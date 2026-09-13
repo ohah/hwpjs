@@ -37,3 +37,15 @@ ReleaseSafe 전체 조립 probe에서 실제 차트 43개를 기반으로 정상
 30건 모두 컴파일 성공 후 실제 대조에서 ERR_ASSERTION·종료 코드 1로 실패했습니다. 컴파일 실패나 임의 trap을 검출 성공으로 대신하지 않았습니다. 정상 코어와 같은 작은 bridge는 세 모드 각각 정상·변형 430건, 기본 오류 172건을 통과했습니다. 각 변형의 `*.compile.log`와 실행 `*.log`는 위 임시 경로에 있습니다.
 
 기존 검사기 방어 검사도 동일 메시지의 호스트 예외 3종과 출력 바이트 변조 8종을 검출했습니다. 이 축 확장은 정규 audit가 호출하는 smoke에 연결됐으며 후속 누적 세 모드 전체 audit도 통과했습니다. 최종 수치와 로그는 [사전 엔트리 대조](hwp5-chart-observed-tables.md)가 소유합니다.
+
+## 후속: ValueBlock 참조 위치
+
+기존 공통 ValueBlock wire는 reference·label의 값과 `introduced`는 대조했지만 각 `ObjectTable.Reference`/`ValueReference`가 반환한 `start`·`end`를 빠뜨렸습니다. `chart-value-block-probe.zig`와 독립 `chart-value-block-oracle.mjs`에 네 위치 필드를 추가해 개별 ValueBlock 검사와 전체 축 조립 검사가 같은 계약을 사용합니다.
+
+개별 probe는 잘라낸 ValueBlock 본문의 0 기준 위치, 전체 조립은 Contents의 절대 위치를 반환합니다. oracle의 기존 `start` 인자를 네 필드에도 적용하여 좌표계를 명시적으로 변환합니다. 최초 실행에서 이 변환 누락으로 실제/기대 위치가 달랐고, 제품 오류로 세지 않고 oracle을 수정한 뒤 두 경계를 각각 재검증했습니다.
+
+ReleaseSafe에서 실제 차트 경로 43개, ValueBlock 69개(숫자 reference 2개)의 개별 검사는 정상 276건·거부 25,326건을 통과했습니다. 전체 조립은 정상·변형 1,452건·기본 거부 946건, 모든 잘림 382,411개 위치와 기타 오류를 합친 거부 383,314건을 통과했습니다. 검사기 방어의 호스트 예외 3종·반환 바이트 변조 8종도 검출했습니다.
+
+임시 코어 복사본에서 주축 Scale의 non-null reference start/end 및 필수 label start/end를 각각 변경했습니다. Debug·ReleaseSafe·ReleaseFast 총 12건 모두 컴파일 종료 코드 0 뒤 실제 wire 대조의 `ERR_ASSERTION`·실행 종료 코드 1로 검출했습니다. 최초 두 번의 임시 결함 컴파일은 Zig 단일문장 `for/if` 문법 오류였으며 검출 실적으로 세지 않았습니다. 수정한 로그는 `/tmp/hwpjs-value-reference-mutants.izmT6i`에 있습니다.
+
+TextFormat은 현재 제품 구조가 code 값과 `code_introduced`·Format end만 보존하고 내부 String reference의 start/end는 보존하지 않습니다. 따라서 이번 검사는 **현재 반환되는** ValueBlock reference 메타데이터의 대조이며, 파서가 버린 위치 정보까지 지원한다는 뜻이 아닙니다. 그 필드를 API로 보존할지는 별도 모델 계약 변경입니다.

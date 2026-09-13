@@ -47,10 +47,12 @@ pub fn serialize(a: std.mem.Allocator, b: core.hwp5.chart_value_block.Block, obj
             .string => |s| {
                 try int(a, &out, u32, 1);
                 try string(a, &out, s, r.introduced);
+                inline for (.{ r.start, r.end }) |v| try int(a, &out, u32, @intCast(v));
             },
             .number => |n| {
                 for ([_]u32{ 2, n.object_id, n.trailer, @intFromBool(r.introduced) }) |v| try int(a, &out, u32, v);
                 try int(a, &out, u64, n.bits);
+                inline for (.{ r.start, r.end }) |v| try int(a, &out, u32, @intCast(v));
             },
         }
     } else try int(a, &out, u32, 0);
@@ -59,6 +61,7 @@ pub fn serialize(a: std.mem.Allocator, b: core.hwp5.chart_value_block.Block, obj
         try string(a, &out, f.code, f.code_introduced);
     }
     try string(a, &out, b.label.value, b.label.introduced);
+    inline for (.{ b.label.start, b.label.end }) |v| try int(a, &out, u32, @intCast(v));
     const body = try @import("chart-text-body-probe.zig").serialize(a, b.text, objects);
     defer a.free(body);
     try out.appendSlice(a, body);
