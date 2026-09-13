@@ -12,7 +12,7 @@ String object ID가 뒤에서 재참조되면 기존 inline 격리 규칙과 같
 
 known-type String은 `19 + payload length`, Double은 26바이트의 정확한 정의 길이를 요구한다. 실제 HWP에서 `(0,2)` String과 `(1,2)` Double을 wire 역순의 한 batch로 null화하고 바깥 CFB·압축 BinData·내부 OLE·Contents를 다시 열어 두 슬롯과 뒤쪽 문서 전체를 확인한다.
 
-null 셀 재선택, 행·열 범위 밖, 최초 타입 선언 소유 셀과 손상된 Number payload를 직접 거부한다. 타입 선언 자체를 다음 사용자로 이동하는 기능, 행·열 축소, 계열 캐시·OOXML 동기화와 렌더링 의미는 아직 범위 밖이다. 기존 82개 완전 편집 batch와는 같은 셀을 동시에 수정하므로 별도 대안 시나리오로 검증한다.
+null 셀 재선택, 행·열 범위 밖, 최초 타입 선언 소유 셀과 손상된 Number payload를 직접 거부한다. [타입 참조 span](hwp5-chart-type-reference-spans.md)은 다음 사용자 탐색의 원본 좌표를 보존하지만, 타입 선언 자체를 다음 사용자로 이동하는 기능은 아직 범위 밖이다. 행·열 축소, 계열 캐시·OOXML 동기화와 렌더링 의미도 이 단계에서 다루지 않는다. 기존 82개 완전 편집 batch와는 같은 셀을 동시에 수정하므로 별도 대안 시나리오로 검증한다.
 
 ## 적대적 검증
 

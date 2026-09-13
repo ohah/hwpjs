@@ -1359,6 +1359,29 @@ test "actual Contents Grid nullification validates known-type number cells" {
     bad.payload_start += 1;
     try t.expectError(error.InvalidChartNumberSource, core.hwp5.chart_grid_cell_nullify.numberReplacement(t.allocator, &value, cell, bad));
 }
+test "actual Contents retains exact type reference spans for declaration relocation" {
+    const bytes = try decode();
+    var value = try contents.readObservedV6(t.allocator, &bytes, layout, .{});
+    defer value.deinit();
+    const references = value.prefix.grid.prelude.types.references.items;
+    try t.expect(references.len > 0);
+    var string_cell_declarations: usize = 0;
+    var number_cell_declarations: usize = 0;
+    for (references) |reference| {
+        try t.expect(reference.start < reference.end);
+        try t.expect(reference.end <= bytes.len);
+        try t.expectEqual(reference.id, std.mem.readInt(u32, bytes[reference.start..][0..4], .little));
+        const expected_length: usize = if (reference.introduced)
+            8 + value.prefix.grid.prelude.types.definitions.get(reference.id).?.raw_name.len
+        else
+            4;
+        try t.expectEqual(expected_length, reference.end - reference.start);
+        string_cell_declarations += @intFromBool(reference.introduced and reference.start >= value.prefix.grid.cells[1].start and reference.end <= value.prefix.grid.cells[1].end);
+        number_cell_declarations += @intFromBool(reference.introduced and reference.start >= value.prefix.grid.cells[5].start and reference.end <= value.prefix.grid.cells[5].end);
+    }
+    try t.expectEqual(@as(usize, 2), string_cell_declarations);
+    try t.expectEqual(@as(usize, 1), number_cell_declarations);
+}
 test "actual Contents String ValueReference forks and rejects Number" {
     const bytes = try decode();
     var value = try contents.readObservedV6(t.allocator, &bytes, layout, .{});

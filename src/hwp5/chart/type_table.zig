@@ -10,7 +10,10 @@ pub const Reference = struct {
     id: u32,
     declaration: declaration.Declaration,
     introduced: bool,
+    start: usize,
+    end: usize,
 };
+pub const ReferenceSpan = struct { id: u32, introduced: bool, start: usize, end: usize };
 
 /// One table per caller-established chart serialization scope. Owns names;
 /// references survive input release and map growth, but not table deinit.
@@ -18,6 +21,7 @@ pub const Table = struct {
     allocator: std.mem.Allocator,
     options: Options,
     definitions: std.AutoHashMapUnmanaged(u32, declaration.Declaration) = .empty,
+    references: std.ArrayListUnmanaged(ReferenceSpan) = .empty,
     name_bytes: usize = 0,
 
     pub fn init(a: std.mem.Allocator, options: Options) Table {
@@ -27,6 +31,7 @@ pub const Table = struct {
         var it = self.definitions.valueIterator();
         while (it.next()) |value| self.allocator.free(value.raw_name);
         self.definitions.deinit(self.allocator);
+        self.references.deinit(self.allocator);
         self.* = undefined;
     }
     /// Returns the lowest registered ID with the exact raw name and version.
@@ -48,10 +53,13 @@ pub const Table = struct {
     /// Failure preserves the cursor, definitions and name-byte accounting.
     pub fn readObserved16(self: *Table, reader: *Reader) !Reference {
         var next = reader.*;
+        const start = next.offset;
         const id = try next.readInt(u32);
         if (self.definitions.get(id)) |value| {
+            try self.references.ensureUnusedCapacity(self.allocator, 1);
+            self.references.appendAssumeCapacity(.{ .id = id, .introduced = false, .start = start, .end = next.offset });
             reader.* = next;
-            return .{ .id = id, .declaration = value, .introduced = false };
+            return .{ .id = id, .declaration = value, .introduced = false, .start = start, .end = next.offset };
         }
         if (self.definitions.count() >= self.options.max_types or self.name_bytes > self.options.max_total_name_bytes)
             return error.LimitExceeded;
@@ -60,9 +68,11 @@ pub const Table = struct {
         const name = try self.allocator.dupe(u8, value.raw_name);
         errdefer self.allocator.free(name);
         const owned: declaration.Declaration = .{ .raw_name = name, .version = value.version };
+        try self.references.ensureUnusedCapacity(self.allocator, 1);
         try self.definitions.put(self.allocator, id, owned);
+        self.references.appendAssumeCapacity(.{ .id = id, .introduced = true, .start = start, .end = next.offset });
         self.name_bytes += name.len; // Bounded by the remaining total above.
         reader.* = next;
-        return .{ .id = id, .declaration = owned, .introduced = true };
+        return .{ .id = id, .declaration = owned, .introduced = true, .start = start, .end = next.offset };
     }
 };

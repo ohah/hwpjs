@@ -12,15 +12,24 @@ test "chart type table skips repeat declarations and isolates scopes" {
     try t.expect(first.introduced);
     try t.expectEqual(@as(u32, 0xffffffff), first.id);
     try t.expectEqual(@as(u16, 65535), first.declaration.version);
+    try t.expectEqual(@as(usize, 0), first.start);
+    try t.expectEqual(@as(usize, 10), first.end);
     bytes[6] = 'Y';
     try t.expectEqualStrings("X\x00", first.declaration.raw_name);
     reader = .{ .bytes = &bytes };
     const repeated = try table.readObserved16(&reader);
     try t.expect(!repeated.introduced);
     try t.expectEqual(@as(usize, 4), reader.offset);
+    try t.expectEqual(@as(usize, 0), repeated.start);
+    try t.expectEqual(@as(usize, 4), repeated.end);
     try t.expectEqualStrings("X\x00", repeated.declaration.raw_name);
     try t.expect(first.declaration.raw_name.ptr == repeated.declaration.raw_name.ptr);
     try t.expectEqual(@as(usize, 2), table.name_bytes);
+    try t.expectEqual(@as(usize, 2), table.references.items.len);
+    try t.expect(table.references.items[0].introduced);
+    try t.expect(!table.references.items[1].introduced);
+    try t.expectEqual(@as(usize, 10), table.references.items[0].end);
+    try t.expectEqual(@as(usize, 4), table.references.items[1].end);
     var separate = Table.init(t.allocator, .{});
     defer separate.deinit();
     reader.offset = 0;
@@ -58,10 +67,12 @@ fn exercise(a: std.mem.Allocator) !void {
         bytes[6] = @intCast(i);
         var reader: Reader = .{ .bytes = &bytes };
         const before = table.name_bytes;
+        const references_before = table.references.items.len;
         const value = table.readObserved16(&reader) catch |err| {
             try t.expectEqual(@as(usize, 0), reader.offset);
             try t.expectEqual(before, table.name_bytes);
             try t.expectEqual(@as(u32, @intCast(i)), table.definitions.count());
+            try t.expectEqual(references_before, table.references.items.len);
             return err;
         };
         if (first_name == null) first_name = value.declaration.raw_name;
@@ -73,6 +84,7 @@ fn exercise(a: std.mem.Allocator) !void {
     try t.expectError(error.LimitExceeded, table.readObserved16(&reader));
     try t.expectEqual(@as(usize, 0), reader.offset);
     try t.expectEqual(@as(u32, 32), table.definitions.count());
+    try t.expectEqual(@as(usize, 32), table.references.items.len);
 }
 
 test "chart type table growth OOM and returned names have stable ownership" {
@@ -96,6 +108,7 @@ test "chart type table all cuts preserve prior definitions and reader" {
         try t.expectEqual(@as(usize, 0), reader.offset);
         try t.expectEqual(@as(u32, 1), table.definitions.count());
         try t.expectEqual(@as(usize, 2), table.name_bytes);
+        try t.expectEqual(@as(usize, 1), table.references.items.len);
         try t.expectEqualStrings("A\x00", table.definitions.get(0).?.raw_name);
     }
 }
