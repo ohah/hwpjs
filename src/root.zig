@@ -17,6 +17,7 @@ test {
     _ = @import("image/wmf/drawing_records_tests.zig");
     _ = @import("image/wmf/text_records_tests.zig");
     _ = @import("image/wmf/enhanced_metafile_tests.zig");
+    _ = @import("image/wmf/enhanced_metafile_sequence_tests.zig");
     _ = @import("image/gif/tests.zig");
     _ = @import("image/jpeg/progressive_block_tests.zig");
     _ = @import("image/jpeg/rgb_raster_tests.zig");

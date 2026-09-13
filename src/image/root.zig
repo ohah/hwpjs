@@ -85,3 +85,4 @@ pub const wmf_escape = @import("wmf/escape.zig");
 pub const wmf_text_records = @import("wmf/text_records.zig");
 pub const wmf_enhanced_metafile = @import("wmf/enhanced_metafile.zig");
 pub const wmf_enhanced_metafile_records = @import("wmf/enhanced_metafile_records.zig");
+pub const wmf_enhanced_metafile_sequence = @import("wmf/enhanced_metafile_sequence.zig");
