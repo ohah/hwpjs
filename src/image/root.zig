@@ -62,3 +62,4 @@ pub const jpeg_jfif_rgb = @import("jpeg/jfif_rgb.zig");
 pub const jpeg_jfif_progressive_rgb = @import("jpeg/jfif_progressive_rgb.zig");
 pub const jpeg_progressive_block = @import("jpeg/progressive_block.zig");
 pub const wmf_header = @import("wmf/header.zig");
+pub const wmf_records = @import("wmf/records.zig");
