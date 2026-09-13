@@ -30,6 +30,9 @@ pub fn forkMany(a: std.mem.Allocator, value: *const Contents, requests: []const 
     defer a.free(output_patches);
     const replacements = try a.alloc([]u8, patch_capacity);
     defer a.free(replacements);
+    const target_spans = try a.alloc(@import("contents_inline_fork.zig").Span, requests.len);
+    defer a.free(target_spans);
+    for (requests, target_spans) |request, *span| span.* = requestSpan(request);
     var built: usize = 0;
     defer for (replacements[0..built]) |replacement| a.free(replacement);
 
@@ -38,7 +41,7 @@ pub fn forkMany(a: std.mem.Allocator, value: *const Contents, requests: []const 
         if (request == .inline_string) {
             const item = request.inline_string;
             for (requests[0..i]) |prior| if (requestHasId(prior, item.new_object_id)) return error.DuplicateChartObjectId;
-            const prepared = try @import("contents_inline_fork.zig").prepare(a, value, &item.reference, item.new_object_id, item.bytes, item.trailer);
+            const prepared = try @import("contents_inline_fork.zig").prepareAvoiding(a, value, &item.reference, item.new_object_id, item.bytes, item.trailer, target_spans);
             replacements[built] = prepared.target;
             built += 1;
             output_patches[patch_count] = .{ .start = prepared.target_start, .end = prepared.target_end, .replacement = prepared.target };
@@ -63,6 +66,19 @@ pub fn forkMany(a: std.mem.Allocator, value: *const Contents, requests: []const 
         }
     }.lessThan);
     return patches.applyOriginal(a, value, output_patches[0..patch_count], max_output_bytes);
+}
+
+fn requestSpan(request: BatchRequest) @import("contents_inline_fork.zig").Span {
+    return switch (request) {
+        .font_name => |item| .{ .start = item.font.name_start, .end = item.font.name_end },
+        .text_body => |item| .{ .start = item.body.text_start, .end = item.body.text_end },
+        .null_text_body => |item| .{ .start = item.body.text_start, .end = item.body.text_end },
+        .nullable_text_block => |item| .{ .start = item.block.text_start, .end = item.block.text_end },
+        .null_nullable_text_block => |item| .{ .start = item.block.text_start, .end = item.block.text_end },
+        .null_nullable_text_format => |item| .{ .start = item.format.code_start, .end = item.format.code_end },
+        .null_text_format_object => |item| .{ .start = item.block.format_start, .end = item.block.format_end },
+        .inline_string => |item| .{ .start = item.reference.start, .end = item.reference.end },
+    };
 }
 
 fn requestHasId(request: BatchRequest, id: u32) bool {

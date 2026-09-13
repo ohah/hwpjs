@@ -80,6 +80,8 @@ fn exercise(a: std.mem.Allocator) !void {
     const shared_inline_reference: core.hwp5.chart_object_table.Reference = .{ .value = value.prefix.footnote.block.font.name, .introduced = value.prefix.footnote.block.font.name_introduced, .start = value.prefix.footnote.block.font.name_start, .end = value.prefix.footnote.block.font.name_end };
     const shared_inline_forked = try core.hwp5.chart_contents_inline_fork.forkIntroduced(a, &value, &shared_inline_reference, 0xffffffee, "i", 9, bytes.len + 128);
     defer a.free(shared_inline_forked);
+    const shared_mixed_forked = try core.hwp5.chart_contents_string_fork.forkMany(a, &value, &.{ .{ .inline_string = .{ .reference = shared_inline_reference, .new_object_id = 0xffffffed, .bytes = "j", .trailer = 10 } }, .{ .font_name = .{ .font = &value.primary_axes[0].title.font, .new_object_id = 0xffffffec, .bytes = "k", .trailer = 11 } } }, bytes.len + 160);
+    defer a.free(shared_mixed_forked);
     const inline_reference: core.hwp5.chart_object_table.Reference = .{ .value = value.title.block.text.?, .introduced = value.title.block.text_introduced, .start = value.title.block.text_start, .end = value.title.block.text_end };
     const batch_forked = try core.hwp5.chart_contents_string_fork.forkMany(a, &value, &.{ .{ .inline_string = .{ .reference = inline_reference, .new_object_id = 0xffffffef, .bytes = "h", .trailer = 8 } }, .{ .null_text_format_object = .{ .block = &value.primary_axes[0].scale.?.value, .format_object_id = 0xfffffff1, .code_object_id = 0xfffffff2, .format_type_id = 0xfffffff0, .raw_word = 7, .bytes = "g", .trailer = 7 } }, .{ .null_nullable_text_format = .{ .format = &value.series.items[0].suffix.formats[0], .new_object_id = 0xfffffff3, .bytes = "f", .trailer = 6 } }, .{ .null_nullable_text_block = .{ .block = &value.secondary_axis.title, .new_object_id = 0xfffffff4, .bytes = "e", .trailer = 5 } }, .{ .nullable_text_block = .{ .block = &value.series.items[0].suffix.block, .new_object_id = 0xfffffff5, .bytes = "d", .trailer = 4 } }, .{ .null_text_body = .{ .body = &value.series.items[0].section.points[0].label.body, .new_object_id = 0xfffffff6, .bytes = "c", .trailer = 3 } }, .{ .text_body = .{ .body = &value.series.items[0].section.label.body, .new_object_id = 0xfffffff8, .bytes = "b", .trailer = 2 } }, .{ .font_name = .{ .font = &value.primary_axes[0].title.font, .new_object_id = 0xfffffff7, .bytes = "a", .trailer = 1 } } }, bytes.len + 256);
     defer a.free(batch_forked);
@@ -659,6 +661,89 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
     try t.expectEqual(old_footnote_font.trailer, retained_footnote.trailer);
     try t.expectEqualSlices(u8, old_legend_font.bytes, retained_legend.bytes);
     try t.expectEqual(old_legend_font.trailer, retained_legend.trailer);
+
+    var mixed_commands: [inline_commands.len + font_commands.len]core.hwp5.chart_edit_session.StringEdit = undefined;
+    @memcpy(mixed_commands[0..inline_commands.len], &inline_commands);
+    @memcpy(mixed_commands[inline_commands.len..], &font_commands);
+    var mixed_options = edit_options;
+    mixed_options.max_edits = mixed_commands.len;
+    mixed_options.max_edited_contents_bytes = bytes.len + mixed_commands.len * (inline_bytes.len + all_fonts.len + 100);
+    const mixed_saved = try core.hwp5.chart_edit_session.applyStringEdits(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, &mixed_commands, mixed_options);
+    defer t.allocator.free(mixed_saved);
+    var mixed_outer = try core.cfb.File.open(t.allocator, mixed_saved, .{ .strict = true });
+    defer mixed_outer.deinit();
+    const mixed_header = try core.hwp5.Header.parse(mixed_outer.entries[(try mixed_outer.findExact("/FileHeader")).?].content);
+    const mixed_inner = try core.hwp5.bin_data_stream.decode(t.allocator, &mixed_header, item, mixed_outer.entries[(try mixed_outer.findExact("/BinData/BIN0001.OLE")).?].content, 64 * 1024);
+    defer t.allocator.free(mixed_inner);
+    var mixed_ole = try core.cfb.File.open(t.allocator, mixed_inner, .{ .strict = true });
+    defer mixed_ole.deinit();
+    var mixed_chart = try contents.readObservedV6(t.allocator, mixed_ole.entries[(try mixed_ole.findExact("/Contents")).?].content, layout, .{});
+    defer mixed_chart.deinit();
+    try t.expectEqualSlices(u8, inline_bytes, mixed_chart.prefix.footnote.block.font.name.bytes);
+    try t.expectEqualSlices(u8, inline_bytes, mixed_chart.prefix.legend.font.name.bytes);
+    try t.expectEqualSlices(u8, all_fonts, mixed_chart.primary_axes[0].title.font.name.bytes);
+    try t.expectEqualSlices(u8, all_fonts, mixed_chart.series.items[2].section.points[3].label.body.font.name.bytes);
+
+    const all_texts = "all-non-inline-texts";
+    var complete_commands: [60]core.hwp5.chart_edit_session.StringEdit = undefined;
+    var complete_at: usize = 0;
+    @memcpy(complete_commands[complete_at..][0..inline_commands.len], &inline_commands);
+    complete_at += inline_commands.len;
+    @memcpy(complete_commands[complete_at..][0..font_commands.len], &font_commands);
+    complete_at += font_commands.len;
+    complete_commands[complete_at] = .{ .null_secondary_axis_title_text = .{ .bytes = all_texts, .trailer = 0xe0 } };
+    complete_at += 1;
+    for (value.series.items, 0..) |series, series_index| {
+        complete_commands[complete_at] = .{ .series_label_body_text = .{ .series_index = series_index, .bytes = all_texts, .trailer = 0xe1 } };
+        complete_at += 1;
+        complete_commands[complete_at] = .{ .series_suffix_text = .{ .series_index = series_index, .bytes = all_texts, .trailer = 0xe2 } };
+        complete_at += 1;
+        for (series.section.points, 0..) |_, point_index| {
+            complete_commands[complete_at] = .{ .null_series_point_label_body_text = .{ .series_index = series_index, .point_index = point_index, .bytes = all_texts, .trailer = 0xe3 } };
+            complete_at += 1;
+        }
+    }
+    @memcpy(complete_commands[complete_at..][0..format_commands.len], &format_commands);
+    complete_at += format_commands.len;
+    @memcpy(complete_commands[complete_at..][0..axis_format_commands.len], &axis_format_commands);
+    complete_at += axis_format_commands.len;
+    try t.expectEqual(complete_commands.len, complete_at);
+    var complete_options = edit_options;
+    complete_options.max_edits = complete_commands.len;
+    complete_options.max_edited_contents_bytes = bytes.len + complete_commands.len * 160;
+    const complete_saved = try core.hwp5.chart_edit_session.applyStringEdits(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, &complete_commands, complete_options);
+    defer t.allocator.free(complete_saved);
+    var complete_outer = try core.cfb.File.open(t.allocator, complete_saved, .{ .strict = true });
+    defer complete_outer.deinit();
+    const complete_header = try core.hwp5.Header.parse(complete_outer.entries[(try complete_outer.findExact("/FileHeader")).?].content);
+    const complete_inner = try core.hwp5.bin_data_stream.decode(t.allocator, &complete_header, item, complete_outer.entries[(try complete_outer.findExact("/BinData/BIN0001.OLE")).?].content, 128 * 1024);
+    defer t.allocator.free(complete_inner);
+    var complete_ole = try core.cfb.File.open(t.allocator, complete_inner, .{ .strict = true });
+    defer complete_ole.deinit();
+    var complete_chart = try contents.readObservedV6(t.allocator, complete_ole.entries[(try complete_ole.findExact("/Contents")).?].content, layout, .{});
+    defer complete_chart.deinit();
+    try t.expectEqualSlices(u8, inline_bytes, complete_chart.prefix.footnote.block.font.name.bytes);
+    try t.expectEqualSlices(u8, inline_bytes, complete_chart.prefix.legend.font.name.bytes);
+    try t.expectEqualSlices(u8, inline_bytes, complete_chart.title.block.font.name.bytes);
+    try t.expectEqualSlices(u8, inline_bytes, complete_chart.prefix.footnote.block.text.bytes);
+    try t.expectEqualSlices(u8, inline_bytes, complete_chart.title.block.text.?.bytes);
+    try t.expectEqualSlices(u8, all_texts, complete_chart.secondary_axis.title.text.?.bytes);
+    for (complete_chart.primary_axes, 0..) |axis, axis_index| {
+        try t.expectEqualSlices(u8, all_fonts, axis.title.font.name.bytes);
+        try t.expectEqualSlices(u8, inline_bytes, axis.title.text.bytes);
+        if (axis_index < 3) try t.expectEqualSlices(u8, axis_format_bytes, axis.scale.?.value.format.?.code.bytes);
+    }
+    for (complete_chart.series.items) |series| {
+        try t.expectEqualSlices(u8, all_fonts, series.section.label.body.font.name.bytes);
+        try t.expectEqualSlices(u8, all_texts, series.section.label.body.text.?.bytes);
+        try t.expectEqualSlices(u8, all_fonts, series.suffix.block.font.name.bytes);
+        try t.expectEqualSlices(u8, all_texts, series.suffix.block.text.?.bytes);
+        for (series.suffix.formats) |format| try t.expectEqualSlices(u8, format_bytes, format.code.?.bytes);
+        for (series.section.points) |point| {
+            try t.expectEqualSlices(u8, all_fonts, point.label.body.font.name.bytes);
+            try t.expectEqualSlices(u8, all_texts, point.label.body.text.?.bytes);
+        }
+    }
 
     var multi_options = edit_options;
     multi_options.file.bin_data.max_total_encoded_bytes = 128 * 1024;

@@ -17,6 +17,7 @@ pub const Prepared = struct {
         a.free(self.target);
     }
 };
+pub const Span = struct { start: usize, end: usize };
 
 /// Gives one introduced String site a new identity. If the old identity has
 /// later aliases, its original definition is relocated to the first alias so
@@ -30,6 +31,10 @@ pub fn forkIntroduced(a: std.mem.Allocator, value: *const Contents, target: *con
 }
 
 pub fn prepare(a: std.mem.Allocator, value: *const Contents, target: *const Objects.Reference, new_object_id: u32, bytes: []const u8, trailer: u8) !Prepared {
+    return prepareAvoiding(a, value, target, new_object_id, bytes, trailer, &.{});
+}
+
+pub fn prepareAvoiding(a: std.mem.Allocator, value: *const Contents, target: *const Objects.Reference, new_object_id: u32, bytes: []const u8, trailer: u8, excluded: []const Span) !Prepared {
     if (!target.introduced) return error.ExpectedInlineChartString;
     if (bytes.len > std.math.maxInt(u16)) return error.LimitExceeded;
     try ids.requireInline(new_object_id);
@@ -68,6 +73,12 @@ pub fn prepare(a: std.mem.Allocator, value: *const Contents, target: *const Obje
         }
         if (reference.introduced or reference.start < target.end or reference.end - reference.start != 4)
             return error.InvalidChartStringReferenceGraph;
+        var edited = false;
+        for (excluded) |span| if (span.start == reference.start and span.end == reference.end) {
+            edited = true;
+            break;
+        };
+        if (edited) continue;
         if (next_alias == null or reference.start < next_alias.?.start) next_alias = reference;
     }
     if (!matched_definition) return error.InvalidChartStringReferenceGraph;
