@@ -85,6 +85,8 @@ test "actual Contents String object edit reparses" {
     defer value.deinit();
     const original = value.prefix.legend.font.name;
     try t.expect(value.prefix.legend.font.name_introduced);
+    try t.expect(value.prefix.legend.font.name_end > value.prefix.legend.font.name_start + 4);
+    try t.expectEqual(original.object_id, std.mem.readInt(u32, bytes[value.prefix.legend.font.name_start..][0..4], .little));
     const same = try core.hwp5.chart_contents_string_edit.replaceStringObject(t.allocator, &value, original.object_id, original.bytes, original.trailer, bytes.len);
     defer t.allocator.free(same);
     try t.expectEqualSlices(u8, &bytes, same);
@@ -105,6 +107,8 @@ test "actual Contents String object edit reparses" {
 
     const alias = value.primary_axes[0].title.font.name;
     try t.expect(!value.primary_axes[0].title.font.name_introduced);
+    try t.expectEqual(@as(usize, 4), value.primary_axes[0].title.font.name_end - value.primary_axes[0].title.font.name_start);
+    try t.expectEqual(alias.object_id, std.mem.readInt(u32, bytes[value.primary_axes[0].title.font.name_start..][0..4], .little));
     const alias_bytes = "shared-axis-font";
     const alias_max = bytes.len - alias.bytes.len + alias_bytes.len;
     const alias_edited = try core.hwp5.chart_contents_string_edit.replaceStringObject(t.allocator, &value, alias.object_id, alias_bytes, 0x5a, alias_max);

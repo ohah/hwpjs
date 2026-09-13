@@ -25,7 +25,7 @@ pub fn assertCurrent() void {
         fields(h.chart_footnote.Footnote, &.{ "object_id", "block", "section", "end" });
         fields(h.chart_text_block.Block, &.{ "object_id", "prefix", "font", "middle", "text", "suffix", "end", "backdrop", "text_introduced" });
         fields(h.chart_text_block_body.Body, &.{ "prefix", "font", "middle", "text", "suffix", "end", "backdrop", "text_introduced" });
-        fields(@TypeOf(@as(h.chart_text_block.Block, undefined).font), &.{ "object_id", "name", "raw", "name_introduced" });
+        fields(@TypeOf(@as(h.chart_text_block.Block, undefined).font), &.{ "object_id", "name", "raw", "name_introduced", "name_start", "name_end" });
         fields(h.chart_value_object.String, &.{ "object_id", "bytes", "trailer" });
         fields(h.chart_value_object.Number, &.{ "object_id", "bits", "trailer" });
         fields(h.chart_section.Section, &.{ "raw", "backdrop", "end" });
