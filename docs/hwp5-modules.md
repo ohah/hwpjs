@@ -48,6 +48,7 @@
   - [SeriesLabel 본문·Point 반복 조사](hwp5-chart-series-label-evidence.md)
   - [SeriesLabel·SeriesPoint 코어](hwp5-chart-series-label.md)
   - [Series 뒤쪽 TextBlock·TextFormat 조사](hwp5-chart-series-suffix-evidence.md)
+  - [TextFormat nullable code 코어](hwp5-chart-nullable-format.md)
   - [TextBlock 보조 Backdrop·문자열 재참조](hwp5-chart-text-block-objects.md)
 - [표·셀](hwp5-tables-contracts.md)
 - [ParameterSet·이름·참조](hwp5-parameters-contracts.md)

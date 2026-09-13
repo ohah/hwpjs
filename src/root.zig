@@ -224,6 +224,7 @@ test {
     _ = @import("hwp5/chart/object_table_tests.zig");
     _ = @import("hwp5/chart/number_object_tests.zig");
     _ = @import("hwp5/chart/text_format_tests.zig");
+    _ = @import("hwp5/chart/text_format_nullable_tests.zig");
     _ = @import("hwp5/chart/value_block_tests.zig");
     _ = @import("hwp5/chart/axis_tests.zig");
     _ = @import("hwp5/chart/nullable_title_tests.zig");

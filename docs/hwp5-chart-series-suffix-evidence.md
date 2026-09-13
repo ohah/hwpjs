@@ -37,3 +37,5 @@ node tests/hwp5/chart-series-suffix-survey.mjs --verify
 ## 다음 범위
 
 기존 필수 TextFormat API를 보존한 nullable code 코어 연결과 새 실제 WASM 대조가 필요합니다. 그 뒤의 원시 꼬리, 계열 끝·반복·일반 배열 의미, 전체 Chart 조립·렌더링·저장은 미완료입니다. 공식 차트 API 속성 표만으로 이 바이트 순서나 의미를 확정하지 않습니다.
+
+후속 구현·실제 WASM 연결의 현재 범위는 [nullable code 코어](hwp5-chart-nullable-format.md)가 소유합니다. 위 조사 수치를 제품 실행 수치로 읽지 않습니다.

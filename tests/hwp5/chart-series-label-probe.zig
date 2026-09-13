@@ -1,37 +1,8 @@
 const std = @import("std");
-const core = @import("hwpjs");
-const int = @import("resource-probe.zig").int;
-// Test-only first-Series assembly. Count is supplied by the independent caller,
-// not inferred by a product array policy. Tail raw66 is not interpreted here.
+// Ownership of the test wire transfers to the caller; preceding chart state
+// is released after serialization, as in the original mode 328.
 pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
-    var input: core.Reader = .{ .bytes = bytes };
-    const max_objects = try input.readInt(u32);
-    const count = try input.readInt(u32);
-    if (count > 32) return error.LimitExceeded;
-    var prefix = try @import("chart-post-line-prefix.zig").read(a, bytes[input.offset..], limit, max_objects);
-    defer prefix.deinit();
-    _ = try core.hwp5.chart_series_prefix.readObservedV2(prefix.reader(), prefix.types(), prefix.objects());
-    var out: std.ArrayList(u8) = .empty;
-    errdefer out.deinit(a);
-    try int(a, &out, u32, count);
-    for (0..count) |_| {
-        const p = try core.hwp5.chart_series_point.readObservedV1(prefix.reader(), prefix.types(), prefix.objects(), .{});
-        try int(a, &out, u32, p.object_id);
-        try int(a, &out, u32, @intCast(p.end));
-        try out.appendSlice(a, &p.raw);
-        try label(a, &out, p.label, prefix.objects());
-    }
-    _ = try prefix.reader().take(66);
-    _ = try prefix.objects().readStringObservedV1(prefix.reader(), prefix.types(), 65535);
-    const value = try core.hwp5.chart_series_label.readObservedV1(prefix.reader(), prefix.types(), prefix.objects(), .{});
-    try label(a, &out, value, prefix.objects());
-    try int(a, &out, u32, prefix.types().definitions.count());
-    return out.toOwnedSlice(a);
-}
-fn label(a: std.mem.Allocator, out: *std.ArrayList(u8), v: core.hwp5.chart_series_label.Label, objects: *const core.hwp5.chart_object_table.Table) !void {
-    try int(a, out, u32, v.object_id);
-    try int(a, out, u32, @intCast(v.end));
-    const body = try @import("chart-text-body-probe.zig").serialize(a, v.body, objects);
-    defer a.free(body);
-    try out.appendSlice(a, body);
+    var prefix = try @import("chart-series-label-prefix.zig").read(a, bytes, limit);
+    defer prefix.previous.deinit();
+    return prefix.wire;
 }
