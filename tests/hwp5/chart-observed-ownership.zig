@@ -232,6 +232,8 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
     const target = &value.primary_axes[0].title.font;
     const new_id = try core.hwp5.chart_object_id_allocator.findLowestAvailable(&value.prefix.objects, &.{target.object_id});
     const replacement = "outer-saved-axis-font";
+    const series_new_id = try core.hwp5.chart_object_id_allocator.findLowestAvailable(&value.prefix.objects, &.{});
+    const series_replacement = "outer-series-label";
 
     const inner = try core.cfb.writer.write(t.allocator, &.{ .{ .name = "Root Entry", .kind = 5 }, .{ .name = "Contents", .parent = 0, .content = &bytes }, .{ .name = "Unknown", .parent = 0, .content = "inner-preserved" } }, .{ .version = 4 });
     defer t.allocator.free(inner);
@@ -261,6 +263,7 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
     const item: core.hwp5.docinfo.BinData = .{ .attributes = 2, .data = .{ .storage = 1 }, .extra = &.{ 3, 0, 'O', 0, 'L', 0, 'E', 0 } };
     const edit_options: core.hwp5.chart_edit_session.Options = .{ .file = .{ .bin_data = .{ .max_doc_info_bytes = 96, .max_encoded_bytes = 64 * 1024, .max_total_encoded_bytes = 64 * 1024, .max_output_bytes = 128 * 1024 }, .ole = .{ .max_output_bytes = 64 * 1024 }, .max_decoded_bin_data_bytes = 64 * 1024, .max_total_decoded_bin_data_bytes = 64 * 1024, .max_total_edited_ole_bytes = 64 * 1024 }, .max_contents_bytes = bytes.len, .max_edited_contents_bytes = bytes.len + replacement.len + 15 };
     try t.expectError(error.InvalidChartAxisIndex, core.hwp5.chart_edit_session.forkPrimaryAxisTitleFontName(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, layout.primary_axis_count, replacement, 0x55, edit_options));
+    try t.expectError(error.InvalidChartSeriesIndex, core.hwp5.chart_edit_session.forkSeriesLabelBodyText(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, layout.series_point_counts.len, series_replacement, 0x66, edit_options));
     var low_source = edit_options;
     low_source.max_contents_bytes = bytes.len - 1;
     try t.expectError(error.LimitExceeded, core.hwp5.chart_edit_session.forkPrimaryAxisTitleFontName(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 0, replacement, 0x55, low_source));
@@ -290,6 +293,26 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
     try t.expectEqual(new_id, reparsed.primary_axes[0].title.font.name.object_id);
     try t.expectEqualSlices(u8, replacement, reparsed.primary_axes[0].title.font.name.bytes);
     try t.expectEqual(@as(u8, 0x55), reparsed.primary_axes[0].title.font.name.trailer);
+
+    const series_saved_outer = try core.hwp5.chart_edit_session.forkSeriesLabelBodyText(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 0, series_replacement, 0x66, edit_options);
+    defer t.allocator.free(series_saved_outer);
+    var series_outer_file = try core.cfb.File.open(t.allocator, series_saved_outer, .{ .strict = true });
+    defer series_outer_file.deinit();
+    const series_header = try core.hwp5.Header.parse(series_outer_file.entries[(try series_outer_file.findExact("/FileHeader")).?].content);
+    const series_stored = series_outer_file.entries[(try series_outer_file.findExact("/BinData/BIN0001.OLE")).?].content;
+    const series_decoded_inner = try core.hwp5.bin_data_stream.decode(t.allocator, &series_header, item, series_stored, 64 * 1024);
+    defer t.allocator.free(series_decoded_inner);
+    var series_inner_file = try core.cfb.File.open(t.allocator, series_decoded_inner, .{ .strict = true });
+    defer series_inner_file.deinit();
+    try t.expectEqual(@as(u16, 4), series_inner_file.header.major);
+    try t.expectEqualStrings("inner-preserved", series_inner_file.entries[(try series_inner_file.findExact("/Unknown")).?].content);
+    var series_reparsed = try contents.readObservedV6(t.allocator, series_inner_file.entries[(try series_inner_file.findExact("/Contents")).?].content, layout, .{});
+    defer series_reparsed.deinit();
+    const changed_body = series_reparsed.series.items[0].section.label.body;
+    try t.expect(changed_body.text_introduced);
+    try t.expectEqual(series_new_id, changed_body.text.?.object_id);
+    try t.expectEqualSlices(u8, series_replacement, changed_body.text.?.bytes);
+    try t.expectEqual(@as(u8, 0x66), changed_body.text.?.trailer);
 }
 test "actual Contents patch validation" {
     var bytes = try decode();
