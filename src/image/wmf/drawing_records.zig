@@ -33,7 +33,7 @@ fn addPoints(report_count: *usize, x_sum: *i64, y_sum: *i64, points: @import("po
     }
 }
 
-fn addRect(left: *i64, top: *i64, right: *i64, bottom: *i64, rect: rect_record.Rect) void {
+fn addRect(left: *i64, top: *i64, right: *i64, bottom: *i64, rect: @import("rect.zig").Rect) void {
     left.* += rect.left;
     top.* += rect.top;
     right.* += rect.right;

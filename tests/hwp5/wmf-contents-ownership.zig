@@ -99,6 +99,53 @@ test "actual HWP OLE CONTENTS is an explicitly selected payload-sized placeable 
     try t.expectEqual(@as(i64, 83018), drawings.rectangle_top_sum);
     try t.expectEqual(@as(i64, 145226), drawings.rectangle_right_sum);
     try t.expectEqual(@as(i64, 87922), drawings.rectangle_bottom_sum);
+    const text = try core.image.wmf_text_records.inspect(fixture.bytes, value, records, .from_options);
+    try t.expectEqual(@as(usize, 120), text.alignments);
+    try t.expectEqual(@as(usize, 60), text.alignment_baseline);
+    try t.expectEqual(@as(usize, 60), text.alignment_update_cp);
+    try t.expectEqual(@as(usize, 60), text.ext_texts);
+    try t.expectEqual(@as(usize, 248), text.string_bytes);
+    try t.expectEqual(@as(usize, 8), text.string_padding);
+    try t.expectEqual(@as(usize, 6), text.nonzero_string_padding);
+    try t.expectEqual(@as(usize, 248), text.dx_values);
+    try t.expectEqual(@as(i64, 13484), text.dx_sum);
+    try t.expectEqual(@as(i64, 136594), text.x_sum);
+    try t.expectEqual(@as(i64, 133130), text.y_sum);
+    try t.expectEqual(@as(usize, 118), text.escapes);
+    try t.expectEqual(@as(usize, 118), text.enhanced_metafile_escapes);
+    try t.expectEqual(@as(usize, 1689), text.escape_bytes);
+    try t.expectEqual(@as(usize, 1), text.escape_padding);
+    try t.expectEqual(@as(usize, 0), text.nonzero_escape_padding);
+}
+
+test "public WMF text audit pins alignment padding Dx rectangle and escape length" {
+    const align_short = [_]u8{ 0x18, 0 };
+    const alignment = try core.image.wmf_text_align.parse(syntheticRecord(0x012e, 4, &align_short));
+    try t.expectEqual(@as(?u16, null), alignment.reserved);
+    const invalid_alignment = [_]u8{ 4, 0 };
+    try t.expectError(error.UnsupportedWmfTextAlignment, core.image.wmf_text_align.parse(syntheticRecord(0x012e, 4, &invalid_alignment)));
+
+    const ext_bytes = [_]u8{ 0xfe, 0xff, 3, 0, 3, 0, 0, 0, 'a', 'b', 'c', 0xd6, 1, 0, 0xfe, 0xff, 3, 0 };
+    const ext = try core.image.wmf_ext_text_out.parse(syntheticRecord(0x0a32, 12, &ext_bytes), .absent);
+    try t.expectEqual(@as(i16, 3), ext.x);
+    try t.expectEqual(@as(i16, -2), ext.y);
+    try t.expectEqualSlices(u8, "abc", ext.string);
+    try t.expectEqual(@as(?u8, 0xd6), ext.padding);
+    try t.expectEqual(@as(usize, 3), ext.dx_count);
+    try t.expectEqual(@as(i16, -2), try ext.dx(1));
+    try t.expectError(error.InvalidWmfDxSize, core.image.wmf_ext_text_out.parse(syntheticRecord(0x0a32, 11, ext_bytes[0..16]), .absent));
+
+    const rect_bytes = [_]u8{ 0, 0, 0, 0, 0, 0, 2, 0, 1, 0, 2, 0, 3, 0, 4, 0 };
+    const rect_text = try core.image.wmf_ext_text_out.parse(syntheticRecord(0x0a32, 11, &rect_bytes), .from_options);
+    try t.expectEqual(@as(i16, 1), rect_text.rectangle.?.left);
+    try t.expectEqual(@as(i16, 4), rect_text.rectangle.?.bottom);
+
+    var escape_bytes = [_]u8{ 15, 0, 3, 0, 1, 2, 3, 0xaa };
+    const escaped = try core.image.wmf_escape.parse(syntheticRecord(0x0626, 7, &escape_bytes));
+    try t.expectEqualSlices(u8, &.{ 1, 2, 3 }, escaped.data);
+    try t.expectEqual(@as(?u8, 0xaa), escaped.padding);
+    escape_bytes[2] = 5;
+    try t.expectError(error.InvalidWmfEscapeSize, core.image.wmf_escape.parse(syntheticRecord(0x0626, 7, &escape_bytes)));
 }
 
 test "public WMF drawing audit pins point counts XY and rectangle field order" {
