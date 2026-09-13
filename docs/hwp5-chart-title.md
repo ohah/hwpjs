@@ -47,4 +47,4 @@ Debug·ReleaseSafe·ReleaseFast 전체 audit가 각각 종료 코드 0으로 완
 
 뒤쪽 78바이트, 계열 raw106의 필드 의미, 표본 밖 버전·자동 배열 형태 선택, 전체 Chart 모델·렌더링·편집·저장은 미완료입니다. 이 단계의 성공을 전체 문서 파서 완료로 해석하지 않습니다.
 
-다음 후보를 읽기 전용으로 확인했습니다. 43개 모두 다음 inline ID가 기존 범위와 충돌하지 않고, VtList v1 → VtCollection v1 → raw word → VtObject v1까지 29바이트입니다. 이어 raw26을 보존하고 VtWindow v2 → VtObject v1 → raw word를 읽으면 23바이트를 소비하여 Contents 끝에 도달합니다. 두 word는 표본 모두 0입니다. 아직 잘림·참조·버전 변형 검증을 하지 않았으며, word의 개수 의미나 raw26의 소유 관계를 확정하지 않습니다.
+뒤쪽 78바이트의 후속 실측·적대적 검증과 Window 앞 4바이트의 미확정 ID 후보는 [List·Window 타입 구간 조사](hwp5-chart-tail-evidence.md)가 소유합니다. 조사 결과를 제품 지원 범위로 해석하지 않습니다.

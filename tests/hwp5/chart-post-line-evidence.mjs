@@ -1,3 +1,4 @@
+import {readCollectionFields} from './chart-collection-fields-evidence.mjs';
 // Selected raw span and known-type array header only. No Series body or
 // enclosing ownership/count inference; no marker scan or offset retry.
 export function observePostLine(bytes,offset,priorTypes,priorObjects){
@@ -8,6 +9,7 @@ export function observePostLine(bytes,offset,priorTypes,priorObjects){
  const type=name=>{references.push(p);const id=long(),d=types.get(id);if(d?.name!==name+'\0'||d.version!==1)throw Error('UnsupportedPostLineObservationType');return id;};
  const raw194=take(194).toString('hex'),baseOffset=p,baseTypeId=type('VtObject'),arrayStart=p,objectId=long();
  if(objectId===0xffffffff||objects.has(objectId))throw Error('UnsupportedPostLineObservationObject');objects.add(objectId);
- const arrayTypeId=type('VtArray'),firstOffset=p,first=word(),collectionTypeId=type('VtCollection'),secondOffset=p,second=word(),arrayBaseTypeId=type('VtObject');
+ const arrayTypeId=type('VtArray'),firstOffset=p,first=word();
+ const {typeId:collectionTypeId,wordOffset:secondOffset,word:second,baseTypeId:arrayBaseTypeId}=readCollectionFields({type,word,offset:()=>p});
  return {start:offset,raw194,baseOffset,baseTypeId,array:{start:arrayStart,id:objectId,typeId:arrayTypeId,firstOffset,first,collectionTypeId,secondOffset,second,baseTypeId:arrayBaseTypeId},end:p,references,types,objects};
 }
