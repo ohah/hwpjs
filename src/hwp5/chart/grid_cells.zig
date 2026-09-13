@@ -13,6 +13,8 @@ pub const Cell = struct {
     object_id: ?u32,
     start: usize,
     end: usize,
+    payload_start: ?usize,
+    payload_end: ?usize,
     value: values.Value,
 };
 pub const Grid = struct {
@@ -45,7 +47,7 @@ pub fn readObservedV6(a: std.mem.Allocator, bytes: []const u8, options: Options)
         const start = reader.offset;
         const id = try reader.readInt(u32);
         if (id == 0xffffffff) {
-            try cells.append(a, .{ .object_id = null, .start = start, .end = reader.offset, .value = .empty });
+            try cells.append(a, .{ .object_id = null, .start = start, .end = reader.offset, .payload_start = null, .payload_end = null, .value = .empty });
             continue;
         }
         // Repeated object references need a separate graph contract, not an
@@ -54,12 +56,18 @@ pub fn readObservedV6(a: std.mem.Allocator, bytes: []const u8, options: Options)
         if (object.found_existing) return error.UnsupportedChartObjectReference;
         const reference = try head.types.readObserved16(&reader);
         if (reference.declaration.version != 1) return error.UnsupportedChartTypeVersion;
+        const payload_start = reader.offset;
         const value = try value_objects.readBody(&reader, &head.types, reference.declaration.raw_name, @min(options.max_string_bytes, options.max_total_string_bytes - string_bytes));
+        const payload_end = payload_start + switch (value) {
+            .empty => 0,
+            .string => |string| string.bytes.len + 3,
+            .number => 10,
+        };
         switch (value) {
             .string => |s| string_bytes += s.bytes.len,
             else => {},
         }
-        try cells.append(a, .{ .object_id = id, .start = start, .end = reader.offset, .value = value });
+        try cells.append(a, .{ .object_id = id, .start = start, .end = reader.offset, .payload_start = payload_start, .payload_end = payload_end, .value = value });
     }
     return .{ .allocator = a, .prelude = head, .cells = try cells.toOwnedSlice(a), .string_bytes = string_bytes, .payload_offset = reader.offset };
 }

@@ -4,7 +4,7 @@
 
 `chart/value_block.zig`는 원시 u32와 VtValueBlock v1부터 선택 값, 선택 TextFormat, 원시 u16, 라벨 String, 원시 3바이트, TextBlock v2 기반 본문 끝까지 읽습니다. 앞선 배열의 다섯 null 슬롯과 이후 Axis 꼬리는 포함하지 않습니다. 배치 근거는 [값 블록 앞부분](hwp5-chart-value-prefix-evidence.md)과 [기반 본문 관측](hwp5-chart-value-text-evidence.md)입니다.
 
-원시 u32는 객체 ID로 등록하지 않습니다. 실제 연속 Axis에서 65536이 반복된 반례가 있으므로 0만 허용하지도 않습니다. 선택 값은 null/String/Double이며 공통 값 객체 사전으로 신규 정의와 기존 참조를 구분합니다. TextFormat·라벨·TextBlock은 각 공통 파서로 위임합니다. 숫자는 부동소수점 연산 없이 비트 그대로 유지하고, 원시 필드는 복사하며 String은 입력 버퍼를 빌립니다.
+원시 u32는 객체 ID로 등록하지 않습니다. 실제 연속 Axis에서 65536이 반복된 반례가 있으므로 0만 허용하지도 않습니다. 선택 값은 null/String/Double이며 공통 값 객체 사전으로 신규 정의와 기존 참조를 구분합니다. TextFormat·라벨·TextBlock은 각 공통 파서로 위임합니다. 숫자는 부동소수점 연산 없이 비트와 10바이트 payload span을 그대로 유지하고, 원시 필드는 복사하며 String은 입력 버퍼를 빌립니다. 실제 숫자 편집 계약은 [Double 선택 값 편집](hwp5-chart-number-edit.md)에 둡니다.
 
 필드 문자열 합계는 선택 String, 서식 코드, 라벨, 글꼴명, 본문 텍스트의 최대 다섯 필드를 계산합니다. 같은 String을 재참조하더라도 각 필드에서 다시 차감합니다. Double은 문자열 합계를 차감하지 않습니다. 객체 사전이 소유하는 고유 저장량 제한과는 별개입니다. 실패 시 Reader는 유지되지만 호출자는 타입·객체 사전을 폐기해야 합니다.
 

@@ -80,6 +80,8 @@ fn exercise(a: std.mem.Allocator) !void {
     const shared_inline_reference: core.hwp5.chart_object_table.Reference = .{ .value = value.prefix.footnote.block.font.name, .introduced = value.prefix.footnote.block.font.name_introduced, .start = value.prefix.footnote.block.font.name_start, .end = value.prefix.footnote.block.font.name_end };
     const shared_inline_forked = try core.hwp5.chart_contents_inline_fork.forkIntroduced(a, &value, &shared_inline_reference, 0xffffffee, "i", 9, bytes.len + 128);
     defer a.free(shared_inline_forked);
+    const number_replacement = try core.hwp5.chart_contents_number_edit.replacement(a, &value, &value.primary_axes[1].scale.?.value.reference.?, 1, 2);
+    defer a.free(number_replacement);
     const shared_mixed_forked = try core.hwp5.chart_contents_string_fork.forkMany(a, &value, &.{ .{ .inline_string = .{ .reference = shared_inline_reference, .new_object_id = 0xffffffed, .bytes = "j", .trailer = 10 } }, .{ .font_name = .{ .font = &value.primary_axes[0].title.font, .new_object_id = 0xffffffec, .bytes = "k", .trailer = 11 } } }, bytes.len + 160);
     defer a.free(shared_mixed_forked);
     const inline_reference: core.hwp5.chart_object_table.Reference = .{ .value = value.title.block.text.?, .introduced = value.title.block.text_introduced, .start = value.title.block.text_start, .end = value.title.block.text_end };
@@ -191,6 +193,22 @@ test "actual chart string reference inventory remains explicit" {
     try t.expectEqualSlices(usize, &.{ 13, 6, 6 }, &texts);
     try t.expectEqual(@as(usize, 3), missing_formats);
     try t.expectEqualSlices(usize, &.{ 6, 0, 0 }, &format_codes);
+    var number_count: usize = 0;
+    for (value.primary_axes, 0..) |axis, axis_index| if (axis.scale) |scale| if (scale.value.reference) |reference| switch (reference.value) {
+        .number => |number| {
+            try t.expect(axis_index == 1 or axis_index == 2);
+            try t.expect(reference.introduced);
+            var refs: usize = 0;
+            for (value.prefix.objects.references.items) |item| refs += @intFromBool(item.object_id == number.object_id);
+            try t.expectEqual(@as(usize, 1), refs);
+            try t.expectEqual(@as(usize, 10), number.payload_end - number.payload_start);
+            try t.expectEqual(number.bits, std.mem.readInt(u64, bytes[number.payload_start..][0..8], .little));
+            try t.expectEqual(number.trailer, std.mem.readInt(u16, bytes[number.payload_start + 8 ..][0..2], .little));
+            number_count += 1;
+        },
+        else => {},
+    };
+    try t.expectEqual(@as(usize, 2), number_count);
     const ReferenceCount = struct {
         fn of(objects: *const core.hwp5.chart_object_table.Table, object_id: u32) usize {
             var count: usize = 0;
@@ -376,6 +394,8 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
     try t.expectError(error.InvalidChartAxisIndex, core.hwp5.chart_edit_session.materializePrimaryAxisScaleFormat(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, layout.primary_axis_count, 0, "x", 0, edit_options));
     try t.expectError(error.MissingChartAxisScale, core.hwp5.chart_edit_session.materializePrimaryAxisScaleFormat(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 3, 0, "x", 0, edit_options));
     try t.expectError(error.InvalidChartAxisIndex, core.hwp5.chart_edit_session.forkInlinePrimaryAxisTitleText(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, layout.primary_axis_count, "x", 0, edit_options));
+    try t.expectError(error.InvalidChartAxisIndex, core.hwp5.chart_edit_session.replacePrimaryAxisScaleNumber(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, layout.primary_axis_count, 0, 0, edit_options));
+    try t.expectError(error.MissingChartAxisScale, core.hwp5.chart_edit_session.replacePrimaryAxisScaleNumber(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 3, 0, 0, edit_options));
     try t.expectError(error.InvalidChartPointIndex, core.hwp5.chart_edit_session.forkSeriesPointLabelFontName(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 0, value.series.items[0].section.points.len, "x", 0, edit_options));
     try t.expectError(error.InvalidChartSeriesIndex, core.hwp5.chart_edit_session.materializeSeriesPointLabelBodyText(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, layout.series_point_counts.len, 0, point_replacement, 0x77, edit_options));
     try t.expectError(error.InvalidChartPointIndex, core.hwp5.chart_edit_session.materializeSeriesPointLabelBodyText(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 0, value.series.items[0].section.points.len, point_replacement, 0x77, edit_options));
@@ -610,6 +630,26 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
         try t.expect(materialized.object_id != materialized.code.object_id);
     }
 
+    const number_commands = [_]core.hwp5.chart_edit_session.StringEdit{
+        .{ .primary_axis_scale_number = .{ .axis_index = 2, .bits = 0x7ff8000000001234, .trailer = 0xca02 } },
+        .{ .primary_axis_scale_number = .{ .axis_index = 1, .bits = 0x8000000000000000, .trailer = 0xca01 } },
+    };
+    const number_saved = try core.hwp5.chart_edit_session.applyStringEdits(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, &number_commands, edit_options);
+    defer t.allocator.free(number_saved);
+    var number_outer = try core.cfb.File.open(t.allocator, number_saved, .{ .strict = true });
+    defer number_outer.deinit();
+    const number_header = try core.hwp5.Header.parse(number_outer.entries[(try number_outer.findExact("/FileHeader")).?].content);
+    const number_inner = try core.hwp5.bin_data_stream.decode(t.allocator, &number_header, item, number_outer.entries[(try number_outer.findExact("/BinData/BIN0001.OLE")).?].content, 64 * 1024);
+    defer t.allocator.free(number_inner);
+    var number_ole = try core.cfb.File.open(t.allocator, number_inner, .{ .strict = true });
+    defer number_ole.deinit();
+    var number_chart = try contents.readObservedV6(t.allocator, number_ole.entries[(try number_ole.findExact("/Contents")).?].content, layout, .{});
+    defer number_chart.deinit();
+    try t.expectEqual(@as(u64, 0x8000000000000000), number_chart.primary_axes[1].scale.?.value.reference.?.value.number.bits);
+    try t.expectEqual(@as(u16, 0xca01), number_chart.primary_axes[1].scale.?.value.reference.?.value.number.trailer);
+    try t.expectEqual(@as(u64, 0x7ff8000000001234), number_chart.primary_axes[2].scale.?.value.reference.?.value.number.bits);
+    try t.expectEqual(@as(u16, 0xca02), number_chart.primary_axes[2].scale.?.value.reference.?.value.number.trailer);
+
     const inline_bytes = "inline-file-edit";
     const old_footnote_font = value.prefix.footnote.block.font.name;
     const old_legend_font = value.prefix.legend.font.name;
@@ -685,7 +725,7 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
     try t.expectEqualSlices(u8, all_fonts, mixed_chart.series.items[2].section.points[3].label.body.font.name.bytes);
 
     const all_texts = "all-non-inline-texts";
-    var complete_commands: [60]core.hwp5.chart_edit_session.StringEdit = undefined;
+    var complete_commands: [62]core.hwp5.chart_edit_session.StringEdit = undefined;
     var complete_at: usize = 0;
     @memcpy(complete_commands[complete_at..][0..inline_commands.len], &inline_commands);
     complete_at += inline_commands.len;
@@ -707,11 +747,13 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
     complete_at += format_commands.len;
     @memcpy(complete_commands[complete_at..][0..axis_format_commands.len], &axis_format_commands);
     complete_at += axis_format_commands.len;
+    @memcpy(complete_commands[complete_at..][0..number_commands.len], &number_commands);
+    complete_at += number_commands.len;
     try t.expectEqual(complete_commands.len, complete_at);
     var complete_options = edit_options;
     complete_options.max_edits = complete_commands.len;
     complete_options.max_edited_contents_bytes = bytes.len + complete_commands.len * 160;
-    const complete_saved = try core.hwp5.chart_edit_session.applyStringEdits(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, &complete_commands, complete_options);
+    const complete_saved = try core.hwp5.chart_edit_session.applyEdits(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, &complete_commands, complete_options);
     defer t.allocator.free(complete_saved);
     var complete_outer = try core.cfb.File.open(t.allocator, complete_saved, .{ .strict = true });
     defer complete_outer.deinit();
@@ -732,6 +774,8 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
         try t.expectEqualSlices(u8, all_fonts, axis.title.font.name.bytes);
         try t.expectEqualSlices(u8, inline_bytes, axis.title.text.bytes);
         if (axis_index < 3) try t.expectEqualSlices(u8, axis_format_bytes, axis.scale.?.value.format.?.code.bytes);
+        if (axis_index == 1) try t.expectEqual(@as(u64, 0x8000000000000000), axis.scale.?.value.reference.?.value.number.bits);
+        if (axis_index == 2) try t.expectEqual(@as(u64, 0x7ff8000000001234), axis.scale.?.value.reference.?.value.number.bits);
     }
     for (complete_chart.series.items) |series| {
         try t.expectEqualSlices(u8, all_fonts, series.section.label.body.font.name.bytes);
@@ -1051,6 +1095,32 @@ test "actual Contents null TextFormat materialization validation" {
     try t.expectError(error.DuplicateChartTypeId, core.hwp5.chart_contents_string_fork.forkMany(t.allocator, &value, &.{ .{ .null_text_format_object = .{ .block = block, .format_object_id = 0xfffffff0, .code_object_id = 0xffffffef, .format_type_id = 0xffffffee, .raw_word = 1, .bytes = "x", .trailer = 0 } }, .{ .null_text_format_object = .{ .block = &value.primary_axes[1].scale.?.value, .format_object_id = 0xffffffed, .code_object_id = 0xffffffec, .format_type_id = 0xffffffee, .raw_word = 2, .bytes = "y", .trailer = 1 } } }, bytes.len + 128));
     bytes[block.format_start] ^= 1;
     try t.expectError(error.InvalidChartFormatSpan, core.hwp5.chart_format_materialize.replacement(t.allocator, &value, block, 0xfffffff0, 0xffffffef, 0xffffffee, 1, "x", 0));
+}
+test "actual Contents Double payload edit is fixed-width and validated" {
+    var bytes = try decode();
+    var value = try contents.readObservedV6(t.allocator, &bytes, layout, .{});
+    defer value.deinit();
+    const reference = &value.primary_axes[1].scale.?.value.reference.?;
+    const original_id = reference.value.number.object_id;
+    const edited = try core.hwp5.chart_contents_string_fork.forkMany(t.allocator, &value, &.{.{ .number_payload = .{ .reference = reference, .bits = 0xffffffffffffffff, .trailer = 0xa55a } }}, bytes.len);
+    defer t.allocator.free(edited);
+    try t.expectEqual(bytes.len, edited.len);
+    var reparsed = try contents.readObservedV6(t.allocator, edited, layout, .{});
+    defer reparsed.deinit();
+    const changed = reparsed.primary_axes[1].scale.?.value.reference.?.value.number;
+    try t.expectEqual(original_id, changed.object_id);
+    try t.expectEqual(@as(u64, 0xffffffffffffffff), changed.bits);
+    try t.expectEqual(@as(u16, 0xa55a), changed.trailer);
+    try t.expectError(error.OverlappingChartPatches, core.hwp5.chart_contents_string_fork.forkMany(t.allocator, &value, &.{ .{ .number_payload = .{ .reference = reference, .bits = 1, .trailer = 2 } }, .{ .number_payload = .{ .reference = reference, .bits = 3, .trailer = 4 } } }, bytes.len));
+    const font = value.primary_axes[0].title.font;
+    const string_reference: core.hwp5.chart_object_table.ValueReference = .{ .value = .{ .string = font.name }, .introduced = font.name_introduced, .start = font.name_start, .end = font.name_end };
+    try t.expectError(error.ExpectedChartNumber, core.hwp5.chart_contents_number_edit.replacement(t.allocator, &value, &string_reference, 0, 0));
+    const number = reference.value.number;
+    try core.hwp5.chart_contents_number_edit.requireUniqueReference(&value.prefix.objects, number.object_id);
+    try value.prefix.objects.references.append(t.allocator, .{ .object_id = number.object_id, .introduced = false, .start = reference.start, .end = reference.start + 4 });
+    try t.expectError(error.SharedChartNumberObject, core.hwp5.chart_contents_number_edit.requireUniqueReference(&value.prefix.objects, number.object_id));
+    bytes[number.payload_start] ^= 1;
+    try t.expectError(error.InvalidChartNumberSource, core.hwp5.chart_contents_number_edit.replacement(t.allocator, &value, reference, 0, 0));
 }
 test "actual Contents String ValueReference forks and rejects Number" {
     const bytes = try decode();

@@ -7,7 +7,7 @@ const Footnote = @import("footnote.zig").Footnote;
 pub fn register(objects: *Objects, grid: Grid, backdrop: Backdrop, footnote: Footnote) !void {
     for (grid.cells) |cell| switch (cell.value) {
         .empty => {},
-        .number => |n| try objects.registerInitialNumber(.{ .object_id = cell.object_id.?, .bits = n.bits, .trailer = n.trailer }, cell.start, cell.end),
+        .number => |n| try objects.registerInitialNumber(.{ .object_id = cell.object_id.?, .bits = n.bits, .trailer = n.trailer, .payload_start = cell.payload_start.?, .payload_end = cell.payload_end.? }, cell.start, cell.end),
         .string => |s| try objects.registerInitialString(.{ .object_id = cell.object_id.?, .bytes = s.bytes, .trailer = s.trailer }, cell.start, cell.end),
     };
     for (backdrop.object_ids) |id| try objects.registerOther(id);

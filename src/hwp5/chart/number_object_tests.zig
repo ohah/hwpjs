@@ -27,6 +27,8 @@ fn exercise(a: std.mem.Allocator, bits: u64) !void {
     try t.expectEqual(bits, ref.value.number.bits);
     try t.expectEqual(@as(u16, 0xaa55), ref.value.number.trailer);
     try t.expectEqual(@as(u32, 90), ref.value.number.object_id);
+    try t.expectEqual(@as(usize, 22), ref.value.number.payload_start);
+    try t.expectEqual(@as(usize, 32), ref.value.number.payload_end);
     try t.expect(ref.introduced);
     try t.expectEqual(@as(usize, 1), ref.start);
     try t.expectEqual(bytes.len, ref.end);
@@ -36,6 +38,8 @@ fn exercise(a: std.mem.Allocator, bits: u64) !void {
         const known = try objects.readValueObservedV1(&reader, &types, 0);
         try t.expect(!known.introduced);
         try t.expectEqual(bits, known.value.number.bits);
+        try t.expectEqual(ref.value.number.payload_start, known.value.number.payload_start);
+        try t.expectEqual(ref.value.number.payload_end, known.value.number.payload_end);
         try t.expectEqual(@as(usize, 5), reader.offset);
         try t.expectEqual(@as(u32, 2), objects.entries.count());
         try t.expectEqual(@as(usize, 0), objects.string_bytes);

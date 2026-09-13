@@ -5,7 +5,7 @@ const requireType = @import("type_checks.zig").require;
 const payloads = @import("cell_value.zig");
 const ids = @import("object_ids.zig");
 pub const String = struct { object_id: u32, bytes: []const u8, trailer: u8 };
-pub const Number = struct { object_id: u32, bits: u64, trailer: u16 };
+pub const Number = struct { object_id: u32, bits: u64, trailer: u16, payload_start: usize = 0, payload_end: usize = 0 };
 pub const Value = union(enum) { string: String, number: Number };
 
 /// Shared payload and base references after the caller has checked the type.
@@ -33,10 +33,11 @@ fn read(reader: *Reader, table: *Table, max_bytes: usize, allow_number: bool) !V
     const name = ref.declaration.raw_name;
     if (!std.mem.eql(u8, name, "VtString\x00") and !(allow_number and std.mem.eql(u8, name, "VtDouble\x00"))) return error.UnsupportedChartClass;
     if (ref.declaration.version != 1) return error.UnsupportedChartTypeVersion;
+    const payload_start = next.offset;
     const payload = try readBody(&next, table, name, max_bytes);
     const value: Value = switch (payload) {
         .string => |s| .{ .string = .{ .object_id = id, .bytes = s.bytes, .trailer = s.trailer } },
-        .number => |n| .{ .number = .{ .object_id = id, .bits = n.bits, .trailer = n.trailer } },
+        .number => |n| .{ .number = .{ .object_id = id, .bits = n.bits, .trailer = n.trailer, .payload_start = payload_start, .payload_end = payload_start + 10 } },
         .empty => unreachable,
     };
     reader.* = next;

@@ -10,6 +10,7 @@ const NullableTextBlock = @import("../chart/text_block.zig").NullableBlock;
 const NullableTextFormat = @import("../chart/text_format.zig").NullableFormat;
 const ValueBlock = @import("../chart/value_block.zig").Block;
 const ObjectReference = @import("../chart/object_table.zig").Reference;
+const ObjectValueReference = @import("../chart/object_table.zig").ValueReference;
 const paths = @import("paths.zig");
 
 pub const Options = struct {
@@ -43,6 +44,10 @@ pub fn forkInlinePrimaryAxisTitleText(a: std.mem.Allocator, hwp: []const u8, ord
 
 pub fn forkInlineRootTitleText(a: std.mem.Allocator, hwp: []const u8, ordinal: usize, storage_layout: StorageLayout, ole_layout: @import("../ole/envelope.zig").Layout, chart_layout: ChartLayout, bytes: []const u8, trailer: u8, options: Options) ![]u8 {
     return applyStringEdits(a, hwp, ordinal, storage_layout, ole_layout, chart_layout, &.{.{ .inline_root_title_text = .{ .bytes = bytes, .trailer = trailer } }}, options);
+}
+
+pub fn replacePrimaryAxisScaleNumber(a: std.mem.Allocator, hwp: []const u8, ordinal: usize, storage_layout: StorageLayout, ole_layout: @import("../ole/envelope.zig").Layout, chart_layout: ChartLayout, axis_index: usize, bits: u64, trailer: u16, options: Options) ![]u8 {
+    return applyStringEdits(a, hwp, ordinal, storage_layout, ole_layout, chart_layout, &.{.{ .primary_axis_scale_number = .{ .axis_index = axis_index, .bits = bits, .trailer = trailer } }}, options);
 }
 
 /// Forks one primary-axis title Font name in an observed chart Contents and
@@ -93,7 +98,7 @@ pub fn materializePrimaryAxisScaleFormat(a: std.mem.Allocator, hwp: []const u8, 
     return applyStringEdits(a, hwp, ordinal, storage_layout, ole_layout, chart_layout, &.{.{ .null_primary_axis_scale_format = .{ .axis_index = axis_index, .raw_word = raw_word, .bytes = code, .trailer = trailer } }}, options);
 }
 
-pub const StringEdit = union(enum) {
+pub const Edit = union(enum) {
     inline_footnote_font_name: struct { bytes: []const u8, trailer: u8 },
     inline_legend_font_name: struct { bytes: []const u8, trailer: u8 },
     inline_root_title_font_name: struct { bytes: []const u8, trailer: u8 },
@@ -111,7 +116,12 @@ pub const StringEdit = union(enum) {
     series_suffix_text: struct { series_index: usize, bytes: []const u8, trailer: u8 },
     null_series_suffix_format_code: struct { series_index: usize, format_index: usize, bytes: []const u8, trailer: u8 },
     null_primary_axis_scale_format: struct { axis_index: usize, raw_word: u16, bytes: []const u8, trailer: u8 },
+    primary_axis_scale_number: struct { axis_index: usize, bits: u64, trailer: u16 },
 };
+
+/// Backward-compatible name retained for callers created before non-string
+/// chart values became editable.
+pub const StringEdit = Edit;
 
 const Resolved = union(enum) {
     inline_string: struct { value: ObjectReference, bytes: []const u8, trailer: u8 },
@@ -122,19 +132,26 @@ const Resolved = union(enum) {
     null_nullable_text_block: struct { value: *const NullableTextBlock, bytes: []const u8, trailer: u8 },
     null_nullable_text_format: struct { value: *const NullableTextFormat, bytes: []const u8, trailer: u8 },
     null_text_format_object: struct { value: *const ValueBlock, raw_word: u16, bytes: []const u8, trailer: u8 },
+    number_payload: struct { value: *const ObjectValueReference, bits: u64, trailer: u16 },
 };
-pub const Command = StringEdit;
+pub const Command = Edit;
 
 pub const ChartCommand = struct {
     ordinal: usize,
     ole_layout: @import("../ole/envelope.zig").Layout,
     chart_layout: ChartLayout,
-    edits: []const StringEdit,
+    edits: []const Edit,
 };
 
-/// Applies multiple typed String forks to one parsed Contents and commits once.
-pub fn applyStringEdits(a: std.mem.Allocator, hwp: []const u8, ordinal: usize, storage_layout: StorageLayout, ole_layout: @import("../ole/envelope.zig").Layout, chart_layout: ChartLayout, commands: []const Command, options: Options) ![]u8 {
+/// Applies multiple typed chart edits to one parsed Contents and commits once.
+pub fn applyEdits(a: std.mem.Allocator, hwp: []const u8, ordinal: usize, storage_layout: StorageLayout, ole_layout: @import("../ole/envelope.zig").Layout, chart_layout: ChartLayout, commands: []const Command, options: Options) ![]u8 {
     return applyCharts(a, hwp, &.{.{ .ordinal = ordinal, .ole_layout = ole_layout, .chart_layout = chart_layout, .edits = commands }}, storage_layout, options);
+}
+
+/// Backward-compatible entry point retained for callers created before
+/// non-string chart values became editable.
+pub fn applyStringEdits(a: std.mem.Allocator, hwp: []const u8, ordinal: usize, storage_layout: StorageLayout, ole_layout: @import("../ole/envelope.zig").Layout, chart_layout: ChartLayout, commands: []const Command, options: Options) ![]u8 {
+    return applyEdits(a, hwp, ordinal, storage_layout, ole_layout, chart_layout, commands, options);
 }
 
 /// Applies typed edits to multiple chart BinData records and commits the outer
@@ -195,7 +212,7 @@ pub fn applyCharts(a: std.mem.Allocator, hwp: []const u8, commands: []const Char
     return ole_session.apply(a, hwp, ole_commands, storage_layout, options.file);
 }
 
-fn editOleContents(a: std.mem.Allocator, decoded: []const u8, ole_layout: @import("../ole/envelope.zig").Layout, chart_layout: ChartLayout, commands: []const StringEdit, max_output_bytes: usize, options: Options) ![]u8 {
+fn editOleContents(a: std.mem.Allocator, decoded: []const u8, ole_layout: @import("../ole/envelope.zig").Layout, chart_layout: ChartLayout, commands: []const Edit, max_output_bytes: usize, options: Options) ![]u8 {
     var ole = try @import("../ole/container.zig").open(a, decoded, ole_layout, options.file.ole.limits);
     defer ole.deinit();
     const contents_index = try ole.findExact("/Contents") orelse return error.StreamNotFound;
@@ -205,7 +222,7 @@ fn editOleContents(a: std.mem.Allocator, decoded: []const u8, ole_layout: @impor
     return editContents(a, source, chart_layout, commands, max_output_bytes, options);
 }
 
-fn editContents(a: std.mem.Allocator, source: []const u8, chart_layout: ChartLayout, commands: []const StringEdit, max_output_bytes: usize, options: Options) ![]u8 {
+fn editContents(a: std.mem.Allocator, source: []const u8, chart_layout: ChartLayout, commands: []const Edit, max_output_bytes: usize, options: Options) ![]u8 {
     var chart = try @import("../chart/observed_contents.zig").readObservedV6(a, source, chart_layout, options.chart);
     defer chart.deinit();
     const fork = @import("../chart/contents_string_fork.zig");
@@ -225,6 +242,10 @@ fn editContents(a: std.mem.Allocator, source: []const u8, chart_layout: ChartLay
         item.* = try resolve(&chart, command);
         switch (item.*) {
             .inline_string => |target| starts[i] = target.value.start,
+            .number_payload => |target| starts[i] = switch (target.value.value) {
+                .number => |number| number.payload_start,
+                else => target.value.start,
+            },
             .font => |target| {
                 starts[i] = target.value.name_start;
                 forbidden[reserved] = target.value.object_id;
@@ -257,6 +278,11 @@ fn editContents(a: std.mem.Allocator, source: []const u8, chart_layout: ChartLay
             std.mem.swap(usize, &order[at], &order[at - 1]);
     }
     for (order, 0..) |i, request_at| {
+        if (resolved[i] == .number_payload) {
+            const target = resolved[i].number_payload;
+            requests[request_at] = .{ .number_payload = .{ .reference = target.value, .bits = target.bits, .trailer = target.trailer } };
+            continue;
+        }
         if (resolved[i] == .null_text_format_object) {
             const target = resolved[i].null_text_format_object;
             const format_id = try @import("../chart/object_id_allocator.zig").findLowestAvailable(&chart.prefix.objects, forbidden[0..reserved]);
@@ -281,6 +307,7 @@ fn editContents(a: std.mem.Allocator, source: []const u8, chart_layout: ChartLay
             .null_nullable_text_block => |target| .{ .null_nullable_text_block = .{ .block = target.value, .new_object_id = new_id, .bytes = target.bytes, .trailer = target.trailer } },
             .null_nullable_text_format => |target| .{ .null_nullable_text_format = .{ .format = target.value, .new_object_id = new_id, .bytes = target.bytes, .trailer = target.trailer } },
             .null_text_format_object => unreachable,
+            .number_payload => unreachable,
         };
     }
     return fork.forkMany(a, &chart, requests, max_output_bytes);
@@ -301,7 +328,7 @@ fn findLowestTypeId(types: *const @import("../chart/type_table.zig").Table, prev
     return error.LimitExceeded;
 }
 
-fn resolve(chart: *const ChartContents, command: StringEdit) !Resolved {
+fn resolve(chart: *const ChartContents, command: Edit) !Resolved {
     return switch (command) {
         .inline_footnote_font_name => |item| .{ .inline_string = .{ .value = fontReference(&chart.prefix.footnote.block.font), .bytes = item.bytes, .trailer = item.trailer } },
         .inline_legend_font_name => |item| .{ .inline_string = .{ .value = fontReference(&chart.prefix.legend.font), .bytes = item.bytes, .trailer = item.trailer } },
@@ -361,6 +388,19 @@ fn resolve(chart: *const ChartContents, command: StringEdit) !Resolved {
             if (chart.primary_axes[item.axis_index].scale == null) return error.MissingChartAxisScale;
             const scale = &chart.primary_axes[item.axis_index].scale.?;
             break :blk .{ .null_text_format_object = .{ .value = &scale.value, .raw_word = item.raw_word, .bytes = item.bytes, .trailer = item.trailer } };
+        },
+        .primary_axis_scale_number => |item| blk: {
+            if (item.axis_index >= chart.primary_axes.len) return error.InvalidChartAxisIndex;
+            if (chart.primary_axes[item.axis_index].scale == null) return error.MissingChartAxisScale;
+            const value = &chart.primary_axes[item.axis_index].scale.?.value;
+            if (value.reference == null) return error.MissingChartAxisScaleValue;
+            const reference = &value.reference.?;
+            const number = switch (reference.value) {
+                .number => |number| number,
+                else => return error.ExpectedChartNumber,
+            };
+            try @import("../chart/contents_number_edit.zig").requireUniqueReference(&chart.prefix.objects, number.object_id);
+            break :blk .{ .number_payload = .{ .value = reference, .bits = item.bits, .trailer = item.trailer } };
         },
     };
 }

@@ -80,6 +80,9 @@ fn success(a: std.mem.Allocator, f: Fixture) !void {
     try t.expectEqualSlices(u8, &.{ 0x20, 0, 0, 0, 0x30, 0, 0, 0xff }, value.cells[1].value.string.bytes);
     try t.expectEqual(@as(u64, 0x7ff8000000001234), value.cells[3].value.number.bits);
     try t.expectEqual(@as(u16, 0x1234), value.cells[3].value.number.trailer);
+    try t.expectEqual(@as(usize, 10), value.cells[3].payload_end.? - value.cells[3].payload_start.?);
+    try t.expectEqual(@as(u64, 0x7ff8000000001234), std.mem.readInt(u64, f.bytes[value.cells[3].payload_start.?..][0..8], .little));
+    try t.expectEqual(@as(u16, 0x1234), std.mem.readInt(u16, f.bytes[value.cells[3].payload_start.? + 8 ..][0..2], .little));
     try t.expectEqualStrings(" \x00 ", value.cells[4].value.string.bytes);
     try t.expect(value.cells[4].value.string.bytes.ptr == f.bytes[f.starts[4] + 10 ..].ptr);
 }
