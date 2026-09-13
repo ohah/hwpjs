@@ -232,13 +232,11 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
     const target = &value.primary_axes[0].title.font;
     const new_id = try core.hwp5.chart_object_id_allocator.findLowestAvailable(&value.prefix.objects, &.{target.object_id});
     const replacement = "outer-saved-axis-font";
-    const forked = try core.hwp5.chart_contents_string_fork.forkFontName(t.allocator, &value, target, new_id, replacement, 0x55, bytes.len + replacement.len + 15);
-    defer t.allocator.free(forked);
 
     const inner = try core.cfb.writer.write(t.allocator, &.{ .{ .name = "Root Entry", .kind = 5 }, .{ .name = "Contents", .parent = 0, .content = &bytes }, .{ .name = "Unknown", .parent = 0, .content = "inner-preserved" } }, .{ .version = 4 });
     defer t.allocator.free(inner);
-    const saved_inner = try core.hwp5.ole_stream_replace.replaceExact(t.allocator, inner, .raw_cfb, "/Contents", forked, .{ .max_output_bytes = inner.len + forked.len });
-    defer t.allocator.free(saved_inner);
+    const stored_inner = try core.raw_deflate.encodeStored(t.allocator, inner, inner.len + 16);
+    defer t.allocator.free(stored_inner);
 
     var header = [_]u8{0} ** 256;
     @memcpy(header[0..17], "HWP Document File");
@@ -256,12 +254,21 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
         .{ .name = "FileHeader", .parent = 0, .content = &header },
         .{ .name = "DocInfo", .parent = 0, .content = stored_doc_info },
         .{ .name = "BinData", .kind = 1, .parent = 0 },
-        .{ .name = "BIN0001.OLE", .parent = 3, .content = "old" },
+        .{ .name = "BIN0001.OLE", .parent = 3, .content = stored_inner },
         .{ .name = "Sibling", .parent = 0, .content = "outer-preserved" },
     }, .{ .version = 3 });
     defer t.allocator.free(outer);
     const item: core.hwp5.docinfo.BinData = .{ .attributes = 2, .data = .{ .storage = 1 }, .extra = &.{ 3, 0, 'O', 0, 'L', 0, 'E', 0 } };
-    const saved_outer = try core.hwp5.bin_data_replace.replaceDecodedAt(t.allocator, outer, 1, .observed_optional_extension, saved_inner, .{ .max_doc_info_bytes = 96, .max_encoded_bytes = saved_inner.len + 16, .max_output_bytes = outer.len + saved_inner.len + 4096 });
+    const edit_options: core.hwp5.chart_edit_session.Options = .{ .file = .{ .bin_data = .{ .max_doc_info_bytes = 96, .max_encoded_bytes = 64 * 1024, .max_total_encoded_bytes = 64 * 1024, .max_output_bytes = 128 * 1024 }, .ole = .{ .max_output_bytes = 64 * 1024 }, .max_decoded_bin_data_bytes = 64 * 1024, .max_total_decoded_bin_data_bytes = 64 * 1024, .max_total_edited_ole_bytes = 64 * 1024 }, .max_contents_bytes = bytes.len, .max_edited_contents_bytes = bytes.len + replacement.len + 15 };
+    try t.expectError(error.InvalidChartAxisIndex, core.hwp5.chart_edit_session.forkPrimaryAxisTitleFontName(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, layout.primary_axis_count, replacement, 0x55, edit_options));
+    var low_source = edit_options;
+    low_source.max_contents_bytes = bytes.len - 1;
+    try t.expectError(error.LimitExceeded, core.hwp5.chart_edit_session.forkPrimaryAxisTitleFontName(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 0, replacement, 0x55, low_source));
+    var low_output = edit_options;
+    low_output.max_edited_contents_bytes = bytes.len;
+    try t.expectError(error.LimitExceeded, core.hwp5.chart_edit_session.forkPrimaryAxisTitleFontName(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 0, replacement, 0x55, low_output));
+    try t.expectError(error.InvalidOleEnvelopeSize, core.hwp5.chart_edit_session.forkPrimaryAxisTitleFontName(t.allocator, outer, 1, .observed_optional_extension, .observed_size_prefix, layout, 0, replacement, 0x55, edit_options));
+    const saved_outer = try core.hwp5.chart_edit_session.forkPrimaryAxisTitleFontName(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 0, replacement, 0x55, edit_options);
     defer t.allocator.free(saved_outer);
 
     var outer_file = try core.cfb.File.open(t.allocator, saved_outer, .{ .strict = true });
@@ -271,8 +278,8 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
     const parsed_header = try core.hwp5.Header.parse(outer_file.entries[(try outer_file.findExact("/FileHeader")).?].content);
     const stored = outer_file.entries[(try outer_file.findExact("/BinData/BIN0001.OLE")).?].content;
     try t.expect(parsed_header.has(.compressed));
-    try t.expect(!std.mem.eql(u8, stored, saved_inner));
-    const decoded_inner = try core.hwp5.bin_data_stream.decode(t.allocator, &parsed_header, item, stored, saved_inner.len);
+    try t.expect(!std.mem.eql(u8, stored, inner));
+    const decoded_inner = try core.hwp5.bin_data_stream.decode(t.allocator, &parsed_header, item, stored, 64 * 1024);
     defer t.allocator.free(decoded_inner);
     var inner_file = try core.cfb.File.open(t.allocator, decoded_inner, .{ .strict = true });
     defer inner_file.deinit();

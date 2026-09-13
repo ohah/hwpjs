@@ -1,0 +1,21 @@
+# HWP5 실제 차트 파일 편집
+
+## typed 계약
+
+`src/hwp5/container/chart_edit_session.zig`의 `forkPrimaryAxisTitleFontName`은 HWP 파일에서 실제 DocInfo `BinData` 순번 하나를 선택하고, 해당 OLE의 루트 `/Contents`를 명시된 observed chart layout으로 파싱한 뒤 지정한 primary-axis title Font의 이름 alias를 독립 String object로 분리합니다. caller는 1-based DocInfo 순번·storage 배치·OLE envelope 배치·차트 구조 count·axis index·새 UTF-8 bytes와 trailer만 지정합니다. 물리 storage ID, CFB 경로와 새 chart object ID는 API가 실제 파일에서 유도합니다.
+
+새 ID는 기존 chart object table과 enclosing Font ID를 기준으로 `chart_object_id_allocator.findLowestAvailable`이 선택합니다. 실제 String fork와 Contents extent 갱신은 기존 `chart_contents_string_fork`가 소유합니다. 결과 Contents는 [파일 단위 OLE 편집 세션](hwp5-ole-edit-session.md)의 `/Contents` replacement 하나로 전달되며, 내부 OLE와 바깥 HWP의 원자적 저장 규칙을 그대로 사용합니다.
+
+차트 adapter는 의미 편집 전에 같은 불변 HWP의 Header·DocInfo·BinData·내부 OLE·Contents를 직접 검증합니다. 하위 OLE 세션과 HWP batch의 재검증은 방어 계층이며 별도 경로 추측이나 object ID 상태를 만들지 않습니다. `max_contents_bytes`는 원본 Contents, `max_edited_contents_bytes`는 fork 결과를 제한하고 하위 세션의 decoded/OLE/encoded/최종 HWP 한도도 모두 적용됩니다.
+
+## 실제 검증
+
+SHA-256가 고정된 9,876바이트 실제 Contents를 내부 CFB v4에 넣고, 이를 유효한 압축 DocInfo와 raw-DEFLATE OLE BinData를 가진 바깥 HWP CFB v3에 연결합니다. typed API로 primary axis 0의 title Font 이름을 수정한 뒤 최종 HWP·BinData 압축·내부 OLE·Contents를 모두 다시 열어 새 최저 object ID, UTF-8 bytes, trailer, 양쪽 CFB version과 내부·외부 형제 stream 보존을 확인합니다.
+
+axis 범위 밖, 원본 Contents 한도, 편집 Contents 한도와 잘못 선택한 size-prefix envelope는 typed API 경계에서 정확한 오류로 거부합니다. 실제 fixture의 초기 BinData도 FileHeader 기본 압축 정책과 일치하는 raw DEFLATE로 저장해 합성 전제 불일치를 허용하지 않습니다.
+
+적대적 검증은 축 index 이동, BinData 순번 이동, `/Contents` 대신 형제 stream 선택, 기존 Font ID 재사용, 편집 전 Contents 저장의 다섯 결함을 각각 주입했습니다. `Debug`, `ReleaseSafe`, `ReleaseFast`의 총 15회에서 모두 실제 파일 round-trip 검사가 결함을 검출했으며, 컴파일 실패는 통과로 세지 않았습니다.
+
+## 남은 범위
+
+현재 typed 대상은 observed V6 차트의 primary-axis title Font name alias 하나입니다. 이미 inline인 이름, 다른 Font 위치, TextBlock·TextFormat·series label, 같은 차트의 여러 의미 변경과 여러 차트의 typed batch는 각 기존 writer를 이 계층에 추가 연결해야 합니다. chart layout은 opaque wire 값에서 추측하지 않으며 caller가 신뢰할 수 있는 구조 count를 명시해야 합니다. 차트 렌더링·수식 재계산·한글 프로그램과의 시각 동일성은 이 저장 성공으로 증명되지 않습니다.

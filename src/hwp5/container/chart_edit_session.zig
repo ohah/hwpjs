@@ -1,0 +1,52 @@
+const std = @import("std");
+const cfb = @import("../../cfb/reader.zig");
+const ole_session = @import("ole_edit_session.zig");
+const StorageLayout = @import("../docinfo/bin_data.zig").StorageLayout;
+const ChartLayout = @import("../chart/observed_contents.zig").Layout;
+const paths = @import("paths.zig");
+
+pub const Options = struct {
+    file: ole_session.Options = .{},
+    chart: @import("../chart/observed_contents.zig").Options = .{},
+    max_contents_bytes: usize = 64 * 1024 * 1024,
+    max_edited_contents_bytes: usize = 64 * 1024 * 1024,
+};
+
+/// Forks one primary-axis title Font name in an observed chart Contents and
+/// commits it through the OLE and outer HWP atomic edit layers.
+pub fn forkPrimaryAxisTitleFontName(a: std.mem.Allocator, hwp: []const u8, ordinal: usize, storage_layout: StorageLayout, ole_layout: @import("../ole/envelope.zig").Layout, chart_layout: ChartLayout, axis_index: usize, new_name: []const u8, trailer: u8, options: Options) ![]u8 {
+    var read_options = options.file.bin_data.cfb;
+    read_options.strict = true;
+    var file = try cfb.File.open(a, hwp, read_options);
+    defer file.deinit();
+    const header_index = try paths.required(&file, "/FileHeader", 2);
+    const header = try @import("../file_header.zig").Header.parse(file.entries[header_index].content);
+    const doc_info_index = try paths.required(&file, "/DocInfo", 2);
+    const doc_info = try @import("../stream.zig").decodeWithPolicy(a, &header, file.entries[doc_info_index].content, options.file.bin_data.max_doc_info_bytes, options.file.bin_data.distribution);
+    defer a.free(doc_info);
+    const selection = try @import("../docinfo/resources.zig").inspectBinDataOrdinal(doc_info, header.version(), options.file.bin_data.framing, ordinal);
+    try selection.resources.validateKnownCounts();
+    const target = (try selection.item.target(storage_layout)) orelse return error.UnsupportedBinDataType;
+    const path = try paths.binary(a, target.id, target.extension_utf16 orelse &.{});
+    const stream_index = paths.required(&file, path, 2) catch |err| {
+        a.free(path);
+        return err;
+    };
+    a.free(path);
+    const decoded = try @import("../bin_data_stream.zig").decodeWithPolicy(a, &header, selection.item, file.entries[stream_index].content, @min(options.file.max_decoded_bin_data_bytes, options.file.max_total_decoded_bin_data_bytes), options.file.bin_data.distribution);
+    defer a.free(decoded);
+    var ole = try @import("../ole/container.zig").open(a, decoded, ole_layout, options.file.ole.limits);
+    defer ole.deinit();
+    const contents_index = try ole.findExact("/Contents") orelse return error.StreamNotFound;
+    if (ole.entries[contents_index].kind != 2) return error.NotAStream;
+    const source = ole.entries[contents_index].content;
+    if (source.len > options.max_contents_bytes) return error.LimitExceeded;
+    var chart = try @import("../chart/observed_contents.zig").readObservedV6(a, source, chart_layout, options.chart);
+    defer chart.deinit();
+    if (axis_index >= chart.primary_axes.len) return error.InvalidChartAxisIndex;
+    const font = &chart.primary_axes[axis_index].title.font;
+    const new_id = try @import("../chart/object_id_allocator.zig").findLowestAvailable(&chart.prefix.objects, &.{font.object_id});
+    const edited = try @import("../chart/contents_string_fork.zig").forkFontName(a, &chart, font, new_id, new_name, trailer, options.max_edited_contents_bytes);
+    defer a.free(edited);
+    return ole_session.apply(a, hwp, &.{.{ .ordinal = ordinal, .layout = ole_layout, .replacements = &.{.{ .path = "/Contents", .content = edited }} }}, storage_layout, options.file);
+}

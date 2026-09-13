@@ -155,3 +155,4 @@ pub const page_visibility_validation = @import("body/page_visibility_validation.
 pub const bin_data_stream = @import("bin_data_stream.zig");
 pub const bin_data_replace = @import("container/bin_data_replace.zig");
 pub const ole_edit_session = @import("container/ole_edit_session.zig");
+pub const chart_edit_session = @import("container/chart_edit_session.zig");
