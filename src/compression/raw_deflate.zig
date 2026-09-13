@@ -1,5 +1,32 @@
 const std = @import("std");
 
+/// Encodes one raw RFC1951 stream using only stored blocks. This deliberately
+/// provides deterministic compatibility rather than compression ratio.
+/// The caller owns the result and no allocation occurs above max_output.
+pub fn encodeStored(a: std.mem.Allocator, bytes: []const u8, max_output: usize) ![]u8 {
+    const max_block = std.math.maxInt(u16);
+    const blocks = if (bytes.len == 0) @as(usize, 1) else (bytes.len - 1) / max_block + 1;
+    const overhead = try std.math.mul(usize, blocks, 5);
+    const size = try std.math.add(usize, bytes.len, overhead);
+    if (size > max_output) return error.LimitExceeded;
+    const out = try a.alloc(u8, size);
+    errdefer a.free(out);
+    var input_offset: usize = 0;
+    var output_offset: usize = 0;
+    for (0..blocks) |i| {
+        const len: u16 = @intCast(@min(bytes.len - input_offset, max_block));
+        out[output_offset] = if (i + 1 == blocks) 1 else 0;
+        std.mem.writeInt(u16, out[output_offset + 1 ..][0..2], len, .little);
+        std.mem.writeInt(u16, out[output_offset + 3 ..][0..2], ~len, .little);
+        const count: usize = len;
+        @memcpy(out[output_offset + 5 ..][0..count], bytes[input_offset..][0..count]);
+        input_offset += count;
+        output_offset += 5 + count;
+    }
+    std.debug.assert(input_offset == bytes.len and output_offset == out.len);
+    return out;
+}
+
 /// Exactly one raw RFC1951 stream; no zlib/gzip wrapper fallback.
 /// The caller owns the result. Output is bounded during decompression.
 pub fn decode(a: std.mem.Allocator, bytes: []const u8, max_output: usize) ![]u8 {

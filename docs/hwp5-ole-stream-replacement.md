@@ -20,4 +20,4 @@ strict 검사 해제, compact node target을 다음 항목으로 변경, 출력 
 
 ## 남은 범위
 
-이 API는 압축 해제된 BinData 값 하나의 내부 CFB만 재생성합니다. 바깥 HWP CFB의 BinData stream 선택·압축 재적용·DocInfo 참조 수정·파일 전체 저장은 아직 연결하지 않았습니다. 차트 Contents의 의미 편집은 별도 parser/writer가 소유하며 이 API는 replacement bytes를 해석하지 않습니다.
+이 API는 압축 해제된 BinData 값 하나의 내부 CFB만 재생성합니다. 바깥 HWP CFB의 BinData stream 선택·[raw DEFLATE 재인코딩](raw-deflate-stored-encoder.md) 정책 연결·DocInfo 참조 수정·파일 전체 저장은 아직 연결하지 않았습니다. 차트 Contents의 의미 편집은 별도 parser/writer가 소유하며 이 API는 replacement bytes를 해석하지 않습니다.
