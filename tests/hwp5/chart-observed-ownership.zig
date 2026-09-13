@@ -40,6 +40,14 @@ fn exercise(a: std.mem.Allocator) !void {
     };
     const generic_forked = try core.hwp5.chart_contents_string_fork.forkStringReference(a, &value, &generic_alias, 0xfffffffd, "y", 0, bytes.len + 16);
     defer a.free(generic_forked);
+    const value_alias: core.hwp5.chart_object_table.ValueReference = .{
+        .value = .{ .string = value.primary_axes[0].title.font.name },
+        .introduced = value.primary_axes[0].title.font.name_introduced,
+        .start = value.primary_axes[0].title.font.name_start,
+        .end = value.primary_axes[0].title.font.name_end,
+    };
+    const value_forked = try core.hwp5.chart_contents_string_fork.forkStringValueReference(a, &value, &value_alias, 0xfffffffc, "z", 0, bytes.len + 16);
+    defer a.free(value_forked);
     const begin = @intFromPtr(&bytes);
     try t.expect(@intFromPtr(name.ptr) >= begin and @intFromPtr(name.ptr) + name.len <= begin + bytes.len);
     const raw = value.prefix.transition.raw;
@@ -249,6 +257,36 @@ test "actual Contents Font String fork validation" {
     const string_type = value.prefix.grid.prelude.types.findLowestId("VtString\x00", 1).?;
     value.prefix.grid.prelude.types.definitions.getPtr(string_type).?.version = 2;
     try t.expectError(error.MissingChartStringForkType, core.hwp5.chart_contents_string_fork.forkFontName(t.allocator, &value, target, 0xfffffffe, "x", 0, bytes.len + 16));
+}
+test "actual Contents String ValueReference forks and rejects Number" {
+    const bytes = try decode();
+    var value = try contents.readObservedV6(t.allocator, &bytes, layout, .{});
+    defer value.deinit();
+    const font = value.primary_axes[0].title.font;
+    const target: core.hwp5.chart_object_table.ValueReference = .{ .value = .{ .string = font.name }, .introduced = font.name_introduced, .start = font.name_start, .end = font.name_end };
+    const replacement = "value-reference-name";
+    const expected_len = bytes.len + replacement.len + 15;
+    const forked = try core.hwp5.chart_contents_string_fork.forkStringValueReference(t.allocator, &value, &target, 0xfffffffc, replacement, 0x4d, expected_len);
+    defer t.allocator.free(forked);
+    var reparsed = try contents.readObservedV6(t.allocator, forked, layout, .{});
+    defer reparsed.deinit();
+    try t.expectEqual(@as(u32, 0xfffffffc), reparsed.primary_axes[0].title.font.name.object_id);
+    try t.expectEqualSlices(u8, replacement, reparsed.primary_axes[0].title.font.name.bytes);
+    try t.expectEqual(@as(u8, 0x4d), reparsed.primary_axes[0].title.font.name.trailer);
+
+    var number_reference: ?*const core.hwp5.chart_object_table.ValueReference = null;
+    for (value.primary_axes) |*axis| {
+        if (axis.scale) |*scale| {
+            if (scale.value.reference) |*reference| switch (reference.value) {
+                .number => {
+                    number_reference = reference;
+                    break;
+                },
+                .string => {},
+            };
+        }
+    }
+    try t.expectError(error.UnsupportedChartStringForkValue, core.hwp5.chart_contents_string_fork.forkStringValueReference(t.allocator, &value, number_reference orelse return error.MissingFixtureNumberValueReference, 0xfffffffb, "x", 0, bytes.len + 16));
 }
 test "actual Contents original copy boundaries" {
     const bytes = try decode();
