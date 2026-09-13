@@ -53,4 +53,4 @@ node tests/hwp5/chart-tail-survey.mjs --verify
 
 ## 다음 범위
 
-Collection 접두부 읽기를 Zig Array/List에서 공유하고, 확인된 타입 위치·원시 구간만 보존하는 코어를 연결해야 합니다. Window 앞의 ID 후보, raw26·계열 raw106의 필드 의미, 표본 밖 List 요소·버전, 전체 그래프의 의미 해석은 별도로 남아 있습니다. 스트림 끝까지 위치가 연결된 사실을 전체 필드 지원 완료로 해석하지 않습니다.
+후속 코어와 검증 진행 상태는 [List·Window 코어](hwp5-chart-tail.md)가 소유합니다. Window 앞의 ID 후보, raw26·계열 raw106의 필드 의미, 표본 밖 List 요소·버전, 전체 그래프의 의미 해석은 별도로 남아 있습니다. 스트림 끝까지 위치가 연결된 사실을 전체 필드 지원 완료로 해석하지 않습니다.
