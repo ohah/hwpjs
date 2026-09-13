@@ -6,9 +6,12 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     defer prefix.deinit();
     _ = try core.hwp5.chart_title.readBodyObservedV1(prefix.reader(), prefix.types(), prefix.objects(), .{});
     const value = try core.hwp5.chart_tail.readObservedNoItems(prefix.reader(), prefix.types(), prefix.objects());
+    return serialize(a, value, prefix.types().definitions.count(), prefix.objects().entries.count());
+}
+pub fn serialize(a: std.mem.Allocator, value: core.hwp5.chart_tail.Tail, type_count: usize, object_count: usize) ![]u8 {
     var out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(a);
-    inline for (.{ value.end, prefix.types().definitions.count(), prefix.objects().entries.count(), value.list.object_id, value.list.end }) |v| try int(a, &out, u32, @intCast(v));
+    inline for (.{ value.end, type_count, object_count, value.list.object_id, value.list.end }) |v| try int(a, &out, u32, @intCast(v));
     try int(a, &out, u16, value.list.collection.raw_word);
     try out.appendSlice(a, &value.raw);
     try int(a, &out, u16, value.window.raw_word);

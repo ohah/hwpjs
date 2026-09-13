@@ -1,8 +1,8 @@
 import {seriesCollectionOracle} from './chart-series-collection-oracle.mjs';
 import {observeChartTitleBody} from './chart-title-body-evidence.mjs';
 import {integer,textBodyWire} from './chart-text-body-oracle.mjs';
-export function titleBodyOracle(b){
- const prior=seriesCollectionOracle(b),c=prior.r,r=observeChartTitleBody(b,c.end,c.types,c.objects,c.strings);
+export function titleBodyOracle(b,selectedSeriesCount){
+ const prior=seriesCollectionOracle(b,selectedSeriesCount),c=prior.r,r=observeChartTitleBody(b,c.end,c.types,c.objects,c.strings);
  const input=(bytes=b,maxObjects=r.objects.size)=>prior.input(bytes,maxObjects);
  return {prior,r,input,wire:titleBodyWire(c.title.id,r),start:c.end,end:r.end};
 }

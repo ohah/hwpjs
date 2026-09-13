@@ -24,15 +24,21 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize, is_surface: bo
     errdefer out.deinit(a);
     if (is_surface) {
         const value = try core.hwp5.chart_surface_prefix.readObservedEmptyArrayV1(&reader, &types, &objects);
-        try header(a, &out, value.end, &types, &objects, value.object_id, value.array);
-        try out.appendSlice(a, &value.raw_before);
-        try out.appendSlice(a, &value.raw_body);
+        try appendSurface(a, &out, value, &types, &objects);
     } else {
         const value = try core.hwp5.chart_plot_prefix.readObservedEmptyArrayV4(&reader, &types, &objects);
-        try header(a, &out, value.end, &types, &objects, value.object_id, value.initial);
-        try out.appendSlice(a, &value.raw);
+        try appendPlot(a, &out, value, &types, &objects);
     }
     return out.toOwnedSlice(a);
+}
+pub fn appendPlot(a: std.mem.Allocator, out: *std.ArrayList(u8), value: core.hwp5.chart_plot_prefix.Prefix, types: *const core.hwp5.chart_type_table.Table, objects: *const core.hwp5.chart_object_table.Table) !void {
+    try header(a, out, value.end, types, objects, value.object_id, value.initial);
+    try out.appendSlice(a, &value.raw);
+}
+pub fn appendSurface(a: std.mem.Allocator, out: *std.ArrayList(u8), value: core.hwp5.chart_surface_prefix.Prefix, types: *const core.hwp5.chart_type_table.Table, objects: *const core.hwp5.chart_object_table.Table) !void {
+    try header(a, out, value.end, types, objects, value.object_id, value.array);
+    try out.appendSlice(a, &value.raw_before);
+    try out.appendSlice(a, &value.raw_body);
 }
 fn header(a: std.mem.Allocator, out: *std.ArrayList(u8), end: usize, types: *const core.hwp5.chart_type_table.Table, objects: *const core.hwp5.chart_object_table.Table, id: u32, array: core.hwp5.chart_array_header.Header) !void {
     inline for (.{ end, types.definitions.count(), objects.entries.count(), id, array.object_id, array.end }) |v| try int(a, out, u32, @intCast(v));

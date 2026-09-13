@@ -5,12 +5,13 @@ import {oleContainerSurvey} from './ole-container-survey.mjs';
 import {streamBytes} from './hwp-corpus-evidence.mjs';
 import {chartLegendOracle} from './chart-legend-oracle.mjs';
 import {observePlotPrefix} from './chart-plot-evidence.mjs';
+import {lightWire} from './chart-light-wire.mjs';
+import {lightSourceCountVariant} from './chart-light-source-variant.mjs';
 const u32=n=>{const b=Buffer.alloc(4);b.writeUInt32LE(n);return b;};
 function oracle(b){
  const legend=chartLegendOracle(b),prior=new Map([[3,{name:'VtCollection\0',version:1}],[4,{name:'VtObject\0',version:1}]]);
  const e=observePlotPrefix(b,legend.end,prior),count=e.sources.length,objects=legend.objectCount+4+count;
- const wire=Buffer.concat([...[e.end,e.lightId,e.sourcesArray.id,e.sourcesArray.first,e.sourcesArray.second,count,objects].map(u32),Buffer.from(e.lightRaw10,'hex'),
-  ...e.sources.map(s=>Buffer.concat([...[s.id,s.start,s.end].map(u32),Buffer.from(s.raw16,'hex')]))]);
+ const wire=lightWire(e,objects);
  return {...e,objects,wire,priorId:legend.nameId};
 }
 export async function chartLights(call){
@@ -42,13 +43,10 @@ export async function chartLights(call){
   }
   bad=Buffer.from(b);bad.fill(0xff,e.lightRawStart,e.lightRawStart+10);for(const s of e.sources)bad.fill(0xff,s.rawStart,s.rawStart+16);accept(bad);
   // Zero sources removes the first source's type declaration as well.
-  bad=Buffer.concat([b.subarray(0,e.sourcesArray.headerEnd),b.subarray(e.lightRawStart)]);
-  bad.writeUInt16LE(0,e.sourcesArray.firstOffset);bad.writeUInt16LE(0,e.sourcesArray.secondOffset);bad.writeUInt32LE(bad.length-36,32);accept(bad);
+  accept(lightSourceCountVariant(b,e,0));
   // Keep the original first definition; append repeated types with fresh IDs.
   for(const count of (roots===1?[3,65535]:[3])){
-   const extra=[];for(let i=e.sources.length;i<count;i++)extra.push(Buffer.concat([u32(0x80000000+i),u32(e.sources[0].typeId),Buffer.alloc(16,0xff),u32(4)]));
-   bad=Buffer.concat([b.subarray(0,e.lightRawStart),...extra,b.subarray(e.lightRawStart)]);
-   bad.writeUInt16LE(count,e.sourcesArray.firstOffset);bad.writeUInt16LE(count,e.sourcesArray.secondOffset);bad.writeUInt32LE(bad.length-36,32);accept(bad);
+   accept(lightSourceCountVariant(b,e,count));
   }
  });}finally{cfb.close();}
  assert.equal(roots,43);assert.equal(accepted,173);

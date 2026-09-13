@@ -26,5 +26,54 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     const title = try @import("chart-title-body-probe.zig").serialize(a, value.series.title.object_id, value.title, type_count, &value.prefix.objects);
     defer a.free(title);
     try out.appendSlice(a, title);
+    for (value.primary_axes) |axis| try @import("chart-axes-probe.zig").serialize(a, &out, axis, &value.prefix.objects);
+    try @import("chart-axes-probe.zig").serialize(a, &out, value.secondary_axis, &value.prefix.objects);
+    const object_count = value.prefix.objects.entries.count();
+    const light = try @import("chart-light-probe.zig").serialize(a, value.light, object_count);
+    defer a.free(light);
+    try out.appendSlice(a, light);
+    const line_end = if (value.line_items.len > 0) value.line_items[value.line_items.len - 1].end else value.secondary_axis.end + @sizeOf(u16);
+    const lines_wire = try @import("chart-line-items-probe.zig").serialize(a, value.line_word, value.line_items, line_end, type_count, object_count);
+    defer a.free(lines_wire);
+    try out.appendSlice(a, lines_wire);
+    const post_line = try @import("chart-post-line-probe.zig").serialize(a, value.post_line, type_count, object_count);
+    defer a.free(post_line);
+    try out.appendSlice(a, post_line);
+    const types = &value.prefix.grid.prelude.types;
+    const objects = &value.prefix.objects;
+    try @import("chart-plot-surface-probe.zig").appendPlot(a, &out, value.plot, types, objects);
+    try @import("chart-plot-surface-probe.zig").appendSurface(a, &out, value.surface, types, objects);
+    const tail = try @import("chart-tail-probe.zig").serialize(a, value.tail, type_count, object_count);
+    defer a.free(tail);
+    try out.appendSlice(a, tail);
+    // Redundant component boundaries still belong to the returned value.
+    inline for (.{ value.tail.list.collection.end, value.tail.window.end, value.light.array.end }) |end| try int(a, &out, u32, @intCast(end));
+    for (value.series.items) |item| {
+        try int(a, &out, u32, @intCast(item.section.end));
+        try int(a, &out, u32, @intCast(item.suffix.end));
+    }
+    const grid = try @import("chart-grid-cells-probe.zig").serialize(a, value.prefix.grid);
+    defer a.free(grid);
+    try out.appendSlice(a, grid);
+    const prelude = try @import("chart-grid-prelude-probe.zig").serialize(a, value.prefix.grid.prelude);
+    defer a.free(prelude);
+    try out.appendSlice(a, prelude);
+    const footnote = try @import("chart-footnote-probe.zig").serialize(a, value.prefix.footnote);
+    defer a.free(footnote);
+    try out.appendSlice(a, footnote);
+    const legend = try @import("chart-legend-probe.zig").serialize(a, value.prefix.legend, object_count, value.prefix.objects.string_bytes);
+    defer a.free(legend);
+    try out.appendSlice(a, legend);
+    inline for (.{ value.prefix.footnote.section.end, value.prefix.footnote.section.backdrop.end, value.prefix.legend.section.end, value.prefix.legend.section.backdrop.end, value.prefix.end }) |end| try int(a, &out, u32, @intCast(end));
+    const transition = value.prefix.transition;
+    const backdrop = try @import("chart-backdrop-probe.zig").serialize(a, transition.backdrop, transition.raw);
+    defer a.free(backdrop);
+    try out.appendSlice(a, backdrop);
+    try int(a, &out, u32, @intCast(transition.end));
+    try @import("chart-type-table-wire.zig").append(a, &out, types);
+    try @import("chart-object-table-wire.zig").append(a, &out, objects);
+    const footnote_block = value.prefix.footnote.block;
+    inline for (.{ footnote_block.font.name_introduced, footnote_block.text_introduced, footnote_block.backdrop != null }) |flag|
+        try int(a, &out, u32, @intFromBool(flag));
     return out.toOwnedSlice(a);
 }

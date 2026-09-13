@@ -33,6 +33,9 @@ export function chartLegendOracle(b){
  for(const [className,n] of [['VtBackdrop',50],['VtFill',34],['VtPicture',4]]){ids.push(object());type(className);background.push(raw(n));}
  const picture=p;assert.equal(long(),0xffffffff);type('VtObject');const suffixOffset=p,suffix=take(2);type('VtObject');type('VtObject');type('VtObject');
  const stored=[...objects.values()].reduce((n,v)=>n+(v?.bytes.length??0),0);
- return {start,end:p,introduced,name,nameId,nameOffset,nameEnd,priorStrings,declarations,references,objectOffsets,rawOffsets,picture,suffixOffset,objectCount:objects.size,stored,
-  wire:Buffer.concat([...[p,id,fontId,nameId,+introduced,name.bytes.length,name.trailer,objects.size,stored,...ids].map(u32),suffix,fontRaw,layout,section,...background,name.bytes])};
+ const r={start,end:p,id,fontId,ids,suffix,fontRaw,layout,section,background,introduced,name,nameId,nameOffset,nameEnd,priorStrings,declarations,references,objectOffsets,rawOffsets,picture,suffixOffset,objectCount:objects.size,stored};
+ return {...r,wire:legendWire(r)};
+}
+export function legendWire(r,objectCount=r.objectCount,stored=r.stored){
+ return Buffer.concat([...[r.end,r.id,r.fontId,r.nameId,+r.introduced,r.name.bytes.length,r.name.trailer,objectCount,stored,...r.ids].map(u32),r.suffix,r.fontRaw,r.layout,r.section,...r.background,r.name.bytes]);
 }

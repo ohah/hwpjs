@@ -33,8 +33,8 @@ export function observePlotPrefix(bytes, offset, priorTypes) {
   const start=p,id=object(),typeId=type('VtInfLight3',1),rawStart=p,raw16=take(16).toString('hex');type('VtObject',1);
   sources.push({start,id,typeId,rawStart,raw16,end:p});
  }
- const lightRawStart=p,lightRaw10=take(10).toString('hex');type('VtObject',1);
+ const lightRawStart=p,lightRaw10=take(10).toString('hex'),baseTypeId=type('VtObject',1);
  const end=p,axisId=object(),axisTypeId=type('VtAxis',3);
  return {start:offset,id,typeId,initialArray,rawStart,raw136,lightStart,lightId,lightTypeId,sourcesArray,sources,
-  lightRawStart,lightRaw10,end,axisId,axisTypeId,axisHeaderEnd:p,declarations,references};
+  lightRawStart,lightRaw10,baseTypeId,end,axisId,axisTypeId,axisHeaderEnd:p,declarations,references};
 }

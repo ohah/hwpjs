@@ -5,12 +5,11 @@ import {oleContainerSurvey} from './ole-container-survey.mjs';
 import {streamBytes} from './hwp-corpus-evidence.mjs';
 import {titleBodyOracle} from './chart-title-body-oracle.mjs';
 import {observeChartTail} from './chart-tail-evidence.mjs';
-import {integer} from './chart-text-body-oracle.mjs';
-const word=n=>{const b=Buffer.alloc(2);b.writeUInt16LE(n);return b;};
+import {tailWire} from './chart-tail-wire.mjs';
 const extent=b=>{b.writeUInt32LE(b.length-36,32);return b;};
 function oracle(b){
  const prior=titleBodyOracle(b),r=observeChartTail(b,prior.end,prior.r.types,prior.r.objects);
- return {prior,r,wire:Buffer.concat([...[r.end,r.types.size,r.objects.size,r.list.id,r.list.end].map(n=>integer(n)),word(r.list.collection.word),Buffer.from(r.raw26,'hex'),word(r.window.rawWord)])};
+ return {prior,r,wire:tailWire(r)};
 }
 export async function chartTails(call){
  const cfb=await createCfbReader(readFileSync('zig-out/bin/hwpjs.wasm'));let roots=0,accepted=0,rejected=0;

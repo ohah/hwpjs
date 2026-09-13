@@ -15,6 +15,9 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     };
     var value = try core.hwp5.chart_grid_prelude.readObservedV6(a, bytes[input.offset..], options);
     defer value.deinit();
+    return serialize(a, value);
+}
+pub fn serialize(a: std.mem.Allocator, value: core.hwp5.chart_grid_prelude.Prelude) ![]u8 {
     var out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(a);
     try out.appendSlice(a, &value.prefix);

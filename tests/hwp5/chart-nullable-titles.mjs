@@ -4,7 +4,7 @@ import {createCfbReader} from '../../js/cfb.mjs';
 import {oleContainerSurvey} from './ole-container-survey.mjs';
 import {streamBytes} from './hwp-corpus-evidence.mjs';
 import {nullableTitleOracle} from './chart-nullable-title-oracle.mjs';
-import {integer} from './chart-text-body-oracle.mjs';
+import {axisTitleVariants} from './chart-axis-title-variants.mjs';
 const extent=b=>{b.writeUInt32LE(b.length-36,32);return b;};
 export async function chartNullableTitles(call){
  const cfb=await createCfbReader(readFileSync('zig-out/bin/hwpjs.wasm'));let roots=0,accepted=0,rejected=0;
@@ -22,13 +22,9 @@ export async function chartNullableTitles(call){
   if(e.per)reject(b,'LimitExceeded',{per:e.per-1});if(e.total)reject(b,'LimitExceeded',{total:e.total-1});
   reject(b,'LimitExceeded',{objects:e.objects-1});reject(b,'LimitExceeded',{stored:e.stored-1});reject(b,'LimitExceeded',{},b.length-1);
   const duplicate=Buffer.from(b);duplicate.writeUInt32LE(e.r.axis.axisId,e.r.axis.blockStart);reject(duplicate,'DuplicateChartObjectId');
-  const middle=e.r.axis.rawFields.find(f=>f.n===24),at=middle.start+middle.n;
-  const alias=Buffer.from(b);alias.writeUInt32LE(e.r.axis.fontName.id,at);const aliasCase=accept(alias);
-  reject(alias,'LimitExceeded',{total:aliasCase.total-1},alias.length,aliasCase);
-  const type=name=>[...e.types].find(([,v])=>v.name===name+'\0')[0];
-  for(const text of [Buffer.alloc(0),Buffer.from([0xff,0x80,0x00])]){
-   const value=Buffer.concat([integer(0xfffffffe),integer(type('VtString')),integer(text.length,2),text,integer(255,1),integer(type('VtValue')),integer(type('VtObject'))]);
-   const changed=extent(Buffer.concat([b.subarray(0,at),value,b.subarray(at+4)])),x=accept(changed);
+  for(const {kind,bytes:changed,text} of axisTitleVariants(b,e)){
+   const x=accept(changed);
+   if(kind==='alias'){reject(changed,'LimitExceeded',{total:x.total-1},changed.length,x);continue;}
    assert.equal(x.r.axis.text.hex,text.toString('hex'));assert.equal(x.r.axis.text.introduced,true);
    reject(changed,'LimitExceeded',{objects:x.objects-1},changed.length,x);
    if(text.length)reject(changed,'LimitExceeded',{stored:x.stored-1},changed.length,x);

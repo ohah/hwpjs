@@ -3,12 +3,11 @@ import {readFileSync} from 'node:fs';
 import {createCfbReader} from '../../js/cfb.mjs';
 import {oleContainerSurvey} from './ole-container-survey.mjs';
 import {streamBytes} from './hwp-corpus-evidence.mjs';
+import {gridPreludeWire} from './chart-grid-prelude-wire.mjs';
+import {gridPreludeRawVariant} from './chart-grid-prelude-variant.mjs';
 const u32=n=>{const b=Buffer.alloc(4);b.writeUInt32LE(n);return b;};
 const input=(b,caps=[5,13,50,1000000])=>Buffer.concat([...caps.map(u32),b]);
-const expected=b=>Buffer.concat([b.subarray(0,36),...[
- b.readUInt32LE(36),b.readUInt32LE(56),b.readUInt16LE(117),
- b.readUInt16LE(136),b.readUInt16LE(138),140,5,50,
-].map(u32)]);
+const expected=gridPreludeWire;
 
 export async function chartGridPreludes(call){
  const cfb=await createCfbReader(readFileSync(new URL('../../zig-out/bin/hwpjs.wasm',import.meta.url)));
@@ -34,7 +33,7 @@ export async function chartGridPreludes(call){
   for(const [at,error] of [[32,'InvalidChartExtent'],[46,'UnsupportedChartClass'],[125,'UnsupportedChartClass'],[54,'UnsupportedChartTypeVersion'],[134,'UnsupportedChartTypeVersion'],[133,'InvalidChartTypeName']]){
    const broken=Buffer.from(b);broken[at]^=1;reject(broken,error);
   }
-  const raw=Buffer.from(b);raw.fill(0xa5,0,32);raw.writeUInt32LE(0xffffffff,36);raw.writeUInt32LE(42,56);raw.writeUInt16LE(65535,117);accept(raw);
+  accept(gridPreludeRawVariant(b));
   for(const rows of [0,1,65535])for(const columns of [0,1,65535]){
    const changed=Buffer.from(b);changed.writeUInt16LE(rows,136);changed.writeUInt16LE(columns,138);
    accept(changed,[5,13,50,rows*columns]);

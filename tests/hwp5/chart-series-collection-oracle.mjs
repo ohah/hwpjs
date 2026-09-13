@@ -1,8 +1,8 @@
 import {postLineOracle} from './chart-post-line-oracle.mjs';
 import {observeSeriesCollection} from './chart-series-collection-evidence.mjs';
 import {integer,textBodyWire} from './chart-text-body-oracle.mjs';
-export function seriesCollectionOracle(b){
- const prior=postLineOracle(b),r=observeSeriesCollection(b,prior.end,prior.r.types,prior.r.objects,prior.strings,prior.r.array.first);
+export function seriesCollectionOracle(b,selectedSeriesCount){
+ const prior=postLineOracle(b),r=observeSeriesCollection(b,prior.end,prior.r.types,prior.r.objects,prior.strings,selectedSeriesCount===undefined?prior.r.array.first:selectedSeriesCount);
  const counts=r.series.map(s=>s.section.points.length);
  const input=(bytes=b,maxObjects=r.objects.size,selected=counts)=>Buffer.concat([integer(maxObjects),integer(selected.length),...selected.map(n=>integer(n)),bytes]);
  return {prior,r,wire:seriesCollectionWire(r),input,start:prior.end,end:r.end};

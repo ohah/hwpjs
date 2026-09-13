@@ -4,6 +4,7 @@ import {createCfbReader} from '../../js/cfb.mjs';
 import {oleContainerSurvey} from './ole-container-survey.mjs';
 import {streamBytes} from './hwp-corpus-evidence.mjs';
 import {chartFootnoteOracle} from './chart-footnote-oracle.mjs';
+import {stringLengthVariant} from './chart-string-length-variant.mjs';
 const u32=n=>{const b=Buffer.alloc(4);b.writeUInt32LE(n);return b;};
 const input=(b,s,t)=>Buffer.concat([u32(s),u32(t),b]);
 export async function chartFootnotes(call){
@@ -43,9 +44,7 @@ export async function chartFootnotes(call){
   bad=Buffer.from(b);for(const [i,offset] of e.objectOffsets.entries())bad.writeUInt32LE([0,0xfffffffe,100,5,6,7,8,9][i],offset);accept(bad);
   bad=Buffer.from(b);for(const [i,d] of e.declarations.entries())bad.writeUInt32LE(900+i,d.idOffset);accept(bad);
   for(const length of [0,1,65535]){
-   bad=Buffer.from(b);const field=Buffer.alloc(2+length,0xff);field.writeUInt16LE(length);
-   for(const s of [...e.block.strings].reverse())bad=Buffer.concat([bad.subarray(0,s.lengthOffset),field,bad.subarray(s.payloadOffset+s.bytes.length)]);
-   bad.writeUInt32LE(bad.length-36,32);accept(bad);
+   accept(stringLengthVariant(b,e.block.strings,length));
   }
  });}finally{cfb.close();}
  assert.equal(roots,43);assert.equal(accepted,301);

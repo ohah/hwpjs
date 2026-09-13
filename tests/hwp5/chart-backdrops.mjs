@@ -4,6 +4,7 @@ import {createCfbReader} from '../../js/cfb.mjs';
 import {oleContainerSurvey} from './ole-container-survey.mjs';
 import {streamBytes} from './hwp-corpus-evidence.mjs';
 import {chartGridCellsOracle} from './chart-grid-cells-oracle.mjs';
+import {backdropRawVariant} from './chart-backdrop-variant.mjs';
 const u32=n=>{const b=Buffer.alloc(4);b.writeUInt32LE(n);return b;};
 
 // Independent selected-corpus oracle: walks declarations and base references;
@@ -47,11 +48,7 @@ export async function chartBackdrops(call){
   let bad=Buffer.from(b);bad.writeUInt32LE(0,e.pictureData);reject(bad,'UnsupportedChartPictureData');
   for(const base of e.bases){bad=Buffer.from(b);bad.writeUInt32LE(e.declarations[0].id,base);reject(bad,'UnsupportedChartClass');}
   bad=Buffer.from(b);bad.writeUInt32LE(0xffffffff,start+26);reject(bad,'UnsupportedChartObjectReference');
-  bad=Buffer.from(b);
-  // Opaque bytes are deliberately varied, including transition and fill suffix.
-  bad.fill(0x5a,start,start+26);
-  for(const [i,d] of e.declarations.entries())bad.fill(0xa5,d.versionOffset+2,d.versionOffset+2+[50,34,4][i]);
-  bad.writeUInt16LE(65535,e.bases[0]+4);accept(bad);
+  accept(backdropRawVariant(b,start,e));
   bad=Buffer.from(b);for(const [i,d] of e.declarations.entries())bad.writeUInt32LE(900+i,d.idOffset);accept(bad);
  });}finally{cfb.close();}
  assert.equal(roots,43);assert.equal(accepted,129);

@@ -30,9 +30,9 @@ export function chartGridCellsOracle(b){
   const valueBase=p;assert.equal(type(),'VtValue\0');const objectBase=p;assert.equal(type(),'VtObject\0');
   cells.push({id,kind,start,end:p,trailer,raw,payloadStart,valueBase,objectBase});
  }
- const wire=Buffer.concat([
-  ...[rows,columns,cells.length,p,types.size,stringBytes].map(u32),
-  ...cells.map(c=>Buffer.concat([...[c.id,c.kind,c.start,c.end,c.trailer,c.raw.length].map(u32),c.raw])),
- ]);
+ const wire=gridCellsWire({rows,columns,cells,end:p,stringBytes},types.size);
  return {rows,columns,cells,end:p,typeCount:types.size,stringBytes,maxString,wire,types};
+}
+export function gridCellsWire(g,typeCount){
+ return Buffer.concat([...[g.rows,g.columns,g.cells.length,g.end,typeCount,g.stringBytes].map(u32),...g.cells.map(c=>Buffer.concat([...[c.id,c.kind,c.start,c.end,c.trailer,c.raw.length].map(u32),c.raw]))]);
 }

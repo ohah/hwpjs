@@ -13,6 +13,9 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
         .prelude = .{ .max_bytes = limit, .max_cells = max_cells, .types = .{ .max_types = max_types } },
     });
     defer value.deinit();
+    return serialize(a, value);
+}
+pub fn serialize(a: std.mem.Allocator, value: core.hwp5.chart_grid_cells.Grid) ![]u8 {
     var out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(a);
     inline for (.{ value.prelude.rows, value.prelude.columns, value.cells.len, value.payload_offset, value.prelude.types.definitions.count(), value.string_bytes }) |field|

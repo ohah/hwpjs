@@ -8,6 +8,9 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     var prefix = try @import("chart-footnote-prefix.zig").read(a, bytes[input.offset..], limit);
     defer prefix.deinit();
     const value = try core.hwp5.chart_footnote.readObservedV1(&prefix.reader, &prefix.grid.prelude.types, .{ .max_string_bytes = max_string, .max_total_string_bytes = max_total });
+    return serialize(a, value);
+}
+pub fn serialize(a: std.mem.Allocator, value: core.hwp5.chart_footnote.Footnote) ![]u8 {
     const block = try @import("chart-text-block-probe.zig").serialize(a, value.block);
     defer a.free(block);
     var out: std.ArrayList(u8) = .empty;

@@ -60,9 +60,11 @@ ReleaseSafe 실측:
 
 기본 86/172 대조와 위 검사기 방어 검사는 정규 WASM audit에도 연결했습니다. 모든 잘림 실행은 이 기본 대조와 별도입니다. 변경을 고정한 세 모드 전체 audit를 순차 실행해 종료 코드 0을 확인했습니다. Debug·ReleaseSafe·ReleaseFast 각각 단계 32/32, native 1,089/1,089(코어 1,085 + 소유권 4), WASM checks 8,902,901, imports 0으로 통과했습니다. 로그는 `/tmp/hwpjs-observed-fields-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.
 
-반환 구조와 wire를 직접 비교했을 때 다음 확장이 남습니다. Series의 `section.end`·`suffix.end`는 기존 wire에 없어 전체 조립에서도 아직 별도 대조하지 않습니다. Grid/Footnote/Legend, Plot/Light, 주축/보조축, Surface, 선 항목과 `line_word`, PostLine의 개별 필드 및 Tail List/Window의 식별자·word도 mode 336에서는 아직 전체 대조하지 않습니다(일부 개수와 원시 구간만 비교). 테이블 총계 일치 역시 개별 엔트리 일치를 대신하지 않습니다. 기존 개별 모듈 검사의 통과를 이 전체 조립 반환값 검사의 완료로 대신하지 않습니다.
+후속 [축 반환값 대조](hwp5-chart-observed-axes.md), [Light·선 항목·PostLine 대조](hwp5-chart-observed-light-lines.md), [Plot·Surface·Tail 대조](hwp5-chart-observed-envelope.md), [Grid 셀·Prelude 대조](hwp5-chart-observed-grid.md), [Footnote·Legend 대조](hwp5-chart-observed-initial-text.md)를 연결했습니다. 해당 변경의 실측과 제한은 별도 문서가 소유하며 위 전체 audit는 그 이전 파트의 결과입니다. 각 후속 문서에 명시한 중첩 필드는 아직 전체 대조하지 않습니다. 테이블 총계 일치 역시 개별 엔트리 일치를 대신하지 않습니다. 기존 개별 모듈 검사의 통과를 이 전체 조립 반환값 검사의 완료로 대신하지 않습니다.
 
 ### 축 배치의 실제 표본 편향
+
+타입별 ID·이름·버전 및 객체별 kind·문자열/숫자 값의 후속 전체 반환값 검사는 [사전 엔트리 대조](hwp5-chart-observed-tables.md)에 연결했습니다. 기존 총계 검사와 구분하며 참조별 introduced·start/end 같은 미대조 중첩 필드는 아직 남아 있습니다.
 
 전체 audit를 실행하는 동안 원본을 변경하지 않고 `axesOracle`·`nullableTitleOracle`로 43개 Contents의 축 분기를 다시 집계했습니다. 이는 독립 관측의 입력 분포이며 아직 mode 336의 축 반환 필드 검증 실적은 아닙니다.
 
@@ -75,9 +77,9 @@ ReleaseSafe 실측:
 | 기존 font-name 문자열 참조 | 172 | 43 |
 | 기존 제목 문자열 참조 | 0 | 0 |
 
-따라서 이 표본만 반복해도 빈 제목, 제목 alias, 보조축의 비-null 제목·Scale·추가 Tail 조합은 검증되지 않습니다. 다음 전체 조립 검사는 재사용 가능한 `chart-axes-probe.zig`의 결과 전용 serialize와 독립 `axisWire`를 연결하고, 표본에 없는 분기를 명시적인 변형/합성 입력으로 따로 다뤄야 합니다. Light·선 항목·PostLine은 현재 개별 probe에서 파싱과 출력이 결합돼 있으므로 결과 직렬화 책임을 먼저 분리합니다. 이 연결 계획을 이미 구현된 검사로 계산하지 않습니다.
+따라서 원본 표본만 반복하는 것으로 빈 제목, 제목 alias, 보조축의 비-null 제목·Scale·추가 Tail 조합을 검증할 수 없습니다. 이 조사 이후 추가한 연결과 합성 입력 검사는 [축 반환값 대조](hwp5-chart-observed-axes.md)에 기록합니다. 이후 Light·선 항목·PostLine의 결과 직렬화도 별도 후속 검사에서 공통화했습니다.
 
-추가 일회성 ReleaseSafe 검사에서는 기존 보조축 검사와 같은 방식으로 각 표본의 null 제목을 기존 font-name 참조, 새 빈 문자열, 새 원시 문자열 `ff 80 00`으로 각각 바꿨습니다. 길이가 바뀔 때 Contents extent도 갱신했습니다. 세 종류 각 43건이 전체 조립을 통과하고 현재 mode 336 wire와 독립 기대값이 일치했으며 원본 43건도 재대조했습니다. 입력 Buffer만 변경했으며 원본 파일과 audit 중인 소스·테스트는 수정하지 않았습니다. 이 129개 변형은 downstream 오프셋·집계·Series/Title 유지 확인이며, 아직 wire에 없는 보조축 제목 반환값 자체의 검증이나 정규 audit 연결 완료는 아닙니다.
+축 wire 확장 전의 일회성 ReleaseSafe 검사에서는 기존 보조축 검사와 같은 방식으로 각 표본의 null 제목을 기존 font-name 참조, 새 빈 문자열, 새 원시 문자열 `ff 80 00`으로 각각 바꿨습니다. 길이가 바뀔 때 Contents extent도 갱신했습니다. 세 종류 각 43건이 전체 조립을 통과하고 당시 mode 336 wire와 독립 기대값이 일치했으며 원본 43건도 재대조했습니다. 입력 Buffer만 변경했으며 원본 파일과 audit 중인 소스·테스트는 수정하지 않았습니다. 이 129개 변형은 downstream 오프셋·집계·Series/Title 유지 확인이며 당시 wire에 없던 보조축 제목 반환값 자체를 검증한 것은 아닙니다.
 
 ### 저장소의 지속적인 소유권 회귀 검사
 

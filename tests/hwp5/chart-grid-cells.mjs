@@ -6,6 +6,7 @@ import {oleContainerSurvey} from './ole-container-survey.mjs';
 import {streamBytes} from './hwp-corpus-evidence.mjs';
 import {chartGridCellsOracle} from './chart-grid-cells-oracle.mjs';
 import {chartGridGapEvidence} from './chart-grid-gap-evidence.mjs';
+import {gridCellVariants} from './chart-grid-cell-variants.mjs';
 const u32=n=>{const b=Buffer.alloc(4);b.writeUInt32LE(n);return b;};
 const input=(b,caps)=>Buffer.concat([...caps.map(u32),b]);
 export async function chartGridCells(call){
@@ -43,11 +44,7 @@ export async function chartGridCells(call){
   let bad=Buffer.from(b);bad.writeUInt32LE(first.id,last.start);reject(bad,'UnsupportedChartObjectReference');
   bad=Buffer.from(b);bad.writeUInt32LE(0,last.objectBase);reject(bad,'UnsupportedChartClass');
   bad=Buffer.from(b);bad[first.start+19]^=1;reject(bad,'UnsupportedChartTypeVersion');
-  const number=o.cells.find(c=>c.kind===2);
-  if(number){for(const bits of [0n,0x8000000000000000n,0x7ff0000000000000n,0x7ff8000000001234n,0xffffffffffffffffn]){
-   bad=Buffer.from(b);bad.writeBigUInt64LE(bits,number.payloadStart);bad.writeUInt16LE(0x1234,number.payloadStart+8);accept(bad);
-  }}
-  bad=Buffer.from(b);bad.fill(0xa5,first.payloadStart+2,first.payloadStart+2+first.raw.length);accept(bad);
+  for(const bytes of gridCellVariants(b,o))accept(bytes);
  });}finally{cfb.close();}
  assert.deepEqual([roots,slots,nulls],[43,750,51]);
  assert.deepEqual(gaps,[

@@ -8,10 +8,12 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     const max_stored = try input.readInt(u32);
     var prefix = try @import("chart-legend-prefix.zig").read(a, bytes[input.offset..], limit, max_name, max_objects, max_stored);
     defer prefix.deinit();
-    const value = prefix.legend;
+    return serialize(a, prefix.legend, prefix.objects.entries.count(), prefix.objects.string_bytes);
+}
+pub fn serialize(a: std.mem.Allocator, value: core.hwp5.chart_legend.Legend, object_count: usize, string_bytes: usize) ![]u8 {
     var out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(a);
-    inline for (.{ value.end, value.object_id, value.font.object_id, value.font.name.object_id, @intFromBool(value.font.name_introduced), value.font.name.bytes.len, value.font.name.trailer, prefix.objects.entries.count(), prefix.objects.string_bytes }) |field|
+    inline for (.{ value.end, value.object_id, value.font.object_id, value.font.name.object_id, @intFromBool(value.font.name_introduced), value.font.name.bytes.len, value.font.name.trailer, object_count, string_bytes }) |field|
         try int(a, &out, u32, @intCast(field));
     for (value.section.backdrop.object_ids) |id| try int(a, &out, u32, id);
     try int(a, &out, u16, value.section.backdrop.fill_suffix);

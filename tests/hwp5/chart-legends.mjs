@@ -4,6 +4,7 @@ import {createCfbReader} from '../../js/cfb.mjs';
 import {oleContainerSurvey} from './ole-container-survey.mjs';
 import {streamBytes} from './hwp-corpus-evidence.mjs';
 import {chartLegendOracle} from './chart-legend-oracle.mjs';
+import {stringLengthVariant} from './chart-string-length-variant.mjs';
 const u32=n=>{const b=Buffer.alloc(4);b.writeUInt32LE(n);return b;};
 const input=(b,name,objects,stored)=>Buffer.concat([u32(name),u32(objects),u32(stored),b]);
 export async function chartLegends(call){
@@ -39,8 +40,7 @@ export async function chartLegends(call){
   bad=Buffer.from(b);bad.writeUInt32LE(0,e.picture);reject(bad,'UnsupportedChartPictureData');
   bad=Buffer.from(b);for(const [offset,n] of e.rawOffsets)bad.fill(0xa5,offset,offset+n);bad.fill(0xff,e.name.payloadOffset,e.name.payloadOffset+e.name.bytes.length);bad[e.name.trailerOffset]^=255;bad.writeUInt16LE(65535,e.suffixOffset);accept(bad);
   for(const length of [0,1,65535]){
-   const field=Buffer.alloc(length+2,0xff);field.writeUInt16LE(length);
-   bad=Buffer.concat([b.subarray(0,e.name.lengthOffset),field,b.subarray(e.name.payloadOffset+e.name.bytes.length)]);bad.writeUInt32LE(bad.length-36,32);accept(bad);
+   accept(stringLengthVariant(b,[e.name],length));
   }
   // Resolve a different valid prior string, not just a hardcoded font-name ID.
   const target=e.priorStrings.find(s=>s.id!==e.nameId);assert.ok(target);

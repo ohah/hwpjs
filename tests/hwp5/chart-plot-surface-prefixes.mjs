@@ -7,6 +7,7 @@ import {chartAxisContext} from './chart-axis-context.mjs';
 import {axesOracle} from './chart-axes-oracle.mjs';
 import {observeSurfacePrefix} from './chart-surface-evidence.mjs';
 import {integer} from './chart-text-body-oracle.mjs';
+import {plotSurfaceWire} from './chart-plot-surface-wire.mjs';
 const ints=values=>Buffer.concat(values.map(n=>integer(n)));
 function context(b,isSurface){
  const c=chartAxisContext(b),p=c.plot,prior=axesOracle(b,isSurface?4:0);
@@ -26,7 +27,7 @@ function context(b,isSurface){
  }
  assert(!objects.has(id));assert(!objects.has(array.id));assert.notEqual(id,array.id);
  const finalTypes=new Map(types);for(const d of declarations)finalTypes.set(d.id,{name:d.name,version:d.version});
- const wire=bytes=>Buffer.concat([ints([end,finalTypes.size,objects.size+2,id,array.id,array.end]),integer(array.first,2),integer(array.second,2),...raws.map(([at,n])=>bytes.subarray(at,at+n))]);
+ const wire=bytes=>plotSurfaceWire({end,id,array,raws:raws.map(([at,n])=>bytes.subarray(at,at+n))},finalTypes.size,objects.size+2);
  const scope=Buffer.concat([...types].map(([id,d])=>{const name=Buffer.from(d.name,'latin1');return Buffer.concat([integer(id),integer(name.length,2),name,integer(d.version,2)]);}));
  const input=(bytes,max=objects.size+2)=>Buffer.concat([ints([start,types.size,objects.size,max]),scope,ints([...objects]),bytes]);
  return {start,end,id,idOffset,array,types,objects,declarations,references,raws,wire,input};
