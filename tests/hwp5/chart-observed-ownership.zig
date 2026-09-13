@@ -77,7 +77,7 @@ fn exercise(a: std.mem.Allocator) !void {
     defer a.free(value_forked);
     const body_forked = try core.hwp5.chart_contents_string_fork.forkTextBodyText(a, &value, &value.series.items[0].section.label.body, 0xfffffffb, "q", 0, bytes.len + 16);
     defer a.free(body_forked);
-    const batch_forked = try core.hwp5.chart_contents_string_fork.forkMany(a, &value, &.{ .{ .text_body = .{ .body = &value.series.items[0].section.label.body, .new_object_id = 0xfffffff8, .bytes = "b", .trailer = 2 } }, .{ .font_name = .{ .font = &value.primary_axes[0].title.font, .new_object_id = 0xfffffff7, .bytes = "a", .trailer = 1 } } }, bytes.len + 32);
+    const batch_forked = try core.hwp5.chart_contents_string_fork.forkMany(a, &value, &.{ .{ .null_text_body = .{ .body = &value.series.items[0].section.points[0].label.body, .new_object_id = 0xfffffff6, .bytes = "c", .trailer = 3 } }, .{ .text_body = .{ .body = &value.series.items[0].section.label.body, .new_object_id = 0xfffffff8, .bytes = "b", .trailer = 2 } }, .{ .font_name = .{ .font = &value.primary_axes[0].title.font, .new_object_id = 0xfffffff7, .bytes = "a", .trailer = 1 } } }, bytes.len + 48);
     defer a.free(batch_forked);
     const font = value.primary_axes[0].title.font;
     const format_alias: core.hwp5.chart_text_format.Format = .{ .object_id = font.object_id, .raw_word = 0, .code = font.name, .code_introduced = font.name_introduced, .code_start = font.name_start, .code_end = font.name_end, .end = font.name_end };
@@ -163,6 +163,28 @@ test "actual Contents TextBlock text adapters fork aliases and reject other stat
     try t.expectError(error.UnsupportedChartStringForkTarget, core.hwp5.chart_contents_string_fork.forkTextBlockText(t.allocator, &value, &value.primary_axes[0].title, 0xfffffffa, "x", 0, bytes.len + 16));
     try t.expectError(error.UnsupportedChartStringForkValue, core.hwp5.chart_contents_string_fork.forkNullableTextBlockText(t.allocator, &value, &value.secondary_axis.title, 0xfffffffa, "x", 0, bytes.len + 16));
 }
+test "actual null point label materializes as an inline String" {
+    var bytes = try decode();
+    var value = try contents.readObservedV6(t.allocator, &bytes, layout, .{});
+    defer value.deinit();
+    const body = &value.series.items[0].section.points[0].label.body;
+    try t.expect(body.text == null);
+    try t.expectEqual(@as(usize, 4), body.text_end - body.text_start);
+    const new_id = try core.hwp5.chart_object_id_allocator.findLowestAvailable(&value.prefix.objects, &.{});
+    const replacement = "materialized-point";
+    const forked = try core.hwp5.chart_contents_string_fork.forkMany(t.allocator, &value, &.{.{ .null_text_body = .{ .body = body, .new_object_id = new_id, .bytes = replacement, .trailer = 0x48 } }}, bytes.len + replacement.len + 15);
+    defer t.allocator.free(forked);
+    var reparsed = try contents.readObservedV6(t.allocator, forked, layout, .{});
+    defer reparsed.deinit();
+    const changed = reparsed.series.items[0].section.points[0].label.body;
+    try t.expect(changed.text_introduced);
+    try t.expectEqual(new_id, changed.text.?.object_id);
+    try t.expectEqualSlices(u8, replacement, changed.text.?.bytes);
+    try t.expectEqual(@as(u8, 0x48), changed.text.?.trailer);
+    try t.expectError(error.ExpectedNullChartString, core.hwp5.chart_contents_string_fork.forkMany(t.allocator, &value, &.{.{ .null_text_body = .{ .body = &value.series.items[0].section.label.body, .new_object_id = 0xfffffffa, .bytes = "x", .trailer = 0 } }}, bytes.len + 16));
+    bytes[body.text_start] = 0;
+    try t.expectError(error.InvalidChartStringReferenceSpan, core.hwp5.chart_contents_string_fork.forkMany(t.allocator, &value, &.{.{ .null_text_body = .{ .body = body, .new_object_id = 0xfffffffa, .bytes = "x", .trailer = 0 } }}, bytes.len + 16));
+}
 test "TextFormat adapters map actual source spans to the shared String fork" {
     const bytes = try decode();
     var value = try contents.readObservedV6(t.allocator, &bytes, layout, .{});
@@ -243,7 +265,9 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
     const series_new_id = try core.hwp5.chart_object_id_allocator.findLowestAvailable(&value.prefix.objects, &.{});
     const series_replacement = "outer-series-label";
     const batch_axis_id = try core.hwp5.chart_object_id_allocator.findLowestAvailable(&value.prefix.objects, &.{target.object_id});
-    const batch_series_id = try core.hwp5.chart_object_id_allocator.findLowestAvailable(&value.prefix.objects, &.{ target.object_id, batch_axis_id });
+    const batch_point_id = try core.hwp5.chart_object_id_allocator.findLowestAvailable(&value.prefix.objects, &.{ target.object_id, batch_axis_id });
+    const batch_series_id = try core.hwp5.chart_object_id_allocator.findLowestAvailable(&value.prefix.objects, &.{ target.object_id, batch_axis_id, batch_point_id });
+    const point_replacement = "outer-point-label";
 
     const inner = try core.cfb.writer.write(t.allocator, &.{ .{ .name = "Root Entry", .kind = 5 }, .{ .name = "Contents", .parent = 0, .content = &bytes }, .{ .name = "Unknown", .parent = 0, .content = "inner-preserved" } }, .{ .version = 4 });
     defer t.allocator.free(inner);
@@ -277,6 +301,8 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
     const edit_options: core.hwp5.chart_edit_session.Options = .{ .file = .{ .bin_data = .{ .max_doc_info_bytes = 96, .max_encoded_bytes = 64 * 1024, .max_total_encoded_bytes = 64 * 1024, .max_output_bytes = 128 * 1024 }, .ole = .{ .max_output_bytes = 64 * 1024 }, .max_decoded_bin_data_bytes = 64 * 1024, .max_total_decoded_bin_data_bytes = 64 * 1024, .max_total_edited_ole_bytes = 64 * 1024 }, .max_contents_bytes = bytes.len, .max_edited_contents_bytes = bytes.len + replacement.len + 15 };
     try t.expectError(error.InvalidChartAxisIndex, core.hwp5.chart_edit_session.forkPrimaryAxisTitleFontName(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, layout.primary_axis_count, replacement, 0x55, edit_options));
     try t.expectError(error.InvalidChartSeriesIndex, core.hwp5.chart_edit_session.forkSeriesLabelBodyText(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, layout.series_point_counts.len, series_replacement, 0x66, edit_options));
+    try t.expectError(error.InvalidChartSeriesIndex, core.hwp5.chart_edit_session.materializeSeriesPointLabelBodyText(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, layout.series_point_counts.len, 0, point_replacement, 0x77, edit_options));
+    try t.expectError(error.InvalidChartPointIndex, core.hwp5.chart_edit_session.materializeSeriesPointLabelBodyText(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 0, value.series.items[0].section.points.len, point_replacement, 0x77, edit_options));
     var low_source = edit_options;
     low_source.max_contents_bytes = bytes.len - 1;
     try t.expectError(error.LimitExceeded, core.hwp5.chart_edit_session.forkPrimaryAxisTitleFontName(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 0, replacement, 0x55, low_source));
@@ -333,8 +359,8 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
     try t.expectEqual(@as(u8, 0x66), changed_body.text.?.trailer);
 
     var batch_options = edit_options;
-    batch_options.max_edited_contents_bytes = bytes.len + replacement.len + series_replacement.len + 30;
-    const batch_saved_outer = try core.hwp5.chart_edit_session.applyStringEdits(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, &.{ .{ .series_label_body_text = .{ .series_index = 0, .bytes = series_replacement, .trailer = 0x66 } }, .{ .primary_axis_title_font_name = .{ .axis_index = 0, .bytes = replacement, .trailer = 0x55 } } }, batch_options);
+    batch_options.max_edited_contents_bytes = bytes.len + replacement.len + series_replacement.len + point_replacement.len + 45;
+    const batch_saved_outer = try core.hwp5.chart_edit_session.applyStringEdits(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, &.{ .{ .series_label_body_text = .{ .series_index = 0, .bytes = series_replacement, .trailer = 0x66 } }, .{ .primary_axis_title_font_name = .{ .axis_index = 0, .bytes = replacement, .trailer = 0x55 } }, .{ .null_series_point_label_body_text = .{ .series_index = 0, .point_index = 0, .bytes = point_replacement, .trailer = 0x77 } } }, batch_options);
     defer t.allocator.free(batch_saved_outer);
     var batch_outer_file = try core.cfb.File.open(t.allocator, batch_saved_outer, .{ .strict = true });
     defer batch_outer_file.deinit();
@@ -354,6 +380,11 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
     const batch_body = batch_reparsed.series.items[0].section.label.body;
     try t.expectEqual(batch_series_id, batch_body.text.?.object_id);
     try t.expectEqualSlices(u8, series_replacement, batch_body.text.?.bytes);
+    const batch_point = batch_reparsed.series.items[0].section.points[0].label.body;
+    try t.expect(batch_point.text_introduced);
+    try t.expectEqual(batch_point_id, batch_point.text.?.object_id);
+    try t.expectEqualSlices(u8, point_replacement, batch_point.text.?.bytes);
+    try t.expectEqual(@as(u8, 0x77), batch_point.text.?.trailer);
 
     var multi_options = edit_options;
     multi_options.file.bin_data.max_total_encoded_bytes = 128 * 1024;

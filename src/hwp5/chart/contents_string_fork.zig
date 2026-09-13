@@ -11,6 +11,7 @@ const patches = @import("contents_patch.zig");
 pub const BatchRequest = union(enum) {
     font_name: struct { font: *const Font, new_object_id: u32, bytes: []const u8, trailer: u8 },
     text_body: struct { body: *const TextBody, new_object_id: u32, bytes: []const u8, trailer: u8 },
+    null_text_body: struct { body: *const TextBody, new_object_id: u32, bytes: []const u8, trailer: u8 },
 };
 
 /// Forks multiple aliases from one original Contents coordinate space.
@@ -27,14 +28,18 @@ pub fn forkMany(a: std.mem.Allocator, value: *const Contents, requests: []const 
 
     for (requests, 0..) |request, i| {
         const spec = switch (request) {
-            .font_name => |item| Spec{ .target = Target{ .object_id = item.font.name.object_id, .start = item.font.name_start, .end = item.font.name_end, .introduced = item.font.name_introduced }, .enclosing_object_id = item.font.object_id, .new_object_id = item.new_object_id, .bytes = item.bytes, .trailer = item.trailer },
+            .font_name => |item| Spec{ .target = Target{ .object_id = item.font.name.object_id, .start = item.font.name_start, .end = item.font.name_end, .introduced = item.font.name_introduced }, .enclosing_object_id = item.font.object_id, .new_object_id = item.new_object_id, .bytes = item.bytes, .trailer = item.trailer, .require_original = true },
             .text_body => |item| blk: {
                 const string = item.body.text orelse return error.UnsupportedChartStringForkValue;
-                break :blk Spec{ .target = Target{ .object_id = string.object_id, .start = item.body.text_start, .end = item.body.text_end, .introduced = item.body.text_introduced }, .enclosing_object_id = null, .new_object_id = item.new_object_id, .bytes = item.bytes, .trailer = item.trailer };
+                break :blk Spec{ .target = Target{ .object_id = string.object_id, .start = item.body.text_start, .end = item.body.text_end, .introduced = item.body.text_introduced }, .enclosing_object_id = null, .new_object_id = item.new_object_id, .bytes = item.bytes, .trailer = item.trailer, .require_original = true };
+            },
+            .null_text_body => |item| blk: {
+                if (item.body.text != null) return error.ExpectedNullChartString;
+                break :blk Spec{ .target = Target{ .object_id = 0xffffffff, .start = item.body.text_start, .end = item.body.text_end, .introduced = false }, .enclosing_object_id = null, .new_object_id = item.new_object_id, .bytes = item.bytes, .trailer = item.trailer, .require_original = false };
             },
         };
         for (requests[0..i]) |previous| if (requestObjectId(previous) == spec.new_object_id) return error.DuplicateChartObjectId;
-        const replacement = try makeReplacement(a, value, spec.target, spec.enclosing_object_id, spec.new_object_id, spec.bytes, spec.trailer);
+        const replacement = try makeReplacement(a, value, spec.target, spec.enclosing_object_id, spec.new_object_id, spec.bytes, spec.trailer, spec.require_original);
         replacements[i] = replacement;
         built += 1;
         output_patches[i] = .{ .start = spec.target.start, .end = spec.target.end, .replacement = replacement };
@@ -51,6 +56,7 @@ fn requestObjectId(request: BatchRequest) u32 {
     return switch (request) {
         .font_name => |item| item.new_object_id,
         .text_body => |item| item.new_object_id,
+        .null_text_body => |item| item.new_object_id,
     };
 }
 
@@ -104,15 +110,15 @@ pub fn forkNullableTextFormatCode(a: std.mem.Allocator, value: *const Contents, 
 }
 
 const Target = struct { object_id: u32, start: usize, end: usize, introduced: bool };
-const Spec = struct { target: Target, enclosing_object_id: ?u32, new_object_id: u32, bytes: []const u8, trailer: u8 };
+const Spec = struct { target: Target, enclosing_object_id: ?u32, new_object_id: u32, bytes: []const u8, trailer: u8, require_original: bool };
 
 fn fork(a: std.mem.Allocator, value: *const Contents, target: Target, enclosing_object_id: ?u32, new_object_id: u32, bytes: []const u8, trailer: u8, max_output_bytes: usize) ![]u8 {
-    const replacement = try makeReplacement(a, value, target, enclosing_object_id, new_object_id, bytes, trailer);
+    const replacement = try makeReplacement(a, value, target, enclosing_object_id, new_object_id, bytes, trailer, true);
     defer a.free(replacement);
     return patches.applyOriginal(a, value, &.{.{ .start = target.start, .end = target.end, .replacement = replacement }}, max_output_bytes);
 }
 
-fn makeReplacement(a: std.mem.Allocator, value: *const Contents, target: Target, enclosing_object_id: ?u32, new_object_id: u32, bytes: []const u8, trailer: u8) ![]u8 {
+fn makeReplacement(a: std.mem.Allocator, value: *const Contents, target: Target, enclosing_object_id: ?u32, new_object_id: u32, bytes: []const u8, trailer: u8, require_original: bool) ![]u8 {
     if (bytes.len > std.math.maxInt(u16)) return error.LimitExceeded;
     try ids.requireInline(new_object_id);
     if (value.prefix.objects.entries.contains(new_object_id)) return error.DuplicateChartObjectId;
@@ -124,10 +130,14 @@ fn makeReplacement(a: std.mem.Allocator, value: *const Contents, target: Target,
         return error.InvalidChartStringReferenceSpan;
     if (std.mem.readInt(u32, source[target.start..][0..4], .little) != target.object_id)
         return error.InvalidChartStringReferenceSpan;
-    const original = value.prefix.objects.entries.get(target.object_id) orelse return error.InvalidChartStringReferenceSpan;
-    switch (original) {
-        .string => |string| if (string.object_id != target.object_id) return error.InvalidChartStringReferenceSpan,
-        else => return error.InvalidChartStringReferenceSpan,
+    if (require_original) {
+        const original = value.prefix.objects.entries.get(target.object_id) orelse return error.InvalidChartStringReferenceSpan;
+        switch (original) {
+            .string => |string| if (string.object_id != target.object_id) return error.InvalidChartStringReferenceSpan,
+            else => return error.InvalidChartStringReferenceSpan,
+        }
+    } else if (target.object_id != 0xffffffff) {
+        return error.InvalidChartStringReferenceSpan;
     }
 
     const types = &value.prefix.grid.prelude.types;

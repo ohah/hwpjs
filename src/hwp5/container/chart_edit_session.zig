@@ -25,9 +25,15 @@ pub fn forkSeriesLabelBodyText(a: std.mem.Allocator, hwp: []const u8, ordinal: u
     return applyStringEdits(a, hwp, ordinal, storage_layout, ole_layout, chart_layout, &.{.{ .series_label_body_text = .{ .series_index = series_index, .bytes = new_text, .trailer = trailer } }}, options);
 }
 
+/// Materializes one currently-null point-label body as an inline String.
+pub fn materializeSeriesPointLabelBodyText(a: std.mem.Allocator, hwp: []const u8, ordinal: usize, storage_layout: StorageLayout, ole_layout: @import("../ole/envelope.zig").Layout, chart_layout: ChartLayout, series_index: usize, point_index: usize, new_text: []const u8, trailer: u8, options: Options) ![]u8 {
+    return applyStringEdits(a, hwp, ordinal, storage_layout, ole_layout, chart_layout, &.{.{ .null_series_point_label_body_text = .{ .series_index = series_index, .point_index = point_index, .bytes = new_text, .trailer = trailer } }}, options);
+}
+
 pub const StringEdit = union(enum) {
     primary_axis_title_font_name: struct { axis_index: usize, bytes: []const u8, trailer: u8 },
     series_label_body_text: struct { series_index: usize, bytes: []const u8, trailer: u8 },
+    null_series_point_label_body_text: struct { series_index: usize, point_index: usize, bytes: []const u8, trailer: u8 },
 };
 pub const Command = StringEdit;
 
@@ -137,6 +143,12 @@ fn editContents(a: std.mem.Allocator, source: []const u8, chart_layout: ChartLay
             if (item.series_index >= chart.series.items.len) return error.InvalidChartSeriesIndex;
             starts[i] = chart.series.items[item.series_index].section.label.body.text_start;
         },
+        .null_series_point_label_body_text => |item| {
+            if (item.series_index >= chart.series.items.len) return error.InvalidChartSeriesIndex;
+            const points = chart.series.items[item.series_index].section.points;
+            if (item.point_index >= points.len) return error.InvalidChartPointIndex;
+            starts[i] = points[item.point_index].label.body.text_start;
+        },
     };
     for (order, 0..) |*slot, i| slot.* = i;
     for (order, 0..) |_, i| {
@@ -158,6 +170,13 @@ fn editContents(a: std.mem.Allocator, source: []const u8, chart_layout: ChartLay
             forbidden[reserved] = new_id;
             reserved += 1;
             requests[i] = .{ .text_body = .{ .body = body, .new_object_id = new_id, .bytes = item.bytes, .trailer = item.trailer } };
+        },
+        .null_series_point_label_body_text => |item| {
+            const body = &chart.series.items[item.series_index].section.points[item.point_index].label.body;
+            const new_id = try @import("../chart/object_id_allocator.zig").findLowestAvailable(&chart.prefix.objects, forbidden[0..reserved]);
+            forbidden[reserved] = new_id;
+            reserved += 1;
+            requests[i] = .{ .null_text_body = .{ .body = body, .new_object_id = new_id, .bytes = item.bytes, .trailer = item.trailer } };
         },
     };
     return fork.forkMany(a, &chart, requests, max_output_bytes);
