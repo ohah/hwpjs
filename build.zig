@@ -43,6 +43,28 @@ pub fn build(b: *std.Build) void {
     audit.dependOn(&mutations.step);
     audit.dependOn(&run_tests.step);
     audit.dependOn(compare_step);
+    const chart_fixture = b.addSystemCommand(&.{ "node", "tests/hwp5/chart-observed-fixture.mjs" });
+    // Recheck the corpus and JS oracle on every invocation, not a stale
+    // captured stdout result whose external read dependencies are invisible.
+    chart_fixture.has_side_effects = true;
+    chart_fixture.step.dependOn(b.getInstallStep());
+    const chart_ownership_module = b.createModule(.{
+        .root_source_file = b.path("tests/hwp5/chart-observed-ownership.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    chart_ownership_module.addImport("hwpjs", core);
+    chart_ownership_module.addImport("chart_fixture", b.createModule(.{
+        .root_source_file = chart_fixture.captureStdOut(.{ .basename = "chart-fixture.zig" }),
+        .target = target,
+        .optimize = optimize,
+    }));
+    const chart_ownership = b.addRunArtifact(b.addTest(.{ .root_module = chart_ownership_module }));
+    const chart_ownership_step = b.step("chart-ownership-audit", "Verify selected Contents ownership using a hash-pinned corpus fixture");
+    chart_ownership_step.dependOn(&chart_ownership.step);
+    const chart_fixture_tests = b.addSystemCommand(&.{ "node", "--test", "tests/hwp5/chart-native-fixture-module.test.mjs" });
+    chart_ownership_step.dependOn(&chart_fixture_tests.step);
+    audit.dependOn(chart_ownership_step);
     const icc_registry_tests = b.addSystemCommand(&.{ "node", "--test", "tools/icc-registry/csv.test.mjs", "tools/icc-registry/download.test.mjs", "tools/icc-registry/snapshot.test.mjs", "tools/icc-registry/generate.test.mjs" });
     icc_registry_tests.step.dependOn(&icc_registry_check.step);
     const icc_registry_audit = b.step("icc-registry-audit", "Verify offline ICC registry snapshot and generation contracts");

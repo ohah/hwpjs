@@ -240,6 +240,8 @@ import {chartSeriesPictures} from './chart-series-pictures.mjs';
 import {chartSeriesCollections} from './chart-series-collections.mjs';
 import {chartTitleBodies} from './chart-title-bodies.mjs';
 import {chartTails} from './chart-tails.mjs';
+import {chartObservedContentsSmoke} from './chart-observed-contents-smoke.mjs';
+import {chartObservedContentsGuards} from './chart-observed-contents-guards.mjs';
 import {chartPlotSurfacePrefixes} from './chart-plot-surface-prefixes.mjs';
 import {chartStrings} from './chart-strings.mjs';
 import {chartBackdrops} from './chart-backdrops.mjs';
@@ -856,6 +858,8 @@ const chartSeriesPictureResults = await chartSeriesPictures(call);
 const chartSeriesCollectionResults = await chartSeriesCollections(call);
 const chartTitleBodyResults = await chartTitleBodies(call);
 const chartTailResults = await chartTails(call);
+const chartObservedContentsResults = await chartObservedContentsSmoke(call);
+const chartObservedContentsGuardResults = await chartObservedContentsGuards(call);
 const chartPlotSurfacePrefixResults = await chartPlotSurfacePrefixes(call);
 const chartStringResults = await chartStrings(call);
 const chartBackdropResults = await chartBackdrops(call);
@@ -1616,6 +1620,8 @@ console.log(
       chartSeriesCollectionResults,
       chartTitleBodyResults,
       chartTailResults,
+      chartObservedContentsResults,
+      chartObservedContentsGuardResults,
       chartPlotSurfacePrefixResults,
       chartStringResults,
       chartBackdropResults,

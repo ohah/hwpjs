@@ -5,10 +5,13 @@ const Objects = core.hwp5.chart_object_table.Table;
 pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     var prefix = try @import("chart-series-collection-prefix.zig").read(a, bytes, limit);
     defer prefix.deinit();
-    const c = prefix.collection;
+    return serialize(a, prefix.collection, prefix.types().definitions.count(), prefix.objects());
+}
+// Shared result-only wire: never reparse input to inspect an enclosing result.
+pub fn serialize(a: std.mem.Allocator, c: core.hwp5.chart_series_collection.Collection, type_count: usize, objects: *const Objects) ![]u8 {
     var out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(a);
-    inline for (.{ c.items.len, c.end, c.title.object_id, c.title.end, prefix.types().definitions.count(), prefix.objects().entries.count(), prefix.objects().string_bytes }) |v| try int(a, &out, u32, @intCast(v));
+    inline for (.{ c.items.len, c.end, c.title.object_id, c.title.end, type_count, objects.entries.count(), objects.string_bytes }) |v| try int(a, &out, u32, @intCast(v));
     for (c.items) |s| {
         const p = s.prefix;
         inline for (.{ p.object_id, p.end, p.array.object_id, p.array.first_word, p.array.second_word, p.array.end }) |v| try int(a, &out, u32, @intCast(v));
@@ -18,17 +21,17 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
             try int(a, &out, u32, point.object_id);
             try int(a, &out, u32, @intCast(point.end));
             try out.appendSlice(a, &point.raw);
-            try label(a, &out, point.label, prefix.objects());
+            try label(a, &out, point.label, objects);
         }
         try out.appendSlice(a, &s.section.raw);
         const ref = s.section.text;
         inline for (.{ ref.value.object_id, ref.value.bytes.len, ref.value.trailer, @intFromBool(ref.introduced), ref.start, ref.end }) |v| try int(a, &out, u32, @intCast(v));
         try out.appendSlice(a, ref.value.bytes);
-        try label(a, &out, s.section.label, prefix.objects());
+        try label(a, &out, s.section.label, objects);
         const b = s.suffix.block;
         try int(a, &out, u32, b.object_id);
         {
-            const wire = try @import("chart-text-body-probe.zig").serializeNullableBlock(a, b, prefix.objects());
+            const wire = try @import("chart-text-body-probe.zig").serializeNullableBlock(a, b, objects);
             defer a.free(wire);
             try out.appendSlice(a, wire);
         }

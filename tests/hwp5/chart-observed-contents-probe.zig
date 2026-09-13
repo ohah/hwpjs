@@ -1,0 +1,30 @@
+const std = @import("std");
+const core = @import("hwpjs");
+const int = @import("resource-probe.zig").int;
+pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
+    var input: core.Reader = .{ .bytes = bytes };
+    const max_objects = try input.readInt(u32);
+    const axes = try input.readInt(u32);
+    const lines = try input.readInt(u32);
+    const count = try input.readInt(u32);
+    if (count > 16) return error.LimitExceeded;
+    var points: [16]usize = undefined;
+    for (points[0..count]) |*n| n.* = try input.readInt(u32);
+    var value = try core.hwp5.chart_observed_contents.readObservedV6(a, bytes[input.offset..], .{ .primary_axis_count = axes, .line_item_count = lines, .series_point_counts = points[0..count] }, .{ .prefix = .{ .grid = .{ .prelude = .{ .max_bytes = limit } }, .objects = .{ .max_objects = max_objects } } });
+    defer value.deinit();
+    var point_count: usize = 0;
+    for (value.series.items) |item| point_count += item.section.points.len;
+    var out: std.ArrayList(u8) = .empty;
+    errdefer out.deinit(a);
+    inline for (.{ value.end, value.prefix.grid.prelude.types.definitions.count(), value.prefix.objects.entries.count(), value.prefix.objects.string_bytes, value.primary_axes.len, value.line_items.len, value.series.items.len, point_count, value.light.sources.len }) |n| try int(a, &out, u32, @intCast(n));
+    try out.appendSlice(a, &value.prefix.transition.raw);
+    try out.appendSlice(a, &value.tail.raw);
+    const type_count = value.prefix.grid.prelude.types.definitions.count();
+    const series = try @import("chart-series-collection-probe.zig").serialize(a, value.series, type_count, &value.prefix.objects);
+    defer a.free(series);
+    try out.appendSlice(a, series);
+    const title = try @import("chart-title-body-probe.zig").serialize(a, value.series.title.object_id, value.title, type_count, &value.prefix.objects);
+    defer a.free(title);
+    try out.appendSlice(a, title);
+    return out.toOwnedSlice(a);
+}

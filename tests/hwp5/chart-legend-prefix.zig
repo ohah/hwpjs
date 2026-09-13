@@ -20,16 +20,7 @@ pub fn read(a: std.mem.Allocator, contents: []const u8, limit: usize, max_name: 
     errdefer objects.deinit();
     // Only established objects are registered; opaque root/grid prefix words
     // are not guessed to be object IDs. Caller retains the complete Contents.
-    for (prefix.grid.cells) |cell| switch (cell.value) {
-        .empty => {},
-        .number => |n| try objects.registerNumber(.{ .object_id = cell.object_id.?, .bits = n.bits, .trailer = n.trailer }),
-        .string => |s| try objects.registerString(.{ .object_id = cell.object_id.?, .bytes = s.bytes, .trailer = s.trailer }),
-    };
-    for (prefix.backdrop.object_ids) |id| try objects.registerOther(id);
-    for ([_]u32{ footnote.object_id, footnote.block.object_id, footnote.block.font.object_id } ++ footnote.section.backdrop.object_ids) |id|
-        try objects.registerOther(id);
-    try objects.registerString(footnote.block.font.name);
-    try objects.registerString(footnote.block.text);
+    try core.hwp5.chart_initial_objects.register(&objects, prefix.grid, prefix.backdrop, footnote);
     const value = try core.hwp5.chart_legend.readObservedV1(&prefix.reader, &prefix.grid.prelude.types, &objects, max_name);
     return .{ .previous = prefix, .objects = objects, .legend = value };
 }

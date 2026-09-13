@@ -5,6 +5,11 @@ const Objects = @import("object_table.zig").Table;
 const series = @import("series.zig");
 const titles = @import("title_header.zig");
 pub const Options = struct { max_series: usize = 65535, series: series.Options = .{} };
+/// Shared allocation-free preflight for a caller-selected Series layout.
+pub fn validateCounts(point_counts: []const usize, options: Options) !void {
+    if (point_counts.len > options.max_series) return error.LimitExceeded;
+    for (point_counts) |n| if (n > options.series.section.max_points) return error.LimitExceeded;
+}
 pub const Collection = struct {
     items: []series.Series,
     title: titles.Header,
@@ -22,8 +27,7 @@ pub const Collection = struct {
 /// their Point slices. Failure preserves reader, frees partial results and
 /// requires disposal of both tables. All String input must remain alive.
 pub fn readObserved(a: std.mem.Allocator, reader: *Reader, types: *Types, objects: *Objects, point_counts: []const usize, options: Options) !Collection {
-    if (point_counts.len > options.max_series) return error.LimitExceeded;
-    for (point_counts) |n| if (n > options.series.section.max_points) return error.LimitExceeded;
+    try validateCounts(point_counts, options);
     var next = reader.*;
     const items = try a.alloc(series.Series, point_counts.len);
     var initialized: usize = 0;
