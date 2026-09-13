@@ -89,6 +89,8 @@ fn exercise(a: std.mem.Allocator) !void {
     defer a.free(grid_number_materialized);
     const grid_nullified_number = try core.hwp5.chart_grid_cell_nullify.numberReplacement(a, &value, &value.prefix.grid.cells[6], .{ .object_id = value.prefix.grid.cells[6].object_id.?, .bits = value.prefix.grid.cells[6].value.number.bits, .trailer = value.prefix.grid.cells[6].value.number.trailer, .payload_start = value.prefix.grid.cells[6].payload_start.?, .payload_end = value.prefix.grid.cells[6].payload_end.? });
     defer a.free(grid_nullified_number);
+    const type_relocations = try core.hwp5.chart_type_declaration_relocation.prepare(a, &value, .{ .start = value.prefix.grid.cells[1].start, .end = value.prefix.grid.cells[1].end }, value.prefix.grid.cells[1].value.string.bytes.len + 19, &.{.{ .start = value.prefix.grid.cells[1].start, .end = value.prefix.grid.cells[1].end }});
+    defer type_relocations.deinit(a);
     const shared_mixed_forked = try core.hwp5.chart_contents_string_fork.forkMany(a, &value, &.{ .{ .inline_string = .{ .reference = shared_inline_reference, .new_object_id = 0xffffffed, .bytes = "j", .trailer = 10 } }, .{ .font_name = .{ .font = &value.primary_axes[0].title.font, .new_object_id = 0xffffffec, .bytes = "k", .trailer = 11 } } }, bytes.len + 160);
     defer a.free(shared_mixed_forked);
     const inline_reference: core.hwp5.chart_object_table.Reference = .{ .value = value.title.block.text.?, .introduced = value.title.block.text_introduced, .start = value.title.block.text_start, .end = value.title.block.text_end };
@@ -418,8 +420,6 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
     try t.expectError(error.InvalidChartGridRow, core.hwp5.chart_edit_session.nullifyGridCell(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, value.prefix.grid.prelude.rows, 0, edit_options));
     try t.expectError(error.InvalidChartGridColumn, core.hwp5.chart_edit_session.nullifyGridCell(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 0, value.prefix.grid.prelude.columns, edit_options));
     try t.expectError(error.ExpectedNonNullChartCell, core.hwp5.chart_edit_session.nullifyGridCell(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 0, 0, edit_options));
-    try t.expectError(error.ChartGridCellOwnsTypeDeclaration, core.hwp5.chart_edit_session.nullifyGridCell(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 0, 1, edit_options));
-    try t.expectError(error.ChartGridCellOwnsTypeDeclaration, core.hwp5.chart_edit_session.nullifyGridCell(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, 1, 1, edit_options));
     const duplicate_nullify = [_]core.hwp5.chart_edit_session.Edit{
         .{ .nullify_grid_cell = .{ .row = 0, .column = 2 } },
         .{ .nullify_grid_cell = .{ .row = 0, .column = 2 } },
@@ -755,6 +755,31 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
         try t.expectEqual(removed_string.trailer, retained.trailer);
     } else try t.expect(!nullified_chart.prefix.objects.entries.contains(removed_string_id));
     try t.expect(!nullified_chart.prefix.objects.entries.contains(value.prefix.grid.cells[6].object_id.?));
+
+    const owner_nullify_commands = [_]core.hwp5.chart_edit_session.Edit{
+        .{ .nullify_grid_cell = .{ .row = 1, .column = 2 } },
+        .{ .nullify_grid_cell = .{ .row = 1, .column = 1 } },
+        .{ .nullify_grid_cell = .{ .row = 0, .column = 2 } },
+        .{ .nullify_grid_cell = .{ .row = 0, .column = 1 } },
+    };
+    const owner_nullified_saved = try core.hwp5.chart_edit_session.applyEdits(t.allocator, outer, 1, .observed_optional_extension, .raw_cfb, layout, &owner_nullify_commands, null_grid_options);
+    defer t.allocator.free(owner_nullified_saved);
+    var owner_nullified_outer = try core.cfb.File.open(t.allocator, owner_nullified_saved, .{ .strict = true });
+    defer owner_nullified_outer.deinit();
+    const owner_nullified_header = try core.hwp5.Header.parse(owner_nullified_outer.entries[(try owner_nullified_outer.findExact("/FileHeader")).?].content);
+    const owner_nullified_inner = try core.hwp5.bin_data_stream.decode(t.allocator, &owner_nullified_header, item, owner_nullified_outer.entries[(try owner_nullified_outer.findExact("/BinData/BIN0001.OLE")).?].content, 64 * 1024);
+    defer t.allocator.free(owner_nullified_inner);
+    var owner_nullified_ole = try core.cfb.File.open(t.allocator, owner_nullified_inner, .{ .strict = true });
+    defer owner_nullified_ole.deinit();
+    var owner_nullified_chart = try contents.readObservedV6(t.allocator, owner_nullified_ole.entries[(try owner_nullified_ole.findExact("/Contents")).?].content, layout, .{});
+    defer owner_nullified_chart.deinit();
+    try t.expect(owner_nullified_chart.prefix.grid.cells[1].value == .empty);
+    try t.expect(owner_nullified_chart.prefix.grid.cells[2].value == .empty);
+    try t.expect(owner_nullified_chart.prefix.grid.cells[5].value == .empty);
+    try t.expect(owner_nullified_chart.prefix.grid.cells[6].value == .empty);
+    try t.expectEqualSlices(u8, value.prefix.grid.cells[3].value.string.bytes, owner_nullified_chart.prefix.grid.cells[3].value.string.bytes);
+    try t.expectEqual(value.prefix.grid.cells[7].value.number.bits, owner_nullified_chart.prefix.grid.cells[7].value.number.bits);
+    try t.expectEqual(value.prefix.grid.prelude.types.definitions.count(), owner_nullified_chart.prefix.grid.prelude.types.definitions.count());
 
     const inline_bytes = "inline-file-edit";
     const old_footnote_font = value.prefix.footnote.block.font.name;
@@ -1290,7 +1315,9 @@ test "actual Contents Grid string target preserves inline coordinate span" {
     defer prepared.deinit(t.allocator);
     try t.expectEqualSlices(u8, &.{ 0xff, 0xff, 0xff, 0xff }, prepared.target);
     const first = try core.hwp5.chart_grid_string_target.resolve(&value, 0, 1);
-    try t.expectError(error.ChartGridCellOwnsTypeDeclaration, core.hwp5.chart_contents_inline_fork.prepareNullAvoiding(t.allocator, &value, &first, &.{}));
+    const first_prepared = try core.hwp5.chart_contents_inline_fork.prepareNullAvoiding(t.allocator, &value, &first, &.{});
+    defer first_prepared.deinit(t.allocator);
+    try t.expectEqualSlices(u8, &.{ 0xff, 0xff, 0xff, 0xff }, first_prepared.target);
 }
 test "actual Contents null Grid String materializer validates identities and source" {
     var bytes = try decode();
@@ -1354,13 +1381,15 @@ test "actual Contents Grid nullification validates known-type number cells" {
     defer t.allocator.free(replacement);
     try t.expectEqualSlices(u8, &.{ 0xff, 0xff, 0xff, 0xff }, replacement);
     const first_number = try core.hwp5.chart_grid_number_target.resolve(&value, 1, 1);
-    try t.expectError(error.ChartGridCellOwnsTypeDeclaration, core.hwp5.chart_grid_cell_nullify.numberReplacement(t.allocator, &value, &value.prefix.grid.cells[5], first_number));
+    const first_replacement = try core.hwp5.chart_grid_cell_nullify.numberReplacement(t.allocator, &value, &value.prefix.grid.cells[5], first_number);
+    defer t.allocator.free(first_replacement);
+    try t.expectEqualSlices(u8, &.{ 0xff, 0xff, 0xff, 0xff }, first_replacement);
     var bad = number;
     bad.payload_start += 1;
     try t.expectError(error.InvalidChartNumberSource, core.hwp5.chart_grid_cell_nullify.numberReplacement(t.allocator, &value, cell, bad));
 }
 test "actual Contents retains exact type reference spans for declaration relocation" {
-    const bytes = try decode();
+    var bytes = try decode();
     var value = try contents.readObservedV6(t.allocator, &bytes, layout, .{});
     defer value.deinit();
     const references = value.prefix.grid.prelude.types.references.items;
@@ -1381,6 +1410,26 @@ test "actual Contents retains exact type reference spans for declaration relocat
     }
     try t.expectEqual(@as(usize, 2), string_cell_declarations);
     try t.expectEqual(@as(usize, 1), number_cell_declarations);
+
+    const string_cell = value.prefix.grid.cells[1];
+    const string_prepared = try core.hwp5.chart_type_declaration_relocation.prepare(t.allocator, &value, .{ .start = string_cell.start, .end = string_cell.end }, string_cell.value.string.bytes.len + 19, &.{.{ .start = string_cell.start, .end = string_cell.end }});
+    defer string_prepared.deinit(t.allocator);
+    try t.expectEqual(@as(usize, 2), string_prepared.relocations.len);
+    for (string_prepared.relocations) |relocation| {
+        try t.expectEqual(@as(usize, 4), relocation.end - relocation.start);
+        try t.expect(relocation.replacement.len > 4);
+        try t.expectEqual(std.mem.readInt(u32, relocation.replacement[0..4], .little), std.mem.readInt(u32, bytes[relocation.start..][0..4], .little));
+    }
+    const number_cell = value.prefix.grid.cells[5];
+    const number_prepared = try core.hwp5.chart_type_declaration_relocation.prepare(t.allocator, &value, .{ .start = number_cell.start, .end = number_cell.end }, 26, &.{.{ .start = number_cell.start, .end = number_cell.end }});
+    defer number_prepared.deinit(t.allocator);
+    try t.expectEqual(@as(usize, 1), number_prepared.relocations.len);
+
+    const first_string_type = for (references) |reference| {
+        if (reference.introduced and reference.start >= string_cell.start and reference.end <= string_cell.end) break reference;
+    } else unreachable;
+    bytes[first_string_type.start + 6] ^= 1;
+    try t.expectError(error.InvalidChartTypeReferenceSpan, core.hwp5.chart_type_declaration_relocation.prepare(t.allocator, &value, .{ .start = string_cell.start, .end = string_cell.end }, string_cell.value.string.bytes.len + 19, &.{.{ .start = string_cell.start, .end = string_cell.end }}));
 }
 test "actual Contents String ValueReference forks and rejects Number" {
     const bytes = try decode();

@@ -64,7 +64,6 @@ pub fn prepareAvoiding(a: std.mem.Allocator, value: *const Contents, target: *co
 /// by String forking.
 pub fn prepareNullAvoiding(a: std.mem.Allocator, value: *const Contents, target: *const Objects.Reference, excluded: []const Span) !Prepared {
     const inspected = try inspectIntroduced(value, target, excluded);
-    if (target.end - target.start != target.value.bytes.len + 19) return error.ChartGridCellOwnsTypeDeclaration;
     const replacement = try a.alloc(u8, 4);
     @memset(replacement, 0xff);
     if (inspected.next_alias) |alias| {

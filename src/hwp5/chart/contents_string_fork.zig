@@ -30,7 +30,9 @@ pub const BatchRequest = union(enum) {
 /// affect patch order or output bytes.
 pub fn forkMany(a: std.mem.Allocator, value: *const Contents, requests: []const BatchRequest, max_output_bytes: usize) ![]u8 {
     if (requests.len == 0) return error.EmptyChartStringForkBatch;
-    const patch_capacity = std.math.mul(usize, requests.len, 2) catch return error.LimitExceeded;
+    // Grid nullification may emit its target, one object relocation and up to
+    // three type-declaration relocations from the observed value-object wire.
+    const patch_capacity = std.math.mul(usize, requests.len, 5) catch return error.LimitExceeded;
     const output_patches = try a.alloc(patches.Patch, patch_capacity);
     defer a.free(output_patches);
     const replacements = try a.alloc([]u8, patch_capacity);
@@ -48,6 +50,11 @@ pub fn forkMany(a: std.mem.Allocator, value: *const Contents, requests: []const 
             const reference = if (is_nullify) request.nullify_grid_string.reference else request.inline_string.reference;
             if (is_nullify) {
                 const prepared = try @import("contents_inline_fork.zig").prepareNullAvoiding(a, value, &reference, target_spans);
+                const type_prepared = @import("type_declaration_relocation.zig").prepare(a, value, .{ .start = reference.start, .end = reference.end }, reference.value.bytes.len + 19, target_spans) catch |err| {
+                    prepared.deinit(a);
+                    return err;
+                };
+                defer a.free(type_prepared.relocations);
                 replacements[built] = prepared.target;
                 built += 1;
                 output_patches[patch_count] = .{ .start = prepared.target_start, .end = prepared.target_end, .replacement = prepared.target };
@@ -56,6 +63,12 @@ pub fn forkMany(a: std.mem.Allocator, value: *const Contents, requests: []const 
                     replacements[built] = relocation;
                     built += 1;
                     output_patches[patch_count] = .{ .start = prepared.relocation_start, .end = prepared.relocation_end, .replacement = relocation };
+                    patch_count += 1;
+                }
+                for (type_prepared.relocations) |relocation| {
+                    replacements[built] = relocation.replacement;
+                    built += 1;
+                    output_patches[patch_count] = .{ .start = relocation.start, .end = relocation.end, .replacement = relocation.replacement };
                     patch_count += 1;
                 }
                 continue;
@@ -71,6 +84,26 @@ pub fn forkMany(a: std.mem.Allocator, value: *const Contents, requests: []const 
                 replacements[built] = relocation;
                 built += 1;
                 output_patches[patch_count] = .{ .start = prepared.relocation_start, .end = prepared.relocation_end, .replacement = relocation };
+                patch_count += 1;
+            }
+            continue;
+        }
+        if (request == .nullify_grid_number) {
+            const item = request.nullify_grid_number;
+            const replacement = try @import("grid_cell_nullify.zig").numberReplacement(a, value, item.cell, item.number);
+            const type_prepared = @import("type_declaration_relocation.zig").prepare(a, value, .{ .start = item.cell.start, .end = item.cell.end }, 26, target_spans) catch |err| {
+                a.free(replacement);
+                return err;
+            };
+            defer a.free(type_prepared.relocations);
+            replacements[built] = replacement;
+            built += 1;
+            output_patches[patch_count] = .{ .start = item.cell.start, .end = item.cell.end, .replacement = replacement };
+            patch_count += 1;
+            for (type_prepared.relocations) |relocation| {
+                replacements[built] = relocation.replacement;
+                built += 1;
+                output_patches[patch_count] = .{ .start = relocation.start, .end = relocation.end, .replacement = relocation.replacement };
                 patch_count += 1;
             }
             continue;
@@ -142,11 +175,6 @@ fn prepare(a: std.mem.Allocator, value: *const Contents, request: BatchRequest, 
         const item = request.null_grid_number;
         for (previous) |prior| if (requestHasId(prior, item.object_id)) return error.DuplicateChartObjectId;
         const replacement = try @import("grid_number_materialize.zig").replacement(a, value, item.cell, item.object_id, item.number_type_id, item.value_type_id, item.bits, item.trailer);
-        return .{ .start = item.cell.start, .end = item.cell.end, .replacement = replacement };
-    }
-    if (request == .nullify_grid_number) {
-        const item = request.nullify_grid_number;
-        const replacement = try @import("grid_cell_nullify.zig").numberReplacement(a, value, item.cell, item.number);
         return .{ .start = item.cell.start, .end = item.cell.end, .replacement = replacement };
     }
     if (request == .null_text_format_object) {
