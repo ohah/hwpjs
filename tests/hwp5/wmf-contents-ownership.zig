@@ -59,13 +59,34 @@ test "actual HWP OLE CONTENTS is an explicitly selected payload-sized placeable 
     try t.expectEqual(@as(usize, 25), payloads.nonempty_face_names);
     try t.expectEqual(@as(usize, 234), payloads.face_name_bytes);
     try t.expectError(error.InvalidWmfColorReserved, core.image.wmf_create_payloads.inspect(fixture.bytes, value, records, .specified_zero));
+    const state = try core.image.wmf_state_records.inspect(fixture.bytes, value, records, .observed_preserve);
+    try t.expectEqual(@as(usize, 60), state.background_transparent);
+    try t.expectEqual(@as(usize, 88), state.background_opaque);
+    try t.expectEqual(@as(usize, 1), state.raster_operations);
+    try t.expectEqual(@as(usize, 2), state.polygon_alternate);
+    try t.expectEqual(@as(usize, 2), state.polygon_winding);
+    try t.expectEqual(@as(usize, 96), state.text_colors);
+    try t.expectEqual(@as(usize, 96), state.nonzero_color_reserved);
+    try t.expectEqual(@as(usize, 1), state.window_origins);
+    try t.expectEqual(@as(i64, 60), state.window_origin_x_sum);
+    try t.expectEqual(@as(i64, 1008), state.window_origin_y_sum);
+    try t.expectEqual(@as(usize, 1), state.window_extents);
+    try t.expectEqual(@as(i64, 5464), state.window_extent_x_sum);
+    try t.expectEqual(@as(i64, 2173), state.window_extent_y_sum);
+    try t.expectEqual(@as(usize, 96), state.moves);
+    try t.expectEqual(@as(i64, 267579), state.move_x_sum);
+    try t.expectEqual(@as(i64, 143072), state.move_y_sum);
+    try t.expectEqual(@as(usize, 8), state.lines);
+    try t.expectEqual(@as(i64, 20994), state.line_x_sum);
+    try t.expectEqual(@as(i64, 13754), state.line_y_sum);
+    try t.expectError(error.InvalidWmfColorReserved, core.image.wmf_state_records.inspect(fixture.bytes, value, records, .specified_zero));
 }
 
 test "public WMF create payload audit pins fields and mandatory validation" {
     const pen_bytes = [_]u8{ 6, 0, 0xff, 0xff, 2, 0, 1, 2, 3, 2 };
     const pen = try core.image.wmf_pen.parse(syntheticRecord(0x02fa, 8, &pen_bytes), .observed_preserve);
-    try t.expectEqual(@as(i16, -1), pen.width_x);
-    try t.expectEqual(@as(i16, 2), pen.width_y);
+    try t.expectEqual(@as(i16, -1), pen.width.x);
+    try t.expectEqual(@as(i16, 2), pen.width.y);
     try t.expectEqual(@as(u32, 0x02030201), pen.color.raw);
     try t.expectError(error.InvalidWmfColorReserved, core.image.wmf_pen.parse(syntheticRecord(0x02fa, 8, &pen_bytes), .specified_zero));
 
@@ -82,6 +103,28 @@ test "public WMF create payload audit pins fields and mandatory validation" {
     font_bytes[10] = 0;
     @memset(font_bytes[18..50], 'A');
     try t.expectError(error.UnterminatedWmfFaceName, core.image.wmf_font.parse(syntheticRecord(0x02fb, 28, &font_bytes)));
+}
+
+test "public WMF state audit pins YX order optional reserved and mode domains" {
+    const point_bytes = [_]u8{ 0xfe, 0xff, 3, 0 };
+    const point = try core.image.wmf_point_record.parse(syntheticRecord(0x0214, 5, &point_bytes), .move_to);
+    try t.expectEqual(@as(i16, 3), point.point.x);
+    try t.expectEqual(@as(i16, -2), point.point.y);
+    try t.expectError(error.InvalidWmfPointFunction, core.image.wmf_point_record.parse(syntheticRecord(0x0213, 5, &point_bytes), .move_to));
+
+    const short_mode = [_]u8{ 1, 0 };
+    const mode = try core.image.wmf_mode_record.parse(syntheticRecord(0x0102, 4, &short_mode), .background);
+    try t.expectEqual(@as(?u16, null), mode.reserved);
+    const long_mode = [_]u8{ 2, 0, 0x34, 0x12 };
+    const reserved = try core.image.wmf_mode_record.parse(syntheticRecord(0x0102, 5, &long_mode), .background);
+    try t.expectEqual(@as(?u16, 0x1234), reserved.reserved);
+    const invalid_mode = [_]u8{ 3, 0 };
+    try t.expectError(error.UnsupportedWmfMode, core.image.wmf_mode_record.parse(syntheticRecord(0x0106, 4, &invalid_mode), .polygon_fill));
+
+    const color_bytes = [_]u8{ 1, 2, 3, 2 };
+    const color = try core.image.wmf_text_color.parse(syntheticRecord(0x0209, 5, &color_bytes), .observed_preserve);
+    try t.expectEqual(@as(u32, 0x02030201), color.raw);
+    try t.expectError(error.InvalidWmfColorReserved, core.image.wmf_text_color.parse(syntheticRecord(0x0209, 5, &color_bytes), .specified_zero));
 }
 
 test "public WMF object audit pins lowest-slot reuse and dead references" {

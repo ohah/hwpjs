@@ -1,11 +1,11 @@
 const std = @import("std");
 const records = @import("records.zig");
 const color_ref = @import("color_ref.zig");
+const point_s = @import("point_s.zig");
 
 pub const Pen = struct {
     style_raw: u16,
-    width_x: i16,
-    width_y: i16,
+    width: point_s.Point,
     color: color_ref.ColorRef,
 };
 
@@ -24,8 +24,7 @@ pub fn parse(record: records.Record, color_policy: color_ref.ReservedPolicy) !Pe
     if (!validStyle(style)) return error.UnsupportedWmfPenStyle;
     return .{
         .style_raw = style,
-        .width_x = std.mem.readInt(i16, record.parameters[2..4], .little),
-        .width_y = std.mem.readInt(i16, record.parameters[4..6], .little),
+        .width = point_s.readXY(record.parameters[2..6]),
         .color = try color_ref.parse(record.parameters[6..10], color_policy),
     };
 }

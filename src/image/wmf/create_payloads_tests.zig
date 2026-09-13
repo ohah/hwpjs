@@ -13,8 +13,8 @@ test "WMF pen preserves signed width and explicit ColorRef policy" {
     const bytes = [_]u8{ 6, 0, 0xff, 0xff, 2, 0, 1, 2, 3, 2 };
     const value = try pen.parse(record(0x02fa, 8, &bytes), .observed_preserve);
     try t.expectEqual(@as(u16, 6), value.style_raw);
-    try t.expectEqual(@as(i16, -1), value.width_x);
-    try t.expectEqual(@as(i16, 2), value.width_y);
+    try t.expectEqual(@as(i16, -1), value.width.x);
+    try t.expectEqual(@as(i16, 2), value.width.y);
     try t.expectEqual(@as(u32, 0x02030201), value.color.raw);
     try t.expectError(error.InvalidWmfColorReserved, pen.parse(record(0x02fa, 8, &bytes), .specified_zero));
 }
