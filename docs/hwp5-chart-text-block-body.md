@@ -47,3 +47,7 @@ Debug·ReleaseSafe·ReleaseFast 독립 WASM에서 43개 차트의 배율 본문 
 전체 audit 이후 기본 `zig build test --summary all`도 1,035/1,035 tests, `zig build -Doptimize=ReleaseSafe --summary all`도 5/5 steps로 통과했습니다. 변경 Zig fmt·JS 구문·문서 링크·diff 공백 검사도 통과했습니다.
 
 TextBlock span 추가 상태의 현재 정규 audit는 Debug·ReleaseSafe·ReleaseFast 모두 32/32 단계, native 1,100/1,100개, HWP/WASM 8,905,815회, imports 0으로 통과했습니다. Contents 소유권 테스트는 각 모드 14/14개이며 전체 기본 Zig 테스트는 1,086/1,086개입니다. 위의 과거 단계별 수치는 당시 기준 기록이고 이 문단이 현재 통합 검증 수치입니다.
+
+보존한 alias span은 [String 참조 분리](hwp5-chart-string-fork.md)의 TextBlock/Body adapter가 사용합니다. 실제 series section label 본문을 새 inline String으로 분리해 전체 Contents를 재파싱하며, null과 이미 inline인 본문은 분리 대상으로 허용하지 않습니다.
+
+adapter 추가 후 Contents 소유권 테스트는 Debug·ReleaseSafe·ReleaseFast 각각 15/15개를 통과했고, 정상 Body 분리 경로도 모든 할당 실패 주입에 포함했습니다. Body span 시작·끝·도입 상태와 required/nullable 상태 오류를 바꾼 5종 변이 15개 조합을 모두 런타임 assertion으로 검출했습니다.

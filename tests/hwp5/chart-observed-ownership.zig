@@ -59,6 +59,8 @@ fn exercise(a: std.mem.Allocator) !void {
     };
     const value_forked = try core.hwp5.chart_contents_string_fork.forkStringValueReference(a, &value, &value_alias, 0xfffffffc, "z", 0, bytes.len + 16);
     defer a.free(value_forked);
+    const body_forked = try core.hwp5.chart_contents_string_fork.forkTextBodyText(a, &value, &value.series.items[0].section.label.body, 0xfffffffb, "q", 0, bytes.len + 16);
+    defer a.free(body_forked);
     const begin = @intFromPtr(&bytes);
     try t.expect(@intFromPtr(name.ptr) >= begin and @intFromPtr(name.ptr) + name.len <= begin + bytes.len);
     const raw = value.prefix.transition.raw;
@@ -100,6 +102,29 @@ test "actual Contents TextBlock text spans retain wire boundaries" {
         try expectTextSpan(&bytes, item.section.label.body.text, item.section.label.body.text_introduced, item.section.label.body.text_start, item.section.label.body.text_end);
     }
     try expectTextSpan(&bytes, value.title.block.text, value.title.block.text_introduced, value.title.block.text_start, value.title.block.text_end);
+}
+test "actual Contents TextBlock text adapters fork aliases and reject other states" {
+    const bytes = try decode();
+    var value = try contents.readObservedV6(t.allocator, &bytes, layout, .{});
+    defer value.deinit();
+    const target = &value.series.items[0].section.label.body;
+    try t.expect(target.text != null and !target.text_introduced);
+    const old_id = target.text.?.object_id;
+    const replacement = "independent-label-body";
+    const expected_len = bytes.len + replacement.len + 15;
+    const forked = try core.hwp5.chart_contents_string_fork.forkTextBodyText(t.allocator, &value, target, 0xfffffffb, replacement, 0x39, expected_len);
+    defer t.allocator.free(forked);
+    var reparsed = try contents.readObservedV6(t.allocator, forked, layout, .{});
+    defer reparsed.deinit();
+    const changed = reparsed.series.items[0].section.label.body;
+    try t.expect(changed.text_introduced);
+    try t.expectEqual(@as(u32, 0xfffffffb), changed.text.?.object_id);
+    try t.expectEqualSlices(u8, replacement, changed.text.?.bytes);
+    try t.expectEqual(@as(u8, 0x39), changed.text.?.trailer);
+    try t.expect(reparsed.prefix.objects.entries.contains(old_id));
+    try t.expectError(error.UnsupportedChartStringForkTarget, core.hwp5.chart_contents_string_fork.forkTextBlockText(t.allocator, &value, &value.prefix.footnote.block, 0xfffffffa, "x", 0, bytes.len + 16));
+    try t.expectError(error.UnsupportedChartStringForkTarget, core.hwp5.chart_contents_string_fork.forkTextBlockText(t.allocator, &value, &value.primary_axes[0].title, 0xfffffffa, "x", 0, bytes.len + 16));
+    try t.expectError(error.UnsupportedChartStringForkValue, core.hwp5.chart_contents_string_fork.forkNullableTextBlockText(t.allocator, &value, &value.secondary_axis.title, 0xfffffffa, "x", 0, bytes.len + 16));
 }
 test "actual Contents patch validation" {
     var bytes = try decode();

@@ -2,6 +2,8 @@ const std = @import("std");
 const Contents = @import("observed_contents.zig").Contents;
 const Font = @import("font.zig").Font;
 const Objects = @import("object_table.zig");
+const TextBlock = @import("text_block.zig");
+const TextBody = @import("text_block_body.zig").Body;
 const ids = @import("object_ids.zig");
 const patches = @import("contents_patch.zig");
 
@@ -24,6 +26,23 @@ pub fn forkStringValueReference(a: std.mem.Allocator, value: *const Contents, re
         .number => return error.UnsupportedChartStringForkValue,
     };
     return fork(a, value, .{ .object_id = string.object_id, .start = reference.start, .end = reference.end, .introduced = reference.introduced }, null, new_object_id, bytes, trailer, max_output_bytes);
+}
+
+/// Forks the required text of an enclosing TextBlock.
+pub fn forkTextBlockText(a: std.mem.Allocator, value: *const Contents, block: *const TextBlock.Block, new_object_id: u32, bytes: []const u8, trailer: u8, max_output_bytes: usize) ![]u8 {
+    return fork(a, value, .{ .object_id = block.text.object_id, .start = block.text_start, .end = block.text_end, .introduced = block.text_introduced }, block.object_id, new_object_id, bytes, trailer, max_output_bytes);
+}
+
+/// Forks non-null text from a nullable enclosing TextBlock.
+pub fn forkNullableTextBlockText(a: std.mem.Allocator, value: *const Contents, block: *const TextBlock.NullableBlock, new_object_id: u32, bytes: []const u8, trailer: u8, max_output_bytes: usize) ![]u8 {
+    const string = block.text orelse return error.UnsupportedChartStringForkValue;
+    return fork(a, value, .{ .object_id = string.object_id, .start = block.text_start, .end = block.text_end, .introduced = block.text_introduced }, block.object_id, new_object_id, bytes, trailer, max_output_bytes);
+}
+
+/// Forks non-null text from a base-class body without an enclosing object ID.
+pub fn forkTextBodyText(a: std.mem.Allocator, value: *const Contents, body: *const TextBody, new_object_id: u32, bytes: []const u8, trailer: u8, max_output_bytes: usize) ![]u8 {
+    const string = body.text orelse return error.UnsupportedChartStringForkValue;
+    return fork(a, value, .{ .object_id = string.object_id, .start = body.text_start, .end = body.text_end, .introduced = body.text_introduced }, null, new_object_id, bytes, trailer, max_output_bytes);
 }
 
 const Target = struct { object_id: u32, start: usize, end: usize, introduced: bool };

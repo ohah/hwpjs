@@ -2,7 +2,7 @@
 
 ## 계약
 
-`chart/contents_string_fork.zig`의 `forkStringReference`는 기존 String object ID를 재참조하는 `object_table.Reference` 한 곳을 새 inline String 정의로 교체합니다. `forkStringValueReference`는 String/Number union에서 String만 같은 경로로 전달하고 Number를 명시적으로 거부합니다. `forkFontName`은 평탄화된 Font 필드를 같은 내부 `Target`으로 변환하는 adapter입니다. 세 진입점은 직렬화 규칙을 복제하지 않습니다. 대상은 `introduced == false`이고 [보존된 참조 span](hwp5-chart-string-reference-spans.md)이 정확히 4바이트여야 합니다. span의 u32 ID, 결과 모델의 ID, 객체 사전의 String entry가 모두 일치해야 합니다.
+`chart/contents_string_fork.zig`의 `forkStringReference`는 기존 String object ID를 재참조하는 `object_table.Reference` 한 곳을 새 inline String 정의로 교체합니다. `forkStringValueReference`는 String/Number union에서 String만 같은 경로로 전달하고 Number를 명시적으로 거부합니다. `forkFontName`, `forkTextBlockText`, `forkNullableTextBlockText`, `forkTextBodyText`는 평탄화된 필드를 같은 내부 `Target`으로 변환하는 adapter입니다. 모든 진입점은 직렬화 규칙을 복제하지 않습니다. 대상은 `introduced == false`이고 [보존된 참조 span](hwp5-chart-string-reference-spans.md)이 정확히 4바이트여야 합니다. span의 u32 ID, 결과 모델의 ID, 객체 사전의 String entry가 모두 일치해야 합니다.
 
 caller가 새 object ID, 원시 bytes, trailer와 출력 한도를 제공합니다. ID는 null sentinel이 아니고 기존 객체 사전 및 Font object ID와 충돌하지 않아야 합니다. writer가 임의 ID를 고르지 않으므로 ID 할당 정책은 호출자 소유입니다. 문자열 최대 길이는 wire의 u16과 같은 65,535바이트입니다.
 
@@ -17,7 +17,7 @@ SHA-256 고정 9,876바이트 Contents의 첫 주축 Font 이름 alias를 Font a
 - 뒤의 주축 중 적어도 하나는 기존 ID alias를 그대로 유지합니다.
 - 정상 분리 경로의 임시 직렬화 버퍼와 최종 출력은 모든 할당 실패 지점에서 누수 없이 정리됩니다.
 
-null ID, 기존 ID 충돌, inline 정의 대상, 65,536바이트 입력, 잘못된 span·원본 ID·객체 사전 entry, 필수 타입 version 부재는 정확한 오류로 거부합니다. 실제 axis scale의 Number `ValueReference`도 `UnsupportedChartStringForkValue`로 거부합니다. 이 fixture에서 Font 밖에 보존된 String `Reference`들은 모두 inline 정의였으므로 series section text를 범용 API에 넣어 거부되는 것까지만 실측했습니다. 비-Font String alias 성공을 이 표본으로 검증했다고 주장하지 않습니다.
+null ID, 기존 ID 충돌, inline 정의 대상, 65,536바이트 입력, 잘못된 span·원본 ID·객체 사전 entry, 필수 타입 version 부재는 정확한 오류로 거부합니다. 실제 axis scale의 Number `ValueReference`도 `UnsupportedChartStringForkValue`로 거부합니다. TextBlock adapter는 실제 series section label의 alias 본문 하나를 분리하고 전체 Contents를 재파싱해 대상만 새 ID·bytes·trailer를 얻는지 확인합니다. 실제 Footnote·주축의 inline 본문과 보조축 null 본문도 각각 상태별 오류로 거부합니다.
 
 ## 적대적 검증
 
@@ -27,6 +27,8 @@ null ID, 기존 ID 충돌, inline 정의 대상, 65,536바이트 입력, 잘못�
 
 `ValueReference` adapter에는 Number를 String 경로로 전달, String object ID를 변경, `introduced`를 true로 고정한 세 변이를 세 모드에서 실행했습니다. 최초 Number 변이가 컴파일되지 않은 결과는 폐기하고 컴파일 가능한 의미 변이로 교체했으며, 유효한 9개 조합은 모두 컴파일 성공 후 assertion 실패로 거부됐습니다.
 
+TextBlock adapter에는 Body 시작+1·끝-1·introduced=true, nullable null 오류 변경, required Block introduced=false의 다섯 변이를 세 모드에서 실행했습니다. 15개 조합은 모두 컴파일 성공 후 실제 재파싱 또는 정확 오류 assertion 실패로 거부됐고 trap은 검출로 세지 않았습니다.
+
 ## 미구현 범위
 
-범용 API는 `object_table.Reference`와 String arm의 `ValueReference`를 결과에 보존한 필드에 적용할 수 있습니다. Number를 String으로 재형식화하지 않습니다. Font처럼 값을 평탄화한 다른 필드는 별도 span 보존과 얇은 adapter가 필요합니다. 자동 object ID 탐색, 새 type ID·선언 생성, 문자열 인코딩 변환, 여러 편집의 일괄 트랜잭션, CFB 스트림 저장은 제공하지 않습니다.
+범용 API는 `object_table.Reference`, String arm의 `ValueReference`, Font 이름과 TextBlock 본문에 적용할 수 있습니다. Number와 null을 String으로 재형식화하지 않습니다. 값을 평탄화한 다른 필드는 별도 span 보존과 얇은 adapter가 필요합니다. 자동 object ID 탐색, 새 type ID·선언 생성, 문자열 인코딩 변환, 여러 편집의 일괄 트랜잭션, CFB 스트림 저장은 제공하지 않습니다.
