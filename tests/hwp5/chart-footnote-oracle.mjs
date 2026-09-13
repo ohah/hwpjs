@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {chartTextBlockOracle} from './chart-text-block-oracle.mjs';
+import {readChartSectionFields} from './chart-section-fields-evidence.mjs';
 const u32=n=>{const b=Buffer.alloc(4);b.writeUInt32LE(n);return b;};
 export function chartFootnoteOracle(b){
  const block=chartTextBlockOracle(b),types=block.types;let p=block.end;
@@ -14,13 +15,9 @@ export function chartFootnoteOracle(b){
   }
   assert.equal(types.get(id),name+'\0');
  };
- type('VtChartSection');rawOffsets.push([p,26]);const section=take(26),ids=[],raw=[];
- for(const [name,length] of [['VtBackdrop',50],['VtFill',34],['VtPicture',4]]){
-  objectOffsets.push(p);ids.push(long());references.push(p);type(name);rawOffsets.push([p,length]);raw.push(take(length));
- }
- const picture=p;assert.equal(long(),0xffffffff);
- const base=()=>{bases.push(p);type('VtObject');};
- base();const suffixOffset=p,suffix=take(2);base();base();base();
+ let picture,suffixOffset,data;
+ const fields=readChartSectionFields({type,object:()=>{objectOffsets.push(p);const id=long();references.push(p);return id;},raw:n=>{rawOffsets.push([p,n]);return take(n);},long:()=>{picture=p;data=long();return data;},word:()=>{suffixOffset=p;return take(2);},base:()=>{bases.push(p);type('VtObject');},reject:()=>assert.equal(data,0xffffffff)});
+ const {raw26:section,ids,suffix}=fields,raw=[fields.raw50,fields.raw34,fields.raw4];
  return {start:block.footnoteStart,end:p,block,declarations,objectOffsets,rawOffsets,references,bases,picture,suffixOffset,
   wire:Buffer.concat([u32(p),u32(block.footnoteId),...ids.map(u32),suffix,section,...raw,block.wire])};
 }
