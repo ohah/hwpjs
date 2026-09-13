@@ -83,6 +83,8 @@ ReleaseSafe 실측:
 
 ### 저장소의 지속적인 소유권 회귀 검사
 
+미수정 바이트 동일 재생의 기반과 source borrow 계약은 [차트 원본 바이트 보존](hwp5-chart-source-preservation.md)이 소유합니다. 의미 모델만으로 미해석 타입 참조와 raw 구간을 재생성할 수 있다고 가정하지 않습니다.
+
 임시 native 검사의 네 테스트를 `tests/hwp5/chart-observed-ownership.zig`로 옮겨 정규 audit에 연결했습니다. 실행 명령은 [개발·검증 명령](development-commands.md)에 둡니다. 현재 소스로 Debug·ReleaseSafe·ReleaseFast 각각 빌드 단계 10/10, native 4/4, JS 생성기 2/2 통과를 확인했습니다.
 
 이 연결 이후 전체 코어 단위 테스트 1,085/1,085와 ReleaseSafe 제품 빌드 5/5도 통과했습니다. 별도 소유권 테스트 네 개는 이 코어 단위 테스트 수에 포함되지 않습니다. Zig 포맷·변경 JS 구문·diff 공백 검사도 통과했습니다. 후속 세 모드 전체 audit 결과는 위 반환값 대조 확장 절에 기록했습니다.

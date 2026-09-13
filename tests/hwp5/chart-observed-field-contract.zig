@@ -15,7 +15,7 @@ fn fields(comptime T: type, comptime expected: []const []const u8) void {
 pub fn assertCurrent() void {
     comptime {
         @setEvalBranchQuota(10000);
-        fields(h.chart_observed_contents.Contents, &.{ "allocator", "prefix", "plot", "light", "primary_axes", "surface", "secondary_axis", "line_word", "line_items", "post_line", "series", "title", "tail", "end" });
+        fields(h.chart_observed_contents.Contents, &.{ "allocator", "source", "prefix", "plot", "light", "primary_axes", "surface", "secondary_axis", "line_word", "line_items", "post_line", "series", "title", "tail", "end" });
         fields(h.chart_contents_prefix.Prefix, &.{ "grid", "transition", "footnote", "objects", "legend", "end" });
         fields(h.chart_grid_cells.Grid, &.{ "allocator", "prelude", "cells", "string_bytes", "payload_offset" });
         fields(h.chart_grid_cells.Cell, &.{ "object_id", "start", "end", "value" });

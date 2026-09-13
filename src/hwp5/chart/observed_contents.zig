@@ -29,6 +29,9 @@ pub const Options = struct {
 };
 pub const Contents = struct {
     allocator: std.mem.Allocator,
+    /// Exact borrowed input for unchanged replay and future patch-based save.
+    /// Semantic fields and type tables do not reproduce every original choice.
+    source: []const u8,
     prefix: prefixes.Prefix,
     plot: plots.Prefix,
     light: lights.Light,
@@ -82,5 +85,5 @@ pub fn readObservedV6(a: std.mem.Allocator, bytes: []const u8, layout: Layout, o
     const title = try titles.readBodyObservedV1(&reader, types, objects, options.title);
     const tail = try tails.readObservedNoItems(&reader, types, objects);
     if (reader.offset != bytes.len) return error.UnexpectedChartTrailingBytes;
-    return .{ .allocator = a, .prefix = prefix, .plot = plot, .light = light, .primary_axes = primary_axes, .surface = surface, .secondary_axis = secondary_axis, .line_word = line_word, .line_items = line_items, .post_line = post_line, .series = series, .title = title, .tail = tail, .end = reader.offset };
+    return .{ .allocator = a, .source = bytes, .prefix = prefix, .plot = plot, .light = light, .primary_axes = primary_axes, .surface = surface, .secondary_axis = secondary_axis, .line_word = line_word, .line_items = line_items, .post_line = post_line, .series = series, .title = title, .tail = tail, .end = reader.offset };
 }

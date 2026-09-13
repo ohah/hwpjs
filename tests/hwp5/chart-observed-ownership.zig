@@ -13,6 +13,9 @@ fn exercise(a: std.mem.Allocator) !void {
     var bytes = try decode();
     var value = try contents.readObservedV6(a, &bytes, layout, .{});
     defer value.deinit();
+    try t.expectEqual(bytes.len, value.source.len);
+    try t.expectEqual(@intFromPtr(&bytes), @intFromPtr(value.source.ptr));
+    try t.expectEqualSlices(u8, &bytes, value.source);
     try t.expectEqual(bytes.len, value.end);
     try t.expectEqual(fixture.point_counts.len, value.series.items.len);
     for (value.series.items, layout.series_point_counts) |item, n| try t.expectEqual(n, item.section.points.len);
@@ -22,6 +25,7 @@ fn exercise(a: std.mem.Allocator) !void {
     try t.expect(@intFromPtr(name.ptr) >= begin and @intFromPtr(name.ptr) + name.len <= begin + bytes.len);
     const raw = value.prefix.transition.raw;
     @memset(&bytes, 0xcc);
+    try t.expectEqual(@as(u8, 0xcc), value.source[0]);
     try t.expectEqual(@as(u8, 0xcc), name[0]);
     try t.expectEqualSlices(u8, &raw, &value.prefix.transition.raw);
 }

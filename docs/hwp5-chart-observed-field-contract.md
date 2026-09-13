@@ -6,7 +6,7 @@
 
 필드 목록은 **변경 감지 계약**입니다. 목록에 있다는 사실만으로 해당 필드 값이 독립 wire와 대조된다고 주장하지 않습니다. 값 대조는 `chart-observed-contents-probe.zig`와 주제별 공통 serializer, 기대값은 `chart-observed-contents-oracle.mjs`와 주제별 독립 oracle이 소유합니다. 새 필드 추가 시 계약 목록만 갱신해서는 안 되며 값 대조 또는 명시적 제외 근거를 함께 갱신해야 합니다.
 
-allocator, options, HashMap 저장소처럼 파일에서 직접 복호화한 값이 아닌 소유권·한도·구현 필드도 구조 변경 감지를 위해 목록에는 포함합니다. 이들을 바이너리 반환 wire에 넣거나 HWP 필드라고 해석하지 않습니다. String이 빌리는 원본 입력이나 table이 소유한 이름 등 수명 계약은 [Contents 조립](hwp5-chart-observed-contents.md)과 [사전 엔트리 대조](hwp5-chart-observed-tables.md)가 소유합니다.
+allocator, source, options, HashMap 저장소처럼 파일의 의미 필드가 아닌 소유권·원본·한도·구현 필드도 구조 변경 감지를 위해 목록에는 포함합니다. 이들을 바이너리 반환 wire에 넣거나 HWP 필드라고 해석하지 않습니다. source와 String이 빌리는 입력 및 table이 소유한 이름의 수명 계약은 [원본 바이트 보존](hwp5-chart-source-preservation.md), [Contents 조립](hwp5-chart-observed-contents.md), [사전 엔트리 대조](hwp5-chart-observed-tables.md)가 소유합니다.
 
 ## 적대적 검증
 
