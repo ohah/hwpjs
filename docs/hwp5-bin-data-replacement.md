@@ -16,6 +16,12 @@ CFB v3/v4, FileHeader 기본 압축 true/false, 항목 default/compressed/uncomp
 
 적대적 변이 검증에서는 strict 읽기 해제, BinData ID를 다음 값으로 오선택, 압축 인코딩 우회, compact CFB node를 다음 값으로 오선택, 출력 CFB version 3 강제의 다섯 결함을 각각 주입했습니다. Debug·ReleaseSafe·ReleaseFast의 15개 실행 모두 컴파일 성공 뒤 런타임 assertion 실패로 검출했습니다. 실행 로그는 `/tmp/hwpjs-outer-bin-data-mutants.Xkj0fS`에 남겼습니다.
 
+## 실제 차트 전체 연결
+
+실제 차트 fixture로 String fork, 내부 OLE `/Contents` 교체, 기본 압축이 켜진 바깥 HWP `BIN0001.OLE` 교체를 연속 실행합니다. 저장 결과를 strict HWP CFB로 다시 열어 raw DEFLATE를 해제하고, strict 내부 CFB로 다시 연 뒤 최종 Contents를 재파싱합니다. 바깥 v3·안쪽 v4, 양쪽 보존 stream, 새 object ID·문자열·trailer를 끝단에서 대조하므로 각 계층의 단독 성공만 확인하는 테스트가 아닙니다.
+
+전체 연결의 적대적 검증은 내부 Contents 경로 오선택, 바깥 BinData ID 오선택, FileHeader 압축 플래그 제거, 저장 stream 압축 해제 우회, 최종 원본 Contents 재파싱을 각각 주입했습니다. 다섯 실행 모두 컴파일 뒤 정확히 새 전체 연결 테스트에서 실패해 계층별 우회를 검출했습니다.
+
 ## 남은 범위
 
-caller가 전달한 BinData 항목이 실제 `/DocInfo`의 특정 레코드와 동일한지 이 API가 다시 탐색하지는 않습니다. 항목 추가·삭제와 DocInfo 수정, 암호화/DRM 쓰기, 외부 LINK, 여러 stream의 원자적 편집 세션, 공개 JS API는 별도 범위입니다. 실제 차트 편집 전체 연결은 내부 OLE와 Contents writer를 함께 호출하는 상위 작업이 남아 있습니다.
+caller가 전달한 BinData 항목이 실제 `/DocInfo`의 특정 레코드와 동일한지 이 API가 다시 탐색하지는 않습니다. 항목 추가·삭제와 DocInfo 수정, 암호화/DRM 쓰기, 외부 LINK, 여러 stream의 원자적 편집 세션, 공개 JS API는 별도 범위입니다.

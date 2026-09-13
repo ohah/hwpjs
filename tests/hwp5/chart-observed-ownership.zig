@@ -225,6 +225,57 @@ test "actual edited Contents survives inner OLE CFB stream replacement" {
     try t.expectEqualSlices(u8, replacement, reparsed.primary_axes[0].title.font.name.bytes);
     try t.expectEqual(@as(u8, 0x44), reparsed.primary_axes[0].title.font.name.trailer);
 }
+test "actual edited Contents survives compressed outer HWP BinData replacement" {
+    const bytes = try decode();
+    var value = try contents.readObservedV6(t.allocator, &bytes, layout, .{});
+    defer value.deinit();
+    const target = &value.primary_axes[0].title.font;
+    const new_id = try core.hwp5.chart_object_id_allocator.findLowestAvailable(&value.prefix.objects, &.{target.object_id});
+    const replacement = "outer-saved-axis-font";
+    const forked = try core.hwp5.chart_contents_string_fork.forkFontName(t.allocator, &value, target, new_id, replacement, 0x55, bytes.len + replacement.len + 15);
+    defer t.allocator.free(forked);
+
+    const inner = try core.cfb.writer.write(t.allocator, &.{ .{ .name = "Root Entry", .kind = 5 }, .{ .name = "Contents", .parent = 0, .content = &bytes }, .{ .name = "Unknown", .parent = 0, .content = "inner-preserved" } }, .{ .version = 4 });
+    defer t.allocator.free(inner);
+    const saved_inner = try core.hwp5.ole_stream_replace.replaceExact(t.allocator, inner, .raw_cfb, "/Contents", forked, .{ .max_output_bytes = inner.len + forked.len });
+    defer t.allocator.free(saved_inner);
+
+    var header = [_]u8{0} ** 256;
+    @memcpy(header[0..17], "HWP Document File");
+    std.mem.writeInt(u32, header[32..36], 0x05000107, .little);
+    std.mem.writeInt(u32, header[36..40], 1, .little);
+    const outer = try core.cfb.writer.write(t.allocator, &.{
+        .{ .name = "Root Entry", .kind = 5 },
+        .{ .name = "FileHeader", .parent = 0, .content = &header },
+        .{ .name = "BinData", .kind = 1, .parent = 0 },
+        .{ .name = "BIN0001.OLE", .parent = 2, .content = "old" },
+        .{ .name = "Sibling", .parent = 0, .content = "outer-preserved" },
+    }, .{ .version = 3 });
+    defer t.allocator.free(outer);
+    const item: core.hwp5.docinfo.BinData = .{ .attributes = 2, .data = .{ .storage = 1 }, .extra = &.{ 3, 0, 'O', 0, 'L', 0, 'E', 0 } };
+    const saved_outer = try core.hwp5.bin_data_replace.replaceDecoded(t.allocator, outer, item, .observed_optional_extension, saved_inner, .{ .max_encoded_bytes = saved_inner.len + 16, .max_output_bytes = outer.len + saved_inner.len + 4096 });
+    defer t.allocator.free(saved_outer);
+
+    var outer_file = try core.cfb.File.open(t.allocator, saved_outer, .{ .strict = true });
+    defer outer_file.deinit();
+    try t.expectEqual(@as(u16, 3), outer_file.header.major);
+    try t.expectEqualStrings("outer-preserved", outer_file.entries[(try outer_file.findExact("/Sibling")).?].content);
+    const parsed_header = try core.hwp5.Header.parse(outer_file.entries[(try outer_file.findExact("/FileHeader")).?].content);
+    const stored = outer_file.entries[(try outer_file.findExact("/BinData/BIN0001.OLE")).?].content;
+    try t.expect(parsed_header.has(.compressed));
+    try t.expect(!std.mem.eql(u8, stored, saved_inner));
+    const decoded_inner = try core.hwp5.bin_data_stream.decode(t.allocator, &parsed_header, item, stored, saved_inner.len);
+    defer t.allocator.free(decoded_inner);
+    var inner_file = try core.cfb.File.open(t.allocator, decoded_inner, .{ .strict = true });
+    defer inner_file.deinit();
+    try t.expectEqual(@as(u16, 4), inner_file.header.major);
+    try t.expectEqualStrings("inner-preserved", inner_file.entries[(try inner_file.findExact("/Unknown")).?].content);
+    var reparsed = try contents.readObservedV6(t.allocator, inner_file.entries[(try inner_file.findExact("/Contents")).?].content, layout, .{});
+    defer reparsed.deinit();
+    try t.expectEqual(new_id, reparsed.primary_axes[0].title.font.name.object_id);
+    try t.expectEqualSlices(u8, replacement, reparsed.primary_axes[0].title.font.name.bytes);
+    try t.expectEqual(@as(u8, 0x55), reparsed.primary_axes[0].title.font.name.trailer);
+}
 test "actual Contents patch validation" {
     var bytes = try decode();
     var value = try contents.readObservedV6(t.allocator, &bytes, layout, .{});
