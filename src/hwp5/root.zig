@@ -96,6 +96,7 @@ pub const chart_observed_contents = @import("chart/observed_contents.zig");
 pub const chart_contents_original = @import("chart/contents_original.zig");
 pub const chart_contents_patch = @import("chart/contents_patch.zig");
 pub const chart_contents_string_edit = @import("chart/contents_string_edit.zig");
+pub const chart_contents_string_fork = @import("chart/contents_string_fork.zig");
 pub const chart_light_source = @import("chart/light_source.zig");
 pub const chart_light = @import("chart/light.zig");
 pub const ole_validation = @import("body/ole_validation.zig");

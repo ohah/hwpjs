@@ -28,6 +28,26 @@ test "chart type table skips repeat declarations and isolates scopes" {
     try t.expectEqualStrings("Y\x00", separate.definitions.get(0xffffffff).?.raw_name);
 }
 
+test "chart type table exact lookup chooses lowest matching ID" {
+    var table = Table.init(t.allocator, .{});
+    defer table.deinit();
+    const ids = [_]u32{ 90, 3, 2 };
+    const names = [_][]const u8{ "A\x00", "A\x00", "A\x00" };
+    const versions = [_]u16{ 1, 1, 2 };
+    for (ids, names, versions) |id, name, version| {
+        var bytes: [10]u8 = undefined;
+        std.mem.writeInt(u32, bytes[0..4], id, .little);
+        std.mem.writeInt(u16, bytes[4..6], @intCast(name.len), .little);
+        @memcpy(bytes[6..8], name);
+        std.mem.writeInt(u16, bytes[8..10], version, .little);
+        var reader: Reader = .{ .bytes = &bytes };
+        _ = try table.readObserved16(&reader);
+    }
+    try t.expectEqual(@as(?u32, 3), table.findLowestId("A\x00", 1));
+    try t.expectEqual(@as(?u32, 2), table.findLowestId("A\x00", 2));
+    try t.expectEqual(@as(?u32, null), table.findLowestId("B\x00", 1));
+}
+
 fn exercise(a: std.mem.Allocator) !void {
     var table = Table.init(a, .{ .max_types = 32, .max_total_name_bytes = 64 });
     defer table.deinit();

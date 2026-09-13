@@ -30,6 +30,8 @@ fn exercise(a: std.mem.Allocator) !void {
     try t.expect(name.len > 0);
     const edited = try core.hwp5.chart_contents_string_edit.replaceStringObject(a, &value, value.prefix.legend.font.name.object_id, "x", 0, bytes.len);
     defer a.free(edited);
+    const forked = try core.hwp5.chart_contents_string_fork.forkFontName(a, &value, &value.primary_axes[0].title.font, 0xfffffffe, "x", 0, bytes.len + 16);
+    defer a.free(forked);
     const begin = @intFromPtr(&bytes);
     try t.expect(@intFromPtr(name.ptr) >= begin and @intFromPtr(name.ptr) + name.len <= begin + bytes.len);
     const raw = value.prefix.transition.raw;
@@ -160,6 +162,61 @@ test "actual Contents String edit validation" {
     entry.string.object_id ^= 1;
     entry.string.bytes = "outside-source";
     try t.expectError(error.InvalidChartStringSource, core.hwp5.chart_contents_string_edit.replaceStringObject(t.allocator, &value, original.object_id, "x", 0, bytes.len));
+}
+test "actual Contents Font String alias forks and reparses" {
+    const bytes = try decode();
+    var value = try contents.readObservedV6(t.allocator, &bytes, layout, .{});
+    defer value.deinit();
+    const target = &value.primary_axes[0].title.font;
+    try t.expect(!target.name_introduced);
+    const old_id = target.name.object_id;
+    const new_id: u32 = 0xfffffffe;
+    try t.expect(!value.prefix.objects.entries.contains(new_id));
+    const replacement = "independent-axis-font";
+    const expected_len = bytes.len + replacement.len + 15;
+    const forked = try core.hwp5.chart_contents_string_fork.forkFontName(t.allocator, &value, target, new_id, replacement, 0x7b, expected_len);
+    defer t.allocator.free(forked);
+    try t.expectEqual(expected_len, forked.len);
+    try t.expectEqual(@as(u32, @intCast(forked.len - 36)), std.mem.readInt(u32, forked[32..36], .little));
+
+    var reparsed = try contents.readObservedV6(t.allocator, forked, layout, .{});
+    defer reparsed.deinit();
+    const changed = reparsed.primary_axes[0].title.font;
+    try t.expect(changed.name_introduced);
+    try t.expectEqual(new_id, changed.name.object_id);
+    try t.expectEqualSlices(u8, replacement, changed.name.bytes);
+    try t.expectEqual(@as(u8, 0x7b), changed.name.trailer);
+    try t.expectEqual(new_id, reparsed.prefix.objects.entries.get(new_id).?.string.object_id);
+    var retained_old_alias = false;
+    for (reparsed.primary_axes[1..]) |axis| {
+        if (axis.title.font.name.object_id == old_id) retained_old_alias = true;
+    }
+    try t.expect(retained_old_alias);
+}
+test "actual Contents Font String fork validation" {
+    var bytes = try decode();
+    var value = try contents.readObservedV6(t.allocator, &bytes, layout, .{});
+    defer value.deinit();
+    const target = &value.primary_axes[0].title.font;
+    try t.expectError(error.UnsupportedChartStringForkTarget, core.hwp5.chart_contents_string_fork.forkFontName(t.allocator, &value, &value.prefix.legend.font, 0xfffffffe, "x", 0, bytes.len + 16));
+    try t.expectError(error.UnsupportedChartObjectReference, core.hwp5.chart_contents_string_fork.forkFontName(t.allocator, &value, target, 0xffffffff, "x", 0, bytes.len + 16));
+    try t.expectError(error.DuplicateChartObjectId, core.hwp5.chart_contents_string_fork.forkFontName(t.allocator, &value, target, target.name.object_id, "x", 0, bytes.len + 16));
+    const too_long = try t.allocator.alloc(u8, 65536);
+    defer t.allocator.free(too_long);
+    try t.expectError(error.LimitExceeded, core.hwp5.chart_contents_string_fork.forkFontName(t.allocator, &value, target, 0xfffffffe, too_long, 0, std.math.maxInt(usize)));
+    var bad_span = target.*;
+    bad_span.name_end -= 1;
+    try t.expectError(error.InvalidChartStringReferenceSpan, core.hwp5.chart_contents_string_fork.forkFontName(t.allocator, &value, &bad_span, 0xfffffffe, "x", 0, bytes.len + 16));
+    bytes[target.name_start] ^= 1;
+    try t.expectError(error.InvalidChartStringReferenceSpan, core.hwp5.chart_contents_string_fork.forkFontName(t.allocator, &value, target, 0xfffffffe, "x", 0, bytes.len + 16));
+    bytes[target.name_start] ^= 1;
+    const original_entry = value.prefix.objects.entries.getPtr(target.name.object_id).?;
+    original_entry.string.object_id ^= 1;
+    try t.expectError(error.InvalidChartStringReferenceSpan, core.hwp5.chart_contents_string_fork.forkFontName(t.allocator, &value, target, 0xfffffffe, "x", 0, bytes.len + 16));
+    original_entry.string.object_id ^= 1;
+    const string_type = value.prefix.grid.prelude.types.findLowestId("VtString\x00", 1).?;
+    value.prefix.grid.prelude.types.definitions.getPtr(string_type).?.version = 2;
+    try t.expectError(error.MissingChartStringForkType, core.hwp5.chart_contents_string_fork.forkFontName(t.allocator, &value, target, 0xfffffffe, "x", 0, bytes.len + 16));
 }
 test "actual Contents original copy boundaries" {
     const bytes = try decode();

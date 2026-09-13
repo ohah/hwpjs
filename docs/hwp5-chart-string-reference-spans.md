@@ -16,4 +16,4 @@ SHA-256 고정 9,876바이트 Contents에서 새로 도입되는 Legend Font 이
 
 ## 미구현 범위
 
-현재 span 보존 자체는 참조를 수정하거나 새 object/type ID를 할당하지 않습니다. 특정 참조 하나만 분리하는 copy-on-write는 새 inline 정의의 직렬화 규칙, 충돌 없는 ID 정책, 전체 재파싱 검증을 별도 writer에서 추가해야 합니다. Font 밖의 String 참조 구조는 이미 자체 `Reference`를 보존하는 경우만 현재 span을 노출합니다.
+span 보존 자체는 참조를 수정하거나 새 object/type ID를 할당하지 않습니다. 이를 사용하는 첫 writer는 [Font String 참조 분리](hwp5-chart-string-fork.md)입니다. Font 밖의 String 참조 구조는 이미 자체 `Reference`를 보존하는 경우만 현재 span을 노출합니다.

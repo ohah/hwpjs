@@ -29,6 +29,19 @@ pub const Table = struct {
         self.definitions.deinit(self.allocator);
         self.* = undefined;
     }
+    /// Returns the lowest registered ID with the exact raw name and version.
+    /// Choosing the lowest ID makes writers deterministic when equivalent type
+    /// declarations were observed under multiple IDs.
+    pub fn findLowestId(self: *const Table, raw_name: []const u8, version: u16) ?u32 {
+        var found: ?u32 = null;
+        var it = self.definitions.iterator();
+        while (it.next()) |entry| {
+            const value = entry.value_ptr.*;
+            if (value.version == version and std.mem.eql(u8, value.raw_name, raw_name) and
+                (found == null or entry.key_ptr.* < found.?)) found = entry.key_ptr.*;
+        }
+        return found;
+    }
     /// Caller has established a non-null type-reference position. Reads u32 ID
     /// and, only for a new ID, the explicitly observed 16-bit declaration.
     /// Does not consume object IDs, infer null references, or locate object data.
