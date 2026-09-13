@@ -37,3 +37,5 @@ String 사전 반환 추가 후 기존 ReleaseSafe 테스트 WASM으로 Series �
 ## 남은 범위
 
 다음은 이 두 경로를 코어로 연결하고 SeriesLabel 본문을 검증하는 작업입니다. SeriesPoint 원소의 끝과 반복, SeriesLabel의 실제 소유 관계, 뒤쪽 계열·raw 의미·전체 Chart 조립·렌더링·저장은 미완료입니다. 0/0 표본만으로 나머지 두 경로를 완료했다고 판단하지 않습니다.
+
+후속 [SeriesLabel 본문·Point 반복 조사](hwp5-chart-series-label-evidence.md)에서 공통 TextBlock 본문과 5개 Point의 끝·반복을 검증했습니다. 현재 확인 범위는 해당 문서가 소유하며 일반 소유 관계·전체 Series 완료를 뜻하지 않습니다.
