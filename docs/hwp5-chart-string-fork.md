@@ -35,4 +35,4 @@ TextFormat adapter에는 required 시작+1·끝-1·introduced=true, nullable nul
 
 ## 미구현 범위
 
-범용 API는 `object_table.Reference`, String arm의 `ValueReference`, Font 이름, TextBlock 본문과 TextFormat code에 적용할 수 있습니다. Number와 null을 String으로 재형식화하지 않습니다. 값을 평탄화한 다른 필드는 별도 span 보존과 얇은 adapter가 필요합니다. 자동 ID 선택은 별도 모듈을 명시적으로 호출하며 예약형 편집 세션은 제공하지 않습니다. 새 type ID·선언 생성, 문자열 인코딩 변환, 여러 편집의 일괄 트랜잭션, CFB 스트림 저장도 제공하지 않습니다.
+범용 API는 `object_table.Reference`, String arm의 `ValueReference`, Font 이름, TextBlock 본문과 TextFormat code에 적용할 수 있습니다. Number와 null을 String으로 재형식화하지 않습니다. 값을 평탄화한 다른 필드는 별도 span 보존과 얇은 adapter가 필요합니다. 자동 ID 선택은 별도 모듈을 명시적으로 호출하며 예약형 편집 세션은 제공하지 않습니다. 새 type ID·선언 생성, 문자열 인코딩 변환과 여러 편집의 일괄 트랜잭션도 제공하지 않습니다. 생성한 Contents를 압축 해제된 OLE BinData 내부 CFB에 넣는 경계는 [OLE 내부 스트림 교체](hwp5-ole-stream-replacement.md)가 담당합니다.

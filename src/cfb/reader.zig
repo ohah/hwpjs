@@ -27,6 +27,15 @@ pub const File = struct {
         return @import("name_order.zig").find(self.entries, path);
     }
 
+    /// Maps an active directory entry index to the compact index returned by
+    /// toNodes. Does not accept padding/unused entries.
+    pub fn nodeIndex(self: *const File, entry_index: usize) !usize {
+        if (entry_index >= self.entries.len or self.entries[entry_index].kind == 0) return error.InvalidDirectoryReference;
+        var node_index: usize = 0;
+        for (self.entries[0..entry_index]) |entry| node_index += @intFromBool(entry.kind != 0);
+        return node_index;
+    }
+
     /// Caller frees the array; names/content borrow this File until deinit.
     pub fn toNodes(self: *const File, allocator: Allocator) ![]writer.Node {
         const map = try allocator.alloc(u32, self.entries.len);

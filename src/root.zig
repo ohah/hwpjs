@@ -242,6 +242,7 @@ test {
     _ = @import("hwp5/chart/light_tests.zig");
     _ = @import("hwp5/chart/string_value_tests.zig");
     _ = @import("hwp5/chart/object_id_allocator_tests.zig");
+    _ = @import("hwp5/ole/stream_replace_tests.zig");
     _ = @import("hwp5/body/ole_references_tests.zig");
     _ = @import("hwp5/document/ole_reference_tests.zig");
     _ = @import("hwp5/docinfo/storage_tests.zig");

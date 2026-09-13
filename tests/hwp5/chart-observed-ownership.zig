@@ -201,6 +201,30 @@ test "actual Contents allocates and forks with the lowest available object ID" {
     try t.expectEqual(new_id, reparsed.primary_axes[0].title.font.name.object_id);
     try t.expectEqualSlices(u8, replacement, reparsed.primary_axes[0].title.font.name.bytes);
 }
+test "actual edited Contents survives inner OLE CFB stream replacement" {
+    const bytes = try decode();
+    var value = try contents.readObservedV6(t.allocator, &bytes, layout, .{});
+    defer value.deinit();
+    const target = &value.primary_axes[0].title.font;
+    const new_id = try core.hwp5.chart_object_id_allocator.findLowestAvailable(&value.prefix.objects, &.{target.object_id});
+    const replacement = "saved-axis-font";
+    const forked = try core.hwp5.chart_contents_string_fork.forkFontName(t.allocator, &value, target, new_id, replacement, 0x44, bytes.len + replacement.len + 15);
+    defer t.allocator.free(forked);
+
+    const inner = try core.cfb.writer.write(t.allocator, &.{ .{ .name = "Root Entry", .kind = 5 }, .{ .name = "Contents", .parent = 0, .content = &bytes }, .{ .name = "Unknown", .parent = 0, .content = "preserved" } }, .{});
+    defer t.allocator.free(inner);
+    const saved = try core.hwp5.ole_stream_replace.replaceExact(t.allocator, inner, .raw_cfb, "/Contents", forked, .{ .max_output_bytes = inner.len + forked.len });
+    defer t.allocator.free(saved);
+    var file = try core.cfb.File.open(t.allocator, saved, .{ .strict = true });
+    defer file.deinit();
+    try t.expectEqualStrings("preserved", file.entries[(try file.findExact("/Unknown")).?].content);
+    const stored = file.entries[(try file.findExact("/Contents")).?].content;
+    var reparsed = try contents.readObservedV6(t.allocator, stored, layout, .{});
+    defer reparsed.deinit();
+    try t.expectEqual(new_id, reparsed.primary_axes[0].title.font.name.object_id);
+    try t.expectEqualSlices(u8, replacement, reparsed.primary_axes[0].title.font.name.bytes);
+    try t.expectEqual(@as(u8, 0x44), reparsed.primary_axes[0].title.font.name.trailer);
+}
 test "actual Contents patch validation" {
     var bytes = try decode();
     var value = try contents.readObservedV6(t.allocator, &bytes, layout, .{});
