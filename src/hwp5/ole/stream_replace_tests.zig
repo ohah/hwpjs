@@ -37,6 +37,37 @@ fn exercise(a: std.mem.Allocator, version: u16, layout: envelope.Layout) !void {
     try t.expectEqual(@as(u64, 99), storage.modified);
 }
 
+fn exerciseMany(a: std.mem.Allocator, version: u16, layout: envelope.Layout) !void {
+    const original = try writer.write(a, &.{
+        .{ .name = "Root Entry", .kind = 5 },
+        .{ .name = "Chart", .kind = 1, .parent = 0 },
+        .{ .name = "Contents", .parent = 1, .content = "old-contents" },
+        .{ .name = "Metadata", .parent = 1, .content = "old-metadata" },
+        .{ .name = "Keep", .parent = 0, .content = "preserved" },
+    }, .{ .version = version });
+    defer a.free(original);
+    const input = if (layout == .raw_cfb) original else blk: {
+        const wrapped = try a.alloc(u8, original.len + 4);
+        std.mem.writeInt(u32, wrapped[0..4], @intCast(original.len), .little);
+        @memcpy(wrapped[4..], original);
+        break :blk wrapped;
+    };
+    defer if (layout == .observed_size_prefix) a.free(input);
+    const output = try replace.replaceManyExact(a, input, layout, &.{
+        .{ .path = "/Chart/Metadata", .content = "new-metadata" },
+        .{ .path = "/Chart/Contents", .content = "new-contents" },
+    }, .{ .max_output_bytes = 64 * 1024 });
+    defer a.free(output);
+    if (layout == .observed_size_prefix) try t.expectEqual(@as(u32, @intCast(output.len - 4)), std.mem.readInt(u32, output[0..4], .little));
+    const raw = if (layout == .raw_cfb) output else output[4..];
+    var file = try cfb.File.open(a, raw, .{ .strict = true });
+    defer file.deinit();
+    try t.expectEqual(version, file.header.major);
+    try t.expectEqualStrings("new-contents", file.entries[(try file.findExact("/Chart/Contents")).?].content);
+    try t.expectEqualStrings("new-metadata", file.entries[(try file.findExact("/Chart/Metadata")).?].content);
+    try t.expectEqualStrings("preserved", file.entries[(try file.findExact("/Keep")).?].content);
+}
+
 test "OLE stream replacement preserves envelope version siblings and metadata" {
     for ([_]u16{ 3, 4 }) |version| for ([_]envelope.Layout{ .raw_cfb, .observed_size_prefix }) |layout| {
         try exercise(t.allocator, version, layout);
@@ -61,4 +92,25 @@ test "OLE stream replacement rejects selection and output boundaries atomically"
     try t.expectError(error.LimitExceeded, replace.replaceExact(t.allocator, input, .raw_cfb, "/Folder/Contents", "xx", .{ .limits = .{ .max_stream_bytes = 1 } }));
     input[8] = 1;
     try t.expectError(error.InvalidHeader, replace.replaceExact(t.allocator, input, .raw_cfb, "/Folder/Contents", "x", .{}));
+}
+
+test "OLE batch replacement preserves envelope and replaces every inner stream once" {
+    for ([_]u16{ 3, 4 }) |version| for ([_]envelope.Layout{ .raw_cfb, .observed_size_prefix }) |layout| {
+        try exerciseMany(t.allocator, version, layout);
+        try t.checkAllAllocationFailures(t.allocator, exerciseMany, .{ version, layout });
+    };
+}
+
+test "OLE batch replacement rejects the complete command set before output" {
+    const input = try writer.write(t.allocator, &.{ .{ .name = "Root Entry", .kind = 5 }, .{ .name = "Folder", .kind = 1, .parent = 0 }, .{ .name = "First", .parent = 1, .content = "old-first" }, .{ .name = "Second", .parent = 1, .content = "old-second" } }, .{});
+    defer t.allocator.free(input);
+    try t.expectError(error.EmptyReplacementSet, replace.replaceManyExact(t.allocator, input, .raw_cfb, &.{}, .{}));
+    try t.expectError(error.StreamNotFound, replace.replaceManyExact(t.allocator, input, .raw_cfb, &.{ .{ .path = "/Folder/First", .content = "new" }, .{ .path = "/Missing", .content = "x" } }, .{}));
+    try t.expectError(error.DuplicateStreamReplacement, replace.replaceManyExact(t.allocator, input, .raw_cfb, &.{ .{ .path = "/Folder/First", .content = "a" }, .{ .path = "/folder/first", .content = "b" } }, .{}));
+    try t.expectError(error.NotAStream, replace.replaceManyExact(t.allocator, input, .raw_cfb, &.{.{ .path = "/Folder", .content = "x" }}, .{}));
+    try t.expectError(error.LimitExceeded, replace.replaceManyExact(t.allocator, input, .raw_cfb, &.{.{ .path = "/Folder/First", .content = "x" }}, .{ .max_output_bytes = input.len - 1 }));
+    var file = try cfb.File.open(t.allocator, input, .{ .strict = true });
+    defer file.deinit();
+    try t.expectEqualStrings("old-first", file.entries[(try file.findExact("/Folder/First")).?].content);
+    try t.expectEqualStrings("old-second", file.entries[(try file.findExact("/Folder/Second")).?].content);
 }
