@@ -31,3 +31,5 @@ max_bytes는 전체 Contents 길이, max_cells는 행×열의 상한입니다. �
 소스·테스트를 고정하고 Debug → ReleaseSafe → ReleaseFast 전체 audit를 순서대로 실행했습니다. `/tmp/hwpjs-chart-grid-prelude-{Debug,ReleaseSafe,ReleaseFast}-audit.log`에서 각 모드 27/27 단계·1,001/1,001 네이티브 테스트·HWP/WASM 7,857,825회 검사 통과를 확인했습니다. Debug 실행과 뒤이은 두 최적화 모드의 순차 실행 모두 종료 코드 0입니다. 포맷·JS 구문·공백 검사 및 문서 로컬 링크 19개 검사도 통과했습니다. 이 수치는 이번 변경을 포함한 검사 결과이지 전체 차트나 전체 문서 구현 완료율이 아닙니다.
 
 최종 `zig build test --summary all`은 5/5 단계·1,001/1,001 테스트, `zig build -Doptimize=ReleaseSafe --summary all`은 5/5 단계로 통과했습니다(종료 코드 0).
+
+후속 Collection 공통화의 계약·회귀 결과는 [Grid 공통 Collection·원시 구간](hwp5-chart-grid-transition.md)에서 관리합니다. 이 문서의 위 수치는 최초 구현 단계의 기록입니다.

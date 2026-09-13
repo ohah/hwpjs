@@ -38,4 +38,4 @@ Debug·ReleaseSafe·ReleaseFast 전체 audit는 각각 종료 코드 0으로 완
 
 ## 다음 연결 공백
 
-소스 재검토에서 `grid_prelude.zig`에 Collection v1·word·Object v1 읽기가 별도로 남아 있음을 확인했습니다. 공통 `collection_header.zig`로 공유할 수 있는지 기존 Prelude 출력·오류·할당 실패 계약을 대조해야 합니다. 테스트 전용 `chart-footnote-prefix.zig`의 셀 이후 raw26과 `chart-line-items-prefix.zig`의 raw word도 전체 조립 시 명시적으로 보존해야 합니다. 이 잔여 구간이나 자동 배열·축 선택, 미확정 ID·필드 의미까지 이번 접두부 코어 완료에 포함하지 않습니다.
+Grid의 Collection 중복 읽기와 셀 이후 raw26 보존의 후속 구현·검증은 [Grid 공통 Collection·원시 구간](hwp5-chart-grid-transition.md)이 소유합니다. line-items 앞 word는 이미 테스트 Prefix에 보존돼 있으며 전체 제품 조립에서도 유지해야 합니다. 자동 배열·축 선택, 미확정 ID·필드 의미까지 이번 접두부 코어 완료에 포함하지 않습니다.

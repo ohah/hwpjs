@@ -2,6 +2,7 @@ const std = @import("std");
 const Reader = @import("../../binary/reader.zig").Reader;
 const types = @import("type_table.zig");
 const requireType = @import("type_checks.zig").require;
+const collections = @import("collection_header.zig");
 pub const Options = struct {
     types: types.Options = .{},
     max_bytes: usize = 64 * 1024 * 1024,
@@ -38,9 +39,8 @@ pub fn readObservedV6(a: std.mem.Allocator, bytes: []const u8, options: Options)
     const grid_prefix = try reader.readInt(u32);
     try requireType(&table, &reader, "VtDataGrid\x00", 1);
     try requireType(&table, &reader, "VtMatrix\x00", 1);
-    try requireType(&table, &reader, "VtCollection\x00", 1);
-    const collection_prefix = try reader.readInt(u16);
-    try requireType(&table, &reader, "VtObject\x00", 1);
+    const collection = try collections.readObservedV1(&reader, &table);
+    const collection_prefix = collection.raw_word;
     const rows = try reader.readInt(u16);
     const columns = try reader.readInt(u16);
     if (@as(u32, rows) * columns > options.max_cells) return error.LimitExceeded;

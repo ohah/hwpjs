@@ -58,6 +58,7 @@
   - [Contents 끝의 List·Window 타입 구간 조사](hwp5-chart-tail-evidence.md)
   - [List 접두부·Window 타입 구간 코어](hwp5-chart-tail.md)
   - [Plot·Surface 접두부 코어](hwp5-chart-plot-surface-prefix.md)
+  - [Grid 공통 Collection·셀 이후 원시 구간](hwp5-chart-grid-transition.md)
   - [TextBlock 보조 Backdrop·문자열 재참조](hwp5-chart-text-block-objects.md)
 - [표·셀](hwp5-tables-contracts.md)
 - [ParameterSet·이름·참조](hwp5-parameters-contracts.md)

@@ -237,6 +237,7 @@ test {
     _ = @import("hwp5/chart/title_tests.zig");
     _ = @import("hwp5/chart/tail_tests.zig");
     _ = @import("hwp5/chart/plot_surface_tests.zig");
+    _ = @import("hwp5/chart/grid_backdrop_tests.zig");
     _ = @import("hwp5/chart/legend_tests.zig");
     _ = @import("hwp5/chart/light_tests.zig");
     _ = @import("hwp5/chart/string_value_tests.zig");

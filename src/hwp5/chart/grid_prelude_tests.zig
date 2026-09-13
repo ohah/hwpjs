@@ -95,6 +95,20 @@ test "chart grid prelude zero singleton and maximum dimensions are raw values" {
     };
 }
 
+test "chart grid prelude shared Collection preserves every selected word without a count rule" {
+    for ([_]u16{ 0, 1, 2, 65535 }) |word| {
+        var bytes = fixture();
+        std.mem.writeInt(u16, bytes[117..119], word, .little);
+        var result = try prelude.readObservedV6(t.allocator, &bytes, .{});
+        defer result.deinit();
+        try t.expectEqual(word, result.collection_prefix);
+        try t.expectEqual(@as(u16, 3), result.rows);
+        try t.expectEqual(@as(u16, 4), result.columns);
+        try t.expectEqual(@as(usize, 140), result.payload_offset);
+        try t.expectEqual(@as(u32, 5), result.types.definitions.count());
+    }
+}
+
 test "chart grid prelude rejects each class version and aliased type without marker fallback" {
     const names = [_]usize{ 46, 66, 85, 102, 125 };
     const versions = [_]usize{ 54, 77, 94, 115, 134 };

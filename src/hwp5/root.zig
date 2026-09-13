@@ -89,6 +89,7 @@ pub const chart_window_type_body = @import("chart/window_type_body.zig");
 pub const chart_tail = @import("chart/tail.zig");
 pub const chart_plot_prefix = @import("chart/plot_prefix.zig");
 pub const chart_surface_prefix = @import("chart/surface_prefix.zig");
+pub const chart_grid_backdrop = @import("chart/grid_backdrop.zig");
 pub const chart_light_source = @import("chart/light_source.zig");
 pub const chart_light = @import("chart/light.zig");
 pub const ole_validation = @import("body/ole_validation.zig");
