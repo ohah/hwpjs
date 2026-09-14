@@ -25,7 +25,7 @@ fn fixture() [108]u8 {
 
 test "EMF framing validates header declarations and terminal EOF" {
     const bytes = fixture();
-    const value = try framing.validate(&bytes);
+    const value = try framing.validate(t.allocator, &bytes);
     try t.expectEqual(@as(usize, 2), value.records);
     try t.expectEqual(@as(u32, 108), value.header.bytes);
     try t.expectEqual(@as(i32, -1), value.header.bounds.left);
@@ -56,7 +56,7 @@ test "EMF header variant uses variable field offsets and validates UTF-16" {
     bytes[121] = 24;
     bytes[122..128].* = .{ 8, 16, 8, 8, 8, 0 };
     @memcpy(bytes[152..172], base[88..108]);
-    const value = try framing.validate(&bytes);
+    const value = try framing.validate(t.allocator, &bytes);
     try t.expectEqual(@import("header_payload.zig").Variant.extension2, value.header_payload.variant);
     try t.expectEqualSlices(u8, &.{ 'A', 0, 0, 0 }, value.header_payload.description_utf16le.?);
     try t.expect(value.header_payload.extension1.?.open_gl);
@@ -68,9 +68,9 @@ test "EMF header variant uses variable field offsets and validates UTF-16" {
     try t.expectEqual(@as(i32, 508000), value.header_payload.extension2.?.micrometers.width);
 
     bytes[110] = 1;
-    try t.expectError(error.MissingEmfDescriptionTerminator, framing.validate(&bytes));
+    try t.expectError(error.MissingEmfDescriptionTerminator, framing.validate(t.allocator, &bytes));
     bytes[108..112].* = .{ 0, 0xd8, 0, 0 };
-    try t.expectError(error.InvalidUnicodeEncoding, framing.validate(&bytes));
+    try t.expectError(error.InvalidUnicodeEncoding, framing.validate(t.allocator, &bytes));
 }
 
 test "EMF HeaderSize flowchart keeps a long description in the base variant" {
@@ -83,7 +83,7 @@ test "EMF HeaderSize flowchart keeps a long description in the base variant" {
     std.mem.writeInt(u32, bytes[64..68], 88, .little);
     bytes[108..112].* = .{ 'B', 0, 0, 0 };
     @memcpy(bytes[112..132], original[88..108]);
-    const value = try framing.validate(&bytes);
+    const value = try framing.validate(t.allocator, &bytes);
     try t.expectEqual(@import("header_payload.zig").Variant.base, value.header_payload.variant);
     try t.expect(value.header_payload.extension1 == null);
 }
@@ -96,7 +96,7 @@ test "EMF header extension rejects OpenGL and pixel format metadata drift" {
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[96..100], 2, .little);
     @memcpy(bytes[100..120], original[88..108]);
-    try t.expectError(error.InvalidEmfOpenGlFlag, framing.validate(&bytes));
+    try t.expectError(error.InvalidEmfOpenGlFlag, framing.validate(t.allocator, &bytes));
 
     std.mem.writeInt(u32, bytes[96..100], 0, .little);
     std.mem.writeInt(u32, bytes[88..92], 39, .little);
@@ -105,49 +105,49 @@ test "EMF header extension rejects OpenGL and pixel format metadata drift" {
     std.mem.writeInt(u32, with_pixel[4..8], 140, .little);
     std.mem.writeInt(u32, with_pixel[48..52], with_pixel.len, .little);
     @memcpy(with_pixel[140..160], original[88..108]);
-    try t.expectError(error.InvalidEmfPixelFormatSize, framing.validate(&with_pixel));
+    try t.expectError(error.InvalidEmfPixelFormatSize, framing.validate(t.allocator, &with_pixel));
 }
 
 test "EMF framing rejects fixed header and EOF invariant drift" {
     var bytes = fixture();
     bytes[40] = 0;
-    try t.expectError(error.InvalidEmfSignature, framing.validate(&bytes));
+    try t.expectError(error.InvalidEmfSignature, framing.validate(t.allocator, &bytes));
     bytes = fixture();
     bytes[58] = 1;
-    try t.expectError(error.InvalidEmfHeaderReserved, framing.validate(&bytes));
+    try t.expectError(error.InvalidEmfHeaderReserved, framing.validate(t.allocator, &bytes));
     bytes = fixture();
     bytes[48] -= 1;
-    try t.expectError(error.InvalidEmfDeclaredBytes, framing.validate(&bytes));
+    try t.expectError(error.InvalidEmfDeclaredBytes, framing.validate(t.allocator, &bytes));
     bytes = fixture();
     bytes[52] = 3;
-    try t.expectError(error.InvalidEmfDeclaredRecords, framing.validate(&bytes));
+    try t.expectError(error.InvalidEmfDeclaredRecords, framing.validate(t.allocator, &bytes));
     bytes = fixture();
     bytes[104] = 19;
-    try t.expectError(error.InvalidEmfEofSizeLast, framing.validate(&bytes));
+    try t.expectError(error.InvalidEmfEofSizeLast, framing.validate(t.allocator, &bytes));
 }
 
 test "EMF record iterator rejects truncation alignment and data after EOF" {
     const bytes = fixture();
-    try t.expectError(error.MissingEmfHeader, framing.validate(bytes[0..0]));
-    for (1..88) |cut| try t.expectError(error.TruncatedEmfRecord, framing.validate(bytes[0..cut]));
+    try t.expectError(error.MissingEmfHeader, framing.validate(t.allocator, bytes[0..0]));
+    for (1..88) |cut| try t.expectError(error.TruncatedEmfRecord, framing.validate(t.allocator, bytes[0..cut]));
     var header_only = bytes[0..88].*;
     std.mem.writeInt(u32, header_only[48..52], header_only.len, .little);
-    try t.expectError(error.MissingEmfEof, framing.validate(&header_only));
+    try t.expectError(error.MissingEmfEof, framing.validate(t.allocator, &header_only));
     for (89..108) |cut| {
         var truncated = bytes;
         std.mem.writeInt(u32, truncated[48..52], @intCast(cut), .little);
-        try t.expectError(error.TruncatedEmfRecord, framing.validate(truncated[0..cut]));
+        try t.expectError(error.TruncatedEmfRecord, framing.validate(t.allocator, truncated[0..cut]));
     }
     var invalid = bytes;
     invalid[4] = 87;
-    try t.expectError(error.InvalidEmfRecordSize, framing.validate(&invalid));
+    try t.expectError(error.InvalidEmfRecordSize, framing.validate(t.allocator, &invalid));
     invalid = bytes;
     std.mem.writeInt(u32, invalid[92..96], 16, .little);
-    try t.expectError(error.InvalidEmfEofSize, framing.validate(&invalid));
+    try t.expectError(error.InvalidEmfEofSize, framing.validate(t.allocator, &invalid));
 
     var trailing = bytes ++ [_]u8{0} ** 4;
     std.mem.writeInt(u32, trailing[48..52], trailing.len, .little);
-    try t.expectError(error.DataAfterEmfEof, framing.validate(&trailing));
+    try t.expectError(error.DataAfterEmfEof, framing.validate(t.allocator, &trailing));
 }
 
 test "EMF framing validates parameterless path bracket record size" {
@@ -161,7 +161,7 @@ test "EMF framing validates parameterless path bracket record size" {
     std.mem.writeInt(u32, valid[96..100], @intFromEnum(@import("records.zig").RecordType.endpath), .little);
     std.mem.writeInt(u32, valid[100..104], 8, .little);
     @memcpy(valid[104..124], original[88..108]);
-    try t.expectEqual(@as(usize, 4), (try framing.validate(&valid)).records);
+    try t.expectEqual(@as(usize, 4), (try framing.validate(t.allocator, &valid)).records);
 
     var invalid = [_]u8{0} ** 120;
     @memcpy(invalid[0..88], original[0..88]);
@@ -170,14 +170,14 @@ test "EMF framing validates parameterless path bracket record size" {
     std.mem.writeInt(u32, invalid[88..92], @intFromEnum(@import("records.zig").RecordType.beginpath), .little);
     std.mem.writeInt(u32, invalid[92..96], 12, .little);
     @memcpy(invalid[100..120], original[88..108]);
-    try t.expectError(error.InvalidEmfPathBracketSize, framing.validate(&invalid));
+    try t.expectError(error.InvalidEmfPathBracketSize, framing.validate(t.allocator, &invalid));
 
     var unclosed = [_]u8{0} ** 116;
     @memcpy(unclosed[0..96], valid[0..96]);
     std.mem.writeInt(u32, unclosed[48..52], unclosed.len, .little);
     std.mem.writeInt(u32, unclosed[52..56], 3, .little);
     @memcpy(unclosed[96..116], original[88..108]);
-    try t.expectError(error.UnclosedEmfPathBracket, framing.validate(&unclosed));
+    try t.expectError(error.UnclosedEmfPathBracket, framing.validate(t.allocator, &unclosed));
 }
 
 test "EMF framing validates world transform records" {
@@ -190,7 +190,7 @@ test "EMF framing validates world transform records" {
     std.mem.writeInt(u32, valid[92..96], 32, .little);
     std.mem.writeInt(u32, valid[96..100], 0x3f800000, .little);
     @memcpy(valid[120..140], original[88..108]);
-    try t.expectEqual(@as(usize, 3), (try framing.validate(&valid)).records);
+    try t.expectEqual(@as(usize, 3), (try framing.validate(t.allocator, &valid)).records);
 
     var invalid = [_]u8{0} ** 144;
     @memcpy(invalid[0..88], original[0..88]);
@@ -199,7 +199,7 @@ test "EMF framing validates world transform records" {
     std.mem.writeInt(u32, invalid[88..92], @intFromEnum(@import("records.zig").RecordType.modifyworldtransform), .little);
     std.mem.writeInt(u32, invalid[92..96], 36, .little);
     @memcpy(invalid[124..144], original[88..108]);
-    try t.expectError(error.InvalidEmfModifyWorldTransformMode, framing.validate(&invalid));
+    try t.expectError(error.InvalidEmfModifyWorldTransformMode, framing.validate(t.allocator, &invalid));
 }
 
 test "EMF framing validates fixed point state records" {
@@ -213,7 +213,7 @@ test "EMF framing validates fixed point state records" {
     std.mem.writeInt(i32, valid[96..100], -7, .little);
     std.mem.writeInt(i32, valid[100..104], 9, .little);
     @memcpy(valid[104..124], original[88..108]);
-    try t.expectEqual(@as(usize, 3), (try framing.validate(&valid)).records);
+    try t.expectEqual(@as(usize, 3), (try framing.validate(t.allocator, &valid)).records);
 
     var invalid = [_]u8{0} ** 128;
     @memcpy(invalid[0..88], original[0..88]);
@@ -222,7 +222,7 @@ test "EMF framing validates fixed point state records" {
     std.mem.writeInt(u32, invalid[88..92], @intFromEnum(@import("records.zig").RecordType.movetoex), .little);
     std.mem.writeInt(u32, invalid[92..96], 20, .little);
     @memcpy(invalid[108..128], original[88..108]);
-    try t.expectError(error.InvalidEmfPointRecordSize, framing.validate(&invalid));
+    try t.expectError(error.InvalidEmfPointRecordSize, framing.validate(t.allocator, &invalid));
 }
 
 test "EMF framing validates strict modes and preserves unknown stretch modes" {
@@ -235,12 +235,12 @@ test "EMF framing validates strict modes and preserves unknown stretch modes" {
     std.mem.writeInt(u32, valid[92..96], 12, .little);
     std.mem.writeInt(u32, valid[96..100], std.math.maxInt(u32), .little);
     @memcpy(valid[100..120], original[88..108]);
-    try t.expectEqual(@as(usize, 3), (try framing.validate(&valid)).records);
+    try t.expectEqual(@as(usize, 3), (try framing.validate(t.allocator, &valid)).records);
 
     var invalid = valid;
     std.mem.writeInt(u32, invalid[88..92], @intFromEnum(@import("records.zig").RecordType.setmapmode), .little);
     std.mem.writeInt(u32, invalid[96..100], 0, .little);
-    try t.expectError(error.InvalidEmfMapMode, framing.validate(&invalid));
+    try t.expectError(error.InvalidEmfMapMode, framing.validate(t.allocator, &invalid));
 }
 
 test "EMF framing validates ColorRef state records" {
@@ -253,10 +253,10 @@ test "EMF framing validates ColorRef state records" {
     std.mem.writeInt(u32, valid[92..96], 12, .little);
     valid[96..100].* = .{ 1, 2, 3, 0 };
     @memcpy(valid[100..120], original[88..108]);
-    try t.expectEqual(@as(usize, 3), (try framing.validate(&valid)).records);
+    try t.expectEqual(@as(usize, 3), (try framing.validate(t.allocator, &valid)).records);
 
     valid[99] = 1;
-    try t.expectError(error.InvalidWmfColorReserved, framing.validate(&valid));
+    try t.expectError(error.InvalidWmfColorReserved, framing.validate(t.allocator, &valid));
 }
 
 test "EMF framing validates mapper flags and miter limit records" {
@@ -272,11 +272,11 @@ test "EMF framing validates mapper flags and miter limit records" {
     std.mem.writeInt(u32, valid[104..108], 12, .little);
     std.mem.writeInt(u32, valid[108..112], 0x7fc01234, .little);
     @memcpy(valid[112..132], original[88..108]);
-    try t.expectEqual(@as(usize, 4), (try framing.validate(&valid)).records);
+    try t.expectEqual(@as(usize, 4), (try framing.validate(t.allocator, &valid)).records);
 
     var invalid_mapper = valid;
     invalid_mapper[96] = 2;
-    try t.expectError(error.InvalidEmfMapperFlags, framing.validate(&invalid_mapper));
+    try t.expectError(error.InvalidEmfMapperFlags, framing.validate(t.allocator, &invalid_mapper));
 
     var invalid_miter = [_]u8{0} ** 136;
     @memcpy(invalid_miter[0..100], valid[0..100]);
@@ -284,7 +284,7 @@ test "EMF framing validates mapper flags and miter limit records" {
     std.mem.writeInt(u32, invalid_miter[100..104], @intFromEnum(@import("records.zig").RecordType.setmiterlimit), .little);
     std.mem.writeInt(u32, invalid_miter[104..108], 16, .little);
     @memcpy(invalid_miter[116..136], original[88..108]);
-    try t.expectError(error.InvalidEmfMiterLimitRecordSize, framing.validate(&invalid_miter));
+    try t.expectError(error.InvalidEmfMiterLimitRecordSize, framing.validate(t.allocator, &invalid_miter));
 }
 
 test "EMF framing validates text alignment components" {
@@ -297,10 +297,10 @@ test "EMF framing validates text alignment components" {
     std.mem.writeInt(u32, valid[92..96], 12, .little);
     std.mem.writeInt(u32, valid[96..100], 0x011f, .little);
     @memcpy(valid[100..120], original[88..108]);
-    try t.expectEqual(@as(usize, 3), (try framing.validate(&valid)).records);
+    try t.expectEqual(@as(usize, 3), (try framing.validate(t.allocator, &valid)).records);
 
     std.mem.writeInt(u32, valid[96..100], 0x0004, .little);
-    try t.expectError(error.InvalidEmfTextAlignmentFlags, framing.validate(&valid));
+    try t.expectError(error.InvalidEmfTextAlignmentFlags, framing.validate(t.allocator, &valid));
 }
 
 test "EMF framing validates text justification and extent scaling" {
@@ -320,11 +320,11 @@ test "EMF framing validates text justification and extent scaling" {
     std.mem.writeInt(i32, valid[120..124], 3, .little);
     std.mem.writeInt(i32, valid[124..128], -4, .little);
     @memcpy(valid[128..148], original[88..108]);
-    try t.expectEqual(@as(usize, 4), (try framing.validate(&valid)).records);
+    try t.expectEqual(@as(usize, 4), (try framing.validate(t.allocator, &valid)).records);
 
     var invalid_scale = valid;
     std.mem.writeInt(i32, invalid_scale[112..116], 0, .little);
-    try t.expectError(error.InvalidEmfScaleExtentRatio, framing.validate(&invalid_scale));
+    try t.expectError(error.InvalidEmfScaleExtentRatio, framing.validate(t.allocator, &invalid_scale));
 
     var invalid_text = [_]u8{0} ** 152;
     @memcpy(invalid_text[0..88], original[0..88]);
@@ -333,7 +333,7 @@ test "EMF framing validates text justification and extent scaling" {
     std.mem.writeInt(u32, invalid_text[88..92], @intFromEnum(@import("records.zig").RecordType.settextjustification), .little);
     std.mem.writeInt(u32, invalid_text[92..96], 44, .little);
     @memcpy(invalid_text[132..152], original[88..108]);
-    try t.expectError(error.InvalidEmfTextJustificationRecordSize, framing.validate(&invalid_text));
+    try t.expectError(error.InvalidEmfTextJustificationRecordSize, framing.validate(t.allocator, &invalid_text));
 }
 
 test "EMF framing validates device-context save and relative restore" {
@@ -348,15 +348,15 @@ test "EMF framing validates device-context save and relative restore" {
     std.mem.writeInt(u32, valid[100..104], 12, .little);
     std.mem.writeInt(i32, valid[104..108], -1, .little);
     @memcpy(valid[108..128], original[88..108]);
-    try t.expectEqual(@as(usize, 4), (try framing.validate(&valid)).records);
+    try t.expectEqual(@as(usize, 4), (try framing.validate(t.allocator, &valid)).records);
 
     var missing_save = valid;
     std.mem.writeInt(u32, missing_save[88..92], @intFromEnum(@import("records.zig").RecordType.realizepalette), .little);
-    try t.expectError(error.InvalidEmfRestoreDcDepth, framing.validate(&missing_save));
+    try t.expectError(error.InvalidEmfRestoreDcDepth, framing.validate(t.allocator, &missing_save));
 
     var nonnegative = valid;
     std.mem.writeInt(i32, nonnegative[104..108], 0, .little);
-    try t.expectError(error.InvalidEmfRestoreDcIndex, framing.validate(&nonnegative));
+    try t.expectError(error.InvalidEmfRestoreDcIndex, framing.validate(t.allocator, &nonnegative));
 
     var oversized_save = [_]u8{0} ** 132;
     @memcpy(oversized_save[0..88], original[0..88]);
@@ -365,7 +365,7 @@ test "EMF framing validates device-context save and relative restore" {
     std.mem.writeInt(u32, oversized_save[88..92], @intFromEnum(@import("records.zig").RecordType.savedc), .little);
     std.mem.writeInt(u32, oversized_save[92..96], 24, .little);
     @memcpy(oversized_save[112..132], original[88..108]);
-    try t.expectError(error.InvalidEmfSaveDcRecordSize, framing.validate(&oversized_save));
+    try t.expectError(error.InvalidEmfSaveDcRecordSize, framing.validate(t.allocator, &oversized_save));
 }
 
 test "EMF framing validates logical palette record wire contracts" {
@@ -401,21 +401,40 @@ test "EMF framing validates logical palette record wire contracts" {
     std.mem.writeInt(u32, valid[160..164], @intFromEnum(@import("records.zig").RecordType.realizepalette), .little);
     std.mem.writeInt(u32, valid[164..168], 8, .little);
     @memcpy(valid[168..188], original[88..108]);
-    try t.expectEqual(@as(usize, 7), (try framing.validate(&valid)).records);
+    const summary = try framing.validate(t.allocator, &valid);
+    try t.expectEqual(@as(usize, 7), summary.records);
+    try t.expectEqual(@as(usize, 1), summary.objects.creates);
+    try t.expectEqual(@as(usize, 1), summary.objects.palette_selects);
+    try t.expectEqual(@as(usize, 2), summary.objects.palette_updates);
+    try t.expectEqual(@as(usize, 1), summary.objects.peak_live);
+    try t.expectEqual(@as(usize, 1), summary.objects.final_live);
 
     var bad_version = valid;
     std.mem.writeInt(u16, bad_version[100..102], 0x0200, .little);
-    try t.expectError(error.InvalidEmfLogPaletteVersion, framing.validate(&bad_version));
+    try t.expectError(error.InvalidEmfLogPaletteVersion, framing.validate(t.allocator, &bad_version));
     var bad_resize = valid;
     std.mem.writeInt(u32, bad_resize[144..148], 0, .little);
-    try t.expectError(error.InvalidEmfPaletteEntryCount, framing.validate(&bad_resize));
+    try t.expectError(error.InvalidEmfPaletteEntryCount, framing.validate(t.allocator, &bad_resize));
+    var no_object_slot = valid;
+    std.mem.writeInt(u16, no_object_slot[56..58], 0, .little);
+    try t.expectError(error.EmfObjectHandleOutOfBounds, framing.validate(t.allocator, &no_object_slot));
+    var wrong_object_type = valid;
+    std.mem.writeInt(u32, wrong_object_type[88..92], @intFromEnum(@import("records.zig").RecordType.createpen), .little);
+    try t.expectError(error.InvalidEmfPaletteObjectType, framing.validate(t.allocator, &wrong_object_type));
+    var update_past_end = valid;
+    std.mem.writeInt(u32, update_past_end[120..124], 1, .little);
+    try t.expectError(error.EmfPaletteUpdateOutOfBounds, framing.validate(t.allocator, &update_past_end));
     var bad_realize = [_]u8{0} ** 192;
     @memcpy(bad_realize[0..160], valid[0..160]);
     std.mem.writeInt(u32, bad_realize[48..52], bad_realize.len, .little);
     std.mem.writeInt(u32, bad_realize[160..164], @intFromEnum(@import("records.zig").RecordType.realizepalette), .little);
     std.mem.writeInt(u32, bad_realize[164..168], 12, .little);
     @memcpy(bad_realize[172..192], original[88..108]);
-    try t.expectError(error.InvalidEmfPaletteRecordSize, framing.validate(&bad_realize));
+    try t.expectError(error.InvalidEmfPaletteRecordSize, framing.validate(t.allocator, &bad_realize));
+
+    var no_memory: [0]u8 = .{};
+    var fba = std.heap.FixedBufferAllocator.init(&no_memory);
+    try t.expectError(error.OutOfMemory, framing.validate(fba.allocator(), &valid));
 }
 
 test "EMF EOF palette preserves undefined spaces and reserved-blue-green-red order" {
@@ -432,7 +451,7 @@ test "EMF EOF palette preserves undefined spaces and reserved-blue-green-red ord
     bytes[108..116].* = .{ 5, 10, 20, 30, 6, 40, 50, 60 };
     bytes[116..120].* = .{ 1, 2, 3, 4 };
     std.mem.writeInt(u32, bytes[120..124], 36, .little);
-    const value = try framing.validate(&bytes);
+    const value = try framing.validate(t.allocator, &bytes);
     try t.expectEqualSlices(u8, &.{ 9, 8, 7, 6 }, value.palette.undefined_before);
     try t.expectEqualSlices(u8, &.{ 1, 2, 3, 4 }, value.palette.undefined_after);
     const second = try value.palette.entry(1);
@@ -443,21 +462,21 @@ test "EMF EOF palette preserves undefined spaces and reserved-blue-green-red ord
     try t.expectError(error.EmfPaletteIndexOutOfBounds, value.palette.entry(2));
     var invalid_offset = bytes;
     std.mem.writeInt(u32, invalid_offset[100..104], 15, .little);
-    try t.expectError(error.InvalidEmfPaletteOffset, framing.validate(&invalid_offset));
+    try t.expectError(error.InvalidEmfPaletteOffset, framing.validate(t.allocator, &invalid_offset));
 }
 
 test "EMF EOF palette validates header count offset and SizeLast boundary" {
     var bytes = fixture();
     bytes[68] = 1;
-    try t.expectError(error.InvalidEmfPaletteCount, framing.validate(&bytes));
+    try t.expectError(error.InvalidEmfPaletteCount, framing.validate(t.allocator, &bytes));
     bytes = fixture();
     bytes[68] = 1;
     bytes[96] = 1;
     bytes[100] = 15;
-    try t.expectError(error.InvalidEmfPaletteOffset, framing.validate(&bytes));
+    try t.expectError(error.InvalidEmfPaletteOffset, framing.validate(t.allocator, &bytes));
     bytes = fixture();
     bytes[68] = 1;
     bytes[96] = 1;
     bytes[100] = 16;
-    try t.expectError(error.InvalidEmfPaletteRange, framing.validate(&bytes));
+    try t.expectError(error.InvalidEmfPaletteRange, framing.validate(t.allocator, &bytes));
 }

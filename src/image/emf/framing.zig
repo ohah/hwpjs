@@ -13,12 +13,14 @@ const text_justification = @import("text_justification.zig");
 const scale_extents = @import("scale_extents.zig");
 const dc_stack = @import("dc_stack.zig");
 const palette_records = @import("palette_records.zig");
+const object_table = @import("object_table.zig");
+const std = @import("std");
 const eof = @import("eof.zig");
 const eof_palette = @import("eof_palette.zig");
 
-pub const Summary = struct { header: header.Header, header_payload: header_payload.Payload, eof: eof.Eof, palette: eof_palette.Palette, records: usize };
+pub const Summary = struct { header: header.Header, header_payload: header_payload.Payload, eof: eof.Eof, palette: eof_palette.Palette, objects: object_table.Report, records: usize };
 
-pub fn validate(bytes: []const u8) !Summary {
+fn validateStructure(bytes: []const u8) !Summary {
     var iterator: records.Iterator = .{ .bytes = bytes };
     var path_state: path_bracket.State = .{};
     var dc_state: dc_stack.State = .{};
@@ -48,7 +50,13 @@ pub fn validate(bytes: []const u8) !Summary {
         const palette = try eof_palette.parse(record, terminal);
         if (iterator.offset != bytes.len) return error.DataAfterEmfEof;
         if (count != value.records) return error.InvalidEmfDeclaredRecords;
-        return .{ .header = value, .header_payload = payload, .eof = terminal, .palette = palette, .records = count };
+        return .{ .header = value, .header_payload = payload, .eof = terminal, .palette = palette, .objects = .{}, .records = count };
     }
     return error.MissingEmfEof;
+}
+
+pub fn validate(a: std.mem.Allocator, bytes: []const u8) !Summary {
+    var summary = try validateStructure(bytes);
+    summary.objects = try object_table.validate(a, bytes, summary.header);
+    return summary;
 }
