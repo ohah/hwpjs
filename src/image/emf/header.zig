@@ -32,7 +32,7 @@ fn size(bytes: []const u8) SizeL {
 }
 
 pub fn parse(record: records.Record, stream_size: usize) !Header {
-    if (record.kind != 1) return error.InvalidEmfHeaderType;
+    if (record.kind != .header) return error.InvalidEmfHeaderType;
     if (record.bytes.len < 88) return error.InvalidEmfHeaderSize;
     if (std.mem.readInt(u32, record.bytes[40..44], .little) != 0x464d4520)
         return error.InvalidEmfSignature;

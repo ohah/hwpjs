@@ -4,7 +4,7 @@
 
 Microsoft [EMR_HEADER Record Types](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/de081cd7-351f-4cc2-830b-d03fb55e89ab)와 [Header Object](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/e4a35c41-e8e3-43f9-bc07-a18e99bb866d)에 따라 EMF는 Type 1의 header record로 시작한다. 최소 크기는 Type/Size 8바이트와 Header object 80바이트를 합친 88바이트다. `header.zig`는 signature `0x464D4520`, Reserved 0, 전체 stream Bytes 일치를 검사하고 기본 Header object 필드를 보존한다. Version `0x00010000`은 MAY이므로 강제하지 않는다.
 
-`records.zig`는 모든 EMF record의 Type/Size와 4바이트 정렬, 최소 8바이트, stream 경계를 소유한다. payload 의미는 개별 record parser의 책임이다.
+`records.zig`는 모든 EMF record의 Type/Size와 4바이트 정렬, 최소 8바이트, stream 경계를 소유한다. [RecordType Enumeration](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/1eec80ba-799b-4784-a9ac-91597d590ae1)의 119개 값을 단일 enum으로 보존하고, 정의되지 않은 `0x45`, `0x6B`, `0x75` 및 범위 밖 값을 거부한다. payload 의미는 개별 record parser의 책임이다.
 
 Microsoft [EMR_EOF Record](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/3f47fde0-0e6b-40c1-87f3-f4129af03aa1)에 따라 `eof.zig`는 Type 14, 최소 고정 필드와 record 마지막 SizeLast가 Size와 같은지 검사한다.
 
@@ -33,3 +33,5 @@ Microsoft [EMR_EOF](https://learn.microsoft.com/en-us/openspecs/windows_protocol
 EOF palette에는 Header/EOF count 비교 제거, offset 15를 16으로 보정, SizeLast 앞 공간을 넘는 entry bytes를 조용히 절단, Blue/Red 순서 교환, 뒤 undefined space 손실의 5개 변이를 적용했다. Debug/ReleaseSafe/ReleaseFast의 15회 모두 불일치 수용, 잘못된 byte 소유, entry 손실, 채널 교환 또는 raw data 손실로 탐지됐다. 모든 변이를 제거한 정상 구현은 별도로 전체 검증한다.
 
 PixelFormatDescriptor에는 내부 nSize 검사 제거, Version 검사 제거, 미정의 flag 허용, DOUBLEBUFFER/GDI 금지 조합 허용, 미정의 pixel type 허용의 5개 변이를 적용했다. Debug/ReleaseSafe/ReleaseFast의 15회 모두 해당 손상값 수용으로 탐지됐다. 정상 구현 복원 후 세 모드 전체 테스트와 Debug 통합 audit 8,905,815 checks도 통과했다.
+
+RecordType enum에는 미정의 `0`, 예약값 `0x45`, 예약값 `0x6B`, 예약값 `0x75`, 미정의 `0x7B`를 각각 멤버로 추가하는 5개 변이를 적용했다. Debug/ReleaseSafe/ReleaseFast의 15회 모두 미정의 Type 수용과 enum 개수 변화로 탐지됐다. 모든 변이 멤버를 제거한 정상 구현은 세 모드 전체 테스트와 Debug 통합 audit 8,905,815 checks를 통과했다. 공식 HTML에서 독립 추출한 119개 값과 구현 enum을 순서대로 비교해 missing/extra 0도 확인했다.

@@ -14,8 +14,8 @@ pub fn validate(bytes: []const u8) !Summary {
     var count: usize = 1;
     while (try iterator.next()) |record| {
         count += 1;
-        if (record.kind == 1) return error.DuplicateEmfHeader;
-        if (record.kind != 14) continue;
+        if (record.kind == .header) return error.DuplicateEmfHeader;
+        if (record.kind != .eof) continue;
         const terminal = try eof.parse(record);
         if (terminal.palette_entries != value.palette_entries) return error.InvalidEmfPaletteCount;
         const palette = try eof_palette.parse(record, terminal);
