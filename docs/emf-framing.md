@@ -34,7 +34,11 @@ Microsoft [EMR_EOF Record](https://learn.microsoft.com/en-us/openspecs/windows_p
 
 `object_table.zig`는 Header의 Handles가 지정한 최대 index에 예약 index 0을 더한 배열을 호출자 allocator로 생성한다. 모든 9종 object creation record의 명시적 handle을 점유시키며 0·stock·범위 밖 index를 거부한다. 명세는 CREATE 시 해당 element를 updated한다고 하며 기존 점유에 대한 실패를 규정하지 않으므로 같은 index의 새 CREATE는 slot을 교체하고 live 수를 늘리지 않는다. 정확히 12바이트인 [DELETEOBJECT](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/6f0f12a3-111a-478b-8251-a9505168f9a9)는 살아 있는 non-stock object만 삭제하고 slot 재사용을 허용한다. Palette object는 현재 entry count를 함께 보존하여 SELECT/SET/RESIZE의 생존·종류를 검사하고, SET의 `Start + NumberOfEntries`가 현재 크기를 넘지 않게 하며 RESIZE 후 크기를 갱신한다. `framing.validate`는 allocator를 필수로 받고 구조 검증 성공 후 이 상태 재생을 항상 수행하며 Summary에 create/delete/palette 동작·peak/final live 수를 제공한다.
 
-현재 Object Table은 모든 creation의 handle 점유와 일반 DELETE, palette 조작을 완료했다. SELECTOBJECT의 stock 종류 및 객체 활성화, color-space 전용 SET/DELETE, 선택 객체를 삭제했을 때 기본 객체 복원은 해당 record payload와 playback state 후속 파트다. 이를 일반 Object Table 완료로 과장하지 않는다.
+`stock_object.zig`는 [StockObject](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/d6dffd25-8615-42f8-aed1-309f1fe54ab2)의 비연속 19개 값과 brush/pen/font/palette 종류를 단독 소유한다. 예약 gap `0x80000009`, 범위 밖 stock 값과 일반 handle을 stock으로 수용하지 않는다. [SELECTOBJECT](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/145b063d-5f96-41fe-b7ae-1e615b2bc2bf)는 정확히 12바이트이고 0이 아니어야 하며, 살아 있는 명시적 brush/pen/font 또는 종류가 맞는 stock object만 활성화한다. Palette는 기존 SELECTPALETTE, color space는 후속 SETCOLORSPACE의 전용 경계를 유지하므로 SELECTOBJECT로 수용하지 않는다.
+
+Object Table은 brush/pen/font/palette의 현재 명시적 선택을 별도로 추적한다. 같은 종류를 새로 선택하면 이전 객체는 삭제하지 않고 비활성화되며, 선택된 객체를 DELETEOBJECT로 삭제하면 해당 종류의 기본 stock 상태(null)로 복원한다. SELECTPALETTE도 같은 DC 선택 상태에 연결했다. SAVEDC에서 네 선택값을 저장하고 RESTOREDC의 음수 상대 깊이로 복원하며, 삭제된 handle은 살아 있는 모든 저장 snapshot에서도 제거해 이후 복원으로 부활하지 않게 한다. 같은 handle을 같은 종류 creation으로 갱신하면 활성 인덱스를 유지하고, 다른 종류로 교체하면 모순되는 현재/snapshot 선택을 해제한다. Snapshot 저장소는 전체 record 수가 아니라 실제 SAVEDC 수만큼만 할당한다.
+
+일반 DELETEOBJECT는 color-space 객체를 거부한다. color-space 전용 SETCOLORSPACE/DELETECOLORSPACE와 그 DC 상태, 실제 creation payload 전체 의미, 선택 객체를 사용하는 drawing playback과 렌더링은 아직 후속 파트다. 따라서 현재 범위는 Object Table의 일반 선택·수명 상태이며 전체 EMF 재생 완료가 아니다.
 
 ## 실제 HWP BinData 검증
 
@@ -51,6 +55,8 @@ description은 둘 중 하나의 count/offset이 0이면 부재하고, 둘 다 �
 `pixel_format.zig`는 [PixelFormatDescriptor Object](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/1db036d6-2da8-4b92-b4f8-e9cab8cc93b7)의 40바이트 필드를 모두 파싱하고 원본 view도 보존한다. 정확한 입력 길이와 내부 nSize, Version 1, 정의된 flag bit, RGBA/ColorIndex enum을 검증하며 `PFD_DOUBLEBUFFER`와 `PFD_SUPPORT_GDI` 동시 설정을 거부한다. 문서가 MAY/SHOULD-ignore로 둔 layer type, reserved nibble, layer/damage mask와 각 bit count는 임의 제한 없이 보존한다. `cbPixelFormat` 또는 `offPixelFormat` 중 하나라도 0이면 descriptor가 없다는 레코드 규칙도 유지한다.
 
 ## 적대적 검증
+
+Object selection 추가분은 다섯 차례 경계 검토로 palette 선택도 DC 상태라는 점, color-space 삭제가 전용 record라는 점, 같은 handle·같은 종류 교체 시 활성 선택을 유지해야 한다는 점, 다른 종류 교체 시 현재 상태와 저장 snapshot을 함께 비활성화해야 한다는 점, record 수 기반 snapshot 선할당이 입력 증폭을 허용한다는 점을 찾아 수정했다. StockObject는 문서의 비연속 19개 값을 독립 배열로 전부 고정하여 예약 gap과 양끝 인접값을 거부한다. 명시적/stock 선택, 잘못된 종류·죽은 handle·범위 밖 handle, 선택 객체 삭제 후 기본 복원, palette 선택, SAVEDC/RESTOREDC, 삭제 뒤 snapshot 비부활, 같은/다른 종류 교체, color-space의 일반 삭제 거부를 단위 및 전체 stream 테스트로 검증한다. 수정 후 Debug·ReleaseSafe·ReleaseFast의 전체 audit은 각각 40/40 단계와 1,256/1,256 테스트, HWP5 8,905,815 checks를 통과했다. 실제 584개 HWP corpus에는 EMF가 0개이므로 실파일 EMF 호환성 완료 근거로 확대 해석하지 않는다.
 
 signature, Header Bytes, Header Records, EOF SizeLast, terminal EOF 뒤 데이터 검사를 하나씩 제거했다. Debug/ReleaseSafe/ReleaseFast의 15회 모두 각각 손상된 필드 또는 trailing data가 있는 stream을 실제 성공값으로 반환해 테스트가 탐지했다. 변이는 모두 제거하고 정상 구현을 별도로 검증한다.
 

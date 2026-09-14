@@ -11,7 +11,7 @@ fn word(out: []u8, index: usize, value: usize) !void {
 /// stream order so corpus coverage is measured without duplicating Zig parsing.
 pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     const summary = try core.image.emf_framing.validate(a, bytes);
-    const words = std.math.add(usize, 10, summary.records) catch return error.LimitExceeded;
+    const words = std.math.add(usize, 15, summary.records) catch return error.LimitExceeded;
     const size = std.math.mul(usize, words, 4) catch return error.LimitExceeded;
     if (size > limit) return error.LimitExceeded;
     const out = try a.alloc(u8, size);
@@ -26,8 +26,13 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     try word(out, 7, summary.objects.peak_live);
     try word(out, 8, summary.objects.final_live);
     try word(out, 9, summary.palette.count);
+    try word(out, 10, summary.objects.selections);
+    try word(out, 11, summary.objects.stock_selections);
+    try word(out, 12, summary.objects.default_restores);
+    try word(out, 13, summary.objects.replacement_deactivations);
+    try word(out, 14, summary.objects.final_explicit_selected);
     var iterator: core.image.emf_records.Iterator = .{ .bytes = bytes };
-    var index: usize = 10;
+    var index: usize = 15;
     while (try iterator.next()) |record| : (index += 1)
         std.mem.writeInt(u32, out[index * 4 ..][0..4], @intFromEnum(record.kind), .little);
     return out;

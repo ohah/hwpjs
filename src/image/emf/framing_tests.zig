@@ -437,6 +437,41 @@ test "EMF framing validates logical palette record wire contracts" {
     try t.expectError(error.OutOfMemory, framing.validate(fba.allocator(), &valid));
 }
 
+test "EMF framing connects SELECTOBJECT activation deletion and default restoration" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 160;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 5, .little);
+    std.mem.writeInt(u16, bytes[56..58], 1, .little);
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.createpen), .little);
+    std.mem.writeInt(u32, bytes[92..96], 28, .little);
+    std.mem.writeInt(u32, bytes[96..100], 1, .little);
+    std.mem.writeInt(u32, bytes[116..120], @intFromEnum(@import("records.zig").RecordType.selectobject), .little);
+    std.mem.writeInt(u32, bytes[120..124], 12, .little);
+    std.mem.writeInt(u32, bytes[124..128], 1, .little);
+    std.mem.writeInt(u32, bytes[128..132], @intFromEnum(@import("records.zig").RecordType.deleteobject), .little);
+    std.mem.writeInt(u32, bytes[132..136], 12, .little);
+    std.mem.writeInt(u32, bytes[136..140], 1, .little);
+    @memcpy(bytes[140..160], original[88..108]);
+    const summary = try framing.validate(t.allocator, &bytes);
+    try t.expectEqual(@as(usize, 1), summary.objects.selections);
+    try t.expectEqual(@as(usize, 1), summary.objects.default_restores);
+    try t.expectEqual(@as(usize, 0), summary.objects.final_explicit_selected);
+
+    var stock = [_]u8{0} ** 120;
+    @memcpy(stock[0..88], original[0..88]);
+    std.mem.writeInt(u32, stock[48..52], stock.len, .little);
+    std.mem.writeInt(u32, stock[52..56], 3, .little);
+    std.mem.writeInt(u32, stock[88..92], @intFromEnum(@import("records.zig").RecordType.selectobject), .little);
+    std.mem.writeInt(u32, stock[92..96], 12, .little);
+    std.mem.writeInt(u32, stock[96..100], 0x80000013, .little);
+    @memcpy(stock[100..120], original[88..108]);
+    const stock_summary = try framing.validate(t.allocator, &stock);
+    try t.expectEqual(@as(usize, 1), stock_summary.objects.stock_selections);
+    try t.expectEqual(@as(usize, 0), stock_summary.objects.final_explicit_selected);
+}
+
 test "EMF EOF palette preserves undefined spaces and reserved-blue-green-red order" {
     const original = fixture();
     var bytes = [_]u8{0} ** 124;
