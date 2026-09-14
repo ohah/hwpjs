@@ -1,4 +1,5 @@
 const records = @import("records.zig");
+const record_extent = @import("record_extent.zig");
 const geometry = @import("geometry.zig");
 
 pub const Value = union(enum) {
@@ -21,7 +22,7 @@ pub fn parse(record: records.Record) !?Value {
         => {},
         else => return null,
     }
-    if (record.size != 16 or record.bytes.len != 16) return error.InvalidEmfPointRecordSize;
+    if (!record_extent.hasRequiredPrefix(record, 16)) return error.InvalidEmfPointRecordSize;
     return switch (record.kind) {
         .setwindowextex => .{ .window_extent = try geometry.parseSizeL(record.bytes[8..16]) },
         .setwindoworgex => .{ .window_origin = try geometry.parsePointL(record.bytes[8..16]) },
@@ -50,10 +51,11 @@ test "all six fixed point and extent records parse signed fields" {
     try std.testing.expectEqual(@as(i32, 456), (try parse(fixture(.movetoex, &bytes))).?.move_to.y);
 }
 
-test "point records reject size drift and do not claim unrelated types" {
+test "point records require their prefix accept trailing data and do not claim unrelated types" {
     const std = @import("std");
     const oversized = [_]u8{0} ** 20;
     for ([_]records.RecordType{ .setwindowextex, .setwindoworgex, .setviewportextex, .setviewportorgex, .setbrushorgex, .movetoex }) |kind|
-        try std.testing.expectError(error.InvalidEmfPointRecordSize, parse(fixture(kind, &oversized)));
+        try std.testing.expect((try parse(fixture(kind, &oversized))) != null);
+    try std.testing.expectError(error.InvalidEmfPointRecordSize, parse(fixture(.movetoex, oversized[0..12])));
     try std.testing.expect((try parse(fixture(.lineto, oversized[0..16]))) == null);
 }

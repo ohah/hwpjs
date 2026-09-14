@@ -1,5 +1,6 @@
 const std = @import("std");
 const records = @import("records.zig");
+const record_extent = @import("record_extent.zig");
 
 pub const Justification = struct {
     break_extra: i32,
@@ -8,7 +9,7 @@ pub const Justification = struct {
 
 pub fn parse(record: records.Record) !?Justification {
     if (record.kind != .settextjustification) return null;
-    if (record.size != 16 or record.bytes.len != 16) return error.InvalidEmfTextJustificationRecordSize;
+    if (!record_extent.hasRequiredPrefix(record, 16)) return error.InvalidEmfTextJustificationRecordSize;
     return .{
         .break_extra = std.mem.readInt(i32, record.bytes[8..12], .little),
         .break_count = std.mem.readInt(i32, record.bytes[12..16], .little),
@@ -36,13 +37,13 @@ test "text justification preserves signed fields in wire order" {
     }
 }
 
-test "text justification requires exact size and does not claim unrelated records" {
+test "text justification requires its prefix accepts trailing data and does not claim unrelated records" {
     var short = [_]u8{0} ** 12;
     try std.testing.expectError(error.InvalidEmfTextJustificationRecordSize, parse(fixture(.settextjustification, &short)));
     var declared_sixteen = fixture(.settextjustification, &short);
     declared_sixteen.size = 16;
     try std.testing.expectError(error.InvalidEmfTextJustificationRecordSize, parse(declared_sixteen));
     var long = [_]u8{0} ** 20;
-    try std.testing.expectError(error.InvalidEmfTextJustificationRecordSize, parse(fixture(.settextjustification, &long)));
+    try std.testing.expect((try parse(fixture(.settextjustification, &long))) != null);
     try std.testing.expect((try parse(fixture(.savedc, short[0..8]))) == null);
 }

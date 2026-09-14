@@ -1,5 +1,6 @@
 const std = @import("std");
 const records = @import("records.zig");
+const record_extent = @import("record_extent.zig");
 
 pub const Flags = enum(u32) {
     unrestricted = 0,
@@ -8,7 +9,7 @@ pub const Flags = enum(u32) {
 
 pub fn parse(record: records.Record) !?Flags {
     if (record.kind != .setmapperflags) return null;
-    if (record.size != 12 or record.bytes.len != 12) return error.InvalidEmfMapperFlagsRecordSize;
+    if (!record_extent.hasRequiredPrefix(record, 12)) return error.InvalidEmfMapperFlagsRecordSize;
     const raw = std.mem.readInt(u32, record.bytes[8..12], .little);
     return std.enums.fromInt(Flags, raw) orelse error.InvalidEmfMapperFlags;
 }
@@ -24,7 +25,7 @@ test "mapper flags parse both defined values" {
     try std.testing.expectEqual(Flags.match_device_aspect_ratio, (try parse(fixture(.setmapperflags, &bytes))).?);
 }
 
-test "mapper flags reject undefined values exact-size drift and unrelated records" {
+test "mapper flags reject undefined values require their prefix and accept trailing data" {
     var bytes = [_]u8{0} ** 12;
     bytes[8] = 2;
     try std.testing.expectError(error.InvalidEmfMapperFlags, parse(fixture(.setmapperflags, &bytes)));
@@ -37,6 +38,6 @@ test "mapper flags reject undefined values exact-size drift and unrelated record
     declared_twelve.size = 12;
     try std.testing.expectError(error.InvalidEmfMapperFlagsRecordSize, parse(declared_twelve));
     var long = [_]u8{0} ** 16;
-    try std.testing.expectError(error.InvalidEmfMapperFlagsRecordSize, parse(fixture(.setmapperflags, &long)));
+    try std.testing.expectEqual(Flags.unrestricted, (try parse(fixture(.setmapperflags, &long))).?);
     try std.testing.expect((try parse(fixture(.savedc, short[0..8]))) == null);
 }

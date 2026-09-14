@@ -1,4 +1,5 @@
 const records = @import("records.zig");
+const record_extent = @import("record_extent.zig");
 
 pub const Bracket = struct { kind: records.RecordType };
 
@@ -35,7 +36,7 @@ pub fn parse(record: records.Record) !?Bracket {
         => {},
         else => return null,
     }
-    if (record.size != 8 or record.bytes.len != 8) return error.InvalidEmfPathBracketSize;
+    if (!record_extent.hasRequiredPrefix(record, 8)) return error.InvalidEmfPathBracketSize;
     return .{ .kind = record.kind };
 }
 
@@ -49,10 +50,11 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
     };
 }
 
-test "all six parameterless path bracket records require exactly eight bytes" {
+test "all six path bracket records require the header and accept trailing data" {
     const std = @import("std");
     const exact = [_]u8{0} ** 8;
     const oversized = [_]u8{0} ** 12;
+    const truncated = [_]u8{0} ** 4;
     for ([_]records.RecordType{
         .beginpath,
         .endpath,
@@ -63,7 +65,8 @@ test "all six parameterless path bracket records require exactly eight bytes" {
     }) |kind| {
         const value = (try parse(fixture(kind, &exact))).?;
         try std.testing.expectEqual(kind, value.kind);
-        try std.testing.expectError(error.InvalidEmfPathBracketSize, parse(fixture(kind, &oversized)));
+        try std.testing.expectEqual(kind, (try parse(fixture(kind, &oversized))).?.kind);
+        try std.testing.expectError(error.InvalidEmfPathBracketSize, parse(fixture(kind, &truncated)));
     }
 }
 

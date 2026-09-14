@@ -1,5 +1,6 @@
 const std = @import("std");
 const records = @import("records.zig");
+const record_extent = @import("record_extent.zig");
 
 pub const Kind = enum { viewport, window };
 
@@ -17,7 +18,7 @@ pub fn parse(record: records.Record) !?Scale {
         .scalewindowextex => .window,
         else => return null,
     };
-    if (record.size != 24 or record.bytes.len != 24) return error.InvalidEmfScaleExtentsRecordSize;
+    if (!record_extent.hasRequiredPrefix(record, 24)) return error.InvalidEmfScaleExtentsRecordSize;
     const value: Scale = .{
         .kind = kind,
         .x_numerator = std.mem.readInt(i32, record.bytes[8..12], .little),
@@ -63,13 +64,14 @@ test "scale extents reject zero in every ratio component" {
     }
 }
 
-test "scale extents require exact size and do not claim unrelated records" {
+test "scale extents require their prefix accept trailing data and do not claim unrelated records" {
     var short = [_]u8{0} ** 20;
     try std.testing.expectError(error.InvalidEmfScaleExtentsRecordSize, parse(fixture(.scaleviewportextex, &short)));
     var declared_twenty_four = fixture(.scaleviewportextex, &short);
     declared_twenty_four.size = 24;
     try std.testing.expectError(error.InvalidEmfScaleExtentsRecordSize, parse(declared_twenty_four));
     var long = [_]u8{0} ** 28;
-    try std.testing.expectError(error.InvalidEmfScaleExtentsRecordSize, parse(fixture(.scalewindowextex, &long)));
+    inline for (.{ 8, 12, 16, 20 }) |offset| std.mem.writeInt(i32, long[offset..][0..4], 1, .little);
+    try std.testing.expect((try parse(fixture(.scalewindowextex, &long))) != null);
     try std.testing.expect((try parse(fixture(.savedc, short[0..8]))) == null);
 }

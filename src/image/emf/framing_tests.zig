@@ -150,7 +150,7 @@ test "EMF record iterator rejects truncation alignment and data after EOF" {
     try t.expectError(error.DataAfterEmfEof, framing.validate(t.allocator, &trailing));
 }
 
-test "EMF framing validates parameterless path bracket record size" {
+test "EMF framing validates parameterless path bracket records and trailing data" {
     const original = fixture();
     var valid = [_]u8{0} ** 124;
     @memcpy(valid[0..88], original[0..88]);
@@ -167,10 +167,10 @@ test "EMF framing validates parameterless path bracket record size" {
     @memcpy(invalid[0..88], original[0..88]);
     std.mem.writeInt(u32, invalid[48..52], invalid.len, .little);
     std.mem.writeInt(u32, invalid[52..56], 3, .little);
-    std.mem.writeInt(u32, invalid[88..92], @intFromEnum(@import("records.zig").RecordType.beginpath), .little);
+    std.mem.writeInt(u32, invalid[88..92], @intFromEnum(@import("records.zig").RecordType.closefigure), .little);
     std.mem.writeInt(u32, invalid[92..96], 12, .little);
     @memcpy(invalid[100..120], original[88..108]);
-    try t.expectError(error.InvalidEmfPathBracketSize, framing.validate(t.allocator, &invalid));
+    try t.expectEqual(@as(usize, 3), (try framing.validate(t.allocator, &invalid)).records);
 
     var unclosed = [_]u8{0} ** 116;
     @memcpy(unclosed[0..96], valid[0..96]);
@@ -202,7 +202,7 @@ test "EMF framing validates world transform records" {
     try t.expectError(error.InvalidEmfModifyWorldTransformMode, framing.validate(t.allocator, &invalid));
 }
 
-test "EMF framing validates fixed point state records" {
+test "EMF framing validates fixed point state records and trailing data" {
     const original = fixture();
     var valid = [_]u8{0} ** 124;
     @memcpy(valid[0..88], original[0..88]);
@@ -222,7 +222,7 @@ test "EMF framing validates fixed point state records" {
     std.mem.writeInt(u32, invalid[88..92], @intFromEnum(@import("records.zig").RecordType.movetoex), .little);
     std.mem.writeInt(u32, invalid[92..96], 20, .little);
     @memcpy(invalid[108..128], original[88..108]);
-    try t.expectError(error.InvalidEmfPointRecordSize, framing.validate(t.allocator, &invalid));
+    try t.expectEqual(@as(usize, 3), (try framing.validate(t.allocator, &invalid)).records);
 }
 
 test "EMF framing validates strict modes and preserves unknown stretch modes" {
@@ -278,13 +278,13 @@ test "EMF framing validates mapper flags and miter limit records" {
     invalid_mapper[96] = 2;
     try t.expectError(error.InvalidEmfMapperFlags, framing.validate(t.allocator, &invalid_mapper));
 
-    var invalid_miter = [_]u8{0} ** 136;
-    @memcpy(invalid_miter[0..100], valid[0..100]);
-    std.mem.writeInt(u32, invalid_miter[48..52], invalid_miter.len, .little);
-    std.mem.writeInt(u32, invalid_miter[100..104], @intFromEnum(@import("records.zig").RecordType.setmiterlimit), .little);
-    std.mem.writeInt(u32, invalid_miter[104..108], 16, .little);
-    @memcpy(invalid_miter[116..136], original[88..108]);
-    try t.expectError(error.InvalidEmfMiterLimitRecordSize, framing.validate(t.allocator, &invalid_miter));
+    var extended_miter = [_]u8{0} ** 136;
+    @memcpy(extended_miter[0..100], valid[0..100]);
+    std.mem.writeInt(u32, extended_miter[48..52], extended_miter.len, .little);
+    std.mem.writeInt(u32, extended_miter[100..104], @intFromEnum(@import("records.zig").RecordType.setmiterlimit), .little);
+    std.mem.writeInt(u32, extended_miter[104..108], 16, .little);
+    @memcpy(extended_miter[116..136], original[88..108]);
+    try t.expectEqual(@as(usize, 4), (try framing.validate(t.allocator, &extended_miter)).records);
 }
 
 test "EMF framing validates text alignment components" {
@@ -326,14 +326,14 @@ test "EMF framing validates text justification and extent scaling" {
     std.mem.writeInt(i32, invalid_scale[112..116], 0, .little);
     try t.expectError(error.InvalidEmfScaleExtentRatio, framing.validate(t.allocator, &invalid_scale));
 
-    var invalid_text = [_]u8{0} ** 152;
-    @memcpy(invalid_text[0..88], original[0..88]);
-    std.mem.writeInt(u32, invalid_text[48..52], invalid_text.len, .little);
-    std.mem.writeInt(u32, invalid_text[52..56], 3, .little);
-    std.mem.writeInt(u32, invalid_text[88..92], @intFromEnum(@import("records.zig").RecordType.settextjustification), .little);
-    std.mem.writeInt(u32, invalid_text[92..96], 44, .little);
-    @memcpy(invalid_text[132..152], original[88..108]);
-    try t.expectError(error.InvalidEmfTextJustificationRecordSize, framing.validate(t.allocator, &invalid_text));
+    var extended_text = [_]u8{0} ** 152;
+    @memcpy(extended_text[0..88], original[0..88]);
+    std.mem.writeInt(u32, extended_text[48..52], extended_text.len, .little);
+    std.mem.writeInt(u32, extended_text[52..56], 3, .little);
+    std.mem.writeInt(u32, extended_text[88..92], @intFromEnum(@import("records.zig").RecordType.settextjustification), .little);
+    std.mem.writeInt(u32, extended_text[92..96], 44, .little);
+    @memcpy(extended_text[132..152], original[88..108]);
+    try t.expectEqual(@as(usize, 3), (try framing.validate(t.allocator, &extended_text)).records);
 }
 
 test "EMF framing validates device-context save and relative restore" {
@@ -358,14 +358,14 @@ test "EMF framing validates device-context save and relative restore" {
     std.mem.writeInt(i32, nonnegative[104..108], 0, .little);
     try t.expectError(error.InvalidEmfRestoreDcIndex, framing.validate(t.allocator, &nonnegative));
 
-    var oversized_save = [_]u8{0} ** 132;
-    @memcpy(oversized_save[0..88], original[0..88]);
-    std.mem.writeInt(u32, oversized_save[48..52], oversized_save.len, .little);
-    std.mem.writeInt(u32, oversized_save[52..56], 3, .little);
-    std.mem.writeInt(u32, oversized_save[88..92], @intFromEnum(@import("records.zig").RecordType.savedc), .little);
-    std.mem.writeInt(u32, oversized_save[92..96], 24, .little);
-    @memcpy(oversized_save[112..132], original[88..108]);
-    try t.expectError(error.InvalidEmfSaveDcRecordSize, framing.validate(t.allocator, &oversized_save));
+    var extended_save = [_]u8{0} ** 132;
+    @memcpy(extended_save[0..88], original[0..88]);
+    std.mem.writeInt(u32, extended_save[48..52], extended_save.len, .little);
+    std.mem.writeInt(u32, extended_save[52..56], 3, .little);
+    std.mem.writeInt(u32, extended_save[88..92], @intFromEnum(@import("records.zig").RecordType.savedc), .little);
+    std.mem.writeInt(u32, extended_save[92..96], 24, .little);
+    @memcpy(extended_save[112..132], original[88..108]);
+    try t.expectEqual(@as(usize, 3), (try framing.validate(t.allocator, &extended_save)).records);
 }
 
 test "EMF framing validates logical palette record wire contracts" {

@@ -1,5 +1,6 @@
 const std = @import("std");
 const records = @import("records.zig");
+const record_extent = @import("record_extent.zig");
 
 pub const LowAxis = enum(u32) {
     default = 0,
@@ -23,7 +24,7 @@ pub const Alignment = struct {
 
 pub fn parse(record: records.Record) !?Alignment {
     if (record.kind != .settextalign) return null;
-    if (record.size != 12 or record.bytes.len != 12) return error.InvalidEmfTextAlignmentRecordSize;
+    if (!record_extent.hasRequiredPrefix(record, 12)) return error.InvalidEmfTextAlignmentRecordSize;
     const raw = std.mem.readInt(u32, record.bytes[8..12], .little);
     if ((raw & ~@as(u32, 0x011f)) != 0) return error.InvalidEmfTextAlignmentFlags;
     const low_axis = std.enums.fromInt(LowAxis, raw & 0x0006) orelse return error.InvalidEmfTextAlignmentFlags;
@@ -68,14 +69,14 @@ test "text alignment rejects undefined bits and mutually exclusive values" {
     }
 }
 
-test "text alignment requires exact size and does not claim unrelated records" {
+test "text alignment requires its prefix accepts trailing data and does not claim unrelated records" {
     var short = [_]u8{0} ** 8;
     try std.testing.expectError(error.InvalidEmfTextAlignmentRecordSize, parse(fixture(.settextalign, &short)));
     var declared_twelve = fixture(.settextalign, &short);
     declared_twelve.size = 12;
     try std.testing.expectError(error.InvalidEmfTextAlignmentRecordSize, parse(declared_twelve));
     var long = [_]u8{0} ** 16;
-    try std.testing.expectError(error.InvalidEmfTextAlignmentRecordSize, parse(fixture(.settextalign, &long)));
+    try std.testing.expectEqual(@as(u32, 0), (try parse(fixture(.settextalign, &long))).?.raw);
     var declared_twelve_long = fixture(.settextalign, &long);
     declared_twelve_long.size = 12;
     try std.testing.expectError(error.InvalidEmfTextAlignmentRecordSize, parse(declared_twelve_long));

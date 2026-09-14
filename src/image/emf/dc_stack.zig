@@ -1,5 +1,6 @@
 const std = @import("std");
 const records = @import("records.zig");
+const record_extent = @import("record_extent.zig");
 
 pub const Action = union(enum) {
     save,
@@ -26,11 +27,11 @@ pub const State = struct {
 pub fn parse(record: records.Record) !?Action {
     switch (record.kind) {
         .savedc => {
-            if (record.size != 8 or record.bytes.len != 8) return error.InvalidEmfSaveDcRecordSize;
+            if (!record_extent.hasRequiredPrefix(record, 8)) return error.InvalidEmfSaveDcRecordSize;
             return .save;
         },
         .restoredc => {
-            if (record.size != 12 or record.bytes.len != 12) return error.InvalidEmfRestoreDcRecordSize;
+            if (!record_extent.hasRequiredPrefix(record, 12)) return error.InvalidEmfRestoreDcRecordSize;
             const saved_dc = std.mem.readInt(i32, record.bytes[8..12], .little);
             if (saved_dc >= 0) return error.InvalidEmfRestoreDcIndex;
             return .{ .restore = saved_dc };
@@ -58,16 +59,17 @@ test "save and restore records preserve their distinct wire forms" {
     }
 }
 
-test "save and restore require exact record sizes" {
+test "save and restore require their prefixes and accept trailing data" {
     const save_long = [_]u8{0} ** 12;
-    try std.testing.expectError(error.InvalidEmfSaveDcRecordSize, parse(fixture(.savedc, &save_long)));
+    try std.testing.expect((try parse(fixture(.savedc, &save_long))) != null);
     const restore_short = [_]u8{0} ** 8;
     try std.testing.expectError(error.InvalidEmfRestoreDcRecordSize, parse(fixture(.restoredc, &restore_short)));
     var declared_twelve = fixture(.restoredc, &restore_short);
     declared_twelve.size = 12;
     try std.testing.expectError(error.InvalidEmfRestoreDcRecordSize, parse(declared_twelve));
-    const restore_long = [_]u8{0} ** 16;
-    try std.testing.expectError(error.InvalidEmfRestoreDcRecordSize, parse(fixture(.restoredc, &restore_long)));
+    var restore_long = [_]u8{0} ** 16;
+    std.mem.writeInt(i32, restore_long[8..12], -1, .little);
+    try std.testing.expect((try parse(fixture(.restoredc, &restore_long))) != null);
 }
 
 test "restore index must be negative" {

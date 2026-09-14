@@ -1,5 +1,6 @@
 const std = @import("std");
 const records = @import("records.zig");
+const record_extent = @import("record_extent.zig");
 
 pub const Limit = struct {
     raw: u32,
@@ -15,7 +16,7 @@ pub const Limit = struct {
 
 pub fn parse(record: records.Record) !?Limit {
     if (record.kind != .setmiterlimit) return null;
-    if (record.size != 12 or record.bytes.len != 12) return error.InvalidEmfMiterLimitRecordSize;
+    if (!record_extent.hasRequiredPrefix(record, 12)) return error.InvalidEmfMiterLimitRecordSize;
     return .{ .raw = std.mem.readInt(u32, record.bytes[8..12], .little) };
 }
 
@@ -34,14 +35,14 @@ test "miter limit preserves unsigned and FLOAT interpretations without normaliza
     }
 }
 
-test "miter limit requires exact size and does not claim unrelated records" {
+test "miter limit requires its prefix accepts trailing data and does not claim unrelated records" {
     var short = [_]u8{0} ** 8;
     try std.testing.expectError(error.InvalidEmfMiterLimitRecordSize, parse(fixture(.setmiterlimit, &short)));
     var declared_twelve = fixture(.setmiterlimit, &short);
     declared_twelve.size = 12;
     try std.testing.expectError(error.InvalidEmfMiterLimitRecordSize, parse(declared_twelve));
     var long = [_]u8{0} ** 16;
-    try std.testing.expectError(error.InvalidEmfMiterLimitRecordSize, parse(fixture(.setmiterlimit, &long)));
+    try std.testing.expectEqual(@as(u32, 0), (try parse(fixture(.setmiterlimit, &long))).?.raw);
     var declared_twelve_long = fixture(.setmiterlimit, &long);
     declared_twelve_long.size = 12;
     try std.testing.expectError(error.InvalidEmfMiterLimitRecordSize, parse(declared_twelve_long));

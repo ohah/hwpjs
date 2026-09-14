@@ -1,5 +1,6 @@
 const std = @import("std");
 const records = @import("records.zig");
+const record_extent = @import("record_extent.zig");
 
 pub const MapMode = enum(u32) {
     text = 1,
@@ -79,7 +80,7 @@ pub fn parse(record: records.Record) !?Value {
         => {},
         else => return null,
     }
-    if (record.size != 12 or record.bytes.len != 12) return error.InvalidEmfModeRecordSize;
+    if (!record_extent.hasRequiredPrefix(record, 12)) return error.InvalidEmfModeRecordSize;
     const raw = std.mem.readInt(u32, record.bytes[8..12], .little);
     return switch (kind) {
         .setmapmode => .{ .map = std.enums.fromInt(MapMode, raw) orelse return error.InvalidEmfMapMode },
@@ -146,7 +147,7 @@ test "strict mode records reject values outside their enumerations" {
     try std.testing.expectError(error.InvalidEmfBinaryRasterOperation, parse(fixture(.setrop2, &bytes)));
 }
 
-test "mode records require exact size and do not claim unrelated records" {
+test "mode records require their prefix accept trailing data and do not claim unrelated records" {
     var short = [_]u8{0} ** 8;
     try std.testing.expectError(error.InvalidEmfModeRecordSize, parse(fixture(.setmapmode, &short)));
     var declared_twelve = fixture(.setmapmode, &short);
@@ -154,7 +155,7 @@ test "mode records require exact size and do not claim unrelated records" {
     try std.testing.expectError(error.InvalidEmfModeRecordSize, parse(declared_twelve));
     var long = [_]u8{0} ** 16;
     long[8] = 1;
-    try std.testing.expectError(error.InvalidEmfModeRecordSize, parse(fixture(.setstretchbltmode, &long)));
+    try std.testing.expect((try parse(fixture(.setstretchbltmode, &long))) != null);
     var declared_twelve_long = fixture(.setstretchbltmode, &long);
     declared_twelve_long.size = 12;
     try std.testing.expectError(error.InvalidEmfModeRecordSize, parse(declared_twelve_long));

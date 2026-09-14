@@ -1,5 +1,6 @@
 const std = @import("std");
 const records = @import("records.zig");
+const record_extent = @import("record_extent.zig");
 const color_ref = @import("../wmf/color_ref.zig");
 
 pub const Value = union(enum) {
@@ -13,7 +14,7 @@ pub fn parse(record: records.Record) !?Value {
         .settextcolor, .setbkcolor => {},
         else => return null,
     }
-    if (record.size != 12 or record.bytes.len != 12) return error.InvalidEmfColorRecordSize;
+    if (!record_extent.hasRequiredPrefix(record, 12)) return error.InvalidEmfColorRecordSize;
     const color = try color_ref.parse(record.bytes[8..12], .specified_zero);
     return switch (kind) {
         .settextcolor => .{ .text = color },
@@ -39,7 +40,7 @@ test "color records parse text and background ColorRef in wire order" {
     try std.testing.expectEqual(text.raw, background.raw);
 }
 
-test "color records enforce exact size and zero reserved byte" {
+test "color records require their prefix accept trailing data and enforce zero reserved byte" {
     var short = [_]u8{0} ** 8;
     try std.testing.expectError(error.InvalidEmfColorRecordSize, parse(fixture(.settextcolor, &short)));
     var declared_twelve = fixture(.settextcolor, &short);
@@ -47,7 +48,7 @@ test "color records enforce exact size and zero reserved byte" {
     try std.testing.expectError(error.InvalidEmfColorRecordSize, parse(declared_twelve));
 
     var long = [_]u8{0} ** 16;
-    try std.testing.expectError(error.InvalidEmfColorRecordSize, parse(fixture(.setbkcolor, &long)));
+    try std.testing.expect((try parse(fixture(.setbkcolor, &long))) != null);
     var declared_twelve_long = fixture(.setbkcolor, &long);
     declared_twelve_long.size = 12;
     try std.testing.expectError(error.InvalidEmfColorRecordSize, parse(declared_twelve_long));
