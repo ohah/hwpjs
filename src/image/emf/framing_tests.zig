@@ -424,13 +424,13 @@ test "EMF framing validates logical palette record wire contracts" {
     var update_past_end = valid;
     std.mem.writeInt(u32, update_past_end[120..124], 1, .little);
     try t.expectError(error.EmfPaletteUpdateOutOfBounds, framing.validate(t.allocator, &update_past_end));
-    var bad_realize = [_]u8{0} ** 192;
-    @memcpy(bad_realize[0..160], valid[0..160]);
-    std.mem.writeInt(u32, bad_realize[48..52], bad_realize.len, .little);
-    std.mem.writeInt(u32, bad_realize[160..164], @intFromEnum(@import("records.zig").RecordType.realizepalette), .little);
-    std.mem.writeInt(u32, bad_realize[164..168], 12, .little);
-    @memcpy(bad_realize[172..192], original[88..108]);
-    try t.expectError(error.InvalidEmfPaletteRecordSize, framing.validate(t.allocator, &bad_realize));
+    var extended_realize = [_]u8{0} ** 192;
+    @memcpy(extended_realize[0..160], valid[0..160]);
+    std.mem.writeInt(u32, extended_realize[48..52], extended_realize.len, .little);
+    std.mem.writeInt(u32, extended_realize[160..164], @intFromEnum(@import("records.zig").RecordType.realizepalette), .little);
+    std.mem.writeInt(u32, extended_realize[164..168], 12, .little);
+    @memcpy(extended_realize[172..192], original[88..108]);
+    try t.expectEqual(@as(usize, 7), (try framing.validate(t.allocator, &extended_realize)).records);
 
     var no_memory: [0]u8 = .{};
     var fba = std.heap.FixedBufferAllocator.init(&no_memory);

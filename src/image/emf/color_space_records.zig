@@ -1,5 +1,6 @@
 const std = @import("std");
 const records = @import("records.zig");
+const record_extent = @import("record_extent.zig");
 
 pub const Action = union(enum) {
     set: u32,
@@ -12,7 +13,7 @@ pub fn parse(record: records.Record) !?Action {
         .deletecolorspace => .delete,
         else => return null,
     };
-    if (record.size != 12 or record.bytes.len != 12) return switch (action) {
+    if (!record_extent.hasRequiredPrefix(record, 12)) return switch (action) {
         .set => error.InvalidEmfSetColorSpaceRecordSize,
         .delete => error.InvalidEmfDeleteColorSpaceRecordSize,
     };
@@ -41,13 +42,13 @@ test "color-space manipulation records preserve handles" {
     }
 }
 
-test "color-space manipulation records require exact sizes" {
+test "color-space manipulation records require prefixes and accept trailing data" {
     const short = [_]u8{0} ** 8;
     const long = [_]u8{0} ** 16;
     try std.testing.expectError(error.InvalidEmfSetColorSpaceRecordSize, parse(fixture(.setcolorspace, &short)));
-    try std.testing.expectError(error.InvalidEmfSetColorSpaceRecordSize, parse(fixture(.setcolorspace, &long)));
+    try std.testing.expectEqual(@as(u32, 0), (try parse(fixture(.setcolorspace, &long))).?.set);
     try std.testing.expectError(error.InvalidEmfDeleteColorSpaceRecordSize, parse(fixture(.deletecolorspace, &short)));
-    try std.testing.expectError(error.InvalidEmfDeleteColorSpaceRecordSize, parse(fixture(.deletecolorspace, &long)));
+    try std.testing.expectEqual(@as(u32, 0), (try parse(fixture(.deletecolorspace, &long))).?.delete);
 
     var mismatched = fixture(.setcolorspace, &short);
     mismatched.size = 12;

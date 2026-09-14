@@ -1,5 +1,6 @@
 const std = @import("std");
 const records = @import("records.zig");
+const record_extent = @import("record_extent.zig");
 const log_palette_entry = @import("log_palette_entry.zig");
 
 pub const Entries = struct {
@@ -25,9 +26,9 @@ pub const Value = union(enum) {
     realize,
 };
 
-fn exactArraySize(base: usize, count: u32, actual: usize) !usize {
+fn requiredArrayEnd(base: usize, count: u32, actual: usize) !usize {
     const expected = @as(u64, base) + @as(u64, count) * 4;
-    if (expected > std.math.maxInt(usize) or expected != actual) return error.InvalidEmfPaletteRecordSize;
+    if (expected > std.math.maxInt(usize) or expected > actual) return error.InvalidEmfPaletteRecordSize;
     return @intCast(expected);
 }
 
@@ -40,35 +41,35 @@ fn validateHandle(handle: u32, allow_default: bool) !void {
 pub fn parse(record: records.Record) !?Value {
     switch (record.kind) {
         .createpalette => {
-            if (record.bytes.len < 16 or record.size != record.bytes.len) return error.InvalidEmfPaletteRecordSize;
+            if (!record_extent.hasRequiredPrefix(record, 16)) return error.InvalidEmfPaletteRecordSize;
             const handle = std.mem.readInt(u32, record.bytes[8..12], .little);
             try validateHandle(handle, false);
             if (std.mem.readInt(u16, record.bytes[12..14], .little) != 0x0300) return error.InvalidEmfLogPaletteVersion;
             const count = std.mem.readInt(u16, record.bytes[14..16], .little);
             if (count == 0) return error.EmptyEmfLogPalette;
-            _ = try exactArraySize(16, count, record.bytes.len);
-            return .{ .create = .{ .handle = handle, .entries = .{ .bytes = record.bytes[16..], .count = count } } };
+            const entries_end = try requiredArrayEnd(16, count, record.bytes.len);
+            return .{ .create = .{ .handle = handle, .entries = .{ .bytes = record.bytes[16..entries_end], .count = count } } };
         },
         .selectpalette => {
-            if (record.size != 12 or record.bytes.len != 12) return error.InvalidEmfPaletteRecordSize;
+            if (!record_extent.hasRequiredPrefix(record, 12)) return error.InvalidEmfPaletteRecordSize;
             const handle = std.mem.readInt(u32, record.bytes[8..12], .little);
             try validateHandle(handle, true);
             return .{ .select = handle };
         },
         .setpaletteentries => {
-            if (record.bytes.len < 20 or record.size != record.bytes.len) return error.InvalidEmfPaletteRecordSize;
+            if (!record_extent.hasRequiredPrefix(record, 20)) return error.InvalidEmfPaletteRecordSize;
             const handle = std.mem.readInt(u32, record.bytes[8..12], .little);
             try validateHandle(handle, false);
             const count = std.mem.readInt(u32, record.bytes[16..20], .little);
-            _ = try exactArraySize(20, count, record.bytes.len);
+            const entries_end = try requiredArrayEnd(20, count, record.bytes.len);
             return .{ .set_entries = .{
                 .handle = handle,
                 .start = std.mem.readInt(u32, record.bytes[12..16], .little),
-                .entries = .{ .bytes = record.bytes[20..], .count = count },
+                .entries = .{ .bytes = record.bytes[20..entries_end], .count = count },
             } };
         },
         .resizepalette => {
-            if (record.size != 16 or record.bytes.len != 16) return error.InvalidEmfPaletteRecordSize;
+            if (!record_extent.hasRequiredPrefix(record, 16)) return error.InvalidEmfPaletteRecordSize;
             const handle = std.mem.readInt(u32, record.bytes[8..12], .little);
             try validateHandle(handle, false);
             const count = std.mem.readInt(u32, record.bytes[12..16], .little);
@@ -76,7 +77,7 @@ pub fn parse(record: records.Record) !?Value {
             return .{ .resize = .{ .handle = handle, .entries = count } };
         },
         .realizepalette => {
-            if (record.size != 8 or record.bytes.len != 8) return error.InvalidEmfPaletteRecordSize;
+            if (!record_extent.hasRequiredPrefix(record, 8)) return error.InvalidEmfPaletteRecordSize;
             return .realize;
         },
         else => return null,
@@ -107,12 +108,19 @@ test "create palette validates version count and entry wire order" {
     try std.testing.expectError(error.EmptyEmfLogPalette, parse(fixture(.createpalette, &bytes)));
 }
 
-test "palette entry arrays require count-derived exact size" {
+test "palette entry arrays require count-derived prefixes and exclude trailing data" {
     var create = [_]u8{0} ** 20;
     std.mem.writeInt(u32, create[8..12], 1, .little);
     std.mem.writeInt(u16, create[12..14], 0x0300, .little);
     std.mem.writeInt(u16, create[14..16], 2, .little);
     try std.testing.expectError(error.InvalidEmfPaletteRecordSize, parse(fixture(.createpalette, &create)));
+
+    var extended_create = [_]u8{0} ** 28;
+    std.mem.writeInt(u32, extended_create[8..12], 1, .little);
+    std.mem.writeInt(u16, extended_create[12..14], 0x0300, .little);
+    std.mem.writeInt(u16, extended_create[14..16], 2, .little);
+    const created = (try parse(fixture(.createpalette, &extended_create))).?.create;
+    try std.testing.expectEqual(@as(usize, 8), created.entries.bytes.len);
 
     var set = [_]u8{0} ** 24;
     std.mem.writeInt(u32, set[8..12], 1, .little);
@@ -121,6 +129,7 @@ test "palette entry arrays require count-derived exact size" {
     const value = (try parse(fixture(.setpaletteentries, &set))).?.set_entries;
     try std.testing.expectEqual(std.math.maxInt(u32), value.start);
     try std.testing.expectEqual(@as(usize, 1), value.entries.count);
+    try std.testing.expectEqual(@as(usize, 4), value.entries.bytes.len);
     std.mem.writeInt(u32, set[16..20], std.math.maxInt(u32), .little);
     try std.testing.expectError(error.InvalidEmfPaletteRecordSize, parse(fixture(.setpaletteentries, &set)));
 }
@@ -151,12 +160,12 @@ test "select resize and realize enforce their scalar contracts" {
     try std.testing.expectEqual(Value.realize, (try parse(fixture(.realizepalette, &realize))).?);
 }
 
-test "palette records require exact declared and physical sizes" {
+test "palette records require matching declared and physical sizes and accept trailing data" {
     var bytes = [_]u8{0} ** 12;
     std.mem.writeInt(u32, bytes[8..12], 1, .little);
     var mismatched = fixture(.selectpalette, &bytes);
     mismatched.size = 16;
     try std.testing.expectError(error.InvalidEmfPaletteRecordSize, parse(mismatched));
-    try std.testing.expectError(error.InvalidEmfPaletteRecordSize, parse(fixture(.realizepalette, &bytes)));
+    try std.testing.expectEqual(Value.realize, (try parse(fixture(.realizepalette, &bytes))).?);
     try std.testing.expect((try parse(fixture(.savedc, bytes[0..8]))) == null);
 }

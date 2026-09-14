@@ -2,6 +2,7 @@ const std = @import("std");
 const header_types = @import("header.zig");
 const palette_records = @import("palette_records.zig");
 const records = @import("records.zig");
+const record_extent = @import("record_extent.zig");
 const dc_stack = @import("dc_stack.zig");
 const stock_object = @import("stock_object.zig");
 const color_space_records = @import("color_space_records.zig");
@@ -130,7 +131,7 @@ const State = struct {
     }
 
     fn selectObject(self: *State, record: records.Record) !void {
-        if (record.size != 12 or record.bytes.len != 12) return error.InvalidEmfSelectObjectRecordSize;
+        if (!record_extent.hasRequiredPrefix(record, 12)) return error.InvalidEmfSelectObjectRecordSize;
         const handle = std.mem.readInt(u32, record.bytes[8..12], .little);
         if (handle == 0) return error.InvalidEmfObjectHandle;
         if (handle & 0x80000000 != 0) {
@@ -256,7 +257,7 @@ const State = struct {
             return;
         }
         if (record.kind == .deleteobject) {
-            if (record.size != 12 or record.bytes.len != 12) return error.InvalidEmfDeleteObjectRecordSize;
+            if (!record_extent.hasRequiredPrefix(record, 12)) return error.InvalidEmfDeleteObjectRecordSize;
             try self.delete(std.mem.readInt(u32, record.bytes[8..12], .little), null);
         }
     }
@@ -472,8 +473,10 @@ test "object table validates record sizes and allocator failure" {
     var state: State = .{ .slots = &slots };
     const short = [_]u8{0} ** 8;
     try std.testing.expectError(error.InvalidEmfCreatePenRecordSize, state.consume(fixture(.createpen, &short)));
-    const long_delete = [_]u8{0} ** 16;
-    try std.testing.expectError(error.InvalidEmfDeleteObjectRecordSize, state.consume(fixture(.deleteobject, &long_delete)));
+    try state.consume(fixture(.createpen, &createPen(1)));
+    var long_delete = [_]u8{0} ** 16;
+    std.mem.writeInt(u32, long_delete[8..12], 1, .little);
+    try state.consume(fixture(.deleteobject, &long_delete));
 
     var empty: [0]u8 = .{};
     var fba = std.heap.FixedBufferAllocator.init(&empty);
@@ -661,6 +664,9 @@ test "SELECTOBJECT validates explicit and stock object types" {
     try std.testing.expectError(error.InvalidEmfSelectableObjectType, state.consume(fixture(.selectobject, &handleRecord(4))));
     try std.testing.expectError(error.InvalidEmfSelectableObjectType, state.consume(fixture(.selectobject, &handleRecord(0x8000000f))));
     try std.testing.expectError(error.InvalidEmfStockObject, state.consume(fixture(.selectobject, &handleRecord(0x80000009))));
+    var extended_select = [_]u8{0} ** 16;
+    std.mem.writeInt(u32, extended_select[8..12], 1, .little);
+    try state.consume(fixture(.selectobject, &extended_select));
     const short = [_]u8{0} ** 8;
     try std.testing.expectError(error.InvalidEmfSelectObjectRecordSize, state.consume(fixture(.selectobject, &short)));
 }
