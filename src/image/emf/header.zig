@@ -1,8 +1,9 @@
 const std = @import("std");
 const records = @import("records.zig");
+const geometry = @import("geometry.zig");
 
-pub const RectL = struct { left: i32, top: i32, right: i32, bottom: i32 };
-pub const SizeL = struct { width: i32, height: i32 };
+pub const RectL = geometry.RectL;
+pub const SizeL = geometry.SizeL;
 pub const Header = struct {
     size: u32,
     bounds: RectL,
@@ -18,19 +19,6 @@ pub const Header = struct {
     millimeters: SizeL,
 };
 
-fn rect(bytes: []const u8) RectL {
-    return .{
-        .left = std.mem.readInt(i32, bytes[0..4], .little),
-        .top = std.mem.readInt(i32, bytes[4..8], .little),
-        .right = std.mem.readInt(i32, bytes[8..12], .little),
-        .bottom = std.mem.readInt(i32, bytes[12..16], .little),
-    };
-}
-
-fn size(bytes: []const u8) SizeL {
-    return .{ .width = std.mem.readInt(i32, bytes[0..4], .little), .height = std.mem.readInt(i32, bytes[4..8], .little) };
-}
-
 pub fn parse(record: records.Record, stream_size: usize) !Header {
     if (record.kind != .header) return error.InvalidEmfHeaderType;
     if (record.bytes.len < 88) return error.InvalidEmfHeaderSize;
@@ -42,8 +30,8 @@ pub fn parse(record: records.Record, stream_size: usize) !Header {
     if (declared_bytes != stream_size) return error.InvalidEmfDeclaredBytes;
     return .{
         .size = record.size,
-        .bounds = rect(record.bytes[8..24]),
-        .frame = rect(record.bytes[24..40]),
+        .bounds = try geometry.parseRectL(record.bytes[8..24]),
+        .frame = try geometry.parseRectL(record.bytes[24..40]),
         .version = std.mem.readInt(u32, record.bytes[44..48], .little),
         .bytes = declared_bytes,
         .records = std.mem.readInt(u32, record.bytes[52..56], .little),
@@ -51,7 +39,7 @@ pub fn parse(record: records.Record, stream_size: usize) !Header {
         .description_characters = std.mem.readInt(u32, record.bytes[60..64], .little),
         .description_offset = std.mem.readInt(u32, record.bytes[64..68], .little),
         .palette_entries = std.mem.readInt(u32, record.bytes[68..72], .little),
-        .device = size(record.bytes[72..80]),
-        .millimeters = size(record.bytes[80..88]),
+        .device = try geometry.parseSizeL(record.bytes[72..80]),
+        .millimeters = try geometry.parseSizeL(record.bytes[80..88]),
     };
 }

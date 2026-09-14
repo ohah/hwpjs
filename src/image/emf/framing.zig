@@ -3,6 +3,7 @@ const header = @import("header.zig");
 const header_payload = @import("header_payload.zig");
 const path_bracket = @import("path_bracket.zig");
 const transform_records = @import("transform_records.zig");
+const point_records = @import("point_records.zig");
 const eof = @import("eof.zig");
 const eof_palette = @import("eof_palette.zig");
 
@@ -20,6 +21,7 @@ pub fn validate(bytes: []const u8) !Summary {
         if (record.kind == .header) return error.DuplicateEmfHeader;
         _ = try path_state.consume(record);
         _ = try transform_records.parse(record);
+        _ = try point_records.parse(record);
         if (record.kind != .eof) continue;
         const terminal = try eof.parse(record);
         try path_state.finish();

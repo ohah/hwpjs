@@ -202,6 +202,29 @@ test "EMF framing validates world transform records" {
     try t.expectError(error.InvalidEmfModifyWorldTransformMode, framing.validate(&invalid));
 }
 
+test "EMF framing validates fixed point state records" {
+    const original = fixture();
+    var valid = [_]u8{0} ** 124;
+    @memcpy(valid[0..88], original[0..88]);
+    std.mem.writeInt(u32, valid[48..52], valid.len, .little);
+    std.mem.writeInt(u32, valid[52..56], 3, .little);
+    std.mem.writeInt(u32, valid[88..92], @intFromEnum(@import("records.zig").RecordType.movetoex), .little);
+    std.mem.writeInt(u32, valid[92..96], 16, .little);
+    std.mem.writeInt(i32, valid[96..100], -7, .little);
+    std.mem.writeInt(i32, valid[100..104], 9, .little);
+    @memcpy(valid[104..124], original[88..108]);
+    try t.expectEqual(@as(usize, 3), (try framing.validate(&valid)).records);
+
+    var invalid = [_]u8{0} ** 128;
+    @memcpy(invalid[0..88], original[0..88]);
+    std.mem.writeInt(u32, invalid[48..52], invalid.len, .little);
+    std.mem.writeInt(u32, invalid[52..56], 3, .little);
+    std.mem.writeInt(u32, invalid[88..92], @intFromEnum(@import("records.zig").RecordType.movetoex), .little);
+    std.mem.writeInt(u32, invalid[92..96], 20, .little);
+    @memcpy(invalid[108..128], original[88..108]);
+    try t.expectError(error.InvalidEmfPointRecordSize, framing.validate(&invalid));
+}
+
 test "EMF EOF palette preserves undefined spaces and reserved-blue-green-red order" {
     const original = fixture();
     var bytes = [_]u8{0} ** 124;
