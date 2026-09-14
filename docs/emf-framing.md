@@ -48,6 +48,8 @@ Microsoft [EMR_EOF Record](https://learn.microsoft.com/en-us/openspecs/windows_p
 
 32비트 `POLYBEZIER`·`POLYGON`·`POLYLINE` 계열과 `POLYPOLYLINE`·`POLYPOLYGON`의 배열 계약은 [EMF 32비트 poly drawing](emf-poly-records.md)이 소유한다.
 
+동일 도형의 16비트 PointS 변형은 [EMF 16비트 poly drawing](emf-poly-records-16.md)이 소유하며 종류·산식·그룹 규칙은 32비트 파트와 공유한다.
+
 [MS-WMF Compression](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/4e588f70-bd92-4a6f-b77f-35d0feaf7a57)의 BI_CMYK, BI_CMYKRLE8, BI_CMYKRLE4도 공통 BMP header enum에서 보존한다. [DeviceIndependentBitmap](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/7376542a-cce9-4625-8ead-585e9538f9f1)의 규칙대로 RGB/BITFIELDS/CMYK는 stride-derived 길이를, 나머지 압축은 ImageSize를 사용한다. 이 단계는 DIB 구조와 원문 payload 보존까지이며 JPEG/PNG/RLE/CMYK 픽셀 해제, V5 profile 의미, 실제 brush 재생은 완료 범위가 아니다. 공용 BMP RGBA decoder도 CMYK를 RGB로 오해하지 않고 명시적으로 거부한다.
 
 EXTCREATEPEN 적대적 검증은 (1) DIB가 없을 때 참조되지 않은 record 꼬리를 허용, (2) DIB offset/size 일부만 존재하는 상태를 허용, (3) geometric pen의 pattern brush를 허용, (4) cosmetic hatch 값을 검사하지 않음, (5) NumStyleEntries를 항상 0으로 취급하는 다섯 변이를 각각 주입했다. 전체 네이티브 테스트가 각 변이를 실패로 검출한 뒤 원복했다. 별도 코드 검토에서 `24 + count * 4`의 최종 합이 wasm32 `usize`를 넘는 경로를 발견해 합계 전체를 u64에서 검사하도록 수정했다.

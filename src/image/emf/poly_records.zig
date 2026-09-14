@@ -1,11 +1,13 @@
 const std = @import("std");
 const geometry = @import("geometry.zig");
 const point_l_array = @import("point_l_array.zig");
+const poly_groups = @import("poly_groups.zig");
+const poly_layout = @import("poly_layout.zig");
 const records = @import("records.zig");
 
-pub const single_header_size: usize = 28;
-pub const multiple_header_size: usize = 32;
-pub const Range = struct { start: usize, end: usize };
+pub const single_header_size = poly_layout.single_header_size;
+pub const multiple_header_size = poly_layout.multiple_header_size;
+pub const Range = poly_groups.Range;
 
 pub const Single = struct {
     kind: records.RecordType,
@@ -13,91 +15,16 @@ pub const Single = struct {
     points: point_l_array.Points,
 };
 
-pub const Multiple = struct {
-    kind: records.RecordType,
-    bounds: geometry.RectL,
-    shape_count: u32,
-    point_count: u32,
-    count_bytes: []const u8,
-    points: point_l_array.Points,
-
-    pub fn countAt(self: Multiple, index: usize) !u32 {
-        if (index >= self.shape_count) return error.EmfPolyShapeIndexOutOfBounds;
-        return std.mem.readInt(u32, self.count_bytes[index * 4 ..][0..4], .little);
-    }
-
-    pub fn pointRange(self: Multiple, index: usize) !Range {
-        if (index >= self.shape_count) return error.EmfPolyShapeIndexOutOfBounds;
-        var start: u64 = 0;
-        for (0..index) |item| start += try self.countAt(item);
-        const end = start + try self.countAt(index);
-        return .{ .start = @intCast(start), .end = @intCast(end) };
-    }
-};
+pub const Multiple = poly_groups.Groups(point_l_array.Points);
 
 pub const Value = union(enum) { single: Single, multiple: Multiple };
 
-fn isSingle(kind: records.RecordType) bool {
-    return switch (kind) {
-        .polybezier, .polygon, .polyline, .polybezierto, .polylineto => true,
-        else => false,
-    };
-}
-
-fn isMultiple(kind: records.RecordType) bool {
-    return kind == .polypolyline or kind == .polypolygon;
-}
-
-fn validateSingleCount(kind: records.RecordType, count: u32) !void {
-    switch (kind) {
-        .polybezier => if (count < 4 or (count - 1) % 3 != 0) return error.InvalidEmfPolyBezierPointCount,
-        .polybezierto => if (count < 3 or count % 3 != 0) return error.InvalidEmfPolyBezierPointCount,
-        .polygon, .polyline, .polylineto => {},
-        else => unreachable,
-    }
-}
-
-fn parseSingle(record: records.Record) !Single {
-    if (record.bytes.len < single_header_size) return error.InvalidEmfPolyRecordSize;
-    const count = std.mem.readInt(u32, record.bytes[24..28], .little);
-    try validateSingleCount(record.kind, count);
-    const expected: u64 = single_header_size + @as(u64, count) * point_l_array.width;
-    if (record.size != record.bytes.len or expected != record.bytes.len) return error.InvalidEmfPolyRecordSize;
-    return .{
-        .kind = record.kind,
-        .bounds = try geometry.parseRectL(record.bytes[8..24]),
-        .points = try point_l_array.Points.parse(record.bytes[28..]),
-    };
-}
-
-fn parseMultiple(record: records.Record) !Multiple {
-    if (record.bytes.len < multiple_header_size) return error.InvalidEmfPolyRecordSize;
-    const shape_count = std.mem.readInt(u32, record.bytes[24..28], .little);
-    const point_count = std.mem.readInt(u32, record.bytes[28..32], .little);
-    const counts_end: u64 = multiple_header_size + @as(u64, shape_count) * 4;
-    const expected: u64 = counts_end + @as(u64, point_count) * point_l_array.width;
-    if (record.size != record.bytes.len or expected != record.bytes.len) return error.InvalidEmfPolyRecordSize;
-    const counts_end_usize: usize = @intCast(counts_end);
-    var sum: u64 = 0;
-    for (0..shape_count) |index| {
-        const count = std.mem.readInt(u32, record.bytes[multiple_header_size + index * 4 ..][0..4], .little);
-        sum += count;
-    }
-    if (sum != point_count) return error.InvalidEmfPolyPointCountTotal;
-    return .{
-        .kind = record.kind,
-        .bounds = try geometry.parseRectL(record.bytes[8..24]),
-        .shape_count = shape_count,
-        .point_count = point_count,
-        .count_bytes = record.bytes[multiple_header_size..counts_end_usize],
-        .points = try point_l_array.Points.parse(record.bytes[counts_end_usize..]),
-    };
-}
-
 pub fn parse(record: records.Record) !?Value {
-    if (isSingle(record.kind)) return .{ .single = try parseSingle(record) };
-    if (isMultiple(record.kind)) return .{ .multiple = try parseMultiple(record) };
-    return null;
+    const layout = (try poly_layout.parse(record, .long, point_l_array.width)) orelse return null;
+    return switch (layout) {
+        .single => |value| .{ .single = .{ .kind = record.kind, .bounds = value.bounds, .points = try point_l_array.Points.parse(value.point_bytes) } },
+        .multiple => |value| .{ .multiple = .{ .kind = record.kind, .bounds = value.bounds, .shape_count = value.shape_count, .point_count = value.point_count, .count_bytes = value.count_bytes, .points = try point_l_array.Points.parse(value.point_bytes) } },
+    };
 }
 
 fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {

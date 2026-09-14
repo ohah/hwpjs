@@ -16,7 +16,10 @@
 |---|---|
 | signed PointL·RectL wire 순서 | `geometry.zig` |
 | borrowed PointL 배열과 index 경계 | `point_l_array.zig` |
-| record 종류·Count 산식·PolyPoly count 합계 | `poly_records.zig` |
+| 32/16 record 종류·Bezier 산식·PolyPoly count 합계 | `poly_rules.zig` |
+| 좌표 폭별 checked extent·공통 배열 배치 | `poly_layout.zig` |
+| 하위 도형 count/index/반열린 범위 | `poly_groups.zig` |
+| 32비트 PointL 결과 어댑터 | `poly_records.zig` |
 | 전체 stream 연결 | `framing.zig` |
 
 `Points.get`, `Multiple.countAt`, `Multiple.pointRange`는 원본 배열을 빌린 채 범위를 검사한다. PointL을 native struct로 cast하지 않고 공통 geometry parser를 호출한다. `pointRange`는 각 도형의 반열린 점 범위를 반환하며 원문을 재배열하지 않는다. Bounds가 실제 점을 포함하는지, 현재 위치 갱신, pen/brush/fill mode, Bezier 계산 및 출력은 이 구조 검사의 완료 범위가 아니다.
@@ -32,4 +35,4 @@
 
 최초 구현 검토에서는 polygon/polyline 및 PolyPoly 하위 도형에 2점 이상을 강제했으나, 공식 record 문서가 이를 wire-level `MUST`로 규정하지 않는다는 반례를 확인했다. 해당 과잉 거부를 제거하고 0·1점 및 빈 PolyPoly를 보존하는 회귀를 추가한 뒤 전체 검증을 처음부터 다시 수행했다. 최종 원복 상태의 Debug·ReleaseSafe·ReleaseFast audit는 각 40/40 단계와 전체 1,326/1,326 테스트(네이티브 1,287개), HWP 검사 8,905,827건을 통과했다.
 
-16비트 PointS 변형과 POLYDRAW/16의 point-type 배열은 동일 레코드가 아니며 아직 이 parser가 claim하지 않는다. 실제 HWP corpus 584개에는 EMF가 없어 실제 한글 생성기 표본 근거는 없고, 현재 증거는 공식 wire 명세와 합성 framing에 한정한다.
+16비트 PointS 변형은 [별도 어댑터 계약](emf-poly-records-16.md)이 같은 공통 규칙을 사용한다. POLYDRAW/16의 point-type 배열은 동일 레코드가 아니며 아직 어느 poly parser도 claim하지 않는다. 실제 HWP corpus 584개에는 EMF가 없어 실제 한글 생성기 표본 근거는 없고, 현재 증거는 공식 wire 명세와 합성 framing에 한정한다.

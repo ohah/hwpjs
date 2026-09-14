@@ -1,6 +1,7 @@
 const std = @import("std");
 
 pub const PointL = struct { x: i32, y: i32 };
+pub const PointS = struct { x: i16, y: i16 };
 pub const SizeL = struct { width: i32, height: i32 };
 pub const RectL = struct { left: i32, top: i32, right: i32, bottom: i32 };
 
@@ -9,6 +10,14 @@ pub fn parsePointL(bytes: []const u8) !PointL {
     return .{
         .x = std.mem.readInt(i32, bytes[0..4], .little),
         .y = std.mem.readInt(i32, bytes[4..8], .little),
+    };
+}
+
+pub fn parsePointS(bytes: []const u8) !PointS {
+    if (bytes.len != 4) return error.InvalidEmfPointSSize;
+    return .{
+        .x = std.mem.readInt(i16, bytes[0..2], .little),
+        .y = std.mem.readInt(i16, bytes[2..4], .little),
     };
 }
 
@@ -59,4 +68,15 @@ test "geometry objects reject truncated and oversized inputs" {
     try std.testing.expectError(error.InvalidEmfSizeLSize, parseSizeL(bytes[0..9]));
     try std.testing.expectError(error.InvalidEmfRectLSize, parseRectL(bytes[0..15]));
     try std.testing.expectError(error.InvalidEmfRectLSize, parseRectL(&bytes));
+    try std.testing.expectError(error.InvalidEmfPointSSize, parsePointS(bytes[0..3]));
+    try std.testing.expectError(error.InvalidEmfPointSSize, parsePointS(bytes[0..5]));
+}
+
+test "PointS preserves signed XY wire order" {
+    var bytes = [_]u8{0} ** 4;
+    std.mem.writeInt(i16, bytes[0..2], std.math.minInt(i16), .little);
+    std.mem.writeInt(i16, bytes[2..4], std.math.maxInt(i16), .little);
+    const point = try parsePointS(&bytes);
+    try std.testing.expectEqual(@as(i16, std.math.minInt(i16)), point.x);
+    try std.testing.expectEqual(@as(i16, std.math.maxInt(i16)), point.y);
 }
