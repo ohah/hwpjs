@@ -102,6 +102,7 @@ pub const emf_miter_limit = @import("emf/miter_limit.zig");
 pub const emf_text_alignment = @import("emf/text_alignment.zig");
 pub const emf_text_justification = @import("emf/text_justification.zig");
 pub const emf_scale_extents = @import("emf/scale_extents.zig");
+pub const emf_dc_stack = @import("emf/dc_stack.zig");
 pub const emf_eof = @import("emf/eof.zig");
 pub const emf_eof_palette = @import("emf/eof_palette.zig");
 pub const emf_framing = @import("emf/framing.zig");

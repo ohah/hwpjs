@@ -26,6 +26,8 @@ Microsoft [EMR_EOF Record](https://learn.microsoft.com/en-us/openspecs/windows_p
 
 `text_justification.zig`는 정확히 16바이트인 [SETTEXTJUSTIFICATION](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/edbc2be0-1da0-45d6-9c05-677cbcaa2d47)의 nBreakExtra와 nBreakCount를 signed i32 wire 순서로 보존한다. 명세에 별도 값 범위가 없으므로 음수와 극값을 임의 보정하지 않는다. `scale_extents.zig`는 같은 24바이트 배치인 [SCALEVIEWPORTEXTEX](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/469e353c-4209-4919-a5aa-9331b60765ed)와 [SCALEWINDOWEXTEX](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/01698f29-bbcb-4100-9bad-0fd52c33b0da)를 구분한다. x/y numerator와 denominator 네 필드는 모두 signed i32이고 모두 0을 금지한다. 실제 곱셈·나눗셈과 fixed-scale mapping mode에서의 적용 여부는 overflow 및 상태 정책이 필요한 재생 계층의 책임이다.
 
+`dc_stack.zig`는 매개변수가 없는 정확히 8바이트의 [SAVEDC](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/8f8a4df2-f8d7-4d39-afc0-94e19f524652)와 정확히 12바이트의 [RESTOREDC](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/efa2f180-4c7e-4a7b-b4ef-a1d06a0ce89f)를 구분한다. SavedDC는 반드시 음수이며 `-k`는 현재 stack의 k번째 저장 상태를 복원하면서 그 상태와 더 최신 상태를 제거한다. framing은 저장 depth를 추적하여 존재하지 않는 상태 복원을 거부한다. EOF에서 남은 저장 상태를 모두 복원해야 한다는 명세는 없으므로 stack이 비어야 한다는 제약은 추가하지 않는다. 실제 그래픽 속성 snapshot은 재생 계층의 책임이다.
+
 ## Header variable fields와 extension
 
 `header_payload.zig`는 [공식 HeaderSize flowchart](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/de081cd7-351f-4cc2-830b-d03fb55e89ab)에 따라 record Size에서 시작해 유효한 description offset과 그보다 앞선 pixel-format offset으로 고정 header 크기를 산정한다. 산정값 88/100/108 경계로 base, Extension1, Extension2를 구분하므로 긴 description이 있는 base header를 record 전체 길이만 보고 Extension으로 오인하지 않는다.
@@ -69,3 +71,5 @@ Mapper Flags와 Miter Limit에는 Mapper 크기 제거·미정의 값 허용, Mi
 Text Alignment에는 정확한 12바이트 크기 제거, 미정의 비트 마스크 허용, low-axis 금지값 4 허용, high-axis 금지값 16 허용, framing 연결 제거의 5개 변이를 적용했다. Debug/ReleaseSafe/ReleaseFast의 15회 모두 크기·비트 영역·상호배타 조합·통합 계약으로 탐지됐다. 모든 변이를 제거한 정상 구현은 세 모드에서 각각 1,191/1,191 테스트를 통과했다. Debug 통합 audit도 36/36 단계, 1,230/1,230 테스트, HWP5를 포함한 8,905,815 checks를 통과했다.
 
 Text Justification과 Scale Extents에는 justification 크기 제거·두 필드 교환, scaling 크기 제거·x numerator 0 허용·SCALEWINDOWEXTEX 분류 제거, 두 파서의 framing 연결을 각각 제거한 7개 변이를 적용했다. Debug/ReleaseSafe/ReleaseFast의 21회 모두 record 경계·signed wire 순서·0 금지·타입 집합·통합 계약으로 탐지됐다. 모든 변이를 제거한 정상 구현은 세 모드에서 각각 1,197/1,197 테스트를 통과했다. Debug 통합 audit도 36/36 단계, 1,236/1,236 테스트, HWP5를 포함한 8,905,815 checks를 통과했다.
+
+DC Save/Restore에는 SAVEDC 크기 제거, RESTOREDC 크기 제거, SavedDC 음수 제약 제거, 존재하지 않는 stack depth 복원 허용, `-k`를 항상 한 단계만 pop, framing 연결 제거의 6개 변이를 적용했다. Debug/ReleaseSafe/ReleaseFast의 18회 모두 record 경계·값 범위·stack 전이·통합 계약으로 탐지됐다. 모든 변이를 제거한 정상 구현은 세 모드에서 각각 1,203/1,203 테스트를 통과했다. Debug 통합 audit도 36/36 단계, 1,242/1,242 테스트, HWP5를 포함한 8,905,815 checks를 통과했다.

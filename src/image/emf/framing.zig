@@ -11,6 +11,7 @@ const miter_limit = @import("miter_limit.zig");
 const text_alignment = @import("text_alignment.zig");
 const text_justification = @import("text_justification.zig");
 const scale_extents = @import("scale_extents.zig");
+const dc_stack = @import("dc_stack.zig");
 const eof = @import("eof.zig");
 const eof_palette = @import("eof_palette.zig");
 
@@ -19,6 +20,7 @@ pub const Summary = struct { header: header.Header, header_payload: header_paylo
 pub fn validate(bytes: []const u8) !Summary {
     var iterator: records.Iterator = .{ .bytes = bytes };
     var path_state: path_bracket.State = .{};
+    var dc_state: dc_stack.State = .{};
     const first = (try iterator.next()) orelse return error.MissingEmfHeader;
     const value = try header.parse(first, bytes.len);
     const payload = try header_payload.parse(first, value);
@@ -36,6 +38,7 @@ pub fn validate(bytes: []const u8) !Summary {
         _ = try text_alignment.parse(record);
         _ = try text_justification.parse(record);
         _ = try scale_extents.parse(record);
+        _ = try dc_state.consume(record);
         if (record.kind != .eof) continue;
         const terminal = try eof.parse(record);
         try path_state.finish();

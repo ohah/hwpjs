@@ -336,6 +336,38 @@ test "EMF framing validates text justification and extent scaling" {
     try t.expectError(error.InvalidEmfTextJustificationRecordSize, framing.validate(&invalid_text));
 }
 
+test "EMF framing validates device-context save and relative restore" {
+    const original = fixture();
+    var valid = [_]u8{0} ** 128;
+    @memcpy(valid[0..88], original[0..88]);
+    std.mem.writeInt(u32, valid[48..52], valid.len, .little);
+    std.mem.writeInt(u32, valid[52..56], 4, .little);
+    std.mem.writeInt(u32, valid[88..92], @intFromEnum(@import("records.zig").RecordType.savedc), .little);
+    std.mem.writeInt(u32, valid[92..96], 8, .little);
+    std.mem.writeInt(u32, valid[96..100], @intFromEnum(@import("records.zig").RecordType.restoredc), .little);
+    std.mem.writeInt(u32, valid[100..104], 12, .little);
+    std.mem.writeInt(i32, valid[104..108], -1, .little);
+    @memcpy(valid[108..128], original[88..108]);
+    try t.expectEqual(@as(usize, 4), (try framing.validate(&valid)).records);
+
+    var missing_save = valid;
+    std.mem.writeInt(u32, missing_save[88..92], @intFromEnum(@import("records.zig").RecordType.realizepalette), .little);
+    try t.expectError(error.InvalidEmfRestoreDcDepth, framing.validate(&missing_save));
+
+    var nonnegative = valid;
+    std.mem.writeInt(i32, nonnegative[104..108], 0, .little);
+    try t.expectError(error.InvalidEmfRestoreDcIndex, framing.validate(&nonnegative));
+
+    var oversized_save = [_]u8{0} ** 132;
+    @memcpy(oversized_save[0..88], original[0..88]);
+    std.mem.writeInt(u32, oversized_save[48..52], oversized_save.len, .little);
+    std.mem.writeInt(u32, oversized_save[52..56], 3, .little);
+    std.mem.writeInt(u32, oversized_save[88..92], @intFromEnum(@import("records.zig").RecordType.savedc), .little);
+    std.mem.writeInt(u32, oversized_save[92..96], 24, .little);
+    @memcpy(oversized_save[112..132], original[88..108]);
+    try t.expectError(error.InvalidEmfSaveDcRecordSize, framing.validate(&oversized_save));
+}
+
 test "EMF EOF palette preserves undefined spaces and reserved-blue-green-red order" {
     const original = fixture();
     var bytes = [_]u8{0} ** 124;
