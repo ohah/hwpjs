@@ -420,7 +420,7 @@ test "EMF framing validates logical palette record wire contracts" {
     try t.expectError(error.EmfObjectHandleOutOfBounds, framing.validate(t.allocator, &no_object_slot));
     var wrong_object_type = valid;
     std.mem.writeInt(u32, wrong_object_type[88..92], @intFromEnum(@import("records.zig").RecordType.createpen), .little);
-    try t.expectError(error.InvalidEmfPaletteObjectType, framing.validate(t.allocator, &wrong_object_type));
+    try t.expectError(error.InvalidEmfCreatePenRecordSize, framing.validate(t.allocator, &wrong_object_type));
     var update_past_end = valid;
     std.mem.writeInt(u32, update_past_end[120..124], 1, .little);
     try t.expectError(error.EmfPaletteUpdateOutOfBounds, framing.validate(t.allocator, &update_past_end));
@@ -447,6 +447,7 @@ test "EMF framing connects SELECTOBJECT activation deletion and default restorat
     std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.createpen), .little);
     std.mem.writeInt(u32, bytes[92..96], 28, .little);
     std.mem.writeInt(u32, bytes[96..100], 1, .little);
+    std.mem.writeInt(i32, bytes[104..108], 1, .little);
     std.mem.writeInt(u32, bytes[116..120], @intFromEnum(@import("records.zig").RecordType.selectobject), .little);
     std.mem.writeInt(u32, bytes[120..124], 12, .little);
     std.mem.writeInt(u32, bytes[124..128], 1, .little);

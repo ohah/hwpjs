@@ -16,6 +16,7 @@ function emf() {
   b.writeUInt32LE(48,148);b.writeUInt32LE(12,152);b.writeUInt32LE(1,156);
   b.writeUInt32LE(52,160);b.writeUInt32LE(8,164);
   b.writeUInt32LE(38,168);b.writeUInt32LE(28,172);b.writeUInt32LE(2,176);
+  b.writeInt32LE(1,184);
   b.writeUInt32LE(37,196);b.writeUInt32LE(12,200);b.writeUInt32LE(2,204);
   b.writeUInt32LE(40,208);b.writeUInt32LE(12,212);b.writeUInt32LE(2,216);
   b.writeUInt32LE(99,220);b.writeUInt32LE(340,224);b.writeUInt32LE(2,228);

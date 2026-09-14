@@ -6,6 +6,7 @@ const dc_stack = @import("dc_stack.zig");
 const stock_object = @import("stock_object.zig");
 const color_space_records = @import("color_space_records.zig");
 const color_space_creation = @import("color_space_creation.zig");
+const basic_object_creation = @import("basic_object_creation.zig");
 
 const Slot = union(enum) {
     empty,
@@ -194,6 +195,13 @@ const State = struct {
             try self.create(handle, .{ .object = .color_space });
             return;
         }
+        if (try basic_object_creation.parse(record)) |creation| {
+            switch (creation) {
+                .pen => |value| try self.create(value.handle, .{ .object = .pen }),
+                .brush => |value| try self.create(value.handle, .{ .object = .brush }),
+            }
+            return;
+        }
         const palette_value = try palette_records.parse(record);
         if (palette_value) |value| switch (value) {
             .create => |create_value| {
@@ -245,8 +253,8 @@ fn isCreation(kind: records.RecordType) bool {
 
 fn creationKind(kind: records.RecordType) ?stock_object.Kind {
     return switch (kind) {
-        .createpen, .extcreatepen => .pen,
-        .createbrushindirect, .createmonobrush, .createdibpatternbrushpt => .brush,
+        .extcreatepen => .pen,
+        .createmonobrush, .createdibpatternbrushpt => .brush,
         .extcreatefontindirectw => .font,
         .createpalette => .palette,
         else => null,
@@ -278,6 +286,19 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 
 fn handleRecord(handle: u32) [12]u8 {
     var bytes = [_]u8{0} ** 12;
+    std.mem.writeInt(u32, bytes[8..12], handle, .little);
+    return bytes;
+}
+
+fn createPen(handle: u32) [28]u8 {
+    var bytes = [_]u8{0} ** 28;
+    std.mem.writeInt(u32, bytes[8..12], handle, .little);
+    std.mem.writeInt(i32, bytes[16..20], 1, .little);
+    return bytes;
+}
+
+fn createBrush(handle: u32) [24]u8 {
+    var bytes = [_]u8{0} ** 24;
     std.mem.writeInt(u32, bytes[8..12], handle, .little);
     return bytes;
 }
@@ -325,13 +346,13 @@ fn initColorSpaceObject(bytes: []u8) void {
 test "object table bounds creation replacement deletion and slot reuse" {
     var slots = [_]Slot{.empty} ** 3;
     var state: State = .{ .slots = &slots };
-    _ = try state.consume(fixture(.createpen, &handleRecord(1)));
-    _ = try state.consume(fixture(.createbrushindirect, &handleRecord(1)));
-    try std.testing.expectError(error.EmfObjectHandleOutOfBounds, state.consume(fixture(.createpen, &handleRecord(3))));
-    try std.testing.expectError(error.InvalidEmfObjectHandle, state.consume(fixture(.createpen, &handleRecord(0x80000000))));
+    _ = try state.consume(fixture(.createpen, &createPen(1)));
+    _ = try state.consume(fixture(.createbrushindirect, &createBrush(1)));
+    try std.testing.expectError(error.EmfObjectHandleOutOfBounds, state.consume(fixture(.createpen, &createPen(3))));
+    try std.testing.expectError(error.InvalidEmfObjectHandle, state.consume(fixture(.createpen, &createPen(0x80000000))));
     _ = try state.consume(fixture(.deleteobject, &handleRecord(1)));
     try std.testing.expectError(error.DeadEmfObjectReference, state.consume(fixture(.deleteobject, &handleRecord(1))));
-    _ = try state.consume(fixture(.createpen, &handleRecord(1)));
+    _ = try state.consume(fixture(.createpen, &createPen(1)));
     try std.testing.expectEqual(@as(usize, 3), state.report.creates);
     try std.testing.expectEqual(@as(usize, 1), state.report.deletes);
     try std.testing.expectEqual(@as(usize, 1), state.report.peak_live);
@@ -340,9 +361,11 @@ test "object table bounds creation replacement deletion and slot reuse" {
 test "object table tracks every non-palette creation kind" {
     var slots = [_]Slot{.empty} ** 2;
     var state: State = .{ .slots = &slots };
+    try state.consume(fixture(.createpen, &createPen(1)));
+    try state.consume(fixture(.deleteobject, &handleRecord(1)));
+    try state.consume(fixture(.createbrushindirect, &createBrush(1)));
+    try state.consume(fixture(.deleteobject, &handleRecord(1)));
     for ([_]records.RecordType{
-        .createpen,
-        .createbrushindirect,
         .extcreatefontindirectw,
         .createmonobrush,
         .createdibpatternbrushpt,
@@ -365,7 +388,7 @@ test "palette references require a live palette and current entry bounds" {
     var slots = [_]Slot{.empty} ** 4;
     var state: State = .{ .slots = &slots };
     _ = try state.consume(fixture(.createpalette, &createPalette(1, 1)));
-    _ = try state.consume(fixture(.createpen, &handleRecord(2)));
+    _ = try state.consume(fixture(.createpen, &createPen(2)));
     _ = try state.consume(fixture(.selectpalette, &handleRecord(1)));
     _ = try state.consume(fixture(.selectpalette, &handleRecord(palette_records.default_palette)));
     try std.testing.expectError(error.InvalidEmfPaletteObjectType, state.consume(fixture(.selectpalette, &handleRecord(2))));
@@ -407,7 +430,7 @@ test "object table validates record sizes and allocator failure" {
     var slots = [_]Slot{.empty} ** 2;
     var state: State = .{ .slots = &slots };
     const short = [_]u8{0} ** 8;
-    try std.testing.expectError(error.InvalidEmfObjectCreationRecordSize, state.consume(fixture(.createpen, &short)));
+    try std.testing.expectError(error.InvalidEmfCreatePenRecordSize, state.consume(fixture(.createpen, &short)));
     const long_delete = [_]u8{0} ** 16;
     try std.testing.expectError(error.InvalidEmfDeleteObjectRecordSize, state.consume(fixture(.deleteobject, &long_delete)));
 
@@ -442,7 +465,7 @@ test "color-space selection and both deletion records share object lifetime" {
 test "color-space records reject dead wrong zero stock and out-of-range handles" {
     var slots = [_]Slot{.empty} ** 3;
     var state: State = .{ .slots = &slots };
-    try state.consume(fixture(.createpen, &handleRecord(1)));
+    try state.consume(fixture(.createpen, &createPen(1)));
     try std.testing.expectError(error.InvalidEmfObjectType, state.consume(fixture(.setcolorspace, &handleRecord(1))));
     try std.testing.expectError(error.InvalidEmfObjectType, state.consume(fixture(.deletecolorspace, &handleRecord(1))));
     try std.testing.expectError(error.DeadEmfObjectReference, state.consume(fixture(.setcolorspace, &handleRecord(2))));
@@ -488,7 +511,7 @@ test "cross-kind replacement deactivates current and saved color-space selection
     try state.consume(fixture(.setcolorspace, &handleRecord(1)));
     const save = [_]u8{0} ** 8;
     try state.consume(fixture(.savedc, &save));
-    try state.consume(fixture(.createpen, &handleRecord(1)));
+    try state.consume(fixture(.createpen, &createPen(1)));
     try std.testing.expectEqual(null, state.selected.color_space);
     try state.consume(fixture(.restoredc, &restoreRecord(-1)));
     try std.testing.expectEqual(null, state.selected.color_space);
@@ -498,7 +521,7 @@ test "cross-kind replacement deactivates current and saved color-space selection
 test "failed color-space operations do not change reports or live objects" {
     var slots = [_]Slot{.empty} ** 2;
     var state: State = .{ .slots = &slots };
-    try state.consume(fixture(.createpen, &handleRecord(1)));
+    try state.consume(fixture(.createpen, &createPen(1)));
     const before = state.report;
     try std.testing.expectError(error.InvalidEmfObjectType, state.consume(fixture(.setcolorspace, &handleRecord(1))));
     try std.testing.expectError(error.InvalidEmfObjectType, state.consume(fixture(.deletecolorspace, &handleRecord(1))));
@@ -506,12 +529,31 @@ test "failed color-space operations do not change reports or live objects" {
     try std.testing.expectEqual(@as(usize, 1), state.live);
 }
 
+test "invalid basic creation payloads do not occupy or replace slots" {
+    var slots = [_]Slot{.empty} ** 3;
+    var state: State = .{ .slots = &slots };
+    var invalid_pen = createPen(1);
+    std.mem.writeInt(i32, invalid_pen[16..20], 0, .little);
+    try std.testing.expectError(error.InvalidEmfCosmeticPenWidth, state.consume(fixture(.createpen, &invalid_pen)));
+    try std.testing.expectEqual(@as(usize, 0), state.live);
+    try std.testing.expectEqual(@as(usize, 0), state.report.creates);
+
+    try state.consume(fixture(.createbrushindirect, &createBrush(1)));
+    const before = state.report;
+    var invalid_brush = createBrush(1);
+    std.mem.writeInt(u32, invalid_brush[20..24], 6, .little);
+    std.mem.writeInt(u32, invalid_brush[12..16], 2, .little);
+    try std.testing.expectError(error.UnsupportedEmfHatchStyle, state.consume(fixture(.createbrushindirect, &invalid_brush)));
+    try std.testing.expectEqualDeep(before, state.report);
+    try std.testing.expectEqual(stock_object.Kind.brush, slotKind(state.slots[1]).?);
+}
+
 test "SELECTOBJECT validates explicit and stock object types" {
     var slots = [_]Slot{.empty} ** 5;
     var snapshots: [2]Selection = undefined;
     var state: State = .{ .slots = &slots, .snapshots = &snapshots };
-    try state.consume(fixture(.createpen, &handleRecord(1)));
-    try state.consume(fixture(.createbrushindirect, &handleRecord(2)));
+    try state.consume(fixture(.createpen, &createPen(1)));
+    try state.consume(fixture(.createbrushindirect, &createBrush(2)));
     try state.consume(fixture(.extcreatefontindirectw, &handleRecord(3)));
     try state.consume(fixture(.createpalette, &createPalette(4, 1)));
     try state.consume(fixture(.selectobject, &handleRecord(1)));
@@ -540,7 +582,7 @@ test "delete replacement and DC restore cannot retain dead selected objects" {
     var slots = [_]Slot{.empty} ** 3;
     var snapshots: [3]Selection = undefined;
     var state: State = .{ .slots = &slots, .snapshots = &snapshots };
-    try state.consume(fixture(.createpen, &handleRecord(1)));
+    try state.consume(fixture(.createpen, &createPen(1)));
     try state.consume(fixture(.selectobject, &handleRecord(1)));
     const save = [_]u8{0} ** 8;
     try state.consume(fixture(.savedc, &save));
@@ -551,7 +593,7 @@ test "delete replacement and DC restore cannot retain dead selected objects" {
     try std.testing.expectEqual(null, state.selected.pen);
     try std.testing.expectEqual(@as(usize, 1), state.report.default_restores);
 
-    try state.consume(fixture(.createpen, &handleRecord(1)));
+    try state.consume(fixture(.createpen, &createPen(1)));
     try state.consume(fixture(.selectobject, &handleRecord(1)));
     try state.consume(fixture(.savedc, &save));
     try state.consume(fixture(.selectobject, &handleRecord(0x80000007)));
@@ -559,11 +601,11 @@ test "delete replacement and DC restore cannot retain dead selected objects" {
     try state.consume(fixture(.restoredc, &restoreRecord(-1)));
     try std.testing.expectEqual(null, state.selected.pen);
 
-    try state.consume(fixture(.createpen, &handleRecord(1)));
+    try state.consume(fixture(.createpen, &createPen(1)));
     try state.consume(fixture(.selectobject, &handleRecord(1)));
-    try state.consume(fixture(.createpen, &handleRecord(1)));
+    try state.consume(fixture(.createpen, &createPen(1)));
     try std.testing.expectEqual(@as(?u32, 1), state.selected.pen);
-    try state.consume(fixture(.createbrushindirect, &handleRecord(1)));
+    try state.consume(fixture(.createbrushindirect, &createBrush(1)));
     try std.testing.expectEqual(null, state.selected.pen);
     try std.testing.expectEqual(@as(usize, 1), state.report.replacement_deactivations);
 }
