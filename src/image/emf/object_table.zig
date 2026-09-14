@@ -7,6 +7,7 @@ const stock_object = @import("stock_object.zig");
 const color_space_records = @import("color_space_records.zig");
 const color_space_creation = @import("color_space_creation.zig");
 const basic_object_creation = @import("basic_object_creation.zig");
+const extended_pen_creation = @import("extended_pen_creation.zig");
 
 const Slot = union(enum) {
     empty,
@@ -202,6 +203,10 @@ const State = struct {
             }
             return;
         }
+        if (try extended_pen_creation.parse(record)) |creation| {
+            try self.create(creation.handle, .{ .object = .pen });
+            return;
+        }
         const palette_value = try palette_records.parse(record);
         if (palette_value) |value| switch (value) {
             .create => |create_value| {
@@ -253,7 +258,6 @@ fn isCreation(kind: records.RecordType) bool {
 
 fn creationKind(kind: records.RecordType) ?stock_object.Kind {
     return switch (kind) {
-        .extcreatepen => .pen,
         .createmonobrush, .createdibpatternbrushpt => .brush,
         .extcreatefontindirectw => .font,
         .createpalette => .palette,
@@ -300,6 +304,13 @@ fn createPen(handle: u32) [28]u8 {
 fn createBrush(handle: u32) [24]u8 {
     var bytes = [_]u8{0} ** 24;
     std.mem.writeInt(u32, bytes[8..12], handle, .little);
+    return bytes;
+}
+
+fn createExtendedPen(handle: u32) [extended_pen_creation.minimum_size]u8 {
+    var bytes = [_]u8{0} ** extended_pen_creation.minimum_size;
+    std.mem.writeInt(u32, bytes[8..12], handle, .little);
+    std.mem.writeInt(u32, bytes[32..36], 1, .little);
     return bytes;
 }
 
@@ -365,11 +376,12 @@ test "object table tracks every non-palette creation kind" {
     try state.consume(fixture(.deleteobject, &handleRecord(1)));
     try state.consume(fixture(.createbrushindirect, &createBrush(1)));
     try state.consume(fixture(.deleteobject, &handleRecord(1)));
+    try state.consume(fixture(.extcreatepen, &createExtendedPen(1)));
+    try state.consume(fixture(.deleteobject, &handleRecord(1)));
     for ([_]records.RecordType{
         .extcreatefontindirectw,
         .createmonobrush,
         .createdibpatternbrushpt,
-        .extcreatepen,
     }) |kind| {
         _ = try state.consume(fixture(kind, &handleRecord(1)));
         _ = try state.consume(fixture(.deleteobject, &handleRecord(1)));
@@ -546,6 +558,17 @@ test "invalid basic creation payloads do not occupy or replace slots" {
     try std.testing.expectError(error.UnsupportedEmfHatchStyle, state.consume(fixture(.createbrushindirect, &invalid_brush)));
     try std.testing.expectEqualDeep(before, state.report);
     try std.testing.expectEqual(stock_object.Kind.brush, slotKind(state.slots[1]).?);
+}
+
+test "invalid extended pen payload does not occupy its object slot" {
+    var slots = [_]Slot{.empty} ** 2;
+    var state: State = .{ .slots = &slots };
+    var invalid = createExtendedPen(1);
+    std.mem.writeInt(u32, invalid[48..52], 1, .little);
+    try std.testing.expectError(error.TruncatedEmfPenStyleEntries, state.consume(fixture(.extcreatepen, &invalid)));
+    try std.testing.expectEqual(@as(usize, 0), state.live);
+    try std.testing.expectEqual(@as(usize, 0), state.report.creates);
+    try std.testing.expectEqual(@as(?stock_object.Kind, null), slotKind(state.slots[1]));
 }
 
 test "SELECTOBJECT validates explicit and stock object types" {
