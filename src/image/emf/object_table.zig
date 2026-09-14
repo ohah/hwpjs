@@ -9,6 +9,7 @@ const color_space_creation = @import("color_space_creation.zig");
 const basic_object_creation = @import("basic_object_creation.zig");
 const extended_pen_creation = @import("extended_pen_creation.zig");
 const bitmap_brush_creation = @import("bitmap_brush_creation.zig");
+const font_creation = @import("font_creation.zig");
 
 const Slot = union(enum) {
     empty,
@@ -212,6 +213,10 @@ const State = struct {
             try self.create(creation.handle, .{ .object = .brush });
             return;
         }
+        if (try font_creation.parse(record)) |creation| {
+            try self.create(creation.handle, .{ .object = .font });
+            return;
+        }
         const palette_value = try palette_records.parse(record);
         if (palette_value) |value| switch (value) {
             .create => |create_value| {
@@ -263,7 +268,6 @@ fn isCreation(kind: records.RecordType) bool {
 
 fn creationKind(kind: records.RecordType) ?stock_object.Kind {
     return switch (kind) {
-        .extcreatefontindirectw => .font,
         .createpalette => .palette,
         else => null,
     };
@@ -331,6 +335,13 @@ fn createBitmapBrush(kind: records.RecordType, handle: u32) [60]u8 {
     std.mem.writeInt(u16, bytes[38..40], 2, .little);
     std.mem.writeInt(u16, bytes[40..42], 1, .little);
     std.mem.writeInt(u16, bytes[42..44], 1, .little);
+    return bytes;
+}
+
+fn createFont(handle: u32) [font_creation.minimum_size]u8 {
+    var bytes = [_]u8{0} ** font_creation.minimum_size;
+    std.mem.writeInt(u32, bytes[8..12], handle, .little);
+    std.mem.writeInt(i32, bytes[28..32], 400, .little);
     return bytes;
 }
 
@@ -402,12 +413,8 @@ test "object table tracks every non-palette creation kind" {
     try state.consume(fixture(.deleteobject, &handleRecord(1)));
     try state.consume(fixture(.createdibpatternbrushpt, &createBitmapBrush(.createdibpatternbrushpt, 1)));
     try state.consume(fixture(.deleteobject, &handleRecord(1)));
-    for ([_]records.RecordType{
-        .extcreatefontindirectw,
-    }) |kind| {
-        _ = try state.consume(fixture(kind, &handleRecord(1)));
-        _ = try state.consume(fixture(.deleteobject, &handleRecord(1)));
-    }
+    try state.consume(fixture(.extcreatefontindirectw, &createFont(1)));
+    try state.consume(fixture(.deleteobject, &handleRecord(1)));
     try state.consume(fixture(.createcolorspace, &createColorSpace(1)));
     try state.consume(fixture(.deleteobject, &handleRecord(1)));
     try state.consume(fixture(.createcolorspacew, &createColorSpaceWide(1)));
@@ -610,13 +617,31 @@ test "invalid bitmap brush payload does not occupy or replace its slot" {
     try std.testing.expectEqual(stock_object.Kind.brush, slotKind(state.slots[1]).?);
 }
 
+test "invalid font payload does not occupy or replace its slot" {
+    var slots = [_]Slot{.empty} ** 2;
+    var state: State = .{ .slots = &slots };
+    var invalid = createFont(1);
+    invalid[32] = 2;
+    try std.testing.expectError(error.InvalidEmfFontBoolean, state.consume(fixture(.extcreatefontindirectw, &invalid)));
+    try std.testing.expectEqual(@as(usize, 0), state.live);
+    try std.testing.expectEqual(@as(usize, 0), state.report.creates);
+
+    try state.consume(fixture(.extcreatefontindirectw, &createFont(1)));
+    const before = state.report;
+    invalid = createFont(1);
+    invalid[35] = 3;
+    try std.testing.expectError(error.InvalidEmfFontCharacterSet, state.consume(fixture(.extcreatefontindirectw, &invalid)));
+    try std.testing.expectEqualDeep(before, state.report);
+    try std.testing.expectEqual(stock_object.Kind.font, slotKind(state.slots[1]).?);
+}
+
 test "SELECTOBJECT validates explicit and stock object types" {
     var slots = [_]Slot{.empty} ** 5;
     var snapshots: [2]Selection = undefined;
     var state: State = .{ .slots = &slots, .snapshots = &snapshots };
     try state.consume(fixture(.createpen, &createPen(1)));
     try state.consume(fixture(.createbrushindirect, &createBrush(2)));
-    try state.consume(fixture(.extcreatefontindirectw, &handleRecord(3)));
+    try state.consume(fixture(.extcreatefontindirectw, &createFont(3)));
     try state.consume(fixture(.createpalette, &createPalette(4, 1)));
     try state.consume(fixture(.selectobject, &handleRecord(1)));
     try state.consume(fixture(.selectobject, &handleRecord(2)));

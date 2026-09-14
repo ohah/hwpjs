@@ -44,6 +44,8 @@ Microsoft [EMR_EOF Record](https://learn.microsoft.com/en-us/openspecs/windows_p
 
 `bitmap_brush_creation.zig`는 [EMR_CREATEMONOBRUSH](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/49b42277-31b0-4eb9-a6af-86d9be9b568f)와 [EMR_CREATEDIBPATTERNBRUSHPT](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/332116b4-c6f9-4b18-a7cc-22c531b52afc)의 공통 32바이트 고정부와 필수 packed DIB를 구분한다. `dib_colors.zig`는 공식 [DIBColors](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/a5e722e3-891a-4a67-be1a-ed5a48a7fda1)의 RGB/PAL_COLORS/PAL_INDICES 세 값만 허용한다. `dib_payload.zig`는 BMP header parser를 SSOT로 재사용해 크기·dimensions·planes·bit count·compression을 검사하고, usage에 따른 RGBTriple/RGBQuad 또는 16비트 palette entry 최소 길이, packed pixel 길이와 MONOBRUSH의 1bpp를 검증한다.
 
+`EMR_EXTCREATEFONTINDIRECTW`의 가변 글꼴 객체 계약과 검증 기록은 [EMF 글꼴 생성](emf-font-creation.md)이 소유한다.
+
 [MS-WMF Compression](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/4e588f70-bd92-4a6f-b77f-35d0feaf7a57)의 BI_CMYK, BI_CMYKRLE8, BI_CMYKRLE4도 공통 BMP header enum에서 보존한다. [DeviceIndependentBitmap](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/7376542a-cce9-4625-8ead-585e9538f9f1)의 규칙대로 RGB/BITFIELDS/CMYK는 stride-derived 길이를, 나머지 압축은 ImageSize를 사용한다. 이 단계는 DIB 구조와 원문 payload 보존까지이며 JPEG/PNG/RLE/CMYK 픽셀 해제, V5 profile 의미, 실제 brush 재생은 완료 범위가 아니다. 공용 BMP RGBA decoder도 CMYK를 RGB로 오해하지 않고 명시적으로 거부한다.
 
 EXTCREATEPEN 적대적 검증은 (1) DIB가 없을 때 참조되지 않은 record 꼬리를 허용, (2) DIB offset/size 일부만 존재하는 상태를 허용, (3) geometric pen의 pattern brush를 허용, (4) cosmetic hatch 값을 검사하지 않음, (5) NumStyleEntries를 항상 0으로 취급하는 다섯 변이를 각각 주입했다. 전체 네이티브 테스트가 각 변이를 실패로 검출한 뒤 원복했다. 별도 코드 검토에서 `24 + count * 4`의 최종 합이 wasm32 `usize`를 넘는 경로를 발견해 합계 전체를 u64에서 검사하도록 수정했다.

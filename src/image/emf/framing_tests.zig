@@ -525,6 +525,30 @@ test "EMF framing validates monochrome bitmap brush before object creation" {
     try t.expectError(error.InvalidEmfMonochromeBrushBitCount, framing.validate(t.allocator, &not_monochrome));
 }
 
+test "EMF framing validates extended font payload before object creation" {
+    const original = fixture();
+    const font_size = @import("font_creation.zig").minimum_size;
+    var bytes: [88 + font_size + 20]u8 = undefined;
+    @memset(&bytes, 0);
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 3, .little);
+    std.mem.writeInt(u16, bytes[56..58], 1, .little);
+    @memset(bytes[88 .. 88 + font_size], 0);
+    std.mem.writeInt(u32, bytes[96..100], 1, .little);
+    std.mem.writeInt(i32, bytes[116..120], 400, .little);
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.extcreatefontindirectw), .little);
+    std.mem.writeInt(u32, bytes[92..96], font_size, .little);
+    @memcpy(bytes[88 + font_size ..], original[88..108]);
+
+    const summary = try framing.validate(t.allocator, &bytes);
+    try t.expectEqual(@as(usize, 1), summary.objects.creates);
+    try t.expectEqual(@as(usize, 1), summary.objects.final_live);
+    var invalid = bytes;
+    invalid[88 + 12 + 20] = 2;
+    try t.expectError(error.InvalidEmfFontBoolean, framing.validate(t.allocator, &invalid));
+}
+
 test "EMF framing connects color-space set and dedicated deletion" {
     const original = fixture();
     var bytes = [_]u8{0} ** 472;
