@@ -549,6 +549,25 @@ test "EMF framing validates extended font payload before object creation" {
     try t.expectError(error.InvalidEmfFontBoolean, framing.validate(t.allocator, &invalid));
 }
 
+test "EMF framing validates 32-bit poly drawing arrays" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 152;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 3, .little);
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.polyline), .little);
+    std.mem.writeInt(u32, bytes[92..96], 44, .little);
+    std.mem.writeInt(i32, bytes[96..100], -20, .little);
+    std.mem.writeInt(u32, bytes[112..116], 2, .little);
+    std.mem.writeInt(i32, bytes[116..120], std.math.minInt(i32), .little);
+    std.mem.writeInt(i32, bytes[128..132], std.math.maxInt(i32), .little);
+    @memcpy(bytes[132..152], original[88..108]);
+    try t.expectEqual(@as(usize, 3), (try framing.validate(t.allocator, &bytes)).records);
+
+    std.mem.writeInt(u32, bytes[112..116], 3, .little);
+    try t.expectError(error.InvalidEmfPolyRecordSize, framing.validate(t.allocator, &bytes));
+}
+
 test "EMF framing connects color-space set and dedicated deletion" {
     const original = fixture();
     var bytes = [_]u8{0} ** 472;

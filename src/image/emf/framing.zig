@@ -11,6 +11,7 @@ const miter_limit = @import("miter_limit.zig");
 const text_alignment = @import("text_alignment.zig");
 const text_justification = @import("text_justification.zig");
 const scale_extents = @import("scale_extents.zig");
+const poly_records = @import("poly_records.zig");
 const dc_stack = @import("dc_stack.zig");
 const palette_records = @import("palette_records.zig");
 const object_table = @import("object_table.zig");
@@ -41,6 +42,7 @@ fn validateStructure(bytes: []const u8) !Summary {
         _ = try text_alignment.parse(record);
         _ = try text_justification.parse(record);
         _ = try scale_extents.parse(record);
+        _ = try poly_records.parse(record);
         _ = try dc_state.consume(record);
         _ = try palette_records.parse(record);
         if (record.kind != .eof) continue;
