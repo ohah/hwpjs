@@ -24,6 +24,8 @@ Microsoft [EMR_EOF Record](https://learn.microsoft.com/en-us/openspecs/windows_p
 
 `text_alignment.zig`는 정확히 12바이트인 [SETTEXTALIGN](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/a49bb565-a583-41da-8d4a-8a0314b3e397)의 DWORD mask를 보존한다. [TextAlignmentMode](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/2cf0d802-5db7-42f6-bb75-50ff195a6c7c)의 UPDATECP와 RTL, 두 축 그룹 `0/2/6`과 `0/8/24`만 허용하고 `4`, `16`, 미정의 비트를 거부한다. 같은 숫자는 현재 글꼴의 baseline에 따라 [VerticalTextAlignmentMode](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/2475d008-f5ff-4c93-b28b-3953818b8827)로 다르게 해석된다. 이 레코드만으로 baseline을 알 수 없으므로 파서는 축 그룹을 중립적으로 보존하며, 수평/수직 의미 선택은 글꼴 상태를 가진 재생 계층의 책임이다.
 
+`text_justification.zig`는 정확히 16바이트인 [SETTEXTJUSTIFICATION](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/edbc2be0-1da0-45d6-9c05-677cbcaa2d47)의 nBreakExtra와 nBreakCount를 signed i32 wire 순서로 보존한다. 명세에 별도 값 범위가 없으므로 음수와 극값을 임의 보정하지 않는다. `scale_extents.zig`는 같은 24바이트 배치인 [SCALEVIEWPORTEXTEX](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/469e353c-4209-4919-a5aa-9331b60765ed)와 [SCALEWINDOWEXTEX](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/01698f29-bbcb-4100-9bad-0fd52c33b0da)를 구분한다. x/y numerator와 denominator 네 필드는 모두 signed i32이고 모두 0을 금지한다. 실제 곱셈·나눗셈과 fixed-scale mapping mode에서의 적용 여부는 overflow 및 상태 정책이 필요한 재생 계층의 책임이다.
+
 ## Header variable fields와 extension
 
 `header_payload.zig`는 [공식 HeaderSize flowchart](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/de081cd7-351f-4cc2-830b-d03fb55e89ab)에 따라 record Size에서 시작해 유효한 description offset과 그보다 앞선 pixel-format offset으로 고정 header 크기를 산정한다. 산정값 88/100/108 경계로 base, Extension1, Extension2를 구분하므로 긴 description이 있는 base header를 record 전체 길이만 보고 Extension으로 오인하지 않는다.
@@ -65,3 +67,5 @@ Color State Records에는 정확한 12바이트 크기 검사 제거, 공통 Col
 Mapper Flags와 Miter Limit에는 Mapper 크기 제거·미정의 값 허용, Miter 크기 제거·endian 반전, Mapper framing 연결 제거, Miter framing 연결 제거의 6개 변이를 적용했다. Debug/ReleaseSafe/ReleaseFast의 18회 모두 각 전용 경계·원시 비트·통합 계약으로 탐지됐다. 모든 변이를 제거한 정상 구현은 세 모드에서 각각 1,187/1,187 테스트를 통과했다. Debug 통합 audit도 36/36 단계, 1,226/1,226 테스트, HWP5를 포함한 8,905,815 checks를 통과했다.
 
 Text Alignment에는 정확한 12바이트 크기 제거, 미정의 비트 마스크 허용, low-axis 금지값 4 허용, high-axis 금지값 16 허용, framing 연결 제거의 5개 변이를 적용했다. Debug/ReleaseSafe/ReleaseFast의 15회 모두 크기·비트 영역·상호배타 조합·통합 계약으로 탐지됐다. 모든 변이를 제거한 정상 구현은 세 모드에서 각각 1,191/1,191 테스트를 통과했다. Debug 통합 audit도 36/36 단계, 1,230/1,230 테스트, HWP5를 포함한 8,905,815 checks를 통과했다.
+
+Text Justification과 Scale Extents에는 justification 크기 제거·두 필드 교환, scaling 크기 제거·x numerator 0 허용·SCALEWINDOWEXTEX 분류 제거, 두 파서의 framing 연결을 각각 제거한 7개 변이를 적용했다. Debug/ReleaseSafe/ReleaseFast의 21회 모두 record 경계·signed wire 순서·0 금지·타입 집합·통합 계약으로 탐지됐다. 모든 변이를 제거한 정상 구현은 세 모드에서 각각 1,197/1,197 테스트를 통과했다. Debug 통합 audit도 36/36 단계, 1,236/1,236 테스트, HWP5를 포함한 8,905,815 checks를 통과했다.

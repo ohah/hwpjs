@@ -303,6 +303,39 @@ test "EMF framing validates text alignment components" {
     try t.expectError(error.InvalidEmfTextAlignmentFlags, framing.validate(&valid));
 }
 
+test "EMF framing validates text justification and extent scaling" {
+    const original = fixture();
+    var valid = [_]u8{0} ** 148;
+    @memcpy(valid[0..88], original[0..88]);
+    std.mem.writeInt(u32, valid[48..52], valid.len, .little);
+    std.mem.writeInt(u32, valid[52..56], 4, .little);
+    std.mem.writeInt(u32, valid[88..92], @intFromEnum(@import("records.zig").RecordType.settextjustification), .little);
+    std.mem.writeInt(u32, valid[92..96], 16, .little);
+    std.mem.writeInt(i32, valid[96..100], -9, .little);
+    std.mem.writeInt(i32, valid[100..104], 3, .little);
+    std.mem.writeInt(u32, valid[104..108], @intFromEnum(@import("records.zig").RecordType.scaleviewportextex), .little);
+    std.mem.writeInt(u32, valid[108..112], 24, .little);
+    std.mem.writeInt(i32, valid[112..116], -1, .little);
+    std.mem.writeInt(i32, valid[116..120], 2, .little);
+    std.mem.writeInt(i32, valid[120..124], 3, .little);
+    std.mem.writeInt(i32, valid[124..128], -4, .little);
+    @memcpy(valid[128..148], original[88..108]);
+    try t.expectEqual(@as(usize, 4), (try framing.validate(&valid)).records);
+
+    var invalid_scale = valid;
+    std.mem.writeInt(i32, invalid_scale[112..116], 0, .little);
+    try t.expectError(error.InvalidEmfScaleExtentRatio, framing.validate(&invalid_scale));
+
+    var invalid_text = [_]u8{0} ** 152;
+    @memcpy(invalid_text[0..88], original[0..88]);
+    std.mem.writeInt(u32, invalid_text[48..52], invalid_text.len, .little);
+    std.mem.writeInt(u32, invalid_text[52..56], 3, .little);
+    std.mem.writeInt(u32, invalid_text[88..92], @intFromEnum(@import("records.zig").RecordType.settextjustification), .little);
+    std.mem.writeInt(u32, invalid_text[92..96], 44, .little);
+    @memcpy(invalid_text[132..152], original[88..108]);
+    try t.expectError(error.InvalidEmfTextJustificationRecordSize, framing.validate(&invalid_text));
+}
+
 test "EMF EOF palette preserves undefined spaces and reserved-blue-green-red order" {
     const original = fixture();
     var bytes = [_]u8{0} ** 124;
