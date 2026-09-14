@@ -1,10 +1,11 @@
 const std = @import("std");
 const records = @import("records.zig");
 const header = @import("header.zig");
+const pixel_format = @import("pixel_format.zig");
 const utf16 = @import("../../text/utf16.zig");
 
 pub const Variant = enum { base, extension1, extension2 };
-pub const Extension1 = struct { pixel_format: ?[]const u8, open_gl: bool };
+pub const Extension1 = struct { pixel_format: ?pixel_format.Descriptor, open_gl: bool };
 pub const Extension2 = struct { micrometers: header.SizeL };
 pub const Payload = struct {
     variant: Variant,
@@ -42,13 +43,14 @@ pub fn parse(record: records.Record, base: header.Header) !Payload {
         const pixel_offset = std.mem.readInt(u32, record.bytes[92..96], .little);
         const open_gl = std.mem.readInt(u32, record.bytes[96..100], .little);
         if (open_gl > 1) return error.InvalidEmfOpenGlFlag;
-        var pixel_format: ?[]const u8 = null;
+        var descriptor: ?pixel_format.Descriptor = null;
         if (pixel_size != 0 and pixel_offset != 0) {
             if (pixel_size != 40) return error.InvalidEmfPixelFormatSize;
-            pixel_format = try range(record.bytes, pixel_offset, pixel_size, 100, error.InvalidEmfPixelFormatRange);
+            const bytes = try range(record.bytes, pixel_offset, pixel_size, 100, error.InvalidEmfPixelFormatRange);
+            descriptor = try pixel_format.parse(bytes);
             header_size = @min(header_size, @as(usize, pixel_offset));
         }
-        extension1 = .{ .pixel_format = pixel_format, .open_gl = open_gl == 1 };
+        extension1 = .{ .pixel_format = descriptor, .open_gl = open_gl == 1 };
     }
 
     const variant: Variant = if (header_size >= 108) .extension2 else if (header_size >= 100) .extension1 else .base;
@@ -59,8 +61,8 @@ pub fn parse(record: records.Record, base: header.Header) !Payload {
     };
     if (description) |bytes| if (base.description_offset < fixed_size or base.description_offset + bytes.len > record.bytes.len)
         return error.InvalidEmfDescriptionRange;
-    if (extension1) |value| if (value.pixel_format) |bytes| if (std.mem.readInt(u32, record.bytes[92..96], .little) < fixed_size or
-        std.mem.readInt(u32, record.bytes[92..96], .little) + bytes.len > record.bytes.len)
+    if (extension1) |value| if (value.pixel_format) |descriptor| if (std.mem.readInt(u32, record.bytes[92..96], .little) < fixed_size or
+        std.mem.readInt(u32, record.bytes[92..96], .little) + descriptor.raw.len > record.bytes.len)
         return error.InvalidEmfPixelFormatRange;
 
     return .{

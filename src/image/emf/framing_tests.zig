@@ -49,13 +49,22 @@ test "EMF header variant uses variable field offsets and validates UTF-16" {
     std.mem.writeInt(i32, bytes[100..104], 508000, .little);
     std.mem.writeInt(i32, bytes[104..108], 285000, .little);
     bytes[108..112].* = .{ 'A', 0, 0, 0 };
-    for (112..152) |index| bytes[index] = @intCast(index);
+    std.mem.writeInt(u16, bytes[112..114], 40, .little);
+    std.mem.writeInt(u16, bytes[114..116], 1, .little);
+    std.mem.writeInt(u32, bytes[116..120], 0x20, .little);
+    bytes[120] = 0;
+    bytes[121] = 24;
+    bytes[122..128].* = .{ 8, 16, 8, 8, 8, 0 };
     @memcpy(bytes[152..172], base[88..108]);
     const value = try framing.validate(&bytes);
     try t.expectEqual(@import("header_payload.zig").Variant.extension2, value.header_payload.variant);
     try t.expectEqualSlices(u8, &.{ 'A', 0, 0, 0 }, value.header_payload.description_utf16le.?);
     try t.expect(value.header_payload.extension1.?.open_gl);
-    try t.expectEqual(@as(usize, 40), value.header_payload.extension1.?.pixel_format.?.len);
+    const pixel = value.header_payload.extension1.?.pixel_format.?;
+    try t.expectEqual(@as(usize, 40), pixel.raw.len);
+    try t.expectEqual(@import("pixel_format.zig").PixelType.rgba, pixel.pixel_type);
+    try t.expect(pixel.flags.support_opengl);
+    try t.expectEqual(@as(u8, 24), pixel.color_bits);
     try t.expectEqual(@as(i32, 508000), value.header_payload.extension2.?.micrometers.width);
 
     bytes[110] = 1;

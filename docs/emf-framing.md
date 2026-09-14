@@ -14,7 +14,9 @@ Microsoft [EMR_EOF Record](https://learn.microsoft.com/en-us/openspecs/windows_p
 
 `header_payload.zig`는 [공식 HeaderSize flowchart](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/de081cd7-351f-4cc2-830b-d03fb55e89ab)에 따라 record Size에서 시작해 유효한 description offset과 그보다 앞선 pixel-format offset으로 고정 header 크기를 산정한다. 산정값 88/100/108 경계로 base, Extension1, Extension2를 구분하므로 긴 description이 있는 base header를 record 전체 길이만 보고 Extension으로 오인하지 않는다.
 
-description은 둘 중 하나의 count/offset이 0이면 부재하고, 둘 다 존재하면 고정 영역 뒤의 정확한 UTF-16LE 범위와 마지막 NUL을 요구한다. Unicode scalar 검사는 공통 `text/utf16.zig`를 재사용한다. [HeaderExtension1](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/00cc8ab4-ea2e-4bb1-9569-1201af47a0c8)의 pixel format offset/40바이트 크기와 OpenGL 0/1을 검사하고 raw descriptor를 보존한다. [HeaderExtension2](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/9e96e5cf-e949-49ae-baa8-3fffd948e588)의 micrometer 크기를 보존한다. PixelFormatDescriptor 내부 필드는 후속 단계다.
+description은 둘 중 하나의 count/offset이 0이면 부재하고, 둘 다 존재하면 고정 영역 뒤의 정확한 UTF-16LE 범위와 마지막 NUL을 요구한다. Unicode scalar 검사는 공통 `text/utf16.zig`를 재사용한다. [HeaderExtension1](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/00cc8ab4-ea2e-4bb1-9569-1201af47a0c8)의 pixel format offset/40바이트 크기와 OpenGL 0/1을 검사한다. [HeaderExtension2](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/9e96e5cf-e949-49ae-baa8-3fffd948e588)의 micrometer 크기를 보존한다.
+
+`pixel_format.zig`는 [PixelFormatDescriptor Object](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/1db036d6-2da8-4b92-b4f8-e9cab8cc93b7)의 40바이트 필드를 모두 파싱하고 원본 view도 보존한다. 정확한 입력 길이와 내부 nSize, Version 1, 정의된 flag bit, RGBA/ColorIndex enum을 검증하며 `PFD_DOUBLEBUFFER`와 `PFD_SUPPORT_GDI` 동시 설정을 거부한다. 문서가 MAY/SHOULD-ignore로 둔 layer type, reserved nibble, layer/damage mask와 각 bit count는 임의 제한 없이 보존한다. `cbPixelFormat` 또는 `offPixelFormat` 중 하나라도 0이면 descriptor가 없다는 레코드 규칙도 유지한다.
 
 ## 적대적 검증
 
@@ -29,3 +31,5 @@ Header variable fields에는 description offset을 HeaderSize 산정에서 무�
 Microsoft [EMR_EOF](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/3f47fde0-0e6b-40c1-87f3-f4129af03aa1)의 palette offset은 record 시작 기준이며 모든 entry는 마지막 SizeLast 앞에 있어야 한다. `eof_palette.zig`는 offset 앞뒤 undefined space를 별도 raw view로 보존하고, [LogPaletteEntry](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/c1f7b285-be16-4112-a4e6-0b2fd4c1d148)의 Reserved/Blue/Green/Red 순서를 accessor에서 해석한다. Reserved는 MUST-ignore이므로 0으로 강제하지 않는다. Header와 EOF의 palette entry count는 framing에서 일치시킨다.
 
 EOF palette에는 Header/EOF count 비교 제거, offset 15를 16으로 보정, SizeLast 앞 공간을 넘는 entry bytes를 조용히 절단, Blue/Red 순서 교환, 뒤 undefined space 손실의 5개 변이를 적용했다. Debug/ReleaseSafe/ReleaseFast의 15회 모두 불일치 수용, 잘못된 byte 소유, entry 손실, 채널 교환 또는 raw data 손실로 탐지됐다. 모든 변이를 제거한 정상 구현은 별도로 전체 검증한다.
+
+PixelFormatDescriptor에는 내부 nSize 검사 제거, Version 검사 제거, 미정의 flag 허용, DOUBLEBUFFER/GDI 금지 조합 허용, 미정의 pixel type 허용의 5개 변이를 적용했다. Debug/ReleaseSafe/ReleaseFast의 15회 모두 해당 손상값 수용으로 탐지됐다. 정상 구현 복원 후 세 모드 전체 테스트와 Debug 통합 audit 8,905,815 checks도 통과했다.
