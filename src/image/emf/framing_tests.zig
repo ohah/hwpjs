@@ -368,6 +368,56 @@ test "EMF framing validates device-context save and relative restore" {
     try t.expectError(error.InvalidEmfSaveDcRecordSize, framing.validate(&oversized_save));
 }
 
+test "EMF framing validates logical palette record wire contracts" {
+    const original = fixture();
+    var valid = [_]u8{0} ** 188;
+    @memcpy(valid[0..88], original[0..88]);
+    std.mem.writeInt(u32, valid[48..52], valid.len, .little);
+    std.mem.writeInt(u32, valid[52..56], 7, .little);
+    std.mem.writeInt(u16, valid[56..58], 2, .little);
+
+    std.mem.writeInt(u32, valid[88..92], @intFromEnum(@import("records.zig").RecordType.createpalette), .little);
+    std.mem.writeInt(u32, valid[92..96], 20, .little);
+    std.mem.writeInt(u32, valid[96..100], 1, .little);
+    std.mem.writeInt(u16, valid[100..102], 0x0300, .little);
+    std.mem.writeInt(u16, valid[102..104], 1, .little);
+    valid[104..108].* = .{ 0, 30, 20, 10 };
+
+    std.mem.writeInt(u32, valid[108..112], @intFromEnum(@import("records.zig").RecordType.setpaletteentries), .little);
+    std.mem.writeInt(u32, valid[112..116], 24, .little);
+    std.mem.writeInt(u32, valid[116..120], 1, .little);
+    std.mem.writeInt(u32, valid[120..124], 0, .little);
+    std.mem.writeInt(u32, valid[124..128], 1, .little);
+    valid[128..132].* = .{ 9, 60, 50, 40 };
+
+    std.mem.writeInt(u32, valid[132..136], @intFromEnum(@import("records.zig").RecordType.resizepalette), .little);
+    std.mem.writeInt(u32, valid[136..140], 16, .little);
+    std.mem.writeInt(u32, valid[140..144], 1, .little);
+    std.mem.writeInt(u32, valid[144..148], 0x400, .little);
+
+    std.mem.writeInt(u32, valid[148..152], @intFromEnum(@import("records.zig").RecordType.selectpalette), .little);
+    std.mem.writeInt(u32, valid[152..156], 12, .little);
+    std.mem.writeInt(u32, valid[156..160], 1, .little);
+    std.mem.writeInt(u32, valid[160..164], @intFromEnum(@import("records.zig").RecordType.realizepalette), .little);
+    std.mem.writeInt(u32, valid[164..168], 8, .little);
+    @memcpy(valid[168..188], original[88..108]);
+    try t.expectEqual(@as(usize, 7), (try framing.validate(&valid)).records);
+
+    var bad_version = valid;
+    std.mem.writeInt(u16, bad_version[100..102], 0x0200, .little);
+    try t.expectError(error.InvalidEmfLogPaletteVersion, framing.validate(&bad_version));
+    var bad_resize = valid;
+    std.mem.writeInt(u32, bad_resize[144..148], 0, .little);
+    try t.expectError(error.InvalidEmfPaletteEntryCount, framing.validate(&bad_resize));
+    var bad_realize = [_]u8{0} ** 192;
+    @memcpy(bad_realize[0..160], valid[0..160]);
+    std.mem.writeInt(u32, bad_realize[48..52], bad_realize.len, .little);
+    std.mem.writeInt(u32, bad_realize[160..164], @intFromEnum(@import("records.zig").RecordType.realizepalette), .little);
+    std.mem.writeInt(u32, bad_realize[164..168], 12, .little);
+    @memcpy(bad_realize[172..192], original[88..108]);
+    try t.expectError(error.InvalidEmfPaletteRecordSize, framing.validate(&bad_realize));
+}
+
 test "EMF EOF palette preserves undefined spaces and reserved-blue-green-red order" {
     const original = fixture();
     var bytes = [_]u8{0} ** 124;

@@ -1,8 +1,9 @@
 const std = @import("std");
 const records = @import("records.zig");
 const eof = @import("eof.zig");
+const log_palette_entry = @import("log_palette_entry.zig");
 
-pub const Entry = struct { reserved: u8, blue: u8, green: u8, red: u8 };
+pub const Entry = log_palette_entry.Entry;
 pub const Palette = struct {
     undefined_before: []const u8,
     entry_bytes: []const u8,
@@ -11,8 +12,7 @@ pub const Palette = struct {
 
     pub fn entry(self: Palette, index: usize) !Entry {
         if (index >= self.count) return error.EmfPaletteIndexOutOfBounds;
-        const bytes = self.entry_bytes[index * 4 ..][0..4];
-        return .{ .reserved = bytes[0], .blue = bytes[1], .green = bytes[2], .red = bytes[3] };
+        return log_palette_entry.parse(self.entry_bytes[index * 4 ..][0..4]);
     }
 };
 
