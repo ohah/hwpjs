@@ -495,6 +495,36 @@ test "EMF framing validates extended pen payload before object creation" {
     try t.expectError(error.TruncatedEmfPenStyleEntries, framing.validate(t.allocator, &truncated_style));
 }
 
+test "EMF framing validates monochrome bitmap brush before object creation" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 168;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 3, .little);
+    std.mem.writeInt(u16, bytes[56..58], 1, .little);
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.createmonobrush), .little);
+    std.mem.writeInt(u32, bytes[92..96], 60, .little);
+    std.mem.writeInt(u32, bytes[96..100], 1, .little);
+    std.mem.writeInt(u32, bytes[104..108], 32, .little);
+    std.mem.writeInt(u32, bytes[108..112], 18, .little);
+    std.mem.writeInt(u32, bytes[112..116], 50, .little);
+    std.mem.writeInt(u32, bytes[116..120], 8, .little);
+    std.mem.writeInt(u32, bytes[120..124], 12, .little);
+    std.mem.writeInt(u16, bytes[124..126], 2, .little);
+    std.mem.writeInt(u16, bytes[126..128], 2, .little);
+    std.mem.writeInt(u16, bytes[128..130], 1, .little);
+    std.mem.writeInt(u16, bytes[130..132], 1, .little);
+    @memcpy(bytes[148..168], original[88..108]);
+
+    const summary = try framing.validate(t.allocator, &bytes);
+    try t.expectEqual(@as(usize, 1), summary.objects.creates);
+    try t.expectEqual(@as(usize, 1), summary.objects.final_live);
+
+    var not_monochrome = bytes;
+    std.mem.writeInt(u16, not_monochrome[130..132], 4, .little);
+    try t.expectError(error.InvalidEmfMonochromeBrushBitCount, framing.validate(t.allocator, &not_monochrome));
+}
+
 test "EMF framing connects color-space set and dedicated deletion" {
     const original = fixture();
     var bytes = [_]u8{0} ** 472;

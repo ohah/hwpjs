@@ -8,6 +8,7 @@ const color_space_records = @import("color_space_records.zig");
 const color_space_creation = @import("color_space_creation.zig");
 const basic_object_creation = @import("basic_object_creation.zig");
 const extended_pen_creation = @import("extended_pen_creation.zig");
+const bitmap_brush_creation = @import("bitmap_brush_creation.zig");
 
 const Slot = union(enum) {
     empty,
@@ -207,6 +208,10 @@ const State = struct {
             try self.create(creation.handle, .{ .object = .pen });
             return;
         }
+        if (try bitmap_brush_creation.parse(record)) |creation| {
+            try self.create(creation.handle, .{ .object = .brush });
+            return;
+        }
         const palette_value = try palette_records.parse(record);
         if (palette_value) |value| switch (value) {
             .create => |create_value| {
@@ -258,7 +263,6 @@ fn isCreation(kind: records.RecordType) bool {
 
 fn creationKind(kind: records.RecordType) ?stock_object.Kind {
     return switch (kind) {
-        .createmonobrush, .createdibpatternbrushpt => .brush,
         .extcreatefontindirectw => .font,
         .createpalette => .palette,
         else => null,
@@ -311,6 +315,22 @@ fn createExtendedPen(handle: u32) [extended_pen_creation.minimum_size]u8 {
     var bytes = [_]u8{0} ** extended_pen_creation.minimum_size;
     std.mem.writeInt(u32, bytes[8..12], handle, .little);
     std.mem.writeInt(u32, bytes[32..36], 1, .little);
+    return bytes;
+}
+
+fn createBitmapBrush(kind: records.RecordType, handle: u32) [60]u8 {
+    std.debug.assert(kind == .createmonobrush or kind == .createdibpatternbrushpt);
+    var bytes = [_]u8{0} ** 60;
+    std.mem.writeInt(u32, bytes[8..12], handle, .little);
+    std.mem.writeInt(u32, bytes[16..20], 32, .little);
+    std.mem.writeInt(u32, bytes[20..24], 18, .little);
+    std.mem.writeInt(u32, bytes[24..28], 50, .little);
+    std.mem.writeInt(u32, bytes[28..32], 8, .little);
+    std.mem.writeInt(u32, bytes[32..36], 12, .little);
+    std.mem.writeInt(u16, bytes[36..38], 2, .little);
+    std.mem.writeInt(u16, bytes[38..40], 2, .little);
+    std.mem.writeInt(u16, bytes[40..42], 1, .little);
+    std.mem.writeInt(u16, bytes[42..44], 1, .little);
     return bytes;
 }
 
@@ -378,10 +398,12 @@ test "object table tracks every non-palette creation kind" {
     try state.consume(fixture(.deleteobject, &handleRecord(1)));
     try state.consume(fixture(.extcreatepen, &createExtendedPen(1)));
     try state.consume(fixture(.deleteobject, &handleRecord(1)));
+    try state.consume(fixture(.createmonobrush, &createBitmapBrush(.createmonobrush, 1)));
+    try state.consume(fixture(.deleteobject, &handleRecord(1)));
+    try state.consume(fixture(.createdibpatternbrushpt, &createBitmapBrush(.createdibpatternbrushpt, 1)));
+    try state.consume(fixture(.deleteobject, &handleRecord(1)));
     for ([_]records.RecordType{
         .extcreatefontindirectw,
-        .createmonobrush,
-        .createdibpatternbrushpt,
     }) |kind| {
         _ = try state.consume(fixture(kind, &handleRecord(1)));
         _ = try state.consume(fixture(.deleteobject, &handleRecord(1)));
@@ -569,6 +591,23 @@ test "invalid extended pen payload does not occupy its object slot" {
     try std.testing.expectEqual(@as(usize, 0), state.live);
     try std.testing.expectEqual(@as(usize, 0), state.report.creates);
     try std.testing.expectEqual(@as(?stock_object.Kind, null), slotKind(state.slots[1]));
+}
+
+test "invalid bitmap brush payload does not occupy or replace its slot" {
+    var slots = [_]Slot{.empty} ** 2;
+    var state: State = .{ .slots = &slots };
+    var invalid = createBitmapBrush(.createmonobrush, 1);
+    std.mem.writeInt(u16, invalid[42..44], 4, .little);
+    try std.testing.expectError(error.InvalidEmfMonochromeBrushBitCount, state.consume(fixture(.createmonobrush, &invalid)));
+    try std.testing.expectEqual(@as(usize, 0), state.live);
+    try std.testing.expectEqual(@as(usize, 0), state.report.creates);
+
+    try state.consume(fixture(.createdibpatternbrushpt, &createBitmapBrush(.createdibpatternbrushpt, 1)));
+    const before = state.report;
+    std.mem.writeInt(u32, invalid[12..16], 3, .little);
+    try std.testing.expectError(error.UnsupportedEmfDibColors, state.consume(fixture(.createdibpatternbrushpt, &invalid)));
+    try std.testing.expectEqualDeep(before, state.report);
+    try std.testing.expectEqual(stock_object.Kind.brush, slotKind(state.slots[1]).?);
 }
 
 test "SELECTOBJECT validates explicit and stock object types" {

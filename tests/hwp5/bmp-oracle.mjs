@@ -3,10 +3,10 @@ export const bmpWords=values=>{const out=Buffer.alloc(values.length*4);values.fo
 export function bmpHeaderOracle(raw) {
   const size=raw.readUInt32LE();assert.ok([12,40,108,124].includes(size));assert.ok(raw.length>=size);
   const core=size===12,width=core?raw.readUInt16LE(4):raw.readInt32LE(4),height=core?raw.readUInt16LE(6):raw.readInt32LE(8),bits=raw.readUInt16LE(core?10:14),compression=core?0:raw.readUInt32LE(16);
-  assert.ok(compression<=5);if(size===124)assert.equal(raw.readUInt32LE(120),0);
+  assert.ok([0,1,2,3,4,5,11,12,13].includes(compression));if(size===124)assert.equal(raw.readUInt32LE(120),0);
   assert.ok(width>0&&height!==0);assert.equal(raw.readUInt16LE(core?8:12),1);
-  assert.ok((core?[1,4,8,24]:compression===0?[1,4,8,16,24,32]:compression===1?[8]:compression===2?[4]:compression===3?[16,32]:[0]).includes(bits));
-  assert.ok(height>0||compression===0||compression===3);
+  assert.ok((core?[1,4,8,24]:compression===0||compression===11?[1,4,8,16,24,32]:compression===1||compression===12?[8]:compression===2||compression===13?[4]:compression===3?[16,32]:[0]).includes(bits));
+  assert.ok(height>0||compression===0||compression===3||compression===11);
   const info=core?Array(5).fill(0):Array.from({length:5},(_,i)=>raw.readUInt32LE(20+i*4));
   const colour=size<108?Array(17).fill(0):Array.from({length:17},(_,i)=>raw.readUInt32LE(40+i*4));
   const profile=size<124?Array(3).fill(0):Array.from({length:3},(_,i)=>raw.readUInt32LE(108+i*4));
@@ -22,7 +22,7 @@ export function bmpLayoutOracle(raw,{trailing=false}={}) {
   let at=14+kind,masks=null;if(compression===3){masks=Array.from({length:kind===40?3:4},(_,i)=>raw.readUInt32LE(54+i*4));if(kind===40){at+=12;masks.push(0);}channels(masks,bits);}else if(bits===16&&compression===0)masks=[31744,992,31,0];
   const entry=kind===12?3:4,used=kind===12?0:raw.readUInt32LE(46),count=used||(bits>0&&bits<=8?2**bits:0),palette=raw.subarray(at,at+count*entry);assert.equal(palette.length,count*entry);
   if(bits>0&&bits<=8)assert.ok(count<=2**bits);if(entry===4)for(let i=3;i<palette.length;i+=4)assert.equal(palette[i],0);at+=palette.length;assert.ok(offset>=at&&offset<=size);
-  const uncompressed=compression===0||compression===3,stride=uncompressed?Number(((BigInt(width)*BigInt(bits)+31n)/32n)*4n):0,declared=kind===12?0:raw.readUInt32LE(34),imageBytes=uncompressed?stride*height:declared;
+  const uncompressed=compression===0||compression===3||compression===11,stride=uncompressed?Number(((BigInt(width)*BigInt(bits)+31n)/32n)*4n):0,declared=kind===12?0:raw.readUInt32LE(34),imageBytes=uncompressed?stride*height:declared;
   if(declared&&uncompressed)assert.equal(declared,imageBytes);if(compression!==0)assert.ok(declared>0);assert.ok(offset+imageBytes<=size);
   const pixels=raw.subarray(offset,offset+imageBytes),gap=raw.subarray(at,offset),after=raw.subarray(offset+imageBytes,size),tail=raw.subarray(size);
   const wire=Buffer.concat([h,bmpWords([size,offset,stride,imageBytes,count,entry,+!!masks,...(masks??[0,0,0,0]),gap.length,after.length,tail.length,1]),palette,pixels,gap,after,tail]);

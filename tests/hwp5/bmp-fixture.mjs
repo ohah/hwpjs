@@ -2,7 +2,7 @@
 export function bmpFixture({kind=40,width=3,height=2,top=false,bits=32,compression=0,masks,used=0,gap=0,after=0,declared=true}={}) {
   const indexed=bits>0&&bits<=8,count=indexed?(used||2**bits):used,entry=kind===12?3:4;
   const external=kind===40&&compression===3?12:0,offset=14+kind+external+count*entry+gap;
-  const stride=Math.ceil(width*bits/32)*4,uncompressed=compression===0||compression===3,size=uncompressed?stride*height:4;
+  const stride=Math.ceil(width*bits/32)*4,uncompressed=compression===0||compression===3||compression===11,size=uncompressed?stride*height:4;
   const out=Buffer.alloc(offset+size+after);out.write('BM');out.writeUInt32LE(out.length,2);out.writeUInt32LE(offset,10);out.writeUInt32LE(kind,14);
   if(kind===12){out.writeUInt16LE(width,18);out.writeUInt16LE(height,20);out.writeUInt16LE(1,22);out.writeUInt16LE(bits,24);}
   else{out.writeInt32LE(width,18);out.writeInt32LE(top?-height:height,22);out.writeUInt16LE(1,26);out.writeUInt16LE(bits,28);out.writeUInt32LE(compression,30);out.writeUInt32LE(declared?size:0,34);out.writeInt32LE(-321,38);out.writeInt32LE(12345,42);out.writeUInt32LE(used,46);}

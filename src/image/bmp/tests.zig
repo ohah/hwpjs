@@ -28,6 +28,14 @@ test "BMP owns top-down RGBA and never interprets unused BI_RGB high bytes as al
     try t.expectEqualSlices(u8, f.rgba[0..8], image.rgba[8..]);
 }
 
+test "BMP preserves specified CMYK structure without decoding it as RGB" {
+    var raw = f.plain;
+    f.put(&raw, 30, u32, @intFromEnum(header.Compression.cmyk));
+    const view = try structure.inspect(&raw, .{});
+    try t.expectEqual(header.Compression.cmyk, view.header.compression);
+    try t.expectError(error.UnsupportedBmpPixelCompression, bmp.decode(t.allocator, &raw, options));
+}
+
 test "BMP headers preserve absent core fields and V4 V5 raw colour values" {
     const core = [_]u8{ 12, 0, 0, 0, 3, 0, 5, 0, 1, 0, 24, 0 };
     const old = try header.parse(&core, .{});

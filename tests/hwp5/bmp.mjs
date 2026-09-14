@@ -26,6 +26,8 @@ export function bmpEdges(call) {
     const raw=bmpFixture({compression,bits});check(raw);
     const bad=Buffer.from(raw);bad.writeInt32LE(-2,22);reject(bad,/InvalidBmpOrientation/);
   }
+  for(const [compression,bits] of [[11,32],[12,8],[13,4]])check(bmpFixture({compression,bits}));
+  check(bmpFixture({compression:11,bits:32,top:true}));
   const raw=bmpFixture({width:3,height:2,bits:32});
   for(let n=0;n<raw.length;n++)reject(raw.subarray(0,n),/UnexpectedEnd/);
   const change=(at,type,value)=>{const b=Buffer.from(raw);b[type](value,at);return b;};
@@ -40,7 +42,7 @@ export function bmpEdges(call) {
   reject(change(22,'writeInt32LE',-2147483648),/LimitExceeded/);
   for(const planes of [0,2,65535])reject(change(26,'writeUInt16LE',planes),/InvalidBmpPlanes/);
   for(const bits of [0,2,3,15,48,64,65535])reject(change(28,'writeUInt16LE',bits),/InvalidBmpBitCount/);
-  for(const compression of [6,11,12,13,0xffffffff])reject(change(30,'writeUInt32LE',compression),/UnsupportedBmpCompression/);
+  for(const compression of [6,7,10,14,0xffffffff])reject(change(30,'writeUInt32LE',compression),/UnsupportedBmpCompression/);
   for(const size of [1,23,25,0xffffffff])reject(change(34,'writeUInt32LE',size),/InvalidBmpImageSize/);
   reject(raw,/LimitExceeded/,{pixels:5});reject(raw,/LimitExceeded/,{bytes:raw.length-1});reject(raw,/LimitExceeded/,{storage:23});reject(raw,/LimitExceeded/,{rgba:23},287);
   check(raw,{pixels:6,bytes:raw.length,storage:24,rgba:24});

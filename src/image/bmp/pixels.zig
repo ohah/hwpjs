@@ -17,6 +17,7 @@ pub fn decode(a: std.mem.Allocator, bytes: []const u8, options: Options) !Image 
 }
 /// Requires structure.inspect's View. The structure options are already applied.
 pub fn decodeView(a: std.mem.Allocator, view: structure.View, options: Options) !Image {
+    if (view.header.compression == .cmyk) return error.UnsupportedBmpPixelCompression;
     if (!view.header.uncompressed()) {
         if (options.rle) |selected| switch (view.header.compression) {
             .rle4, .rle8 => return rle.decode(a, view, selected, options.max_rgba_bytes),

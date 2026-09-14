@@ -1,7 +1,17 @@
 const std = @import("std");
 const Reader = @import("../../binary/reader.zig").Reader;
 pub const Kind = enum(u32) { core = 12, info = 40, v4 = 108, v5 = 124 };
-pub const Compression = enum(u32) { rgb = 0, rle8 = 1, rle4 = 2, bitfields = 3, jpeg = 4, png = 5 };
+pub const Compression = enum(u32) {
+    rgb = 0,
+    rle8 = 1,
+    rle4 = 2,
+    bitfields = 3,
+    jpeg = 4,
+    png = 5,
+    cmyk = 11,
+    cmyk_rle8 = 12,
+    cmyk_rle4 = 13,
+};
 pub const Options = struct { max_pixels: u64 = 100000000 };
 pub const Colour = struct {
     masks: [4]u32,
@@ -27,7 +37,7 @@ pub const Header = struct {
     raw: []const u8,
 
     pub fn uncompressed(self: Header) bool {
-        return self.compression == .rgb or self.compression == .bitfields;
+        return self.compression == .rgb or self.compression == .bitfields or self.compression == .cmyk;
     }
     pub fn paletteCount(self: Header) u32 {
         const declared = if (self.info) |v| v.colours_used else 0;
@@ -75,6 +85,12 @@ pub fn parse(bytes: []const u8, options: Options) !Header {
         .rle4 => result.bit_count == 4,
         .bitfields => result.bit_count == 16 or result.bit_count == 32,
         .jpeg, .png => result.bit_count == 0,
+        .cmyk => switch (result.bit_count) {
+            1, 4, 8, 16, 24, 32 => true,
+            else => false,
+        },
+        .cmyk_rle8 => result.bit_count == 8,
+        .cmyk_rle4 => result.bit_count == 4,
     };
     if (!valid) return error.InvalidBmpBitCount;
     if (result.top_down and !result.uncompressed()) return error.InvalidBmpOrientation;
