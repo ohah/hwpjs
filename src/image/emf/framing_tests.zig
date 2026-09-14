@@ -140,3 +140,47 @@ test "EMF record iterator rejects truncation alignment and data after EOF" {
     std.mem.writeInt(u32, trailing[48..52], trailing.len, .little);
     try t.expectError(error.DataAfterEmfEof, framing.validate(&trailing));
 }
+
+test "EMF EOF palette preserves undefined spaces and reserved-blue-green-red order" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 124;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[68..72], 2, .little);
+    std.mem.writeInt(u32, bytes[88..92], 14, .little);
+    std.mem.writeInt(u32, bytes[92..96], 36, .little);
+    std.mem.writeInt(u32, bytes[96..100], 2, .little);
+    std.mem.writeInt(u32, bytes[100..104], 20, .little);
+    bytes[104..108].* = .{ 9, 8, 7, 6 };
+    bytes[108..116].* = .{ 5, 10, 20, 30, 6, 40, 50, 60 };
+    bytes[116..120].* = .{ 1, 2, 3, 4 };
+    std.mem.writeInt(u32, bytes[120..124], 36, .little);
+    const value = try framing.validate(&bytes);
+    try t.expectEqualSlices(u8, &.{ 9, 8, 7, 6 }, value.palette.undefined_before);
+    try t.expectEqualSlices(u8, &.{ 1, 2, 3, 4 }, value.palette.undefined_after);
+    const second = try value.palette.entry(1);
+    try t.expectEqual(@as(u8, 6), second.reserved);
+    try t.expectEqual(@as(u8, 40), second.blue);
+    try t.expectEqual(@as(u8, 50), second.green);
+    try t.expectEqual(@as(u8, 60), second.red);
+    try t.expectError(error.EmfPaletteIndexOutOfBounds, value.palette.entry(2));
+    var invalid_offset = bytes;
+    std.mem.writeInt(u32, invalid_offset[100..104], 15, .little);
+    try t.expectError(error.InvalidEmfPaletteOffset, framing.validate(&invalid_offset));
+}
+
+test "EMF EOF palette validates header count offset and SizeLast boundary" {
+    var bytes = fixture();
+    bytes[68] = 1;
+    try t.expectError(error.InvalidEmfPaletteCount, framing.validate(&bytes));
+    bytes = fixture();
+    bytes[68] = 1;
+    bytes[96] = 1;
+    bytes[100] = 15;
+    try t.expectError(error.InvalidEmfPaletteOffset, framing.validate(&bytes));
+    bytes = fixture();
+    bytes[68] = 1;
+    bytes[96] = 1;
+    bytes[100] = 16;
+    try t.expectError(error.InvalidEmfPaletteRange, framing.validate(&bytes));
+}

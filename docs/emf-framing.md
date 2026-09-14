@@ -6,9 +6,9 @@ Microsoft [EMR_HEADER Record Types](https://learn.microsoft.com/en-us/openspecs/
 
 `records.zig`는 모든 EMF record의 Type/Size와 4바이트 정렬, 최소 8바이트, stream 경계를 소유한다. payload 의미는 개별 record parser의 책임이다.
 
-Microsoft [EMR_EOF Record](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/3f47fde0-0e6b-40c1-87f3-f4129af03aa1)에 따라 `eof.zig`는 Type 14, 최소 고정 필드와 record 마지막 SizeLast가 Size와 같은지 검사한다. palette buffer 의미는 후속 단계다.
+Microsoft [EMR_EOF Record](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/3f47fde0-0e6b-40c1-87f3-f4129af03aa1)에 따라 `eof.zig`는 Type 14, 최소 고정 필드와 record 마지막 SizeLast가 Size와 같은지 검사한다.
 
-`framing.zig`는 첫 record가 유일한 header이고 EOF가 유일한 마지막 record이며, 실제 record 수가 Header의 Records와 일치하는지 조립한다. record별 drawing/state 의미와 header description/extensions, EOF palette는 이 단계의 완료 범위가 아니다.
+`framing.zig`는 첫 record가 유일한 header이고 EOF가 유일한 마지막 record이며, 실제 record 수가 Header의 Records와 일치하는지 조립한다. record별 drawing/state 의미는 이 단계의 완료 범위가 아니다.
 
 ## Header variable fields와 extension
 
@@ -23,3 +23,9 @@ signature, Header Bytes, Header Records, EOF SizeLast, terminal EOF 뒤 데이�
 절단 테스트는 오류 우선순위도 분리한다. 원래 Bytes 108을 유지한 88바이트 slice는 MissingEmfEof보다 먼저 InvalidEmfDeclaredBytes가 맞으므로, header-only와 두 번째 record 절단 fixture는 Header Bytes를 해당 slice 길이로 맞춘 뒤 각각 EOF 부재와 record 절단만 검증한다.
 
 Header variable fields에는 description offset을 HeaderSize 산정에서 무시, 마지막 NUL 검사 제거, 실제 UTF-16 대신 빈 slice 검사, OpenGL 0/1 제한 제거, PixelFormatDescriptor 40바이트 제한 제거의 5개 변이를 적용했다. Debug/ReleaseSafe/ReleaseFast의 15회 모두 유효 base header 거부 또는 잘못된 description/metadata 수용으로 탐지됐다. 모든 변이를 제거한 정상 구현은 별도로 전체 검증한다.
+
+## EOF palette
+
+Microsoft [EMR_EOF](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/3f47fde0-0e6b-40c1-87f3-f4129af03aa1)의 palette offset은 record 시작 기준이며 모든 entry는 마지막 SizeLast 앞에 있어야 한다. `eof_palette.zig`는 offset 앞뒤 undefined space를 별도 raw view로 보존하고, [LogPaletteEntry](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/c1f7b285-be16-4112-a4e6-0b2fd4c1d148)의 Reserved/Blue/Green/Red 순서를 accessor에서 해석한다. Reserved는 MUST-ignore이므로 0으로 강제하지 않는다. Header와 EOF의 palette entry count는 framing에서 일치시킨다.
+
+EOF palette에는 Header/EOF count 비교 제거, offset 15를 16으로 보정, SizeLast 앞 공간을 넘는 entry bytes를 조용히 절단, Blue/Red 순서 교환, 뒤 undefined space 손실의 5개 변이를 적용했다. Debug/ReleaseSafe/ReleaseFast의 15회 모두 불일치 수용, 잘못된 byte 소유, entry 손실, 채널 교환 또는 raw data 손실로 탐지됐다. 모든 변이를 제거한 정상 구현은 별도로 전체 검증한다.
