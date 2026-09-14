@@ -36,6 +36,12 @@ Microsoft [EMR_EOF Record](https://learn.microsoft.com/en-us/openspecs/windows_p
 
 현재 Object Table은 모든 creation의 handle 점유와 일반 DELETE, palette 조작을 완료했다. SELECTOBJECT의 stock 종류 및 객체 활성화, color-space 전용 SET/DELETE, 선택 객체를 삭제했을 때 기본 객체 복원은 해당 record payload와 playback state 후속 파트다. 이를 일반 Object Table 완료로 과장하지 않는다.
 
+## 실제 HWP BinData 검증
+
+`tests/hwp5/emf-corpus-evidence.mjs`가 HWP CFB의 FileHeader와 DocInfo `HWPTAG_BIN_DATA`를 읽어 정확한 `/BinData/BINxxxx.ext` stream을 선택하고, 문서 기본값과 항목별 compression 정책에 따라 해제한다. 확장자 `emf`뿐 아니라 offset 40의 EMF signature도 독립적으로 확인하므로 잘못된 확장자의 실제 EMF를 놓치지 않으며, `emf`로 선언됐지만 signature가 다른 값은 별도 실패 증거로 남긴다. 해제된 bytes는 test-only WASM mode 337을 통해 제품 `framing.validate`에 전달하고 summary와 record type 순서를 반환한다.
+
+현재 저장소의 실제 표본 584개를 전수 조사한 최초 baseline은 지원 가능한 HWP 475개와 BinData 2,167개 중 EMF 0개였다. 따라서 이 수치는 실제 EMF 호환성 증거가 아니라 표본 공백을 드러내는 값이다. 종단간 계약은 기존 실제 HWP CFB fixture의 compressed BinData 한 항목에 object/palette EMF를 주입해 CFB → DocInfo 선택 → inflate → signature → Zig framing/object-table 경계를 검증한다. 외부에서 유래한 실제 EMF 포함 HWP가 확보되면 같은 survey에 자동 편입되며 record type coverage가 보고된다.
+
 ## Header variable fields와 extension
 
 `header_payload.zig`는 [공식 HeaderSize flowchart](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/de081cd7-351f-4cc2-830b-d03fb55e89ab)에 따라 record Size에서 시작해 유효한 description offset과 그보다 앞선 pixel-format offset으로 고정 header 크기를 산정한다. 산정값 88/100/108 경계로 base, Extension1, Extension2를 구분하므로 긴 description이 있는 base header를 record 전체 길이만 보고 Extension으로 오인하지 않는다.

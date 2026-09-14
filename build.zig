@@ -138,6 +138,7 @@ pub fn build(b: *std.Build) void {
     hwp_probe.entry = .disabled;
     hwp_probe.step.dependOn(&icc_registry_check.step);
     hwp_probe.rdynamic = true;
+    const install_hwp_probe = b.addInstallArtifact(hwp_probe, .{});
     const hwp_check = b.addSystemCommand(&.{ "node", "tests/hwp5/audit.mjs" });
     const drawing_evidence_tests = b.addSystemCommand(&.{ "node", "--test", "tests/hwp5/drawing-section-evidence.test.mjs", "tests/hwp5/ole-paired-evidence.test.mjs" });
     hwp_check.step.dependOn(&drawing_evidence_tests.step);
@@ -145,4 +146,15 @@ pub fn build(b: *std.Build) void {
     hwp_check.step.dependOn(b.getInstallStep());
     b.step("hwp5-audit", "Verify HWP5 foundation in WASM against independent byte oracles").dependOn(&hwp_check.step);
     audit.dependOn(&hwp_check.step);
+
+    const emf_corpus_tests = b.addSystemCommand(&.{ "node", "--test", "tests/hwp5/emf-corpus.test.mjs" });
+    emf_corpus_tests.step.dependOn(b.getInstallStep());
+    emf_corpus_tests.step.dependOn(&install_hwp_probe.step);
+    const emf_corpus_survey = b.addSystemCommand(&.{ "node", "tests/hwp5/emf-corpus-survey.mjs" });
+    emf_corpus_survey.addArtifactArg(wasm);
+    emf_corpus_survey.addArtifactArg(hwp_probe);
+    const emf_corpus_audit = b.step("emf-corpus-audit", "Extract HWP BinData and validate embedded EMF with record coverage evidence");
+    emf_corpus_audit.dependOn(&emf_corpus_tests.step);
+    emf_corpus_audit.dependOn(&emf_corpus_survey.step);
+    audit.dependOn(emf_corpus_audit);
 }
