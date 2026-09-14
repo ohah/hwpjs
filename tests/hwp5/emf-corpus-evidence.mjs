@@ -8,16 +8,17 @@ export const emfSignature = bytes => {
 };
 
 export function decodeEmfReport(bytes) {
-  if (!(bytes instanceof Uint8Array) || bytes.length < 60 || bytes.length % 4) throw new Error('InvalidEmfReport');
+  if (!(bytes instanceof Uint8Array) || bytes.length < 68 || bytes.length % 4) throw new Error('InvalidEmfReport');
   const b=Buffer.from(bytes),records=b.readUInt32LE(0);
-  if (b.length !== (15+records)*4) throw new Error('InvalidEmfReport');
+  if (b.length !== (17+records)*4) throw new Error('InvalidEmfReport');
   return {
     records,handles:b.readUInt32LE(4),headerPaletteEntries:b.readUInt32LE(8),
     creates:b.readUInt32LE(12),deletes:b.readUInt32LE(16),paletteSelects:b.readUInt32LE(20),
     paletteUpdates:b.readUInt32LE(24),peakLive:b.readUInt32LE(28),finalLive:b.readUInt32LE(32),
     eofPaletteEntries:b.readUInt32LE(36),selections:b.readUInt32LE(40),stockSelections:b.readUInt32LE(44),
     defaultRestores:b.readUInt32LE(48),replacementDeactivations:b.readUInt32LE(52),finalExplicitSelected:b.readUInt32LE(56),
-    recordTypes:Array.from({length:records},(_,i)=>b.readUInt32LE(60+i*4)),
+    colorSpaceSets:b.readUInt32LE(60),colorSpaceDeletes:b.readUInt32LE(64),
+    recordTypes:Array.from({length:records},(_,i)=>b.readUInt32LE(68+i*4)),
   };
 }
 

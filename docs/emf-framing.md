@@ -38,7 +38,7 @@ Microsoft [EMR_EOF Record](https://learn.microsoft.com/en-us/openspecs/windows_p
 
 Object Table은 brush/pen/font/palette의 현재 명시적 선택을 별도로 추적한다. 같은 종류를 새로 선택하면 이전 객체는 삭제하지 않고 비활성화되며, 선택된 객체를 DELETEOBJECT로 삭제하면 해당 종류의 기본 stock 상태(null)로 복원한다. SELECTPALETTE도 같은 DC 선택 상태에 연결했다. SAVEDC에서 네 선택값을 저장하고 RESTOREDC의 음수 상대 깊이로 복원하며, 삭제된 handle은 살아 있는 모든 저장 snapshot에서도 제거해 이후 복원으로 부활하지 않게 한다. 같은 handle을 같은 종류 creation으로 갱신하면 활성 인덱스를 유지하고, 다른 종류로 교체하면 모순되는 현재/snapshot 선택을 해제한다. Snapshot 저장소는 전체 record 수가 아니라 실제 SAVEDC 수만큼만 할당한다.
 
-일반 DELETEOBJECT는 color-space 객체를 거부한다. color-space 전용 SETCOLORSPACE/DELETECOLORSPACE와 그 DC 상태, 실제 creation payload 전체 의미, 선택 객체를 사용하는 drawing playback과 렌더링은 아직 후속 파트다. 따라서 현재 범위는 Object Table의 일반 선택·수명 상태이며 전체 EMF 재생 완료가 아니다.
+`color_space_records.zig`는 정확히 12바이트인 [SETCOLORSPACE](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/2a84d7a5-f8c1-4dd2-ae79-a029a25ad601)와 [DELETECOLORSPACE](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/5d137387-d79a-4bc8-9a4d-38291320e148)의 handle wire 형식을 분리한다. Object Table은 살아 있는 color-space 종류만 SET으로 선택하고 DC snapshot에 함께 저장한다. 전용 DELETE와 일반 DELETEOBJECT 모두 같은 삭제 경계를 사용하며 현재 선택을 삭제하면 기본 color-space 상태(null)로 복원하고 저장 snapshot에서도 제거한다. Microsoft 구현이 일반 DELETEOBJECT를 사용하고 명세도 이를 권고하므로 color-space라는 이유로 일반 삭제를 거부하지 않는다. CREATECOLORSPACE/CREATECOLORSPACEW의 handle 점유만 현재 연결되어 있으며 LogColorSpace/LogColorSpaceW payload 전체 의미 검증, 선택 color-space를 사용하는 drawing playback과 렌더링은 후속 파트다. 따라서 전체 EMF 재생 완료가 아니다.
 
 ## 실제 HWP BinData 검증
 
@@ -56,7 +56,9 @@ description은 둘 중 하나의 count/offset이 0이면 부재하고, 둘 다 �
 
 ## 적대적 검증
 
-Object selection 추가분은 다섯 차례 경계 검토로 palette 선택도 DC 상태라는 점, color-space 삭제가 전용 record라는 점, 같은 handle·같은 종류 교체 시 활성 선택을 유지해야 한다는 점, 다른 종류 교체 시 현재 상태와 저장 snapshot을 함께 비활성화해야 한다는 점, record 수 기반 snapshot 선할당이 입력 증폭을 허용한다는 점을 찾아 수정했다. StockObject는 문서의 비연속 19개 값을 독립 배열로 전부 고정하여 예약 gap과 양끝 인접값을 거부한다. 명시적/stock 선택, 잘못된 종류·죽은 handle·범위 밖 handle, 선택 객체 삭제 후 기본 복원, palette 선택, SAVEDC/RESTOREDC, 삭제 뒤 snapshot 비부활, 같은/다른 종류 교체, color-space의 일반 삭제 거부를 단위 및 전체 stream 테스트로 검증한다. 수정 후 Debug·ReleaseSafe·ReleaseFast의 전체 audit은 각각 40/40 단계와 1,256/1,256 테스트, HWP5 8,905,815 checks를 통과했다. 실제 584개 HWP corpus에는 EMF가 0개이므로 실파일 EMF 호환성 완료 근거로 확대 해석하지 않는다.
+Object selection 추가분은 다섯 차례 경계 검토로 palette 선택도 DC 상태라는 점, color-space 조작은 별도 검토가 필요하다는 점, 같은 handle·같은 종류 교체 시 활성 선택을 유지해야 한다는 점, 다른 종류 교체 시 현재 상태와 저장 snapshot을 함께 비활성화해야 한다는 점, record 수 기반 snapshot 선할당이 입력 증폭을 허용한다는 점을 찾아 수정했다. StockObject는 문서의 비연속 19개 값을 독립 배열로 전부 고정하여 예약 gap과 양끝 인접값을 거부한다. 명시적/stock 선택, 잘못된 종류·죽은 handle·범위 밖 handle, 선택 객체 삭제 후 기본 복원, palette 선택, SAVEDC/RESTOREDC, 삭제 뒤 snapshot 비부활, 같은/다른 종류 교체를 단위 및 전체 stream 테스트로 검증한다. 수정 후 Debug·ReleaseSafe·ReleaseFast의 전체 audit은 각각 40/40 단계와 1,256/1,256 테스트, HWP5 8,905,815 checks를 통과했다. 실제 584개 HWP corpus에는 EMF가 0개이므로 실파일 EMF 호환성 완료 근거로 확대 해석하지 않는다.
+
+Color-space 조작 추가분은 다섯 차례 적대적 대조에서 일반 DELETEOBJECT 거부가 명세와 반대인 결함을 먼저 재현해 제거했다. 이후 전용 DELETE의 종류 검사, 죽은·0·stock·범위 밖 handle, 실패 시 통계 불변성, 비활성 color-space 삭제 시 현재 선택 보존, 현재/저장 DC의 삭제 후 기본 복원, 다른 종류로 같은 handle 교체 시 snapshot 비활성화를 직접 검사한다. HWP CFB의 압축 BinData에 합성 SETCOLORSPACE/DELETECOLORSPACE를 통과시켜 테스트용 WASM의 두 nonzero 보고 필드와 record type을 독립 JS decoder에서 확인한다. 이 합성 입력의 CREATECOLORSPACE는 현재 handle 점유 경계만 사용하므로 LogColorSpace payload 유효성을 입증하지 않는다. 고정된 최종 소스의 Debug·ReleaseSafe·ReleaseFast 전체 audit은 각각 40/40 단계와 1,266/1,266 테스트(네이티브 1,227개), HWP5 8,905,815 checks를 통과했다.
 
 signature, Header Bytes, Header Records, EOF SizeLast, terminal EOF 뒤 데이터 검사를 하나씩 제거했다. Debug/ReleaseSafe/ReleaseFast의 15회 모두 각각 손상된 필드 또는 trailing data가 있는 stream을 실제 성공값으로 반환해 테스트가 탐지했다. 변이는 모두 제거하고 정상 구현을 별도로 검증한다.
 

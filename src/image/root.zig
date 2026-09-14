@@ -106,6 +106,7 @@ pub const emf_dc_stack = @import("emf/dc_stack.zig");
 pub const emf_log_palette_entry = @import("emf/log_palette_entry.zig");
 pub const emf_palette_records = @import("emf/palette_records.zig");
 pub const emf_stock_object = @import("emf/stock_object.zig");
+pub const emf_color_space_records = @import("emf/color_space_records.zig");
 pub const emf_object_table = @import("emf/object_table.zig");
 pub const emf_eof = @import("emf/eof.zig");
 pub const emf_eof_palette = @import("emf/eof_palette.zig");

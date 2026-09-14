@@ -4,6 +4,7 @@ const palette_records = @import("palette_records.zig");
 const records = @import("records.zig");
 const dc_stack = @import("dc_stack.zig");
 const stock_object = @import("stock_object.zig");
+const color_space_records = @import("color_space_records.zig");
 
 const Slot = union(enum) {
     empty,
@@ -24,6 +25,7 @@ const Selection = struct {
     pen: ?u32 = null,
     font: ?u32 = null,
     palette: ?u32 = null,
+    color_space: ?u32 = null,
 
     fn select(self: *Selection, kind: stock_object.Kind, handle: ?u32) !void {
         switch (kind) {
@@ -31,13 +33,13 @@ const Selection = struct {
             .pen => self.pen = handle,
             .font => self.font = handle,
             .palette => self.palette = handle,
-            .color_space => return error.InvalidEmfSelectableObjectType,
+            .color_space => self.color_space = handle,
         }
     }
 
     fn clear(self: *Selection, handle: u32) bool {
         var changed = false;
-        inline for (.{ "brush", "pen", "font", "palette" }) |field| {
+        inline for (.{ "brush", "pen", "font", "palette", "color_space" }) |field| {
             if (@field(self, field) == @as(?u32, handle)) {
                 @field(self, field) = null;
                 changed = true;
@@ -47,7 +49,7 @@ const Selection = struct {
     }
 
     fn explicitCount(self: Selection) usize {
-        return @intFromBool(self.brush != null) + @intFromBool(self.pen != null) + @intFromBool(self.font != null) + @intFromBool(self.palette != null);
+        return @intFromBool(self.brush != null) + @intFromBool(self.pen != null) + @intFromBool(self.font != null) + @intFromBool(self.palette != null) + @intFromBool(self.color_space != null);
     }
 };
 
@@ -60,6 +62,8 @@ pub const Report = struct {
     stock_selections: usize = 0,
     default_restores: usize = 0,
     replacement_deactivations: usize = 0,
+    color_space_sets: usize = 0,
+    color_space_deletes: usize = 0,
     peak_live: usize = 0,
     final_live: usize = 0,
     final_explicit_selected: usize = 0,
@@ -101,6 +105,23 @@ const State = struct {
             .empty => error.DeadEmfObjectReference,
             .object => error.InvalidEmfPaletteObjectType,
         };
+    }
+
+    fn requireKind(self: State, handle: u32, expected: stock_object.Kind) !usize {
+        const index = try self.explicitIndex(handle);
+        const actual = slotKind(self.slots[index]) orelse return error.DeadEmfObjectReference;
+        if (actual != expected) return error.InvalidEmfObjectType;
+        return index;
+    }
+
+    fn delete(self: *State, handle: u32, expected: ?stock_object.Kind) !void {
+        const index = if (expected) |kind| try self.requireKind(handle, kind) else try self.explicitIndex(handle);
+        if (self.slots[index] == .empty) return error.DeadEmfObjectReference;
+        if (self.selected.clear(@intCast(index))) self.report.default_restores += 1;
+        for (self.snapshots[0..self.snapshot_count]) |*snapshot| _ = snapshot.clear(@intCast(index));
+        self.slots[index] = .empty;
+        self.live -= 1;
+        self.report.deletes += 1;
     }
 
     fn selectObject(self: *State, record: records.Record) !void {
@@ -150,6 +171,20 @@ const State = struct {
             try self.selectObject(record);
             return;
         }
+        if (try color_space_records.parse(record)) |action| {
+            switch (action) {
+                .set => |handle| {
+                    _ = try self.requireKind(handle, .color_space);
+                    try self.selected.select(.color_space, handle);
+                    self.report.color_space_sets += 1;
+                },
+                .delete => |handle| {
+                    try self.delete(handle, .color_space);
+                    self.report.color_space_deletes += 1;
+                },
+            }
+            return;
+        }
         const palette_value = try palette_records.parse(record);
         if (palette_value) |value| switch (value) {
             .create => |create_value| {
@@ -190,14 +225,7 @@ const State = struct {
         }
         if (record.kind == .deleteobject) {
             if (record.size != 12 or record.bytes.len != 12) return error.InvalidEmfDeleteObjectRecordSize;
-            const index = try self.explicitIndex(std.mem.readInt(u32, record.bytes[8..12], .little));
-            if (self.slots[index] == .empty) return error.DeadEmfObjectReference;
-            if (self.slots[index] == .object and self.slots[index].object == .color_space) return error.InvalidEmfDeleteObjectType;
-            if (self.selected.clear(@intCast(index))) self.report.default_restores += 1;
-            for (self.snapshots[0..self.snapshot_count]) |*snapshot| _ = snapshot.clear(@intCast(index));
-            self.slots[index] = .empty;
-            self.live -= 1;
-            self.report.deletes += 1;
+            try self.delete(std.mem.readInt(u32, record.bytes[8..12], .little), null);
         }
     }
 };
@@ -275,7 +303,7 @@ test "object table bounds creation replacement deletion and slot reuse" {
     try std.testing.expectEqual(@as(usize, 1), state.report.peak_live);
 }
 
-test "object table tracks every non-palette creation kind and reserves color-space deletion" {
+test "object table tracks every non-palette creation kind" {
     var slots = [_]Slot{.empty} ** 2;
     var state: State = .{ .slots = &slots };
     for ([_]records.RecordType{
@@ -289,13 +317,12 @@ test "object table tracks every non-palette creation kind and reserves color-spa
         .createcolorspacew,
     }) |kind| {
         _ = try state.consume(fixture(kind, &handleRecord(1)));
-        if (creationKind(kind).? != .color_space)
-            _ = try state.consume(fixture(.deleteobject, &handleRecord(1)));
+        _ = try state.consume(fixture(.deleteobject, &handleRecord(1)));
     }
     try std.testing.expectEqual(@as(usize, 8), state.report.creates);
-    try std.testing.expectEqual(@as(usize, 6), state.report.deletes);
+    try std.testing.expectEqual(@as(usize, 8), state.report.deletes);
     try std.testing.expectEqual(@as(usize, 1), state.report.peak_live);
-    try std.testing.expectEqual(@as(usize, 1), state.live);
+    try std.testing.expectEqual(@as(usize, 0), state.live);
 }
 
 test "palette references require a live palette and current entry bounds" {
@@ -353,11 +380,94 @@ test "object table validates record sizes and allocator failure" {
     const header = std.mem.zeroes(header_types.Header);
     try std.testing.expectError(error.OutOfMemory, validate(fba.allocator(), &.{}, header));
     try std.testing.checkAllAllocationFailures(std.testing.allocator, allocationCheck, .{});
+}
 
-    var color_slots = [_]Slot{.empty} ** 2;
-    var color_state: State = .{ .slots = &color_slots };
-    try color_state.consume(fixture(.createcolorspace, &handleRecord(1)));
-    try std.testing.expectError(error.InvalidEmfDeleteObjectType, color_state.consume(fixture(.deleteobject, &handleRecord(1))));
+test "color-space selection and both deletion records share object lifetime" {
+    var slots = [_]Slot{.empty} ** 4;
+    var snapshots: [2]Selection = undefined;
+    var state: State = .{ .slots = &slots, .snapshots = &snapshots };
+    try state.consume(fixture(.createcolorspace, &handleRecord(1)));
+    try state.consume(fixture(.setcolorspace, &handleRecord(1)));
+    try std.testing.expectEqual(@as(?u32, 1), state.selected.color_space);
+    try state.consume(fixture(.deletecolorspace, &handleRecord(1)));
+    try std.testing.expectEqual(null, state.selected.color_space);
+    try std.testing.expectEqual(@as(usize, 1), state.report.default_restores);
+
+    try state.consume(fixture(.createcolorspacew, &handleRecord(1)));
+    try state.consume(fixture(.setcolorspace, &handleRecord(1)));
+    try state.consume(fixture(.deleteobject, &handleRecord(1)));
+    try std.testing.expectEqual(null, state.selected.color_space);
+    try std.testing.expectEqual(@as(usize, 2), state.report.default_restores);
+    try std.testing.expectEqual(@as(usize, 2), state.report.color_space_sets);
+    try std.testing.expectEqual(@as(usize, 1), state.report.color_space_deletes);
+    try std.testing.expectEqual(@as(usize, 2), state.report.deletes);
+}
+
+test "color-space records reject dead wrong zero stock and out-of-range handles" {
+    var slots = [_]Slot{.empty} ** 3;
+    var state: State = .{ .slots = &slots };
+    try state.consume(fixture(.createpen, &handleRecord(1)));
+    try std.testing.expectError(error.InvalidEmfObjectType, state.consume(fixture(.setcolorspace, &handleRecord(1))));
+    try std.testing.expectError(error.InvalidEmfObjectType, state.consume(fixture(.deletecolorspace, &handleRecord(1))));
+    try std.testing.expectError(error.DeadEmfObjectReference, state.consume(fixture(.setcolorspace, &handleRecord(2))));
+    try std.testing.expectError(error.DeadEmfObjectReference, state.consume(fixture(.deletecolorspace, &handleRecord(2))));
+    for ([_]u32{ 0, 0x80000000 }) |handle| {
+        try std.testing.expectError(error.InvalidEmfObjectHandle, state.consume(fixture(.setcolorspace, &handleRecord(handle))));
+        try std.testing.expectError(error.InvalidEmfObjectHandle, state.consume(fixture(.deletecolorspace, &handleRecord(handle))));
+    }
+    try std.testing.expectError(error.EmfObjectHandleOutOfBounds, state.consume(fixture(.setcolorspace, &handleRecord(3))));
+    try std.testing.expectError(error.EmfObjectHandleOutOfBounds, state.consume(fixture(.deletecolorspace, &handleRecord(3))));
+}
+
+test "color-space DC snapshots cannot restore deleted objects" {
+    var slots = [_]Slot{.empty} ** 2;
+    var snapshots: [2]Selection = undefined;
+    var state: State = .{ .slots = &slots, .snapshots = &snapshots };
+    try state.consume(fixture(.createcolorspace, &handleRecord(1)));
+    try state.consume(fixture(.setcolorspace, &handleRecord(1)));
+    const save = [_]u8{0} ** 8;
+    try state.consume(fixture(.savedc, &save));
+    try state.consume(fixture(.deleteobject, &handleRecord(1)));
+    try state.consume(fixture(.restoredc, &restoreRecord(-1)));
+    try std.testing.expectEqual(null, state.selected.color_space);
+}
+
+test "deleting an inactive color space preserves the current selection" {
+    var slots = [_]Slot{.empty} ** 3;
+    var state: State = .{ .slots = &slots };
+    try state.consume(fixture(.createcolorspace, &handleRecord(1)));
+    try state.consume(fixture(.createcolorspacew, &handleRecord(2)));
+    try state.consume(fixture(.setcolorspace, &handleRecord(1)));
+    try state.consume(fixture(.setcolorspace, &handleRecord(2)));
+    try state.consume(fixture(.deletecolorspace, &handleRecord(1)));
+    try std.testing.expectEqual(@as(?u32, 2), state.selected.color_space);
+    try std.testing.expectEqual(@as(usize, 0), state.report.default_restores);
+}
+
+test "cross-kind replacement deactivates current and saved color-space selections" {
+    var slots = [_]Slot{.empty} ** 2;
+    var snapshots: [1]Selection = undefined;
+    var state: State = .{ .slots = &slots, .snapshots = &snapshots };
+    try state.consume(fixture(.createcolorspace, &handleRecord(1)));
+    try state.consume(fixture(.setcolorspace, &handleRecord(1)));
+    const save = [_]u8{0} ** 8;
+    try state.consume(fixture(.savedc, &save));
+    try state.consume(fixture(.createpen, &handleRecord(1)));
+    try std.testing.expectEqual(null, state.selected.color_space);
+    try state.consume(fixture(.restoredc, &restoreRecord(-1)));
+    try std.testing.expectEqual(null, state.selected.color_space);
+    try std.testing.expectEqual(@as(usize, 1), state.report.replacement_deactivations);
+}
+
+test "failed color-space operations do not change reports or live objects" {
+    var slots = [_]Slot{.empty} ** 2;
+    var state: State = .{ .slots = &slots };
+    try state.consume(fixture(.createpen, &handleRecord(1)));
+    const before = state.report;
+    try std.testing.expectError(error.InvalidEmfObjectType, state.consume(fixture(.setcolorspace, &handleRecord(1))));
+    try std.testing.expectError(error.InvalidEmfObjectType, state.consume(fixture(.deletecolorspace, &handleRecord(1))));
+    try std.testing.expectEqualDeep(before, state.report);
+    try std.testing.expectEqual(@as(usize, 1), state.live);
 }
 
 test "SELECTOBJECT validates explicit and stock object types" {

@@ -472,6 +472,31 @@ test "EMF framing connects SELECTOBJECT activation deletion and default restorat
     try t.expectEqual(@as(usize, 0), stock_summary.objects.final_explicit_selected);
 }
 
+test "EMF framing connects color-space set and dedicated deletion" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 144;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 5, .little);
+    std.mem.writeInt(u16, bytes[56..58], 1, .little);
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.createcolorspace), .little);
+    std.mem.writeInt(u32, bytes[92..96], 12, .little);
+    std.mem.writeInt(u32, bytes[96..100], 1, .little);
+    std.mem.writeInt(u32, bytes[100..104], @intFromEnum(@import("records.zig").RecordType.setcolorspace), .little);
+    std.mem.writeInt(u32, bytes[104..108], 12, .little);
+    std.mem.writeInt(u32, bytes[108..112], 1, .little);
+    std.mem.writeInt(u32, bytes[112..116], @intFromEnum(@import("records.zig").RecordType.deletecolorspace), .little);
+    std.mem.writeInt(u32, bytes[116..120], 12, .little);
+    std.mem.writeInt(u32, bytes[120..124], 1, .little);
+    @memcpy(bytes[124..144], original[88..108]);
+    const summary = try framing.validate(t.allocator, &bytes);
+    try t.expectEqual(@as(usize, 1), summary.objects.color_space_sets);
+    try t.expectEqual(@as(usize, 1), summary.objects.color_space_deletes);
+    try t.expectEqual(@as(usize, 1), summary.objects.default_restores);
+    try t.expectEqual(@as(usize, 0), summary.objects.final_live);
+    try t.expectEqual(@as(usize, 0), summary.objects.final_explicit_selected);
+}
+
 test "EMF EOF palette preserves undefined spaces and reserved-blue-green-red order" {
     const original = fixture();
     var bytes = [_]u8{0} ** 124;
