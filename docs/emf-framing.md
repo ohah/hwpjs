@@ -12,6 +12,8 @@ Microsoft [EMR_EOF Record](https://learn.microsoft.com/en-us/openspecs/windows_p
 
 `path_bracket.zig`는 [Path Bracket Record Types](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/b930b989-30ec-4954-a889-1dc60ce0b689)의 `BEGINPATH`, `ENDPATH`, `CLOSEFIGURE`, `FLATTENPATH`, `WIDENPATH`, `ABORTPATH`만 분류한다. 여섯 record는 매개변수가 없으므로 정확히 8바이트여야 하며, 다른 Type을 이 집합으로 오인하지 않는다. State는 열린 construction에서 BEGINPATH를 거부하고, EOF 전에 END/ABORT로 닫혔는지 검사한다. `framing.zig`가 구조와 상태 검증을 전체 stream 순회에 연결한다. CLOSEFIGURE의 open-figure 권고와 실제 path drawing 의미는 별도 재생 계층의 책임이다.
 
+`xform.zig`는 [XForm Object](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/e84107e9-bc2b-4a14-9234-5d173adc1b59)의 M11, M12, M21, M22, Dx, Dy를 24바이트 wire 순서로 읽고 FLOAT 원시 비트를 보존한다. 문서에 finite 제약이 없으므로 NaN·Infinity를 임의 거부하지 않는다. `transform_records.zig`는 [SETWORLDTRANSFORM](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/985724c0-4db1-48f0-b346-67288b3288cb)의 정확한 32바이트와 [MODIFYWORLDTRANSFORM](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/c70b85e5-8c31-418f-a7b8-349e417e0f76)의 정확한 36바이트를 구분한다. 후자는 [ModifyWorldTransformMode](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/e6bb2996-195f-473f-80c6-9dc1afe474f9)의 Identity/LeftMultiply/RightMultiply/Set 1~4만 허용한다. framing은 두 레코드의 구조 검증을 전체 stream에 연결하며 실제 행렬 합성은 재생 계층의 책임이다.
+
 ## Header variable fields와 extension
 
 `header_payload.zig`는 [공식 HeaderSize flowchart](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/de081cd7-351f-4cc2-830b-d03fb55e89ab)에 따라 record Size에서 시작해 유효한 description offset과 그보다 앞선 pixel-format offset으로 고정 header 크기를 산정한다. 산정값 88/100/108 경계로 base, Extension1, Extension2를 구분하므로 긴 description이 있는 base header를 record 전체 길이만 보고 Extension으로 오인하지 않는다.
@@ -41,3 +43,5 @@ RecordType enum에는 미정의 `0`, 예약값 `0x45`, 예약값 `0x6B`, 예약�
 Path Bracket에는 8바이트 크기 검사 제거, BEGINPATH 분류 제거, ABORTPATH 분류 제거, SAVEDC를 잘못 분류, framing 연결 제거의 5개 변이를 적용했다. Debug/ReleaseSafe/ReleaseFast의 15회 모두 크기·집합·통합 계약으로 탐지됐다.
 
 상태 규칙에는 nested BEGIN 검사 제거, BEGIN의 open 갱신 제거, END의 close 갱신 제거, ABORT의 close 갱신 제거, EOF 미종료 검사 제거의 5개 변이를 추가 적용했다. Debug/ReleaseSafe/ReleaseFast의 15회 모두 상태·통합 계약으로 탐지됐다. 구조 검증과 합치면 이 파트의 적대적 실행은 30/30이다. 모든 변이를 제거한 정상 구현은 세 모드 전체 테스트와 Debug 통합 audit 8,905,815 checks를 통과했다.
+
+World Transform에는 XForm 24바이트 검사 제거, SET 크기 검사 제거, MODIFY 크기 검사 제거, 미정의 mode 허용, framing 연결 제거의 5개 변이를 적용했다. Debug/ReleaseSafe/ReleaseFast의 15회 모두 객체·레코드·통합 계약으로 탐지됐다. XForm 절단 변이는 Debug/ReleaseSafe에서 경계 trap, ReleaseFast에서 초과 입력 수용으로 탐지됐으며 나머지는 모두 명시적 계약 실패였다. 모든 변이를 제거한 정상 구현은 세 모드 전체 테스트와 Debug 통합 audit 8,905,815 checks를 통과했다.

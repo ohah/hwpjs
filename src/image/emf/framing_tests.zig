@@ -180,6 +180,28 @@ test "EMF framing validates parameterless path bracket record size" {
     try t.expectError(error.UnclosedEmfPathBracket, framing.validate(&unclosed));
 }
 
+test "EMF framing validates world transform records" {
+    const original = fixture();
+    var valid = [_]u8{0} ** 140;
+    @memcpy(valid[0..88], original[0..88]);
+    std.mem.writeInt(u32, valid[48..52], valid.len, .little);
+    std.mem.writeInt(u32, valid[52..56], 3, .little);
+    std.mem.writeInt(u32, valid[88..92], @intFromEnum(@import("records.zig").RecordType.setworldtransform), .little);
+    std.mem.writeInt(u32, valid[92..96], 32, .little);
+    std.mem.writeInt(u32, valid[96..100], 0x3f800000, .little);
+    @memcpy(valid[120..140], original[88..108]);
+    try t.expectEqual(@as(usize, 3), (try framing.validate(&valid)).records);
+
+    var invalid = [_]u8{0} ** 144;
+    @memcpy(invalid[0..88], original[0..88]);
+    std.mem.writeInt(u32, invalid[48..52], invalid.len, .little);
+    std.mem.writeInt(u32, invalid[52..56], 3, .little);
+    std.mem.writeInt(u32, invalid[88..92], @intFromEnum(@import("records.zig").RecordType.modifyworldtransform), .little);
+    std.mem.writeInt(u32, invalid[92..96], 36, .little);
+    @memcpy(invalid[124..144], original[88..108]);
+    try t.expectError(error.InvalidEmfModifyWorldTransformMode, framing.validate(&invalid));
+}
+
 test "EMF EOF palette preserves undefined spaces and reserved-blue-green-red order" {
     const original = fixture();
     var bytes = [_]u8{0} ** 124;
