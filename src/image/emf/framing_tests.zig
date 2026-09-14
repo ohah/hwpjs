@@ -243,6 +243,22 @@ test "EMF framing validates strict modes and preserves unknown stretch modes" {
     try t.expectError(error.InvalidEmfMapMode, framing.validate(&invalid));
 }
 
+test "EMF framing validates ColorRef state records" {
+    const original = fixture();
+    var valid = [_]u8{0} ** 120;
+    @memcpy(valid[0..88], original[0..88]);
+    std.mem.writeInt(u32, valid[48..52], valid.len, .little);
+    std.mem.writeInt(u32, valid[52..56], 3, .little);
+    std.mem.writeInt(u32, valid[88..92], @intFromEnum(@import("records.zig").RecordType.settextcolor), .little);
+    std.mem.writeInt(u32, valid[92..96], 12, .little);
+    valid[96..100].* = .{ 1, 2, 3, 0 };
+    @memcpy(valid[100..120], original[88..108]);
+    try t.expectEqual(@as(usize, 3), (try framing.validate(&valid)).records);
+
+    valid[99] = 1;
+    try t.expectError(error.InvalidWmfColorReserved, framing.validate(&valid));
+}
+
 test "EMF EOF palette preserves undefined spaces and reserved-blue-green-red order" {
     const original = fixture();
     var bytes = [_]u8{0} ** 124;

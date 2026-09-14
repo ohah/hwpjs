@@ -96,6 +96,7 @@ pub const emf_transform_records = @import("emf/transform_records.zig");
 pub const emf_geometry = @import("emf/geometry.zig");
 pub const emf_point_records = @import("emf/point_records.zig");
 pub const emf_mode_records = @import("emf/mode_records.zig");
+pub const emf_color_records = @import("emf/color_records.zig");
 pub const emf_eof = @import("emf/eof.zig");
 pub const emf_eof_palette = @import("emf/eof_palette.zig");
 pub const emf_framing = @import("emf/framing.zig");

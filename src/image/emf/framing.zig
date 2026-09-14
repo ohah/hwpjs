@@ -5,6 +5,7 @@ const path_bracket = @import("path_bracket.zig");
 const transform_records = @import("transform_records.zig");
 const point_records = @import("point_records.zig");
 const mode_records = @import("mode_records.zig");
+const color_records = @import("color_records.zig");
 const eof = @import("eof.zig");
 const eof_palette = @import("eof_palette.zig");
 
@@ -24,6 +25,7 @@ pub fn validate(bytes: []const u8) !Summary {
         _ = try transform_records.parse(record);
         _ = try point_records.parse(record);
         _ = try mode_records.parse(record);
+        _ = try color_records.parse(record);
         if (record.kind != .eof) continue;
         const terminal = try eof.parse(record);
         try path_state.finish();
