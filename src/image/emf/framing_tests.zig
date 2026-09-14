@@ -287,6 +287,22 @@ test "EMF framing validates mapper flags and miter limit records" {
     try t.expectError(error.InvalidEmfMiterLimitRecordSize, framing.validate(&invalid_miter));
 }
 
+test "EMF framing validates text alignment components" {
+    const original = fixture();
+    var valid = [_]u8{0} ** 120;
+    @memcpy(valid[0..88], original[0..88]);
+    std.mem.writeInt(u32, valid[48..52], valid.len, .little);
+    std.mem.writeInt(u32, valid[52..56], 3, .little);
+    std.mem.writeInt(u32, valid[88..92], @intFromEnum(@import("records.zig").RecordType.settextalign), .little);
+    std.mem.writeInt(u32, valid[92..96], 12, .little);
+    std.mem.writeInt(u32, valid[96..100], 0x011f, .little);
+    @memcpy(valid[100..120], original[88..108]);
+    try t.expectEqual(@as(usize, 3), (try framing.validate(&valid)).records);
+
+    std.mem.writeInt(u32, valid[96..100], 0x0004, .little);
+    try t.expectError(error.InvalidEmfTextAlignmentFlags, framing.validate(&valid));
+}
+
 test "EMF EOF palette preserves undefined spaces and reserved-blue-green-red order" {
     const original = fixture();
     var bytes = [_]u8{0} ** 124;

@@ -22,6 +22,8 @@ Microsoft [EMR_EOF Record](https://learn.microsoft.com/en-us/openspecs/windows_p
 
 `mapper_flags.zig`는 정확히 12바이트인 [SETMAPPERFLAGS](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/6647abf7-bd70-43ef-8766-1a6e06ed2f03)의 두 정의값을 구분한다. 값 0은 font mapper를 장치 종횡비와 무관하게 두고, 값 1은 장치 종횡비와 일치하는 font 선택을 지시한다. 그 밖의 값은 정의되지 않았으므로 거부한다. `miter_limit.zig`는 정확히 12바이트인 [SETMITERLIMIT](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/2637d0d0-92dd-48e8-be5e-6400b4d1fc5e)의 원시 DWORD를 보존한다. 본문은 UINT32로 정의하지만 제품 동작 주석은 Windows GDI가 FLOAT도 받는다고 명시하므로, 같은 raw 비트의 unsigned/float view를 모두 제공하고 NaN·Infinity를 정규화하거나 거부하지 않는다. 두 파서는 상태 적용 없이 framing 검증만 담당한다.
 
+`text_alignment.zig`는 정확히 12바이트인 [SETTEXTALIGN](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/a49bb565-a583-41da-8d4a-8a0314b3e397)의 DWORD mask를 보존한다. [TextAlignmentMode](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/2cf0d802-5db7-42f6-bb75-50ff195a6c7c)의 UPDATECP와 RTL, 두 축 그룹 `0/2/6`과 `0/8/24`만 허용하고 `4`, `16`, 미정의 비트를 거부한다. 같은 숫자는 현재 글꼴의 baseline에 따라 [VerticalTextAlignmentMode](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/2475d008-f5ff-4c93-b28b-3953818b8827)로 다르게 해석된다. 이 레코드만으로 baseline을 알 수 없으므로 파서는 축 그룹을 중립적으로 보존하며, 수평/수직 의미 선택은 글꼴 상태를 가진 재생 계층의 책임이다.
+
 ## Header variable fields와 extension
 
 `header_payload.zig`는 [공식 HeaderSize flowchart](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/de081cd7-351f-4cc2-830b-d03fb55e89ab)에 따라 record Size에서 시작해 유효한 description offset과 그보다 앞선 pixel-format offset으로 고정 header 크기를 산정한다. 산정값 88/100/108 경계로 base, Extension1, Extension2를 구분하므로 긴 description이 있는 base header를 record 전체 길이만 보고 Extension으로 오인하지 않는다.
@@ -61,3 +63,5 @@ Mode State Records에는 정확한 12바이트 크기 검사 제거, 미정의 M
 Color State Records에는 정확한 12바이트 크기 검사 제거, 공통 ColorRef의 Red/Blue 교환, Reserved 허용 정책 사용, SETBKCOLOR 분류 제거, framing 연결 제거의 5개 변이를 적용했다. Debug/ReleaseSafe/ReleaseFast의 15회 모두 레코드 경계·공통 객체 의미·타입 집합·통합 계약으로 탐지됐다. 모든 변이를 제거한 정상 구현은 세 모드에서 각각 1,182/1,182 테스트를 통과했다. Debug 통합 audit도 36/36 단계, 1,221/1,221 테스트, HWP5를 포함한 8,905,815 checks를 통과했다.
 
 Mapper Flags와 Miter Limit에는 Mapper 크기 제거·미정의 값 허용, Miter 크기 제거·endian 반전, Mapper framing 연결 제거, Miter framing 연결 제거의 6개 변이를 적용했다. Debug/ReleaseSafe/ReleaseFast의 18회 모두 각 전용 경계·원시 비트·통합 계약으로 탐지됐다. 모든 변이를 제거한 정상 구현은 세 모드에서 각각 1,187/1,187 테스트를 통과했다. Debug 통합 audit도 36/36 단계, 1,226/1,226 테스트, HWP5를 포함한 8,905,815 checks를 통과했다.
+
+Text Alignment에는 정확한 12바이트 크기 제거, 미정의 비트 마스크 허용, low-axis 금지값 4 허용, high-axis 금지값 16 허용, framing 연결 제거의 5개 변이를 적용했다. Debug/ReleaseSafe/ReleaseFast의 15회 모두 크기·비트 영역·상호배타 조합·통합 계약으로 탐지됐다. 모든 변이를 제거한 정상 구현은 세 모드에서 각각 1,191/1,191 테스트를 통과했다. Debug 통합 audit도 36/36 단계, 1,230/1,230 테스트, HWP5를 포함한 8,905,815 checks를 통과했다.

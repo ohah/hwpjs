@@ -99,6 +99,7 @@ pub const emf_mode_records = @import("emf/mode_records.zig");
 pub const emf_color_records = @import("emf/color_records.zig");
 pub const emf_mapper_flags = @import("emf/mapper_flags.zig");
 pub const emf_miter_limit = @import("emf/miter_limit.zig");
+pub const emf_text_alignment = @import("emf/text_alignment.zig");
 pub const emf_eof = @import("emf/eof.zig");
 pub const emf_eof_palette = @import("emf/eof_palette.zig");
 pub const emf_framing = @import("emf/framing.zig");

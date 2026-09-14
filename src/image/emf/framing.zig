@@ -8,6 +8,7 @@ const mode_records = @import("mode_records.zig");
 const color_records = @import("color_records.zig");
 const mapper_flags = @import("mapper_flags.zig");
 const miter_limit = @import("miter_limit.zig");
+const text_alignment = @import("text_alignment.zig");
 const eof = @import("eof.zig");
 const eof_palette = @import("eof_palette.zig");
 
@@ -30,6 +31,7 @@ pub fn validate(bytes: []const u8) !Summary {
         _ = try color_records.parse(record);
         _ = try mapper_flags.parse(record);
         _ = try miter_limit.parse(record);
+        _ = try text_alignment.parse(record);
         if (record.kind != .eof) continue;
         const terminal = try eof.parse(record);
         try path_state.finish();
