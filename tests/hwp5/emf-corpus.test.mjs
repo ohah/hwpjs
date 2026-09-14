@@ -6,7 +6,7 @@ import {createCfbReader} from '../../js/cfb.mjs';
 import {decodeEmfReport,emfSignature,observeHwpEmf,summarizeEmfCorpus} from './emf-corpus-evidence.mjs';
 
 function emf() {
-  const b=Buffer.alloc(276);
+  const b=Buffer.alloc(604);
   b.writeUInt32LE(1,0);b.writeUInt32LE(88,4);b.writeInt32LE(-1,8);b.writeInt32LE(20,20);
   b.writeUInt32LE(0x464d4520,40);b.writeUInt32LE(0x10000,44);b.writeUInt32LE(b.length,48);
   b.writeUInt32LE(13,52);b.writeUInt16LE(2,56);b.writeInt32LE(1920,72);b.writeInt32LE(1080,76);b.writeInt32LE(508,80);b.writeInt32LE(285,84);
@@ -18,10 +18,12 @@ function emf() {
   b.writeUInt32LE(38,168);b.writeUInt32LE(28,172);b.writeUInt32LE(2,176);
   b.writeUInt32LE(37,196);b.writeUInt32LE(12,200);b.writeUInt32LE(2,204);
   b.writeUInt32LE(40,208);b.writeUInt32LE(12,212);b.writeUInt32LE(2,216);
-  b.writeUInt32LE(99,220);b.writeUInt32LE(12,224);b.writeUInt32LE(2,228);
-  b.writeUInt32LE(100,232);b.writeUInt32LE(12,236);b.writeUInt32LE(2,240);
-  b.writeUInt32LE(101,244);b.writeUInt32LE(12,248);b.writeUInt32LE(2,252);
-  b.writeUInt32LE(14,256);b.writeUInt32LE(20,260);b.writeUInt32LE(20,272);
+  b.writeUInt32LE(99,220);b.writeUInt32LE(340,224);b.writeUInt32LE(2,228);
+  b.writeUInt32LE(0x50534f43,232);b.writeUInt32LE(0x400,236);b.writeUInt32LE(328,240);
+  b.writeUInt32LE(0x73524742,244);b.writeUInt32LE(4,248);
+  b.writeUInt32LE(100,560);b.writeUInt32LE(12,564);b.writeUInt32LE(2,568);
+  b.writeUInt32LE(101,572);b.writeUInt32LE(12,576);b.writeUInt32LE(2,580);
+  b.writeUInt32LE(14,584);b.writeUInt32LE(20,588);b.writeUInt32LE(20,600);
   return b;
 }
 

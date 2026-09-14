@@ -5,6 +5,7 @@ const records = @import("records.zig");
 const dc_stack = @import("dc_stack.zig");
 const stock_object = @import("stock_object.zig");
 const color_space_records = @import("color_space_records.zig");
+const color_space_creation = @import("color_space_creation.zig");
 
 const Slot = union(enum) {
     empty,
@@ -185,6 +186,14 @@ const State = struct {
             }
             return;
         }
+        if (try color_space_creation.parse(record)) |creation| {
+            const handle = switch (creation) {
+                .ansi => |value| value.handle,
+                .wide => |value| value.handle,
+            };
+            try self.create(handle, .{ .object = .color_space });
+            return;
+        }
         const palette_value = try palette_records.parse(record);
         if (palette_value) |value| switch (value) {
             .create => |create_value| {
@@ -240,7 +249,6 @@ fn creationKind(kind: records.RecordType) ?stock_object.Kind {
         .createbrushindirect, .createmonobrush, .createdibpatternbrushpt => .brush,
         .extcreatefontindirectw => .font,
         .createpalette => .palette,
-        .createcolorspace, .createcolorspacew => .color_space,
         else => null,
     };
 }
@@ -288,6 +296,32 @@ fn createPalette(handle: u32, count: u16) [20]u8 {
     return bytes;
 }
 
+fn createColorSpace(handle: u32) [12 + @import("log_color_space.zig").ansi_size]u8 {
+    var bytes: [12 + @import("log_color_space.zig").ansi_size]u8 = undefined;
+    @memset(&bytes, 0);
+    std.mem.writeInt(u32, bytes[8..12], handle, .little);
+    initColorSpaceObject(bytes[12..]);
+    return bytes;
+}
+
+fn createColorSpaceWide(handle: u32) [12 + @import("log_color_space.zig").wide_size + 8]u8 {
+    var bytes: [12 + @import("log_color_space.zig").wide_size + 8]u8 = undefined;
+    @memset(&bytes, 0);
+    std.mem.writeInt(u32, bytes[8..12], handle, .little);
+    initColorSpaceObject(bytes[12 .. 12 + @import("log_color_space.zig").wide_size]);
+    return bytes;
+}
+
+fn initColorSpaceObject(bytes: []u8) void {
+    const log = @import("log_color_space.zig");
+    const values = @import("color_space_values.zig");
+    std.mem.writeInt(u32, bytes[0..4], log.signature, .little);
+    std.mem.writeInt(u32, bytes[4..8], log.version, .little);
+    std.mem.writeInt(u32, bytes[8..12], @intCast(bytes.len), .little);
+    std.mem.writeInt(u32, bytes[12..16], @intFromEnum(values.LogicalColorSpace.srgb), .little);
+    std.mem.writeInt(u32, bytes[16..20], @intFromEnum(values.GamutMappingIntent.images), .little);
+}
+
 test "object table bounds creation replacement deletion and slot reuse" {
     var slots = [_]Slot{.empty} ** 3;
     var state: State = .{ .slots = &slots };
@@ -313,12 +347,14 @@ test "object table tracks every non-palette creation kind" {
         .createmonobrush,
         .createdibpatternbrushpt,
         .extcreatepen,
-        .createcolorspace,
-        .createcolorspacew,
     }) |kind| {
         _ = try state.consume(fixture(kind, &handleRecord(1)));
         _ = try state.consume(fixture(.deleteobject, &handleRecord(1)));
     }
+    try state.consume(fixture(.createcolorspace, &createColorSpace(1)));
+    try state.consume(fixture(.deleteobject, &handleRecord(1)));
+    try state.consume(fixture(.createcolorspacew, &createColorSpaceWide(1)));
+    try state.consume(fixture(.deleteobject, &handleRecord(1)));
     try std.testing.expectEqual(@as(usize, 8), state.report.creates);
     try std.testing.expectEqual(@as(usize, 8), state.report.deletes);
     try std.testing.expectEqual(@as(usize, 1), state.report.peak_live);
@@ -386,14 +422,14 @@ test "color-space selection and both deletion records share object lifetime" {
     var slots = [_]Slot{.empty} ** 4;
     var snapshots: [2]Selection = undefined;
     var state: State = .{ .slots = &slots, .snapshots = &snapshots };
-    try state.consume(fixture(.createcolorspace, &handleRecord(1)));
+    try state.consume(fixture(.createcolorspace, &createColorSpace(1)));
     try state.consume(fixture(.setcolorspace, &handleRecord(1)));
     try std.testing.expectEqual(@as(?u32, 1), state.selected.color_space);
     try state.consume(fixture(.deletecolorspace, &handleRecord(1)));
     try std.testing.expectEqual(null, state.selected.color_space);
     try std.testing.expectEqual(@as(usize, 1), state.report.default_restores);
 
-    try state.consume(fixture(.createcolorspacew, &handleRecord(1)));
+    try state.consume(fixture(.createcolorspacew, &createColorSpaceWide(1)));
     try state.consume(fixture(.setcolorspace, &handleRecord(1)));
     try state.consume(fixture(.deleteobject, &handleRecord(1)));
     try std.testing.expectEqual(null, state.selected.color_space);
@@ -423,7 +459,7 @@ test "color-space DC snapshots cannot restore deleted objects" {
     var slots = [_]Slot{.empty} ** 2;
     var snapshots: [2]Selection = undefined;
     var state: State = .{ .slots = &slots, .snapshots = &snapshots };
-    try state.consume(fixture(.createcolorspace, &handleRecord(1)));
+    try state.consume(fixture(.createcolorspace, &createColorSpace(1)));
     try state.consume(fixture(.setcolorspace, &handleRecord(1)));
     const save = [_]u8{0} ** 8;
     try state.consume(fixture(.savedc, &save));
@@ -435,8 +471,8 @@ test "color-space DC snapshots cannot restore deleted objects" {
 test "deleting an inactive color space preserves the current selection" {
     var slots = [_]Slot{.empty} ** 3;
     var state: State = .{ .slots = &slots };
-    try state.consume(fixture(.createcolorspace, &handleRecord(1)));
-    try state.consume(fixture(.createcolorspacew, &handleRecord(2)));
+    try state.consume(fixture(.createcolorspace, &createColorSpace(1)));
+    try state.consume(fixture(.createcolorspacew, &createColorSpaceWide(2)));
     try state.consume(fixture(.setcolorspace, &handleRecord(1)));
     try state.consume(fixture(.setcolorspace, &handleRecord(2)));
     try state.consume(fixture(.deletecolorspace, &handleRecord(1)));
@@ -448,7 +484,7 @@ test "cross-kind replacement deactivates current and saved color-space selection
     var slots = [_]Slot{.empty} ** 2;
     var snapshots: [1]Selection = undefined;
     var state: State = .{ .slots = &slots, .snapshots = &snapshots };
-    try state.consume(fixture(.createcolorspace, &handleRecord(1)));
+    try state.consume(fixture(.createcolorspace, &createColorSpace(1)));
     try state.consume(fixture(.setcolorspace, &handleRecord(1)));
     const save = [_]u8{0} ** 8;
     try state.consume(fixture(.savedc, &save));
