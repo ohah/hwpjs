@@ -15,6 +15,7 @@ const poly_records = @import("poly_records.zig");
 const poly_records_16 = @import("poly_records_16.zig");
 const poly_draw = @import("poly_draw.zig");
 const basic_point_drawing = @import("basic_point_drawing.zig");
+const basic_shapes = @import("basic_shapes.zig");
 const dc_stack = @import("dc_stack.zig");
 const palette_records = @import("palette_records.zig");
 const object_table = @import("object_table.zig");
@@ -49,6 +50,7 @@ fn validateStructure(bytes: []const u8) !Summary {
         _ = try poly_records_16.parse(record);
         _ = try poly_draw.parse(record);
         _ = try basic_point_drawing.parse(record);
+        _ = try basic_shapes.parse(record);
         _ = try dc_state.consume(record);
         _ = try palette_records.parse(record);
         if (record.kind != .eof) continue;

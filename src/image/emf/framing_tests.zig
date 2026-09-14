@@ -625,6 +625,23 @@ test "EMF framing validates LINETO and SETPIXELV payloads" {
     try t.expectError(error.InvalidWmfColorReserved, framing.validate(t.allocator, &bytes));
 }
 
+test "EMF framing validates basic shape payloads" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 140;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 3, .little);
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.roundrect), .little);
+    std.mem.writeInt(u32, bytes[92..96], 32, .little);
+    std.mem.writeInt(i32, bytes[96..100], -4, .little);
+    std.mem.writeInt(i32, bytes[116..120], 8, .little);
+    @memcpy(bytes[120..140], original[88..108]);
+    try t.expectEqual(@as(usize, 3), (try framing.validate(t.allocator, &bytes)).records);
+
+    std.mem.writeInt(u32, bytes[92..96], 28, .little);
+    try t.expectError(error.InvalidEmfRoundRectRecordSize, framing.validate(t.allocator, &bytes));
+}
+
 test "EMF framing connects color-space set and dedicated deletion" {
     const original = fixture();
     var bytes = [_]u8{0} ** 472;
