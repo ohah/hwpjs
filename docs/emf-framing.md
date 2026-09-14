@@ -10,6 +10,8 @@ Microsoft [EMR_EOF Record](https://learn.microsoft.com/en-us/openspecs/windows_p
 
 `framing.zig`는 첫 record가 유일한 header이고 EOF가 유일한 마지막 record이며, 실제 record 수가 Header의 Records와 일치하는지 조립한다. record별 drawing/state 의미는 이 단계의 완료 범위가 아니다.
 
+`path_bracket.zig`는 [Path Bracket Record Types](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/b930b989-30ec-4954-a889-1dc60ce0b689)의 `BEGINPATH`, `ENDPATH`, `CLOSEFIGURE`, `FLATTENPATH`, `WIDENPATH`, `ABORTPATH`만 분류한다. 여섯 record는 매개변수가 없으므로 정확히 8바이트여야 하며, 다른 Type을 이 집합으로 오인하지 않는다. State는 열린 construction에서 BEGINPATH를 거부하고, EOF 전에 END/ABORT로 닫혔는지 검사한다. `framing.zig`가 구조와 상태 검증을 전체 stream 순회에 연결한다. CLOSEFIGURE의 open-figure 권고와 실제 path drawing 의미는 별도 재생 계층의 책임이다.
+
 ## Header variable fields와 extension
 
 `header_payload.zig`는 [공식 HeaderSize flowchart](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/de081cd7-351f-4cc2-830b-d03fb55e89ab)에 따라 record Size에서 시작해 유효한 description offset과 그보다 앞선 pixel-format offset으로 고정 header 크기를 산정한다. 산정값 88/100/108 경계로 base, Extension1, Extension2를 구분하므로 긴 description이 있는 base header를 record 전체 길이만 보고 Extension으로 오인하지 않는다.
@@ -35,3 +37,7 @@ EOF palette에는 Header/EOF count 비교 제거, offset 15를 16으로 보정, 
 PixelFormatDescriptor에는 내부 nSize 검사 제거, Version 검사 제거, 미정의 flag 허용, DOUBLEBUFFER/GDI 금지 조합 허용, 미정의 pixel type 허용의 5개 변이를 적용했다. Debug/ReleaseSafe/ReleaseFast의 15회 모두 해당 손상값 수용으로 탐지됐다. 정상 구현 복원 후 세 모드 전체 테스트와 Debug 통합 audit 8,905,815 checks도 통과했다.
 
 RecordType enum에는 미정의 `0`, 예약값 `0x45`, 예약값 `0x6B`, 예약값 `0x75`, 미정의 `0x7B`를 각각 멤버로 추가하는 5개 변이를 적용했다. Debug/ReleaseSafe/ReleaseFast의 15회 모두 미정의 Type 수용과 enum 개수 변화로 탐지됐다. 모든 변이 멤버를 제거한 정상 구현은 세 모드 전체 테스트와 Debug 통합 audit 8,905,815 checks를 통과했다. 공식 HTML에서 독립 추출한 119개 값과 구현 enum을 순서대로 비교해 missing/extra 0도 확인했다.
+
+Path Bracket에는 8바이트 크기 검사 제거, BEGINPATH 분류 제거, ABORTPATH 분류 제거, SAVEDC를 잘못 분류, framing 연결 제거의 5개 변이를 적용했다. Debug/ReleaseSafe/ReleaseFast의 15회 모두 크기·집합·통합 계약으로 탐지됐다.
+
+상태 규칙에는 nested BEGIN 검사 제거, BEGIN의 open 갱신 제거, END의 close 갱신 제거, ABORT의 close 갱신 제거, EOF 미종료 검사 제거의 5개 변이를 추가 적용했다. Debug/ReleaseSafe/ReleaseFast의 15회 모두 상태·통합 계약으로 탐지됐다. 구조 검증과 합치면 이 파트의 적대적 실행은 30/30이다. 모든 변이를 제거한 정상 구현은 세 모드 전체 테스트와 Debug 통합 audit 8,905,815 checks를 통과했다.

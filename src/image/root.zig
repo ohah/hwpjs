@@ -90,6 +90,7 @@ pub const emf_records = @import("emf/records.zig");
 pub const emf_header = @import("emf/header.zig");
 pub const emf_header_payload = @import("emf/header_payload.zig");
 pub const emf_pixel_format = @import("emf/pixel_format.zig");
+pub const emf_path_bracket = @import("emf/path_bracket.zig");
 pub const emf_eof = @import("emf/eof.zig");
 pub const emf_eof_palette = @import("emf/eof_palette.zig");
 pub const emf_framing = @import("emf/framing.zig");

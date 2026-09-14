@@ -150,6 +150,36 @@ test "EMF record iterator rejects truncation alignment and data after EOF" {
     try t.expectError(error.DataAfterEmfEof, framing.validate(&trailing));
 }
 
+test "EMF framing validates parameterless path bracket record size" {
+    const original = fixture();
+    var valid = [_]u8{0} ** 124;
+    @memcpy(valid[0..88], original[0..88]);
+    std.mem.writeInt(u32, valid[48..52], valid.len, .little);
+    std.mem.writeInt(u32, valid[52..56], 4, .little);
+    std.mem.writeInt(u32, valid[88..92], @intFromEnum(@import("records.zig").RecordType.beginpath), .little);
+    std.mem.writeInt(u32, valid[92..96], 8, .little);
+    std.mem.writeInt(u32, valid[96..100], @intFromEnum(@import("records.zig").RecordType.endpath), .little);
+    std.mem.writeInt(u32, valid[100..104], 8, .little);
+    @memcpy(valid[104..124], original[88..108]);
+    try t.expectEqual(@as(usize, 4), (try framing.validate(&valid)).records);
+
+    var invalid = [_]u8{0} ** 120;
+    @memcpy(invalid[0..88], original[0..88]);
+    std.mem.writeInt(u32, invalid[48..52], invalid.len, .little);
+    std.mem.writeInt(u32, invalid[52..56], 3, .little);
+    std.mem.writeInt(u32, invalid[88..92], @intFromEnum(@import("records.zig").RecordType.beginpath), .little);
+    std.mem.writeInt(u32, invalid[92..96], 12, .little);
+    @memcpy(invalid[100..120], original[88..108]);
+    try t.expectError(error.InvalidEmfPathBracketSize, framing.validate(&invalid));
+
+    var unclosed = [_]u8{0} ** 116;
+    @memcpy(unclosed[0..96], valid[0..96]);
+    std.mem.writeInt(u32, unclosed[48..52], unclosed.len, .little);
+    std.mem.writeInt(u32, unclosed[52..56], 3, .little);
+    @memcpy(unclosed[96..116], original[88..108]);
+    try t.expectError(error.UnclosedEmfPathBracket, framing.validate(&unclosed));
+}
+
 test "EMF EOF palette preserves undefined spaces and reserved-blue-green-red order" {
     const original = fixture();
     var bytes = [_]u8{0} ** 124;
