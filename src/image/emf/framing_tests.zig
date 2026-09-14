@@ -259,6 +259,34 @@ test "EMF framing validates ColorRef state records" {
     try t.expectError(error.InvalidWmfColorReserved, framing.validate(&valid));
 }
 
+test "EMF framing validates mapper flags and miter limit records" {
+    const original = fixture();
+    var valid = [_]u8{0} ** 132;
+    @memcpy(valid[0..88], original[0..88]);
+    std.mem.writeInt(u32, valid[48..52], valid.len, .little);
+    std.mem.writeInt(u32, valid[52..56], 4, .little);
+    std.mem.writeInt(u32, valid[88..92], @intFromEnum(@import("records.zig").RecordType.setmapperflags), .little);
+    std.mem.writeInt(u32, valid[92..96], 12, .little);
+    valid[96] = 1;
+    std.mem.writeInt(u32, valid[100..104], @intFromEnum(@import("records.zig").RecordType.setmiterlimit), .little);
+    std.mem.writeInt(u32, valid[104..108], 12, .little);
+    std.mem.writeInt(u32, valid[108..112], 0x7fc01234, .little);
+    @memcpy(valid[112..132], original[88..108]);
+    try t.expectEqual(@as(usize, 4), (try framing.validate(&valid)).records);
+
+    var invalid_mapper = valid;
+    invalid_mapper[96] = 2;
+    try t.expectError(error.InvalidEmfMapperFlags, framing.validate(&invalid_mapper));
+
+    var invalid_miter = [_]u8{0} ** 136;
+    @memcpy(invalid_miter[0..100], valid[0..100]);
+    std.mem.writeInt(u32, invalid_miter[48..52], invalid_miter.len, .little);
+    std.mem.writeInt(u32, invalid_miter[100..104], @intFromEnum(@import("records.zig").RecordType.setmiterlimit), .little);
+    std.mem.writeInt(u32, invalid_miter[104..108], 16, .little);
+    @memcpy(invalid_miter[116..136], original[88..108]);
+    try t.expectError(error.InvalidEmfMiterLimitRecordSize, framing.validate(&invalid_miter));
+}
+
 test "EMF EOF palette preserves undefined spaces and reserved-blue-green-red order" {
     const original = fixture();
     var bytes = [_]u8{0} ** 124;
