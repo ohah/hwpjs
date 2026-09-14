@@ -139,6 +139,7 @@ pub const emf_poly_records = @import("emf/poly_records.zig");
 pub const emf_poly_records_16 = @import("emf/poly_records_16.zig");
 pub const emf_point_type_array = @import("emf/point_type_array.zig");
 pub const emf_poly_draw = @import("emf/poly_draw.zig");
+pub const emf_basic_point_drawing = @import("emf/basic_point_drawing.zig");
 pub const emf_object_table = @import("emf/object_table.zig");
 pub const emf_eof = @import("emf/eof.zig");
 pub const emf_eof_palette = @import("emf/eof_palette.zig");

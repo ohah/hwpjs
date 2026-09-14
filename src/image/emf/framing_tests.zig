@@ -605,6 +605,26 @@ test "EMF framing validates POLYDRAW type arrays and alignment" {
     try t.expectError(error.InvalidEmfPointType, framing.validate(t.allocator, &bytes));
 }
 
+test "EMF framing validates LINETO and SETPIXELV payloads" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 144;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 4, .little);
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.lineto), .little);
+    std.mem.writeInt(u32, bytes[92..96], 16, .little);
+    std.mem.writeInt(i32, bytes[96..100], -1, .little);
+    std.mem.writeInt(u32, bytes[104..108], @intFromEnum(@import("records.zig").RecordType.setpixelv), .little);
+    std.mem.writeInt(u32, bytes[108..112], 20, .little);
+    std.mem.writeInt(i32, bytes[112..116], 2, .little);
+    bytes[120..124].* = .{ 10, 20, 30, 0 };
+    @memcpy(bytes[124..144], original[88..108]);
+    try t.expectEqual(@as(usize, 4), (try framing.validate(t.allocator, &bytes)).records);
+
+    bytes[123] = 1;
+    try t.expectError(error.InvalidWmfColorReserved, framing.validate(t.allocator, &bytes));
+}
+
 test "EMF framing connects color-space set and dedicated deletion" {
     const original = fixture();
     var bytes = [_]u8{0} ** 472;
