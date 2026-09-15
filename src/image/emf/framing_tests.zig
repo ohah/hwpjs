@@ -132,6 +132,27 @@ test "EMF framing validates and counts SETLINKEDUFIS arrays" {
     try t.expectError(error.InvalidEmfSetLinkedUfisRecordSize, framing.validate(t.allocator, &bytes));
 }
 
+test "EMF framing validates and counts COLORMATCHTOTARGETW payloads" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 140;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 3, .little);
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.colormatchtotargetw), .little);
+    std.mem.writeInt(u32, bytes[92..96], 32, .little);
+    std.mem.writeInt(u32, bytes[96..100], 1, .little);
+    std.mem.writeInt(u32, bytes[100..104], 1, .little);
+    std.mem.writeInt(u32, bytes[104..108], 4, .little);
+    std.mem.writeInt(u32, bytes[108..112], 4, .little);
+    bytes[112..116].* = .{ 'A', 0, 0, 0 };
+    bytes[116..120].* = .{ 1, 2, 3, 4 };
+    @memcpy(bytes[120..140], original[88..108]);
+    try t.expectEqual(@as(usize, 1), (try framing.validate(t.allocator, &bytes)).color_match_records);
+
+    std.mem.writeInt(u32, bytes[104..108], 6, .little);
+    try t.expectError(error.InvalidEmfColorMatchToTargetSize, framing.validate(t.allocator, &bytes));
+}
+
 test "EMF framing connects all fixed clipping records" {
     const original = fixture();
     var bytes = [_]u8{0} ** 180;

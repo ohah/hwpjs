@@ -10,6 +10,7 @@ const mapper_flags = @import("mapper_flags.zig");
 const miter_limit = @import("miter_limit.zig");
 const text_alignment = @import("text_alignment.zig");
 const text_justification = @import("text_justification.zig");
+const color_match_to_target = @import("color_match_to_target.zig");
 const scale_extents = @import("scale_extents.zig");
 const poly_records = @import("poly_records.zig");
 const poly_records_16 = @import("poly_records_16.zig");
@@ -39,7 +40,7 @@ const std = @import("std");
 const eof = @import("eof.zig");
 const eof_palette = @import("eof_palette.zig");
 
-pub const Summary = struct { header: header.Header, header_payload: header_payload.Payload, eof: eof.Eof, palette: eof_palette.Palette, objects: object_table.Report, records: usize, clipping_records: usize, clipping_selection_records: usize, region_drawing_records: usize, path_drawing_records: usize, flood_fill_records: usize, gradient_fill_records: usize, bit_block_transfer_records: usize, stretch_block_transfer_records: usize, mask_block_transfer_records: usize, parallelogram_block_transfer_records: usize, set_dibits_to_device_records: usize, stretch_dibits_records: usize, alpha_blend_records: usize, transparent_blt_records: usize, linked_ufi_records: usize, linked_ufis: usize };
+pub const Summary = struct { header: header.Header, header_payload: header_payload.Payload, eof: eof.Eof, palette: eof_palette.Palette, objects: object_table.Report, records: usize, clipping_records: usize, clipping_selection_records: usize, region_drawing_records: usize, path_drawing_records: usize, flood_fill_records: usize, gradient_fill_records: usize, bit_block_transfer_records: usize, stretch_block_transfer_records: usize, mask_block_transfer_records: usize, parallelogram_block_transfer_records: usize, set_dibits_to_device_records: usize, stretch_dibits_records: usize, alpha_blend_records: usize, transparent_blt_records: usize, linked_ufi_records: usize, linked_ufis: usize, color_match_records: usize };
 
 fn validateStructure(bytes: []const u8) !Summary {
     var iterator: records.Iterator = .{ .bytes = bytes };
@@ -66,6 +67,7 @@ fn validateStructure(bytes: []const u8) !Summary {
     var transparent_blt_count: usize = 0;
     var linked_ufi_record_count: usize = 0;
     var linked_ufi_count: usize = 0;
+    var color_match_count: usize = 0;
     while (try iterator.next()) |record| {
         count += 1;
         if (record.kind == .header) return error.DuplicateEmfHeader;
@@ -78,6 +80,7 @@ fn validateStructure(bytes: []const u8) !Summary {
         _ = try miter_limit.parse(record);
         _ = try text_alignment.parse(record);
         _ = try text_justification.parse(record);
+        if (try color_match_to_target.parse(record) != null) color_match_count += 1;
         _ = try scale_extents.parse(record);
         _ = try poly_records.parse(record);
         _ = try poly_records_16.parse(record);
@@ -113,7 +116,7 @@ fn validateStructure(bytes: []const u8) !Summary {
         const palette = terminal_and_palette.palette;
         if (iterator.offset != bytes.len) return error.DataAfterEmfEof;
         if (count != value.records) return error.InvalidEmfDeclaredRecords;
-        return .{ .header = value, .header_payload = payload, .eof = terminal, .palette = palette, .objects = .{}, .records = count, .clipping_records = clipping_count, .clipping_selection_records = clipping_selection_count, .region_drawing_records = region_drawing_count, .path_drawing_records = path_drawing_count, .flood_fill_records = flood_fill_count, .gradient_fill_records = gradient_fill_count, .bit_block_transfer_records = bit_block_transfer_count, .stretch_block_transfer_records = stretch_block_transfer_count, .mask_block_transfer_records = mask_block_transfer_count, .parallelogram_block_transfer_records = parallelogram_block_transfer_count, .set_dibits_to_device_records = set_dibits_to_device_count, .stretch_dibits_records = stretch_dibits_count, .alpha_blend_records = alpha_blend_count, .transparent_blt_records = transparent_blt_count, .linked_ufi_records = linked_ufi_record_count, .linked_ufis = linked_ufi_count };
+        return .{ .header = value, .header_payload = payload, .eof = terminal, .palette = palette, .objects = .{}, .records = count, .clipping_records = clipping_count, .clipping_selection_records = clipping_selection_count, .region_drawing_records = region_drawing_count, .path_drawing_records = path_drawing_count, .flood_fill_records = flood_fill_count, .gradient_fill_records = gradient_fill_count, .bit_block_transfer_records = bit_block_transfer_count, .stretch_block_transfer_records = stretch_block_transfer_count, .mask_block_transfer_records = mask_block_transfer_count, .parallelogram_block_transfer_records = parallelogram_block_transfer_count, .set_dibits_to_device_records = set_dibits_to_device_count, .stretch_dibits_records = stretch_dibits_count, .alpha_blend_records = alpha_blend_count, .transparent_blt_records = transparent_blt_count, .linked_ufi_records = linked_ufi_record_count, .linked_ufis = linked_ufi_count, .color_match_records = color_match_count };
     }
     return error.MissingEmfEof;
 }
