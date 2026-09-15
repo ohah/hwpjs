@@ -191,22 +191,23 @@ test "EMF framing validates and counts FORCEUFIMAPPING payloads" {
 
 test "EMF framing validates and counts COLORMATCHTOTARGETW payloads" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 140;
+    var bytes = [_]u8{0} ** 144;
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
     std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.colormatchtotargetw), .little);
-    std.mem.writeInt(u32, bytes[92..96], 32, .little);
+    std.mem.writeInt(u32, bytes[92..96], 36, .little);
     std.mem.writeInt(u32, bytes[96..100], 1, .little);
     std.mem.writeInt(u32, bytes[100..104], 1, .little);
     std.mem.writeInt(u32, bytes[104..108], 4, .little);
     std.mem.writeInt(u32, bytes[108..112], 4, .little);
     bytes[112..116].* = .{ 'A', 0, 0, 0 };
     bytes[116..120].* = .{ 1, 2, 3, 4 };
-    @memcpy(bytes[120..140], original[88..108]);
+    bytes[120..124].* = .{ 0xde, 0xad, 0xbe, 0xef };
+    @memcpy(bytes[124..144], original[88..108]);
     try t.expectEqual(@as(usize, 1), (try framing.validate(t.allocator, &bytes)).color_match_records);
 
-    std.mem.writeInt(u32, bytes[104..108], 6, .little);
+    std.mem.writeInt(u32, bytes[104..108], 12, .little);
     try t.expectError(error.InvalidEmfColorMatchToTargetSize, framing.validate(t.allocator, &bytes));
 }
 
