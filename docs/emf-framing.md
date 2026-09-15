@@ -40,7 +40,7 @@ Microsoft [EMR_EOF Record](https://learn.microsoft.com/en-us/openspecs/windows_p
 
 `brush_style.zig`, `hatch_style.zig`, `color_usage.zig`는 EMF 객체들이 공유하는 값 영역을 단독 소유한다. `log_pen_ex.zig`는 [LogPenEx](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/5b67b3ee-ea00-4f80-9b73-2959804381be)의 24바이트 고정부와 checked `NumStyleEntries * 4` 배열을 읽고 소비 끝을 반환한다. cosmetic 폭 1, NULL brush와 PS_NULL의 관계, geometric pen의 brush 제한, brush별 ColorRef/ColorUsage 및 geometric/cosmetic hatch 영역을 구분한다. 명세가 non-user style의 entry count를 0으로 SHOULD 지정하므로 0이 아닌 값을 손상으로 단정하지 않으며 배열 원문을 보존한다.
 
-`extended_pen_creation.zig`는 [EXTCREATEPEN](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/d7f51e05-4024-497c-ad4a-8aeca9d34256)의 최소 52바이트와 가변 LogPenEx 뒤 선택적 packed DIB를 조립한다. `dib_sections.zig`는 네 offset/size의 전부 부재·전부 존재를 구분하고 checked extent, LogPenEx와의 비중첩, 연속 BmiSrc/BitsSrc, 최대 3바이트 record padding을 검사한다. 고정부와 DIB 사이 UndefinedSpace 및 padding은 MUST-ignore이므로 원문을 빌려 보존한다. Object Table은 이 구조 검증이 끝난 뒤에만 pen handle을 점유한다. EXTCREATEPEN의 선택 DIB에는 현재 공통 section 경계만 적용하며, 아래 bitmap-brush 전용 DIB 의미 검증은 연결하지 않았다.
+가변 LogPenEx, 선택 DIB와 후행 extra data의 정확한 계약은 [EMF 확장 펜](emf-extended-pen.md)이 소유한다.
 
 비트맵 브러시의 정확한 offset/size slice, 정렬 padding과 후행 extra data 계약은 [EMF 비트맵 브러시](emf-bitmap-brush.md)가 소유한다.
 
@@ -60,13 +60,9 @@ Microsoft [EMR_EOF Record](https://learn.microsoft.com/en-us/openspecs/windows_p
 
 [MS-WMF Compression](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/4e588f70-bd92-4a6f-b77f-35d0feaf7a57)의 BI_CMYK, BI_CMYKRLE8, BI_CMYKRLE4도 공통 BMP header enum에서 보존한다. [DeviceIndependentBitmap](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/7376542a-cce9-4625-8ead-585e9538f9f1)의 규칙대로 RGB/BITFIELDS/CMYK는 stride-derived 길이를, 나머지 압축은 ImageSize를 사용한다. 이 단계는 DIB 구조와 원문 payload 보존까지이며 JPEG/PNG/RLE/CMYK 픽셀 해제, V5 profile 의미, 실제 brush 재생은 완료 범위가 아니다. 공용 BMP RGBA decoder도 CMYK를 RGB로 오해하지 않고 명시적으로 거부한다.
 
-EXTCREATEPEN 적대적 검증은 (1) DIB가 없을 때 참조되지 않은 record 꼬리를 허용, (2) DIB offset/size 일부만 존재하는 상태를 허용, (3) geometric pen의 pattern brush를 허용, (4) cosmetic hatch 값을 검사하지 않음, (5) NumStyleEntries를 항상 0으로 취급하는 다섯 변이를 각각 주입했다. 전체 네이티브 테스트가 각 변이를 실패로 검출한 뒤 원복했다. 별도 코드 검토에서 `24 + count * 4`의 최종 합이 wasm32 `usize`를 넘는 경로를 발견해 합계 전체를 u64에서 검사하도록 수정했다.
-
 Bitmap Brush 적대적 검증은 (1) DIBColors를 항상 RGB로 취급, (2) MONOBRUSH의 1bpp 정책 제거, (3) palette 최소 길이 계산 제거, (4) pixel buffer 1바이트 부족 허용, (5) payload 검증 전에 object slot 변경의 다섯 변이를 각각 주입했다. 전체 네이티브 테스트가 값 영역, mono 정책, DIB 경계, 정확 길이, 실패 원자성 위반을 모두 실제 실패로 검출했으며 각 변이는 즉시 원복했다. 공식 Compression enum 재대조에서 기존 공용 BMP header가 세 CMYK 값을 누락한 사실도 발견해 구조 지원과 오해 없는 decode 거부를 추가했다.
 
 최종 원복 상태의 Debug·ReleaseSafe·ReleaseFast audit는 각각 40/40 단계와 전체 1,306/1,306 테스트(네이티브 1,267개), HWP 검사 8,905,827건을 통과했다. 첫 Debug audit에서 독립 JS BMP oracle이 값 11을 미지원으로 고정한 과거 계약을 검출했고, 공식 enum에 맞춰 CMYK 세 값 수용·미정의 인접값 거부·RGBA decode 거부를 독립적으로 검사하도록 수정한 뒤 세 모드를 모두 처음부터 재실행했다. 실제 HWP corpus 584개에는 EMF가 0개이므로 bitmap brush 실생성기 호환성 근거로 확대 해석하지 않는다.
-
-최종 원복 상태의 Debug·ReleaseSafe·ReleaseFast audit는 각 40/40 단계와 전체 1,297/1,297 테스트, HWP 검사 8,905,815건을 통과했다. 실제 HWP corpus 584개에는 EMF가 0개이므로 EXTCREATEPEN 실생성기 호환성 근거는 아직 없으며, 현재 증거는 공식 wire 명세·합성 framing·적대적 변이 검사로 한정한다.
 
 이 파트의 적대적 검증은 (1) record 선언 크기 검사를 제거, (2) cosmetic 폭 기준을 1에서 0으로 변경, (3) brush style 3을 허용, (4) HATCHED의 hatch 상한을 제거, (5) 무시 대상인 SOLID hatch도 검증, (6) payload 검증 전에 pen handle을 생성하는 여섯 변이를 각각 주입했다. 전체 네이티브 테스트가 모든 변이를 실패로 검출한 뒤 원복했다. 이 과정에서 기존 framing 및 HWP 삽입 fixture의 cosmetic 폭이 0이던 실제 오류를 발견해 1로 고쳤고, 선언 크기와 실제 slice 길이의 독립 검사 및 실패 시 object-table 무변경 검사를 추가했다.
 

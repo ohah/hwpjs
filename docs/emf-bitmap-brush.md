@@ -8,7 +8,7 @@ Microsoft의 [EMR_CREATEMONOBRUSH](https://learn.microsoft.com/en-us/openspecs/w
 
 `dib_payload.zig`는 BMP header parser를 재사용해 DIB 구조와 pixel 길이를 검사한다. MONOBRUSH에는 1bpp를 요구한다. `object_table.zig`는 이 모든 검증이 성공한 뒤에만 brush handle을 생성하거나 교체한다.
 
-이 문서는 비트맵 브러시만 소유한다. 같은 section parser를 쓰는 EXTCREATEPEN에서 DIB가 없는 경우의 후행 데이터와 가변 LogPenEx 경계는 후속 extended-pen 감사 범위다. JPEG·PNG·RLE·CMYK 픽셀 해제와 실제 brush 렌더링도 현재 범위가 아니다.
+이 문서는 비트맵 브러시만 소유한다. 같은 section parser를 쓰는 EXTCREATEPEN의 가변 LogPenEx와 선택 DIB 조립은 [EMF 확장 펜](emf-extended-pen.md)이 소유한다. JPEG·PNG·RLE·CMYK 픽셀 해제와 실제 brush 렌더링도 현재 범위가 아니다.
 
 ## 검증
 

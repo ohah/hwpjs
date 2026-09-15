@@ -26,7 +26,7 @@ Microsoft [EMF Records](https://learn.microsoft.com/en-us/openspecs/windows_prot
 - `scale_extents.zig`: 24바이트 prefix
 - `dc_stack.zig`: SAVEDC 8, RESTOREDC 12바이트 prefix
 
-직전 파트의 `basic_point_drawing.zig`와 `basic_shapes.zig`도 같은 SSOT를 사용한다. palette와 handle 연계 record는 [EMF 핸들·팔레트 record 호환성](emf-handle-record-compatibility.md), color-space creation은 [전용 호환성 문서](emf-color-space-record-compatibility.md), poly 배열은 [poly record 후행 호환성](emf-poly-record-compatibility.md)에서 후속 이관했다. [글꼴 생성](emf-font-creation.md)은 record Size가 가변 객체 형식을 결정하므로 후행 허용 대상이 아님을 별도로 검증했다. bitmap brush의 offset/size 의미 끝은 [전용 문서](emf-bitmap-brush.md)에서 후속 이관했다. extended pen은 별도 감사 범위다.
+직전 파트의 `basic_point_drawing.zig`와 `basic_shapes.zig`도 같은 SSOT를 사용한다. palette와 handle 연계 record는 [EMF 핸들·팔레트 record 호환성](emf-handle-record-compatibility.md), color-space creation은 [전용 호환성 문서](emf-color-space-record-compatibility.md), poly 배열은 [poly record 후행 호환성](emf-poly-record-compatibility.md)에서 후속 이관했다. [글꼴 생성](emf-font-creation.md)은 record Size가 가변 객체 형식을 결정하므로 후행 허용 대상이 아님을 별도로 검증했다. offset/size 의미 끝은 [비트맵 브러시](emf-bitmap-brush.md)와 [확장 펜](emf-extended-pen.md)의 전용 문서에서 후속 이관했다.
 
 ## 검증
 

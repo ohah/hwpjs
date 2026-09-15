@@ -475,23 +475,24 @@ test "EMF framing connects SELECTOBJECT activation deletion and default restorat
 
 test "EMF framing validates extended pen payload before object creation" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 160;
+    var bytes = [_]u8{0} ** 164;
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
     std.mem.writeInt(u16, bytes[56..58], 1, .little);
     std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.extcreatepen), .little);
-    std.mem.writeInt(u32, bytes[92..96], 52, .little);
+    std.mem.writeInt(u32, bytes[92..96], 56, .little);
     std.mem.writeInt(u32, bytes[96..100], 1, .little);
     std.mem.writeInt(u32, bytes[120..124], 1, .little);
-    @memcpy(bytes[140..160], original[88..108]);
+    bytes[140..144].* = .{ 1, 2, 3, 4 };
+    @memcpy(bytes[144..164], original[88..108]);
 
     const summary = try framing.validate(t.allocator, &bytes);
     try t.expectEqual(@as(usize, 1), summary.objects.creates);
     try t.expectEqual(@as(usize, 1), summary.objects.final_live);
 
     var truncated_style = bytes;
-    std.mem.writeInt(u32, truncated_style[136..140], 1, .little);
+    std.mem.writeInt(u32, truncated_style[136..140], 2, .little);
     try t.expectError(error.TruncatedEmfPenStyleEntries, framing.validate(t.allocator, &truncated_style));
 }
 

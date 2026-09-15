@@ -9,11 +9,9 @@ pub const Sections = struct {
 };
 
 pub fn parse(bytes: []const u8, fixed_end: usize, fields: Fields) !?Sections {
+    if (fixed_end > bytes.len) return error.InvalidEmfDibSectionExtent;
     const absent = fields.bmi_offset == 0 and fields.bmi_size == 0 and fields.bits_offset == 0 and fields.bits_size == 0;
-    if (absent) {
-        if (bytes.len != fixed_end) return error.UnreferencedEmfObjectCreationBytes;
-        return null;
-    }
+    if (absent) return null;
     if (fields.bmi_offset == 0 or fields.bmi_size == 0 or fields.bits_offset == 0 or fields.bits_size == 0)
         return error.IncompleteEmfDibSections;
     const bmi_start: usize = fields.bmi_offset;
@@ -49,9 +47,10 @@ test "DIB sections preserve undefined space and alignment padding" {
     try std.testing.expect((try parse(bytes[0..52], 52, .{ .bmi_offset = 0, .bmi_size = 0, .bits_offset = 0, .bits_size = 0 })) == null);
 }
 
-test "DIB sections reject partial overlapping overflowing and unreferenced layouts" {
+test "DIB sections reject partial overlapping and overflowing layouts" {
     const bytes = [_]u8{0} ** 68;
-    try std.testing.expectError(error.UnreferencedEmfObjectCreationBytes, parse(&bytes, 52, .{ .bmi_offset = 0, .bmi_size = 0, .bits_offset = 0, .bits_size = 0 }));
+    try std.testing.expect((try parse(&bytes, 52, .{ .bmi_offset = 0, .bmi_size = 0, .bits_offset = 0, .bits_size = 0 })) == null);
+    try std.testing.expectError(error.InvalidEmfDibSectionExtent, parse(&bytes, 69, .{ .bmi_offset = 0, .bmi_size = 0, .bits_offset = 0, .bits_size = 0 }));
     try std.testing.expectError(error.IncompleteEmfDibSections, parse(&bytes, 52, .{ .bmi_offset = 56, .bmi_size = 8, .bits_offset = 0, .bits_size = 0 }));
     try std.testing.expectError(error.InvalidEmfDibSectionExtent, parse(&bytes, 52, .{ .bmi_offset = 48, .bmi_size = 8, .bits_offset = 56, .bits_size = 1 }));
     try std.testing.expectError(error.NonContiguousEmfPackedDib, parse(&bytes, 52, .{ .bmi_offset = 56, .bmi_size = 4, .bits_offset = 64, .bits_size = 1 }));

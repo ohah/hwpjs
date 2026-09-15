@@ -1,6 +1,7 @@
 const std = @import("std");
 const dib_sections = @import("dib_sections.zig");
 const log_pen_ex = @import("log_pen_ex.zig");
+const record_extent = @import("record_extent.zig");
 const records = @import("records.zig");
 
 pub const minimum_size = 28 + log_pen_ex.fixed_size;
@@ -13,7 +14,7 @@ pub const Creation = struct {
 
 pub fn parse(record: records.Record) !?Creation {
     if (record.kind != .extcreatepen) return null;
-    if (record.size != record.bytes.len or record.bytes.len < minimum_size)
+    if (!record_extent.hasRequiredPrefix(record, minimum_size))
         return error.InvalidEmfExtCreatePenRecordSize;
     const pen = try log_pen_ex.parsePrefix(record.bytes[28..]);
     const fixed_end = 28 + pen.consumed;
@@ -46,6 +47,24 @@ test "extended pen parses minimum and detached packed DIB layouts" {
     try std.testing.expectEqual(@as(u32, 1), plain.handle);
     try std.testing.expect(plain.dib == null);
 
+    var extended: [minimum_size + 4]u8 = undefined;
+    @memcpy(extended[0..minimum_size], &minimum);
+    extended[minimum_size..].* = .{ 1, 2, 3, 4 };
+    const with_extra = (try parse(fixture(.extcreatepen, &extended))).?;
+    try std.testing.expect(with_extra.dib == null);
+    try std.testing.expectEqual(@as(usize, log_pen_ex.fixed_size), with_extra.pen.consumed);
+
+    var styled: [minimum_size + 12]u8 = undefined;
+    @memcpy(styled[0..minimum_size], &minimum);
+    std.mem.writeInt(u32, styled[48..52], 2, .little);
+    std.mem.writeInt(u32, styled[52..56], 3, .little);
+    std.mem.writeInt(u32, styled[56..60], 4, .little);
+    styled[60..].* = .{ 5, 6, 7, 8 };
+    const with_styles_and_extra = (try parse(fixture(.extcreatepen, &styled))).?;
+    try std.testing.expectEqual(@as(usize, 32), with_styles_and_extra.pen.consumed);
+    try std.testing.expectEqual(@as(usize, 8), with_styles_and_extra.pen.style_entries.len);
+    try std.testing.expect(with_styles_and_extra.dib == null);
+
     var bytes = [_]u8{0} ** 68;
     @memcpy(bytes[0..minimum_size], &minimum);
     std.mem.writeInt(u32, bytes[12..16], 56, .little);
@@ -55,6 +74,13 @@ test "extended pen parses minimum and detached packed DIB layouts" {
     const with_dib = (try parse(fixture(.extcreatepen, &bytes))).?;
     try std.testing.expectEqual(@as(usize, 4), with_dib.dib.?.before_bmi.len);
     try std.testing.expectEqual(@as(usize, 3), with_dib.dib.?.padding.len);
+
+    var dib_with_extra: [72]u8 = undefined;
+    @memcpy(dib_with_extra[0..68], &bytes);
+    dib_with_extra[68..].* = .{ 9, 10, 11, 12 };
+    const extended_dib = (try parse(fixture(.extcreatepen, &dib_with_extra))).?;
+    try std.testing.expectEqual(@as(usize, 1), extended_dib.dib.?.bits.len);
+    try std.testing.expectEqual(@as(usize, 3), extended_dib.dib.?.padding.len);
 }
 
 test "extended pen validates declared actual dynamic and DIB boundaries" {
