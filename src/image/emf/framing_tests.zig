@@ -974,6 +974,45 @@ test "EMF framing validates and counts COLORCORRECTPALETTE" {
     try t.expectError(error.EmfPaletteCorrectionOutOfBounds, framing.validate(t.allocator, &out_of_bounds));
 }
 
+test "EMF framing validates and counts SETCOLORADJUSTMENT" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 144;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 3, .little);
+
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.setcoloradjustment), .little);
+    std.mem.writeInt(u32, bytes[92..96], 36, .little);
+    std.mem.writeInt(u16, bytes[96..98], @import("color_adjustment.zig").size, .little);
+    std.mem.writeInt(u16, bytes[98..100], 3, .little);
+    std.mem.writeInt(u16, bytes[100..102], 8, .little);
+    std.mem.writeInt(u16, bytes[102..104], 2_500, .little);
+    std.mem.writeInt(u16, bytes[104..106], 10_000, .little);
+    std.mem.writeInt(u16, bytes[106..108], 65_000, .little);
+    std.mem.writeInt(u16, bytes[108..110], 4_000, .little);
+    std.mem.writeInt(u16, bytes[110..112], 6_000, .little);
+    std.mem.writeInt(i16, bytes[112..114], -100, .little);
+    std.mem.writeInt(i16, bytes[114..116], 0, .little);
+    std.mem.writeInt(i16, bytes[116..118], 100, .little);
+    std.mem.writeInt(i16, bytes[118..120], -1, .little);
+    bytes[120..124].* = .{ 0xde, 0xad, 0xbe, 0xef };
+    @memcpy(bytes[124..144], original[88..108]);
+
+    const summary = try framing.validate(t.allocator, &bytes);
+    try t.expectEqual(@as(usize, 3), summary.records);
+    try t.expectEqual(@as(usize, 1), summary.color_adjustment_records);
+
+    var invalid_object_size = bytes;
+    std.mem.writeInt(u16, invalid_object_size[96..98], 20, .little);
+    try t.expectError(error.InvalidEmfColorAdjustmentSize, framing.validate(t.allocator, &invalid_object_size));
+    var invalid_flags = bytes;
+    std.mem.writeInt(u16, invalid_flags[98..100], 4, .little);
+    try t.expectError(error.InvalidEmfColorAdjustmentValues, framing.validate(t.allocator, &invalid_flags));
+    var invalid_illuminant = bytes;
+    std.mem.writeInt(u16, invalid_illuminant[100..102], 9, .little);
+    try t.expectError(error.InvalidEmfColorAdjustmentIlluminant, framing.validate(t.allocator, &invalid_illuminant));
+}
+
 test "EMF framing connects SELECTOBJECT activation deletion and default restoration" {
     const original = fixture();
     var bytes = [_]u8{0} ** 160;

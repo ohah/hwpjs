@@ -78,6 +78,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - [EMF text justification](emf-text-justification.md)
 - [EMF target color matching](emf-color-match-target.md)
 - [EMF palette color correction](emf-color-correct-palette.md)
+- [EMF color adjustment](emf-color-adjustment.md)
 
 - [HWP5 모듈 계약](hwp5-modules.md)
 - [아키텍처와 구현 순서](architecture.md)
