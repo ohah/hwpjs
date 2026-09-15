@@ -148,19 +148,20 @@ test "EMF framing validates SETLAYOUT payloads" {
 
 test "EMF framing validates and counts SETLINKEDUFIS arrays" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 144;
+    var bytes = [_]u8{0} ** 148;
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
     std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.setlinkedufis), .little);
-    std.mem.writeInt(u32, bytes[92..96], 36, .little);
+    std.mem.writeInt(u32, bytes[92..96], 40, .little);
     std.mem.writeInt(u32, bytes[96..100], 2, .little);
     std.mem.writeInt(u32, bytes[100..104], 1, .little);
     std.mem.writeInt(u32, bytes[104..108], 10, .little);
     std.mem.writeInt(u32, bytes[108..112], 2, .little);
     std.mem.writeInt(u32, bytes[112..116], 20, .little);
     bytes[116..124].* = .{ 9, 8, 7, 6, 5, 4, 3, 2 };
-    @memcpy(bytes[124..144], original[88..108]);
+    bytes[124..128].* = .{ 0xde, 0xad, 0xbe, 0xef };
+    @memcpy(bytes[128..148], original[88..108]);
     const summary = try framing.validate(t.allocator, &bytes);
     try t.expectEqual(@as(usize, 1), summary.linked_ufi_records);
     try t.expectEqual(@as(usize, 2), summary.linked_ufis);
