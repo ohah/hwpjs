@@ -60,6 +60,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - [EMF clipping selection과 RegionData](emf-clipping-selection.md)
 - [EMF RegionData drawing records](emf-region-drawing.md)
 - [EMF path 그리기 records](emf-path-drawing.md)
+- [EMF 확장 flood fill](emf-flood-fill.md)
 
 - [HWP5 모듈 계약](hwp5-modules.md)
 - [아키텍처와 구현 순서](architecture.md)

@@ -158,6 +158,26 @@ test "EMF framing connects all path drawing records" {
     try t.expectError(error.InvalidEmfPathDrawingSize, framing.validate(t.allocator, bytes[0..176]));
 }
 
+test "EMF framing connects EXTFLOODFILL structure and field validation" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 132;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 3, .little);
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.extfloodfill), .little);
+    std.mem.writeInt(u32, bytes[92..96], 24, .little);
+    std.mem.writeInt(i32, bytes[96..100], -2, .little);
+    bytes[104..108].* = .{ 1, 2, 3, 0 };
+    std.mem.writeInt(u32, bytes[108..112], @intFromEnum(@import("flood_fill_mode.zig").FloodFillMode.border), .little);
+    @memcpy(bytes[112..132], original[88..108]);
+
+    const summary = try framing.validate(t.allocator, &bytes);
+    try t.expectEqual(@as(usize, 1), summary.flood_fill_records);
+
+    std.mem.writeInt(u32, bytes[108..112], 2, .little);
+    try t.expectError(error.InvalidEmfFloodFillMode, framing.validate(t.allocator, &bytes));
+}
+
 test "EMF header variant uses variable field offsets and validates UTF-16" {
     var bytes = [_]u8{0} ** 172;
     const base = fixture();

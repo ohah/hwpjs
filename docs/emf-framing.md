@@ -20,6 +20,8 @@ RegionData를 사용하는 네 drawing record와 brush 참조의 구조·집계�
 
 `FILLPATH`, `STROKEANDFILLPATH`, `STROKEPATH`의 wire payload와 framing 집계는 [path 그리기 records](emf-path-drawing.md)가 소유한다.
 
+`EXTFLOODFILL`의 PointL·ColorRef·FloodFill mode 구조와 framing 집계는 [확장 flood fill](emf-flood-fill.md)이 소유한다.
+
 `xform.zig`는 [XForm Object](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/e84107e9-bc2b-4a14-9234-5d173adc1b59)의 M11, M12, M21, M22, Dx, Dy를 24바이트 wire 순서로 읽고 FLOAT 원시 비트를 보존한다. 문서에 finite 제약이 없으므로 NaN·Infinity를 임의 거부하지 않는다. `transform_records.zig`는 [SETWORLDTRANSFORM](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/985724c0-4db1-48f0-b346-67288b3288cb)의 32바이트와 [MODIFYWORLDTRANSFORM](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/c70b85e5-8c31-418f-a7b8-349e417e0f76)의 36바이트 필수 prefix를 구분한다. 후자는 [ModifyWorldTransformMode](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/e6bb2996-195f-473f-80c6-9dc1afe474f9)의 Identity/LeftMultiply/RightMultiply/Set 1~4만 허용한다. framing은 두 레코드의 구조 검증을 전체 stream에 연결하며 실제 행렬 합성은 재생 계층의 책임이다.
 
 `geometry.zig`는 [MS-WMF PointL](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/4eeaf09e-e41a-491c-93a1-7aec0afd4f96), [SizeL](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/17b541c5-f8ee-4111-b1f2-012128f35871), [RectL](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/fe9329f4-7a87-4025-9a8a-541ee21e6530)의 signed 32비트 wire 해석을 단독 소유한다. 기존 EMF header도 이 SSOT를 재사용한다. `point_records.zig`는 SETWINDOWEXTEX/ORGEX, SETVIEWPORTEXTEX/ORGEX, SETBRUSHORGEX, MOVETOEX의 16바이트 필수 prefix와 PointL/SizeL 의미를 구분하고 framing에 연결한다. LINETO처럼 배치가 같아도 이 State Record 집합이 아닌 타입은 claim하지 않는다.
