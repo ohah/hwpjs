@@ -329,6 +329,32 @@ test "EMF framing connects SETDIBITSTODEVICE and propagates source errors" {
     try t.expectError(error.MissingEmfSetDibitsToDeviceSourceBitmap, framing.validate(t.allocator, &bytes));
 }
 
+test "EMF framing connects STRETCHDIBITS and propagates ROP source errors" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 216;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 3, .little);
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.stretchdibits), .little);
+    std.mem.writeInt(u32, bytes[92..96], 108, .little);
+    std.mem.writeInt(u32, bytes[136..140], 84, .little);
+    std.mem.writeInt(u32, bytes[140..144], 12, .little);
+    std.mem.writeInt(u32, bytes[144..148], 100, .little);
+    std.mem.writeInt(u32, bytes[148..152], 8, .little);
+    std.mem.writeInt(u32, bytes[152..156], 2, .little);
+    std.mem.writeInt(u32, bytes[156..160], 0x00cc0020, .little);
+    std.mem.writeInt(u32, bytes[172..176], 12, .little);
+    std.mem.writeInt(u16, bytes[176..178], 2, .little);
+    std.mem.writeInt(u16, bytes[178..180], 2, .little);
+    std.mem.writeInt(u16, bytes[180..182], 1, .little);
+    std.mem.writeInt(u16, bytes[182..184], 1, .little);
+    @memcpy(bytes[196..216], original[88..108]);
+    const summary = try framing.validate(t.allocator, &bytes);
+    try t.expectEqual(@as(usize, 1), summary.stretch_dibits_records);
+    @memset(bytes[136..152], 0);
+    try t.expectError(error.MissingEmfStretchDibitsSourceBitmap, framing.validate(t.allocator, &bytes));
+}
+
 test "EMF header variant uses variable field offsets and validates UTF-16" {
     var bytes = [_]u8{0} ** 172;
     const base = fixture();

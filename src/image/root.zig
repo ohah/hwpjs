@@ -167,6 +167,7 @@ pub const emf_destination_parallelogram = @import("emf/destination_parallelogram
 pub const emf_parallelogram_block_transfer = @import("emf/parallelogram_block_transfer.zig");
 pub const emf_set_dibits_to_device = @import("emf/set_dibits_to_device.zig");
 pub const emf_scanline_range = @import("emf/scanline_range.zig");
+pub const emf_stretch_dibits = @import("emf/stretch_dibits.zig");
 pub const emf_object_table = @import("emf/object_table.zig");
 pub const emf_eof = @import("emf/eof.zig");
 pub const emf_eof_palette = @import("emf/eof_palette.zig");
