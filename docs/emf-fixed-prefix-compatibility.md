@@ -10,6 +10,8 @@ Microsoft [EMF Records](https://learn.microsoft.com/en-us/openspecs/windows_prot
 - `record.size >= required_size`로 필수 prefix 보장
 - prefix 뒤 extra data는 필드 해석에 사용하지 않음
 
+가변 배열 parser는 같은 파일의 `requiredEnd`를 사용해 u64 의미 끝을 검사하고 안전한 `usize` slice 끝을 받는다. 적용 범위와 배열 분리는 [poly record 후행 호환성](emf-poly-record-compatibility.md)이 소유한다.
+
 4바이트 정렬과 stream 범위는 기존 `records.Iterator`가 먼저 검사한다. `PointL`, `SizeL`, `RectL`, `XForm`처럼 정확한 field slice를 받는 공용 객체 parser는 record 호환성 정책을 소유하지 않으므로 정확한 자신의 크기를 계속 요구한다.
 
 ## 이관 범위
@@ -24,7 +26,7 @@ Microsoft [EMF Records](https://learn.microsoft.com/en-us/openspecs/windows_prot
 - `scale_extents.zig`: 24바이트 prefix
 - `dc_stack.zig`: SAVEDC 8, RESTOREDC 12바이트 prefix
 
-직전 파트의 `basic_point_drawing.zig`와 `basic_shapes.zig`도 같은 SSOT를 사용한다. palette와 handle 연계 record는 [EMF 핸들·팔레트 record 호환성](emf-handle-record-compatibility.md), color-space creation은 [전용 호환성 문서](emf-color-space-record-compatibility.md)에서 후속 이관했다. offset/size section과 가변 객체를 포함한 poly·font·bitmap brush·extended pen은 의미 payload 끝과 보존할 extra를 먼저 분리해야 하므로 이 파트의 완료 범위가 아니다.
+직전 파트의 `basic_point_drawing.zig`와 `basic_shapes.zig`도 같은 SSOT를 사용한다. palette와 handle 연계 record는 [EMF 핸들·팔레트 record 호환성](emf-handle-record-compatibility.md), color-space creation은 [전용 호환성 문서](emf-color-space-record-compatibility.md), poly 배열은 [poly record 후행 호환성](emf-poly-record-compatibility.md)에서 후속 이관했다. offset/size section과 가변 객체를 포함한 font·bitmap brush·extended pen은 의미 payload 끝과 보존할 extra를 먼저 분리해야 하므로 이 파트의 완료 범위가 아니다.
 
 ## 검증
 

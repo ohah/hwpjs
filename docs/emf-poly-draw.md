@@ -4,7 +4,7 @@
 
 `poly_draw.zig`는 Microsoft [EMR_POLYDRAW16](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/57f0cfe7-2139-4199-b6ad-61fb61a1d4ec) 및 같은 PointL 배치의 EMR_POLYDRAW를 구분한다. 두 record는 Type/Size, RectL, Count 뒤 Count개의 점과 정확히 Count바이트인 type 배열을 순서대로 가진다. `POLYDRAW`는 8바이트 PointL, `POLYDRAW16`은 4바이트 PointS를 사용한다.
 
-내용 끝은 4바이트 record 경계로 올림하며 0~3바이트 padding은 의미를 부여하지 않고 빌려 보존한다. `28 + Count * (point_width + 1)`과 정렬을 u64에서 계산하고 실제/선언 Size가 정확히 일치한 뒤에만 usize offset으로 바꾼다. 입력 길이에 맞춰 Count를 줄이거나 type을 생성하지 않는다.
+내용 끝은 4바이트 record 경계로 올림하며 0~3바이트 padding은 의미를 부여하지 않고 빌려 보존한다. `28 + Count * (point_width + 1)`과 정렬을 u64에서 계산하고 선언/실제 record 길이 일치와 의미 범위 포함을 확인한 뒤에만 usize offset으로 바꾼다. 그 뒤 후행 data는 padding에 포함하지 않으며 [공통 호환성 문서](emf-poly-record-compatibility.md)가 이 경계를 소유한다. 입력 길이에 맞춰 Count를 줄이거나 type을 생성하지 않는다.
 
 `point_type_array.zig`는 공식 [Point Enumeration](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/01b63e3f-19d6-437c-8fc6-2758884bc08d)의 유일한 소유자다. 기본 operation은 LINETO 2, BEZIERTO 4, MOVETO 6이고 close bit 1은 LINETO 또는 Bezier의 끝점에만 붙는다. 따라서 wire 값 2·3·4·5·6만 허용하고 MOVETO|CLOSE 7 및 다른 모든 u8을 거부한다. BEZIERTO는 연속 세 개이며 첫 두 control type은 정확히 4, 세 번째 endpoint만 4 또는 5다.
 
@@ -25,7 +25,7 @@ points와 types는 같은 Count에서 파생되어 개수가 항상 같지만 �
 - 0..255 type 전 값을 독립적으로 순회해 다섯 wire 값만 수용하고 close bit를 보존한다.
 - 정상 Bezier triple, 잘린/비연속 triple, 첫·둘째 control point의 잘못된 close를 구분한다.
 - PointL/PointS 극값, 빈 배열, padding 0·1·2·3바이트와 무시 padding 원문을 검사한다.
-- 고정부 모든 잘림, count-derived 길이보다 부족·초과, 선언 Size 불일치, u32 최대 Count를 거부한다.
+- 고정부 모든 잘림, count-derived 길이보다 부족한 입력, 선언 Size 불일치, u32 최대 Count를 거부하고 의미 범위 뒤 후행 data를 배열과 padding에서 제외한다.
 - 합성 전체 EMF의 POLYDRAW16 record로 framing 연결 및 잘못된 type 전파를 검사한다.
 
 최초 type parser는 base operation만 세 개 연속이면 첫·둘째 Bezier control point의 close도 허용했다. Microsoft PolyDraw 설명은 close가 Bezier endpoint type에 결합된다고 명시하므로 첫 두 바이트를 정확히 4로 제한하고 해당 반례를 회귀로 추가했다.

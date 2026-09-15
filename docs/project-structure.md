@@ -50,6 +50,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - [PNG iCCP 구현 작업·미완료 경계](png-embedded-profile.md)
 - [ICC 헤더·식별자 구현 작업](icc-structure.md)
 - [EMF color-space 생성 record 호환성](emf-color-space-record-compatibility.md)
+- [EMF poly record 후행 호환성](emf-poly-record-compatibility.md)
 
 - [HWP5 모듈 계약](hwp5-modules.md)
 - [아키텍처와 구현 순서](architecture.md)

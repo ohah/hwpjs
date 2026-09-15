@@ -551,17 +551,18 @@ test "EMF framing validates extended font payload before object creation" {
 
 test "EMF framing validates 32-bit poly drawing arrays" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 152;
+    var bytes = [_]u8{0} ** 156;
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
     std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.polyline), .little);
-    std.mem.writeInt(u32, bytes[92..96], 44, .little);
+    std.mem.writeInt(u32, bytes[92..96], 48, .little);
     std.mem.writeInt(i32, bytes[96..100], -20, .little);
     std.mem.writeInt(u32, bytes[112..116], 2, .little);
     std.mem.writeInt(i32, bytes[116..120], std.math.minInt(i32), .little);
     std.mem.writeInt(i32, bytes[128..132], std.math.maxInt(i32), .little);
-    @memcpy(bytes[132..152], original[88..108]);
+    bytes[132..136].* = .{ 1, 2, 3, 4 };
+    @memcpy(bytes[136..156], original[88..108]);
     try t.expectEqual(@as(usize, 3), (try framing.validate(t.allocator, &bytes)).records);
 
     std.mem.writeInt(u32, bytes[112..116], 3, .little);
@@ -570,35 +571,37 @@ test "EMF framing validates 32-bit poly drawing arrays" {
 
 test "EMF framing validates 16-bit poly drawing arrays" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 144;
+    var bytes = [_]u8{0} ** 148;
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
     std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.polyline16), .little);
-    std.mem.writeInt(u32, bytes[92..96], 36, .little);
+    std.mem.writeInt(u32, bytes[92..96], 40, .little);
     std.mem.writeInt(u32, bytes[112..116], 2, .little);
     std.mem.writeInt(i16, bytes[116..118], std.math.minInt(i16), .little);
     std.mem.writeInt(i16, bytes[120..122], std.math.maxInt(i16), .little);
-    @memcpy(bytes[124..144], original[88..108]);
+    bytes[124..128].* = .{ 1, 2, 3, 4 };
+    @memcpy(bytes[128..148], original[88..108]);
     try t.expectEqual(@as(usize, 3), (try framing.validate(t.allocator, &bytes)).records);
 
-    std.mem.writeInt(u32, bytes[112..116], 3, .little);
+    std.mem.writeInt(u32, bytes[112..116], 4, .little);
     try t.expectError(error.InvalidEmfPoly16RecordSize, framing.validate(t.allocator, &bytes));
 }
 
 test "EMF framing validates POLYDRAW type arrays and alignment" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 144;
+    var bytes = [_]u8{0} ** 148;
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
     std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.polydraw16), .little);
-    std.mem.writeInt(u32, bytes[92..96], 36, .little);
+    std.mem.writeInt(u32, bytes[92..96], 40, .little);
     std.mem.writeInt(u32, bytes[112..116], 1, .little);
     std.mem.writeInt(i16, bytes[116..118], -7, .little);
     bytes[120] = 3;
     bytes[121..124].* = .{ 0xaa, 0xbb, 0xcc };
-    @memcpy(bytes[124..144], original[88..108]);
+    bytes[124..128].* = .{ 1, 2, 3, 4 };
+    @memcpy(bytes[128..148], original[88..108]);
     try t.expectEqual(@as(usize, 3), (try framing.validate(t.allocator, &bytes)).records);
 
     bytes[120] = 7;

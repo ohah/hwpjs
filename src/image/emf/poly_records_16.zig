@@ -54,7 +54,7 @@ test "all five single PointS poly records use shared kinds and signed XY" {
     try std.testing.expect((try parse(fixture(.polydraw16, &bytes))) == null);
 }
 
-test "PointS single records reject all fixed truncations exact extent and invalid Bezier counts" {
+test "PointS single records reject truncations and invalid counts but ignore trailing data" {
     var bytes = [_]u8{0} ** 44;
     std.mem.writeInt(u32, bytes[24..28], 4, .little);
     for (0..single_header_size) |cut|
@@ -62,7 +62,7 @@ test "PointS single records reject all fixed truncations exact extent and invali
     try std.testing.expectError(error.InvalidEmfPoly16RecordSize, parse(fixture(.polybezier16, bytes[0..43])));
     var excess = [_]u8{0} ** 48;
     std.mem.writeInt(u32, excess[24..28], 4, .little);
-    try std.testing.expectError(error.InvalidEmfPoly16RecordSize, parse(fixture(.polybezier16, &excess)));
+    try std.testing.expectEqual(@as(usize, 4), (try parse(fixture(.polybezier16, &excess))).?.single.points.count());
     var wrong = fixture(.polybezier16, &bytes);
     wrong.size -= 4;
     try std.testing.expectError(error.InvalidEmfPoly16RecordSize, parse(wrong));
@@ -102,6 +102,10 @@ test "PointS multi-poly validates exact arrays total ranges and indexes" {
         try std.testing.expectError(error.EmfPolyShapeIndexOutOfBounds, value.countAt(2));
         try std.testing.expectError(error.EmfPolyShapeIndexOutOfBounds, value.pointRange(2));
     }
+    var extended: [64]u8 = undefined;
+    @memcpy(extended[0..60], &bytes);
+    extended[60..].* = .{ 1, 2, 3, 4 };
+    try std.testing.expectEqual(@as(usize, 5), (try parse(fixture(.polypolygon16, &extended))).?.multiple.points.count());
     for (0..bytes.len) |cut|
         try std.testing.expectError(error.InvalidEmfPoly16RecordSize, parse(fixture(.polypolygon16, bytes[0..cut])));
     std.mem.writeInt(u32, bytes[36..40], 2, .little);

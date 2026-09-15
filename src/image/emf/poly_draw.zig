@@ -3,6 +3,7 @@ const geometry = @import("geometry.zig");
 const point_l_array = @import("point_l_array.zig");
 const point_s_array = @import("point_s_array.zig");
 const point_type_array = @import("point_type_array.zig");
+const record_extent = @import("record_extent.zig");
 const records = @import("records.zig");
 
 pub const header_size: usize = 28;
@@ -28,14 +29,14 @@ fn parseLayout(record: records.Record, point_width: usize) !Layout {
     const points_end: u64 = header_size + @as(u64, count) * point_width;
     const content_end = points_end + count;
     const expected = std.mem.alignForward(u64, content_end, 4);
-    if (record.size != record.bytes.len or expected != record.bytes.len) return error.InvalidEmfPolyDrawRecordSize;
+    const semantic_end = record_extent.requiredEnd(record, expected) orelse return error.InvalidEmfPolyDrawRecordSize;
     const points_end_usize: usize = @intCast(points_end);
     const content_end_usize: usize = @intCast(content_end);
     return .{
         .bounds = try geometry.parseRectL(record.bytes[8..24]),
         .point_bytes = record.bytes[header_size..points_end_usize],
         .type_bytes = record.bytes[points_end_usize..content_end_usize],
-        .padding = record.bytes[content_end_usize..],
+        .padding = record.bytes[content_end_usize..semantic_end],
     };
 }
 
@@ -98,13 +99,16 @@ test "POLYDRAW16 keeps parallel PointS types and every padding length" {
     }
 }
 
-test "POLYDRAW variants reject every fixed truncation extent drift and type error" {
+test "POLYDRAW variants reject truncation and type errors but ignore trailing data" {
     var bytes = [_]u8{0} ** 48;
     std.mem.writeInt(u32, bytes[24..28], 3, .little);
     bytes[40..43].* = .{ 4, 4, 5 };
     for (0..header_size) |cut|
         try std.testing.expectError(error.InvalidEmfPolyDrawRecordSize, parse(fixture(.polydraw16, bytes[0..cut])));
-    try std.testing.expectError(error.InvalidEmfPolyDrawRecordSize, parse(fixture(.polydraw16, bytes[0..47])));
+    try std.testing.expectError(error.InvalidEmfPolyDrawRecordSize, parse(fixture(.polydraw16, bytes[0..43])));
+    const extended = (try parse(fixture(.polydraw16, &bytes))).?.short;
+    try std.testing.expectEqual(@as(usize, 3), extended.points.count());
+    try std.testing.expectEqual(@as(usize, 1), extended.padding.len);
     var wrong = fixture(.polydraw16, bytes[0..44]);
     wrong.size -= 4;
     try std.testing.expectError(error.InvalidEmfPolyDrawRecordSize, parse(wrong));

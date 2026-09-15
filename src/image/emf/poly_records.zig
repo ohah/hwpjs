@@ -60,7 +60,7 @@ test "single 32-bit poly records enforce kind-specific point sequences" {
     try std.testing.expect((try parse(fixture(.savedc, &unrelated))) == null);
 }
 
-test "single poly records reject count grammar truncation excess and declaration drift" {
+test "single poly records reject grammar truncation and declaration drift but ignore trailing data" {
     var bytes = singleFixture(4);
     for (0..single_header_size) |cut|
         try std.testing.expectError(error.InvalidEmfPolyRecordSize, parse(fixture(.polybezier, bytes[0..cut])));
@@ -72,7 +72,7 @@ test "single poly records reject count grammar truncation excess and declaration
     try std.testing.expectError(error.InvalidEmfPolyRecordSize, parse(fixture(.polybezier, bytes[0..59])));
     var excess = [_]u8{0} ** 68;
     std.mem.writeInt(u32, excess[24..28], 4, .little);
-    try std.testing.expectError(error.InvalidEmfPolyRecordSize, parse(fixture(.polybezier, &excess)));
+    try std.testing.expectEqual(@as(usize, 4), (try parse(fixture(.polybezier, &excess))).?.single.points.count());
     var wrong = fixture(.polybezier, &bytes);
     wrong.size -= 4;
     try std.testing.expectError(error.InvalidEmfPolyRecordSize, parse(wrong));
@@ -119,6 +119,10 @@ test "multi-poly records validate per-shape counts total and borrowed ranges" {
         try std.testing.expectError(error.EmfPolyShapeIndexOutOfBounds, value.countAt(2));
         try std.testing.expectError(error.EmfPolyShapeIndexOutOfBounds, value.pointRange(2));
     }
+    var extended: [84]u8 = undefined;
+    @memcpy(extended[0..80], &bytes);
+    extended[80..].* = .{ 1, 2, 3, 4 };
+    try std.testing.expectEqual(@as(usize, 5), (try parse(fixture(.polypolygon, &extended))).?.multiple.points.count());
     for (0..bytes.len) |cut|
         try std.testing.expectError(error.InvalidEmfPolyRecordSize, parse(fixture(.polypolygon, bytes[0..cut])));
     std.mem.writeInt(u32, bytes[36..40], 2, .little);

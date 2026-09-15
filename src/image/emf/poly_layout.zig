@@ -1,6 +1,7 @@
 const std = @import("std");
 const geometry = @import("geometry.zig");
 const poly_rules = @import("poly_rules.zig");
+const record_extent = @import("record_extent.zig");
 const records = @import("records.zig");
 
 pub const single_header_size: usize = 28;
@@ -21,11 +22,11 @@ pub fn parse(record: records.Record, coordinate: poly_rules.Coordinate, point_wi
         const count = std.mem.readInt(u32, record.bytes[24..28], .little);
         try poly_rules.validateSingleCount(info.shape, count);
         const expected: u64 = single_header_size + @as(u64, count) * point_width;
-        if (record.size != record.bytes.len or expected != record.bytes.len) return sizeError(coordinate);
+        const semantic_end = record_extent.requiredEnd(record, expected) orelse return sizeError(coordinate);
         return .{ .single = .{
             .shape = info.shape,
             .bounds = try geometry.parseRectL(record.bytes[8..24]),
-            .point_bytes = record.bytes[single_header_size..],
+            .point_bytes = record.bytes[single_header_size..semantic_end],
         } };
     }
 
@@ -34,7 +35,7 @@ pub fn parse(record: records.Record, coordinate: poly_rules.Coordinate, point_wi
     const point_count = std.mem.readInt(u32, record.bytes[28..32], .little);
     const counts_end: u64 = multiple_header_size + @as(u64, shape_count) * 4;
     const expected: u64 = counts_end + @as(u64, point_count) * point_width;
-    if (record.size != record.bytes.len or expected != record.bytes.len) return sizeError(coordinate);
+    const semantic_end = record_extent.requiredEnd(record, expected) orelse return sizeError(coordinate);
     const counts_end_usize: usize = @intCast(counts_end);
     const count_bytes = record.bytes[multiple_header_size..counts_end_usize];
     if (try poly_rules.sumCounts(count_bytes, shape_count) != point_count) return error.InvalidEmfPolyPointCountTotal;
@@ -43,6 +44,6 @@ pub fn parse(record: records.Record, coordinate: poly_rules.Coordinate, point_wi
         .shape_count = shape_count,
         .point_count = point_count,
         .count_bytes = count_bytes,
-        .point_bytes = record.bytes[counts_end_usize..],
+        .point_bytes = record.bytes[counts_end_usize..semantic_end],
     } };
 }
