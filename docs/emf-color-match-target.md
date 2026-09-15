@@ -12,5 +12,5 @@
 
 - 빈 payload와 이름·프로필 동시 존재, surrogate pair와 NUL, action/embedded 전체 정의값·미정의값, 모든 입력 잘림, 선언/실제 크기 불일치, `cbName + cbData` 초과, 홀수 UTF-16 바이트, 고립 surrogate, 다른 record dispatch를 검사합니다.
 - framing fixture에서 정상 집계와 잘못된 size field의 의미 검증 연결을 확인합니다.
-- action/flag 값과 offset, 두 크기 field, UTF-16 검사, payload 분할, exact extent, framing dispatch·집계의 12개 독립 변이를 Debug/ReleaseSafe/ReleaseFast에서 실행해 36/36 검출했습니다. 첫 실행에서 제품 `fixed_size`를 fixture도 참조해 24→25 변이가 살아남는 테스트 oracle 결합을 재현했고, 테스트 전용 wire 리터럴로 분리한 뒤 세 모드 전체 검출을 다시 확인했습니다.
+- action/flag 값과 offset, 두 크기 field, UTF-16 검사, payload 분할, exact extent, framing dispatch·집계의 12개 독립 변이를 Debug/ReleaseSafe/ReleaseFast에서 실행해 36/36 검출했습니다. 첫 실행에서 제품 `fixed_size`를 fixture도 참조해 24→25 변이가 살아남는 테스트 oracle 결합을 재현해 분리했습니다. PIXELFORMAT 검증에서 연속 변이 cache 위험을 확인한 뒤에는 각 변이 직후 `.zig-cache`를 제거하는 강화된 실행으로 36회 전체를 다시 측정했습니다.
 - 세 모드 전체 audit는 각각 1,441/1,441 테스트를 통과했습니다. 현재 재귀 HWP corpus 584개에서 signature로 확인된 EMF 후보가 0개이므로 이 record의 실제 HWP 표본 일치까지 주장하지 않으며, wire fixture와 명세 대조가 현재 근거입니다.

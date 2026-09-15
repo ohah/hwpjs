@@ -10,7 +10,7 @@
 ## 검증 기록
 
 - Checksum/Index의 독립 byte 위치와 극값, 0..15의 모든 prefix 잘림, 선언/실제 길이 양방향 불일치, 후행 바이트 보존, unrelated dispatch, framing 연결과 다음 EOF 경계를 검사합니다.
-- UFI field offset·endianness, record dispatch, 필수 prefix와 선언 길이, trailing 분리, 공통 UFI parser 호출, framing 호출·집계의 10개 독립 변이를 Debug/ReleaseSafe/ReleaseFast에서 실행해 30/30 검출했습니다. 첫 실행은 작업 트리와 함께 복사된 `.zig-cache`가 첫 변이를 가리는 검증 도구 결함을 재현했으며, 임시 복사본의 캐시를 제거한 뒤 모든 변이를 처음부터 재실행한 결과만 유효한 근거로 기록합니다.
+- UFI field offset·endianness, record dispatch, 필수 prefix와 선언 길이, trailing 분리, 공통 UFI parser 호출, framing 호출·집계의 10개 독립 변이를 Debug/ReleaseSafe/ReleaseFast에서 실행해 30/30 검출했습니다. PIXELFORMAT 검증에서 연속 변이 사이에도 cache가 개입할 수 있음을 확인한 뒤, 각 변이 직후 `.zig-cache`를 제거하는 강화된 실행으로 30회 전체를 다시 측정했습니다.
 - 세 모드 전체 audit는 각각 1,444/1,444 테스트를 통과했습니다.
 - 현재 재귀 HWP corpus에는 확인된 EMF 후보가 없으므로 실제 한글 생성기의 FORCEUFIMAPPING 표본 호환성을 주장하지 않습니다.
 

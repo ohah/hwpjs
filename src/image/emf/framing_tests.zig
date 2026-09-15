@@ -35,6 +35,25 @@ test "EMF framing validates header declarations and terminal EOF" {
     try t.expectEqual(@import("header_payload.zig").Variant.base, value.header_payload.variant);
 }
 
+test "EMF framing validates and counts PIXELFORMAT records" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 160;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 3, .little);
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.pixelformat), .little);
+    std.mem.writeInt(u32, bytes[92..96], 52, .little);
+    std.mem.writeInt(u16, bytes[96..98], 40, .little);
+    std.mem.writeInt(u16, bytes[98..100], 1, .little);
+    bytes[104] = 1;
+    bytes[136..140].* = .{ 9, 8, 7, 6 };
+    @memcpy(bytes[140..160], original[88..108]);
+    try t.expectEqual(@as(usize, 1), (try framing.validate(t.allocator, &bytes)).pixel_format_records);
+
+    bytes[98] = 2;
+    try t.expectError(error.InvalidEmfPixelFormatVersion, framing.validate(t.allocator, &bytes));
+}
+
 test "EMF framing validates and counts ALPHABLEND records" {
     const original = fixture();
     var bytes = [_]u8{0} ** 272;
