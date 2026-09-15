@@ -271,6 +271,38 @@ test "EMF framing connects MASKBLT and propagates bitmap-pair errors" {
     try t.expectError(error.MissingEmfMaskBltMaskBitmap, framing.validate(t.allocator, &bytes));
 }
 
+test "EMF framing connects PLGBLT and propagates bitmap-pair errors" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 292;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 3, .little);
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.plgblt), .little);
+    std.mem.writeInt(u32, bytes[92..96], 184, .little);
+    std.mem.writeInt(u32, bytes[180..184], 2, .little);
+    std.mem.writeInt(u32, bytes[184..188], 144, .little);
+    std.mem.writeInt(u32, bytes[188..192], 12, .little);
+    std.mem.writeInt(u32, bytes[192..196], 156, .little);
+    std.mem.writeInt(u32, bytes[196..200], 8, .little);
+    std.mem.writeInt(u32, bytes[208..212], 2, .little);
+    std.mem.writeInt(u32, bytes[212..216], 164, .little);
+    std.mem.writeInt(u32, bytes[216..220], 12, .little);
+    std.mem.writeInt(u32, bytes[220..224], 176, .little);
+    std.mem.writeInt(u32, bytes[224..228], 8, .little);
+    for ([_]usize{ 232, 252 }) |at| {
+        std.mem.writeInt(u32, bytes[at..][0..4], 12, .little);
+        std.mem.writeInt(u16, bytes[at + 4 ..][0..2], 2, .little);
+        std.mem.writeInt(u16, bytes[at + 6 ..][0..2], 2, .little);
+        std.mem.writeInt(u16, bytes[at + 8 ..][0..2], 1, .little);
+        std.mem.writeInt(u16, bytes[at + 10 ..][0..2], 1, .little);
+    }
+    @memcpy(bytes[272..292], original[88..108]);
+    const summary = try framing.validate(t.allocator, &bytes);
+    try t.expectEqual(@as(usize, 1), summary.parallelogram_block_transfer_records);
+    @memset(bytes[212..228], 0);
+    try t.expectError(error.MissingEmfPlgBltMaskBitmap, framing.validate(t.allocator, &bytes));
+}
+
 test "EMF header variant uses variable field offsets and validates UTF-16" {
     var bytes = [_]u8{0} ** 172;
     const base = fixture();
