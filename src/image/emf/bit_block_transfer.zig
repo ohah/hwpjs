@@ -1,51 +1,24 @@
 const std = @import("std");
-const bitmap_source = @import("bitmap_source.zig");
-const color_ref = @import("../wmf/color_ref.zig");
-const dib_colors = @import("dib_colors.zig");
-const geometry = @import("geometry.zig");
+const bit_blt_core = @import("bit_blt_core.zig");
 const record_extent = @import("record_extent.zig");
 const records = @import("records.zig");
-const ternary = @import("ternary_raster_operation.zig");
-const xform = @import("xform.zig");
 
-pub const fixed_size = 100;
+pub const fixed_size = bit_blt_core.byte_size;
 pub const BitBlt = struct {
-    bounds: geometry.RectL,
-    destination: geometry.PointL,
-    destination_size: geometry.SizeL,
-    raster_operation: ternary.Operation,
-    source: geometry.PointL,
-    source_transform: xform.XForm,
-    source_background: color_ref.ColorRef,
-    source_usage: dib_colors.Usage,
-    bitmap: ?bitmap_source.Source,
+    core: bit_blt_core.Core,
     trailing_data: []const u8,
 };
 
 pub fn parse(record: records.Record) !?BitBlt {
     if (record.kind != .bitblt) return null;
     const end = record_extent.requiredEnd(record, fixed_size) orelse return error.InvalidEmfBitBltSize;
-    const operation = try ternary.parse(std.mem.readInt(u32, record.bytes[40..44], .little));
-    const usage = try dib_colors.parse(std.mem.readInt(u32, record.bytes[80..84], .little));
-    const bitmap = try bitmap_source.parse(record.bytes, end, .{
-        .bmi_offset = std.mem.readInt(u32, record.bytes[84..88], .little),
-        .bmi_size = std.mem.readInt(u32, record.bytes[88..92], .little),
-        .bits_offset = std.mem.readInt(u32, record.bytes[92..96], .little),
-        .bits_size = std.mem.readInt(u32, record.bytes[96..100], .little),
-    }, usage);
-    if (operation.requiresSource() and bitmap == null) return error.MissingEmfBitBltSourceBitmap;
-    const semantic_end = if (bitmap) |value| value.semantic_end else end;
+    const core = bit_blt_core.parse(record.bytes, end) catch |err| switch (err) {
+        error.MissingEmfBltSourceBitmap => return error.MissingEmfBitBltSourceBitmap,
+        else => return err,
+    };
     return .{
-        .bounds = try geometry.parseRectL(record.bytes[8..24]),
-        .destination = try geometry.parsePointL(record.bytes[24..32]),
-        .destination_size = try geometry.parseSizeL(record.bytes[32..40]),
-        .raster_operation = operation,
-        .source = try geometry.parsePointL(record.bytes[44..52]),
-        .source_transform = try xform.parse(record.bytes[52..76]),
-        .source_background = try color_ref.parse(record.bytes[76..80], .specified_zero),
-        .source_usage = usage,
-        .bitmap = bitmap,
-        .trailing_data = record.bytes[semantic_end..],
+        .core = core,
+        .trailing_data = record.bytes[core.semanticEnd(end)..],
     };
 }
 
@@ -81,14 +54,14 @@ test "BITBLT parses fixed fields and non-contiguous source bitmap" {
     std.mem.writeInt(u32, bytes[52..56], 0x7fc01234, .little);
     bytes[76..80].* = .{ 1, 2, 3, 0 };
     const value = (try parse(fixture(.bitblt, &bytes))).?;
-    try std.testing.expectEqual(@as(i32, -9), value.bounds.left);
-    try std.testing.expectEqual(@as(i32, -3), value.destination.x);
-    try std.testing.expectEqual(@as(i32, -5), value.destination_size.width);
-    try std.testing.expectEqual(@as(i32, 7), value.source.x);
-    try std.testing.expectEqual(@as(u32, 0x7fc01234), value.source_transform.m11.bits);
-    try std.testing.expectEqual(@as(u8, 3), value.source_background.blue);
-    try std.testing.expectEqual(@as(usize, 4), value.bitmap.?.before_bmi.len);
-    try std.testing.expectEqual(@as(usize, 2), value.bitmap.?.between_bmi_and_bits.len);
+    try std.testing.expectEqual(@as(i32, -9), value.core.bounds.left);
+    try std.testing.expectEqual(@as(i32, -3), value.core.destination.x);
+    try std.testing.expectEqual(@as(i32, -5), value.core.destination_size.width);
+    try std.testing.expectEqual(@as(i32, 7), value.core.source.x);
+    try std.testing.expectEqual(@as(u32, 0x7fc01234), value.core.source_transform.m11.bits);
+    try std.testing.expectEqual(@as(u8, 3), value.core.source_background.blue);
+    try std.testing.expectEqual(@as(usize, 4), value.core.bitmap.?.before_bmi.len);
+    try std.testing.expectEqual(@as(usize, 2), value.core.bitmap.?.between_bmi_and_bits.len);
     try std.testing.expectEqual(@as(usize, 0), value.trailing_data.len);
 
     var extended: [136]u8 = undefined;
@@ -101,7 +74,7 @@ test "BITBLT parses fixed fields and non-contiguous source bitmap" {
 test "BITBLT omission follows raster truth table and all boundaries are checked" {
     var bytes = [_]u8{0} ** fixed_size;
     std.mem.writeInt(u32, bytes[40..44], 0x00f00021, .little); // PATCOPY ignores source.
-    try std.testing.expect((try parse(fixture(.bitblt, &bytes))).?.bitmap == null);
+    try std.testing.expect((try parse(fixture(.bitblt, &bytes))).?.core.bitmap == null);
     std.mem.writeInt(u32, bytes[40..44], 0x00cc0020, .little);
     try std.testing.expectError(error.MissingEmfBitBltSourceBitmap, parse(fixture(.bitblt, &bytes)));
     for (0..fixed_size) |cut| try std.testing.expectError(error.InvalidEmfBitBltSize, parse(fixture(.bitblt, bytes[0..cut])));

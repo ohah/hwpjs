@@ -218,6 +218,25 @@ test "EMF framing connects BITBLT and propagates missing source errors" {
     try t.expectError(error.MissingEmfBitBltSourceBitmap, framing.validate(t.allocator, &bytes));
 }
 
+test "EMF framing connects STRETCHBLT and propagates missing source errors" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 216;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 3, .little);
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.stretchblt), .little);
+    std.mem.writeInt(u32, bytes[92..96], 108, .little);
+    std.mem.writeInt(u32, bytes[128..132], 0x00f00021, .little);
+    std.mem.writeInt(i32, bytes[188..192], -7, .little);
+    std.mem.writeInt(i32, bytes[192..196], 9, .little);
+    @memcpy(bytes[196..216], original[88..108]);
+    const summary = try framing.validate(t.allocator, &bytes);
+    try t.expectEqual(@as(usize, 1), summary.stretch_block_transfer_records);
+
+    std.mem.writeInt(u32, bytes[128..132], 0x00cc0020, .little);
+    try t.expectError(error.MissingEmfStretchBltSourceBitmap, framing.validate(t.allocator, &bytes));
+}
+
 test "EMF header variant uses variable field offsets and validates UTF-16" {
     var bytes = [_]u8{0} ** 172;
     const base = fixture();
