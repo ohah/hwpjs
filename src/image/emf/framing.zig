@@ -16,6 +16,7 @@ const poly_records_16 = @import("poly_records_16.zig");
 const poly_draw = @import("poly_draw.zig");
 const basic_point_drawing = @import("basic_point_drawing.zig");
 const basic_shapes = @import("basic_shapes.zig");
+const clipping_records = @import("clipping_records.zig");
 const dc_stack = @import("dc_stack.zig");
 const palette_records = @import("palette_records.zig");
 const object_table = @import("object_table.zig");
@@ -23,7 +24,7 @@ const std = @import("std");
 const eof = @import("eof.zig");
 const eof_palette = @import("eof_palette.zig");
 
-pub const Summary = struct { header: header.Header, header_payload: header_payload.Payload, eof: eof.Eof, palette: eof_palette.Palette, objects: object_table.Report, records: usize };
+pub const Summary = struct { header: header.Header, header_payload: header_payload.Payload, eof: eof.Eof, palette: eof_palette.Palette, objects: object_table.Report, records: usize, clipping_records: usize };
 
 fn validateStructure(bytes: []const u8) !Summary {
     var iterator: records.Iterator = .{ .bytes = bytes };
@@ -34,6 +35,7 @@ fn validateStructure(bytes: []const u8) !Summary {
     const value = parsed_header.header;
     const payload = parsed_header.payload;
     var count: usize = 1;
+    var clipping_count: usize = 0;
     while (try iterator.next()) |record| {
         count += 1;
         if (record.kind == .header) return error.DuplicateEmfHeader;
@@ -52,6 +54,7 @@ fn validateStructure(bytes: []const u8) !Summary {
         _ = try poly_draw.parse(record);
         _ = try basic_point_drawing.parse(record);
         _ = try basic_shapes.parse(record);
+        if (try clipping_records.parse(record) != null) clipping_count += 1;
         _ = try dc_state.consume(record);
         _ = try palette_records.parse(record);
         if (record.kind != .eof) continue;
@@ -62,7 +65,7 @@ fn validateStructure(bytes: []const u8) !Summary {
         const palette = terminal_and_palette.palette;
         if (iterator.offset != bytes.len) return error.DataAfterEmfEof;
         if (count != value.records) return error.InvalidEmfDeclaredRecords;
-        return .{ .header = value, .header_payload = payload, .eof = terminal, .palette = palette, .objects = .{}, .records = count };
+        return .{ .header = value, .header_payload = payload, .eof = terminal, .palette = palette, .objects = .{}, .records = count, .clipping_records = clipping_count };
     }
     return error.MissingEmfEof;
 }

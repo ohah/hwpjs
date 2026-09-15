@@ -35,6 +35,34 @@ test "EMF framing validates header declarations and terminal EOF" {
     try t.expectEqual(@import("header_payload.zig").Variant.base, value.header_payload.variant);
 }
 
+test "EMF framing connects all fixed clipping records" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 180;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 6, .little);
+
+    var at: usize = 88;
+    inline for (.{
+        .{ @import("records.zig").RecordType.offsetcliprgn, @as(usize, 16) },
+        .{ @import("records.zig").RecordType.setmetargn, @as(usize, 8) },
+        .{ @import("records.zig").RecordType.excludecliprect, @as(usize, 24) },
+        .{ @import("records.zig").RecordType.intersectcliprect, @as(usize, 24) },
+    }) |case| {
+        std.mem.writeInt(u32, bytes[at..][0..4], @intFromEnum(case[0]), .little);
+        std.mem.writeInt(u32, bytes[at + 4 ..][0..4], @intCast(case[1]), .little);
+        at += case[1];
+    }
+    @memcpy(bytes[at..], original[88..108]);
+
+    const summary = try framing.validate(t.allocator, &bytes);
+    try t.expectEqual(@as(usize, 4), summary.clipping_records);
+
+    std.mem.writeInt(u32, bytes[92..96], 12, .little);
+    std.mem.writeInt(u32, bytes[48..52], 176, .little);
+    try t.expectError(error.InvalidEmfOffsetClipRegionSize, framing.validate(t.allocator, bytes[0..176]));
+}
+
 test "EMF header variant uses variable field offsets and validates UTF-16" {
     var bytes = [_]u8{0} ** 172;
     const base = fixture();

@@ -142,6 +142,7 @@ pub const emf_poly_draw = @import("emf/poly_draw.zig");
 pub const emf_basic_point_drawing = @import("emf/basic_point_drawing.zig");
 pub const emf_record_extent = @import("emf/record_extent.zig");
 pub const emf_basic_shapes = @import("emf/basic_shapes.zig");
+pub const emf_clipping_records = @import("emf/clipping_records.zig");
 pub const emf_object_table = @import("emf/object_table.zig");
 pub const emf_eof = @import("emf/eof.zig");
 pub const emf_eof_palette = @import("emf/eof_palette.zig");
