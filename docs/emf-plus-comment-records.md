@@ -23,4 +23,4 @@
 
 변경 소스를 고정한 뒤 Debug·ReleaseSafe·ReleaseFast 전체 `audit`를 순차 실행했습니다. 각 모드는 40/40 단계, 전체 1,498/1,498 테스트(공통 native 1,459, 별도 chart 31, WMF 8), HWP/WASM 8,905,827회 검사를 통과했습니다. CFB 변이 12,000회도 trap 0이며 로그는 `/tmp/hwpjs-emf-plus-comments-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.
 
-이 파트는 private comment 보존과 reserved record 거부만 완료합니다. private bytes의 vendor 의미를 지원한다는 뜻이 아니며, 다음 EMF+ payload인 Object와 SerializableObject 및 Object Table은 아직 구현하지 않았습니다.
+이 파트는 private comment 보존과 reserved record 거부만 완료합니다. private bytes의 vendor 의미를 지원한다는 뜻이 아닙니다. 후속 Object Table과 SerializableObject의 현재 범위는 [Object 레코드](emf-plus-object-record.md)와 [SerializableObject](emf-plus-serializable-object.md) 문서가 각각 소유합니다.

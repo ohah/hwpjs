@@ -84,6 +84,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - [EMF+ 공통 record stream](emf-plus-record-stream.md)
 - [EMF+ private comment와 reserved records](emf-plus-comment-records.md)
 - [EMF+ Object 레코드와 64슬롯 객체 테이블](emf-plus-object-record.md)
+- [EMF+ SerializableObject와 11개 Image Effects](emf-plus-serializable-object.md)
 
 - [HWP5 모듈 계약](hwp5-modules.md)
 - [아키텍처와 구현 순서](architecture.md)

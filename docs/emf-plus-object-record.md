@@ -14,7 +14,7 @@ C가 설정된 첫 조각과 같은 ID·타입의 후속 `EmfPlusObject`를 연�
 
 레코드 `DataSize`는 4바이트 정렬되지만 객체의 의미 길이는 그렇지 않을 수 있습니다. 따라서 마지막 조각은 `TotalObjectSize`를 채운 뒤 최대 3바이트의 정렬 패딩을 가질 수 있습니다. 의미 길이 미만, 정렬 길이 초과, 이미 의미 길이를 채운 조각의 C 설정은 각각 거부합니다. 패딩 값은 명세대로 해석하지 않습니다.
 
-이 계층은 조각의 총량과 순서를 검증하지만 객체 payload를 소유 버퍼로 복사하지 않습니다. Brush, Pen, Path, Region, Image, Font, StringFormat, ImageAttributes, CustomLineCap의 필드 해석과 완성 payload 조립은 후속 객체별 계층의 책임입니다. 현재 테이블 항목은 타입만 보존하며 렌더링 가능한 객체라고 주장하지 않습니다. `EmfPlusSerializableObject`와 image effect도 아직 이 문서의 구현 범위가 아닙니다.
+이 계층은 조각의 총량과 순서를 검증하지만 객체 payload를 소유 버퍼로 복사하지 않습니다. Brush, Pen, Path, Region, Image, Font, StringFormat, ImageAttributes, CustomLineCap의 필드 해석과 완성 payload 조립은 후속 객체별 계층의 책임입니다. 현재 테이블 항목은 타입만 보존하며 렌더링 가능한 객체라고 주장하지 않습니다. 별도 record인 `EmfPlusSerializableObject`와 image effect의 범위는 [전용 문서](emf-plus-serializable-object.md)가 소유합니다.
 
 ## 검증 경계
 

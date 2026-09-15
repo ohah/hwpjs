@@ -16,6 +16,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ Object 계층](emf-plus-object-record.md)은 Flags 해석, 분할 객체 총량, 64슬롯 Object Table 수명만 소유합니다. 개별 Brush/Pen/Path 등의 payload 파서가 이 규칙을 복제하지 않으며, 완성 객체의 바이트 조립과 타입별 의미 검증은 후속 계층으로 분리합니다.
 
+[EMF+ SerializableObject 계층](emf-plus-serializable-object.md)은 GUID packet 분류, 효과 parameter block, record envelope를 세 파일로 분리합니다. 효과별 필드 규칙은 image_effect에만 두고 stream은 검증 결과 집계만 담당합니다.
+
 PNG에서 파일 전체 이름 고유성을 검사하는 [sPLT 추천 팔레트](png-suggested-palettes.md)는 소유권이 있는 별도 Collector로 분리합니다. 기존 픽셀 검사 순회에 연결하되 비할당 metadata.State에 이름 인덱스 수명을 섞지 않습니다.
 
 ```text

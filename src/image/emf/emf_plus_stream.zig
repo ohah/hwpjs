@@ -4,6 +4,8 @@ const record = @import("emf_plus_record.zig");
 const header_record = @import("emf_plus_header.zig");
 const private_comment = @import("emf_plus_comment.zig");
 const object_record = @import("emf_plus_object.zig");
+const serializable_object = @import("emf_plus_serializable_object.zig");
+const image_effect_guid = @import("emf_plus_image_effect_guid.zig");
 
 pub const Report = struct {
     comments: usize = 0,
@@ -14,6 +16,8 @@ pub const Report = struct {
     private_comments: usize = 0,
     private_data_bytes: usize = 0,
     objects: object_record.Report = .{},
+    serializable_objects: usize = 0,
+    image_effects: [image_effect_guid.effect_count]usize = .{0} ** image_effect_guid.effect_count,
 };
 
 pub const State = struct {
@@ -51,6 +55,12 @@ pub const State = struct {
                 else => {},
             }
             _ = try pending.object_state.consume(value);
+            if (value.kind == .serializable_object) {
+                const parsed = try serializable_object.parse(value);
+                pending.report.serializable_objects = std.math.add(usize, pending.report.serializable_objects, 1) catch return error.LimitExceeded;
+                const effect_index: usize = @intFromEnum(parsed.kind);
+                pending.report.image_effects[effect_index] = std.math.add(usize, pending.report.image_effects[effect_index], 1) catch return error.LimitExceeded;
+            }
             if (private_comment.parse(value)) |parsed| {
                 pending.report.private_comments = std.math.add(usize, pending.report.private_comments, 1) catch return error.LimitExceeded;
                 pending.report.private_data_bytes = std.math.add(usize, pending.report.private_data_bytes, parsed.private_data.len) catch return error.LimitExceeded;
@@ -294,4 +304,48 @@ test "EMF+ EOF cannot complete a pending multipart object" {
     try std.testing.expectError(error.TruncatedEmfPlusObject, state.finish());
     try std.testing.expectEqual(@as(usize, 0), state.report.objects.completed);
     try std.testing.expectEqual(@as(usize, 0), state.report.objects.live_objects);
+}
+
+test "EMF+ stream validates and counts serializable image effects" {
+    var bytes = [_]u8{0} ** 80;
+    writeHeader(bytes[0..28]);
+    std.mem.writeInt(u16, bytes[28..30], 0x4038, .little);
+    std.mem.writeInt(u16, bytes[30..32], 0xffff, .little);
+    std.mem.writeInt(u32, bytes[32..36], 40, .little);
+    std.mem.writeInt(u32, bytes[36..40], 28, .little);
+    bytes[40..56].* = image_effect_guid.tint;
+    std.mem.writeInt(u32, bytes[56..60], 8, .little);
+    std.mem.writeInt(u32, bytes[60..64], @bitCast(@as(i32, -180)), .little);
+    std.mem.writeInt(u32, bytes[64..68], 100, .little);
+    writeEmptyRecord(bytes[68..80], 0x4002);
+
+    var state: State = .{};
+    try std.testing.expect(try state.consume(testComment(&bytes), 2));
+    try state.finish();
+    try std.testing.expectEqual(@as(usize, 1), state.report.serializable_objects);
+    try std.testing.expectEqual(@as(usize, 1), state.report.image_effects[@intFromEnum(image_effect_guid.Kind.tint)]);
+    for (state.report.image_effects, 0..) |count, i|
+        if (i != @intFromEnum(image_effect_guid.Kind.tint)) try std.testing.expectEqual(@as(usize, 0), count);
+}
+
+test "EMF+ serializable aggregate overflow leaves the whole comment unchanged" {
+    var bytes = [_]u8{0} ** 68;
+    writeHeader(bytes[0..28]);
+    std.mem.writeInt(u16, bytes[28..30], 0x4038, .little);
+    std.mem.writeInt(u32, bytes[32..36], 40, .little);
+    std.mem.writeInt(u32, bytes[36..40], 28, .little);
+    bytes[40..56].* = image_effect_guid.tint;
+    std.mem.writeInt(u32, bytes[56..60], 8, .little);
+
+    var count_overflow: State = .{};
+    count_overflow.report.serializable_objects = std.math.maxInt(usize);
+    const before_count = count_overflow;
+    try std.testing.expectError(error.LimitExceeded, count_overflow.consume(testComment(&bytes), 2));
+    try std.testing.expectEqualDeep(before_count, count_overflow);
+
+    var effect_overflow: State = .{};
+    effect_overflow.report.image_effects[@intFromEnum(image_effect_guid.Kind.tint)] = std.math.maxInt(usize);
+    const before_effect = effect_overflow;
+    try std.testing.expectError(error.LimitExceeded, effect_overflow.consume(testComment(&bytes), 2));
+    try std.testing.expectEqualDeep(before_effect, effect_overflow);
 }
