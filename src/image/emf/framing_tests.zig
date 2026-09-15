@@ -92,6 +92,43 @@ test "EMF framing connects path and extended clipping selection" {
     try t.expectError(error.MissingEmfExtSelectClipRegionData, framing.validate(t.allocator, &bytes));
 }
 
+test "EMF framing connects all RegionData drawing records and brush references" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 428;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 6, .little);
+
+    var at: usize = 88;
+    inline for (.{
+        .{ @import("records.zig").RecordType.fillrgn, @as(usize, 32) },
+        .{ @import("records.zig").RecordType.framergn, @as(usize, 40) },
+        .{ @import("records.zig").RecordType.invertrgn, @as(usize, 28) },
+        .{ @import("records.zig").RecordType.paintrgn, @as(usize, 28) },
+    }) |case| {
+        const record_size = case[1] + 48;
+        std.mem.writeInt(u32, bytes[at..][0..4], @intFromEnum(case[0]), .little);
+        std.mem.writeInt(u32, bytes[at + 4 ..][0..4], @intCast(record_size), .little);
+        std.mem.writeInt(u32, bytes[at + 24 ..][0..4], 48, .little);
+        if (case[0] == .fillrgn or case[0] == .framergn)
+            std.mem.writeInt(u32, bytes[at + 28 ..][0..4], @intFromEnum(@import("stock_object.zig").StockObject.white_brush), .little);
+        const region_at = at + case[1];
+        std.mem.writeInt(u32, bytes[region_at..][0..4], @import("region_data.zig").header_size, .little);
+        std.mem.writeInt(u32, bytes[region_at + 4 ..][0..4], @import("region_data.zig").rectangle_type, .little);
+        std.mem.writeInt(u32, bytes[region_at + 8 ..][0..4], 1, .little);
+        std.mem.writeInt(u32, bytes[region_at + 12 ..][0..4], @import("region_data.zig").rectangle_size, .little);
+        at += record_size;
+    }
+    @memcpy(bytes[at..], original[88..108]);
+
+    const summary = try framing.validate(t.allocator, &bytes);
+    try t.expectEqual(@as(usize, 4), summary.region_drawing_records);
+    try t.expectEqual(@as(usize, 2), summary.objects.region_brush_uses);
+
+    std.mem.writeInt(u32, bytes[120..124], 28, .little);
+    try t.expectError(error.InvalidEmfRegionDataHeaderSize, framing.validate(t.allocator, &bytes));
+}
+
 test "EMF header variant uses variable field offsets and validates UTF-16" {
     var bytes = [_]u8{0} ** 172;
     const base = fixture();

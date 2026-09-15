@@ -146,6 +146,7 @@ pub const emf_clipping_records = @import("emf/clipping_records.zig");
 pub const emf_region_mode = @import("emf/region_mode.zig");
 pub const emf_region_data = @import("emf/region_data.zig");
 pub const emf_clipping_selection = @import("emf/clipping_selection.zig");
+pub const emf_region_drawing = @import("emf/region_drawing.zig");
 pub const emf_object_table = @import("emf/object_table.zig");
 pub const emf_eof = @import("emf/eof.zig");
 pub const emf_eof_palette = @import("emf/eof_palette.zig");

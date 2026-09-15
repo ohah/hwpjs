@@ -11,6 +11,7 @@ const basic_object_creation = @import("basic_object_creation.zig");
 const extended_pen_creation = @import("extended_pen_creation.zig");
 const bitmap_brush_creation = @import("bitmap_brush_creation.zig");
 const font_creation = @import("font_creation.zig");
+const region_drawing = @import("region_drawing.zig");
 
 const Slot = union(enum) {
     empty,
@@ -70,6 +71,7 @@ pub const Report = struct {
     replacement_deactivations: usize = 0,
     color_space_sets: usize = 0,
     color_space_deletes: usize = 0,
+    region_brush_uses: usize = 0,
     peak_live: usize = 0,
     final_live: usize = 0,
     final_explicit_selected: usize = 0,
@@ -118,6 +120,14 @@ const State = struct {
         const actual = slotKind(self.slots[index]) orelse return error.DeadEmfObjectReference;
         if (actual != expected) return error.InvalidEmfObjectType;
         return index;
+    }
+
+    fn requireBrush(self: State, handle: u32) !void {
+        if (handle & 0x80000000 != 0) {
+            if (stock_object.kind(try stock_object.parse(handle)) != .brush) return error.InvalidEmfObjectType;
+            return;
+        }
+        _ = try self.requireKind(handle, .brush);
     }
 
     fn delete(self: *State, handle: u32, expected: ?stock_object.Kind) !void {
@@ -197,6 +207,20 @@ const State = struct {
                 .wide => |value| value.handle,
             };
             try self.create(handle, .{ .object = .color_space });
+            return;
+        }
+        if (try region_drawing.parse(record)) |drawing| {
+            switch (drawing) {
+                .fill => |value| {
+                    try self.requireBrush(value.brush_handle);
+                    self.report.region_brush_uses += 1;
+                },
+                .frame => |value| {
+                    try self.requireBrush(value.brush_handle);
+                    self.report.region_brush_uses += 1;
+                },
+                .invert, .paint => {},
+            }
             return;
         }
         if (try basic_object_creation.parse(record)) |creation| {
@@ -316,6 +340,19 @@ fn createBrush(handle: u32) [24]u8 {
     return bytes;
 }
 
+fn regionBrushRecord(kind: records.RecordType, handle: u32) [88]u8 {
+    std.debug.assert(kind == .fillrgn or kind == .framergn);
+    const fixed_end: usize = if (kind == .fillrgn) 32 else 40;
+    var bytes = [_]u8{0} ** 88;
+    std.mem.writeInt(u32, bytes[24..28], 48, .little);
+    std.mem.writeInt(u32, bytes[28..32], handle, .little);
+    std.mem.writeInt(u32, bytes[fixed_end..][0..4], @import("region_data.zig").header_size, .little);
+    std.mem.writeInt(u32, bytes[fixed_end + 4 ..][0..4], @import("region_data.zig").rectangle_type, .little);
+    std.mem.writeInt(u32, bytes[fixed_end + 8 ..][0..4], 1, .little);
+    std.mem.writeInt(u32, bytes[fixed_end + 12 ..][0..4], @import("region_data.zig").rectangle_size, .little);
+    return bytes;
+}
+
 fn createExtendedPen(handle: u32) [extended_pen_creation.minimum_size]u8 {
     var bytes = [_]u8{0} ** extended_pen_creation.minimum_size;
     std.mem.writeInt(u32, bytes[8..12], handle, .little);
@@ -424,6 +461,36 @@ test "object table tracks every non-palette creation kind" {
     try std.testing.expectEqual(@as(usize, 8), state.report.deletes);
     try std.testing.expectEqual(@as(usize, 1), state.report.peak_live);
     try std.testing.expectEqual(@as(usize, 0), state.live);
+}
+
+test "region drawing brush handles require live explicit or brush stock objects" {
+    var slots = [_]Slot{.empty} ** 4;
+    var state: State = .{ .slots = &slots };
+    try state.consume(fixture(.createbrushindirect, &createBrush(1)));
+    try state.consume(fixture(.createpen, &createPen(2)));
+    const fill = regionBrushRecord(.fillrgn, 1);
+    try state.consume(fixture(.fillrgn, fill[0..80]));
+    const stock_frame = regionBrushRecord(.framergn, @intFromEnum(stock_object.StockObject.white_brush));
+    try state.consume(fixture(.framergn, &stock_frame));
+    try std.testing.expectEqual(@as(usize, 2), state.report.region_brush_uses);
+
+    const before = state.report;
+    for ([_]u32{ 0, 2, 3, 0x80000009, @intFromEnum(stock_object.StockObject.white_pen) }) |handle| {
+        const invalid = regionBrushRecord(.fillrgn, handle);
+        _ = state.consume(fixture(.fillrgn, invalid[0..80])) catch {};
+        try std.testing.expectEqualDeep(before, state.report);
+    }
+    const wrong_kind = regionBrushRecord(.fillrgn, 2);
+    try std.testing.expectError(error.InvalidEmfObjectType, state.consume(fixture(.fillrgn, wrong_kind[0..80])));
+    const dead = regionBrushRecord(.fillrgn, 3);
+    try std.testing.expectError(error.DeadEmfObjectReference, state.consume(fixture(.fillrgn, dead[0..80])));
+    const zero = regionBrushRecord(.fillrgn, 0);
+    try std.testing.expectError(error.InvalidEmfObjectHandle, state.consume(fixture(.fillrgn, zero[0..80])));
+    const stock_pen = regionBrushRecord(.fillrgn, @intFromEnum(stock_object.StockObject.white_pen));
+    try std.testing.expectError(error.InvalidEmfObjectType, state.consume(fixture(.fillrgn, stock_pen[0..80])));
+    const stock_gap = regionBrushRecord(.fillrgn, 0x80000009);
+    try std.testing.expectError(error.InvalidEmfStockObject, state.consume(fixture(.fillrgn, stock_gap[0..80])));
+    try std.testing.expectEqualDeep(before, state.report);
 }
 
 test "palette references require a live palette and current entry bounds" {

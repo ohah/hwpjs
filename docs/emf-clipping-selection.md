@@ -16,6 +16,8 @@ EXTSELECTCLIPRGN에서 `RgnDataSize=0`은 mode가 COPY일 때만 RegionData 부�
 
 `framing.zig`는 두 record를 모두 연결하고 selection record 수를 Summary에 보존한다. RegionData의 bounds 재계산, rectangle의 정렬·겹침 검사, 실제 region boolean 연산과 SELECTCLIPPATH의 현재 path 소비는 명시적인 wire 제약이 아니며 playback 계층에서 다룬다.
 
+같은 RegionData 객체를 사용하는 fill/frame/invert/paint record는 [RegionData drawing records](emf-region-drawing.md)가 소유한다.
+
 ## 검증 기록과 한계
 
 다섯 mode와 인접 미정의 값, RegionData Header Size/Type, signed bounds·rectangle 순서, count 기반 실제 크기, `RgnSize=0`과 잘못된 비영 크기, 모든 잘림·초과, rectangle index, COPY만 허용되는 빈 data, 선언된 nested 범위와 후행 record data 분리, 무관 record 비수용, framing 연결을 직접 검사한다.
