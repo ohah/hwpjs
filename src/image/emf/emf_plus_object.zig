@@ -54,12 +54,76 @@ pub const Report = struct {
     live_objects: usize = 0,
 };
 
-const Pending = struct {
+pub const Pending = struct {
     object_id: u6,
     object_type: ObjectType,
     total_object_size: u32,
     received: u64,
 };
+
+const Transition = struct {
+    next_pending: ?Pending,
+    semantic_bytes: usize,
+    completed: bool,
+    started_multipart: bool,
+};
+
+fn transition(pending: ?Pending, fragment: Fragment) !Transition {
+    if (pending) |current| {
+        if (fragment.object_id != current.object_id or fragment.object_type != current.object_type)
+            return error.MismatchedEmfPlusObjectContinuation;
+        if (fragment.total_object_size.? != current.total_object_size)
+            return error.ChangedEmfPlusTotalObjectSize;
+        const received = std.math.add(u64, current.received, @as(u64, @intCast(fragment.object_data.len))) catch
+            return error.EmfPlusObjectSizeExceeded;
+        const aligned_total = std.mem.alignForward(u64, current.total_object_size, 4);
+        if (received > aligned_total) return error.EmfPlusObjectSizeExceeded;
+        if (fragment.continues and received >= current.total_object_size)
+            return error.RedundantEmfPlusObjectContinuation;
+        if (!fragment.continues and received < current.total_object_size)
+            return error.TruncatedEmfPlusObject;
+
+        const semantic_bytes: usize = if (fragment.continues)
+            fragment.object_data.len
+        else
+            @intCast(@as(u64, current.total_object_size) - current.received);
+        return .{
+            .next_pending = if (fragment.continues) .{
+                .object_id = current.object_id,
+                .object_type = current.object_type,
+                .total_object_size = current.total_object_size,
+                .received = received,
+            } else null,
+            .semantic_bytes = semantic_bytes,
+            .completed = !fragment.continues,
+            .started_multipart = false,
+        };
+    }
+
+    if (fragment.continues) {
+        const total = fragment.total_object_size.?;
+        const received: u64 = @intCast(fragment.object_data.len);
+        if (received >= total) return error.RedundantEmfPlusObjectContinuation;
+        return .{
+            .next_pending = .{
+                .object_id = fragment.object_id,
+                .object_type = fragment.object_type,
+                .total_object_size = total,
+                .received = received,
+            },
+            .semantic_bytes = fragment.object_data.len,
+            .completed = false,
+            .started_multipart = true,
+        };
+    }
+
+    return .{
+        .next_pending = null,
+        .semantic_bytes = fragment.object_data.len,
+        .completed = true,
+        .started_multipart = false,
+    };
+}
 
 pub const State = struct {
     table: [64]?ObjectType = .{null} ** 64,
@@ -72,47 +136,21 @@ pub const State = struct {
         const fragment = try parse(value, next.pending != null);
         next.report.records = try add(next.report.records, 1);
 
-        if (next.pending) |pending| {
-            if (fragment.object_id != pending.object_id or fragment.object_type != pending.object_type)
-                return error.MismatchedEmfPlusObjectContinuation;
-            if (fragment.total_object_size.? != pending.total_object_size)
-                return error.ChangedEmfPlusTotalObjectSize;
-            const received = std.math.add(u64, pending.received, @as(u64, @intCast(fragment.object_data.len))) catch
-                return error.EmfPlusObjectSizeExceeded;
-            const aligned_total = std.mem.alignForward(u64, pending.total_object_size, 4);
-            if (received > aligned_total) return error.EmfPlusObjectSizeExceeded;
-            if (fragment.continues and received >= pending.total_object_size)
-                return error.RedundantEmfPlusObjectContinuation;
-            if (!fragment.continues and received < pending.total_object_size)
-                return error.TruncatedEmfPlusObject;
-
+        const decision = try transition(next.pending, fragment);
+        if (next.pending != null) {
             next.report.multipart_fragments = try add(next.report.multipart_fragments, 1);
-            if (fragment.continues) {
-                next.report.object_data_bytes = try add(next.report.object_data_bytes, fragment.object_data.len);
-                next.pending.?.received = received;
-            } else {
-                next.report.object_data_bytes = try add(
-                    next.report.object_data_bytes,
-                    @intCast(@as(u64, pending.total_object_size) - pending.received),
-                );
-                next.pending = null;
+            next.report.object_data_bytes = try add(next.report.object_data_bytes, decision.semantic_bytes);
+            next.pending = decision.next_pending;
+            if (decision.completed) {
                 try next.complete(fragment.object_id, fragment.object_type);
             }
-        } else if (fragment.continues) {
-            const total = fragment.total_object_size.?;
-            const received: u64 = @intCast(fragment.object_data.len);
-            if (received >= total) return error.RedundantEmfPlusObjectContinuation;
-            next.pending = .{
-                .object_id = fragment.object_id,
-                .object_type = fragment.object_type,
-                .total_object_size = total,
-                .received = received,
-            };
+        } else if (decision.started_multipart) {
+            next.pending = decision.next_pending;
             next.report.multipart_objects = try add(next.report.multipart_objects, 1);
             next.report.multipart_fragments = try add(next.report.multipart_fragments, 1);
-            next.report.object_data_bytes = try add(next.report.object_data_bytes, fragment.object_data.len);
+            next.report.object_data_bytes = try add(next.report.object_data_bytes, decision.semantic_bytes);
         } else {
-            next.report.object_data_bytes = try add(next.report.object_data_bytes, fragment.object_data.len);
+            next.report.object_data_bytes = try add(next.report.object_data_bytes, decision.semantic_bytes);
             try next.complete(fragment.object_id, fragment.object_type);
         }
 
@@ -133,6 +171,78 @@ pub const State = struct {
         }
         self.table[slot] = object_type;
         self.report.completed = try add(self.report.completed, 1);
+    }
+};
+
+pub const AssembleOptions = struct {
+    max_object_bytes: usize = 64 * 1024 * 1024,
+};
+
+pub const Completed = struct {
+    object_id: u6,
+    object_type: ObjectType,
+    object_data: []const u8,
+    multipart: bool,
+};
+
+pub const Assembler = struct {
+    allocator: std.mem.Allocator,
+    options: AssembleOptions,
+    pending: ?Pending = null,
+    storage: std.ArrayListUnmanaged(u8) = .empty,
+
+    pub fn init(allocator: std.mem.Allocator, options: AssembleOptions) Assembler {
+        return .{ .allocator = allocator, .options = options };
+    }
+
+    pub fn deinit(self: *Assembler) void {
+        self.storage.deinit(self.allocator);
+        self.* = undefined;
+    }
+
+    pub fn consume(self: *Assembler, value: record.Record) !?Completed {
+        if (value.kind != .object) return null;
+        const fragment = try parse(value, self.pending != null);
+        const decision = try transition(self.pending, fragment);
+
+        if (decision.started_multipart and fragment.total_object_size.? > self.options.max_object_bytes)
+            return error.LimitExceeded;
+
+        if (self.pending == null and !decision.started_multipart) {
+            if (fragment.object_data.len > self.options.max_object_bytes) return error.LimitExceeded;
+            self.storage.clearRetainingCapacity();
+            return .{
+                .object_id = fragment.object_id,
+                .object_type = fragment.object_type,
+                .object_data = fragment.object_data,
+                .multipart = false,
+            };
+        }
+
+        const current_len: usize = if (decision.started_multipart) 0 else self.storage.items.len;
+        const target_len = std.math.add(usize, current_len, decision.semantic_bytes) catch
+            return error.LimitExceeded;
+        if (target_len > self.options.max_object_bytes) return error.LimitExceeded;
+        if (decision.started_multipart) self.storage.clearRetainingCapacity();
+        try self.storage.appendSlice(self.allocator, fragment.object_data[0..decision.semantic_bytes]);
+        self.pending = decision.next_pending;
+        if (!decision.completed) return null;
+
+        return .{
+            .object_id = fragment.object_id,
+            .object_type = fragment.object_type,
+            .object_data = self.storage.items,
+            .multipart = true,
+        };
+    }
+
+    pub fn reset(self: *Assembler) void {
+        self.pending = null;
+        self.storage.clearRetainingCapacity();
+    }
+
+    pub fn finish(self: Assembler) !void {
+        if (self.pending != null) return error.TruncatedEmfPlusObject;
     }
 };
 
@@ -278,4 +388,120 @@ test "EMF+ object report overflow leaves table and counters unchanged" {
     const before = state;
     try std.testing.expectError(error.LimitExceeded, state.consume(makeRecord(0x0100, &data)));
     try std.testing.expectEqualDeep(before, state);
+}
+
+test "EMF+ object assembler returns direct and exact multipart payloads" {
+    var assembler = Assembler.init(std.testing.allocator, .{});
+    defer assembler.deinit();
+
+    const direct_data = [_]u8{ 9, 8, 7, 6 };
+    const direct = (try assembler.consume(makeRecord(0x0103, &direct_data))).?;
+    try std.testing.expectEqual(@as(u6, 3), direct.object_id);
+    try std.testing.expectEqual(ObjectType.brush, direct.object_type);
+    try std.testing.expect(!direct.multipart);
+    try std.testing.expectEqualSlices(u8, &direct_data, direct.object_data);
+
+    const first = [_]u8{ 7, 0, 0, 0, 1, 2, 3, 4 };
+    const final = [_]u8{ 7, 0, 0, 0, 5, 6, 7, 0xaa };
+    try std.testing.expect((try assembler.consume(makeRecord(0x8205, &first))) == null);
+    const completed = (try assembler.consume(makeRecord(0x0205, &final))).?;
+    try std.testing.expectEqual(@as(u6, 5), completed.object_id);
+    try std.testing.expectEqual(ObjectType.pen, completed.object_type);
+    try std.testing.expect(completed.multipart);
+    try std.testing.expectEqualSlices(u8, &.{ 1, 2, 3, 4, 5, 6, 7 }, completed.object_data);
+    try assembler.finish();
+
+    const next_first = [_]u8{ 4, 0, 0, 0, 10, 11 };
+    const next_final = [_]u8{ 4, 0, 0, 0, 12, 13 };
+    try std.testing.expect((try assembler.consume(makeRecord(0x8301, &next_first))) == null);
+    const next = (try assembler.consume(makeRecord(0x0301, &next_final))).?;
+    try std.testing.expectEqualSlices(u8, &.{ 10, 11, 12, 13 }, next.object_data);
+}
+
+test "EMF+ object assembler covers every aligned split and final padding width" {
+    var assembler = Assembler.init(std.testing.allocator, .{});
+    defer assembler.deinit();
+    var payload: [32]u8 = undefined;
+    for (&payload, 0..) |*byte, i| byte.* = @intCast(i + 1);
+
+    for (1..payload.len + 1) |semantic_len| {
+        var split: usize = 0;
+        while (split < semantic_len) : (split += 4) {
+            var first: [36]u8 = undefined;
+            std.mem.writeInt(u32, first[0..4], @intCast(semantic_len), .little);
+            @memcpy(first[4 .. 4 + split], payload[0..split]);
+
+            const remaining = semantic_len - split;
+            const padded_remaining = std.mem.alignForward(usize, remaining, 4);
+            var final: [36]u8 = undefined;
+            std.mem.writeInt(u32, final[0..4], @intCast(semantic_len), .little);
+            @memcpy(final[4 .. 4 + remaining], payload[split..semantic_len]);
+            @memset(final[4 + remaining .. 4 + padded_remaining], 0xa5);
+
+            assembler.reset();
+            try std.testing.expect((try assembler.consume(makeRecord(0x8100, first[0 .. 4 + split]))) == null);
+            const completed = (try assembler.consume(makeRecord(0x0100, final[0 .. 4 + padded_remaining]))).?;
+            try std.testing.expectEqualSlices(u8, payload[0..semantic_len], completed.object_data);
+        }
+    }
+}
+
+test "EMF+ object assembler enforces limits and preserves pending state on rejection" {
+    var assembler = Assembler.init(std.testing.allocator, .{ .max_object_bytes = 7 });
+    defer assembler.deinit();
+
+    const too_large_direct = [_]u8{0} ** 8;
+    try std.testing.expectError(error.LimitExceeded, assembler.consume(makeRecord(0x0100, &too_large_direct)));
+    try std.testing.expect(assembler.pending == null);
+
+    const too_large_first = [_]u8{ 8, 0, 0, 0, 1, 2, 3, 4 };
+    try std.testing.expectError(error.LimitExceeded, assembler.consume(makeRecord(0x8100, &too_large_first)));
+    try std.testing.expect(assembler.pending == null);
+
+    const first = [_]u8{ 7, 0, 0, 0, 1, 2, 3, 4 };
+    try std.testing.expect((try assembler.consume(makeRecord(0x8100, &first))) == null);
+    const before_pending = assembler.pending;
+    const before_bytes = assembler.storage.items.len;
+    const excessive = [_]u8{ 7, 0, 0, 0, 5, 6, 7, 8, 9, 10, 11, 12 };
+    try std.testing.expectError(error.EmfPlusObjectSizeExceeded, assembler.consume(makeRecord(0x0100, &excessive)));
+    try std.testing.expectEqualDeep(before_pending, assembler.pending);
+    try std.testing.expectEqual(before_bytes, assembler.storage.items.len);
+    try std.testing.expectError(error.TruncatedEmfPlusObject, assembler.finish());
+}
+
+fn assembleAllocationCheck(allocator: std.mem.Allocator) !void {
+    var assembler = Assembler.init(allocator, .{});
+    defer assembler.deinit();
+    const first = [_]u8{ 8, 0, 0, 0, 1, 2, 3, 4 };
+    const final = [_]u8{ 8, 0, 0, 0, 5, 6, 7, 8 };
+    try std.testing.expect((try assembler.consume(makeRecord(0x8100, &first))) == null);
+    const completed = (try assembler.consume(makeRecord(0x0100, &final))).?;
+    try std.testing.expectEqualSlices(u8, &.{ 1, 2, 3, 4, 5, 6, 7, 8 }, completed.object_data);
+}
+
+test "EMF+ object assembler survives every allocation failure" {
+    try std.testing.checkAllAllocationFailures(std.testing.allocator, assembleAllocationCheck, .{});
+}
+
+test "EMF+ object assembler frees allocations on success and error paths" {
+    var checked = std.heap.DebugAllocator(.{ .safety = true }){};
+    defer {
+        const status = checked.deinit();
+        std.testing.expect(status == .ok) catch @panic("object assembler leaked memory");
+    }
+    var assembler = Assembler.init(checked.allocator(), .{});
+    defer assembler.deinit();
+
+    const first = [_]u8{ 8, 0, 0, 0, 1, 2, 3, 4 };
+    const final = [_]u8{ 8, 0, 0, 0, 5, 6, 7, 8 };
+    try std.testing.expect((try assembler.consume(makeRecord(0x8100, &first))) == null);
+    _ = (try assembler.consume(makeRecord(0x0100, &final))).?;
+
+    assembler.reset();
+    try std.testing.expect((try assembler.consume(makeRecord(0x8100, &first))) == null);
+    const wrong = [_]u8{ 8, 0, 0, 0, 5, 6, 7, 8 };
+    try std.testing.expectError(
+        error.MismatchedEmfPlusObjectContinuation,
+        assembler.consume(makeRecord(0x0200, &wrong)),
+    );
 }
