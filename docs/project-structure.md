@@ -72,6 +72,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - [EMF transparent bitmap transfer](emf-transparent-blt.md)
 - [EMF layout mode](emf-layout-mode.md)
 - [EMF linked universal font IDs](emf-linked-ufis.md)
+- [EMF forced universal font mapping](emf-force-ufi-mapping.md)
 - [EMF text justification](emf-text-justification.md)
 - [EMF target color matching](emf-color-match-target.md)
 

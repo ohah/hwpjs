@@ -132,6 +132,25 @@ test "EMF framing validates and counts SETLINKEDUFIS arrays" {
     try t.expectError(error.InvalidEmfSetLinkedUfisRecordSize, framing.validate(t.allocator, &bytes));
 }
 
+test "EMF framing validates and counts FORCEUFIMAPPING payloads" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 128;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 3, .little);
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.forceufimapping), .little);
+    std.mem.writeInt(u32, bytes[92..96], 20, .little);
+    std.mem.writeInt(u32, bytes[96..100], 0x12345678, .little);
+    std.mem.writeInt(u32, bytes[100..104], 42, .little);
+    bytes[104..108].* = .{ 9, 8, 7, 6 };
+    @memcpy(bytes[108..128], original[88..108]);
+    try t.expectEqual(@as(usize, 1), (try framing.validate(t.allocator, &bytes)).force_ufi_mapping_records);
+
+    std.mem.writeInt(u32, bytes[92..96], 12, .little);
+    std.mem.writeInt(u32, bytes[48..52], 120, .little);
+    try t.expectError(error.InvalidEmfForceUfiMappingRecordSize, framing.validate(t.allocator, bytes[0..120]));
+}
+
 test "EMF framing validates and counts COLORMATCHTOTARGETW payloads" {
     const original = fixture();
     var bytes = [_]u8{0} ** 140;

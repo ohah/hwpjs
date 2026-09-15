@@ -176,6 +176,7 @@ pub const emf_bitmap_source_transfer = @import("emf/bitmap_source_transfer.zig")
 pub const emf_transparent_blt = @import("emf/transparent_blt.zig");
 pub const emf_layout_mode = @import("emf/layout_mode.zig");
 pub const emf_universal_font_id = @import("emf/universal_font_id.zig");
+pub const emf_force_ufi_mapping = @import("emf/force_ufi_mapping.zig");
 pub const emf_linked_ufis = @import("emf/linked_ufis.zig");
 pub const emf_object_table = @import("emf/object_table.zig");
 pub const emf_eof = @import("emf/eof.zig");

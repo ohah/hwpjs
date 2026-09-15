@@ -32,6 +32,7 @@ const stretch_dibits = @import("stretch_dibits.zig");
 const alpha_blend = @import("alpha_blend.zig");
 const transparent_blt = @import("transparent_blt.zig");
 const layout_mode = @import("layout_mode.zig");
+const force_ufi_mapping = @import("force_ufi_mapping.zig");
 const linked_ufis = @import("linked_ufis.zig");
 const dc_stack = @import("dc_stack.zig");
 const palette_records = @import("palette_records.zig");
@@ -40,7 +41,7 @@ const std = @import("std");
 const eof = @import("eof.zig");
 const eof_palette = @import("eof_palette.zig");
 
-pub const Summary = struct { header: header.Header, header_payload: header_payload.Payload, eof: eof.Eof, palette: eof_palette.Palette, objects: object_table.Report, records: usize, clipping_records: usize, clipping_selection_records: usize, region_drawing_records: usize, path_drawing_records: usize, flood_fill_records: usize, gradient_fill_records: usize, bit_block_transfer_records: usize, stretch_block_transfer_records: usize, mask_block_transfer_records: usize, parallelogram_block_transfer_records: usize, set_dibits_to_device_records: usize, stretch_dibits_records: usize, alpha_blend_records: usize, transparent_blt_records: usize, linked_ufi_records: usize, linked_ufis: usize, color_match_records: usize };
+pub const Summary = struct { header: header.Header, header_payload: header_payload.Payload, eof: eof.Eof, palette: eof_palette.Palette, objects: object_table.Report, records: usize, clipping_records: usize, clipping_selection_records: usize, region_drawing_records: usize, path_drawing_records: usize, flood_fill_records: usize, gradient_fill_records: usize, bit_block_transfer_records: usize, stretch_block_transfer_records: usize, mask_block_transfer_records: usize, parallelogram_block_transfer_records: usize, set_dibits_to_device_records: usize, stretch_dibits_records: usize, alpha_blend_records: usize, transparent_blt_records: usize, force_ufi_mapping_records: usize, linked_ufi_records: usize, linked_ufis: usize, color_match_records: usize };
 
 fn validateStructure(bytes: []const u8) !Summary {
     var iterator: records.Iterator = .{ .bytes = bytes };
@@ -65,6 +66,7 @@ fn validateStructure(bytes: []const u8) !Summary {
     var stretch_dibits_count: usize = 0;
     var alpha_blend_count: usize = 0;
     var transparent_blt_count: usize = 0;
+    var force_ufi_mapping_count: usize = 0;
     var linked_ufi_record_count: usize = 0;
     var linked_ufi_count: usize = 0;
     var color_match_count: usize = 0;
@@ -102,6 +104,7 @@ fn validateStructure(bytes: []const u8) !Summary {
         if (try alpha_blend.parse(record) != null) alpha_blend_count += 1;
         if (try transparent_blt.parse(record) != null) transparent_blt_count += 1;
         _ = try layout_mode.parse(record);
+        if (try force_ufi_mapping.parse(record) != null) force_ufi_mapping_count += 1;
         if (try linked_ufis.parse(record)) |linked| {
             linked_ufi_record_count += 1;
             linked_ufi_count = std.math.add(usize, linked_ufi_count, linked.count) catch return error.LimitExceeded;
@@ -116,7 +119,7 @@ fn validateStructure(bytes: []const u8) !Summary {
         const palette = terminal_and_palette.palette;
         if (iterator.offset != bytes.len) return error.DataAfterEmfEof;
         if (count != value.records) return error.InvalidEmfDeclaredRecords;
-        return .{ .header = value, .header_payload = payload, .eof = terminal, .palette = palette, .objects = .{}, .records = count, .clipping_records = clipping_count, .clipping_selection_records = clipping_selection_count, .region_drawing_records = region_drawing_count, .path_drawing_records = path_drawing_count, .flood_fill_records = flood_fill_count, .gradient_fill_records = gradient_fill_count, .bit_block_transfer_records = bit_block_transfer_count, .stretch_block_transfer_records = stretch_block_transfer_count, .mask_block_transfer_records = mask_block_transfer_count, .parallelogram_block_transfer_records = parallelogram_block_transfer_count, .set_dibits_to_device_records = set_dibits_to_device_count, .stretch_dibits_records = stretch_dibits_count, .alpha_blend_records = alpha_blend_count, .transparent_blt_records = transparent_blt_count, .linked_ufi_records = linked_ufi_record_count, .linked_ufis = linked_ufi_count, .color_match_records = color_match_count };
+        return .{ .header = value, .header_payload = payload, .eof = terminal, .palette = palette, .objects = .{}, .records = count, .clipping_records = clipping_count, .clipping_selection_records = clipping_selection_count, .region_drawing_records = region_drawing_count, .path_drawing_records = path_drawing_count, .flood_fill_records = flood_fill_count, .gradient_fill_records = gradient_fill_count, .bit_block_transfer_records = bit_block_transfer_count, .stretch_block_transfer_records = stretch_block_transfer_count, .mask_block_transfer_records = mask_block_transfer_count, .parallelogram_block_transfer_records = parallelogram_block_transfer_count, .set_dibits_to_device_records = set_dibits_to_device_count, .stretch_dibits_records = stretch_dibits_count, .alpha_blend_records = alpha_blend_count, .transparent_blt_records = transparent_blt_count, .force_ufi_mapping_records = force_ufi_mapping_count, .linked_ufi_records = linked_ufi_record_count, .linked_ufis = linked_ufi_count, .color_match_records = color_match_count };
     }
     return error.MissingEmfEof;
 }
