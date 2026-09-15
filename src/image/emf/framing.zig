@@ -54,10 +54,11 @@ fn validateStructure(bytes: []const u8) !Summary {
         _ = try dc_state.consume(record);
         _ = try palette_records.parse(record);
         if (record.kind != .eof) continue;
-        const terminal = try eof.parse(record);
+        const terminal_and_palette = try eof_palette.parse(record);
+        const terminal = terminal_and_palette.eof;
         try path_state.finish();
         if (terminal.palette_entries != value.palette_entries) return error.InvalidEmfPaletteCount;
-        const palette = try eof_palette.parse(record, terminal);
+        const palette = terminal_and_palette.palette;
         if (iterator.offset != bytes.len) return error.DataAfterEmfEof;
         if (count != value.records) return error.InvalidEmfDeclaredRecords;
         return .{ .header = value, .header_payload = payload, .eof = terminal, .palette = palette, .objects = .{}, .records = count };
