@@ -77,3 +77,18 @@ test "font creation accepts every DesignVector axis count and rejects every Pano
         if (count != 0) try std.testing.expectEqual(@as(i32, std.math.minInt(i32)), try value.font.ex_dv.design.valueAt(count - 1));
     }
 }
+
+test "font creation record size classifies all bytes as Panose or ExDv payload" {
+    var panose_with_tail: [minimum_size + 4]u8 = undefined;
+    initValidPanoseRecord(panose_with_tail[0..minimum_size], 1);
+    panose_with_tail[minimum_size..].* = .{ 1, 2, 3, 4 };
+    try std.testing.expectError(error.InvalidEmfLogFontExDvSize, parse(fixture(&panose_with_tail)));
+
+    var ex_dv_with_tail = [_]u8{0} ** (12 + extended_font.ex_size + @import("design_vector.zig").minimum_size + 4);
+    std.mem.writeInt(i32, ex_dv_with_tail[28..32], 400, .little);
+    std.mem.writeInt(u32, ex_dv_with_tail[12 + extended_font.ex_size ..][0..4], @import("design_vector.zig").signature, .little);
+    try std.testing.expectError(error.InvalidEmfDesignVectorSize, parse(fixture(&ex_dv_with_tail)));
+
+    const oversized = [_]u8{0} ** (maximum_size + 4);
+    try std.testing.expectError(error.InvalidEmfFontCreationRecordSize, parse(fixture(&oversized)));
+}

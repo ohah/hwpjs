@@ -4,6 +4,8 @@
 
 `font_creation.zig`는 Microsoft [EMR_EXTCREATEFONTINDIRECTW](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/7e266b6d-32e5-4201-b687-8ec40c24cd73)의 record 경계와 handle을 소유한다. 고정 12바이트 뒤 `elw`가 정확히 320바이트이면 [LogFontPanose](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/c68ffff8-1c32-4398-ac81-2cb6f0cd7a7c), 더 크면 [LogFontExDv](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/595fcaae-bc37-4148-9afe-859e81ca7f76)로만 해석한다. 따라서 전체 record는 332바이트 또는 DesignVector 축 개수에 따라 368..432바이트이며, 그 사이 333..367바이트를 관대하게 채우거나 자르지 않는다.
 
+이 record는 일반적인 고정 prefix record와 달리 후행 data를 따로 식별할 수 없다. 공식 분류 알고리즘이 `elw` 길이를 record `Size - 12`로 정의하므로 332바이트 뒤의 모든 byte는 Panose의 미정의 extra가 아니라 ExDv 형식 선택에 참여한다. ExDv에서도 DesignVector가 남은 `elw`를 차지하고 내부 축 개수로 정확한 길이를 정의하므로 그 뒤 byte는 DesignVector 크기 오류다. [EMF 고정 prefix 호환성](emf-fixed-prefix-compatibility.md)의 후행 허용을 이 record에 적용하지 않는다.
+
 `log_font.zig`는 [LogFont](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/1cd7cb7a-1a7c-48d2-b4a4-c218f9d12100)의 정확한 92바이트를 읽는다. signed 크기·각도, 0..1000 weight, 세 BOOLEAN, CharacterSet·OutPrecision·ClipPrecision·Quality·PitchAndFamily의 공식 값 영역을 구분한다. `font_values.zig`가 이 값 영역의 SSOT다. 글꼴 선택이나 장치별 대체는 재생 계층의 책임이다.
 
 `font_string.zig`는 FaceName·FullName·Style·Script의 고정 UTF-16LE 필드를 공유한다. 첫 NUL 전까지만 문자열로 검증하고 전체 고정 storage는 빌려 보존한다. 필드를 모두 채우면 NUL이 없어도 허용하며, 첫 NUL 뒤 padding은 MUST-ignore이므로 잘못된 surrogate처럼 보여도 해석하지 않는다. 첫 NUL 전의 잘못된 UTF-16은 `InvalidEmfFontStringEncoding`으로 통일한다.
@@ -28,12 +30,17 @@
 ## 검증과 미지원 범위
 
 - 정확한 고정 크기와 333..367바이트의 전 gap, 0..16 모든 DesignVector 축 개수, signed 축 극값과 index 경계를 검사한다.
+- 320바이트 Panose 뒤 4바이트가 붙으면 ExDv로 분류되어야 하고, 완전한 ExDv 뒤 4바이트도 DesignVector 내부 길이와 충돌해 거부되는 것을 검사한다.
 - weight·BOOLEAN·sparse enum·bit mask·PANOSE 열 필드를 독립적으로 깨고 각 전용 오류를 확인한다. 고정 문자열은 정상 surrogate pair, NUL 뒤 무시 데이터, NUL 없는 잘못된 끝 surrogate를 구분한다.
 - 합성 전체 EMF에 글꼴 생성 record를 넣어 framing과 object 집계 연결을 확인하고, 잘못된 payload가 빈 slot이나 기존 font를 점유·교체하지 않는지 검사한다.
 - 실제 HWP corpus 584개에는 EMF가 0개이므로 한글 생성기의 실제 `EMR_EXTCREATEFONTINDIRECTW` 바이트 호환성을 입증하지 않는다. 현재 근거는 공식 명세와 합성 record다.
 
 적대적 검증은 (1) weight 상한 제거, (2) BOOLEAN의 2 허용, (3) 320바이트 이상을 모두 Panose로 선택, (4) DesignVector의 count-derived 길이 검사를 제거, (5) Object Table의 글꼴 parser 연결 제거의 다섯 변이를 임시 복사본에 각각 주입했다. Debug·ReleaseSafe·ReleaseFast의 15회 실행이 모두 전용 값 경계·형식 분기·가변 배열 extent·통합 테스트로 변이를 탐지했다. 변이는 제품 작업 트리에 적용하지 않았다.
 
-최종 원복 상태의 Debug·ReleaseSafe·ReleaseFast audit는 각 40/40 단계와 전체 1,319/1,319 테스트(네이티브 1,280개), HWP 검사 8,905,827건을 통과했다. 구현 중 첫 단위 실행은 NUL 직전의 고립 high surrogate를 공통 UTF-16 오류로 반환해 EMF 문자열 계약과 달랐으므로 `InvalidEmfFontStringEncoding`으로 안정화했다. 제품 모듈에 공개되어 있던 fixture 초기화 helper도 제거하고 테스트 내부로 한정했다.
+당시 최종 원복 상태의 Debug·ReleaseSafe·ReleaseFast audit는 각 40/40 단계와 전체 1,319/1,319 테스트(네이티브 1,280개), HWP 검사 8,905,827건을 통과했다. 구현 중 첫 단위 실행은 NUL 직전의 고립 high surrogate를 공통 UTF-16 오류로 반환해 EMF 문자열 계약과 달랐으므로 `InvalidEmfFontStringEncoding`으로 안정화했다. 제품 모듈에 공개되어 있던 fixture 초기화 helper도 제거하고 테스트 내부로 한정했다.
+
+후행 경계 재검증에서는 Panose로 320바이트 이상을 잘라 읽기, DesignVector exact 길이 제거, record 선언 크기 검사 제거, record/DesignVector 최대 크기 제거, DesignVector signature 제거, Panose/ExDv gap 완화, Object Table 연결 제거의 7개 변이를 추가했다. Debug·ReleaseSafe·ReleaseFast의 21회 실행에서 모두 검출됐다. 관련 모듈과 framing을 명시적으로 수집한 168개 테스트와 전체 native 1,314개 테스트도 통과했다.
+
+재검증 후 최종 `zig build audit --summary all`은 Debug·ReleaseSafe·ReleaseFast 모두 40/40 단계와 1,353/1,353 테스트를 통과했다. HWP corpus 584개 파일에서 8,905,827개 조건을 검사했으며 실제 EMF가 0개라는 표본 한계는 그대로다.
 
 글꼴 파일 로딩, FaceName과 설치 글꼴의 CharacterSet 일치, font mapper, DesignVector의 실제 축 의미, 텍스트 shaping·재생·편집은 이 구조 parser의 완료 범위가 아니다. 원문 필드를 보존하지만 EMF writer나 무손실 재저장을 제공한다는 뜻도 아니다.
