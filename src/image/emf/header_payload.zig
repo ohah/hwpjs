@@ -14,6 +14,7 @@ pub const Payload = struct {
     extension1: ?Extension1,
     extension2: ?Extension2,
 };
+pub const Parsed = struct { header: header.Header, payload: Payload };
 
 fn range(bytes: []const u8, offset: u32, size: u64, minimum: usize, invalid: anyerror) ![]const u8 {
     if (offset < minimum or size > std.math.maxInt(usize)) return invalid;
@@ -24,7 +25,12 @@ fn range(bytes: []const u8, offset: u32, size: u64, minimum: usize, invalid: any
     return bytes[start .. start + count];
 }
 
-pub fn parse(record: records.Record, base: header.Header) !Payload {
+pub fn parse(record: records.Record, stream_size: usize) !Parsed {
+    const base = try header.parse(record, stream_size);
+    return .{ .header = base, .payload = try parsePayload(record, base) };
+}
+
+fn parsePayload(record: records.Record, base: header.Header) !Payload {
     var header_size: usize = record.bytes.len;
     var description: ?[]const u8 = null;
     if (base.description_characters != 0 and base.description_offset != 0) {
@@ -45,7 +51,6 @@ pub fn parse(record: records.Record, base: header.Header) !Payload {
         if (open_gl > 1) return error.InvalidEmfOpenGlFlag;
         var descriptor: ?pixel_format.Descriptor = null;
         if (pixel_size != 0 and pixel_offset != 0) {
-            if (pixel_size != 40) return error.InvalidEmfPixelFormatSize;
             const bytes = try range(record.bytes, pixel_offset, pixel_size, 100, error.InvalidEmfPixelFormatRange);
             descriptor = try pixel_format.parse(bytes);
             header_size = @min(header_size, @as(usize, pixel_offset));
@@ -75,4 +80,70 @@ pub fn parse(record: records.Record, base: header.Header) !Payload {
             .height = std.mem.readInt(i32, record.bytes[104..108], .little),
         } } else null,
     };
+}
+
+fn fixture(bytes: []const u8) records.Record {
+    return .{ .offset = 0, .kind = .header, .size = @intCast(bytes.len), .bytes = bytes, .end = bytes.len };
+}
+
+test "Header payload owns base parsing and exact fixed-size thresholds" {
+    var bytes = [_]u8{0} ** 108;
+    std.mem.writeInt(u32, bytes[40..44], 0x464d4520, .little);
+    for ([_]struct { size: usize, variant: Variant }{
+        .{ .size = 88, .variant = .base },
+        .{ .size = 92, .variant = .base },
+        .{ .size = 96, .variant = .base },
+        .{ .size = 100, .variant = .extension1 },
+        .{ .size = 104, .variant = .extension1 },
+        .{ .size = 108, .variant = .extension2 },
+    }) |case| {
+        std.mem.writeInt(u32, bytes[48..52], @intCast(case.size), .little);
+        const parsed = try parse(fixture(bytes[0..case.size]), case.size);
+        try std.testing.expectEqual(case.variant, parsed.payload.variant);
+        try std.testing.expectEqual(@as(u32, @intCast(case.size)), parsed.header.bytes);
+    }
+
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    var mismatched = fixture(&bytes);
+    mismatched.size -= 4;
+    try std.testing.expectError(error.InvalidEmfHeaderSize, parse(mismatched, bytes.len));
+    try std.testing.expectError(error.InvalidEmfDeclaredBytes, parse(fixture(&bytes), bytes.len + 4));
+}
+
+test "pixel format before description determines the extension boundary" {
+    var bytes = [_]u8{0} ** 156;
+    std.mem.writeInt(u32, bytes[40..44], 0x464d4520, .little);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[60..64], 2, .little);
+    std.mem.writeInt(u32, bytes[64..68], 152, .little);
+    std.mem.writeInt(u32, bytes[88..92], pixel_format.byte_size, .little);
+    std.mem.writeInt(u32, bytes[92..96], 100, .little);
+    std.mem.writeInt(u16, bytes[100..102], pixel_format.byte_size, .little);
+    std.mem.writeInt(u16, bytes[102..104], 1, .little);
+    bytes[152] = 'x';
+    bytes[153] = 0;
+
+    const parsed = try parse(fixture(&bytes), bytes.len);
+    try std.testing.expectEqual(Variant.extension1, parsed.payload.variant);
+    try std.testing.expectEqual(@as(usize, 100), parsed.payload.fixed_size);
+    try std.testing.expect(parsed.payload.extension1.?.pixel_format != null);
+    try std.testing.expect(parsed.payload.extension2 == null);
+    try std.testing.expectEqualSlices(u8, bytes[152..156], parsed.payload.description_utf16le.?);
+}
+
+test "Header payload treats incomplete optional pairs as absent per HeaderSize flow" {
+    var bytes = [_]u8{0} ** 108;
+    std.mem.writeInt(u32, bytes[40..44], 0x464d4520, .little);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[60..64], 1, .little);
+    const missing_description_offset = try parse(fixture(&bytes), bytes.len);
+    try std.testing.expect(missing_description_offset.payload.description_utf16le == null);
+    try std.testing.expectEqual(Variant.extension2, missing_description_offset.payload.variant);
+
+    std.mem.writeInt(u32, bytes[60..64], 0, .little);
+    std.mem.writeInt(u32, bytes[64..68], 88, .little);
+    std.mem.writeInt(u32, bytes[88..92], pixel_format.byte_size, .little);
+    const missing_pixel_offset = try parse(fixture(&bytes), bytes.len);
+    try std.testing.expect(missing_pixel_offset.payload.description_utf16le == null);
+    try std.testing.expect(missing_pixel_offset.payload.extension1.?.pixel_format == null);
 }

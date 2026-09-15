@@ -84,13 +84,7 @@ Object Table은 brush/pen/font/palette의 현재 명시적 선택을 별도로 �
 
 현재 저장소의 실제 표본 584개를 전수 조사한 최초 baseline은 지원 가능한 HWP 475개와 BinData 2,167개 중 EMF 0개였다. 따라서 이 수치는 실제 EMF 호환성 증거가 아니라 표본 공백을 드러내는 값이다. 종단간 계약은 기존 실제 HWP CFB fixture의 compressed BinData 한 항목에 object/palette EMF를 주입해 CFB → DocInfo 선택 → inflate → signature → Zig framing/object-table 경계를 검증한다. 외부에서 유래한 실제 EMF 포함 HWP가 확보되면 같은 survey에 자동 편입되며 record type coverage가 보고된다.
 
-## Header variable fields와 extension
-
-`header_payload.zig`는 [공식 HeaderSize flowchart](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/de081cd7-351f-4cc2-830b-d03fb55e89ab)에 따라 record Size에서 시작해 유효한 description offset과 그보다 앞선 pixel-format offset으로 고정 header 크기를 산정한다. 산정값 88/100/108 경계로 base, Extension1, Extension2를 구분하므로 긴 description이 있는 base header를 record 전체 길이만 보고 Extension으로 오인하지 않는다.
-
-description은 둘 중 하나의 count/offset이 0이면 부재하고, 둘 다 존재하면 고정 영역 뒤의 정확한 UTF-16LE 범위와 마지막 NUL을 요구한다. Unicode scalar 검사는 공통 `text/utf16.zig`를 재사용한다. [HeaderExtension1](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/00cc8ab4-ea2e-4bb1-9569-1201af47a0c8)의 pixel format offset/40바이트 크기와 OpenGL 0/1을 검사한다. [HeaderExtension2](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/9e96e5cf-e949-49ae-baa8-3fffd948e588)의 micrometer 크기를 보존한다.
-
-`pixel_format.zig`는 [PixelFormatDescriptor Object](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/1db036d6-2da8-4b92-b4f8-e9cab8cc93b7)의 40바이트 필드를 모두 파싱하고 원본 view도 보존한다. 정확한 입력 길이와 내부 nSize, Version 1, 정의된 flag bit, RGBA/ColorIndex enum을 검증하며 `PFD_DOUBLEBUFFER`와 `PFD_SUPPORT_GDI` 동시 설정을 거부한다. 문서가 MAY/SHOULD-ignore로 둔 layer type, reserved nibble, layer/damage mask와 각 bit count는 임의 제한 없이 보존한다. `cbPixelFormat` 또는 `offPixelFormat` 중 하나라도 0이면 descriptor가 없다는 레코드 규칙도 유지한다.
+Header base와 Extension1/2 판별, description, PixelFormatDescriptor의 현재 계약과 검증 기록은 [EMF Header 가변 payload](emf-header-payload.md)가 단일 출처다.
 
 ## 적대적 검증
 
@@ -105,10 +99,6 @@ Color-space 생성 payload 추가분은 다섯 차례 재검토에서 기존 12�
 signature, Header Bytes, Header Records, EOF SizeLast, terminal EOF 뒤 데이터 검사를 하나씩 제거했다. Debug/ReleaseSafe/ReleaseFast의 15회 모두 각각 손상된 필드 또는 trailing data가 있는 stream을 실제 성공값으로 반환해 테스트가 탐지했다. 변이는 모두 제거하고 정상 구현을 별도로 검증한다.
 
 절단 테스트는 오류 우선순위도 분리한다. 원래 Bytes 108을 유지한 88바이트 slice는 MissingEmfEof보다 먼저 InvalidEmfDeclaredBytes가 맞으므로, header-only와 두 번째 record 절단 fixture는 Header Bytes를 해당 slice 길이로 맞춘 뒤 각각 EOF 부재와 record 절단만 검증한다.
-
-Header variable fields에는 description offset을 HeaderSize 산정에서 무시, 마지막 NUL 검사 제거, 실제 UTF-16 대신 빈 slice 검사, OpenGL 0/1 제한 제거, PixelFormatDescriptor 40바이트 제한 제거의 5개 변이를 적용했다. Debug/ReleaseSafe/ReleaseFast의 15회 모두 유효 base header 거부 또는 잘못된 description/metadata 수용으로 탐지됐다. 모든 변이를 제거한 정상 구현은 별도로 전체 검증한다.
-
-PixelFormatDescriptor에는 내부 nSize 검사 제거, Version 검사 제거, 미정의 flag 허용, DOUBLEBUFFER/GDI 금지 조합 허용, 미정의 pixel type 허용의 5개 변이를 적용했다. Debug/ReleaseSafe/ReleaseFast의 15회 모두 해당 손상값 수용으로 탐지됐다. 정상 구현 복원 후 세 모드 전체 테스트와 Debug 통합 audit 8,905,815 checks도 통과했다.
 
 RecordType enum에는 미정의 `0`, 예약값 `0x45`, 예약값 `0x6B`, 예약값 `0x75`, 미정의 `0x7B`를 각각 멤버로 추가하는 5개 변이를 적용했다. Debug/ReleaseSafe/ReleaseFast의 15회 모두 미정의 Type 수용과 enum 개수 변화로 탐지됐다. 모든 변이 멤버를 제거한 정상 구현은 세 모드 전체 테스트와 Debug 통합 audit 8,905,815 checks를 통과했다. 공식 HTML에서 독립 추출한 119개 값과 구현 enum을 순서대로 비교해 missing/extra 0도 확인했다.
 

@@ -55,6 +55,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - [EMF 비트맵 브러시](emf-bitmap-brush.md)
 - [EMF 확장 펜](emf-extended-pen.md)
 - [EMF EOF 팔레트](emf-eof-palette.md)
+- [EMF Header 가변 payload](emf-header-payload.md)
 
 - [HWP5 모듈 계약](hwp5-modules.md)
 - [아키텍처와 구현 순서](architecture.md)

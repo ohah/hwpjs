@@ -30,8 +30,9 @@ fn validateStructure(bytes: []const u8) !Summary {
     var path_state: path_bracket.State = .{};
     var dc_state: dc_stack.State = .{};
     const first = (try iterator.next()) orelse return error.MissingEmfHeader;
-    const value = try header.parse(first, bytes.len);
-    const payload = try header_payload.parse(first, value);
+    const parsed_header = try header_payload.parse(first, bytes.len);
+    const value = parsed_header.header;
+    const payload = parsed_header.payload;
     var count: usize = 1;
     while (try iterator.next()) |record| {
         count += 1;

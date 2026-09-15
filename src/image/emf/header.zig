@@ -1,6 +1,7 @@
 const std = @import("std");
 const records = @import("records.zig");
 const geometry = @import("geometry.zig");
+const record_extent = @import("record_extent.zig");
 
 pub const RectL = geometry.RectL;
 pub const SizeL = geometry.SizeL;
@@ -21,7 +22,7 @@ pub const Header = struct {
 
 pub fn parse(record: records.Record, stream_size: usize) !Header {
     if (record.kind != .header) return error.InvalidEmfHeaderType;
-    if (record.bytes.len < 88) return error.InvalidEmfHeaderSize;
+    if (!record_extent.hasRequiredPrefix(record, 88)) return error.InvalidEmfHeaderSize;
     if (std.mem.readInt(u32, record.bytes[40..44], .little) != 0x464d4520)
         return error.InvalidEmfSignature;
     if (std.mem.readInt(u16, record.bytes[58..60], .little) != 0)
@@ -42,4 +43,22 @@ pub fn parse(record: records.Record, stream_size: usize) !Header {
         .device = try geometry.parseSizeL(record.bytes[72..80]),
         .millimeters = try geometry.parseSizeL(record.bytes[80..88]),
     };
+}
+
+fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
+    return .{ .offset = 0, .kind = kind, .size = @intCast(bytes.len), .bytes = bytes, .end = bytes.len };
+}
+
+test "Header requires matching declared physical and stream sizes" {
+    var bytes = [_]u8{0} ** 88;
+    std.mem.writeInt(u32, bytes[40..44], 0x464d4520, .little);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    const value = try parse(fixture(.header, &bytes), bytes.len);
+    try std.testing.expectEqual(@as(u32, bytes.len), value.size);
+
+    var mismatched = fixture(.header, &bytes);
+    mismatched.size -= 4;
+    try std.testing.expectError(error.InvalidEmfHeaderSize, parse(mismatched, bytes.len));
+    try std.testing.expectError(error.InvalidEmfDeclaredBytes, parse(fixture(.header, &bytes), bytes.len + 4));
+    try std.testing.expectError(error.InvalidEmfHeaderType, parse(fixture(.savedc, bytes[0..8]), bytes.len));
 }
