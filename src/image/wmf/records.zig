@@ -1,5 +1,4 @@
 const std = @import("std");
-const Header = @import("header.zig").Header;
 
 pub const Options = struct {
     /// Exact number of zero WORDs permitted after META_EOF.
@@ -56,7 +55,7 @@ pub const Iterator = struct {
 
 /// Validates generic META_RECORD framing through the unique terminal META_EOF.
 /// Record-specific parameters remain owned by later decoders.
-pub fn validate(bytes: []const u8, header: Header, options: Options) !Summary {
+pub fn validate(bytes: []const u8, header: anytype, options: Options) !Summary {
     if (header.records_offset > bytes.len) return error.InvalidWmfRecordsOffset;
     const trailing_bytes = std.math.mul(usize, options.trailing_zero_words, 2) catch return error.InvalidWmfTrailingData;
     if (trailing_bytes > bytes.len - header.records_offset) return error.InvalidWmfTrailingData;

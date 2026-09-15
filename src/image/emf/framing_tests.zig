@@ -1015,7 +1015,7 @@ test "EMF framing validates and counts SETCOLORADJUSTMENT" {
 
 test "EMF framing validates and classifies COMMENT envelopes" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 184;
+    var bytes = [_]u8{0} ** 188;
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 7, .little);
@@ -1031,7 +1031,10 @@ test "EMF framing validates and classifies COMMENT envelopes" {
         std.mem.writeInt(u32, bytes[offset + 8 ..][0..4], 4, .little);
         std.mem.writeInt(u32, bytes[offset + 12 ..][0..4], identifier, .little);
     }
-    @memcpy(bytes[164..184], original[88..108]);
+    std.mem.writeInt(u32, bytes[152..156], 20, .little);
+    std.mem.writeInt(u32, bytes[156..160], 8, .little);
+    std.mem.writeInt(u32, bytes[164..168], 0x11223344, .little);
+    @memcpy(bytes[168..188], original[88..108]);
 
     const summary = try framing.validate(t.allocator, &bytes);
     try t.expectEqual(@as(usize, 7), summary.records);
@@ -1040,10 +1043,87 @@ test "EMF framing validates and classifies COMMENT envelopes" {
     try t.expectEqual(@as(usize, 1), summary.comments.emf_spool);
     try t.expectEqual(@as(usize, 1), summary.comments.emf_plus);
     try t.expectEqual(@as(usize, 1), summary.comments.public);
+    try t.expectEqual(@as(usize, 1), summary.public_comments.unknown);
 
     var invalid_data_size = bytes;
     std.mem.writeInt(u32, invalid_data_size[108..112], std.math.maxInt(u32), .little);
     try t.expectError(error.InvalidEmfCommentDataSize, framing.validate(t.allocator, &invalid_data_size));
+}
+
+test "EMF framing validates nested public comment group state" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 228;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 6, .little);
+
+    for ([_]usize{ 88, 128 }) |offset| {
+        std.mem.writeInt(u32, bytes[offset..][0..4], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+        std.mem.writeInt(u32, bytes[offset + 4 ..][0..4], 40, .little);
+        std.mem.writeInt(u32, bytes[offset + 8 ..][0..4], 28, .little);
+        std.mem.writeInt(u32, bytes[offset + 12 ..][0..4], 0x43494447, .little);
+        std.mem.writeInt(u32, bytes[offset + 16 ..][0..4], 0x00000002, .little);
+    }
+    for ([_]usize{ 168, 188 }) |offset| {
+        std.mem.writeInt(u32, bytes[offset..][0..4], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+        std.mem.writeInt(u32, bytes[offset + 4 ..][0..4], 20, .little);
+        std.mem.writeInt(u32, bytes[offset + 8 ..][0..4], 8, .little);
+        std.mem.writeInt(u32, bytes[offset + 12 ..][0..4], 0x43494447, .little);
+        std.mem.writeInt(u32, bytes[offset + 16 ..][0..4], 0x00000003, .little);
+    }
+    @memcpy(bytes[208..228], original[88..108]);
+
+    const summary = try framing.validate(t.allocator, &bytes);
+    try t.expectEqual(@as(usize, 2), summary.public_comments.begin_groups);
+    try t.expectEqual(@as(usize, 2), summary.public_comments.end_groups);
+    try t.expectEqual(@as(usize, 2), summary.public_comments.max_group_depth);
+
+    var unclosed = bytes;
+    std.mem.writeInt(u32, unclosed[204..208], 0x11223344, .little);
+    try t.expectError(error.UnclosedEmfPublicGroup, framing.validate(t.allocator, &unclosed));
+    var underflow = bytes;
+    std.mem.writeInt(u32, underflow[104..108], 0x11223344, .little);
+    try t.expectError(error.UnmatchedEmfPublicEndGroup, framing.validate(t.allocator, &underflow));
+}
+
+test "EMF framing reports public MULTIFORMATS and standard WMF payloads" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 208;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 4, .little);
+
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[92..96], 40, .little);
+    std.mem.writeInt(u32, bytes[96..100], 28, .little);
+    std.mem.writeInt(u32, bytes[100..104], 0x43494447, .little);
+    std.mem.writeInt(u32, bytes[104..108], 0x40000004, .little);
+
+    std.mem.writeInt(u32, bytes[128..132], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[132..136], 60, .little);
+    std.mem.writeInt(u32, bytes[136..140], 48, .little);
+    std.mem.writeInt(u32, bytes[140..144], 0x43494447, .little);
+    std.mem.writeInt(u32, bytes[144..148], 0x80000001, .little);
+    std.mem.writeInt(u16, bytes[148..150], 0x0100, .little);
+    std.mem.writeInt(u32, bytes[152..156], 0x12345678, .little);
+    std.mem.writeInt(u32, bytes[160..164], 24, .little);
+    std.mem.writeInt(u16, bytes[164..166], 1, .little);
+    std.mem.writeInt(u16, bytes[166..168], 9, .little);
+    std.mem.writeInt(u16, bytes[168..170], 0x0300, .little);
+    std.mem.writeInt(u32, bytes[170..174], 12, .little);
+    std.mem.writeInt(u32, bytes[176..180], 3, .little);
+    std.mem.writeInt(u32, bytes[182..186], 3, .little);
+    @memcpy(bytes[188..208], original[88..108]);
+
+    const summary = try framing.validate(t.allocator, &bytes);
+    try t.expectEqual(@as(usize, 1), summary.public_comments.multi_formats);
+    try t.expectEqual(@as(usize, 0), summary.public_comments.formats);
+    try t.expectEqual(@as(usize, 1), summary.public_comments.windows_metafiles);
+    try t.expectEqual(@as(usize, 1), summary.public_comments.wmf_records);
+
+    var reserved = bytes;
+    std.mem.writeInt(u32, reserved[104..108], 0x00000040, .little);
+    try t.expectError(error.ReservedEmfPublicCommentIdentifier, framing.validate(t.allocator, &reserved));
 }
 
 test "EMF framing connects SELECTOBJECT activation deletion and default restoration" {

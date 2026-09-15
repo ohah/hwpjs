@@ -2,7 +2,7 @@
 
 ## 책임과 명세
 
-`src/image/wmf/header.zig`는 22바이트 META_PLACEABLE과 바로 뒤 18바이트 META_HEADER만 읽는다. `src/image/wmf/records.zig`는 이어지는 generic META_RECORD의 DWORD 크기와 WORD 함수, 최대 record 크기, 종단 META_EOF를 검증한다. Microsoft [MS-WMF META_PLACEABLE](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/828e1864-7fe7-42d8-ab0a-1de161b32f27)의 key `0x9AC6CDD7`, reserved 0, 앞선 10 WORD의 XOR checksum과 disk형 handle 0을 검사한다. bounding box의 signed 좌표, inch, handle과 checksum 원값을 보존하며 좌표 방향이나 inch 1440을 강제하지 않는다.
+`src/image/wmf/header.zig`는 22바이트 META_PLACEABLE과 바로 뒤 18바이트 META_HEADER를 읽으며, [EMF public comment](emf-public-comments.md)가 제공하는 Placeable 없는 표준 META_HEADER 진입점도 같은 필드 파서를 재사용한다. `src/image/wmf/records.zig`는 두 헤더 형식 뒤의 generic META_RECORD DWORD 크기와 WORD 함수, 최대 record 크기, 종단 META_EOF를 검증한다. Microsoft [MS-WMF META_PLACEABLE](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/828e1864-7fe7-42d8-ab0a-1de161b32f27)의 key `0x9AC6CDD7`, reserved 0, 앞선 10 WORD의 XOR checksum과 disk형 handle 0을 검사한다. bounding box의 signed 좌표, inch, handle과 checksum 원값을 보존하며 좌표 방향이나 inch 1440을 강제하지 않는다.
 
 [MS-WMF META_HEADER](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/d169108a-e3fe-436a-bb44-bea61a46ce56)의 type 1/2, header size 9 WORD, version 0x0100/0x0300을 검사한다. object 수, 최대 record WORD 수와 권고값인 number of members는 원값으로 보존한다. record framing 단계는 선언 최대값과 EOF까지 검증하지만 객체 인덱스·그리기 명령 의미는 아직 검증하지 않는다.
 

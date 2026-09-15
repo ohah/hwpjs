@@ -20,6 +20,30 @@ pub const Meta = struct {
     number_of_members: u16,
 };
 pub const Header = struct { placeable: Placeable, meta: Meta, records_offset: usize };
+pub const StandardHeader = struct { meta: Meta, records_offset: usize };
+
+fn parseMeta(reader: *Reader) !Meta {
+    const metafile_type = std.enums.fromInt(MetafileType, try reader.readInt(u16)) orelse return error.UnsupportedWmfMetafileType;
+    if (try reader.readInt(u16) != 9) return error.InvalidWmfHeaderSize;
+    const version = std.enums.fromInt(Version, try reader.readInt(u16)) orelse return error.UnsupportedWmfVersion;
+    return .{
+        .metafile_type = metafile_type,
+        .version = version,
+        .size_words = try reader.readInt(u32),
+        .number_of_objects = try reader.readInt(u16),
+        .max_record_words = try reader.readInt(u32),
+        .number_of_members = try reader.readInt(u16),
+    };
+}
+
+/// Parses the 18-byte META_HEADER of a standard non-placeable WMF.
+pub fn parseStandard(bytes: []const u8) !StandardHeader {
+    var reader: Reader = .{ .bytes = bytes };
+    const meta = try parseMeta(&reader);
+    if (bytes.len % 2 != 0 or bytes.len / 2 > std.math.maxInt(u32) or meta.size_words != bytes.len / 2)
+        return error.InvalidWmfSize;
+    return .{ .meta = meta, .records_offset = reader.offset };
+}
 
 /// Parses the 22-byte placeable extension and following 18-byte META_HEADER.
 /// The caller explicitly selects the documented whole-metafile Size rule or
@@ -36,13 +60,7 @@ pub fn parse(bytes: []const u8, size_layout: SizeLayout) !Header {
     const stored_checksum = std.mem.readInt(u16, placeable_bytes[20..22], .little);
     if (checksum != stored_checksum) return error.InvalidWmfPlaceableChecksum;
 
-    const metafile_type = std.enums.fromInt(MetafileType, try reader.readInt(u16)) orelse return error.UnsupportedWmfMetafileType;
-    if (try reader.readInt(u16) != 9) return error.InvalidWmfHeaderSize;
-    const version = std.enums.fromInt(Version, try reader.readInt(u16)) orelse return error.UnsupportedWmfVersion;
-    const size_words = try reader.readInt(u32);
-    const number_of_objects = try reader.readInt(u16);
-    const max_record_words = try reader.readInt(u32);
-    const number_of_members = try reader.readInt(u16);
+    const meta = try parseMeta(&reader);
 
     const standard_bytes = bytes.len - 22;
     if (standard_bytes % 2 != 0) return error.InvalidWmfSize;
@@ -50,9 +68,9 @@ pub fn parse(bytes: []const u8, size_layout: SizeLayout) !Header {
         .specified => standard_bytes / 2,
         .observed_payload_words => (standard_bytes - 18) / 2,
     };
-    if (expected_words > std.math.maxInt(u32) or size_words != expected_words)
+    if (expected_words > std.math.maxInt(u32) or meta.size_words != expected_words)
         return error.InvalidWmfSize;
-    if (metafile_type == .disk and std.mem.readInt(u16, placeable_bytes[4..6], .little) != 0)
+    if (meta.metafile_type == .disk and std.mem.readInt(u16, placeable_bytes[4..6], .little) != 0)
         return error.InvalidWmfPlaceableHandle;
 
     return .{
@@ -67,14 +85,31 @@ pub fn parse(bytes: []const u8, size_layout: SizeLayout) !Header {
             .inch = std.mem.readInt(u16, placeable_bytes[14..16], .little),
             .checksum = stored_checksum,
         },
-        .meta = .{
-            .metafile_type = metafile_type,
-            .version = version,
-            .size_words = size_words,
-            .number_of_objects = number_of_objects,
-            .max_record_words = max_record_words,
-            .number_of_members = number_of_members,
-        },
+        .meta = meta,
         .records_offset = reader.offset,
     };
+}
+
+test "standard META_HEADER parses without a placeable prefix" {
+    var bytes = [_]u8{0} ** 24;
+    std.mem.writeInt(u16, bytes[0..2], @intFromEnum(MetafileType.memory), .little);
+    std.mem.writeInt(u16, bytes[2..4], 9, .little);
+    std.mem.writeInt(u16, bytes[4..6], @intFromEnum(Version.version_300), .little);
+    std.mem.writeInt(u32, bytes[6..10], 12, .little);
+    std.mem.writeInt(u16, bytes[10..12], 0, .little);
+    std.mem.writeInt(u32, bytes[12..16], 3, .little);
+    std.mem.writeInt(u16, bytes[16..18], 0xffff, .little);
+    std.mem.writeInt(u32, bytes[18..22], 3, .little);
+    const value = try parseStandard(&bytes);
+    try std.testing.expectEqual(@as(usize, 18), value.records_offset);
+    try std.testing.expectEqual(Version.version_300, value.meta.version);
+    try std.testing.expectEqual(@as(u16, 0xffff), value.meta.number_of_members);
+
+    for (0..18) |cut| try std.testing.expectError(error.UnexpectedEnd, parseStandard(bytes[0..cut]));
+    var odd = bytes;
+    std.mem.writeInt(u32, odd[6..10], 12, .little);
+    try std.testing.expectError(error.InvalidWmfSize, parseStandard(odd[0..23]));
+    var wrong_size = bytes;
+    std.mem.writeInt(u32, wrong_size[6..10], 11, .little);
+    try std.testing.expectError(error.InvalidWmfSize, parseStandard(&wrong_size));
 }
