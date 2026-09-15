@@ -237,6 +237,40 @@ test "EMF framing connects STRETCHBLT and propagates missing source errors" {
     try t.expectError(error.MissingEmfStretchBltSourceBitmap, framing.validate(t.allocator, &bytes));
 }
 
+test "EMF framing connects MASKBLT and propagates bitmap-pair errors" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 284;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 3, .little);
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.maskblt), .little);
+    std.mem.writeInt(u32, bytes[92..96], 176, .little);
+    std.mem.writeInt(u32, bytes[128..132], 0xccf00000, .little);
+    std.mem.writeInt(u32, bytes[168..172], 2, .little);
+    std.mem.writeInt(u32, bytes[172..176], 132, .little);
+    std.mem.writeInt(u32, bytes[176..180], 12, .little);
+    std.mem.writeInt(u32, bytes[180..184], 144, .little);
+    std.mem.writeInt(u32, bytes[184..188], 8, .little);
+    std.mem.writeInt(u32, bytes[196..200], 2, .little);
+    std.mem.writeInt(u32, bytes[200..204], 156, .little);
+    std.mem.writeInt(u32, bytes[204..208], 12, .little);
+    std.mem.writeInt(u32, bytes[208..212], 168, .little);
+    std.mem.writeInt(u32, bytes[212..216], 8, .little);
+    for ([_]usize{ 220, 244 }) |at| {
+        std.mem.writeInt(u32, bytes[at..][0..4], 12, .little);
+        std.mem.writeInt(u16, bytes[at + 4 ..][0..2], 2, .little);
+        std.mem.writeInt(u16, bytes[at + 6 ..][0..2], 2, .little);
+        std.mem.writeInt(u16, bytes[at + 8 ..][0..2], 1, .little);
+        std.mem.writeInt(u16, bytes[at + 10 ..][0..2], 1, .little);
+    }
+    @memcpy(bytes[264..284], original[88..108]);
+    const summary = try framing.validate(t.allocator, &bytes);
+    try t.expectEqual(@as(usize, 1), summary.mask_block_transfer_records);
+
+    @memset(bytes[200..216], 0);
+    try t.expectError(error.MissingEmfMaskBltMaskBitmap, framing.validate(t.allocator, &bytes));
+}
+
 test "EMF header variant uses variable field offsets and validates UTF-16" {
     var bytes = [_]u8{0} ** 172;
     const base = fixture();

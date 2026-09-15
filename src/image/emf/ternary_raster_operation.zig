@@ -50,6 +50,10 @@ pub const Operation = struct {
     }
 };
 
+pub fn isDefinedIndex(index: u8) bool {
+    return operation_codes[index] != null;
+}
+
 pub fn parse(raw: u32) !Operation {
     // The operation index is a zero-extended 8-bit value in the high word.
     if (raw & 0xff00_0000 != 0) return error.InvalidEmfTernaryRasterOperationIndex;

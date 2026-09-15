@@ -1,44 +1,34 @@
 const std = @import("std");
 const dib_colors = @import("dib_colors.zig");
-const dib_payload = @import("dib_payload.zig");
+const bitmap_object = @import("bitmap_object.zig");
 
-pub const Fields = struct { bmi_offset: u32, bmi_size: u32, bits_offset: u32, bits_size: u32 };
+pub const Fields = bitmap_object.Fields;
 pub const Source = struct {
     before_bmi: []const u8,
     bmi: []const u8,
     between_bmi_and_bits: []const u8,
     bits: []const u8,
     alignment_padding: []const u8,
-    dib: dib_payload.Payload,
+    dib: @import("dib_payload.zig").Payload,
     semantic_end: usize,
 };
 
 pub fn parse(bytes: []const u8, fixed_end: usize, fields: Fields, usage: dib_colors.Usage) !?Source {
-    if (fixed_end > bytes.len) return error.InvalidEmfBitmapSourceExtent;
-    const absent = fields.bmi_offset == 0 and fields.bmi_size == 0 and fields.bits_offset == 0 and fields.bits_size == 0;
-    if (absent) return null;
-    if (fields.bmi_offset == 0 or fields.bmi_size == 0 or fields.bits_offset == 0 or fields.bits_size == 0)
-        return error.IncompleteEmfBitmapSource;
-
-    const bmi_start: u64 = fields.bmi_offset;
-    const bmi_end = bmi_start + fields.bmi_size;
-    const bits_start: u64 = fields.bits_offset;
-    const bits_end = bits_start + fields.bits_size;
-    if (bmi_start < fixed_end or bmi_end > bits_start or bits_end > bytes.len)
-        return error.InvalidEmfBitmapSourceExtent;
-    const aligned_end = std.mem.alignForward(u64, bits_end, 4);
-    if (aligned_end > bytes.len) return error.InvalidEmfBitmapSourcePadding;
-
-    const bmi = bytes[@intCast(bmi_start)..@intCast(bmi_end)];
-    const bits = bytes[@intCast(bits_start)..@intCast(bits_end)];
+    const object = bitmap_object.parse(bytes, fixed_end, fields, usage, .{}) catch |err| switch (err) {
+        error.InvalidEmfBitmapObjectExtent => return error.InvalidEmfBitmapSourceExtent,
+        error.IncompleteEmfBitmapObject => return error.IncompleteEmfBitmapSource,
+        else => return err,
+    } orelse return null;
+    const semantic_end = std.mem.alignForward(usize, object.data_end, 4);
+    if (semantic_end > bytes.len) return error.InvalidEmfBitmapSourcePadding;
     return .{
-        .before_bmi = bytes[fixed_end..@intCast(bmi_start)],
-        .bmi = bmi,
-        .between_bmi_and_bits = bytes[@intCast(bmi_end)..@intCast(bits_start)],
-        .bits = bits,
-        .alignment_padding = bytes[@intCast(bits_end)..@intCast(aligned_end)],
-        .dib = try dib_payload.parse(bmi, bits, usage, .{}),
-        .semantic_end = @intCast(aligned_end),
+        .before_bmi = bytes[fixed_end..object.start],
+        .bmi = object.bmi,
+        .between_bmi_and_bits = object.between_bmi_and_bits,
+        .bits = object.bits,
+        .alignment_padding = bytes[object.data_end..semantic_end],
+        .dib = object.dib,
+        .semantic_end = semantic_end,
     };
 }
 
@@ -63,5 +53,13 @@ test "bitmap source rejects partial overlap overflow and missing alignment" {
     try std.testing.expectError(error.InvalidEmfBitmapSourceExtent, parse(&bytes, 100, .{ .bmi_offset = 96, .bmi_size = 18, .bits_offset = 124, .bits_size = 8 }, .rgb_colors));
     try std.testing.expectError(error.InvalidEmfBitmapSourceExtent, parse(&bytes, 100, .{ .bmi_offset = 104, .bmi_size = 24, .bits_offset = 124, .bits_size = 8 }, .rgb_colors));
     try std.testing.expectError(error.InvalidEmfBitmapSourceExtent, parse(&bytes, 100, .{ .bmi_offset = 0xfffffff0, .bmi_size = 0x40, .bits_offset = 0xfffffff8, .bits_size = 8 }, .rgb_colors));
-    try std.testing.expectError(error.InvalidEmfBitmapSourcePadding, parse(bytes[0..131], 100, .{ .bmi_offset = 104, .bmi_size = 18, .bits_offset = 124, .bits_size = 7 }, .palette_indices));
+    var unaligned = [_]u8{0} ** 151;
+    std.mem.writeInt(u32, unaligned[104..108], 40, .little);
+    std.mem.writeInt(i32, unaligned[108..112], 2, .little);
+    std.mem.writeInt(i32, unaligned[112..116], 2, .little);
+    std.mem.writeInt(u16, unaligned[116..118], 1, .little);
+    std.mem.writeInt(u16, unaligned[118..120], 8, .little);
+    std.mem.writeInt(u32, unaligned[120..124], 12, .little);
+    std.mem.writeInt(u32, unaligned[124..128], 7, .little);
+    try std.testing.expectError(error.InvalidEmfBitmapSourcePadding, parse(&unaligned, 100, .{ .bmi_offset = 104, .bmi_size = 40, .bits_offset = 144, .bits_size = 7 }, .palette_indices));
 }
