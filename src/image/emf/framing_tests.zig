@@ -201,6 +201,23 @@ test "EMF framing connects GRADIENTFILL arrays and index validation" {
     try t.expectError(error.EmfGradientVertexIndexOutOfBounds, framing.validate(t.allocator, &bytes));
 }
 
+test "EMF framing connects BITBLT and propagates missing source errors" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 208;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 3, .little);
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.bitblt), .little);
+    std.mem.writeInt(u32, bytes[92..96], 100, .little);
+    std.mem.writeInt(u32, bytes[128..132], 0x00f00021, .little); // PATCOPY needs no source bitmap.
+    @memcpy(bytes[188..208], original[88..108]);
+    const summary = try framing.validate(t.allocator, &bytes);
+    try t.expectEqual(@as(usize, 1), summary.bit_block_transfer_records);
+
+    std.mem.writeInt(u32, bytes[128..132], 0x00cc0020, .little);
+    try t.expectError(error.MissingEmfBitBltSourceBitmap, framing.validate(t.allocator, &bytes));
+}
+
 test "EMF header variant uses variable field offsets and validates UTF-16" {
     var bytes = [_]u8{0} ** 172;
     const base = fixture();
