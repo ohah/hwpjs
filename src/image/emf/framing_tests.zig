@@ -178,6 +178,29 @@ test "EMF framing connects EXTFLOODFILL structure and field validation" {
     try t.expectError(error.InvalidEmfFloodFillMode, framing.validate(t.allocator, &bytes));
 }
 
+test "EMF framing connects GRADIENTFILL arrays and index validation" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 188;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 3, .little);
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.gradientfill), .little);
+    std.mem.writeInt(u32, bytes[92..96], 80, .little);
+    std.mem.writeInt(u32, bytes[112..116], 2, .little);
+    std.mem.writeInt(u32, bytes[116..120], 1, .little);
+    std.mem.writeInt(u32, bytes[120..124], @intFromEnum(@import("gradient_fill_mode.zig").GradientFillMode.rectangle_vertical), .little);
+    std.mem.writeInt(u32, bytes[156..160], 0, .little);
+    std.mem.writeInt(u32, bytes[160..164], 1, .little);
+    bytes[164..168].* = .{ 9, 8, 7, 6 };
+    @memcpy(bytes[168..188], original[88..108]);
+
+    const summary = try framing.validate(t.allocator, &bytes);
+    try t.expectEqual(@as(usize, 1), summary.gradient_fill_records);
+
+    std.mem.writeInt(u32, bytes[160..164], 2, .little);
+    try t.expectError(error.EmfGradientVertexIndexOutOfBounds, framing.validate(t.allocator, &bytes));
+}
+
 test "EMF header variant uses variable field offsets and validates UTF-16" {
     var bytes = [_]u8{0} ** 172;
     const base = fixture();
