@@ -172,6 +172,7 @@ pub const emf_blend_function = @import("emf/blend_function.zig");
 pub const emf_alpha_blend = @import("emf/alpha_blend.zig");
 pub const emf_bitmap_source_transfer = @import("emf/bitmap_source_transfer.zig");
 pub const emf_transparent_blt = @import("emf/transparent_blt.zig");
+pub const emf_layout_mode = @import("emf/layout_mode.zig");
 pub const emf_object_table = @import("emf/object_table.zig");
 pub const emf_eof = @import("emf/eof.zig");
 pub const emf_eof_palette = @import("emf/eof_palette.zig");

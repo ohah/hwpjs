@@ -30,6 +30,7 @@ const set_dibits_to_device = @import("set_dibits_to_device.zig");
 const stretch_dibits = @import("stretch_dibits.zig");
 const alpha_blend = @import("alpha_blend.zig");
 const transparent_blt = @import("transparent_blt.zig");
+const layout_mode = @import("layout_mode.zig");
 const dc_stack = @import("dc_stack.zig");
 const palette_records = @import("palette_records.zig");
 const object_table = @import("object_table.zig");
@@ -94,6 +95,7 @@ fn validateStructure(bytes: []const u8) !Summary {
         if (try stretch_dibits.parse(record) != null) stretch_dibits_count += 1;
         if (try alpha_blend.parse(record) != null) alpha_blend_count += 1;
         if (try transparent_blt.parse(record) != null) transparent_blt_count += 1;
+        _ = try layout_mode.parse(record);
         _ = try dc_state.consume(record);
         _ = try palette_records.parse(record);
         if (record.kind != .eof) continue;
