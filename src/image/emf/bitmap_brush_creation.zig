@@ -2,6 +2,7 @@ const std = @import("std");
 const dib_colors = @import("dib_colors.zig");
 const dib_payload = @import("dib_payload.zig");
 const dib_sections = @import("dib_sections.zig");
+const record_extent = @import("record_extent.zig");
 const records = @import("records.zig");
 
 pub const fixed_size = 32;
@@ -19,7 +20,7 @@ pub fn parse(record: records.Record) !?Creation {
         .createdibpatternbrushpt => .dib_pattern,
         else => return null,
     };
-    if (record.size != record.bytes.len or record.bytes.len < fixed_size)
+    if (!record_extent.hasRequiredPrefix(record, fixed_size))
         return error.InvalidEmfBitmapBrushRecordSize;
     const usage = try dib_colors.parse(std.mem.readInt(u32, record.bytes[12..16], .little));
     const sections = (try dib_sections.parse(record.bytes, fixed_size, .{
@@ -62,6 +63,13 @@ test "both bitmap brush records share DIB framing and differ in mono policy" {
     try std.testing.expectEqual(@as(u16, 1), mono.dib.header.bit_count);
     const pattern = (try parse(fixture(.createdibpatternbrushpt, &bytes))).?;
     try std.testing.expectEqual(Kind.dib_pattern, pattern.kind);
+
+    var extended: [64]u8 = undefined;
+    @memcpy(extended[0..60], &bytes);
+    extended[60..].* = .{ 1, 2, 3, 4 };
+    const with_trailing = (try parse(fixture(.createmonobrush, &extended))).?;
+    try std.testing.expectEqual(@as(usize, 8), with_trailing.sections.bits.len);
+    try std.testing.expectEqual(@as(usize, 2), with_trailing.sections.padding.len);
 }
 
 test "bitmap brush rejects missing malformed non-mono and wrong record boundaries" {

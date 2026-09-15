@@ -42,7 +42,7 @@ Microsoft [EMR_EOF Record](https://learn.microsoft.com/en-us/openspecs/windows_p
 
 `extended_pen_creation.zig`는 [EXTCREATEPEN](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/d7f51e05-4024-497c-ad4a-8aeca9d34256)의 최소 52바이트와 가변 LogPenEx 뒤 선택적 packed DIB를 조립한다. `dib_sections.zig`는 네 offset/size의 전부 부재·전부 존재를 구분하고 checked extent, LogPenEx와의 비중첩, 연속 BmiSrc/BitsSrc, 최대 3바이트 record padding을 검사한다. 고정부와 DIB 사이 UndefinedSpace 및 padding은 MUST-ignore이므로 원문을 빌려 보존한다. Object Table은 이 구조 검증이 끝난 뒤에만 pen handle을 점유한다. EXTCREATEPEN의 선택 DIB에는 현재 공통 section 경계만 적용하며, 아래 bitmap-brush 전용 DIB 의미 검증은 연결하지 않았다.
 
-`bitmap_brush_creation.zig`는 [EMR_CREATEMONOBRUSH](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/49b42277-31b0-4eb9-a6af-86d9be9b568f)와 [EMR_CREATEDIBPATTERNBRUSHPT](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/332116b4-c6f9-4b18-a7cc-22c531b52afc)의 공통 32바이트 고정부와 필수 packed DIB를 구분한다. `dib_colors.zig`는 공식 [DIBColors](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/a5e722e3-891a-4a67-be1a-ed5a48a7fda1)의 RGB/PAL_COLORS/PAL_INDICES 세 값만 허용한다. `dib_payload.zig`는 BMP header parser를 SSOT로 재사용해 크기·dimensions·planes·bit count·compression을 검사하고, usage에 따른 RGBTriple/RGBQuad 또는 16비트 palette entry 최소 길이, packed pixel 길이와 MONOBRUSH의 1bpp를 검증한다.
+비트맵 브러시의 정확한 offset/size slice, 정렬 padding과 후행 extra data 계약은 [EMF 비트맵 브러시](emf-bitmap-brush.md)가 소유한다.
 
 `EMR_EXTCREATEFONTINDIRECTW`의 가변 글꼴 객체 계약과 검증 기록은 [EMF 글꼴 생성](emf-font-creation.md)이 소유한다.
 
@@ -56,7 +56,7 @@ Microsoft [EMR_EOF Record](https://learn.microsoft.com/en-us/openspecs/windows_p
 
 고정 길이 `ANGLEARC`와 사각형·호 계열은 [EMF 기본 도형](emf-basic-shapes.md)이 소유한다.
 
-`기본 점`·`기본 도형`과 고정 상태·변환·path record의 상위 크기 계약은 [EMF 고정 prefix 호환성](emf-fixed-prefix-compatibility.md)이 소유한다. 가변 배열·offset payload의 의미 끝과 extra data는 아직 별도 전수 감사 대상이다.
+`기본 점`·`기본 도형`과 고정 상태·변환·path record의 상위 크기 계약은 [EMF 고정 prefix 호환성](emf-fixed-prefix-compatibility.md)이 소유한다. 가변 배열·offset payload의 의미 끝과 extra data는 각 전용 문서에서 감사한다.
 
 [MS-WMF Compression](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/4e588f70-bd92-4a6f-b77f-35d0feaf7a57)의 BI_CMYK, BI_CMYKRLE8, BI_CMYKRLE4도 공통 BMP header enum에서 보존한다. [DeviceIndependentBitmap](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/7376542a-cce9-4625-8ead-585e9538f9f1)의 규칙대로 RGB/BITFIELDS/CMYK는 stride-derived 길이를, 나머지 압축은 ImageSize를 사용한다. 이 단계는 DIB 구조와 원문 payload 보존까지이며 JPEG/PNG/RLE/CMYK 픽셀 해제, V5 profile 의미, 실제 brush 재생은 완료 범위가 아니다. 공용 BMP RGBA decoder도 CMYK를 RGB로 오해하지 않고 명시적으로 거부한다.
 

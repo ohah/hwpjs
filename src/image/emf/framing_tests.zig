@@ -497,13 +497,13 @@ test "EMF framing validates extended pen payload before object creation" {
 
 test "EMF framing validates monochrome bitmap brush before object creation" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 168;
+    var bytes = [_]u8{0} ** 172;
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
     std.mem.writeInt(u16, bytes[56..58], 1, .little);
     std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.createmonobrush), .little);
-    std.mem.writeInt(u32, bytes[92..96], 60, .little);
+    std.mem.writeInt(u32, bytes[92..96], 64, .little);
     std.mem.writeInt(u32, bytes[96..100], 1, .little);
     std.mem.writeInt(u32, bytes[104..108], 32, .little);
     std.mem.writeInt(u32, bytes[108..112], 18, .little);
@@ -514,7 +514,8 @@ test "EMF framing validates monochrome bitmap brush before object creation" {
     std.mem.writeInt(u16, bytes[126..128], 2, .little);
     std.mem.writeInt(u16, bytes[128..130], 1, .little);
     std.mem.writeInt(u16, bytes[130..132], 1, .little);
-    @memcpy(bytes[148..168], original[88..108]);
+    bytes[148..152].* = .{ 1, 2, 3, 4 };
+    @memcpy(bytes[152..172], original[88..108]);
 
     const summary = try framing.validate(t.allocator, &bytes);
     try t.expectEqual(@as(usize, 1), summary.objects.creates);

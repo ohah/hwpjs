@@ -23,13 +23,14 @@ pub fn parse(bytes: []const u8, fixed_end: usize, fields: Fields) !?Sections {
         return error.InvalidEmfDibSectionExtent;
     if (fields.bits_offset != bmi_end_u64) return error.NonContiguousEmfPackedDib;
     const bits_end: usize = @intCast(bits_end_u64);
-    const padding = bytes[bits_end..];
-    if (padding.len > 3) return error.InvalidEmfObjectCreationPadding;
+    const semantic_end_u64 = std.mem.alignForward(u64, bits_end_u64, 4);
+    if (semantic_end_u64 > bytes.len) return error.InvalidEmfObjectCreationPadding;
+    const semantic_end: usize = @intCast(semantic_end_u64);
     return .{
         .before_bmi = bytes[fixed_end..bmi_start],
         .bmi = bytes[bmi_start..@intCast(bmi_end_u64)],
         .bits = bytes[fields.bits_offset..bits_end],
-        .padding = padding,
+        .padding = bytes[bits_end..semantic_end],
     };
 }
 
@@ -40,6 +41,11 @@ test "DIB sections preserve undefined space and alignment padding" {
     try std.testing.expectEqual(@as(usize, 8), sections.bmi.len);
     try std.testing.expectEqual(@as(usize, 1), sections.bits.len);
     try std.testing.expectEqual(@as(usize, 3), sections.padding.len);
+    var extended: [72]u8 = undefined;
+    @memcpy(extended[0..68], &bytes);
+    extended[68..].* = .{ 1, 2, 3, 4 };
+    const with_trailing = (try parse(&extended, 52, .{ .bmi_offset = 56, .bmi_size = 8, .bits_offset = 64, .bits_size = 1 })).?;
+    try std.testing.expectEqual(@as(usize, 3), with_trailing.padding.len);
     try std.testing.expect((try parse(bytes[0..52], 52, .{ .bmi_offset = 0, .bmi_size = 0, .bits_offset = 0, .bits_size = 0 })) == null);
 }
 
