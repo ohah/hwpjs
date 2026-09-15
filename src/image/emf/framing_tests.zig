@@ -92,6 +92,42 @@ test "EMF framing enforces the complete EMF+ stream contract" {
     try t.expectError(error.MissingInitialEmfPlusHeader, framing.validate(t.allocator, &delayed));
 }
 
+test "EMF framing reports private EMF+ comments and rejects reserved records" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 184;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 3, .little);
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[92..96], 76, .little);
+    std.mem.writeInt(u32, bytes[96..100], 64, .little);
+    std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
+    std.mem.writeInt(u16, bytes[104..106], 0x4001, .little);
+    std.mem.writeInt(u32, bytes[108..112], 28, .little);
+    std.mem.writeInt(u32, bytes[112..116], 16, .little);
+    std.mem.writeInt(u32, bytes[116..120], 0xdbc01001, .little);
+    std.mem.writeInt(u32, bytes[124..128], 96, .little);
+    std.mem.writeInt(u32, bytes[128..132], 96, .little);
+    std.mem.writeInt(u16, bytes[132..134], 0x4003, .little);
+    std.mem.writeInt(u16, bytes[134..136], 0xffff, .little);
+    std.mem.writeInt(u32, bytes[136..140], 20, .little);
+    std.mem.writeInt(u32, bytes[140..144], 8, .little);
+    bytes[144..152].* = .{ 0, 1, 2, 3, 0xfc, 0xfd, 0xfe, 0xff };
+    std.mem.writeInt(u16, bytes[152..154], 0x4002, .little);
+    std.mem.writeInt(u32, bytes[156..160], 12, .little);
+    @memcpy(bytes[164..184], original[88..108]);
+
+    const summary = try framing.validate(t.allocator, &bytes);
+    try t.expectEqual(@as(usize, 1), summary.emf_plus.private_comments);
+    try t.expectEqual(@as(usize, 8), summary.emf_plus.private_data_bytes);
+
+    for ([_]u16{ 0x4005, 0x4006, 0x4007 }) |kind| {
+        var reserved = bytes;
+        std.mem.writeInt(u16, reserved[132..134], kind, .little);
+        try t.expectError(error.ReservedEmfPlusRecordType, framing.validate(t.allocator, &reserved));
+    }
+}
+
 test "EMF framing validates and counts PIXELFORMAT records" {
     const original = fixture();
     var bytes = [_]u8{0} ** 160;

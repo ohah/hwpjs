@@ -2,6 +2,7 @@ const std = @import("std");
 const comment_record = @import("comment_record.zig");
 const record = @import("emf_plus_record.zig");
 const header_record = @import("emf_plus_header.zig");
+const private_comment = @import("emf_plus_comment.zig");
 
 pub const Report = struct {
     comments: usize = 0,
@@ -9,6 +10,8 @@ pub const Report = struct {
     header: ?header_record.Header = null,
     end_of_file_records: usize = 0,
     get_dc_records: usize = 0,
+    private_comments: usize = 0,
+    private_data_bytes: usize = 0,
 };
 
 pub const State = struct {
@@ -41,7 +44,12 @@ pub const State = struct {
                     if (value.size != 12 or value.data_size != 0) return error.InvalidEmfPlusGetDcSize;
                     pending.report.get_dc_records += 1;
                 },
+                .multi_format_start, .multi_format_section, .multi_format_end => return error.ReservedEmfPlusRecordType,
                 else => {},
+            }
+            if (private_comment.parse(value)) |parsed| {
+                pending.report.private_comments = std.math.add(usize, pending.report.private_comments, 1) catch return error.LimitExceeded;
+                pending.report.private_data_bytes = std.math.add(usize, pending.report.private_data_bytes, parsed.private_data.len) catch return error.LimitExceeded;
             }
         }
         if (records_in_comment == 0) return error.EmptyEmfPlusComment;
@@ -175,4 +183,60 @@ test "EMF+ fixed control records ignore flags but require exact empty payloads" 
     std.mem.writeInt(u32, bad_eof[8..12], 4, .little);
     try std.testing.expectError(error.InvalidEmfPlusEndOfFileSize, second.consume(testComment(&bad_eof), 3));
     try std.testing.expectEqual(@as(usize, 1), second.report.records);
+}
+
+test "EMF+ stream counts private comments without interpreting their data" {
+    var bytes = [_]u8{0} ** 48;
+    writeHeader(bytes[0..28]);
+    std.mem.writeInt(u16, bytes[28..30], 0x4003, .little);
+    std.mem.writeInt(u16, bytes[30..32], 0xffff, .little);
+    std.mem.writeInt(u32, bytes[32..36], 20, .little);
+    std.mem.writeInt(u32, bytes[36..40], 8, .little);
+    bytes[40..48].* = .{ 0, 1, 2, 3, 0xfc, 0xfd, 0xfe, 0xff };
+    var eof = [_]u8{0} ** 12;
+    writeEmptyRecord(&eof, 0x4002);
+
+    var state: State = .{};
+    try std.testing.expect(try state.consume(testComment(&bytes), 2));
+    try std.testing.expect(try state.consume(testComment(&eof), 3));
+    try std.testing.expectEqual(@as(usize, 1), state.report.private_comments);
+    try std.testing.expectEqual(@as(usize, 8), state.report.private_data_bytes);
+}
+
+test "EMF+ stream rejects all reserved multi-format record types atomically" {
+    var header = [_]u8{0} ** 28;
+    writeHeader(&header);
+    for ([_]u16{ 0x4005, 0x4006, 0x4007 }) |kind| {
+        var reserved = [_]u8{0} ** 12;
+        writeEmptyRecord(&reserved, kind);
+        var state: State = .{};
+        try std.testing.expect(try state.consume(testComment(&header), 2));
+        try std.testing.expectError(error.ReservedEmfPlusRecordType, state.consume(testComment(&reserved), 3));
+        try std.testing.expectEqual(@as(usize, 1), state.report.records);
+        try std.testing.expectEqual(@as(usize, 1), state.report.comments);
+        try std.testing.expectError(error.MissingEmfPlusEndOfFile, state.finish());
+    }
+}
+
+test "EMF+ private comment aggregate overflow leaves the entire state unchanged" {
+    var bytes = [_]u8{0} ** 44;
+    writeHeader(bytes[0..28]);
+    std.mem.writeInt(u16, bytes[28..30], 0x4003, .little);
+    std.mem.writeInt(u32, bytes[32..36], 16, .little);
+    std.mem.writeInt(u32, bytes[36..40], 4, .little);
+    bytes[40..44].* = .{ 1, 2, 3, 4 };
+
+    var count_overflow: State = .{};
+    count_overflow.report.private_comments = std.math.maxInt(usize);
+    try std.testing.expectError(error.LimitExceeded, count_overflow.consume(testComment(&bytes), 2));
+    try std.testing.expectEqual(@as(?header_record.Header, null), count_overflow.report.header);
+    try std.testing.expectEqual(@as(usize, 0), count_overflow.report.records);
+    try std.testing.expectEqual(std.math.maxInt(usize), count_overflow.report.private_comments);
+
+    var bytes_overflow: State = .{};
+    bytes_overflow.report.private_data_bytes = std.math.maxInt(usize) - 3;
+    try std.testing.expectError(error.LimitExceeded, bytes_overflow.consume(testComment(&bytes), 2));
+    try std.testing.expectEqual(@as(?header_record.Header, null), bytes_overflow.report.header);
+    try std.testing.expectEqual(@as(usize, 0), bytes_overflow.report.records);
+    try std.testing.expectEqual(std.math.maxInt(usize) - 3, bytes_overflow.report.private_data_bytes);
 }
