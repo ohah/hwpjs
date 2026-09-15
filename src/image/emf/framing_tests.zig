@@ -66,6 +66,33 @@ test "EMF framing validates and counts ALPHABLEND records" {
     try t.expectError(error.UnsupportedEmfAlphaFormat, framing.validate(t.allocator, &bytes));
 }
 
+test "EMF framing validates and counts TRANSPARENTBLT records" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 244;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 3, .little);
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.transparentblt), .little);
+    std.mem.writeInt(u32, bytes[92..96], 136, .little);
+    bytes[128..132].* = .{ 10, 20, 30, 0 };
+    std.mem.writeInt(u32, bytes[168..172], @intFromEnum(@import("dib_colors.zig").Usage.palette_indices), .little);
+    std.mem.writeInt(u32, bytes[172..176], 108, .little);
+    std.mem.writeInt(u32, bytes[176..180], 12, .little);
+    std.mem.writeInt(u32, bytes[180..184], 128, .little);
+    std.mem.writeInt(u32, bytes[184..188], 8, .little);
+    std.mem.writeInt(u32, bytes[196..200], 12, .little);
+    std.mem.writeInt(u16, bytes[200..202], 2, .little);
+    std.mem.writeInt(u16, bytes[202..204], 2, .little);
+    std.mem.writeInt(u16, bytes[204..206], 1, .little);
+    std.mem.writeInt(u16, bytes[206..208], 1, .little);
+    @memcpy(bytes[224..244], original[88..108]);
+    const summary = try framing.validate(t.allocator, &bytes);
+    try t.expectEqual(@as(usize, 1), summary.transparent_blt_records);
+
+    bytes[131] = 1;
+    try t.expectError(error.InvalidWmfColorReserved, framing.validate(t.allocator, &bytes));
+}
+
 test "EMF framing connects all fixed clipping records" {
     const original = fixture();
     var bytes = [_]u8{0} ** 180;

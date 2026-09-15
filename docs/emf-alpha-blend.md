@@ -2,7 +2,7 @@
 
 ## 현재 계약
 
-`src/image/emf/alpha_blend.zig`는 `EMR_ALPHABLEND`(0x72)의 108바이트 고정 영역과 가변 source bitmap을 해석합니다. bounds, 목적지와 원본의 signed 좌표, 양수 width/height, 원본 XForm, 배경 ColorRef, DIB 색상 사용법과 네 offset/size를 원값으로 보존합니다. source bitmap은 기존 `bitmap_source`/`bitmap_object`/`dib_payload` 계층이 범위·간격·정렬·DIB 크기를 한 번만 검사합니다.
+`src/image/emf/alpha_blend.zig`는 `EMR_ALPHABLEND`(0x72)의 blend 전용 조건을 해석합니다. TRANSPARENTBLT와 공유하는 108바이트 source-transfer 배치는 `bitmap_source_transfer.zig`, 실제 bitmap 범위·간격·정렬·DIB 크기는 기존 `bitmap_source`/`bitmap_object`/`dib_payload` 계층이 각각 한 번만 검사합니다. ALPHABLEND는 목적지와 원본 width/height의 양수 조건 및 per-pixel alpha의 32bpp 조건을 추가합니다.
 
 `src/image/emf/blend_function.zig`가 4바이트 BLENDFUNCTION을 소유합니다. 정의된 `AC_SRC_OVER`(0), constant alpha, AlphaFormat 0과 `AC_SRC_ALPHA`(1)를 구분합니다. BlendFlags는 명세가 0을 지정하면서도 재생 시 무시하도록 요구하므로 거부하지 않고 원값을 보존합니다. per-pixel alpha를 선언하면 Win32 계약에 따라 source DIB가 32bpp인지 검사합니다.
 

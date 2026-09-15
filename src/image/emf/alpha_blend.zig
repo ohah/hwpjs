@@ -1,57 +1,33 @@
 const std = @import("std");
-const bitmap_source = @import("bitmap_source.zig");
+const bitmap_source_transfer = @import("bitmap_source_transfer.zig");
 const blend_function = @import("blend_function.zig");
-const color_ref = @import("../wmf/color_ref.zig");
 const dib_colors = @import("dib_colors.zig");
-const geometry = @import("geometry.zig");
 const record_extent = @import("record_extent.zig");
 const records = @import("records.zig");
-const xform = @import("xform.zig");
 
-pub const fixed_size = 108;
+pub const fixed_size = bitmap_source_transfer.byte_size;
 pub const AlphaBlend = struct {
-    bounds: geometry.RectL,
-    destination: geometry.PointL,
-    destination_size: geometry.SizeL,
+    core: bitmap_source_transfer.Core,
     blend: blend_function.BlendFunction,
-    source: geometry.PointL,
-    source_transform: xform.XForm,
-    source_background: color_ref.ColorRef,
-    source_usage: dib_colors.Usage,
-    source_size: geometry.SizeL,
-    bitmap: bitmap_source.Source,
     trailing_data: []const u8,
 };
 
 pub fn parse(record: records.Record) !?AlphaBlend {
     if (record.kind != .alphablend) return null;
     const end = record_extent.requiredEnd(record, fixed_size) orelse return error.InvalidEmfAlphaBlendSize;
-    const destination_size = try geometry.parseSizeL(record.bytes[32..40]);
-    if (destination_size.width <= 0 or destination_size.height <= 0) return error.InvalidEmfAlphaBlendDestinationSize;
-    const blend = try blend_function.parse(record.bytes[40..44]);
-    const source_size = try geometry.parseSizeL(record.bytes[100..108]);
-    if (source_size.width <= 0 or source_size.height <= 0) return error.InvalidEmfAlphaBlendSourceSize;
-    const usage = try dib_colors.parse(std.mem.readInt(u32, record.bytes[80..84], .little));
-    const bitmap = (try bitmap_source.parse(record.bytes, end, .{
-        .bmi_offset = std.mem.readInt(u32, record.bytes[84..88], .little),
-        .bmi_size = std.mem.readInt(u32, record.bytes[88..92], .little),
-        .bits_offset = std.mem.readInt(u32, record.bytes[92..96], .little),
-        .bits_size = std.mem.readInt(u32, record.bytes[96..100], .little),
-    }, usage)) orelse return error.MissingEmfAlphaBlendSourceBitmap;
-    if (blend.alpha_format == .source_alpha and bitmap.dib.header.bit_count != 32)
+    const core = bitmap_source_transfer.parse(record.bytes, end) catch |err| switch (err) {
+        error.MissingEmfBitmapSourceTransferBitmap => return error.MissingEmfAlphaBlendSourceBitmap,
+        else => return err,
+    };
+    if (core.destination_size.width <= 0 or core.destination_size.height <= 0) return error.InvalidEmfAlphaBlendDestinationSize;
+    const blend = try blend_function.parse(&core.operation_bytes);
+    if (core.source_size.width <= 0 or core.source_size.height <= 0) return error.InvalidEmfAlphaBlendSourceSize;
+    if (blend.alpha_format == .source_alpha and core.bitmap.dib.header.bit_count != 32)
         return error.InvalidEmfAlphaBlendSourceBitCount;
     return .{
-        .bounds = try geometry.parseRectL(record.bytes[8..24]),
-        .destination = try geometry.parsePointL(record.bytes[24..32]),
-        .destination_size = destination_size,
+        .core = core,
         .blend = blend,
-        .source = try geometry.parsePointL(record.bytes[44..52]),
-        .source_transform = try xform.parse(record.bytes[52..76]),
-        .source_background = try color_ref.parse(record.bytes[76..80], .specified_zero),
-        .source_usage = usage,
-        .source_size = source_size,
-        .bitmap = bitmap,
-        .trailing_data = record.bytes[bitmap.semantic_end..],
+        .trailing_data = record.bytes[core.semanticEnd()..],
     };
 }
 
@@ -95,16 +71,16 @@ test "ALPHABLEND parses all fixed fields source and trailing data" {
     std.mem.writeInt(u32, bytes[52..56], 0x3f800000, .little);
     bytes[76..80].* = .{ 1, 2, 3, 0 };
     const value = (try parse(fixture(.alphablend, &bytes))).?;
-    try std.testing.expectEqual(@as(i32, -9), value.bounds.left);
-    try std.testing.expectEqual(@as(i32, -3), value.destination.x);
-    try std.testing.expectEqual(@as(i32, 2), value.destination_size.width);
+    try std.testing.expectEqual(@as(i32, -9), value.core.bounds.left);
+    try std.testing.expectEqual(@as(i32, -3), value.core.destination.x);
+    try std.testing.expectEqual(@as(i32, 2), value.core.destination_size.width);
     try std.testing.expectEqual(@as(u8, 0xff), value.blend.source_constant_alpha);
     try std.testing.expectEqual(blend_function.AlphaFormat.source_alpha, value.blend.alpha_format);
-    try std.testing.expectEqual(@as(i32, -5), value.source.x);
-    try std.testing.expectEqual(@as(u32, 0x3f800000), value.source_transform.m11.bits);
-    try std.testing.expectEqual(@as(u8, 3), value.source_background.blue);
-    try std.testing.expectEqual(@as(i32, 2), value.source_size.height);
-    try std.testing.expectEqual(@as(u16, 32), value.bitmap.dib.header.bit_count);
+    try std.testing.expectEqual(@as(i32, -5), value.core.source.x);
+    try std.testing.expectEqual(@as(u32, 0x3f800000), value.core.source_transform.m11.bits);
+    try std.testing.expectEqual(@as(u8, 3), value.core.source_background.blue);
+    try std.testing.expectEqual(@as(i32, 2), value.core.source_size.height);
+    try std.testing.expectEqual(@as(u16, 32), value.core.bitmap.dib.header.bit_count);
     try std.testing.expectEqual(@as(usize, 0), value.trailing_data.len);
 
     var extended: [168]u8 = undefined;
