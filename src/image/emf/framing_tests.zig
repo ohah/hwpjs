@@ -131,14 +131,15 @@ test "EMF framing validates and counts TRANSPARENTBLT records" {
 
 test "EMF framing validates SETLAYOUT payloads" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 120;
+    var bytes = [_]u8{0} ** 124;
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
     std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.setlayout), .little);
-    std.mem.writeInt(u32, bytes[92..96], 12, .little);
+    std.mem.writeInt(u32, bytes[92..96], 16, .little);
     std.mem.writeInt(u32, bytes[96..100], 0x00000009, .little);
-    @memcpy(bytes[100..120], original[88..108]);
+    bytes[100..104].* = .{ 0xde, 0xad, 0xbe, 0xef };
+    @memcpy(bytes[104..124], original[88..108]);
     try t.expectEqual(@as(usize, 3), (try framing.validate(t.allocator, &bytes)).records);
 
     bytes[98] = 1;
