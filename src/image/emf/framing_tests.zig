@@ -1013,6 +1013,39 @@ test "EMF framing validates and counts SETCOLORADJUSTMENT" {
     try t.expectError(error.InvalidEmfColorAdjustmentIlluminant, framing.validate(t.allocator, &invalid_illuminant));
 }
 
+test "EMF framing validates and classifies COMMENT envelopes" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 184;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 7, .little);
+
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[92..96], 12, .little);
+
+    const offsets = [_]usize{ 100, 116, 132, 148 };
+    const identifiers = [_]u32{ 0x11223344, 0x00000000, 0x2b464d45, 0x43494447 };
+    for (offsets, identifiers) |offset, identifier| {
+        std.mem.writeInt(u32, bytes[offset..][0..4], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+        std.mem.writeInt(u32, bytes[offset + 4 ..][0..4], 16, .little);
+        std.mem.writeInt(u32, bytes[offset + 8 ..][0..4], 4, .little);
+        std.mem.writeInt(u32, bytes[offset + 12 ..][0..4], identifier, .little);
+    }
+    @memcpy(bytes[164..184], original[88..108]);
+
+    const summary = try framing.validate(t.allocator, &bytes);
+    try t.expectEqual(@as(usize, 7), summary.records);
+    try t.expectEqual(@as(usize, 5), summary.comment_records);
+    try t.expectEqual(@as(usize, 2), summary.comments.private);
+    try t.expectEqual(@as(usize, 1), summary.comments.emf_spool);
+    try t.expectEqual(@as(usize, 1), summary.comments.emf_plus);
+    try t.expectEqual(@as(usize, 1), summary.comments.public);
+
+    var invalid_data_size = bytes;
+    std.mem.writeInt(u32, invalid_data_size[108..112], std.math.maxInt(u32), .little);
+    try t.expectError(error.InvalidEmfCommentDataSize, framing.validate(t.allocator, &invalid_data_size));
+}
+
 test "EMF framing connects SELECTOBJECT activation deletion and default restoration" {
     const original = fixture();
     var bytes = [_]u8{0} ** 160;
