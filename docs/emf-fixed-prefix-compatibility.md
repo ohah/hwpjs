@@ -24,7 +24,7 @@ Microsoft [EMF Records](https://learn.microsoft.com/en-us/openspecs/windows_prot
 - `scale_extents.zig`: 24바이트 prefix
 - `dc_stack.zig`: SAVEDC 8, RESTOREDC 12바이트 prefix
 
-직전 파트의 `basic_point_drawing.zig`와 `basic_shapes.zig`도 같은 SSOT를 사용한다. palette와 handle 연계 record는 [EMF 핸들·팔레트 record 호환성](emf-handle-record-compatibility.md)에서 후속 이관했다. offset/size section과 가변 객체를 포함한 poly·font·bitmap brush·extended pen·color-space creation은 의미 payload 끝과 보존할 extra를 먼저 분리해야 하므로 이 파트의 완료 범위가 아니다.
+직전 파트의 `basic_point_drawing.zig`와 `basic_shapes.zig`도 같은 SSOT를 사용한다. palette와 handle 연계 record는 [EMF 핸들·팔레트 record 호환성](emf-handle-record-compatibility.md), color-space creation은 [전용 호환성 문서](emf-color-space-record-compatibility.md)에서 후속 이관했다. offset/size section과 가변 객체를 포함한 poly·font·bitmap brush·extended pen은 의미 payload 끝과 보존할 extra를 먼저 분리해야 하므로 이 파트의 완료 범위가 아니다.
 
 ## 검증
 

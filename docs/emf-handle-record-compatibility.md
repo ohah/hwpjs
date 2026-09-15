@@ -14,7 +14,7 @@ Microsoft [EMF Records](https://learn.microsoft.com/en-us/openspecs/windows_prot
 - `object_table.zig`: SELECTOBJECT와 DELETEOBJECT의 12바이트 필수 prefix를 검사한다. payload 검증이 성공한 뒤에만 선택·삭제 상태를 변경한다.
 - `color_space_records.zig`: SETCOLORSPACE와 DELETECOLORSPACE의 12바이트 필수 prefix를 검사한다.
 
-offset/size section이나 자체 가변 payload 보존 정책이 필요한 color-space creation, poly, font, bitmap brush, extended pen은 이 문서의 완료 범위가 아니다.
+color-space creation은 [전용 호환성 문서](emf-color-space-record-compatibility.md)에서 후속 이관했다. offset/size section이나 자체 가변 payload 보존 정책이 필요한 poly, font, bitmap brush, extended pen은 이 문서의 완료 범위가 아니다.
 
 ## 검증
 

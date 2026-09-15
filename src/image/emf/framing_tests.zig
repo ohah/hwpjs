@@ -644,26 +644,27 @@ test "EMF framing validates basic shape payloads" {
 
 test "EMF framing connects color-space set and dedicated deletion" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 472;
+    var bytes = [_]u8{0} ** 476;
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 5, .little);
     std.mem.writeInt(u16, bytes[56..58], 1, .little);
     std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.createcolorspace), .little);
-    std.mem.writeInt(u32, bytes[92..96], 340, .little);
+    std.mem.writeInt(u32, bytes[92..96], 344, .little);
     std.mem.writeInt(u32, bytes[96..100], 1, .little);
     std.mem.writeInt(u32, bytes[100..104], @import("log_color_space.zig").signature, .little);
     std.mem.writeInt(u32, bytes[104..108], @import("log_color_space.zig").version, .little);
     std.mem.writeInt(u32, bytes[108..112], @import("log_color_space.zig").ansi_size, .little);
     std.mem.writeInt(u32, bytes[112..116], @intFromEnum(@import("color_space_values.zig").LogicalColorSpace.srgb), .little);
     std.mem.writeInt(u32, bytes[116..120], @intFromEnum(@import("color_space_values.zig").GamutMappingIntent.images), .little);
-    std.mem.writeInt(u32, bytes[428..432], @intFromEnum(@import("records.zig").RecordType.setcolorspace), .little);
-    std.mem.writeInt(u32, bytes[432..436], 12, .little);
-    std.mem.writeInt(u32, bytes[436..440], 1, .little);
-    std.mem.writeInt(u32, bytes[440..444], @intFromEnum(@import("records.zig").RecordType.deletecolorspace), .little);
-    std.mem.writeInt(u32, bytes[444..448], 12, .little);
-    std.mem.writeInt(u32, bytes[448..452], 1, .little);
-    @memcpy(bytes[452..472], original[88..108]);
+    bytes[428..432].* = .{ 1, 2, 3, 4 };
+    std.mem.writeInt(u32, bytes[432..436], @intFromEnum(@import("records.zig").RecordType.setcolorspace), .little);
+    std.mem.writeInt(u32, bytes[436..440], 12, .little);
+    std.mem.writeInt(u32, bytes[440..444], 1, .little);
+    std.mem.writeInt(u32, bytes[444..448], @intFromEnum(@import("records.zig").RecordType.deletecolorspace), .little);
+    std.mem.writeInt(u32, bytes[448..452], 12, .little);
+    std.mem.writeInt(u32, bytes[452..456], 1, .little);
+    @memcpy(bytes[456..476], original[88..108]);
     const summary = try framing.validate(t.allocator, &bytes);
     try t.expectEqual(@as(usize, 1), summary.objects.color_space_sets);
     try t.expectEqual(@as(usize, 1), summary.objects.color_space_deletes);

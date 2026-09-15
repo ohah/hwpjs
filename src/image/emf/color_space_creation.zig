@@ -1,5 +1,6 @@
 const std = @import("std");
 const records = @import("records.zig");
+const record_extent = @import("record_extent.zig");
 const log = @import("log_color_space.zig");
 
 pub const Ansi = struct { handle: u32, color_space: log.Ansi };
@@ -16,21 +17,21 @@ pub fn parse(record: records.Record) !?Creation {
     switch (record.kind) {
         .createcolorspace => {
             const expected = 12 + log.ansi_size;
-            if (record.size != expected or record.bytes.len != expected) return error.InvalidEmfCreateColorSpaceRecordSize;
+            if (!record_extent.hasRequiredPrefix(record, expected)) return error.InvalidEmfCreateColorSpaceRecordSize;
             return .{ .ansi = .{
                 .handle = std.mem.readInt(u32, record.bytes[8..12], .little),
-                .color_space = try log.parseAnsi(record.bytes[12..]),
+                .color_space = try log.parseAnsi(record.bytes[12..expected]),
             } };
         },
         .createcolorspacew => {
             const flags_offset = 12 + log.wide_size;
             const prefix = flags_offset + 8;
-            if (record.size < prefix or record.bytes.len < prefix or record.size != record.bytes.len)
+            if (!record_extent.hasRequiredPrefix(record, prefix))
                 return error.InvalidEmfCreateColorSpaceWRecordSize;
             const data_size = std.mem.readInt(u32, record.bytes[flags_offset + 4 ..][0..4], .little);
             const data_end = std.math.add(usize, prefix, data_size) catch return error.InvalidEmfCreateColorSpaceWDataSize;
             const expected = (std.math.add(usize, data_end, 3) catch return error.InvalidEmfCreateColorSpaceWDataSize) & ~@as(usize, 3);
-            if (expected != record.bytes.len) return error.InvalidEmfCreateColorSpaceWDataSize;
+            if (expected > record.bytes.len) return error.InvalidEmfCreateColorSpaceWDataSize;
             return .{ .wide = .{
                 .handle = std.mem.readInt(u32, record.bytes[8..12], .little),
                 .color_space = try log.parseWide(record.bytes[12..flags_offset]),
@@ -64,24 +65,29 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
     return .{ .offset = 0, .kind = kind, .size = @intCast(bytes.len), .bytes = bytes, .end = bytes.len };
 }
 
-test "ANSI creation requires one exact LogColorSpace object" {
-    var bytes: [12 + log.ansi_size]u8 = undefined;
-    initAnsiRecord(&bytes, 7);
+test "ANSI creation requires one LogColorSpace prefix and ignores trailing data" {
+    var bytes: [12 + log.ansi_size + 4]u8 = undefined;
+    initAnsiRecord(bytes[0 .. 12 + log.ansi_size], 7);
+    bytes[12 + log.ansi_size ..].* = .{ 1, 2, 3, 4 };
     const value = (try parse(fixture(.createcolorspace, &bytes))).?.ansi;
     try std.testing.expectEqual(@as(u32, 7), value.handle);
     try std.testing.expectEqual(log.ansi_size, value.color_space.filename_storage.len + log.core_size);
-    try std.testing.expectError(error.InvalidEmfCreateColorSpaceRecordSize, parse(fixture(.createcolorspace, bytes[0 .. bytes.len - 4])));
+    try std.testing.expectError(error.InvalidEmfCreateColorSpaceRecordSize, parse(fixture(.createcolorspace, bytes[0 .. 12 + log.ansi_size - 4])));
+    var mismatched = fixture(.createcolorspace, &bytes);
+    mismatched.size -= 4;
+    try std.testing.expectError(error.InvalidEmfCreateColorSpaceRecordSize, parse(mismatched));
 }
 
-test "wide creation validates data extent and preserves alignment padding" {
-    var bytes: [12 + log.wide_size + 8 + 4]u8 = undefined;
+test "wide creation validates data extent and separates padding from trailing data" {
+    var bytes: [12 + log.wide_size + 8 + 8]u8 = undefined;
     @memset(&bytes, 0);
     std.mem.writeInt(u32, bytes[8..12], 9, .little);
     initLog(bytes[12 .. 12 + log.wide_size]);
     std.mem.writeInt(u32, bytes[12 + log.wide_size ..][0..4], 0xffffffff, .little);
     std.mem.writeInt(u32, bytes[12 + log.wide_size + 4 ..][0..4], 1, .little);
     bytes[12 + log.wide_size + 8] = 0xaa;
-    bytes[bytes.len - 1] = 0xcc;
+    bytes[12 + log.wide_size + 11] = 0xcc;
+    bytes[12 + log.wide_size + 12 ..].* = .{ 1, 2, 3, 4 };
     const value = (try parse(fixture(.createcolorspacew, &bytes))).?.wide;
     try std.testing.expectEqual(@as(u32, 9), value.handle);
     try std.testing.expectEqual(@as(u32, 0xffffffff), value.flags);
@@ -89,7 +95,16 @@ test "wide creation validates data extent and preserves alignment padding" {
     try std.testing.expectEqualSlices(u8, &.{ 0, 0, 0xcc }, value.padding);
 
     std.mem.writeInt(u32, bytes[12 + log.wide_size + 4 ..][0..4], 5, .little);
+    const wider_data = (try parse(fixture(.createcolorspacew, &bytes))).?.wide;
+    try std.testing.expectEqual(@as(usize, 5), wider_data.data.len);
+    try std.testing.expectEqual(@as(usize, 3), wider_data.padding.len);
+
+    std.mem.writeInt(u32, bytes[12 + log.wide_size + 4 ..][0..4], 9, .little);
     try std.testing.expectError(error.InvalidEmfCreateColorSpaceWDataSize, parse(fixture(.createcolorspacew, &bytes)));
+
+    var mismatched = fixture(.createcolorspacew, &bytes);
+    mismatched.size -= 4;
+    try std.testing.expectError(error.InvalidEmfCreateColorSpaceWRecordSize, parse(mismatched));
 }
 
 test "color-space creation parser does not claim manipulation records" {
