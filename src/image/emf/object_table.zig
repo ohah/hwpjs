@@ -12,6 +12,7 @@ const extended_pen_creation = @import("extended_pen_creation.zig");
 const bitmap_brush_creation = @import("bitmap_brush_creation.zig");
 const font_creation = @import("font_creation.zig");
 const region_drawing = @import("region_drawing.zig");
+const color_correct_palette = @import("color_correct_palette.zig");
 
 const Slot = union(enum) {
     empty,
@@ -65,6 +66,7 @@ pub const Report = struct {
     deletes: usize = 0,
     palette_selects: usize = 0,
     palette_updates: usize = 0,
+    palette_corrections: usize = 0,
     selections: usize = 0,
     stock_selections: usize = 0,
     default_restores: usize = 0,
@@ -128,6 +130,11 @@ const State = struct {
             return;
         }
         _ = try self.requireKind(handle, .brush);
+    }
+
+    fn paletteRangeInBounds(current: u32, start: u32, count: u64) bool {
+        const end = std.math.add(u64, start, count) catch return false;
+        return end <= current;
     }
 
     fn delete(self: *State, handle: u32, expected: ?stock_object.Kind) !void {
@@ -223,6 +230,13 @@ const State = struct {
             }
             return;
         }
+        if (try color_correct_palette.parse(record)) |correction| {
+            const current = try self.palette(correction.palette_handle);
+            if (!paletteRangeInBounds(current, correction.first_entry, correction.entry_count))
+                return error.EmfPaletteCorrectionOutOfBounds;
+            self.report.palette_corrections += 1;
+            return;
+        }
         if (try basic_object_creation.parse(record)) |creation| {
             switch (creation) {
                 .pen => |value| try self.create(value.handle, .{ .object = .pen }),
@@ -260,8 +274,8 @@ const State = struct {
             },
             .set_entries => |set_value| {
                 const current = try self.palette(set_value.handle);
-                const end = @as(u64, set_value.start) + set_value.entries.count;
-                if (end > current) return error.EmfPaletteUpdateOutOfBounds;
+                if (!paletteRangeInBounds(current, set_value.start, set_value.entries.count))
+                    return error.EmfPaletteUpdateOutOfBounds;
                 self.report.palette_updates += 1;
                 return;
             },
@@ -397,6 +411,14 @@ fn createPalette(handle: u32, count: u16) [20]u8 {
     return bytes;
 }
 
+fn colorCorrectPalette(handle: u32, first: u32, count: u32) [color_correct_palette.minimum_size]u8 {
+    var bytes = [_]u8{0} ** color_correct_palette.minimum_size;
+    std.mem.writeInt(u32, bytes[8..12], handle, .little);
+    std.mem.writeInt(u32, bytes[12..16], first, .little);
+    std.mem.writeInt(u32, bytes[16..20], count, .little);
+    return bytes;
+}
+
 fn createColorSpace(handle: u32) [12 + @import("log_color_space.zig").ansi_size]u8 {
     var bytes: [12 + @import("log_color_space.zig").ansi_size]u8 = undefined;
     @memset(&bytes, 0);
@@ -524,6 +546,26 @@ test "palette references require a live palette and current entry bounds" {
     _ = try state.consume(fixture(.deleteobject, &handleRecord(1)));
     try std.testing.expectEqual(null, state.selected.palette);
     try std.testing.expectEqual(@as(usize, 1), state.report.default_restores);
+}
+
+test "COLORCORRECTPALETTE requires a live palette and an in-bounds range" {
+    var slots = [_]Slot{.empty} ** 4;
+    var state: State = .{ .slots = &slots };
+    try state.consume(fixture(.createpalette, &createPalette(1, 1)));
+    try state.consume(fixture(.createpen, &createPen(2)));
+
+    try state.consume(fixture(.colorcorrectpalette, &colorCorrectPalette(1, 0, 1)));
+    try state.consume(fixture(.colorcorrectpalette, &colorCorrectPalette(1, 1, 0)));
+    try std.testing.expectEqual(@as(usize, 2), state.report.palette_corrections);
+
+    const before = state.report;
+    try std.testing.expectError(error.EmfPaletteCorrectionOutOfBounds, state.consume(fixture(.colorcorrectpalette, &colorCorrectPalette(1, 1, 1))));
+    try std.testing.expectError(error.EmfPaletteCorrectionOutOfBounds, state.consume(fixture(.colorcorrectpalette, &colorCorrectPalette(1, std.math.maxInt(u32), std.math.maxInt(u32)))));
+    try std.testing.expectError(error.InvalidEmfPaletteObjectType, state.consume(fixture(.colorcorrectpalette, &colorCorrectPalette(2, 0, 1))));
+    try std.testing.expectError(error.DeadEmfObjectReference, state.consume(fixture(.colorcorrectpalette, &colorCorrectPalette(3, 0, 1))));
+    try std.testing.expectError(error.InvalidEmfObjectHandle, state.consume(fixture(.colorcorrectpalette, &colorCorrectPalette(0, 0, 1))));
+    try std.testing.expectError(error.InvalidEmfObjectHandle, state.consume(fixture(.colorcorrectpalette, &colorCorrectPalette(0x80000000, 0, 1))));
+    try std.testing.expectEqualDeep(before, state.report);
 }
 
 fn allocationCheck(a: std.mem.Allocator) !void {

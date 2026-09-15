@@ -942,6 +942,38 @@ test "EMF framing validates logical palette record wire contracts" {
     try t.expectError(error.OutOfMemory, framing.validate(fba.allocator(), &valid));
 }
 
+test "EMF framing validates and counts COLORCORRECTPALETTE" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 160;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 4, .little);
+    std.mem.writeInt(u16, bytes[56..58], 1, .little);
+
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.createpalette), .little);
+    std.mem.writeInt(u32, bytes[92..96], 24, .little);
+    std.mem.writeInt(u32, bytes[96..100], 1, .little);
+    std.mem.writeInt(u16, bytes[100..102], 0x0300, .little);
+    std.mem.writeInt(u16, bytes[102..104], 2, .little);
+
+    std.mem.writeInt(u32, bytes[112..116], @intFromEnum(@import("records.zig").RecordType.colorcorrectpalette), .little);
+    std.mem.writeInt(u32, bytes[116..120], 28, .little);
+    std.mem.writeInt(u32, bytes[120..124], 1, .little);
+    std.mem.writeInt(u32, bytes[124..128], 1, .little);
+    std.mem.writeInt(u32, bytes[128..132], 1, .little);
+    std.mem.writeInt(u32, bytes[132..136], 0xaabbccdd, .little);
+    bytes[136..140].* = .{ 0xde, 0xad, 0xbe, 0xef };
+    @memcpy(bytes[140..160], original[88..108]);
+
+    const summary = try framing.validate(t.allocator, &bytes);
+    try t.expectEqual(@as(usize, 1), summary.palette_correction_records);
+    try t.expectEqual(@as(usize, 1), summary.objects.palette_corrections);
+
+    var out_of_bounds = bytes;
+    std.mem.writeInt(u32, out_of_bounds[124..128], 2, .little);
+    try t.expectError(error.EmfPaletteCorrectionOutOfBounds, framing.validate(t.allocator, &out_of_bounds));
+}
+
 test "EMF framing connects SELECTOBJECT activation deletion and default restoration" {
     const original = fixture();
     var bytes = [_]u8{0} ** 160;

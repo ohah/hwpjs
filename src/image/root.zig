@@ -180,6 +180,7 @@ pub const emf_layout_mode = @import("emf/layout_mode.zig");
 pub const emf_universal_font_id = @import("emf/universal_font_id.zig");
 pub const emf_force_ufi_mapping = @import("emf/force_ufi_mapping.zig");
 pub const emf_linked_ufis = @import("emf/linked_ufis.zig");
+pub const emf_color_correct_palette = @import("emf/color_correct_palette.zig");
 pub const emf_object_table = @import("emf/object_table.zig");
 pub const emf_eof = @import("emf/eof.zig");
 pub const emf_eof_palette = @import("emf/eof_palette.zig");
