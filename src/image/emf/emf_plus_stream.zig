@@ -3,6 +3,7 @@ const comment_record = @import("comment_record.zig");
 const record = @import("emf_plus_record.zig");
 const header_record = @import("emf_plus_header.zig");
 const private_comment = @import("emf_plus_comment.zig");
+const object_record = @import("emf_plus_object.zig");
 
 pub const Report = struct {
     comments: usize = 0,
@@ -12,11 +13,13 @@ pub const Report = struct {
     get_dc_records: usize = 0,
     private_comments: usize = 0,
     private_data_bytes: usize = 0,
+    objects: object_record.Report = .{},
 };
 
 pub const State = struct {
     report: Report = .{},
     ended: bool = false,
+    object_state: object_record.State = .{},
 
     pub fn consume(self: *State, comment: comment_record.Comment, emf_record_index: usize) !bool {
         if (comment.classification != .emf_plus) return false;
@@ -47,6 +50,7 @@ pub const State = struct {
                 .multi_format_start, .multi_format_section, .multi_format_end => return error.ReservedEmfPlusRecordType,
                 else => {},
             }
+            _ = try pending.object_state.consume(value);
             if (private_comment.parse(value)) |parsed| {
                 pending.report.private_comments = std.math.add(usize, pending.report.private_comments, 1) catch return error.LimitExceeded;
                 pending.report.private_data_bytes = std.math.add(usize, pending.report.private_data_bytes, parsed.private_data.len) catch return error.LimitExceeded;
@@ -54,12 +58,14 @@ pub const State = struct {
         }
         if (records_in_comment == 0) return error.EmptyEmfPlusComment;
         pending.report.comments = std.math.add(usize, pending.report.comments, 1) catch return error.LimitExceeded;
+        pending.report.objects = pending.object_state.report;
         self.* = pending;
         return true;
     }
 
     pub fn finish(self: State) !void {
         if (self.report.header != null and !self.ended) return error.MissingEmfPlusEndOfFile;
+        try self.object_state.finish();
     }
 };
 
@@ -239,4 +245,53 @@ test "EMF+ private comment aggregate overflow leaves the entire state unchanged"
     try std.testing.expectEqual(@as(?header_record.Header, null), bytes_overflow.report.header);
     try std.testing.expectEqual(@as(usize, 0), bytes_overflow.report.records);
     try std.testing.expectEqual(std.math.maxInt(usize) - 3, bytes_overflow.report.private_data_bytes);
+}
+
+test "EMF+ multipart object crosses comments and ignores intervening non-object records" {
+    var first = [_]u8{0} ** 48;
+    writeHeader(first[0..28]);
+    std.mem.writeInt(u16, first[28..30], 0x4008, .little);
+    std.mem.writeInt(u16, first[30..32], 0x8507, .little);
+    std.mem.writeInt(u32, first[32..36], 20, .little);
+    std.mem.writeInt(u32, first[36..40], 8, .little);
+    std.mem.writeInt(u32, first[40..44], 8, .little);
+    first[44..48].* = .{ 1, 2, 3, 4 };
+
+    var second = [_]u8{0} ** 44;
+    writeEmptyRecord(second[0..12], 0x4004);
+    std.mem.writeInt(u16, second[12..14], 0x4008, .little);
+    std.mem.writeInt(u16, second[14..16], 0x0507, .little);
+    std.mem.writeInt(u32, second[16..20], 20, .little);
+    std.mem.writeInt(u32, second[20..24], 8, .little);
+    std.mem.writeInt(u32, second[24..28], 8, .little);
+    second[28..32].* = .{ 5, 6, 7, 8 };
+    writeEmptyRecord(second[32..44], 0x4002);
+
+    var state: State = .{};
+    try std.testing.expect(try state.consume(testComment(&first), 2));
+    try std.testing.expect(try state.consume(testComment(&second), 3));
+    try state.finish();
+    try std.testing.expectEqual(@as(usize, 2), state.report.objects.records);
+    try std.testing.expectEqual(@as(usize, 1), state.report.objects.completed);
+    try std.testing.expectEqual(@as(usize, 2), state.report.objects.multipart_fragments);
+    try std.testing.expectEqual(@as(usize, 8), state.report.objects.object_data_bytes);
+    try std.testing.expectEqual(object_record.ObjectType.image, state.object_state.table[7].?);
+}
+
+test "EMF+ EOF cannot complete a pending multipart object" {
+    var bytes = [_]u8{0} ** 60;
+    writeHeader(bytes[0..28]);
+    std.mem.writeInt(u16, bytes[28..30], 0x4008, .little);
+    std.mem.writeInt(u16, bytes[30..32], 0x8100, .little);
+    std.mem.writeInt(u32, bytes[32..36], 20, .little);
+    std.mem.writeInt(u32, bytes[36..40], 8, .little);
+    std.mem.writeInt(u32, bytes[40..44], 8, .little);
+    bytes[44..48].* = .{ 1, 2, 3, 4 };
+    writeEmptyRecord(bytes[48..60], 0x4002);
+
+    var state: State = .{};
+    try std.testing.expect(try state.consume(testComment(&bytes), 2));
+    try std.testing.expectError(error.TruncatedEmfPlusObject, state.finish());
+    try std.testing.expectEqual(@as(usize, 0), state.report.objects.completed);
+    try std.testing.expectEqual(@as(usize, 0), state.report.objects.live_objects);
 }
