@@ -13,7 +13,7 @@ Microsoft [Clipping Record Types](https://learn.microsoft.com/en-us/openspecs/wi
 
 공통 선언 Size와 실제 record slice 일치 및 필수 prefix 검사는 `record_extent.zig`, PointL·RectL wire 순서는 `geometry.zig`가 단일 출처다. 네 동작은 같은 좌표 배치라도 서로 바뀌지 않도록 별도 union tag로 보존한다. 명세에 좌표 정렬이나 정규화 MUST가 없으므로 음수·역방향 rectangle을 구조 계층에서 거부하지 않는다. EXCLUDE/INTERSECT의 lower/right edge 재생 의미와 실제 clipping-region 상태 계산은 후속 playback 계층의 책임이다.
 
-`framing.zig`는 모든 record를 이 파서에 전달하고 인식한 고정 clipping record 수를 Summary에 보존한다. `SELECTCLIPPATH`와 RegionData를 사용하는 `EXTSELECTCLIPRGN`은 이 모듈이 수용하지 않으며 각각의 mode·가변 extent 검증 파트로 분리한다.
+`framing.zig`는 모든 record를 이 파서에 전달하고 인식한 고정 clipping record 수를 Summary에 보존한다. `SELECTCLIPPATH`와 RegionData를 사용하는 `EXTSELECTCLIPRGN`은 이 모듈이 수용하지 않으며 [별도 selection 파트](emf-clipping-selection.md)가 소유한다.
 
 ## 검증 기록과 한계
 

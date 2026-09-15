@@ -63,6 +63,35 @@ test "EMF framing connects all fixed clipping records" {
     try t.expectError(error.InvalidEmfOffsetClipRegionSize, framing.validate(t.allocator, bytes[0..176]));
 }
 
+test "EMF framing connects path and extended clipping selection" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 184;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 4, .little);
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.selectclippath), .little);
+    std.mem.writeInt(u32, bytes[92..96], 12, .little);
+    std.mem.writeInt(u32, bytes[96..100], @intFromEnum(@import("region_mode.zig").RegionMode.diff_region), .little);
+    std.mem.writeInt(u32, bytes[100..104], @intFromEnum(@import("records.zig").RecordType.extselectcliprgn), .little);
+    std.mem.writeInt(u32, bytes[104..108], 64, .little);
+    std.mem.writeInt(u32, bytes[108..112], 48, .little);
+    std.mem.writeInt(u32, bytes[112..116], @intFromEnum(@import("region_mode.zig").RegionMode.xor_region), .little);
+    std.mem.writeInt(u32, bytes[116..120], @import("region_data.zig").header_size, .little);
+    std.mem.writeInt(u32, bytes[120..124], @import("region_data.zig").rectangle_type, .little);
+    std.mem.writeInt(u32, bytes[124..128], 1, .little);
+    std.mem.writeInt(u32, bytes[128..132], @import("region_data.zig").rectangle_size, .little);
+    @memcpy(bytes[164..184], original[88..108]);
+
+    const summary = try framing.validate(t.allocator, &bytes);
+    try t.expectEqual(@as(usize, 2), summary.clipping_selection_records);
+
+    std.mem.writeInt(u32, bytes[116..120], 28, .little);
+    try t.expectError(error.InvalidEmfRegionDataHeaderSize, framing.validate(t.allocator, &bytes));
+    std.mem.writeInt(u32, bytes[108..112], 0, .little);
+    std.mem.writeInt(u32, bytes[112..116], @intFromEnum(@import("region_mode.zig").RegionMode.and_region), .little);
+    try t.expectError(error.MissingEmfExtSelectClipRegionData, framing.validate(t.allocator, &bytes));
+}
+
 test "EMF header variant uses variable field offsets and validates UTF-16" {
     var bytes = [_]u8{0} ** 172;
     const base = fixture();
