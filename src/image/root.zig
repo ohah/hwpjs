@@ -91,6 +91,7 @@ pub const emf_header = @import("emf/header.zig");
 pub const emf_header_payload = @import("emf/header_payload.zig");
 pub const emf_pixel_format = @import("emf/pixel_format.zig");
 pub const emf_pixel_format_record = @import("emf/pixel_format_record.zig");
+pub const emf_icm_mode = @import("emf/icm_mode.zig");
 pub const emf_path_bracket = @import("emf/path_bracket.zig");
 pub const emf_xform = @import("emf/xform.zig");
 pub const emf_transform_records = @import("emf/transform_records.zig");

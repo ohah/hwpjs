@@ -57,6 +57,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - [EMF EOF 팔레트](emf-eof-palette.md)
 - [EMF Header 가변 payload](emf-header-payload.md)
 - [EMF pixel format record](emf-pixel-format-record.md)
+- [EMF image color management mode](emf-icm-mode.md)
 - [EMF 고정 clipping records](emf-fixed-clipping-records.md)
 - [EMF clipping selection과 RegionData](emf-clipping-selection.md)
 - [EMF RegionData drawing records](emf-region-drawing.md)

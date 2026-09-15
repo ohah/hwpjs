@@ -54,6 +54,22 @@ test "EMF framing validates and counts PIXELFORMAT records" {
     try t.expectError(error.InvalidEmfPixelFormatVersion, framing.validate(t.allocator, &bytes));
 }
 
+test "EMF framing validates and counts SETICMMODE records" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 120;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 3, .little);
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.seticmmode), .little);
+    std.mem.writeInt(u32, bytes[92..96], 12, .little);
+    std.mem.writeInt(u32, bytes[96..100], 4, .little);
+    @memcpy(bytes[100..120], original[88..108]);
+    try t.expectEqual(@as(usize, 1), (try framing.validate(t.allocator, &bytes)).icm_mode_records);
+
+    std.mem.writeInt(u32, bytes[96..100], 5, .little);
+    try t.expectError(error.InvalidEmfIcmMode, framing.validate(t.allocator, &bytes));
+}
+
 test "EMF framing validates and counts ALPHABLEND records" {
     const original = fixture();
     var bytes = [_]u8{0} ** 272;
