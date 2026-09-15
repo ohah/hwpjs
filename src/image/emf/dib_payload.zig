@@ -2,7 +2,7 @@ const std = @import("std");
 const bmp_header = @import("../bmp/header.zig");
 const dib_colors = @import("dib_colors.zig");
 
-pub const Options = struct { max_pixels: u64 = 100_000_000, require_monochrome: bool = false };
+pub const Options = struct { max_pixels: u64 = 100_000_000, require_monochrome: bool = false, uncompressed_rows: ?u32 = null };
 
 pub const Payload = struct {
     header: bmp_header.Header,
@@ -30,15 +30,16 @@ pub fn parse(bmi: []const u8, bits: []const u8, usage: dib_colors.Usage, options
     minimum_bmi += @as(u64, palette_entries) * palette_entry_bytes;
     if (minimum_bmi > bmi.len) return error.TruncatedEmfDibHeaderInfo;
 
+    const full_uncompressed_bits = rowStride(header.width, 1, header.bit_count) * header.height;
     const expected_bits: u64 = if (header.kind == .core or header.uncompressed())
-        rowStride(header.width, 1, header.bit_count) * header.height
+        rowStride(header.width, 1, header.bit_count) * (options.uncompressed_rows orelse header.height)
     else blk: {
         const declared = header.info.?.image_bytes;
         if (declared == 0) return error.InvalidEmfDibImageSize;
         break :blk declared;
     };
     if (header.info) |info| {
-        if (header.uncompressed() and info.image_bytes != 0 and info.image_bytes != expected_bits)
+        if (header.uncompressed() and info.image_bytes != 0 and info.image_bytes != full_uncompressed_bits)
             return error.InvalidEmfDibImageSize;
     }
     if (expected_bits != bits.len) return error.InvalidEmfDibBitsSize;
@@ -114,4 +115,16 @@ test "DIB payload accepts every specified CMYK compression size policy" {
 
     const cmyk_rle4 = infoHeader(.cmyk_rle4, 4, 3);
     _ = try parse(&cmyk_rle4, &compressed, .palette_indices, .{});
+}
+
+test "DIB payload can validate an explicit uncompressed scanline band" {
+    var core = coreHeader(1);
+    std.mem.writeInt(u16, core[6..8], 4, .little);
+    const band = [_]u8{0} ** 8;
+    _ = try parse(&core, &band, .palette_indices, .{ .uncompressed_rows = 2 });
+    try std.testing.expectError(error.InvalidEmfDibBitsSize, parse(&core, &band, .palette_indices, .{}));
+
+    var info = infoHeader(.rgb, 1, 16);
+    std.mem.writeInt(i32, info[8..12], 4, .little);
+    _ = try parse(&info, &band, .palette_indices, .{ .uncompressed_rows = 2 });
 }

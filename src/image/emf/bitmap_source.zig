@@ -14,7 +14,11 @@ pub const Source = struct {
 };
 
 pub fn parse(bytes: []const u8, fixed_end: usize, fields: Fields, usage: dib_colors.Usage) !?Source {
-    const object = bitmap_object.parse(bytes, fixed_end, fields, usage, .{}) catch |err| switch (err) {
+    return parseWithOptions(bytes, fixed_end, fields, usage, .{});
+}
+
+pub fn parseWithOptions(bytes: []const u8, fixed_end: usize, fields: Fields, usage: dib_colors.Usage, options: bitmap_object.Options) !?Source {
+    const object = bitmap_object.parse(bytes, fixed_end, fields, usage, options) catch |err| switch (err) {
         error.InvalidEmfBitmapObjectExtent => return error.InvalidEmfBitmapSourceExtent,
         error.IncompleteEmfBitmapObject => return error.IncompleteEmfBitmapSource,
         else => return err,

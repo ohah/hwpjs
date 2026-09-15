@@ -26,6 +26,7 @@ const bit_block_transfer = @import("bit_block_transfer.zig");
 const stretch_block_transfer = @import("stretch_block_transfer.zig");
 const mask_block_transfer = @import("mask_block_transfer.zig");
 const parallelogram_block_transfer = @import("parallelogram_block_transfer.zig");
+const set_dibits_to_device = @import("set_dibits_to_device.zig");
 const dc_stack = @import("dc_stack.zig");
 const palette_records = @import("palette_records.zig");
 const object_table = @import("object_table.zig");
@@ -33,7 +34,7 @@ const std = @import("std");
 const eof = @import("eof.zig");
 const eof_palette = @import("eof_palette.zig");
 
-pub const Summary = struct { header: header.Header, header_payload: header_payload.Payload, eof: eof.Eof, palette: eof_palette.Palette, objects: object_table.Report, records: usize, clipping_records: usize, clipping_selection_records: usize, region_drawing_records: usize, path_drawing_records: usize, flood_fill_records: usize, gradient_fill_records: usize, bit_block_transfer_records: usize, stretch_block_transfer_records: usize, mask_block_transfer_records: usize, parallelogram_block_transfer_records: usize };
+pub const Summary = struct { header: header.Header, header_payload: header_payload.Payload, eof: eof.Eof, palette: eof_palette.Palette, objects: object_table.Report, records: usize, clipping_records: usize, clipping_selection_records: usize, region_drawing_records: usize, path_drawing_records: usize, flood_fill_records: usize, gradient_fill_records: usize, bit_block_transfer_records: usize, stretch_block_transfer_records: usize, mask_block_transfer_records: usize, parallelogram_block_transfer_records: usize, set_dibits_to_device_records: usize };
 
 fn validateStructure(bytes: []const u8) !Summary {
     var iterator: records.Iterator = .{ .bytes = bytes };
@@ -54,6 +55,7 @@ fn validateStructure(bytes: []const u8) !Summary {
     var stretch_block_transfer_count: usize = 0;
     var mask_block_transfer_count: usize = 0;
     var parallelogram_block_transfer_count: usize = 0;
+    var set_dibits_to_device_count: usize = 0;
     while (try iterator.next()) |record| {
         count += 1;
         if (record.kind == .header) return error.DuplicateEmfHeader;
@@ -82,6 +84,7 @@ fn validateStructure(bytes: []const u8) !Summary {
         if (try stretch_block_transfer.parse(record) != null) stretch_block_transfer_count += 1;
         if (try mask_block_transfer.parse(record) != null) mask_block_transfer_count += 1;
         if (try parallelogram_block_transfer.parse(record) != null) parallelogram_block_transfer_count += 1;
+        if (try set_dibits_to_device.parse(record) != null) set_dibits_to_device_count += 1;
         _ = try dc_state.consume(record);
         _ = try palette_records.parse(record);
         if (record.kind != .eof) continue;
@@ -92,7 +95,7 @@ fn validateStructure(bytes: []const u8) !Summary {
         const palette = terminal_and_palette.palette;
         if (iterator.offset != bytes.len) return error.DataAfterEmfEof;
         if (count != value.records) return error.InvalidEmfDeclaredRecords;
-        return .{ .header = value, .header_payload = payload, .eof = terminal, .palette = palette, .objects = .{}, .records = count, .clipping_records = clipping_count, .clipping_selection_records = clipping_selection_count, .region_drawing_records = region_drawing_count, .path_drawing_records = path_drawing_count, .flood_fill_records = flood_fill_count, .gradient_fill_records = gradient_fill_count, .bit_block_transfer_records = bit_block_transfer_count, .stretch_block_transfer_records = stretch_block_transfer_count, .mask_block_transfer_records = mask_block_transfer_count, .parallelogram_block_transfer_records = parallelogram_block_transfer_count };
+        return .{ .header = value, .header_payload = payload, .eof = terminal, .palette = palette, .objects = .{}, .records = count, .clipping_records = clipping_count, .clipping_selection_records = clipping_selection_count, .region_drawing_records = region_drawing_count, .path_drawing_records = path_drawing_count, .flood_fill_records = flood_fill_count, .gradient_fill_records = gradient_fill_count, .bit_block_transfer_records = bit_block_transfer_count, .stretch_block_transfer_records = stretch_block_transfer_count, .mask_block_transfer_records = mask_block_transfer_count, .parallelogram_block_transfer_records = parallelogram_block_transfer_count, .set_dibits_to_device_records = set_dibits_to_device_count };
     }
     return error.MissingEmfEof;
 }
