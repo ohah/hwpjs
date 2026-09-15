@@ -41,6 +41,7 @@ const set_color_adjustment = @import("set_color_adjustment.zig");
 const comment_record = @import("comment_record.zig");
 const public_comment = @import("public_comment.zig");
 const public_comment_group = @import("public_comment_group.zig");
+const emf_plus_stream = @import("emf_plus_stream.zig");
 const dc_stack = @import("dc_stack.zig");
 const palette_records = @import("palette_records.zig");
 const object_table = @import("object_table.zig");
@@ -63,13 +64,14 @@ pub const PublicCommentReport = struct {
     unknown: usize = 0,
 };
 
-pub const Summary = struct { header: header.Header, header_payload: header_payload.Payload, eof: eof.Eof, palette: eof_palette.Palette, objects: object_table.Report, records: usize, pixel_format_records: usize, icm_mode_records: usize, clipping_records: usize, clipping_selection_records: usize, region_drawing_records: usize, path_drawing_records: usize, flood_fill_records: usize, gradient_fill_records: usize, bit_block_transfer_records: usize, stretch_block_transfer_records: usize, mask_block_transfer_records: usize, parallelogram_block_transfer_records: usize, set_dibits_to_device_records: usize, stretch_dibits_records: usize, alpha_blend_records: usize, transparent_blt_records: usize, force_ufi_mapping_records: usize, linked_ufi_records: usize, linked_ufis: usize, color_match_records: usize, palette_correction_records: usize, color_adjustment_records: usize, comment_records: usize, comments: CommentCounts, public_comments: PublicCommentReport };
+pub const Summary = struct { header: header.Header, header_payload: header_payload.Payload, eof: eof.Eof, palette: eof_palette.Palette, objects: object_table.Report, records: usize, pixel_format_records: usize, icm_mode_records: usize, clipping_records: usize, clipping_selection_records: usize, region_drawing_records: usize, path_drawing_records: usize, flood_fill_records: usize, gradient_fill_records: usize, bit_block_transfer_records: usize, stretch_block_transfer_records: usize, mask_block_transfer_records: usize, parallelogram_block_transfer_records: usize, set_dibits_to_device_records: usize, stretch_dibits_records: usize, alpha_blend_records: usize, transparent_blt_records: usize, force_ufi_mapping_records: usize, linked_ufi_records: usize, linked_ufis: usize, color_match_records: usize, palette_correction_records: usize, color_adjustment_records: usize, comment_records: usize, comments: CommentCounts, public_comments: PublicCommentReport, emf_plus: emf_plus_stream.Report };
 
 fn validateStructure(bytes: []const u8) !Summary {
     var iterator: records.Iterator = .{ .bytes = bytes };
     var path_state: path_bracket.State = .{};
     var dc_state: dc_stack.State = .{};
     var public_group_state: public_comment_group.State = .{};
+    var emf_plus_state: emf_plus_stream.State = .{};
     const first = (try iterator.next()) orelse return error.MissingEmfHeader;
     const parsed_header = try header_payload.parse(first, bytes.len);
     const value = parsed_header.header;
@@ -171,6 +173,7 @@ fn validateStructure(bytes: []const u8) !Summary {
                 },
                 .unknown => public_comments.unknown = std.math.add(usize, public_comments.unknown, 1) catch return error.LimitExceeded,
             };
+            _ = try emf_plus_state.consume(comment, count);
         }
         _ = try dc_state.consume(record);
         _ = try palette_records.parse(record);
@@ -179,6 +182,7 @@ fn validateStructure(bytes: []const u8) !Summary {
         const terminal = terminal_and_palette.eof;
         try path_state.finish();
         try public_group_state.finish();
+        try emf_plus_state.finish();
         public_comments.begin_groups = public_group_state.begin_groups;
         public_comments.end_groups = public_group_state.end_groups;
         public_comments.max_group_depth = public_group_state.max_depth;
@@ -186,7 +190,7 @@ fn validateStructure(bytes: []const u8) !Summary {
         const palette = terminal_and_palette.palette;
         if (iterator.offset != bytes.len) return error.DataAfterEmfEof;
         if (count != value.records) return error.InvalidEmfDeclaredRecords;
-        return .{ .header = value, .header_payload = payload, .eof = terminal, .palette = palette, .objects = .{}, .records = count, .pixel_format_records = pixel_format_count, .icm_mode_records = icm_mode_count, .clipping_records = clipping_count, .clipping_selection_records = clipping_selection_count, .region_drawing_records = region_drawing_count, .path_drawing_records = path_drawing_count, .flood_fill_records = flood_fill_count, .gradient_fill_records = gradient_fill_count, .bit_block_transfer_records = bit_block_transfer_count, .stretch_block_transfer_records = stretch_block_transfer_count, .mask_block_transfer_records = mask_block_transfer_count, .parallelogram_block_transfer_records = parallelogram_block_transfer_count, .set_dibits_to_device_records = set_dibits_to_device_count, .stretch_dibits_records = stretch_dibits_count, .alpha_blend_records = alpha_blend_count, .transparent_blt_records = transparent_blt_count, .force_ufi_mapping_records = force_ufi_mapping_count, .linked_ufi_records = linked_ufi_record_count, .linked_ufis = linked_ufi_count, .color_match_records = color_match_count, .palette_correction_records = palette_correction_count, .color_adjustment_records = color_adjustment_count, .comment_records = comment_count, .comments = comments, .public_comments = public_comments };
+        return .{ .header = value, .header_payload = payload, .eof = terminal, .palette = palette, .objects = .{}, .records = count, .pixel_format_records = pixel_format_count, .icm_mode_records = icm_mode_count, .clipping_records = clipping_count, .clipping_selection_records = clipping_selection_count, .region_drawing_records = region_drawing_count, .path_drawing_records = path_drawing_count, .flood_fill_records = flood_fill_count, .gradient_fill_records = gradient_fill_count, .bit_block_transfer_records = bit_block_transfer_count, .stretch_block_transfer_records = stretch_block_transfer_count, .mask_block_transfer_records = mask_block_transfer_count, .parallelogram_block_transfer_records = parallelogram_block_transfer_count, .set_dibits_to_device_records = set_dibits_to_device_count, .stretch_dibits_records = stretch_dibits_count, .alpha_blend_records = alpha_blend_count, .transparent_blt_records = transparent_blt_count, .force_ufi_mapping_records = force_ufi_mapping_count, .linked_ufi_records = linked_ufi_record_count, .linked_ufis = linked_ufi_count, .color_match_records = color_match_count, .palette_correction_records = palette_correction_count, .color_adjustment_records = color_adjustment_count, .comment_records = comment_count, .comments = comments, .public_comments = public_comments, .emf_plus = emf_plus_state.report };
     }
     return error.MissingEmfEof;
 }

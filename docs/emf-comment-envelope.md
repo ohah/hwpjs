@@ -44,7 +44,7 @@ Predefined identifier는 `EMR_COMMENT_EMFSPOOL=0x00000000`, `EMR_COMMENT_EMFPLUS
 이번 파트는 공통 envelope 완료입니다. 다음 내부 payload는 아직 검증 완료가 아닙니다.
 
 1. [public comment의 BeginGroup, EndGroup, MultiFormats, embedded WMF 및 reserved identifier](emf-public-comments.md)는 후속 계층에서 구현했습니다.
-2. EMF+ record stream은 미구현입니다.
+2. [EMF+ 공통 record stream과 Header/EndOfFile/GetDC](emf-plus-record-stream.md)는 후속 계층에서 구현했습니다. 나머지 개별 payload 의미는 계속 미구현입니다.
 3. EMFSPOOL record stream은 미구현입니다.
 
 Private data는 정의상 vendor 전용이므로 실행하거나 내용을 추측하지 않고 원문을 보존합니다. EMF+/EMFSPOOL/public 분류 성공도 embedded record의 안전성·렌더링·실행 지원을 뜻하지 않습니다.

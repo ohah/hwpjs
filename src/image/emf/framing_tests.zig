@@ -23,6 +23,28 @@ fn fixture() [108]u8 {
     return bytes;
 }
 
+fn emfPlusFixture() [164]u8 {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 164;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 3, .little);
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[92..96], 56, .little);
+    std.mem.writeInt(u32, bytes[96..100], 44, .little);
+    std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
+    std.mem.writeInt(u16, bytes[104..106], 0x4001, .little);
+    std.mem.writeInt(u32, bytes[108..112], 28, .little);
+    std.mem.writeInt(u32, bytes[112..116], 16, .little);
+    std.mem.writeInt(u32, bytes[116..120], 0xdbc01001, .little);
+    std.mem.writeInt(u32, bytes[124..128], 96, .little);
+    std.mem.writeInt(u32, bytes[128..132], 96, .little);
+    std.mem.writeInt(u16, bytes[132..134], 0x4002, .little);
+    std.mem.writeInt(u32, bytes[136..140], 12, .little);
+    @memcpy(bytes[144..164], original[88..108]);
+    return bytes;
+}
+
 test "EMF framing validates header declarations and terminal EOF" {
     const bytes = fixture();
     const value = try framing.validate(t.allocator, &bytes);
@@ -33,6 +55,41 @@ test "EMF framing validates header declarations and terminal EOF" {
     try t.expectEqual(@as(i32, 1920), value.header.device.width);
     try t.expectEqual(@as(i32, 285), value.header.millimeters.height);
     try t.expectEqual(@import("header_payload.zig").Variant.base, value.header_payload.variant);
+}
+
+test "EMF framing enforces the complete EMF+ stream contract" {
+    const valid = emfPlusFixture();
+    const summary = try framing.validate(t.allocator, &valid);
+    try t.expectEqual(@as(usize, 1), summary.emf_plus.comments);
+    try t.expectEqual(@as(usize, 2), summary.emf_plus.records);
+    try t.expect(summary.emf_plus.header != null);
+    try t.expectEqual(@as(u12, 1), summary.emf_plus.header.?.graphics_version);
+
+    var bad_signature = valid;
+    std.mem.writeInt(u32, bad_signature[116..120], 0xabcde001, .little);
+    try t.expectError(error.InvalidEmfPlusMetafileSignature, framing.validate(t.allocator, &bad_signature));
+
+    var no_eof = valid;
+    std.mem.writeInt(u16, no_eof[132..134], 0x4003, .little);
+    try t.expectError(error.MissingEmfPlusEndOfFile, framing.validate(t.allocator, &no_eof));
+
+    var empty = valid;
+    std.mem.writeInt(u32, empty[92..96], 16, .little);
+    std.mem.writeInt(u32, empty[96..100], 4, .little);
+    @memcpy(empty[104..124], valid[144..164]);
+    std.mem.writeInt(u32, empty[48..52], 124, .little);
+    std.mem.writeInt(u32, empty[52..56], 3, .little);
+    try t.expectError(error.EmptyEmfPlusComment, framing.validate(t.allocator, empty[0..124]));
+
+    var delayed = [_]u8{0} ** 176;
+    @memcpy(delayed[0..88], valid[0..88]);
+    std.mem.writeInt(u32, delayed[48..52], delayed.len, .little);
+    std.mem.writeInt(u32, delayed[52..56], 4, .little);
+    std.mem.writeInt(u32, delayed[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, delayed[92..96], 12, .little);
+    @memcpy(delayed[100..156], valid[88..144]);
+    @memcpy(delayed[156..176], valid[144..164]);
+    try t.expectError(error.MissingInitialEmfPlusHeader, framing.validate(t.allocator, &delayed));
 }
 
 test "EMF framing validates and counts PIXELFORMAT records" {
@@ -1015,26 +1072,40 @@ test "EMF framing validates and counts SETCOLORADJUSTMENT" {
 
 test "EMF framing validates and classifies COMMENT envelopes" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 188;
+    var bytes = [_]u8{0} ** 228;
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 7, .little);
 
+    // The first record after the EMF header contains the complete EMF+ Header/EOF stream.
     std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
-    std.mem.writeInt(u32, bytes[92..96], 12, .little);
+    std.mem.writeInt(u32, bytes[92..96], 56, .little);
+    std.mem.writeInt(u32, bytes[96..100], 44, .little);
+    std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
+    std.mem.writeInt(u16, bytes[104..106], 0x4001, .little);
+    std.mem.writeInt(u32, bytes[108..112], 28, .little);
+    std.mem.writeInt(u32, bytes[112..116], 16, .little);
+    std.mem.writeInt(u32, bytes[116..120], 0xdbc01001, .little);
+    std.mem.writeInt(u32, bytes[124..128], 96, .little);
+    std.mem.writeInt(u32, bytes[128..132], 96, .little);
+    std.mem.writeInt(u16, bytes[132..134], 0x4002, .little);
+    std.mem.writeInt(u32, bytes[136..140], 12, .little);
 
-    const offsets = [_]usize{ 100, 116, 132, 148 };
-    const identifiers = [_]u32{ 0x11223344, 0x00000000, 0x2b464d45, 0x43494447 };
+    // Empty private, unknown private, EMFSPOOL, and unknown public comment.
+    std.mem.writeInt(u32, bytes[144..148], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[148..152], 12, .little);
+    const offsets = [_]usize{ 156, 172, 188 };
+    const identifiers = [_]u32{ 0x11223344, 0x00000000, 0x43494447 };
     for (offsets, identifiers) |offset, identifier| {
         std.mem.writeInt(u32, bytes[offset..][0..4], @intFromEnum(@import("records.zig").RecordType.comment), .little);
         std.mem.writeInt(u32, bytes[offset + 4 ..][0..4], 16, .little);
         std.mem.writeInt(u32, bytes[offset + 8 ..][0..4], 4, .little);
         std.mem.writeInt(u32, bytes[offset + 12 ..][0..4], identifier, .little);
     }
-    std.mem.writeInt(u32, bytes[152..156], 20, .little);
-    std.mem.writeInt(u32, bytes[156..160], 8, .little);
-    std.mem.writeInt(u32, bytes[164..168], 0x11223344, .little);
-    @memcpy(bytes[168..188], original[88..108]);
+    std.mem.writeInt(u32, bytes[192..196], 20, .little);
+    std.mem.writeInt(u32, bytes[196..200], 8, .little);
+    std.mem.writeInt(u32, bytes[204..208], 0x11223344, .little);
+    @memcpy(bytes[208..228], original[88..108]);
 
     const summary = try framing.validate(t.allocator, &bytes);
     try t.expectEqual(@as(usize, 7), summary.records);
@@ -1044,9 +1115,12 @@ test "EMF framing validates and classifies COMMENT envelopes" {
     try t.expectEqual(@as(usize, 1), summary.comments.emf_plus);
     try t.expectEqual(@as(usize, 1), summary.comments.public);
     try t.expectEqual(@as(usize, 1), summary.public_comments.unknown);
+    try t.expectEqual(@as(usize, 1), summary.emf_plus.comments);
+    try t.expectEqual(@as(usize, 2), summary.emf_plus.records);
+    try t.expectEqual(@as(usize, 1), summary.emf_plus.end_of_file_records);
 
     var invalid_data_size = bytes;
-    std.mem.writeInt(u32, invalid_data_size[108..112], std.math.maxInt(u32), .little);
+    std.mem.writeInt(u32, invalid_data_size[164..168], std.math.maxInt(u32), .little);
     try t.expectError(error.InvalidEmfCommentDataSize, framing.validate(t.allocator, &invalid_data_size));
 }
 
