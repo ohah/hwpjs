@@ -5,14 +5,16 @@ const record_extent = @import("record_extent.zig");
 pub const Justification = struct {
     break_extra: i32,
     break_count: i32,
+    trailing_data: []const u8,
 };
 
 pub fn parse(record: records.Record) !?Justification {
     if (record.kind != .settextjustification) return null;
-    if (!record_extent.hasRequiredPrefix(record, 16)) return error.InvalidEmfTextJustificationRecordSize;
+    const end = record_extent.requiredEnd(record, 16) orelse return error.InvalidEmfTextJustificationRecordSize;
     return .{
         .break_extra = std.mem.readInt(i32, record.bytes[8..12], .little),
         .break_count = std.mem.readInt(i32, record.bytes[12..16], .little),
+        .trailing_data = record.bytes[end..],
     };
 }
 
@@ -37,13 +39,18 @@ test "text justification preserves signed fields in wire order" {
     }
 }
 
-test "text justification requires its prefix accepts trailing data and does not claim unrelated records" {
-    var short = [_]u8{0} ** 12;
-    try std.testing.expectError(error.InvalidEmfTextJustificationRecordSize, parse(fixture(.settextjustification, &short)));
-    var declared_sixteen = fixture(.settextjustification, &short);
+test "text justification requires every prefix byte preserves trailing data and ignores unrelated records" {
+    var prefix = [_]u8{0} ** 16;
+    for (0..prefix.len) |cut|
+        try std.testing.expectError(error.InvalidEmfTextJustificationRecordSize, parse(fixture(.settextjustification, prefix[0..cut])));
+    var declared_sixteen = fixture(.settextjustification, prefix[0..12]);
     declared_sixteen.size = 16;
     try std.testing.expectError(error.InvalidEmfTextJustificationRecordSize, parse(declared_sixteen));
     var long = [_]u8{0} ** 20;
-    try std.testing.expect((try parse(fixture(.settextjustification, &long))) != null);
-    try std.testing.expect((try parse(fixture(.savedc, short[0..8]))) == null);
+    long[16..20].* = .{ 1, 2, 3, 4 };
+    try std.testing.expectEqualSlices(u8, &.{ 1, 2, 3, 4 }, (try parse(fixture(.settextjustification, &long))).?.trailing_data);
+    var declared_sixteen_long = fixture(.settextjustification, &long);
+    declared_sixteen_long.size = 16;
+    try std.testing.expectError(error.InvalidEmfTextJustificationRecordSize, parse(declared_sixteen_long));
+    try std.testing.expect((try parse(fixture(.savedc, prefix[0..8]))) == null);
 }

@@ -751,6 +751,15 @@ test "EMF framing validates text justification and extent scaling" {
     std.mem.writeInt(u32, extended_text[92..96], 44, .little);
     @memcpy(extended_text[132..152], original[88..108]);
     try t.expectEqual(@as(usize, 3), (try framing.validate(t.allocator, &extended_text)).records);
+
+    var short_text = [_]u8{0} ** 120;
+    @memcpy(short_text[0..88], original[0..88]);
+    std.mem.writeInt(u32, short_text[48..52], short_text.len, .little);
+    std.mem.writeInt(u32, short_text[52..56], 3, .little);
+    std.mem.writeInt(u32, short_text[88..92], @intFromEnum(@import("records.zig").RecordType.settextjustification), .little);
+    std.mem.writeInt(u32, short_text[92..96], 12, .little);
+    @memcpy(short_text[100..120], original[88..108]);
+    try t.expectError(error.InvalidEmfTextJustificationRecordSize, framing.validate(t.allocator, &short_text));
 }
 
 test "EMF framing validates device-context save and relative restore" {
