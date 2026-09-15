@@ -35,6 +35,37 @@ test "EMF framing validates header declarations and terminal EOF" {
     try t.expectEqual(@import("header_payload.zig").Variant.base, value.header_payload.variant);
 }
 
+test "EMF framing validates and counts ALPHABLEND records" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 272;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 3, .little);
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.alphablend), .little);
+    std.mem.writeInt(u32, bytes[92..96], 164, .little);
+    std.mem.writeInt(i32, bytes[120..124], 2, .little);
+    std.mem.writeInt(i32, bytes[124..128], 2, .little);
+    bytes[130] = 0xff;
+    bytes[131] = 1;
+    std.mem.writeInt(u32, bytes[172..176], 108, .little);
+    std.mem.writeInt(u32, bytes[176..180], 40, .little);
+    std.mem.writeInt(u32, bytes[180..184], 148, .little);
+    std.mem.writeInt(u32, bytes[184..188], 16, .little);
+    std.mem.writeInt(i32, bytes[188..192], 2, .little);
+    std.mem.writeInt(i32, bytes[192..196], 2, .little);
+    std.mem.writeInt(u32, bytes[196..200], 40, .little);
+    std.mem.writeInt(i32, bytes[200..204], 2, .little);
+    std.mem.writeInt(i32, bytes[204..208], 2, .little);
+    std.mem.writeInt(u16, bytes[208..210], 1, .little);
+    std.mem.writeInt(u16, bytes[210..212], 32, .little);
+    @memcpy(bytes[252..272], original[88..108]);
+    const summary = try framing.validate(t.allocator, &bytes);
+    try t.expectEqual(@as(usize, 1), summary.alpha_blend_records);
+
+    bytes[131] = 2;
+    try t.expectError(error.UnsupportedEmfAlphaFormat, framing.validate(t.allocator, &bytes));
+}
+
 test "EMF framing connects all fixed clipping records" {
     const original = fixture();
     var bytes = [_]u8{0} ** 180;

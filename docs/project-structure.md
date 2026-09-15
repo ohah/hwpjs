@@ -68,6 +68,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - [EMF parallelogram block transfer](emf-parallelogram-block-transfer.md)
 - [EMF scanline bitmap transfer](emf-set-dibits-to-device.md)
 - [EMF stretched DIB transfer](emf-stretch-dibits.md)
+- [EMF alpha blend](emf-alpha-blend.md)
 
 - [HWP5 모듈 계약](hwp5-modules.md)
 - [아키텍처와 구현 순서](architecture.md)
