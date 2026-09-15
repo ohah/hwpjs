@@ -129,6 +129,35 @@ test "EMF framing connects all RegionData drawing records and brush references" 
     try t.expectError(error.InvalidEmfRegionDataHeaderSize, framing.validate(t.allocator, &bytes));
 }
 
+test "EMF framing connects all path drawing records" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 180;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 5, .little);
+
+    var at: usize = 88;
+    inline for (.{
+        @import("records.zig").RecordType.fillpath,
+        @import("records.zig").RecordType.strokeandfillpath,
+        @import("records.zig").RecordType.strokepath,
+    }) |kind| {
+        std.mem.writeInt(u32, bytes[at..][0..4], @intFromEnum(kind), .little);
+        std.mem.writeInt(u32, bytes[at + 4 ..][0..4], 24, .little);
+        std.mem.writeInt(i32, bytes[at + 8 ..][0..4], -1, .little);
+        std.mem.writeInt(i32, bytes[at + 20 ..][0..4], 2, .little);
+        at += 24;
+    }
+    @memcpy(bytes[at..], original[88..108]);
+
+    const summary = try framing.validate(t.allocator, &bytes);
+    try t.expectEqual(@as(usize, 3), summary.path_drawing_records);
+
+    std.mem.writeInt(u32, bytes[92..96], 20, .little);
+    std.mem.writeInt(u32, bytes[48..52], 176, .little);
+    try t.expectError(error.InvalidEmfPathDrawingSize, framing.validate(t.allocator, bytes[0..176]));
+}
+
 test "EMF header variant uses variable field offsets and validates UTF-16" {
     var bytes = [_]u8{0} ** 172;
     const base = fixture();
