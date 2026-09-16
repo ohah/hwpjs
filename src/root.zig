@@ -25,6 +25,12 @@ test {
     _ = @import("image/emf/emf_plus_bitmap.zig");
     _ = @import("image/emf/emf_plus_metafile.zig");
     _ = @import("image/emf/emf_plus_image.zig");
+    _ = @import("image/emf/emf_plus_simple_brush.zig");
+    _ = @import("image/emf/emf_plus_brush_optional.zig");
+    _ = @import("image/emf/emf_plus_linear_gradient_brush.zig");
+    _ = @import("image/emf/emf_plus_path_gradient_brush.zig");
+    _ = @import("image/emf/emf_plus_texture_brush.zig");
+    _ = @import("image/emf/emf_plus_brush.zig");
     _ = @import("image/wmf/header_tests.zig");
     _ = @import("image/wmf/records_tests.zig");
     _ = @import("image/wmf/objects_tests.zig");
