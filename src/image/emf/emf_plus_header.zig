@@ -1,5 +1,6 @@
 const std = @import("std");
 const record = @import("emf_plus_record.zig");
+const graphics_version = @import("emf_plus_graphics_version.zig");
 
 pub const Header = struct {
     flags: u16,
@@ -15,14 +16,13 @@ pub const Header = struct {
 pub fn parse(value: record.Record) !Header {
     if (value.kind != .header) return error.ExpectedEmfPlusHeader;
     if (value.size != 28 or value.data_size != 16) return error.InvalidEmfPlusHeaderSize;
-    const version = std.mem.readInt(u32, value.data[0..4], .little);
-    if (version >> 12 != 0xdbc01) return error.InvalidEmfPlusMetafileSignature;
+    const version = try graphics_version.parse(std.mem.readInt(u32, value.data[0..4], .little));
     const emf_plus_flags = std.mem.readInt(u32, value.data[4..8], .little);
     return .{
         .flags = value.flags,
         .dual = value.flags & 1 != 0,
-        .version_raw = version,
-        .graphics_version = @truncate(version),
+        .version_raw = version.raw,
+        .graphics_version = version.version,
         .emf_plus_flags = emf_plus_flags,
         .video_display = emf_plus_flags & 1 != 0,
         .logical_dpi_x = std.mem.readInt(u32, value.data[8..12], .little),

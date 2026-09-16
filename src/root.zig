@@ -9,6 +9,13 @@ pub const image = @import("image/root.zig");
 pub const text = @import("text/root.zig");
 
 test {
+    _ = @import("image/emf/emf_plus_graphics_version.zig");
+    _ = @import("image/emf/emf_plus_values.zig");
+    _ = @import("image/emf/emf_plus_argb.zig");
+    _ = @import("image/emf/emf_plus_geometry.zig");
+    _ = @import("image/emf/emf_plus_transform_matrix.zig");
+    _ = @import("image/emf/emf_plus_brush_values.zig");
+    _ = @import("image/emf/emf_plus_gradient_data.zig");
     _ = @import("image/wmf/header_tests.zig");
     _ = @import("image/wmf/records_tests.zig");
     _ = @import("image/wmf/objects_tests.zig");

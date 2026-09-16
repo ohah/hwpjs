@@ -18,6 +18,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ SerializableObject 계층](emf-plus-serializable-object.md)은 GUID packet 분류, 효과 parameter block, record envelope를 세 파일로 분리합니다. 효과별 필드 규칙은 image_effect에만 두고 stream은 검증 결과 집계만 담당합니다.
 
+[EMF+ 객체 공통 값 계층](emf-plus-common-objects.md)은 GraphicsVersion signature, floating geometry와 transform, Brush/Wrap 값, gradient 보조 객체를 소유합니다. Header와 후속 객체 parser는 이 규칙을 재사용합니다. Brush별 flag 조합, 중첩 Path/Image, Object Table 수명은 이 계층에 섞지 않습니다.
+
 PNG에서 파일 전체 이름 고유성을 검사하는 [sPLT 추천 팔레트](png-suggested-palettes.md)는 소유권이 있는 별도 Collector로 분리합니다. 기존 픽셀 검사 순회에 연결하되 비할당 metadata.State에 이름 인덱스 수명을 섞지 않습니다.
 
 ```text
