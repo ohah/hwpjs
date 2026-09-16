@@ -16,6 +16,10 @@ test {
     _ = @import("image/emf/emf_plus_transform_matrix.zig");
     _ = @import("image/emf/emf_plus_brush_values.zig");
     _ = @import("image/emf/emf_plus_gradient_data.zig");
+    _ = @import("image/emf/emf_plus_integer.zig");
+    _ = @import("image/emf/emf_plus_path_point.zig");
+    _ = @import("image/emf/emf_plus_path_type.zig");
+    _ = @import("image/emf/emf_plus_path.zig");
     _ = @import("image/wmf/header_tests.zig");
     _ = @import("image/wmf/records_tests.zig");
     _ = @import("image/wmf/objects_tests.zig");

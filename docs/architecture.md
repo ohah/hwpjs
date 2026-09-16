@@ -20,6 +20,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ 객체 공통 값 계층](emf-plus-common-objects.md)은 GraphicsVersion signature, floating geometry와 transform, Brush/Wrap 값, gradient 보조 객체를 소유합니다. Header와 후속 객체 parser는 이 규칙을 재사용합니다. Brush별 flag 조합, 중첩 Path/Image, Object Table 수명은 이 계층에 섞지 않습니다.
 
+[EMF+ Path 계층](emf-plus-path-object.md)은 Integer7/15, 세 point wire 표현, 일반/RLE point type과 Path envelope를 분리합니다. 공식 R flag 결합 해석과 독립 RLE 호환 해석은 명시적 option으로 구분하며 자동 휴리스틱을 사용하지 않습니다. 상위 Brush/Region/CustomLineCap은 이 parser를 재사용하고 geometry·type 규칙을 복제하지 않습니다.
+
 PNG에서 파일 전체 이름 고유성을 검사하는 [sPLT 추천 팔레트](png-suggested-palettes.md)는 소유권이 있는 별도 Collector로 분리합니다. 기존 픽셀 검사 순회에 연결하되 비할당 metadata.State에 이름 인덱스 수명을 섞지 않습니다.
 
 ```text

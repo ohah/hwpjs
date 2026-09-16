@@ -3,6 +3,14 @@ const values = @import("emf_plus_values.zig");
 
 pub const PointF = struct { x: f32, y: f32 };
 pub const RectF = struct { x: f32, y: f32, width: f32, height: f32 };
+pub const Point = struct { x: i16, y: i16 };
+
+pub fn readPoint(reader: *binary.Reader) !Point {
+    var next = reader.*;
+    const result: Point = .{ .x = try next.readInt(i16), .y = try next.readInt(i16) };
+    reader.* = next;
+    return result;
+}
 
 pub fn readPointF(reader: *binary.Reader) !PointF {
     var next = reader.*;
@@ -44,6 +52,11 @@ test "EMF+ floating geometry preserves values and consumes exact widths" {
 test "EMF+ geometry failure leaves the shared cursor unchanged" {
     const std = @import("std");
     const bytes = [_]u8{0} ** 16;
+    for (0..4) |cut| {
+        var integer_reader: binary.Reader = .{ .bytes = bytes[0..cut] };
+        try std.testing.expectError(error.UnexpectedEnd, readPoint(&integer_reader));
+        try std.testing.expectEqual(@as(usize, 0), integer_reader.offset);
+    }
     for (0..8) |cut| {
         var point_reader: binary.Reader = .{ .bytes = bytes[0..cut] };
         try std.testing.expectError(error.UnexpectedEnd, readPointF(&point_reader));
