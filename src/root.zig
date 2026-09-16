@@ -20,6 +20,11 @@ test {
     _ = @import("image/emf/emf_plus_path_point.zig");
     _ = @import("image/emf/emf_plus_path_type.zig");
     _ = @import("image/emf/emf_plus_path.zig");
+    _ = @import("image/emf/emf_plus_image_values.zig");
+    _ = @import("image/emf/emf_plus_palette.zig");
+    _ = @import("image/emf/emf_plus_bitmap.zig");
+    _ = @import("image/emf/emf_plus_metafile.zig");
+    _ = @import("image/emf/emf_plus_image.zig");
     _ = @import("image/wmf/header_tests.zig");
     _ = @import("image/wmf/records_tests.zig");
     _ = @import("image/wmf/objects_tests.zig");
