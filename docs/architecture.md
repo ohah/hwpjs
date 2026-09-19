@@ -30,6 +30,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ Pen 계층](emf-plus-pen-object.md)은 enum·flag, count-prefix float 배열, size-prefix CustomLineCap, flag 순서 PenData와 최상위 Brush 조립을 분리합니다. PenData가 소비한 위치가 Brush 경계의 SSOT이며 기존 Transform·line enum·CustomLineCap·Brush parser에 exact slice를 위임합니다.
 
+[EMF+ Region 계층](emf-plus-region-object.md)은 sparse node type, 비재귀 전위 순회 트리 검사와 최상위 count/version 조립을 분리합니다. `RegionNodeCount + 1`과 실제 노드 수·완성된 이진 트리를 함께 대조하고 Rect·signed-size Path 해석은 기존 geometry·sized Path 계층에 위임합니다.
+
 PNG에서 파일 전체 이름 고유성을 검사하는 [sPLT 추천 팔레트](png-suggested-palettes.md)는 소유권이 있는 별도 Collector로 분리합니다. 기존 픽셀 검사 순회에 연결하되 비할당 metadata.State에 이름 인덱스 수명을 섞지 않습니다.
 
 ```text
