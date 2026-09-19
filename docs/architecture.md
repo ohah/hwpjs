@@ -46,6 +46,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ DrawClosedCurve record 계층](emf-plus-draw-closed-curve-record.md)은 공용 PointData에 Tension과 최소 Count 3을 조립합니다. stream은 Pen 참조만 연결하며 cardinal spline 계산은 wire parser에 넣지 않습니다.
 
+[EMF+ DrawCurve record 계층](emf-plus-draw-curve-record.md)은 C별 절대 PointData에 Tension·Offset·NumSegments와 최소 Count 2를 조립합니다. reserved bit를 상대 좌표 flag로 오인하지 않으며 재생 범위는 wire parser에서 추정하지 않습니다.
+
 PNG에서 파일 전체 이름 고유성을 검사하는 [sPLT 추천 팔레트](png-suggested-palettes.md)는 소유권이 있는 별도 Collector로 분리합니다. 기존 픽셀 검사 순회에 연결하되 비할당 metadata.State에 이름 인덱스 수명을 섞지 않습니다.
 
 ```text
