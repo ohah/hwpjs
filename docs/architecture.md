@@ -26,6 +26,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ Brush 계층](emf-plus-brush-object.md)은 다섯 BrushType dispatch와 Solid/Hatch/Linear/Path/Texture payload를 분리합니다. 선택 데이터 순서와 flag 충돌은 공통 optional 계층이 소유하고, boundary Path와 Texture Image는 기존 parser에 정확한 slice를 위임합니다. 정의됐지만 해당 brush에서 무관한 flag를 임의로 예약 비트처럼 거부하지 않으며 렌더링 의미는 이 wire 계층에 넣지 않습니다.
 
+[EMF+ CustomLineCap 계층](emf-plus-custom-line-cap.md)은 Default/AdjustableArrow dispatch, 공통 line enum과 두 flag, 고정 payload와 중첩 Fill/Line Path를 분리합니다. signed 길이는 공통 sized Path 계층이 원자적으로 처리하고 기존 Path parser에 정확한 slice를 위임합니다. 후속 Pen/Region이 enum·길이·Path 규칙을 복제하지 않습니다.
+
 PNG에서 파일 전체 이름 고유성을 검사하는 [sPLT 추천 팔레트](png-suggested-palettes.md)는 소유권이 있는 별도 Collector로 분리합니다. 기존 픽셀 검사 순회에 연결하되 비할당 metadata.State에 이름 인덱스 수명을 섞지 않습니다.
 
 ```text

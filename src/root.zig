@@ -31,6 +31,11 @@ test {
     _ = @import("image/emf/emf_plus_path_gradient_brush.zig");
     _ = @import("image/emf/emf_plus_texture_brush.zig");
     _ = @import("image/emf/emf_plus_brush.zig");
+    _ = @import("image/emf/emf_plus_line_values.zig");
+    _ = @import("image/emf/emf_plus_sized_path.zig");
+    _ = @import("image/emf/emf_plus_custom_line_cap_arrow.zig");
+    _ = @import("image/emf/emf_plus_custom_line_cap_default.zig");
+    _ = @import("image/emf/emf_plus_custom_line_cap.zig");
     _ = @import("image/wmf/header_tests.zig");
     _ = @import("image/wmf/records_tests.zig");
     _ = @import("image/wmf/objects_tests.zig");
