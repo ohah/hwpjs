@@ -18,7 +18,7 @@ test {
     _ = @import("image/emf/emf_plus_wrap_mode.zig");
     _ = @import("image/emf/emf_plus_gradient_data.zig");
     _ = @import("image/emf/emf_plus_integer.zig");
-    _ = @import("image/emf/emf_plus_path_point.zig");
+    _ = @import("image/emf/emf_plus_point.zig");
     _ = @import("image/emf/emf_plus_path_type.zig");
     _ = @import("image/emf/emf_plus_path.zig");
     _ = @import("image/emf/emf_plus_image_values.zig");
@@ -58,6 +58,8 @@ test {
     _ = @import("image/emf/emf_plus_record_flags.zig");
     _ = @import("image/emf/emf_plus_rect_data.zig");
     _ = @import("image/emf/emf_plus_draw_arc.zig");
+    _ = @import("image/emf/emf_plus_point_data.zig");
+    _ = @import("image/emf/emf_plus_draw_beziers.zig");
     _ = @import("image/emf/emf_plus_object.zig");
     _ = @import("image/emf/emf_plus_stream.zig");
     _ = @import("image/wmf/header_tests.zig");

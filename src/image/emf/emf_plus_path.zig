@@ -2,7 +2,7 @@ const std = @import("std");
 const binary = @import("../../binary/reader.zig");
 const graphics_version = @import("emf_plus_graphics_version.zig");
 const object = @import("emf_plus_object.zig");
-const path_point = @import("emf_plus_path_point.zig");
+const point = @import("emf_plus_point.zig");
 const path_type = @import("emf_plus_path_type.zig");
 
 pub const FlagInterpretation = enum {
@@ -20,13 +20,13 @@ pub const Path = struct {
     version: graphics_version.GraphicsVersion,
     point_count: u32,
     point_flags: u32,
-    point_encoding: path_point.Encoding,
+    point_encoding: point.Encoding,
     point_types_rle: bool,
     point_data: []const u8,
     point_type_data: []const u8,
     alignment_padding: []const u8,
 
-    pub fn points(self: Path) path_point.Iterator {
+    pub fn points(self: Path) point.Iterator {
         return .{
             .reader = .{ .bytes = self.point_data },
             .encoding = self.point_encoding,
@@ -53,7 +53,7 @@ pub fn parse(bytes: []const u8, options: Options) !Path {
     const decoded_flags = try decodeFlags(point_flags, options.flag_interpretation);
 
     const points_start = reader.offset;
-    var point_iterator: path_point.Iterator = .{
+    var point_iterator: point.Iterator = .{
         .reader = reader,
         .encoding = decoded_flags.encoding,
         .remaining = point_count,
@@ -97,7 +97,7 @@ pub fn parseCompleted(value: object.Completed, options: Options) !Path {
     return parse(value.object_data, options);
 }
 
-const DecodedFlags = struct { encoding: path_point.Encoding, rle: bool };
+const DecodedFlags = struct { encoding: point.Encoding, rle: bool };
 
 fn decodeFlags(raw: u32, interpretation: FlagInterpretation) !DecodedFlags {
     const relative = raw & 0x0800 != 0;
@@ -135,7 +135,7 @@ test "EMF+ Path parses floating points types and indeterminate padding" {
     putF32(&bytes, 24, 4.5);
     bytes[28..32].* = .{ 0x00, 0x91, 0xaa, 0xbb };
     const value = try parse(&bytes, .{});
-    try std.testing.expectEqual(path_point.Encoding.floating, value.point_encoding);
+    try std.testing.expectEqual(point.Encoding.floating, value.point_encoding);
     try std.testing.expect(!value.point_types_rle);
     try std.testing.expectEqualSlices(u8, bytes[30..32], value.alignment_padding);
     var points = value.points();
@@ -187,7 +187,7 @@ test "EMF+ Path parses signed 16-bit absolute points" {
     bytes[12..24].* = .{ 0, 0x80, 0xff, 0x7f, 1, 0, 2, 0, 0xfe, 0xff, 0xfd, 0xff };
     bytes[24..28].* = .{ 0, 1, 0x83, 0xcc };
     const value = try parse(&bytes, .{});
-    try std.testing.expectEqual(path_point.Encoding.integer, value.point_encoding);
+    try std.testing.expectEqual(point.Encoding.integer, value.point_encoding);
     try std.testing.expectEqual(@as(usize, 1), value.alignment_padding.len);
     var points = value.points();
     const first = (try points.next()).?.integer;
@@ -203,7 +203,7 @@ test "EMF+ Path specification mode parses mixed PointR and RLE types" {
     bytes[12..19].* = .{ 0x3f, 0xff, 0xc0, 0xc1, 0x00, 0x80, 0x40 };
     bytes[19..24].* = .{ 0xc2, 0x03, 0xde, 0xad, 0xbe };
     const value = try parse(&bytes, .{});
-    try std.testing.expectEqual(path_point.Encoding.relative, value.point_encoding);
+    try std.testing.expectEqual(point.Encoding.relative, value.point_encoding);
     try std.testing.expect(value.point_types_rle);
     var points = value.points();
     const first = (try points.next()).?.relative;
@@ -225,7 +225,7 @@ test "EMF+ Path independent RLE mode keeps relative and type compression orthogo
     putU32(&relative, 8, 0x0800);
     relative[12..20].* = .{ 1, 2, 3, 4, 0, 1, 0, 0 };
     const relative_value = try parse(&relative, .{ .flag_interpretation = .independent_rle });
-    try std.testing.expectEqual(path_point.Encoding.relative, relative_value.point_encoding);
+    try std.testing.expectEqual(point.Encoding.relative, relative_value.point_encoding);
     try std.testing.expect(!relative_value.point_types_rle);
     try std.testing.expectError(error.InvalidEmfPlusPathPointTypeRleHeader, parse(&relative, .{}));
 
@@ -239,7 +239,7 @@ test "EMF+ Path independent RLE mode keeps relative and type compression orthogo
     putF32(&rle, 24, 4);
     rle[28..32].* = .{ 0x42, 1, 0, 0 };
     const rle_value = try parse(&rle, .{ .flag_interpretation = .independent_rle });
-    try std.testing.expectEqual(path_point.Encoding.floating, rle_value.point_encoding);
+    try std.testing.expectEqual(point.Encoding.floating, rle_value.point_encoding);
     try std.testing.expect(rle_value.point_types_rle);
     try std.testing.expectError(error.InvalidEmfPlusPathFlags, parse(&rle, .{}));
 }

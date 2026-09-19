@@ -10,6 +10,8 @@
 
 같은 geometry 모듈은 signed i16 EmfPlusPoint와 EmfPlusRect도 소유합니다. `emf_plus_rect_data.zig`는 record의 공용 C 비트에 따라 Rect 또는 RectF를 선택하되 wire 표현을 union tag로 보존합니다. C 비트와 ObjectID의 공통 해석은 `emf_plus_record_flags.zig`가 소유합니다.
 
+`emf_plus_point.zig`는 Point·PointF·PointR의 공용 iterator와 가변 Integer7/15 PointR 읽기를 소유합니다. [Path 객체](emf-plus-path-object.md)와 [DrawBeziers](emf-plus-draw-beziers-record.md)는 이를 공유하고, `emf_plus_point_data.zig`는 drawing record의 P/C별 배열과 alignment padding을 빌려 노출합니다.
+
 `emf_plus_brush_values.zig`는 [BrushType](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/6a62c568-0916-4032-ab49-7c9e377a3d70), HatchStyle과 BrushData flags를 소유합니다. Brush와 ImageAttributes가 함께 쓰는 [WrapMode](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/79d01e4a-6a59-4464-bd8c-2d3fe26df5bc)는 `emf_plus_wrap_mode.zig`가 정의된 0~4만 승인하는 단일 출처입니다. BrushData flags는 알려진 비트를 해석하면서 bit 5와 상위 예약 비트까지 원문 u32로 왕복 보존합니다. 어떤 flag 조합이 어떤 BrushType에서 의미 있는지는 개별 Brush 파서가 소유합니다.
 
 `emf_plus_gradient_data.zig`는 [BlendColors](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/bab3d8e7-cc3c-44a4-a6be-2b4b88ab389c), [BlendFactors](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/c8a8d3db-09ed-4b79-b7b4-f2c502df1869), [FocusScaleData](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/d90f9243-3d44-48e5-9baa-1db4ae5394b4)의 prefix를 읽고 소비 위치를 반환합니다. 배열은 입력을 빌리며 할당하지 않고 bounds-safe accessor가 position, factor, ARGB를 반환합니다. 모든 position/factor는 0 이상 1 이하이고 FocusScale은 두 값 모두 0과 1 사이의 배타 범위여야 합니다. 비교식 자체로 NaN도 거부합니다.
