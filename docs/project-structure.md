@@ -92,6 +92,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - [EMF+ CustomLineCap과 중첩 Fill/Line Path](emf-plus-custom-line-cap.md)
 - [EMF+ Pen과 flag 순서 선택 데이터](emf-plus-pen-object.md)
 - [EMF+ Region 이진 트리와 중첩 Path](emf-plus-region-object.md)
+- [EMF+ StringFormat 고정 헤더와 가변 배열](emf-plus-string-format-object.md)
 
 - [HWP5 모듈 계약](hwp5-modules.md)
 - [아키텍처와 구현 순서](architecture.md)

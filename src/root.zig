@@ -44,6 +44,10 @@ test {
     _ = @import("image/emf/emf_plus_region_values.zig");
     _ = @import("image/emf/emf_plus_region_node.zig");
     _ = @import("image/emf/emf_plus_region.zig");
+    _ = @import("image/emf/emf_plus_string_values.zig");
+    _ = @import("image/emf/emf_plus_character_range.zig");
+    _ = @import("image/emf/emf_plus_string_format_data.zig");
+    _ = @import("image/emf/emf_plus_string_format.zig");
     _ = @import("image/wmf/header_tests.zig");
     _ = @import("image/wmf/records_tests.zig");
     _ = @import("image/wmf/objects_tests.zig");
