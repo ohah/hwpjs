@@ -3,6 +3,7 @@ const custom_line_cap = @import("emf_plus_custom_line_cap.zig");
 const line_values = @import("emf_plus_line_values.zig");
 const pen_array = @import("emf_plus_pen_array.zig");
 const pen_values = @import("emf_plus_pen_values.zig");
+const unit_type = @import("emf_plus_unit_type.zig");
 const sized_cap = @import("emf_plus_sized_custom_line_cap.zig");
 const transform = @import("emf_plus_transform_matrix.zig");
 const values = @import("emf_plus_values.zig");
@@ -15,7 +16,7 @@ pub const Options = struct {
 
 pub const PenData = struct {
     flags: pen_values.PenDataFlags,
-    unit: pen_values.UnitType,
+    unit: unit_type.UnitType,
     width: f32,
     transform_matrix: ?transform.TransformMatrix,
     start_cap: ?line_values.LineCapType,
@@ -37,7 +38,7 @@ pub fn read(reader: *binary.Reader, options: Options) !PenData {
     const flags = try pen_values.PenDataFlags.parse(try next.readInt(u32));
     const result: PenData = .{
         .flags = flags,
-        .unit = try pen_values.unitType(try next.readInt(u32)),
+        .unit = try unit_type.UnitType.parse(try next.readInt(u32)),
         .width = try values.readFloat(&next),
         .transform_matrix = if (flags.transform) try transform.read(&next) else null,
         .start_cap = if (flags.start_cap) try line_values.lineCapType(try next.readInt(u32)) else null,

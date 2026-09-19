@@ -34,6 +34,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ StringFormat 계층](emf-plus-string-format-object.md)은 enum·flags·LCID, signed CharacterRange view, count 기반 가변 배열과 60바이트 최상위 헤더를 분리합니다. 가변부 크기 산술과 TabStops/CharRange 경계는 StringFormatData가 한 번만 계산하며 상위 객체는 그 결과를 재사용합니다.
 
+[EMF+ Font 계층](emf-plus-font-object.md)은 Pen과 공유하는 UnitType, FontStyle flags와 Length 기반 UTF-16 family name 조립을 분리합니다. 이름은 공통 UTF-16 scalar 검사를 재사용하고 Reserved와 객체 정렬 바이트를 손실 없이 보존합니다.
+
 PNG에서 파일 전체 이름 고유성을 검사하는 [sPLT 추천 팔레트](png-suggested-palettes.md)는 소유권이 있는 별도 Collector로 분리합니다. 기존 픽셀 검사 순회에 연결하되 비할당 metadata.State에 이름 인덱스 수명을 섞지 않습니다.
 
 ```text

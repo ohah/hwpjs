@@ -4,7 +4,7 @@
 
 `src/image/emf/emf_plus_pen.zig`는 [EmfPlusPen](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/7af4bee7-b3e0-47c5-9678-ffcbb234e378)의 GraphicsVersion, 반드시 0인 Type, PenData와 뒤따르는 BrushObject의 경계를 소유합니다. PenData가 flag로 선언된 필드만 순서대로 소비한 뒤 남은 정확한 slice를 기존 [Brush parser](emf-plus-brush-object.md)에 전달합니다. 완성된 Object assembler 결과는 ObjectTypePen인지 확인하며 기본 객체 한도는 64 MiB입니다.
 
-`emf_plus_pen_values.zig`는 PenData 13개 flag, UnitType, LineStyle, sparse DashedLineCapType과 PenAlignment의 공식 domain을 한 번만 정의합니다. 시작·끝 cap과 join은 [CustomLineCap 계층](emf-plus-custom-line-cap.md)의 공통 LineCapType·LineJoinType을 재사용합니다. 정의되지 않은 flag와 enum 값은 지원 값으로 보정하지 않습니다.
+`emf_plus_pen_values.zig`는 PenData 13개 flag, LineStyle, sparse DashedLineCapType과 PenAlignment의 공식 domain을 한 번만 정의합니다. UnitType은 Font와 공유하는 `emf_plus_unit_type.zig`를 사용합니다. 시작·끝 cap과 join은 [CustomLineCap 계층](emf-plus-custom-line-cap.md)의 공통 LineCapType·LineJoinType을 재사용합니다. 정의되지 않은 flag와 enum 값은 지원 값으로 보정하지 않습니다.
 
 `emf_plus_pen_data.zig`는 [EmfPlusPenData](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/33d8ced5-7768-47aa-a082-a14e5dfabc96)와 [EmfPlusPenOptionalData](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/5ef071f3-f503-4f16-b027-7c4bcf2d1d81)의 wire 순서를 소유합니다. Transform, StartCap, EndCap, Join, MiterLimit, LineStyle, DashedLineCap, DashOffset, DashedLine, PenAlignment, CompoundLine, CustomStartCap, CustomEndCap을 flag 비트 순서로만 읽습니다. 실패 시 공유 reader 위치를 보존합니다.
 

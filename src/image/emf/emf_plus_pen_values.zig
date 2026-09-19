@@ -1,7 +1,6 @@
 pub const DashedLineCapType = enum(i32) { flat = 0, round = 2, triangle = 3 };
 pub const LineStyle = enum(i32) { solid = 0, dash = 1, dot = 2, dash_dot = 3, dash_dot_dot = 4, custom = 5 };
 pub const PenAlignment = enum(i32) { center = 0, inset = 1, left = 2, outset = 3, right = 4 };
-pub const UnitType = enum(u32) { world = 0, display = 1, pixel = 2, point = 3, inch = 4, document = 5, millimeter = 6 };
 
 pub const PenDataFlags = packed struct(u32) {
     transform: bool,
@@ -62,19 +61,6 @@ pub fn penAlignment(raw: i32) !PenAlignment {
     };
 }
 
-pub fn unitType(raw: u32) !UnitType {
-    return switch (raw) {
-        0 => .world,
-        1 => .display,
-        2 => .pixel,
-        3 => .point,
-        4 => .inch,
-        5 => .document,
-        6 => .millimeter,
-        else => error.InvalidEmfPlusUnitType,
-    };
-}
-
 test "EMF+ pen value domains reject gaps and reserved flag bits" {
     const std = @import("std");
     try std.testing.expectEqual(DashedLineCapType.round, try dashedLineCapType(2));
@@ -83,8 +69,6 @@ test "EMF+ pen value domains reject gaps and reserved flag bits" {
     try std.testing.expectError(error.InvalidEmfPlusLineStyle, lineStyle(6));
     try std.testing.expectEqual(PenAlignment.right, try penAlignment(4));
     try std.testing.expectError(error.InvalidEmfPlusPenAlignment, penAlignment(-1));
-    try std.testing.expectEqual(UnitType.millimeter, try unitType(6));
-    try std.testing.expectError(error.InvalidEmfPlusUnitType, unitType(7));
     const flags = try PenDataFlags.parse(0x1fff);
     try std.testing.expectEqual(@as(u32, 0x1fff), flags.raw());
     try std.testing.expectError(error.InvalidEmfPlusPenDataFlags, PenDataFlags.parse(0x2000));

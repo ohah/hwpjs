@@ -48,6 +48,9 @@ test {
     _ = @import("image/emf/emf_plus_character_range.zig");
     _ = @import("image/emf/emf_plus_string_format_data.zig");
     _ = @import("image/emf/emf_plus_string_format.zig");
+    _ = @import("image/emf/emf_plus_unit_type.zig");
+    _ = @import("image/emf/emf_plus_font_values.zig");
+    _ = @import("image/emf/emf_plus_font.zig");
     _ = @import("image/wmf/header_tests.zig");
     _ = @import("image/wmf/records_tests.zig");
     _ = @import("image/wmf/objects_tests.zig");
