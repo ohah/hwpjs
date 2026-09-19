@@ -38,6 +38,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ ImageAttributes 계층](emf-plus-image-attributes-object.md)은 Brush와 공유하는 WrapMode, signed ObjectClamp domain과 24바이트 고정 객체 조립을 분리합니다. ignored Reserved와 Clamp 이외 모드의 ClampColor도 원문으로 보존하며 렌더링 조건을 wire parser에 섞지 않습니다.
 
+[EMF+ Clear record 계층](emf-plus-clear-record.md)은 정확한 고정 record 크기와 공통 ARGB Color만 해석하고 stream은 검증된 record 수만 집계합니다. ignored Flags를 보존하며 실제 surface 상태 변경은 wire parser에 넣지 않습니다.
+
 PNG에서 파일 전체 이름 고유성을 검사하는 [sPLT 추천 팔레트](png-suggested-palettes.md)는 소유권이 있는 별도 Collector로 분리합니다. 기존 픽셀 검사 순회에 연결하되 비할당 metadata.State에 이름 인덱스 수명을 섞지 않습니다.
 
 ```text

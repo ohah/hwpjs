@@ -95,6 +95,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - [EMF+ StringFormat 고정 헤더와 가변 배열](emf-plus-string-format-object.md)
 - [EMF+ Font와 UTF-16 family name](emf-plus-font-object.md)
 - [EMF+ ImageAttributes 고정 객체](emf-plus-image-attributes-object.md)
+- [EMF+ Clear drawing record](emf-plus-clear-record.md)
 
 - [HWP5 모듈 계약](hwp5-modules.md)
 - [아키텍처와 구현 순서](architecture.md)

@@ -6,6 +6,7 @@ const private_comment = @import("emf_plus_comment.zig");
 const object_record = @import("emf_plus_object.zig");
 const serializable_object = @import("emf_plus_serializable_object.zig");
 const image_effect_guid = @import("emf_plus_image_effect_guid.zig");
+const clear_record = @import("emf_plus_clear.zig");
 
 pub const Report = struct {
     comments: usize = 0,
@@ -18,6 +19,7 @@ pub const Report = struct {
     objects: object_record.Report = .{},
     serializable_objects: usize = 0,
     image_effects: [image_effect_guid.effect_count]usize = .{0} ** image_effect_guid.effect_count,
+    clear_records: usize = 0,
 };
 
 pub const State = struct {
@@ -60,6 +62,10 @@ pub const State = struct {
                 pending.report.serializable_objects = std.math.add(usize, pending.report.serializable_objects, 1) catch return error.LimitExceeded;
                 const effect_index: usize = @intFromEnum(parsed.kind);
                 pending.report.image_effects[effect_index] = std.math.add(usize, pending.report.image_effects[effect_index], 1) catch return error.LimitExceeded;
+            }
+            if (value.kind == .clear) {
+                _ = try clear_record.parse(value);
+                pending.report.clear_records = std.math.add(usize, pending.report.clear_records, 1) catch return error.LimitExceeded;
             }
             if (private_comment.parse(value)) |parsed| {
                 pending.report.private_comments = std.math.add(usize, pending.report.private_comments, 1) catch return error.LimitExceeded;
@@ -348,4 +354,34 @@ test "EMF+ serializable aggregate overflow leaves the whole comment unchanged" {
     const before_effect = effect_overflow;
     try std.testing.expectError(error.LimitExceeded, effect_overflow.consume(testComment(&bytes), 2));
     try std.testing.expectEqualDeep(before_effect, effect_overflow);
+}
+
+test "EMF+ stream validates and counts Clear records atomically" {
+    var bytes = [_]u8{0} ** 56;
+    writeHeader(bytes[0..28]);
+    std.mem.writeInt(u16, bytes[28..30], 0x4009, .little);
+    std.mem.writeInt(u16, bytes[30..32], 0xffff, .little);
+    std.mem.writeInt(u32, bytes[32..36], 16, .little);
+    std.mem.writeInt(u32, bytes[36..40], 4, .little);
+    bytes[40..44].* = .{ 0x11, 0x22, 0x33, 0x44 };
+    writeEmptyRecord(bytes[44..56], 0x4002);
+
+    var state: State = .{};
+    try std.testing.expect(try state.consume(testComment(&bytes), 2));
+    try state.finish();
+    try std.testing.expectEqual(@as(usize, 1), state.report.clear_records);
+
+    var malformed = bytes;
+    std.mem.writeInt(u16, malformed[28..30], 0x4009, .little);
+    std.mem.writeInt(u32, malformed[32..36], 12, .little);
+    std.mem.writeInt(u32, malformed[36..40], 0, .little);
+    var malformed_state: State = .{};
+    try std.testing.expectError(error.InvalidEmfPlusClearSize, malformed_state.consume(testComment(malformed[0..40]), 2));
+    try std.testing.expectEqualDeep(State{}, malformed_state);
+
+    var overflow: State = .{};
+    overflow.report.clear_records = std.math.maxInt(usize);
+    const before = overflow;
+    try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..44]), 2));
+    try std.testing.expectEqualDeep(before, overflow);
 }

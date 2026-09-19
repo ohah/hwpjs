@@ -92,15 +92,15 @@ test "EMF framing enforces the complete EMF+ stream contract" {
     try t.expectError(error.MissingInitialEmfPlusHeader, framing.validate(t.allocator, &delayed));
 }
 
-test "EMF framing reports private EMF+ comments and rejects reserved records" {
+test "EMF framing reports private and Clear EMF+ records and rejects reserved records" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 184;
+    var bytes = [_]u8{0} ** 200;
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
     std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
-    std.mem.writeInt(u32, bytes[92..96], 76, .little);
-    std.mem.writeInt(u32, bytes[96..100], 64, .little);
+    std.mem.writeInt(u32, bytes[92..96], 92, .little);
+    std.mem.writeInt(u32, bytes[96..100], 80, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
     std.mem.writeInt(u16, bytes[104..106], 0x4001, .little);
     std.mem.writeInt(u32, bytes[108..112], 28, .little);
@@ -113,13 +113,19 @@ test "EMF framing reports private EMF+ comments and rejects reserved records" {
     std.mem.writeInt(u32, bytes[136..140], 20, .little);
     std.mem.writeInt(u32, bytes[140..144], 8, .little);
     bytes[144..152].* = .{ 0, 1, 2, 3, 0xfc, 0xfd, 0xfe, 0xff };
-    std.mem.writeInt(u16, bytes[152..154], 0x4002, .little);
-    std.mem.writeInt(u32, bytes[156..160], 12, .little);
-    @memcpy(bytes[164..184], original[88..108]);
+    std.mem.writeInt(u16, bytes[152..154], 0x4009, .little);
+    std.mem.writeInt(u16, bytes[154..156], 0xffff, .little);
+    std.mem.writeInt(u32, bytes[156..160], 16, .little);
+    std.mem.writeInt(u32, bytes[160..164], 4, .little);
+    bytes[164..168].* = .{ 0x11, 0x22, 0x33, 0x44 };
+    std.mem.writeInt(u16, bytes[168..170], 0x4002, .little);
+    std.mem.writeInt(u32, bytes[172..176], 12, .little);
+    @memcpy(bytes[180..200], original[88..108]);
 
     const summary = try framing.validate(t.allocator, &bytes);
     try t.expectEqual(@as(usize, 1), summary.emf_plus.private_comments);
     try t.expectEqual(@as(usize, 8), summary.emf_plus.private_data_bytes);
+    try t.expectEqual(@as(usize, 1), summary.emf_plus.clear_records);
 
     for ([_]u16{ 0x4005, 0x4006, 0x4007 }) |kind| {
         var reserved = bytes;

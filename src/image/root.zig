@@ -239,6 +239,7 @@ pub const emf_plus_font_values = @import("emf/emf_plus_font_values.zig");
 pub const emf_plus_font = @import("emf/emf_plus_font.zig");
 pub const emf_plus_image_attributes_values = @import("emf/emf_plus_image_attributes_values.zig");
 pub const emf_plus_image_attributes = @import("emf/emf_plus_image_attributes.zig");
+pub const emf_plus_clear = @import("emf/emf_plus_clear.zig");
 pub const emf_plus_comment = @import("emf/emf_plus_comment.zig");
 pub const emf_plus_object = @import("emf/emf_plus_object.zig");
 pub const emf_plus_image_effect_guid = @import("emf/emf_plus_image_effect_guid.zig");
