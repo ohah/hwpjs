@@ -44,6 +44,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ DrawBeziers record 계층](emf-plus-draw-beziers-record.md)은 Path와 공유하는 Point/PointR iterator 위에서 P/C별 PointData를 선택합니다. stream은 Pen 참조만 연결하며 상대좌표 누적과 곡선 재생은 wire parser에 넣지 않습니다.
 
+[EMF+ DrawClosedCurve record 계층](emf-plus-draw-closed-curve-record.md)은 공용 PointData에 Tension과 최소 Count 3을 조립합니다. stream은 Pen 참조만 연결하며 cardinal spline 계산은 wire parser에 넣지 않습니다.
+
 PNG에서 파일 전체 이름 고유성을 검사하는 [sPLT 추천 팔레트](png-suggested-palettes.md)는 소유권이 있는 별도 Collector로 분리합니다. 기존 픽셀 검사 순회에 연결하되 비할당 metadata.State에 이름 인덱스 수명을 섞지 않습니다.
 
 ```text

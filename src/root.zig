@@ -60,6 +60,7 @@ test {
     _ = @import("image/emf/emf_plus_draw_arc.zig");
     _ = @import("image/emf/emf_plus_point_data.zig");
     _ = @import("image/emf/emf_plus_draw_beziers.zig");
+    _ = @import("image/emf/emf_plus_draw_closed_curve.zig");
     _ = @import("image/emf/emf_plus_object.zig");
     _ = @import("image/emf/emf_plus_stream.zig");
     _ = @import("image/wmf/header_tests.zig");

@@ -245,6 +245,7 @@ pub const emf_plus_rect_data = @import("emf/emf_plus_rect_data.zig");
 pub const emf_plus_draw_arc = @import("emf/emf_plus_draw_arc.zig");
 pub const emf_plus_point_data = @import("emf/emf_plus_point_data.zig");
 pub const emf_plus_draw_beziers = @import("emf/emf_plus_draw_beziers.zig");
+pub const emf_plus_draw_closed_curve = @import("emf/emf_plus_draw_closed_curve.zig");
 pub const emf_plus_comment = @import("emf/emf_plus_comment.zig");
 pub const emf_plus_object = @import("emf/emf_plus_object.zig");
 pub const emf_plus_image_effect_guid = @import("emf/emf_plus_image_effect_guid.zig");
