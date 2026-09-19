@@ -28,6 +28,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ CustomLineCap 계층](emf-plus-custom-line-cap.md)은 Default/AdjustableArrow dispatch, 공통 line enum과 두 flag, 고정 payload와 중첩 Fill/Line Path를 분리합니다. signed 길이는 공통 sized Path 계층이 원자적으로 처리하고 기존 Path parser에 정확한 slice를 위임합니다. 후속 Pen/Region이 enum·길이·Path 규칙을 복제하지 않습니다.
 
+[EMF+ Pen 계층](emf-plus-pen-object.md)은 enum·flag, count-prefix float 배열, size-prefix CustomLineCap, flag 순서 PenData와 최상위 Brush 조립을 분리합니다. PenData가 소비한 위치가 Brush 경계의 SSOT이며 기존 Transform·line enum·CustomLineCap·Brush parser에 exact slice를 위임합니다.
+
 PNG에서 파일 전체 이름 고유성을 검사하는 [sPLT 추천 팔레트](png-suggested-palettes.md)는 소유권이 있는 별도 Collector로 분리합니다. 기존 픽셀 검사 순회에 연결하되 비할당 metadata.State에 이름 인덱스 수명을 섞지 않습니다.
 
 ```text

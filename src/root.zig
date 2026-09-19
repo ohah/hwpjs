@@ -36,6 +36,11 @@ test {
     _ = @import("image/emf/emf_plus_custom_line_cap_arrow.zig");
     _ = @import("image/emf/emf_plus_custom_line_cap_default.zig");
     _ = @import("image/emf/emf_plus_custom_line_cap.zig");
+    _ = @import("image/emf/emf_plus_pen_values.zig");
+    _ = @import("image/emf/emf_plus_pen_array.zig");
+    _ = @import("image/emf/emf_plus_sized_custom_line_cap.zig");
+    _ = @import("image/emf/emf_plus_pen_data.zig");
+    _ = @import("image/emf/emf_plus_pen.zig");
     _ = @import("image/wmf/header_tests.zig");
     _ = @import("image/wmf/records_tests.zig");
     _ = @import("image/wmf/objects_tests.zig");
