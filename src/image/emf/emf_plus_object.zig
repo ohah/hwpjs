@@ -1,5 +1,6 @@
 const std = @import("std");
 const record = @import("emf_plus_record.zig");
+const record_flags = @import("emf_plus_record_flags.zig");
 
 pub const ObjectType = enum(u7) {
     brush = 1,
@@ -24,8 +25,7 @@ pub const Fragment = struct {
 pub fn parse(value: record.Record, multipart: bool) !Fragment {
     if (value.kind != .object) return error.NotEmfPlusObject;
 
-    const raw_id: u8 = @truncate(value.flags);
-    if (raw_id > 63) return error.InvalidEmfPlusObjectId;
+    const object_id = try record_flags.objectId(value.flags);
     const raw_type: u7 = @truncate(value.flags >> 8);
     const object_type: ObjectType = switch (raw_type) {
         1...9 => @enumFromInt(raw_type),
@@ -36,7 +36,7 @@ pub fn parse(value: record.Record, multipart: bool) !Fragment {
     if (has_total and value.data.len < 4) return error.MissingEmfPlusTotalObjectSize;
 
     return .{
-        .object_id = @intCast(raw_id),
+        .object_id = object_id,
         .object_type = object_type,
         .continues = continues,
         .total_object_size = if (has_total) std.mem.readInt(u32, value.data[0..4], .little) else null,

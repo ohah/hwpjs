@@ -55,6 +55,10 @@ test {
     _ = @import("image/emf/emf_plus_image_attributes_values.zig");
     _ = @import("image/emf/emf_plus_image_attributes.zig");
     _ = @import("image/emf/emf_plus_clear.zig");
+    _ = @import("image/emf/emf_plus_record_flags.zig");
+    _ = @import("image/emf/emf_plus_rect_data.zig");
+    _ = @import("image/emf/emf_plus_draw_arc.zig");
+    _ = @import("image/emf/emf_plus_object.zig");
     _ = @import("image/emf/emf_plus_stream.zig");
     _ = @import("image/wmf/header_tests.zig");
     _ = @import("image/wmf/records_tests.zig");

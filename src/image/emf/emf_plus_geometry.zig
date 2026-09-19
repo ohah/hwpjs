@@ -4,6 +4,7 @@ const values = @import("emf_plus_values.zig");
 pub const PointF = struct { x: f32, y: f32 };
 pub const RectF = struct { x: f32, y: f32, width: f32, height: f32 };
 pub const Point = struct { x: i16, y: i16 };
+pub const Rect = struct { x: i16, y: i16, width: i16, height: i16 };
 
 pub fn readPoint(reader: *binary.Reader) !Point {
     var next = reader.*;
@@ -26,6 +27,18 @@ pub fn readRectF(reader: *binary.Reader) !RectF {
         .y = try values.readFloat(&next),
         .width = try values.readFloat(&next),
         .height = try values.readFloat(&next),
+    };
+    reader.* = next;
+    return result;
+}
+
+pub fn readRect(reader: *binary.Reader) !Rect {
+    var next = reader.*;
+    const result: Rect = .{
+        .x = try next.readInt(i16),
+        .y = try next.readInt(i16),
+        .width = try next.readInt(i16),
+        .height = try next.readInt(i16),
     };
     reader.* = next;
     return result;
@@ -67,4 +80,24 @@ test "EMF+ geometry failure leaves the shared cursor unchanged" {
         try std.testing.expectError(error.UnexpectedEnd, readRectF(&rect_reader));
         try std.testing.expectEqual(@as(usize, 0), rect_reader.offset);
     }
+    for (0..8) |cut| {
+        var rect_reader: binary.Reader = .{ .bytes = bytes[0..cut] };
+        try std.testing.expectError(error.UnexpectedEnd, readRect(&rect_reader));
+        try std.testing.expectEqual(@as(usize, 0), rect_reader.offset);
+    }
+}
+
+test "EMF+ integer rectangle preserves signed coordinates and exact width" {
+    const std = @import("std");
+    var bytes = [_]u8{0} ** 10;
+    const input = [_]i16{ -32768, -1, 0, 32767 };
+    for (input, 0..) |value, index|
+        std.mem.writeInt(i16, bytes[index * 2 ..][0..2], value, .little);
+    var reader: binary.Reader = .{ .bytes = &bytes };
+    const rect = try readRect(&reader);
+    try std.testing.expectEqual(input[0], rect.x);
+    try std.testing.expectEqual(input[1], rect.y);
+    try std.testing.expectEqual(input[2], rect.width);
+    try std.testing.expectEqual(input[3], rect.height);
+    try std.testing.expectEqual(@as(usize, 8), reader.offset);
 }

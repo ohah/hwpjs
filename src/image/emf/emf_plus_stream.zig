@@ -7,6 +7,7 @@ const object_record = @import("emf_plus_object.zig");
 const serializable_object = @import("emf_plus_serializable_object.zig");
 const image_effect_guid = @import("emf_plus_image_effect_guid.zig");
 const clear_record = @import("emf_plus_clear.zig");
+const draw_arc_record = @import("emf_plus_draw_arc.zig");
 
 pub const Report = struct {
     comments: usize = 0,
@@ -20,6 +21,7 @@ pub const Report = struct {
     serializable_objects: usize = 0,
     image_effects: [image_effect_guid.effect_count]usize = .{0} ** image_effect_guid.effect_count,
     clear_records: usize = 0,
+    draw_arc_records: usize = 0,
 };
 
 pub const State = struct {
@@ -66,6 +68,12 @@ pub const State = struct {
             if (value.kind == .clear) {
                 _ = try clear_record.parse(value);
                 pending.report.clear_records = std.math.add(usize, pending.report.clear_records, 1) catch return error.LimitExceeded;
+            }
+            if (value.kind == .draw_arc) {
+                const parsed = try draw_arc_record.parse(value);
+                const object_type = pending.object_state.table[parsed.pen_id] orelse return error.MissingEmfPlusDrawArcPen;
+                if (object_type != .pen) return error.InvalidEmfPlusDrawArcPenType;
+                pending.report.draw_arc_records = std.math.add(usize, pending.report.draw_arc_records, 1) catch return error.LimitExceeded;
             }
             if (private_comment.parse(value)) |parsed| {
                 pending.report.private_comments = std.math.add(usize, pending.report.private_comments, 1) catch return error.LimitExceeded;
@@ -383,5 +391,49 @@ test "EMF+ stream validates and counts Clear records atomically" {
     overflow.report.clear_records = std.math.maxInt(usize);
     const before = overflow;
     try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..44]), 2));
+    try std.testing.expectEqualDeep(before, overflow);
+}
+
+test "EMF+ stream resolves DrawArc Pen references and remains atomic" {
+    var bytes = [_]u8{0} ** 88;
+    writeHeader(bytes[0..28]);
+    writeEmptyRecord(bytes[28..40], 0x4008);
+    std.mem.writeInt(u16, bytes[30..32], 0x0205, .little);
+    std.mem.writeInt(u16, bytes[40..42], 0x4012, .little);
+    std.mem.writeInt(u16, bytes[42..44], 0x0005, .little);
+    std.mem.writeInt(u32, bytes[44..48], 36, .little);
+    std.mem.writeInt(u32, bytes[48..52], 24, .little);
+    std.mem.writeInt(u32, bytes[52..56], @bitCast(@as(f32, 90.0)), .little);
+    std.mem.writeInt(u32, bytes[56..60], @bitCast(@as(f32, -180.0)), .little);
+    writeEmptyRecord(bytes[76..88], 0x4002);
+
+    var state: State = .{};
+    try std.testing.expect(try state.consume(testComment(&bytes), 2));
+    try state.finish();
+    try std.testing.expectEqual(@as(usize, 1), state.report.draw_arc_records);
+    try std.testing.expectEqual(object_record.ObjectType.pen, state.object_state.table[5].?);
+
+    var missing = bytes;
+    std.mem.writeInt(u16, missing[42..44], 0x0006, .little);
+    var missing_state: State = .{};
+    try std.testing.expectError(error.MissingEmfPlusDrawArcPen, missing_state.consume(testComment(&missing), 2));
+    try std.testing.expectEqualDeep(State{}, missing_state);
+
+    var wrong_type = bytes;
+    std.mem.writeInt(u16, wrong_type[30..32], 0x0505, .little);
+    var wrong_type_state: State = .{};
+    try std.testing.expectError(error.InvalidEmfPlusDrawArcPenType, wrong_type_state.consume(testComment(&wrong_type), 2));
+    try std.testing.expectEqualDeep(State{}, wrong_type_state);
+
+    var invalid_id = bytes;
+    std.mem.writeInt(u16, invalid_id[42..44], 0x0040, .little);
+    var invalid_id_state: State = .{};
+    try std.testing.expectError(error.InvalidEmfPlusObjectId, invalid_id_state.consume(testComment(&invalid_id), 2));
+    try std.testing.expectEqualDeep(State{}, invalid_id_state);
+
+    var overflow: State = .{};
+    overflow.report.draw_arc_records = std.math.maxInt(usize);
+    const before = overflow;
+    try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..76]), 2));
     try std.testing.expectEqualDeep(before, overflow);
 }
