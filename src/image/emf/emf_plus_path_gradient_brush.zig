@@ -2,6 +2,7 @@ const std = @import("std");
 const binary = @import("../../binary/reader.zig");
 const argb = @import("emf_plus_argb.zig");
 const brush_values = @import("emf_plus_brush_values.zig");
+const wrap_mode_values = @import("emf_plus_wrap_mode.zig");
 const geometry = @import("emf_plus_geometry.zig");
 const optional = @import("emf_plus_brush_optional.zig");
 const path = @import("emf_plus_path.zig");
@@ -35,7 +36,7 @@ pub const Boundary = union(enum) {
 pub const PathGradient = struct {
     bytes: []const u8,
     flags_raw: u32,
-    wrap_mode: brush_values.WrapMode,
+    wrap_mode: wrap_mode_values.WrapMode,
     center_color: argb.Argb,
     center_point: geometry.PointF,
     surrounding_color_count: u32,
@@ -54,7 +55,7 @@ pub fn parse(bytes: []const u8, options: Options) !PathGradient {
     var reader: binary.Reader = .{ .bytes = bytes };
     const flags = try reader.readInt(u32);
     try optional.validatePathFlags(flags);
-    const wrap_mode = try brush_values.wrapMode(try reader.readInt(u32));
+    const wrap_mode = try wrap_mode_values.WrapMode.parse(try reader.readInt(u32));
     const center_color = try argb.read(&reader);
     const center_point = try geometry.readPointF(&reader);
     const color_count = try reader.readInt(u32);
@@ -124,7 +125,7 @@ test "EMF+ path gradient parses surrounding colors and point boundary" {
     putF32(&bytes, 44, 30);
     putF32(&bytes, 48, 40);
     const value = try parse(&bytes, .{});
-    try std.testing.expectEqual(brush_values.WrapMode.clamp, value.wrap_mode);
+    try std.testing.expectEqual(wrap_mode_values.WrapMode.clamp, value.wrap_mode);
     try std.testing.expectEqual(@as(u32, 0x08070605), value.surroundingColor(1).?.raw());
     try std.testing.expect(value.surroundingColor(2) == null);
     try std.testing.expectEqual(@as(u32, 2), value.boundary.points.count);

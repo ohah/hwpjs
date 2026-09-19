@@ -1,6 +1,7 @@
 const std = @import("std");
 const binary = @import("../../binary/reader.zig");
 const brush_values = @import("emf_plus_brush_values.zig");
+const wrap_mode_values = @import("emf_plus_wrap_mode.zig");
 const graphics_version = @import("emf_plus_graphics_version.zig");
 const linear = @import("emf_plus_linear_gradient_brush.zig");
 const object = @import("emf_plus_object.zig");
@@ -78,7 +79,7 @@ test "EMF+ Brush dispatches all five official brush types" {
     var linear_bytes = [_]u8{0} ** 48;
     putU32(&linear_bytes, 0, 0xdbc01001);
     putU32(&linear_bytes, 4, 4);
-    try std.testing.expectEqual(brush_values.WrapMode.tile, (try parse(&linear_bytes, .{})).data.linear_gradient.wrap_mode);
+    try std.testing.expectEqual(wrap_mode_values.WrapMode.tile, (try parse(&linear_bytes, .{})).data.linear_gradient.wrap_mode);
 }
 
 test "EMF+ Brush rejects every envelope truncation type limit and wrong completed object" {

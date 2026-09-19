@@ -4,7 +4,7 @@
 
 `src/image/emf/emf_plus_brush.zig`는 [EmfPlusBrush](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/79c653fb-bf01-4f87-8bd2-eac1de71e140)의 GraphicsVersion, BrushType과 다섯 payload dispatch를 소유합니다. 완성된 Object assembler 결과는 `parseCompleted`가 ObjectTypeBrush인지 확인한 뒤 같은 parser로 전달합니다. 기본 입력 한도는 64 MiB이며 호출자가 낮출 수 있습니다.
 
-`emf_plus_brush_values.zig`는 BrushType, WrapMode, 0x00~0x34의 HatchStyle과 BrushData flag 정의를 한 번만 소유합니다. 명세가 정의한 비트 `0x0000_01df`만 승인하되, 각 brush에서 의미가 없는 정의된 비트도 원값으로 보존합니다. 의미가 없다는 이유만으로 정의된 비트를 거부하지 않으며 예약 비트 5와 상위 비트는 거부합니다.
+`emf_plus_brush_values.zig`는 BrushType, 0x00~0x34의 HatchStyle과 BrushData flag 정의를 한 번만 소유합니다. Brush와 ImageAttributes가 공유하는 WrapMode는 `emf_plus_wrap_mode.zig`만 소유합니다. 명세가 정의한 BrushData 비트 `0x0000_01df`만 승인하되, 각 brush에서 의미가 없는 정의된 비트도 원값으로 보존합니다. 의미가 없다는 이유만으로 정의된 비트를 거부하지 않으며 예약 비트 5와 상위 비트는 거부합니다.
 
 `emf_plus_simple_brush.zig`는 SolidColor의 ARGB 4바이트와 HatchFill의 HatchStyle·foreground·background 12바이트를 정확한 크기로 읽습니다. `emf_plus_linear_gradient_brush.zig`는 flags, WrapMode, RectF, 시작·끝 ARGB와 두 reserved DWORD를 보존하고 선택 데이터를 이어 읽습니다. Linear 선택 데이터의 순서는 Transform, PresetColors 또는 BlendFactors이며 수직·수평 factor가 함께 있으면 명세 순서인 수직 다음 수평으로 읽습니다. PresetColors와 factor flag의 충돌은 거부합니다.
 

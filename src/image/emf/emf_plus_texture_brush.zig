@@ -1,6 +1,7 @@
 const std = @import("std");
 const binary = @import("../../binary/reader.zig");
 const brush_values = @import("emf_plus_brush_values.zig");
+const wrap_mode_values = @import("emf_plus_wrap_mode.zig");
 const image = @import("emf_plus_image.zig");
 const matrix = @import("emf_plus_transform_matrix.zig");
 
@@ -9,7 +10,7 @@ pub const Options = struct { image_options: image.Options = .{} };
 pub const Texture = struct {
     bytes: []const u8,
     flags_raw: u32,
-    wrap_mode: brush_values.WrapMode,
+    wrap_mode: wrap_mode_values.WrapMode,
     transform: ?matrix.TransformMatrix,
     image_object: ?image.Image,
 };
@@ -18,7 +19,7 @@ pub fn parse(bytes: []const u8, options: Options) !Texture {
     var reader: binary.Reader = .{ .bytes = bytes };
     const flags = try reader.readInt(u32);
     try brush_values.validateBrushDataFlags(flags);
-    const wrap_mode = try brush_values.wrapMode(try reader.readInt(u32));
+    const wrap_mode = try wrap_mode_values.WrapMode.parse(try reader.readInt(u32));
     const transform = if (flags & 0x02 != 0) try matrix.read(&reader) else null;
     const image_object = if (reader.offset == bytes.len)
         null
@@ -51,7 +52,7 @@ test "EMF+ texture brush parses transform then delegates optional Image" {
     putU32(&bytes, 32, 0xdbc01002);
     bytes[40..43].* = .{ 1, 2, 3 };
     const value = try parse(&bytes, .{});
-    try std.testing.expectEqual(brush_values.WrapMode.tile_flip_y, value.wrap_mode);
+    try std.testing.expectEqual(wrap_mode_values.WrapMode.tile_flip_y, value.wrap_mode);
     try std.testing.expectEqual(@as(f32, 6), value.transform.?.dy);
     try std.testing.expect(value.image_object != null);
     try std.testing.expectEqualSlices(u8, &.{ 1, 2, 3 }, value.image_object.?.data.unknown);

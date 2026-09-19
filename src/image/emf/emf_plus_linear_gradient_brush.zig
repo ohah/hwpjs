@@ -1,6 +1,7 @@
 const std = @import("std");
 const argb = @import("emf_plus_argb.zig");
 const brush_values = @import("emf_plus_brush_values.zig");
+const wrap_mode_values = @import("emf_plus_wrap_mode.zig");
 const geometry = @import("emf_plus_geometry.zig");
 const optional = @import("emf_plus_brush_optional.zig");
 const binary = @import("../../binary/reader.zig");
@@ -8,7 +9,7 @@ const binary = @import("../../binary/reader.zig");
 pub const LinearGradient = struct {
     bytes: []const u8,
     flags_raw: u32,
-    wrap_mode: brush_values.WrapMode,
+    wrap_mode: wrap_mode_values.WrapMode,
     rectangle: geometry.RectF,
     start_color: argb.Argb,
     end_color: argb.Argb,
@@ -21,7 +22,7 @@ pub fn parse(bytes: []const u8) !LinearGradient {
     var reader: binary.Reader = .{ .bytes = bytes };
     const flags = try reader.readInt(u32);
     try optional.validateLinearFlags(flags);
-    const wrap_mode = try brush_values.wrapMode(try reader.readInt(u32));
+    const wrap_mode = try wrap_mode_values.WrapMode.parse(try reader.readInt(u32));
     const rectangle = try geometry.readRectF(&reader);
     const start_color = try argb.read(&reader);
     const end_color = try argb.read(&reader);
@@ -65,7 +66,7 @@ test "EMF+ linear gradient parses fixed fields reserved values and preset colors
     putU32(&bytes, 52, 0x04030201);
     putU32(&bytes, 56, 0x08070605);
     const value = try parse(&bytes);
-    try std.testing.expectEqual(brush_values.WrapMode.tile_flip_xy, value.wrap_mode);
+    try std.testing.expectEqual(wrap_mode_values.WrapMode.tile_flip_xy, value.wrap_mode);
     try std.testing.expectEqual(@as(f32, 4), value.rectangle.height);
     try std.testing.expectEqual(@as(u32, 0xdeadbeef), value.reserved_1);
     try std.testing.expectEqual(@as(u32, 0x01234567), value.reserved_2);
