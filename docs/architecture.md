@@ -60,6 +60,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ DrawPath record 계층](emf-plus-draw-path-record.md)은 고정 payload의 Pen ID와 Flags의 Path ObjectID를 분리합니다. stream은 기존 두 Object Table 슬롯과 타입만 연결하고 Path geometry·stroke 재생은 기존 Path 객체 parser와 후속 렌더러의 책임으로 둡니다.
 
+[EMF+ DrawPie record 계층](emf-plus-draw-pie-record.md)은 DrawArc와 동일한 angle·RectData payload를 공용 ArcData에서 재사용하고 record envelope와 Pen 참조만 별도로 조립합니다. modulo·clamp와 pie stroke 재생은 wire parser에 넣지 않습니다.
+
 PNG에서 파일 전체 이름 고유성을 검사하는 [sPLT 추천 팔레트](png-suggested-palettes.md)는 소유권이 있는 별도 Collector로 분리합니다. 기존 픽셀 검사 순회에 연결하되 비할당 metadata.State에 이름 인덱스 수명을 섞지 않습니다.
 
 ```text

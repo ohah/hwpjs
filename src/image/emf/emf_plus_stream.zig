@@ -17,6 +17,7 @@ const draw_image_record = @import("emf_plus_draw_image.zig");
 const draw_image_points_record = @import("emf_plus_draw_image_points.zig");
 const draw_lines_record = @import("emf_plus_draw_lines.zig");
 const draw_path_record = @import("emf_plus_draw_path.zig");
+const draw_pie_record = @import("emf_plus_draw_pie.zig");
 
 pub const Report = struct {
     comments: usize = 0,
@@ -40,6 +41,7 @@ pub const Report = struct {
     draw_image_points_records: usize = 0,
     draw_lines_records: usize = 0,
     draw_path_records: usize = 0,
+    draw_pie_records: usize = 0,
 };
 
 pub const State = struct {
@@ -165,6 +167,12 @@ pub const State = struct {
                 const pen_type = pending.object_state.table[parsed.pen_id] orelse return error.MissingEmfPlusDrawPathPen;
                 if (pen_type != .pen) return error.InvalidEmfPlusDrawPathPenType;
                 pending.report.draw_path_records = std.math.add(usize, pending.report.draw_path_records, 1) catch return error.LimitExceeded;
+            }
+            if (value.kind == .draw_pie) {
+                const parsed = try draw_pie_record.parse(value);
+                const object_type = pending.object_state.table[parsed.pen_id] orelse return error.MissingEmfPlusDrawPiePen;
+                if (object_type != .pen) return error.InvalidEmfPlusDrawPiePenType;
+                pending.report.draw_pie_records = std.math.add(usize, pending.report.draw_pie_records, 1) catch return error.LimitExceeded;
             }
             if (private_comment.parse(value)) |parsed| {
                 pending.report.private_comments = std.math.add(usize, pending.report.private_comments, 1) catch return error.LimitExceeded;
@@ -524,6 +532,50 @@ test "EMF+ stream resolves DrawArc Pen references and remains atomic" {
 
     var overflow: State = .{};
     overflow.report.draw_arc_records = std.math.maxInt(usize);
+    const before = overflow;
+    try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..76]), 2));
+    try std.testing.expectEqualDeep(before, overflow);
+}
+
+test "EMF+ stream resolves DrawPie Pen references and remains atomic" {
+    var bytes = [_]u8{0} ** 88;
+    writeHeader(bytes[0..28]);
+    writeEmptyRecord(bytes[28..40], 0x4008);
+    std.mem.writeInt(u16, bytes[30..32], 0x0205, .little);
+    std.mem.writeInt(u16, bytes[40..42], 0x4011, .little);
+    std.mem.writeInt(u16, bytes[42..44], 0x0005, .little);
+    std.mem.writeInt(u32, bytes[44..48], 36, .little);
+    std.mem.writeInt(u32, bytes[48..52], 24, .little);
+    std.mem.writeInt(u32, bytes[52..56], @bitCast(@as(f32, 90.0)), .little);
+    std.mem.writeInt(u32, bytes[56..60], @bitCast(@as(f32, -180.0)), .little);
+    writeEmptyRecord(bytes[76..88], 0x4002);
+
+    var state: State = .{};
+    try std.testing.expect(try state.consume(testComment(&bytes), 2));
+    try state.finish();
+    try std.testing.expectEqual(@as(usize, 1), state.report.draw_pie_records);
+    try std.testing.expectEqual(object_record.ObjectType.pen, state.object_state.table[5].?);
+
+    var missing = bytes;
+    std.mem.writeInt(u16, missing[42..44], 0x0006, .little);
+    var missing_state: State = .{};
+    try std.testing.expectError(error.MissingEmfPlusDrawPiePen, missing_state.consume(testComment(&missing), 2));
+    try std.testing.expectEqualDeep(State{}, missing_state);
+
+    var wrong_type = bytes;
+    std.mem.writeInt(u16, wrong_type[30..32], 0x0505, .little);
+    var wrong_type_state: State = .{};
+    try std.testing.expectError(error.InvalidEmfPlusDrawPiePenType, wrong_type_state.consume(testComment(&wrong_type), 2));
+    try std.testing.expectEqualDeep(State{}, wrong_type_state);
+
+    var invalid_id = bytes;
+    std.mem.writeInt(u16, invalid_id[42..44], 0x0040, .little);
+    var invalid_id_state: State = .{};
+    try std.testing.expectError(error.InvalidEmfPlusObjectId, invalid_id_state.consume(testComment(&invalid_id), 2));
+    try std.testing.expectEqualDeep(State{}, invalid_id_state);
+
+    var overflow: State = .{};
+    overflow.report.draw_pie_records = std.math.maxInt(usize);
     const before = overflow;
     try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..76]), 2));
     try std.testing.expectEqualDeep(before, overflow);
