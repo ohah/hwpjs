@@ -41,6 +41,7 @@ const scale_world_transform_record = @import("emf_plus_scale_world_transform.zig
 const rotate_world_transform_record = @import("emf_plus_rotate_world_transform.zig");
 const set_page_transform_record = @import("emf_plus_set_page_transform.zig");
 const reset_clip_record = @import("emf_plus_reset_clip.zig");
+const set_clip_rect_record = @import("emf_plus_set_clip_rect.zig");
 const save_record = @import("emf_plus_save.zig");
 const restore_record = @import("emf_plus_restore.zig");
 const graphics_state_stack = @import("emf_plus_graphics_state_stack.zig");
@@ -94,6 +95,7 @@ pub const Report = struct {
     set_page_transform_records: usize = 0,
     set_page_transform_discouraged_page_unit_records: usize = 0,
     reset_clip_records: usize = 0,
+    set_clip_rect_records: usize = 0,
     save_records: usize = 0,
     restore_records: usize = 0,
     graphics_state_max_depth: usize = 0,
@@ -370,6 +372,10 @@ pub const State = struct {
             if (value.kind == .reset_clip) {
                 _ = try reset_clip_record.parse(value);
                 pending.report.reset_clip_records = std.math.add(usize, pending.report.reset_clip_records, 1) catch return error.LimitExceeded;
+            }
+            if (value.kind == .set_clip_rect) {
+                _ = try set_clip_rect_record.parse(value);
+                pending.report.set_clip_rect_records = std.math.add(usize, pending.report.set_clip_rect_records, 1) catch return error.LimitExceeded;
             }
             if (private_comment.parse(value)) |parsed| {
                 pending.report.private_comments = std.math.add(usize, pending.report.private_comments, 1) catch return error.LimitExceeded;
@@ -2220,5 +2226,40 @@ test "EMF+ stream validates ResetClip and rolls report back atomically" {
     overflow.report.reset_clip_records = std.math.maxInt(usize);
     const before = overflow;
     try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..40]), 2));
+    try std.testing.expectEqualDeep(before, overflow);
+}
+
+test "EMF+ stream validates SetClipRect and rolls report back atomically" {
+    var bytes = [_]u8{0} ** 68;
+    writeHeader(bytes[0..28]);
+    std.mem.writeInt(u16, bytes[28..30], 0x4032, .little);
+    std.mem.writeInt(u16, bytes[30..32], 0xf5ff, .little);
+    std.mem.writeInt(u32, bytes[32..36], 28, .little);
+    std.mem.writeInt(u32, bytes[36..40], 16, .little);
+    std.mem.writeInt(u32, bytes[40..44], 0x80000000, .little);
+    std.mem.writeInt(u32, bytes[44..48], 0x7f800000, .little);
+    std.mem.writeInt(u32, bytes[48..52], 0x7fc00001, .little);
+    std.mem.writeInt(u32, bytes[52..56], 0xc0900000, .little);
+    writeEmptyRecord(bytes[56..68], 0x4002);
+
+    var state: State = .{};
+    try std.testing.expect(try state.consume(testComment(&bytes), 2));
+    try state.finish();
+    try std.testing.expectEqual(@as(usize, 1), state.report.set_clip_rect_records);
+
+    var malformed = [_]u8{0} ** 64;
+    @memcpy(malformed[0..28], bytes[0..28]);
+    std.mem.writeInt(u16, malformed[28..30], 0x4032, .little);
+    std.mem.writeInt(u32, malformed[32..36], 24, .little);
+    std.mem.writeInt(u32, malformed[36..40], 12, .little);
+    writeEmptyRecord(malformed[52..64], 0x4002);
+    var malformed_state: State = .{};
+    try std.testing.expectError(error.InvalidEmfPlusSetClipRectSize, malformed_state.consume(testComment(&malformed), 2));
+    try std.testing.expectEqualDeep(State{}, malformed_state);
+
+    var overflow: State = .{};
+    overflow.report.set_clip_rect_records = std.math.maxInt(usize);
+    const before = overflow;
+    try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..56]), 2));
     try std.testing.expectEqualDeep(before, overflow);
 }

@@ -108,6 +108,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ ResetClip clipping record 계층](emf-plus-reset-clip-record.md)은 payload 없는 고정 envelope와 ignored Flags를 보존합니다. clipping region의 infinity reset과 graphics state replay는 wire parser와 분리합니다.
 
+[EMF+ SetClipRect clipping record 계층](emf-plus-set-clip-rect-record.md)은 공용 RectF와 전용 CombineMode enum을 조립하고 Flags의 나머지 reserved bit를 보존합니다. clipping region의 논리 연산과 graphics state replay는 wire parser와 분리합니다.
+
 [EMF+ Save state record 계층](emf-plus-save-record.md)은 미사용 Flags와 u32 StackIndex를 보존합니다. 실제 graphics-state stack과 Restore 매칭은 wire parser와 분리합니다.
 
 [EMF+ Restore와 graphics-state stack 계층](emf-plus-restore-record.md)은 Save/Container 종류를 함께 표현하고 target 이후 entry 제거, comment 원자성, allocator 소유권과 EOF closure를 담당합니다. 두 BeginContainer record와 EndContainer도 같은 stack에 연결합니다.

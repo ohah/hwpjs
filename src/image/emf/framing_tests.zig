@@ -386,6 +386,38 @@ test "EMF framing routes ResetClip through the EMF+ stream" {
     try t.expectEqual(@as(usize, 1), report.reset_clip_records);
 }
 
+test "EMF framing routes SetClipRect through the EMF+ stream" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 192;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 3, .little);
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[92..96], 84, .little);
+    std.mem.writeInt(u32, bytes[96..100], 72, .little);
+    std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
+    std.mem.writeInt(u16, bytes[104..106], 0x4001, .little);
+    std.mem.writeInt(u32, bytes[108..112], 28, .little);
+    std.mem.writeInt(u32, bytes[112..116], 16, .little);
+    std.mem.writeInt(u32, bytes[116..120], 0xdbc01001, .little);
+    std.mem.writeInt(u32, bytes[124..128], 96, .little);
+    std.mem.writeInt(u32, bytes[128..132], 96, .little);
+    std.mem.writeInt(u16, bytes[132..134], 0x4032, .little);
+    std.mem.writeInt(u16, bytes[134..136], 0xf5ff, .little);
+    std.mem.writeInt(u32, bytes[136..140], 28, .little);
+    std.mem.writeInt(u32, bytes[140..144], 16, .little);
+    std.mem.writeInt(u32, bytes[144..148], @bitCast(@as(f32, -1.5)), .little);
+    std.mem.writeInt(u32, bytes[148..152], @bitCast(@as(f32, 2.5)), .little);
+    std.mem.writeInt(u32, bytes[152..156], @bitCast(@as(f32, 3.5)), .little);
+    std.mem.writeInt(u32, bytes[156..160], @bitCast(@as(f32, 4.5)), .little);
+    std.mem.writeInt(u16, bytes[160..162], 0x4002, .little);
+    std.mem.writeInt(u32, bytes[164..168], 12, .little);
+    @memcpy(bytes[172..192], original[88..108]);
+
+    const report = (try framing.validate(t.allocator, &bytes)).emf_plus;
+    try t.expectEqual(@as(usize, 1), report.set_clip_rect_records);
+}
+
 test "EMF framing reports private and Clear EMF+ records and rejects reserved records" {
     const original = fixture();
     var bytes = [_]u8{0} ** 200;
