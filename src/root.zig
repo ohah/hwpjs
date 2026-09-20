@@ -99,6 +99,7 @@ test {
     _ = @import("image/emf/emf_plus_filter_type.zig");
     _ = @import("image/emf/emf_plus_set_ts_graphics.zig");
     _ = @import("image/emf/emf_plus_multiply_world_transform.zig");
+    _ = @import("image/emf/emf_plus_reset_world_transform.zig");
     _ = @import("image/emf/emf_plus_save.zig");
     _ = @import("image/emf/emf_plus_stack_index_record.zig");
     _ = @import("image/emf/emf_plus_restore.zig");
