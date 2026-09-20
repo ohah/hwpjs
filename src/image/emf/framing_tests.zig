@@ -463,6 +463,46 @@ test "EMF framing routes DrawLines through the Object Table Pen reference" {
     try t.expectError(error.MissingEmfPlusDrawLinesPen, framing.validate(t.allocator, &missing));
 }
 
+test "EMF framing routes DrawPath through Path and Pen object references" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 204;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 3, .little);
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[92..96], 96, .little);
+    std.mem.writeInt(u32, bytes[96..100], 84, .little);
+    std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
+    std.mem.writeInt(u16, bytes[104..106], 0x4001, .little);
+    std.mem.writeInt(u32, bytes[108..112], 28, .little);
+    std.mem.writeInt(u32, bytes[112..116], 16, .little);
+    std.mem.writeInt(u32, bytes[116..120], 0xdbc01001, .little);
+    std.mem.writeInt(u32, bytes[124..128], 96, .little);
+    std.mem.writeInt(u32, bytes[128..132], 96, .little);
+    std.mem.writeInt(u16, bytes[132..134], 0x4008, .little);
+    std.mem.writeInt(u16, bytes[134..136], 0x0305, .little);
+    std.mem.writeInt(u32, bytes[136..140], 12, .little);
+    std.mem.writeInt(u16, bytes[144..146], 0x4008, .little);
+    std.mem.writeInt(u16, bytes[146..148], 0x0206, .little);
+    std.mem.writeInt(u32, bytes[148..152], 12, .little);
+    std.mem.writeInt(u16, bytes[156..158], 0x4015, .little);
+    std.mem.writeInt(u16, bytes[158..160], 0x0005, .little);
+    std.mem.writeInt(u32, bytes[160..164], 16, .little);
+    std.mem.writeInt(u32, bytes[164..168], 4, .little);
+    std.mem.writeInt(u32, bytes[168..172], 6, .little);
+    std.mem.writeInt(u16, bytes[172..174], 0x4002, .little);
+    std.mem.writeInt(u32, bytes[176..180], 12, .little);
+    @memcpy(bytes[184..204], original[88..108]);
+
+    try t.expectEqual(@as(usize, 1), (try framing.validate(t.allocator, &bytes)).emf_plus.draw_path_records);
+    var missing_path = bytes;
+    std.mem.writeInt(u16, missing_path[158..160], 0x0007, .little);
+    try t.expectError(error.MissingEmfPlusDrawPathPath, framing.validate(t.allocator, &missing_path));
+    var missing_pen = bytes;
+    std.mem.writeInt(u32, missing_pen[168..172], 7, .little);
+    try t.expectError(error.MissingEmfPlusDrawPathPen, framing.validate(t.allocator, &missing_pen));
+}
+
 test "EMF framing validates and counts PIXELFORMAT records" {
     const original = fixture();
     var bytes = [_]u8{0} ** 160;

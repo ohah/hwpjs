@@ -70,6 +70,7 @@ test {
     _ = @import("image/emf/emf_plus_draw_image.zig");
     _ = @import("image/emf/emf_plus_draw_image_points.zig");
     _ = @import("image/emf/emf_plus_draw_lines.zig");
+    _ = @import("image/emf/emf_plus_draw_path.zig");
     _ = @import("image/emf/emf_plus_object.zig");
     _ = @import("image/emf/emf_plus_stream.zig");
     _ = @import("image/wmf/header_tests.zig");

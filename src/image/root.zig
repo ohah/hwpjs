@@ -255,6 +255,7 @@ pub const emf_plus_image_attributes_id = @import("emf/emf_plus_image_attributes_
 pub const emf_plus_draw_image = @import("emf/emf_plus_draw_image.zig");
 pub const emf_plus_draw_image_points = @import("emf/emf_plus_draw_image_points.zig");
 pub const emf_plus_draw_lines = @import("emf/emf_plus_draw_lines.zig");
+pub const emf_plus_draw_path = @import("emf/emf_plus_draw_path.zig");
 pub const emf_plus_comment = @import("emf/emf_plus_comment.zig");
 pub const emf_plus_object = @import("emf/emf_plus_object.zig");
 pub const emf_plus_image_effect_guid = @import("emf/emf_plus_image_effect_guid.zig");
