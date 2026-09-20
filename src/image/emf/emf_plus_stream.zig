@@ -33,6 +33,7 @@ const begin_container_no_params_record = @import("emf_plus_begin_container_no_pa
 const end_container_record = @import("emf_plus_end_container.zig");
 const set_ts_clip_record = @import("emf_plus_set_ts_clip.zig");
 const set_ts_graphics_record = @import("emf_plus_set_ts_graphics.zig");
+const multiply_world_transform_record = @import("emf_plus_multiply_world_transform.zig");
 const save_record = @import("emf_plus_save.zig");
 const restore_record = @import("emf_plus_restore.zig");
 const graphics_state_stack = @import("emf_plus_graphics_state_stack.zig");
@@ -77,6 +78,7 @@ pub const Report = struct {
     end_container_records: usize = 0,
     set_ts_clip_records: usize = 0,
     set_ts_graphics_records: usize = 0,
+    multiply_world_transform_records: usize = 0,
     save_records: usize = 0,
     restore_records: usize = 0,
     graphics_state_max_depth: usize = 0,
@@ -319,6 +321,10 @@ pub const State = struct {
             if (value.kind == .set_ts_graphics) {
                 _ = try set_ts_graphics_record.parse(value, .{});
                 pending.report.set_ts_graphics_records = std.math.add(usize, pending.report.set_ts_graphics_records, 1) catch return error.LimitExceeded;
+            }
+            if (value.kind == .multiply_world_transform) {
+                _ = try multiply_world_transform_record.parse(value);
+                pending.report.multiply_world_transform_records = std.math.add(usize, pending.report.multiply_world_transform_records, 1) catch return error.LimitExceeded;
             }
             if (private_comment.parse(value)) |parsed| {
                 pending.report.private_comments = std.math.add(usize, pending.report.private_comments, 1) catch return error.LimitExceeded;
@@ -1909,5 +1915,36 @@ test "EMF+ stream validates SetTSGraphics and rolls report back atomically" {
     overflow.report.set_ts_graphics_records = std.math.maxInt(usize);
     const before = overflow;
     try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..76]), 2));
+    try std.testing.expectEqualDeep(before, overflow);
+}
+
+test "EMF+ stream validates MultiplyWorldTransform and rolls report back atomically" {
+    var bytes = [_]u8{0} ** 76;
+    writeHeader(bytes[0..28]);
+    std.mem.writeInt(u16, bytes[28..30], 0x402c, .little);
+    std.mem.writeInt(u16, bytes[30..32], 0x2000, .little);
+    std.mem.writeInt(u32, bytes[32..36], 36, .little);
+    std.mem.writeInt(u32, bytes[36..40], 24, .little);
+    writeEmptyRecord(bytes[64..76], 0x4002);
+
+    var state: State = .{};
+    try std.testing.expect(try state.consume(testComment(&bytes), 2));
+    try state.finish();
+    try std.testing.expectEqual(@as(usize, 1), state.report.multiply_world_transform_records);
+
+    var malformed = [_]u8{0} ** 72;
+    @memcpy(malformed[0..28], bytes[0..28]);
+    std.mem.writeInt(u16, malformed[28..30], 0x402c, .little);
+    std.mem.writeInt(u32, malformed[32..36], 32, .little);
+    std.mem.writeInt(u32, malformed[36..40], 20, .little);
+    writeEmptyRecord(malformed[60..72], 0x4002);
+    var malformed_state: State = .{};
+    try std.testing.expectError(error.InvalidEmfPlusMultiplyWorldTransformSize, malformed_state.consume(testComment(&malformed), 2));
+    try std.testing.expectEqualDeep(State{}, malformed_state);
+
+    var overflow: State = .{};
+    overflow.report.multiply_world_transform_records = std.math.maxInt(usize);
+    const before = overflow;
+    try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..64]), 2));
     try std.testing.expectEqualDeep(before, overflow);
 }

@@ -122,6 +122,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - [EMF+ EndContainer와 Container stack 종료](emf-plus-end-container-record.md)
 - [EMF+ SetTSClip의 terminal-server delta rectangle](emf-plus-set-ts-clip-record.md)
 - [EMF+ SetTSGraphics의 terminal-server graphics state](emf-plus-set-ts-graphics-record.md)
+- [EMF+ MultiplyWorldTransform의 행렬과 곱셈 순서](emf-plus-multiply-world-transform-record.md)
 - [EMF+ Save와 StackIndex wire record](emf-plus-save-record.md)
 - [EMF+ Restore와 공유 graphics-state stack](emf-plus-restore-record.md)
 
