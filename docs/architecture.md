@@ -98,6 +98,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ TranslateWorldTransform transform record 계층](emf-plus-translate-world-transform-record.md)은 dx/dy float와 A bit의 pre/post 순서를 wire 의미로 해석합니다. 실제 translation 행렬 적용과 graphics state replay는 wire parser와 분리합니다.
 
+[EMF+ ScaleWorldTransform transform record 계층](emf-plus-scale-world-transform-record.md)은 Sx/Sy float와 A bit의 pre/post 순서를 wire 의미로 해석합니다. 실제 scale 행렬 적용과 graphics state replay는 wire parser와 분리합니다.
+
 [EMF+ Save state record 계층](emf-plus-save-record.md)은 미사용 Flags와 u32 StackIndex를 보존합니다. 실제 graphics-state stack과 Restore 매칭은 wire parser와 분리합니다.
 
 [EMF+ Restore와 graphics-state stack 계층](emf-plus-restore-record.md)은 Save/Container 종류를 함께 표현하고 target 이후 entry 제거, comment 원자성, allocator 소유권과 EOF closure를 담당합니다. 두 BeginContainer record와 EndContainer도 같은 stack에 연결합니다.

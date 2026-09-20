@@ -101,6 +101,7 @@ test {
     _ = @import("image/emf/emf_plus_multiply_world_transform.zig");
     _ = @import("image/emf/emf_plus_reset_world_transform.zig");
     _ = @import("image/emf/emf_plus_translate_world_transform.zig");
+    _ = @import("image/emf/emf_plus_scale_world_transform.zig");
     _ = @import("image/emf/emf_plus_save.zig");
     _ = @import("image/emf/emf_plus_stack_index_record.zig");
     _ = @import("image/emf/emf_plus_restore.zig");
