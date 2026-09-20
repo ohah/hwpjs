@@ -50,6 +50,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ DrawDriverString record 계층](emf-plus-draw-driver-string-record.md)은 Font ObjectID와 S별 Brush/ARGB, 네 option, glyph·PointF 배열과 선택 행렬을 조립합니다. 홀수 glyph의 내부 비정렬 배치를 자동 보정하지 않고 record 끝 정렬만 분리하며 glyph shaping과 재생 의미는 wire parser에 넣지 않습니다.
 
+[EMF+ DrawEllipse record 계층](emf-plus-draw-ellipse-record.md)은 공용 C/ObjectID와 RectData를 조립하고 stream은 Pen 참조만 연결합니다. Rect/RectF 선택·좌표 배치를 복제하지 않으며 ellipse 재생은 wire parser에 넣지 않습니다.
+
 PNG에서 파일 전체 이름 고유성을 검사하는 [sPLT 추천 팔레트](png-suggested-palettes.md)는 소유권이 있는 별도 Collector로 분리합니다. 기존 픽셀 검사 순회에 연결하되 비할당 metadata.State에 이름 인덱스 수명을 섞지 않습니다.
 
 ```text
