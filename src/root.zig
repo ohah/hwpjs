@@ -110,6 +110,7 @@ test {
     _ = @import("image/emf/emf_plus_set_clip_rect.zig");
     _ = @import("image/emf/emf_plus_set_clip_path.zig");
     _ = @import("image/emf/emf_plus_set_clip_region.zig");
+    _ = @import("image/emf/emf_plus_offset_clip.zig");
     _ = @import("image/emf/emf_plus_save.zig");
     _ = @import("image/emf/emf_plus_stack_index_record.zig");
     _ = @import("image/emf/emf_plus_restore.zig");
