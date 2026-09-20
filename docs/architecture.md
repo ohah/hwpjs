@@ -52,6 +52,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ DrawEllipse record 계층](emf-plus-draw-ellipse-record.md)은 공용 C/ObjectID와 RectData를 조립하고 stream은 Pen 참조만 연결합니다. Rect/RectF 선택·좌표 배치를 복제하지 않으며 ellipse 재생은 wire parser에 넣지 않습니다.
 
+[EMF+ DrawImage record 계층](emf-plus-draw-image-record.md)은 Image와 optional ImageAttributes ID, Pixel SrcUnit, source RectF와 C별 destination RectData를 조립합니다. optional ID의 raw/null 정책은 다음 DrawImagePoints와 공유하고 stream은 조건부 객체 타입만 연결하며 crop·scale·효과 적용은 wire parser에 넣지 않습니다.
+
 PNG에서 파일 전체 이름 고유성을 검사하는 [sPLT 추천 팔레트](png-suggested-palettes.md)는 소유권이 있는 별도 Collector로 분리합니다. 기존 픽셀 검사 순회에 연결하되 비할당 metadata.State에 이름 인덱스 수명을 섞지 않습니다.
 
 ```text
