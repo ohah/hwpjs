@@ -43,6 +43,7 @@ const set_page_transform_record = @import("emf_plus_set_page_transform.zig");
 const reset_clip_record = @import("emf_plus_reset_clip.zig");
 const set_clip_rect_record = @import("emf_plus_set_clip_rect.zig");
 const set_clip_path_record = @import("emf_plus_set_clip_path.zig");
+const set_clip_region_record = @import("emf_plus_set_clip_region.zig");
 const save_record = @import("emf_plus_save.zig");
 const restore_record = @import("emf_plus_restore.zig");
 const graphics_state_stack = @import("emf_plus_graphics_state_stack.zig");
@@ -98,6 +99,7 @@ pub const Report = struct {
     reset_clip_records: usize = 0,
     set_clip_rect_records: usize = 0,
     set_clip_path_records: usize = 0,
+    set_clip_region_records: usize = 0,
     save_records: usize = 0,
     restore_records: usize = 0,
     graphics_state_max_depth: usize = 0,
@@ -384,6 +386,12 @@ pub const State = struct {
                 const object_type = pending.object_state.table[parsed.path_id] orelse return error.MissingEmfPlusSetClipPathPath;
                 if (object_type != .path) return error.InvalidEmfPlusSetClipPathPathType;
                 pending.report.set_clip_path_records = std.math.add(usize, pending.report.set_clip_path_records, 1) catch return error.LimitExceeded;
+            }
+            if (value.kind == .set_clip_region) {
+                const parsed = try set_clip_region_record.parse(value);
+                const object_type = pending.object_state.table[parsed.region_id] orelse return error.MissingEmfPlusSetClipRegionRegion;
+                if (object_type != .region) return error.InvalidEmfPlusSetClipRegionRegionType;
+                pending.report.set_clip_region_records = std.math.add(usize, pending.report.set_clip_region_records, 1) catch return error.LimitExceeded;
             }
             if (private_comment.parse(value)) |parsed| {
                 pending.report.private_comments = std.math.add(usize, pending.report.private_comments, 1) catch return error.LimitExceeded;
@@ -2306,6 +2314,45 @@ test "EMF+ stream resolves SetClipPath Path references atomically" {
 
     var overflow: State = .{};
     overflow.report.set_clip_path_records = std.math.maxInt(usize);
+    const before = overflow;
+    try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..52]), 2));
+    try std.testing.expectEqualDeep(before, overflow);
+}
+
+test "EMF+ stream resolves SetClipRegion Region references atomically" {
+    var bytes = [_]u8{0} ** 64;
+    writeHeader(bytes[0..28]);
+    writeEmptyRecord(bytes[28..40], 0x4008);
+    std.mem.writeInt(u16, bytes[30..32], 0x0405, .little);
+    writeEmptyRecord(bytes[40..52], 0x4034);
+    std.mem.writeInt(u16, bytes[42..44], 0xf505, .little);
+    writeEmptyRecord(bytes[52..64], 0x4002);
+
+    var state: State = .{};
+    try std.testing.expect(try state.consume(testComment(&bytes), 2));
+    try state.finish();
+    try std.testing.expectEqual(@as(usize, 1), state.report.set_clip_region_records);
+
+    var missing = bytes;
+    std.mem.writeInt(u16, missing[42..44], 0xf506, .little);
+    var missing_state: State = .{};
+    try std.testing.expectError(error.MissingEmfPlusSetClipRegionRegion, missing_state.consume(testComment(&missing), 2));
+    try std.testing.expectEqualDeep(State{}, missing_state);
+
+    var wrong_type = bytes;
+    std.mem.writeInt(u16, wrong_type[30..32], 0x0305, .little);
+    var wrong_type_state: State = .{};
+    try std.testing.expectError(error.InvalidEmfPlusSetClipRegionRegionType, wrong_type_state.consume(testComment(&wrong_type), 2));
+    try std.testing.expectEqualDeep(State{}, wrong_type_state);
+
+    var invalid_mode = bytes;
+    std.mem.writeInt(u16, invalid_mode[42..44], 0xf605, .little);
+    var invalid_mode_state: State = .{};
+    try std.testing.expectError(error.InvalidEmfPlusCombineMode, invalid_mode_state.consume(testComment(&invalid_mode), 2));
+    try std.testing.expectEqualDeep(State{}, invalid_mode_state);
+
+    var overflow: State = .{};
+    overflow.report.set_clip_region_records = std.math.maxInt(usize);
     const before = overflow;
     try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..52]), 2));
     try std.testing.expectEqualDeep(before, overflow);

@@ -112,6 +112,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ SetClipPath clipping record 계층](emf-plus-set-clip-path-record.md)은 공용 ObjectID·CombineMode를 조립하고 stream에서 기존 Path Object 슬롯과 타입을 확인합니다. Path geometry와 clipping 논리 연산 재생은 wire parser와 분리합니다.
 
+[EMF+ SetClipRegion clipping record 계층](emf-plus-set-clip-region-record.md)은 공용 ObjectID·CombineMode를 조립하고 stream에서 기존 Region Object 슬롯과 타입을 확인합니다. Region 트리와 clipping 논리 연산 재생은 wire parser와 분리합니다.
+
 [EMF+ Save state record 계층](emf-plus-save-record.md)은 미사용 Flags와 u32 StackIndex를 보존합니다. 실제 graphics-state stack과 Restore 매칭은 wire parser와 분리합니다.
 
 [EMF+ Restore와 graphics-state stack 계층](emf-plus-restore-record.md)은 Save/Container 종류를 함께 표현하고 target 이후 entry 제거, comment 원자성, allocator 소유권과 EOF closure를 담당합니다. 두 BeginContainer record와 EndContainer도 같은 stack에 연결합니다.

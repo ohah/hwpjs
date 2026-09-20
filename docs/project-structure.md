@@ -132,6 +132,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - [EMF+ ResetClip의 빈 clipping reset 명령](emf-plus-reset-clip-record.md)
 - [EMF+ SetClipRect의 RectF와 CombineMode](emf-plus-set-clip-rect-record.md)
 - [EMF+ SetClipPath의 Path 객체 참조와 CombineMode](emf-plus-set-clip-path-record.md)
+- [EMF+ SetClipRegion의 Region 객체 참조와 CombineMode](emf-plus-set-clip-region-record.md)
 - [EMF+ Save와 StackIndex wire record](emf-plus-save-record.md)
 - [EMF+ Restore와 공유 graphics-state stack](emf-plus-restore-record.md)
 
