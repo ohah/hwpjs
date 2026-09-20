@@ -24,6 +24,7 @@ const set_rendering_origin_record = @import("emf_plus_set_rendering_origin.zig")
 const set_anti_alias_mode_record = @import("emf_plus_set_anti_alias_mode.zig");
 const set_text_rendering_hint_record = @import("emf_plus_set_text_rendering_hint.zig");
 const set_text_contrast_record = @import("emf_plus_set_text_contrast.zig");
+const set_interpolation_mode_record = @import("emf_plus_set_interpolation_mode.zig");
 
 pub const Report = struct {
     comments: usize = 0,
@@ -54,6 +55,7 @@ pub const Report = struct {
     set_anti_alias_mode_records: usize = 0,
     set_text_rendering_hint_records: usize = 0,
     set_text_contrast_records: usize = 0,
+    set_interpolation_mode_records: usize = 0,
 };
 
 pub const State = struct {
@@ -224,6 +226,10 @@ pub const State = struct {
             if (value.kind == .set_text_contrast) {
                 _ = try set_text_contrast_record.parse(value);
                 pending.report.set_text_contrast_records = std.math.add(usize, pending.report.set_text_contrast_records, 1) catch return error.LimitExceeded;
+            }
+            if (value.kind == .set_interpolation_mode) {
+                _ = try set_interpolation_mode_record.parse(value);
+                pending.report.set_interpolation_mode_records = std.math.add(usize, pending.report.set_interpolation_mode_records, 1) catch return error.LimitExceeded;
             }
             if (private_comment.parse(value)) |parsed| {
                 pending.report.private_comments = std.math.add(usize, pending.report.private_comments, 1) catch return error.LimitExceeded;
@@ -846,6 +852,31 @@ test "EMF+ stream validates and counts SetTextContrast records atomically" {
 
     var overflow: State = .{};
     overflow.report.set_text_contrast_records = std.math.maxInt(usize);
+    const before = overflow;
+    try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..40]), 2));
+    try std.testing.expectEqualDeep(before, overflow);
+}
+
+test "EMF+ stream validates and counts SetInterpolationMode records atomically" {
+    var bytes = [_]u8{0} ** 52;
+    writeHeader(bytes[0..28]);
+    writeEmptyRecord(bytes[28..40], 0x4021);
+    std.mem.writeInt(u16, bytes[30..32], 0xff07, .little);
+    writeEmptyRecord(bytes[40..52], 0x4002);
+
+    var state: State = .{};
+    try std.testing.expect(try state.consume(testComment(&bytes), 2));
+    try state.finish();
+    try std.testing.expectEqual(@as(usize, 1), state.report.set_interpolation_mode_records);
+
+    var invalid_mode = bytes;
+    std.mem.writeInt(u16, invalid_mode[30..32], 0xff08, .little);
+    var invalid_state: State = .{};
+    try std.testing.expectError(error.InvalidEmfPlusInterpolationMode, invalid_state.consume(testComment(&invalid_mode), 2));
+    try std.testing.expectEqualDeep(State{}, invalid_state);
+
+    var overflow: State = .{};
+    overflow.report.set_interpolation_mode_records = std.math.maxInt(usize);
     const before = overflow;
     try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..40]), 2));
     try std.testing.expectEqualDeep(before, overflow);
