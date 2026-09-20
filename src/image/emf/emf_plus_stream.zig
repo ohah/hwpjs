@@ -14,6 +14,7 @@ const draw_curve_record = @import("emf_plus_draw_curve.zig");
 const draw_driver_string_record = @import("emf_plus_draw_driver_string.zig");
 const draw_ellipse_record = @import("emf_plus_draw_ellipse.zig");
 const draw_image_record = @import("emf_plus_draw_image.zig");
+const draw_image_points_record = @import("emf_plus_draw_image_points.zig");
 
 pub const Report = struct {
     comments: usize = 0,
@@ -34,6 +35,7 @@ pub const Report = struct {
     draw_driver_string_records: usize = 0,
     draw_ellipse_records: usize = 0,
     draw_image_records: usize = 0,
+    draw_image_points_records: usize = 0,
 };
 
 pub const State = struct {
@@ -133,6 +135,18 @@ pub const State = struct {
                     if (attributes_type != .image_attributes) return error.InvalidEmfPlusDrawImageAttributesType;
                 }
                 pending.report.draw_image_records = std.math.add(usize, pending.report.draw_image_records, 1) catch return error.LimitExceeded;
+            }
+            if (value.kind == .draw_image_points) {
+                const parsed = try draw_image_points_record.parse(value);
+                if (parsed.has_effect and pending.report.serializable_objects == 0)
+                    return error.MissingEmfPlusDrawImagePointsEffect;
+                const image_type = pending.object_state.table[parsed.image_id] orelse return error.MissingEmfPlusDrawImagePointsImage;
+                if (image_type != .image) return error.InvalidEmfPlusDrawImagePointsImageType;
+                if (parsed.image_attributes.object_id) |id| {
+                    const attributes_type = pending.object_state.table[id] orelse return error.MissingEmfPlusDrawImagePointsAttributes;
+                    if (attributes_type != .image_attributes) return error.InvalidEmfPlusDrawImagePointsAttributesType;
+                }
+                pending.report.draw_image_points_records = std.math.add(usize, pending.report.draw_image_points_records, 1) catch return error.LimitExceeded;
             }
             if (private_comment.parse(value)) |parsed| {
                 pending.report.private_comments = std.math.add(usize, pending.report.private_comments, 1) catch return error.LimitExceeded;
@@ -770,5 +784,85 @@ test "EMF+ stream resolves DrawImage and optional ImageAttributes references ato
     overflow.report.draw_image_records = std.math.maxInt(usize);
     const before = overflow;
     try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..96]), 2));
+    try std.testing.expectEqualDeep(before, overflow);
+}
+
+test "EMF+ stream resolves DrawImagePoints image attributes and preceding effect atomically" {
+    var bytes = [_]u8{0} ** 152;
+    writeHeader(bytes[0..28]);
+    writeEmptyRecord(bytes[28..40], 0x4008);
+    std.mem.writeInt(u16, bytes[30..32], 0x0505, .little);
+    writeEmptyRecord(bytes[40..52], 0x4008);
+    std.mem.writeInt(u16, bytes[42..44], 0x0807, .little);
+    std.mem.writeInt(u16, bytes[52..54], 0x4038, .little);
+    std.mem.writeInt(u32, bytes[56..60], 40, .little);
+    std.mem.writeInt(u32, bytes[60..64], 28, .little);
+    bytes[64..80].* = image_effect_guid.tint;
+    std.mem.writeInt(u32, bytes[80..84], 8, .little);
+    std.mem.writeInt(u16, bytes[92..94], 0x401b, .little);
+    std.mem.writeInt(u16, bytes[94..96], 0x6805, .little);
+    std.mem.writeInt(u32, bytes[96..100], 48, .little);
+    std.mem.writeInt(u32, bytes[100..104], 36, .little);
+    std.mem.writeInt(u32, bytes[104..108], 7, .little);
+    std.mem.writeInt(u32, bytes[108..112], 2, .little);
+    std.mem.writeInt(u32, bytes[128..132], 3, .little);
+    bytes[132..140].* = .{ 1, 2, 3, 4, 5, 6, 0xaa, 0xbb };
+    writeEmptyRecord(bytes[140..152], 0x4002);
+
+    var state: State = .{};
+    try std.testing.expect(try state.consume(testComment(&bytes), 2));
+    try state.finish();
+    try std.testing.expectEqual(@as(usize, 1), state.report.draw_image_points_records);
+
+    var split_state: State = .{};
+    try std.testing.expect(try split_state.consume(testComment(bytes[0..92]), 2));
+    try std.testing.expect(try split_state.consume(testComment(bytes[92..152]), 3));
+    try split_state.finish();
+    try std.testing.expectEqual(@as(usize, 1), split_state.report.draw_image_points_records);
+
+    var missing_effect = [_]u8{0} ** 112;
+    @memcpy(missing_effect[0..52], bytes[0..52]);
+    @memcpy(missing_effect[52..100], bytes[92..140]);
+    @memcpy(missing_effect[100..112], bytes[140..152]);
+    var missing_effect_state: State = .{};
+    try std.testing.expectError(error.MissingEmfPlusDrawImagePointsEffect, missing_effect_state.consume(testComment(&missing_effect), 2));
+    try std.testing.expectEqualDeep(State{}, missing_effect_state);
+
+    var absent_attributes = bytes;
+    std.mem.writeInt(u32, absent_attributes[104..108], 0xffff_ffff, .little);
+    std.mem.writeInt(u16, absent_attributes[42..44], 0x0607, .little);
+    var absent_state: State = .{};
+    try std.testing.expect(try absent_state.consume(testComment(&absent_attributes), 2));
+    try absent_state.finish();
+
+    var missing_image = bytes;
+    std.mem.writeInt(u16, missing_image[94..96], 0x6806, .little);
+    var missing_image_state: State = .{};
+    try std.testing.expectError(error.MissingEmfPlusDrawImagePointsImage, missing_image_state.consume(testComment(&missing_image), 2));
+    try std.testing.expectEqualDeep(State{}, missing_image_state);
+
+    var wrong_image = bytes;
+    std.mem.writeInt(u16, wrong_image[30..32], 0x0605, .little);
+    var wrong_image_state: State = .{};
+    try std.testing.expectError(error.InvalidEmfPlusDrawImagePointsImageType, wrong_image_state.consume(testComment(&wrong_image), 2));
+    try std.testing.expectEqualDeep(State{}, wrong_image_state);
+
+    var missing_attributes = bytes;
+    std.mem.writeInt(u32, missing_attributes[104..108], 8, .little);
+    var missing_attributes_state: State = .{};
+    try std.testing.expectError(error.MissingEmfPlusDrawImagePointsAttributes, missing_attributes_state.consume(testComment(&missing_attributes), 2));
+    try std.testing.expectEqualDeep(State{}, missing_attributes_state);
+
+    var wrong_attributes = bytes;
+    std.mem.writeInt(u16, wrong_attributes[42..44], 0x0607, .little);
+    var wrong_attributes_state: State = .{};
+    try std.testing.expectError(error.InvalidEmfPlusDrawImagePointsAttributesType, wrong_attributes_state.consume(testComment(&wrong_attributes), 2));
+    try std.testing.expectEqualDeep(State{}, wrong_attributes_state);
+
+    var overflow: State = .{};
+    overflow.report.serializable_objects = 1;
+    overflow.report.draw_image_points_records = std.math.maxInt(usize);
+    const before = overflow;
+    try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..140]), 2));
     try std.testing.expectEqualDeep(before, overflow);
 }

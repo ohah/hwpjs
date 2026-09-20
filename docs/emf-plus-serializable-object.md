@@ -29,7 +29,7 @@
 
 Sharpen radius의 프로토콜 표는 필드 설명에 범위를 빠뜨렸지만 Microsoft의 [SharpenParams](https://learn.microsoft.com/en-us/windows/desktop/api/Gdipluseffects/ns-gdipluseffects-sharpenparams)는 0..255를 요구합니다. wire object가 해당 parameter structure를 직렬화하므로 같은 범위를 적용했습니다. ColorMatrix의 Matrix_4_4는 SHOULD 1.0이므로 오류로 강제하지 않고 원값을 보존합니다. 그 밖의 Matrix f32도 명세가 MUST 범위를 주지 않으므로 임의 정규화하지 않습니다.
 
-RedEye의 RectL은 이 계층에서 16바이트 원시 배열로 빌립니다. 개수·경계는 검증하지만 좌표 정규화, 사각형 중첩, 이미지 범위와의 관계는 렌더링 계층 책임입니다. 효과 적용·픽셀 생성·DrawImagePoints 연결도 현재 범위가 아닙니다.
+RedEye의 RectL은 이 계층에서 16바이트 원시 배열로 빌립니다. 개수·경계는 검증하지만 좌표 정규화, 사각형 중첩, 이미지 범위와의 관계는 렌더링 계층 책임입니다. [DrawImagePoints](emf-plus-draw-image-points-record.md)는 E flag의 선행 effect 존재만 stream 순서로 연결합니다. 효과 적용과 픽셀 생성은 여전히 현재 범위가 아닙니다.
 
 ## 적대적 검증
 

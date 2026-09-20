@@ -68,6 +68,7 @@ test {
     _ = @import("image/emf/emf_plus_draw_ellipse.zig");
     _ = @import("image/emf/emf_plus_image_attributes_id.zig");
     _ = @import("image/emf/emf_plus_draw_image.zig");
+    _ = @import("image/emf/emf_plus_draw_image_points.zig");
     _ = @import("image/emf/emf_plus_object.zig");
     _ = @import("image/emf/emf_plus_stream.zig");
     _ = @import("image/wmf/header_tests.zig");
