@@ -8,6 +8,7 @@ const serializable_object = @import("emf_plus_serializable_object.zig");
 const image_effect_guid = @import("emf_plus_image_effect_guid.zig");
 const clear_record = @import("emf_plus_clear.zig");
 const fill_rects_record = @import("emf_plus_fill_rects.zig");
+const fill_polygon_record = @import("emf_plus_fill_polygon.zig");
 const draw_arc_record = @import("emf_plus_draw_arc.zig");
 const draw_beziers_record = @import("emf_plus_draw_beziers.zig");
 const draw_closed_curve_record = @import("emf_plus_draw_closed_curve.zig");
@@ -64,6 +65,7 @@ pub const Report = struct {
     image_effects: [image_effect_guid.effect_count]usize = .{0} ** image_effect_guid.effect_count,
     clear_records: usize = 0,
     fill_rects_records: usize = 0,
+    fill_polygon_records: usize = 0,
     draw_arc_records: usize = 0,
     draw_beziers_records: usize = 0,
     draw_closed_curve_records: usize = 0,
@@ -180,6 +182,17 @@ pub const State = struct {
                     },
                 }
                 pending.report.fill_rects_records = std.math.add(usize, pending.report.fill_rects_records, 1) catch return error.LimitExceeded;
+            }
+            if (value.kind == .fill_polygon) {
+                const parsed = try fill_polygon_record.parse(value, .{});
+                switch (parsed.brush) {
+                    .color => {},
+                    .brush_id => |id| {
+                        const brush_type = pending.object_state.table[id] orelse return error.MissingEmfPlusFillPolygonBrush;
+                        if (brush_type != .brush) return error.InvalidEmfPlusFillPolygonBrushType;
+                    },
+                }
+                pending.report.fill_polygon_records = std.math.add(usize, pending.report.fill_polygon_records, 1) catch return error.LimitExceeded;
             }
             if (value.kind == .draw_arc) {
                 const parsed = try draw_arc_record.parse(value);
@@ -2480,6 +2493,53 @@ test "EMF+ stream resolves FillRects conditional Brush references atomically" {
 
     var overflow: State = .{};
     overflow.report.fill_rects_records = std.math.maxInt(usize);
+    const before = overflow;
+    try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..68]), 2));
+    try std.testing.expectEqualDeep(before, overflow);
+}
+
+test "EMF+ stream resolves FillPolygon conditional Brush references atomically" {
+    var bytes = [_]u8{0} ** 80;
+    writeHeader(bytes[0..28]);
+    writeEmptyRecord(bytes[28..40], 0x4008);
+    std.mem.writeInt(u16, bytes[30..32], 0x0107, .little);
+    std.mem.writeInt(u16, bytes[40..42], 0x400c, .little);
+    std.mem.writeInt(u16, bytes[42..44], 0x4800, .little);
+    std.mem.writeInt(u32, bytes[44..48], 28, .little);
+    std.mem.writeInt(u32, bytes[48..52], 16, .little);
+    std.mem.writeInt(u32, bytes[52..56], 7, .little);
+    std.mem.writeInt(u32, bytes[56..60], 3, .little);
+    bytes[60..68].* = .{ 1, 2, 3, 4, 5, 6, 0, 0 };
+    writeEmptyRecord(bytes[68..80], 0x4002);
+
+    var state: State = .{};
+    try std.testing.expect(try state.consume(testComment(&bytes), 2));
+    try state.finish();
+    try std.testing.expectEqual(@as(usize, 1), state.report.fill_polygon_records);
+
+    var literal = bytes;
+    std.mem.writeInt(u16, literal[42..44], 0xc800, .little);
+    std.mem.writeInt(u32, literal[52..56], 0xffffffff, .little);
+    std.mem.writeInt(u16, literal[30..32], 0x0207, .little);
+    var literal_state: State = .{};
+    try std.testing.expect(try literal_state.consume(testComment(&literal), 2));
+    try literal_state.finish();
+    try std.testing.expectEqual(@as(usize, 1), literal_state.report.fill_polygon_records);
+
+    var missing = bytes;
+    std.mem.writeInt(u32, missing[52..56], 8, .little);
+    var missing_state: State = .{};
+    try std.testing.expectError(error.MissingEmfPlusFillPolygonBrush, missing_state.consume(testComment(&missing), 2));
+    try std.testing.expectEqualDeep(State{}, missing_state);
+
+    var wrong_type = bytes;
+    std.mem.writeInt(u16, wrong_type[30..32], 0x0207, .little);
+    var wrong_type_state: State = .{};
+    try std.testing.expectError(error.InvalidEmfPlusFillPolygonBrushType, wrong_type_state.consume(testComment(&wrong_type), 2));
+    try std.testing.expectEqualDeep(State{}, wrong_type_state);
+
+    var overflow: State = .{};
+    overflow.report.fill_polygon_records = std.math.maxInt(usize);
     const before = overflow;
     try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..68]), 2));
     try std.testing.expectEqualDeep(before, overflow);
