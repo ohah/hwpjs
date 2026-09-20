@@ -38,6 +38,7 @@ const reset_world_transform_record = @import("emf_plus_reset_world_transform.zig
 const translate_world_transform_record = @import("emf_plus_translate_world_transform.zig");
 const scale_world_transform_record = @import("emf_plus_scale_world_transform.zig");
 const rotate_world_transform_record = @import("emf_plus_rotate_world_transform.zig");
+const set_page_transform_record = @import("emf_plus_set_page_transform.zig");
 const save_record = @import("emf_plus_save.zig");
 const restore_record = @import("emf_plus_restore.zig");
 const graphics_state_stack = @import("emf_plus_graphics_state_stack.zig");
@@ -87,6 +88,8 @@ pub const Report = struct {
     translate_world_transform_records: usize = 0,
     scale_world_transform_records: usize = 0,
     rotate_world_transform_records: usize = 0,
+    set_page_transform_records: usize = 0,
+    set_page_transform_discouraged_page_unit_records: usize = 0,
     save_records: usize = 0,
     restore_records: usize = 0,
     graphics_state_max_depth: usize = 0,
@@ -349,6 +352,12 @@ pub const State = struct {
             if (value.kind == .rotate_world_transform) {
                 _ = try rotate_world_transform_record.parse(value);
                 pending.report.rotate_world_transform_records = std.math.add(usize, pending.report.rotate_world_transform_records, 1) catch return error.LimitExceeded;
+            }
+            if (value.kind == .set_page_transform) {
+                const parsed = try set_page_transform_record.parse(value);
+                pending.report.set_page_transform_records = std.math.add(usize, pending.report.set_page_transform_records, 1) catch return error.LimitExceeded;
+                if (parsed.discouraged_page_unit)
+                    pending.report.set_page_transform_discouraged_page_unit_records = std.math.add(usize, pending.report.set_page_transform_discouraged_page_unit_records, 1) catch return error.LimitExceeded;
             }
             if (private_comment.parse(value)) |parsed| {
                 pending.report.private_comments = std.math.add(usize, pending.report.private_comments, 1) catch return error.LimitExceeded;
@@ -2098,4 +2107,46 @@ test "EMF+ stream validates RotateWorldTransform and rolls report back atomicall
     const before = overflow;
     try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..44]), 2));
     try std.testing.expectEqualDeep(before, overflow);
+}
+
+test "EMF+ stream validates SetPageTransform warnings and rolls report back atomically" {
+    var bytes = [_]u8{0} ** 56;
+    writeHeader(bytes[0..28]);
+    std.mem.writeInt(u16, bytes[28..30], 0x4030, .little);
+    std.mem.writeInt(u16, bytes[30..32], 2, .little);
+    std.mem.writeInt(u32, bytes[32..36], 16, .little);
+    std.mem.writeInt(u32, bytes[36..40], 4, .little);
+    std.mem.writeInt(u32, bytes[40..44], 0x7fc00001, .little);
+    writeEmptyRecord(bytes[44..56], 0x4002);
+
+    var state: State = .{};
+    try std.testing.expect(try state.consume(testComment(&bytes), 2));
+    try state.finish();
+    try std.testing.expectEqual(@as(usize, 1), state.report.set_page_transform_records);
+    try std.testing.expectEqual(@as(usize, 0), state.report.set_page_transform_discouraged_page_unit_records);
+
+    var discouraged = bytes;
+    std.mem.writeInt(u16, discouraged[30..32], 0, .little);
+    var discouraged_state: State = .{};
+    try std.testing.expect(try discouraged_state.consume(testComment(&discouraged), 2));
+    try discouraged_state.finish();
+    try std.testing.expectEqual(@as(usize, 1), discouraged_state.report.set_page_transform_discouraged_page_unit_records);
+
+    var malformed = bytes;
+    std.mem.writeInt(u16, malformed[30..32], 0x0102, .little);
+    var malformed_state: State = .{};
+    try std.testing.expectError(error.InvalidEmfPlusSetPageTransformReservedFlags, malformed_state.consume(testComment(&malformed), 2));
+    try std.testing.expectEqualDeep(State{}, malformed_state);
+
+    var count_overflow: State = .{};
+    count_overflow.report.set_page_transform_records = std.math.maxInt(usize);
+    const count_before = count_overflow;
+    try std.testing.expectError(error.LimitExceeded, count_overflow.consume(testComment(bytes[0..44]), 2));
+    try std.testing.expectEqualDeep(count_before, count_overflow);
+
+    var warning_overflow: State = .{};
+    warning_overflow.report.set_page_transform_discouraged_page_unit_records = std.math.maxInt(usize);
+    const warning_before = warning_overflow;
+    try std.testing.expectError(error.LimitExceeded, warning_overflow.consume(testComment(discouraged[0..44]), 2));
+    try std.testing.expectEqualDeep(warning_before, warning_overflow);
 }

@@ -103,6 +103,7 @@ test {
     _ = @import("image/emf/emf_plus_translate_world_transform.zig");
     _ = @import("image/emf/emf_plus_scale_world_transform.zig");
     _ = @import("image/emf/emf_plus_rotate_world_transform.zig");
+    _ = @import("image/emf/emf_plus_set_page_transform.zig");
     _ = @import("image/emf/emf_plus_save.zig");
     _ = @import("image/emf/emf_plus_stack_index_record.zig");
     _ = @import("image/emf/emf_plus_restore.zig");

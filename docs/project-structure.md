@@ -127,6 +127,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - [EMF+ TranslateWorldTransform의 이동 거리와 곱셈 순서](emf-plus-translate-world-transform-record.md)
 - [EMF+ ScaleWorldTransform의 배율과 곱셈 순서](emf-plus-scale-world-transform-record.md)
 - [EMF+ RotateWorldTransform의 각도와 곱셈 순서](emf-plus-rotate-world-transform-record.md)
+- [EMF+ SetPageTransform의 단위와 page scale](emf-plus-set-page-transform-record.md)
 - [EMF+ Save와 StackIndex wire record](emf-plus-save-record.md)
 - [EMF+ Restore와 공유 graphics-state stack](emf-plus-restore-record.md)
 
