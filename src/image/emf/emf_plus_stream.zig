@@ -28,6 +28,7 @@ const set_interpolation_mode_record = @import("emf_plus_set_interpolation_mode.z
 const set_pixel_offset_mode_record = @import("emf_plus_set_pixel_offset_mode.zig");
 const set_compositing_mode_record = @import("emf_plus_set_compositing_mode.zig");
 const set_compositing_quality_record = @import("emf_plus_set_compositing_quality.zig");
+const save_record = @import("emf_plus_save.zig");
 
 pub const Report = struct {
     comments: usize = 0,
@@ -63,6 +64,7 @@ pub const Report = struct {
     set_compositing_mode_records: usize = 0,
     set_compositing_quality_records: usize = 0,
     set_compositing_quality_windows_fallback_records: usize = 0,
+    save_records: usize = 0,
 };
 
 pub const State = struct {
@@ -253,6 +255,10 @@ pub const State = struct {
                     .defined => {},
                     .invalid_windows_default => pending.report.set_compositing_quality_windows_fallback_records = std.math.add(usize, pending.report.set_compositing_quality_windows_fallback_records, 1) catch return error.LimitExceeded,
                 }
+            }
+            if (value.kind == .save) {
+                _ = try save_record.parse(value);
+                pending.report.save_records = std.math.add(usize, pending.report.save_records, 1) catch return error.LimitExceeded;
             }
             if (private_comment.parse(value)) |parsed| {
                 pending.report.private_comments = std.math.add(usize, pending.report.private_comments, 1) catch return error.LimitExceeded;
@@ -996,6 +1002,35 @@ test "EMF+ stream validates and counts SetCompositingQuality records atomically"
     const fallback_before = fallback_overflow;
     try std.testing.expectError(error.LimitExceeded, fallback_overflow.consume(testComment(&windows_fallback), 2));
     try std.testing.expectEqualDeep(fallback_before, fallback_overflow);
+}
+
+test "EMF+ stream validates and counts Save records atomically" {
+    var bytes = [_]u8{0} ** 56;
+    writeHeader(bytes[0..28]);
+    std.mem.writeInt(u16, bytes[28..30], 0x4025, .little);
+    std.mem.writeInt(u16, bytes[30..32], 0xffff, .little);
+    std.mem.writeInt(u32, bytes[32..36], 16, .little);
+    std.mem.writeInt(u32, bytes[36..40], 4, .little);
+    std.mem.writeInt(u32, bytes[40..44], 0x01020304, .little);
+    writeEmptyRecord(bytes[44..56], 0x4002);
+
+    var state: State = .{};
+    try std.testing.expect(try state.consume(testComment(&bytes), 2));
+    try state.finish();
+    try std.testing.expectEqual(@as(usize, 1), state.report.save_records);
+
+    var malformed = bytes;
+    std.mem.writeInt(u32, malformed[36..40], 0, .little);
+    std.mem.writeInt(u32, malformed[32..36], 12, .little);
+    var invalid_state: State = .{};
+    try std.testing.expectError(error.InvalidEmfPlusSaveSize, invalid_state.consume(testComment(malformed[0..40]), 2));
+    try std.testing.expectEqualDeep(State{}, invalid_state);
+
+    var overflow: State = .{};
+    overflow.report.save_records = std.math.maxInt(usize);
+    const before = overflow;
+    try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..44]), 2));
+    try std.testing.expectEqualDeep(before, overflow);
 }
 
 test "EMF+ stream resolves DrawBeziers Pen references and remains atomic" {

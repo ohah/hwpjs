@@ -82,6 +82,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ SetCompositingQuality property 계층](emf-plus-set-compositing-quality-record.md)은 정의된 enum과 Windows invalid-value fallback을 구분해 원시값과 유효 재생값을 함께 보존합니다. 실제 gamma correction과 합성은 wire parser에 넣지 않습니다.
 
+[EMF+ Save state record 계층](emf-plus-save-record.md)은 미사용 Flags와 u32 StackIndex를 보존합니다. 실제 graphics-state stack과 Restore 매칭은 wire parser와 분리합니다.
+
 PNG에서 파일 전체 이름 고유성을 검사하는 [sPLT 추천 팔레트](png-suggested-palettes.md)는 소유권이 있는 별도 Collector로 분리합니다. 기존 픽셀 검사 순회에 연결하되 비할당 metadata.State에 이름 인덱스 수명을 섞지 않습니다.
 
 ```text

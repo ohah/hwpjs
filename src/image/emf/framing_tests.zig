@@ -521,6 +521,34 @@ test "EMF framing routes SetCompositingQuality and Windows invalid-value fallbac
     try t.expectEqual(@as(usize, 1), fallback.set_compositing_quality_windows_fallback_records);
 }
 
+test "EMF framing routes Save through the EMF+ stream" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 180;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 3, .little);
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[92..96], 72, .little);
+    std.mem.writeInt(u32, bytes[96..100], 60, .little);
+    std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
+    std.mem.writeInt(u16, bytes[104..106], 0x4001, .little);
+    std.mem.writeInt(u32, bytes[108..112], 28, .little);
+    std.mem.writeInt(u32, bytes[112..116], 16, .little);
+    std.mem.writeInt(u32, bytes[116..120], 0xdbc01001, .little);
+    std.mem.writeInt(u32, bytes[124..128], 96, .little);
+    std.mem.writeInt(u32, bytes[128..132], 96, .little);
+    std.mem.writeInt(u16, bytes[132..134], 0x4025, .little);
+    std.mem.writeInt(u16, bytes[134..136], 0xffff, .little);
+    std.mem.writeInt(u32, bytes[136..140], 16, .little);
+    std.mem.writeInt(u32, bytes[140..144], 4, .little);
+    std.mem.writeInt(u32, bytes[144..148], 0x01020304, .little);
+    std.mem.writeInt(u16, bytes[148..150], 0x4002, .little);
+    std.mem.writeInt(u32, bytes[152..156], 12, .little);
+    @memcpy(bytes[160..180], original[88..108]);
+
+    try t.expectEqual(@as(usize, 1), (try framing.validate(t.allocator, &bytes)).emf_plus.save_records);
+}
+
 test "EMF framing routes DrawBeziers through the Object Table Pen reference" {
     const original = fixture();
     var bytes = [_]u8{0} ** 224;
