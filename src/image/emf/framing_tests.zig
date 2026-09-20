@@ -204,6 +204,40 @@ test "EMF framing routes DrawPie through the Object Table Pen reference" {
     try t.expectError(error.MissingEmfPlusDrawPiePen, framing.validate(t.allocator, &missing));
 }
 
+test "EMF framing routes DrawRects through the Object Table Pen reference" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 200;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 3, .little);
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[92..96], 92, .little);
+    std.mem.writeInt(u32, bytes[96..100], 80, .little);
+    std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
+    std.mem.writeInt(u16, bytes[104..106], 0x4001, .little);
+    std.mem.writeInt(u32, bytes[108..112], 28, .little);
+    std.mem.writeInt(u32, bytes[112..116], 16, .little);
+    std.mem.writeInt(u32, bytes[116..120], 0xdbc01001, .little);
+    std.mem.writeInt(u32, bytes[124..128], 96, .little);
+    std.mem.writeInt(u32, bytes[128..132], 96, .little);
+    std.mem.writeInt(u16, bytes[132..134], 0x4008, .little);
+    std.mem.writeInt(u16, bytes[134..136], 0x0205, .little);
+    std.mem.writeInt(u32, bytes[136..140], 12, .little);
+    std.mem.writeInt(u16, bytes[144..146], 0x400b, .little);
+    std.mem.writeInt(u16, bytes[146..148], 0x4005, .little);
+    std.mem.writeInt(u32, bytes[148..152], 24, .little);
+    std.mem.writeInt(u32, bytes[152..156], 12, .little);
+    std.mem.writeInt(u32, bytes[156..160], 1, .little);
+    std.mem.writeInt(u16, bytes[168..170], 0x4002, .little);
+    std.mem.writeInt(u32, bytes[172..176], 12, .little);
+    @memcpy(bytes[180..200], original[88..108]);
+
+    try t.expectEqual(@as(usize, 1), (try framing.validate(t.allocator, &bytes)).emf_plus.draw_rects_records);
+    var missing = bytes;
+    std.mem.writeInt(u16, missing[146..148], 0x4006, .little);
+    try t.expectError(error.MissingEmfPlusDrawRectsPen, framing.validate(t.allocator, &missing));
+}
+
 test "EMF framing routes DrawBeziers through the Object Table Pen reference" {
     const original = fixture();
     var bytes = [_]u8{0} ** 224;

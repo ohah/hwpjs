@@ -73,6 +73,8 @@ test {
     _ = @import("image/emf/emf_plus_draw_path.zig");
     _ = @import("image/emf/emf_plus_arc_data.zig");
     _ = @import("image/emf/emf_plus_draw_pie.zig");
+    _ = @import("image/emf/emf_plus_rect_array.zig");
+    _ = @import("image/emf/emf_plus_draw_rects.zig");
     _ = @import("image/emf/emf_plus_object.zig");
     _ = @import("image/emf/emf_plus_stream.zig");
     _ = @import("image/wmf/header_tests.zig");

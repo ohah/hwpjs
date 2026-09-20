@@ -107,6 +107,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - [EMF+ DrawLines의 가변 PointData와 L 닫힘](emf-plus-draw-lines-record.md)
 - [EMF+ DrawPath의 Path·Pen 객체 참조](emf-plus-draw-path-record.md)
 - [EMF+ DrawPie와 DrawArc 공용 ArcData](emf-plus-draw-pie-record.md)
+- [EMF+ DrawRects와 공용 RectArray](emf-plus-draw-rects-record.md)
 
 - [HWP5 모듈 계약](hwp5-modules.md)
 - [아키텍처와 구현 순서](architecture.md)

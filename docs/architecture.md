@@ -62,6 +62,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ DrawPie record 계층](emf-plus-draw-pie-record.md)은 DrawArc와 동일한 angle·RectData payload를 공용 ArcData에서 재사용하고 record envelope와 Pen 참조만 별도로 조립합니다. modulo·clamp와 pie stroke 재생은 wire parser에 넣지 않습니다.
 
+[EMF+ DrawRects record 계층](emf-plus-draw-rects-record.md)은 Count·C별 고정폭 RectData 배열을 공용 RectArray에 분리하고 record envelope와 Pen 참조만 조립합니다. iterator는 입력을 빌리며 좌표 의미와 rectangle stroke 재생은 wire parser에 넣지 않습니다.
+
 PNG에서 파일 전체 이름 고유성을 검사하는 [sPLT 추천 팔레트](png-suggested-palettes.md)는 소유권이 있는 별도 Collector로 분리합니다. 기존 픽셀 검사 순회에 연결하되 비할당 metadata.State에 이름 인덱스 수명을 섞지 않습니다.
 
 ```text
