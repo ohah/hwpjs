@@ -10,7 +10,7 @@ Flags는 사용되지 않고 SHOULD zero이지만 수신 시 MUST be ignored이�
 
 `emf_plus_stream.zig`는 전용 parser를 호출한 뒤 구조적으로 유효한 Save 수를 checked 집계합니다. payload·집계 오류는 comment 전체 상태를 원복하고 실제 EMF framing도 같은 경로를 사용합니다.
 
-후속 [Restore와 graphics-state stack](emf-plus-restore-record.md)은 Save entry를 allocator-backed 공통 stack에 push하고 Restore target과 그 이후 entry를 함께 제거합니다. [BeginContainer](emf-plus-begin-container-record.md)도 같은 stack에 연결되어 Restore가 뒤따른 Container를 함께 제거합니다. comment 단위 원자적 rollback과 EOF의 unmatched entry 거부도 tracked framing에 연결했습니다. 실제 graphics 속성 snapshot 값과 적용·렌더링은 아직 구현하지 않았습니다.
+후속 [Restore와 graphics-state stack](emf-plus-restore-record.md)은 Save entry를 allocator-backed 공통 stack에 push하고 Restore target과 그 이후 entry를 함께 제거합니다. [BeginContainer](emf-plus-begin-container-record.md)와 [BeginContainerNoParams](emf-plus-begin-container-no-params-record.md)도 같은 stack에 연결되어 Restore가 뒤따른 Container를 함께 제거합니다. comment 단위 원자적 rollback과 EOF의 unmatched entry 거부도 tracked framing에 연결했습니다. 실제 graphics 속성 snapshot 값과 적용·렌더링은 아직 구현하지 않았습니다.
 
 ## 검증 기록
 

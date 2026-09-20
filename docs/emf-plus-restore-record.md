@@ -12,7 +12,7 @@ Restore Flags는 사용되지 않고 SHOULD zero이지만 수신 시 MUST be ign
 
 `emf_plus_stream.State.consumeTracked`는 comment 시작 시 stack을 복제하고 parser/report와 함께 성공한 경우에만 교체합니다. payload·missing target·후속 record·할당·집계 오류에서는 report와 stack이 모두 원복됩니다. `finishTracked`는 EOF 계약 뒤 남은 entry를 거부합니다. 실제 EMF `framing.validate`는 allocator를 이 tracked 경로에 전달합니다.
 
-[BeginContainer](emf-plus-begin-container-record.md)는 같은 GDI+ stack의 Container entry로 연결됐습니다. BeginContainerNoParams와 EndContainer는 아직 전용 parser가 없어 framing에서 `UnsupportedEmfPlusGraphicsContainerState`로 거부합니다. 구조 조사용 `State.consume`은 allocation-free untracked API이고 Save/Restore/Container 관계를 검증하지 않으므로 전체 EMF 검증에는 `framing.validate` 또는 tracked API를 사용해야 합니다.
+[BeginContainer](emf-plus-begin-container-record.md)와 [BeginContainerNoParams](emf-plus-begin-container-no-params-record.md)는 같은 GDI+ stack의 Container entry로 연결됐습니다. EndContainer는 아직 전용 parser가 없어 framing에서 `UnsupportedEmfPlusGraphicsContainerState`로 거부합니다. 구조 조사용 `State.consume`은 allocation-free untracked API이고 Save/Restore/Container 관계를 검증하지 않으므로 전체 EMF 검증에는 `framing.validate` 또는 tracked API를 사용해야 합니다.
 
 ## 검증 기록
 
