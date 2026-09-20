@@ -123,6 +123,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - [EMF+ SetTSClip의 terminal-server delta rectangle](emf-plus-set-ts-clip-record.md)
 - [EMF+ SetTSGraphics의 terminal-server graphics state](emf-plus-set-ts-graphics-record.md)
 - [EMF+ MultiplyWorldTransform의 행렬과 곱셈 순서](emf-plus-multiply-world-transform-record.md)
+- [EMF+ SetWorldTransform의 world matrix 교체 명령](emf-plus-set-world-transform-record.md)
 - [EMF+ ResetWorldTransform의 빈 reset 명령](emf-plus-reset-world-transform-record.md)
 - [EMF+ TranslateWorldTransform의 이동 거리와 곱셈 순서](emf-plus-translate-world-transform-record.md)
 - [EMF+ ScaleWorldTransform의 배율과 곱셈 순서](emf-plus-scale-world-transform-record.md)

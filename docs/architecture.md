@@ -94,6 +94,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ MultiplyWorldTransform transform record 계층](emf-plus-multiply-world-transform-record.md)은 공용 TransformMatrix와 record별 고정 envelope를 조립하고 A bit의 pre/post 순서를 의미별 record flag 별칭으로 해석합니다. 실제 행렬 곱셈과 graphics state replay는 wire parser와 분리합니다.
 
+[EMF+ SetWorldTransform transform record 계층](emf-plus-set-world-transform-record.md)은 공용 TransformMatrix와 ignored Flags를 보존합니다. 실제 world matrix 교체와 graphics state replay는 wire parser와 분리합니다.
+
 [EMF+ ResetWorldTransform transform record 계층](emf-plus-reset-world-transform-record.md)은 payload 없는 고정 envelope와 ignored Flags 보존만 담당합니다. identity 행렬 적용과 graphics state replay는 wire parser에 넣지 않습니다.
 
 [EMF+ TranslateWorldTransform transform record 계층](emf-plus-translate-world-transform-record.md)은 dx/dy float와 A bit의 pre/post 순서를 wire 의미로 해석합니다. 실제 translation 행렬 적용과 graphics state replay는 wire parser와 분리합니다.
