@@ -45,6 +45,7 @@ const set_clip_rect_record = @import("emf_plus_set_clip_rect.zig");
 const set_clip_path_record = @import("emf_plus_set_clip_path.zig");
 const set_clip_region_record = @import("emf_plus_set_clip_region.zig");
 const offset_clip_record = @import("emf_plus_offset_clip.zig");
+const stroke_fill_path_record = @import("emf_plus_stroke_fill_path.zig");
 const save_record = @import("emf_plus_save.zig");
 const restore_record = @import("emf_plus_restore.zig");
 const graphics_state_stack = @import("emf_plus_graphics_state_stack.zig");
@@ -102,6 +103,7 @@ pub const Report = struct {
     set_clip_path_records: usize = 0,
     set_clip_region_records: usize = 0,
     offset_clip_records: usize = 0,
+    opaque_stroke_fill_path_records: usize = 0,
     save_records: usize = 0,
     restore_records: usize = 0,
     graphics_state_max_depth: usize = 0,
@@ -398,6 +400,10 @@ pub const State = struct {
             if (value.kind == .offset_clip) {
                 _ = try offset_clip_record.parse(value);
                 pending.report.offset_clip_records = std.math.add(usize, pending.report.offset_clip_records, 1) catch return error.LimitExceeded;
+            }
+            if (value.kind == .stroke_fill_path) {
+                _ = try stroke_fill_path_record.observe(value);
+                pending.report.opaque_stroke_fill_path_records = std.math.add(usize, pending.report.opaque_stroke_fill_path_records, 1) catch return error.LimitExceeded;
             }
             if (private_comment.parse(value)) |parsed| {
                 pending.report.private_comments = std.math.add(usize, pending.report.private_comments, 1) catch return error.LimitExceeded;
@@ -2394,5 +2400,27 @@ test "EMF+ stream validates OffsetClip and rolls report back atomically" {
     overflow.report.offset_clip_records = std.math.maxInt(usize);
     const before = overflow;
     try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..48]), 2));
+    try std.testing.expectEqualDeep(before, overflow);
+}
+
+test "EMF+ stream observes undocumented StrokeFillPath atomically" {
+    var bytes = [_]u8{0} ** 56;
+    writeHeader(bytes[0..28]);
+    std.mem.writeInt(u16, bytes[28..30], 0x4037, .little);
+    std.mem.writeInt(u16, bytes[30..32], 0xa55a, .little);
+    std.mem.writeInt(u32, bytes[32..36], 16, .little);
+    std.mem.writeInt(u32, bytes[36..40], 4, .little);
+    bytes[40..44].* = .{ 0x00, 0x7f, 0x80, 0xff };
+    writeEmptyRecord(bytes[44..56], 0x4002);
+
+    var state: State = .{};
+    try std.testing.expect(try state.consume(testComment(&bytes), 2));
+    try state.finish();
+    try std.testing.expectEqual(@as(usize, 1), state.report.opaque_stroke_fill_path_records);
+
+    var overflow: State = .{};
+    overflow.report.opaque_stroke_fill_path_records = std.math.maxInt(usize);
+    const before = overflow;
+    try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..44]), 2));
     try std.testing.expectEqualDeep(before, overflow);
 }
