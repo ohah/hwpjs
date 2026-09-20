@@ -11,6 +11,7 @@ const draw_arc_record = @import("emf_plus_draw_arc.zig");
 const draw_beziers_record = @import("emf_plus_draw_beziers.zig");
 const draw_closed_curve_record = @import("emf_plus_draw_closed_curve.zig");
 const draw_curve_record = @import("emf_plus_draw_curve.zig");
+const draw_driver_string_record = @import("emf_plus_draw_driver_string.zig");
 
 pub const Report = struct {
     comments: usize = 0,
@@ -28,6 +29,7 @@ pub const Report = struct {
     draw_beziers_records: usize = 0,
     draw_closed_curve_records: usize = 0,
     draw_curve_records: usize = 0,
+    draw_driver_string_records: usize = 0,
 };
 
 pub const State = struct {
@@ -98,6 +100,19 @@ pub const State = struct {
                 const object_type = pending.object_state.table[parsed.pen_id] orelse return error.MissingEmfPlusDrawCurvePen;
                 if (object_type != .pen) return error.InvalidEmfPlusDrawCurvePenType;
                 pending.report.draw_curve_records = std.math.add(usize, pending.report.draw_curve_records, 1) catch return error.LimitExceeded;
+            }
+            if (value.kind == .draw_driver_string) {
+                const parsed = try draw_driver_string_record.parse(value, .{});
+                const font_type = pending.object_state.table[parsed.font_id] orelse return error.MissingEmfPlusDrawDriverStringFont;
+                if (font_type != .font) return error.InvalidEmfPlusDrawDriverStringFontType;
+                switch (parsed.brush) {
+                    .color => {},
+                    .brush_id => |id| {
+                        const brush_type = pending.object_state.table[id] orelse return error.MissingEmfPlusDrawDriverStringBrush;
+                        if (brush_type != .brush) return error.InvalidEmfPlusDrawDriverStringBrushType;
+                    },
+                }
+                pending.report.draw_driver_string_records = std.math.add(usize, pending.report.draw_driver_string_records, 1) catch return error.LimitExceeded;
             }
             if (private_comment.parse(value)) |parsed| {
                 pending.report.private_comments = std.math.add(usize, pending.report.private_comments, 1) catch return error.LimitExceeded;
@@ -580,5 +595,66 @@ test "EMF+ stream resolves DrawCurve Pen references and remains atomic" {
     overflow.report.draw_curve_records = std.math.maxInt(usize);
     const before = overflow;
     try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..76]), 2));
+    try std.testing.expectEqualDeep(before, overflow);
+}
+
+test "EMF+ stream resolves DrawDriverString Font and conditional Brush references atomically" {
+    var bytes = [_]u8{0} ** 92;
+    writeHeader(bytes[0..28]);
+    writeEmptyRecord(bytes[28..40], 0x4008);
+    std.mem.writeInt(u16, bytes[30..32], 0x0605, .little);
+    writeEmptyRecord(bytes[40..52], 0x4008);
+    std.mem.writeInt(u16, bytes[42..44], 0x0107, .little);
+    std.mem.writeInt(u16, bytes[52..54], 0x4036, .little);
+    std.mem.writeInt(u16, bytes[54..56], 0x0005, .little);
+    std.mem.writeInt(u32, bytes[56..60], 28, .little);
+    std.mem.writeInt(u32, bytes[60..64], 16, .little);
+    std.mem.writeInt(u32, bytes[64..68], 7, .little);
+    writeEmptyRecord(bytes[80..92], 0x4002);
+
+    var state: State = .{};
+    try std.testing.expect(try state.consume(testComment(&bytes), 2));
+    try state.finish();
+    try std.testing.expectEqual(@as(usize, 1), state.report.draw_driver_string_records);
+    try std.testing.expectEqual(object_record.ObjectType.font, state.object_state.table[5].?);
+    try std.testing.expectEqual(object_record.ObjectType.brush, state.object_state.table[7].?);
+
+    var literal = bytes;
+    std.mem.writeInt(u16, literal[54..56], 0x8005, .little);
+    std.mem.writeInt(u32, literal[64..68], 0xffffffff, .little);
+    std.mem.writeInt(u16, literal[42..44], 0x0607, .little);
+    var literal_state: State = .{};
+    try std.testing.expect(try literal_state.consume(testComment(&literal), 2));
+    try literal_state.finish();
+    try std.testing.expectEqual(@as(usize, 1), literal_state.report.draw_driver_string_records);
+
+    var missing_font = bytes;
+    std.mem.writeInt(u16, missing_font[54..56], 0x0006, .little);
+    var missing_font_state: State = .{};
+    try std.testing.expectError(error.MissingEmfPlusDrawDriverStringFont, missing_font_state.consume(testComment(&missing_font), 2));
+    try std.testing.expectEqualDeep(State{}, missing_font_state);
+
+    var wrong_font = bytes;
+    std.mem.writeInt(u16, wrong_font[30..32], 0x0105, .little);
+    var wrong_font_state: State = .{};
+    try std.testing.expectError(error.InvalidEmfPlusDrawDriverStringFontType, wrong_font_state.consume(testComment(&wrong_font), 2));
+    try std.testing.expectEqualDeep(State{}, wrong_font_state);
+
+    var missing_brush = bytes;
+    std.mem.writeInt(u32, missing_brush[64..68], 8, .little);
+    var missing_brush_state: State = .{};
+    try std.testing.expectError(error.MissingEmfPlusDrawDriverStringBrush, missing_brush_state.consume(testComment(&missing_brush), 2));
+    try std.testing.expectEqualDeep(State{}, missing_brush_state);
+
+    var wrong_brush = bytes;
+    std.mem.writeInt(u16, wrong_brush[42..44], 0x0607, .little);
+    var wrong_brush_state: State = .{};
+    try std.testing.expectError(error.InvalidEmfPlusDrawDriverStringBrushType, wrong_brush_state.consume(testComment(&wrong_brush), 2));
+    try std.testing.expectEqualDeep(State{}, wrong_brush_state);
+
+    var overflow: State = .{};
+    overflow.report.draw_driver_string_records = std.math.maxInt(usize);
+    const before = overflow;
+    try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..80]), 2));
     try std.testing.expectEqualDeep(before, overflow);
 }

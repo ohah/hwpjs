@@ -62,6 +62,9 @@ test {
     _ = @import("image/emf/emf_plus_draw_beziers.zig");
     _ = @import("image/emf/emf_plus_draw_closed_curve.zig");
     _ = @import("image/emf/emf_plus_draw_curve.zig");
+    _ = @import("image/emf/emf_plus_brush_id.zig");
+    _ = @import("image/emf/emf_plus_driver_string_options.zig");
+    _ = @import("image/emf/emf_plus_draw_driver_string.zig");
     _ = @import("image/emf/emf_plus_object.zig");
     _ = @import("image/emf/emf_plus_stream.zig");
     _ = @import("image/wmf/header_tests.zig");

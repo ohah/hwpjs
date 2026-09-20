@@ -100,6 +100,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - [EMF+ DrawBeziers와 공용 PointData](emf-plus-draw-beziers-record.md)
 - [EMF+ DrawClosedCurve와 Tension](emf-plus-draw-closed-curve-record.md)
 - [EMF+ DrawCurve와 Offset·NumSegments](emf-plus-draw-curve-record.md)
+- [EMF+ DrawDriverString의 glyph·위치·선택 행렬](emf-plus-draw-driver-string-record.md)
 
 - [HWP5 모듈 계약](hwp5-modules.md)
 - [아키텍처와 구현 순서](architecture.md)
