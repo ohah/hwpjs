@@ -267,6 +267,7 @@ pub const emf_plus_smoothing_mode = @import("emf/emf_plus_smoothing_mode.zig");
 pub const emf_plus_set_anti_alias_mode = @import("emf/emf_plus_set_anti_alias_mode.zig");
 pub const emf_plus_text_rendering_hint = @import("emf/emf_plus_text_rendering_hint.zig");
 pub const emf_plus_set_text_rendering_hint = @import("emf/emf_plus_set_text_rendering_hint.zig");
+pub const emf_plus_set_text_contrast = @import("emf/emf_plus_set_text_contrast.zig");
 pub const emf_plus_comment = @import("emf/emf_plus_comment.zig");
 pub const emf_plus_object = @import("emf/emf_plus_object.zig");
 pub const emf_plus_image_effect_guid = @import("emf/emf_plus_image_effect_guid.zig");

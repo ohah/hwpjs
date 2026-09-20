@@ -82,6 +82,7 @@ test {
     _ = @import("image/emf/emf_plus_set_anti_alias_mode.zig");
     _ = @import("image/emf/emf_plus_text_rendering_hint.zig");
     _ = @import("image/emf/emf_plus_set_text_rendering_hint.zig");
+    _ = @import("image/emf/emf_plus_set_text_contrast.zig");
     _ = @import("image/emf/emf_plus_object.zig");
     _ = @import("image/emf/emf_plus_stream.zig");
     _ = @import("image/wmf/header_tests.zig");
