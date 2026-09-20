@@ -32,6 +32,7 @@ const begin_container_record = @import("emf_plus_begin_container.zig");
 const begin_container_no_params_record = @import("emf_plus_begin_container_no_params.zig");
 const end_container_record = @import("emf_plus_end_container.zig");
 const set_ts_clip_record = @import("emf_plus_set_ts_clip.zig");
+const set_ts_graphics_record = @import("emf_plus_set_ts_graphics.zig");
 const save_record = @import("emf_plus_save.zig");
 const restore_record = @import("emf_plus_restore.zig");
 const graphics_state_stack = @import("emf_plus_graphics_state_stack.zig");
@@ -75,6 +76,7 @@ pub const Report = struct {
     begin_container_no_params_records: usize = 0,
     end_container_records: usize = 0,
     set_ts_clip_records: usize = 0,
+    set_ts_graphics_records: usize = 0,
     save_records: usize = 0,
     restore_records: usize = 0,
     graphics_state_max_depth: usize = 0,
@@ -313,6 +315,10 @@ pub const State = struct {
             if (value.kind == .set_ts_clip) {
                 _ = try set_ts_clip_record.parse(value);
                 pending.report.set_ts_clip_records = std.math.add(usize, pending.report.set_ts_clip_records, 1) catch return error.LimitExceeded;
+            }
+            if (value.kind == .set_ts_graphics) {
+                _ = try set_ts_graphics_record.parse(value, .{});
+                pending.report.set_ts_graphics_records = std.math.add(usize, pending.report.set_ts_graphics_records, 1) catch return error.LimitExceeded;
             }
             if (private_comment.parse(value)) |parsed| {
                 pending.report.private_comments = std.math.add(usize, pending.report.private_comments, 1) catch return error.LimitExceeded;
@@ -1876,5 +1882,32 @@ test "EMF+ stream validates SetTSClip and rolls report back atomically" {
     overflow.report.set_ts_clip_records = std.math.maxInt(usize);
     const before = overflow;
     try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..44]), 2));
+    try std.testing.expectEqualDeep(before, overflow);
+}
+
+test "EMF+ stream validates SetTSGraphics and rolls report back atomically" {
+    var bytes = [_]u8{0} ** 88;
+    writeHeader(bytes[0..28]);
+    std.mem.writeInt(u16, bytes[28..30], 0x4039, .little);
+    std.mem.writeInt(u32, bytes[32..36], 48, .little);
+    std.mem.writeInt(u32, bytes[36..40], 36, .little);
+    bytes[43] = 1;
+    writeEmptyRecord(bytes[76..88], 0x4002);
+
+    var state: State = .{};
+    try std.testing.expect(try state.consume(testComment(&bytes), 2));
+    try state.finish();
+    try std.testing.expectEqual(@as(usize, 1), state.report.set_ts_graphics_records);
+
+    var malformed = bytes;
+    malformed[50] = 5;
+    var malformed_state: State = .{};
+    try std.testing.expectError(error.InvalidEmfPlusFilterType, malformed_state.consume(testComment(&malformed), 2));
+    try std.testing.expectEqualDeep(State{}, malformed_state);
+
+    var overflow: State = .{};
+    overflow.report.set_ts_graphics_records = std.math.maxInt(usize);
+    const before = overflow;
+    try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..76]), 2));
     try std.testing.expectEqualDeep(before, overflow);
 }

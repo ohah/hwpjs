@@ -6,7 +6,7 @@ pub const SmoothingMode = enum(u7) {
     anti_alias_8x4 = 4,
     anti_alias_8x8 = 5,
 
-    pub fn parse(raw: u7) !SmoothingMode {
+    pub fn parse(raw: u8) !SmoothingMode {
         if (raw > @intFromEnum(SmoothingMode.anti_alias_8x8)) return error.InvalidEmfPlusSmoothingMode;
         return @enumFromInt(raw);
     }
@@ -18,4 +18,5 @@ test "EMF+ SmoothingMode accepts exactly the official domain" {
         try std.testing.expectEqual(@as(u7, @intCast(raw)), @intFromEnum(try SmoothingMode.parse(@intCast(raw))));
     try std.testing.expectError(error.InvalidEmfPlusSmoothingMode, SmoothingMode.parse(6));
     try std.testing.expectError(error.InvalidEmfPlusSmoothingMode, SmoothingMode.parse(127));
+    try std.testing.expectError(error.InvalidEmfPlusSmoothingMode, SmoothingMode.parse(255));
 }

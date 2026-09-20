@@ -90,6 +90,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ SetTSClip terminal-server record 계층](emf-plus-set-ts-clip-record.md)은 C별 고정폭 signed delta 좌표와 NumRects/크기 envelope를 분리합니다. 일반 PointR과 반대인 marker 규칙을 공유 decoder에 섞지 않으며 clip state 적용과 재생은 후속 계층으로 둡니다.
 
+[EMF+ SetTSGraphics terminal-server record 계층](emf-plus-set-ts-graphics-record.md)은 36바이트 graphics state와 선택 Palette를 공용 enum·행렬·Palette 모듈 위에 조립합니다. sparse FilterType은 별도 SSOT로 두고 T/V 의미와 VGA claim은 record 계층에서 검증하며 실제 state replay는 분리합니다.
+
 [EMF+ Save state record 계층](emf-plus-save-record.md)은 미사용 Flags와 u32 StackIndex를 보존합니다. 실제 graphics-state stack과 Restore 매칭은 wire parser와 분리합니다.
 
 [EMF+ Restore와 graphics-state stack 계층](emf-plus-restore-record.md)은 Save/Container 종류를 함께 표현하고 target 이후 entry 제거, comment 원자성, allocator 소유권과 EOF closure를 담당합니다. 두 BeginContainer record와 EndContainer도 같은 stack에 연결합니다.

@@ -125,6 +125,38 @@ test "EMF framing routes SetTSClip through the EMF+ stream" {
     try t.expectError(error.InvalidEmfPlusSetTSClipCoordinate, framing.validate(t.allocator, &malformed));
 }
 
+test "EMF framing routes SetTSGraphics through the EMF+ stream" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 212;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 3, .little);
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[92..96], 104, .little);
+    std.mem.writeInt(u32, bytes[96..100], 92, .little);
+    std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
+    std.mem.writeInt(u16, bytes[104..106], 0x4001, .little);
+    std.mem.writeInt(u32, bytes[108..112], 28, .little);
+    std.mem.writeInt(u32, bytes[112..116], 16, .little);
+    std.mem.writeInt(u32, bytes[116..120], 0xdbc01001, .little);
+    std.mem.writeInt(u32, bytes[124..128], 96, .little);
+    std.mem.writeInt(u32, bytes[128..132], 96, .little);
+    std.mem.writeInt(u16, bytes[132..134], 0x4039, .little);
+    std.mem.writeInt(u32, bytes[136..140], 48, .little);
+    std.mem.writeInt(u32, bytes[140..144], 36, .little);
+    bytes[147] = 1;
+    std.mem.writeInt(u16, bytes[180..182], 0x4002, .little);
+    std.mem.writeInt(u32, bytes[184..188], 12, .little);
+    @memcpy(bytes[192..212], original[88..108]);
+
+    const report = (try framing.validate(t.allocator, &bytes)).emf_plus;
+    try t.expectEqual(@as(usize, 1), report.set_ts_graphics_records);
+
+    var malformed = bytes;
+    malformed[154] = 5;
+    try t.expectError(error.InvalidEmfPlusFilterType, framing.validate(t.allocator, &malformed));
+}
+
 test "EMF framing reports private and Clear EMF+ records and rejects reserved records" {
     const original = fixture();
     var bytes = [_]u8{0} ** 200;
