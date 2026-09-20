@@ -21,6 +21,7 @@ const draw_pie_record = @import("emf_plus_draw_pie.zig");
 const draw_rects_record = @import("emf_plus_draw_rects.zig");
 const draw_string_record = @import("emf_plus_draw_string.zig");
 const set_rendering_origin_record = @import("emf_plus_set_rendering_origin.zig");
+const set_anti_alias_mode_record = @import("emf_plus_set_anti_alias_mode.zig");
 
 pub const Report = struct {
     comments: usize = 0,
@@ -48,6 +49,7 @@ pub const Report = struct {
     draw_rects_records: usize = 0,
     draw_string_records: usize = 0,
     set_rendering_origin_records: usize = 0,
+    set_anti_alias_mode_records: usize = 0,
 };
 
 pub const State = struct {
@@ -206,6 +208,10 @@ pub const State = struct {
             if (value.kind == .set_rendering_origin) {
                 _ = try set_rendering_origin_record.parse(value);
                 pending.report.set_rendering_origin_records = std.math.add(usize, pending.report.set_rendering_origin_records, 1) catch return error.LimitExceeded;
+            }
+            if (value.kind == .set_anti_alias_mode) {
+                _ = try set_anti_alias_mode_record.parse(value);
+                pending.report.set_anti_alias_mode_records = std.math.add(usize, pending.report.set_anti_alias_mode_records, 1) catch return error.LimitExceeded;
             }
             if (private_comment.parse(value)) |parsed| {
                 pending.report.private_comments = std.math.add(usize, pending.report.private_comments, 1) catch return error.LimitExceeded;
@@ -755,6 +761,31 @@ test "EMF+ stream validates and counts SetRenderingOrigin records atomically" {
     overflow.report.set_rendering_origin_records = std.math.maxInt(usize);
     const before = overflow;
     try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..48]), 2));
+    try std.testing.expectEqualDeep(before, overflow);
+}
+
+test "EMF+ stream validates and counts SetAntiAliasMode records atomically" {
+    var bytes = [_]u8{0} ** 52;
+    writeHeader(bytes[0..28]);
+    writeEmptyRecord(bytes[28..40], 0x401e);
+    std.mem.writeInt(u16, bytes[30..32], 0xff0b, .little);
+    writeEmptyRecord(bytes[40..52], 0x4002);
+
+    var state: State = .{};
+    try std.testing.expect(try state.consume(testComment(&bytes), 2));
+    try state.finish();
+    try std.testing.expectEqual(@as(usize, 1), state.report.set_anti_alias_mode_records);
+
+    var invalid_mode = bytes;
+    std.mem.writeInt(u16, invalid_mode[30..32], 0xff0c, .little);
+    var invalid_state: State = .{};
+    try std.testing.expectError(error.InvalidEmfPlusSmoothingMode, invalid_state.consume(testComment(&invalid_mode), 2));
+    try std.testing.expectEqualDeep(State{}, invalid_state);
+
+    var overflow: State = .{};
+    overflow.report.set_anti_alias_mode_records = std.math.maxInt(usize);
+    const before = overflow;
+    try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..40]), 2));
     try std.testing.expectEqualDeep(before, overflow);
 }
 
