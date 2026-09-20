@@ -76,6 +76,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ SetInterpolationMode property 계층](emf-plus-set-interpolation-mode-record.md)은 Flags low byte와 high-byte reserved 영역을 분리하고 0–7 enum 및 공식 예제를 검증합니다. 별칭 정규화와 image resampling은 wire parser에 넣지 않습니다.
 
+[EMF+ SetPixelOffsetMode property 계층](emf-plus-set-pixel-offset-mode-record.md)은 Flags low byte와 high-byte reserved 영역을 분리하고 0–4 enum 및 공식 예제를 검증합니다. 별칭 정규화와 pixel-center rasterization은 wire parser에 넣지 않습니다.
+
 PNG에서 파일 전체 이름 고유성을 검사하는 [sPLT 추천 팔레트](png-suggested-palettes.md)는 소유권이 있는 별도 Collector로 분리합니다. 기존 픽셀 검사 순회에 연결하되 비할당 metadata.State에 이름 인덱스 수명을 섞지 않습니다.
 
 ```text

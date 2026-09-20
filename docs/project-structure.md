@@ -114,6 +114,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - [EMF+ SetTextRenderingHint와 공식 Flags 예제](emf-plus-set-text-rendering-hint-record.md)
 - [EMF+ SetTextContrast 12비트 gamma 범위](emf-plus-set-text-contrast-record.md)
 - [EMF+ SetInterpolationMode와 공식 Flags 예제](emf-plus-set-interpolation-mode-record.md)
+- [EMF+ SetPixelOffsetMode와 공식 Flags 예제](emf-plus-set-pixel-offset-mode-record.md)
 
 - [HWP5 모듈 계약](hwp5-modules.md)
 - [아키텍처와 구현 순서](architecture.md)

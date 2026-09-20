@@ -85,6 +85,8 @@ test {
     _ = @import("image/emf/emf_plus_set_text_contrast.zig");
     _ = @import("image/emf/emf_plus_interpolation_mode.zig");
     _ = @import("image/emf/emf_plus_set_interpolation_mode.zig");
+    _ = @import("image/emf/emf_plus_pixel_offset_mode.zig");
+    _ = @import("image/emf/emf_plus_set_pixel_offset_mode.zig");
     _ = @import("image/emf/emf_plus_object.zig");
     _ = @import("image/emf/emf_plus_stream.zig");
     _ = @import("image/wmf/header_tests.zig");
