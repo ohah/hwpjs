@@ -212,6 +212,36 @@ test "EMF framing routes ResetWorldTransform through the EMF+ stream" {
     try t.expectEqual(@as(usize, 1), report.reset_world_transform_records);
 }
 
+test "EMF framing routes TranslateWorldTransform through the EMF+ stream" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 184;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 3, .little);
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[92..96], 76, .little);
+    std.mem.writeInt(u32, bytes[96..100], 64, .little);
+    std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
+    std.mem.writeInt(u16, bytes[104..106], 0x4001, .little);
+    std.mem.writeInt(u32, bytes[108..112], 28, .little);
+    std.mem.writeInt(u32, bytes[112..116], 16, .little);
+    std.mem.writeInt(u32, bytes[116..120], 0xdbc01001, .little);
+    std.mem.writeInt(u32, bytes[124..128], 96, .little);
+    std.mem.writeInt(u32, bytes[128..132], 96, .little);
+    std.mem.writeInt(u16, bytes[132..134], 0x402d, .little);
+    std.mem.writeInt(u16, bytes[134..136], 0x2000, .little);
+    std.mem.writeInt(u32, bytes[136..140], 20, .little);
+    std.mem.writeInt(u32, bytes[140..144], 8, .little);
+    std.mem.writeInt(u32, bytes[144..148], @bitCast(@as(f32, -1.5)), .little);
+    std.mem.writeInt(u32, bytes[148..152], @bitCast(@as(f32, 2.25)), .little);
+    std.mem.writeInt(u16, bytes[152..154], 0x4002, .little);
+    std.mem.writeInt(u32, bytes[156..160], 12, .little);
+    @memcpy(bytes[164..184], original[88..108]);
+
+    const report = (try framing.validate(t.allocator, &bytes)).emf_plus;
+    try t.expectEqual(@as(usize, 1), report.translate_world_transform_records);
+}
+
 test "EMF framing reports private and Clear EMF+ records and rejects reserved records" {
     const original = fixture();
     var bytes = [_]u8{0} ** 200;
