@@ -29,6 +29,8 @@ const set_pixel_offset_mode_record = @import("emf_plus_set_pixel_offset_mode.zig
 const set_compositing_mode_record = @import("emf_plus_set_compositing_mode.zig");
 const set_compositing_quality_record = @import("emf_plus_set_compositing_quality.zig");
 const save_record = @import("emf_plus_save.zig");
+const restore_record = @import("emf_plus_restore.zig");
+const graphics_state_stack = @import("emf_plus_graphics_state_stack.zig");
 
 pub const Report = struct {
     comments: usize = 0,
@@ -65,6 +67,8 @@ pub const Report = struct {
     set_compositing_quality_records: usize = 0,
     set_compositing_quality_windows_fallback_records: usize = 0,
     save_records: usize = 0,
+    restore_records: usize = 0,
+    graphics_state_max_depth: usize = 0,
 };
 
 pub const State = struct {
@@ -73,6 +77,20 @@ pub const State = struct {
     object_state: object_record.State = .{},
 
     pub fn consume(self: *State, comment: comment_record.Comment, emf_record_index: usize) !bool {
+        return self.consumeInner(comment, emf_record_index, null);
+    }
+
+    pub fn consumeTracked(self: *State, stack: *graphics_state_stack.Stack, comment: comment_record.Comment, emf_record_index: usize) !bool {
+        if (comment.classification != .emf_plus) return false;
+        var pending_stack = try stack.clone();
+        errdefer pending_stack.deinit();
+        const consumed = try self.consumeInner(comment, emf_record_index, &pending_stack);
+        stack.deinit();
+        stack.* = pending_stack;
+        return consumed;
+    }
+
+    fn consumeInner(self: *State, comment: comment_record.Comment, emf_record_index: usize, stack: ?*graphics_state_stack.Stack) !bool {
         if (comment.classification != .emf_plus) return false;
         if (self.ended) return error.EmfPlusRecordAfterEndOfFile;
 
@@ -257,8 +275,17 @@ pub const State = struct {
                 }
             }
             if (value.kind == .save) {
-                _ = try save_record.parse(value);
+                const parsed = try save_record.parse(value);
                 pending.report.save_records = std.math.add(usize, pending.report.save_records, 1) catch return error.LimitExceeded;
+                if (stack) |tracked| try tracked.push(.save, parsed.stack_index);
+            }
+            if (value.kind == .restore) {
+                const parsed = try restore_record.parse(value);
+                pending.report.restore_records = std.math.add(usize, pending.report.restore_records, 1) catch return error.LimitExceeded;
+                if (stack) |tracked| try tracked.close(.save, parsed.stack_index);
+            }
+            if (stack != null and (value.kind == .begin_container or value.kind == .begin_container_no_params or value.kind == .end_container)) {
+                return error.UnsupportedEmfPlusGraphicsContainerState;
             }
             if (private_comment.parse(value)) |parsed| {
                 pending.report.private_comments = std.math.add(usize, pending.report.private_comments, 1) catch return error.LimitExceeded;
@@ -267,6 +294,7 @@ pub const State = struct {
         }
         if (records_in_comment == 0) return error.EmptyEmfPlusComment;
         pending.report.comments = std.math.add(usize, pending.report.comments, 1) catch return error.LimitExceeded;
+        if (stack) |tracked| pending.report.graphics_state_max_depth = tracked.max_depth;
         pending.report.objects = pending.object_state.report;
         self.* = pending;
         return true;
@@ -275,6 +303,11 @@ pub const State = struct {
     pub fn finish(self: State) !void {
         if (self.report.header != null and !self.ended) return error.MissingEmfPlusEndOfFile;
         try self.object_state.finish();
+    }
+
+    pub fn finishTracked(self: State, stack: graphics_state_stack.Stack) !void {
+        try self.finish();
+        try stack.finish();
     }
 };
 
@@ -303,6 +336,14 @@ fn writeHeader(bytes: []u8) void {
 fn writeEmptyRecord(bytes: []u8, kind: u16) void {
     std.mem.writeInt(u16, bytes[0..2], kind, .little);
     std.mem.writeInt(u32, bytes[4..8], 12, .little);
+}
+
+fn writeStackIndexRecord(bytes: []u8, kind: u16, flags: u16, stack_index: u32) void {
+    std.mem.writeInt(u16, bytes[0..2], kind, .little);
+    std.mem.writeInt(u16, bytes[2..4], flags, .little);
+    std.mem.writeInt(u32, bytes[4..8], 16, .little);
+    std.mem.writeInt(u32, bytes[8..12], 4, .little);
+    std.mem.writeInt(u32, bytes[12..16], stack_index, .little);
 }
 
 test "EMF+ stream spans comments while every record remains locally complete" {
@@ -1031,6 +1072,103 @@ test "EMF+ stream validates and counts Save records atomically" {
     const before = overflow;
     try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..44]), 2));
     try std.testing.expectEqualDeep(before, overflow);
+}
+
+test "EMF+ Save/Restore tracked stream restores a target and all newer saves" {
+    var bytes = [_]u8{0} ** 88;
+    writeHeader(bytes[0..28]);
+    writeStackIndexRecord(bytes[28..44], 0x4025, 0xffff, 10);
+    writeStackIndexRecord(bytes[44..60], 0x4025, 0xabcd, 20);
+    writeStackIndexRecord(bytes[60..76], 0x4026, 0x9876, 10);
+    writeEmptyRecord(bytes[76..88], 0x4002);
+
+    var state: State = .{};
+    var stack = graphics_state_stack.Stack.init(std.testing.allocator);
+    defer stack.deinit();
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&bytes), 2));
+    try state.finishTracked(stack);
+    try std.testing.expectEqual(@as(usize, 2), state.report.save_records);
+    try std.testing.expectEqual(@as(usize, 1), state.report.restore_records);
+    try std.testing.expectEqual(@as(usize, 2), state.report.graphics_state_max_depth);
+    try std.testing.expectEqual(@as(usize, 0), stack.entries.items.len);
+
+    var overflow_state: State = .{};
+    overflow_state.report.restore_records = std.math.maxInt(usize);
+    const overflow_before = overflow_state;
+    var overflow_stack = graphics_state_stack.Stack.init(std.testing.allocator);
+    defer overflow_stack.deinit();
+    try std.testing.expectError(error.LimitExceeded, overflow_state.consumeTracked(&overflow_stack, testComment(bytes[0..76]), 2));
+    try std.testing.expectEqualDeep(overflow_before, overflow_state);
+    try std.testing.expectEqual(@as(usize, 0), overflow_stack.entries.items.len);
+}
+
+test "EMF+ Save/Restore tracked stream rolls back stack and report on missing and late failures" {
+    var header = [_]u8{0} ** 28;
+    writeHeader(&header);
+    var state: State = .{};
+    var stack = graphics_state_stack.Stack.init(std.testing.allocator);
+    defer stack.deinit();
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&header), 2));
+
+    var missing = [_]u8{0} ** 16;
+    writeStackIndexRecord(&missing, 0x4026, 0xffff, 7);
+    const before_missing = state;
+    try std.testing.expectError(error.MissingEmfPlusSavedGraphicsState, state.consumeTracked(&stack, testComment(&missing), 3));
+    try std.testing.expectEqualDeep(before_missing, state);
+    try std.testing.expectEqual(@as(usize, 0), stack.entries.items.len);
+
+    var malformed_restore = [_]u8{0} ** 12;
+    writeEmptyRecord(&malformed_restore, 0x4026);
+    const before_malformed = state;
+    try std.testing.expectError(error.InvalidEmfPlusRestoreSize, state.consumeTracked(&stack, testComment(&malformed_restore), 3));
+    try std.testing.expectEqualDeep(before_malformed, state);
+    try std.testing.expectEqual(@as(usize, 0), stack.entries.items.len);
+
+    var late = [_]u8{0} ** 17;
+    writeStackIndexRecord(late[0..16], 0x4025, 0, 7);
+    late[16] = 0xff;
+    const before_late = state;
+    try std.testing.expectError(error.TruncatedEmfPlusRecordHeader, state.consumeTracked(&stack, testComment(&late), 3));
+    try std.testing.expectEqualDeep(before_late, state);
+    try std.testing.expectEqual(@as(usize, 0), stack.entries.items.len);
+
+    var save = [_]u8{0} ** 28;
+    writeStackIndexRecord(save[0..16], 0x4025, 0, 9);
+    writeEmptyRecord(save[16..28], 0x4002);
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&save), 3));
+    try std.testing.expectError(error.UnclosedEmfPlusGraphicsStateStack, state.finishTracked(stack));
+}
+
+test "EMF+ Save/Restore tracked stream rejects containers until the shared stack parser exists" {
+    var bytes = [_]u8{0} ** 44;
+    writeHeader(bytes[0..28]);
+    writeStackIndexRecord(bytes[28..44], 0x4028, 0, 1);
+    var state: State = .{};
+    var stack = graphics_state_stack.Stack.init(std.testing.allocator);
+    defer stack.deinit();
+    try std.testing.expectError(error.UnsupportedEmfPlusGraphicsContainerState, state.consumeTracked(&stack, testComment(&bytes), 2));
+    try std.testing.expectEqualDeep(State{}, state);
+    try std.testing.expectEqual(@as(usize, 0), stack.entries.items.len);
+}
+
+fn trackedAllocationExercise(allocator: std.mem.Allocator) !void {
+    var first = [_]u8{0} ** 44;
+    writeHeader(first[0..28]);
+    writeStackIndexRecord(first[28..44], 0x4025, 0, 1);
+    var last = [_]u8{0} ** 28;
+    writeStackIndexRecord(last[0..16], 0x4026, 0, 1);
+    writeEmptyRecord(last[16..28], 0x4002);
+
+    var state: State = .{};
+    var stack = graphics_state_stack.Stack.init(allocator);
+    defer stack.deinit();
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&first), 2));
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&last), 3));
+    try state.finishTracked(stack);
+}
+
+test "EMF+ Save/Restore tracked stream survives every graphics stack allocation failure" {
+    try std.testing.checkAllAllocationFailures(std.testing.allocator, trackedAllocationExercise, .{});
 }
 
 test "EMF+ stream resolves DrawBeziers Pen references and remains atomic" {

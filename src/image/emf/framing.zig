@@ -42,6 +42,7 @@ const comment_record = @import("comment_record.zig");
 const public_comment = @import("public_comment.zig");
 const public_comment_group = @import("public_comment_group.zig");
 const emf_plus_stream = @import("emf_plus_stream.zig");
+const emf_plus_graphics_state_stack = @import("emf_plus_graphics_state_stack.zig");
 const dc_stack = @import("dc_stack.zig");
 const palette_records = @import("palette_records.zig");
 const object_table = @import("object_table.zig");
@@ -66,12 +67,14 @@ pub const PublicCommentReport = struct {
 
 pub const Summary = struct { header: header.Header, header_payload: header_payload.Payload, eof: eof.Eof, palette: eof_palette.Palette, objects: object_table.Report, records: usize, pixel_format_records: usize, icm_mode_records: usize, clipping_records: usize, clipping_selection_records: usize, region_drawing_records: usize, path_drawing_records: usize, flood_fill_records: usize, gradient_fill_records: usize, bit_block_transfer_records: usize, stretch_block_transfer_records: usize, mask_block_transfer_records: usize, parallelogram_block_transfer_records: usize, set_dibits_to_device_records: usize, stretch_dibits_records: usize, alpha_blend_records: usize, transparent_blt_records: usize, force_ufi_mapping_records: usize, linked_ufi_records: usize, linked_ufis: usize, color_match_records: usize, palette_correction_records: usize, color_adjustment_records: usize, comment_records: usize, comments: CommentCounts, public_comments: PublicCommentReport, emf_plus: emf_plus_stream.Report };
 
-fn validateStructure(bytes: []const u8) !Summary {
+fn validateStructure(a: std.mem.Allocator, bytes: []const u8) !Summary {
     var iterator: records.Iterator = .{ .bytes = bytes };
     var path_state: path_bracket.State = .{};
     var dc_state: dc_stack.State = .{};
     var public_group_state: public_comment_group.State = .{};
     var emf_plus_state: emf_plus_stream.State = .{};
+    var emf_plus_graphics_stack = emf_plus_graphics_state_stack.Stack.init(a);
+    defer emf_plus_graphics_stack.deinit();
     const first = (try iterator.next()) orelse return error.MissingEmfHeader;
     const parsed_header = try header_payload.parse(first, bytes.len);
     const value = parsed_header.header;
@@ -173,7 +176,7 @@ fn validateStructure(bytes: []const u8) !Summary {
                 },
                 .unknown => public_comments.unknown = std.math.add(usize, public_comments.unknown, 1) catch return error.LimitExceeded,
             };
-            _ = try emf_plus_state.consume(comment, count);
+            _ = try emf_plus_state.consumeTracked(&emf_plus_graphics_stack, comment, count);
         }
         _ = try dc_state.consume(record);
         _ = try palette_records.parse(record);
@@ -182,7 +185,7 @@ fn validateStructure(bytes: []const u8) !Summary {
         const terminal = terminal_and_palette.eof;
         try path_state.finish();
         try public_group_state.finish();
-        try emf_plus_state.finish();
+        try emf_plus_state.finishTracked(emf_plus_graphics_stack);
         public_comments.begin_groups = public_group_state.begin_groups;
         public_comments.end_groups = public_group_state.end_groups;
         public_comments.max_group_depth = public_group_state.max_depth;
@@ -196,7 +199,7 @@ fn validateStructure(bytes: []const u8) !Summary {
 }
 
 pub fn validate(a: std.mem.Allocator, bytes: []const u8) !Summary {
-    var summary = try validateStructure(bytes);
+    var summary = try validateStructure(a, bytes);
     summary.objects = try object_table.validate(a, bytes, summary.header);
     return summary;
 }

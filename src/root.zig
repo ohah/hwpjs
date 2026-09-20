@@ -92,6 +92,9 @@ test {
     _ = @import("image/emf/emf_plus_compositing_quality.zig");
     _ = @import("image/emf/emf_plus_set_compositing_quality.zig");
     _ = @import("image/emf/emf_plus_save.zig");
+    _ = @import("image/emf/emf_plus_stack_index_record.zig");
+    _ = @import("image/emf/emf_plus_restore.zig");
+    _ = @import("image/emf/emf_plus_graphics_state_stack.zig");
     _ = @import("image/emf/emf_plus_object.zig");
     _ = @import("image/emf/emf_plus_stream.zig");
     _ = @import("image/wmf/header_tests.zig");

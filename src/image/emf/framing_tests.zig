@@ -521,15 +521,15 @@ test "EMF framing routes SetCompositingQuality and Windows invalid-value fallbac
     try t.expectEqual(@as(usize, 1), fallback.set_compositing_quality_windows_fallback_records);
 }
 
-test "EMF framing routes Save through the EMF+ stream" {
+test "EMF framing routes Save/Restore through the EMF+ stream" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 180;
+    var bytes = [_]u8{0} ** 196;
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
     std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
-    std.mem.writeInt(u32, bytes[92..96], 72, .little);
-    std.mem.writeInt(u32, bytes[96..100], 60, .little);
+    std.mem.writeInt(u32, bytes[92..96], 88, .little);
+    std.mem.writeInt(u32, bytes[96..100], 76, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
     std.mem.writeInt(u16, bytes[104..106], 0x4001, .little);
     std.mem.writeInt(u32, bytes[108..112], 28, .little);
@@ -542,11 +542,32 @@ test "EMF framing routes Save through the EMF+ stream" {
     std.mem.writeInt(u32, bytes[136..140], 16, .little);
     std.mem.writeInt(u32, bytes[140..144], 4, .little);
     std.mem.writeInt(u32, bytes[144..148], 0x01020304, .little);
-    std.mem.writeInt(u16, bytes[148..150], 0x4002, .little);
-    std.mem.writeInt(u32, bytes[152..156], 12, .little);
-    @memcpy(bytes[160..180], original[88..108]);
+    std.mem.writeInt(u16, bytes[148..150], 0x4026, .little);
+    std.mem.writeInt(u16, bytes[150..152], 0xabcd, .little);
+    std.mem.writeInt(u32, bytes[152..156], 16, .little);
+    std.mem.writeInt(u32, bytes[156..160], 4, .little);
+    std.mem.writeInt(u32, bytes[160..164], 0x01020304, .little);
+    std.mem.writeInt(u16, bytes[164..166], 0x4002, .little);
+    std.mem.writeInt(u32, bytes[168..172], 12, .little);
+    @memcpy(bytes[176..196], original[88..108]);
 
-    try t.expectEqual(@as(usize, 1), (try framing.validate(t.allocator, &bytes)).emf_plus.save_records);
+    const report = (try framing.validate(t.allocator, &bytes)).emf_plus;
+    try t.expectEqual(@as(usize, 1), report.save_records);
+    try t.expectEqual(@as(usize, 1), report.restore_records);
+    try t.expectEqual(@as(usize, 1), report.graphics_state_max_depth);
+
+    var missing = bytes;
+    std.mem.writeInt(u32, missing[160..164], 0x01020305, .little);
+    try t.expectError(error.MissingEmfPlusSavedGraphicsState, framing.validate(t.allocator, &missing));
+
+    var unmatched = bytes;
+    std.mem.writeInt(u16, unmatched[148..150], 0x4025, .little);
+    try t.expectError(error.UnclosedEmfPlusGraphicsStateStack, framing.validate(t.allocator, &unmatched));
+
+    var container = bytes;
+    std.mem.writeInt(u16, container[132..134], 0x4028, .little);
+    std.mem.writeInt(u16, container[148..150], 0x4029, .little);
+    try t.expectError(error.UnsupportedEmfPlusGraphicsContainerState, framing.validate(t.allocator, &container));
 }
 
 test "EMF framing routes DrawBeziers through the Object Table Pen reference" {
