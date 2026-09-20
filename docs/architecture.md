@@ -64,6 +64,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ DrawRects record 계층](emf-plus-draw-rects-record.md)은 Count·C별 고정폭 RectData 배열을 공용 RectArray에 분리하고 record envelope와 Pen 참조만 조립합니다. iterator는 입력을 빌리며 좌표 의미와 rectangle stroke 재생은 wire parser에 넣지 않습니다.
 
+[EMF+ DrawString record 계층](emf-plus-draw-string-record.md)은 Font·조건부 Brush·선택 StringFormat 참조와 UTF-16LE StringData를 조립합니다. optional u32 ObjectID 해석은 DrawImage의 ImageAttributes와 공유하고, shaping·layout·CharacterRange 교차 검증은 wire parser와 타입 전용 Object Table 상태에 넣지 않습니다.
+
 PNG에서 파일 전체 이름 고유성을 검사하는 [sPLT 추천 팔레트](png-suggested-palettes.md)는 소유권이 있는 별도 Collector로 분리합니다. 기존 픽셀 검사 순회에 연결하되 비할당 metadata.State에 이름 인덱스 수명을 섞지 않습니다.
 
 ```text

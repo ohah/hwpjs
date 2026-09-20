@@ -238,6 +238,49 @@ test "EMF framing routes DrawRects through the Object Table Pen reference" {
     try t.expectError(error.MissingEmfPlusDrawRectsPen, framing.validate(t.allocator, &missing));
 }
 
+test "EMF framing routes DrawString through Font Brush and StringFormat references" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 244;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 3, .little);
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[92..96], 136, .little);
+    std.mem.writeInt(u32, bytes[96..100], 124, .little);
+    std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
+    std.mem.writeInt(u16, bytes[104..106], 0x4001, .little);
+    std.mem.writeInt(u32, bytes[108..112], 28, .little);
+    std.mem.writeInt(u32, bytes[112..116], 16, .little);
+    std.mem.writeInt(u32, bytes[116..120], 0xdbc01001, .little);
+    std.mem.writeInt(u32, bytes[124..128], 96, .little);
+    std.mem.writeInt(u32, bytes[128..132], 96, .little);
+    for ([_]struct { offset: usize, flags: u16 }{
+        .{ .offset = 132, .flags = 0x0605 },
+        .{ .offset = 144, .flags = 0x0107 },
+        .{ .offset = 156, .flags = 0x0709 },
+    }) |object| {
+        std.mem.writeInt(u16, bytes[object.offset..][0..2], 0x4008, .little);
+        std.mem.writeInt(u16, bytes[object.offset + 2 ..][0..2], object.flags, .little);
+        std.mem.writeInt(u32, bytes[object.offset + 4 ..][0..4], 12, .little);
+    }
+    std.mem.writeInt(u16, bytes[168..170], 0x401c, .little);
+    std.mem.writeInt(u16, bytes[170..172], 0x0005, .little);
+    std.mem.writeInt(u32, bytes[172..176], 44, .little);
+    std.mem.writeInt(u32, bytes[176..180], 32, .little);
+    std.mem.writeInt(u32, bytes[180..184], 7, .little);
+    std.mem.writeInt(u32, bytes[184..188], 9, .little);
+    std.mem.writeInt(u32, bytes[188..192], 2, .little);
+    bytes[208..212].* = .{ 'A', 0, 'B', 0 };
+    std.mem.writeInt(u16, bytes[212..214], 0x4002, .little);
+    std.mem.writeInt(u32, bytes[216..220], 12, .little);
+    @memcpy(bytes[224..244], original[88..108]);
+
+    try t.expectEqual(@as(usize, 1), (try framing.validate(t.allocator, &bytes)).emf_plus.draw_string_records);
+    var missing = bytes;
+    std.mem.writeInt(u16, missing[170..172], 0x0006, .little);
+    try t.expectError(error.MissingEmfPlusDrawStringFont, framing.validate(t.allocator, &missing));
+}
+
 test "EMF framing routes DrawBeziers through the Object Table Pen reference" {
     const original = fixture();
     var bytes = [_]u8{0} ** 224;

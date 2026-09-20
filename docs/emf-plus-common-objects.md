@@ -14,7 +14,7 @@
 
 `emf_plus_brush_id.zig`는 drawing record의 S bit에 따른 Brush ObjectID와 literal ARGB 선택을 소유합니다. [DrawDriverString](emf-plus-draw-driver-string-record.md)은 Font ID와 별개인 이 선택을 재사용하며 S가 켜진 색 값을 Object Table ID로 재해석하지 않습니다.
 
-`emf_plus_image_attributes_id.zig`는 [DrawImage](emf-plus-draw-image-record.md) 계열의 optional ImageAttributes u32 원값과 0~63 ObjectID 선택을 소유합니다. 범위 밖 값을 하나의 sentinel로 정규화하지 않고 raw와 null을 함께 보존합니다.
+`emf_plus_optional_object_id.zig`는 optional u32 객체 참조의 원값과 0~63 ObjectID 선택을 소유합니다. 범위 밖 값을 하나의 sentinel로 정규화하지 않고 raw와 null을 함께 보존합니다. `emf_plus_image_attributes_id.zig`의 DrawImage 계열 ImageAttributes ID와 [DrawString](emf-plus-draw-string-record.md)의 FormatID가 이를 공유합니다.
 
 `emf_plus_brush_values.zig`는 [BrushType](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/6a62c568-0916-4032-ab49-7c9e377a3d70), HatchStyle과 BrushData flags를 소유합니다. Brush와 ImageAttributes가 함께 쓰는 [WrapMode](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/79d01e4a-6a59-4464-bd8c-2d3fe26df5bc)는 `emf_plus_wrap_mode.zig`가 정의된 0~4만 승인하는 단일 출처입니다. BrushData flags는 알려진 비트를 해석하면서 bit 5와 상위 예약 비트까지 원문 u32로 왕복 보존합니다. 어떤 flag 조합이 어떤 BrushType에서 의미 있는지는 개별 Brush 파서가 소유합니다.
 

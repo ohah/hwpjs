@@ -19,6 +19,7 @@ const draw_lines_record = @import("emf_plus_draw_lines.zig");
 const draw_path_record = @import("emf_plus_draw_path.zig");
 const draw_pie_record = @import("emf_plus_draw_pie.zig");
 const draw_rects_record = @import("emf_plus_draw_rects.zig");
+const draw_string_record = @import("emf_plus_draw_string.zig");
 
 pub const Report = struct {
     comments: usize = 0,
@@ -44,6 +45,7 @@ pub const Report = struct {
     draw_path_records: usize = 0,
     draw_pie_records: usize = 0,
     draw_rects_records: usize = 0,
+    draw_string_records: usize = 0,
 };
 
 pub const State = struct {
@@ -181,6 +183,23 @@ pub const State = struct {
                 const object_type = pending.object_state.table[parsed.pen_id] orelse return error.MissingEmfPlusDrawRectsPen;
                 if (object_type != .pen) return error.InvalidEmfPlusDrawRectsPenType;
                 pending.report.draw_rects_records = std.math.add(usize, pending.report.draw_rects_records, 1) catch return error.LimitExceeded;
+            }
+            if (value.kind == .draw_string) {
+                const parsed = try draw_string_record.parse(value, .{});
+                const font_type = pending.object_state.table[parsed.font_id] orelse return error.MissingEmfPlusDrawStringFont;
+                if (font_type != .font) return error.InvalidEmfPlusDrawStringFontType;
+                switch (parsed.brush) {
+                    .color => {},
+                    .brush_id => |id| {
+                        const brush_type = pending.object_state.table[id] orelse return error.MissingEmfPlusDrawStringBrush;
+                        if (brush_type != .brush) return error.InvalidEmfPlusDrawStringBrushType;
+                    },
+                }
+                if (parsed.format.object_id) |id| {
+                    const format_type = pending.object_state.table[id] orelse return error.MissingEmfPlusDrawStringFormat;
+                    if (format_type != .string_format) return error.InvalidEmfPlusDrawStringFormatType;
+                }
+                pending.report.draw_string_records = std.math.add(usize, pending.report.draw_string_records, 1) catch return error.LimitExceeded;
             }
             if (private_comment.parse(value)) |parsed| {
                 pending.report.private_comments = std.math.add(usize, pending.report.private_comments, 1) catch return error.LimitExceeded;
@@ -622,6 +641,84 @@ test "EMF+ stream resolves DrawRects Pen references and remains atomic" {
     overflow.report.draw_rects_records = std.math.maxInt(usize);
     const before = overflow;
     try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..64]), 2));
+    try std.testing.expectEqualDeep(before, overflow);
+}
+
+test "EMF+ stream resolves DrawString Font Brush and optional StringFormat references atomically" {
+    var bytes = [_]u8{0} ** 120;
+    writeHeader(bytes[0..28]);
+    writeEmptyRecord(bytes[28..40], 0x4008);
+    std.mem.writeInt(u16, bytes[30..32], 0x0605, .little);
+    writeEmptyRecord(bytes[40..52], 0x4008);
+    std.mem.writeInt(u16, bytes[42..44], 0x0107, .little);
+    writeEmptyRecord(bytes[52..64], 0x4008);
+    std.mem.writeInt(u16, bytes[54..56], 0x0709, .little);
+    std.mem.writeInt(u16, bytes[64..66], 0x401c, .little);
+    std.mem.writeInt(u16, bytes[66..68], 0x0005, .little);
+    std.mem.writeInt(u32, bytes[68..72], 44, .little);
+    std.mem.writeInt(u32, bytes[72..76], 32, .little);
+    std.mem.writeInt(u32, bytes[76..80], 7, .little);
+    std.mem.writeInt(u32, bytes[80..84], 9, .little);
+    std.mem.writeInt(u32, bytes[84..88], 2, .little);
+    bytes[104..108].* = .{ 'A', 0, 'B', 0 };
+    writeEmptyRecord(bytes[108..120], 0x4002);
+
+    var state: State = .{};
+    try std.testing.expect(try state.consume(testComment(&bytes), 2));
+    try state.finish();
+    try std.testing.expectEqual(@as(usize, 1), state.report.draw_string_records);
+
+    var literal = bytes;
+    std.mem.writeInt(u16, literal[66..68], 0x8005, .little);
+    std.mem.writeInt(u32, literal[76..80], 0xff010203, .little);
+    std.mem.writeInt(u32, literal[80..84], 64, .little);
+    std.mem.writeInt(u16, literal[42..44], 0x0607, .little);
+    std.mem.writeInt(u16, literal[54..56], 0x0109, .little);
+    var literal_state: State = .{};
+    try std.testing.expect(try literal_state.consume(testComment(&literal), 2));
+    try literal_state.finish();
+    try std.testing.expectEqual(@as(usize, 1), literal_state.report.draw_string_records);
+
+    var missing_font = bytes;
+    std.mem.writeInt(u16, missing_font[66..68], 0x0006, .little);
+    var missing_font_state: State = .{};
+    try std.testing.expectError(error.MissingEmfPlusDrawStringFont, missing_font_state.consume(testComment(&missing_font), 2));
+    try std.testing.expectEqualDeep(State{}, missing_font_state);
+
+    var wrong_font = bytes;
+    std.mem.writeInt(u16, wrong_font[30..32], 0x0105, .little);
+    var wrong_font_state: State = .{};
+    try std.testing.expectError(error.InvalidEmfPlusDrawStringFontType, wrong_font_state.consume(testComment(&wrong_font), 2));
+    try std.testing.expectEqualDeep(State{}, wrong_font_state);
+
+    var missing_brush = bytes;
+    std.mem.writeInt(u32, missing_brush[76..80], 8, .little);
+    var missing_brush_state: State = .{};
+    try std.testing.expectError(error.MissingEmfPlusDrawStringBrush, missing_brush_state.consume(testComment(&missing_brush), 2));
+    try std.testing.expectEqualDeep(State{}, missing_brush_state);
+
+    var wrong_brush = bytes;
+    std.mem.writeInt(u16, wrong_brush[42..44], 0x0607, .little);
+    var wrong_brush_state: State = .{};
+    try std.testing.expectError(error.InvalidEmfPlusDrawStringBrushType, wrong_brush_state.consume(testComment(&wrong_brush), 2));
+    try std.testing.expectEqualDeep(State{}, wrong_brush_state);
+
+    var missing_format = bytes;
+    std.mem.writeInt(u32, missing_format[80..84], 8, .little);
+    var missing_format_state: State = .{};
+    try std.testing.expectError(error.MissingEmfPlusDrawStringFormat, missing_format_state.consume(testComment(&missing_format), 2));
+    try std.testing.expectEqualDeep(State{}, missing_format_state);
+
+    var wrong_format = bytes;
+    std.mem.writeInt(u16, wrong_format[54..56], 0x0109, .little);
+    var wrong_format_state: State = .{};
+    try std.testing.expectError(error.InvalidEmfPlusDrawStringFormatType, wrong_format_state.consume(testComment(&wrong_format), 2));
+    try std.testing.expectEqualDeep(State{}, wrong_format_state);
+
+    var overflow: State = .{};
+    overflow.report.draw_string_records = std.math.maxInt(usize);
+    const before = overflow;
+    try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..108]), 2));
     try std.testing.expectEqualDeep(before, overflow);
 }
 

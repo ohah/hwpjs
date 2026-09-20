@@ -1,12 +1,16 @@
-const optional_object_id = @import("emf_plus_optional_object_id.zig");
+pub const OptionalObjectId = struct {
+    raw: u32,
+    object_id: ?u6,
+};
 
-pub const ImageAttributesId = optional_object_id.OptionalObjectId;
-
-pub fn parse(raw: u32) ImageAttributesId {
-    return optional_object_id.parse(raw);
+pub fn parse(raw: u32) OptionalObjectId {
+    return .{
+        .raw = raw,
+        .object_id = if (raw <= 63) @intCast(raw) else null,
+    };
 }
 
-test "EMF+ optional ImageAttributes ID preserves every raw value" {
+test "EMF+ optional Object ID preserves raw values and exposes only table slots" {
     const std = @import("std");
     try std.testing.expectEqual(@as(u6, 0), parse(0).object_id.?);
     try std.testing.expectEqual(@as(u6, 63), parse(63).object_id.?);
