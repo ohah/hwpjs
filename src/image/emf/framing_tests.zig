@@ -488,6 +488,39 @@ test "EMF framing routes SetCompositingMode through the EMF+ stream" {
     try t.expectError(error.InvalidEmfPlusCompositingMode, framing.validate(t.allocator, &invalid));
 }
 
+test "EMF framing routes SetCompositingQuality and Windows invalid-value fallback" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 176;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 3, .little);
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[92..96], 68, .little);
+    std.mem.writeInt(u32, bytes[96..100], 56, .little);
+    std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
+    std.mem.writeInt(u16, bytes[104..106], 0x4001, .little);
+    std.mem.writeInt(u32, bytes[108..112], 28, .little);
+    std.mem.writeInt(u32, bytes[112..116], 16, .little);
+    std.mem.writeInt(u32, bytes[116..120], 0xdbc01001, .little);
+    std.mem.writeInt(u32, bytes[124..128], 96, .little);
+    std.mem.writeInt(u32, bytes[128..132], 96, .little);
+    std.mem.writeInt(u16, bytes[132..134], 0x4024, .little);
+    std.mem.writeInt(u16, bytes[134..136], 0xff02, .little);
+    std.mem.writeInt(u32, bytes[136..140], 12, .little);
+    std.mem.writeInt(u16, bytes[144..146], 0x4002, .little);
+    std.mem.writeInt(u32, bytes[148..152], 12, .little);
+    @memcpy(bytes[156..176], original[88..108]);
+
+    const defined = (try framing.validate(t.allocator, &bytes)).emf_plus;
+    try t.expectEqual(@as(usize, 1), defined.set_compositing_quality_records);
+    try t.expectEqual(@as(usize, 0), defined.set_compositing_quality_windows_fallback_records);
+    var windows_fallback = bytes;
+    std.mem.writeInt(u16, windows_fallback[134..136], 0xffff, .little);
+    const fallback = (try framing.validate(t.allocator, &windows_fallback)).emf_plus;
+    try t.expectEqual(@as(usize, 1), fallback.set_compositing_quality_records);
+    try t.expectEqual(@as(usize, 1), fallback.set_compositing_quality_windows_fallback_records);
+}
+
 test "EMF framing routes DrawBeziers through the Object Table Pen reference" {
     const original = fixture();
     var bytes = [_]u8{0} ** 224;

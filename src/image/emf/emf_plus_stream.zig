@@ -27,6 +27,7 @@ const set_text_contrast_record = @import("emf_plus_set_text_contrast.zig");
 const set_interpolation_mode_record = @import("emf_plus_set_interpolation_mode.zig");
 const set_pixel_offset_mode_record = @import("emf_plus_set_pixel_offset_mode.zig");
 const set_compositing_mode_record = @import("emf_plus_set_compositing_mode.zig");
+const set_compositing_quality_record = @import("emf_plus_set_compositing_quality.zig");
 
 pub const Report = struct {
     comments: usize = 0,
@@ -60,6 +61,8 @@ pub const Report = struct {
     set_interpolation_mode_records: usize = 0,
     set_pixel_offset_mode_records: usize = 0,
     set_compositing_mode_records: usize = 0,
+    set_compositing_quality_records: usize = 0,
+    set_compositing_quality_windows_fallback_records: usize = 0,
 };
 
 pub const State = struct {
@@ -242,6 +245,14 @@ pub const State = struct {
             if (value.kind == .set_compositing_mode) {
                 _ = try set_compositing_mode_record.parse(value);
                 pending.report.set_compositing_mode_records = std.math.add(usize, pending.report.set_compositing_mode_records, 1) catch return error.LimitExceeded;
+            }
+            if (value.kind == .set_compositing_quality) {
+                const parsed = try set_compositing_quality_record.parse(value);
+                pending.report.set_compositing_quality_records = std.math.add(usize, pending.report.set_compositing_quality_records, 1) catch return error.LimitExceeded;
+                switch (parsed.quality) {
+                    .defined => {},
+                    .invalid_windows_default => pending.report.set_compositing_quality_windows_fallback_records = std.math.add(usize, pending.report.set_compositing_quality_windows_fallback_records, 1) catch return error.LimitExceeded,
+                }
             }
             if (private_comment.parse(value)) |parsed| {
                 pending.report.private_comments = std.math.add(usize, pending.report.private_comments, 1) catch return error.LimitExceeded;
@@ -942,6 +953,49 @@ test "EMF+ stream validates and counts SetCompositingMode records atomically" {
     const before = overflow;
     try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..40]), 2));
     try std.testing.expectEqualDeep(before, overflow);
+}
+
+test "EMF+ stream validates and counts SetCompositingQuality records atomically" {
+    var bytes = [_]u8{0} ** 52;
+    writeHeader(bytes[0..28]);
+    writeEmptyRecord(bytes[28..40], 0x4024);
+    std.mem.writeInt(u16, bytes[30..32], 0xff02, .little);
+    writeEmptyRecord(bytes[40..52], 0x4002);
+
+    var state: State = .{};
+    try std.testing.expect(try state.consume(testComment(&bytes), 2));
+    try state.finish();
+    try std.testing.expectEqual(@as(usize, 1), state.report.set_compositing_quality_records);
+    try std.testing.expectEqual(@as(usize, 0), state.report.set_compositing_quality_windows_fallback_records);
+
+    var windows_fallback = bytes;
+    std.mem.writeInt(u16, windows_fallback[30..32], 0xff00, .little);
+    var fallback_state: State = .{};
+    try std.testing.expect(try fallback_state.consume(testComment(&windows_fallback), 2));
+    try fallback_state.finish();
+    try std.testing.expectEqual(@as(usize, 1), fallback_state.report.set_compositing_quality_records);
+    try std.testing.expectEqual(@as(usize, 1), fallback_state.report.set_compositing_quality_windows_fallback_records);
+
+    var malformed = [_]u8{0} ** 44;
+    writeHeader(malformed[0..28]);
+    writeEmptyRecord(malformed[28..40], 0x4024);
+    std.mem.writeInt(u32, malformed[32..36], 16, .little);
+    std.mem.writeInt(u32, malformed[36..40], 4, .little);
+    var invalid_state: State = .{};
+    try std.testing.expectError(error.InvalidEmfPlusSetCompositingQualitySize, invalid_state.consume(testComment(&malformed), 2));
+    try std.testing.expectEqualDeep(State{}, invalid_state);
+
+    var overflow: State = .{};
+    overflow.report.set_compositing_quality_records = std.math.maxInt(usize);
+    const before = overflow;
+    try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..40]), 2));
+    try std.testing.expectEqualDeep(before, overflow);
+
+    var fallback_overflow: State = .{};
+    fallback_overflow.report.set_compositing_quality_windows_fallback_records = std.math.maxInt(usize);
+    const fallback_before = fallback_overflow;
+    try std.testing.expectError(error.LimitExceeded, fallback_overflow.consume(testComment(&windows_fallback), 2));
+    try std.testing.expectEqualDeep(fallback_before, fallback_overflow);
 }
 
 test "EMF+ stream resolves DrawBeziers Pen references and remains atomic" {
