@@ -15,6 +15,7 @@ const draw_driver_string_record = @import("emf_plus_draw_driver_string.zig");
 const draw_ellipse_record = @import("emf_plus_draw_ellipse.zig");
 const draw_image_record = @import("emf_plus_draw_image.zig");
 const draw_image_points_record = @import("emf_plus_draw_image_points.zig");
+const draw_lines_record = @import("emf_plus_draw_lines.zig");
 
 pub const Report = struct {
     comments: usize = 0,
@@ -36,6 +37,7 @@ pub const Report = struct {
     draw_ellipse_records: usize = 0,
     draw_image_records: usize = 0,
     draw_image_points_records: usize = 0,
+    draw_lines_records: usize = 0,
 };
 
 pub const State = struct {
@@ -147,6 +149,12 @@ pub const State = struct {
                     if (attributes_type != .image_attributes) return error.InvalidEmfPlusDrawImagePointsAttributesType;
                 }
                 pending.report.draw_image_points_records = std.math.add(usize, pending.report.draw_image_points_records, 1) catch return error.LimitExceeded;
+            }
+            if (value.kind == .draw_lines) {
+                const parsed = try draw_lines_record.parse(value, .{});
+                const object_type = pending.object_state.table[parsed.pen_id] orelse return error.MissingEmfPlusDrawLinesPen;
+                if (object_type != .pen) return error.InvalidEmfPlusDrawLinesPenType;
+                pending.report.draw_lines_records = std.math.add(usize, pending.report.draw_lines_records, 1) catch return error.LimitExceeded;
             }
             if (private_comment.parse(value)) |parsed| {
                 pending.report.private_comments = std.math.add(usize, pending.report.private_comments, 1) catch return error.LimitExceeded;
@@ -864,5 +872,41 @@ test "EMF+ stream resolves DrawImagePoints image attributes and preceding effect
     overflow.report.draw_image_points_records = std.math.maxInt(usize);
     const before = overflow;
     try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..140]), 2));
+    try std.testing.expectEqualDeep(before, overflow);
+}
+
+test "EMF+ stream resolves DrawLines Pen references and remains atomic" {
+    var bytes = [_]u8{0} ** 76;
+    writeHeader(bytes[0..28]);
+    writeEmptyRecord(bytes[28..40], 0x4008);
+    std.mem.writeInt(u16, bytes[30..32], 0x0205, .little);
+    std.mem.writeInt(u16, bytes[40..42], 0x400d, .little);
+    std.mem.writeInt(u16, bytes[42..44], 0x6005, .little);
+    std.mem.writeInt(u32, bytes[44..48], 24, .little);
+    std.mem.writeInt(u32, bytes[48..52], 12, .little);
+    std.mem.writeInt(u32, bytes[52..56], 2, .little);
+    writeEmptyRecord(bytes[64..76], 0x4002);
+
+    var state: State = .{};
+    try std.testing.expect(try state.consume(testComment(&bytes), 2));
+    try state.finish();
+    try std.testing.expectEqual(@as(usize, 1), state.report.draw_lines_records);
+
+    var missing = bytes;
+    std.mem.writeInt(u16, missing[42..44], 0x6006, .little);
+    var missing_state: State = .{};
+    try std.testing.expectError(error.MissingEmfPlusDrawLinesPen, missing_state.consume(testComment(&missing), 2));
+    try std.testing.expectEqualDeep(State{}, missing_state);
+
+    var wrong_type = bytes;
+    std.mem.writeInt(u16, wrong_type[30..32], 0x0605, .little);
+    var wrong_type_state: State = .{};
+    try std.testing.expectError(error.InvalidEmfPlusDrawLinesPenType, wrong_type_state.consume(testComment(&wrong_type), 2));
+    try std.testing.expectEqualDeep(State{}, wrong_type_state);
+
+    var overflow: State = .{};
+    overflow.report.draw_lines_records = std.math.maxInt(usize);
+    const before = overflow;
+    try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..64]), 2));
     try std.testing.expectEqualDeep(before, overflow);
 }

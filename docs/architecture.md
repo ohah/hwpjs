@@ -56,6 +56,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ DrawImagePoints record 계층](emf-plus-draw-image-points-record.md)은 DrawImage의 공통 ID·source 필드와 P/C별 PointData, 정확한 Count 3, E 효과 요구를 조립합니다. stream은 앞선 SerializableObject와 객체 타입을 연결하고 상대좌표 누적·parallelogram 재생은 wire parser에 넣지 않습니다.
 
+[EMF+ DrawLines record 계층](emf-plus-draw-lines-record.md)은 P/C별 PointData, 최소 Count 2와 L 닫힘 flag를 조립합니다. stream은 Pen 참조만 연결하고 PointR 누적·닫힘 선분·stroke 재생은 wire parser에 넣지 않습니다.
+
 PNG에서 파일 전체 이름 고유성을 검사하는 [sPLT 추천 팔레트](png-suggested-palettes.md)는 소유권이 있는 별도 Collector로 분리합니다. 기존 픽셀 검사 순회에 연결하되 비할당 metadata.State에 이름 인덱스 수명을 섞지 않습니다.
 
 ```text

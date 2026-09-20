@@ -19,6 +19,10 @@ pub fn hasEffect(flags: u16) bool {
     return flags & effect_mask != 0;
 }
 
+pub fn closesFigure(flags: u16) bool {
+    return flags & effect_mask != 0;
+}
+
 pub fn objectId(flags: u16) !u6 {
     const raw: u8 = @truncate(flags);
     if (raw > 63) return error.InvalidEmfPlusObjectId;
@@ -35,6 +39,8 @@ test "EMF+ record flags preserve reserved bits while decoding C and ObjectID" {
     try std.testing.expect(isSolidColor(0xff3f));
     try std.testing.expect(!hasEffect(0xdf3f));
     try std.testing.expect(hasEffect(0xff3f));
+    try std.testing.expect(!closesFigure(0xdf3f));
+    try std.testing.expect(closesFigure(0xff3f));
     try std.testing.expectEqual(@as(u6, 63), try objectId(0xff3f));
     try std.testing.expectEqual(@as(u6, 0), try objectId(0xff00));
     try std.testing.expectError(error.InvalidEmfPlusObjectId, objectId(0x0040));
