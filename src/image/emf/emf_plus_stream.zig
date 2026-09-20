@@ -30,6 +30,7 @@ const set_compositing_mode_record = @import("emf_plus_set_compositing_mode.zig")
 const set_compositing_quality_record = @import("emf_plus_set_compositing_quality.zig");
 const begin_container_record = @import("emf_plus_begin_container.zig");
 const begin_container_no_params_record = @import("emf_plus_begin_container_no_params.zig");
+const end_container_record = @import("emf_plus_end_container.zig");
 const save_record = @import("emf_plus_save.zig");
 const restore_record = @import("emf_plus_restore.zig");
 const graphics_state_stack = @import("emf_plus_graphics_state_stack.zig");
@@ -71,6 +72,7 @@ pub const Report = struct {
     begin_container_records: usize = 0,
     begin_container_discouraged_page_unit_records: usize = 0,
     begin_container_no_params_records: usize = 0,
+    end_container_records: usize = 0,
     save_records: usize = 0,
     restore_records: usize = 0,
     graphics_state_max_depth: usize = 0,
@@ -301,8 +303,10 @@ pub const State = struct {
                 pending.report.restore_records = std.math.add(usize, pending.report.restore_records, 1) catch return error.LimitExceeded;
                 if (stack) |tracked| try tracked.close(.save, parsed.stack_index);
             }
-            if (stack != null and value.kind == .end_container) {
-                return error.UnsupportedEmfPlusGraphicsContainerState;
+            if (value.kind == .end_container) {
+                const parsed = try end_container_record.parse(value);
+                pending.report.end_container_records = std.math.add(usize, pending.report.end_container_records, 1) catch return error.LimitExceeded;
+                if (stack) |tracked| try tracked.close(.container, parsed.stack_index);
             }
             if (private_comment.parse(value)) |parsed| {
                 pending.report.private_comments = std.math.add(usize, pending.report.private_comments, 1) catch return error.LimitExceeded;
@@ -1284,16 +1288,97 @@ test "EMF+ Save/Restore tracked stream rolls back stack and report on missing an
     try std.testing.expectError(error.UnclosedEmfPlusGraphicsStateStack, state.finishTracked(stack));
 }
 
-test "EMF+ tracked stream still rejects unsupported container records" {
-    var bytes = [_]u8{0} ** 44;
+test "EMF+ EndContainer closes its target and every newer mixed state" {
+    var bytes = [_]u8{0} ** 104;
     writeHeader(bytes[0..28]);
-    writeStackIndexRecord(bytes[28..44], 0x4029, 0, 1);
+    writeStackIndexRecord(bytes[28..44], 0x4028, 0, 1);
+    writeStackIndexRecord(bytes[44..60], 0x4025, 0, 2);
+    writeStackIndexRecord(bytes[60..76], 0x4028, 0xffff, 3);
+    writeStackIndexRecord(bytes[76..92], 0x4029, 0xabcd, 1);
+    writeEmptyRecord(bytes[92..104], 0x4002);
     var state: State = .{};
     var stack = graphics_state_stack.Stack.init(std.testing.allocator);
     defer stack.deinit();
-    try std.testing.expectError(error.UnsupportedEmfPlusGraphicsContainerState, state.consumeTracked(&stack, testComment(&bytes), 2));
-    try std.testing.expectEqualDeep(State{}, state);
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&bytes), 2));
+    try state.finishTracked(stack);
+    try std.testing.expectEqual(@as(usize, 2), state.report.begin_container_no_params_records);
+    try std.testing.expectEqual(@as(usize, 1), state.report.end_container_records);
+    try std.testing.expectEqual(@as(usize, 3), state.report.graphics_state_max_depth);
     try std.testing.expectEqual(@as(usize, 0), stack.entries.items.len);
+
+    var nested = [_]u8{0} ** 136;
+    writeHeader(nested[0..28]);
+    writeBeginContainer(nested[28..76], 2, 4);
+    writeStackIndexRecord(nested[76..92], 0x4028, 0, 5);
+    writeStackIndexRecord(nested[92..108], 0x4029, 0, 5);
+    writeStackIndexRecord(nested[108..124], 0x4029, 0, 4);
+    writeEmptyRecord(nested[124..136], 0x4002);
+    var nested_state: State = .{};
+    var nested_stack = graphics_state_stack.Stack.init(std.testing.allocator);
+    defer nested_stack.deinit();
+    try std.testing.expect(try nested_state.consumeTracked(&nested_stack, testComment(&nested), 2));
+    try nested_state.finishTracked(nested_stack);
+    try std.testing.expectEqual(@as(usize, 1), nested_state.report.begin_container_records);
+    try std.testing.expectEqual(@as(usize, 1), nested_state.report.begin_container_no_params_records);
+    try std.testing.expectEqual(@as(usize, 2), nested_state.report.end_container_records);
+    try std.testing.expectEqual(@as(usize, 2), nested_state.report.graphics_state_max_depth);
+
+    var open = [_]u8{0} ** 44;
+    writeHeader(open[0..28]);
+    writeStackIndexRecord(open[28..44], 0x4028, 0, 9);
+    var rollback_state: State = .{};
+    var rollback_stack = graphics_state_stack.Stack.init(std.testing.allocator);
+    defer rollback_stack.deinit();
+    try std.testing.expect(try rollback_state.consumeTracked(&rollback_stack, testComment(&open), 2));
+    var late = [_]u8{0} ** 17;
+    writeStackIndexRecord(late[0..16], 0x4029, 0, 9);
+    late[16] = 0xff;
+    const rollback_before = rollback_state;
+    try std.testing.expectError(error.TruncatedEmfPlusRecordHeader, rollback_state.consumeTracked(&rollback_stack, testComment(&late), 3));
+    try std.testing.expectEqualDeep(rollback_before, rollback_state);
+    try std.testing.expectEqual(@as(usize, 1), rollback_stack.entries.items.len);
+    try std.testing.expectEqual(graphics_state_stack.EntryKind.container, rollback_stack.entries.items[0].kind);
+    try std.testing.expectEqual(@as(u32, 9), rollback_stack.entries.items[0].stack_index);
+
+    var missing = [_]u8{0} ** 44;
+    writeHeader(missing[0..28]);
+    writeStackIndexRecord(missing[28..44], 0x4029, 0, 1);
+    var missing_state: State = .{};
+    var missing_stack = graphics_state_stack.Stack.init(std.testing.allocator);
+    defer missing_stack.deinit();
+    try std.testing.expectError(error.MissingEmfPlusGraphicsContainer, missing_state.consumeTracked(&missing_stack, testComment(&missing), 2));
+    try std.testing.expectEqualDeep(State{}, missing_state);
+    try std.testing.expectEqual(@as(usize, 0), missing_stack.entries.items.len);
+
+    var wrong_kind = [_]u8{0} ** 60;
+    writeHeader(wrong_kind[0..28]);
+    writeStackIndexRecord(wrong_kind[28..44], 0x4025, 0, 1);
+    writeStackIndexRecord(wrong_kind[44..60], 0x4029, 0, 1);
+    var wrong_kind_state: State = .{};
+    var wrong_kind_stack = graphics_state_stack.Stack.init(std.testing.allocator);
+    defer wrong_kind_stack.deinit();
+    try std.testing.expectError(error.MissingEmfPlusGraphicsContainer, wrong_kind_state.consumeTracked(&wrong_kind_stack, testComment(&wrong_kind), 2));
+    try std.testing.expectEqualDeep(State{}, wrong_kind_state);
+    try std.testing.expectEqual(@as(usize, 0), wrong_kind_stack.entries.items.len);
+
+    var malformed = bytes;
+    std.mem.writeInt(u32, malformed[84..88], 0, .little);
+    std.mem.writeInt(u32, malformed[80..84], 12, .little);
+    var malformed_state: State = .{};
+    var malformed_stack = graphics_state_stack.Stack.init(std.testing.allocator);
+    defer malformed_stack.deinit();
+    try std.testing.expectError(error.InvalidEmfPlusEndContainerSize, malformed_state.consumeTracked(&malformed_stack, testComment(malformed[0..88]), 2));
+    try std.testing.expectEqualDeep(State{}, malformed_state);
+    try std.testing.expectEqual(@as(usize, 0), malformed_stack.entries.items.len);
+
+    var overflow: State = .{};
+    overflow.report.end_container_records = std.math.maxInt(usize);
+    const before = overflow;
+    var overflow_stack = graphics_state_stack.Stack.init(std.testing.allocator);
+    defer overflow_stack.deinit();
+    try std.testing.expectError(error.LimitExceeded, overflow.consumeTracked(&overflow_stack, testComment(&bytes), 2));
+    try std.testing.expectEqualDeep(before, overflow);
+    try std.testing.expectEqual(@as(usize, 0), overflow_stack.entries.items.len);
 }
 
 fn trackedAllocationExercise(allocator: std.mem.Allocator) !void {
@@ -1301,9 +1386,10 @@ fn trackedAllocationExercise(allocator: std.mem.Allocator) !void {
     writeHeader(first[0..28]);
     writeStackIndexRecord(first[28..44], 0x4025, 0, 1);
     writeStackIndexRecord(first[44..60], 0x4028, 0, 2);
-    var last = [_]u8{0} ** 28;
-    writeStackIndexRecord(last[0..16], 0x4026, 0, 1);
-    writeEmptyRecord(last[16..28], 0x4002);
+    var last = [_]u8{0} ** 44;
+    writeStackIndexRecord(last[0..16], 0x4029, 0, 2);
+    writeStackIndexRecord(last[16..32], 0x4026, 0, 1);
+    writeEmptyRecord(last[32..44], 0x4002);
 
     var state: State = .{};
     var stack = graphics_state_stack.Stack.init(allocator);
@@ -1313,7 +1399,7 @@ fn trackedAllocationExercise(allocator: std.mem.Allocator) !void {
     try state.finishTracked(stack);
 }
 
-test "EMF+ Save Container and Restore tracked stream survives every graphics stack allocation failure" {
+test "EMF+ Save Container End and Restore tracked stream survives every graphics stack allocation failure" {
     try std.testing.checkAllAllocationFailures(std.testing.allocator, trackedAllocationExercise, .{});
 }
 

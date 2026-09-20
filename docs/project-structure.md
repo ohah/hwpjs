@@ -119,6 +119,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - [EMF+ SetCompositingQuality와 Windows invalid fallback](emf-plus-set-compositing-quality-record.md)
 - [EMF+ BeginContainer와 변환 Container stack](emf-plus-begin-container-record.md)
 - [EMF+ BeginContainerNoParams와 공용 StackIndex](emf-plus-begin-container-no-params-record.md)
+- [EMF+ EndContainer와 Container stack 종료](emf-plus-end-container-record.md)
 - [EMF+ Save와 StackIndex wire record](emf-plus-save-record.md)
 - [EMF+ Restore와 공유 graphics-state stack](emf-plus-restore-record.md)
 

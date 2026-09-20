@@ -521,7 +521,7 @@ test "EMF framing routes SetCompositingQuality and Windows invalid-value fallbac
     try t.expectEqual(@as(usize, 1), fallback.set_compositing_quality_windows_fallback_records);
 }
 
-test "EMF framing routes Save/Restore through the EMF+ stream" {
+test "EMF framing routes Save Restore and EndContainer through the EMF+ stream" {
     const original = fixture();
     var bytes = [_]u8{0} ** 196;
     @memcpy(bytes[0..88], original[0..88]);
@@ -567,7 +567,13 @@ test "EMF framing routes Save/Restore through the EMF+ stream" {
     var container = bytes;
     std.mem.writeInt(u16, container[132..134], 0x4028, .little);
     std.mem.writeInt(u16, container[148..150], 0x4029, .little);
-    try t.expectError(error.UnsupportedEmfPlusGraphicsContainerState, framing.validate(t.allocator, &container));
+    const container_report = (try framing.validate(t.allocator, &container)).emf_plus;
+    try t.expectEqual(@as(usize, 1), container_report.begin_container_no_params_records);
+    try t.expectEqual(@as(usize, 1), container_report.end_container_records);
+    try t.expectEqual(@as(usize, 1), container_report.graphics_state_max_depth);
+    var missing_container = container;
+    std.mem.writeInt(u32, missing_container[160..164], 0x01020305, .little);
+    try t.expectError(error.MissingEmfPlusGraphicsContainer, framing.validate(t.allocator, &missing_container));
 }
 
 test "EMF framing routes BeginContainer through the shared graphics state stack" {
