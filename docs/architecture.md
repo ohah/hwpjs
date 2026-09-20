@@ -82,9 +82,11 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ SetCompositingQuality property 계층](emf-plus-set-compositing-quality-record.md)은 정의된 enum과 Windows invalid-value fallback을 구분해 원시값과 유효 재생값을 함께 보존합니다. 실제 gamma correction과 합성은 wire parser에 넣지 않습니다.
 
+[EMF+ BeginContainer state record 계층](emf-plus-begin-container-record.md)은 공용 RectF·UnitType 위에 두 rectangle과 StackIndex를 조립하고 SHOULD NOT 단위를 거부 오류와 분리합니다. tracked stream은 Container entry를 공용 stack에 넣되 transform replay는 wire parser에 섞지 않습니다.
+
 [EMF+ Save state record 계층](emf-plus-save-record.md)은 미사용 Flags와 u32 StackIndex를 보존합니다. 실제 graphics-state stack과 Restore 매칭은 wire parser와 분리합니다.
 
-[EMF+ Restore와 graphics-state stack 계층](emf-plus-restore-record.md)은 Save/Container 종류를 함께 표현하고 target 이후 entry 제거, comment 원자성, allocator 소유권과 EOF closure를 담당합니다. Container wire parser가 생기기 전에는 혼합 stack을 명시적으로 거부합니다.
+[EMF+ Restore와 graphics-state stack 계층](emf-plus-restore-record.md)은 Save/Container 종류를 함께 표현하고 target 이후 entry 제거, comment 원자성, allocator 소유권과 EOF closure를 담당합니다. BeginContainer는 이 stack에 연결됐고 아직 파서가 없는 BeginContainerNoParams/EndContainer는 명시적으로 거부합니다.
 
 PNG에서 파일 전체 이름 고유성을 검사하는 [sPLT 추천 팔레트](png-suggested-palettes.md)는 소유권이 있는 별도 Collector로 분리합니다. 기존 픽셀 검사 순회에 연결하되 비할당 metadata.State에 이름 인덱스 수명을 섞지 않습니다.
 

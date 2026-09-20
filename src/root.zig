@@ -91,6 +91,7 @@ test {
     _ = @import("image/emf/emf_plus_set_compositing_mode.zig");
     _ = @import("image/emf/emf_plus_compositing_quality.zig");
     _ = @import("image/emf/emf_plus_set_compositing_quality.zig");
+    _ = @import("image/emf/emf_plus_begin_container.zig");
     _ = @import("image/emf/emf_plus_save.zig");
     _ = @import("image/emf/emf_plus_stack_index_record.zig");
     _ = @import("image/emf/emf_plus_restore.zig");

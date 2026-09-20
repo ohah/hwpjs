@@ -28,6 +28,7 @@ const set_interpolation_mode_record = @import("emf_plus_set_interpolation_mode.z
 const set_pixel_offset_mode_record = @import("emf_plus_set_pixel_offset_mode.zig");
 const set_compositing_mode_record = @import("emf_plus_set_compositing_mode.zig");
 const set_compositing_quality_record = @import("emf_plus_set_compositing_quality.zig");
+const begin_container_record = @import("emf_plus_begin_container.zig");
 const save_record = @import("emf_plus_save.zig");
 const restore_record = @import("emf_plus_restore.zig");
 const graphics_state_stack = @import("emf_plus_graphics_state_stack.zig");
@@ -66,6 +67,8 @@ pub const Report = struct {
     set_compositing_mode_records: usize = 0,
     set_compositing_quality_records: usize = 0,
     set_compositing_quality_windows_fallback_records: usize = 0,
+    begin_container_records: usize = 0,
+    begin_container_discouraged_page_unit_records: usize = 0,
     save_records: usize = 0,
     restore_records: usize = 0,
     graphics_state_max_depth: usize = 0,
@@ -279,12 +282,19 @@ pub const State = struct {
                 pending.report.save_records = std.math.add(usize, pending.report.save_records, 1) catch return error.LimitExceeded;
                 if (stack) |tracked| try tracked.push(.save, parsed.stack_index);
             }
+            if (value.kind == .begin_container) {
+                const parsed = try begin_container_record.parse(value);
+                pending.report.begin_container_records = std.math.add(usize, pending.report.begin_container_records, 1) catch return error.LimitExceeded;
+                if (parsed.discouraged_page_unit)
+                    pending.report.begin_container_discouraged_page_unit_records = std.math.add(usize, pending.report.begin_container_discouraged_page_unit_records, 1) catch return error.LimitExceeded;
+                if (stack) |tracked| try tracked.push(.container, parsed.stack_index);
+            }
             if (value.kind == .restore) {
                 const parsed = try restore_record.parse(value);
                 pending.report.restore_records = std.math.add(usize, pending.report.restore_records, 1) catch return error.LimitExceeded;
                 if (stack) |tracked| try tracked.close(.save, parsed.stack_index);
             }
-            if (stack != null and (value.kind == .begin_container or value.kind == .begin_container_no_params or value.kind == .end_container)) {
+            if (stack != null and (value.kind == .begin_container_no_params or value.kind == .end_container)) {
                 return error.UnsupportedEmfPlusGraphicsContainerState;
             }
             if (private_comment.parse(value)) |parsed| {
@@ -344,6 +354,18 @@ fn writeStackIndexRecord(bytes: []u8, kind: u16, flags: u16, stack_index: u32) v
     std.mem.writeInt(u32, bytes[4..8], 16, .little);
     std.mem.writeInt(u32, bytes[8..12], 4, .little);
     std.mem.writeInt(u32, bytes[12..16], stack_index, .little);
+}
+
+fn writeBeginContainer(bytes: []u8, flags: u16, stack_index: u32) void {
+    std.debug.assert(bytes.len == 48);
+    @memset(bytes, 0);
+    std.mem.writeInt(u16, bytes[0..2], 0x4027, .little);
+    std.mem.writeInt(u16, bytes[2..4], flags, .little);
+    std.mem.writeInt(u32, bytes[4..8], 48, .little);
+    std.mem.writeInt(u32, bytes[8..12], 36, .little);
+    for (0..8) |index|
+        std.mem.writeInt(u32, bytes[12 + index * 4 ..][0..4], @bitCast(@as(f32, @floatFromInt(index + 1))), .little);
+    std.mem.writeInt(u32, bytes[44..48], stack_index, .little);
 }
 
 test "EMF+ stream spans comments while every record remains locally complete" {
@@ -1102,6 +1124,72 @@ test "EMF+ Save/Restore tracked stream restores a target and all newer saves" {
     try std.testing.expectEqual(@as(usize, 0), overflow_stack.entries.items.len);
 }
 
+test "EMF+ BeginContainer is parsed counted and removed by an older Restore" {
+    var closed = [_]u8{0} ** 120;
+    writeHeader(closed[0..28]);
+    writeStackIndexRecord(closed[28..44], 0x4025, 0, 10);
+    writeBeginContainer(closed[44..92], 2, 20);
+    writeStackIndexRecord(closed[92..108], 0x4026, 0, 10);
+    writeEmptyRecord(closed[108..120], 0x4002);
+    var state: State = .{};
+    var stack = graphics_state_stack.Stack.init(std.testing.allocator);
+    defer stack.deinit();
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&closed), 2));
+    try state.finishTracked(stack);
+    try std.testing.expectEqual(@as(usize, 1), state.report.begin_container_records);
+    try std.testing.expectEqual(@as(usize, 0), state.report.begin_container_discouraged_page_unit_records);
+    try std.testing.expectEqual(@as(usize, 2), state.report.graphics_state_max_depth);
+
+    var discouraged = closed;
+    std.mem.writeInt(u16, discouraged[46..48], 0, .little);
+    var discouraged_state: State = .{};
+    var discouraged_stack = graphics_state_stack.Stack.init(std.testing.allocator);
+    defer discouraged_stack.deinit();
+    try std.testing.expect(try discouraged_state.consumeTracked(&discouraged_stack, testComment(&discouraged), 2));
+    try discouraged_state.finishTracked(discouraged_stack);
+    try std.testing.expectEqual(@as(usize, 1), discouraged_state.report.begin_container_discouraged_page_unit_records);
+
+    var unclosed = [_]u8{0} ** 88;
+    writeHeader(unclosed[0..28]);
+    writeBeginContainer(unclosed[28..76], 2, 20);
+    writeEmptyRecord(unclosed[76..88], 0x4002);
+    var unclosed_state: State = .{};
+    var unclosed_stack = graphics_state_stack.Stack.init(std.testing.allocator);
+    defer unclosed_stack.deinit();
+    try std.testing.expect(try unclosed_state.consumeTracked(&unclosed_stack, testComment(&unclosed), 2));
+    try std.testing.expectEqual(@as(usize, 1), unclosed_stack.entries.items.len);
+    try std.testing.expectEqual(graphics_state_stack.EntryKind.container, unclosed_stack.entries.items[0].kind);
+    try std.testing.expectEqual(@as(u32, 20), unclosed_stack.entries.items[0].stack_index);
+    try std.testing.expectError(error.UnclosedEmfPlusGraphicsStateStack, unclosed_state.finishTracked(unclosed_stack));
+
+    var malformed = closed;
+    std.mem.writeInt(u16, malformed[46..48], 0x0102, .little);
+    var malformed_state: State = .{};
+    var malformed_stack = graphics_state_stack.Stack.init(std.testing.allocator);
+    defer malformed_stack.deinit();
+    try std.testing.expectError(error.InvalidEmfPlusBeginContainerReservedFlags, malformed_state.consumeTracked(&malformed_stack, testComment(&malformed), 2));
+    try std.testing.expectEqualDeep(State{}, malformed_state);
+    try std.testing.expectEqual(@as(usize, 0), malformed_stack.entries.items.len);
+
+    var count_overflow: State = .{};
+    count_overflow.report.begin_container_records = std.math.maxInt(usize);
+    const count_before = count_overflow;
+    var count_stack = graphics_state_stack.Stack.init(std.testing.allocator);
+    defer count_stack.deinit();
+    try std.testing.expectError(error.LimitExceeded, count_overflow.consumeTracked(&count_stack, testComment(&closed), 2));
+    try std.testing.expectEqualDeep(count_before, count_overflow);
+    try std.testing.expectEqual(@as(usize, 0), count_stack.entries.items.len);
+
+    var warning_overflow: State = .{};
+    warning_overflow.report.begin_container_discouraged_page_unit_records = std.math.maxInt(usize);
+    const warning_before = warning_overflow;
+    var warning_stack = graphics_state_stack.Stack.init(std.testing.allocator);
+    defer warning_stack.deinit();
+    try std.testing.expectError(error.LimitExceeded, warning_overflow.consumeTracked(&warning_stack, testComment(&discouraged), 2));
+    try std.testing.expectEqualDeep(warning_before, warning_overflow);
+    try std.testing.expectEqual(@as(usize, 0), warning_stack.entries.items.len);
+}
+
 test "EMF+ Save/Restore tracked stream rolls back stack and report on missing and late failures" {
     var header = [_]u8{0} ** 28;
     writeHeader(&header);
@@ -1139,7 +1227,7 @@ test "EMF+ Save/Restore tracked stream rolls back stack and report on missing an
     try std.testing.expectError(error.UnclosedEmfPlusGraphicsStateStack, state.finishTracked(stack));
 }
 
-test "EMF+ Save/Restore tracked stream rejects containers until the shared stack parser exists" {
+test "EMF+ tracked stream still rejects unsupported container records" {
     var bytes = [_]u8{0} ** 44;
     writeHeader(bytes[0..28]);
     writeStackIndexRecord(bytes[28..44], 0x4028, 0, 1);
