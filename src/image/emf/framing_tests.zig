@@ -539,6 +539,36 @@ test "EMF framing reports opaque StrokeFillPath without inferring payload fields
     try t.expectEqual(@as(usize, 1), (try framing.validate(t.allocator, &bytes)).emf_plus.opaque_stroke_fill_path_records);
 }
 
+test "EMF framing routes literal-color FillRects through the EMF+ stream" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 192;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 3, .little);
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[92..96], 84, .little);
+    std.mem.writeInt(u32, bytes[96..100], 72, .little);
+    std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
+    std.mem.writeInt(u16, bytes[104..106], 0x4001, .little);
+    std.mem.writeInt(u32, bytes[108..112], 28, .little);
+    std.mem.writeInt(u32, bytes[112..116], 16, .little);
+    std.mem.writeInt(u32, bytes[116..120], 0xdbc01001, .little);
+    std.mem.writeInt(u32, bytes[124..128], 96, .little);
+    std.mem.writeInt(u32, bytes[128..132], 96, .little);
+    std.mem.writeInt(u16, bytes[132..134], 0x400a, .little);
+    std.mem.writeInt(u16, bytes[134..136], 0xc000, .little);
+    std.mem.writeInt(u32, bytes[136..140], 28, .little);
+    std.mem.writeInt(u32, bytes[140..144], 16, .little);
+    std.mem.writeInt(u32, bytes[144..148], 0x44332211, .little);
+    std.mem.writeInt(u32, bytes[148..152], 1, .little);
+    for (0..4) |index| std.mem.writeInt(i16, bytes[152 + index * 2 ..][0..2], @intCast(index), .little);
+    std.mem.writeInt(u16, bytes[160..162], 0x4002, .little);
+    std.mem.writeInt(u32, bytes[164..168], 12, .little);
+    @memcpy(bytes[172..192], original[88..108]);
+
+    try t.expectEqual(@as(usize, 1), (try framing.validate(t.allocator, &bytes)).emf_plus.fill_rects_records);
+}
+
 test "EMF framing reports private and Clear EMF+ records and rejects reserved records" {
     const original = fixture();
     var bytes = [_]u8{0} ** 200;
