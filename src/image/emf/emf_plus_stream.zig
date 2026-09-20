@@ -20,6 +20,7 @@ const draw_path_record = @import("emf_plus_draw_path.zig");
 const draw_pie_record = @import("emf_plus_draw_pie.zig");
 const draw_rects_record = @import("emf_plus_draw_rects.zig");
 const draw_string_record = @import("emf_plus_draw_string.zig");
+const set_rendering_origin_record = @import("emf_plus_set_rendering_origin.zig");
 
 pub const Report = struct {
     comments: usize = 0,
@@ -46,6 +47,7 @@ pub const Report = struct {
     draw_pie_records: usize = 0,
     draw_rects_records: usize = 0,
     draw_string_records: usize = 0,
+    set_rendering_origin_records: usize = 0,
 };
 
 pub const State = struct {
@@ -200,6 +202,10 @@ pub const State = struct {
                     if (format_type != .string_format) return error.InvalidEmfPlusDrawStringFormatType;
                 }
                 pending.report.draw_string_records = std.math.add(usize, pending.report.draw_string_records, 1) catch return error.LimitExceeded;
+            }
+            if (value.kind == .set_rendering_origin) {
+                _ = try set_rendering_origin_record.parse(value);
+                pending.report.set_rendering_origin_records = std.math.add(usize, pending.report.set_rendering_origin_records, 1) catch return error.LimitExceeded;
             }
             if (private_comment.parse(value)) |parsed| {
                 pending.report.private_comments = std.math.add(usize, pending.report.private_comments, 1) catch return error.LimitExceeded;
@@ -719,6 +725,36 @@ test "EMF+ stream resolves DrawString Font Brush and optional StringFormat refer
     overflow.report.draw_string_records = std.math.maxInt(usize);
     const before = overflow;
     try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..108]), 2));
+    try std.testing.expectEqualDeep(before, overflow);
+}
+
+test "EMF+ stream validates and counts SetRenderingOrigin records atomically" {
+    var bytes = [_]u8{0} ** 60;
+    writeHeader(bytes[0..28]);
+    std.mem.writeInt(u16, bytes[28..30], 0x401d, .little);
+    std.mem.writeInt(u16, bytes[30..32], 0xffff, .little);
+    std.mem.writeInt(u32, bytes[32..36], 20, .little);
+    std.mem.writeInt(u32, bytes[36..40], 8, .little);
+    std.mem.writeInt(i32, bytes[40..44], -123456789, .little);
+    std.mem.writeInt(i32, bytes[44..48], 987654321, .little);
+    writeEmptyRecord(bytes[48..60], 0x4002);
+
+    var state: State = .{};
+    try std.testing.expect(try state.consume(testComment(&bytes), 2));
+    try state.finish();
+    try std.testing.expectEqual(@as(usize, 1), state.report.set_rendering_origin_records);
+
+    var malformed = bytes;
+    std.mem.writeInt(u32, malformed[32..36], 16, .little);
+    std.mem.writeInt(u32, malformed[36..40], 4, .little);
+    var malformed_state: State = .{};
+    try std.testing.expectError(error.InvalidEmfPlusSetRenderingOriginSize, malformed_state.consume(testComment(malformed[0..44]), 2));
+    try std.testing.expectEqualDeep(State{}, malformed_state);
+
+    var overflow: State = .{};
+    overflow.report.set_rendering_origin_records = std.math.maxInt(usize);
+    const before = overflow;
+    try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..48]), 2));
     try std.testing.expectEqualDeep(before, overflow);
 }
 

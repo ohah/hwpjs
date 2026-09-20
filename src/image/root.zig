@@ -262,6 +262,7 @@ pub const emf_plus_rect_array = @import("emf/emf_plus_rect_array.zig");
 pub const emf_plus_draw_rects = @import("emf/emf_plus_draw_rects.zig");
 pub const emf_plus_optional_object_id = @import("emf/emf_plus_optional_object_id.zig");
 pub const emf_plus_draw_string = @import("emf/emf_plus_draw_string.zig");
+pub const emf_plus_set_rendering_origin = @import("emf/emf_plus_set_rendering_origin.zig");
 pub const emf_plus_comment = @import("emf/emf_plus_comment.zig");
 pub const emf_plus_object = @import("emf/emf_plus_object.zig");
 pub const emf_plus_image_effect_guid = @import("emf/emf_plus_image_effect_guid.zig");

@@ -281,6 +281,39 @@ test "EMF framing routes DrawString through Font Brush and StringFormat referenc
     try t.expectError(error.MissingEmfPlusDrawStringFont, framing.validate(t.allocator, &missing));
 }
 
+test "EMF framing routes SetRenderingOrigin through the EMF+ stream" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 184;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 3, .little);
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[92..96], 76, .little);
+    std.mem.writeInt(u32, bytes[96..100], 64, .little);
+    std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
+    std.mem.writeInt(u16, bytes[104..106], 0x4001, .little);
+    std.mem.writeInt(u32, bytes[108..112], 28, .little);
+    std.mem.writeInt(u32, bytes[112..116], 16, .little);
+    std.mem.writeInt(u32, bytes[116..120], 0xdbc01001, .little);
+    std.mem.writeInt(u32, bytes[124..128], 96, .little);
+    std.mem.writeInt(u32, bytes[128..132], 96, .little);
+    std.mem.writeInt(u16, bytes[132..134], 0x401d, .little);
+    std.mem.writeInt(u16, bytes[134..136], 0xffff, .little);
+    std.mem.writeInt(u32, bytes[136..140], 20, .little);
+    std.mem.writeInt(u32, bytes[140..144], 8, .little);
+    std.mem.writeInt(i32, bytes[144..148], -123456789, .little);
+    std.mem.writeInt(i32, bytes[148..152], 987654321, .little);
+    std.mem.writeInt(u16, bytes[152..154], 0x4002, .little);
+    std.mem.writeInt(u32, bytes[156..160], 12, .little);
+    @memcpy(bytes[164..184], original[88..108]);
+
+    try t.expectEqual(@as(usize, 1), (try framing.validate(t.allocator, &bytes)).emf_plus.set_rendering_origin_records);
+    var malformed = bytes;
+    std.mem.writeInt(u32, malformed[136..140], 16, .little);
+    std.mem.writeInt(u32, malformed[140..144], 4, .little);
+    try t.expectError(error.InvalidEmfPlusSetRenderingOriginSize, framing.validate(t.allocator, &malformed));
+}
+
 test "EMF framing routes DrawBeziers through the Object Table Pen reference" {
     const original = fixture();
     var bytes = [_]u8{0} ** 224;
