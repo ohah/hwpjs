@@ -10,13 +10,13 @@
 
 Count는 명세의 최소값 4를 적용하며 기본 최대값은 16 Mi points입니다. 고정형 Point/PointF는 Count로 계산한 길이와 정확히 일치해야 합니다. PointR는 좌표마다 2~4바이트이므로 실제 Count개를 원자적으로 읽고, 32-bit record 정렬을 위한 남은 0~3바이트를 원문 padding으로 보존합니다. Count를 신뢰해 선할당하지 않으며 곱셈·덧셈과 stream 집계 overflow를 검사합니다.
 
-명세는 최소 4 points만 요구하므로 문서에 없는 `(Count - 1) % 3 == 0` 제약을 wire parser가 추가하지 않습니다. 상대 좌표를 절대 좌표로 누적하거나 Bezier topology를 보정하지 않고 세 wire 표현을 tagged iterator로 노출합니다. reserved flags와 padding 값은 거부하지 않습니다.
+명세는 최소 4 points만 요구하므로 문서에 없는 `(Count - 1) % 3 == 0` 제약을 wire parser가 추가하지 않습니다. 세 wire 표현은 tagged iterator로 노출하고, 상대 좌표 누적과 완전한 `1+3n` [연결 cubic topology](emf-plus-bezier-geometry.md)는 별도 geometry API가 담당합니다. reserved flags와 padding 값은 거부하지 않습니다.
 
 stream은 해당 ObjectID 슬롯이 이미 존재하고 ObjectTypePen인지 확인합니다. 누락 슬롯, 다른 객체 타입, payload·한도·집계 오류는 comment 전체 상태를 원복합니다. 상위 EMF framing은 같은 stream 경로를 사용합니다.
 
 ## 미지원 경계와 검증 기록
 
-현재 로컬 HWP corpus에는 EMF+ signature가 없어 실제 한컴 DrawBeziers 표본과 렌더링 결과는 관측하지 못했습니다. 구현 범위는 wire 구조, borrowed point iteration, [공용 상대좌표 누적](emf-plus-point-resolution.md), Object Table 참조와 stream/framing 연결입니다. Bezier topology, 변환, 곡선 재생·래스터화와 저장은 미구현입니다.
+현재 로컬 HWP corpus에는 EMF+ signature가 없어 실제 한컴 DrawBeziers 표본과 렌더링 결과는 관측하지 못했습니다. 구현 범위는 wire 구조, borrowed point iteration, [공용 상대좌표 누적](emf-plus-point-resolution.md), 연결 cubic segment 조립, Object Table 참조와 stream/framing 연결입니다. Bézier 평가·flattening, 변환, stroke·래스터화와 저장은 미구현입니다.
 
 합성 fixture는 Point·PointF·혼합폭 PointR, P 우선순위, ObjectID 0~63 경계, reserved flags, Count 최소·한도, float 원비트, padding 0~3, 모든 prefix 잘림, 독립 Size/DataSize/slice 불일치, Pen 존재·누락·타입 불일치, stream 집계·overflow 원자성과 실제 EMF framing 연결을 검사합니다.
 

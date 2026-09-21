@@ -90,6 +90,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - [EMF+ 객체 공통 값과 gradient 보조 객체](emf-plus-common-objects.md)
 - [EMF+ drawing PointData 절대 좌표 해석](emf-plus-point-resolution.md)
 - [EMF+ polyline·polygon 선분 조립](emf-plus-polyline-geometry.md)
+- [EMF+ 연결 cubic Bézier 조립](emf-plus-bezier-geometry.md)
 - [EMF+ Path와 가변 좌표·RLE point types](emf-plus-path-object.md)
 - [EMF+ Image·Bitmap·Palette·Metafile payload](emf-plus-image-object.md)
 - [EMF+ 다섯 Brush payload와 선택 데이터](emf-plus-brush-object.md)

@@ -1,6 +1,7 @@
 const std = @import("std");
 const binary = @import("../../binary/reader.zig");
 const point_data = @import("emf_plus_point_data.zig");
+const bezier_segments = @import("emf_plus_bezier_segments.zig");
 const record = @import("emf_plus_record.zig");
 const record_flags = @import("emf_plus_record_flags.zig");
 
@@ -13,6 +14,10 @@ pub const DrawBeziers = struct {
     compressed_flag: bool,
     count: u32,
     point_data: point_data.PointData,
+
+    pub fn segments(self: DrawBeziers) !bezier_segments.Iterator {
+        return bezier_segments.segments(self.point_data);
+    }
 };
 
 pub fn parse(value: record.Record, options: Options) !DrawBeziers {
@@ -67,6 +72,15 @@ test "EMF+ DrawBeziers parses integer and floating points with Pen IDs" {
     try std.testing.expect(!compressed.relative);
     var compressed_points = compressed.point_data.points();
     try std.testing.expectEqual(@as(i16, -32768), (try compressed_points.next()).?.integer.x);
+    var integer_segments = try compressed.segments();
+    const maybe_integer_segment = try integer_segments.next();
+    try std.testing.expect(maybe_integer_segment != null);
+    const integer_segment = maybe_integer_segment.?;
+    try std.testing.expectEqual(@as(i64, -32_768), integer_segment.start.integer.x);
+    try std.testing.expectEqual(@as(i64, -1), integer_segment.control1.integer.x);
+    try std.testing.expectEqual(@as(i64, -2), integer_segment.control2.integer.x);
+    try std.testing.expectEqual(@as(i64, -3), integer_segment.end.integer.x);
+    try std.testing.expect((try integer_segments.next()) == null);
 
     var floating = [_]u8{0} ** 36;
     std.mem.writeInt(u32, floating[0..4], 4, .little);
@@ -78,6 +92,11 @@ test "EMF+ DrawBeziers parses integer and floating points with Pen IDs" {
     const first = (try float_points.next()).?.floating;
     try std.testing.expectEqual(@as(u32, @bitCast(@as(f32, -0.0))), @as(u32, @bitCast(first.x)));
     try std.testing.expect(std.math.isNan(first.y));
+
+    var incomplete = [_]u8{0} ** 24;
+    std.mem.writeInt(u32, incomplete[0..4], 5, .little);
+    const wire_valid = try parse(makeRecord(&incomplete, 0x4000), .{});
+    try std.testing.expectError(error.InvalidEmfPlusBezierTopology, wire_valid.segments());
 }
 
 test "EMF+ DrawBeziers parses mixed PointR widths padding and ignores C when P is set" {

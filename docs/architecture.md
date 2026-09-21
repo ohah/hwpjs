@@ -24,6 +24,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ polyline·polygon 선분 계층](emf-plus-polyline-geometry.md)은 절대 PointData의 인접점을 allocation-free segment로 연결합니다. DrawLines는 L을 닫힘 정책으로 전달하고 FillPolygon은 항상 마지막→첫 경계를 추가하며 transform·clip·stroke/fill은 이 계층에 섞지 않습니다.
 
+[EMF+ 연결 cubic Bézier 계층](emf-plus-bezier-geometry.md)은 첫 4점과 이후 3점씩을 segment로 조립하고 앞 end를 다음 start로 공유합니다. wire parser의 최소 Count 4 수용과 geometry의 완전한 `1+3n` 요구를 분리하며 불완전한 후행 점을 버리지 않습니다.
+
 [EMF+ Path 계층](emf-plus-path-object.md)은 Integer7/15, 세 point wire 표현, 일반/RLE point type과 Path envelope를 분리합니다. 공식 R flag 결합 해석과 독립 RLE 호환 해석은 명시적 option으로 구분하며 자동 휴리스틱을 사용하지 않습니다. 상위 Brush/Region/CustomLineCap은 이 parser를 재사용하고 geometry·type 규칙을 복제하지 않습니다.
 
 [EMF+ Image 계층](emf-plus-image-object.md)은 Image dispatch, Bitmap, indexed Palette, Metafile payload를 분리합니다. raw pixel에서만 format·stride·palette·크기를 검증하고 compressed payload와 중첩 metafile은 원문을 보존합니다. 이미지 시그니처나 바이트 모양으로 명시된 wire type을 자동 교정하지 않습니다.
@@ -58,7 +60,7 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ DrawArc record 계층](emf-plus-draw-arc-record.md)은 drawing record 공용 C/ObjectID flags, Rect/RectF 선택과 두 각도를 분리합니다. stream은 기존 Object Table에서 Pen 존재·타입을 확인하고 payload parser는 렌더링 modulo·clamp를 수행하지 않습니다.
 
-[EMF+ DrawBeziers record 계층](emf-plus-draw-beziers-record.md)은 Path와 공유하는 Point/PointR iterator 위에서 P/C별 PointData를 선택합니다. stream은 Pen 참조만 연결하며 상대좌표 누적은 공용 resolver, 곡선 재생은 후속 geometry 계층에 둡니다.
+[EMF+ DrawBeziers record 계층](emf-plus-draw-beziers-record.md)은 Path와 공유하는 Point/PointR iterator 위에서 P/C별 PointData를 선택합니다. stream은 Pen 참조만 연결하며 상대좌표 누적과 연결 cubic topology는 공용 geometry 계층, 곡선 평가·stroke는 후속 renderer 계층에 둡니다.
 
 [EMF+ DrawClosedCurve record 계층](emf-plus-draw-closed-curve-record.md)은 FillClosedCurve와 공통인 Tension·최소 Count 3·PointData 위에 Pen 참조를 조립합니다. stream은 Pen 참조만 연결하며 cardinal spline 계산은 wire parser에 넣지 않습니다.
 
