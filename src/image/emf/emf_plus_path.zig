@@ -3,6 +3,7 @@ const binary = @import("../../binary/reader.zig");
 const graphics_version = @import("emf_plus_graphics_version.zig");
 const object = @import("emf_plus_object.zig");
 const path_geometry = @import("emf_plus_path_geometry.zig");
+const path_segments = @import("emf_plus_path_segments.zig");
 const point = @import("emf_plus_point.zig");
 const path_type = @import("emf_plus_path_type.zig");
 
@@ -45,6 +46,10 @@ pub const Path = struct {
 
     pub fn commands(self: Path) path_geometry.Iterator {
         return path_geometry.commands(self.points(), self.pointTypes());
+    }
+
+    pub fn segments(self: Path) path_segments.Iterator {
+        return path_segments.segments(self.commands());
     }
 };
 
@@ -165,6 +170,17 @@ test "EMF+ Path parses floating points types and indeterminate padding" {
     try std.testing.expectEqual(@as(u32, @bitCast(@as(f32, 3.5))), @as(u32, @bitCast(command.end.value.floating.x)));
     try std.testing.expect(command.end.point_type.point_type.close_subpath);
     try std.testing.expect((try commands_iterator.next()) == null);
+    var segments_iterator = value.segments();
+    const maybe_line_segment = try segments_iterator.next();
+    try std.testing.expect(maybe_line_segment != null);
+    try std.testing.expect(maybe_line_segment.? == .line_to);
+    const maybe_closing_segment = try segments_iterator.next();
+    try std.testing.expect(maybe_closing_segment != null);
+    try std.testing.expect(maybe_closing_segment.? == .close_figure);
+    const closing_segment = maybe_closing_segment.?.close_figure;
+    try std.testing.expectEqual(@as(u32, @bitCast(@as(f32, 3.5))), @as(u32, @bitCast(closing_segment.start.floating.x)));
+    try std.testing.expectEqual(@as(u32, @bitCast(@as(f32, 1.5))), @as(u32, @bitCast(closing_segment.end.floating.x)));
+    try std.testing.expect((try segments_iterator.next()) == null);
 }
 
 test "EMF+ Path parses the official 19-point object example byte for byte" {

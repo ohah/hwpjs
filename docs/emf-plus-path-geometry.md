@@ -18,7 +18,7 @@ RLE type에서는 Start가 figure 경계로 우선하고, Start가 아닌 point�
 
 각 `next`는 필요한 좌표와 type 전체를 임시 iterator에서 읽은 뒤에만 좌표 cursor·PointR 누적·RLE run 상태·현재점·figure 시작점·닫힘 상태를 교체합니다. 잘림, point/type 개수 불일치, 잘못된 figure 시작 또는 불완전한 Bézier group은 현재 command 소비를 전부 원복합니다. 입력을 빌리고 할당하지 않습니다.
 
-이 계층은 path topology까지만 구현합니다. CloseSubpath의 실제 closing edge 출력, DashMode stroke 적용, marker 소비자, world/page transform, clip boolean geometry, fill rule, curve 평가·flattening, rasterization과 저장은 후속 범위입니다. PathGradient·Region·CustomLineCap이 보유한 중첩 Path는 같은 `Path.commands()`를 호출할 수 있지만 상위 객체 의미를 여기서 추정하지 않습니다. 로컬 HWP corpus에는 EMF+ signature 표본이 0개라 실제 한컴 렌더링 동등성도 주장하지 않습니다.
+이 계층은 path command topology까지만 구현합니다. CloseSubpath의 실제 closing edge는 별도 [Path closing segment 계층](emf-plus-path-segments.md)이 command를 재사용해 출력합니다. DashMode stroke 적용, marker 소비자, world/page transform, clip boolean geometry, fill rule, 곡선 평가·flattening, rasterization과 저장은 후속 범위입니다. PathGradient·Region·CustomLineCap이 보유한 중첩 Path는 같은 `Path.commands()`와 `Path.segments()`를 호출할 수 있지만 상위 객체 의미를 여기서 추정하지 않습니다. 로컬 HWP corpus에는 EMF+ signature 표본이 0개라 실제 한컴 렌더링 동등성도 주장하지 않습니다.
 
 ## 검증 기록
 
