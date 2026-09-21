@@ -131,6 +131,7 @@ test {
     _ = @import("image/emf/emf_plus_page_transform.zig");
     _ = @import("image/emf/emf_plus_clip_state.zig");
     _ = @import("image/emf/emf_plus_property_state.zig");
+    _ = @import("image/emf/emf_plus_ts_clip_state.zig");
     _ = @import("image/emf/emf_plus_object.zig");
     _ = @import("image/emf/emf_plus_stream.zig");
     _ = @import("image/wmf/header_tests.zig");

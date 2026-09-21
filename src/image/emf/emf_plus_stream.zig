@@ -134,6 +134,7 @@ pub const Report = struct {
     page_transform: ?page_transform.PageTransform = null,
     clip: ?clip_state.State = null,
     properties: ?property_state.State = null,
+    terminal_server_clip_rectangles: ?u16 = null,
 };
 
 pub const State = struct {
@@ -477,8 +478,12 @@ pub const State = struct {
                 if (stack) |tracked| try tracked.close(.container, parsed.stack_index);
             }
             if (value.kind == .set_ts_clip) {
-                _ = try set_ts_clip_record.parse(value);
+                const parsed = try set_ts_clip_record.parse(value);
                 pending.report.set_ts_clip_records = std.math.add(usize, pending.report.set_ts_clip_records, 1) catch return error.LimitExceeded;
+                if (stack) |tracked| {
+                    try tracked.current.setTerminalServerClip(tracked.allocator, parsed.rects);
+                    tracked.current.clip = if (parsed.num_rects == 0) .empty else .complex;
+                }
             }
             if (value.kind == .set_ts_graphics) {
                 _ = try set_ts_graphics_record.parse(value, .{});
@@ -539,31 +544,31 @@ pub const State = struct {
             if (value.kind == .reset_clip) {
                 _ = try reset_clip_record.parse(value);
                 pending.report.reset_clip_records = std.math.add(usize, pending.report.reset_clip_records, 1) catch return error.LimitExceeded;
-                if (stack) |tracked| tracked.current.clip = .infinite;
+                if (stack) |tracked| tracked.current.resetClip(tracked.allocator);
             }
             if (value.kind == .set_clip_rect) {
                 const parsed = try set_clip_rect_record.parse(value);
                 pending.report.set_clip_rect_records = std.math.add(usize, pending.report.set_clip_rect_records, 1) catch return error.LimitExceeded;
-                if (stack) |tracked| tracked.current.clip = tracked.current.clip.combineRectangle(parsed.mode, parsed.rectangle);
+                if (stack) |tracked| tracked.current.combineClipRectangle(tracked.allocator, parsed.mode, parsed.rectangle);
             }
             if (value.kind == .set_clip_path) {
                 const parsed = try set_clip_path_record.parse(value);
                 const object_type = pending.object_state.table[parsed.path_id] orelse return error.MissingEmfPlusSetClipPathPath;
                 if (object_type != .path) return error.InvalidEmfPlusSetClipPathPathType;
                 pending.report.set_clip_path_records = std.math.add(usize, pending.report.set_clip_path_records, 1) catch return error.LimitExceeded;
-                if (stack) |tracked| tracked.current.clip = tracked.current.clip.combineOpaque(parsed.mode);
+                if (stack) |tracked| tracked.current.combineClipOpaque(tracked.allocator, parsed.mode);
             }
             if (value.kind == .set_clip_region) {
                 const parsed = try set_clip_region_record.parse(value);
                 const object_type = pending.object_state.table[parsed.region_id] orelse return error.MissingEmfPlusSetClipRegionRegion;
                 if (object_type != .region) return error.InvalidEmfPlusSetClipRegionRegionType;
                 pending.report.set_clip_region_records = std.math.add(usize, pending.report.set_clip_region_records, 1) catch return error.LimitExceeded;
-                if (stack) |tracked| tracked.current.clip = tracked.current.clip.combineOpaque(parsed.mode);
+                if (stack) |tracked| tracked.current.combineClipOpaque(tracked.allocator, parsed.mode);
             }
             if (value.kind == .offset_clip) {
                 const parsed = try offset_clip_record.parse(value);
                 pending.report.offset_clip_records = std.math.add(usize, pending.report.offset_clip_records, 1) catch return error.LimitExceeded;
-                if (stack) |tracked| tracked.current.clip = tracked.current.clip.offset(parsed.dx, parsed.dy);
+                if (stack) |tracked| tracked.current.offsetClip(tracked.allocator, parsed.dx, parsed.dy);
             }
             if (value.kind == .stroke_fill_path) {
                 _ = try stroke_fill_path_record.observe(value);
@@ -582,6 +587,7 @@ pub const State = struct {
             pending.report.page_transform = tracked.current.page_transform;
             pending.report.clip = tracked.current.clip;
             pending.report.properties = tracked.current.properties;
+            pending.report.terminal_server_clip_rectangles = if (tracked.current.terminal_server_clip) |state| @intCast(state.rectangles.len) else null;
         }
         pending.report.objects = pending.object_state.report;
         self.* = pending;
@@ -2399,6 +2405,75 @@ test "EMF+ stream validates SetTSClip and rolls report back atomically" {
     const before = overflow;
     try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..44]), 2));
     try std.testing.expectEqualDeep(before, overflow);
+}
+
+test "EMF+ tracked SetTSClip owns rectangles snapshots containers clears and rolls back" {
+    var header = [_]u8{0} ** 28;
+    writeHeader(&header);
+    var state: State = .{};
+    var stack = graphics_state_stack.Stack.init(std.testing.allocator);
+    defer stack.deinit();
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&header), 2));
+
+    var first = [_]u8{0} ** 16;
+    std.mem.writeInt(u16, first[0..2], 0x403a, .little);
+    std.mem.writeInt(u16, first[2..4], 0x8001, .little);
+    std.mem.writeInt(u32, first[4..8], 16, .little);
+    std.mem.writeInt(u32, first[8..12], 4, .little);
+    first[12..16].* = .{ 0x81, 0x82, 0x83, 0x84 };
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&first), 3));
+    try std.testing.expectEqual(clip_state.State.complex, stack.current.clip);
+    try std.testing.expectEqual(@as(?u16, 1), state.report.terminal_server_clip_rectangles);
+    try std.testing.expect(stack.current.terminal_server_clip != null);
+    try std.testing.expectEqual(@import("emf_plus_ts_clip_rects.zig").Rect{ .left = 1, .top = 2, .right = 3, .bottom = 6 }, stack.current.terminal_server_clip.?.rectangles[0]);
+
+    var save = [_]u8{0} ** 16;
+    writeStackIndexRecord(&save, 0x4025, 0, 70);
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&save), 4));
+    var second = first;
+    second[12..16].* = .{ 0x85, 0x86, 0x87, 0x88 };
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&second), 5));
+    try std.testing.expect(stack.current.terminal_server_clip != null);
+    try std.testing.expectEqual(@as(i32, 5), stack.current.terminal_server_clip.?.rectangles[0].left);
+    var restore = [_]u8{0} ** 16;
+    writeStackIndexRecord(&restore, 0x4026, 0, 70);
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&restore), 6));
+    try std.testing.expect(stack.current.terminal_server_clip != null);
+    try std.testing.expectEqual(@as(i32, 1), stack.current.terminal_server_clip.?.rectangles[0].left);
+
+    var begin = [_]u8{0} ** 16;
+    writeStackIndexRecord(&begin, 0x4028, 0, 71);
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&begin), 7));
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&second), 8));
+    var end = [_]u8{0} ** 16;
+    writeStackIndexRecord(&end, 0x4029, 0, 71);
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&end), 9));
+    try std.testing.expect(stack.current.terminal_server_clip != null);
+    try std.testing.expectEqual(@as(i32, 1), stack.current.terminal_server_clip.?.rectangles[0].left);
+
+    var malformed = [_]u8{0} ** 19;
+    @memcpy(malformed[0..16], second[0..16]);
+    malformed[16..19].* = .{ 0xaa, 0xbb, 0xcc };
+    const report_before = state.report;
+    try std.testing.expectError(error.TruncatedEmfPlusRecordHeader, state.consumeTracked(&stack, testComment(&malformed), 10));
+    try std.testing.expectEqualDeep(report_before, state.report);
+    try std.testing.expect(stack.current.terminal_server_clip != null);
+    try std.testing.expectEqual(@as(i32, 1), stack.current.terminal_server_clip.?.rectangles[0].left);
+
+    var empty = [_]u8{0} ** 12;
+    writeEmptyRecord(&empty, 0x403a);
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&empty), 11));
+    try std.testing.expectEqual(clip_state.State.empty, stack.current.clip);
+    try std.testing.expect(stack.current.terminal_server_clip != null);
+    try std.testing.expectEqual(@as(usize, 0), stack.current.terminal_server_clip.?.rectangles.len);
+    try std.testing.expectEqual(@as(?u16, 0), state.report.terminal_server_clip_rectangles);
+
+    var reset = [_]u8{0} ** 12;
+    writeEmptyRecord(&reset, 0x4031);
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&reset), 12));
+    try std.testing.expect(stack.current.terminal_server_clip == null);
+    try std.testing.expectEqual(clip_state.State.infinite, stack.current.clip);
+    try std.testing.expectEqual(@as(?u16, null), state.report.terminal_server_clip_rectangles);
 }
 
 test "EMF+ stream validates SetTSGraphics and rolls report back atomically" {

@@ -8,7 +8,7 @@ Restore Flags는 사용되지 않고 SHOULD zero이지만 수신 시 MUST be ign
 
 ## 공유 stack과 소유권
 
-`emf_plus_graphics_state_stack.zig`는 allocator-backed entry stack과 현재 [world transform](emf-plus-graphics-state.md)을 소유하고 Save와 Container 종류를 구분합니다. Microsoft [Graphics::Restore](https://learn.microsoft.com/en-us/windows/win32/api/gdiplusgraphics/nf-gdiplusgraphics-graphics-restore) 동작처럼 지정한 Save entry의 snapshot을 복원하고 그 entry와 뒤에 쌓인 모든 Save/Container entry를 제거합니다. 같은 StackIndex가 중복되면 stack top에서 가장 가까운 같은 종류를 선택합니다. 다른 종류의 같은 값은 매칭하지 않습니다.
+`emf_plus_graphics_state_stack.zig`는 allocator-backed entry stack과 현재 [graphics state](emf-plus-graphics-state.md)를 소유하고 Save와 Container 종류를 구분합니다. world/page transform·일반 clip·property는 값으로, [terminal-server clip rectangles](emf-plus-ts-clip-state.md)는 소유 배열의 깊은 복사로 snapshot합니다. Microsoft [Graphics::Restore](https://learn.microsoft.com/en-us/windows/win32/api/gdiplusgraphics/nf-gdiplusgraphics-graphics-restore) 동작처럼 지정한 Save entry의 snapshot을 복원하고 그 entry와 뒤에 쌓인 모든 Save/Container entry를 제거합니다. 같은 StackIndex가 중복되면 stack top에서 가장 가까운 같은 종류를 선택합니다. 다른 종류의 같은 값은 매칭하지 않습니다.
 
 `emf_plus_stream.State.consumeTracked`는 comment 시작 시 stack을 복제하고 parser/report와 함께 성공한 경우에만 교체합니다. payload·missing target·후속 record·할당·집계 오류에서는 report와 stack이 모두 원복됩니다. `finishTracked`는 EOF 계약 뒤 남은 entry를 거부합니다. 실제 EMF `framing.validate`는 allocator를 이 tracked 경로에 전달합니다.
 

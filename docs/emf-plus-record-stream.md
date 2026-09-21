@@ -20,6 +20,8 @@ EndOfFile과 GetDC는 Size 12/DataSize 0을 검사하고 사용되지 않는 Fla
 - [MS-EMFPLUS EmfPlusGetDC](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/b7879ac2-355d-4419-8e65-e2e4de4fa4a9)
 - [Microsoft GDI+ EmfPlusRecordType](https://learn.microsoft.com/en-us/windows/win32/api/gdiplusenums/ne-gdiplusenums-emfplusrecordtype)
 
+별도 [SetTSClip 소유 상태](emf-plus-ts-clip-state.md)는 복원된 terminal-server rectangle 배열을 Save/Container snapshot에 깊은 복사합니다. 이는 보수적 일반 clip 분류보다 정확한 원값 상태이지만 rectangle union과 실제 clipping 렌더링은 여전히 후속 범위입니다.
+
 ## 검증과 미구현 경계
 
 단위 테스트는 전체 type 범위와 양쪽 인접값, 모든 1~11바이트 header 잘림, 최소/비정렬/불일치/최대 선언 크기, iterator 실패 원자성, Header signature와 크기, 여러 comment의 상태 연속, 빈 comment, Header 위치·중복, EOF 누락·후속 record를 검사합니다. 상위 framing 테스트는 정상 Header/EOF 보고서와 signature·빈 comment·지연 Header·EOF 누락 오류 전파를 확인합니다.

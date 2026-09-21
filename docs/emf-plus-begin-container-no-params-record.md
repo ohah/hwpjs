@@ -10,7 +10,7 @@
 
 tracked stream은 유효 레코드를 공용 graphics-state stack의 Container entry로 push하고 checked count를 보고합니다. 앞선 Save를 Restore하면 그 뒤의 Container도 함께 제거됩니다. EOF에 남은 Container, malformed payload, count overflow, 할당 실패와 후속 record 실패는 기존 comment 원자성 계약을 따릅니다. allocation-free `State.consume`은 구조 조사 API이므로 stack 관계를 검증하지 않습니다.
 
-[world/page transform, 보수적 clip과 여덟 property snapshot](emf-plus-graphics-state.md)의 생성과 EndContainer 복원은 구현했습니다. 실제 graphics 렌더링은 구현하지 않았습니다. [EndContainer](emf-plus-end-container-record.md)는 같은 stack에서 이 레코드를 정상 종료하며 wire 수명주기를 검증합니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성도 주장하지 않습니다.
+[world/page transform, 일반 clip, 소유 terminal-server clip rectangles와 여덟 property snapshot](emf-plus-graphics-state.md)의 생성과 EndContainer 복원은 구현했습니다. 실제 graphics 렌더링은 구현하지 않았습니다. [EndContainer](emf-plus-end-container-record.md)는 같은 stack에서 이 레코드를 정상 종료하며 wire 수명주기를 검증합니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성도 주장하지 않습니다.
 
 ## 검증 기록
 

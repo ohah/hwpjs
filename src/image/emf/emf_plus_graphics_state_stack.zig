@@ -3,12 +3,60 @@ const transform_matrix = @import("emf_plus_transform_matrix.zig");
 const page_transform = @import("emf_plus_page_transform.zig");
 const clip_state = @import("emf_plus_clip_state.zig");
 const property_state = @import("emf_plus_property_state.zig");
+const ts_clip_state = @import("emf_plus_ts_clip_state.zig");
+const ts_clip_rects = @import("emf_plus_ts_clip_rects.zig");
+const combine_mode = @import("emf_plus_combine_mode.zig");
+const geometry = @import("emf_plus_geometry.zig");
 
 pub const GraphicsState = struct {
     world_transform: ?transform_matrix.TransformMatrix = transform_matrix.TransformMatrix.identity,
     page_transform: page_transform.PageTransform = .{},
     clip: clip_state.State = .infinite,
     properties: property_state.State = .{},
+    terminal_server_clip: ?ts_clip_state.State = null,
+
+    pub fn clone(self: GraphicsState, allocator: std.mem.Allocator) !GraphicsState {
+        var result = self;
+        result.terminal_server_clip = if (self.terminal_server_clip) |state| try state.clone(allocator) else null;
+        return result;
+    }
+
+    pub fn deinit(self: *GraphicsState, allocator: std.mem.Allocator) void {
+        if (self.terminal_server_clip) |*state| state.deinit(allocator);
+        self.* = undefined;
+    }
+
+    pub fn setTerminalServerClip(self: *GraphicsState, allocator: std.mem.Allocator, rectangles: ts_clip_rects.Rects) !void {
+        var replacement = try ts_clip_state.State.fromRects(allocator, rectangles);
+        errdefer replacement.deinit(allocator);
+        self.clearTerminalServerClip(allocator);
+        self.terminal_server_clip = replacement;
+    }
+
+    pub fn clearTerminalServerClip(self: *GraphicsState, allocator: std.mem.Allocator) void {
+        if (self.terminal_server_clip) |*state| state.deinit(allocator);
+        self.terminal_server_clip = null;
+    }
+
+    pub fn resetClip(self: *GraphicsState, allocator: std.mem.Allocator) void {
+        self.clearTerminalServerClip(allocator);
+        self.clip = .infinite;
+    }
+
+    pub fn combineClipRectangle(self: *GraphicsState, allocator: std.mem.Allocator, mode: combine_mode.CombineMode, rectangle: geometry.RectF) void {
+        self.clearTerminalServerClip(allocator);
+        self.clip = self.clip.combineRectangle(mode, rectangle);
+    }
+
+    pub fn combineClipOpaque(self: *GraphicsState, allocator: std.mem.Allocator, mode: combine_mode.CombineMode) void {
+        self.clearTerminalServerClip(allocator);
+        self.clip = self.clip.combineOpaque(mode);
+    }
+
+    pub fn offsetClip(self: *GraphicsState, allocator: std.mem.Allocator, dx: f32, dy: f32) void {
+        self.clearTerminalServerClip(allocator);
+        self.clip = self.clip.offset(dx, dy);
+    }
 };
 
 pub const EntryKind = enum {
@@ -33,6 +81,8 @@ pub const Stack = struct {
     }
 
     pub fn deinit(self: *Stack) void {
+        self.current.deinit(self.allocator);
+        for (self.entries.items) |*entry| entry.state.deinit(self.allocator);
         self.entries.deinit(self.allocator);
         self.* = undefined;
     }
@@ -40,14 +90,23 @@ pub const Stack = struct {
     pub fn clone(self: Stack) !Stack {
         var result = Stack.init(self.allocator);
         errdefer result.deinit();
-        try result.entries.appendSlice(result.allocator, self.entries.items);
+        try result.entries.ensureTotalCapacity(result.allocator, self.entries.items.len);
+        for (self.entries.items) |entry| {
+            const state = try entry.state.clone(result.allocator);
+            result.entries.appendAssumeCapacity(.{ .kind = entry.kind, .stack_index = entry.stack_index, .state = state });
+        }
         result.max_depth = self.max_depth;
-        result.current = self.current;
+        result.current = try self.current.clone(result.allocator);
         return result;
     }
 
     pub fn push(self: *Stack, kind: EntryKind, stack_index: u32) !void {
-        try self.entries.append(self.allocator, .{ .kind = kind, .stack_index = stack_index, .state = self.current });
+        const state = try self.current.clone(self.allocator);
+        errdefer {
+            var pending = state;
+            pending.deinit(self.allocator);
+        }
+        try self.entries.append(self.allocator, .{ .kind = kind, .stack_index = stack_index, .state = state });
         self.max_depth = @max(self.max_depth, self.entries.items.len);
     }
 
@@ -57,6 +116,8 @@ pub const Stack = struct {
             cursor -= 1;
             const entry = self.entries.items[cursor];
             if (entry.kind == kind and entry.stack_index == stack_index) {
+                self.current.deinit(self.allocator);
+                for (self.entries.items[cursor + 1 ..]) |*newer| newer.state.deinit(self.allocator);
                 self.current = entry.state;
                 self.entries.shrinkRetainingCapacity(cursor);
                 return;
@@ -114,6 +175,81 @@ fn allocationExercise(allocator: std.mem.Allocator) !void {
 
 test "EMF+ Save/Restore graphics state stack survives every allocation failure" {
     try std.testing.checkAllAllocationFailures(std.testing.allocator, allocationExercise, .{});
+}
+
+fn terminalServerClipAllocationExercise(allocator: std.mem.Allocator) !void {
+    const bytes = [_]u8{ 0x81, 0x82, 0x83, 0x84 };
+    var stack = Stack.init(allocator);
+    defer stack.deinit();
+    try stack.current.setTerminalServerClip(allocator, try ts_clip_rects.parse(&bytes, 1, true));
+    try stack.push(.save, 1);
+    var copy = try stack.clone();
+    defer copy.deinit();
+    try copy.close(.save, 1);
+}
+
+test "EMF+ graphics state stack owns terminal-server clip through every allocation failure" {
+    try std.testing.checkAllAllocationFailures(std.testing.allocator, terminalServerClipAllocationExercise, .{});
+}
+
+test "EMF+ ordinary clip transitions discard stale terminal-server rectangles" {
+    const bytes = [_]u8{ 0x81, 0x82, 0x83, 0x84 };
+    const rectangles = try ts_clip_rects.parse(&bytes, 1, true);
+    var state: GraphicsState = .{};
+    defer state.deinit(std.testing.allocator);
+
+    try state.setTerminalServerClip(std.testing.allocator, rectangles);
+    state.resetClip(std.testing.allocator);
+    try std.testing.expect(state.terminal_server_clip == null);
+    try std.testing.expectEqual(clip_state.State.infinite, state.clip);
+
+    try state.setTerminalServerClip(std.testing.allocator, rectangles);
+    state.combineClipRectangle(std.testing.allocator, .replace, .{ .x = 1, .y = 2, .width = 3, .height = 4 });
+    try std.testing.expect(state.terminal_server_clip == null);
+    try std.testing.expectEqual(clip_state.State.complex, state.clip);
+
+    try state.setTerminalServerClip(std.testing.allocator, rectangles);
+    state.combineClipOpaque(std.testing.allocator, .intersect);
+    try std.testing.expect(state.terminal_server_clip == null);
+    try std.testing.expectEqual(clip_state.State.complex, state.clip);
+
+    try state.setTerminalServerClip(std.testing.allocator, rectangles);
+    state.offsetClip(std.testing.allocator, 5, 6);
+    try std.testing.expect(state.terminal_server_clip == null);
+    try std.testing.expectEqual(clip_state.State.complex, state.clip);
+}
+
+test "EMF+ terminal-server clip transitions release owned bytes in every build mode" {
+    var checked: std.heap.DebugAllocator(.{ .safety = true, .enable_memory_limit = true }) = .init;
+    defer _ = checked.deinit();
+    const allocator = checked.allocator();
+    const bytes = [_]u8{ 0x81, 0x82, 0x83, 0x84 };
+    var state: GraphicsState = .{};
+    defer state.deinit(allocator);
+    try state.setTerminalServerClip(allocator, try ts_clip_rects.parse(&bytes, 1, true));
+    state.resetClip(allocator);
+    try std.testing.expectEqual(@as(usize, 0), checked.total_requested_bytes);
+}
+
+test "EMF+ terminal-server clip stack snapshots release every owned copy in every build mode" {
+    var checked: std.heap.DebugAllocator(.{ .safety = true, .enable_memory_limit = true }) = .init;
+    defer _ = checked.deinit();
+    const allocator = checked.allocator();
+    const first = [_]u8{ 0x81, 0x82, 0x83, 0x84 };
+    const second = [_]u8{ 0x85, 0x86, 0x87, 0x88 };
+    {
+        var stack = Stack.init(allocator);
+        defer stack.deinit();
+        try stack.current.setTerminalServerClip(allocator, try ts_clip_rects.parse(&first, 1, true));
+        try stack.push(.save, 1);
+        try stack.current.setTerminalServerClip(allocator, try ts_clip_rects.parse(&second, 1, true));
+        try stack.push(.container, 2);
+        var copy = try stack.clone();
+        defer copy.deinit();
+        try stack.close(.save, 1);
+        try std.testing.expectEqual(@as(i32, 1), stack.current.terminal_server_clip.?.rectangles[0].left);
+    }
+    try std.testing.expectEqual(@as(usize, 0), checked.total_requested_bytes);
 }
 
 test "EMF+ graphics state stack snapshots and restores world transform across mixed entries" {
