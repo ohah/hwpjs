@@ -16,7 +16,7 @@ stream은 해당 ObjectID 슬롯이 이미 존재하고 ObjectTypePen인지 확�
 
 ## 미지원 경계와 검증 기록
 
-현재 로컬 HWP corpus에는 EMF+ signature가 없어 실제 한컴 DrawBeziers 표본과 렌더링 결과는 관측하지 못했습니다. 구현 범위는 wire 구조, borrowed point iteration, Object Table 참조와 stream/framing 연결입니다. 상대좌표 누적, 변환, 곡선 재생·래스터화와 저장은 미구현입니다.
+현재 로컬 HWP corpus에는 EMF+ signature가 없어 실제 한컴 DrawBeziers 표본과 렌더링 결과는 관측하지 못했습니다. 구현 범위는 wire 구조, borrowed point iteration, [공용 상대좌표 누적](emf-plus-point-resolution.md), Object Table 참조와 stream/framing 연결입니다. Bezier topology, 변환, 곡선 재생·래스터화와 저장은 미구현입니다.
 
 합성 fixture는 Point·PointF·혼합폭 PointR, P 우선순위, ObjectID 0~63 경계, reserved flags, Count 최소·한도, float 원비트, padding 0~3, 모든 prefix 잘림, 독립 Size/DataSize/slice 불일치, Pen 존재·누락·타입 불일치, stream 집계·overflow 원자성과 실제 EMF framing 연결을 검사합니다.
 
