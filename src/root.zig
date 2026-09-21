@@ -126,6 +126,7 @@ test {
     _ = @import("image/emf/emf_plus_stack_index_record.zig");
     _ = @import("image/emf/emf_plus_restore.zig");
     _ = @import("image/emf/emf_plus_graphics_state_stack.zig");
+    _ = @import("image/emf/emf_plus_container_transform.zig");
     _ = @import("image/emf/emf_plus_object.zig");
     _ = @import("image/emf/emf_plus_stream.zig");
     _ = @import("image/wmf/header_tests.zig");

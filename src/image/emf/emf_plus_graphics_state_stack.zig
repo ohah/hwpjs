@@ -2,7 +2,7 @@ const std = @import("std");
 const transform_matrix = @import("emf_plus_transform_matrix.zig");
 
 pub const GraphicsState = struct {
-    world_transform: transform_matrix.TransformMatrix = transform_matrix.TransformMatrix.identity,
+    world_transform: ?transform_matrix.TransformMatrix = transform_matrix.TransformMatrix.identity,
 };
 
 pub const EntryKind = enum {
@@ -119,6 +119,6 @@ test "EMF+ graphics state stack snapshots and restores world transform across mi
     try stack.push(.container, 2);
     stack.current.world_transform = transform_matrix.TransformMatrix.rotation(90);
     try stack.close(.save, 1);
-    try std.testing.expectEqualDeep(transform_matrix.TransformMatrix.translation(2, 3), stack.current.world_transform);
+    try std.testing.expectEqualDeep(transform_matrix.TransformMatrix.translation(2, 3), stack.current.world_transform.?);
     try stack.finish();
 }

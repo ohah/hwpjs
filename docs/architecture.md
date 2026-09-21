@@ -96,7 +96,9 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ BeginContainer state record 계층](emf-plus-begin-container-record.md)은 공용 RectF·UnitType 위에 두 rectangle과 StackIndex를 조립하고 SHOULD NOT 단위를 거부 오류와 분리합니다. tracked stream은 Container entry를 공용 stack에 넣되 transform replay는 wire parser에 섞지 않습니다.
 
-[EMF+ BeginContainerNoParams state record 계층](emf-plus-begin-container-no-params-record.md)은 Save·Restore와 같은 StackIndex wire SSOT를 재사용하고 ignored Flags를 보존합니다. tracked stream은 같은 Container entry를 사용하며 snapshot replay를 조립하지 않습니다.
+[EMF+ BeginContainer transform 계층](emf-plus-container-transform.md)은 Header logical DPI와 PageUnit으로 source 단위를 환산하고 DestRect/SrcRect 행렬을 구성합니다. stream은 snapshot 뒤 기존 world transform에 prepend하며 World/Display의 불확정 상태를 명시적으로 보존합니다.
+
+[EMF+ BeginContainerNoParams state record 계층](emf-plus-begin-container-no-params-record.md)은 Save·Restore와 같은 StackIndex wire SSOT를 재사용하고 ignored Flags를 보존합니다. tracked stream은 같은 Container entry를 사용해 공용 graphics state snapshot을 캡처합니다.
 
 [EMF+ EndContainer state record 계층](emf-plus-end-container-record.md)은 같은 StackIndex wire SSOT와 공용 graphics-state stack을 재사용해 target과 이후 mixed entry를 제거합니다. wire 수명주기 검증과 실제 graphics snapshot 복원을 구분합니다.
 
