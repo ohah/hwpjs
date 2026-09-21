@@ -8,7 +8,7 @@
 
 Header는 EMF Header 바로 다음 EMF record의 첫 EMF+ record여야 합니다. 정확한 Size 28/DataSize 16, `EmfPlusGraphicsVersion`의 20비트 signature 0xDBC01을 검사하고 12비트 graphics version은 원값으로 보존합니다. 명세가 vendor extension을 허용하므로 알려진 1/2 이외 값을 임의로 거부하지 않습니다. Header Flags의 D와 EmfPlusFlags의 V를 해석하되 나머지 비트는 명세대로 무시하면서 원값을 보존합니다.
 
-EndOfFile과 GetDC는 Size 12/DataSize 0을 검사하고 사용되지 않는 Flags는 거부하지 않습니다. EndOfFile은 전체 EMF+ 스트림에서 정확히 마지막 EMF+ record이며 같은 comment의 후속 record나 이후 EMF+ comment를 허용하지 않습니다. EMF+가 시작되었으면 EMF EOF 전에 EndOfFile이 있어야 합니다. EMF+가 전혀 없는 일반 EMF는 기존과 같이 허용합니다.
+EndOfFile과 GetDC는 Size 12/DataSize 0을 검사하고 사용되지 않는 Flags는 거부하지 않습니다. [GetDC interleaving 계층](emf-plus-get-dc-interleaving.md)은 다음 EMF+ record까지의 classic EMF 구간을 별도 소유합니다. EndOfFile은 전체 EMF+ 스트림에서 정확히 마지막 EMF+ record이며 같은 comment의 후속 record나 이후 EMF+ comment를 허용하지 않습니다. EMF+가 시작되었으면 EMF EOF 전에 EndOfFile이 있어야 합니다. EMF+가 전혀 없는 일반 EMF는 기존과 같이 허용합니다.
 
 ## 명세 근거
 

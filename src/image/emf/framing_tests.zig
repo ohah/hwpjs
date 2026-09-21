@@ -92,6 +92,44 @@ test "EMF framing enforces the complete EMF+ stream contract" {
     try t.expectError(error.MissingInitialEmfPlusHeader, framing.validate(t.allocator, &delayed));
 }
 
+test "EMF framing counts only classic records between GetDC and the next EMF+ record" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 208;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 6, .little);
+
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[92..96], 56, .little);
+    std.mem.writeInt(u32, bytes[96..100], 44, .little);
+    std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
+    std.mem.writeInt(u16, bytes[104..106], 0x4001, .little);
+    std.mem.writeInt(u32, bytes[108..112], 28, .little);
+    std.mem.writeInt(u32, bytes[112..116], 16, .little);
+    std.mem.writeInt(u32, bytes[116..120], 0xdbc01001, .little);
+    std.mem.writeInt(u32, bytes[124..128], 96, .little);
+    std.mem.writeInt(u32, bytes[128..132], 96, .little);
+    std.mem.writeInt(u16, bytes[132..134], 0x4004, .little);
+    std.mem.writeInt(u32, bytes[136..140], 12, .little);
+
+    std.mem.writeInt(u32, bytes[144..148], @intFromEnum(@import("records.zig").RecordType.savedc), .little);
+    std.mem.writeInt(u32, bytes[148..152], 8, .little);
+    std.mem.writeInt(u32, bytes[152..156], @intFromEnum(@import("records.zig").RecordType.savedc), .little);
+    std.mem.writeInt(u32, bytes[156..160], 8, .little);
+
+    std.mem.writeInt(u32, bytes[160..164], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[164..168], 28, .little);
+    std.mem.writeInt(u32, bytes[168..172], 16, .little);
+    std.mem.writeInt(u32, bytes[172..176], 0x2b464d45, .little);
+    std.mem.writeInt(u16, bytes[176..178], 0x4002, .little);
+    std.mem.writeInt(u32, bytes[180..184], 12, .little);
+    @memcpy(bytes[188..208], original[88..108]);
+
+    const summary = try framing.validate(t.allocator, &bytes);
+    try t.expectEqual(@as(usize, 1), summary.emf_plus.get_dc_records);
+    try t.expectEqual(@as(usize, 2), summary.emf_plus.get_dc_emf_records);
+}
+
 test "EMF framing routes SetTSClip through the EMF+ stream" {
     const original = fixture();
     var bytes = [_]u8{0} ** 180;

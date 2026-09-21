@@ -14,7 +14,7 @@
 
 ## 완료로 세지 않는 범위
 
-`wire_validated`는 해당 record의 wire payload·참조·stream 상태 검사를 뜻할 뿐 graphics 동작 재생을 뜻하지 않습니다. 특히 GetDC 뒤 일반 EMF record를 playback에 포함하는 전환, property·transform·clip의 실제 graphics snapshot, drawing rasterization, text shaping, image resampling, Save/Restore의 실제 상태 복원과 저장은 별도 후속 범위입니다.
+`wire_validated`는 해당 record의 wire payload·참조·stream 상태 검사를 뜻할 뿐 graphics 동작 재생을 뜻하지 않습니다. [GetDC 뒤 일반 EMF record 구간](emf-plus-get-dc-interleaving.md)은 framing에서 관측·집계하지만 실제 playback surface에 적용하지 않습니다. property·transform·clip의 실제 graphics snapshot, drawing rasterization, text shaping, image resampling, Save/Restore의 실제 상태 복원과 저장도 별도 후속 범위입니다.
 
 `opaque_preserved`도 payload 지원이 아닙니다. `StrokeFillPath`의 Pen/Brush/Path 배치를 추정하거나 현재 객체를 임의로 연결하지 않습니다. 로컬 지원 HWP corpus의 EMF+ signature 표본은 0개이므로 54개 wire 정책은 합성 fixture와 공식 구조 대조 결과이며 실제 한컴 출력 동등성 주장이 아닙니다.
 

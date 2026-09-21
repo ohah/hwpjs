@@ -132,6 +132,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ RecordType wire 지원 매트릭스](emf-plus-record-coverage.md)는 공식 58개 enum 값을 wire-validated 54개, opaque-preserved 1개, forbidden 3개로 exhaustive 분류하고 stream이 같은 정책을 사용하게 합니다. 이 분류는 graphics replay·렌더링·저장 지원률과 분리합니다.
 
+[EMF+ GetDC interleaving 계층](emf-plus-get-dc-interleaving.md)은 GetDC 뒤 다음 EMF+ record 전까지의 classic EMF record 구간을 stream state와 framing에서 관측합니다. EMF+ carrier comment를 일반 playback record로 세지 않으며 실제 device-context replay는 후속 책임입니다.
+
 [EMF+ Save state record 계층](emf-plus-save-record.md)은 미사용 Flags와 u32 StackIndex를 보존합니다. 실제 graphics-state stack과 Restore 매칭은 wire parser와 분리합니다.
 
 [EMF+ Restore와 graphics-state stack 계층](emf-plus-restore-record.md)은 Save/Container 종류를 함께 표현하고 target 이후 entry 제거, comment 원자성, allocator 소유권과 EOF closure를 담당합니다. 두 BeginContainer record와 EndContainer도 같은 stack에 연결합니다.

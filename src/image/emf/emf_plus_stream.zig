@@ -64,6 +64,7 @@ pub const Report = struct {
     header: ?header_record.Header = null,
     end_of_file_records: usize = 0,
     get_dc_records: usize = 0,
+    get_dc_emf_records: usize = 0,
     private_comments: usize = 0,
     private_data_bytes: usize = 0,
     objects: object_record.Report = .{},
@@ -127,7 +128,14 @@ pub const Report = struct {
 pub const State = struct {
     report: Report = .{},
     ended: bool = false,
+    process_emf_records: bool = false,
     object_state: object_record.State = .{},
+
+    pub fn observeEmfRecord(self: *State) !bool {
+        if (!self.process_emf_records) return false;
+        self.report.get_dc_emf_records = std.math.add(usize, self.report.get_dc_emf_records, 1) catch return error.LimitExceeded;
+        return true;
+    }
 
     pub fn consume(self: *State, comment: comment_record.Comment, emf_record_index: usize) !bool {
         return self.consumeInner(comment, emf_record_index, null);
@@ -151,6 +159,7 @@ pub const State = struct {
         var records_in_comment: usize = 0;
         var pending = self.*;
         while (try iterator.next()) |value| {
+            pending.process_emf_records = false;
             records_in_comment += 1;
             pending.report.records = std.math.add(usize, pending.report.records, 1) catch return error.LimitExceeded;
             if (pending.report.header == null) {
@@ -167,7 +176,8 @@ pub const State = struct {
                 },
                 .get_dc => {
                     if (value.size != 12 or value.data_size != 0) return error.InvalidEmfPlusGetDcSize;
-                    pending.report.get_dc_records += 1;
+                    pending.report.get_dc_records = std.math.add(usize, pending.report.get_dc_records, 1) catch return error.LimitExceeded;
+                    pending.process_emf_records = true;
                 },
                 else => {},
             }
@@ -665,6 +675,50 @@ test "EMF+ fixed control records ignore flags but require exact empty payloads" 
     std.mem.writeInt(u32, bad_eof[8..12], 4, .little);
     try std.testing.expectError(error.InvalidEmfPlusEndOfFileSize, second.consume(testComment(&bad_eof), 3));
     try std.testing.expectEqual(@as(usize, 1), second.report.records);
+}
+
+test "EMF+ GetDC activates classic EMF observation until the next EMF+ record" {
+    var header = [_]u8{0} ** 28;
+    writeHeader(&header);
+    var get_dc = [_]u8{0} ** 12;
+    writeEmptyRecord(&get_dc, 0x4004);
+    var eof = [_]u8{0} ** 12;
+    writeEmptyRecord(&eof, 0x4002);
+
+    var state: State = .{};
+    try std.testing.expect(try state.consume(testComment(&header), 2));
+    try std.testing.expect(!(try state.observeEmfRecord()));
+    try std.testing.expect(try state.consume(testComment(&get_dc), 3));
+    try std.testing.expect(state.process_emf_records);
+    try std.testing.expect(try state.observeEmfRecord());
+    try std.testing.expect(try state.observeEmfRecord());
+    try std.testing.expectEqual(@as(usize, 2), state.report.get_dc_emf_records);
+    try std.testing.expect(try state.consume(testComment(&eof), 6));
+    try std.testing.expect(!state.process_emf_records);
+    try std.testing.expect(!(try state.observeEmfRecord()));
+    try state.finish();
+
+    var same_comment = [_]u8{0} ** 52;
+    writeHeader(same_comment[0..28]);
+    writeEmptyRecord(same_comment[28..40], 0x4004);
+    writeEmptyRecord(same_comment[40..52], 0x4003);
+    var same_state: State = .{};
+    try std.testing.expect(try same_state.consume(testComment(&same_comment), 2));
+    try std.testing.expect(!same_state.process_emf_records);
+    try std.testing.expect(!(try same_state.observeEmfRecord()));
+
+    var overflow: State = .{ .process_emf_records = true };
+    overflow.report.get_dc_emf_records = std.math.maxInt(usize);
+    const before = overflow;
+    try std.testing.expectError(error.LimitExceeded, overflow.observeEmfRecord());
+    try std.testing.expectEqualDeep(before, overflow);
+
+    var get_dc_overflow: State = .{};
+    try std.testing.expect(try get_dc_overflow.consume(testComment(&header), 2));
+    get_dc_overflow.report.get_dc_records = std.math.maxInt(usize);
+    const before_get_dc = get_dc_overflow;
+    try std.testing.expectError(error.LimitExceeded, get_dc_overflow.consume(testComment(&get_dc), 3));
+    try std.testing.expectEqualDeep(before_get_dc, get_dc_overflow);
 }
 
 test "EMF+ stream counts private comments without interpreting their data" {

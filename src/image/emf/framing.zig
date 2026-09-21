@@ -107,6 +107,7 @@ fn validateStructure(a: std.mem.Allocator, bytes: []const u8) !Summary {
     var public_comments: PublicCommentReport = .{};
     while (try iterator.next()) |record| {
         count += 1;
+        var is_emf_plus_comment = false;
         if (record.kind == .header) return error.DuplicateEmfHeader;
         if (try pixel_format_record.parse(record) != null) pixel_format_count += 1;
         if (try icm_mode.parse(record) != null) icm_mode_count += 1;
@@ -177,7 +178,9 @@ fn validateStructure(a: std.mem.Allocator, bytes: []const u8) !Summary {
                 .unknown => public_comments.unknown = std.math.add(usize, public_comments.unknown, 1) catch return error.LimitExceeded,
             };
             _ = try emf_plus_state.consumeTracked(&emf_plus_graphics_stack, comment, count);
+            is_emf_plus_comment = comment.classification == .emf_plus;
         }
+        if (!is_emf_plus_comment) _ = try emf_plus_state.observeEmfRecord();
         _ = try dc_state.consume(record);
         _ = try palette_records.parse(record);
         if (record.kind != .eof) continue;
