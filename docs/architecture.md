@@ -48,6 +48,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ FillPie record 계층](emf-plus-fill-pie-record.md)은 공용 BrushId/ARGB와 DrawArc·DrawPie가 공유하는 ArcData를 조립하고 stream은 조건부 Brush 참조만 연결합니다. 각도 modulo·clamp와 pie fill 재생은 wire parser에 넣지 않습니다.
 
+[EMF+ FillRegion record 계층](emf-plus-fill-region-record.md)은 Flags의 Region ObjectId와 공용 BrushId/ARGB를 조립하고 stream은 Region 및 조건부 Brush 참조만 연결합니다. 기존 Region 객체 tree를 다시 해석하지 않으며 region fill 재생은 wire parser에 넣지 않습니다.
+
 [EMF+ DrawArc record 계층](emf-plus-draw-arc-record.md)은 drawing record 공용 C/ObjectID flags, Rect/RectF 선택과 두 각도를 분리합니다. stream은 기존 Object Table에서 Pen 존재·타입을 확인하고 payload parser는 렌더링 modulo·clamp를 수행하지 않습니다.
 
 [EMF+ DrawBeziers record 계층](emf-plus-draw-beziers-record.md)은 Path와 공유하는 Point/PointR iterator 위에서 P/C별 PointData를 선택합니다. stream은 Pen 참조만 연결하며 상대좌표 누적과 곡선 재생은 wire parser에 넣지 않습니다.

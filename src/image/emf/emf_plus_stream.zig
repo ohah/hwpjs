@@ -11,6 +11,7 @@ const fill_rects_record = @import("emf_plus_fill_rects.zig");
 const fill_polygon_record = @import("emf_plus_fill_polygon.zig");
 const fill_ellipse_record = @import("emf_plus_fill_ellipse.zig");
 const fill_pie_record = @import("emf_plus_fill_pie.zig");
+const fill_region_record = @import("emf_plus_fill_region.zig");
 const draw_arc_record = @import("emf_plus_draw_arc.zig");
 const draw_beziers_record = @import("emf_plus_draw_beziers.zig");
 const draw_closed_curve_record = @import("emf_plus_draw_closed_curve.zig");
@@ -70,6 +71,7 @@ pub const Report = struct {
     fill_polygon_records: usize = 0,
     fill_ellipse_records: usize = 0,
     fill_pie_records: usize = 0,
+    fill_region_records: usize = 0,
     draw_arc_records: usize = 0,
     draw_beziers_records: usize = 0,
     draw_closed_curve_records: usize = 0,
@@ -219,6 +221,19 @@ pub const State = struct {
                     },
                 }
                 pending.report.fill_pie_records = std.math.add(usize, pending.report.fill_pie_records, 1) catch return error.LimitExceeded;
+            }
+            if (value.kind == .fill_region) {
+                const parsed = try fill_region_record.parse(value);
+                const region_type = pending.object_state.table[parsed.region_id] orelse return error.MissingEmfPlusFillRegionRegion;
+                if (region_type != .region) return error.InvalidEmfPlusFillRegionRegionType;
+                switch (parsed.brush) {
+                    .color => {},
+                    .brush_id => |id| {
+                        const brush_type = pending.object_state.table[id] orelse return error.MissingEmfPlusFillRegionBrush;
+                        if (brush_type != .brush) return error.InvalidEmfPlusFillRegionBrushType;
+                    },
+                }
+                pending.report.fill_region_records = std.math.add(usize, pending.report.fill_region_records, 1) catch return error.LimitExceeded;
             }
             if (value.kind == .draw_arc) {
                 const parsed = try draw_arc_record.parse(value);
@@ -2662,5 +2677,64 @@ test "EMF+ stream resolves FillPie conditional Brush references atomically" {
     overflow.report.fill_pie_records = std.math.maxInt(usize);
     const before = overflow;
     try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..72]), 2));
+    try std.testing.expectEqualDeep(before, overflow);
+}
+
+test "EMF+ stream resolves FillRegion Region and conditional Brush references atomically" {
+    var bytes = [_]u8{0} ** 80;
+    writeHeader(bytes[0..28]);
+    writeEmptyRecord(bytes[28..40], 0x4008);
+    std.mem.writeInt(u16, bytes[30..32], 0x0405, .little);
+    writeEmptyRecord(bytes[40..52], 0x4008);
+    std.mem.writeInt(u16, bytes[42..44], 0x0107, .little);
+    std.mem.writeInt(u16, bytes[52..54], 0x4013, .little);
+    std.mem.writeInt(u16, bytes[54..56], 5, .little);
+    std.mem.writeInt(u32, bytes[56..60], 16, .little);
+    std.mem.writeInt(u32, bytes[60..64], 4, .little);
+    std.mem.writeInt(u32, bytes[64..68], 7, .little);
+    writeEmptyRecord(bytes[68..80], 0x4002);
+
+    var state: State = .{};
+    try std.testing.expect(try state.consume(testComment(&bytes), 2));
+    try state.finish();
+    try std.testing.expectEqual(@as(usize, 1), state.report.fill_region_records);
+
+    var literal = bytes;
+    std.mem.writeInt(u16, literal[54..56], 0x8005, .little);
+    std.mem.writeInt(u32, literal[64..68], 0xffffffff, .little);
+    std.mem.writeInt(u16, literal[42..44], 0x0207, .little);
+    var literal_state: State = .{};
+    try std.testing.expect(try literal_state.consume(testComment(&literal), 2));
+    try literal_state.finish();
+    try std.testing.expectEqual(@as(usize, 1), literal_state.report.fill_region_records);
+
+    var missing_region = bytes;
+    std.mem.writeInt(u16, missing_region[54..56], 6, .little);
+    var missing_region_state: State = .{};
+    try std.testing.expectError(error.MissingEmfPlusFillRegionRegion, missing_region_state.consume(testComment(&missing_region), 2));
+    try std.testing.expectEqualDeep(State{}, missing_region_state);
+
+    var wrong_region = bytes;
+    std.mem.writeInt(u16, wrong_region[30..32], 0x0305, .little);
+    var wrong_region_state: State = .{};
+    try std.testing.expectError(error.InvalidEmfPlusFillRegionRegionType, wrong_region_state.consume(testComment(&wrong_region), 2));
+    try std.testing.expectEqualDeep(State{}, wrong_region_state);
+
+    var missing_brush = bytes;
+    std.mem.writeInt(u32, missing_brush[64..68], 8, .little);
+    var missing_brush_state: State = .{};
+    try std.testing.expectError(error.MissingEmfPlusFillRegionBrush, missing_brush_state.consume(testComment(&missing_brush), 2));
+    try std.testing.expectEqualDeep(State{}, missing_brush_state);
+
+    var wrong_brush = bytes;
+    std.mem.writeInt(u16, wrong_brush[42..44], 0x0207, .little);
+    var wrong_brush_state: State = .{};
+    try std.testing.expectError(error.InvalidEmfPlusFillRegionBrushType, wrong_brush_state.consume(testComment(&wrong_brush), 2));
+    try std.testing.expectEqualDeep(State{}, wrong_brush_state);
+
+    var overflow: State = .{};
+    overflow.report.fill_region_records = std.math.maxInt(usize);
+    const before = overflow;
+    try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..68]), 2));
     try std.testing.expectEqualDeep(before, overflow);
 }
