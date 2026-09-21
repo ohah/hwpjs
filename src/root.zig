@@ -58,6 +58,7 @@ test {
     _ = @import("image/emf/emf_plus_fill_rects.zig");
     _ = @import("image/emf/emf_plus_fill_polygon.zig");
     _ = @import("image/emf/emf_plus_fill_ellipse.zig");
+    _ = @import("image/emf/emf_plus_fill_pie.zig");
     _ = @import("image/emf/emf_plus_record_flags.zig");
     _ = @import("image/emf/emf_plus_rect_data.zig");
     _ = @import("image/emf/emf_plus_draw_arc.zig");

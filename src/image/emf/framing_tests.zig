@@ -628,6 +628,37 @@ test "EMF framing routes literal-color FillEllipse through the EMF+ stream" {
     try t.expectEqual(@as(usize, 1), (try framing.validate(t.allocator, &bytes)).emf_plus.fill_ellipse_records);
 }
 
+test "EMF framing routes literal-color FillPie through the EMF+ stream" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 196;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 3, .little);
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[92..96], 88, .little);
+    std.mem.writeInt(u32, bytes[96..100], 76, .little);
+    std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
+    std.mem.writeInt(u16, bytes[104..106], 0x4001, .little);
+    std.mem.writeInt(u32, bytes[108..112], 28, .little);
+    std.mem.writeInt(u32, bytes[112..116], 16, .little);
+    std.mem.writeInt(u32, bytes[116..120], 0xdbc01001, .little);
+    std.mem.writeInt(u32, bytes[124..128], 96, .little);
+    std.mem.writeInt(u32, bytes[128..132], 96, .little);
+    std.mem.writeInt(u16, bytes[132..134], 0x4010, .little);
+    std.mem.writeInt(u16, bytes[134..136], 0xc000, .little);
+    std.mem.writeInt(u32, bytes[136..140], 32, .little);
+    std.mem.writeInt(u32, bytes[140..144], 20, .little);
+    std.mem.writeInt(u32, bytes[144..148], 0x44332211, .little);
+    std.mem.writeInt(u32, bytes[148..152], @bitCast(@as(f32, 450.0)), .little);
+    std.mem.writeInt(u32, bytes[152..156], @bitCast(@as(f32, -720.0)), .little);
+    for (0..4) |index| std.mem.writeInt(i16, bytes[156 + index * 2 ..][0..2], @intCast(index), .little);
+    std.mem.writeInt(u16, bytes[164..166], 0x4002, .little);
+    std.mem.writeInt(u32, bytes[168..172], 12, .little);
+    @memcpy(bytes[176..196], original[88..108]);
+
+    try t.expectEqual(@as(usize, 1), (try framing.validate(t.allocator, &bytes)).emf_plus.fill_pie_records);
+}
+
 test "EMF framing reports private and Clear EMF+ records and rejects reserved records" {
     const original = fixture();
     var bytes = [_]u8{0} ** 200;
