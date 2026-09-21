@@ -8,7 +8,7 @@ Count는 3 이상입니다. P가 clear이면 C에 따라 `DataSize = 8 + Count *
 
 ## stream 연결과 미지원 경계
 
-stream은 S가 clear일 때만 Brush 슬롯 존재와 ObjectTypeBrush를 검사하며 오류·한도·count overflow에서 comment 상태를 원복합니다. 상대 좌표 누적은 [공용 PointData resolver](emf-plus-point-resolution.md)가 담당합니다. 마지막 점과 첫 점의 닫힘, polygon fill·transform·clipping 및 저장은 구현하지 않았습니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성도 주장하지 않습니다.
+stream은 S가 clear일 때만 Brush 슬롯 존재와 ObjectTypeBrush를 검사하며 오류·한도·count overflow에서 comment 상태를 원복합니다. 상대 좌표 누적은 [공용 PointData resolver](emf-plus-point-resolution.md)가, 마지막 점과 첫 점의 닫힌 경계는 [공용 선분 계층](emf-plus-polyline-geometry.md)이 담당합니다. Brush fill·transform·clipping 및 저장은 구현하지 않았습니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성도 주장하지 않습니다.
 
 ## 공식 근거
 

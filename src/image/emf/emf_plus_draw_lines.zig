@@ -1,6 +1,7 @@
 const std = @import("std");
 const binary = @import("../../binary/reader.zig");
 const point_data = @import("emf_plus_point_data.zig");
+const polyline_segments = @import("emf_plus_polyline_segments.zig");
 const record = @import("emf_plus_record.zig");
 const record_flags = @import("emf_plus_record_flags.zig");
 
@@ -14,6 +15,10 @@ pub const DrawLines = struct {
     closes_figure: bool,
     count: u32,
     point_data: point_data.PointData,
+
+    pub fn segments(self: DrawLines) polyline_segments.Iterator {
+        return polyline_segments.segments(self.point_data, self.closes_figure);
+    }
 };
 
 pub fn parse(value: record.Record, options: Options) !DrawLines {
@@ -73,6 +78,16 @@ test "EMF+ DrawLines parses absolute integer and floating points" {
     var integer_points = compressed.point_data.points();
     try std.testing.expectEqual(@as(i16, -32768), (try integer_points.next()).?.integer.x);
     try std.testing.expectEqual(@as(i16, 1), (try integer_points.next()).?.integer.y);
+    var closed_segments = compressed.segments();
+    const forward = (try closed_segments.next()).?;
+    try std.testing.expectEqual(@as(i64, -32_768), forward.start.integer.x);
+    try std.testing.expectEqual(@as(i64, -1), forward.end.integer.x);
+    const maybe_closing = try closed_segments.next();
+    try std.testing.expect(maybe_closing != null);
+    const closing = maybe_closing.?;
+    try std.testing.expectEqual(@as(i64, -1), closing.start.integer.x);
+    try std.testing.expectEqual(@as(i64, -32_768), closing.end.integer.x);
+    try std.testing.expect((try closed_segments.next()) == null);
 
     var floating = [_]u8{0} ** 20;
     std.mem.writeInt(u32, floating[0..4], 2, .little);
@@ -86,6 +101,9 @@ test "EMF+ DrawLines parses absolute integer and floating points" {
     try std.testing.expect(std.math.isNan(first.y));
     const second = (try float_points.next()).?.floating;
     try std.testing.expect(std.math.isPositiveInf(second.x));
+    var open_segments = uncompressed.segments();
+    _ = (try open_segments.next()).?;
+    try std.testing.expect((try open_segments.next()) == null);
 }
 
 test "EMF+ DrawLines parses variable PointR widths padding and ignores C" {

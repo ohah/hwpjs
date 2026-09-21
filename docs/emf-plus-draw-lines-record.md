@@ -8,13 +8,13 @@ Count는 명세의 MUST에 따라 2 이상이어야 하며 기본 최대값은 �
 
 공식 Size/DataSize 표는 P 경로를 `Count * 2` 기반의 minimum이라고 설명합니다. PointR 한 점은 두 좌표가 각각 Integer7 또는 Integer15이므로 실제로 2~4바이트입니다. 따라서 최소 산술을 먼저 검사한 뒤 실제 PointR Count개를 완전히 소비하고 남은 padding 폭을 검사합니다. 고정 Point/PointF 경로는 공용 PointData가 정확한 길이를 요구합니다. Size의 DWORD 정렬, `Size == DataSize + 12`, 실제 slice도 독립적으로 검사하며 모든 곱셈·덧셈과 stream 집계는 overflow를 검사합니다.
 
-reserved flags는 MUST be ignored에 따라 원값으로 보존합니다. PointF에는 별도 유한성 제약이 없어 음수 0, 무한대와 NaN 원비트도 정규화하지 않습니다. 상대 좌표 누적은 [공용 PointData resolver](emf-plus-point-resolution.md)가 담당하고 L 선분 추가는 후속 geometry 계층 책임입니다.
+reserved flags는 MUST be ignored에 따라 원값으로 보존합니다. PointF에는 별도 유한성 제약이 없어 음수 0, 무한대와 NaN 원비트도 정규화하지 않습니다. 상대 좌표 누적은 [공용 PointData resolver](emf-plus-point-resolution.md)가, L에 따른 마지막→첫 [선분 추가](emf-plus-polyline-geometry.md)는 공용 geometry 계층이 담당합니다.
 
 ## stream 연결과 미지원 경계
 
 stream은 Pen ObjectID 슬롯이 존재하고 ObjectTypePen인지 확인합니다. 누락 Pen, 다른 객체 타입, payload·한도·집계 오류는 comment 전체 상태를 원복하고 상위 EMF framing은 같은 경로를 사용합니다.
 
-현재 로컬 HWP corpus에는 EMF+ signature가 없어 실제 한컴 DrawLines 표본과 렌더링 결과는 관측하지 못했습니다. 구현 범위는 wire 구조, borrowed point iteration, 공용 PointR 절대 좌표 해석, Pen 참조와 stream/framing 연결입니다. L 닫힘 선분, transform·clipping·stroke 재생과 저장은 미구현입니다.
+현재 로컬 HWP corpus에는 EMF+ signature가 없어 실제 한컴 DrawLines 표본과 렌더링 결과는 관측하지 못했습니다. 구현 범위는 wire 구조, borrowed point iteration, 공용 PointR 절대 좌표·open/closed 선분 해석, Pen 참조와 stream/framing 연결입니다. transform·clipping·Pen stroke 재생과 저장은 미구현입니다.
 
 ## 검증 기록
 

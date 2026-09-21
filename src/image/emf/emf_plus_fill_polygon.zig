@@ -2,6 +2,7 @@ const std = @import("std");
 const binary = @import("../../binary/reader.zig");
 const brush_id = @import("emf_plus_brush_id.zig");
 const point_data = @import("emf_plus_point_data.zig");
+const polyline_segments = @import("emf_plus_polyline_segments.zig");
 const record = @import("emf_plus_record.zig");
 const record_flags = @import("emf_plus_record_flags.zig");
 
@@ -14,6 +15,10 @@ pub const FillPolygon = struct {
     compressed_flag: bool,
     count: u32,
     point_data: point_data.PointData,
+
+    pub fn segments(self: FillPolygon) polyline_segments.Iterator {
+        return polyline_segments.segments(self.point_data, true);
+    }
 };
 
 pub fn parse(value: record.Record, options: Options) !FillPolygon {
@@ -65,6 +70,17 @@ test "EMF+ FillPolygon parses absolute integer and floating points with both bru
     try std.testing.expectEqual(@as(i16, -32768), (try integer_points.next()).?.integer.x);
     _ = try integer_points.next();
     try std.testing.expectEqual(@as(i16, 3), (try integer_points.next()).?.integer.y);
+    var boundary = compressed.segments();
+    _ = (try boundary.next()).?;
+    _ = (try boundary.next()).?;
+    const maybe_closing = try boundary.next();
+    try std.testing.expect(maybe_closing != null);
+    const closing = maybe_closing.?;
+    try std.testing.expectEqual(@as(i64, 2), closing.start.integer.x);
+    try std.testing.expectEqual(@as(i64, 3), closing.start.integer.y);
+    try std.testing.expectEqual(@as(i64, -32_768), closing.end.integer.x);
+    try std.testing.expectEqual(@as(i64, 32_767), closing.end.integer.y);
+    try std.testing.expect((try boundary.next()) == null);
 
     var floating = [_]u8{0} ** 32;
     std.mem.writeInt(u32, floating[0..4], 0x44332211, .little);

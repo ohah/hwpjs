@@ -22,6 +22,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ drawing PointData 절대 좌표 계층](emf-plus-point-resolution.md)은 공용 borrowed PointData iterator 위에서 첫 PointR을 원점 기준으로, 이후 delta를 직전 위치 기준으로 누적합니다. 정수 결과는 i64로 유지하고 PointF 원비트는 보존하며 wire parser나 record별 replay에 누적 규칙을 복제하지 않습니다.
 
+[EMF+ polyline·polygon 선분 계층](emf-plus-polyline-geometry.md)은 절대 PointData의 인접점을 allocation-free segment로 연결합니다. DrawLines는 L을 닫힘 정책으로 전달하고 FillPolygon은 항상 마지막→첫 경계를 추가하며 transform·clip·stroke/fill은 이 계층에 섞지 않습니다.
+
 [EMF+ Path 계층](emf-plus-path-object.md)은 Integer7/15, 세 point wire 표현, 일반/RLE point type과 Path envelope를 분리합니다. 공식 R flag 결합 해석과 독립 RLE 호환 해석은 명시적 option으로 구분하며 자동 휴리스틱을 사용하지 않습니다. 상위 Brush/Region/CustomLineCap은 이 parser를 재사용하고 geometry·type 규칙을 복제하지 않습니다.
 
 [EMF+ Image 계층](emf-plus-image-object.md)은 Image dispatch, Bitmap, indexed Palette, Metafile payload를 분리합니다. raw pixel에서만 format·stride·palette·크기를 검증하고 compressed payload와 중첩 metafile은 원문을 보존합니다. 이미지 시그니처나 바이트 모양으로 명시된 wire type을 자동 교정하지 않습니다.
@@ -44,7 +46,7 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ FillRects record 계층](emf-plus-fill-rects-record.md)은 공용 BrushId/ARGB 선택과 RectArray를 조립하고 stream은 조건부 Brush 참조만 연결합니다. rectangle fill 재생은 wire parser와 분리합니다.
 
-[EMF+ FillPolygon record 계층](emf-plus-fill-polygon-record.md)은 공용 BrushId/ARGB와 P/C PointData를 조립하고 stream은 조건부 Brush 참조만 연결합니다. 상대좌표 누적은 공용 resolver에 두고 polygon fill 재생은 wire parser와 분리합니다.
+[EMF+ FillPolygon record 계층](emf-plus-fill-polygon-record.md)은 공용 BrushId/ARGB와 P/C PointData를 조립하고 stream은 조건부 Brush 참조만 연결합니다. 상대좌표 누적과 닫힌 경계 선분은 공용 geometry 계층에 두고 polygon fill 재생은 wire parser와 분리합니다.
 
 [EMF+ FillEllipse record 계층](emf-plus-fill-ellipse-record.md)은 공용 BrushId/ARGB와 C별 RectData를 조립하고 stream은 조건부 Brush 참조만 연결합니다. Rect/RectF 선택·좌표 배치를 복제하지 않으며 ellipse fill 재생은 wire parser에 넣지 않습니다.
 
@@ -70,7 +72,7 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ DrawImagePoints record 계층](emf-plus-draw-image-points-record.md)은 DrawImage의 공통 ID·source 필드와 P/C별 PointData, 정확한 Count 3, E 효과 요구를 조립합니다. stream은 앞선 SerializableObject와 객체 타입을 연결하고 상대좌표 누적은 공용 resolver, parallelogram 재생은 후속 geometry 계층에 둡니다.
 
-[EMF+ DrawLines record 계층](emf-plus-draw-lines-record.md)은 P/C별 PointData, 최소 Count 2와 L 닫힘 flag를 조립합니다. stream은 Pen 참조만 연결하고 PointR 누적은 공용 resolver, 닫힘 선분·stroke 재생은 후속 geometry/renderer 계층에 둡니다.
+[EMF+ DrawLines record 계층](emf-plus-draw-lines-record.md)은 P/C별 PointData, 최소 Count 2와 L 닫힘 flag를 조립합니다. stream은 Pen 참조만 연결하고 PointR 누적과 L 닫힘 선분은 공용 geometry 계층, stroke 재생은 후속 renderer 계층에 둡니다.
 
 [EMF+ DrawPath record 계층](emf-plus-draw-path-record.md)은 고정 payload의 Pen ID와 Flags의 Path ObjectID를 분리합니다. stream은 기존 두 Object Table 슬롯과 타입만 연결하고 Path geometry·stroke 재생은 기존 Path 객체 parser와 후속 렌더러의 책임으로 둡니다.
 
