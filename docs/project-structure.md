@@ -98,6 +98,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - [EMF+ Clear drawing record](emf-plus-clear-record.md)
 - [EMF+ FillRects의 Brush 선택과 RectData 배열](emf-plus-fill-rects-record.md)
 - [EMF+ FillPolygon의 Brush 선택과 PointData](emf-plus-fill-polygon-record.md)
+- [EMF+ FillEllipse의 Brush 선택과 RectData](emf-plus-fill-ellipse-record.md)
 - [EMF+ DrawArc와 공용 RectData](emf-plus-draw-arc-record.md)
 - [EMF+ DrawBeziers와 공용 PointData](emf-plus-draw-beziers-record.md)
 - [EMF+ DrawClosedCurve와 Tension](emf-plus-draw-closed-curve-record.md)
