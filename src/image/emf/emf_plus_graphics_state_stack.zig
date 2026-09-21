@@ -1,4 +1,9 @@
 const std = @import("std");
+const transform_matrix = @import("emf_plus_transform_matrix.zig");
+
+pub const GraphicsState = struct {
+    world_transform: transform_matrix.TransformMatrix = transform_matrix.TransformMatrix.identity,
+};
 
 pub const EntryKind = enum {
     save,
@@ -8,12 +13,14 @@ pub const EntryKind = enum {
 pub const Entry = struct {
     kind: EntryKind,
     stack_index: u32,
+    state: GraphicsState,
 };
 
 pub const Stack = struct {
     allocator: std.mem.Allocator,
     entries: std.ArrayListUnmanaged(Entry) = .empty,
     max_depth: usize = 0,
+    current: GraphicsState = .{},
 
     pub fn init(allocator: std.mem.Allocator) Stack {
         return .{ .allocator = allocator };
@@ -29,11 +36,12 @@ pub const Stack = struct {
         errdefer result.deinit();
         try result.entries.appendSlice(result.allocator, self.entries.items);
         result.max_depth = self.max_depth;
+        result.current = self.current;
         return result;
     }
 
     pub fn push(self: *Stack, kind: EntryKind, stack_index: u32) !void {
-        try self.entries.append(self.allocator, .{ .kind = kind, .stack_index = stack_index });
+        try self.entries.append(self.allocator, .{ .kind = kind, .stack_index = stack_index, .state = self.current });
         self.max_depth = @max(self.max_depth, self.entries.items.len);
     }
 
@@ -43,6 +51,7 @@ pub const Stack = struct {
             cursor -= 1;
             const entry = self.entries.items[cursor];
             if (entry.kind == kind and entry.stack_index == stack_index) {
+                self.current = entry.state;
                 self.entries.shrinkRetainingCapacity(cursor);
                 return;
             }
@@ -99,4 +108,17 @@ fn allocationExercise(allocator: std.mem.Allocator) !void {
 
 test "EMF+ Save/Restore graphics state stack survives every allocation failure" {
     try std.testing.checkAllAllocationFailures(std.testing.allocator, allocationExercise, .{});
+}
+
+test "EMF+ graphics state stack snapshots and restores world transform across mixed entries" {
+    var stack = Stack.init(std.testing.allocator);
+    defer stack.deinit();
+    stack.current.world_transform = transform_matrix.TransformMatrix.translation(2, 3);
+    try stack.push(.save, 1);
+    stack.current.world_transform = transform_matrix.TransformMatrix.scaling(4, 5);
+    try stack.push(.container, 2);
+    stack.current.world_transform = transform_matrix.TransformMatrix.rotation(90);
+    try stack.close(.save, 1);
+    try std.testing.expectEqualDeep(transform_matrix.TransformMatrix.translation(2, 3), stack.current.world_transform);
+    try stack.finish();
 }

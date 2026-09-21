@@ -10,7 +10,7 @@ Flags의 low byte는 공용 `UnitType` 0~6을 재사용하고 명세 도표에�
 
 tracked stream은 유효 BeginContainer를 공용 graphics-state stack의 Container entry로 push합니다. 앞선 Save를 대상으로 하는 Restore는 Microsoft Restore 의미대로 그 Save와 이후 Container를 함께 제거할 수 있습니다. EOF에 남은 Container는 거부되며 parser·집계·할당·후속 record 실패 시 report와 stack을 comment 단위로 함께 원복합니다. allocation-free `State.consume`은 구조 조사 API라 stack 관계를 검사하지 않습니다.
 
-전용 transform은 wire 값만 보존하며 graphics state snapshot 생성, DestRect/SrcRect 변환 적용과 렌더링은 아직 구현하지 않았습니다. [BeginContainerNoParams](emf-plus-begin-container-no-params-record.md)와 [EndContainer](emf-plus-end-container-record.md)는 같은 stack에 연결되어 wire 수명주기를 검증합니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성도 주장하지 않습니다.
+전용 transform은 wire 값만 보존하며 [world transform snapshot](emf-plus-graphics-state.md) 생성과 EndContainer 복원은 구현했습니다. DestRect/SrcRect/PageUnit에서 파생되는 컨테이너 transform 적용과 다른 graphics 속성 및 렌더링은 아직 구현하지 않았습니다. [BeginContainerNoParams](emf-plus-begin-container-no-params-record.md)와 [EndContainer](emf-plus-end-container-record.md)는 같은 stack에 연결되어 wire 수명주기를 검증합니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성도 주장하지 않습니다.
 
 ## 검증 기록
 

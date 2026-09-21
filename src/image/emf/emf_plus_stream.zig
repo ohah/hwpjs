@@ -57,6 +57,7 @@ const stroke_fill_path_record = @import("emf_plus_stroke_fill_path.zig");
 const save_record = @import("emf_plus_save.zig");
 const restore_record = @import("emf_plus_restore.zig");
 const graphics_state_stack = @import("emf_plus_graphics_state_stack.zig");
+const transform_matrix = @import("emf_plus_transform_matrix.zig");
 
 pub const Report = struct {
     comments: usize = 0,
@@ -123,6 +124,7 @@ pub const Report = struct {
     save_records: usize = 0,
     restore_records: usize = 0,
     graphics_state_max_depth: usize = 0,
+    world_transform: ?transform_matrix.TransformMatrix = null,
 };
 
 pub const State = struct {
@@ -454,28 +456,34 @@ pub const State = struct {
                 pending.report.set_ts_graphics_records = std.math.add(usize, pending.report.set_ts_graphics_records, 1) catch return error.LimitExceeded;
             }
             if (value.kind == .multiply_world_transform) {
-                _ = try multiply_world_transform_record.parse(value);
+                const parsed = try multiply_world_transform_record.parse(value);
                 pending.report.multiply_world_transform_records = std.math.add(usize, pending.report.multiply_world_transform_records, 1) catch return error.LimitExceeded;
+                if (stack) |tracked| tracked.current.world_transform = tracked.current.world_transform.multiplied(parsed.matrix, parsed.post_multiply);
             }
             if (value.kind == .set_world_transform) {
-                _ = try set_world_transform_record.parse(value);
+                const parsed = try set_world_transform_record.parse(value);
                 pending.report.set_world_transform_records = std.math.add(usize, pending.report.set_world_transform_records, 1) catch return error.LimitExceeded;
+                if (stack) |tracked| tracked.current.world_transform = parsed.matrix;
             }
             if (value.kind == .reset_world_transform) {
                 _ = try reset_world_transform_record.parse(value);
                 pending.report.reset_world_transform_records = std.math.add(usize, pending.report.reset_world_transform_records, 1) catch return error.LimitExceeded;
+                if (stack) |tracked| tracked.current.world_transform = transform_matrix.TransformMatrix.identity;
             }
             if (value.kind == .translate_world_transform) {
-                _ = try translate_world_transform_record.parse(value);
+                const parsed = try translate_world_transform_record.parse(value);
                 pending.report.translate_world_transform_records = std.math.add(usize, pending.report.translate_world_transform_records, 1) catch return error.LimitExceeded;
+                if (stack) |tracked| tracked.current.world_transform = tracked.current.world_transform.multiplied(transform_matrix.TransformMatrix.translation(parsed.dx, parsed.dy), parsed.post_multiply);
             }
             if (value.kind == .scale_world_transform) {
-                _ = try scale_world_transform_record.parse(value);
+                const parsed = try scale_world_transform_record.parse(value);
                 pending.report.scale_world_transform_records = std.math.add(usize, pending.report.scale_world_transform_records, 1) catch return error.LimitExceeded;
+                if (stack) |tracked| tracked.current.world_transform = tracked.current.world_transform.multiplied(transform_matrix.TransformMatrix.scaling(parsed.sx, parsed.sy), parsed.post_multiply);
             }
             if (value.kind == .rotate_world_transform) {
-                _ = try rotate_world_transform_record.parse(value);
+                const parsed = try rotate_world_transform_record.parse(value);
                 pending.report.rotate_world_transform_records = std.math.add(usize, pending.report.rotate_world_transform_records, 1) catch return error.LimitExceeded;
+                if (stack) |tracked| tracked.current.world_transform = tracked.current.world_transform.multiplied(transform_matrix.TransformMatrix.rotation(parsed.angle), parsed.post_multiply);
             }
             if (value.kind == .set_page_transform) {
                 const parsed = try set_page_transform_record.parse(value);
@@ -518,7 +526,10 @@ pub const State = struct {
         }
         if (records_in_comment == 0) return error.EmptyEmfPlusComment;
         pending.report.comments = std.math.add(usize, pending.report.comments, 1) catch return error.LimitExceeded;
-        if (stack) |tracked| pending.report.graphics_state_max_depth = tracked.max_depth;
+        if (stack) |tracked| {
+            pending.report.graphics_state_max_depth = tracked.max_depth;
+            pending.report.world_transform = tracked.current.world_transform;
+        }
         pending.report.objects = pending.object_state.report;
         self.* = pending;
         return true;
@@ -2334,6 +2345,149 @@ test "EMF+ stream validates RotateWorldTransform and rolls report back atomicall
     const before = overflow;
     try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..44]), 2));
     try std.testing.expectEqualDeep(before, overflow);
+}
+
+test "EMF+ tracked stream applies world transforms and Restore recovers the saved snapshot" {
+    var bytes = [_]u8{0} ** 128;
+    writeHeader(bytes[0..28]);
+
+    std.mem.writeInt(u16, bytes[28..30], 0x402a, .little);
+    std.mem.writeInt(u32, bytes[32..36], 36, .little);
+    std.mem.writeInt(u32, bytes[36..40], 24, .little);
+    for ([_]f32{ 2, 0, 0, 3, 5, 7 }, 0..) |item, index|
+        std.mem.writeInt(u32, bytes[40 + index * 4 ..][0..4], @bitCast(item), .little);
+
+    std.mem.writeInt(u16, bytes[64..66], 0x4025, .little);
+    std.mem.writeInt(u32, bytes[68..72], 16, .little);
+    std.mem.writeInt(u32, bytes[72..76], 4, .little);
+    std.mem.writeInt(u32, bytes[76..80], 9, .little);
+
+    std.mem.writeInt(u16, bytes[80..82], 0x402d, .little);
+    std.mem.writeInt(u16, bytes[82..84], 0x2000, .little);
+    std.mem.writeInt(u32, bytes[84..88], 20, .little);
+    std.mem.writeInt(u32, bytes[88..92], 8, .little);
+    std.mem.writeInt(u32, bytes[92..96], @bitCast(@as(f32, 11)), .little);
+    std.mem.writeInt(u32, bytes[96..100], @bitCast(@as(f32, 13)), .little);
+
+    std.mem.writeInt(u16, bytes[100..102], 0x4026, .little);
+    std.mem.writeInt(u32, bytes[104..108], 16, .little);
+    std.mem.writeInt(u32, bytes[108..112], 4, .little);
+    std.mem.writeInt(u32, bytes[112..116], 9, .little);
+    writeEmptyRecord(bytes[116..128], 0x4002);
+
+    var state: State = .{};
+    var stack = graphics_state_stack.Stack.init(std.testing.allocator);
+    defer stack.deinit();
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&bytes), 2));
+    try state.finishTracked(stack);
+    try std.testing.expectEqualDeep(transform_matrix.TransformMatrix{
+        .m11 = 2,
+        .m12 = 0,
+        .m21 = 0,
+        .m22 = 3,
+        .dx = 5,
+        .dy = 7,
+    }, state.report.world_transform.?);
+    try std.testing.expectEqualDeep(state.report.world_transform.?, stack.current.world_transform);
+    try std.testing.expectEqual(@as(usize, 1), state.report.graphics_state_max_depth);
+}
+
+test "EMF+ tracked stream rolls world transform back when a later record is malformed" {
+    var header = [_]u8{0} ** 28;
+    writeHeader(&header);
+    var state: State = .{};
+    var stack = graphics_state_stack.Stack.init(std.testing.allocator);
+    defer stack.deinit();
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&header), 2));
+
+    var bytes = [_]u8{0} ** 39;
+    std.mem.writeInt(u16, bytes[0..2], 0x402a, .little);
+    std.mem.writeInt(u32, bytes[4..8], 36, .little);
+    std.mem.writeInt(u32, bytes[8..12], 24, .little);
+    for ([_]f32{ 2, 0, 0, 3, 5, 7 }, 0..) |item, index|
+        std.mem.writeInt(u32, bytes[12 + index * 4 ..][0..4], @bitCast(item), .little);
+    bytes[36] = 0xaa;
+    bytes[37] = 0xbb;
+    bytes[38] = 0xcc;
+
+    const before_state = state;
+    const before_stack = stack.current;
+    try std.testing.expectError(error.TruncatedEmfPlusRecordHeader, state.consumeTracked(&stack, testComment(&bytes), 3));
+    try std.testing.expectEqualDeep(before_state, state);
+    try std.testing.expectEqualDeep(before_stack, stack.current);
+}
+
+test "EMF+ tracked stream connects multiply scale rotate and reset to the current world transform" {
+    var header = [_]u8{0} ** 28;
+    writeHeader(&header);
+    var state: State = .{};
+    var stack = graphics_state_stack.Stack.init(std.testing.allocator);
+    defer stack.deinit();
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&header), 2));
+
+    var multiply = [_]u8{0} ** 36;
+    std.mem.writeInt(u16, multiply[0..2], 0x402c, .little);
+    std.mem.writeInt(u32, multiply[4..8], 36, .little);
+    std.mem.writeInt(u32, multiply[8..12], 24, .little);
+    for ([_]f32{ 2, 0, 0, 3, 5, 7 }, 0..) |item, index|
+        std.mem.writeInt(u32, multiply[12 + index * 4 ..][0..4], @bitCast(item), .little);
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&multiply), 3));
+    try std.testing.expectEqualDeep(transform_matrix.TransformMatrix{
+        .m11 = 2,
+        .m12 = 0,
+        .m21 = 0,
+        .m22 = 3,
+        .dx = 5,
+        .dy = 7,
+    }, stack.current.world_transform);
+
+    var scale = [_]u8{0} ** 20;
+    std.mem.writeInt(u16, scale[0..2], 0x402e, .little);
+    std.mem.writeInt(u16, scale[2..4], 0x2000, .little);
+    std.mem.writeInt(u32, scale[4..8], 20, .little);
+    std.mem.writeInt(u32, scale[8..12], 8, .little);
+    std.mem.writeInt(u32, scale[12..16], @bitCast(@as(f32, 4)), .little);
+    std.mem.writeInt(u32, scale[16..20], @bitCast(@as(f32, 5)), .little);
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&scale), 4));
+    try std.testing.expectEqualDeep(transform_matrix.TransformMatrix{
+        .m11 = 8,
+        .m12 = 0,
+        .m21 = 0,
+        .m22 = 15,
+        .dx = 20,
+        .dy = 35,
+    }, stack.current.world_transform);
+
+    var rotate = [_]u8{0} ** 16;
+    std.mem.writeInt(u16, rotate[0..2], 0x402f, .little);
+    std.mem.writeInt(u16, rotate[2..4], 0x2000, .little);
+    std.mem.writeInt(u32, rotate[4..8], 16, .little);
+    std.mem.writeInt(u32, rotate[8..12], 4, .little);
+    std.mem.writeInt(u32, rotate[12..16], @bitCast(@as(f32, 90)), .little);
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&rotate), 5));
+    try std.testing.expectApproxEqAbs(@as(f32, 0), stack.current.world_transform.m11, 0.00001);
+    try std.testing.expectApproxEqAbs(@as(f32, 8), stack.current.world_transform.m12, 0.00001);
+    try std.testing.expectApproxEqAbs(@as(f32, -15), stack.current.world_transform.m21, 0.00001);
+    try std.testing.expectApproxEqAbs(@as(f32, 0), stack.current.world_transform.m22, 0.00001);
+    try std.testing.expectApproxEqAbs(@as(f32, -35), stack.current.world_transform.dx, 0.00001);
+    try std.testing.expectApproxEqAbs(@as(f32, 20), stack.current.world_transform.dy, 0.00001);
+
+    var reset = [_]u8{0} ** 12;
+    writeEmptyRecord(&reset, 0x402b);
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&reset), 6));
+    try std.testing.expectEqualDeep(transform_matrix.TransformMatrix.identity, stack.current.world_transform);
+    try std.testing.expectEqualDeep(transform_matrix.TransformMatrix.identity, state.report.world_transform.?);
+
+    var translate = [_]u8{0} ** 20;
+    std.mem.writeInt(u16, translate[0..2], 0x402d, .little);
+    std.mem.writeInt(u16, translate[2..4], 0x2000, .little);
+    std.mem.writeInt(u32, translate[4..8], 20, .little);
+    std.mem.writeInt(u32, translate[8..12], 8, .little);
+    std.mem.writeInt(u32, translate[12..16], @bitCast(@as(f32, -2)), .little);
+    std.mem.writeInt(u32, translate[16..20], @bitCast(@as(f32, 9)), .little);
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&translate), 7));
+    try std.testing.expectEqualDeep(transform_matrix.TransformMatrix.translation(-2, 9), stack.current.world_transform);
+    try std.testing.expectEqualDeep(stack.current.world_transform, state.report.world_transform.?);
 }
 
 test "EMF+ stream validates SetPageTransform warnings and rolls report back atomically" {

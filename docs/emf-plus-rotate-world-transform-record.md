@@ -8,7 +8,7 @@ A flag는 `0x2000`이며 set이면 post-multiply, clear이면 pre-multiply입니
 
 ## 미지원 경계
 
-반환값은 rotation wire 명령만 표현합니다. angle을 삼각함수로 변환하거나 현재 world transform에 rotation matrix를 실제 pre/post multiplication하고 Save/Restore snapshot 및 렌더링에 적용하는 기능은 구현하지 않았습니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성도 주장하지 않습니다.
+반환값은 rotation wire 명령을 표현하고 tracked stream은 [graphics state 계층](emf-plus-graphics-state.md)에서 degree angle로 rotation matrix를 구성해 실제 pre/post multiplication하며 Save/Restore snapshot에 포함합니다. 다른 graphics 속성과 렌더링은 구현하지 않았으며 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성도 주장하지 않습니다.
 
 ## 검증 기록
 

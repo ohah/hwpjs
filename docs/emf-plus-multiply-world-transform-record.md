@@ -8,7 +8,7 @@ A flag는 `0x2000`이며 set이면 post-multiply, clear이면 pre-multiply입니
 
 ## 미지원 경계
 
-현재 graphics state의 행렬과 실제로 pre/post multiplication하거나 Save/Restore snapshot 및 렌더링에 적용하는 기능은 구현하지 않았습니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성도 주장하지 않습니다.
+tracked stream은 [graphics state 계층](emf-plus-graphics-state.md)의 GDI+ row-vector 행렬 연산으로 현재 행렬에 pre/post multiplication하고 Save/Restore snapshot에 포함합니다. 다른 graphics 속성과 렌더링은 구현하지 않았으며 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성도 주장하지 않습니다.
 
 ## 검증 기록
 
