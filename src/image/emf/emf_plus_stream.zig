@@ -62,6 +62,7 @@ const container_transform = @import("emf_plus_container_transform.zig");
 const page_transform = @import("emf_plus_page_transform.zig");
 const clip_state = @import("emf_plus_clip_state.zig");
 const property_state = @import("emf_plus_property_state.zig");
+const ts_graphics_state = @import("emf_plus_ts_graphics_state.zig");
 
 pub const Report = struct {
     comments: usize = 0,
@@ -135,6 +136,7 @@ pub const Report = struct {
     clip: ?clip_state.State = null,
     properties: ?property_state.State = null,
     terminal_server_clip_rectangles: ?u16 = null,
+    terminal_server_graphics: ?ts_graphics_state.Summary = null,
 };
 
 pub const State = struct {
@@ -486,8 +488,9 @@ pub const State = struct {
                 }
             }
             if (value.kind == .set_ts_graphics) {
-                _ = try set_ts_graphics_record.parse(value, .{});
+                const parsed = try set_ts_graphics_record.parse(value, .{});
                 pending.report.set_ts_graphics_records = std.math.add(usize, pending.report.set_ts_graphics_records, 1) catch return error.LimitExceeded;
+                if (stack) |tracked| try tracked.current.setTerminalServerGraphics(tracked.allocator, parsed);
             }
             if (value.kind == .multiply_world_transform) {
                 const parsed = try multiply_world_transform_record.parse(value);
@@ -588,6 +591,7 @@ pub const State = struct {
             pending.report.clip = tracked.current.clip;
             pending.report.properties = tracked.current.properties;
             pending.report.terminal_server_clip_rectangles = if (tracked.current.terminal_server_clip) |state| @intCast(state.rectangles.len) else null;
+            pending.report.terminal_server_graphics = if (tracked.current.terminal_server_graphics) |state| state.summary else null;
         }
         pending.report.objects = pending.object_state.report;
         self.* = pending;
@@ -698,6 +702,29 @@ fn writePropertyRecords(bytes: []u8, alternate: bool) void {
         const offset = 20 + index * 12;
         writeEmptyRecord(bytes[offset..][0..12], record_type);
         std.mem.writeInt(u16, bytes[offset + 2 ..][0..2], if (alternate) alternate_flags[index] else initial_flags[index], .little);
+    }
+}
+
+fn writeTerminalServerGraphics(bytes: []u8, alternate: bool, with_palette: bool) void {
+    const data_size: u32 = if (with_palette) 52 else 36;
+    std.debug.assert(bytes.len == data_size + 12);
+    @memset(bytes, 0);
+    std.mem.writeInt(u16, bytes[0..2], 0x4039, .little);
+    std.mem.writeInt(u16, bytes[2..4], if (with_palette) 1 else 0, .little);
+    std.mem.writeInt(u32, bytes[4..8], data_size + 12, .little);
+    std.mem.writeInt(u32, bytes[8..12], data_size, .little);
+    bytes[12..16].* = if (alternate) .{ 1, 1, 0, 2 } else .{ 5, 5, 1, 5 };
+    std.mem.writeInt(i16, bytes[16..18], if (alternate) 3 else -7, .little);
+    std.mem.writeInt(i16, bytes[18..20], if (alternate) 4 else 9, .little);
+    std.mem.writeInt(u16, bytes[20..22], if (alternate) 2 else 12, .little);
+    bytes[22..24].* = if (alternate) .{ 2, 1 } else .{ 7, 4 };
+    const matrix = if (alternate) [_]f32{ 7, 8, 9, 10, 11, 12 } else [_]f32{ 1, 2, 3, 4, 5, 6 };
+    for (matrix, 0..) |value, index|
+        std.mem.writeInt(u32, bytes[24 + index * 4 ..][0..4], @bitCast(value), .little);
+    if (with_palette) {
+        std.mem.writeInt(u32, bytes[48..52], 0, .little);
+        std.mem.writeInt(u32, bytes[52..56], 2, .little);
+        bytes[56..64].* = .{ 0x11, 0x22, 0x33, 0x44, 0xaa, 0xbb, 0xcc, 0xdd };
     }
 }
 
@@ -2501,6 +2528,66 @@ test "EMF+ stream validates SetTSGraphics and rolls report back atomically" {
     const before = overflow;
     try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..76]), 2));
     try std.testing.expectEqualDeep(before, overflow);
+}
+
+test "EMF+ tracked SetTSGraphics owns palette snapshots containers and rolls back" {
+    var header = [_]u8{0} ** 28;
+    writeHeader(&header);
+    var state: State = .{};
+    var stack = graphics_state_stack.Stack.init(std.testing.allocator);
+    defer stack.deinit();
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&header), 2));
+
+    var initial = [_]u8{0} ** 64;
+    writeTerminalServerGraphics(&initial, false, true);
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&initial), 3));
+    try std.testing.expect(stack.current.terminal_server_graphics != null);
+    const expected = stack.current.terminal_server_graphics.?.summary;
+    try std.testing.expectEqual(@as(i16, -7), expected.render_origin_x);
+    try std.testing.expectEqual(@as(u16, 12), expected.text_contrast);
+    try std.testing.expectEqual(@as(f32, 6), expected.world_to_device.dy);
+    try std.testing.expectEqual(@as(?u32, 2), expected.palette_entries);
+    try std.testing.expectEqualDeep(expected, state.report.terminal_server_graphics.?);
+    try std.testing.expect(stack.current.terminal_server_graphics.?.palette != null);
+    initial[56] = 0xff;
+    try std.testing.expectEqual(@as(u8, 0x11), stack.current.terminal_server_graphics.?.palette.?.entry_bytes[0]);
+
+    var save = [_]u8{0} ** 16;
+    writeStackIndexRecord(&save, 0x4025, 0, 80);
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&save), 4));
+    var alternate = [_]u8{0} ** 48;
+    writeTerminalServerGraphics(&alternate, true, false);
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&alternate), 5));
+    try std.testing.expectEqual(@as(i16, 3), stack.current.terminal_server_graphics.?.summary.render_origin_x);
+    try std.testing.expect(stack.current.terminal_server_graphics.?.palette == null);
+    var restore = [_]u8{0} ** 16;
+    writeStackIndexRecord(&restore, 0x4026, 0, 80);
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&restore), 6));
+    try std.testing.expect(stack.current.terminal_server_graphics != null);
+    try std.testing.expectEqualDeep(expected, stack.current.terminal_server_graphics.?.summary);
+    try std.testing.expect(stack.current.terminal_server_graphics.?.palette != null);
+    try std.testing.expectEqual(@as(u8, 0x11), stack.current.terminal_server_graphics.?.palette.?.entry_bytes[0]);
+
+    var begin = [_]u8{0} ** 16;
+    writeStackIndexRecord(&begin, 0x4028, 0, 81);
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&begin), 7));
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&alternate), 8));
+    var end = [_]u8{0} ** 16;
+    writeStackIndexRecord(&end, 0x4029, 0, 81);
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&end), 9));
+    try std.testing.expect(stack.current.terminal_server_graphics != null);
+    try std.testing.expectEqualDeep(expected, stack.current.terminal_server_graphics.?.summary);
+    try std.testing.expect(stack.current.terminal_server_graphics.?.palette != null);
+
+    var malformed = [_]u8{0} ** 51;
+    @memcpy(malformed[0..48], &alternate);
+    malformed[48..51].* = .{ 0xaa, 0xbb, 0xcc };
+    const report_before = state.report;
+    try std.testing.expectError(error.TruncatedEmfPlusRecordHeader, state.consumeTracked(&stack, testComment(&malformed), 10));
+    try std.testing.expectEqualDeep(report_before, state.report);
+    try std.testing.expect(stack.current.terminal_server_graphics != null);
+    try std.testing.expectEqualDeep(expected, stack.current.terminal_server_graphics.?.summary);
+    try std.testing.expectEqual(@as(u8, 0x11), stack.current.terminal_server_graphics.?.palette.?.entry_bytes[0]);
 }
 
 test "EMF+ stream validates MultiplyWorldTransform and rolls report back atomically" {

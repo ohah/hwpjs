@@ -5,6 +5,9 @@ const clip_state = @import("emf_plus_clip_state.zig");
 const property_state = @import("emf_plus_property_state.zig");
 const ts_clip_state = @import("emf_plus_ts_clip_state.zig");
 const ts_clip_rects = @import("emf_plus_ts_clip_rects.zig");
+const ts_graphics_state = @import("emf_plus_ts_graphics_state.zig");
+const set_ts_graphics = @import("emf_plus_set_ts_graphics.zig");
+const palette_data = @import("emf_plus_palette.zig");
 const combine_mode = @import("emf_plus_combine_mode.zig");
 const geometry = @import("emf_plus_geometry.zig");
 
@@ -14,15 +17,21 @@ pub const GraphicsState = struct {
     clip: clip_state.State = .infinite,
     properties: property_state.State = .{},
     terminal_server_clip: ?ts_clip_state.State = null,
+    terminal_server_graphics: ?ts_graphics_state.State = null,
 
     pub fn clone(self: GraphicsState, allocator: std.mem.Allocator) !GraphicsState {
         var result = self;
+        result.terminal_server_clip = null;
+        result.terminal_server_graphics = null;
+        errdefer result.deinit(allocator);
         result.terminal_server_clip = if (self.terminal_server_clip) |state| try state.clone(allocator) else null;
+        result.terminal_server_graphics = if (self.terminal_server_graphics) |state| try state.clone(allocator) else null;
         return result;
     }
 
     pub fn deinit(self: *GraphicsState, allocator: std.mem.Allocator) void {
         if (self.terminal_server_clip) |*state| state.deinit(allocator);
+        if (self.terminal_server_graphics) |*state| state.deinit(allocator);
         self.* = undefined;
     }
 
@@ -36,6 +45,13 @@ pub const GraphicsState = struct {
     pub fn clearTerminalServerClip(self: *GraphicsState, allocator: std.mem.Allocator) void {
         if (self.terminal_server_clip) |*state| state.deinit(allocator);
         self.terminal_server_clip = null;
+    }
+
+    pub fn setTerminalServerGraphics(self: *GraphicsState, allocator: std.mem.Allocator, parsed: set_ts_graphics.SetTSGraphics) !void {
+        var replacement = try ts_graphics_state.State.fromParsed(allocator, parsed);
+        errdefer replacement.deinit(allocator);
+        if (self.terminal_server_graphics) |*state| state.deinit(allocator);
+        self.terminal_server_graphics = replacement;
     }
 
     pub fn resetClip(self: *GraphicsState, allocator: std.mem.Allocator) void {
@@ -248,6 +264,48 @@ test "EMF+ terminal-server clip stack snapshots release every owned copy in ever
         defer copy.deinit();
         try stack.close(.save, 1);
         try std.testing.expectEqual(@as(i32, 1), stack.current.terminal_server_clip.?.rectangles[0].left);
+    }
+    try std.testing.expectEqual(@as(usize, 0), checked.total_requested_bytes);
+}
+
+fn terminalServerGraphicsValue(entry_bytes: []const u8, origin: i16) set_ts_graphics.SetTSGraphics {
+    return .{
+        .flags = 1,
+        .basic_vga = false,
+        .anti_alias_mode = .anti_alias_8x8,
+        .text_render_hint = .clear_type_grid_fit,
+        .compositing_mode = .source_copy,
+        .compositing_quality = .assume_linear,
+        .render_origin_x = origin,
+        .render_origin_y = 9,
+        .text_contrast = 12,
+        .filter_type = .gaussian_quad,
+        .pixel_offset = .half,
+        .world_to_device = .{ .m11 = 1, .m12 = 2, .m21 = 3, .m22 = 4, .dx = 5, .dy = 6 },
+        .palette = palette_data.Palette{ .style = @bitCast(@as(u32, 0)), .count = 1, .entry_bytes = entry_bytes },
+    };
+}
+
+test "EMF+ terminal-server graphics stack releases palette snapshots in every build mode" {
+    var checked: std.heap.DebugAllocator(.{ .safety = true, .enable_memory_limit = true }) = .init;
+    defer _ = checked.deinit();
+    const allocator = checked.allocator();
+    const first = [_]u8{ 1, 2, 3, 4 };
+    const second = [_]u8{ 5, 6, 7, 8 };
+    {
+        var stack = Stack.init(allocator);
+        defer stack.deinit();
+        try stack.current.setTerminalServerGraphics(allocator, terminalServerGraphicsValue(&first, 1));
+        try stack.push(.save, 1);
+        try stack.current.setTerminalServerGraphics(allocator, terminalServerGraphicsValue(&second, 2));
+        try stack.push(.container, 2);
+        var copy = try stack.clone();
+        defer copy.deinit();
+        try stack.close(.save, 1);
+        try std.testing.expect(stack.current.terminal_server_graphics != null);
+        try std.testing.expectEqual(@as(i16, 1), stack.current.terminal_server_graphics.?.summary.render_origin_x);
+        try std.testing.expect(stack.current.terminal_server_graphics.?.palette != null);
+        try std.testing.expectEqual(@as(u8, 1), stack.current.terminal_server_graphics.?.palette.?.entry_bytes[0]);
     }
     try std.testing.expectEqual(@as(usize, 0), checked.total_requested_bytes);
 }

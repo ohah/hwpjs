@@ -10,9 +10,9 @@ V는 T와 실제 Palette를 요구합니다. Palette의 각 RGB가 표준 16개 
 
 공식 문서에는 전체 record 예제가 없고 Windows는 이 record를 생성하지 않으며 GDI+ 1.1만 지원한다고 명시합니다. 따라서 검증은 공식 필드 계약에 따른 합성 wire를 사용합니다.
 
-## 미지원 경계
+## 상태 연결과 미지원 경계
 
-graphics device context에 품질·원점·행렬·Palette를 적용하거나 Save/Restore snapshot과 함께 재생하고 렌더링하는 기능은 구현하지 않았습니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없으므로 실제 한컴 출력 동등성도 주장하지 않습니다.
+파싱 결과는 별도 [terminal-server graphics 소유 상태](emf-plus-ts-graphics-state.md)에 연결했습니다. 고정부는 값으로, 선택 Palette bytes는 소유 복사본으로 보존하며 tracked report, Save/Container snapshot, Restore/EndContainer와 comment 실패 rollback에 참여합니다. graphics device context에 품질·원점·행렬·Palette를 실제 적용하거나 렌더링하는 기능은 구현하지 않았습니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없으므로 실제 한컴 출력 동등성도 주장하지 않습니다.
 
 ## 검증 기록
 

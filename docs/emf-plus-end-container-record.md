@@ -10,7 +10,7 @@ Save·Restore·BeginContainerNoParams와 같은 고정 StackIndex payload이므�
 
 tracked stream은 StackIndex가 일치하는 가장 가까운 Container entry를 닫습니다. Microsoft GDI+의 공용 정보 블록 stack 의미에 따라 대상 BeginContainer와 그 이후에 쌓인 Save/Container entry를 모두 제거하며, 같은 숫자의 Save entry는 Container target으로 취급하지 않습니다. missing target, malformed payload, count overflow, 할당과 후속 record 실패에서는 report와 stack을 comment 단위로 함께 원복합니다. EOF에는 열린 Save/Container가 없어야 합니다.
 
-두 Begin 레코드와 EndContainer의 wire 수명주기, [world/page transform, 일반 clip, 소유 terminal-server clip rectangles와 여덟 property snapshot](emf-plus-graphics-state.md) 복원 및 [BeginContainer 컨테이너 transform](emf-plus-container-transform.md)은 구현됐습니다. 실제 graphics 렌더링은 아직 구현하지 않았습니다. allocation-free `State.consume`은 구조 조사 API라 stack 관계를 검증하지 않으며 전체 EMF 검증에는 `framing.validate` 또는 tracked API를 사용해야 합니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성도 주장하지 않습니다.
+두 Begin 레코드와 EndContainer의 wire 수명주기, [world/page transform, 일반 clip, 소유 terminal-server clip·graphics와 여덟 property snapshot](emf-plus-graphics-state.md) 복원 및 [BeginContainer 컨테이너 transform](emf-plus-container-transform.md)은 구현됐습니다. 실제 graphics 렌더링은 아직 구현하지 않았습니다. allocation-free `State.consume`은 구조 조사 API라 stack 관계를 검증하지 않으며 전체 EMF 검증에는 `framing.validate` 또는 tracked API를 사용해야 합니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성도 주장하지 않습니다.
 
 ## 검증 기록
 

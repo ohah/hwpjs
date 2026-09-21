@@ -106,7 +106,7 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ SetTSClip terminal-server record 계층](emf-plus-set-ts-clip-record.md)은 C별 고정폭 signed delta 좌표와 NumRects/크기 envelope를 분리합니다. 일반 PointR과 반대인 marker 규칙을 공유 decoder에 섞지 않습니다. [terminal-server clip 상태](emf-plus-ts-clip-state.md)는 빌린 rectangle을 소유 배열로 물질화하고 graphics snapshot 수명주기에 연결합니다.
 
-[EMF+ SetTSGraphics terminal-server record 계층](emf-plus-set-ts-graphics-record.md)은 36바이트 graphics state와 선택 Palette를 공용 enum·행렬·Palette 모듈 위에 조립합니다. sparse FilterType은 별도 SSOT로 두고 T/V 의미와 VGA claim은 record 계층에서 검증하며 실제 state replay는 분리합니다.
+[EMF+ SetTSGraphics terminal-server record 계층](emf-plus-set-ts-graphics-record.md)은 36바이트 graphics state와 선택 Palette를 공용 enum·행렬·Palette 모듈 위에 조립합니다. sparse FilterType은 별도 SSOT로 두고 T/V 의미와 VGA claim은 record 계층에서 검증합니다. [terminal-server graphics 소유 상태](emf-plus-ts-graphics-state.md)는 Palette를 깊은 복사해 tracked report와 Save/Container snapshot 수명주기에 연결하며, 단위와 의미가 다른 일반 property·world transform에 병합하지 않습니다.
 
 [EMF+ MultiplyWorldTransform transform record 계층](emf-plus-multiply-world-transform-record.md)은 공용 TransformMatrix와 record별 고정 envelope를 조립하고 A bit의 pre/post 순서를 의미별 record flag 별칭으로 해석합니다. [graphics state 계층](emf-plus-graphics-state.md)이 실제 행렬 곱셈과 snapshot replay를 소유합니다.
 
@@ -140,7 +140,7 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ Save state record 계층](emf-plus-save-record.md)은 미사용 Flags와 u32 StackIndex를 보존합니다. 실제 graphics-state stack과 Restore 매칭은 wire parser와 분리합니다.
 
-[EMF+ Restore와 graphics-state stack 계층](emf-plus-restore-record.md)은 Save/Container 종류를 함께 표현하고 target 이후 entry 제거, world/page transform, 보수적 일반 clip과 소유 terminal-server clip snapshot 복원, comment 원자성, allocator 소유권과 EOF closure를 담당합니다. 두 BeginContainer record와 EndContainer도 같은 stack에 연결합니다.
+[EMF+ Restore와 graphics-state stack 계층](emf-plus-restore-record.md)은 Save/Container 종류를 함께 표현하고 target 이후 entry 제거, world/page transform, 보수적 일반 clip, 소유 terminal-server clip과 graphics snapshot 복원, comment 원자성, allocator 소유권과 EOF closure를 담당합니다. 두 BeginContainer record와 EndContainer도 같은 stack에 연결합니다.
 
 PNG에서 파일 전체 이름 고유성을 검사하는 [sPLT 추천 팔레트](png-suggested-palettes.md)는 소유권이 있는 별도 Collector로 분리합니다. 기존 픽셀 검사 순회에 연결하되 비할당 metadata.State에 이름 인덱스 수명을 섞지 않습니다.
 

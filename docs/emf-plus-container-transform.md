@@ -16,7 +16,7 @@ MS-EMFPLUS가 SHOULD NOT으로 표시한 World와 Display는 parser 단계에서
 
 ## 미지원 경계
 
-이 단계는 BeginContainer의 world-transform 효과를 재생합니다. 공용 graphics snapshot에는 [page transform](emf-plus-page-transform.md), [보수적 일반 clip state](emf-plus-clip-state.md), [소유 terminal-server clip rectangles](emf-plus-ts-clip-state.md)와 [여덟 graphics property](emf-plus-property-state.md)도 포함됩니다. 실제 GDI+ 렌더러나 픽셀 동등성은 구현 범위가 아닙니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성을 주장하지 않습니다.
+이 단계는 BeginContainer의 world-transform 효과를 재생합니다. 공용 graphics snapshot에는 [page transform](emf-plus-page-transform.md), [보수적 일반 clip state](emf-plus-clip-state.md), [소유 terminal-server clip rectangles](emf-plus-ts-clip-state.md), [소유 terminal-server graphics와 Palette](emf-plus-ts-graphics-state.md), [여덟 graphics property](emf-plus-property-state.md)도 포함됩니다. 실제 GDI+ 렌더러나 픽셀 동등성은 구현 범위가 아닙니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성을 주장하지 않습니다.
 
 ## 검증 기록
 
