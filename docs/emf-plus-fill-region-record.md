@@ -2,7 +2,7 @@
 
 ## 범위와 단일 출처
 
-`src/image/emf/emf_plus_fill_region.zig`는 MS-EMFPLUS 2.3.4.21의 Type, Flags, 고정 Size/DataSize와 BrushId를 조립합니다. Flags 하위 ObjectId와 S 선택은 `emf_plus_record_flags.zig`, Brush ObjectID/literal ARGB 선택은 `emf_plus_brush_id.zig`가 소유합니다.
+`src/image/emf/emf_plus_fill_region.zig`는 MS-EMFPLUS 2.3.4.21의 Type과 Region 대상 이름만 조립합니다. FillRegion과 FillPath가 공유하는 고정 Size/DataSize, Flags의 ObjectId와 S, BrushId 해석은 `emf_plus_fill_object.zig`가 단일 소유하고, Brush ObjectID/literal ARGB 선택은 `emf_plus_brush_id.zig`가 소유합니다.
 
 record는 항상 `Size=16`, `DataSize=4`입니다. ObjectId는 0~63의 Region 객체 슬롯입니다. S가 clear일 때 BrushId도 0~63의 Brush 객체 슬롯이고, set이면 모든 u32 ARGB를 허용합니다. S와 ObjectId 이외의 flag는 명세대로 무시하되 원래 flags를 보존합니다.
 
@@ -18,8 +18,8 @@ stream은 Region 슬롯의 존재와 ObjectTypeRegion을 항상 검사합니다.
 
 Region/Brush ID 0·63·64 경계, 객체/literal Brush 양쪽, 예약 flag 보존, 모든 payload 잘림과 세 envelope 축, Region 및 조건부 Brush 참조·타입·집계·overflow rollback, 실제 EMF framing을 검사합니다.
 
-다섯 관점의 적대적 검토로 (1) 고정 BrushId payload와 공식 크기, (2) S와 ObjectId의 독립 선택 및 예약 flag 무시, (3) 공용 ObjectId·BrushIdOrColor SSOT와 Region 객체 parser 책임 분리, (4) Region/Brush 참조·stream 집계·rollback·상위 framing, (5) Region tree 재파싱 금지·fill replay·실파일 표본·저장 미지원 경계를 대조합니다.
+다섯 관점의 적대적 검토로 (1) 고정 BrushId payload와 공식 크기, (2) S와 ObjectId의 독립 선택 및 예약 flag 무시, (3) FillRegion/FillPath 공통 wire SSOT와 Region 객체 parser 책임 분리, (4) Region/Brush 참조·stream 집계·rollback·상위 framing, (5) Region tree 재파싱 금지·fill replay·실파일 표본·저장 미지원 경계를 대조합니다.
 
 RecordType, Size/DataSize/실제 slice 세 축, BrushId endian, Region ObjectId, Brush 값·S 선택, 반환 Flags, stream routing·Region 존재/타입·literal 분기·Brush 존재/타입·집계 값·집계 대상을 각각 훼손한 17종 의미 변이를 독립 복사본과 모드별 새 cache에서 실행했습니다. Debug, ReleaseSafe, ReleaseFast의 51/51 실행이 모두 컴파일 오류·panic·timeout이 아닌 실제 테스트 실패로 검출됐고 임시 작업 복사본은 제거했습니다.
 
-최종 `zig build audit --summary all`, `-Doptimize=ReleaseSafe`, `-Doptimize=ReleaseFast`는 각 모드에서 40/40 step과 1869/1869 test를 통과했습니다. 모드별 구성은 native 1830, chart ownership 31, WMF contents 8이며, 각 실행은 8,905,827 checks, imports 0과 CFB 12,000 mutation의 traps 0을 기록했습니다.
+FillPath와 공통 wire 계층으로 합친 뒤 다시 실행한 최종 `zig build audit --summary all`, `-Doptimize=ReleaseSafe`, `-Doptimize=ReleaseFast`는 각 모드에서 40/40 step과 1875/1875 test를 통과했습니다. 모드별 구성은 native 1836, chart ownership 31, WMF contents 8이며, 각 실행은 8,905,827 checks, imports 0과 CFB 12,000 mutation의 traps 0을 기록했습니다.
