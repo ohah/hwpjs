@@ -6,9 +6,9 @@
 
 Flags low byte의 ObjectID는 공용 `emf_plus_record_flags.zig`가 0~63 범위를 검사하고 bits 8~11의 CM은 `emf_plus_combine_mode.zig`가 CombineMode 0~5를 검사합니다. 상위 4비트는 reserved/MUST ignore이므로 Flags 16비트 원값을 보존합니다. stream은 해당 Object Table 슬롯이 이미 존재하고 ObjectTypeRegion인지 확인합니다.
 
-## 미지원 경계
+## stream 연결과 지원 경계
 
-반환값은 Region 객체 참조와 논리 결합 연산의 wire 명령만 표현합니다. Region 이진 트리는 기존 Region 객체 계층이 소유하며, 현재 clipping region에 실제 논리 연산을 적용하거나 graphics state snapshot 및 렌더링에 반영하는 기능은 구현하지 않았습니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성도 주장하지 않습니다.
+반환값은 Region 객체 참조와 논리 결합 wire 명령을 표현합니다. tracked stream은 객체 타입 확인 뒤 [clipping state](emf-plus-clip-state.md)에 증명 가능한 무한/공집합 항등식을 적용하고 나머지는 `complex`로 표시합니다. Object Table이 Region payload를 장기 보존하지 않으므로 실제 tree boolean·mask·렌더링은 미지원입니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성도 주장하지 않습니다.
 
 ## 검증 기록
 
@@ -20,7 +20,7 @@ ObjectID 0·63 및 64·255, 여섯 CombineMode와 6~15, reserved Flags 보존, R
 - Flags low byte의 ObjectID 0~63, bits 8~11의 여섯 CombineMode와 상위 reserved bit 보존을 서로 분리해 확인했습니다.
 - parser를 통과한 정확한 Region ID로 Object Table을 조회하고 슬롯 부재와 Region 이외 타입을 구분하는지 확인했습니다.
 - 전용 parser, stream routing과 checked count를 각각 무력화해 malformed record·framing·comment rollback 테스트가 검출하는지 확인했습니다.
-- Region 트리 해석과 실제 clipping 논리 연산·graphics state replay를 이 wire parser의 완료 범위로 과장하지 않는지 대조했습니다.
+- Region payload 미보존 상태에서 geometry 결과를 추측하지 않고 `complex`로 승격하는지 대조했습니다.
 
 Type, Size, DataSize, data slice, Flags 보존, CM bit 위치, CombineMode 범위, ObjectID 범위, stream routing, parser, lookup ID, 슬롯 부재, 타입과 count의 고유 의미 변이 14개를 Debug·ReleaseSafe·ReleaseFast에서 각각 실행했습니다. Region 전용 parser·오류·counter 문맥으로 치환 위치를 제한하고 lookup 변이는 parsed ID를 소비하면서 조회값만 변경했습니다. 컴파일 성공 후 테스트 실패 집계가 있는 실행만 인정한 최종 결과는 42/42 검출이며 생존·컴파일 오류·timeout은 0입니다. 변이별 복제본과 cache는 즉시 제거했고 최종 42개 로그만 `/tmp/hwpjs-set-clip-region-mutants-run`에 남겼습니다.
 

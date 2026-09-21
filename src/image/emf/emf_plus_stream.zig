@@ -60,6 +60,7 @@ const graphics_state_stack = @import("emf_plus_graphics_state_stack.zig");
 const transform_matrix = @import("emf_plus_transform_matrix.zig");
 const container_transform = @import("emf_plus_container_transform.zig");
 const page_transform = @import("emf_plus_page_transform.zig");
+const clip_state = @import("emf_plus_clip_state.zig");
 
 pub const Report = struct {
     comments: usize = 0,
@@ -130,6 +131,7 @@ pub const Report = struct {
     graphics_state_max_depth: usize = 0,
     world_transform: ?transform_matrix.TransformMatrix = null,
     page_transform: ?page_transform.PageTransform = null,
+    clip: ?clip_state.State = null,
 };
 
 pub const State = struct {
@@ -527,26 +529,31 @@ pub const State = struct {
             if (value.kind == .reset_clip) {
                 _ = try reset_clip_record.parse(value);
                 pending.report.reset_clip_records = std.math.add(usize, pending.report.reset_clip_records, 1) catch return error.LimitExceeded;
+                if (stack) |tracked| tracked.current.clip = .infinite;
             }
             if (value.kind == .set_clip_rect) {
-                _ = try set_clip_rect_record.parse(value);
+                const parsed = try set_clip_rect_record.parse(value);
                 pending.report.set_clip_rect_records = std.math.add(usize, pending.report.set_clip_rect_records, 1) catch return error.LimitExceeded;
+                if (stack) |tracked| tracked.current.clip = tracked.current.clip.combineRectangle(parsed.mode, parsed.rectangle);
             }
             if (value.kind == .set_clip_path) {
                 const parsed = try set_clip_path_record.parse(value);
                 const object_type = pending.object_state.table[parsed.path_id] orelse return error.MissingEmfPlusSetClipPathPath;
                 if (object_type != .path) return error.InvalidEmfPlusSetClipPathPathType;
                 pending.report.set_clip_path_records = std.math.add(usize, pending.report.set_clip_path_records, 1) catch return error.LimitExceeded;
+                if (stack) |tracked| tracked.current.clip = tracked.current.clip.combineOpaque(parsed.mode);
             }
             if (value.kind == .set_clip_region) {
                 const parsed = try set_clip_region_record.parse(value);
                 const object_type = pending.object_state.table[parsed.region_id] orelse return error.MissingEmfPlusSetClipRegionRegion;
                 if (object_type != .region) return error.InvalidEmfPlusSetClipRegionRegionType;
                 pending.report.set_clip_region_records = std.math.add(usize, pending.report.set_clip_region_records, 1) catch return error.LimitExceeded;
+                if (stack) |tracked| tracked.current.clip = tracked.current.clip.combineOpaque(parsed.mode);
             }
             if (value.kind == .offset_clip) {
-                _ = try offset_clip_record.parse(value);
+                const parsed = try offset_clip_record.parse(value);
                 pending.report.offset_clip_records = std.math.add(usize, pending.report.offset_clip_records, 1) catch return error.LimitExceeded;
+                if (stack) |tracked| tracked.current.clip = tracked.current.clip.offset(parsed.dx, parsed.dy);
             }
             if (value.kind == .stroke_fill_path) {
                 _ = try stroke_fill_path_record.observe(value);
@@ -563,6 +570,7 @@ pub const State = struct {
             pending.report.graphics_state_max_depth = tracked.max_depth;
             pending.report.world_transform = tracked.current.world_transform;
             pending.report.page_transform = tracked.current.page_transform;
+            pending.report.clip = tracked.current.clip;
         }
         pending.report.objects = pending.object_state.report;
         self.* = pending;
@@ -635,6 +643,27 @@ fn writeSetPageTransform(bytes: []u8, flags: u16, page_scale_value: f32) void {
     std.mem.writeInt(u32, bytes[4..8], 16, .little);
     std.mem.writeInt(u32, bytes[8..12], 4, .little);
     std.mem.writeInt(u32, bytes[12..16], @bitCast(page_scale_value), .little);
+}
+
+fn writeSetClipRect(bytes: []u8, flags: u16, rectangle: [4]f32) void {
+    std.debug.assert(bytes.len == 28);
+    @memset(bytes, 0);
+    std.mem.writeInt(u16, bytes[0..2], 0x4032, .little);
+    std.mem.writeInt(u16, bytes[2..4], flags, .little);
+    std.mem.writeInt(u32, bytes[4..8], 28, .little);
+    std.mem.writeInt(u32, bytes[8..12], 16, .little);
+    for (rectangle, 0..) |value, index|
+        std.mem.writeInt(u32, bytes[12 + index * 4 ..][0..4], @bitCast(value), .little);
+}
+
+fn writeOffsetClip(bytes: []u8, dx: f32, dy: f32) void {
+    std.debug.assert(bytes.len == 20);
+    @memset(bytes, 0);
+    std.mem.writeInt(u16, bytes[0..2], 0x4035, .little);
+    std.mem.writeInt(u32, bytes[4..8], 20, .little);
+    std.mem.writeInt(u32, bytes[8..12], 8, .little);
+    std.mem.writeInt(u32, bytes[12..16], @bitCast(dx), .little);
+    std.mem.writeInt(u32, bytes[16..20], @bitCast(dy), .little);
 }
 
 test "EMF+ stream spans comments while every record remains locally complete" {
@@ -2785,6 +2814,65 @@ test "EMF+ stream validates ResetClip and rolls report back atomically" {
     try std.testing.expectEqualDeep(before, overflow);
 }
 
+test "EMF+ tracked clip state preserves abstract commands snapshots containers and rollback" {
+    var header = [_]u8{0} ** 28;
+    writeHeader(&header);
+    var state: State = .{};
+    var stack = graphics_state_stack.Stack.init(std.testing.allocator);
+    defer stack.deinit();
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&header), 2));
+    try std.testing.expectEqual(clip_state.State.infinite, state.report.clip.?);
+
+    var replace = [_]u8{0} ** 28;
+    writeSetClipRect(&replace, 0x0000, .{ 1, 2, 3, 4 });
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&replace), 3));
+    const original = clip_state.State.complex;
+    try std.testing.expectEqual(original, stack.current.clip);
+    try std.testing.expectEqual(original, state.report.clip.?);
+
+    var save = [_]u8{0} ** 16;
+    writeStackIndexRecord(&save, 0x4025, 0, 20);
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&save), 4));
+    var offset = [_]u8{0} ** 20;
+    writeOffsetClip(&offset, 5, -7);
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&offset), 5));
+    try std.testing.expectEqual(clip_state.State.complex, stack.current.clip);
+
+    var intersect = [_]u8{0} ** 28;
+    writeSetClipRect(&intersect, 0x0100, .{ 0, 0, 2, 2 });
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&intersect), 6));
+    try std.testing.expectEqual(clip_state.State.complex, stack.current.clip);
+
+    var restore = [_]u8{0} ** 16;
+    writeStackIndexRecord(&restore, 0x4026, 0, 20);
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&restore), 7));
+    try std.testing.expectEqual(original, stack.current.clip);
+
+    var begin = [_]u8{0} ** 16;
+    writeStackIndexRecord(&begin, 0x4028, 0, 21);
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&begin), 8));
+    var reset = [_]u8{0} ** 12;
+    writeEmptyRecord(&reset, 0x4031);
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&reset), 9));
+    try std.testing.expectEqual(clip_state.State.infinite, stack.current.clip);
+    var end = [_]u8{0} ** 16;
+    writeStackIndexRecord(&end, 0x4029, 0, 21);
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&end), 10));
+    try std.testing.expectEqual(original, stack.current.clip);
+    try std.testing.expectEqual(original, state.report.clip.?);
+
+    var malformed = [_]u8{0} ** 23;
+    writeOffsetClip(malformed[0..20], 100, 200);
+    malformed[20] = 0xaa;
+    malformed[21] = 0xbb;
+    malformed[22] = 0xcc;
+    const before_state = state;
+    const before_clip = stack.current.clip;
+    try std.testing.expectError(error.TruncatedEmfPlusRecordHeader, state.consumeTracked(&stack, testComment(&malformed), 11));
+    try std.testing.expectEqualDeep(before_state, state);
+    try std.testing.expectEqual(before_clip, stack.current.clip);
+}
+
 test "EMF+ stream validates SetClipRect and rolls report back atomically" {
     var bytes = [_]u8{0} ** 68;
     writeHeader(bytes[0..28]);
@@ -2826,13 +2914,16 @@ test "EMF+ stream resolves SetClipPath Path references atomically" {
     writeEmptyRecord(bytes[28..40], 0x4008);
     std.mem.writeInt(u16, bytes[30..32], 0x0305, .little);
     writeEmptyRecord(bytes[40..52], 0x4033);
-    std.mem.writeInt(u16, bytes[42..44], 0xf505, .little);
+    std.mem.writeInt(u16, bytes[42..44], 0xf005, .little);
     writeEmptyRecord(bytes[52..64], 0x4002);
 
     var state: State = .{};
-    try std.testing.expect(try state.consume(testComment(&bytes), 2));
-    try state.finish();
+    var stack = graphics_state_stack.Stack.init(std.testing.allocator);
+    defer stack.deinit();
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&bytes), 2));
+    try state.finishTracked(stack);
     try std.testing.expectEqual(@as(usize, 1), state.report.set_clip_path_records);
+    try std.testing.expectEqualDeep(clip_state.State.complex, state.report.clip.?);
 
     var missing = bytes;
     std.mem.writeInt(u16, missing[42..44], 0xf506, .little);
@@ -2865,13 +2956,16 @@ test "EMF+ stream resolves SetClipRegion Region references atomically" {
     writeEmptyRecord(bytes[28..40], 0x4008);
     std.mem.writeInt(u16, bytes[30..32], 0x0405, .little);
     writeEmptyRecord(bytes[40..52], 0x4034);
-    std.mem.writeInt(u16, bytes[42..44], 0xf505, .little);
+    std.mem.writeInt(u16, bytes[42..44], 0xf005, .little);
     writeEmptyRecord(bytes[52..64], 0x4002);
 
     var state: State = .{};
-    try std.testing.expect(try state.consume(testComment(&bytes), 2));
-    try state.finish();
+    var stack = graphics_state_stack.Stack.init(std.testing.allocator);
+    defer stack.deinit();
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&bytes), 2));
+    try state.finishTracked(stack);
     try std.testing.expectEqual(@as(usize, 1), state.report.set_clip_region_records);
+    try std.testing.expectEqualDeep(clip_state.State.complex, state.report.clip.?);
 
     var missing = bytes;
     std.mem.writeInt(u16, missing[42..44], 0xf506, .little);

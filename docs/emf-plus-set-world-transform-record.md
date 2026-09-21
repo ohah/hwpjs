@@ -8,7 +8,7 @@ Flags는 사용되지 않고 SHOULD zero이지만 수신 시 MUST ignore이므�
 
 ## 미지원 경계
 
-반환값은 새 world transform의 wire 값을 표현하고 tracked stream은 [graphics state 계층](emf-plus-graphics-state.md)에서 현재 행렬을 교체합니다. Save/Restore의 world-transform snapshot도 지원합니다. 다른 graphics 속성 snapshot과 렌더링은 구현하지 않았으며 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성도 주장하지 않습니다.
+반환값은 새 world transform의 wire 값을 표현하고 tracked stream은 [graphics state 계층](emf-plus-graphics-state.md)에서 현재 행렬을 교체합니다. Save/Restore의 world-transform snapshot도 지원합니다. quality 등 나머지 graphics 속성과 렌더링은 구현하지 않았으며 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성도 주장하지 않습니다.
 
 ## 검증 기록
 

@@ -12,7 +12,7 @@ tracked stream은 SetPageTransform을 현재 graphics state에 적용하고 성�
 
 ## 미지원 경계
 
-현재 구현은 page-to-device scale 상태와 수명주기를 재생합니다. 실제 geometry 좌표 적용, device origin, clip·quality 등 나머지 graphics property와 rasterization은 구현 범위가 아닙니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력의 픽셀 동등성도 주장하지 않습니다.
+현재 구현은 page-to-device scale 상태와 수명주기를 재생합니다. 실제 geometry 좌표 적용, device origin, quality 등 나머지 graphics property와 rasterization은 구현 범위가 아닙니다. clip은 [별도 보수적 상태](emf-plus-clip-state.md)로 재생하지만 geometry clipping은 하지 않습니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력의 픽셀 동등성도 주장하지 않습니다.
 
 ## 검증 계약
 

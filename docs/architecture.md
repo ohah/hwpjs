@@ -120,15 +120,15 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ SetPageTransform transform record 계층](emf-plus-set-page-transform-record.md)은 PageUnit과 PageScale을 해석하고 SHOULD NOT 단위를 경고 상태로 보존합니다. [page transform 재생 계층](emf-plus-page-transform.md)은 Header DPI와 공용 단위 환산으로 page-to-device scale을 만들고 graphics state snapshot에 연결합니다.
 
-[EMF+ ResetClip clipping record 계층](emf-plus-reset-clip-record.md)은 payload 없는 고정 envelope와 ignored Flags를 보존합니다. clipping region의 infinity reset과 graphics state replay는 wire parser와 분리합니다.
+[EMF+ ResetClip clipping record 계층](emf-plus-reset-clip-record.md)은 payload 없는 고정 envelope와 ignored Flags를 보존합니다. [clipping state 계층](emf-plus-clip-state.md)이 infinity reset, 증명 가능한 CombineMode 항등식, 추상 Offset과 Save/Container snapshot을 소유합니다.
 
-[EMF+ SetClipRect clipping record 계층](emf-plus-set-clip-rect-record.md)은 공용 RectF와 전용 CombineMode enum을 조립하고 Flags의 나머지 reserved bit를 보존합니다. clipping region의 논리 연산과 graphics state replay는 wire parser와 분리합니다.
+[EMF+ SetClipRect clipping record 계층](emf-plus-set-clip-rect-record.md)은 공용 RectF와 전용 CombineMode enum을 조립하고 Flags의 나머지 reserved bit를 보존합니다. 일반 geometry boolean은 clipping state에서 `complex`로 명시합니다.
 
-[EMF+ SetClipPath clipping record 계층](emf-plus-set-clip-path-record.md)은 공용 ObjectID·CombineMode를 조립하고 stream에서 기존 Path Object 슬롯과 타입을 확인합니다. Path geometry와 clipping 논리 연산 재생은 wire parser와 분리합니다.
+[EMF+ SetClipPath clipping record 계층](emf-plus-set-clip-path-record.md)은 공용 ObjectID·CombineMode를 조립하고 stream에서 기존 Path Object 슬롯과 타입을 확인합니다. payload 미보존으로 계산할 수 없는 geometry는 clipping state에서 `complex`로 명시합니다.
 
-[EMF+ SetClipRegion clipping record 계층](emf-plus-set-clip-region-record.md)은 공용 ObjectID·CombineMode를 조립하고 stream에서 기존 Region Object 슬롯과 타입을 확인합니다. Region 트리와 clipping 논리 연산 재생은 wire parser와 분리합니다.
+[EMF+ SetClipRegion clipping record 계층](emf-plus-set-clip-region-record.md)은 공용 ObjectID·CombineMode를 조립하고 stream에서 기존 Region Object 슬롯과 타입을 확인합니다. payload 미보존으로 계산할 수 없는 geometry는 clipping state에서 `complex`로 명시합니다.
 
-[EMF+ OffsetClip clipping record 계층](emf-plus-offset-clip-record.md)은 공용 float reader 위에 dx/dy translation을 조립하고 ignored Flags를 보존합니다. clipping region의 실제 이동과 graphics state replay는 wire parser와 분리합니다.
+[EMF+ OffsetClip clipping record 계층](emf-plus-offset-clip-record.md)은 공용 float reader 위에 dx/dy translation을 조립하고 ignored Flags를 보존합니다. clipping state 계층은 geometry를 추측하지 않고 추상 영역 분류를 유지합니다.
 
 [EMF+ StrokeFillPath 관측 계층](emf-plus-stroke-fill-path-record.md)은 공식 문서에 payload 정의가 없는 0x4037의 Flags와 data를 opaque 원문으로 유지합니다. current Pen/Brush/Path 배치를 추측하거나 replay 지원으로 세지 않습니다.
 
@@ -138,7 +138,7 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ Save state record 계층](emf-plus-save-record.md)은 미사용 Flags와 u32 StackIndex를 보존합니다. 실제 graphics-state stack과 Restore 매칭은 wire parser와 분리합니다.
 
-[EMF+ Restore와 graphics-state stack 계층](emf-plus-restore-record.md)은 Save/Container 종류를 함께 표현하고 target 이후 entry 제거, world-transform snapshot 복원, comment 원자성, allocator 소유권과 EOF closure를 담당합니다. 두 BeginContainer record와 EndContainer도 같은 stack에 연결합니다.
+[EMF+ Restore와 graphics-state stack 계층](emf-plus-restore-record.md)은 Save/Container 종류를 함께 표현하고 target 이후 entry 제거, world/page transform과 보수적 clip snapshot 복원, comment 원자성, allocator 소유권과 EOF closure를 담당합니다. 두 BeginContainer record와 EndContainer도 같은 stack에 연결합니다.
 
 PNG에서 파일 전체 이름 고유성을 검사하는 [sPLT 추천 팔레트](png-suggested-palettes.md)는 소유권이 있는 별도 Collector로 분리합니다. 기존 픽셀 검사 순회에 연결하되 비할당 metadata.State에 이름 인덱스 수명을 섞지 않습니다.
 
