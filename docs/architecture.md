@@ -50,11 +50,13 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ FillRegion](emf-plus-fill-region-record.md)과 [FillPath record 계층](emf-plus-fill-path-record.md)은 동일한 고정 envelope·Flags ObjectId·BrushId/ARGB를 공통 Fill-object 모듈에서 해석하고 각 wrapper는 대상 이름만 부여합니다. stream은 대상 객체와 조건부 Brush 참조만 연결하며 기존 Region tree·Path geometry를 다시 해석하거나 fill 재생을 수행하지 않습니다.
 
+[EMF+ FillClosedCurve record 계층](emf-plus-fill-closed-curve-record.md)은 Brush와 W fill mode를 조립하고 DrawClosedCurve와 공유하는 Tension·Count·PointData는 공통 closed-curve-data 모듈에서 해석합니다. stream은 조건부 Brush 참조만 연결하며 spline 계산과 alternate/winding fill 재생은 wire parser에 넣지 않습니다.
+
 [EMF+ DrawArc record 계층](emf-plus-draw-arc-record.md)은 drawing record 공용 C/ObjectID flags, Rect/RectF 선택과 두 각도를 분리합니다. stream은 기존 Object Table에서 Pen 존재·타입을 확인하고 payload parser는 렌더링 modulo·clamp를 수행하지 않습니다.
 
 [EMF+ DrawBeziers record 계층](emf-plus-draw-beziers-record.md)은 Path와 공유하는 Point/PointR iterator 위에서 P/C별 PointData를 선택합니다. stream은 Pen 참조만 연결하며 상대좌표 누적과 곡선 재생은 wire parser에 넣지 않습니다.
 
-[EMF+ DrawClosedCurve record 계층](emf-plus-draw-closed-curve-record.md)은 공용 PointData에 Tension과 최소 Count 3을 조립합니다. stream은 Pen 참조만 연결하며 cardinal spline 계산은 wire parser에 넣지 않습니다.
+[EMF+ DrawClosedCurve record 계층](emf-plus-draw-closed-curve-record.md)은 FillClosedCurve와 공통인 Tension·최소 Count 3·PointData 위에 Pen 참조를 조립합니다. stream은 Pen 참조만 연결하며 cardinal spline 계산은 wire parser에 넣지 않습니다.
 
 [EMF+ DrawCurve record 계층](emf-plus-draw-curve-record.md)은 C별 절대 PointData에 Tension·Offset·NumSegments와 최소 Count 2를 조립합니다. reserved bit를 상대 좌표 flag로 오인하지 않으며 재생 범위는 wire parser에서 추정하지 않습니다.
 

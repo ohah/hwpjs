@@ -102,6 +102,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - [EMF+ FillPie의 Brush 선택과 공용 ArcData](emf-plus-fill-pie-record.md)
 - [EMF+ FillRegion의 Region·Brush 객체 참조](emf-plus-fill-region-record.md)
 - [EMF+ FillPath의 Path·Brush 객체 참조](emf-plus-fill-path-record.md)
+- [EMF+ FillClosedCurve와 공용 curve data](emf-plus-fill-closed-curve-record.md)
 - [EMF+ DrawArc와 공용 RectData](emf-plus-draw-arc-record.md)
 - [EMF+ DrawBeziers와 공용 PointData](emf-plus-draw-beziers-record.md)
 - [EMF+ DrawClosedCurve와 Tension](emf-plus-draw-closed-curve-record.md)

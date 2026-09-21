@@ -2,7 +2,7 @@
 
 ## 범위와 단일 출처
 
-`emf_plus_draw_closed_curve.zig`는 MS-EMFPLUS 2.3.4.4의 Type, Flags, Size/DataSize, Tension, Count와 PointData를 조립합니다. P `0x0800`이 set이면 C `0x4000`을 무시하고 PointR를 선택하며, P가 clear이면 C에 따라 signed i16 Point 또는 원비트 f32 PointF를 선택합니다. P/C/ObjectID는 `emf_plus_record_flags.zig`, 세 point 표현과 0~3바이트 padding은 `emf_plus_point_data.zig`, Integer7/15와 iterator는 `emf_plus_point.zig`가 소유합니다.
+`emf_plus_draw_closed_curve.zig`는 MS-EMFPLUS 2.3.4.4의 Type, record envelope와 Pen ObjectID를 조립합니다. FillClosedCurve와 공유하는 Tension, Count와 PointData는 `emf_plus_closed_curve_data.zig`가 단일 소유합니다. P `0x0800`이 set이면 C `0x4000`을 무시하고 PointR를 선택하며, P가 clear이면 C에 따라 signed i16 Point 또는 원비트 f32 PointF를 선택합니다. P/C/ObjectID는 `emf_plus_record_flags.zig`, 세 point 표현과 0~3바이트 padding은 `emf_plus_point_data.zig`, Integer7/15와 iterator는 `emf_plus_point.zig`가 소유합니다.
 
 반환값의 `compressed_flag`는 P 때문에 무시된 경우에도 원문 C bit를 보존하고, 실제 선택된 wire 형식은 `point_data.encoding`만 나타냅니다. Tension은 렌더링 값으로 해석하거나 정규화하지 않고 IEEE 754 원비트를 유지합니다. 명세에 MUST 유한성·부호 범위가 없으므로 음수 0과 NaN도 wire parser가 새로 거부하지 않습니다.
 
@@ -20,4 +20,4 @@ stream은 해당 ObjectID 슬롯이 이미 존재하고 ObjectTypePen인지 확�
 
 P mask·ObjectID 경계, P/C 우선순위, 고정 point 폭, padding 상한, point 한도, PointR 필드 전달, record type·정렬·Tension·Count 최소값, Pen ID와 반환 flags/count, stream routing·Pen 존재/타입·집계 대상을 각각 망가뜨린 19개 유효 의미 변이를 독립 복사본에 주입했습니다. 변이·모드마다 local/global cache를 분리해 Debug·ReleaseSafe·ReleaseFast 총 57/57회를 모두 검출했고 생존·컴파일 실패·무변경 치환은 없습니다. 로그는 `/tmp/hwpjs-emfplus-draw-closed-curve-mutants.WanAO8`입니다.
 
-최종 제품 트리의 전체 `audit`를 Debug·ReleaseSafe·ReleaseFast 순서로 실행했습니다. 세 모드 모두 40/40 단계와 1,655/1,655 테스트, HWP 감사 8,905,827 checks, WASM imports 0으로 통과했습니다. 로그는 `/tmp/hwpjs-emfplus-draw-closed-curve-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.
+FillClosedCurve와 공통 curve-data 계층으로 합친 뒤 세 모드 전체 audit를 다시 실행한 최신 결과는 [FillClosedCurve 검증 기록](emf-plus-fill-closed-curve-record.md)에 둡니다. 위 19종 변이 기록은 최초 DrawClosedCurve 구현 당시의 독립 검증 이력입니다.

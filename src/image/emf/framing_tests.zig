@@ -721,6 +721,37 @@ test "EMF framing routes literal-color FillPath through its Path reference" {
     try t.expectEqual(@as(usize, 1), (try framing.validate(t.allocator, &bytes)).emf_plus.fill_path_records);
 }
 
+test "EMF framing routes literal-color FillClosedCurve through the EMF+ stream" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 200;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 3, .little);
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[92..96], 92, .little);
+    std.mem.writeInt(u32, bytes[96..100], 80, .little);
+    std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
+    std.mem.writeInt(u16, bytes[104..106], 0x4001, .little);
+    std.mem.writeInt(u32, bytes[108..112], 28, .little);
+    std.mem.writeInt(u32, bytes[112..116], 16, .little);
+    std.mem.writeInt(u32, bytes[116..120], 0xdbc01001, .little);
+    std.mem.writeInt(u32, bytes[124..128], 96, .little);
+    std.mem.writeInt(u32, bytes[128..132], 96, .little);
+    std.mem.writeInt(u16, bytes[132..134], 0x4016, .little);
+    std.mem.writeInt(u16, bytes[134..136], 0xe000, .little);
+    std.mem.writeInt(u32, bytes[136..140], 36, .little);
+    std.mem.writeInt(u32, bytes[140..144], 24, .little);
+    std.mem.writeInt(u32, bytes[144..148], 0x44332211, .little);
+    std.mem.writeInt(u32, bytes[148..152], @bitCast(@as(f32, 0.5)), .little);
+    std.mem.writeInt(u32, bytes[152..156], 3, .little);
+    for (0..6) |index| std.mem.writeInt(i16, bytes[156 + index * 2 ..][0..2], @intCast(index), .little);
+    std.mem.writeInt(u16, bytes[168..170], 0x4002, .little);
+    std.mem.writeInt(u32, bytes[172..176], 12, .little);
+    @memcpy(bytes[180..200], original[88..108]);
+
+    try t.expectEqual(@as(usize, 1), (try framing.validate(t.allocator, &bytes)).emf_plus.fill_closed_curve_records);
+}
+
 test "EMF framing reports private and Clear EMF+ records and rejects reserved records" {
     const original = fixture();
     var bytes = [_]u8{0} ** 200;

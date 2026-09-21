@@ -1,9 +1,8 @@
 const std = @import("std");
-const binary = @import("../../binary/reader.zig");
+const closed_curve_data = @import("emf_plus_closed_curve_data.zig");
 const point_data = @import("emf_plus_point_data.zig");
 const record = @import("emf_plus_record.zig");
 const record_flags = @import("emf_plus_record_flags.zig");
-const values = @import("emf_plus_values.zig");
 
 pub const Options = point_data.Options;
 
@@ -22,33 +21,19 @@ pub fn parse(value: record.Record, options: Options) !DrawClosedCurve {
     if (value.size < 12 or value.size % 4 != 0 or value.data_size != value.size - 12 or value.data.len != value.data_size)
         return error.InvalidEmfPlusDrawClosedCurveSize;
 
-    var reader: binary.Reader = .{ .bytes = value.data };
-    const tension = try values.readFloat(&reader);
-    const count = try reader.readInt(u32);
-    if (count < 3) return error.InvalidEmfPlusDrawClosedCurvePointCount;
-    const relative = record_flags.isRelative(value.flags);
-    const compressed = record_flags.isCompressed(value.flags);
-    const point_width: u64 = if (relative) 2 else if (compressed) 4 else 8;
-    const point_bytes = std.math.mul(u64, count, point_width) catch return error.LimitExceeded;
-    const unaligned_minimum = std.math.add(u64, point_bytes, 8) catch return error.LimitExceeded;
-    const minimum_data_size = if (relative)
-        std.mem.alignForward(u64, unaligned_minimum, 4)
-    else
-        unaligned_minimum;
-    if (value.data_size < minimum_data_size) return error.InvalidEmfPlusDrawClosedCurveSize;
-
-    const points = point_data.parse(value.data[reader.offset..], count, relative, compressed, options) catch |err| switch (err) {
-        error.InvalidEmfPlusPointDataSize, error.InvalidEmfPlusPointDataPadding => return error.InvalidEmfPlusDrawClosedCurveSize,
+    const curve = closed_curve_data.parse(value.data, value.flags, options) catch |err| switch (err) {
+        error.InvalidEmfPlusClosedCurvePointCount => return error.InvalidEmfPlusDrawClosedCurvePointCount,
+        error.InvalidEmfPlusClosedCurveDataSize => return error.InvalidEmfPlusDrawClosedCurveSize,
         else => return err,
     };
     return .{
         .flags = value.flags,
         .pen_id = try record_flags.objectId(value.flags),
-        .relative = relative,
-        .compressed_flag = compressed,
-        .tension = tension,
-        .count = count,
-        .point_data = points,
+        .relative = curve.relative,
+        .compressed_flag = curve.compressed_flag,
+        .tension = curve.tension,
+        .count = curve.count,
+        .point_data = curve.point_data,
     };
 }
 
