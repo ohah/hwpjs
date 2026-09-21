@@ -30,6 +30,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ Path 계층](emf-plus-path-object.md)은 Integer7/15, 세 point wire 표현, 일반/RLE point type과 Path envelope를 분리합니다. 공식 R flag 결합 해석과 독립 RLE 호환 해석은 명시적 option으로 구분하며 자동 휴리스틱을 사용하지 않습니다. 상위 Brush/Region/CustomLineCap은 이 parser를 재사용하고 geometry·type 규칙을 복제하지 않습니다.
 
+[EMF+ Path geometry 계층](emf-plus-path-geometry.md)은 좌표와 일반/RLE point type을 함께 소비해 figure별 Move·Line·cubic Bézier command를 조립합니다. PointR 누적은 공용 resolver, RLE B와 중첩 flags 보존은 geometry iterator, 렌더링·clip/fill/stroke는 후속 계층이 소유합니다.
+
 [EMF+ Image 계층](emf-plus-image-object.md)은 Image dispatch, Bitmap, indexed Palette, Metafile payload를 분리합니다. raw pixel에서만 format·stride·palette·크기를 검증하고 compressed payload와 중첩 metafile은 원문을 보존합니다. 이미지 시그니처나 바이트 모양으로 명시된 wire type을 자동 교정하지 않습니다.
 
 [EMF+ Brush 계층](emf-plus-brush-object.md)은 다섯 BrushType dispatch와 Solid/Hatch/Linear/Path/Texture payload를 분리합니다. 선택 데이터 순서와 flag 충돌은 공통 optional 계층이 소유하고, boundary Path와 Texture Image는 기존 parser에 정확한 slice를 위임합니다. 정의됐지만 해당 brush에서 무관한 flag를 임의로 예약 비트처럼 거부하지 않으며 렌더링 의미는 이 wire 계층에 넣지 않습니다.

@@ -37,7 +37,11 @@ pub const Iterator = struct {
 };
 
 pub fn points(source: point_data.PointData) Iterator {
-    return .{ .source = source.points() };
+    return fromIterator(source.points());
+}
+
+pub fn fromIterator(source: point.Iterator) Iterator {
+    return .{ .source = source };
 }
 
 const std = @import("std");

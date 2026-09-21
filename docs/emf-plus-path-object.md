@@ -20,7 +20,7 @@
 
 공식 3.2.32.21의 19개 PointF, 19개 point type, 0xBF padding으로 된 184바이트 ObjectTypePath 예제를 byte-for-byte 파싱합니다. 별도 합성 fixture는 PointF, i16 Point, X/Y 혼합 폭 PointR, 공식 RLE, 독립 RLE, padding 0~3, 빈 Path, 모든 잘림, 미지 flags/type, RLE 고정 bit·run 초과·0 run, point 한도와 잘못된 ObjectType을 검사합니다. Integer7 전 범위 128개와 Integer15 전 범위 32,768개도 전수 검사합니다.
 
-이 계층은 wire 구조와 의미상 enum·count 경계만 검증합니다. Start/Line/Bezier 배열을 렌더링 가능한 도형으로 조립하거나 cubic Bezier topology를 보정하지 않으며, 상대 좌표 누적·변환·래스터화도 하지 않습니다. PathGradient boundary와 Region/CustomLineCap의 중첩 Path 연결은 각 상위 객체 파트가 소유합니다. 실제 HWP EMF+ 표본 비교와 렌더링 동등성도 아직 남아 있습니다.
+이 계층은 wire 구조와 의미상 enum·count 경계만 검증합니다. Start/Line/Bezier 배열, figure 상태와 cubic Bézier topology는 별도 [Path geometry 계층](emf-plus-path-geometry.md)이 조립하며 wire parser가 보정하지 않습니다. 변환·clip boolean geometry·곡선 평가·래스터화는 아직 구현하지 않았습니다. PathGradient boundary와 Region/CustomLineCap의 중첩 Path 연결은 각 상위 객체 파트가 소유합니다. 실제 HWP EMF+ 표본 비교와 렌더링 동등성도 아직 남아 있습니다.
 
 ## 적대적 검증 기록
 
