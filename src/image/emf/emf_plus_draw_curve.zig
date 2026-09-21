@@ -1,5 +1,6 @@
 const std = @import("std");
 const binary = @import("../../binary/reader.zig");
+const cardinal_spans = @import("emf_plus_cardinal_spans.zig");
 const point_data = @import("emf_plus_point_data.zig");
 const record = @import("emf_plus_record.zig");
 const record_flags = @import("emf_plus_record_flags.zig");
@@ -16,6 +17,10 @@ pub const DrawCurve = struct {
     num_segments: u32,
     count: u32,
     point_data: point_data.PointData,
+
+    pub fn spans(self: DrawCurve) !cardinal_spans.Iterator {
+        return cardinal_spans.open(self.point_data, self.offset, self.num_segments);
+    }
 };
 
 pub fn parse(value: record.Record, options: Options) !DrawCurve {
@@ -86,6 +91,23 @@ test "EMF+ DrawCurve parses integer points and ignores every reserved flag" {
     var points = value.point_data.points();
     try std.testing.expectEqual(@as(i16, -32768), (try points.next()).?.integer.x);
     try std.testing.expectEqual(@as(i16, -1), (try points.next()).?.integer.x);
+    try std.testing.expectError(error.InvalidEmfPlusCardinalRange, value.spans());
+
+    var selected_data = [_]u8{0} ** 32;
+    std.mem.writeInt(u32, selected_data[4..8], 1, .little);
+    std.mem.writeInt(u32, selected_data[8..12], 2, .little);
+    std.mem.writeInt(u32, selected_data[12..16], 4, .little);
+    for ([_]i16{ 1, 2, 3, 4, 5, 6, 7, 8 }, 0..) |coordinate, index|
+        std.mem.writeInt(i16, selected_data[16 + index * 2 ..][0..2], coordinate, .little);
+    const selected = try parse(makeRecord(&selected_data, 0x4000), .{});
+    var spans = try selected.spans();
+    const maybe_first_span = try spans.next();
+    try std.testing.expect(maybe_first_span != null);
+    try std.testing.expectEqual(@as(i64, 3), maybe_first_span.?.start.integer.x);
+    const maybe_second_span = try spans.next();
+    try std.testing.expect(maybe_second_span != null);
+    try std.testing.expectEqual(@as(i64, 5), maybe_second_span.?.start.integer.x);
+    try std.testing.expect((try spans.next()) == null);
 }
 
 test "EMF+ DrawCurve parses floating points and preserves float bits" {

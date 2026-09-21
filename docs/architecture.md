@@ -26,6 +26,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ 연결 cubic Bézier 계층](emf-plus-bezier-geometry.md)은 첫 4점과 이후 3점씩을 segment로 조립하고 앞 end를 다음 start로 공유합니다. wire parser의 최소 Count 4 수용과 geometry의 완전한 `1+3n` 요구를 분리하며 불완전한 후행 점을 버리지 않습니다.
 
+[EMF+ cardinal spline span 계층](emf-plus-cardinal-spans.md)은 DrawCurve의 Offset·NumSegments가 선택하는 인접 endpoint와 닫힌 두 curve record의 마지막→첫 연결을 조립합니다. span은 spline이 통과하는 점의 topology만 나타내며 Tension 기반 tangent/control point 계산과 렌더링은 별도 후속 계층입니다.
+
 [EMF+ Path 계층](emf-plus-path-object.md)은 Integer7/15, 세 point wire 표현, 일반/RLE point type과 Path envelope를 분리합니다. 공식 R flag 결합 해석과 독립 RLE 호환 해석은 명시적 option으로 구분하며 자동 휴리스틱을 사용하지 않습니다. 상위 Brush/Region/CustomLineCap은 이 parser를 재사용하고 geometry·type 규칙을 복제하지 않습니다.
 
 [EMF+ Image 계층](emf-plus-image-object.md)은 Image dispatch, Bitmap, indexed Palette, Metafile payload를 분리합니다. raw pixel에서만 format·stride·palette·크기를 검증하고 compressed payload와 중첩 metafile은 원문을 보존합니다. 이미지 시그니처나 바이트 모양으로 명시된 wire type을 자동 교정하지 않습니다.
@@ -62,9 +64,9 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ DrawBeziers record 계층](emf-plus-draw-beziers-record.md)은 Path와 공유하는 Point/PointR iterator 위에서 P/C별 PointData를 선택합니다. stream은 Pen 참조만 연결하며 상대좌표 누적과 연결 cubic topology는 공용 geometry 계층, 곡선 평가·stroke는 후속 renderer 계층에 둡니다.
 
-[EMF+ DrawClosedCurve record 계층](emf-plus-draw-closed-curve-record.md)은 FillClosedCurve와 공통인 Tension·최소 Count 3·PointData 위에 Pen 참조를 조립합니다. stream은 Pen 참조만 연결하며 cardinal spline 계산은 wire parser에 넣지 않습니다.
+[EMF+ DrawClosedCurve record 계층](emf-plus-draw-closed-curve-record.md)은 FillClosedCurve와 공통인 Tension·최소 Count 3·PointData 위에 Pen 참조를 조립합니다. stream은 Pen 참조만 연결하며 닫힌 span topology는 공용 geometry 계층, cardinal tangent·곡선 평가는 후속 renderer 계층에 둡니다.
 
-[EMF+ DrawCurve record 계층](emf-plus-draw-curve-record.md)은 C별 절대 PointData에 Tension·Offset·NumSegments와 최소 Count 2를 조립합니다. reserved bit를 상대 좌표 flag로 오인하지 않으며 재생 범위는 wire parser에서 추정하지 않습니다.
+[EMF+ DrawCurve record 계층](emf-plus-draw-curve-record.md)은 C별 절대 PointData에 Tension·Offset·NumSegments와 최소 Count 2를 조립합니다. reserved bit를 상대 좌표 flag로 오인하지 않고 wire parser는 재생 범위를 추정하지 않으며, 공용 geometry 계층이 실제 span 범위를 검증합니다.
 
 [EMF+ DrawDriverString record 계층](emf-plus-draw-driver-string-record.md)은 Font ObjectID와 S별 Brush/ARGB, 네 option, glyph·PointF 배열과 선택 행렬을 조립합니다. 홀수 glyph의 내부 비정렬 배치를 자동 보정하지 않고 record 끝 정렬만 분리하며 glyph shaping과 재생 의미는 wire parser에 넣지 않습니다.
 

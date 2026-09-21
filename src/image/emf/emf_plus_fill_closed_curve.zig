@@ -1,6 +1,7 @@
 const std = @import("std");
 const binary = @import("../../binary/reader.zig");
 const brush_id = @import("emf_plus_brush_id.zig");
+const cardinal_spans = @import("emf_plus_cardinal_spans.zig");
 const closed_curve_data = @import("emf_plus_closed_curve_data.zig");
 const point_data = @import("emf_plus_point_data.zig");
 const record = @import("emf_plus_record.zig");
@@ -17,6 +18,10 @@ pub const FillClosedCurve = struct {
     tension: f32,
     count: u32,
     point_data: point_data.PointData,
+
+    pub fn spans(self: FillClosedCurve) !cardinal_spans.Iterator {
+        return cardinal_spans.closed(self.point_data);
+    }
 };
 
 pub fn parse(value: record.Record, options: Options) !FillClosedCurve {
@@ -68,6 +73,15 @@ test "EMF+ FillClosedCurve parses brush fill mode tension and fixed points" {
     try std.testing.expectEqual(@as(u32, @bitCast(@as(f32, -0.0))), @as(u32, @bitCast(compressed.tension)));
     var points = compressed.point_data.points();
     try std.testing.expectEqual(@as(i16, -32768), (try points.next()).?.integer.x);
+    var spans = try compressed.spans();
+    try std.testing.expect((try spans.next()) != null);
+    try std.testing.expect((try spans.next()) != null);
+    const maybe_closing = try spans.next();
+    try std.testing.expect(maybe_closing != null);
+    const closing = maybe_closing.?;
+    try std.testing.expectEqual(@as(i64, -2), closing.start.integer.x);
+    try std.testing.expectEqual(@as(i64, -32768), closing.end.integer.x);
+    try std.testing.expect((try spans.next()) == null);
 
     var floating = [_]u8{0} ** 36;
     std.mem.writeInt(u32, floating[0..4], 0x44332211, .little);

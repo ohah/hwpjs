@@ -1,4 +1,5 @@
 const std = @import("std");
+const cardinal_spans = @import("emf_plus_cardinal_spans.zig");
 const closed_curve_data = @import("emf_plus_closed_curve_data.zig");
 const point_data = @import("emf_plus_point_data.zig");
 const record = @import("emf_plus_record.zig");
@@ -14,6 +15,10 @@ pub const DrawClosedCurve = struct {
     tension: f32,
     count: u32,
     point_data: point_data.PointData,
+
+    pub fn spans(self: DrawClosedCurve) !cardinal_spans.Iterator {
+        return cardinal_spans.closed(self.point_data);
+    }
 };
 
 pub fn parse(value: record.Record, options: Options) !DrawClosedCurve {
@@ -67,6 +72,15 @@ test "EMF+ DrawClosedCurve parses integer and floating points with raw tension" 
     try std.testing.expectEqual(@as(u32, @bitCast(@as(f32, -0.0))), @as(u32, @bitCast(compressed.tension)));
     var compressed_points = compressed.point_data.points();
     try std.testing.expectEqual(@as(i16, -32768), (try compressed_points.next()).?.integer.x);
+    var spans = try compressed.spans();
+    try std.testing.expect((try spans.next()) != null);
+    try std.testing.expect((try spans.next()) != null);
+    const maybe_closing = try spans.next();
+    try std.testing.expect(maybe_closing != null);
+    const closing = maybe_closing.?;
+    try std.testing.expectEqual(@as(i64, -2), closing.start.integer.x);
+    try std.testing.expectEqual(@as(i64, -32768), closing.end.integer.x);
+    try std.testing.expect((try spans.next()) == null);
 
     var floating = [_]u8{0} ** 32;
     putF32(&floating, 0, std.math.nan(f32));
