@@ -2,7 +2,7 @@
 
 ## 범위와 책임
 
-`emf_plus_record_type.zig`는 공식 EMF+ `RecordType` 값 0x4001~0x403A의 단일 대응표를 소유합니다. `emf_plus_record.zig`는 모든 EMF+ 레코드가 공유하는 12바이트 머리와 comment 내부 iterator를, `emf_plus_header.zig`는 Header 전용 필드를, `emf_plus_stream.zig`는 여러 `EMR_COMMENT_EMFPLUS` 사이의 시작·종료 상태를 소유합니다. 외부 `EMR_COMMENT`의 DataSize·identifier·padding은 [comment envelope](emf-comment-envelope.md)가 계속 소유합니다.
+`emf_plus_record_type.zig`는 공식 EMF+ `RecordType` 값 0x4001~0x403A의 단일 대응표를 소유하고, [RecordType wire 지원 매트릭스](emf-plus-record-coverage.md)는 exhaustive 정책과 완료 경계를 소유합니다. `emf_plus_record.zig`는 모든 EMF+ 레코드가 공유하는 12바이트 머리와 comment 내부 iterator를, `emf_plus_header.zig`는 Header 전용 필드를, `emf_plus_stream.zig`는 여러 `EMR_COMMENT_EMFPLUS` 사이의 시작·종료 상태를 소유합니다. 외부 `EMR_COMMENT`의 DataSize·identifier·padding은 [comment envelope](emf-comment-envelope.md)가 계속 소유합니다.
 
 각 EMF+ 레코드는 Type u16, Flags u16, Size u32, DataSize u32와 data로 구성됩니다. Size와 DataSize는 4바이트 정렬이어야 하고 `Size == 12 + DataSize`여야 합니다. iterator는 선언 크기가 현재 comment를 벗어나면 거부하며 다음 comment에서 조각을 보충하지 않습니다. 공식 `EMR_COMMENT_EMFPLUS`가 각 comment에 **하나 이상의 EMF+ records**를 요구하므로 빈 parameter와 잘린 마지막 레코드도 오류입니다.
 

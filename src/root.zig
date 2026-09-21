@@ -65,6 +65,7 @@ test {
     _ = @import("image/emf/emf_plus_closed_curve_data.zig");
     _ = @import("image/emf/emf_plus_fill_closed_curve.zig");
     _ = @import("image/emf/emf_plus_record_flags.zig");
+    _ = @import("image/emf/emf_plus_record_support.zig");
     _ = @import("image/emf/emf_plus_rect_data.zig");
     _ = @import("image/emf/emf_plus_draw_arc.zig");
     _ = @import("image/emf/emf_plus_point_data.zig");

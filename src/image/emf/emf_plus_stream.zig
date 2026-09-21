@@ -1,6 +1,7 @@
 const std = @import("std");
 const comment_record = @import("comment_record.zig");
 const record = @import("emf_plus_record.zig");
+const record_support = @import("emf_plus_record_support.zig");
 const header_record = @import("emf_plus_header.zig");
 const private_comment = @import("emf_plus_comment.zig");
 const object_record = @import("emf_plus_object.zig");
@@ -168,9 +169,9 @@ pub const State = struct {
                     if (value.size != 12 or value.data_size != 0) return error.InvalidEmfPlusGetDcSize;
                     pending.report.get_dc_records += 1;
                 },
-                .multi_format_start, .multi_format_section, .multi_format_end => return error.ReservedEmfPlusRecordType,
                 else => {},
             }
+            if (record_support.policy(value.kind) == .forbidden) return error.ReservedEmfPlusRecordType;
             _ = try pending.object_state.consume(value);
             if (value.kind == .serializable_object) {
                 const parsed = try serializable_object.parse(value);

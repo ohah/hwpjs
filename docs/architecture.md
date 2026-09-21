@@ -130,6 +130,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ StrokeFillPath 관측 계층](emf-plus-stroke-fill-path-record.md)은 공식 문서에 payload 정의가 없는 0x4037의 Flags와 data를 opaque 원문으로 유지합니다. current Pen/Brush/Path 배치를 추측하거나 replay 지원으로 세지 않습니다.
 
+[EMF+ RecordType wire 지원 매트릭스](emf-plus-record-coverage.md)는 공식 58개 enum 값을 wire-validated 54개, opaque-preserved 1개, forbidden 3개로 exhaustive 분류하고 stream이 같은 정책을 사용하게 합니다. 이 분류는 graphics replay·렌더링·저장 지원률과 분리합니다.
+
 [EMF+ Save state record 계층](emf-plus-save-record.md)은 미사용 Flags와 u32 StackIndex를 보존합니다. 실제 graphics-state stack과 Restore 매칭은 wire parser와 분리합니다.
 
 [EMF+ Restore와 graphics-state stack 계층](emf-plus-restore-record.md)은 Save/Container 종류를 함께 표현하고 target 이후 entry 제거, comment 원자성, allocator 소유권과 EOF closure를 담당합니다. 두 BeginContainer record와 EndContainer도 같은 stack에 연결합니다.
