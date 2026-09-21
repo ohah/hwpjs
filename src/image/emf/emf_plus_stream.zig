@@ -61,6 +61,7 @@ const transform_matrix = @import("emf_plus_transform_matrix.zig");
 const container_transform = @import("emf_plus_container_transform.zig");
 const page_transform = @import("emf_plus_page_transform.zig");
 const clip_state = @import("emf_plus_clip_state.zig");
+const property_state = @import("emf_plus_property_state.zig");
 
 pub const Report = struct {
     comments: usize = 0,
@@ -132,6 +133,7 @@ pub const Report = struct {
     world_transform: ?transform_matrix.TransformMatrix = null,
     page_transform: ?page_transform.PageTransform = null,
     clip: ?clip_state.State = null,
+    properties: ?property_state.State = null,
 };
 
 pub const State = struct {
@@ -393,32 +395,39 @@ pub const State = struct {
                 pending.report.draw_string_records = std.math.add(usize, pending.report.draw_string_records, 1) catch return error.LimitExceeded;
             }
             if (value.kind == .set_rendering_origin) {
-                _ = try set_rendering_origin_record.parse(value);
+                const parsed = try set_rendering_origin_record.parse(value);
                 pending.report.set_rendering_origin_records = std.math.add(usize, pending.report.set_rendering_origin_records, 1) catch return error.LimitExceeded;
+                if (stack) |tracked| tracked.current.properties.rendering_origin = .{ .x = parsed.x, .y = parsed.y };
             }
             if (value.kind == .set_anti_alias_mode) {
-                _ = try set_anti_alias_mode_record.parse(value);
+                const parsed = try set_anti_alias_mode_record.parse(value);
                 pending.report.set_anti_alias_mode_records = std.math.add(usize, pending.report.set_anti_alias_mode_records, 1) catch return error.LimitExceeded;
+                if (stack) |tracked| tracked.current.properties.anti_alias_mode = .{ .smoothing = parsed.smoothing, .anti_alias = parsed.anti_alias };
             }
             if (value.kind == .set_text_rendering_hint) {
-                _ = try set_text_rendering_hint_record.parse(value);
+                const parsed = try set_text_rendering_hint_record.parse(value);
                 pending.report.set_text_rendering_hint_records = std.math.add(usize, pending.report.set_text_rendering_hint_records, 1) catch return error.LimitExceeded;
+                if (stack) |tracked| tracked.current.properties.text_rendering_hint = parsed.hint;
             }
             if (value.kind == .set_text_contrast) {
-                _ = try set_text_contrast_record.parse(value);
+                const parsed = try set_text_contrast_record.parse(value);
                 pending.report.set_text_contrast_records = std.math.add(usize, pending.report.set_text_contrast_records, 1) catch return error.LimitExceeded;
+                if (stack) |tracked| tracked.current.properties.text_contrast = parsed.text_contrast;
             }
             if (value.kind == .set_interpolation_mode) {
-                _ = try set_interpolation_mode_record.parse(value);
+                const parsed = try set_interpolation_mode_record.parse(value);
                 pending.report.set_interpolation_mode_records = std.math.add(usize, pending.report.set_interpolation_mode_records, 1) catch return error.LimitExceeded;
+                if (stack) |tracked| tracked.current.properties.interpolation_mode = parsed.mode;
             }
             if (value.kind == .set_pixel_offset_mode) {
-                _ = try set_pixel_offset_mode_record.parse(value);
+                const parsed = try set_pixel_offset_mode_record.parse(value);
                 pending.report.set_pixel_offset_mode_records = std.math.add(usize, pending.report.set_pixel_offset_mode_records, 1) catch return error.LimitExceeded;
+                if (stack) |tracked| tracked.current.properties.pixel_offset_mode = parsed.mode;
             }
             if (value.kind == .set_compositing_mode) {
-                _ = try set_compositing_mode_record.parse(value);
+                const parsed = try set_compositing_mode_record.parse(value);
                 pending.report.set_compositing_mode_records = std.math.add(usize, pending.report.set_compositing_mode_records, 1) catch return error.LimitExceeded;
+                if (stack) |tracked| tracked.current.properties.compositing_mode = parsed.mode;
             }
             if (value.kind == .set_compositing_quality) {
                 const parsed = try set_compositing_quality_record.parse(value);
@@ -427,6 +436,7 @@ pub const State = struct {
                     .defined => {},
                     .invalid_windows_default => pending.report.set_compositing_quality_windows_fallback_records = std.math.add(usize, pending.report.set_compositing_quality_windows_fallback_records, 1) catch return error.LimitExceeded,
                 }
+                if (stack) |tracked| tracked.current.properties.compositing_quality = parsed.quality;
             }
             if (value.kind == .save) {
                 const parsed = try save_record.parse(value);
@@ -571,6 +581,7 @@ pub const State = struct {
             pending.report.world_transform = tracked.current.world_transform;
             pending.report.page_transform = tracked.current.page_transform;
             pending.report.clip = tracked.current.clip;
+            pending.report.properties = tracked.current.properties;
         }
         pending.report.objects = pending.object_state.report;
         self.* = pending;
@@ -664,6 +675,24 @@ fn writeOffsetClip(bytes: []u8, dx: f32, dy: f32) void {
     std.mem.writeInt(u32, bytes[8..12], 8, .little);
     std.mem.writeInt(u32, bytes[12..16], @bitCast(dx), .little);
     std.mem.writeInt(u32, bytes[16..20], @bitCast(dy), .little);
+}
+
+fn writePropertyRecords(bytes: []u8, alternate: bool) void {
+    std.debug.assert(bytes.len == 104);
+    @memset(bytes, 0);
+    std.mem.writeInt(u16, bytes[0..2], 0x401d, .little);
+    std.mem.writeInt(u32, bytes[4..8], 20, .little);
+    std.mem.writeInt(u32, bytes[8..12], 8, .little);
+    std.mem.writeInt(i32, bytes[12..16], if (alternate) 3 else -1, .little);
+    std.mem.writeInt(i32, bytes[16..20], if (alternate) 4 else 2, .little);
+    const types = [_]u16{ 0x401e, 0x401f, 0x4020, 0x4021, 0x4022, 0x4023, 0x4024 };
+    const initial_flags = [_]u16{ 0x000b, 0x0005, 2200, 0x0007, 0x0004, 0x0001, 0x00ff };
+    const alternate_flags = [_]u16{ 0x0000, 0x0001, 1000, 0x0001, 0x0001, 0x0000, 0x0002 };
+    for (types, 0..) |record_type, index| {
+        const offset = 20 + index * 12;
+        writeEmptyRecord(bytes[offset..][0..12], record_type);
+        std.mem.writeInt(u16, bytes[offset + 2 ..][0..2], if (alternate) alternate_flags[index] else initial_flags[index], .little);
+    }
 }
 
 test "EMF+ stream spans comments while every record remains locally complete" {
@@ -1184,6 +1213,68 @@ test "EMF+ stream resolves DrawString Font Brush and optional StringFormat refer
     const before = overflow;
     try std.testing.expectError(error.LimitExceeded, overflow.consume(testComment(bytes[0..108]), 2));
     try std.testing.expectEqualDeep(before, overflow);
+}
+
+test "EMF+ tracked property state preserves all fields snapshots containers and rollback" {
+    var header = [_]u8{0} ** 28;
+    writeHeader(&header);
+    var state: State = .{};
+    var stack = graphics_state_stack.Stack.init(std.testing.allocator);
+    defer stack.deinit();
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&header), 2));
+    try std.testing.expectEqualDeep(property_state.State{}, state.report.properties.?);
+
+    var initial = [_]u8{0} ** 104;
+    writePropertyRecords(&initial, false);
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&initial), 3));
+    const expected: property_state.State = .{
+        .rendering_origin = .{ .x = -1, .y = 2 },
+        .anti_alias_mode = .{ .smoothing = .anti_alias_8x8, .anti_alias = true },
+        .text_rendering_hint = .clear_type_grid_fit,
+        .text_contrast = 2200,
+        .interpolation_mode = .high_quality_bicubic,
+        .pixel_offset_mode = .half,
+        .compositing_mode = .source_copy,
+        .compositing_quality = .{ .invalid_windows_default = 0xff },
+    };
+    try std.testing.expectEqualDeep(expected, stack.current.properties);
+    try std.testing.expectEqualDeep(expected, state.report.properties.?);
+
+    var save = [_]u8{0} ** 16;
+    writeStackIndexRecord(&save, 0x4025, 0, 30);
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&save), 4));
+    var alternate = [_]u8{0} ** 104;
+    writePropertyRecords(&alternate, true);
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&alternate), 5));
+    try std.testing.expectEqual(@as(i32, 3), stack.current.properties.rendering_origin.?.x);
+    try std.testing.expectEqual(@as(u12, 1000), stack.current.properties.text_contrast.?);
+    try std.testing.expectEqual(@import("emf_plus_compositing_quality.zig").CompositingQuality.high_speed, stack.current.properties.compositing_quality.?.defined);
+
+    var restore = [_]u8{0} ** 16;
+    writeStackIndexRecord(&restore, 0x4026, 0, 30);
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&restore), 6));
+    try std.testing.expectEqualDeep(expected, stack.current.properties);
+
+    var begin = [_]u8{0} ** 16;
+    writeStackIndexRecord(&begin, 0x4028, 0, 31);
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&begin), 7));
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&alternate), 8));
+    var end = [_]u8{0} ** 16;
+    writeStackIndexRecord(&end, 0x4029, 0, 31);
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&end), 9));
+    try std.testing.expectEqualDeep(expected, stack.current.properties);
+    try std.testing.expectEqualDeep(expected, state.report.properties.?);
+
+    var malformed = [_]u8{0} ** 23;
+    @memcpy(malformed[0..20], alternate[0..20]);
+    malformed[20] = 0xaa;
+    malformed[21] = 0xbb;
+    malformed[22] = 0xcc;
+    const before_state = state;
+    const before_properties = stack.current.properties;
+    try std.testing.expectError(error.TruncatedEmfPlusRecordHeader, state.consumeTracked(&stack, testComment(&malformed), 10));
+    try std.testing.expectEqualDeep(before_state, state);
+    try std.testing.expectEqualDeep(before_properties, stack.current.properties);
 }
 
 test "EMF+ stream validates and counts SetRenderingOrigin records atomically" {

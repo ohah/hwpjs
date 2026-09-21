@@ -8,7 +8,7 @@ A flag는 `0x2000`이며 set이면 post-multiply, clear이면 pre-multiply입니
 
 ## 미지원 경계
 
-반환값은 translation wire 명령을 표현하고 tracked stream은 [graphics state 계층](emf-plus-graphics-state.md)에서 translation matrix를 실제 pre/post multiplication하며 Save/Restore snapshot에 포함합니다. 다른 graphics 속성과 렌더링은 구현하지 않았으며 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성도 주장하지 않습니다.
+반환값은 translation wire 명령을 표현하고 tracked stream은 [graphics state 계층](emf-plus-graphics-state.md)에서 translation matrix를 실제 pre/post multiplication하며 Save/Restore snapshot에 포함합니다. [여덟 graphics property](emf-plus-property-state.md)도 별도 상태로 추적하지만 실제 렌더링은 구현하지 않았으며 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성도 주장하지 않습니다.
 
 ## 검증 기록
 

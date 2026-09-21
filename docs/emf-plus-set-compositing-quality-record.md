@@ -12,7 +12,7 @@ Type은 `0x4024`, Size는 정확히 12, DataSize와 실제 data slice는 0이어
 
 `emf_plus_stream.zig`는 전용 parser를 호출한 뒤 전체 record 수와 Windows fallback record 수를 따로 보고합니다. payload·두 집계의 오류는 comment 전체 상태를 원복하고 실제 EMF framing도 같은 경로를 사용합니다. invalid quality는 공식 Windows fallback이 있으므로 구조 오류로 거부하지 않되 문서 수준에서 편차를 잃지 않습니다.
 
-Default/HighSpeed/HighQuality/GammaCorrected를 결과가 같다는 설명만으로 서로 정규화하지 않습니다. 실제 gamma correction, alpha compositing, graphics state replay, Save/Restore와 저장은 미구현입니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 한컴 렌더링과의 동등성도 주장하지 않습니다.
+Default/HighSpeed/HighQuality/GammaCorrected를 결과가 같다는 설명만으로 서로 정규화하지 않습니다. tracked stream은 정의값 또는 invalid 원값과 fallback을 [공용 property 상태](emf-plus-property-state.md)에 적용하고 Save/Container 수명주기와 report에 연결합니다. 실제 gamma correction, alpha compositing과 저장은 미구현입니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 한컴 렌더링과의 동등성도 주장하지 않습니다.
 
 ## 검증 기록
 

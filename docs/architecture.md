@@ -78,7 +78,7 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ DrawString record 계층](emf-plus-draw-string-record.md)은 Font·조건부 Brush·선택 StringFormat 참조와 UTF-16LE StringData를 조립합니다. optional u32 ObjectID 해석은 DrawImage의 ImageAttributes와 공유하고, shaping·layout·CharacterRange 교차 검증은 wire parser와 타입 전용 Object Table 상태에 넣지 않습니다.
 
-[EMF+ SetRenderingOrigin property 계층](emf-plus-set-rendering-origin-record.md)은 고정 signed x/y wire 값과 record envelope만 검증합니다. stream은 유효 record를 집계하되 hatch/dither의 실제 graphics state와 Save/Restore 재생은 parser에 섞지 않습니다.
+[EMF+ SetRenderingOrigin property 계층](emf-plus-set-rendering-origin-record.md)은 고정 signed x/y wire 값과 record envelope를 검증합니다. stream의 상태 적용과 Save/Restore 재생은 parser와 분리한 공용 property 상태가 담당합니다.
 
 [EMF+ SetAntiAliasMode property 계층](emf-plus-set-anti-alias-mode-record.md)은 Flags의 A, SmoothingMode와 reserved bits를 분리하고 정의된 enum domain을 전용 값 모듈에서 검증합니다. 실제 rasterization과 state replay는 wire parser에 넣지 않습니다.
 
@@ -93,6 +93,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 [EMF+ SetCompositingMode property 계층](emf-plus-set-compositing-mode-record.md)은 Flags low byte와 high-byte reserved 영역을 분리하고 SourceOver·SourceCopy enum을 검증합니다. 실제 alpha blending과 합성은 wire parser에 넣지 않습니다.
 
 [EMF+ SetCompositingQuality property 계층](emf-plus-set-compositing-quality-record.md)은 정의된 enum과 Windows invalid-value fallback을 구분해 원시값과 유효 재생값을 함께 보존합니다. 실제 gamma correction과 합성은 wire parser에 넣지 않습니다.
+
+[EMF+ graphics property 상태 계층](emf-plus-property-state.md)은 위 여덟 record의 관측값을 optional 필드로 보존하고 tracked stream report 및 Save/Container snapshot에 연결합니다. wire 검증·enum domain은 각 전용 parser가, 상태 수명주기는 이 계층이 소유하며 실제 rasterization은 둘 모두에 넣지 않습니다.
 
 [EMF+ BeginContainer state record 계층](emf-plus-begin-container-record.md)은 공용 RectF·UnitType 위에 두 rectangle과 StackIndex를 조립하고 SHOULD NOT 단위를 거부 오류와 분리합니다. tracked stream은 Container entry를 공용 stack에 넣되 transform replay는 wire parser에 섞지 않습니다.
 

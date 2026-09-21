@@ -12,7 +12,7 @@ Type은 `0x4022`, Size는 정확히 12, DataSize와 실제 data slice는 0이어
 
 `emf_plus_stream.zig`는 전용 parser를 호출한 뒤 유효 record 수를 보고합니다. enum·payload·집계 오류는 comment 전체 상태를 원복하고 실제 EMF framing도 같은 경로를 사용합니다.
 
-Default/HighSpeed/HighQuality 별칭을 None/Half로 정규화하지 않고 wire enum을 그대로 보존합니다. 실제 pixel-center 이동, rasterization, graphics state replay, Save/Restore와 저장은 미구현입니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 한컴 렌더링과의 동등성도 주장하지 않습니다.
+Default/HighSpeed/HighQuality 별칭을 None/Half로 정규화하지 않고 wire enum을 그대로 보존합니다. tracked stream은 [공용 property 상태](emf-plus-property-state.md)와 Save/Container 수명주기에 값을 적용합니다. 실제 pixel-center 이동, rasterization과 저장은 미구현입니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 한컴 렌더링과의 동등성도 주장하지 않습니다.
 
 ## 검증 기록
 

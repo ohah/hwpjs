@@ -10,7 +10,7 @@ tracked stream은 Set/Reset/Multiply/Translate/Scale/RotateWorldTransform을 현
 
 ## 지원 경계
 
-현재 snapshot에는 world transform, page transform과 보수적 clip state가 포함됩니다. rendering/compositing quality와 다른 graphics property는 아직 snapshot·재생하지 않습니다. BeginContainerNoParams는 현재 상태를 snapshot하고 [BeginContainer transform 계층](emf-plus-container-transform.md)은 지원 단위의 컨테이너 행렬을 적용합니다. 따라서 이 단계는 전체 GDI+ 재생이나 렌더링 완료를 뜻하지 않습니다.
+현재 snapshot에는 world transform, page transform, 보수적 clip state와 [여덟 graphics property](emf-plus-property-state.md)가 포함됩니다. BeginContainerNoParams는 현재 상태를 snapshot하고 [BeginContainer transform 계층](emf-plus-container-transform.md)은 지원 단위의 컨테이너 행렬을 적용합니다. property의 초기 플랫폼 기본값과 실제 rasterization은 구현하지 않으므로 이 단계는 전체 GDI+ 재생이나 렌더링 완료를 뜻하지 않습니다.
 
 wire parser는 NaN·무한대·signed zero를 그대로 보존합니다. tracked 산술은 IEEE-754 연산 결과를 따르며 특수값을 보정하지 않습니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력과의 픽셀 동등성도 주장하지 않습니다.
 

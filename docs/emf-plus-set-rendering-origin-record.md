@@ -10,7 +10,7 @@ Type은 `0x401d`, Size는 정확히 20, DataSize와 실제 data slice는 각각 
 
 `emf_plus_stream.zig`는 record를 전용 parser로 검증한 뒤 유효 record 수를 보고합니다. payload 오류와 집계 overflow는 comment 전체 상태를 원복하고, 실제 EMF comment 경로도 같은 parser를 통과합니다.
 
-명세상 rendering origin은 hatch brush와 8/16-bpp dither pattern에 적용됩니다. 현재 계층은 그래픽 replay state, hatch/dither rasterization, Save/Restore 상호작용, 렌더링과 저장을 구현하지 않습니다. 단순 wire 파싱과 report count를 상태 적용 완료로 확대하지 않습니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력과의 동등성도 주장하지 않습니다.
+명세상 rendering origin은 hatch brush와 8/16-bpp dither pattern에 적용됩니다. tracked stream은 [공용 property 상태](emf-plus-property-state.md)에 signed x/y를 적용하고 Save/Container 수명주기와 report에 연결합니다. hatch/dither rasterization, 렌더링과 저장은 구현하지 않습니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력과의 동등성도 주장하지 않습니다.
 
 ## 검증 기록
 

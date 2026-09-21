@@ -12,7 +12,7 @@ Type은 `0x401f`, Size는 정확히 12, DataSize와 실제 data slice는 0이어
 
 `emf_plus_stream.zig`는 전용 parser를 호출한 뒤 유효 record 수를 보고합니다. enum·payload·집계 오류는 comment 전체 상태를 원복하고 실제 EMF framing도 같은 경로를 사용합니다.
 
-실제 glyph hinting, ClearType subpixel 처리, 플랫폼 글꼴 설정, 그래픽 상태 replay, Save/Restore와 저장은 미구현입니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 텍스트 출력과의 동등성도 주장하지 않습니다.
+tracked stream은 [공용 property 상태](emf-plus-property-state.md)에 wire enum을 적용하고 Save/Container 수명주기와 report에 연결합니다. 실제 glyph hinting, ClearType subpixel 처리, 플랫폼 글꼴 설정과 저장은 미구현입니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 텍스트 출력과의 동등성도 주장하지 않습니다.
 
 ## 검증 기록
 
