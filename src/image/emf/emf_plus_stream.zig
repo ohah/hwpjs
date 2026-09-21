@@ -59,6 +59,7 @@ const restore_record = @import("emf_plus_restore.zig");
 const graphics_state_stack = @import("emf_plus_graphics_state_stack.zig");
 const transform_matrix = @import("emf_plus_transform_matrix.zig");
 const container_transform = @import("emf_plus_container_transform.zig");
+const page_transform = @import("emf_plus_page_transform.zig");
 
 pub const Report = struct {
     comments: usize = 0,
@@ -128,6 +129,7 @@ pub const Report = struct {
     restore_records: usize = 0,
     graphics_state_max_depth: usize = 0,
     world_transform: ?transform_matrix.TransformMatrix = null,
+    page_transform: ?page_transform.PageTransform = null,
 };
 
 pub const State = struct {
@@ -517,6 +519,10 @@ pub const State = struct {
                 pending.report.set_page_transform_records = std.math.add(usize, pending.report.set_page_transform_records, 1) catch return error.LimitExceeded;
                 if (parsed.discouraged_page_unit)
                     pending.report.set_page_transform_discouraged_page_unit_records = std.math.add(usize, pending.report.set_page_transform_discouraged_page_unit_records, 1) catch return error.LimitExceeded;
+                if (stack) |tracked| {
+                    const emf_header = pending.report.header orelse unreachable;
+                    tracked.current.page_transform = page_transform.build(parsed.page_unit, parsed.page_scale, .{ .x = emf_header.logical_dpi_x, .y = emf_header.logical_dpi_y });
+                }
             }
             if (value.kind == .reset_clip) {
                 _ = try reset_clip_record.parse(value);
@@ -556,6 +562,7 @@ pub const State = struct {
         if (stack) |tracked| {
             pending.report.graphics_state_max_depth = tracked.max_depth;
             pending.report.world_transform = tracked.current.world_transform;
+            pending.report.page_transform = tracked.current.page_transform;
         }
         pending.report.objects = pending.object_state.report;
         self.* = pending;
@@ -618,6 +625,16 @@ fn writeBeginContainer(bytes: []u8, flags: u16, stack_index: u32) void {
     for (0..8) |index|
         std.mem.writeInt(u32, bytes[12 + index * 4 ..][0..4], @bitCast(@as(f32, @floatFromInt(index + 1))), .little);
     std.mem.writeInt(u32, bytes[44..48], stack_index, .little);
+}
+
+fn writeSetPageTransform(bytes: []u8, flags: u16, page_scale_value: f32) void {
+    std.debug.assert(bytes.len == 16);
+    @memset(bytes, 0);
+    std.mem.writeInt(u16, bytes[0..2], 0x4030, .little);
+    std.mem.writeInt(u16, bytes[2..4], flags, .little);
+    std.mem.writeInt(u32, bytes[4..8], 16, .little);
+    std.mem.writeInt(u32, bytes[8..12], 4, .little);
+    std.mem.writeInt(u32, bytes[12..16], @bitCast(page_scale_value), .little);
 }
 
 test "EMF+ stream spans comments while every record remains locally complete" {
@@ -2663,6 +2680,80 @@ test "EMF+ stream validates SetPageTransform warnings and rolls report back atom
     const warning_before = warning_overflow;
     try std.testing.expectError(error.LimitExceeded, warning_overflow.consume(testComment(discouraged[0..44]), 2));
     try std.testing.expectEqualDeep(warning_before, warning_overflow);
+}
+
+test "EMF+ tracked SetPageTransform resolves DPI snapshots Restore and rollback" {
+    var header = [_]u8{0} ** 28;
+    writeHeader(&header);
+    std.mem.writeInt(u32, header[20..24], 96, .little);
+    std.mem.writeInt(u32, header[24..28], 120, .little);
+    var state: State = .{};
+    var stack = graphics_state_stack.Stack.init(std.testing.allocator);
+    defer stack.deinit();
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&header), 2));
+
+    var inch = [_]u8{0} ** 16;
+    writeSetPageTransform(&inch, 4, 2);
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&inch), 3));
+    try std.testing.expectEqualDeep(page_transform.PageTransform{
+        .page_unit = .inch,
+        .page_scale = 2,
+        .device_scale = .{ .x = 192, .y = 240 },
+    }, stack.current.page_transform);
+    try std.testing.expectEqualDeep(stack.current.page_transform, state.report.page_transform.?);
+
+    var save = [_]u8{0} ** 16;
+    writeStackIndexRecord(&save, 0x4025, 0, 9);
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&save), 4));
+
+    var point = [_]u8{0} ** 16;
+    writeSetPageTransform(&point, 3, 0.5);
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&point), 5));
+    try std.testing.expectApproxEqAbs(@as(f32, 2.0 / 3.0), stack.current.page_transform.device_scale.?.x, 0.000001);
+    try std.testing.expectApproxEqAbs(@as(f32, 5.0 / 6.0), stack.current.page_transform.device_scale.?.y, 0.000001);
+
+    var restore = [_]u8{0} ** 16;
+    writeStackIndexRecord(&restore, 0x4026, 0, 9);
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&restore), 6));
+    try std.testing.expectEqualDeep(page_transform.PageTransform{
+        .page_unit = .inch,
+        .page_scale = 2,
+        .device_scale = .{ .x = 192, .y = 240 },
+    }, stack.current.page_transform);
+
+    var malformed = [_]u8{0} ** 19;
+    writeSetPageTransform(malformed[0..16], 2, 7);
+    malformed[16] = 0xaa;
+    malformed[17] = 0xbb;
+    malformed[18] = 0xcc;
+    const before_state = state;
+    const before_page = stack.current.page_transform;
+    try std.testing.expectError(error.TruncatedEmfPlusRecordHeader, state.consumeTracked(&stack, testComment(&malformed), 7));
+    try std.testing.expectEqualDeep(before_state, state);
+    try std.testing.expectEqualDeep(before_page, stack.current.page_transform);
+
+    var display = [_]u8{0} ** 16;
+    writeSetPageTransform(&display, 1, 3);
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&display), 8));
+    try std.testing.expectEqual(@import("emf_plus_unit_type.zig").UnitType.display, stack.current.page_transform.page_unit);
+    try std.testing.expectEqual(@as(f32, 3), stack.current.page_transform.page_scale);
+    try std.testing.expect(stack.current.page_transform.device_scale == null);
+    try std.testing.expectEqualDeep(stack.current.page_transform, state.report.page_transform.?);
+
+    var begin = [_]u8{0} ** 16;
+    writeStackIndexRecord(&begin, 0x4028, 0, 10);
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&begin), 9));
+    var pixel = [_]u8{0} ** 16;
+    writeSetPageTransform(&pixel, 2, 7);
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&pixel), 10));
+    try std.testing.expectEqual(@as(f32, 7), stack.current.page_transform.device_scale.?.x);
+    var end = [_]u8{0} ** 16;
+    writeStackIndexRecord(&end, 0x4029, 0, 10);
+    try std.testing.expect(try state.consumeTracked(&stack, testComment(&end), 11));
+    try std.testing.expectEqual(@import("emf_plus_unit_type.zig").UnitType.display, stack.current.page_transform.page_unit);
+    try std.testing.expectEqual(@as(f32, 3), stack.current.page_transform.page_scale);
+    try std.testing.expect(stack.current.page_transform.device_scale == null);
+    try std.testing.expectEqualDeep(stack.current.page_transform, state.report.page_transform.?);
 }
 
 test "EMF+ stream validates ResetClip and rolls report back atomically" {

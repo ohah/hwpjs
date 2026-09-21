@@ -1,6 +1,7 @@
 const std = @import("std");
 const geometry = @import("emf_plus_geometry.zig");
 const transform_matrix = @import("emf_plus_transform_matrix.zig");
+const unit_scale = @import("emf_plus_unit_scale.zig");
 const unit_type = @import("emf_plus_unit_type.zig");
 
 pub const Resolution = struct {
@@ -8,21 +9,9 @@ pub const Resolution = struct {
     y: u32,
 };
 
-fn unitsToPixels(unit: unit_type.UnitType, dpi: u32) ?f32 {
-    const resolution: f32 = @floatFromInt(dpi);
-    return switch (unit) {
-        .world, .display => null,
-        .pixel => 1,
-        .point => resolution / 72.0,
-        .inch => resolution,
-        .document => resolution / 300.0,
-        .millimeter => resolution / 25.4,
-    };
-}
-
 pub fn build(dest: geometry.RectF, source: geometry.RectF, unit: unit_type.UnitType, resolution: Resolution) ?transform_matrix.TransformMatrix {
-    const unit_x = unitsToPixels(unit, resolution.x) orelse return null;
-    const unit_y = unitsToPixels(unit, resolution.y) orelse return null;
+    const unit_x = unit_scale.toPixels(unit, resolution.x) orelse return null;
+    const unit_y = unit_scale.toPixels(unit, resolution.y).?;
     const source_x = unit_x * source.x;
     const source_y = unit_y * source.y;
     const source_width = unit_x * source.width;

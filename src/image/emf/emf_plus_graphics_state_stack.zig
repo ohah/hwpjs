@@ -1,8 +1,10 @@
 const std = @import("std");
 const transform_matrix = @import("emf_plus_transform_matrix.zig");
+const page_transform = @import("emf_plus_page_transform.zig");
 
 pub const GraphicsState = struct {
     world_transform: ?transform_matrix.TransformMatrix = transform_matrix.TransformMatrix.identity,
+    page_transform: page_transform.PageTransform = .{},
 };
 
 pub const EntryKind = enum {
@@ -114,11 +116,14 @@ test "EMF+ graphics state stack snapshots and restores world transform across mi
     var stack = Stack.init(std.testing.allocator);
     defer stack.deinit();
     stack.current.world_transform = transform_matrix.TransformMatrix.translation(2, 3);
+    stack.current.page_transform = page_transform.build(.inch, 2, .{ .x = 96, .y = 120 });
     try stack.push(.save, 1);
     stack.current.world_transform = transform_matrix.TransformMatrix.scaling(4, 5);
+    stack.current.page_transform = page_transform.build(.pixel, 3, .{ .x = 96, .y = 120 });
     try stack.push(.container, 2);
     stack.current.world_transform = transform_matrix.TransformMatrix.rotation(90);
     try stack.close(.save, 1);
     try std.testing.expectEqualDeep(transform_matrix.TransformMatrix.translation(2, 3), stack.current.world_transform.?);
+    try std.testing.expectEqualDeep(page_transform.build(.inch, 2, .{ .x = 96, .y = 120 }), stack.current.page_transform);
     try stack.finish();
 }

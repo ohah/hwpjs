@@ -8,7 +8,7 @@ MS-EMFPLUS 2.3.7.1은 DestRect와 SrcRect가 컨테이너 transform을 지정한
 
 ## 책임과 단일 출처
 
-`src/image/emf/emf_plus_container_transform.zig`가 source 단위 환산과 컨테이너 행렬 구성을 소유합니다. pixel은 1, point는 DPI/72, inch는 DPI, document는 DPI/300, millimeter는 DPI/25.4입니다. x/y는 EmfPlusHeader의 LogicalDpiX/Y를 각각 사용합니다. 0 크기·0 DPI·NaN·무한대는 wire parser가 보존한 값에 IEEE-754 산술을 적용하며 임의 보정하지 않습니다.
+`src/image/emf/emf_plus_container_transform.zig`가 컨테이너 행렬 구성을 소유하고 `emf_plus_unit_scale.zig`의 공용 단위 환산을 사용합니다. pixel은 1, point는 DPI/72, inch는 DPI, document는 DPI/300, millimeter는 DPI/25.4입니다. x/y는 EmfPlusHeader의 LogicalDpiX/Y를 각각 사용합니다. 0 크기·0 DPI·NaN·무한대는 wire parser가 보존한 값에 IEEE-754 산술을 적용하며 임의 보정하지 않습니다.
 
 tracked stream은 BeginContainer 직전에 현재 graphics state를 snapshot하고 계산된 행렬을 기존 world transform에 prepend합니다. EndContainer 또는 바깥 Restore는 snapshot을 복원합니다. DPI는 `State.report.header`가 유일하게 소유하며 stack에 복제하지 않습니다.
 
@@ -16,7 +16,7 @@ MS-EMFPLUS가 SHOULD NOT으로 표시한 World와 Display는 parser 단계에서
 
 ## 미지원 경계
 
-이 단계는 BeginContainer의 world-transform 효과만 재생합니다. clip, page transform, rendering/compositing quality 등 다른 graphics state는 아직 snapshot하지 않습니다. 실제 GDI+ 렌더러나 픽셀 동등성도 구현 범위가 아닙니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성을 주장하지 않습니다.
+이 단계는 BeginContainer의 world-transform 효과를 재생합니다. 공용 graphics snapshot에는 [page transform](emf-plus-page-transform.md)도 포함되지만 clip, rendering/compositing quality 등 다른 상태는 아직 snapshot하지 않습니다. 실제 GDI+ 렌더러나 픽셀 동등성도 구현 범위가 아닙니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성을 주장하지 않습니다.
 
 ## 검증 기록
 
