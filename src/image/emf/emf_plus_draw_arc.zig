@@ -1,4 +1,5 @@
 const std = @import("std");
+const arc_device_geometry = @import("emf_plus_arc_device_geometry.zig");
 const arc_data = @import("emf_plus_arc_data.zig");
 const binary = @import("../../binary/reader.zig");
 const record = @import("emf_plus_record.zig");
@@ -17,6 +18,10 @@ pub const DrawArc = struct {
 
     pub fn deviceCorners(self: DrawArc, mapping: world_page_device.Mapper) rect_device_corners.Corners {
         return rect_device_corners.map(self.rectangle, mapping);
+    }
+
+    pub fn deviceArc(self: DrawArc, mapping: world_page_device.Mapper) ?arc_device_geometry.Arc {
+        return arc_device_geometry.build(self.deviceCorners(mapping), self.start_angle, self.sweep_angle);
     }
 };
 
@@ -71,6 +76,7 @@ test "EMF+ DrawArc parses compressed rectangle Pen ID angles and ignored flags" 
     try std.testing.expectEqual(@as(i16, 32767), value.rectangle.compressed.height);
     const mapping: world_page_device.Mapper = .{ .world = .{ .m11 = 1, .m12 = 0, .m21 = 0, .m22 = 1, .dx = 10, .dy = 20 }, .device_scale = .{ .x = 2, .y = 3 } };
     try std.testing.expectEqualDeep(rect_device_corners.map(value.rectangle, mapping), value.deviceCorners(mapping));
+    try std.testing.expectEqualDeep(arc_device_geometry.build(value.deviceCorners(mapping), value.start_angle, value.sweep_angle), value.deviceArc(mapping));
 }
 
 test "EMF+ DrawArc parses floating rectangle without normalizing float bits" {

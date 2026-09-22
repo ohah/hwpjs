@@ -18,7 +18,7 @@ center            = upper_left + horizontal_radius + vertical_radius
 
 각 f32 빼기·곱하기·더하기 순서를 코드와 위 식대로 유지합니다. 음수 width/height에서 반축 방향을 절댓값화하지 않고 signed zero·NaN·무한대도 정규화하지 않습니다. `horizontal_radius`와 `vertical_radius`는 axis-aligned 길이가 아니라 device-space 벡터이므로 회전·shear 성분을 함께 가질 수 있습니다.
 
-이 계층은 ellipse의 affine geometry basis까지만 구현합니다. 매개변수 각도 평가, flattening, DrawEllipse의 Pen stroke, FillEllipse의 Brush fill, clipping, anti-aliasing, rasterization과 저장은 미구현입니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 픽셀 출력 동등성을 주장하지 않습니다.
+이 계층은 ellipse의 affine geometry basis까지만 구현합니다. [Arc/Pie geometry](emf-plus-arc-device-geometry.md)가 이 basis와 해석된 각도를 조립하지만 매개변수 point 평가, flattening, DrawEllipse의 Pen stroke, FillEllipse의 Brush fill, clipping, anti-aliasing, rasterization과 저장은 미구현입니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 픽셀 출력 동등성을 주장하지 않습니다.
 
 ## 검증 기록
 
