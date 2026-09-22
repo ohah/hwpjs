@@ -1,16 +1,17 @@
 const geometry = @import("emf_plus_geometry.zig");
 const image_affine_map = @import("emf_plus_image_affine_map.zig");
 const image_source_device_map = @import("emf_plus_image_source_device_map.zig");
+const rect_corners = @import("emf_plus_rect_corners.zig");
 const rect_data = @import("emf_plus_rect_data.zig");
 const transform_matrix = @import("emf_plus_transform_matrix.zig");
 const world_page_device = @import("emf_plus_world_page_device.zig");
 
 pub fn sourceToDestinationTransform(source: geometry.RectF, destination: rect_data.RectData) transform_matrix.TransformMatrix {
-    const rectangle = rect_data.toRectF(destination);
+    const corners = rect_corners.fromRectData(destination);
     return image_affine_map.buildFromBasis(source, .{
-        .upper_left = .{ .x = rectangle.x, .y = rectangle.y },
-        .upper_right = .{ .x = rectangle.x + rectangle.width, .y = rectangle.y },
-        .lower_left = .{ .x = rectangle.x, .y = rectangle.y + rectangle.height },
+        .upper_left = corners.upper_left,
+        .upper_right = corners.upper_right,
+        .lower_left = corners.lower_left,
     });
 }
 

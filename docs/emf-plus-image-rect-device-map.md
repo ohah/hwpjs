@@ -2,9 +2,9 @@
 
 ## 범위와 단일 출처
 
-`src/image/emf/emf_plus_image_rect_device_map.zig`는 DrawImage의 source `RectF`와 destination `RectData`를 source→destination affine transform 및 source→device mapper로 연결합니다. `RectData`의 정수/float 통합은 `emf_plus_rect_data.zig`의 `toRectF()`가, affine 계수는 [image affine map](emf-plus-image-affine-map.md)의 `buildFromBasis()`가, world→page→device 순서는 [공용 source→device map](emf-plus-image-source-device-map.md)이 각각 소유합니다.
+`src/image/emf/emf_plus_image_rect_device_map.zig`는 DrawImage의 source `RectF`와 destination `RectData`를 source→destination affine transform 및 source→device mapper로 연결합니다. `RectData`의 정수/float 통합과 네 역할은 [공용 rectangle corner 계층](emf-plus-rect-device-corners.md)이, affine 계수는 [image affine map](emf-plus-image-affine-map.md)의 `buildFromBasis()`가, world→page→device 순서는 [공용 source→device map](emf-plus-image-source-device-map.md)이 각각 소유합니다.
 
-destination rectangle `(x, y, width, height)`는 upper-left `(x,y)`, upper-right `(x+width,y)`, lower-left `(x,y+height)` 역할로만 바꿉니다. 이 계층은 affine 식이나 point 적용을 복제하지 않습니다. `DrawImage.sourceToDestinationTransform()`과 `sourceToDeviceMapper()`는 이 adapter에 위임합니다.
+destination rectangle의 upper-left·upper-right·lower-left 역할을 공용 corner 계층에서 받아 affine basis로 전달합니다. 이 계층은 rectangle 산술, affine 식이나 point 적용을 복제하지 않습니다. `DrawImage.sourceToDestinationTransform()`과 `sourceToDeviceMapper()`는 이 adapter에 위임합니다.
 
 ## 수치와 미지원 경계
 

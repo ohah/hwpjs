@@ -40,6 +40,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ Path device segment 계층](emf-plus-path-device-segments.md)은 stroke와 fill의 공용 Line·Bézier·closure union을 일반 world·page·device mapper에 연결합니다. 좌표만 변환하고 point type·DashMode·PathMarker·CloseSubpath·RLE metadata를 보존하며 record replay와 rasterization은 후속 책임입니다.
 
+[EMF+ RectData world·device corner 계층](emf-plus-rect-device-corners.md)은 공용 RectData를 네 역할로 한 번만 조립하고 일반 world·page·device mapper를 각 point에 적용합니다. 회전·shear를 axis-aligned rectangle로 축약하지 않으며 RectArray는 allocation-free 순서 iterator로 연결합니다. 개별 rectangle record 연결과 곡선·stroke/fill 재생은 후속 책임입니다.
+
 [EMF+ image parallelogram 계층](emf-plus-image-parallelogram.md)은 DrawImagePoints의 upper-left·upper-right·lower-left를 공용 resolver로 읽고 네 번째 점을 외삽합니다. 정수는 i64로 유지합니다. [image affine map 계층](emf-plus-image-affine-map.md)은 SrcRect의 네 corner를 이 destination 역할로 보내는 row-vector transform을 조립하고 공용 TransformMatrix의 점 적용을 재사용합니다. 픽셀 sampling·effect·rasterization은 후속 계층이 소유합니다.
 
 [EMF+ DrawImagePoints source→device map 계층](emf-plus-image-source-device-map.md)은 source affine 결과에 일반 world transform과 page/device scale을 순차 적용합니다. f32 단계 순서를 보존해 행렬을 미리 합성하지 않으며 crop·sampling·effect·clip·rasterization은 후속 책임입니다.
