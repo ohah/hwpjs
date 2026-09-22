@@ -2,6 +2,7 @@ const std = @import("std");
 const binary = @import("../../binary/reader.zig");
 const geometry = @import("emf_plus_geometry.zig");
 const image_attributes_id = @import("emf_plus_image_attributes_id.zig");
+const image_parallelogram = @import("emf_plus_image_parallelogram.zig");
 const point_data = @import("emf_plus_point_data.zig");
 const record = @import("emf_plus_record.zig");
 const record_flags = @import("emf_plus_record_flags.zig");
@@ -16,6 +17,10 @@ pub const DrawImagePoints = struct {
     source_rectangle: geometry.RectF,
     count: u32,
     point_data: point_data.PointData,
+
+    pub fn destinationParallelogram(self: DrawImagePoints) !image_parallelogram.Parallelogram {
+        return image_parallelogram.assemble(self.point_data);
+    }
 };
 
 pub fn parse(value: record.Record) !DrawImagePoints {
@@ -97,6 +102,11 @@ test "EMF+ DrawImagePoints parses relative points effect and ignores C" {
     try std.testing.expectEqual(@as(i16, 4), (try points.next()).?.relative.y);
     try std.testing.expectEqual(@as(i16, 5), (try points.next()).?.relative.x);
     try std.testing.expect((try points.next()) == null);
+    const destination = try value.destinationParallelogram();
+    try std.testing.expectEqual(@as(i64, 1), destination.upper_left.integer.x);
+    try std.testing.expectEqual(@as(i64, 4), destination.upper_right.integer.x);
+    try std.testing.expectEqual(@as(i64, 9), destination.lower_left.integer.x);
+    try std.testing.expectEqual(@as(i64, 12), destination.lower_right.integer.x);
 }
 
 test "EMF+ DrawImagePoints parses absolute integer and floating points" {

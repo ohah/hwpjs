@@ -96,6 +96,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - [EMF+ Path figure·Line·Bézier geometry 조립](emf-plus-path-geometry.md)
 - [EMF+ Path 명시적 closing segment 조립](emf-plus-path-segments.md)
 - [EMF+ Path 열린 figure fill boundary 조립](emf-plus-path-fill-segments.md)
+- [EMF+ DrawImagePoints destination parallelogram 조립](emf-plus-image-parallelogram.md)
 - [EMF+ Image·Bitmap·Palette·Metafile payload](emf-plus-image-object.md)
 - [EMF+ 다섯 Brush payload와 선택 데이터](emf-plus-brush-object.md)
 - [EMF+ CustomLineCap과 중첩 Fill/Line Path](emf-plus-custom-line-cap.md)

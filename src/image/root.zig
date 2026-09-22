@@ -251,6 +251,7 @@ pub const emf_plus_cardinal_spans = @import("emf/emf_plus_cardinal_spans.zig");
 pub const emf_plus_path_geometry = @import("emf/emf_plus_path_geometry.zig");
 pub const emf_plus_path_fill_segments = @import("emf/emf_plus_path_fill_segments.zig");
 pub const emf_plus_path_segments = @import("emf/emf_plus_path_segments.zig");
+pub const emf_plus_image_parallelogram = @import("emf/emf_plus_image_parallelogram.zig");
 pub const emf_plus_draw_beziers = @import("emf/emf_plus_draw_beziers.zig");
 pub const emf_plus_draw_closed_curve = @import("emf/emf_plus_draw_closed_curve.zig");
 pub const emf_plus_draw_curve = @import("emf/emf_plus_draw_curve.zig");

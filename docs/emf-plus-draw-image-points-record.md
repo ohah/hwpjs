@@ -24,7 +24,7 @@ ImageAttributes 범위 밖 raw 값의 정책과 Wine 근거는 [DrawImage](emf-p
 
 ## 미지원 경계와 검증 기록
 
-현재 로컬 HWP corpus에는 EMF+ signature가 없어 실제 한컴 DrawImagePoints 표본과 효과·렌더링 결과를 관측하지 못했습니다. 구현 범위는 wire 구조, 세 point 표현, [공용 PointR 절대 좌표 해석](emf-plus-point-resolution.md), 객체·선행 effect 참조와 stream/framing 연결입니다. parallelogram 재생, crop·scale·shear, ImageAttributes 및 image effect 적용, 저장은 미구현입니다.
+현재 로컬 HWP corpus에는 EMF+ signature가 없어 실제 한컴 DrawImagePoints 표본과 효과·렌더링 결과를 관측하지 못했습니다. 구현 범위는 wire 구조, 세 point 표현, [공용 PointR 절대 좌표 해석](emf-plus-point-resolution.md), [destination parallelogram 조립](emf-plus-image-parallelogram.md), 객체·선행 effect 참조와 stream/framing 연결입니다. SrcRect→parallelogram affine map, crop·scale·shear sampling, ImageAttributes 및 image effect 적용, rasterization과 저장은 미구현입니다.
 
 합성 fixture는 P/C 세 형식, P에서 C 무시, E 양쪽, Count 정확히 3, PointR 정렬, signed i16 양 끝, 비유한 PointF/SrcRect, Pixel 외 UnitType, Image·optional attributes·선행 effect의 존재·타입·순서, 모든 0~53바이트 slice 길이, 독립 Size/DataSize/slice 불일치, stream 집계·overflow 원자성과 실제 EMF framing 연결을 검사합니다.
 
