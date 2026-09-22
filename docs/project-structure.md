@@ -106,6 +106,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - [EMF+ Arc and Pie affine device geometry](emf-plus-arc-device-geometry.md)
 - [EMF+ Arc endpoints and Pie radial edges](emf-plus-arc-device-points.md)
 - [EMF+ Arc exact rational quadratic segments](emf-plus-arc-device-segments.md)
+- [EMF+ Arc rational quadratic evaluation](emf-plus-arc-segment-evaluation.md)
 - [EMF+ Pie device boundary](emf-plus-pie-device-boundary.md)
 - [EMF+ DrawImagePoints destination parallelogram 조립](emf-plus-image-parallelogram.md)
 - [EMF+ DrawImagePoints SrcRect affine transform](emf-plus-image-affine-map.md)

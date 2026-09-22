@@ -46,7 +46,7 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ Ellipse affine device basis](emf-plus-ellipse-device-basis.md)는 transformed rectangle의 세 corner에서 중심과 두 2D 반축 벡터를 조립합니다. 회전·shear를 보존하고 axis-aligned bounds나 Bézier 근사로 축약하지 않으며 Draw/FillEllipse가 같은 basis를 재사용합니다. Arc/Pie의 각도 평가는 별도 계층이 이 basis를 재사용하고, 완전한 ellipse의 segment 생성·stroke/fill·clip·rasterization은 후속 책임입니다.
 
-[EMF+ Arc/Pie affine device geometry](emf-plus-arc-device-geometry.md)는 non-negative finite StartAngle의 modulo 360, finite SweepAngle의 ±360 clamp와 방향 부호를 해석해 affine ellipse basis와 조립합니다. [Arc endpoint와 Pie radial edge](emf-plus-arc-device-points.md)는 이 geometry를 공통 삼각함수 식으로 평가하고, [Arc exact conic segment](emf-plus-arc-device-segments.md)는 최대 90도 rational quadratic span으로 조립합니다. wire 원값 보존·각도 해석·점 평가·곡선 표현을 분리하며 flattening·stroke/fill·clip·rasterization은 후속 책임입니다.
+[EMF+ Arc/Pie affine device geometry](emf-plus-arc-device-geometry.md)는 non-negative finite StartAngle의 modulo 360, finite SweepAngle의 ±360 clamp와 방향 부호를 해석해 affine ellipse basis와 조립합니다. [Arc endpoint와 Pie radial edge](emf-plus-arc-device-points.md)는 이 geometry를 공통 삼각함수 식으로 평가하고, [Arc exact conic segment](emf-plus-arc-device-segments.md)는 최대 90도 rational quadratic span으로 조립하며, [conic evaluator](emf-plus-arc-segment-evaluation.md)는 유효한 parameter에서 homogeneous 점을 계산합니다. wire 원값 보존·각도 해석·점 평가·곡선 표현을 분리하며 flattening·stroke/fill·clip·rasterization은 후속 책임입니다.
 
 [Pie device boundary](emf-plus-pie-device-boundary.md)는 center→start, signed Arc conic sequence, end→center를 역할이 있는 union으로 조립합니다. zero/full sweep의 coincident radial edge도 의미상 보존하고 실제 stroke/fill·degenerate 처리·rasterization은 후속 책임입니다.
 
