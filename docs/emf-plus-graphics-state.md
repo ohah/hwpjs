@@ -8,9 +8,11 @@
 
 tracked stream은 Set/Reset/Multiply/Translate/Scale/RotateWorldTransform을 현재 행렬에 적용하고 SetPageTransform과 다섯 clipping record를 각각 [page transform](emf-plus-page-transform.md)과 [clipping state](emf-plus-clip-state.md)에 적용합니다. 성공한 comment 이후 값을 `Report.world_transform`, `Report.page_transform`, `Report.clip`에 노출합니다. allocation-free `State.consume`은 구조 조사 API이므로 세 값은 `null`이며 실제 EMF 검증은 tracked framing을 사용합니다.
 
+[world·page·device 좌표 계층](emf-plus-world-page-device.md)은 현재 일반 world transform으로 point를 page space로 옮긴 뒤 page scale을 device space에 적용합니다. `GraphicsState.mapWorldPagePointToDevice()`는 이 공통 산술의 상태 연결만 소유합니다. terminal-server WorldToDevice는 별도 상태이며 이 API에 병합하지 않습니다.
+
 ## 지원 경계
 
-현재 snapshot에는 world transform, page transform, 보수적 일반 clip state, [소유 terminal-server clip rectangles](emf-plus-ts-clip-state.md), [소유 terminal-server graphics와 Palette](emf-plus-ts-graphics-state.md), [여덟 graphics property](emf-plus-property-state.md)가 포함됩니다. BeginContainerNoParams는 현재 상태를 snapshot하고 [BeginContainer transform 계층](emf-plus-container-transform.md)은 지원 단위의 컨테이너 행렬을 적용합니다. property의 초기 플랫폼 기본값, terminal-server graphics의 실제 device 적용, 일반 clip geometry와 rasterization은 구현하지 않으므로 이 단계는 전체 GDI+ 재생이나 렌더링 완료를 뜻하지 않습니다.
+현재 snapshot에는 world transform, page transform, 보수적 일반 clip state, [소유 terminal-server clip rectangles](emf-plus-ts-clip-state.md), [소유 terminal-server graphics와 Palette](emf-plus-ts-graphics-state.md), [여덟 graphics property](emf-plus-property-state.md)가 포함됩니다. BeginContainerNoParams는 현재 상태를 snapshot하고 [BeginContainer transform 계층](emf-plus-container-transform.md)은 지원 단위의 컨테이너 행렬을 적용합니다. 일반 point의 world/page/device 적용 외에 개별 geometry 전체 순회, property의 초기 플랫폼 기본값, terminal-server graphics의 실제 device 적용, 일반 clip geometry와 rasterization은 구현하지 않으므로 이 단계는 전체 GDI+ 재생이나 렌더링 완료를 뜻하지 않습니다.
 
 wire parser는 NaN·무한대·signed zero를 그대로 보존합니다. tracked 산술은 IEEE-754 연산 결과를 따르며 특수값을 보정하지 않습니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력과의 픽셀 동등성도 주장하지 않습니다.
 

@@ -10,6 +10,7 @@ const set_ts_graphics = @import("emf_plus_set_ts_graphics.zig");
 const palette_data = @import("emf_plus_palette.zig");
 const combine_mode = @import("emf_plus_combine_mode.zig");
 const geometry = @import("emf_plus_geometry.zig");
+const world_page_device = @import("emf_plus_world_page_device.zig");
 
 pub const GraphicsState = struct {
     world_transform: ?transform_matrix.TransformMatrix = transform_matrix.TransformMatrix.identity,
@@ -18,6 +19,10 @@ pub const GraphicsState = struct {
     properties: property_state.State = .{},
     terminal_server_clip: ?ts_clip_state.State = null,
     terminal_server_graphics: ?ts_graphics_state.State = null,
+
+    pub fn mapWorldPagePointToDevice(self: GraphicsState, point: geometry.PointF) ?geometry.PointF {
+        return world_page_device.mapPoint(self.world_transform, self.page_transform, point);
+    }
 
     pub fn clone(self: GraphicsState, allocator: std.mem.Allocator) !GraphicsState {
         var result = self;
@@ -330,4 +335,14 @@ test "EMF+ graphics state stack snapshots and restores world transform across mi
     try std.testing.expectEqual(clip_state.State.complex, stack.current.clip);
     try std.testing.expectEqual(@as(u12, 1200), stack.current.properties.text_contrast.?);
     try stack.finish();
+}
+
+test "EMF+ graphics state exposes the shared world-page-device point mapping" {
+    const state: GraphicsState = .{
+        .world_transform = transform_matrix.TransformMatrix.translation(10, 20),
+        .page_transform = page_transform.build(.inch, 2, .{ .x = 5, .y = 50 }),
+    };
+    const device = state.mapWorldPagePointToDevice(.{ .x = 1, .y = 2 }).?;
+    try std.testing.expectEqual(@as(f32, 110), device.x);
+    try std.testing.expectEqual(@as(f32, 2200), device.y);
 }
