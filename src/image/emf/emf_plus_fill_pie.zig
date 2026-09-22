@@ -5,6 +5,8 @@ const brush_id = @import("emf_plus_brush_id.zig");
 const record = @import("emf_plus_record.zig");
 const record_flags = @import("emf_plus_record_flags.zig");
 const rect_data = @import("emf_plus_rect_data.zig");
+const rect_device_corners = @import("emf_plus_rect_device_corners.zig");
+const world_page_device = @import("emf_plus_world_page_device.zig");
 
 pub const FillPie = struct {
     flags: u16,
@@ -13,6 +15,10 @@ pub const FillPie = struct {
     start_angle: f32,
     sweep_angle: f32,
     rectangle: rect_data.RectData,
+
+    pub fn deviceCorners(self: FillPie, mapping: world_page_device.Mapper) rect_device_corners.Corners {
+        return rect_device_corners.map(self.rectangle, mapping);
+    }
 };
 
 pub fn parse(value: record.Record) !FillPie {
@@ -66,6 +72,8 @@ test "EMF+ FillPie parses compressed ArcData with both Brush forms and ignored f
     try std.testing.expectEqual(@as(f32, -720.0), object.sweep_angle);
     try std.testing.expectEqual(@as(i16, -32768), object.rectangle.compressed.x);
     try std.testing.expectEqual(@as(i16, 32767), object.rectangle.compressed.height);
+    const mapping: world_page_device.Mapper = .{ .world = .{ .m11 = 1, .m12 = 0, .m21 = 0, .m22 = 1, .dx = 10, .dy = 20 }, .device_scale = .{ .x = 2, .y = 3 } };
+    try std.testing.expectEqualDeep(rect_device_corners.map(object.rectangle, mapping), object.deviceCorners(mapping));
 
     std.mem.writeInt(u32, data[0..4], 0x44332211, .little);
     const literal = try parse(makeRecord(&data, 0xc000));

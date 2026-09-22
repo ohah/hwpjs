@@ -14,7 +14,7 @@ Microsoft의 [EmfPlusRect 정의](https://learn.microsoft.com/en-us/openspecs/wi
 
 f32 덧셈과 world/page/device 적용 순서를 보존합니다. signed zero·NaN·무한대, 음수 크기를 거부하거나 절댓값화하지 않습니다. 이름은 좌표의 최종 대소 관계가 아니라 원래 rectangle 역할을 뜻합니다.
 
-이 계층은 rectangle의 device-space 네 corner까지만 제공합니다. Ellipse·Arc·Pie 곡선 평가, DrawRects/FillRects와 개별 record 공개 연결, Pen/Brush 의미, clipping, rasterization과 저장은 후속 범위입니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성을 주장하지 않습니다.
+이 계층은 rectangle의 device-space 네 corner까지만 제공합니다. [rectangle record 연결](emf-plus-rect-record-device-corners.md)은 이 API를 재사용하지만 Ellipse·Arc·Pie 곡선 평가, Pen/Brush 의미, clipping, rasterization과 저장은 후속 범위입니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성을 주장하지 않습니다.
 
 ## 검증 기록
 

@@ -3,6 +3,8 @@ const binary = @import("../../binary/reader.zig");
 const record = @import("emf_plus_record.zig");
 const record_flags = @import("emf_plus_record_flags.zig");
 const rect_array = @import("emf_plus_rect_array.zig");
+const rect_device_corners = @import("emf_plus_rect_device_corners.zig");
+const world_page_device = @import("emf_plus_world_page_device.zig");
 
 pub const Options = rect_array.Options;
 
@@ -12,6 +14,10 @@ pub const DrawRects = struct {
     compressed: bool,
     count: u32,
     rect_array: rect_array.RectArray,
+
+    pub fn deviceRectangles(self: DrawRects, mapping: world_page_device.Mapper) rect_device_corners.Iterator {
+        return rect_device_corners.fromRectArray(self.rect_array, mapping);
+    }
 };
 
 pub fn parse(value: record.Record, options: Options) !DrawRects {
@@ -61,6 +67,13 @@ test "EMF+ DrawRects parses compressed rectangles Pen ID and ignored flags" {
     var rectangles = parsed.rect_array.rectangles();
     try std.testing.expectEqual(@as(i16, -32768), (try rectangles.next()).?.compressed.x);
     try std.testing.expectEqual(@as(i16, 4), (try rectangles.next()).?.compressed.height);
+
+    const mapping: world_page_device.Mapper = .{ .world = .{ .m11 = 1, .m12 = 0, .m21 = 0, .m22 = 1, .dx = 10, .dy = 20 }, .device_scale = .{ .x = 2, .y = 3 } };
+    var expected = rect_device_corners.fromRectArray(parsed.rect_array, mapping);
+    var actual = parsed.deviceRectangles(mapping);
+    try std.testing.expectEqualDeep(try expected.next(), try actual.next());
+    try std.testing.expectEqualDeep(try expected.next(), try actual.next());
+    try std.testing.expectEqualDeep(try expected.next(), try actual.next());
 }
 
 test "EMF+ DrawRects preserves floating rectangle bits" {

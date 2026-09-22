@@ -3,17 +3,19 @@ const rect_corners = @import("emf_plus_rect_corners.zig");
 const rect_data = @import("emf_plus_rect_data.zig");
 const world_page_device = @import("emf_plus_world_page_device.zig");
 
+pub const Corners = rect_corners.Corners;
+
 pub const Iterator = struct {
     source: rect_array.Iterator,
     mapping: world_page_device.Mapper,
 
-    pub fn next(self: *Iterator) !?rect_corners.Corners {
+    pub fn next(self: *Iterator) !?Corners {
         const rectangle = try self.source.next() orelse return null;
         return map(rectangle, self.mapping);
     }
 };
 
-pub fn map(value: rect_data.RectData, mapping: world_page_device.Mapper) rect_corners.Corners {
+pub fn map(value: rect_data.RectData, mapping: world_page_device.Mapper) Corners {
     const source = rect_corners.fromRectData(value);
     return .{
         .upper_left = mapping.mapPoint(source.upper_left),

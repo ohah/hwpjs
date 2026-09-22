@@ -3,12 +3,18 @@ const binary = @import("../../binary/reader.zig");
 const record = @import("emf_plus_record.zig");
 const record_flags = @import("emf_plus_record_flags.zig");
 const rect_data = @import("emf_plus_rect_data.zig");
+const rect_device_corners = @import("emf_plus_rect_device_corners.zig");
+const world_page_device = @import("emf_plus_world_page_device.zig");
 
 pub const DrawEllipse = struct {
     flags: u16,
     pen_id: u6,
     compressed: bool,
     rectangle: rect_data.RectData,
+
+    pub fn deviceCorners(self: DrawEllipse, mapping: world_page_device.Mapper) rect_device_corners.Corners {
+        return rect_device_corners.map(self.rectangle, mapping);
+    }
 };
 
 pub fn parse(value: record.Record) !DrawEllipse {
@@ -55,6 +61,8 @@ test "EMF+ DrawEllipse parses compressed rectangle Pen ID and ignored flags" {
     try std.testing.expectEqual(@as(i16, -1), value.rectangle.compressed.y);
     try std.testing.expectEqual(@as(i16, 0), value.rectangle.compressed.width);
     try std.testing.expectEqual(@as(i16, 32767), value.rectangle.compressed.height);
+    const mapping: world_page_device.Mapper = .{ .world = .{ .m11 = 1, .m12 = 0, .m21 = 0, .m22 = 1, .dx = 10, .dy = 20 }, .device_scale = .{ .x = 2, .y = 3 } };
+    try std.testing.expectEqualDeep(rect_device_corners.map(value.rectangle, mapping), value.deviceCorners(mapping));
 }
 
 test "EMF+ DrawEllipse parses floating rectangle without normalizing float bits" {

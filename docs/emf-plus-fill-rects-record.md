@@ -10,7 +10,7 @@ Count는 1 이상입니다. C가 set이면 `DataSize = 8 + Count * 8`, clear이�
 
 stream은 S가 clear일 때만 Brush 슬롯 존재와 ObjectTypeBrush를 확인합니다. literal ARGB는 같은 수치의 객체 슬롯을 참조하지 않습니다. 오류와 count overflow는 comment 전체 상태를 원복합니다.
 
-현재 로컬 HWP corpus에는 EMF+ signature가 없어 실제 한컴 FillRects 표본과 렌더링 결과는 관측하지 못했습니다. rectangle fill, transform·clipping 적용과 저장은 미구현입니다.
+현재 로컬 HWP corpus에는 EMF+ signature가 없어 실제 한컴 FillRects 표본과 렌더링 결과는 관측하지 못했습니다. [공개 device-corner iterator 연결](emf-plus-rect-record-device-corners.md)은 구현했지만 rectangle fill, clipping·rasterization과 저장은 미구현입니다.
 
 ## 공식 근거
 

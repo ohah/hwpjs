@@ -8,7 +8,7 @@ C가 set이면 BrushId 4바이트와 ArcData 16바이트로 `DataSize=20`, `Size
 
 ## stream 연결과 미지원 경계
 
-stream은 S가 clear일 때만 Brush 슬롯 존재와 ObjectTypeBrush를 검사하며 오류와 count overflow에서 comment 상태를 원복합니다. 공식 재생 시 StartAngle은 modulo 360, SweepAngle은 -360~360 clamp 대상이지만 wire parser는 비유한 값을 포함한 원시 f32 비트를 보존합니다. pie fill, transform·clipping 적용, 렌더링 및 저장은 구현하지 않았습니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성도 주장하지 않습니다.
+stream은 S가 clear일 때만 Brush 슬롯 존재와 ObjectTypeBrush를 검사하며 오류와 count overflow에서 comment 상태를 원복합니다. 공식 재생 시 StartAngle은 modulo 360, SweepAngle은 -360~360 clamp 대상이지만 wire parser는 비유한 값을 포함한 원시 f32 비트를 보존합니다. [공개 device-corner 연결](emf-plus-rect-record-device-corners.md)은 구현했지만 pie geometry·fill, clipping·rasterization 및 저장은 구현하지 않았습니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성도 주장하지 않습니다.
 
 ## 공식 근거
 
