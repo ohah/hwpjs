@@ -151,6 +151,7 @@ test {
     _ = @import("image/emf/emf_plus_path_segments.zig");
     _ = @import("image/emf/emf_plus_path_device_commands.zig");
     _ = @import("image/emf/emf_plus_path_device_geometry.zig");
+    _ = @import("image/emf/emf_plus_path_device_polyline.zig");
     _ = @import("image/emf/emf_plus_path_device_segments.zig");
     _ = @import("image/emf/emf_plus_image_parallelogram.zig");
     _ = @import("image/emf/emf_plus_image_affine_map.zig");

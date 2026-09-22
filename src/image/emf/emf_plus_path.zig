@@ -7,6 +7,7 @@ const path_geometry = @import("emf_plus_path_geometry.zig");
 const path_fill_segments = @import("emf_plus_path_fill_segments.zig");
 const path_device_commands = @import("emf_plus_path_device_commands.zig");
 const path_device_geometry = @import("emf_plus_path_device_geometry.zig");
+const path_device_polyline = @import("emf_plus_path_device_polyline.zig");
 const path_device_segments = @import("emf_plus_path_device_segments.zig");
 const path_segments = @import("emf_plus_path_segments.zig");
 const point = @import("emf_plus_point.zig");
@@ -70,6 +71,10 @@ pub const Path = struct {
 
     pub fn deviceGeometry(self: Path, allocator: std.mem.Allocator, mapping: world_page_device.Mapper, options: path_device_geometry.Options) !path_device_geometry.Geometry {
         return path_device_geometry.collect(allocator, self.deviceCommands(mapping), options);
+    }
+
+    pub fn devicePolyline(self: Path, allocator: std.mem.Allocator, mapping: world_page_device.Mapper, options: path_device_polyline.CollectOptions) !path_device_polyline.Geometry {
+        return path_device_polyline.collect(allocator, self.deviceCommands(mapping), options);
     }
 
     pub fn deviceSegments(self: Path, mapping: world_page_device.Mapper) path_device_segments.StrokeIterator {
@@ -257,6 +262,16 @@ test "EMF+ Path exposes shared stroke and fill device segments" {
     try std.testing.expect(device_geometry.commands[0] == .line_to);
     try std.testing.expectEqual(geometry.PointF{ .x = 27, .y = 49 }, device_geometry.commands[0].line_to.end.value);
     try std.testing.expectError(error.EmfPlusPathFigureLimitExceeded, value.deviceGeometry(std.testing.allocator, mapping, .{ .max_figures = 0 }));
+
+    var device_polyline = try value.devicePolyline(std.testing.allocator, mapping, .{ .flattening = .{ .tolerance = 0.5 } });
+    defer device_polyline.deinit(std.testing.allocator);
+    try std.testing.expectEqual(@as(usize, 1), device_polyline.figures.len);
+    try std.testing.expectEqual(@as(usize, 2), device_polyline.points.len);
+    try std.testing.expectEqual(geometry.PointF{ .x = 23, .y = 35 }, device_polyline.points[0].value);
+    try std.testing.expectEqual(geometry.PointF{ .x = 27, .y = 49 }, device_polyline.points[1].value);
+    try std.testing.expect(device_polyline.points[1].source_type.?.point_type.close_subpath);
+    try std.testing.expectError(error.EmfPlusPathFigureLimitExceeded, value.devicePolyline(std.testing.allocator, mapping, .{ .geometry = .{ .max_figures = 0 }, .flattening = .{ .tolerance = 0.5 } }));
+    try std.testing.expectError(error.InvalidEmfPlusCubicTolerance, value.devicePolyline(std.testing.allocator, mapping, .{ .geometry = .{ .max_figures = 0 }, .flattening = .{ .tolerance = 0 } }));
 
     var stroke = value.deviceSegments(mapping);
     const stroke_line = try stroke.next();

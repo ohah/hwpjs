@@ -12,12 +12,20 @@ const world_page_device = @import("emf_plus_world_page_device.zig");
 pub const TypedPoint = struct {
     value: geometry.PointF,
     point_type: path_type.Value,
+
+    pub fn sourcePointCount(_: TypedPoint) usize {
+        return 1;
+    }
 };
 
 pub const Line = struct {
     start: geometry.PointF,
     end: TypedPoint,
     figure_start: geometry.PointF,
+
+    pub fn sourcePointCount(_: Line) usize {
+        return 1;
+    }
 };
 
 pub const Bezier = struct {
@@ -26,6 +34,10 @@ pub const Bezier = struct {
     control2: TypedPoint,
     end: TypedPoint,
     figure_start: geometry.PointF,
+
+    pub fn sourcePointCount(_: Bezier) usize {
+        return 3;
+    }
 
     pub fn pointAt(self: Bezier, parameter: f32) !geometry.PointF {
         return cubic_evaluation.evaluate(self.cubic(), parameter);
@@ -64,8 +76,9 @@ pub const Command = union(enum) {
 
     pub fn sourcePointCount(self: Command) usize {
         return switch (self) {
-            .move_to, .line_to => 1,
-            .bezier_to => 3,
+            .move_to => |move| move.sourcePointCount(),
+            .line_to => |line| line.sourcePointCount(),
+            .bezier_to => |bezier| bezier.sourcePointCount(),
         };
     }
 };

@@ -15,6 +15,13 @@ pub const Range = struct {
 pub const Command = union(enum) {
     line_to: device_commands.Line,
     bezier_to: device_commands.Bezier,
+
+    pub fn sourcePointCount(self: Command) usize {
+        return switch (self) {
+            .line_to => |line| line.sourcePointCount(),
+            .bezier_to => |bezier| bezier.sourcePointCount(),
+        };
+    }
 };
 
 pub const Figure = struct {

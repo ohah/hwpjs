@@ -18,7 +18,7 @@ point range는 원래 Path point 소비량입니다. Move는 1, Line은 endpoint
 
 source iterator는 값으로 복사해 소비합니다. iterator 오류, 한도, 할당 실패에서 부분 `Geometry`를 노출하지 않고 모든 figure·command storage를 해제합니다. 정상·source-error 경로는 safety allocator로 모든 build mode의 해제를 검사하고 `checkAllAllocationFailures`로 모든 할당 실패 위치를 검사합니다.
 
-이 계층은 source command topology의 소유·figure 색인까지만 구현합니다. 명시적 closing edge·fill의 암묵적 closure는 기존 segment 계층의 별도 표현이며 이 aggregate의 command 배열에 가짜 Line으로 추가하지 않습니다. Bézier 평탄화, figure별 device polyline·point range, DashMode·marker 소비, fill rule, stroke, clipping, rasterization과 record replay는 후속 책임입니다. 로컬 지원 HWP corpus에 EMF+ signature 표본이 없으므로 실제 한컴 렌더링 동등성을 주장하지 않습니다.
+이 계층은 source command topology의 소유·figure 색인까지만 구현합니다. 명시적 closing edge·fill의 암묵적 closure는 기존 segment 계층의 별도 표현이며 이 aggregate의 command 배열에 가짜 Line으로 추가하지 않습니다. [figure별 device polyline](emf-plus-path-device-polyline.md)은 이 결과와 공용 cubic flattener를 조립합니다. DashMode·marker 소비, fill rule, stroke, clipping, rasterization과 record replay는 후속 책임입니다. 로컬 지원 HWP corpus에 EMF+ signature 표본이 없으므로 실제 한컴 렌더링 동등성을 주장하지 않습니다.
 
 ## 검증 기록
 
