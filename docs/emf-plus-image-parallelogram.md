@@ -14,7 +14,7 @@ PointR은 원점부터 누적한 i64 절대 좌표 세 개를 사용합니다. a
 
 ## 지원 경계
 
-이 계층은 destination parallelogram topology까지만 구현합니다. SrcRect와 destination 사이의 좌표 변환은 [image affine map 계층](emf-plus-image-affine-map.md)이 소비합니다. crop·픽셀 sampling, ImageAttributes, 선행 image effect, world/page transform, clipping, interpolation·pixel offset mode, compositing, rasterization과 저장은 후속 범위입니다. float 파생점의 플랫폼별 최종 raster 결과나 실제 한컴 출력 동등성을 주장하지 않습니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 0개입니다.
+이 계층은 destination parallelogram topology까지만 구현합니다. SrcRect와 destination 사이의 좌표 변환은 [image affine map 계층](emf-plus-image-affine-map.md)이, 그 결과의 일반 world/page/device 연결은 [source→device map 계층](emf-plus-image-source-device-map.md)이 소비합니다. crop·픽셀 sampling, ImageAttributes, 선행 image effect, clipping, interpolation·pixel offset mode, compositing, rasterization과 저장은 후속 범위입니다. float 파생점의 플랫폼별 최종 raster 결과나 실제 한컴 출력 동등성을 주장하지 않습니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 0개입니다.
 
 ## 검증 기록
 

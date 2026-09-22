@@ -23,7 +23,7 @@ dy  = UL.y - x*m12 - y*m22
 
 destination의 정수 좌표는 topology 조립 동안 i64로 유지하고 이 map 경계에서 [공용 resolved point 변환](emf-plus-point-resolution.md)을 통해 f32로 바꿉니다. PointF와 SrcRect의 음수 크기·signed zero·NaN·무한대를 임의 거부하거나 보정하지 않으며 Zig f32의 IEEE-754 연산 결과를 그대로 반환합니다. 너비나 높이가 0이면 무한대 또는 NaN 계수가 생길 수 있습니다.
 
-이 계층은 좌표 transform까지만 구현합니다. source crop, 픽셀 sampling, ImageAttributes와 선행 image effect, world/page transform 합성, clipping, interpolation·pixel-offset·compositing, rasterization과 저장은 미구현입니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 픽셀 출력 동등성을 주장하지 않습니다.
+이 계층은 source→destination/world 좌표 transform까지만 구현하고 [source→device map 계층](emf-plus-image-source-device-map.md)이 이 결과에 일반 world/page/device 변환을 순차 적용합니다. source crop, 픽셀 sampling, ImageAttributes와 선행 image effect, clipping, interpolation·pixel-offset·compositing, rasterization과 저장은 미구현입니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 픽셀 출력 동등성을 주장하지 않습니다.
 
 ## 검증 기록
 

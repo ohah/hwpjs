@@ -4,9 +4,13 @@ const geometry = @import("emf_plus_geometry.zig");
 const image_attributes_id = @import("emf_plus_image_attributes_id.zig");
 const image_affine_map = @import("emf_plus_image_affine_map.zig");
 const image_parallelogram = @import("emf_plus_image_parallelogram.zig");
+const image_source_device_map = @import("emf_plus_image_source_device_map.zig");
+const page_transform = @import("emf_plus_page_transform.zig");
 const point_data = @import("emf_plus_point_data.zig");
 const record = @import("emf_plus_record.zig");
 const record_flags = @import("emf_plus_record_flags.zig");
+const transform_matrix = @import("emf_plus_transform_matrix.zig");
+const world_page_device = @import("emf_plus_world_page_device.zig");
 
 pub const DrawImagePoints = struct {
     flags: u16,
@@ -25,6 +29,10 @@ pub const DrawImagePoints = struct {
 
     pub fn sourceToDestinationTransform(self: DrawImagePoints) !@import("emf_plus_transform_matrix.zig").TransformMatrix {
         return image_affine_map.build(self.source_rectangle, try self.destinationParallelogram());
+    }
+
+    pub fn sourceToDeviceMapper(self: DrawImagePoints, mapping: world_page_device.Mapper) !image_source_device_map.Mapper {
+        return image_source_device_map.build(self.source_rectangle, try self.destinationParallelogram(), mapping);
     }
 };
 
@@ -154,6 +162,22 @@ test "EMF+ DrawImagePoints parses absolute integer and floating points" {
     try std.testing.expectApproxEqAbs(@as(f32, 3), transform.m22, 0.0001);
     try std.testing.expectApproxEqAbs(@as(f32, 92), transform.dx, 0.0001);
     try std.testing.expectApproxEqAbs(@as(f32, 130), transform.dy, 0.0001);
+}
+
+test "EMF+ DrawImagePoints exposes the shared source to device mapper" {
+    var data = [_]u8{0} ** 40;
+    writePrefix(&data, 0xffff_ffff);
+    for ([_]f32{ 10, 20, 4, 5 }, 0..) |coordinate, index| putF32(&data, 8 + index * 4, coordinate);
+    for ([_]i16{ 100, 200, 108, 204, 97, 215 }, 0..) |coordinate, index|
+        std.mem.writeInt(i16, data[28 + index * 2 ..][0..2], coordinate, .little);
+    const value = try parse(makeRecord(&data, 0x4000));
+    const page = page_transform.build(.pixel, 2, .{ .x = 96, .y = 96 });
+    const mapping = world_page_device.resolve(transform_matrix.TransformMatrix.translation(10, 20), page).?;
+    const mapper = try value.sourceToDeviceMapper(mapping);
+    try std.testing.expectEqual(geometry.PointF{ .x = 220, .y = 440 }, mapper.mapSourcePoint(.{ .x = 10, .y = 20 }));
+    try std.testing.expectEqual(geometry.PointF{ .x = 236, .y = 448 }, mapper.mapSourcePoint(.{ .x = 14, .y = 20 }));
+    try std.testing.expectEqual(geometry.PointF{ .x = 214, .y = 470 }, mapper.mapSourcePoint(.{ .x = 10, .y = 25 }));
+    try std.testing.expectEqual(geometry.PointF{ .x = 230, .y = 478 }, mapper.mapSourcePoint(.{ .x = 14, .y = 25 }));
 }
 
 test "EMF+ DrawImagePoints rejects type count unit ObjectID and every size mismatch" {
