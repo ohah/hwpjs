@@ -6,6 +6,7 @@ const object = @import("emf_plus_object.zig");
 const path_geometry = @import("emf_plus_path_geometry.zig");
 const path_fill_segments = @import("emf_plus_path_fill_segments.zig");
 const path_device_commands = @import("emf_plus_path_device_commands.zig");
+const path_device_geometry = @import("emf_plus_path_device_geometry.zig");
 const path_device_segments = @import("emf_plus_path_device_segments.zig");
 const path_segments = @import("emf_plus_path_segments.zig");
 const point = @import("emf_plus_point.zig");
@@ -65,6 +66,10 @@ pub const Path = struct {
 
     pub fn deviceCommands(self: Path, mapping: world_page_device.Mapper) path_device_commands.Iterator {
         return path_device_commands.fromCommands(self.commands(), mapping);
+    }
+
+    pub fn deviceGeometry(self: Path, allocator: std.mem.Allocator, mapping: world_page_device.Mapper, options: path_device_geometry.Options) !path_device_geometry.Geometry {
+        return path_device_geometry.collect(allocator, self.deviceCommands(mapping), options);
     }
 
     pub fn deviceSegments(self: Path, mapping: world_page_device.Mapper) path_device_segments.StrokeIterator {
@@ -241,6 +246,17 @@ test "EMF+ Path exposes shared stroke and fill device segments" {
     try std.testing.expect(device_line.line_to.end.point_type.point_type.dash_mode);
     try std.testing.expect(device_line.line_to.end.point_type.point_type.close_subpath);
     try std.testing.expect((try commands_iterator.next()) == null);
+
+    var device_geometry = try value.deviceGeometry(std.testing.allocator, mapping, .{});
+    defer device_geometry.deinit(std.testing.allocator);
+    try std.testing.expectEqual(@as(usize, 1), device_geometry.figures.len);
+    try std.testing.expectEqual(path_device_geometry.Range{ .start = 0, .count = 2 }, device_geometry.figures[0].points);
+    try std.testing.expectEqual(path_device_geometry.Range{ .start = 0, .count = 1 }, device_geometry.figures[0].commands);
+    try std.testing.expect(device_geometry.figures[0].closed);
+    try std.testing.expectEqual(geometry.PointF{ .x = 23, .y = 35 }, device_geometry.figures[0].move_to.value);
+    try std.testing.expect(device_geometry.commands[0] == .line_to);
+    try std.testing.expectEqual(geometry.PointF{ .x = 27, .y = 49 }, device_geometry.commands[0].line_to.end.value);
+    try std.testing.expectError(error.EmfPlusPathFigureLimitExceeded, value.deviceGeometry(std.testing.allocator, mapping, .{ .max_figures = 0 }));
 
     var stroke = value.deviceSegments(mapping);
     const stroke_line = try stroke.next();

@@ -103,6 +103,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - [EMF+ Path와 가변 좌표·RLE point types](emf-plus-path-object.md)
 - [EMF+ Path figure·Line·Bézier geometry 조립](emf-plus-path-geometry.md)
 - [EMF+ Path device-space command](emf-plus-path-device-commands.md)
+- [EMF+ Path device figure geometry](emf-plus-path-device-geometry.md)
 - [EMF+ Path 명시적 closing segment 조립](emf-plus-path-segments.md)
 - [EMF+ Path 열린 figure fill boundary 조립](emf-plus-path-fill-segments.md)
 - [EMF+ Path stroke·fill device-space segment](emf-plus-path-device-segments.md)

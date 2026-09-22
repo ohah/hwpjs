@@ -36,6 +36,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ Path device command 계층](emf-plus-path-device-commands.md)은 Move·Line·Bézier와 빈 figure의 metadata를 보존한 채 일반 world·page·device mapper를 적용합니다. device TypedPoint·Line·Bézier mapping의 SSOT로서 segment 계층도 같은 타입과 변환을 재사용합니다.
 
+[EMF+ Path device figure geometry](emf-plus-path-device-geometry.md)는 device command를 figure별 Move·source point range·drawable command range·닫힘 상태로 색인하고 소유합니다. 원래 command metadata를 그대로 보존하며 closure edge나 평탄화 point를 발명하지 않습니다.
+
 [EMF+ Path closing segment 계층](emf-plus-path-segments.md)은 command iterator를 재사용해 닫힌 figure의 endpoint→시작점 직선을 원래 line/Bézier 다음에 명시적으로 방출합니다. 동일 좌표 closure와 원본 segment 순서를 보존하며 fill의 암묵적 닫힘·stroke/renderer 의미는 섞지 않습니다.
 
 [EMF+ Path fill boundary 계층](emf-plus-path-fill-segments.md)은 열린 비어 있지 않은 figure를 다음 Start 또는 EOF에서 끝점→시작점 직선으로 닫고 명시적 closure는 중복하지 않습니다. command·segment SSOT를 재사용하며 fill mode·Brush sampling·record replay는 후속 계층에 둡니다.
@@ -62,9 +64,9 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ world·page·device 좌표 계층](emf-plus-world-page-device.md)은 일반 graphics state의 world transform을 먼저 적용하고 page의 비대칭 device scale을 뒤에 적용합니다. unknown world/page는 추정하지 않으며 SetTSGraphics의 별도 WorldToDevice와 개별 geometry 순회·clip·rasterization은 후속 책임으로 남깁니다.
 
-[EMF+ Bézier device segment 계층](emf-plus-bezier-device-segments.md)은 기존 cubic topology의 네 역할을 일반 world·page·device mapper에 연결합니다. [공용 cubic evaluator](emf-plus-cubic-evaluation.md)와 [subdivision 계층](emf-plus-cubic-subdivision.md)은 하나의 de Casteljau 중간점 SSOT로 점 평가·정확한 분할을 제공하고, [분석 계층](emf-plus-cubic-analysis.md)은 derivative와 tolerance 독립 flatness metric을 분리합니다. [adaptive flattening 계층](emf-plus-cubic-flattening.md)은 이 metric과 midpoint 분할만 조립하며 깊이·출력 한도를 소유합니다. DrawBeziers와 Path adapter는 같은 canonical cubic을 사용하며 record parser·상대좌표 누적·topology·좌표 산술을 복제하지 않습니다. Path figure·metadata 병합과 stroke/rasterization은 후속 책임입니다.
+[EMF+ Bézier device segment 계층](emf-plus-bezier-device-segments.md)은 기존 cubic topology의 네 역할을 일반 world·page·device mapper에 연결합니다. [공용 cubic evaluator](emf-plus-cubic-evaluation.md)와 [subdivision 계층](emf-plus-cubic-subdivision.md)은 하나의 de Casteljau 중간점 SSOT로 점 평가·정확한 분할을 제공하고, [분석 계층](emf-plus-cubic-analysis.md)은 derivative와 tolerance 독립 flatness metric을 분리합니다. [adaptive flattening 계층](emf-plus-cubic-flattening.md)은 이 metric과 midpoint 분할만 조립하며 깊이·출력 한도를 소유합니다. DrawBeziers와 Path adapter는 같은 canonical cubic을 사용하며 record parser·상대좌표 누적·topology·좌표 산술을 복제하지 않습니다. Path figure별 polyline flattening과 stroke/rasterization은 후속 책임입니다.
 
-[연결 Bézier polyline 계층](emf-plus-bezier-device-polyline.md)은 DrawBeziers device segment들을 global point budget 아래 병합하고 공유 endpoint를 한 번만 저장합니다. Path의 figure/metadata 병합과 stroke/rasterization은 이 계층에 넣지 않습니다.
+[연결 Bézier polyline 계층](emf-plus-bezier-device-polyline.md)은 DrawBeziers device segment들을 global point budget 아래 병합하고 공유 endpoint를 한 번만 저장합니다. Path의 figure별 polyline flattening과 stroke/rasterization은 이 계층에 넣지 않습니다.
 
 [EMF+ Image 계층](emf-plus-image-object.md)은 Image dispatch, Bitmap, indexed Palette, Metafile payload를 분리합니다. raw pixel에서만 format·stride·palette·크기를 검증하고 compressed payload와 중첩 metafile은 원문을 보존합니다. 이미지 시그니처나 바이트 모양으로 명시된 wire type을 자동 교정하지 않습니다.
 

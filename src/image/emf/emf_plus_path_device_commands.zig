@@ -61,6 +61,13 @@ pub const Command = union(enum) {
     move_to: TypedPoint,
     line_to: Line,
     bezier_to: Bezier,
+
+    pub fn sourcePointCount(self: Command) usize {
+        return switch (self) {
+            .move_to, .line_to => 1,
+            .bezier_to => 3,
+        };
+    }
 };
 
 pub const Iterator = struct {
@@ -140,11 +147,13 @@ test "EMF+ Path device commands preserve moves roles metadata and coordinate map
 
     const move = try expectNext(&iterator);
     try std.testing.expect(move == .move_to);
+    try std.testing.expectEqual(@as(usize, 1), move.sourcePointCount());
     try std.testing.expectEqual(geometry.PointF{ .x = 22, .y = 44 }, move.move_to.value);
     try std.testing.expect(move.move_to.point_type.point_type.path_marker);
 
     const line = try expectNext(&iterator);
     try std.testing.expect(line == .line_to);
+    try std.testing.expectEqual(@as(usize, 1), line.sourcePointCount());
     try std.testing.expectEqual(geometry.PointF{ .x = 22, .y = 44 }, line.line_to.start);
     try std.testing.expectEqual(geometry.PointF{ .x = 26, .y = 48 }, line.line_to.end.value);
     try std.testing.expect(line.line_to.end.point_type.point_type.dash_mode);
@@ -153,6 +162,7 @@ test "EMF+ Path device commands preserve moves roles metadata and coordinate map
 
     const bezier = try expectNext(&iterator);
     try std.testing.expect(bezier == .bezier_to);
+    try std.testing.expectEqual(@as(usize, 3), bezier.sourcePointCount());
     try std.testing.expectEqual(geometry.PointF{ .x = 26, .y = 48 }, bezier.bezier_to.start);
     try std.testing.expectEqual(geometry.PointF{ .x = 30, .y = 52 }, bezier.bezier_to.control1.value);
     try std.testing.expect(bezier.bezier_to.control1.point_type.point_type.dash_mode);

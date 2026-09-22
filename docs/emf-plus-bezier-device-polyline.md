@@ -14,7 +14,7 @@
 
 ## 지원 경계
 
-이 계층은 하나의 DrawBeziers record가 나타내는 연결 cubic sequence까지만 병합합니다. 여러 record 연결, Path의 Move/Close·figure·DashMode·PathMarker, Pen 폭·cap·join·dash, clipping, hit testing, anti-aliasing, rasterization과 저장은 후속 책임입니다. 실제 한컴 EMF+ corpus 표본이 없으므로 렌더링 동등성을 주장하지 않습니다.
+이 계층은 하나의 DrawBeziers record가 나타내는 연결 cubic sequence까지만 병합합니다. 여러 record 연결, Path figure별 polyline flattening·DashMode·PathMarker, Pen 폭·cap·join·dash, clipping, hit testing, anti-aliasing, rasterization과 저장은 후속 책임입니다. Path의 Move·figure·command metadata 소유는 [별도 device figure geometry](emf-plus-path-device-geometry.md)가 담당합니다. 실제 한컴 EMF+ corpus 표본이 없으므로 렌더링 동등성을 주장하지 않습니다.
 
 ## 검증 기록
 
