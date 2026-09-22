@@ -19,7 +19,7 @@ sweep             -> clamp(sweep, -360, 360)
 
 ## 지원 경계
 
-이 계층은 affine ellipse basis와 정규화된 start/sweep까지 제공합니다. 삼각함수 기반 start/end point 평가, arc flattening, DrawArc stroke, DrawPie/FillPie의 center→start·end radial edges와 닫힘, Pen/Brush, clipping, anti-aliasing, rasterization과 저장은 미구현입니다. 양수 sweep의 clockwise 의미는 부호로 보존하지만 이 단계에서 point 순회를 생성하지 않습니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 픽셀 출력 동등성을 주장하지 않습니다.
+이 계층은 affine ellipse basis와 정규화된 start/sweep까지 제공합니다. 삼각함수 기반 start/end point와 Pie radial edge는 [별도 평가 계층](emf-plus-arc-device-points.md)이 소유합니다. arc flattening, DrawArc stroke, DrawPie/FillPie의 닫힌 fill boundary, Pen/Brush, clipping, anti-aliasing, rasterization과 저장은 미구현입니다. 양수 sweep의 clockwise 의미는 부호로 보존하지만 이 단계에서 point 순회를 생성하지 않습니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 픽셀 출력 동등성을 주장하지 않습니다.
 
 ## 검증 기록
 

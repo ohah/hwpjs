@@ -8,7 +8,7 @@ C가 set이면 BrushId 4바이트와 ArcData 16바이트로 `DataSize=20`, `Size
 
 ## stream 연결과 미지원 경계
 
-stream은 S가 clear일 때만 Brush 슬롯 존재와 ObjectTypeBrush를 검사하며 오류와 count overflow에서 comment 상태를 원복합니다. wire parser는 비유한 값을 포함한 원시 f32 비트를 보존하고 [affine arc geometry](emf-plus-arc-device-geometry.md)가 공식 modulo·clamp를 적용합니다. [공개 device-corner 연결](emf-plus-rect-record-device-corners.md)도 구현했지만 radial edges·닫힘·fill, clipping·rasterization 및 저장은 구현하지 않았습니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성도 주장하지 않습니다.
+stream은 S가 clear일 때만 Brush 슬롯 존재와 ObjectTypeBrush를 검사하며 오류와 count overflow에서 comment 상태를 원복합니다. wire parser는 비유한 값을 포함한 원시 f32 비트를 보존하고 [affine arc geometry](emf-plus-arc-device-geometry.md)가 공식 modulo·clamp를 적용합니다. [공개 device-corner 연결](emf-plus-rect-record-device-corners.md)과 [endpoint·radial edge 평가](emf-plus-arc-device-points.md)도 구현했지만 arc segment·닫힌 fill boundary, clipping·rasterization 및 저장은 구현하지 않았습니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성도 주장하지 않습니다.
 
 ## 공식 근거
 

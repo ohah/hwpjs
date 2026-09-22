@@ -153,6 +153,7 @@ test {
     _ = @import("image/emf/emf_plus_ellipse_device_basis.zig");
     _ = @import("image/emf/emf_plus_arc_angles.zig");
     _ = @import("image/emf/emf_plus_arc_device_geometry.zig");
+    _ = @import("image/emf/emf_plus_arc_device_points.zig");
     _ = @import("image/emf/emf_plus_world_page_device.zig");
     _ = @import("image/emf/emf_plus_object.zig");
     _ = @import("image/emf/emf_plus_stream.zig");
