@@ -102,6 +102,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - [EMF+ Path stroke·fill device-space segment](emf-plus-path-device-segments.md)
 - [EMF+ RectData world·device corner geometry](emf-plus-rect-device-corners.md)
 - [EMF+ rectangle records device-corner connection](emf-plus-rect-record-device-corners.md)
+- [EMF+ Ellipse affine device basis](emf-plus-ellipse-device-basis.md)
 - [EMF+ DrawImagePoints destination parallelogram 조립](emf-plus-image-parallelogram.md)
 - [EMF+ DrawImagePoints SrcRect affine transform](emf-plus-image-affine-map.md)
 - [EMF+ DrawImagePoints source→device map](emf-plus-image-source-device-map.md)

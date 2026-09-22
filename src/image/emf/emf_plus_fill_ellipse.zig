@@ -1,6 +1,7 @@
 const std = @import("std");
 const binary = @import("../../binary/reader.zig");
 const brush_id = @import("emf_plus_brush_id.zig");
+const ellipse_device_basis = @import("emf_plus_ellipse_device_basis.zig");
 const record = @import("emf_plus_record.zig");
 const record_flags = @import("emf_plus_record_flags.zig");
 const rect_data = @import("emf_plus_rect_data.zig");
@@ -15,6 +16,10 @@ pub const FillEllipse = struct {
 
     pub fn deviceCorners(self: FillEllipse, mapping: world_page_device.Mapper) rect_device_corners.Corners {
         return rect_device_corners.map(self.rectangle, mapping);
+    }
+
+    pub fn deviceEllipse(self: FillEllipse, mapping: world_page_device.Mapper) ellipse_device_basis.Basis {
+        return ellipse_device_basis.fromCorners(self.deviceCorners(mapping));
     }
 };
 
@@ -62,6 +67,7 @@ test "EMF+ FillEllipse parses compressed rectangle Brush ID and ignored flags" {
     try std.testing.expectEqual(@as(i16, 32767), value.rectangle.compressed.height);
     const mapping: world_page_device.Mapper = .{ .world = .{ .m11 = 1, .m12 = 0, .m21 = 0, .m22 = 1, .dx = 10, .dy = 20 }, .device_scale = .{ .x = 2, .y = 3 } };
     try std.testing.expectEqualDeep(rect_device_corners.map(value.rectangle, mapping), value.deviceCorners(mapping));
+    try std.testing.expectEqualDeep(ellipse_device_basis.fromCorners(value.deviceCorners(mapping)), value.deviceEllipse(mapping));
 
     std.mem.writeInt(u32, data[0..4], 0x44332211, .little);
     const literal = try parse(makeRecord(&data, 0xc000));
