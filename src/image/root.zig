@@ -250,6 +250,7 @@ pub const emf_plus_polyline_device_segments = @import("emf/emf_plus_polyline_dev
 pub const emf_plus_bezier_segments = @import("emf/emf_plus_bezier_segments.zig");
 pub const emf_plus_bezier_device_segments = @import("emf/emf_plus_bezier_device_segments.zig");
 pub const emf_plus_cardinal_spans = @import("emf/emf_plus_cardinal_spans.zig");
+pub const emf_plus_cardinal_device_spans = @import("emf/emf_plus_cardinal_device_spans.zig");
 pub const emf_plus_path_geometry = @import("emf/emf_plus_path_geometry.zig");
 pub const emf_plus_path_fill_segments = @import("emf/emf_plus_path_fill_segments.zig");
 pub const emf_plus_path_segments = @import("emf/emf_plus_path_segments.zig");

@@ -1,10 +1,15 @@
 const std = @import("std");
 const binary = @import("../../binary/reader.zig");
+const cardinal_device_spans = @import("emf_plus_cardinal_device_spans.zig");
 const cardinal_spans = @import("emf_plus_cardinal_spans.zig");
+const geometry = @import("emf_plus_geometry.zig");
+const page_transform = @import("emf_plus_page_transform.zig");
 const point_data = @import("emf_plus_point_data.zig");
 const record = @import("emf_plus_record.zig");
 const record_flags = @import("emf_plus_record_flags.zig");
+const transform_matrix = @import("emf_plus_transform_matrix.zig");
 const values = @import("emf_plus_values.zig");
+const world_page_device = @import("emf_plus_world_page_device.zig");
 
 pub const Options = point_data.Options;
 
@@ -20,6 +25,10 @@ pub const DrawCurve = struct {
 
     pub fn spans(self: DrawCurve) !cardinal_spans.Iterator {
         return cardinal_spans.open(self.point_data, self.offset, self.num_segments);
+    }
+
+    pub fn deviceSpans(self: DrawCurve, mapping: world_page_device.Mapper) !cardinal_device_spans.Iterator {
+        return cardinal_device_spans.fromSpans(try self.spans(), mapping);
     }
 };
 
@@ -125,6 +134,30 @@ test "EMF+ DrawCurve parses floating points and preserves float bits" {
     const first = (try points.next()).?.floating;
     try std.testing.expectEqual(@as(u32, @bitCast(@as(f32, -0.0))), @as(u32, @bitCast(first.x)));
     try std.testing.expect(std.math.isPositiveInf(first.y));
+}
+
+test "EMF+ DrawCurve exposes shared device cardinal spans" {
+    var data = [_]u8{0} ** 32;
+    std.mem.writeInt(u32, data[4..8], 1, .little);
+    std.mem.writeInt(u32, data[8..12], 2, .little);
+    std.mem.writeInt(u32, data[12..16], 4, .little);
+    for ([_]i16{ 1, 2, 3, 4, 5, 6, 7, 8 }, 0..) |coordinate, index|
+        std.mem.writeInt(i16, data[16 + index * 2 ..][0..2], coordinate, .little);
+    const value = try parse(makeRecord(&data, 0x4000), .{});
+    const page = page_transform.build(.pixel, 2, .{ .x = 96, .y = 96 });
+    const mapping = world_page_device.resolve(transform_matrix.TransformMatrix.translation(10, 20), page).?;
+    var spans = try value.deviceSpans(mapping);
+    const maybe_first = try spans.next();
+    try std.testing.expect(maybe_first != null);
+    const first = maybe_first.?;
+    try std.testing.expectEqual(geometry.PointF{ .x = 26, .y = 48 }, first.start);
+    try std.testing.expectEqual(geometry.PointF{ .x = 30, .y = 52 }, first.end);
+    const maybe_second = try spans.next();
+    try std.testing.expect(maybe_second != null);
+    const second = maybe_second.?;
+    try std.testing.expectEqual(first.end, second.start);
+    try std.testing.expectEqual(geometry.PointF{ .x = 34, .y = 56 }, second.end);
+    try std.testing.expect((try spans.next()) == null);
 }
 
 test "EMF+ DrawCurve rejects type count ObjectID sizes truncation and limit" {

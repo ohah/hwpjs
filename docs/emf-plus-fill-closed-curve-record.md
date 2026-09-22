@@ -17,7 +17,7 @@ stream은 S가 clear일 때만 Brush 슬롯 존재와 ObjectTypeBrush를 검사�
 - [MS-EMFPLUS EmfPlusFillClosedCurve](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/d7b561b0-3dc7-4444-b7ac-55492b5af0f4)
 - [MS-WINERRATA FillClosedCurve fill-rule 정정](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-winerrata/a4fc60b3-edd1-4fde-a639-74ed85e5d0eb)
 
-현재 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 FillClosedCurve 출력과 렌더링 결과는 관측하지 못했습니다. 구현 범위는 wire 구조, borrowed point iteration, [공용 상대좌표 누적](emf-plus-point-resolution.md), [마지막→첫 span 조립](emf-plus-cardinal-spans.md), 조건부 Brush 참조와 stream/framing 연결입니다. Tension 기반 tangent/control point 계산, 곡선 평가, alternate/winding rasterization, transform·clip 적용, 재생·렌더링과 저장은 미구현입니다.
+현재 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 FillClosedCurve 출력과 렌더링 결과는 관측하지 못했습니다. 구현 범위는 wire 구조, borrowed point iteration, [공용 상대좌표 누적](emf-plus-point-resolution.md), [마지막→첫 span 조립](emf-plus-cardinal-spans.md), [span 통과점의 일반 world/page/device 변환](emf-plus-cardinal-device-spans.md), 조건부 Brush 참조와 stream/framing 연결입니다. Tension 기반 tangent/control point 계산, 곡선 평가, alternate/winding rasterization, clip 적용, 재생·렌더링과 저장은 미구현입니다.
 
 ## 검증 기록
 

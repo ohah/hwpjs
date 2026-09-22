@@ -16,7 +16,7 @@ DrawClosedCurve와 FillClosedCurve의 `spans()`는 Count개의 span을 반환합
 
 ## 지원 경계
 
-span은 cardinal spline이 통과하는 endpoint 쌍이지 직선 출력이나 완성된 cubic curve가 아닙니다. Tension 기반 tangent/control point 계산, 수치 평가·flattening, world/page transform, clipping, Pen stroke, fill rule, anti-aliasing·rasterization과 저장은 후속 범위입니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 0개라 실제 한컴 렌더링 동등성도 주장하지 않습니다.
+span은 cardinal spline이 통과하는 endpoint 쌍이지 직선 출력이나 완성된 cubic curve가 아닙니다. [Cardinal device span 계층](emf-plus-cardinal-device-spans.md)이 이 topology의 두 통과점에 일반 world/page/device 변환을 적용합니다. Tension 기반 tangent/control point 계산, 수치 평가·flattening, clipping, Pen stroke, fill rule, anti-aliasing·rasterization과 저장은 후속 범위입니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 0개라 실제 한컴 렌더링 동등성도 주장하지 않습니다.
 
 ## 검증 기록
 

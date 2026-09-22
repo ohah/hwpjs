@@ -28,6 +28,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ cardinal spline span 계층](emf-plus-cardinal-spans.md)은 DrawCurve의 Offset·NumSegments가 선택하는 인접 endpoint와 닫힌 두 curve record의 마지막→첫 연결을 조립합니다. span은 spline이 통과하는 점의 topology만 나타내며 Tension 기반 tangent/control point 계산과 렌더링은 별도 후속 계층입니다.
 
+[EMF+ cardinal device span 계층](emf-plus-cardinal-device-spans.md)은 기존 open/closed span의 두 통과점을 일반 world·page·device mapper에 연결합니다. record 선택·topology·상대좌표·좌표 산술을 복제하지 않으며 Tension 기반 control point와 렌더링은 후속 책임입니다.
+
 [EMF+ Path 계층](emf-plus-path-object.md)은 Integer7/15, 세 point wire 표현, 일반/RLE point type과 Path envelope를 분리합니다. 공식 R flag 결합 해석과 독립 RLE 호환 해석은 명시적 option으로 구분하며 자동 휴리스틱을 사용하지 않습니다. 상위 Brush/Region/CustomLineCap은 이 parser를 재사용하고 geometry·type 규칙을 복제하지 않습니다.
 
 [EMF+ Path geometry 계층](emf-plus-path-geometry.md)은 좌표와 일반/RLE point type을 함께 소비해 figure별 Move·Line·cubic Bézier command를 조립합니다. PointR 누적은 공용 resolver, RLE B와 중첩 flags 보존은 geometry iterator, 렌더링·clip/fill/stroke는 후속 계층이 소유합니다.

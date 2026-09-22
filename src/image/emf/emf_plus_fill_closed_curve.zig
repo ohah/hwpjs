@@ -1,11 +1,16 @@
 const std = @import("std");
 const binary = @import("../../binary/reader.zig");
 const brush_id = @import("emf_plus_brush_id.zig");
+const cardinal_device_spans = @import("emf_plus_cardinal_device_spans.zig");
 const cardinal_spans = @import("emf_plus_cardinal_spans.zig");
 const closed_curve_data = @import("emf_plus_closed_curve_data.zig");
+const geometry = @import("emf_plus_geometry.zig");
+const page_transform = @import("emf_plus_page_transform.zig");
 const point_data = @import("emf_plus_point_data.zig");
 const record = @import("emf_plus_record.zig");
 const record_flags = @import("emf_plus_record_flags.zig");
+const transform_matrix = @import("emf_plus_transform_matrix.zig");
+const world_page_device = @import("emf_plus_world_page_device.zig");
 
 pub const Options = point_data.Options;
 
@@ -21,6 +26,10 @@ pub const FillClosedCurve = struct {
 
     pub fn spans(self: FillClosedCurve) !cardinal_spans.Iterator {
         return cardinal_spans.closed(self.point_data);
+    }
+
+    pub fn deviceSpans(self: FillClosedCurve, mapping: world_page_device.Mapper) !cardinal_device_spans.Iterator {
+        return cardinal_device_spans.fromSpans(try self.spans(), mapping);
     }
 };
 
@@ -103,6 +112,25 @@ test "EMF+ FillClosedCurve parses relative points with P over C and padding" {
     try std.testing.expectEqual(@as(i16, 63), (try points.next()).?.relative.x);
     try std.testing.expectEqual(@as(i16, 1), (try points.next()).?.relative.x);
     try std.testing.expectEqual(@as(i16, -1), (try points.next()).?.relative.x);
+}
+
+test "EMF+ FillClosedCurve exposes shared closed device cardinal spans" {
+    var data = [_]u8{0} ** 24;
+    std.mem.writeInt(u32, data[8..12], 3, .little);
+    for ([_]i16{ 1, 2, 3, 4, 5, 6 }, 0..) |coordinate, index|
+        std.mem.writeInt(i16, data[12 + index * 2 ..][0..2], coordinate, .little);
+    const value = try parse(makeRecord(&data, 0x4000), .{});
+    const page = page_transform.build(.pixel, 2, .{ .x = 96, .y = 96 });
+    const mapping = world_page_device.resolve(transform_matrix.TransformMatrix.translation(10, 20), page).?;
+    var spans = try value.deviceSpans(mapping);
+    try std.testing.expect((try spans.next()) != null);
+    try std.testing.expect((try spans.next()) != null);
+    const maybe_closing = try spans.next();
+    try std.testing.expect(maybe_closing != null);
+    const closing = maybe_closing.?;
+    try std.testing.expectEqual(geometry.PointF{ .x = 30, .y = 52 }, closing.start);
+    try std.testing.expectEqual(geometry.PointF{ .x = 22, .y = 44 }, closing.end);
+    try std.testing.expect((try spans.next()) == null);
 }
 
 test "EMF+ FillClosedCurve rejects type brush count envelope truncation padding and limit" {
