@@ -34,6 +34,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ Path geometry 계층](emf-plus-path-geometry.md)은 좌표와 일반/RLE point type을 함께 소비해 figure별 Move·Line·cubic Bézier command를 조립합니다. PointR 누적은 공용 resolver, RLE B와 중첩 flags 보존은 geometry iterator, 렌더링·clip/fill/stroke는 후속 계층이 소유합니다.
 
+[EMF+ Path device command 계층](emf-plus-path-device-commands.md)은 Move·Line·Bézier와 빈 figure의 metadata를 보존한 채 일반 world·page·device mapper를 적용합니다. device TypedPoint·Line·Bézier mapping의 SSOT로서 segment 계층도 같은 타입과 변환을 재사용합니다.
+
 [EMF+ Path closing segment 계층](emf-plus-path-segments.md)은 command iterator를 재사용해 닫힌 figure의 endpoint→시작점 직선을 원래 line/Bézier 다음에 명시적으로 방출합니다. 동일 좌표 closure와 원본 segment 순서를 보존하며 fill의 암묵적 닫힘·stroke/renderer 의미는 섞지 않습니다.
 
 [EMF+ Path fill boundary 계층](emf-plus-path-fill-segments.md)은 열린 비어 있지 않은 figure를 다음 Start 또는 EOF에서 끝점→시작점 직선으로 닫고 명시적 closure는 중복하지 않습니다. command·segment SSOT를 재사용하며 fill mode·Brush sampling·record replay는 후속 계층에 둡니다.

@@ -2,7 +2,7 @@
 
 ## 범위와 단일 출처
 
-`src/image/emf/emf_plus_path_device_segments.zig`는 [Path closing segment](emf-plus-path-segments.md)와 [Path fill boundary](emf-plus-path-fill-segments.md)가 반환한 공용 segment union을 [일반 world·page·device mapper](emf-plus-world-page-device.md)로 변환합니다. Line, cubic Bézier와 `close_figure` tag를 그대로 보존하며, Bézier의 `start`, `control1`, `control2`, `end`와 각 figure 시작점을 역할별로 변환합니다.
+`src/image/emf/emf_plus_path_device_segments.zig`는 [Path closing segment](emf-plus-path-segments.md)와 [Path fill boundary](emf-plus-path-fill-segments.md)가 반환한 공용 segment union을 [일반 world·page·device mapper](emf-plus-world-page-device.md)로 변환합니다. Line, cubic Bézier와 `close_figure` tag를 그대로 보존하며, Bézier의 `start`, `control1`, `control2`, `end`와 각 figure 시작점을 역할별로 변환합니다. device `TypedPoint`·`Line`·`Bezier`와 두 drawable mapping은 [Path device command 계층](emf-plus-path-device-commands.md)의 단일 출처를 재사용합니다.
 
 endpoint와 control point는 좌표만 `PointF`로 바꾸고 원래 `PathPointType`, DashMode, PathMarker, CloseSubpath와 RLE B 정보를 그대로 보존합니다. 좌표·point type·figure 문법·명시적/암묵적 닫힘은 기존 Path 계층, PointR 누적과 정수/부동 표현은 [PointData resolver](emf-plus-point-resolution.md), world→page→device 산술은 mapper가 각각 소유합니다.
 

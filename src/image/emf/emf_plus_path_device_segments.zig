@@ -3,60 +3,16 @@ const cubic_derivative = @import("emf_plus_cubic_derivative.zig");
 const cubic_evaluation = @import("emf_plus_cubic_evaluation.zig");
 const cubic_flatness = @import("emf_plus_cubic_flatness.zig");
 const cubic_flattening = @import("emf_plus_cubic_flattening.zig");
-const cubic_subdivision = @import("emf_plus_cubic_subdivision.zig");
 const path_fill_segments = @import("emf_plus_path_fill_segments.zig");
+const path_device_commands = @import("emf_plus_path_device_commands.zig");
 const path_geometry = @import("emf_plus_path_geometry.zig");
 const path_segments = @import("emf_plus_path_segments.zig");
 const path_type = @import("emf_plus_path_type.zig");
 const world_page_device = @import("emf_plus_world_page_device.zig");
 
-pub const TypedPoint = struct {
-    value: geometry.PointF,
-    point_type: path_type.Value,
-};
-
-pub const Line = struct {
-    start: geometry.PointF,
-    end: TypedPoint,
-    figure_start: geometry.PointF,
-};
-
-pub const Bezier = struct {
-    start: geometry.PointF,
-    control1: TypedPoint,
-    control2: TypedPoint,
-    end: TypedPoint,
-    figure_start: geometry.PointF,
-
-    pub fn pointAt(self: Bezier, parameter: f32) !geometry.PointF {
-        return cubic_evaluation.evaluate(self.cubic(), parameter);
-    }
-
-    pub fn splitAt(self: Bezier, parameter: f32) !cubic_subdivision.Split {
-        return cubic_subdivision.split(self.cubic(), parameter);
-    }
-
-    pub fn tangentAt(self: Bezier, parameter: f32) !geometry.PointF {
-        return cubic_derivative.evaluate(self.cubic(), parameter);
-    }
-
-    pub fn maximumControlDistanceSquared(self: Bezier) !f64 {
-        return cubic_flatness.maximumControlDistanceSquared(self.cubic());
-    }
-
-    pub fn flatten(self: Bezier, allocator: @import("std").mem.Allocator, options: cubic_flattening.Options) !cubic_flattening.Polyline {
-        return cubic_flattening.flatten(allocator, self.cubic(), options);
-    }
-
-    fn cubic(self: Bezier) cubic_evaluation.Cubic {
-        return .{
-            .start = self.start,
-            .control1 = self.control1.value,
-            .control2 = self.control2.value,
-            .end = self.end.value,
-        };
-    }
-};
+pub const TypedPoint = path_device_commands.TypedPoint;
+pub const Line = path_device_commands.Line;
+pub const Bezier = path_device_commands.Bezier;
 
 pub const ClosingLine = struct {
     start: geometry.PointF,
@@ -96,34 +52,12 @@ pub fn fromSegments(source: anytype, mapping: world_page_device.Mapper) DeviceIt
 
 fn mapSegment(source: path_segments.Segment, mapping: world_page_device.Mapper) Segment {
     return switch (source) {
-        .line_to => |line| .{ .line_to = mapLine(line, mapping) },
-        .bezier_to => |bezier| .{ .bezier_to = mapBezier(bezier, mapping) },
+        .line_to => |line| .{ .line_to = path_device_commands.mapLine(line, mapping) },
+        .bezier_to => |bezier| .{ .bezier_to = path_device_commands.mapBezier(bezier, mapping) },
         .close_figure => |closing| .{ .close_figure = .{
             .start = mapping.mapResolved(closing.start),
             .end = mapping.mapResolved(closing.end),
         } },
-    };
-}
-
-fn mapTyped(source: path_geometry.TypedPoint, mapping: world_page_device.Mapper) TypedPoint {
-    return .{ .value = mapping.mapResolved(source.value), .point_type = source.point_type };
-}
-
-fn mapLine(source: path_geometry.Line, mapping: world_page_device.Mapper) Line {
-    return .{
-        .start = mapping.mapResolved(source.start),
-        .end = mapTyped(source.end, mapping),
-        .figure_start = mapping.mapResolved(source.figure_start),
-    };
-}
-
-fn mapBezier(source: path_geometry.Bezier, mapping: world_page_device.Mapper) Bezier {
-    return .{
-        .start = mapping.mapResolved(source.start),
-        .control1 = mapTyped(source.control1, mapping),
-        .control2 = mapTyped(source.control2, mapping),
-        .end = mapTyped(source.end, mapping),
-        .figure_start = mapping.mapResolved(source.figure_start),
     };
 }
 
@@ -143,6 +77,15 @@ fn expectNext(iterator: anytype) !Segment {
     const value = try iterator.next();
     try std.testing.expect(value != null);
     return value.?;
+}
+
+fn testCubic(bezier: Bezier) cubic_evaluation.Cubic {
+    return .{
+        .start = bezier.start,
+        .control1 = bezier.control1.value,
+        .control2 = bezier.control2.value,
+        .end = bezier.end.value,
+    };
 }
 
 test "EMF+ Path device segments preserve Line Bezier closure roles metadata and coordinate mapping" {
@@ -181,16 +124,16 @@ test "EMF+ Path device segments preserve Line Bezier closure roles metadata and 
     const split = try bezier.bezier_to.splitAt(0.25);
     try std.testing.expectEqual(try bezier.bezier_to.pointAt(0.25), split.left.end);
     try std.testing.expectEqual(split.left.end, split.right.start);
-    try std.testing.expectEqual(try cubic_derivative.evaluate(bezier.bezier_to.cubic(), 0.25), try bezier.bezier_to.tangentAt(0.25));
-    try std.testing.expectEqual(try cubic_flatness.maximumControlDistanceSquared(bezier.bezier_to.cubic()), try bezier.bezier_to.maximumControlDistanceSquared());
+    try std.testing.expectEqual(try cubic_derivative.evaluate(testCubic(bezier.bezier_to), 0.25), try bezier.bezier_to.tangentAt(0.25));
+    try std.testing.expectEqual(try cubic_flatness.maximumControlDistanceSquared(testCubic(bezier.bezier_to)), try bezier.bezier_to.maximumControlDistanceSquared());
     var curved = bezier.bezier_to;
     curved.control1.value.y += 5;
     const curved_flatness = try curved.maximumControlDistanceSquared();
     try std.testing.expect(curved_flatness > 0);
-    try std.testing.expectEqual(try cubic_flatness.maximumControlDistanceSquared(curved.cubic()), curved_flatness);
+    try std.testing.expectEqual(try cubic_flatness.maximumControlDistanceSquared(testCubic(curved)), curved_flatness);
     var polyline = try curved.flatten(std.testing.allocator, .{ .tolerance = 1, .max_depth = 16, .max_points = 128 });
     defer polyline.deinit(std.testing.allocator);
-    var expected_polyline = try cubic_flattening.flatten(std.testing.allocator, curved.cubic(), .{ .tolerance = 1, .max_depth = 16, .max_points = 128 });
+    var expected_polyline = try cubic_flattening.flatten(std.testing.allocator, testCubic(curved), .{ .tolerance = 1, .max_depth = 16, .max_points = 128 });
     defer expected_polyline.deinit(std.testing.allocator);
     try std.testing.expectEqualSlices(geometry.PointF, expected_polyline.points, polyline.points);
     try std.testing.expect(polyline.points.len > 2);

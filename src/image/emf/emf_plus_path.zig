@@ -5,6 +5,7 @@ const graphics_version = @import("emf_plus_graphics_version.zig");
 const object = @import("emf_plus_object.zig");
 const path_geometry = @import("emf_plus_path_geometry.zig");
 const path_fill_segments = @import("emf_plus_path_fill_segments.zig");
+const path_device_commands = @import("emf_plus_path_device_commands.zig");
 const path_device_segments = @import("emf_plus_path_device_segments.zig");
 const path_segments = @import("emf_plus_path_segments.zig");
 const point = @import("emf_plus_point.zig");
@@ -60,6 +61,10 @@ pub const Path = struct {
 
     pub fn fillSegments(self: Path) path_fill_segments.Iterator {
         return path_fill_segments.segments(self.commands());
+    }
+
+    pub fn deviceCommands(self: Path, mapping: world_page_device.Mapper) path_device_commands.Iterator {
+        return path_device_commands.fromCommands(self.commands(), mapping);
     }
 
     pub fn deviceSegments(self: Path, mapping: world_page_device.Mapper) path_device_segments.StrokeIterator {
@@ -224,6 +229,18 @@ test "EMF+ Path exposes shared stroke and fill device segments" {
     const value = try parse(&bytes, .{});
     const page = page_transform.build(.pixel, 2, .{ .x = 96, .y = 96 });
     const mapping = world_page_device.resolve(transform_matrix.TransformMatrix.translation(10, 20), page).?;
+
+    var commands_iterator = value.deviceCommands(mapping);
+    const move = (try commands_iterator.next()).?;
+    try std.testing.expect(move == .move_to);
+    try std.testing.expectEqual(geometry.PointF{ .x = 23, .y = 35 }, move.move_to.value);
+    const device_line = (try commands_iterator.next()).?;
+    try std.testing.expect(device_line == .line_to);
+    try std.testing.expectEqual(geometry.PointF{ .x = 23, .y = 35 }, device_line.line_to.start);
+    try std.testing.expectEqual(geometry.PointF{ .x = 27, .y = 49 }, device_line.line_to.end.value);
+    try std.testing.expect(device_line.line_to.end.point_type.point_type.dash_mode);
+    try std.testing.expect(device_line.line_to.end.point_type.point_type.close_subpath);
+    try std.testing.expect((try commands_iterator.next()) == null);
 
     var stroke = value.deviceSegments(mapping);
     const stroke_line = try stroke.next();
