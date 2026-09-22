@@ -19,7 +19,7 @@ DrawBeziers device segment와 Path device Bézier의 `splitAt()`은 원래 네 �
 
 ## 지원 경계
 
-이 계층은 parameter 하나에서 정확한 두 cubic을 만드는 데까지만 제공합니다. derivative와 tolerance 독립 flatness metric은 [별도 분석 계층](emf-plus-cubic-analysis.md)이 담당합니다. adaptive subdivision 정책·오차 한도, flattening, 길이, hit testing, Pen stroke·dash·cap·join, clipping, anti-aliasing, rasterization과 저장은 미구현입니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 픽셀 출력 동등성을 주장하지 않습니다.
+이 계층은 parameter 하나에서 정확한 두 cubic을 만드는 데까지만 제공합니다. derivative와 tolerance 독립 flatness metric은 [별도 분석 계층](emf-plus-cubic-analysis.md)이, midpoint 반복과 한도는 [adaptive flattening 계층](emf-plus-cubic-flattening.md)이 담당합니다. 길이, hit testing, Pen stroke·dash·cap·join, clipping, anti-aliasing, rasterization과 저장은 미구현입니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 픽셀 출력 동등성을 주장하지 않습니다.
 
 ## 검증 기록
 

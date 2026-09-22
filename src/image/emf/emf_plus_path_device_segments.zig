@@ -2,6 +2,7 @@ const geometry = @import("emf_plus_geometry.zig");
 const cubic_derivative = @import("emf_plus_cubic_derivative.zig");
 const cubic_evaluation = @import("emf_plus_cubic_evaluation.zig");
 const cubic_flatness = @import("emf_plus_cubic_flatness.zig");
+const cubic_flattening = @import("emf_plus_cubic_flattening.zig");
 const cubic_subdivision = @import("emf_plus_cubic_subdivision.zig");
 const path_fill_segments = @import("emf_plus_path_fill_segments.zig");
 const path_geometry = @import("emf_plus_path_geometry.zig");
@@ -41,6 +42,10 @@ pub const Bezier = struct {
 
     pub fn maximumControlDistanceSquared(self: Bezier) !f64 {
         return cubic_flatness.maximumControlDistanceSquared(self.cubic());
+    }
+
+    pub fn flatten(self: Bezier, allocator: @import("std").mem.Allocator, options: cubic_flattening.Options) !cubic_flattening.Polyline {
+        return cubic_flattening.flatten(allocator, self.cubic(), options);
     }
 
     fn cubic(self: Bezier) cubic_evaluation.Cubic {
@@ -183,6 +188,14 @@ test "EMF+ Path device segments preserve Line Bezier closure roles metadata and 
     const curved_flatness = try curved.maximumControlDistanceSquared();
     try std.testing.expect(curved_flatness > 0);
     try std.testing.expectEqual(try cubic_flatness.maximumControlDistanceSquared(curved.cubic()), curved_flatness);
+    var polyline = try curved.flatten(std.testing.allocator, .{ .tolerance = 1, .max_depth = 16, .max_points = 128 });
+    defer polyline.deinit(std.testing.allocator);
+    var expected_polyline = try cubic_flattening.flatten(std.testing.allocator, curved.cubic(), .{ .tolerance = 1, .max_depth = 16, .max_points = 128 });
+    defer expected_polyline.deinit(std.testing.allocator);
+    try std.testing.expectEqualSlices(geometry.PointF, expected_polyline.points, polyline.points);
+    try std.testing.expect(polyline.points.len > 2);
+    try std.testing.expectEqual(curved.start, polyline.points[0]);
+    try std.testing.expectEqual(curved.end.value, polyline.points[polyline.points.len - 1]);
 
     const closing = try expectNext(&iterator);
     try std.testing.expect(closing == .close_figure);

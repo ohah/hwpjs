@@ -2,6 +2,7 @@ const bezier = @import("emf_plus_bezier_segments.zig");
 const cubic_derivative = @import("emf_plus_cubic_derivative.zig");
 const cubic_evaluation = @import("emf_plus_cubic_evaluation.zig");
 const cubic_flatness = @import("emf_plus_cubic_flatness.zig");
+const cubic_flattening = @import("emf_plus_cubic_flattening.zig");
 const cubic_subdivision = @import("emf_plus_cubic_subdivision.zig");
 const geometry = @import("emf_plus_geometry.zig");
 const world_page_device = @import("emf_plus_world_page_device.zig");
@@ -26,6 +27,10 @@ pub const Segment = struct {
 
     pub fn maximumControlDistanceSquared(self: Segment) !f64 {
         return cubic_flatness.maximumControlDistanceSquared(self.cubic());
+    }
+
+    pub fn flatten(self: Segment, allocator: @import("std").mem.Allocator, options: cubic_flattening.Options) !cubic_flattening.Polyline {
+        return cubic_flattening.flatten(allocator, self.cubic(), options);
     }
 
     fn cubic(self: Segment) cubic_evaluation.Cubic {
@@ -91,6 +96,16 @@ test "EMF+ device Bezier segments preserve four roles connected endpoints and co
     try std.testing.expectEqual(split.left.end, split.right.start);
     try std.testing.expectEqual(try cubic_derivative.evaluate(first.cubic(), 0.25), try first.tangentAt(0.25));
     try std.testing.expectEqual(try cubic_flatness.maximumControlDistanceSquared(first.cubic()), try first.maximumControlDistanceSquared());
+    var curved = first;
+    curved.control1.y += 100;
+    var polyline = try curved.flatten(std.testing.allocator, .{ .tolerance = 1, .max_depth = 16, .max_points = 128 });
+    defer polyline.deinit(std.testing.allocator);
+    var expected_polyline = try cubic_flattening.flatten(std.testing.allocator, curved.cubic(), .{ .tolerance = 1, .max_depth = 16, .max_points = 128 });
+    defer expected_polyline.deinit(std.testing.allocator);
+    try std.testing.expectEqualSlices(geometry.PointF, expected_polyline.points, polyline.points);
+    try std.testing.expect(polyline.points.len > 2);
+    try std.testing.expectEqual(curved.start, polyline.points[0]);
+    try std.testing.expectEqual(curved.end, polyline.points[polyline.points.len - 1]);
     const second = (try iterator.next()).?;
     try std.testing.expectEqual(first.end, second.start);
     try expectPoint(2110, 29800, second.control1);

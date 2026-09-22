@@ -13,8 +13,8 @@ pub fn maximumControlDistanceSquared(cubic: de_casteljau.Cubic) !f64 {
         return @max(pointDistanceSquared(start, wide(cubic.control1)), pointDistanceSquared(start, wide(cubic.control2)));
     }
     return @max(
-        lineDistanceSquared(start, chord_x, chord_y, chord_squared, wide(cubic.control1)),
-        lineDistanceSquared(start, chord_x, chord_y, chord_squared, wide(cubic.control2)),
+        segmentDistanceSquared(start, end, chord_x, chord_y, chord_squared, wide(cubic.control1)),
+        segmentDistanceSquared(start, end, chord_x, chord_y, chord_squared, wide(cubic.control2)),
     );
 }
 
@@ -37,9 +37,12 @@ fn pointDistanceSquared(origin: WidePoint, point: WidePoint) f64 {
     return x * x + y * y;
 }
 
-fn lineDistanceSquared(start: WidePoint, chord_x: f64, chord_y: f64, chord_squared: f64, point: WidePoint) f64 {
+fn segmentDistanceSquared(start: WidePoint, end: WidePoint, chord_x: f64, chord_y: f64, chord_squared: f64, point: WidePoint) f64 {
     const relative_x = point.x - start.x;
     const relative_y = point.y - start.y;
+    const projection = chord_x * relative_x + chord_y * relative_y;
+    if (projection <= 0) return pointDistanceSquared(start, point);
+    if (projection >= chord_squared) return pointDistanceSquared(end, point);
     const cross = chord_x * relative_y - chord_y * relative_x;
     return cross * cross / chord_squared;
 }
@@ -70,6 +73,14 @@ test "EMF+ cubic flatness handles straight and degenerate chords without divisio
         .end = .{ .x = 8, .y = 4 },
     };
     try std.testing.expectEqual(@as(f64, 0), try maximumControlDistanceSquared(straight));
+
+    const overshooting: de_casteljau.Cubic = .{
+        .start = .{ .x = 0, .y = 0 },
+        .control1 = .{ .x = -4, .y = 0 },
+        .control2 = .{ .x = 14, .y = 0 },
+        .end = .{ .x = 10, .y = 0 },
+    };
+    try std.testing.expectEqual(@as(f64, 16), try maximumControlDistanceSquared(overshooting));
 
     const degenerate: de_casteljau.Cubic = .{
         .start = .{ .x = 1, .y = 2 },
