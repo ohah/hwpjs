@@ -1,5 +1,7 @@
 const geometry = @import("emf_plus_geometry.zig");
+const cubic_derivative = @import("emf_plus_cubic_derivative.zig");
 const cubic_evaluation = @import("emf_plus_cubic_evaluation.zig");
+const cubic_flatness = @import("emf_plus_cubic_flatness.zig");
 const cubic_subdivision = @import("emf_plus_cubic_subdivision.zig");
 const path_fill_segments = @import("emf_plus_path_fill_segments.zig");
 const path_geometry = @import("emf_plus_path_geometry.zig");
@@ -31,6 +33,14 @@ pub const Bezier = struct {
 
     pub fn splitAt(self: Bezier, parameter: f32) !cubic_subdivision.Split {
         return cubic_subdivision.split(self.cubic(), parameter);
+    }
+
+    pub fn tangentAt(self: Bezier, parameter: f32) !geometry.PointF {
+        return cubic_derivative.evaluate(self.cubic(), parameter);
+    }
+
+    pub fn maximumControlDistanceSquared(self: Bezier) !f64 {
+        return cubic_flatness.maximumControlDistanceSquared(self.cubic());
     }
 
     fn cubic(self: Bezier) cubic_evaluation.Cubic {
@@ -166,6 +176,13 @@ test "EMF+ Path device segments preserve Line Bezier closure roles metadata and 
     const split = try bezier.bezier_to.splitAt(0.25);
     try std.testing.expectEqual(try bezier.bezier_to.pointAt(0.25), split.left.end);
     try std.testing.expectEqual(split.left.end, split.right.start);
+    try std.testing.expectEqual(try cubic_derivative.evaluate(bezier.bezier_to.cubic(), 0.25), try bezier.bezier_to.tangentAt(0.25));
+    try std.testing.expectEqual(try cubic_flatness.maximumControlDistanceSquared(bezier.bezier_to.cubic()), try bezier.bezier_to.maximumControlDistanceSquared());
+    var curved = bezier.bezier_to;
+    curved.control1.value.y += 5;
+    const curved_flatness = try curved.maximumControlDistanceSquared();
+    try std.testing.expect(curved_flatness > 0);
+    try std.testing.expectEqual(try cubic_flatness.maximumControlDistanceSquared(curved.cubic()), curved_flatness);
 
     const closing = try expectNext(&iterator);
     try std.testing.expect(closing == .close_figure);

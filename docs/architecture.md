@@ -60,7 +60,7 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ world·page·device 좌표 계층](emf-plus-world-page-device.md)은 일반 graphics state의 world transform을 먼저 적용하고 page의 비대칭 device scale을 뒤에 적용합니다. unknown world/page는 추정하지 않으며 SetTSGraphics의 별도 WorldToDevice와 개별 geometry 순회·clip·rasterization은 후속 책임으로 남깁니다.
 
-[EMF+ Bézier device segment 계층](emf-plus-bezier-device-segments.md)은 기존 cubic topology의 네 역할을 일반 world·page·device mapper에 연결합니다. [공용 cubic evaluator](emf-plus-cubic-evaluation.md)와 [subdivision 계층](emf-plus-cubic-subdivision.md)은 하나의 de Casteljau 중간점 SSOT로 DrawBeziers와 Path device cubic의 점 평가·정확한 분할을 제공합니다. record parser·상대좌표 누적·topology·좌표 산술을 복제하지 않으며 adaptive flattening과 stroke/rasterization은 후속 책임입니다.
+[EMF+ Bézier device segment 계층](emf-plus-bezier-device-segments.md)은 기존 cubic topology의 네 역할을 일반 world·page·device mapper에 연결합니다. [공용 cubic evaluator](emf-plus-cubic-evaluation.md)와 [subdivision 계층](emf-plus-cubic-subdivision.md)은 하나의 de Casteljau 중간점 SSOT로 점 평가·정확한 분할을 제공하고, [분석 계층](emf-plus-cubic-analysis.md)은 derivative와 tolerance 독립 flatness metric을 분리합니다. DrawBeziers와 Path adapter는 같은 canonical cubic을 사용하며 record parser·상대좌표 누적·topology·좌표 산술을 복제하지 않습니다. adaptive flattening과 stroke/rasterization은 후속 책임입니다.
 
 [EMF+ Image 계층](emf-plus-image-object.md)은 Image dispatch, Bitmap, indexed Palette, Metafile payload를 분리합니다. raw pixel에서만 format·stride·palette·크기를 검증하고 compressed payload와 중첩 metafile은 원문을 보존합니다. 이미지 시그니처나 바이트 모양으로 명시된 wire type을 자동 교정하지 않습니다.
 
