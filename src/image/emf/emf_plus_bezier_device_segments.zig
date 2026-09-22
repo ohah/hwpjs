@@ -1,5 +1,6 @@
 const bezier = @import("emf_plus_bezier_segments.zig");
 const cubic_evaluation = @import("emf_plus_cubic_evaluation.zig");
+const cubic_subdivision = @import("emf_plus_cubic_subdivision.zig");
 const geometry = @import("emf_plus_geometry.zig");
 const world_page_device = @import("emf_plus_world_page_device.zig");
 
@@ -10,12 +11,20 @@ pub const Segment = struct {
     end: geometry.PointF,
 
     pub fn pointAt(self: Segment, parameter: f32) !geometry.PointF {
-        return cubic_evaluation.evaluate(.{
+        return cubic_evaluation.evaluate(self.cubic(), parameter);
+    }
+
+    pub fn splitAt(self: Segment, parameter: f32) !cubic_subdivision.Split {
+        return cubic_subdivision.split(self.cubic(), parameter);
+    }
+
+    fn cubic(self: Segment) cubic_evaluation.Cubic {
+        return .{
             .start = self.start,
             .control1 = self.control1,
             .control2 = self.control2,
             .end = self.end,
-        }, parameter);
+        };
     }
 };
 
@@ -67,6 +76,9 @@ test "EMF+ device Bezier segments preserve four roles connected endpoints and co
     try expectPoint(890, 12400, first.control2);
     try expectPoint(1430, 20100, first.end);
     try std.testing.expectEqual(try cubic_evaluation.evaluate(.{ .start = first.start, .control1 = first.control1, .control2 = first.control2, .end = first.end }, 0.25), try first.pointAt(0.25));
+    const split = try first.splitAt(0.25);
+    try std.testing.expectEqual(try first.pointAt(0.25), split.left.end);
+    try std.testing.expectEqual(split.left.end, split.right.start);
     const second = (try iterator.next()).?;
     try std.testing.expectEqual(first.end, second.start);
     try expectPoint(2110, 29800, second.control1);

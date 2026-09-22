@@ -12,7 +12,7 @@ generic device iterator 하나를 stroke용 `Path.segments()`와 fill용 `Path.f
 
 `next()`는 source iterator의 임시 복사본에서 완전한 segment를 얻고 모든 역할을 변환한 뒤에만 진행 상태를 교체합니다. Move skip, PointR, point type, Bézier group이나 figure boundary에서 오류가 나면 command·closure·fill 상태를 포함한 source 전체가 유지되며 오류를 EOF로 바꾸지 않습니다.
 
-이 계층은 Path segment의 device 좌표와 metadata까지 구현하고 Bézier 항목의 `pointAt()`을 [공용 cubic evaluator](emf-plus-cubic-evaluation.md)에 위임합니다. flattening, DashMode 적용, marker 소비, Pen cap/join, alternate/winding fill, self-intersection, Brush sampling, clip boolean geometry, anti-aliasing, rasterization과 저장은 미구현입니다. Object Table은 아직 Path payload를 장기 소유하지 않으므로 DrawPath·FillPath record replay가 이 API를 자동 호출하지 않습니다. SetTSGraphics의 별도 WorldToDevice도 일반 mapper에 병합하지 않습니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 픽셀 출력 동등성을 주장하지 않습니다.
+이 계층은 Path segment의 device 좌표와 metadata까지 구현하고 Bézier 항목의 `pointAt()`과 `splitAt()`을 [공용 cubic evaluator](emf-plus-cubic-evaluation.md)와 [subdivision 계층](emf-plus-cubic-subdivision.md)에 위임합니다. adaptive flattening, DashMode 적용, marker 소비, Pen cap/join, alternate/winding fill, self-intersection, Brush sampling, clip boolean geometry, anti-aliasing, rasterization과 저장은 미구현입니다. Object Table은 아직 Path payload를 장기 소유하지 않으므로 DrawPath·FillPath record replay가 이 API를 자동 호출하지 않습니다. SetTSGraphics의 별도 WorldToDevice도 일반 mapper에 병합하지 않습니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 픽셀 출력 동등성을 주장하지 않습니다.
 
 ## 검증 기록
 

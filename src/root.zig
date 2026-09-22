@@ -139,6 +139,7 @@ test {
     _ = @import("image/emf/emf_plus_bezier_segments.zig");
     _ = @import("image/emf/emf_plus_bezier_device_segments.zig");
     _ = @import("image/emf/emf_plus_cubic_evaluation.zig");
+    _ = @import("image/emf/emf_plus_cubic_subdivision.zig");
     _ = @import("image/emf/emf_plus_cardinal_spans.zig");
     _ = @import("image/emf/emf_plus_cardinal_device_spans.zig");
     _ = @import("image/emf/emf_plus_path_geometry.zig");

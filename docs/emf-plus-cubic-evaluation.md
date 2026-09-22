@@ -22,7 +22,7 @@ P    = lerp(P012, P123)
 
 ## 지원 경계
 
-이 계층은 cubic 한 개의 단일 parameter 점만 계산합니다. derivative, curvature, subdivision·오차 한도, flattening, 길이, hit testing, Pen stroke·dash·cap·join, clipping, anti-aliasing, rasterization과 저장은 미구현입니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 픽셀 출력 동등성을 주장하지 않습니다.
+이 계층은 cubic 한 개의 단일 parameter 점만 계산하며 [정확한 subdivision 계층](emf-plus-cubic-subdivision.md)이 같은 de Casteljau 중간점을 재사용합니다. derivative, curvature, adaptive subdivision 정책·오차 한도, flattening, 길이, hit testing, Pen stroke·dash·cap·join, clipping, anti-aliasing, rasterization과 저장은 미구현입니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 픽셀 출력 동등성을 주장하지 않습니다.
 
 ## 검증 기록
 

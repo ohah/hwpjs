@@ -1,5 +1,6 @@
 const geometry = @import("emf_plus_geometry.zig");
 const cubic_evaluation = @import("emf_plus_cubic_evaluation.zig");
+const cubic_subdivision = @import("emf_plus_cubic_subdivision.zig");
 const path_fill_segments = @import("emf_plus_path_fill_segments.zig");
 const path_geometry = @import("emf_plus_path_geometry.zig");
 const path_segments = @import("emf_plus_path_segments.zig");
@@ -25,12 +26,20 @@ pub const Bezier = struct {
     figure_start: geometry.PointF,
 
     pub fn pointAt(self: Bezier, parameter: f32) !geometry.PointF {
-        return cubic_evaluation.evaluate(.{
+        return cubic_evaluation.evaluate(self.cubic(), parameter);
+    }
+
+    pub fn splitAt(self: Bezier, parameter: f32) !cubic_subdivision.Split {
+        return cubic_subdivision.split(self.cubic(), parameter);
+    }
+
+    fn cubic(self: Bezier) cubic_evaluation.Cubic {
+        return .{
             .start = self.start,
             .control1 = self.control1.value,
             .control2 = self.control2.value,
             .end = self.end.value,
-        }, parameter);
+        };
     }
 };
 
@@ -154,6 +163,9 @@ test "EMF+ Path device segments preserve Line Bezier closure roles metadata and 
         .control2 = bezier.bezier_to.control2.value,
         .end = bezier.bezier_to.end.value,
     }, 0.25), try bezier.bezier_to.pointAt(0.25));
+    const split = try bezier.bezier_to.splitAt(0.25);
+    try std.testing.expectEqual(try bezier.bezier_to.pointAt(0.25), split.left.end);
+    try std.testing.expectEqual(split.left.end, split.right.start);
 
     const closing = try expectNext(&iterator);
     try std.testing.expect(closing == .close_figure);

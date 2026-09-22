@@ -1,33 +1,14 @@
 const std = @import("std");
+const de_casteljau = @import("emf_plus_cubic_de_casteljau.zig");
 const geometry = @import("emf_plus_geometry.zig");
 
-pub const Cubic = struct {
-    start: geometry.PointF,
-    control1: geometry.PointF,
-    control2: geometry.PointF,
-    end: geometry.PointF,
-};
+pub const Cubic = de_casteljau.Cubic;
 
 pub fn evaluate(cubic: Cubic, parameter: f32) !geometry.PointF {
-    if (!std.math.isFinite(parameter) or parameter < 0 or parameter > 1)
-        return error.InvalidEmfPlusCubicParameter;
+    try de_casteljau.validateParameter(parameter);
     if (parameter == 0) return cubic.start;
     if (parameter == 1) return cubic.end;
-
-    const inverse = 1.0 - parameter;
-    const first = lerp(cubic.start, cubic.control1, inverse, parameter);
-    const second = lerp(cubic.control1, cubic.control2, inverse, parameter);
-    const third = lerp(cubic.control2, cubic.end, inverse, parameter);
-    const left = lerp(first, second, inverse, parameter);
-    const right = lerp(second, third, inverse, parameter);
-    return lerp(left, right, inverse, parameter);
-}
-
-fn lerp(start: geometry.PointF, end: geometry.PointF, inverse: f32, parameter: f32) geometry.PointF {
-    return .{
-        .x = inverse * start.x + parameter * end.x,
-        .y = inverse * start.y + parameter * end.y,
-    };
+    return (try de_casteljau.resolve(cubic, parameter)).point;
 }
 
 test "EMF+ cubic evaluation preserves endpoints and evaluates an asymmetric interior point" {
