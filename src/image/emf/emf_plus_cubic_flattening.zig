@@ -10,7 +10,7 @@ pub const Options = struct {
     max_depth: u8 = 32,
     max_points: usize = 1_000_000,
 
-    fn validate(self: Options) !void {
+    pub fn validate(self: Options) !void {
         if (!std.math.isFinite(self.tolerance) or self.tolerance <= 0)
             return error.InvalidEmfPlusCubicTolerance;
         if (self.max_depth > 64) return error.InvalidEmfPlusCubicDepthLimit;

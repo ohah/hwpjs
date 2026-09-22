@@ -10,7 +10,7 @@
 
 `Iterator.next()`는 source iterator의 임시 복사본에서 완전한 cubic segment를 얻고 네 점을 모두 변환한 뒤에만 진행 상태를 교체합니다. borrowed PointR가 control point나 endpoint 중간에서 잘리면 source offset·remaining·누적 좌표·공유 endpoint가 함께 유지됩니다.
 
-이 계층은 DrawBeziers endpoint와 control point의 device 좌표를 만들고 각 segment의 `pointAt()`·`splitAt()`·`tangentAt()`·`maximumControlDistanceSquared()`·`flatten()`을 [공용 cubic evaluator](emf-plus-cubic-evaluation.md), [subdivision](emf-plus-cubic-subdivision.md), [분석](emf-plus-cubic-analysis.md), [flattening 계층](emf-plus-cubic-flattening.md)에 위임합니다. 여러 segment polyline 병합, clip, Pen 폭·cap·join·dash, anti-aliasing, rasterization과 저장은 미구현입니다. `EmfPlusPath`의 Bézier command는 별도 Path geometry이며 이 iterator에 합치지 않습니다. SetTSGraphics의 별도 WorldToDevice도 일반 mapper에 병합하지 않습니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 픽셀 출력 동등성을 주장하지 않습니다.
+이 계층은 DrawBeziers endpoint와 control point의 device 좌표를 만들고 각 segment의 `pointAt()`·`splitAt()`·`tangentAt()`·`maximumControlDistanceSquared()`·`flatten()`을 [공용 cubic evaluator](emf-plus-cubic-evaluation.md), [subdivision](emf-plus-cubic-subdivision.md), [분석](emf-plus-cubic-analysis.md), [flattening 계층](emf-plus-cubic-flattening.md)에 위임합니다. DrawBeziers의 여러 segment 병합은 [별도 connected polyline 계층](emf-plus-bezier-device-polyline.md)이 담당합니다. clip, Pen 폭·cap·join·dash, anti-aliasing, rasterization과 저장은 미구현입니다. `EmfPlusPath`의 Bézier command는 별도 Path geometry이며 이 iterator에 합치지 않습니다. SetTSGraphics의 별도 WorldToDevice도 일반 mapper에 병합하지 않습니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 픽셀 출력 동등성을 주장하지 않습니다.
 
 ## 검증 기록
 

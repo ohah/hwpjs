@@ -14,7 +14,7 @@ DrawBeziers device segment와 Path device Bézier의 `flatten()`은 기존 canon
 
 ## 지원 경계
 
-이 계층은 한 cubic의 ordered device-space polyline 생성까지만 제공합니다. 여러 segment의 연결 polyline 병합, Path metadata의 분할 위치 재배치, closed figure 종결, tolerance의 픽셀/anti-aliasing 정책, Pen 폭·cap·join·dash, fill rule, clipping, hit testing, rasterization과 저장은 후속 책임입니다. 표본 거리 검사가 모든 플랫폼의 픽셀 출력이나 한컴 렌더링 동등성을 뜻하지 않습니다.
+이 계층은 한 cubic의 ordered device-space polyline 생성까지만 제공하며 DrawBeziers segment 연결은 [별도 aggregate 계층](emf-plus-bezier-device-polyline.md)이 담당합니다. Path metadata의 분할 위치 재배치, closed figure 종결, tolerance의 픽셀/anti-aliasing 정책, Pen 폭·cap·join·dash, fill rule, clipping, hit testing, rasterization과 저장은 후속 책임입니다. 표본 거리 검사가 모든 플랫폼의 픽셀 출력이나 한컴 렌더링 동등성을 뜻하지 않습니다.
 
 ## 검증 기록
 

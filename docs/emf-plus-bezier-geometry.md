@@ -14,7 +14,7 @@
 
 ## 지원 경계
 
-이 계층은 cubic topology까지만 구현하고 [Bézier device segment 계층](emf-plus-bezier-device-segments.md)이 네 역할에 일반 world/page/device 변환과 segment별 평가·flattening을 연결합니다. 여러 segment polyline 병합, clipping, Pen width/cap/join, anti-aliasing·rasterization과 저장은 후속 범위입니다. `EmfPlusPath`의 point type 배열과 개별 subpath는 별도 geometry 조립이 필요하므로 이 API에 섞지 않습니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 0개라 실제 한컴 렌더링 동등성도 주장하지 않습니다.
+이 계층은 cubic topology까지만 구현하고 [Bézier device segment 계층](emf-plus-bezier-device-segments.md)이 네 역할에 일반 world/page/device 변환과 segment별 평가·flattening을, [connected polyline 계층](emf-plus-bezier-device-polyline.md)이 DrawBeziers segment 병합을 담당합니다. clipping, Pen width/cap/join, anti-aliasing·rasterization과 저장은 후속 범위입니다. `EmfPlusPath`의 point type 배열과 개별 subpath는 별도 geometry 조립이 필요하므로 이 API에 섞지 않습니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 0개라 실제 한컴 렌더링 동등성도 주장하지 않습니다.
 
 ## 검증 기록
 

@@ -5,6 +5,7 @@ const page_transform = @import("emf_plus_page_transform.zig");
 const point_data = @import("emf_plus_point_data.zig");
 const bezier_segments = @import("emf_plus_bezier_segments.zig");
 const bezier_device_segments = @import("emf_plus_bezier_device_segments.zig");
+const bezier_device_polyline = @import("emf_plus_bezier_device_polyline.zig");
 const record = @import("emf_plus_record.zig");
 const record_flags = @import("emf_plus_record_flags.zig");
 const transform_matrix = @import("emf_plus_transform_matrix.zig");
@@ -26,6 +27,10 @@ pub const DrawBeziers = struct {
 
     pub fn deviceSegments(self: DrawBeziers, mapping: world_page_device.Mapper) !bezier_device_segments.Iterator {
         return bezier_device_segments.fromSegments(try self.segments(), mapping);
+    }
+
+    pub fn flatten(self: DrawBeziers, allocator: std.mem.Allocator, mapping: world_page_device.Mapper, options: bezier_device_polyline.Options) !bezier_device_polyline.Polyline {
+        return bezier_device_polyline.flattenConnected(allocator, try self.deviceSegments(mapping), options);
     }
 };
 
@@ -124,6 +129,30 @@ test "EMF+ DrawBeziers exposes shared device Bezier segments" {
     try std.testing.expectEqual(geometry.PointF{ .x = 30, .y = 52 }, segment.control2);
     try std.testing.expectEqual(geometry.PointF{ .x = 34, .y = 56 }, segment.end);
     try std.testing.expect((try device_segments.next()) == null);
+
+    var polyline = try value.flatten(std.testing.allocator, mapping, .{ .tolerance = 0.5, .max_depth = 8, .max_points = 32 });
+    defer polyline.deinit(std.testing.allocator);
+    try std.testing.expectEqual(segment.start, polyline.points[0]);
+    try std.testing.expectEqual(segment.end, polyline.points[polyline.points.len - 1]);
+}
+
+test "EMF+ DrawBeziers flattens every connected device segment with one global budget" {
+    var data = [_]u8{0} ** 32;
+    std.mem.writeInt(u32, data[0..4], 7, .little);
+    for ([_]i16{ 0, 0, 0, 8, 8, 8, 8, 0, 8, -8, 16, -8, 16, 0 }, 0..) |coordinate, index|
+        std.mem.writeInt(i16, data[4 + index * 2 ..][0..2], coordinate, .little);
+    const value = try parse(makeRecord(&data, 0x4000), .{});
+    const mapping = world_page_device.resolve(transform_matrix.TransformMatrix.identity, page_transform.build(.pixel, 1, .{ .x = 96, .y = 96 })).?;
+    const options: bezier_device_polyline.Options = .{ .tolerance = 0.5, .max_depth = 8, .max_points = 128 };
+    var actual = try value.flatten(std.testing.allocator, mapping, options);
+    defer actual.deinit(std.testing.allocator);
+    var expected = try bezier_device_polyline.flattenConnected(std.testing.allocator, try value.deviceSegments(mapping), options);
+    defer expected.deinit(std.testing.allocator);
+    try std.testing.expectEqualSlices(geometry.PointF, expected.points, actual.points);
+    try std.testing.expect(actual.points.len > 3);
+    var joint_count: usize = 0;
+    for (actual.points) |point| joint_count += @intFromBool(point.x == 8 and point.y == 0);
+    try std.testing.expectEqual(@as(usize, 1), joint_count);
 }
 
 test "EMF+ DrawBeziers parses mixed PointR widths padding and ignores C when P is set" {

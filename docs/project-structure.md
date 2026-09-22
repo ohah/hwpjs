@@ -97,6 +97,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - [EMF+ Cubic Bézier subdivision](emf-plus-cubic-subdivision.md)
 - [EMF+ Cubic Bézier derivative와 flatness metric](emf-plus-cubic-analysis.md)
 - [EMF+ Cubic Bézier adaptive flattening](emf-plus-cubic-flattening.md)
+- [EMF+ 연결 Bézier device polyline](emf-plus-bezier-device-polyline.md)
 - [EMF+ cardinal spline span 조립](emf-plus-cardinal-spans.md)
 - [EMF+ cardinal spline device-space span](emf-plus-cardinal-device-spans.md)
 - [EMF+ Path와 가변 좌표·RLE point types](emf-plus-path-object.md)
