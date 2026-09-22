@@ -14,7 +14,7 @@ E `0x2000`은 `emf_plus_record_flags.zig`가 소유하며 앞선 SerializableObj
 - P가 clear이고 C가 set이면 세 signed i16 Point로 Size 52/DataSize 40을 요구합니다.
 - P와 C가 모두 clear이면 세 PointF로 Size 64/DataSize 52를 요구합니다.
 
-Size, DataSize와 실제 slice 세 축을 독립적으로 검사합니다. Image ObjectID는 0~63, SrcUnit은 signed i32 원값 2인 UnitPixel만 허용합니다. PointF와 SrcRect는 별도 유한성·양수 제약이 없어 IEEE 754 원비트를 유지합니다. relative point 누적, 네 번째 parallelogram 점 계산, scaling·shearing은 렌더링 계층 책임이며 wire parser가 좌표를 변환하지 않습니다.
+Size, DataSize와 실제 slice 세 축을 독립적으로 검사합니다. Image ObjectID는 0~63, SrcUnit은 signed i32 원값 2인 UnitPixel만 허용합니다. PointF와 SrcRect는 별도 유한성·양수 제약이 없어 IEEE 754 원비트를 유지합니다. wire parser는 좌표를 변환하지 않고, relative point 누적·네 번째 parallelogram 점·SrcRect affine transform은 각각 전용 geometry 계층이 소유합니다.
 
 ## stream 연결과 호환 정책
 
@@ -24,7 +24,7 @@ ImageAttributes 범위 밖 raw 값의 정책과 Wine 근거는 [DrawImage](emf-p
 
 ## 미지원 경계와 검증 기록
 
-현재 로컬 HWP corpus에는 EMF+ signature가 없어 실제 한컴 DrawImagePoints 표본과 효과·렌더링 결과를 관측하지 못했습니다. 구현 범위는 wire 구조, 세 point 표현, [공용 PointR 절대 좌표 해석](emf-plus-point-resolution.md), [destination parallelogram 조립](emf-plus-image-parallelogram.md), 객체·선행 effect 참조와 stream/framing 연결입니다. SrcRect→parallelogram affine map, crop·scale·shear sampling, ImageAttributes 및 image effect 적용, rasterization과 저장은 미구현입니다.
+현재 로컬 HWP corpus에는 EMF+ signature가 없어 실제 한컴 DrawImagePoints 표본과 효과·렌더링 결과를 관측하지 못했습니다. 구현 범위는 wire 구조, 세 point 표현, [공용 PointR 절대 좌표 해석](emf-plus-point-resolution.md), [destination parallelogram 조립](emf-plus-image-parallelogram.md), [SrcRect→destination affine transform](emf-plus-image-affine-map.md), 객체·선행 effect 참조와 stream/framing 연결입니다. crop·픽셀 sampling, ImageAttributes 및 image effect 적용, rasterization과 저장은 미구현입니다.
 
 합성 fixture는 P/C 세 형식, P에서 C 무시, E 양쪽, Count 정확히 3, PointR 정렬, signed i16 양 끝, 비유한 PointF/SrcRect, Pixel 외 UnitType, Image·optional attributes·선행 effect의 존재·타입·순서, 모든 0~53바이트 slice 길이, 독립 Size/DataSize/slice 불일치, stream 집계·overflow 원자성과 실제 EMF framing 연결을 검사합니다.
 

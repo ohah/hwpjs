@@ -2,7 +2,7 @@
 
 ## 범위와 단일 출처
 
-`src/image/emf/emf_plus_transform_matrix.zig`가 GDI+ row-vector affine 행렬의 identity, 곱셈, 이동, 배율, degree 회전을 소유합니다. `TransformMatrix.multiplied(operand, post_multiply)`는 A bit가 set이면 `current * operand`, clear이면 `operand * current`를 계산합니다. 각 record parser는 wire 검증과 필드 보존만 담당하고 이 산술을 복제하지 않습니다.
+`src/image/emf/emf_plus_transform_matrix.zig`가 GDI+ row-vector affine 행렬의 identity, 곱셈, 이동, 배율, degree 회전과 점 적용을 소유합니다. `TransformMatrix.multiplied(operand, post_multiply)`는 A bit가 set이면 `current * operand`, clear이면 `operand * current`를 계산합니다. `mapPoint`는 같은 계수 배치로 좌표를 변환하며 [image affine map](emf-plus-image-affine-map.md)도 이를 재사용합니다. 각 record parser는 wire 검증과 필드 보존만 담당하고 이 산술을 복제하지 않습니다.
 
 `src/image/emf/emf_plus_graphics_state_stack.zig`가 현재 `GraphicsState`와 Save/Container별 snapshot을 소유합니다. push는 현재 상태를 값으로 복사하고, Restore/EndContainer는 stack top에서 같은 kind와 StackIndex의 가장 가까운 entry를 찾아 그 snapshot을 복원한 뒤 target과 이후 entry를 제거합니다. clone은 entry와 현재 상태를 모두 복제하므로 `consumeTracked`의 comment 단위 실패는 report와 state를 함께 원복합니다.
 

@@ -36,7 +36,7 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ Path fill boundary 계층](emf-plus-path-fill-segments.md)은 열린 비어 있지 않은 figure를 다음 Start 또는 EOF에서 끝점→시작점 직선으로 닫고 명시적 closure는 중복하지 않습니다. command·segment SSOT를 재사용하며 fill mode·Brush sampling·record replay는 후속 계층에 둡니다.
 
-[EMF+ image parallelogram 계층](emf-plus-image-parallelogram.md)은 DrawImagePoints의 upper-left·upper-right·lower-left를 공용 resolver로 읽고 네 번째 점을 외삽합니다. 정수는 i64로 유지하며 SrcRect affine map·sampling·effect·rasterization은 후속 계층이 소유합니다.
+[EMF+ image parallelogram 계층](emf-plus-image-parallelogram.md)은 DrawImagePoints의 upper-left·upper-right·lower-left를 공용 resolver로 읽고 네 번째 점을 외삽합니다. 정수는 i64로 유지합니다. [image affine map 계층](emf-plus-image-affine-map.md)은 SrcRect의 네 corner를 이 destination 역할로 보내는 row-vector transform을 조립하고 공용 TransformMatrix의 점 적용을 재사용합니다. 픽셀 sampling·effect·rasterization은 후속 계층이 소유합니다.
 
 [EMF+ Image 계층](emf-plus-image-object.md)은 Image dispatch, Bitmap, indexed Palette, Metafile payload를 분리합니다. raw pixel에서만 format·stride·palette·크기를 검증하고 compressed payload와 중첩 metafile은 원문을 보존합니다. 이미지 시그니처나 바이트 모양으로 명시된 wire type을 자동 교정하지 않습니다.
 
@@ -82,7 +82,7 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ DrawImage record 계층](emf-plus-draw-image-record.md)은 Image와 optional ImageAttributes ID, Pixel SrcUnit, source RectF와 C별 destination RectData를 조립합니다. optional ID의 raw/null 정책은 다음 DrawImagePoints와 공유하고 stream은 조건부 객체 타입만 연결하며 crop·scale·효과 적용은 wire parser에 넣지 않습니다.
 
-[EMF+ DrawImagePoints record 계층](emf-plus-draw-image-points-record.md)은 DrawImage의 공통 ID·source 필드와 P/C별 PointData, 정확한 Count 3, E 효과 요구를 조립합니다. stream은 앞선 SerializableObject와 객체 타입을 연결하고 상대좌표 누적과 destination parallelogram은 공용 geometry 계층을 재사용하며, SrcRect affine mapping·image 재생은 후속 계층에 둡니다.
+[EMF+ DrawImagePoints record 계층](emf-plus-draw-image-points-record.md)은 DrawImage의 공통 ID·source 필드와 P/C별 PointData, 정확한 Count 3, E 효과 요구를 조립합니다. stream은 앞선 SerializableObject와 객체 타입을 연결하고 상대좌표 누적·destination parallelogram·SrcRect affine mapping은 공용 geometry 계층을 재사용하며, image sampling과 재생은 후속 계층에 둡니다.
 
 [EMF+ DrawLines record 계층](emf-plus-draw-lines-record.md)은 P/C별 PointData, 최소 Count 2와 L 닫힘 flag를 조립합니다. stream은 Pen 참조만 연결하고 PointR 누적과 L 닫힘 선분은 공용 geometry 계층, stroke 재생은 후속 renderer 계층에 둡니다.
 

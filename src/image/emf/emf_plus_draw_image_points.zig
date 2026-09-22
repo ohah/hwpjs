@@ -2,6 +2,7 @@ const std = @import("std");
 const binary = @import("../../binary/reader.zig");
 const geometry = @import("emf_plus_geometry.zig");
 const image_attributes_id = @import("emf_plus_image_attributes_id.zig");
+const image_affine_map = @import("emf_plus_image_affine_map.zig");
 const image_parallelogram = @import("emf_plus_image_parallelogram.zig");
 const point_data = @import("emf_plus_point_data.zig");
 const record = @import("emf_plus_record.zig");
@@ -20,6 +21,10 @@ pub const DrawImagePoints = struct {
 
     pub fn destinationParallelogram(self: DrawImagePoints) !image_parallelogram.Parallelogram {
         return image_parallelogram.assemble(self.point_data);
+    }
+
+    pub fn sourceToDestinationTransform(self: DrawImagePoints) !@import("emf_plus_transform_matrix.zig").TransformMatrix {
+        return image_affine_map.build(self.source_rectangle, try self.destinationParallelogram());
     }
 };
 
@@ -136,6 +141,19 @@ test "EMF+ DrawImagePoints parses absolute integer and floating points" {
     const first = (try float_points.next()).?.floating;
     try std.testing.expectEqual(@as(u32, @bitCast(@as(f32, -0.0))), @as(u32, @bitCast(first.x)));
     try std.testing.expect(std.math.isNan(first.y));
+
+    var mapped = [_]u8{0} ** 40;
+    writePrefix(&mapped, 0xffff_ffff);
+    for ([_]f32{ 10, 20, 4, 5 }, 0..) |coordinate, index| putF32(&mapped, 8 + index * 4, coordinate);
+    for ([_]i16{ 100, 200, 108, 204, 97, 215 }, 0..) |coordinate, index|
+        std.mem.writeInt(i16, mapped[28 + index * 2 ..][0..2], coordinate, .little);
+    const transform = try (try parse(makeRecord(&mapped, 0x4000))).sourceToDestinationTransform();
+    try std.testing.expectApproxEqAbs(@as(f32, 2), transform.m11, 0.0001);
+    try std.testing.expectApproxEqAbs(@as(f32, 1), transform.m12, 0.0001);
+    try std.testing.expectApproxEqAbs(@as(f32, -0.6), transform.m21, 0.0001);
+    try std.testing.expectApproxEqAbs(@as(f32, 3), transform.m22, 0.0001);
+    try std.testing.expectApproxEqAbs(@as(f32, 92), transform.dx, 0.0001);
+    try std.testing.expectApproxEqAbs(@as(f32, 130), transform.dy, 0.0001);
 }
 
 test "EMF+ DrawImagePoints rejects type count unit ObjectID and every size mismatch" {

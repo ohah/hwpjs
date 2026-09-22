@@ -1,5 +1,6 @@
 const std = @import("std");
 const binary = @import("../../binary/reader.zig");
+const geometry = @import("emf_plus_geometry.zig");
 const values = @import("emf_plus_values.zig");
 
 pub const TransformMatrix = struct {
@@ -59,6 +60,13 @@ pub const TransformMatrix = struct {
             .m22 = cosine,
             .dx = 0,
             .dy = 0,
+        };
+    }
+
+    pub fn mapPoint(self: TransformMatrix, point: geometry.PointF) geometry.PointF {
+        return .{
+            .x = point.x * self.m11 + point.y * self.m21 + self.dx,
+            .y = point.x * self.m12 + point.y * self.m22 + self.dy,
         };
     }
 };
@@ -131,4 +139,11 @@ test "EMF+ transform matrix constructors preserve identity scale translation and
     try std.testing.expectApproxEqAbs(@as(f32, 1), quarter_turn.m12, 0.000001);
     try std.testing.expectApproxEqAbs(@as(f32, -1), quarter_turn.m21, 0.000001);
     try std.testing.expectApproxEqAbs(@as(f32, 0), quarter_turn.m22, 0.000001);
+}
+
+test "EMF+ transform matrix applies row-vector scale shear and translation to a point" {
+    const matrix: TransformMatrix = .{ .m11 = 2, .m12 = 3, .m21 = 5, .m22 = 7, .dx = 11, .dy = 13 };
+    const point = matrix.mapPoint(.{ .x = 17, .y = 19 });
+    try std.testing.expectEqual(@as(f32, 140), point.x);
+    try std.testing.expectEqual(@as(f32, 197), point.y);
 }
