@@ -40,6 +40,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ world·page·device 좌표 계층](emf-plus-world-page-device.md)은 일반 graphics state의 world transform을 먼저 적용하고 page의 비대칭 device scale을 뒤에 적용합니다. unknown world/page는 추정하지 않으며 SetTSGraphics의 별도 WorldToDevice와 개별 geometry 순회·clip·rasterization은 후속 책임으로 남깁니다.
 
+[EMF+ Bézier device segment 계층](emf-plus-bezier-device-segments.md)은 기존 cubic topology의 네 역할을 일반 world·page·device mapper에 연결합니다. record parser·상대좌표 누적·topology·좌표 산술을 복제하지 않으며 곡선 평가와 stroke/rasterization은 후속 책임입니다.
+
 [EMF+ Image 계층](emf-plus-image-object.md)은 Image dispatch, Bitmap, indexed Palette, Metafile payload를 분리합니다. raw pixel에서만 format·stride·palette·크기를 검증하고 compressed payload와 중첩 metafile은 원문을 보존합니다. 이미지 시그니처나 바이트 모양으로 명시된 wire type을 자동 교정하지 않습니다.
 
 [EMF+ Brush 계층](emf-plus-brush-object.md)은 다섯 BrushType dispatch와 Solid/Hatch/Linear/Path/Texture payload를 분리합니다. 선택 데이터 순서와 flag 충돌은 공통 optional 계층이 소유하고, boundary Path와 Texture Image는 기존 parser에 정확한 slice를 위임합니다. 정의됐지만 해당 brush에서 무관한 flag를 임의로 예약 비트처럼 거부하지 않으며 렌더링 의미는 이 wire 계층에 넣지 않습니다.

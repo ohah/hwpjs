@@ -1,5 +1,6 @@
 const geometry = @import("emf_plus_geometry.zig");
 const page_transform = @import("emf_plus_page_transform.zig");
+const resolved = @import("emf_plus_resolved_point_data.zig");
 const transform_matrix = @import("emf_plus_transform_matrix.zig");
 
 pub const Mapper = struct {
@@ -12,6 +13,10 @@ pub const Mapper = struct {
             .x = page_point.x * self.device_scale.x,
             .y = page_point.y * self.device_scale.y,
         };
+    }
+
+    pub fn mapResolved(self: Mapper, point: resolved.Value) geometry.PointF {
+        return self.mapPoint(resolved.toPointF(point));
     }
 };
 

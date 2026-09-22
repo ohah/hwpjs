@@ -1,9 +1,14 @@
 const std = @import("std");
 const binary = @import("../../binary/reader.zig");
+const geometry = @import("emf_plus_geometry.zig");
+const page_transform = @import("emf_plus_page_transform.zig");
 const point_data = @import("emf_plus_point_data.zig");
 const bezier_segments = @import("emf_plus_bezier_segments.zig");
+const bezier_device_segments = @import("emf_plus_bezier_device_segments.zig");
 const record = @import("emf_plus_record.zig");
 const record_flags = @import("emf_plus_record_flags.zig");
+const transform_matrix = @import("emf_plus_transform_matrix.zig");
+const world_page_device = @import("emf_plus_world_page_device.zig");
 
 pub const Options = point_data.Options;
 
@@ -17,6 +22,10 @@ pub const DrawBeziers = struct {
 
     pub fn segments(self: DrawBeziers) !bezier_segments.Iterator {
         return bezier_segments.segments(self.point_data);
+    }
+
+    pub fn deviceSegments(self: DrawBeziers, mapping: world_page_device.Mapper) !bezier_device_segments.Iterator {
+        return bezier_device_segments.fromSegments(try self.segments(), mapping);
     }
 };
 
@@ -97,6 +106,24 @@ test "EMF+ DrawBeziers parses integer and floating points with Pen IDs" {
     std.mem.writeInt(u32, incomplete[0..4], 5, .little);
     const wire_valid = try parse(makeRecord(&incomplete, 0x4000), .{});
     try std.testing.expectError(error.InvalidEmfPlusBezierTopology, wire_valid.segments());
+}
+
+test "EMF+ DrawBeziers exposes shared device Bezier segments" {
+    var data = [_]u8{0} ** 20;
+    std.mem.writeInt(u32, data[0..4], 4, .little);
+    for ([_]i16{ 1, 2, 3, 4, 5, 6, 7, 8 }, 0..) |coordinate, index|
+        std.mem.writeInt(i16, data[4 + index * 2 ..][0..2], coordinate, .little);
+    const value = try parse(makeRecord(&data, 0x4000), .{});
+    const mapping = world_page_device.resolve(transform_matrix.TransformMatrix.translation(10, 20), page_transform.build(.pixel, 2, .{ .x = 96, .y = 96 })).?;
+    var device_segments = try value.deviceSegments(mapping);
+    const maybe_segment = try device_segments.next();
+    try std.testing.expect(maybe_segment != null);
+    const segment = maybe_segment.?;
+    try std.testing.expectEqual(geometry.PointF{ .x = 22, .y = 44 }, segment.start);
+    try std.testing.expectEqual(geometry.PointF{ .x = 26, .y = 48 }, segment.control1);
+    try std.testing.expectEqual(geometry.PointF{ .x = 30, .y = 52 }, segment.control2);
+    try std.testing.expectEqual(geometry.PointF{ .x = 34, .y = 56 }, segment.end);
+    try std.testing.expect((try device_segments.next()) == null);
 }
 
 test "EMF+ DrawBeziers parses mixed PointR widths padding and ignores C when P is set" {
