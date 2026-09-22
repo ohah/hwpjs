@@ -24,7 +24,7 @@ DrawArc의 `deviceSegments()`와 DrawPie·FillPie의 `deviceArcSegments()`는 �
 
 ## 지원 경계
 
-이 계층은 exact-conic geometry 표현까지 제공합니다. rational quadratic 평가 API, tolerance 기반 flattening, DrawArc/DrawPie stroke, FillPie의 arc와 radial edge를 합친 닫힌 boundary, Pen/Brush, clipping, anti-aliasing, rasterization과 저장은 미구현입니다. 출력 backend가 rational quadratic을 직접 소비하지 못할 때의 subdivision tolerance도 이 계층에서 임의로 정하지 않습니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 픽셀 출력 동등성을 주장하지 않습니다.
+이 계층은 exact-conic geometry 표현까지 제공하며 [Pie boundary 계층](emf-plus-pie-device-boundary.md)이 radial edge와 의미 순서로 조립합니다. rational quadratic 평가 API, tolerance 기반 flattening, DrawArc/DrawPie stroke, FillPie fill 처리, Pen/Brush, clipping, anti-aliasing, rasterization과 저장은 미구현입니다. 출력 backend가 rational quadratic을 직접 소비하지 못할 때의 subdivision tolerance도 이 계층에서 임의로 정하지 않습니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 픽셀 출력 동등성을 주장하지 않습니다.
 
 ## 검증 기록
 

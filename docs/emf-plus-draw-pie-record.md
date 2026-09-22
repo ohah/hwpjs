@@ -12,7 +12,7 @@ StartAngle과 SweepAngle은 IEEE 754 wire 값을 보존합니다. 명세의 Star
 
 stream은 Pen ObjectID 슬롯이 존재하고 ObjectTypePen인지 확인합니다. 누락 Pen, 다른 객체 타입, payload·집계 오류는 comment 전체 상태를 원복하고 상위 EMF framing은 같은 경로를 사용합니다.
 
-현재 로컬 HWP corpus에는 EMF+ signature가 없어 실제 한컴 DrawPie 표본과 렌더링 결과는 관측하지 못했습니다. 구현 범위는 wire 구조, Pen 참조, stream/framing, [공개 device-corner 연결](emf-plus-rect-record-device-corners.md), [affine arc geometry](emf-plus-arc-device-geometry.md), [endpoint·radial edge 평가](emf-plus-arc-device-points.md), [exact conic segment](emf-plus-arc-device-segments.md)입니다. 닫힌 boundary 조립·flattening, clipping·stroke·rasterization과 저장은 미구현입니다.
+현재 로컬 HWP corpus에는 EMF+ signature가 없어 실제 한컴 DrawPie 표본과 렌더링 결과는 관측하지 못했습니다. 구현 범위는 wire 구조, Pen 참조, stream/framing, [공개 device-corner 연결](emf-plus-rect-record-device-corners.md), [affine arc geometry](emf-plus-arc-device-geometry.md), [endpoint·radial edge 평가](emf-plus-arc-device-points.md), [exact conic segment](emf-plus-arc-device-segments.md), [닫힌 의미 boundary](emf-plus-pie-device-boundary.md)입니다. flattening, clipping·stroke·rasterization과 저장은 미구현입니다.
 
 ## 검증 기록
 

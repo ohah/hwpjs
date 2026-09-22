@@ -48,6 +48,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ Arc/Pie affine device geometry](emf-plus-arc-device-geometry.md)는 non-negative finite StartAngle의 modulo 360, finite SweepAngle의 ±360 clamp와 방향 부호를 해석해 affine ellipse basis와 조립합니다. [Arc endpoint와 Pie radial edge](emf-plus-arc-device-points.md)는 이 geometry를 공통 삼각함수 식으로 평가하고, [Arc exact conic segment](emf-plus-arc-device-segments.md)는 최대 90도 rational quadratic span으로 조립합니다. wire 원값 보존·각도 해석·점 평가·곡선 표현을 분리하며 flattening·stroke/fill·clip·rasterization은 후속 책임입니다.
 
+[Pie device boundary](emf-plus-pie-device-boundary.md)는 center→start, signed Arc conic sequence, end→center를 역할이 있는 union으로 조립합니다. zero/full sweep의 coincident radial edge도 의미상 보존하고 실제 stroke/fill·degenerate 처리·rasterization은 후속 책임입니다.
+
 [EMF+ image parallelogram 계층](emf-plus-image-parallelogram.md)은 DrawImagePoints의 upper-left·upper-right·lower-left를 공용 resolver로 읽고 네 번째 점을 외삽합니다. 정수는 i64로 유지합니다. [image affine map 계층](emf-plus-image-affine-map.md)은 SrcRect의 네 corner를 이 destination 역할로 보내는 row-vector transform을 조립하고 공용 TransformMatrix의 점 적용을 재사용합니다. 픽셀 sampling·effect·rasterization은 후속 계층이 소유합니다.
 
 [EMF+ DrawImagePoints source→device map 계층](emf-plus-image-source-device-map.md)은 source affine 결과에 일반 world transform과 page/device scale을 순차 적용합니다. f32 단계 순서를 보존해 행렬을 미리 합성하지 않으며 crop·sampling·effect·clip·rasterization은 후속 책임입니다.

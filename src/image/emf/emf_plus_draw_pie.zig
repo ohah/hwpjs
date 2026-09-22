@@ -8,6 +8,7 @@ const record = @import("emf_plus_record.zig");
 const record_flags = @import("emf_plus_record_flags.zig");
 const rect_data = @import("emf_plus_rect_data.zig");
 const rect_device_corners = @import("emf_plus_rect_device_corners.zig");
+const pie_device_boundary = @import("emf_plus_pie_device_boundary.zig");
 const world_page_device = @import("emf_plus_world_page_device.zig");
 
 pub const DrawPie = struct {
@@ -32,6 +33,10 @@ pub const DrawPie = struct {
 
     pub fn deviceArcSegments(self: DrawPie, mapping: world_page_device.Mapper) ?arc_device_segments.Iterator {
         return arc_device_segments.segments(self.deviceArc(mapping) orelse return null);
+    }
+
+    pub fn deviceBoundary(self: DrawPie, mapping: world_page_device.Mapper) ?pie_device_boundary.Iterator {
+        return pie_device_boundary.boundary(self.deviceArc(mapping) orelse return null);
     }
 };
 
@@ -91,10 +96,15 @@ test "EMF+ DrawPie parses compressed rectangle Pen ID angles and ignored flags" 
     var value_segments = value.deviceArcSegments(mapping).?;
     var expected_segments = arc_device_segments.segments(value.deviceArc(mapping).?);
     try std.testing.expectEqualDeep(expected_segments.next().?, value_segments.next().?);
+    var value_boundary = value.deviceBoundary(mapping).?;
+    var expected_boundary = pie_device_boundary.boundary(value.deviceArc(mapping).?);
+    try std.testing.expectEqualDeep(expected_boundary.next().?, value_boundary.next().?);
+    try std.testing.expectEqualDeep(expected_boundary.next().?, value_boundary.next().?);
     var invalid = value;
     invalid.sweep_angle = std.math.inf(f32);
     try std.testing.expect(invalid.deviceRadialEdges(mapping) == null);
     try std.testing.expect(invalid.deviceArcSegments(mapping) == null);
+    try std.testing.expect(invalid.deviceBoundary(mapping) == null);
 }
 
 test "EMF+ DrawPie preserves floating rectangle and non-finite angle bits" {
