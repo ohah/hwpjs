@@ -1,6 +1,7 @@
 const std = @import("std");
 const arc_device_geometry = @import("emf_plus_arc_device_geometry.zig");
 const arc_device_points = @import("emf_plus_arc_device_points.zig");
+const arc_device_segments = @import("emf_plus_arc_device_segments.zig");
 const arc_data = @import("emf_plus_arc_data.zig");
 const binary = @import("../../binary/reader.zig");
 const record = @import("emf_plus_record.zig");
@@ -27,6 +28,10 @@ pub const DrawArc = struct {
 
     pub fn deviceEndpoints(self: DrawArc, mapping: world_page_device.Mapper) ?arc_device_points.Endpoints {
         return arc_device_points.endpoints(self.deviceArc(mapping) orelse return null);
+    }
+
+    pub fn deviceSegments(self: DrawArc, mapping: world_page_device.Mapper) ?arc_device_segments.Iterator {
+        return arc_device_segments.segments(self.deviceArc(mapping) orelse return null);
     }
 };
 
@@ -83,6 +88,9 @@ test "EMF+ DrawArc parses compressed rectangle Pen ID angles and ignored flags" 
     try std.testing.expectEqualDeep(rect_device_corners.map(value.rectangle, mapping), value.deviceCorners(mapping));
     try std.testing.expectEqualDeep(arc_device_geometry.build(value.deviceCorners(mapping), value.start_angle, value.sweep_angle), value.deviceArc(mapping));
     try std.testing.expectEqualDeep(arc_device_points.endpoints(value.deviceArc(mapping).?), value.deviceEndpoints(mapping).?);
+    var value_segments = value.deviceSegments(mapping).?;
+    var expected_segments = arc_device_segments.segments(value.deviceArc(mapping).?);
+    try std.testing.expectEqualDeep(expected_segments.next().?, value_segments.next().?);
     var non_full = value;
     non_full.sweep_angle = -90;
     const non_full_endpoints = non_full.deviceEndpoints(mapping).?;
@@ -91,6 +99,7 @@ test "EMF+ DrawArc parses compressed rectangle Pen ID angles and ignored flags" 
     var invalid = value;
     invalid.start_angle = -1;
     try std.testing.expect(invalid.deviceEndpoints(mapping) == null);
+    try std.testing.expect(invalid.deviceSegments(mapping) == null);
 }
 
 test "EMF+ DrawArc parses floating rectangle without normalizing float bits" {

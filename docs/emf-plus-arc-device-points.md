@@ -20,7 +20,7 @@ DrawArc의 `deviceEndpoints()`와 DrawPie·FillPie의 `deviceRadialEdges()`는 �
 
 ## 지원 경계
 
-이 계층은 endpoint와 Pie radial edge의 device-space 의미 geometry까지만 제공합니다. arc flattening, 곡선 segment 생성, DrawArc/DrawPie stroke, FillPie 닫힌 fill boundary, Pen/Brush, clipping, anti-aliasing, rasterization과 저장은 미구현입니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 픽셀 출력 동등성을 주장하지 않습니다.
+이 계층은 endpoint와 Pie radial edge의 device-space 의미 geometry를 제공합니다. 정확한 rational quadratic 곡선 표현은 [별도 segment 계층](emf-plus-arc-device-segments.md)이 재사용합니다. arc flattening, DrawArc/DrawPie stroke, FillPie 닫힌 fill boundary, Pen/Brush, clipping, anti-aliasing, rasterization과 저장은 미구현입니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 픽셀 출력 동등성을 주장하지 않습니다.
 
 ## 검증 기록
 

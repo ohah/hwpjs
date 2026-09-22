@@ -1,6 +1,7 @@
 const std = @import("std");
 const arc_device_geometry = @import("emf_plus_arc_device_geometry.zig");
 const arc_device_points = @import("emf_plus_arc_device_points.zig");
+const arc_device_segments = @import("emf_plus_arc_device_segments.zig");
 const arc_data = @import("emf_plus_arc_data.zig");
 const binary = @import("../../binary/reader.zig");
 const brush_id = @import("emf_plus_brush_id.zig");
@@ -28,6 +29,10 @@ pub const FillPie = struct {
 
     pub fn deviceRadialEdges(self: FillPie, mapping: world_page_device.Mapper) ?arc_device_points.PieRadialEdges {
         return arc_device_points.pieRadialEdges(self.deviceArc(mapping) orelse return null);
+    }
+
+    pub fn deviceArcSegments(self: FillPie, mapping: world_page_device.Mapper) ?arc_device_segments.Iterator {
+        return arc_device_segments.segments(self.deviceArc(mapping) orelse return null);
     }
 };
 
@@ -86,9 +91,13 @@ test "EMF+ FillPie parses compressed ArcData with both Brush forms and ignored f
     try std.testing.expectEqualDeep(rect_device_corners.map(object.rectangle, mapping), object.deviceCorners(mapping));
     try std.testing.expectEqualDeep(arc_device_geometry.build(object.deviceCorners(mapping), object.start_angle, object.sweep_angle), object.deviceArc(mapping));
     try std.testing.expectEqualDeep(arc_device_points.pieRadialEdges(object.deviceArc(mapping).?), object.deviceRadialEdges(mapping).?);
+    var object_segments = object.deviceArcSegments(mapping).?;
+    var expected_segments = arc_device_segments.segments(object.deviceArc(mapping).?);
+    try std.testing.expectEqualDeep(expected_segments.next().?, object_segments.next().?);
     var invalid = object;
     invalid.start_angle = std.math.nan(f32);
     try std.testing.expect(invalid.deviceRadialEdges(mapping) == null);
+    try std.testing.expect(invalid.deviceArcSegments(mapping) == null);
 
     std.mem.writeInt(u32, data[0..4], 0x44332211, .little);
     const literal = try parse(makeRecord(&data, 0xc000));

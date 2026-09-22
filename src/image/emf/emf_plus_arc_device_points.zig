@@ -18,14 +18,18 @@ pub const PieRadialEdges = struct {
     end_to_center: Segment,
 };
 
+pub fn pointAtComponents(ellipse: ellipse_device_basis.Basis, horizontal: f32, vertical: f32) geometry.PointF {
+    return .{
+        .x = ellipse.center.x + ellipse.horizontal_radius.x * horizontal + ellipse.vertical_radius.x * vertical,
+        .y = ellipse.center.y + ellipse.horizontal_radius.y * horizontal + ellipse.vertical_radius.y * vertical,
+    };
+}
+
 pub fn pointAtDegrees(ellipse: ellipse_device_basis.Basis, degrees: f32) geometry.PointF {
     const radians = degrees * (@as(f32, std.math.pi) / 180.0);
     const cosine = @cos(radians);
     const sine = @sin(radians);
-    return .{
-        .x = ellipse.center.x + ellipse.horizontal_radius.x * cosine + ellipse.vertical_radius.x * sine,
-        .y = ellipse.center.y + ellipse.horizontal_radius.y * cosine + ellipse.vertical_radius.y * sine,
-    };
+    return pointAtComponents(ellipse, cosine, sine);
 }
 
 pub fn endpoints(arc: arc_device_geometry.Arc) Endpoints {
