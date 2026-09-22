@@ -1,12 +1,17 @@
 const std = @import("std");
 const binary = @import("../../binary/reader.zig");
+const geometry = @import("emf_plus_geometry.zig");
 const graphics_version = @import("emf_plus_graphics_version.zig");
 const object = @import("emf_plus_object.zig");
 const path_geometry = @import("emf_plus_path_geometry.zig");
 const path_fill_segments = @import("emf_plus_path_fill_segments.zig");
+const path_device_segments = @import("emf_plus_path_device_segments.zig");
 const path_segments = @import("emf_plus_path_segments.zig");
 const point = @import("emf_plus_point.zig");
 const path_type = @import("emf_plus_path_type.zig");
+const page_transform = @import("emf_plus_page_transform.zig");
+const transform_matrix = @import("emf_plus_transform_matrix.zig");
+const world_page_device = @import("emf_plus_world_page_device.zig");
 
 pub const FlagInterpretation = enum {
     specification,
@@ -55,6 +60,14 @@ pub const Path = struct {
 
     pub fn fillSegments(self: Path) path_fill_segments.Iterator {
         return path_fill_segments.segments(self.commands());
+    }
+
+    pub fn deviceSegments(self: Path, mapping: world_page_device.Mapper) path_device_segments.StrokeIterator {
+        return path_device_segments.fromSegments(self.segments(), mapping);
+    }
+
+    pub fn fillDeviceSegments(self: Path, mapping: world_page_device.Mapper) path_device_segments.FillIterator {
+        return path_device_segments.fromSegments(self.fillSegments(), mapping);
     }
 };
 
@@ -197,6 +210,47 @@ test "EMF+ Path parses floating points types and indeterminate padding" {
     try std.testing.expectEqual(@as(u32, @bitCast(@as(f32, 3.5))), @as(u32, @bitCast(fill_close.start.floating.x)));
     try std.testing.expectEqual(@as(u32, @bitCast(@as(f32, 1.5))), @as(u32, @bitCast(fill_close.end.floating.x)));
     try std.testing.expect((try fill_segments_iterator.next()) == null);
+}
+
+test "EMF+ Path exposes shared stroke and fill device segments" {
+    var bytes = [_]u8{0} ** 32;
+    putU32(&bytes, 0, 0xdbc01002);
+    putU32(&bytes, 4, 2);
+    putF32(&bytes, 12, 1.5);
+    putF32(&bytes, 16, -2.5);
+    putF32(&bytes, 20, 3.5);
+    putF32(&bytes, 24, 4.5);
+    bytes[28..32].* = .{ 0x00, 0x91, 0xaa, 0xbb };
+    const value = try parse(&bytes, .{});
+    const page = page_transform.build(.pixel, 2, .{ .x = 96, .y = 96 });
+    const mapping = world_page_device.resolve(transform_matrix.TransformMatrix.translation(10, 20), page).?;
+
+    var stroke = value.deviceSegments(mapping);
+    const stroke_line = try stroke.next();
+    try std.testing.expect(stroke_line != null);
+    try std.testing.expect(stroke_line.? == .line_to);
+    try std.testing.expectEqual(geometry.PointF{ .x = 23, .y = 35 }, stroke_line.?.line_to.start);
+    try std.testing.expectEqual(geometry.PointF{ .x = 27, .y = 49 }, stroke_line.?.line_to.end.value);
+    try std.testing.expect(stroke_line.?.line_to.end.point_type.point_type.dash_mode);
+    const stroke_close = try stroke.next();
+    try std.testing.expect(stroke_close != null);
+    try std.testing.expect(stroke_close.? == .close_figure);
+    try std.testing.expectEqual(geometry.PointF{ .x = 27, .y = 49 }, stroke_close.?.close_figure.start);
+    try std.testing.expectEqual(geometry.PointF{ .x = 23, .y = 35 }, stroke_close.?.close_figure.end);
+    try std.testing.expect((try stroke.next()) == null);
+
+    var fill = value.fillDeviceSegments(mapping);
+    const fill_line = try fill.next();
+    try std.testing.expect(fill_line != null);
+    try std.testing.expect(fill_line.? == .line_to);
+    try std.testing.expectEqual(geometry.PointF{ .x = 23, .y = 35 }, fill_line.?.line_to.start);
+    try std.testing.expectEqual(geometry.PointF{ .x = 27, .y = 49 }, fill_line.?.line_to.end.value);
+    const fill_close = try fill.next();
+    try std.testing.expect(fill_close != null);
+    try std.testing.expect(fill_close.? == .close_figure);
+    try std.testing.expectEqual(geometry.PointF{ .x = 27, .y = 49 }, fill_close.?.close_figure.start);
+    try std.testing.expectEqual(geometry.PointF{ .x = 23, .y = 35 }, fill_close.?.close_figure.end);
+    try std.testing.expect((try fill.next()) == null);
 }
 
 test "EMF+ Path parses the official 19-point object example byte for byte" {

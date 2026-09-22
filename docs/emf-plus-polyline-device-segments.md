@@ -12,7 +12,7 @@
 
 `Iterator.next()`는 source iterator의 임시 복사본에서 다음 topology 선분을 완성한 뒤 두 endpoint를 변환하고 성공 시에만 진행 상태를 교체합니다. borrowed PointR가 잘리면 source offset·remaining·누적 좌표와 device iterator 상태가 함께 유지됩니다. 종료와 closing segment도 원래 topology의 한 번만 반환하는 계약을 보존합니다.
 
-이 계층은 DrawLines/FillPolygon의 선분 endpoint를 device 좌표로 만드는 범위입니다. clip geometry, Pen 폭·cap·join·dash, Brush fill rule·sampling, anti-aliasing, pixel offset, rasterization과 저장은 미구현입니다. Bézier는 [별도 device segment 계층](emf-plus-bezier-device-segments.md)이 command 역할을, cardinal spline은 [별도 device span 계층](emf-plus-cardinal-device-spans.md)이 통과점 topology를 보존하며 Path에도 별도 device geometry가 필요합니다. 이들을 polyline으로 강제 변환하지 않습니다. SetTSGraphics의 별도 WorldToDevice도 일반 mapper에 병합하지 않습니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 픽셀 출력 동등성을 주장하지 않습니다.
+이 계층은 DrawLines/FillPolygon의 선분 endpoint를 device 좌표로 만드는 범위입니다. clip geometry, Pen 폭·cap·join·dash, Brush fill rule·sampling, anti-aliasing, pixel offset, rasterization과 저장은 미구현입니다. Bézier는 [별도 device segment 계층](emf-plus-bezier-device-segments.md)이 command 역할을, cardinal spline은 [별도 device span 계층](emf-plus-cardinal-device-spans.md)이 통과점 topology를, Path는 [별도 device segment 계층](emf-plus-path-device-segments.md)이 Line·Bézier·closure와 metadata를 보존합니다. 이들을 polyline으로 강제 변환하지 않습니다. SetTSGraphics의 별도 WorldToDevice도 일반 mapper에 병합하지 않습니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 픽셀 출력 동등성을 주장하지 않습니다.
 
 ## 검증 기록
 

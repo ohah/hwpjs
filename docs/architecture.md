@@ -38,6 +38,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ Path fill boundary 계층](emf-plus-path-fill-segments.md)은 열린 비어 있지 않은 figure를 다음 Start 또는 EOF에서 끝점→시작점 직선으로 닫고 명시적 closure는 중복하지 않습니다. command·segment SSOT를 재사용하며 fill mode·Brush sampling·record replay는 후속 계층에 둡니다.
 
+[EMF+ Path device segment 계층](emf-plus-path-device-segments.md)은 stroke와 fill의 공용 Line·Bézier·closure union을 일반 world·page·device mapper에 연결합니다. 좌표만 변환하고 point type·DashMode·PathMarker·CloseSubpath·RLE metadata를 보존하며 record replay와 rasterization은 후속 책임입니다.
+
 [EMF+ image parallelogram 계층](emf-plus-image-parallelogram.md)은 DrawImagePoints의 upper-left·upper-right·lower-left를 공용 resolver로 읽고 네 번째 점을 외삽합니다. 정수는 i64로 유지합니다. [image affine map 계층](emf-plus-image-affine-map.md)은 SrcRect의 네 corner를 이 destination 역할로 보내는 row-vector transform을 조립하고 공용 TransformMatrix의 점 적용을 재사용합니다. 픽셀 sampling·effect·rasterization은 후속 계층이 소유합니다.
 
 [EMF+ world·page·device 좌표 계층](emf-plus-world-page-device.md)은 일반 graphics state의 world transform을 먼저 적용하고 page의 비대칭 device scale을 뒤에 적용합니다. unknown world/page는 추정하지 않으며 SetTSGraphics의 별도 WorldToDevice와 개별 geometry 순회·clip·rasterization은 후속 책임으로 남깁니다.

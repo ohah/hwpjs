@@ -8,7 +8,7 @@ Flags의 low byte는 공용 `UnitType` 0~6이며 high byte는 명세 도표의 0
 
 ## stream 연결과 지원 경계
 
-반환값은 wire 명령만 표현하고 실제 상태 전이는 [page transform 재생 계층](emf-plus-page-transform.md)이 소유합니다. tracked stream은 Header의 축별 LogicalDpi로 page-to-device scale을 계산하고 Save/Container snapshot과 report에 연결합니다. [일반 point mapper](emf-plus-world-page-device.md)를 통해 [polyline](emf-plus-polyline-device-segments.md), [Bézier device segment](emf-plus-bezier-device-segments.md), [cardinal device span](emf-plus-cardinal-device-spans.md)이 이 scale을 적용하지만 다른 geometry, clipping과 렌더링은 구현하지 않았습니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성도 주장하지 않습니다.
+반환값은 wire 명령만 표현하고 실제 상태 전이는 [page transform 재생 계층](emf-plus-page-transform.md)이 소유합니다. tracked stream은 Header의 축별 LogicalDpi로 page-to-device scale을 계산하고 Save/Container snapshot과 report에 연결합니다. [일반 point mapper](emf-plus-world-page-device.md)를 통해 [polyline](emf-plus-polyline-device-segments.md), [Bézier device segment](emf-plus-bezier-device-segments.md), [cardinal device span](emf-plus-cardinal-device-spans.md), [Path device segment](emf-plus-path-device-segments.md)가 이 scale을 적용하지만 다른 geometry, clipping과 렌더링은 구현하지 않았습니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성도 주장하지 않습니다.
 
 ## 검증 기록
 

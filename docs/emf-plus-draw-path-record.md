@@ -10,7 +10,7 @@
 
 stream은 Flags의 Path ObjectID 슬롯이 존재하고 ObjectTypePath인지, payload의 PenId 슬롯이 존재하고 ObjectTypePen인지 순서대로 확인합니다. 누락·타입 불일치·payload·집계 오류는 comment 전체 상태를 원복하고 상위 EMF framing은 같은 경로를 사용합니다.
 
-현재 로컬 HWP corpus에는 EMF+ signature가 없어 실제 한컴 DrawPath 표본과 렌더링 결과는 관측하지 못했습니다. 구현 범위는 고정 wire 구조, Path/Pen 참조와 stream/framing 연결입니다. Path geometry 재생, transform·clipping·stroke와 저장은 미구현입니다.
+현재 로컬 HWP corpus에는 EMF+ signature가 없어 실제 한컴 DrawPath 표본과 렌더링 결과는 관측하지 못했습니다. 구현 범위는 고정 wire 구조, Path/Pen 참조와 stream/framing 연결입니다. 독립 Path 객체 API는 [stroke segment의 일반 world/page/device 변환](emf-plus-path-device-segments.md)을 제공하지만 Object Table이 Path payload를 장기 소유하지 않아 이 record replay에는 아직 연결되지 않았습니다. clipping·stroke·저장은 미구현입니다.
 
 ## 검증 기록
 
