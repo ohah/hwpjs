@@ -8,7 +8,7 @@ record는 항상 `Size=16`, `DataSize=4`입니다. ObjectId는 0~63의 Path 객�
 
 ## stream 연결과 미지원 경계
 
-stream은 Path 슬롯의 존재와 ObjectTypePath를 항상 검사합니다. S가 clear일 때만 Brush 슬롯 존재와 ObjectTypeBrush를 추가 검사하며, 오류와 count overflow에서 comment 상태를 원복합니다. Path geometry 해석은 기존 Path 객체 모듈의 책임이고 이 record에서 다시 파싱하지 않습니다. path fill, transform·clipping 적용, 렌더링 및 저장은 구현하지 않았습니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성도 주장하지 않습니다.
+stream은 Path 슬롯의 존재와 ObjectTypePath를 항상 검사합니다. S가 clear일 때만 Brush 슬롯 존재와 ObjectTypeBrush를 추가 검사하며, 오류와 count overflow에서 comment 상태를 원복합니다. Path geometry 해석은 기존 Path 객체 모듈의 책임이고 이 record에서 다시 파싱하지 않습니다. 열린 figure를 포함한 fill boundary topology는 [Path fill boundary 계층](emf-plus-path-fill-segments.md)이 구현했습니다. Object Table의 실제 Path payload 보유와 이 record의 연결, fill mode·Brush·transform·clipping 적용, rasterization 및 저장은 아직 구현하지 않았습니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성도 주장하지 않습니다.
 
 ## 공식 근거
 
