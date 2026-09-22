@@ -18,7 +18,7 @@ DrawPie와 FillPie의 `deviceBoundary()`는 기존 `deviceArc()`가 성공한 �
 
 ## 지원 경계
 
-이 계층은 Pie의 닫힌 device-space 의미 boundary까지 제공합니다. rational quadratic 평가·flattening, DrawPie Pen stroke, FillPie fill rule·Brush sampling, coincident edge의 backend 처리, clipping, anti-aliasing, rasterization과 저장은 미구현입니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 픽셀 출력 동등성을 주장하지 않습니다.
+이 계층은 Pie의 닫힌 device-space 의미 boundary까지 제공하고, boundary의 Arc 항목은 [공용 rational quadratic 평가 계층](emf-plus-arc-segment-evaluation.md)으로 점을 계산할 수 있습니다. flattening, DrawPie Pen stroke, FillPie fill rule·Brush sampling, coincident edge의 backend 처리, clipping, anti-aliasing, rasterization과 저장은 미구현입니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 픽셀 출력 동등성을 주장하지 않습니다.
 
 ## 검증 기록
 

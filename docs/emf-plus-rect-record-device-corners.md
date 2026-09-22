@@ -8,7 +8,7 @@ rectangle을 직접 보유하는 drawing record는 [공용 RectData corner 계�
 
 ## 지원 경계
 
-반환값은 rectangle의 transformed four-corner basis입니다. Draw/FillEllipse는 이를 [affine ellipse basis](emf-plus-ellipse-device-basis.md)로, DrawArc·Draw/FillPie는 [affine arc geometry](emf-plus-arc-device-geometry.md)로 조립합니다. DrawRects/FillRects의 실제 stroke/fill, Arc/Pie point 평가, Pen/Brush, clipping, anti-aliasing, rasterization과 저장은 구현하지 않았습니다. 특히 회전·shear된 ellipse/arc를 axis-aligned device rectangle로 해석하지 않습니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성을 주장하지 않습니다.
+반환값은 rectangle의 transformed four-corner basis입니다. Draw/FillEllipse는 이를 [affine ellipse basis](emf-plus-ellipse-device-basis.md)로, DrawArc·Draw/FillPie는 [affine arc geometry](emf-plus-arc-device-geometry.md)로 조립합니다. Arc/Pie의 endpoint·radial edge, exact conic segment와 단일 parameter 평가는 각각 [point](emf-plus-arc-device-points.md), [segment](emf-plus-arc-device-segments.md), [평가](emf-plus-arc-segment-evaluation.md) 계층이 소유합니다. DrawRects/FillRects의 실제 stroke/fill, Pen/Brush, flattening, clipping, anti-aliasing, rasterization과 저장은 구현하지 않았습니다. 특히 회전·shear된 ellipse/arc를 axis-aligned device rectangle로 해석하지 않습니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성을 주장하지 않습니다.
 
 ## 검증 기록
 

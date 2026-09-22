@@ -22,7 +22,7 @@ Stream은 해당 ObjectID 슬롯이 이미 존재하고 ObjectTypePen인지 확�
 
 최초 Rect 선택 반전은 안전 모드에서 union tag panic, stream parser 우회는 변이 생성기의 `@` 치환 오류, Pen 타입 검사 제거는 미사용 변수 컴파일 오류였으므로 9회를 결과에서 제외했습니다. 타입 안전한 RectData 값 손실, 컴파일 가능한 parser 우회, 불가능한 타입 조건으로 각각 교체해 세 모드에서 다시 검출했습니다. 유효 복사본은 `/tmp/hwpjs-emfplus-draw-arc-mutants.Pf9IOp`, 로그는 `/tmp/hwpjs-draw-arc-mutation-<변이>-<모드>.log`와 세 교체 변이의 `-valid-` 로그입니다.
 
-현재 corpus에는 EMF+ signature가 없어 실제 한컴 DrawArc 표본과 렌더링 결과는 관측하지 못했습니다. 구현 범위는 wire 구조, Object Table 참조, stream/framing 연결, [공개 device-corner 연결](emf-plus-rect-record-device-corners.md), [affine arc geometry](emf-plus-arc-device-geometry.md), [start/end point 평가](emf-plus-arc-device-points.md), [exact conic segment](emf-plus-arc-device-segments.md)와 합성·변이 검증입니다. flattening·stroke, clipping·rasterization과 저장은 미구현입니다.
+현재 corpus에는 EMF+ signature가 없어 실제 한컴 DrawArc 표본과 렌더링 결과는 관측하지 못했습니다. 구현 범위는 wire 구조, Object Table 참조, stream/framing 연결, [공개 device-corner 연결](emf-plus-rect-record-device-corners.md), [affine arc geometry](emf-plus-arc-device-geometry.md), [start/end point 평가](emf-plus-arc-device-points.md), [exact conic segment](emf-plus-arc-device-segments.md), [단일 parameter conic 평가](emf-plus-arc-segment-evaluation.md)와 합성·변이 검증입니다. flattening·stroke, clipping·rasterization과 저장은 미구현입니다.
 
 최종 제품 트리의 전체 `audit`를 Debug·ReleaseSafe·ReleaseFast 순서로 실행했습니다. 세 모드 모두 40/40 단계와 1,642/1,642 테스트(네이티브 1,603, 차트 31, WMF 8), HWP 감사 8,905,827 checks, WASM imports 0으로 통과했습니다. 로그는 `/tmp/hwpjs-emfplus-draw-arc-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.
 
