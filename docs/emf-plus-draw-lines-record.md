@@ -14,7 +14,7 @@ reserved flags는 MUST be ignored에 따라 원값으로 보존합니다. PointF
 
 stream은 Pen ObjectID 슬롯이 존재하고 ObjectTypePen인지 확인합니다. 누락 Pen, 다른 객체 타입, payload·한도·집계 오류는 comment 전체 상태를 원복하고 상위 EMF framing은 같은 경로를 사용합니다.
 
-현재 로컬 HWP corpus에는 EMF+ signature가 없어 실제 한컴 DrawLines 표본과 렌더링 결과는 관측하지 못했습니다. 구현 범위는 wire 구조, borrowed point iteration, 공용 PointR 절대 좌표·open/closed 선분 해석, Pen 참조와 stream/framing 연결입니다. transform·clipping·Pen stroke 재생과 저장은 미구현입니다.
+현재 로컬 HWP corpus에는 EMF+ signature가 없어 실제 한컴 DrawLines 표본과 렌더링 결과는 관측하지 못했습니다. 구현 범위는 wire 구조, borrowed point iteration, 공용 PointR 절대 좌표·open/closed 선분 해석, [일반 world/page/device endpoint 변환](emf-plus-polyline-device-segments.md), Pen 참조와 stream/framing 연결입니다. clipping·Pen stroke 재생과 저장은 미구현입니다.
 
 ## 검증 기록
 

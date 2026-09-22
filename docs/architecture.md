@@ -22,7 +22,7 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ drawing PointData 절대 좌표 계층](emf-plus-point-resolution.md)은 공용 borrowed PointData iterator 위에서 첫 PointR을 원점 기준으로, 이후 delta를 직전 위치 기준으로 누적합니다. 정수 결과는 i64로 유지하고 PointF 원비트는 보존하며 wire parser나 record별 replay에 누적 규칙을 복제하지 않습니다.
 
-[EMF+ polyline·polygon 선분 계층](emf-plus-polyline-geometry.md)은 절대 PointData의 인접점을 allocation-free segment로 연결합니다. DrawLines는 L을 닫힘 정책으로 전달하고 FillPolygon은 항상 마지막→첫 경계를 추가하며 transform·clip·stroke/fill은 이 계층에 섞지 않습니다.
+[EMF+ polyline·polygon 선분 계층](emf-plus-polyline-geometry.md)은 절대 PointData의 인접점을 allocation-free segment로 연결합니다. DrawLines는 L을 닫힘 정책으로 전달하고 FillPolygon은 항상 마지막→첫 경계를 추가합니다. [Device segment 계층](emf-plus-polyline-device-segments.md)은 공용 resolved→PointF와 world/page/device mapper로 두 endpoint를 변환하며 clip·stroke/fill은 섞지 않습니다.
 
 [EMF+ 연결 cubic Bézier 계층](emf-plus-bezier-geometry.md)은 첫 4점과 이후 3점씩을 segment로 조립하고 앞 end를 다음 start로 공유합니다. wire parser의 최소 Count 4 수용과 geometry의 완전한 `1+3n` 요구를 분리하며 불완전한 후행 점을 버리지 않습니다.
 

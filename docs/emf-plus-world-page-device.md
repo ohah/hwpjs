@@ -17,7 +17,7 @@ device = (page.x * device_scale.x, page.y * device_scale.y)
 
 BeginContainer의 World/Display source unit 때문에 world transform이 unknown이면 `null`을 반환합니다. SetPageTransform의 World/Display처럼 기존 page 계약에서 device scale을 확정하지 못한 경우도 `null`입니다. identity나 pixel scale로 추정해 계속하지 않습니다.
 
-이 API는 이름 그대로 일반 world/page 경로만 적용합니다. [SetTSGraphics의 별도 WorldToDevice](emf-plus-ts-graphics-state.md)는 일반 상태와 의미가 같다는 근거가 없어 적용하지 않습니다. device origin, terminal-server graphics, clip geometry, Pen/Brush local transform, image local transform, pixel offset, rasterization과 저장도 이 계층의 범위가 아닙니다. 개별 polyline·Path·image 소비자는 필요할 때 이 point 함수를 호출해야 하며, 존재만으로 전체 geometry가 변환됐다고 주장하지 않습니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성도 주장하지 않습니다.
+이 API는 이름 그대로 일반 world/page 경로만 적용합니다. [SetTSGraphics의 별도 WorldToDevice](emf-plus-ts-graphics-state.md)는 일반 상태와 의미가 같다는 근거가 없어 적용하지 않습니다. device origin, terminal-server graphics, clip geometry, Pen/Brush local transform, image local transform, pixel offset, rasterization과 저장도 이 계층의 범위가 아닙니다. [Polyline device segment](emf-plus-polyline-device-segments.md)는 이 mapper의 첫 geometry 소비자이며 Path·Bézier·cardinal·image에는 아직 각각의 연결이 필요합니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성도 주장하지 않습니다.
 
 ## 검증 기록
 

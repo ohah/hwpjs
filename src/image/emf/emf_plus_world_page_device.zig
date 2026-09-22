@@ -2,14 +2,28 @@ const geometry = @import("emf_plus_geometry.zig");
 const page_transform = @import("emf_plus_page_transform.zig");
 const transform_matrix = @import("emf_plus_transform_matrix.zig");
 
-pub fn mapPoint(world: ?transform_matrix.TransformMatrix, page: page_transform.PageTransform, point: geometry.PointF) ?geometry.PointF {
-    const world_matrix = world orelse return null;
-    const device_scale = page.device_scale orelse return null;
-    const page_point = world_matrix.mapPoint(point);
+pub const Mapper = struct {
+    world: transform_matrix.TransformMatrix,
+    device_scale: page_transform.DeviceScale,
+
+    pub fn mapPoint(self: Mapper, point: geometry.PointF) geometry.PointF {
+        const page_point = self.world.mapPoint(point);
+        return .{
+            .x = page_point.x * self.device_scale.x,
+            .y = page_point.y * self.device_scale.y,
+        };
+    }
+};
+
+pub fn resolve(world: ?transform_matrix.TransformMatrix, page: page_transform.PageTransform) ?Mapper {
     return .{
-        .x = page_point.x * device_scale.x,
-        .y = page_point.y * device_scale.y,
+        .world = world orelse return null,
+        .device_scale = page.device_scale orelse return null,
     };
+}
+
+pub fn mapPoint(world: ?transform_matrix.TransformMatrix, page: page_transform.PageTransform, point: geometry.PointF) ?geometry.PointF {
+    return (resolve(world, page) orelse return null).mapPoint(point);
 }
 
 const std = @import("std");

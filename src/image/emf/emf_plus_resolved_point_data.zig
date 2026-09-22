@@ -12,6 +12,16 @@ pub const Value = union(enum) {
     integer: IntegerPoint,
 };
 
+pub fn toPointF(value: Value) geometry.PointF {
+    return switch (value) {
+        .floating => |point_value| point_value,
+        .integer => |point_value| .{
+            .x = @floatFromInt(point_value.x),
+            .y = @floatFromInt(point_value.y),
+        },
+    };
+}
+
 pub const Iterator = struct {
     source: point.Iterator,
     previous_relative: IntegerPoint = .{ .x = 0, .y = 0 },
@@ -92,4 +102,17 @@ test "EMF+ resolved PointData iterator is atomic when borrowed bytes become trun
     try std.testing.expectEqual(before.source.reader.offset, iterator.source.reader.offset);
     try std.testing.expectEqual(before.source.remaining, iterator.source.remaining);
     try std.testing.expectEqual(before.previous_relative, iterator.previous_relative);
+}
+
+test "EMF+ resolved PointData owns integer conversion and floating bit preservation" {
+    const integer = toPointF(.{ .integer = .{ .x = 16_777_217, .y = -16_777_217 } });
+    try std.testing.expectEqual(@as(f32, 16_777_216), integer.x);
+    try std.testing.expectEqual(@as(f32, -16_777_216), integer.y);
+
+    const floating = toPointF(.{ .floating = .{
+        .x = @bitCast(@as(u32, 0x80000000)),
+        .y = @bitCast(@as(u32, 0x7fc00001)),
+    } });
+    try std.testing.expectEqual(@as(u32, 0x80000000), @as(u32, @bitCast(floating.x)));
+    try std.testing.expectEqual(@as(u32, 0x7fc00001), @as(u32, @bitCast(floating.y)));
 }

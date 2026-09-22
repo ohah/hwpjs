@@ -4,9 +4,9 @@ const resolved = @import("emf_plus_resolved_point_data.zig");
 const transform_matrix = @import("emf_plus_transform_matrix.zig");
 
 pub fn build(source: geometry.RectF, destination: image_parallelogram.Parallelogram) transform_matrix.TransformMatrix {
-    const upper_left = pointF(destination.upper_left);
-    const upper_right = pointF(destination.upper_right);
-    const lower_left = pointF(destination.lower_left);
+    const upper_left = resolved.toPointF(destination.upper_left);
+    const upper_right = resolved.toPointF(destination.upper_right);
+    const lower_left = resolved.toPointF(destination.lower_left);
     const m11 = (upper_right.x - upper_left.x) / source.width;
     const m12 = (upper_right.y - upper_left.y) / source.width;
     const m21 = (lower_left.x - upper_left.x) / source.height;
@@ -18,13 +18,6 @@ pub fn build(source: geometry.RectF, destination: image_parallelogram.Parallelog
         .m22 = m22,
         .dx = upper_left.x - source.x * m11 - source.y * m21,
         .dy = upper_left.y - source.x * m12 - source.y * m22,
-    };
-}
-
-fn pointF(value: resolved.Value) geometry.PointF {
-    return switch (value) {
-        .floating => |point| point,
-        .integer => |point| .{ .x = @floatFromInt(point.x), .y = @floatFromInt(point.y) },
     };
 }
 

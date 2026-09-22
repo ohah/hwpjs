@@ -1,10 +1,15 @@
 const std = @import("std");
 const binary = @import("../../binary/reader.zig");
 const brush_id = @import("emf_plus_brush_id.zig");
+const geometry = @import("emf_plus_geometry.zig");
+const page_transform = @import("emf_plus_page_transform.zig");
 const point_data = @import("emf_plus_point_data.zig");
 const polyline_segments = @import("emf_plus_polyline_segments.zig");
+const polyline_device_segments = @import("emf_plus_polyline_device_segments.zig");
 const record = @import("emf_plus_record.zig");
 const record_flags = @import("emf_plus_record_flags.zig");
+const transform_matrix = @import("emf_plus_transform_matrix.zig");
+const world_page_device = @import("emf_plus_world_page_device.zig");
 
 pub const Options = point_data.Options;
 
@@ -18,6 +23,10 @@ pub const FillPolygon = struct {
 
     pub fn segments(self: FillPolygon) polyline_segments.Iterator {
         return polyline_segments.segments(self.point_data, true);
+    }
+
+    pub fn deviceSegments(self: FillPolygon, mapping: world_page_device.Mapper) polyline_device_segments.Iterator {
+        return polyline_device_segments.fromSegments(self.segments(), mapping);
     }
 };
 
@@ -95,6 +104,26 @@ test "EMF+ FillPolygon parses absolute integer and floating points with both bru
     const first = (try float_points.next()).?.floating;
     try std.testing.expectEqual(@as(u32, 0x80000000), @as(u32, @bitCast(first.x)));
     try std.testing.expectEqual(@as(u32, 0x7fc00001), @as(u32, @bitCast(first.y)));
+}
+
+test "EMF+ FillPolygon exposes shared closed device polyline segments" {
+    var data = [_]u8{0} ** 20;
+    std.mem.writeInt(u32, data[4..8], 3, .little);
+    for ([_]i16{ 1, 2, 3, 4, 5, 6 }, 0..) |coordinate, index|
+        std.mem.writeInt(i16, data[8 + index * 2 ..][0..2], coordinate, .little);
+    const value = try parse(makeRecord(&data, 0x4000), .{});
+    const mapping = world_page_device.resolve(transform_matrix.TransformMatrix.identity, page_transform.build(.pixel, 2, .{ .x = 96, .y = 96 })).?;
+    var boundary = value.deviceSegments(mapping);
+    const first = (try boundary.next()).?;
+    try std.testing.expectEqual(geometry.PointF{ .x = 2, .y = 4 }, first.start);
+    try std.testing.expectEqual(geometry.PointF{ .x = 6, .y = 8 }, first.end);
+    _ = (try boundary.next()).?;
+    const maybe_closing = try boundary.next();
+    try std.testing.expect(maybe_closing != null);
+    const closing = maybe_closing.?;
+    try std.testing.expectEqual(geometry.PointF{ .x = 10, .y = 12 }, closing.start);
+    try std.testing.expectEqual(first.start, closing.end);
+    try std.testing.expect((try boundary.next()) == null);
 }
 
 test "EMF+ FillPolygon parses variable PointR padding and ignores C" {

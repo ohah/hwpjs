@@ -1,9 +1,14 @@
 const std = @import("std");
 const binary = @import("../../binary/reader.zig");
+const geometry = @import("emf_plus_geometry.zig");
+const page_transform = @import("emf_plus_page_transform.zig");
 const point_data = @import("emf_plus_point_data.zig");
 const polyline_segments = @import("emf_plus_polyline_segments.zig");
+const polyline_device_segments = @import("emf_plus_polyline_device_segments.zig");
 const record = @import("emf_plus_record.zig");
 const record_flags = @import("emf_plus_record_flags.zig");
+const transform_matrix = @import("emf_plus_transform_matrix.zig");
+const world_page_device = @import("emf_plus_world_page_device.zig");
 
 pub const Options = point_data.Options;
 
@@ -18,6 +23,10 @@ pub const DrawLines = struct {
 
     pub fn segments(self: DrawLines) polyline_segments.Iterator {
         return polyline_segments.segments(self.point_data, self.closes_figure);
+    }
+
+    pub fn deviceSegments(self: DrawLines, mapping: world_page_device.Mapper) polyline_device_segments.Iterator {
+        return polyline_device_segments.fromSegments(self.segments(), mapping);
     }
 };
 
@@ -104,6 +113,25 @@ test "EMF+ DrawLines parses absolute integer and floating points" {
     var open_segments = uncompressed.segments();
     _ = (try open_segments.next()).?;
     try std.testing.expect((try open_segments.next()) == null);
+}
+
+test "EMF+ DrawLines exposes shared device polyline segments with its L policy" {
+    var data = [_]u8{0} ** 12;
+    std.mem.writeInt(u32, data[0..4], 2, .little);
+    for ([_]i16{ 1, 2, 3, 4 }, 0..) |coordinate, index|
+        std.mem.writeInt(i16, data[4 + index * 2 ..][0..2], coordinate, .little);
+    const value = try parse(makeRecord(&data, 0x6000), .{});
+    const mapping = world_page_device.resolve(transform_matrix.TransformMatrix.translation(10, 20), page_transform.build(.pixel, 2, .{ .x = 96, .y = 96 })).?;
+    var device_segments = value.deviceSegments(mapping);
+    const forward = (try device_segments.next()).?;
+    try std.testing.expectEqual(geometry.PointF{ .x = 22, .y = 44 }, forward.start);
+    try std.testing.expectEqual(geometry.PointF{ .x = 26, .y = 48 }, forward.end);
+    const maybe_closing = try device_segments.next();
+    try std.testing.expect(maybe_closing != null);
+    const closing = maybe_closing.?;
+    try std.testing.expectEqual(forward.end, closing.start);
+    try std.testing.expectEqual(forward.start, closing.end);
+    try std.testing.expect((try device_segments.next()) == null);
 }
 
 test "EMF+ DrawLines parses variable PointR widths padding and ignores C" {

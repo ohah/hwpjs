@@ -12,7 +12,7 @@
 
 첫 `next`는 첫째와 둘째 점을 함께 읽어 첫 선분을 만듭니다. 둘째 점에서 borrowed source 오류가 나면 첫 점 소비, 상대좌표 누적, segment count와 종료 상태를 모두 커밋하지 않습니다. 정상 종료 뒤에는 source를 다시 읽지 않으며 closing segment도 한 번만 반환합니다.
 
-이 계층은 선분 topology까지만 구현합니다. world/page transform, clipping, Pen stroke와 Brush fill 규칙, anti-aliasing·rasterization 및 저장은 후속 범위입니다. DrawBeziers와 cardinal spline은 단순 인접 선분으로 바꾸면 의미가 손실되므로 이 API에 연결하지 않습니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 0개라 실제 한컴 렌더링 동등성도 주장하지 않습니다.
+이 계층은 선분 topology까지만 구현하며 [device segment 계층](emf-plus-polyline-device-segments.md)이 결과 endpoint에 일반 world/page/device 변환을 적용합니다. clipping, Pen stroke와 Brush fill 규칙, anti-aliasing·rasterization 및 저장은 후속 범위입니다. DrawBeziers와 cardinal spline은 단순 인접 선분으로 바꾸면 의미가 손실되므로 이 API에 연결하지 않습니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 0개라 실제 한컴 렌더링 동등성도 주장하지 않습니다.
 
 ## 검증 기록
 

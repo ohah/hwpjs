@@ -135,6 +135,7 @@ test {
     _ = @import("image/emf/emf_plus_ts_graphics_state.zig");
     _ = @import("image/emf/emf_plus_resolved_point_data.zig");
     _ = @import("image/emf/emf_plus_polyline_segments.zig");
+    _ = @import("image/emf/emf_plus_polyline_device_segments.zig");
     _ = @import("image/emf/emf_plus_bezier_segments.zig");
     _ = @import("image/emf/emf_plus_cardinal_spans.zig");
     _ = @import("image/emf/emf_plus_path_geometry.zig");

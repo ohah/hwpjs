@@ -6,13 +6,13 @@
 
 [MS-EMFPLUS EmfPlusDrawLines](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/a5c0bc88-ab0e-4126-b68f-47b04bfc5cad)는 P가 set된 첫 PointR의 이전 위치를 `(0,0)`으로, 이후 원소의 기준을 직전 원소가 지정한 위치로 정의합니다. resolver는 이 순서대로 X/Y delta를 각각 누적합니다. 최대 16 Mi 기본 point 한도에서도 i16 결과로 다시 좁히지 않도록 상대 결과와 절대 Point를 i64 정수 좌표로 노출합니다. PointF는 NaN·무한대·signed zero를 포함한 f32 원비트를 그대로 유지합니다.
 
-`Iterator.next`는 borrowed source iterator와 이전 상대 위치를 임시 복사본에서 진행하고 성공한 뒤에만 교체합니다. 호출자가 원본 수명을 위반해 bytes를 잘라 오류가 발생해도 offset·remaining·누적 위치가 함께 유지됩니다.
+`Iterator.next`는 borrowed source iterator와 이전 상대 위치를 임시 복사본에서 진행하고 성공한 뒤에만 교체합니다. 호출자가 원본 수명을 위반해 bytes를 잘라 오류가 발생해도 offset·remaining·누적 위치가 함께 유지됩니다. `toPointF()`는 소비 계층의 공용 f32 경계로, PointF 원비트를 그대로 반환하고 i64 정수에는 `@floatFromInt`를 한 번 적용합니다.
 
 ## 지원 경계
 
 이 계층은 FillPolygon, FillClosedCurve, DrawBeziers, DrawClosedCurve, DrawImagePoints, DrawLines처럼 공용 `PointData`를 반환하는 record가 공유합니다. `fromIterator`는 별도 point type 배열을 가진 `EmfPlusPath`가 같은 누적 상태를 재사용하는 진입점이며, Path command 문법은 [Path geometry 계층](emf-plus-path-geometry.md)이 소유합니다. 각 소비자가 상대좌표 누적을 다시 구현하지 않습니다.
 
-절대 좌표 해석 자체는 transform·clip, 곡선 평가, fill/stroke rasterization이나 저장을 구현했다는 뜻이 아닙니다. DrawLines와 FillPolygon의 인접·닫힘 선분은 [polyline geometry 계층](emf-plus-polyline-geometry.md)이, DrawBeziers의 점 역할과 endpoint 공유는 [Bézier geometry 계층](emf-plus-bezier-geometry.md)이, 세 cardinal curve record의 열린 범위·닫힘 연결은 [cardinal span 계층](emf-plus-cardinal-spans.md)이, Path의 figure와 point type은 [Path geometry 계층](emf-plus-path-geometry.md)이, DrawImagePoints의 destination은 [image parallelogram 계층](emf-plus-image-parallelogram.md)이 소비합니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 0개이므로 합성 결과를 실제 한컴 출력 동등성으로 주장하지 않습니다.
+절대 좌표 해석 자체는 clip, 곡선 평가, fill/stroke rasterization이나 저장을 구현했다는 뜻이 아닙니다. DrawLines와 FillPolygon의 인접·닫힘 선분은 [polyline geometry 계층](emf-plus-polyline-geometry.md)이 조립하고 [device segment 계층](emf-plus-polyline-device-segments.md)이 공용 좌표 변환을 적용합니다. DrawBeziers의 점 역할과 endpoint 공유는 [Bézier geometry 계층](emf-plus-bezier-geometry.md)이, 세 cardinal curve record의 열린 범위·닫힘 연결은 [cardinal span 계층](emf-plus-cardinal-spans.md)이, Path의 figure와 point type은 [Path geometry 계층](emf-plus-path-geometry.md)이, DrawImagePoints의 destination은 [image parallelogram 계층](emf-plus-image-parallelogram.md)이 소비합니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 0개이므로 합성 결과를 실제 한컴 출력 동등성으로 주장하지 않습니다.
 
 ## 검증 기록
 
