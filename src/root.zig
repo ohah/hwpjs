@@ -151,6 +151,7 @@ test {
     _ = @import("image/emf/emf_plus_rect_corners.zig");
     _ = @import("image/emf/emf_plus_rect_device_corners.zig");
     _ = @import("image/emf/emf_plus_ellipse_device_basis.zig");
+    _ = @import("image/emf/emf_plus_ellipse_device_segments.zig");
     _ = @import("image/emf/emf_plus_arc_angles.zig");
     _ = @import("image/emf/emf_plus_arc_device_geometry.zig");
     _ = @import("image/emf/emf_plus_arc_device_points.zig");

@@ -103,6 +103,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - [EMF+ RectData world·device corner geometry](emf-plus-rect-device-corners.md)
 - [EMF+ rectangle records device-corner connection](emf-plus-rect-record-device-corners.md)
 - [EMF+ Ellipse affine device basis](emf-plus-ellipse-device-basis.md)
+- [EMF+ Ellipse exact rational quadratic segments](emf-plus-ellipse-device-segments.md)
 - [EMF+ Arc and Pie affine device geometry](emf-plus-arc-device-geometry.md)
 - [EMF+ Arc endpoints and Pie radial edges](emf-plus-arc-device-points.md)
 - [EMF+ Arc exact rational quadratic segments](emf-plus-arc-device-segments.md)

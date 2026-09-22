@@ -1,6 +1,8 @@
 const std = @import("std");
+const arc_device_segments = @import("emf_plus_arc_device_segments.zig");
 const binary = @import("../../binary/reader.zig");
 const ellipse_device_basis = @import("emf_plus_ellipse_device_basis.zig");
+const ellipse_device_segments = @import("emf_plus_ellipse_device_segments.zig");
 const record = @import("emf_plus_record.zig");
 const record_flags = @import("emf_plus_record_flags.zig");
 const rect_data = @import("emf_plus_rect_data.zig");
@@ -19,6 +21,10 @@ pub const DrawEllipse = struct {
 
     pub fn deviceEllipse(self: DrawEllipse, mapping: world_page_device.Mapper) ellipse_device_basis.Basis {
         return ellipse_device_basis.fromCorners(self.deviceCorners(mapping));
+    }
+
+    pub fn deviceSegments(self: DrawEllipse, mapping: world_page_device.Mapper) arc_device_segments.Iterator {
+        return ellipse_device_segments.segments(self.deviceEllipse(mapping));
     }
 };
 
@@ -54,6 +60,10 @@ fn putF32(bytes: []u8, offset: usize, value: f32) void {
     std.mem.writeInt(u32, bytes[offset..][0..4], @bitCast(value), .little);
 }
 
+fn nextExpectedSegment(iterator: *arc_device_segments.Iterator) !arc_device_segments.Segment {
+    return iterator.next() orelse error.TestExpectedEllipseSegment;
+}
+
 test "EMF+ DrawEllipse parses compressed rectangle Pen ID and ignored flags" {
     var bytes = [_]u8{0} ** 8;
     for ([_]i16{ -32768, -1, 0, 32767 }, 0..) |coordinate, index|
@@ -69,6 +79,11 @@ test "EMF+ DrawEllipse parses compressed rectangle Pen ID and ignored flags" {
     const mapping: world_page_device.Mapper = .{ .world = .{ .m11 = 1, .m12 = 0, .m21 = 0, .m22 = 1, .dx = 10, .dy = 20 }, .device_scale = .{ .x = 2, .y = 3 } };
     try std.testing.expectEqualDeep(rect_device_corners.map(value.rectangle, mapping), value.deviceCorners(mapping));
     try std.testing.expectEqualDeep(ellipse_device_basis.fromCorners(value.deviceCorners(mapping)), value.deviceEllipse(mapping));
+    var expected_segments = ellipse_device_segments.segments(value.deviceEllipse(mapping));
+    var actual_segments = value.deviceSegments(mapping);
+    inline for (0..4) |_| try std.testing.expectEqualDeep(try nextExpectedSegment(&expected_segments), try nextExpectedSegment(&actual_segments));
+    try std.testing.expect(expected_segments.next() == null);
+    try std.testing.expect(actual_segments.next() == null);
 }
 
 test "EMF+ DrawEllipse parses floating rectangle without normalizing float bits" {
