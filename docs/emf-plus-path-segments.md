@@ -16,7 +16,7 @@
 
 `next`는 command iterator와 pending closure를 복사한 뒤 결과 전체가 준비된 경우에만 상태를 교체합니다. Move를 건너뛴 뒤 잘린 Bézier·잘못된 type·개수 오류가 발생해도 좌표 cursor, PointR 누적, RLE run, figure 상태와 pending closure가 모두 원복됩니다. 원래 segment를 반환한 뒤에는 closure가 메모리에 보존되므로 source를 더 읽지 않고 정확히 한 번 반환합니다. 입력을 빌리고 할당하지 않습니다.
 
-이 계층은 명시적으로 닫힌 figure의 topology만 구현합니다. FillPath가 열린 figure도 채울 때 적용하는 암묵적 직선은 별도 [Path fill boundary 계층](emf-plus-path-fill-segments.md)이 소유하고 [Path device segment 계층](emf-plus-path-device-segments.md)이 Line·Bézier·closure 역할과 metadata를 보존해 일반 world/page/device 변환을 적용합니다. DashMode 적용, marker 소비, clipping, fill rule, Pen cap/join, 곡선 평가·flattening, rasterization과 저장은 후속 범위입니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 0개라 실제 한컴 렌더링 동등성은 주장하지 않습니다.
+이 계층은 명시적으로 닫힌 figure의 topology만 구현합니다. FillPath가 열린 figure도 채울 때 적용하는 암묵적 직선은 별도 [Path fill boundary 계층](emf-plus-path-fill-segments.md)이 소유하고 [Path device segment 계층](emf-plus-path-device-segments.md)이 Line·Bézier·closure 역할과 metadata를 보존해 일반 world/page/device 변환을 적용하며 [공용 cubic evaluator](emf-plus-cubic-evaluation.md)가 Bézier 점을 계산합니다. DashMode 적용, marker 소비, clipping, fill rule, Pen cap/join, flattening, rasterization과 저장은 후속 범위입니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 0개라 실제 한컴 렌더링 동등성은 주장하지 않습니다.
 
 ## 검증 기록
 

@@ -93,6 +93,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - [EMF+ DrawLines·FillPolygon device-space 선분](emf-plus-polyline-device-segments.md)
 - [EMF+ 연결 cubic Bézier 조립](emf-plus-bezier-geometry.md)
 - [EMF+ DrawBeziers device-space segment](emf-plus-bezier-device-segments.md)
+- [EMF+ Cubic Bézier evaluation](emf-plus-cubic-evaluation.md)
 - [EMF+ cardinal spline span 조립](emf-plus-cardinal-spans.md)
 - [EMF+ cardinal spline device-space span](emf-plus-cardinal-device-spans.md)
 - [EMF+ Path와 가변 좌표·RLE point types](emf-plus-path-object.md)

@@ -14,7 +14,7 @@
 
 ## 지원 경계
 
-이 계층은 cubic topology까지만 구현하고 [Bézier device segment 계층](emf-plus-bezier-device-segments.md)이 네 역할에 일반 world/page/device 변환을 적용합니다. Bézier 평가·flattening, clipping, Pen width/cap/join, anti-aliasing·rasterization과 저장은 후속 범위입니다. `EmfPlusPath`의 point type 배열과 개별 subpath는 별도 geometry 조립이 필요하므로 이 API에 섞지 않습니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 0개라 실제 한컴 렌더링 동등성도 주장하지 않습니다.
+이 계층은 cubic topology까지만 구현하고 [Bézier device segment 계층](emf-plus-bezier-device-segments.md)이 네 역할에 일반 world/page/device 변환을 적용하며 [공용 cubic evaluator](emf-plus-cubic-evaluation.md)가 단일 parameter 점을 계산합니다. flattening, clipping, Pen width/cap/join, anti-aliasing·rasterization과 저장은 후속 범위입니다. `EmfPlusPath`의 point type 배열과 개별 subpath는 별도 geometry 조립이 필요하므로 이 API에 섞지 않습니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 0개라 실제 한컴 렌더링 동등성도 주장하지 않습니다.
 
 ## 검증 기록
 

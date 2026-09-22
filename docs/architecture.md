@@ -60,7 +60,7 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ world·page·device 좌표 계층](emf-plus-world-page-device.md)은 일반 graphics state의 world transform을 먼저 적용하고 page의 비대칭 device scale을 뒤에 적용합니다. unknown world/page는 추정하지 않으며 SetTSGraphics의 별도 WorldToDevice와 개별 geometry 순회·clip·rasterization은 후속 책임으로 남깁니다.
 
-[EMF+ Bézier device segment 계층](emf-plus-bezier-device-segments.md)은 기존 cubic topology의 네 역할을 일반 world·page·device mapper에 연결합니다. record parser·상대좌표 누적·topology·좌표 산술을 복제하지 않으며 곡선 평가와 stroke/rasterization은 후속 책임입니다.
+[EMF+ Bézier device segment 계층](emf-plus-bezier-device-segments.md)은 기존 cubic topology의 네 역할을 일반 world·page·device mapper에 연결합니다. [공용 cubic evaluator](emf-plus-cubic-evaluation.md)는 DrawBeziers와 Path device cubic을 같은 de Casteljau 식으로 평가합니다. record parser·상대좌표 누적·topology·좌표 산술을 복제하지 않으며 flattening과 stroke/rasterization은 후속 책임입니다.
 
 [EMF+ Image 계층](emf-plus-image-object.md)은 Image dispatch, Bitmap, indexed Palette, Metafile payload를 분리합니다. raw pixel에서만 format·stride·palette·크기를 검증하고 compressed payload와 중첩 metafile은 원문을 보존합니다. 이미지 시그니처나 바이트 모양으로 명시된 wire type을 자동 교정하지 않습니다.
 
@@ -94,7 +94,7 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ DrawArc record 계층](emf-plus-draw-arc-record.md)은 drawing record 공용 C/ObjectID flags, Rect/RectF 선택과 두 각도를 분리합니다. stream은 기존 Object Table에서 Pen 존재·타입을 확인하고 payload parser는 렌더링 modulo·clamp를 수행하지 않습니다.
 
-[EMF+ DrawBeziers record 계층](emf-plus-draw-beziers-record.md)은 Path와 공유하는 Point/PointR iterator 위에서 P/C별 PointData를 선택합니다. stream은 Pen 참조만 연결하며 상대좌표 누적과 연결 cubic topology는 공용 geometry 계층, 곡선 평가·stroke는 후속 renderer 계층에 둡니다.
+[EMF+ DrawBeziers record 계층](emf-plus-draw-beziers-record.md)은 Path와 공유하는 Point/PointR iterator 위에서 P/C별 PointData를 선택합니다. stream은 Pen 참조만 연결하며 상대좌표 누적과 연결 cubic topology는 공용 geometry 계층, 단일 parameter 점은 공용 cubic evaluator, flattening·stroke는 후속 renderer 계층에 둡니다.
 
 [EMF+ DrawClosedCurve record 계층](emf-plus-draw-closed-curve-record.md)은 FillClosedCurve와 공통인 Tension·최소 Count 3·PointData 위에 Pen 참조를 조립합니다. stream은 Pen 참조만 연결하며 닫힌 span topology는 공용 geometry 계층, cardinal tangent·곡선 평가는 후속 renderer 계층에 둡니다.
 
