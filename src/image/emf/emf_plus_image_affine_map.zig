@@ -3,21 +3,32 @@ const image_parallelogram = @import("emf_plus_image_parallelogram.zig");
 const resolved = @import("emf_plus_resolved_point_data.zig");
 const transform_matrix = @import("emf_plus_transform_matrix.zig");
 
+pub const DestinationBasis = struct {
+    upper_left: geometry.PointF,
+    upper_right: geometry.PointF,
+    lower_left: geometry.PointF,
+};
+
 pub fn build(source: geometry.RectF, destination: image_parallelogram.Parallelogram) transform_matrix.TransformMatrix {
-    const upper_left = resolved.toPointF(destination.upper_left);
-    const upper_right = resolved.toPointF(destination.upper_right);
-    const lower_left = resolved.toPointF(destination.lower_left);
-    const m11 = (upper_right.x - upper_left.x) / source.width;
-    const m12 = (upper_right.y - upper_left.y) / source.width;
-    const m21 = (lower_left.x - upper_left.x) / source.height;
-    const m22 = (lower_left.y - upper_left.y) / source.height;
+    return buildFromBasis(source, .{
+        .upper_left = resolved.toPointF(destination.upper_left),
+        .upper_right = resolved.toPointF(destination.upper_right),
+        .lower_left = resolved.toPointF(destination.lower_left),
+    });
+}
+
+pub fn buildFromBasis(source: geometry.RectF, destination: DestinationBasis) transform_matrix.TransformMatrix {
+    const m11 = (destination.upper_right.x - destination.upper_left.x) / source.width;
+    const m12 = (destination.upper_right.y - destination.upper_left.y) / source.width;
+    const m21 = (destination.lower_left.x - destination.upper_left.x) / source.height;
+    const m22 = (destination.lower_left.y - destination.upper_left.y) / source.height;
     return .{
         .m11 = m11,
         .m12 = m12,
         .m21 = m21,
         .m22 = m22,
-        .dx = upper_left.x - source.x * m11 - source.y * m21,
-        .dy = upper_left.y - source.x * m12 - source.y * m22,
+        .dx = destination.upper_left.x - source.x * m11 - source.y * m21,
+        .dy = destination.upper_left.y - source.x * m12 - source.y * m22,
     };
 }
 

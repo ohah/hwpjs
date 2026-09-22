@@ -20,7 +20,7 @@ stream은 Flags의 Image ObjectID를 항상 존재하는 ObjectTypeImage로 확�
 
 ## 미지원 경계와 검증 기록
 
-현재 로컬 HWP corpus에는 EMF+ signature가 없어 실제 한컴 DrawImage 표본과 렌더링 결과는 관측하지 못했습니다. 구현 범위는 wire 구조, 두 객체 참조, source/destination rectangle과 stream/framing 연결입니다. 이미지 복호화 연결, cropping·scaling, ImageAttributes 효과 적용, transform·clipping, 재생과 저장은 미구현입니다.
+현재 로컬 HWP corpus에는 EMF+ signature가 없어 실제 한컴 DrawImage 표본과 렌더링 결과는 관측하지 못했습니다. 구현 범위는 wire 구조, 두 객체 참조, source/destination rectangle, stream/framing 연결과 [rectangle source→device 좌표 map](emf-plus-image-rect-device-map.md)입니다. 이미지 복호화 연결, crop·sampling, ImageAttributes 효과 적용, clipping, 재생·rasterization과 저장은 미구현입니다.
 
 합성 fixture는 C 양쪽 형식, Image ID 0·63·64, attributes ID 0·63·64·고위 원값, Pixel 외 모든 UnitType과 음수 원값, 서로 구별되는 source/destination 좌표, 비유한 float, 양쪽 형식의 모든 0~41바이트 slice 길이, 독립 Size/DataSize/slice 불일치, Image 및 조건부 ImageAttributes 존재·타입·부재, stream 집계·overflow 원자성과 실제 EMF framing 연결을 검사합니다.
 

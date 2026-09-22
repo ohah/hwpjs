@@ -2,7 +2,7 @@
 
 ## 범위와 단일 출처
 
-`src/image/emf/emf_plus_image_source_device_map.zig`는 DrawImagePoints의 source 좌표를 destination/world 좌표로 보내는 [image affine map](emf-plus-image-affine-map.md)과 [일반 world·page·device mapper](emf-plus-world-page-device.md)를 순서대로 적용합니다. SrcRect→destination 행렬 계수는 affine 계층, world transform과 page/device scale은 공용 mapper가 각각 소유하며 이 계층은 두 결과를 다음 순서로만 연결합니다.
+`src/image/emf/emf_plus_image_source_device_map.zig`는 image source 좌표를 destination/world 좌표로 보내는 [image affine map](emf-plus-image-affine-map.md)과 [일반 world·page·device mapper](emf-plus-world-page-device.md)를 순서대로 적용합니다. SrcRect→destination 행렬 계수는 affine 계층, world transform과 page/device scale은 공용 mapper가 각각 소유하며 이 계층은 두 결과를 다음 순서로만 연결합니다.
 
 ```text
 world  = source_to_world.mapPoint(source)
@@ -11,11 +11,11 @@ device = world_page_device.mapPoint(world)
 
 두 행렬을 미리 합성하거나 device-space destination으로 affine 행렬을 다시 만들지 않습니다. f32에서 연산 결합 순서를 바꾸면 일반 유한값의 반올림과 signed zero·NaN·무한대 결과가 달라질 수 있으므로 source affine, world transform, page scale의 단계 순서를 보존합니다.
 
-`DrawImagePoints.sourceToDeviceMapper()`는 기존 source rectangle과 [destination parallelogram](emf-plus-image-parallelogram.md)을 이 공용 builder에 전달합니다. wire parser나 record wrapper가 affine 공식과 좌표 변환을 다시 구현하지 않습니다.
+`DrawImagePoints.sourceToDeviceMapper()`는 기존 source rectangle과 [destination parallelogram](emf-plus-image-parallelogram.md)을, [DrawImage rectangle adapter](emf-plus-image-rect-device-map.md)는 rectangle에서 만든 공용 affine transform을 이 builder에 전달합니다. wire parser나 record wrapper가 affine 공식과 좌표 변환을 다시 구현하지 않습니다.
 
 ## 지원 경계
 
-이 계층은 source point에서 device point까지의 좌표 map만 구현합니다. source crop과 픽셀 sampling, ImageAttributes와 선행 image effect, clipping, interpolation·pixel-offset·compositing, rasterization과 저장은 미구현입니다. DrawImage의 rectangle destination은 별도 record 경로이며 이 API에 합치지 않습니다. SetTSGraphics의 WorldToDevice도 일반 graphics state와 의미가 같다는 근거 없이 적용하지 않습니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 픽셀 출력 동등성을 주장하지 않습니다.
+이 계층은 source point에서 device point까지의 좌표 map만 구현합니다. source crop과 픽셀 sampling, ImageAttributes와 선행 image effect, clipping, interpolation·pixel-offset·compositing, rasterization과 저장은 미구현입니다. SetTSGraphics의 WorldToDevice도 일반 graphics state와 의미가 같다는 근거 없이 적용하지 않습니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 픽셀 출력 동등성을 주장하지 않습니다.
 
 ## 검증 기록
 

@@ -147,6 +147,7 @@ test {
     _ = @import("image/emf/emf_plus_image_parallelogram.zig");
     _ = @import("image/emf/emf_plus_image_affine_map.zig");
     _ = @import("image/emf/emf_plus_image_source_device_map.zig");
+    _ = @import("image/emf/emf_plus_image_rect_device_map.zig");
     _ = @import("image/emf/emf_plus_world_page_device.zig");
     _ = @import("image/emf/emf_plus_object.zig");
     _ = @import("image/emf/emf_plus_stream.zig");

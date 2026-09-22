@@ -44,6 +44,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ DrawImagePoints source→device map 계층](emf-plus-image-source-device-map.md)은 source affine 결과에 일반 world transform과 page/device scale을 순차 적용합니다. f32 단계 순서를 보존해 행렬을 미리 합성하지 않으며 crop·sampling·effect·clip·rasterization은 후속 책임입니다.
 
+[EMF+ DrawImage rectangle source→device map 계층](emf-plus-image-rect-device-map.md)은 공용 RectData 변환으로 destination의 세 basis 역할을 만들고 기존 image affine 및 source→device 계층에 위임합니다. rectangle 산술·affine 공식·world/page/device 순서를 복제하지 않으며 실제 image sampling과 replay는 후속 책임입니다.
+
 [EMF+ world·page·device 좌표 계층](emf-plus-world-page-device.md)은 일반 graphics state의 world transform을 먼저 적용하고 page의 비대칭 device scale을 뒤에 적용합니다. unknown world/page는 추정하지 않으며 SetTSGraphics의 별도 WorldToDevice와 개별 geometry 순회·clip·rasterization은 후속 책임으로 남깁니다.
 
 [EMF+ Bézier device segment 계층](emf-plus-bezier-device-segments.md)은 기존 cubic topology의 네 역할을 일반 world·page·device mapper에 연결합니다. record parser·상대좌표 누적·topology·좌표 산술을 복제하지 않으며 곡선 평가와 stroke/rasterization은 후속 책임입니다.

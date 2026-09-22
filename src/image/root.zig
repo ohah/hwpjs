@@ -258,6 +258,7 @@ pub const emf_plus_path_device_segments = @import("emf/emf_plus_path_device_segm
 pub const emf_plus_image_parallelogram = @import("emf/emf_plus_image_parallelogram.zig");
 pub const emf_plus_image_affine_map = @import("emf/emf_plus_image_affine_map.zig");
 pub const emf_plus_image_source_device_map = @import("emf/emf_plus_image_source_device_map.zig");
+pub const emf_plus_image_rect_device_map = @import("emf/emf_plus_image_rect_device_map.zig");
 pub const emf_plus_world_page_device = @import("emf/emf_plus_world_page_device.zig");
 pub const emf_plus_draw_beziers = @import("emf/emf_plus_draw_beziers.zig");
 pub const emf_plus_draw_closed_curve = @import("emf/emf_plus_draw_closed_curve.zig");

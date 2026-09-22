@@ -2,9 +2,14 @@ const std = @import("std");
 const binary = @import("../../binary/reader.zig");
 const geometry = @import("emf_plus_geometry.zig");
 const image_attributes_id = @import("emf_plus_image_attributes_id.zig");
+const image_rect_device_map = @import("emf_plus_image_rect_device_map.zig");
+const image_source_device_map = @import("emf_plus_image_source_device_map.zig");
+const page_transform = @import("emf_plus_page_transform.zig");
 const record = @import("emf_plus_record.zig");
 const record_flags = @import("emf_plus_record_flags.zig");
 const rect_data = @import("emf_plus_rect_data.zig");
+const transform_matrix = @import("emf_plus_transform_matrix.zig");
+const world_page_device = @import("emf_plus_world_page_device.zig");
 
 pub const DrawImage = struct {
     flags: u16,
@@ -13,6 +18,14 @@ pub const DrawImage = struct {
     image_attributes: image_attributes_id.ImageAttributesId,
     source_rectangle: geometry.RectF,
     destination_rectangle: rect_data.RectData,
+
+    pub fn sourceToDestinationTransform(self: DrawImage) transform_matrix.TransformMatrix {
+        return image_rect_device_map.sourceToDestinationTransform(self.source_rectangle, self.destination_rectangle);
+    }
+
+    pub fn sourceToDeviceMapper(self: DrawImage, mapping: world_page_device.Mapper) image_source_device_map.Mapper {
+        return image_rect_device_map.build(self.source_rectangle, self.destination_rectangle, mapping);
+    }
 };
 
 pub fn parse(value: record.Record) !DrawImage {
@@ -94,6 +107,27 @@ test "EMF+ DrawImage parses floating destination and preserves absent attributes
     try std.testing.expectEqual(@as(f32, 4), value.source_rectangle.height);
     try std.testing.expectEqual(@as(f32, 5.25), value.destination_rectangle.float.x);
     try std.testing.expectEqual(@as(f32, -8), value.destination_rectangle.float.height);
+}
+
+test "EMF+ DrawImage exposes shared rectangle affine and device maps" {
+    var bytes = [_]u8{0} ** 32;
+    putU32(&bytes, 0, 0xffff_ffff);
+    putU32(&bytes, 4, 2);
+    for ([_]f32{ 10, 20, 4, 5 }, 0..) |coordinate, index| putF32(&bytes, 8 + index * 4, coordinate);
+    for ([_]i16{ 100, 200, 8, 15 }, 0..) |coordinate, index|
+        std.mem.writeInt(i16, bytes[24 + index * 2 ..][0..2], coordinate, .little);
+    const value = try parse(makeRecord(&bytes, 0x4000));
+    const affine = value.sourceToDestinationTransform();
+    try std.testing.expectEqual(geometry.PointF{ .x = 100, .y = 200 }, affine.mapPoint(.{ .x = 10, .y = 20 }));
+    try std.testing.expectEqual(geometry.PointF{ .x = 108, .y = 215 }, affine.mapPoint(.{ .x = 14, .y = 25 }));
+
+    const page = page_transform.build(.pixel, 2, .{ .x = 96, .y = 96 });
+    const mapping = world_page_device.resolve(transform_matrix.TransformMatrix.translation(10, 20), page).?;
+    const mapper = value.sourceToDeviceMapper(mapping);
+    try std.testing.expectEqual(geometry.PointF{ .x = 220, .y = 440 }, mapper.mapSourcePoint(.{ .x = 10, .y = 20 }));
+    try std.testing.expectEqual(geometry.PointF{ .x = 236, .y = 440 }, mapper.mapSourcePoint(.{ .x = 14, .y = 20 }));
+    try std.testing.expectEqual(geometry.PointF{ .x = 220, .y = 470 }, mapper.mapSourcePoint(.{ .x = 10, .y = 25 }));
+    try std.testing.expectEqual(geometry.PointF{ .x = 236, .y = 470 }, mapper.mapSourcePoint(.{ .x = 14, .y = 25 }));
 }
 
 test "EMF+ DrawImage rejects unit type ObjectID and every independent size mismatch" {

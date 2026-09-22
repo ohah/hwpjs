@@ -2,7 +2,7 @@
 
 ## 범위와 단일 출처
 
-`src/image/emf/emf_plus_image_affine_map.zig`는 DrawImagePoints의 `SrcRect`를 destination parallelogram으로 보내는 단일 affine transform을 조립합니다. [parallelogram 계층](emf-plus-image-parallelogram.md)이 upper-left·upper-right·lower-left 역할과 네 번째 점을, `emf_plus_transform_matrix.zig`가 GDI+ row-vector 행렬과 점 적용을 소유합니다. `DrawImagePoints.sourceToDestinationTransform()`은 이 두 계층을 연결할 뿐 계산을 복제하지 않습니다.
+`src/image/emf/emf_plus_image_affine_map.zig`는 source `RectF`를 upper-left·upper-right·lower-left destination basis로 보내는 단일 affine transform을 조립합니다. [parallelogram 계층](emf-plus-image-parallelogram.md)이 DrawImagePoints의 세 역할과 네 번째 점을, [rectangle adapter](emf-plus-image-rect-device-map.md)가 DrawImage destination rectangle의 세 역할을 만들며, `emf_plus_transform_matrix.zig`가 GDI+ row-vector 행렬과 점 적용을 소유합니다. 두 record의 공개 연결은 공용 `buildFromBasis()`에 위임할 뿐 계산을 복제하지 않습니다.
 
 [MS-EMFPLUS EmfPlusDrawImagePoints](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/9bad3867-71b0-46fb-9b90-f7d8fb37ff76)는 source rectangle이 세 destination point가 정하는 parallelogram에 맞게 scale·shear된다고 정의합니다. [GDI+ DrawImage의 RectF/Matrix overload](https://learn.microsoft.com/en-us/windows/win32/api/gdiplusgraphics/nf-gdiplusgraphics-graphics-drawimage%28image_rectf_matrix_effect_imageattributes_unit%29)는 source rectangle에 affine transform을 적용해 destination parallelogram을 만든다고 설명합니다. 행렬 계수의 배치는 [GDI+ Matrix 생성자](https://learn.microsoft.com/en-us/windows/win32/api/gdiplusmatrix/nf-gdiplusmatrix-matrix-matrix%28real_real_real_real_real_real%29)와 [row-vector 표현](https://learn.microsoft.com/en-us/windows/win32/gdiplus/-gdiplus-matrix-representation-of-transformations-about)을 따릅니다.
 
