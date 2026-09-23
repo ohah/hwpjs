@@ -1008,6 +1008,37 @@ test "HWPX layout-only paragraph keeps its real section diagnostic" {
     try std.testing.expectEqual(@as(usize, 1), report.issues());
 }
 
+const SectionAttributeCount = struct { present: usize = 0, empty: usize = 0 };
+const section_paragraph_fields = [_][]const u8{ "id", "paraPrIDRef", "styleIDRef", "pageBreak" };
+const section_run_fields = [_][]const u8{ "charPrIDRef", "charTcId" };
+
+fn sectionAttributeDigest(a: std.mem.Allocator, parsed: *const package.SectionTree, counts: *[6]SectionAttributeCount) !u256 {
+    var hash = std.crypto.hash.sha2.Sha256.init(.{});
+    for (parsed.elements, 0..) |node, index| {
+        const marker: u8 = if (node.is("http://www.hancom.co.kr/hwpml/2011/paragraph", "p")) 'P' else if (node.is("http://www.hancom.co.kr/hwpml/2011/paragraph", "run")) 'R' else continue;
+        hash.update(&.{marker});
+        const fields: []const []const u8 = if (marker == 'P') &section_paragraph_fields else &section_run_fields;
+        const base: usize = if (marker == 'P') 0 else section_paragraph_fields.len;
+        for (fields, 0..) |field, offset| {
+            const value = try parsed.attributeValue(a, index, "", field);
+            if (value) |present| {
+                counts[base + offset].present += 1;
+                const bytes = try present.toUtf8(a, 4096);
+                defer a.free(bytes);
+                counts[base + offset].empty += @intFromBool(bytes.len == 0);
+                hash.update(&.{1});
+                var length: [4]u8 = undefined;
+                std.mem.writeInt(u32, &length, @intCast(bytes.len), .little);
+                hash.update(&length);
+                hash.update(bytes);
+            } else hash.update(&.{0});
+        }
+    }
+    var output: [32]u8 = undefined;
+    hash.final(&output);
+    return std.mem.readInt(u256, &output, .big);
+}
+
 fn surveySectionTreeShard(shard: usize) !void {
     const a = std.testing.allocator;
     const roots = [_][]const u8{ "legacy/rust/crates/hwp-core/tests/fixtures", "reference/rhwp/samples" };
@@ -1016,6 +1047,8 @@ fn surveySectionTreeShard(shard: usize) !void {
     var encrypted: usize = 0;
     var sections: usize = 0;
     var elements: usize = 0;
+    var attribute_digest_sum: u256 = 0;
+    var attribute_counts: [6]SectionAttributeCount = @splat(.{});
     for (roots, 0..) |root, root_index| {
         const dir = try std.Io.Dir.cwd().openDir(std.testing.io, root, .{ .iterate = true });
         defer dir.close(std.testing.io);
@@ -1089,12 +1122,13 @@ fn surveySectionTreeShard(shard: usize) !void {
                 }
                 try std.testing.expectEqual(parsed.elements.len - 1, child_edges);
                 try std.testing.expectEqual(child_edges, linked_children);
+                attribute_digest_sum +%= try sectionAttributeDigest(a, &parsed, &attribute_counts);
                 sections += 1;
                 elements += parsed.elements.len;
             }
         }
     }
-    std.debug.print("HWPX section tree shard={d} accepted={d} rejected_zip={d} encrypted={d} sections={d} elements={d}\n", .{ shard, accepted, rejected_zip, encrypted, sections, elements });
+    std.debug.print("HWPX section tree shard={d} accepted={d} rejected_zip={d} encrypted={d} sections={d} elements={d} attribute_digest={x:0>64}\n", .{ shard, accepted, rejected_zip, encrypted, sections, elements, attribute_digest_sum });
     const expected_accepted = [_]usize{ 64, 68, 56, 49, 61, 59, 58, 61 };
     const expected_rejected_zip = [_]usize{ 1, 3, 0, 2, 0, 0, 0, 0 };
     const expected_encrypted = [_]usize{ 0, 0, 0, 0, 2, 0, 0, 0 };
@@ -1105,6 +1139,17 @@ fn surveySectionTreeShard(shard: usize) !void {
     try std.testing.expectEqual(expected_encrypted[shard], encrypted);
     try std.testing.expectEqual(expected_sections[shard], sections);
     try std.testing.expectEqual(expected_elements[shard], elements);
+    const expected_attribute_digests = [_][]const u8{
+        "5ced297d6b1c07d9e25be09e97daf368bbe59560a2e9a74e38ade5273bc73b5f",
+        "df702c97c12bf3a1ee49b49a825ad3c79ac1b29000668b96ae902534cdf56549",
+        "694ab231cf11bb7e0a507d7edfb1d905f60d50a7bc8cd2bbcfb375f86162c0ee",
+        "2eb64287e29560d8b70177fd2ea37aec6d2a381bb76d5fadc20951d9792a6126",
+        "67bca3b92aba6577e493059c1307221a17e1b5745411e5ae29d6bb74be1c5010",
+        "d1ff87b118764aea1a09a48e1d3f129baca99d8166bf5b91fdd80872dbfe4024",
+        "a278ae890bf1e5858a610947c532596ab3fbd20db726d994a6ccaf59dc1dcadf",
+        "bc0e3f22b0d5c2b5a00f017a7df8e2431d5da532bf53a36bdb817ec37259b4ce",
+    };
+    try std.testing.expectEqual(try std.fmt.parseInt(u256, expected_attribute_digests[shard], 16), attribute_digest_sum);
 }
 
 test "HWPX corpus section tree shard 0" {

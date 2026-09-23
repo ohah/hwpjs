@@ -45,6 +45,45 @@ test "HWPX section tree owns all XML nodes and exact source spans" {
     try std.testing.expect(parsed.elements[3].end_tag != null);
 }
 
+test "HWPX section tree attributes preserve absence empty values and namespace scope" {
+    const a = std.testing.allocator;
+    const source = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph' xmlns:a='urn:outer' xmlns='urn:default' plain='root'>" ++
+        "<p:p xmlns:a='urn:inner' plain='' ref='local' a:ref='&#49;&amp;' xml:lang='ko'/>" ++
+        "<p:p a:ref='outer'/>" ++
+        "</s:sec>";
+    var parsed = try tree.parse(a, source, 0, 0, .{});
+    defer parsed.deinit(a);
+    try std.testing.expectEqual(@as(usize, 3), parsed.elements.len);
+    try std.testing.expectError(error.InvalidElementIndex, parsed.attributeValue(a, 3, "", "plain"));
+    const empty = (try parsed.attributeValue(a, 1, "", "plain")).?;
+    try std.testing.expectEqualStrings("''", empty.raw);
+    const empty_utf8 = try empty.toUtf8(a, 16);
+    defer a.free(empty_utf8);
+    try std.testing.expectEqualStrings("", empty_utf8);
+    try std.testing.expect((try parsed.attributeValue(a, 2, "", "plain")) == null);
+    try std.testing.expect((try parsed.attributeValue(a, 1, "urn:outer", "ref")) == null);
+    try std.testing.expect((try parsed.attributeValue(a, 1, "urn:default", "plain")) == null);
+    const local_ref = (try parsed.attributeValue(a, 1, "", "ref")).?;
+    const local_ref_utf8 = try local_ref.toUtf8(a, 16);
+    defer a.free(local_ref_utf8);
+    try std.testing.expectEqualStrings("local", local_ref_utf8);
+    try std.testing.expect((try parsed.attributeValue(a, 1, "urn:inner", "plain")) == null);
+    const inner = (try parsed.attributeValue(a, 1, "urn:inner", "ref")).?;
+    try std.testing.expectEqualStrings("'&#49;&amp;'", inner.raw);
+    const inner_utf8 = try inner.toUtf8(a, 16);
+    defer a.free(inner_utf8);
+    try std.testing.expectEqualStrings("1&", inner_utf8);
+    const language = (try parsed.attributeValue(a, 1, "http://www.w3.org/XML/1998/namespace", "lang")).?;
+    const language_utf8 = try language.toUtf8(a, 16);
+    defer a.free(language_utf8);
+    try std.testing.expectEqualStrings("ko", language_utf8);
+    const outer = (try parsed.attributeValue(a, 2, "urn:outer", "ref")).?;
+    const outer_utf8 = try outer.toUtf8(a, 16);
+    defer a.free(outer_utf8);
+    try std.testing.expectEqualStrings("outer", outer_utf8);
+    try std.testing.expect((try parsed.attributeValue(a, 1, "http://www.w3.org/2000/xmlns/", "a")) == null);
+}
+
 test "HWPX section tree selects a spine section and survives archive release" {
     const a = std.testing.allocator;
     const hpf = "<p:package xmlns:p=\"http://www.idpf.org/2007/opf/\"><p:manifest>" ++
@@ -69,6 +108,10 @@ test "HWPX section tree selects a spine section and survives archive release" {
     try std.testing.expectEqualStrings(section, parsed.source);
     try std.testing.expectEqual(@as(usize, 0), parsed.section_ordinal);
     try std.testing.expect(parsed.elements[0].is(section_uri, "sec"));
+    const id = (try parsed.attributeValue(a, 1, "", "id")).?;
+    const id_utf8 = try id.toUtf8(a, 16);
+    defer a.free(id_utf8);
+    try std.testing.expectEqualStrings("1", id_utf8);
 }
 
 test "HWPX section tree rejects roots, malformed source and exact limits" {
@@ -88,7 +131,7 @@ test "HWPX section tree spans remain raw UTF16 for both byte orders" {
     const a = std.testing.allocator;
     inline for (.{ std.builtin.Endian.little, std.builtin.Endian.big }) |order| {
         const name = if (order == .little) "UTF-16LE" else "UTF-16BE";
-        const ascii = "<?xml version='1.0' encoding='" ++ name ++ "'?><s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section'><x/></s:sec>";
+        const ascii = "<?xml version='1.0' encoding='" ++ name ++ "'?><s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section'><x id='&#49;'/></s:sec>";
         const raw = try a.alloc(u8, 2 + ascii.len * 2);
         defer a.free(raw);
         @memcpy(raw[0..2], if (order == .little) "\xff\xfe" else "\xfe\xff");
@@ -99,7 +142,11 @@ test "HWPX section tree spans remain raw UTF16 for both byte orders" {
         try std.testing.expectEqual(@as(usize, 2), parsed.elements.len);
         try std.testing.expect(parsed.elements[0].is(section_uri, "sec"));
         try std.testing.expect(parsed.elements[1].is("", "x"));
-        try std.testing.expectEqualStrings(if (order == .little) "<\x00x\x00/\x00>\x00" else "\x00<\x00x\x00/\x00>", parsed.sourceOf(1));
+        try std.testing.expectEqual(@as(usize, 2 * "<x id='&#49;'/>".len), parsed.sourceOf(1).len);
+        const id = (try parsed.attributeValue(a, 1, "", "id")).?;
+        const id_utf8 = try id.toUtf8(a, 16);
+        defer a.free(id_utf8);
+        try std.testing.expectEqualStrings("1", id_utf8);
     }
 }
 
@@ -111,4 +158,19 @@ test "HWPX section tree cleans up on every allocation failure" {
             try std.testing.expectEqual(@as(usize, 10), parsed.elements.len);
         }
     }.run, .{});
+}
+
+test "HWPX section tree attribute lookup cleans up on every allocation failure" {
+    const a = std.testing.allocator;
+    const source = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph' xmlns:a='urn:outer'><p:p xmlns:a='urn:inner' a:ref='&#49;&amp;'/></s:sec>";
+    var parsed = try tree.parse(a, source, 0, 0, .{});
+    defer parsed.deinit(a);
+    try std.testing.checkAllAllocationFailures(a, struct {
+        fn run(allocator: std.mem.Allocator, parsed_tree: *const tree.Tree) !void {
+            const value = (try parsed_tree.attributeValue(allocator, 1, "urn:inner", "ref")).?;
+            const text = try value.toUtf8(allocator, 16);
+            defer allocator.free(text);
+            try std.testing.expectEqualStrings("1&", text);
+        }
+    }.run, .{&parsed});
 }

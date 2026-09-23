@@ -54,6 +54,13 @@ pub const Tree = struct {
         const element = self.elements[index];
         return self.source[element.start_tag.start..element.end];
     }
+
+    /// Returns the original XML value of one expanded attribute. Null means
+    /// absent; an empty value remains present. The value borrows Tree.source
+    /// and can be normalized with Value.toUtf8 while the tree remains alive.
+    pub fn attributeValue(self: *const Tree, a: std.mem.Allocator, index: usize, uri: []const u8, local: []const u8) !?xml.attribute_value.Value {
+        return @import("section_tree_attributes.zig").find(a, self, index, uri, local);
+    }
 };
 
 const Builder = struct {

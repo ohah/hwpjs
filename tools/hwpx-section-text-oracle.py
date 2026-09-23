@@ -5,6 +5,7 @@ Zig parser. It compares counts and UTF-8 content sizes, not XML event chunks or
 visual rendering. Local reference/rhwp samples are intentionally not vendored.
 """
 
+import hashlib
 import json
 from collections import Counter
 from pathlib import Path
@@ -43,6 +44,11 @@ OTHER_CONTENT = {
 MAX_PACKAGE_BYTES = 25_000_000
 MAX_SECTION_BYTES = 128 * 1024 * 1024
 MAX_MANIFEST_BYTES = 2 * 1024 * 1024
+ATTRIBUTE_FIELDS = {
+    PARAGRAPH + "p": (b"P", ("id", "paraPrIDRef", "styleIDRef", "pageBreak")),
+    PARAGRAPH + "run": (b"R", ("charPrIDRef", "charTcId")),
+}
+HASH_MODULUS = 1 << 256
 
 
 def bounded_read(archive: ZipFile, name: str, limit: int) -> bytes:
@@ -54,6 +60,29 @@ def bounded_read(archive: ZipFile, name: str, limit: int) -> bytes:
     if len(data) > limit:
         raise ValueError("HWPX oracle entry limit exceeded")
     return data
+
+
+def section_attribute_digest(section: ET.Element, counts: dict) -> int:
+    digest = hashlib.sha256()
+    for node in section.iter():
+        spec = ATTRIBUTE_FIELDS.get(node.tag)
+        if spec is None:
+            continue
+        marker, fields = spec
+        digest.update(marker)
+        for field in fields:
+            value = node.get(field)
+            key = marker.decode("ascii") + "." + field
+            if value is None:
+                digest.update(b"\x00")
+                continue
+            counts[key]["present"] += 1
+            counts[key]["empty"] += value == ""
+            encoded = value.encode("utf-8")
+            digest.update(b"\x01")
+            digest.update(len(encoded).to_bytes(4, "little"))
+            digest.update(encoded)
+    return int.from_bytes(digest.digest(), "big")
 
 
 def inspect_text(node: ET.Element, parent: str, result: dict, inside_text: bool = False) -> None:
@@ -130,14 +159,25 @@ def self_check() -> None:
     )
     inspect_text(layout_only, "", result)
     assert result["paragraphs_without_direct_run"] == 1
+    empty = ET.fromstring('<p:p xmlns:p="http://www.hancom.co.kr/hwpml/2011/paragraph" id=""/>')
+    absent = ET.fromstring('<p:p xmlns:p="http://www.hancom.co.kr/hwpml/2011/paragraph"/>')
+    counts = {"P." + field: {"present": 0, "empty": 0} for field in ATTRIBUTE_FIELDS[PARAGRAPH + "p"][1]}
+    counts.update({"R." + field: {"present": 0, "empty": 0} for field in ATTRIBUTE_FIELDS[PARAGRAPH + "run"][1]})
+    assert section_attribute_digest(empty, counts) != section_attribute_digest(absent, counts)
+    assert counts["P.id"] == {"present": 1, "empty": 1}
 
 
 def main() -> None:
     self_check()
     tree_shards = [
-        {"accepted": 0, "rejected_zip": 0, "encrypted": 0, "sections": 0, "elements": 0}
+        {"accepted": 0, "rejected_zip": 0, "encrypted": 0, "sections": 0, "elements": 0, "attribute_digest_sum": 0}
         for _ in range(8)
     ]
+    attribute_counts = {
+        marker.decode("ascii") + "." + field: {"present": 0, "empty": 0}
+        for marker, fields in ATTRIBUTE_FIELDS.values()
+        for field in fields
+    }
     result = {
         "accepted": 0,
         "rejected_zip": 0,
@@ -197,6 +237,9 @@ def main() -> None:
                         shard["elements"] += section_elements
                         result["max_section_elements"] = max(result["max_section_elements"], section_elements)
                         result["max_section_bytes"] = max(result["max_section_bytes"], len(section_bytes))
+                        shard["attribute_digest_sum"] = (
+                            shard["attribute_digest_sum"] + section_attribute_digest(section, attribute_counts)
+                        ) % HASH_MODULUS
                         direct = sum(child.tag == PARAGRAPH + "p" for child in section)
                         result["direct_paragraphs"] += direct
                         result["sections_without_direct_paragraph"] += direct == 0
@@ -206,7 +249,10 @@ def main() -> None:
             except BadZipFile:
                 result["rejected_zip"] += 1
                 shard["rejected_zip"] += 1
+    for shard in tree_shards:
+        shard["attribute_digest_sum"] = f'{shard["attribute_digest_sum"]:064x}'
     result["section_tree_shards"] = tree_shards
+    result["section_attribute_counts"] = attribute_counts
     result["inline"] = dict(sorted(result["inline"].items()))
     result["other_content"] = dict(sorted(result["other_content"].items()))
     print(json.dumps(result, ensure_ascii=False, sort_keys=True))
