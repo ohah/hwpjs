@@ -13,6 +13,7 @@ const font_references = @import("font_references.zig");
 const list_references = @import("list_references.zig");
 const binary_references = @import("binary_references.zig");
 const chart_references = @import("chart_references.zig");
+const section_text = @import("section_text.zig");
 
 pub const Archive = zip.Archive;
 pub const Options = zip.Options;
@@ -76,6 +77,15 @@ pub const ChartReferenceOptions = struct {
 };
 pub const ChartReferenceReport = chart_references.Report;
 pub const ChartProblemKind = chart_references.ProblemKind;
+pub const SectionTextOptions = struct {
+    structure: StructureOptions = .{},
+    text: section_text.Options = .{},
+};
+pub const SectionTextReport = section_text.Report;
+pub const SectionTextVisitor = section_text.Visitor;
+pub const SectionTextEvent = section_text.Event;
+pub const SectionTextInlineKind = section_text.InlineKind;
+pub const SectionOtherContentKind = section_text.OtherContentKind;
 pub const DocumentOptions = struct {
     // The archive index also contains large BinData/section entries. Their
     // declared sizes are bounded here; this call only decodes the two small
@@ -124,6 +134,14 @@ pub const Document = struct {
         var resources = try self.inspectHeaderResources(a, .{ .protection = options.structure.protection, .resources = options.header_resources });
         defer resources.deinit(a);
         return section_references.inspect(a, self.archive, self.manifest, structure.sections, &resources, options.sections);
+    }
+
+    /// Streams normalized text and inline XML events from structure-selected
+    /// sections in spine order. The report does not materialize an edit model.
+    pub fn inspectSectionText(self: *const Document, a: std.mem.Allocator, options: SectionTextOptions, visitor: ?SectionTextVisitor) !SectionTextReport {
+        var structure = try self.inspectStructure(a, options.structure);
+        defer structure.deinit(a);
+        return section_text.inspect(a, self.archive, self.manifest, structure.sections, options.text, visitor);
     }
 
     /// Resolves selected style, paragraph-shape, and character-shape links

@@ -17,6 +17,7 @@ test {
     _ = @import("hwpx/chart_references_tests.zig");
     _ = @import("hwpx/chart_cache_tests.zig");
     _ = @import("hwpx/xstring_tests.zig");
+    _ = @import("hwpx/section_text_tests.zig");
     _ = @import("hwpx/chart_formula_tests.zig");
     _ = @import("hwpx/allocator_ownership_tests.zig");
     _ = @import("image/emf/emf_plus_graphics_version.zig");

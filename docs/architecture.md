@@ -20,6 +20,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [차트 값 ST_Xstring 해석](hwpx-xstring.md)은 값 leaf에만 적용합니다. 수식과 숫자 의미 해석은 이 계층에 넣지 않습니다.
 
+[Section 텍스트 이벤트](hwpx-section-text.md)는 spine에서 선택한 `hp:t`의 문자 조각과 내부 요소 경계를 순서대로 노출합니다. 텍스트 모델 조립·조건부 분기·편집은 별도 책임으로 남깁니다.
+
 이미지/XML 외부에서도 재사용할 수 있는 언어 태그 규칙은 `src/text/`에 둡니다. [BCP 47 문법 검사](bcp47-syntax.md)와 [IANA 등록 검증](bcp47-registry.md)은 다른 단계입니다. [PNG iTXt](png-international-text.md)는 등록 검사와 UTF-8·압축 검사를 조립하며 extension 의미 보류를 별도로 보고합니다.
 
 바이트 리더와 CFB 읽기·strict 검증·새 컨테이너 쓰기를 구현했습니다. CFB의 각 책임은 개별 파일로 나누며, `reader.zig`는 소유권과 처리 순서를 조립합니다. 상세 API와 검증 범위는 [CFB 읽기·쓰기](cfb-reader.md)를 참고하세요.

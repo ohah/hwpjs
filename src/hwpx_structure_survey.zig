@@ -828,3 +828,76 @@ test "HWPX corpus chart path and XML read-only survey" {
     try std.testing.expectEqual(@as(usize, 10540), formula_text_bytes);
     try std.testing.expectEqual(@as(usize, 17), max_formula_bytes);
 }
+
+test "HWPX corpus section text and inline token read-only survey" {
+    const a = std.testing.allocator;
+    const roots = [_][]const u8{ "legacy/rust/crates/hwp-core/tests/fixtures", "reference/rhwp/samples" };
+    var accepted: usize = 0;
+    var rejected_zip: usize = 0;
+    var encrypted: usize = 0;
+    var sections: usize = 0;
+    var paragraphs: usize = 0;
+    var runs: usize = 0;
+    var text_elements: usize = 0;
+    var empty_text_elements: usize = 0;
+    var text_bytes: usize = 0;
+    var inline_counts: [@typeInfo(package.SectionTextInlineKind).@"enum".fields.len]usize = @splat(0);
+    var other_content_counts: [@typeInfo(package.SectionOtherContentKind).@"enum".fields.len]usize = @splat(0);
+    var non_text_content_chunks: usize = 0;
+    var issues: usize = 0;
+    for (roots) |root| {
+        const dir = try std.Io.Dir.cwd().openDir(std.testing.io, root, .{ .iterate = true });
+        defer dir.close(std.testing.io);
+        var walker = try dir.walk(a);
+        defer walker.deinit();
+        while (try walker.next(std.testing.io)) |entry| {
+            if (entry.kind != .file or !std.mem.endsWith(u8, entry.path, ".hwpx")) continue;
+            const bytes = try dir.readFileAlloc(std.testing.io, entry.path, a, .limited(25_000_000));
+            defer a.free(bytes);
+            var document = package.inspectDocument(a, bytes, .{}) catch |err| {
+                try std.testing.expectEqual(error.MissingEndRecord, err);
+                rejected_zip += 1;
+                continue;
+            };
+            defer document.deinit(a);
+            const report = document.inspectSectionText(a, .{}, null) catch |err| {
+                if (err == error.EncryptedDocument) {
+                    encrypted += 1;
+                    continue;
+                }
+                std.debug.print("HWPX text unexpected path={s} error={s}\n", .{ entry.path, @errorName(err) });
+                return err;
+            };
+            accepted += 1;
+            sections += report.sections;
+            paragraphs += report.paragraphs;
+            runs += report.runs;
+            text_elements += report.text_elements;
+            empty_text_elements += report.empty_text_elements;
+            text_bytes += report.text_bytes;
+            for (report.inline_counts, 0..) |count, index| inline_counts[index] += count;
+            for (report.other_content_counts, 0..) |count, index| other_content_counts[index] += count;
+            non_text_content_chunks += report.non_text_content_chunks;
+            issues += report.issues();
+        }
+    }
+    std.debug.print("HWPX text accepted={d} rejected_zip={d} encrypted={d} sections={d} paragraphs={d} runs={d} texts={d} empty={d} bytes={d} issues={d}\n", .{ accepted, rejected_zip, encrypted, sections, paragraphs, runs, text_elements, empty_text_elements, text_bytes, issues });
+    for (inline_counts, 0..) |count, index| std.debug.print("HWPX text inline {s}={d}\n", .{ @tagName(@as(package.SectionTextInlineKind, @enumFromInt(index))), count });
+    std.debug.print("HWPX ancillary XML content chunks={d}\n", .{non_text_content_chunks});
+    for (other_content_counts, 0..) |count, index| std.debug.print("HWPX ancillary {s}={d}\n", .{ @tagName(@as(package.SectionOtherContentKind, @enumFromInt(index))), count });
+    try std.testing.expectEqual(@as(usize, 476), accepted);
+    try std.testing.expectEqual(@as(usize, 6), rejected_zip);
+    try std.testing.expectEqual(@as(usize, 2), encrypted);
+    try std.testing.expectEqual(@as(usize, 544), sections);
+    try std.testing.expectEqual(@as(usize, 215146), paragraphs);
+    try std.testing.expectEqual(@as(usize, 267347), runs);
+    try std.testing.expectEqual(@as(usize, 230677), text_elements);
+    try std.testing.expectEqual(@as(usize, 14607), empty_text_elements);
+    try std.testing.expectEqual(@as(usize, 7975957), text_bytes);
+    const expected_inline = [_]usize{ 7582, 2981, 1398, 2852, 367, 27, 31, 17, 0 };
+    try std.testing.expectEqualSlices(usize, &expected_inline, &inline_counts);
+    const expected_other = [_]usize{ 23227, 1833, 1687, 400, 12, 4, 3, 1, 1, 0 };
+    try std.testing.expectEqualSlices(usize, &expected_other, &other_content_counts);
+    try std.testing.expectEqual(@as(usize, 27168), non_text_content_chunks);
+    try std.testing.expectEqual(@as(usize, 0), issues);
+}
