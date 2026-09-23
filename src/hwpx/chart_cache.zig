@@ -24,6 +24,7 @@ pub const Report = struct {
     out_of_range_point_index: usize = 0,
     missing_value_element: usize = 0,
     duplicate_value_element: usize = 0,
+    nested_value_element: usize = 0,
 
     pub fn caches(self: Report) usize {
         return self.numeric_caches + self.string_caches;
@@ -35,7 +36,7 @@ pub const Report = struct {
 
     pub fn issues(self: Report) usize {
         return self.unsupported_multilevel_string_caches + self.missing_point_count + self.duplicate_point_count + self.point_count_disagreement +
-            self.duplicate_point_index + self.out_of_range_point_index + self.missing_value_element + self.duplicate_value_element;
+            self.duplicate_point_index + self.out_of_range_point_index + self.missing_value_element + self.duplicate_value_element + self.nested_value_element;
     }
 };
 
@@ -54,6 +55,8 @@ pub const Scanner = struct {
     current: ?Cache = null,
     point_depth: ?usize = null,
     point_values: usize = 0,
+    value_depth: ?usize = null,
+    unsupported_depth: ?usize = null,
 
     pub fn deinit(self: *Scanner) void {
         if (self.current) |*cache| cache.seen.deinit(self.allocator);
@@ -91,16 +94,25 @@ pub const Scanner = struct {
     }
 
     pub fn onTag(self: *Scanner, tag: xml.tags.Tag, scope: *const xml.namespaces.State, depth: usize) !void {
+        if (self.unsupported_depth) |unsupported_depth| {
+            if (tag.kind == .end and depth == unsupported_depth) self.unsupported_depth = null;
+            return;
+        }
         if (tag.kind == .end) {
+            if (self.value_depth == depth) self.value_depth = null;
             if (self.point_depth == depth) self.finishPoint();
             if (self.current) |cache| {
                 if (cache.depth == depth) try self.finishCache();
             }
             return;
         }
+        if (self.value_depth) |value_depth| {
+            if (depth > value_depth) self.report.nested_value_element += 1;
+        }
         if (try attrs.element(tag, scope, chart_namespace.uri, "multiLvlStrCache")) {
             if (self.report.containers() == self.options.max_data_containers) return error.LimitExceeded;
             self.report.unsupported_multilevel_string_caches += 1;
+            if (tag.kind == .start) self.unsupported_depth = depth;
             return;
         }
         const numeric_cache = try attrs.element(tag, scope, chart_namespace.uri, "numCache");
@@ -135,7 +147,10 @@ pub const Scanner = struct {
             return;
         }
         if (self.point_depth) |point_depth| {
-            if (depth == point_depth + 1 and try attrs.element(tag, scope, chart_namespace.uri, "v")) self.point_values += 1;
+            if (depth == point_depth + 1 and try attrs.element(tag, scope, chart_namespace.uri, "v")) {
+                self.point_values += 1;
+                if (tag.kind == .start) self.value_depth = depth;
+            }
         }
     }
 };

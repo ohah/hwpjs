@@ -45,10 +45,11 @@ test "HWPX chart caches include literal data with the same point structure" {
 }
 
 test "HWPX chart caches report multilevel strings as unsupported coverage" {
-    const source = prefix ++ "<c:multiLvlStrCache><c:ptCount val=\"1\"/><c:lvl><c:pt idx=\"0\"><c:v>A</c:v></c:pt></c:lvl></c:multiLvlStrCache>" ++ suffix;
+    const source = prefix ++ "<c:multiLvlStrCache><c:ptCount val=\"1\"/><c:lvl><c:pt idx=\"0\"><c:v>A</c:v></c:pt></c:lvl><c:numCache/></c:multiLvlStrCache>" ++ suffix;
     const report = try inspect(std.testing.allocator, source, .{});
     try std.testing.expectEqual(@as(usize, 1), report.unsupported_multilevel_string_caches);
     try std.testing.expectEqual(@as(usize, 0), report.points);
+    try std.testing.expectEqual(@as(usize, 0), report.numeric_caches);
     try std.testing.expectEqual(@as(usize, 1), report.issues());
 }
 
@@ -99,6 +100,13 @@ test "HWPX chart caches ignore lookalike namespaces" {
     const source = prefix ++ "<x:numCache xmlns:x=\"urn:other\"><x:ptCount val=\"1\"/><x:pt idx=\"0\"><x:v>x</x:v></x:pt></x:numCache>" ++ suffix;
     const report = try inspect(std.testing.allocator, source, .{});
     try std.testing.expectEqual(@as(usize, 0), report.caches());
+}
+
+test "HWPX chart caches report a nested element inside a value leaf" {
+    const source = prefix ++ "<c:numCache><c:ptCount val=\"1\"/><c:pt idx=\"0\"><c:v>1<x:extra xmlns:x=\"urn:other\"/></c:v></c:pt></c:numCache>" ++ suffix;
+    const report = try inspect(std.testing.allocator, source, .{});
+    try std.testing.expectEqual(@as(usize, 1), report.nested_value_element);
+    try std.testing.expectEqual(@as(usize, 1), report.issues());
 }
 
 test "HWPX chart cache scanner releases index maps on every allocation failure" {

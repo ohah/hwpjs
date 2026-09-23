@@ -14,6 +14,8 @@ HWPX 전용 테스트는 `zig test src/root.zig --test-filter HWPX`로 실행합
 
 [차트 데이터 캐시 구조](hwpx-chart-cache.md) 단위 테스트는 `zig test src/root.zig --test-filter 'HWPX chart cache'`로 선택할 수 있습니다. 차트 경로 검사와 결합된 캐시 진단 및 두 차트 간 한도 테스트는 `--test-filter 'HWPX chart'`로 함께 확인합니다.
 
+[차트 수식 참조 구조](hwpx-chart-formula.md) 단위 테스트는 `zig test src/root.zig --test-filter 'HWPX chart formula'`로 선택합니다. 경로와의 통합 테스트는 `--test-filter 'HWPX chart'`에 포함됩니다.
+
 전체 corpus의 header/section XML 문법·namespace, 제품 header·spine 구조, header 리소스 ID 색인, section 및 header 서식 참조, 언어별 글꼴·번호·글머리표·이진 리소스·차트 경로 연결 조사는 `zig test src/hwpx_structure_survey.zig -O ReleaseFast`로 명시적으로 실행합니다. 이 선택 조사는 Git에 추적되지 않는 로컬 `reference/rhwp` 클론이 있어야 재현됩니다. 수백 MB의 해제 XML을 읽으므로 기본 `zig build test`·`audit`에는 포함하지 않습니다. 묶음 실행은 큰 메모리 사용량으로 중단될 수 있어 `--test-filter 'HWPX corpus chart path and XML read-only survey'`처럼 corpus 항목별 단독 실행 결과를 구분해 기록합니다. 원본은 변경하지 않으며 선행 XML 관측은 [HWPX XML 구조 조사](hwpx-xml-structure-evidence.md), 제품 구조 검증 결과는 [header·spine 구조](hwpx-document-structure.md), ID 색인 결과는 [header 리소스](hwpx-header-resources.md), 참조 결과는 [section 서식 참조](hwpx-section-references.md)·[header 내부 참조](hwpx-header-references.md)·[글꼴 ID 참조](hwpx-font-references.md)·[번호·글머리표 참조](hwpx-list-references.md)·[이진 리소스 연결](hwpx-binary-references.md)·[차트 경로 검증](hwpx-chart-references.md)이 각각 소유합니다.
 
 테스트용 문서 보고서의 기대 바이트 간격/필드 위치는 `tests/hwp5/document-report-wire.mjs`에서 공유합니다. 제품 serializer로부터 생성하지 않아 독립 대조를 유지하며, 다른 테스트에 구역 stride·필드 offset 숫자를 다시 복제하지 않습니다. 구역 인덱스 정렬 검증은 서로 다른 진단값을 가진 입력으로 수행합니다.

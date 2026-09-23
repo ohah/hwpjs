@@ -16,6 +16,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - `src/zip/`, `src/hwpx/`: [ZIP 인덱스·제한된 해제와 HWPX mimetype 식별](hwpx-zip-container.md), [OCF 루트·OPF manifest/spine 관계](hwpx-package-relationships.md), [버전 XML 검증](hwpx-version.md), [암호화 분류](hwpx-protection.md), [header·spine XML 구조](hwpx-document-structure.md), [header 리소스 ID 색인](hwpx-header-resources.md), [section의 p/run 서식 참조](hwpx-section-references.md), [header 내부 서식 참조](hwpx-header-references.md), [언어별 글꼴 ID와 fontRef](hwpx-font-references.md), [번호·글머리표 내부 참조](hwpx-list-references.md), [이진 리소스 manifest 연결](hwpx-binary-references.md), [차트 ZIP 경로·XML 경계](hwpx-chart-references.md). 나머지 header/section 내부 참조·문서 모델 조립은 아직 미구현입니다.
 
   차트 XML 안의 개수·인덱스·값 요소는 별도 [차트 데이터 캐시 구조](hwpx-chart-cache.md) 계층이 검사합니다.
+  `numRef`·`strRef`의 수식·캐시 연결은 [차트 수식 참조 구조](hwpx-chart-formula.md) 계층이 검사합니다.
 - `src/cfb/`: 읽기·검증·저장을 책임별로 분리한 CFB 코어.
 - `src/hwp5/`: 헤더 원본·버전·스트림 정책·압축 trailer·레코드 framing을 분리합니다. 현재 계약·검증 범위는 [HWP5 모듈 계약](hwp5-modules.md), 과거 이력은 [구현/검증 기록](hwp5-foundation.md)을 참조합니다.
 - `src/compression/`: bounded raw DEFLATE, [zlib 검증](zlib-validation.md), MIT Zig 디코더 로컬 수정본. HWP 플래그·trailer 정책을 넣지 않습니다.
