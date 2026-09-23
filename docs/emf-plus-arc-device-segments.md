@@ -24,7 +24,7 @@ DrawArc의 `deviceSegments()`와 DrawPie·FillPie의 `deviceArcSegments()`는 �
 
 ## 지원 경계
 
-이 계층은 exact-conic geometry 표현까지 제공하며 [Pie boundary 계층](emf-plus-pie-device-boundary.md)이 radial edge와 의미 순서로 조립하고 [평가 계층](emf-plus-arc-segment-evaluation.md)이 단일 parameter 점을 계산합니다. tolerance 기반 flattening, DrawArc/DrawPie stroke, FillPie fill 처리, Pen/Brush, clipping, anti-aliasing, rasterization과 저장은 미구현입니다. 출력 backend가 rational quadratic을 직접 소비하지 못할 때의 subdivision tolerance도 이 계층에서 임의로 정하지 않습니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 픽셀 출력 동등성을 주장하지 않습니다.
+이 계층은 exact-conic geometry 표현까지 제공하며 [Pie boundary 계층](emf-plus-pie-device-boundary.md)이 radial edge와 의미 순서로 조립하고 [평가 계층](emf-plus-arc-segment-evaluation.md)이 단일 parameter 점을 계산합니다. 별도 [평탄화](emf-plus-arc-segment-flattening.md)·[Arc polyline](emf-plus-arc-device-polyline.md)이 호출자 지정 tolerance로 선형 근사를 만듭니다. DrawArc/DrawPie stroke, FillPie fill 처리, Pen/Brush, clipping, anti-aliasing, rasterization과 저장은 미구현입니다. 출력 backend의 subdivision tolerance를 이 exact segment 계층에서 임의로 정하지 않습니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 픽셀 출력 동등성을 주장하지 않습니다.
 
 ## 검증 기록
 

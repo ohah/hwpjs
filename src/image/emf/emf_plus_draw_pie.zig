@@ -1,6 +1,7 @@
 const std = @import("std");
 const arc_device_geometry = @import("emf_plus_arc_device_geometry.zig");
 const arc_device_points = @import("emf_plus_arc_device_points.zig");
+const arc_device_polyline = @import("emf_plus_arc_device_polyline.zig");
 const arc_device_segments = @import("emf_plus_arc_device_segments.zig");
 const arc_data = @import("emf_plus_arc_data.zig");
 const binary = @import("../../binary/reader.zig");
@@ -9,6 +10,7 @@ const record_flags = @import("emf_plus_record_flags.zig");
 const rect_data = @import("emf_plus_rect_data.zig");
 const rect_device_corners = @import("emf_plus_rect_device_corners.zig");
 const pie_device_boundary = @import("emf_plus_pie_device_boundary.zig");
+const pie_device_polyline = @import("emf_plus_pie_device_polyline.zig");
 const world_page_device = @import("emf_plus_world_page_device.zig");
 
 pub const DrawPie = struct {
@@ -35,8 +37,16 @@ pub const DrawPie = struct {
         return arc_device_segments.segments(self.deviceArc(mapping) orelse return null);
     }
 
+    pub fn deviceArcPolyline(self: DrawPie, allocator: std.mem.Allocator, mapping: world_page_device.Mapper, options: arc_device_polyline.Options) !?arc_device_polyline.Polyline {
+        return try arc_device_polyline.collect(allocator, self.deviceArcSegments(mapping) orelse return null, options);
+    }
+
     pub fn deviceBoundary(self: DrawPie, mapping: world_page_device.Mapper) ?pie_device_boundary.Iterator {
         return pie_device_boundary.boundary(self.deviceArc(mapping) orelse return null);
+    }
+
+    pub fn deviceBoundaryPolyline(self: DrawPie, allocator: std.mem.Allocator, mapping: world_page_device.Mapper, options: pie_device_polyline.Options) !?pie_device_polyline.Polyline {
+        return try pie_device_polyline.collect(allocator, self.deviceArc(mapping) orelse return null, options);
     }
 };
 
@@ -96,15 +106,27 @@ test "EMF+ DrawPie parses compressed rectangle Pen ID angles and ignored flags" 
     var value_segments = value.deviceArcSegments(mapping).?;
     var expected_segments = arc_device_segments.segments(value.deviceArc(mapping).?);
     try std.testing.expectEqualDeep(expected_segments.next().?, value_segments.next().?);
+    var polyline = (try value.deviceArcPolyline(std.testing.allocator, mapping, .{ .tolerance = 1_000_000 })).?;
+    defer polyline.deinit(std.testing.allocator);
+    try std.testing.expectEqual(@as(usize, 5), polyline.points.len);
+    try std.testing.expectEqual(value.deviceRadialEdges(mapping).?.center_to_start.end, polyline.points[0]);
+    try std.testing.expectEqual(value.deviceRadialEdges(mapping).?.end_to_center.start, polyline.points[4]);
     var value_boundary = value.deviceBoundary(mapping).?;
     var expected_boundary = pie_device_boundary.boundary(value.deviceArc(mapping).?);
     try std.testing.expectEqualDeep(expected_boundary.next().?, value_boundary.next().?);
+    var boundary_polyline = (try value.deviceBoundaryPolyline(std.testing.allocator, mapping, .{ .tolerance = 1_000_000 })).?;
+    defer boundary_polyline.deinit(std.testing.allocator);
+    try std.testing.expectEqual(@as(usize, 7), boundary_polyline.points.len);
+    try std.testing.expectEqual(value.deviceArc(mapping).?.ellipse.center, boundary_polyline.points[0]);
+    try std.testing.expectEqual(value.deviceArc(mapping).?.ellipse.center, boundary_polyline.points[6]);
     try std.testing.expectEqualDeep(expected_boundary.next().?, value_boundary.next().?);
     var invalid = value;
     invalid.sweep_angle = std.math.inf(f32);
     try std.testing.expect(invalid.deviceRadialEdges(mapping) == null);
     try std.testing.expect(invalid.deviceArcSegments(mapping) == null);
+    try std.testing.expect((try invalid.deviceArcPolyline(std.testing.allocator, mapping, .{ .tolerance = 1 })) == null);
     try std.testing.expect(invalid.deviceBoundary(mapping) == null);
+    try std.testing.expect((try invalid.deviceBoundaryPolyline(std.testing.allocator, mapping, .{ .tolerance = 1 })) == null);
 }
 
 test "EMF+ DrawPie preserves floating rectangle and non-finite angle bits" {

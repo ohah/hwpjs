@@ -10,7 +10,7 @@ C가 set이면 Size 20/DataSize 8의 signed i16 Rect, clear이면 Size 28/DataSi
 
 stream은 ObjectID 슬롯이 이미 존재하고 ObjectTypePen인지 확인하며 성공한 record 수만 집계합니다. 누락 Pen, 다른 객체 타입, payload·집계 오류는 comment 전체 상태를 원복합니다. 상위 EMF framing은 같은 stream 경로를 사용하고 Ellipse payload 규칙을 복제하지 않습니다.
 
-현재 로컬 HWP corpus에는 EMF+ signature가 없어 실제 한컴 DrawEllipse 표본과 렌더링 결과는 관측하지 못했습니다. 구현 범위는 wire 구조, 공용 RectData, Object Table 참조, stream/framing, [공개 device-corner 연결](emf-plus-rect-record-device-corners.md), [affine ellipse basis](emf-plus-ellipse-device-basis.md)와 [완전한 exact conic segment iterator](emf-plus-ellipse-device-segments.md)입니다. flattening·stroke, clipping·rasterization과 저장은 미구현입니다.
+현재 로컬 HWP corpus에는 EMF+ signature가 없어 실제 한컴 DrawEllipse 표본과 렌더링 결과는 관측하지 못했습니다. 구현 범위는 wire 구조, 공용 RectData, Object Table 참조, stream/framing, [공개 device-corner 연결](emf-plus-rect-record-device-corners.md), [affine ellipse basis](emf-plus-ellipse-device-basis.md), [완전한 exact conic segment iterator](emf-plus-ellipse-device-segments.md)와 [device polyline](emf-plus-arc-device-polyline.md)입니다. stroke, clipping·rasterization과 저장은 미구현입니다.
 
 ## 검증 기록
 

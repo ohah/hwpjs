@@ -1,6 +1,7 @@
 const std = @import("std");
 const arc_device_geometry = @import("emf_plus_arc_device_geometry.zig");
 const arc_device_points = @import("emf_plus_arc_device_points.zig");
+const arc_device_polyline = @import("emf_plus_arc_device_polyline.zig");
 const arc_device_segments = @import("emf_plus_arc_device_segments.zig");
 const arc_data = @import("emf_plus_arc_data.zig");
 const binary = @import("../../binary/reader.zig");
@@ -10,6 +11,7 @@ const record_flags = @import("emf_plus_record_flags.zig");
 const rect_data = @import("emf_plus_rect_data.zig");
 const rect_device_corners = @import("emf_plus_rect_device_corners.zig");
 const pie_device_boundary = @import("emf_plus_pie_device_boundary.zig");
+const pie_device_polyline = @import("emf_plus_pie_device_polyline.zig");
 const world_page_device = @import("emf_plus_world_page_device.zig");
 
 pub const FillPie = struct {
@@ -36,8 +38,16 @@ pub const FillPie = struct {
         return arc_device_segments.segments(self.deviceArc(mapping) orelse return null);
     }
 
+    pub fn deviceArcPolyline(self: FillPie, allocator: std.mem.Allocator, mapping: world_page_device.Mapper, options: arc_device_polyline.Options) !?arc_device_polyline.Polyline {
+        return try arc_device_polyline.collect(allocator, self.deviceArcSegments(mapping) orelse return null, options);
+    }
+
     pub fn deviceBoundary(self: FillPie, mapping: world_page_device.Mapper) ?pie_device_boundary.Iterator {
         return pie_device_boundary.boundary(self.deviceArc(mapping) orelse return null);
+    }
+
+    pub fn deviceBoundaryPolyline(self: FillPie, allocator: std.mem.Allocator, mapping: world_page_device.Mapper, options: pie_device_polyline.Options) !?pie_device_polyline.Polyline {
+        return try pie_device_polyline.collect(allocator, self.deviceArc(mapping) orelse return null, options);
     }
 };
 
@@ -99,15 +109,27 @@ test "EMF+ FillPie parses compressed ArcData with both Brush forms and ignored f
     var object_segments = object.deviceArcSegments(mapping).?;
     var expected_segments = arc_device_segments.segments(object.deviceArc(mapping).?);
     try std.testing.expectEqualDeep(expected_segments.next().?, object_segments.next().?);
+    var polyline = (try object.deviceArcPolyline(std.testing.allocator, mapping, .{ .tolerance = 1_000_000 })).?;
+    defer polyline.deinit(std.testing.allocator);
+    try std.testing.expectEqual(@as(usize, 5), polyline.points.len);
+    try std.testing.expectEqual(object.deviceRadialEdges(mapping).?.center_to_start.end, polyline.points[0]);
+    try std.testing.expectEqual(object.deviceRadialEdges(mapping).?.end_to_center.start, polyline.points[4]);
     var object_boundary = object.deviceBoundary(mapping).?;
     var expected_boundary = pie_device_boundary.boundary(object.deviceArc(mapping).?);
     try std.testing.expectEqualDeep(expected_boundary.next().?, object_boundary.next().?);
+    var boundary_polyline = (try object.deviceBoundaryPolyline(std.testing.allocator, mapping, .{ .tolerance = 1_000_000 })).?;
+    defer boundary_polyline.deinit(std.testing.allocator);
+    try std.testing.expectEqual(@as(usize, 7), boundary_polyline.points.len);
+    try std.testing.expectEqual(object.deviceArc(mapping).?.ellipse.center, boundary_polyline.points[0]);
+    try std.testing.expectEqual(object.deviceArc(mapping).?.ellipse.center, boundary_polyline.points[6]);
     try std.testing.expectEqualDeep(expected_boundary.next().?, object_boundary.next().?);
     var invalid = object;
     invalid.start_angle = std.math.nan(f32);
     try std.testing.expect(invalid.deviceRadialEdges(mapping) == null);
     try std.testing.expect(invalid.deviceArcSegments(mapping) == null);
+    try std.testing.expect((try invalid.deviceArcPolyline(std.testing.allocator, mapping, .{ .tolerance = 1 })) == null);
     try std.testing.expect(invalid.deviceBoundary(mapping) == null);
+    try std.testing.expect((try invalid.deviceBoundaryPolyline(std.testing.allocator, mapping, .{ .tolerance = 1 })) == null);
 
     std.mem.writeInt(u32, data[0..4], 0x44332211, .little);
     const literal = try parse(makeRecord(&data, 0xc000));

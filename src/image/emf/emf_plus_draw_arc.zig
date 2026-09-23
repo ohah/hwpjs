@@ -1,6 +1,7 @@
 const std = @import("std");
 const arc_device_geometry = @import("emf_plus_arc_device_geometry.zig");
 const arc_device_points = @import("emf_plus_arc_device_points.zig");
+const arc_device_polyline = @import("emf_plus_arc_device_polyline.zig");
 const arc_device_segments = @import("emf_plus_arc_device_segments.zig");
 const arc_data = @import("emf_plus_arc_data.zig");
 const binary = @import("../../binary/reader.zig");
@@ -32,6 +33,10 @@ pub const DrawArc = struct {
 
     pub fn deviceSegments(self: DrawArc, mapping: world_page_device.Mapper) ?arc_device_segments.Iterator {
         return arc_device_segments.segments(self.deviceArc(mapping) orelse return null);
+    }
+
+    pub fn devicePolyline(self: DrawArc, allocator: std.mem.Allocator, mapping: world_page_device.Mapper, options: arc_device_polyline.Options) !?arc_device_polyline.Polyline {
+        return try arc_device_polyline.collect(allocator, self.deviceSegments(mapping) orelse return null, options);
     }
 };
 
@@ -91,6 +96,11 @@ test "EMF+ DrawArc parses compressed rectangle Pen ID angles and ignored flags" 
     var value_segments = value.deviceSegments(mapping).?;
     var expected_segments = arc_device_segments.segments(value.deviceArc(mapping).?);
     try std.testing.expectEqualDeep(expected_segments.next().?, value_segments.next().?);
+    var polyline = (try value.devicePolyline(std.testing.allocator, mapping, .{ .tolerance = 1_000_000 })).?;
+    defer polyline.deinit(std.testing.allocator);
+    try std.testing.expectEqual(@as(usize, 5), polyline.points.len);
+    try std.testing.expectEqual(value.deviceEndpoints(mapping).?.start, polyline.points[0]);
+    try std.testing.expectEqual(value.deviceEndpoints(mapping).?.end, polyline.points[4]);
     var non_full = value;
     non_full.sweep_angle = -90;
     const non_full_endpoints = non_full.deviceEndpoints(mapping).?;
@@ -100,6 +110,7 @@ test "EMF+ DrawArc parses compressed rectangle Pen ID angles and ignored flags" 
     invalid.start_angle = -1;
     try std.testing.expect(invalid.deviceEndpoints(mapping) == null);
     try std.testing.expect(invalid.deviceSegments(mapping) == null);
+    try std.testing.expect((try invalid.devicePolyline(std.testing.allocator, mapping, .{ .tolerance = 1 })) == null);
 }
 
 test "EMF+ DrawArc parses floating rectangle without normalizing float bits" {

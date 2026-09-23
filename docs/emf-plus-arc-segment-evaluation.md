@@ -28,7 +28,7 @@ P  = (b0*start + b1*control + b2*end) / d
 
 ## 지원 경계
 
-이 계층은 단일 parameter의 점 평가만 제공합니다. derivative, curvature, adaptive subdivision·오차 한도, flattening, 길이, hit testing, stroke/fill, clipping, anti-aliasing, rasterization과 저장은 미구현입니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 픽셀 출력 동등성을 주장하지 않습니다.
+이 계층은 단일 parameter의 점 평가만 제공합니다. 별도 [rational quadratic 평탄화](emf-plus-arc-segment-flattening.md)가 adaptive subdivision·device-space 오차/출력 한도를 소유합니다. derivative, curvature, 길이, hit testing, stroke/fill, clipping, anti-aliasing, rasterization과 저장은 미구현입니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 픽셀 출력 동등성을 주장하지 않습니다.
 
 ## 검증 기록
 

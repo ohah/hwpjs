@@ -171,6 +171,9 @@ test {
     _ = @import("image/emf/emf_plus_arc_device_points.zig");
     _ = @import("image/emf/emf_plus_arc_device_segments.zig");
     _ = @import("image/emf/emf_plus_arc_segment_evaluation.zig");
+    _ = @import("image/emf/emf_plus_arc_segment_flattening.zig");
+    _ = @import("image/emf/emf_plus_arc_device_polyline.zig");
+    _ = @import("image/emf/emf_plus_pie_device_polyline.zig");
     _ = @import("image/emf/emf_plus_pie_device_boundary.zig");
     _ = @import("image/emf/emf_plus_world_page_device.zig");
     _ = @import("image/emf/emf_plus_object.zig");

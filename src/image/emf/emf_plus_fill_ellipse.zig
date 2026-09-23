@@ -1,5 +1,6 @@
 const std = @import("std");
 const arc_device_segments = @import("emf_plus_arc_device_segments.zig");
+const arc_device_polyline = @import("emf_plus_arc_device_polyline.zig");
 const binary = @import("../../binary/reader.zig");
 const brush_id = @import("emf_plus_brush_id.zig");
 const ellipse_device_basis = @import("emf_plus_ellipse_device_basis.zig");
@@ -26,6 +27,10 @@ pub const FillEllipse = struct {
 
     pub fn deviceSegments(self: FillEllipse, mapping: world_page_device.Mapper) arc_device_segments.Iterator {
         return ellipse_device_segments.segments(self.deviceEllipse(mapping));
+    }
+
+    pub fn devicePolyline(self: FillEllipse, allocator: std.mem.Allocator, mapping: world_page_device.Mapper, options: arc_device_polyline.Options) !arc_device_polyline.Polyline {
+        return arc_device_polyline.collect(allocator, self.deviceSegments(mapping), options);
     }
 };
 
@@ -83,6 +88,10 @@ test "EMF+ FillEllipse parses compressed rectangle Brush ID and ignored flags" {
     inline for (0..4) |_| try std.testing.expectEqualDeep(try nextExpectedSegment(&expected_segments), try nextExpectedSegment(&actual_segments));
     try std.testing.expect(expected_segments.next() == null);
     try std.testing.expect(actual_segments.next() == null);
+    var polyline = try value.devicePolyline(std.testing.allocator, mapping, .{ .tolerance = 1_000_000 });
+    defer polyline.deinit(std.testing.allocator);
+    try std.testing.expectEqual(@as(usize, 5), polyline.points.len);
+    try std.testing.expectEqual(polyline.points[0], polyline.points[4]);
 
     std.mem.writeInt(u32, data[0..4], 0x44332211, .little);
     const literal = try parse(makeRecord(&data, 0xc000));

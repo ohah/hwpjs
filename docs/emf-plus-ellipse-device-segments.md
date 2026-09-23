@@ -16,7 +16,7 @@ DrawEllipse와 FillEllipse의 `deviceSegments()`는 기존 `deviceEllipse()` 결
 
 ## 지원 경계
 
-이 계층은 완전한 ellipse의 exact-conic geometry 표현까지 제공합니다. 각 segment의 단일 parameter 점은 [공용 conic 평가 계층](emf-plus-arc-segment-evaluation.md)이 계산합니다. flattening, DrawEllipse Pen stroke, FillEllipse fill rule·Brush sampling, clipping, anti-aliasing, rasterization과 저장은 미구현입니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 픽셀 출력 동등성을 주장하지 않습니다.
+이 계층은 완전한 ellipse의 exact-conic geometry 표현까지 제공합니다. 각 segment의 단일 parameter 점은 [공용 conic 평가 계층](emf-plus-arc-segment-evaluation.md)이 계산하고 [공용 Arc polyline](emf-plus-arc-device-polyline.md)이 네 조각을 선형 근사합니다. DrawEllipse Pen stroke, FillEllipse fill rule·Brush sampling, clipping, anti-aliasing, rasterization과 저장은 미구현입니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 픽셀 출력 동등성을 주장하지 않습니다.
 
 ## 검증 기록
 
