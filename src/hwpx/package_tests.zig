@@ -2,6 +2,7 @@ const std = @import("std");
 const zip = @import("../zip/archive.zig");
 const package = @import("package.zig");
 const version_xml = @import("version_xml.zig");
+const encryption_manifest = @import("encryption_manifest.zig");
 
 fn loadFixture(a: std.mem.Allocator, name: []const u8) ![]u8 {
     const path = try std.fmt.allocPrint(a, "legacy/rust/crates/hwp-core/tests/fixtures/{s}.hwpx", .{name});
@@ -753,4 +754,389 @@ test "HWPX corpus version XML read-only survey" {
     try std.testing.expectEqual(@as(usize, 6), rejected_zip);
     try std.testing.expectEqual(@as(usize, 6), old_minor);
     try std.testing.expectEqual(@as(usize, 1), patch_variant);
+}
+
+fn syntheticProtectionZip(a: std.mem.Allocator, manifest_xml: []const u8) ![]u8 {
+    const sources = [_]Source{
+        .{ .name = "mimetype", .data = package.mime },
+        .{ .name = "META-INF/container.xml", .data = package_container },
+        .{ .name = "Contents/content.hpf", .data = simple_hpf },
+        .{ .name = "Contents/section0.xml", .data = "<section/>" },
+        .{ .name = "META-INF/manifest.xml", .data = manifest_xml },
+    };
+    return storedZip(a, &sources);
+}
+
+const protection_xml = "<m:manifest xmlns:m=\"urn:oasis:names:tc:opendocument:xmlns:manifest:1.0\"><m:file-entry full-path=\"Contents/header.xml\"><m:encryption-data/></m:file-entry><m:file-entry full-path=\"Contents/section0.xml\"/></m:manifest>";
+
+test "HWPX protection manifest reports exact encrypted paths" {
+    const a = std.testing.allocator;
+    const bytes = try syntheticProtectionZip(a, protection_xml);
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    var report = try document.inspectProtection(a, .{});
+    defer report.deinit(a);
+    try std.testing.expect(report.manifest_present);
+    try std.testing.expectEqual(@as(usize, 1), report.encrypted_paths.len);
+    try std.testing.expect(report.hasEncryptedPath("Contents/header.xml"));
+    try std.testing.expect(!report.hasEncryptedPath("Contents/section0.xml"));
+    try std.testing.expect(!report.hasEncryptedPath("header.xml"));
+}
+
+test "HWPX protection manifest ignores spoofed namespace and resolves XML path references" {
+    const a = std.testing.allocator;
+    const spoof = "<m:manifest xmlns:m=\"urn:oasis:names:tc:opendocument:xmlns:manifest:1.0\"><!-- <m:encryption-data/> --><m:file-entry full-path=\"Contents/header.xml\"><![CDATA[<m:encryption-data/>]]><x:encryption-data xmlns:x=\"urn:wrong\"/></m:file-entry></m:manifest>";
+    const spoof_bytes = try syntheticProtectionZip(a, spoof);
+    defer a.free(spoof_bytes);
+    var spoof_document = try package.inspectDocument(a, spoof_bytes, .{});
+    defer spoof_document.deinit(a);
+    var spoof_report = try spoof_document.inspectProtection(a, .{});
+    defer spoof_report.deinit(a);
+    try std.testing.expectEqual(@as(usize, 0), spoof_report.encrypted_paths.len);
+
+    const encoded = "<m:manifest xmlns:m=\"urn:oasis:names:tc:opendocument:xmlns:manifest:1.0\"><m:file-entry full-path=\"Contents/header&#46;xml\"><m:encryption-data/></m:file-entry></m:manifest>";
+    const encoded_bytes = try syntheticProtectionZip(a, encoded);
+    defer a.free(encoded_bytes);
+    var encoded_document = try package.inspectDocument(a, encoded_bytes, .{});
+    defer encoded_document.deinit(a);
+    var encoded_report = try encoded_document.inspectProtection(a, .{});
+    defer encoded_report.deinit(a);
+    try std.testing.expect(encoded_report.hasEncryptedPath("Contents/header.xml"));
+}
+
+test "HWPX protection manifest rejects namespace spoofing and broken entries" {
+    const a = std.testing.allocator;
+    const cases = [_]struct { xml: []const u8, expected: anyerror }{
+        .{ .xml = "<m:manifest xmlns:m=\"urn:wrong\"><m:file-entry full-path=\"Contents/header.xml\"><m:encryption-data/></m:file-entry></m:manifest>", .expected = error.InvalidEncryptionManifestRoot },
+        .{ .xml = "<m:manifest xmlns:m=\"urn:oasis:names:tc:opendocument:xmlns:manifest:1.0\"><m:file-entry><m:encryption-data/></m:file-entry></m:manifest>", .expected = error.MissingEncryptionManifestPath },
+        .{ .xml = "<m:manifest xmlns:m=\"urn:oasis:names:tc:opendocument:xmlns:manifest:1.0\"><m:file-entry full-path=\"Contents/header.xml\"><m:encryption-data/><m:encryption-data/></m:file-entry></m:manifest>", .expected = error.DuplicateEncryptionData },
+        .{ .xml = "<m:manifest xmlns:m=\"urn:oasis:names:tc:opendocument:xmlns:manifest:1.0\"><m:encryption-data/></m:manifest>", .expected = error.OrphanEncryptionData },
+        .{ .xml = "<!DOCTYPE x><m:manifest xmlns:m=\"urn:oasis:names:tc:opendocument:xmlns:manifest:1.0\"/>", .expected = error.UnsupportedXmlDtd },
+    };
+    for (cases) |case| {
+        const bytes = try syntheticProtectionZip(a, case.xml);
+        defer a.free(bytes);
+        var document = try package.inspectDocument(a, bytes, .{});
+        defer document.deinit(a);
+        if (document.inspectProtection(a, .{})) |value| {
+            var unexpected = value;
+            unexpected.deinit(a);
+            return error.TestExpectedError;
+        } else |err| try std.testing.expectEqual(case.expected, err);
+    }
+}
+
+test "HWPX protection manifest exact byte and entry budgets with allocation cleanup" {
+    const a = std.testing.allocator;
+    const bytes = try syntheticProtectionZip(a, protection_xml);
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    var report = try document.inspectProtection(a, .{ .max_xml_bytes = protection_xml.len });
+    report.deinit(a);
+    for ([_]package.ProtectionOptions{ .{ .max_xml_bytes = protection_xml.len - 1 }, .{ .max_encrypted_entries = 0 } }) |options| {
+        if (document.inspectProtection(a, options)) |value| {
+            var unexpected = value;
+            unexpected.deinit(a);
+            return error.TestExpectedError;
+        } else |err| try std.testing.expectEqual(error.LimitExceeded, err);
+    }
+    try std.testing.checkAllAllocationFailures(a, struct {
+        fn run(allocator: std.mem.Allocator, source: []const u8) !void {
+            var archive = try package.open(allocator, source, .{});
+            defer archive.deinit();
+            var parsed = try encryption_manifest.read(allocator, archive, .{});
+            parsed.deinit(allocator);
+        }
+    }.run, .{bytes});
+    var checked: std.heap.DebugAllocator(.{ .safety = true, .enable_memory_limit = true }) = .init;
+    defer _ = checked.deinit();
+    var archive = try package.open(checked.allocator(), bytes, .{});
+    var parsed = try encryption_manifest.read(checked.allocator(), archive, .{});
+    parsed.deinit(checked.allocator());
+    archive.deinit();
+    try std.testing.expectEqual(@as(usize, 0), checked.total_requested_bytes);
+}
+
+test "HWPX corpus protection manifest read-only survey" {
+    const a = std.testing.allocator;
+    const roots = [_][]const u8{ "legacy/rust/crates/hwp-core/tests/fixtures", "reference/rhwp/samples" };
+    var with_manifest: usize = 0;
+    var without_manifest: usize = 0;
+    var encrypted: usize = 0;
+    for (roots) |root| {
+        const dir = try std.Io.Dir.cwd().openDir(std.testing.io, root, .{ .iterate = true });
+        defer dir.close(std.testing.io);
+        var walker = try dir.walk(a);
+        defer walker.deinit();
+        while (try walker.next(std.testing.io)) |entry| {
+            if (entry.kind != .file or !std.mem.endsWith(u8, entry.path, ".hwpx")) continue;
+            const bytes = try dir.readFileAlloc(std.testing.io, entry.path, a, .limited(25_000_000));
+            defer a.free(bytes);
+            var document = package.inspectDocument(a, bytes, .{}) catch |err| {
+                try std.testing.expectEqual(error.MissingEndRecord, err);
+                continue;
+            };
+            defer document.deinit(a);
+            var report = try document.inspectProtection(a, .{});
+            defer report.deinit(a);
+            if (report.manifest_present) with_manifest += 1 else without_manifest += 1;
+            if (report.encrypted_paths.len != 0) {
+                encrypted += 1;
+                try std.testing.expect(report.hasEncryptedPath("Contents/header.xml"));
+                try std.testing.expect(report.hasEncryptedPath("Contents/section0.xml"));
+            }
+        }
+    }
+    std.debug.print("HWPX protection corpus: manifest={d} absent={d} encrypted={d}\n", .{ with_manifest, without_manifest, encrypted });
+    try std.testing.expectEqual(@as(usize, 473), with_manifest);
+    try std.testing.expectEqual(@as(usize, 5), without_manifest);
+    try std.testing.expectEqual(@as(usize, 2), encrypted);
+}
+
+test "HWPX real header and section structure keeps spine order" {
+    const a = std.testing.allocator;
+    for ([_][]const u8{ "example", "noori" }) |name| {
+        const bytes = try loadFixture(a, name);
+        defer a.free(bytes);
+        var document = try package.inspectDocument(a, bytes, .{});
+        defer document.deinit(a);
+        var structure = try document.inspectStructure(a, .{});
+        defer structure.deinit(a);
+        try std.testing.expect(structure.header_in_spine);
+        try std.testing.expect(structure.sections.len > 0);
+        try std.testing.expectEqual(@as(?bool, true), structure.declared_count_matches);
+        try std.testing.expectEqual(@as(?bool, true), structure.numeric_path_order_matches);
+        try std.testing.expectEqualStrings("Contents/section0.xml", document.manifest.items[structure.sections[0].item_index].href);
+        try std.testing.expect(structure.sections[0].direct_paragraphs > 0);
+    }
+}
+
+fn expectStructureError(a: std.mem.Allocator, document: *const package.Document, options: package.StructureOptions, expected: anyerror) !void {
+    if (document.inspectStructure(a, options)) |value| {
+        var unexpected = value;
+        unexpected.deinit(a);
+        return error.TestExpectedError;
+    } else |err| try std.testing.expectEqual(expected, err);
+}
+
+test "HWPX encrypted documents stop before ciphertext XML parsing" {
+    const a = std.testing.allocator;
+    for ([_][]const u8{
+        "legacy/rust/crates/hwp-core/tests/fixtures/password-12345.hwpx",
+        "reference/rhwp/samples/HWP5-password-123456.hwpx",
+    }) |path| {
+        const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, path, a, .limited(1_000_000));
+        defer a.free(bytes);
+        var document = try package.inspectDocument(a, bytes, .{});
+        defer document.deinit(a);
+        try expectStructureError(a, &document, .{}, error.EncryptedDocument);
+    }
+}
+
+test "HWPX header section count disagreement is explicit, not silently repaired" {
+    const a = std.testing.allocator;
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "reference/rhwp/samples/hwpx/hwpx-02.hwpx", a, .limited(1_000_000));
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    var structure = try document.inspectStructure(a, .{});
+    defer structure.deinit(a);
+    try std.testing.expectEqual(@as(?u32, 1), structure.declared_section_count);
+    try std.testing.expectEqual(@as(usize, 2), structure.sections.len);
+    try std.testing.expectEqual(@as(?bool, false), structure.declared_count_matches);
+    try std.testing.expectEqualStrings("Contents/section0.xml", document.manifest.items[structure.sections[0].item_index].href);
+    try std.testing.expectEqualStrings("Contents/section1.xml", document.manifest.items[structure.sections[1].item_index].href);
+}
+
+const structure_header = "<h:head xmlns:h=\"http://www.hancom.co.kr/hwpml/2011/head\" version=\"1.5\" secCnt=\"2\"/>";
+const structure_section = "<s:sec xmlns:s=\"http://www.hancom.co.kr/hwpml/2011/section\" xmlns:p=\"http://www.hancom.co.kr/hwpml/2011/paragraph\"><p:p/></s:sec>";
+const structure_hpf = "<p:package xmlns:p=\"http://www.idpf.org/2007/opf/\"><p:manifest>" ++
+    "<p:item id=\"header\" href=\"Contents/header.xml\" media-type=\"application/xml\"/>" ++
+    "<p:item id=\"a\" href=\"Contents/chapter-A.xml\" media-type=\"application/xml\"/>" ++
+    "<p:item id=\"b\" href=\"Contents/chapter-B.xml\" media-type=\"application/xml\"/>" ++
+    "<p:item id=\"extra\" href=\"Contents/extra.xml\" media-type=\"application/xml\"/>" ++
+    "</p:manifest><p:spine><p:itemref idref=\"header\"/><p:itemref idref=\"b\"/><p:itemref idref=\"extra\"/><p:itemref idref=\"a\"/></p:spine></p:package>";
+
+fn syntheticStructureZip(a: std.mem.Allocator, header_xml: []const u8, section_xml: []const u8) ![]u8 {
+    return syntheticStructureZipWithHpf(a, structure_hpf, header_xml, section_xml);
+}
+
+fn syntheticStructureZipWithHpf(a: std.mem.Allocator, hpf_xml: []const u8, header_xml: []const u8, section_xml: []const u8) ![]u8 {
+    const sources = [_]Source{
+        .{ .name = "mimetype", .data = package.mime },
+        .{ .name = "META-INF/container.xml", .data = package_container },
+        .{ .name = "Contents/content.hpf", .data = hpf_xml },
+        .{ .name = "Contents/header.xml", .data = header_xml },
+        .{ .name = "Contents/chapter-A.xml", .data = section_xml },
+        .{ .name = "Contents/chapter-B.xml", .data = section_xml },
+        .{ .name = "Contents/extra.xml", .data = "<misc/>" },
+        .{ .name = "Contents/section1.xml", .data = section_xml },
+        .{ .name = "Contents/section2.xml", .data = section_xml },
+    };
+    return storedZip(a, &sources);
+}
+
+test "HWPX structure rejects duplicate section spine references and absent header manifest item" {
+    const a = std.testing.allocator;
+    const manifest_prefix = "<p:package xmlns:p=\"http://www.idpf.org/2007/opf/\"><p:manifest>" ++
+        "<p:item id=\"header\" href=\"Contents/header.xml\" media-type=\"application/xml\"/>" ++
+        "<p:item id=\"a\" href=\"Contents/chapter-A.xml\" media-type=\"application/xml\"/>";
+    const duplicate = manifest_prefix ++ "</p:manifest><p:spine><p:itemref idref=\"header\"/><p:itemref idref=\"a\"/><p:itemref idref=\"a\"/></p:spine></p:package>";
+    const duplicate_bytes = try syntheticStructureZipWithHpf(a, duplicate, structure_header, structure_section);
+    defer a.free(duplicate_bytes);
+    var duplicate_document = try package.inspectDocument(a, duplicate_bytes, .{});
+    defer duplicate_document.deinit(a);
+    try expectStructureError(a, &duplicate_document, .{}, error.DuplicateSectionSpineReference);
+
+    const no_header = "<p:package xmlns:p=\"http://www.idpf.org/2007/opf/\"><p:manifest><p:item id=\"a\" href=\"Contents/chapter-A.xml\" media-type=\"application/xml\"/></p:manifest><p:spine><p:itemref idref=\"a\"/></p:spine></p:package>";
+    const no_header_bytes = try syntheticStructureZipWithHpf(a, no_header, structure_header, structure_section);
+    defer a.free(no_header_bytes);
+    var no_header_document = try package.inspectDocument(a, no_header_bytes, .{});
+    defer no_header_document.deinit(a);
+    try expectStructureError(a, &no_header_document, .{}, error.MissingHeaderManifestItem);
+}
+
+test "HWPX structure reports header absent from spine without inserting it" {
+    const a = std.testing.allocator;
+    const hpf = "<p:package xmlns:p=\"http://www.idpf.org/2007/opf/\"><p:manifest>" ++
+        "<p:item id=\"header\" href=\"Contents/header.xml\" media-type=\"application/xml\"/>" ++
+        "<p:item id=\"a\" href=\"Contents/chapter-A.xml\" media-type=\"application/xml\"/>" ++
+        "</p:manifest><p:spine><p:itemref idref=\"a\"/></p:spine></p:package>";
+    const bytes = try syntheticStructureZipWithHpf(a, hpf, structure_header, structure_section);
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    var structure = try document.inspectStructure(a, .{});
+    defer structure.deinit(a);
+    try std.testing.expect(!structure.header_in_spine);
+    try std.testing.expectEqual(@as(usize, 1), structure.sections.len);
+    try std.testing.expectEqual(@as(?bool, false), structure.declared_count_matches);
+}
+
+test "HWPX structure classifies XML roots in spine order without filename heuristic" {
+    const a = std.testing.allocator;
+    const bytes = try syntheticStructureZip(a, structure_header, structure_section);
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    var structure = try document.inspectStructure(a, .{});
+    defer structure.deinit(a);
+    try std.testing.expect(structure.header_in_spine);
+    try std.testing.expectEqual(@as(usize, 2), structure.sections.len);
+    try std.testing.expectEqualStrings("Contents/chapter-B.xml", document.manifest.items[structure.sections[0].item_index].href);
+    try std.testing.expectEqualStrings("Contents/chapter-A.xml", document.manifest.items[structure.sections[1].item_index].href);
+    try std.testing.expectEqual(@as(?bool, true), structure.declared_count_matches);
+    try std.testing.expectEqual(@as(?bool, null), structure.numeric_path_order_matches);
+    try std.testing.expectEqual(@as(usize, 1), structure.unclassified_spine_xml);
+    try std.testing.expectEqual(@as(usize, 1), structure.sections[0].direct_paragraphs);
+}
+
+test "HWPX structure mixed section path diagnostic stays unknown" {
+    const a = std.testing.allocator;
+    const hpf = "<p:package xmlns:p=\"http://www.idpf.org/2007/opf/\"><p:manifest>" ++
+        "<p:item id=\"header\" href=\"Contents/header.xml\" media-type=\"application/xml\"/>" ++
+        "<p:item id=\"a\" href=\"Contents/chapter-A.xml\" media-type=\"application/xml\"/>" ++
+        "<p:item id=\"one\" href=\"Contents/section1.xml\" media-type=\"application/xml\"/>" ++
+        "<p:item id=\"two\" href=\"Contents/section2.xml\" media-type=\"application/xml\"/>" ++
+        "</p:manifest><p:spine><p:itemref idref=\"header\"/><p:itemref idref=\"a\"/><p:itemref idref=\"two\"/><p:itemref idref=\"one\"/></p:spine></p:package>";
+    const bytes = try syntheticStructureZipWithHpf(a, hpf, structure_header, structure_section);
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    var structure = try document.inspectStructure(a, .{});
+    defer structure.deinit(a);
+    try std.testing.expectEqual(@as(usize, 3), structure.sections.len);
+    try std.testing.expectEqual(@as(?bool, null), structure.numeric_path_order_matches);
+
+    const numeric_hpf = "<p:package xmlns:p=\"http://www.idpf.org/2007/opf/\"><p:manifest>" ++
+        "<p:item id=\"header\" href=\"Contents/header.xml\" media-type=\"application/xml\"/>" ++
+        "<p:item id=\"one\" href=\"Contents/section1.xml\" media-type=\"application/xml\"/>" ++
+        "<p:item id=\"two\" href=\"Contents/section2.xml\" media-type=\"application/xml\"/>" ++
+        "</p:manifest><p:spine><p:itemref idref=\"header\"/><p:itemref idref=\"two\"/><p:itemref idref=\"one\"/></p:spine></p:package>";
+    const numeric_bytes = try syntheticStructureZipWithHpf(a, numeric_hpf, structure_header, structure_section);
+    defer a.free(numeric_bytes);
+    var numeric_document = try package.inspectDocument(a, numeric_bytes, .{});
+    defer numeric_document.deinit(a);
+    var numeric_structure = try numeric_document.inspectStructure(a, .{});
+    defer numeric_structure.deinit(a);
+    try std.testing.expectEqual(@as(?bool, false), numeric_structure.numeric_path_order_matches);
+}
+
+test "HWPX structure rejects bad header root and enforces shared XML budgets" {
+    const a = std.testing.allocator;
+    const bad = try syntheticStructureZip(a, "<nothead/>", structure_section);
+    defer a.free(bad);
+    var bad_document = try package.inspectDocument(a, bad, .{});
+    defer bad_document.deinit(a);
+    try expectStructureError(a, &bad_document, .{}, error.InvalidHeaderRoot);
+
+    const wrong_header_namespace = try syntheticStructureZip(a, "<h:head xmlns:h=\"urn:wrong\" secCnt=\"2\"/>", structure_section);
+    defer a.free(wrong_header_namespace);
+    var wrong_header_document = try package.inspectDocument(a, wrong_header_namespace, .{});
+    defer wrong_header_document.deinit(a);
+    try expectStructureError(a, &wrong_header_document, .{}, error.InvalidHeaderRoot);
+
+    const invalid_count = try syntheticStructureZip(a, "<h:head xmlns:h=\"http://www.hancom.co.kr/hwpml/2011/head\" secCnt=\"many\"/>", structure_section);
+    defer a.free(invalid_count);
+    var invalid_count_document = try package.inspectDocument(a, invalid_count, .{});
+    defer invalid_count_document.deinit(a);
+    try expectStructureError(a, &invalid_count_document, .{}, error.InvalidSectionCount);
+
+    const wrong_sections = try syntheticStructureZip(a, structure_header, "<notsection/>");
+    defer a.free(wrong_sections);
+    var wrong_sections_document = try package.inspectDocument(a, wrong_sections, .{});
+    defer wrong_sections_document.deinit(a);
+    try expectStructureError(a, &wrong_sections_document, .{}, error.MissingDocumentSection);
+
+    const wrong_section_namespace = try syntheticStructureZip(a, structure_header, "<s:sec xmlns:s=\"urn:wrong\"/>");
+    defer a.free(wrong_section_namespace);
+    var wrong_section_document = try package.inspectDocument(a, wrong_section_namespace, .{});
+    defer wrong_section_document.deinit(a);
+    try expectStructureError(a, &wrong_section_document, .{}, error.MissingDocumentSection);
+
+    const missing_count = try syntheticStructureZip(a, "<h:head xmlns:h=\"http://www.hancom.co.kr/hwpml/2011/head\"/>", structure_section);
+    defer a.free(missing_count);
+    var missing_count_document = try package.inspectDocument(a, missing_count, .{});
+    defer missing_count_document.deinit(a);
+    var missing_count_structure = try missing_count_document.inspectStructure(a, .{});
+    defer missing_count_structure.deinit(a);
+    try std.testing.expectEqual(@as(?u32, null), missing_count_structure.declared_section_count);
+    try std.testing.expectEqual(@as(?bool, null), missing_count_structure.declared_count_matches);
+
+    const bytes = try syntheticStructureZip(a, structure_header, structure_section);
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    var structure = try document.inspectStructure(a, .{});
+    const exact = structure.decoded_xml_bytes;
+    structure.deinit(a);
+    var at_limit = try document.inspectStructure(a, .{ .max_total_xml_bytes = exact });
+    at_limit.deinit(a);
+    try expectStructureError(a, &document, .{ .max_total_xml_bytes = exact - 1 }, error.LimitExceeded);
+    try expectStructureError(a, &document, .{ .max_header_xml_bytes = structure_header.len - 1 }, error.LimitExceeded);
+    try expectStructureError(a, &document, .{ .max_spine_xml_bytes = structure_section.len - 1 }, error.LimitExceeded);
+    try expectStructureError(a, &document, .{ .max_sections = 1 }, error.LimitExceeded);
+}
+
+test "HWPX structure allocation failures and ReleaseFast cleanup accounting" {
+    const a = std.testing.allocator;
+    const bytes = try syntheticStructureZip(a, structure_header, structure_section);
+    defer a.free(bytes);
+    try std.testing.checkAllAllocationFailures(a, struct {
+        fn run(allocator: std.mem.Allocator, source: []const u8) !void {
+            var document = try package.inspectDocument(allocator, source, .{});
+            defer document.deinit(allocator);
+            var structure = try document.inspectStructure(allocator, .{});
+            structure.deinit(allocator);
+        }
+    }.run, .{bytes});
+    var checked: std.heap.DebugAllocator(.{ .safety = true, .enable_memory_limit = true }) = .init;
+    defer _ = checked.deinit();
+    var document = try package.inspectDocument(checked.allocator(), bytes, .{});
+    var structure = try document.inspectStructure(checked.allocator(), .{});
+    structure.deinit(checked.allocator());
+    document.deinit(checked.allocator());
+    try std.testing.expectEqual(@as(usize, 0), checked.total_requested_bytes);
 }

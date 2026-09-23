@@ -89,3 +89,59 @@ test "HWPX encrypted samples account for four XML failures" {
     try std.testing.expectEqual(@as(usize, 3), text_outside);
     try std.testing.expectEqual(@as(usize, 1), encoding);
 }
+
+test "HWPX corpus product header and spine structure read-only survey" {
+    const a = std.testing.allocator;
+    const roots = [_][]const u8{ "legacy/rust/crates/hwp-core/tests/fixtures", "reference/rhwp/samples" };
+    var accepted: usize = 0;
+    var rejected_zip: usize = 0;
+    var encrypted: usize = 0;
+    var section_count: usize = 0;
+    var mismatched_count: usize = 0;
+    var undeclared_count: usize = 0;
+    var non_xml_spine: usize = 0;
+    var unclassified_spine_xml: usize = 0;
+    for (roots) |root| {
+        const dir = try std.Io.Dir.cwd().openDir(std.testing.io, root, .{ .iterate = true });
+        defer dir.close(std.testing.io);
+        var walker = try dir.walk(a);
+        defer walker.deinit();
+        while (try walker.next(std.testing.io)) |entry| {
+            if (entry.kind != .file or !std.mem.endsWith(u8, entry.path, ".hwpx")) continue;
+            const bytes = try dir.readFileAlloc(std.testing.io, entry.path, a, .limited(25_000_000));
+            defer a.free(bytes);
+            var document = package.inspectDocument(a, bytes, .{}) catch |err| {
+                try std.testing.expectEqual(error.MissingEndRecord, err);
+                rejected_zip += 1;
+                continue;
+            };
+            defer document.deinit(a);
+            var structure = document.inspectStructure(a, .{}) catch |err| {
+                if (err == error.EncryptedDocument) {
+                    encrypted += 1;
+                    continue;
+                }
+                std.debug.print("HWPX structure unexpected error in {s}: {s}\n", .{ entry.path, @errorName(err) });
+                return err;
+            };
+            defer structure.deinit(a);
+            accepted += 1;
+            section_count += structure.sections.len;
+            non_xml_spine += structure.non_xml_spine_items;
+            unclassified_spine_xml += structure.unclassified_spine_xml;
+            if (structure.declared_count_matches) |matches| {
+                if (!matches) mismatched_count += 1;
+            } else undeclared_count += 1;
+            try std.testing.expect(structure.header_in_spine);
+            try std.testing.expectEqual(@as(?bool, true), structure.numeric_path_order_matches);
+        }
+    }
+    std.debug.print("HWPX structure corpus: accepted={d} rejected_zip={d} encrypted={d} sections={d} mismatched={d} undeclared={d} non_xml_spine={d} unclassified={d}\n", .{ accepted, rejected_zip, encrypted, section_count, mismatched_count, undeclared_count, non_xml_spine, unclassified_spine_xml });
+    try std.testing.expectEqual(@as(usize, 476), accepted);
+    try std.testing.expectEqual(@as(usize, 6), rejected_zip);
+    try std.testing.expectEqual(@as(usize, 2), encrypted);
+    try std.testing.expectEqual(@as(usize, 544), section_count);
+    try std.testing.expectEqual(@as(usize, 1), mismatched_count);
+    try std.testing.expectEqual(@as(usize, 0), undeclared_count);
+    try std.testing.expectEqual(@as(usize, 0), unclassified_spine_xml);
+}

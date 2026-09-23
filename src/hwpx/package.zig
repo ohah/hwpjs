@@ -3,12 +3,18 @@ const zip = @import("../zip/archive.zig");
 const container = @import("container_manifest.zig");
 const content_manifest = @import("content_manifest.zig");
 const version_xml = @import("version_xml.zig");
+const encryption_manifest = @import("encryption_manifest.zig");
+const document_structure = @import("document_structure.zig");
 
 pub const Archive = zip.Archive;
 pub const Options = zip.Options;
 pub const mime = "application/hwp+zip";
 pub const Version = version_xml.Version;
 pub const VersionOptions = struct { max_xml_bytes: usize = 1024 * 1024, max_attribute_bytes: usize = 4096 };
+pub const ProtectionOptions = encryption_manifest.Options;
+pub const ProtectionReport = encryption_manifest.Report;
+pub const StructureOptions = document_structure.Options;
+pub const StructureReport = document_structure.Report;
 pub const DocumentOptions = struct {
     // The archive index also contains large BinData/section entries. Their
     // declared sizes are bounded here; this call only decodes the two small
@@ -29,6 +35,17 @@ pub const Document = struct {
     /// not imply a compatible or even parseable document version.
     pub fn inspectVersion(self: *const Document, a: std.mem.Allocator, options: VersionOptions) !Version {
         return version_xml.read(a, self.archive, options.max_xml_bytes, options.max_attribute_bytes);
+    }
+
+    /// Reports ODF manifest encryption metadata without decrypting any entry.
+    pub fn inspectProtection(self: *const Document, a: std.mem.Allocator, options: ProtectionOptions) !ProtectionReport {
+        return encryption_manifest.read(a, self.archive, options);
+    }
+
+    /// Reads bounded header/spine XML and preserves section ordering and
+    /// count disagreement; encrypted entries are explicitly unsupported.
+    pub fn inspectStructure(self: *const Document, a: std.mem.Allocator, options: StructureOptions) !StructureReport {
+        return document_structure.inspect(a, self.archive, self.manifest, options);
     }
 
     pub fn deinit(self: *Document, a: std.mem.Allocator) void {

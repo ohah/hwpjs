@@ -10,7 +10,7 @@ PNG 감마·색도는 [고정소수점 원값 계약](png-color-fixed.md)에 분
 
 XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다. HWP5 원시 문자열 보존과 정책이 다르며, XML 문법·HWPML/HWPX 모델 검증으로 자동 승격하지 않습니다.
 
-[HWPX ZIP 컨테이너 경계](hwpx-zip-container.md)는 `src/zip/`의 일반 ZIP 인덱스·해제와 `src/hwpx/`의 mimetype 식별을 분리합니다. [패키지 관계](hwpx-package-relationships.md)는 공통 XML 태그/namespace 순회를 재사용해 OCF 루트와 OPF manifest/spine을 연결합니다. [버전 XML](hwpx-version.md)은 그 위의 별도 검증 진입점이며, header/section 의미 검사와 공통 문서 모델 조립은 후속 계층입니다.
+[HWPX ZIP 컨테이너 경계](hwpx-zip-container.md)는 `src/zip/`의 일반 ZIP 인덱스·해제와 `src/hwpx/`의 mimetype 식별을 분리합니다. [패키지 관계](hwpx-package-relationships.md)는 공통 XML 태그/namespace 순회를 재사용해 OCF 루트와 OPF manifest/spine을 연결합니다. [버전 XML](hwpx-version.md), [암호화 분류](hwpx-protection.md), [header·spine 구조](hwpx-document-structure.md)는 각각 독립 계약이며, header/section 내부 참조와 공통 문서 모델 조립은 후속 계층입니다.
 
 이미지/XML 외부에서도 재사용할 수 있는 언어 태그 규칙은 `src/text/`에 둡니다. [BCP 47 문법 검사](bcp47-syntax.md)와 [IANA 등록 검증](bcp47-registry.md)은 다른 단계입니다. [PNG iTXt](png-international-text.md)는 등록 검사와 UTF-8·압축 검사를 조립하며 extension 의미 보류를 별도로 보고합니다.
 
