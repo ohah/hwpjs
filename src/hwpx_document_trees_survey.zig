@@ -12,6 +12,16 @@ fn surveyShard(shard: usize) !void {
     var section_elements: usize = 0;
     var header_bytes: usize = 0;
     var section_bytes: usize = 0;
+    var paragraphs: usize = 0;
+    var zero_ids: usize = 0;
+    var missing_ids: usize = 0;
+    var missing_para_tc_ids: usize = 0;
+    var page_break_true: usize = 0;
+    var page_break_absent: usize = 0;
+    var column_break_true: usize = 0;
+    var column_break_absent: usize = 0;
+    var merged_absent: usize = 0;
+    var merged_true: usize = 0;
     for (roots, 0..) |root, root_index| {
         const dir = try std.Io.Dir.cwd().openDir(std.testing.io, root, .{ .iterate = true });
         defer dir.close(std.testing.io);
@@ -39,6 +49,18 @@ fn surveyShard(shard: usize) !void {
                 return err;
             };
             defer all.deinit(a);
+            const paragraph_report = try all.inspectParagraphMetadata(a, .{});
+            try std.testing.expectEqual(all.sections.len, paragraph_report.sections);
+            paragraphs += paragraph_report.paragraphs;
+            zero_ids += paragraph_report.zero_id;
+            missing_ids += paragraph_report.missing_id;
+            missing_para_tc_ids += paragraph_report.missing_para_tc_id;
+            page_break_true += paragraph_report.page_break.true_value;
+            page_break_absent += paragraph_report.page_break.absent;
+            column_break_true += paragraph_report.column_break.true_value;
+            column_break_absent += paragraph_report.column_break.absent;
+            merged_absent += paragraph_report.merged.absent;
+            merged_true += paragraph_report.merged.true_value;
             try std.testing.expectEqual(all.structure.header_item_index, all.header.item_index);
             try std.testing.expectEqual(all.structure.header_xml_bytes, all.header.source.len);
             try std.testing.expectEqual(all.structure.header_elements, all.header.elements.len);
@@ -70,6 +92,10 @@ fn surveyShard(shard: usize) !void {
     const expected_section_elements = [_]usize{ 299906, 229744, 218284, 124064, 356522, 297849, 252376, 395971 };
     const expected_header_bytes = [_]usize{ 11717857, 8327608, 9835741, 5823234, 7899943, 8527746, 9564672, 16078146 };
     const expected_section_bytes = [_]usize{ 23032794, 18221301, 16858881, 9304952, 27450891, 23164353, 19233517, 30724197 };
+    const expected_paragraphs = [_]usize{ 28740, 20865, 20019, 11680, 44679, 24829, 23614, 40720 };
+    const expected_zero_ids = [_]usize{ 5484, 3164, 1109, 2568, 28364, 8198, 630, 8376 };
+    const expected_page_break_true = [_]usize{ 269, 110, 182, 138, 348, 147, 45, 297 };
+    const expected_column_break_true = [_]usize{ 23, 34, 37, 0, 18, 36, 5, 78 };
     try std.testing.expectEqual(expected_accepted[shard], accepted);
     try std.testing.expectEqual(expected_rejected[shard], rejected_zip);
     try std.testing.expectEqual(expected_encrypted[shard], encrypted);
@@ -78,6 +104,16 @@ fn surveyShard(shard: usize) !void {
     try std.testing.expectEqual(expected_section_elements[shard], section_elements);
     try std.testing.expectEqual(expected_header_bytes[shard], header_bytes);
     try std.testing.expectEqual(expected_section_bytes[shard], section_bytes);
+    try std.testing.expectEqual(expected_paragraphs[shard], paragraphs);
+    try std.testing.expectEqual(expected_zero_ids[shard], zero_ids);
+    try std.testing.expectEqual(@as(usize, 0), missing_ids);
+    try std.testing.expectEqual(paragraphs, missing_para_tc_ids);
+    try std.testing.expectEqual(expected_page_break_true[shard], page_break_true);
+    try std.testing.expectEqual(@as(usize, 0), page_break_absent);
+    try std.testing.expectEqual(expected_column_break_true[shard], column_break_true);
+    try std.testing.expectEqual(@as(usize, 0), column_break_absent);
+    try std.testing.expectEqual(if (shard == 7) @as(usize, 987) else @as(usize, 0), merged_absent);
+    try std.testing.expectEqual(@as(usize, 0), merged_true);
 }
 
 test "HWPX owned XML document trees shard 0" {

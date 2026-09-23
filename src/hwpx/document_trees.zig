@@ -5,6 +5,7 @@ const structure_xml = @import("document_structure.zig");
 const protection = @import("encryption_manifest.zig");
 const header_tree = @import("header_tree.zig");
 const section_tree = @import("section_tree.zig");
+const paragraph_metadata = @import("paragraph_metadata.zig");
 
 pub const HeaderOptions = struct {
     protection: protection.Options = .{},
@@ -30,6 +31,10 @@ pub const Bundle = struct {
     structure: structure_xml.Report,
     header: header_tree.Tree,
     sections: []section_tree.Tree,
+
+    pub fn inspectParagraphMetadata(self: *const Bundle, a: std.mem.Allocator, options: paragraph_metadata.Options) !paragraph_metadata.Report {
+        return paragraph_metadata.inspect(a, self.sections, options);
+    }
 
     pub fn deinit(self: *Bundle, a: std.mem.Allocator) void {
         for (self.sections) |*section| section.deinit(a);

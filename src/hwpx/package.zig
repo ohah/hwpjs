@@ -17,6 +17,7 @@ const section_text = @import("section_text.zig");
 const header_tree = @import("header_tree.zig");
 const section_tree = @import("section_tree.zig");
 const document_trees = @import("document_trees.zig");
+const paragraph_metadata = @import("paragraph_metadata.zig");
 
 pub const Archive = zip.Archive;
 pub const Options = zip.Options;
@@ -95,6 +96,8 @@ pub const HeaderTreeOptions = document_trees.HeaderOptions;
 pub const SectionTreeOptions = document_trees.SectionOptions;
 pub const XmlTrees = document_trees.Bundle;
 pub const XmlTreesOptions = document_trees.AllOptions;
+pub const ParagraphMetadataOptions = paragraph_metadata.Options;
+pub const ParagraphMetadataReport = paragraph_metadata.Report;
 pub const DocumentOptions = struct {
     // The archive index also contains large BinData/section entries. Their
     // declared sizes are bounded here; this call only decodes the two small

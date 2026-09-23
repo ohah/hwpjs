@@ -7,6 +7,7 @@ visual rendering. Local reference/rhwp samples are intentionally not vendored.
 
 import hashlib
 import json
+import re
 from collections import Counter
 from pathlib import Path
 from xml.etree import ElementTree as ET
@@ -85,6 +86,26 @@ def section_attribute_digest(section: ET.Element, counts: dict) -> int:
             digest.update(len(encoded).to_bytes(4, "little"))
             digest.update(encoded)
     return int.from_bytes(digest.digest(), "big")
+
+
+def section_paragraph_metadata(section: ET.Element, counts: dict) -> None:
+    for node in section.iter(PARAGRAPH + "p"):
+        counts["paragraphs"] += 1
+        raw_id = node.get("id")
+        if raw_id is None:
+            counts["missing_id"] += 1
+        elif re.fullmatch(r"[+-]?0+", raw_id.strip()):
+            counts["zero_id"] += 1
+        if node.get("paraTcId") is None:
+            counts["missing_para_tc_id"] += 1
+        for field in ("pageBreak", "columnBreak", "merged"):
+            value = node.get(field)
+            if value is None:
+                counts[field + "_absent"] += 1
+            elif value.strip() in ("true", "1"):
+                counts[field + "_true"] += 1
+            elif value.strip() not in ("false", "0"):
+                raise ValueError("HWPX oracle invalid paragraph Boolean")
 
 
 def section_direct_content_digest(data: bytes) -> int:
@@ -247,6 +268,26 @@ def self_check() -> None:
     counts.update({"R." + field: {"present": 0, "empty": 0} for field in ATTRIBUTE_FIELDS[PARAGRAPH + "run"][1]})
     assert section_attribute_digest(empty, counts) != section_attribute_digest(absent, counts)
     assert counts["P.id"] == {"present": 1, "empty": 1}
+    metadata = Counter()
+    section_paragraph_metadata(ET.fromstring(
+        '<root xmlns:p="http://www.hancom.co.kr/hwpml/2011/paragraph">'
+        '<p:p id="0" pageBreak="1"/><p:p columnBreak="true"/>'
+        '<p:p id="-0" merged="false"/></root>'
+    ), metadata)
+    assert metadata == Counter({
+        "paragraphs": 3, "zero_id": 2, "missing_id": 1,
+        "missing_para_tc_id": 3, "pageBreak_true": 1,
+        "pageBreak_absent": 2, "columnBreak_true": 1,
+        "columnBreak_absent": 2, "merged_absent": 2,
+    })
+    try:
+        section_paragraph_metadata(ET.fromstring(
+            '<p:p xmlns:p="http://www.hancom.co.kr/hwpml/2011/paragraph" pageBreak="yes"/>'
+        ), Counter())
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("paragraph metadata accepted an invalid Boolean")
     assert section_direct_content_digest(b"<root>A&amp;<child/>B<![CDATA[C]]></root>") != section_direct_content_digest(b"<root>A&amp;<child>B</child><![CDATA[C]]></root>")
     assert xml_ordered_digest(b"<root>A<child/>B</root>") != xml_ordered_digest(b"<root>AB<child/></root>")
     assert xml_ordered_digest(b"<root>A&amp;<![CDATA[B]]></root>") == xml_ordered_digest(b"<root>A&amp;B</root>")
@@ -267,7 +308,7 @@ def self_check() -> None:
 def main() -> None:
     self_check()
     tree_shards = [
-        {"accepted": 0, "rejected_zip": 0, "encrypted": 0, "sections": 0, "elements": 0, "header_elements": 0, "header_bytes": 0, "section_bytes": 0, "attribute_digest_sum": 0, "content_digest_sum": 0, "ordered_digest_sum": 0}
+        {"accepted": 0, "rejected_zip": 0, "encrypted": 0, "sections": 0, "elements": 0, "header_elements": 0, "header_bytes": 0, "section_bytes": 0, "attribute_digest_sum": 0, "content_digest_sum": 0, "ordered_digest_sum": 0, "paragraph_metadata": Counter()}
         for _ in range(8)
     ]
     attribute_counts = {
@@ -348,6 +389,7 @@ def main() -> None:
                         section_elements = sum(1 for _ in section.iter())
                         result["section_elements"] += section_elements
                         shard["elements"] += section_elements
+                        section_paragraph_metadata(section, shard["paragraph_metadata"])
                         result["max_section_elements"] = max(result["max_section_elements"], section_elements)
                         result["max_section_bytes"] = max(result["max_section_bytes"], len(section_bytes))
                         shard["attribute_digest_sum"] = (
@@ -371,6 +413,7 @@ def main() -> None:
     if sum(result["header_root_names"].values()) != result["accepted"]:
         raise ValueError("HWPX oracle counted header roots outside accepted documents")
     for shard in tree_shards:
+        shard["paragraph_metadata"] = dict(shard["paragraph_metadata"])
         shard["attribute_digest_sum"] = f'{shard["attribute_digest_sum"]:064x}'
         shard["content_digest_sum"] = f'{shard["content_digest_sum"]:064x}'
         shard["ordered_digest_sum"] = f'{shard["ordered_digest_sum"]:064x}'
