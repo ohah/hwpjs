@@ -40,11 +40,16 @@ pub const Location = struct {
 };
 
 pub const InlineEvent = struct { location: Location, kind: InlineKind, tag: xml.tags.Tag, scope: *const xml.namespaces.State };
+pub const BoundaryEvent = struct { location: Location, tag: xml.tags.Tag, scope: *const xml.namespaces.State };
 
 /// Tag and scope borrow the XML visitor's storage. Text bytes are normalized
 /// UTF-8 and borrow a temporary allocation. Copy anything retained past the
 /// callback. Start/end events preserve nested inline element boundaries.
 pub const Event = union(enum) {
+    paragraph_start: BoundaryEvent,
+    paragraph_end: BoundaryEvent,
+    run_start: BoundaryEvent,
+    run_end: BoundaryEvent,
     text_start: struct { location: Location, tag: xml.tags.Tag, scope: *const xml.namespaces.State },
     text_end: Location,
     content: struct { location: Location, bytes: []const u8 },
@@ -70,7 +75,11 @@ pub const Options = struct {
 pub const Report = struct {
     sections: usize = 0,
     paragraphs: usize = 0,
+    direct_paragraphs: usize = 0,
+    sections_without_direct_paragraph: usize = 0,
+    paragraphs_without_direct_run: usize = 0,
     runs: usize = 0,
+    non_direct_runs: usize = 0,
     text_elements: usize = 0,
     empty_text_elements: usize = 0,
     text_bytes: usize = 0,
@@ -87,7 +96,8 @@ pub const Report = struct {
     }
 
     pub fn issues(self: *const Report) usize {
-        return self.non_direct_text_elements + self.nested_inline_elements + self.inlineCount(.unknown) + self.otherContentCount(.unknown);
+        return self.sections_without_direct_paragraph + self.paragraphs_without_direct_run + self.non_direct_runs +
+            self.non_direct_text_elements + self.nested_inline_elements + self.inlineCount(.unknown) + self.otherContentCount(.unknown);
     }
 
     pub fn otherContentCount(self: *const Report, kind: OtherContentKind) usize {
@@ -102,6 +112,7 @@ const Node = struct {
     paragraph: usize = 0,
     run: usize = 0,
     text: usize = 0,
+    direct_runs: usize = 0,
 };
 
 fn inlineKind(tag: xml.tags.Tag, scope: *const xml.namespaces.State) !InlineKind {
@@ -163,6 +174,11 @@ const Scanner = struct {
         if (tag.kind == .end) {
             const node = self.nodes[depth - 1];
             switch (node.kind) {
+                .paragraph => {
+                    if (node.direct_runs == 0) self.report.paragraphs_without_direct_run += 1;
+                    try self.emit(.{ .paragraph_end = .{ .location = self.location(node), .tag = tag, .scope = scope } });
+                },
+                .run => try self.emit(.{ .run_end = .{ .location = self.location(node), .tag = tag, .scope = scope } }),
                 .text => {
                     if (self.current_text_bytes == 0) self.report.empty_text_elements += 1;
                     try self.emit(.{ .text_end = self.location(node) });
@@ -193,10 +209,23 @@ const Scanner = struct {
             node.kind = .paragraph;
             node.paragraph = self.report.paragraphs;
             node.run = 0;
+            node.text = 0;
+            node.direct_runs = 0;
+            try self.emit(.{ .paragraph_start = .{ .location = self.location(node), .tag = tag, .scope = scope } });
+            if (tag.kind == .empty) {
+                self.report.paragraphs_without_direct_run += 1;
+                try self.emit(.{ .paragraph_end = .{ .location = self.location(node), .tag = tag, .scope = scope } });
+            }
         } else if (try attrs.element(tag, scope, document_xml.paragraph_uri, "run")) {
             self.report.runs += 1;
             node.kind = .run;
             node.run = self.report.runs;
+            node.text = 0;
+            if (parent.kind == .paragraph) {
+                self.nodes[depth - 2].direct_runs += 1;
+            } else self.report.non_direct_runs += 1;
+            try self.emit(.{ .run_start = .{ .location = self.location(node), .tag = tag, .scope = scope } });
+            if (tag.kind == .empty) try self.emit(.{ .run_end = .{ .location = self.location(node), .tag = tag, .scope = scope } });
         } else if (try attrs.element(tag, scope, document_xml.paragraph_uri, "t")) {
             if (self.report.text_elements == self.options.max_text_elements) return error.LimitExceeded;
             self.report.text_elements += 1;
@@ -251,6 +280,8 @@ pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, manifest: content_man
     var report: Report = .{ .sections = sections.len };
     var remaining = options.max_total_section_xml_bytes;
     for (sections, 0..) |section, ordinal| {
+        report.direct_paragraphs += section.direct_paragraphs;
+        if (section.direct_paragraphs == 0) report.sections_without_direct_paragraph += 1;
         const item = manifest.items[section.item_index];
         const entry_index = item.entry_index orelse return error.ExternalSpineXml;
         const max_bytes = @min(options.max_section_xml_bytes, remaining);

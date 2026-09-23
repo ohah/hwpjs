@@ -20,7 +20,7 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [차트 값 ST_Xstring 해석](hwpx-xstring.md)은 값 leaf에만 적용합니다. 수식과 숫자 의미 해석은 이 계층에 넣지 않습니다.
 
-[Section 텍스트 이벤트](hwpx-section-text.md)는 spine에서 선택한 `hp:t`의 문자 조각과 내부 요소 경계를 순서대로 노출합니다. 텍스트 모델 조립·조건부 분기·편집은 별도 책임으로 남깁니다.
+[Section 텍스트 이벤트](hwpx-section-text.md)는 spine에서 선택한 문단·run·`hp:t`의 경계와 문자 조각·내부 요소를 순서대로 노출합니다. 텍스트 모델 조립·조건부 분기·편집은 별도 책임으로 남깁니다.
 
 이미지/XML 외부에서도 재사용할 수 있는 언어 태그 규칙은 `src/text/`에 둡니다. [BCP 47 문법 검사](bcp47-syntax.md)와 [IANA 등록 검증](bcp47-registry.md)은 다른 단계입니다. [PNG iTXt](png-international-text.md)는 등록 검사와 UTF-8·압축 검사를 조립하며 extension 의미 보류를 별도로 보고합니다.
 

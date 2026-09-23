@@ -1,6 +1,7 @@
 const std = @import("std");
 const package = @import("hwpx/package.zig");
 const xml = @import("xml/root.zig");
+const hwpx_attrs = @import("hwpx/xml_attributes.zig");
 
 test "HWPX corpus XML structure read-only survey" {
     const a = std.testing.allocator;
@@ -831,13 +832,56 @@ test "HWPX corpus chart path and XML read-only survey" {
 
 test "HWPX corpus section text and inline token read-only survey" {
     const a = std.testing.allocator;
+    const BoundaryCounter = struct {
+        paragraph_starts: usize = 0,
+        paragraph_ends: usize = 0,
+        run_starts: usize = 0,
+        run_ends: usize = 0,
+        stack: [256]u8 = undefined,
+        depth: usize = 0,
+        fn push(self: *@This(), kind: u8) !void {
+            if (self.depth == self.stack.len) return error.InvalidTextBoundaryDepth;
+            self.stack[self.depth] = kind;
+            self.depth += 1;
+        }
+        fn pop(self: *@This(), kind: u8) !void {
+            if (self.depth == 0 or self.stack[self.depth - 1] != kind) return error.InvalidTextBoundaryOrder;
+            self.depth -= 1;
+        }
+        fn onEvent(raw: *anyopaque, event: package.SectionTextEvent) anyerror!void {
+            const self: *@This() = @ptrCast(@alignCast(raw));
+            switch (event) {
+                .paragraph_start => {
+                    self.paragraph_starts += 1;
+                    try self.push('p');
+                },
+                .paragraph_end => {
+                    self.paragraph_ends += 1;
+                    try self.pop('p');
+                },
+                .run_start => {
+                    self.run_starts += 1;
+                    try self.push('r');
+                },
+                .run_end => {
+                    self.run_ends += 1;
+                    try self.pop('r');
+                },
+                else => {},
+            }
+        }
+    };
     const roots = [_][]const u8{ "legacy/rust/crates/hwp-core/tests/fixtures", "reference/rhwp/samples" };
     var accepted: usize = 0;
     var rejected_zip: usize = 0;
     var encrypted: usize = 0;
     var sections: usize = 0;
+    var direct_paragraphs: usize = 0;
+    var sections_without_direct_paragraph: usize = 0;
     var paragraphs: usize = 0;
+    var paragraphs_without_direct_run: usize = 0;
     var runs: usize = 0;
+    var non_direct_runs: usize = 0;
     var text_elements: usize = 0;
     var empty_text_elements: usize = 0;
     var text_bytes: usize = 0;
@@ -860,7 +904,8 @@ test "HWPX corpus section text and inline token read-only survey" {
                 continue;
             };
             defer document.deinit(a);
-            const report = document.inspectSectionText(a, .{}, null) catch |err| {
+            var boundary: BoundaryCounter = .{};
+            const report = document.inspectSectionText(a, .{}, .{ .context = &boundary, .on_event = BoundaryCounter.onEvent }) catch |err| {
                 if (err == error.EncryptedDocument) {
                     encrypted += 1;
                     continue;
@@ -868,10 +913,19 @@ test "HWPX corpus section text and inline token read-only survey" {
                 std.debug.print("HWPX text unexpected path={s} error={s}\n", .{ entry.path, @errorName(err) });
                 return err;
             };
+            try std.testing.expectEqual(@as(usize, 0), boundary.depth);
+            try std.testing.expectEqual(report.paragraphs, boundary.paragraph_starts);
+            try std.testing.expectEqual(report.paragraphs, boundary.paragraph_ends);
+            try std.testing.expectEqual(report.runs, boundary.run_starts);
+            try std.testing.expectEqual(report.runs, boundary.run_ends);
             accepted += 1;
             sections += report.sections;
+            direct_paragraphs += report.direct_paragraphs;
+            sections_without_direct_paragraph += report.sections_without_direct_paragraph;
             paragraphs += report.paragraphs;
+            paragraphs_without_direct_run += report.paragraphs_without_direct_run;
             runs += report.runs;
+            non_direct_runs += report.non_direct_runs;
             text_elements += report.text_elements;
             empty_text_elements += report.empty_text_elements;
             text_bytes += report.text_bytes;
@@ -882,6 +936,7 @@ test "HWPX corpus section text and inline token read-only survey" {
         }
     }
     std.debug.print("HWPX text accepted={d} rejected_zip={d} encrypted={d} sections={d} paragraphs={d} runs={d} texts={d} empty={d} bytes={d} issues={d}\n", .{ accepted, rejected_zip, encrypted, sections, paragraphs, runs, text_elements, empty_text_elements, text_bytes, issues });
+    std.debug.print("HWPX text structure direct_paragraphs={d} sections_without_direct_paragraph={d} paragraphs_without_direct_run={d} non_direct_runs={d}\n", .{ direct_paragraphs, sections_without_direct_paragraph, paragraphs_without_direct_run, non_direct_runs });
     for (inline_counts, 0..) |count, index| std.debug.print("HWPX text inline {s}={d}\n", .{ @tagName(@as(package.SectionTextInlineKind, @enumFromInt(index))), count });
     std.debug.print("HWPX ancillary XML content chunks={d}\n", .{non_text_content_chunks});
     for (other_content_counts, 0..) |count, index| std.debug.print("HWPX ancillary {s}={d}\n", .{ @tagName(@as(package.SectionOtherContentKind, @enumFromInt(index))), count });
@@ -889,6 +944,10 @@ test "HWPX corpus section text and inline token read-only survey" {
     try std.testing.expectEqual(@as(usize, 6), rejected_zip);
     try std.testing.expectEqual(@as(usize, 2), encrypted);
     try std.testing.expectEqual(@as(usize, 544), sections);
+    try std.testing.expectEqual(@as(usize, 76920), direct_paragraphs);
+    try std.testing.expectEqual(@as(usize, 0), sections_without_direct_paragraph);
+    try std.testing.expectEqual(@as(usize, 1), paragraphs_without_direct_run);
+    try std.testing.expectEqual(@as(usize, 0), non_direct_runs);
     try std.testing.expectEqual(@as(usize, 215146), paragraphs);
     try std.testing.expectEqual(@as(usize, 267347), runs);
     try std.testing.expectEqual(@as(usize, 230677), text_elements);
@@ -899,5 +958,52 @@ test "HWPX corpus section text and inline token read-only survey" {
     const expected_other = [_]usize{ 23227, 1833, 1687, 400, 12, 4, 3, 1, 1, 0 };
     try std.testing.expectEqualSlices(usize, &expected_other, &other_content_counts);
     try std.testing.expectEqual(@as(usize, 27168), non_text_content_chunks);
-    try std.testing.expectEqual(@as(usize, 0), issues);
+    try std.testing.expectEqual(@as(usize, 1), issues);
+}
+
+test "HWPX layout-only paragraph keeps its real section diagnostic" {
+    const a = std.testing.allocator;
+    const path = "reference/rhwp/samples/hwpx/opengov/36386761_백제학연구총서위탁판매의뢰목록.hwpx";
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, path, a, .limited(25_000_000));
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    const Capture = struct {
+        allocator: std.mem.Allocator,
+        ordinals: [64]usize = undefined,
+        has_run: [64]bool = @splat(false),
+        count: usize = 0,
+        fn onEvent(raw: *anyopaque, event: package.SectionTextEvent) anyerror!void {
+            const self: *@This() = @ptrCast(@alignCast(raw));
+            switch (event) {
+                .paragraph_start => |paragraph| {
+                    const id = try hwpx_attrs.attribute(self.allocator, paragraph.tag, paragraph.scope, "id", 64);
+                    defer if (id) |owned| self.allocator.free(owned);
+                    if (id) |owned| if (std.mem.eql(u8, owned, "2147483648")) {
+                        if (self.count == self.ordinals.len) return error.TestCapacity;
+                        self.ordinals[self.count] = paragraph.location.paragraph_ordinal;
+                        self.count += 1;
+                    };
+                },
+                .run_start => |run| {
+                    for (self.ordinals[0..self.count], 0..) |ordinal, index| {
+                        if (ordinal == run.location.paragraph_ordinal) self.has_run[index] = true;
+                    }
+                },
+                else => {},
+            }
+        }
+    };
+    var capture: Capture = .{ .allocator = a };
+    const report = try document.inspectSectionText(a, .{}, .{ .context = &capture, .on_event = Capture.onEvent });
+    try std.testing.expectEqual(@as(usize, 22), capture.count);
+    var matching_without_run: usize = 0;
+    for (capture.has_run[0..capture.count]) |has_run| if (!has_run) {
+        matching_without_run += 1;
+    };
+    try std.testing.expectEqual(@as(usize, 1), matching_without_run);
+    try std.testing.expectEqual(@as(usize, 1), report.paragraphs_without_direct_run);
+    try std.testing.expectEqual(@as(usize, 0), report.sections_without_direct_paragraph);
+    try std.testing.expectEqual(@as(usize, 0), report.non_direct_runs);
+    try std.testing.expectEqual(@as(usize, 1), report.issues());
 }

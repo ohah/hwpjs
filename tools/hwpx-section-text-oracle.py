@@ -73,8 +73,12 @@ def inspect_text(node: ET.Element, parent: str, result: dict, inside_text: bool 
         note_other(node.tag, node.text)
     if node.tag == PARAGRAPH + "p":
         result["paragraphs"] += 1
+        result["paragraphs_without_direct_run"] += not any(
+            child.tag == PARAGRAPH + "run" for child in node
+        )
     if node.tag == PARAGRAPH + "run":
         result["runs"] += 1
+        result["non_direct_runs"] += parent != PARAGRAPH + "p"
     if node.tag == PARAGRAPH + "t":
         result["text_elements"] += 1
         result["non_direct_text_elements"] += parent != PARAGRAPH + "run"
@@ -107,16 +111,25 @@ def self_check() -> None:
         '</p:run></p:p></s:sec>'
     )
     result = {
-        "paragraphs": 0, "runs": 0, "text_elements": 0, "text_bytes": 0,
+        "paragraphs": 0, "paragraphs_without_direct_run": 0,
+        "runs": 0, "non_direct_runs": 0,
+        "text_elements": 0, "text_bytes": 0,
         "empty_text_elements": 0, "non_direct_text_elements": 0,
         "nested_inline_elements": 0, "inline": Counter(),
         "non_text_content_chunks": 0, "other_content": Counter(),
     }
     inspect_text(ET.fromstring(source), "", result)
     assert result["paragraphs"] == result["runs"] == result["text_elements"] == 1
+    assert result["paragraphs_without_direct_run"] == result["non_direct_runs"] == 0
     assert result["text_bytes"] == 4
     assert result["inline"] == Counter({"line_break": 1})
     assert result["other_content"] == Counter({"script": 1})
+    layout_only = ET.fromstring(
+        '<p:p xmlns:p="http://www.hancom.co.kr/hwpml/2011/paragraph">'
+        '<p:linesegarray/></p:p>'
+    )
+    inspect_text(layout_only, "", result)
+    assert result["paragraphs_without_direct_run"] == 1
 
 
 def main() -> None:
@@ -126,8 +139,12 @@ def main() -> None:
         "rejected_zip": 0,
         "encrypted": 0,
         "sections": 0,
+        "direct_paragraphs": 0,
+        "sections_without_direct_paragraph": 0,
         "paragraphs": 0,
+        "paragraphs_without_direct_run": 0,
         "runs": 0,
+        "non_direct_runs": 0,
         "text_elements": 0,
         "empty_text_elements": 0,
         "text_bytes": 0,
@@ -164,6 +181,9 @@ def main() -> None:
                         if section.tag != SECTION:
                             continue
                         result["sections"] += 1
+                        direct = sum(child.tag == PARAGRAPH + "p" for child in section)
+                        result["direct_paragraphs"] += direct
+                        result["sections_without_direct_paragraph"] += direct == 0
                         inspect_text(section, "", result)
                     result["accepted"] += 1
             except BadZipFile:

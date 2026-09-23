@@ -60,6 +60,7 @@ const Trace = struct {
             },
             .inline_start => try self.bytes.appendSlice(self.allocator, "{"),
             .inline_end => try self.bytes.appendSlice(self.allocator, "}"),
+            .paragraph_start, .paragraph_end, .run_start, .run_end => {},
         }
     }
 };
@@ -174,6 +175,76 @@ test "HWPX section text keeps nested paragraph ordinals and callback errors" {
     try std.testing.expectError(error.StopHere, inspect(std.testing.allocator, source, .{}, .{ .context = &capture, .on_event = Stop.onEvent }));
     const retry = try inspect(std.testing.allocator, source, .{}, null);
     try std.testing.expectEqual(@as(usize, 10), retry.text_bytes);
+}
+
+test "HWPX section text emits paragraph and run boundaries including empty nodes" {
+    const source = prefix ++ "<p:p id=\"&#49;\"><p:run charPrIDRef=\"&#55;\"><p:t>A</p:t></p:run><p:run/></p:p><p:p/>" ++ suffix;
+    const Capture = struct {
+        allocator: std.mem.Allocator,
+        order: std.ArrayList(u8) = .empty,
+        saw_paragraph_id: bool = false,
+        saw_run_style: bool = false,
+        fn deinit(self: *@This()) void {
+            self.order.deinit(self.allocator);
+        }
+        fn onEvent(raw: *anyopaque, event: package.SectionTextEvent) anyerror!void {
+            const self: *@This() = @ptrCast(@alignCast(raw));
+            const marker: u8 = switch (event) {
+                .paragraph_start => |value| blk: {
+                    if (value.location.paragraph_ordinal == 1) {
+                        const id = try attrs.attribute(self.allocator, value.tag, value.scope, "id", 8);
+                        defer if (id) |owned| self.allocator.free(owned);
+                        self.saw_paragraph_id = if (id) |owned| std.mem.eql(u8, owned, "1") else false;
+                    }
+                    break :blk 'P';
+                },
+                .paragraph_end => 'p',
+                .run_start => |value| blk: {
+                    if (value.location.run_ordinal == 1) {
+                        const id = try attrs.attribute(self.allocator, value.tag, value.scope, "charPrIDRef", 8);
+                        defer if (id) |owned| self.allocator.free(owned);
+                        self.saw_run_style = if (id) |owned| std.mem.eql(u8, owned, "7") else false;
+                    }
+                    break :blk 'R';
+                },
+                .run_end => 'r',
+                .text_start => 'T',
+                .text_end => 't',
+                else => return,
+            };
+            try self.order.append(self.allocator, marker);
+        }
+    };
+    var capture: Capture = .{ .allocator = std.testing.allocator };
+    defer capture.deinit();
+    const report = try inspect(std.testing.allocator, source, .{}, .{ .context = &capture, .on_event = Capture.onEvent });
+    try std.testing.expectEqualStrings("PRTtrRrpPp", capture.order.items);
+    try std.testing.expect(capture.saw_paragraph_id);
+    try std.testing.expect(capture.saw_run_style);
+    try std.testing.expectEqual(@as(usize, 2), report.direct_paragraphs);
+    try std.testing.expectEqual(@as(usize, 1), report.paragraphs_without_direct_run);
+    try std.testing.expectEqual(@as(usize, 0), report.non_direct_runs);
+    try std.testing.expectEqual(@as(usize, 1), report.issues());
+}
+
+test "HWPX section text reports missing direct children without inventing nodes" {
+    const empty_section = try inspect(std.testing.allocator, prefix ++ suffix, .{}, null);
+    try std.testing.expectEqual(@as(usize, 1), empty_section.sections_without_direct_paragraph);
+    try std.testing.expectEqual(@as(usize, 0), empty_section.paragraphs);
+    try std.testing.expectEqual(@as(usize, 1), empty_section.issues());
+
+    const layout_only = try inspect(std.testing.allocator, prefix ++ "<p:p id=\"2147483648\"><p:linesegarray/></p:p>" ++ suffix, .{}, null);
+    try std.testing.expectEqual(@as(usize, 1), layout_only.direct_paragraphs);
+    try std.testing.expectEqual(@as(usize, 1), layout_only.paragraphs_without_direct_run);
+    try std.testing.expectEqual(@as(usize, 0), layout_only.runs);
+    try std.testing.expectEqual(@as(usize, 1), layout_only.issues());
+
+    const nested = prefix ++ "<p:container><p:p><p:container><p:run/></p:container></p:p></p:container>" ++ suffix;
+    const report = try inspect(std.testing.allocator, nested, .{}, null);
+    try std.testing.expectEqual(@as(usize, 1), report.sections_without_direct_paragraph);
+    try std.testing.expectEqual(@as(usize, 1), report.paragraphs_without_direct_run);
+    try std.testing.expectEqual(@as(usize, 1), report.non_direct_runs);
+    try std.testing.expectEqual(@as(usize, 3), report.issues());
 }
 
 test "HWPX section text cleans up on every allocation failure" {
