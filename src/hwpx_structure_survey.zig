@@ -710,6 +710,13 @@ test "HWPX corpus chart path and XML read-only survey" {
     var chart_parts: usize = 0;
     var unclassified: usize = 0;
     var missing: usize = 0;
+    var numeric_caches: usize = 0;
+    var string_caches: usize = 0;
+    var numeric_literals: usize = 0;
+    var string_literals: usize = 0;
+    var cache_points: usize = 0;
+    var declared_points: usize = 0;
+    var cache_issues: usize = 0;
     for (roots) |root| {
         const dir = try std.Io.Dir.cwd().openDir(std.testing.io, root, .{ .iterate = true });
         defer dir.close(std.testing.io);
@@ -741,12 +748,21 @@ test "HWPX corpus chart path and XML read-only survey" {
             chart_parts += report.chart_parts;
             unclassified += report.unclassified_attribute_sites;
             missing += report.missing_entry + report.invalid_path;
+            numeric_caches += report.cache.numeric_caches;
+            string_caches += report.cache.string_caches;
+            numeric_literals += report.cache.numeric_literals;
+            string_literals += report.cache.string_literals;
+            cache_points += report.cache.points;
+            declared_points += report.cache.declared_points;
+            cache_issues += report.cache.issues();
+            if (report.first_cache_issue_path) |path| std.debug.print("HWPX chart cache diagnostic file={s} part={s} issues={d}\n", .{ entry.path, path, report.cache.issues() });
             if (report.chart_sites != report.resolved or report.unclassified_attribute_sites != 0) {
                 std.debug.print("HWPX chart link diagnostic path={s} sites={d} resolved={d} absent={d} empty={d} invalid={d} missing={d} unclassified={d}\n", .{ entry.path, report.chart_sites, report.resolved, report.absent, report.empty, report.invalid_path, report.missing_entry, report.unclassified_attribute_sites });
             }
         }
     }
     std.debug.print("HWPX chart accepted={d} rejected_zip={d} encrypted={d} sections={d} sites={d} resolved={d} chart_parts={d} unclassified={d} missing={d}\n", .{ accepted, rejected_zip, encrypted, sections, sites, resolved, chart_parts, unclassified, missing });
+    std.debug.print("HWPX chart data numeric_cache={d} string_cache={d} numeric_literal={d} string_literal={d} points={d} declared={d} issues={d}\n", .{ numeric_caches, string_caches, numeric_literals, string_literals, cache_points, declared_points, cache_issues });
     try std.testing.expectEqual(@as(usize, 476), accepted);
     try std.testing.expectEqual(@as(usize, 6), rejected_zip);
     try std.testing.expectEqual(@as(usize, 2), encrypted);
@@ -755,4 +771,11 @@ test "HWPX corpus chart path and XML read-only survey" {
     try std.testing.expectEqual(sites, resolved);
     try std.testing.expectEqual(@as(usize, 0), unclassified);
     try std.testing.expectEqual(@as(usize, 0), missing);
+    try std.testing.expectEqual(@as(usize, 259), numeric_caches);
+    try std.testing.expectEqual(@as(usize, 477), string_caches);
+    try std.testing.expectEqual(@as(usize, 11), numeric_literals);
+    try std.testing.expectEqual(@as(usize, 5), string_literals);
+    try std.testing.expectEqual(@as(usize, 2296), cache_points);
+    try std.testing.expectEqual(cache_points, declared_points);
+    try std.testing.expectEqual(@as(usize, 0), cache_issues);
 }

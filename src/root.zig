@@ -15,6 +15,7 @@ test {
     _ = @import("hwpx/list_references_tests.zig");
     _ = @import("hwpx/binary_references_tests.zig");
     _ = @import("hwpx/chart_references_tests.zig");
+    _ = @import("hwpx/chart_cache_tests.zig");
     _ = @import("hwpx/allocator_ownership_tests.zig");
     _ = @import("image/emf/emf_plus_graphics_version.zig");
     _ = @import("image/emf/emf_plus_values.zig");

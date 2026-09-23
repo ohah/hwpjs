@@ -15,6 +15,7 @@ const header = "<h:head xmlns:h=\"http://www.hancom.co.kr/hwpml/2011/head\" secC
 const section_prefix = "<s:sec xmlns:s=\"http://www.hancom.co.kr/hwpml/2011/section\" xmlns:p=\"http://www.hancom.co.kr/hwpml/2011/paragraph\"><p:p><p:run>";
 const section_suffix = "</p:run></p:p></s:sec>";
 const chart = "<c:chartSpace xmlns:c=\"http://schemas.openxmlformats.org/drawingml/2006/chart\"><c:chart/></c:chartSpace>";
+const chart_with_cache_issue = "<c:chartSpace xmlns:c=\"http://schemas.openxmlformats.org/drawingml/2006/chart\"><c:chart><c:strCache><c:ptCount val=\"2\"/><c:pt idx=\"0\"><c:v>A</c:v></c:pt></c:strCache></c:chart></c:chartSpace>";
 const two_refs = section_prefix ++ "<p:chart chartIDRef=\"Chart/chart&#49;.xml\"/><p:chart chartIDRef=\"Chart/chart1.xml\"/>" ++ section_suffix;
 
 fn zipFor(a: std.mem.Allocator, section: []const u8, chart_xml: []const u8) ![]u8 {
@@ -55,6 +56,31 @@ test "HWPX chart links use exact ZIP paths outside OPF manifest and validate uni
     try std.testing.expectEqual(@as(usize, 1), report.chart_parts);
     try std.testing.expectEqual(chart.len, report.chart_xml_bytes);
     try std.testing.expectEqual(@as(usize, 0), report.unclassified_attribute_sites);
+}
+
+test "HWPX chart links expose cache disagreement once per unique chart part" {
+    var report = try inspect(std.testing.allocator, two_refs, chart_with_cache_issue, .{});
+    defer report.deinit(std.testing.allocator);
+    try std.testing.expectEqual(@as(usize, 2), report.resolved);
+    try std.testing.expectEqual(@as(usize, 1), report.chart_parts);
+    try std.testing.expectEqual(@as(usize, 1), report.cache.string_caches);
+    try std.testing.expectEqual(@as(usize, 1), report.cache.points);
+    try std.testing.expectEqual(@as(usize, 2), report.cache.declared_points);
+    try std.testing.expectEqual(@as(usize, 1), report.cache.point_count_disagreement);
+    try std.testing.expectEqualStrings("Chart/chart1.xml", report.first_cache_issue_path.?);
+}
+
+test "HWPX chart cache budgets are shared across distinct chart parts" {
+    const a = std.testing.allocator;
+    const distinct = section_prefix ++ "<p:chart chartIDRef=\"Chart/chart1.xml\"/><p:chart chartIDRef=\"Chart/chart2.xml\"/>" ++ section_suffix;
+    const chart_with_one_point = "<c:chartSpace xmlns:c=\"http://schemas.openxmlformats.org/drawingml/2006/chart\"><c:numCache><c:ptCount val=\"1\"/><c:pt idx=\"0\"><c:v>2</c:v></c:pt></c:numCache></c:chartSpace>";
+    var report = try inspect(a, distinct, chart_with_one_point, .{ .references = .{ .charts = .{ .cache = .{ .max_data_containers = 2, .max_points = 2 } } } });
+    try std.testing.expectEqual(@as(usize, 2), report.chart_parts);
+    try std.testing.expectEqual(@as(usize, 2), report.cache.numeric_caches);
+    try std.testing.expectEqual(@as(usize, 2), report.cache.points);
+    report.deinit(a);
+    try expectError(a, distinct, chart_with_one_point, .{ .references = .{ .charts = .{ .cache = .{ .max_data_containers = 1 } } } }, error.LimitExceeded);
+    try expectError(a, distinct, chart_with_one_point, .{ .references = .{ .charts = .{ .cache = .{ .max_points = 1 } } } }, error.LimitExceeded);
 }
 
 test "HWPX chart links retain missing, invalid, empty, absent and unclassified paths" {
@@ -169,7 +195,7 @@ test "HWPX chart links reject encryption before reading section XML" {
 test "HWPX chart links cover allocation failures and ReleaseFast owned diagnostics" {
     const a = std.testing.allocator;
     const section = section_prefix ++ "<p:chart chartIDRef=\"Chart/missing.xml\"/><p:other chartIDRef=\"Chart/chart1.xml\"/><p:chart chartIDRef=\"Chart/chart1.xml\"/>" ++ section_suffix;
-    const bytes = try zipFor(a, section, chart);
+    const bytes = try zipFor(a, section, chart_with_cache_issue);
     defer a.free(bytes);
     try std.testing.checkAllAllocationFailures(a, struct {
         fn run(allocator: std.mem.Allocator, source: []const u8) !void {
@@ -185,6 +211,7 @@ test "HWPX chart links cover allocation failures and ReleaseFast owned diagnosti
     var report = try document.inspectChartReferences(checked.allocator(), .{});
     try std.testing.expect(report.first_problem_ref != null);
     try std.testing.expect(report.first_unclassified_ref != null);
+    try std.testing.expect(report.first_cache_issue_path != null);
     report.deinit(checked.allocator());
     document.deinit(checked.allocator());
     try std.testing.expectEqual(@as(usize, 0), checked.total_requested_bytes);

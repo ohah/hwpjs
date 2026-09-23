@@ -3,8 +3,10 @@ const xml = @import("../xml/root.zig");
 const zip = @import("../zip/archive.zig");
 const attrs = @import("xml_attributes.zig");
 const document_xml = @import("document_xml.zig");
+const chart_namespace = @import("chart_namespace.zig");
+const chart_cache = @import("chart_cache.zig");
 
-pub const chart_uri = "http://schemas.openxmlformats.org/drawingml/2006/chart";
+pub const chart_uri = chart_namespace.uri;
 pub const ProblemKind = enum { invalid_path, missing_entry };
 
 pub const Options = struct {
@@ -12,6 +14,7 @@ pub const Options = struct {
     max_total_chart_xml_bytes: usize = 128 * 1024 * 1024,
     max_chart_parts: usize = 100_000,
     xml: document_xml.Options = .{},
+    cache: chart_cache.Options = .{},
 };
 
 pub const Report = struct {
@@ -27,6 +30,8 @@ pub const Report = struct {
     missing_entry: usize = 0,
     resolved: usize = 0,
     unclassified_attribute_sites: usize = 0,
+    cache: chart_cache.Report = .{},
+    first_cache_issue_path: ?[]u8 = null,
     first_problem_ref: ?[]u8 = null,
     first_problem_kind: ?ProblemKind = null,
     first_problem_item_index: ?usize = null,
@@ -36,14 +41,18 @@ pub const Report = struct {
     pub fn deinit(self: *Report, a: std.mem.Allocator) void {
         if (self.first_problem_ref) |value| a.free(value);
         if (self.first_unclassified_ref) |value| a.free(value);
+        if (self.first_cache_issue_path) |value| a.free(value);
         self.* = undefined;
     }
 };
 
 const Root = struct {
-    fn onTag(_: *anyopaque, tag: xml.tags.Tag, scope: *const xml.namespaces.State, depth: usize) anyerror!void {
-        if (tag.kind == .end or depth != 1) return;
-        if (!try attrs.element(tag, scope, chart_uri, "chartSpace")) return error.InvalidChartRoot;
+    cache: *chart_cache.Scanner,
+
+    fn onTag(raw: *anyopaque, tag: xml.tags.Tag, scope: *const xml.namespaces.State, depth: usize) anyerror!void {
+        const self: *Root = @ptrCast(@alignCast(raw));
+        if (tag.kind != .end and depth == 1 and !try attrs.element(tag, scope, chart_uri, "chartSpace")) return error.InvalidChartRoot;
+        try self.cache.onTag(tag, scope, depth);
     }
 };
 
@@ -114,8 +123,14 @@ pub const Resolver = struct {
             if (self.report.chart_parts == self.options.max_chart_parts) return error.LimitExceeded;
             const bytes = try self.archive.decode(entry, @min(self.options.max_chart_xml_bytes, self.remaining));
             defer self.archive.allocator.free(bytes);
-            var root: Root = .{};
+            var cache: chart_cache.Scanner = .{ .allocator = self.allocator, .options = self.options.cache, .report = &self.report.cache };
+            defer cache.deinit();
+            const old_issues = self.report.cache.issues();
+            var root: Root = .{ .cache = &cache };
             _ = try document_xml.visitBytes(self.allocator, bytes, bytes.len, self.options.xml, .{ .context = &root, .on_tag = Root.onTag });
+            if (self.report.cache.issues() != old_issues and self.report.first_cache_issue_path == null) {
+                self.report.first_cache_issue_path = try self.allocator.dupe(u8, entry.name);
+            }
             try self.checked.put(self.allocator, entry.name, {});
             self.remaining -= bytes.len;
             self.report.chart_parts += 1;
