@@ -302,6 +302,108 @@ test "HWPX section tree content visits mixed text and CDATA under exact parents"
     parsed.elements[4].end = original_end;
 }
 
+test "HWPX section tree ordered replay retains element and direct content order" {
+    const a = std.testing.allocator;
+    const source = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'>" ++
+        "A<!-- ignored --><p:p>B&amp;<p:run><p:t>X<![CDATA[Y]]><mark/><?pi ignored?>Z</p:t></p:run>T</p:p>Q</s:sec>";
+    var parsed = try tree.parse(a, source, 0, 0, .{});
+    defer parsed.deinit(a);
+    const Collector = struct {
+        allocator: std.mem.Allocator,
+        events: std.ArrayList(tree.Tree.OrderedEvent) = .empty,
+
+        fn onEvent(raw: *anyopaque, event: tree.Tree.OrderedEvent) !void {
+            const self: *@This() = @ptrCast(@alignCast(raw));
+            try self.events.append(self.allocator, event);
+        }
+    };
+    var collected: Collector = .{ .allocator = a };
+    defer collected.events.deinit(a);
+    try parsed.visitOrdered(a, .{ .context = &collected, .on_event = Collector.onEvent });
+    const Kind = std.meta.Tag(tree.Tree.OrderedEvent);
+    const expected_kinds = [_]Kind{
+        .start_element, .content,       .start_element, .content,
+        .start_element, .start_element, .content,       .content,
+        .empty_element, .content,       .end_element,   .end_element,
+        .content,       .end_element,   .content,       .end_element,
+    };
+    const expected_indices = [_]usize{ 0, 0, 1, 1, 2, 3, 3, 3, 4, 3, 3, 2, 1, 1, 0, 0 };
+    const expected_text = [_]?[]const u8{ null, "A", null, "B&", null, null, "X", "Y", null, "Z", null, null, "T", null, "Q", null };
+    try std.testing.expectEqual(expected_kinds.len, collected.events.items.len);
+    for (collected.events.items, 0..) |event, index| {
+        try std.testing.expectEqual(expected_kinds[index], std.meta.activeTag(event));
+        switch (event) {
+            .start_element, .end_element, .empty_element => |element_index| try std.testing.expectEqual(expected_indices[index], element_index),
+            .content => |value| {
+                try std.testing.expectEqual(expected_indices[index], value.parent_index);
+                try std.testing.expectEqual(if (index == 7) @as(@TypeOf(value.value.kind), .cdata) else .char_data, value.value.kind);
+                const decoded = try value.value.toUtf8(a, 16);
+                defer a.free(decoded);
+                try std.testing.expectEqualStrings(expected_text[index].?, decoded);
+            },
+        }
+    }
+    const Failing = struct {
+        count: usize = 0,
+        fn onEvent(raw: *anyopaque, _: tree.Tree.OrderedEvent) !void {
+            const self: *@This() = @ptrCast(@alignCast(raw));
+            self.count += 1;
+            if (self.count == 9) return error.StopOnEmptyElement;
+        }
+    };
+    var failing: Failing = .{};
+    try std.testing.expectError(error.StopOnEmptyElement, parsed.visitOrdered(a, .{ .context = &failing, .on_event = Failing.onEvent }));
+    try std.testing.expectEqual(@as(usize, 9), failing.count);
+    collected.events.clearRetainingCapacity();
+    try parsed.visitOrdered(a, .{ .context = &collected, .on_event = Collector.onEvent });
+    try std.testing.expectEqual(expected_kinds.len, collected.events.items.len);
+    parsed.elements[4].parent = 1;
+    try std.testing.expectError(error.InvalidSectionTreeDepth, parsed.visitOrdered(a, .{ .context = &collected, .on_event = Collector.onEvent }));
+    parsed.elements[4].parent = 3;
+    const original_uri = parsed.elements[4].name.uri;
+    parsed.elements[4].name.uri = "urn:wrong";
+    try std.testing.expectError(error.InvalidSectionTreeName, parsed.visitOrdered(a, .{ .context = &collected, .on_event = Collector.onEvent }));
+    parsed.elements[4].name.uri = original_uri;
+}
+
+test "HWPX section tree ordered replay cleans up on every allocation failure" {
+    const a = std.testing.allocator;
+    var parsed = try tree.parse(a, "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section'><p>A&amp;<![CDATA[B]]><x/></p></s:sec>", 0, 0, .{});
+    defer parsed.deinit(a);
+    try std.testing.checkAllAllocationFailures(a, struct {
+        fn run(allocator: std.mem.Allocator, parsed_tree: *const tree.Tree) !void {
+            var count: usize = 0;
+            const Counter = struct {
+                fn onEvent(raw: *anyopaque, _: tree.Tree.OrderedEvent) !void {
+                    const value: *usize = @ptrCast(@alignCast(raw));
+                    value.* += 1;
+                }
+            };
+            try parsed_tree.visitOrdered(allocator, .{ .context = &count, .on_event = Counter.onEvent });
+            try std.testing.expectEqual(@as(usize, 7), count);
+        }
+    }.run, .{&parsed});
+}
+
+test "HWPX section tree ordered replay distinguishes empty syntax from explicit pair" {
+    const a = std.testing.allocator;
+    var parsed = try tree.parse(a, "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section'><x/><y></y></s:sec>", 0, 0, .{});
+    defer parsed.deinit(a);
+    const C = struct {
+        events: [5]std.meta.Tag(tree.Tree.OrderedEvent) = undefined,
+        count: usize = 0,
+        fn onEvent(raw: *anyopaque, event: tree.Tree.OrderedEvent) !void {
+            const self: *@This() = @ptrCast(@alignCast(raw));
+            self.events[self.count] = std.meta.activeTag(event);
+            self.count += 1;
+        }
+    };
+    var captured: C = .{};
+    try parsed.visitOrdered(a, .{ .context = &captured, .on_event = C.onEvent });
+    try std.testing.expectEqual(@as(usize, 5), captured.count);
+    try std.testing.expectEqualSlices(std.meta.Tag(tree.Tree.OrderedEvent), &.{ .start_element, .empty_element, .start_element, .end_element, .end_element }, &captured.events);
+}
+
 test "HWPX section tree content replay cleans up on every allocation failure" {
     const a = std.testing.allocator;
     const source = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section'><p>first&amp;second<![CDATA[third]]></p></s:sec>";

@@ -1,5 +1,6 @@
 const std = @import("std");
 const package = @import("hwpx/package.zig");
+const section_tree = @import("hwpx/section_tree.zig");
 const xml = @import("xml/root.zig");
 const hwpx_attrs = @import("hwpx/xml_attributes.zig");
 
@@ -1039,24 +1040,73 @@ fn sectionAttributeDigest(a: std.mem.Allocator, parsed: *const package.SectionTr
     return std.mem.readInt(u256, &output, .big);
 }
 
-fn sectionDirectContentDigest(a: std.mem.Allocator, parsed: *const package.SectionTree) !u256 {
+const SectionContentDigests = struct { direct: u256, ordered: u256 };
+
+fn sectionContentDigests(a: std.mem.Allocator, parsed: *const package.SectionTree) !SectionContentDigests {
     const parts = try a.alloc(std.ArrayList(u8), parsed.elements.len);
     defer a.free(parts);
     @memset(parts, .empty);
     defer for (parts) |*part| part.deinit(a);
     const Context = struct {
         allocator: std.mem.Allocator,
+        parsed: *const package.SectionTree,
         parts: []std.ArrayList(u8),
+        stack: std.ArrayList(usize) = .empty,
+        next_element: usize = 0,
+        ordered_hash: std.crypto.hash.sha2.Sha256 = std.crypto.hash.sha2.Sha256.init(.{}),
+        pending: std.ArrayList(u8) = .empty,
 
-        fn onContent(raw: *anyopaque, event: package.SectionTree.ContentEvent) !void {
+        fn mark(self: *@This(), kind: u8, index: usize) void {
+            var encoded: [4]u8 = undefined;
+            std.mem.writeInt(u32, &encoded, @intCast(index), .little);
+            self.ordered_hash.update(&.{kind});
+            self.ordered_hash.update(&encoded);
+        }
+
+        fn flush(self: *@This()) !void {
+            if (self.pending.items.len == 0) return;
+            const parent = self.stack.getLast();
+            self.mark(3, parent);
+            var length: [4]u8 = undefined;
+            std.mem.writeInt(u32, &length, @intCast(self.pending.items.len), .little);
+            self.ordered_hash.update(&length);
+            self.ordered_hash.update(self.pending.items);
+            self.pending.clearRetainingCapacity();
+        }
+
+        fn onEvent(raw: *anyopaque, event: package.SectionTree.OrderedEvent) !void {
             const self: *@This() = @ptrCast(@alignCast(raw));
-            const bytes = try event.value.toUtf8(self.allocator, 128 * 1024 * 1024);
-            defer self.allocator.free(bytes);
-            try self.parts[event.parent_index].appendSlice(self.allocator, bytes);
+            switch (event) {
+                .start_element, .empty_element => |index| {
+                    try self.flush();
+                    try std.testing.expectEqual(self.next_element, index);
+                    try std.testing.expectEqual(if (self.stack.items.len == 0) @as(?usize, null) else self.stack.items[self.stack.items.len - 1], self.parsed.elements[index].parent);
+                    self.next_element += 1;
+                    self.mark(1, index);
+                    if (event == .start_element) try self.stack.append(self.allocator, index);
+                    if (event == .empty_element) self.mark(2, index);
+                },
+                .end_element => |index| {
+                    try self.flush();
+                    try std.testing.expectEqual(index, self.stack.pop() orelse return error.InvalidSectionTreeDepth);
+                    self.mark(2, index);
+                },
+                .content => |value| {
+                    try std.testing.expectEqual(value.parent_index, self.stack.getLast());
+                    const bytes = try value.value.toUtf8(self.allocator, 128 * 1024 * 1024);
+                    defer self.allocator.free(bytes);
+                    try self.parts[value.parent_index].appendSlice(self.allocator, bytes);
+                    try self.pending.appendSlice(self.allocator, bytes);
+                },
+            }
         }
     };
-    var context: Context = .{ .allocator = a, .parts = parts };
-    try parsed.visitContent(a, .{ .context = &context, .on_content = Context.onContent });
+    var context: Context = .{ .allocator = a, .parsed = parsed, .parts = parts };
+    defer context.stack.deinit(a);
+    defer context.pending.deinit(a);
+    try parsed.visitOrdered(a, .{ .context = &context, .on_event = Context.onEvent });
+    try std.testing.expectEqual(parsed.elements.len, context.next_element);
+    try std.testing.expectEqual(@as(usize, 0), context.stack.items.len);
     var hash = std.crypto.hash.sha2.Sha256.init(.{});
     for (parts) |part| {
         var length: [4]u8 = undefined;
@@ -1066,7 +1116,22 @@ fn sectionDirectContentDigest(a: std.mem.Allocator, parsed: *const package.Secti
     }
     var output: [32]u8 = undefined;
     hash.final(&output);
-    return std.mem.readInt(u256, &output, .big);
+    var ordered_output: [32]u8 = undefined;
+    context.ordered_hash.final(&ordered_output);
+    return .{ .direct = std.mem.readInt(u256, &output, .big), .ordered = std.mem.readInt(u256, &ordered_output, .big) };
+}
+
+test "HWPX ordered digest detects moved text with unchanged direct content" {
+    const a = std.testing.allocator;
+    const root = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section'>";
+    var before = try section_tree.parse(a, root ++ "A<x/>B</s:sec>", 0, 0, .{});
+    defer before.deinit(a);
+    var after = try section_tree.parse(a, root ++ "AB<x/></s:sec>", 0, 0, .{});
+    defer after.deinit(a);
+    const first = try sectionContentDigests(a, &before);
+    const second = try sectionContentDigests(a, &after);
+    try std.testing.expectEqual(first.direct, second.direct);
+    try std.testing.expect(first.ordered != second.ordered);
 }
 
 fn surveySectionTreeShard(shard: usize) !void {
@@ -1079,6 +1144,7 @@ fn surveySectionTreeShard(shard: usize) !void {
     var elements: usize = 0;
     var attribute_digest_sum: u256 = 0;
     var content_digest_sum: u256 = 0;
+    var ordered_digest_sum: u256 = 0;
     var attribute_counts: [6]SectionAttributeCount = @splat(.{});
     for (roots, 0..) |root, root_index| {
         const dir = try std.Io.Dir.cwd().openDir(std.testing.io, root, .{ .iterate = true });
@@ -1154,13 +1220,15 @@ fn surveySectionTreeShard(shard: usize) !void {
                 try std.testing.expectEqual(parsed.elements.len - 1, child_edges);
                 try std.testing.expectEqual(child_edges, linked_children);
                 attribute_digest_sum +%= try sectionAttributeDigest(a, &parsed, &attribute_counts);
-                content_digest_sum +%= try sectionDirectContentDigest(a, &parsed);
+                const content_digests = try sectionContentDigests(a, &parsed);
+                content_digest_sum +%= content_digests.direct;
+                ordered_digest_sum +%= content_digests.ordered;
                 sections += 1;
                 elements += parsed.elements.len;
             }
         }
     }
-    std.debug.print("HWPX section tree shard={d} accepted={d} rejected_zip={d} encrypted={d} sections={d} elements={d} attribute_digest={x:0>64} content_digest={x:0>64}\n", .{ shard, accepted, rejected_zip, encrypted, sections, elements, attribute_digest_sum, content_digest_sum });
+    std.debug.print("HWPX section tree shard={d} accepted={d} rejected_zip={d} encrypted={d} sections={d} elements={d} attribute_digest={x:0>64} content_digest={x:0>64} ordered_digest={x:0>64}\n", .{ shard, accepted, rejected_zip, encrypted, sections, elements, attribute_digest_sum, content_digest_sum, ordered_digest_sum });
     const expected_accepted = [_]usize{ 64, 68, 56, 49, 61, 59, 58, 61 };
     const expected_rejected_zip = [_]usize{ 1, 3, 0, 2, 0, 0, 0, 0 };
     const expected_encrypted = [_]usize{ 0, 0, 0, 0, 2, 0, 0, 0 };
@@ -1193,6 +1261,17 @@ fn surveySectionTreeShard(shard: usize) !void {
         "57f5e54270cdce33bee8d3963bd9ec1281ca1d1e58a84e055c809ba7d69bb302",
     };
     try std.testing.expectEqual(try std.fmt.parseInt(u256, expected_content_digests[shard], 16), content_digest_sum);
+    const expected_ordered_digests = [_][]const u8{
+        "f61718dfaee3b8135dcb919c53ff75a8076d0be7f88962cdf50da0275a3b6ebd",
+        "880079dfebed47c5aa3fc71ad016c2ca6f3582606dd2a5ebddc7700b3aadf600",
+        "455b50d011655180dfac92a808bae7aba531e1d289fa347ecaed90d32cff8274",
+        "62cccb98dbbb60a33a66c5aadb81be33f38fafc7cd4771e9dc8b9c87a2ac1698",
+        "d598bbc447823dfc48c24b864b12b42854d5efc7b84d25361e86920c1da55dce",
+        "24e7ddad86ef3b67f71822b6df619313a1b369200ce980552308d7392cc6107f",
+        "ad992858bae9b4650776187d624858693c8eadb88c5672daae3150d28b99063c",
+        "07eba7707db97cc2389837da235c04d6c1fa3dc854a9fce7bb8c5315de83d111",
+    };
+    try std.testing.expectEqual(try std.fmt.parseInt(u256, expected_ordered_digests[shard], 16), ordered_digest_sum);
 }
 
 test "HWPX corpus section tree shard 0" {

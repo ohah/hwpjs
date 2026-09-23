@@ -120,6 +120,53 @@ def section_direct_content_digest(data: bytes) -> int:
     return int.from_bytes(digest.digest(), "big")
 
 
+def section_ordered_digest(data: bytes) -> int:
+    """Independent Expat stream: element boundaries and coalesced direct text."""
+    digest = hashlib.sha256()
+    stack = []
+    pending = bytearray()
+    next_index = 0
+    parser = expat.ParserCreate()
+
+    def flush():
+        if pending:
+            digest.update(b"\x03")
+            digest.update(stack[-1].to_bytes(4, "little"))
+            digest.update(len(pending).to_bytes(4, "little"))
+            digest.update(pending)
+            pending.clear()
+
+    def start(_name, _attributes):
+        nonlocal next_index
+        flush()
+        digest.update(b"\x01")
+        digest.update(next_index.to_bytes(4, "little"))
+        stack.append(next_index)
+        next_index += 1
+
+    def end(_name):
+        flush()
+        digest.update(b"\x02")
+        digest.update(stack.pop().to_bytes(4, "little"))
+
+    def content(value):
+        if stack:
+            pending.extend(value.encode("utf-8"))
+
+    def reject_declaration(*_args):
+        raise ValueError("HWPX oracle does not accept DTD or external entities")
+
+    parser.StartElementHandler = start
+    parser.EndElementHandler = end
+    parser.CharacterDataHandler = content
+    parser.StartDoctypeDeclHandler = reject_declaration
+    parser.ExternalEntityRefHandler = reject_declaration
+    parser.Parse(data, True)
+    if stack or pending:
+        raise ValueError("HWPX oracle ordered stream did not close")
+    return int.from_bytes(digest.digest(), "big")
+
+
 def inspect_text(node: ET.Element, parent: str, result: dict, inside_text: bool = False) -> None:
     now_inside_text = inside_text or node.tag == PARAGRAPH + "t"
 
@@ -201,18 +248,26 @@ def self_check() -> None:
     assert section_attribute_digest(empty, counts) != section_attribute_digest(absent, counts)
     assert counts["P.id"] == {"present": 1, "empty": 1}
     assert section_direct_content_digest(b"<root>A&amp;<child/>B<![CDATA[C]]></root>") != section_direct_content_digest(b"<root>A&amp;<child>B</child><![CDATA[C]]></root>")
+    assert section_ordered_digest(b"<root>A<child/>B</root>") != section_ordered_digest(b"<root>AB<child/></root>")
+    assert section_ordered_digest(b"<root>A&amp;<![CDATA[B]]></root>") == section_ordered_digest(b"<root>A&amp;B</root>")
     try:
         section_direct_content_digest(b"<!DOCTYPE root><root/>")
     except ValueError:
         pass
     else:
         raise AssertionError("DTD was not rejected")
+    try:
+        section_ordered_digest(b"<!DOCTYPE root><root/>")
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("ordered digest accepted a DTD")
 
 
 def main() -> None:
     self_check()
     tree_shards = [
-        {"accepted": 0, "rejected_zip": 0, "encrypted": 0, "sections": 0, "elements": 0, "attribute_digest_sum": 0, "content_digest_sum": 0}
+        {"accepted": 0, "rejected_zip": 0, "encrypted": 0, "sections": 0, "elements": 0, "attribute_digest_sum": 0, "content_digest_sum": 0, "ordered_digest_sum": 0}
         for _ in range(8)
     ]
     attribute_counts = {
@@ -290,6 +345,9 @@ def main() -> None:
                         shard["content_digest_sum"] = (
                             shard["content_digest_sum"] + section_direct_content_digest(section_bytes)
                         ) % HASH_MODULUS
+                        shard["ordered_digest_sum"] = (
+                            shard["ordered_digest_sum"] + section_ordered_digest(section_bytes)
+                        ) % HASH_MODULUS
                         direct = sum(child.tag == PARAGRAPH + "p" for child in section)
                         result["direct_paragraphs"] += direct
                         result["sections_without_direct_paragraph"] += direct == 0
@@ -304,6 +362,7 @@ def main() -> None:
     for shard in tree_shards:
         shard["attribute_digest_sum"] = f'{shard["attribute_digest_sum"]:064x}'
         shard["content_digest_sum"] = f'{shard["content_digest_sum"]:064x}'
+        shard["ordered_digest_sum"] = f'{shard["ordered_digest_sum"]:064x}'
     result["section_tree_shards"] = tree_shards
     result["section_attribute_counts"] = attribute_counts
     result["header_root_names"] = dict(sorted(result["header_root_names"].items()))

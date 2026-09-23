@@ -66,11 +66,19 @@ pub const Tree = struct {
 
     pub const ContentEvent = content.Event;
     pub const ContentVisitor = content.Visitor;
+    pub const OrderedEvent = content.OrderedEvent;
+    pub const OrderedVisitor = content.OrderedVisitor;
 
     /// Visits ordered CharData and CDATA chunks with their exact parent index.
     /// Raw content borrows this tree; callback failure may follow prior events.
     pub fn visitContent(self: *const Tree, a: std.mem.Allocator, visitor: ContentVisitor) !void {
         return content.visit(a, self, visitor);
+    }
+
+    /// Visits element boundaries and direct character/CDATA content in XML
+    /// order. Unsupported elements are retained as indexed elements.
+    pub fn visitOrdered(self: *const Tree, a: std.mem.Allocator, visitor: OrderedVisitor) !void {
+        return content.visitOrdered(a, self, visitor);
     }
 };
 
