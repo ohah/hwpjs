@@ -5,10 +5,13 @@ pub const hwp5 = @import("hwp5/root.zig");
 pub const raw_deflate = @import("compression/raw_deflate.zig");
 pub const zlib = @import("compression/zlib.zig");
 pub const xml = @import("xml/root.zig");
+pub const zip = @import("zip/archive.zig");
+pub const hwpx = @import("hwpx/package.zig");
 pub const image = @import("image/root.zig");
 pub const text = @import("text/root.zig");
 
 test {
+    _ = @import("hwpx/package_tests.zig");
     _ = @import("image/emf/emf_plus_graphics_version.zig");
     _ = @import("image/emf/emf_plus_values.zig");
     _ = @import("image/emf/emf_plus_argb.zig");
