@@ -367,3 +367,120 @@ test "HWPX corpus header resource links read-only survey" {
     try std.testing.expectEqual(@as(usize, 1), character_style_missing_paragraph_shape);
     try std.testing.expectEqual(@as(usize, 6), character_style_missing_next_style);
 }
+
+test "HWPX corpus fontface language links read-only survey" {
+    const a = std.testing.allocator;
+    const roots = [_][]const u8{ "legacy/rust/crates/hwp-core/tests/fixtures", "reference/rhwp/samples" };
+    const languages = [_]package.FontLanguage{ .hangul, .latin, .hanja, .japanese, .other, .symbol, .user };
+    var accepted: usize = 0;
+    var rejected_zip: usize = 0;
+    var encrypted: usize = 0;
+    var fontfaces_absent: usize = 0;
+    var group_count_mismatch: usize = 0;
+    var char_shapes: usize = 0;
+    var font_refs: usize = 0;
+    var extra_font_refs: usize = 0;
+    var shapes_without_font_ref: usize = 0;
+    var languages_present: [languages.len]usize = @splat(0);
+    var font_ids: [languages.len]usize = @splat(0);
+    var font_count_mismatch: [languages.len]usize = @splat(0);
+    var resolved: [languages.len]usize = @splat(0);
+    var absent: [languages.len]usize = @splat(0);
+    var missing_target: [languages.len]usize = @splat(0);
+    var absent_table: [languages.len]usize = @splat(0);
+    var absent_table_documents: [languages.len]usize = @splat(0);
+    var absent_table_minor0: [languages.len]usize = @splat(0);
+    var absent_table_minor1: [languages.len]usize = @splat(0);
+    var absent_table_first_zero: [languages.len]usize = @splat(0);
+    for (roots) |root| {
+        const dir = try std.Io.Dir.cwd().openDir(std.testing.io, root, .{ .iterate = true });
+        defer dir.close(std.testing.io);
+        var walker = try dir.walk(a);
+        defer walker.deinit();
+        while (try walker.next(std.testing.io)) |entry| {
+            if (entry.kind != .file or !std.mem.endsWith(u8, entry.path, ".hwpx")) continue;
+            const bytes = try dir.readFileAlloc(std.testing.io, entry.path, a, .limited(25_000_000));
+            defer a.free(bytes);
+            var document = package.inspectDocument(a, bytes, .{}) catch |err| {
+                try std.testing.expectEqual(error.MissingEndRecord, err);
+                rejected_zip += 1;
+                continue;
+            };
+            defer document.deinit(a);
+            var report = document.inspectFontReferences(a, .{}) catch |err| {
+                if (err == error.EncryptedDocument) {
+                    encrypted += 1;
+                    continue;
+                }
+                std.debug.print("HWPX font links unexpected error in {s}: {s}\n", .{ entry.path, @errorName(err) });
+                return err;
+            };
+            defer report.deinit(a);
+            accepted += 1;
+            if (!report.faces.fontfaces_present) fontfaces_absent += 1;
+            if (report.faces.languageCountMatches()) |matches| {
+                if (!matches) group_count_mismatch += 1;
+            }
+            char_shapes += report.references.character_shapes;
+            font_refs += report.references.font_ref_elements;
+            extra_font_refs += report.references.extra_font_ref_elements;
+            shapes_without_font_ref += report.references.character_shapes_without_font_ref;
+            for (languages, 0..) |language, index| {
+                const table = report.faces.table(language);
+                if (table.present) languages_present[index] += 1;
+                font_ids[index] += table.ids.items.len;
+                if (table.countMatches()) |matches| {
+                    if (!matches) font_count_mismatch[index] += 1;
+                }
+                const counts = report.references.counts(language);
+                resolved[index] += counts.resolved;
+                absent[index] += counts.absent;
+                missing_target[index] += counts.missing_target;
+                absent_table[index] += counts.absent_table;
+                if (counts.absent_table != 0) {
+                    absent_table_documents[index] += 1;
+                    if (counts.first_unresolved_id == 0) absent_table_first_zero[index] += 1;
+                    if (absent_table_documents[index] <= 2) {
+                        std.debug.print("HWPX font absent language path={s} language={s} first_id={?d}\n", .{ entry.path, @tagName(language), counts.first_unresolved_id });
+                    }
+                }
+            }
+            var any_absent = false;
+            for (languages) |language| {
+                if (report.references.counts(language).absent_table != 0) any_absent = true;
+            }
+            if (any_absent) {
+                var version = try document.inspectVersion(a, .{});
+                defer version.deinit(a);
+                for (languages, 0..) |language, index| {
+                    if (report.references.counts(language).absent_table == 0) continue;
+                    if (version.minor == 0) absent_table_minor0[index] += 1;
+                    if (version.minor == 1) absent_table_minor1[index] += 1;
+                }
+            }
+        }
+    }
+    std.debug.print("HWPX font links: accepted={d} rejected_zip={d} encrypted={d} fontfaces_absent={d} group_count_mismatch={d} char_shapes={d} font_refs={d} extra_font_refs={d} no_font_ref={d}\n", .{ accepted, rejected_zip, encrypted, fontfaces_absent, group_count_mismatch, char_shapes, font_refs, extra_font_refs, shapes_without_font_ref });
+    std.debug.print("HWPX font links: languages_present={any} font_ids={any} font_count_mismatch={any}\n", .{ languages_present, font_ids, font_count_mismatch });
+    std.debug.print("HWPX font links: resolved={any} absent={any} missing_target={any} absent_table={any}\n", .{ resolved, absent, missing_target, absent_table });
+    std.debug.print("HWPX font absent table docs={any} minor0={any} minor1={any} first_zero={any}\n", .{ absent_table_documents, absent_table_minor0, absent_table_minor1, absent_table_first_zero });
+    try std.testing.expectEqual(@as(usize, 476), accepted);
+    try std.testing.expectEqual(@as(usize, 6), rejected_zip);
+    try std.testing.expectEqual(@as(usize, 2), encrypted);
+    try std.testing.expectEqual(@as(usize, 0), fontfaces_absent);
+    try std.testing.expectEqual(@as(usize, 0), group_count_mismatch);
+    try std.testing.expectEqual(@as(usize, 30_189), char_shapes);
+    try std.testing.expectEqual(char_shapes, font_refs);
+    try std.testing.expectEqual(@as(usize, 0), extra_font_refs);
+    try std.testing.expectEqual(@as(usize, 0), shapes_without_font_ref);
+    try std.testing.expectEqual([languages.len]usize{ 476, 457, 457, 457, 457, 457, 457 }, languages_present);
+    try std.testing.expectEqual([languages.len]usize{ 3252, 3403, 2912, 2905, 2547, 2888, 2539 }, font_ids);
+    try std.testing.expectEqual([languages.len]usize{ 0, 0, 0, 0, 0, 0, 0 }, font_count_mismatch);
+    try std.testing.expectEqual([languages.len]usize{ 30_189, 30_169, 30_169, 30_169, 30_169, 30_169, 30_169 }, resolved);
+    try std.testing.expectEqual([languages.len]usize{ 0, 0, 0, 0, 0, 0, 0 }, absent);
+    try std.testing.expectEqual([languages.len]usize{ 0, 0, 0, 0, 0, 0, 0 }, missing_target);
+    try std.testing.expectEqual([languages.len]usize{ 0, 20, 20, 20, 20, 20, 20 }, absent_table);
+    try std.testing.expectEqual([languages.len]usize{ 0, 0, 0, 0, 0, 0, 0 }, absent_table_minor0);
+    try std.testing.expectEqual([languages.len]usize{ 0, 19, 19, 19, 19, 19, 19 }, absent_table_minor1);
+    try std.testing.expectEqual(absent_table_documents, absent_table_first_zero);
+}

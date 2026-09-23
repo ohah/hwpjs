@@ -1581,3 +1581,223 @@ test "HWPX header links allocation failures and ReleaseFast cleanup" {
     document.deinit(checked.allocator());
     try std.testing.expectEqual(@as(usize, 0), checked.total_requested_bytes);
 }
+
+const font_header = resource_prefix ++
+    "<h:fontfaces itemCnt=\"7\">" ++
+    "<h:fontface lang=\"HANGUL\" fontCnt=\"2\"><h:font id=\"&#55;\"/><h:font id=\"3\"/></h:fontface>" ++
+    "<h:fontface lang=\"LATIN\" fontCnt=\"1\"><h:font id=\"9\"/></h:fontface>" ++
+    "<h:fontface lang=\"HANJA\" fontCnt=\"1\"><h:font id=\"0\"/></h:fontface>" ++
+    "<h:fontface lang=\"JAPANESE\" fontCnt=\"1\"><h:font id=\"0\"/></h:fontface>" ++
+    "<h:fontface lang=\"OTHER\" fontCnt=\"1\"><h:font id=\"0\"/></h:fontface>" ++
+    "<h:fontface lang=\"SYMBOL\" fontCnt=\"1\"><h:font id=\"0\"/></h:fontface>" ++
+    "<h:fontface lang=\"USER\" fontCnt=\"1\"><h:font id=\"0\"/></h:fontface>" ++
+    "</h:fontfaces><h:charProperties><h:charPr id=\"5\"><h:fontRef latin=\"9\" hangul=\"7\" hanja=\"0\" japanese=\"0\" other=\"0\" symbol=\"0\" user=\"0\"/></h:charPr><h:charPr id=\"6\"/></h:charProperties>" ++ resource_suffix;
+
+fn expectFontReferenceError(a: std.mem.Allocator, header: []const u8, options: package.FontReferenceOptions, expected: anyerror) !void {
+    const bytes = try syntheticStructureZip(a, header, structure_section);
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    if (document.inspectFontReferences(a, options)) |value| {
+        var unexpected = value;
+        unexpected.deinit(a);
+        return error.TestExpectedError;
+    } else |err| try std.testing.expectEqual(expected, err);
+}
+
+test "HWPX font references resolve sparse IDs within their own language" {
+    const a = std.testing.allocator;
+    const bytes = try syntheticStructureZip(a, font_header, structure_section);
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    var report = try document.inspectFontReferences(a, .{});
+    defer report.deinit(a);
+    try std.testing.expect(report.faces.fontfaces_present);
+    try std.testing.expectEqual(@as(?bool, true), report.faces.languageCountMatches());
+    try std.testing.expect(report.faces.table(.hangul).hasId(7));
+    try std.testing.expect(!report.faces.table(.hangul).hasId(9));
+    try std.testing.expect(report.faces.table(.latin).hasId(9));
+    try std.testing.expect(!report.faces.table(.latin).hasId(7));
+    try std.testing.expectEqual(@as(usize, 2), report.references.character_shapes);
+    try std.testing.expectEqual(@as(usize, 1), report.references.font_ref_elements);
+    try std.testing.expectEqual(@as(usize, 1), report.references.character_shapes_without_font_ref);
+    try std.testing.expectEqual(@as(usize, 0), report.references.extra_font_ref_elements);
+    for ([_]package.FontLanguage{ .hangul, .latin, .hanja, .japanese, .other, .symbol, .user }) |language| {
+        try std.testing.expectEqual(@as(?bool, true), report.faces.table(language).countMatches());
+        try std.testing.expectEqual(@as(usize, 1), report.references.counts(language).resolved);
+        try std.testing.expectEqual(@as(usize, 0), report.references.counts(language).missing_target);
+        try std.testing.expectEqual(@as(usize, 0), report.references.counts(language).absent_table);
+    }
+}
+
+test "HWPX font references distinguish absent language, ID and attribute" {
+    const a = std.testing.allocator;
+    const header = resource_prefix ++
+        "<h:fontfaces itemCnt=\"1\"><h:fontface lang=\"HANGUL\" fontCnt=\"1\"><h:font id=\"5\"/></h:fontface></h:fontfaces>" ++
+        "<h:charProperties><h:charPr id=\"0\"><h:fontRef hangul=\"0\" latin=\"0\"/></h:charPr></h:charProperties>" ++ resource_suffix;
+    const bytes = try syntheticStructureZip(a, header, structure_section);
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    var report = try document.inspectFontReferences(a, .{});
+    defer report.deinit(a);
+    try std.testing.expectEqual(@as(usize, 1), report.references.counts(.hangul).missing_target);
+    try std.testing.expectEqual(@as(?u32, 0), report.references.counts(.hangul).first_unresolved_id);
+    try std.testing.expect(report.references.counts(.hangul).first_unresolved_item_index != null);
+    try std.testing.expectEqual(@as(usize, 1), report.references.counts(.latin).absent_table);
+    try std.testing.expectEqual(@as(usize, 0), report.references.counts(.latin).missing_target);
+    try std.testing.expectEqual(@as(usize, 1), report.references.counts(.user).absent);
+
+    const spoofed = resource_prefix ++
+        "<h:fontfaces><h:fontface lang=\"HANGUL\"><h:font id=\"0\"/></h:fontface></h:fontfaces>" ++
+        "<h:charProperties xmlns:x=\"urn:wrong\"><h:charPr id=\"0\"><x:fontRef hangul=\"999\"/><h:fontRef x:hangul=\"999\"/></h:charPr></h:charProperties>" ++ resource_suffix;
+    const spoofed_bytes = try syntheticStructureZip(a, spoofed, structure_section);
+    defer a.free(spoofed_bytes);
+    var spoofed_document = try package.inspectDocument(a, spoofed_bytes, .{});
+    defer spoofed_document.deinit(a);
+    var spoofed_report = try spoofed_document.inspectFontReferences(a, .{});
+    defer spoofed_report.deinit(a);
+    try std.testing.expectEqual(@as(usize, 1), spoofed_report.references.font_ref_elements);
+    try std.testing.expectEqual(@as(usize, 1), spoofed_report.references.counts(.hangul).absent);
+    try std.testing.expectEqual(@as(usize, 0), spoofed_report.references.counts(.hangul).missing_target);
+}
+
+test "HWPX font count disagreements, absent group and repeated fontRef stay explicit" {
+    const a = std.testing.allocator;
+    const mismatch = resource_prefix ++
+        "<h:fontfaces itemCnt=\"2\"><h:fontface lang=\"HANGUL\" fontCnt=\"2\"><h:font id=\"5\"/></h:fontface></h:fontfaces>" ++
+        "<h:charProperties><h:charPr id=\"0\"><h:fontRef hangul=\"5\"/><h:fontRef hangul=\"5\"/></h:charPr></h:charProperties>" ++ resource_suffix;
+    const bytes = try syntheticStructureZip(a, mismatch, structure_section);
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    var report = try document.inspectFontReferences(a, .{});
+    defer report.deinit(a);
+    try std.testing.expectEqual(@as(?bool, false), report.faces.languageCountMatches());
+    try std.testing.expectEqual(@as(?bool, false), report.faces.table(.hangul).countMatches());
+    try std.testing.expectEqual(@as(usize, 2), report.references.font_ref_elements);
+    try std.testing.expectEqual(@as(usize, 1), report.references.extra_font_ref_elements);
+    try std.testing.expectEqual(@as(usize, 2), report.references.counts(.hangul).resolved);
+
+    const absent_group = resource_prefix ++
+        "<h:charProperties><h:charPr id=\"0\"><h:fontRef hangul=\"0\"/></h:charPr></h:charProperties>" ++ resource_suffix;
+    const absent_bytes = try syntheticStructureZip(a, absent_group, structure_section);
+    defer a.free(absent_bytes);
+    var absent_document = try package.inspectDocument(a, absent_bytes, .{});
+    defer absent_document.deinit(a);
+    var absent_report = try absent_document.inspectFontReferences(a, .{});
+    defer absent_report.deinit(a);
+    try std.testing.expect(!absent_report.faces.fontfaces_present);
+    try std.testing.expectEqual(@as(?bool, null), absent_report.faces.languageCountMatches());
+    try std.testing.expectEqual(@as(usize, 1), absent_report.references.counts(.hangul).absent_table);
+    try std.testing.expectEqual(@as(?u32, 0), absent_report.references.counts(.hangul).first_unresolved_id);
+
+    const outside = resource_prefix ++
+        "<h:charProperties><h:charPr id=\"0\"><h:fontRef hangul=\"7\"/></h:charPr></h:charProperties>" ++
+        "</h:refList><h:other><h:fontfaces><h:fontface lang=\"HANGUL\"><h:font id=\"7\"/></h:fontface></h:fontfaces></h:other></h:head>";
+    const outside_bytes = try syntheticStructureZip(a, outside, structure_section);
+    defer a.free(outside_bytes);
+    var outside_document = try package.inspectDocument(a, outside_bytes, .{});
+    defer outside_document.deinit(a);
+    var outside_report = try outside_document.inspectFontReferences(a, .{});
+    defer outside_report.deinit(a);
+    try std.testing.expect(!outside_report.faces.fontfaces_present);
+    try std.testing.expectEqual(@as(usize, 1), outside_report.references.counts(.hangul).absent_table);
+
+    const undeclared = resource_prefix ++
+        "<h:fontfaces><h:fontface lang=\"HANGUL\"><h:font id=\"0\"/></h:fontface></h:fontfaces>" ++ resource_suffix;
+    const undeclared_bytes = try syntheticStructureZip(a, undeclared, structure_section);
+    defer a.free(undeclared_bytes);
+    var undeclared_document = try package.inspectDocument(a, undeclared_bytes, .{});
+    defer undeclared_document.deinit(a);
+    var undeclared_report = try undeclared_document.inspectFontReferences(a, .{});
+    defer undeclared_report.deinit(a);
+    try std.testing.expect(undeclared_report.faces.fontfaces_present);
+    try std.testing.expectEqual(@as(?bool, null), undeclared_report.faces.languageCountMatches());
+    try std.testing.expect(undeclared_report.faces.table(.hangul).present);
+    try std.testing.expectEqual(@as(?bool, null), undeclared_report.faces.table(.hangul).countMatches());
+    try std.testing.expect(undeclared_report.faces.table(.hangul).hasId(0));
+}
+
+test "HWPX font face inventory rejects bad language, IDs and duplicates" {
+    const a = std.testing.allocator;
+    const cases = [_]struct { xml: []const u8, expected: anyerror }{
+        .{ .xml = resource_prefix ++ "<h:fontfaces><h:fontface><h:font id=\"0\"/></h:fontface></h:fontfaces>" ++ resource_suffix, .expected = error.MissingFontLanguage },
+        .{ .xml = resource_prefix ++ "<h:fontfaces><h:fontface lang=\"KOREAN\"/></h:fontfaces>" ++ resource_suffix, .expected = error.InvalidFontLanguage },
+        .{ .xml = resource_prefix ++ "<h:fontfaces><h:fontface lang=\"HANGUL\"/><h:fontface lang=\"HANGUL\"/></h:fontfaces>" ++ resource_suffix, .expected = error.DuplicateFontLanguage },
+        .{ .xml = resource_prefix ++ "<h:fontfaces><h:fontface lang=\"HANGUL\"><h:font/></h:fontface></h:fontfaces>" ++ resource_suffix, .expected = error.MissingFontId },
+        .{ .xml = resource_prefix ++ "<h:fontfaces><h:fontface lang=\"HANGUL\"><h:font id=\"4294967296\"/></h:fontface></h:fontfaces>" ++ resource_suffix, .expected = error.InvalidFontId },
+        .{ .xml = resource_prefix ++ "<h:fontfaces><h:fontface lang=\"HANGUL\"><h:font id=\"03\"/><h:font id=\"3\"/></h:fontface></h:fontfaces>" ++ resource_suffix, .expected = error.DuplicateFontId },
+        .{ .xml = resource_prefix ++ "<h:fontfaces itemCnt=\"bad\"/>" ++ resource_suffix, .expected = error.InvalidFontCount },
+        .{ .xml = resource_prefix ++ "<h:fontfaces><h:fontface lang=\"HANGUL\" fontCnt=\"4294967296\"/></h:fontfaces>" ++ resource_suffix, .expected = error.InvalidFontCount },
+        .{ .xml = resource_prefix ++ "<h:fontfaces/><h:fontfaces/>" ++ resource_suffix, .expected = error.DuplicateFontfaces },
+    };
+    for (cases) |case| try expectFontReferenceError(a, case.xml, .{}, case.expected);
+}
+
+test "HWPX font references reject bad numbers and honor exact budgets" {
+    const a = std.testing.allocator;
+    const invalid = resource_prefix ++ "<h:charProperties><h:charPr id=\"0\"><h:fontRef hangul=\"bad\"/></h:charPr></h:charProperties>" ++ resource_suffix;
+    try expectFontReferenceError(a, invalid, .{}, error.InvalidResourceReferenceId);
+    const overflow = resource_prefix ++ "<h:charProperties><h:charPr id=\"0\"><h:fontRef hangul=\"4294967296\"/></h:charPr></h:charProperties>" ++ resource_suffix;
+    try expectFontReferenceError(a, overflow, .{}, error.InvalidResourceReferenceId);
+    const bytes = try syntheticStructureZip(a, font_header, structure_section);
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    var report = try document.inspectFontReferences(a, .{ .faces = .{ .max_xml_bytes = font_header.len }, .references = .{ .max_xml_bytes = font_header.len } });
+    report.deinit(a);
+    try expectFontReferenceError(a, font_header, .{ .faces = .{ .max_xml_bytes = font_header.len - 1 } }, error.LimitExceeded);
+    try expectFontReferenceError(a, font_header, .{ .references = .{ .max_xml_bytes = font_header.len - 1 } }, error.LimitExceeded);
+    try expectFontReferenceError(a, font_header, .{ .faces = .{ .max_font_ids = 1 } }, error.LimitExceeded);
+    try expectFontReferenceError(a, font_header, .{ .faces = .{ .max_attribute_bytes = 0 } }, error.LimitExceeded);
+    try expectFontReferenceError(a, font_header, .{ .references = .{ .max_attribute_bytes = 0 } }, error.LimitExceeded);
+}
+
+test "HWPX real font references traverse example and noori and reject encryption" {
+    const a = std.testing.allocator;
+    for ([_][]const u8{ "example", "noori" }) |name| {
+        const bytes = try loadFixture(a, name);
+        defer a.free(bytes);
+        var document = try package.inspectDocument(a, bytes, .{});
+        defer document.deinit(a);
+        var report = try document.inspectFontReferences(a, .{});
+        defer report.deinit(a);
+        try std.testing.expect(report.faces.fontfaces_present);
+        try std.testing.expectEqual(@as(?bool, true), report.faces.languageCountMatches());
+        try std.testing.expect(report.references.character_shapes > 0);
+        try std.testing.expect(report.references.font_ref_elements > 0);
+        try std.testing.expectEqual(@as(usize, 0), report.references.character_shapes_without_font_ref);
+    }
+    const encrypted = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/password-12345.hwpx", a, .limited(1_000_000));
+    defer a.free(encrypted);
+    var encrypted_document = try package.inspectDocument(a, encrypted, .{});
+    defer encrypted_document.deinit(a);
+    if (encrypted_document.inspectFontReferences(a, .{})) |value| {
+        var unexpected = value;
+        unexpected.deinit(a);
+        return error.TestExpectedError;
+    } else |err| try std.testing.expectEqual(error.EncryptedDocument, err);
+}
+
+test "HWPX font references allocation failures and ReleaseFast cleanup" {
+    const a = std.testing.allocator;
+    const bytes = try syntheticStructureZip(a, font_header, structure_section);
+    defer a.free(bytes);
+    try std.testing.checkAllAllocationFailures(a, struct {
+        fn run(allocator: std.mem.Allocator, source: []const u8) !void {
+            var document = try package.inspectDocument(allocator, source, .{});
+            defer document.deinit(allocator);
+            var report = try document.inspectFontReferences(allocator, .{});
+            report.deinit(allocator);
+        }
+    }.run, .{bytes});
+    var checked: std.heap.DebugAllocator(.{ .safety = true, .enable_memory_limit = true }) = .init;
+    defer _ = checked.deinit();
+    var document = try package.inspectDocument(checked.allocator(), bytes, .{});
+    var report = try document.inspectFontReferences(checked.allocator(), .{});
+    report.deinit(checked.allocator());
+    document.deinit(checked.allocator());
+    try std.testing.expectEqual(@as(usize, 0), checked.total_requested_bytes);
+}

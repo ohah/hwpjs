@@ -8,6 +8,8 @@ const document_structure = @import("document_structure.zig");
 const header_resources = @import("header_resources.zig");
 const section_references = @import("section_references.zig");
 const header_references = @import("header_references.zig");
+const font_faces = @import("font_faces.zig");
+const font_references = @import("font_references.zig");
 
 pub const Archive = zip.Archive;
 pub const Options = zip.Options;
@@ -38,6 +40,21 @@ pub const HeaderReferenceOptions = struct {
 };
 pub const HeaderReferenceReport = header_references.Report;
 pub const HeaderReferenceKind = header_references.Kind;
+pub const FontLanguage = font_faces.Language;
+pub const FontReferenceOptions = struct {
+    protection: ProtectionOptions = .{},
+    faces: font_faces.Options = .{},
+    references: font_references.Options = .{},
+};
+pub const FontReferenceReport = struct {
+    faces: font_faces.Report,
+    references: font_references.Report,
+
+    pub fn deinit(self: *FontReferenceReport, a: std.mem.Allocator) void {
+        self.faces.deinit(a);
+        self.* = undefined;
+    }
+};
 pub const DocumentOptions = struct {
     // The archive index also contains large BinData/section entries. Their
     // declared sizes are bounded here; this call only decodes the two small
@@ -95,6 +112,16 @@ pub const Document = struct {
         var resources = try header_resources.read(a, self.archive, selected.entry, options.resources);
         defer resources.deinit(a);
         return header_references.read(a, self.archive, selected.entry, selected.item_index, &resources, options.references);
+    }
+
+    /// Indexes exact font IDs independently for seven languages, then checks
+    /// direct charPr/fontRef links against the matching language table.
+    pub fn inspectFontReferences(self: *const Document, a: std.mem.Allocator, options: FontReferenceOptions) !FontReferenceReport {
+        const selected = try document_structure.plainHeaderEntry(a, self.archive, self.manifest, options.protection);
+        var faces = try font_faces.read(a, self.archive, selected.entry, options.faces);
+        errdefer faces.deinit(a);
+        const references = try font_references.read(a, self.archive, selected.entry, selected.item_index, &faces, options.references);
+        return .{ .faces = faces, .references = references };
     }
 
     pub fn deinit(self: *Document, a: std.mem.Allocator) void {
