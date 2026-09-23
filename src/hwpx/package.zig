@@ -7,6 +7,7 @@ const encryption_manifest = @import("encryption_manifest.zig");
 const document_structure = @import("document_structure.zig");
 const header_resources = @import("header_resources.zig");
 const section_references = @import("section_references.zig");
+const header_references = @import("header_references.zig");
 
 pub const Archive = zip.Archive;
 pub const Options = zip.Options;
@@ -30,6 +31,13 @@ pub const ReferenceOptions = struct {
 };
 pub const ReferenceReport = section_references.Report;
 pub const ReferenceKind = section_references.Kind;
+pub const HeaderReferenceOptions = struct {
+    protection: ProtectionOptions = .{},
+    resources: header_resources.Options = .{},
+    references: header_references.Options = .{},
+};
+pub const HeaderReferenceReport = header_references.Report;
+pub const HeaderReferenceKind = header_references.Kind;
 pub const DocumentOptions = struct {
     // The archive index also contains large BinData/section entries. Their
     // declared sizes are bounded here; this call only decodes the two small
@@ -78,6 +86,15 @@ pub const Document = struct {
         var resources = try self.inspectHeaderResources(a, .{ .protection = options.structure.protection, .resources = options.header_resources });
         defer resources.deinit(a);
         return section_references.inspect(a, self.archive, self.manifest, structure.sections, &resources, options.sections);
+    }
+
+    /// Resolves selected style, paragraph-shape, and character-shape links
+    /// against explicit IDs from the same unencrypted header.
+    pub fn inspectHeaderReferences(self: *const Document, a: std.mem.Allocator, options: HeaderReferenceOptions) !HeaderReferenceReport {
+        const selected = try document_structure.plainHeaderEntry(a, self.archive, self.manifest, options.protection);
+        var resources = try header_resources.read(a, self.archive, selected.entry, options.resources);
+        defer resources.deinit(a);
+        return header_references.read(a, self.archive, selected.entry, selected.item_index, &resources, options.references);
     }
 
     pub fn deinit(self: *Document, a: std.mem.Allocator) void {

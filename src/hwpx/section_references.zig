@@ -6,21 +6,10 @@ const document_xml = @import("document_xml.zig");
 const content_manifest = @import("content_manifest.zig");
 const document_structure = @import("document_structure.zig");
 const header_resources = @import("header_resources.zig");
+const id_references = @import("id_references.zig");
 
 pub const Kind = enum(u8) { paragraph_shape, style, character_shape };
-pub const Counts = struct {
-    present: usize = 0,
-    absent: usize = 0,
-    resolved: usize = 0,
-    missing_target: usize = 0,
-    absent_table: usize = 0,
-    first_unresolved_id: ?u32 = null,
-    first_unresolved_item_index: ?usize = null,
-
-    pub fn allPresentResolved(self: Counts) bool {
-        return self.missing_target == 0 and self.absent_table == 0;
-    }
-};
+pub const Counts = id_references.Counts;
 
 pub const Report = struct {
     sections: usize,
@@ -58,27 +47,7 @@ const Context = struct {
     }
 
     fn note(self: *Context, kind: Kind, raw_id: ?[]u8, table_kind: header_resources.Kind) !void {
-        defer if (raw_id) |value| self.allocator.free(value);
-        const counts = &self.report.references[@intFromEnum(kind)];
-        const value = raw_id orelse {
-            counts.absent += 1;
-            return;
-        };
-        const id = std.fmt.parseInt(u32, value, 10) catch return error.InvalidResourceReferenceId;
-        counts.present += 1;
-        const table = self.resources.table(table_kind);
-        if (!table.present) {
-            counts.absent_table += 1;
-        } else if (table.hasId(id)) {
-            counts.resolved += 1;
-            return;
-        } else {
-            counts.missing_target += 1;
-        }
-        if (counts.first_unresolved_id == null) {
-            counts.first_unresolved_id = id;
-            counts.first_unresolved_item_index = self.item_index;
-        }
+        _ = try id_references.note(self.allocator, &self.report.references[@intFromEnum(kind)], raw_id, self.resources.table(table_kind), self.item_index);
     }
 
     fn onTag(raw: *anyopaque, tag: xml.tags.Tag, scope: *const xml.namespaces.State, depth: usize) anyerror!void {

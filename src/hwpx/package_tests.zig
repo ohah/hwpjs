@@ -1443,3 +1443,141 @@ test "HWPX section references allocation failures and ReleaseFast cleanup" {
     document.deinit(checked.allocator());
     try std.testing.expectEqual(@as(usize, 0), checked.total_requested_bytes);
 }
+
+const header_links = resource_prefix ++
+    "<h:borderFills><h:borderFill id=\"9\"/><h:borderFill id=\"2\"/></h:borderFills>" ++
+    "<h:charProperties><h:charPr id=\"7\"/><h:charPr id=\"5\" borderFillIDRef=\"9\"/></h:charProperties>" ++
+    "<h:tabProperties><h:tabPr id=\"3\"/></h:tabProperties>" ++
+    "<h:paraProperties><h:paraPr id=\"22\"/><h:paraPr id=\"21\"><h:border/></h:paraPr><h:paraPr id=\"20\" tabPrIDRef=\"3\"><h:border borderFillIDRef=\"2\"/></h:paraPr></h:paraProperties>" ++
+    "<h:styles><h:style id=\"10\" type=\"PARA\" paraPrIDRef=\"20\" charPrIDRef=\"5\" nextStyleIDRef=\"11\"/>" ++
+    "<h:style id=\"11\" type=\"CHAR\" paraPrIDRef=\"21\" charPrIDRef=\"7\" nextStyleIDRef=\"11\"/>" ++
+    "<h:style id=\"12\"/></h:styles>" ++ resource_suffix;
+
+fn expectHeaderReferenceError(a: std.mem.Allocator, header: []const u8, options: package.HeaderReferenceOptions, expected: anyerror) !void {
+    const bytes = try syntheticStructureZip(a, header, structure_section);
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    if (document.inspectHeaderReferences(a, options)) |_| {
+        return error.TestExpectedError;
+    } else |err| try std.testing.expectEqual(expected, err);
+}
+
+test "HWPX header links use sparse exact IDs and distinct absent fields" {
+    const a = std.testing.allocator;
+    const bytes = try syntheticStructureZip(a, header_links, structure_section);
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    const report = try document.inspectHeaderReferences(a, .{});
+    try std.testing.expectEqual(header_links.len, report.xml_bytes);
+    try std.testing.expectEqual(@as(usize, 3), report.styles);
+    try std.testing.expectEqual(@as(usize, 1), report.character_styles);
+    try std.testing.expectEqual(@as(usize, 0), report.character_style_missing_paragraph_shape);
+    try std.testing.expectEqual(@as(usize, 0), report.character_style_missing_next_style);
+    try std.testing.expectEqual(@as(usize, 3), report.paragraph_shapes);
+    try std.testing.expectEqual(@as(usize, 2), report.character_shapes);
+    try std.testing.expectEqual(@as(usize, 2), report.paragraph_border_elements);
+    try std.testing.expectEqual(@as(usize, 1), report.paragraphs_without_border_element);
+    for ([_]package.HeaderReferenceKind{ .style_paragraph_shape, .style_character_shape, .style_next_style }) |kind| {
+        try std.testing.expectEqual(@as(usize, 2), report.counts(kind).resolved);
+        try std.testing.expectEqual(@as(usize, 1), report.counts(kind).absent);
+    }
+    try std.testing.expectEqual(@as(usize, 1), report.counts(.paragraph_tab).resolved);
+    try std.testing.expectEqual(@as(usize, 2), report.counts(.paragraph_tab).absent);
+    try std.testing.expectEqual(@as(usize, 1), report.counts(.character_border_fill).resolved);
+    try std.testing.expectEqual(@as(usize, 1), report.counts(.character_border_fill).absent);
+    try std.testing.expectEqual(@as(usize, 1), report.counts(.paragraph_border_fill).resolved);
+    try std.testing.expectEqual(@as(usize, 1), report.counts(.paragraph_border_fill).absent);
+    try std.testing.expect(report.counts(.style_next_style).allPresentResolved());
+}
+
+test "HWPX header links distinguish missing ID, absent table and namespace spoofing" {
+    const a = std.testing.allocator;
+    const missing = resource_prefix ++
+        "<h:charProperties><h:charPr id=\"5\"/></h:charProperties>" ++
+        "<h:paraProperties><h:paraPr id=\"20\" tabPrIDRef=\"0\"/></h:paraProperties>" ++
+        "<h:styles><h:style id=\"10\" type=\"CHAR\" paraPrIDRef=\"0\" charPrIDRef=\"5\" nextStyleIDRef=\"42\"/></h:styles>" ++ resource_suffix;
+    const bytes = try syntheticStructureZip(a, missing, structure_section);
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    const report = try document.inspectHeaderReferences(a, .{});
+    try std.testing.expectEqual(@as(usize, 1), report.counts(.style_paragraph_shape).missing_target);
+    try std.testing.expectEqual(@as(?u32, 0), report.counts(.style_paragraph_shape).first_unresolved_id);
+    try std.testing.expect(report.counts(.style_paragraph_shape).first_unresolved_item_index != null);
+    try std.testing.expectEqual(@as(usize, 1), report.counts(.style_next_style).missing_target);
+    try std.testing.expectEqual(@as(usize, 1), report.counts(.paragraph_tab).absent_table);
+    try std.testing.expectEqual(@as(usize, 0), report.counts(.paragraph_tab).missing_target);
+    try std.testing.expectEqual(@as(usize, 1), report.character_styles);
+    try std.testing.expectEqual(@as(usize, 1), report.character_style_missing_paragraph_shape);
+    try std.testing.expectEqual(@as(usize, 1), report.character_style_missing_next_style);
+
+    const spoofed = resource_prefix ++
+        "<h:styles xmlns:x=\"urn:wrong\"><h:style id=\"10\" x:paraPrIDRef=\"999\"/><x:style id=\"999\" paraPrIDRef=\"999\"/></h:styles>" ++
+        "</h:refList><h:other><h:styles><h:style id=\"77\" paraPrIDRef=\"999\"/></h:styles></h:other></h:head>";
+    const spoofed_bytes = try syntheticStructureZip(a, spoofed, structure_section);
+    defer a.free(spoofed_bytes);
+    var spoofed_document = try package.inspectDocument(a, spoofed_bytes, .{});
+    defer spoofed_document.deinit(a);
+    const spoofed_report = try spoofed_document.inspectHeaderReferences(a, .{});
+    try std.testing.expectEqual(@as(usize, 1), spoofed_report.styles);
+    try std.testing.expectEqual(@as(usize, 1), spoofed_report.counts(.style_paragraph_shape).absent);
+    try std.testing.expectEqual(@as(usize, 0), spoofed_report.counts(.style_paragraph_shape).missing_target);
+}
+
+test "HWPX header links reject invalid IDs and exact byte limits" {
+    const a = std.testing.allocator;
+    const invalid = resource_prefix ++ "<h:styles><h:style id=\"10\" nextStyleIDRef=\"bad\"/></h:styles>" ++ resource_suffix;
+    try expectHeaderReferenceError(a, invalid, .{}, error.InvalidResourceReferenceId);
+    const overflow = resource_prefix ++ "<h:styles><h:style id=\"10\" nextStyleIDRef=\"4294967296\"/></h:styles>" ++ resource_suffix;
+    try expectHeaderReferenceError(a, overflow, .{}, error.InvalidResourceReferenceId);
+    const at_limit = try syntheticStructureZip(a, header_links, structure_section);
+    defer a.free(at_limit);
+    var document = try package.inspectDocument(a, at_limit, .{});
+    defer document.deinit(a);
+    _ = try document.inspectHeaderReferences(a, .{ .references = .{ .max_xml_bytes = header_links.len } });
+    try expectHeaderReferenceError(a, header_links, .{ .references = .{ .max_xml_bytes = header_links.len - 1 } }, error.LimitExceeded);
+    try expectHeaderReferenceError(a, header_links, .{ .references = .{ .max_attribute_bytes = 0 } }, error.LimitExceeded);
+    try expectHeaderReferenceError(a, header_links, .{ .resources = .{ .max_resource_ids = 1 } }, error.LimitExceeded);
+}
+
+test "HWPX real header links traverse example and noori and reject encryption" {
+    const a = std.testing.allocator;
+    for ([_][]const u8{ "example", "noori" }) |name| {
+        const bytes = try loadFixture(a, name);
+        defer a.free(bytes);
+        var document = try package.inspectDocument(a, bytes, .{});
+        defer document.deinit(a);
+        const report = try document.inspectHeaderReferences(a, .{});
+        try std.testing.expect(report.styles > 0);
+        try std.testing.expect(report.paragraph_shapes > 0);
+        try std.testing.expect(report.character_shapes > 0);
+        try std.testing.expect(report.counts(.style_next_style).present > 0);
+        try std.testing.expect(report.counts(.paragraph_border_fill).present > 0);
+    }
+    const encrypted = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/password-12345.hwpx", a, .limited(1_000_000));
+    defer a.free(encrypted);
+    var encrypted_document = try package.inspectDocument(a, encrypted, .{});
+    defer encrypted_document.deinit(a);
+    if (encrypted_document.inspectHeaderReferences(a, .{})) |_| return error.TestExpectedError else |err| try std.testing.expectEqual(error.EncryptedDocument, err);
+}
+
+test "HWPX header links allocation failures and ReleaseFast cleanup" {
+    const a = std.testing.allocator;
+    const bytes = try syntheticStructureZip(a, header_links, structure_section);
+    defer a.free(bytes);
+    try std.testing.checkAllAllocationFailures(a, struct {
+        fn run(allocator: std.mem.Allocator, source: []const u8) !void {
+            var document = try package.inspectDocument(allocator, source, .{});
+            defer document.deinit(allocator);
+            _ = try document.inspectHeaderReferences(allocator, .{});
+        }
+    }.run, .{bytes});
+    var checked: std.heap.DebugAllocator(.{ .safety = true, .enable_memory_limit = true }) = .init;
+    defer _ = checked.deinit();
+    var document = try package.inspectDocument(checked.allocator(), bytes, .{});
+    _ = try document.inspectHeaderReferences(checked.allocator(), .{});
+    document.deinit(checked.allocator());
+    try std.testing.expectEqual(@as(usize, 0), checked.total_requested_bytes);
+}

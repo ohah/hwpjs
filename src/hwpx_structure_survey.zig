@@ -268,3 +268,102 @@ test "HWPX corpus section format references read-only survey" {
     try std.testing.expectEqual(@as(usize, 6), rejected_zip);
     try std.testing.expectEqual(@as(usize, 2), encrypted);
 }
+
+test "HWPX corpus header resource links read-only survey" {
+    const a = std.testing.allocator;
+    const roots = [_][]const u8{ "legacy/rust/crates/hwp-core/tests/fixtures", "reference/rhwp/samples" };
+    const kinds = [_]package.HeaderReferenceKind{
+        .style_paragraph_shape,
+        .style_character_shape,
+        .style_next_style,
+        .paragraph_tab,
+        .paragraph_border_fill,
+        .character_border_fill,
+    };
+    var accepted: usize = 0;
+    var rejected_zip: usize = 0;
+    var encrypted: usize = 0;
+    var styles: usize = 0;
+    var character_styles: usize = 0;
+    var character_style_missing_paragraph_shape: usize = 0;
+    var character_style_missing_next_style: usize = 0;
+    var paragraph_shapes: usize = 0;
+    var character_shapes: usize = 0;
+    var paragraph_border_elements: usize = 0;
+    var paragraphs_without_border_element: usize = 0;
+    var resolved: [kinds.len]usize = @splat(0);
+    var absent: [kinds.len]usize = @splat(0);
+    var missing_target: [kinds.len]usize = @splat(0);
+    var absent_table: [kinds.len]usize = @splat(0);
+    var anomaly_documents: [3]usize = @splat(0);
+    var anomaly_minor0: [3]usize = @splat(0);
+    var anomaly_minor1: [3]usize = @splat(0);
+    for (roots) |root| {
+        const dir = try std.Io.Dir.cwd().openDir(std.testing.io, root, .{ .iterate = true });
+        defer dir.close(std.testing.io);
+        var walker = try dir.walk(a);
+        defer walker.deinit();
+        while (try walker.next(std.testing.io)) |entry| {
+            if (entry.kind != .file or !std.mem.endsWith(u8, entry.path, ".hwpx")) continue;
+            const bytes = try dir.readFileAlloc(std.testing.io, entry.path, a, .limited(25_000_000));
+            defer a.free(bytes);
+            var document = package.inspectDocument(a, bytes, .{}) catch |err| {
+                try std.testing.expectEqual(error.MissingEndRecord, err);
+                rejected_zip += 1;
+                continue;
+            };
+            defer document.deinit(a);
+            const report = document.inspectHeaderReferences(a, .{}) catch |err| {
+                if (err == error.EncryptedDocument) {
+                    encrypted += 1;
+                    continue;
+                }
+                std.debug.print("HWPX header links unexpected error in {s}: {s}\n", .{ entry.path, @errorName(err) });
+                return err;
+            };
+            accepted += 1;
+            styles += report.styles;
+            character_styles += report.character_styles;
+            character_style_missing_paragraph_shape += report.character_style_missing_paragraph_shape;
+            character_style_missing_next_style += report.character_style_missing_next_style;
+            paragraph_shapes += report.paragraph_shapes;
+            character_shapes += report.character_shapes;
+            paragraph_border_elements += report.paragraph_border_elements;
+            paragraphs_without_border_element += report.paragraphs_without_border_element;
+            for (kinds, 0..) |kind, index| {
+                const counts = report.counts(kind);
+                resolved[index] += counts.resolved;
+                absent[index] += counts.absent;
+                missing_target[index] += counts.missing_target;
+                absent_table[index] += counts.absent_table;
+            }
+            const unusual = [_]bool{
+                report.counts(.style_paragraph_shape).missing_target != 0,
+                report.counts(.style_next_style).missing_target != 0,
+                report.counts(.paragraph_tab).absent_table != 0,
+            };
+            if (unusual[0] or unusual[1] or unusual[2]) {
+                var version = try document.inspectVersion(a, .{});
+                defer version.deinit(a);
+                const tracked = [_]package.HeaderReferenceKind{ .style_paragraph_shape, .style_next_style, .paragraph_tab };
+                for (unusual, 0..) |found, index| {
+                    if (!found) continue;
+                    anomaly_documents[index] += 1;
+                    if (version.minor == 0) anomaly_minor0[index] += 1;
+                    if (version.minor == 1) anomaly_minor1[index] += 1;
+                    if (anomaly_documents[index] <= 3) std.debug.print("HWPX header link anomaly kind={s} path={s} minor={d} first_id={?d}\n", .{ @tagName(tracked[index]), entry.path, version.minor, report.counts(tracked[index]).first_unresolved_id });
+                }
+            }
+        }
+    }
+    std.debug.print("HWPX header links: accepted={d} rejected_zip={d} encrypted={d} styles={d} para={d} char={d} borders={d} no_border={d} resolved={any} absent={any} missing_target={any} absent_table={any}\n", .{ accepted, rejected_zip, encrypted, styles, paragraph_shapes, character_shapes, paragraph_border_elements, paragraphs_without_border_element, resolved, absent, missing_target, absent_table });
+    std.debug.print("HWPX header link character styles={d} missing_para={d} missing_next={d}\n", .{ character_styles, character_style_missing_paragraph_shape, character_style_missing_next_style });
+    std.debug.print("HWPX header link anomaly docs={any} minor0={any} minor1={any}\n", .{ anomaly_documents, anomaly_minor0, anomaly_minor1 });
+    try std.testing.expectEqual(@as(usize, 476), accepted);
+    try std.testing.expectEqual(@as(usize, 6), rejected_zip);
+    try std.testing.expectEqual(@as(usize, 2), encrypted);
+    try std.testing.expectEqual([kinds.len]usize{ 1, 0, 6, 0, 0, 0 }, missing_target);
+    try std.testing.expectEqual([kinds.len]usize{ 0, 0, 0, 33, 0, 0 }, absent_table);
+    try std.testing.expectEqual(@as(usize, 1), character_style_missing_paragraph_shape);
+    try std.testing.expectEqual(@as(usize, 6), character_style_missing_next_style);
+}
