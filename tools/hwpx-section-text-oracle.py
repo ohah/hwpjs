@@ -134,11 +134,18 @@ def self_check() -> None:
 
 def main() -> None:
     self_check()
+    tree_shards = [
+        {"accepted": 0, "rejected_zip": 0, "encrypted": 0, "sections": 0, "elements": 0}
+        for _ in range(8)
+    ]
     result = {
         "accepted": 0,
         "rejected_zip": 0,
         "encrypted": 0,
         "sections": 0,
+        "section_elements": 0,
+        "max_section_elements": 0,
+        "max_section_bytes": 0,
         "direct_paragraphs": 0,
         "sections_without_direct_paragraph": 0,
         "paragraphs": 0,
@@ -154,8 +161,9 @@ def main() -> None:
         "non_text_content_chunks": 0,
         "other_content": Counter(),
     }
-    for root in ROOTS:
+    for root_index, root in enumerate(ROOTS):
         for path in root.rglob("*.hwpx"):
+            shard = tree_shards[(sum(path.relative_to(root).as_posix().encode("utf-8")) + root_index) % len(tree_shards)]
             if path.stat().st_size > MAX_PACKAGE_BYTES:
                 raise ValueError("HWPX oracle package limit exceeded")
             try:
@@ -164,6 +172,7 @@ def main() -> None:
                         security = bounded_read(archive, "META-INF/manifest.xml", MAX_MANIFEST_BYTES)
                         if b"encryption-data" in security:
                             result["encrypted"] += 1
+                            shard["encrypted"] += 1
                             continue
                     opf = ET.fromstring(bounded_read(archive, "Contents/content.hpf", MAX_MANIFEST_BYTES))
                     items = {
@@ -177,17 +186,27 @@ def main() -> None:
                         name = items[entry.get("idref")]
                         if not name.endswith(".xml"):
                             continue
-                        section = ET.fromstring(bounded_read(archive, name, MAX_SECTION_BYTES))
+                        section_bytes = bounded_read(archive, name, MAX_SECTION_BYTES)
+                        section = ET.fromstring(section_bytes)
                         if section.tag != SECTION:
                             continue
                         result["sections"] += 1
+                        shard["sections"] += 1
+                        section_elements = sum(1 for _ in section.iter())
+                        result["section_elements"] += section_elements
+                        shard["elements"] += section_elements
+                        result["max_section_elements"] = max(result["max_section_elements"], section_elements)
+                        result["max_section_bytes"] = max(result["max_section_bytes"], len(section_bytes))
                         direct = sum(child.tag == PARAGRAPH + "p" for child in section)
                         result["direct_paragraphs"] += direct
                         result["sections_without_direct_paragraph"] += direct == 0
                         inspect_text(section, "", result)
                     result["accepted"] += 1
+                    shard["accepted"] += 1
             except BadZipFile:
                 result["rejected_zip"] += 1
+                shard["rejected_zip"] += 1
+    result["section_tree_shards"] = tree_shards
     result["inline"] = dict(sorted(result["inline"].items()))
     result["other_content"] = dict(sorted(result["other_content"].items()))
     print(json.dumps(result, ensure_ascii=False, sort_keys=True))

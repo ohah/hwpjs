@@ -14,6 +14,7 @@ const list_references = @import("list_references.zig");
 const binary_references = @import("binary_references.zig");
 const chart_references = @import("chart_references.zig");
 const section_text = @import("section_text.zig");
+const section_tree = @import("section_tree.zig");
 
 pub const Archive = zip.Archive;
 pub const Options = zip.Options;
@@ -86,6 +87,11 @@ pub const SectionTextVisitor = section_text.Visitor;
 pub const SectionTextEvent = section_text.Event;
 pub const SectionTextInlineKind = section_text.InlineKind;
 pub const SectionOtherContentKind = section_text.OtherContentKind;
+pub const SectionTree = section_tree.Tree;
+pub const SectionTreeOptions = struct {
+    structure: StructureOptions = .{},
+    tree: section_tree.Options = .{},
+};
 pub const DocumentOptions = struct {
     // The archive index also contains large BinData/section entries. Their
     // declared sizes are bounded here; this call only decodes the two small
@@ -142,6 +148,21 @@ pub const Document = struct {
         var structure = try self.inspectStructure(a, options.structure);
         defer structure.deinit(a);
         return section_text.inspect(a, self.archive, self.manifest, structure.sections, options.text, visitor);
+    }
+
+    /// Materializes one structure-selected section as exact owned XML bytes
+    /// plus a namespace-aware index of every element, including unknown ones.
+    /// This does not infer display order, style values, or edit semantics.
+    pub fn readSectionTree(self: *const Document, a: std.mem.Allocator, section_ordinal: usize, options: SectionTreeOptions) !SectionTree {
+        var structure = try self.inspectStructure(a, options.structure);
+        defer structure.deinit(a);
+        if (section_ordinal >= structure.sections.len) return error.SectionOutOfRange;
+        const section = structure.sections[section_ordinal];
+        const item = self.manifest.items[section.item_index];
+        const entry_index = item.entry_index orelse return error.ExternalSpineXml;
+        const bytes = try self.archive.decode(self.archive.entries[entry_index], options.tree.max_xml_bytes);
+        defer self.archive.allocator.free(bytes);
+        return section_tree.parse(a, bytes, section_ordinal, section.item_index, options.tree);
     }
 
     /// Resolves selected style, paragraph-shape, and character-shape links

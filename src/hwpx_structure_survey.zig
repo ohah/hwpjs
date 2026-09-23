@@ -1007,3 +1007,127 @@ test "HWPX layout-only paragraph keeps its real section diagnostic" {
     try std.testing.expectEqual(@as(usize, 0), report.non_direct_runs);
     try std.testing.expectEqual(@as(usize, 1), report.issues());
 }
+
+fn surveySectionTreeShard(shard: usize) !void {
+    const a = std.testing.allocator;
+    const roots = [_][]const u8{ "legacy/rust/crates/hwp-core/tests/fixtures", "reference/rhwp/samples" };
+    var accepted: usize = 0;
+    var rejected_zip: usize = 0;
+    var encrypted: usize = 0;
+    var sections: usize = 0;
+    var elements: usize = 0;
+    for (roots, 0..) |root, root_index| {
+        const dir = try std.Io.Dir.cwd().openDir(std.testing.io, root, .{ .iterate = true });
+        defer dir.close(std.testing.io);
+        var walker = try dir.walk(a);
+        defer walker.deinit();
+        while (try walker.next(std.testing.io)) |entry| {
+            if (entry.kind != .file or !std.mem.endsWith(u8, entry.path, ".hwpx")) continue;
+            var path_sum: usize = root_index;
+            for (entry.path) |byte| path_sum += byte;
+            if (path_sum % 8 != shard) continue;
+            const bytes = try dir.readFileAlloc(std.testing.io, entry.path, a, .limited(25_000_000));
+            defer a.free(bytes);
+            var document = package.inspectDocument(a, bytes, .{}) catch |err| {
+                try std.testing.expectEqual(error.MissingEndRecord, err);
+                rejected_zip += 1;
+                continue;
+            };
+            defer document.deinit(a);
+            var structure = document.inspectStructure(a, .{}) catch |err| {
+                if (err == error.EncryptedDocument) {
+                    encrypted += 1;
+                    continue;
+                }
+                std.debug.print("HWPX tree unexpected path={s} error={s}\n", .{ entry.path, @errorName(err) });
+                return err;
+            };
+            defer structure.deinit(a);
+            accepted += 1;
+            for (structure.sections, 0..) |section_meta, ordinal| {
+                var parsed = try document.readSectionTree(a, ordinal, .{});
+                defer parsed.deinit(a);
+                try std.testing.expectEqual(ordinal, parsed.section_ordinal);
+                try std.testing.expectEqual(section_meta.item_index, parsed.item_index);
+                try std.testing.expectEqual(section_meta.xml_bytes, parsed.source.len);
+                try std.testing.expectEqual(section_meta.elements, parsed.elements.len);
+                try std.testing.expectEqual(parsed.xml_report.elements, parsed.elements.len);
+                try std.testing.expect(parsed.elements[0].is("http://www.hancom.co.kr/hwpml/2011/section", "sec"));
+                var child_edges: usize = 0;
+                var linked_children: usize = 0;
+                for (parsed.elements, 0..) |node, index| {
+                    try std.testing.expect(node.start_tag.start < node.start_tag.end);
+                    try std.testing.expect(node.start_tag.end <= node.end and node.end <= parsed.source.len);
+                    if (node.end_tag) |closing| {
+                        try std.testing.expect(node.start_tag.end <= closing.start and closing.start < closing.end and closing.end == node.end);
+                    } else try std.testing.expectEqual(node.start_tag.end, node.end);
+                    if (node.parent) |parent_index| {
+                        child_edges += 1;
+                        try std.testing.expect(parent_index < index);
+                        const parent = parsed.elements[parent_index];
+                        try std.testing.expect(parent.start_tag.end <= node.start_tag.start and node.end <= parent.end);
+                    } else try std.testing.expectEqual(@as(usize, 0), index);
+                    if (node.first_child) |first| {
+                        try std.testing.expect(first > index and first < parsed.elements.len);
+                        try std.testing.expectEqual(@as(?usize, index), parsed.elements[first].parent);
+                    } else try std.testing.expect(node.last_child == null);
+                    if (node.next_sibling) |next| {
+                        try std.testing.expect(next > index and next < parsed.elements.len);
+                        try std.testing.expectEqual(node.parent, parsed.elements[next].parent);
+                        try std.testing.expect(node.end <= parsed.elements[next].start_tag.start);
+                    }
+                    var cursor = node.first_child;
+                    var final_child: ?usize = null;
+                    while (cursor) |child| {
+                        try std.testing.expect(child > index and child < parsed.elements.len);
+                        try std.testing.expectEqual(@as(?usize, index), parsed.elements[child].parent);
+                        linked_children += 1;
+                        final_child = child;
+                        cursor = parsed.elements[child].next_sibling;
+                    }
+                    try std.testing.expectEqual(node.last_child, final_child);
+                }
+                try std.testing.expectEqual(parsed.elements.len - 1, child_edges);
+                try std.testing.expectEqual(child_edges, linked_children);
+                sections += 1;
+                elements += parsed.elements.len;
+            }
+        }
+    }
+    std.debug.print("HWPX section tree shard={d} accepted={d} rejected_zip={d} encrypted={d} sections={d} elements={d}\n", .{ shard, accepted, rejected_zip, encrypted, sections, elements });
+    const expected_accepted = [_]usize{ 64, 68, 56, 49, 61, 59, 58, 61 };
+    const expected_rejected_zip = [_]usize{ 1, 3, 0, 2, 0, 0, 0, 0 };
+    const expected_encrypted = [_]usize{ 0, 0, 0, 0, 2, 0, 0, 0 };
+    const expected_sections = [_]usize{ 75, 72, 72, 53, 64, 62, 63, 83 };
+    const expected_elements = [_]usize{ 299906, 229744, 218284, 124064, 356522, 297849, 252376, 395971 };
+    try std.testing.expectEqual(expected_accepted[shard], accepted);
+    try std.testing.expectEqual(expected_rejected_zip[shard], rejected_zip);
+    try std.testing.expectEqual(expected_encrypted[shard], encrypted);
+    try std.testing.expectEqual(expected_sections[shard], sections);
+    try std.testing.expectEqual(expected_elements[shard], elements);
+}
+
+test "HWPX corpus section tree shard 0" {
+    try surveySectionTreeShard(0);
+}
+test "HWPX corpus section tree shard 1" {
+    try surveySectionTreeShard(1);
+}
+test "HWPX corpus section tree shard 2" {
+    try surveySectionTreeShard(2);
+}
+test "HWPX corpus section tree shard 3" {
+    try surveySectionTreeShard(3);
+}
+test "HWPX corpus section tree shard 4" {
+    try surveySectionTreeShard(4);
+}
+test "HWPX corpus section tree shard 5" {
+    try surveySectionTreeShard(5);
+}
+test "HWPX corpus section tree shard 6" {
+    try surveySectionTreeShard(6);
+}
+test "HWPX corpus section tree shard 7" {
+    try surveySectionTreeShard(7);
+}
