@@ -720,6 +720,10 @@ test "HWPX corpus chart path and XML read-only survey" {
     var value_text_bytes: usize = 0;
     var empty_values: usize = 0;
     var max_value_bytes: usize = 0;
+    var xstring_escapes: usize = 0;
+    var xstring_decoded_values: usize = 0;
+    var xstring_decoded_bytes: usize = 0;
+    var unsupported_xstring_surrogates: usize = 0;
     var numeric_references: usize = 0;
     var string_references: usize = 0;
     var formulas: usize = 0;
@@ -769,6 +773,10 @@ test "HWPX corpus chart path and XML read-only survey" {
             value_text_bytes += report.cache.value_text_bytes;
             empty_values += report.cache.empty_values;
             max_value_bytes = @max(max_value_bytes, report.cache.max_observed_value_bytes);
+            xstring_escapes += report.cache.xstring_escape_sequences;
+            xstring_decoded_values += report.cache.xstring_decoded_values;
+            xstring_decoded_bytes += report.cache.xstring_decoded_bytes;
+            unsupported_xstring_surrogates += report.cache.unsupported_xstring_surrogates;
             numeric_references += report.formula.numeric_references;
             string_references += report.formula.string_references;
             formulas += report.formula.formulas;
@@ -788,6 +796,7 @@ test "HWPX corpus chart path and XML read-only survey" {
     std.debug.print("HWPX chart data numeric_cache={d} string_cache={d} numeric_literal={d} string_literal={d} points={d} declared={d} issues={d}\n", .{ numeric_caches, string_caches, numeric_literals, string_literals, cache_points, declared_points, cache_issues });
     std.debug.print("HWPX chart formula numeric_ref={d} string_ref={d} formulas={d} attached_caches={d} issues={d}\n", .{ numeric_references, string_references, formulas, attached_caches, formula_issues });
     std.debug.print("HWPX chart text value_bytes={d} empty_values={d} max_value_bytes={d} formula_bytes={d} empty_formulas={d} max_formula_bytes={d}\n", .{ value_text_bytes, empty_values, max_value_bytes, formula_text_bytes, empty_formulas, max_formula_bytes });
+    std.debug.print("HWPX chart Xstring escapes={d} decoded_values={d} decoded_bytes={d} unsupported_surrogates={d}\n", .{ xstring_escapes, xstring_decoded_values, xstring_decoded_bytes, unsupported_xstring_surrogates });
     try std.testing.expectEqual(@as(usize, 476), accepted);
     try std.testing.expectEqual(@as(usize, 6), rejected_zip);
     try std.testing.expectEqual(@as(usize, 2), encrypted);
@@ -812,6 +821,10 @@ test "HWPX corpus chart path and XML read-only survey" {
     try std.testing.expectEqual(@as(usize, 0), empty_formulas);
     try std.testing.expectEqual(@as(usize, 12374), value_text_bytes);
     try std.testing.expectEqual(@as(usize, 21), max_value_bytes);
+    try std.testing.expectEqual(@as(usize, 0), xstring_escapes);
+    try std.testing.expectEqual(@as(usize, 2296), xstring_decoded_values);
+    try std.testing.expectEqual(value_text_bytes, xstring_decoded_bytes);
+    try std.testing.expectEqual(@as(usize, 0), unsupported_xstring_surrogates);
     try std.testing.expectEqual(@as(usize, 10540), formula_text_bytes);
     try std.testing.expectEqual(@as(usize, 17), max_formula_bytes);
 }

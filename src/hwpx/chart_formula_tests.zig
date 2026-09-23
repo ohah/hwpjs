@@ -114,3 +114,10 @@ test "HWPX chart formula visitor releases all allocations on failure" {
         }
     }.run, .{source});
 }
+
+test "HWPX chart formulas keep Xstring-looking text as plain string" {
+    const source = prefix ++ "<c:numRef><c:f>Sheet1!_x0008_</c:f><c:numCache/></c:numRef>" ++ suffix;
+    const report = try inspect(std.testing.allocator, source, .{});
+    try std.testing.expectEqual(@as(usize, "Sheet1!_x0008_".len), report.formula_text_bytes);
+    try std.testing.expectEqual(@as(usize, 0), report.issues());
+}

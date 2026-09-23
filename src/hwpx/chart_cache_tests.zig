@@ -121,6 +121,8 @@ test "HWPX chart cache value text counts decoded bytes and enforces exact budget
         "<c:pt idx=\"2\"><c:v/></c:pt></c:numCache>" ++ suffix;
     const report = try inspect(std.testing.allocator, source, .{ .max_value_bytes = 4, .max_total_value_bytes = 7 });
     try std.testing.expectEqual(@as(usize, 7), report.value_text_bytes);
+    try std.testing.expectEqual(@as(usize, 7), report.xstring_decoded_bytes);
+    try std.testing.expectEqual(@as(usize, 3), report.xstring_decoded_values);
     try std.testing.expectEqual(@as(usize, 4), report.max_observed_value_bytes);
     try std.testing.expectEqual(@as(usize, 1), report.empty_values);
     try std.testing.expectEqual(@as(usize, 0), report.issues());
@@ -131,8 +133,30 @@ test "HWPX chart cache value text counts decoded bytes and enforces exact budget
     try std.testing.expectEqual(@as(usize, 11), string_report.value_text_bytes);
 }
 
+test "HWPX chart cache decodes Xstring across XML content boundaries" {
+    const source = prefix ++
+        "<c:strCache><c:ptCount val=\"3\"/>" ++
+        "<c:pt idx=\"0\"><c:v>A_x<![CDATA[0008_]]>B</c:v></c:pt>" ++
+        "<c:pt idx=\"1\"><c:v>_x005F_x0008_</c:v></c:pt>" ++
+        "<c:pt idx=\"2\"><c:v>_xD83D_<![CDATA[_xDE00_]]></c:v></c:pt></c:strCache>" ++ suffix;
+    const report = try inspect(std.testing.allocator, source, .{});
+    try std.testing.expectEqual(@as(usize, 3), report.xstring_decoded_values);
+    try std.testing.expectEqual(@as(usize, 4), report.xstring_escape_sequences);
+    try std.testing.expectEqual(@as(usize, 3 + 7 + 4), report.xstring_decoded_bytes);
+    try std.testing.expectEqual(@as(usize, 0), report.issues());
+}
+
+test "HWPX chart cache reports unpaired Xstring surrogate without making up a value" {
+    const source = prefix ++ "<c:numLit><c:ptCount val=\"2\"/><c:pt idx=\"0\"><c:v>_xD800_</c:v></c:pt><c:pt idx=\"1\"><c:v>ok</c:v></c:pt></c:numLit>" ++ suffix;
+    const report = try inspect(std.testing.allocator, source, .{});
+    try std.testing.expectEqual(@as(usize, 1), report.unsupported_xstring_surrogates);
+    try std.testing.expectEqual(@as(usize, 1), report.issues());
+    try std.testing.expectEqual(@as(usize, 1), report.xstring_decoded_values);
+    try std.testing.expectEqual(@as(usize, 2), report.xstring_decoded_bytes);
+}
+
 test "HWPX chart cache scanner releases index maps on every allocation failure" {
-    const source = prefix ++ "<c:numCache><c:ptCount val=\"2\"/><c:pt idx=\"0\"><c:v>1</c:v></c:pt><c:pt idx=\"1\"><c:v>2</c:v></c:pt></c:numCache>" ++ suffix;
+    const source = prefix ++ "<c:numCache><c:ptCount val=\"2\"/><c:pt idx=\"0\"><c:v>_xD83D_<![CDATA[_xDE00_]]></c:v></c:pt><c:pt idx=\"1\"><c:v>2</c:v></c:pt></c:numCache>" ++ suffix;
     try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
         fn run(a: std.mem.Allocator, bytes: []const u8) !void {
             _ = try inspect(a, bytes, .{});

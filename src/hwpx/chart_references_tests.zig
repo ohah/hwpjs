@@ -84,6 +84,15 @@ test "HWPX chart links retain a formula-only diagnostic independently" {
     try std.testing.expectEqualStrings("Chart/chart1.xml", report.first_formula_issue_path.?);
 }
 
+test "HWPX chart links retain an unpaired Xstring diagnostic on the exact part" {
+    const bad_chart = "<c:chartSpace xmlns:c=\"http://schemas.openxmlformats.org/drawingml/2006/chart\"><c:strLit><c:ptCount val=\"1\"/><c:pt idx=\"0\"><c:v>_xD800_</c:v></c:pt></c:strLit></c:chartSpace>";
+    var report = try inspect(std.testing.allocator, two_refs, bad_chart, .{});
+    defer report.deinit(std.testing.allocator);
+    try std.testing.expectEqual(@as(usize, 1), report.chart_parts);
+    try std.testing.expectEqual(@as(usize, 1), report.cache.unsupported_xstring_surrogates);
+    try std.testing.expectEqualStrings("Chart/chart1.xml", report.first_cache_issue_path.?);
+}
+
 test "HWPX chart cache budgets are shared across distinct chart parts" {
     const a = std.testing.allocator;
     const distinct = section_prefix ++ "<p:chart chartIDRef=\"Chart/chart1.xml\"/><p:chart chartIDRef=\"Chart/chart2.xml\"/>" ++ section_suffix;

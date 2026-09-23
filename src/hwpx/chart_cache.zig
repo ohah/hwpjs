@@ -2,6 +2,7 @@ const std = @import("std");
 const xml = @import("../xml/root.zig");
 const attrs = @import("xml_attributes.zig");
 const chart_namespace = @import("chart_namespace.zig");
+const xstring = @import("xstring.zig");
 
 pub const Options = struct {
     max_data_containers: usize = 100_000,
@@ -30,6 +31,10 @@ pub const Report = struct {
     value_text_bytes: usize = 0,
     empty_values: usize = 0,
     max_observed_value_bytes: usize = 0,
+    xstring_escape_sequences: usize = 0,
+    xstring_decoded_values: usize = 0,
+    xstring_decoded_bytes: usize = 0,
+    unsupported_xstring_surrogates: usize = 0,
 
     pub fn caches(self: Report) usize {
         return self.numeric_caches + self.string_caches;
@@ -41,7 +46,7 @@ pub const Report = struct {
 
     pub fn issues(self: Report) usize {
         return self.unsupported_multilevel_string_caches + self.missing_point_count + self.duplicate_point_count + self.point_count_disagreement +
-            self.duplicate_point_index + self.out_of_range_point_index + self.missing_value_element + self.duplicate_value_element + self.nested_value_element;
+            self.duplicate_point_index + self.out_of_range_point_index + self.missing_value_element + self.duplicate_value_element + self.nested_value_element + self.unsupported_xstring_surrogates;
     }
 };
 
@@ -62,11 +67,21 @@ pub const Scanner = struct {
     point_values: usize = 0,
     value_depth: ?usize = null,
     value_bytes: usize = 0,
+    value_text: std.ArrayList(u8) = .empty,
     unsupported_depth: ?usize = null,
 
-    fn finishValue(self: *Scanner) void {
+    fn finishValue(self: *Scanner) !void {
         if (self.value_bytes == 0) self.report.empty_values += 1;
         self.report.max_observed_value_bytes = @max(self.report.max_observed_value_bytes, self.value_bytes);
+        var decoded = try xstring.decode(self.allocator, self.value_text.items, self.options.max_value_bytes);
+        defer decoded.deinit(self.allocator);
+        self.report.xstring_escape_sequences += decoded.escapes;
+        self.report.unsupported_xstring_surrogates += decoded.unsupported_surrogates;
+        if (decoded.text) |value| {
+            self.report.xstring_decoded_values += 1;
+            self.report.xstring_decoded_bytes += value.len;
+        }
+        self.value_text.clearRetainingCapacity();
         self.value_depth = null;
         self.value_bytes = 0;
     }
@@ -77,12 +92,14 @@ pub const Scanner = struct {
         const remaining_total = self.options.max_total_value_bytes - self.report.value_text_bytes;
         const bytes = try value.toUtf8(self.allocator, @min(remaining_leaf, remaining_total));
         defer self.allocator.free(bytes);
+        try self.value_text.appendSlice(self.allocator, bytes);
         self.value_bytes += bytes.len;
         self.report.value_text_bytes += bytes.len;
     }
 
     pub fn deinit(self: *Scanner) void {
         if (self.current) |*cache| cache.seen.deinit(self.allocator);
+        self.value_text.deinit(self.allocator);
         self.* = undefined;
     }
 
@@ -122,7 +139,7 @@ pub const Scanner = struct {
             return;
         }
         if (tag.kind == .end) {
-            if (self.value_depth == depth) self.finishValue();
+            if (self.value_depth == depth) try self.finishValue();
             if (self.point_depth == depth) self.finishPoint();
             if (self.current) |cache| {
                 if (cache.depth == depth) try self.finishCache();
@@ -173,7 +190,8 @@ pub const Scanner = struct {
             if (depth == point_depth + 1 and try attrs.element(tag, scope, chart_namespace.uri, "v")) {
                 self.point_values += 1;
                 self.value_bytes = 0;
-                if (tag.kind == .start) self.value_depth = depth else self.finishValue();
+                self.value_text.clearRetainingCapacity();
+                if (tag.kind == .start) self.value_depth = depth else try self.finishValue();
             }
         }
     }

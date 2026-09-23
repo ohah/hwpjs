@@ -4,7 +4,7 @@
 
 캐시마다 직접 자식 `ptCount.val`과 `pt.idx`의 `u32` 원값을 읽고 직접 `pt/v` 요소의 존재를 확인합니다. [XML Schema의 `whiteSpace=collapse`](https://www.w3.org/TR/xmlschema-2/#rf-whiteSpace)에 따라 숫자 앞뒤의 XML 공백은 허용하되 내부 공백과 손상·초과 숫자는 오류로 반환합니다. `ptCount` 부재·중복, 선언 개수와 실제 포인트 수 차이, 중복·범위 밖 인덱스, `v` 요소 부재·중복 및 [leaf text인 `v`](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.drawing.charts.numericvalue?view=openxml-3.0.1)의 중첩 자식은 각각 보고서 진단으로 남깁니다. 희소한 포인트를 임의로 채우거나 개수 불일치를 자동 보정하지 않습니다. `first_cache_issue_path`는 처음 진단이 생긴 ZIP 경로를 소유하며 `ChartReferenceReport.deinit`으로 해제합니다. 중복 `chartIDRef`가 같은 차트를 가리키면 캐시도 한 번만 검사합니다.
 
-기본 한도는 참조된 차트 XML 전체에서 지원하는 네 데이터 컨테이너와 미지원 다단계 문자열 캐시의 합계 10만 개, 포인트 100만 개, 숫자 속성값 4096바이트입니다. 기존 차트 XML의 엔트리당·총량·문법 한도도 그대로 적용됩니다. `c:multiLvlStrCache`는 아직 해석하지 않고 미지원 건수로 드러냅니다. `v` 텍스트의 정규화된 길이·빈 값과 추가 한도는 [차트 값·수식 텍스트 관측](hwpx-chart-text.md)이 소유합니다. 숫자 표기·비유한 값, `c:f` 수식과 원본 표 데이터의 일치, 시리즈 유형별 제약, 조건부 OOXML 분기 선택과 렌더링·편집·저장은 아직 검증하지 않습니다. 구조 진단 0건은 차트 데이터 의미가 완전히 검증됐다는 뜻이 아닙니다.
+기본 한도는 참조된 차트 XML 전체에서 지원하는 네 데이터 컨테이너와 미지원 다단계 문자열 캐시의 합계 10만 개, 포인트 100만 개, 숫자 속성값 4096바이트입니다. 기존 차트 XML의 엔트리당·총량·문법 한도도 그대로 적용됩니다. `c:multiLvlStrCache`는 아직 해석하지 않고 미지원 건수로 드러냅니다. `v` 텍스트의 정규화된 길이·빈 값과 추가 한도는 [차트 값·수식 텍스트 관측](hwpx-chart-text.md), 값의 이스케이프 해독은 [ST_Xstring](hwpx-xstring.md)이 소유합니다. 숫자 표기·비유한 값, `c:f` 수식과 원본 표 데이터의 일치, 시리즈 유형별 제약, 조건부 OOXML 분기 선택과 렌더링·편집·저장은 아직 검증하지 않습니다. 구조 진단 0건은 차트 데이터 의미가 완전히 검증됐다는 뜻이 아닙니다.
 
 ## 실파일·적대적 검증
 

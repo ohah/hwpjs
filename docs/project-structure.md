@@ -18,6 +18,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
   차트 XML 안의 개수·인덱스·값 요소는 별도 [차트 데이터 캐시 구조](hwpx-chart-cache.md) 계층이 검사합니다.
   `numRef`·`strRef`의 수식·캐시 연결은 [차트 수식 참조 구조](hwpx-chart-formula.md) 계층이 검사합니다.
   공통 XML 본문 view를 이용한 차트 값·수식 길이·빈 값은 [차트 텍스트 관측](hwpx-chart-text.md)이 소유합니다.
+  값 leaf의 `_xHHHH_` 해독과 서로게이트 진단은 [차트 ST_Xstring](hwpx-xstring.md)이 소유합니다.
 - `src/cfb/`: 읽기·검증·저장을 책임별로 분리한 CFB 코어.
 - `src/hwp5/`: 헤더 원본·버전·스트림 정책·압축 trailer·레코드 framing을 분리합니다. 현재 계약·검증 범위는 [HWP5 모듈 계약](hwp5-modules.md), 과거 이력은 [구현/검증 기록](hwp5-foundation.md)을 참조합니다.
 - `src/compression/`: bounded raw DEFLATE, [zlib 검증](zlib-validation.md), MIT Zig 디코더 로컬 수정본. HWP 플래그·trailer 정책을 넣지 않습니다.
