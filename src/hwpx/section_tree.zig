@@ -3,6 +3,7 @@ const xml = @import("../xml/root.zig");
 const attrs = @import("xml_attributes.zig");
 const document_xml = @import("document_xml.zig");
 const content = @import("section_tree_content.zig");
+const namespace_profile = @import("namespace_profile.zig");
 
 pub const Span = struct {
     start: usize,
@@ -121,7 +122,10 @@ const Builder = struct {
             return;
         }
         if (depth != self.stack.items.len + 1) return error.InvalidSectionTreeDepth;
-        if (depth == 1 and !try attrs.element(tag, scope, document_xml.section_uri, "sec")) return error.InvalidSectionRoot;
+        if (depth == 1 and !try attrs.element(tag, scope, document_xml.section_uri, "sec")) {
+            if (namespace_profile.isVersionedRoot(try scope.expandElement(tag.name), "sec", "section")) return error.UnsupportedHwpxNamespaceProfile;
+            return error.InvalidSectionRoot;
+        }
         if (self.elements.items.len == self.max_nodes) return error.LimitExceeded;
         const name = try scope.expandElement(tag.name);
         const owned_uri = try self.internUri(name.uri);

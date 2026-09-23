@@ -12,6 +12,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [HWPX ZIP 컨테이너 경계](hwpx-zip-container.md)는 `src/zip/`의 일반 ZIP 인덱스·해제와 `src/hwpx/`의 mimetype 식별을 분리합니다. [패키지 관계](hwpx-package-relationships.md)는 공통 XML 태그/namespace 순회를 재사용해 OCF 루트와 OPF manifest/spine을 연결합니다. [버전 XML](hwpx-version.md), [암호화 분류](hwpx-protection.md), [header·spine 구조](hwpx-document-structure.md), [header 리소스 ID 색인](hwpx-header-resources.md), [section 서식 참조](hwpx-section-references.md), [header 내부 서식 참조](hwpx-header-references.md), [언어별 글꼴 ID 참조](hwpx-font-references.md), [번호·글머리표 내부 참조](hwpx-list-references.md), [이진 리소스 manifest 연결](hwpx-binary-references.md), [차트 ZIP 경로·XML 경계](hwpx-chart-references.md)는 각각 독립 계약이며, 나머지 header/section 내부 참조와 공통 문서 모델 조립은 후속 계층입니다.
 
+[XML 네임스페이스 버전 경계](hwpx-namespace-profiles.md)는 2011 지원과 후속 OWPML 계열의 미지원 진단을 구분합니다. 숫자 버전이나 URI 모양만으로 스키마·의미 지원을 활성화하지 않습니다.
+
 [차트 데이터 캐시 구조](hwpx-chart-cache.md)는 차트 XML 경계가 확보한 입력의 개수·인덱스·값 요소만 검사합니다. 차트 경로 해석이나 시리즈별 의미를 다시 소유하지 않습니다.
 
 [차트 수식 참조 구조](hwpx-chart-formula.md)는 같은 XML 순회에서 참조와 캐시의 연결만 검사합니다. 수식 문자열의 의미 해석과 포인트 원값 모델 조립은 별도의 후속 책임입니다.

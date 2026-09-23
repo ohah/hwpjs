@@ -3,6 +3,8 @@ const package = @import("package.zig");
 const tree = @import("section_tree.zig");
 const fixture = @import("test_package_fixture.zig");
 const document_xml = @import("document_xml.zig");
+const document_structure = @import("document_structure.zig");
+const section_text = @import("section_text.zig");
 
 const section_uri = document_xml.section_uri;
 const paragraph_uri = document_xml.paragraph_uri;
@@ -135,6 +137,46 @@ test "HWPX section tree rejects roots, malformed source and exact limits" {
     var parsed = try tree.parse(a, section, 0, 0, .{ .max_xml_bytes = section.len, .max_nodes = 10 });
     defer parsed.deinit(a);
     try std.testing.expectEqual(@as(usize, 10), parsed.elements.len);
+}
+
+test "HWPX namespace profile reports versioned roots as unsupported before document reading" {
+    const a = std.testing.allocator;
+    const legacy_header = "<h:head xmlns:h='http://www.hancom.co.kr/hwpml/2011/head' secCnt='1'/>";
+    const legacy_section = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section'/>";
+    const future_header = "<h:head xmlns:h='http://www.owpml.org/owpml/2021/head' secCnt='1'/>";
+    const future_section = "<s:sec xmlns:s='http://www.owpml.org/owpml/2021/section'/>";
+    try std.testing.expectError(error.UnsupportedHwpxNamespaceProfile, tree.parse(a, future_section, 0, 0, .{}));
+    try std.testing.expectError(error.UnsupportedHwpxNamespaceProfile, tree.parse(a, "<sec xmlns='http://www.owpml.org/owpml/2021/section'/>", 0, 0, .{}));
+    try std.testing.expectError(error.UnsupportedHwpxNamespaceProfile, tree.parse(a, "<s:sec xmlns:s='http://www.owpml.org/owpml/2024/section'/>", 0, 0, .{}));
+    try std.testing.expectError(error.InvalidSectionRoot, tree.parse(a, "<s:sec xmlns:s='http://www.owpml.org/owpml/2021/section/extra'/>", 0, 0, .{}));
+    const hpf = "<p:package xmlns:p='http://www.idpf.org/2007/opf/'><p:manifest>" ++
+        "<p:item id='header' href='Contents/header.xml' media-type='application/xml'/>" ++
+        "<p:item id='section' href='Contents/section0.xml' media-type='application/xml'/>" ++
+        "</p:manifest><p:spine><p:itemref idref='header'/><p:itemref idref='section'/></p:spine></p:package>";
+    for ([_]struct { header: []const u8, section_xml: []const u8 }{
+        .{ .header = legacy_header, .section_xml = future_section },
+        .{ .header = future_header, .section_xml = legacy_section },
+    }, 0..) |sample, sample_index| {
+        const sources = [_]fixture.Source{
+            .{ .name = "mimetype", .data = package.mime },
+            .{ .name = "META-INF/container.xml", .data = fixture.package_container },
+            .{ .name = "Contents/content.hpf", .data = hpf },
+            .{ .name = "Contents/header.xml", .data = sample.header },
+            .{ .name = "Contents/section0.xml", .data = sample.section_xml },
+        };
+        const bytes = try fixture.storedZip(a, &sources);
+        defer a.free(bytes);
+        var document = try package.inspectDocument(a, bytes, .{});
+        defer document.deinit(a);
+        try std.testing.expectError(error.UnsupportedHwpxNamespaceProfile, document.inspectStructure(a, .{}));
+        try std.testing.expectError(error.UnsupportedHwpxNamespaceProfile, document.readSectionTree(a, 0, .{}));
+        try std.testing.expectError(error.UnsupportedHwpxNamespaceProfile, document.inspectSectionText(a, .{}, null));
+        if (sample_index == 0) {
+            const sections = [_]document_structure.Section{.{ .item_index = document.manifest.spine[1].item_index, .xml_bytes = future_section.len, .elements = 1, .direct_paragraphs = 0 }};
+            try std.testing.expectError(error.UnsupportedHwpxNamespaceProfile, section_text.inspect(a, document.archive, document.manifest, &sections, .{}, null));
+        }
+        if (sample_index == 1) try std.testing.expectError(error.InvalidHeaderRoot, document.inspectHeaderResources(a, .{}));
+    }
 }
 
 test "HWPX section tree spans remain raw UTF16 for both byte orders" {

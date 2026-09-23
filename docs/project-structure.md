@@ -15,6 +15,8 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - `src/xml/`: [XML 1.0 문자 입력](xml-input.md), [선언·인코딩 시작 처리](xml-declaration.md), [이름·참조](xml-names-references.md), [태그·속성 토큰](xml-tags.md), [문서 구조 검증](xml-document.md), [namespace 검증](xml-namespaces.md). 공통 순회를 HWPX 패키지·버전·header·section 구조 검사에 재사용하지만 DTD·스키마 검증과 section 의미 해석은 아직 미구현입니다.
 - `src/zip/`, `src/hwpx/`: [ZIP 인덱스·제한된 해제와 HWPX mimetype 식별](hwpx-zip-container.md), [OCF 루트·OPF manifest/spine 관계](hwpx-package-relationships.md), [버전 XML 검증](hwpx-version.md), [암호화 분류](hwpx-protection.md), [header·spine XML 구조](hwpx-document-structure.md), [header 리소스 ID 색인](hwpx-header-resources.md), [section의 p/run 서식 참조](hwpx-section-references.md), [header 내부 서식 참조](hwpx-header-references.md), [언어별 글꼴 ID와 fontRef](hwpx-font-references.md), [번호·글머리표 내부 참조](hwpx-list-references.md), [이진 리소스 manifest 연결](hwpx-binary-references.md), [차트 ZIP 경로·XML 경계](hwpx-chart-references.md). 나머지 header/section 내부 참조·문서 모델 조립은 아직 미구현입니다.
 
+  [XML 네임스페이스 버전 경계](hwpx-namespace-profiles.md)는 2011 XML 의미 검사와 이후 OWPML 루트의 명시적 미지원 진단을 구분합니다.
+
   차트 XML 안의 개수·인덱스·값 요소는 별도 [차트 데이터 캐시 구조](hwpx-chart-cache.md) 계층이 검사합니다.
   `numRef`·`strRef`의 수식·캐시 연결은 [차트 수식 참조 구조](hwpx-chart-formula.md) 계층이 검사합니다.
   공통 XML 본문 view를 이용한 차트 값·수식 길이·빈 값은 [차트 텍스트 관측](hwpx-chart-text.md)이 소유합니다.

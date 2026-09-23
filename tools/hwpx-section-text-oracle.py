@@ -43,6 +43,7 @@ OTHER_CONTENT = {
     "subText": "sub_text",
 }
 MAX_PACKAGE_BYTES = 25_000_000
+MAX_HEADER_BYTES = 32 * 1024 * 1024
 MAX_SECTION_BYTES = 128 * 1024 * 1024
 MAX_MANIFEST_BYTES = 2 * 1024 * 1024
 ATTRIBUTE_FIELDS = {
@@ -225,6 +226,8 @@ def main() -> None:
         "encrypted": 0,
         "sections": 0,
         "section_elements": 0,
+        "header_root_names": Counter(),
+        "spine_xml_root_names": Counter(),
         "max_section_elements": 0,
         "max_section_bytes": 0,
         "direct_paragraphs": 0,
@@ -256,6 +259,8 @@ def main() -> None:
                             shard["encrypted"] += 1
                             continue
                     opf = ET.fromstring(bounded_read(archive, "Contents/content.hpf", MAX_MANIFEST_BYTES))
+                    header_root = ET.fromstring(bounded_read(archive, "Contents/header.xml", MAX_HEADER_BYTES))
+                    result["header_root_names"][header_root.tag] += 1
                     items = {
                         item.get("id"): item.get("href")
                         for item in opf.findall(OPF + "manifest/" + OPF + "item")
@@ -269,6 +274,7 @@ def main() -> None:
                             continue
                         section_bytes = bounded_read(archive, name, MAX_SECTION_BYTES)
                         section = ET.fromstring(section_bytes)
+                        result["spine_xml_root_names"][section.tag] += 1
                         if section.tag != SECTION:
                             continue
                         result["sections"] += 1
@@ -293,11 +299,15 @@ def main() -> None:
             except BadZipFile:
                 result["rejected_zip"] += 1
                 shard["rejected_zip"] += 1
+    if sum(result["header_root_names"].values()) != result["accepted"]:
+        raise ValueError("HWPX oracle counted header roots outside accepted documents")
     for shard in tree_shards:
         shard["attribute_digest_sum"] = f'{shard["attribute_digest_sum"]:064x}'
         shard["content_digest_sum"] = f'{shard["content_digest_sum"]:064x}'
     result["section_tree_shards"] = tree_shards
     result["section_attribute_counts"] = attribute_counts
+    result["header_root_names"] = dict(sorted(result["header_root_names"].items()))
+    result["spine_xml_root_names"] = dict(sorted(result["spine_xml_root_names"].items()))
     result["inline"] = dict(sorted(result["inline"].items()))
     result["other_content"] = dict(sorted(result["other_content"].items()))
     print(json.dumps(result, ensure_ascii=False, sort_keys=True))

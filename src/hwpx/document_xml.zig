@@ -2,6 +2,7 @@ const std = @import("std");
 const xml = @import("../xml/root.zig");
 const zip = @import("../zip/archive.zig");
 const attrs = @import("xml_attributes.zig");
+const namespace_profile = @import("namespace_profile.zig");
 
 pub const head_uri = "http://www.hancom.co.kr/hwpml/2011/head";
 pub const section_uri = "http://www.hancom.co.kr/hwpml/2011/section";
@@ -52,7 +53,10 @@ const Context = struct {
                     self.declared_section_count = std.fmt.parseInt(u32, value, 10) catch return error.InvalidSectionCount;
                 }
                 self.header_version = try attrs.attribute(self.allocator, tag, scope, "version", self.max_attribute_bytes);
-            } else if (try attrs.element(tag, scope, section_uri, "sec")) self.kind = .section;
+            } else if (try attrs.element(tag, scope, section_uri, "sec")) self.kind = .section else {
+                const name = try scope.expandElement(tag.name);
+                if (namespace_profile.isVersionedRoot(name, "head", "head") or namespace_profile.isVersionedRoot(name, "sec", "section")) return error.UnsupportedHwpxNamespaceProfile;
+            }
             return;
         }
         if (self.kind == .section and depth == 2 and try attrs.element(tag, scope, paragraph_uri, "p")) {

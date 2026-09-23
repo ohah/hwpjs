@@ -5,6 +5,7 @@ const attrs = @import("xml_attributes.zig");
 const document_xml = @import("document_xml.zig");
 const content_manifest = @import("content_manifest.zig");
 const document_structure = @import("document_structure.zig");
+const namespace_profile = @import("namespace_profile.zig");
 
 pub const InlineKind = enum(u8) {
     tab,
@@ -189,7 +190,10 @@ const Scanner = struct {
             }
             return;
         }
-        if (depth == 1 and !try attrs.element(tag, scope, document_xml.section_uri, "sec")) return error.InvalidSectionRoot;
+        if (depth == 1 and !try attrs.element(tag, scope, document_xml.section_uri, "sec")) {
+            if (namespace_profile.isVersionedRoot(try scope.expandElement(tag.name), "sec", "section")) return error.UnsupportedHwpxNamespaceProfile;
+            return error.InvalidSectionRoot;
+        }
         const parent: Node = if (depth == 1) .{} else self.nodes[depth - 2];
         var node = parent;
         node.kind = .other;
