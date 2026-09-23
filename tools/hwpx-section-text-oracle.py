@@ -21,6 +21,7 @@ ROOTS = (
 )
 OPF = "{http://www.idpf.org/2007/opf/}"
 SECTION = "{http://www.hancom.co.kr/hwpml/2011/section}sec"
+HEAD = "{http://www.hancom.co.kr/hwpml/2011/head}"
 PARAGRAPH = "{http://www.hancom.co.kr/hwpml/2011/paragraph}"
 INLINE = {
     "tab": "tab",
@@ -47,6 +48,7 @@ MAX_PACKAGE_BYTES = 25_000_000
 MAX_HEADER_BYTES = 32 * 1024 * 1024
 MAX_SECTION_BYTES = 128 * 1024 * 1024
 MAX_MANIFEST_BYTES = 2 * 1024 * 1024
+BEGIN_NUMBER_FIELDS = ("page", "footnote", "endnote", "pic", "tbl", "equation")
 ATTRIBUTE_FIELDS = {
     PARAGRAPH + "p": (b"P", ("id", "paraPrIDRef", "styleIDRef", "pageBreak")),
     PARAGRAPH + "run": (b"R", ("charPrIDRef", "charTcId")),
@@ -106,6 +108,32 @@ def section_paragraph_metadata(section: ET.Element, counts: dict) -> None:
                 counts[field + "_true"] += 1
             elif value.strip() not in ("false", "0"):
                 raise ValueError("HWPX oracle invalid paragraph Boolean")
+
+
+def header_begin_numbers(header: ET.Element, counts: dict) -> None:
+    counts["header_version:" + str(header.get("version"))] += 1
+    matches = [node for node in header if node.tag == HEAD + "beginNum"]
+    counts["elements"] += len(matches)
+    if not matches:
+        counts["missing"] += 1
+        counts["missing_header_version:" + str(header.get("version"))] += 1
+        return
+    if len(matches) > 1:
+        counts["duplicate"] += 1
+    for node in matches:
+        for field in BEGIN_NUMBER_FIELDS:
+            raw = node.get(field)
+            if raw is None:
+                counts[field + "_missing"] += 1
+            else:
+                normalized = raw.strip()
+                if not re.fullmatch(r"\+?[0-9]+", normalized):
+                    raise ValueError("HWPX oracle invalid beginNum integer")
+                value = int(normalized)
+                counts[field + "_present"] += 1
+                counts[field + "_sum"] += value
+                if value <= 0:
+                    counts[field + "_nonpositive"] += 1
 
 
 def section_direct_content_digest(data: bytes) -> int:
@@ -236,6 +264,32 @@ def inspect_text(node: ET.Element, parent: str, result: dict, inside_text: bool 
 
 
 def self_check() -> None:
+    begin_counts = Counter()
+    header_begin_numbers(ET.fromstring(
+        '<h:head xmlns:h="http://www.hancom.co.kr/hwpml/2011/head">'
+        '<h:other><h:beginNum page="9"/></h:other><h:beginNum page="1"/>'
+        '</h:head>'
+    ), begin_counts)
+    assert begin_counts == Counter({"header_version:None": 1, "elements": 1, "page_present": 1, "page_sum": 1, **{f + "_missing": 1 for f in BEGIN_NUMBER_FIELDS[1:]}})
+    header_begin_numbers(ET.fromstring(
+        '<h:head xmlns:h="http://www.hancom.co.kr/hwpml/2011/head"/>'
+    ), begin_counts)
+    assert begin_counts["missing"] == 1
+    zero_counts = Counter()
+    header_begin_numbers(ET.fromstring(
+        '<h:head xmlns:h="http://www.hancom.co.kr/hwpml/2011/head">'
+        '<h:beginNum page="0"/></h:head>'
+    ), zero_counts)
+    assert zero_counts["page_nonpositive"] == 1
+    try:
+        header_begin_numbers(ET.fromstring(
+            '<h:head xmlns:h="http://www.hancom.co.kr/hwpml/2011/head">'
+            '<h:beginNum page="1_0"/></h:head>'
+        ), Counter())
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("beginNum oracle accepted a damaged integer")
     source = (
         '<s:sec xmlns:s="http://www.hancom.co.kr/hwpml/2011/section" '
         'xmlns:p="http://www.hancom.co.kr/hwpml/2011/paragraph">'
@@ -308,7 +362,7 @@ def self_check() -> None:
 def main() -> None:
     self_check()
     tree_shards = [
-        {"accepted": 0, "rejected_zip": 0, "encrypted": 0, "sections": 0, "elements": 0, "header_elements": 0, "header_bytes": 0, "section_bytes": 0, "attribute_digest_sum": 0, "content_digest_sum": 0, "ordered_digest_sum": 0, "paragraph_metadata": Counter()}
+        {"accepted": 0, "rejected_zip": 0, "encrypted": 0, "sections": 0, "elements": 0, "header_elements": 0, "header_bytes": 0, "section_bytes": 0, "attribute_digest_sum": 0, "content_digest_sum": 0, "ordered_digest_sum": 0, "paragraph_metadata": Counter(), "begin_numbers": Counter()}
         for _ in range(8)
     ]
     attribute_counts = {
@@ -359,6 +413,7 @@ def main() -> None:
                     opf = ET.fromstring(bounded_read(archive, "Contents/content.hpf", MAX_MANIFEST_BYTES))
                     header_bytes = bounded_read(archive, "Contents/header.xml", MAX_HEADER_BYTES)
                     header_root = ET.fromstring(header_bytes)
+                    header_begin_numbers(header_root, shard["begin_numbers"])
                     result["header_root_names"][header_root.tag] += 1
                     header_elements = sum(1 for _ in header_root.iter())
                     result["header_elements"] += header_elements
@@ -414,6 +469,7 @@ def main() -> None:
         raise ValueError("HWPX oracle counted header roots outside accepted documents")
     for shard in tree_shards:
         shard["paragraph_metadata"] = dict(shard["paragraph_metadata"])
+        shard["begin_numbers"] = dict(shard["begin_numbers"])
         shard["attribute_digest_sum"] = f'{shard["attribute_digest_sum"]:064x}'
         shard["content_digest_sum"] = f'{shard["content_digest_sum"]:064x}'
         shard["ordered_digest_sum"] = f'{shard["ordered_digest_sum"]:064x}'

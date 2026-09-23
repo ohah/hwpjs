@@ -26,6 +26,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
   header·section 요소별 직접 문자·CDATA의 원문 순회와 부모 연결은 공통 `xml_part_content.zig`가 소유하며 계약은 [section 콘텐츠 순회](hwpx-section-content.md)와 [header 트리](hwpx-header-tree.md)에 기록합니다.
   모든 선택 XML 트리의 소유권·합계 한도는 [문서 XML 트리 조립](hwpx-document-trees.md)이 소유합니다.
   문단의 `id`·`paraTcId`·Boolean 값과 부재 진단은 [문단 메타 속성 검사](hwpx-paragraph-metadata.md)가 소유합니다.
+  Header의 여섯 `beginNum` 원값과 부재 진단은 [Header 시작 번호](hwpx-header-begin-numbers.md)가 소유합니다.
 - `src/cfb/`: 읽기·검증·저장을 책임별로 분리한 CFB 코어.
 - `src/hwp5/`: 헤더 원본·버전·스트림 정책·압축 trailer·레코드 framing을 분리합니다. 현재 계약·검증 범위는 [HWP5 모듈 계약](hwp5-modules.md), 과거 이력은 [구현/검증 기록](hwp5-foundation.md)을 참조합니다.
 - `src/compression/`: bounded raw DEFLATE, [zlib 검증](zlib-validation.md), MIT Zig 디코더 로컬 수정본. HWP 플래그·trailer 정책을 넣지 않습니다.

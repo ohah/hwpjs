@@ -22,6 +22,9 @@ fn surveyShard(shard: usize) !void {
     var column_break_absent: usize = 0;
     var merged_absent: usize = 0;
     var merged_true: usize = 0;
+    var begin_present: usize = 0;
+    var begin_missing_attributes: usize = 0;
+    var begin_nested: usize = 0;
     for (roots, 0..) |root, root_index| {
         const dir = try std.Io.Dir.cwd().openDir(std.testing.io, root, .{ .iterate = true });
         defer dir.close(std.testing.io);
@@ -49,6 +52,18 @@ fn surveyShard(shard: usize) !void {
                 return err;
             };
             defer all.deinit(a);
+            var begin_report = try all.inspectBeginNumbers(a, .{});
+            defer begin_report.deinit(a);
+            if (begin_report.present) {
+                begin_present += 1;
+                begin_missing_attributes += begin_report.missingAttributes();
+                inline for (@import("hwpx/header_begin_numbers.zig").fields, 0..) |_, field_index| {
+                    try std.testing.expectEqualStrings("1", begin_report.values[field_index].?);
+                }
+            } else {
+                try std.testing.expectEqualStrings("1.4", all.structure.header_version.?);
+            }
+            begin_nested += begin_report.nested_ignored;
             const paragraph_report = try all.inspectParagraphMetadata(a, .{});
             try std.testing.expectEqual(all.sections.len, paragraph_report.sections);
             paragraphs += paragraph_report.paragraphs;
@@ -96,6 +111,7 @@ fn surveyShard(shard: usize) !void {
     const expected_zero_ids = [_]usize{ 5484, 3164, 1109, 2568, 28364, 8198, 630, 8376 };
     const expected_page_break_true = [_]usize{ 269, 110, 182, 138, 348, 147, 45, 297 };
     const expected_column_break_true = [_]usize{ 23, 34, 37, 0, 18, 36, 5, 78 };
+    const expected_begin_present = [_]usize{ 60, 64, 53, 48, 58, 57, 54, 61 };
     try std.testing.expectEqual(expected_accepted[shard], accepted);
     try std.testing.expectEqual(expected_rejected[shard], rejected_zip);
     try std.testing.expectEqual(expected_encrypted[shard], encrypted);
@@ -114,6 +130,9 @@ fn surveyShard(shard: usize) !void {
     try std.testing.expectEqual(@as(usize, 0), column_break_absent);
     try std.testing.expectEqual(if (shard == 7) @as(usize, 987) else @as(usize, 0), merged_absent);
     try std.testing.expectEqual(@as(usize, 0), merged_true);
+    try std.testing.expectEqual(expected_begin_present[shard], begin_present);
+    try std.testing.expectEqual(@as(usize, 0), begin_missing_attributes);
+    try std.testing.expectEqual(@as(usize, 0), begin_nested);
 }
 
 test "HWPX owned XML document trees shard 0" {
