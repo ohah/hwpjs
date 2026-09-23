@@ -42,6 +42,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ Path device boundary polyline](emf-plus-path-device-boundary-polyline.md)은 figure polyline에 stroke의 명시적 closure와 fill의 명시적·암묵적 closure를 구분해 적용합니다. Move-only figure와 퇴화 closure를 보존하며 stroke/fill/rasterization 자체는 수행하지 않습니다.
 
+[EMF+ Path device boundary edge iterator](emf-plus-path-device-boundary-edges.md)는 boundary polyline을 allocation-free Move·Edge 이벤트로 투영하고 평탄화 endpoint, 원본 endpoint, 명시적·암묵적 closure 역할과 원본 metadata를 보존합니다. closure 정책과 좌표를 다시 계산하지 않으며 실제 stroke/fill은 후속 책임입니다.
+
 [EMF+ Path closing segment 계층](emf-plus-path-segments.md)은 command iterator를 재사용해 닫힌 figure의 endpoint→시작점 직선을 원래 line/Bézier 다음에 명시적으로 방출합니다. 동일 좌표 closure와 원본 segment 순서를 보존하며 fill의 암묵적 닫힘·stroke/renderer 의미는 섞지 않습니다.
 
 [EMF+ Path fill boundary 계층](emf-plus-path-fill-segments.md)은 열린 비어 있지 않은 figure를 다음 Start 또는 EOF에서 끝점→시작점 직선으로 닫고 명시적 closure는 중복하지 않습니다. command·segment SSOT를 재사용하며 fill mode·Brush sampling·record replay는 후속 계층에 둡니다.

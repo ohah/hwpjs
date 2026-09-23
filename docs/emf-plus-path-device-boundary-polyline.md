@@ -20,7 +20,7 @@ drawable command가 있는 명시적 closed figure는 stroke와 fill 모두 마�
 
 `Options.max_points`는 모든 figure와 추가 closure를 합친 전역 결과 한도입니다. closure가 없는 정확한 source slice 한도와 closure를 포함한 정확한 한도는 성공하고 하나 부족하면 `EmfPlusPathBoundaryPointLimitExceeded`입니다. source 검증, 한도, 할당 실패에서는 부분 결과를 노출하지 않고 모든 임시 polyline·figure·point storage를 해제합니다.
 
-이 계층은 closure가 포함된 device-space 선형 경계까지만 구현합니다. DashMode·PathMarker 소비, Pen 폭·cap·join·dash, alternate/winding fill rule, self-intersection, clipping, Brush sampling, hit testing, anti-aliasing, rasterization과 record replay는 후속 책임입니다. 로컬 지원 HWP corpus에 EMF+ signature 표본이 없으므로 실제 한컴 렌더링 동등성을 주장하지 않습니다.
+이 계층은 closure가 포함된 device-space 선형 경계까지만 구현합니다. [Boundary edge iterator](emf-plus-path-device-boundary-edges.md)가 이 결과를 allocation-free Move·Edge 이벤트로 투영하고 endpoint metadata와 closure 역할을 전달합니다. DashMode·PathMarker 소비, Pen 폭·cap·join·dash, alternate/winding fill rule, self-intersection, clipping, Brush sampling, hit testing, anti-aliasing, rasterization과 record replay는 후속 책임입니다. 로컬 지원 HWP corpus에 EMF+ signature 표본이 없으므로 실제 한컴 렌더링 동등성을 주장하지 않습니다.
 
 ## 검증 기록
 
