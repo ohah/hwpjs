@@ -717,11 +717,17 @@ test "HWPX corpus chart path and XML read-only survey" {
     var cache_points: usize = 0;
     var declared_points: usize = 0;
     var cache_issues: usize = 0;
+    var value_text_bytes: usize = 0;
+    var empty_values: usize = 0;
+    var max_value_bytes: usize = 0;
     var numeric_references: usize = 0;
     var string_references: usize = 0;
     var formulas: usize = 0;
     var attached_caches: usize = 0;
     var formula_issues: usize = 0;
+    var formula_text_bytes: usize = 0;
+    var empty_formulas: usize = 0;
+    var max_formula_bytes: usize = 0;
     for (roots) |root| {
         const dir = try std.Io.Dir.cwd().openDir(std.testing.io, root, .{ .iterate = true });
         defer dir.close(std.testing.io);
@@ -760,11 +766,17 @@ test "HWPX corpus chart path and XML read-only survey" {
             cache_points += report.cache.points;
             declared_points += report.cache.declared_points;
             cache_issues += report.cache.issues();
+            value_text_bytes += report.cache.value_text_bytes;
+            empty_values += report.cache.empty_values;
+            max_value_bytes = @max(max_value_bytes, report.cache.max_observed_value_bytes);
             numeric_references += report.formula.numeric_references;
             string_references += report.formula.string_references;
             formulas += report.formula.formulas;
             attached_caches += report.formula.attached_caches;
             formula_issues += report.formula.issues();
+            formula_text_bytes += report.formula.formula_text_bytes;
+            empty_formulas += report.formula.empty_formulas;
+            max_formula_bytes = @max(max_formula_bytes, report.formula.max_observed_formula_bytes);
             if (report.first_cache_issue_path) |path| std.debug.print("HWPX chart cache diagnostic file={s} part={s} issues={d}\n", .{ entry.path, path, report.cache.issues() });
             if (report.first_formula_issue_path) |path| std.debug.print("HWPX chart formula diagnostic file={s} part={s} issues={d}\n", .{ entry.path, path, report.formula.issues() });
             if (report.chart_sites != report.resolved or report.unclassified_attribute_sites != 0) {
@@ -775,6 +787,7 @@ test "HWPX corpus chart path and XML read-only survey" {
     std.debug.print("HWPX chart accepted={d} rejected_zip={d} encrypted={d} sections={d} sites={d} resolved={d} chart_parts={d} unclassified={d} missing={d}\n", .{ accepted, rejected_zip, encrypted, sections, sites, resolved, chart_parts, unclassified, missing });
     std.debug.print("HWPX chart data numeric_cache={d} string_cache={d} numeric_literal={d} string_literal={d} points={d} declared={d} issues={d}\n", .{ numeric_caches, string_caches, numeric_literals, string_literals, cache_points, declared_points, cache_issues });
     std.debug.print("HWPX chart formula numeric_ref={d} string_ref={d} formulas={d} attached_caches={d} issues={d}\n", .{ numeric_references, string_references, formulas, attached_caches, formula_issues });
+    std.debug.print("HWPX chart text value_bytes={d} empty_values={d} max_value_bytes={d} formula_bytes={d} empty_formulas={d} max_formula_bytes={d}\n", .{ value_text_bytes, empty_values, max_value_bytes, formula_text_bytes, empty_formulas, max_formula_bytes });
     try std.testing.expectEqual(@as(usize, 476), accepted);
     try std.testing.expectEqual(@as(usize, 6), rejected_zip);
     try std.testing.expectEqual(@as(usize, 2), encrypted);
@@ -795,4 +808,10 @@ test "HWPX corpus chart path and XML read-only survey" {
     try std.testing.expectEqual(@as(usize, 736), formulas);
     try std.testing.expectEqual(@as(usize, 736), attached_caches);
     try std.testing.expectEqual(@as(usize, 0), formula_issues);
+    try std.testing.expectEqual(@as(usize, 0), empty_values);
+    try std.testing.expectEqual(@as(usize, 0), empty_formulas);
+    try std.testing.expectEqual(@as(usize, 12374), value_text_bytes);
+    try std.testing.expectEqual(@as(usize, 21), max_value_bytes);
+    try std.testing.expectEqual(@as(usize, 10540), formula_text_bytes);
+    try std.testing.expectEqual(@as(usize, 17), max_formula_bytes);
 }

@@ -14,7 +14,9 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [차트 데이터 캐시 구조](hwpx-chart-cache.md)는 차트 XML 경계가 확보한 입력의 개수·인덱스·값 요소만 검사합니다. 차트 경로 해석이나 시리즈별 의미를 다시 소유하지 않습니다.
 
-[차트 수식 참조 구조](hwpx-chart-formula.md)는 같은 XML 순회에서 참조와 캐시의 연결만 검사합니다. 수식 문자열 해석과 포인트 원값 처리는 별도의 후속 책임입니다.
+[차트 수식 참조 구조](hwpx-chart-formula.md)는 같은 XML 순회에서 참조와 캐시의 연결만 검사합니다. 수식 문자열의 의미 해석과 포인트 원값 모델 조립은 별도의 후속 책임입니다.
+
+[차트 값·수식 텍스트 관측](hwpx-chart-text.md)은 공통 XML 본문 이벤트에서 정규화된 UTF-8 길이·빈 값을 계수합니다. 문자열의 OOXML 의미, 문서 모델 보존과 편집은 여전히 후속 계층입니다.
 
 이미지/XML 외부에서도 재사용할 수 있는 언어 태그 규칙은 `src/text/`에 둡니다. [BCP 47 문법 검사](bcp47-syntax.md)와 [IANA 등록 검증](bcp47-registry.md)은 다른 단계입니다. [PNG iTXt](png-international-text.md)는 등록 검사와 UTF-8·압축 검사를 조립하며 extension 의미 보류를 별도로 보고합니다.
 

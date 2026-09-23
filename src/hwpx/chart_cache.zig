@@ -7,6 +7,8 @@ pub const Options = struct {
     max_data_containers: usize = 100_000,
     max_points: usize = 1_000_000,
     max_attribute_bytes: usize = 4096,
+    max_value_bytes: usize = 1024 * 1024,
+    max_total_value_bytes: usize = 64 * 1024 * 1024,
 };
 
 pub const Report = struct {
@@ -25,6 +27,9 @@ pub const Report = struct {
     missing_value_element: usize = 0,
     duplicate_value_element: usize = 0,
     nested_value_element: usize = 0,
+    value_text_bytes: usize = 0,
+    empty_values: usize = 0,
+    max_observed_value_bytes: usize = 0,
 
     pub fn caches(self: Report) usize {
         return self.numeric_caches + self.string_caches;
@@ -56,7 +61,25 @@ pub const Scanner = struct {
     point_depth: ?usize = null,
     point_values: usize = 0,
     value_depth: ?usize = null,
+    value_bytes: usize = 0,
     unsupported_depth: ?usize = null,
+
+    fn finishValue(self: *Scanner) void {
+        if (self.value_bytes == 0) self.report.empty_values += 1;
+        self.report.max_observed_value_bytes = @max(self.report.max_observed_value_bytes, self.value_bytes);
+        self.value_depth = null;
+        self.value_bytes = 0;
+    }
+
+    pub fn onContent(self: *Scanner, value: xml.text_content.View, depth: usize) !void {
+        if (self.value_depth != depth) return;
+        const remaining_leaf = self.options.max_value_bytes - self.value_bytes;
+        const remaining_total = self.options.max_total_value_bytes - self.report.value_text_bytes;
+        const bytes = try value.toUtf8(self.allocator, @min(remaining_leaf, remaining_total));
+        defer self.allocator.free(bytes);
+        self.value_bytes += bytes.len;
+        self.report.value_text_bytes += bytes.len;
+    }
 
     pub fn deinit(self: *Scanner) void {
         if (self.current) |*cache| cache.seen.deinit(self.allocator);
@@ -99,7 +122,7 @@ pub const Scanner = struct {
             return;
         }
         if (tag.kind == .end) {
-            if (self.value_depth == depth) self.value_depth = null;
+            if (self.value_depth == depth) self.finishValue();
             if (self.point_depth == depth) self.finishPoint();
             if (self.current) |cache| {
                 if (cache.depth == depth) try self.finishCache();
@@ -149,7 +172,8 @@ pub const Scanner = struct {
         if (self.point_depth) |point_depth| {
             if (depth == point_depth + 1 and try attrs.element(tag, scope, chart_namespace.uri, "v")) {
                 self.point_values += 1;
-                if (tag.kind == .start) self.value_depth = depth;
+                self.value_bytes = 0;
+                if (tag.kind == .start) self.value_depth = depth else self.finishValue();
             }
         }
     }

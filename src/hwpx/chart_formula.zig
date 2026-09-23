@@ -1,9 +1,12 @@
+const std = @import("std");
 const xml = @import("../xml/root.zig");
 const attrs = @import("xml_attributes.zig");
 const namespace = @import("chart_namespace.zig");
 
 pub const Options = struct {
     max_references: usize = 100_000,
+    max_formula_bytes: usize = 1024 * 1024,
+    max_total_formula_bytes: usize = 16 * 1024 * 1024,
 };
 
 pub const Report = struct {
@@ -20,6 +23,9 @@ pub const Report = struct {
     nested_formula_element: usize = 0,
     formula_after_cache: usize = 0,
     unexpected_data_container: usize = 0,
+    formula_text_bytes: usize = 0,
+    empty_formulas: usize = 0,
+    max_observed_formula_bytes: usize = 0,
 
     pub fn references(self: Report) usize {
         return self.numeric_references + self.string_references;
@@ -40,11 +46,30 @@ const Reference = struct {
 };
 
 pub const Scanner = struct {
+    allocator: std.mem.Allocator,
     options: Options,
     report: *Report,
     current: ?Reference = null,
     formula_depth: ?usize = null,
+    formula_bytes: usize = 0,
     unsupported_depth: ?usize = null,
+
+    fn finishFormula(self: *Scanner) void {
+        if (self.formula_bytes == 0) self.report.empty_formulas += 1;
+        self.report.max_observed_formula_bytes = @max(self.report.max_observed_formula_bytes, self.formula_bytes);
+        self.formula_depth = null;
+        self.formula_bytes = 0;
+    }
+
+    pub fn onContent(self: *Scanner, value: xml.text_content.View, depth: usize) !void {
+        if (self.formula_depth != depth) return;
+        const remaining_leaf = self.options.max_formula_bytes - self.formula_bytes;
+        const remaining_total = self.options.max_total_formula_bytes - self.report.formula_text_bytes;
+        const bytes = try value.toUtf8(self.allocator, @min(remaining_leaf, remaining_total));
+        defer self.allocator.free(bytes);
+        self.formula_bytes += bytes.len;
+        self.report.formula_text_bytes += bytes.len;
+    }
 
     fn finishReference(self: *Scanner) void {
         const current = self.current.?;
@@ -59,7 +84,7 @@ pub const Scanner = struct {
             return;
         }
         if (tag.kind == .end) {
-            if (self.formula_depth == depth) self.formula_depth = null;
+            if (self.formula_depth == depth) self.finishFormula();
             if (self.current) |reference| {
                 if (reference.depth == depth) self.finishReference();
             }
@@ -93,7 +118,8 @@ pub const Scanner = struct {
             reference.formulas += 1;
             self.report.formulas += 1;
             if (reference.formulas > 1) self.report.duplicate_formula += 1;
-            if (tag.kind == .start) self.formula_depth = depth;
+            self.formula_bytes = 0;
+            if (tag.kind == .start) self.formula_depth = depth else self.finishFormula();
             return;
         }
         const numeric_cache = try attrs.element(tag, scope, namespace.uri, "numCache");

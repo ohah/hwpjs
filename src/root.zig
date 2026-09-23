@@ -372,6 +372,7 @@ test {
     _ = @import("xml/reference_tests.zig");
     _ = @import("xml/tag_tests.zig");
     _ = @import("xml/document_tests.zig");
+    _ = @import("xml/text_content_tests.zig");
     _ = @import("xml/namespace_tests.zig");
     _ = @import("hwp5/container/xml_validation_tests.zig");
     _ = @import("binary/reader.zig");

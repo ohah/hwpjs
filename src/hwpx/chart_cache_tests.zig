@@ -15,8 +15,12 @@ fn inspect(a: std.mem.Allocator, source: []const u8, options: cache.Options) !ca
             const value: *cache.Scanner = @ptrCast(@alignCast(raw));
             try value.onTag(tag, scope, depth);
         }
+        fn onContent(raw: *anyopaque, value: xml.text_content.View, depth: usize) anyerror!void {
+            const self: *cache.Scanner = @ptrCast(@alignCast(raw));
+            try self.onContent(value, depth);
+        }
     };
-    _ = try document_xml.visitBytes(a, source, source.len, .{}, .{ .context = &scanner, .on_tag = Context.onTag });
+    _ = try document_xml.visitBytes(a, source, source.len, .{}, .{ .context = &scanner, .on_tag = Context.onTag, .on_content = Context.onContent });
     return report;
 }
 
@@ -107,6 +111,24 @@ test "HWPX chart caches report a nested element inside a value leaf" {
     const report = try inspect(std.testing.allocator, source, .{});
     try std.testing.expectEqual(@as(usize, 1), report.nested_value_element);
     try std.testing.expectEqual(@as(usize, 1), report.issues());
+}
+
+test "HWPX chart cache value text counts decoded bytes and enforces exact budgets" {
+    const source = prefix ++
+        "<c:numCache><c:ptCount val=\"3\"/>" ++
+        "<c:pt idx=\"0\"><c:v>A&amp;<![CDATA[B]]></c:v></c:pt>" ++
+        "<c:pt idx=\"1\"><c:v>&#x1F600;</c:v></c:pt>" ++
+        "<c:pt idx=\"2\"><c:v/></c:pt></c:numCache>" ++ suffix;
+    const report = try inspect(std.testing.allocator, source, .{ .max_value_bytes = 4, .max_total_value_bytes = 7 });
+    try std.testing.expectEqual(@as(usize, 7), report.value_text_bytes);
+    try std.testing.expectEqual(@as(usize, 4), report.max_observed_value_bytes);
+    try std.testing.expectEqual(@as(usize, 1), report.empty_values);
+    try std.testing.expectEqual(@as(usize, 0), report.issues());
+    try std.testing.expectError(error.LimitExceeded, inspect(std.testing.allocator, source, .{ .max_value_bytes = 3 }));
+    try std.testing.expectError(error.LimitExceeded, inspect(std.testing.allocator, source, .{ .max_total_value_bytes = 6 }));
+    const xstring = prefix ++ "<c:numLit><c:ptCount val=\"1\"/><c:pt idx=\"0\"><c:v>not-a-float</c:v></c:pt></c:numLit>" ++ suffix;
+    const string_report = try inspect(std.testing.allocator, xstring, .{});
+    try std.testing.expectEqual(@as(usize, 11), string_report.value_text_bytes);
 }
 
 test "HWPX chart cache scanner releases index maps on every allocation failure" {

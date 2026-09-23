@@ -61,6 +61,12 @@ const Root = struct {
         try self.cache.onTag(tag, scope, depth);
         try self.formula.onTag(tag, scope, depth);
     }
+
+    fn onContent(raw: *anyopaque, value: xml.text_content.View, depth: usize) anyerror!void {
+        const self: *Root = @ptrCast(@alignCast(raw));
+        try self.cache.onContent(value, depth);
+        try self.formula.onContent(value, depth);
+    }
 };
 
 pub const Resolver = struct {
@@ -132,11 +138,11 @@ pub const Resolver = struct {
             defer self.archive.allocator.free(bytes);
             var cache: chart_cache.Scanner = .{ .allocator = self.allocator, .options = self.options.cache, .report = &self.report.cache };
             defer cache.deinit();
-            var formula: chart_formula.Scanner = .{ .options = self.options.formula, .report = &self.report.formula };
+            var formula: chart_formula.Scanner = .{ .allocator = self.allocator, .options = self.options.formula, .report = &self.report.formula };
             const old_issues = self.report.cache.issues();
             const old_formula_issues = self.report.formula.issues();
             var root: Root = .{ .cache = &cache, .formula = &formula };
-            _ = try document_xml.visitBytes(self.allocator, bytes, bytes.len, self.options.xml, .{ .context = &root, .on_tag = Root.onTag });
+            _ = try document_xml.visitBytes(self.allocator, bytes, bytes.len, self.options.xml, .{ .context = &root, .on_tag = Root.onTag, .on_content = Root.onContent });
             if (self.report.cache.issues() != old_issues and self.report.first_cache_issue_path == null) {
                 self.report.first_cache_issue_path = try self.allocator.dupe(u8, entry.name);
             }

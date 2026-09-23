@@ -88,16 +88,21 @@ test "HWPX chart cache budgets are shared across distinct chart parts" {
     const a = std.testing.allocator;
     const distinct = section_prefix ++ "<p:chart chartIDRef=\"Chart/chart1.xml\"/><p:chart chartIDRef=\"Chart/chart2.xml\"/>" ++ section_suffix;
     const chart_with_one_point = "<c:chartSpace xmlns:c=\"http://schemas.openxmlformats.org/drawingml/2006/chart\"><c:numRef><c:f>Sheet1!$A$1</c:f><c:numCache><c:ptCount val=\"1\"/><c:pt idx=\"0\"><c:v>2</c:v></c:pt></c:numCache></c:numRef></c:chartSpace>";
-    var report = try inspect(a, distinct, chart_with_one_point, .{ .references = .{ .charts = .{ .cache = .{ .max_data_containers = 2, .max_points = 2 } } } });
+    const formula_bytes = "Sheet1!$A$1".len * 2;
+    var report = try inspect(a, distinct, chart_with_one_point, .{ .references = .{ .charts = .{ .cache = .{ .max_data_containers = 2, .max_points = 2, .max_total_value_bytes = 2 }, .formula = .{ .max_total_formula_bytes = formula_bytes } } } });
     try std.testing.expectEqual(@as(usize, 2), report.chart_parts);
     try std.testing.expectEqual(@as(usize, 2), report.cache.numeric_caches);
     try std.testing.expectEqual(@as(usize, 2), report.cache.points);
+    try std.testing.expectEqual(@as(usize, 2), report.cache.value_text_bytes);
     try std.testing.expectEqual(@as(usize, 2), report.formula.numeric_references);
+    try std.testing.expectEqual(formula_bytes, report.formula.formula_text_bytes);
     try std.testing.expectEqual(@as(usize, 0), report.formula.issues());
     report.deinit(a);
     try expectError(a, distinct, chart_with_one_point, .{ .references = .{ .charts = .{ .cache = .{ .max_data_containers = 1 } } } }, error.LimitExceeded);
     try expectError(a, distinct, chart_with_one_point, .{ .references = .{ .charts = .{ .cache = .{ .max_points = 1 } } } }, error.LimitExceeded);
+    try expectError(a, distinct, chart_with_one_point, .{ .references = .{ .charts = .{ .cache = .{ .max_total_value_bytes = 1 } } } }, error.LimitExceeded);
     try expectError(a, distinct, chart_with_one_point, .{ .references = .{ .charts = .{ .formula = .{ .max_references = 1 } } } }, error.LimitExceeded);
+    try expectError(a, distinct, chart_with_one_point, .{ .references = .{ .charts = .{ .formula = .{ .max_total_formula_bytes = formula_bytes - 1 } } } }, error.LimitExceeded);
 }
 
 test "HWPX chart links retain missing, invalid, empty, absent and unclassified paths" {

@@ -8,14 +8,18 @@ const suffix = "</c:chartSpace>";
 
 fn inspect(a: std.mem.Allocator, source: []const u8, options: formula.Options) !formula.Report {
     var report: formula.Report = .{};
-    var scanner: formula.Scanner = .{ .options = options, .report = &report };
+    var scanner: formula.Scanner = .{ .allocator = a, .options = options, .report = &report };
     const Context = struct {
         fn onTag(raw: *anyopaque, tag: xml.tags.Tag, scope: *const xml.namespaces.State, depth: usize) anyerror!void {
             const value: *formula.Scanner = @ptrCast(@alignCast(raw));
             try value.onTag(tag, scope, depth);
         }
+        fn onContent(raw: *anyopaque, value: xml.text_content.View, depth: usize) anyerror!void {
+            const self: *formula.Scanner = @ptrCast(@alignCast(raw));
+            try self.onContent(value, depth);
+        }
     };
-    _ = try document_xml.visitBytes(a, source, source.len, .{}, .{ .context = &scanner, .on_tag = Context.onTag });
+    _ = try document_xml.visitBytes(a, source, source.len, .{}, .{ .context = &scanner, .on_tag = Context.onTag, .on_content = Context.onContent });
     return report;
 }
 
@@ -87,6 +91,19 @@ test "HWPX chart formulas recognize remapped namespace prefixes" {
     try std.testing.expectEqual(@as(usize, 1), report.string_references);
     try std.testing.expectEqual(@as(usize, 1), report.attached_caches);
     try std.testing.expectEqual(@as(usize, 0), report.issues());
+}
+
+test "HWPX chart formula text counts decoded bytes and enforces exact budgets" {
+    const source = prefix ++
+        "<c:numRef><c:f>A&amp;<![CDATA[B]]></c:f></c:numRef>" ++
+        "<c:strRef><c:f/></c:strRef>" ++ suffix;
+    const report = try inspect(std.testing.allocator, source, .{ .max_formula_bytes = 3, .max_total_formula_bytes = 3 });
+    try std.testing.expectEqual(@as(usize, 3), report.formula_text_bytes);
+    try std.testing.expectEqual(@as(usize, 3), report.max_observed_formula_bytes);
+    try std.testing.expectEqual(@as(usize, 1), report.empty_formulas);
+    try std.testing.expectEqual(@as(usize, 0), report.issues());
+    try std.testing.expectError(error.LimitExceeded, inspect(std.testing.allocator, source, .{ .max_formula_bytes = 2 }));
+    try std.testing.expectError(error.LimitExceeded, inspect(std.testing.allocator, source, .{ .max_total_formula_bytes = 2 }));
 }
 
 test "HWPX chart formula visitor releases all allocations on failure" {

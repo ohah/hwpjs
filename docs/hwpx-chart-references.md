@@ -4,7 +4,7 @@
 
 section의 `p/run/chart`와 `p/run/switch/case|default/chart`를 검사합니다. 조건부 양쪽 분기를 각각 관측할 뿐 선택 조건을 평가하지 않습니다. 속성 부재·빈 값·안전하지 않은 경로·ZIP 엔트리 부재·해결된 참조·출처가 확인되지 않은 같은 속성을 별도로 보고합니다. 첫 문제 경로·문제 종류와 첫 미분류 값은 반환 보고서가 소유하거나 기록하며 해당 section의 manifest 항목 인덱스도 보존합니다. `Report.deinit`으로 소유 문자열을 해제합니다. 동일 ZIP 경로의 중복 참조는 각각 세지만 차트 XML은 한 번만 해제·검사합니다.
 
-참조된 차트 엔트리는 ZIP CRC와 해제 길이를 검사하고, XML 문법·namespace 및 `{http://schemas.openxmlformats.org/drawingml/2006/chart}chartSpace` 루트를 확인합니다. section 엔트리당 128MiB·합계 256MiB, 차트 엔트리당 32MiB·고유 차트 합계 128MiB, 속성값 4096바이트, 위치 100만 개, 고유 차트 10만 개가 기본 한도이며 XML 공통 요소·깊이 한도도 적용됩니다. XML 안의 `numCache`·`strCache` [개수·인덱스 구조](hwpx-chart-cache.md)와 [수식 참조 구조](hwpx-chart-formula.md)는 같은 API에서 별도 계층으로 검사합니다. 차트 시리즈별 값의 의미·데이터 레이블, OOXML 관계 파일과 외부 리소스, 렌더링·편집·저장은 아직 검증하지 않습니다. 이 단계만으로 전체 문서 검증을 완료한 것은 아닙니다.
+참조된 차트 엔트리는 ZIP CRC와 해제 길이를 검사하고, XML 문법·namespace 및 `{http://schemas.openxmlformats.org/drawingml/2006/chart}chartSpace` 루트를 확인합니다. section 엔트리당 128MiB·합계 256MiB, 차트 엔트리당 32MiB·고유 차트 합계 128MiB, 속성값 4096바이트, 위치 100만 개, 고유 차트 10만 개가 기본 한도이며 XML 공통 요소·깊이 한도도 적용됩니다. XML 안의 `numCache`·`strCache` [개수·인덱스 구조](hwpx-chart-cache.md), [수식 참조 구조](hwpx-chart-formula.md)와 [값·수식 텍스트 관측](hwpx-chart-text.md)은 같은 API에서 별도 책임으로 검사합니다. 차트 시리즈별 값의 의미·데이터 레이블, OOXML 관계 파일과 외부 리소스, 렌더링·편집·저장은 아직 검증하지 않습니다. 이 단계만으로 전체 문서 검증을 완료한 것은 아닙니다.
 
 ## 실파일과 적대적 검증
 

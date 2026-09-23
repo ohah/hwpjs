@@ -1,6 +1,7 @@
 const Input = @import("input.zig").Input;
 const Cursor = @import("token_cursor.zig").Cursor;
 pub const Kind = enum { tag, comment, cdata, pi, doctype };
+pub const Report = struct { scalars: usize, cdata_raw: ?[]const u8 = null };
 fn begins(input: Input, prefix: []const u8) !bool {
     var copy = input;
     for (prefix) |c| {
@@ -24,8 +25,9 @@ fn literal(cursor: *Cursor, expected: []const u8) !void {
     }
 }
 /// Comment/CDATA/PI validation only; never interpret references or execute PI data.
-/// Returns content scalar count (used for CDATA); caller state is atomic on error.
-pub fn parse(input: *Input, kind: Kind, max_bytes: usize, max_name_bytes: usize, validate_namespaces: bool) !usize {
+/// Returns content scalar count and the borrowed CDATA body span, if present.
+/// Caller state is atomic on error.
+pub fn parse(input: *Input, kind: Kind, max_bytes: usize, max_name_bytes: usize, validate_namespaces: bool) !Report {
     var cursor: Cursor = .{ .input = input.*, .start = input.offset, .max_bytes = max_bytes };
     switch (kind) {
         .comment => try literal(&cursor, "<!--"),
@@ -38,15 +40,17 @@ pub fn parse(input: *Input, kind: Kind, max_bytes: usize, max_name_bytes: usize,
             if ((try cursor.peek()) == '?') {
                 try literal(&cursor, "?>");
                 input.* = cursor.input;
-                return 0;
+                return .{ .scalars = 0 };
             }
             if (!try cursor.whitespace()) return error.InvalidXmlMarkup;
         },
         .doctype => return error.UnsupportedXmlDtd,
         .tag => return error.InvalidXmlMarkup,
     }
+    const content_start = cursor.input.offset;
     var count: usize = 0;
     var tail: usize = 0;
+    var cdata_end: usize = content_start;
     while (true) {
         const c = (try cursor.next()) orelse return error.UnexpectedEnd;
         count += 1;
@@ -60,6 +64,8 @@ pub fn parse(input: *Input, kind: Kind, max_bytes: usize, max_name_bytes: usize,
         } else if (kind == .cdata) {
             if (c == '>' and tail == 2) {
                 count -= 3;
+                const unit: usize = if (cursor.input.encoding == .utf8) 1 else 2;
+                cdata_end = cursor.input.offset - 3 * unit;
                 break;
             }
             tail = if (c == ']') @min(tail + 1, 2) else 0;
@@ -71,6 +77,7 @@ pub fn parse(input: *Input, kind: Kind, max_bytes: usize, max_name_bytes: usize,
             tail = if (c == '?') 1 else 0;
         }
     }
+    const result: Report = .{ .scalars = count, .cdata_raw = if (kind == .cdata) cursor.input.bytes[content_start..cdata_end] else null };
     input.* = cursor.input;
-    return count;
+    return result;
 }

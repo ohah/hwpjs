@@ -9,5 +9,6 @@ pub const references = @import("references.zig");
 pub const tags = @import("tags.zig");
 pub const attribute_value = @import("attribute_value.zig");
 pub const document = @import("document.zig");
+pub const text_content = @import("text_content.zig");
 pub const qname = @import("qname.zig");
 pub const namespaces = @import("namespaces.zig");

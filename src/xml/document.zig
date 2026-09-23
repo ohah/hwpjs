@@ -3,6 +3,7 @@ const prolog = @import("prolog.zig");
 const tags = @import("tags.zig");
 const markup = @import("markup.zig");
 const namespaces = @import("namespaces.zig");
+const text_content = @import("text_content.zig");
 pub const Options = struct {
     validate_namespaces: bool = false,
     namespaces: namespaces.Options = .{},
@@ -38,6 +39,7 @@ pub const Report = struct {
 pub const Visitor = struct {
     context: *anyopaque,
     on_tag: *const fn (*anyopaque, tags.Tag, *const namespaces.State, usize) anyerror!void,
+    on_content: ?*const fn (*anyopaque, text_content.View, usize) anyerror!void = null,
 };
 pub fn inspect(a: std.mem.Allocator, bytes: []const u8, options: Options) !Report {
     return visit(a, bytes, options, null);
@@ -57,22 +59,39 @@ pub fn visit(a: std.mem.Allocator, bytes: []const u8, options: Options, visitor:
         if (report.events == options.max_events) return error.LimitExceeded;
         report.events += 1;
         if (first.value != '<') {
+            const content_start = opened.input.offset;
             const text = try @import("content.zig").inspect(&opened.input, options.max_text_bytes, options.tags.references, options.max_references - report.references, stack.items.len == 0);
             report.references += text.references;
-            if (stack.items.len != 0) report.text_scalars += text.scalars;
+            if (stack.items.len != 0) {
+                report.text_scalars += text.scalars;
+                if (visitor) |v| if (v.on_content) |on_content| try on_content(v.context, .{
+                    .kind = .char_data,
+                    .raw = opened.input.bytes[content_start..opened.input.offset],
+                    .encoding = opened.input.encoding,
+                    .scalars = text.scalars,
+                    .reference_options = options.tags.references,
+                }, stack.items.len);
+            }
             continue;
         }
         const kind = try markup.classify(opened.input);
         if (kind == .doctype) return error.UnsupportedXmlDtd;
         if (kind != .tag) {
             if (kind == .cdata and stack.items.len == 0) return error.CdataOutsideXmlRoot;
-            const scalars = try markup.parse(&opened.input, kind, options.max_markup_bytes, options.tags.max_name_bytes, options.validate_namespaces);
+            const parsed = try markup.parse(&opened.input, kind, options.max_markup_bytes, options.tags.max_name_bytes, options.validate_namespaces);
             switch (kind) {
                 .comment => report.comments += 1,
                 .pi => report.processing_instructions += 1,
                 .cdata => {
                     report.cdata += 1;
-                    report.text_scalars += scalars;
+                    report.text_scalars += parsed.scalars;
+                    if (visitor) |v| if (v.on_content) |on_content| try on_content(v.context, .{
+                        .kind = .cdata,
+                        .raw = parsed.cdata_raw.?,
+                        .encoding = opened.input.encoding,
+                        .scalars = parsed.scalars,
+                        .reference_options = options.tags.references,
+                    }, stack.items.len);
                 },
                 else => unreachable,
             }
