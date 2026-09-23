@@ -91,7 +91,7 @@ pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, manifest: content_man
         const entry_index = item.entry_index orelse return error.ExternalSpineXml;
         const max_bytes = @min(options.max_section_xml_bytes, remaining);
         const bytes = try archive.decode(archive.entries[entry_index], max_bytes);
-        defer a.free(bytes);
+        defer archive.allocator.free(bytes);
         var context: Context = .{ .allocator = a, .options = options, .resources = resources, .report = &report, .item_index = section.item_index };
         defer context.deinit();
         _ = try document_xml.visitBytes(a, bytes, max_bytes, options.xml, .{ .context = &context, .on_tag = Context.onTag });

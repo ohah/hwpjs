@@ -31,8 +31,10 @@ pub const Archive = struct {
         return null;
     }
 
-    /// The returned bytes are owned by the caller. CRC and exact output length
-    /// are verified before any content is handed to the HWPX layer.
+    /// The returned bytes are owned by the caller but allocated with
+    /// self.allocator; free them with that allocator even when a consumer uses
+    /// a different allocator for its report. CRC and exact output length are
+    /// verified before any content is handed to the HWPX layer.
     pub fn decode(self: Archive, entry: Entry, max_bytes: usize) ![]u8 {
         const bound = @min(max_bytes, entry.uncompressed_size);
         if (entry.uncompressed_size > bound) return error.LimitExceeded;

@@ -12,6 +12,7 @@ const font_faces = @import("font_faces.zig");
 const font_references = @import("font_references.zig");
 const list_references = @import("list_references.zig");
 const binary_references = @import("binary_references.zig");
+const chart_references = @import("chart_references.zig");
 
 pub const Archive = zip.Archive;
 pub const Options = zip.Options;
@@ -69,6 +70,12 @@ pub const BinaryReferenceOptions = struct {
 };
 pub const BinaryReferenceReport = binary_references.Report;
 pub const BinaryReferenceKind = binary_references.Kind;
+pub const ChartReferenceOptions = struct {
+    structure: StructureOptions = .{},
+    references: chart_references.Options = .{},
+};
+pub const ChartReferenceReport = chart_references.Report;
+pub const ChartProblemKind = chart_references.ProblemKind;
 pub const DocumentOptions = struct {
     // The archive index also contains large BinData/section entries. Their
     // declared sizes are bounded here; this call only decodes the two small
@@ -154,6 +161,14 @@ pub const Document = struct {
         defer structure.deinit(a);
         const header = try document_structure.plainHeaderEntry(a, self.archive, self.manifest, options.structure.protection);
         return binary_references.inspect(a, self.archive, self.manifest, header, structure.sections, options.references);
+    }
+
+    /// Resolves section chartIDRef ZIP paths and validates each unique chart
+    /// XML member's syntax and chartSpace root; this is not chart semantics.
+    pub fn inspectChartReferences(self: *const Document, a: std.mem.Allocator, options: ChartReferenceOptions) !ChartReferenceReport {
+        var structure = try self.inspectStructure(a, options.structure);
+        defer structure.deinit(a);
+        return chart_references.inspect(a, self.archive, self.manifest, structure.sections, options.references);
     }
 
     pub fn deinit(self: *Document, a: std.mem.Allocator) void {

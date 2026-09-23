@@ -4,6 +4,8 @@
 
 `package.inspectDocument`는 [ZIP·mimetype 경계](hwpx-zip-container.md) 뒤에서 `META-INF/container.xml`의 패키지 루트와 그 루트 OPF의 manifest·spine을 연결합니다. 반환 `Document`는 ZIP 엔트리 인덱스, 루트 경로, manifest 항목·spine 인덱스를 소유하지만 ZIP 입력 바이트는 빌립니다. 호출자는 `Document.deinit` 후에 원본 입력을 해제합니다. 두 XML 엔트리의 해제량은 단일 `max_total_xml_bytes` 한도에서 차감합니다. 이 단계는 문서 헤더·section XML의 의미를 해석하거나 BinData를 해제하지 않습니다.
 
+`Archive.decode`의 반환 버퍼는 문서를 연 archive의 할당자가 소유하며, 각 검사 메서드의 인자로 받은 할당자는 XML 순회 상태·반환 보고서에 사용합니다. 둘이 달라도 ZIP 해제 버퍼는 반드시 `archive.allocator`로 반환합니다. 이 구분은 [차트 경로 검사](hwpx-chart-references.md)의 적대적 재현에서 기존 잘못된 해제를 발견한 뒤 HWPX XML 소비자에 공통 적용했습니다.
+
 `xml.document.visit`는 기존 XML 문법·DTD 거부·namespace 검사와 같은 순회에서 태그를 동기적으로 전달합니다. 호출 중에만 유효한 태그·scope를 `hwpx/xml_attributes.zig`가 URI/로컬명으로 대조하고, 속성 값은 공통 XML 값 iterator를 통해 UTF-8로 복사합니다. 주석/CDATA 문자열이나 다른 namespace의 같은 로컬명은 manifest 항목이 아닙니다. UTF-8·UTF-16LE XML을 같은 규칙으로 검사합니다. XML 파서를 HWPX에 복제하지 않습니다.
 
 `container_manifest.zig`는 OCF namespace의 직접 `rootfiles/rootfile`에서 `application/hwpml-package+xml` 루트 하나를 찾고 ZIP 정확 경로를 요구합니다. 부가 rootfile의 누락은 보고서의 `missing_optional_roots`로 남깁니다. 실제 `rowbreak-problem-pages.hwpx`에는 선언한 `Preview/PrvText.txt`가 없으므로 이를 필수 패키지 루트와 같은 오류로 처리하지 않습니다.
@@ -22,4 +24,4 @@
 
 최종 소스의 `zig test src/root.zig --test-filter HWPX`는 24/24, `zig build test --summary all`은 2046/2046 통과했습니다. `zig build audit --summary all`을 Debug·ReleaseSafe·ReleaseFast 순서로 실행해 모두 종료 코드 0을 확인했으며, ReleaseFast 출력의 전체 요약은 40/40 단계·2085/2085 테스트 통과였습니다. ReleaseSafe 제품 빌드와 `zig build compare -Doptimize=ReleaseSafe --summary all`(8/8 단계), `zig fmt --check build.zig src`, `git diff --check`, 변경 문서의 로컬 링크 검사도 통과했습니다. 전체 audit의 HWP5/WASM 검사를 새로운 HWPX section 의미 검증으로 계산하지 않습니다.
 
-후속 [버전 XML 검증](hwpx-version.md)은 별도 진입점으로 구현했습니다. 이후 [암호화 분류](hwpx-protection.md), [header·spine 구조](hwpx-document-structure.md), [header 리소스 ID 색인](hwpx-header-resources.md), [section의 p/run 서식 참조 검사](hwpx-section-references.md), [header 내부 서식 참조 검사](hwpx-header-references.md), [언어별 글꼴 ID 연결](hwpx-font-references.md), [번호·글머리표 내부 참조](hwpx-list-references.md), [이진 리소스 manifest ID 연결](hwpx-binary-references.md)이 별도 계층으로 구현됐습니다. 그 외 header/section 내부 참조·BinData 바이트 검증, 버전별 확장, HWP5 공통 문서 모델, 편집·쓰기·공개 WASM/JS API는 남아 있습니다. manifest 관계 검증 통과를 전체 HWPX 문서 검증 완료로 표시하지 않습니다.
+후속 [버전 XML 검증](hwpx-version.md)은 별도 진입점으로 구현했습니다. 이후 [암호화 분류](hwpx-protection.md), [header·spine 구조](hwpx-document-structure.md), [header 리소스 ID 색인](hwpx-header-resources.md), [section의 p/run 서식 참조 검사](hwpx-section-references.md), [header 내부 서식 참조 검사](hwpx-header-references.md), [언어별 글꼴 ID 연결](hwpx-font-references.md), [번호·글머리표 내부 참조](hwpx-list-references.md), [이진 리소스 manifest ID 연결](hwpx-binary-references.md), [차트 ZIP 경로·XML 경계 검증](hwpx-chart-references.md)이 별도 계층으로 구현됐습니다. 그 외 header/section 내부 참조·BinData 바이트 검증, 버전별 확장, HWP5 공통 문서 모델, 편집·쓰기·공개 WASM/JS API는 남아 있습니다. manifest 관계 검증 통과를 전체 HWPX 문서 검증 완료로 표시하지 않습니다.

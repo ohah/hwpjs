@@ -63,7 +63,7 @@ const Context = struct {
 
 pub fn read(a: std.mem.Allocator, archive: zip.Archive, entry: zip.Entry, max_xml_bytes: usize, options: Options) !Report {
     const bytes = try archive.decode(entry, max_xml_bytes);
-    defer a.free(bytes);
+    defer archive.allocator.free(bytes);
     var context: Context = .{ .allocator = a, .max_attribute_bytes = options.max_attribute_bytes };
     errdefer if (context.header_version) |value| a.free(value);
     const parsed = try visitBytes(a, bytes, max_xml_bytes, options, .{ .context = &context, .on_tag = Context.onTag });

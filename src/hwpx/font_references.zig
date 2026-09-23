@@ -85,7 +85,7 @@ const Context = struct {
 /// Incomplete/extra elements remain diagnostics, not invented fallback fonts.
 pub fn read(a: std.mem.Allocator, archive: zip.Archive, entry: zip.Entry, item_index: usize, faces: *const font_faces.Report, options: Options) !Report {
     const bytes = try archive.decode(entry, options.max_xml_bytes);
-    defer a.free(bytes);
+    defer archive.allocator.free(bytes);
     var report: Report = .{ .xml_bytes = bytes.len };
     var context: Context = .{ .allocator = a, .options = options, .faces = faces, .item_index = item_index, .report = &report };
     _ = try document_xml.visitBytes(a, bytes, options.max_xml_bytes, options.xml, .{ .context = &context, .on_tag = Context.onTag });

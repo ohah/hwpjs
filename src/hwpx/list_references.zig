@@ -152,7 +152,7 @@ const Context = struct {
 /// not guessed to address the ordinary numbering table.
 pub fn read(a: std.mem.Allocator, archive: zip.Archive, entry: zip.Entry, item_index: usize, resources: *const header_resources.Report, options: Options) !Report {
     const bytes = try archive.decode(entry, options.max_xml_bytes);
-    defer a.free(bytes);
+    defer archive.allocator.free(bytes);
     var report: Report = .{ .xml_bytes = bytes.len };
     var context: Context = .{ .allocator = a, .options = options, .resources = resources, .item_index = item_index, .report = &report };
     _ = try document_xml.visitBytes(a, bytes, options.max_xml_bytes, options.xml, .{ .context = &context, .on_tag = Context.onTag });

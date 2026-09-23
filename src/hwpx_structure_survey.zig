@@ -697,3 +697,62 @@ test "HWPX corpus binary manifest links read-only survey" {
     try std.testing.expectEqual(@as(usize, 65), totals[5].resolved_external);
     for (totals) |counts| try std.testing.expectEqual(@as(usize, 0), counts.missing_target);
 }
+
+test "HWPX corpus chart path and XML read-only survey" {
+    const a = std.testing.allocator;
+    const roots = [_][]const u8{ "legacy/rust/crates/hwp-core/tests/fixtures", "reference/rhwp/samples" };
+    var accepted: usize = 0;
+    var rejected_zip: usize = 0;
+    var encrypted: usize = 0;
+    var sections: usize = 0;
+    var sites: usize = 0;
+    var resolved: usize = 0;
+    var chart_parts: usize = 0;
+    var unclassified: usize = 0;
+    var missing: usize = 0;
+    for (roots) |root| {
+        const dir = try std.Io.Dir.cwd().openDir(std.testing.io, root, .{ .iterate = true });
+        defer dir.close(std.testing.io);
+        var walker = try dir.walk(a);
+        defer walker.deinit();
+        while (try walker.next(std.testing.io)) |entry| {
+            if (entry.kind != .file or !std.mem.endsWith(u8, entry.path, ".hwpx")) continue;
+            const bytes = try dir.readFileAlloc(std.testing.io, entry.path, a, .limited(25_000_000));
+            defer a.free(bytes);
+            var document = package.inspectDocument(a, bytes, .{}) catch |err| {
+                try std.testing.expectEqual(error.MissingEndRecord, err);
+                rejected_zip += 1;
+                continue;
+            };
+            defer document.deinit(a);
+            var report = document.inspectChartReferences(a, .{}) catch |err| {
+                if (err == error.EncryptedDocument) {
+                    encrypted += 1;
+                    continue;
+                }
+                std.debug.print("HWPX chart unexpected path={s} error={s}\n", .{ entry.path, @errorName(err) });
+                return err;
+            };
+            defer report.deinit(a);
+            accepted += 1;
+            sections += report.sections;
+            sites += report.chart_sites;
+            resolved += report.resolved;
+            chart_parts += report.chart_parts;
+            unclassified += report.unclassified_attribute_sites;
+            missing += report.missing_entry + report.invalid_path;
+            if (report.chart_sites != report.resolved or report.unclassified_attribute_sites != 0) {
+                std.debug.print("HWPX chart link diagnostic path={s} sites={d} resolved={d} absent={d} empty={d} invalid={d} missing={d} unclassified={d}\n", .{ entry.path, report.chart_sites, report.resolved, report.absent, report.empty, report.invalid_path, report.missing_entry, report.unclassified_attribute_sites });
+            }
+        }
+    }
+    std.debug.print("HWPX chart accepted={d} rejected_zip={d} encrypted={d} sections={d} sites={d} resolved={d} chart_parts={d} unclassified={d} missing={d}\n", .{ accepted, rejected_zip, encrypted, sections, sites, resolved, chart_parts, unclassified, missing });
+    try std.testing.expectEqual(@as(usize, 476), accepted);
+    try std.testing.expectEqual(@as(usize, 6), rejected_zip);
+    try std.testing.expectEqual(@as(usize, 2), encrypted);
+    try std.testing.expectEqual(@as(usize, 544), sections);
+    try std.testing.expectEqual(@as(usize, 93), sites);
+    try std.testing.expectEqual(sites, resolved);
+    try std.testing.expectEqual(@as(usize, 0), unclassified);
+    try std.testing.expectEqual(@as(usize, 0), missing);
+}

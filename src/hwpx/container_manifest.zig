@@ -66,7 +66,7 @@ const Context = struct {
 pub fn read(a: std.mem.Allocator, archive: zip.Archive, max_xml_bytes: usize, max_attribute_bytes: usize) !Root {
     const entry = archive.find("META-INF/container.xml") orelse return error.MissingContainerXml;
     const bytes = try archive.decode(entry, max_xml_bytes);
-    defer a.free(bytes);
+    defer archive.allocator.free(bytes);
     var context: Context = .{ .allocator = a, .archive = archive, .max_attribute_bytes = max_attribute_bytes };
     errdefer if (context.path) |path| a.free(path);
     _ = try xml.document.visit(a, bytes, .{

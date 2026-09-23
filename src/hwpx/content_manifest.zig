@@ -151,7 +151,7 @@ const Context = struct {
 pub fn read(a: std.mem.Allocator, archive: zip.Archive, root_path: []const u8, options: Options) !Manifest {
     const entry = archive.find(root_path) orelse return error.MissingPackageRoot;
     const bytes = try archive.decode(entry, options.max_xml_bytes);
-    defer a.free(bytes);
+    defer archive.allocator.free(bytes);
     var context: Context = .{ .allocator = a, .options = options };
     defer context.deinit();
     for (archive.entries, 0..) |member, i| try context.zip_by_name.put(a, member.name, i);

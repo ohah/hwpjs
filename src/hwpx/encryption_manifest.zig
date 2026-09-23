@@ -89,7 +89,7 @@ pub fn read(a: std.mem.Allocator, archive: zip.Archive, options: Options) !Repor
         .encrypted_paths = try a.alloc([]u8, 0),
     };
     const bytes = try archive.decode(entry, options.max_xml_bytes);
-    defer a.free(bytes);
+    defer archive.allocator.free(bytes);
     var context: Context = .{ .allocator = a, .options = options };
     defer context.deinit();
     _ = try xml.document.visit(a, bytes, .{

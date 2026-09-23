@@ -128,7 +128,7 @@ pub fn read(a: std.mem.Allocator, archive: zip.Archive, entry: zip.Entry, source
     const per_file = if (mode == .header) options.max_header_xml_bytes else options.max_section_xml_bytes;
     const max_bytes = @min(per_file, remaining.*);
     const bytes = try archive.decode(entry, max_bytes);
-    defer a.free(bytes);
+    defer archive.allocator.free(bytes);
     var context: Context = .{ .allocator = a, .mode = mode, .options = options, .source_item_index = source_item_index, .manifest = manifest, .index = index, .report = report };
     _ = try document_xml.visitBytes(a, bytes, max_bytes, options.xml, .{ .context = &context, .on_tag = Context.onTag });
     remaining.* -= bytes.len;

@@ -79,7 +79,7 @@ const Context = struct {
 pub fn read(a: std.mem.Allocator, archive: zip.Archive, max_xml_bytes: usize, max_attribute_bytes: usize) !Version {
     const entry = archive.find("version.xml") orelse return error.MissingVersionXml;
     const bytes = try archive.decode(entry, max_xml_bytes);
-    defer a.free(bytes);
+    defer archive.allocator.free(bytes);
     var context: Context = .{ .allocator = a, .max_attribute_bytes = max_attribute_bytes };
     errdefer if (context.version) |*version| version.deinit(a);
     _ = try xml.document.visit(a, bytes, .{

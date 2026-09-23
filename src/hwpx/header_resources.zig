@@ -127,7 +127,7 @@ fn less(_: void, a: u32, b: u32) bool {
 /// unvalidated. The package layer chooses the exact unencrypted header entry.
 pub fn read(a: std.mem.Allocator, archive: zip.Archive, entry: zip.Entry, options: Options) !Report {
     const bytes = try archive.decode(entry, options.max_xml_bytes);
-    defer a.free(bytes);
+    defer archive.allocator.free(bytes);
     var context: Context = .{ .allocator = a, .options = options };
     errdefer context.deinit();
     _ = try document_xml.visitBytes(a, bytes, options.max_xml_bytes, options.xml, .{ .context = &context, .on_tag = Context.onTag });
