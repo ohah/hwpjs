@@ -13,6 +13,7 @@ pub const text = @import("text/root.zig");
 test {
     _ = @import("hwpx/package_tests.zig");
     _ = @import("hwpx/list_references_tests.zig");
+    _ = @import("hwpx/binary_references_tests.zig");
     _ = @import("image/emf/emf_plus_graphics_version.zig");
     _ = @import("image/emf/emf_plus_values.zig");
     _ = @import("image/emf/emf_plus_argb.zig");

@@ -1,0 +1,136 @@
+const std = @import("std");
+const xml = @import("../xml/root.zig");
+const zip = @import("../zip/archive.zig");
+const attrs = @import("xml_attributes.zig");
+const document_xml = @import("document_xml.zig");
+const content_manifest = @import("content_manifest.zig");
+const links = @import("binary_reference_links.zig");
+
+pub const Mode = enum { header, section };
+
+pub const Options = struct {
+    max_header_xml_bytes: usize = 32 * 1024 * 1024,
+    max_section_xml_bytes: usize = 128 * 1024 * 1024,
+    max_total_xml_bytes: usize = 256 * 1024 * 1024,
+    max_attribute_bytes: usize = 4096,
+    max_sites: usize = 1_000_000,
+    xml: document_xml.Options = .{},
+};
+
+const Node = enum {
+    other,
+    head,
+    section,
+    ref_list,
+    fontfaces,
+    fontface,
+    font,
+    subst_font,
+    border_fills,
+    border_fill,
+    paragraph,
+    run,
+    container,
+    switch_element,
+    branch,
+    drawing,
+    picture,
+    ole,
+    fill_brush,
+    image_brush,
+    image,
+};
+
+const Context = struct {
+    allocator: std.mem.Allocator,
+    mode: Mode,
+    options: Options,
+    source_item_index: usize,
+    manifest: content_manifest.Manifest,
+    index: *const links.Index,
+    report: *links.Report,
+    stack: [256]Node = @splat(.other),
+
+    fn drawing(tag: xml.tags.Tag, scope: *const xml.namespaces.State) !bool {
+        for ([_][]const u8{ "rect", "ellipse", "polygon", "arc", "curve", "line", "connectLine", "textart", "unknown", "presentation" }) |local| {
+            if (try attrs.element(tag, scope, document_xml.paragraph_uri, local)) return true;
+        }
+        return false;
+    }
+
+    fn classify(self: *Context, tag: xml.tags.Tag, scope: *const xml.namespaces.State, depth: usize) !Node {
+        const parent = if (depth == 1) Node.other else self.stack[depth - 2];
+        if (depth == 1) {
+            const uri = if (self.mode == .header) document_xml.head_uri else document_xml.section_uri;
+            const local = if (self.mode == .header) "head" else "sec";
+            if (!try attrs.element(tag, scope, uri, local)) return if (self.mode == .header) error.InvalidHeaderRoot else error.InvalidSectionRoot;
+            return if (self.mode == .header) .head else .section;
+        }
+        if (self.mode == .header) {
+            if (parent == .head and try attrs.element(tag, scope, document_xml.head_uri, "refList")) return .ref_list;
+            if (parent == .ref_list) {
+                if (try attrs.element(tag, scope, document_xml.head_uri, "fontfaces")) return .fontfaces;
+                if (try attrs.element(tag, scope, document_xml.head_uri, "borderFills")) return .border_fills;
+            }
+            if (parent == .fontfaces and try attrs.element(tag, scope, document_xml.head_uri, "fontface")) return .fontface;
+            if (parent == .fontface and try attrs.element(tag, scope, document_xml.head_uri, "font")) return .font;
+            if (parent == .font and try attrs.element(tag, scope, document_xml.head_uri, "substFont")) return .subst_font;
+            if (parent == .border_fills and try attrs.element(tag, scope, document_xml.head_uri, "borderFill")) return .border_fill;
+        } else {
+            if (try attrs.element(tag, scope, document_xml.paragraph_uri, "p")) return .paragraph;
+            if (parent == .paragraph and try attrs.element(tag, scope, document_xml.paragraph_uri, "run")) return .run;
+            if ((parent == .run or parent == .container or parent == .branch) and try attrs.element(tag, scope, document_xml.paragraph_uri, "switch")) return .switch_element;
+            if (parent == .switch_element) {
+                if (try attrs.element(tag, scope, document_xml.paragraph_uri, "case")) return .branch;
+                if (try attrs.element(tag, scope, document_xml.paragraph_uri, "default")) return .branch;
+            }
+            if (parent == .run or parent == .container or parent == .branch) {
+                if (try attrs.element(tag, scope, document_xml.paragraph_uri, "container")) return .container;
+                if (try attrs.element(tag, scope, document_xml.paragraph_uri, "pic")) return .picture;
+                if (try attrs.element(tag, scope, document_xml.paragraph_uri, "ole")) return .ole;
+                if (try drawing(tag, scope)) return .drawing;
+            }
+        }
+        if ((parent == .border_fill or (self.mode == .section and parent == .drawing)) and try attrs.element(tag, scope, document_xml.core_uri, "fillBrush")) return .fill_brush;
+        if (parent == .fill_brush and try attrs.element(tag, scope, document_xml.core_uri, "imgBrush")) return .image_brush;
+        if ((parent == .picture or parent == .image_brush) and try attrs.element(tag, scope, document_xml.core_uri, "img")) return .image;
+        return .other;
+    }
+
+    fn onTag(raw: *anyopaque, tag: xml.tags.Tag, scope: *const xml.namespaces.State, depth: usize) anyerror!void {
+        const self: *Context = @ptrCast(@alignCast(raw));
+        if (tag.kind == .end) return;
+        if (depth == 0 or depth > self.stack.len) return error.LimitExceeded;
+        const node = try self.classify(tag, scope, depth);
+        if (tag.kind == .start) self.stack[depth - 1] = node;
+        const kind: ?links.Kind = switch (node) {
+            .font => .header_font,
+            .subst_font => .header_substitute_font,
+            .ole => .section_ole,
+            .image => if (self.mode == .header) .header_brush_image else if (self.stack[depth - 2] == .picture) .section_picture else .section_brush_image,
+            else => null,
+        };
+        const raw_id = try attrs.attribute(self.allocator, tag, scope, "binaryItemIDRef", self.options.max_attribute_bytes);
+        if (kind == null and raw_id == null) return;
+        if (self.report.observed_sites == self.options.max_sites) {
+            if (raw_id) |id| self.allocator.free(id);
+            return error.LimitExceeded;
+        }
+        self.report.observed_sites += 1;
+        if (kind) |value| return links.note(self.allocator, self.report, self.index, self.manifest, value, self.source_item_index, raw_id);
+        return links.noteUnclassified(self.allocator, self.report, self.source_item_index, raw_id.?);
+    }
+};
+
+/// Parses one structure-selected member; the report and manifest index are
+/// shared across header and spine-order sections, with a single site budget.
+pub fn read(a: std.mem.Allocator, archive: zip.Archive, entry: zip.Entry, source_item_index: usize, mode: Mode, manifest: content_manifest.Manifest, index: *const links.Index, report: *links.Report, options: Options, remaining: *usize) !void {
+    const per_file = if (mode == .header) options.max_header_xml_bytes else options.max_section_xml_bytes;
+    const max_bytes = @min(per_file, remaining.*);
+    const bytes = try archive.decode(entry, max_bytes);
+    defer a.free(bytes);
+    var context: Context = .{ .allocator = a, .mode = mode, .options = options, .source_item_index = source_item_index, .manifest = manifest, .index = index, .report = report };
+    _ = try document_xml.visitBytes(a, bytes, max_bytes, options.xml, .{ .context = &context, .on_tag = Context.onTag });
+    remaining.* -= bytes.len;
+    if (mode == .header) report.header_xml_bytes = bytes.len else report.section_xml_bytes += bytes.len;
+}

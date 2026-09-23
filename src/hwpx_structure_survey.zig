@@ -608,3 +608,92 @@ test "HWPX corpus list definition links read-only survey" {
     try std.testing.expectEqual(@as(usize, 0), bullet_missing_minor0);
     try std.testing.expectEqual(@as(usize, 5), bullet_missing_minor1);
 }
+
+test "HWPX corpus binary manifest links read-only survey" {
+    const a = std.testing.allocator;
+    const roots = [_][]const u8{ "legacy/rust/crates/hwp-core/tests/fixtures", "reference/rhwp/samples" };
+    const kinds = [_]package.BinaryReferenceKind{ .header_font, .header_substitute_font, .header_brush_image, .section_picture, .section_brush_image, .section_ole };
+    const Counts = @TypeOf(@as(package.BinaryReferenceReport, undefined).counts_by_kind[0]);
+    var totals: [kinds.len]Counts = @splat(.{});
+    var accepted: usize = 0;
+    var rejected_zip: usize = 0;
+    var encrypted: usize = 0;
+    var sections: usize = 0;
+    var observed_sites: usize = 0;
+    var unclassified_sites: usize = 0;
+    var missing_docs: usize = 0;
+    var unclassified_docs: usize = 0;
+    for (roots) |root| {
+        const dir = try std.Io.Dir.cwd().openDir(std.testing.io, root, .{ .iterate = true });
+        defer dir.close(std.testing.io);
+        var walker = try dir.walk(a);
+        defer walker.deinit();
+        while (try walker.next(std.testing.io)) |entry| {
+            if (entry.kind != .file or !std.mem.endsWith(u8, entry.path, ".hwpx")) continue;
+            const bytes = try dir.readFileAlloc(std.testing.io, entry.path, a, .limited(25_000_000));
+            defer a.free(bytes);
+            var document = package.inspectDocument(a, bytes, .{}) catch |err| {
+                try std.testing.expectEqual(error.MissingEndRecord, err);
+                rejected_zip += 1;
+                continue;
+            };
+            defer document.deinit(a);
+            var report = document.inspectBinaryReferences(a, .{}) catch |err| {
+                if (err == error.EncryptedDocument) {
+                    encrypted += 1;
+                    continue;
+                }
+                std.debug.print("HWPX binary links unexpected path={s} error={s}\n", .{ entry.path, @errorName(err) });
+                return err;
+            };
+            defer report.deinit(a);
+            accepted += 1;
+            sections += report.sections;
+            observed_sites += report.observed_sites;
+            unclassified_sites += report.unclassified_attribute_sites;
+            if (report.first_unclassified_id != null) {
+                unclassified_docs += 1;
+                if (unclassified_docs <= 3) std.debug.print("HWPX binary unclassified path={s} first_id={s}\n", .{ entry.path, report.first_unclassified_id.? });
+            }
+            if (report.first_missing_id != null) {
+                missing_docs += 1;
+                if (missing_docs <= 3) std.debug.print("HWPX binary missing path={s} first_id={s}\n", .{ entry.path, report.first_missing_id.? });
+            }
+            for (kinds, 0..) |kind, index| {
+                const source = report.counts(kind);
+                totals[index].sites += source.sites;
+                totals[index].absent += source.absent;
+                totals[index].empty += source.empty;
+                totals[index].resolved_embedded += source.resolved_embedded;
+                totals[index].resolved_external += source.resolved_external;
+                totals[index].missing_target += source.missing_target;
+            }
+        }
+    }
+    std.debug.print("HWPX binary links accepted={d} rejected_zip={d} encrypted={d} sections={d} observed_sites={d} unclassified_sites={d} missing_docs={d} unclassified_docs={d}\n", .{ accepted, rejected_zip, encrypted, sections, observed_sites, unclassified_sites, missing_docs, unclassified_docs });
+    for (kinds, totals) |kind, counts| std.debug.print("HWPX binary {s} {any}\n", .{ @tagName(kind), counts });
+    try std.testing.expectEqual(@as(usize, 476), accepted);
+    try std.testing.expectEqual(@as(usize, 6), rejected_zip);
+    try std.testing.expectEqual(@as(usize, 2), encrypted);
+    try std.testing.expectEqual(@as(usize, 544), sections);
+    try std.testing.expectEqual(@as(usize, 25_549), observed_sites);
+    try std.testing.expectEqual(@as(usize, 0), unclassified_sites);
+    try std.testing.expectEqual(@as(usize, 0), missing_docs);
+    try std.testing.expectEqual(@as(usize, 0), unclassified_docs);
+    try std.testing.expectEqual(@as(usize, 20_446), totals[0].sites);
+    try std.testing.expectEqual(@as(usize, 20_445), totals[0].absent);
+    try std.testing.expectEqual(@as(usize, 1), totals[0].resolved_embedded);
+    try std.testing.expectEqual(@as(usize, 2620), totals[1].sites);
+    try std.testing.expectEqual(@as(usize, 2620), totals[1].empty);
+    try std.testing.expectEqual(@as(usize, 389), totals[2].resolved_embedded);
+    try std.testing.expectEqual(@as(usize, 1993), totals[3].sites);
+    try std.testing.expectEqual(@as(usize, 41), totals[3].empty);
+    try std.testing.expectEqual(@as(usize, 1945), totals[3].resolved_embedded);
+    try std.testing.expectEqual(@as(usize, 7), totals[3].resolved_external);
+    try std.testing.expectEqual(@as(usize, 1), totals[4].resolved_embedded);
+    try std.testing.expectEqual(@as(usize, 100), totals[5].sites);
+    try std.testing.expectEqual(@as(usize, 1), totals[5].empty);
+    try std.testing.expectEqual(@as(usize, 34), totals[5].resolved_embedded);
+    try std.testing.expectEqual(@as(usize, 65), totals[5].resolved_external);
+    for (totals) |counts| try std.testing.expectEqual(@as(usize, 0), counts.missing_target);
+}

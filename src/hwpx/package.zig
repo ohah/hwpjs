@@ -11,6 +11,7 @@ const header_references = @import("header_references.zig");
 const font_faces = @import("font_faces.zig");
 const font_references = @import("font_references.zig");
 const list_references = @import("list_references.zig");
+const binary_references = @import("binary_references.zig");
 
 pub const Archive = zip.Archive;
 pub const Options = zip.Options;
@@ -62,6 +63,12 @@ pub const ListReferenceOptions = struct {
     references: list_references.Options = .{},
 };
 pub const ListReferenceReport = list_references.Report;
+pub const BinaryReferenceOptions = struct {
+    structure: StructureOptions = .{},
+    references: binary_references.Options = .{},
+};
+pub const BinaryReferenceReport = binary_references.Report;
+pub const BinaryReferenceKind = binary_references.Kind;
 pub const DocumentOptions = struct {
     // The archive index also contains large BinData/section entries. Their
     // declared sizes are bounded here; this call only decodes the two small
@@ -138,6 +145,15 @@ pub const Document = struct {
         var resources = try header_resources.read(a, self.archive, selected.entry, options.resources);
         defer resources.deinit(a);
         return list_references.read(a, self.archive, selected.entry, selected.item_index, &resources, options.references);
+    }
+
+    /// Links selected header and spine-section binaryItemIDRef strings to
+    /// manifest IDs without decoding or fetching the binary resources.
+    pub fn inspectBinaryReferences(self: *const Document, a: std.mem.Allocator, options: BinaryReferenceOptions) !BinaryReferenceReport {
+        var structure = try self.inspectStructure(a, options.structure);
+        defer structure.deinit(a);
+        const header = try document_structure.plainHeaderEntry(a, self.archive, self.manifest, options.structure.protection);
+        return binary_references.inspect(a, self.archive, self.manifest, header, structure.sections, options.references);
     }
 
     pub fn deinit(self: *Document, a: std.mem.Allocator) void {

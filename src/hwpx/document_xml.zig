@@ -6,6 +6,7 @@ const attrs = @import("xml_attributes.zig");
 pub const head_uri = "http://www.hancom.co.kr/hwpml/2011/head";
 pub const section_uri = "http://www.hancom.co.kr/hwpml/2011/section";
 pub const paragraph_uri = "http://www.hancom.co.kr/hwpml/2011/paragraph";
+pub const core_uri = "http://www.hancom.co.kr/hwpml/2011/core";
 
 pub const Kind = enum { header, section, other };
 pub const Options = struct {

@@ -6,7 +6,7 @@
 
 잘못된/중복 언어, 글꼴 ID 부재·손상·중복, 손상된 선언 개수·참조 숫자, XML 오류와 한도 초과는 오류로 반환합니다. 그룹·속성 부재와 개수 불일치, 끊어진 참조는 호환성 정책을 결정하기 전까지 보고서 진단으로 남깁니다. 각 단계는 header XML을 별도로 최대 32MiB 해제하고, 속성 값 기본 상한은 4096바이트이며, 글꼴 ID 합계 기본 상한은 100만 개입니다. 호출자가 조정할 수 있습니다. 공통 ID 존재/부재 규칙은 [header·section 참조가 공유하는 ID 검사](hwpx-header-references.md)와 동일한 `src/hwpx/id_references.zig`를 사용합니다.
 
-이 검사는 `face` 문자열·글꼴 종류·대체 글꼴·내장 폰트 바이트·실제 폰트 설치·글리프 선택을 해석하거나 그 원문을 저장 가능한 모델로 보존하지 않습니다. 2011 namespace 이외의 변형, 글자 모양의 다른 하위 필드, 번호·글머리표·그림 연결, 편집·저장도 별도 단계입니다. [header의 다른 여섯 참조](hwpx-header-references.md)와 [section p/run 참조](hwpx-section-references.md)는 독립 API이며 어느 한 보고서만으로 전체 문서가 검증됐다고 주장하지 않습니다.
+이 검사는 `face` 문자열·글꼴 종류·대체 글꼴·내장 폰트 바이트·실제 폰트 설치·글리프 선택을 해석하거나 그 원문을 저장 가능한 모델로 보존하지 않습니다. `font/substFont.binaryItemIDRef`의 [별도 manifest ID 연결](hwpx-binary-references.md)도 자동 호출하지 않습니다. 2011 namespace 이외의 변형, 글자 모양의 다른 하위 필드, 번호·글머리표·그림 연결, 편집·저장도 별도 단계입니다. [header의 다른 여섯 참조](hwpx-header-references.md)와 [section p/run 참조](hwpx-section-references.md)는 독립 API이며 어느 한 보고서만으로 전체 문서가 검증됐다고 주장하지 않습니다.
 
 ## 실파일·적대적 검증
 
