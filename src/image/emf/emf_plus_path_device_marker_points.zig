@@ -1,68 +1,20 @@
 const device_commands = @import("emf_plus_path_device_commands.zig");
+const source_points = @import("emf_plus_path_device_source_points.zig");
 
-pub const Role = enum {
-    move,
-    line_endpoint,
-    bezier_control1,
-    bezier_control2,
-    bezier_endpoint,
-};
-
-pub const Marker = struct {
-    figure_index: usize,
-    source_point_index: usize,
-    figure_point_index: usize,
-    role: Role,
-    point: device_commands.TypedPoint,
-};
-
-const Selected = struct {
-    role: Role,
-    point: device_commands.TypedPoint,
-};
+pub const Role = source_points.Role;
+pub const Marker = source_points.SourcePoint;
 
 pub const Iterator = struct {
-    source: device_commands.Iterator,
-    pending_command: ?device_commands.Command = null,
-    pending_offset: u2 = 0,
-    figure_count: usize = 0,
-    source_point_index: usize = 0,
-    figure_point_index: usize = 0,
+    source: source_points.Iterator,
 
     pub fn next(self: *Iterator) !?Marker {
         var pending = self.*;
         while (true) {
-            if (pending.pending_command == null) {
-                pending.pending_command = try pending.source.next() orelse {
-                    self.* = pending;
-                    return null;
-                };
-                pending.pending_offset = 0;
-            }
-
-            const command = pending.pending_command.?;
-            const selected = selectPoint(command, pending.pending_offset);
-            if (command == .move_to) {
-                pending.figure_count += 1;
-                pending.figure_point_index = 0;
-            } else if (pending.figure_count == 0) {
-                return error.InvalidEmfPlusPathDeviceMarkerSequence;
-            }
-            const marker: Marker = .{
-                .figure_index = pending.figure_count - 1,
-                .source_point_index = pending.source_point_index,
-                .figure_point_index = pending.figure_point_index,
-                .role = selected.role,
-                .point = selected.point,
+            const marker = try pending.source.next() orelse {
+                self.* = pending;
+                return null;
             };
-            pending.source_point_index += 1;
-            pending.figure_point_index += 1;
-            pending.pending_offset += 1;
-            if (pending.pending_offset == command.sourcePointCount()) {
-                pending.pending_command = null;
-                pending.pending_offset = 0;
-            }
-            if (selected.point.point_type.point_type.path_marker) {
+            if (marker.point.point_type.point_type.path_marker) {
                 self.* = pending;
                 return marker;
             }
@@ -71,20 +23,7 @@ pub const Iterator = struct {
 };
 
 pub fn fromCommands(source: device_commands.Iterator) Iterator {
-    return .{ .source = source };
-}
-
-fn selectPoint(command: device_commands.Command, offset: u2) Selected {
-    return switch (command) {
-        .move_to => |move| .{ .role = .move, .point = move },
-        .line_to => |line| .{ .role = .line_endpoint, .point = line.end },
-        .bezier_to => |bezier| switch (offset) {
-            0 => .{ .role = .bezier_control1, .point = bezier.control1 },
-            1 => .{ .role = .bezier_control2, .point = bezier.control2 },
-            2 => .{ .role = .bezier_endpoint, .point = bezier.end },
-            else => unreachable,
-        },
-    };
+    return .{ .source = source_points.fromCommands(source) };
 }
 
 const std = @import("std");
@@ -156,6 +95,6 @@ test "EMF+ Path device marker points preserve errors and progress atomically" {
 
     var no_markers = fromCommands(commandIterator(point_bytes[0..8], &.{ 0x00, 0x01 }, 2));
     try std.testing.expect((try no_markers.next()) == null);
-    try std.testing.expectEqual(@as(usize, 2), no_markers.source_point_index);
+    try std.testing.expectEqual(@as(usize, 2), no_markers.source.source_point_index);
     try std.testing.expect((try no_markers.next()) == null);
 }

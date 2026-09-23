@@ -7,6 +7,7 @@ const path_geometry = @import("emf_plus_path_geometry.zig");
 const path_fill_segments = @import("emf_plus_path_fill_segments.zig");
 const path_device_commands = @import("emf_plus_path_device_commands.zig");
 const path_device_geometry = @import("emf_plus_path_device_geometry.zig");
+const path_device_dash_points = @import("emf_plus_path_device_dash_points.zig");
 const path_device_marker_points = @import("emf_plus_path_device_marker_points.zig");
 const path_device_boundary_polyline = @import("emf_plus_path_device_boundary_polyline.zig");
 const path_device_polyline = @import("emf_plus_path_device_polyline.zig");
@@ -77,6 +78,10 @@ pub const Path = struct {
 
     pub fn deviceMarkerPoints(self: Path, mapping: world_page_device.Mapper) path_device_marker_points.Iterator {
         return path_device_marker_points.fromCommands(self.deviceCommands(mapping));
+    }
+
+    pub fn deviceDashPoints(self: Path, mapping: world_page_device.Mapper) path_device_dash_points.Iterator {
+        return path_device_dash_points.fromCommands(self.deviceCommands(mapping));
     }
 
     pub fn devicePolyline(self: Path, allocator: std.mem.Allocator, mapping: world_page_device.Mapper, options: path_device_polyline.CollectOptions) !path_device_polyline.Geometry {
@@ -286,6 +291,67 @@ test "EMF+ Path public device marker points retain RLE flag" {
     try std.testing.expectEqual(@as(?bool, false), marker.point.point_type.rle_bezier);
     try std.testing.expectEqual(@as(u8, 0x20), marker.point.point_type.point_type.raw);
     try std.testing.expect((try markers.next()) == null);
+}
+
+test "EMF+ Path public device dash points keep Bezier control and PointR RLE flags" {
+    const mapping = world_page_device.resolve(transform_matrix.TransformMatrix.translation(10, 20), page_transform.build(.pixel, 2, .{ .x = 96, .y = 96 })).?;
+    var bytes = [_]u8{0} ** 32;
+    putU32(&bytes, 0, 0xdbc01002);
+    putU32(&bytes, 4, 4);
+    putU32(&bytes, 8, 0x4000);
+    for ([_]i16{ 1, 2, 3, 4, 5, 6, 7, 8 }, 0..) |coordinate, index|
+        std.mem.writeInt(i16, bytes[12 + index * 2 ..][0..2], coordinate, .little);
+    bytes[28..32].* = .{ 0x00, 0x13, 0x03, 0x93 };
+    const value = try parse(&bytes, .{});
+    var dashes = value.deviceDashPoints(mapping);
+    const maybe_control = try dashes.next();
+    try std.testing.expect(maybe_control != null);
+    const control = maybe_control.?;
+    try std.testing.expectEqual(path_device_dash_points.Role.bezier_control1, control.role);
+    try std.testing.expectEqual(@as(usize, 1), control.source_point_index);
+    try std.testing.expectEqual(geometry.PointF{ .x = 26, .y = 48 }, control.point.value);
+    const maybe_end = try dashes.next();
+    try std.testing.expect(maybe_end != null);
+    const end = maybe_end.?;
+    try std.testing.expectEqual(path_device_dash_points.Role.bezier_endpoint, end.role);
+    try std.testing.expectEqual(@as(usize, 3), end.source_point_index);
+    try std.testing.expect(end.point.point_type.point_type.close_subpath);
+    try std.testing.expect((try dashes.next()) == null);
+
+    var relative = [_]u8{0} ** 16;
+    putU32(&relative, 0, 0xdbc01002);
+    putU32(&relative, 4, 1);
+    putU32(&relative, 8, 0x0800);
+    relative[12..16].* = .{ 0x01, 0x02, 0x41, 0x10 };
+    const relative_value = try parse(&relative, .{});
+    var relative_dashes = relative_value.deviceDashPoints(mapping);
+    const maybe_move = try relative_dashes.next();
+    try std.testing.expect(maybe_move != null);
+    const move = maybe_move.?;
+    try std.testing.expectEqual(path_device_dash_points.Role.move, move.role);
+    try std.testing.expectEqual(geometry.PointF{ .x = 22, .y = 44 }, move.point.value);
+    try std.testing.expectEqual(@as(?bool, false), move.point.point_type.rle_bezier);
+    try std.testing.expectEqual(@as(u8, 0x10), move.point.point_type.point_type.raw);
+    try std.testing.expect((try relative_dashes.next()) == null);
+
+    var relative_bezier = [_]u8{0} ** 24;
+    putU32(&relative_bezier, 0, 0xdbc01002);
+    putU32(&relative_bezier, 4, 4);
+    putU32(&relative_bezier, 8, 0x0800);
+    relative_bezier[12..24].* = .{ 1, 2, 3, 4, 5, 6, 7, 8, 0x41, 0x00, 0xc3, 0x13 };
+    const bezier_value = try parse(&relative_bezier, .{});
+    var bezier_dashes = bezier_value.deviceDashPoints(mapping);
+    const expected_roles = [_]path_device_dash_points.Role{ .bezier_control1, .bezier_control2, .bezier_endpoint };
+    for (expected_roles, 0..) |role, index| {
+        const maybe_point = try bezier_dashes.next();
+        try std.testing.expect(maybe_point != null);
+        const dash_point = maybe_point.?;
+        try std.testing.expectEqual(role, dash_point.role);
+        try std.testing.expectEqual(index + 1, dash_point.source_point_index);
+        try std.testing.expectEqual(@as(?bool, true), dash_point.point.point_type.rle_bezier);
+        try std.testing.expectEqual(@as(u8, 0x13), dash_point.point.point_type.point_type.raw);
+    }
+    try std.testing.expect((try bezier_dashes.next()) == null);
 }
 
 test "EMF+ Path exposes shared stroke and fill device segments" {

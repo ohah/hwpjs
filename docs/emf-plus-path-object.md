@@ -24,6 +24,8 @@
 
 [Path device marker point 반복자](emf-plus-path-device-marker-points.md)는 `Path.deviceMarkerPoints()`에서 원본 Move·Line·Bézier control/end의 PathMarker 위치를 제공합니다. marker의 GDI+ 조작 의미는 아직 적용하지 않습니다.
 
+[공유 원본 point 반복자](emf-plus-path-device-source-points.md)는 역할과 원본 index를 한 번만 계산하고 [DashMode point 반복자](emf-plus-path-device-dash-points.md)는 `Path.deviceDashPoints()`에서 해당 flag 위치를 제공합니다. 실제 점선 적용은 아직 구현하지 않았습니다.
+
 ## 적대적 검증 기록
 
 14개 결함(정수 byte order·부호 확장, point 원자성, 상대/RLE flag 해석, RLE marker·run 초과·0 run, point kind·flag, 전체 정렬·padding, point 한도, ObjectType)을 각각 독립 복사본에 주입했습니다. 캐시를 분리한 Debug·ReleaseSafe·ReleaseFast에서 총 42/42를 모두 검출했습니다. 자동 치환이 실제 diff를 만들지 못한 정수 byte order와 point flag 두 항목은 diff를 확인한 수동 변이로 다시 실행했으며, 무효 실행은 42회에 포함하지 않았습니다. 변이 로그는 `/tmp/hwpjs-emfplus-path-mutants.UDq3zL`에 남겼습니다.

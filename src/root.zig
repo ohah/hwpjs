@@ -150,6 +150,8 @@ test {
     _ = @import("image/emf/emf_plus_path_fill_segments.zig");
     _ = @import("image/emf/emf_plus_path_segments.zig");
     _ = @import("image/emf/emf_plus_path_device_commands.zig");
+    _ = @import("image/emf/emf_plus_path_device_source_points.zig");
+    _ = @import("image/emf/emf_plus_path_device_dash_points.zig");
     _ = @import("image/emf/emf_plus_path_device_geometry.zig");
     _ = @import("image/emf/emf_plus_path_device_marker_points.zig");
     _ = @import("image/emf/emf_plus_path_device_polyline.zig");
