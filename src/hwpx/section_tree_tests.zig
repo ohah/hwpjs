@@ -18,6 +18,7 @@ test "HWPX section tree owns all XML nodes and exact source spans" {
     var parsed = try tree.parse(a, section, 3, 9, .{});
     defer parsed.deinit(a);
     try std.testing.expectEqualStrings(section, parsed.source);
+    try std.testing.expectEqual(@as(@TypeOf(parsed.part_kind), .section), parsed.part_kind);
     try std.testing.expectEqual(@as(usize, 3), parsed.section_ordinal);
     try std.testing.expectEqual(@as(usize, 9), parsed.item_index);
     try std.testing.expectEqual(@as(usize, 10), parsed.elements.len);

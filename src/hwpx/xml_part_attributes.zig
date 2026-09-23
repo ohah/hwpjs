@@ -15,7 +15,7 @@ fn parseStartTag(a: std.mem.Allocator, tree: anytype, index: usize) !xml.tags.Ta
 
 /// Reconstructs the original namespace scope from the indexed ancestors.
 /// This reuses the XML tag/value/namespace SSOT without retaining a second
-/// per-element attribute table. Returned Value slices borrow Tree.source.
+/// per-element attribute table. Returned Value slices borrow the part source.
 pub fn find(a: std.mem.Allocator, tree: anytype, index: usize, uri: []const u8, local: []const u8) !?xml.attribute_value.Value {
     if (index >= tree.elements.len) return error.InvalidElementIndex;
     // XML default namespaces never apply to unprefixed attributes. Most HWPX

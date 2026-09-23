@@ -14,6 +14,7 @@ const list_references = @import("list_references.zig");
 const binary_references = @import("binary_references.zig");
 const chart_references = @import("chart_references.zig");
 const section_text = @import("section_text.zig");
+const header_tree = @import("header_tree.zig");
 const section_tree = @import("section_tree.zig");
 
 pub const Archive = zip.Archive;
@@ -88,6 +89,11 @@ pub const SectionTextEvent = section_text.Event;
 pub const SectionTextInlineKind = section_text.InlineKind;
 pub const SectionOtherContentKind = section_text.OtherContentKind;
 pub const SectionTree = section_tree.Tree;
+pub const HeaderTree = header_tree.Tree;
+pub const HeaderTreeOptions = struct {
+    protection: ProtectionOptions = .{},
+    tree: header_tree.Options = .{},
+};
 pub const SectionTreeOptions = struct {
     structure: StructureOptions = .{},
     tree: section_tree.Options = .{},
@@ -148,6 +154,15 @@ pub const Document = struct {
         var structure = try self.inspectStructure(a, options.structure);
         defer structure.deinit(a);
         return section_text.inspect(a, self.archive, self.manifest, structure.sections, options.text, visitor);
+    }
+
+    /// Materializes the exact package-selected, unencrypted header XML with
+    /// every element indexed, including unknown extensions and raw source.
+    pub fn readHeaderTree(self: *const Document, a: std.mem.Allocator, options: HeaderTreeOptions) !HeaderTree {
+        const selected = try document_structure.plainHeaderEntry(a, self.archive, self.manifest, options.protection);
+        const bytes = try self.archive.decode(selected.entry, options.tree.max_xml_bytes);
+        defer self.archive.allocator.free(bytes);
+        return header_tree.parse(a, bytes, selected.item_index, options.tree);
     }
 
     /// Materializes one structure-selected section as exact owned XML bytes

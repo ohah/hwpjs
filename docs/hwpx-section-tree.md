@@ -2,6 +2,8 @@
 
 `Document.readSectionTree(allocator, section_ordinal, options)`는 [header·spine 구조](hwpx-document-structure.md)가 선택한 한 section을 읽습니다. 선택 기준과 section 순번은 기존 구조 계층이 소유하고, XML 문법·namespace·깊이 검사는 [공통 XML 입력](xml-input.md) 및 `document_xml.visitBytes`를 재사용합니다. 반환 `SectionTree`는 해제된 section XML의 정확한 원문 바이트를 복사해 소유하므로 ZIP 문서와 입력 바이트를 먼저 해제해도 유효합니다. 사용 후 `deinit(allocator)`을 호출해야 합니다.
 
+공통 인덱스·원문 재생은 `src/hwpx/xml_part_tree.zig`가 소유합니다. section 전용 `section_tree.zig`는 루트·순번 정책만 적용하며 `part_kind=section`, `section_ordinal`은 존재하는 순번입니다. [header 원문 트리](hwpx-header-tree.md)도 같은 인덱스를 사용하지만 순번은 `null`이고 header 한도·선택 정책은 별도입니다.
+
 인덱스는 section의 **모든 XML 요소**를 원문 순서대로 저장합니다. 각 요소에는 확장된 namespace URI와 인코딩된 local name, 부모·첫/마지막 자식·다음 형제 인덱스, 시작·끝 태그의 원문 byte span 및 전체 요소의 끝 위치가 있습니다. 빈 태그는 별도 끝 태그가 없고 시작 태그의 끝이 요소의 끝입니다. `sourceOf(index)`는 해당 요소의 시작 태그부터 끝 태그까지 원문 byte slice를 돌려줍니다. prefix 재바인딩은 파싱 당시의 namespace scope로 확정하므로 같은 철자의 이름도 URI가 다르면 구분됩니다.
 
 `Tree.attributeValue(allocator, element_index, namespace_uri, local_name)`은 해당 요소의 확장된 이름에 맞는 XML 속성 값을 지연 조회합니다. `null`은 속성이 없는 경우이며 빈 문자열 속성은 값이 있는 것으로 반환됩니다. 반환 `Value`의 원문 slice는 `Tree.source`를 빌리므로 트리를 해제하면 사용할 수 없습니다. 문자 참조·개행 등을 반영한 UTF-8 값은 공통 XML `Value.toUtf8(allocator, max_bytes)`로 별도 할당해 얻고 사용 후 해제합니다. 비접두 속성에는 기본 namespace를 적용하지 않습니다. 접두 속성은 해당 요소까지의 조상 namespace 선언을 재구성하여 URI로 구분합니다. 조회마다 시작 태그를 다시 파싱하며 접두 속성은 조상도 순회하므로 대량 속성을 한 번에 인덱싱하는 API는 아직 없습니다.

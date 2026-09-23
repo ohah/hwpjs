@@ -1040,9 +1040,9 @@ fn sectionAttributeDigest(a: std.mem.Allocator, parsed: *const package.SectionTr
     return std.mem.readInt(u256, &output, .big);
 }
 
-const SectionContentDigests = struct { direct: u256, ordered: u256 };
+const PartContentDigests = struct { direct: u256, ordered: u256 };
 
-fn sectionContentDigests(a: std.mem.Allocator, parsed: *const package.SectionTree) !SectionContentDigests {
+fn partContentDigests(a: std.mem.Allocator, parsed: *const package.SectionTree) !PartContentDigests {
     const parts = try a.alloc(std.ArrayList(u8), parsed.elements.len);
     defer a.free(parts);
     @memset(parts, .empty);
@@ -1128,10 +1128,61 @@ test "HWPX ordered digest detects moved text with unchanged direct content" {
     defer before.deinit(a);
     var after = try section_tree.parse(a, root ++ "AB<x/></s:sec>", 0, 0, .{});
     defer after.deinit(a);
-    const first = try sectionContentDigests(a, &before);
-    const second = try sectionContentDigests(a, &after);
+    const first = try partContentDigests(a, &before);
+    const second = try partContentDigests(a, &after);
     try std.testing.expectEqual(first.direct, second.direct);
     try std.testing.expect(first.ordered != second.ordered);
+}
+
+test "HWPX corpus header tree read-only survey" {
+    const a = std.testing.allocator;
+    const roots = [_][]const u8{ "legacy/rust/crates/hwp-core/tests/fixtures", "reference/rhwp/samples" };
+    var accepted: usize = 0;
+    var rejected_zip: usize = 0;
+    var encrypted: usize = 0;
+    var elements: usize = 0;
+    var ordered_digest_sum: u256 = 0;
+    for (roots) |root| {
+        const dir = try std.Io.Dir.cwd().openDir(std.testing.io, root, .{ .iterate = true });
+        defer dir.close(std.testing.io);
+        var walker = try dir.walk(a);
+        defer walker.deinit();
+        while (try walker.next(std.testing.io)) |entry| {
+            if (entry.kind != .file or !std.mem.endsWith(u8, entry.path, ".hwpx")) continue;
+            const bytes = try dir.readFileAlloc(std.testing.io, entry.path, a, .limited(25_000_000));
+            defer a.free(bytes);
+            var document = package.inspectDocument(a, bytes, .{}) catch |err| {
+                try std.testing.expectEqual(error.MissingEndRecord, err);
+                rejected_zip += 1;
+                continue;
+            };
+            defer document.deinit(a);
+            var parsed = document.readHeaderTree(a, .{}) catch |err| {
+                if (err == error.EncryptedDocument) {
+                    encrypted += 1;
+                    continue;
+                }
+                std.debug.print("HWPX header tree unexpected path={s} error={s}\n", .{ entry.path, @errorName(err) });
+                return err;
+            };
+            defer parsed.deinit(a);
+            try std.testing.expectEqual(@as(@TypeOf(parsed.part_kind), .header), parsed.part_kind);
+            try std.testing.expectEqual(@as(?usize, null), parsed.section_ordinal);
+            try std.testing.expectEqualStrings("Contents/header.xml", document.manifest.items[parsed.item_index].href);
+            try std.testing.expect(parsed.elements[0].is("http://www.hancom.co.kr/hwpml/2011/head", "head"));
+            try std.testing.expectEqual(parsed.xml_report.elements, parsed.elements.len);
+            const digests = try partContentDigests(a, &parsed);
+            ordered_digest_sum +%= digests.ordered;
+            elements += parsed.elements.len;
+            accepted += 1;
+        }
+    }
+    std.debug.print("HWPX header tree corpus: accepted={d} rejected_zip={d} encrypted={d} elements={d} ordered_digest={x:0>64}\n", .{ accepted, rejected_zip, encrypted, elements, ordered_digest_sum });
+    try std.testing.expectEqual(@as(usize, 476), accepted);
+    try std.testing.expectEqual(@as(usize, 6), rejected_zip);
+    try std.testing.expectEqual(@as(usize, 2), encrypted);
+    try std.testing.expectEqual(@as(usize, 1_200_622), elements);
+    try std.testing.expectEqual(try std.fmt.parseInt(u256, "3aa151e548bf2d2034ff5fa208b3a6fd7fad03f116a9d2315ad8762aec3a9662", 16), ordered_digest_sum);
 }
 
 fn surveySectionTreeShard(shard: usize) !void {
@@ -1220,7 +1271,7 @@ fn surveySectionTreeShard(shard: usize) !void {
                 try std.testing.expectEqual(parsed.elements.len - 1, child_edges);
                 try std.testing.expectEqual(child_edges, linked_children);
                 attribute_digest_sum +%= try sectionAttributeDigest(a, &parsed, &attribute_counts);
-                const content_digests = try sectionContentDigests(a, &parsed);
+                const content_digests = try partContentDigests(a, &parsed);
                 content_digest_sum +%= content_digests.direct;
                 ordered_digest_sum +%= content_digests.ordered;
                 sections += 1;

@@ -120,7 +120,7 @@ def section_direct_content_digest(data: bytes) -> int:
     return int.from_bytes(digest.digest(), "big")
 
 
-def section_ordered_digest(data: bytes) -> int:
+def xml_ordered_digest(data: bytes) -> int:
     """Independent Expat stream: element boundaries and coalesced direct text."""
     digest = hashlib.sha256()
     stack = []
@@ -248,8 +248,8 @@ def self_check() -> None:
     assert section_attribute_digest(empty, counts) != section_attribute_digest(absent, counts)
     assert counts["P.id"] == {"present": 1, "empty": 1}
     assert section_direct_content_digest(b"<root>A&amp;<child/>B<![CDATA[C]]></root>") != section_direct_content_digest(b"<root>A&amp;<child>B</child><![CDATA[C]]></root>")
-    assert section_ordered_digest(b"<root>A<child/>B</root>") != section_ordered_digest(b"<root>AB<child/></root>")
-    assert section_ordered_digest(b"<root>A&amp;<![CDATA[B]]></root>") == section_ordered_digest(b"<root>A&amp;B</root>")
+    assert xml_ordered_digest(b"<root>A<child/>B</root>") != xml_ordered_digest(b"<root>AB<child/></root>")
+    assert xml_ordered_digest(b"<root>A&amp;<![CDATA[B]]></root>") == xml_ordered_digest(b"<root>A&amp;B</root>")
     try:
         section_direct_content_digest(b"<!DOCTYPE root><root/>")
     except ValueError:
@@ -257,7 +257,7 @@ def self_check() -> None:
     else:
         raise AssertionError("DTD was not rejected")
     try:
-        section_ordered_digest(b"<!DOCTYPE root><root/>")
+        xml_ordered_digest(b"<!DOCTYPE root><root/>")
     except ValueError:
         pass
     else:
@@ -281,6 +281,8 @@ def main() -> None:
         "encrypted": 0,
         "sections": 0,
         "section_elements": 0,
+        "header_elements": 0,
+        "header_ordered_digest_sum": 0,
         "header_root_names": Counter(),
         "spine_xml_root_names": Counter(),
         "max_section_elements": 0,
@@ -314,8 +316,13 @@ def main() -> None:
                             shard["encrypted"] += 1
                             continue
                     opf = ET.fromstring(bounded_read(archive, "Contents/content.hpf", MAX_MANIFEST_BYTES))
-                    header_root = ET.fromstring(bounded_read(archive, "Contents/header.xml", MAX_HEADER_BYTES))
+                    header_bytes = bounded_read(archive, "Contents/header.xml", MAX_HEADER_BYTES)
+                    header_root = ET.fromstring(header_bytes)
                     result["header_root_names"][header_root.tag] += 1
+                    result["header_elements"] += sum(1 for _ in header_root.iter())
+                    result["header_ordered_digest_sum"] = (
+                        result["header_ordered_digest_sum"] + xml_ordered_digest(header_bytes)
+                    ) % HASH_MODULUS
                     items = {
                         item.get("id"): item.get("href")
                         for item in opf.findall(OPF + "manifest/" + OPF + "item")
@@ -346,7 +353,7 @@ def main() -> None:
                             shard["content_digest_sum"] + section_direct_content_digest(section_bytes)
                         ) % HASH_MODULUS
                         shard["ordered_digest_sum"] = (
-                            shard["ordered_digest_sum"] + section_ordered_digest(section_bytes)
+                            shard["ordered_digest_sum"] + xml_ordered_digest(section_bytes)
                         ) % HASH_MODULUS
                         direct = sum(child.tag == PARAGRAPH + "p" for child in section)
                         result["direct_paragraphs"] += direct
@@ -364,6 +371,7 @@ def main() -> None:
         shard["content_digest_sum"] = f'{shard["content_digest_sum"]:064x}'
         shard["ordered_digest_sum"] = f'{shard["ordered_digest_sum"]:064x}'
     result["section_tree_shards"] = tree_shards
+    result["header_ordered_digest_sum"] = f'{result["header_ordered_digest_sum"]:064x}'
     result["section_attribute_counts"] = attribute_counts
     result["header_root_names"] = dict(sorted(result["header_root_names"].items()))
     result["spine_xml_root_names"] = dict(sorted(result["spine_xml_root_names"].items()))

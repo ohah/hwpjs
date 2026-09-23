@@ -2,7 +2,7 @@ const std = @import("std");
 const xml = @import("../xml/root.zig");
 const document_xml = @import("document_xml.zig");
 
-/// Raw content borrows the section tree. CDATA delimiters are not included in
+/// Raw content borrows the XML part tree. CDATA delimiters are not included in
 /// View.raw; View.toUtf8 performs the common XML decoding when requested.
 pub const Event = struct {
     parent_index: usize,
@@ -46,7 +46,7 @@ pub fn visit(a: std.mem.Allocator, tree: anytype, visitor: Visitor) !void {
     return visitOrdered(a, tree, .{ .context = &adapter, .on_event = Adapter.onEvent });
 }
 
-/// Replays all element boundaries and direct content in one original-XML
+/// Replays all XML part element boundaries and direct content in original-XML
 /// order, checking each event against the retained element index.
 pub fn visitOrdered(a: std.mem.Allocator, tree: anytype, visitor: OrderedVisitor) !void {
     const Context = struct {
