@@ -10,6 +10,7 @@ const section_references = @import("section_references.zig");
 const header_references = @import("header_references.zig");
 const font_faces = @import("font_faces.zig");
 const font_references = @import("font_references.zig");
+const list_references = @import("list_references.zig");
 
 pub const Archive = zip.Archive;
 pub const Options = zip.Options;
@@ -55,6 +56,12 @@ pub const FontReferenceReport = struct {
         self.* = undefined;
     }
 };
+pub const ListReferenceOptions = struct {
+    protection: ProtectionOptions = .{},
+    resources: header_resources.Options = .{},
+    references: list_references.Options = .{},
+};
+pub const ListReferenceReport = list_references.Report;
 pub const DocumentOptions = struct {
     // The archive index also contains large BinData/section entries. Their
     // declared sizes are bounded here; this call only decodes the two small
@@ -122,6 +129,15 @@ pub const Document = struct {
         errdefer faces.deinit(a);
         const references = try font_references.read(a, self.archive, selected.entry, selected.item_index, &faces, options.references);
         return .{ .faces = faces, .references = references };
+    }
+
+    /// Resolves NUMBER/BULLET heading IDs and list-marker character IDs from
+    /// direct header children. OUTLINE is retained as a separate observation.
+    pub fn inspectListReferences(self: *const Document, a: std.mem.Allocator, options: ListReferenceOptions) !ListReferenceReport {
+        const selected = try document_structure.plainHeaderEntry(a, self.archive, self.manifest, options.protection);
+        var resources = try header_resources.read(a, self.archive, selected.entry, options.resources);
+        defer resources.deinit(a);
+        return list_references.read(a, self.archive, selected.entry, selected.item_index, &resources, options.references);
     }
 
     pub fn deinit(self: *Document, a: std.mem.Allocator) void {

@@ -6,7 +6,7 @@
 
 손상된 숫자·`u32` 초과, XML 문법/namespace 오류, 한도 초과는 오류입니다. 미해결 참조는 조용히 보정하거나 ID 0으로 바꾸지 않으며 실파일 편차를 위해 진단으로 반환합니다. 목록 색인과 내부 참조 검사는 header XML을 각각 최대 32MiB 해제하는 별도 단계이고, 각 단계의 속성 값 기본 한도는 4096바이트입니다. 보고서는 숫자 진단만 소유하여 별도 해제가 필요 없습니다. 공통 ID 대조·속성 부재 정책은 `src/hwpx/id_references.zig`가 section 참조 검사와 함께 소유합니다. [한컴의 공식 HWPX 파싱 설명](https://tech.hancom.com/python-hwpx-parsing-2/)은 header의 `refList`와 본문의 서식 ID 연결을 설명하며, 이 여섯 세부 속성은 실제 표본 XML에서도 확인했습니다.
 
-이는 header의 모든 스키마 제약을 검사하지 않습니다. [별도 API의 언어별 글꼴 ID·fontRef](hwpx-font-references.md), 번호/글머리표/탭의 내부 필드, 스타일 타입별 적용 정책, 문단/글자 모양의 다른 하위 필드, 그림·BinData 참조, 2021/2024 namespace, 편집·저장은 별도 단계입니다. [section p/run 참조](hwpx-section-references.md)는 이 API를 암묵적으로 호출하지 않으므로 어느 하나의 통과를 전체 문서 통과로 간주하지 않습니다.
+이는 header의 모든 스키마 제약을 검사하지 않습니다. [별도 API의 언어별 글꼴 ID·fontRef](hwpx-font-references.md)와 [번호·글머리표 일부 내부 참조](hwpx-list-references.md), 탭의 내부 필드, 스타일 타입별 적용 정책, 문단/글자 모양의 다른 하위 필드, 그림·BinData 참조, 2021/2024 namespace, 편집·저장은 별도 단계입니다. [section p/run 참조](hwpx-section-references.md)는 이 API를 암묵적으로 호출하지 않으므로 어느 하나의 통과를 전체 문서 통과로 간주하지 않습니다.
 
 ## 실파일과 적대적 검증
 

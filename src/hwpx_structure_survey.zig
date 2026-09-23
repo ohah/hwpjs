@@ -484,3 +484,127 @@ test "HWPX corpus fontface language links read-only survey" {
     try std.testing.expectEqual([languages.len]usize{ 0, 19, 19, 19, 19, 19, 19 }, absent_table_minor1);
     try std.testing.expectEqual(absent_table_documents, absent_table_first_zero);
 }
+
+test "HWPX corpus list definition links read-only survey" {
+    const a = std.testing.allocator;
+    const roots = [_][]const u8{ "legacy/rust/crates/hwp-core/tests/fixtures", "reference/rhwp/samples" };
+    var accepted: usize = 0;
+    var rejected_zip: usize = 0;
+    var encrypted: usize = 0;
+    var paragraph_shapes: usize = 0;
+    var headings: usize = 0;
+    var without_heading: usize = 0;
+    var extra_headings: usize = 0;
+    var none: usize = 0;
+    var outline: usize = 0;
+    var number: @TypeOf(@as(package.ListReferenceReport, undefined).heading_number) = .{};
+    var bullet: @TypeOf(@as(package.ListReferenceReport, undefined).heading_bullet) = .{};
+    var heading_type_absent: usize = 0;
+    var unlinked_id_absent: usize = 0;
+    var unlinked_id_nonzero: usize = 0;
+    var numbering_para_heads: usize = 0;
+    var bullet_para_heads: usize = 0;
+    var numbering_character: @TypeOf(@as(package.ListReferenceReport, undefined).numbering_character) = .{};
+    var bullet_character: @TypeOf(@as(package.ListReferenceReport, undefined).bullet_character) = .{};
+    var numbering_character_max_marker: usize = 0;
+    var bullet_character_max_marker: usize = 0;
+    var bullet_missing_docs: usize = 0;
+    var bullet_missing_minor0: usize = 0;
+    var bullet_missing_minor1: usize = 0;
+    for (roots) |root| {
+        const dir = try std.Io.Dir.cwd().openDir(std.testing.io, root, .{ .iterate = true });
+        defer dir.close(std.testing.io);
+        var walker = try dir.walk(a);
+        defer walker.deinit();
+        while (try walker.next(std.testing.io)) |entry| {
+            if (entry.kind != .file or !std.mem.endsWith(u8, entry.path, ".hwpx")) continue;
+            const bytes = try dir.readFileAlloc(std.testing.io, entry.path, a, .limited(25_000_000));
+            defer a.free(bytes);
+            var document = package.inspectDocument(a, bytes, .{}) catch |err| {
+                try std.testing.expectEqual(error.MissingEndRecord, err);
+                rejected_zip += 1;
+                continue;
+            };
+            defer document.deinit(a);
+            const report = document.inspectListReferences(a, .{}) catch |err| {
+                if (err == error.EncryptedDocument) {
+                    encrypted += 1;
+                    continue;
+                }
+                std.debug.print("HWPX list links unexpected error: {s}\n", .{@errorName(err)});
+                return err;
+            };
+            accepted += 1;
+            paragraph_shapes += report.paragraph_shapes;
+            headings += report.headings;
+            without_heading += report.paragraphs_without_heading;
+            extra_headings += report.extra_headings;
+            none += report.heading_none;
+            outline += report.heading_outline;
+            number.present += report.heading_number.present;
+            number.absent += report.heading_number.absent;
+            number.resolved += report.heading_number.resolved;
+            number.missing_target += report.heading_number.missing_target;
+            number.absent_table += report.heading_number.absent_table;
+            bullet.present += report.heading_bullet.present;
+            bullet.absent += report.heading_bullet.absent;
+            bullet.resolved += report.heading_bullet.resolved;
+            bullet.missing_target += report.heading_bullet.missing_target;
+            bullet.absent_table += report.heading_bullet.absent_table;
+            heading_type_absent += report.heading_type_absent;
+            unlinked_id_absent += report.unlinked_id_absent;
+            unlinked_id_nonzero += report.unlinked_id_nonzero;
+            numbering_para_heads += report.numbering_para_heads;
+            bullet_para_heads += report.bullet_para_heads;
+            numbering_character.present += report.numbering_character.present;
+            numbering_character.absent += report.numbering_character.absent;
+            numbering_character.resolved += report.numbering_character.resolved;
+            numbering_character.missing_target += report.numbering_character.missing_target;
+            numbering_character.absent_table += report.numbering_character.absent_table;
+            bullet_character.present += report.bullet_character.present;
+            bullet_character.absent += report.bullet_character.absent;
+            bullet_character.resolved += report.bullet_character.resolved;
+            bullet_character.missing_target += report.bullet_character.missing_target;
+            bullet_character.absent_table += report.bullet_character.absent_table;
+            numbering_character_max_marker += report.numbering_character_max_marker;
+            bullet_character_max_marker += report.bullet_character_max_marker;
+            if (report.heading_bullet.missing_target != 0 or report.heading_bullet.absent_table != 0) {
+                bullet_missing_docs += 1;
+                try std.testing.expectEqual(@as(?u32, 0), report.heading_bullet.first_unresolved_id);
+                var version = try document.inspectVersion(a, .{});
+                defer version.deinit(a);
+                if (version.minor == 0) bullet_missing_minor0 += 1;
+                if (version.minor == 1) bullet_missing_minor1 += 1;
+                if (bullet_missing_docs <= 3) std.debug.print("HWPX list missing bullet path={s} first_id={?d}\n", .{ entry.path, report.heading_bullet.first_unresolved_id });
+            }
+        }
+    }
+    std.debug.print("HWPX list links: accepted={d} rejected_zip={d} encrypted={d} paragraph_shapes={d} headings={d} without={d} extra={d}\n", .{ accepted, rejected_zip, encrypted, paragraph_shapes, headings, without_heading, extra_headings });
+    std.debug.print("HWPX list links: none={d} outline={d} number={any} bullet={any} type_absent={d} unlinked_id_absent={d} unlinked_id_nonzero={d}\n", .{ none, outline, number, bullet, heading_type_absent, unlinked_id_absent, unlinked_id_nonzero });
+    std.debug.print("HWPX list links: numbering_para_heads={d} numbering_char={any} numbering_max={d} bullet_para_heads={d} bullet_char={any} bullet_max={d}\n", .{ numbering_para_heads, numbering_character, numbering_character_max_marker, bullet_para_heads, bullet_character, bullet_character_max_marker });
+    std.debug.print("HWPX list unresolved bullet docs={d} minor0={d} minor1={d}\n", .{ bullet_missing_docs, bullet_missing_minor0, bullet_missing_minor1 });
+    try std.testing.expectEqual(@as(usize, 476), accepted);
+    try std.testing.expectEqual(@as(usize, 6), rejected_zip);
+    try std.testing.expectEqual(@as(usize, 2), encrypted);
+    try std.testing.expectEqual(@as(usize, 28_144), paragraph_shapes);
+    try std.testing.expectEqual(@as(usize, 27_766), headings);
+    try std.testing.expectEqual(@as(usize, 378), without_heading);
+    try std.testing.expectEqual(@as(usize, 0), extra_headings);
+    try std.testing.expectEqual(@as(usize, 25_122), none);
+    try std.testing.expectEqual(@as(usize, 2358), outline);
+    try std.testing.expectEqual(@as(usize, 153), number.resolved);
+    try std.testing.expectEqual(@as(usize, 128), bullet.resolved);
+    try std.testing.expectEqual(@as(usize, 5), bullet.absent_table);
+    try std.testing.expectEqual(@as(usize, 0), number.missing_target + number.absent_table + bullet.missing_target);
+    try std.testing.expectEqual(@as(usize, 0), heading_type_absent + unlinked_id_absent + unlinked_id_nonzero);
+    try std.testing.expectEqual(@as(usize, 4976), numbering_para_heads);
+    try std.testing.expectEqual(@as(usize, 83), bullet_para_heads);
+    try std.testing.expectEqual(@as(usize, 644), numbering_character.resolved);
+    try std.testing.expectEqual(@as(usize, 3), bullet_character.resolved);
+    try std.testing.expectEqual(@as(usize, 4332), numbering_character_max_marker);
+    try std.testing.expectEqual(@as(usize, 80), bullet_character_max_marker);
+    try std.testing.expectEqual(@as(usize, 0), numbering_character.missing_target + numbering_character.absent_table + bullet_character.missing_target + bullet_character.absent_table);
+    try std.testing.expectEqual(@as(usize, 5), bullet_missing_docs);
+    try std.testing.expectEqual(@as(usize, 0), bullet_missing_minor0);
+    try std.testing.expectEqual(@as(usize, 5), bullet_missing_minor1);
+}

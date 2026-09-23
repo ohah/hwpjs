@@ -4,7 +4,7 @@
 
 그룹 부재는 `present=false`, 그룹은 있으나 `itemCnt`가 없으면 `declared_count=null`로 남깁니다. 선언값과 실제 항목 수의 비교는 `countMatches()`가 `?bool`로 제공합니다. 불일치를 자동 보정하지 않습니다. 알려진 그룹의 중복 선언, 항목 ID 부재·잘못된 숫자·중복, 잘못된 root 또는 `refList` 부재는 오류입니다. 알 수 없는 `refList` 그룹이나 하위 payload는 XML 문법만 검사하며 ID 색인·의미 검증 완료로 세지 않습니다. 원문 보존·저장은 아직 미구현입니다. 반환 목록과 조회 메서드는 보고서가 소유하고 `deinit`으로 해제합니다.
 
-기본 한도는 header XML 32MiB, 색인 대상 속성 값 4096바이트, 일곱 그룹의 ID 합계 100만 개이며 호출자가 조정할 수 있습니다. ID와 `itemCnt`가 `u32`를 넘는 값은 현재 미지원 오류로 처리합니다. 이 색인 단계 자체는 [fontfaces의 언어별 ID](hwpx-font-references.md), [style·문단·글자 모양 내부 연결](hwpx-header-references.md), [문단·run의 서식 참조](hwpx-section-references.md), 그림·BinData 참조, 알 수 없는 그룹의 리소스, 편집·저장을 검증하지 않습니다. 2011 namespace 이외 OWPML 변형도 지원 범위로 주장하지 않습니다. [한컴의 공식 파싱 설명](https://tech.hancom.com/python-hwpx-parsing-2/)은 `refList`가 본문 서식 매핑을 소유하고 `charPr`·`paraPr`의 명시적 ID를 참조한다고 설명합니다.
+기본 한도는 header XML 32MiB, 색인 대상 속성 값 4096바이트, 일곱 그룹의 ID 합계 100만 개이며 호출자가 조정할 수 있습니다. ID와 `itemCnt`가 `u32`를 넘는 값은 현재 미지원 오류로 처리합니다. 이 색인 단계 자체는 [fontfaces의 언어별 ID](hwpx-font-references.md), [style·문단·글자 모양 내부 연결](hwpx-header-references.md), [번호·글머리표 내부 연결](hwpx-list-references.md), [문단·run의 서식 참조](hwpx-section-references.md), 그림·BinData 참조, 알 수 없는 그룹의 리소스, 편집·저장을 검증하지 않습니다. 2011 namespace 이외 OWPML 변형도 지원 범위로 주장하지 않습니다. [한컴의 공식 파싱 설명](https://tech.hancom.com/python-hwpx-parsing-2/)은 `refList`가 본문 서식 매핑을 소유하고 `charPr`·`paraPr`의 명시적 ID를 참조한다고 설명합니다.
 
 ## 실파일·적대적 검증
 
