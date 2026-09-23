@@ -6,7 +6,7 @@
 
 device `TypedPoint`·`Line`·`Bezier`와 역할별 mapping은 이 모듈이 단일 출처입니다. [Path device segment 계층](emf-plus-path-device-segments.md)도 같은 타입과 `mapLine()`·`mapBezier()`를 재사용하므로 command와 segment의 좌표 계약이 따로 변하지 않습니다. device `Bezier`는 기존 cubic evaluator·subdivision·derivative·flatness·flattening에 위임합니다.
 
-`Command.sourcePointCount()`는 Move·Line이 각각 source point 1개를, cubic Bézier가 control1·control2·endpoint 3개를 소비한다는 역할별 계약의 단일 출처입니다. [figure geometry 계층](emf-plus-path-device-geometry.md)은 point range를 색인할 때 이 값을 재사용하고 마법 숫자를 복제하지 않습니다.
+`TypedPoint`·`Line`·`Bezier`의 `sourcePointCount()`는 Move·Line이 각각 source point 1개를, cubic Bézier가 control1·control2·endpoint 3개를 소비한다는 역할별 계약의 단일 출처이고 `Command`가 이를 dispatch합니다. 세 역할의 `closesFigure()`도 Move 자체 또는 Line/Bézier endpoint의 CloseSubpath 판정을 소유합니다. [figure geometry 계층](emf-plus-path-device-geometry.md)은 point range와 닫힘을 조립할 때 이 값을 재사용하고 마법 숫자나 flag 접근을 복제하지 않습니다.
 
 ## command와 원자성 계약
 
@@ -16,7 +16,7 @@ device `TypedPoint`·`Line`·`Bezier`와 역할별 mapping은 이 모듈이 단�
 
 ## 지원 경계와 검증
 
-이 계층은 Path command의 device 좌표와 metadata까지만 제공하고 [figure geometry 계층](emf-plus-path-device-geometry.md)이 이를 소유·색인합니다. figure별 평탄화 polyline, 명시적/암묵적 closure edge, DashMode 적용, marker 소비, Pen cap/join, fill rule, clipping, rasterization과 저장은 후속 책임입니다. Object Table이 Path payload를 장기 소유하지 않으므로 DrawPath·FillPath record replay가 이 API를 자동 호출하지 않습니다. 로컬 지원 HWP corpus에 EMF+ signature 표본이 없어 실제 한컴 렌더링 동등성을 주장하지 않습니다.
+이 계층은 Path command의 device 좌표와 metadata까지만 제공하고 [figure geometry 계층](emf-plus-path-device-geometry.md)이 이를 소유·색인합니다. figure별 평탄화는 [device figure polyline](emf-plus-path-device-polyline.md), 명시적/암묵적 closure는 [device boundary polyline](emf-plus-path-device-boundary-polyline.md)이 조립합니다. DashMode 적용, marker 소비, Pen cap/join, fill rule, clipping, rasterization과 저장은 후속 책임입니다. Object Table이 Path payload를 장기 소유하지 않으므로 DrawPath·FillPath record replay가 이 API를 자동 호출하지 않습니다. 로컬 지원 HWP corpus에 EMF+ signature 표본이 없어 실제 한컴 렌더링 동등성을 주장하지 않습니다.
 
 합성 fixture는 다중 figure의 Move·Line·Bézier·빈 닫힌 figure 순서, 비대칭 translation/scale, 모든 좌표 역할, DashMode·PathMarker·CloseSubpath, 공개 `Path.deviceCommands()` 연결과 잘린 PointR Bézier 오류 원자성을 검사합니다.
 

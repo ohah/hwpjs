@@ -10,7 +10,7 @@
 
 point range는 원래 Path point 소비량입니다. Move는 1, Line은 endpoint 1, cubic Bézier는 control1·control2·endpoint 3을 소비하며 이 값은 device command의 `sourcePointCount()`만 소유합니다. command range는 Line/Bézier 하나를 각각 1로 세며 Move는 별도 `Figure.move_to`에 보존합니다. 그러므로 빈 figure도 point count 1·command count 0으로 손실 없이 나타납니다.
 
-새 Move는 이전의 열린 figure를 닫지 않은 상태로 종료하고 새 figure를 시작합니다. Move 자체나 Line/Bézier endpoint에 CloseSubpath가 있으면 해당 figure를 `closed=true`로 즉시 완료합니다. EOF의 열린 figure와 빈 열린 figure는 `closed=false`로 완료합니다. `closed`는 endpoint/Move metadata에서 파생된 figure 요약이며 원래 metadata도 command와 Move에 남습니다.
+새 Move는 이전의 열린 figure를 닫지 않은 상태로 종료하고 새 figure를 시작합니다. Move 자체나 Line/Bézier endpoint의 `closesFigure()`가 true이면 해당 figure를 `closed=true`로 즉시 완료합니다. EOF의 열린 figure와 빈 열린 figure는 `closed=false`로 완료합니다. `closed`는 device command 역할 타입의 CloseSubpath SSOT에서 파생된 figure 요약이며 원래 metadata도 command와 Move에 남습니다.
 
 ## 한도·원자성·지원 경계
 
@@ -18,7 +18,7 @@ point range는 원래 Path point 소비량입니다. Move는 1, Line은 endpoint
 
 source iterator는 값으로 복사해 소비합니다. iterator 오류, 한도, 할당 실패에서 부분 `Geometry`를 노출하지 않고 모든 figure·command storage를 해제합니다. 정상·source-error 경로는 safety allocator로 모든 build mode의 해제를 검사하고 `checkAllAllocationFailures`로 모든 할당 실패 위치를 검사합니다.
 
-이 계층은 source command topology의 소유·figure 색인까지만 구현합니다. 명시적 closing edge·fill의 암묵적 closure는 기존 segment 계층의 별도 표현이며 이 aggregate의 command 배열에 가짜 Line으로 추가하지 않습니다. [figure별 device polyline](emf-plus-path-device-polyline.md)은 이 결과와 공용 cubic flattener를 조립합니다. DashMode·marker 소비, fill rule, stroke, clipping, rasterization과 record replay는 후속 책임입니다. 로컬 지원 HWP corpus에 EMF+ signature 표본이 없으므로 실제 한컴 렌더링 동등성을 주장하지 않습니다.
+이 계층은 source command topology의 소유·figure 색인까지만 구현합니다. 명시적 closing edge·fill의 암묵적 closure는 기존 segment 계층의 별도 표현이며 이 aggregate의 command 배열에 가짜 Line으로 추가하지 않습니다. [figure별 device polyline](emf-plus-path-device-polyline.md)은 이 결과와 공용 cubic flattener를 조립하고 [boundary polyline](emf-plus-path-device-boundary-polyline.md)이 stroke/fill closure를 구분해 적용합니다. DashMode·marker 소비, fill rule, stroke, clipping, rasterization과 record replay는 후속 책임입니다. 로컬 지원 HWP corpus에 EMF+ signature 표본이 없으므로 실제 한컴 렌더링 동등성을 주장하지 않습니다.
 
 ## 검증 기록
 

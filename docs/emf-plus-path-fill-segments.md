@@ -16,7 +16,7 @@ Line과 cubic Bézier는 원래 순서와 endpoint metadata를 그대로 반환�
 
 `next`는 command iterator, 열린 figure의 시작·끝점과 pending closure를 복사한 뒤 결과가 준비된 경우에만 상태를 교체합니다. Move를 건너뛴 뒤 잘린 Bézier·잘못된 type·개수 오류가 발생해도 좌표 cursor, PointR 누적, RLE run, command figure 상태와 fill 상태가 모두 원복됩니다. 명시적 CloseSubpath의 closure는 endpoint command를 반환할 때 예약하므로 다음 Start를 읽지 않고 한 번만 반환합니다. 입력을 빌리고 할당하지 않습니다.
 
-이 계층은 FillPath에 필요한 figure boundary topology까지만 구현하고 [Path device segment 계층](emf-plus-path-device-segments.md)이 원래 segment와 명시적·암묵적 closure에 일반 world/page/device 변환을 적용합니다. alternate/winding FillMode 적용, self-intersection 처리, Brush sampling, clipping, anti-aliasing·rasterization, Object Table의 Path payload 보유·record replay와 저장은 후속 범위입니다. PathGradient와 CustomLineCap의 fill path가 이 경계를 재사용할지는 각 상위 객체 의미가 결정합니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 0개라 실제 한컴 렌더링 동등성은 주장하지 않습니다.
+이 계층은 FillPath에 필요한 figure boundary topology까지만 구현하고 [Path device segment 계층](emf-plus-path-device-segments.md)이 원래 segment와 명시적·암묵적 closure에 일반 world/page/device 변환을 적용합니다. 평탄화된 선형 경계는 [device boundary polyline](emf-plus-path-device-boundary-polyline.md)이 동일한 explicit/implicit 구분으로 소유합니다. alternate/winding FillMode 적용, self-intersection 처리, Brush sampling, clipping, anti-aliasing·rasterization, Object Table의 Path payload 보유·record replay와 저장은 후속 범위입니다. PathGradient와 CustomLineCap의 fill path가 이 경계를 재사용할지는 각 상위 객체 의미가 결정합니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 0개라 실제 한컴 렌더링 동등성은 주장하지 않습니다.
 
 ## 검증 기록
 

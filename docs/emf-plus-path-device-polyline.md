@@ -16,7 +16,7 @@ figure별 source command/point range는 연속이어야 하며 point count는 Mo
 
 `Options.tolerance`와 `max_depth`는 빈 입력에서도 먼저 검증합니다. `max_points`는 모든 figure를 합친 결과 point의 전역 한도이며 0인 빈 geometry는 성공합니다. 정확한 한도는 성공하고 하나 부족하면 `EmfPlusCubicPointLimitExceeded`입니다. source 검증, 평탄화, 한도, 할당 실패에서 부분 결과를 노출하지 않고 임시 polyline·figure·point·command storage를 모두 해제합니다.
 
-이 계층은 source topology와 metadata를 보존한 device polyline까지만 구현합니다. 명시적 closing edge와 fill의 암묵적 closure는 기존 segment 계층의 별도 정책이며 결과 point에 자동 추가하지 않습니다. DashMode·PathMarker 소비, Pen 폭·cap·join·dash, fill rule, clipping, hit testing, anti-aliasing, rasterization과 record replay는 후속 책임입니다. 로컬 지원 HWP corpus에 EMF+ signature 표본이 없으므로 실제 한컴 렌더링 동등성을 주장하지 않습니다.
+이 계층은 source topology와 metadata를 보존한 device polyline까지만 구현합니다. 명시적 closing edge와 fill의 암묵적 closure는 [별도 boundary polyline 계층](emf-plus-path-device-boundary-polyline.md)이 기존 segment 정책과 같은 구분으로 적용합니다. DashMode·PathMarker 소비, Pen 폭·cap·join·dash, fill rule, clipping, hit testing, anti-aliasing, rasterization과 record replay는 후속 책임입니다. 로컬 지원 HWP corpus에 EMF+ signature 표본이 없으므로 실제 한컴 렌더링 동등성을 주장하지 않습니다.
 
 ## 검증 기록
 

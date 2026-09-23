@@ -7,6 +7,7 @@ const path_geometry = @import("emf_plus_path_geometry.zig");
 const path_fill_segments = @import("emf_plus_path_fill_segments.zig");
 const path_device_commands = @import("emf_plus_path_device_commands.zig");
 const path_device_geometry = @import("emf_plus_path_device_geometry.zig");
+const path_device_boundary_polyline = @import("emf_plus_path_device_boundary_polyline.zig");
 const path_device_polyline = @import("emf_plus_path_device_polyline.zig");
 const path_device_segments = @import("emf_plus_path_device_segments.zig");
 const path_segments = @import("emf_plus_path_segments.zig");
@@ -75,6 +76,14 @@ pub const Path = struct {
 
     pub fn devicePolyline(self: Path, allocator: std.mem.Allocator, mapping: world_page_device.Mapper, options: path_device_polyline.CollectOptions) !path_device_polyline.Geometry {
         return path_device_polyline.collect(allocator, self.deviceCommands(mapping), options);
+    }
+
+    pub fn strokeDevicePolyline(self: Path, allocator: std.mem.Allocator, mapping: world_page_device.Mapper, options: path_device_boundary_polyline.CollectOptions) !path_device_boundary_polyline.Geometry {
+        return path_device_boundary_polyline.collect(allocator, self.deviceCommands(mapping), .stroke, options);
+    }
+
+    pub fn fillDevicePolyline(self: Path, allocator: std.mem.Allocator, mapping: world_page_device.Mapper, options: path_device_boundary_polyline.CollectOptions) !path_device_boundary_polyline.Geometry {
+        return path_device_boundary_polyline.collect(allocator, self.deviceCommands(mapping), .fill, options);
     }
 
     pub fn deviceSegments(self: Path, mapping: world_page_device.Mapper) path_device_segments.StrokeIterator {
@@ -272,6 +281,32 @@ test "EMF+ Path exposes shared stroke and fill device segments" {
     try std.testing.expect(device_polyline.points[1].source_type.?.point_type.close_subpath);
     try std.testing.expectError(error.EmfPlusPathFigureLimitExceeded, value.devicePolyline(std.testing.allocator, mapping, .{ .geometry = .{ .max_figures = 0 }, .flattening = .{ .tolerance = 0.5 } }));
     try std.testing.expectError(error.InvalidEmfPlusCubicTolerance, value.devicePolyline(std.testing.allocator, mapping, .{ .geometry = .{ .max_figures = 0 }, .flattening = .{ .tolerance = 0 } }));
+
+    const boundary_options: path_device_boundary_polyline.CollectOptions = .{ .polyline = .{ .flattening = .{ .tolerance = 0.5 } } };
+    var stroke_polyline = try value.strokeDevicePolyline(std.testing.allocator, mapping, boundary_options);
+    defer stroke_polyline.deinit(std.testing.allocator);
+    var fill_polyline = try value.fillDevicePolyline(std.testing.allocator, mapping, boundary_options);
+    defer fill_polyline.deinit(std.testing.allocator);
+    try std.testing.expectEqual(path_device_boundary_polyline.Closure.explicit, stroke_polyline.figures[0].closure);
+    try std.testing.expectEqual(path_device_boundary_polyline.Closure.explicit, fill_polyline.figures[0].closure);
+    try std.testing.expectEqual(@as(usize, 3), stroke_polyline.points.len);
+    try std.testing.expectEqual(@as(usize, 3), fill_polyline.points.len);
+    try std.testing.expectEqual(geometry.PointF{ .x = 23, .y = 35 }, stroke_polyline.points[2].value);
+    try std.testing.expect(stroke_polyline.points[2].source_type == null);
+    try std.testing.expectError(error.EmfPlusPathBoundaryPointLimitExceeded, value.fillDevicePolyline(std.testing.allocator, mapping, .{ .polyline = boundary_options.polyline, .boundary = .{ .max_points = 2 } }));
+    try std.testing.expectError(error.InvalidEmfPlusCubicTolerance, value.strokeDevicePolyline(std.testing.allocator, mapping, .{ .polyline = .{ .flattening = .{ .tolerance = 0 } } }));
+
+    var open_bytes = bytes;
+    open_bytes[29] = 0x11;
+    const open_value = try parse(&open_bytes, .{});
+    var open_stroke_polyline = try open_value.strokeDevicePolyline(std.testing.allocator, mapping, boundary_options);
+    defer open_stroke_polyline.deinit(std.testing.allocator);
+    var open_fill_polyline = try open_value.fillDevicePolyline(std.testing.allocator, mapping, boundary_options);
+    defer open_fill_polyline.deinit(std.testing.allocator);
+    try std.testing.expectEqual(path_device_boundary_polyline.Closure.none, open_stroke_polyline.figures[0].closure);
+    try std.testing.expectEqual(path_device_boundary_polyline.Closure.implicit, open_fill_polyline.figures[0].closure);
+    try std.testing.expectEqual(@as(usize, 2), open_stroke_polyline.points.len);
+    try std.testing.expectEqual(@as(usize, 3), open_fill_polyline.points.len);
 
     var stroke = value.deviceSegments(mapping);
     const stroke_line = try stroke.next();

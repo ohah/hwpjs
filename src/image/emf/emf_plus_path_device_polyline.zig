@@ -170,7 +170,7 @@ fn appendPoint(allocator: std.mem.Allocator, points: *std.ArrayList(Point), poin
     try points.append(allocator, point);
 }
 
-fn pointBitsEqual(left: geometry.PointF, right: geometry.PointF) bool {
+pub fn pointBitsEqual(left: geometry.PointF, right: geometry.PointF) bool {
     return @as(u32, @bitCast(left.x)) == @as(u32, @bitCast(right.x)) and
         @as(u32, @bitCast(left.y)) == @as(u32, @bitCast(right.y));
 }

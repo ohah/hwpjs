@@ -16,6 +16,10 @@ pub const TypedPoint = struct {
     pub fn sourcePointCount(_: TypedPoint) usize {
         return 1;
     }
+
+    pub fn closesFigure(self: TypedPoint) bool {
+        return self.point_type.point_type.close_subpath;
+    }
 };
 
 pub const Line = struct {
@@ -25,6 +29,10 @@ pub const Line = struct {
 
     pub fn sourcePointCount(_: Line) usize {
         return 1;
+    }
+
+    pub fn closesFigure(self: Line) bool {
+        return self.end.closesFigure();
     }
 };
 
@@ -37,6 +45,10 @@ pub const Bezier = struct {
 
     pub fn sourcePointCount(_: Bezier) usize {
         return 3;
+    }
+
+    pub fn closesFigure(self: Bezier) bool {
+        return self.end.closesFigure();
     }
 
     pub fn pointAt(self: Bezier, parameter: f32) !geometry.PointF {
@@ -79,6 +91,14 @@ pub const Command = union(enum) {
             .move_to => |move| move.sourcePointCount(),
             .line_to => |line| line.sourcePointCount(),
             .bezier_to => |bezier| bezier.sourcePointCount(),
+        };
+    }
+
+    pub fn closesFigure(self: Command) bool {
+        return switch (self) {
+            .move_to => |move| move.closesFigure(),
+            .line_to => |line| line.closesFigure(),
+            .bezier_to => |bezier| bezier.closesFigure(),
         };
     }
 };

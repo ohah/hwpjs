@@ -22,6 +22,13 @@ pub const Command = union(enum) {
             .bezier_to => |bezier| bezier.sourcePointCount(),
         };
     }
+
+    pub fn closesFigure(self: Command) bool {
+        return switch (self) {
+            .line_to => |line| line.closesFigure(),
+            .bezier_to => |bezier| bezier.closesFigure(),
+        };
+    }
 };
 
 pub const Figure = struct {
@@ -59,6 +66,7 @@ pub fn collect(allocator: std.mem.Allocator, source: device_commands.Iterator, o
 
     while (try iterator.next()) |command| {
         const source_point_count = command.sourcePointCount();
+        const closes_figure = command.closesFigure();
         switch (command) {
             .move_to => |move| {
                 if (active_figure) |index| finishFigure(figures.items, index, commands.items.len, point_count, false);
@@ -68,10 +76,10 @@ pub fn collect(allocator: std.mem.Allocator, source: device_commands.Iterator, o
                     .move_to = move,
                     .points = .{ .start = point_count, .count = 0 },
                     .commands = .{ .start = commands.items.len, .count = 0 },
-                    .closed = move.point_type.point_type.close_subpath,
+                    .closed = closes_figure,
                 });
                 point_count += source_point_count;
-                if (move.point_type.point_type.close_subpath) {
+                if (closes_figure) {
                     finishFigure(figures.items, figures.items.len - 1, commands.items.len, point_count, true);
                     active_figure = null;
                 } else {
@@ -84,7 +92,7 @@ pub fn collect(allocator: std.mem.Allocator, source: device_commands.Iterator, o
                 try ensurePointBudget(point_count, source_point_count, options.max_points);
                 try commands.append(allocator, .{ .line_to = line });
                 point_count += source_point_count;
-                if (line.end.point_type.point_type.close_subpath) {
+                if (closes_figure) {
                     finishFigure(figures.items, index, commands.items.len, point_count, true);
                     active_figure = null;
                 }
@@ -95,7 +103,7 @@ pub fn collect(allocator: std.mem.Allocator, source: device_commands.Iterator, o
                 try ensurePointBudget(point_count, source_point_count, options.max_points);
                 try commands.append(allocator, .{ .bezier_to = bezier });
                 point_count += source_point_count;
-                if (bezier.end.point_type.point_type.close_subpath) {
+                if (closes_figure) {
                     finishFigure(figures.items, index, commands.items.len, point_count, true);
                     active_figure = null;
                 }
