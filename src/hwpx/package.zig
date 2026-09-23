@@ -5,6 +5,7 @@ const content_manifest = @import("content_manifest.zig");
 const version_xml = @import("version_xml.zig");
 const encryption_manifest = @import("encryption_manifest.zig");
 const document_structure = @import("document_structure.zig");
+const header_resources = @import("header_resources.zig");
 
 pub const Archive = zip.Archive;
 pub const Options = zip.Options;
@@ -15,6 +16,12 @@ pub const ProtectionOptions = encryption_manifest.Options;
 pub const ProtectionReport = encryption_manifest.Report;
 pub const StructureOptions = document_structure.Options;
 pub const StructureReport = document_structure.Report;
+pub const HeaderResourceOptions = struct {
+    protection: ProtectionOptions = .{},
+    resources: header_resources.Options = .{},
+};
+pub const HeaderResourceReport = header_resources.Report;
+pub const HeaderResourceKind = header_resources.Kind;
 pub const DocumentOptions = struct {
     // The archive index also contains large BinData/section entries. Their
     // declared sizes are bounded here; this call only decodes the two small
@@ -46,6 +53,13 @@ pub const Document = struct {
     /// count disagreement; encrypted entries are explicitly unsupported.
     pub fn inspectStructure(self: *const Document, a: std.mem.Allocator, options: StructureOptions) !StructureReport {
         return document_structure.inspect(a, self.archive, self.manifest, options);
+    }
+
+    /// Indexes seven exact-ID header resource groups after protection and
+    /// package-header selection. Section references are a separate phase.
+    pub fn inspectHeaderResources(self: *const Document, a: std.mem.Allocator, options: HeaderResourceOptions) !HeaderResourceReport {
+        const header = try document_structure.plainHeaderEntry(a, self.archive, self.manifest, options.protection);
+        return header_resources.read(a, self.archive, header.entry, options.resources);
     }
 
     pub fn deinit(self: *Document, a: std.mem.Allocator) void {

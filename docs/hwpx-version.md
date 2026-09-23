@@ -12,7 +12,7 @@
 
 2026-09-23 두 corpus의 `.hwpx` 484개 중 패키지로 열린 478개 모두 버전 XML 파서가 통과했습니다. 나머지 6개는 기존 ZIP 단계의 `MissingEndRecord`입니다. 열린 478개의 `major`는 모두 5였고 `minor=0`은 6개, `minor=1`은 472개였습니다. 한 `minor=0` 파일은 `micro`·`buildNumber` 대신 `patch`·`revision`을 사용하므로 네 값을 독립적으로 보존합니다. 관측 `xmlVersion`은 `1.1`, `1.2`, `1.3`, `1.31`, `1.4`, `1.5`로 다양합니다. 이 숫자는 필드별 구현 완료율이 아닙니다.
 
-실파일 양쪽 변형, 잘못된 namespace·누락된 필수 숫자·음수·`u32` 초과, XML 참조를 사용한 속성 값, 정확한 바이트 한도, 모든 할당 실패와 명시적 해제 회계를 테스트합니다. 후속 검증은 [읽기 전용 XML 구조 조사](hwpx-xml-structure-evidence.md)를 바탕으로 암호화 정보, `header.xml`과 spine 순서, section XML 및 자원 참조를 별도 책임으로 다뤄야 합니다.
+실파일 양쪽 변형, 잘못된 namespace·누락된 필수 숫자·음수·`u32` 초과, XML 참조를 사용한 속성 값, 정확한 바이트 한도, 모든 할당 실패와 명시적 해제 회계를 테스트합니다. 후속 [암호화 분류](hwpx-protection.md), [header·spine 구조](hwpx-document-structure.md), [header 리소스 ID 색인](hwpx-header-resources.md)은 별도 책임으로 구현됐습니다. section 내부 자원 참조와 편집·저장은 남아 있습니다.
 
 적대적 검증은 원본과 분리한 소스 복사본에서 필수 `major` 누락 허용, `patch`를 `micro` 기본값으로 합치기, namespace 선언을 일반 속성으로 취급하기, `application` 문자열 해제 누락을 각각 주입했습니다. 앞의 세 변이는 Debug 테스트에서, 마지막 변이는 ReleaseFast의 명시적 할당 회계에서 실패했습니다. 컴파일 실패가 아니라 계약 위반을 검출한 결과이며, 임시 변이는 제품 소스에 반영하지 않았습니다.
 

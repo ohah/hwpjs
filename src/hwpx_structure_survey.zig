@@ -145,3 +145,52 @@ test "HWPX corpus product header and spine structure read-only survey" {
     try std.testing.expectEqual(@as(usize, 0), undeclared_count);
     try std.testing.expectEqual(@as(usize, 0), unclassified_spine_xml);
 }
+
+test "HWPX corpus header resource ID inventory read-only survey" {
+    const a = std.testing.allocator;
+    const roots = [_][]const u8{ "legacy/rust/crates/hwp-core/tests/fixtures", "reference/rhwp/samples" };
+    var accepted: usize = 0;
+    var rejected_zip: usize = 0;
+    var encrypted: usize = 0;
+    var declared_mismatches: [7]usize = @splat(0);
+    var missing_groups: [7]usize = @splat(0);
+    var undeclared_groups: [7]usize = @splat(0);
+    for (roots) |root| {
+        const dir = try std.Io.Dir.cwd().openDir(std.testing.io, root, .{ .iterate = true });
+        defer dir.close(std.testing.io);
+        var walker = try dir.walk(a);
+        defer walker.deinit();
+        while (try walker.next(std.testing.io)) |entry| {
+            if (entry.kind != .file or !std.mem.endsWith(u8, entry.path, ".hwpx")) continue;
+            const bytes = try dir.readFileAlloc(std.testing.io, entry.path, a, .limited(25_000_000));
+            defer a.free(bytes);
+            var document = package.inspectDocument(a, bytes, .{}) catch |err| {
+                try std.testing.expectEqual(error.MissingEndRecord, err);
+                rejected_zip += 1;
+                continue;
+            };
+            defer document.deinit(a);
+            var resources = document.inspectHeaderResources(a, .{}) catch |err| {
+                if (err == error.EncryptedDocument) {
+                    encrypted += 1;
+                    continue;
+                }
+                std.debug.print("HWPX resource inventory unexpected error in {s}: {s}\n", .{ entry.path, @errorName(err) });
+                return err;
+            };
+            defer resources.deinit(a);
+            accepted += 1;
+            for ([_]package.HeaderResourceKind{ .border_fill, .char_shape, .tab, .numbering, .bullet, .para_shape, .style }, 0..) |kind, index| {
+                const table = resources.table(kind);
+                if (!table.present) missing_groups[index] += 1;
+                if (table.countMatches()) |matches| {
+                    if (!matches) declared_mismatches[index] += 1;
+                } else undeclared_groups[index] += 1;
+            }
+        }
+    }
+    std.debug.print("HWPX resource corpus: accepted={d} rejected_zip={d} encrypted={d} mismatches={any} missing={any} undeclared={any}\n", .{ accepted, rejected_zip, encrypted, declared_mismatches, missing_groups, undeclared_groups });
+    try std.testing.expectEqual(@as(usize, 476), accepted);
+    try std.testing.expectEqual(@as(usize, 6), rejected_zip);
+    try std.testing.expectEqual(@as(usize, 2), encrypted);
+}

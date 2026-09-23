@@ -3,9 +3,9 @@ const xml = @import("../xml/root.zig");
 const zip = @import("../zip/archive.zig");
 const attrs = @import("xml_attributes.zig");
 
-const head_uri = "http://www.hancom.co.kr/hwpml/2011/head";
-const section_uri = "http://www.hancom.co.kr/hwpml/2011/section";
-const paragraph_uri = "http://www.hancom.co.kr/hwpml/2011/paragraph";
+pub const head_uri = "http://www.hancom.co.kr/hwpml/2011/head";
+pub const section_uri = "http://www.hancom.co.kr/hwpml/2011/section";
+pub const paragraph_uri = "http://www.hancom.co.kr/hwpml/2011/paragraph";
 
 pub const Kind = enum { header, section, other };
 pub const Options = struct {
@@ -65,7 +65,21 @@ pub fn read(a: std.mem.Allocator, archive: zip.Archive, entry: zip.Entry, max_xm
     defer a.free(bytes);
     var context: Context = .{ .allocator = a, .max_attribute_bytes = options.max_attribute_bytes };
     errdefer if (context.header_version) |value| a.free(value);
-    const parsed = try xml.document.visit(a, bytes, .{
+    const parsed = try visitBytes(a, bytes, max_xml_bytes, options, .{ .context = &context, .on_tag = Context.onTag });
+    return .{
+        .kind = context.kind,
+        .xml_bytes = bytes.len,
+        .elements = parsed.elements,
+        .direct_paragraphs = context.direct_paragraphs,
+        .declared_section_count = context.declared_section_count,
+        .header_version = context.header_version,
+    };
+}
+
+/// Applies the same namespace, syntax and resource limits to every HWPX
+/// document XML consumer. Visitor state is valid only during this call.
+pub fn visitBytes(a: std.mem.Allocator, bytes: []const u8, max_xml_bytes: usize, options: Options, visitor: xml.document.Visitor) !xml.document.Report {
+    return xml.document.visit(a, bytes, .{
         .validate_namespaces = true,
         .prolog = .{ .input = .{ .max_bytes = max_xml_bytes, .max_characters = max_xml_bytes } },
         .max_markup_bytes = max_xml_bytes,
@@ -75,13 +89,5 @@ pub fn read(a: std.mem.Allocator, archive: zip.Archive, entry: zip.Entry, max_xm
         .max_attributes = options.max_attributes,
         .max_references = options.max_references,
         .max_depth = options.max_depth,
-    }, .{ .context = &context, .on_tag = Context.onTag });
-    return .{
-        .kind = context.kind,
-        .xml_bytes = bytes.len,
-        .elements = parsed.elements,
-        .direct_paragraphs = context.direct_paragraphs,
-        .declared_section_count = context.declared_section_count,
-        .header_version = context.header_version,
-    };
+    }, visitor);
 }

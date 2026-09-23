@@ -6,7 +6,7 @@
 
 header의 `version`은 부재 가능 문자열, `secCnt`는 부재 가능 `u32`로 보존합니다. `declared_count_matches`는 선언값과 spine에서 확인한 section 수의 비교이며 선언이 없으면 null입니다. 한 실파일에서 선언 1·실제 2가 관측됐으므로 파서는 section을 버리거나 선언값을 고치지 않고 false를 반환합니다. header의 manifest 참조 누락·외부 header·잘못된 미디어 유형·잘못된 XML 루트, 중복 section spine 참조, section 없음은 오류입니다. header가 spine에 있는지 여부도 별도 보고하며 없는 경우 자동 삽입하지 않습니다. 반환 section 인덱스는 소유 `Document.manifest.items`를 가리키므로 `Document`가 보고서보다 오래 살아야 합니다.
 
-header 최대 32MiB, spine XML 엔트리별 최대 128MiB, header+spine XML 합계 최대 256MiB, section 수 최대 65,535개가 기본 상한이며 호출자가 조정할 수 있습니다. 암호화 manifest·앞선 package XML·version XML의 해제량은 이 합계에 포함되지 않고 각 단계의 별도 상한을 따릅니다. 반환 문자열·section 배열은 보고서가 소유하고 `deinit`으로 해제합니다. 이 계층은 header 리소스 테이블, 문단 속성 참조, 표·그림·BinData 의미, 편집·저장을 아직 검증하지 않습니다. 2021/2024 OWPML namespace 변형도 현재 지원 근거가 없으므로 2011 형식 검사 통과를 모든 버전의 문서 지원으로 확대하지 않습니다.
+header 최대 32MiB, spine XML 엔트리별 최대 128MiB, header+spine XML 합계 최대 256MiB, section 수 최대 65,535개가 기본 상한이며 호출자가 조정할 수 있습니다. 암호화 manifest·앞선 package XML·version XML의 해제량은 이 합계에 포함되지 않고 각 단계의 별도 상한을 따릅니다. 반환 문자열·section 배열은 보고서가 소유하고 `deinit`으로 해제합니다. [header 리소스 ID 색인](hwpx-header-resources.md)은 별도 진입점이며, 이 계층은 문단 속성 참조, 표·그림·BinData 의미, 편집·저장을 아직 검증하지 않습니다. 2021/2024 OWPML namespace 변형도 현재 지원 근거가 없으므로 2011 형식 검사 통과를 모든 버전의 문서 지원으로 확대하지 않습니다.
 
 [한컴의 구조 설명](https://tech.hancom.com/hwpxformat/)은 spine 읽기 순서와 header/section 역할을, [한컴의 본문 파싱 설명](https://tech.hancom.com/python-hwpx-parsing-2/)은 `secCnt`가 구역 개수이며 section에 문단이 포함된다는 점을 설명합니다. 다만 이 구현은 해당 설명의 전체 스키마 검증기가 아닙니다.
 

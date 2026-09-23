@@ -55,26 +55,13 @@ fn sectionNumber(path: []const u8) ?u32 {
 }
 
 pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, manifest: content_manifest.Manifest, options: Options) !Report {
-    var encryption = try protection.read(a, archive, options.protection);
-    defer encryption.deinit(a);
-    if (encryption.encrypted_paths.len != 0) return error.EncryptedDocument;
-
-    var header_item_index: ?usize = null;
-    for (manifest.items, 0..) |item, i| {
-        if (std.mem.eql(u8, item.href, header_path)) {
-            if (header_item_index != null) return error.DuplicateHeaderManifestItem;
-            if (!std.mem.eql(u8, item.media_type, xml_media)) return error.InvalidHeaderMediaType;
-            if (item.entry_index == null) return error.ExternalHeaderXml;
-            header_item_index = i;
-        }
-    }
-    const header_index = header_item_index orelse return error.MissingHeaderManifestItem;
-    const header_entry = archive.entries[manifest.items[header_index].entry_index.?];
-    var header = try document_xml.read(a, archive, header_entry, @min(options.max_header_xml_bytes, options.max_total_xml_bytes), options.xml);
+    const selected_header = try plainHeaderEntry(a, archive, manifest, options.protection);
+    var header = try document_xml.read(a, archive, selected_header.entry, @min(options.max_header_xml_bytes, options.max_total_xml_bytes), options.xml);
     errdefer header.deinit(a);
     if (header.kind != .header) return error.InvalidHeaderRoot;
     var remaining = options.max_total_xml_bytes - header.xml_bytes;
 
+    const header_index = selected_header.item_index;
     var sections: std.ArrayList(Section) = .empty;
     errdefer sections.deinit(a);
     var seen: std.AutoHashMapUnmanaged(usize, void) = .empty;
@@ -134,4 +121,29 @@ pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, manifest: content_man
         .declared_count_matches = if (header.declared_section_count) |declared| declared == owned_sections.len else null,
         .decoded_xml_bytes = options.max_total_xml_bytes - remaining,
     };
+}
+
+/// One exact package/header selection policy shared by structure and resource
+/// readers. A protected package cannot be treated as ordinary XML.
+pub const SelectedHeader = struct { entry: zip.Entry, item_index: usize };
+pub fn plainHeaderEntry(a: std.mem.Allocator, archive: zip.Archive, manifest: content_manifest.Manifest, protection_options: protection.Options) !SelectedHeader {
+    var encryption = try protection.read(a, archive, protection_options);
+    defer encryption.deinit(a);
+    if (encryption.encrypted_paths.len != 0) return error.EncryptedDocument;
+
+    const header_index = (try headerItemIndex(manifest)) orelse return error.MissingHeaderManifestItem;
+    return .{ .entry = archive.entries[manifest.items[header_index].entry_index.?], .item_index = header_index };
+}
+
+fn headerItemIndex(manifest: content_manifest.Manifest) !?usize {
+    var header_item_index: ?usize = null;
+    for (manifest.items, 0..) |item, i| {
+        if (std.mem.eql(u8, item.href, header_path)) {
+            if (header_item_index != null) return error.DuplicateHeaderManifestItem;
+            if (!std.mem.eql(u8, item.media_type, xml_media)) return error.InvalidHeaderMediaType;
+            if (item.entry_index == null) return error.ExternalHeaderXml;
+            header_item_index = i;
+        }
+    }
+    return header_item_index;
 }

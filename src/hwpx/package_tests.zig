@@ -1140,3 +1140,157 @@ test "HWPX structure allocation failures and ReleaseFast cleanup accounting" {
     document.deinit(checked.allocator());
     try std.testing.expectEqual(@as(usize, 0), checked.total_requested_bytes);
 }
+
+const resource_prefix = "<h:head xmlns:h=\"http://www.hancom.co.kr/hwpml/2011/head\"><h:refList>";
+const resource_suffix = "</h:refList></h:head>";
+const sparse_resources = resource_prefix ++
+    "<h:charProperties itemCnt=\"2\"><h:charPr id=\"7\"/><x:charPr xmlns:x=\"urn:wrong\" id=\"99\"/><h:charPr id=\"2\"/></h:charProperties>" ++
+    "<h:paraProperties itemCnt=\"1\"><h:paraPr id=\"20\"/></h:paraProperties>" ++
+    "<h:styles><h:style id=\"0\"/></h:styles>" ++ resource_suffix;
+
+fn expectResourceError(a: std.mem.Allocator, header_xml: []const u8, options: package.HeaderResourceOptions, expected: anyerror) !void {
+    const bytes = try syntheticStructureZip(a, header_xml, structure_section);
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    if (document.inspectHeaderResources(a, options)) |value| {
+        var unexpected = value;
+        unexpected.deinit(a);
+        return error.TestExpectedError;
+    } else |err| try std.testing.expectEqual(expected, err);
+}
+
+test "HWPX header resources use explicit sparse IDs and preserve missing declarations" {
+    const a = std.testing.allocator;
+    const bytes = try syntheticStructureZip(a, sparse_resources, structure_section);
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    var resources = try document.inspectHeaderResources(a, .{});
+    defer resources.deinit(a);
+    const chars = resources.table(.char_shape);
+    try std.testing.expect(chars.present);
+    try std.testing.expectEqual(@as(?u32, 2), chars.declared_count);
+    try std.testing.expectEqual(@as(?bool, true), chars.countMatches());
+    try std.testing.expectEqualSlices(u32, &.{ 2, 7 }, chars.ids.items);
+    try std.testing.expect(chars.hasId(7));
+    try std.testing.expect(!chars.hasId(0));
+    try std.testing.expect(!chars.hasId(99));
+    try std.testing.expectEqual(@as(?bool, null), resources.table(.style).countMatches());
+    try std.testing.expect(!resources.table(.bullet).present);
+    try std.testing.expectEqual(@as(?bool, null), resources.table(.bullet).countMatches());
+
+    const mismatched = resource_prefix ++ "<h:styles itemCnt=\"2\"><h:style id=\"7\"/></h:styles>" ++ resource_suffix;
+    const mismatch_bytes = try syntheticStructureZip(a, mismatched, structure_section);
+    defer a.free(mismatch_bytes);
+    var mismatch_document = try package.inspectDocument(a, mismatch_bytes, .{});
+    defer mismatch_document.deinit(a);
+    var mismatch_resources = try mismatch_document.inspectHeaderResources(a, .{});
+    defer mismatch_resources.deinit(a);
+    try std.testing.expectEqual(@as(?bool, false), mismatch_resources.table(.style).countMatches());
+    try std.testing.expect(mismatch_resources.table(.style).hasId(7));
+
+    const decoded_id = resource_prefix ++ "<h:styles itemCnt=\"1\"><h:style id=\"&#50;\"/></h:styles>" ++ resource_suffix;
+    const decoded_bytes = try syntheticStructureZip(a, decoded_id, structure_section);
+    defer a.free(decoded_bytes);
+    var decoded_document = try package.inspectDocument(a, decoded_bytes, .{});
+    defer decoded_document.deinit(a);
+    var decoded_resources = try decoded_document.inspectHeaderResources(a, .{});
+    defer decoded_resources.deinit(a);
+    try std.testing.expect(decoded_resources.table(.style).hasId(2));
+}
+
+test "HWPX header resources reject real encrypted documents before XML parsing" {
+    const a = std.testing.allocator;
+    for ([_][]const u8{
+        "legacy/rust/crates/hwp-core/tests/fixtures/password-12345.hwpx",
+        "reference/rhwp/samples/HWP5-password-123456.hwpx",
+    }) |path| {
+        const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, path, a, .limited(1_000_000));
+        defer a.free(bytes);
+        var document = try package.inspectDocument(a, bytes, .{});
+        defer document.deinit(a);
+        if (document.inspectHeaderResources(a, .{})) |value| {
+            var unexpected = value;
+            unexpected.deinit(a);
+            return error.TestExpectedError;
+        } else |err| try std.testing.expectEqual(error.EncryptedDocument, err);
+    }
+}
+
+test "HWPX real header inventories preserve seven group identities" {
+    const a = std.testing.allocator;
+    const bytes = try loadFixture(a, "example");
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    var resources = try document.inspectHeaderResources(a, .{});
+    defer resources.deinit(a);
+    try std.testing.expectEqual(@as(usize, 12), resources.table(.char_shape).ids.items.len);
+    try std.testing.expectEqual(@as(usize, 16), resources.table(.para_shape).ids.items.len);
+    try std.testing.expectEqual(@as(usize, 18), resources.table(.style).ids.items.len);
+    try std.testing.expect(resources.table(.border_fill).hasId(1));
+    try std.testing.expect(!resources.table(.border_fill).hasId(0));
+    try std.testing.expect(resources.table(.numbering).hasId(1));
+    try std.testing.expect(!resources.table(.bullet).present);
+    for ([_]package.HeaderResourceKind{ .border_fill, .char_shape, .tab, .numbering, .para_shape, .style }) |kind| {
+        try std.testing.expectEqual(@as(?bool, true), resources.table(kind).countMatches());
+    }
+
+    const noori = try loadFixture(a, "noori");
+    defer a.free(noori);
+    var second_document = try package.inspectDocument(a, noori, .{});
+    defer second_document.deinit(a);
+    var second_resources = try second_document.inspectHeaderResources(a, .{});
+    defer second_resources.deinit(a);
+    try std.testing.expect(second_resources.table(.bullet).present);
+    try std.testing.expect(second_resources.table(.bullet).hasId(1));
+    try std.testing.expectEqual(@as(?bool, true), second_resources.table(.bullet).countMatches());
+}
+
+test "HWPX header resources reject wrong roots, duplicate groups and IDs" {
+    const a = std.testing.allocator;
+    const cases = [_]struct { xml: []const u8, expected: anyerror }{
+        .{ .xml = "<x:head xmlns:x=\"urn:wrong\"><x:refList/></x:head>", .expected = error.InvalidHeaderRoot },
+        .{ .xml = "<h:head xmlns:h=\"http://www.hancom.co.kr/hwpml/2011/head\"/>", .expected = error.MissingReferenceList },
+        .{ .xml = "<h:head xmlns:h=\"http://www.hancom.co.kr/hwpml/2011/head\"><x:refList xmlns:x=\"urn:wrong\"/></h:head>", .expected = error.MissingReferenceList },
+        .{ .xml = resource_prefix ++ "<h:styles/><h:styles/>" ++ resource_suffix, .expected = error.DuplicateResourceTable },
+        .{ .xml = resource_prefix ++ "<h:styles itemCnt=\"two\"/>" ++ resource_suffix, .expected = error.InvalidResourceCount },
+        .{ .xml = resource_prefix ++ "<h:styles itemCnt=\"4294967296\"/>" ++ resource_suffix, .expected = error.InvalidResourceCount },
+        .{ .xml = resource_prefix ++ "<h:styles><h:style/></h:styles>" ++ resource_suffix, .expected = error.MissingResourceId },
+        .{ .xml = resource_prefix ++ "<h:styles><h:style id=\"-1\"/></h:styles>" ++ resource_suffix, .expected = error.InvalidResourceId },
+        .{ .xml = resource_prefix ++ "<h:styles><h:style id=\"4294967296\"/></h:styles>" ++ resource_suffix, .expected = error.InvalidResourceId },
+        .{ .xml = resource_prefix ++ "<h:styles><h:style id=\"03\"/><h:style id=\"3\"/></h:styles>" ++ resource_suffix, .expected = error.DuplicateResourceId },
+    };
+    for (cases) |case| try expectResourceError(a, case.xml, .{}, case.expected);
+}
+
+test "HWPX header resource limits, allocation failures and ReleaseFast ownership" {
+    const a = std.testing.allocator;
+    const bytes = try syntheticStructureZip(a, sparse_resources, structure_section);
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    var at_limit = try document.inspectHeaderResources(a, .{ .resources = .{ .max_xml_bytes = sparse_resources.len } });
+    at_limit.deinit(a);
+    var exact_ids = try document.inspectHeaderResources(a, .{ .resources = .{ .max_resource_ids = 4 } });
+    exact_ids.deinit(a);
+    try expectResourceError(a, sparse_resources, .{ .resources = .{ .max_xml_bytes = sparse_resources.len - 1 } }, error.LimitExceeded);
+    try expectResourceError(a, sparse_resources, .{ .resources = .{ .max_resource_ids = 1 } }, error.LimitExceeded);
+    try expectResourceError(a, sparse_resources, .{ .resources = .{ .max_attribute_bytes = 0 } }, error.LimitExceeded);
+    try std.testing.checkAllAllocationFailures(a, struct {
+        fn run(allocator: std.mem.Allocator, source: []const u8) !void {
+            var parsed = try package.inspectDocument(allocator, source, .{});
+            defer parsed.deinit(allocator);
+            var resources = try parsed.inspectHeaderResources(allocator, .{});
+            resources.deinit(allocator);
+        }
+    }.run, .{bytes});
+    var checked: std.heap.DebugAllocator(.{ .safety = true, .enable_memory_limit = true }) = .init;
+    defer _ = checked.deinit();
+    var parsed = try package.inspectDocument(checked.allocator(), bytes, .{});
+    var resources = try parsed.inspectHeaderResources(checked.allocator(), .{});
+    resources.deinit(checked.allocator());
+    parsed.deinit(checked.allocator());
+    try std.testing.expectEqual(@as(usize, 0), checked.total_requested_bytes);
+}
