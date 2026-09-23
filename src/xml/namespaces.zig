@@ -97,3 +97,7 @@ fn declaration(name: qname.QName) ?View {
     }
     return if (name.local.equals("xmlns", false)) .{ .raw = "", .encoding = name.local.encoding } else null;
 }
+
+pub fn isDeclaration(name: View) !bool {
+    return declaration(try qname.parse(name)) != null;
+}

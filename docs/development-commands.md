@@ -10,7 +10,9 @@ zig build audit -Doptimize=ReleaseSafe
 
 파서·writer 변경에는 정상 입력뿐 아니라 잘림·잘못된 참조·크기 경계 테스트를 추가합니다. WASM ABI 변경은 실제 WebAssembly 인스턴스에서 확인합니다. 문서만 변경한 경우 관련 링크·경로·내용 검증으로 충분합니다.
 
-HWPX 전용 테스트는 `zig test src/root.zig --test-filter HWPX`로 실행합니다. ZIP 엔트리·손상 경계·할당 실패와 두 corpus의 패키지 관계를 검사합니다. section XML 문서 의미 검증이나 공개 JS API 검사는 아닙니다. ZIP 범위는 [HWPX ZIP 컨테이너](hwpx-zip-container.md), 패키지 관계 범위·실측은 [HWPX 패키지 관계 검증](hwpx-package-relationships.md)을 참조합니다.
+HWPX 전용 테스트는 `zig test src/root.zig --test-filter HWPX`로 실행합니다. ZIP 엔트리·손상 경계·할당 실패와 두 corpus의 패키지 관계·버전 XML을 검사합니다. section XML 문서 의미 검증이나 공개 JS API 검사는 아닙니다. ZIP 범위는 [HWPX ZIP 컨테이너](hwpx-zip-container.md), 패키지 관계 범위·실측은 [HWPX 패키지 관계 검증](hwpx-package-relationships.md), 버전 필드 변형은 [HWPX 버전 XML 검증](hwpx-version.md)을 참조합니다.
+
+전체 corpus의 header/section XML 문법·namespace 조사는 `zig test src/hwpx_structure_survey.zig -O ReleaseFast`로 명시적으로 실행합니다. 약 246MB의 해제 XML을 읽으므로 기본 `zig build test`·`audit`에는 포함하지 않습니다. 원본은 변경하지 않으며 해석 범위·암호 문서 예외는 [HWPX XML 구조 조사](hwpx-xml-structure-evidence.md)가 소유합니다.
 
 테스트용 문서 보고서의 기대 바이트 간격/필드 위치는 `tests/hwp5/document-report-wire.mjs`에서 공유합니다. 제품 serializer로부터 생성하지 않아 독립 대조를 유지하며, 다른 테스트에 구역 stride·필드 offset 숫자를 다시 복제하지 않습니다. 구역 인덱스 정렬 검증은 서로 다른 진단값을 가진 입력으로 수행합니다.
 

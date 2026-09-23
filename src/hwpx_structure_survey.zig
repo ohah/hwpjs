@@ -1,0 +1,91 @@
+const std = @import("std");
+const package = @import("hwpx/package.zig");
+const xml = @import("xml/root.zig");
+
+test "HWPX corpus XML structure read-only survey" {
+    const a = std.testing.allocator;
+    const roots = [_][]const u8{ "legacy/rust/crates/hwp-core/tests/fixtures", "reference/rhwp/samples" };
+    var parsed: usize = 0;
+    var errors: std.StringHashMapUnmanaged(usize) = .empty;
+    defer errors.deinit(a);
+    for (roots) |root| {
+        const dir = try std.Io.Dir.cwd().openDir(std.testing.io, root, .{ .iterate = true });
+        defer dir.close(std.testing.io);
+        var walker = try dir.walk(a);
+        defer walker.deinit();
+        while (try walker.next(std.testing.io)) |entry| {
+            if (entry.kind != .file or !std.mem.endsWith(u8, entry.path, ".hwpx")) continue;
+            const bytes = try dir.readFileAlloc(std.testing.io, entry.path, a, .limited(25_000_000));
+            defer a.free(bytes);
+            var document = package.inspectDocument(a, bytes, .{}) catch |err| {
+                try std.testing.expectEqual(error.MissingEndRecord, err);
+                continue;
+            };
+            defer document.deinit(a);
+            for (document.archive.entries) |member| {
+                if (!std.mem.eql(u8, member.name, "version.xml") and
+                    !std.mem.eql(u8, member.name, "Contents/header.xml") and
+                    !(std.mem.startsWith(u8, member.name, "Contents/section") and std.mem.endsWith(u8, member.name, ".xml"))) continue;
+                const decoded = try document.archive.decode(member, 32 * 1024 * 1024);
+                defer a.free(decoded);
+                _ = xml.document.inspect(a, decoded, .{
+                    .validate_namespaces = true,
+                    .prolog = .{ .input = .{ .max_bytes = decoded.len, .max_characters = decoded.len } },
+                    .max_markup_bytes = decoded.len,
+                    .max_text_bytes = decoded.len,
+                    .max_elements = decoded.len,
+                    .max_events = decoded.len,
+                    .max_attributes = decoded.len,
+                    .max_references = decoded.len,
+                }) catch |err| {
+                    const slot = try errors.getOrPut(a, @errorName(err));
+                    if (!slot.found_existing) slot.value_ptr.* = 0;
+                    slot.value_ptr.* += 1;
+                    continue;
+                };
+                parsed += 1;
+            }
+        }
+    }
+    std.debug.print("HWPX XML structure parsed={d}\n", .{parsed});
+    var it = errors.iterator();
+    while (it.next()) |item| std.debug.print("  {s}: {d}\n", .{ item.key_ptr.*, item.value_ptr.* });
+    try std.testing.expectEqual(@as(usize, 1498), parsed);
+    try std.testing.expectEqual(@as(usize, 2), errors.count());
+    try std.testing.expectEqual(@as(?usize, 3), errors.get("TextOutsideXmlRoot"));
+    try std.testing.expectEqual(@as(?usize, 1), errors.get("InvalidXmlEncoding"));
+}
+
+test "HWPX encrypted samples account for four XML failures" {
+    const a = std.testing.allocator;
+    const paths = [_][]const u8{
+        "legacy/rust/crates/hwp-core/tests/fixtures/password-12345.hwpx",
+        "reference/rhwp/samples/HWP5-password-123456.hwpx",
+    };
+    var text_outside: usize = 0;
+    var encoding: usize = 0;
+    for (paths) |path| {
+        const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, path, a, .limited(1_000_000));
+        defer a.free(bytes);
+        var document = try package.inspectDocument(a, bytes, .{});
+        defer document.deinit(a);
+        const manifest = document.archive.find("META-INF/manifest.xml") orelse return error.MissingEncryptionManifest;
+        const manifest_xml = try document.archive.decode(manifest, 1024 * 1024);
+        defer a.free(manifest_xml);
+        try std.testing.expect(std.mem.indexOf(u8, manifest_xml, "encryption-data") != null);
+        for ([_][]const u8{ "Contents/header.xml", "Contents/section0.xml" }) |name| {
+            const member = document.archive.find(name) orelse return error.MissingEncryptedMember;
+            const decoded = try document.archive.decode(member, 1024 * 1024);
+            defer a.free(decoded);
+            if (xml.document.inspect(a, decoded, .{ .validate_namespaces = true })) |_| {
+                return error.ExpectedEncryptedXmlFailure;
+            } else |err| switch (err) {
+                error.TextOutsideXmlRoot => text_outside += 1,
+                error.InvalidXmlEncoding => encoding += 1,
+                else => return err,
+            }
+        }
+    }
+    try std.testing.expectEqual(@as(usize, 3), text_outside);
+    try std.testing.expectEqual(@as(usize, 1), encoding);
+}

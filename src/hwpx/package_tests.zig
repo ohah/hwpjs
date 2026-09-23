@@ -1,6 +1,7 @@
 const std = @import("std");
 const zip = @import("../zip/archive.zig");
 const package = @import("package.zig");
+const version_xml = @import("version_xml.zig");
 
 fn loadFixture(a: std.mem.Allocator, name: []const u8) ![]u8 {
     const path = try std.fmt.allocPrint(a, "legacy/rust/crates/hwp-core/tests/fixtures/{s}.hwpx", .{name});
@@ -608,4 +609,148 @@ test "HWPX corpus package relationships read-only survey" {
     try std.testing.expectEqual(@as(usize, 478), accepted);
     try std.testing.expectEqual(@as(usize, 1), errors.count());
     try std.testing.expectEqual(@as(?usize, 6), errors.get("MissingEndRecord"));
+}
+
+fn versionOnlyZip(a: std.mem.Allocator, version_bytes: []const u8) ![]u8 {
+    const sources = [_]Source{
+        .{ .name = "mimetype", .data = package.mime },
+        .{ .name = "version.xml", .data = version_bytes },
+    };
+    return storedZip(a, &sources);
+}
+
+test "HWPX version XML preserves observed numeric field variants" {
+    const a = std.testing.allocator;
+    const cases = [_]struct { path: []const u8, minor: u32, micro: ?u32, build_number: ?u32, patch: ?u32, revision: ?u32 }{
+        .{ .path = "legacy/rust/crates/hwp-core/tests/fixtures/example.hwpx", .minor = 1, .micro = 0, .build_number = 1, .patch = null, .revision = null },
+        .{ .path = "reference/rhwp/samples/hwpx/issue2019_floating_form_74312.hwpx", .minor = 0, .micro = null, .build_number = null, .patch = 0, .revision = 0 },
+    };
+    for (cases) |case| {
+        const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, case.path, a, .limited(1_000_000));
+        defer a.free(bytes);
+        var archive = try package.open(a, bytes, .{});
+        defer archive.deinit();
+        var version = try version_xml.read(a, archive, 1024 * 1024, 4096);
+        defer version.deinit(a);
+        try std.testing.expectEqual(@as(u32, 5), version.major);
+        try std.testing.expectEqual(case.minor, version.minor);
+        try std.testing.expectEqual(case.micro, version.micro);
+        try std.testing.expectEqual(case.build_number, version.build_number);
+        try std.testing.expectEqual(case.patch, version.patch);
+        try std.testing.expectEqual(case.revision, version.revision);
+        try std.testing.expectEqualStrings("WORDPROCESSOR", version.target_application.?);
+        try std.testing.expectEqualStrings("Hancom Office Hangul", version.application.?);
+        try std.testing.expect(version.app_version.?.len > 0);
+    }
+}
+
+test "HWPX version XML rejects wrong root and invalid number without leaks" {
+    const a = std.testing.allocator;
+    const cases = [_]struct { xml: []const u8, expected: anyerror }{
+        .{ .xml = "<v:HCFVersion xmlns:v=\"urn:wrong\" major=\"5\" minor=\"1\"/>", .expected = error.InvalidVersionRoot },
+        .{ .xml = "<v:HCFVersion xmlns:v=\"http://www.hancom.co.kr/hwpml/2011/version\" minor=\"1\"/>", .expected = error.MissingVersionMajor },
+        .{ .xml = "<v:HCFVersion xmlns:v=\"http://www.hancom.co.kr/hwpml/2011/version\" major=\"-1\" minor=\"1\"/>", .expected = error.InvalidVersionNumber },
+        .{ .xml = "<v:HCFVersion xmlns:v=\"http://www.hancom.co.kr/hwpml/2011/version\" major=\"5\" minor=\"1\" micro=\"4294967296\"/>", .expected = error.InvalidVersionNumber },
+    };
+    for (cases) |case| {
+        const bytes = try versionOnlyZip(a, case.xml);
+        defer a.free(bytes);
+        var archive = try package.open(a, bytes, .{});
+        defer archive.deinit();
+        if (version_xml.read(a, archive, 4096, 4096)) |value| {
+            var unexpected = value;
+            unexpected.deinit(a);
+            return error.TestExpectedError;
+        } else |err| try std.testing.expectEqual(case.expected, err);
+    }
+}
+
+test "HWPX version XML exact budget and allocation ownership" {
+    const a = std.testing.allocator;
+    const version_text = "<v:HCFVersion xmlns:v=\"http://www.hancom.co.kr/hwpml/2011/version\" major=\"5\" minor=\"1\" xmlVersion=\"1&#46;5\" tagetApplication=\"WORDPROCESSOR\" application=\"Hancom Office Hangul\" appVersion=\"12.0\"/>";
+    const bytes = try versionOnlyZip(a, version_text);
+    defer a.free(bytes);
+    var archive = try package.open(a, bytes, .{});
+    defer archive.deinit();
+    var version = try version_xml.read(a, archive, version_text.len, 4096);
+    defer version.deinit(a);
+    try std.testing.expectEqualStrings("1.5", version.xml_version.?);
+    try std.testing.expectEqual(@as(?u32, null), version.micro);
+    try std.testing.expectEqualStrings("Hancom Office Hangul", version.application.?);
+    try std.testing.expectEqualStrings("12.0", version.app_version.?);
+    const minimal = try versionOnlyZip(a, "<v:HCFVersion xmlns:v=\"http://www.hancom.co.kr/hwpml/2011/version\" major=\"5\" minor=\"1\"/>");
+    defer a.free(minimal);
+    var minimal_archive = try package.open(a, minimal, .{});
+    defer minimal_archive.deinit();
+    var minimal_version = try version_xml.read(a, minimal_archive, 4096, 4096);
+    defer minimal_version.deinit(a);
+    try std.testing.expectEqual(@as(?[]u8, null), minimal_version.application);
+    try std.testing.expectEqual(@as(?[]u8, null), minimal_version.app_version);
+    try std.testing.expectEqual(@as(?[]u8, null), minimal_version.xml_version);
+    if (version_xml.read(a, archive, version_text.len - 1, 4096)) |value| {
+        var unexpected = value;
+        unexpected.deinit(a);
+        return error.TestExpectedError;
+    } else |err| try std.testing.expectEqual(error.LimitExceeded, err);
+    try std.testing.checkAllAllocationFailures(a, struct {
+        fn run(allocator: std.mem.Allocator, source: []const u8) !void {
+            var opened = try package.open(allocator, source, .{});
+            defer opened.deinit();
+            var parsed = try version_xml.read(allocator, opened, 4096, 4096);
+            parsed.deinit(allocator);
+        }
+    }.run, .{bytes});
+    var checked: std.heap.DebugAllocator(.{ .safety = true, .enable_memory_limit = true }) = .init;
+    defer _ = checked.deinit();
+    var opened = try package.open(checked.allocator(), bytes, .{});
+    var parsed = try version_xml.read(checked.allocator(), opened, 4096, 4096);
+    parsed.deinit(checked.allocator());
+    opened.deinit();
+    try std.testing.expectEqual(@as(usize, 0), checked.total_requested_bytes);
+}
+
+test "HWPX corpus version XML read-only survey" {
+    const a = std.testing.allocator;
+    const roots = [_][]const u8{ "legacy/rust/crates/hwp-core/tests/fixtures", "reference/rhwp/samples" };
+    var accepted: usize = 0;
+    var rejected_zip: usize = 0;
+    var old_minor: usize = 0;
+    var patch_variant: usize = 0;
+    for (roots) |root| {
+        const dir = try std.Io.Dir.cwd().openDir(std.testing.io, root, .{ .iterate = true });
+        defer dir.close(std.testing.io);
+        var walker = try dir.walk(a);
+        defer walker.deinit();
+        while (try walker.next(std.testing.io)) |entry| {
+            if (entry.kind != .file or !std.mem.endsWith(u8, entry.path, ".hwpx")) continue;
+            const bytes = try dir.readFileAlloc(std.testing.io, entry.path, a, .limited(25_000_000));
+            defer a.free(bytes);
+            var document = package.inspectDocument(a, bytes, .{}) catch |err| {
+                try std.testing.expectEqual(error.MissingEndRecord, err);
+                rejected_zip += 1;
+                continue;
+            };
+            defer document.deinit(a);
+            var version = try document.inspectVersion(a, .{});
+            defer version.deinit(a);
+            try std.testing.expectEqual(@as(u32, 5), version.major);
+            try std.testing.expect(version.xml_version != null);
+            try std.testing.expectEqualStrings("WORDPROCESSOR", version.target_application.?);
+            try std.testing.expect(version.application != null);
+            try std.testing.expect(version.app_version != null);
+            try std.testing.expect(version.os != null);
+            if (version.minor == 0) old_minor += 1;
+            if (version.patch != null) {
+                patch_variant += 1;
+                try std.testing.expectEqual(@as(?u32, null), version.micro);
+                try std.testing.expectEqual(@as(?u32, null), version.build_number);
+            }
+            accepted += 1;
+        }
+    }
+    std.debug.print("HWPX version corpus: accepted={d} rejected_zip={d} minor0={d} patch_variant={d}\n", .{ accepted, rejected_zip, old_minor, patch_variant });
+    try std.testing.expectEqual(@as(usize, 478), accepted);
+    try std.testing.expectEqual(@as(usize, 6), rejected_zip);
+    try std.testing.expectEqual(@as(usize, 6), old_minor);
+    try std.testing.expectEqual(@as(usize, 1), patch_variant);
 }

@@ -10,6 +10,7 @@ pub fn element(tag: xml.tags.Tag, scope: *const xml.namespaces.State, uri: []con
 /// check is performed by the shared document visitor before this lookup.
 pub fn attribute(a: std.mem.Allocator, tag: xml.tags.Tag, scope: *const xml.namespaces.State, local: []const u8, max_bytes: usize) !?[]u8 {
     for (tag.attributes) |attr| {
+        if (try xml.namespaces.isDeclaration(attr.name)) continue;
         const name = try scope.expandAttribute(attr.name);
         if (name.uri.len == 0 and name.local.equals(local, false)) {
             return try attr.value.toUtf8(a, max_bytes);

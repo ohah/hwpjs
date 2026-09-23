@@ -3,7 +3,7 @@
 ## 프로젝트와 현재 범위
 
 HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라이브러리입니다.
-현재는 바이트 리더, CFB v3/v4 읽기·strict 검증·새 컨테이너 생성/재저장, HWP5 헤더·압축 스트림·레코드 경계와 DocInfo 주요 리소스 해석·활성 참조 검증, 본문 문단 헤더·UTF-16 텍스트/제어문자 토큰 코어가 구현되어 있습니다. HWPX에는 [ZIP·mimetype 읽기 경계](hwpx-zip-container.md)와 [패키지 관계 검증](hwpx-package-relationships.md)이 추가됐으며 전체 문서 모델·레이아웃·본문 편집·저장은 미구현입니다. HWP5 코어는 테스트용 WASM에서 검증하며 제품 JS 공개 API는 아직 CFB만 제공합니다. 지원 범위는 구현·테스트로 확인하고, 예정 기능을 완료된 기능처럼 설명하지 않습니다.
+현재는 바이트 리더, CFB v3/v4 읽기·strict 검증·새 컨테이너 생성/재저장, HWP5 헤더·압축 스트림·레코드 경계와 DocInfo 주요 리소스 해석·활성 참조 검증, 본문 문단 헤더·UTF-16 텍스트/제어문자 토큰 코어가 구현되어 있습니다. HWPX에는 [ZIP·mimetype 읽기 경계](hwpx-zip-container.md), [패키지 관계 검증](hwpx-package-relationships.md), [버전 XML 검증](hwpx-version.md)이 추가됐으며 전체 문서 모델·레이아웃·본문 편집·저장은 미구현입니다. HWP5 코어는 테스트용 WASM에서 검증하며 제품 JS 공개 API는 아직 CFB만 제공합니다. 지원 범위는 구현·테스트로 확인하고, 예정 기능을 완료된 기능처럼 설명하지 않습니다.
 
 ## 진입점과 공통 계층
 
@@ -13,7 +13,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
   [ISO 639 두 글자 코드 조회](iso639-alpha2.md)는 IANA 목록과 별도의 고정 ISO 목록·확인된 폐기 이력을 다룹니다.
 - `src/image/`: [PNG 청크 구조·CRC 검사](png-structure.md), [행 필터 복원](png-filters.md), [IDAT 이미지 데이터 검증](png-pixels.md), [tRNS 투명도](png-transparency.md), [배경색·히스토그램](png-palette-metadata.md), [물리적 크기·유효 비트](png-sample-metadata.md), [수정 시각](png-timestamp.md), [비압축 텍스트](png-text.md), [압축 텍스트](png-compressed-text.md), [국제 텍스트](png-international-text.md), [추천 팔레트](png-suggested-palettes.md), [Placeable WMF 헤더·generic record framing](wmf-header.md), [WMF Object Table 수명](wmf-object-table.md), [WMF pen·brush·font payload](wmf-create-payloads.md), [WMF 고정 길이 상태·좌표 레코드](wmf-state-records.md), [WMF polygon·polyline·ellipse·rectangle](wmf-drawing-records.md), [WMF text·escape records](wmf-text-escape-records.md), [strict embedded EMF payload](wmf-enhanced-metafile.md), [EMF framing·Object Table 상태](emf-framing.md), [EMF 핸들·팔레트 record 호환성](emf-handle-record-compatibility.md). HWP의 선택적 연결은 [BinData 이미지 검사](hwp5-bin-data-images.md)가 소유합니다. [JPEG의 별도 선택 연결](hwp5-bin-data-jpeg.md)도 제공합니다. [BMP의 별도 선택 연결](hwp5-bin-data-bmp.md)도 제공하며 독립 코어는 아래 상세 문서를 참조합니다. PNG RGBA 변환과 나머지 WMF/EMF payload·렌더링은 후속 단계입니다.
 - `src/xml/`: [XML 1.0 문자 입력](xml-input.md), [선언·인코딩 시작 처리](xml-declaration.md), [이름·참조](xml-names-references.md), [태그·속성 토큰](xml-tags.md), [문서 구조 검증](xml-document.md), [namespace 검증](xml-namespaces.md). 공통 순회를 HWPX 패키지 관계 검사에 재사용하지만 DTD·스키마 검증과 section 의미 해석은 아직 미구현입니다.
-- `src/zip/`, `src/hwpx/`: [ZIP 인덱스·제한된 해제와 HWPX mimetype 식별](hwpx-zip-container.md), [OCF 루트·OPF manifest/spine 관계](hwpx-package-relationships.md). 실제 section XML 문서 조립은 아직 미구현입니다.
+- `src/zip/`, `src/hwpx/`: [ZIP 인덱스·제한된 해제와 HWPX mimetype 식별](hwpx-zip-container.md), [OCF 루트·OPF manifest/spine 관계](hwpx-package-relationships.md), [버전 XML 검증](hwpx-version.md). 실제 header/section XML 문서 조립은 아직 미구현입니다.
 - `src/cfb/`: 읽기·검증·저장을 책임별로 분리한 CFB 코어.
 - `src/hwp5/`: 헤더 원본·버전·스트림 정책·압축 trailer·레코드 framing을 분리합니다. 현재 계약·검증 범위는 [HWP5 모듈 계약](hwp5-modules.md), 과거 이력은 [구현/검증 기록](hwp5-foundation.md)을 참조합니다.
 - `src/compression/`: bounded raw DEFLATE, [zlib 검증](zlib-validation.md), MIT Zig 디코더 로컬 수정본. HWP 플래그·trailer 정책을 넣지 않습니다.
