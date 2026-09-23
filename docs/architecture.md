@@ -36,6 +36,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [EMF+ Path device command 계층](emf-plus-path-device-commands.md)은 Move·Line·Bézier와 빈 figure의 metadata를 보존한 채 일반 world·page·device mapper를 적용합니다. device TypedPoint·Line·Bézier mapping의 SSOT로서 segment 계층도 같은 타입과 변환을 재사용합니다.
 
+[EMF+ Path device marker point 반복자](emf-plus-path-device-marker-points.md)는 원본 device command에서 marker가 설정된 Move·Line 끝점·Bézier control/end point의 좌표, 역할과 원본 index를 반환합니다. 평탄화 point나 closure point를 marker로 취급하지 않습니다.
+
 [EMF+ Path device figure geometry](emf-plus-path-device-geometry.md)는 device command를 figure별 Move·source point range·drawable command range·닫힘 상태로 색인하고 소유합니다. 원래 command metadata를 그대로 보존하며 closure edge나 평탄화 point를 발명하지 않습니다.
 
 [EMF+ Path device figure polyline](emf-plus-path-device-polyline.md)은 figure geometry의 Line과 공용 cubic flattener를 조립해 결과 point range를 소유합니다. Move·endpoint metadata와 control metadata가 든 원본 command snapshot을 함께 보존하며 closure·stroke·fill 정책은 적용하지 않습니다.

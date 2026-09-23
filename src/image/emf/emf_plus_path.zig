@@ -7,6 +7,7 @@ const path_geometry = @import("emf_plus_path_geometry.zig");
 const path_fill_segments = @import("emf_plus_path_fill_segments.zig");
 const path_device_commands = @import("emf_plus_path_device_commands.zig");
 const path_device_geometry = @import("emf_plus_path_device_geometry.zig");
+const path_device_marker_points = @import("emf_plus_path_device_marker_points.zig");
 const path_device_boundary_polyline = @import("emf_plus_path_device_boundary_polyline.zig");
 const path_device_polyline = @import("emf_plus_path_device_polyline.zig");
 const path_device_segments = @import("emf_plus_path_device_segments.zig");
@@ -72,6 +73,10 @@ pub const Path = struct {
 
     pub fn deviceGeometry(self: Path, allocator: std.mem.Allocator, mapping: world_page_device.Mapper, options: path_device_geometry.Options) !path_device_geometry.Geometry {
         return path_device_geometry.collect(allocator, self.deviceCommands(mapping), options);
+    }
+
+    pub fn deviceMarkerPoints(self: Path, mapping: world_page_device.Mapper) path_device_marker_points.Iterator {
+        return path_device_marker_points.fromCommands(self.deviceCommands(mapping));
     }
 
     pub fn devicePolyline(self: Path, allocator: std.mem.Allocator, mapping: world_page_device.Mapper, options: path_device_polyline.CollectOptions) !path_device_polyline.Geometry {
@@ -234,6 +239,53 @@ test "EMF+ Path parses floating points types and indeterminate padding" {
     try std.testing.expectEqual(@as(u32, @bitCast(@as(f32, 3.5))), @as(u32, @bitCast(fill_close.start.floating.x)));
     try std.testing.expectEqual(@as(u32, @bitCast(@as(f32, 1.5))), @as(u32, @bitCast(fill_close.end.floating.x)));
     try std.testing.expect((try fill_segments_iterator.next()) == null);
+}
+
+test "EMF+ Path public device marker points retain Bezier control marker" {
+    var bytes = [_]u8{0} ** 32;
+    putU32(&bytes, 0, 0xdbc01002);
+    putU32(&bytes, 4, 4);
+    putU32(&bytes, 8, 0x4000);
+    for ([_]i16{ 1, 2, 3, 4, 5, 6, 7, 8 }, 0..) |coordinate, index|
+        std.mem.writeInt(i16, bytes[12 + index * 2 ..][0..2], coordinate, .little);
+    bytes[28..32].* = .{ 0x20, 0x23, 0x03, 0x83 };
+    const value = try parse(&bytes, .{});
+    const mapping = world_page_device.resolve(transform_matrix.TransformMatrix.translation(10, 20), page_transform.build(.pixel, 2, .{ .x = 96, .y = 96 })).?;
+    var markers = value.deviceMarkerPoints(mapping);
+    const maybe_move = try markers.next();
+    try std.testing.expect(maybe_move != null);
+    const move = maybe_move.?;
+    try std.testing.expectEqual(path_device_marker_points.Role.move, move.role);
+    try std.testing.expectEqual(@as(usize, 0), move.source_point_index);
+    try std.testing.expectEqual(geometry.PointF{ .x = 22, .y = 44 }, move.point.value);
+    const maybe_control = try markers.next();
+    try std.testing.expect(maybe_control != null);
+    const control = maybe_control.?;
+    try std.testing.expectEqual(path_device_marker_points.Role.bezier_control1, control.role);
+    try std.testing.expectEqual(@as(usize, 1), control.source_point_index);
+    try std.testing.expectEqual(geometry.PointF{ .x = 26, .y = 48 }, control.point.value);
+    try std.testing.expectEqual(@as(u8, 0x23), control.point.point_type.point_type.raw);
+    try std.testing.expect((try markers.next()) == null);
+}
+
+test "EMF+ Path public device marker points retain RLE flag" {
+    var bytes = [_]u8{0} ** 16;
+    putU32(&bytes, 0, 0xdbc01002);
+    putU32(&bytes, 4, 1);
+    putU32(&bytes, 8, 0x0800);
+    bytes[12..16].* = .{ 0x01, 0x02, 0x41, 0x20 };
+    const value = try parse(&bytes, .{});
+    const mapping = world_page_device.resolve(transform_matrix.TransformMatrix.translation(10, 20), page_transform.build(.pixel, 2, .{ .x = 96, .y = 96 })).?;
+    var markers = value.deviceMarkerPoints(mapping);
+    const maybe_marker = try markers.next();
+    try std.testing.expect(maybe_marker != null);
+    const marker = maybe_marker.?;
+    try std.testing.expectEqual(@as(usize, 0), marker.source_point_index);
+    try std.testing.expectEqual(path_device_marker_points.Role.move, marker.role);
+    try std.testing.expectEqual(geometry.PointF{ .x = 22, .y = 44 }, marker.point.value);
+    try std.testing.expectEqual(@as(?bool, false), marker.point.point_type.rle_bezier);
+    try std.testing.expectEqual(@as(u8, 0x20), marker.point.point_type.point_type.raw);
+    try std.testing.expect((try markers.next()) == null);
 }
 
 test "EMF+ Path exposes shared stroke and fill device segments" {

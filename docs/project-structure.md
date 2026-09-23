@@ -106,6 +106,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 - [EMF+ Path device stroke·fill boundary polyline](emf-plus-path-device-boundary-polyline.md)
 - [EMF+ Path device boundary edge iterator](emf-plus-path-device-boundary-edges.md)
 - [EMF+ Path device-space command](emf-plus-path-device-commands.md)
+- [EMF+ Path device marker points](emf-plus-path-device-marker-points.md)
 - [EMF+ Path device figure geometry](emf-plus-path-device-geometry.md)
 - [EMF+ Path 명시적 closing segment 조립](emf-plus-path-segments.md)
 - [EMF+ Path 열린 figure fill boundary 조립](emf-plus-path-fill-segments.md)

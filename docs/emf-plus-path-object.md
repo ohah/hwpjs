@@ -22,6 +22,8 @@
 
 이 계층은 wire 구조와 의미상 enum·count 경계만 검증합니다. Start/Line/Bezier 배열, figure 상태와 cubic Bézier topology는 별도 [Path geometry 계층](emf-plus-path-geometry.md)이, 명시적 닫힘 직선은 [Path closing segment 계층](emf-plus-path-segments.md)이 조립하며 wire parser가 보정하지 않습니다. [Path device command 계층](emf-plus-path-device-commands.md)은 Move와 빈 figure를 포함한 command metadata를, [Path device figure geometry](emf-plus-path-device-geometry.md)는 figure별 point·command 범위와 닫힘을 소유하고, [Path device figure polyline](emf-plus-path-device-polyline.md)은 원본 command snapshot과 평탄화 point range를 함께 소유합니다. [Path device segment 계층](emf-plus-path-device-segments.md)은 stroke/fill segment의 Line·Bézier·closure 역할과 metadata를 보존해 같은 world/page/device 변환을 적용합니다. [공용 cubic evaluator](emf-plus-cubic-evaluation.md)가 단일 parameter 점을 계산합니다. clip boolean geometry·래스터화는 아직 구현하지 않았습니다. PathGradient boundary와 Region/CustomLineCap의 중첩 Path 연결은 각 상위 객체 파트가 소유합니다. 실제 HWP EMF+ 표본 비교와 렌더링 동등성도 아직 남아 있습니다.
 
+[Path device marker point 반복자](emf-plus-path-device-marker-points.md)는 `Path.deviceMarkerPoints()`에서 원본 Move·Line·Bézier control/end의 PathMarker 위치를 제공합니다. marker의 GDI+ 조작 의미는 아직 적용하지 않습니다.
+
 ## 적대적 검증 기록
 
 14개 결함(정수 byte order·부호 확장, point 원자성, 상대/RLE flag 해석, RLE marker·run 초과·0 run, point kind·flag, 전체 정렬·padding, point 한도, ObjectType)을 각각 독립 복사본에 주입했습니다. 캐시를 분리한 Debug·ReleaseSafe·ReleaseFast에서 총 42/42를 모두 검출했습니다. 자동 치환이 실제 diff를 만들지 못한 정수 byte order와 point flag 두 항목은 diff를 확인한 수동 변이로 다시 실행했으며, 무효 실행은 42회에 포함하지 않았습니다. 변이 로그는 `/tmp/hwpjs-emfplus-path-mutants.UDq3zL`에 남겼습니다.

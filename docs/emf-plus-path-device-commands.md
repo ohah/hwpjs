@@ -16,7 +16,7 @@ device `TypedPoint`·`Line`·`Bezier`와 역할별 mapping은 이 모듈이 단�
 
 ## 지원 경계와 검증
 
-이 계층은 Path command의 device 좌표와 metadata까지만 제공하고 [figure geometry 계층](emf-plus-path-device-geometry.md)이 이를 소유·색인합니다. figure별 평탄화는 [device figure polyline](emf-plus-path-device-polyline.md), 명시적/암묵적 closure는 [device boundary polyline](emf-plus-path-device-boundary-polyline.md)이 조립합니다. DashMode 적용, marker 소비, Pen cap/join, fill rule, clipping, rasterization과 저장은 후속 책임입니다. Object Table이 Path payload를 장기 소유하지 않으므로 DrawPath·FillPath record replay가 이 API를 자동 호출하지 않습니다. 로컬 지원 HWP corpus에 EMF+ signature 표본이 없어 실제 한컴 렌더링 동등성을 주장하지 않습니다.
+이 계층은 Path command의 device 좌표와 metadata까지만 제공하고 [figure geometry 계층](emf-plus-path-device-geometry.md)이 이를 소유·색인합니다. [Marker point 반복자](emf-plus-path-device-marker-points.md)는 이 command의 원본 point 중 PathMarker가 설정된 위치를 반환합니다. figure별 평탄화는 [device figure polyline](emf-plus-path-device-polyline.md), 명시적/암묵적 closure는 [device boundary polyline](emf-plus-path-device-boundary-polyline.md)이 조립합니다. DashMode 적용, marker에 따른 GDI+ 조작, Pen cap/join, fill rule, clipping, rasterization과 저장은 후속 책임입니다. Object Table이 Path payload를 장기 소유하지 않으므로 DrawPath·FillPath record replay가 이 API를 자동 호출하지 않습니다. 로컬 지원 HWP corpus에 EMF+ signature 표본이 없어 실제 한컴 렌더링 동등성을 주장하지 않습니다.
 
 합성 fixture는 다중 figure의 Move·Line·Bézier·빈 닫힌 figure 순서, 비대칭 translation/scale, 모든 좌표 역할, DashMode·PathMarker·CloseSubpath, 공개 `Path.deviceCommands()` 연결과 잘린 PointR Bézier 오류 원자성을 검사합니다.
 
