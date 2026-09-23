@@ -2,6 +2,7 @@ const std = @import("std");
 const xml = @import("../xml/root.zig");
 const attrs = @import("xml_attributes.zig");
 const document_xml = @import("document_xml.zig");
+const content = @import("section_tree_content.zig");
 
 pub const Span = struct {
     start: usize,
@@ -60,6 +61,15 @@ pub const Tree = struct {
     /// and can be normalized with Value.toUtf8 while the tree remains alive.
     pub fn attributeValue(self: *const Tree, a: std.mem.Allocator, index: usize, uri: []const u8, local: []const u8) !?xml.attribute_value.Value {
         return @import("section_tree_attributes.zig").find(a, self, index, uri, local);
+    }
+
+    pub const ContentEvent = content.Event;
+    pub const ContentVisitor = content.Visitor;
+
+    /// Visits ordered CharData and CDATA chunks with their exact parent index.
+    /// Raw content borrows this tree; callback failure may follow prior events.
+    pub fn visitContent(self: *const Tree, a: std.mem.Allocator, visitor: ContentVisitor) !void {
+        return content.visit(a, self, visitor);
     }
 };
 

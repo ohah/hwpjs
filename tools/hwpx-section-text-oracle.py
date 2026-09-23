@@ -10,6 +10,7 @@ import json
 from collections import Counter
 from pathlib import Path
 from xml.etree import ElementTree as ET
+from xml.parsers import expat
 from zipfile import BadZipFile, ZipFile
 
 
@@ -82,6 +83,39 @@ def section_attribute_digest(section: ET.Element, counts: dict) -> int:
             digest.update(b"\x01")
             digest.update(len(encoded).to_bytes(4, "little"))
             digest.update(encoded)
+    return int.from_bytes(digest.digest(), "big")
+
+
+def section_direct_content_digest(data: bytes) -> int:
+    """Independent XML parser: direct text/CDATA per element in preorder."""
+    parts = []
+    stack = []
+    parser = expat.ParserCreate()
+
+    def start(_name, _attributes):
+        stack.append(len(parts))
+        parts.append(bytearray())
+
+    def end(_name):
+        stack.pop()
+
+    def content(value):
+        if stack:
+            parts[stack[-1]].extend(value.encode("utf-8"))
+
+    def reject_declaration(*_args):
+        raise ValueError("HWPX oracle does not accept DTD or external entities")
+
+    parser.StartElementHandler = start
+    parser.EndElementHandler = end
+    parser.CharacterDataHandler = content
+    parser.StartDoctypeDeclHandler = reject_declaration
+    parser.ExternalEntityRefHandler = reject_declaration
+    parser.Parse(data, True)
+    digest = hashlib.sha256()
+    for part in parts:
+        digest.update(len(part).to_bytes(4, "little"))
+        digest.update(part)
     return int.from_bytes(digest.digest(), "big")
 
 
@@ -165,12 +199,19 @@ def self_check() -> None:
     counts.update({"R." + field: {"present": 0, "empty": 0} for field in ATTRIBUTE_FIELDS[PARAGRAPH + "run"][1]})
     assert section_attribute_digest(empty, counts) != section_attribute_digest(absent, counts)
     assert counts["P.id"] == {"present": 1, "empty": 1}
+    assert section_direct_content_digest(b"<root>A&amp;<child/>B<![CDATA[C]]></root>") != section_direct_content_digest(b"<root>A&amp;<child>B</child><![CDATA[C]]></root>")
+    try:
+        section_direct_content_digest(b"<!DOCTYPE root><root/>")
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("DTD was not rejected")
 
 
 def main() -> None:
     self_check()
     tree_shards = [
-        {"accepted": 0, "rejected_zip": 0, "encrypted": 0, "sections": 0, "elements": 0, "attribute_digest_sum": 0}
+        {"accepted": 0, "rejected_zip": 0, "encrypted": 0, "sections": 0, "elements": 0, "attribute_digest_sum": 0, "content_digest_sum": 0}
         for _ in range(8)
     ]
     attribute_counts = {
@@ -240,6 +281,9 @@ def main() -> None:
                         shard["attribute_digest_sum"] = (
                             shard["attribute_digest_sum"] + section_attribute_digest(section, attribute_counts)
                         ) % HASH_MODULUS
+                        shard["content_digest_sum"] = (
+                            shard["content_digest_sum"] + section_direct_content_digest(section_bytes)
+                        ) % HASH_MODULUS
                         direct = sum(child.tag == PARAGRAPH + "p" for child in section)
                         result["direct_paragraphs"] += direct
                         result["sections_without_direct_paragraph"] += direct == 0
@@ -251,6 +295,7 @@ def main() -> None:
                 shard["rejected_zip"] += 1
     for shard in tree_shards:
         shard["attribute_digest_sum"] = f'{shard["attribute_digest_sum"]:064x}'
+        shard["content_digest_sum"] = f'{shard["content_digest_sum"]:064x}'
     result["section_tree_shards"] = tree_shards
     result["section_attribute_counts"] = attribute_counts
     result["inline"] = dict(sorted(result["inline"].items()))

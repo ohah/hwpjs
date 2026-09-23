@@ -112,6 +112,16 @@ test "HWPX section tree selects a spine section and survives archive release" {
     const id_utf8 = try id.toUtf8(a, 16);
     defer a.free(id_utf8);
     try std.testing.expectEqualStrings("1", id_utf8);
+    var chunks: usize = 0;
+    const Count = struct {
+        fn onContent(raw: *anyopaque, event: tree.Tree.ContentEvent) !void {
+            const count: *usize = @ptrCast(@alignCast(raw));
+            try std.testing.expectEqual(@as(usize, 3), event.parent_index);
+            count.* += 1;
+        }
+    };
+    try parsed.visitContent(a, .{ .context = &chunks, .on_content = Count.onContent });
+    try std.testing.expectEqual(@as(usize, 2), chunks);
 }
 
 test "HWPX section tree rejects roots, malformed source and exact limits" {
@@ -131,7 +141,7 @@ test "HWPX section tree spans remain raw UTF16 for both byte orders" {
     const a = std.testing.allocator;
     inline for (.{ std.builtin.Endian.little, std.builtin.Endian.big }) |order| {
         const name = if (order == .little) "UTF-16LE" else "UTF-16BE";
-        const ascii = "<?xml version='1.0' encoding='" ++ name ++ "'?><s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section'><x id='&#49;'/></s:sec>";
+        const ascii = "<?xml version='1.0' encoding='" ++ name ++ "'?><s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section'><x id='&#49;'>A&#50;<![CDATA[C]]></x></s:sec>";
         const raw = try a.alloc(u8, 2 + ascii.len * 2);
         defer a.free(raw);
         @memcpy(raw[0..2], if (order == .little) "\xff\xfe" else "\xfe\xff");
@@ -142,11 +152,32 @@ test "HWPX section tree spans remain raw UTF16 for both byte orders" {
         try std.testing.expectEqual(@as(usize, 2), parsed.elements.len);
         try std.testing.expect(parsed.elements[0].is(section_uri, "sec"));
         try std.testing.expect(parsed.elements[1].is("", "x"));
-        try std.testing.expectEqual(@as(usize, 2 * "<x id='&#49;'/>".len), parsed.sourceOf(1).len);
+        try std.testing.expectEqual(@as(usize, 2 * "<x id='&#49;'>A&#50;<![CDATA[C]]></x>".len), parsed.sourceOf(1).len);
         const id = (try parsed.attributeValue(a, 1, "", "id")).?;
         const id_utf8 = try id.toUtf8(a, 16);
         defer a.free(id_utf8);
         try std.testing.expectEqualStrings("1", id_utf8);
+        const Capture = struct {
+            allocator: std.mem.Allocator,
+            chunks: std.ArrayList([]u8) = .empty,
+
+            fn onContent(context: *anyopaque, event: tree.Tree.ContentEvent) !void {
+                const self: *@This() = @ptrCast(@alignCast(context));
+                try std.testing.expectEqual(@as(usize, 1), event.parent_index);
+                const bytes = try event.value.toUtf8(self.allocator, 16);
+                errdefer self.allocator.free(bytes);
+                try self.chunks.append(self.allocator, bytes);
+            }
+        };
+        var capture: Capture = .{ .allocator = a };
+        defer {
+            for (capture.chunks.items) |bytes| a.free(bytes);
+            capture.chunks.deinit(a);
+        }
+        try parsed.visitContent(a, .{ .context = &capture, .on_content = Capture.onContent });
+        try std.testing.expectEqual(@as(usize, 2), capture.chunks.items.len);
+        try std.testing.expectEqualStrings("A2", capture.chunks.items[0]);
+        try std.testing.expectEqualStrings("C", capture.chunks.items[1]);
     }
 }
 
@@ -171,6 +202,81 @@ test "HWPX section tree attribute lookup cleans up on every allocation failure" 
             const text = try value.toUtf8(allocator, 16);
             defer allocator.free(text);
             try std.testing.expectEqualStrings("1&", text);
+        }
+    }.run, .{&parsed});
+}
+
+test "HWPX section tree content visits mixed text and CDATA under exact parents" {
+    const a = std.testing.allocator;
+    const source = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph' xmlns:x='urn:extension'>" ++
+        "A<!-- ignored --><p:p>B&amp;<p:run><p:t>X<![CDATA[Y]]><x:mark/><?pi ignored?>Z</p:t></p:run>T</p:p>Q</s:sec>";
+    var parsed = try tree.parse(a, source, 0, 0, .{});
+    defer parsed.deinit(a);
+    const Collector = struct {
+        allocator: std.mem.Allocator,
+        events: std.ArrayList(tree.Tree.ContentEvent) = .empty,
+
+        fn onContent(raw: *anyopaque, event: tree.Tree.ContentEvent) !void {
+            const self: *@This() = @ptrCast(@alignCast(raw));
+            try self.events.append(self.allocator, event);
+        }
+    };
+    var collector: Collector = .{ .allocator = a };
+    defer collector.events.deinit(a);
+    try parsed.visitContent(a, .{ .context = &collector, .on_content = Collector.onContent });
+    try std.testing.expectEqual(@as(usize, 7), collector.events.items.len);
+    const parents = [_]usize{ 0, 1, 3, 3, 3, 1, 0 };
+    const expected = [_][]const u8{ "A", "B&", "X", "Y", "Z", "T", "Q" };
+    for (collector.events.items, 0..) |event, index| {
+        try std.testing.expectEqual(parents[index], event.parent_index);
+        try std.testing.expectEqual(if (index == 3) @as(@TypeOf(event.value.kind), .cdata) else .char_data, event.value.kind);
+        const bytes = try event.value.toUtf8(a, 16);
+        defer a.free(bytes);
+        try std.testing.expectEqualStrings(expected[index], bytes);
+    }
+    const Failing = struct {
+        calls: usize = 0,
+        fn onContent(raw: *anyopaque, _: tree.Tree.ContentEvent) !void {
+            const self: *@This() = @ptrCast(@alignCast(raw));
+            self.calls += 1;
+            if (self.calls == 2) return error.StopAfterTwo;
+        }
+    };
+    var failing: Failing = .{};
+    try std.testing.expectError(error.StopAfterTwo, parsed.visitContent(a, .{ .context = &failing, .on_content = Failing.onContent }));
+    try std.testing.expectEqual(@as(usize, 2), failing.calls);
+    try parsed.visitContent(a, .{ .context = &collector, .on_content = Collector.onContent });
+    const original = parsed.elements[1].start_tag;
+    parsed.elements[1].start_tag.start += 1;
+    try std.testing.expectError(error.InvalidSourceSpan, parsed.visitContent(a, .{ .context = &collector, .on_content = Collector.onContent }));
+    parsed.elements[1].start_tag = original;
+    const original_parent = parsed.elements[3].parent;
+    parsed.elements[3].parent = 1;
+    try std.testing.expectError(error.InvalidSectionTreeDepth, parsed.visitContent(a, .{ .context = &collector, .on_content = Collector.onContent }));
+    parsed.elements[3].parent = original_parent;
+    const original_end = parsed.elements[4].end;
+    parsed.elements[4].end += 1;
+    try std.testing.expectError(error.InvalidSourceSpan, parsed.visitContent(a, .{ .context = &collector, .on_content = Collector.onContent }));
+    parsed.elements[4].end = original_end;
+}
+
+test "HWPX section tree content replay cleans up on every allocation failure" {
+    const a = std.testing.allocator;
+    const source = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section'><p>first&amp;second<![CDATA[third]]></p></s:sec>";
+    var parsed = try tree.parse(a, source, 0, 0, .{});
+    defer parsed.deinit(a);
+    try std.testing.checkAllAllocationFailures(a, struct {
+        fn run(allocator: std.mem.Allocator, parsed_tree: *const tree.Tree) !void {
+            var count: usize = 0;
+            const C = struct {
+                fn onContent(raw: *anyopaque, event: tree.Tree.ContentEvent) !void {
+                    const result: *usize = @ptrCast(@alignCast(raw));
+                    _ = event;
+                    result.* += 1;
+                }
+            };
+            try parsed_tree.visitContent(allocator, .{ .context = &count, .on_content = C.onContent });
+            try std.testing.expectEqual(@as(usize, 2), count);
         }
     }.run, .{&parsed});
 }

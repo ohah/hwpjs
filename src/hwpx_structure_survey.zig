@@ -1039,6 +1039,36 @@ fn sectionAttributeDigest(a: std.mem.Allocator, parsed: *const package.SectionTr
     return std.mem.readInt(u256, &output, .big);
 }
 
+fn sectionDirectContentDigest(a: std.mem.Allocator, parsed: *const package.SectionTree) !u256 {
+    const parts = try a.alloc(std.ArrayList(u8), parsed.elements.len);
+    defer a.free(parts);
+    @memset(parts, .empty);
+    defer for (parts) |*part| part.deinit(a);
+    const Context = struct {
+        allocator: std.mem.Allocator,
+        parts: []std.ArrayList(u8),
+
+        fn onContent(raw: *anyopaque, event: package.SectionTree.ContentEvent) !void {
+            const self: *@This() = @ptrCast(@alignCast(raw));
+            const bytes = try event.value.toUtf8(self.allocator, 128 * 1024 * 1024);
+            defer self.allocator.free(bytes);
+            try self.parts[event.parent_index].appendSlice(self.allocator, bytes);
+        }
+    };
+    var context: Context = .{ .allocator = a, .parts = parts };
+    try parsed.visitContent(a, .{ .context = &context, .on_content = Context.onContent });
+    var hash = std.crypto.hash.sha2.Sha256.init(.{});
+    for (parts) |part| {
+        var length: [4]u8 = undefined;
+        std.mem.writeInt(u32, &length, @intCast(part.items.len), .little);
+        hash.update(&length);
+        hash.update(part.items);
+    }
+    var output: [32]u8 = undefined;
+    hash.final(&output);
+    return std.mem.readInt(u256, &output, .big);
+}
+
 fn surveySectionTreeShard(shard: usize) !void {
     const a = std.testing.allocator;
     const roots = [_][]const u8{ "legacy/rust/crates/hwp-core/tests/fixtures", "reference/rhwp/samples" };
@@ -1048,6 +1078,7 @@ fn surveySectionTreeShard(shard: usize) !void {
     var sections: usize = 0;
     var elements: usize = 0;
     var attribute_digest_sum: u256 = 0;
+    var content_digest_sum: u256 = 0;
     var attribute_counts: [6]SectionAttributeCount = @splat(.{});
     for (roots, 0..) |root, root_index| {
         const dir = try std.Io.Dir.cwd().openDir(std.testing.io, root, .{ .iterate = true });
@@ -1123,12 +1154,13 @@ fn surveySectionTreeShard(shard: usize) !void {
                 try std.testing.expectEqual(parsed.elements.len - 1, child_edges);
                 try std.testing.expectEqual(child_edges, linked_children);
                 attribute_digest_sum +%= try sectionAttributeDigest(a, &parsed, &attribute_counts);
+                content_digest_sum +%= try sectionDirectContentDigest(a, &parsed);
                 sections += 1;
                 elements += parsed.elements.len;
             }
         }
     }
-    std.debug.print("HWPX section tree shard={d} accepted={d} rejected_zip={d} encrypted={d} sections={d} elements={d} attribute_digest={x:0>64}\n", .{ shard, accepted, rejected_zip, encrypted, sections, elements, attribute_digest_sum });
+    std.debug.print("HWPX section tree shard={d} accepted={d} rejected_zip={d} encrypted={d} sections={d} elements={d} attribute_digest={x:0>64} content_digest={x:0>64}\n", .{ shard, accepted, rejected_zip, encrypted, sections, elements, attribute_digest_sum, content_digest_sum });
     const expected_accepted = [_]usize{ 64, 68, 56, 49, 61, 59, 58, 61 };
     const expected_rejected_zip = [_]usize{ 1, 3, 0, 2, 0, 0, 0, 0 };
     const expected_encrypted = [_]usize{ 0, 0, 0, 0, 2, 0, 0, 0 };
@@ -1150,6 +1182,17 @@ fn surveySectionTreeShard(shard: usize) !void {
         "bc0e3f22b0d5c2b5a00f017a7df8e2431d5da532bf53a36bdb817ec37259b4ce",
     };
     try std.testing.expectEqual(try std.fmt.parseInt(u256, expected_attribute_digests[shard], 16), attribute_digest_sum);
+    const expected_content_digests = [_][]const u8{
+        "44edfe26f54be4a7e9df07936a7a552b96bcbd0dd2e207752d5af95bf825ab2c",
+        "2c222f7857caec4bc27e899155fb9ce9d46e600454dbf84cd4f50c2fc47ce281",
+        "897632ac087b03de47b2727eda417149247e1aea78c6b5d628dcdc99b43905f7",
+        "53bb3eb7438eb94ca5472772c9f4559697641e9e2b4900760d1116d5e02cdf2c",
+        "c6156726b9138184189354842fa8df889d12f65caa8b4d9855278fed9b443b6d",
+        "4f91047e4250aec1f1cc067d6d88daa836f1ab83b16072b23ef7bed4b35d2302",
+        "96f86761af18d5c3315af908b71a1a51eb94ee0a631d6e5fdd7c5be9347a8868",
+        "57f5e54270cdce33bee8d3963bd9ec1281ca1d1e58a84e055c809ba7d69bb302",
+    };
+    try std.testing.expectEqual(try std.fmt.parseInt(u256, expected_content_digests[shard], 16), content_digest_sum);
 }
 
 test "HWPX corpus section tree shard 0" {

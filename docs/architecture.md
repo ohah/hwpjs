@@ -24,6 +24,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [Section 원문·요소 인덱스](hwpx-section-tree.md)는 같은 spine 선택과 공통 XML 검사를 사용해 미지원 요소까지 포함한 원문과 부모·자식 구조를 소유합니다. 텍스트 이벤트를 전체 문서 모델로 오인하지 않도록 이 인덱스 위에서 의미 계층을 단계적으로 조립합니다.
 
+[Section 직접 문자 콘텐츠 순회](hwpx-section-content.md)는 소유 원문을 다시 파싱해 문자·CDATA 조각을 인덱스의 정확한 부모 요소에 연결합니다. 의미 계층은 이 순회와 원문·요소 인덱스를 재사용하며 표시 문장이나 편집 모델을 임의 조립하지 않습니다.
+
 이미지/XML 외부에서도 재사용할 수 있는 언어 태그 규칙은 `src/text/`에 둡니다. [BCP 47 문법 검사](bcp47-syntax.md)와 [IANA 등록 검증](bcp47-registry.md)은 다른 단계입니다. [PNG iTXt](png-international-text.md)는 등록 검사와 UTF-8·압축 검사를 조립하며 extension 의미 보류를 별도로 보고합니다.
 
 바이트 리더와 CFB 읽기·strict 검증·새 컨테이너 쓰기를 구현했습니다. CFB의 각 책임은 개별 파일로 나누며, `reader.zig`는 소유권과 처리 순서를 조립합니다. 상세 API와 검증 범위는 [CFB 읽기·쓰기](cfb-reader.md)를 참고하세요.
