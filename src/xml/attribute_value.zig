@@ -24,6 +24,22 @@ pub const Value = struct {
         const input = try Input.init(self.text.raw, self.text.encoding, .{ .max_bytes = self.text.raw.len, .max_characters = self.text.raw.len });
         return .{ .cursor = .{ .input = input, .start = 0, .max_bytes = self.text.raw.len }, .options = self.reference_options };
     }
+    /// XML-normalized Unicode scalars as owned UTF-8, including resolved
+    /// numeric/predefined references. The caller owns the returned bytes.
+    pub fn toUtf8(self: Value, a: @import("std").mem.Allocator, max_bytes: usize) ![]u8 {
+        const std = @import("std");
+        var it = try self.iterator();
+        var out: std.ArrayList(u8) = .empty;
+        defer out.deinit(a);
+        while (try it.next()) |part| {
+            const scalar = part.scalar() orelse return error.UnresolvedXmlEntity;
+            var encoded: [4]u8 = undefined;
+            const n = try std.unicode.utf8Encode(scalar, &encoded);
+            if (out.items.len > max_bytes or n > max_bytes - out.items.len) return error.LimitExceeded;
+            try out.appendSlice(a, encoded[0..n]);
+        }
+        return out.toOwnedSlice(a);
+    }
 };
 pub const Iterator = struct {
     cursor: Cursor,

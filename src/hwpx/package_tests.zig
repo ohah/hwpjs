@@ -291,3 +291,321 @@ test "HWPX EOCD signature inside archive comment is not selected" {
     try std.testing.expectEqual(@as(usize, 1), archive.entries.len);
     archive.deinit();
 }
+
+test "HWPX package relationships from real documents" {
+    const a = std.testing.allocator;
+    for ([_][]const u8{ "example", "noori" }) |name| {
+        const bytes = try loadFixture(a, name);
+        defer a.free(bytes);
+        var document = try package.inspectDocument(a, bytes, .{});
+        defer document.deinit(a);
+        try std.testing.expectEqualStrings("Contents/content.hpf", document.container.path);
+        try std.testing.expect(document.manifest.items.len >= 3);
+        try std.testing.expect(document.manifest.spine.len >= 2);
+        try std.testing.expectEqualStrings("Contents/header.xml", document.manifest.items[document.manifest.spine[0].item_index].href);
+        try std.testing.expectEqualStrings("Contents/section0.xml", document.manifest.items[document.manifest.spine[1].item_index].href);
+        try std.testing.expect(document.decoded_xml_bytes > 0);
+    }
+}
+
+test "HWPX external BinData link remains an unvisited reference" {
+    const a = std.testing.allocator;
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "reference/rhwp/samples/issue1891_external_bindata_link.hwpx", a, .limited(1_000_000));
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    var external: usize = 0;
+    for (document.manifest.items) |item| {
+        if (item.embedded == false) {
+            try std.testing.expectEqual(@as(?usize, null), item.entry_index);
+            external += 1;
+        }
+    }
+    try std.testing.expect(external > 0);
+}
+
+test "HWPX real DEFLATE mimetype keeps exact decoded identity" {
+    const a = std.testing.allocator;
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "reference/rhwp/samples/task2169/empty_ladder.hwpx", a, .limited(1_000_000));
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    const mime_entry = document.archive.find("mimetype") orelse unreachable;
+    try std.testing.expectEqual(@as(u16, 8), mime_entry.method);
+    const decoded = try document.archive.decode(mime_entry, package.mime.len);
+    defer a.free(decoded);
+    try std.testing.expectEqualStrings(package.mime, decoded);
+}
+
+test "HWPX package relationships cover converted and incomplete preview samples" {
+    const a = std.testing.allocator;
+    const cases = [_]struct { path: []const u8, missing_optional: usize }{
+        .{ .path = "reference/rhwp/samples/hwp3-sample10-hwpx.hwpx", .missing_optional = 0 },
+        .{ .path = "reference/rhwp/samples/rowbreak-problem-pages.hwpx", .missing_optional = 1 },
+        .{ .path = "legacy/rust/crates/hwp-core/tests/fixtures/multicolumns.hwpx", .missing_optional = 0 },
+        .{ .path = "reference/rhwp/samples/issue2006/1790387_prep_final_report.hwpx", .missing_optional = 0 },
+    };
+    for (cases) |case| {
+        const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, case.path, a, .limited(25_000_000));
+        defer a.free(bytes);
+        var document = try package.inspectDocument(a, bytes, .{});
+        defer document.deinit(a);
+        try std.testing.expectEqual(case.missing_optional, document.container.missing_optional_roots);
+        try std.testing.expect(document.manifest.items.len > 0);
+        try std.testing.expect(document.manifest.spine.len > 0);
+    }
+}
+
+const Source = struct { name: []const u8, data: []const u8 };
+
+fn storedZip(a: std.mem.Allocator, sources: []const Source) ![]u8 {
+    var locals_size: usize = 0;
+    var central_size: usize = 0;
+    for (sources) |source| {
+        locals_size += 30 + source.name.len + source.data.len;
+        central_size += 46 + source.name.len;
+    }
+    const bytes = try a.alloc(u8, locals_size + central_size + 22);
+    @memset(bytes, 0);
+    var local_offset: usize = 0;
+    var central_offset: usize = locals_size;
+    for (sources) |source| {
+        const crc = std.hash.Crc32.hash(source.data);
+        write32(bytes, local_offset, 0x04034b50);
+        write16(bytes, local_offset + 4, 20);
+        write32(bytes, local_offset + 14, crc);
+        write32(bytes, local_offset + 18, @intCast(source.data.len));
+        write32(bytes, local_offset + 22, @intCast(source.data.len));
+        write16(bytes, local_offset + 26, @intCast(source.name.len));
+        @memcpy(bytes[local_offset + 30 ..][0..source.name.len], source.name);
+        @memcpy(bytes[local_offset + 30 + source.name.len ..][0..source.data.len], source.data);
+        write32(bytes, central_offset, 0x02014b50);
+        write16(bytes, central_offset + 4, 20);
+        write16(bytes, central_offset + 6, 20);
+        write32(bytes, central_offset + 16, crc);
+        write32(bytes, central_offset + 20, @intCast(source.data.len));
+        write32(bytes, central_offset + 24, @intCast(source.data.len));
+        write16(bytes, central_offset + 28, @intCast(source.name.len));
+        write32(bytes, central_offset + 42, @intCast(local_offset));
+        @memcpy(bytes[central_offset + 46 ..][0..source.name.len], source.name);
+        local_offset += 30 + source.name.len + source.data.len;
+        central_offset += 46 + source.name.len;
+    }
+    const end = locals_size + central_size;
+    write32(bytes, end, 0x06054b50);
+    write16(bytes, end + 8, @intCast(sources.len));
+    write16(bytes, end + 10, @intCast(sources.len));
+    write32(bytes, end + 12, @intCast(central_size));
+    write32(bytes, end + 16, @intCast(locals_size));
+    return bytes;
+}
+
+const package_container = "<c:container xmlns:c=\"urn:oasis:names:tc:opendocument:xmlns:container\"><c:rootfiles><c:rootfile media-type=\"application/hwpml-package+xml\" full-path=\"Contents/content.hpf\"/><c:rootfile full-path=\"Preview/PrvText.txt\" media-type=\"text/plain\"/></c:rootfiles></c:container>";
+const opf_prefix = "<p:package xmlns:p=\"http://www.idpf.org/2007/opf/\"><p:manifest>";
+const opf_suffix = "</p:manifest><p:spine><p:itemref idref=\"s0\" linear=\"no\"/></p:spine></p:package>";
+const simple_item = "<p:item id=\"s0\" href=\"Contents/section0.xml\" media-type=\"application/xml\"/>";
+const simple_hpf = opf_prefix ++ simple_item ++ opf_suffix;
+
+fn syntheticPackage(a: std.mem.Allocator, container_xml: []const u8, hpf_xml: []const u8, include_section: bool) ![]u8 {
+    var sources = [_]Source{
+        .{ .name = "mimetype", .data = package.mime },
+        .{ .name = "META-INF/container.xml", .data = container_xml },
+        .{ .name = "Contents/content.hpf", .data = hpf_xml },
+        .{ .name = "Contents/section0.xml", .data = "<section/>" },
+    };
+    return storedZip(a, sources[0..if (include_section) 4 else 3]);
+}
+
+test "HWPX synthetic package resolves renamed prefixes and reports optional missing roots" {
+    const a = std.testing.allocator;
+    const hpf = opf_prefix ++ "<p:item media-type=\"application/xml\" href=\"Contents/section0.xml\" id=\"s0\"/><p:item id=\"ext\" href=\"D:\\images\\a.gif\" media-type=\"image/gif\" isEmbeded=\"0\"/>" ++ opf_suffix;
+    const bytes = try syntheticPackage(a, package_container, hpf, true);
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    try std.testing.expectEqual(@as(usize, 1), document.container.optional_roots);
+    try std.testing.expectEqual(@as(usize, 1), document.container.missing_optional_roots);
+    try std.testing.expectEqual(@as(usize, 2), document.manifest.items.len);
+    try std.testing.expectEqual(@as(usize, 1), document.manifest.spine.len);
+    try std.testing.expectEqual(@as(?bool, false), document.manifest.spine[0].linear);
+    try std.testing.expectEqual(@as(?bool, false), document.manifest.items[1].embedded);
+    try std.testing.expectEqual(@as(?usize, null), document.manifest.items[1].entry_index);
+}
+
+test "HWPX manifest rejects missing embedded target and broken spine" {
+    const a = std.testing.allocator;
+    const hpf = opf_prefix ++ "<p:item id=\"s0\" href=\"Contents/section0.xml\" media-type=\"application/xml\"/>" ++ opf_suffix;
+    const missing_target = try syntheticPackage(a, package_container, hpf, false);
+    defer a.free(missing_target);
+    try expectDocumentError(a, missing_target, error.MissingEmbeddedEntry);
+    const broken_hpf = opf_prefix ++ "<p:item id=\"different\" href=\"Contents/section0.xml\" media-type=\"application/xml\"/>" ++ opf_suffix;
+    const broken_spine = try syntheticPackage(a, package_container, broken_hpf, true);
+    defer a.free(broken_spine);
+    try expectDocumentError(a, broken_spine, error.MissingSpineItem);
+}
+
+fn expectDocumentError(a: std.mem.Allocator, bytes: []const u8, expected: anyerror) !void {
+    return expectDocumentErrorWithOptions(a, bytes, .{}, expected);
+}
+
+fn expectDocumentErrorWithOptions(a: std.mem.Allocator, bytes: []const u8, options: package.DocumentOptions, expected: anyerror) !void {
+    if (package.inspectDocument(a, bytes, options)) |value| {
+        var document = value;
+        document.deinit(a);
+        return error.TestExpectedError;
+    } else |actual| try std.testing.expectEqual(expected, actual);
+}
+
+test "HWPX XML package relationship adversarial cases" {
+    const a = std.testing.allocator;
+    const cases = [_]struct { container_xml: []const u8 = package_container, hpf_xml: []const u8 = simple_hpf, expected: anyerror }{
+        .{ .hpf_xml = opf_prefix ++ simple_item ++ simple_item ++ opf_suffix, .expected = error.DuplicateManifestId },
+        .{ .hpf_xml = opf_prefix ++ "<p:item id=\"s0\" href=\"../outside.xml\" media-type=\"application/xml\"/>" ++ opf_suffix, .expected = error.InvalidItemHref },
+        .{ .hpf_xml = opf_prefix ++ "<p:item id=\"s0\" href=\"&#46;&#46;/outside.xml\" media-type=\"application/xml\"/>" ++ opf_suffix, .expected = error.InvalidItemHref },
+        .{ .hpf_xml = opf_prefix ++ "<p:item id=\"s0\" href=\"Contents/section0.xml\" media-type=\"application/xml\" isEmbeded=\"maybe\"/>" ++ opf_suffix, .expected = error.InvalidEmbeddedValue },
+        .{ .hpf_xml = "<p:package><p:manifest>" ++ simple_item ++ opf_suffix, .expected = error.UnboundXmlPrefix },
+        .{ .hpf_xml = "<q:package xmlns:q=\"urn:wrong\"><q:manifest/><q:spine/></q:package>", .expected = error.InvalidPackageRoot },
+        .{ .hpf_xml = "<!DOCTYPE x><p:package xmlns:p=\"http://www.idpf.org/2007/opf/\"/>", .expected = error.UnsupportedXmlDtd },
+        .{ .hpf_xml = "<p:package xmlns:p=\"http://www.idpf.org/2007/opf/\"><p:spine/></p:package>", .expected = error.MissingManifest },
+        .{ .hpf_xml = "<p:package xmlns:p=\"http://www.idpf.org/2007/opf/\"><p:manifest/></p:package>", .expected = error.MissingSpine },
+        .{ .hpf_xml = opf_prefix ++ simple_item ++ "</p:manifest><p:spine><p:itemref idref=\"s0\" linear=\"sometimes\"/></p:spine></p:package>", .expected = error.InvalidSpineLinear },
+        .{ .container_xml = "<c:container xmlns:c=\"urn:wrong\"><c:rootfiles/></c:container>", .expected = error.InvalidContainerRoot },
+        .{ .container_xml = "<c:container xmlns:c=\"urn:oasis:names:tc:opendocument:xmlns:container\"><c:rootfiles><c:rootfile full-path=\"Contents/content.hpf\" media-type=\"application/hwpml-package+xml\"/><c:rootfile full-path=\"Contents/content.hpf\" media-type=\"application/hwpml-package+xml\"/></c:rootfiles></c:container>", .expected = error.DuplicatePackageRoot },
+        .{ .container_xml = "<c:container xmlns:c=\"urn:oasis:names:tc:opendocument:xmlns:container\"><c:rootfiles><c:rootfile full-path=\"Contents/content.hpf\"/></c:rootfiles></c:container>", .expected = error.MissingRootMediaType },
+    };
+    for (cases) |case| {
+        const bytes = try syntheticPackage(a, case.container_xml, case.hpf_xml, true);
+        defer a.free(bytes);
+        try expectDocumentError(a, bytes, case.expected);
+        const original = try syntheticPackage(a, package_container, simple_hpf, true);
+        defer a.free(original);
+        var valid = try package.inspectDocument(a, original, .{});
+        valid.deinit(a);
+    }
+}
+
+test "HWPX XML manifest uses expanded names and decoded attribute values" {
+    const a = std.testing.allocator;
+    const hpf = opf_prefix ++ "<!-- <p:item id=\"fake\" href=\"missing.xml\" media-type=\"application/xml\"/> --><![CDATA[<p:item id=\"fake2\"/>]]><q:item xmlns:q=\"urn:other\" id=\"other\" href=\"missing.xml\"/><p:item media-type=\"application/xml\" href=\"Contents/section0&#x2e;xml\" id=\"s0\"/>" ++ opf_suffix;
+    const bytes = try syntheticPackage(a, package_container, hpf, true);
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    try std.testing.expectEqual(@as(usize, 1), document.manifest.items.len);
+    try std.testing.expectEqualStrings("Contents/section0.xml", document.manifest.items[0].href);
+}
+
+fn asciiUtf16le(a: std.mem.Allocator, ascii: []const u8) ![]u8 {
+    const out = try a.alloc(u8, 2 + ascii.len * 2);
+    out[0] = 0xff;
+    out[1] = 0xfe;
+    for (ascii, 0..) |c, i| {
+        out[2 + i * 2] = c;
+        out[3 + i * 2] = 0;
+    }
+    return out;
+}
+
+test "HWPX package XML UTF16LE keeps namespace and attribute identity" {
+    const a = std.testing.allocator;
+    const container_xml = try asciiUtf16le(a, package_container);
+    defer a.free(container_xml);
+    const hpf_xml = try asciiUtf16le(a, simple_hpf);
+    defer a.free(hpf_xml);
+    const bytes = try syntheticPackage(a, container_xml, hpf_xml, true);
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    try std.testing.expectEqualStrings("Contents/content.hpf", document.container.path);
+    try std.testing.expectEqualStrings("Contents/section0.xml", document.manifest.items[0].href);
+}
+
+test "HWPX two XML files share exact byte and item budgets" {
+    const a = std.testing.allocator;
+    const bytes = try syntheticPackage(a, package_container, simple_hpf, true);
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    const exact = document.decoded_xml_bytes;
+    const manifest_bytes = document.manifest.xml_bytes;
+    document.deinit(a);
+    var at_limit = try package.inspectDocument(a, bytes, .{ .max_total_xml_bytes = exact });
+    at_limit.deinit(a);
+    try expectDocumentErrorWithOptions(a, bytes, .{ .max_total_xml_bytes = exact - 1 }, error.LimitExceeded);
+    try expectDocumentErrorWithOptions(a, bytes, .{ .manifest = .{ .max_xml_bytes = manifest_bytes - 1 } }, error.LimitExceeded);
+    try expectDocumentErrorWithOptions(a, bytes, .{ .manifest = .{ .max_items = 0 } }, error.LimitExceeded);
+    try expectDocumentErrorWithOptions(a, bytes, .{ .manifest = .{ .max_spine = 0 } }, error.LimitExceeded);
+}
+
+test "HWPX package assembly allocation failures and explicit cleanup" {
+    const a = std.testing.allocator;
+    const valid = try syntheticPackage(a, package_container, simple_hpf, true);
+    defer a.free(valid);
+    const missing = try syntheticPackage(a, package_container, simple_hpf, false);
+    defer a.free(missing);
+    try std.testing.checkAllAllocationFailures(a, struct {
+        fn run(allocator: std.mem.Allocator, bytes: []const u8) !void {
+            var document = try package.inspectDocument(allocator, bytes, .{});
+            document.deinit(allocator);
+        }
+    }.run, .{valid});
+    try std.testing.checkAllAllocationFailures(a, struct {
+        fn run(allocator: std.mem.Allocator, bytes: []const u8) !void {
+            if (package.inspectDocument(allocator, bytes, .{})) |value| {
+                var document = value;
+                document.deinit(allocator);
+                return error.TestExpectedError;
+            } else |err| {
+                if (err == error.OutOfMemory) return err;
+                try std.testing.expectEqual(error.MissingEmbeddedEntry, err);
+            }
+        }
+    }.run, .{missing});
+    var checked: std.heap.DebugAllocator(.{ .safety = true, .enable_memory_limit = true }) = .init;
+    defer _ = checked.deinit();
+    var document = try package.inspectDocument(checked.allocator(), valid, .{});
+    document.deinit(checked.allocator());
+    try std.testing.expectEqual(@as(usize, 0), checked.total_requested_bytes);
+    if (package.inspectDocument(checked.allocator(), missing, .{})) |value| {
+        var unexpected = value;
+        unexpected.deinit(checked.allocator());
+        return error.TestExpectedError;
+    } else |err| try std.testing.expectEqual(error.MissingEmbeddedEntry, err);
+    try std.testing.expectEqual(@as(usize, 0), checked.total_requested_bytes);
+}
+
+test "HWPX corpus package relationships read-only survey" {
+    const a = std.testing.allocator;
+    const roots = [_][]const u8{ "legacy/rust/crates/hwp-core/tests/fixtures", "reference/rhwp/samples" };
+    var total: usize = 0;
+    var accepted: usize = 0;
+    var errors: std.StringHashMapUnmanaged(usize) = .empty;
+    defer errors.deinit(a);
+    for (roots) |root| {
+        const dir = try std.Io.Dir.cwd().openDir(std.testing.io, root, .{ .iterate = true });
+        defer dir.close(std.testing.io);
+        var walker = try dir.walk(a);
+        defer walker.deinit();
+        while (try walker.next(std.testing.io)) |entry| {
+            if (entry.kind != .file or !std.mem.endsWith(u8, entry.path, ".hwpx")) continue;
+            total += 1;
+            const bytes = try dir.readFileAlloc(std.testing.io, entry.path, a, .limited(25_000_000));
+            defer a.free(bytes);
+            if (package.inspectDocument(a, bytes, .{})) |value| {
+                var document = value;
+                document.deinit(a);
+                accepted += 1;
+            } else |err| {
+                const slot = try errors.getOrPut(a, @errorName(err));
+                if (!slot.found_existing) slot.value_ptr.* = 0;
+                slot.value_ptr.* += 1;
+            }
+        }
+    }
+    std.debug.print("HWPX package corpus: total={d} accepted={d}\n", .{ total, accepted });
+    var it = errors.iterator();
+    while (it.next()) |item| std.debug.print("  {s}: {d}\n", .{ item.key_ptr.*, item.value_ptr.* });
+    try std.testing.expectEqual(@as(usize, 484), total);
+    try std.testing.expectEqual(@as(usize, 478), accepted);
+    try std.testing.expectEqual(@as(usize, 1), errors.count());
+    try std.testing.expectEqual(@as(?usize, 6), errors.get("MissingEndRecord"));
+}

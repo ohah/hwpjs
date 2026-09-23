@@ -1,18 +1,56 @@
 const std = @import("std");
 const zip = @import("../zip/archive.zig");
+const container = @import("container_manifest.zig");
+const content_manifest = @import("content_manifest.zig");
 
 pub const Archive = zip.Archive;
 pub const Options = zip.Options;
 pub const mime = "application/hwp+zip";
+pub const DocumentOptions = struct {
+    // The archive index also contains large BinData/section entries. Their
+    // declared sizes are bounded here; this call only decodes the two small
+    // package XML members under the separate limits below.
+    zip: zip.Options = .{ .max_entry_bytes = 512 * 1024 * 1024 },
+    max_container_xml_bytes: usize = 1024 * 1024,
+    max_total_xml_bytes: usize = 2 * 1024 * 1024,
+    manifest: content_manifest.Options = .{},
+};
+
+pub const Document = struct {
+    archive: Archive,
+    container: container.Root,
+    manifest: content_manifest.Manifest,
+    decoded_xml_bytes: usize,
+
+    pub fn deinit(self: *Document, a: std.mem.Allocator) void {
+        self.manifest.deinit(a);
+        self.container.deinit(a);
+        self.archive.deinit();
+        self.* = undefined;
+    }
+};
 
 /// Owns only the entry index. The input archive bytes must outlive this view.
 pub fn open(allocator: std.mem.Allocator, bytes: []const u8, options: Options) !Archive {
     var archive = try zip.open(allocator, bytes, options);
     errdefer archive.deinit();
     const mime_entry = archive.find("mimetype") orelse return error.MissingMimeType;
-    if (mime_entry.method != 0) return error.InvalidMimeType;
     const content = try archive.decode(mime_entry, mime.len);
     defer allocator.free(content);
     if (!std.mem.eql(u8, content, mime)) return error.InvalidMimeType;
     return archive;
+}
+
+/// Validates the OCF package root, OPF item references, and ZIP presence of
+/// embedded resources. Section XML semantics remain a later document layer.
+pub fn inspectDocument(a: std.mem.Allocator, bytes: []const u8, options: DocumentOptions) !Document {
+    var archive = try open(a, bytes, options.zip);
+    errdefer archive.deinit();
+    var root = try container.read(a, archive, @min(options.max_container_xml_bytes, options.max_total_xml_bytes), options.manifest.max_attribute_bytes);
+    errdefer root.deinit(a);
+    var manifest_options = options.manifest;
+    manifest_options.max_xml_bytes = @min(manifest_options.max_xml_bytes, options.max_total_xml_bytes - root.xml_bytes);
+    var manifest = try content_manifest.read(a, archive, root.path, manifest_options);
+    errdefer manifest.deinit(a);
+    return .{ .archive = archive, .container = root, .manifest = manifest, .decoded_xml_bytes = root.xml_bytes + manifest.xml_bytes };
 }

@@ -33,7 +33,16 @@ pub const Report = struct {
     max_depth: usize = 0,
     namespaces_validated: bool = false,
 };
+/// Tags and namespace bindings borrow parser state and are valid only for
+/// the synchronous callback. Depth is 1 for the root, for all tag kinds.
+pub const Visitor = struct {
+    context: *anyopaque,
+    on_tag: *const fn (*anyopaque, tags.Tag, *const namespaces.State, usize) anyerror!void,
+};
 pub fn inspect(a: std.mem.Allocator, bytes: []const u8, options: Options) !Report {
+    return visit(a, bytes, options, null);
+}
+pub fn visit(a: std.mem.Allocator, bytes: []const u8, options: Options, visitor: ?Visitor) !Report {
     var opened = try prolog.open(bytes, options.prolog);
     const Frame = struct { name: []const u8, namespace_marker: usize };
     var stack: std.ArrayList(Frame) = .empty;
@@ -81,6 +90,7 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, options: Options) !Repor
             if (stack.items.len == 0) return error.UnexpectedXmlEndTag;
             const frame = stack.items[stack.items.len - 1];
             if (!std.mem.eql(u8, frame.name, tag.name.raw)) return error.XmlElementNameMismatch;
+            if (visitor) |v| try v.on_tag(v.context, tag, &scope, stack.items.len);
             _ = stack.pop();
             if (options.validate_namespaces) scope.leave(a, frame.namespace_marker);
             report.end_tags += 1;
@@ -93,6 +103,7 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, options: Options) !Repor
             report.elements += 1;
             report.max_depth = @max(report.max_depth, stack.items.len + 1);
             const marker = if (options.validate_namespaces) try scope.enter(a, tag, options.namespaces) else 0;
+            if (visitor) |v| try v.on_tag(v.context, tag, &scope, stack.items.len + 1);
             if (tag.kind == .start) try stack.append(a, .{ .name = tag.name.raw, .namespace_marker = marker }) else if (options.validate_namespaces) scope.leave(a, marker);
         }
     }

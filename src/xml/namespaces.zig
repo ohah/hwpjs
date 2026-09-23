@@ -6,6 +6,7 @@ const View = @import("text.zig").View;
 pub const Options = struct { max_bindings: usize = 65536, max_uri_bytes: usize = 16 * 1024 * 1024 };
 const Binding = struct { prefix: []const u8, uri: []u8, previous: ?usize };
 const Expanded = struct { uri: []const u8, local: []const u8 };
+pub const ExpandedName = struct { uri: []const u8, local: View };
 const ExpandedContext = struct {
     pub fn hash(_: @This(), key: Expanded) u64 {
         return std.hash.Wyhash.hash(std.hash.Wyhash.hash(0, key.uri), key.local);
@@ -58,6 +59,17 @@ pub const State = struct {
             break :blk self.bindings.items[index].uri;
         } else "";
         return .{ .uri = uri, .local = name.local.raw };
+    }
+    /// Returned URI borrows this scope; local name borrows the XML input.
+    pub fn expandElement(self: *const State, name: View) !ExpandedName {
+        const parsed = try qname.parse(name);
+        const resolved = try self.resolve(parsed, false);
+        return .{ .uri = resolved.uri, .local = parsed.local };
+    }
+    pub fn expandAttribute(self: *const State, name: View) !ExpandedName {
+        const parsed = try qname.parse(name);
+        const resolved = try self.resolve(parsed, true);
+        return .{ .uri = resolved.uri, .local = parsed.local };
     }
     pub fn enter(self: *State, a: std.mem.Allocator, tag: Tag, options: Options) !usize {
         const marker = self.bindings.items.len;

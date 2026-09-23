@@ -61,7 +61,7 @@ fn checkedSlice(bytes: []const u8, start: usize, len: usize) ![]const u8 {
     return bytes[start .. start + len];
 }
 
-fn validName(name: []const u8) bool {
+pub fn validPath(name: []const u8) bool {
     if (name.len == 0 or name[0] == '/') return false;
     var part_start: usize = 0;
     for (name, 0..) |c, i| {
@@ -154,7 +154,7 @@ pub fn open(allocator: std.mem.Allocator, bytes: []const u8, options: Options) !
         const total_len = try std.math.add(usize, rest_len, comment_len);
         const rest = try checkedSlice(bytes, cursor + 46, total_len);
         const name = rest[0..name_len];
-        if (!validName(name)) return error.InvalidEntryName;
+        if (!validPath(name)) return error.InvalidEntryName;
         if ((try seen.getOrPut(allocator, name)).found_existing) return error.DuplicateEntryName;
         if (local_offset >= cd_start) return error.InvalidLocalHeader;
         const local = try checkedSlice(bytes[0..cd_start], local_offset, 30);
