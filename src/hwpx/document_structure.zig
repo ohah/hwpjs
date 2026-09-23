@@ -26,7 +26,9 @@ pub const Section = struct {
 
 pub const Report = struct {
     header_version: ?[]u8,
+    header_item_index: usize,
     header_xml_bytes: usize,
+    header_elements: usize,
     declared_section_count: ?u32,
     sections: []Section,
     header_in_spine: bool,
@@ -111,7 +113,9 @@ pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, manifest: content_man
     const owned_sections = try sections.toOwnedSlice(a);
     return .{
         .header_version = header.header_version,
+        .header_item_index = header_index,
         .header_xml_bytes = header.xml_bytes,
+        .header_elements = header.elements,
         .declared_section_count = header.declared_section_count,
         .sections = owned_sections,
         .header_in_spine = header_in_spine,

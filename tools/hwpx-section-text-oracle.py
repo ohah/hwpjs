@@ -267,7 +267,7 @@ def self_check() -> None:
 def main() -> None:
     self_check()
     tree_shards = [
-        {"accepted": 0, "rejected_zip": 0, "encrypted": 0, "sections": 0, "elements": 0, "attribute_digest_sum": 0, "content_digest_sum": 0, "ordered_digest_sum": 0}
+        {"accepted": 0, "rejected_zip": 0, "encrypted": 0, "sections": 0, "elements": 0, "header_elements": 0, "header_bytes": 0, "section_bytes": 0, "attribute_digest_sum": 0, "content_digest_sum": 0, "ordered_digest_sum": 0}
         for _ in range(8)
     ]
     attribute_counts = {
@@ -319,7 +319,10 @@ def main() -> None:
                     header_bytes = bounded_read(archive, "Contents/header.xml", MAX_HEADER_BYTES)
                     header_root = ET.fromstring(header_bytes)
                     result["header_root_names"][header_root.tag] += 1
-                    result["header_elements"] += sum(1 for _ in header_root.iter())
+                    header_elements = sum(1 for _ in header_root.iter())
+                    result["header_elements"] += header_elements
+                    shard["header_elements"] += header_elements
+                    shard["header_bytes"] += len(header_bytes)
                     result["header_ordered_digest_sum"] = (
                         result["header_ordered_digest_sum"] + xml_ordered_digest(header_bytes)
                     ) % HASH_MODULUS
@@ -341,6 +344,7 @@ def main() -> None:
                             continue
                         result["sections"] += 1
                         shard["sections"] += 1
+                        shard["section_bytes"] += len(section_bytes)
                         section_elements = sum(1 for _ in section.iter())
                         result["section_elements"] += section_elements
                         shard["elements"] += section_elements

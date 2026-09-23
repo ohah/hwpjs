@@ -20,6 +20,7 @@ test {
     _ = @import("hwpx/section_text_tests.zig");
     _ = @import("hwpx/section_tree_tests.zig");
     _ = @import("hwpx/header_tree_tests.zig");
+    _ = @import("hwpx/document_trees_tests.zig");
     _ = @import("hwpx/namespace_profile.zig");
     _ = @import("hwpx/chart_formula_tests.zig");
     _ = @import("hwpx/allocator_ownership_tests.zig");

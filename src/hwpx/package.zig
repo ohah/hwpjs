@@ -16,6 +16,7 @@ const chart_references = @import("chart_references.zig");
 const section_text = @import("section_text.zig");
 const header_tree = @import("header_tree.zig");
 const section_tree = @import("section_tree.zig");
+const document_trees = @import("document_trees.zig");
 
 pub const Archive = zip.Archive;
 pub const Options = zip.Options;
@@ -90,14 +91,10 @@ pub const SectionTextInlineKind = section_text.InlineKind;
 pub const SectionOtherContentKind = section_text.OtherContentKind;
 pub const SectionTree = section_tree.Tree;
 pub const HeaderTree = header_tree.Tree;
-pub const HeaderTreeOptions = struct {
-    protection: ProtectionOptions = .{},
-    tree: header_tree.Options = .{},
-};
-pub const SectionTreeOptions = struct {
-    structure: StructureOptions = .{},
-    tree: section_tree.Options = .{},
-};
+pub const HeaderTreeOptions = document_trees.HeaderOptions;
+pub const SectionTreeOptions = document_trees.SectionOptions;
+pub const XmlTrees = document_trees.Bundle;
+pub const XmlTreesOptions = document_trees.AllOptions;
 pub const DocumentOptions = struct {
     // The archive index also contains large BinData/section entries. Their
     // declared sizes are bounded here; this call only decodes the two small
@@ -159,25 +156,21 @@ pub const Document = struct {
     /// Materializes the exact package-selected, unencrypted header XML with
     /// every element indexed, including unknown extensions and raw source.
     pub fn readHeaderTree(self: *const Document, a: std.mem.Allocator, options: HeaderTreeOptions) !HeaderTree {
-        const selected = try document_structure.plainHeaderEntry(a, self.archive, self.manifest, options.protection);
-        const bytes = try self.archive.decode(selected.entry, options.tree.max_xml_bytes);
-        defer self.archive.allocator.free(bytes);
-        return header_tree.parse(a, bytes, selected.item_index, options.tree);
+        return document_trees.readHeader(a, self.archive, self.manifest, options);
     }
 
     /// Materializes one structure-selected section as exact owned XML bytes
     /// plus a namespace-aware index of every element, including unknown ones.
     /// This does not infer display order, style values, or edit semantics.
     pub fn readSectionTree(self: *const Document, a: std.mem.Allocator, section_ordinal: usize, options: SectionTreeOptions) !SectionTree {
-        var structure = try self.inspectStructure(a, options.structure);
-        defer structure.deinit(a);
-        if (section_ordinal >= structure.sections.len) return error.SectionOutOfRange;
-        const section = structure.sections[section_ordinal];
-        const item = self.manifest.items[section.item_index];
-        const entry_index = item.entry_index orelse return error.ExternalSpineXml;
-        const bytes = try self.archive.decode(self.archive.entries[entry_index], options.tree.max_xml_bytes);
-        defer self.archive.allocator.free(bytes);
-        return section_tree.parse(a, bytes, section_ordinal, section.item_index, options.tree);
+        return document_trees.readSection(a, self.archive, self.manifest, section_ordinal, options);
+    }
+
+    /// Owns all selected header and section XML trees in spine order after one
+    /// structure inspection. Non-XML parts and semantic references are not
+    /// materialized or validated by this API.
+    pub fn readXmlTrees(self: *const Document, a: std.mem.Allocator, options: XmlTreesOptions) !XmlTrees {
+        return document_trees.readAll(a, self.archive, self.manifest, options);
     }
 
     /// Resolves selected style, paragraph-shape, and character-shape links

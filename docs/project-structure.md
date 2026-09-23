@@ -3,7 +3,7 @@
 ## 프로젝트와 현재 범위
 
 HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라이브러리입니다.
-현재는 바이트 리더, CFB v3/v4 읽기·strict 검증·새 컨테이너 생성/재저장, HWP5 헤더·압축 스트림·레코드 경계와 DocInfo 주요 리소스 해석·활성 참조 검증, 본문 문단 헤더·UTF-16 텍스트/제어문자 토큰 코어가 구현되어 있습니다. HWPX에는 [ZIP·mimetype 읽기 경계](hwpx-zip-container.md), [패키지 관계 검증](hwpx-package-relationships.md), [버전 XML 검증](hwpx-version.md), [암호화 분류](hwpx-protection.md), [header·spine 구조 검증](hwpx-document-structure.md), [header 리소스 ID 색인](hwpx-header-resources.md), [section 서식 참조 진단](hwpx-section-references.md), [header 내부 서식 참조](hwpx-header-references.md), [언어별 글꼴 ID 참조](hwpx-font-references.md), [번호·글머리표 내부 참조](hwpx-list-references.md), [이진 리소스 manifest 연결](hwpx-binary-references.md), [차트 ZIP 경로·XML 경계](hwpx-chart-references.md), [section 텍스트 토큰 이벤트](hwpx-section-text.md), [header 원문·요소 인덱스](hwpx-header-tree.md), [section 원문·요소 인덱스](hwpx-section-tree.md)가 추가됐으며 전체 문서 모델·레이아웃·본문 편집·저장은 미구현입니다. HWP5 코어는 테스트용 WASM에서 검증하며 제품 JS 공개 API는 아직 CFB만 제공합니다. 지원 범위는 구현·테스트로 확인하고, 예정 기능을 완료된 기능처럼 설명하지 않습니다.
+현재는 바이트 리더, CFB v3/v4 읽기·strict 검증·새 컨테이너 생성/재저장, HWP5 헤더·압축 스트림·레코드 경계와 DocInfo 주요 리소스 해석·활성 참조 검증, 본문 문단 헤더·UTF-16 텍스트/제어문자 토큰 코어가 구현되어 있습니다. HWPX에는 [ZIP·mimetype 읽기 경계](hwpx-zip-container.md), [패키지 관계 검증](hwpx-package-relationships.md), [버전 XML 검증](hwpx-version.md), [암호화 분류](hwpx-protection.md), [header·spine 구조 검증](hwpx-document-structure.md), [header 리소스 ID 색인](hwpx-header-resources.md), [section 서식 참조 진단](hwpx-section-references.md), [header 내부 서식 참조](hwpx-header-references.md), [언어별 글꼴 ID 참조](hwpx-font-references.md), [번호·글머리표 내부 참조](hwpx-list-references.md), [이진 리소스 manifest 연결](hwpx-binary-references.md), [차트 ZIP 경로·XML 경계](hwpx-chart-references.md), [section 텍스트 토큰 이벤트](hwpx-section-text.md), [header 원문·요소 인덱스](hwpx-header-tree.md), [section 원문·요소 인덱스](hwpx-section-tree.md), [문서 XML 트리 조립](hwpx-document-trees.md)이 추가됐으며 전체 의미 문서 모델·레이아웃·본문 편집·저장은 미구현입니다. HWP5 코어는 테스트용 WASM에서 검증하며 제품 JS 공개 API는 아직 CFB만 제공합니다. 지원 범위는 구현·테스트로 확인하고, 예정 기능을 완료된 기능처럼 설명하지 않습니다.
 
 ## 진입점과 공통 계층
 
@@ -24,6 +24,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
   section의 `hp:t` 본문·내부 요소 이벤트는 [section 텍스트](hwpx-section-text.md)가 소유합니다.
   모든 header·section XML 요소의 원문 byte span·부모 관계는 공통 `xml_part_tree.zig`가 소유하며 각각 [header 구조 인덱스](hwpx-header-tree.md)·[section 구조 인덱스](hwpx-section-tree.md)가 선택 정책을 적용합니다.
   header·section 요소별 직접 문자·CDATA의 원문 순회와 부모 연결은 공통 `xml_part_content.zig`가 소유하며 계약은 [section 콘텐츠 순회](hwpx-section-content.md)와 [header 트리](hwpx-header-tree.md)에 기록합니다.
+  모든 선택 XML 트리의 소유권·합계 한도는 [문서 XML 트리 조립](hwpx-document-trees.md)이 소유합니다.
 - `src/cfb/`: 읽기·검증·저장을 책임별로 분리한 CFB 코어.
 - `src/hwp5/`: 헤더 원본·버전·스트림 정책·압축 trailer·레코드 framing을 분리합니다. 현재 계약·검증 범위는 [HWP5 모듈 계약](hwp5-modules.md), 과거 이력은 [구현/검증 기록](hwp5-foundation.md)을 참조합니다.
 - `src/compression/`: bounded raw DEFLATE, [zlib 검증](zlib-validation.md), MIT Zig 디코더 로컬 수정본. HWP 플래그·trailer 정책을 넣지 않습니다.

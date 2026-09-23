@@ -2,7 +2,7 @@
 
 ## 책임과 결과
 
-`Document.inspectStructure`는 [암호화 분류](hwpx-protection.md) 뒤에 `Contents/header.xml`을 package manifest의 내장 `application/xml` 항목과 정확히 연결하고, 공통 XML 파서로 header와 spine의 XML 전체 문법·namespace를 검사합니다. header 루트는 2011 `head` namespace의 `head`, section 루트는 2011 `section` namespace의 `sec`로 판정합니다. spine 항목을 파일명이나 manifest 저장 순서로 재정렬하지 않습니다. `application/xml` spine 항목의 실제 XML 루트가 section이면 그 순서와 manifest item 인덱스, 해제 바이트·요소·직접 문단 개수를 기록합니다. 비XML spine 항목과 다른 XML 루트는 각각 따로 셉니다. section 파일명이 관측형 `Contents/sectionN.xml`일 때의 숫자 순서 일치는 별도 진단일 뿐 section 선택 조건이 아닙니다.
+`Document.inspectStructure`는 [암호화 분류](hwpx-protection.md) 뒤에 `Contents/header.xml`을 package manifest의 내장 `application/xml` 항목과 정확히 연결하고, 공통 XML 파서로 header와 spine의 XML 전체 문법·namespace를 검사합니다. header 루트는 2011 `head` namespace의 `head`, section 루트는 2011 `section` namespace의 `sec`로 판정합니다. 선택된 header의 manifest item 인덱스·해제 바이트·요소 수를 보고합니다. spine 항목을 파일명이나 manifest 저장 순서로 재정렬하지 않습니다. `application/xml` spine 항목의 실제 XML 루트가 section이면 그 순서와 manifest item 인덱스, 해제 바이트·요소·직접 문단 개수를 기록합니다. 비XML spine 항목과 다른 XML 루트는 각각 따로 셉니다. section 파일명이 관측형 `Contents/sectionN.xml`일 때의 숫자 순서 일치는 별도 진단일 뿐 section 선택 조건이 아닙니다.
 
 header의 `version`은 부재 가능 문자열, `secCnt`는 부재 가능 `u32`로 보존합니다. `declared_count_matches`는 선언값과 spine에서 확인한 section 수의 비교이며 선언이 없으면 null입니다. 한 실파일에서 선언 1·실제 2가 관측됐으므로 파서는 section을 버리거나 선언값을 고치지 않고 false를 반환합니다. header의 manifest 참조 누락·외부 header·잘못된 미디어 유형·잘못된 XML 루트, 중복 section spine 참조, section 없음은 오류입니다. header가 spine에 있는지 여부도 별도 보고하며 없는 경우 자동 삽입하지 않습니다. 반환 section 인덱스는 소유 `Document.manifest.items`를 가리키므로 `Document`가 보고서보다 오래 살아야 합니다.
 
