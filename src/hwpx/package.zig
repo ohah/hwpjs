@@ -6,6 +6,7 @@ const version_xml = @import("version_xml.zig");
 const encryption_manifest = @import("encryption_manifest.zig");
 const document_structure = @import("document_structure.zig");
 const header_resources = @import("header_resources.zig");
+const section_references = @import("section_references.zig");
 
 pub const Archive = zip.Archive;
 pub const Options = zip.Options;
@@ -22,6 +23,13 @@ pub const HeaderResourceOptions = struct {
 };
 pub const HeaderResourceReport = header_resources.Report;
 pub const HeaderResourceKind = header_resources.Kind;
+pub const ReferenceOptions = struct {
+    structure: StructureOptions = .{},
+    header_resources: header_resources.Options = .{},
+    sections: section_references.Options = .{},
+};
+pub const ReferenceReport = section_references.Report;
+pub const ReferenceKind = section_references.Kind;
 pub const DocumentOptions = struct {
     // The archive index also contains large BinData/section entries. Their
     // declared sizes are bounded here; this call only decodes the two small
@@ -60,6 +68,16 @@ pub const Document = struct {
     pub fn inspectHeaderResources(self: *const Document, a: std.mem.Allocator, options: HeaderResourceOptions) !HeaderResourceReport {
         const header = try document_structure.plainHeaderEntry(a, self.archive, self.manifest, options.protection);
         return header_resources.read(a, self.archive, header.entry, options.resources);
+    }
+
+    /// Builds the bounded structure and explicit header ID inventory, then
+    /// links paragraph/run style IDs from all section XML in spine order.
+    pub fn inspectReferences(self: *const Document, a: std.mem.Allocator, options: ReferenceOptions) !ReferenceReport {
+        var structure = try self.inspectStructure(a, options.structure);
+        defer structure.deinit(a);
+        var resources = try self.inspectHeaderResources(a, .{ .protection = options.structure.protection, .resources = options.header_resources });
+        defer resources.deinit(a);
+        return section_references.inspect(a, self.archive, self.manifest, structure.sections, &resources, options.sections);
     }
 
     pub fn deinit(self: *Document, a: std.mem.Allocator) void {

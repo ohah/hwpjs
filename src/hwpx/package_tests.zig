@@ -1294,3 +1294,152 @@ test "HWPX header resource limits, allocation failures and ReleaseFast ownership
     parsed.deinit(checked.allocator());
     try std.testing.expectEqual(@as(usize, 0), checked.total_requested_bytes);
 }
+
+const reference_hpf = "<p:package xmlns:p=\"http://www.idpf.org/2007/opf/\"><p:manifest>" ++
+    "<p:item id=\"header\" href=\"Contents/header.xml\" media-type=\"application/xml\"/>" ++
+    "<p:item id=\"a\" href=\"Contents/chapter-A.xml\" media-type=\"application/xml\"/>" ++
+    "</p:manifest><p:spine><p:itemref idref=\"header\"/><p:itemref idref=\"a\"/></p:spine></p:package>";
+const reference_header = resource_prefix ++
+    "<h:charProperties itemCnt=\"2\"><h:charPr id=\"7\"/><h:charPr id=\"5\"/></h:charProperties>" ++
+    "<h:paraProperties itemCnt=\"2\"><h:paraPr id=\"21\"/><h:paraPr id=\"20\"/></h:paraProperties>" ++
+    "<h:styles itemCnt=\"1\"><h:style id=\"7\"/></h:styles>" ++ resource_suffix;
+const reference_section = "<s:sec xmlns:s=\"http://www.hancom.co.kr/hwpml/2011/section\" xmlns:p=\"http://www.hancom.co.kr/hwpml/2011/paragraph\">" ++
+    "<p:p paraPrIDRef=\"20\" styleIDRef=\"7\"><p:run charPrIDRef=\"5\"/><p:tbl><p:cell>" ++
+    "<p:p paraPrIDRef=\"21\"><p:run charPrIDRef=\"7\"/></p:p>" ++
+    "</p:cell></p:tbl><p:run charPrIDRef=\"5\"/></p:p><p:run charPrIDRef=\"7\"/>" ++
+    "<x:p xmlns:x=\"urn:wrong\" paraPrIDRef=\"999\"/></s:sec>";
+
+fn referenceZip(a: std.mem.Allocator, header: []const u8, section: []const u8) ![]u8 {
+    return syntheticStructureZipWithHpf(a, reference_hpf, header, section);
+}
+
+test "HWPX section references resolve sparse IDs through nested paragraphs" {
+    const a = std.testing.allocator;
+    const bytes = try referenceZip(a, reference_header, reference_section);
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    const report = try document.inspectReferences(a, .{});
+    try std.testing.expectEqual(@as(usize, 1), report.sections);
+    try std.testing.expectEqual(@as(usize, 2), report.paragraphs);
+    try std.testing.expectEqual(@as(usize, 1), report.non_direct_paragraphs);
+    try std.testing.expectEqual(@as(usize, 4), report.runs);
+    try std.testing.expectEqual(@as(usize, 1), report.non_direct_runs);
+    try std.testing.expectEqual(@as(usize, 2), report.counts(.paragraph_shape).resolved);
+    try std.testing.expectEqual(@as(usize, 1), report.counts(.style).resolved);
+    try std.testing.expectEqual(@as(usize, 1), report.counts(.style).absent);
+    try std.testing.expectEqual(@as(usize, 4), report.counts(.character_shape).resolved);
+    try std.testing.expect(report.counts(.paragraph_shape).allPresentResolved());
+    try std.testing.expect(report.counts(.character_shape).allPresentResolved());
+}
+
+test "HWPX real section references traverse example and noori" {
+    const a = std.testing.allocator;
+    for ([_][]const u8{ "example", "noori" }) |name| {
+        const bytes = try loadFixture(a, name);
+        defer a.free(bytes);
+        var document = try package.inspectDocument(a, bytes, .{});
+        defer document.deinit(a);
+        const report = try document.inspectReferences(a, .{});
+        try std.testing.expect(report.sections > 0);
+        try std.testing.expect(report.paragraphs > 0);
+        try std.testing.expect(report.runs > 0);
+        try std.testing.expect(report.counts(.paragraph_shape).present > 0);
+        try std.testing.expect(report.counts(.character_shape).present > 0);
+    }
+}
+
+fn expectReferenceError(a: std.mem.Allocator, header: []const u8, section: []const u8, options: package.ReferenceOptions, expected: anyerror) !void {
+    const bytes = try referenceZip(a, header, section);
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    try expectReferenceDocumentError(a, &document, options, expected);
+}
+
+fn expectReferenceDocumentError(a: std.mem.Allocator, document: *const package.Document, options: package.ReferenceOptions, expected: anyerror) !void {
+    if (document.inspectReferences(a, options)) |_| {
+        return error.TestExpectedError;
+    } else |err| try std.testing.expectEqual(expected, err);
+}
+
+test "HWPX section references distinguish absent attributes from missing ID zero" {
+    const a = std.testing.allocator;
+    const section = "<s:sec xmlns:s=\"http://www.hancom.co.kr/hwpml/2011/section\" xmlns:p=\"http://www.hancom.co.kr/hwpml/2011/paragraph\">" ++
+        "<p:p paraPrIDRef=\"0\" styleIDRef=\"7\"><p:run charPrIDRef=\"0\"/></p:p><p:p><p:run/></p:p></s:sec>";
+    const bytes = try referenceZip(a, reference_header, section);
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    const report = try document.inspectReferences(a, .{});
+    try std.testing.expectEqual(@as(usize, 1), report.counts(.paragraph_shape).missing_target);
+    try std.testing.expectEqual(@as(usize, 1), report.counts(.paragraph_shape).absent);
+    try std.testing.expectEqual(@as(?u32, 0), report.counts(.paragraph_shape).first_unresolved_id);
+    try std.testing.expectEqualStrings("Contents/chapter-A.xml", document.manifest.items[report.counts(.paragraph_shape).first_unresolved_item_index.?].href);
+    try std.testing.expectEqual(@as(usize, 1), report.counts(.style).resolved);
+    try std.testing.expectEqual(@as(usize, 1), report.counts(.style).absent);
+    try std.testing.expectEqual(@as(usize, 1), report.counts(.character_shape).missing_target);
+    try std.testing.expectEqual(@as(usize, 1), report.counts(.character_shape).absent);
+    try std.testing.expect(!report.counts(.character_shape).allPresentResolved());
+
+    const no_styles = resource_prefix ++
+        "<h:charProperties><h:charPr id=\"0\"/></h:charProperties>" ++
+        "<h:paraProperties><h:paraPr id=\"0\"/></h:paraProperties>" ++ resource_suffix;
+    const absent_table_bytes = try referenceZip(a, no_styles, section);
+    defer a.free(absent_table_bytes);
+    var absent_table_document = try package.inspectDocument(a, absent_table_bytes, .{});
+    defer absent_table_document.deinit(a);
+    const absent_table_report = try absent_table_document.inspectReferences(a, .{});
+    try std.testing.expectEqual(@as(usize, 1), absent_table_report.counts(.style).absent_table);
+    try std.testing.expectEqual(@as(usize, 0), absent_table_report.counts(.style).missing_target);
+}
+
+test "HWPX section references reject invalid numeric attributes and exact budgets" {
+    const a = std.testing.allocator;
+    const invalid = "<s:sec xmlns:s=\"http://www.hancom.co.kr/hwpml/2011/section\" xmlns:p=\"http://www.hancom.co.kr/hwpml/2011/paragraph\"><p:p paraPrIDRef=\"no\"/></s:sec>";
+    try expectReferenceError(a, reference_header, invalid, .{}, error.InvalidResourceReferenceId);
+    const overflow = "<s:sec xmlns:s=\"http://www.hancom.co.kr/hwpml/2011/section\" xmlns:p=\"http://www.hancom.co.kr/hwpml/2011/paragraph\"><p:p><p:run charPrIDRef=\"4294967296\"/></p:p></s:sec>";
+    try expectReferenceError(a, reference_header, overflow, .{}, error.InvalidResourceReferenceId);
+    const bytes = try referenceZip(a, reference_header, reference_section);
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    const report = try document.inspectReferences(a, .{});
+    const at_total = try document.inspectReferences(a, .{ .sections = .{ .max_total_section_xml_bytes = report.decoded_xml_bytes } });
+    try std.testing.expectEqual(report.decoded_xml_bytes, at_total.decoded_xml_bytes);
+    try expectReferenceError(a, reference_header, reference_section, .{ .sections = .{ .max_total_section_xml_bytes = report.decoded_xml_bytes - 1 } }, error.LimitExceeded);
+    try expectReferenceError(a, reference_header, reference_section, .{ .sections = .{ .max_section_xml_bytes = reference_section.len - 1 } }, error.LimitExceeded);
+    try expectReferenceError(a, reference_header, reference_section, .{ .sections = .{ .max_paragraphs = 1 } }, error.LimitExceeded);
+    try expectReferenceError(a, reference_header, reference_section, .{ .sections = .{ .max_runs = 3 } }, error.LimitExceeded);
+    try expectReferenceError(a, reference_header, reference_section, .{ .sections = .{ .max_attribute_bytes = 0 } }, error.LimitExceeded);
+
+    const two_bytes = try syntheticStructureZip(a, reference_header, reference_section);
+    defer a.free(two_bytes);
+    var two_document = try package.inspectDocument(a, two_bytes, .{});
+    defer two_document.deinit(a);
+    const both = try two_document.inspectReferences(a, .{});
+    try std.testing.expectEqual(@as(usize, 2), both.sections);
+    try std.testing.expectEqual(reference_section.len * 2, both.decoded_xml_bytes);
+    const both_at_limit = try two_document.inspectReferences(a, .{ .sections = .{ .max_total_section_xml_bytes = both.decoded_xml_bytes } });
+    try std.testing.expectEqual(both.decoded_xml_bytes, both_at_limit.decoded_xml_bytes);
+    try expectReferenceDocumentError(a, &two_document, .{ .sections = .{ .max_total_section_xml_bytes = both.decoded_xml_bytes - 1 } }, error.LimitExceeded);
+}
+
+test "HWPX section references allocation failures and ReleaseFast cleanup" {
+    const a = std.testing.allocator;
+    const bytes = try referenceZip(a, reference_header, reference_section);
+    defer a.free(bytes);
+    try std.testing.checkAllAllocationFailures(a, struct {
+        fn run(allocator: std.mem.Allocator, source: []const u8) !void {
+            var document = try package.inspectDocument(allocator, source, .{});
+            defer document.deinit(allocator);
+            _ = try document.inspectReferences(allocator, .{});
+        }
+    }.run, .{bytes});
+    var checked: std.heap.DebugAllocator(.{ .safety = true, .enable_memory_limit = true }) = .init;
+    defer _ = checked.deinit();
+    var document = try package.inspectDocument(checked.allocator(), bytes, .{});
+    _ = try document.inspectReferences(checked.allocator(), .{});
+    document.deinit(checked.allocator());
+    try std.testing.expectEqual(@as(usize, 0), checked.total_requested_bytes);
+}

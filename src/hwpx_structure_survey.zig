@@ -194,3 +194,77 @@ test "HWPX corpus header resource ID inventory read-only survey" {
     try std.testing.expectEqual(@as(usize, 6), rejected_zip);
     try std.testing.expectEqual(@as(usize, 2), encrypted);
 }
+
+test "HWPX corpus section format references read-only survey" {
+    const a = std.testing.allocator;
+    const roots = [_][]const u8{ "legacy/rust/crates/hwp-core/tests/fixtures", "reference/rhwp/samples" };
+    var accepted: usize = 0;
+    var rejected_zip: usize = 0;
+    var encrypted: usize = 0;
+    var sections: usize = 0;
+    var paragraphs: usize = 0;
+    var non_direct_paragraphs: usize = 0;
+    var runs: usize = 0;
+    var non_direct_runs: usize = 0;
+    var resolved: [3]usize = @splat(0);
+    var absent: [3]usize = @splat(0);
+    var missing_target: [3]usize = @splat(0);
+    var absent_table: [3]usize = @splat(0);
+    var absent_style_documents: usize = 0;
+    var absent_style_minor0: usize = 0;
+    var absent_style_minor1: usize = 0;
+    var absent_style_first_zero: usize = 0;
+    var absent_style_first_nonzero: usize = 0;
+    for (roots) |root| {
+        const dir = try std.Io.Dir.cwd().openDir(std.testing.io, root, .{ .iterate = true });
+        defer dir.close(std.testing.io);
+        var walker = try dir.walk(a);
+        defer walker.deinit();
+        while (try walker.next(std.testing.io)) |entry| {
+            if (entry.kind != .file or !std.mem.endsWith(u8, entry.path, ".hwpx")) continue;
+            const bytes = try dir.readFileAlloc(std.testing.io, entry.path, a, .limited(25_000_000));
+            defer a.free(bytes);
+            var document = package.inspectDocument(a, bytes, .{}) catch |err| {
+                try std.testing.expectEqual(error.MissingEndRecord, err);
+                rejected_zip += 1;
+                continue;
+            };
+            defer document.deinit(a);
+            const report = document.inspectReferences(a, .{}) catch |err| {
+                if (err == error.EncryptedDocument) {
+                    encrypted += 1;
+                    continue;
+                }
+                std.debug.print("HWPX reference unexpected error in {s}: {s}\n", .{ entry.path, @errorName(err) });
+                return err;
+            };
+            accepted += 1;
+            sections += report.sections;
+            paragraphs += report.paragraphs;
+            non_direct_paragraphs += report.non_direct_paragraphs;
+            runs += report.runs;
+            non_direct_runs += report.non_direct_runs;
+            if (report.counts(.style).absent_table != 0) {
+                absent_style_documents += 1;
+                var version = try document.inspectVersion(a, .{});
+                defer version.deinit(a);
+                if (version.minor == 0) absent_style_minor0 += 1;
+                if (version.minor == 1) absent_style_minor1 += 1;
+                if (report.counts(.style).first_unresolved_id == 0) absent_style_first_zero += 1 else absent_style_first_nonzero += 1;
+                if (absent_style_documents <= 3) std.debug.print("HWPX absent style sample: {s} minor={d} first_id={?d}\n", .{ entry.path, version.minor, report.counts(.style).first_unresolved_id });
+            }
+            for ([_]package.ReferenceKind{ .paragraph_shape, .style, .character_shape }, 0..) |kind, index| {
+                const counts = report.counts(kind);
+                resolved[index] += counts.resolved;
+                absent[index] += counts.absent;
+                missing_target[index] += counts.missing_target;
+                absent_table[index] += counts.absent_table;
+            }
+        }
+    }
+    std.debug.print("HWPX format references: accepted={d} rejected_zip={d} encrypted={d} sections={d} paragraphs={d} non_direct_paragraphs={d} runs={d} non_direct_runs={d} resolved={any} absent={any} missing_target={any} absent_table={any}\n", .{ accepted, rejected_zip, encrypted, sections, paragraphs, non_direct_paragraphs, runs, non_direct_runs, resolved, absent, missing_target, absent_table });
+    std.debug.print("HWPX absent style docs={d} minor0={d} minor1={d} first_zero={d} first_nonzero={d}\n", .{ absent_style_documents, absent_style_minor0, absent_style_minor1, absent_style_first_zero, absent_style_first_nonzero });
+    try std.testing.expectEqual(@as(usize, 476), accepted);
+    try std.testing.expectEqual(@as(usize, 6), rejected_zip);
+    try std.testing.expectEqual(@as(usize, 2), encrypted);
+}
