@@ -7,6 +7,7 @@ const attrs = @import("xml_attributes.zig");
 const values = @import("xml_values.zig");
 const namespace_profile = @import("namespace_profile.zig");
 const para_list_attributes = @import("para_list_attributes.zig");
+const paragraph_metadata = @import("paragraph_metadata.zig");
 
 pub const Kind = enum { both, even, odd, last_page, optional_page };
 
@@ -17,14 +18,16 @@ pub const Options = struct {
     max_attribute_bytes: usize = 4096,
     max_sub_lists_per_part: usize = 4096,
     max_direct_paragraphs_per_part: usize = 1_000_000,
+    max_paragraphs_per_part: usize = 2_000_000,
     xml: document_xml.Options = .{},
 };
 
 pub const SubList = struct {
     attributes: para_list_attributes.Attributes,
     direct_paragraphs: usize = 0,
+    paragraph_metadata: paragraph_metadata.Report = .{},
     other_direct_elements: usize = 0,
-    uninspected_descendants: usize = 0,
+    nested_elements: usize = 0,
 
     fn deinit(self: *SubList, a: std.mem.Allocator) void {
         self.attributes.deinit(a);
@@ -43,7 +46,7 @@ pub const Part = struct {
     page_front: ?[]u8,
     sub_lists: []SubList,
     other_direct_elements: usize,
-    uninspected_descendants: usize,
+    descendant_elements: usize,
     manifest_id_matches: bool,
 
     fn deinit(self: *Part, a: std.mem.Allocator) void {
@@ -102,8 +105,9 @@ const Context = struct {
     sub_lists: std.ArrayList(SubList) = .empty,
     active_sub_list: ?usize = null,
     direct_paragraphs: usize = 0,
+    paragraphs: usize = 0,
     other_direct_elements: usize = 0,
-    uninspected_descendants: usize = 0,
+    descendant_elements: usize = 0,
 
     fn deinit(self: *Context) void {
         if (self.id) |v| self.a.free(v);
@@ -147,16 +151,22 @@ const Context = struct {
                 if (tag.kind == .start) self.active_sub_list = self.sub_lists.items.len - 1;
             } else self.other_direct_elements += 1;
         } else {
-            self.uninspected_descendants += 1;
+            self.descendant_elements += 1;
             if (self.active_sub_list) |index| {
                 const list = &self.sub_lists.items[index];
+                const is_paragraph = try attrs.element(tag, scope, document_xml.paragraph_uri, "p");
+                if (is_paragraph) {
+                    if (self.paragraphs == self.options.max_paragraphs_per_part) return error.LimitExceeded;
+                    try paragraph_metadata.noteTag(self.a, tag, scope, self.options.max_attribute_bytes, &list.paragraph_metadata);
+                    self.paragraphs += 1;
+                }
                 if (depth == 3) {
-                    if (try attrs.element(tag, scope, document_xml.paragraph_uri, "p")) {
+                    if (is_paragraph) {
                         if (self.direct_paragraphs == self.options.max_direct_paragraphs_per_part) return error.LimitExceeded;
                         self.direct_paragraphs += 1;
                         list.direct_paragraphs += 1;
                     } else list.other_direct_elements += 1;
-                } else list.uninspected_descendants += 1;
+                } else list.nested_elements += 1;
             }
         }
     }
@@ -187,7 +197,7 @@ fn parsePart(a: std.mem.Allocator, archive: zip.Archive, item: manifest.Item, it
         .page_front = context.page_front,
         .sub_lists = sub_lists,
         .other_direct_elements = context.other_direct_elements,
-        .uninspected_descendants = context.uninspected_descendants,
+        .descendant_elements = context.descendant_elements,
         .manifest_id_matches = std.mem.eql(u8, id, item.id),
     };
     context.type_name = null;

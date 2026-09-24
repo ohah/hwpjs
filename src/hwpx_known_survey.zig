@@ -30,6 +30,14 @@ const Statistics = struct {
     master_sub_list_other_attributes: usize,
     master_sub_list_width_sum: u64,
     master_sub_list_height_sum: u64,
+    master_paragraphs: usize,
+    master_paragraph_missing_id: usize,
+    master_paragraph_zero_id: usize,
+    master_paragraph_missing_tc_id: usize,
+    master_paragraph_boolean_present: [3]usize,
+    master_paragraph_page_break_true: usize,
+    master_paragraph_column_break_true: usize,
+    master_paragraph_merged_true: usize,
     master_page_number_sum: u64,
     master_page_count_declarations: usize,
     master_page_type_counts: [5]usize,
@@ -88,6 +96,14 @@ fn inspectOne(bytes: []const u8) !Outcome {
     var master_sub_list_other_attributes: usize = 0;
     var master_sub_list_width_sum: u64 = 0;
     var master_sub_list_height_sum: u64 = 0;
+    var master_paragraphs: usize = 0;
+    var master_paragraph_missing_id: usize = 0;
+    var master_paragraph_zero_id: usize = 0;
+    var master_paragraph_missing_tc_id: usize = 0;
+    var master_paragraph_boolean_present: [3]usize = @splat(0);
+    var master_paragraph_page_break_true: usize = 0;
+    var master_paragraph_column_break_true: usize = 0;
+    var master_paragraph_merged_true: usize = 0;
     var master_page_number_sum: u64 = 0;
     var master_type_counts: [5]usize = @splat(0);
     for (known.master_pages.parts.parts) |part| {
@@ -99,6 +115,16 @@ fn inspectOne(bytes: []const u8) !Outcome {
             master_sub_list_other_attributes += list.attributes.other_attributes;
             if (list.attributes.get(.text_width)) |raw| master_sub_list_width_sum += try std.fmt.parseInt(u32, raw, 10);
             if (list.attributes.get(.text_height)) |raw| master_sub_list_height_sum += try std.fmt.parseInt(u32, raw, 10);
+            master_paragraphs += list.paragraph_metadata.paragraphs;
+            master_paragraph_missing_id += list.paragraph_metadata.missing_id;
+            master_paragraph_zero_id += list.paragraph_metadata.zero_id;
+            master_paragraph_missing_tc_id += list.paragraph_metadata.missing_para_tc_id;
+            master_paragraph_boolean_present[0] += list.paragraph_metadata.page_break.false_value + list.paragraph_metadata.page_break.true_value;
+            master_paragraph_boolean_present[1] += list.paragraph_metadata.column_break.false_value + list.paragraph_metadata.column_break.true_value;
+            master_paragraph_boolean_present[2] += list.paragraph_metadata.merged.false_value + list.paragraph_metadata.merged.true_value;
+            master_paragraph_page_break_true += list.paragraph_metadata.page_break.true_value;
+            master_paragraph_column_break_true += list.paragraph_metadata.column_break.true_value;
+            master_paragraph_merged_true += list.paragraph_metadata.merged.true_value;
         }
         if (part.page_number) |raw| master_page_number_sum += try std.fmt.parseInt(u32, raw, 10);
         if (part.kind) |kind| master_type_counts[@intFromEnum(kind)] += 1;
@@ -142,6 +168,14 @@ fn inspectOne(bytes: []const u8) !Outcome {
         .master_sub_list_other_attributes = master_sub_list_other_attributes,
         .master_sub_list_width_sum = master_sub_list_width_sum,
         .master_sub_list_height_sum = master_sub_list_height_sum,
+        .master_paragraphs = master_paragraphs,
+        .master_paragraph_missing_id = master_paragraph_missing_id,
+        .master_paragraph_zero_id = master_paragraph_zero_id,
+        .master_paragraph_missing_tc_id = master_paragraph_missing_tc_id,
+        .master_paragraph_boolean_present = master_paragraph_boolean_present,
+        .master_paragraph_page_break_true = master_paragraph_page_break_true,
+        .master_paragraph_column_break_true = master_paragraph_column_break_true,
+        .master_paragraph_merged_true = master_paragraph_merged_true,
         .master_page_number_sum = master_page_number_sum,
         .master_page_count_declarations = known.master_pages.count_declarations.len,
         .master_page_type_counts = master_type_counts,
@@ -178,6 +212,14 @@ fn surveyShard(shard: usize) !void {
     var master_sub_list_other_attributes: usize = 0;
     var master_sub_list_width_sum: u64 = 0;
     var master_sub_list_height_sum: u64 = 0;
+    var master_paragraphs: usize = 0;
+    var master_paragraph_missing_id: usize = 0;
+    var master_paragraph_zero_id: usize = 0;
+    var master_paragraph_missing_tc_id: usize = 0;
+    var master_paragraph_boolean_present: [3]usize = @splat(0);
+    var master_paragraph_page_break_true: usize = 0;
+    var master_paragraph_column_break_true: usize = 0;
+    var master_paragraph_merged_true: usize = 0;
     var master_page_number_sum: u64 = 0;
     var master_page_count_declarations: usize = 0;
     var master_page_type_counts: [5]usize = @splat(0);
@@ -225,6 +267,14 @@ fn surveyShard(shard: usize) !void {
                     master_sub_list_other_attributes += stats.master_sub_list_other_attributes;
                     master_sub_list_width_sum += stats.master_sub_list_width_sum;
                     master_sub_list_height_sum += stats.master_sub_list_height_sum;
+                    master_paragraphs += stats.master_paragraphs;
+                    master_paragraph_missing_id += stats.master_paragraph_missing_id;
+                    master_paragraph_zero_id += stats.master_paragraph_zero_id;
+                    master_paragraph_missing_tc_id += stats.master_paragraph_missing_tc_id;
+                    for (stats.master_paragraph_boolean_present, 0..) |value, i| master_paragraph_boolean_present[i] += value;
+                    master_paragraph_page_break_true += stats.master_paragraph_page_break_true;
+                    master_paragraph_column_break_true += stats.master_paragraph_column_break_true;
+                    master_paragraph_merged_true += stats.master_paragraph_merged_true;
                     master_page_number_sum += stats.master_page_number_sum;
                     master_page_count_declarations += stats.master_page_count_declarations;
                     for (stats.master_page_type_counts, 0..) |value, i| master_page_type_counts[i] += value;
@@ -261,6 +311,14 @@ fn surveyShard(shard: usize) !void {
     try std.testing.expectEqual(expected.master_sub_list_other_attributes[shard], master_sub_list_other_attributes);
     try std.testing.expectEqual(expected.master_sub_list_width_sum[shard], master_sub_list_width_sum);
     try std.testing.expectEqual(expected.master_sub_list_height_sum[shard], master_sub_list_height_sum);
+    try std.testing.expectEqual(expected.master_paragraphs[shard], master_paragraphs);
+    try std.testing.expectEqual(expected.master_paragraph_missing_id[shard], master_paragraph_missing_id);
+    try std.testing.expectEqual(expected.master_paragraph_zero_id[shard], master_paragraph_zero_id);
+    try std.testing.expectEqual(expected.master_paragraph_missing_tc_id[shard], master_paragraph_missing_tc_id);
+    try std.testing.expectEqualSlices(usize, &expected.master_paragraph_boolean_present[shard], &master_paragraph_boolean_present);
+    try std.testing.expectEqual(expected.master_paragraph_page_break_true[shard], master_paragraph_page_break_true);
+    try std.testing.expectEqual(expected.master_paragraph_column_break_true[shard], master_paragraph_column_break_true);
+    try std.testing.expectEqual(expected.master_paragraph_merged_true[shard], master_paragraph_merged_true);
     try std.testing.expectEqual(expected.master_page_number_sum[shard], master_page_number_sum);
     try std.testing.expectEqual(expected.master_page_count_declarations[shard], master_page_count_declarations);
     try std.testing.expectEqualSlices(usize, &expected.master_page_type_counts[shard], &master_page_type_counts);

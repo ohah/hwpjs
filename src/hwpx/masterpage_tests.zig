@@ -42,7 +42,7 @@ test "HWPX master pages keep raw fields and resolve section root IDs without tru
     try std.testing.expectEqualStrings("0", list.attributes.get(.has_num_ref).?);
     try std.testing.expect(list.attributes.get(.metatag) == null);
     try std.testing.expectEqual(@as(usize, 0), list.attributes.unknown_enums);
-    try std.testing.expectEqual(@as(usize, 1), report.parts.parts[0].uninspected_descendants);
+    try std.testing.expectEqual(@as(usize, 1), report.parts.parts[0].descendant_elements);
     try std.testing.expect(report.parts.parts[1].kind == null);
     try std.testing.expectEqual(@as(usize, 1), report.parts.unsupported_types);
     try std.testing.expect(report.parts.parts[1].page_duplicate == null);
@@ -62,7 +62,7 @@ test "HWPX master subList distinguishes direct paragraphs, unknown enums, empty 
     var changed = sources;
     changed[6].data = "<masterPage id='masterpage0' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph' xmlns:f='urn:future'>" ++
         "<p:subList textDirection='FUTURE' lineWrap='KEEP' vertAlign='BOTTOM' metatag='' textWidth='+12' hasTextRef='true' f:future='x'>" ++
-        "<p:p/><p:tbl><p:p/></p:tbl><p:p/></p:subList><p:subList><p:p/></p:subList></masterPage>";
+        "<p:p id='0' pageBreak='1'/><p:tbl><p:p id='-0' columnBreak='true'/></p:tbl><p:p id='1' merged='false'/></p:subList><p:subList><p:p/></p:subList></masterPage>";
     const bytes = try fixture.storedZip(a, &changed);
     defer a.free(bytes);
     var document = try package.inspectDocument(a, bytes, .{});
@@ -73,8 +73,15 @@ test "HWPX master subList distinguishes direct paragraphs, unknown enums, empty 
     try std.testing.expectEqual(@as(usize, 2), lists.len);
     try std.testing.expectEqual(@as(usize, 2), lists[0].direct_paragraphs);
     try std.testing.expectEqual(@as(usize, 1), lists[0].other_direct_elements);
-    try std.testing.expectEqual(@as(usize, 1), lists[0].uninspected_descendants);
+    try std.testing.expectEqual(@as(usize, 1), lists[0].nested_elements);
     try std.testing.expectEqual(@as(usize, 1), lists[1].direct_paragraphs);
+    try std.testing.expectEqual(@as(usize, 3), lists[0].paragraph_metadata.paragraphs);
+    try std.testing.expectEqual(@as(usize, 2), lists[0].paragraph_metadata.zero_id);
+    try std.testing.expectEqual(@as(usize, 3), lists[0].paragraph_metadata.missing_para_tc_id);
+    try std.testing.expectEqual(@as(usize, 1), lists[0].paragraph_metadata.page_break.true_value);
+    try std.testing.expectEqual(@as(usize, 1), lists[0].paragraph_metadata.column_break.true_value);
+    try std.testing.expectEqual(@as(usize, 1), lists[0].paragraph_metadata.merged.false_value);
+    try std.testing.expectEqual(@as(usize, 1), lists[1].paragraph_metadata.missing_id);
     try std.testing.expectEqual(@as(usize, 1), lists[0].attributes.unknown_enums);
     try std.testing.expectEqual(@as(usize, 1), lists[0].attributes.other_attributes);
     try std.testing.expectEqualStrings("FUTURE", lists[0].attributes.get(.text_direction).?);
@@ -82,6 +89,10 @@ test "HWPX master subList distinguishes direct paragraphs, unknown enums, empty 
     try std.testing.expect(lists[0].attributes.get(.id) == null);
     try std.testing.expect(lists[1].attributes.get(.text_direction) == null);
     try std.testing.expectEqual(@as(usize, 0), lists[1].attributes.unknown_enums);
+    var exact = try document.inspectMasterPages(a, .{ .references = .{ .parts = .{ .max_paragraphs_per_part = 4, .max_direct_paragraphs_per_part = 3 } } });
+    exact.deinit(a);
+    try std.testing.expectError(error.LimitExceeded, document.inspectMasterPages(a, .{ .references = .{ .parts = .{ .max_paragraphs_per_part = 3 } } }));
+    try std.testing.expectError(error.LimitExceeded, document.inspectMasterPages(a, .{ .references = .{ .parts = .{ .max_direct_paragraphs_per_part = 2 } } }));
 }
 
 test "HWPX master subList rejects malformed numeric and Boolean attributes" {
@@ -110,7 +121,7 @@ test "HWPX master subList recognizes all defined enums and ignores foreign names
     const a = std.testing.allocator;
     var changed = sources;
     changed[6].data = "<masterPage id='masterpage0' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph' xmlns:f='urn:future'>" ++
-        "<f:subList><p:p/></f:subList><p:subList textDirection='VERTICAL' lineWrap='SQUEEZE' vertAlign='CENTER'/>" ++
+        "<f:subList><p:p id='-1' pageBreak='bad'/></f:subList><p:subList textDirection='VERTICAL' lineWrap='SQUEEZE' vertAlign='CENTER'/>" ++
         "<p:subList textDirection='VERTICALALL' lineWrap='KEEP' vertAlign='BOTTOM'/></masterPage>";
     const bytes = try fixture.storedZip(a, &changed);
     defer a.free(bytes);
@@ -139,6 +150,42 @@ test "HWPX master subList releases earlier owned values when later list is malfo
     try std.testing.expectError(error.InvalidUnsigned32, document.inspectMasterPages(a, .{}));
 }
 
+test "HWPX master subList shares paragraph scalar validation even in nested content" {
+    const a = std.testing.allocator;
+    for ([_]struct { attribute: []const u8, expected: anyerror }{
+        .{ .attribute = "id='-1'", .expected = error.InvalidNonNegativeInteger },
+        .{ .attribute = "paraTcId=''", .expected = error.InvalidNonNegativeInteger },
+        .{ .attribute = "pageBreak='yes'", .expected = error.InvalidXmlBoolean },
+        .{ .attribute = "columnBreak='2'", .expected = error.InvalidXmlBoolean },
+        .{ .attribute = "merged='TRUE'", .expected = error.InvalidXmlBoolean },
+    }) |mutation| {
+        const part = try std.fmt.allocPrint(a, "<masterPage id='masterpage0' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:subList><p:p id='0'/><p:tbl><p:p {s}/></p:tbl></p:subList></masterPage>", .{mutation.attribute});
+        defer a.free(part);
+        var changed = sources;
+        changed[6].data = part;
+        const bytes = try fixture.storedZip(a, &changed);
+        defer a.free(bytes);
+        var document = try package.inspectDocument(a, bytes, .{});
+        defer document.deinit(a);
+        try std.testing.expectError(mutation.expected, document.inspectMasterPages(a, .{}));
+    }
+}
+
+test "HWPX master nested paragraph failure releases owned package and temporary values" {
+    var changed = sources;
+    changed[6].data = "<masterPage id='masterpage0' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'>" ++
+        "<p:subList id='owned'><p:p id='0'/><p:tbl><p:p id='1' pageBreak='bad'/></p:tbl></p:subList></masterPage>";
+    const bytes = try fixture.storedZip(std.testing.allocator, &changed);
+    defer std.testing.allocator.free(bytes);
+    var checked: std.heap.DebugAllocator(.{ .safety = true, .enable_memory_limit = true }) = .init;
+    defer _ = checked.deinit();
+    const a = checked.allocator();
+    var document = try package.inspectDocument(a, bytes, .{});
+    try std.testing.expectError(error.InvalidXmlBoolean, document.inspectMasterPages(a, .{}));
+    document.deinit(a);
+    try std.testing.expectEqual(@as(usize, 0), checked.total_requested_bytes);
+}
+
 test "HWPX master subList has exact count and attribute limits" {
     const a = std.testing.allocator;
     const bytes = try fixture.storedZip(a, &sources);
@@ -149,6 +196,7 @@ test "HWPX master subList has exact count and attribute limits" {
     exact.deinit(a);
     try std.testing.expectError(error.LimitExceeded, document.inspectMasterPages(a, .{ .references = .{ .parts = .{ .max_sub_lists_per_part = 0 } } }));
     try std.testing.expectError(error.LimitExceeded, document.inspectMasterPages(a, .{ .references = .{ .parts = .{ .max_direct_paragraphs_per_part = 0 } } }));
+    try std.testing.expectError(error.LimitExceeded, document.inspectMasterPages(a, .{ .references = .{ .parts = .{ .max_paragraphs_per_part = 0 } } }));
     try std.testing.expectError(error.LimitExceeded, document.inspectMasterPages(a, .{ .references = .{ .parts = .{ .max_attribute_bytes = 9 } } }));
 }
 

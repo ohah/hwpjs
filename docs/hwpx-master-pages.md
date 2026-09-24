@@ -19,3 +19,5 @@ manifest 경로와 루트 ID는 별도 색인으로 조회해, 많은 참조가 
 경로·ID 색인으로 중복 검사와 참조 조회의 제곱 시간 경로를 제거한 최종 소스에서도 위 8개 shard와 2,219개 테스트를 다시 통과했습니다. `zig build -Doptimize=ReleaseSafe`, `zig build audit -Doptimize=ReleaseSafe --summary all`, `zig fmt --check build.zig src`, `git diff --check`도 성공했습니다. audit의 HWP5/WASM 통과는 마스터페이지 내부 의미의 검증 근거로 확대하지 않습니다.
 
 후속 [직접 ParaListType 속성](hwpx-para-list.md) 단계에서 루트 직접 `hp:subList`의 소유 배열·원값·직접 문단 경계를 추가했습니다. 이 소스의 전체 Debug 테스트 2,224개와 실파일 8개 shard가 독립 조사와 일치했습니다. 위의 2,219개는 이전 단계의 기록입니다.
+
+이후 [공통 문단 메타 값](hwpx-paragraph-metadata.md)을 직접 `subList`의 모든 후손 `hp:p`에 재사용합니다. 직접 문단 63개와 중첩 포함 394개의 구분 및 실파일 값 집계는 문단 메타 주제 문서가 소유합니다. 문단/run의 서식 ID 연결과 바탕쪽 표시 의미는 여전히 후속입니다.

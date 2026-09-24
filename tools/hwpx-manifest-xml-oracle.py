@@ -40,6 +40,11 @@ def empty():
                 master_sub_list_attribute_presence=[0] * len(SUB_LIST_FIELDS),
                 master_sub_list_unknown_enums=0, master_sub_list_other_attributes=0,
                 master_sub_list_width_sum=0, master_sub_list_height_sum=0,
+                master_paragraphs=0, master_paragraph_missing_id=0,
+                master_paragraph_zero_id=0, master_paragraph_missing_tc_id=0,
+                master_paragraph_page_break_present=0, master_paragraph_page_break_true=0,
+                master_paragraph_column_break_present=0, master_paragraph_column_break_true=0,
+                master_paragraph_merged_present=0, master_paragraph_merged_true=0,
                 master_page_number_sum=0,
                 master_type_counts=[0] * len(MASTER_KINDS),
                 master_manifest_id_mismatch=0, master_refs=0,
@@ -152,6 +157,18 @@ def main():
                                     shard["master_sub_list_width_sum"] += int(child.attrib["textWidth"])
                                 if "textHeight" in child.attrib:
                                     shard["master_sub_list_height_sum"] += int(child.attrib["textHeight"])
+                                for paragraph in child.iter(PARA + "p"):
+                                    shard["master_paragraphs"] += 1
+                                    para_id = paragraph.get("id")
+                                    shard["master_paragraph_missing_id"] += para_id is None
+                                    shard["master_paragraph_zero_id"] += para_id is not None and int(para_id) == 0
+                                    shard["master_paragraph_missing_tc_id"] += paragraph.get("paraTcId") is None
+                                    shard["master_paragraph_page_break_present"] += "pageBreak" in paragraph.attrib
+                                    shard["master_paragraph_page_break_true"] += paragraph.get("pageBreak") in ("true", "1")
+                                    shard["master_paragraph_column_break_present"] += "columnBreak" in paragraph.attrib
+                                    shard["master_paragraph_column_break_true"] += paragraph.get("columnBreak") in ("true", "1")
+                                    shard["master_paragraph_merged_present"] += "merged" in paragraph.attrib
+                                    shard["master_paragraph_merged_true"] += paragraph.get("merged") in ("true", "1")
                         if name.startswith("Contents/section") and name.endswith(".xml"):
                             master_refs.extend(node.get("idRef") for node in document.iter(PARA + "masterPage"))
                             shard["master_count_declarations"] += sum("masterPageCnt" in node.attrib for node in document.iter(PARA + "secPr"))

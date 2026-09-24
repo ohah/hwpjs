@@ -39,6 +39,20 @@ pub const master_sub_list_unknown_enums = [_]usize{ 0, 0, 0, 0, 0, 0, 0, 0 };
 pub const master_sub_list_other_attributes = [_]usize{ 0, 0, 0, 0, 0, 0, 0, 0 };
 pub const master_sub_list_width_sum = [_]u64{ 630706, 399342, 982188, 0, 0, 0, 199836, 947462 };
 pub const master_sub_list_height_sum = [_]u64{ 1015820, 545946, 1489464, 0, 0, 0, 272538, 1142649 };
+// All hp:p descendants of root-direct master-page subLists, not only direct p.
+pub const master_paragraphs = [_]usize{ 86, 31, 126, 0, 0, 0, 21, 130 };
+pub const master_paragraph_missing_id = [_]usize{ 0, 0, 0, 0, 0, 0, 0, 0 };
+pub const master_paragraph_zero_id = [_]usize{ 11, 3, 20, 0, 0, 0, 0, 35 };
+pub const master_paragraph_missing_tc_id = master_paragraphs;
+// pageBreak, columnBreak, merged present counts from the independent oracle.
+pub const master_paragraph_boolean_present = [_][3]usize{
+    .{ 86, 86, 86 }, .{ 31, 31, 31 },    .{ 126, 126, 126 },
+    .{ 0, 0, 0 },    .{ 0, 0, 0 },       .{ 0, 0, 0 },
+    .{ 21, 21, 21 }, .{ 130, 130, 130 },
+};
+pub const master_paragraph_page_break_true = [_]usize{ 0, 0, 0, 0, 0, 0, 0, 0 };
+pub const master_paragraph_column_break_true = [_]usize{ 0, 0, 0, 0, 0, 0, 0, 0 };
+pub const master_paragraph_merged_true = [_]usize{ 0, 0, 0, 0, 0, 0, 0, 0 };
 pub const master_page_number_sum = [_]u64{ 0, 0, 4, 0, 0, 0, 0, 0 };
 pub const master_page_count_declarations = [_]usize{ 75, 72, 72, 55, 64, 62, 63, 92 };
 pub const master_page_type_counts = [_][5]usize{

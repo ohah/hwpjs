@@ -28,41 +28,47 @@ pub const Report = struct {
     merged: BooleanCounts = .{},
 };
 
+fn value(a: std.mem.Allocator, tag: xml.tags.Tag, scope: *const xml.namespaces.State, name: []const u8, max_attribute_bytes: usize) !?[]u8 {
+    return attrs.attribute(a, tag, scope, name, max_attribute_bytes);
+}
+
+fn noteBoolean(a: std.mem.Allocator, tag: xml.tags.Tag, scope: *const xml.namespaces.State, name: []const u8, max_attribute_bytes: usize, counts: *BooleanCounts) !void {
+    const raw = try value(a, tag, scope, name, max_attribute_bytes);
+    defer if (raw) |v| a.free(v);
+    if (raw) |v| {
+        if (try xml_values.boolean(v)) counts.true_value += 1 else counts.false_value += 1;
+    } else counts.absent += 1;
+}
+
+/// Shared PType scalar validation for any 2011 hp:p caller. The caller owns
+/// element selection and its paragraph budget; this routine owns field rules.
+pub fn noteTag(a: std.mem.Allocator, tag: xml.tags.Tag, scope: *const xml.namespaces.State, max_attribute_bytes: usize, report: *Report) !void {
+    report.paragraphs += 1;
+    const id = try value(a, tag, scope, "id", max_attribute_bytes);
+    defer if (id) |v| a.free(v);
+    if (id) |v| {
+        if (try xml_values.nonNegative(v)) report.zero_id += 1;
+    } else report.missing_id += 1;
+    const tc_id = try value(a, tag, scope, "paraTcId", max_attribute_bytes);
+    defer if (tc_id) |v| a.free(v);
+    if (tc_id) |v| {
+        _ = try xml_values.nonNegative(v);
+    } else report.missing_para_tc_id += 1;
+    try noteBoolean(a, tag, scope, "pageBreak", max_attribute_bytes, &report.page_break);
+    try noteBoolean(a, tag, scope, "columnBreak", max_attribute_bytes, &report.column_break);
+    try noteBoolean(a, tag, scope, "merged", max_attribute_bytes, &report.merged);
+}
+
 const Context = struct {
     allocator: std.mem.Allocator,
     options: Options,
     report: *Report,
 
-    fn value(self: *Context, tag: xml.tags.Tag, scope: *const xml.namespaces.State, name: []const u8) !?[]u8 {
-        return attrs.attribute(self.allocator, tag, scope, name, self.options.max_attribute_bytes);
-    }
-
-    fn noteBoolean(self: *Context, tag: xml.tags.Tag, scope: *const xml.namespaces.State, name: []const u8, counts: *BooleanCounts) !void {
-        const raw = try self.value(tag, scope, name);
-        defer if (raw) |v| self.allocator.free(v);
-        if (raw) |v| {
-            if (try xml_values.boolean(v)) counts.true_value += 1 else counts.false_value += 1;
-        } else counts.absent += 1;
-    }
-
     fn onTag(raw: *anyopaque, tag: xml.tags.Tag, scope: *const xml.namespaces.State, _: usize) anyerror!void {
         const self: *Context = @ptrCast(@alignCast(raw));
         if (tag.kind == .end or !try attrs.element(tag, scope, document_xml.paragraph_uri, "p")) return;
         if (self.report.paragraphs == self.options.max_paragraphs) return error.LimitExceeded;
-        self.report.paragraphs += 1;
-        const id = try self.value(tag, scope, "id");
-        defer if (id) |v| self.allocator.free(v);
-        if (id) |v| {
-            if (try xml_values.nonNegative(v)) self.report.zero_id += 1;
-        } else self.report.missing_id += 1;
-        const tc_id = try self.value(tag, scope, "paraTcId");
-        defer if (tc_id) |v| self.allocator.free(v);
-        if (tc_id) |v| {
-            _ = try xml_values.nonNegative(v);
-        } else self.report.missing_para_tc_id += 1;
-        try self.noteBoolean(tag, scope, "pageBreak", &self.report.page_break);
-        try self.noteBoolean(tag, scope, "columnBreak", &self.report.column_break);
-        try self.noteBoolean(tag, scope, "merged", &self.report.merged);
+        try noteTag(self.allocator, tag, scope, self.options.max_attribute_bytes, self.report);
     }
 };
 
