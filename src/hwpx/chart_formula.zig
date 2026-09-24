@@ -12,7 +12,7 @@ pub const Options = struct {
 pub const Report = struct {
     numeric_references: usize = 0,
     string_references: usize = 0,
-    unsupported_multilevel_references: usize = 0,
+    multilevel_references: usize = 0,
     formulas: usize = 0,
     attached_caches: usize = 0,
     references_without_cache: usize = 0,
@@ -28,19 +28,21 @@ pub const Report = struct {
     max_observed_formula_bytes: usize = 0,
 
     pub fn references(self: Report) usize {
-        return self.numeric_references + self.string_references;
+        return self.numeric_references + self.string_references + self.multilevel_references;
     }
 
     pub fn issues(self: Report) usize {
         return self.missing_formula + self.duplicate_formula + self.duplicate_cache +
             self.wrong_cache_kind + self.nested_formula_element + self.formula_after_cache +
-            self.unexpected_data_container + self.unsupported_multilevel_references;
+            self.unexpected_data_container;
     }
 };
 
+const Kind = enum { numeric, string, multilevel };
+
 const Reference = struct {
     depth: usize,
-    numeric: bool,
+    kind: Kind,
     formulas: usize = 0,
     caches: usize = 0,
 };
@@ -52,7 +54,6 @@ pub const Scanner = struct {
     current: ?Reference = null,
     formula_depth: ?usize = null,
     formula_bytes: usize = 0,
-    unsupported_depth: ?usize = null,
 
     fn finishFormula(self: *Scanner) void {
         if (self.formula_bytes == 0) self.report.empty_formulas += 1;
@@ -79,10 +80,6 @@ pub const Scanner = struct {
     }
 
     pub fn onTag(self: *Scanner, tag: xml.tags.Tag, scope: *const xml.namespaces.State, depth: usize) !void {
-        if (self.unsupported_depth) |unsupported_depth| {
-            if (tag.kind == .end and depth == unsupported_depth) self.unsupported_depth = null;
-            return;
-        }
         if (tag.kind == .end) {
             if (self.formula_depth == depth) self.finishFormula();
             if (self.current) |reference| {
@@ -96,18 +93,16 @@ pub const Scanner = struct {
         const numeric_ref = try attrs.element(tag, scope, namespace.uri, "numRef");
         const string_ref = try attrs.element(tag, scope, namespace.uri, "strRef");
         const multilevel_ref = try attrs.element(tag, scope, namespace.uri, "multiLvlStrRef");
-        if (multilevel_ref) {
+        if (numeric_ref or string_ref or multilevel_ref) {
             if (self.current != null) return error.NestedChartReference;
-            if (self.report.references() + self.report.unsupported_multilevel_references == self.options.max_references) return error.LimitExceeded;
-            self.report.unsupported_multilevel_references += 1;
-            if (tag.kind == .start) self.unsupported_depth = depth;
-            return;
-        }
-        if (numeric_ref or string_ref) {
-            if (self.current != null) return error.NestedChartReference;
-            if (self.report.references() + self.report.unsupported_multilevel_references == self.options.max_references) return error.LimitExceeded;
-            if (numeric_ref) self.report.numeric_references += 1 else self.report.string_references += 1;
-            self.current = .{ .depth = depth, .numeric = numeric_ref };
+            if (self.report.references() == self.options.max_references) return error.LimitExceeded;
+            const kind: Kind = if (numeric_ref) .numeric else if (string_ref) .string else .multilevel;
+            switch (kind) {
+                .numeric => self.report.numeric_references += 1,
+                .string => self.report.string_references += 1,
+                .multilevel => self.report.multilevel_references += 1,
+            }
+            self.current = .{ .depth = depth, .kind = kind };
             if (tag.kind == .empty) self.finishReference();
             return;
         }
@@ -124,15 +119,19 @@ pub const Scanner = struct {
         }
         const numeric_cache = try attrs.element(tag, scope, namespace.uri, "numCache");
         const string_cache = try attrs.element(tag, scope, namespace.uri, "strCache");
-        if (numeric_cache or string_cache) {
+        const multilevel_cache = try attrs.element(tag, scope, namespace.uri, "multiLvlStrCache");
+        if (numeric_cache or string_cache or multilevel_cache) {
             reference.caches += 1;
             self.report.attached_caches += 1;
             if (reference.caches > 1) self.report.duplicate_cache += 1;
-            if (numeric_cache != reference.numeric) self.report.wrong_cache_kind += 1;
+            if (!switch (reference.kind) {
+                .numeric => numeric_cache,
+                .string => string_cache,
+                .multilevel => multilevel_cache,
+            }) self.report.wrong_cache_kind += 1;
             return;
         }
         if (try attrs.element(tag, scope, namespace.uri, "numLit") or
-            try attrs.element(tag, scope, namespace.uri, "strLit") or
-            try attrs.element(tag, scope, namespace.uri, "multiLvlStrCache")) self.report.unexpected_data_container += 1;
+            try attrs.element(tag, scope, namespace.uri, "strLit")) self.report.unexpected_data_container += 1;
     }
 };

@@ -48,13 +48,49 @@ test "HWPX chart caches include literal data with the same point structure" {
     try std.testing.expectEqual(@as(usize, 0), report.issues());
 }
 
-test "HWPX chart caches report multilevel strings as unsupported coverage" {
-    const source = prefix ++ "<c:multiLvlStrCache><c:ptCount val=\"1\"/><c:lvl><c:pt idx=\"0\"><c:v>A</c:v></c:pt></c:lvl><c:numCache/></c:multiLvlStrCache>" ++ suffix;
+test "HWPX chart caches inspect multilevel strings per level" {
+    const source = prefix ++ "<c:multiLvlStrCache><c:ptCount val=\"2\"/>" ++
+        "<c:lvl><c:pt idx=\"0\"><c:v>A</c:v></c:pt><c:pt idx=\"1\"><c:v>B</c:v></c:pt></c:lvl>" ++
+        "<c:lvl><c:pt idx=\"0\"><c:v>가</c:v></c:pt><c:pt idx=\"1\"><c:v>나</c:v></c:pt></c:lvl>" ++
+        "</c:multiLvlStrCache>" ++ suffix;
     const report = try inspect(std.testing.allocator, source, .{});
-    try std.testing.expectEqual(@as(usize, 1), report.unsupported_multilevel_string_caches);
-    try std.testing.expectEqual(@as(usize, 0), report.points);
+    try std.testing.expectEqual(@as(usize, 1), report.multilevel_string_caches);
+    try std.testing.expectEqual(@as(usize, 2), report.levels);
+    try std.testing.expectEqual(@as(usize, 4), report.points);
+    try std.testing.expectEqual(@as(usize, 2), report.declared_points);
     try std.testing.expectEqual(@as(usize, 0), report.numeric_caches);
-    try std.testing.expectEqual(@as(usize, 1), report.issues());
+    try std.testing.expectEqual(@as(usize, 4), report.xstring_decoded_values);
+    try std.testing.expectEqual(@as(usize, 0), report.issues());
+    try std.testing.expectError(error.NestedChartCache, inspect(std.testing.allocator, prefix ++ "<c:multiLvlStrCache><c:numCache/></c:multiLvlStrCache>" ++ suffix, .{}));
+    _ = try inspect(std.testing.allocator, source, .{ .max_data_containers = 1, .max_levels = 2, .max_points = 4, .max_total_value_bytes = 8 });
+    try std.testing.expectError(error.LimitExceeded, inspect(std.testing.allocator, source, .{ .max_data_containers = 0 }));
+    try std.testing.expectError(error.LimitExceeded, inspect(std.testing.allocator, source, .{ .max_levels = 1 }));
+    try std.testing.expectError(error.LimitExceeded, inspect(std.testing.allocator, source, .{ .max_points = 3 }));
+    try std.testing.expectError(error.LimitExceeded, inspect(std.testing.allocator, source, .{ .max_total_value_bytes = 7 }));
+}
+
+test "HWPX chart caches diagnose multilevel omissions and isolate indices per level" {
+    const source = prefix ++ "<c:multiLvlStrCache><c:ptCount val=\"2\"/>" ++
+        "<c:lvl><c:pt idx=\"0\"><c:v>A</c:v></c:pt><c:pt idx=\"0\"><c:v>B</c:v></c:pt></c:lvl>" ++
+        "<c:lvl><c:pt idx=\"3\"><c:v>C</c:v></c:pt></c:lvl></c:multiLvlStrCache>" ++
+        "<c:multiLvlStrCache><c:ptCount val=\"0\"/></c:multiLvlStrCache>" ++ suffix;
+    const report = try inspect(std.testing.allocator, source, .{});
+    try std.testing.expectEqual(@as(usize, 2), report.multilevel_string_caches);
+    try std.testing.expectEqual(@as(usize, 2), report.levels);
+    try std.testing.expectEqual(@as(usize, 3), report.points);
+    try std.testing.expectEqual(@as(usize, 1), report.duplicate_point_index);
+    try std.testing.expectEqual(@as(usize, 1), report.point_count_disagreement);
+    try std.testing.expectEqual(@as(usize, 1), report.out_of_range_point_index);
+    try std.testing.expectEqual(@as(usize, 1), report.empty_multilevel_caches);
+    try std.testing.expectError(error.InvalidChartPointCountOrder, inspect(std.testing.allocator, prefix ++ "<c:multiLvlStrCache><c:lvl/><c:ptCount val=\"0\"/></c:multiLvlStrCache>" ++ suffix, .{}));
+    try std.testing.expectError(error.LimitExceeded, inspect(std.testing.allocator, source, .{ .max_levels = 1 }));
+}
+
+test "HWPX chart caches allow zero levels without a false structure issue" {
+    const report = try inspect(std.testing.allocator, prefix ++ "<c:multiLvlStrCache><c:ptCount val=\"0\"/></c:multiLvlStrCache>" ++ suffix, .{});
+    try std.testing.expectEqual(@as(usize, 1), report.multilevel_string_caches);
+    try std.testing.expectEqual(@as(usize, 1), report.empty_multilevel_caches);
+    try std.testing.expectEqual(@as(usize, 0), report.issues());
 }
 
 test "HWPX chart caches retain disagreement, duplicate and out-of-range diagnostics" {
@@ -162,4 +198,27 @@ test "HWPX chart cache scanner releases index maps on every allocation failure" 
             _ = try inspect(a, bytes, .{});
         }
     }.run, .{source});
+}
+
+test "HWPX chart multilevel scanner releases maps across levels on every allocation failure" {
+    const source = prefix ++ "<c:multiLvlStrCache><c:ptCount val=\"1\"/>" ++
+        "<c:lvl><c:pt idx=\"0\"><c:v>_xD83D_<![CDATA[_xDE00_]]></c:v></c:pt></c:lvl>" ++
+        "<c:lvl><c:pt idx=\"0\"><c:v>B</c:v></c:pt></c:lvl></c:multiLvlStrCache>" ++ suffix;
+    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+        fn run(a: std.mem.Allocator, bytes: []const u8) !void {
+            const report = try inspect(a, bytes, .{});
+            try std.testing.expectEqual(@as(usize, 2), report.points);
+            try std.testing.expectEqual(@as(usize, 0), report.issues());
+        }
+    }.run, .{source});
+}
+
+test "HWPX chart multilevel scanner frees prior levels after a later invalid index" {
+    const source = prefix ++ "<c:multiLvlStrCache><c:ptCount val=\"1\"/>" ++
+        "<c:lvl><c:pt idx=\"0\"><c:v>A</c:v></c:pt></c:lvl>" ++
+        "<c:lvl><c:pt idx=\"bad\"/></c:lvl></c:multiLvlStrCache>" ++ suffix;
+    var checked: std.heap.DebugAllocator(.{ .safety = true, .enable_memory_limit = true }) = .init;
+    defer _ = checked.deinit();
+    try std.testing.expectError(error.InvalidChartPointIndex, inspect(checked.allocator(), source, .{}));
+    try std.testing.expectEqual(@as(usize, 0), checked.total_requested_bytes);
 }

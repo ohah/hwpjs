@@ -714,6 +714,8 @@ test "HWPX corpus chart path and XML read-only survey" {
     var missing: usize = 0;
     var numeric_caches: usize = 0;
     var string_caches: usize = 0;
+    var multilevel_caches: usize = 0;
+    var multilevel_levels: usize = 0;
     var numeric_literals: usize = 0;
     var string_literals: usize = 0;
     var cache_points: usize = 0;
@@ -728,6 +730,7 @@ test "HWPX corpus chart path and XML read-only survey" {
     var unsupported_xstring_surrogates: usize = 0;
     var numeric_references: usize = 0;
     var string_references: usize = 0;
+    var multilevel_references: usize = 0;
     var formulas: usize = 0;
     var attached_caches: usize = 0;
     var formula_issues: usize = 0;
@@ -767,6 +770,8 @@ test "HWPX corpus chart path and XML read-only survey" {
             missing += report.missing_entry + report.invalid_path;
             numeric_caches += report.cache.numeric_caches;
             string_caches += report.cache.string_caches;
+            multilevel_caches += report.cache.multilevel_string_caches;
+            multilevel_levels += report.cache.levels;
             numeric_literals += report.cache.numeric_literals;
             string_literals += report.cache.string_literals;
             cache_points += report.cache.points;
@@ -781,6 +786,7 @@ test "HWPX corpus chart path and XML read-only survey" {
             unsupported_xstring_surrogates += report.cache.unsupported_xstring_surrogates;
             numeric_references += report.formula.numeric_references;
             string_references += report.formula.string_references;
+            multilevel_references += report.formula.multilevel_references;
             formulas += report.formula.formulas;
             attached_caches += report.formula.attached_caches;
             formula_issues += report.formula.issues();
@@ -809,6 +815,8 @@ test "HWPX corpus chart path and XML read-only survey" {
     try std.testing.expectEqual(@as(usize, 0), missing);
     try std.testing.expectEqual(@as(usize, 259), numeric_caches);
     try std.testing.expectEqual(@as(usize, 477), string_caches);
+    try std.testing.expectEqual(@as(usize, 0), multilevel_caches);
+    try std.testing.expectEqual(@as(usize, 0), multilevel_levels);
     try std.testing.expectEqual(@as(usize, 11), numeric_literals);
     try std.testing.expectEqual(@as(usize, 5), string_literals);
     try std.testing.expectEqual(@as(usize, 2296), cache_points);
@@ -816,6 +824,7 @@ test "HWPX corpus chart path and XML read-only survey" {
     try std.testing.expectEqual(@as(usize, 0), cache_issues);
     try std.testing.expectEqual(@as(usize, 259), numeric_references);
     try std.testing.expectEqual(@as(usize, 477), string_references);
+    try std.testing.expectEqual(@as(usize, 0), multilevel_references);
     try std.testing.expectEqual(@as(usize, 736), formulas);
     try std.testing.expectEqual(@as(usize, 736), attached_caches);
     try std.testing.expectEqual(@as(usize, 0), formula_issues);

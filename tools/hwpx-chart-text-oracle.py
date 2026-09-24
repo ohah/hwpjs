@@ -6,6 +6,7 @@ parser. It inventories Chart/*.xml members, not HWPX chartIDRef reachability.
 
 import json
 import re
+import sys
 from pathlib import Path
 from xml.etree import ElementTree
 from zipfile import BadZipFile, ZipFile
@@ -21,6 +22,32 @@ MAX_PACKAGE_BYTES = 25_000_000
 MAX_CHART_BYTES = 32 * 1024 * 1024
 
 
+def count_multilevel(chart: ElementTree.Element) -> dict[str, int]:
+    result = {"multilevel_references": 0, "multilevel_caches": 0,
+              "multilevel_levels": 0, "multilevel_points": 0}
+    for reference in chart.iter(CHART + "multiLvlStrRef"):
+        result["multilevel_references"] += 1
+    for cache in chart.iter(CHART + "multiLvlStrCache"):
+        result["multilevel_caches"] += 1
+        for level in cache.findall(CHART + "lvl"):
+            result["multilevel_levels"] += 1
+            result["multilevel_points"] += len(level.findall(CHART + "pt"))
+    return result
+
+
+def self_test() -> None:
+    chart = ElementTree.fromstring(
+        f"<c:chartSpace xmlns:c='{CHART[1:-1]}'>"
+        "<c:multiLvlStrRef><c:multiLvlStrCache><c:ptCount val='2'/>"
+        "<c:lvl><c:pt idx='0'/><c:pt idx='1'/></c:lvl><c:lvl><c:pt idx='0'/></c:lvl>"
+        "</c:multiLvlStrCache></c:multiLvlStrRef>"
+        "<x:multiLvlStrCache xmlns:x='urn:foreign'/>"
+        "</c:chartSpace>"
+    )
+    assert count_multilevel(chart) == {"multilevel_references": 1, "multilevel_caches": 1,
+                                      "multilevel_levels": 2, "multilevel_points": 3}
+
+
 def main() -> None:
     result = {
         "chart_parts": 0,
@@ -32,6 +59,10 @@ def main() -> None:
         "formula_bytes": 0,
         "empty_formulas": 0,
         "max_formula_bytes": 0,
+        "multilevel_references": 0,
+        "multilevel_caches": 0,
+        "multilevel_levels": 0,
+        "multilevel_points": 0,
         "rejected_zip": 0,
     }
     for root in ROOTS:
@@ -51,6 +82,8 @@ def main() -> None:
                             raise ValueError("HWPX oracle chart limit exceeded")
                         chart = ElementTree.fromstring(source)
                         result["chart_parts"] += 1
+                        for key, count in count_multilevel(chart).items():
+                            result[key] += count
                         for kind in ("numCache", "strCache", "numLit", "strLit"):
                             for container in chart.iter(CHART + kind):
                                 for point in container.findall(CHART + "pt"):
@@ -74,4 +107,10 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    if sys.argv[1:] == ["--self-test"]:
+        self_test()
+        print("multilevel chart oracle self-test passed")
+    elif not sys.argv[1:]:
+        main()
+    else:
+        raise SystemExit("usage: hwpx-chart-text-oracle.py [--self-test]")

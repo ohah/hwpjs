@@ -6,6 +6,7 @@ const xstring = @import("xstring.zig");
 
 pub const Options = struct {
     max_data_containers: usize = 100_000,
+    max_levels: usize = 100_000,
     max_points: usize = 1_000_000,
     max_attribute_bytes: usize = 4096,
     max_value_bytes: usize = 1024 * 1024,
@@ -17,7 +18,9 @@ pub const Report = struct {
     string_caches: usize = 0,
     numeric_literals: usize = 0,
     string_literals: usize = 0,
-    unsupported_multilevel_string_caches: usize = 0,
+    multilevel_string_caches: usize = 0,
+    levels: usize = 0,
+    empty_multilevel_caches: usize = 0,
     points: usize = 0,
     declared_points: usize = 0,
     missing_point_count: usize = 0,
@@ -37,24 +40,27 @@ pub const Report = struct {
     unsupported_xstring_surrogates: usize = 0,
 
     pub fn caches(self: Report) usize {
-        return self.numeric_caches + self.string_caches;
+        return self.numeric_caches + self.string_caches + self.multilevel_string_caches;
     }
 
     pub fn containers(self: Report) usize {
-        return self.caches() + self.numeric_literals + self.string_literals + self.unsupported_multilevel_string_caches;
+        return self.caches() + self.numeric_literals + self.string_literals;
     }
 
     pub fn issues(self: Report) usize {
-        return self.unsupported_multilevel_string_caches + self.missing_point_count + self.duplicate_point_count + self.point_count_disagreement +
+        return self.missing_point_count + self.duplicate_point_count + self.point_count_disagreement +
             self.duplicate_point_index + self.out_of_range_point_index + self.missing_value_element + self.duplicate_value_element + self.nested_value_element + self.unsupported_xstring_surrogates;
     }
 };
 
 const Cache = struct {
     depth: usize,
+    multilevel: bool = false,
     declared: ?u32 = null,
     point_count_elements: usize = 0,
     points: usize = 0,
+    levels: usize = 0,
+    level_depth: ?usize = null,
     seen: std.AutoHashMapUnmanaged(u32, void) = .empty,
 };
 
@@ -68,7 +74,6 @@ pub const Scanner = struct {
     value_depth: ?usize = null,
     value_bytes: usize = 0,
     value_text: std.ArrayList(u8) = .empty,
-    unsupported_depth: ?usize = null,
 
     fn finishValue(self: *Scanner) !void {
         if (self.value_bytes == 0) self.report.empty_values += 1;
@@ -118,29 +123,45 @@ pub const Scanner = struct {
         self.point_values = 0;
     }
 
-    fn finishCache(self: *Scanner) !void {
-        var cache = self.current.?;
-        defer cache.seen.deinit(self.allocator);
-        self.current = null;
-        if (cache.point_count_elements == 0) self.report.missing_point_count += 1;
+    fn finishLevel(self: *Scanner) void {
+        const cache = &self.current.?;
         if (cache.declared) |declared| {
-            self.report.declared_points = std.math.add(usize, self.report.declared_points, declared) catch return error.LimitExceeded;
             if (cache.points != declared) self.report.point_count_disagreement += 1;
             var it = cache.seen.keyIterator();
             while (it.next()) |index| if (index.* >= declared) {
                 self.report.out_of_range_point_index += 1;
             };
         }
+        cache.seen.clearRetainingCapacity();
+        cache.points = 0;
+        cache.level_depth = null;
+    }
+
+    fn finishCache(self: *Scanner) !void {
+        var cache = self.current.?;
+        defer cache.seen.deinit(self.allocator);
+        self.current = null;
+        if (cache.point_count_elements == 0) self.report.missing_point_count += 1;
+        if (cache.multilevel and cache.levels == 0) self.report.empty_multilevel_caches += 1;
+        if (cache.declared) |declared| {
+            self.report.declared_points = std.math.add(usize, self.report.declared_points, declared) catch return error.LimitExceeded;
+            if (!cache.multilevel) {
+                if (cache.points != declared) self.report.point_count_disagreement += 1;
+                var it = cache.seen.keyIterator();
+                while (it.next()) |index| if (index.* >= declared) {
+                    self.report.out_of_range_point_index += 1;
+                };
+            }
+        }
     }
 
     pub fn onTag(self: *Scanner, tag: xml.tags.Tag, scope: *const xml.namespaces.State, depth: usize) !void {
-        if (self.unsupported_depth) |unsupported_depth| {
-            if (tag.kind == .end and depth == unsupported_depth) self.unsupported_depth = null;
-            return;
-        }
         if (tag.kind == .end) {
             if (self.value_depth == depth) try self.finishValue();
             if (self.point_depth == depth) self.finishPoint();
+            if (self.current) |cache| {
+                if (cache.level_depth == depth) self.finishLevel();
+            }
             if (self.current) |cache| {
                 if (cache.depth == depth) try self.finishCache();
             }
@@ -149,33 +170,38 @@ pub const Scanner = struct {
         if (self.value_depth) |value_depth| {
             if (depth > value_depth) self.report.nested_value_element += 1;
         }
-        if (try attrs.element(tag, scope, chart_namespace.uri, "multiLvlStrCache")) {
-            if (self.report.containers() == self.options.max_data_containers) return error.LimitExceeded;
-            self.report.unsupported_multilevel_string_caches += 1;
-            if (tag.kind == .start) self.unsupported_depth = depth;
-            return;
-        }
+        const multilevel_cache = try attrs.element(tag, scope, chart_namespace.uri, "multiLvlStrCache");
         const numeric_cache = try attrs.element(tag, scope, chart_namespace.uri, "numCache");
         const string_cache = try attrs.element(tag, scope, chart_namespace.uri, "strCache");
         const numeric_literal = try attrs.element(tag, scope, chart_namespace.uri, "numLit");
         const string_literal = try attrs.element(tag, scope, chart_namespace.uri, "strLit");
-        if (numeric_cache or string_cache or numeric_literal or string_literal) {
+        if (numeric_cache or string_cache or numeric_literal or string_literal or multilevel_cache) {
             if (self.current != null) return error.NestedChartCache;
             if (self.report.containers() == self.options.max_data_containers) return error.LimitExceeded;
-            if (numeric_cache) self.report.numeric_caches += 1 else if (string_cache) self.report.string_caches += 1 else if (numeric_literal) self.report.numeric_literals += 1 else self.report.string_literals += 1;
-            self.current = .{ .depth = depth };
+            if (numeric_cache) self.report.numeric_caches += 1 else if (string_cache) self.report.string_caches += 1 else if (numeric_literal) self.report.numeric_literals += 1 else if (string_literal) self.report.string_literals += 1 else self.report.multilevel_string_caches += 1;
+            self.current = .{ .depth = depth, .multilevel = multilevel_cache };
             if (tag.kind == .empty) try self.finishCache();
             return;
         }
         const cache = if (self.current) |*value| value else return;
         if (depth == cache.depth + 1 and try attrs.element(tag, scope, chart_namespace.uri, "ptCount")) {
+            if (cache.multilevel and cache.levels != 0) return error.InvalidChartPointCountOrder;
             cache.point_count_elements += 1;
             if (cache.point_count_elements > 1) self.report.duplicate_point_count += 1;
             const declared = try self.numericAttribute(tag, scope, "val", error.InvalidChartPointCount);
             if (cache.declared == null) cache.declared = declared;
             return;
         }
-        if (depth == cache.depth + 1 and try attrs.element(tag, scope, chart_namespace.uri, "pt")) {
+        if (cache.multilevel and depth == cache.depth + 1 and try attrs.element(tag, scope, chart_namespace.uri, "lvl")) {
+            if (self.report.levels == self.options.max_levels) return error.LimitExceeded;
+            self.report.levels += 1;
+            cache.levels += 1;
+            cache.level_depth = depth;
+            if (tag.kind == .empty) self.finishLevel();
+            return;
+        }
+        const expected_point_depth = if (cache.multilevel) if (cache.level_depth) |level_depth| level_depth + 1 else 0 else cache.depth + 1;
+        if (depth == expected_point_depth and try attrs.element(tag, scope, chart_namespace.uri, "pt")) {
             if (self.report.points == self.options.max_points) return error.LimitExceeded;
             const index = try self.numericAttribute(tag, scope, "idx", error.InvalidChartPointIndex);
             self.report.points += 1;

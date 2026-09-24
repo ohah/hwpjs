@@ -66,16 +66,21 @@ test "HWPX chart formulas reject nested references and enforce a shared exact bu
     try std.testing.expectError(error.LimitExceeded, inspect(std.testing.allocator, prefix ++ "<c:multiLvlStrRef/><c:numRef/>" ++ suffix, .{ .max_references = 1 }));
 }
 
-test "HWPX chart formulas expose unsupported multilevel and misplaced reference children" {
+test "HWPX chart formulas parse multilevel references and misplaced children" {
     const source = prefix ++
-        "<c:multiLvlStrRef><c:f>Sheet1!$A$1</c:f><c:numRef/></c:multiLvlStrRef>" ++
+        "<c:multiLvlStrRef><c:f>Sheet1!$A$1</c:f><c:multiLvlStrCache><c:ptCount val=\"0\"/></c:multiLvlStrCache></c:multiLvlStrRef>" ++
         "<c:numRef><c:numCache/><c:f>Sheet1!$B$1</c:f><c:numLit/></c:numRef>" ++ suffix;
     const report = try inspect(std.testing.allocator, source, .{});
-    try std.testing.expectEqual(@as(usize, 1), report.unsupported_multilevel_references);
+    try std.testing.expectEqual(@as(usize, 1), report.multilevel_references);
     try std.testing.expectEqual(@as(usize, 1), report.numeric_references);
+    try std.testing.expectEqual(@as(usize, 2), report.formulas);
+    try std.testing.expectEqual(@as(usize, 2), report.attached_caches);
     try std.testing.expectEqual(@as(usize, 1), report.formula_after_cache);
     try std.testing.expectEqual(@as(usize, 1), report.unexpected_data_container);
-    try std.testing.expectEqual(@as(usize, 3), report.issues());
+    try std.testing.expectEqual(@as(usize, 2), report.issues());
+    try std.testing.expectError(error.NestedChartReference, inspect(std.testing.allocator, prefix ++ "<c:multiLvlStrRef><c:numRef/></c:multiLvlStrRef>" ++ suffix, .{}));
+    const mismatch = try inspect(std.testing.allocator, prefix ++ "<c:multiLvlStrRef><c:f>A1</c:f><c:strCache/></c:multiLvlStrRef>" ++ suffix, .{});
+    try std.testing.expectEqual(@as(usize, 1), mismatch.wrong_cache_kind);
 }
 
 test "HWPX chart formulas ignore lookalike namespaces and out-of-reference formulas" {

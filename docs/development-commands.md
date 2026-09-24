@@ -56,6 +56,8 @@ HWPX 전용 테스트는 `zig test src/root.zig --test-filter HWPX`로 실행합
 
 [차트 수식 참조 구조](hwpx-chart-formula.md) 단위 테스트는 `zig test src/root.zig --test-filter 'HWPX chart formula'`로 선택합니다. 경로와의 통합 테스트는 `--test-filter 'HWPX chart'`에 포함됩니다.
 
+다단계 차트 범위는 `zig test src/root.zig --test-filter 'HWPX chart caches'`, `--test-filter 'HWPX chart formulas'`, `--test-filter 'HWPX chart links'`로 각각 검사하고, `python3 tools/hwpx-chart-text-oracle.py --self-test` 및 인자 없는 전체 차트 조사의 `multilevel_*` 집계와 대조합니다. 양성 실파일은 현재 로컬 corpus에 없습니다.
+
 [차트 값·수식 텍스트 관측](hwpx-chart-text.md)의 공통 XML 이벤트 테스트는 `zig test src/root.zig --test-filter 'XML content visitor'`, 차트의 텍스트 한도·집계는 `zig test src/root.zig --test-filter 'HWPX chart'`로 확인합니다. 선택 실파일 제품 조사와 독립 대조는 각각 아래 `hwpx_structure_survey.zig`의 차트 필터와 `python3 tools/hwpx-chart-text-oracle.py`를 실행합니다. Python oracle은 제품·기본 audit 의존성이 아닙니다.
 
 [차트 ST_Xstring](hwpx-xstring.md)의 해독기 단위 테스트는 `zig test src/root.zig --test-filter 'HWPX Xstring'`, 차트 통합 테스트는 위 `HWPX chart` 필터로 실행합니다. corpus에는 해당 이스케이프가 없으므로 독립 oracle의 원문 값 길이 대조를 해독 정확성의 증거로 사용하지 않습니다.

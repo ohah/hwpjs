@@ -73,6 +73,26 @@ test "HWPX chart links expose cache disagreement once per unique chart part" {
     try std.testing.expectEqualStrings("Chart/chart1.xml", report.first_formula_issue_path.?);
 }
 
+test "HWPX chart links inspect multilevel labels once per unique chart part" {
+    const source = "<c:chartSpace xmlns:c=\"http://schemas.openxmlformats.org/drawingml/2006/chart\"><c:chart><c:multiLvlStrRef>" ++
+        "<c:f>Sheet1!$A$1:$A$2</c:f><c:multiLvlStrCache><c:ptCount val=\"2\"/>" ++
+        "<c:lvl><c:pt idx=\"0\"><c:v>A</c:v></c:pt><c:pt idx=\"1\"><c:v>B</c:v></c:pt></c:lvl>" ++
+        "<c:lvl><c:pt idx=\"0\"><c:v>C</c:v></c:pt><c:pt idx=\"1\"><c:v>D</c:v></c:pt></c:lvl>" ++
+        "</c:multiLvlStrCache></c:multiLvlStrRef></c:chart></c:chartSpace>";
+    var report = try inspect(std.testing.allocator, two_refs, source, .{});
+    defer report.deinit(std.testing.allocator);
+    try std.testing.expectEqual(@as(usize, 1), report.chart_parts);
+    try std.testing.expectEqual(@as(usize, 1), report.formula.multilevel_references);
+    try std.testing.expectEqual(@as(usize, 1), report.formula.attached_caches);
+    try std.testing.expectEqual(@as(usize, 1), report.cache.multilevel_string_caches);
+    try std.testing.expectEqual(@as(usize, 2), report.cache.levels);
+    try std.testing.expectEqual(@as(usize, 4), report.cache.points);
+    try std.testing.expectEqual(@as(usize, 0), report.cache.issues());
+    try std.testing.expectEqual(@as(usize, 0), report.formula.issues());
+    const distinct = section_prefix ++ "<p:chart chartIDRef=\"Chart/chart1.xml\"/><p:chart chartIDRef=\"Chart/chart2.xml\"/>" ++ section_suffix;
+    try expectError(std.testing.allocator, distinct, source, .{ .references = .{ .charts = .{ .cache = .{ .max_levels = 2 } } } }, error.LimitExceeded);
+}
+
 test "HWPX chart links retain a formula-only diagnostic independently" {
     const chart_with_formula_issue = "<c:chartSpace xmlns:c=\"http://schemas.openxmlformats.org/drawingml/2006/chart\"><c:numRef><c:numCache><c:ptCount val=\"0\"/></c:numCache></c:numRef></c:chartSpace>";
     var report = try inspect(std.testing.allocator, two_refs, chart_with_formula_issue, .{});
