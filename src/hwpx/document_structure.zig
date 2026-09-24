@@ -5,7 +5,7 @@ const protection = @import("encryption_manifest.zig");
 const document_xml = @import("document_xml.zig");
 
 const header_path = "Contents/header.xml";
-const xml_media = "application/xml";
+const xml_media = content_manifest.xml_media_type;
 
 pub const Options = struct {
     protection: protection.Options = .{},

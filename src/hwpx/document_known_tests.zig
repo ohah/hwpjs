@@ -117,3 +117,15 @@ test "HWPX known inspections check unlisted payload bytes before XML phases" {
     try std.testing.expectError(error.InvalidCrc, document.inspectKnown(a, .{}));
     try std.testing.expectError(error.LimitExceeded, document.inspectKnown(a, .{ .payload_integrity = .{ .max_total_decoded_bytes = 0 } }));
 }
+
+test "HWPX known inspections reject malformed manifest XML outside the spine" {
+    const hpf = "<o:package xmlns:o='http://www.idpf.org/2007/opf/'><o:manifest><o:item id='h' href='Contents/header.xml' media-type='application/xml'/><o:item id='s' href='Contents/section0.xml' media-type='application/xml'/><o:item id='settings' href='settings.xml' media-type='application/xml'/></o:manifest><o:spine><o:itemref idref='h'/><o:itemref idref='s'/></o:spine></o:package>";
+    var sources = synthetic_sources ++ [_]fixture.Source{.{ .name = "settings.xml", .data = "<settings>" }};
+    sources[2].data = hpf;
+    const a = std.testing.allocator;
+    const bytes = try fixture.storedZip(a, &sources);
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    try std.testing.expectError(error.UnclosedXmlElement, document.inspectKnown(a, .{}));
+}

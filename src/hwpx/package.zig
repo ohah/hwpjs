@@ -21,6 +21,7 @@ const paragraph_metadata = @import("paragraph_metadata.zig");
 const header_begin_numbers = @import("header_begin_numbers.zig");
 const document_known = @import("document_known.zig");
 const payload_integrity = @import("payload_integrity.zig");
+const manifest_xml = @import("manifest_xml.zig");
 
 pub const Archive = zip.Archive;
 pub const Options = zip.Options;
@@ -107,10 +108,13 @@ pub const BeginNumberField = header_begin_numbers.Field;
 pub const KnownReport = document_known.Report;
 pub const PayloadIntegrityOptions = payload_integrity.Options;
 pub const PayloadIntegrityReport = payload_integrity.Report;
+pub const ManifestXmlOptions = manifest_xml.Options;
+pub const ManifestXmlReport = manifest_xml.Report;
 pub const KnownOptions = struct {
     version: VersionOptions = .{},
     protection: ProtectionOptions = .{},
     payload_integrity: PayloadIntegrityOptions = .{},
+    manifest_xml: ManifestXmlOptions = .{},
     structure: StructureOptions = .{},
     header_resources: HeaderResourceOptions = .{},
     section_references: ReferenceOptions = .{},
@@ -144,6 +148,12 @@ pub const Document = struct {
     /// including parts outside the OPF manifest. Does not parse their format.
     pub fn inspectPayloadIntegrity(self: *const Document, a: std.mem.Allocator, options: PayloadIntegrityOptions) !PayloadIntegrityReport {
         return payload_integrity.inspect(a, self.archive, self.manifest.items, options);
+    }
+
+    /// Validates syntax and namespaces for every OPF application/xml item,
+    /// including settings and master pages not selected by the spine.
+    pub fn inspectManifestXml(self: *const Document, a: std.mem.Allocator, options: ManifestXmlOptions) !ManifestXmlReport {
+        return manifest_xml.inspect(a, self.archive, self.manifest.items, options);
     }
 
     /// Runs all currently exposed HWPX inspections on this document. A

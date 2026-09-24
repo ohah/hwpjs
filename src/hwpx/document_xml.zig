@@ -83,7 +83,7 @@ pub fn read(a: std.mem.Allocator, archive: zip.Archive, entry: zip.Entry, max_xm
 
 /// Applies the same namespace, syntax and resource limits to every HWPX
 /// document XML consumer. Visitor state is valid only during this call.
-pub fn visitBytes(a: std.mem.Allocator, bytes: []const u8, max_xml_bytes: usize, options: Options, visitor: xml.document.Visitor) !xml.document.Report {
+pub fn visitBytes(a: std.mem.Allocator, bytes: []const u8, max_xml_bytes: usize, options: Options, visitor: ?xml.document.Visitor) !xml.document.Report {
     return xml.document.visit(a, bytes, .{
         .validate_namespaces = true,
         .prolog = .{ .input = .{ .max_bytes = max_xml_bytes, .max_characters = max_xml_bytes } },

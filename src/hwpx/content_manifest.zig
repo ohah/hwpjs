@@ -4,6 +4,7 @@ const zip = @import("../zip/archive.zig");
 const attrs = @import("xml_attributes.zig");
 
 const opf_uri = "http://www.idpf.org/2007/opf/";
+pub const xml_media_type = "application/xml";
 
 pub const Item = struct {
     id: []u8,

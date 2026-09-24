@@ -36,6 +36,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [모든 ZIP 엔트리 바이트 무결성](hwpx-payload-integrity.md)은 기존 ZIP 해제·CRC 계약을 전체 archive에 적용합니다. OPF 밖 항목도 누락하지 않지만 media-type과 payload 내부 포맷의 의미 검사는 해당 리소스 계층에 남깁니다.
 
+[OPF 선언 XML 전수 문법 검사](hwpx-manifest-xml.md)는 공통 XML 순회를 모든 내장 `application/xml` manifest 항목에 적용합니다. settings·masterpage도 포함하지만 루트별 스키마·의미는 해당 후속 계층에 남깁니다.
+
 [Section 직접 문자 콘텐츠·순서형 이벤트](hwpx-section-content.md)는 소유 원문을 다시 파싱해 문자·CDATA 조각을 인덱스의 정확한 부모 요소에 연결하고, 요소 경계와 문자를 원래 순서로 전달합니다. 의미 계층은 이 순회와 원문·요소 인덱스를 재사용하며 표시 문장이나 편집 모델을 임의 조립하지 않습니다.
 
 이미지/XML 외부에서도 재사용할 수 있는 언어 태그 규칙은 `src/text/`에 둡니다. [BCP 47 문법 검사](bcp47-syntax.md)와 [IANA 등록 검증](bcp47-registry.md)은 다른 단계입니다. [PNG iTXt](png-international-text.md)는 등록 검사와 UTF-8·압축 검사를 조립하며 extension 의미 보류를 별도로 보고합니다.

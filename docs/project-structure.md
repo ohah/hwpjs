@@ -28,6 +28,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
   문단의 `id`·`paraTcId`·Boolean 값과 부재 진단은 [문단 메타 속성 검사](hwpx-paragraph-metadata.md)가 소유합니다.
   Header의 여섯 `beginNum` 원값과 부재 진단은 [Header 시작 번호](hwpx-header-begin-numbers.md)가 소유합니다.
   모든 ZIP 엔트리의 실제 해제·CRC와 OPF 목록 밖 항목 분류는 [바이트 무결성](hwpx-payload-integrity.md)이 소유합니다.
+  OPF가 XML로 선언한 내장 항목의 전수 문법·namespace 검사와 합계 예산은 [manifest XML](hwpx-manifest-xml.md)이 소유합니다.
   기존 검사들을 같은 문서에 적용한 소유 보고서·정리 순서는 [현재 지원 검사 묶음](hwpx-known-inspections.md)이 소유합니다.
 - `src/cfb/`: 읽기·검증·저장을 책임별로 분리한 CFB 코어.
 - `src/hwp5/`: 헤더 원본·버전·스트림 정책·압축 trailer·레코드 framing을 분리합니다. 현재 계약·검증 범위는 [HWP5 모듈 계약](hwp5-modules.md), 과거 이력은 [구현/검증 기록](hwp5-foundation.md)을 참조합니다.
