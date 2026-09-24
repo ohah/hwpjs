@@ -6,6 +6,8 @@ It checks syntax and counts; it does not validate HWPX XML schemas or meaning.
 
 import json
 import re
+import sys
+from collections import Counter
 from pathlib import Path
 from xml.etree import ElementTree as ET
 from zipfile import BadZipFile, ZipFile
@@ -30,6 +32,8 @@ SUB_LIST_FIELDS = ("id", "textDirection", "lineWrap", "vertAlign", "linkListIDRe
 SUB_LIST_ENUMS = {"textDirection": ("HORIZONTAL", "VERTICAL", "VERTICALALL"),
                   "lineWrap": ("BREAK", "SQUEEZE", "KEEP"),
                   "vertAlign": ("TOP", "CENTER", "BOTTOM")}
+LINE_SEG_FIELDS = ("textpos", "vertpos", "vertsize", "textheight", "baseline", "spacing", "horzpos", "horzsize", "flags")
+LINE_SEG_UNSIGNED = frozenset(("textpos", "flags"))
 RUN_MODEL_CHILDREN = frozenset((
     "secPr", "ctrl", "t", "tbl", "pic", "ole", "container", "equation",
     "line", "rect", "ellipse", "arc", "polygon", "curve", "connectLine",
@@ -63,6 +67,7 @@ def empty():
                 master_sub_list_unknown_enums=0, master_sub_list_other_attributes=0,
                 master_sub_list_width_sum=0, master_sub_list_height_sum=0,
                 master_paragraphs=0, master_paragraph_missing_id=0,
+                master_line_segments=Counter(),
                 master_paragraph_zero_id=0, master_paragraph_missing_tc_id=0,
                 master_paragraph_page_break_present=0, master_paragraph_page_break_true=0,
                 master_paragraph_column_break_present=0, master_paragraph_column_break_true=0,
@@ -98,6 +103,63 @@ def master_path(name):
     return (name.startswith(prefix) and name.endswith(".xml")
             and bool(name[len(prefix):-4])
             and all("0" <= char <= "9" for char in name[len(prefix):-4]))
+
+
+def count_master_line_segments(sub_list, counts):
+    """Independent direct p/linesegarray/lineseg census under one root subList."""
+    for paragraph in sub_list.iter(PARA + "p"):
+        counts["paragraphs"] += 1
+        arrays = [child for child in paragraph if child.tag == PARA + "linesegarray"]
+        counts["arrays"] += len(arrays)
+        counts["paragraphs_without_array"] += not arrays
+        counts["paragraphs_with_multiple_arrays"] += len(arrays) > 1
+        for array in arrays:
+            counts["array_other_attributes"] += len(array.attrib)
+            segments = [child for child in array if child.tag == PARA + "lineseg"]
+            counts["segments"] += len(segments)
+            counts["empty_arrays"] += not segments
+            counts["array_other_direct"] += len(array) - len(segments)
+            counts["array_foreign_direct"] += sum(not child.tag.startswith(PARA) for child in array if child.tag != PARA + "lineseg")
+            for segment in segments:
+                counts["segment_other_attributes"] += sum(name not in LINE_SEG_FIELDS for name in segment.attrib)
+                counts["segment_direct_children"] += len(segment)
+                counts["segment_foreign_direct"] += sum(not child.tag.startswith(PARA) for child in segment)
+                for field in LINE_SEG_FIELDS:
+                    raw = segment.get(field)
+                    if raw is None:
+                        counts[field + "_missing"] += 1
+                        continue
+                    normalized = raw.strip()
+                    if not re.fullmatch(r"[+-]?[0-9]+", normalized):
+                        raise ValueError("master-page line segment damaged number")
+                    number = int(normalized)
+                    if number < (0 if field in LINE_SEG_UNSIGNED else -0x80000000) or number > 0xFFFFFFFF:
+                        raise ValueError("master-page line segment number out of range")
+                    counts[field + "_present"] += 1
+                    counts[field + "_sum"] += number
+                    counts[field + "_zero"] += number == 0
+                    counts[field + "_negative"] += number < 0
+                    counts[field + "_highbit"] += number >= 0x80000000
+
+
+def self_test_master_line_segments():
+    sub = ET.fromstring(
+        '<p:subList xmlns:p="http://www.hancom.co.kr/hwpml/2011/paragraph" xmlns:x="urn:foreign">'
+        '<p:p><x:linesegarray/><p:linesegarray x:extra="1"><x:lineseg/><p:lineseg '
+        'textpos="4294967295" spacing="-1" flags="0" x:extra="2"><x:child/></p:lineseg>'
+        '</p:linesegarray></p:p><p:p><p:linesegarray/></p:p></p:subList>'
+    )
+    counts = Counter()
+    count_master_line_segments(sub, counts)
+    expected = Counter({"paragraphs": 2, "arrays": 2, "segments": 1, "empty_arrays": 1,
+                        "array_other_attributes": 1, "array_other_direct": 1,
+                        "array_foreign_direct": 1, "segment_other_attributes": 1,
+                        "segment_direct_children": 1, "segment_foreign_direct": 1,
+                        "textpos_present": 1, "textpos_sum": 4294967295, "textpos_highbit": 1,
+                        "spacing_present": 1, "spacing_sum": -1, "spacing_negative": 1,
+                        "flags_present": 1, "flags_zero": 1,
+                        **{name + "_missing": 1 for name in LINE_SEG_FIELDS if name not in ("textpos", "spacing", "flags")}})
+    assert Counter({key: value for key, value in counts.items() if value != 0}) == expected, counts
 
 
 def count_run_metadata(counts, node):
@@ -422,6 +484,7 @@ def main():
                                 if child.tag != PARA + "subList":
                                     continue
                                 shard["master_sub_lists"] += 1
+                                count_master_line_segments(child, shard["master_line_segments"])
                                 shard["master_sub_list_direct_paragraphs"] += sum(
                                     grandchild.tag == PARA + "p" for grandchild in child)
                                 shard["master_sub_list_other_attributes"] += sum(
@@ -515,4 +578,10 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    self_test_master_line_segments()
+    if sys.argv[1:] == ["--self-test"]:
+        print("master line segments oracle self-test passed")
+    elif not sys.argv[1:]:
+        main()
+    else:
+        raise SystemExit("usage: hwpx-manifest-xml-oracle.py [--self-test]")

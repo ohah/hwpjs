@@ -151,6 +151,20 @@ pub const settings_unsupported_types = [_]usize{ 0, 0, 0, 0, 0, 0, 0, 0 };
 // Master-page package roots and section links from the independent ZIP/XML oracle.
 pub const master_page_refs = [_]usize{ 14, 6, 19, 0, 0, 0, 3, 19 };
 pub const master_page_sub_lists = [_]usize{ 14, 6, 19, 0, 0, 0, 3, 19 };
+// Independent root-direct subList/descendant p/direct linesegarray census.
+pub const master_line_paragraphs = [_]usize{ 86, 31, 126, 0, 0, 0, 21, 130 };
+pub const master_line_segments = [_]usize{ 88, 33, 131, 0, 0, 0, 23, 143 };
+pub const master_line_spacing_negative = [_]usize{ 7, 9, 13, 0, 0, 0, 3, 7 };
+pub const master_line_field_sums = [_][9]i64{
+    .{ 73, 37696, 100845, 100845, 85717, 33136, 5150, 2378422, 36700160 },
+    .{ 73, 35776, 65245, 65245, 55463, 13136, 5150, 925634, 15073280 },
+    .{ 182, 85324, 205135, 205135, 174363, 59904, 13450, 3484502, 56754176 },
+    @splat(0),
+    @splat(0),
+    @splat(0),
+    .{ 73, 32096, 53745, 53745, 45683, 14056, 5150, 632418, 11141120 },
+    .{ 105, 276644, 168545, 168545, 143265, 50376, 13150, 2015578, 58327040 },
+};
 pub const master_sub_list_direct_paragraphs = [_]usize{ 14, 7, 19, 0, 0, 0, 3, 20 };
 // 11 fields in para_list_attributes.Field order. The final metatag is absent.
 pub const master_sub_list_attribute_presence = [_][11]usize{

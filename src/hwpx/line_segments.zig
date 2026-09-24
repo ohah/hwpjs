@@ -36,19 +36,17 @@ pub const Report = struct {
     field_sum: [field_names.len]i64 = @splat(0),
 };
 
-fn inspectArrayAttributes(a: std.mem.Allocator, tree: *const part_tree.Tree, index: usize, report: *Report) !void {
-    var tag = try part_attrs.parseStartTag(a, tree, index);
-    defer tag.deinit(a);
+pub fn noteArrayTag(tag: xml.tags.Tag, options: Options, report: *Report) !void {
+    if (report.arrays == options.max_arrays) return error.LimitExceeded;
+    report.arrays += 1;
     for (tag.attributes) |attribute| {
         if (!try xml.namespaces.isDeclaration(attribute.name)) report.array_other_attributes += 1;
     }
 }
 
-fn inspectSegment(a: std.mem.Allocator, tree: *const part_tree.Tree, index: usize, options: Options, report: *Report) !void {
+pub fn noteSegmentTag(a: std.mem.Allocator, tag: xml.tags.Tag, options: Options, report: *Report) !void {
     if (report.segments == options.max_segments) return error.LimitExceeded;
     report.segments += 1;
-    var tag = try part_attrs.parseStartTag(a, tree, index);
-    defer tag.deinit(a);
     var raw: [field_names.len]?xml.attribute_value.Value = @splat(null);
     for (tag.attributes) |attribute| {
         if (try xml.namespaces.isDeclaration(attribute.name)) continue;
@@ -78,11 +76,6 @@ fn inspectSegment(a: std.mem.Allocator, tree: *const part_tree.Tree, index: usiz
         report.field_highbit[field_index] += @intFromBool(number >= 0x80000000);
         report.field_sum[field_index] = std.math.add(i64, report.field_sum[field_index], number) catch return error.LimitExceeded;
     }
-    var child = tree.elements[index].first_child;
-    while (child) |child_index| : (child = tree.elements[child_index].next_sibling) {
-        report.segment_direct_children += 1;
-        report.segment_foreign_direct += @intFromBool(!std.mem.eql(u8, tree.elements[child_index].name.uri, document_xml.paragraph_uri));
-    }
 }
 
 pub fn inspect(a: std.mem.Allocator, sections: []const part_tree.Tree, options: Options) !Report {
@@ -94,15 +87,22 @@ pub fn inspect(a: std.mem.Allocator, sections: []const part_tree.Tree, options: 
             var child = paragraph.first_child;
             while (child) |array_index| : (child = section.elements[array_index].next_sibling) {
                 if (!section.elements[array_index].is(document_xml.paragraph_uri, paragraph_children.line_seg_array_name)) continue;
-                if (report.arrays == options.max_arrays) return error.LimitExceeded;
-                report.arrays += 1;
-                try inspectArrayAttributes(a, &section, array_index, &report);
+                var array_tag = try part_attrs.parseStartTag(a, &section, array_index);
+                defer array_tag.deinit(a);
+                try noteArrayTag(array_tag, options, &report);
                 var direct_segments: usize = 0;
                 var segment = section.elements[array_index].first_child;
                 while (segment) |segment_index| : (segment = section.elements[segment_index].next_sibling) {
                     if (section.elements[segment_index].is(document_xml.paragraph_uri, "lineseg")) {
                         direct_segments += 1;
-                        try inspectSegment(a, &section, segment_index, options, &report);
+                        var segment_tag = try part_attrs.parseStartTag(a, &section, segment_index);
+                        defer segment_tag.deinit(a);
+                        try noteSegmentTag(a, segment_tag, options, &report);
+                        var segment_child = section.elements[segment_index].first_child;
+                        while (segment_child) |child_index| : (segment_child = section.elements[child_index].next_sibling) {
+                            report.segment_direct_children += 1;
+                            report.segment_foreign_direct += @intFromBool(!std.mem.eql(u8, section.elements[child_index].name.uri, document_xml.paragraph_uri));
+                        }
                     } else {
                         report.array_other_direct += 1;
                         report.array_foreign_direct += @intFromBool(!std.mem.eql(u8, section.elements[segment_index].name.uri, document_xml.paragraph_uri));

@@ -4,6 +4,8 @@
 
 [HWPX 문단 줄 조각](hwpx-line-segments.md)은 `zig test src/root.zig --test-filter 'HWPX line segments'`로 합성·숫자 경계·할당 실패를, 같은 독립 조사기와 선택 실파일 known survey 8개 shard로 원값 합계·부재·음수·상위 비트 편차를 대조합니다.
 
+[HWPX 마스터페이지 문단 줄 조각](hwpx-master-line-segments.md)은 `zig test src/root.zig --test-filter 'HWPX master line segments'`로 합성·예산·할당 실패를, `python3 tools/hwpx-manifest-xml-oracle.py --self-test`와 인자 없는 corpus 조사 및 선택 실파일 known survey 8개 shard로 독립 원값 합계를 대조합니다.
+
 [HWPX 조건부 참조 선택](hwpx-switch-selection.md)의 합성 검사는 `zig test src/root.zig --test-filter 'HWPX selected references'`로, 실제 corpus 대조는 `zig test src/hwpx_known_survey.zig -O ReleaseFast --test-filter 'HWPX known document inspections shard N'`을 N=0..7 각각 별도 프로세스로 실행합니다. 후자는 로컬 `reference/rhwp`가 필요합니다.
 
 [HWPX 표 격자 구조](hwpx-table-geometry.md)는 `zig test src/root.zig --test-filter 'HWPX table geometry'`로 합성·할당 실패를, 위 known survey 8개 shard로 실파일 표·행·셀 개수와 진단을 검사합니다. 독립 조사기 반례는 `python3 tools/hwpx-table-oracle.py --self-test`, 실파일 집계는 인자 없이 실행합니다. 실파일 조사는 기본 audit에 포함되지 않습니다.

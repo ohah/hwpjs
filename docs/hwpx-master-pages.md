@@ -27,3 +27,5 @@ manifest 경로와 루트 ID는 별도 색인으로 조회해, 많은 참조가 
 `subList` 후손 run의 변경 추적 ID 값 검사는 [run 메타 속성](hwpx-run-metadata.md)을 section과 공유합니다. 쪽 배치 및 변경 추적 적용 의미는 여전히 검증하지 않습니다.
 
 후손 run의 부모·직접 자식 분포는 [run 위치·자식 진단](hwpx-run-topology.md)이 별도 순회로 다룹니다. 직접 `subList` 밖의 요소를 바탕쪽 본문으로 합치지 않습니다.
+
+후손 문단의 직접 줄 조각 원값은 [마스터페이지 문단 줄 조각](hwpx-master-line-segments.md)이 section 필드 판정을 재사용해 별도로 진단합니다.

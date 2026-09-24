@@ -21,6 +21,7 @@ const document_trees = @import("document_trees.zig");
 const paragraph_metadata = @import("paragraph_metadata.zig");
 const paragraph_children = @import("paragraph_children.zig");
 const line_segments = @import("line_segments.zig");
+const masterpage_line_segments = @import("masterpage_line_segments.zig");
 const run_metadata = @import("run_metadata.zig");
 const run_topology = @import("run_topology.zig");
 const switch_shape = @import("switch_shape.zig");
@@ -185,6 +186,11 @@ pub const MasterPageOptions = struct {
     references: masterpage_references.Options = .{},
 };
 pub const MasterPageReport = masterpage_references.Report;
+pub const MasterPageLineSegmentsOptions = struct {
+    master_pages: MasterPageOptions = .{},
+    line_segments: masterpage_line_segments.Options = .{},
+};
+pub const MasterPageLineSegmentsReport = masterpage_line_segments.Report;
 pub const MasterPageStyleReferenceOptions = struct {
     master_pages: MasterPageOptions = .{},
     header_resources: HeaderResourceOptions = .{},
@@ -208,6 +214,7 @@ pub const KnownOptions = struct {
     master_pages: MasterPageOptions = .{},
     master_page_style_references: masterpage_style_references.Options = .{},
     master_page_run_topology: run_topology.MasterOptions = .{},
+    master_page_line_segments: masterpage_line_segments.Options = .{},
     master_page_text_nodes: text_node.MasterOptions = .{},
     structure: StructureOptions = .{},
     header_resources: HeaderResourceOptions = .{},
@@ -274,6 +281,13 @@ pub const Document = struct {
         var section_structure = try self.inspectStructure(a, options.structure);
         defer section_structure.deinit(a);
         return masterpage_references.inspect(a, self.archive, self.manifest, section_structure.sections, options.references);
+    }
+
+    /// Observes direct line segment values under root-direct master-page subLists.
+    pub fn inspectMasterPageLineSegments(self: *const Document, a: std.mem.Allocator, options: MasterPageLineSegmentsOptions) !MasterPageLineSegmentsReport {
+        var pages = try self.inspectMasterPages(a, options.master_pages);
+        defer pages.deinit(a);
+        return masterpage_line_segments.inspect(a, self.archive, pages.parts.parts, options.line_segments);
     }
 
     /// Resolves paragraph and run formatting links inside root-direct master

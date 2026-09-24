@@ -62,6 +62,27 @@ fn addRunCounts(total: *[7]usize, values: [7]usize) void {
     for (values, 0..) |value, index| total[index] += value;
 }
 
+fn addLineReport(total: *package.LineSegmentsReport, report: package.LineSegmentsReport) void {
+    total.sections += report.sections;
+    total.arrays += report.arrays;
+    total.segments += report.segments;
+    total.empty_arrays += report.empty_arrays;
+    total.array_other_attributes += report.array_other_attributes;
+    total.array_other_direct += report.array_other_direct;
+    total.array_foreign_direct += report.array_foreign_direct;
+    total.segment_other_attributes += report.segment_other_attributes;
+    total.segment_direct_children += report.segment_direct_children;
+    total.segment_foreign_direct += report.segment_foreign_direct;
+    for (0..total.field_sum.len) |field| {
+        total.field_sum[field] += report.field_sum[field];
+        total.field_present[field] += report.field_present[field];
+        total.field_missing[field] += report.field_missing[field];
+        total.field_zero[field] += report.field_zero[field];
+        total.field_negative[field] += report.field_negative[field];
+        total.field_highbit[field] += report.field_highbit[field];
+    }
+}
+
 fn selectedTextFields(report: package.SectionTextReport) [5]usize {
     var inline_elements: usize = 0;
     for (report.inline_counts) |count| inline_elements += count;
@@ -171,6 +192,7 @@ const Statistics = struct {
     paragraphs: usize,
     paragraph_children: package.ParagraphChildrenReport,
     line_segments: package.LineSegmentsReport,
+    master_line_segments: package.MasterPageLineSegmentsReport,
     begin_present: bool,
     missing_id: usize,
     manifest_xml_entries: usize,
@@ -348,6 +370,9 @@ fn inspectOne(bytes: []const u8) !Outcome {
     try std.testing.expectEqual(master_sub_lists, known.master_page_run_topology.sub_lists);
     try std.testing.expectEqual(masterpages, known.master_page_text_nodes.parts);
     try std.testing.expectEqual(master_sub_lists, known.master_page_text_nodes.sub_lists);
+    try std.testing.expectEqual(masterpages, known.master_page_line_segments.parts);
+    try std.testing.expectEqual(master_sub_lists, known.master_page_line_segments.sub_lists);
+    try std.testing.expectEqual(master_paragraphs, known.master_page_line_segments.paragraphs);
     var section_child_total: usize = 0;
     var master_child_total: usize = 0;
     for (known.run_topology.child_classes) |value| section_child_total += value;
@@ -399,6 +424,7 @@ fn inspectOne(bytes: []const u8) !Outcome {
         .paragraphs = known.paragraph_metadata.paragraphs,
         .paragraph_children = known.paragraph_children,
         .line_segments = known.line_segments,
+        .master_line_segments = known.master_page_line_segments,
         .begin_present = known.begin_numbers.present,
         .missing_id = known.paragraph_metadata.missing_id,
         .manifest_xml_entries = known.manifest_xml.parsed_entry_indices.len,
@@ -455,6 +481,7 @@ fn surveyShard(shard: usize) !void {
     var paragraphs: usize = 0;
     var paragraph_children: package.ParagraphChildrenReport = .{};
     var line_segments: package.LineSegmentsReport = .{};
+    var master_line_segments: package.MasterPageLineSegmentsReport = .{};
     var begin_present: usize = 0;
     var missing_id: usize = 0;
     var manifest_xml_entries: usize = 0;
@@ -539,24 +566,12 @@ fn surveyShard(shard: usize) !void {
                     paragraph_children.paragraphs_with_multiple_line_seg_arrays += stats.paragraph_children.paragraphs_with_multiple_line_seg_arrays;
                     paragraph_children.other_direct += stats.paragraph_children.other_direct;
                     paragraph_children.foreign_direct += stats.paragraph_children.foreign_direct;
-                    line_segments.sections += stats.line_segments.sections;
-                    line_segments.arrays += stats.line_segments.arrays;
-                    line_segments.segments += stats.line_segments.segments;
-                    line_segments.empty_arrays += stats.line_segments.empty_arrays;
-                    line_segments.array_other_attributes += stats.line_segments.array_other_attributes;
-                    line_segments.array_other_direct += stats.line_segments.array_other_direct;
-                    line_segments.array_foreign_direct += stats.line_segments.array_foreign_direct;
-                    line_segments.segment_other_attributes += stats.line_segments.segment_other_attributes;
-                    line_segments.segment_direct_children += stats.line_segments.segment_direct_children;
-                    line_segments.segment_foreign_direct += stats.line_segments.segment_foreign_direct;
-                    for (0..line_segments.field_sum.len) |field| {
-                        line_segments.field_sum[field] += stats.line_segments.field_sum[field];
-                        line_segments.field_present[field] += stats.line_segments.field_present[field];
-                        line_segments.field_missing[field] += stats.line_segments.field_missing[field];
-                        line_segments.field_zero[field] += stats.line_segments.field_zero[field];
-                        line_segments.field_negative[field] += stats.line_segments.field_negative[field];
-                        line_segments.field_highbit[field] += stats.line_segments.field_highbit[field];
-                    }
+                    addLineReport(&line_segments, stats.line_segments);
+                    master_line_segments.parts += stats.master_line_segments.parts;
+                    master_line_segments.sub_lists += stats.master_line_segments.sub_lists;
+                    master_line_segments.paragraphs += stats.master_line_segments.paragraphs;
+                    master_line_segments.xml_bytes += stats.master_line_segments.xml_bytes;
+                    addLineReport(&master_line_segments.lines, stats.master_line_segments.lines);
                     missing_id += stats.missing_id;
                     if (stats.begin_present) begin_present += 1;
                     manifest_xml_entries += stats.manifest_xml_entries;
@@ -765,6 +780,18 @@ fn surveyShard(shard: usize) !void {
     try std.testing.expectEqual(expected.line_segment_flags_highbit[shard], line_segments.field_highbit[8]);
     try std.testing.expectEqual(expected.line_segment_spacing_negative[shard], line_segments.field_negative[5]);
     try std.testing.expectEqual(expected.line_segment_horzpos_negative[shard], line_segments.field_negative[6]);
+    try std.testing.expectEqual(expected.master_page_sub_lists[shard], master_line_segments.parts);
+    try std.testing.expectEqual(expected.master_page_sub_lists[shard], master_line_segments.sub_lists);
+    try std.testing.expectEqual(expected.master_line_paragraphs[shard], master_line_segments.paragraphs);
+    try std.testing.expectEqual(expected.master_line_paragraphs[shard], master_line_segments.lines.arrays);
+    try std.testing.expectEqual(expected.master_line_segments[shard], master_line_segments.lines.segments);
+    try std.testing.expectEqual(@as(usize, 0), master_line_segments.lines.sections + master_line_segments.lines.empty_arrays + master_line_segments.lines.array_other_attributes + master_line_segments.lines.array_other_direct + master_line_segments.lines.array_foreign_direct + master_line_segments.lines.segment_other_attributes + master_line_segments.lines.segment_direct_children + master_line_segments.lines.segment_foreign_direct);
+    try std.testing.expectEqualSlices(i64, &expected.master_line_field_sums[shard], &master_line_segments.lines.field_sum);
+    try std.testing.expectEqual(expected.master_line_spacing_negative[shard], master_line_segments.lines.field_negative[5]);
+    for (master_line_segments.lines.field_present, master_line_segments.lines.field_missing) |present, missing| {
+        try std.testing.expectEqual(master_line_segments.lines.segments, present);
+        try std.testing.expectEqual(@as(usize, 0), missing);
+    }
     try std.testing.expectEqual(expected.table_count[shard], table_geometry.tables);
     try std.testing.expectEqual(expected.table_rows[shard], table_child_topology.rows);
     try std.testing.expectEqual(expected.table_cells[shard], table_child_topology.cells);
