@@ -72,6 +72,10 @@ pub const Bundle = struct {
         return table_geometry.inspectWithBorderFills(a, self.sections, options, border_fills);
     }
 
+    pub fn inspectSelectedTableGeometryWithBorderFills(self: *const Bundle, a: std.mem.Allocator, options: table_geometry.Options, border_fills: *const header_resources.Table, supported_namespaces: []const []const u8) !table_geometry.Report {
+        return table_geometry.inspectSelectedWithBorderFills(a, self.sections, options, border_fills, supported_namespaces);
+    }
+
     pub fn inspectBeginNumbers(self: *const Bundle, a: std.mem.Allocator, options: header_begin_numbers.Options) !header_begin_numbers.Report {
         return header_begin_numbers.inspect(a, &self.header, options);
     }

@@ -173,6 +173,11 @@ pub const BeginNumberField = header_begin_numbers.Field;
 pub const KnownReport = document_known.Report;
 pub const TableGeometryOptions = table_geometry.Options;
 pub const TableGeometryReport = table_geometry.Report;
+pub const SelectedTableGeometryOptions = struct {
+    trees: XmlTreesOptions = .{},
+    header_resources: HeaderResourceOptions = .{},
+    geometry: TableGeometryOptions = .{},
+};
 pub const TableAttributesReport = table_attributes.Report;
 pub const TableChildrenReport = table_children.Report;
 pub const TableShapeReport = table_shape.Report;
@@ -355,11 +360,22 @@ pub const Document = struct {
     /// Applies the section table structure rules to tables within selected
     /// root-direct master-page subLists. This is not table layout validation.
     pub fn inspectMasterPageTableGeometry(self: *const Document, a: std.mem.Allocator, options: MasterPageTableGeometryOptions) !MasterPageTableGeometryReport {
+        return self.inspectMasterPageTableGeometryWithPolicy(a, options, .{});
+    }
+
+    fn inspectMasterPageTableGeometryWithPolicy(self: *const Document, a: std.mem.Allocator, options: MasterPageTableGeometryOptions, policy: compatibility_selection.Policy) !MasterPageTableGeometryReport {
+        try compatibility_selection.validate(policy);
         var pages = try self.inspectMasterPages(a, options.master_pages);
         defer pages.deinit(a);
         var resources = try self.inspectHeaderResources(a, options.header_resources);
         defer resources.deinit(a);
-        return masterpage_table_geometry.inspect(a, self.archive, pages.parts.parts, resources.table(.border_fill), options.geometry);
+        return masterpage_table_geometry.inspect(a, self.archive, pages.parts.parts, resources.table(.border_fill), options.geometry, policy);
+    }
+
+    /// Keeps the raw master-page report unchanged and counts tables only in
+    /// branches selected for caller-declared namespace capabilities.
+    pub fn inspectSelectedMasterPageTableGeometry(self: *const Document, a: std.mem.Allocator, options: MasterPageTableGeometryOptions, supported_namespaces: []const []const u8) !MasterPageTableGeometryReport {
+        return self.inspectMasterPageTableGeometryWithPolicy(a, options, .{ .mode = .selected, .supported_namespaces = supported_namespaces });
     }
 
     /// Observes run parent/child shape inside selected master-page subLists.
@@ -460,6 +476,17 @@ pub const Document = struct {
     /// materialized or validated by this API.
     pub fn readXmlTrees(self: *const Document, a: std.mem.Allocator, options: XmlTreesOptions) !XmlTrees {
         return document_trees.readAll(a, self.archive, self.manifest, options);
+    }
+
+    /// Reuses the owned section trees and header border-fill IDs; inactive
+    /// switch branches remain XML-checked but do not enter table budgets.
+    pub fn inspectSelectedTableGeometry(self: *const Document, a: std.mem.Allocator, options: SelectedTableGeometryOptions, supported_namespaces: []const []const u8) !TableGeometryReport {
+        try compatibility_selection.validate(.{ .mode = .selected, .supported_namespaces = supported_namespaces });
+        var trees = try self.readXmlTrees(a, options.trees);
+        defer trees.deinit(a);
+        var resources = try self.inspectHeaderResources(a, options.header_resources);
+        defer resources.deinit(a);
+        return trees.inspectSelectedTableGeometryWithBorderFills(a, options.geometry, resources.table(.border_fill), supported_namespaces);
     }
 
     /// Resolves selected style, paragraph-shape, and character-shape links

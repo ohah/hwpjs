@@ -9,6 +9,8 @@ const table_shape = @import("table_shape.zig");
 const table_child_topology = @import("table_child_topology.zig");
 const cell_sub_lists = @import("table_cell_sub_lists.zig");
 const header_resources = @import("header_resources.zig");
+const selection = @import("compatibility_selection.zig");
+const tree_selection = @import("xml_tree_selection.zig");
 
 pub const Options = struct {
     max_tables: usize = 100_000,
@@ -165,6 +167,24 @@ pub fn inspectWithBorderFills(a: std.mem.Allocator, sections: []const tree_mod.T
     return report;
 }
 
+/// Explicit selected-branch view. Raw inspectWithBorderFills continues to
+/// count both branches and does not evaluate required-namespace attributes.
+pub fn inspectSelectedWithBorderFills(a: std.mem.Allocator, sections: []const tree_mod.Tree, options: Options, border_fills: ?*const header_resources.Table, supported_namespaces: []const []const u8) !Report {
+    const policy: selection.Policy = .{ .mode = .selected, .supported_namespaces = supported_namespaces };
+    try selection.validate(policy);
+    var report = initReport(border_fills);
+    for (sections) |*section| {
+        if (section.part_kind != .section) return error.InvalidPartKind;
+        const frames = try tree_selection.build(a, section, policy, options.max_attribute_bytes);
+        defer a.free(frames);
+        for (section.elements, frames, 0..) |element, frame, index| {
+            if (frame.active and element.is(document_xml.paragraph_uri, "tbl")) try inspectTable(a, section, index, options, border_fills, &report);
+        }
+        report.sections += 1;
+    }
+    return report;
+}
+
 fn belowDirectMasterSubList(tree: *const tree_mod.Tree, index: usize) bool {
     var cursor = tree.elements[index].parent;
     while (cursor) |parent| : (cursor = tree.elements[parent].parent) {
@@ -184,6 +204,24 @@ pub fn inspectMasterPage(a: std.mem.Allocator, tree: *const tree_mod.Tree, optio
     }
     for (tree.elements, 0..) |element, index| {
         if (element.is(document_xml.paragraph_uri, "tbl") and belowDirectMasterSubList(tree, index)) try inspectTable(a, tree, index, options, border_fills, report);
+    }
+    return sub_lists;
+}
+
+/// Same master-page table scope, with inactive switch branches excluded from
+/// table and cell budgets. All XML nodes remain syntax-checked by the tree.
+pub fn inspectSelectedMasterPage(a: std.mem.Allocator, tree: *const tree_mod.Tree, options: Options, border_fills: ?*const header_resources.Table, supported_namespaces: []const []const u8, report: *Report) !usize {
+    if (tree.part_kind != .master_page or tree.elements.len == 0) return error.InvalidPartKind;
+    const policy: selection.Policy = .{ .mode = .selected, .supported_namespaces = supported_namespaces };
+    const frames = try tree_selection.build(a, tree, policy, options.max_attribute_bytes);
+    defer a.free(frames);
+    var sub_lists: usize = 0;
+    var root_child = tree.elements[0].first_child;
+    while (root_child) |index| : (root_child = tree.elements[index].next_sibling) {
+        sub_lists += @intFromBool(tree.elements[index].is(document_xml.paragraph_uri, "subList"));
+    }
+    for (tree.elements, frames, 0..) |element, frame, index| {
+        if (frame.active and element.is(document_xml.paragraph_uri, "tbl")) try inspectTable(a, tree, index, options, border_fills, report);
     }
     return sub_lists;
 }

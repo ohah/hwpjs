@@ -4,6 +4,7 @@ const part_tree = @import("xml_part_tree.zig");
 const masterpage_parts = @import("masterpage_parts.zig");
 const table_geometry = @import("table_geometry.zig");
 const header_resources = @import("header_resources.zig");
+const selection = @import("compatibility_selection.zig");
 
 pub const Options = struct {
     max_parts: usize = 4096,
@@ -24,7 +25,8 @@ pub const Report = struct {
 
 /// Decodes one selected master-page part at a time. The owned XML tree is
 /// transient; returned numbers use the section table geometry rules unchanged.
-pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, parts: []const masterpage_parts.Part, border_fills: ?*const header_resources.Table, options: Options) !Report {
+pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, parts: []const masterpage_parts.Part, border_fills: ?*const header_resources.Table, options: Options, branch_policy: selection.Policy) !Report {
+    try selection.validate(branch_policy);
     if (parts.len > options.max_parts) return error.LimitExceeded;
     var result: Report = .{ .geometry = table_geometry.initReport(border_fills) };
     var remaining_bytes = options.max_total_xml_bytes;
@@ -44,7 +46,10 @@ pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, parts: []const master
         const child_elements = std.math.add(usize, direct_elements, part.descendant_elements) catch return error.LimitExceeded;
         const expected_elements = std.math.add(usize, 1, child_elements) catch return error.LimitExceeded;
         if (tree.elements.len != expected_elements) return error.InconsistentMasterPageSelection;
-        const sub_lists = try table_geometry.inspectMasterPage(a, &tree, options.geometry, border_fills, &result.geometry);
+        const sub_lists = if (branch_policy.mode == .selected)
+            try table_geometry.inspectSelectedMasterPage(a, &tree, options.geometry, border_fills, branch_policy.supported_namespaces, &result.geometry)
+        else
+            try table_geometry.inspectMasterPage(a, &tree, options.geometry, border_fills, &result.geometry);
         if (sub_lists != part.sub_lists.len) return error.InconsistentMasterPageSelection;
         result.parts += 1;
         result.sub_lists += sub_lists;

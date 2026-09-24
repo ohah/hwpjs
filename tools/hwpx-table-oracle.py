@@ -428,6 +428,9 @@ def main():
                             continue
                         stats["sections"] += 1
                         shard["sections"] += 1
+                        switch_tables = sum(1 for node in section.iter(P + "switch") for _ in node.iter(P + "tbl"))
+                        stats["section_switch_tables"] += switch_tables
+                        shard["section_switch_tables"] += switch_tables
                         for table in section.iter(P + "tbl"):
                             try:
                                 inspect_table(table, stats, samples, relative, border_ids)
@@ -449,6 +452,9 @@ def main():
                             if child.tag == P + "subList":
                                 master_stats["sub_lists"] += 1
                                 master_shard["sub_lists"] += 1
+                                switch_tables = sum(1 for node in child.iter(P + "switch") for _ in node.iter(P + "tbl"))
+                                master_stats["master_switch_tables"] += switch_tables
+                                master_shard["master_switch_tables"] += switch_tables
                         for table in master_tables(page):
                             try:
                                 inspect_table(table, master_stats, [], relative, border_ids)
@@ -532,6 +538,9 @@ def self_test():
         raise AssertionError("master-page table selection crossed a direct subList boundary")
     if not master_path("Contents/masterpage12.xml") or master_path("Contents/masterpageX.xml"):
         raise AssertionError("master-page canonical path recognition changed")
+    switch = ET.fromstring("<p:switch xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:case><p:tbl rowCnt='0' colCnt='0'/></p:case></p:switch>")
+    if sum(1 for node in switch.iter(P + "switch") for _ in node.iter(P + "tbl")) != 1:
+        raise AssertionError("switch table census missed a positive case")
     print("HWPX table oracle self-test: grid, shape, and numeric canaries passed")
 
 

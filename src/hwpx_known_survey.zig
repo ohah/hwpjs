@@ -461,6 +461,22 @@ fn inspectOne(bytes: []const u8) !Outcome {
     try std.testing.expectEqual(known.master_page_text_nodes.text_nodes, known.master_page_text.text.text_elements);
     try std.testing.expectEqual(known.master_page_text_nodes.non_direct_text_nodes, known.master_page_text.text.non_direct_text_elements);
     try std.testing.expectEqual(known.master_page_text_nodes.tab.tabs, known.master_page_text.text.inlineCount(.tab));
+    if (known.run_topology.switches.switches != 0) {
+        const fallback_tables = try document.inspectSelectedTableGeometry(a, .{}, &.{});
+        const chart_tables = try document.inspectSelectedTableGeometry(a, .{}, &.{"http://www.hancom.co.kr/hwpml/2016/ooxmlchart"});
+        try std.testing.expectEqual(known.table_geometry.tables, fallback_tables.tables);
+        try std.testing.expectEqual(known.table_geometry.tables, chart_tables.tables);
+        try std.testing.expectEqual(known.table_geometry.grid_slots, fallback_tables.grid_slots);
+        try std.testing.expectEqual(known.table_geometry.grid_slots, chart_tables.grid_slots);
+    }
+    if (known.master_page_run_topology.switches.switches != 0) {
+        const fallback_tables = try document.inspectSelectedMasterPageTableGeometry(a, .{}, &.{});
+        const chart_tables = try document.inspectSelectedMasterPageTableGeometry(a, .{}, &.{"http://www.hancom.co.kr/hwpml/2016/ooxmlchart"});
+        try std.testing.expectEqual(known.master_page_table_geometry.geometry.tables, fallback_tables.geometry.tables);
+        try std.testing.expectEqual(known.master_page_table_geometry.geometry.tables, chart_tables.geometry.tables);
+        try std.testing.expectEqual(known.master_page_table_geometry.geometry.grid_slots, fallback_tables.geometry.grid_slots);
+        try std.testing.expectEqual(known.master_page_table_geometry.geometry.grid_slots, chart_tables.geometry.grid_slots);
+    }
     try std.testing.expectEqual(masterpages, known.master_page_table_geometry.parts);
     try std.testing.expectEqual(master_sub_lists, known.master_page_table_geometry.sub_lists);
     try std.testing.expectEqual(master_sub_lists, known.master_page_text_nodes.sub_lists);

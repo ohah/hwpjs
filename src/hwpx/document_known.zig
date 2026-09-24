@@ -108,7 +108,7 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
     errdefer structure_report.deinit(a);
     var resource_report = try document.inspectHeaderResources(a, options.header_resources);
     errdefer resource_report.deinit(a);
-    const master_page_table_report = try masterpage_table_geometry.inspect(a, document.archive, master_page_report.parts.parts, resource_report.table(.border_fill), options.master_page_table_geometry);
+    const master_page_table_report = try masterpage_table_geometry.inspect(a, document.archive, master_page_report.parts.parts, resource_report.table(.border_fill), options.master_page_table_geometry, .{});
     const master_page_style_report = try document.inspectMasterPageStyleReferences(a, .{ .master_pages = options.master_pages, .header_resources = options.header_resources, .references = options.master_page_style_references });
     const master_page_run_topology_report = try document.inspectMasterPageRunTopology(a, .{ .master_pages = options.master_pages, .topology = options.master_page_run_topology });
     const master_page_text_nodes_report = try document.inspectMasterPageTextNodes(a, .{ .master_pages = options.master_pages, .text_nodes = options.master_page_text_nodes });

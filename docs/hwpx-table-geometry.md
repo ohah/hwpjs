@@ -2,6 +2,8 @@
 
 마스터페이지의 직접 `subList` 안에 있는 표도 같은 표·셀 규칙을 적용하지만, 파트 선택과 별도 보고서는 [마스터페이지 표 격자](hwpx-master-table-geometry.md)가 소유합니다.
 
+활성 조건부 분기만의 표는 [선택 분기 표 격자](hwpx-selected-table-geometry.md)에서 같은 필드 판정에 위임합니다.
+
 `src/hwpx/table_geometry.zig`는 선택된 2011 section XML 트리에서 모든 `hp:tbl`을 순회합니다. 중첩 표도 각각 독립 표로 세며 표의 직접 `hp:tr`, 행의 직접 `hp:tc`, 셀의 직접 `hp:cellAddr`·`hp:cellSpan`만 격자 입력으로 취급합니다. XML 원문·요소·속성·숫자 어휘는 각각 `xml_part_tree.zig`와 `xml_values.zig`가 소유하며 이 모듈은 새 XML 파서를 만들지 않습니다.
 
 근거는 한컴 공개 [TableType](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Para/TableType.cpp), [tr](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Para/tr.cpp), [tc](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Para/tc.cpp), [cellAddr](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Para/cellAddr.cpp), [cellSpan](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Para/cellSpan.cpp)의 고정 커밋입니다. 공개 모델의 `rowCnt`·`colCnt`, `rowAddr`·`colAddr`, `rowSpan`·`colSpan` 이름을 따르되 공개 모델의 기본값은 원본 XML의 부재와 동일시하지 않습니다.
