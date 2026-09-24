@@ -23,6 +23,7 @@ const document_known = @import("document_known.zig");
 const payload_integrity = @import("payload_integrity.zig");
 const manifest_xml = @import("manifest_xml.zig");
 const settings = @import("settings.zig");
+const masterpage_references = @import("masterpage_references.zig");
 
 pub const Archive = zip.Archive;
 pub const Options = zip.Options;
@@ -116,12 +117,19 @@ pub const SettingsOptions = struct {
     values: settings.Options = .{},
 };
 pub const SettingsReport = settings.Report;
+pub const MasterPageOptions = struct {
+    protection: ProtectionOptions = .{},
+    structure: StructureOptions = .{},
+    references: masterpage_references.Options = .{},
+};
+pub const MasterPageReport = masterpage_references.Report;
 pub const KnownOptions = struct {
     version: VersionOptions = .{},
     protection: ProtectionOptions = .{},
     payload_integrity: PayloadIntegrityOptions = .{},
     manifest_xml: ManifestXmlOptions = .{},
     settings: SettingsOptions = .{},
+    master_pages: MasterPageOptions = .{},
     structure: StructureOptions = .{},
     header_resources: HeaderResourceOptions = .{},
     section_references: ReferenceOptions = .{},
@@ -170,6 +178,17 @@ pub const Document = struct {
         defer protection_report.deinit(a);
         if (protection_report.encrypted_paths.len != 0) return error.EncryptedDocument;
         return settings.inspect(a, self.archive, self.manifest.items, options.values);
+    }
+
+    /// Parses declared master-page parts and links section idRef values to
+    /// their exact root IDs. Unresolved links stay explicit in the report.
+    pub fn inspectMasterPages(self: *const Document, a: std.mem.Allocator, options: MasterPageOptions) !MasterPageReport {
+        var protection_report = try self.inspectProtection(a, options.protection);
+        defer protection_report.deinit(a);
+        if (protection_report.encrypted_paths.len != 0) return error.EncryptedDocument;
+        var section_structure = try self.inspectStructure(a, options.structure);
+        defer section_structure.deinit(a);
+        return masterpage_references.inspect(a, self.archive, self.manifest, section_structure.sections, options.references);
     }
 
     /// Runs all currently exposed HWPX inspections on this document. A

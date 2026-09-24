@@ -20,3 +20,12 @@ pub const settings_config_items = [_]usize{ 134, 93, 102, 88, 94, 98, 96, 111 };
 pub const settings_short_sum = [_]i64{ 3408, 2401, 2605, 2208, 2408, 2600, 2408, 2804 };
 pub const settings_boolean_true = [_]usize{ 0, 0, 0, 0, 0, 0, 0, 0 };
 pub const settings_unsupported_types = [_]usize{ 0, 0, 0, 0, 0, 0, 0, 0 };
+// Master-page package roots and section links from the independent ZIP/XML oracle.
+pub const master_page_refs = [_]usize{ 14, 6, 19, 0, 0, 0, 3, 19 };
+pub const master_page_sub_lists = [_]usize{ 14, 6, 19, 0, 0, 0, 3, 19 };
+pub const master_page_number_sum = [_]u64{ 0, 0, 4, 0, 0, 0, 0, 0 };
+pub const master_page_count_declarations = [_]usize{ 75, 72, 72, 55, 64, 62, 63, 92 };
+pub const master_page_type_counts = [_][5]usize{
+    .{ 1, 6, 6, 1, 0 }, .{ 1, 2, 2, 1, 0 }, .{ 0, 8, 8, 2, 1 }, .{ 0, 0, 0, 0, 0 },
+    .{ 0, 0, 0, 0, 0 }, .{ 0, 0, 0, 0, 0 }, .{ 0, 1, 1, 1, 0 }, .{ 1, 4, 13, 1, 0 },
+};

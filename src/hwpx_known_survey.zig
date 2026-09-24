@@ -19,6 +19,11 @@ const Statistics = struct {
     settings_short_sum: i64,
     settings_boolean_true: usize,
     settings_unsupported_types: usize,
+    master_page_refs: usize,
+    master_page_sub_lists: usize,
+    master_page_number_sum: u64,
+    master_page_count_declarations: usize,
+    master_page_type_counts: [5]usize,
 };
 
 const Outcome = union(enum) {
@@ -66,6 +71,22 @@ fn inspectOne(bytes: []const u8) !Outcome {
             if (std.mem.eql(u8, kind, "boolean")) boolean_true += @intFromBool(std.mem.eql(u8, item.value.items, "true") or std.mem.eql(u8, item.value.items, "1"));
         }
     }
+    try std.testing.expectEqual(masterpages, known.master_pages.parts.parts.len);
+    var master_sub_lists: usize = 0;
+    var master_page_number_sum: u64 = 0;
+    var master_type_counts: [5]usize = @splat(0);
+    for (known.master_pages.parts.parts) |part| {
+        master_sub_lists += part.sub_lists;
+        if (part.page_number) |raw| master_page_number_sum += try std.fmt.parseInt(u32, raw, 10);
+        if (part.kind) |kind| master_type_counts[@intFromEnum(kind)] += 1;
+    }
+    try std.testing.expectEqual(@as(usize, 0), known.master_pages.parts.manifest_id_mismatches);
+    try std.testing.expectEqual(@as(usize, 0), known.master_pages.parts.unsupported_types);
+    try std.testing.expectEqual(@as(usize, 0), known.master_pages.missing_target);
+    try std.testing.expectEqual(@as(usize, 0), known.master_pages.absent_id);
+    try std.testing.expectEqual(@as(usize, 0), known.master_pages.ambiguous_target);
+    try std.testing.expectEqual(@as(usize, 0), known.master_pages.duplicate_part_ids);
+    try std.testing.expectEqual(@as(usize, 0), known.master_pages.unreferenced_parts);
     const count = known.structure.sections.len;
     try std.testing.expectEqual(count, known.section_references.sections);
     try std.testing.expectEqual(count, known.binary_references.sections);
@@ -90,6 +111,11 @@ fn inspectOne(bytes: []const u8) !Outcome {
         .settings_short_sum = short_sum,
         .settings_boolean_true = boolean_true,
         .settings_unsupported_types = known.settings.unsupported_types,
+        .master_page_refs = known.master_pages.resolved,
+        .master_page_sub_lists = master_sub_lists,
+        .master_page_number_sum = master_page_number_sum,
+        .master_page_count_declarations = known.master_pages.count_declarations.len,
+        .master_page_type_counts = master_type_counts,
     } };
 }
 
@@ -115,6 +141,11 @@ fn surveyShard(shard: usize) !void {
     var settings_short_sum: i64 = 0;
     var settings_boolean_true: usize = 0;
     var settings_unsupported_types: usize = 0;
+    var master_page_refs: usize = 0;
+    var master_page_sub_lists: usize = 0;
+    var master_page_number_sum: u64 = 0;
+    var master_page_count_declarations: usize = 0;
+    var master_page_type_counts: [5]usize = @splat(0);
     for (roots, 0..) |root, root_index| {
         const dir = try std.Io.Dir.cwd().openDir(std.testing.io, root, .{ .iterate = true });
         defer dir.close(std.testing.io);
@@ -151,6 +182,11 @@ fn surveyShard(shard: usize) !void {
                     settings_short_sum += stats.settings_short_sum;
                     settings_boolean_true += stats.settings_boolean_true;
                     settings_unsupported_types += stats.settings_unsupported_types;
+                    master_page_refs += stats.master_page_refs;
+                    master_page_sub_lists += stats.master_page_sub_lists;
+                    master_page_number_sum += stats.master_page_number_sum;
+                    master_page_count_declarations += stats.master_page_count_declarations;
+                    for (stats.master_page_type_counts, 0..) |value, i| master_page_type_counts[i] += value;
                     accepted += 1;
                 },
             }
@@ -176,6 +212,11 @@ fn surveyShard(shard: usize) !void {
     try std.testing.expectEqual(expected.settings_short_sum[shard], settings_short_sum);
     try std.testing.expectEqual(expected.settings_boolean_true[shard], settings_boolean_true);
     try std.testing.expectEqual(expected.settings_unsupported_types[shard], settings_unsupported_types);
+    try std.testing.expectEqual(expected.master_page_refs[shard], master_page_refs);
+    try std.testing.expectEqual(expected.master_page_sub_lists[shard], master_page_sub_lists);
+    try std.testing.expectEqual(expected.master_page_number_sum[shard], master_page_number_sum);
+    try std.testing.expectEqual(expected.master_page_count_declarations[shard], master_page_count_declarations);
+    try std.testing.expectEqualSlices(usize, &expected.master_page_type_counts[shard], &master_page_type_counts);
 }
 
 test "HWPX known document inspections shard 0" {

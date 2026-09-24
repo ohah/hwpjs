@@ -18,6 +18,8 @@ OPF = "{http://www.idpf.org/2007/opf/}"
 ENCRYPTION = "{urn:oasis:names:tc:opendocument:xmlns:manifest:1.0}encryption-data"
 APP = "{http://www.hancom.co.kr/hwpml/2011/app}"
 CONFIG = "{urn:oasis:names:tc:opendocument:xmlns:config:1.0}"
+PARA = "{http://www.hancom.co.kr/hwpml/2011/paragraph}"
+MASTER_KINDS = ("BOTH", "EVEN", "ODD", "LAST_PAGE", "OPTIONAL_PAGE")
 MAX_PACKAGE_BYTES = 25_000_000
 MAX_ENTRY_BYTES = 128 * 1024 * 1024
 MAX_TOTAL_BYTES = 256 * 1024 * 1024
@@ -28,7 +30,19 @@ def empty():
                 external=0, duplicates=0, entries=0, bytes=0, elements=0,
                 settings=0, masterpages=0, carets=0, caret_pos_sum=0,
                 config_sets=0, config_items=0, short_sum=0,
-                boolean_true=0, unsupported_types=0)
+                boolean_true=0, unsupported_types=0,
+                master_sub_lists=0, master_page_number_sum=0,
+                master_type_counts=[0] * len(MASTER_KINDS),
+                master_manifest_id_mismatch=0, master_refs=0,
+                master_resolved=0, master_missing=0, master_absent=0,
+                master_ambiguous=0, master_count_declarations=0)
+
+
+def master_path(name):
+    prefix = "Contents/masterpage"
+    return (name.startswith(prefix) and name.endswith(".xml")
+            and bool(name[len(prefix):-4])
+            and all("0" <= char <= "9" for char in name[len(prefix):-4]))
 
 
 def main():
@@ -51,6 +65,8 @@ def main():
                     opf = ET.fromstring(archive.read("Contents/content.hpf"))
                     seen = set()
                     total = 0
+                    master_ids = []
+                    master_refs = []
                     for item in opf.findall(OPF + "manifest/" + OPF + "item"):
                         if item.get("media-type") != "application/xml":
                             continue
@@ -96,10 +112,39 @@ def main():
                                         else:
                                             shard["unsupported_types"] += 1
                         shard["masterpages"] += name.startswith("Contents/masterpage")
+                        if master_path(name):
+                            if document.tag != "masterPage":
+                                raise ValueError("unexpected master-page root")
+                            page_id = document.get("id")
+                            if not page_id:
+                                raise ValueError("missing master-page ID")
+                            master_ids.append(page_id)
+                            shard["master_manifest_id_mismatch"] += page_id != item.get("id")
+                            kind = document.get("type")
+                            if kind in MASTER_KINDS:
+                                shard["master_type_counts"][MASTER_KINDS.index(kind)] += 1
+                            if document.get("pageNumber") is not None:
+                                shard["master_page_number_sum"] += int(document.get("pageNumber"))
+                            shard["master_sub_lists"] += sum(child.tag == PARA + "subList" for child in document)
+                        if name.startswith("Contents/section") and name.endswith(".xml"):
+                            master_refs.extend(node.get("idRef") for node in document.iter(PARA + "masterPage"))
+                            shard["master_count_declarations"] += sum("masterPageCnt" in node.attrib for node in document.iter(PARA + "secPr"))
+                    for ref in master_refs:
+                        shard["master_refs"] += 1
+                        if not ref:
+                            shard["master_absent"] += 1
+                        elif master_ids.count(ref) == 1:
+                            shard["master_resolved"] += 1
+                        elif master_ids.count(ref) > 1:
+                            shard["master_ambiguous"] += 1
+                        else:
+                            shard["master_missing"] += 1
                     shard["accepted"] += 1
             except BadZipFile:
                 shard["rejected_zip"] += 1
-    total = {key: sum(shard[key] for shard in shards) for key in shards[0]}
+    total = {key: ([sum(shard[key][i] for shard in shards) for i in range(len(MASTER_KINDS))]
+                   if key == "master_type_counts" else sum(shard[key] for shard in shards))
+             for key in shards[0]}
     print(json.dumps({"total": total, "shards": shards}, sort_keys=True))
 
 
