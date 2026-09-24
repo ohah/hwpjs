@@ -162,6 +162,7 @@ const Statistics = struct {
     master_page_type_counts: [5]usize,
     switch_removed_case: [5]usize,
     switch_removed_default: [5]usize,
+    table_geometry: package.TableGeometryReport,
 };
 
 const Outcome = union(enum) {
@@ -318,6 +319,7 @@ fn inspectOne(bytes: []const u8) !Outcome {
     try std.testing.expectEqual(count, known.section_text.sections);
     try std.testing.expectEqual(count, known.paragraph_metadata.sections);
     try std.testing.expectEqual(count, known.run_metadata.sections);
+    try std.testing.expectEqual(count, known.table_geometry.sections);
     try std.testing.expectEqual(known.section_text.paragraphs, known.paragraph_metadata.paragraphs);
     try std.testing.expectEqual(known.section_references.runs, known.run_metadata.runs);
     try std.testing.expectEqual(known.run_metadata.runs, known.run_topology.runs);
@@ -377,6 +379,7 @@ fn inspectOne(bytes: []const u8) !Outcome {
         .master_page_type_counts = master_type_counts,
         .switch_removed_case = switch_removed_case,
         .switch_removed_default = switch_removed_default,
+        .table_geometry = known.table_geometry,
     } };
 }
 
@@ -430,6 +433,7 @@ fn surveyShard(shard: usize) !void {
     var master_page_type_counts: [5]usize = @splat(0);
     var switch_removed_case: [5]usize = @splat(0);
     var switch_removed_default: [5]usize = @splat(0);
+    var table_geometry: package.TableGeometryReport = .{};
     for (roots, 0..) |root, root_index| {
         const dir = try std.Io.Dir.cwd().openDir(std.testing.io, root, .{ .iterate = true });
         defer dir.close(std.testing.io);
@@ -498,6 +502,13 @@ fn surveyShard(shard: usize) !void {
                     for (stats.master_page_type_counts, 0..) |value, i| master_page_type_counts[i] += value;
                     for (stats.switch_removed_case, 0..) |value, i| switch_removed_case[i] += value;
                     for (stats.switch_removed_default, 0..) |value, i| switch_removed_default[i] += value;
+                    const t = stats.table_geometry;
+                    table_geometry.tables += t.tables;
+                    table_geometry.rows += t.rows;
+                    table_geometry.cells += t.cells;
+                    table_geometry.grid_slots += t.grid_slots;
+                    table_geometry.cell_slots += t.cell_slots;
+                    try std.testing.expectEqual(@as(usize, 0), t.missing_row_count + t.missing_column_count + t.row_count_mismatch + t.empty_rows + t.missing_address + t.duplicate_address + t.missing_span + t.duplicate_span + t.missing_coordinate + t.missing_span_value + t.row_address_mismatch + t.zero_span + t.outside_grid + t.overlaps + t.uncovered_slots);
                     accepted += 1;
                 },
             }
@@ -508,6 +519,11 @@ fn surveyShard(shard: usize) !void {
     try std.testing.expectEqual(expected.rejected_zip[shard], rejected_zip);
     try std.testing.expectEqual(expected.encrypted[shard], encrypted);
     try std.testing.expectEqual(expected.sections[shard], sections);
+    try std.testing.expectEqual(expected.table_count[shard], table_geometry.tables);
+    try std.testing.expectEqual(expected.table_rows[shard], table_geometry.rows);
+    try std.testing.expectEqual(expected.table_cells[shard], table_geometry.cells);
+    try std.testing.expectEqual(expected.table_grid_slots[shard], table_geometry.grid_slots);
+    try std.testing.expectEqual(expected.table_cell_slots[shard], table_geometry.cell_slots);
     try std.testing.expectEqual(expected.paragraphs[shard], paragraphs);
     try std.testing.expectEqual(expected.begin_present[shard], begin_present);
     try std.testing.expectEqual(@as(usize, 0), missing_id);

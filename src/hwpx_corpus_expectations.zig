@@ -4,6 +4,12 @@ pub const accepted = [_]usize{ 64, 68, 56, 49, 61, 59, 58, 61 };
 pub const rejected_zip = [_]usize{ 1, 3, 0, 2, 0, 0, 0, 0 };
 pub const encrypted = [_]usize{ 0, 0, 0, 0, 2, 0, 0, 0 };
 pub const sections = [_]usize{ 75, 72, 72, 53, 64, 62, 63, 83 };
+// Independent tools/hwpx-table-oracle.py census of selected 2011 section XML.
+pub const table_count = [_]usize{ 870, 364, 436, 361, 300, 421, 355, 1075 };
+pub const table_rows = [_]usize{ 3699, 3758, 2398, 1859, 1879, 2489, 2386, 5240 };
+pub const table_cells = [_]usize{ 15695, 10688, 11205, 7236, 13414, 10994, 17716, 20050 };
+pub const table_grid_slots = [_]usize{ 27616, 28955, 20479, 12530, 18609, 19013, 23619, 36665 };
+pub const table_cell_slots = table_grid_slots;
 pub const paragraphs = [_]usize{ 28740, 20865, 20019, 11680, 44679, 24829, 23614, 40720 };
 pub const begin_present = [_]usize{ 60, 64, 53, 48, 58, 57, 54, 61 };
 // Raw minus selected section text: [paragraphs, runs, hp:t, UTF-8 bytes,

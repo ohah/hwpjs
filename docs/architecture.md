@@ -40,6 +40,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [현재 지원 검사 묶음](hwpx-known-inspections.md)은 기존 HWPX 검사들의 결과를 같은 문서에서 모으는 경계입니다. 개별 파서 SSOT를 유지하며 미지원 문서 의미를 검증 완료로 승격하지 않습니다.
 
+[표 격자 구조](hwpx-table-geometry.md)는 소유 XML 트리 위에서 표·행·셀 주소와 병합 범위의 점유를 진단합니다. 셀 내용·서식·레이아웃·편집은 별도 후속 계층입니다.
+
 [모든 ZIP 엔트리 바이트 무결성](hwpx-payload-integrity.md)은 기존 ZIP 해제·CRC 계약을 전체 archive에 적용합니다. OPF 밖 항목도 누락하지 않지만 media-type과 payload 내부 포맷의 의미 검사는 해당 리소스 계층에 남깁니다.
 
 [OPF 선언 XML 전수 문법 검사](hwpx-manifest-xml.md)는 공통 XML 순회를 모든 내장 `application/xml` manifest 항목에 적용합니다. settings·masterpage도 포함하지만 루트별 스키마·의미는 해당 후속 계층에 남깁니다.

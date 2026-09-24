@@ -16,6 +16,7 @@ const run_metadata = @import("run_metadata.zig");
 const run_topology = @import("run_topology.zig");
 const text_node = @import("text_node.zig");
 const begin_numbers = @import("header_begin_numbers.zig");
+const table_geometry = @import("table_geometry.zig");
 const payload_integrity = @import("payload_integrity.zig");
 const manifest_xml = @import("manifest_xml.zig");
 const settings = @import("settings.zig");
@@ -48,6 +49,7 @@ pub const Report = struct {
     run_metadata: run_metadata.Report,
     run_topology: run_topology.Report,
     text_nodes: text_node.Report,
+    table_geometry: table_geometry.Report,
     begin_numbers: begin_numbers.Report,
 
     pub fn deinit(self: *Report, a: std.mem.Allocator) void {
@@ -109,7 +111,8 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
         const run_report = try trees.inspectRunMetadata(a, options.run_metadata);
         const topology_report = try trees.inspectRunTopology(a, options.run_topology);
         const text_nodes_report = try trees.inspectTextNodes(a, options.text_nodes);
-        break :blk .{ .begin = begin_report, .paragraph = paragraph_report, .run = run_report, .topology = topology_report, .text_nodes = text_nodes_report };
+        const table_report = try trees.inspectTableGeometry(a, options.table_geometry);
+        break :blk .{ .begin = begin_report, .paragraph = paragraph_report, .run = run_report, .topology = topology_report, .text_nodes = text_nodes_report, .table_geometry = table_report };
     };
     return .{
         .version = version,
@@ -135,6 +138,7 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
         .run_metadata = semantic.run,
         .run_topology = semantic.topology,
         .text_nodes = semantic.text_nodes,
+        .table_geometry = semantic.table_geometry,
         .begin_numbers = semantic.begin,
     };
 }
