@@ -6,6 +6,7 @@ const document_xml = @import("document_xml.zig");
 const attrs = @import("xml_attributes.zig");
 const values = @import("xml_values.zig");
 const namespace_profile = @import("namespace_profile.zig");
+const para_list_attributes = @import("para_list_attributes.zig");
 
 pub const Kind = enum { both, even, odd, last_page, optional_page };
 
@@ -14,7 +15,20 @@ pub const Options = struct {
     max_part_xml_bytes: usize = 32 * 1024 * 1024,
     max_total_xml_bytes: usize = 128 * 1024 * 1024,
     max_attribute_bytes: usize = 4096,
+    max_sub_lists_per_part: usize = 4096,
+    max_direct_paragraphs_per_part: usize = 1_000_000,
     xml: document_xml.Options = .{},
+};
+
+pub const SubList = struct {
+    attributes: para_list_attributes.Attributes,
+    direct_paragraphs: usize = 0,
+    other_direct_elements: usize = 0,
+    uninspected_descendants: usize = 0,
+
+    fn deinit(self: *SubList, a: std.mem.Allocator) void {
+        self.attributes.deinit(a);
+    }
 };
 
 pub const Part = struct {
@@ -27,7 +41,7 @@ pub const Part = struct {
     page_number: ?[]u8,
     page_duplicate: ?[]u8,
     page_front: ?[]u8,
-    sub_lists: usize,
+    sub_lists: []SubList,
     other_direct_elements: usize,
     uninspected_descendants: usize,
     manifest_id_matches: bool,
@@ -39,6 +53,8 @@ pub const Part = struct {
         if (self.page_number) |v| a.free(v);
         if (self.page_duplicate) |v| a.free(v);
         if (self.page_front) |v| a.free(v);
+        for (self.sub_lists) |*list| list.deinit(a);
+        a.free(self.sub_lists);
     }
 };
 
@@ -83,7 +99,9 @@ const Context = struct {
     page_number: ?[]u8 = null,
     page_duplicate: ?[]u8 = null,
     page_front: ?[]u8 = null,
-    sub_lists: usize = 0,
+    sub_lists: std.ArrayList(SubList) = .empty,
+    active_sub_list: ?usize = null,
+    direct_paragraphs: usize = 0,
     other_direct_elements: usize = 0,
     uninspected_descendants: usize = 0,
 
@@ -93,11 +111,16 @@ const Context = struct {
         if (self.page_number) |v| self.a.free(v);
         if (self.page_duplicate) |v| self.a.free(v);
         if (self.page_front) |v| self.a.free(v);
+        for (self.sub_lists.items) |*list| list.deinit(self.a);
+        self.sub_lists.deinit(self.a);
     }
 
     fn onTag(raw: *anyopaque, tag: xml.tags.Tag, scope: *const xml.namespaces.State, depth: usize) anyerror!void {
         const self: *Context = @ptrCast(@alignCast(raw));
-        if (tag.kind == .end) return;
+        if (tag.kind == .end) {
+            if (depth == 2) self.active_sub_list = null;
+            return;
+        }
         if (depth == 1) {
             if (!try attrs.element(tag, scope, "", "masterPage")) {
                 const name = try scope.expandElement(tag.name);
@@ -117,9 +140,25 @@ const Context = struct {
         }
         if (depth == 2) {
             if (try attrs.element(tag, scope, document_xml.paragraph_uri, "subList")) {
-                self.sub_lists += 1;
+                if (self.sub_lists.items.len == self.options.max_sub_lists_per_part) return error.LimitExceeded;
+                var list: SubList = .{ .attributes = try para_list_attributes.read(self.a, tag, scope, self.options.max_attribute_bytes) };
+                errdefer list.deinit(self.a);
+                try self.sub_lists.append(self.a, list);
+                if (tag.kind == .start) self.active_sub_list = self.sub_lists.items.len - 1;
             } else self.other_direct_elements += 1;
-        } else self.uninspected_descendants += 1;
+        } else {
+            self.uninspected_descendants += 1;
+            if (self.active_sub_list) |index| {
+                const list = &self.sub_lists.items[index];
+                if (depth == 3) {
+                    if (try attrs.element(tag, scope, document_xml.paragraph_uri, "p")) {
+                        if (self.direct_paragraphs == self.options.max_direct_paragraphs_per_part) return error.LimitExceeded;
+                        self.direct_paragraphs += 1;
+                        list.direct_paragraphs += 1;
+                    } else list.other_direct_elements += 1;
+                } else list.uninspected_descendants += 1;
+            }
+        }
     }
 };
 
@@ -133,6 +172,8 @@ fn parsePart(a: std.mem.Allocator, archive: zip.Archive, item: manifest.Item, it
     _ = try document_xml.visitBytes(a, bytes, max_bytes, options.xml, .{ .context = &context, .on_tag = Context.onTag });
     const id = context.id orelse return error.MissingMasterPageId;
     const href = try a.dupe(u8, item.href);
+    errdefer a.free(href);
+    const sub_lists = try context.sub_lists.toOwnedSlice(a);
     context.id = null;
     const part: Part = .{
         .href = href,
@@ -144,7 +185,7 @@ fn parsePart(a: std.mem.Allocator, archive: zip.Archive, item: manifest.Item, it
         .page_number = context.page_number,
         .page_duplicate = context.page_duplicate,
         .page_front = context.page_front,
-        .sub_lists = context.sub_lists,
+        .sub_lists = sub_lists,
         .other_direct_elements = context.other_direct_elements,
         .uninspected_descendants = context.uninspected_descendants,
         .manifest_id_matches = std.mem.eql(u8, id, item.id),

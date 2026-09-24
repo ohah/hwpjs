@@ -20,6 +20,11 @@ APP = "{http://www.hancom.co.kr/hwpml/2011/app}"
 CONFIG = "{urn:oasis:names:tc:opendocument:xmlns:config:1.0}"
 PARA = "{http://www.hancom.co.kr/hwpml/2011/paragraph}"
 MASTER_KINDS = ("BOTH", "EVEN", "ODD", "LAST_PAGE", "OPTIONAL_PAGE")
+SUB_LIST_FIELDS = ("id", "textDirection", "lineWrap", "vertAlign", "linkListIDRef",
+                   "linkListNextIDRef", "textWidth", "textHeight", "hasTextRef", "hasNumRef", "metatag")
+SUB_LIST_ENUMS = {"textDirection": ("HORIZONTAL", "VERTICAL", "VERTICALALL"),
+                  "lineWrap": ("BREAK", "SQUEEZE", "KEEP"),
+                  "vertAlign": ("TOP", "CENTER", "BOTTOM")}
 MAX_PACKAGE_BYTES = 25_000_000
 MAX_ENTRY_BYTES = 128 * 1024 * 1024
 MAX_TOTAL_BYTES = 256 * 1024 * 1024
@@ -31,7 +36,11 @@ def empty():
                 settings=0, masterpages=0, carets=0, caret_pos_sum=0,
                 config_sets=0, config_items=0, short_sum=0,
                 boolean_true=0, unsupported_types=0,
-                master_sub_lists=0, master_page_number_sum=0,
+                master_sub_lists=0, master_sub_list_direct_paragraphs=0,
+                master_sub_list_attribute_presence=[0] * len(SUB_LIST_FIELDS),
+                master_sub_list_unknown_enums=0, master_sub_list_other_attributes=0,
+                master_sub_list_width_sum=0, master_sub_list_height_sum=0,
+                master_page_number_sum=0,
                 master_type_counts=[0] * len(MASTER_KINDS),
                 master_manifest_id_mismatch=0, master_refs=0,
                 master_resolved=0, master_missing=0, master_absent=0,
@@ -125,7 +134,24 @@ def main():
                                 shard["master_type_counts"][MASTER_KINDS.index(kind)] += 1
                             if document.get("pageNumber") is not None:
                                 shard["master_page_number_sum"] += int(document.get("pageNumber"))
-                            shard["master_sub_lists"] += sum(child.tag == PARA + "subList" for child in document)
+                            for child in document:
+                                if child.tag != PARA + "subList":
+                                    continue
+                                shard["master_sub_lists"] += 1
+                                shard["master_sub_list_direct_paragraphs"] += sum(
+                                    grandchild.tag == PARA + "p" for grandchild in child)
+                                shard["master_sub_list_other_attributes"] += sum(
+                                    field not in SUB_LIST_FIELDS for field in child.attrib)
+                                for index, field in enumerate(SUB_LIST_FIELDS):
+                                    if field not in child.attrib:
+                                        continue
+                                    shard["master_sub_list_attribute_presence"][index] += 1
+                                    if field in SUB_LIST_ENUMS and child.attrib[field] not in SUB_LIST_ENUMS[field]:
+                                        shard["master_sub_list_unknown_enums"] += 1
+                                if "textWidth" in child.attrib:
+                                    shard["master_sub_list_width_sum"] += int(child.attrib["textWidth"])
+                                if "textHeight" in child.attrib:
+                                    shard["master_sub_list_height_sum"] += int(child.attrib["textHeight"])
                         if name.startswith("Contents/section") and name.endswith(".xml"):
                             master_refs.extend(node.get("idRef") for node in document.iter(PARA + "masterPage"))
                             shard["master_count_declarations"] += sum("masterPageCnt" in node.attrib for node in document.iter(PARA + "secPr"))
@@ -142,8 +168,8 @@ def main():
                     shard["accepted"] += 1
             except BadZipFile:
                 shard["rejected_zip"] += 1
-    total = {key: ([sum(shard[key][i] for shard in shards) for i in range(len(MASTER_KINDS))]
-                   if key == "master_type_counts" else sum(shard[key] for shard in shards))
+    total = {key: ([sum(shard[key][i] for shard in shards) for i in range(len(shards[0][key]))]
+                   if isinstance(shards[0][key], list) else sum(shard[key] for shard in shards))
              for key in shards[0]}
     print(json.dumps({"total": total, "shards": shards}, sort_keys=True))
 

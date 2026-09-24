@@ -18,7 +18,7 @@ const sources = [_]fixture.Source{
     .{ .name = "version.xml", .data = "<v:HCFVersion xmlns:v='http://www.hancom.co.kr/hwpml/2011/version' major='5' minor='1'/>" },
     .{ .name = "Contents/header.xml", .data = "<h:head xmlns:h='http://www.hancom.co.kr/hwpml/2011/head' secCnt='1'><h:beginNum page='1' footnote='1' endnote='1' pic='1' tbl='1' equation='1'/><h:refList/></h:head>" },
     .{ .name = "Contents/section0.xml", .data = section },
-    .{ .name = "Contents/masterpage0.xml", .data = "<masterPage id='masterpage0' type='BOTH' pageNumber='0' pageDuplicate='0' pageFront='false' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:subList><p:p/></p:subList></masterPage>" },
+    .{ .name = "Contents/masterpage0.xml", .data = "<masterPage id='masterpage0' type='BOTH' pageNumber='0' pageDuplicate='0' pageFront='false' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:subList id='' textDirection='HORIZONTAL' lineWrap='BREAK' vertAlign='TOP' linkListIDRef='0' linkListNextIDRef='0' textWidth='66612' textHeight='90846' hasTextRef='0' hasNumRef='0'><p:p/></p:subList></masterPage>" },
     .{ .name = "Contents/masterpage1.xml", .data = "<masterPage id='masterpage1' type='FUTURE' pageNumber='4'/>" },
 };
 
@@ -33,7 +33,15 @@ test "HWPX master pages keep raw fields and resolve section root IDs without tru
     try std.testing.expectEqual(@as(usize, 2), report.parts.parts.len);
     try std.testing.expectEqualStrings("masterpage0", report.parts.parts[0].id);
     try std.testing.expectEqual(@as(?@import("masterpage_parts.zig").Kind, .both), report.parts.parts[0].kind);
-    try std.testing.expectEqual(@as(usize, 1), report.parts.parts[0].sub_lists);
+    try std.testing.expectEqual(@as(usize, 1), report.parts.parts[0].sub_lists.len);
+    try std.testing.expectEqual(@as(usize, 1), report.parts.parts[0].sub_lists[0].direct_paragraphs);
+    const list = &report.parts.parts[0].sub_lists[0];
+    try std.testing.expectEqualStrings("", list.attributes.get(.id).?);
+    try std.testing.expectEqualStrings("HORIZONTAL", list.attributes.get(.text_direction).?);
+    try std.testing.expectEqualStrings("66612", list.attributes.get(.text_width).?);
+    try std.testing.expectEqualStrings("0", list.attributes.get(.has_num_ref).?);
+    try std.testing.expect(list.attributes.get(.metatag) == null);
+    try std.testing.expectEqual(@as(usize, 0), list.attributes.unknown_enums);
     try std.testing.expectEqual(@as(usize, 1), report.parts.parts[0].uninspected_descendants);
     try std.testing.expect(report.parts.parts[1].kind == null);
     try std.testing.expectEqual(@as(usize, 1), report.parts.unsupported_types);
@@ -47,6 +55,101 @@ test "HWPX master pages keep raw fields and resolve section root IDs without tru
     var known = try document.inspectKnown(a, .{});
     defer known.deinit(a);
     try std.testing.expectEqual(@as(usize, 2), known.master_pages.resolved);
+}
+
+test "HWPX master subList distinguishes direct paragraphs, unknown enums, empty and absent values" {
+    const a = std.testing.allocator;
+    var changed = sources;
+    changed[6].data = "<masterPage id='masterpage0' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph' xmlns:f='urn:future'>" ++
+        "<p:subList textDirection='FUTURE' lineWrap='KEEP' vertAlign='BOTTOM' metatag='' textWidth='+12' hasTextRef='true' f:future='x'>" ++
+        "<p:p/><p:tbl><p:p/></p:tbl><p:p/></p:subList><p:subList><p:p/></p:subList></masterPage>";
+    const bytes = try fixture.storedZip(a, &changed);
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    var report = try document.inspectMasterPages(a, .{});
+    defer report.deinit(a);
+    const lists = report.parts.parts[0].sub_lists;
+    try std.testing.expectEqual(@as(usize, 2), lists.len);
+    try std.testing.expectEqual(@as(usize, 2), lists[0].direct_paragraphs);
+    try std.testing.expectEqual(@as(usize, 1), lists[0].other_direct_elements);
+    try std.testing.expectEqual(@as(usize, 1), lists[0].uninspected_descendants);
+    try std.testing.expectEqual(@as(usize, 1), lists[1].direct_paragraphs);
+    try std.testing.expectEqual(@as(usize, 1), lists[0].attributes.unknown_enums);
+    try std.testing.expectEqual(@as(usize, 1), lists[0].attributes.other_attributes);
+    try std.testing.expectEqualStrings("FUTURE", lists[0].attributes.get(.text_direction).?);
+    try std.testing.expectEqualStrings("", lists[0].attributes.get(.metatag).?);
+    try std.testing.expect(lists[0].attributes.get(.id) == null);
+    try std.testing.expect(lists[1].attributes.get(.text_direction) == null);
+    try std.testing.expectEqual(@as(usize, 0), lists[1].attributes.unknown_enums);
+}
+
+test "HWPX master subList rejects malformed numeric and Boolean attributes" {
+    const a = std.testing.allocator;
+    for ([_]struct { field: []const u8, value: []const u8, expected: anyerror }{
+        .{ .field = "linkListIDRef", .value = "4294967296", .expected = error.InvalidUnsigned32 },
+        .{ .field = "linkListNextIDRef", .value = "x", .expected = error.InvalidNonNegativeInteger },
+        .{ .field = "textWidth", .value = "-1", .expected = error.InvalidNonNegativeInteger },
+        .{ .field = "textHeight", .value = "4294967296", .expected = error.InvalidUnsigned32 },
+        .{ .field = "hasTextRef", .value = "yes", .expected = error.InvalidXmlBoolean },
+        .{ .field = "hasNumRef", .value = "2", .expected = error.InvalidXmlBoolean },
+    }) |mutation| {
+        const part = try std.fmt.allocPrint(a, "<masterPage id='masterpage0' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:subList {s}='{s}'/></masterPage>", .{ mutation.field, mutation.value });
+        defer a.free(part);
+        var changed = sources;
+        changed[6].data = part;
+        const bytes = try fixture.storedZip(a, &changed);
+        defer a.free(bytes);
+        var document = try package.inspectDocument(a, bytes, .{});
+        defer document.deinit(a);
+        try std.testing.expectError(mutation.expected, document.inspectMasterPages(a, .{}));
+    }
+}
+
+test "HWPX master subList recognizes all defined enums and ignores foreign namespace siblings" {
+    const a = std.testing.allocator;
+    var changed = sources;
+    changed[6].data = "<masterPage id='masterpage0' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph' xmlns:f='urn:future'>" ++
+        "<f:subList><p:p/></f:subList><p:subList textDirection='VERTICAL' lineWrap='SQUEEZE' vertAlign='CENTER'/>" ++
+        "<p:subList textDirection='VERTICALALL' lineWrap='KEEP' vertAlign='BOTTOM'/></masterPage>";
+    const bytes = try fixture.storedZip(a, &changed);
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    var report = try document.inspectMasterPages(a, .{});
+    defer report.deinit(a);
+    const part = &report.parts.parts[0];
+    try std.testing.expectEqual(@as(usize, 2), part.sub_lists.len);
+    try std.testing.expectEqual(@as(usize, 1), part.other_direct_elements);
+    try std.testing.expectEqual(@as(usize, 0), part.sub_lists[0].direct_paragraphs);
+    try std.testing.expectEqual(@as(usize, 0), part.sub_lists[1].direct_paragraphs);
+    try std.testing.expectEqual(@as(usize, 0), part.sub_lists[0].attributes.unknown_enums);
+    try std.testing.expectEqual(@as(usize, 0), part.sub_lists[1].attributes.unknown_enums);
+}
+
+test "HWPX master subList releases earlier owned values when later list is malformed" {
+    const a = std.testing.allocator;
+    var changed = sources;
+    changed[6].data = "<masterPage id='masterpage0' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'>" ++
+        "<p:subList id='first' textWidth='1'/><p:subList textHeight='4294967296'/></masterPage>";
+    const bytes = try fixture.storedZip(a, &changed);
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    try std.testing.expectError(error.InvalidUnsigned32, document.inspectMasterPages(a, .{}));
+}
+
+test "HWPX master subList has exact count and attribute limits" {
+    const a = std.testing.allocator;
+    const bytes = try fixture.storedZip(a, &sources);
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    var exact = try document.inspectMasterPages(a, .{ .references = .{ .parts = .{ .max_sub_lists_per_part = 1, .max_direct_paragraphs_per_part = 1 } } });
+    exact.deinit(a);
+    try std.testing.expectError(error.LimitExceeded, document.inspectMasterPages(a, .{ .references = .{ .parts = .{ .max_sub_lists_per_part = 0 } } }));
+    try std.testing.expectError(error.LimitExceeded, document.inspectMasterPages(a, .{ .references = .{ .parts = .{ .max_direct_paragraphs_per_part = 0 } } }));
+    try std.testing.expectError(error.LimitExceeded, document.inspectMasterPages(a, .{ .references = .{ .parts = .{ .max_attribute_bytes = 9 } } }));
 }
 
 test "HWPX master pages reject malformed root and scalar fields" {

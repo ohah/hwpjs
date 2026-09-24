@@ -1,6 +1,6 @@
 # HWPX masterpage 파트와 section 참조
 
-`Document.inspectMasterPages`는 OPF manifest에 선언된 정규 `Contents/masterpageN.xml` 항목을 선택합니다. ZIP 해제·공통 XML 문법/namespace 검사를 거쳐 namespace가 없는 `masterPage` 루트의 `id`, `type`, `pageNumber`, `pageDuplicate`, `pageFront` 원값과 각 속성의 부재를 구분해 소유합니다. 루트의 직접 `hp:subList` 개수를 기록하고 내부 요소 및 다른 직접 요소는 검사하지 않은 수로 남깁니다. 없는 마스터페이지는 빈 배열이며 대체 페이지를 만들지 않습니다. 중복 경로, 잘못된 media-type, 외부 항목, 암호화 문서는 명시적으로 거부합니다.
+`Document.inspectMasterPages`는 OPF manifest에 선언된 정규 `Contents/masterpageN.xml` 항목을 선택합니다. ZIP 해제·공통 XML 문법/namespace 검사를 거쳐 namespace가 없는 `masterPage` 루트의 `id`, `type`, `pageNumber`, `pageDuplicate`, `pageFront` 원값과 각 속성의 부재를 구분해 소유합니다. 루트의 직접 `hp:subList`는 소유 배열로 반환하며, 공통 속성 계약과 직접 문단 경계는 [ParaListType 속성](hwpx-para-list.md)이 소유합니다. 다른 직접 요소는 별도 수로 남깁니다. 없는 마스터페이지는 빈 배열이며 대체 페이지를 만들지 않습니다. 중복 경로, 잘못된 media-type, 외부 항목, 암호화 문서는 명시적으로 거부합니다.
 
 `type`의 알려진 값은 `BOTH`, `EVEN`, `ODD`, `LAST_PAGE`, `OPTIONAL_PAGE`입니다. 미지 값은 원문과 함께 미지원 진단으로 남깁니다. `pageNumber`는 unsigned 32-bit, 두 플래그는 XML Boolean 어휘만 검사합니다. `id`는 비어 있으면 거부합니다. manifest ID와 루트 ID가 달라도 값을 임의로 합치지 않고 불일치로 보고합니다.
 
@@ -17,3 +17,5 @@ manifest 경로와 루트 ID는 별도 색인으로 조회해, 많은 참조가 
 검증: 합성 ZIP에서 정상 연결·불일치 원값·누락/중복 ID·잘못된 루트 거부·미지원 타입 보존·media-type/외부·한도 경계·원본 해제 뒤 보고서 수명·별도 할당자·모든 할당 실패 지점을 검사했습니다. `zig test src/root.zig --test-filter 'HWPX master'`는 Debug·ReleaseSafe·ReleaseFast에서 각각 통과했습니다. 선택 실파일 8개 shard의 파트/참조/타입/수치 집계도 독립 Python oracle과 일치했고, 전체 Debug `zig build test --summary all`은 2,219/2,219 통과했습니다. 이 수치는 전체 HWPX 지원률이 아닙니다.
 
 경로·ID 색인으로 중복 검사와 참조 조회의 제곱 시간 경로를 제거한 최종 소스에서도 위 8개 shard와 2,219개 테스트를 다시 통과했습니다. `zig build -Doptimize=ReleaseSafe`, `zig build audit -Doptimize=ReleaseSafe --summary all`, `zig fmt --check build.zig src`, `git diff --check`도 성공했습니다. audit의 HWP5/WASM 통과는 마스터페이지 내부 의미의 검증 근거로 확대하지 않습니다.
+
+후속 [직접 ParaListType 속성](hwpx-para-list.md) 단계에서 루트 직접 `hp:subList`의 소유 배열·원값·직접 문단 경계를 추가했습니다. 이 소스의 전체 Debug 테스트 2,224개와 실파일 8개 shard가 독립 조사와 일치했습니다. 위의 2,219개는 이전 단계의 기록입니다.

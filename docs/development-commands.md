@@ -42,6 +42,8 @@ HWPX 전용 테스트는 `zig test src/root.zig --test-filter HWPX`로 실행합
 
 [HWPX masterpage 파트·참조](hwpx-master-pages.md)는 `zig test src/root.zig --test-filter 'HWPX master'`로 합성 ZIP·오류·한도·할당 실패를 확인합니다. 위의 8개 `HWPX known document inspections shard N` 선택 검사에서 `python3 tools/hwpx-manifest-xml-oracle.py`의 루트 타입·subList 개수·pageNumber 합계·section 참조·선언 수를 대조합니다. `masterPageCnt`와 실제 참조 개수의 동치는 주장하지 않습니다.
 
+[HWPX ParaListType 직접 속성](hwpx-para-list.md)도 같은 `HWPX master` 합성 검사를 사용합니다. 독립 Python 조사의 subList 직접 문단 수·속성 존재·폭/높이 합계는 위 8개 실파일 shard와 대조합니다. 기본 audit에 실파일 조사가 포함되지는 않습니다.
+
 [HWPX section 직접 문자 콘텐츠](hwpx-section-content.md)의 단위 테스트도 위의 `HWPX section tree` 필터에 포함됩니다. 같은 8개 선택 shard에서 `section_tree_shards[].content_digest_sum`을 독립 Python Expat의 직접 콘텐츠 합계와 대조합니다. 이 합계는 요소별 정규화 문자 값의 검증이며 개별 콜백 경계의 동치 주장은 아닙니다.
 
 요소와 문자를 섞어 전달하는 `visitOrdered`도 같은 테스트·shard 명령으로 검사합니다. 독립 Expat의 경계별 문자·시작/끝 순서 해시는 `section_tree_shards[].ordered_digest_sum`으로 대조하며, 빈 태그는 시작+끝으로 정규화합니다. 순서 해시의 반례 테스트는 `zig test src/hwpx_structure_survey.zig -O ReleaseFast --test-filter 'HWPX ordered digest detects moved text'`로 실행합니다. 주석·처리 지시문과 콜백 분할은 포함하지 않습니다.

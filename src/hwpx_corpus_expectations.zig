@@ -23,6 +23,22 @@ pub const settings_unsupported_types = [_]usize{ 0, 0, 0, 0, 0, 0, 0, 0 };
 // Master-page package roots and section links from the independent ZIP/XML oracle.
 pub const master_page_refs = [_]usize{ 14, 6, 19, 0, 0, 0, 3, 19 };
 pub const master_page_sub_lists = [_]usize{ 14, 6, 19, 0, 0, 0, 3, 19 };
+pub const master_sub_list_direct_paragraphs = [_]usize{ 14, 7, 19, 0, 0, 0, 3, 20 };
+// 11 fields in para_list_attributes.Field order. The final metatag is absent.
+pub const master_sub_list_attribute_presence = [_][11]usize{
+    .{ 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 0 },
+    .{ 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 0 },
+    .{ 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 0 },
+    @splat(0),
+    @splat(0),
+    @splat(0),
+    .{ 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0 },
+    .{ 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 0 },
+};
+pub const master_sub_list_unknown_enums = [_]usize{ 0, 0, 0, 0, 0, 0, 0, 0 };
+pub const master_sub_list_other_attributes = [_]usize{ 0, 0, 0, 0, 0, 0, 0, 0 };
+pub const master_sub_list_width_sum = [_]u64{ 630706, 399342, 982188, 0, 0, 0, 199836, 947462 };
+pub const master_sub_list_height_sum = [_]u64{ 1015820, 545946, 1489464, 0, 0, 0, 272538, 1142649 };
 pub const master_page_number_sum = [_]u64{ 0, 0, 4, 0, 0, 0, 0, 0 };
 pub const master_page_count_declarations = [_]usize{ 75, 72, 72, 55, 64, 62, 63, 92 };
 pub const master_page_type_counts = [_][5]usize{

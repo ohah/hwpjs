@@ -1,6 +1,9 @@
 const std = @import("std");
 const package = @import("hwpx/package.zig");
 const expected = @import("hwpx_corpus_expectations.zig");
+const para_list_attributes = @import("hwpx/para_list_attributes.zig");
+
+const sub_list_field_count = para_list_attributes.field_names.len;
 
 const Statistics = struct {
     sections: usize,
@@ -21,6 +24,12 @@ const Statistics = struct {
     settings_unsupported_types: usize,
     master_page_refs: usize,
     master_page_sub_lists: usize,
+    master_sub_list_direct_paragraphs: usize,
+    master_sub_list_attribute_presence: [sub_list_field_count]usize,
+    master_sub_list_unknown_enums: usize,
+    master_sub_list_other_attributes: usize,
+    master_sub_list_width_sum: u64,
+    master_sub_list_height_sum: u64,
     master_page_number_sum: u64,
     master_page_count_declarations: usize,
     master_page_type_counts: [5]usize,
@@ -73,10 +82,24 @@ fn inspectOne(bytes: []const u8) !Outcome {
     }
     try std.testing.expectEqual(masterpages, known.master_pages.parts.parts.len);
     var master_sub_lists: usize = 0;
+    var master_sub_list_direct_paragraphs: usize = 0;
+    var master_sub_list_attribute_presence: [sub_list_field_count]usize = @splat(0);
+    var master_sub_list_unknown_enums: usize = 0;
+    var master_sub_list_other_attributes: usize = 0;
+    var master_sub_list_width_sum: u64 = 0;
+    var master_sub_list_height_sum: u64 = 0;
     var master_page_number_sum: u64 = 0;
     var master_type_counts: [5]usize = @splat(0);
     for (known.master_pages.parts.parts) |part| {
-        master_sub_lists += part.sub_lists;
+        master_sub_lists += part.sub_lists.len;
+        for (part.sub_lists) |list| {
+            master_sub_list_direct_paragraphs += list.direct_paragraphs;
+            for (list.attributes.raw, 0..) |raw, index| master_sub_list_attribute_presence[index] += @intFromBool(raw != null);
+            master_sub_list_unknown_enums += list.attributes.unknown_enums;
+            master_sub_list_other_attributes += list.attributes.other_attributes;
+            if (list.attributes.get(.text_width)) |raw| master_sub_list_width_sum += try std.fmt.parseInt(u32, raw, 10);
+            if (list.attributes.get(.text_height)) |raw| master_sub_list_height_sum += try std.fmt.parseInt(u32, raw, 10);
+        }
         if (part.page_number) |raw| master_page_number_sum += try std.fmt.parseInt(u32, raw, 10);
         if (part.kind) |kind| master_type_counts[@intFromEnum(kind)] += 1;
     }
@@ -113,6 +136,12 @@ fn inspectOne(bytes: []const u8) !Outcome {
         .settings_unsupported_types = known.settings.unsupported_types,
         .master_page_refs = known.master_pages.resolved,
         .master_page_sub_lists = master_sub_lists,
+        .master_sub_list_direct_paragraphs = master_sub_list_direct_paragraphs,
+        .master_sub_list_attribute_presence = master_sub_list_attribute_presence,
+        .master_sub_list_unknown_enums = master_sub_list_unknown_enums,
+        .master_sub_list_other_attributes = master_sub_list_other_attributes,
+        .master_sub_list_width_sum = master_sub_list_width_sum,
+        .master_sub_list_height_sum = master_sub_list_height_sum,
         .master_page_number_sum = master_page_number_sum,
         .master_page_count_declarations = known.master_pages.count_declarations.len,
         .master_page_type_counts = master_type_counts,
@@ -143,6 +172,12 @@ fn surveyShard(shard: usize) !void {
     var settings_unsupported_types: usize = 0;
     var master_page_refs: usize = 0;
     var master_page_sub_lists: usize = 0;
+    var master_sub_list_direct_paragraphs: usize = 0;
+    var master_sub_list_attribute_presence: [sub_list_field_count]usize = @splat(0);
+    var master_sub_list_unknown_enums: usize = 0;
+    var master_sub_list_other_attributes: usize = 0;
+    var master_sub_list_width_sum: u64 = 0;
+    var master_sub_list_height_sum: u64 = 0;
     var master_page_number_sum: u64 = 0;
     var master_page_count_declarations: usize = 0;
     var master_page_type_counts: [5]usize = @splat(0);
@@ -184,6 +219,12 @@ fn surveyShard(shard: usize) !void {
                     settings_unsupported_types += stats.settings_unsupported_types;
                     master_page_refs += stats.master_page_refs;
                     master_page_sub_lists += stats.master_page_sub_lists;
+                    master_sub_list_direct_paragraphs += stats.master_sub_list_direct_paragraphs;
+                    for (stats.master_sub_list_attribute_presence, 0..) |value, i| master_sub_list_attribute_presence[i] += value;
+                    master_sub_list_unknown_enums += stats.master_sub_list_unknown_enums;
+                    master_sub_list_other_attributes += stats.master_sub_list_other_attributes;
+                    master_sub_list_width_sum += stats.master_sub_list_width_sum;
+                    master_sub_list_height_sum += stats.master_sub_list_height_sum;
                     master_page_number_sum += stats.master_page_number_sum;
                     master_page_count_declarations += stats.master_page_count_declarations;
                     for (stats.master_page_type_counts, 0..) |value, i| master_page_type_counts[i] += value;
@@ -214,6 +255,12 @@ fn surveyShard(shard: usize) !void {
     try std.testing.expectEqual(expected.settings_unsupported_types[shard], settings_unsupported_types);
     try std.testing.expectEqual(expected.master_page_refs[shard], master_page_refs);
     try std.testing.expectEqual(expected.master_page_sub_lists[shard], master_page_sub_lists);
+    try std.testing.expectEqual(expected.master_sub_list_direct_paragraphs[shard], master_sub_list_direct_paragraphs);
+    try std.testing.expectEqualSlices(usize, &expected.master_sub_list_attribute_presence[shard], &master_sub_list_attribute_presence);
+    try std.testing.expectEqual(expected.master_sub_list_unknown_enums[shard], master_sub_list_unknown_enums);
+    try std.testing.expectEqual(expected.master_sub_list_other_attributes[shard], master_sub_list_other_attributes);
+    try std.testing.expectEqual(expected.master_sub_list_width_sum[shard], master_sub_list_width_sum);
+    try std.testing.expectEqual(expected.master_sub_list_height_sum[shard], master_sub_list_height_sum);
     try std.testing.expectEqual(expected.master_page_number_sum[shard], master_page_number_sum);
     try std.testing.expectEqual(expected.master_page_count_declarations[shard], master_page_count_declarations);
     try std.testing.expectEqualSlices(usize, &expected.master_page_type_counts[shard], &master_page_type_counts);
