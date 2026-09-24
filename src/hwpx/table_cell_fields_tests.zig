@@ -83,8 +83,40 @@ test "HWPX table cell fields validate surviving elements and lexical limits" {
 test "HWPX table cell fields release all allocations under failure injection" {
     try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
         fn run(a: std.mem.Allocator) !void {
-            const report = try inspectXml(a, "<p:tbl rowCnt='1' colCnt='1'><p:tr><p:tc hasMargin='1'><p:cellAddr rowAddr='0' colAddr='0'/><p:cellSpan rowSpan='1' colSpan='1'/><p:cellSz width='10' height='20'/><p:cellMargin left='-3' right='4294967295' top='0' bottom='1'/></p:tc></p:tr></p:tbl>", .{});
+            const report = try inspectXml(a, "<p:tbl rowCnt='1' colCnt='1'><p:tr><p:tc name='A&amp;B' header='true' hasMargin='1' protect='false' editable='1' dirty='0' borderFillIDRef='7'><p:cellAddr rowAddr='0' colAddr='0'/><p:cellSpan rowSpan='1' colSpan='1'/><p:cellSz width='10' height='20'/><p:cellMargin left='-3' right='4294967295' top='0' bottom='1'/></p:tc></p:tr></p:tbl>", .{});
             try std.testing.expectEqual(@as(usize, 1), report.cell_fields.cells);
+            try std.testing.expectEqual(@as(u64, 7), report.cell_fields.border_fill_sum);
         }
     }.run, .{});
+}
+
+test "HWPX table cell attributes preserve name flags and border reference lexical values" {
+    const report = try inspectXml(std.testing.allocator, "<p:tbl rowCnt='1' colCnt='2'><p:tr>" ++
+        "<p:tc name='A&amp;B' header='1' hasMargin='0' protect='true' editable='false' dirty='1' borderFillIDRef='4294967295'/>" ++
+        "<p:tc x:name='ignored' x:header='true' x:borderFillIDRef='2' name='' header='false' borderFillIDRef='0'/>" ++
+        "</p:tr></p:tbl>", .{});
+    const fields = report.cell_fields;
+    try std.testing.expectEqual(@as(usize, 2), fields.name_present);
+    try std.testing.expectEqual(@as(usize, 1), fields.name_empty);
+    try std.testing.expectEqual(@as(u64, 3), fields.name_utf8_bytes);
+    try std.testing.expectEqual(@as(usize, 1), fields.flags[0].true_value);
+    try std.testing.expectEqual(@as(usize, 1), fields.flags[0].false_value);
+    try std.testing.expectEqual(@as(usize, 1), fields.flags[1].true_value);
+    try std.testing.expectEqual(@as(usize, 1), fields.flags[1].absent);
+    try std.testing.expectEqual(@as(usize, 1), fields.flags[2].false_value);
+    try std.testing.expectEqual(@as(usize, 1), fields.flags[3].true_value);
+    try std.testing.expectEqual(@as(usize, 2), fields.border_fill_present);
+    try std.testing.expectEqual(@as(usize, 1), fields.border_fill_zero);
+    try std.testing.expectEqual(@as(u64, 4294967295), fields.border_fill_sum);
+}
+
+test "HWPX table cell attributes reject bad known lexical values and enforce byte limit" {
+    const a = std.testing.allocator;
+    try std.testing.expectError(error.InvalidXmlBoolean, inspectXml(a, "<p:tbl rowCnt='1' colCnt='1'><p:tr><p:tc protect='TRUE'/></p:tr></p:tbl>", .{}));
+    try std.testing.expectError(error.InvalidUnsigned32, inspectXml(a, "<p:tbl rowCnt='1' colCnt='1'><p:tr><p:tc borderFillIDRef='4294967296'/></p:tr></p:tbl>", .{}));
+    try std.testing.expectError(error.LimitExceeded, inspectXml(a, "<p:tbl rowCnt='1' colCnt='1'><p:tr><p:tc name='long'/></p:tr></p:tbl>", .{ .max_attribute_bytes = 3 }));
+    const absent = try inspectXml(a, "<p:tbl rowCnt='1' colCnt='1'><p:tr><p:tc x:name='foreign' x:protect='wrong' x:borderFillIDRef='wrong'/></p:tr></p:tbl>", .{});
+    try std.testing.expectEqual(@as(usize, 1), absent.cell_fields.name_absent);
+    try std.testing.expectEqual(@as(usize, 1), absent.cell_fields.flags[1].absent);
+    try std.testing.expectEqual(@as(usize, 1), absent.cell_fields.border_fill_absent);
 }

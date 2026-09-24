@@ -517,9 +517,18 @@ fn surveyShard(shard: usize) !void {
                     try std.testing.expectEqual(t.cells, fields.has_margin.true_value + fields.has_margin.false_value);
                     try std.testing.expectEqual(fields.has_margin.false_value, fields.false_with_margin);
                     try std.testing.expectEqual(@as(usize, 0), fields.missing_size + fields.duplicate_size + fields.missing_margin + fields.duplicate_margin + fields.has_margin.absent + fields.true_without_margin + fields.zero_size_field[0]);
+                    try std.testing.expectEqual(fields.cells, fields.name_present + fields.name_absent);
+                    try std.testing.expectEqual(fields.cells, fields.border_fill_present);
+                    try std.testing.expectEqual(@as(usize, 0), fields.border_fill_absent + fields.border_fill_zero);
+                    for (fields.flags) |flag| try std.testing.expectEqual(fields.cells, flag.true_value + flag.false_value);
                     for (fields.missing_size_field) |value| try std.testing.expectEqual(@as(usize, 0), value);
                     for (fields.missing_margin_field) |value| try std.testing.expectEqual(@as(usize, 0), value);
                     table_fields.has_margin.true_value += fields.has_margin.true_value;
+                    table_fields.name_absent += fields.name_absent;
+                    table_fields.name_empty += fields.name_empty;
+                    table_fields.name_utf8_bytes += fields.name_utf8_bytes;
+                    table_fields.border_fill_sum += fields.border_fill_sum;
+                    for (fields.flags, 0..) |flag, i| table_fields.flags[i].true_value += flag.true_value;
                     for (fields.size_sum, 0..) |value, i| {
                         table_fields.size_sum[i] += value;
                         table_fields.zero_size_field[i] += fields.zero_size_field[i];
@@ -546,6 +555,11 @@ fn surveyShard(shard: usize) !void {
     try std.testing.expectEqual(expected.table_grid_slots[shard], table_geometry.grid_slots);
     try std.testing.expectEqual(expected.table_cell_slots[shard], table_geometry.cell_slots);
     try std.testing.expectEqual(expected.table_has_margin_true[shard], table_fields.has_margin.true_value);
+    try std.testing.expectEqual(expected.table_cell_name_absent[shard], table_fields.name_absent);
+    try std.testing.expectEqual(expected.table_cell_name_empty[shard], table_fields.name_empty);
+    try std.testing.expectEqual(expected.table_cell_name_bytes[shard], table_fields.name_utf8_bytes);
+    try std.testing.expectEqual(expected.table_cell_border_sum[shard], table_fields.border_fill_sum);
+    for (table_fields.flags, 0..) |flag, i| try std.testing.expectEqual(expected.table_cell_flag_true[shard][i], flag.true_value);
     try std.testing.expectEqual(expected.table_zero_height[shard], table_fields.zero_size_field[1]);
     try std.testing.expectEqualSlices(u64, &expected.table_size_sums[shard], &table_fields.size_sum);
     try std.testing.expectEqualSlices(i64, &expected.table_margin_sums[shard], &table_fields.margin_sum);

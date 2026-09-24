@@ -39,6 +39,15 @@ pub const table_margin_highbit = [_][4]usize{
     .{ 212, 212, 212, 212 }, .{ 130, 130, 130, 130 },     .{ 192, 190, 194, 191 },     .{ 827, 829, 829, 829 },
     .{ 323, 323, 323, 323 }, .{ 2533, 2345, 2674, 2674 }, .{ 9748, 9695, 9748, 9748 }, .{ 161, 190, 187, 167 },
 };
+// Direct hp:tc attributes, field order for booleans is table_cell_fields.flag_names.
+pub const table_cell_name_absent = [_]usize{ 0, 0, 0, 0, 0, 0, 0, 59 };
+pub const table_cell_name_empty = [_]usize{ 14504, 9568, 10589, 6400, 12989, 10355, 17347, 19359 };
+pub const table_cell_name_bytes = [_]u64{ 17547, 15498, 7762, 10666, 4251, 7390, 5361, 5860 };
+pub const table_cell_flag_true = [_][4]usize{
+    .{ 70, 34, 639, 0 }, .{ 404, 37, 274, 0 }, .{ 77, 15, 184, 0 },  .{ 42, 97, 354, 0 },
+    .{ 4, 148, 123, 0 }, .{ 85, 5, 175, 36 },  .{ 178, 30, 111, 8 }, .{ 61, 77, 290, 36 },
+};
+pub const table_cell_border_sum = [_]u64{ 658079, 191413, 347715, 247895, 3319327, 1252296, 2772075, 2592952 };
 pub const paragraphs = [_]usize{ 28740, 20865, 20019, 11680, 44679, 24829, 23614, 40720 };
 pub const begin_present = [_]usize{ 60, 64, 53, 48, 58, 57, 54, 61 };
 // Raw minus selected section text: [paragraphs, runs, hp:t, UTF-8 bytes,

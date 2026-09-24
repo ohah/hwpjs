@@ -99,6 +99,23 @@ def inspect_metrics(cell, stats):
                 stats[high] = max(stats[high], value) if high in stats else value
     stats["margin_flag_true_without_element"] += has_margin is True and not margins
     stats["margin_flag_false_with_element"] += has_margin is False and bool(margins)
+    name = cell.get("name")
+    stats["name_absent"] += name is None
+    stats["name_present"] += name is not None
+    if name is not None:
+        stats["name_empty"] += name == ""
+        stats["name_utf8_bytes"] += len(name.encode("utf-8"))
+    for flag in ("header", "protect", "editable", "dirty"):
+        value = optional_bool(cell, flag)
+        stats[f"{flag}_absent"] += value is None
+        stats[f"{flag}_true"] += value is True
+        stats[f"{flag}_false"] += value is False
+    border = optional_int(cell, "borderFillIDRef")
+    stats["border_absent"] += border is None
+    stats["border_present"] += border is not None
+    if border is not None:
+        stats["border_zero"] += border == 0
+        stats["border_sum"] += border
 
 
 def inspect_table(table, stats, samples, path):
@@ -210,6 +227,8 @@ def self_test():
         ("<p:tbl rowCnt='1' colCnt='2'><p:tr><p:tc><p:cellAddr rowAddr='0' colAddr='0'/><p:cellSpan rowSpan='1' colSpan='1'/></p:tc><p:tc><p:cellAddr rowAddr='0' colAddr='0'/><p:cellSpan rowSpan='1' colSpan='1'/></p:tc></p:tr></p:tbl>", {"overlap": 1, "uncovered_slots": 1}),
         ("<p:tbl rowCnt='1' colCnt='1'><p:tr><p:tc><p:cellAddr rowAddr='0' colAddr='1'/><p:cellSpan rowSpan='0' colSpan='1'/></p:tc></p:tr></p:tbl>", {"zero_span": 1, "outside_grid": 1, "uncovered_slots": 1}),
         ("<p:tbl rowCnt='1' colCnt='1'><p:tr><p:tc hasMargin='false'><p:cellSz width='10' height='0'/><p:cellMargin left='-21280' right='4294948081' top='0' bottom='141'/></p:tc></p:tr></p:tbl>", {"size_elements": 1, "margin_elements": 1, "zero_size_height": 1, "negative_margin_left": 1, "highbit_margin_right": 1, "margin_flag_false_with_element": 1}),
+        ("<p:tbl rowCnt='1' colCnt='1'><p:tr><p:tc name='A&amp;B' header='true' protect='false' editable='1' dirty='0' borderFillIDRef='4294967295'/></p:tr></p:tbl>", {"name_present": 1, "name_utf8_bytes": 3, "header_true": 1, "protect_false": 1, "editable_true": 1, "dirty_false": 1, "border_sum": 4294967295}),
+        ("<p:tbl rowCnt='1' colCnt='2'><p:tr><p:tc/><p:tc name='' header='false' borderFillIDRef='0'/></p:tr></p:tbl>", {"name_absent": 1, "name_present": 1, "name_empty": 1, "header_absent": 1, "header_false": 1, "border_absent": 1, "border_zero": 1}),
     )
     for source, expected in cases:
         stats = Counter()
