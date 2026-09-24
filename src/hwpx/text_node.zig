@@ -7,12 +7,14 @@ const document_xml = @import("document_xml.zig");
 const part_tree = @import("xml_part_tree.zig");
 const masterpage_parts = @import("masterpage_parts.zig");
 const text_child_names = @import("text_child_names.zig");
+const tab_attributes = @import("tab_attributes.zig");
 
 pub const ChildClass = enum(u8) { model, xsd_hyphen, other_paragraph, foreign };
 pub const Location = struct { item_index: usize, text_ordinal: usize };
 
 pub const Options = struct {
     max_text_nodes: usize = 4_000_000,
+    max_tabs: usize = 2_000_000,
     max_attribute_bytes: usize = 4096,
     xml: document_xml.Options = .{},
 };
@@ -35,6 +37,7 @@ pub const Report = struct {
     over_u32_char_style_id_ref: usize = 0,
     direct_children: usize = 0,
     child_classes: [4]usize = @splat(0),
+    tab: tab_attributes.Report = .{},
     xml_bytes: usize = 0,
     first_non_direct_text: ?Location = null,
     first_unmodeled_child: ?Location = null,
@@ -44,12 +47,14 @@ pub const Report = struct {
     }
 };
 
-fn classify(tag: xml.tags.Tag, scope: *const xml.namespaces.State) !ChildClass {
-    if (try text_child_names.modelKind(tag, scope) != null) return .model;
+const Classified = struct { class: ChildClass, model: ?text_child_names.ModelKind = null };
+
+fn classify(tag: xml.tags.Tag, scope: *const xml.namespaces.State) !Classified {
+    if (try text_child_names.modelKind(tag, scope)) |kind| return .{ .class = .model, .model = kind };
     const name = try scope.expandElement(tag.name);
-    if (!std.mem.eql(u8, name.uri, document_xml.paragraph_uri)) return .foreign;
-    if (name.local.equals("hyphen", false)) return .xsd_hyphen;
-    return .other_paragraph;
+    if (!std.mem.eql(u8, name.uri, document_xml.paragraph_uri)) return .{ .class = .foreign };
+    if (name.local.equals("hyphen", false)) return .{ .class = .xsd_hyphen };
+    return .{ .class = .other_paragraph };
 }
 
 const Mode = enum { section, master_page };
@@ -115,11 +120,15 @@ const Scanner = struct {
             if (node.in_scope) self.sub_lists += 1;
         }
         if (parent.in_scope and parent.kind == .text) {
-            const child_class = try classify(tag, scope);
+            const classified = try classify(tag, scope);
             self.report.direct_children += 1;
-            self.report.child_classes[@intFromEnum(child_class)] += 1;
-            if (child_class != .model) {
+            self.report.child_classes[@intFromEnum(classified.class)] += 1;
+            if (classified.class != .model) {
                 if (self.report.first_unmodeled_child == null) self.report.first_unmodeled_child = self.location(parent.text_ordinal);
+            }
+            if (classified.model == .tab) {
+                if (self.report.tab.tabs == self.options.max_tabs) return error.LimitExceeded;
+                try tab_attributes.noteTag(self.a, tag, scope, self.options.max_attribute_bytes, &self.report.tab);
             }
         }
         if (node.in_scope and try attrs.element(tag, scope, document_xml.paragraph_uri, "run")) {

@@ -8,6 +8,8 @@
 
 section은 소유 `XmlTrees.inspectTextNodes`, 마스터페이지는 `Document.inspectMasterPageTextNodes`, 묶음 API는 두 별도 보고서로 제공합니다. 공통 XML 이벤트/깊이 한도와 `t` 수, 마스터페이지 파트 수·각/전체 XML 바이트·속성 바이트 한도를 적용합니다. 보고서는 숫자와 manifest 항목 인덱스·해당 part 안의 `t` 순번만 소유하므로 별도 해제가 없습니다. 문자 조각의 순서·디코딩은 [section 콘텐츠 이벤트](hwpx-section-content.md)가 소유하며, 표시 텍스트·삽입/삭제 적용·`charStyleIDRef`의 대상 표·자식별 속성 의미·편집/저장은 이 검사 범위가 아닙니다.
 
+후속 [`hp:tab` 속성 진단](hwpx-inline-tab.md)은 이번 검사가 선택한 직접 인라인 자식에만 적용합니다. `tab` 숫자/이름 원값 판정은 별도 파일이 소유하고 text 노드는 선택 범위·개수 한도를 소유합니다.
+
 적대적 점검에서 기존 section 텍스트 검사와 이번 검사에 이름 8개가 중복되어 있던 문제를 찾아 공통 이름 모듈로 합쳤습니다. 실파일에 없는 모델 자식까지 14개 전부 합성 테스트에 포함하고, `hyphen`만 있는 경우에도 첫 모델 미등록 자식 위치가 남는지 검사합니다. 32비트 초과 값 0건은 Zig 결과만으로 주장하지 않고 독립 Python oracle에도 별도 카운터를 두어 대조합니다. XML 어휘 오류·속성 바이트 한도·중첩/타 namespace `t`·마스터페이지 선택 범위·할당 실패도 합성 테스트로 확인합니다.
 
 2026-09-24 검증: 전체 Debug 테스트 2,248개, ReleaseSafe 제품 빌드와 전체 audit 40단계·2,287개 테스트, 전용 Debug·ReleaseSafe·ReleaseFast 테스트가 통과했습니다. 수정된 독립 oracle의 section·마스터페이지 `hp:t` 원값·자식 분류 수치를 선택 실파일 8개 shard의 Zig 보고서와 대조해 모두 일치했습니다. 실파일 shard는 기본 audit에 포함되지 않습니다. 이 숫자는 `hp:t` 의미 해석이나 HWPX 전체 문서 유효성의 완료율이 아닙니다.

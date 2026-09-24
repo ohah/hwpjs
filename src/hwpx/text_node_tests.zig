@@ -66,7 +66,7 @@ const hpf = "<o:package xmlns:o='http://www.idpf.org/2007/opf/'><o:manifest>" ++
     "<o:item id='masterpage0' href='Contents/masterpage0.xml' media-type='application/xml'/>" ++
     "</o:manifest><o:spine><o:itemref idref='h'/><o:itemref idref='s'/></o:spine></o:package>";
 const master = "<masterPage id='masterpage0' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'>" ++
-    "<p:t><p:future/></p:t><p:subList><p:p id='0'><p:run><p:t charStyleIDRef='7'>a<p:fwSpace/>b</p:t></p:run></p:p></p:subList></masterPage>";
+    "<p:t><p:future/></p:t><p:subList><p:p id='0'><p:run><p:t charStyleIDRef='7'>a<p:fwSpace/><p:tab width='4000' leader='0' type='1'/>b</p:t></p:run></p:p></p:subList></masterPage>";
 const sources = [_]fixture.Source{
     .{ .name = "mimetype", .data = package.mime },
     .{ .name = "META-INF/container.xml", .data = fixture.package_container },
@@ -87,12 +87,15 @@ test "HWPX text node inspects only selected master-page subLists and Known" {
     try std.testing.expectEqual(@as(usize, 1), report.parts);
     try std.testing.expectEqual(@as(usize, 1), report.sub_lists);
     try std.testing.expectEqual(@as(usize, 1), report.text_nodes);
-    try std.testing.expectEqual(@as(usize, 1), report.childCount(.model));
+    try std.testing.expectEqual(@as(usize, 2), report.childCount(.model));
+    try std.testing.expectEqual(@as(usize, 1), report.tab.tabs);
+    try std.testing.expectEqual(@as(u64, 4000), report.tab.width_sum);
     try std.testing.expectEqual(@as(usize, 0), report.missing_char_style_id_ref);
     var known = try document.inspectKnown(a, .{});
     defer known.deinit(a);
     try std.testing.expectEqual(@as(usize, 1), known.text_nodes.text_nodes);
     try std.testing.expectEqual(report.text_nodes, known.master_page_text_nodes.text_nodes);
+    try std.testing.expectEqual(report.tab.tabs, known.master_page_text_nodes.tab.tabs);
     try std.testing.expectError(error.LimitExceeded, document.inspectMasterPageTextNodes(a, .{ .text_nodes = .{ .max_parts = 0 } }));
     try std.testing.expectError(error.LimitExceeded, document.inspectMasterPageTextNodes(a, .{ .text_nodes = .{ .max_total_xml_bytes = master.len - 1 } }));
 }
@@ -103,9 +106,9 @@ test "HWPX text node applies one budget and per-part ordinals across master page
     const hpf_two = try std.mem.replaceOwned(u8, a, hpf, "</o:manifest>", extra);
     defer a.free(hpf_two);
     const first = "<masterPage id='masterpage0' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'>" ++
-        "<p:subList><p:p id='0'><p:run><p:t/></p:run></p:p></p:subList></masterPage>";
+        "<p:subList><p:p id='0'><p:run><p:t><p:tab type='LEFT'/></p:t></p:run></p:p></p:subList></masterPage>";
     const second = "<masterPage id='masterpage1' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'>" ++
-        "<p:subList><p:p id='1'><p:run><p:t><p:future/></p:t></p:run></p:p></p:subList></masterPage>";
+        "<p:subList><p:p id='1'><p:run><p:t><p:tab type='1'/><p:future/></p:t></p:run></p:p></p:subList></masterPage>";
     var changed: [sources.len + 1]fixture.Source = undefined;
     @memcpy(changed[0..sources.len], &sources);
     changed[2].data = hpf_two;
@@ -118,10 +121,12 @@ test "HWPX text node applies one budget and per-part ordinals across master page
     const exact = try document.inspectMasterPageTextNodes(a, .{ .text_nodes = .{ .max_total_xml_bytes = first.len + second.len } });
     try std.testing.expectEqual(@as(usize, 2), exact.parts);
     try std.testing.expectEqual(@as(usize, 2), exact.text_nodes);
+    try std.testing.expectEqual(@as(usize, 2), exact.tab.tabs);
     try std.testing.expectEqual(first.len + second.len, exact.xml_bytes);
     try std.testing.expectEqual(@as(?subject.Location, .{ .item_index = 3, .text_ordinal = 1 }), exact.first_unmodeled_child);
     try std.testing.expectError(error.LimitExceeded, document.inspectMasterPageTextNodes(a, .{ .text_nodes = .{ .max_parts = 1 } }));
     try std.testing.expectError(error.LimitExceeded, document.inspectMasterPageTextNodes(a, .{ .text_nodes = .{ .scan = .{ .max_text_nodes = 1 } } }));
+    try std.testing.expectError(error.LimitExceeded, document.inspectMasterPageTextNodes(a, .{ .text_nodes = .{ .scan = .{ .max_tabs = 1 } } }));
     try std.testing.expectError(error.LimitExceeded, document.inspectMasterPageTextNodes(a, .{ .text_nodes = .{ .max_total_xml_bytes = first.len + second.len - 1 } }));
 }
 

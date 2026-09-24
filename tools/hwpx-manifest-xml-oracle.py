@@ -5,6 +5,7 @@ It checks syntax and counts; it does not validate HWPX XML schemas or meaning.
 """
 
 import json
+import re
 from pathlib import Path
 from xml.etree import ElementTree as ET
 from zipfile import BadZipFile, ZipFile
@@ -41,6 +42,10 @@ TEXT_MODEL_CHILDREN = frozenset((
     "hypen", "nbSpace", "fwSpace", "chval", "insertBegin",
     "insertEnd", "deleteBegin", "deleteEnd", "unknownch",
 ))
+TAB_TYPES = frozenset(("LEFT", "RIGHT", "CENTER", "DECIMAL"))
+TAB_LEADERS = frozenset(("NONE", "SOLID", "DOT", "DASH", "DASH_DOT", "DASH_DOT_DOT",
+                         "LONG_DASH", "CIRCLE", "DOUBLE_SLIM", "SLIM_THICK", "THICK_SLIM", "SLIM_THICK_SLIM"))
+TAB_LEADERS_EXTENDED = frozenset(("WAVE", "DOUBLEWAVE", "THICK3D", "THICKREV3D", "3D", "REV3D"))
 MAX_PACKAGE_BYTES = 25_000_000
 MAX_ENTRY_BYTES = 128 * 1024 * 1024
 MAX_TOTAL_BYTES = 256 * 1024 * 1024
@@ -75,6 +80,7 @@ def empty():
                 section_text_nodes=[0] * 6, master_text_nodes=[0] * 6,
                 section_text_children={}, master_text_children={},
                 section_text_child_classes=[0] * 4, master_text_child_classes=[0] * 4,
+                section_tab_fields=[0] * 21, master_tab_fields=[0] * 21,
                 master_page_number_sum=0,
                 master_type_counts=[0] * len(MASTER_KINDS),
                 master_manifest_id_mismatch=0, master_refs=0,
@@ -136,6 +142,66 @@ def count_text_node(shard, prefix, node, parent):
             classes[0 if local in TEXT_MODEL_CHILDREN else 1 if local == "hyphen" else 2] += 1
         else:
             classes[3] += 1
+        if child.tag == PARA + "tab":
+            count_tab(shard[prefix + "_tab_fields"], child)
+
+
+def tab_number(raw):
+    if raw is None:
+        return None
+    trimmed = raw.strip(" \t\r\n")
+    if not re.fullmatch(r"[+-]?[0-9]+", trimmed):
+        return None
+    number = int(trimmed)
+    return number if number >= 0 else None
+
+
+def count_tab(counts, node):
+    # [tabs, width present/zero/over-u32/sum, type present/numeric/named/other/
+    #  over-u32/sum/gt4, leader present/numeric/base-named/extended-named/other/
+    #  over-u32/sum/gt17, extra attributes]
+    counts[0] += 1
+    counts[20] += sum(key not in ("width", "type", "leader") for key in node.attrib)
+    width = node.get("width")
+    if width is not None:
+        counts[1] += 1
+        number = tab_number(width)
+        if number is None:
+            raise ValueError("invalid tab width")
+        counts[2] += number == 0
+        counts[3] += number > 0xFFFFFFFF
+        if number <= 0xFFFFFFFF:
+            counts[4] += number
+    raw_type = node.get("type")
+    if raw_type is not None:
+        counts[5] += 1
+        number = tab_number(raw_type)
+        if number is not None:
+            counts[6] += 1
+            counts[9] += number > 0xFFFFFFFF
+            if number <= 0xFFFFFFFF:
+                counts[10] += number
+                counts[11] += number > 4
+        elif raw_type in TAB_TYPES:
+            counts[7] += 1
+        else:
+            counts[8] += 1
+    leader = node.get("leader")
+    if leader is not None:
+        counts[12] += 1
+        number = tab_number(leader)
+        if number is not None:
+            counts[13] += 1
+            counts[17] += number > 0xFFFFFFFF
+            if number <= 0xFFFFFFFF:
+                counts[18] += number
+                counts[19] += number > 17
+        elif leader in TAB_LEADERS:
+            counts[14] += 1
+        elif leader in TAB_LEADERS_EXTENDED:
+            counts[15] += 1
+        else:
+            counts[16] += 1
 
 
 def main():
