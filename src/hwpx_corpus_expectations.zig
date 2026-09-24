@@ -113,6 +113,22 @@ pub const paragraph_direct_runs = [_]usize{ 38461, 25758, 26965, 15293, 47472, 2
 pub const paragraph_line_seg_arrays = [_]usize{ 28651, 20745, 19968, 11551, 44611, 24744, 23523, 40112 };
 pub const paragraph_without_runs = [_]usize{ 0, 0, 0, 0, 0, 0, 0, 1 };
 pub const paragraph_without_line_seg_array = [_]usize{ 89, 120, 51, 129, 68, 85, 91, 608 };
+// Independent tools/hwpx-section-text-oracle.py direct linesegarray/lineseg census.
+pub const line_segment_count = [_]usize{ 33498, 25558, 24047, 13970, 49575, 28300, 28181, 51351 };
+pub const line_segment_empty_arrays = [_]usize{ 0, 0, 0, 0, 0, 0, 6, 0 };
+pub const line_segment_flags_highbit = [_]usize{ 3980, 1810, 0, 0, 0, 0, 0, 0 };
+pub const line_segment_spacing_negative = [_]usize{ 367, 86, 118, 26, 100, 83, 539, 341 };
+pub const line_segment_horzpos_negative = [_]usize{ 19, 81, 5, 10, 17, 15, 10, 46 };
+pub const line_segment_field_sums = [_][9]i64{
+    .{ 452626, 406942239, 37837372, 37712948, 30531114, 12038704, 5534737, 702337142, 8562911215616 },
+    .{ 547422, 316205401, 30673574, 30533880, 25316459, 13035699, 3021274, 536808045, 3899844132864 },
+    .{ 337349, 341327705, 33104836, 32984105, 26654688, 12282840, 3865916, 519064868, 12359172096 },
+    .{ 238106, 154816160, 20580404, 20541732, 17325596, 7922396, 1747012, 343304370, 7246446592 },
+    .{ 626348, 1049249316, 54929943, 54896065, 46120588, 24388392, 2277041, 1552924966, 20268187648 },
+    .{ 342238, 445431401, 38167562, 38026351, 31578018, 13421552, 2227002, 734973263, 13222871040 },
+    .{ 567834, 248623564, 32576803, 32550129, 24623728, 10624584, 2285935, 511138530, 14605418496 },
+    .{ 908456, 833867989, 72317861, 72278821, 60076768, 25997613, 34147114, 1422689887, 29698818048 },
+};
 pub const begin_present = [_]usize{ 60, 64, 53, 48, 58, 57, 54, 61 };
 // Raw minus selected section text: [paragraphs, runs, hp:t, UTF-8 bytes,
 // inline elements], independently counted in hwpx-section-text-oracle.py.

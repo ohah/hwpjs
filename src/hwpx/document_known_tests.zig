@@ -41,8 +41,29 @@ test "HWPX known inspections compose every currently exposed document report" {
     try std.testing.expectEqual(report.structure.sections.len, report.paragraph_metadata.sections);
     try std.testing.expectEqual(report.paragraph_metadata.paragraphs, report.paragraph_children.paragraphs);
     try std.testing.expectEqual(report.section_text.paragraphs_without_direct_run, report.paragraph_children.paragraphs_without_run);
+    try std.testing.expectEqual(report.paragraph_children.line_seg_arrays, report.line_segments.arrays);
+    try std.testing.expectEqual(report.structure.sections.len, report.line_segments.sections);
     try std.testing.expectEqual(report.structure.sections.len, report.table_geometry.sections);
     try std.testing.expect(report.paragraph_metadata.paragraphs > 0);
+}
+
+test "HWPX known inspections include line segment raw values and limits" {
+    const a = std.testing.allocator;
+    var sources = synthetic_sources;
+    sources[5].data = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:p id='0' styleIDRef='0'><p:run><p:t>A</p:t></p:run><p:linesegarray><p:lineseg textpos='0' vertpos='-1' vertsize='2' textheight='3' baseline='4' spacing='-5' horzpos='-6' horzsize='7' flags='4294967295'/></p:linesegarray></p:p></s:sec>";
+    const bytes = try fixture.storedZip(a, &sources);
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    var report = try document.inspectKnown(a, .{});
+    defer report.deinit(a);
+    try std.testing.expectEqual(@as(usize, 1), report.line_segments.arrays);
+    try std.testing.expectEqual(@as(usize, 1), report.line_segments.segments);
+    try std.testing.expectEqual(@as(usize, 1), report.line_segments.field_negative[1]);
+    try std.testing.expectEqual(@as(usize, 1), report.line_segments.field_highbit[8]);
+    try std.testing.expectEqual(@as(i64, 4294967295), report.line_segments.field_sum[8]);
+    try std.testing.expectError(error.LimitExceeded, document.inspectKnown(a, .{ .line_segments = .{ .max_segments = 0 } }));
+    try std.testing.expectError(error.LimitExceeded, document.inspectKnown(a, .{ .line_segments = .{ .max_attribute_bytes = 1 } }));
 }
 
 test "HWPX known inspections include table geometry diagnostics and limits" {

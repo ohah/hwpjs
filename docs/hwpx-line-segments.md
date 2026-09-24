@@ -1,0 +1,13 @@
+# HWPX section 문단 줄 조각 원값
+
+`src/hwpx/line_segments.zig`는 section XML 트리의 모든 2011 `hp:p`에서 직접 `hp:linesegarray`와 그 직접 `hp:lineseg`만 검사합니다. 선택 규칙은 [문단 직접 자식](hwpx-paragraph-children.md)의 `linesegarray` 이름을 공유합니다. [한컴 공개 PType 모델](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Para/PType.cpp)과 [필드 선언](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Para/PType.h)을 자식과 아홉 필드 이름·타입의 기준으로 삼습니다. 다른 namespace의 동명 요소나 손자 `lineseg`를 직접 요소로 오인하지 않습니다. 표 셀·캡션 문단이 section에 있으면 포함하고, 마스터페이지 문단은 아직 포함하지 않습니다.
+
+필드는 `textpos`, `vertpos`, `vertsize`, `textheight`, `baseline`, `spacing`, `horzpos`, `horzsize`, `flags` 순서로 진단합니다. 공개 모델의 `textpos`·`flags`는 UINT여서 XML unsigned 32-bit로, 나머지는 INT지만 실제 XML의 부호 있는 32-bit 십진값과 상위 비트가 켜진 unsigned 32-bit 십진값을 모두 손실 없이 받는 공통 판정을 사용합니다. 빈/손상 숫자를 0으로 대체하지 않고 오류로 반환합니다. 각 필드의 존재·부재, 0·음수·상위 비트 수와 원값 합계를 별도로 보존합니다. `flags` 비트 의미, 좌표 간 제약, 글줄 배치·페이지 조판은 추정하지 않습니다.
+
+보고서는 배열·직접 줄 조각·빈 배열 수, 공개 모델 밖 배열 속성/직접 자식, 줄 조각의 미등록 속성/직접 자식과 다른 namespace 자식도 분리합니다. namespace 선언은 속성으로 세지 않습니다. 빈 배열이나 미등록 요소는 진단이며 문서를 자동 거부·수정하지 않습니다. 선택 section 트리의 기존 XML 한도 외에 배열·줄 조각 개수와 속성값 바이트 길이 한도를 둡니다. 원본 트리나 셀 본문의 문자·주석·PI, 레이아웃 결과와 편집·저장은 이 보고서의 소유 대상이 아닙니다.
+
+독립 ZIP/ElementTree 조사에서 2026-09-25 로컬 허용 HWPX 476개 문서의 직접 배열 213,905개 안에 `lineseg` 254,480개가 있었습니다. 아홉 필드는 모든 조각에서 존재했고, 미등록 직접 자식·속성은 0개였습니다. 빈 배열 6개는 모두 `reference/rhwp/samples/issue2527_empty_linesegs.hwpx`에서 나왔으며, 해당 파일의 SHA-256은 `43b3090f33370cc678da8ed3e55e32901ccb379b50153114ae41fa3984006f10`, `version.xml`은 5.1.1.0입니다. `flags`의 상위 비트 값은 5,790개, `spacing` 음수는 1,660개, `horzpos` 음수는 203개였습니다. 한 파일의 빈 배열을 5.1.1.0 전체의 규칙으로 일반화하지 않습니다. 이 분포는 해당 표본의 원값 관측이지 완전한 XSD/조판 적합성 증명이 아닙니다.
+
+`zig test src/root.zig --test-filter 'HWPX line segments'`는 직접성·다른 namespace·부재·숫자 경계·정확한 개수/바이트 한도·모든 할당 실패를 검사합니다. `python3 tools/hwpx-section-text-oracle.py`는 독립 반례와 실파일 shard 집계를 만들고, `zig test src/hwpx_known_survey.zig -O ReleaseFast --test-filter 'HWPX known document inspections shard N'`의 N=0..7이 제품 보고서의 아홉 필드 원값 합계와 편차 분포를 대조합니다. 선택 corpus가 없는 체크아웃에서는 실파일 대조를 재현할 수 없습니다.
+
+2026-09-25 최종 소스에서 독립 조사기 반례·476개 corpus 집계와 ReleaseFast 실파일 shard 0~7이 모두 통과했습니다. 전용 합성 테스트는 Debug·ReleaseSafe·ReleaseFast에서 각각 6/6, 전체 Debug `zig build test --summary all`은 2,328/2,328, `zig build -Doptimize=ReleaseSafe`와 두 최적화 모드 전체 `audit --summary all`은 종료 코드 0입니다. 문서 진입점 합성 ZIP 테스트에서 실제 숫자·상위 비트·한도 오류도 확인했습니다. 적대적 반례는 namespace 선언/동명 요소 혼동, 빈 배열의 손실, signed 필드 상위 비트 강제 음수화, 음수 좌표의 거부, 손상 숫자의 0 대체, 정확한 예산과 할당 실패를 각각 겨냥했습니다. 이 검증은 직접 줄 조각 원값에 한정되며 레이아웃/문서 모델/편집·저장을 증명하지 않습니다.

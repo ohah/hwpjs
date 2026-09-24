@@ -20,6 +20,8 @@ section 텍스트 보고서도 원문 양쪽 분기를 유지합니다. 활성 �
 
 [section 문단 직접 자식 구조](hwpx-paragraph-children.md)는 같은 XML 트리에서 직접 `run`·`linesegarray`와 미등록 자식의 개수를 진단합니다. 표 셀 문단도 포함하지만 마스터페이지는 포함하지 않습니다.
 
+[문단 줄 조각](hwpx-line-segments.md)은 같은 section 트리에서 직접 `linesegarray/lineseg`의 아홉 숫자 원값과 부재·추가 요소를 보고합니다. 조판·저장 의미는 포함하지 않습니다.
+
 [run 위치·직접 자식 진단](hwpx-run-topology.md)은 section·마스터페이지 결과를 별도로 반환합니다. 공개 모델 미등록 자식이나 늦은 `secPr`는 즉시 문서 오류로 거부하지 않습니다.
 
 직접 [조건부 switch 구조 진단](hwpx-switch-shape.md)은 두 run topology 보고서의 `switches` 필드에 포함됩니다. 두 분기의 선택·적용은 아직 판정하지 않습니다.

@@ -53,6 +53,8 @@ ATTRIBUTE_FIELDS = {
     PARAGRAPH + "p": (b"P", ("id", "paraPrIDRef", "styleIDRef", "pageBreak")),
     PARAGRAPH + "run": (b"R", ("charPrIDRef", "charTcId")),
 }
+LINE_SEG_FIELDS = ("textpos", "vertpos", "vertsize", "textheight", "baseline", "spacing", "horzpos", "horzsize", "flags")
+LINE_SEG_UNSIGNED = frozenset(("textpos", "flags"))
 HASH_MODULUS = 1 << 256
 SWITCH = PARAGRAPH + "switch"
 CASE = PARAGRAPH + "case"
@@ -273,6 +275,44 @@ def inspect_paragraph_children(section: ET.Element, counts: Counter) -> None:
         counts["multiple_line_seg_arrays"] += segments > 1
 
 
+def inspect_line_segments(section: ET.Element, counts: Counter) -> None:
+    """Independent direct PType/LineSegArray census with raw numeric evidence."""
+    for paragraph in section.iter(PARAGRAPH + "p"):
+        for array in paragraph:
+            if array.tag != PARAGRAPH + "linesegarray":
+                continue
+            counts["arrays"] += 1
+            counts["array_other_attributes"] += len(array.attrib)
+            direct_segments = 0
+            for segment in array:
+                if segment.tag != PARAGRAPH + "lineseg":
+                    counts["array_other_direct"] += 1
+                    counts["array_foreign_direct"] += not segment.tag.startswith(PARAGRAPH)
+                    continue
+                direct_segments += 1
+                counts["segments"] += 1
+                counts["segment_other_attributes"] += sum(name not in LINE_SEG_FIELDS for name in segment.attrib)
+                counts["segment_direct_children"] += len(segment)
+                counts["segment_foreign_direct"] += sum(not child.tag.startswith(PARAGRAPH) for child in segment)
+                for field in LINE_SEG_FIELDS:
+                    raw = segment.get(field)
+                    if raw is None:
+                        counts[field + "_missing"] += 1
+                        continue
+                    counts[field + "_present"] += 1
+                    value = raw.strip()
+                    if not re.fullmatch(r"[+-]?[0-9]+", value):
+                        counts[field + "_invalid_lexeme"] += 1
+                        continue
+                    number = int(value)
+                    counts[field + "_sum"] += number
+                    counts[field + "_negative"] += number < 0
+                    counts[field + "_highbit"] += number >= 0x80000000
+                    counts[field + "_zero"] += number == 0
+                    counts[field + "_out_of_range"] += number < (0 if field in LINE_SEG_UNSIGNED else -0x80000000) or number > 0xFFFFFFFF
+            counts["empty_arrays"] += direct_segments == 0
+
+
 def inspect_text(node: ET.Element, parent: str, result: dict, inside_text: bool = False) -> None:
     now_inside_text = inside_text or node.tag == PARAGRAPH + "t"
 
@@ -389,6 +429,22 @@ def self_check() -> None:
         "without_run": 1, "without_line_seg_array": 1,
         "multiple_line_seg_arrays": 1, "other_direct": 3, "foreign_direct": 2,
     })
+    segments = Counter()
+    inspect_line_segments(ET.fromstring(
+        '<root xmlns:p="http://www.hancom.co.kr/hwpml/2011/paragraph" xmlns:x="urn:foreign">'
+        '<p:p><p:linesegarray x:a="1"><x:lineseg/><p:lineseg textpos="4294967295" '
+        'vertpos="-1" flags="4294967295" spare="x"><x:other/></p:lineseg></p:linesegarray>'
+        '<p:linesegarray/></p:p></root>'
+    ), segments)
+    assert Counter({key: value for key, value in segments.items() if value != 0}) == Counter({
+        "arrays": 2, "empty_arrays": 1, "array_other_attributes": 1, "array_other_direct": 1,
+        "array_foreign_direct": 1, "segments": 1,
+        "segment_other_attributes": 1, "segment_direct_children": 1, "segment_foreign_direct": 1,
+        "textpos_present": 1, "textpos_sum": 4294967295, "textpos_highbit": 1,
+        "vertpos_present": 1, "vertpos_sum": -1, "vertpos_negative": 1,
+        "flags_present": 1, "flags_sum": 4294967295, "flags_highbit": 1,
+        **{field + "_missing": 1 for field in LINE_SEG_FIELDS if field not in ("textpos", "vertpos", "flags")},
+    }), segments
     empty = ET.fromstring('<p:p xmlns:p="http://www.hancom.co.kr/hwpml/2011/paragraph" id=""/>')
     absent = ET.fromstring('<p:p xmlns:p="http://www.hancom.co.kr/hwpml/2011/paragraph"/>')
     counts = {"P." + field: {"present": 0, "empty": 0} for field in ATTRIBUTE_FIELDS[PARAGRAPH + "p"][1]}
@@ -435,7 +491,7 @@ def self_check() -> None:
 def main() -> None:
     self_check()
     tree_shards = [
-        {"accepted": 0, "rejected_zip": 0, "encrypted": 0, "sections": 0, "elements": 0, "header_elements": 0, "header_bytes": 0, "section_bytes": 0, "attribute_digest_sum": 0, "content_digest_sum": 0, "ordered_digest_sum": 0, "paragraph_metadata": Counter(), "paragraph_children": Counter(), "begin_numbers": Counter(), "switch_removed_case": [0] * 5, "switch_removed_default": [0] * 5}
+        {"accepted": 0, "rejected_zip": 0, "encrypted": 0, "sections": 0, "elements": 0, "header_elements": 0, "header_bytes": 0, "section_bytes": 0, "attribute_digest_sum": 0, "content_digest_sum": 0, "ordered_digest_sum": 0, "paragraph_metadata": Counter(), "paragraph_children": Counter(), "line_segments": Counter(), "begin_numbers": Counter(), "switch_removed_case": [0] * 5, "switch_removed_default": [0] * 5}
         for _ in range(8)
     ]
     attribute_counts = {
@@ -472,12 +528,14 @@ def main() -> None:
         "switch_removed_case": [0] * 5,
         "switch_removed_default": [0] * 5,
         "switch_text_files": [],
+        "line_segment_empty_files": [],
     }
     for root_index, root in enumerate(ROOTS):
         for path in root.rglob("*.hwpx"):
             shard = tree_shards[(sum(path.relative_to(root).as_posix().encode("utf-8")) + root_index) % len(tree_shards)]
             before_case = result["switch_removed_case"].copy()
             before_default = result["switch_removed_default"].copy()
+            before_empty_arrays = shard["line_segments"]["empty_arrays"]
             if path.stat().st_size > MAX_PACKAGE_BYTES:
                 raise ValueError("HWPX oracle package limit exceeded")
             try:
@@ -524,6 +582,7 @@ def main() -> None:
                         shard["elements"] += section_elements
                         section_paragraph_metadata(section, shard["paragraph_metadata"])
                         inspect_paragraph_children(section, shard["paragraph_children"])
+                        inspect_line_segments(section, shard["line_segments"])
                         result["max_section_elements"] = max(result["max_section_elements"], section_elements)
                         result["max_section_bytes"] = max(result["max_section_bytes"], len(section_bytes))
                         shard["attribute_digest_sum"] = (
@@ -540,6 +599,9 @@ def main() -> None:
                         result["sections_without_direct_paragraph"] += direct == 0
                         inspect_text(section, "", result)
                         section_switch_text_counts(section, result, shard)
+                    empty_delta = shard["line_segments"]["empty_arrays"] - before_empty_arrays
+                    if empty_delta:
+                        result["line_segment_empty_files"].append({"root": root_index, "path": path.relative_to(root).as_posix(), "empty_arrays": empty_delta})
                     case_delta = [after - before for after, before in zip(result["switch_removed_case"], before_case)]
                     default_delta = [after - before for after, before in zip(result["switch_removed_default"], before_default)]
                     if any(case_delta) or any(default_delta):
@@ -554,6 +616,7 @@ def main() -> None:
     for shard in tree_shards:
         shard["paragraph_metadata"] = dict(shard["paragraph_metadata"])
         shard["paragraph_children"] = dict(shard["paragraph_children"])
+        shard["line_segments"] = dict(shard["line_segments"])
         shard["begin_numbers"] = dict(shard["begin_numbers"])
         shard["attribute_digest_sum"] = f'{shard["attribute_digest_sum"]:064x}'
         shard["content_digest_sum"] = f'{shard["content_digest_sum"]:064x}'

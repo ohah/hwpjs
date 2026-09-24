@@ -2,6 +2,8 @@ const std = @import("std");
 const part_tree = @import("xml_part_tree.zig");
 const document_xml = @import("document_xml.zig");
 
+pub const line_seg_array_name = "linesegarray";
+
 pub const Options = struct {
     max_paragraphs: usize = 2_000_000,
     max_direct_children: usize = 4_000_000,
@@ -40,7 +42,7 @@ pub fn inspect(sections: []const part_tree.Tree, options: Options) !Report {
                 if (child.is(document_xml.paragraph_uri, "run")) {
                     runs += 1;
                     report.direct_runs += 1;
-                } else if (child.is(document_xml.paragraph_uri, "linesegarray")) {
+                } else if (child.is(document_xml.paragraph_uri, line_seg_array_name)) {
                     segments += 1;
                     report.line_seg_arrays += 1;
                 } else {

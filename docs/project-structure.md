@@ -33,6 +33,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
   모든 선택 XML 트리의 소유권·합계 한도는 [문서 XML 트리 조립](hwpx-document-trees.md)이 소유합니다.
   문단의 `id`·`paraTcId`·Boolean 값과 부재 진단은 [문단 메타 속성 검사](hwpx-paragraph-metadata.md)가 소유합니다.
   section 문단의 직접 `run`·`linesegarray`·미등록 자식 분류는 [문단 직접 자식 구조](hwpx-paragraph-children.md)가 소유합니다.
+  직접 `linesegarray`의 `lineseg` 원값과 추가 요소 진단은 [문단 줄 조각](hwpx-line-segments.md)이 소유합니다.
   Header의 여섯 `beginNum` 원값과 부재 진단은 [Header 시작 번호](hwpx-header-begin-numbers.md)가 소유합니다.
   모든 ZIP 엔트리의 실제 해제·CRC와 OPF 목록 밖 항목 분류는 [바이트 무결성](hwpx-payload-integrity.md)이 소유합니다.
   OPF가 XML로 선언한 내장 항목의 전수 문법·namespace 검사와 합계 예산은 [manifest XML](hwpx-manifest-xml.md)이 소유합니다.
