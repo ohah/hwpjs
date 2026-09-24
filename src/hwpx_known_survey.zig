@@ -435,6 +435,7 @@ fn surveyShard(shard: usize) !void {
     var switch_removed_default: [5]usize = @splat(0);
     var table_geometry: package.TableGeometryReport = .{};
     var table_attributes: package.TableAttributesReport = .{};
+    var table_children: package.TableChildrenReport = .{};
     var table_fields: package.TableCellFieldsReport = .{};
     var table_sub_lists: package.TableCellSubListsReport = .{};
     for (roots, 0..) |root, root_index| {
@@ -542,6 +543,26 @@ fn surveyShard(shard: usize) !void {
                     table_attributes.border_fill_references.resolved += attrs.border_fill_references.resolved;
                     table_attributes.border_fill_references.missing_target += attrs.border_fill_references.missing_target;
                     table_attributes.border_fill_references.absent_table += attrs.border_fill_references.absent_table;
+                    const children = t.table_children;
+                    try std.testing.expectEqual(t.tables, children.tables);
+                    try std.testing.expect(children.border_references_checked);
+                    try std.testing.expectEqual(t.tables, children.in_margins);
+                    try std.testing.expectEqual(@as(usize, 0), children.missing_in_margin + children.duplicate_in_margin + children.duplicate_zone_list + children.empty_zone_lists + children.other_zone_list_children + children.inverted_zones + children.outside_grid + children.border_absent + children.border_zero + children.border_references.missing_target + children.border_references.absent_table);
+                    try std.testing.expectEqual(children.zones, children.border_references.resolved);
+                    for (children.margin_missing) |value| try std.testing.expectEqual(@as(usize, 0), value);
+                    for (children.margin_negative) |value| try std.testing.expectEqual(@as(usize, 0), value);
+                    for (children.margin_highbit) |value| try std.testing.expectEqual(@as(usize, 0), value);
+                    for (children.coordinate_absent) |value| try std.testing.expectEqual(@as(usize, 0), value);
+                    table_children.tables += children.tables;
+                    table_children.in_margins += children.in_margins;
+                    table_children.zone_lists += children.zone_lists;
+                    table_children.zones += children.zones;
+                    table_children.border_sum += children.border_sum;
+                    for (children.margin_sum, 0..) |value, i| {
+                        table_children.margin_sum[i] += value;
+                        table_children.margin_zero[i] += children.margin_zero[i];
+                    }
+                    for (children.coordinate_sum, 0..) |value, i| table_children.coordinate_sum[i] += value;
                     try std.testing.expectEqual(@as(usize, 0), t.missing_row_count + t.missing_column_count + t.row_count_mismatch + t.empty_rows + t.missing_address + t.duplicate_address + t.missing_span + t.duplicate_span + t.missing_coordinate + t.missing_span_value + t.row_address_mismatch + t.zero_span + t.outside_grid + t.overlaps + t.uncovered_slots);
                     const fields = t.cell_fields;
                     try std.testing.expectEqual(t.cells, fields.cells);
@@ -619,6 +640,14 @@ fn surveyShard(shard: usize) !void {
     try std.testing.expectEqual(expected.table_border_sum[shard], table_attributes.border_fill_sum);
     try std.testing.expectEqual(expected.table_border_missing_target[shard], table_attributes.border_fill_references.missing_target);
     try std.testing.expectEqual(expected.table_count[shard] - expected.table_border_missing_target[shard], table_attributes.border_fill_references.resolved);
+    try std.testing.expectEqual(expected.table_count[shard], table_children.tables);
+    try std.testing.expectEqual(expected.table_count[shard], table_children.in_margins);
+    try std.testing.expectEqual(expected.table_zone_lists[shard], table_children.zone_lists);
+    try std.testing.expectEqual(expected.table_zones[shard], table_children.zones);
+    try std.testing.expectEqual(expected.table_zone_border_sum[shard], table_children.border_sum);
+    try std.testing.expectEqualSlices(i64, &expected.table_inside_margin_sum[shard], &table_children.margin_sum);
+    try std.testing.expectEqualSlices(usize, &expected.table_inside_margin_zero[shard], &table_children.margin_zero);
+    try std.testing.expectEqualSlices(u64, &expected.table_zone_coordinate_sum[shard], &table_children.coordinate_sum);
     try std.testing.expectEqual(expected.table_has_margin_true[shard], table_fields.has_margin.true_value);
     try std.testing.expectEqual(expected.table_cell_name_absent[shard], table_fields.name_absent);
     try std.testing.expectEqual(expected.table_cell_name_empty[shard], table_fields.name_empty);

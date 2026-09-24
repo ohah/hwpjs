@@ -4,6 +4,7 @@ const document_xml = @import("document_xml.zig");
 const table_fields = @import("table_xml_fields.zig");
 const cell_fields = @import("table_cell_fields.zig");
 const table_attributes = @import("table_attributes.zig");
+const table_children = @import("table_children.zig");
 const cell_sub_lists = @import("table_cell_sub_lists.zig");
 const header_resources = @import("header_resources.zig");
 
@@ -16,6 +17,7 @@ pub const Options = struct {
     max_total_cell_slots: usize = 8_000_000,
     max_attribute_bytes: usize = 4096,
     cell_sub_lists: cell_sub_lists.Options = .{},
+    table_children: table_children.Options = .{},
 };
 
 /// Structural observations, not a claim that the table can be laid out or edited.
@@ -43,6 +45,7 @@ pub const Report = struct {
     uncovered_slots: usize = 0,
     cell_fields: cell_fields.Report = .{},
     table_attributes: table_attributes.Report = .{},
+    table_children: table_children.Report = .{},
     cell_sub_lists: cell_sub_lists.Report = .{},
 };
 
@@ -88,6 +91,7 @@ fn inspectTable(a: std.mem.Allocator, tree: *const tree_mod.Tree, table: usize, 
     try table_attributes.inspectTable(a, tree, table, options.max_attribute_bytes, border_fills, &report.table_attributes);
     const rows = try table_fields.optionalUnsigned(a, tree, table, "rowCnt", options.max_attribute_bytes);
     const cols = try table_fields.optionalUnsigned(a, tree, table, "colCnt", options.max_attribute_bytes);
+    try table_children.inspectTable(a, tree, table, rows, cols, options.max_attribute_bytes, options.table_children, border_fills, &report.table_children);
     if (rows == null) report.missing_row_count += 1;
     if (cols == null) report.missing_column_count += 1;
     var occupied: ?[]u8 = null;
@@ -137,6 +141,7 @@ pub fn inspectWithBorderFills(a: std.mem.Allocator, sections: []const tree_mod.T
     var report: Report = .{};
     report.cell_fields.border_fill_references_checked = border_fills != null;
     report.table_attributes.border_fill_references_checked = border_fills != null;
+    report.table_children.border_references_checked = border_fills != null;
     for (sections) |*section| {
         if (section.part_kind != .section) return error.InvalidPartKind;
         for (section.elements, 0..) |element, index| {

@@ -47,7 +47,7 @@ test "HWPX known inspections include table geometry diagnostics and limits" {
     const a = std.testing.allocator;
     var sources = synthetic_sources;
     sources[4].data = "<h:head xmlns:h='http://www.hancom.co.kr/hwpml/2011/head' secCnt='1'><h:beginNum page='1' footnote='1' endnote='1' pic='1' tbl='1' equation='1'/><h:refList><h:borderFills itemCnt='1'><h:borderFill id='7'/></h:borderFills></h:refList></h:head>";
-    sources[5].data = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:p id='0' styleIDRef='0'><p:run><p:tbl rowCnt='1' colCnt='2' pageBreak='CELL' repeatHeader='1' noAdjust='false' cellSpacing='12' borderFillIDRef='7'><p:tr><p:tc hasMargin='false' borderFillIDRef='7'><p:cellAddr rowAddr='0' colAddr='0'/><p:cellSpan rowSpan='1' colSpan='1'/><p:cellSz width='10' height='0'/><p:cellMargin left='-2' right='4294967295' top='0' bottom='1'/><p:subList textDirection='HORIZONTAL' textWidth='12'><p:p id='1'/></p:subList></p:tc></p:tr></p:tbl></p:run></p:p></s:sec>";
+    sources[5].data = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:p id='0' styleIDRef='0'><p:run><p:tbl rowCnt='1' colCnt='2' pageBreak='CELL' repeatHeader='1' noAdjust='false' cellSpacing='12' borderFillIDRef='7'><p:inMargin left='1' right='2' top='3' bottom='4'/><p:cellzoneList><p:cellzone startRowAddr='0' startColAddr='0' endRowAddr='0' endColAddr='1' borderFillIDRef='7'/></p:cellzoneList><p:tr><p:tc hasMargin='false' borderFillIDRef='7'><p:cellAddr rowAddr='0' colAddr='0'/><p:cellSpan rowSpan='1' colSpan='1'/><p:cellSz width='10' height='0'/><p:cellMargin left='-2' right='4294967295' top='0' bottom='1'/><p:subList textDirection='HORIZONTAL' textWidth='12'><p:p id='1'/></p:subList></p:tc></p:tr></p:tbl></p:run></p:p></s:sec>";
     const bytes = try fixture.storedZip(a, &sources);
     defer a.free(bytes);
     var document = try package.inspectDocument(a, bytes, .{});
@@ -59,6 +59,9 @@ test "HWPX known inspections include table geometry diagnostics and limits" {
     try std.testing.expectEqual(@as(usize, 1), report.table_geometry.table_attributes.page_break.cell);
     try std.testing.expectEqual(@as(usize, 1), report.table_geometry.table_attributes.repeat_header.true_value);
     try std.testing.expectEqual(@as(usize, 1), report.table_geometry.table_attributes.border_fill_references.resolved);
+    try std.testing.expectEqual(@as(usize, 1), report.table_geometry.table_children.in_margins);
+    try std.testing.expectEqual(@as(usize, 1), report.table_geometry.table_children.zones);
+    try std.testing.expectEqual(@as(usize, 1), report.table_geometry.table_children.border_references.resolved);
     try std.testing.expectEqual(@as(usize, 1), report.table_geometry.uncovered_slots);
     try std.testing.expectEqual(@as(u64, 10), report.table_geometry.cell_fields.size_sum[0]);
     try std.testing.expectEqual(@as(i64, -2), report.table_geometry.cell_fields.margin_sum[0]);
@@ -77,6 +80,7 @@ test "HWPX known inspections include table geometry diagnostics and limits" {
             defer known.deinit(allocator);
             try std.testing.expectEqual(@as(usize, 1), known.table_geometry.uncovered_slots);
             try std.testing.expectEqual(@as(usize, 1), known.table_geometry.table_attributes.border_fill_references.resolved);
+            try std.testing.expectEqual(@as(usize, 1), known.table_geometry.table_children.border_references.resolved);
             try std.testing.expectEqual(@as(i64, 4294967295), known.table_geometry.cell_fields.margin_sum[1]);
             try std.testing.expectEqual(@as(usize, 1), known.table_geometry.cell_fields.border_fill_references.resolved);
             try std.testing.expectEqual(@as(u64, 12), known.table_geometry.cell_sub_lists.text_width_sum);
@@ -87,7 +91,7 @@ test "HWPX known inspections include table geometry diagnostics and limits" {
 test "HWPX known inspections distinguish missing border target from absent header table" {
     const a = std.testing.allocator;
     var sources = synthetic_sources;
-    sources[5].data = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:p id='0' styleIDRef='0'><p:run><p:tbl rowCnt='1' colCnt='1' borderFillIDRef='0'><p:tr><p:tc borderFillIDRef='7'/></p:tr></p:tbl></p:run></p:p></s:sec>";
+    sources[5].data = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:p id='0' styleIDRef='0'><p:run><p:tbl rowCnt='1' colCnt='1' borderFillIDRef='0'><p:cellzoneList><p:cellzone borderFillIDRef='0'/></p:cellzoneList><p:tr><p:tc borderFillIDRef='7'/></p:tr></p:tbl></p:run></p:p></s:sec>";
     sources[4].data = "<h:head xmlns:h='http://www.hancom.co.kr/hwpml/2011/head' secCnt='1'><h:refList><h:borderFills itemCnt='1'><h:borderFill id='8'/></h:borderFills></h:refList></h:head>";
     const missing_bytes = try fixture.storedZip(a, &sources);
     defer a.free(missing_bytes);
@@ -101,6 +105,8 @@ test "HWPX known inspections distinguish missing border target from absent heade
     try std.testing.expectEqual(@as(usize, 1), missing.table_geometry.table_attributes.border_fill_references.missing_target);
     try std.testing.expectEqual(@as(?u32, 0), missing.table_geometry.table_attributes.border_fill_references.first_unresolved_id);
     try std.testing.expectEqual(@as(?usize, 1), missing.table_geometry.table_attributes.border_fill_references.first_unresolved_item_index);
+    try std.testing.expectEqual(@as(usize, 1), missing.table_geometry.table_children.border_references.missing_target);
+    try std.testing.expectEqual(@as(?u32, 0), missing.table_geometry.table_children.border_references.first_unresolved_id);
     sources[4].data = synthetic_header;
     const absent_bytes = try fixture.storedZip(a, &sources);
     defer a.free(absent_bytes);
@@ -111,6 +117,7 @@ test "HWPX known inspections distinguish missing border target from absent heade
     try std.testing.expectEqual(@as(usize, 1), absent.table_geometry.cell_fields.border_fill_references.absent_table);
     try std.testing.expectEqual(@as(usize, 0), absent.table_geometry.cell_fields.border_fill_references.missing_target);
     try std.testing.expectEqual(@as(usize, 1), absent.table_geometry.table_attributes.border_fill_references.absent_table);
+    try std.testing.expectEqual(@as(usize, 1), absent.table_geometry.table_children.border_references.absent_table);
 }
 
 test "HWPX known inspections keep separate phase limits and release on late failure" {

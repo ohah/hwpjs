@@ -39,6 +39,7 @@ section 텍스트 보고서도 원문 양쪽 분기를 유지합니다. 활성 �
 미구현 범위는 2011 외 OWPML namespace의 의미, 전체 header/section XSD 및 조건부 분기, settings/masterpage 의미, OPF 밖 XML과 BinData의 실제 포맷 의미 검사, 차트 수식의 의미·표시, 문서 모델·레이아웃, 편집·저장·무손실 왕복입니다. ZIP 바이트 CRC나 XML 문법 통과만으로는 내부 포맷을 보증하지 않습니다. 이 API의 이름을 `validateDocument`나 완료 판정으로 바꾸지 않는 이유입니다.
 
 [표 자체 속성 원값·테두리 ID 참조](hwpx-table-attributes.md)도 표 격자 보고서 안에서 확인할 수 있습니다. 원값 검사 성공을 표 표시·편집 완료로 해석하지 않습니다.
+[표 안쪽 여백·셀 구역](hwpx-table-children.md) 보고서도 같은 격자 보고서에 포함되며, 구역 겹침·표 배치의 의미는 판정하지 않습니다.
 
 현재 Zig 코어 API이며 제품 JS/WASM 공개 API에는 아직 연결되지 않았습니다.
 

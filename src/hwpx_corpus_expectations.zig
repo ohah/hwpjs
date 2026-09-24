@@ -21,6 +21,24 @@ pub const table_cell_spacing_sum = [_]u64{ 0, 0, 0, 0, 0, 0, 0, 9066 };
 pub const table_border_zero = [_]usize{ 0, 0, 0, 0, 0, 0, 0, 5 };
 pub const table_border_sum = [_]u64{ 4399, 2033, 4281, 4428, 3525, 3117, 3698, 70374 };
 pub const table_border_missing_target = table_border_zero;
+// Direct hp:tbl inMargin and cellzoneList/cellzone census.
+pub const table_inside_margin_sum = [_][4]i64{
+    .{ 212501, 212500, 97559, 97559 }, .{ 106873, 106873, 68149, 68005 },
+    .{ 105253, 105480, 53449, 53449 }, .{ 119043, 119043, 63776, 63776 },
+    .{ 63081, 64082, 35979, 35979 },   .{ 153488, 153914, 70875, 70449 },
+    .{ 107747, 108199, 46144, 46144 }, .{ 231049, 231050, 136257, 136257 },
+};
+pub const table_inside_margin_zero = [_][4]usize{
+    .{ 226, 226, 211, 211 }, .{ 76, 76, 56, 56 }, .{ 96, 96, 85, 85 }, .{ 50, 50, 37, 37 },
+    .{ 26, 26, 26, 26 },     .{ 51, 51, 53, 53 }, .{ 54, 52, 40, 40 }, .{ 236, 236, 236, 236 },
+};
+pub const table_zone_lists = [_]usize{ 12, 7, 9, 9, 8, 20, 9, 25 };
+pub const table_zones = [_]usize{ 16, 7, 14, 10, 16, 26, 16, 25 };
+pub const table_zone_coordinate_sum = [_][4]u64{
+    .{ 40, 6, 84, 49 },   .{ 4, 4, 13, 46 },  .{ 17, 8, 32, 23 },  .{ 11, 17, 33, 65 },
+    .{ 94, 40, 148, 92 }, .{ 36, 6, 40, 47 }, .{ 71, 50, 93, 72 }, .{ 21, 0, 31, 51 },
+};
+pub const table_zone_border_sum = [_]u64{ 863, 38, 683, 171, 908, 1605, 921, 633 };
 // Raw cellSz/cellMargin/hasMargin census from tools/hwpx-table-oracle.py.
 // Field order is table_cell_fields.size_names and margin_names.
 pub const table_has_margin_true = [_]usize{ 1653, 1427, 1320, 482, 5812, 2321, 1444, 1146 };

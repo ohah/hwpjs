@@ -4,6 +4,8 @@ const tree_mod = @import("xml_part_tree.zig");
 const document_xml = @import("document_xml.zig");
 const values = @import("xml_values.zig");
 
+pub const margin_names = [_][]const u8{ "left", "right", "top", "bottom" };
+
 pub const BooleanCounts = struct {
     absent: usize = 0,
     false_value: usize = 0,

@@ -6,7 +6,7 @@ const header_resources = @import("header_resources.zig");
 const id_references = @import("id_references.zig");
 
 pub const size_names = [_][]const u8{ "width", "height" };
-pub const margin_names = [_][]const u8{ "left", "right", "top", "bottom" };
+pub const margin_names = table_xml.margin_names;
 pub const flag_names = [_][]const u8{ "header", "protect", "editable", "dirty" };
 const cell_attribute_names = [_][]const u8{ "name", "header", "hasMargin", "protect", "editable", "dirty", "borderFillIDRef" };
 

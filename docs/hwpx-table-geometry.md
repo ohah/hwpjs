@@ -9,6 +9,7 @@
 이 검사는 **표의 격자 모양 관측**이지 HWPX 표 구현 완료가 아닙니다. `cellSz`·`cellMargin`의 원값은 [표 셀 필드](hwpx-table-cell-fields.md)가, 직접 `subList` 구조·공통 속성은 [표 셀 목록](hwpx-table-cell-sublists.md)이 별도로 검사합니다. 크기·여백의 실제 적용, 테두리/채우기 내용, 행 높이, 반복 머리글, 캡션, 셀 본문의 표시·편집 의미, 중첩 표 레이아웃, 조건부 분기 선택, 전 XSD 적합성, 쓰기/무손실 왕복은 미검증입니다. `Document.inspectKnown`의 성공은 격자 진단이 0이라는 뜻도 아닙니다.
 
 [표 자체 속성 원값·테두리 ID 참조](hwpx-table-attributes.md)는 별도 보고서에서 다룹니다. 격자 선언 `rowCnt`·`colCnt`의 소유권은 이 모듈에 그대로 둡니다.
+[표 안쪽 여백·셀 구역](hwpx-table-children.md)도 별도 보고서가 소유하며 선언 격자 수만 이 모듈에서 전달받습니다.
 
 ## 검증
 

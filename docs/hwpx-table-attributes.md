@@ -12,6 +12,6 @@
 
 합성 테스트 `zig test src/root.zig --test-filter 'HWPX table attributes'`는 열거값·미래 값·부재·다른 namespace의 동명 속성, Boolean/숫자 오류, `u32` 상한, 길이 제한, header ID 0 유무, header 표 부재, 단독 검사와 할당 실패 전 지점을 검사합니다. 독립 조사기의 자체 반례는 `python3 tools/hwpx-table-oracle.py --self-test`, 실파일 분포는 인자 없이 실행하며, Zig 8개 ReleaseFast shard의 기대값은 `src/hwpx_corpus_expectations.zig`에 둡니다. 각 shard는 `zig test src/hwpx_known_survey.zig -O ReleaseFast --test-filter 'HWPX known document inspections shard N'`으로 별도 실행합니다. 로컬 `reference/rhwp`가 없으면 실파일 검사는 재현되지 않습니다.
 
-직접 `inMargin`, `cellzoneList`, inherited shape 속성·자식, 셀 내용 의미, 조건부 분기, 표 배치·반복 머리글 동작, 편집·저장·무손실 왕복은 아직 이 검사 범위 밖입니다. `inspectKnown` 성공은 전체 HWPX 스키마 적합성 또는 문서 검증 완료가 아닙니다.
+직접 `inMargin`·`cellzoneList`는 [표 자식 검사](hwpx-table-children.md)가 별도로 소유합니다. inherited shape 속성·자식, 셀 내용 의미, 조건부 분기, 표 배치·반복 머리글 동작, 편집·저장·무손실 왕복은 아직 이 검사 범위 밖입니다. `inspectKnown` 성공은 전체 HWPX 스키마 적합성 또는 문서 검증 완료가 아닙니다.
 
 이번 파트의 최종 재검증에서는 독립 조사기 자체 반례와 실제 파일 집계, 최종 코드의 ReleaseFast shard 0~7, Debug 전체 2,306/2,306 테스트, ReleaseSafe·ReleaseFast 전체 감사 각 2,345/2,345 테스트, 두 최적화 모드의 표 속성 단독 테스트, 포맷·공백 검사가 통과했습니다. 적대적 점검은 ID 0을 부재/유효 기본값으로 오인하는 경로, 셀 참조 성공을 표 참조 성공으로 일반화하는 경로, header 없는 단독 검사의 0 카운트, 미지 열거값과 무접두 속성 선택, 잘못된 숫자·Boolean, 할당 실패 경로를 각각 반례로 확인했습니다. 이 결과는 이 파트의 관측 범위에 한정됩니다.

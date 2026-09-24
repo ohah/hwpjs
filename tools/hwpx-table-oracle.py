@@ -155,6 +155,8 @@ def inspect_metrics(cell, stats, border_ids):
 
 def inspect_table(table, stats, samples, path, border_ids=None):
     stats["tables"] += 1
+    declared_rows = optional_int(table, "rowCnt")
+    declared_cols = optional_int(table, "colCnt")
     page_break = table.get("pageBreak")
     stats["table_pageBreak_absent"] += page_break is None
     if page_break is not None:
@@ -178,9 +180,46 @@ def inspect_table(table, stats, samples, path, border_ids=None):
     stats["table_border_ref_resolved"] += border_ref is not None and border_ids is not None and border_ref in border_ids
     stats["table_border_ref_missing_target"] += border_ref is not None and border_ids is not None and border_ref not in border_ids
     stats["table_border_ref_missing_zero"] += border_ref == 0 and border_ids is not None and border_ref not in border_ids
+    in_margins = [child for child in table if child.tag == P + "inMargin"]
+    stats["table_inMargin_missing"] += not in_margins
+    stats["table_inMargin_duplicate"] += len(in_margins) > 1
+    for margin in in_margins:
+        stats["table_inMargin_elements"] += 1
+        for field in ("left", "right", "top", "bottom"):
+            value = optional_margin_int(margin, field)
+            stats[f"table_inMargin_{field}_absent"] += value is None
+            if value is not None:
+                stats[f"table_inMargin_{field}_zero"] += value == 0
+                stats[f"table_inMargin_{field}_negative"] += value < 0
+                stats[f"table_inMargin_{field}_highbit"] += value >= 0x80000000
+                stats[f"table_inMargin_{field}_sum"] += value
+    zone_lists = [child for child in table if child.tag == P + "cellzoneList"]
+    stats["table_cellzoneList_missing"] += not zone_lists
+    stats["table_cellzoneList_duplicate"] += len(zone_lists) > 1
+    for zone_list in zone_lists:
+        stats["table_cellzoneList_elements"] += 1
+        zones = [child for child in zone_list if child.tag == P + "cellzone"]
+        stats["table_cellzoneList_empty"] += not zones
+        stats["table_cellzoneList_other_direct"] += len(zone_list) - len(zones)
+        for zone in zones:
+            stats["table_cellzones"] += 1
+            coords = [optional_int(zone, field) for field in ("startRowAddr", "startColAddr", "endRowAddr", "endColAddr")]
+            for field, value in zip(("startRowAddr", "startColAddr", "endRowAddr", "endColAddr"), coords):
+                stats[f"table_cellzone_{field}_absent"] += value is None
+                if value is not None:
+                    stats[f"table_cellzone_{field}_sum"] += value
+            sr, sc, er, ec = coords
+            stats["table_cellzone_inverted"] += (sr is not None and er is not None and sr > er) or (sc is not None and ec is not None and sc > ec)
+            stats["table_cellzone_outside_grid"] += (declared_rows is not None and any(value is not None and value >= declared_rows for value in (sr, er))) or (declared_cols is not None and any(value is not None and value >= declared_cols for value in (sc, ec)))
+            zone_ref = optional_int(zone, "borderFillIDRef")
+            stats["table_cellzone_border_absent"] += zone_ref is None
+            if zone_ref is not None:
+                stats["table_cellzone_border_zero"] += zone_ref == 0
+                stats["table_cellzone_border_sum"] += zone_ref
+                stats["table_cellzone_border_ref_absent_table"] += border_ids is None
+                stats["table_cellzone_border_ref_resolved"] += border_ids is not None and zone_ref in border_ids
+                stats["table_cellzone_border_ref_missing_target"] += border_ids is not None and zone_ref not in border_ids
     rows = [child for child in table if child.tag == P + "tr"]
-    declared_rows = optional_int(table, "rowCnt")
-    declared_cols = optional_int(table, "colCnt")
     stats["rows"] += len(rows)
     stats["missing_rowCnt"] += declared_rows is None
     stats["missing_colCnt"] += declared_cols is None
@@ -297,6 +336,7 @@ def self_test():
         ("<p:tbl rowCnt='1' colCnt='2'><p:tr><p:tc/><p:tc name='' header='false' borderFillIDRef='0'/></p:tr></p:tbl>", {"name_absent": 1, "name_present": 1, "name_empty": 1, "header_absent": 1, "header_false": 1, "border_absent": 1, "border_zero": 1}),
         ("<p:tbl rowCnt='1' colCnt='1'><p:tr><p:tc><p:subList textDirection='FUTURE' textWidth='12' hasTextRef='true'><p:p/><p:future/></p:subList><p:subList/></p:tc></p:tr></p:tbl>", {"sublists": 2, "sublist_duplicate_cells": 1, "sublist_direct_paragraphs": 1, "sublist_other_direct": 1, "sublist_unknown_enums": 1, "sublist_textWidth_sum": 12, "sublist_hasTextRef_true": 1, "sublist_empty": 1}),
         ("<p:tbl rowCnt='1' colCnt='0' pageBreak='FUTURE' repeatHeader='1' noAdjust='false' cellSpacing='12' borderFillIDRef='0'><p:tr/></p:tbl>", {"tables": 1, "table_pageBreak_unknown": 1, "table_repeatHeader_true": 1, "table_noAdjust_false": 1, "table_cellSpacing_sum": 12, "table_border_zero": 1, "table_border_ref_absent_table": 1}),
+        ("<p:tbl rowCnt='2' colCnt='2'><p:inMargin left='-2' right='4294967295' top='0'/><p:cellzoneList><p:cellzone startRowAddr='2' endRowAddr='1' startColAddr='1' endColAddr='0' borderFillIDRef='0'/><p:cellzone startRowAddr='3'/></p:cellzoneList></p:tbl>", {"table_inMargin_elements": 1, "table_inMargin_left_negative": 1, "table_inMargin_right_highbit": 1, "table_inMargin_bottom_absent": 1, "table_cellzoneList_elements": 1, "table_cellzones": 2, "table_cellzone_endRowAddr_absent": 1, "table_cellzone_inverted": 1, "table_cellzone_outside_grid": 2, "table_cellzone_border_zero": 1, "table_cellzone_border_absent": 1}),
     )
     for source, expected in cases:
         stats = Counter()
