@@ -16,6 +16,8 @@ ROOTS = (
 )
 OPF = "{http://www.idpf.org/2007/opf/}"
 ENCRYPTION = "{urn:oasis:names:tc:opendocument:xmlns:manifest:1.0}encryption-data"
+APP = "{http://www.hancom.co.kr/hwpml/2011/app}"
+CONFIG = "{urn:oasis:names:tc:opendocument:xmlns:config:1.0}"
 MAX_PACKAGE_BYTES = 25_000_000
 MAX_ENTRY_BYTES = 128 * 1024 * 1024
 MAX_TOTAL_BYTES = 256 * 1024 * 1024
@@ -24,7 +26,9 @@ MAX_TOTAL_BYTES = 256 * 1024 * 1024
 def empty():
     return dict(accepted=0, rejected_zip=0, encrypted=0, xml_items=0,
                 external=0, duplicates=0, entries=0, bytes=0, elements=0,
-                settings=0, masterpages=0)
+                settings=0, masterpages=0, carets=0, caret_pos_sum=0,
+                config_sets=0, config_items=0, short_sum=0,
+                boolean_true=0, unsupported_types=0)
 
 
 def main():
@@ -69,6 +73,28 @@ def main():
                         shard["bytes"] += len(data)
                         shard["elements"] += sum(1 for _ in document.iter())
                         shard["settings"] += name == "settings.xml"
+                        if name == "settings.xml":
+                            if document.tag != APP + "HWPApplicationSetting":
+                                raise ValueError("unexpected settings root")
+                            for child in document:
+                                if child.tag == APP + "CaretPosition":
+                                    shard["carets"] += 1
+                                    if "pos" in child.attrib:
+                                        shard["caret_pos_sum"] += int(child.attrib["pos"])
+                                elif child.tag == CONFIG + "config-item-set":
+                                    shard["config_sets"] += 1
+                                    for config_item in child:
+                                        if config_item.tag != CONFIG + "config-item":
+                                            continue
+                                        shard["config_items"] += 1
+                                        type_name = config_item.get("type", config_item.get(CONFIG + "type"))
+                                        value = "".join(config_item.itertext()).strip()
+                                        if type_name == "short":
+                                            shard["short_sum"] += int(value)
+                                        elif type_name == "boolean":
+                                            shard["boolean_true"] += value in ("true", "1")
+                                        else:
+                                            shard["unsupported_types"] += 1
                         shard["masterpages"] += name.startswith("Contents/masterpage")
                     shard["accepted"] += 1
             except BadZipFile:

@@ -12,3 +12,11 @@ pub const manifest_xml_bytes = [_]usize{ 34_898_756, 26_622_158, 26_901_093, 15_
 pub const manifest_xml_elements = [_]usize{ 478_758, 357_297, 371_323, 215_713, 477_503, 431_955, 400_730, 651_235 };
 pub const manifest_xml_settings = [_]usize{ 60, 64, 53, 48, 58, 57, 54, 61 };
 pub const manifest_xml_masterpages = [_]usize{ 14, 6, 19, 0, 0, 0, 3, 19 };
+// settings.xml census and value sums from tools/hwpx-manifest-xml-oracle.py.
+pub const settings_carets = [_]usize{ 60, 64, 53, 48, 58, 57, 54, 61 };
+pub const settings_caret_pos_sum = [_]u64{ 1494, 1202, 982, 666, 1579, 681, 1365, 1147 };
+pub const settings_config_sets = [_]usize{ 17, 12, 13, 11, 12, 13, 12, 14 };
+pub const settings_config_items = [_]usize{ 134, 93, 102, 88, 94, 98, 96, 111 };
+pub const settings_short_sum = [_]i64{ 3408, 2401, 2605, 2208, 2408, 2600, 2408, 2804 };
+pub const settings_boolean_true = [_]usize{ 0, 0, 0, 0, 0, 0, 0, 0 };
+pub const settings_unsupported_types = [_]usize{ 0, 0, 0, 0, 0, 0, 0, 0 };

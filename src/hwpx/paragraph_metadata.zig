@@ -3,6 +3,7 @@ const xml = @import("../xml/root.zig");
 const attrs = @import("xml_attributes.zig");
 const document_xml = @import("document_xml.zig");
 const part_tree = @import("xml_part_tree.zig");
+const xml_values = @import("xml_values.zig");
 
 pub const Options = struct {
     max_attribute_bytes: usize = 4096,
@@ -27,34 +28,6 @@ pub const Report = struct {
     merged: BooleanCounts = .{},
 };
 
-// xs:nonNegativeInteger is not bounded to a machine integer. Check the
-// lexical/value constraint without truncating or rejecting a valid large ID.
-fn nonNegative(raw: []const u8) !bool {
-    const value = std.mem.trim(u8, raw, " \t\r\n");
-    if (value.len == 0) return error.InvalidNonNegativeInteger;
-    var offset: usize = 0;
-    var negative = false;
-    if (value[0] == '+' or value[0] == '-') {
-        negative = value[0] == '-';
-        offset = 1;
-    }
-    if (offset == value.len) return error.InvalidNonNegativeInteger;
-    var zero = true;
-    for (value[offset..]) |byte| {
-        if (byte < '0' or byte > '9') return error.InvalidNonNegativeInteger;
-        if (byte != '0') zero = false;
-    }
-    if (negative and !zero) return error.InvalidNonNegativeInteger;
-    return zero;
-}
-
-fn boolean(raw: []const u8) !bool {
-    const value = std.mem.trim(u8, raw, " \t\r\n");
-    if (std.mem.eql(u8, value, "true") or std.mem.eql(u8, value, "1")) return true;
-    if (std.mem.eql(u8, value, "false") or std.mem.eql(u8, value, "0")) return false;
-    return error.InvalidXmlBoolean;
-}
-
 const Context = struct {
     allocator: std.mem.Allocator,
     options: Options,
@@ -68,7 +41,7 @@ const Context = struct {
         const raw = try self.value(tag, scope, name);
         defer if (raw) |v| self.allocator.free(v);
         if (raw) |v| {
-            if (try boolean(v)) counts.true_value += 1 else counts.false_value += 1;
+            if (try xml_values.boolean(v)) counts.true_value += 1 else counts.false_value += 1;
         } else counts.absent += 1;
     }
 
@@ -80,12 +53,12 @@ const Context = struct {
         const id = try self.value(tag, scope, "id");
         defer if (id) |v| self.allocator.free(v);
         if (id) |v| {
-            if (try nonNegative(v)) self.report.zero_id += 1;
+            if (try xml_values.nonNegative(v)) self.report.zero_id += 1;
         } else self.report.missing_id += 1;
         const tc_id = try self.value(tag, scope, "paraTcId");
         defer if (tc_id) |v| self.allocator.free(v);
         if (tc_id) |v| {
-            _ = try nonNegative(v);
+            _ = try xml_values.nonNegative(v);
         } else self.report.missing_para_tc_id += 1;
         try self.noteBoolean(tag, scope, "pageBreak", &self.report.page_break);
         try self.noteBoolean(tag, scope, "columnBreak", &self.report.column_break);

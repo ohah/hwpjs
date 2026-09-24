@@ -15,6 +15,7 @@ const paragraph_metadata = @import("paragraph_metadata.zig");
 const begin_numbers = @import("header_begin_numbers.zig");
 const payload_integrity = @import("payload_integrity.zig");
 const manifest_xml = @import("manifest_xml.zig");
+const settings = @import("settings.zig");
 
 /// Results of the currently implemented HWPX inspections only. A successful
 /// return does not assert complete schema, semantic or edit/save validity.
@@ -23,6 +24,7 @@ pub const Report = struct {
     protection: protection.Report,
     payload_integrity: payload_integrity.Report,
     manifest_xml: manifest_xml.Report,
+    settings: settings.Report,
     structure: structure.Report,
     resources: resources.Report,
     section_references: section_refs.Report,
@@ -40,6 +42,7 @@ pub const Report = struct {
         self.begin_numbers.deinit(a);
         self.payload_integrity.deinit(a);
         self.manifest_xml.deinit(a);
+        self.settings.deinit(a);
         self.chart_references.deinit(a);
         self.binary_references.deinit(a);
         self.font_faces.deinit(a);
@@ -61,6 +64,8 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
     errdefer payload_report.deinit(a);
     var manifest_xml_report = try document.inspectManifestXml(a, options.manifest_xml);
     errdefer manifest_xml_report.deinit(a);
+    var settings_report = try document.inspectSettings(a, options.settings);
+    errdefer settings_report.deinit(a);
     var version = try document.inspectVersion(a, options.version);
     errdefer version.deinit(a);
     var structure_report = try document.inspectStructure(a, options.structure);
@@ -90,6 +95,7 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
         .protection = protection_report,
         .payload_integrity = payload_report,
         .manifest_xml = manifest_xml_report,
+        .settings = settings_report,
         .structure = structure_report,
         .resources = resource_report,
         .section_references = section_ref_report,

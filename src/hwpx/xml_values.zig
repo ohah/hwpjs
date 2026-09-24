@@ -1,0 +1,60 @@
+const std = @import("std");
+
+pub fn nonNegative(raw: []const u8) !bool {
+    const value = std.mem.trim(u8, raw, " \t\r\n");
+    if (value.len == 0) return error.InvalidNonNegativeInteger;
+    var offset: usize = 0;
+    var negative = false;
+    if (value[0] == '+' or value[0] == '-') {
+        negative = value[0] == '-';
+        offset = 1;
+    }
+    if (offset == value.len) return error.InvalidNonNegativeInteger;
+    var zero = true;
+    for (value[offset..]) |byte| {
+        if (byte < '0' or byte > '9') return error.InvalidNonNegativeInteger;
+        if (byte != '0') zero = false;
+    }
+    if (negative and !zero) return error.InvalidNonNegativeInteger;
+    return zero;
+}
+
+pub fn unsigned32(raw: []const u8) !u32 {
+    const zero = try nonNegative(raw);
+    if (zero) return 0;
+    const value = std.mem.trim(u8, raw, " \t\r\n");
+    const digits = if (value[0] == '+') value[1..] else value;
+    return std.fmt.parseInt(u32, digits, 10) catch error.InvalidUnsigned32;
+}
+
+pub fn boolean(raw: []const u8) !bool {
+    const value = std.mem.trim(u8, raw, " \t\r\n");
+    if (std.mem.eql(u8, value, "true") or std.mem.eql(u8, value, "1")) return true;
+    if (std.mem.eql(u8, value, "false") or std.mem.eql(u8, value, "0")) return false;
+    return error.InvalidXmlBoolean;
+}
+
+pub fn short(raw: []const u8) !i16 {
+    const value = std.mem.trim(u8, raw, " \t\r\n");
+    if (value.len == 0) return error.InvalidXmlShort;
+    var offset: usize = 0;
+    if (value[0] == '+' or value[0] == '-') offset = 1;
+    if (offset == value.len) return error.InvalidXmlShort;
+    for (value[offset..]) |byte| if (byte < '0' or byte > '9') return error.InvalidXmlShort;
+    return std.fmt.parseInt(i16, value, 10) catch error.InvalidXmlShort;
+}
+
+test "HWPX shared XML scalar lexical bounds" {
+    try std.testing.expect(try nonNegative(" -000 "));
+    try std.testing.expect(!(try nonNegative(" +12 ")));
+    try std.testing.expectError(error.InvalidNonNegativeInteger, nonNegative("-1"));
+    try std.testing.expect(try boolean(" true "));
+    try std.testing.expectError(error.InvalidXmlBoolean, boolean("TRUE"));
+    try std.testing.expectEqual(@as(i16, -32768), try short(" -32768 "));
+    try std.testing.expectEqual(@as(i16, 32767), try short("+32767"));
+    try std.testing.expectError(error.InvalidXmlShort, short("32768"));
+    try std.testing.expectError(error.InvalidXmlShort, short("1_0"));
+    try std.testing.expectEqual(@as(u32, 0), try unsigned32("-000"));
+    try std.testing.expectEqual(@as(u32, 4294967295), try unsigned32("4294967295"));
+    try std.testing.expectError(error.InvalidUnsigned32, unsigned32("4294967296"));
+}

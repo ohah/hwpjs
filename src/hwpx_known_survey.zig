@@ -12,6 +12,13 @@ const Statistics = struct {
     manifest_xml_elements: usize,
     manifest_xml_settings: usize,
     manifest_xml_masterpages: usize,
+    settings_carets: usize,
+    settings_caret_pos_sum: u64,
+    settings_config_sets: usize,
+    settings_config_items: usize,
+    settings_short_sum: i64,
+    settings_boolean_true: usize,
+    settings_unsupported_types: usize,
 };
 
 const Outcome = union(enum) {
@@ -46,6 +53,19 @@ fn inspectOne(bytes: []const u8) !Outcome {
         settings += @intFromBool(std.mem.eql(u8, name, "settings.xml"));
         masterpages += @intFromBool(std.mem.startsWith(u8, name, "Contents/masterpage"));
     }
+    try std.testing.expectEqual(settings != 0, known.settings.present);
+    var caret_pos_sum: u64 = 0;
+    for (known.settings.carets) |caret| {
+        if (caret.pos) |raw| caret_pos_sum += try std.fmt.parseInt(u32, raw, 10);
+    }
+    var short_sum: i64 = 0;
+    var boolean_true: usize = 0;
+    for (known.settings.items) |item| {
+        if (item.type_name) |kind| {
+            if (std.mem.eql(u8, kind, "short")) short_sum += try std.fmt.parseInt(i16, item.value.items, 10);
+            if (std.mem.eql(u8, kind, "boolean")) boolean_true += @intFromBool(std.mem.eql(u8, item.value.items, "true") or std.mem.eql(u8, item.value.items, "1"));
+        }
+    }
     const count = known.structure.sections.len;
     try std.testing.expectEqual(count, known.section_references.sections);
     try std.testing.expectEqual(count, known.binary_references.sections);
@@ -63,6 +83,13 @@ fn inspectOne(bytes: []const u8) !Outcome {
         .manifest_xml_elements = known.manifest_xml.elements,
         .manifest_xml_settings = settings,
         .manifest_xml_masterpages = masterpages,
+        .settings_carets = known.settings.carets.len,
+        .settings_caret_pos_sum = caret_pos_sum,
+        .settings_config_sets = known.settings.sets.len,
+        .settings_config_items = known.settings.items.len,
+        .settings_short_sum = short_sum,
+        .settings_boolean_true = boolean_true,
+        .settings_unsupported_types = known.settings.unsupported_types,
     } };
 }
 
@@ -81,6 +108,13 @@ fn surveyShard(shard: usize) !void {
     var manifest_xml_elements: usize = 0;
     var manifest_xml_settings: usize = 0;
     var manifest_xml_masterpages: usize = 0;
+    var settings_carets: usize = 0;
+    var settings_caret_pos_sum: u64 = 0;
+    var settings_config_sets: usize = 0;
+    var settings_config_items: usize = 0;
+    var settings_short_sum: i64 = 0;
+    var settings_boolean_true: usize = 0;
+    var settings_unsupported_types: usize = 0;
     for (roots, 0..) |root, root_index| {
         const dir = try std.Io.Dir.cwd().openDir(std.testing.io, root, .{ .iterate = true });
         defer dir.close(std.testing.io);
@@ -110,6 +144,13 @@ fn surveyShard(shard: usize) !void {
                     manifest_xml_elements += stats.manifest_xml_elements;
                     manifest_xml_settings += stats.manifest_xml_settings;
                     manifest_xml_masterpages += stats.manifest_xml_masterpages;
+                    settings_carets += stats.settings_carets;
+                    settings_caret_pos_sum += stats.settings_caret_pos_sum;
+                    settings_config_sets += stats.settings_config_sets;
+                    settings_config_items += stats.settings_config_items;
+                    settings_short_sum += stats.settings_short_sum;
+                    settings_boolean_true += stats.settings_boolean_true;
+                    settings_unsupported_types += stats.settings_unsupported_types;
                     accepted += 1;
                 },
             }
@@ -128,6 +169,13 @@ fn surveyShard(shard: usize) !void {
     try std.testing.expectEqual(expected.manifest_xml_elements[shard], manifest_xml_elements);
     try std.testing.expectEqual(expected.manifest_xml_settings[shard], manifest_xml_settings);
     try std.testing.expectEqual(expected.manifest_xml_masterpages[shard], manifest_xml_masterpages);
+    try std.testing.expectEqual(expected.settings_carets[shard], settings_carets);
+    try std.testing.expectEqual(expected.settings_caret_pos_sum[shard], settings_caret_pos_sum);
+    try std.testing.expectEqual(expected.settings_config_sets[shard], settings_config_sets);
+    try std.testing.expectEqual(expected.settings_config_items[shard], settings_config_items);
+    try std.testing.expectEqual(expected.settings_short_sum[shard], settings_short_sum);
+    try std.testing.expectEqual(expected.settings_boolean_true[shard], settings_boolean_true);
+    try std.testing.expectEqual(expected.settings_unsupported_types[shard], settings_unsupported_types);
 }
 
 test "HWPX known document inspections shard 0" {

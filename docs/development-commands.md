@@ -38,6 +38,8 @@ HWPX 전용 테스트는 `zig test src/root.zig --test-filter HWPX`로 실행합
 
 [HWPX OPF 선언 XML 전수 문법 검사](hwpx-manifest-xml.md)는 `zig test src/root.zig --test-filter 'HWPX manifest XML'`로 단위 검사를 실행합니다. `inspectKnown`의 위 8개 선택 shard가 전체 내장 `application/xml` 엔트리의 수·바이트·요소 및 settings/masterpage 수를 `python3 tools/hwpx-manifest-xml-oracle.py`의 독립 ZIP/ElementTree 결과와 대조합니다. 외부/비XML 항목이나 XML 의미 검증으로 확대하지 않습니다.
 
+[HWPX settings 원값 검사](hwpx-settings.md)는 `zig test src/root.zig --test-filter 'HWPX settings'`와 `zig test src/root.zig --test-filter 'HWPX known'`로 합성 ZIP·묶음 경로를 확인합니다. 위 `HWPX known document inspections shard 0`부터 `shard 7`까지의 선택 실파일 검사는 `python3 tools/hwpx-manifest-xml-oracle.py`의 settings 존재·Caret/config 개수·값 합계와 대조합니다. 전체 설정 의미 검증은 아닙니다.
+
 [HWPX section 직접 문자 콘텐츠](hwpx-section-content.md)의 단위 테스트도 위의 `HWPX section tree` 필터에 포함됩니다. 같은 8개 선택 shard에서 `section_tree_shards[].content_digest_sum`을 독립 Python Expat의 직접 콘텐츠 합계와 대조합니다. 이 합계는 요소별 정규화 문자 값의 검증이며 개별 콜백 경계의 동치 주장은 아닙니다.
 
 요소와 문자를 섞어 전달하는 `visitOrdered`도 같은 테스트·shard 명령으로 검사합니다. 독립 Expat의 경계별 문자·시작/끝 순서 해시는 `section_tree_shards[].ordered_digest_sum`으로 대조하며, 빈 태그는 시작+끝으로 정규화합니다. 순서 해시의 반례 테스트는 `zig test src/hwpx_structure_survey.zig -O ReleaseFast --test-filter 'HWPX ordered digest detects moved text'`로 실행합니다. 주석·처리 지시문과 콜백 분할은 포함하지 않습니다.

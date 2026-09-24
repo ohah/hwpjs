@@ -22,6 +22,7 @@ const header_begin_numbers = @import("header_begin_numbers.zig");
 const document_known = @import("document_known.zig");
 const payload_integrity = @import("payload_integrity.zig");
 const manifest_xml = @import("manifest_xml.zig");
+const settings = @import("settings.zig");
 
 pub const Archive = zip.Archive;
 pub const Options = zip.Options;
@@ -110,11 +111,17 @@ pub const PayloadIntegrityOptions = payload_integrity.Options;
 pub const PayloadIntegrityReport = payload_integrity.Report;
 pub const ManifestXmlOptions = manifest_xml.Options;
 pub const ManifestXmlReport = manifest_xml.Report;
+pub const SettingsOptions = struct {
+    protection: ProtectionOptions = .{},
+    values: settings.Options = .{},
+};
+pub const SettingsReport = settings.Report;
 pub const KnownOptions = struct {
     version: VersionOptions = .{},
     protection: ProtectionOptions = .{},
     payload_integrity: PayloadIntegrityOptions = .{},
     manifest_xml: ManifestXmlOptions = .{},
+    settings: SettingsOptions = .{},
     structure: StructureOptions = .{},
     header_resources: HeaderResourceOptions = .{},
     section_references: ReferenceOptions = .{},
@@ -154,6 +161,15 @@ pub const Document = struct {
     /// including settings and master pages not selected by the spine.
     pub fn inspectManifestXml(self: *const Document, a: std.mem.Allocator, options: ManifestXmlOptions) !ManifestXmlReport {
         return manifest_xml.inspect(a, self.archive, self.manifest.items, options);
+    }
+
+    /// Reads the exact settings.xml part and preserves optional caret/config
+    /// values. The encrypted-document boundary is checked before decoding.
+    pub fn inspectSettings(self: *const Document, a: std.mem.Allocator, options: SettingsOptions) !SettingsReport {
+        var protection_report = try self.inspectProtection(a, options.protection);
+        defer protection_report.deinit(a);
+        if (protection_report.encrypted_paths.len != 0) return error.EncryptedDocument;
+        return settings.inspect(a, self.archive, self.manifest.items, options.values);
     }
 
     /// Runs all currently exposed HWPX inspections on this document. A

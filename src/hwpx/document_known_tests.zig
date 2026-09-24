@@ -5,7 +5,7 @@ const fixture = @import("test_package_fixture.zig");
 const synthetic_version = "<v:HCFVersion xmlns:v='http://www.hancom.co.kr/hwpml/2011/version' major='5' minor='1'/>";
 const synthetic_header = "<h:head xmlns:h='http://www.hancom.co.kr/hwpml/2011/head' secCnt='1'><h:beginNum page='1' footnote='1' endnote='1' pic='1' tbl='1' equation='1'/><h:refList/></h:head>";
 const synthetic_section = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:p id='0' styleIDRef='0'><p:run><p:t>A</p:t></p:run></p:p></s:sec>";
-const synthetic_hpf = "<o:package xmlns:o='http://www.idpf.org/2007/opf/'><o:manifest><o:item id='h' href='Contents/header.xml' media-type='application/xml'/><o:item id='s' href='Contents/section0.xml' media-type='application/xml'/></o:manifest><o:spine><o:itemref idref='h'/><o:itemref idref='s'/></o:spine></o:package>";
+const synthetic_hpf = "<o:package xmlns:o='http://www.idpf.org/2007/opf/'><o:manifest><o:item id='h' href='Contents/header.xml' media-type='application/xml'/><o:item id='s' href='Contents/section0.xml' media-type='application/xml'/><o:item id='setting' href='settings.xml' media-type='application/xml'/></o:manifest><o:spine><o:itemref idref='h'/><o:itemref idref='s'/></o:spine></o:package>";
 const synthetic_sources = [_]fixture.Source{
     .{ .name = "mimetype", .data = package.mime },
     .{ .name = "META-INF/container.xml", .data = fixture.package_container },
@@ -13,6 +13,7 @@ const synthetic_sources = [_]fixture.Source{
     .{ .name = "version.xml", .data = synthetic_version },
     .{ .name = "Contents/header.xml", .data = synthetic_header },
     .{ .name = "Contents/section0.xml", .data = synthetic_section },
+    .{ .name = "settings.xml", .data = "<app:HWPApplicationSetting xmlns:app='http://www.hancom.co.kr/hwpml/2011/app'><app:CaretPosition listIDRef='2' paraIDRef='0' pos='16'/></app:HWPApplicationSetting>" },
 };
 const encrypted_sources = synthetic_sources ++ [_]fixture.Source{.{ .name = "META-INF/manifest.xml", .data = "<m:manifest xmlns:m='urn:oasis:names:tc:opendocument:xmlns:manifest:1.0'><m:file-entry full-path='Contents/header.xml'><m:encryption-data/></m:file-entry></m:manifest>" }};
 const orphan_sources = synthetic_sources ++ [_]fixture.Source{.{ .name = "Unlisted/data.bin", .data = "hidden" }};
@@ -71,6 +72,7 @@ test "HWPX known report owns values after source document release" {
     try std.testing.expectEqualStrings("1", report.begin_numbers.value(.page).?);
     try std.testing.expectEqual(@as(usize, 1), report.structure.sections.len);
     try std.testing.expectEqual(@as(usize, 1), report.paragraph_metadata.paragraphs);
+    try std.testing.expectEqualStrings("16", report.settings.carets[0].pos.?);
     try std.testing.expectEqual(synthetic_sources.len, report.payload_integrity.validated_entries);
     try std.testing.expectEqual(@as(usize, 1), report.section_references.counts(.style).absent_table);
 }
@@ -87,6 +89,7 @@ test "HWPX known inspections own all phases across every allocation failure" {
             defer report.deinit(allocator);
             try std.testing.expectEqual(@as(usize, 1), report.structure.sections.len);
             try std.testing.expectEqual(@as(usize, 1), report.paragraph_metadata.paragraphs);
+            try std.testing.expectEqualStrings("16", report.settings.carets[0].pos.?);
             try std.testing.expectEqual(@as(usize, 1), report.section_references.counts(.style).absent_table);
             try std.testing.expectEqualStrings("1", report.begin_numbers.value(.page).?);
         }
@@ -120,8 +123,9 @@ test "HWPX known inspections check unlisted payload bytes before XML phases" {
 
 test "HWPX known inspections reject malformed manifest XML outside the spine" {
     const hpf = "<o:package xmlns:o='http://www.idpf.org/2007/opf/'><o:manifest><o:item id='h' href='Contents/header.xml' media-type='application/xml'/><o:item id='s' href='Contents/section0.xml' media-type='application/xml'/><o:item id='settings' href='settings.xml' media-type='application/xml'/></o:manifest><o:spine><o:itemref idref='h'/><o:itemref idref='s'/></o:spine></o:package>";
-    var sources = synthetic_sources ++ [_]fixture.Source{.{ .name = "settings.xml", .data = "<settings>" }};
+    var sources = synthetic_sources;
     sources[2].data = hpf;
+    sources[6].data = "<settings>";
     const a = std.testing.allocator;
     const bytes = try fixture.storedZip(a, &sources);
     defer a.free(bytes);
