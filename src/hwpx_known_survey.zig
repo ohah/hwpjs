@@ -434,6 +434,7 @@ fn surveyShard(shard: usize) !void {
     var switch_removed_case: [5]usize = @splat(0);
     var switch_removed_default: [5]usize = @splat(0);
     var table_geometry: package.TableGeometryReport = .{};
+    var table_fields: package.TableCellFieldsReport = .{};
     for (roots, 0..) |root, root_index| {
         const dir = try std.Io.Dir.cwd().openDir(std.testing.io, root, .{ .iterate = true });
         defer dir.close(std.testing.io);
@@ -509,6 +510,26 @@ fn surveyShard(shard: usize) !void {
                     table_geometry.grid_slots += t.grid_slots;
                     table_geometry.cell_slots += t.cell_slots;
                     try std.testing.expectEqual(@as(usize, 0), t.missing_row_count + t.missing_column_count + t.row_count_mismatch + t.empty_rows + t.missing_address + t.duplicate_address + t.missing_span + t.duplicate_span + t.missing_coordinate + t.missing_span_value + t.row_address_mismatch + t.zero_span + t.outside_grid + t.overlaps + t.uncovered_slots);
+                    const fields = t.cell_fields;
+                    try std.testing.expectEqual(t.cells, fields.cells);
+                    try std.testing.expectEqual(t.cells, fields.size_elements);
+                    try std.testing.expectEqual(t.cells, fields.margin_elements);
+                    try std.testing.expectEqual(t.cells, fields.has_margin.true_value + fields.has_margin.false_value);
+                    try std.testing.expectEqual(fields.has_margin.false_value, fields.false_with_margin);
+                    try std.testing.expectEqual(@as(usize, 0), fields.missing_size + fields.duplicate_size + fields.missing_margin + fields.duplicate_margin + fields.has_margin.absent + fields.true_without_margin + fields.zero_size_field[0]);
+                    for (fields.missing_size_field) |value| try std.testing.expectEqual(@as(usize, 0), value);
+                    for (fields.missing_margin_field) |value| try std.testing.expectEqual(@as(usize, 0), value);
+                    table_fields.has_margin.true_value += fields.has_margin.true_value;
+                    for (fields.size_sum, 0..) |value, i| {
+                        table_fields.size_sum[i] += value;
+                        table_fields.zero_size_field[i] += fields.zero_size_field[i];
+                    }
+                    for (fields.margin_sum, 0..) |value, i| {
+                        table_fields.margin_sum[i] += value;
+                        table_fields.zero_margin_field[i] += fields.zero_margin_field[i];
+                        table_fields.negative_margin_field[i] += fields.negative_margin_field[i];
+                        table_fields.highbit_margin_field[i] += fields.highbit_margin_field[i];
+                    }
                     accepted += 1;
                 },
             }
@@ -524,6 +545,13 @@ fn surveyShard(shard: usize) !void {
     try std.testing.expectEqual(expected.table_cells[shard], table_geometry.cells);
     try std.testing.expectEqual(expected.table_grid_slots[shard], table_geometry.grid_slots);
     try std.testing.expectEqual(expected.table_cell_slots[shard], table_geometry.cell_slots);
+    try std.testing.expectEqual(expected.table_has_margin_true[shard], table_fields.has_margin.true_value);
+    try std.testing.expectEqual(expected.table_zero_height[shard], table_fields.zero_size_field[1]);
+    try std.testing.expectEqualSlices(u64, &expected.table_size_sums[shard], &table_fields.size_sum);
+    try std.testing.expectEqualSlices(i64, &expected.table_margin_sums[shard], &table_fields.margin_sum);
+    try std.testing.expectEqualSlices(usize, &expected.table_margin_zero[shard], &table_fields.zero_margin_field);
+    try std.testing.expectEqualSlices(usize, &expected.table_margin_negative[shard], &table_fields.negative_margin_field);
+    try std.testing.expectEqualSlices(usize, &expected.table_margin_highbit[shard], &table_fields.highbit_margin_field);
     try std.testing.expectEqual(expected.paragraphs[shard], paragraphs);
     try std.testing.expectEqual(expected.begin_present[shard], begin_present);
     try std.testing.expectEqual(@as(usize, 0), missing_id);

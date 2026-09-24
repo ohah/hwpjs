@@ -4,6 +4,8 @@
 
 [HWPX 표 격자 구조](hwpx-table-geometry.md)는 `zig test src/root.zig --test-filter 'HWPX table geometry'`로 합성·할당 실패를, 위 known survey 8개 shard로 실파일 표·행·셀 개수와 진단을 검사합니다. 독립 조사기 반례는 `python3 tools/hwpx-table-oracle.py --self-test`, 실파일 집계는 인자 없이 실행합니다. 실파일 조사는 기본 audit에 포함되지 않습니다.
 
+[표 셀 크기·여백 원값](hwpx-table-cell-fields.md)은 `zig test src/root.zig --test-filter 'HWPX table cell fields'`로 합성·오류·할당 실패를, `zig test src/hwpx/xml_values.zig`로 공통 숫자 어휘를 검사합니다. 같은 known survey 8개 shard로 독립 Python 조사기의 크기·여백 합계와 부재·음수·상위 비트 분포를 대조합니다. 기본 audit에는 실파일 분할이 포함되지 않습니다.
+
 [선택 분기 section 텍스트](hwpx-selected-section-text.md)의 합성 검사는 `zig test src/root.zig --test-filter 'HWPX selected section text'`로 실행합니다. 조건부 분기가 있는 실파일의 텍스트 보존 대조는 같은 known survey 8개 shard에 포함됩니다.
 
 [선택 분기 서식 참조](hwpx-selected-style-references.md)는 `zig test src/root.zig --test-filter 'HWPX selected style references'`로 합성·할당 실패를 검사합니다. 실파일의 선택 텍스트·서식 참조 교차 대조는 위 known survey 8개 shard를 별도 프로세스로 실행합니다.

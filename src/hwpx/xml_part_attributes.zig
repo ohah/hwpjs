@@ -13,6 +13,25 @@ fn parseStartTag(a: std.mem.Allocator, tree: anytype, index: usize) !xml.tags.Ta
     return tag;
 }
 
+/// Finds several unqualified attributes from one original start tag. This is
+/// the same namespace rule as find(..., "", ...) but avoids reparsing the tag
+/// once per field for dense HWPX cell records. Output values borrow the tree.
+pub fn findUnprefixedMany(a: std.mem.Allocator, tree: anytype, index: usize, names: []const []const u8, output: []?xml.attribute_value.Value) !void {
+    if (names.len != output.len) return error.InvalidAttributeSelection;
+    if (index >= tree.elements.len) return error.InvalidElementIndex;
+    @memset(output, null);
+    var tag = try parseStartTag(a, tree, index);
+    defer tag.deinit(a);
+    for (tag.attributes) |attribute| {
+        if (try xml.namespaces.isDeclaration(attribute.name)) continue;
+        const name = try xml.qname.parse(attribute.name);
+        if (name.prefix != null) continue;
+        for (names, 0..) |wanted, field_index| {
+            if (name.local.equals(wanted, false)) output[field_index] = attribute.value;
+        }
+    }
+}
+
 /// Reconstructs the original namespace scope from the indexed ancestors.
 /// This reuses the XML tag/value/namespace SSOT without retaining a second
 /// per-element attribute table. Returned Value slices borrow the part source.

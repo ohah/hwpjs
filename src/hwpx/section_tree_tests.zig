@@ -3,6 +3,7 @@ const package = @import("package.zig");
 const tree = @import("section_tree.zig");
 const fixture = @import("test_package_fixture.zig");
 const document_xml = @import("document_xml.zig");
+const xml = @import("../xml/root.zig");
 const document_structure = @import("document_structure.zig");
 const section_text = @import("section_text.zig");
 
@@ -12,6 +13,31 @@ const section = "<s:sec xmlns:s=\"http://www.hancom.co.kr/hwpml/2011/section\" x
     "<p:p id=\"1\"><p:run><p:t>A&amp;<![CDATA[B]]><x:mark/></p:t></p:run><x:table><p:p/></x:table></p:p>" ++
     "<x:p xmlns:p=\"urn:rebound\"/><p:p xmlns:p=\"urn:rebound\"><p:run/></p:p>" ++
     "</s:sec>";
+
+test "HWPX section tree batch unprefixed attributes match individual lookup" {
+    const a = std.testing.allocator;
+    const source = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph' xmlns:x='urn:other'><p:p id='&#49;' x:id='2' blank='' flag='false'/></s:sec>";
+    var parsed = try tree.parse(a, source, 0, 0, .{});
+    defer parsed.deinit(a);
+    const names = [_][]const u8{ "id", "blank", "missing", "flag" };
+    var output: [names.len]?xml.attribute_value.Value = undefined;
+    try parsed.unprefixedAttributeValues(a, 1, &names, &output);
+    for (names, output) |name, value| {
+        const single = try parsed.attributeValue(a, 1, "", name);
+        try std.testing.expectEqual(single == null, value == null);
+        if (value) |present| {
+            const one = try present.toUtf8(a, 32);
+            defer a.free(one);
+            const other = try single.?.toUtf8(a, 32);
+            defer a.free(other);
+            try std.testing.expectEqualStrings(one, other);
+        }
+    }
+    try std.testing.expectEqualStrings("'&#49;'", output[0].?.raw);
+    try std.testing.expect(output[2] == null);
+    try std.testing.expectError(error.InvalidAttributeSelection, parsed.unprefixedAttributeValues(a, 1, &names, output[0..3]));
+    try std.testing.expectError(error.InvalidElementIndex, parsed.unprefixedAttributeValues(a, 2, &names, &output));
+}
 
 test "HWPX section tree owns all XML nodes and exact source spans" {
     const a = std.testing.allocator;

@@ -35,8 +35,70 @@ def optional_int(node, name):
         raise ValueError(f"HWPX table oracle invalid unsigned attribute {name}")
     number = int(value)
     if number < 0 or number > 0xFFFFFFFF:
-        raise ValueError(f"HWPX table oracle unsigned attribute outside u32 {name}")
+        raise ValueError(f"HWPX table oracle unsigned attribute outside u32 {name}={value!r}")
     return number
+
+
+def optional_bool(node, name):
+    value = node.get(name)
+    if value is None:
+        return None
+    value = value.strip(" \t\r\n")
+    if value in ("true", "1"):
+        return True
+    if value in ("false", "0"):
+        return False
+    raise ValueError(f"HWPX table oracle invalid boolean attribute {name}")
+
+
+def optional_margin_int(node, name):
+    value = node.get(name)
+    if value is None:
+        return None
+    value = value.strip(" \t\r\n")
+    if not re.fullmatch(r"[+-]?[0-9]+", value):
+        raise ValueError(f"HWPX table oracle invalid signed attribute {name}={value!r}")
+    number = int(value)
+    if number < -0x80000000 or number > 0xFFFFFFFF:
+        raise ValueError(f"HWPX table oracle margin attribute outside supported lexical union {name}={value!r}")
+    return number
+
+
+def inspect_metrics(cell, stats):
+    sizes = [child for child in cell if child.tag == P + "cellSz"]
+    margins = [child for child in cell if child.tag == P + "cellMargin"]
+    stats["missing_size"] += not sizes
+    stats["duplicate_size"] += len(sizes) > 1
+    stats["missing_margin"] += not margins
+    stats["duplicate_margin"] += len(margins) > 1
+    has_margin = optional_bool(cell, "hasMargin")
+    stats["missing_hasMargin"] += has_margin is None
+    stats["true_hasMargin"] += has_margin is True
+    stats["false_hasMargin"] += has_margin is False
+    if len(sizes) == 1:
+        stats["size_elements"] += 1
+        for field in ("width", "height"):
+            value = optional_int(sizes[0], field)
+            stats[f"missing_size_{field}"] += value is None
+            if value is not None:
+                stats[f"size_{field}_sum"] += value
+                stats[f"zero_size_{field}"] += value == 0
+    if len(margins) == 1:
+        stats["margin_elements"] += 1
+        for field in ("left", "right", "top", "bottom"):
+            value = optional_margin_int(margins[0], field)
+            stats[f"missing_margin_{field}"] += value is None
+            if value is not None:
+                stats[f"margin_{field}_sum"] += value
+                stats[f"zero_margin_{field}"] += value == 0
+                stats[f"negative_margin_{field}"] += value < 0
+                stats[f"highbit_margin_{field}"] += value >= 0x80000000
+                low = f"min_margin_{field}"
+                high = f"max_margin_{field}"
+                stats[low] = min(stats[low], value) if low in stats else value
+                stats[high] = max(stats[high], value) if high in stats else value
+    stats["margin_flag_true_without_element"] += has_margin is True and not margins
+    stats["margin_flag_false_with_element"] += has_margin is False and bool(margins)
 
 
 def inspect_table(table, stats, samples, path):
@@ -57,6 +119,7 @@ def inspect_table(table, stats, samples, path):
         stats["cells"] += len(cells)
         table_issues["empty_row"] += not cells
         for cell in cells:
+            inspect_metrics(cell, stats)
             addresses = [child for child in cell if child.tag == P + "cellAddr"]
             spans = [child for child in cell if child.tag == P + "cellSpan"]
             stats["missing_addr"] += not addresses
@@ -91,7 +154,8 @@ def inspect_table(table, stats, samples, path):
         table_issues["grid_slots"] = grid
         table_issues["uncovered_slots"] = grid - len(occupied)
     stats.update(table_issues)
-    if (declared_rows is not None and declared_rows != len(rows)) or any(table_issues.values()):
+    geometric_issues = ("empty_row", "row_address_mismatch", "zero_span", "outside_grid", "overlap", "uncovered_slots")
+    if (declared_rows is not None and declared_rows != len(rows)) or any(table_issues[name] for name in geometric_issues):
         if len(samples) < 12:
             samples.append({"path": path, "rows": declared_rows, "cols": declared_cols, "direct_rows": len(rows), "issues": dict(table_issues)})
 
@@ -127,8 +191,11 @@ def main():
                         stats["sections"] += 1
                         shard["sections"] += 1
                         for table in section.iter(P + "tbl"):
-                            inspect_table(table, stats, samples, relative)
-                            inspect_table(table, shard, [], relative)
+                            try:
+                                inspect_table(table, stats, samples, relative)
+                                inspect_table(table, shard, [], relative)
+                            except ValueError as exc:
+                                raise ValueError(f"{relative}:{name}: {exc}") from exc
                     stats["accepted"] += 1
                     shard["accepted"] += 1
             except BadZipFile:
@@ -142,6 +209,7 @@ def self_test():
         ("<p:tbl rowCnt='1' colCnt='2'><p:tr><p:tc><p:cellAddr rowAddr='0' colAddr='0'/><p:cellSpan rowSpan='1' colSpan='2'/></p:tc></p:tr></p:tbl>", {"tables": 1, "cells": 1, "grid_slots": 2, "cell_slots": 2, "uncovered_slots": 0}),
         ("<p:tbl rowCnt='1' colCnt='2'><p:tr><p:tc><p:cellAddr rowAddr='0' colAddr='0'/><p:cellSpan rowSpan='1' colSpan='1'/></p:tc><p:tc><p:cellAddr rowAddr='0' colAddr='0'/><p:cellSpan rowSpan='1' colSpan='1'/></p:tc></p:tr></p:tbl>", {"overlap": 1, "uncovered_slots": 1}),
         ("<p:tbl rowCnt='1' colCnt='1'><p:tr><p:tc><p:cellAddr rowAddr='0' colAddr='1'/><p:cellSpan rowSpan='0' colSpan='1'/></p:tc></p:tr></p:tbl>", {"zero_span": 1, "outside_grid": 1, "uncovered_slots": 1}),
+        ("<p:tbl rowCnt='1' colCnt='1'><p:tr><p:tc hasMargin='false'><p:cellSz width='10' height='0'/><p:cellMargin left='-21280' right='4294948081' top='0' bottom='141'/></p:tc></p:tr></p:tbl>", {"size_elements": 1, "margin_elements": 1, "zero_size_height": 1, "negative_margin_left": 1, "highbit_margin_right": 1, "margin_flag_false_with_element": 1}),
     )
     for source, expected in cases:
         stats = Counter()

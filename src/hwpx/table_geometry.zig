@@ -1,7 +1,8 @@
 const std = @import("std");
 const tree_mod = @import("xml_part_tree.zig");
 const document_xml = @import("document_xml.zig");
-const values = @import("xml_values.zig");
+const table_fields = @import("table_xml_fields.zig");
+const cell_fields = @import("table_cell_fields.zig");
 
 pub const Options = struct {
     max_tables: usize = 100_000,
@@ -36,43 +37,19 @@ pub const Report = struct {
     outside_grid: usize = 0,
     overlaps: usize = 0,
     uncovered_slots: usize = 0,
+    cell_fields: cell_fields.Report = .{},
 };
-
-fn childIs(tree: *const tree_mod.Tree, index: usize, local: []const u8) bool {
-    return tree.elements[index].is(document_xml.paragraph_uri, local);
-}
-
-fn number(a: std.mem.Allocator, tree: *const tree_mod.Tree, index: usize, name: []const u8, max_bytes: usize) !?u32 {
-    const raw = (try tree.attributeValue(a, index, "", name)) orelse return null;
-    const bytes = try raw.toUtf8(a, max_bytes);
-    defer a.free(bytes);
-    return try values.unsigned32(bytes);
-}
-
-fn uniqueChild(tree: *const tree_mod.Tree, parent: usize, name: []const u8, missing: *usize, duplicate: *usize) ?usize {
-    var found: ?usize = null;
-    var cursor = tree.elements[parent].first_child;
-    while (cursor) |index| : (cursor = tree.elements[index].next_sibling) {
-        if (!childIs(tree, index, name)) continue;
-        if (found != null) {
-            duplicate.* += 1;
-            return null;
-        }
-        found = index;
-    }
-    if (found == null) missing.* += 1;
-    return found;
-}
 
 fn inspectCell(a: std.mem.Allocator, tree: *const tree_mod.Tree, cell: usize, row_index: usize, rows: ?u32, cols: ?u32, occupied: ?[]u8, options: Options, report: *Report) !void {
     if (report.cells == options.max_cells) return error.LimitExceeded;
     report.cells += 1;
-    const addr = uniqueChild(tree, cell, "cellAddr", &report.missing_address, &report.duplicate_address);
-    const span = uniqueChild(tree, cell, "cellSpan", &report.missing_span, &report.duplicate_span);
-    const col = if (addr) |index| try number(a, tree, index, "colAddr", options.max_attribute_bytes) else null;
-    const row = if (addr) |index| try number(a, tree, index, "rowAddr", options.max_attribute_bytes) else null;
-    const col_span = if (span) |index| try number(a, tree, index, "colSpan", options.max_attribute_bytes) else null;
-    const row_span = if (span) |index| try number(a, tree, index, "rowSpan", options.max_attribute_bytes) else null;
+    try cell_fields.inspectCell(a, tree, cell, options.max_attribute_bytes, &report.cell_fields);
+    const addr = table_fields.uniqueChild(tree, cell, "cellAddr", &report.missing_address, &report.duplicate_address);
+    const span = table_fields.uniqueChild(tree, cell, "cellSpan", &report.missing_span, &report.duplicate_span);
+    const col = if (addr) |index| try table_fields.optionalUnsigned(a, tree, index, "colAddr", options.max_attribute_bytes) else null;
+    const row = if (addr) |index| try table_fields.optionalUnsigned(a, tree, index, "rowAddr", options.max_attribute_bytes) else null;
+    const col_span = if (span) |index| try table_fields.optionalUnsigned(a, tree, index, "colSpan", options.max_attribute_bytes) else null;
+    const row_span = if (span) |index| try table_fields.optionalUnsigned(a, tree, index, "rowSpan", options.max_attribute_bytes) else null;
     if (addr != null and (col == null or row == null)) report.missing_coordinate += 1;
     if (span != null and (col_span == null or row_span == null)) report.missing_span_value += 1;
     if (row) |value| if (value != row_index) {
@@ -101,8 +78,8 @@ fn inspectCell(a: std.mem.Allocator, tree: *const tree_mod.Tree, cell: usize, ro
 fn inspectTable(a: std.mem.Allocator, tree: *const tree_mod.Tree, table: usize, options: Options, report: *Report) !void {
     if (report.tables == options.max_tables) return error.LimitExceeded;
     report.tables += 1;
-    const rows = try number(a, tree, table, "rowCnt", options.max_attribute_bytes);
-    const cols = try number(a, tree, table, "colCnt", options.max_attribute_bytes);
+    const rows = try table_fields.optionalUnsigned(a, tree, table, "rowCnt", options.max_attribute_bytes);
+    const cols = try table_fields.optionalUnsigned(a, tree, table, "colCnt", options.max_attribute_bytes);
     if (rows == null) report.missing_row_count += 1;
     if (cols == null) report.missing_column_count += 1;
     var occupied: ?[]u8 = null;
@@ -119,13 +96,13 @@ fn inspectTable(a: std.mem.Allocator, tree: *const tree_mod.Tree, table: usize, 
     var direct_rows: usize = 0;
     var row_cursor = tree.elements[table].first_child;
     while (row_cursor) |row| : (row_cursor = tree.elements[row].next_sibling) {
-        if (!childIs(tree, row, "tr")) continue;
+        if (!table_fields.childIs(tree, row, "tr")) continue;
         if (report.rows == options.max_rows) return error.LimitExceeded;
         report.rows += 1;
         var direct_cells: usize = 0;
         var cell_cursor = tree.elements[row].first_child;
         while (cell_cursor) |cell| : (cell_cursor = tree.elements[cell].next_sibling) {
-            if (!childIs(tree, cell, "tc")) continue;
+            if (!table_fields.childIs(tree, cell, "tc")) continue;
             direct_cells += 1;
             try inspectCell(a, tree, cell, direct_rows, rows, cols, occupied, options, report);
         }

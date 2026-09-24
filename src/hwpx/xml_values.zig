@@ -27,6 +27,28 @@ pub fn unsigned32(raw: []const u8) !u32 {
     return std.fmt.parseInt(u32, digits, 10) catch error.InvalidUnsigned32;
 }
 
+/// Some HWPX unit fields occur both as negative decimal i32 values and as
+/// unsigned 32-bit decimal values. Preserve the lexical numeric value; do not
+/// silently reinterpret a high-bit u32 as a negative signed value.
+pub fn signedOrUnsigned32(raw: []const u8) !i64 {
+    const value = std.mem.trim(u8, raw, " \t\r\n");
+    if (value.len == 0) return error.InvalidSignedOrUnsigned32;
+    var offset: usize = 0;
+    const negative = value[0] == '-';
+    if (negative or value[0] == '+') offset = 1;
+    if (offset == value.len) return error.InvalidSignedOrUnsigned32;
+    for (value[offset..]) |byte| {
+        if (byte < '0' or byte > '9') return error.InvalidSignedOrUnsigned32;
+    }
+    const magnitude = std.fmt.parseInt(u64, value[offset..], 10) catch return error.InvalidSignedOrUnsigned32;
+    if (negative) {
+        if (magnitude > 0x80000000) return error.InvalidSignedOrUnsigned32;
+        return -@as(i64, @intCast(magnitude));
+    }
+    if (magnitude > 0xFFFFFFFF) return error.InvalidSignedOrUnsigned32;
+    return @intCast(magnitude);
+}
+
 pub fn boolean(raw: []const u8) !bool {
     const value = std.mem.trim(u8, raw, " \t\r\n");
     if (std.mem.eql(u8, value, "true") or std.mem.eql(u8, value, "1")) return true;
@@ -57,4 +79,13 @@ test "HWPX shared XML scalar lexical bounds" {
     try std.testing.expectEqual(@as(u32, 0), try unsigned32("-000"));
     try std.testing.expectEqual(@as(u32, 4294967295), try unsigned32("4294967295"));
     try std.testing.expectError(error.InvalidUnsigned32, unsigned32("4294967296"));
+    try std.testing.expectEqual(@as(i64, -21280), try signedOrUnsigned32(" -21280 "));
+    try std.testing.expectEqual(@as(i64, 4294948081), try signedOrUnsigned32("4294948081"));
+    try std.testing.expectEqual(@as(i64, -2147483648), try signedOrUnsigned32("-2147483648"));
+    try std.testing.expectEqual(@as(i64, 4294967295), try signedOrUnsigned32("+4294967295"));
+    try std.testing.expectEqual(@as(i64, 0), try signedOrUnsigned32("-000"));
+    const bad_values = [_][]const u8{ "", "+", "1_0", "-2147483649", "4294967296" };
+    for (bad_values) |bad| {
+        try std.testing.expectError(error.InvalidSignedOrUnsigned32, signedOrUnsigned32(bad));
+    }
 }

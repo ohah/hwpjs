@@ -67,6 +67,10 @@ pub const Tree = struct {
         return @import("xml_part_attributes.zig").find(a, self, index, uri, local);
     }
 
+    pub fn unprefixedAttributeValues(self: *const Tree, a: std.mem.Allocator, index: usize, names: []const []const u8, output: []?xml.attribute_value.Value) !void {
+        return @import("xml_part_attributes.zig").findUnprefixedMany(a, self, index, names, output);
+    }
+
     pub const ContentEvent = content.Event;
     pub const ContentVisitor = content.Visitor;
     pub const OrderedEvent = content.OrderedEvent;
