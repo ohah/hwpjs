@@ -26,6 +26,8 @@ section 텍스트 보고서도 원문 양쪽 분기를 유지합니다. 활성 �
 
 [마스터페이지 문단 직접 자식](hwpx-master-paragraph-children.md)도 같은 후손 문단에서 run·배열·기타 직접 요소를 별도 보고서로 제공합니다.
 
+[마스터페이지 텍스트 이벤트](hwpx-master-text.md)의 개수 보고서도 `master_page_text`로 포함됩니다. 내용 이벤트가 필요하면 `Document.inspectMasterPageText`에 콜백을 전달합니다. 이벤트 관측은 페이지 적용·표시 결과가 아닙니다.
+
 [run 위치·직접 자식 진단](hwpx-run-topology.md)은 section·마스터페이지 결과를 별도로 반환합니다. 공개 모델 미등록 자식이나 늦은 `secPr`는 즉시 문서 오류로 거부하지 않습니다.
 
 직접 [조건부 switch 구조 진단](hwpx-switch-shape.md)은 두 run topology 보고서의 `switches` 필드에 포함됩니다. 두 분기의 선택·적용은 아직 판정하지 않습니다.

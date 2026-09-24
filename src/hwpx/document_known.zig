@@ -41,6 +41,7 @@ pub const Report = struct {
     master_page_line_segments: masterpage_line_segments.Report,
     master_page_paragraph_children: masterpage_paragraph_children.Report,
     master_page_text_nodes: text_node.Report,
+    master_page_text: section_text.MasterReport,
     structure: structure.Report,
     resources: resources.Report,
     section_references: section_refs.Report,
@@ -91,6 +92,7 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
     errdefer settings_report.deinit(a);
     var master_page_report = try document.inspectMasterPages(a, options.master_pages);
     errdefer master_page_report.deinit(a);
+    const master_page_text_report = try section_text.inspectMasterPages(a, document.archive, master_page_report.parts.parts, options.master_page_text, null);
     const master_page_line_segment_report = try masterpage_line_segments.inspect(a, document.archive, master_page_report.parts.parts, options.master_page_line_segments);
     const master_page_paragraph_children_report = try masterpage_paragraph_children.inspect(a, document.archive, master_page_report.parts.parts, options.master_page_paragraph_children);
     var version = try document.inspectVersion(a, options.version);
@@ -138,6 +140,7 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
         .master_page_line_segments = master_page_line_segment_report,
         .master_page_paragraph_children = master_page_paragraph_children_report,
         .master_page_text_nodes = master_page_text_nodes_report,
+        .master_page_text = master_page_text_report,
         .structure = structure_report,
         .resources = resource_report,
         .section_references = section_ref_report,

@@ -173,6 +173,45 @@ const TextNodeStats = struct {
     }
 };
 
+const MasterTextStats = struct {
+    counts: [5]usize = @splat(0),
+    digest_sum: u64 = 0,
+
+    fn from(report: package.MasterPageTextReport, digest: u64) MasterTextStats {
+        return .{
+            .counts = .{ report.text.paragraphs, report.text.runs, report.text.text_elements, report.text.empty_text_elements, report.text.text_bytes },
+            .digest_sum = digest,
+        };
+    }
+
+    fn add(self: *MasterTextStats, other: MasterTextStats) void {
+        for (other.counts, 0..) |count, i| self.counts[i] += count;
+        self.digest_sum +%= other.digest_sum;
+    }
+};
+
+const MasterTextDigest = struct {
+    value: u64 = 14695981039346656037,
+    text_elements: usize = 0,
+
+    fn feed(self: *MasterTextDigest, bytes: []const u8) void {
+        for (bytes) |byte| self.value = (self.value ^ byte) *% 1099511628211;
+    }
+
+    fn onEvent(raw: *anyopaque, event: package.SectionTextEvent) anyerror!void {
+        const self: *MasterTextDigest = @ptrCast(@alignCast(raw));
+        switch (event) {
+            .text_start => {
+                self.text_elements += 1;
+                self.feed("[");
+            },
+            .text_end => self.feed("]"),
+            .content => |value| self.feed(value.bytes),
+            else => {},
+        }
+    }
+};
+
 const MasterStyleStats = struct {
     paragraphs: usize = 0,
     non_direct_paragraphs: usize = 0,
@@ -243,6 +282,7 @@ const Statistics = struct {
     master_run_topology: TopologyStats,
     section_text_nodes: TextNodeStats,
     master_text_nodes: TextNodeStats,
+    master_text: MasterTextStats,
     master_page_number_sum: u64,
     master_page_count_declarations: usize,
     master_page_type_counts: [5]usize,
@@ -273,6 +313,10 @@ fn inspectOne(bytes: []const u8) !Outcome {
         return err;
     };
     defer known.deinit(a);
+    var master_text_digest: MasterTextDigest = .{};
+    const standalone_master_text = try document.inspectMasterPageText(a, .{}, .{ .context = &master_text_digest, .on_event = MasterTextDigest.onEvent });
+    try std.testing.expectEqualDeep(known.master_page_text, standalone_master_text);
+    try std.testing.expectEqual(known.master_page_text.text.text_elements, master_text_digest.text_elements);
     var switch_removed_case: [5]usize = @splat(0);
     var switch_removed_default: [5]usize = @splat(0);
     if (known.run_topology.switches.switches != 0) {
@@ -382,6 +426,14 @@ fn inspectOne(bytes: []const u8) !Outcome {
     try std.testing.expectEqual(masterpages, known.master_page_run_topology.parts);
     try std.testing.expectEqual(master_sub_lists, known.master_page_run_topology.sub_lists);
     try std.testing.expectEqual(masterpages, known.master_page_text_nodes.parts);
+    try std.testing.expectEqual(masterpages, known.master_page_text.parts);
+    try std.testing.expectEqual(master_sub_lists, known.master_page_text.sub_lists);
+    try std.testing.expectEqual(master_paragraphs, known.master_page_text.text.paragraphs);
+    try std.testing.expectEqual(master_sub_list_direct_paragraphs, known.master_page_text.text.direct_paragraphs);
+    try std.testing.expectEqual(master_style.runs, known.master_page_text.text.runs);
+    try std.testing.expectEqual(known.master_page_text_nodes.text_nodes, known.master_page_text.text.text_elements);
+    try std.testing.expectEqual(known.master_page_text_nodes.non_direct_text_nodes, known.master_page_text.text.non_direct_text_elements);
+    try std.testing.expectEqual(known.master_page_text_nodes.tab.tabs, known.master_page_text.text.inlineCount(.tab));
     try std.testing.expectEqual(master_sub_lists, known.master_page_text_nodes.sub_lists);
     try std.testing.expectEqual(masterpages, known.master_page_line_segments.parts);
     try std.testing.expectEqual(master_sub_lists, known.master_page_line_segments.sub_lists);
@@ -480,6 +532,7 @@ fn inspectOne(bytes: []const u8) !Outcome {
         .master_run_topology = TopologyStats.from(known.master_page_run_topology),
         .section_text_nodes = TextNodeStats.from(known.text_nodes),
         .master_text_nodes = TextNodeStats.from(known.master_page_text_nodes),
+        .master_text = MasterTextStats.from(known.master_page_text, if (master_text_digest.text_elements == 0) 0 else master_text_digest.value),
         .master_page_number_sum = master_page_number_sum,
         .master_page_count_declarations = known.master_pages.count_declarations.len,
         .master_page_type_counts = master_type_counts,
@@ -538,6 +591,7 @@ fn surveyShard(shard: usize) !void {
     var master_run_topology: TopologyStats = .{};
     var section_text_nodes: TextNodeStats = .{};
     var master_text_nodes: TextNodeStats = .{};
+    var master_text: MasterTextStats = .{};
     var master_page_number_sum: u64 = 0;
     var master_page_count_declarations: usize = 0;
     var master_page_type_counts: [5]usize = @splat(0);
@@ -624,6 +678,7 @@ fn surveyShard(shard: usize) !void {
                     master_run_topology.add(stats.master_run_topology);
                     section_text_nodes.add(stats.section_text_nodes);
                     master_text_nodes.add(stats.master_text_nodes);
+                    master_text.add(stats.master_text);
                     master_page_number_sum += stats.master_page_number_sum;
                     master_page_count_declarations += stats.master_page_count_declarations;
                     for (stats.master_page_type_counts, 0..) |value, i| master_page_type_counts[i] += value;
@@ -943,6 +998,8 @@ fn surveyShard(shard: usize) !void {
     try std.testing.expectEqualSlices(usize, &expected.switch_removed_default[shard], &switch_removed_default);
     try std.testing.expectEqualSlices(usize, &expected.section_text_nodes[shard], &section_text_nodes.counts);
     try std.testing.expectEqualSlices(usize, &expected.master_text_nodes[shard], &master_text_nodes.counts);
+    try std.testing.expectEqualSlices(usize, &expected.master_text_content[shard], &master_text.counts);
+    try std.testing.expectEqual(expected.master_text_digest_sum[shard], master_text.digest_sum);
     try std.testing.expectEqualSlices(usize, &expected.section_text_child_classes[shard], &section_text_nodes.classes);
     try std.testing.expectEqualSlices(usize, &expected.master_text_child_classes[shard], &master_text_nodes.classes);
     try std.testing.expectEqualSlices(u64, &expected.section_tab_fields[shard], &section_text_nodes.tab);

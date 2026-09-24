@@ -2,6 +2,8 @@
 
 이 문서의 기본 API는 양쪽 조건부 분기를 관측합니다. 활성 분기의 이벤트가 필요한 경우 별도 [선택 분기 텍스트](hwpx-selected-section-text.md) API를 사용합니다.
 
+동일한 문단/run/text 이벤트 스캐너를 마스터페이지 직접 `subList` 후손에도 재사용합니다. 파트 선택·위치와 독립 한도는 [마스터페이지 텍스트 이벤트](hwpx-master-text.md)가 소유합니다.
+
 [한컴의 HWPX 구조 설명](https://tech.hancom.com/hwpxformat/)은 section의 `hp:p` 아래 `hp:run`과 `hp:t`가 본문 텍스트를 담는다고 설명합니다. `Document.inspectSectionText`는 기존 [header·spine 구조](hwpx-document-structure.md)가 고른 평문 section만 spine 순서로 다시 읽고, 2011 paragraph namespace의 `p`·`run`·`t`를 구분합니다. `hp:t`의 XML 문자 참조·CDATA·줄바꿈 정규화가 끝난 UTF-8 내용과 내부 요소 시작·끝·빈 태그를 원래 순서대로 콜백에 전달합니다. 콜백의 `Tag`·namespace scope·텍스트 바이트는 호출 중에만 유효하므로 보관하려면 호출자가 복사해야 합니다. 파싱 또는 콜백 오류 전까지의 이벤트는 이미 전달됐을 수 있으므로 호출자는 실패한 스트림의 부분 상태를 버려야 합니다. section의 manifest item 인덱스와 section·문단·run·text의 관측 순번을 이벤트에 포함합니다. 실제 편집 가능한 문서 모델은 아직 만들지 않습니다.
 
 `paragraph_start/end`·`run_start/end`도 전달하므로 빈 문단과 빈 run을 건너뛰지 않고 경계를 복원할 수 있습니다. 시작 이벤트의 `Tag`에서 `id`·`paraPrIDRef`·`styleIDRef`·`charPrIDRef`를 XML 정규화된 값으로 읽을 수 있지만, 그 값의 header 참조 검증은 기존 [section 서식 참조](hwpx-section-references.md)가 소유합니다. [한컴의 본문 구조 설명](https://tech.hancom.com/python-hwpx-parsing-2/)에서 section은 하나 이상의 직접 문단, 문단은 하나 이상의 직접 run을 갖는다고 설명합니다. 이 계층은 두 필수 자식의 부재와 문단 직접 자식이 아닌 run을 별도 진단으로 반환합니다. 없는 문단·run을 만들어 채우지 않고, 한 실파일 편차 때문에 나머지 내용을 버리지 않습니다.

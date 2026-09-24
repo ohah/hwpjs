@@ -5,6 +5,7 @@ const attrs = @import("xml_attributes.zig");
 const document_xml = @import("document_xml.zig");
 const content_manifest = @import("content_manifest.zig");
 const document_structure = @import("document_structure.zig");
+const masterpage_parts = @import("masterpage_parts.zig");
 const namespace_profile = @import("namespace_profile.zig");
 const text_child_names = @import("text_child_names.zig");
 const selection = @import("compatibility_selection.zig");
@@ -40,7 +41,13 @@ pub const Location = struct {
     paragraph_ordinal: usize,
     run_ordinal: usize,
     text_ordinal: usize,
+    /// section_ordinal is valid only for section events. Master-page events
+    /// use part_ordinal and set part_kind to master_page.
+    part_kind: PartKind = .section,
+    part_ordinal: usize = 0,
 };
+
+pub const PartKind = enum { section, master_page };
 
 pub const InlineEvent = struct { location: Location, kind: InlineKind, tag: xml.tags.Tag, scope: *const xml.namespaces.State };
 pub const BoundaryEvent = struct { location: Location, tag: xml.tags.Tag, scope: *const xml.namespaces.State };
@@ -75,6 +82,20 @@ pub const Options = struct {
     max_attribute_bytes: usize = 4096,
     branch_policy: selection.Policy = .{},
     xml: document_xml.Options = .{},
+};
+
+pub const MasterOptions = struct {
+    max_parts: usize = 4096,
+    max_part_xml_bytes: usize = 32 * 1024 * 1024,
+    max_total_xml_bytes: usize = 128 * 1024 * 1024,
+    scan: Options = .{},
+};
+
+pub const MasterReport = struct {
+    parts: usize = 0,
+    sub_lists: usize = 0,
+    text: Report = .{},
+    xml_bytes: usize = 0,
 };
 
 pub const Report = struct {
@@ -122,6 +143,7 @@ const Node = struct {
     is_switch: bool = false,
     is_branch: bool = false,
     selected: selection.State = .{},
+    in_scope: bool = true,
 };
 
 fn inlineKind(tag: xml.tags.Tag, scope: *const xml.namespaces.State) !InlineKind {
@@ -161,6 +183,9 @@ const Scanner = struct {
     visitor: ?Visitor,
     section_ordinal: usize,
     item_index: usize,
+    mode: PartKind = .section,
+    sub_lists: usize = 0,
+    paragraphs_in_part: usize = 0,
     nodes: [256]Node = @splat(.{}),
     current_text_bytes: usize = 0,
 
@@ -171,6 +196,8 @@ const Scanner = struct {
             .paragraph_ordinal = node.paragraph,
             .run_ordinal = node.run,
             .text_ordinal = node.text,
+            .part_kind = self.mode,
+            .part_ordinal = self.section_ordinal,
         };
     }
 
@@ -200,13 +227,27 @@ const Scanner = struct {
             }
             return;
         }
-        if (depth == 1 and !try attrs.element(tag, scope, document_xml.section_uri, "sec")) {
-            if (namespace_profile.isVersionedRoot(try scope.expandElement(tag.name), "sec", "section")) return error.UnsupportedHwpxNamespaceProfile;
-            return error.InvalidSectionRoot;
+        if (depth == 1) {
+            const valid_root = switch (self.mode) {
+                .section => try attrs.element(tag, scope, document_xml.section_uri, "sec"),
+                .master_page => try masterpage_parts.isRootTag(tag, scope),
+            };
+            if (!valid_root) {
+                if (self.mode == .section and namespace_profile.isVersionedRoot(try scope.expandElement(tag.name), "sec", "section")) return error.UnsupportedHwpxNamespaceProfile;
+                return if (self.mode == .section) error.InvalidSectionRoot else error.InvalidMasterPageRoot;
+            }
         }
         const parent: Node = if (depth == 1) .{} else self.nodes[depth - 2];
         var node = parent;
         node.active = parent.active;
+        node.in_scope = parent.in_scope;
+        if (self.mode == .master_page) {
+            if (depth == 1) node.in_scope = false else if (depth == 2) {
+                node.in_scope = try masterpage_parts.isDirectSubListTag(tag, scope);
+                self.sub_lists += @intFromBool(node.in_scope);
+                node.active = node.in_scope;
+            }
+        }
         node.is_switch = false;
         node.is_branch = false;
         node.selected = .{};
@@ -238,6 +279,7 @@ const Scanner = struct {
             if (tag.kind == .empty) try self.emit(.{ .inline_empty = event }) else try self.emit(.{ .inline_start = event });
         } else if (try attrs.element(tag, scope, document_xml.paragraph_uri, "p")) {
             self.report.paragraphs += 1;
+            self.paragraphs_in_part += 1;
             node.kind = .paragraph;
             node.paragraph = self.report.paragraphs;
             node.run = 0;
@@ -284,7 +326,7 @@ const Scanner = struct {
         const self: *Scanner = @ptrCast(@alignCast(raw));
         if (depth == 0 or depth > self.nodes.len) return error.LimitExceeded;
         const node = self.nodes[depth - 1];
-        if (!node.active) return;
+        if (!node.active or (self.mode == .master_page and !node.in_scope)) return;
         if (node.text == 0) {
             // XML formatting whitespace is not document text. Flag only
             // non-whitespace content that no hp:t owner receives.
@@ -328,4 +370,35 @@ pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, manifest: content_man
     }
     report.decoded_xml_bytes = options.max_total_section_xml_bytes - remaining;
     return report;
+}
+
+/// Reuses the section token scanner for selected master-page subLists while
+/// keeping the package selection, limits and report separate from sections.
+pub fn inspectMasterPages(a: std.mem.Allocator, archive: zip.Archive, parts: []const masterpage_parts.Part, options: MasterOptions, visitor: ?Visitor) !MasterReport {
+    try selection.validate(options.scan.branch_policy);
+    if (parts.len > options.max_parts) return error.LimitExceeded;
+    var result: MasterReport = .{};
+    var remaining = options.max_total_xml_bytes;
+    for (parts, 0..) |part, ordinal| {
+        if (part.entry_index >= archive.entries.len) return error.InvalidManifestEntryIndex;
+        const bytes = try archive.decode(archive.entries[part.entry_index], @min(options.max_part_xml_bytes, remaining));
+        defer archive.allocator.free(bytes);
+        var scanner: Scanner = .{ .allocator = a, .options = options.scan, .report = &result.text, .visitor = visitor, .section_ordinal = ordinal, .item_index = part.item_index, .mode = .master_page };
+        _ = try document_xml.visitBytes(a, bytes, bytes.len, options.scan.xml, .{ .context = &scanner, .on_tag = Scanner.onTag, .on_content = Scanner.onContent });
+        if (scanner.sub_lists != part.sub_lists.len) return error.InconsistentMasterPageSelection;
+        var expected_paragraphs: usize = 0;
+        for (part.sub_lists) |list| {
+            expected_paragraphs = std.math.add(usize, expected_paragraphs, list.paragraph_metadata.paragraphs) catch return error.LimitExceeded;
+            result.text.direct_paragraphs = std.math.add(usize, result.text.direct_paragraphs, list.direct_paragraphs) catch return error.LimitExceeded;
+        }
+        // Part metadata observes both switch branches; selected text events
+        // intentionally omit inactive nested paragraphs.
+        if (options.scan.branch_policy.mode == .all and scanner.paragraphs_in_part != expected_paragraphs) return error.InconsistentMasterPageSelection;
+        result.parts += 1;
+        result.sub_lists += scanner.sub_lists;
+        result.xml_bytes = std.math.add(usize, result.xml_bytes, bytes.len) catch return error.LimitExceeded;
+        remaining -= bytes.len;
+    }
+    result.text.decoded_xml_bytes = result.xml_bytes;
+    return result;
 }

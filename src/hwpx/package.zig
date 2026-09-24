@@ -187,6 +187,11 @@ pub const MasterPageOptions = struct {
     references: masterpage_references.Options = .{},
 };
 pub const MasterPageReport = masterpage_references.Report;
+pub const MasterPageTextOptions = struct {
+    master_pages: MasterPageOptions = .{},
+    text: section_text.MasterOptions = .{},
+};
+pub const MasterPageTextReport = section_text.MasterReport;
 pub const MasterPageParagraphChildrenOptions = struct {
     master_pages: MasterPageOptions = .{},
     children: masterpage_paragraph_children.Options = .{},
@@ -223,6 +228,7 @@ pub const KnownOptions = struct {
     master_page_line_segments: masterpage_line_segments.Options = .{},
     master_page_paragraph_children: masterpage_paragraph_children.Options = .{},
     master_page_text_nodes: text_node.MasterOptions = .{},
+    master_page_text: section_text.MasterOptions = .{},
     structure: StructureOptions = .{},
     header_resources: HeaderResourceOptions = .{},
     section_references: ReferenceOptions = .{},
@@ -303,6 +309,14 @@ pub const Document = struct {
         var pages = try self.inspectMasterPages(a, options.master_pages);
         defer pages.deinit(a);
         return masterpage_paragraph_children.inspect(a, self.archive, pages.parts.parts, options.children);
+    }
+
+    /// Streams normalized hp:t content and inline boundaries from selected
+    /// root-direct master-page subLists using the section text token scanner.
+    pub fn inspectMasterPageText(self: *const Document, a: std.mem.Allocator, options: MasterPageTextOptions, visitor: ?SectionTextVisitor) !MasterPageTextReport {
+        var pages = try self.inspectMasterPages(a, options.master_pages);
+        defer pages.deinit(a);
+        return section_text.inspectMasterPages(a, self.archive, pages.parts.parts, options.text, visitor);
     }
 
     /// Resolves paragraph and run formatting links inside root-direct master

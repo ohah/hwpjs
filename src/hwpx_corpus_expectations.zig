@@ -263,6 +263,17 @@ pub const master_text_nodes = [_][6]usize{
     .{ 0, 0, 0, 0, 0, 0 },     .{ 0, 0, 0, 0, 0, 0 },
     .{ 24, 0, 24, 0, 0, 0 },   .{ 129, 0, 129, 0, 0, 0 },
 };
+// Independent ElementTree oracle: paragraphs, runs, hp:t, empty hp:t, UTF-8 bytes.
+pub const master_text_content = [_][5]usize{
+    .{ 86, 118, 71, 38, 641 },    .{ 31, 39, 33, 20, 274 },
+    .{ 126, 177, 114, 53, 1164 }, .{ 0, 0, 0, 0, 0 },
+    .{ 0, 0, 0, 0, 0 },           .{ 0, 0, 0, 0, 0 },
+    .{ 21, 29, 24, 14, 268 },     .{ 130, 158, 129, 40, 933 },
+};
+pub const master_text_digest_sum = [_]u64{
+    3454785851527485364, 13920564907367095401, 11283306605575013755, 0,
+    0,                   0,                    5992471676250238163,  14003655075739860585,
+};
 // [Hancom model, 2011 XSD-only hyphen, other 2011, foreign].
 pub const section_text_child_classes = [_][4]usize{
     .{ 1760, 0, 0, 0 }, .{ 2153, 0, 0, 0 },

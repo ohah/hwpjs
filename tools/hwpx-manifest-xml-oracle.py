@@ -86,6 +86,7 @@ def empty():
                 section_run_child_classes=[0] * 5, master_run_child_classes=[0] * 5,
                 section_switch_shape=[0] * 21, master_switch_shape=[0] * 21,
                 section_text_nodes=[0] * 6, master_text_nodes=[0] * 6,
+                master_text_content=[0] * 5, master_text_digest_sum=0,
                 section_text_children={}, master_text_children={},
                 section_text_child_classes=[0] * 4, master_text_child_classes=[0] * 4,
                 section_tab_fields=[0] * 21, master_tab_fields=[0] * 21,
@@ -104,6 +105,42 @@ def master_path(name):
     return (name.startswith(prefix) and name.endswith(".xml")
             and bool(name[len(prefix):-4])
             and all("0" <= char <= "9" for char in name[len(prefix):-4]))
+
+
+def master_text_content(sub_list, counts, digest):
+    """Independent ElementTree census, with ordered hp:t UTF-8 boundaries."""
+    for node in sub_list.iter():
+        if node.tag == PARA + "p":
+            counts[0] += 1
+        elif node.tag == PARA + "run":
+            counts[1] += 1
+        elif node.tag == PARA + "t":
+            value = "".join(node.itertext()).encode("utf-8")
+            counts[2] += 1
+            counts[3] += not value
+            counts[4] += len(value)
+            for byte in b"[" + value + b"]":
+                digest = ((digest ^ byte) * 1099511628211) & 0xFFFFFFFFFFFFFFFF
+    return digest
+
+
+def self_test_master_text_content():
+    root = ET.fromstring("<masterPage xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph' "
+                         "xmlns:x='urn:foreign'><x:subList><p:p><p:run><p:t>omit</p:t></p:run></p:p></x:subList>"
+                         "<p:subList><p:p><p:run><p:t>A&amp;<![CDATA[B]]><p:tab/>C</p:t><p:t/></p:run></p:p>"
+                         "<p:tbl><p:p><p:run><p:t>nested</p:t></p:run></p:p></p:tbl></p:subList>"
+                         "<p:outside><p:p><p:run><p:t>skip</p:t></p:run></p:p></p:outside></masterPage>")
+    counts = [0] * 5
+    digest = 14695981039346656037
+    for child in root:
+        if child.tag == PARA + "subList":
+            digest = master_text_content(child, counts, digest)
+    assert counts == [2, 2, 3, 1, 10]
+    expected = b"[A&BC][][nested]"
+    oracle_digest = 14695981039346656037
+    for byte in expected:
+        oracle_digest = ((oracle_digest ^ byte) * 1099511628211) & 0xFFFFFFFFFFFFFFFF
+    assert digest == oracle_digest
 
 
 def count_master_line_segments(sub_list, counts):
@@ -449,6 +486,8 @@ def main():
                     master_refs = []
                     header_tables = [None, None, None]
                     master_style_values = [[], [], []]
+                    file_master_digest = 14695981039346656037
+                    file_master_text_elements = 0
                     for item in opf.findall(OPF + "manifest/" + OPF + "item"):
                         if item.get("media-type") != "application/xml":
                             continue
@@ -517,6 +556,9 @@ def main():
                                 if child.tag != PARA + "subList":
                                     continue
                                 shard["master_sub_lists"] += 1
+                                before_text_elements = shard["master_text_content"][2]
+                                file_master_digest = master_text_content(child, shard["master_text_content"], file_master_digest)
+                                file_master_text_elements += shard["master_text_content"][2] - before_text_elements
                                 count_master_paragraph_children(child, shard["master_paragraph_children"])
                                 count_master_line_segments(child, shard["master_line_segments"])
                                 shard["master_sub_list_direct_paragraphs"] += sum(
@@ -583,6 +625,10 @@ def main():
                             shard["master_ambiguous"] += 1
                         else:
                             shard["master_missing"] += 1
+                    # Count only documents with hp:t, so empty files do not
+                    # contribute the FNV offset to the shard sum.
+                    if file_master_text_elements:
+                        shard["master_text_digest_sum"] = (shard["master_text_digest_sum"] + file_master_digest) & 0xFFFFFFFFFFFFFFFF
                     for index, values in enumerate(master_style_values):
                         table = header_tables[index]
                         for raw in values:
@@ -614,8 +660,9 @@ def main():
 if __name__ == "__main__":
     self_test_master_paragraph_children()
     self_test_master_line_segments()
+    self_test_master_text_content()
     if sys.argv[1:] == ["--self-test"]:
-        print("master paragraph children and line segments oracle self-tests passed")
+        print("master paragraph children, line segments and text oracle self-tests passed")
     elif not sys.argv[1:]:
         main()
     else:
