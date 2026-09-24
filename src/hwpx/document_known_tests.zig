@@ -15,6 +15,7 @@ const synthetic_sources = [_]fixture.Source{
     .{ .name = "Contents/section0.xml", .data = synthetic_section },
 };
 const encrypted_sources = synthetic_sources ++ [_]fixture.Source{.{ .name = "META-INF/manifest.xml", .data = "<m:manifest xmlns:m='urn:oasis:names:tc:opendocument:xmlns:manifest:1.0'><m:file-entry full-path='Contents/header.xml'><m:encryption-data/></m:file-entry></m:manifest>" }};
+const orphan_sources = synthetic_sources ++ [_]fixture.Source{.{ .name = "Unlisted/data.bin", .data = "hidden" }};
 
 fn load(a: std.mem.Allocator, name: []const u8) ![]u8 {
     const path = try std.fmt.allocPrint(a, "legacy/rust/crates/hwp-core/tests/fixtures/{s}.hwpx", .{name});
@@ -31,6 +32,7 @@ test "HWPX known inspections compose every currently exposed document report" {
     var report = try document.inspectKnown(a, .{});
     defer report.deinit(a);
     try std.testing.expectEqual(@as(usize, 1), report.structure.sections.len);
+    try std.testing.expectEqual(document.archive.entries.len, report.payload_integrity.validated_entries);
     try std.testing.expectEqual(report.structure.sections.len, report.section_references.sections);
     try std.testing.expectEqual(report.structure.sections.len, report.binary_references.sections);
     try std.testing.expectEqual(report.structure.sections.len, report.chart_references.sections);
@@ -69,6 +71,7 @@ test "HWPX known report owns values after source document release" {
     try std.testing.expectEqualStrings("1", report.begin_numbers.value(.page).?);
     try std.testing.expectEqual(@as(usize, 1), report.structure.sections.len);
     try std.testing.expectEqual(@as(usize, 1), report.paragraph_metadata.paragraphs);
+    try std.testing.expectEqual(synthetic_sources.len, report.payload_integrity.validated_entries);
     try std.testing.expectEqual(@as(usize, 1), report.section_references.counts(.style).absent_table);
 }
 
@@ -101,4 +104,16 @@ test "HWPX known inspections reject encrypted packages before semantic phases wi
     try std.testing.expectError(error.EncryptedDocument, document.inspectKnown(checked.allocator(), .{}));
     document.deinit(checked.allocator());
     try std.testing.expectEqual(@as(usize, 0), checked.total_requested_bytes);
+}
+
+test "HWPX known inspections check unlisted payload bytes before XML phases" {
+    const a = std.testing.allocator;
+    const bytes = try fixture.storedZip(a, &orphan_sources);
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    const orphan = document.archive.find("Unlisted/data.bin") orelse return error.MissingEntry;
+    bytes[@intFromPtr(orphan.compressed.ptr) - @intFromPtr(bytes.ptr)] ^= 1;
+    try std.testing.expectError(error.InvalidCrc, document.inspectKnown(a, .{}));
+    try std.testing.expectError(error.LimitExceeded, document.inspectKnown(a, .{ .payload_integrity = .{ .max_total_decoded_bytes = 0 } }));
 }

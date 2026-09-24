@@ -20,6 +20,7 @@ const document_trees = @import("document_trees.zig");
 const paragraph_metadata = @import("paragraph_metadata.zig");
 const header_begin_numbers = @import("header_begin_numbers.zig");
 const document_known = @import("document_known.zig");
+const payload_integrity = @import("payload_integrity.zig");
 
 pub const Archive = zip.Archive;
 pub const Options = zip.Options;
@@ -104,9 +105,12 @@ pub const BeginNumberOptions = header_begin_numbers.Options;
 pub const BeginNumberReport = header_begin_numbers.Report;
 pub const BeginNumberField = header_begin_numbers.Field;
 pub const KnownReport = document_known.Report;
+pub const PayloadIntegrityOptions = payload_integrity.Options;
+pub const PayloadIntegrityReport = payload_integrity.Report;
 pub const KnownOptions = struct {
     version: VersionOptions = .{},
     protection: ProtectionOptions = .{},
+    payload_integrity: PayloadIntegrityOptions = .{},
     structure: StructureOptions = .{},
     header_resources: HeaderResourceOptions = .{},
     section_references: ReferenceOptions = .{},
@@ -135,6 +139,12 @@ pub const Document = struct {
     container: container.Root,
     manifest: content_manifest.Manifest,
     decoded_xml_bytes: usize,
+
+    /// Checks the actual decompression, size and CRC of every ZIP entry,
+    /// including parts outside the OPF manifest. Does not parse their format.
+    pub fn inspectPayloadIntegrity(self: *const Document, a: std.mem.Allocator, options: PayloadIntegrityOptions) !PayloadIntegrityReport {
+        return payload_integrity.inspect(a, self.archive, self.manifest.items, options);
+    }
 
     /// Runs all currently exposed HWPX inspections on this document. A
     /// returned report still has unresolved diagnostics and unsupported

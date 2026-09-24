@@ -31,6 +31,8 @@ fn inspectOne(bytes: []const u8) !Outcome {
         return err;
     };
     defer known.deinit(a);
+    try std.testing.expectEqual(document.archive.entries.len, known.payload_integrity.validated_entries);
+    try std.testing.expectEqual(document.archive.entries.len, known.payload_integrity.manifested_entries + known.payload_integrity.unmanifested_entries.len);
     const count = known.structure.sections.len;
     try std.testing.expectEqual(count, known.section_references.sections);
     try std.testing.expectEqual(count, known.binary_references.sections);
