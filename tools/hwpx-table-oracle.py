@@ -12,6 +12,7 @@ from zipfile import BadZipFile, ZipFile
 ROOTS = (Path("legacy/rust/crates/hwp-core/tests/fixtures"), Path("reference/rhwp/samples"))
 OPF = "{http://www.idpf.org/2007/opf/}"
 P = "{http://www.hancom.co.kr/hwpml/2011/paragraph}"
+H = "{http://www.hancom.co.kr/hwpml/2011/head}"
 SECTION = "{http://www.hancom.co.kr/hwpml/2011/section}sec"
 
 
@@ -64,7 +65,7 @@ def optional_margin_int(node, name):
     return number
 
 
-def inspect_metrics(cell, stats):
+def inspect_metrics(cell, stats, border_ids):
     sizes = [child for child in cell if child.tag == P + "cellSz"]
     margins = [child for child in cell if child.tag == P + "cellMargin"]
     stats["missing_size"] += not sizes
@@ -116,9 +117,13 @@ def inspect_metrics(cell, stats):
     if border is not None:
         stats["border_zero"] += border == 0
         stats["border_sum"] += border
+    stats["border_ref_absent"] += border is None
+    stats["border_ref_absent_table"] += border is not None and border_ids is None
+    stats["border_ref_resolved"] += border is not None and border_ids is not None and border in border_ids
+    stats["border_ref_missing_target"] += border is not None and border_ids is not None and border not in border_ids
 
 
-def inspect_table(table, stats, samples, path):
+def inspect_table(table, stats, samples, path, border_ids=None):
     stats["tables"] += 1
     rows = [child for child in table if child.tag == P + "tr"]
     declared_rows = optional_int(table, "rowCnt")
@@ -136,7 +141,7 @@ def inspect_table(table, stats, samples, path):
         stats["cells"] += len(cells)
         table_issues["empty_row"] += not cells
         for cell in cells:
-            inspect_metrics(cell, stats)
+            inspect_metrics(cell, stats, border_ids)
             addresses = [child for child in cell if child.tag == P + "cellAddr"]
             spans = [child for child in cell if child.tag == P + "cellSpan"]
             stats["missing_addr"] += not addresses
@@ -194,6 +199,14 @@ def main():
                         shard["encrypted"] += 1
                         continue
                     opf = ET.fromstring(read_part(archive, "Contents/content.hpf", 2_000_000))
+                    header = ET.fromstring(read_part(archive, "Contents/header.xml", 32 * 1024 * 1024))
+                    groups = header.findall(H + "refList/" + H + "borderFills")
+                    if len(groups) > 1:
+                        raise ValueError(f"{relative}: duplicate header borderFills")
+                    border_values = [optional_int(node, "id") for node in groups[0].findall(H + "borderFill")] if groups else None
+                    if border_values is not None and (None in border_values or len(set(border_values)) != len(border_values)):
+                        raise ValueError(f"{relative}: missing or duplicate borderFill ID")
+                    border_ids = set(border_values) if border_values is not None else None
                     items = {item.get("id"): item.get("href") for item in opf.findall(OPF + "manifest/" + OPF + "item")}
                     spine = opf.find(OPF + "spine")
                     if spine is None:
@@ -209,8 +222,8 @@ def main():
                         shard["sections"] += 1
                         for table in section.iter(P + "tbl"):
                             try:
-                                inspect_table(table, stats, samples, relative)
-                                inspect_table(table, shard, [], relative)
+                                inspect_table(table, stats, samples, relative, border_ids)
+                                inspect_table(table, shard, [], relative, border_ids)
                             except ValueError as exc:
                                 raise ValueError(f"{relative}:{name}: {exc}") from exc
                     stats["accepted"] += 1
@@ -246,6 +259,15 @@ def self_test():
             raise AssertionError(f"invalid unsigned value accepted: {bad!r}")
     if optional_int(ET.fromstring("<x n='-000'/>"), "n") != 0:
         raise AssertionError("negative lexical zero was not preserved")
+    reference = ET.fromstring("<p:tbl xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph' rowCnt='1' colCnt='4'><p:tr><p:tc borderFillIDRef='7'/><p:tc borderFillIDRef='9'/><p:tc borderFillIDRef='0'/><p:tc/></p:tr></p:tbl>")
+    ref_stats = Counter()
+    inspect_table(reference, ref_stats, [], "self-test", {0, 7})
+    if (ref_stats["border_ref_resolved"], ref_stats["border_ref_missing_target"], ref_stats["border_ref_absent"]) != (2, 1, 1):
+        raise AssertionError("header ID matching or absent reference changed")
+    missing_group = Counter()
+    inspect_table(reference, missing_group, [], "self-test")
+    if missing_group["border_ref_absent_table"] != 3 or missing_group["border_ref_absent"] != 1:
+        raise AssertionError("missing header table was treated as an empty ID inventory")
     incomplete = ET.fromstring("<p:tbl xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph' rowCnt='1' colCnt='1'><p:tr><p:tc><p:cellSpan rowSpan='-1' colSpan='1'/></p:tc></p:tr></p:tbl>")
     try:
         inspect_table(incomplete, Counter(), [], "self-test")

@@ -111,7 +111,7 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
         const run_report = try trees.inspectRunMetadata(a, options.run_metadata);
         const topology_report = try trees.inspectRunTopology(a, options.run_topology);
         const text_nodes_report = try trees.inspectTextNodes(a, options.text_nodes);
-        const table_report = try trees.inspectTableGeometry(a, options.table_geometry);
+        const table_report = try trees.inspectTableGeometryWithBorderFills(a, options.table_geometry, resource_report.table(.border_fill));
         break :blk .{ .begin = begin_report, .paragraph = paragraph_report, .run = run_report, .topology = topology_report, .text_nodes = text_nodes_report, .table_geometry = table_report };
     };
     return .{

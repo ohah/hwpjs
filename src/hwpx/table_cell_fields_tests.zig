@@ -1,15 +1,20 @@
 const std = @import("std");
 const section_tree = @import("section_tree.zig");
 const geometry = @import("table_geometry.zig");
+const header_resources = @import("header_resources.zig");
 
 const prefix = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph' xmlns:x='urn:foreign'>";
 
 fn inspectXml(a: std.mem.Allocator, body: []const u8, options: geometry.Options) !geometry.Report {
+    return inspectXmlWithBorderFills(a, body, options, null);
+}
+
+fn inspectXmlWithBorderFills(a: std.mem.Allocator, body: []const u8, options: geometry.Options, border_fills: ?*const header_resources.Table) !geometry.Report {
     const source = try std.fmt.allocPrint(a, "{s}{s}</s:sec>", .{ prefix, body });
     defer a.free(source);
     var tree = try section_tree.parse(a, source, 0, 0, .{});
     defer tree.deinit(a);
-    return geometry.inspect(a, &.{tree}, options);
+    return geometry.inspectWithBorderFills(a, &.{tree}, options, border_fills);
 }
 
 test "HWPX table cell fields preserve negative and high-bit margin lexical values" {
@@ -119,4 +124,31 @@ test "HWPX table cell attributes reject bad known lexical values and enforce byt
     try std.testing.expectEqual(@as(usize, 1), absent.cell_fields.name_absent);
     try std.testing.expectEqual(@as(usize, 1), absent.cell_fields.flags[1].absent);
     try std.testing.expectEqual(@as(usize, 1), absent.cell_fields.border_fill_absent);
+}
+
+test "HWPX table cell border references use header IDs and preserve absence" {
+    const a = std.testing.allocator;
+    var table: header_resources.Table = .{ .present = true };
+    defer table.ids.deinit(a);
+    try table.ids.appendSlice(a, &.{ 0, 7, 4294967295 });
+    const body = "<p:tbl rowCnt='1' colCnt='5'><p:tr>" ++
+        "<p:tc borderFillIDRef='7'/><p:tc borderFillIDRef='9'/><p:tc x:borderFillIDRef='7'/><p:tc borderFillIDRef='4294967295'/><p:tc borderFillIDRef='0'/>" ++
+        "</p:tr></p:tbl>";
+    const with_table = try inspectXmlWithBorderFills(a, body, .{}, &table);
+    const refs = with_table.cell_fields.border_fill_references;
+    try std.testing.expect(with_table.cell_fields.border_fill_references_checked);
+    try std.testing.expectEqual(@as(usize, 4), refs.present);
+    try std.testing.expectEqual(@as(usize, 1), refs.absent);
+    try std.testing.expectEqual(@as(usize, 3), refs.resolved);
+    try std.testing.expectEqual(@as(usize, 1), refs.missing_target);
+    try std.testing.expectEqual(@as(usize, 1), with_table.cell_fields.border_fill_zero);
+    try std.testing.expectEqual(@as(?u32, 9), refs.first_unresolved_id);
+    try std.testing.expectEqual(@as(?usize, 0), refs.first_unresolved_item_index);
+    const no_inventory = try inspectXmlWithBorderFills(a, body, .{}, &.{});
+    try std.testing.expect(no_inventory.cell_fields.border_fill_references_checked);
+    try std.testing.expectEqual(@as(usize, 4), no_inventory.cell_fields.border_fill_references.absent_table);
+    try std.testing.expectEqual(@as(usize, 1), no_inventory.cell_fields.border_fill_references.absent);
+    const standalone = try inspectXml(a, body, .{});
+    try std.testing.expect(!standalone.cell_fields.border_fill_references_checked);
+    try std.testing.expectEqual(@as(usize, 0), standalone.cell_fields.border_fill_references.present);
 }

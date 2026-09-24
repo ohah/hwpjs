@@ -2,6 +2,8 @@ const std = @import("std");
 const xml = @import("../xml/root.zig");
 const tree_mod = @import("xml_part_tree.zig");
 const table_xml = @import("table_xml_fields.zig");
+const header_resources = @import("header_resources.zig");
+const id_references = @import("id_references.zig");
 
 pub const size_names = [_][]const u8{ "width", "height" };
 pub const margin_names = [_][]const u8{ "left", "right", "top", "bottom" };
@@ -44,6 +46,9 @@ pub const Report = struct {
     border_fill_present: usize = 0,
     border_fill_zero: usize = 0,
     border_fill_sum: u64 = 0,
+    /// Populated only when the caller supplies the header border-fill table.
+    border_fill_references_checked: bool = false,
+    border_fill_references: id_references.Counts = .{},
 };
 
 fn noteBoolean(a: std.mem.Allocator, raw: ?xml.attribute_value.Value, max_bytes: usize, counts: *BooleanCounts) !?bool {
@@ -86,7 +91,7 @@ fn inspectMargin(a: std.mem.Allocator, tree: *const tree_mod.Tree, index: usize,
 
 /// Inspects one already-selected direct hp:tc, independent of cellAddr/span
 /// validity. No table-row or layout policy is duplicated here.
-pub fn inspectCell(a: std.mem.Allocator, tree: *const tree_mod.Tree, cell: usize, max_bytes: usize, report: *Report) !void {
+pub fn inspectCell(a: std.mem.Allocator, tree: *const tree_mod.Tree, cell: usize, max_bytes: usize, border_fills: ?*const header_resources.Table, report: *Report) !void {
     report.cells += 1;
     const size = table_xml.uniqueChild(tree, cell, "cellSz", &report.missing_size, &report.duplicate_size);
     const missing_before = report.missing_margin;
@@ -116,7 +121,11 @@ pub fn inspectCell(a: std.mem.Allocator, tree: *const tree_mod.Tree, cell: usize
         report.border_fill_present += 1;
         report.border_fill_zero += @intFromBool(id == 0);
         report.border_fill_sum = std.math.add(u64, report.border_fill_sum, id) catch return error.LimitExceeded;
-    } else report.border_fill_absent += 1;
+        if (border_fills) |table| _ = id_references.noteValue(&report.border_fill_references, id, table, tree.item_index);
+    } else {
+        report.border_fill_absent += 1;
+        if (border_fills) |table| _ = id_references.noteValue(&report.border_fill_references, null, table, tree.item_index);
+    }
     if (size) |index| try inspectSize(a, tree, index, max_bytes, report);
     if (margin) |index| try inspectMargin(a, tree, index, max_bytes, report);
 }

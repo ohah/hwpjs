@@ -519,7 +519,12 @@ fn surveyShard(shard: usize) !void {
                     try std.testing.expectEqual(@as(usize, 0), fields.missing_size + fields.duplicate_size + fields.missing_margin + fields.duplicate_margin + fields.has_margin.absent + fields.true_without_margin + fields.zero_size_field[0]);
                     try std.testing.expectEqual(fields.cells, fields.name_present + fields.name_absent);
                     try std.testing.expectEqual(fields.cells, fields.border_fill_present);
+                    try std.testing.expect(fields.border_fill_references_checked);
                     try std.testing.expectEqual(@as(usize, 0), fields.border_fill_absent + fields.border_fill_zero);
+                    try std.testing.expectEqual(fields.cells, fields.border_fill_references.present);
+                    try std.testing.expectEqual(fields.cells, fields.border_fill_references.resolved);
+                    try std.testing.expectEqual(@as(usize, 0), fields.border_fill_references.absent + fields.border_fill_references.missing_target + fields.border_fill_references.absent_table);
+                    try std.testing.expectEqual(@as(?u32, null), fields.border_fill_references.first_unresolved_id);
                     for (fields.flags) |flag| try std.testing.expectEqual(fields.cells, flag.true_value + flag.false_value);
                     for (fields.missing_size_field) |value| try std.testing.expectEqual(@as(usize, 0), value);
                     for (fields.missing_margin_field) |value| try std.testing.expectEqual(@as(usize, 0), value);

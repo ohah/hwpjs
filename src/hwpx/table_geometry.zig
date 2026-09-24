@@ -3,6 +3,7 @@ const tree_mod = @import("xml_part_tree.zig");
 const document_xml = @import("document_xml.zig");
 const table_fields = @import("table_xml_fields.zig");
 const cell_fields = @import("table_cell_fields.zig");
+const header_resources = @import("header_resources.zig");
 
 pub const Options = struct {
     max_tables: usize = 100_000,
@@ -40,10 +41,10 @@ pub const Report = struct {
     cell_fields: cell_fields.Report = .{},
 };
 
-fn inspectCell(a: std.mem.Allocator, tree: *const tree_mod.Tree, cell: usize, row_index: usize, rows: ?u32, cols: ?u32, occupied: ?[]u8, options: Options, report: *Report) !void {
+fn inspectCell(a: std.mem.Allocator, tree: *const tree_mod.Tree, cell: usize, row_index: usize, rows: ?u32, cols: ?u32, occupied: ?[]u8, options: Options, border_fills: ?*const header_resources.Table, report: *Report) !void {
     if (report.cells == options.max_cells) return error.LimitExceeded;
     report.cells += 1;
-    try cell_fields.inspectCell(a, tree, cell, options.max_attribute_bytes, &report.cell_fields);
+    try cell_fields.inspectCell(a, tree, cell, options.max_attribute_bytes, border_fills, &report.cell_fields);
     const addr = table_fields.uniqueChild(tree, cell, "cellAddr", &report.missing_address, &report.duplicate_address);
     const span = table_fields.uniqueChild(tree, cell, "cellSpan", &report.missing_span, &report.duplicate_span);
     const col = if (addr) |index| try table_fields.optionalUnsigned(a, tree, index, "colAddr", options.max_attribute_bytes) else null;
@@ -75,7 +76,7 @@ fn inspectCell(a: std.mem.Allocator, tree: *const tree_mod.Tree, cell: usize, ro
     }
 }
 
-fn inspectTable(a: std.mem.Allocator, tree: *const tree_mod.Tree, table: usize, options: Options, report: *Report) !void {
+fn inspectTable(a: std.mem.Allocator, tree: *const tree_mod.Tree, table: usize, options: Options, border_fills: ?*const header_resources.Table, report: *Report) !void {
     if (report.tables == options.max_tables) return error.LimitExceeded;
     report.tables += 1;
     const rows = try table_fields.optionalUnsigned(a, tree, table, "rowCnt", options.max_attribute_bytes);
@@ -104,7 +105,7 @@ fn inspectTable(a: std.mem.Allocator, tree: *const tree_mod.Tree, table: usize, 
         while (cell_cursor) |cell| : (cell_cursor = tree.elements[cell].next_sibling) {
             if (!table_fields.childIs(tree, cell, "tc")) continue;
             direct_cells += 1;
-            try inspectCell(a, tree, cell, direct_rows, rows, cols, occupied, options, report);
+            try inspectCell(a, tree, cell, direct_rows, rows, cols, occupied, options, border_fills, report);
         }
         if (direct_cells == 0) report.empty_rows += 1;
         direct_rows += 1;
@@ -120,11 +121,18 @@ fn inspectTable(a: std.mem.Allocator, tree: *const tree_mod.Tree, table: usize, 
 /// Scan all 2011 hp:tbl descendants (including nested tables) of each selected
 /// section; only direct hp:tr/hp:tc/hp:cellAddr/hp:cellSpan children define a grid.
 pub fn inspect(a: std.mem.Allocator, sections: []const tree_mod.Tree, options: Options) !Report {
+    return inspectWithBorderFills(a, sections, options, null);
+}
+
+/// The known-document path supplies its actual header inventory; standalone
+/// structural inspection deliberately leaves reference counts unpopulated.
+pub fn inspectWithBorderFills(a: std.mem.Allocator, sections: []const tree_mod.Tree, options: Options, border_fills: ?*const header_resources.Table) !Report {
     var report: Report = .{};
+    report.cell_fields.border_fill_references_checked = border_fills != null;
     for (sections) |*section| {
         if (section.part_kind != .section) return error.InvalidPartKind;
         for (section.elements, 0..) |element, index| {
-            if (element.is(document_xml.paragraph_uri, "tbl")) try inspectTable(a, section, index, options, &report);
+            if (element.is(document_xml.paragraph_uri, "tbl")) try inspectTable(a, section, index, options, border_fills, &report);
         }
         report.sections += 1;
     }

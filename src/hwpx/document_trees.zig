@@ -11,6 +11,7 @@ const run_topology = @import("run_topology.zig");
 const text_node = @import("text_node.zig");
 const header_begin_numbers = @import("header_begin_numbers.zig");
 const table_geometry = @import("table_geometry.zig");
+const header_resources = @import("header_resources.zig");
 
 pub const HeaderOptions = struct {
     protection: protection.Options = .{},
@@ -55,6 +56,10 @@ pub const Bundle = struct {
 
     pub fn inspectTableGeometry(self: *const Bundle, a: std.mem.Allocator, options: table_geometry.Options) !table_geometry.Report {
         return table_geometry.inspect(a, self.sections, options);
+    }
+
+    pub fn inspectTableGeometryWithBorderFills(self: *const Bundle, a: std.mem.Allocator, options: table_geometry.Options, border_fills: *const header_resources.Table) !table_geometry.Report {
+        return table_geometry.inspectWithBorderFills(a, self.sections, options, border_fills);
     }
 
     pub fn inspectBeginNumbers(self: *const Bundle, a: std.mem.Allocator, options: header_begin_numbers.Options) !header_begin_numbers.Report {

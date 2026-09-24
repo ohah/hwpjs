@@ -30,7 +30,7 @@ section 텍스트 보고서도 원문 양쪽 분기를 유지합니다. 활성 �
 
 직접 [인라인 변경 추적 태그 진단](hwpx-track-change-tags.md)은 두 text 노드 보고서의 `track_change_tags` 필드에 포함됩니다. 네 태그의 참조·짝과 변경 적용은 판정하지 않습니다.
 
-`Document.inspectKnown(allocator, options)`는 같은 패키지 문서에 현재 공개된 개별 검사를 순서대로 적용하고 `KnownReport`를 반환합니다. ZIP/OCF/OPF 관계는 선행 `inspectDocument`가 검사합니다. 이 API는 보호 manifest를 먼저 확인한 뒤 [모든 ZIP 엔트리 바이트 무결성](hwpx-payload-integrity.md), [OPF 선언 XML 전수 문법 검사](hwpx-manifest-xml.md), version XML, header·spine 구조, header 리소스 ID, section/헤더 서식 참조, 언어별 글꼴, 번호·글머리표, 이진 리소스 연결, 차트 경로·캐시·수식 구조, section 텍스트 이벤트, 문단·run 메타 속성, run·text 자식 진단, header 시작 번호, [표 격자 구조](hwpx-table-geometry.md)와 그 안의 [셀 크기·여백 원값](hwpx-table-cell-fields.md) 보고서를 묶습니다. 같은 이름의 파서나 참조 규칙을 새로 만들지 않고 선택된 XML 트리를 재사용합니다.
+`Document.inspectKnown(allocator, options)`는 같은 패키지 문서에 현재 공개된 개별 검사를 순서대로 적용하고 `KnownReport`를 반환합니다. ZIP/OCF/OPF 관계는 선행 `inspectDocument`가 검사합니다. 이 API는 보호 manifest를 먼저 확인한 뒤 [모든 ZIP 엔트리 바이트 무결성](hwpx-payload-integrity.md), [OPF 선언 XML 전수 문법 검사](hwpx-manifest-xml.md), version XML, header·spine 구조, header 리소스 ID, section/헤더 서식 참조, 언어별 글꼴, 번호·글머리표, 이진 리소스 연결, 차트 경로·캐시·수식 구조, section 텍스트 이벤트, 문단·run 메타 속성, run·text 자식 진단, header 시작 번호, [표 격자 구조](hwpx-table-geometry.md)와 그 안의 [셀 크기·여백·속성·테두리 ID 참조](hwpx-table-cell-fields.md) 보고서를 묶습니다. 같은 이름의 파서나 참조 규칙을 새로 만들지 않고 선택된 XML 트리를 재사용합니다.
 
 반환 보고서는 소유 문자열·배열을 `deinit(allocator)`으로 해제합니다. 원본 `Document`·ZIP 바이트를 해제해도 보고서의 소유 값은 유효하지만 manifest item 인덱스를 파일 경로로 역참조하려면 원본 문서가 필요합니다. 암호화된 항목이 보호 manifest에 있으면 `EncryptedDocument`로 멈추며, 암호화 분류만 필요하면 기존 `inspectProtection`을 사용합니다. 구조·서식 참조·차트 등의 미해결 항목은 해당 보고서의 진단값으로 남습니다. `inspectKnown`의 성공은 이 진단값이 모두 0이거나 **전체 문서가 유효하다는 뜻이 아닙니다.**
 
