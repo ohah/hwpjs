@@ -10,6 +10,8 @@
 
 보고서의 `text_bytes`는 `hp:t` 하위의 UTF-8 내용 합계이고, `empty_text_elements`는 문자 내용이 0바이트인 `t` 수입니다. 내부 제어 요소가 있어도 문자 내용이 없으면 여기서는 비어 있다고 셉니다. 기본 한도는 section XML 하나 128 MiB·합계 256 MiB, `t` 200만 개·내부 요소 200만 개·본문 UTF-8 64 MiB이며 XML 공통 문법·깊이 한도도 유지합니다. 이 수치는 가시 문자 수나 렌더링 결과가 아닙니다. 조건부 분기 선택, 표·도형 내부 텍스트의 화면상 순서, 필드 의미, 다른 버전 namespace, 원문 왕복·저장은 후속 검증 대상입니다.
 
+후속 [run 위치·자식 진단](hwpx-run-topology.md)은 section 텍스트 이벤트를 바꾸지 않고, 같은 `hp:run`의 직접 부모와 직접 자식·`secPr` 위치를 별도 보고서로 관측합니다. 두 보고서의 run 수·비직접 run 수는 실파일 검증에서 대조합니다.
+
 ## 검증
 
 단위·통합 테스트는 참조·CDATA와 제어 요소 사이의 순서, 속성 접근의 콜백 수명, 8종 분류, namespace 위장, 미분류·중첩 요소, 중첩 문단 순번, 정확한 한도, 콜백 오류 뒤 재시도, 전 할당 실패 경로를 확인합니다. 실파일 선택 조사는 `zig test src/hwpx_structure_survey.zig -O ReleaseFast --test-filter 'HWPX corpus section text and inline token read-only survey'`로 실행합니다. 독립 oracle `python3 tools/hwpx-section-text-oracle.py`는 Python 표준 ZIP/XML 파서로 OPF spine을 따라가며 제품 코드를 사용하지 않습니다. 두 조사의 corpus 의존성은 [개발·검증 명령](development-commands.md)을 따릅니다.

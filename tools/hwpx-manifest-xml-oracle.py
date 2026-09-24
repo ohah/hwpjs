@@ -29,6 +29,13 @@ SUB_LIST_FIELDS = ("id", "textDirection", "lineWrap", "vertAlign", "linkListIDRe
 SUB_LIST_ENUMS = {"textDirection": ("HORIZONTAL", "VERTICAL", "VERTICALALL"),
                   "lineWrap": ("BREAK", "SQUEEZE", "KEEP"),
                   "vertAlign": ("TOP", "CENTER", "BOTTOM")}
+RUN_MODEL_CHILDREN = frozenset((
+    "secPr", "ctrl", "t", "tbl", "pic", "ole", "container", "equation",
+    "line", "rect", "ellipse", "arc", "polygon", "curve", "connectLine",
+    "textart", "compose", "dutmal", "btn", "radioBtn", "checkBtn",
+    "comboBox", "listBox", "edit", "scrollBar", "video", "markpenBegin",
+    "markpenEnd", "chart", "unknownObj",
+))
 MAX_PACKAGE_BYTES = 25_000_000
 MAX_ENTRY_BYTES = 128 * 1024 * 1024
 MAX_TOTAL_BYTES = 256 * 1024 * 1024
@@ -55,6 +62,11 @@ def empty():
                 master_style_ref_resolved=[0, 0, 0], master_style_ref_missing=[0, 0, 0],
                 master_style_ref_absent_table=[0, 0, 0],
                 section_run_metadata=[0] * 7, master_run_metadata=[0] * 7,
+                section_run_non_direct=0, master_run_non_direct=0,
+                section_run_secpr_duplicate=0, master_run_secpr_duplicate=0,
+                section_run_secpr_non_first=0, master_run_secpr_non_first=0,
+                section_run_children={}, master_run_children={},
+                section_run_child_classes=[0] * 5, master_run_child_classes=[0] * 5,
                 master_page_number_sum=0,
                 master_type_counts=[0] * len(MASTER_KINDS),
                 master_manifest_id_mismatch=0, master_refs=0,
@@ -79,6 +91,23 @@ def count_run_metadata(counts, node):
     counts[4] += char is None and para is not None
     counts[5] += char is not None and para is not None and int(char) == int(para)
     counts[6] += char is not None and para is not None and int(char) != int(para)
+
+
+def count_run_structure(shard, prefix, run, parent):
+    shard[prefix + "_run_non_direct"] += parent.tag != PARA + "p"
+    children = list(run)
+    positions = [index for index, child in enumerate(children) if child.tag == PARA + "secPr"]
+    shard[prefix + "_run_secpr_duplicate"] += len(positions) > 1
+    shard[prefix + "_run_secpr_non_first"] += bool(positions) and positions[0] != 0
+    names = shard[prefix + "_run_children"]
+    classes = shard[prefix + "_run_child_classes"]
+    for child in children:
+        names[child.tag] = names.get(child.tag, 0) + 1
+        if child.tag.startswith(PARA):
+            local = child.tag[len(PARA):]
+            classes[0 if local in RUN_MODEL_CHILDREN else 1 if local == "bookmark" else 2 if local == "switch" else 3] += 1
+        else:
+            classes[4] += 1
 
 
 def main():
@@ -210,6 +239,7 @@ def main():
                                         shard["master_style_non_direct_runs"] += parent.tag != PARA + "p"
                                         master_style_values[2].append(node.get("charPrIDRef"))
                                         count_run_metadata(shard["master_run_metadata"], node)
+                                        count_run_structure(shard, "master", node, parent)
                                     for nested in node:
                                         visit_style(nested, node)
                                 for direct in child:
@@ -217,8 +247,11 @@ def main():
                         if name.startswith("Contents/section") and name.endswith(".xml"):
                             master_refs.extend(node.get("idRef") for node in document.iter(PARA + "masterPage"))
                             shard["master_count_declarations"] += sum("masterPageCnt" in node.attrib for node in document.iter(PARA + "secPr"))
-                            for run in document.iter(PARA + "run"):
-                                count_run_metadata(shard["section_run_metadata"], run)
+                            for parent in document.iter():
+                                for run in parent:
+                                    if run.tag == PARA + "run":
+                                        count_run_metadata(shard["section_run_metadata"], run)
+                                        count_run_structure(shard, "section", run, parent)
                     for ref in master_refs:
                         shard["master_refs"] += 1
                         if not ref:
@@ -245,9 +278,15 @@ def main():
                     shard["accepted"] += 1
             except BadZipFile:
                 shard["rejected_zip"] += 1
-    total = {key: ([sum(shard[key][i] for shard in shards) for i in range(len(shards[0][key]))]
-                   if isinstance(shards[0][key], list) else sum(shard[key] for shard in shards))
-             for key in shards[0]}
+    total = {}
+    for key, value in shards[0].items():
+        if isinstance(value, list):
+            total[key] = [sum(shard[key][i] for shard in shards) for i in range(len(value))]
+        elif isinstance(value, dict):
+            names = set().union(*(shard[key] for shard in shards))
+            total[key] = {name: sum(shard[key].get(name, 0) for shard in shards) for name in sorted(names)}
+        else:
+            total[key] = sum(shard[key] for shard in shards)
     print(json.dumps({"total": total, "shards": shards}, sort_keys=True))
 
 

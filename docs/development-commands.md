@@ -50,6 +50,8 @@ HWPX 전용 테스트는 `zig test src/root.zig --test-filter HWPX`로 실행합
 
 [run 변경 추적 ID 원값](hwpx-run-metadata.md)의 합성 section·마스터페이지 검사는 `zig test src/root.zig --test-filter 'HWPX run metadata'`로 실행합니다. 위의 8개 선택 shard는 독립 `python3 tools/hwpx-manifest-xml-oracle.py`의 `section_run_metadata`·`master_run_metadata`와 대조합니다. 실파일에서는 두 속성이 전부 부재하므로 명시적 값 분기는 합성 테스트만 검증합니다.
 
+[run 위치·자식 진단](hwpx-run-topology.md)의 합성 검사는 `zig test src/root.zig --test-filter 'HWPX run topology'`로 실행합니다. 같은 8개 선택 shard에서 독립 Python oracle의 `*_run_non_direct`, `*_run_secpr_*`, `*_run_child_classes`와 대조하며, 공개 모델 미등록 요소를 오류로 강제하지 않습니다.
+
 [HWPX section 직접 문자 콘텐츠](hwpx-section-content.md)의 단위 테스트도 위의 `HWPX section tree` 필터에 포함됩니다. 같은 8개 선택 shard에서 `section_tree_shards[].content_digest_sum`을 독립 Python Expat의 직접 콘텐츠 합계와 대조합니다. 이 합계는 요소별 정규화 문자 값의 검증이며 개별 콜백 경계의 동치 주장은 아닙니다.
 
 요소와 문자를 섞어 전달하는 `visitOrdered`도 같은 테스트·shard 명령으로 검사합니다. 독립 Expat의 경계별 문자·시작/끝 순서 해시는 `section_tree_shards[].ordered_digest_sum`으로 대조하며, 빈 태그는 시작+끝으로 정규화합니다. 순서 해시의 반례 테스트는 `zig test src/hwpx_structure_survey.zig -O ReleaseFast --test-filter 'HWPX ordered digest detects moved text'`로 실행합니다. 주석·처리 지시문과 콜백 분할은 포함하지 않습니다.

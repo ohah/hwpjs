@@ -7,6 +7,7 @@ const header_tree = @import("header_tree.zig");
 const section_tree = @import("section_tree.zig");
 const paragraph_metadata = @import("paragraph_metadata.zig");
 const run_metadata = @import("run_metadata.zig");
+const run_topology = @import("run_topology.zig");
 const header_begin_numbers = @import("header_begin_numbers.zig");
 
 pub const HeaderOptions = struct {
@@ -40,6 +41,10 @@ pub const Bundle = struct {
 
     pub fn inspectRunMetadata(self: *const Bundle, a: std.mem.Allocator, options: run_metadata.Options) !run_metadata.Report {
         return run_metadata.inspect(a, self.sections, options);
+    }
+
+    pub fn inspectRunTopology(self: *const Bundle, a: std.mem.Allocator, options: run_topology.Options) !run_topology.Report {
+        return run_topology.inspectSections(a, self.sections, options);
     }
 
     pub fn inspectBeginNumbers(self: *const Bundle, a: std.mem.Allocator, options: header_begin_numbers.Options) !header_begin_numbers.Report {

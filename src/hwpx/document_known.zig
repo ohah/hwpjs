@@ -13,6 +13,7 @@ const chart_refs = @import("chart_parts.zig");
 const section_text = @import("section_text.zig");
 const paragraph_metadata = @import("paragraph_metadata.zig");
 const run_metadata = @import("run_metadata.zig");
+const run_topology = @import("run_topology.zig");
 const begin_numbers = @import("header_begin_numbers.zig");
 const payload_integrity = @import("payload_integrity.zig");
 const manifest_xml = @import("manifest_xml.zig");
@@ -30,6 +31,7 @@ pub const Report = struct {
     settings: settings.Report,
     master_pages: masterpage_references.Report,
     master_page_style_references: masterpage_style_references.Report,
+    master_page_run_topology: run_topology.Report,
     structure: structure.Report,
     resources: resources.Report,
     section_references: section_refs.Report,
@@ -42,6 +44,7 @@ pub const Report = struct {
     section_text: section_text.Report,
     paragraph_metadata: paragraph_metadata.Report,
     run_metadata: run_metadata.Report,
+    run_topology: run_topology.Report,
     begin_numbers: begin_numbers.Report,
 
     pub fn deinit(self: *Report, a: std.mem.Allocator) void {
@@ -82,6 +85,7 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
     var resource_report = try document.inspectHeaderResources(a, options.header_resources);
     errdefer resource_report.deinit(a);
     const master_page_style_report = try document.inspectMasterPageStyleReferences(a, .{ .master_pages = options.master_pages, .header_resources = options.header_resources, .references = options.master_page_style_references });
+    const master_page_run_topology_report = try document.inspectMasterPageRunTopology(a, .{ .master_pages = options.master_pages, .topology = options.master_page_run_topology });
     const section_ref_report = try document.inspectReferences(a, options.section_references);
     const header_ref_report = try document.inspectHeaderReferences(a, options.header_references);
     var fonts = try document.inspectFontReferences(a, options.font_references);
@@ -99,7 +103,8 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
         errdefer begin_report.deinit(a);
         const paragraph_report = try trees.inspectParagraphMetadata(a, options.paragraph_metadata);
         const run_report = try trees.inspectRunMetadata(a, options.run_metadata);
-        break :blk .{ .begin = begin_report, .paragraph = paragraph_report, .run = run_report };
+        const topology_report = try trees.inspectRunTopology(a, options.run_topology);
+        break :blk .{ .begin = begin_report, .paragraph = paragraph_report, .run = run_report, .topology = topology_report };
     };
     return .{
         .version = version,
@@ -109,6 +114,7 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
         .settings = settings_report,
         .master_pages = master_page_report,
         .master_page_style_references = master_page_style_report,
+        .master_page_run_topology = master_page_run_topology_report,
         .structure = structure_report,
         .resources = resource_report,
         .section_references = section_ref_report,
@@ -121,6 +127,7 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
         .section_text = text_report,
         .paragraph_metadata = semantic.paragraph,
         .run_metadata = semantic.run,
+        .run_topology = semantic.topology,
         .begin_numbers = semantic.begin,
     };
 }

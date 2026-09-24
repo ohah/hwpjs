@@ -13,6 +13,28 @@ fn addRunCounts(total: *[7]usize, values: [7]usize) void {
     for (values, 0..) |value, index| total[index] += value;
 }
 
+const TopologyStats = struct {
+    runs: usize = 0,
+    non_direct: usize = 0,
+    sec_pr: usize = 0,
+    duplicates: usize = 0,
+    late: usize = 0,
+    classes: [5]usize = @splat(0),
+
+    fn from(report: package.RunTopologyReport) TopologyStats {
+        return .{ .runs = report.runs, .non_direct = report.non_direct_runs, .sec_pr = report.sec_pr_children, .duplicates = report.duplicate_sec_pr_runs, .late = report.late_sec_pr_runs, .classes = report.child_classes };
+    }
+
+    fn add(self: *TopologyStats, other: TopologyStats) void {
+        self.runs += other.runs;
+        self.non_direct += other.non_direct;
+        self.sec_pr += other.sec_pr;
+        self.duplicates += other.duplicates;
+        self.late += other.late;
+        for (other.classes, 0..) |count, index| self.classes[index] += count;
+    }
+};
+
 const MasterStyleStats = struct {
     paragraphs: usize = 0,
     non_direct_paragraphs: usize = 0,
@@ -75,6 +97,8 @@ const Statistics = struct {
     master_style: MasterStyleStats,
     section_run_metadata: [7]usize,
     master_run_metadata: [7]usize,
+    section_run_topology: TopologyStats,
+    master_run_topology: TopologyStats,
     master_page_number_sum: u64,
     master_page_count_declarations: usize,
     master_page_type_counts: [5]usize,
@@ -184,6 +208,15 @@ fn inspectOne(bytes: []const u8) !Outcome {
     }
     try std.testing.expectEqual(master_paragraphs, master_style.paragraphs);
     try std.testing.expectEqual(master_style.runs, master_run_metadata[0]);
+    try std.testing.expectEqual(master_style.runs, known.master_page_run_topology.runs);
+    try std.testing.expectEqual(masterpages, known.master_page_run_topology.parts);
+    try std.testing.expectEqual(master_sub_lists, known.master_page_run_topology.sub_lists);
+    var section_child_total: usize = 0;
+    var master_child_total: usize = 0;
+    for (known.run_topology.child_classes) |value| section_child_total += value;
+    for (known.master_page_run_topology.child_classes) |value| master_child_total += value;
+    try std.testing.expectEqual(section_child_total, known.run_topology.direct_children);
+    try std.testing.expectEqual(master_child_total, known.master_page_run_topology.direct_children);
     try std.testing.expectEqual(@as(usize, 0), known.master_pages.parts.manifest_id_mismatches);
     try std.testing.expectEqual(@as(usize, 0), known.master_pages.parts.unsupported_types);
     try std.testing.expectEqual(@as(usize, 0), known.master_pages.missing_target);
@@ -200,6 +233,9 @@ fn inspectOne(bytes: []const u8) !Outcome {
     try std.testing.expectEqual(count, known.run_metadata.sections);
     try std.testing.expectEqual(known.section_text.paragraphs, known.paragraph_metadata.paragraphs);
     try std.testing.expectEqual(known.section_references.runs, known.run_metadata.runs);
+    try std.testing.expectEqual(known.run_metadata.runs, known.run_topology.runs);
+    try std.testing.expectEqual(known.section_text.non_direct_runs, known.run_topology.non_direct_runs);
+    try std.testing.expectEqual(count, known.run_topology.parts);
     return .{ .accepted = .{
         .sections = count,
         .paragraphs = known.paragraph_metadata.paragraphs,
@@ -236,6 +272,8 @@ fn inspectOne(bytes: []const u8) !Outcome {
         .master_style = master_style,
         .section_run_metadata = runMetadataCounts(known.run_metadata),
         .master_run_metadata = master_run_metadata,
+        .section_run_topology = TopologyStats.from(known.run_topology),
+        .master_run_topology = TopologyStats.from(known.master_page_run_topology),
         .master_page_number_sum = master_page_number_sum,
         .master_page_count_declarations = known.master_pages.count_declarations.len,
         .master_page_type_counts = master_type_counts,
@@ -283,6 +321,8 @@ fn surveyShard(shard: usize) !void {
     var master_style: MasterStyleStats = .{};
     var section_run_metadata: [7]usize = @splat(0);
     var master_run_metadata: [7]usize = @splat(0);
+    var section_run_topology: TopologyStats = .{};
+    var master_run_topology: TopologyStats = .{};
     var master_page_number_sum: u64 = 0;
     var master_page_count_declarations: usize = 0;
     var master_page_type_counts: [5]usize = @splat(0);
@@ -341,6 +381,8 @@ fn surveyShard(shard: usize) !void {
                     master_style.add(stats.master_style);
                     addRunCounts(&section_run_metadata, stats.section_run_metadata);
                     addRunCounts(&master_run_metadata, stats.master_run_metadata);
+                    section_run_topology.add(stats.section_run_topology);
+                    master_run_topology.add(stats.master_run_topology);
                     master_page_number_sum += stats.master_page_number_sum;
                     master_page_count_declarations += stats.master_page_count_declarations;
                     for (stats.master_page_type_counts, 0..) |value, i| master_page_type_counts[i] += value;
@@ -396,6 +438,18 @@ fn surveyShard(shard: usize) !void {
     try std.testing.expectEqualSlices(usize, &expected.master_style_ref_absent_table[shard], &master_style.absent_table);
     try std.testing.expectEqualSlices(usize, &expected.section_run_metadata[shard], &section_run_metadata);
     try std.testing.expectEqualSlices(usize, &expected.master_run_metadata[shard], &master_run_metadata);
+    try std.testing.expectEqual(expected.section_run_metadata[shard][0], section_run_topology.runs);
+    try std.testing.expectEqual(expected.master_run_metadata[shard][0], master_run_topology.runs);
+    try std.testing.expectEqual(expected.zero_run_topology[shard], section_run_topology.non_direct);
+    try std.testing.expectEqual(expected.zero_run_topology[shard], master_run_topology.non_direct);
+    try std.testing.expectEqual(expected.zero_run_topology[shard], section_run_topology.duplicates);
+    try std.testing.expectEqual(expected.zero_run_topology[shard], master_run_topology.duplicates);
+    try std.testing.expectEqual(expected.section_run_topology_sec_pr[shard], section_run_topology.sec_pr);
+    try std.testing.expectEqual(expected.zero_run_topology[shard], master_run_topology.sec_pr);
+    try std.testing.expectEqual(expected.section_run_topology_late_sec_pr[shard], section_run_topology.late);
+    try std.testing.expectEqual(expected.zero_run_topology[shard], master_run_topology.late);
+    try std.testing.expectEqualSlices(usize, &expected.section_run_topology_classes[shard], &section_run_topology.classes);
+    try std.testing.expectEqualSlices(usize, &expected.master_run_topology_classes[shard], &master_run_topology.classes);
     try std.testing.expectEqual(expected.master_page_number_sum[shard], master_page_number_sum);
     try std.testing.expectEqual(expected.master_page_count_declarations[shard], master_page_count_declarations);
     try std.testing.expectEqualSlices(usize, &expected.master_page_type_counts[shard], &master_page_type_counts);

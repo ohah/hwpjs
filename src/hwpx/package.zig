@@ -19,6 +19,7 @@ const section_tree = @import("section_tree.zig");
 const document_trees = @import("document_trees.zig");
 const paragraph_metadata = @import("paragraph_metadata.zig");
 const run_metadata = @import("run_metadata.zig");
+const run_topology = @import("run_topology.zig");
 const header_begin_numbers = @import("header_begin_numbers.zig");
 const document_known = @import("document_known.zig");
 const payload_integrity = @import("payload_integrity.zig");
@@ -108,6 +109,10 @@ pub const ParagraphMetadataOptions = paragraph_metadata.Options;
 pub const ParagraphMetadataReport = paragraph_metadata.Report;
 pub const RunMetadataOptions = run_metadata.Options;
 pub const RunMetadataReport = run_metadata.Report;
+pub const RunTopologyOptions = run_topology.Options;
+pub const RunTopologyReport = run_topology.Report;
+pub const RunTopologyChildClass = run_topology.ChildClass;
+pub const RunTopologyLocation = run_topology.Location;
 pub const BeginNumberOptions = header_begin_numbers.Options;
 pub const BeginNumberReport = header_begin_numbers.Report;
 pub const BeginNumberField = header_begin_numbers.Field;
@@ -133,6 +138,10 @@ pub const MasterPageStyleReferenceOptions = struct {
     references: masterpage_style_references.Options = .{},
 };
 pub const MasterPageStyleReferenceReport = masterpage_style_references.Report;
+pub const MasterPageRunTopologyOptions = struct {
+    master_pages: MasterPageOptions = .{},
+    topology: run_topology.MasterOptions = .{},
+};
 pub const KnownOptions = struct {
     version: VersionOptions = .{},
     protection: ProtectionOptions = .{},
@@ -141,6 +150,7 @@ pub const KnownOptions = struct {
     settings: SettingsOptions = .{},
     master_pages: MasterPageOptions = .{},
     master_page_style_references: masterpage_style_references.Options = .{},
+    master_page_run_topology: run_topology.MasterOptions = .{},
     structure: StructureOptions = .{},
     header_resources: HeaderResourceOptions = .{},
     section_references: ReferenceOptions = .{},
@@ -153,6 +163,7 @@ pub const KnownOptions = struct {
     trees: XmlTreesOptions = .{},
     paragraph_metadata: ParagraphMetadataOptions = .{},
     run_metadata: RunMetadataOptions = .{},
+    run_topology: RunTopologyOptions = .{},
     begin_numbers: BeginNumberOptions = .{},
 };
 pub const DocumentOptions = struct {
@@ -211,6 +222,14 @@ pub const Document = struct {
         var resources = try self.inspectHeaderResources(a, options.header_resources);
         defer resources.deinit(a);
         return masterpage_style_references.inspect(a, self.archive, pages.parts.parts, &resources, options.references);
+    }
+
+    /// Observes run parent/child shape inside selected master-page subLists.
+    /// Late secPr and model-unlisted children remain diagnostics, not errors.
+    pub fn inspectMasterPageRunTopology(self: *const Document, a: std.mem.Allocator, options: MasterPageRunTopologyOptions) !RunTopologyReport {
+        var pages = try self.inspectMasterPages(a, options.master_pages);
+        defer pages.deinit(a);
+        return run_topology.inspectMasterPages(a, self.archive, pages.parts.parts, options.topology);
     }
 
     /// Runs all currently exposed HWPX inspections on this document. A

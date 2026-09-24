@@ -46,6 +46,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [Run 변경 추적 ID 원값](hwpx-run-metadata.md)은 section과 마스터페이지에서 `charTcId`·대체 `paraTcId`를 같은 필드 검사기로 관측합니다. 부재·0·양쪽 값 충돌을 보존하며 변경 추적의 의미나 기본값 결정은 후속 계층에 남깁니다.
 
+[Run 위치·직접 자식 진단](hwpx-run-topology.md)은 같은 두 범위의 부모·자식 관계와 `secPr` 위치를 별도 순회에서 관측합니다. 2021 스키마 순서를 2011 문서에 강제하지 않고 미등록 자식을 진단으로 보존합니다.
+
 [Section 직접 문자 콘텐츠·순서형 이벤트](hwpx-section-content.md)는 소유 원문을 다시 파싱해 문자·CDATA 조각을 인덱스의 정확한 부모 요소에 연결하고, 요소 경계와 문자를 원래 순서로 전달합니다. 의미 계층은 이 순회와 원문·요소 인덱스를 재사용하며 표시 문장이나 편집 모델을 임의 조립하지 않습니다.
 
 이미지/XML 외부에서도 재사용할 수 있는 언어 태그 규칙은 `src/text/`에 둡니다. [BCP 47 문법 검사](bcp47-syntax.md)와 [IANA 등록 검증](bcp47-registry.md)은 다른 단계입니다. [PNG iTXt](png-international-text.md)는 등록 검사와 UTF-8·압축 검사를 조립하며 extension 의미 보류를 별도로 보고합니다.

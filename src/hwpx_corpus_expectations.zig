@@ -81,6 +81,22 @@ pub const master_run_metadata = [_][7]usize{
     .{ 0, 0, 0, 0, 0, 0, 0 },     .{ 0, 0, 0, 0, 0, 0, 0 },
     .{ 29, 29, 0, 0, 0, 0, 0 },   .{ 158, 158, 0, 0, 0, 0, 0 },
 };
+// Run topology: [Hancom model, bookmark, switch, other 2011, foreign].
+pub const section_run_topology_classes = [_][5]usize{
+    .{ 38992, 2, 12, 0, 0 }, .{ 32773, 2, 14, 0, 0 },
+    .{ 28449, 1, 15, 0, 0 }, .{ 13453, 1, 9, 0, 0 },
+    .{ 45048, 1, 12, 0, 0 }, .{ 37090, 0, 10, 0, 0 },
+    .{ 27676, 2, 12, 0, 0 }, .{ 46017, 0, 9, 0, 0 },
+};
+pub const master_run_topology_classes = [_][5]usize{
+    .{ 123, 0, 0, 0, 0 }, .{ 61, 0, 0, 0, 0 },
+    .{ 198, 0, 0, 0, 0 }, .{ 0, 0, 0, 0, 0 },
+    .{ 0, 0, 0, 0, 0 },   .{ 0, 0, 0, 0, 0 },
+    .{ 43, 0, 0, 0, 0 },  .{ 208, 0, 0, 0, 0 },
+};
+pub const section_run_topology_sec_pr = [_]usize{ 75, 72, 72, 55, 64, 62, 63, 92 };
+pub const section_run_topology_late_sec_pr = [_]usize{ 3, 3, 4, 1, 3, 3, 0, 15 };
+pub const zero_run_topology = [_]usize{0} ** 8;
 pub const master_page_number_sum = [_]u64{ 0, 0, 4, 0, 0, 0, 0, 0 };
 pub const master_page_count_declarations = [_]usize{ 75, 72, 72, 55, 64, 62, 63, 92 };
 pub const master_page_type_counts = [_][5]usize{
