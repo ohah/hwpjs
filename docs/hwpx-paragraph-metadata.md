@@ -12,6 +12,8 @@
 
 후속 [마스터페이지 서식 참조](hwpx-master-style-references.md)는 같은 `hp:p`·`hp:run`의 세 ID를 별도 header 색인과 연결합니다. 메타 속성 보고서와 ID 연결 보고서는 독립적으로 유지합니다.
 
+`hp:run`의 `charTcId`와 대체 `paraTcId` 원값은 [run 메타 속성](hwpx-run-metadata.md)의 별도 계약입니다. 이 문서의 `hp:p/@paraTcId`와 run의 대체 표기를 한 필드로 합치지 않습니다.
+
 ## 검증
 
 합성 테스트는 명시적 0·부재·큰 정수·`-0`, XML 문자 참조 Boolean, 다른 namespace 동명 요소, 손상된 정수·Boolean, 문단 수 한도, 모든 할당 실패와 ReleaseFast 오류 경로 해제를 검사합니다. 선택 실파일 조사는 [문서 XML 트리 조립](hwpx-document-trees.md)의 8개 shard 명령에서 독립 Python ElementTree 집계와 문단 수·명시적 0·부재·참 Boolean을 대조합니다. 이 실파일 집계는 구조·속성값의 확인이며 전체 문서 의미 검증의 증거가 아닙니다.

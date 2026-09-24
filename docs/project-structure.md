@@ -32,6 +32,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
   `settings.xml`의 Caret·config 원값과 지원된 숫자/Boolean 검사는 [settings](hwpx-settings.md)가 소유합니다.
   마스터페이지 루트 원값과 section의 `idRef` 연결은 [masterpage](hwpx-master-pages.md)가 소유하며, 직접 `subList`의 공통 속성은 [ParaListType](hwpx-para-list.md)이, 그 아래 문단 메타 값은 [공통 문단 규칙](hwpx-paragraph-metadata.md)이 소유합니다.
   마스터페이지 문단·run의 header ID 연결은 [마스터페이지 서식 참조](hwpx-master-style-references.md)가 소유하며, section과 공통 속성→테이블 판정을 재사용합니다.
+  section·마스터페이지 run의 변경 추적 ID 원값은 [run 메타 속성](hwpx-run-metadata.md)이 소유합니다.
   기존 검사들을 같은 문서에 적용한 소유 보고서·정리 순서는 [현재 지원 검사 묶음](hwpx-known-inspections.md)이 소유합니다.
 - `src/cfb/`: 읽기·검증·저장을 책임별로 분리한 CFB 코어.
 - `src/hwp5/`: 헤더 원본·버전·스트림 정책·압축 trailer·레코드 framing을 분리합니다. 현재 계약·검증 범위는 [HWP5 모듈 계약](hwp5-modules.md), 과거 이력은 [구현/검증 기록](hwp5-foundation.md)을 참조합니다.

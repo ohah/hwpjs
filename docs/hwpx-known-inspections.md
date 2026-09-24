@@ -10,7 +10,9 @@
 
 [마스터페이지 문단·run 서식 참조](hwpx-master-style-references.md)는 같은 header 리소스 ID 판정을 마스터페이지의 직접 `subList` 후손에 적용합니다. 미해결 대상은 진단이며 표시·편집 완료 판정이 아닙니다.
 
-`Document.inspectKnown(allocator, options)`는 같은 패키지 문서에 현재 공개된 개별 검사를 순서대로 적용하고 `KnownReport`를 반환합니다. ZIP/OCF/OPF 관계는 선행 `inspectDocument`가 검사합니다. 이 API는 보호 manifest를 먼저 확인한 뒤 [모든 ZIP 엔트리 바이트 무결성](hwpx-payload-integrity.md), [OPF 선언 XML 전수 문법 검사](hwpx-manifest-xml.md), version XML, header·spine 구조, header 리소스 ID, section/헤더 서식 참조, 언어별 글꼴, 번호·글머리표, 이진 리소스 연결, 차트 경로·캐시·수식 구조, section 텍스트 이벤트, 문단 메타 속성, header 시작 번호의 기존 보고서를 묶습니다. 같은 이름의 파서나 참조 규칙을 새로 만들지 않고 `Document`의 각 진입점을 호출합니다.
+[run 변경 추적 ID 원값](hwpx-run-metadata.md)은 section 결과를 별도 보고서로, 마스터페이지 결과를 각 `subList`에 남깁니다. 대체 표기나 충돌을 관측할 뿐 변경 추적 의미를 적용하지 않습니다.
+
+`Document.inspectKnown(allocator, options)`는 같은 패키지 문서에 현재 공개된 개별 검사를 순서대로 적용하고 `KnownReport`를 반환합니다. ZIP/OCF/OPF 관계는 선행 `inspectDocument`가 검사합니다. 이 API는 보호 manifest를 먼저 확인한 뒤 [모든 ZIP 엔트리 바이트 무결성](hwpx-payload-integrity.md), [OPF 선언 XML 전수 문법 검사](hwpx-manifest-xml.md), version XML, header·spine 구조, header 리소스 ID, section/헤더 서식 참조, 언어별 글꼴, 번호·글머리표, 이진 리소스 연결, 차트 경로·캐시·수식 구조, section 텍스트 이벤트, 문단·run 메타 속성, header 시작 번호의 기존 보고서를 묶습니다. 같은 이름의 파서나 참조 규칙을 새로 만들지 않고 `Document`의 각 진입점을 호출합니다.
 
 반환 보고서는 소유 문자열·배열을 `deinit(allocator)`으로 해제합니다. 원본 `Document`·ZIP 바이트를 해제해도 보고서의 소유 값은 유효하지만 manifest item 인덱스를 파일 경로로 역참조하려면 원본 문서가 필요합니다. 암호화된 항목이 보호 manifest에 있으면 `EncryptedDocument`로 멈추며, 암호화 분류만 필요하면 기존 `inspectProtection`을 사용합니다. 구조·서식 참조·차트 등의 미해결 항목은 해당 보고서의 진단값으로 남습니다. `inspectKnown`의 성공은 이 진단값이 모두 0이거나 **전체 문서가 유효하다는 뜻이 아닙니다.**
 
@@ -45,3 +47,5 @@
 다음 [마스터페이지 문단 메타 값](hwpx-paragraph-metadata.md) 재사용 단계에서는 전체 Debug 테스트 2,226개와 선택 실파일 8개 shard가 통과했습니다. 직접·중첩 문단의 메타 값 적합성만 더했고, 서식 참조·본문 의미·쪽 배치를 검증 완료로 바꾸지 않았습니다.
 
 이번 [마스터페이지 문단·run 서식 참조](hwpx-master-style-references.md) 단계에서는 전체 Debug 테스트 2,231개와 선택 실파일 8개 shard가 통과했습니다. section과 속성→header ID 판정을 공유하고 마스터페이지의 직접 `subList` 아래에만 적용했습니다. 이 결과는 서식 참조 연결에 한정되며 본문 의미·쪽 배치·편집/저장 완료를 뜻하지 않습니다.
+
+후속 [run 변경 추적 ID 원값](hwpx-run-metadata.md) 단계에서는 전체 Debug 테스트 2,237개와 선택 실파일 8개 shard가 통과했습니다. section과 마스터페이지의 동일 필드 판정을 공유하지만 corpus에서는 해당 속성 출현이 0건이므로, 명시적 값·충돌 정책은 합성 테스트만 뒷받침합니다. 변경 추적 의미·부모/자식 구조·편집/저장은 미검증입니다.

@@ -67,6 +67,20 @@ pub const master_style_ref_resolved = master_style_ref_present;
 pub const master_style_ref_absent = [_][3]usize{.{ 0, 0, 0 }} ** 8;
 pub const master_style_ref_missing = master_style_ref_absent;
 pub const master_style_ref_absent_table = master_style_ref_absent;
+// [runs, missing charTcId, zero charTcId, paraTcId alias present,
+//  alias only, equal dual IDs, conflicting dual IDs]
+pub const section_run_metadata = [_][7]usize{
+    .{ 38461, 38461, 0, 0, 0, 0, 0 }, .{ 25758, 25758, 0, 0, 0, 0, 0 },
+    .{ 26965, 26965, 0, 0, 0, 0, 0 }, .{ 15293, 15293, 0, 0, 0, 0, 0 },
+    .{ 47472, 47472, 0, 0, 0, 0, 0 }, .{ 29962, 29962, 0, 0, 0, 0, 0 },
+    .{ 28564, 28564, 0, 0, 0, 0, 0 }, .{ 54872, 54872, 0, 0, 0, 0, 0 },
+};
+pub const master_run_metadata = [_][7]usize{
+    .{ 118, 118, 0, 0, 0, 0, 0 }, .{ 39, 39, 0, 0, 0, 0, 0 },
+    .{ 177, 177, 0, 0, 0, 0, 0 }, .{ 0, 0, 0, 0, 0, 0, 0 },
+    .{ 0, 0, 0, 0, 0, 0, 0 },     .{ 0, 0, 0, 0, 0, 0, 0 },
+    .{ 29, 29, 0, 0, 0, 0, 0 },   .{ 158, 158, 0, 0, 0, 0, 0 },
+};
 pub const master_page_number_sum = [_]u64{ 0, 0, 4, 0, 0, 0, 0, 0 };
 pub const master_page_count_declarations = [_]usize{ 75, 72, 72, 55, 64, 62, 63, 92 };
 pub const master_page_type_counts = [_][5]usize{

@@ -23,3 +23,5 @@ manifest 경로와 루트 ID는 별도 색인으로 조회해, 많은 참조가 
 이후 [공통 문단 메타 값](hwpx-paragraph-metadata.md)을 직접 `subList`의 모든 후손 `hp:p`에 재사용합니다. 직접 문단 63개와 중첩 포함 394개의 구분 및 실파일 값 집계는 문단 메타 주제 문서가 소유합니다. 문단/run의 서식 ID 연결과 바탕쪽 표시 의미는 여전히 후속입니다.
 
 문단/run 서식 ID의 별도 연결과 검증 경계는 [마스터페이지 서식 참조](hwpx-master-style-references.md)가 소유합니다. 이 문서의 루트·section `idRef` 계약과 혼합하지 않습니다.
+
+`subList` 후손 run의 변경 추적 ID 값 검사는 [run 메타 속성](hwpx-run-metadata.md)을 section과 공유합니다. 쪽 배치 및 변경 추적 적용 의미는 여전히 검증하지 않습니다.

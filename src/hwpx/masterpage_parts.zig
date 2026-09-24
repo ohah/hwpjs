@@ -8,6 +8,7 @@ const values = @import("xml_values.zig");
 const namespace_profile = @import("namespace_profile.zig");
 const para_list_attributes = @import("para_list_attributes.zig");
 const paragraph_metadata = @import("paragraph_metadata.zig");
+const run_metadata = @import("run_metadata.zig");
 
 pub const Kind = enum { both, even, odd, last_page, optional_page };
 
@@ -19,6 +20,7 @@ pub const Options = struct {
     max_sub_lists_per_part: usize = 4096,
     max_direct_paragraphs_per_part: usize = 1_000_000,
     max_paragraphs_per_part: usize = 2_000_000,
+    max_runs_per_part: usize = 4_000_000,
     xml: document_xml.Options = .{},
 };
 
@@ -26,6 +28,7 @@ pub const SubList = struct {
     attributes: para_list_attributes.Attributes,
     direct_paragraphs: usize = 0,
     paragraph_metadata: paragraph_metadata.Report = .{},
+    run_metadata: run_metadata.Report = .{},
     other_direct_elements: usize = 0,
     nested_elements: usize = 0,
 
@@ -106,6 +109,7 @@ const Context = struct {
     active_sub_list: ?usize = null,
     direct_paragraphs: usize = 0,
     paragraphs: usize = 0,
+    runs: usize = 0,
     other_direct_elements: usize = 0,
     descendant_elements: usize = 0,
 
@@ -159,6 +163,11 @@ const Context = struct {
                     if (self.paragraphs == self.options.max_paragraphs_per_part) return error.LimitExceeded;
                     try paragraph_metadata.noteTag(self.a, tag, scope, self.options.max_attribute_bytes, &list.paragraph_metadata);
                     self.paragraphs += 1;
+                }
+                if (try attrs.element(tag, scope, document_xml.paragraph_uri, "run")) {
+                    if (self.runs == self.options.max_runs_per_part) return error.LimitExceeded;
+                    try run_metadata.noteTag(self.a, tag, scope, self.options.max_attribute_bytes, &list.run_metadata);
+                    self.runs += 1;
                 }
                 if (depth == 3) {
                     if (is_paragraph) {

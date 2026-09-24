@@ -54,6 +54,7 @@ def empty():
                 master_style_ref_present=[0, 0, 0], master_style_ref_absent=[0, 0, 0],
                 master_style_ref_resolved=[0, 0, 0], master_style_ref_missing=[0, 0, 0],
                 master_style_ref_absent_table=[0, 0, 0],
+                section_run_metadata=[0] * 7, master_run_metadata=[0] * 7,
                 master_page_number_sum=0,
                 master_type_counts=[0] * len(MASTER_KINDS),
                 master_manifest_id_mismatch=0, master_refs=0,
@@ -66,6 +67,18 @@ def master_path(name):
     return (name.startswith(prefix) and name.endswith(".xml")
             and bool(name[len(prefix):-4])
             and all("0" <= char <= "9" for char in name[len(prefix):-4]))
+
+
+def count_run_metadata(counts, node):
+    char = node.get("charTcId")
+    para = node.get("paraTcId")
+    counts[0] += 1
+    counts[1] += char is None
+    counts[2] += char is not None and int(char) == 0
+    counts[3] += para is not None
+    counts[4] += char is None and para is not None
+    counts[5] += char is not None and para is not None and int(char) == int(para)
+    counts[6] += char is not None and para is not None and int(char) != int(para)
 
 
 def main():
@@ -196,6 +209,7 @@ def main():
                                         shard["master_style_runs"] += 1
                                         shard["master_style_non_direct_runs"] += parent.tag != PARA + "p"
                                         master_style_values[2].append(node.get("charPrIDRef"))
+                                        count_run_metadata(shard["master_run_metadata"], node)
                                     for nested in node:
                                         visit_style(nested, node)
                                 for direct in child:
@@ -203,6 +217,8 @@ def main():
                         if name.startswith("Contents/section") and name.endswith(".xml"):
                             master_refs.extend(node.get("idRef") for node in document.iter(PARA + "masterPage"))
                             shard["master_count_declarations"] += sum("masterPageCnt" in node.attrib for node in document.iter(PARA + "secPr"))
+                            for run in document.iter(PARA + "run"):
+                                count_run_metadata(shard["section_run_metadata"], run)
                     for ref in master_refs:
                         shard["master_refs"] += 1
                         if not ref:

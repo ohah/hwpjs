@@ -5,6 +5,14 @@ const para_list_attributes = @import("hwpx/para_list_attributes.zig");
 
 const sub_list_field_count = para_list_attributes.field_names.len;
 
+fn runMetadataCounts(report: package.RunMetadataReport) [7]usize {
+    return .{ report.runs, report.missing_char_tc_id, report.zero_char_tc_id, report.para_tc_alias_present, report.para_tc_alias_only, report.equal_dual_ids, report.conflicting_dual_ids };
+}
+
+fn addRunCounts(total: *[7]usize, values: [7]usize) void {
+    for (values, 0..) |value, index| total[index] += value;
+}
+
 const MasterStyleStats = struct {
     paragraphs: usize = 0,
     non_direct_paragraphs: usize = 0,
@@ -65,6 +73,8 @@ const Statistics = struct {
     master_paragraph_column_break_true: usize,
     master_paragraph_merged_true: usize,
     master_style: MasterStyleStats,
+    section_run_metadata: [7]usize,
+    master_run_metadata: [7]usize,
     master_page_number_sum: u64,
     master_page_count_declarations: usize,
     master_page_type_counts: [5]usize,
@@ -123,6 +133,7 @@ fn inspectOne(bytes: []const u8) !Outcome {
         .runs = known.master_page_style_references.runs,
         .non_direct_runs = known.master_page_style_references.non_direct_runs,
     };
+    var master_run_metadata: [7]usize = @splat(0);
     for (known.master_page_style_references.references, 0..) |counts, i| {
         master_style.present[i] = counts.present;
         master_style.absent[i] = counts.absent;
@@ -150,6 +161,7 @@ fn inspectOne(bytes: []const u8) !Outcome {
     for (known.master_pages.parts.parts) |part| {
         master_sub_lists += part.sub_lists.len;
         for (part.sub_lists) |list| {
+            addRunCounts(&master_run_metadata, runMetadataCounts(list.run_metadata));
             master_sub_list_direct_paragraphs += list.direct_paragraphs;
             for (list.attributes.raw, 0..) |raw, index| master_sub_list_attribute_presence[index] += @intFromBool(raw != null);
             master_sub_list_unknown_enums += list.attributes.unknown_enums;
@@ -171,6 +183,7 @@ fn inspectOne(bytes: []const u8) !Outcome {
         if (part.kind) |kind| master_type_counts[@intFromEnum(kind)] += 1;
     }
     try std.testing.expectEqual(master_paragraphs, master_style.paragraphs);
+    try std.testing.expectEqual(master_style.runs, master_run_metadata[0]);
     try std.testing.expectEqual(@as(usize, 0), known.master_pages.parts.manifest_id_mismatches);
     try std.testing.expectEqual(@as(usize, 0), known.master_pages.parts.unsupported_types);
     try std.testing.expectEqual(@as(usize, 0), known.master_pages.missing_target);
@@ -184,7 +197,9 @@ fn inspectOne(bytes: []const u8) !Outcome {
     try std.testing.expectEqual(count, known.chart_references.sections);
     try std.testing.expectEqual(count, known.section_text.sections);
     try std.testing.expectEqual(count, known.paragraph_metadata.sections);
+    try std.testing.expectEqual(count, known.run_metadata.sections);
     try std.testing.expectEqual(known.section_text.paragraphs, known.paragraph_metadata.paragraphs);
+    try std.testing.expectEqual(known.section_references.runs, known.run_metadata.runs);
     return .{ .accepted = .{
         .sections = count,
         .paragraphs = known.paragraph_metadata.paragraphs,
@@ -219,6 +234,8 @@ fn inspectOne(bytes: []const u8) !Outcome {
         .master_paragraph_column_break_true = master_paragraph_column_break_true,
         .master_paragraph_merged_true = master_paragraph_merged_true,
         .master_style = master_style,
+        .section_run_metadata = runMetadataCounts(known.run_metadata),
+        .master_run_metadata = master_run_metadata,
         .master_page_number_sum = master_page_number_sum,
         .master_page_count_declarations = known.master_pages.count_declarations.len,
         .master_page_type_counts = master_type_counts,
@@ -264,6 +281,8 @@ fn surveyShard(shard: usize) !void {
     var master_paragraph_column_break_true: usize = 0;
     var master_paragraph_merged_true: usize = 0;
     var master_style: MasterStyleStats = .{};
+    var section_run_metadata: [7]usize = @splat(0);
+    var master_run_metadata: [7]usize = @splat(0);
     var master_page_number_sum: u64 = 0;
     var master_page_count_declarations: usize = 0;
     var master_page_type_counts: [5]usize = @splat(0);
@@ -320,6 +339,8 @@ fn surveyShard(shard: usize) !void {
                     master_paragraph_column_break_true += stats.master_paragraph_column_break_true;
                     master_paragraph_merged_true += stats.master_paragraph_merged_true;
                     master_style.add(stats.master_style);
+                    addRunCounts(&section_run_metadata, stats.section_run_metadata);
+                    addRunCounts(&master_run_metadata, stats.master_run_metadata);
                     master_page_number_sum += stats.master_page_number_sum;
                     master_page_count_declarations += stats.master_page_count_declarations;
                     for (stats.master_page_type_counts, 0..) |value, i| master_page_type_counts[i] += value;
@@ -373,6 +394,8 @@ fn surveyShard(shard: usize) !void {
     try std.testing.expectEqualSlices(usize, &expected.master_style_ref_resolved[shard], &master_style.resolved);
     try std.testing.expectEqualSlices(usize, &expected.master_style_ref_missing[shard], &master_style.missing);
     try std.testing.expectEqualSlices(usize, &expected.master_style_ref_absent_table[shard], &master_style.absent_table);
+    try std.testing.expectEqualSlices(usize, &expected.section_run_metadata[shard], &section_run_metadata);
+    try std.testing.expectEqualSlices(usize, &expected.master_run_metadata[shard], &master_run_metadata);
     try std.testing.expectEqual(expected.master_page_number_sum[shard], master_page_number_sum);
     try std.testing.expectEqual(expected.master_page_count_declarations[shard], master_page_count_declarations);
     try std.testing.expectEqualSlices(usize, &expected.master_page_type_counts[shard], &master_page_type_counts);

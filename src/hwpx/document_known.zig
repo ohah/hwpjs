@@ -12,6 +12,7 @@ const binary_refs = @import("binary_reference_links.zig");
 const chart_refs = @import("chart_parts.zig");
 const section_text = @import("section_text.zig");
 const paragraph_metadata = @import("paragraph_metadata.zig");
+const run_metadata = @import("run_metadata.zig");
 const begin_numbers = @import("header_begin_numbers.zig");
 const payload_integrity = @import("payload_integrity.zig");
 const manifest_xml = @import("manifest_xml.zig");
@@ -40,6 +41,7 @@ pub const Report = struct {
     chart_references: chart_refs.Report,
     section_text: section_text.Report,
     paragraph_metadata: paragraph_metadata.Report,
+    run_metadata: run_metadata.Report,
     begin_numbers: begin_numbers.Report,
 
     pub fn deinit(self: *Report, a: std.mem.Allocator) void {
@@ -96,7 +98,8 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
         var begin_report = try trees.inspectBeginNumbers(a, options.begin_numbers);
         errdefer begin_report.deinit(a);
         const paragraph_report = try trees.inspectParagraphMetadata(a, options.paragraph_metadata);
-        break :blk .{ .begin = begin_report, .paragraph = paragraph_report };
+        const run_report = try trees.inspectRunMetadata(a, options.run_metadata);
+        break :blk .{ .begin = begin_report, .paragraph = paragraph_report, .run = run_report };
     };
     return .{
         .version = version,
@@ -117,6 +120,7 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
         .chart_references = chart_ref_report,
         .section_text = text_report,
         .paragraph_metadata = semantic.paragraph,
+        .run_metadata = semantic.run,
         .begin_numbers = semantic.begin,
     };
 }
