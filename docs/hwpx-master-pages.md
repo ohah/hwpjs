@@ -21,3 +21,5 @@ manifest 경로와 루트 ID는 별도 색인으로 조회해, 많은 참조가 
 후속 [직접 ParaListType 속성](hwpx-para-list.md) 단계에서 루트 직접 `hp:subList`의 소유 배열·원값·직접 문단 경계를 추가했습니다. 이 소스의 전체 Debug 테스트 2,224개와 실파일 8개 shard가 독립 조사와 일치했습니다. 위의 2,219개는 이전 단계의 기록입니다.
 
 이후 [공통 문단 메타 값](hwpx-paragraph-metadata.md)을 직접 `subList`의 모든 후손 `hp:p`에 재사용합니다. 직접 문단 63개와 중첩 포함 394개의 구분 및 실파일 값 집계는 문단 메타 주제 문서가 소유합니다. 문단/run의 서식 ID 연결과 바탕쪽 표시 의미는 여전히 후속입니다.
+
+문단/run 서식 ID의 별도 연결과 검증 경계는 [마스터페이지 서식 참조](hwpx-master-style-references.md)가 소유합니다. 이 문서의 루트·section `idRef` 계약과 혼합하지 않습니다.

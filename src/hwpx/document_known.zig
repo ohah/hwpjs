@@ -17,6 +17,7 @@ const payload_integrity = @import("payload_integrity.zig");
 const manifest_xml = @import("manifest_xml.zig");
 const settings = @import("settings.zig");
 const masterpage_references = @import("masterpage_references.zig");
+const masterpage_style_references = @import("masterpage_style_references.zig");
 
 /// Results of the currently implemented HWPX inspections only. A successful
 /// return does not assert complete schema, semantic or edit/save validity.
@@ -27,6 +28,7 @@ pub const Report = struct {
     manifest_xml: manifest_xml.Report,
     settings: settings.Report,
     master_pages: masterpage_references.Report,
+    master_page_style_references: masterpage_style_references.Report,
     structure: structure.Report,
     resources: resources.Report,
     section_references: section_refs.Report,
@@ -77,6 +79,7 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
     errdefer structure_report.deinit(a);
     var resource_report = try document.inspectHeaderResources(a, options.header_resources);
     errdefer resource_report.deinit(a);
+    const master_page_style_report = try document.inspectMasterPageStyleReferences(a, .{ .master_pages = options.master_pages, .header_resources = options.header_resources, .references = options.master_page_style_references });
     const section_ref_report = try document.inspectReferences(a, options.section_references);
     const header_ref_report = try document.inspectHeaderReferences(a, options.header_references);
     var fonts = try document.inspectFontReferences(a, options.font_references);
@@ -102,6 +105,7 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
         .manifest_xml = manifest_xml_report,
         .settings = settings_report,
         .master_pages = master_page_report,
+        .master_page_style_references = master_page_style_report,
         .structure = structure_report,
         .resources = resource_report,
         .section_references = section_ref_report,

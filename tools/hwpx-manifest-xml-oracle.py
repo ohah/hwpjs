@@ -19,6 +19,10 @@ ENCRYPTION = "{urn:oasis:names:tc:opendocument:xmlns:manifest:1.0}encryption-dat
 APP = "{http://www.hancom.co.kr/hwpml/2011/app}"
 CONFIG = "{urn:oasis:names:tc:opendocument:xmlns:config:1.0}"
 PARA = "{http://www.hancom.co.kr/hwpml/2011/paragraph}"
+HEAD = "{http://www.hancom.co.kr/hwpml/2011/head}"
+MASTER_STYLE_FIELDS = (("paraPrIDRef", "paraProperties", "paraPr"),
+                       ("styleIDRef", "styles", "style"),
+                       ("charPrIDRef", "charProperties", "charPr"))
 MASTER_KINDS = ("BOTH", "EVEN", "ODD", "LAST_PAGE", "OPTIONAL_PAGE")
 SUB_LIST_FIELDS = ("id", "textDirection", "lineWrap", "vertAlign", "linkListIDRef",
                    "linkListNextIDRef", "textWidth", "textHeight", "hasTextRef", "hasNumRef", "metatag")
@@ -45,6 +49,11 @@ def empty():
                 master_paragraph_page_break_present=0, master_paragraph_page_break_true=0,
                 master_paragraph_column_break_present=0, master_paragraph_column_break_true=0,
                 master_paragraph_merged_present=0, master_paragraph_merged_true=0,
+                master_style_paragraphs=0, master_style_non_direct_paragraphs=0,
+                master_style_runs=0, master_style_non_direct_runs=0,
+                master_style_ref_present=[0, 0, 0], master_style_ref_absent=[0, 0, 0],
+                master_style_ref_resolved=[0, 0, 0], master_style_ref_missing=[0, 0, 0],
+                master_style_ref_absent_table=[0, 0, 0],
                 master_page_number_sum=0,
                 master_type_counts=[0] * len(MASTER_KINDS),
                 master_manifest_id_mismatch=0, master_refs=0,
@@ -81,6 +90,8 @@ def main():
                     total = 0
                     master_ids = []
                     master_refs = []
+                    header_tables = [None, None, None]
+                    master_style_values = [[], [], []]
                     for item in opf.findall(OPF + "manifest/" + OPF + "item"):
                         if item.get("media-type") != "application/xml":
                             continue
@@ -103,6 +114,12 @@ def main():
                         shard["bytes"] += len(data)
                         shard["elements"] += sum(1 for _ in document.iter())
                         shard["settings"] += name == "settings.xml"
+                        if name == "Contents/header.xml":
+                            ref_list = document.find(HEAD + "refList")
+                            for index, (_, group, element) in enumerate(MASTER_STYLE_FIELDS):
+                                table = None if ref_list is None else ref_list.find(HEAD + group)
+                                if table is not None:
+                                    header_tables[index] = {int(node.attrib["id"]) for node in table.findall(HEAD + element)}
                         if name == "settings.xml":
                             if document.tag != APP + "HWPApplicationSetting":
                                 raise ValueError("unexpected settings root")
@@ -169,6 +186,20 @@ def main():
                                     shard["master_paragraph_column_break_true"] += paragraph.get("columnBreak") in ("true", "1")
                                     shard["master_paragraph_merged_present"] += "merged" in paragraph.attrib
                                     shard["master_paragraph_merged_true"] += paragraph.get("merged") in ("true", "1")
+                                def visit_style(node, parent):
+                                    if node.tag == PARA + "p":
+                                        shard["master_style_paragraphs"] += 1
+                                        shard["master_style_non_direct_paragraphs"] += parent is not child
+                                        master_style_values[0].append(node.get("paraPrIDRef"))
+                                        master_style_values[1].append(node.get("styleIDRef"))
+                                    elif node.tag == PARA + "run":
+                                        shard["master_style_runs"] += 1
+                                        shard["master_style_non_direct_runs"] += parent.tag != PARA + "p"
+                                        master_style_values[2].append(node.get("charPrIDRef"))
+                                    for nested in node:
+                                        visit_style(nested, node)
+                                for direct in child:
+                                    visit_style(direct, child)
                         if name.startswith("Contents/section") and name.endswith(".xml"):
                             master_refs.extend(node.get("idRef") for node in document.iter(PARA + "masterPage"))
                             shard["master_count_declarations"] += sum("masterPageCnt" in node.attrib for node in document.iter(PARA + "secPr"))
@@ -182,6 +213,19 @@ def main():
                             shard["master_ambiguous"] += 1
                         else:
                             shard["master_missing"] += 1
+                    for index, values in enumerate(master_style_values):
+                        table = header_tables[index]
+                        for raw in values:
+                            if raw is None:
+                                shard["master_style_ref_absent"][index] += 1
+                            else:
+                                shard["master_style_ref_present"][index] += 1
+                                if table is None:
+                                    shard["master_style_ref_absent_table"][index] += 1
+                                elif int(raw) in table:
+                                    shard["master_style_ref_resolved"][index] += 1
+                                else:
+                                    shard["master_style_ref_missing"][index] += 1
                     shard["accepted"] += 1
             except BadZipFile:
                 shard["rejected_zip"] += 1

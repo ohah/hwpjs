@@ -6,7 +6,9 @@
 
 직접 `hp:subList`의 원값과 직접 문단 수는 [ParaListType 속성](hwpx-para-list.md) 계약으로 추가 검사합니다. 중첩 내용의 의미 해석은 여전히 포함되지 않습니다.
 
-마스터페이지의 직접 `subList` 아래 모든 `hp:p`에는 section에서 쓰는 [문단 메타 값 규칙](hwpx-paragraph-metadata.md)을 적용합니다. 직접/중첩 문단의 구분, 서식 참조의 대상 검사와 본문 내용 의미는 별개입니다.
+마스터페이지의 직접 `subList` 아래 모든 `hp:p`에는 section에서 쓰는 [문단 메타 값 규칙](hwpx-paragraph-metadata.md)을 적용합니다. 직접/중첩 문단의 구분, 서식 참조의 대상 검사와 본문 내용 의미는 각각 별개 계약입니다.
+
+[마스터페이지 문단·run 서식 참조](hwpx-master-style-references.md)는 같은 header 리소스 ID 판정을 마스터페이지의 직접 `subList` 후손에 적용합니다. 미해결 대상은 진단이며 표시·편집 완료 판정이 아닙니다.
 
 `Document.inspectKnown(allocator, options)`는 같은 패키지 문서에 현재 공개된 개별 검사를 순서대로 적용하고 `KnownReport`를 반환합니다. ZIP/OCF/OPF 관계는 선행 `inspectDocument`가 검사합니다. 이 API는 보호 manifest를 먼저 확인한 뒤 [모든 ZIP 엔트리 바이트 무결성](hwpx-payload-integrity.md), [OPF 선언 XML 전수 문법 검사](hwpx-manifest-xml.md), version XML, header·spine 구조, header 리소스 ID, section/헤더 서식 참조, 언어별 글꼴, 번호·글머리표, 이진 리소스 연결, 차트 경로·캐시·수식 구조, section 텍스트 이벤트, 문단 메타 속성, header 시작 번호의 기존 보고서를 묶습니다. 같은 이름의 파서나 참조 규칙을 새로 만들지 않고 `Document`의 각 진입점을 호출합니다.
 
@@ -41,3 +43,5 @@
 이번 [ParaListType 직접 속성](hwpx-para-list.md) 단계에서는 전체 Debug 테스트 2,224개와 선택 실파일 8개 shard가 통과했습니다. 이 단계에서 추가된 것은 직접 `subList` 속성·직접 문단 경계이며, 중첩 본문 의미와 쪽 배치는 여전히 미검증입니다.
 
 다음 [마스터페이지 문단 메타 값](hwpx-paragraph-metadata.md) 재사용 단계에서는 전체 Debug 테스트 2,226개와 선택 실파일 8개 shard가 통과했습니다. 직접·중첩 문단의 메타 값 적합성만 더했고, 서식 참조·본문 의미·쪽 배치를 검증 완료로 바꾸지 않았습니다.
+
+이번 [마스터페이지 문단·run 서식 참조](hwpx-master-style-references.md) 단계에서는 전체 Debug 테스트 2,231개와 선택 실파일 8개 shard가 통과했습니다. section과 속성→header ID 판정을 공유하고 마스터페이지의 직접 `subList` 아래에만 적용했습니다. 이 결과는 서식 참조 연결에 한정되며 본문 의미·쪽 배치·편집/저장 완료를 뜻하지 않습니다.

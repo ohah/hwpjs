@@ -53,6 +53,20 @@ pub const master_paragraph_boolean_present = [_][3]usize{
 pub const master_paragraph_page_break_true = [_]usize{ 0, 0, 0, 0, 0, 0, 0, 0 };
 pub const master_paragraph_column_break_true = [_]usize{ 0, 0, 0, 0, 0, 0, 0, 0 };
 pub const master_paragraph_merged_true = [_]usize{ 0, 0, 0, 0, 0, 0, 0, 0 };
+// Master-page hp:p/hp:run link census from the independent ZIP/XML oracle.
+pub const master_style_paragraphs = master_paragraphs;
+pub const master_style_non_direct_paragraphs = [_]usize{ 72, 24, 107, 0, 0, 0, 18, 110 };
+pub const master_style_runs = [_]usize{ 118, 39, 177, 0, 0, 0, 29, 158 };
+pub const master_style_non_direct_runs = [_]usize{ 0, 0, 0, 0, 0, 0, 0, 0 };
+pub const master_style_ref_present = [_][3]usize{
+    .{ 86, 86, 118 }, .{ 31, 31, 39 },    .{ 126, 126, 177 },
+    .{ 0, 0, 0 },     .{ 0, 0, 0 },       .{ 0, 0, 0 },
+    .{ 21, 21, 29 },  .{ 130, 130, 158 },
+};
+pub const master_style_ref_resolved = master_style_ref_present;
+pub const master_style_ref_absent = [_][3]usize{.{ 0, 0, 0 }} ** 8;
+pub const master_style_ref_missing = master_style_ref_absent;
+pub const master_style_ref_absent_table = master_style_ref_absent;
 pub const master_page_number_sum = [_]u64{ 0, 0, 4, 0, 0, 0, 0, 0 };
 pub const master_page_count_declarations = [_]usize{ 75, 72, 72, 55, 64, 62, 63, 92 };
 pub const master_page_type_counts = [_][5]usize{

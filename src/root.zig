@@ -28,6 +28,7 @@ test {
     _ = @import("hwpx/manifest_xml_tests.zig");
     _ = @import("hwpx/settings_tests.zig");
     _ = @import("hwpx/masterpage_tests.zig");
+    _ = @import("hwpx/masterpage_style_tests.zig");
     _ = @import("hwpx/namespace_profile.zig");
     _ = @import("hwpx/chart_formula_tests.zig");
     _ = @import("hwpx/allocator_ownership_tests.zig");

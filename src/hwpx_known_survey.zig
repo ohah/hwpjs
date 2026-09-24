@@ -5,6 +5,32 @@ const para_list_attributes = @import("hwpx/para_list_attributes.zig");
 
 const sub_list_field_count = para_list_attributes.field_names.len;
 
+const MasterStyleStats = struct {
+    paragraphs: usize = 0,
+    non_direct_paragraphs: usize = 0,
+    runs: usize = 0,
+    non_direct_runs: usize = 0,
+    present: [3]usize = @splat(0),
+    absent: [3]usize = @splat(0),
+    resolved: [3]usize = @splat(0),
+    missing: [3]usize = @splat(0),
+    absent_table: [3]usize = @splat(0),
+
+    fn add(self: *MasterStyleStats, other: MasterStyleStats) void {
+        self.paragraphs += other.paragraphs;
+        self.non_direct_paragraphs += other.non_direct_paragraphs;
+        self.runs += other.runs;
+        self.non_direct_runs += other.non_direct_runs;
+        for (0..3) |i| {
+            self.present[i] += other.present[i];
+            self.absent[i] += other.absent[i];
+            self.resolved[i] += other.resolved[i];
+            self.missing[i] += other.missing[i];
+            self.absent_table[i] += other.absent_table[i];
+        }
+    }
+};
+
 const Statistics = struct {
     sections: usize,
     paragraphs: usize,
@@ -38,6 +64,7 @@ const Statistics = struct {
     master_paragraph_page_break_true: usize,
     master_paragraph_column_break_true: usize,
     master_paragraph_merged_true: usize,
+    master_style: MasterStyleStats,
     master_page_number_sum: u64,
     master_page_count_declarations: usize,
     master_page_type_counts: [5]usize,
@@ -89,6 +116,20 @@ fn inspectOne(bytes: []const u8) !Outcome {
         }
     }
     try std.testing.expectEqual(masterpages, known.master_pages.parts.parts.len);
+    try std.testing.expectEqual(masterpages, known.master_page_style_references.parts);
+    var master_style: MasterStyleStats = .{
+        .paragraphs = known.master_page_style_references.paragraphs,
+        .non_direct_paragraphs = known.master_page_style_references.non_direct_paragraphs,
+        .runs = known.master_page_style_references.runs,
+        .non_direct_runs = known.master_page_style_references.non_direct_runs,
+    };
+    for (known.master_page_style_references.references, 0..) |counts, i| {
+        master_style.present[i] = counts.present;
+        master_style.absent[i] = counts.absent;
+        master_style.resolved[i] = counts.resolved;
+        master_style.missing[i] = counts.missing_target;
+        master_style.absent_table[i] = counts.absent_table;
+    }
     var master_sub_lists: usize = 0;
     var master_sub_list_direct_paragraphs: usize = 0;
     var master_sub_list_attribute_presence: [sub_list_field_count]usize = @splat(0);
@@ -129,6 +170,7 @@ fn inspectOne(bytes: []const u8) !Outcome {
         if (part.page_number) |raw| master_page_number_sum += try std.fmt.parseInt(u32, raw, 10);
         if (part.kind) |kind| master_type_counts[@intFromEnum(kind)] += 1;
     }
+    try std.testing.expectEqual(master_paragraphs, master_style.paragraphs);
     try std.testing.expectEqual(@as(usize, 0), known.master_pages.parts.manifest_id_mismatches);
     try std.testing.expectEqual(@as(usize, 0), known.master_pages.parts.unsupported_types);
     try std.testing.expectEqual(@as(usize, 0), known.master_pages.missing_target);
@@ -176,6 +218,7 @@ fn inspectOne(bytes: []const u8) !Outcome {
         .master_paragraph_page_break_true = master_paragraph_page_break_true,
         .master_paragraph_column_break_true = master_paragraph_column_break_true,
         .master_paragraph_merged_true = master_paragraph_merged_true,
+        .master_style = master_style,
         .master_page_number_sum = master_page_number_sum,
         .master_page_count_declarations = known.master_pages.count_declarations.len,
         .master_page_type_counts = master_type_counts,
@@ -220,6 +263,7 @@ fn surveyShard(shard: usize) !void {
     var master_paragraph_page_break_true: usize = 0;
     var master_paragraph_column_break_true: usize = 0;
     var master_paragraph_merged_true: usize = 0;
+    var master_style: MasterStyleStats = .{};
     var master_page_number_sum: u64 = 0;
     var master_page_count_declarations: usize = 0;
     var master_page_type_counts: [5]usize = @splat(0);
@@ -275,6 +319,7 @@ fn surveyShard(shard: usize) !void {
                     master_paragraph_page_break_true += stats.master_paragraph_page_break_true;
                     master_paragraph_column_break_true += stats.master_paragraph_column_break_true;
                     master_paragraph_merged_true += stats.master_paragraph_merged_true;
+                    master_style.add(stats.master_style);
                     master_page_number_sum += stats.master_page_number_sum;
                     master_page_count_declarations += stats.master_page_count_declarations;
                     for (stats.master_page_type_counts, 0..) |value, i| master_page_type_counts[i] += value;
@@ -319,6 +364,15 @@ fn surveyShard(shard: usize) !void {
     try std.testing.expectEqual(expected.master_paragraph_page_break_true[shard], master_paragraph_page_break_true);
     try std.testing.expectEqual(expected.master_paragraph_column_break_true[shard], master_paragraph_column_break_true);
     try std.testing.expectEqual(expected.master_paragraph_merged_true[shard], master_paragraph_merged_true);
+    try std.testing.expectEqual(expected.master_style_paragraphs[shard], master_style.paragraphs);
+    try std.testing.expectEqual(expected.master_style_non_direct_paragraphs[shard], master_style.non_direct_paragraphs);
+    try std.testing.expectEqual(expected.master_style_runs[shard], master_style.runs);
+    try std.testing.expectEqual(expected.master_style_non_direct_runs[shard], master_style.non_direct_runs);
+    try std.testing.expectEqualSlices(usize, &expected.master_style_ref_present[shard], &master_style.present);
+    try std.testing.expectEqualSlices(usize, &expected.master_style_ref_absent[shard], &master_style.absent);
+    try std.testing.expectEqualSlices(usize, &expected.master_style_ref_resolved[shard], &master_style.resolved);
+    try std.testing.expectEqualSlices(usize, &expected.master_style_ref_missing[shard], &master_style.missing);
+    try std.testing.expectEqualSlices(usize, &expected.master_style_ref_absent_table[shard], &master_style.absent_table);
     try std.testing.expectEqual(expected.master_page_number_sum[shard], master_page_number_sum);
     try std.testing.expectEqual(expected.master_page_count_declarations[shard], master_page_count_declarations);
     try std.testing.expectEqualSlices(usize, &expected.master_page_type_counts[shard], &master_page_type_counts);

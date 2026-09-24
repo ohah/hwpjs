@@ -40,7 +40,9 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [settings.xml 원값 검사](hwpx-settings.md)는 manifest의 정확한 항목을 선택하고 Caret·config 원값과 지원되는 수치/Boolean 어휘만 확인합니다. 문서 참조 및 설정 동작 의미는 조립 후속 계층에 남깁니다.
 
-[masterpage 파트·section 참조](hwpx-master-pages.md)는 정규 manifest 파트의 루트 속성과 `hp:masterPage/@idRef` 연결을 분리해 확인합니다. 직접 자식 `hp:subList`의 원값·직접 문단 경계는 [ParaListType 속성](hwpx-para-list.md)이, 그 아래 모든 문단의 메타 속성은 [공통 문단 규칙](hwpx-paragraph-metadata.md)이 소유합니다. 문단 서식 참조와 페이지 적용 규칙은 후속 계층에 남깁니다.
+[masterpage 파트·section 참조](hwpx-master-pages.md)는 정규 manifest 파트의 루트 속성과 `hp:masterPage/@idRef` 연결을 분리해 확인합니다. 직접 자식 `hp:subList`의 원값·직접 문단 경계는 [ParaListType 속성](hwpx-para-list.md)이, 그 아래 모든 문단의 메타 속성은 [공통 문단 규칙](hwpx-paragraph-metadata.md)이 소유합니다. 페이지 적용 규칙은 후속 계층에 남깁니다.
+
+[마스터페이지 문단·run 서식 참조](hwpx-master-style-references.md)는 section과 같은 속성→header 테이블 판정을 재사용하되 선택 범위와 XML 바이트 한도는 별도로 소유합니다. 페이지 적용과 본문 의미는 후속 계층입니다.
 
 [Section 직접 문자 콘텐츠·순서형 이벤트](hwpx-section-content.md)는 소유 원문을 다시 파싱해 문자·CDATA 조각을 인덱스의 정확한 부모 요소에 연결하고, 요소 경계와 문자를 원래 순서로 전달합니다. 의미 계층은 이 순회와 원문·요소 인덱스를 재사용하며 표시 문장이나 편집 모델을 임의 조립하지 않습니다.
 

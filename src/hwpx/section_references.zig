@@ -6,10 +6,10 @@ const document_xml = @import("document_xml.zig");
 const content_manifest = @import("content_manifest.zig");
 const document_structure = @import("document_structure.zig");
 const header_resources = @import("header_resources.zig");
-const id_references = @import("id_references.zig");
+const paragraph_style_links = @import("paragraph_style_links.zig");
 
-pub const Kind = enum(u8) { paragraph_shape, style, character_shape };
-pub const Counts = id_references.Counts;
+pub const Kind = paragraph_style_links.Kind;
+pub const Counts = paragraph_style_links.Counts;
 
 pub const Report = struct {
     sections: usize,
@@ -18,7 +18,7 @@ pub const Report = struct {
     runs: usize = 0,
     non_direct_runs: usize = 0,
     decoded_xml_bytes: usize = 0,
-    references: [3]Counts = @splat(.{}),
+    references: paragraph_style_links.Links = @splat(.{}),
 
     pub fn counts(self: *const Report, kind: Kind) *const Counts {
         return &self.references[@intFromEnum(kind)];
@@ -46,10 +46,6 @@ const Context = struct {
         self.paragraph_depths.deinit(self.allocator);
     }
 
-    fn note(self: *Context, kind: Kind, raw_id: ?[]u8, table_kind: header_resources.Kind) !void {
-        _ = try id_references.note(self.allocator, &self.report.references[@intFromEnum(kind)], raw_id, self.resources.table(table_kind), self.item_index);
-    }
-
     fn onTag(raw: *anyopaque, tag: xml.tags.Tag, scope: *const xml.namespaces.State, depth: usize) anyerror!void {
         const self: *Context = @ptrCast(@alignCast(raw));
         if (tag.kind == .end) {
@@ -66,8 +62,7 @@ const Context = struct {
             if (self.report.paragraphs == self.options.max_paragraphs) return error.LimitExceeded;
             self.report.paragraphs += 1;
             if (depth != 2) self.report.non_direct_paragraphs += 1;
-            try self.note(.paragraph_shape, try attrs.attribute(self.allocator, tag, scope, "paraPrIDRef", self.options.max_attribute_bytes), .para_shape);
-            try self.note(.style, try attrs.attribute(self.allocator, tag, scope, "styleIDRef", self.options.max_attribute_bytes), .style);
+            try paragraph_style_links.noteParagraph(self.allocator, tag, scope, self.options.max_attribute_bytes, self.resources, self.item_index, &self.report.references);
             if (tag.kind == .start) try self.paragraph_depths.append(self.allocator, depth);
             return;
         }
@@ -75,7 +70,7 @@ const Context = struct {
             if (self.report.runs == self.options.max_runs) return error.LimitExceeded;
             self.report.runs += 1;
             if (self.paragraph_depths.items.len == 0 or self.paragraph_depths.items[self.paragraph_depths.items.len - 1] + 1 != depth) self.report.non_direct_runs += 1;
-            try self.note(.character_shape, try attrs.attribute(self.allocator, tag, scope, "charPrIDRef", self.options.max_attribute_bytes), .char_shape);
+            try paragraph_style_links.noteRun(self.allocator, tag, scope, self.options.max_attribute_bytes, self.resources, self.item_index, &self.report.references);
         }
     }
 };

@@ -24,6 +24,7 @@ const payload_integrity = @import("payload_integrity.zig");
 const manifest_xml = @import("manifest_xml.zig");
 const settings = @import("settings.zig");
 const masterpage_references = @import("masterpage_references.zig");
+const masterpage_style_references = @import("masterpage_style_references.zig");
 
 pub const Archive = zip.Archive;
 pub const Options = zip.Options;
@@ -123,6 +124,12 @@ pub const MasterPageOptions = struct {
     references: masterpage_references.Options = .{},
 };
 pub const MasterPageReport = masterpage_references.Report;
+pub const MasterPageStyleReferenceOptions = struct {
+    master_pages: MasterPageOptions = .{},
+    header_resources: HeaderResourceOptions = .{},
+    references: masterpage_style_references.Options = .{},
+};
+pub const MasterPageStyleReferenceReport = masterpage_style_references.Report;
 pub const KnownOptions = struct {
     version: VersionOptions = .{},
     protection: ProtectionOptions = .{},
@@ -130,6 +137,7 @@ pub const KnownOptions = struct {
     manifest_xml: ManifestXmlOptions = .{},
     settings: SettingsOptions = .{},
     master_pages: MasterPageOptions = .{},
+    master_page_style_references: masterpage_style_references.Options = .{},
     structure: StructureOptions = .{},
     header_resources: HeaderResourceOptions = .{},
     section_references: ReferenceOptions = .{},
@@ -189,6 +197,16 @@ pub const Document = struct {
         var section_structure = try self.inspectStructure(a, options.structure);
         defer section_structure.deinit(a);
         return masterpage_references.inspect(a, self.archive, self.manifest, section_structure.sections, options.references);
+    }
+
+    /// Resolves paragraph and run formatting links inside root-direct master
+    /// page subLists. The master-page part and header ID inventory stay separate.
+    pub fn inspectMasterPageStyleReferences(self: *const Document, a: std.mem.Allocator, options: MasterPageStyleReferenceOptions) !MasterPageStyleReferenceReport {
+        var pages = try self.inspectMasterPages(a, options.master_pages);
+        defer pages.deinit(a);
+        var resources = try self.inspectHeaderResources(a, options.header_resources);
+        defer resources.deinit(a);
+        return masterpage_style_references.inspect(a, self.archive, pages.parts.parts, &resources, options.references);
     }
 
     /// Runs all currently exposed HWPX inspections on this document. A
