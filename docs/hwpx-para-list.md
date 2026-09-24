@@ -1,6 +1,6 @@
 # HWPX ParaListType 직접 속성
 
-`src/hwpx/para_list_attributes.zig`는 `hp:subList`에 공통인 속성 원값의 소유·어휘 검사를 담당합니다. 현재 호출자는 `masterpage_parts.zig`의 루트 직접 자식 `hp:subList`뿐입니다. [한컴 ParaListType 구현](https://github.com/hancom-io/hwpx-owpml-model/blob/main/OWPML/Class/Para/ParaListType.cpp) 및 [필드 선언](https://github.com/hancom-io/hwpx-owpml-model/blob/main/OWPML/Class/Para/ParaListType.h)을 필드 이름과 타입의 기준으로 삼습니다. 코드를 복사하거나 한컴 모델의 기본값을 입력 문서에 임의로 채우지 않습니다.
+`src/hwpx/para_list_attributes.zig`는 `hp:subList`에 공통인 속성 원값의 소유·어휘 검사를 담당합니다. 호출자는 `masterpage_parts.zig`의 루트 직접 자식 `hp:subList`와 [표 셀의 직접 목록](hwpx-table-cell-sublists.md)입니다. 두 입력 경로는 같은 필드·값 판정을 사용하며 표 셀 경로는 이미 색인된 section XML 트리의 시작 태그를 읽습니다. [한컴 ParaListType 구현](https://github.com/hancom-io/hwpx-owpml-model/blob/main/OWPML/Class/Para/ParaListType.cpp) 및 [필드 선언](https://github.com/hancom-io/hwpx-owpml-model/blob/main/OWPML/Class/Para/ParaListType.h)을 필드 이름과 타입의 기준으로 삼습니다. 코드를 복사하거나 한컴 모델의 기본값을 입력 문서에 임의로 채우지 않습니다.
 
 `Attributes.raw`는 `id`, `textDirection`, `lineWrap`, `vertAlign`, `linkListIDRef`, `linkListNextIDRef`, `textWidth`, `textHeight`, `hasTextRef`, `hasNumRef`, `metatag` 순서로 XML 정규화된 UTF-8 원값을 소유합니다. `null`은 부재, 빈 문자열은 실제 빈 값입니다. 방향·줄바꿈·세로 정렬의 알려진 열거값은 각각 `HORIZONTAL/VERTICAL/VERTICALALL`, `BREAK/SQUEEZE/KEEP`, `TOP/CENTER/BOTTOM`입니다. 미지 열거값은 버리지 않고 `unknown_enums`에 집계합니다. 네 참조·크기 값은 unsigned 32-bit, 두 플래그는 XML Boolean 어휘로 검사합니다. 알려지지 않은 무명·다른 namespace 속성은 `other_attributes`에 계수하며 의미를 추측하지 않습니다. `id` 및 `metatag`의 의미·유일성은 여기서 추측하지 않습니다.
 
@@ -10,4 +10,4 @@
 
 최종 소스에서 Debug·ReleaseSafe·ReleaseFast의 `HWPX master` 테스트 각각 13개, 전체 Debug `zig build test --summary all` 2,224개, 선택 실파일 8개 shard, `zig build -Doptimize=ReleaseSafe`, `zig build audit -Doptimize=ReleaseSafe --summary all`, `zig fmt --check build.zig src`가 통과했습니다. audit의 다른 포맷 검증은 ParaListType 내부 의미 완료의 근거가 아닙니다.
 
-후속: 일반 표/도형 안의 다른 ParaListType 호출자 연결, 마스터페이지 문단·run의 서식 참조, 문단 내용의 의미 조립, `metatag` 내용·쪽 배치·저장 정책. 이 단계의 보고서는 문서 모델이나 무손실 편집 지원을 뜻하지 않습니다.
+후속: 도형 등 다른 ParaListType 호출자 연결, 표 셀·마스터페이지 문단 내용의 의미 조립, `metatag` 내용·쪽 배치·저장 정책. 이 단계의 보고서는 문서 모델이나 무손실 편집 지원을 뜻하지 않습니다.

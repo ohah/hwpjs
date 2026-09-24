@@ -1,7 +1,8 @@
 const std = @import("std");
 const xml = @import("../xml/root.zig");
 
-fn parseStartTag(a: std.mem.Allocator, tree: anytype, index: usize) !xml.tags.Tag {
+pub fn parseStartTag(a: std.mem.Allocator, tree: anytype, index: usize) !xml.tags.Tag {
+    if (index >= tree.elements.len) return error.InvalidElementIndex;
     const element = tree.elements[index];
     const raw = tree.source[element.start_tag.start..element.start_tag.end];
     var input = try xml.input.Input.init(raw, element.name.local.encoding, .{ .max_bytes = raw.len, .max_characters = raw.len });

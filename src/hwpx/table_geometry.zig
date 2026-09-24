@@ -3,6 +3,7 @@ const tree_mod = @import("xml_part_tree.zig");
 const document_xml = @import("document_xml.zig");
 const table_fields = @import("table_xml_fields.zig");
 const cell_fields = @import("table_cell_fields.zig");
+const cell_sub_lists = @import("table_cell_sub_lists.zig");
 const header_resources = @import("header_resources.zig");
 
 pub const Options = struct {
@@ -13,6 +14,7 @@ pub const Options = struct {
     max_total_grid_slots: usize = 4_000_000,
     max_total_cell_slots: usize = 8_000_000,
     max_attribute_bytes: usize = 4096,
+    cell_sub_lists: cell_sub_lists.Options = .{},
 };
 
 /// Structural observations, not a claim that the table can be laid out or edited.
@@ -39,12 +41,14 @@ pub const Report = struct {
     overlaps: usize = 0,
     uncovered_slots: usize = 0,
     cell_fields: cell_fields.Report = .{},
+    cell_sub_lists: cell_sub_lists.Report = .{},
 };
 
 fn inspectCell(a: std.mem.Allocator, tree: *const tree_mod.Tree, cell: usize, row_index: usize, rows: ?u32, cols: ?u32, occupied: ?[]u8, options: Options, border_fills: ?*const header_resources.Table, report: *Report) !void {
     if (report.cells == options.max_cells) return error.LimitExceeded;
     report.cells += 1;
     try cell_fields.inspectCell(a, tree, cell, options.max_attribute_bytes, border_fills, &report.cell_fields);
+    try cell_sub_lists.inspectCell(a, tree, cell, options.max_attribute_bytes, options.cell_sub_lists, &report.cell_sub_lists);
     const addr = table_fields.uniqueChild(tree, cell, "cellAddr", &report.missing_address, &report.duplicate_address);
     const span = table_fields.uniqueChild(tree, cell, "cellSpan", &report.missing_span, &report.duplicate_span);
     const col = if (addr) |index| try table_fields.optionalUnsigned(a, tree, index, "colAddr", options.max_attribute_bytes) else null;

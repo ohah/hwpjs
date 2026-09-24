@@ -44,6 +44,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [표 셀 크기·여백·속성·테두리 참조](hwpx-table-cell-fields.md)는 같은 직접 셀 선택을 재사용해 크기·여백·속성의 표기를 구분합니다. 전체 문서 검사에서만 이미 읽은 header 리소스 ID 목록을 주입해 공통 참조 판정기에 연결합니다. 음수 여백과 상위 비트 값의 화면상 해석은 확정하지 않습니다.
 
+[표 셀 직접 subList](hwpx-table-cell-sublists.md)는 같은 셀 선택에서 목록 경계·직접 문단을 세고 [ParaListType](hwpx-para-list.md)의 필드 판정을 색인된 section 트리에 재사용합니다. 문단 메타 값은 기존 section 전체 검사가 소유하며 셀 본문의 의미 조립은 아직 별도 단계입니다.
+
 [모든 ZIP 엔트리 바이트 무결성](hwpx-payload-integrity.md)은 기존 ZIP 해제·CRC 계약을 전체 archive에 적용합니다. OPF 밖 항목도 누락하지 않지만 media-type과 payload 내부 포맷의 의미 검사는 해당 리소스 계층에 남깁니다.
 
 [OPF 선언 XML 전수 문법 검사](hwpx-manifest-xml.md)는 공통 XML 순회를 모든 내장 `application/xml` manifest 항목에 적용합니다. settings·masterpage도 포함하지만 루트별 스키마·의미는 해당 후속 계층에 남깁니다.

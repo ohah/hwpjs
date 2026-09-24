@@ -48,6 +48,10 @@ pub const table_cell_flag_true = [_][4]usize{
     .{ 4, 148, 123, 0 }, .{ 85, 5, 175, 36 },  .{ 178, 30, 111, 8 }, .{ 61, 77, 290, 36 },
 };
 pub const table_cell_border_sum = [_]u64{ 658079, 191413, 347715, 247895, 3319327, 1252296, 2772075, 2592952 };
+// Direct table-cell hp:subList census from the independent ZIP/XML oracle.
+pub const table_cell_sublist_direct_paragraphs = [_]usize{ 18932, 13738, 13208, 9173, 13989, 12640, 19096, 27328 };
+pub const table_cell_sublist_id_absent = [_]usize{ 0, 0, 0, 0, 0, 0, 0, 59 };
+pub const table_cell_sublist_metatag_present = [_]usize{ 0, 1, 0, 11, 23, 15, 50, 0 };
 pub const paragraphs = [_]usize{ 28740, 20865, 20019, 11680, 44679, 24829, 23614, 40720 };
 pub const begin_present = [_]usize{ 60, 64, 53, 48, 58, 57, 54, 61 };
 // Raw minus selected section text: [paragraphs, runs, hp:t, UTF-8 bytes,

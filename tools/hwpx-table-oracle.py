@@ -14,6 +14,8 @@ OPF = "{http://www.idpf.org/2007/opf/}"
 P = "{http://www.hancom.co.kr/hwpml/2011/paragraph}"
 H = "{http://www.hancom.co.kr/hwpml/2011/head}"
 SECTION = "{http://www.hancom.co.kr/hwpml/2011/section}sec"
+PARA_LIST_FIELDS = ("id", "textDirection", "lineWrap", "vertAlign", "linkListIDRef", "linkListNextIDRef", "textWidth", "textHeight", "hasTextRef", "hasNumRef", "metatag")
+PARA_LIST_ENUMS = {"textDirection": {"HORIZONTAL", "VERTICAL", "VERTICALALL"}, "lineWrap": {"BREAK", "SQUEEZE", "KEEP"}, "vertAlign": {"TOP", "CENTER", "BOTTOM"}}
 
 
 def read_part(archive, name, limit):
@@ -65,7 +67,35 @@ def optional_margin_int(node, name):
     return number
 
 
+def inspect_cell_sub_lists(cell, stats):
+    lists = [child for child in cell if child.tag == P + "subList"]
+    stats["sublist_missing_cells"] += not lists
+    stats["sublist_duplicate_cells"] += len(lists) > 1
+    for sublist in lists:
+        stats["sublists"] += 1
+        direct_paragraphs = sum(child.tag == P + "p" for child in sublist)
+        stats["sublist_direct_paragraphs"] += direct_paragraphs
+        stats["sublist_other_direct"] += len(sublist) - direct_paragraphs
+        stats["sublist_empty"] += len(sublist) == 0
+        stats["sublist_other_attributes"] += sum(name not in PARA_LIST_FIELDS for name in sublist.attrib)
+        for name in PARA_LIST_FIELDS:
+            raw = sublist.get(name)
+            stats[f"sublist_{name}_present"] += raw is not None
+            stats[f"sublist_{name}_empty"] += raw == "" if raw is not None else False
+            if raw is None:
+                continue
+            if name in PARA_LIST_ENUMS:
+                stats["sublist_unknown_enums"] += raw not in PARA_LIST_ENUMS[name]
+            elif name in ("linkListIDRef", "linkListNextIDRef", "textWidth", "textHeight"):
+                value = optional_int(sublist, name)
+                if name in ("textWidth", "textHeight"):
+                    stats[f"sublist_{name}_sum"] += value
+            elif name in ("hasTextRef", "hasNumRef"):
+                stats[f"sublist_{name}_true"] += optional_bool(sublist, name) is True
+
+
 def inspect_metrics(cell, stats, border_ids):
+    inspect_cell_sub_lists(cell, stats)
     sizes = [child for child in cell if child.tag == P + "cellSz"]
     margins = [child for child in cell if child.tag == P + "cellMargin"]
     stats["missing_size"] += not sizes
@@ -242,6 +272,7 @@ def self_test():
         ("<p:tbl rowCnt='1' colCnt='1'><p:tr><p:tc hasMargin='false'><p:cellSz width='10' height='0'/><p:cellMargin left='-21280' right='4294948081' top='0' bottom='141'/></p:tc></p:tr></p:tbl>", {"size_elements": 1, "margin_elements": 1, "zero_size_height": 1, "negative_margin_left": 1, "highbit_margin_right": 1, "margin_flag_false_with_element": 1}),
         ("<p:tbl rowCnt='1' colCnt='1'><p:tr><p:tc name='A&amp;B' header='true' protect='false' editable='1' dirty='0' borderFillIDRef='4294967295'/></p:tr></p:tbl>", {"name_present": 1, "name_utf8_bytes": 3, "header_true": 1, "protect_false": 1, "editable_true": 1, "dirty_false": 1, "border_sum": 4294967295}),
         ("<p:tbl rowCnt='1' colCnt='2'><p:tr><p:tc/><p:tc name='' header='false' borderFillIDRef='0'/></p:tr></p:tbl>", {"name_absent": 1, "name_present": 1, "name_empty": 1, "header_absent": 1, "header_false": 1, "border_absent": 1, "border_zero": 1}),
+        ("<p:tbl rowCnt='1' colCnt='1'><p:tr><p:tc><p:subList textDirection='FUTURE' textWidth='12' hasTextRef='true'><p:p/><p:future/></p:subList><p:subList/></p:tc></p:tr></p:tbl>", {"sublists": 2, "sublist_duplicate_cells": 1, "sublist_direct_paragraphs": 1, "sublist_other_direct": 1, "sublist_unknown_enums": 1, "sublist_textWidth_sum": 12, "sublist_hasTextRef_true": 1, "sublist_empty": 1}),
     )
     for source, expected in cases:
         stats = Counter()

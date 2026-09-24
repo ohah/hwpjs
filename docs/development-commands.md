@@ -6,6 +6,8 @@
 
 [표 셀 크기·여백·속성·테두리 참조](hwpx-table-cell-fields.md)는 `zig test src/root.zig --test-filter 'HWPX table cell fields'`, `--test-filter 'HWPX table cell attributes'`, `--test-filter 'HWPX table cell border references'`와 `--test-filter 'HWPX known inspections distinguish missing border target'`로 합성·오류·참조 분기·할당 실패를 확인합니다. `zig test src/hwpx/xml_values.zig`는 공통 숫자 어휘를 검사합니다. 같은 known survey 8개 shard로 독립 Python 조사기의 크기·여백·속성 분포와 테두리 ID 해결을 대조합니다. 기본 audit에는 실파일 분할이 포함되지 않습니다.
 
+[표 셀 직접 subList](hwpx-table-cell-sublists.md)는 `zig test src/root.zig --test-filter 'HWPX cell subLists'`로 합성·오류·한도·할당 실패를, 위의 `HWPX known inspections include table geometry`로 전체 문서 연결을 확인합니다. 같은 known survey 8개 shard에서 독립 Python 조사기의 목록·직접 문단·속성 분포를 대조합니다.
+
 [선택 분기 section 텍스트](hwpx-selected-section-text.md)의 합성 검사는 `zig test src/root.zig --test-filter 'HWPX selected section text'`로 실행합니다. 조건부 분기가 있는 실파일의 텍스트 보존 대조는 같은 known survey 8개 shard에 포함됩니다.
 
 [선택 분기 서식 참조](hwpx-selected-style-references.md)는 `zig test src/root.zig --test-filter 'HWPX selected style references'`로 합성·할당 실패를 검사합니다. 실파일의 선택 텍스트·서식 참조 교차 대조는 위 known survey 8개 shard를 별도 프로세스로 실행합니다.

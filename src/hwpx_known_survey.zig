@@ -435,6 +435,7 @@ fn surveyShard(shard: usize) !void {
     var switch_removed_default: [5]usize = @splat(0);
     var table_geometry: package.TableGeometryReport = .{};
     var table_fields: package.TableCellFieldsReport = .{};
+    var table_sub_lists: package.TableCellSubListsReport = .{};
     for (roots, 0..) |root, root_index| {
         const dir = try std.Io.Dir.cwd().openDir(std.testing.io, root, .{ .iterate = true });
         defer dir.close(std.testing.io);
@@ -544,6 +545,20 @@ fn surveyShard(shard: usize) !void {
                         table_fields.negative_margin_field[i] += fields.negative_margin_field[i];
                         table_fields.highbit_margin_field[i] += fields.highbit_margin_field[i];
                     }
+                    const lists = t.cell_sub_lists;
+                    try std.testing.expectEqual(t.cells, lists.cells);
+                    try std.testing.expectEqual(t.cells, lists.sub_lists);
+                    try std.testing.expectEqual(@as(usize, 0), lists.missing_cells + lists.duplicate_cells + lists.empty_sub_lists + lists.other_direct_elements + lists.unknown_enums + lists.other_attributes + lists.has_text_ref_true + lists.has_num_ref_true);
+                    try std.testing.expectEqual(@as(u64, 0), lists.text_width_sum + lists.text_height_sum);
+                    for (lists.field_present, 0..) |value, i| {
+                        if (i == @intFromEnum(para_list_attributes.Field.id) or i == @intFromEnum(para_list_attributes.Field.metatag)) continue;
+                        try std.testing.expectEqual(lists.sub_lists, value);
+                    }
+                    table_sub_lists.sub_lists += lists.sub_lists;
+                    table_sub_lists.direct_paragraphs += lists.direct_paragraphs;
+                    table_sub_lists.field_present[@intFromEnum(para_list_attributes.Field.id)] += lists.field_present[@intFromEnum(para_list_attributes.Field.id)];
+                    table_sub_lists.field_present[@intFromEnum(para_list_attributes.Field.metatag)] += lists.field_present[@intFromEnum(para_list_attributes.Field.metatag)];
+                    table_sub_lists.field_empty[@intFromEnum(para_list_attributes.Field.id)] += lists.field_empty[@intFromEnum(para_list_attributes.Field.id)];
                     accepted += 1;
                 },
             }
@@ -564,6 +579,11 @@ fn surveyShard(shard: usize) !void {
     try std.testing.expectEqual(expected.table_cell_name_empty[shard], table_fields.name_empty);
     try std.testing.expectEqual(expected.table_cell_name_bytes[shard], table_fields.name_utf8_bytes);
     try std.testing.expectEqual(expected.table_cell_border_sum[shard], table_fields.border_fill_sum);
+    try std.testing.expectEqual(expected.table_cells[shard], table_sub_lists.sub_lists);
+    try std.testing.expectEqual(expected.table_cell_sublist_direct_paragraphs[shard], table_sub_lists.direct_paragraphs);
+    try std.testing.expectEqual(expected.table_cell_sublist_id_absent[shard], table_sub_lists.sub_lists - table_sub_lists.field_present[@intFromEnum(para_list_attributes.Field.id)]);
+    try std.testing.expectEqual(table_sub_lists.field_present[@intFromEnum(para_list_attributes.Field.id)], table_sub_lists.field_empty[@intFromEnum(para_list_attributes.Field.id)]);
+    try std.testing.expectEqual(expected.table_cell_sublist_metatag_present[shard], table_sub_lists.field_present[@intFromEnum(para_list_attributes.Field.metatag)]);
     for (table_fields.flags, 0..) |flag, i| try std.testing.expectEqual(expected.table_cell_flag_true[shard][i], flag.true_value);
     try std.testing.expectEqual(expected.table_zero_height[shard], table_fields.zero_size_field[1]);
     try std.testing.expectEqualSlices(u64, &expected.table_size_sums[shard], &table_fields.size_sum);
