@@ -80,3 +80,25 @@ test "summary typed text preserves zero-length versus terminator, raw surrogates
     const unknown = try v.parse(999, &.{ 0xff, 0xff, 0, 0, 1, 2 });
     try t.expect(unknown.value == .unsupported);
 }
+
+test "summary typed value rejects nonzero reserved bits even for unknown types" {
+    const v = @import("value.zig");
+    try t.expectError(error.InvalidSummaryPadding, v.parse(2, &.{ 3, 0, 1, 0, 0, 0, 0, 0 }));
+    try t.expectError(error.InvalidSummaryPadding, v.parse(999, &.{ 0xff, 0xff, 1, 0, 0 }));
+    const vector = try v.parse(999, &.{ 2, 0x10, 0, 0, 0 });
+    try t.expect(vector.value == .unsupported);
+    const dictionary = try v.parse(0, &.{ 3, 0, 1, 0 });
+    try t.expect(dictionary.value == .dictionary);
+    var b = fixture();
+    put(&b, 74, u16, 1);
+    var checked: std.heap.DebugAllocator(.{ .safety = true, .enable_memory_limit = true }) = .init;
+    defer _ = checked.deinit();
+    try t.expectError(error.InvalidSummaryPadding, p.Document.parse(checked.allocator(), &b, 2));
+    try t.expectEqual(@as(usize, 0), checked.total_requested_bytes);
+}
+
+test "HWP summary rejects a forged two-set stream rather than selecting its first set" {
+    var b = fixture();
+    put(&b, 24, u32, 2);
+    try t.expectError(error.UnsupportedSummaryLayout, p.Document.parse(t.allocator, &b, 2));
+}

@@ -21,7 +21,7 @@
 
 - [PrvImage 형식 조사](hwp5-preview-image-evidence.md)는 BMP/GIF 명세와 실제 PNG/JPEG 관측을, [PrvImage 검사](hwp5-preview-image.md)는 선택 코덱 연결·소비·한도 계약과 검증 기록을 관리합니다. 시그니처 조사 성공을 이미지 검증이나 스트림 소비 완료로 세지 않습니다.
 
-- `hwp5/summary/`: header는 HWP FMTID/단일 set envelope, parser는 속성 offset/중복/배열 수명, value는 알려진 typed value, rules는 ID별 기대 타입을 소유합니다. PID 0 dictionary는 TypedPropertyValue로 읽지 않습니다. LPWSTR 문자열 길이는 u32 코드 유닛이며 NUL 종결/패딩을 검사하되 원문·extra·64비트 FILETIME을 보존합니다. `container/summary.zig`는 제어문자 0x05를 포함한 정확한 루트 경로와 전역 한도만 연결합니다. 미지원 타입/ID·dictionary·꼬리를 완료로 치환하지 않습니다.
+- `hwp5/summary/`: header는 HWP FMTID/단일 set envelope, parser는 속성 offset/중복/배열 수명, value는 알려진 typed value, rules는 ID별 기대 타입을 소유합니다. PID 0 dictionary는 TypedPropertyValue로 읽지 않습니다. LPWSTR 문자열 길이는 u32 코드 유닛이며 NUL 종결/패딩을 검사하되 원문·extra·64비트 FILETIME을 보존합니다. `container/summary.zig`는 제어문자 0x05를 포함한 정확한 루트 경로와 전역 한도만 연결합니다. 다중 set과 타입·예약 필드 경계는 [문서 요약 property set](hwp5-summary-property-sets.md)이 소유하며, 미지원 타입/ID·dictionary·꼬리를 완료로 치환하지 않습니다.
 
 - `hwp5/scripts/version.zig`는 버전 두 DWORD, `source.zig`는 u32 길이의 네 UTF-16 필드와 -1 종료 표식을 소유합니다. summary의 NUL/패딩 규칙을 재사용하지 않습니다. `container/scripts.zig`는 정확한 선택 경로·scripts/stream의 역할별 선택 디코딩·전역 소비 한도를 연결하며 scalar 보고서만 반환합니다. 미지 버전/꼬리는 보존·보고하고 스크립트를 실행하지 않습니다.
 

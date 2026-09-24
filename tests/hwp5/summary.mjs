@@ -132,6 +132,14 @@ export function summaryEdges(call) {
     /InvalidSummaryPropertyType/,
   );
   reject(
+    summaryFixture([[14, Buffer.concat([w(0x00010003), w(1)])]]),
+    /InvalidSummaryPadding/,
+  );
+  reject(
+    summaryFixture([[999, Buffer.concat([w(0x0001ffff), w(1)])]]),
+    /InvalidSummaryPadding/,
+  );
+  reject(
     summaryFixture([
       [2, Buffer.concat([w(31), w(1), Buffer.from([0, 0, 1, 0])])],
     ]),
@@ -149,6 +157,7 @@ export function summaryEdges(call) {
       [2, Buffer.concat([w(30), w(0)])],
     ]),
   );
+  summaryActual(call, summaryFixture([[0, w(0x00010003)]]));
   summaryActual(call, Buffer.concat([good, Buffer.from([1, 2, 3])]));
   assert.throws(() => call(27, good, 3), /LimitExceeded/);
   return { rejected, recoveries: rejected };

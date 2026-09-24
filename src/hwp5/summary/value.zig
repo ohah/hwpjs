@@ -9,7 +9,10 @@ pub fn parse(id: u32, raw: []const u8) !Parsed {
 pub fn parseWithCodePage(id: u32, raw: []const u8, code_page: ?u16) !Parsed {
     if (id == 0) return .{ .value = .{ .dictionary = raw }, .extra = &.{} };
     var r: Reader = .{ .bytes = raw };
-    const tag = try r.readInt(u32);
+    const tag = try r.readInt(u16);
+    // MS-OLEPS TypedPropertyValue stores a 16-bit type followed by a
+    // separate reserved 16-bit field; unknown types do not waive padding.
+    if (try r.readInt(u16) != 0) return error.InvalidSummaryPadding;
     const value: Value = switch (tag) {
         2 => blk: {
             const v = try r.readInt(i16);

@@ -120,6 +120,8 @@ HWPX 전용 테스트는 `zig test src/root.zig --test-filter HWPX`로 실행합
 
 `zig build history-xml-audit`는 별도 설치된 `xmllint`가 PATH에 있을 때 이력의 읽기 전용 XML 조사를 실행합니다. 자동 설치하거나 제품/WASM에 링크하지 않습니다. 외부 도구가 필요 없는 안전 경계 단위 테스트만 기본 `audit`에 포함하며, 실제 XML 조사는 명시적으로 실행합니다. 계약과 실측은 [이력 XML 조사](hwp5-history-xml-evidence.md)가 소유합니다.
 
+[HWP5 문서 요약 property set](hwp5-summary-property-sets.md)의 타입·예약 필드와 다중 set 거부는 `zig test src/root.zig --test-filter 'summary typed value'` 및 `--test-filter 'HWP summary rejects'`로 검사합니다. 전체 회귀는 아래 `zig build test --summary all`·`audit`를 따릅니다. 별도 읽기 전용 원시 필드 조사는 `node tools/hwp5-summary-reserved-survey.mjs --self-test` 후 `node tools/hwp5-summary-reserved-survey.mjs legacy/rust/crates/hwp-core/tests/fixtures reference/rhwp/samples`로 재현합니다. 이 조사는 제품 WASM의 CFB 조회를 사용하며, 문서 전체 검증은 아닙니다.
+
 ## PrvImage 조사
 
 `zig build preview-image-audit --summary all`은 제품 WASM 빌드 후 조사 도구 테스트와 기본 HWP fixture의 읽기 전용 시그니처 조사를 실행하며 정규 audit에도 포함됩니다. 제품 이미지 검사 명령이 아닙니다. 범위를 넓히려면 빌드 후 아래 명령에 디렉터리를 명시합니다. 직접 자식 파일만 조사합니다. 계약·미구현 범위는 [PrvImage 형식 조사](hwp5-preview-image-evidence.md)에 둡니다.
