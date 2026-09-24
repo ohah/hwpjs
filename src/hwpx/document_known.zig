@@ -9,6 +9,7 @@ const font_faces = @import("font_faces.zig");
 const font_refs = @import("font_references.zig");
 const list_refs = @import("list_references.zig");
 const binary_refs = @import("binary_reference_links.zig");
+const masterpage_binary_refs = @import("masterpage_binary_references.zig");
 const chart_refs = @import("chart_parts.zig");
 const section_text = @import("section_text.zig");
 const paragraph_metadata = @import("paragraph_metadata.zig");
@@ -42,6 +43,7 @@ pub const Report = struct {
     master_page_paragraph_children: masterpage_paragraph_children.Report,
     master_page_text_nodes: text_node.Report,
     master_page_text: section_text.MasterReport,
+    master_page_binary_references: masterpage_binary_refs.Report,
     structure: structure.Report,
     resources: resources.Report,
     section_references: section_refs.Report,
@@ -69,6 +71,7 @@ pub const Report = struct {
         self.master_pages.deinit(a);
         self.chart_references.deinit(a);
         self.binary_references.deinit(a);
+        self.master_page_binary_references.deinit(a);
         self.font_faces.deinit(a);
         self.resources.deinit(a);
         self.structure.deinit(a);
@@ -93,6 +96,8 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
     var master_page_report = try document.inspectMasterPages(a, options.master_pages);
     errdefer master_page_report.deinit(a);
     const master_page_text_report = try section_text.inspectMasterPages(a, document.archive, master_page_report.parts.parts, options.master_page_text, null);
+    var master_page_binary_report = try masterpage_binary_refs.inspect(a, document.archive, document.manifest, master_page_report.parts.parts, options.master_page_binary_references);
+    errdefer master_page_binary_report.deinit(a);
     const master_page_line_segment_report = try masterpage_line_segments.inspect(a, document.archive, master_page_report.parts.parts, options.master_page_line_segments);
     const master_page_paragraph_children_report = try masterpage_paragraph_children.inspect(a, document.archive, master_page_report.parts.parts, options.master_page_paragraph_children);
     var version = try document.inspectVersion(a, options.version);
@@ -141,6 +146,7 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
         .master_page_paragraph_children = master_page_paragraph_children_report,
         .master_page_text_nodes = master_page_text_nodes_report,
         .master_page_text = master_page_text_report,
+        .master_page_binary_references = master_page_binary_report,
         .structure = structure_report,
         .resources = resource_report,
         .section_references = section_ref_report,

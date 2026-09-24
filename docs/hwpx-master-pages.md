@@ -33,3 +33,5 @@ manifest 경로와 루트 ID는 별도 색인으로 조회해, 많은 참조가 
 후손 문단의 직접 run·`linesegarray`·기타 자식 분류는 [마스터페이지 문단 직접 자식](hwpx-master-paragraph-children.md)이 section 분류 판정을 공유해 별도로 진단합니다.
 
 직접 `subList` 후손의 정규화된 `hp:t` 내용과 인라인 경계는 [마스터페이지 텍스트 이벤트](hwpx-master-text.md)가 section 스캐너를 재사용해 별도로 제공합니다. 이 추가 검사도 바탕쪽 배치 의미를 판정하지 않습니다.
+
+같은 범위의 그림·도형 이미지 브러시·OLE의 manifest ID 연결은 [마스터페이지 이진 리소스 참조](hwpx-master-binary-references.md)가 기존 ID 판정을 재사용합니다.

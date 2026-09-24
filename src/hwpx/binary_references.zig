@@ -20,11 +20,11 @@ pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, manifest: content_man
     var report: Report = .{ .sections = sections.len };
     errdefer report.deinit(a);
     var remaining = options.max_total_xml_bytes;
-    try scan.read(a, archive, header.entry, header.item_index, .header, manifest, &index, &report, options, &remaining);
+    _ = try scan.read(a, archive, header.entry, header.item_index, .header, manifest, &index, &report, options, &remaining, null);
     for (sections) |section| {
         const item = manifest.items[section.item_index];
         const entry_index = item.entry_index orelse return error.ExternalSpineXml;
-        try scan.read(a, archive, archive.entries[entry_index], section.item_index, .section, manifest, &index, &report, options, &remaining);
+        _ = try scan.read(a, archive, archive.entries[entry_index], section.item_index, .section, manifest, &index, &report, options, &remaining, null);
     }
     return report;
 }

@@ -12,6 +12,7 @@ const font_faces = @import("font_faces.zig");
 const font_references = @import("font_references.zig");
 const list_references = @import("list_references.zig");
 const binary_references = @import("binary_references.zig");
+const masterpage_binary_references = @import("masterpage_binary_references.zig");
 const chart_references = @import("chart_references.zig");
 const compatibility_selection = @import("compatibility_selection.zig");
 const section_text = @import("section_text.zig");
@@ -102,6 +103,11 @@ pub const BinaryReferenceOptions = struct {
 };
 pub const BinaryReferenceReport = binary_references.Report;
 pub const BinaryReferenceKind = binary_references.Kind;
+pub const MasterPageBinaryReferenceOptions = struct {
+    master_pages: MasterPageOptions = .{},
+    references: masterpage_binary_references.Options = .{},
+};
+pub const MasterPageBinaryReferenceReport = masterpage_binary_references.Report;
 pub const ChartReferenceOptions = struct {
     structure: StructureOptions = .{},
     references: chart_references.Options = .{},
@@ -229,6 +235,7 @@ pub const KnownOptions = struct {
     master_page_paragraph_children: masterpage_paragraph_children.Options = .{},
     master_page_text_nodes: text_node.MasterOptions = .{},
     master_page_text: section_text.MasterOptions = .{},
+    master_page_binary_references: masterpage_binary_references.Options = .{},
     structure: StructureOptions = .{},
     header_resources: HeaderResourceOptions = .{},
     section_references: ReferenceOptions = .{},
@@ -317,6 +324,14 @@ pub const Document = struct {
         var pages = try self.inspectMasterPages(a, options.master_pages);
         defer pages.deinit(a);
         return section_text.inspectMasterPages(a, self.archive, pages.parts.parts, options.text, visitor);
+    }
+
+    /// Resolves binaryItemIDRef in selected master-page subLists without
+    /// decoding binary payloads or applying a master page to a page view.
+    pub fn inspectMasterPageBinaryReferences(self: *const Document, a: std.mem.Allocator, options: MasterPageBinaryReferenceOptions) !MasterPageBinaryReferenceReport {
+        var pages = try self.inspectMasterPages(a, options.master_pages);
+        defer pages.deinit(a);
+        return masterpage_binary_references.inspect(a, self.archive, self.manifest, pages.parts.parts, options.references);
     }
 
     /// Resolves paragraph and run formatting links inside root-direct master

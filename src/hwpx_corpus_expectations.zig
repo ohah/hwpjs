@@ -274,6 +274,18 @@ pub const master_text_digest_sum = [_]u64{
     3454785851527485364, 13920564907367095401, 11283306605575013755, 0,
     0,                   0,                    5992471676250238163,  14003655075739860585,
 };
+// Three groups of [sites, absent, empty, embedded, external, missing], then
+// unclassified attributes, from the independent OPF/ElementTree oracle.
+pub const master_binary = [_][19]usize{
+    .{ 4, 0, 0, 4, 0, 0 } ++ .{0} ** 13,
+    .{ 3, 0, 0, 3, 0, 0 } ++ .{0} ** 13,
+    .{ 10, 0, 0, 10, 0, 0 } ++ .{0} ** 13,
+    .{0} ** 19,
+    .{0} ** 19,
+    .{0} ** 19,
+    .{ 3, 0, 0, 3, 0, 0 } ++ .{0} ** 13,
+    .{ 15, 0, 0, 15, 0, 0 } ++ .{0} ** 13,
+};
 // [Hancom model, 2011 XSD-only hyphen, other 2011, foreign].
 pub const section_text_child_classes = [_][4]usize{
     .{ 1760, 0, 0, 0 }, .{ 2153, 0, 0, 0 },

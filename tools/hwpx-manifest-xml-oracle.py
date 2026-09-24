@@ -23,6 +23,9 @@ APP = "{http://www.hancom.co.kr/hwpml/2011/app}"
 CONFIG = "{urn:oasis:names:tc:opendocument:xmlns:config:1.0}"
 PARA = "{http://www.hancom.co.kr/hwpml/2011/paragraph}"
 HEAD = "{http://www.hancom.co.kr/hwpml/2011/head}"
+CORE = "{http://www.hancom.co.kr/hwpml/2011/core}"
+MASTER_DRAWINGS = frozenset(PARA + name for name in (
+    "rect", "ellipse", "polygon", "arc", "curve", "line", "connectLine", "textart", "unknown", "presentation"))
 MASTER_STYLE_FIELDS = (("paraPrIDRef", "paraProperties", "paraPr"),
                        ("styleIDRef", "styles", "style"),
                        ("charPrIDRef", "charProperties", "charPr"))
@@ -87,6 +90,7 @@ def empty():
                 section_switch_shape=[0] * 21, master_switch_shape=[0] * 21,
                 section_text_nodes=[0] * 6, master_text_nodes=[0] * 6,
                 master_text_content=[0] * 5, master_text_digest_sum=0,
+                master_binary=[0] * 19,
                 section_text_children={}, master_text_children={},
                 section_text_child_classes=[0] * 4, master_text_child_classes=[0] * 4,
                 section_tab_fields=[0] * 21, master_tab_fields=[0] * 21,
@@ -141,6 +145,52 @@ def self_test_master_text_content():
     for byte in expected:
         oracle_digest = ((oracle_digest ^ byte) * 1099511628211) & 0xFFFFFFFFFFFFFFFF
     assert digest == oracle_digest
+
+
+def count_master_binary(sub_list, items, counts):
+    """Count exact OPF IDs in root-direct subList descendants via ElementTree."""
+    def walk(node, parent=None, grandparent=None, great_grandparent=None):
+        role = None
+        if node.tag == CORE + "img" and parent == PARA + "pic" and grandparent in (PARA + "run", PARA + "container", PARA + "case", PARA + "default"):
+            role = 0
+        elif node.tag == CORE + "img" and parent == CORE + "imgBrush" and grandparent == CORE + "fillBrush" and great_grandparent in MASTER_DRAWINGS:
+            role = 6
+        elif node.tag == PARA + "ole" and parent in (PARA + "run", PARA + "container", PARA + "case", PARA + "default"):
+            role = 12
+        raw = node.get("binaryItemIDRef")
+        if role is None:
+            counts[18] += raw is not None
+        else:
+            counts[role] += 1
+            if raw is None:
+                counts[role + 1] += 1
+            elif not raw:
+                counts[role + 2] += 1
+            elif raw not in items:
+                counts[role + 5] += 1
+            elif items[raw].get("isEmbeded") == "0":
+                counts[role + 4] += 1
+            else:
+                counts[role + 3] += 1
+        for child in node:
+            walk(child, node.tag, parent, grandparent)
+    walk(sub_list)
+
+
+def self_test_master_binary():
+    root = ET.fromstring("<masterPage xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph' "
+                         "xmlns:c='http://www.hancom.co.kr/hwpml/2011/core' xmlns:x='urn:foreign'>"
+                         "<x:subList><p:p><p:run><p:pic><c:img binaryItemIDRef='skip'/></p:pic></p:run></p:p></x:subList>"
+                         "<p:subList><p:p><p:run><p:pic><c:img binaryItemIDRef='a'/></p:pic>"
+                         "<p:pic><c:img/></p:pic><p:ole binaryItemIDRef='external'/>"
+                         "<p:other><c:img binaryItemIDRef='a'/></p:other>"
+                         "</p:run></p:p></p:subList></masterPage>")
+    items = {"a": {"isEmbeded": "1"}, "external": {"isEmbeded": "0"}}
+    counts = [0] * 19
+    for child in root:
+        if child.tag == PARA + "subList":
+            count_master_binary(child, items, counts)
+    assert counts == [2, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1]
 
 
 def count_master_line_segments(sub_list, counts):
@@ -481,6 +531,7 @@ def main():
                             continue
                     opf = ET.fromstring(archive.read("Contents/content.hpf"))
                     seen = set()
+                    manifest_by_id = {item.get("id"): item for item in opf.findall(OPF + "manifest/" + OPF + "item")}
                     total = 0
                     master_ids = []
                     master_refs = []
@@ -558,6 +609,7 @@ def main():
                                 shard["master_sub_lists"] += 1
                                 before_text_elements = shard["master_text_content"][2]
                                 file_master_digest = master_text_content(child, shard["master_text_content"], file_master_digest)
+                                count_master_binary(child, manifest_by_id, shard["master_binary"])
                                 file_master_text_elements += shard["master_text_content"][2] - before_text_elements
                                 count_master_paragraph_children(child, shard["master_paragraph_children"])
                                 count_master_line_segments(child, shard["master_line_segments"])
@@ -661,8 +713,9 @@ if __name__ == "__main__":
     self_test_master_paragraph_children()
     self_test_master_line_segments()
     self_test_master_text_content()
+    self_test_master_binary()
     if sys.argv[1:] == ["--self-test"]:
-        print("master paragraph children, line segments and text oracle self-tests passed")
+        print("master paragraph children, line segments, text and binary oracle self-tests passed")
     elif not sys.argv[1:]:
         main()
     else:

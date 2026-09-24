@@ -212,6 +212,25 @@ const MasterTextDigest = struct {
     }
 };
 
+const MasterBinaryStats = struct {
+    counts: [19]usize = @splat(0),
+
+    fn from(report: package.MasterPageBinaryReferenceReport) MasterBinaryStats {
+        var result: MasterBinaryStats = .{};
+        for ([_]package.BinaryReferenceKind{ .master_picture, .master_brush_image, .master_ole }, 0..) |kind, index| {
+            const c = report.counts(kind);
+            const base = index * 6;
+            result.counts[base..][0..6].* = .{ c.sites, c.absent, c.empty, c.resolved_embedded, c.resolved_external, c.missing_target };
+        }
+        result.counts[18] = report.links.unclassified_attribute_sites;
+        return result;
+    }
+
+    fn add(self: *MasterBinaryStats, other: MasterBinaryStats) void {
+        for (other.counts, 0..) |count, i| self.counts[i] += count;
+    }
+};
+
 const MasterStyleStats = struct {
     paragraphs: usize = 0,
     non_direct_paragraphs: usize = 0,
@@ -283,6 +302,7 @@ const Statistics = struct {
     section_text_nodes: TextNodeStats,
     master_text_nodes: TextNodeStats,
     master_text: MasterTextStats,
+    master_binary: MasterBinaryStats,
     master_page_number_sum: u64,
     master_page_count_declarations: usize,
     master_page_type_counts: [5]usize,
@@ -427,6 +447,12 @@ fn inspectOne(bytes: []const u8) !Outcome {
     try std.testing.expectEqual(master_sub_lists, known.master_page_run_topology.sub_lists);
     try std.testing.expectEqual(masterpages, known.master_page_text_nodes.parts);
     try std.testing.expectEqual(masterpages, known.master_page_text.parts);
+    try std.testing.expectEqual(masterpages, known.master_page_binary_references.parts);
+    try std.testing.expectEqual(master_sub_lists, known.master_page_binary_references.sub_lists);
+    try std.testing.expectEqual(known.master_page_text.xml_bytes, known.master_page_binary_references.xml_bytes);
+    var master_binary_site_total = known.master_page_binary_references.links.unclassified_attribute_sites;
+    for ([_]package.BinaryReferenceKind{ .master_picture, .master_brush_image, .master_ole }) |kind| master_binary_site_total += known.master_page_binary_references.counts(kind).sites;
+    try std.testing.expectEqual(master_binary_site_total, known.master_page_binary_references.links.observed_sites);
     try std.testing.expectEqual(master_sub_lists, known.master_page_text.sub_lists);
     try std.testing.expectEqual(master_paragraphs, known.master_page_text.text.paragraphs);
     try std.testing.expectEqual(master_sub_list_direct_paragraphs, known.master_page_text.text.direct_paragraphs);
@@ -533,6 +559,7 @@ fn inspectOne(bytes: []const u8) !Outcome {
         .section_text_nodes = TextNodeStats.from(known.text_nodes),
         .master_text_nodes = TextNodeStats.from(known.master_page_text_nodes),
         .master_text = MasterTextStats.from(known.master_page_text, if (master_text_digest.text_elements == 0) 0 else master_text_digest.value),
+        .master_binary = MasterBinaryStats.from(known.master_page_binary_references),
         .master_page_number_sum = master_page_number_sum,
         .master_page_count_declarations = known.master_pages.count_declarations.len,
         .master_page_type_counts = master_type_counts,
@@ -592,6 +619,7 @@ fn surveyShard(shard: usize) !void {
     var section_text_nodes: TextNodeStats = .{};
     var master_text_nodes: TextNodeStats = .{};
     var master_text: MasterTextStats = .{};
+    var master_binary: MasterBinaryStats = .{};
     var master_page_number_sum: u64 = 0;
     var master_page_count_declarations: usize = 0;
     var master_page_type_counts: [5]usize = @splat(0);
@@ -679,6 +707,7 @@ fn surveyShard(shard: usize) !void {
                     section_text_nodes.add(stats.section_text_nodes);
                     master_text_nodes.add(stats.master_text_nodes);
                     master_text.add(stats.master_text);
+                    master_binary.add(stats.master_binary);
                     master_page_number_sum += stats.master_page_number_sum;
                     master_page_count_declarations += stats.master_page_count_declarations;
                     for (stats.master_page_type_counts, 0..) |value, i| master_page_type_counts[i] += value;
@@ -1000,6 +1029,7 @@ fn surveyShard(shard: usize) !void {
     try std.testing.expectEqualSlices(usize, &expected.master_text_nodes[shard], &master_text_nodes.counts);
     try std.testing.expectEqualSlices(usize, &expected.master_text_content[shard], &master_text.counts);
     try std.testing.expectEqual(expected.master_text_digest_sum[shard], master_text.digest_sum);
+    try std.testing.expectEqualSlices(usize, &expected.master_binary[shard], &master_binary.counts);
     try std.testing.expectEqualSlices(usize, &expected.section_text_child_classes[shard], &section_text_nodes.classes);
     try std.testing.expectEqualSlices(usize, &expected.master_text_child_classes[shard], &master_text_nodes.classes);
     try std.testing.expectEqualSlices(u64, &expected.section_tab_fields[shard], &section_text_nodes.tab);

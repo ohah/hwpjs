@@ -8,8 +8,11 @@ pub const Kind = enum(u8) {
     section_picture,
     section_brush_image,
     section_ole,
+    master_picture,
+    master_brush_image,
+    master_ole,
 };
-pub const kinds = [_]Kind{ .header_font, .header_substitute_font, .header_brush_image, .section_picture, .section_brush_image, .section_ole };
+pub const kinds = [_]Kind{ .header_font, .header_substitute_font, .header_brush_image, .section_picture, .section_brush_image, .section_ole, .master_picture, .master_brush_image, .master_ole };
 
 pub const Counts = struct {
     sites: usize = 0,
