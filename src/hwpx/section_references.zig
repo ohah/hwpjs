@@ -8,6 +8,7 @@ const document_structure = @import("document_structure.zig");
 const header_resources = @import("header_resources.zig");
 const paragraph_style_links = @import("paragraph_style_links.zig");
 const selection = @import("compatibility_selection.zig");
+const compatibility_frames = @import("compatibility_frames.zig");
 
 pub const Kind = paragraph_style_links.Kind;
 pub const Counts = paragraph_style_links.Counts;
@@ -36,12 +37,6 @@ pub const Options = struct {
     xml: document_xml.Options = .{},
 };
 
-const Frame = struct {
-    kind: enum { other, run, switch_element, branch } = .other,
-    active: bool = true,
-    selected: selection.State = .{},
-};
-
 const Context = struct {
     allocator: std.mem.Allocator,
     options: Options,
@@ -49,7 +44,7 @@ const Context = struct {
     report: *Report,
     item_index: usize,
     paragraph_depths: std.ArrayList(usize) = .empty,
-    frames: [256]Frame = @splat(.{}),
+    frames: [256]compatibility_frames.Frame = @splat(.{}),
 
     fn deinit(self: *Context) void {
         self.paragraph_depths.deinit(self.allocator);
@@ -70,20 +65,8 @@ const Context = struct {
             if (tag.kind == .start) self.frames[0] = .{};
             return;
         }
-        const parent = self.frames[depth - 2];
-        var frame: Frame = .{ .active = parent.active };
-        if (parent.active) {
-            const is_case = if (parent.kind == .switch_element) try attrs.element(tag, scope, document_xml.paragraph_uri, "case") else false;
-            const is_default = if (parent.kind == .switch_element and !is_case) try attrs.element(tag, scope, document_xml.paragraph_uri, "default") else false;
-            if (is_case or is_default) {
-                frame.kind = .branch;
-                frame.active = try selection.choose(self.allocator, tag, scope, is_case, self.options.max_attribute_bytes, self.options.branch_policy, &self.frames[depth - 2].selected);
-            } else if ((parent.kind == .run or parent.kind == .branch) and try attrs.element(tag, scope, document_xml.paragraph_uri, "switch")) {
-                frame.kind = .switch_element;
-            }
-        }
-        const is_run = frame.active and try attrs.element(tag, scope, document_xml.paragraph_uri, "run");
-        if (is_run) frame.kind = .run;
+        const frame = try compatibility_frames.enter(self.allocator, &self.frames, depth, tag, scope, self.options.max_attribute_bytes, self.options.branch_policy);
+        const is_run = frame.active and frame.kind == .run;
         if (tag.kind == .start) self.frames[depth - 1] = frame;
         if (!frame.active) return;
         if (try attrs.element(tag, scope, document_xml.paragraph_uri, "p")) {

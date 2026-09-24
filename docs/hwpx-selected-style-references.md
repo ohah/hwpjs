@@ -1,5 +1,7 @@
 # HWPX 선택 분기 문단·run 서식 참조
 
+이 API는 section에 한정됩니다. 마스터페이지의 대응 API와 별도 파트 선택·예산은 [선택 분기 마스터페이지 서식 참조](hwpx-selected-master-style-references.md)가 소유합니다.
+
 `Document.inspectSelectedStyleReferences(allocator, options, supported_namespaces)`는 기존 [section 서식 참조](hwpx-section-references.md)의 같은 header ID 색인과 속성→리소스 테이블 규칙을 사용하되, `hp:run` 및 활성 분기의 직접 `hp:switch/case|default` 중 선택된 쪽의 문단·run만 집계·해결합니다. 분기 판정은 [공통 조건부 정책](hwpx-switch-selection.md)의 `compatibility_selection.zig`를 재사용합니다. `inspectReferences`와 `inspectKnown.section_references`는 기존대로 두 분기를 모두 관측하는 원문 보고서입니다.
 
 호출자가 지원 namespace를 명시하며 기본 빈 집합은 `default`를 선택합니다. 선택된 분기의 `paraPrIDRef`·`styleIDRef`·`charPrIDRef`만 기존 header 리소스 ID와 정확히 대조합니다. 비활성 분기의 숫자 손상·미해결 ID와 문단·run 개수는 선택 보고서의 진단·요소 예산에 포함하지 않습니다. 반면 전체 section XML은 기존 문법·namespace·원문 바이트 한도 검사를 그대로 받습니다. section 수와 해제 XML 바이트 수는 원문 기준입니다. 암호화 문서와 header/section 구조 오류는 선행 검사에서 거부합니다.

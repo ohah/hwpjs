@@ -72,6 +72,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [마스터페이지 문단·run 서식 참조](hwpx-master-style-references.md)는 section과 같은 속성→header 테이블 판정을 재사용하되 선택 범위와 XML 바이트 한도는 별도로 소유합니다. 페이지 적용과 본문 의미는 후속 계층입니다.
 
+[선택 분기 마스터페이지 서식 참조](hwpx-selected-master-style-references.md)는 section과 공통 스트리밍 분기 상태를 공유하고 활성 문단·run에 기존 ID 판정을 적용합니다. 원문 보고서와 페이지 적용 의미는 바꾸지 않습니다.
+
 [마스터페이지 텍스트 이벤트](hwpx-master-text.md)는 section의 토큰 스캐너를 공유하고 마스터페이지 파트 선택·직접 `subList` 범위·XML 예산만 분리합니다. 페이지 적용/표시 의미는 여기서 만들지 않습니다.
 
 [마스터페이지 이진 리소스 참조](hwpx-master-binary-references.md)는 header/section과 동일한 OPF ID 색인·XML 개체 분류를 재사용하면서 파트 선택·직접 `subList` 범위·예산·결과를 분리합니다. 바이너리 payload 의미는 별개입니다.

@@ -461,6 +461,23 @@ fn inspectOne(bytes: []const u8) !Outcome {
     try std.testing.expectEqual(known.master_page_text_nodes.text_nodes, known.master_page_text.text.text_elements);
     try std.testing.expectEqual(known.master_page_text_nodes.non_direct_text_nodes, known.master_page_text.text.non_direct_text_elements);
     try std.testing.expectEqual(known.master_page_text_nodes.tab.tabs, known.master_page_text.text.inlineCount(.tab));
+    if (known.master_page_style_references.parts != 0) {
+        for ([_][]const []const u8{ &.{}, &.{"http://www.hancom.co.kr/hwpml/2016/ooxmlchart"} }) |capabilities| {
+            const chosen_style = try document.inspectSelectedMasterPageStyleReferences(a, .{}, capabilities);
+            const chosen_text = try document.inspectMasterPageText(a, .{ .text = .{ .scan = .{ .branch_policy = .{ .mode = .selected, .supported_namespaces = capabilities } } } }, null);
+            try std.testing.expectEqual(chosen_text.text.paragraphs, chosen_style.paragraphs);
+            try std.testing.expectEqual(chosen_text.text.runs, chosen_style.runs);
+            try std.testing.expectEqual(known.master_page_style_references.parts, chosen_style.parts);
+            try std.testing.expectEqual(known.master_page_style_references.sub_lists, chosen_style.sub_lists);
+            for (chosen_style.references, 0..) |counts, index| {
+                const expected_count = if (index == 2) chosen_style.runs else chosen_style.paragraphs;
+                try std.testing.expectEqual(expected_count, counts.present + counts.absent);
+            }
+            if (known.master_page_run_topology.switches.switches == 0) {
+                try std.testing.expectEqualDeep(known.master_page_style_references, chosen_style);
+            }
+        }
+    }
     if (known.run_topology.switches.switches != 0) {
         const fallback_tables = try document.inspectSelectedTableGeometry(a, .{}, &.{});
         const chart_tables = try document.inspectSelectedTableGeometry(a, .{}, &.{"http://www.hancom.co.kr/hwpml/2016/ooxmlchart"});

@@ -46,6 +46,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
   `settings.xml`의 Caret·config 원값과 지원된 숫자/Boolean 검사는 [settings](hwpx-settings.md)가 소유합니다.
   마스터페이지 루트 원값과 section의 `idRef` 연결은 [masterpage](hwpx-master-pages.md)가 소유하며, 직접 `subList`의 공통 속성은 [ParaListType](hwpx-para-list.md)이, 그 아래 문단 메타 값은 [공통 문단 규칙](hwpx-paragraph-metadata.md)이 소유합니다.
   마스터페이지 문단·run의 header ID 연결은 [마스터페이지 서식 참조](hwpx-master-style-references.md)가 소유하며, section과 공통 속성→테이블 판정을 재사용합니다.
+  조건부 분기의 활성 문단·run만 연결하는 별도 보고서는 [선택 분기 마스터페이지 서식 참조](hwpx-selected-master-style-references.md)가 소유합니다.
   section·마스터페이지 run의 변경 추적 ID 원값은 [run 메타 속성](hwpx-run-metadata.md)이 소유합니다.
   같은 범위의 run 부모·직접 자식과 `secPr` 순서 진단은 [run 위치·자식](hwpx-run-topology.md)이 소유합니다.
   직접 run 자식 `switch`의 분기 구조와 요구 namespace 원값은 [조건부 switch 구조](hwpx-switch-shape.md)가 별도 소유합니다.

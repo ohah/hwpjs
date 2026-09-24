@@ -6,6 +6,8 @@ const document_xml = @import("document_xml.zig");
 const masterpage_parts = @import("masterpage_parts.zig");
 const header_resources = @import("header_resources.zig");
 const links = @import("paragraph_style_links.zig");
+const selection = @import("compatibility_selection.zig");
+const compatibility_frames = @import("compatibility_frames.zig");
 
 pub const Kind = links.Kind;
 pub const Counts = links.Counts;
@@ -39,11 +41,12 @@ const Context = struct {
     a: std.mem.Allocator,
     options: Options,
     resources: *const header_resources.Report,
+    policy: selection.Policy,
     item_index: usize,
     report: *Report,
-    active_sub_list: bool = false,
     sub_lists: usize = 0,
     paragraph_depths: std.ArrayList(usize) = .empty,
+    frames: [256]compatibility_frames.Frame = @splat(.{}),
 
     fn deinit(self: *Context) void {
         self.paragraph_depths.deinit(self.a);
@@ -51,24 +54,28 @@ const Context = struct {
 
     fn onTag(raw: *anyopaque, tag: xml.tags.Tag, scope: *const xml.namespaces.State, depth: usize) anyerror!void {
         const self: *Context = @ptrCast(@alignCast(raw));
+        if (depth == 0 or depth > self.frames.len) return error.LimitExceeded;
         if (tag.kind == .end) {
-            if (self.paragraph_depths.items.len != 0 and self.paragraph_depths.items[self.paragraph_depths.items.len - 1] == depth) _ = self.paragraph_depths.pop();
-            if (depth == 2) self.active_sub_list = false;
+            if (self.frames[depth - 1].active and self.paragraph_depths.items.len != 0 and self.paragraph_depths.items[self.paragraph_depths.items.len - 1] == depth) _ = self.paragraph_depths.pop();
             return;
         }
         if (depth == 1) {
             if (!try attrs.element(tag, scope, "", "masterPage")) return error.InvalidMasterPageRoot;
+            if (tag.kind == .start) self.frames[0] = .{};
             return;
         }
         if (depth == 2) {
-            if (try attrs.element(tag, scope, document_xml.paragraph_uri, "subList")) {
+            const is_sub_list = try attrs.element(tag, scope, document_xml.paragraph_uri, "subList");
+            if (is_sub_list) {
                 self.sub_lists += 1;
                 self.report.sub_lists += 1;
-                self.active_sub_list = tag.kind == .start;
             }
+            if (tag.kind == .start) self.frames[1] = .{ .active = is_sub_list };
             return;
         }
-        if (!self.active_sub_list) return;
+        const frame = try compatibility_frames.enter(self.a, &self.frames, depth, tag, scope, self.options.max_attribute_bytes, self.policy);
+        if (tag.kind == .start) self.frames[depth - 1] = frame;
+        if (!frame.active) return;
         if (try attrs.element(tag, scope, document_xml.paragraph_uri, "p")) {
             if (self.report.paragraphs == self.options.max_paragraphs) return error.LimitExceeded;
             self.report.paragraphs += 1;
@@ -77,7 +84,7 @@ const Context = struct {
             if (tag.kind == .start) try self.paragraph_depths.append(self.a, depth);
             return;
         }
-        if (try attrs.element(tag, scope, document_xml.paragraph_uri, "run")) {
+        if (frame.kind == .run) {
             if (self.report.runs == self.options.max_runs) return error.LimitExceeded;
             self.report.runs += 1;
             if (self.paragraph_depths.items.len == 0 or self.paragraph_depths.items[self.paragraph_depths.items.len - 1] + 1 != depth) self.report.non_direct_runs += 1;
@@ -88,7 +95,8 @@ const Context = struct {
 
 /// Re-reads exact selected master-page entries. Only hp:p/hp:run descendants
 /// of root-direct hp:subList are linked to explicit IDs in the same header.
-pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, parts: []const masterpage_parts.Part, resources: *const header_resources.Report, options: Options) !Report {
+pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, parts: []const masterpage_parts.Part, resources: *const header_resources.Report, options: Options, policy: selection.Policy) !Report {
+    try selection.validate(policy);
     if (parts.len > options.max_parts) return error.LimitExceeded;
     var report: Report = .{ .parts = parts.len };
     var remaining = options.max_total_xml_bytes;
@@ -97,7 +105,7 @@ pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, parts: []const master
         const max_bytes = @min(options.max_part_xml_bytes, remaining);
         const bytes = try archive.decode(archive.entries[part.entry_index], max_bytes);
         defer archive.allocator.free(bytes);
-        var context: Context = .{ .a = a, .options = options, .resources = resources, .item_index = part.item_index, .report = &report };
+        var context: Context = .{ .a = a, .options = options, .resources = resources, .policy = policy, .item_index = part.item_index, .report = &report };
         defer context.deinit();
         _ = try document_xml.visitBytes(a, bytes, max_bytes, options.xml, .{ .context = &context, .on_tag = Context.onTag });
         if (context.sub_lists != part.sub_lists.len) return error.InconsistentMasterPageSelection;

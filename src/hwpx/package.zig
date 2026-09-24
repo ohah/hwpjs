@@ -350,11 +350,22 @@ pub const Document = struct {
     /// Resolves paragraph and run formatting links inside root-direct master
     /// page subLists. The master-page part and header ID inventory stay separate.
     pub fn inspectMasterPageStyleReferences(self: *const Document, a: std.mem.Allocator, options: MasterPageStyleReferenceOptions) !MasterPageStyleReferenceReport {
+        return self.inspectMasterPageStyleReferencesWithPolicy(a, options, .{});
+    }
+
+    fn inspectMasterPageStyleReferencesWithPolicy(self: *const Document, a: std.mem.Allocator, options: MasterPageStyleReferenceOptions, policy: compatibility_selection.Policy) !MasterPageStyleReferenceReport {
+        try compatibility_selection.validate(policy);
         var pages = try self.inspectMasterPages(a, options.master_pages);
         defer pages.deinit(a);
         var resources = try self.inspectHeaderResources(a, options.header_resources);
         defer resources.deinit(a);
-        return masterpage_style_references.inspect(a, self.archive, pages.parts.parts, &resources, options.references);
+        return masterpage_style_references.inspect(a, self.archive, pages.parts.parts, &resources, options.references, policy);
+    }
+
+    /// Resolves only formatting links inside the caller-selected branches;
+    /// the raw master-page report and inspectKnown remain unchanged.
+    pub fn inspectSelectedMasterPageStyleReferences(self: *const Document, a: std.mem.Allocator, options: MasterPageStyleReferenceOptions, supported_namespaces: []const []const u8) !MasterPageStyleReferenceReport {
+        return self.inspectMasterPageStyleReferencesWithPolicy(a, options, .{ .mode = .selected, .supported_namespaces = supported_namespaces });
     }
 
     /// Applies the section table structure rules to tables within selected

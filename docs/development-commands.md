@@ -36,6 +36,8 @@
 
 [선택 분기 서식 참조](hwpx-selected-style-references.md)는 `zig test src/root.zig --test-filter 'HWPX selected style references'`로 합성·할당 실패를 검사합니다. 실파일의 선택 텍스트·서식 참조 교차 대조는 위 known survey 8개 shard를 별도 프로세스로 실행합니다.
 
+[선택 분기 마스터페이지 서식 참조](hwpx-selected-master-style-references.md)는 `zig test src/root.zig --test-filter 'HWPX selected master style references'`로 합성·한도·할당 실패를 검사합니다. `HWPX master style references`와 `HWPX selected style references` 필터도 회귀 실행하고, 선택적 known survey 8개 shard를 각각 실행해 마스터페이지 선택 텍스트와 문단·run 수를 대조합니다. 실파일 조사는 로컬 `reference/rhwp`가 필요합니다.
+
 ```sh
 zig fmt --check build.zig src
 zig build test

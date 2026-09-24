@@ -1,5 +1,7 @@
 # HWPX 마스터페이지 문단·run 서식 참조
 
+활성 `case`/`default`만 따로 검사하려면 [선택 분기 마스터페이지 서식 참조](hwpx-selected-master-style-references.md)를 사용합니다. 이 문서의 기본 API는 원문 양쪽 분기 보고서를 유지합니다.
+
 `Document.inspectMasterPageStyleReferences`는 보호 여부·정규 masterpage 파트·section 연결을 먼저 검사하고, 같은 문서에서 선택된 header의 명시적 리소스 ID를 색인합니다. `src/hwpx/masterpage_style_references.zig`는 각 선택 파트 XML을 별도 한도에서 다시 읽어 **루트 직접 `hp:subList` 아래**의 모든 `hp:p`와 `hp:run`을 순회합니다. 다른 루트 직접 자식과 namespace가 다른 동명 요소는 대상이 아닙니다. [한컴 PType 구현](https://github.com/hancom-io/hwpx-owpml-model/blob/main/OWPML/Class/Para/PType.cpp)의 `paraPrIDRef`·`styleIDRef`와 [RunType 구현](https://github.com/hancom-io/hwpx-owpml-model/blob/main/OWPML/Class/Para/RunType.cpp)의 `charPrIDRef`를 해당 header의 `paraPr`·`style`·`charPr` 명시적 ID에 연결합니다.
 
 속성→테이블 매핑과 숫자·대상 판정은 `paragraph_style_links.zig`·`id_references.zig`가 [section 서식 참조](hwpx-section-references.md)와 함께 소유합니다. 마스터페이지 순회만 중복하지 않는 별도 모듈이며, ID를 배열 위치나 암묵적 0으로 취급하지 않습니다. 속성 부재, 명시적 ID의 대상 누락, 대상 그룹 자체 부재, 해결을 분리하고 첫 미해결 ID 및 manifest 항목 인덱스를 남깁니다. 숫자 손상·32비트 초과, XML 오류와 각 한도 초과는 오류입니다. 미해결 대상은 이 API에서 진단으로 반환하며 임의 보정하지 않습니다.
