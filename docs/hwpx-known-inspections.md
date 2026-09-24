@@ -30,6 +30,8 @@ section 텍스트 보고서도 원문 양쪽 분기를 유지합니다. 활성 �
 
 [마스터페이지 이진 리소스 참조](hwpx-master-binary-references.md)는 같은 직접 `subList` 범위의 manifest ID 연결을 별도 소유 보고서로 반환합니다. 실제 BinData 복호화·표시는 하지 않습니다.
 
+[마스터페이지 차트 참조](hwpx-master-chart-references.md)는 같은 범위의 `chartIDRef` ZIP 경로와 대상 차트 XML 구조를 별도 소유 보고서로 반환합니다. section 차트와 예산·결과를 합치지 않습니다.
+
 [마스터페이지 표 격자](hwpx-master-table-geometry.md)는 같은 범위의 표·행·셀을 section 공통 규칙으로 검사하고 별도 보고서로 반환합니다. 실제 쪽 배치나 표 레이아웃은 판정하지 않습니다.
 
 활성 분기의 표만 필요한 경우 [선택 분기 표 격자](hwpx-selected-table-geometry.md)의 별도 API를 사용합니다. `inspectKnown`의 표 보고서는 원문 양쪽 분기 관측으로 유지합니다.

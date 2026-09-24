@@ -12,7 +12,7 @@
 
 이 순서는 한컴 공개 모델의 [Compatibility handler](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Base/Handler.cpp#L253-L321)를 참조합니다. 그 구현은 빈 `required-namespace`는 거부하지만 **비어 있지 않은 공백 전용 값은 토큰 반복을 건너뛰어 수용**합니다. Zig도 이 관측 동작을 재현합니다. 다만 공식 구현은 `hp:`/`epub:` 철자에 결합된 속성 조회를 하고, 여기서는 같은 URI의 다른 prefix도 XML namespace 규칙대로 인식합니다. 따라서 공식 프로그램과 모든 비정상 입력에서 바이트 단위 동치라고 주장하지 않습니다. 한컴 앱의 [등록 namespace 목록](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Document.cpp#L407-L409)은 이 라이브러리의 지원 목록으로 자동 채택하지 않습니다.
 
-검사 범위는 기존 이진·차트 스캐너가 알아보는 section 경로입니다. 이 범위 밖의 조건부 요소, masterpage, 다른 참조 종류, `switch` 구조의 스키마 유효성, OOXML 차트 렌더링 의미는 아직 다루지 않습니다. `case/default`의 누락·중복·순서 이상은 [구조 진단](hwpx-switch-shape.md)이 별도로 보고하며, 여기서는 선택 결과를 전체 문서의 적합성 판정으로 승격하지 않습니다.
+이 `inspectSelectedReferences` API의 범위는 기존 이진·차트 스캐너가 알아보는 section 경로입니다. 별도 [마스터페이지 차트 참조](hwpx-master-chart-references.md)와 [마스터페이지 서식 참조](hwpx-selected-master-style-references.md)는 각자의 파트 범위와 보고서로 같은 정책을 사용합니다. 이 API 자체는 다른 참조 종류, `switch` 구조의 스키마 유효성, OOXML 차트 렌더링 의미를 다루지 않습니다. `case/default`의 누락·중복·순서 이상은 [구조 진단](hwpx-switch-shape.md)이 별도로 보고하며, 여기서는 선택 결과를 전체 문서의 적합성 판정으로 승격하지 않습니다.
 
 합성 검증은 양쪽 분기의 raw 보존, 빈 기능 집합의 default, 한·여러 URI 조건, 첫 번째 일치 분기, default 선행, 중첩, EPUB 속성·prefix 별칭, 공백 전용 값, namespace 없는 유사 속성, 비활성 잘못된 참조와 위치 예산의 격리, 첫 조건 충족 시 불필요한 EPUB 속성 해석 생략, 잘못된 capability, 전체 할당 실패와 뒤 단계 오류의 해제를 다룹니다.
 

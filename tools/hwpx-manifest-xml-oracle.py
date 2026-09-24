@@ -91,6 +91,7 @@ def empty():
                 section_text_nodes=[0] * 6, master_text_nodes=[0] * 6,
                 master_text_content=[0] * 5, master_text_digest_sum=0,
                 master_binary=[0] * 19,
+                master_chart_elements=0, master_chart_attributes=0,
                 section_text_children={}, master_text_children={},
                 section_text_child_classes=[0] * 4, master_text_child_classes=[0] * 4,
                 section_tab_fields=[0] * 21, master_tab_fields=[0] * 21,
@@ -191,6 +192,29 @@ def self_test_master_binary():
         if child.tag == PARA + "subList":
             count_master_binary(child, items, counts)
     assert counts == [2, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1]
+
+
+def count_master_chart_census(sub_list):
+    """Count all paragraph-namespace charts and chartIDRef attributes in scope.
+
+    This is an independent upper-bound census, not the product path classifier.
+    """
+    return (sum(node.tag == PARA + "chart" for node in sub_list.iter()),
+            sum("chartIDRef" in node.attrib for node in sub_list.iter()))
+
+
+def self_test_master_chart_census():
+    root = ET.fromstring("<masterPage xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph' xmlns:x='urn:foreign'>"
+                         "<x:subList><p:chart chartIDRef='skip'/></x:subList>"
+                         "<p:subList><p:chart chartIDRef='a'/><x:chart chartIDRef='other'/></p:subList>"
+                         "</masterPage>")
+    counts = [0, 0]
+    for child in root:
+        if child.tag == PARA + "subList":
+            found = count_master_chart_census(child)
+            counts[0] += found[0]
+            counts[1] += found[1]
+    assert counts == [1, 2]
 
 
 def count_master_line_segments(sub_list, counts):
@@ -610,6 +634,9 @@ def main():
                                 before_text_elements = shard["master_text_content"][2]
                                 file_master_digest = master_text_content(child, shard["master_text_content"], file_master_digest)
                                 count_master_binary(child, manifest_by_id, shard["master_binary"])
+                                chart_elements, chart_attributes = count_master_chart_census(child)
+                                shard["master_chart_elements"] += chart_elements
+                                shard["master_chart_attributes"] += chart_attributes
                                 file_master_text_elements += shard["master_text_content"][2] - before_text_elements
                                 count_master_paragraph_children(child, shard["master_paragraph_children"])
                                 count_master_line_segments(child, shard["master_line_segments"])
@@ -714,8 +741,9 @@ if __name__ == "__main__":
     self_test_master_line_segments()
     self_test_master_text_content()
     self_test_master_binary()
+    self_test_master_chart_census()
     if sys.argv[1:] == ["--self-test"]:
-        print("master paragraph children, line segments, text and binary oracle self-tests passed")
+        print("master paragraph children, line segments, text, binary and chart census oracle self-tests passed")
     elif not sys.argv[1:]:
         main()
     else:

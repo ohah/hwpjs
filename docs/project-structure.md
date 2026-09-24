@@ -38,6 +38,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
   마스터페이지 문단의 run·배열 직접 자식 분류 재사용은 [마스터페이지 문단 직접 자식](hwpx-master-paragraph-children.md)이 소유합니다.
   마스터페이지의 `hp:t` 내용·인라인 이벤트는 [마스터페이지 텍스트](hwpx-master-text.md)가 section 공통 스캐너를 재사용하고 파트 범위만 별도로 소유합니다.
   마스터페이지의 그림·도형·OLE manifest ID 연결은 [마스터페이지 이진 참조](hwpx-master-binary-references.md)가 기존 ID 색인·분류를 재사용합니다.
+  마스터페이지의 차트 ZIP 경로·대상 XML 검사는 [마스터페이지 차트 참조](hwpx-master-chart-references.md)가 section 차트 Resolver를 재사용합니다.
   마스터페이지의 직접 `subList` 범위 안 표 격자는 [마스터페이지 표 격자](hwpx-master-table-geometry.md)가 section의 표 판정을 재사용합니다.
   조건부 분기의 활성 표만 따로 보려면 [선택 분기 표 격자](hwpx-selected-table-geometry.md)가 공통 선택 정책과 같은 표 판정을 연결합니다.
   Header의 여섯 `beginNum` 원값과 부재 진단은 [Header 시작 번호](hwpx-header-begin-numbers.md)가 소유합니다.

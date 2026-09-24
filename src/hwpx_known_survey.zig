@@ -461,6 +461,21 @@ fn inspectOne(bytes: []const u8) !Outcome {
     try std.testing.expectEqual(known.master_page_text_nodes.text_nodes, known.master_page_text.text.text_elements);
     try std.testing.expectEqual(known.master_page_text_nodes.non_direct_text_nodes, known.master_page_text.text.non_direct_text_elements);
     try std.testing.expectEqual(known.master_page_text_nodes.tab.tabs, known.master_page_text.text.inlineCount(.tab));
+    try std.testing.expectEqual(masterpages, known.master_page_chart_references.parts);
+    try std.testing.expectEqual(master_sub_lists, known.master_page_chart_references.sub_lists);
+    // The independent ElementTree census finds no hp:chart or chartIDRef
+    // anywhere under a root-direct master-page subList in this local corpus.
+    try std.testing.expectEqual(@as(usize, 0), known.master_page_chart_references.charts.observed_sites);
+    try std.testing.expectEqual(@as(usize, 0), known.master_page_chart_references.charts.chart_parts);
+    if (masterpages != 0) {
+        for ([_][]const []const u8{ &.{}, &.{"http://www.hancom.co.kr/hwpml/2016/ooxmlchart"} }) |capabilities| {
+            var chosen_chart = try document.inspectSelectedMasterPageChartReferences(a, .{}, capabilities);
+            defer chosen_chart.deinit(a);
+            try std.testing.expectEqual(masterpages, chosen_chart.parts);
+            try std.testing.expectEqual(master_sub_lists, chosen_chart.sub_lists);
+            try std.testing.expectEqual(@as(usize, 0), chosen_chart.charts.observed_sites);
+        }
+    }
     if (known.master_page_style_references.parts != 0) {
         for ([_][]const []const u8{ &.{}, &.{"http://www.hancom.co.kr/hwpml/2016/ooxmlchart"} }) |capabilities| {
             const chosen_style = try document.inspectSelectedMasterPageStyleReferences(a, .{}, capabilities);

@@ -12,6 +12,8 @@
 
 [HWPX 마스터페이지 이진 리소스 참조](hwpx-master-binary-references.md)는 `zig test src/root.zig --test-filter 'HWPX master binary'`로 합성·한도·할당 실패를 확인합니다. 독립 `python3 tools/hwpx-manifest-xml-oracle.py --self-test` 및 인자 없는 corpus 조사와 `HWPX known document inspections shard N` 8개 선택 검사는 출처별 대상 분포를 대조합니다. 선택 shard는 로컬 `reference/rhwp`가 필요합니다.
 
+[HWPX 마스터페이지 차트 경로·XML 검사](hwpx-master-chart-references.md)는 `zig test src/root.zig --test-filter 'HWPX master chart links'`로 합성·원문/선택·오류·할당 실패를 검사합니다. 기존 `HWPX chart links` 필터도 재실행합니다. 독립 `python3 tools/hwpx-manifest-xml-oracle.py --self-test`와 인자 없는 corpus 조사에서 `master_chart_elements`·`master_chart_attributes`를 확인하고, 선택 실파일 known survey 8개 shard를 각각 실행해 0건 및 파트 범위를 대조합니다. 이 corpus는 양성 마스터페이지 차트를 포함하지 않습니다.
+
 [HWPX 마스터페이지 표 격자](hwpx-master-table-geometry.md)는 `zig test src/root.zig --test-filter 'HWPX master table geometry'`로 범위·병합·예산·할당 실패를 검사합니다. `python3 tools/hwpx-table-oracle.py --self-test`와 인자 없는 corpus 조사에서 `master_shards`를 만들고, `zig test src/hwpx_known_survey.zig -O ReleaseFast --test-filter 'HWPX known document inspections shard N'`을 N=0..7 각각 실행해 대조합니다. 실파일 조사는 로컬 `reference/rhwp`가 필요합니다.
 
 [HWPX 선택 분기 표 격자](hwpx-selected-table-geometry.md)는 `zig test src/root.zig --test-filter 'HWPX selected table geometry'`로 양쪽 원문/활성 선택·중첩·한도·할당 실패를 확인합니다. 기존 선택 참조·텍스트·서식 회귀 필터도 다시 실행합니다. `python3 tools/hwpx-table-oracle.py --self-test`와 인자 없는 corpus 조사의 `section_switch_tables`·`master_switch_tables`를 확인하고, `HWPX known document inspections shard N`을 N=0..7 각각 실행해 실파일 switch 문서의 원문/선택 표 동치를 확인합니다. 실파일에는 양성 조건부 표가 없습니다.

@@ -46,6 +46,7 @@ const manifest_xml = @import("manifest_xml.zig");
 const settings = @import("settings.zig");
 const masterpage_references = @import("masterpage_references.zig");
 const masterpage_style_references = @import("masterpage_style_references.zig");
+const masterpage_chart_references = @import("masterpage_chart_references.zig");
 const masterpage_table_geometry = @import("masterpage_table_geometry.zig");
 
 pub const Archive = zip.Archive;
@@ -109,6 +110,11 @@ pub const MasterPageBinaryReferenceOptions = struct {
     references: masterpage_binary_references.Options = .{},
 };
 pub const MasterPageBinaryReferenceReport = masterpage_binary_references.Report;
+pub const MasterPageChartReferenceOptions = struct {
+    master_pages: MasterPageOptions = .{},
+    references: masterpage_chart_references.Options = .{},
+};
+pub const MasterPageChartReferenceReport = masterpage_chart_references.Report;
 pub const ChartReferenceOptions = struct {
     structure: StructureOptions = .{},
     references: chart_references.Options = .{},
@@ -248,6 +254,7 @@ pub const KnownOptions = struct {
     master_page_text_nodes: text_node.MasterOptions = .{},
     master_page_text: section_text.MasterOptions = .{},
     master_page_binary_references: masterpage_binary_references.Options = .{},
+    master_page_chart_references: masterpage_chart_references.Options = .{},
     master_page_table_geometry: masterpage_table_geometry.Options = .{},
     structure: StructureOptions = .{},
     header_resources: HeaderResourceOptions = .{},
@@ -345,6 +352,23 @@ pub const Document = struct {
         var pages = try self.inspectMasterPages(a, options.master_pages);
         defer pages.deinit(a);
         return masterpage_binary_references.inspect(a, self.archive, self.manifest, pages.parts.parts, options.references);
+    }
+
+    /// Resolves chartIDRef paths and validates referenced chart XML under
+    /// root-direct master-page subLists. The raw and selected views are separate.
+    pub fn inspectMasterPageChartReferences(self: *const Document, a: std.mem.Allocator, options: MasterPageChartReferenceOptions) !MasterPageChartReferenceReport {
+        return self.inspectMasterPageChartReferencesWithPolicy(a, options, .{});
+    }
+
+    fn inspectMasterPageChartReferencesWithPolicy(self: *const Document, a: std.mem.Allocator, options: MasterPageChartReferenceOptions, policy: compatibility_selection.Policy) !MasterPageChartReferenceReport {
+        try compatibility_selection.validate(policy);
+        var pages = try self.inspectMasterPages(a, options.master_pages);
+        defer pages.deinit(a);
+        return masterpage_chart_references.inspect(a, self.archive, pages.parts.parts, options.references, policy);
+    }
+
+    pub fn inspectSelectedMasterPageChartReferences(self: *const Document, a: std.mem.Allocator, options: MasterPageChartReferenceOptions, supported_namespaces: []const []const u8) !MasterPageChartReferenceReport {
+        return self.inspectMasterPageChartReferencesWithPolicy(a, options, .{ .mode = .selected, .supported_namespaces = supported_namespaces });
     }
 
     /// Resolves paragraph and run formatting links inside root-direct master
