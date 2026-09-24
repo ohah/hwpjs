@@ -8,7 +8,7 @@ const id_references = @import("id_references.zig");
 pub const size_names = [_][]const u8{ "width", "height" };
 pub const margin_names = table_xml.margin_names;
 pub const flag_names = [_][]const u8{ "header", "protect", "editable", "dirty" };
-const cell_attribute_names = [_][]const u8{ "name", "header", "hasMargin", "protect", "editable", "dirty", "borderFillIDRef" };
+pub const cell_attribute_names = [_][]const u8{ "name", "header", "hasMargin", "protect", "editable", "dirty", "borderFillIDRef" };
 
 pub const BooleanCounts = table_xml.BooleanCounts;
 
@@ -79,9 +79,9 @@ fn inspectMargin(a: std.mem.Allocator, tree: *const tree_mod.Tree, index: usize,
 /// validity. No table-row or layout policy is duplicated here.
 pub fn inspectCell(a: std.mem.Allocator, tree: *const tree_mod.Tree, cell: usize, max_bytes: usize, border_fills: ?*const header_resources.Table, report: *Report) !void {
     report.cells += 1;
-    const size = table_xml.uniqueChild(tree, cell, "cellSz", &report.missing_size, &report.duplicate_size);
+    const size = table_xml.uniqueChild(tree, cell, table_xml.cell_child_names[2], &report.missing_size, &report.duplicate_size);
     const missing_before = report.missing_margin;
-    const margin = table_xml.uniqueChild(tree, cell, "cellMargin", &report.missing_margin, &report.duplicate_margin);
+    const margin = table_xml.uniqueChild(tree, cell, table_xml.cell_child_names[3], &report.missing_margin, &report.duplicate_margin);
     const margin_missing = report.missing_margin != missing_before;
     var attributes: [cell_attribute_names.len]?xml.attribute_value.Value = undefined;
     try tree.unprefixedAttributeValues(a, cell, &cell_attribute_names, &attributes);

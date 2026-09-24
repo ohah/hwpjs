@@ -10,6 +10,8 @@
 
 `subList` 내부 문단 흐름·서식·다른 제어 요소, `linkListIDRef`와 `linkListNextIDRef`의 실제 대상, `metatag` 내용, 셀 레이아웃·편집·저장 의미는 아직 구현하지 않았습니다. 보고서의 성공은 셀 본문의 완전한 파싱을 뜻하지 않습니다.
 
+`subList`와 다른 셀 직접 자식의 실제 순서·미등록 요소는 [행·셀 topology](hwpx-table-child-topology.md)가 별도 진단하며, 목록 본문의 의미 검사는 여전히 남아 있습니다.
+
 ## 검증
 
 `zig test src/root.zig --test-filter 'HWPX cell subLists'`는 직접 자식·외부 네임스페이스·중첩 제외, 두 목록·요소 자식 부재, 부재/빈 속성·미지 열거값, 숫자/Boolean 오류, 정확한 한도 및 모든 할당 실패 위치를 검사합니다. `--test-filter 'HWPX ParaListType tree reader'`는 잘못된 요소·인덱스와 동일한 XML 태그에 대한 마스터페이지 스트리밍 경로/section 트리 경로의 원값·진단 일치를 확인합니다. `HWPX known inspections include table geometry`는 전체 문서 진입점과 실패 경로를 연결합니다. `python3 tools/hwpx-table-oracle.py --self-test`는 독립 조사기 반례를, 인자 없는 실행은 실파일 분포를 셉니다. `zig test src/hwpx_known_survey.zig -O ReleaseFast --test-filter 'HWPX known document inspections shard N'`을 N=0..7 각각 실행해 개수·직접 문단·`id` 부재·`metatag` 존재를 대조합니다. 실파일 검사는 로컬 `reference/rhwp` 표본이 없으면 재현되지 않습니다.

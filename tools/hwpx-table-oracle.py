@@ -43,6 +43,8 @@ TABLE_SHAPE_ENUMS = {
 }
 TABLE_SHAPE_BOOLEANS = {("attr", "lock"), ("sz", "protect"), ("caption", "fullSz")} | {("pos", field) for field in ("treatAsChar", "affectLSpacing", "flowWithText", "allowOverlap", "holdAnchorAndSO")}
 TABLE_SHAPE_SIGNED = {("attr", "zOrder"), ("caption", "width"), ("caption", "gap")} | {("outMargin", field) for field in ("left", "right", "top", "bottom")} | {("pos", field) for field in ("vertOffset", "horzOffset")}
+TABLE_CELL_ATTRIBUTES = {"name", "header", "hasMargin", "protect", "editable", "dirty", "borderFillIDRef"}
+TABLE_CELL_DIRECT_NAMES = frozenset(("cellAddr", "cellSpan", "cellSz", "cellMargin", "subList"))
 
 
 def inspect_shape_field(node, kind, field, stats):
@@ -302,10 +304,31 @@ def inspect_table(table, stats, samples, path, border_ids=None):
     occupied = set()
     table_issues = Counter()
     for row_index, row in enumerate(rows):
+        stats["table_row_other_attributes"] += len(row.attrib)
         cells = [child for child in row if child.tag == P + "tc"]
+        stats["table_row_other_direct"] += len(row) - len(cells)
+        stats["table_row_foreign_direct"] += sum(not child.tag.startswith(P) for child in row if child.tag != P + "tc")
         stats["cells"] += len(cells)
         table_issues["empty_row"] += not cells
         for cell in cells:
+            stats["table_cell_other_attributes"] += sum(name not in TABLE_CELL_ATTRIBUTES for name in cell.attrib)
+            known_sequence = []
+            for child in cell:
+                local = child.tag.removeprefix(P) if child.tag.startswith(P) else None
+                if local not in TABLE_CELL_DIRECT_NAMES:
+                    stats["table_cell_other_direct"] += 1
+                    stats["table_cell_foreign_direct"] += not child.tag.startswith(P)
+                    continue
+                stats["table_cell_known_direct"] += 1
+                known_sequence.append(local)
+            stats["table_cell_first_known_subList"] += bool(known_sequence) and known_sequence[0] == "subList"
+            stats["table_cell_last_known_address"] += bool(known_sequence) and known_sequence[-1] == "cellAddr"
+            common = known_sequence == ["subList", "cellAddr", "cellSpan", "cellSz", "cellMargin"]
+            address_last = known_sequence == ["subList", "cellSpan", "cellSz", "cellMargin", "cellAddr"]
+            stats["table_cell_common_sequence"] += common
+            stats["table_cell_addr_last_sequence"] += address_last
+            stats["table_cell_other_known_sequence"] += not common and not address_last
+            stats["table_cell_sequence_" + "/".join(known_sequence)] += 1
             inspect_metrics(cell, stats, border_ids)
             addresses = [child for child in cell if child.tag == P + "cellAddr"]
             spans = [child for child in cell if child.tag == P + "cellSpan"]
@@ -412,6 +435,11 @@ def self_test():
         ("<p:tbl rowCnt='2' colCnt='2'><p:inMargin left='-2' right='4294967295' top='0'/><p:cellzoneList><p:cellzone startRowAddr='2' endRowAddr='1' startColAddr='1' endColAddr='0' borderFillIDRef='0'/><p:cellzone startRowAddr='3'/></p:cellzoneList></p:tbl>", {"table_inMargin_elements": 1, "table_inMargin_left_negative": 1, "table_inMargin_right_highbit": 1, "table_inMargin_bottom_absent": 1, "table_cellzoneList_elements": 1, "table_cellzones": 2, "table_cellzone_endRowAddr_absent": 1, "table_cellzone_inverted": 1, "table_cellzone_outside_grid": 2, "table_cellzone_border_zero": 1, "table_cellzone_border_absent": 1}),
         ("<p:tbl xmlns:x='urn:foreign' rowCnt='0' colCnt='0' id='4294967295' zOrder='-1' textWrap='THROUGH' lock='1'><x:sz width='99'/><p:sz width='10' protect='true'/><p:pos vertOffset='-2' horzOffset='4294967295'/><p:outMargin left='-3' right='4294967295'/><p:caption side='BOTTOM' fullSz='false' width='-1' gap='850' lastWidth='7'><p:subList textDirection='HORIZONTAL' textWidth='12'><p:p/></p:subList></p:caption><p:label pagewidth='9' pageheight='10'/><p:shapeComment/><p:parameterset/><p:metaTag/><x:caption/></p:tbl>", {"table_shape_attr_id_sum": 4294967295, "table_shape_attr_zOrder_negative": 1, "table_shape_attr_textWrap_unknown": 1, "table_shape_attr_textWrap_unrecognized_THROUGH": 1, "table_shape_attr_lock_true": 1, "table_shape_sz_elements": 1, "table_shape_sz_width_sum": 10, "table_shape_sz_protect_true": 1, "table_shape_pos_vertOffset_negative": 1, "table_shape_pos_horzOffset_highbit": 1, "table_shape_outMargin_left_negative": 1, "table_shape_outMargin_right_highbit": 1, "table_shape_caption_elements": 1, "table_shape_caption_sub_lists": 1, "table_shape_caption_direct_paragraphs": 1, "table_shape_caption_width_negative": 1, "table_shape_label_pageheight_sum": 10, "table_shape_shapeComment_elements": 1, "table_shape_parameterset_elements": 1, "table_shape_metaTag_elements": 1, "table_shape_other_direct": 2}),
         ("<p:tbl rowCnt='0' colCnt='0' textWrap='FUTURE'><p:sz/><p:sz width='1'/><p:caption side='FUTURE'><p:subList textDirection='FUTURE'><p:p/><p:other/></p:subList><p:subList/></p:caption><p:caption/><p:other><p:sz width='100'/></p:other></p:tbl>", {"table_shape_sz_duplicate": 1, "table_shape_pos_missing": 1, "table_shape_sz_width_present": 1, "table_shape_sz_height_present": 0, "table_shape_attr_textWrap_unrecognized_FUTURE": 1, "table_shape_caption_duplicate": 1, "table_shape_caption_sub_lists": 2, "table_shape_caption_duplicate_sub_list": 1, "table_shape_caption_missing_sub_list": 1, "table_shape_caption_other_direct_children": 1, "table_shape_caption_unknown_enums": 1, "table_shape_other_direct": 1}),
+        ("<p:tbl xmlns:x='urn:foreign' rowCnt='1' colCnt='1'><p:tr x:flag='1' spare='2'><x:tc/><p:extra/><p:tc x:future='yes' name=''><p:cellSpan rowSpan='1' colSpan='1'/><p:cellAddr rowAddr='0' colAddr='0'/><x:subList/><p:unknown/><p:cellSz width='1' height='1'/><p:cellMargin left='0' right='0' top='0' bottom='0'/><p:subList/></p:tc></p:tr></p:tbl>", {"table_row_other_attributes": 2, "table_row_other_direct": 2, "table_row_foreign_direct": 1, "table_cell_other_attributes": 1, "table_cell_other_direct": 2, "table_cell_foreign_direct": 1, "table_cell_known_direct": 5, "table_cell_first_known_subList": 0, "table_cell_last_known_address": 0}),
+        ("<p:tbl xmlns:x='urn:foreign' rowCnt='1' colCnt='1'><p:tr><p:tc><x:before/><p:subList/><p:cellSpan rowSpan='1' colSpan='1'/><p:cellSz width='1' height='1'/><p:cellMargin left='0' right='0' top='0' bottom='0'/><p:cellAddr rowAddr='0' colAddr='0'/></p:tc></p:tr></p:tbl>", {"table_cell_other_direct": 1, "table_cell_foreign_direct": 1, "table_cell_known_direct": 5, "table_cell_first_known_subList": 1, "table_cell_last_known_address": 1, "table_cell_addr_last_sequence": 1}),
+        ("<p:tbl rowCnt='1' colCnt='1'><p:tr><p:tc><p:subList/><p:cellAddr rowAddr='0' colAddr='0'/><p:cellSpan rowSpan='1' colSpan='1'/><p:cellSz width='1' height='1'/><p:cellMargin left='0' right='0' top='0' bottom='0'/></p:tc></p:tr></p:tbl>", {"table_cell_known_direct": 5, "table_cell_common_sequence": 1, "table_cell_addr_last_sequence": 0, "table_cell_other_known_sequence": 0}),
+        ("<p:tbl rowCnt='1' colCnt='1'><p:tr><p:tc><p:subList/><p:cellSz width='1' height='1'/><p:cellSpan rowSpan='1' colSpan='1'/><p:cellMargin left='0' right='0' top='0' bottom='0'/><p:cellAddr rowAddr='0' colAddr='0'/></p:tc></p:tr></p:tbl>", {"table_cell_first_known_subList": 1, "table_cell_last_known_address": 1, "table_cell_common_sequence": 0, "table_cell_addr_last_sequence": 0, "table_cell_other_known_sequence": 1}),
+        ("<p:tbl xmlns:x='urn:foreign' rowCnt='1' colCnt='1'><p:tr><p:tc><x:unknown/></p:tc></p:tr></p:tbl>", {"table_cell_other_direct": 1, "table_cell_foreign_direct": 1, "table_cell_known_direct": 0, "table_cell_first_known_subList": 0, "table_cell_last_known_address": 0}),
     )
     for source, expected in cases:
         stats = Counter()

@@ -56,7 +56,7 @@ pub fn inspectCell(a: std.mem.Allocator, tree: *const tree_mod.Tree, cell: usize
     var in_cell: usize = 0;
     var cursor = tree.elements[cell].first_child;
     while (cursor) |index| : (cursor = tree.elements[index].next_sibling) {
-        if (!table_xml.childIs(tree, index, "subList")) continue;
+        if (!table_xml.childIs(tree, index, table_xml.cell_child_names[4])) continue;
         if (report.sub_lists == options.max_sub_lists) return error.LimitExceeded;
         report.sub_lists += 1;
         in_cell += 1;

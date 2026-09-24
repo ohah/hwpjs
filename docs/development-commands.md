@@ -14,6 +14,8 @@
 
 [표 상속 shape 필드·자식](hwpx-table-shape.md)은 `zig test src/root.zig --test-filter 'HWPX table shape'`로 합성·오류·예산·할당 실패를, `python3 tools/hwpx-table-oracle.py --self-test`로 독립 반례를 검사합니다. 선택 실파일 known survey 8개 shard에서 `sz`·`pos`·`outMargin`·`caption`·`label` 분포와 원값 합계, 모델 밖 `textWrap=THROUGH`를 대조합니다.
 
+[표 행·셀 직접 자식 topology](hwpx-table-child-topology.md)는 `zig test src/root.zig --test-filter 'HWPX table child topology'`로 합성·한도·할당 실패를, 같은 독립 표 조사기와 선택 실파일 8개 shard로 미등록 자식·속성 및 알려진 직접 자식의 정확한 두 관측 순서와 나머지 순서 분포를 대조합니다.
+
 [선택 분기 section 텍스트](hwpx-selected-section-text.md)의 합성 검사는 `zig test src/root.zig --test-filter 'HWPX selected section text'`로 실행합니다. 조건부 분기가 있는 실파일의 텍스트 보존 대조는 같은 known survey 8개 shard에 포함됩니다.
 
 [선택 분기 서식 참조](hwpx-selected-style-references.md)는 `zig test src/root.zig --test-filter 'HWPX selected style references'`로 합성·할당 실패를 검사합니다. 실파일의 선택 텍스트·서식 참조 교차 대조는 위 known survey 8개 shard를 별도 프로세스로 실행합니다.

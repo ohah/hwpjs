@@ -486,6 +486,7 @@ fn surveyShard(shard: usize) !void {
     var table_attributes: package.TableAttributesReport = .{};
     var table_children: package.TableChildrenReport = .{};
     var table_shape: ShapeTotals = .{};
+    var table_child_topology: package.TableChildTopologyReport = .{};
     var table_fields: package.TableCellFieldsReport = .{};
     var table_sub_lists: package.TableCellSubListsReport = .{};
     for (roots, 0..) |root, root_index| {
@@ -560,6 +561,22 @@ fn surveyShard(shard: usize) !void {
                     table_geometry.tables += t.tables;
                     table_geometry.rows += t.rows;
                     table_geometry.cells += t.cells;
+                    const topology = t.table_child_topology;
+                    try std.testing.expectEqual(t.rows, topology.rows);
+                    try std.testing.expectEqual(t.cells, topology.cells);
+                    try std.testing.expectEqual(@as(usize, 0), topology.row_other_attributes + topology.row_other_direct + topology.row_foreign_direct + topology.cell_other_attributes + topology.cell_other_direct + topology.cell_foreign_direct);
+                    try std.testing.expectEqual(t.cells * 5, topology.cell_known_direct);
+                    try std.testing.expectEqual(t.cells, topology.cell_first_known_sub_list);
+                    try std.testing.expectEqual(t.cells, topology.observed_common_sequence + topology.observed_address_last_sequence + topology.other_known_sequence);
+                    try std.testing.expectEqual(@as(usize, 0), topology.other_known_sequence);
+                    table_child_topology.rows += topology.rows;
+                    table_child_topology.cells += topology.cells;
+                    table_child_topology.cell_known_direct += topology.cell_known_direct;
+                    table_child_topology.cell_first_known_sub_list += topology.cell_first_known_sub_list;
+                    table_child_topology.cell_last_known_address += topology.cell_last_known_address;
+                    table_child_topology.observed_common_sequence += topology.observed_common_sequence;
+                    table_child_topology.observed_address_last_sequence += topology.observed_address_last_sequence;
+                    table_child_topology.other_known_sequence += topology.other_known_sequence;
                     table_geometry.grid_slots += t.grid_slots;
                     table_geometry.cell_slots += t.cell_slots;
                     const attrs = t.table_attributes;
@@ -691,6 +708,14 @@ fn surveyShard(shard: usize) !void {
     try std.testing.expectEqual(expected.encrypted[shard], encrypted);
     try std.testing.expectEqual(expected.sections[shard], sections);
     try std.testing.expectEqual(expected.table_count[shard], table_geometry.tables);
+    try std.testing.expectEqual(expected.table_rows[shard], table_child_topology.rows);
+    try std.testing.expectEqual(expected.table_cells[shard], table_child_topology.cells);
+    try std.testing.expectEqual(expected.table_cells[shard] * 5, table_child_topology.cell_known_direct);
+    try std.testing.expectEqual(expected.table_cells[shard], table_child_topology.cell_first_known_sub_list);
+    try std.testing.expectEqual(expected.table_cell_last_known_address[shard], table_child_topology.cell_last_known_address);
+    try std.testing.expectEqual(expected.table_cells[shard] - expected.table_cell_last_known_address[shard], table_child_topology.observed_common_sequence);
+    try std.testing.expectEqual(expected.table_cell_last_known_address[shard], table_child_topology.observed_address_last_sequence);
+    try std.testing.expectEqual(@as(usize, 0), table_child_topology.other_known_sequence);
     try std.testing.expectEqual(expected.table_rows[shard], table_geometry.rows);
     try std.testing.expectEqual(expected.table_cells[shard], table_geometry.cells);
     try std.testing.expectEqual(expected.table_grid_slots[shard], table_geometry.grid_slots);

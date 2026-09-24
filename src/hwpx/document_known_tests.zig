@@ -56,6 +56,9 @@ test "HWPX known inspections include table geometry diagnostics and limits" {
     defer report.deinit(a);
     try std.testing.expectEqual(@as(usize, 1), report.table_geometry.tables);
     try std.testing.expectEqual(@as(usize, 1), report.table_geometry.cells);
+    try std.testing.expectEqual(@as(usize, 1), report.table_geometry.table_child_topology.rows);
+    try std.testing.expectEqual(@as(usize, 1), report.table_geometry.table_child_topology.cells);
+    try std.testing.expectEqual(@as(usize, 5), report.table_geometry.table_child_topology.cell_known_direct);
     try std.testing.expectEqual(@as(usize, 1), report.table_geometry.table_attributes.page_break.cell);
     try std.testing.expectEqual(@as(usize, 1), report.table_geometry.table_attributes.repeat_header.true_value);
     try std.testing.expectEqual(@as(usize, 1), report.table_geometry.table_attributes.border_fill_references.resolved);
@@ -88,6 +91,7 @@ test "HWPX known inspections include table geometry diagnostics and limits" {
             try std.testing.expectEqual(@as(usize, 1), known.table_geometry.uncovered_slots);
             try std.testing.expectEqual(@as(usize, 1), known.table_geometry.table_attributes.border_fill_references.resolved);
             try std.testing.expectEqual(@as(usize, 1), known.table_geometry.table_children.border_references.resolved);
+            try std.testing.expectEqual(@as(usize, 1), known.table_geometry.table_child_topology.cells);
             try std.testing.expectEqual(@as(usize, 1), known.table_geometry.table_shape.caption_sub_lists);
             try std.testing.expectEqual(@as(i64, 4294967295), known.table_geometry.cell_fields.margin_sum[1]);
             try std.testing.expectEqual(@as(usize, 1), known.table_geometry.cell_fields.border_fill_references.resolved);

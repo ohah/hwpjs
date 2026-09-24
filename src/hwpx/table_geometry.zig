@@ -6,6 +6,7 @@ const cell_fields = @import("table_cell_fields.zig");
 const table_attributes = @import("table_attributes.zig");
 const table_children = @import("table_children.zig");
 const table_shape = @import("table_shape.zig");
+const table_child_topology = @import("table_child_topology.zig");
 const cell_sub_lists = @import("table_cell_sub_lists.zig");
 const header_resources = @import("header_resources.zig");
 
@@ -49,16 +50,18 @@ pub const Report = struct {
     table_attributes: table_attributes.Report = .{},
     table_children: table_children.Report = .{},
     table_shape: table_shape.Report = .{},
+    table_child_topology: table_child_topology.Report = .{},
     cell_sub_lists: cell_sub_lists.Report = .{},
 };
 
 fn inspectCell(a: std.mem.Allocator, tree: *const tree_mod.Tree, cell: usize, row_index: usize, rows: ?u32, cols: ?u32, occupied: ?[]u8, options: Options, border_fills: ?*const header_resources.Table, report: *Report) !void {
     if (report.cells == options.max_cells) return error.LimitExceeded;
     report.cells += 1;
+    try table_child_topology.inspectCell(a, tree, cell, &report.table_child_topology);
     try cell_fields.inspectCell(a, tree, cell, options.max_attribute_bytes, border_fills, &report.cell_fields);
     try cell_sub_lists.inspectCell(a, tree, cell, options.max_attribute_bytes, options.cell_sub_lists, &report.cell_sub_lists);
-    const addr = table_fields.uniqueChild(tree, cell, "cellAddr", &report.missing_address, &report.duplicate_address);
-    const span = table_fields.uniqueChild(tree, cell, "cellSpan", &report.missing_span, &report.duplicate_span);
+    const addr = table_fields.uniqueChild(tree, cell, table_fields.cell_child_names[0], &report.missing_address, &report.duplicate_address);
+    const span = table_fields.uniqueChild(tree, cell, table_fields.cell_child_names[1], &report.missing_span, &report.duplicate_span);
     const col = if (addr) |index| try table_fields.optionalUnsigned(a, tree, index, "colAddr", options.max_attribute_bytes) else null;
     const row = if (addr) |index| try table_fields.optionalUnsigned(a, tree, index, "rowAddr", options.max_attribute_bytes) else null;
     const col_span = if (span) |index| try table_fields.optionalUnsigned(a, tree, index, "colSpan", options.max_attribute_bytes) else null;
@@ -115,6 +118,7 @@ fn inspectTable(a: std.mem.Allocator, tree: *const tree_mod.Tree, table: usize, 
         if (!table_fields.childIs(tree, row, "tr")) continue;
         if (report.rows == options.max_rows) return error.LimitExceeded;
         report.rows += 1;
+        try table_child_topology.inspectRow(a, tree, row, &report.table_child_topology);
         var direct_cells: usize = 0;
         var cell_cursor = tree.elements[row].first_child;
         while (cell_cursor) |cell| : (cell_cursor = tree.elements[cell].next_sibling) {

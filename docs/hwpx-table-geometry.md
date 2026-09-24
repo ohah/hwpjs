@@ -11,6 +11,7 @@
 [표 자체 속성 원값·테두리 ID 참조](hwpx-table-attributes.md)는 별도 보고서에서 다룹니다. 격자 선언 `rowCnt`·`colCnt`의 소유권은 이 모듈에 그대로 둡니다.
 [표 안쪽 여백·셀 구역](hwpx-table-children.md)도 별도 보고서가 소유하며 선언 격자 수만 이 모듈에서 전달받습니다.
 [표 상속 shape 필드·직접 자식](hwpx-table-shape.md)도 별도 보고서가 소유하며 이 모듈은 선택된 표 요소만 전달합니다.
+[표 행·셀 직접 자식 topology](hwpx-table-child-topology.md)도 별도 보고서가 소유하며 이 모듈은 선택된 행·셀 요소만 전달합니다.
 
 ## 검증
 

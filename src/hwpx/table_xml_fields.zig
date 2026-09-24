@@ -5,6 +5,8 @@ const document_xml = @import("document_xml.zig");
 const values = @import("xml_values.zig");
 
 pub const margin_names = [_][]const u8{ "left", "right", "top", "bottom" };
+/// Public model child names; the array order is descriptive, not a required XML order.
+pub const cell_child_names = [_][]const u8{ "cellAddr", "cellSpan", "cellSz", "cellMargin", "subList" };
 
 pub const BooleanCounts = struct {
     absent: usize = 0,

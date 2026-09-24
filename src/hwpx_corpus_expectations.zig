@@ -42,6 +42,8 @@ pub const table_zone_border_sum = [_]u64{ 863, 38, 683, 171, 908, 1605, 921, 633
 // Independent ZIP/ElementTree census of hp:tbl inherited shape fields.
 pub const table_shape_captions = [_]usize{ 31, 5, 5, 7, 10, 7, 42, 27 };
 pub const table_shape_labels = [_]usize{ 8, 0, 11, 0, 0, 2, 3, 4 };
+// All observed cells start their known-child sequence with subList; only shard 7 has trailing cellAddr.
+pub const table_cell_last_known_address = [_]usize{ 0, 0, 0, 0, 0, 0, 0, 59 };
 pub const table_shape_dropcap_present = [_]usize{ 870, 364, 436, 361, 300, 421, 355, 1070 };
 // All five extensions in this corpus are THROUGH; no TIGHT was observed.
 pub const table_shape_wrap_extensions = [_]usize{ 0, 0, 0, 0, 0, 0, 0, 5 };

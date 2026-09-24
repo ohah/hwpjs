@@ -35,6 +35,7 @@ test {
     _ = @import("hwpx/table_attributes_tests.zig");
     _ = @import("hwpx/table_children_tests.zig");
     _ = @import("hwpx/table_shape_tests.zig");
+    _ = @import("hwpx/table_child_topology_tests.zig");
     _ = @import("hwpx/table_cell_sub_lists_tests.zig");
     _ = @import("hwpx/payload_integrity_tests.zig");
     _ = @import("hwpx/manifest_xml_tests.zig");

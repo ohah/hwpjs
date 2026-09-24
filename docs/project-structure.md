@@ -50,6 +50,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
   표 자체의 pageBreak·반복 머리글·간격·테두리 ID 원값과 참조는 [표 자체 속성](hwpx-table-attributes.md)이 소유합니다.
   표 직접 `inMargin`·`cellzoneList`와 구역의 좌표·테두리 ID 진단은 [표 직접 자식](hwpx-table-children.md)이 소유합니다.
   표의 상속 shape 속성 및 `sz`·`pos`·`outMargin`·`caption`·`label` 직접 자식 진단은 [표 shape](hwpx-table-shape.md)가 소유합니다.
+  행·셀의 모델 밖 직접 자식·속성과 알려진 자식의 관측 순서는 [표 행·셀 topology](hwpx-table-child-topology.md)가 소유합니다.
   직접 셀의 크기·여백·속성 원값과 `borderFillIDRef`의 header ID 연결은 [표 셀 필드](hwpx-table-cell-fields.md)가 소유합니다.
   직접 셀의 `subList` 경계·공통 속성·직접 문단 수는 [표 셀 목록](hwpx-table-cell-sublists.md)이 소유합니다.
 - `src/cfb/`: 읽기·검증·저장을 책임별로 분리한 CFB 코어.
