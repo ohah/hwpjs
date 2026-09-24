@@ -14,6 +14,8 @@
 
 [run 위치·직접 자식 진단](hwpx-run-topology.md)은 section·마스터페이지 결과를 별도로 반환합니다. 공개 모델 미등록 자식이나 늦은 `secPr`는 즉시 문서 오류로 거부하지 않습니다.
 
+직접 [조건부 switch 구조 진단](hwpx-switch-shape.md)은 두 run topology 보고서의 `switches` 필드에 포함됩니다. 두 분기의 선택·적용은 아직 판정하지 않습니다.
+
 [`hp:t` 원값·직접 자식 진단](hwpx-text-nodes.md)도 두 범위의 별도 보고서를 반환합니다. 선택적 `charStyleIDRef`의 부재와 값, 모델/XSD 표기 차이를 보존하며 표시 텍스트를 합성하지 않습니다.
 
 직접 [`hp:tab` 속성 진단](hwpx-inline-tab.md)은 두 text 노드 보고서의 `tab` 필드에 포함됩니다. 숫자형과 이름형의 대응·화면상 간격은 판정하지 않습니다.

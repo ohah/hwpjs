@@ -5,6 +5,7 @@ const attrs = @import("xml_attributes.zig");
 const document_xml = @import("document_xml.zig");
 const part_tree = @import("xml_part_tree.zig");
 const masterpage_parts = @import("masterpage_parts.zig");
+const switch_shape = @import("switch_shape.zig");
 
 pub const ChildClass = enum(u8) { model, bookmark, switch_element, other_paragraph, foreign };
 pub const Location = struct {
@@ -14,6 +15,8 @@ pub const Location = struct {
 
 pub const Options = struct {
     max_runs: usize = 4_000_000,
+    max_switches: usize = 1_000_000,
+    max_attribute_bytes: usize = 4096,
     xml: document_xml.Options = .{},
 };
 
@@ -33,6 +36,7 @@ pub const Report = struct {
     non_direct_runs: usize = 0,
     direct_children: usize = 0,
     child_classes: [5]usize = @splat(0),
+    switches: switch_shape.Report = .{},
     sec_pr_children: usize = 0,
     duplicate_sec_pr_runs: usize = 0,
     late_sec_pr_runs: usize = 0,
@@ -67,11 +71,12 @@ fn classify(tag: xml.tags.Tag, scope: *const xml.namespaces.State) !ChildClass {
 
 const Mode = enum { section, master_page };
 const Node = struct {
-    kind: enum { other, paragraph, run } = .other,
+    kind: enum { other, paragraph, run, switch_element, case_branch, default_branch } = .other,
     in_scope: bool = false,
     direct_children: usize = 0,
     sec_pr_children: usize = 0,
     run_ordinal: usize = 0,
+    switch_state: switch_shape.State = .{},
 };
 
 const Scanner = struct {
@@ -96,6 +101,7 @@ const Scanner = struct {
         const self: *Scanner = @ptrCast(@alignCast(raw));
         if (tag.kind == .end) {
             if (depth != self.nodes.items.len) return error.InvalidRunTopologyDepth;
+            if (self.nodes.items[depth - 1].kind == .switch_element) self.report.switches.finish(self.nodes.items[depth - 1].switch_state);
             _ = self.nodes.pop();
             return;
         }
@@ -131,6 +137,22 @@ const Scanner = struct {
                 parent_node.sec_pr_children += 1;
             }
             parent_node.direct_children += 1;
+            if (child_class == .switch_element) {
+                if (self.report.switches.switches == self.options.max_switches) return error.LimitExceeded;
+                try switch_shape.noteSwitch(tag, scope, &self.report.switches);
+                node.kind = .switch_element;
+            }
+        } else if (parent.in_scope and parent.kind == .switch_element) {
+            const state = &self.nodes.items[depth - 2].switch_state;
+            if (try attrs.element(tag, scope, document_xml.paragraph_uri, "case")) {
+                try switch_shape.noteCase(self.a, tag, scope, self.options.max_attribute_bytes, state, &self.report.switches);
+                node.kind = .case_branch;
+            } else if (try attrs.element(tag, scope, document_xml.paragraph_uri, "default")) {
+                try switch_shape.noteDefault(tag, scope, state, &self.report.switches);
+                node.kind = .default_branch;
+            } else switch_shape.noteOtherChild(&self.report.switches);
+        } else if (parent.in_scope and (parent.kind == .case_branch or parent.kind == .default_branch)) {
+            try switch_shape.noteBranchChild(tag, scope, parent.kind == .case_branch, &self.report.switches);
         }
         if (node.in_scope and try attrs.element(tag, scope, document_xml.paragraph_uri, "p")) {
             node.kind = .paragraph;
@@ -145,7 +167,7 @@ const Scanner = struct {
                 if (self.report.first_non_direct_run == null) self.report.first_non_direct_run = self.location(node.run_ordinal);
             }
         }
-        if (tag.kind == .start) try self.nodes.append(self.a, node);
+        if (tag.kind == .start) try self.nodes.append(self.a, node) else if (node.kind == .switch_element) self.report.switches.finish(node.switch_state);
     }
 };
 

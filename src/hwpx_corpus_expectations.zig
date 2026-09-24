@@ -94,6 +94,15 @@ pub const master_run_topology_classes = [_][5]usize{
     .{ 0, 0, 0, 0, 0 },   .{ 0, 0, 0, 0, 0 },
     .{ 43, 0, 0, 0, 0 },  .{ 208, 0, 0, 0, 0 },
 };
+// Direct hp:run/hp:switch shape; each observed case is chart and each default is OLE.
+fn observedSwitchShape(comptime count: u64) [21]u64 {
+    return .{ count, 0, count, count, 0, count, 0, count, 0, 0, 0, 0, 0, count, 0, count, 0, 0, 0, 0, 0 };
+}
+pub const section_switch_shape = [_][21]u64{
+    observedSwitchShape(12), observedSwitchShape(14), observedSwitchShape(15), observedSwitchShape(9),
+    observedSwitchShape(12), observedSwitchShape(10), observedSwitchShape(12), observedSwitchShape(9),
+};
+pub const master_switch_shape = [_][21]u64{[_]u64{0} ** 21} ** 8;
 pub const section_run_topology_sec_pr = [_]usize{ 75, 72, 72, 55, 64, 62, 63, 92 };
 pub const section_run_topology_late_sec_pr = [_]usize{ 3, 3, 4, 1, 3, 3, 0, 15 };
 pub const zero_run_topology = [_]usize{0} ** 8;

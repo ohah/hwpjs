@@ -48,6 +48,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [Run 위치·직접 자식 진단](hwpx-run-topology.md)은 같은 두 범위의 부모·자식 관계와 `secPr` 위치를 별도 순회에서 관측합니다. 2021 스키마 순서를 2011 문서에 강제하지 않고 미등록 자식을 진단으로 보존합니다.
 
+[조건부 switch 구조](hwpx-switch-shape.md)는 직접 run 자식의 case/default 모양과 요구 namespace 원값을 관측합니다. 실제 분기 선택은 명시적 지원 프로필이 정해진 후속 계층에 남깁니다.
+
 [`hp:t` 원값·직접 자식 진단](hwpx-text-nodes.md)은 선택적 `charStyleIDRef`의 어휘·부재와 직접 내부 요소를 별도로 관측합니다. 문자 순서·표시 의미는 section 콘텐츠 계층, 서식 적용은 후속 문서 모델의 책임입니다.
 
 [`hp:tab` 속성 진단](hwpx-inline-tab.md)은 text 노드가 고른 직접 자식의 세 속성 형식을 별도 검사기로 분리합니다. 숫자형과 XSD 이름형을 섞지 않으며 탭의 실제 간격 계산은 후속 계층에 남깁니다.

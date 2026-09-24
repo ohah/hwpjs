@@ -38,6 +38,47 @@ test "HWPX run topology observes direct children, late secPr and unknown extensi
     try std.testing.expectEqual(@as(?topology.Location, .{ .item_index = 9, .run_ordinal = 1 }), report.first_unmodeled_child);
 }
 
+test "HWPX switch shape preserves branches and required namespace forms" {
+    const source = prefix ++ "<p:p><p:run>" ++
+        "<p:switch extra='x'><p:case p:required-namespace='http://www.hancom.co.kr/hwpml/2016/ooxmlchart'><p:chart/></p:case><p:default><p:ole/></p:default></p:switch>" ++
+        "<p:switch/>" ++
+        "<p:switch><p:default extra='x'><p:pic/></p:default>" ++
+        "<p:case p:required-namespace='' required-namespace='urn:other' extra='x'><p:ole/></p:case><p:default/></p:switch>" ++
+        "</p:run></p:p>" ++ suffix;
+    const report = try inspectXml(std.testing.allocator, source, .{});
+    try std.testing.expectEqualSlices(u64, &.{ 3, 1, 2, 3, 0, 2, 1, 1, 0, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1 }, &report.switches.counts());
+    try std.testing.expectError(error.LimitExceeded, inspectXml(std.testing.allocator, source, .{ .max_switches = 2 }));
+    try std.testing.expectError(error.LimitExceeded, inspectXml(std.testing.allocator, source, .{ .max_attribute_bytes = 10 }));
+}
+
+test "HWPX switch shape ignores foreign and nested lookalikes" {
+    const source = prefix ++ "<p:p><p:run>" ++
+        "<x:switch xmlns:x='urn:other'><x:case/></x:switch>" ++
+        "<p:future><p:switch><p:case/></p:switch></p:future>" ++
+        "<p:switch><x:case xmlns:x='urn:other'/><p:case required-namespace='urn:unqualified'><x:chart xmlns:x='urn:other'/></p:case><p:default/></p:switch>" ++
+        "</p:run></p:p>" ++ suffix;
+    const report = try inspectXml(std.testing.allocator, source, .{});
+    try std.testing.expectEqualSlices(u64, &.{ 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0 }, &report.switches.counts());
+    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+        fn run(a: std.mem.Allocator, xml_source: []const u8) !void {
+            const result = try inspectXml(a, xml_source, .{});
+            try std.testing.expectEqual(@as(usize, 1), result.switches.switches);
+        }
+    }.run, .{source});
+}
+
+test "HWPX switch shape classifies non-chart namespace without selecting a branch" {
+    const source = prefix ++ "<p:p><p:run><p:switch>" ++
+        "<p:case p:required-namespace='urn:a&amp;b'><p:ole/></p:case>" ++
+        "<p:default><p:chart/></p:default>" ++
+        "</p:switch></p:run></p:p>" ++ suffix;
+    const report = try inspectXml(std.testing.allocator, source, .{});
+    try std.testing.expectEqual(@as(usize, 1), report.switches.required_other_ns);
+    try std.testing.expectEqual(@as(usize, 1), report.switches.case_other_children);
+    try std.testing.expectEqual(@as(usize, 1), report.switches.default_other_children);
+    try std.testing.expectEqual(@as(usize, 0), report.switches.required_chart_ns);
+}
+
 test "HWPX run topology enforces run budget and exact section tree kind" {
     const source = prefix ++ "<p:p><p:run/><p:run/></p:p>" ++ suffix;
     const exact = try inspectXml(std.testing.allocator, source, .{ .max_runs = 2 });
@@ -72,7 +113,9 @@ const hpf = "<o:package xmlns:o='http://www.idpf.org/2007/opf/'><o:manifest>" ++
     "<o:item id='masterpage0' href='Contents/masterpage0.xml' media-type='application/xml'/>" ++
     "</o:manifest><o:spine><o:itemref idref='h'/><o:itemref idref='s'/></o:spine></o:package>";
 const master = "<masterPage id='masterpage0' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'>" ++
-    "<p:run><p:future/></p:run><p:subList><p:p id='0'><p:run><p:bookmark/><p:t/></p:run></p:p></p:subList></masterPage>";
+    "<p:run><p:future/></p:run><p:subList><p:p id='0'><p:run><p:bookmark/><p:t/>" ++
+    "<p:switch><p:case p:required-namespace='http://www.hancom.co.kr/hwpml/2016/ooxmlchart'/><p:default/></p:switch>" ++
+    "</p:run></p:p></p:subList></masterPage>";
 const sources = [_]fixture.Source{
     .{ .name = "mimetype", .data = package.mime },
     .{ .name = "META-INF/container.xml", .data = fixture.package_container },
@@ -93,12 +136,15 @@ test "HWPX run topology selects only direct master-page subLists and joins Known
     try std.testing.expectEqual(@as(usize, 1), report.parts);
     try std.testing.expectEqual(@as(usize, 1), report.sub_lists);
     try std.testing.expectEqual(@as(usize, 1), report.runs);
-    try std.testing.expectEqual(@as(usize, 2), report.direct_children);
+    try std.testing.expectEqual(@as(usize, 3), report.direct_children);
     try std.testing.expectEqual(@as(usize, 1), report.childCount(.bookmark));
     try std.testing.expectEqual(@as(usize, 1), report.childCount(.model));
+    try std.testing.expectEqual(@as(usize, 1), report.childCount(.switch_element));
+    try std.testing.expectEqual(@as(usize, 1), report.switches.required_chart_ns);
     var known = try document.inspectKnown(a, .{});
     defer known.deinit(a);
     try std.testing.expectEqual(report.runs, known.master_page_run_topology.runs);
+    try std.testing.expectEqual(report.switches.switches, known.master_page_run_topology.switches.switches);
     try std.testing.expectEqual(@as(usize, 1), known.run_topology.runs);
     try std.testing.expectEqual(@as(usize, 1), known.run_topology.sec_pr_children);
     try std.testing.expectError(error.LimitExceeded, document.inspectMasterPageRunTopology(a, .{ .topology = .{ .scan = .{ .max_runs = 0 } } }));
@@ -113,7 +159,7 @@ test "HWPX run topology applies one XML byte budget across master-page parts" {
     const hpf_two = try std.mem.replaceOwned(u8, a, hpf, "</o:manifest>", extra);
     defer a.free(hpf_two);
     const first = "<masterPage id='masterpage0' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'>" ++
-        "<p:subList><p:p id='0'><p:run><p:t/></p:run></p:p></p:subList></masterPage>";
+        "<p:subList><p:p id='0'><p:run><p:switch/><p:t/></p:run></p:p></p:subList></masterPage>";
     const second = "<masterPage id='masterpage1' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'>" ++
         "<p:subList><p:p id='1'><p:run><p:switch/><p:t/></p:run></p:p></p:subList></masterPage>";
     var changed: [sources.len + 1]fixture.Source = undefined;
@@ -129,8 +175,10 @@ test "HWPX run topology applies one XML byte budget across master-page parts" {
     try std.testing.expectEqual(@as(usize, 2), exact.parts);
     try std.testing.expectEqual(@as(usize, 2), exact.sub_lists);
     try std.testing.expectEqual(@as(usize, 2), exact.runs);
+    try std.testing.expectEqual(@as(usize, 2), exact.switches.switches);
     try std.testing.expectEqual(first.len + second.len, exact.xml_bytes);
-    try std.testing.expectEqual(@as(?topology.Location, .{ .item_index = 3, .run_ordinal = 1 }), exact.first_unmodeled_child);
+    try std.testing.expectEqual(@as(?topology.Location, .{ .item_index = 2, .run_ordinal = 1 }), exact.first_unmodeled_child);
+    try std.testing.expectError(error.LimitExceeded, document.inspectMasterPageRunTopology(a, .{ .topology = .{ .scan = .{ .max_switches = 1 } } }));
     try std.testing.expectError(error.LimitExceeded, document.inspectMasterPageRunTopology(a, .{ .topology = .{ .max_total_xml_bytes = first.len + second.len - 1 } }));
 }
 

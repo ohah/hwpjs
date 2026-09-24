@@ -54,6 +54,8 @@ HWPX 전용 테스트는 `zig test src/root.zig --test-filter HWPX`로 실행합
 
 [`hp:t` 원값·자식 진단](hwpx-text-nodes.md)의 합성 검사는 `zig test src/root.zig --test-filter 'HWPX text node'`로 실행합니다. 같은 8개 선택 shard에서 독립 Python oracle의 `*_text_nodes`·`*_text_child_classes`와 대조합니다. 선택 검사에는 로컬 corpus가 필요하고 기본 audit에는 포함되지 않습니다.
 
+[조건부 switch 구조](hwpx-switch-shape.md)의 합성 검사는 `zig test src/root.zig --test-filter 'HWPX switch shape'`로 실행합니다. 선택 실파일 8개 shard에서 독립 oracle의 `section_switch_shape`·`master_switch_shape` 21개 슬롯과 대조합니다. 기본 audit에는 실파일 shard가 포함되지 않습니다.
+
 [`hp:tab` 속성 진단](hwpx-inline-tab.md)의 합성 검사는 `zig test src/root.zig --test-filter 'HWPX tab attributes'`로 실행합니다. 같은 8개 선택 shard에서 독립 oracle의 `section_tab_fields`·`master_tab_fields` 21개 슬롯과 대조합니다. 기본 audit에는 실파일 shard가 포함되지 않습니다.
 
 [인라인 주석 마커 속성](hwpx-inline-annotations.md)의 합성 검사는 `zig test src/root.zig --test-filter 'HWPX inline annotation'`으로 실행합니다. 같은 8개 선택 shard에서 독립 oracle의 `section_markpen_fields`·`master_markpen_fields` 9개 슬롯과 `section_title_mark_fields`·`master_title_mark_fields` 6개 슬롯을 대조합니다.

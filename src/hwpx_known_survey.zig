@@ -20,9 +20,10 @@ const TopologyStats = struct {
     duplicates: usize = 0,
     late: usize = 0,
     classes: [5]usize = @splat(0),
+    switches: [21]u64 = @splat(0),
 
     fn from(report: package.RunTopologyReport) TopologyStats {
-        return .{ .runs = report.runs, .non_direct = report.non_direct_runs, .sec_pr = report.sec_pr_children, .duplicates = report.duplicate_sec_pr_runs, .late = report.late_sec_pr_runs, .classes = report.child_classes };
+        return .{ .runs = report.runs, .non_direct = report.non_direct_runs, .sec_pr = report.sec_pr_children, .duplicates = report.duplicate_sec_pr_runs, .late = report.late_sec_pr_runs, .classes = report.child_classes, .switches = report.switches.counts() };
     }
 
     fn add(self: *TopologyStats, other: TopologyStats) void {
@@ -32,6 +33,7 @@ const TopologyStats = struct {
         self.duplicates += other.duplicates;
         self.late += other.late;
         for (other.classes, 0..) |count, index| self.classes[index] += count;
+        for (other.switches, 0..) |count, index| self.switches[index] += count;
     }
 };
 
@@ -250,6 +252,8 @@ fn inspectOne(bytes: []const u8) !Outcome {
     for (known.master_page_run_topology.child_classes) |value| master_child_total += value;
     try std.testing.expectEqual(section_child_total, known.run_topology.direct_children);
     try std.testing.expectEqual(master_child_total, known.master_page_run_topology.direct_children);
+    try std.testing.expectEqual(known.run_topology.childCount(.switch_element), known.run_topology.switches.switches);
+    try std.testing.expectEqual(known.master_page_run_topology.childCount(.switch_element), known.master_page_run_topology.switches.switches);
     try std.testing.expectEqual(@as(usize, 0), known.master_pages.parts.manifest_id_mismatches);
     try std.testing.expectEqual(@as(usize, 0), known.master_pages.parts.unsupported_types);
     try std.testing.expectEqual(@as(usize, 0), known.master_pages.missing_target);
@@ -498,6 +502,8 @@ fn surveyShard(shard: usize) !void {
     try std.testing.expectEqual(expected.zero_run_topology[shard], master_run_topology.late);
     try std.testing.expectEqualSlices(usize, &expected.section_run_topology_classes[shard], &section_run_topology.classes);
     try std.testing.expectEqualSlices(usize, &expected.master_run_topology_classes[shard], &master_run_topology.classes);
+    try std.testing.expectEqualSlices(u64, &expected.section_switch_shape[shard], &section_run_topology.switches);
+    try std.testing.expectEqualSlices(u64, &expected.master_switch_shape[shard], &master_run_topology.switches);
     try std.testing.expectEqualSlices(usize, &expected.section_text_nodes[shard], &section_text_nodes.counts);
     try std.testing.expectEqualSlices(usize, &expected.master_text_nodes[shard], &master_text_nodes.counts);
     try std.testing.expectEqualSlices(usize, &expected.section_text_child_classes[shard], &section_text_nodes.classes);

@@ -78,6 +78,7 @@ def empty():
                 section_run_secpr_non_first=0, master_run_secpr_non_first=0,
                 section_run_children={}, master_run_children={},
                 section_run_child_classes=[0] * 5, master_run_child_classes=[0] * 5,
+                section_switch_shape=[0] * 21, master_switch_shape=[0] * 21,
                 section_text_nodes=[0] * 6, master_text_nodes=[0] * 6,
                 section_text_children={}, master_text_children={},
                 section_text_child_classes=[0] * 4, master_text_child_classes=[0] * 4,
@@ -126,6 +127,47 @@ def count_run_structure(shard, prefix, run, parent):
             classes[0 if local in RUN_MODEL_CHILDREN else 1 if local == "bookmark" else 2 if local == "switch" else 3] += 1
         else:
             classes[4] += 1
+        if child.tag == PARA + "switch":
+            count_switch_shape(shard[prefix + "_switch_shape"], child)
+
+
+def count_switch_shape(counts, node):
+    # [switches, switch extras, cases, defaults, other switch children,
+    #  required namespace present/empty/chart/other, unqualified/both,
+    #  case/default extras, case chart/other, default ole/other,
+    #  missing case/default, duplicate default, case after default].
+    counts[0] += 1
+    counts[1] += len(node.attrib)
+    cases = defaults = 0
+    after_default = False
+    for branch in node:
+        if branch.tag == PARA + "case":
+            cases += 1
+            counts[2] += 1
+            after_default |= defaults > 0
+            required = branch.get(PARA + "required-namespace")
+            unqualified = branch.get("required-namespace")
+            counts[5] += required is not None
+            counts[6] += required == ""
+            counts[7] += required == "http://www.hancom.co.kr/hwpml/2016/ooxmlchart"
+            counts[8] += required is not None and required not in ("", "http://www.hancom.co.kr/hwpml/2016/ooxmlchart")
+            counts[9] += unqualified is not None
+            counts[10] += required is not None and unqualified is not None
+            counts[11] += sum(key != PARA + "required-namespace" for key in branch.attrib)
+            for child in branch:
+                counts[13 if child.tag == PARA + "chart" else 14] += 1
+        elif branch.tag == PARA + "default":
+            defaults += 1
+            counts[3] += 1
+            counts[12] += len(branch.attrib)
+            for child in branch:
+                counts[15 if child.tag == PARA + "ole" else 16] += 1
+        else:
+            counts[4] += 1
+    counts[17] += cases == 0
+    counts[18] += defaults == 0
+    counts[19] += defaults > 1
+    counts[20] += after_default
 
 
 def count_text_node(shard, prefix, node, parent):
