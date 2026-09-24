@@ -318,6 +318,14 @@ pub const Document = struct {
         return section_references.inspect(a, self.archive, self.manifest, structure.sections, &resources, options.sections);
     }
 
+    /// Resolves paragraph/run style references only in caller-supported
+    /// switch branches. inspectReferences remains the raw all-branches view.
+    pub fn inspectSelectedStyleReferences(self: *const Document, a: std.mem.Allocator, options: ReferenceOptions, supported_namespaces: []const []const u8) !ReferenceReport {
+        var selected_options = options;
+        selected_options.sections.branch_policy = .{ .mode = .selected, .supported_namespaces = supported_namespaces };
+        return self.inspectReferences(a, selected_options);
+    }
+
     /// Streams normalized text and inline XML events from structure-selected
     /// sections in spine order. The report does not materialize an edit model.
     pub fn inspectSectionText(self: *const Document, a: std.mem.Allocator, options: SectionTextOptions, visitor: ?SectionTextVisitor) !SectionTextReport {

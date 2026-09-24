@@ -7,6 +7,7 @@ const content_manifest = @import("content_manifest.zig");
 const document_structure = @import("document_structure.zig");
 const header_resources = @import("header_resources.zig");
 const paragraph_style_links = @import("paragraph_style_links.zig");
+const selection = @import("compatibility_selection.zig");
 
 pub const Kind = paragraph_style_links.Kind;
 pub const Counts = paragraph_style_links.Counts;
@@ -31,7 +32,14 @@ pub const Options = struct {
     max_attribute_bytes: usize = 4096,
     max_paragraphs: usize = 2_000_000,
     max_runs: usize = 4_000_000,
+    branch_policy: selection.Policy = .{},
     xml: document_xml.Options = .{},
+};
+
+const Frame = struct {
+    kind: enum { other, run, switch_element, branch } = .other,
+    active: bool = true,
+    selected: selection.State = .{},
 };
 
 const Context = struct {
@@ -41,6 +49,7 @@ const Context = struct {
     report: *Report,
     item_index: usize,
     paragraph_depths: std.ArrayList(usize) = .empty,
+    frames: [256]Frame = @splat(.{}),
 
     fn deinit(self: *Context) void {
         self.paragraph_depths.deinit(self.allocator);
@@ -48,7 +57,9 @@ const Context = struct {
 
     fn onTag(raw: *anyopaque, tag: xml.tags.Tag, scope: *const xml.namespaces.State, depth: usize) anyerror!void {
         const self: *Context = @ptrCast(@alignCast(raw));
+        if (depth == 0 or depth > self.frames.len) return error.LimitExceeded;
         if (tag.kind == .end) {
+            if (!self.frames[depth - 1].active) return;
             if (self.paragraph_depths.items.len != 0 and self.paragraph_depths.items[self.paragraph_depths.items.len - 1] == depth) {
                 _ = self.paragraph_depths.pop();
             }
@@ -56,8 +67,25 @@ const Context = struct {
         }
         if (depth == 1) {
             if (!try attrs.element(tag, scope, document_xml.section_uri, "sec")) return error.InvalidSectionRoot;
+            if (tag.kind == .start) self.frames[0] = .{};
             return;
         }
+        const parent = self.frames[depth - 2];
+        var frame: Frame = .{ .active = parent.active };
+        if (parent.active) {
+            const is_case = if (parent.kind == .switch_element) try attrs.element(tag, scope, document_xml.paragraph_uri, "case") else false;
+            const is_default = if (parent.kind == .switch_element and !is_case) try attrs.element(tag, scope, document_xml.paragraph_uri, "default") else false;
+            if (is_case or is_default) {
+                frame.kind = .branch;
+                frame.active = try selection.choose(self.allocator, tag, scope, is_case, self.options.max_attribute_bytes, self.options.branch_policy, &self.frames[depth - 2].selected);
+            } else if ((parent.kind == .run or parent.kind == .branch) and try attrs.element(tag, scope, document_xml.paragraph_uri, "switch")) {
+                frame.kind = .switch_element;
+            }
+        }
+        const is_run = frame.active and try attrs.element(tag, scope, document_xml.paragraph_uri, "run");
+        if (is_run) frame.kind = .run;
+        if (tag.kind == .start) self.frames[depth - 1] = frame;
+        if (!frame.active) return;
         if (try attrs.element(tag, scope, document_xml.paragraph_uri, "p")) {
             if (self.report.paragraphs == self.options.max_paragraphs) return error.LimitExceeded;
             self.report.paragraphs += 1;
@@ -66,7 +94,7 @@ const Context = struct {
             if (tag.kind == .start) try self.paragraph_depths.append(self.allocator, depth);
             return;
         }
-        if (try attrs.element(tag, scope, document_xml.paragraph_uri, "run")) {
+        if (is_run) {
             if (self.report.runs == self.options.max_runs) return error.LimitExceeded;
             self.report.runs += 1;
             if (self.paragraph_depths.items.len == 0 or self.paragraph_depths.items[self.paragraph_depths.items.len - 1] + 1 != depth) self.report.non_direct_runs += 1;
@@ -75,10 +103,11 @@ const Context = struct {
     }
 };
 
-/// Re-reads only structure-selected section entries in spine order. All
-/// matching paragraph/run XML nodes are counted, including nested branches;
+/// Re-reads only structure-selected section entries in spine order. Raw mode
+/// counts both branches, while selected mode uses caller-declared capabilities;
 /// reference targets are resolved by header ID, never by array position.
 pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, manifest: content_manifest.Manifest, sections: []const document_structure.Section, resources: *const header_resources.Report, options: Options) !Report {
+    try selection.validate(options.branch_policy);
     var report: Report = .{ .sections = sections.len };
     var remaining = options.max_total_section_xml_bytes;
     for (sections) |section| {

@@ -1,12 +1,14 @@
 # HWPX section 서식 참조 검증
 
+이 문서의 기본 API는 조건부 양쪽 분기를 원문대로 집계합니다. 활성 분기의 참조만 필요한 경우 별도 [선택 분기 서식 참조](hwpx-selected-style-references.md) API를 사용합니다.
+
 `Document.inspectReferences`는 기존 [header·spine 구조](hwpx-document-structure.md)와 [header 리소스 ID 색인](hwpx-header-resources.md)을 같은 문서에 적용한 뒤, spine 순서의 section XML을 다시 읽어 본문 서식 참조를 검사합니다. 2011 paragraph namespace의 모든 `p`에서 `paraPrIDRef`·`styleIDRef`, 모든 `run`에서 `charPrIDRef`를 읽고 각각 header의 `paraPr`·`style`·`charPr` 명시적 ID와 대조합니다. 배열 위치나 ID 0을 기본값으로 쓰지 않습니다. section의 직접 자식이 아닌 문단도 검사하며 별도 집계합니다. 문단의 직접 자식이 아닌 run도 별도 집계하고 참조는 검사합니다. namespace가 다른 같은 로컬명은 세지 않습니다.
 
 참조 종류별로 속성 존재·부재, 해결된 참조, 대상 ID 부재, 대상 그룹 자체의 부재를 따로 보고합니다. 해결되지 않은 첫 ID와 section manifest 항목 인덱스를 남기며, 인덱스 해석에는 반환 원본 `Document`의 수명이 필요합니다. 속성 부재와 명시적 0은 다릅니다. 해결되지 않은 참조를 임의 보정하거나 조용히 성공으로 바꾸지 않지만, 실파일 편차 조사와 호환성 정책을 위해 이 단계에서는 진단으로 반환합니다. 숫자 손상·`u32` 초과, XML 구조·namespace 오류와 한도 초과는 오류로 반환합니다. 보고서는 숫자 진단만 보유해 별도 해제가 필요 없습니다.
 
 이 진입점은 구조 검증의 header+spine 총량, header 리소스 색인의 별도 한도, section 참조 재검사의 별도 한도를 각각 사용합니다. 참조 재검사의 기본 상한은 section 엔트리당 128MiB·합계 256MiB, 색인 대상 속성 값 4096바이트, 문단 200만 개·run 400만 개입니다. 호출자가 조정할 수 있습니다. 반복 해제한 section XML은 각 단계의 한도에서 독립적으로 계산하며 전체 단계의 단일 바이트 총량인 것처럼 설명하지 않습니다. [한컴의 공식 서식 연결 설명](https://tech.hancom.com/python-hwpx-parsing-2/)은 p의 문단 모양·스타일 참조와 run의 글자 모양 참조를 header의 `refList`와 연결합니다.
 
-이 검사는 문단의 `id`, [별도 API의 스타일·header 내부 참조](hwpx-header-references.md), 글꼴별 ID, 중첩 개체·표의 의미, [별도 API의 그림·OLE 등 이진 ID 연결](hwpx-binary-references.md), BinData 바이트, 조건부 XML 분기의 선택, 2021/2024 namespace 변형, 편집·저장을 아직 다루지 않습니다. 조건부 분기가 있는 경우에도 실제 선택 분기만 판정했다고 주장하지 않고, XML에 나타난 일치 namespace의 모든 문단·run을 집계합니다. 전체 문서 검증은 후속 단계입니다.
+기본 `inspectReferences`는 문단의 `id`, [별도 API의 스타일·header 내부 참조](hwpx-header-references.md), 글꼴별 ID, 중첩 개체·표의 의미, [별도 API의 그림·OLE 등 이진 ID 연결](hwpx-binary-references.md), BinData 바이트, 조건부 XML 분기의 선택, 2021/2024 namespace 변형, 편집·저장을 다루지 않습니다. 조건부 분기가 있는 경우에도 XML에 나타난 일치 namespace의 모든 문단·run을 집계하며 실제 선택 분기만 판정했다고 주장하지 않습니다. 별도 선택 API도 전체 문서 검증은 아닙니다.
 
 ## 실파일·적대적 검증
 

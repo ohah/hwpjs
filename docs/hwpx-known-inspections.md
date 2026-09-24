@@ -4,6 +4,8 @@
 
 section 텍스트 보고서도 원문 양쪽 분기를 유지합니다. 활성 분기 텍스트 이벤트는 별도 [선택 분기 텍스트](hwpx-selected-section-text.md) API가 제공합니다.
 
+문단·run 서식 참조도 `inspectKnown`에서는 원문 양쪽을 관측하고, 활성 분기 결과는 별도 [선택 분기 서식 참조](hwpx-selected-style-references.md) API가 제공합니다.
+
 [settings.xml 원값 검사](hwpx-settings.md)도 묶음에 포함됩니다. 값의 일부 어휘 검사만 제공하며 settings 전체 스키마나 동작 의미의 완료는 아닙니다.
 
 [masterpage 파트·section 참조](hwpx-master-pages.md)도 묶음에 포함됩니다. 연결 진단은 바탕쪽 내부/배치 의미나 전체 문서 유효성 판정이 아닙니다.

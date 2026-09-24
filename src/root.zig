@@ -16,6 +16,7 @@ test {
     _ = @import("hwpx/binary_references_tests.zig");
     _ = @import("hwpx/chart_references_tests.zig");
     _ = @import("hwpx/selected_references_tests.zig");
+    _ = @import("hwpx/selected_style_references_tests.zig");
     _ = @import("hwpx/chart_cache_tests.zig");
     _ = @import("hwpx/xstring_tests.zig");
     _ = @import("hwpx/section_text_tests.zig");

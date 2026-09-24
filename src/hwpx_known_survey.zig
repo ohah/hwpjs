@@ -30,6 +30,14 @@ fn removedTextFields(raw: package.SectionTextReport, selected: package.SectionTe
     return removed;
 }
 
+fn expectSelectedStyleAgreement(text_report: package.SectionTextReport, style_report: package.ReferenceReport) !void {
+    try std.testing.expectEqual(text_report.paragraphs, style_report.paragraphs);
+    try std.testing.expectEqual(text_report.runs, style_report.runs);
+    try std.testing.expectEqual(style_report.paragraphs, style_report.counts(.paragraph_shape).present + style_report.counts(.paragraph_shape).absent);
+    try std.testing.expectEqual(style_report.paragraphs, style_report.counts(.style).present + style_report.counts(.style).absent);
+    try std.testing.expectEqual(style_report.runs, style_report.counts(.character_shape).present + style_report.counts(.character_shape).absent);
+}
+
 const TopologyStats = struct {
     runs: usize = 0,
     non_direct: usize = 0,
@@ -194,6 +202,10 @@ fn inspectOne(bytes: []const u8) !Outcome {
         try std.testing.expectEqual(known.binary_references.counts(.section_ole).sites, case_branch.binary.counts(.section_ole).sites + default_oles);
         const fallback_text = try document.inspectSelectedSectionText(a, .{}, &.{}, null);
         const chart_text = try document.inspectSelectedSectionText(a, .{}, &.{chart_namespace}, null);
+        const fallback_style = try document.inspectSelectedStyleReferences(a, .{}, &.{});
+        const chart_style = try document.inspectSelectedStyleReferences(a, .{}, &.{chart_namespace});
+        try expectSelectedStyleAgreement(fallback_text, fallback_style);
+        try expectSelectedStyleAgreement(chart_text, chart_style);
         switch_removed_case = try removedTextFields(known.section_text, fallback_text);
         switch_removed_default = try removedTextFields(known.section_text, chart_text);
     }

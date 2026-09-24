@@ -1,5 +1,7 @@
 # HWPX 선택 분기 텍스트 이벤트
 
+같은 분기에서 문단·run의 header ID 참조를 검사하려면 [선택 분기 서식 참조](hwpx-selected-style-references.md)를 사용합니다. 텍스트 이벤트와 서식 참조는 서로의 보고서를 수정하지 않습니다.
+
 `Document.inspectSelectedSectionText(allocator, options, supported_namespaces, visitor)`는 기존 [section 텍스트 이벤트](hwpx-section-text.md) 스캐너에 호출자가 선언한 capability 집합을 적용합니다. `hp:run` 또는 활성 분기의 직접 자식 `hp:switch`에서 첫 일치 `case` 또는 첫 `default`만 이벤트·보고서에 포함합니다. 선택 정책의 유일한 구현은 [조건부 참조 선택](hwpx-switch-selection.md)의 `compatibility_selection.zig`입니다. 독립적인 namespace 판정이나 버전 추측을 추가하지 않습니다.
 
 기본 `inspectSectionText`와 `inspectKnown.section_text`는 기존대로 양쪽 분기를 순회하는 **원문 관측** 결과입니다. 새 API에서 문단·run·`hp:t` 순번과 텍스트/인라인 개수·한도는 활성 분기만 대상으로 다시 계산합니다. `required-namespace` 속성값은 기본 4096바이트 한도를 적용합니다. section 수·직접 문단 수와 읽은 XML 바이트 수는 같은 원문 section에 대한 값입니다. 방문자는 선택된 분기의 시작·끝·내용 이벤트만 받습니다. 한편 비활성 분기도 XML 문법·namespace·XML 이벤트/깊이·입력 바이트 한도 검사를 거치며, 이 API는 오류 전 이미 전달한 이벤트를 되돌리지 않습니다.

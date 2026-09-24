@@ -1,8 +1,10 @@
 # 파일·폴더 구조
 
-HWPX 조건부 분기 정책은 `src/hwpx/compatibility_selection.zig`가 소유하고 이진·차트 참조 및 section 텍스트 스캐너가 공유합니다. 참조 API와 현재 범위는 [조건부 참조 선택](hwpx-switch-selection.md)에 기록합니다.
+HWPX 조건부 분기 정책은 `src/hwpx/compatibility_selection.zig`가 소유하고 이진·차트·서식 참조 및 section 텍스트 스캐너가 공유합니다. 이진·차트 참조의 선택 범위는 [조건부 참조 선택](hwpx-switch-selection.md)에 기록합니다.
 
 section 텍스트 스캐너도 같은 정책을 쓰되, 선택된 이벤트·순번의 계약은 [선택 분기 텍스트](hwpx-selected-section-text.md)가 소유합니다.
+
+section 문단·run 서식 참조의 선택 결과는 기존 `section_references.zig`에 정책을 연결하고 [선택 분기 서식 참조](hwpx-selected-style-references.md)에 별도 기록합니다.
 
 ## 프로젝트와 현재 범위
 
