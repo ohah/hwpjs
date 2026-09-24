@@ -1,5 +1,7 @@
 # HWPX 이진 리소스 manifest 연결
 
+기본 보고서는 조건부 양쪽 분기를 관측합니다. 호출자 capability를 적용한 선택적 결과는 [조건부 참조 선택](hwpx-switch-selection.md)을 참조합니다.
+
 `Document.inspectBinaryReferences`는 [제품 header·spine 구조](hwpx-document-structure.md)가 선택한 `Contents/header.xml`과 section XML만 다시 읽고, XML의 `binaryItemIDRef` 문자열을 같은 문서의 OPF manifest `item.id`와 정확히 대조합니다. ZIP 파일명이나 manifest 배열 위치를 ID로 취급하지 않습니다. 암호화 문서는 먼저 거부합니다. 내장 item은 `entry_index`가 있는 것으로, `isEmbeded="0"` 외부 item은 별도로 분류합니다. 외부 링크를 네트워크에서 가져오지 않고 내장 바이너리의 바이트도 해제하지 않습니다.
 
 한컴 공개 모델의 [`ImageType.binaryItemIDRef`](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Core/ImageType.cpp#L54-L76)는 그림과 이미지 브러시에, [`OLEType.binaryItemIDRef`](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Para/OLEType.cpp#L103-L125)는 본문 OLE에 있습니다. 헤더의 [`font`](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Head/font.cpp#L50-L71)와 [`substFont`](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Head/substFont.cpp#L44-L63)에도 이 속성이 있습니다. 제품 스캐너는 이를 여섯 출처로 구분합니다: 헤더 font·substFont·borderFill 이미지 브러시, section pic 이미지·도형 이미지 브러시·OLE. `hp:switch`의 `case/default` 안에 있는 개체도 읽되, 조건 선택 없이 XML에 존재하는 양쪽 분기를 각각 집계합니다.

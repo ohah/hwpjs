@@ -5,6 +5,7 @@ const attrs = @import("xml_attributes.zig");
 const document_xml = @import("document_xml.zig");
 const content_manifest = @import("content_manifest.zig");
 const links = @import("binary_reference_links.zig");
+const selection = @import("compatibility_selection.zig");
 
 pub const Mode = enum { header, section };
 
@@ -14,6 +15,7 @@ pub const Options = struct {
     max_total_xml_bytes: usize = 256 * 1024 * 1024,
     max_attribute_bytes: usize = 4096,
     max_sites: usize = 1_000_000,
+    branch_policy: selection.Policy = .{},
     xml: document_xml.Options = .{},
 };
 
@@ -40,6 +42,11 @@ const Node = enum {
     image_brush,
     image,
 };
+const Frame = struct {
+    kind: Node = .other,
+    active: bool = true,
+    selected: selection.State = .{},
+};
 
 const Context = struct {
     allocator: std.mem.Allocator,
@@ -49,7 +56,7 @@ const Context = struct {
     manifest: content_manifest.Manifest,
     index: *const links.Index,
     report: *links.Report,
-    stack: [256]Node = @splat(.other),
+    stack: [256]Frame = @splat(.{}),
 
     fn drawing(tag: xml.tags.Tag, scope: *const xml.namespaces.State) !bool {
         for ([_][]const u8{ "rect", "ellipse", "polygon", "arc", "curve", "line", "connectLine", "textart", "unknown", "presentation" }) |local| {
@@ -59,7 +66,7 @@ const Context = struct {
     }
 
     fn classify(self: *Context, tag: xml.tags.Tag, scope: *const xml.namespaces.State, depth: usize) !Node {
-        const parent = if (depth == 1) Node.other else self.stack[depth - 2];
+        const parent = if (depth == 1) Node.other else self.stack[depth - 2].kind;
         if (depth == 1) {
             const uri = if (self.mode == .header) document_xml.head_uri else document_xml.section_uri;
             const local = if (self.mode == .header) "head" else "sec";
@@ -102,12 +109,19 @@ const Context = struct {
         if (tag.kind == .end) return;
         if (depth == 0 or depth > self.stack.len) return error.LimitExceeded;
         const node = try self.classify(tag, scope, depth);
-        if (tag.kind == .start) self.stack[depth - 1] = node;
+        const parent: Frame = if (depth == 1) .{} else self.stack[depth - 2];
+        var frame: Frame = .{ .kind = node, .active = parent.active };
+        if (parent.active and parent.kind == .switch_element and node == .branch) {
+            const is_case = try attrs.element(tag, scope, document_xml.paragraph_uri, "case");
+            frame.active = try selection.choose(self.allocator, tag, scope, is_case, self.options.max_attribute_bytes, self.options.branch_policy, &self.stack[depth - 2].selected);
+        }
+        if (tag.kind == .start) self.stack[depth - 1] = frame;
+        if (!frame.active) return;
         const kind: ?links.Kind = switch (node) {
             .font => .header_font,
             .subst_font => .header_substitute_font,
             .ole => .section_ole,
-            .image => if (self.mode == .header) .header_brush_image else if (self.stack[depth - 2] == .picture) .section_picture else .section_brush_image,
+            .image => if (self.mode == .header) .header_brush_image else if (self.stack[depth - 2].kind == .picture) .section_picture else .section_brush_image,
             else => null,
         };
         const raw_id = try attrs.attribute(self.allocator, tag, scope, "binaryItemIDRef", self.options.max_attribute_bytes);

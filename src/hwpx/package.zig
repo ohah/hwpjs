@@ -13,6 +13,7 @@ const font_references = @import("font_references.zig");
 const list_references = @import("list_references.zig");
 const binary_references = @import("binary_references.zig");
 const chart_references = @import("chart_references.zig");
+const compatibility_selection = @import("compatibility_selection.zig");
 const section_text = @import("section_text.zig");
 const header_tree = @import("header_tree.zig");
 const section_tree = @import("section_tree.zig");
@@ -96,6 +97,22 @@ pub const ChartReferenceOptions = struct {
 };
 pub const ChartReferenceReport = chart_references.Report;
 pub const ChartProblemKind = chart_references.ProblemKind;
+pub const BranchPolicy = compatibility_selection.Policy;
+pub const SelectedReferencesOptions = struct {
+    supported_namespaces: []const []const u8 = &.{},
+    binary: BinaryReferenceOptions = .{},
+    chart: ChartReferenceOptions = .{},
+};
+pub const SelectedReferencesReport = struct {
+    binary: BinaryReferenceReport,
+    chart: ChartReferenceReport,
+
+    pub fn deinit(self: *SelectedReferencesReport, a: std.mem.Allocator) void {
+        self.chart.deinit(a);
+        self.binary.deinit(a);
+        self.* = undefined;
+    }
+};
 pub const SectionTextOptions = struct {
     structure: StructureOptions = .{},
     text: section_text.Options = .{},
@@ -372,6 +389,21 @@ pub const Document = struct {
         var structure = try self.inspectStructure(a, options.structure);
         defer structure.deinit(a);
         return chart_references.inspect(a, self.archive, self.manifest, structure.sections, options.references);
+    }
+
+    /// Applies one caller-declared namespace capability set to both reference
+    /// scanners. The existing individual/default inspections stay raw.
+    pub fn inspectSelectedReferences(self: *const Document, a: std.mem.Allocator, options: SelectedReferencesOptions) !SelectedReferencesReport {
+        const policy: BranchPolicy = .{ .mode = .selected, .supported_namespaces = options.supported_namespaces };
+        try compatibility_selection.validate(policy);
+        var binary_options = options.binary;
+        binary_options.references.branch_policy = policy;
+        var chart_options = options.chart;
+        chart_options.references.sections.branch_policy = policy;
+        var binary_report = try self.inspectBinaryReferences(a, binary_options);
+        errdefer binary_report.deinit(a);
+        const chart_report = try self.inspectChartReferences(a, chart_options);
+        return .{ .binary = binary_report, .chart = chart_report };
     }
 
     pub fn deinit(self: *Document, a: std.mem.Allocator) void {

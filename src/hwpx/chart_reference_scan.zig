@@ -4,30 +4,33 @@ const zip = @import("../zip/archive.zig");
 const attrs = @import("xml_attributes.zig");
 const document_xml = @import("document_xml.zig");
 const chart_parts = @import("chart_parts.zig");
+const selection = @import("compatibility_selection.zig");
 
 pub const Options = struct {
     max_section_xml_bytes: usize = 128 * 1024 * 1024,
     max_total_section_xml_bytes: usize = 256 * 1024 * 1024,
     max_attribute_bytes: usize = 4096,
     max_sites: usize = 1_000_000,
+    branch_policy: selection.Policy = .{},
     xml: document_xml.Options = .{},
 };
 
 const Node = enum { other, section, paragraph, run, switch_element, branch, chart };
+const Frame = struct { kind: Node = .other, active: bool = true, selected: selection.State = .{} };
 
 const Context = struct {
     allocator: std.mem.Allocator,
     source_item_index: usize,
     options: Options,
     resolver: *chart_parts.Resolver,
-    stack: [256]Node = @splat(.other),
+    stack: [256]Frame = @splat(.{}),
 
     fn classify(self: *Context, tag: xml.tags.Tag, scope: *const xml.namespaces.State, depth: usize) !Node {
         if (depth == 1) {
             if (!try attrs.element(tag, scope, document_xml.section_uri, "sec")) return error.InvalidSectionRoot;
             return .section;
         }
-        const parent = self.stack[depth - 2];
+        const parent = self.stack[depth - 2].kind;
         if (try attrs.element(tag, scope, document_xml.paragraph_uri, "p")) return .paragraph;
         if (parent == .paragraph and try attrs.element(tag, scope, document_xml.paragraph_uri, "run")) return .run;
         if ((parent == .run or parent == .branch) and try attrs.element(tag, scope, document_xml.paragraph_uri, "switch")) return .switch_element;
@@ -44,7 +47,14 @@ const Context = struct {
         if (tag.kind == .end) return;
         if (depth == 0 or depth > self.stack.len) return error.LimitExceeded;
         const node = try self.classify(tag, scope, depth);
-        if (tag.kind == .start) self.stack[depth - 1] = node;
+        const parent: Frame = if (depth == 1) .{} else self.stack[depth - 2];
+        var frame: Frame = .{ .kind = node, .active = parent.active };
+        if (parent.active and parent.kind == .switch_element and node == .branch) {
+            const is_case = try attrs.element(tag, scope, document_xml.paragraph_uri, "case");
+            frame.active = try selection.choose(self.allocator, tag, scope, is_case, self.options.max_attribute_bytes, self.options.branch_policy, &self.stack[depth - 2].selected);
+        }
+        if (tag.kind == .start) self.stack[depth - 1] = frame;
+        if (!frame.active) return;
         const raw_ref = try attrs.attribute(self.allocator, tag, scope, "chartIDRef", self.options.max_attribute_bytes);
         if (node != .chart and raw_ref == null) return;
         if (self.resolver.report.observed_sites == self.options.max_sites) {

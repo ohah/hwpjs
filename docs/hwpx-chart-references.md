@@ -1,5 +1,7 @@
 # HWPX 차트 경로와 XML 경계 검증
 
+기본 보고서는 조건부 양쪽 분기를 관측합니다. 호출자 capability를 적용한 선택적 결과는 [조건부 참조 선택](hwpx-switch-selection.md)을 참조합니다.
+
 `Document.inspectChartReferences`는 보호되지 않은 문서의 선택된 spine section을 읽어 `hp:chart.chartIDRef`를 ZIP 내부 엔트리의 **정확한 경로**로 대조합니다. `binaryItemIDRef`처럼 OPF manifest `item.id`로 해석하지 않고, 경로의 대소문자를 바꾸거나 `chartN.xml` 이름을 생성하지 않습니다. 한컴 공개 모델에는 [`chartIDRef` 속성](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Para/ChartType.cpp#L75-L88)이 있고, 별도 [차트 파일 쓰기](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPMLApi/OWPMLSerialize.cpp#L548-L566) 경로가 있습니다. 실파일에서는 `chartIDRef="Chart/chart1.xml"`이 manifest에 없는 같은 이름의 ZIP 엔트리를 가리켰습니다. 따라서 경로 기반 연결은 공개 모델과 실파일을 함께 근거로 한 구현 판단입니다.
 
 section의 `p/run/chart`와 `p/run/switch/case|default/chart`를 검사합니다. 조건부 양쪽 분기를 각각 관측할 뿐 선택 조건을 평가하지 않습니다. 속성 부재·빈 값·안전하지 않은 경로·ZIP 엔트리 부재·해결된 참조·출처가 확인되지 않은 같은 속성을 별도로 보고합니다. 첫 문제 경로·문제 종류와 첫 미분류 값은 반환 보고서가 소유하거나 기록하며 해당 section의 manifest 항목 인덱스도 보존합니다. `Report.deinit`으로 소유 문자열을 해제합니다. 동일 ZIP 경로의 중복 참조는 각각 세지만 차트 XML은 한 번만 해제·검사합니다.

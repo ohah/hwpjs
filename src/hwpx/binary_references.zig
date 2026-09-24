@@ -4,6 +4,7 @@ const content_manifest = @import("content_manifest.zig");
 const document_structure = @import("document_structure.zig");
 const links = @import("binary_reference_links.zig");
 const scan = @import("binary_reference_scan.zig");
+const selection = @import("compatibility_selection.zig");
 
 pub const Kind = links.Kind;
 pub const Counts = links.Counts;
@@ -13,6 +14,7 @@ pub const Options = scan.Options;
 /// Resolves XML binaryItemIDRef strings against the OPF manifest only. Binary
 /// payload bytes and external links are never loaded or fetched here.
 pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, manifest: content_manifest.Manifest, header: document_structure.SelectedHeader, sections: []const document_structure.Section, options: Options) !Report {
+    try selection.validate(options.branch_policy);
     var index = try links.Index.init(a, manifest);
     defer index.deinit(a);
     var report: Report = .{ .sections = sections.len };

@@ -159,6 +159,19 @@ fn inspectOne(bytes: []const u8) !Outcome {
         return err;
     };
     defer known.deinit(a);
+    if (known.run_topology.switches.switches != 0) {
+        const chart_namespace = "http://www.hancom.co.kr/hwpml/2016/ooxmlchart";
+        const case_charts = known.run_topology.switches.case_chart_children;
+        const default_oles = known.run_topology.switches.default_ole_children;
+        var fallback = try document.inspectSelectedReferences(a, .{});
+        defer fallback.deinit(a);
+        var case_branch = try document.inspectSelectedReferences(a, .{ .supported_namespaces = &.{chart_namespace} });
+        defer case_branch.deinit(a);
+        try std.testing.expectEqual(known.chart_references.chart_sites, fallback.chart.chart_sites + case_charts);
+        try std.testing.expectEqual(known.binary_references.counts(.section_ole).sites, fallback.binary.counts(.section_ole).sites);
+        try std.testing.expectEqual(known.chart_references.chart_sites, case_branch.chart.chart_sites);
+        try std.testing.expectEqual(known.binary_references.counts(.section_ole).sites, case_branch.binary.counts(.section_ole).sites + default_oles);
+    }
     try std.testing.expectEqual(document.archive.entries.len, known.payload_integrity.validated_entries);
     try std.testing.expectEqual(document.archive.entries.len, known.payload_integrity.manifested_entries + known.payload_integrity.unmanifested_entries.len);
     try std.testing.expectEqual(known.manifest_xml.xml_items, known.manifest_xml.external_xml_items + known.manifest_xml.duplicate_xml_bindings + known.manifest_xml.parsed_entry_indices.len);

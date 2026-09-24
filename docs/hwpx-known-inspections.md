@@ -1,5 +1,7 @@
 # HWPX 현재 지원 검사 묶음
 
+`inspectKnown`은 조건부 참조의 양쪽 분기를 관측하며, 활성 분기만의 이진·차트 참조는 별도 [조건부 참조 선택](hwpx-switch-selection.md) API가 제공합니다.
+
 [settings.xml 원값 검사](hwpx-settings.md)도 묶음에 포함됩니다. 값의 일부 어휘 검사만 제공하며 settings 전체 스키마나 동작 의미의 완료는 아닙니다.
 
 [masterpage 파트·section 참조](hwpx-master-pages.md)도 묶음에 포함됩니다. 연결 진단은 바탕쪽 내부/배치 의미나 전체 문서 유효성 판정이 아닙니다.

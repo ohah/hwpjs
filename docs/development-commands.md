@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[HWPX 조건부 참조 선택](hwpx-switch-selection.md)의 합성 검사는 `zig test src/root.zig --test-filter 'HWPX selected references'`로, 실제 corpus 대조는 `zig test src/hwpx_known_survey.zig -O ReleaseFast --test-filter 'HWPX known document inspections shard N'`을 N=0..7 각각 별도 프로세스로 실행합니다. 후자는 로컬 `reference/rhwp`가 필요합니다.
+
 ```sh
 zig fmt --check build.zig src
 zig build test

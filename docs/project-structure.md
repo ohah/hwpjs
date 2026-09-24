@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+HWPX 조건부 분기 정책은 `src/hwpx/compatibility_selection.zig`가 소유하고 이진·차트 참조 스캐너가 공유합니다. 선택적 API와 현재 범위는 [조건부 참조 선택](hwpx-switch-selection.md)에 기록합니다.
+
 ## 프로젝트와 현재 범위
 
 HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라이브러리입니다.

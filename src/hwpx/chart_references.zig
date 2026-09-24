@@ -4,6 +4,7 @@ const content_manifest = @import("content_manifest.zig");
 const document_structure = @import("document_structure.zig");
 const parts = @import("chart_parts.zig");
 const scan = @import("chart_reference_scan.zig");
+const selection = @import("compatibility_selection.zig");
 
 pub const Report = parts.Report;
 pub const ProblemKind = parts.ProblemKind;
@@ -13,6 +14,7 @@ pub const Options = struct {
 };
 
 pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, manifest: content_manifest.Manifest, sections: []const document_structure.Section, options: Options) !Report {
+    try selection.validate(options.sections.branch_policy);
     var report: Report = .{ .sections = sections.len };
     errdefer report.deinit(a);
     var resolver = try parts.Resolver.init(a, archive, &report, options.charts);
