@@ -550,6 +550,7 @@ test {
     _ = @import("hwp5/preview/text_tests.zig");
     _ = @import("hwp5/summary/tests.zig");
     _ = @import("hwp5/summary/codepage_tests.zig");
+    _ = @import("hwp5/summary/real_fixture_tests.zig");
     _ = @import("hwp5/scripts/tests.zig");
     _ = @import("hwp5/xml_template/tests.zig");
     _ = @import("hwp5/history/tests.zig");

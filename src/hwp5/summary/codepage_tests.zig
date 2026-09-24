@@ -94,3 +94,35 @@ test "dictionary Unicode entry padding and atomic malformed iteration" {
         try t.expectEqual(1, it.left);
     }
 }
+
+fn observedPlaceholder(a: std.mem.Allocator, bytes: []const u8) !void {
+    var doc = try p.Document.parse(a, bytes, 1);
+    defer doc.deinit(a);
+    try t.expect(doc.observed_dictionary_placeholder);
+    try t.expect(doc.dictionary_structure == null);
+    try t.expect(doc.code_page == null);
+    try t.expectEqual(@as(usize, 1), doc.stats.dictionaries_deferred);
+}
+
+test "HWP summary missing-codepage dictionary marker is observed but not accepted as OLEPS" {
+    const d = @import("dictionary.zig");
+    const marker = [_]u8{ 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0 };
+    try t.expect(d.isObservedHwpPlaceholder(&marker));
+    try t.expectError(error.InvalidDictionaryId, d.inspect(t.allocator, &marker, 1200));
+    var b = [_]u8{0} ** 77;
+    put(&b, 0, u16, 0xfffe);
+    put(&b, 24, u32, 1);
+    @memcpy(b[28..44], &@import("header.zig").hwp_fmt);
+    put(&b, 44, u32, 48);
+    put(&b, 48, u32, 29);
+    put(&b, 52, u32, 1);
+    put(&b, 56, u32, 0);
+    put(&b, 60, u32, 16);
+    @memcpy(b[64..], &marker);
+    try t.checkAllAllocationFailures(t.allocator, observedPlaceholder, .{&b});
+    b[76] = 1;
+    var altered = try p.Document.parse(t.allocator, &b, 1);
+    defer altered.deinit(t.allocator);
+    try t.expect(!altered.observed_dictionary_placeholder);
+    try t.expectEqual(@as(usize, 1), altered.stats.dictionaries_deferred);
+}

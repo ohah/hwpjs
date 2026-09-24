@@ -2,6 +2,12 @@ const std = @import("std");
 const Reader = @import("../../binary/reader.zig").Reader;
 const strings = @import("strings.zig");
 pub const Entry = struct { id: u32, name: []const u8 };
+/// Observed in HWP summary streams without PID 1. PID 0 is not a valid
+/// DictionaryEntry identifier, so this is a diagnostic marker, not a parsed
+/// OLEPS dictionary or evidence of an inferred code page.
+pub fn isObservedHwpPlaceholder(bytes: []const u8) bool {
+    return std.mem.eql(u8, bytes, &.{ 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0 });
+}
 /// Raw names borrow input; byte-codepage entries have NO per-entry padding.
 pub const Iterator = struct {
     reader: Reader,

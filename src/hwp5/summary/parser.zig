@@ -15,6 +15,7 @@ pub const Document = struct {
     stats: Stats,
     code_page: ?u16,
     dictionary_structure: ?dictionary.Report,
+    observed_dictionary_placeholder: bool,
     pub fn deinit(self: *Document, a: std.mem.Allocator) void {
         a.free(self.properties);
         self.* = undefined;
@@ -54,6 +55,7 @@ pub const Document = struct {
             code_page = @bitCast(cp.value.i16);
         };
         var dictionary_structure: ?dictionary.Report = null;
+        var observed_dictionary_placeholder = false;
         for (properties) |*p| {
             const parsed = try @import("value.zig").parseWithCodePage(p.id, p.raw, code_page);
             p.value = parsed.value;
@@ -68,11 +70,15 @@ pub const Document = struct {
                 .dictionary => |raw| {
                     // Names/case/encoding semantics remain deferred even after structure checks.
                     stats.dictionaries_deferred += 1;
-                    if (code_page) |cp| dictionary_structure = try dictionary.inspect(a, raw, cp);
+                    if (code_page) |cp| {
+                        dictionary_structure = try dictionary.inspect(a, raw, cp);
+                    } else {
+                        observed_dictionary_placeholder = dictionary.isObservedHwpPlaceholder(raw);
+                    }
                 },
                 .unsupported => stats.unsupported_types += 1,
             }
         }
-        return .{ .raw = bytes, .header = h, .properties = properties, .extra = bytes[h.set_offset + size ..], .stats = stats, .code_page = code_page, .dictionary_structure = dictionary_structure };
+        return .{ .raw = bytes, .header = h, .properties = properties, .extra = bytes[h.set_offset + size ..], .stats = stats, .code_page = code_page, .dictionary_structure = dictionary_structure, .observed_dictionary_placeholder = observed_dictionary_placeholder };
     }
 };
