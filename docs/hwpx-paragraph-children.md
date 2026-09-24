@@ -1,0 +1,11 @@
+# HWPX section 문단 직접 자식 구조
+
+`src/hwpx/paragraph_children.zig`는 section XML 트리의 모든 2011 `hp:p`를 선택해 직접 자식 `hp:run`과 `hp:linesegarray`를 구분합니다. [한컴 공개 PType 모델](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Para/PType.cpp)의 두 자식 등록을 분류 근거로 삼습니다. 이 등록 순서를 필수 XML 순서나 전체 2011 스키마로 해석하지 않습니다. 각 문단의 직접 자식만 세고 다른 namespace의 동명 요소, 손자 `run`을 직접 `run`으로 세지 않습니다. 표 셀 `subList`의 문단과 캡션 문단도 section에 있으면 같은 규칙으로 검사합니다. 마스터페이지의 문단은 이번 보고서 범위 밖입니다.
+
+보고서는 section·문단·직접 run·직접 `linesegarray` 수, 직접 run 또는 `linesegarray`가 없는 문단, 둘 이상의 직접 `linesegarray`를 가진 문단, 미등록 직접 요소와 그중 다른 namespace 요소를 구분합니다. 이 값은 진단이며 누락·중복을 자동 수정하거나 문서를 거부하지 않습니다. 문단 속성 값은 [문단 메타](hwpx-paragraph-metadata.md), run 자식과 인라인 내용은 [run 구조](hwpx-run-topology.md)·[section 텍스트](hwpx-section-text.md)가 계속 소유합니다. `linesegarray` 내부 `lineseg` 필드, 조판 위치, 편집·저장 의미는 아직 검사하지 않습니다. XML 트리의 기존 요소/바이트 한도와 별개로 문단·직접 자식 수에 정확한 한도를 둡니다.
+
+독립 ZIP/ElementTree 조사에서 2026-09-25 로컬 허용 HWPX 476개 문서의 544개 section에 문단 215,146개, 직접 run 267,347개, 직접 `linesegarray` 213,905개가 있었습니다. `linesegarray`가 없는 문단은 1,241개, 직접 run이 없는 문단은 1개였고 둘 이상의 `linesegarray`·미등록 직접 요소는 관측되지 않았습니다. 유일한 run 없는 문단의 파일·버전은 [section 텍스트 조사](hwpx-section-text.md)에 기록돼 있습니다. 이 표본 수치는 `linesegarray`의 필수 여부나 다른 HWPX 버전의 허용 자식을 증명하지 않습니다.
+
+합성 검사는 외부 namespace 동명 요소, 손자 `run`, 표 셀 문단, 부재·중복, 정확한 한도와 잘못된 파트 종류를 검사합니다. `python3 tools/hwpx-section-text-oracle.py`는 독립 반례 및 corpus shard 집계를 만들고, `zig test src/hwpx_known_survey.zig -O ReleaseFast --test-filter 'HWPX known document inspections shard N'`의 N=0..7은 같은 shard의 제품 보고서와 대조합니다. 로컬 `reference/rhwp`가 없는 환경에서는 실파일 대조를 재현할 수 없습니다. 이 보고서는 문서 모델·레이아웃·무손실 편집/저장 완료의 증거가 아닙니다.
+
+2026-09-25 최종 소스에서 독립 조사기 반례·전체 집계와 ReleaseFast 실파일 shard 0~7이 통과했습니다. 전체 Debug `zig build test --summary all`은 2,322/2,322, `zig build -Doptimize=ReleaseSafe`와 ReleaseSafe·ReleaseFast 전체 `audit --summary all`은 종료 코드 0입니다. 문서 진입점의 합성 ZIP·할당 실패 검사와 전용 합성 테스트 Debug·ReleaseSafe·ReleaseFast도 통과했습니다. 적대적 반례는 외부 namespace의 동명 자식, 손자 run의 오계수, 중복 `linesegarray`, 정확한 문단/자식 예산, 실제 run 부재를 각각 분리해 확인했습니다. 검증은 이 직접 자식 분류와 선택 corpus에 한정됩니다.

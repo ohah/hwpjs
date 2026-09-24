@@ -12,6 +12,7 @@ const binary_refs = @import("binary_reference_links.zig");
 const chart_refs = @import("chart_parts.zig");
 const section_text = @import("section_text.zig");
 const paragraph_metadata = @import("paragraph_metadata.zig");
+const paragraph_children = @import("paragraph_children.zig");
 const run_metadata = @import("run_metadata.zig");
 const run_topology = @import("run_topology.zig");
 const text_node = @import("text_node.zig");
@@ -46,6 +47,7 @@ pub const Report = struct {
     chart_references: chart_refs.Report,
     section_text: section_text.Report,
     paragraph_metadata: paragraph_metadata.Report,
+    paragraph_children: paragraph_children.Report,
     run_metadata: run_metadata.Report,
     run_topology: run_topology.Report,
     text_nodes: text_node.Report,
@@ -108,11 +110,12 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
         var begin_report = try trees.inspectBeginNumbers(a, options.begin_numbers);
         errdefer begin_report.deinit(a);
         const paragraph_report = try trees.inspectParagraphMetadata(a, options.paragraph_metadata);
+        const paragraph_children_report = try trees.inspectParagraphChildren(options.paragraph_children);
         const run_report = try trees.inspectRunMetadata(a, options.run_metadata);
         const topology_report = try trees.inspectRunTopology(a, options.run_topology);
         const text_nodes_report = try trees.inspectTextNodes(a, options.text_nodes);
         const table_report = try trees.inspectTableGeometryWithBorderFills(a, options.table_geometry, resource_report.table(.border_fill));
-        break :blk .{ .begin = begin_report, .paragraph = paragraph_report, .run = run_report, .topology = topology_report, .text_nodes = text_nodes_report, .table_geometry = table_report };
+        break :blk .{ .begin = begin_report, .paragraph = paragraph_report, .paragraph_children = paragraph_children_report, .run = run_report, .topology = topology_report, .text_nodes = text_nodes_report, .table_geometry = table_report };
     };
     return .{
         .version = version,
@@ -135,6 +138,7 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
         .chart_references = chart_ref_report,
         .section_text = text_report,
         .paragraph_metadata = semantic.paragraph,
+        .paragraph_children = semantic.paragraph_children,
         .run_metadata = semantic.run,
         .run_topology = semantic.topology,
         .text_nodes = semantic.text_nodes,

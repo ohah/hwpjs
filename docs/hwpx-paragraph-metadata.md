@@ -6,7 +6,7 @@
 
 [한컴이 게시한 ParaList 스키마 설명](https://tech.hancom.com/python-hwpx-parsing-2/)은 2021 namespace 예시의 `PType.id`를 `use="required"`로 보여 줍니다. 반면 [한컴 개발자 포럼 답변](https://forum.developer.hancom.com/t/hp-p-id/1725)은 `id` 생략을 허용한다고 명시합니다. 이 코드는 실제로 관측·지원하는 2011 namespace 문단에 동일 이름의 속성값 규칙을 적용하는 **제한된 호환성 검사**이며, 2021 스키마 전체를 2011 스키마와 동일하다고 주장하지 않습니다. 두 근거의 충돌을 숨기지 않고 부재를 별도 집계합니다. 동일 ID가 여러 문단에 나와도 고유성을 가정하지 않습니다. 부재 Boolean의 스키마 기본값 false는 **원문에 없는 값**과 구분하며, 저장용 값을 새로 만들어 넣지 않습니다.
 
-이 검사는 XML 트리의 namespace·문법·소유권 한도를 재사용하고 문단 수·속성값 바이트 길이를 추가로 제한합니다. 전체 HWPX 스키마 적합성, 문단·run의 자식 순서, 조건부 분기 선택, 필드 ID 연결, 표시/편집 의미 및 원본 재저장은 검증하지 않습니다. 문단 서식 ID 연결은 [section 서식 참조](hwpx-section-references.md)가 소유합니다.
+이 검사는 XML 트리의 namespace·문법·소유권 한도를 재사용하고 문단 수·속성값 바이트 길이를 추가로 제한합니다. 전체 HWPX 스키마 적합성, 문단·run의 자식 순서, 조건부 분기 선택, 필드 ID 연결, 표시/편집 의미 및 원본 재저장은 검증하지 않습니다. 문단 직접 자식의 종류·개수는 별도 [section 문단 구조](hwpx-paragraph-children.md)가, 문단 서식 ID 연결은 [section 서식 참조](hwpx-section-references.md)가 소유합니다.
 
 마스터페이지의 `paraPrIDRef`·`styleIDRef` 및 run의 `charPrIDRef`는 이 단계에서 연결하지 않습니다. 해당 섹션 검사 성공을 마스터페이지의 서식 참조 성공으로 확대하지 않습니다.
 

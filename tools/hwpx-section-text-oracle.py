@@ -252,6 +252,27 @@ def xml_ordered_digest(data: bytes) -> int:
     return int.from_bytes(digest.digest(), "big")
 
 
+def inspect_paragraph_children(section: ET.Element, counts: Counter) -> None:
+    """Direct PType child census; does not infer a required child order."""
+    for paragraph in section.iter(PARAGRAPH + "p"):
+        counts["paragraphs"] += 1
+        runs = 0
+        segments = 0
+        for child in paragraph:
+            if child.tag == PARAGRAPH + "run":
+                runs += 1
+            elif child.tag == PARAGRAPH + "linesegarray":
+                segments += 1
+            else:
+                counts["other_direct"] += 1
+                counts["foreign_direct"] += not child.tag.startswith(PARAGRAPH)
+        counts["direct_runs"] += runs
+        counts["line_seg_arrays"] += segments
+        counts["without_run"] += runs == 0
+        counts["without_line_seg_array"] += segments == 0
+        counts["multiple_line_seg_arrays"] += segments > 1
+
+
 def inspect_text(node: ET.Element, parent: str, result: dict, inside_text: bool = False) -> None:
     now_inside_text = inside_text or node.tag == PARAGRAPH + "t"
 
@@ -357,6 +378,17 @@ def self_check() -> None:
     )
     inspect_text(layout_only, "", result)
     assert result["paragraphs_without_direct_run"] == 1
+    topology = Counter()
+    inspect_paragraph_children(ET.fromstring(
+        '<root xmlns:p="http://www.hancom.co.kr/hwpml/2011/paragraph" xmlns:x="urn:foreign">'
+        '<p:p><p:run/><p:linesegarray/><p:linesegarray/><x:run/><p:other><p:run/></p:other></p:p>'
+        '<p:p><x:run/></p:p></root>'
+    ), topology)
+    assert topology == Counter({
+        "paragraphs": 2, "direct_runs": 1, "line_seg_arrays": 2,
+        "without_run": 1, "without_line_seg_array": 1,
+        "multiple_line_seg_arrays": 1, "other_direct": 3, "foreign_direct": 2,
+    })
     empty = ET.fromstring('<p:p xmlns:p="http://www.hancom.co.kr/hwpml/2011/paragraph" id=""/>')
     absent = ET.fromstring('<p:p xmlns:p="http://www.hancom.co.kr/hwpml/2011/paragraph"/>')
     counts = {"P." + field: {"present": 0, "empty": 0} for field in ATTRIBUTE_FIELDS[PARAGRAPH + "p"][1]}
@@ -403,7 +435,7 @@ def self_check() -> None:
 def main() -> None:
     self_check()
     tree_shards = [
-        {"accepted": 0, "rejected_zip": 0, "encrypted": 0, "sections": 0, "elements": 0, "header_elements": 0, "header_bytes": 0, "section_bytes": 0, "attribute_digest_sum": 0, "content_digest_sum": 0, "ordered_digest_sum": 0, "paragraph_metadata": Counter(), "begin_numbers": Counter(), "switch_removed_case": [0] * 5, "switch_removed_default": [0] * 5}
+        {"accepted": 0, "rejected_zip": 0, "encrypted": 0, "sections": 0, "elements": 0, "header_elements": 0, "header_bytes": 0, "section_bytes": 0, "attribute_digest_sum": 0, "content_digest_sum": 0, "ordered_digest_sum": 0, "paragraph_metadata": Counter(), "paragraph_children": Counter(), "begin_numbers": Counter(), "switch_removed_case": [0] * 5, "switch_removed_default": [0] * 5}
         for _ in range(8)
     ]
     attribute_counts = {
@@ -491,6 +523,7 @@ def main() -> None:
                         result["section_elements"] += section_elements
                         shard["elements"] += section_elements
                         section_paragraph_metadata(section, shard["paragraph_metadata"])
+                        inspect_paragraph_children(section, shard["paragraph_children"])
                         result["max_section_elements"] = max(result["max_section_elements"], section_elements)
                         result["max_section_bytes"] = max(result["max_section_bytes"], len(section_bytes))
                         shard["attribute_digest_sum"] = (
@@ -520,6 +553,7 @@ def main() -> None:
         raise ValueError("HWPX oracle counted header roots outside accepted documents")
     for shard in tree_shards:
         shard["paragraph_metadata"] = dict(shard["paragraph_metadata"])
+        shard["paragraph_children"] = dict(shard["paragraph_children"])
         shard["begin_numbers"] = dict(shard["begin_numbers"])
         shard["attribute_digest_sum"] = f'{shard["attribute_digest_sum"]:064x}'
         shard["content_digest_sum"] = f'{shard["content_digest_sum"]:064x}'

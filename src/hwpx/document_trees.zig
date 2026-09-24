@@ -6,6 +6,7 @@ const protection = @import("encryption_manifest.zig");
 const header_tree = @import("header_tree.zig");
 const section_tree = @import("section_tree.zig");
 const paragraph_metadata = @import("paragraph_metadata.zig");
+const paragraph_children = @import("paragraph_children.zig");
 const run_metadata = @import("run_metadata.zig");
 const run_topology = @import("run_topology.zig");
 const text_node = @import("text_node.zig");
@@ -40,6 +41,10 @@ pub const Bundle = struct {
 
     pub fn inspectParagraphMetadata(self: *const Bundle, a: std.mem.Allocator, options: paragraph_metadata.Options) !paragraph_metadata.Report {
         return paragraph_metadata.inspect(a, self.sections, options);
+    }
+
+    pub fn inspectParagraphChildren(self: *const Bundle, options: paragraph_children.Options) !paragraph_children.Report {
+        return paragraph_children.inspect(self.sections, options);
     }
 
     pub fn inspectRunMetadata(self: *const Bundle, a: std.mem.Allocator, options: run_metadata.Options) !run_metadata.Report {

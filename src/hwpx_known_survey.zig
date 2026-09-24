@@ -169,6 +169,7 @@ const MasterStyleStats = struct {
 const Statistics = struct {
     sections: usize,
     paragraphs: usize,
+    paragraph_children: package.ParagraphChildrenReport,
     begin_present: bool,
     missing_id: usize,
     manifest_xml_entries: usize,
@@ -373,6 +374,9 @@ fn inspectOne(bytes: []const u8) !Outcome {
     try std.testing.expectEqual(known.section_references.runs, known.run_metadata.runs);
     try std.testing.expectEqual(known.run_metadata.runs, known.run_topology.runs);
     try std.testing.expectEqual(known.section_text.non_direct_runs, known.run_topology.non_direct_runs);
+    try std.testing.expectEqual(known.paragraph_metadata.paragraphs, known.paragraph_children.paragraphs);
+    try std.testing.expectEqual(known.section_text.paragraphs_without_direct_run, known.paragraph_children.paragraphs_without_run);
+    try std.testing.expectEqual(known.section_text.runs - known.section_text.non_direct_runs, known.paragraph_children.direct_runs);
     try std.testing.expectEqual(count, known.run_topology.parts);
     try std.testing.expectEqual(count, known.text_nodes.parts);
     try std.testing.expectEqual(known.section_text.text_elements, known.text_nodes.text_nodes);
@@ -386,6 +390,7 @@ fn inspectOne(bytes: []const u8) !Outcome {
     return .{ .accepted = .{
         .sections = count,
         .paragraphs = known.paragraph_metadata.paragraphs,
+        .paragraph_children = known.paragraph_children,
         .begin_present = known.begin_numbers.present,
         .missing_id = known.paragraph_metadata.missing_id,
         .manifest_xml_entries = known.manifest_xml.parsed_entry_indices.len,
@@ -440,6 +445,7 @@ fn surveyShard(shard: usize) !void {
     var encrypted: usize = 0;
     var sections: usize = 0;
     var paragraphs: usize = 0;
+    var paragraph_children: package.ParagraphChildrenReport = .{};
     var begin_present: usize = 0;
     var missing_id: usize = 0;
     var manifest_xml_entries: usize = 0;
@@ -515,6 +521,15 @@ fn surveyShard(shard: usize) !void {
                     try std.testing.expectEqualSlices(usize, &expected_removed, &stats.switch_removed_default);
                     sections += stats.sections;
                     paragraphs += stats.paragraphs;
+                    paragraph_children.sections += stats.paragraph_children.sections;
+                    paragraph_children.paragraphs += stats.paragraph_children.paragraphs;
+                    paragraph_children.direct_runs += stats.paragraph_children.direct_runs;
+                    paragraph_children.line_seg_arrays += stats.paragraph_children.line_seg_arrays;
+                    paragraph_children.paragraphs_without_run += stats.paragraph_children.paragraphs_without_run;
+                    paragraph_children.paragraphs_without_line_seg_array += stats.paragraph_children.paragraphs_without_line_seg_array;
+                    paragraph_children.paragraphs_with_multiple_line_seg_arrays += stats.paragraph_children.paragraphs_with_multiple_line_seg_arrays;
+                    paragraph_children.other_direct += stats.paragraph_children.other_direct;
+                    paragraph_children.foreign_direct += stats.paragraph_children.foreign_direct;
                     missing_id += stats.missing_id;
                     if (stats.begin_present) begin_present += 1;
                     manifest_xml_entries += stats.manifest_xml_entries;
@@ -707,6 +722,13 @@ fn surveyShard(shard: usize) !void {
     try std.testing.expectEqual(expected.rejected_zip[shard], rejected_zip);
     try std.testing.expectEqual(expected.encrypted[shard], encrypted);
     try std.testing.expectEqual(expected.sections[shard], sections);
+    try std.testing.expectEqual(expected.sections[shard], paragraph_children.sections);
+    try std.testing.expectEqual(expected.paragraphs[shard], paragraph_children.paragraphs);
+    try std.testing.expectEqual(expected.paragraph_direct_runs[shard], paragraph_children.direct_runs);
+    try std.testing.expectEqual(expected.paragraph_line_seg_arrays[shard], paragraph_children.line_seg_arrays);
+    try std.testing.expectEqual(expected.paragraph_without_runs[shard], paragraph_children.paragraphs_without_run);
+    try std.testing.expectEqual(expected.paragraph_without_line_seg_array[shard], paragraph_children.paragraphs_without_line_seg_array);
+    try std.testing.expectEqual(@as(usize, 0), paragraph_children.paragraphs_with_multiple_line_seg_arrays + paragraph_children.other_direct + paragraph_children.foreign_direct);
     try std.testing.expectEqual(expected.table_count[shard], table_geometry.tables);
     try std.testing.expectEqual(expected.table_rows[shard], table_child_topology.rows);
     try std.testing.expectEqual(expected.table_cells[shard], table_child_topology.cells);

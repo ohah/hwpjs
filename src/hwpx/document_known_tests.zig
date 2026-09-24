@@ -39,6 +39,8 @@ test "HWPX known inspections compose every currently exposed document report" {
     try std.testing.expectEqual(report.structure.sections.len, report.chart_references.sections);
     try std.testing.expectEqual(report.structure.sections.len, report.section_text.sections);
     try std.testing.expectEqual(report.structure.sections.len, report.paragraph_metadata.sections);
+    try std.testing.expectEqual(report.paragraph_metadata.paragraphs, report.paragraph_children.paragraphs);
+    try std.testing.expectEqual(report.section_text.paragraphs_without_direct_run, report.paragraph_children.paragraphs_without_run);
     try std.testing.expectEqual(report.structure.sections.len, report.table_geometry.sections);
     try std.testing.expect(report.paragraph_metadata.paragraphs > 0);
 }
@@ -78,8 +80,11 @@ test "HWPX known inspections include table geometry diagnostics and limits" {
     try std.testing.expectEqual(@as(usize, 1), report.table_geometry.cell_fields.border_fill_references.resolved);
     try std.testing.expectEqual(@as(usize, 1), report.table_geometry.cell_sub_lists.sub_lists);
     try std.testing.expectEqual(@as(usize, 1), report.table_geometry.cell_sub_lists.direct_paragraphs);
+    try std.testing.expect(report.paragraph_children.paragraphs >= 2);
+    try std.testing.expectEqual(@as(usize, 2), report.paragraph_children.paragraphs_without_run);
     try std.testing.expectEqual(@as(u64, 12), report.table_geometry.cell_sub_lists.text_width_sum);
     try std.testing.expectError(error.LimitExceeded, document.inspectKnown(a, .{ .table_geometry = .{ .max_grid_slots = 1 } }));
+    try std.testing.expectError(error.LimitExceeded, document.inspectKnown(a, .{ .paragraph_children = .{ .max_paragraphs = 1 } }));
     try std.testing.expectError(error.LimitExceeded, document.inspectKnown(a, .{ .table_geometry = .{ .max_attribute_bytes = 1 } }));
     try std.testing.expectError(error.LimitExceeded, document.inspectKnown(a, .{ .table_geometry = .{ .table_shape = .{ .max_shape_children = 3 } } }));
     try std.testing.checkAllAllocationFailures(a, struct {

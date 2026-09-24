@@ -108,6 +108,11 @@ pub const table_cell_sublist_direct_paragraphs = [_]usize{ 18932, 13738, 13208, 
 pub const table_cell_sublist_id_absent = [_]usize{ 0, 0, 0, 0, 0, 0, 0, 59 };
 pub const table_cell_sublist_metatag_present = [_]usize{ 0, 1, 0, 11, 23, 15, 50, 0 };
 pub const paragraphs = [_]usize{ 28740, 20865, 20019, 11680, 44679, 24829, 23614, 40720 };
+// Independent tools/hwpx-section-text-oracle.py direct PType child census.
+pub const paragraph_direct_runs = [_]usize{ 38461, 25758, 26965, 15293, 47472, 29962, 28564, 54872 };
+pub const paragraph_line_seg_arrays = [_]usize{ 28651, 20745, 19968, 11551, 44611, 24744, 23523, 40112 };
+pub const paragraph_without_runs = [_]usize{ 0, 0, 0, 0, 0, 0, 0, 1 };
+pub const paragraph_without_line_seg_array = [_]usize{ 89, 120, 51, 129, 68, 85, 91, 608 };
 pub const begin_present = [_]usize{ 60, 64, 53, 48, 58, 57, 54, 61 };
 // Raw minus selected section text: [paragraphs, runs, hp:t, UTF-8 bytes,
 // inline elements], independently counted in hwpx-section-text-oracle.py.
