@@ -19,6 +19,7 @@ const section_tree = @import("section_tree.zig");
 const document_trees = @import("document_trees.zig");
 const paragraph_metadata = @import("paragraph_metadata.zig");
 const header_begin_numbers = @import("header_begin_numbers.zig");
+const document_known = @import("document_known.zig");
 
 pub const Archive = zip.Archive;
 pub const Options = zip.Options;
@@ -102,6 +103,23 @@ pub const ParagraphMetadataReport = paragraph_metadata.Report;
 pub const BeginNumberOptions = header_begin_numbers.Options;
 pub const BeginNumberReport = header_begin_numbers.Report;
 pub const BeginNumberField = header_begin_numbers.Field;
+pub const KnownReport = document_known.Report;
+pub const KnownOptions = struct {
+    version: VersionOptions = .{},
+    protection: ProtectionOptions = .{},
+    structure: StructureOptions = .{},
+    header_resources: HeaderResourceOptions = .{},
+    section_references: ReferenceOptions = .{},
+    header_references: HeaderReferenceOptions = .{},
+    font_references: FontReferenceOptions = .{},
+    list_references: ListReferenceOptions = .{},
+    binary_references: BinaryReferenceOptions = .{},
+    chart_references: ChartReferenceOptions = .{},
+    section_text: SectionTextOptions = .{},
+    trees: XmlTreesOptions = .{},
+    paragraph_metadata: ParagraphMetadataOptions = .{},
+    begin_numbers: BeginNumberOptions = .{},
+};
 pub const DocumentOptions = struct {
     // The archive index also contains large BinData/section entries. Their
     // declared sizes are bounded here; this call only decodes the two small
@@ -117,6 +135,13 @@ pub const Document = struct {
     container: container.Root,
     manifest: content_manifest.Manifest,
     decoded_xml_bytes: usize,
+
+    /// Runs all currently exposed HWPX inspections on this document. A
+    /// returned report still has unresolved diagnostics and unsupported
+    /// schema/semantic fields; it is not a whole-document validity proof.
+    pub fn inspectKnown(self: *const Document, a: std.mem.Allocator, options: KnownOptions) !KnownReport {
+        return document_known.inspect(a, self, options);
+    }
 
     /// Separately validates version.xml; package relationship inspection does
     /// not imply a compatible or even parseable document version.

@@ -1,5 +1,6 @@
 const std = @import("std");
 const package = @import("hwpx/package.zig");
+const expected = @import("hwpx_corpus_expectations.zig");
 
 fn surveyShard(shard: usize) !void {
     const a = std.testing.allocator;
@@ -99,28 +100,22 @@ fn surveyShard(shard: usize) !void {
         }
     }
     std.debug.print("HWPX XML trees shard={d} accepted={d} rejected_zip={d} encrypted={d} sections={d} header_elements={d} section_elements={d} header_bytes={d} section_bytes={d}\n", .{ shard, accepted, rejected_zip, encrypted, sections, header_elements, section_elements, header_bytes, section_bytes });
-    const expected_accepted = [_]usize{ 64, 68, 56, 49, 61, 59, 58, 61 };
-    const expected_rejected = [_]usize{ 1, 3, 0, 2, 0, 0, 0, 0 };
-    const expected_encrypted = [_]usize{ 0, 0, 0, 0, 2, 0, 0, 0 };
-    const expected_sections = [_]usize{ 75, 72, 72, 53, 64, 62, 63, 83 };
     const expected_header_elements = [_]usize{ 177104, 126736, 150513, 91454, 120759, 133881, 147705, 252470 };
     const expected_section_elements = [_]usize{ 299906, 229744, 218284, 124064, 356522, 297849, 252376, 395971 };
     const expected_header_bytes = [_]usize{ 11717857, 8327608, 9835741, 5823234, 7899943, 8527746, 9564672, 16078146 };
     const expected_section_bytes = [_]usize{ 23032794, 18221301, 16858881, 9304952, 27450891, 23164353, 19233517, 30724197 };
-    const expected_paragraphs = [_]usize{ 28740, 20865, 20019, 11680, 44679, 24829, 23614, 40720 };
     const expected_zero_ids = [_]usize{ 5484, 3164, 1109, 2568, 28364, 8198, 630, 8376 };
     const expected_page_break_true = [_]usize{ 269, 110, 182, 138, 348, 147, 45, 297 };
     const expected_column_break_true = [_]usize{ 23, 34, 37, 0, 18, 36, 5, 78 };
-    const expected_begin_present = [_]usize{ 60, 64, 53, 48, 58, 57, 54, 61 };
-    try std.testing.expectEqual(expected_accepted[shard], accepted);
-    try std.testing.expectEqual(expected_rejected[shard], rejected_zip);
-    try std.testing.expectEqual(expected_encrypted[shard], encrypted);
-    try std.testing.expectEqual(expected_sections[shard], sections);
+    try std.testing.expectEqual(expected.accepted[shard], accepted);
+    try std.testing.expectEqual(expected.rejected_zip[shard], rejected_zip);
+    try std.testing.expectEqual(expected.encrypted[shard], encrypted);
+    try std.testing.expectEqual(expected.sections[shard], sections);
     try std.testing.expectEqual(expected_header_elements[shard], header_elements);
     try std.testing.expectEqual(expected_section_elements[shard], section_elements);
     try std.testing.expectEqual(expected_header_bytes[shard], header_bytes);
     try std.testing.expectEqual(expected_section_bytes[shard], section_bytes);
-    try std.testing.expectEqual(expected_paragraphs[shard], paragraphs);
+    try std.testing.expectEqual(expected.paragraphs[shard], paragraphs);
     try std.testing.expectEqual(expected_zero_ids[shard], zero_ids);
     try std.testing.expectEqual(@as(usize, 0), missing_ids);
     try std.testing.expectEqual(paragraphs, missing_para_tc_ids);
@@ -130,7 +125,7 @@ fn surveyShard(shard: usize) !void {
     try std.testing.expectEqual(@as(usize, 0), column_break_absent);
     try std.testing.expectEqual(if (shard == 7) @as(usize, 987) else @as(usize, 0), merged_absent);
     try std.testing.expectEqual(@as(usize, 0), merged_true);
-    try std.testing.expectEqual(expected_begin_present[shard], begin_present);
+    try std.testing.expectEqual(expected.begin_present[shard], begin_present);
     try std.testing.expectEqual(@as(usize, 0), begin_missing_attributes);
     try std.testing.expectEqual(@as(usize, 0), begin_nested);
 }

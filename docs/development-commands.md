@@ -32,6 +32,8 @@ HWPX 전용 테스트는 `zig test src/root.zig --test-filter HWPX`로 실행합
 
 [HWPX header 시작 번호](hwpx-header-begin-numbers.md)의 단위 검사는 `zig test src/root.zig --test-filter 'HWPX begin numbers'`로 실행합니다. 위의 8개 선택 shard가 `section_tree_shards[].begin_numbers`의 요소·속성 존재 및 값 합계와 독립 대조합니다. 이 실파일 대조도 기본 audit에는 포함되지 않습니다.
 
+[HWPX 현재 지원 검사 묶음](hwpx-known-inspections.md)의 합성·실예제·할당 실패 테스트는 `zig test src/root.zig --test-filter 'HWPX known'`로 실행합니다. 선택 실파일은 `HWPX known document inspections shard 0`부터 `shard 7`까지를 각각 `zig test src/hwpx_known_survey.zig -O ReleaseFast --test-filter '<이름>'`에 넣어 별도 프로세스로 실행합니다. 로컬 `reference/rhwp` corpus가 필요하고 기본 audit에는 포함되지 않습니다. 이 검사는 반복 파싱으로 비용이 높으며 전체 문서 유효성 판정이 아닙니다.
+
 [HWPX section 직접 문자 콘텐츠](hwpx-section-content.md)의 단위 테스트도 위의 `HWPX section tree` 필터에 포함됩니다. 같은 8개 선택 shard에서 `section_tree_shards[].content_digest_sum`을 독립 Python Expat의 직접 콘텐츠 합계와 대조합니다. 이 합계는 요소별 정규화 문자 값의 검증이며 개별 콜백 경계의 동치 주장은 아닙니다.
 
 요소와 문자를 섞어 전달하는 `visitOrdered`도 같은 테스트·shard 명령으로 검사합니다. 독립 Expat의 경계별 문자·시작/끝 순서 해시는 `section_tree_shards[].ordered_digest_sum`으로 대조하며, 빈 태그는 시작+끝으로 정규화합니다. 순서 해시의 반례 테스트는 `zig test src/hwpx_structure_survey.zig -O ReleaseFast --test-filter 'HWPX ordered digest detects moved text'`로 실행합니다. 주석·처리 지시문과 콜백 분할은 포함하지 않습니다.

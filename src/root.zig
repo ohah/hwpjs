@@ -23,6 +23,7 @@ test {
     _ = @import("hwpx/document_trees_tests.zig");
     _ = @import("hwpx/paragraph_metadata_tests.zig");
     _ = @import("hwpx/header_begin_numbers_tests.zig");
+    _ = @import("hwpx/document_known_tests.zig");
     _ = @import("hwpx/namespace_profile.zig");
     _ = @import("hwpx/chart_formula_tests.zig");
     _ = @import("hwpx/allocator_ownership_tests.zig");
