@@ -5,6 +5,55 @@ const para_list_attributes = @import("hwpx/para_list_attributes.zig");
 
 const sub_list_field_count = para_list_attributes.field_names.len;
 
+fn expectCompleteShapeFields(counts: anytype, elements: usize) !void {
+    for (counts) |field| {
+        try std.testing.expectEqual(elements, field.present);
+        try std.testing.expectEqual(@as(usize, 0), field.absent + field.unknown_enum + field.extension_enum);
+    }
+}
+
+const ShapeTotals = struct {
+    tables: usize = 0,
+    captions: usize = 0,
+    labels: usize = 0,
+    dropcap_present: usize = 0,
+    wrap_extensions: usize = 0,
+    caption_paragraphs: usize = 0,
+    id_sum: i64 = 0,
+    size_width_sum: i64 = 0,
+    size_height_sum: i64 = 0,
+    vert_offset_sum: i64 = 0,
+    horz_offset_sum: i64 = 0,
+    vert_offset_negative: usize = 0,
+    vert_offset_highbit: usize = 0,
+    horz_offset_highbit: usize = 0,
+    outer_margin_sum: [4]i64 = @splat(0),
+    caption_width_sum: i64 = 0,
+    label_pagewidth_sum: i64 = 0,
+    label_pageheight_sum: i64 = 0,
+
+    fn add(self: *ShapeTotals, shape: package.TableShapeReport) void {
+        self.tables += shape.tables;
+        self.captions += shape.caption.elements;
+        self.labels += shape.label.elements;
+        self.dropcap_present += shape.table_fields[6].present;
+        self.wrap_extensions += shape.table_fields[3].extension_enum;
+        self.caption_paragraphs += shape.caption_direct_paragraphs;
+        self.id_sum += shape.table_fields[0].sum;
+        self.size_width_sum += shape.size.fields[0].sum;
+        self.size_height_sum += shape.size.fields[2].sum;
+        self.vert_offset_sum += shape.position.fields[9].sum;
+        self.horz_offset_sum += shape.position.fields[10].sum;
+        self.vert_offset_negative += shape.position.fields[9].negative;
+        self.vert_offset_highbit += shape.position.fields[9].highbit;
+        self.horz_offset_highbit += shape.position.fields[10].highbit;
+        for (&self.outer_margin_sum, shape.out_margin.fields) |*sum, field| sum.* += field.sum;
+        self.caption_width_sum += shape.caption.fields[2].sum;
+        self.label_pagewidth_sum += shape.label.fields[9].sum;
+        self.label_pageheight_sum += shape.label.fields[10].sum;
+    }
+};
+
 fn runMetadataCounts(report: package.RunMetadataReport) [7]usize {
     return .{ report.runs, report.missing_char_tc_id, report.zero_char_tc_id, report.para_tc_alias_present, report.para_tc_alias_only, report.equal_dual_ids, report.conflicting_dual_ids };
 }
@@ -436,6 +485,7 @@ fn surveyShard(shard: usize) !void {
     var table_geometry: package.TableGeometryReport = .{};
     var table_attributes: package.TableAttributesReport = .{};
     var table_children: package.TableChildrenReport = .{};
+    var table_shape: ShapeTotals = .{};
     var table_fields: package.TableCellFieldsReport = .{};
     var table_sub_lists: package.TableCellSubListsReport = .{};
     for (roots, 0..) |root, root_index| {
@@ -558,6 +608,24 @@ fn surveyShard(shard: usize) !void {
                     table_children.zone_lists += children.zone_lists;
                     table_children.zones += children.zones;
                     table_children.border_sum += children.border_sum;
+                    const shape = t.table_shape;
+                    try std.testing.expectEqual(t.tables, shape.tables);
+                    try std.testing.expectEqual(t.tables, shape.size.elements);
+                    try std.testing.expectEqual(t.tables, shape.position.elements);
+                    try std.testing.expectEqual(t.tables, shape.out_margin.elements);
+                    try std.testing.expectEqual(shape.caption.elements, shape.caption_sub_lists);
+                    try std.testing.expectEqual(@as(usize, 0), shape.size.missing_tables + shape.size.duplicate_tables + shape.position.missing_tables + shape.position.duplicate_tables + shape.out_margin.missing_tables + shape.out_margin.duplicate_tables + shape.caption.duplicate_tables + shape.label.duplicate_tables + shape.shape_comment.elements + shape.parameter_set.elements + shape.meta_tag.elements + shape.other_direct_children + shape.caption_missing_sub_list + shape.caption_duplicate_sub_list + shape.caption_other_direct_children + shape.caption_unknown_enums + shape.caption_other_attributes);
+                    for (shape.table_fields, 0..) |field, i| {
+                        if (i != 6) try std.testing.expectEqual(t.tables, field.present);
+                        try std.testing.expectEqual(@as(usize, 0), field.unknown_enum);
+                        if (i != 3) try std.testing.expectEqual(@as(usize, 0), field.extension_enum);
+                    }
+                    try expectCompleteShapeFields(shape.size.fields, shape.size.elements);
+                    try expectCompleteShapeFields(shape.position.fields, shape.position.elements);
+                    try expectCompleteShapeFields(shape.out_margin.fields, shape.out_margin.elements);
+                    try expectCompleteShapeFields(shape.caption.fields, shape.caption.elements);
+                    try expectCompleteShapeFields(shape.label.fields, shape.label.elements);
+                    table_shape.add(shape);
                     for (children.margin_sum, 0..) |value, i| {
                         table_children.margin_sum[i] += value;
                         table_children.margin_zero[i] += children.margin_zero[i];
@@ -641,6 +709,24 @@ fn surveyShard(shard: usize) !void {
     try std.testing.expectEqual(expected.table_border_missing_target[shard], table_attributes.border_fill_references.missing_target);
     try std.testing.expectEqual(expected.table_count[shard] - expected.table_border_missing_target[shard], table_attributes.border_fill_references.resolved);
     try std.testing.expectEqual(expected.table_count[shard], table_children.tables);
+    try std.testing.expectEqual(expected.table_count[shard], table_shape.tables);
+    try std.testing.expectEqual(expected.table_shape_captions[shard], table_shape.captions);
+    try std.testing.expectEqual(expected.table_shape_labels[shard], table_shape.labels);
+    try std.testing.expectEqual(expected.table_shape_dropcap_present[shard], table_shape.dropcap_present);
+    try std.testing.expectEqual(expected.table_shape_wrap_extensions[shard], table_shape.wrap_extensions);
+    try std.testing.expectEqual(expected.table_shape_caption_paragraphs[shard], table_shape.caption_paragraphs);
+    try std.testing.expectEqual(expected.table_shape_id_sum[shard], table_shape.id_sum);
+    try std.testing.expectEqual(expected.table_shape_size_width_sum[shard], table_shape.size_width_sum);
+    try std.testing.expectEqual(expected.table_shape_size_height_sum[shard], table_shape.size_height_sum);
+    try std.testing.expectEqual(expected.table_shape_vert_offset_sum[shard], table_shape.vert_offset_sum);
+    try std.testing.expectEqual(expected.table_shape_horz_offset_sum[shard], table_shape.horz_offset_sum);
+    try std.testing.expectEqual(expected.table_shape_vert_offset_negative[shard], table_shape.vert_offset_negative);
+    try std.testing.expectEqual(expected.table_shape_vert_offset_highbit[shard], table_shape.vert_offset_highbit);
+    try std.testing.expectEqual(expected.table_shape_horz_offset_highbit[shard], table_shape.horz_offset_highbit);
+    try std.testing.expectEqualSlices(i64, &expected.table_shape_outer_margin_sum[shard], &table_shape.outer_margin_sum);
+    try std.testing.expectEqual(expected.table_shape_caption_width_sum[shard], table_shape.caption_width_sum);
+    try std.testing.expectEqual(expected.table_shape_label_pagewidth_sum[shard], table_shape.label_pagewidth_sum);
+    try std.testing.expectEqual(expected.table_shape_label_pageheight_sum[shard], table_shape.label_pageheight_sum);
     try std.testing.expectEqual(expected.table_count[shard], table_children.in_margins);
     try std.testing.expectEqual(expected.table_zone_lists[shard], table_children.zone_lists);
     try std.testing.expectEqual(expected.table_zones[shard], table_children.zones);

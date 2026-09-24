@@ -16,6 +16,54 @@ H = "{http://www.hancom.co.kr/hwpml/2011/head}"
 SECTION = "{http://www.hancom.co.kr/hwpml/2011/section}sec"
 PARA_LIST_FIELDS = ("id", "textDirection", "lineWrap", "vertAlign", "linkListIDRef", "linkListNextIDRef", "textWidth", "textHeight", "hasTextRef", "hasNumRef", "metatag")
 PARA_LIST_ENUMS = {"textDirection": {"HORIZONTAL", "VERTICAL", "VERTICALALL"}, "lineWrap": {"BREAK", "SQUEEZE", "KEEP"}, "vertAlign": {"TOP", "CENTER", "BOTTOM"}}
+TABLE_SHAPE_CHILD_FIELDS = {
+    "sz": ("width", "widthRelTo", "height", "heightRelTo", "protect"),
+    "pos": ("treatAsChar", "affectLSpacing", "flowWithText", "allowOverlap", "holdAnchorAndSO", "vertRelTo", "horzRelTo", "vertAlign", "horzAlign", "vertOffset", "horzOffset"),
+    "outMargin": ("left", "right", "top", "bottom"),
+    "caption": ("side", "fullSz", "width", "gap", "lastWidth"),
+    "shapeComment": (),
+    "parameterset": (),
+    "metaTag": (),
+    "label": ("topmargin", "leftmargin", "boxwidth", "boxlength", "boxmarginhor", "boxmarginver", "labelcols", "labelrows", "landscape", "pagewidth", "pageheight"),
+}
+TABLE_SHAPE_ATTRIBUTES = ("id", "zOrder", "numberingType", "textWrap", "textFlow", "lock", "dropcapstyle")
+TABLE_SHAPE_ENUMS = {
+    ("attr", "numberingType"): {"NONE", "PICTURE", "TABLE", "EQUATION"},
+    ("attr", "textWrap"): {"SQUARE", "TOP_AND_BOTTOM", "BEHIND_TEXT", "IN_FRONT_OF_TEXT"},
+    ("attr", "textFlow"): {"BOTH_SIDES", "LEFT_ONLY", "RIGHT_ONLY", "LARGEST_ONLY"},
+    ("attr", "dropcapstyle"): {"None", "DoubleLine", "TripleLine", "Margin"},
+    ("sz", "widthRelTo"): {"PAPER", "PAGE", "COLUMN", "PARA", "ABSOLUTE"},
+    ("sz", "heightRelTo"): {"PAPER", "PAGE", "ABSOLUTE"},
+    ("pos", "vertRelTo"): {"PAPER", "PAGE", "PARA"},
+    ("pos", "horzRelTo"): {"PAPER", "PAGE", "COLUMN", "PARA"},
+    ("pos", "vertAlign"): {"TOP", "CENTER", "BOTTOM", "INSIDE", "OUTSIDE"},
+    ("pos", "horzAlign"): {"LEFT", "CENTER", "RIGHT", "INSIDE", "OUTSIDE"},
+    ("caption", "side"): {"LEFT", "RIGHT", "TOP", "BOTTOM"},
+    ("label", "landscape"): {"WIDELY", "NARROWLY"},
+}
+TABLE_SHAPE_BOOLEANS = {("attr", "lock"), ("sz", "protect"), ("caption", "fullSz")} | {("pos", field) for field in ("treatAsChar", "affectLSpacing", "flowWithText", "allowOverlap", "holdAnchorAndSO")}
+TABLE_SHAPE_SIGNED = {("attr", "zOrder"), ("caption", "width"), ("caption", "gap")} | {("outMargin", field) for field in ("left", "right", "top", "bottom")} | {("pos", field) for field in ("vertOffset", "horzOffset")}
+
+
+def inspect_shape_field(node, kind, field, stats):
+    key = f"table_shape_{kind}_{field}"
+    raw = node.get(field)
+    stats[key + "_present"] += raw is not None
+    if raw is None:
+        return
+    if (kind, field) in TABLE_SHAPE_ENUMS:
+        stats[key + "_unknown"] += raw not in TABLE_SHAPE_ENUMS[(kind, field)]
+        stats[key + "_" + (raw if raw in TABLE_SHAPE_ENUMS[(kind, field)] else "unknown_value")] += 1
+        if raw not in TABLE_SHAPE_ENUMS[(kind, field)]:
+            stats[key + "_unrecognized_" + (raw if len(raw) <= 64 else "long")] += 1
+    elif (kind, field) in TABLE_SHAPE_BOOLEANS:
+        stats[key + "_true"] += optional_bool(node, field) is True
+    else:
+        value = optional_margin_int(node, field) if (kind, field) in TABLE_SHAPE_SIGNED else optional_int(node, field)
+        stats[key + "_sum"] += value
+        stats[key + "_zero"] += value == 0
+        stats[key + "_negative"] += value < 0
+        stats[key + "_highbit"] += value >= 0x80000000
 
 
 def read_part(archive, name, limit):
@@ -155,6 +203,31 @@ def inspect_metrics(cell, stats, border_ids):
 
 def inspect_table(table, stats, samples, path, border_ids=None):
     stats["tables"] += 1
+    for field in TABLE_SHAPE_ATTRIBUTES:
+        inspect_shape_field(table, "attr", field, stats)
+    shape_counts = Counter()
+    for child in table:
+        local = child.tag.removeprefix(P) if child.tag.startswith(P) else None
+        if local in TABLE_SHAPE_CHILD_FIELDS:
+            shape_counts[local] += 1
+            stats[f"table_shape_{local}_elements"] += 1
+            for field in TABLE_SHAPE_CHILD_FIELDS[local]:
+                inspect_shape_field(child, local, field, stats)
+            if local == "caption":
+                nested = Counter()
+                inspect_cell_sub_lists(child, nested)
+                stats["table_shape_caption_sub_lists"] += nested["sublists"]
+                stats["table_shape_caption_missing_sub_list"] += nested["sublist_missing_cells"]
+                stats["table_shape_caption_duplicate_sub_list"] += nested["sublist_duplicate_cells"]
+                stats["table_shape_caption_direct_paragraphs"] += nested["sublist_direct_paragraphs"]
+                stats["table_shape_caption_unknown_enums"] += nested["sublist_unknown_enums"]
+                stats["table_shape_caption_other_attributes"] += nested["sublist_other_attributes"]
+                stats["table_shape_caption_other_direct_children"] += nested["sublist_other_direct"] + len(child) - nested["sublists"]
+        elif local not in ("tr", "inMargin", "cellzoneList"):
+            stats["table_shape_other_direct"] += 1
+    for local in TABLE_SHAPE_CHILD_FIELDS:
+        stats[f"table_shape_{local}_missing"] += shape_counts[local] == 0
+        stats[f"table_shape_{local}_duplicate"] += shape_counts[local] > 1
     declared_rows = optional_int(table, "rowCnt")
     declared_cols = optional_int(table, "colCnt")
     page_break = table.get("pageBreak")
@@ -337,6 +410,8 @@ def self_test():
         ("<p:tbl rowCnt='1' colCnt='1'><p:tr><p:tc><p:subList textDirection='FUTURE' textWidth='12' hasTextRef='true'><p:p/><p:future/></p:subList><p:subList/></p:tc></p:tr></p:tbl>", {"sublists": 2, "sublist_duplicate_cells": 1, "sublist_direct_paragraphs": 1, "sublist_other_direct": 1, "sublist_unknown_enums": 1, "sublist_textWidth_sum": 12, "sublist_hasTextRef_true": 1, "sublist_empty": 1}),
         ("<p:tbl rowCnt='1' colCnt='0' pageBreak='FUTURE' repeatHeader='1' noAdjust='false' cellSpacing='12' borderFillIDRef='0'><p:tr/></p:tbl>", {"tables": 1, "table_pageBreak_unknown": 1, "table_repeatHeader_true": 1, "table_noAdjust_false": 1, "table_cellSpacing_sum": 12, "table_border_zero": 1, "table_border_ref_absent_table": 1}),
         ("<p:tbl rowCnt='2' colCnt='2'><p:inMargin left='-2' right='4294967295' top='0'/><p:cellzoneList><p:cellzone startRowAddr='2' endRowAddr='1' startColAddr='1' endColAddr='0' borderFillIDRef='0'/><p:cellzone startRowAddr='3'/></p:cellzoneList></p:tbl>", {"table_inMargin_elements": 1, "table_inMargin_left_negative": 1, "table_inMargin_right_highbit": 1, "table_inMargin_bottom_absent": 1, "table_cellzoneList_elements": 1, "table_cellzones": 2, "table_cellzone_endRowAddr_absent": 1, "table_cellzone_inverted": 1, "table_cellzone_outside_grid": 2, "table_cellzone_border_zero": 1, "table_cellzone_border_absent": 1}),
+        ("<p:tbl xmlns:x='urn:foreign' rowCnt='0' colCnt='0' id='4294967295' zOrder='-1' textWrap='THROUGH' lock='1'><x:sz width='99'/><p:sz width='10' protect='true'/><p:pos vertOffset='-2' horzOffset='4294967295'/><p:outMargin left='-3' right='4294967295'/><p:caption side='BOTTOM' fullSz='false' width='-1' gap='850' lastWidth='7'><p:subList textDirection='HORIZONTAL' textWidth='12'><p:p/></p:subList></p:caption><p:label pagewidth='9' pageheight='10'/><p:shapeComment/><p:parameterset/><p:metaTag/><x:caption/></p:tbl>", {"table_shape_attr_id_sum": 4294967295, "table_shape_attr_zOrder_negative": 1, "table_shape_attr_textWrap_unknown": 1, "table_shape_attr_textWrap_unrecognized_THROUGH": 1, "table_shape_attr_lock_true": 1, "table_shape_sz_elements": 1, "table_shape_sz_width_sum": 10, "table_shape_sz_protect_true": 1, "table_shape_pos_vertOffset_negative": 1, "table_shape_pos_horzOffset_highbit": 1, "table_shape_outMargin_left_negative": 1, "table_shape_outMargin_right_highbit": 1, "table_shape_caption_elements": 1, "table_shape_caption_sub_lists": 1, "table_shape_caption_direct_paragraphs": 1, "table_shape_caption_width_negative": 1, "table_shape_label_pageheight_sum": 10, "table_shape_shapeComment_elements": 1, "table_shape_parameterset_elements": 1, "table_shape_metaTag_elements": 1, "table_shape_other_direct": 2}),
+        ("<p:tbl rowCnt='0' colCnt='0' textWrap='FUTURE'><p:sz/><p:sz width='1'/><p:caption side='FUTURE'><p:subList textDirection='FUTURE'><p:p/><p:other/></p:subList><p:subList/></p:caption><p:caption/><p:other><p:sz width='100'/></p:other></p:tbl>", {"table_shape_sz_duplicate": 1, "table_shape_pos_missing": 1, "table_shape_sz_width_present": 1, "table_shape_sz_height_present": 0, "table_shape_attr_textWrap_unrecognized_FUTURE": 1, "table_shape_caption_duplicate": 1, "table_shape_caption_sub_lists": 2, "table_shape_caption_duplicate_sub_list": 1, "table_shape_caption_missing_sub_list": 1, "table_shape_caption_other_direct_children": 1, "table_shape_caption_unknown_enums": 1, "table_shape_other_direct": 1}),
     )
     for source, expected in cases:
         stats = Counter()
@@ -352,6 +427,14 @@ def self_test():
             pass
         else:
             raise AssertionError(f"invalid unsigned value accepted: {bad!r}")
+    for source in ("<p:tbl lock='TRUE'/>", "<p:tbl><p:pos vertOffset='-2147483649'/></p:tbl>", "<p:tbl><p:sz width='4294967296'/></p:tbl>", "<p:tbl><p:caption fullSz='TRUE'/></p:tbl>"):
+        node = ET.fromstring(source.replace("<p:tbl", "<p:tbl xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'", 1))
+        try:
+            inspect_table(node, Counter(), [], "self-test")
+        except ValueError:
+            pass
+        else:
+            raise AssertionError(f"invalid table shape value accepted: {source}")
     if optional_int(ET.fromstring("<x n='-000'/>"), "n") != 0:
         raise AssertionError("negative lexical zero was not preserved")
     reference = ET.fromstring("<p:tbl xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph' rowCnt='1' colCnt='4'><p:tr><p:tc borderFillIDRef='7'/><p:tc borderFillIDRef='9'/><p:tc borderFillIDRef='0'/><p:tc/></p:tr></p:tbl>")
@@ -375,7 +458,7 @@ def self_test():
         pass
     else:
         raise AssertionError("malformed span hidden by missing address")
-    print("HWPX table oracle self-test: grid and numeric canaries passed")
+    print("HWPX table oracle self-test: grid, shape, and numeric canaries passed")
 
 
 if __name__ == "__main__":

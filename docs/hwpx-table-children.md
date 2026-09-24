@@ -14,6 +14,6 @@
 
 `zig test src/root.zig --test-filter 'HWPX table children'`는 직접 자식 선택, 속성 원값, 중복·부재·부분 좌표, 격자 밖과 역전 동시 진단, 세 가지 개수 한도 및 모든 할당 실패를 검사합니다. 독립 조사기의 반례는 `python3 tools/hwpx-table-oracle.py --self-test`, 전체 corpus 집계는 인자 없이 실행합니다. 선택 실파일은 `zig test src/hwpx_known_survey.zig -O ReleaseFast --test-filter 'HWPX known document inspections shard N'`의 N=0..7을 별도 프로세스로 실행하며 `src/hwpx_corpus_expectations.zig`의 독립 분할 집계와 대조합니다. 로컬 `reference/rhwp`가 없으면 선택 실파일 검사는 재현되지 않습니다.
 
-표의 나머지 inherited shape 자식(`sz`, `pos`, `outMargin`, `caption` 등), `label`, 셀 본문 의미, 구역 간 겹침·우선순위, 전체 XSD, 레이아웃·편집·저장·무손실 왕복은 아직 미구현입니다.
+[표 상속 shape 필드·직접 자식](hwpx-table-shape.md)은 별도 검사로 연결됐습니다. 셀 본문 의미, 구역 간 겹침·우선순위, 전체 XSD, 레이아웃·편집·저장·무손실 왕복은 아직 미구현입니다.
 
 2026-09-25 최종 재검증: 독립 조사기 자체 반례·전체 corpus 집계, 최종 코드의 ReleaseFast shard 0~7, Debug 전체 2,310/2,310 테스트, ReleaseSafe 제품 빌드와 전체 감사 2,349/2,349 테스트, ReleaseFast 전체 감사, Debug/ReleaseSafe/ReleaseFast 표 자식 단독 테스트, 포맷·공백 검사가 통과했습니다. 적대적 점검에서는 중복 요소 뒤의 잘못된 숫자, 부분 좌표와 선언 격자 밖 값, `u32` 최댓값, ID 0과 header 표 부재, header 없이 실행한 참조 0건, 다른 namespace의 동명 요소, 여러 표에 걸친 세 개 수 제한, 모든 할당 실패를 각각 반례로 확인했습니다. 이 결과는 원값·구조·참조 존재의 검사 범위에 한정됩니다.

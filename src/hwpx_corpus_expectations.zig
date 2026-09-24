@@ -39,6 +39,30 @@ pub const table_zone_coordinate_sum = [_][4]u64{
     .{ 94, 40, 148, 92 }, .{ 36, 6, 40, 47 }, .{ 71, 50, 93, 72 }, .{ 21, 0, 31, 51 },
 };
 pub const table_zone_border_sum = [_]u64{ 863, 38, 683, 171, 908, 1605, 921, 633 };
+// Independent ZIP/ElementTree census of hp:tbl inherited shape fields.
+pub const table_shape_captions = [_]usize{ 31, 5, 5, 7, 10, 7, 42, 27 };
+pub const table_shape_labels = [_]usize{ 8, 0, 11, 0, 0, 2, 3, 4 };
+pub const table_shape_dropcap_present = [_]usize{ 870, 364, 436, 361, 300, 421, 355, 1070 };
+// All five extensions in this corpus are THROUGH; no TIGHT was observed.
+pub const table_shape_wrap_extensions = [_]usize{ 0, 0, 0, 0, 0, 0, 0, 5 };
+pub const table_shape_caption_paragraphs = [_]usize{ 34, 8, 6, 10, 13, 8, 45, 27 };
+pub const table_shape_id_sum = [_]i64{ 1341475469557, 603530828261, 640060565692, 592151807521, 491681456877, 689659156721, 600119920046, 1791433675581 };
+pub const table_shape_size_width_sum = [_]i64{ 32999013, 14388484, 18056208, 15916367, 11740598, 18042493, 15051717, 41922443 };
+pub const table_shape_size_height_sum = [_]i64{ 13653757, 6772092, 8340021, 7116872, 5231631, 8055113, 6745834, 17941895 };
+pub const table_shape_vert_offset_sum = [_]i64{ 8591168340, 80135, 8590210164, 4295067718, 8589953226, 17179952194, 21474913281, 21475238679 };
+pub const table_shape_horz_offset_sum = [_]i64{ 4295594224, 4295101158, 4295076720, 4295103091, 4295006482, 12884971312, 30064882848, 8591401346 };
+pub const table_shape_vert_offset_negative = [_]usize{ 0, 0, 1, 0, 0, 0, 0, 0 };
+pub const table_shape_vert_offset_highbit = [_]usize{ 2, 0, 2, 1, 2, 4, 5, 5 };
+pub const table_shape_horz_offset_highbit = [_]usize{ 1, 1, 1, 1, 1, 3, 7, 2 };
+pub const table_shape_outer_margin_sum = [_][4]i64{
+    .{ 123134, 124266, 130495, 137746 }, .{ 49867, 51000, 54340, 62310 },
+    .{ 61628, 62476, 67285, 95363 },     .{ 39512, 39512, 46589, 53429 },
+    .{ 50625, 50625, 49645, 54208 },     .{ 59695, 59695, 67905, 71631 },
+    .{ 68226, 68366, 67657, 73419 },     .{ 175337, 147703, 152586, 181636 },
+};
+pub const table_shape_caption_width_sum = [_]i64{ 263624, 42520, 42520, 59529, 85040, 59528, 357168, 229608 };
+pub const table_shape_label_pagewidth_sum = [_]i64{ 476224, 0, 654808, 0, 0, 119056, 178584, 238112 };
+pub const table_shape_label_pageheight_sum = [_]i64{ 673504, 0, 926068, 0, 0, 168376, 252564, 336752 };
 // Raw cellSz/cellMargin/hasMargin census from tools/hwpx-table-oracle.py.
 // Field order is table_cell_fields.size_names and margin_names.
 pub const table_has_margin_true = [_]usize{ 1653, 1427, 1320, 482, 5812, 2321, 1444, 1146 };

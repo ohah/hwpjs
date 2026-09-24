@@ -47,7 +47,7 @@ test "HWPX known inspections include table geometry diagnostics and limits" {
     const a = std.testing.allocator;
     var sources = synthetic_sources;
     sources[4].data = "<h:head xmlns:h='http://www.hancom.co.kr/hwpml/2011/head' secCnt='1'><h:beginNum page='1' footnote='1' endnote='1' pic='1' tbl='1' equation='1'/><h:refList><h:borderFills itemCnt='1'><h:borderFill id='7'/></h:borderFills></h:refList></h:head>";
-    sources[5].data = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:p id='0' styleIDRef='0'><p:run><p:tbl rowCnt='1' colCnt='2' pageBreak='CELL' repeatHeader='1' noAdjust='false' cellSpacing='12' borderFillIDRef='7'><p:inMargin left='1' right='2' top='3' bottom='4'/><p:cellzoneList><p:cellzone startRowAddr='0' startColAddr='0' endRowAddr='0' endColAddr='1' borderFillIDRef='7'/></p:cellzoneList><p:tr><p:tc hasMargin='false' borderFillIDRef='7'><p:cellAddr rowAddr='0' colAddr='0'/><p:cellSpan rowSpan='1' colSpan='1'/><p:cellSz width='10' height='0'/><p:cellMargin left='-2' right='4294967295' top='0' bottom='1'/><p:subList textDirection='HORIZONTAL' textWidth='12'><p:p id='1'/></p:subList></p:tc></p:tr></p:tbl></p:run></p:p></s:sec>";
+    sources[5].data = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:p id='0' styleIDRef='0'><p:run><p:tbl rowCnt='1' colCnt='2' id='4294967295' textWrap='THROUGH' pageBreak='CELL' repeatHeader='1' noAdjust='false' cellSpacing='12' borderFillIDRef='7'><p:sz width='10' height='0'/><p:pos vertOffset='-2' horzOffset='4294967295'/><p:outMargin left='-3' right='4294967295'/><p:caption side='BOTTOM' fullSz='false' width='-1'><p:subList textDirection='HORIZONTAL'><p:p id='2'/></p:subList></p:caption><p:inMargin left='1' right='2' top='3' bottom='4'/><p:cellzoneList><p:cellzone startRowAddr='0' startColAddr='0' endRowAddr='0' endColAddr='1' borderFillIDRef='7'/></p:cellzoneList><p:tr><p:tc hasMargin='false' borderFillIDRef='7'><p:cellAddr rowAddr='0' colAddr='0'/><p:cellSpan rowSpan='1' colSpan='1'/><p:cellSz width='10' height='0'/><p:cellMargin left='-2' right='4294967295' top='0' bottom='1'/><p:subList textDirection='HORIZONTAL' textWidth='12'><p:p id='1'/></p:subList></p:tc></p:tr></p:tbl></p:run></p:p></s:sec>";
     const bytes = try fixture.storedZip(a, &sources);
     defer a.free(bytes);
     var document = try package.inspectDocument(a, bytes, .{});
@@ -62,6 +62,12 @@ test "HWPX known inspections include table geometry diagnostics and limits" {
     try std.testing.expectEqual(@as(usize, 1), report.table_geometry.table_children.in_margins);
     try std.testing.expectEqual(@as(usize, 1), report.table_geometry.table_children.zones);
     try std.testing.expectEqual(@as(usize, 1), report.table_geometry.table_children.border_references.resolved);
+    try std.testing.expectEqual(@as(usize, 1), report.table_geometry.table_shape.tables);
+    try std.testing.expectEqual(@as(usize, 1), report.table_geometry.table_shape.table_fields[3].extension_enum);
+    try std.testing.expectEqual(@as(i64, -2), report.table_geometry.table_shape.position.fields[9].sum);
+    try std.testing.expectEqual(@as(usize, 1), report.table_geometry.table_shape.position.fields[10].highbit);
+    try std.testing.expectEqual(@as(usize, 1), report.table_geometry.table_shape.caption_sub_lists);
+    try std.testing.expectEqual(@as(usize, 1), report.table_geometry.table_shape.caption_direct_paragraphs);
     try std.testing.expectEqual(@as(usize, 1), report.table_geometry.uncovered_slots);
     try std.testing.expectEqual(@as(u64, 10), report.table_geometry.cell_fields.size_sum[0]);
     try std.testing.expectEqual(@as(i64, -2), report.table_geometry.cell_fields.margin_sum[0]);
@@ -72,6 +78,7 @@ test "HWPX known inspections include table geometry diagnostics and limits" {
     try std.testing.expectEqual(@as(u64, 12), report.table_geometry.cell_sub_lists.text_width_sum);
     try std.testing.expectError(error.LimitExceeded, document.inspectKnown(a, .{ .table_geometry = .{ .max_grid_slots = 1 } }));
     try std.testing.expectError(error.LimitExceeded, document.inspectKnown(a, .{ .table_geometry = .{ .max_attribute_bytes = 1 } }));
+    try std.testing.expectError(error.LimitExceeded, document.inspectKnown(a, .{ .table_geometry = .{ .table_shape = .{ .max_shape_children = 3 } } }));
     try std.testing.checkAllAllocationFailures(a, struct {
         fn run(allocator: std.mem.Allocator, source: []const u8) !void {
             var parsed = try package.inspectDocument(allocator, source, .{});
@@ -81,6 +88,7 @@ test "HWPX known inspections include table geometry diagnostics and limits" {
             try std.testing.expectEqual(@as(usize, 1), known.table_geometry.uncovered_slots);
             try std.testing.expectEqual(@as(usize, 1), known.table_geometry.table_attributes.border_fill_references.resolved);
             try std.testing.expectEqual(@as(usize, 1), known.table_geometry.table_children.border_references.resolved);
+            try std.testing.expectEqual(@as(usize, 1), known.table_geometry.table_shape.caption_sub_lists);
             try std.testing.expectEqual(@as(i64, 4294967295), known.table_geometry.cell_fields.margin_sum[1]);
             try std.testing.expectEqual(@as(usize, 1), known.table_geometry.cell_fields.border_fill_references.resolved);
             try std.testing.expectEqual(@as(u64, 12), known.table_geometry.cell_sub_lists.text_width_sum);

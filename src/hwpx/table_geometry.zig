@@ -5,6 +5,7 @@ const table_fields = @import("table_xml_fields.zig");
 const cell_fields = @import("table_cell_fields.zig");
 const table_attributes = @import("table_attributes.zig");
 const table_children = @import("table_children.zig");
+const table_shape = @import("table_shape.zig");
 const cell_sub_lists = @import("table_cell_sub_lists.zig");
 const header_resources = @import("header_resources.zig");
 
@@ -18,6 +19,7 @@ pub const Options = struct {
     max_attribute_bytes: usize = 4096,
     cell_sub_lists: cell_sub_lists.Options = .{},
     table_children: table_children.Options = .{},
+    table_shape: table_shape.Options = .{},
 };
 
 /// Structural observations, not a claim that the table can be laid out or edited.
@@ -46,6 +48,7 @@ pub const Report = struct {
     cell_fields: cell_fields.Report = .{},
     table_attributes: table_attributes.Report = .{},
     table_children: table_children.Report = .{},
+    table_shape: table_shape.Report = .{},
     cell_sub_lists: cell_sub_lists.Report = .{},
 };
 
@@ -92,6 +95,7 @@ fn inspectTable(a: std.mem.Allocator, tree: *const tree_mod.Tree, table: usize, 
     const rows = try table_fields.optionalUnsigned(a, tree, table, "rowCnt", options.max_attribute_bytes);
     const cols = try table_fields.optionalUnsigned(a, tree, table, "colCnt", options.max_attribute_bytes);
     try table_children.inspectTable(a, tree, table, rows, cols, options.max_attribute_bytes, options.table_children, border_fills, &report.table_children);
+    try table_shape.inspectTable(a, tree, table, options.max_attribute_bytes, options.table_shape, &report.table_shape);
     if (rows == null) report.missing_row_count += 1;
     if (cols == null) report.missing_column_count += 1;
     var occupied: ?[]u8 = null;
