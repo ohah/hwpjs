@@ -7,6 +7,7 @@ const content_manifest = @import("content_manifest.zig");
 const document_structure = @import("document_structure.zig");
 const namespace_profile = @import("namespace_profile.zig");
 const text_child_names = @import("text_child_names.zig");
+const selection = @import("compatibility_selection.zig");
 
 pub const InlineKind = enum(u8) {
     tab,
@@ -71,6 +72,8 @@ pub const Options = struct {
     max_text_elements: usize = 2_000_000,
     max_inline_elements: usize = 2_000_000,
     max_text_bytes: usize = 64 * 1024 * 1024,
+    max_attribute_bytes: usize = 4096,
+    branch_policy: selection.Policy = .{},
     xml: document_xml.Options = .{},
 };
 
@@ -115,6 +118,10 @@ const Node = struct {
     run: usize = 0,
     text: usize = 0,
     direct_runs: usize = 0,
+    active: bool = true,
+    is_switch: bool = false,
+    is_branch: bool = false,
+    selected: selection.State = .{},
 };
 
 fn inlineKind(tag: xml.tags.Tag, scope: *const xml.namespaces.State) !InlineKind {
@@ -176,6 +183,7 @@ const Scanner = struct {
         if (depth == 0 or depth > self.nodes.len) return error.LimitExceeded;
         if (tag.kind == .end) {
             const node = self.nodes[depth - 1];
+            if (!node.active) return;
             switch (node.kind) {
                 .paragraph => {
                     if (node.direct_runs == 0) self.report.paragraphs_without_direct_run += 1;
@@ -198,6 +206,24 @@ const Scanner = struct {
         }
         const parent: Node = if (depth == 1) .{} else self.nodes[depth - 2];
         var node = parent;
+        node.active = parent.active;
+        node.is_switch = false;
+        node.is_branch = false;
+        node.selected = .{};
+        if (parent.active and parent.is_switch) {
+            const is_case = try attrs.element(tag, scope, document_xml.paragraph_uri, "case");
+            const is_default = if (is_case) false else try attrs.element(tag, scope, document_xml.paragraph_uri, "default");
+            if (is_case or is_default) {
+                node.is_branch = true;
+                node.active = try selection.choose(self.allocator, tag, scope, is_case, self.options.max_attribute_bytes, self.options.branch_policy, &self.nodes[depth - 2].selected);
+            }
+        }
+        if (parent.active and (parent.kind == .run or parent.is_branch) and try attrs.element(tag, scope, document_xml.paragraph_uri, "switch")) node.is_switch = true;
+        if (!node.active) {
+            node.kind = .other;
+            if (tag.kind == .start) self.nodes[depth - 1] = node;
+            return;
+        }
         node.kind = .other;
         node.inline_kind = .unknown;
         node.other_content_kind = try otherContentKind(tag, scope);
@@ -258,6 +284,7 @@ const Scanner = struct {
         const self: *Scanner = @ptrCast(@alignCast(raw));
         if (depth == 0 or depth > self.nodes.len) return error.LimitExceeded;
         const node = self.nodes[depth - 1];
+        if (!node.active) return;
         if (node.text == 0) {
             // XML formatting whitespace is not document text. Flag only
             // non-whitespace content that no hp:t owner receives.
@@ -280,9 +307,11 @@ const Scanner = struct {
     }
 };
 
-/// Re-reads structure-selected sections in spine order. It never guesses
-/// visible branch selection or converts inline controls into characters.
+/// Re-reads structure-selected sections in spine order. Raw mode observes all
+/// branches; selected mode uses only caller-declared capabilities. Neither
+/// mode converts inline controls into characters.
 pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, manifest: content_manifest.Manifest, sections: []const document_structure.Section, options: Options, visitor: ?Visitor) !Report {
+    try selection.validate(options.branch_policy);
     var report: Report = .{ .sections = sections.len };
     var remaining = options.max_total_section_xml_bytes;
     for (sections, 0..) |section, ordinal| {

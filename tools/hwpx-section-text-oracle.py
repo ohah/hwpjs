@@ -54,6 +54,42 @@ ATTRIBUTE_FIELDS = {
     PARAGRAPH + "run": (b"R", ("charPrIDRef", "charTcId")),
 }
 HASH_MODULUS = 1 << 256
+SWITCH = PARAGRAPH + "switch"
+CASE = PARAGRAPH + "case"
+DEFAULT = PARAGRAPH + "default"
+CHART_NAMESPACE = "http://www.hancom.co.kr/hwpml/2016/ooxmlchart"
+
+
+def branch_text_counts(branch: ET.Element) -> list[int]:
+    """Counts visible text structure under one XML branch, independently of Zig."""
+    values = [0] * 5  # paragraphs, runs, hp:t, UTF-8 bytes, inline elements
+    for node in branch.iter():
+        if node.tag == PARAGRAPH + "p":
+            values[0] += 1
+        elif node.tag == PARAGRAPH + "run":
+            values[1] += 1
+        elif node.tag == PARAGRAPH + "t":
+            values[2] += 1
+            values[3] += len("".join(node.itertext()).encode("utf-8"))
+            values[4] += sum(1 for child in node.iter() if child is not node)
+    return values
+
+
+def section_switch_text_counts(section: ET.Element, result: dict, shard: dict) -> None:
+    for switch in section.iter(SWITCH):
+        cases = [child for child in switch if child.tag == CASE]
+        defaults = [child for child in switch if child.tag == DEFAULT]
+        if len(cases) != 1 or len(defaults) != 1:
+            raise ValueError("HWPX oracle expected one case and default per observed switch")
+        if list(switch)[:2] != [cases[0], defaults[0]] or cases[0].get(PARAGRAPH + "required-namespace") != CHART_NAMESPACE:
+            raise ValueError("HWPX oracle encountered an unmodeled switch selection rule")
+        if any(child.tag == SWITCH for branch in (cases[0], defaults[0]) for child in branch.iter()):
+            raise ValueError("HWPX oracle selected text delta does not support nested switches")
+        for key, branch in (("switch_removed_case", cases[0]), ("switch_removed_default", defaults[0])):
+            counts = branch_text_counts(branch)
+            for target in (result[key], shard[key]):
+                for index, value in enumerate(counts):
+                    target[index] += value
 
 
 def bounded_read(archive: ZipFile, name: str, limit: int) -> bytes:
@@ -310,6 +346,11 @@ def self_check() -> None:
     assert result["text_bytes"] == 4
     assert result["inline"] == Counter({"line_break": 1})
     assert result["other_content"] == Counter({"script": 1})
+    branch = ET.fromstring(
+        '<p:case xmlns:p="http://www.hancom.co.kr/hwpml/2011/paragraph">'
+        '<p:p><p:run><p:t>가&amp;B<p:tab/></p:t></p:run></p:p></p:case>'
+    )
+    assert branch_text_counts(branch) == [1, 1, 1, 5, 1]
     layout_only = ET.fromstring(
         '<p:p xmlns:p="http://www.hancom.co.kr/hwpml/2011/paragraph">'
         '<p:linesegarray/></p:p>'
@@ -362,7 +403,7 @@ def self_check() -> None:
 def main() -> None:
     self_check()
     tree_shards = [
-        {"accepted": 0, "rejected_zip": 0, "encrypted": 0, "sections": 0, "elements": 0, "header_elements": 0, "header_bytes": 0, "section_bytes": 0, "attribute_digest_sum": 0, "content_digest_sum": 0, "ordered_digest_sum": 0, "paragraph_metadata": Counter(), "begin_numbers": Counter()}
+        {"accepted": 0, "rejected_zip": 0, "encrypted": 0, "sections": 0, "elements": 0, "header_elements": 0, "header_bytes": 0, "section_bytes": 0, "attribute_digest_sum": 0, "content_digest_sum": 0, "ordered_digest_sum": 0, "paragraph_metadata": Counter(), "begin_numbers": Counter(), "switch_removed_case": [0] * 5, "switch_removed_default": [0] * 5}
         for _ in range(8)
     ]
     attribute_counts = {
@@ -396,10 +437,15 @@ def main() -> None:
         "inline": Counter(),
         "non_text_content_chunks": 0,
         "other_content": Counter(),
+        "switch_removed_case": [0] * 5,
+        "switch_removed_default": [0] * 5,
+        "switch_text_files": [],
     }
     for root_index, root in enumerate(ROOTS):
         for path in root.rglob("*.hwpx"):
             shard = tree_shards[(sum(path.relative_to(root).as_posix().encode("utf-8")) + root_index) % len(tree_shards)]
+            before_case = result["switch_removed_case"].copy()
+            before_default = result["switch_removed_default"].copy()
             if path.stat().st_size > MAX_PACKAGE_BYTES:
                 raise ValueError("HWPX oracle package limit exceeded")
             try:
@@ -460,6 +506,11 @@ def main() -> None:
                         result["direct_paragraphs"] += direct
                         result["sections_without_direct_paragraph"] += direct == 0
                         inspect_text(section, "", result)
+                        section_switch_text_counts(section, result, shard)
+                    case_delta = [after - before for after, before in zip(result["switch_removed_case"], before_case)]
+                    default_delta = [after - before for after, before in zip(result["switch_removed_default"], before_default)]
+                    if any(case_delta) or any(default_delta):
+                        result["switch_text_files"].append({"root": root_index, "path": path.relative_to(root).as_posix(), "case": case_delta, "default": default_delta})
                     result["accepted"] += 1
                     shard["accepted"] += 1
             except BadZipFile:

@@ -1,5 +1,7 @@
 # HWPX 조건부 참조 분기 선택
 
+같은 선택 정책을 사용하는 텍스트 이벤트 경로는 [선택 분기 텍스트](hwpx-selected-section-text.md)에 별도 기록합니다. 이 문서는 이진·차트 참조 경계만 소유합니다.
+
 `Document.inspectSelectedReferences(allocator, options)`는 section의 `hp:switch`에서 **이진·차트 참조 검사에 한해** 같은 분기 선택 정책을 적용합니다. 기본 `inspectBinaryReferences`·`inspectChartReferences`와 `inspectKnown`은 기존대로 양쪽 분기를 모두 관측합니다. 반환 보고서의 이진·차트 결과는 각각 소유하므로 `deinit(allocator)`으로 함께 해제합니다. 이 API는 전체 선택 문서 모델·렌더링·편집·저장이 아닙니다.
 
 호출자가 `supported_namespaces`로 실제 해석 가능한 namespace URI를 명시합니다. 기본값은 빈 집합이므로 지원 기능을 버전 번호나 문서의 `required-namespace`에서 추정하지 않습니다. 정책과 URI 목록 검사는 `src/hwpx/compatibility_selection.zig` 한 곳에 두며 두 참조 스캐너가 재사용합니다. URI 최대 64개, 각 1~4096바이트, ASCII 공백 없는 값만 받습니다. 검사 API는 선택된 분기의 참조만 집계·해결하지만 **선택되지 않은 분기도 XML 문법·namespace 검사와 원문 바이트 한도의 대상**입니다.

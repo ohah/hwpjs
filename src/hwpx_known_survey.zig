@@ -13,6 +13,23 @@ fn addRunCounts(total: *[7]usize, values: [7]usize) void {
     for (values, 0..) |value, index| total[index] += value;
 }
 
+fn selectedTextFields(report: package.SectionTextReport) [5]usize {
+    var inline_elements: usize = 0;
+    for (report.inline_counts) |count| inline_elements += count;
+    return .{ report.paragraphs, report.runs, report.text_elements, report.text_bytes, inline_elements };
+}
+
+fn removedTextFields(raw: package.SectionTextReport, selected: package.SectionTextReport) ![5]usize {
+    const before = selectedTextFields(raw);
+    const after = selectedTextFields(selected);
+    var removed: [5]usize = undefined;
+    for (&removed, before, after) |*slot, original, retained| {
+        try std.testing.expect(original >= retained);
+        slot.* = original - retained;
+    }
+    return removed;
+}
+
 const TopologyStats = struct {
     runs: usize = 0,
     non_direct: usize = 0,
@@ -135,6 +152,8 @@ const Statistics = struct {
     master_page_number_sum: u64,
     master_page_count_declarations: usize,
     master_page_type_counts: [5]usize,
+    switch_removed_case: [5]usize,
+    switch_removed_default: [5]usize,
 };
 
 const Outcome = union(enum) {
@@ -159,6 +178,8 @@ fn inspectOne(bytes: []const u8) !Outcome {
         return err;
     };
     defer known.deinit(a);
+    var switch_removed_case: [5]usize = @splat(0);
+    var switch_removed_default: [5]usize = @splat(0);
     if (known.run_topology.switches.switches != 0) {
         const chart_namespace = "http://www.hancom.co.kr/hwpml/2016/ooxmlchart";
         const case_charts = known.run_topology.switches.case_chart_children;
@@ -171,6 +192,10 @@ fn inspectOne(bytes: []const u8) !Outcome {
         try std.testing.expectEqual(known.binary_references.counts(.section_ole).sites, fallback.binary.counts(.section_ole).sites);
         try std.testing.expectEqual(known.chart_references.chart_sites, case_branch.chart.chart_sites);
         try std.testing.expectEqual(known.binary_references.counts(.section_ole).sites, case_branch.binary.counts(.section_ole).sites + default_oles);
+        const fallback_text = try document.inspectSelectedSectionText(a, .{}, &.{}, null);
+        const chart_text = try document.inspectSelectedSectionText(a, .{}, &.{chart_namespace}, null);
+        switch_removed_case = try removedTextFields(known.section_text, fallback_text);
+        switch_removed_default = try removedTextFields(known.section_text, chart_text);
     }
     try std.testing.expectEqual(document.archive.entries.len, known.payload_integrity.validated_entries);
     try std.testing.expectEqual(document.archive.entries.len, known.payload_integrity.manifested_entries + known.payload_integrity.unmanifested_entries.len);
@@ -338,6 +363,8 @@ fn inspectOne(bytes: []const u8) !Outcome {
         .master_page_number_sum = master_page_number_sum,
         .master_page_count_declarations = known.master_pages.count_declarations.len,
         .master_page_type_counts = master_type_counts,
+        .switch_removed_case = switch_removed_case,
+        .switch_removed_default = switch_removed_default,
     } };
 }
 
@@ -389,6 +416,8 @@ fn surveyShard(shard: usize) !void {
     var master_page_number_sum: u64 = 0;
     var master_page_count_declarations: usize = 0;
     var master_page_type_counts: [5]usize = @splat(0);
+    var switch_removed_case: [5]usize = @splat(0);
+    var switch_removed_default: [5]usize = @splat(0);
     for (roots, 0..) |root, root_index| {
         const dir = try std.Io.Dir.cwd().openDir(std.testing.io, root, .{ .iterate = true });
         defer dir.close(std.testing.io);
@@ -409,6 +438,10 @@ fn surveyShard(shard: usize) !void {
                 .rejected_zip => rejected_zip += 1,
                 .encrypted => encrypted += 1,
                 .accepted => |stats| {
+                    const has_captioned_switch = root_index == 1 and std.mem.eql(u8, entry.path, "issue2006/1790387_prep_final_report.hwpx");
+                    const expected_removed: [5]usize = if (has_captioned_switch) .{ 2, 2, 2, 173, 0 } else @splat(0);
+                    try std.testing.expectEqualSlices(usize, &expected_removed, &stats.switch_removed_case);
+                    try std.testing.expectEqualSlices(usize, &expected_removed, &stats.switch_removed_default);
                     sections += stats.sections;
                     paragraphs += stats.paragraphs;
                     missing_id += stats.missing_id;
@@ -451,6 +484,8 @@ fn surveyShard(shard: usize) !void {
                     master_page_number_sum += stats.master_page_number_sum;
                     master_page_count_declarations += stats.master_page_count_declarations;
                     for (stats.master_page_type_counts, 0..) |value, i| master_page_type_counts[i] += value;
+                    for (stats.switch_removed_case, 0..) |value, i| switch_removed_case[i] += value;
+                    for (stats.switch_removed_default, 0..) |value, i| switch_removed_default[i] += value;
                     accepted += 1;
                 },
             }
@@ -517,6 +552,8 @@ fn surveyShard(shard: usize) !void {
     try std.testing.expectEqualSlices(usize, &expected.master_run_topology_classes[shard], &master_run_topology.classes);
     try std.testing.expectEqualSlices(u64, &expected.section_switch_shape[shard], &section_run_topology.switches);
     try std.testing.expectEqualSlices(u64, &expected.master_switch_shape[shard], &master_run_topology.switches);
+    try std.testing.expectEqualSlices(usize, &expected.switch_removed_case[shard], &switch_removed_case);
+    try std.testing.expectEqualSlices(usize, &expected.switch_removed_default[shard], &switch_removed_default);
     try std.testing.expectEqualSlices(usize, &expected.section_text_nodes[shard], &section_text_nodes.counts);
     try std.testing.expectEqualSlices(usize, &expected.master_text_nodes[shard], &master_text_nodes.counts);
     try std.testing.expectEqualSlices(usize, &expected.section_text_child_classes[shard], &section_text_nodes.classes);

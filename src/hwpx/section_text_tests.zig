@@ -11,6 +11,14 @@ const prefix = "<s:sec xmlns:s=\"http://www.hancom.co.kr/hwpml/2011/section\" xm
 const suffix = "</s:sec>";
 
 fn inspect(a: std.mem.Allocator, section: []const u8, options: package.SectionTextOptions, visitor: ?package.SectionTextVisitor) !package.SectionTextReport {
+    return inspectMode(a, section, options, null, visitor);
+}
+
+fn inspectSelected(a: std.mem.Allocator, section: []const u8, options: package.SectionTextOptions, supported_namespaces: []const []const u8, visitor: ?package.SectionTextVisitor) !package.SectionTextReport {
+    return inspectMode(a, section, options, supported_namespaces, visitor);
+}
+
+fn inspectMode(a: std.mem.Allocator, section: []const u8, options: package.SectionTextOptions, supported_namespaces: ?[]const []const u8, visitor: ?package.SectionTextVisitor) !package.SectionTextReport {
     const sources = [_]fixture.Source{
         .{ .name = "mimetype", .data = package.mime },
         .{ .name = "META-INF/container.xml", .data = fixture.package_container },
@@ -22,6 +30,7 @@ fn inspect(a: std.mem.Allocator, section: []const u8, options: package.SectionTe
     defer a.free(bytes);
     var document = try package.inspectDocument(a, bytes, .{});
     defer document.deinit(a);
+    if (supported_namespaces) |supported| return document.inspectSelectedSectionText(a, options, supported, visitor);
     return document.inspectSectionText(a, options, visitor);
 }
 
@@ -254,4 +263,90 @@ test "HWPX section text cleans up on every allocation failure" {
             _ = try inspect(a, bytes, .{}, null);
         }
     }.run, .{source});
+}
+
+test "HWPX selected section text chooses one nested branch without changing raw events" {
+    const source = prefix ++ "<p:p><p:run><p:t>before</p:t><p:switch>" ++
+        "<p:case p:required-namespace='urn:outer'><p:p><p:run><p:switch>" ++
+        "<p:case p:required-namespace='urn:inner'><p:t>inner<p:tab/></p:t></p:case>" ++
+        "<p:default><p:t>fallback<p:lineBreak/></p:t></p:default></p:switch></p:run></p:p></p:case>" ++
+        "<p:default><p:p><p:run><p:t>outer-default</p:t></p:run></p:p></p:default>" ++
+        "</p:switch><p:t>after</p:t></p:run></p:p>" ++ suffix;
+    const Capture = struct {
+        a: std.mem.Allocator,
+        bytes: std.ArrayList(u8) = .empty,
+        fn deinit(self: *@This()) void {
+            self.bytes.deinit(self.a);
+        }
+        fn onEvent(raw: *anyopaque, event: package.SectionTextEvent) anyerror!void {
+            const self: *@This() = @ptrCast(@alignCast(raw));
+            if (event == .content) try self.bytes.appendSlice(self.a, event.content.bytes);
+        }
+    };
+    var raw: Capture = .{ .a = std.testing.allocator };
+    defer raw.deinit();
+    const raw_report = try inspect(std.testing.allocator, source, .{}, .{ .context = &raw, .on_event = Capture.onEvent });
+    try std.testing.expectEqualStrings("beforeinnerfallbackouter-defaultafter", raw.bytes.items);
+    try std.testing.expectEqual(@as(usize, 5), raw_report.text_elements);
+    try std.testing.expectEqual(@as(usize, 1), raw_report.inlineCount(.tab));
+    try std.testing.expectEqual(@as(usize, 1), raw_report.inlineCount(.line_break));
+
+    var default: Capture = .{ .a = std.testing.allocator };
+    defer default.deinit();
+    const default_report = try inspectSelected(std.testing.allocator, source, .{}, &.{}, .{ .context = &default, .on_event = Capture.onEvent });
+    try std.testing.expectEqualStrings("beforeouter-defaultafter", default.bytes.items);
+    try std.testing.expectEqual(@as(usize, 3), default_report.text_elements);
+    try std.testing.expectEqual(@as(usize, 0), default_report.inlineCount(.tab));
+    try std.testing.expectEqual(@as(usize, 0), default_report.inlineCount(.line_break));
+
+    var nested_default: Capture = .{ .a = std.testing.allocator };
+    defer nested_default.deinit();
+    const nested_default_report = try inspectSelected(std.testing.allocator, source, .{}, &.{"urn:outer"}, .{ .context = &nested_default, .on_event = Capture.onEvent });
+    try std.testing.expectEqualStrings("beforefallbackafter", nested_default.bytes.items);
+    try std.testing.expectEqual(@as(usize, 3), nested_default_report.text_elements);
+    try std.testing.expectEqual(@as(usize, 0), nested_default_report.inlineCount(.tab));
+    try std.testing.expectEqual(@as(usize, 1), nested_default_report.inlineCount(.line_break));
+
+    var both: Capture = .{ .a = std.testing.allocator };
+    defer both.deinit();
+    const both_report = try inspectSelected(std.testing.allocator, source, .{}, &.{ "urn:outer", "urn:inner" }, .{ .context = &both, .on_event = Capture.onEvent });
+    try std.testing.expectEqualStrings("beforeinnerafter", both.bytes.items);
+    try std.testing.expectEqual(@as(usize, 3), both_report.text_elements);
+    try std.testing.expectEqual(@as(usize, 1), both_report.inlineCount(.tab));
+    try std.testing.expectEqual(@as(usize, 0), both_report.inlineCount(.line_break));
+}
+
+test "HWPX selected section text isolates inactive limits and validates capabilities" {
+    const source = prefix ++ "<p:p><p:run><p:switch>" ++
+        "<p:case p:required-namespace='urn:feature'><p:t>too much text</p:t></p:case>" ++
+        "<p:default><p:t>X</p:t></p:default></p:switch></p:run></p:p>" ++ suffix;
+    const report = try inspectSelected(std.testing.allocator, source, .{ .text = .{ .max_text_bytes = 1, .max_text_elements = 1 } }, &.{}, null);
+    try std.testing.expectEqual(@as(usize, 1), report.text_bytes);
+    try std.testing.expectEqual(@as(usize, 1), report.text_elements);
+    try std.testing.expectError(error.LimitExceeded, inspectSelected(std.testing.allocator, source, .{ .text = .{ .max_text_bytes = 1 } }, &.{"urn:feature"}, null));
+    try std.testing.expectError(error.InvalidSupportedNamespace, inspectSelected(std.testing.allocator, source, .{}, &.{"urn:bad uri"}, null));
+    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+        fn run(a: std.mem.Allocator, bytes: []const u8) !void {
+            _ = try inspectSelected(a, bytes, .{}, &.{"urn:feature"}, null);
+        }
+    }.run, .{source});
+}
+
+test "HWPX selected section text keeps source-order default and ignores foreign switch" {
+    const source = prefix ++ "<p:p><p:run>" ++
+        "<x:switch><x:case p:required-namespace='urn:yes'><p:t>foreign</p:t></x:case></x:switch>" ++
+        "<p:switch><p:default><p:t>D</p:t></p:default>" ++
+        "<p:case p:required-namespace='urn:yes'><p:t>C</p:t></p:case></p:switch>" ++
+        "</p:run></p:p>" ++ suffix;
+    const report = try inspectSelected(std.testing.allocator, source, .{ .text = .{ .max_text_bytes = 8, .max_text_elements = 2 } }, &.{"urn:yes"}, null);
+    try std.testing.expectEqual(@as(usize, 2), report.text_elements);
+    try std.testing.expectEqual(@as(usize, 8), report.text_bytes);
+    try std.testing.expectError(error.LimitExceeded, inspect(std.testing.allocator, source, .{ .text = .{ .max_text_elements = 2 } }, null));
+}
+
+test "HWPX selected section text still rejects malformed XML inside inactive branch" {
+    const source = prefix ++ "<p:p><p:run><p:switch>" ++
+        "<p:case p:required-namespace='urn:unsupported'><p:t>&#x110000;</p:t></p:case>" ++
+        "<p:default><p:t>valid</p:t></p:default></p:switch></p:run></p:p>" ++ suffix;
+    try std.testing.expectError(error.XmlCharacterReferenceOutOfRange, inspectSelected(std.testing.allocator, source, .{}, &.{}, null));
 }

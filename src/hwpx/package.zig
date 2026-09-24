@@ -326,6 +326,14 @@ pub const Document = struct {
         return section_text.inspect(a, self.archive, self.manifest, structure.sections, options.text, visitor);
     }
 
+    /// Streams only text events in the branches supported by the caller.
+    /// The default inspectSectionText remains an all-branches raw view.
+    pub fn inspectSelectedSectionText(self: *const Document, a: std.mem.Allocator, options: SectionTextOptions, supported_namespaces: []const []const u8, visitor: ?SectionTextVisitor) !SectionTextReport {
+        var selected_options = options;
+        selected_options.text.branch_policy = .{ .mode = .selected, .supported_namespaces = supported_namespaces };
+        return self.inspectSectionText(a, selected_options, visitor);
+    }
+
     /// Materializes the exact package-selected, unencrypted header XML with
     /// every element indexed, including unknown extensions and raw source.
     pub fn readHeaderTree(self: *const Document, a: std.mem.Allocator, options: HeaderTreeOptions) !HeaderTree {

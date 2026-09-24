@@ -6,6 +6,10 @@ pub const encrypted = [_]usize{ 0, 0, 0, 0, 2, 0, 0, 0 };
 pub const sections = [_]usize{ 75, 72, 72, 53, 64, 62, 63, 83 };
 pub const paragraphs = [_]usize{ 28740, 20865, 20019, 11680, 44679, 24829, 23614, 40720 };
 pub const begin_present = [_]usize{ 60, 64, 53, 48, 58, 57, 54, 61 };
+// Raw minus selected section text: [paragraphs, runs, hp:t, UTF-8 bytes,
+// inline elements], independently counted in hwpx-section-text-oracle.py.
+pub const switch_removed_case = [_][5]usize{ @splat(0), @splat(0), @splat(0), .{ 2, 2, 2, 173, 0 }, @splat(0), @splat(0), @splat(0), @splat(0) };
+pub const switch_removed_default = switch_removed_case;
 // OPF application/xml census from tools/hwpx-manifest-xml-oracle.py.
 pub const manifest_xml_entries = [_]usize{ 213, 210, 200, 150, 183, 178, 178, 224 };
 pub const manifest_xml_bytes = [_]usize{ 34_898_756, 26_622_158, 26_901_093, 15_149_032, 35_375_005, 31_716_373, 28_854_349, 47_023_837 };
