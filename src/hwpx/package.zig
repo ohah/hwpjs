@@ -20,6 +20,7 @@ const document_trees = @import("document_trees.zig");
 const paragraph_metadata = @import("paragraph_metadata.zig");
 const run_metadata = @import("run_metadata.zig");
 const run_topology = @import("run_topology.zig");
+const text_node = @import("text_node.zig");
 const header_begin_numbers = @import("header_begin_numbers.zig");
 const document_known = @import("document_known.zig");
 const payload_integrity = @import("payload_integrity.zig");
@@ -113,6 +114,10 @@ pub const RunTopologyOptions = run_topology.Options;
 pub const RunTopologyReport = run_topology.Report;
 pub const RunTopologyChildClass = run_topology.ChildClass;
 pub const RunTopologyLocation = run_topology.Location;
+pub const TextNodeOptions = text_node.Options;
+pub const TextNodeReport = text_node.Report;
+pub const TextNodeChildClass = text_node.ChildClass;
+pub const TextNodeLocation = text_node.Location;
 pub const BeginNumberOptions = header_begin_numbers.Options;
 pub const BeginNumberReport = header_begin_numbers.Report;
 pub const BeginNumberField = header_begin_numbers.Field;
@@ -142,6 +147,10 @@ pub const MasterPageRunTopologyOptions = struct {
     master_pages: MasterPageOptions = .{},
     topology: run_topology.MasterOptions = .{},
 };
+pub const MasterPageTextNodeOptions = struct {
+    master_pages: MasterPageOptions = .{},
+    text_nodes: text_node.MasterOptions = .{},
+};
 pub const KnownOptions = struct {
     version: VersionOptions = .{},
     protection: ProtectionOptions = .{},
@@ -151,6 +160,7 @@ pub const KnownOptions = struct {
     master_pages: MasterPageOptions = .{},
     master_page_style_references: masterpage_style_references.Options = .{},
     master_page_run_topology: run_topology.MasterOptions = .{},
+    master_page_text_nodes: text_node.MasterOptions = .{},
     structure: StructureOptions = .{},
     header_resources: HeaderResourceOptions = .{},
     section_references: ReferenceOptions = .{},
@@ -164,6 +174,7 @@ pub const KnownOptions = struct {
     paragraph_metadata: ParagraphMetadataOptions = .{},
     run_metadata: RunMetadataOptions = .{},
     run_topology: RunTopologyOptions = .{},
+    text_nodes: TextNodeOptions = .{},
     begin_numbers: BeginNumberOptions = .{},
 };
 pub const DocumentOptions = struct {
@@ -230,6 +241,13 @@ pub const Document = struct {
         var pages = try self.inspectMasterPages(a, options.master_pages);
         defer pages.deinit(a);
         return run_topology.inspectMasterPages(a, self.archive, pages.parts.parts, options.topology);
+    }
+
+    /// Observes raw hp:t attributes and direct child names in selected master pages.
+    pub fn inspectMasterPageTextNodes(self: *const Document, a: std.mem.Allocator, options: MasterPageTextNodeOptions) !TextNodeReport {
+        var pages = try self.inspectMasterPages(a, options.master_pages);
+        defer pages.deinit(a);
+        return text_node.inspectMasterPages(a, self.archive, pages.parts.parts, options.text_nodes);
     }
 
     /// Runs all currently exposed HWPX inspections on this document. A

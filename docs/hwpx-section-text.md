@@ -12,6 +12,8 @@
 
 후속 [run 위치·자식 진단](hwpx-run-topology.md)은 section 텍스트 이벤트를 바꾸지 않고, 같은 `hp:run`의 직접 부모와 직접 자식·`secPr` 위치를 별도 보고서로 관측합니다. 두 보고서의 run 수·비직접 run 수는 실파일 검증에서 대조합니다.
 
+후속 [`hp:t` 원값·자식 진단](hwpx-text-nodes.md)은 선택적 `charStyleIDRef`와 직접 내부 요소를 별도 보고서로 관측합니다. section 텍스트 이벤트의 `t`·비직접 `t` 개수와 실파일 검증에서 대조합니다.
+
 ## 검증
 
 단위·통합 테스트는 참조·CDATA와 제어 요소 사이의 순서, 속성 접근의 콜백 수명, 8종 분류, namespace 위장, 미분류·중첩 요소, 중첩 문단 순번, 정확한 한도, 콜백 오류 뒤 재시도, 전 할당 실패 경로를 확인합니다. 실파일 선택 조사는 `zig test src/hwpx_structure_survey.zig -O ReleaseFast --test-filter 'HWPX corpus section text and inline token read-only survey'`로 실행합니다. 독립 oracle `python3 tools/hwpx-section-text-oracle.py`는 Python 표준 ZIP/XML 파서로 OPF spine을 따라가며 제품 코드를 사용하지 않습니다. 두 조사의 corpus 의존성은 [개발·검증 명령](development-commands.md)을 따릅니다.

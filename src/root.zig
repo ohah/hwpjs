@@ -24,6 +24,7 @@ test {
     _ = @import("hwpx/paragraph_metadata_tests.zig");
     _ = @import("hwpx/run_metadata_tests.zig");
     _ = @import("hwpx/run_topology_tests.zig");
+    _ = @import("hwpx/text_node_tests.zig");
     _ = @import("hwpx/header_begin_numbers_tests.zig");
     _ = @import("hwpx/document_known_tests.zig");
     _ = @import("hwpx/payload_integrity_tests.zig");

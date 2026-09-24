@@ -36,6 +36,11 @@ RUN_MODEL_CHILDREN = frozenset((
     "comboBox", "listBox", "edit", "scrollBar", "video", "markpenBegin",
     "markpenEnd", "chart", "unknownObj",
 ))
+TEXT_MODEL_CHILDREN = frozenset((
+    "markpenBegin", "markpenEnd", "titleMark", "tab", "lineBreak",
+    "hypen", "nbSpace", "fwSpace", "chval", "insertBegin",
+    "insertEnd", "deleteBegin", "deleteEnd", "unknownch",
+))
 MAX_PACKAGE_BYTES = 25_000_000
 MAX_ENTRY_BYTES = 128 * 1024 * 1024
 MAX_TOTAL_BYTES = 256 * 1024 * 1024
@@ -67,6 +72,9 @@ def empty():
                 section_run_secpr_non_first=0, master_run_secpr_non_first=0,
                 section_run_children={}, master_run_children={},
                 section_run_child_classes=[0] * 5, master_run_child_classes=[0] * 5,
+                section_text_nodes=[0] * 6, master_text_nodes=[0] * 6,
+                section_text_children={}, master_text_children={},
+                section_text_child_classes=[0] * 4, master_text_child_classes=[0] * 4,
                 master_page_number_sum=0,
                 master_type_counts=[0] * len(MASTER_KINDS),
                 master_manifest_id_mismatch=0, master_refs=0,
@@ -108,6 +116,26 @@ def count_run_structure(shard, prefix, run, parent):
             classes[0 if local in RUN_MODEL_CHILDREN else 1 if local == "bookmark" else 2 if local == "switch" else 3] += 1
         else:
             classes[4] += 1
+
+
+def count_text_node(shard, prefix, node, parent):
+    counts = shard[prefix + "_text_nodes"]
+    counts[0] += 1
+    counts[1] += parent.tag != PARA + "run"
+    raw = node.get("charStyleIDRef")
+    counts[2] += raw is None
+    counts[3] += raw is not None and int(raw) == 0
+    counts[4] += raw is not None and int(raw) > 0xFFFFFFFF
+    counts[5] += sum(child.tag not in {PARA + name for name in TEXT_MODEL_CHILDREN} for child in node)
+    names = shard[prefix + "_text_children"]
+    classes = shard[prefix + "_text_child_classes"]
+    for child in node:
+        names[child.tag] = names.get(child.tag, 0) + 1
+        if child.tag.startswith(PARA):
+            local = child.tag[len(PARA):]
+            classes[0 if local in TEXT_MODEL_CHILDREN else 1 if local == "hyphen" else 2] += 1
+        else:
+            classes[3] += 1
 
 
 def main():
@@ -240,6 +268,8 @@ def main():
                                         master_style_values[2].append(node.get("charPrIDRef"))
                                         count_run_metadata(shard["master_run_metadata"], node)
                                         count_run_structure(shard, "master", node, parent)
+                                    elif node.tag == PARA + "t":
+                                        count_text_node(shard, "master", node, parent)
                                     for nested in node:
                                         visit_style(nested, node)
                                 for direct in child:
@@ -252,6 +282,8 @@ def main():
                                     if run.tag == PARA + "run":
                                         count_run_metadata(shard["section_run_metadata"], run)
                                         count_run_structure(shard, "section", run, parent)
+                                    elif run.tag == PARA + "t":
+                                        count_text_node(shard, "section", run, parent)
                     for ref in master_refs:
                         shard["master_refs"] += 1
                         if not ref:

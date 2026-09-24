@@ -14,7 +14,9 @@
 
 [run 위치·직접 자식 진단](hwpx-run-topology.md)은 section·마스터페이지 결과를 별도로 반환합니다. 공개 모델 미등록 자식이나 늦은 `secPr`는 즉시 문서 오류로 거부하지 않습니다.
 
-`Document.inspectKnown(allocator, options)`는 같은 패키지 문서에 현재 공개된 개별 검사를 순서대로 적용하고 `KnownReport`를 반환합니다. ZIP/OCF/OPF 관계는 선행 `inspectDocument`가 검사합니다. 이 API는 보호 manifest를 먼저 확인한 뒤 [모든 ZIP 엔트리 바이트 무결성](hwpx-payload-integrity.md), [OPF 선언 XML 전수 문법 검사](hwpx-manifest-xml.md), version XML, header·spine 구조, header 리소스 ID, section/헤더 서식 참조, 언어별 글꼴, 번호·글머리표, 이진 리소스 연결, 차트 경로·캐시·수식 구조, section 텍스트 이벤트, 문단·run 메타 속성, run 위치·자식 진단, header 시작 번호의 기존 보고서를 묶습니다. 같은 이름의 파서나 참조 규칙을 새로 만들지 않고 `Document`의 각 진입점을 호출합니다.
+[`hp:t` 원값·직접 자식 진단](hwpx-text-nodes.md)도 두 범위의 별도 보고서를 반환합니다. 선택적 `charStyleIDRef`의 부재와 값, 모델/XSD 표기 차이를 보존하며 표시 텍스트를 합성하지 않습니다.
+
+`Document.inspectKnown(allocator, options)`는 같은 패키지 문서에 현재 공개된 개별 검사를 순서대로 적용하고 `KnownReport`를 반환합니다. ZIP/OCF/OPF 관계는 선행 `inspectDocument`가 검사합니다. 이 API는 보호 manifest를 먼저 확인한 뒤 [모든 ZIP 엔트리 바이트 무결성](hwpx-payload-integrity.md), [OPF 선언 XML 전수 문법 검사](hwpx-manifest-xml.md), version XML, header·spine 구조, header 리소스 ID, section/헤더 서식 참조, 언어별 글꼴, 번호·글머리표, 이진 리소스 연결, 차트 경로·캐시·수식 구조, section 텍스트 이벤트, 문단·run 메타 속성, run·text 자식 진단, header 시작 번호의 기존 보고서를 묶습니다. 같은 이름의 파서나 참조 규칙을 새로 만들지 않고 `Document`의 각 진입점을 호출합니다.
 
 반환 보고서는 소유 문자열·배열을 `deinit(allocator)`으로 해제합니다. 원본 `Document`·ZIP 바이트를 해제해도 보고서의 소유 값은 유효하지만 manifest item 인덱스를 파일 경로로 역참조하려면 원본 문서가 필요합니다. 암호화된 항목이 보호 manifest에 있으면 `EncryptedDocument`로 멈추며, 암호화 분류만 필요하면 기존 `inspectProtection`을 사용합니다. 구조·서식 참조·차트 등의 미해결 항목은 해당 보고서의 진단값으로 남습니다. `inspectKnown`의 성공은 이 진단값이 모두 0이거나 **전체 문서가 유효하다는 뜻이 아닙니다.**
 
@@ -53,3 +55,5 @@
 후속 [run 변경 추적 ID 원값](hwpx-run-metadata.md) 단계에서는 전체 Debug 테스트 2,237개와 선택 실파일 8개 shard가 통과했습니다. section과 마스터페이지의 동일 필드 판정을 공유하지만 corpus에서는 해당 속성 출현이 0건이므로, 명시적 값·충돌 정책은 합성 테스트만 뒷받침합니다. 변경 추적 의미·부모/자식 구조·편집/저장은 미검증입니다.
 
 후속 [run 위치·직접 자식 진단](hwpx-run-topology.md) 단계에서는 전체 Debug 테스트 2,243개와 선택 실파일 8개 shard가 통과했습니다. 실파일의 늦은 `secPr` 및 공개 모델 미등록 자식도 별도 범주로 대조했으며, run 자식의 의미·중첩 스키마·편집/저장은 계속 미검증입니다.
+
+후속 [`hp:t` 원값·직접 자식 진단](hwpx-text-nodes.md) 단계에서는 전체 Debug 테스트 2,248개, ReleaseSafe 전체 audit 40단계·2,287개 테스트 및 선택 실파일 8개 shard가 통과했습니다. 32비트 초과 원값도 독립 oracle에 별도 집계했으며, `t` 내부 자식의 속성·의미와 편집/저장은 여전히 미검증입니다.

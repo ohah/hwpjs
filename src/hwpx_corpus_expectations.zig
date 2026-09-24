@@ -97,6 +97,32 @@ pub const master_run_topology_classes = [_][5]usize{
 pub const section_run_topology_sec_pr = [_]usize{ 75, 72, 72, 55, 64, 62, 63, 92 };
 pub const section_run_topology_late_sec_pr = [_]usize{ 3, 3, 4, 1, 3, 3, 0, 15 };
 pub const zero_run_topology = [_]usize{0} ** 8;
+// Text node: [total, non-direct, missing charStyleIDRef, zero, over u32, child not in model].
+pub const section_text_nodes = [_][6]usize{
+    .{ 32422, 0, 32294, 0, 0, 0 }, .{ 25613, 0, 25612, 0, 0, 0 },
+    .{ 23399, 0, 23285, 0, 0, 0 }, .{ 12239, 0, 12170, 0, 0, 0 },
+    .{ 40502, 0, 40502, 0, 0, 0 }, .{ 28164, 0, 28161, 0, 0, 0 },
+    .{ 25879, 0, 25829, 0, 0, 0 }, .{ 42459, 0, 42278, 0, 0, 0 },
+};
+pub const master_text_nodes = [_][6]usize{
+    .{ 71, 0, 71, 0, 0, 0 },   .{ 33, 0, 33, 0, 0, 0 },
+    .{ 114, 0, 114, 0, 0, 0 }, .{ 0, 0, 0, 0, 0, 0 },
+    .{ 0, 0, 0, 0, 0, 0 },     .{ 0, 0, 0, 0, 0, 0 },
+    .{ 24, 0, 24, 0, 0, 0 },   .{ 129, 0, 129, 0, 0, 0 },
+};
+// [Hancom model, 2011 XSD-only hyphen, other 2011, foreign].
+pub const section_text_child_classes = [_][4]usize{
+    .{ 1760, 0, 0, 0 }, .{ 2153, 0, 0, 0 },
+    .{ 2003, 0, 0, 0 }, .{ 331, 0, 0, 0 },
+    .{ 1647, 0, 0, 0 }, .{ 2862, 0, 0, 0 },
+    .{ 671, 0, 0, 0 },  .{ 3828, 0, 0, 0 },
+};
+pub const master_text_child_classes = [_][4]usize{
+    .{ 20, 0, 0, 0 }, .{ 9, 0, 0, 0 },
+    .{ 31, 0, 0, 0 }, .{ 0, 0, 0, 0 },
+    .{ 0, 0, 0, 0 },  .{ 0, 0, 0, 0 },
+    .{ 9, 0, 0, 0 },  .{ 9, 0, 0, 0 },
+};
 pub const master_page_number_sum = [_]u64{ 0, 0, 4, 0, 0, 0, 0, 0 };
 pub const master_page_count_declarations = [_]usize{ 75, 72, 72, 55, 64, 62, 63, 92 };
 pub const master_page_type_counts = [_][5]usize{

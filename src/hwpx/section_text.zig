@@ -6,6 +6,7 @@ const document_xml = @import("document_xml.zig");
 const content_manifest = @import("content_manifest.zig");
 const document_structure = @import("document_structure.zig");
 const namespace_profile = @import("namespace_profile.zig");
+const text_child_names = @import("text_child_names.zig");
 
 pub const InlineKind = enum(u8) {
     tab,
@@ -117,17 +118,18 @@ const Node = struct {
 };
 
 fn inlineKind(tag: xml.tags.Tag, scope: *const xml.namespaces.State) !InlineKind {
-    const name = try scope.expandElement(tag.name);
-    if (!std.mem.eql(u8, name.uri, document_xml.paragraph_uri)) return .unknown;
-    if (name.local.equals("tab", false)) return .tab;
-    if (name.local.equals("fwSpace", false)) return .fw_space;
-    if (name.local.equals("nbSpace", false)) return .nb_space;
-    if (name.local.equals("lineBreak", false)) return .line_break;
-    if (name.local.equals("titleMark", false)) return .title_mark;
-    if (name.local.equals("markpenBegin", false)) return .markpen_begin;
-    if (name.local.equals("markpenEnd", false)) return .markpen_end;
-    if (name.local.equals("hypen", false)) return .hypen;
-    return .unknown;
+    const model = try text_child_names.modelKind(tag, scope) orelse return .unknown;
+    return switch (model) {
+        .tab => .tab,
+        .fw_space => .fw_space,
+        .nb_space => .nb_space,
+        .line_break => .line_break,
+        .title_mark => .title_mark,
+        .markpen_begin => .markpen_begin,
+        .markpen_end => .markpen_end,
+        .hypen => .hypen,
+        else => .unknown,
+    };
 }
 
 fn otherContentKind(tag: xml.tags.Tag, scope: *const xml.namespaces.State) !OtherContentKind {
