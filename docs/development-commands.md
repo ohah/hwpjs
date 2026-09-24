@@ -8,6 +8,8 @@
 
 [표 셀 직접 subList](hwpx-table-cell-sublists.md)는 `zig test src/root.zig --test-filter 'HWPX cell subLists'`로 합성·오류·한도·할당 실패를, 위의 `HWPX known inspections include table geometry`로 전체 문서 연결을 확인합니다. 같은 known survey 8개 shard에서 독립 Python 조사기의 목록·직접 문단·속성 분포를 대조합니다.
 
+[표 자체 속성](hwpx-table-attributes.md)은 `zig test src/root.zig --test-filter 'HWPX table attributes'`로 합성·오류·할당 실패를 확인합니다. 독립 `python3 tools/hwpx-table-oracle.py --self-test` 및 인자 없는 corpus 집계와 위 known survey 8개 shard를 대조합니다. 특히 표 `borderFillIDRef=0`의 미해결 5건을 셀 참조 결과와 혼동하지 않습니다.
+
 [선택 분기 section 텍스트](hwpx-selected-section-text.md)의 합성 검사는 `zig test src/root.zig --test-filter 'HWPX selected section text'`로 실행합니다. 조건부 분기가 있는 실파일의 텍스트 보존 대조는 같은 known survey 8개 shard에 포함됩니다.
 
 [선택 분기 서식 참조](hwpx-selected-style-references.md)는 `zig test src/root.zig --test-filter 'HWPX selected style references'`로 합성·할당 실패를 검사합니다. 실파일의 선택 텍스트·서식 참조 교차 대조는 위 known survey 8개 shard를 별도 프로세스로 실행합니다.

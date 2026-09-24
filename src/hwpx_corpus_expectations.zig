@@ -10,6 +10,17 @@ pub const table_rows = [_]usize{ 3699, 3758, 2398, 1859, 1879, 2489, 2386, 5240 
 pub const table_cells = [_]usize{ 15695, 10688, 11205, 7236, 13414, 10994, 17716, 20050 };
 pub const table_grid_slots = [_]usize{ 27616, 28955, 20479, 12530, 18609, 19013, 23619, 36665 };
 pub const table_cell_slots = table_grid_slots;
+// Direct hp:tbl scalar census, independent of cell fields and grid dimensions.
+pub const table_page_break_cell = [_]usize{ 710, 275, 318, 295, 188, 342, 290, 734 };
+pub const table_page_break_none = [_]usize{ 153, 88, 117, 65, 112, 70, 63, 336 };
+pub const table_page_break_table = [_]usize{ 7, 1, 1, 1, 0, 9, 2, 5 };
+pub const table_repeat_header_true = [_]usize{ 832, 342, 398, 304, 295, 345, 337, 1064 };
+pub const table_no_adjust_true = [_]usize{ 111, 62, 106, 46, 50, 81, 69, 150 };
+pub const table_cell_spacing_zero = [_]usize{ 870, 364, 436, 361, 300, 421, 355, 1039 };
+pub const table_cell_spacing_sum = [_]u64{ 0, 0, 0, 0, 0, 0, 0, 9066 };
+pub const table_border_zero = [_]usize{ 0, 0, 0, 0, 0, 0, 0, 5 };
+pub const table_border_sum = [_]u64{ 4399, 2033, 4281, 4428, 3525, 3117, 3698, 70374 };
+pub const table_border_missing_target = table_border_zero;
 // Raw cellSz/cellMargin/hasMargin census from tools/hwpx-table-oracle.py.
 // Field order is table_cell_fields.size_names and margin_names.
 pub const table_has_margin_true = [_]usize{ 1653, 1427, 1320, 482, 5812, 2321, 1444, 1146 };

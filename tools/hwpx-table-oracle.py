@@ -155,6 +155,29 @@ def inspect_metrics(cell, stats, border_ids):
 
 def inspect_table(table, stats, samples, path, border_ids=None):
     stats["tables"] += 1
+    page_break = table.get("pageBreak")
+    stats["table_pageBreak_absent"] += page_break is None
+    if page_break is not None:
+        stats[f"table_pageBreak_{page_break if page_break in ('NONE', 'TABLE', 'CELL') else 'unknown'}"] += 1
+    for flag in ("repeatHeader", "noAdjust"):
+        value = optional_bool(table, flag)
+        stats[f"table_{flag}_absent"] += value is None
+        stats[f"table_{flag}_true"] += value is True
+        stats[f"table_{flag}_false"] += value is False
+    spacing = optional_int(table, "cellSpacing")
+    stats["table_cellSpacing_absent"] += spacing is None
+    if spacing is not None:
+        stats["table_cellSpacing_zero"] += spacing == 0
+        stats["table_cellSpacing_sum"] += spacing
+    border_ref = optional_int(table, "borderFillIDRef")
+    stats["table_border_absent"] += border_ref is None
+    if border_ref is not None:
+        stats["table_border_zero"] += border_ref == 0
+        stats["table_border_sum"] += border_ref
+    stats["table_border_ref_absent_table"] += border_ref is not None and border_ids is None
+    stats["table_border_ref_resolved"] += border_ref is not None and border_ids is not None and border_ref in border_ids
+    stats["table_border_ref_missing_target"] += border_ref is not None and border_ids is not None and border_ref not in border_ids
+    stats["table_border_ref_missing_zero"] += border_ref == 0 and border_ids is not None and border_ref not in border_ids
     rows = [child for child in table if child.tag == P + "tr"]
     declared_rows = optional_int(table, "rowCnt")
     declared_cols = optional_int(table, "colCnt")
@@ -273,6 +296,7 @@ def self_test():
         ("<p:tbl rowCnt='1' colCnt='1'><p:tr><p:tc name='A&amp;B' header='true' protect='false' editable='1' dirty='0' borderFillIDRef='4294967295'/></p:tr></p:tbl>", {"name_present": 1, "name_utf8_bytes": 3, "header_true": 1, "protect_false": 1, "editable_true": 1, "dirty_false": 1, "border_sum": 4294967295}),
         ("<p:tbl rowCnt='1' colCnt='2'><p:tr><p:tc/><p:tc name='' header='false' borderFillIDRef='0'/></p:tr></p:tbl>", {"name_absent": 1, "name_present": 1, "name_empty": 1, "header_absent": 1, "header_false": 1, "border_absent": 1, "border_zero": 1}),
         ("<p:tbl rowCnt='1' colCnt='1'><p:tr><p:tc><p:subList textDirection='FUTURE' textWidth='12' hasTextRef='true'><p:p/><p:future/></p:subList><p:subList/></p:tc></p:tr></p:tbl>", {"sublists": 2, "sublist_duplicate_cells": 1, "sublist_direct_paragraphs": 1, "sublist_other_direct": 1, "sublist_unknown_enums": 1, "sublist_textWidth_sum": 12, "sublist_hasTextRef_true": 1, "sublist_empty": 1}),
+        ("<p:tbl rowCnt='1' colCnt='0' pageBreak='FUTURE' repeatHeader='1' noAdjust='false' cellSpacing='12' borderFillIDRef='0'><p:tr/></p:tbl>", {"tables": 1, "table_pageBreak_unknown": 1, "table_repeatHeader_true": 1, "table_noAdjust_false": 1, "table_cellSpacing_sum": 12, "table_border_zero": 1, "table_border_ref_absent_table": 1}),
     )
     for source, expected in cases:
         stats = Counter()
@@ -299,6 +323,11 @@ def self_test():
     inspect_table(reference, missing_group, [], "self-test")
     if missing_group["border_ref_absent_table"] != 3 or missing_group["border_ref_absent"] != 1:
         raise AssertionError("missing header table was treated as an empty ID inventory")
+    zero_table_ref = ET.fromstring("<p:tbl xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph' rowCnt='0' colCnt='0' borderFillIDRef='0'/>")
+    zero_stats = Counter()
+    inspect_table(zero_table_ref, zero_stats, [], "self-test", {7})
+    if zero_stats["table_border_ref_missing_target"] != 1 or zero_stats["table_border_ref_missing_zero"] != 1:
+        raise AssertionError("table border ID zero was treated as absent or resolved")
     incomplete = ET.fromstring("<p:tbl xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph' rowCnt='1' colCnt='1'><p:tr><p:tc><p:cellSpan rowSpan='-1' colSpan='1'/></p:tc></p:tr></p:tbl>")
     try:
         inspect_table(incomplete, Counter(), [], "self-test")

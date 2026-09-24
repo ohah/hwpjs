@@ -21,6 +21,7 @@ test "HWPX table geometry counts direct rows cells and merged occupancy" {
     const report = try inspectXml(a, body, .{});
     try std.testing.expectEqual(@as(usize, 1), report.sections);
     try std.testing.expectEqual(@as(usize, 2), report.tables);
+    try std.testing.expectEqual(@as(usize, 2), report.table_attributes.tables);
     try std.testing.expectEqual(@as(usize, 3), report.rows);
     try std.testing.expectEqual(@as(usize, 4), report.cells);
     try std.testing.expectEqual(@as(usize, 5), report.grid_slots);

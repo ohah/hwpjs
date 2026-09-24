@@ -4,6 +4,22 @@ const tree_mod = @import("xml_part_tree.zig");
 const document_xml = @import("document_xml.zig");
 const values = @import("xml_values.zig");
 
+pub const BooleanCounts = struct {
+    absent: usize = 0,
+    false_value: usize = 0,
+    true_value: usize = 0,
+};
+
+pub fn noteBoolean(a: std.mem.Allocator, raw: ?xml.attribute_value.Value, max_bytes: usize, counts: *BooleanCounts) !?bool {
+    const present = raw orelse {
+        counts.absent += 1;
+        return null;
+    };
+    const value = try boolean(a, present, max_bytes);
+    if (value) counts.true_value += 1 else counts.false_value += 1;
+    return value;
+}
+
 pub fn childIs(tree: *const tree_mod.Tree, index: usize, local: []const u8) bool {
     return tree.elements[index].is(document_xml.paragraph_uri, local);
 }

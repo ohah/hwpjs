@@ -32,6 +32,7 @@ test {
     _ = @import("hwpx/document_known_tests.zig");
     _ = @import("hwpx/table_geometry_tests.zig");
     _ = @import("hwpx/table_cell_fields_tests.zig");
+    _ = @import("hwpx/table_attributes_tests.zig");
     _ = @import("hwpx/table_cell_sub_lists_tests.zig");
     _ = @import("hwpx/payload_integrity_tests.zig");
     _ = @import("hwpx/manifest_xml_tests.zig");

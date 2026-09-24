@@ -42,6 +42,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [표 격자 구조](hwpx-table-geometry.md)는 소유 XML 트리 위에서 표·행·셀 주소와 병합 범위의 점유를 진단합니다. 셀 내용·서식·레이아웃·편집은 별도 후속 계층입니다.
 
+[표 자체 속성](hwpx-table-attributes.md)은 격자가 고른 `hp:tbl`에서 열거형·Boolean·수치 원값을 읽고, 전체 문서 경로에서만 기존 header 테두리 ID 색인에 연결합니다. 표 크기·행열 격자 정책과 셀 속성 판정은 중복하지 않습니다.
+
 [표 셀 크기·여백·속성·테두리 참조](hwpx-table-cell-fields.md)는 같은 직접 셀 선택을 재사용해 크기·여백·속성의 표기를 구분합니다. 전체 문서 검사에서만 이미 읽은 header 리소스 ID 목록을 주입해 공통 참조 판정기에 연결합니다. 음수 여백과 상위 비트 값의 화면상 해석은 확정하지 않습니다.
 
 [표 셀 직접 subList](hwpx-table-cell-sublists.md)는 같은 셀 선택에서 목록 경계·직접 문단을 세고 [ParaListType](hwpx-para-list.md)의 필드 판정을 색인된 section 트리에 재사용합니다. 문단 메타 값은 기존 section 전체 검사가 소유하며 셀 본문의 의미 조립은 아직 별도 단계입니다.

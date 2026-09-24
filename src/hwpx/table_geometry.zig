@@ -3,6 +3,7 @@ const tree_mod = @import("xml_part_tree.zig");
 const document_xml = @import("document_xml.zig");
 const table_fields = @import("table_xml_fields.zig");
 const cell_fields = @import("table_cell_fields.zig");
+const table_attributes = @import("table_attributes.zig");
 const cell_sub_lists = @import("table_cell_sub_lists.zig");
 const header_resources = @import("header_resources.zig");
 
@@ -41,6 +42,7 @@ pub const Report = struct {
     overlaps: usize = 0,
     uncovered_slots: usize = 0,
     cell_fields: cell_fields.Report = .{},
+    table_attributes: table_attributes.Report = .{},
     cell_sub_lists: cell_sub_lists.Report = .{},
 };
 
@@ -83,6 +85,7 @@ fn inspectCell(a: std.mem.Allocator, tree: *const tree_mod.Tree, cell: usize, ro
 fn inspectTable(a: std.mem.Allocator, tree: *const tree_mod.Tree, table: usize, options: Options, border_fills: ?*const header_resources.Table, report: *Report) !void {
     if (report.tables == options.max_tables) return error.LimitExceeded;
     report.tables += 1;
+    try table_attributes.inspectTable(a, tree, table, options.max_attribute_bytes, border_fills, &report.table_attributes);
     const rows = try table_fields.optionalUnsigned(a, tree, table, "rowCnt", options.max_attribute_bytes);
     const cols = try table_fields.optionalUnsigned(a, tree, table, "colCnt", options.max_attribute_bytes);
     if (rows == null) report.missing_row_count += 1;
@@ -133,6 +136,7 @@ pub fn inspect(a: std.mem.Allocator, sections: []const tree_mod.Tree, options: O
 pub fn inspectWithBorderFills(a: std.mem.Allocator, sections: []const tree_mod.Tree, options: Options, border_fills: ?*const header_resources.Table) !Report {
     var report: Report = .{};
     report.cell_fields.border_fill_references_checked = border_fills != null;
+    report.table_attributes.border_fill_references_checked = border_fills != null;
     for (sections) |*section| {
         if (section.part_kind != .section) return error.InvalidPartKind;
         for (section.elements, 0..) |element, index| {

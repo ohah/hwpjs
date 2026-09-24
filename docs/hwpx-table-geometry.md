@@ -8,6 +8,8 @@
 
 이 검사는 **표의 격자 모양 관측**이지 HWPX 표 구현 완료가 아닙니다. `cellSz`·`cellMargin`의 원값은 [표 셀 필드](hwpx-table-cell-fields.md)가, 직접 `subList` 구조·공통 속성은 [표 셀 목록](hwpx-table-cell-sublists.md)이 별도로 검사합니다. 크기·여백의 실제 적용, 테두리/채우기 내용, 행 높이, 반복 머리글, 캡션, 셀 본문의 표시·편집 의미, 중첩 표 레이아웃, 조건부 분기 선택, 전 XSD 적합성, 쓰기/무손실 왕복은 미검증입니다. `Document.inspectKnown`의 성공은 격자 진단이 0이라는 뜻도 아닙니다.
 
+[표 자체 속성 원값·테두리 ID 참조](hwpx-table-attributes.md)는 별도 보고서에서 다룹니다. 격자 선언 `rowCnt`·`colCnt`의 소유권은 이 모듈에 그대로 둡니다.
+
 ## 검증
 
 `zig test src/root.zig --test-filter 'HWPX table geometry'`에서 병합·중첩표·잘못된 namespace·누락·중복·충돌·빈 칸·격자 밖·숫자 경계·예산·모든 할당 실패를 검사합니다. 독립 `python3 tools/hwpx-table-oracle.py`는 로컬 두 HWPX corpus의 ZIP/XML을 ElementTree로 읽어 표·행·셀과 격자 진단을 셉니다. `python3 tools/hwpx-table-oracle.py --self-test`는 독립 조사기의 병합·충돌·격자 밖 반례를 검사합니다. `zig test src/hwpx_known_survey.zig -O ReleaseFast --test-filter 'HWPX known document inspections shard N'`을 N=0..7 각각 실행해 제품 결과를 `src/hwpx_corpus_expectations.zig`의 독립 집계와 대조합니다. 로컬 `reference/rhwp`가 없으면 실파일 조사는 재현되지 않습니다.

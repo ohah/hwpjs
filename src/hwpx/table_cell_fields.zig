@@ -10,11 +10,7 @@ pub const margin_names = [_][]const u8{ "left", "right", "top", "bottom" };
 pub const flag_names = [_][]const u8{ "header", "protect", "editable", "dirty" };
 const cell_attribute_names = [_][]const u8{ "name", "header", "hasMargin", "protect", "editable", "dirty", "borderFillIDRef" };
 
-pub const BooleanCounts = struct {
-    absent: usize = 0,
-    false_value: usize = 0,
-    true_value: usize = 0,
-};
+pub const BooleanCounts = table_xml.BooleanCounts;
 
 /// Lexical observations only. High-bit unsigned margins are NOT coerced to
 /// signed values, and hasMargin is NOT inferred from cellMargin presence.
@@ -50,16 +46,6 @@ pub const Report = struct {
     border_fill_references_checked: bool = false,
     border_fill_references: id_references.Counts = .{},
 };
-
-fn noteBoolean(a: std.mem.Allocator, raw: ?xml.attribute_value.Value, max_bytes: usize, counts: *BooleanCounts) !?bool {
-    const present = raw orelse {
-        counts.absent += 1;
-        return null;
-    };
-    const value = try table_xml.boolean(a, present, max_bytes);
-    if (value) counts.true_value += 1 else counts.false_value += 1;
-    return value;
-}
 
 fn inspectSize(a: std.mem.Allocator, tree: *const tree_mod.Tree, index: usize, max_bytes: usize, report: *Report) !void {
     var raw: [size_names.len]?xml.attribute_value.Value = undefined;
@@ -106,7 +92,7 @@ pub fn inspectCell(a: std.mem.Allocator, tree: *const tree_mod.Tree, cell: usize
         report.name_empty += @intFromBool(name.len == 0);
         report.name_utf8_bytes = std.math.add(u64, report.name_utf8_bytes, name.len) catch return error.LimitExceeded;
     } else report.name_absent += 1;
-    if (try noteBoolean(a, attributes[2], max_bytes, &report.has_margin)) |flag| {
+    if (try table_xml.noteBoolean(a, attributes[2], max_bytes, &report.has_margin)) |flag| {
         if (flag) {
             if (margin_missing) report.true_without_margin += 1;
         } else {
@@ -114,7 +100,7 @@ pub fn inspectCell(a: std.mem.Allocator, tree: *const tree_mod.Tree, cell: usize
         }
     }
     for ([_]usize{ 1, 3, 4, 5 }, 0..) |attribute_index, flag_index| {
-        _ = try noteBoolean(a, attributes[attribute_index], max_bytes, &report.flags[flag_index]);
+        _ = try table_xml.noteBoolean(a, attributes[attribute_index], max_bytes, &report.flags[flag_index]);
     }
     if (attributes[6]) |raw| {
         const id = try table_xml.unsigned(a, raw, max_bytes);
