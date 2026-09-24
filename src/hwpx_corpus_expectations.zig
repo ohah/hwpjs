@@ -136,6 +136,29 @@ pub const section_tab_fields = [_][21]u64{
     .{ 2293, 2293, 0, 0, 10303875, 2293, 2293, 0, 0, 0, 2404, 0, 2293, 2293, 0, 0, 0, 0, 462, 0, 0 },
 };
 pub const master_tab_fields = [_][21]u64{[_]u64{0} ** 21} ** 8;
+// Direct hp:t annotation fields; order matches each attribute report's counts().
+pub const section_markpen_fields = [_][9]u64{
+    .{ 1, 1, 1, 0, 0, 16_777_215, 0, 1, 0 },
+    .{ 2, 2, 2, 0, 0, 33_554_175, 0, 2, 0 },
+    [_]u64{0} ** 9,
+    [_]u64{0} ** 9,
+    [_]u64{0} ** 9,
+    .{ 2, 2, 2, 0, 0, 33_554_430, 0, 2, 0 },
+    .{ 22, 22, 22, 0, 0, 369_098_730, 0, 26, 0 },
+    [_]u64{0} ** 9,
+};
+pub const master_markpen_fields = [_][9]u64{[_]u64{0} ** 9} ** 8;
+pub const section_title_mark_fields = [_][6]u64{
+    .{ 1, 1, 1, 0, 0, 0 },
+    .{ 61, 61, 61, 0, 0, 0 },
+    [_]u64{0} ** 6,
+    [_]u64{0} ** 6,
+    .{ 305, 305, 305, 0, 0, 0 },
+    [_]u64{0} ** 6,
+    [_]u64{0} ** 6,
+    [_]u64{0} ** 6,
+};
+pub const master_title_mark_fields = [_][6]u64{[_]u64{0} ** 6} ** 8;
 pub const master_page_number_sum = [_]u64{ 0, 0, 4, 0, 0, 0, 0, 0 };
 pub const master_page_count_declarations = [_]usize{ 75, 72, 72, 55, 64, 62, 63, 92 };
 pub const master_page_type_counts = [_][5]usize{

@@ -8,6 +8,8 @@ const part_tree = @import("xml_part_tree.zig");
 const masterpage_parts = @import("masterpage_parts.zig");
 const text_child_names = @import("text_child_names.zig");
 const tab_attributes = @import("tab_attributes.zig");
+const markpen_attributes = @import("markpen_attributes.zig");
+const title_mark_attributes = @import("title_mark_attributes.zig");
 
 pub const ChildClass = enum(u8) { model, xsd_hyphen, other_paragraph, foreign };
 pub const Location = struct { item_index: usize, text_ordinal: usize };
@@ -15,6 +17,7 @@ pub const Location = struct { item_index: usize, text_ordinal: usize };
 pub const Options = struct {
     max_text_nodes: usize = 4_000_000,
     max_tabs: usize = 2_000_000,
+    max_annotation_markers: usize = 2_000_000,
     max_attribute_bytes: usize = 4096,
     xml: document_xml.Options = .{},
 };
@@ -38,6 +41,9 @@ pub const Report = struct {
     direct_children: usize = 0,
     child_classes: [4]usize = @splat(0),
     tab: tab_attributes.Report = .{},
+    annotation_markers: usize = 0,
+    markpen: markpen_attributes.Report = .{},
+    title_mark: title_mark_attributes.Report = .{},
     xml_bytes: usize = 0,
     first_non_direct_text: ?Location = null,
     first_unmodeled_child: ?Location = null,
@@ -130,6 +136,19 @@ const Scanner = struct {
                 if (self.report.tab.tabs == self.options.max_tabs) return error.LimitExceeded;
                 try tab_attributes.noteTag(self.a, tag, scope, self.options.max_attribute_bytes, &self.report.tab);
             }
+            if (classified.model) |model| switch (model) {
+                .markpen_begin, .markpen_end, .title_mark => {
+                    if (self.report.annotation_markers == self.options.max_annotation_markers) return error.LimitExceeded;
+                    switch (model) {
+                        .markpen_begin => try markpen_attributes.noteBegin(self.a, tag, scope, self.options.max_attribute_bytes, &self.report.markpen),
+                        .markpen_end => try markpen_attributes.noteEnd(tag, scope, &self.report.markpen),
+                        .title_mark => try title_mark_attributes.noteTag(self.a, tag, scope, self.options.max_attribute_bytes, &self.report.title_mark),
+                        else => unreachable,
+                    }
+                    self.report.annotation_markers += 1;
+                },
+                else => {},
+            };
         }
         if (node.in_scope and try attrs.element(tag, scope, document_xml.paragraph_uri, "run")) {
             node.kind = .run;

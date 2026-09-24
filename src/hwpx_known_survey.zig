@@ -39,12 +39,16 @@ const TextNodeStats = struct {
     counts: [6]usize = @splat(0),
     classes: [4]usize = @splat(0),
     tab: [21]u64 = @splat(0),
+    markpen: [9]u64 = @splat(0),
+    title_mark: [6]u64 = @splat(0),
 
     fn from(report: package.TextNodeReport) TextNodeStats {
         return .{
             .counts = .{ report.text_nodes, report.non_direct_text_nodes, report.missing_char_style_id_ref, report.zero_char_style_id_ref, report.over_u32_char_style_id_ref, report.child_classes[1] + report.child_classes[2] + report.child_classes[3] },
             .classes = report.child_classes,
             .tab = report.tab.counts(),
+            .markpen = report.markpen.counts(),
+            .title_mark = report.title_mark.counts(),
         };
     }
 
@@ -52,6 +56,8 @@ const TextNodeStats = struct {
         for (other.counts, 0..) |value, i| self.counts[i] += value;
         for (other.classes, 0..) |value, i| self.classes[i] += value;
         for (other.tab, 0..) |value, i| self.tab[i] += value;
+        for (other.markpen, 0..) |value, i| self.markpen[i] += value;
+        for (other.title_mark, 0..) |value, i| self.title_mark[i] += value;
     }
 };
 
@@ -264,6 +270,11 @@ fn inspectOne(bytes: []const u8) !Outcome {
     try std.testing.expectEqual(known.section_text.text_elements, known.text_nodes.text_nodes);
     try std.testing.expectEqual(known.section_text.non_direct_text_elements, known.text_nodes.non_direct_text_nodes);
     try std.testing.expectEqual(known.section_text.inlineCount(.tab), known.text_nodes.tab.tabs);
+    try std.testing.expectEqual(known.text_nodes.annotation_markers, known.text_nodes.markpen.begins + known.text_nodes.markpen.ends + known.text_nodes.title_mark.marks);
+    try std.testing.expectEqual(known.master_page_text_nodes.annotation_markers, known.master_page_text_nodes.markpen.begins + known.master_page_text_nodes.markpen.ends + known.master_page_text_nodes.title_mark.marks);
+    try std.testing.expectEqual(known.section_text.inlineCount(.markpen_begin), known.text_nodes.markpen.begins);
+    try std.testing.expectEqual(known.section_text.inlineCount(.markpen_end), known.text_nodes.markpen.ends);
+    try std.testing.expectEqual(known.section_text.inlineCount(.title_mark), known.text_nodes.title_mark.marks);
     return .{ .accepted = .{
         .sections = count,
         .paragraphs = known.paragraph_metadata.paragraphs,
@@ -490,6 +501,10 @@ fn surveyShard(shard: usize) !void {
     try std.testing.expectEqualSlices(usize, &expected.master_text_child_classes[shard], &master_text_nodes.classes);
     try std.testing.expectEqualSlices(u64, &expected.section_tab_fields[shard], &section_text_nodes.tab);
     try std.testing.expectEqualSlices(u64, &expected.master_tab_fields[shard], &master_text_nodes.tab);
+    try std.testing.expectEqualSlices(u64, &expected.section_markpen_fields[shard], &section_text_nodes.markpen);
+    try std.testing.expectEqualSlices(u64, &expected.master_markpen_fields[shard], &master_text_nodes.markpen);
+    try std.testing.expectEqualSlices(u64, &expected.section_title_mark_fields[shard], &section_text_nodes.title_mark);
+    try std.testing.expectEqualSlices(u64, &expected.master_title_mark_fields[shard], &master_text_nodes.title_mark);
     try std.testing.expectEqual(expected.master_page_number_sum[shard], master_page_number_sum);
     try std.testing.expectEqual(expected.master_page_count_declarations[shard], master_page_count_declarations);
     try std.testing.expectEqualSlices(usize, &expected.master_page_type_counts[shard], &master_page_type_counts);

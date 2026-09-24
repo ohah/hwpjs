@@ -81,6 +81,8 @@ def empty():
                 section_text_children={}, master_text_children={},
                 section_text_child_classes=[0] * 4, master_text_child_classes=[0] * 4,
                 section_tab_fields=[0] * 21, master_tab_fields=[0] * 21,
+                section_markpen_fields=[0] * 9, master_markpen_fields=[0] * 9,
+                section_title_mark_fields=[0] * 6, master_title_mark_fields=[0] * 6,
                 master_page_number_sum=0,
                 master_type_counts=[0] * len(MASTER_KINDS),
                 master_manifest_id_mismatch=0, master_refs=0,
@@ -144,6 +146,49 @@ def count_text_node(shard, prefix, node, parent):
             classes[3] += 1
         if child.tag == PARA + "tab":
             count_tab(shard[prefix + "_tab_fields"], child)
+        elif child.tag == PARA + "markpenBegin":
+            count_markpen_begin(shard[prefix + "_markpen_fields"], child)
+        elif child.tag == PARA + "markpenEnd":
+            count_markpen_end(shard[prefix + "_markpen_fields"], child)
+        elif child.tag == PARA + "titleMark":
+            count_title_mark(shard[prefix + "_title_mark_fields"], child)
+
+
+def count_markpen_begin(counts, node):
+    # [begin, color present/valid/invalid/zero/RGB sum, begin extra, end, end extra]
+    counts[0] += 1
+    counts[6] += sum(key != "color" for key in node.attrib)
+    color = node.get("color")
+    if color is not None:
+        counts[1] += 1
+        if re.fullmatch(r"#[0-9A-Fa-f]{6}", color):
+            counts[2] += 1
+            rgb = int(color[1:], 16)
+            counts[4] += rgb == 0
+            counts[5] += rgb
+        else:
+            counts[3] += 1
+
+
+def count_markpen_end(counts, node):
+    counts[7] += 1
+    counts[8] += len(node.attrib)
+
+
+def count_title_mark(counts, node):
+    # [marks, ignore present/true/false/other, extra attributes]
+    counts[0] += 1
+    counts[5] += sum(key != "ignore" for key in node.attrib)
+    raw = node.get("ignore")
+    if raw is not None:
+        counts[1] += 1
+        value = raw.strip(" \t\r\n")
+        if value in ("true", "1"):
+            counts[2] += 1
+        elif value in ("false", "0"):
+            counts[3] += 1
+        else:
+            counts[4] += 1
 
 
 def tab_number(raw):

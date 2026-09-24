@@ -56,6 +56,8 @@ HWPX 전용 테스트는 `zig test src/root.zig --test-filter HWPX`로 실행합
 
 [`hp:tab` 속성 진단](hwpx-inline-tab.md)의 합성 검사는 `zig test src/root.zig --test-filter 'HWPX tab attributes'`로 실행합니다. 같은 8개 선택 shard에서 독립 oracle의 `section_tab_fields`·`master_tab_fields` 21개 슬롯과 대조합니다. 기본 audit에는 실파일 shard가 포함되지 않습니다.
 
+[인라인 주석 마커 속성](hwpx-inline-annotations.md)의 합성 검사는 `zig test src/root.zig --test-filter 'HWPX inline annotation'`으로 실행합니다. 같은 8개 선택 shard에서 독립 oracle의 `section_markpen_fields`·`master_markpen_fields` 9개 슬롯과 `section_title_mark_fields`·`master_title_mark_fields` 6개 슬롯을 대조합니다.
+
 [HWPX section 직접 문자 콘텐츠](hwpx-section-content.md)의 단위 테스트도 위의 `HWPX section tree` 필터에 포함됩니다. 같은 8개 선택 shard에서 `section_tree_shards[].content_digest_sum`을 독립 Python Expat의 직접 콘텐츠 합계와 대조합니다. 이 합계는 요소별 정규화 문자 값의 검증이며 개별 콜백 경계의 동치 주장은 아닙니다.
 
 요소와 문자를 섞어 전달하는 `visitOrdered`도 같은 테스트·shard 명령으로 검사합니다. 독립 Expat의 경계별 문자·시작/끝 순서 해시는 `section_tree_shards[].ordered_digest_sum`으로 대조하며, 빈 태그는 시작+끝으로 정규화합니다. 순서 해시의 반례 테스트는 `zig test src/hwpx_structure_survey.zig -O ReleaseFast --test-filter 'HWPX ordered digest detects moved text'`로 실행합니다. 주석·처리 지시문과 콜백 분할은 포함하지 않습니다.
