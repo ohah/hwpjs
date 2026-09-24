@@ -12,6 +12,14 @@ const run_metadata = @import("run_metadata.zig");
 
 pub const Kind = enum { both, even, odd, last_page, optional_page };
 
+pub fn isRootTag(tag: xml.tags.Tag, scope: *const xml.namespaces.State) !bool {
+    return attrs.element(tag, scope, "", "masterPage");
+}
+
+pub fn isDirectSubListTag(tag: xml.tags.Tag, scope: *const xml.namespaces.State) !bool {
+    return attrs.element(tag, scope, document_xml.paragraph_uri, "subList");
+}
+
 pub const Options = struct {
     max_parts: usize = 4096,
     max_part_xml_bytes: usize = 32 * 1024 * 1024,
@@ -130,7 +138,7 @@ const Context = struct {
             return;
         }
         if (depth == 1) {
-            if (!try attrs.element(tag, scope, "", "masterPage")) {
+            if (!try isRootTag(tag, scope)) {
                 const name = try scope.expandElement(tag.name);
                 if (namespace_profile.isVersionedRoot(name, "masterPage", "master-page")) return error.UnsupportedHwpxNamespaceProfile;
                 return error.InvalidMasterPageRoot;
@@ -147,7 +155,7 @@ const Context = struct {
             return;
         }
         if (depth == 2) {
-            if (try attrs.element(tag, scope, document_xml.paragraph_uri, "subList")) {
+            if (try isDirectSubListTag(tag, scope)) {
                 if (self.sub_lists.items.len == self.options.max_sub_lists_per_part) return error.LimitExceeded;
                 var list: SubList = .{ .attributes = try para_list_attributes.read(self.a, tag, scope, self.options.max_attribute_bytes) };
                 errdefer list.deinit(self.a);

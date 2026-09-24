@@ -20,6 +20,7 @@ const section_tree = @import("section_tree.zig");
 const document_trees = @import("document_trees.zig");
 const paragraph_metadata = @import("paragraph_metadata.zig");
 const paragraph_children = @import("paragraph_children.zig");
+const masterpage_paragraph_children = @import("masterpage_paragraph_children.zig");
 const line_segments = @import("line_segments.zig");
 const masterpage_line_segments = @import("masterpage_line_segments.zig");
 const run_metadata = @import("run_metadata.zig");
@@ -186,6 +187,11 @@ pub const MasterPageOptions = struct {
     references: masterpage_references.Options = .{},
 };
 pub const MasterPageReport = masterpage_references.Report;
+pub const MasterPageParagraphChildrenOptions = struct {
+    master_pages: MasterPageOptions = .{},
+    children: masterpage_paragraph_children.Options = .{},
+};
+pub const MasterPageParagraphChildrenReport = masterpage_paragraph_children.Report;
 pub const MasterPageLineSegmentsOptions = struct {
     master_pages: MasterPageOptions = .{},
     line_segments: masterpage_line_segments.Options = .{},
@@ -215,6 +221,7 @@ pub const KnownOptions = struct {
     master_page_style_references: masterpage_style_references.Options = .{},
     master_page_run_topology: run_topology.MasterOptions = .{},
     master_page_line_segments: masterpage_line_segments.Options = .{},
+    master_page_paragraph_children: masterpage_paragraph_children.Options = .{},
     master_page_text_nodes: text_node.MasterOptions = .{},
     structure: StructureOptions = .{},
     header_resources: HeaderResourceOptions = .{},
@@ -288,6 +295,14 @@ pub const Document = struct {
         var pages = try self.inspectMasterPages(a, options.master_pages);
         defer pages.deinit(a);
         return masterpage_line_segments.inspect(a, self.archive, pages.parts.parts, options.line_segments);
+    }
+
+    /// Classifies direct children of descendant paragraphs under selected
+    /// root-direct master-page subLists, without interpreting their content.
+    pub fn inspectMasterPageParagraphChildren(self: *const Document, a: std.mem.Allocator, options: MasterPageParagraphChildrenOptions) !MasterPageParagraphChildrenReport {
+        var pages = try self.inspectMasterPages(a, options.master_pages);
+        defer pages.deinit(a);
+        return masterpage_paragraph_children.inspect(a, self.archive, pages.parts.parts, options.children);
     }
 
     /// Resolves paragraph and run formatting links inside root-direct master

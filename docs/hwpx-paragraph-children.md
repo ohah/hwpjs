@@ -1,6 +1,6 @@
 # HWPX section 문단 직접 자식 구조
 
-`src/hwpx/paragraph_children.zig`는 section XML 트리의 모든 2011 `hp:p`를 선택해 직접 자식 `hp:run`과 `hp:linesegarray`를 구분합니다. [한컴 공개 PType 모델](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Para/PType.cpp)의 두 자식 등록을 분류 근거로 삼습니다. 이 등록 순서를 필수 XML 순서나 전체 2011 스키마로 해석하지 않습니다. 각 문단의 직접 자식만 세고 다른 namespace의 동명 요소, 손자 `run`을 직접 `run`으로 세지 않습니다. 표 셀 `subList`의 문단과 캡션 문단도 section에 있으면 같은 규칙으로 검사합니다. 마스터페이지의 문단은 이번 보고서 범위 밖입니다.
+`src/hwpx/paragraph_children.zig`는 section XML 트리의 모든 2011 `hp:p`를 선택해 직접 자식 `hp:run`과 `hp:linesegarray`를 구분합니다. [한컴 공개 PType 모델](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Para/PType.cpp)의 두 자식 등록을 분류 근거로 삼습니다. 이 등록 순서를 필수 XML 순서나 전체 2011 스키마로 해석하지 않습니다. 각 문단의 직접 자식만 세고 다른 namespace의 동명 요소, 손자 `run`을 직접 `run`으로 세지 않습니다. 표 셀 `subList`의 문단과 캡션 문단도 section에 있으면 같은 규칙으로 검사합니다. 마스터페이지 문단은 [별도 선택 범위](hwpx-master-paragraph-children.md)에서 같은 자식 분류 함수를 공유합니다.
 
 보고서는 section·문단·직접 run·직접 `linesegarray` 수, 직접 run 또는 `linesegarray`가 없는 문단, 둘 이상의 직접 `linesegarray`를 가진 문단, 미등록 직접 요소와 그중 다른 namespace 요소를 구분합니다. 이 값은 진단이며 누락·중복을 자동 수정하거나 문서를 거부하지 않습니다. 문단 속성 값은 [문단 메타](hwpx-paragraph-metadata.md), run 자식과 인라인 내용은 [run 구조](hwpx-run-topology.md)·[section 텍스트](hwpx-section-text.md)가 계속 소유합니다. `linesegarray` 내부 직접 자식과 `lineseg` 필드 원값은 별도 [줄 조각 검사](hwpx-line-segments.md)가 소유하며 조판 위치·편집·저장 의미는 아직 검사하지 않습니다. XML 트리의 기존 요소/바이트 한도와 별개로 문단·직접 자식 수에 정확한 한도를 둡니다.
 

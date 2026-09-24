@@ -24,6 +24,8 @@ section 텍스트 보고서도 원문 양쪽 분기를 유지합니다. 활성 �
 
 [마스터페이지 문단 줄 조각](hwpx-master-line-segments.md)은 루트 직접 `subList` 후손 문단에서 같은 필드 판정을 별도 보고서로 제공합니다. 쪽 배치 의미는 포함하지 않습니다.
 
+[마스터페이지 문단 직접 자식](hwpx-master-paragraph-children.md)도 같은 후손 문단에서 run·배열·기타 직접 요소를 별도 보고서로 제공합니다.
+
 [run 위치·직접 자식 진단](hwpx-run-topology.md)은 section·마스터페이지 결과를 별도로 반환합니다. 공개 모델 미등록 자식이나 늦은 `secPr`는 즉시 문서 오류로 거부하지 않습니다.
 
 직접 [조건부 switch 구조 진단](hwpx-switch-shape.md)은 두 run topology 보고서의 `switches` 필드에 포함됩니다. 두 분기의 선택·적용은 아직 판정하지 않습니다.

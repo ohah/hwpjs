@@ -13,6 +13,7 @@ const chart_refs = @import("chart_parts.zig");
 const section_text = @import("section_text.zig");
 const paragraph_metadata = @import("paragraph_metadata.zig");
 const paragraph_children = @import("paragraph_children.zig");
+const masterpage_paragraph_children = @import("masterpage_paragraph_children.zig");
 const line_segments = @import("line_segments.zig");
 const masterpage_line_segments = @import("masterpage_line_segments.zig");
 const run_metadata = @import("run_metadata.zig");
@@ -38,6 +39,7 @@ pub const Report = struct {
     master_page_style_references: masterpage_style_references.Report,
     master_page_run_topology: run_topology.Report,
     master_page_line_segments: masterpage_line_segments.Report,
+    master_page_paragraph_children: masterpage_paragraph_children.Report,
     master_page_text_nodes: text_node.Report,
     structure: structure.Report,
     resources: resources.Report,
@@ -90,6 +92,7 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
     var master_page_report = try document.inspectMasterPages(a, options.master_pages);
     errdefer master_page_report.deinit(a);
     const master_page_line_segment_report = try masterpage_line_segments.inspect(a, document.archive, master_page_report.parts.parts, options.master_page_line_segments);
+    const master_page_paragraph_children_report = try masterpage_paragraph_children.inspect(a, document.archive, master_page_report.parts.parts, options.master_page_paragraph_children);
     var version = try document.inspectVersion(a, options.version);
     errdefer version.deinit(a);
     var structure_report = try document.inspectStructure(a, options.structure);
@@ -133,6 +136,7 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
         .master_page_style_references = master_page_style_report,
         .master_page_run_topology = master_page_run_topology_report,
         .master_page_line_segments = master_page_line_segment_report,
+        .master_page_paragraph_children = master_page_paragraph_children_report,
         .master_page_text_nodes = master_page_text_nodes_report,
         .structure = structure_report,
         .resources = resource_report,

@@ -151,6 +151,8 @@ pub const settings_unsupported_types = [_]usize{ 0, 0, 0, 0, 0, 0, 0, 0 };
 // Master-page package roots and section links from the independent ZIP/XML oracle.
 pub const master_page_refs = [_]usize{ 14, 6, 19, 0, 0, 0, 3, 19 };
 pub const master_page_sub_lists = [_]usize{ 14, 6, 19, 0, 0, 0, 3, 19 };
+// Independent direct child census under root-direct master-page subLists.
+pub const master_paragraph_direct_runs = [_]usize{ 118, 39, 177, 0, 0, 0, 29, 158 };
 // Independent root-direct subList/descendant p/direct linesegarray census.
 pub const master_line_paragraphs = [_]usize{ 86, 31, 126, 0, 0, 0, 21, 130 };
 pub const master_line_segments = [_]usize{ 88, 33, 131, 0, 0, 0, 23, 143 };

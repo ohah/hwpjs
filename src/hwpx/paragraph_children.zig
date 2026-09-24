@@ -1,4 +1,5 @@
 const std = @import("std");
+const xml = @import("../xml/root.zig");
 const part_tree = @import("xml_part_tree.zig");
 const document_xml = @import("document_xml.zig");
 
@@ -23,36 +24,49 @@ pub const Report = struct {
     foreign_direct: usize = 0,
 };
 
+pub const ScanState = struct { direct_children: usize = 0 };
+pub const ParagraphState = struct { runs: usize = 0, arrays: usize = 0 };
+
+pub fn noteParagraph(report: *Report, options: Options) !void {
+    if (report.paragraphs == options.max_paragraphs) return error.LimitExceeded;
+    report.paragraphs += 1;
+}
+
+pub fn noteDirectChild(name: xml.namespaces.ExpandedName, report: *Report, options: Options, scan: *ScanState, paragraph: *ParagraphState) !void {
+    if (scan.direct_children == options.max_direct_children) return error.LimitExceeded;
+    scan.direct_children += 1;
+    if (std.mem.eql(u8, name.uri, document_xml.paragraph_uri) and name.local.equals("run", false)) {
+        paragraph.runs += 1;
+        report.direct_runs += 1;
+    } else if (std.mem.eql(u8, name.uri, document_xml.paragraph_uri) and name.local.equals(line_seg_array_name, false)) {
+        paragraph.arrays += 1;
+        report.line_seg_arrays += 1;
+    } else {
+        report.other_direct += 1;
+        report.foreign_direct += @intFromBool(!std.mem.eql(u8, name.uri, document_xml.paragraph_uri));
+    }
+}
+
+pub fn finishParagraph(report: *Report, paragraph: ParagraphState) void {
+    report.paragraphs_without_run += @intFromBool(paragraph.runs == 0);
+    report.paragraphs_without_line_seg_array += @intFromBool(paragraph.arrays == 0);
+    report.paragraphs_with_multiple_line_seg_arrays += @intFromBool(paragraph.arrays > 1);
+}
+
 pub fn inspect(sections: []const part_tree.Tree, options: Options) !Report {
     var report: Report = .{};
-    var direct_children: usize = 0;
+    var scan: ScanState = .{};
     for (sections) |section| {
         if (section.part_kind != .section) return error.InvalidPartKind;
         for (section.elements) |element| {
             if (!element.is(document_xml.paragraph_uri, "p")) continue;
-            if (report.paragraphs == options.max_paragraphs) return error.LimitExceeded;
-            report.paragraphs += 1;
-            var runs: usize = 0;
-            var segments: usize = 0;
+            try noteParagraph(&report, options);
+            var paragraph: ParagraphState = .{};
             var cursor = element.first_child;
             while (cursor) |child_index| : (cursor = section.elements[child_index].next_sibling) {
-                if (direct_children == options.max_direct_children) return error.LimitExceeded;
-                direct_children += 1;
-                const child = section.elements[child_index];
-                if (child.is(document_xml.paragraph_uri, "run")) {
-                    runs += 1;
-                    report.direct_runs += 1;
-                } else if (child.is(document_xml.paragraph_uri, line_seg_array_name)) {
-                    segments += 1;
-                    report.line_seg_arrays += 1;
-                } else {
-                    report.other_direct += 1;
-                    report.foreign_direct += @intFromBool(!std.mem.eql(u8, child.name.uri, document_xml.paragraph_uri));
-                }
+                try noteDirectChild(section.elements[child_index].name, &report, options, &scan, &paragraph);
             }
-            report.paragraphs_without_run += @intFromBool(runs == 0);
-            report.paragraphs_without_line_seg_array += @intFromBool(segments == 0);
-            report.paragraphs_with_multiple_line_seg_arrays += @intFromBool(segments > 1);
+            finishParagraph(&report, paragraph);
         }
         report.sections += 1;
     }

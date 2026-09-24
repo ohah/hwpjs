@@ -29,3 +29,5 @@ manifest 경로와 루트 ID는 별도 색인으로 조회해, 많은 참조가 
 후손 run의 부모·직접 자식 분포는 [run 위치·자식 진단](hwpx-run-topology.md)이 별도 순회로 다룹니다. 직접 `subList` 밖의 요소를 바탕쪽 본문으로 합치지 않습니다.
 
 후손 문단의 직접 줄 조각 원값은 [마스터페이지 문단 줄 조각](hwpx-master-line-segments.md)이 section 필드 판정을 재사용해 별도로 진단합니다.
+
+후손 문단의 직접 run·`linesegarray`·기타 자식 분류는 [마스터페이지 문단 직접 자식](hwpx-master-paragraph-children.md)이 section 분류 판정을 공유해 별도로 진단합니다.

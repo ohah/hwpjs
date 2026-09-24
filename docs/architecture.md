@@ -42,6 +42,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [마스터페이지 문단 줄 조각](hwpx-master-line-segments.md)은 파트·subList 선택만 별도 순회하고 아홉 필드의 판정은 section과 공유합니다. 조판 의미는 부여하지 않습니다.
 
+[마스터페이지 문단 직접 자식](hwpx-master-paragraph-children.md)은 파트·subList 선택만 별도 순회하고 run·`linesegarray`·기타 직접 자식의 판정은 section과 공유합니다.
+
 [Header 시작 번호](hwpx-header-begin-numbers.md)는 소유 header 트리의 직접 `beginNum` 원값과 부재 진단만 담당합니다. 번호 배정·레이아웃·재저장 규칙은 후속 문서 모델의 책임입니다.
 
 [현재 지원 검사 묶음](hwpx-known-inspections.md)은 기존 HWPX 검사들의 결과를 같은 문서에서 모으는 경계입니다. 개별 파서 SSOT를 유지하며 미지원 문서 의미를 검증 완료로 승격하지 않습니다.

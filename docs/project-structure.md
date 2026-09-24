@@ -35,6 +35,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
   section 문단의 직접 `run`·`linesegarray`·미등록 자식 분류는 [문단 직접 자식 구조](hwpx-paragraph-children.md)가 소유합니다.
   직접 `linesegarray`의 `lineseg` 원값과 추가 요소 진단은 [문단 줄 조각](hwpx-line-segments.md)이 소유합니다.
   마스터페이지의 같은 필드 판정 재사용·별도 선택 범위는 [마스터페이지 문단 줄 조각](hwpx-master-line-segments.md)이 소유합니다.
+  마스터페이지 문단의 run·배열 직접 자식 분류 재사용은 [마스터페이지 문단 직접 자식](hwpx-master-paragraph-children.md)이 소유합니다.
   Header의 여섯 `beginNum` 원값과 부재 진단은 [Header 시작 번호](hwpx-header-begin-numbers.md)가 소유합니다.
   모든 ZIP 엔트리의 실제 해제·CRC와 OPF 목록 밖 항목 분류는 [바이트 무결성](hwpx-payload-integrity.md)이 소유합니다.
   OPF가 XML로 선언한 내장 항목의 전수 문법·namespace 검사와 합계 예산은 [manifest XML](hwpx-manifest-xml.md)이 소유합니다.

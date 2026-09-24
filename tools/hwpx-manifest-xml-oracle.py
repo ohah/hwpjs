@@ -67,6 +67,7 @@ def empty():
                 master_sub_list_unknown_enums=0, master_sub_list_other_attributes=0,
                 master_sub_list_width_sum=0, master_sub_list_height_sum=0,
                 master_paragraphs=0, master_paragraph_missing_id=0,
+                master_paragraph_children=Counter(),
                 master_line_segments=Counter(),
                 master_paragraph_zero_id=0, master_paragraph_missing_tc_id=0,
                 master_paragraph_page_break_present=0, master_paragraph_page_break_true=0,
@@ -140,6 +141,38 @@ def count_master_line_segments(sub_list, counts):
                     counts[field + "_zero"] += number == 0
                     counts[field + "_negative"] += number < 0
                     counts[field + "_highbit"] += number >= 0x80000000
+
+
+def count_master_paragraph_children(sub_list, counts):
+    """Count only immediate element children of each descendant paragraph."""
+    for paragraph in sub_list.iter(PARA + "p"):
+        counts["paragraphs"] += 1
+        names = [child.tag for child in paragraph]
+        runs = names.count(PARA + "run")
+        arrays = names.count(PARA + "linesegarray")
+        counts["direct_runs"] += runs
+        counts["line_seg_arrays"] += arrays
+        counts["paragraphs_without_run"] += runs == 0
+        counts["paragraphs_without_line_seg_array"] += arrays == 0
+        counts["paragraphs_with_multiple_line_seg_arrays"] += arrays > 1
+        counts["other_direct"] += len(names) - runs - arrays
+        counts["foreign_direct"] += sum(not name.startswith(PARA) for name in names if name not in (PARA + "run", PARA + "linesegarray"))
+
+
+def self_test_master_paragraph_children():
+    sub = ET.fromstring(
+        '<p:subList xmlns:p="http://www.hancom.co.kr/hwpml/2011/paragraph" xmlns:x="urn:foreign">'
+        '<p:p><p:run/><p:linesegarray/><p:linesegarray/><x:run/>'
+        '<p:other><p:p><p:run/></p:p></p:other></p:p><p:p><x:linesegarray/></p:p>'
+        '</p:subList>'
+    )
+    counts = Counter()
+    count_master_paragraph_children(sub, counts)
+    expected = Counter(paragraphs=3, direct_runs=2, line_seg_arrays=2,
+                       paragraphs_without_run=1, paragraphs_without_line_seg_array=2,
+                       paragraphs_with_multiple_line_seg_arrays=1, other_direct=3,
+                       foreign_direct=2)
+    assert counts == expected, counts
 
 
 def self_test_master_line_segments():
@@ -484,6 +517,7 @@ def main():
                                 if child.tag != PARA + "subList":
                                     continue
                                 shard["master_sub_lists"] += 1
+                                count_master_paragraph_children(child, shard["master_paragraph_children"])
                                 count_master_line_segments(child, shard["master_line_segments"])
                                 shard["master_sub_list_direct_paragraphs"] += sum(
                                     grandchild.tag == PARA + "p" for grandchild in child)
@@ -578,9 +612,10 @@ def main():
 
 
 if __name__ == "__main__":
+    self_test_master_paragraph_children()
     self_test_master_line_segments()
     if sys.argv[1:] == ["--self-test"]:
-        print("master line segments oracle self-test passed")
+        print("master paragraph children and line segments oracle self-tests passed")
     elif not sys.argv[1:]:
         main()
     else:
