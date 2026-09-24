@@ -41,6 +41,7 @@ const TextNodeStats = struct {
     tab: [21]u64 = @splat(0),
     markpen: [9]u64 = @splat(0),
     title_mark: [6]u64 = @splat(0),
+    track_change_tags: [20]u64 = @splat(0),
 
     fn from(report: package.TextNodeReport) TextNodeStats {
         return .{
@@ -49,6 +50,7 @@ const TextNodeStats = struct {
             .tab = report.tab.counts(),
             .markpen = report.markpen.counts(),
             .title_mark = report.title_mark.counts(),
+            .track_change_tags = report.track_change_tags.counts(),
         };
     }
 
@@ -58,6 +60,7 @@ const TextNodeStats = struct {
         for (other.tab, 0..) |value, i| self.tab[i] += value;
         for (other.markpen, 0..) |value, i| self.markpen[i] += value;
         for (other.title_mark, 0..) |value, i| self.title_mark[i] += value;
+        for (other.track_change_tags, 0..) |value, i| self.track_change_tags[i] += value;
     }
 };
 
@@ -505,6 +508,8 @@ fn surveyShard(shard: usize) !void {
     try std.testing.expectEqualSlices(u64, &expected.master_markpen_fields[shard], &master_text_nodes.markpen);
     try std.testing.expectEqualSlices(u64, &expected.section_title_mark_fields[shard], &section_text_nodes.title_mark);
     try std.testing.expectEqualSlices(u64, &expected.master_title_mark_fields[shard], &master_text_nodes.title_mark);
+    try std.testing.expectEqualSlices(u64, &expected.section_track_change_tag_fields[shard], &section_text_nodes.track_change_tags);
+    try std.testing.expectEqualSlices(u64, &expected.master_track_change_tag_fields[shard], &master_text_nodes.track_change_tags);
     try std.testing.expectEqual(expected.master_page_number_sum[shard], master_page_number_sum);
     try std.testing.expectEqual(expected.master_page_count_declarations[shard], master_page_count_declarations);
     try std.testing.expectEqualSlices(usize, &expected.master_page_type_counts[shard], &master_page_type_counts);

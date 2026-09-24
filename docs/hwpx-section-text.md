@@ -18,6 +18,8 @@
 
 직접 [인라인 주석 마커 속성 진단](hwpx-inline-annotations.md)은 이 이벤트 스트림의 세 마커 개수를 실파일에서 대조하지만 시작/끝 짝이나 렌더링 의미를 합성하지 않습니다.
 
+[인라인 변경 추적 태그 진단](hwpx-track-change-tags.md)은 `hp:t` 직접 자식의 네 태그 속성을 검사하지만 현재 실파일 corpus에는 이 네 이름이 없고, 이 이벤트 계층은 변경을 적용하지 않습니다.
+
 ## 검증
 
 단위·통합 테스트는 참조·CDATA와 제어 요소 사이의 순서, 속성 접근의 콜백 수명, 8종 분류, namespace 위장, 미분류·중첩 요소, 중첩 문단 순번, 정확한 한도, 콜백 오류 뒤 재시도, 전 할당 실패 경로를 확인합니다. 실파일 선택 조사는 `zig test src/hwpx_structure_survey.zig -O ReleaseFast --test-filter 'HWPX corpus section text and inline token read-only survey'`로 실행합니다. 독립 oracle `python3 tools/hwpx-section-text-oracle.py`는 Python 표준 ZIP/XML 파서로 OPF spine을 따라가며 제품 코드를 사용하지 않습니다. 두 조사의 corpus 의존성은 [개발·검증 명령](development-commands.md)을 따릅니다.

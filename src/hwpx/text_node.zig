@@ -10,6 +10,7 @@ const text_child_names = @import("text_child_names.zig");
 const tab_attributes = @import("tab_attributes.zig");
 const markpen_attributes = @import("markpen_attributes.zig");
 const title_mark_attributes = @import("title_mark_attributes.zig");
+const track_change_tag_attributes = @import("track_change_tag_attributes.zig");
 
 pub const ChildClass = enum(u8) { model, xsd_hyphen, other_paragraph, foreign };
 pub const Location = struct { item_index: usize, text_ordinal: usize };
@@ -18,6 +19,7 @@ pub const Options = struct {
     max_text_nodes: usize = 4_000_000,
     max_tabs: usize = 2_000_000,
     max_annotation_markers: usize = 2_000_000,
+    max_track_change_tags: usize = 2_000_000,
     max_attribute_bytes: usize = 4096,
     xml: document_xml.Options = .{},
 };
@@ -44,6 +46,7 @@ pub const Report = struct {
     annotation_markers: usize = 0,
     markpen: markpen_attributes.Report = .{},
     title_mark: title_mark_attributes.Report = .{},
+    track_change_tags: track_change_tag_attributes.Report = .{},
     xml_bytes: usize = 0,
     first_non_direct_text: ?Location = null,
     first_unmodeled_child: ?Location = null,
@@ -146,6 +149,17 @@ const Scanner = struct {
                         else => unreachable,
                     }
                     self.report.annotation_markers += 1;
+                },
+                .insert_begin, .insert_end, .delete_begin, .delete_end => {
+                    if (self.report.track_change_tags.count() == self.options.max_track_change_tags) return error.LimitExceeded;
+                    const kind: track_change_tag_attributes.Kind = switch (model) {
+                        .insert_begin => .insert_begin,
+                        .insert_end => .insert_end,
+                        .delete_begin => .delete_begin,
+                        .delete_end => .delete_end,
+                        else => unreachable,
+                    };
+                    try track_change_tag_attributes.noteTag(self.a, tag, scope, kind, self.options.max_attribute_bytes, &self.report.track_change_tags);
                 },
                 else => {},
             };

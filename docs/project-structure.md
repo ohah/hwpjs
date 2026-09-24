@@ -37,6 +37,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
   section·마스터페이지 `hp:t`의 선택 속성·직접 자식 진단은 [text 노드](hwpx-text-nodes.md)가 소유합니다.
   그 안의 직접 `hp:tab` 속성 판정은 [인라인 탭](hwpx-inline-tab.md)이 별도 소유합니다.
   `markpenBegin`·`markpenEnd`·`titleMark`의 직접 자식 속성 판정은 [인라인 주석 마커](hwpx-inline-annotations.md)가 별도 소유합니다.
+  네 종류의 삽입·삭제 변경 추적 태그 속성 판정은 [인라인 변경 추적 태그](hwpx-track-change-tags.md)가 별도 소유합니다.
   기존 검사들을 같은 문서에 적용한 소유 보고서·정리 순서는 [현재 지원 검사 묶음](hwpx-known-inspections.md)이 소유합니다.
 - `src/cfb/`: 읽기·검증·저장을 책임별로 분리한 CFB 코어.
 - `src/hwp5/`: 헤더 원본·버전·스트림 정책·압축 trailer·레코드 framing을 분리합니다. 현재 계약·검증 범위는 [HWP5 모듈 계약](hwp5-modules.md), 과거 이력은 [구현/검증 기록](hwp5-foundation.md)을 참조합니다.

@@ -159,6 +159,8 @@ pub const section_title_mark_fields = [_][6]u64{
     [_]u64{0} ** 6,
 };
 pub const master_title_mark_fields = [_][6]u64{[_]u64{0} ** 6} ** 8;
+pub const section_track_change_tag_fields = [_][20]u64{[_]u64{0} ** 20} ** 8;
+pub const master_track_change_tag_fields = [_][20]u64{[_]u64{0} ** 20} ** 8;
 pub const master_page_number_sum = [_]u64{ 0, 0, 4, 0, 0, 0, 0, 0 };
 pub const master_page_count_declarations = [_]usize{ 75, 72, 72, 55, 64, 62, 63, 92 };
 pub const master_page_type_counts = [_][5]usize{

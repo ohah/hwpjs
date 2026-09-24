@@ -42,6 +42,7 @@ TEXT_MODEL_CHILDREN = frozenset((
     "hypen", "nbSpace", "fwSpace", "chval", "insertBegin",
     "insertEnd", "deleteBegin", "deleteEnd", "unknownch",
 ))
+TRACK_CHANGE_TAGS = ("insertBegin", "insertEnd", "deleteBegin", "deleteEnd")
 TAB_TYPES = frozenset(("LEFT", "RIGHT", "CENTER", "DECIMAL"))
 TAB_LEADERS = frozenset(("NONE", "SOLID", "DOT", "DASH", "DASH_DOT", "DASH_DOT_DOT",
                          "LONG_DASH", "CIRCLE", "DOUBLE_SLIM", "SLIM_THICK", "THICK_SLIM", "SLIM_THICK_SLIM"))
@@ -83,6 +84,7 @@ def empty():
                 section_tab_fields=[0] * 21, master_tab_fields=[0] * 21,
                 section_markpen_fields=[0] * 9, master_markpen_fields=[0] * 9,
                 section_title_mark_fields=[0] * 6, master_title_mark_fields=[0] * 6,
+                section_track_change_tag_fields=[0] * 20, master_track_change_tag_fields=[0] * 20,
                 master_page_number_sum=0,
                 master_type_counts=[0] * len(MASTER_KINDS),
                 master_manifest_id_mismatch=0, master_refs=0,
@@ -152,6 +154,8 @@ def count_text_node(shard, prefix, node, parent):
             count_markpen_end(shard[prefix + "_markpen_fields"], child)
         elif child.tag == PARA + "titleMark":
             count_title_mark(shard[prefix + "_title_mark_fields"], child)
+        elif child.tag in {PARA + name for name in TRACK_CHANGE_TAGS}:
+            count_track_change_tag(shard[prefix + "_track_change_tag_fields"], child)
 
 
 def count_markpen_begin(counts, node):
@@ -189,6 +193,41 @@ def count_title_mark(counts, node):
             counts[3] += 1
         else:
             counts[4] += 1
+
+
+def count_track_change_tag(counts, node):
+    # [4 kinds, Id 5, TcId 5, paraend present/true/false/invalid,
+    #  begin paraend present, extra attributes].
+    kind = node.tag[len(PARA):]
+    counts[TRACK_CHANGE_TAGS.index(kind)] += 1
+    for name, base in (("Id", 4), ("TcId", 9)):
+        raw = node.get(name)
+        if raw is None:
+            continue
+        counts[base] += 1
+        value = raw.strip(" \t\r\n")
+        if not re.fullmatch(r"[+-]?[0-9]+", value) or int(value) < 0:
+            counts[base + 3] += 1
+        else:
+            number = int(value)
+            if number == 0:
+                counts[base + 1] += 1
+            elif number > 0xFFFFFFFF:
+                counts[base + 2] += 1
+            else:
+                counts[base + 4] += number
+    paraend = node.get("paraend")
+    if paraend is not None:
+        counts[14] += 1
+        counts[18] += kind in ("insertBegin", "deleteBegin")
+        value = paraend.strip(" \t\r\n")
+        if value in ("true", "1"):
+            counts[15] += 1
+        elif value in ("false", "0"):
+            counts[16] += 1
+        else:
+            counts[17] += 1
+    counts[19] += sum(key not in ("Id", "TcId", "paraend") for key in node.attrib)
 
 
 def tab_number(raw):

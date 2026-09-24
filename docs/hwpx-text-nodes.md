@@ -12,6 +12,8 @@ section은 소유 `XmlTrees.inspectTextNodes`, 마스터페이지는 `Document.i
 
 [인라인 주석 마커 속성 진단](hwpx-inline-annotations.md)도 이번 검사가 선택한 직접 `markpenBegin`·`markpenEnd`·`titleMark`에만 적용합니다. 각 속성 어휘는 별도 파일이, 세 종류를 합친 개수 한도는 text 노드가 소유합니다.
 
+[인라인 변경 추적 태그 진단](hwpx-track-change-tags.md)은 직접 `insertBegin`·`insertEnd`·`deleteBegin`·`deleteEnd`의 원값을 별도 파일에서 판정합니다. text 노드는 선택 범위와 네 종류 합산 한도만 소유합니다.
+
 적대적 점검에서 기존 section 텍스트 검사와 이번 검사에 이름 8개가 중복되어 있던 문제를 찾아 공통 이름 모듈로 합쳤습니다. 실파일에 없는 모델 자식까지 14개 전부 합성 테스트에 포함하고, `hyphen`만 있는 경우에도 첫 모델 미등록 자식 위치가 남는지 검사합니다. 32비트 초과 값 0건은 Zig 결과만으로 주장하지 않고 독립 Python oracle에도 별도 카운터를 두어 대조합니다. XML 어휘 오류·속성 바이트 한도·중첩/타 namespace `t`·마스터페이지 선택 범위·할당 실패도 합성 테스트로 확인합니다.
 
 2026-09-24 검증: 전체 Debug 테스트 2,248개, ReleaseSafe 제품 빌드와 전체 audit 40단계·2,287개 테스트, 전용 Debug·ReleaseSafe·ReleaseFast 테스트가 통과했습니다. 수정된 독립 oracle의 section·마스터페이지 `hp:t` 원값·자식 분류 수치를 선택 실파일 8개 shard의 Zig 보고서와 대조해 모두 일치했습니다. 실파일 shard는 기본 audit에 포함되지 않습니다. 이 숫자는 `hp:t` 의미 해석이나 HWPX 전체 문서 유효성의 완료율이 아닙니다.

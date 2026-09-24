@@ -54,6 +54,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [인라인 주석 마커 속성](hwpx-inline-annotations.md)은 같은 직접 자식 범위에서 색상·Boolean 원값만 검사합니다. 시작/끝의 짝 관계와 표시 효과는 이 계층의 책임이 아닙니다.
 
+[인라인 변경 추적 태그](hwpx-track-change-tags.md)는 같은 범위에서 네 태그의 ID·Boolean 원값만 진단합니다. 변경 쌍과 문단 범위·변경 적용은 후속 문서 모델의 책임입니다.
+
 [Section 직접 문자 콘텐츠·순서형 이벤트](hwpx-section-content.md)는 소유 원문을 다시 파싱해 문자·CDATA 조각을 인덱스의 정확한 부모 요소에 연결하고, 요소 경계와 문자를 원래 순서로 전달합니다. 의미 계층은 이 순회와 원문·요소 인덱스를 재사용하며 표시 문장이나 편집 모델을 임의 조립하지 않습니다.
 
 이미지/XML 외부에서도 재사용할 수 있는 언어 태그 규칙은 `src/text/`에 둡니다. [BCP 47 문법 검사](bcp47-syntax.md)와 [IANA 등록 검증](bcp47-registry.md)은 다른 단계입니다. [PNG iTXt](png-international-text.md)는 등록 검사와 UTF-8·압축 검사를 조립하며 extension 의미 보류를 별도로 보고합니다.
