@@ -1,5 +1,7 @@
 # HWPX masterpage 파트와 section 참조
 
+직접 `subList` 안의 표 격자·셀 필드 검사는 [마스터페이지 표 격자](hwpx-master-table-geometry.md)가 section 공통 규칙에 위임합니다. 이 문서는 파트 선택과 section 참조 연결만 소유합니다.
+
 `Document.inspectMasterPages`는 OPF manifest에 선언된 정규 `Contents/masterpageN.xml` 항목을 선택합니다. ZIP 해제·공통 XML 문법/namespace 검사를 거쳐 namespace가 없는 `masterPage` 루트의 `id`, `type`, `pageNumber`, `pageDuplicate`, `pageFront` 원값과 각 속성의 부재를 구분해 소유합니다. 루트의 직접 `hp:subList`는 소유 배열로 반환하며, 공통 속성 계약과 직접 문단 경계는 [ParaListType 속성](hwpx-para-list.md)이 소유합니다. 다른 직접 요소는 별도 수로 남깁니다. 없는 마스터페이지는 빈 배열이며 대체 페이지를 만들지 않습니다. 중복 경로, 잘못된 media-type, 외부 항목, 암호화 문서는 명시적으로 거부합니다.
 
 `type`의 알려진 값은 `BOTH`, `EVEN`, `ODD`, `LAST_PAGE`, `OPTIONAL_PAGE`입니다. 미지 값은 원문과 함께 미지원 진단으로 남깁니다. `pageNumber`는 unsigned 32-bit, 두 플래그는 XML Boolean 어휘만 검사합니다. `id`는 비어 있으면 거부합니다. manifest ID와 루트 ID가 달라도 값을 임의로 합치지 않고 불일치로 보고합니다.

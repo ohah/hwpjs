@@ -4,8 +4,9 @@ const attrs = @import("xml_attributes.zig");
 const document_xml = @import("document_xml.zig");
 const content = @import("xml_part_content.zig");
 const namespace_profile = @import("namespace_profile.zig");
+const masterpage_parts = @import("masterpage_parts.zig");
 
-pub const PartKind = enum { header, section };
+pub const PartKind = enum { header, section, master_page };
 
 pub const Span = struct {
     start: usize,
@@ -35,7 +36,7 @@ pub const Options = struct {
     xml: document_xml.Options = .{},
 };
 
-/// Owns an exact decoded header or section XML source and a namespace-aware element
+/// Owns an exact decoded header, section or master-page XML source and a namespace-aware element
 /// index. Text, comments, CDATA, attributes, and unknown nodes stay in source;
 /// this is not yet a semantic document model or a serializer.
 pub const Tree = struct {
@@ -139,12 +140,23 @@ const Builder = struct {
         }
         if (depth != self.stack.items.len + 1) return error.InvalidSectionTreeDepth;
         if (depth == 1) {
-            const root_uri = if (self.part_kind == .header) document_xml.head_uri else document_xml.section_uri;
-            const root_local = if (self.part_kind == .header) "head" else "sec";
-            const uri_suffix = if (self.part_kind == .header) "head" else "section";
-            if (!try attrs.element(tag, scope, root_uri, root_local)) {
-                if (namespace_profile.isVersionedRoot(try scope.expandElement(tag.name), root_local, uri_suffix)) return error.UnsupportedHwpxNamespaceProfile;
-                return if (self.part_kind == .header) error.InvalidHeaderRoot else error.InvalidSectionRoot;
+            const valid = switch (self.part_kind) {
+                .header => try attrs.element(tag, scope, document_xml.head_uri, "head"),
+                .section => try attrs.element(tag, scope, document_xml.section_uri, "sec"),
+                .master_page => try masterpage_parts.isRootTag(tag, scope),
+            };
+            if (!valid) {
+                const local: []const u8, const suffix: []const u8 = switch (self.part_kind) {
+                    .header => .{ "head", "head" },
+                    .section => .{ "sec", "section" },
+                    .master_page => .{ "masterPage", "master-page" },
+                };
+                if (namespace_profile.isVersionedRoot(try scope.expandElement(tag.name), local, suffix)) return error.UnsupportedHwpxNamespaceProfile;
+                return switch (self.part_kind) {
+                    .header => error.InvalidHeaderRoot,
+                    .section => error.InvalidSectionRoot,
+                    .master_page => error.InvalidMasterPageRoot,
+                };
             }
         }
         if (self.elements.items.len == self.max_nodes) return error.LimitExceeded;
@@ -170,8 +182,8 @@ const Builder = struct {
 
 /// The returned tree owns a copy of bytes, independent of the ZIP archive and
 /// the caller's buffer. XML syntax and namespace checks use the common SSOT.
-pub fn parse(a: std.mem.Allocator, bytes: []const u8, part_kind: PartKind, section_ordinal: ?usize, item_index: usize, options: Options) !Tree {
-    if ((part_kind == .header) != (section_ordinal == null)) return error.InvalidPartOrdinal;
+pub fn parse(a: std.mem.Allocator, bytes: []const u8, part_kind: PartKind, part_ordinal: ?usize, item_index: usize, options: Options) !Tree {
+    if ((part_kind == .header) != (part_ordinal == null)) return error.InvalidPartOrdinal;
     if (bytes.len > options.max_xml_bytes) return error.LimitExceeded;
     const source = try a.dupe(u8, bytes);
     errdefer a.free(source);
@@ -187,7 +199,7 @@ pub fn parse(a: std.mem.Allocator, bytes: []const u8, part_kind: PartKind, secti
         .elements = elements,
         .uris = uris,
         .part_kind = part_kind,
-        .section_ordinal = section_ordinal,
+        .section_ordinal = if (part_kind == .section) part_ordinal else null,
         .item_index = item_index,
         .xml_report = report,
     };

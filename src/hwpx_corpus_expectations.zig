@@ -10,6 +10,21 @@ pub const table_rows = [_]usize{ 3699, 3758, 2398, 1859, 1879, 2489, 2386, 5240 
 pub const table_cells = [_]usize{ 15695, 10688, 11205, 7236, 13414, 10994, 17716, 20050 };
 pub const table_grid_slots = [_]usize{ 27616, 28955, 20479, 12530, 18609, 19013, 23619, 36665 };
 pub const table_cell_slots = table_grid_slots;
+// Independent tools/hwpx-table-oracle.py master_shards; root-direct hp:subList scope.
+pub const master_table_parts = [_]usize{ 14, 6, 19, 0, 0, 0, 3, 19 };
+pub const master_table_sub_lists = master_table_parts;
+pub const master_table_xml_bytes = [_]usize{ 119982, 47471, 183012, 0, 0, 0, 32959, 194651 };
+pub const master_table_elements = [_]usize{ 1477, 584, 2305, 0, 0, 0, 433, 2547 };
+pub const master_table_count = [_]usize{ 12, 7, 20, 0, 0, 0, 4, 5 };
+pub const master_table_rows = [_]usize{ 24, 7, 32, 0, 0, 0, 4, 5 };
+pub const master_table_cells = [_]usize{ 50, 13, 70, 0, 0, 0, 10, 11 };
+pub const master_table_grid_slots = [_]usize{ 62, 13, 82, 0, 0, 0, 10, 11 };
+pub const master_table_labels = [_]usize{ 8, 0, 8, 0, 0, 0, 0, 0 };
+pub const master_table_id_sum = [_]i64{ 15179204244, 10163635143, 27723221221, 0, 0, 0, 4383869806, 5479837450 };
+pub const master_table_width_sum = [_]i64{ 685108, 246902, 1148276, 0, 0, 0, 231596, 236698 };
+pub const master_table_cell_width_sum = [_]u64{ 1140408, 246902, 1603576, 0, 0, 0, 231596, 236698 };
+pub const master_table_cell_paragraphs = [_]usize{ 59, 21, 88, 0, 0, 0, 15, 17 };
+pub const master_table_inside_left_sum = [_]i64{ 0, 849, 0, 0, 0, 0, 0, 283 };
 // Direct hp:tbl scalar census, independent of cell fields and grid dimensions.
 pub const table_page_break_cell = [_]usize{ 710, 275, 318, 295, 188, 342, 290, 734 };
 pub const table_page_break_none = [_]usize{ 153, 88, 117, 65, 112, 70, 63, 336 };

@@ -54,6 +54,14 @@ pub const Report = struct {
     cell_sub_lists: cell_sub_lists.Report = .{},
 };
 
+pub fn initReport(border_fills: ?*const header_resources.Table) Report {
+    var report: Report = .{};
+    report.cell_fields.border_fill_references_checked = border_fills != null;
+    report.table_attributes.border_fill_references_checked = border_fills != null;
+    report.table_children.border_references_checked = border_fills != null;
+    return report;
+}
+
 fn inspectCell(a: std.mem.Allocator, tree: *const tree_mod.Tree, cell: usize, row_index: usize, rows: ?u32, cols: ?u32, occupied: ?[]u8, options: Options, border_fills: ?*const header_resources.Table, report: *Report) !void {
     if (report.cells == options.max_cells) return error.LimitExceeded;
     report.cells += 1;
@@ -146,10 +154,7 @@ pub fn inspect(a: std.mem.Allocator, sections: []const tree_mod.Tree, options: O
 /// The known-document path supplies its actual header inventory; standalone
 /// structural inspection deliberately leaves reference counts unpopulated.
 pub fn inspectWithBorderFills(a: std.mem.Allocator, sections: []const tree_mod.Tree, options: Options, border_fills: ?*const header_resources.Table) !Report {
-    var report: Report = .{};
-    report.cell_fields.border_fill_references_checked = border_fills != null;
-    report.table_attributes.border_fill_references_checked = border_fills != null;
-    report.table_children.border_references_checked = border_fills != null;
+    var report = initReport(border_fills);
     for (sections) |*section| {
         if (section.part_kind != .section) return error.InvalidPartKind;
         for (section.elements, 0..) |element, index| {
@@ -158,4 +163,27 @@ pub fn inspectWithBorderFills(a: std.mem.Allocator, sections: []const tree_mod.T
         report.sections += 1;
     }
     return report;
+}
+
+fn belowDirectMasterSubList(tree: *const tree_mod.Tree, index: usize) bool {
+    var cursor = tree.elements[index].parent;
+    while (cursor) |parent| : (cursor = tree.elements[parent].parent) {
+        if (tree.elements[parent].parent == 0 and tree.elements[parent].is(document_xml.paragraph_uri, "subList")) return true;
+    }
+    return false;
+}
+
+/// Applies the same table/cell field and occupancy rules only below a
+/// root-direct master-page hp:subList. Returns that part's direct subList count.
+pub fn inspectMasterPage(a: std.mem.Allocator, tree: *const tree_mod.Tree, options: Options, border_fills: ?*const header_resources.Table, report: *Report) !usize {
+    if (tree.part_kind != .master_page or tree.elements.len == 0) return error.InvalidPartKind;
+    var sub_lists: usize = 0;
+    var root_child = tree.elements[0].first_child;
+    while (root_child) |index| : (root_child = tree.elements[index].next_sibling) {
+        sub_lists += @intFromBool(tree.elements[index].is(document_xml.paragraph_uri, "subList"));
+    }
+    for (tree.elements, 0..) |element, index| {
+        if (element.is(document_xml.paragraph_uri, "tbl") and belowDirectMasterSubList(tree, index)) try inspectTable(a, tree, index, options, border_fills, report);
+    }
+    return sub_lists;
 }

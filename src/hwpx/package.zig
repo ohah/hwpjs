@@ -46,6 +46,7 @@ const manifest_xml = @import("manifest_xml.zig");
 const settings = @import("settings.zig");
 const masterpage_references = @import("masterpage_references.zig");
 const masterpage_style_references = @import("masterpage_style_references.zig");
+const masterpage_table_geometry = @import("masterpage_table_geometry.zig");
 
 pub const Archive = zip.Archive;
 pub const Options = zip.Options;
@@ -214,6 +215,12 @@ pub const MasterPageStyleReferenceOptions = struct {
     references: masterpage_style_references.Options = .{},
 };
 pub const MasterPageStyleReferenceReport = masterpage_style_references.Report;
+pub const MasterPageTableGeometryOptions = struct {
+    master_pages: MasterPageOptions = .{},
+    header_resources: HeaderResourceOptions = .{},
+    geometry: masterpage_table_geometry.Options = .{},
+};
+pub const MasterPageTableGeometryReport = masterpage_table_geometry.Report;
 pub const MasterPageRunTopologyOptions = struct {
     master_pages: MasterPageOptions = .{},
     topology: run_topology.MasterOptions = .{},
@@ -236,6 +243,7 @@ pub const KnownOptions = struct {
     master_page_text_nodes: text_node.MasterOptions = .{},
     master_page_text: section_text.MasterOptions = .{},
     master_page_binary_references: masterpage_binary_references.Options = .{},
+    master_page_table_geometry: masterpage_table_geometry.Options = .{},
     structure: StructureOptions = .{},
     header_resources: HeaderResourceOptions = .{},
     section_references: ReferenceOptions = .{},
@@ -342,6 +350,16 @@ pub const Document = struct {
         var resources = try self.inspectHeaderResources(a, options.header_resources);
         defer resources.deinit(a);
         return masterpage_style_references.inspect(a, self.archive, pages.parts.parts, &resources, options.references);
+    }
+
+    /// Applies the section table structure rules to tables within selected
+    /// root-direct master-page subLists. This is not table layout validation.
+    pub fn inspectMasterPageTableGeometry(self: *const Document, a: std.mem.Allocator, options: MasterPageTableGeometryOptions) !MasterPageTableGeometryReport {
+        var pages = try self.inspectMasterPages(a, options.master_pages);
+        defer pages.deinit(a);
+        var resources = try self.inspectHeaderResources(a, options.header_resources);
+        defer resources.deinit(a);
+        return masterpage_table_geometry.inspect(a, self.archive, pages.parts.parts, resources.table(.border_fill), options.geometry);
     }
 
     /// Observes run parent/child shape inside selected master-page subLists.

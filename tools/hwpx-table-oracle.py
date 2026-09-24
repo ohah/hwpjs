@@ -14,6 +14,22 @@ OPF = "{http://www.idpf.org/2007/opf/}"
 P = "{http://www.hancom.co.kr/hwpml/2011/paragraph}"
 H = "{http://www.hancom.co.kr/hwpml/2011/head}"
 SECTION = "{http://www.hancom.co.kr/hwpml/2011/section}sec"
+
+
+def master_path(name):
+    prefix = "Contents/masterpage"
+    return (name.startswith(prefix) and name.endswith(".xml")
+            and bool(name[len(prefix):-4])
+            and name[len(prefix):-4].isascii()
+            and name[len(prefix):-4].isdecimal())
+
+
+def master_tables(root):
+    if root.tag != "masterPage":
+        raise ValueError("HWPX table oracle invalid master-page root")
+    for child in root:
+        if child.tag == P + "subList":
+            yield from child.iter(P + "tbl")
 PARA_LIST_FIELDS = ("id", "textDirection", "lineWrap", "vertAlign", "linkListIDRef", "linkListNextIDRef", "textWidth", "textHeight", "hasTextRef", "hasNumRef", "metatag")
 PARA_LIST_ENUMS = {"textDirection": {"HORIZONTAL", "VERTICAL", "VERTICALALL"}, "lineWrap": {"BREAK", "SQUEEZE", "KEEP"}, "vertAlign": {"TOP", "CENTER", "BOTTOM"}}
 TABLE_SHAPE_CHILD_FIELDS = {
@@ -373,6 +389,8 @@ def inspect_table(table, stats, samples, path, border_ids=None):
 def main():
     stats = Counter()
     shards = [Counter() for _ in range(8)]
+    master_stats = Counter()
+    master_shards = [Counter() for _ in range(8)]
     samples = []
     for root_index, root in enumerate(ROOTS):
         for path in root.rglob("*.hwpx"):
@@ -396,6 +414,8 @@ def main():
                         raise ValueError(f"{relative}: missing or duplicate borderFill ID")
                     border_ids = set(border_values) if border_values is not None else None
                     items = {item.get("id"): item.get("href") for item in opf.findall(OPF + "manifest/" + OPF + "item")}
+                    master_names = [item.get("href") for item in opf.findall(OPF + "manifest/" + OPF + "item")
+                                    if item.get("media-type") == "application/xml" and master_path(item.get("href") or "")]
                     spine = opf.find(OPF + "spine")
                     if spine is None:
                         raise ValueError("HWPX table oracle missing spine")
@@ -414,12 +434,33 @@ def main():
                                 inspect_table(table, shard, [], relative, border_ids)
                             except ValueError as exc:
                                 raise ValueError(f"{relative}:{name}: {exc}") from exc
+                    for name in master_names:
+                        page_bytes = read_part(archive, name, 32 * 1024 * 1024)
+                        page = ET.fromstring(page_bytes)
+                        master_stats["parts"] += 1
+                        master_shard = master_shards[(sum(relative.encode("utf-8")) + root_index) % 8]
+                        master_shard["parts"] += 1
+                        master_stats["xml_bytes"] += len(page_bytes)
+                        master_shard["xml_bytes"] += len(page_bytes)
+                        element_count = sum(1 for _ in page.iter())
+                        master_stats["elements"] += element_count
+                        master_shard["elements"] += element_count
+                        for child in page:
+                            if child.tag == P + "subList":
+                                master_stats["sub_lists"] += 1
+                                master_shard["sub_lists"] += 1
+                        for table in master_tables(page):
+                            try:
+                                inspect_table(table, master_stats, [], relative, border_ids)
+                                inspect_table(table, master_shard, [], relative, border_ids)
+                            except ValueError as exc:
+                                raise ValueError(f"{relative}:{name}: {exc}") from exc
                     stats["accepted"] += 1
                     shard["accepted"] += 1
             except BadZipFile:
                 stats["rejected_zip"] += 1
                 shard["rejected_zip"] += 1
-    print(json.dumps({"counts": dict(stats), "shards": [dict(shard) for shard in shards], "samples": samples}, ensure_ascii=False, indent=2))
+    print(json.dumps({"counts": dict(stats), "shards": [dict(shard) for shard in shards], "master_counts": dict(master_stats), "master_shards": [dict(shard) for shard in master_shards], "samples": samples}, ensure_ascii=False, indent=2))
 
 
 def self_test():
@@ -486,6 +527,11 @@ def self_test():
         pass
     else:
         raise AssertionError("malformed span hidden by missing address")
+    master = ET.fromstring("<masterPage xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph' xmlns:x='urn:foreign'><p:subList><p:tbl rowCnt='0' colCnt='0'/><p:p><p:tbl rowCnt='0' colCnt='0'/></p:p><x:tbl/></p:subList><x:subList><p:tbl/></x:subList><p:tbl/></masterPage>")
+    if len(list(master_tables(master))) != 2:
+        raise AssertionError("master-page table selection crossed a direct subList boundary")
+    if not master_path("Contents/masterpage12.xml") or master_path("Contents/masterpageX.xml"):
+        raise AssertionError("master-page canonical path recognition changed")
     print("HWPX table oracle self-test: grid, shape, and numeric canaries passed")
 
 

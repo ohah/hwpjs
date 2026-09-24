@@ -76,6 +76,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [마스터페이지 이진 리소스 참조](hwpx-master-binary-references.md)는 header/section과 동일한 OPF ID 색인·XML 개체 분류를 재사용하면서 파트 선택·직접 `subList` 범위·예산·결과를 분리합니다. 바이너리 payload 의미는 별개입니다.
 
+[마스터페이지 표 격자](hwpx-master-table-geometry.md)는 같은 파트 선택·직접 `subList` 경계를 사용하고 section의 표·셀 필드 판정에 위임합니다. 별도 표 파서를 두지 않습니다.
+
 [Run 변경 추적 ID 원값](hwpx-run-metadata.md)은 section과 마스터페이지에서 `charTcId`·대체 `paraTcId`를 같은 필드 검사기로 관측합니다. 부재·0·양쪽 값 충돌을 보존하며 변경 추적의 의미나 기본값 결정은 후속 계층에 남깁니다.
 
 [Run 위치·직접 자식 진단](hwpx-run-topology.md)은 같은 두 범위의 부모·자식 관계와 `secPr` 위치를 별도 순회에서 관측합니다. 2021 스키마 순서를 2011 문서에 강제하지 않고 미등록 자식을 진단으로 보존합니다.

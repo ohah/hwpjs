@@ -309,6 +309,7 @@ const Statistics = struct {
     switch_removed_case: [5]usize,
     switch_removed_default: [5]usize,
     table_geometry: package.TableGeometryReport,
+    master_table_geometry: package.MasterPageTableGeometryReport,
 };
 
 const Outcome = union(enum) {
@@ -460,6 +461,8 @@ fn inspectOne(bytes: []const u8) !Outcome {
     try std.testing.expectEqual(known.master_page_text_nodes.text_nodes, known.master_page_text.text.text_elements);
     try std.testing.expectEqual(known.master_page_text_nodes.non_direct_text_nodes, known.master_page_text.text.non_direct_text_elements);
     try std.testing.expectEqual(known.master_page_text_nodes.tab.tabs, known.master_page_text.text.inlineCount(.tab));
+    try std.testing.expectEqual(masterpages, known.master_page_table_geometry.parts);
+    try std.testing.expectEqual(master_sub_lists, known.master_page_table_geometry.sub_lists);
     try std.testing.expectEqual(master_sub_lists, known.master_page_text_nodes.sub_lists);
     try std.testing.expectEqual(masterpages, known.master_page_line_segments.parts);
     try std.testing.expectEqual(master_sub_lists, known.master_page_line_segments.sub_lists);
@@ -566,6 +569,7 @@ fn inspectOne(bytes: []const u8) !Outcome {
         .switch_removed_case = switch_removed_case,
         .switch_removed_default = switch_removed_default,
         .table_geometry = known.table_geometry,
+        .master_table_geometry = known.master_page_table_geometry,
     } };
 }
 
@@ -626,6 +630,7 @@ fn surveyShard(shard: usize) !void {
     var switch_removed_case: [5]usize = @splat(0);
     var switch_removed_default: [5]usize = @splat(0);
     var table_geometry: package.TableGeometryReport = .{};
+    var master_table_geometry: package.MasterPageTableGeometryReport = .{};
     var table_attributes: package.TableAttributesReport = .{};
     var table_children: package.TableChildrenReport = .{};
     var table_shape: ShapeTotals = .{};
@@ -714,6 +719,26 @@ fn surveyShard(shard: usize) !void {
                     for (stats.switch_removed_case, 0..) |value, i| switch_removed_case[i] += value;
                     for (stats.switch_removed_default, 0..) |value, i| switch_removed_default[i] += value;
                     const t = stats.table_geometry;
+                    const mt = stats.master_table_geometry;
+                    master_table_geometry.parts += mt.parts;
+                    master_table_geometry.sub_lists += mt.sub_lists;
+                    master_table_geometry.xml_bytes += mt.xml_bytes;
+                    master_table_geometry.elements += mt.elements;
+                    master_table_geometry.geometry.tables += mt.geometry.tables;
+                    master_table_geometry.geometry.rows += mt.geometry.rows;
+                    master_table_geometry.geometry.cells += mt.geometry.cells;
+                    master_table_geometry.geometry.grid_slots += mt.geometry.grid_slots;
+                    master_table_geometry.geometry.cell_slots += mt.geometry.cell_slots;
+                    master_table_geometry.geometry.overlaps += mt.geometry.overlaps;
+                    master_table_geometry.geometry.uncovered_slots += mt.geometry.uncovered_slots;
+                    master_table_geometry.geometry.table_attributes.border_fill_references.resolved += mt.geometry.table_attributes.border_fill_references.resolved;
+                    master_table_geometry.geometry.cell_fields.border_fill_references.resolved += mt.geometry.cell_fields.border_fill_references.resolved;
+                    master_table_geometry.geometry.table_shape.label.elements += mt.geometry.table_shape.label.elements;
+                    master_table_geometry.geometry.table_shape.table_fields[0].sum += mt.geometry.table_shape.table_fields[0].sum;
+                    master_table_geometry.geometry.table_shape.size.fields[0].sum += mt.geometry.table_shape.size.fields[0].sum;
+                    master_table_geometry.geometry.cell_fields.size_sum[0] += mt.geometry.cell_fields.size_sum[0];
+                    master_table_geometry.geometry.cell_sub_lists.direct_paragraphs += mt.geometry.cell_sub_lists.direct_paragraphs;
+                    master_table_geometry.geometry.table_children.margin_sum[0] += mt.geometry.table_children.margin_sum[0];
                     table_geometry.tables += t.tables;
                     table_geometry.rows += t.rows;
                     table_geometry.cells += t.cells;
@@ -899,6 +924,24 @@ fn surveyShard(shard: usize) !void {
     try std.testing.expectEqual(expected.master_line_paragraphs[shard], master_paragraph_children.children.line_seg_arrays);
     try std.testing.expectEqual(@as(usize, 0), master_paragraph_children.children.paragraphs_without_run + master_paragraph_children.children.paragraphs_without_line_seg_array + master_paragraph_children.children.paragraphs_with_multiple_line_seg_arrays + master_paragraph_children.children.other_direct + master_paragraph_children.children.foreign_direct);
     try std.testing.expectEqual(expected.table_count[shard], table_geometry.tables);
+    try std.testing.expectEqual(expected.master_table_parts[shard], master_table_geometry.parts);
+    try std.testing.expectEqual(expected.master_table_sub_lists[shard], master_table_geometry.sub_lists);
+    try std.testing.expectEqual(expected.master_table_xml_bytes[shard], master_table_geometry.xml_bytes);
+    try std.testing.expectEqual(expected.master_table_elements[shard], master_table_geometry.elements);
+    try std.testing.expectEqual(expected.master_table_count[shard], master_table_geometry.geometry.tables);
+    try std.testing.expectEqual(expected.master_table_rows[shard], master_table_geometry.geometry.rows);
+    try std.testing.expectEqual(expected.master_table_cells[shard], master_table_geometry.geometry.cells);
+    try std.testing.expectEqual(expected.master_table_grid_slots[shard], master_table_geometry.geometry.grid_slots);
+    try std.testing.expectEqual(expected.master_table_grid_slots[shard], master_table_geometry.geometry.cell_slots);
+    try std.testing.expectEqual(@as(usize, 0), master_table_geometry.geometry.overlaps + master_table_geometry.geometry.uncovered_slots);
+    try std.testing.expectEqual(expected.master_table_count[shard], master_table_geometry.geometry.table_attributes.border_fill_references.resolved);
+    try std.testing.expectEqual(expected.master_table_cells[shard], master_table_geometry.geometry.cell_fields.border_fill_references.resolved);
+    try std.testing.expectEqual(expected.master_table_labels[shard], master_table_geometry.geometry.table_shape.label.elements);
+    try std.testing.expectEqual(expected.master_table_id_sum[shard], master_table_geometry.geometry.table_shape.table_fields[0].sum);
+    try std.testing.expectEqual(expected.master_table_width_sum[shard], master_table_geometry.geometry.table_shape.size.fields[0].sum);
+    try std.testing.expectEqual(expected.master_table_cell_width_sum[shard], master_table_geometry.geometry.cell_fields.size_sum[0]);
+    try std.testing.expectEqual(expected.master_table_cell_paragraphs[shard], master_table_geometry.geometry.cell_sub_lists.direct_paragraphs);
+    try std.testing.expectEqual(expected.master_table_inside_left_sum[shard], master_table_geometry.geometry.table_children.margin_sum[0]);
     try std.testing.expectEqual(expected.table_rows[shard], table_child_topology.rows);
     try std.testing.expectEqual(expected.table_cells[shard], table_child_topology.cells);
     try std.testing.expectEqual(expected.table_cells[shard] * 5, table_child_topology.cell_known_direct);

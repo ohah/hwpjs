@@ -27,6 +27,7 @@ const manifest_xml = @import("manifest_xml.zig");
 const settings = @import("settings.zig");
 const masterpage_references = @import("masterpage_references.zig");
 const masterpage_style_references = @import("masterpage_style_references.zig");
+const masterpage_table_geometry = @import("masterpage_table_geometry.zig");
 
 /// Results of the currently implemented HWPX inspections only. A successful
 /// return does not assert complete schema, semantic or edit/save validity.
@@ -44,6 +45,7 @@ pub const Report = struct {
     master_page_text_nodes: text_node.Report,
     master_page_text: section_text.MasterReport,
     master_page_binary_references: masterpage_binary_refs.Report,
+    master_page_table_geometry: masterpage_table_geometry.Report,
     structure: structure.Report,
     resources: resources.Report,
     section_references: section_refs.Report,
@@ -106,6 +108,7 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
     errdefer structure_report.deinit(a);
     var resource_report = try document.inspectHeaderResources(a, options.header_resources);
     errdefer resource_report.deinit(a);
+    const master_page_table_report = try masterpage_table_geometry.inspect(a, document.archive, master_page_report.parts.parts, resource_report.table(.border_fill), options.master_page_table_geometry);
     const master_page_style_report = try document.inspectMasterPageStyleReferences(a, .{ .master_pages = options.master_pages, .header_resources = options.header_resources, .references = options.master_page_style_references });
     const master_page_run_topology_report = try document.inspectMasterPageRunTopology(a, .{ .master_pages = options.master_pages, .topology = options.master_page_run_topology });
     const master_page_text_nodes_report = try document.inspectMasterPageTextNodes(a, .{ .master_pages = options.master_pages, .text_nodes = options.master_page_text_nodes });
@@ -147,6 +150,7 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
         .master_page_text_nodes = master_page_text_nodes_report,
         .master_page_text = master_page_text_report,
         .master_page_binary_references = master_page_binary_report,
+        .master_page_table_geometry = master_page_table_report,
         .structure = structure_report,
         .resources = resource_report,
         .section_references = section_ref_report,
