@@ -10,6 +10,7 @@ pub const Stats = struct {
     jpeg: usize = 0,
     bmp: usize = 0,
     gif: usize = 0,
+    wmf: usize = 0,
     mismatches: usize = 0,
     failures: usize = 0,
     encoded_bytes: usize = 0,
@@ -19,12 +20,12 @@ pub const Stats = struct {
         var result = try group(items, &known.fill_brush_image_links, &known.fill_brush_image_payloads);
         const master = try group(items, &known.master_page_fill_brush_image_links, &known.master_page_fill_brush_image_payloads);
         result.master_targets = master.targets;
-        try std.testing.expectEqual(@as(usize, 0), master.png + master.jpeg + master.bmp + master.gif + master.mismatches + master.failures + master.encoded_bytes);
+        try std.testing.expectEqual(@as(usize, 0), master.png + master.jpeg + master.bmp + master.gif + master.wmf + master.mismatches + master.failures + master.encoded_bytes);
         return result;
     }
 
     pub fn merge(self: *Stats, other: Stats) void {
-        inline for (.{ "targets", "png", "jpeg", "bmp", "gif", "mismatches", "failures", "encoded_bytes", "master_targets" }) |field| @field(self, field) += @field(other, field);
+        inline for (.{ "targets", "png", "jpeg", "bmp", "gif", "wmf", "mismatches", "failures", "encoded_bytes", "master_targets" }) |field| @field(self, field) += @field(other, field);
     }
 };
 
@@ -52,6 +53,7 @@ fn group(items: manifest.Manifest, linked: *const links.Report, report: *const p
             .jpeg => result.jpeg += 1,
             .bmp => result.bmp += 1,
             .gif => result.gif += 1,
+            .wmf => result.wmf += 1,
             .unknown => unreachable,
         }
     }

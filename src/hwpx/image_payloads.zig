@@ -5,9 +5,11 @@ const png = @import("../image/png/pixels.zig");
 const jpeg = @import("../image/jpeg/structure.zig");
 const bmp = @import("../image/bmp/structure.zig");
 const gif = @import("../image/gif/document.zig");
+const wmf_header = @import("../image/wmf/header.zig");
+const wmf_records = @import("../image/wmf/records.zig");
 
-pub const Format = enum { png, jpeg, bmp, gif, unknown };
-pub const Inspection = enum { png_scanlines, jpeg_framing, bmp_structure, gif_indices, unsupported };
+pub const Format = enum { png, jpeg, bmp, gif, wmf, unknown };
+pub const Inspection = enum { png_scanlines, jpeg_framing, bmp_structure, gif_indices, wmf_framing, unsupported };
 
 pub const Options = struct {
     max_targets: usize = 100_000,
@@ -60,6 +62,8 @@ pub fn formatOf(bytes: []const u8) Format {
     if (std.mem.startsWith(u8, bytes, &.{ 0xff, 0xd8 })) return .jpeg;
     if (std.mem.startsWith(u8, bytes, "BM")) return .bmp;
     if (std.mem.startsWith(u8, bytes, "GIF")) return .gif;
+    if (std.mem.startsWith(u8, bytes, &.{ 0xd7, 0xcd, 0xc6, 0x9a })) return .wmf;
+    if (bytes.len >= 4 and (std.mem.eql(u8, bytes[0..2], &.{ 1, 0 }) or std.mem.eql(u8, bytes[0..2], &.{ 2, 0 })) and std.mem.eql(u8, bytes[2..4], &.{ 9, 0 })) return .wmf;
     return .unknown;
 }
 
@@ -69,6 +73,7 @@ pub fn mediaMatches(format: Format, media: []const u8) ?bool {
         .jpeg => std.mem.eql(u8, media, "image/jpeg") or std.mem.eql(u8, media, "image/jpg"),
         .bmp => std.mem.eql(u8, media, "image/bmp"),
         .gif => std.mem.eql(u8, media, "image/gif"),
+        .wmf => std.mem.eql(u8, media, "image/wmf"),
         .unknown => null,
     };
 }
@@ -99,6 +104,16 @@ fn validate(a: std.mem.Allocator, bytes: []const u8, format: Format, options: Op
             var decoded = try gif.decode(a, bytes, selected);
             defer decoded.deinit(a);
             return .{ .gif_indices = decoded.total_pixels, .gif_codes = decoded.total_codes, .gif_frames = decoded.frames.len };
+        },
+        .wmf => {
+            if (std.mem.startsWith(u8, bytes, &.{ 0xd7, 0xcd, 0xc6, 0x9a })) {
+                const header = try wmf_header.parse(bytes, .specified);
+                _ = try wmf_records.validate(bytes, header, .{});
+            } else {
+                const header = try wmf_header.parseStandard(bytes);
+                _ = try wmf_records.validate(bytes, header, .{});
+            }
+            return .{};
         },
         .unknown => return .{},
     }
@@ -157,6 +172,7 @@ pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, items: manifest.Manif
                 .jpeg => .jpeg_framing,
                 .bmp => .bmp_structure,
                 .gif => .gif_indices,
+                .wmf => .wmf_framing,
                 .unknown => .unsupported,
             },
             .inspection_error = inspection_error,

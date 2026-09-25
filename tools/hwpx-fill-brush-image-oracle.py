@@ -128,6 +128,9 @@ def picture_payload_archive(archive):
                 counts[source + "_invalid_png_targets"] += bad != 0 or malformed
                 counts[source + "_bad_png_crc_chunks"] += bad
                 counts[source + "_malformed_png_targets"] += malformed
+            if kind == "wmf":
+                counts[source + ("_wmf_placeable" if data.startswith(bytes.fromhex("d7cdc69a")) else "_wmf_standard")] += 1
+                counts[source + "_invalid_wmf_targets"] += not wmf_framing_ok(data)
     return counts
 
 
@@ -204,11 +207,48 @@ def byte_format(data):
         return "bmp"
     if data.startswith(b"GIF"):
         return "gif"
+    if data.startswith(bytes.fromhex("d7cdc69a")) or (len(data) >= 4 and data[:2] in (b"\x01\0", b"\x02\0") and data[2:4] == b"\x09\0"):
+        return "wmf"
     return "unknown"
 
 
 def matching_media(kind, media):
-    return media in {"png": ("image/png",), "jpeg": ("image/jpeg", "image/jpg"), "bmp": ("image/bmp",), "gif": ("image/gif",)}.get(kind, ())
+    return media in {"png": ("image/png",), "jpeg": ("image/jpeg", "image/jpg"), "bmp": ("image/bmp",), "gif": ("image/gif",), "wmf": ("image/wmf",)}.get(kind, ())
+
+
+def wmf_framing_ok(data):
+    """Independent strict META_HEADER/META_RECORD check; no payload semantics."""
+    placeable = data.startswith(bytes.fromhex("d7cdc69a"))
+    start = 22 if placeable else 0
+    if len(data) < start + 24 or (len(data) - start) % 2:
+        return False
+    if placeable:
+        words = [int.from_bytes(data[i:i + 2], "little") for i in range(0, 22, 2)]
+        if any(data[16:20]):
+            return False
+        if words[10] != (words[0] ^ words[1] ^ words[2] ^ words[3] ^ words[4] ^ words[5] ^ words[6] ^ words[7] ^ words[8] ^ words[9]):
+            return False
+    u16 = lambda pos: int.from_bytes(data[pos:pos + 2], "little")
+    u32 = lambda pos: int.from_bytes(data[pos:pos + 4], "little")
+    if u16(start) not in (1, 2) or u16(start + 2) != 9 or u16(start + 4) not in (0x0100, 0x0300):
+        return False
+    if placeable and u16(start) == 2 and u16(4) != 0:
+        return False
+    if u32(start + 6) != (len(data) - start) // 2:
+        return False
+    declared_max = u32(start + 12)
+    at = start + 18
+    observed_max = 0
+    while at + 6 <= len(data):
+        size = u32(at)
+        if size < 3 or size > (len(data) - at) // 2:
+            return False
+        observed_max = max(observed_max, size)
+        fn = u16(at + 4)
+        at += size * 2
+        if fn == 0:
+            return size == 3 and at == len(data) and observed_max == declared_max
+    return False
 
 
 def png_defects(data):
@@ -352,6 +392,16 @@ def self_test():
     assert byte_format(bytes.fromhex("89504e470d0a1a0a")) == "png"
     assert byte_format(bytes.fromhex("ffd8")) == "jpeg"
     assert not matching_media("png", "image/jpg")
+    standard_wmf = bytes.fromhex("0100090000030c0000000000030000000000030000000000")
+    placeable_wmf = bytes.fromhex("d7cdc69a") + bytes(16) + bytes.fromhex("1157") + standard_wmf
+    assert byte_format(standard_wmf) == byte_format(placeable_wmf) == "wmf"
+    assert matching_media("wmf", "image/wmf") and not matching_media("wmf", "image/png")
+    assert wmf_framing_ok(standard_wmf) and wmf_framing_ok(placeable_wmf)
+    assert not wmf_framing_ok(standard_wmf[:-1])
+    assert not wmf_framing_ok(standard_wmf[:-6] + bytes.fromhex("020000000000"))
+    assert not wmf_framing_ok(standard_wmf[:6] + bytes(4) + standard_wmf[10:])
+    assert not wmf_framing_ok(placeable_wmf[:28] + bytes(4) + placeable_wmf[32:])
+    assert not wmf_framing_ok(placeable_wmf[:20] + b"\0\0" + placeable_wmf[22:])
     valid_png = bytes.fromhex("89504e470d0a1a0a") + b"\0\0\0\0IEND" + zlib.crc32(b"IEND").to_bytes(4, "big")
     assert png_defects(valid_png) == (0, False)
     assert png_defects(valid_png[:-1] + bytes([valid_png[-1] ^ 1])) == (1, False)

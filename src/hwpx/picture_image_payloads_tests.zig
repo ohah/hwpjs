@@ -42,6 +42,79 @@ fn inspectSample(a: std.mem.Allocator, options: payloads.Options, corrupt_png: b
     return payloads.inspect(a, archive, opf, &raw, options);
 }
 
+fn wmfBytes(placeable: bool) [46]u8 {
+    var bytes = [_]u8{0} ** 46;
+    const start: usize = if (placeable) 22 else 0;
+    if (placeable) {
+        std.mem.writeInt(u32, bytes[0..4], 0x9ac6cdd7, .little);
+        var checksum: u16 = 0;
+        for (0..10) |i| checksum ^= std.mem.readInt(u16, bytes[i * 2 ..][0..2], .little);
+        std.mem.writeInt(u16, bytes[20..22], checksum, .little);
+    }
+    std.mem.writeInt(u16, bytes[start..][0..2], 1, .little);
+    std.mem.writeInt(u16, bytes[start + 2 ..][0..2], 9, .little);
+    std.mem.writeInt(u16, bytes[start + 4 ..][0..2], 0x0300, .little);
+    std.mem.writeInt(u32, bytes[start + 6 ..][0..4], 12, .little);
+    std.mem.writeInt(u32, bytes[start + 12 ..][0..4], 3, .little);
+    std.mem.writeInt(u32, bytes[start + 18 ..][0..4], 3, .little);
+    return bytes;
+}
+
+fn inspectWmf(a: std.mem.Allocator, data: []const u8, media: []const u8) !payloads.Report {
+    const sources = [_]fixture.Source{.{ .name = "BinData/image.wmf", .data = data }};
+    const bytes = try fixture.storedZip(a, &sources);
+    defer a.free(bytes);
+    var archive = try zip.open(a, bytes, .{});
+    defer archive.deinit();
+    var items = [_]manifest.Item{item("wmf", "BinData/image.wmf", media, 0)};
+    const opf: manifest.Manifest = .{ .items = &items, .spine = @constCast(&[_]manifest.SpineRef{}), .xml_bytes = 0 };
+    var sites = [_]links.Site{site("wmf", .embedded, 0)};
+    const raw: links.Report = .{ .sections = 1, .master_pages = 0, .sites = &sites, .counts = @splat(0) };
+    return payloads.inspect(a, archive, opf, &raw, .{});
+}
+
+test "HWPX picture image payloads distinguish WMF framing and malformed bytes" {
+    const a = std.testing.allocator;
+    var standard = wmfBytes(false);
+    var placeable = wmfBytes(true);
+    try std.testing.expectEqual(payloads.Format.wmf, @import("image_payloads.zig").formatOf(standard[0..24]));
+    try std.testing.expectEqual(payloads.Format.wmf, @import("image_payloads.zig").formatOf(&placeable));
+    var disk = standard;
+    disk[0] = 2;
+    try std.testing.expectEqual(payloads.Format.wmf, @import("image_payloads.zig").formatOf(disk[0..24]));
+    for ([_][]const u8{ standard[0..24], &placeable }) |data| {
+        var valid = try inspectWmf(a, data, "image/wmf");
+        defer valid.deinit(a);
+        try std.testing.expectEqual(@as(usize, 0), valid.unknown_formats + valid.inspection_failures + valid.media_mismatches);
+        try std.testing.expectEqual(payloads.Inspection.wmf_framing, valid.targets[0].inspection);
+    }
+    var mismatched = try inspectWmf(a, standard[0..24], "image/png");
+    defer mismatched.deinit(a);
+    try std.testing.expectEqual(@as(usize, 1), mismatched.media_mismatches);
+    standard[6] = 0;
+    var wrong_size = try inspectWmf(a, standard[0..24], "image/wmf");
+    defer wrong_size.deinit(a);
+    try std.testing.expectEqual(@as(?anyerror, error.InvalidWmfSize), wrong_size.targets[0].inspection_error);
+    standard = wmfBytes(false);
+    standard[18] = 2;
+    var bad_record = try inspectWmf(a, standard[0..24], "image/wmf");
+    defer bad_record.deinit(a);
+    try std.testing.expectEqual(@as(?anyerror, error.InvalidWmfRecordSize), bad_record.targets[0].inspection_error);
+    placeable[20] ^= 1;
+    var bad_checksum = try inspectWmf(a, &placeable, "image/wmf");
+    defer bad_checksum.deinit(a);
+    try std.testing.expectEqual(@as(?anyerror, error.InvalidWmfPlaceableChecksum), bad_checksum.targets[0].inspection_error);
+    placeable = wmfBytes(true);
+    std.mem.writeInt(u32, placeable[28..32], 0, .little);
+    var zero_size = try inspectWmf(a, &placeable, "image/wmf");
+    defer zero_size.deinit(a);
+    try std.testing.expectEqual(@as(?anyerror, error.InvalidWmfSize), zero_size.targets[0].inspection_error);
+    var truncated = try inspectWmf(a, standard[0..4], "image/wmf");
+    defer truncated.deinit(a);
+    try std.testing.expectEqual(@as(?anyerror, error.UnexpectedEnd), truncated.targets[0].inspection_error);
+    try std.testing.expectEqual(payloads.Format.unknown, @import("image_payloads.zig").formatOf(&.{ 1, 0, 8, 0, 0, 3 }));
+}
+
 test "HWPX picture image payloads decode unique targets without fetching external sites" {
     const a = std.testing.allocator;
     var report = try inspectSample(a, .{}, false, false);
