@@ -1,5 +1,7 @@
 # Zig/WASM 구현 구조
 
+[구역 정의 ID 참조](hwpx-section-definition-references.md)는 기존 구역 정의 값과 header 리소스 ID 색인을 결합하는 진단 계층입니다. `0`·부재·미해결을 분리하고 원문 파싱을 재구현하지 않습니다.
+
 [HWPX 조건부 참조 선택](hwpx-switch-selection.md)은 한 정책을 이진·차트 스캐너가 공유하는 선택적 계층입니다. 기존 raw 검사와 전체 문서 분기 적용은 별개입니다.
 
 [선택 분기 section 텍스트](hwpx-selected-section-text.md)도 이 정책을 재사용하며 기본 원문 텍스트 보고서는 바꾸지 않습니다. 참조·텍스트의 활성 분기 적용이 곧 문서 모델 완성을 뜻하지는 않습니다.

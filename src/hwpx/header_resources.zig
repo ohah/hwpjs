@@ -4,7 +4,7 @@ const zip = @import("../zip/archive.zig");
 const attrs = @import("xml_attributes.zig");
 const document_xml = @import("document_xml.zig");
 
-pub const Kind = enum(u8) { border_fill, char_shape, tab, numbering, bullet, para_shape, style };
+pub const Kind = enum(u8) { border_fill, char_shape, tab, numbering, bullet, para_shape, style, memo_shape };
 const Descriptor = struct { group: []const u8, item: []const u8 };
 const descriptors = [_]Descriptor{
     .{ .group = "borderFills", .item = "borderFill" },
@@ -14,7 +14,11 @@ const descriptors = [_]Descriptor{
     .{ .group = "bullets", .item = "bullet" },
     .{ .group = "paraProperties", .item = "paraPr" },
     .{ .group = "styles", .item = "style" },
+    .{ .group = "memoProperties", .item = "memoPr" },
 };
+comptime {
+    if (descriptors.len != @typeInfo(Kind).@"enum".fields.len) @compileError("header resource kind/descriptor mismatch");
+}
 
 pub const Options = struct {
     max_xml_bytes: usize = 32 * 1024 * 1024,

@@ -46,8 +46,23 @@ test "HWPX known inspections compose every currently exposed document report" {
     try std.testing.expectEqual(report.structure.sections.len, report.table_geometry.sections);
     try std.testing.expectEqual(report.structure.sections.len, report.page_geometry.sections);
     try std.testing.expectEqual(@as(usize, 1), report.page_geometry.pages.len);
+    try std.testing.expectEqual(@as(usize, 1), report.section_definition_references.outline.resolved);
+    try std.testing.expectEqual(@as(usize, 1), report.section_definition_references.memo.zero);
     try std.testing.expectEqual(package.PageGeometryPage{ .section_ordinal = 0, .element_index = report.page_geometry.pages[0].element_index, .orientation = .narrowly, .width = 59528, .height = 84188, .gutter_type = .left_only, .margin = .{ .header = 4252, .footer = 4252, .gutter = 0, .left = 8504, .right = 8504, .top = 5668, .bottom = 4252 } }, report.page_geometry.pages[0]);
     try std.testing.expect(report.paragraph_metadata.paragraphs > 0);
+}
+
+test "HWPX known inspections resolve real memo shape resource" {
+    const a = std.testing.allocator;
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "reference/rhwp/samples/누름틀-2024.hwpx", a, .limited(1_000_000));
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    var report = try document.inspectKnown(a, .{});
+    defer report.deinit(a);
+    try std.testing.expect(report.resources.table(.memo_shape).hasId(1));
+    try std.testing.expectEqual(@as(usize, 1), report.section_definition_references.memo.resolved);
+    try std.testing.expectEqual(@as(usize, 1), report.section_definition_references.outline.resolved);
 }
 
 test "HWPX known inspections expose page geometry and independent file values" {

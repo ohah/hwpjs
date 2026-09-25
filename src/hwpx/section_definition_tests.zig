@@ -2,6 +2,8 @@ const std = @import("std");
 const section_tree = @import("section_tree.zig");
 const header_tree = @import("header_tree.zig");
 const section_definitions = @import("section_definition.zig");
+const definition_refs = @import("section_definition_refs.zig");
+const resources = @import("header_resources.zig");
 
 const prefix = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'>";
 const suffix = "</s:sec>";
@@ -10,6 +12,41 @@ fn read(a: std.mem.Allocator, xml: []const u8, options: section_definitions.Opti
     var section = try section_tree.parse(a, xml, 0, 0, .{});
     defer section.deinit(a);
     return section_definitions.inspect(a, &.{section}, options);
+}
+
+test "HWPX section definition references distinguish absent zero missing table and target" {
+    const a = std.testing.allocator;
+    var definitions = try read(a, prefix ++
+        "<p:secPr/><p:secPr outlineShapeIDRef='0' memoShapeIDRef='0'/>" ++
+        "<p:secPr outlineShapeIDRef='7' memoShapeIDRef='3'/>" ++
+        "<p:secPr outlineShapeIDRef='8' memoShapeIDRef='4'/>" ++ suffix, .{});
+    defer definitions.deinit(a);
+    var inventory: resources.Report = .{ .xml_bytes = 0, .tables = @splat(.{}) };
+    defer inventory.deinit(a);
+    const numbering = &inventory.tables[@intFromEnum(resources.Kind.numbering)];
+    numbering.present = true;
+    try numbering.ids.append(a, 7);
+    var report = try definition_refs.inspect(&definitions, &inventory);
+    try std.testing.expectEqual(@as(usize, 1), report.outline.absent);
+    try std.testing.expectEqual(@as(usize, 1), report.outline.zero);
+    try std.testing.expectEqual(@as(usize, 1), report.outline.resolved);
+    try std.testing.expectEqual(@as(usize, 1), report.outline.missing_target);
+    try std.testing.expectEqual(@as(?u32, 8), report.outline.first_unresolved_id);
+    try std.testing.expectEqual(@as(usize, 2), report.memo.absent_table);
+    try std.testing.expectEqual(@as(?u32, 3), report.memo.first_unresolved_id);
+    const memo = &inventory.tables[@intFromEnum(resources.Kind.memo_shape)];
+    memo.present = true;
+    try memo.ids.append(a, 3);
+    report = try definition_refs.inspect(&definitions, &inventory);
+    try std.testing.expectEqual(@as(usize, 1), report.memo.resolved);
+    try std.testing.expectEqual(@as(usize, 1), report.memo.missing_target);
+    try std.testing.expectEqual(@as(?u32, 4), report.memo.first_unresolved_id);
+    try std.testing.expectEqual(@as(?usize, 0), report.memo.first_unresolved_section);
+    try std.testing.expectEqual(@as(?usize, definitions.definitions[3].element_index), report.memo.first_unresolved_element);
+    numbering.present = false;
+    report = try definition_refs.inspect(&definitions, &inventory);
+    try std.testing.expectEqual(@as(usize, 2), report.outline.absent_table);
+    try std.testing.expectEqual(@as(usize, 0), report.outline.missing_target);
 }
 
 test "HWPX section definition preserves old and new tab fields independently" {

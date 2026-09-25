@@ -18,6 +18,13 @@ pub const Counts = struct {
 
 pub const Outcome = enum { absent, resolved, missing_target, absent_table };
 
+/// One resource-ID resolution rule shared by all HWPX reference diagnostics.
+/// Callers decide separately whether a zero value has special semantics.
+pub fn resolveValue(id: u32, table: *const header_resources.Table) Outcome {
+    if (!table.present) return .absent_table;
+    return if (table.hasId(id)) .resolved else .missing_target;
+}
+
 /// Resolves an already parsed ID using the same table and diagnostics as note.
 pub fn noteValue(counts: *Counts, id: ?u32, table: *const header_resources.Table, item_index: usize) Outcome {
     const value = id orelse {
@@ -25,19 +32,21 @@ pub fn noteValue(counts: *Counts, id: ?u32, table: *const header_resources.Table
         return .absent;
     };
     counts.present += 1;
-    if (!table.present) {
-        counts.absent_table += 1;
-    } else if (table.hasId(value)) {
-        counts.resolved += 1;
-        return .resolved;
-    } else {
-        counts.missing_target += 1;
+    const outcome = resolveValue(value, table);
+    switch (outcome) {
+        .resolved => {
+            counts.resolved += 1;
+            return .resolved;
+        },
+        .absent_table => counts.absent_table += 1,
+        .missing_target => counts.missing_target += 1,
+        .absent => unreachable,
     }
     if (counts.first_unresolved_id == null) {
         counts.first_unresolved_id = value;
         counts.first_unresolved_item_index = item_index;
     }
-    return if (table.present) .missing_target else .absent_table;
+    return outcome;
 }
 
 /// Consumes an owned XML-normalized optional attribute value. Missing values

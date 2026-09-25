@@ -374,6 +374,12 @@ pub const page_geometry_margin_sum = [_][7]u64{
 // Independent section-definition oracle. Numeric order: spaceColumns,
 // tabStop, tabStopVal, outlineShapeIDRef, memoShapeIDRef, masterPageCnt.
 pub const section_definition_count = [_]usize{ 75, 72, 72, 55, 64, 62, 63, 92 };
+// Independent tools/hwpx-section-definition-reference-oracle.py census.
+pub const section_outline_zero = [_]usize{ 16, 19, 13, 13, 14, 17, 11, 39 };
+pub const section_outline_resolved = [_]usize{ 55, 49, 56, 41, 47, 43, 48, 53 };
+pub const section_outline_absent_table = [_]usize{ 4, 4, 3, 1, 3, 2, 4, 0 };
+pub const section_memo_zero = [_]usize{ 53, 62, 57, 46, 55, 56, 52, 85 };
+pub const section_memo_resolved = [_]usize{ 22, 10, 15, 9, 9, 6, 11, 7 };
 pub const section_definition_missing_id = [_]usize{ 0, 0, 0, 0, 0, 0, 0, 10 };
 pub const section_definition_empty_id = [_]usize{ 75, 72, 72, 55, 64, 62, 63, 82 };
 pub const section_definition_missing_new_tabs = [_]usize{ 9, 16, 10, 8, 16, 9, 5, 18 };

@@ -1136,6 +1136,41 @@ test "HWPX header resources use explicit sparse IDs and preserve missing declara
     try std.testing.expect(decoded_resources.table(.style).hasId(2));
 }
 
+test "HWPX header resources index memo shape IDs without interpreting payload" {
+    const a = std.testing.allocator;
+    const xml = resource_prefix ++ "<h:memoProperties itemCnt='2'><h:memoPr id='9'/><h:memoPr id='3'/></h:memoProperties>" ++ resource_suffix;
+    const bytes = try syntheticStructureZip(a, xml, structure_section);
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    var inventory = try document.inspectHeaderResources(a, .{});
+    defer inventory.deinit(a);
+    const memo = inventory.table(.memo_shape);
+    try std.testing.expect(memo.present);
+    try std.testing.expectEqual(@as(?bool, true), memo.countMatches());
+    try std.testing.expectEqualSlices(u32, &.{ 3, 9 }, memo.ids.items);
+    try expectResourceError(a, resource_prefix ++ "<h:memoProperties><h:memoPr id='3'/><h:memoPr id='03'/></h:memoProperties>" ++ resource_suffix, .{}, error.DuplicateResourceId);
+    try expectResourceError(a, resource_prefix ++ "<h:memoProperties><h:memoPr/></h:memoProperties>" ++ resource_suffix, .{}, error.MissingResourceId);
+    try expectResourceError(a, resource_prefix ++ "<h:memoProperties/><h:memoProperties/>" ++ resource_suffix, .{}, error.DuplicateResourceTable);
+    try expectResourceError(a, xml, .{ .resources = .{ .max_resource_ids = 1 } }, error.LimitExceeded);
+    const spoofed = resource_prefix ++ "<x:memoProperties xmlns:x='urn:foreign'><x:memoPr id='88'/></x:memoProperties><h:memoProperties><x:memoPr xmlns:x='urn:foreign' id='90'/><h:wrapper><h:memoPr id='91'/></h:wrapper><h:memoPr id='3'/></h:memoProperties>" ++ resource_suffix;
+    const spoofed_bytes = try syntheticStructureZip(a, spoofed, structure_section);
+    defer a.free(spoofed_bytes);
+    var spoofed_document = try package.inspectDocument(a, spoofed_bytes, .{});
+    defer spoofed_document.deinit(a);
+    var spoofed_inventory = try spoofed_document.inspectHeaderResources(a, .{});
+    defer spoofed_inventory.deinit(a);
+    try std.testing.expectEqualSlices(u32, &.{3}, spoofed_inventory.table(.memo_shape).ids.items);
+    try std.testing.checkAllAllocationFailures(a, struct {
+        fn run(allocator: std.mem.Allocator, source: []const u8) !void {
+            var parsed = try package.inspectDocument(allocator, source, .{});
+            defer parsed.deinit(allocator);
+            var indexed = try parsed.inspectHeaderResources(allocator, .{});
+            indexed.deinit(allocator);
+        }
+    }.run, .{bytes});
+}
+
 test "HWPX header resources reject real encrypted documents before XML parsing" {
     const a = std.testing.allocator;
     for ([_][]const u8{
@@ -1154,7 +1189,7 @@ test "HWPX header resources reject real encrypted documents before XML parsing" 
     }
 }
 
-test "HWPX real header inventories preserve seven group identities" {
+test "HWPX real header inventories preserve known group identities" {
     const a = std.testing.allocator;
     const bytes = try loadFixture(a, "example");
     defer a.free(bytes);
@@ -1169,6 +1204,7 @@ test "HWPX real header inventories preserve seven group identities" {
     try std.testing.expect(!resources.table(.border_fill).hasId(0));
     try std.testing.expect(resources.table(.numbering).hasId(1));
     try std.testing.expect(!resources.table(.bullet).present);
+    try std.testing.expect(!resources.table(.memo_shape).present);
     for ([_]package.HeaderResourceKind{ .border_fill, .char_shape, .tab, .numbering, .para_shape, .style }) |kind| {
         try std.testing.expectEqual(@as(?bool, true), resources.table(kind).countMatches());
     }

@@ -263,6 +263,7 @@ const Statistics = struct {
     sections: usize,
     page_geometry: PageStats,
     section_definitions: SectionDefinitionStats,
+    section_definition_refs: SectionDefinitionRefStats,
     paragraphs: usize,
     paragraph_children: package.ParagraphChildrenReport,
     line_segments: package.LineSegmentsReport,
@@ -320,6 +321,35 @@ const Outcome = union(enum) {
     rejected_zip,
     encrypted,
     accepted: Statistics,
+};
+
+const SectionDefinitionRefStats = struct {
+    outline_zero: usize = 0,
+    outline_resolved: usize = 0,
+    outline_absent_table: usize = 0,
+    memo_zero: usize = 0,
+    memo_resolved: usize = 0,
+
+    fn from(report: anytype, definitions: usize) !SectionDefinitionRefStats {
+        try std.testing.expectEqual(@as(usize, 0), report.outline.absent + report.outline.missing_target + report.memo.absent + report.memo.absent_table + report.memo.missing_target);
+        try std.testing.expectEqual(definitions, report.outline.zero + report.outline.resolved + report.outline.absent_table);
+        try std.testing.expectEqual(definitions, report.memo.zero + report.memo.resolved);
+        return .{
+            .outline_zero = report.outline.zero,
+            .outline_resolved = report.outline.resolved,
+            .outline_absent_table = report.outline.absent_table,
+            .memo_zero = report.memo.zero,
+            .memo_resolved = report.memo.resolved,
+        };
+    }
+
+    fn merge(self: *SectionDefinitionRefStats, other: SectionDefinitionRefStats) void {
+        self.outline_zero += other.outline_zero;
+        self.outline_resolved += other.outline_resolved;
+        self.outline_absent_table += other.outline_absent_table;
+        self.memo_zero += other.memo_zero;
+        self.memo_resolved += other.memo_resolved;
+    }
 };
 
 const PageStats = struct {
@@ -687,6 +717,7 @@ fn inspectOne(bytes: []const u8) !Outcome {
         .sections = count,
         .page_geometry = page_stats,
         .section_definitions = section_definition_stats,
+        .section_definition_refs = try SectionDefinitionRefStats.from(known.section_definition_references, known.section_definitions.definitions.len),
         .paragraphs = known.paragraph_metadata.paragraphs,
         .paragraph_children = known.paragraph_children,
         .line_segments = known.line_segments,
@@ -750,6 +781,7 @@ fn surveyShard(shard: usize) !void {
     var sections: usize = 0;
     var page_geometry: PageStats = .{};
     var section_definitions: SectionDefinitionStats = .{};
+    var section_definition_refs: SectionDefinitionRefStats = .{};
     var paragraphs: usize = 0;
     var paragraph_children: package.ParagraphChildrenReport = .{};
     var line_segments: package.LineSegmentsReport = .{};
@@ -833,6 +865,7 @@ fn surveyShard(shard: usize) !void {
                     try std.testing.expectEqualSlices(usize, &expected_removed, &stats.switch_removed_default);
                     sections += stats.sections;
                     section_definitions.merge(stats.section_definitions);
+                    section_definition_refs.merge(stats.section_definition_refs);
                     page_geometry.pages += stats.page_geometry.pages;
                     page_geometry.widely += stats.page_geometry.widely;
                     page_geometry.left_right += stats.page_geometry.left_right;
@@ -1067,6 +1100,11 @@ fn surveyShard(shard: usize) !void {
     try std.testing.expectEqual(expected.sections[shard], sections);
     try std.testing.expectEqual(expected.page_geometry_pages[shard], page_geometry.pages);
     try std.testing.expectEqual(expected.section_definition_count[shard], section_definitions.definitions);
+    try std.testing.expectEqual(expected.section_outline_zero[shard], section_definition_refs.outline_zero);
+    try std.testing.expectEqual(expected.section_outline_resolved[shard], section_definition_refs.outline_resolved);
+    try std.testing.expectEqual(expected.section_outline_absent_table[shard], section_definition_refs.outline_absent_table);
+    try std.testing.expectEqual(expected.section_memo_zero[shard], section_definition_refs.memo_zero);
+    try std.testing.expectEqual(expected.section_memo_resolved[shard], section_definition_refs.memo_resolved);
     try std.testing.expectEqual(expected.section_definition_missing_id[shard], section_definitions.missing_id);
     try std.testing.expectEqual(expected.section_definition_empty_id[shard], section_definitions.empty_id);
     try std.testing.expectEqual(expected.section_definition_missing_new_tabs[shard], section_definitions.missing_tab_stop_val);

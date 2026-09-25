@@ -1,5 +1,7 @@
 # HWPX 현재 지원 검사 묶음
 
+`section_definition_references`는 [구역 정의 번호·메모 모양 ID 진단](hwpx-section-definition-references.md)을 기존 `section_definitions`·`resources` 결과에서 계산합니다. 미해결 진단이 있어도 `inspectKnown`은 이를 전체 문서 거부로 승격하지 않습니다.
+
 `inspectKnown`은 조건부 참조의 양쪽 분기를 관측하며, 활성 분기만의 이진·차트 참조는 별도 [조건부 참조 선택](hwpx-switch-selection.md) API가 제공합니다.
 
 section 텍스트 보고서도 원문 양쪽 분기를 유지합니다. 활성 분기 텍스트 이벤트는 별도 [선택 분기 텍스트](hwpx-selected-section-text.md) API가 제공합니다.

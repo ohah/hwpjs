@@ -14,6 +14,6 @@
 
 2026-09-25 실측: 로컬 HWPX 484개 중 기존 ZIP 거부 6개·암호화 2개를 제외한 476개 문서의 section 544개에서 `secPr` 555개를 검사했습니다. 독립 Python 조사와 Zig ReleaseFast 8개 shard가 정의 수, 직접 자식 12종, 숫자 여섯 필드 합, 부재 개수에서 일치했습니다. `id`는 빈 문자열 545개·부재 10개, `tabStopVal`과 `tabStopUnit`은 각각 91개 정의에서 부재였습니다. 알려진 `textDirection` 값은 전부 `HORIZONTAL`; `tabStopUnit=CHAR`는 1개입니다. 모델 미등록 직접 자식 4개(`header`, `headerApply`, `footer`, `footerApply`)는 별도 집계했고 낯선 속성·enum 및 외부 namespace 직접 자식은 이 corpus에서 관측되지 않았습니다. 알려진 다른 방향·단위 값과 음수 탭/간격은 합성 테스트만 뒷받침합니다.
 
-적대적 검토에서는 `masterPageCnt`를 참조 개수와 강제로 맞추지 않는 정책, 구형/신형 탭 필드 분리, 빈 ID/부재, 직접 자식만 세는 경계, 미등록 자식 보존, signed32/unsigned32 오버플로, 전역 예산과 오류 후 메모리 정리를 확인했습니다. oracle도 Python `int()`가 허용하는 잘못된 어휘를 별도 거부하도록 보강했습니다. 이 검사는 값·구조 인벤토리이고 `outlineShapeIDRef`·`memoShapeIDRef` 등의 대상 연결이나 구역 배치 의미는 다음 단계입니다.
+적대적 검토에서는 `masterPageCnt`를 참조 개수와 강제로 맞추지 않는 정책, 구형/신형 탭 필드 분리, 빈 ID/부재, 직접 자식만 세는 경계, 미등록 자식 보존, signed32/unsigned32 오버플로, 전역 예산과 오류 후 메모리 정리를 확인했습니다. oracle도 Python `int()`가 허용하는 잘못된 어휘를 별도 거부하도록 보강했습니다. 이 검사는 값·구조 인벤토리입니다. 후속 [ID 참조 진단](hwpx-section-definition-references.md)은 별도 책임이며 구역 배치 의미는 여전히 남아 있습니다.
 
 같은 작업 상태의 `zig build test --summary all`은 Debug 2,395/2,395 테스트와 빌드 5/5 단계를 통과했습니다. `zig build -Doptimize=ReleaseSafe` 및 `zig build audit -Doptimize=ReleaseSafe --summary all`도 종료 코드 0으로 통과했습니다. 선택 corpus 8개 shard는 기본 audit 외에 각각 별도 ReleaseFast 프로세스로 실행했습니다. 이 결과를 전체 HWPX 스키마·레이아웃·편집/저장 검증 완료로 세지 않습니다.

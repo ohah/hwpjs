@@ -8,6 +8,8 @@ section 문단·run 서식 참조의 선택 결과는 기존 `section_references
 
 ## 프로젝트와 현재 범위
 
+구역 정의의 번호·메모 모양 ID 연결은 [구역 참조 진단](hwpx-section-definition-references.md)이 소유합니다. 진단 결과를 HWPX 문서 전체 유효성 판정으로 사용하지 않습니다.
+
 HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라이브러리입니다.
 현재는 바이트 리더, CFB v3/v4 읽기·strict 검증·새 컨테이너 생성/재저장, HWP5 헤더·압축 스트림·레코드 경계와 DocInfo 주요 리소스 해석·활성 참조 검증, 본문 문단 헤더·UTF-16 텍스트/제어문자 토큰 코어가 구현되어 있습니다. HWPX에는 [ZIP·mimetype 읽기 경계](hwpx-zip-container.md), [패키지 관계 검증](hwpx-package-relationships.md), [버전 XML 검증](hwpx-version.md), [암호화 분류](hwpx-protection.md), [header·spine 구조 검증](hwpx-document-structure.md), [header 리소스 ID 색인](hwpx-header-resources.md), [section 서식 참조 진단](hwpx-section-references.md), [header 내부 서식 참조](hwpx-header-references.md), [언어별 글꼴 ID 참조](hwpx-font-references.md), [번호·글머리표 내부 참조](hwpx-list-references.md), [이진 리소스 manifest 연결](hwpx-binary-references.md), [차트 ZIP 경로·XML 경계](hwpx-chart-references.md), [section 텍스트 토큰 이벤트](hwpx-section-text.md), [header 원문·요소 인덱스](hwpx-header-tree.md), [section 원문·요소 인덱스](hwpx-section-tree.md), [문서 XML 트리 조립](hwpx-document-trees.md), [문단 메타 속성 검사](hwpx-paragraph-metadata.md)가 추가됐으며 전체 의미 문서 모델·레이아웃·본문 편집·저장은 미구현입니다. HWP5 코어는 테스트용 WASM에서 검증하며 제품 JS 공개 API는 아직 CFB만 제공합니다. 지원 범위는 구현·테스트로 확인하고, 예정 기능을 완료된 기능처럼 설명하지 않습니다.
 
