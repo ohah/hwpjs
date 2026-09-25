@@ -13,7 +13,8 @@ test "tracked HWP summary fixture retains missing-codepage placeholder diagnosis
     defer doc.deinit(a);
     try std.testing.expect(doc.code_page == null);
     try std.testing.expect(doc.dictionary_structure == null);
-    try std.testing.expect(doc.observed_dictionary_placeholder);
+    try std.testing.expectEqual(@as(usize, 0), doc.stats.code_page_properties);
+    try std.testing.expectEqual(@as(usize, 1), doc.stats.observed_dictionary_placeholders);
     try std.testing.expectEqual(@as(usize, 1), doc.stats.dictionaries_deferred);
     try std.testing.expect(doc.stats.strings > 0);
 }

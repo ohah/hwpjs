@@ -34,6 +34,8 @@ fn success(a: std.mem.Allocator, bytes: []const u8) !void {
     var doc = try p.Document.parse(a, bytes, 3);
     defer doc.deinit(a);
     try t.expectEqual(65001, doc.code_page.?);
+    try t.expectEqual(@as(usize, 1), doc.stats.code_page_properties);
+    try t.expectEqual(@as(usize, 0), doc.stats.observed_dictionary_placeholders);
     try t.expectEqual(-535, doc.properties[2].value.i16);
     try t.expectEqualSlices(u8, &.{ 'A', 0 }, doc.properties[0].value.encoded_string.bytes);
     try t.expectEqual(2, doc.dictionary_structure.?.entries);
@@ -98,9 +100,10 @@ test "dictionary Unicode entry padding and atomic malformed iteration" {
 fn observedPlaceholder(a: std.mem.Allocator, bytes: []const u8) !void {
     var doc = try p.Document.parse(a, bytes, 1);
     defer doc.deinit(a);
-    try t.expect(doc.observed_dictionary_placeholder);
+    try t.expectEqual(@as(usize, 1), doc.stats.observed_dictionary_placeholders);
     try t.expect(doc.dictionary_structure == null);
     try t.expect(doc.code_page == null);
+    try t.expectEqual(@as(usize, 0), doc.stats.code_page_properties);
     try t.expectEqual(@as(usize, 1), doc.stats.dictionaries_deferred);
 }
 
@@ -123,6 +126,9 @@ test "HWP summary missing-codepage dictionary marker is observed but not accepte
     b[76] = 1;
     var altered = try p.Document.parse(t.allocator, &b, 1);
     defer altered.deinit(t.allocator);
-    try t.expect(!altered.observed_dictionary_placeholder);
+    try t.expectEqual(@as(usize, 0), altered.stats.observed_dictionary_placeholders);
     try t.expectEqual(@as(usize, 1), altered.stats.dictionaries_deferred);
+    var with_code_page = fixture(false);
+    put(&with_code_page, 96, u32, 0);
+    try t.expectError(error.InvalidDictionaryId, p.Document.parse(t.allocator, &with_code_page, 3));
 }

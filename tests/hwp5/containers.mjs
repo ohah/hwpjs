@@ -20,9 +20,11 @@ import {jpegJfifFileActual} from './jpeg-jfif.mjs';
 import { deflateRawSync, inflateRawSync } from "node:zlib";
 import { decodedDocumentInput, documentRecords } from "./documents.mjs";
 import { previewActual } from "./preview.mjs";
-import { summaryActual, summaryFixture } from "./summary.mjs";
+import { summaryActual, summaryFixture, summaryStatsWords } from "./summary.mjs";
 import { scriptsActual, scriptFixture } from "./scripts.mjs";
 import {distributionOracle} from './distribution-oracle.mjs';
+const summaryStartFromEnd = 13 + 1 + summaryStatsWords;
+const scriptsStartFromEnd = summaryStartFromEnd + 10;
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
@@ -109,7 +111,7 @@ export function containerActual(call, bytes, cfb, h, doc, sections) {
     : Buffer.alloc(0);
   const summary = summaryEntry
     ? [1, ...summaryActual(call, summaryBytes)]
-    : Array(9).fill(0);
+    : Array(1 + summaryStatsWords).fill(0);
   if (summaryEntry) used.add("/\x05hwpsummaryinformation");
   const previewEntry = cfb.findExact("/PrvText");
   const previewBytes = previewEntry
@@ -293,7 +295,7 @@ export function containerEdges(call, cfb) {
     const bytes = write(sn()),
       cap = total + version.length + source.length;
     assert.deepEqual(
-      words(run(call, bytes, cap)).slice(-32, -22),
+      words(run(call, bytes, cap)).slice(-scriptsStartFromEnd, -summaryStartFromEnd),
       [1, 0xffffffff, 0x80000000, 1, 0, 0, 0, 0, 31, 3],
     );
     assert.throws(() => run(call, bytes, cap - 1), /LimitExceeded/);
@@ -311,7 +313,7 @@ export function containerEdges(call, cfb) {
     const missingReport = words(run(call, write(missing)));
     assert.equal(missingReport.at(-1), 1);
     assert.deepEqual(
-      missingReport.slice(-32, -22),
+      missingReport.slice(-scriptsStartFromEnd, -summaryStartFromEnd),
       [1, 0xffffffff, 0x80000000, 0, 0, 0, 0, 0, 9, 1],
     );
     const misplaced = sn();
@@ -335,7 +337,7 @@ export function containerEdges(call, cfb) {
   assert.deepEqual(
     words(
       run(call, write([...nodes(), { name: "Scripts", parent: 0, kind: 1 }])),
-    ).slice(-32, -22),
+    ).slice(-scriptsStartFromEnd, -summaryStartFromEnd),
     Array(10).fill(0),
   );
   assert.deepEqual(run(call, good, total), output);
@@ -421,13 +423,23 @@ export function containerEdges(call, cfb) {
   };
   const summaryFile = write([...nodes(), summaryNode]);
   assert.deepEqual(
-    words(run(call, summaryFile, total + summary.length)).slice(-22, -13),
-    [1, 1, 0, 0, 1, 0, 0, 0, 0],
+    words(run(call, summaryFile, total + summary.length)).slice(-summaryStartFromEnd, -13),
+    [1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0],
   );
   assert.throws(
     () => run(call, summaryFile, total + summary.length - 1),
     /LimitExceeded/,
   );
+  const marker = Buffer.from([1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]);
+  const markerSummary = summaryFixture([[0, marker]]);
+  const summaryWords = (raw) =>
+    words(run(call, write([...nodes(), { ...summaryNode, content: raw }]), total + raw.length))
+      .slice(-summaryStartFromEnd, -13);
+  assert.deepEqual(summaryWords(markerSummary), [1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
+  marker[12] = 1;
+  assert.deepEqual(summaryWords(summaryFixture([[0, marker]])), [1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0]);
+  const withCodePage = summaryFixture([[1, Buffer.concat([w(2), w(1200)])]]);
+  assert.deepEqual(summaryWords(withCodePage), [1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0]);
   reject(
     [...nodes(), { ...summaryNode, content: summary.subarray(0, -1) }],
     /InvalidSummarySize/,
@@ -442,7 +454,7 @@ export function containerEdges(call, cfb) {
       write([...nodes(), { ...summaryNode, name: "HwpSummaryInformation" }]),
     ),
   );
-  assert.equal(alias.at(-22), 0);
+  assert.equal(alias.at(-summaryStartFromEnd), 0);
   assert.equal(alias.at(-1), 1);
   for (const raw of [
     Buffer.alloc(0),

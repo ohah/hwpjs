@@ -10,7 +10,7 @@ PID 0 dictionary는 TypedPropertyValue가 아니므로 그 첫 4바이트를 타
 
 [OLEPS CodePage Property](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-oleps/b8910736-7f4a-469a-9644-aed68a71d7d1)는 모든 property set에 PID 1을 요구하지만, 아래 HWP corpus의 요약 스트림은 전부 PID 1이 없습니다. 이 경우 코드페이지를 1200으로 추정하지 않습니다. VT_LPWSTR은 타입 자체로 UTF-16LE 문자열을 읽을 수 있지만, 코드페이지가 필요한 값과 PID 0 이름 해독은 보류합니다.
 
-해당 corpus의 PID 0은 모두 13바이트 `01 00 00 00 00 00 00 00 01 00 00 00 00`입니다. [OLEPS DictionaryEntry](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-oleps/333959a3-a999-4eca-8627-48a224e63e77)는 항목 ID를 2 이상으로 요구하므로, 이 바이트를 정상 사전의 한 항목으로 해석할 수 없습니다. `dictionary.isObservedHwpPlaceholder`는 이 **정확한** 관측 마커만 진단하며 `Document.observed_dictionary_placeholder`로 노출합니다. 원문은 그대로 보존하고 `dictionaries_deferred`는 유지합니다. 다른 누락 코드페이지 사전, 변조된 마커, 코드페이지가 명시된 사전은 자동 보정하지 않습니다.
+해당 corpus의 PID 0은 모두 13바이트 `01 00 00 00 00 00 00 00 01 00 00 00 00`입니다. [OLEPS DictionaryEntry](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-oleps/333959a3-a999-4eca-8627-48a224e63e77)는 항목 ID를 2 이상으로 요구하므로, 이 바이트를 정상 사전의 한 항목으로 해석할 수 없습니다. `dictionary.isObservedHwpPlaceholder`는 이 **정확한** 관측 마커만 진단합니다. `summary.Stats`의 `code_page_properties`·`observed_dictionary_placeholders`는 각각 코드페이지 존재와 마커 수를 나타내며, 같은 통계를 `container.Report.summary_information`이 전달합니다. 원문은 그대로 보존하고 `dictionaries_deferred`는 유지합니다. 다른 누락 코드페이지 사전, 변조된 마커, 코드페이지가 명시된 사전은 자동 보정하지 않습니다.
 
 ## 검증
 
@@ -20,6 +20,10 @@ PID 0 dictionary는 TypedPropertyValue가 아니므로 그 첫 4바이트를 타
 
 같은 481개에서 코드페이지는 0건, PID 0은 481건이고 모두 위 13바이트 마커였습니다. 정수형 956개·VT_LPWSTR 3,848개·FILETIME 1,443개가 관측되었으며, 이 분포는 **strict CFB가 허용하고 요약 스트림이 있는 표본**에만 적용됩니다. 파일 개수는 중복 내용을 제거하지 않은 값입니다. 독립 조사기는 byte/Unicode 사전의 기본 바이트 배치 반례와 관측 마커를 분리해 검사하며, 사전 이름의 중복·문자 인코딩 의미까지 검증하지는 않습니다. 제품 파서의 합성 문서 테스트는 정확한 마커의 진단, 1바이트 변조 시 비진단, 정식 OLEPS 사전 검사에서 ID 0 거부, 할당 실패 경로를 검증합니다. 이 결과를 사용해 실파일의 사전 이름이나 임의 코드페이지를 만들어내지 않습니다.
 
-선택적 `--probe` 조사에서 같은 요약 스트림 481개가 모두 테스트용 WASM 파서의 mode 27을 통과했습니다. 이 모드는 파싱 성공과 기존 필드 wire만 반환하지만, 추적된 `hwpSummaryInformation.hwp` 하나는 별도 네이티브 실파일 테스트가 `Document.observed_dictionary_placeholder == true`를 직접 확인합니다. 나머지 480개의 해당 필드 반환값은 독립 wire 분류와 합성 테스트로 뒷받침됩니다. 이는 문서 전체 의미·편집·저장을 검증한 결과가 아닙니다.
+선택적 `--probe` 조사에서 같은 요약 스트림 481개가 모두 테스트용 WASM 파서의 mode 27을 통과했습니다. 추적된 `hwpSummaryInformation.hwp` 하나는 별도 네이티브 실파일 테스트가 `Document.stats.observed_dictionary_placeholders == 1`을 직접 확인합니다. 테스트용 WASM mode 27·파일 단위 mode 25의 독립 JS 기대 바이트를 확장해 코드페이지 존재·마커·변조를 각각 검사하며, 정규 HWP5 audit의 지원 실파일 45개에서는 컨테이너 보고서의 코드페이지 수 합계 0·관측 마커 수 합계 45를 대조합니다. 나머지 확장 corpus 파일의 보고 필드는 별도 독립 wire 조사와 파싱 성공으로 뒷받침되지만, 전체 파일 단위 보고서 실행을 주장하지 않습니다. 이는 문서 전체 의미·편집·저장을 검증한 결과가 아닙니다.
 
 최종 소스에서 Debug 전체 `zig build test --summary all` 2,383/2,383개, Debug·ReleaseSafe·ReleaseFast의 전체 `zig build audit --summary all`이 모두 통과했습니다. ReleaseSafe 제품 빌드와 독립 CFB `compare` 47개 JS 테스트도 통과했습니다. 조사 도구의 self-test·문법·`zig fmt --check`·`git diff --check`를 확인하고, 마지막 ReleaseFast 테스트용 WASM으로 481개 요약 스트림의 파싱 성공을 다시 확인했습니다. 적대적 경계 검토에서 정확한 마커와 1바이트 변조를 구분하고, 누락 코드페이지를 추정하지 않으며, PID 0을 정식 OLEPS 사전으로 오인하지 않는지 확인했습니다. 이 검증은 기본 audit 밖의 전체 corpus에 대해서는 `--probe` 명령을 별도로 실행한 결과입니다.
+
+파일 단위 진단을 추가한 다음 단계에서는 `zig build hwp5-audit -Doptimize=ReleaseSafe --summary all`을 재실행해 지원 실파일 45개의 신규 통계와 mode 25/27 wire를 통과시켰습니다. 이 변경은 테스트용 보고서의 요약 영역을 u32 두 칸 늘렸으며, 제품 JS 공개 ABI의 CFB 전용 범위를 변경하지 않습니다. 전체 모드 회귀 결과는 이 단계의 최종 검증 뒤 별도로 기록합니다.
+
+최종 검증: Debug 전체 `zig build test --summary all` 2,383/2,383개, ReleaseSafe 전체 `zig build audit --summary all`, Debug·ReleaseSafe·ReleaseFast 각각의 `zig build hwp5-audit --summary all`, ReleaseFast 요약 집중 테스트 12개가 통과했습니다. ReleaseSafe 제품 빌드와 독립 CFB `compare` 47개 테스트도 통과했습니다. 마지막 ReleaseFast 테스트용 WASM으로 확장 corpus의 요약 스트림 481/481개 파싱 성공을 재확인했습니다. 적대적 검토에서는 요약 스트림 부재와 코드페이지 부재를 별도 값으로 두고, 변조된 마커를 진단하지 않으며, 코드페이지가 명시된 잘못된 ID 0 사전은 거부하는지 확인했습니다. 기본 전체 audit가 확장 corpus 481개의 파일 단위 보고서를 전수 검사한 것은 아닙니다.

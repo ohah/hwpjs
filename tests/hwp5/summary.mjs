@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+export const summaryStatsWords = 10;
+const hwpPlaceholder = Buffer.from([1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]);
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);
@@ -37,6 +39,8 @@ export function summaryActual(call, b) {
       0,
       b.length - start - size + (start - 48),
       0,
+      0,
+      0,
     ],
     parts = [];
   let codePage = null;
@@ -45,6 +49,7 @@ export function summaryActual(call, b) {
       const offset = start + b.readUInt32LE(start + 12 + i * 8);
       assert.equal(b.readUInt32LE(offset), 2);
       codePage = b.readUInt16LE(offset + 4);
+      stats[8] = 1;
     }
   for (let i = 0; i < count; i++) {
     const id = b.readUInt32LE(start + 8 + i * 8),
@@ -54,8 +59,10 @@ export function summaryActual(call, b) {
     if (i === 0) stats[6] += offset - 8 - count * 8;
     if (![0, 1, 2, 3, 4, 5, 6, 8, 9, 11, 12, 13, 14, 20, 21].includes(id))
       stats[7]++;
-    if (id === 0) stats[4]++;
-    else {
+    if (id === 0) {
+      stats[4]++;
+      if (codePage === null && raw.equals(hwpPlaceholder)) stats[9]++;
+    } else {
       const type = raw.readUInt32LE(0);
       let consumed = raw.length;
       if (type === 31) {
@@ -79,6 +86,7 @@ export function summaryActual(call, b) {
     call(27, b, count),
     Buffer.concat([...stats.map(w), ...parts]),
   );
+  assert.equal(stats.length, summaryStatsWords);
   return stats;
 }
 export function summaryEdges(call) {
@@ -158,6 +166,11 @@ export function summaryEdges(call) {
     ]),
   );
   summaryActual(call, summaryFixture([[0, w(0x00010003)]]));
+  const observed = summaryActual(call, summaryFixture([[0, hwpPlaceholder]]));
+  assert.equal(observed[9], 1);
+  const changed = Buffer.from(hwpPlaceholder);
+  changed[12] = 1;
+  assert.equal(summaryActual(call, summaryFixture([[0, changed]]))[9], 0);
   summaryActual(call, Buffer.concat([good, Buffer.from([1, 2, 3])]));
   assert.throws(() => call(27, good, 3), /LimitExceeded/);
   return { rejected, recoveries: rejected };

@@ -4,7 +4,7 @@ pub const Header = @import("header.zig").Header;
 pub const Value = @import("value.zig").Value;
 pub const dictionary = @import("dictionary.zig");
 pub const Property = struct { id: u32, offset: usize, raw: []const u8, value: Value, extra: []const u8 };
-pub const Stats = struct { properties: usize = 0, strings: usize = 0, filetimes: usize = 0, integers: usize = 0, dictionaries_deferred: usize = 0, unsupported_types: usize = 0, trailing_bytes: usize = 0, unknown_ids: usize = 0 };
+pub const Stats = struct { properties: usize = 0, strings: usize = 0, filetimes: usize = 0, integers: usize = 0, dictionaries_deferred: usize = 0, unsupported_types: usize = 0, trailing_bytes: usize = 0, unknown_ids: usize = 0, code_page_properties: usize = 0, observed_dictionary_placeholders: usize = 0 };
 /// Owns property array only. All raw/value/extra bytes borrow the input stream.
 /// Single HWP property set; this is not a complete general MS-OLEPS parser.
 pub const Document = struct {
@@ -15,7 +15,6 @@ pub const Document = struct {
     stats: Stats,
     code_page: ?u16,
     dictionary_structure: ?dictionary.Report,
-    observed_dictionary_placeholder: bool,
     pub fn deinit(self: *Document, a: std.mem.Allocator) void {
         a.free(self.properties);
         self.* = undefined;
@@ -54,8 +53,8 @@ pub const Document = struct {
             try @import("rules.zig").validate(1, cp.value);
             code_page = @bitCast(cp.value.i16);
         };
+        stats.code_page_properties = @intFromBool(code_page != null);
         var dictionary_structure: ?dictionary.Report = null;
-        var observed_dictionary_placeholder = false;
         for (properties) |*p| {
             const parsed = try @import("value.zig").parseWithCodePage(p.id, p.raw, code_page);
             p.value = parsed.value;
@@ -73,12 +72,12 @@ pub const Document = struct {
                     if (code_page) |cp| {
                         dictionary_structure = try dictionary.inspect(a, raw, cp);
                     } else {
-                        observed_dictionary_placeholder = dictionary.isObservedHwpPlaceholder(raw);
+                        stats.observed_dictionary_placeholders += @intFromBool(dictionary.isObservedHwpPlaceholder(raw));
                     }
                 },
                 .unsupported => stats.unsupported_types += 1,
             }
         }
-        return .{ .raw = bytes, .header = h, .properties = properties, .extra = bytes[h.set_offset + size ..], .stats = stats, .code_page = code_page, .dictionary_structure = dictionary_structure, .observed_dictionary_placeholder = observed_dictionary_placeholder };
+        return .{ .raw = bytes, .header = h, .properties = properties, .extra = bytes[h.set_offset + size ..], .stats = stats, .code_page = code_page, .dictionary_structure = dictionary_structure };
     }
 };

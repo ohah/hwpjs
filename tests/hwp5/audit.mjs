@@ -85,7 +85,7 @@ import {progressiveSamplesEdges} from './jpeg-progressive-samples.mjs';
 import {progressiveRgbEdges} from './jpeg-progressive-rgb.mjs';
 import {jpegFrameDequantEdges} from './jpeg-frame-dequant.mjs';
 import { previewEdges } from "./preview.mjs";
-import { summaryEdges } from "./summary.mjs";
+import { summaryEdges, summaryStatsWords } from "./summary.mjs";
 import { codepageEdges } from "./codepage.mjs";
 import { scriptEdges } from "./scripts.mjs";
 import { xmlTemplateEdges } from "./xml-template.mjs";
@@ -592,7 +592,7 @@ let pairedColumns = 0;
 const listReport = [0, 0, 0];
 const typeReport = [0, 0, 0];
 const documentReport = [0, 0, 0, 0];
-const containerReport = Array(23).fill(0);
+const containerReport = Array(15 + summaryStatsWords).fill(0);
 const previewEdgeResults = previewEdges(call);
 const summaryEdgeResults = summaryEdges(call);
 const codepageEdgeResults = codepageEdges(call);
@@ -767,10 +767,10 @@ const distributionContainerResults = distributionContainerActual(call,cfb);
 const distributionContainerEdgeResults = distributionContainerEdges(call,cfb);
 assert.deepEqual(distributionContainerEdgeResults,{targets:3,accepted:5,rejected:30});
 assert.deepEqual(distributionContainerResults.map(({flags,primarySource,sections,reportBytes,decodedBytes,uninspectedStreams})=>({flags,primarySource,sections,reportBytes,decodedBytes,uninspectedStreams})), [
-  {flags:5,primarySource:1,sections:1,reportBytes:1064,decodedBytes:570694,uninspectedStreams:3},
-  {flags:1,primarySource:0,sections:1,reportBytes:1064,decodedBytes:586234,uninspectedStreams:2},
-  {flags:131077,primarySource:1,sections:6,reportBytes:5064,decodedBytes:1106070,uninspectedStreams:3},
-  {flags:5,primarySource:1,sections:1,reportBytes:1064,decodedBytes:105188,uninspectedStreams:3},
+  {flags:5,primarySource:1,sections:1,reportBytes:1072,decodedBytes:570694,uninspectedStreams:3},
+  {flags:1,primarySource:0,sections:1,reportBytes:1072,decodedBytes:586234,uninspectedStreams:2},
+  {flags:131077,primarySource:1,sections:6,reportBytes:5072,decodedBytes:1106070,uninspectedStreams:3},
+  {flags:5,primarySource:1,sections:1,reportBytes:1072,decodedBytes:105188,uninspectedStreams:3},
 ]);
 const revisionDeleteResults = revisionDeleteEdges(call);
 const revisionSignResults = {edges:revisionSignEdges(call),actual:revisionSignActual(call,cfb)};
@@ -1182,7 +1182,7 @@ assert.deepEqual(
   containerReport,
   [
     45, 13, 1028155, 90, 45, 11448, 11448, 0, 0, 0, 45, 630, 360, 135, 90, 45,
-    0, 0, 0, 45, 45, 11476, 0,
+    0, 0, 0, 0, 45, 45, 45, 11476, 0,
   ],
 );
 assert.deepEqual(paragraphReport, [1481, 1076, 405, 313, 643, 134]);
