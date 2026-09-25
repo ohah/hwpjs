@@ -16,6 +16,7 @@ const page_geometry = @import("page_geometry.zig");
 const section_definition = @import("section_definition.zig");
 const section_direct_settings = @import("section_direct_settings.zig");
 const section_page_border = @import("section_page_border.zig");
+const section_note_shapes = @import("section_note_shapes.zig");
 const table_geometry = @import("table_geometry.zig");
 const header_resources = @import("header_resources.zig");
 
@@ -98,6 +99,10 @@ pub const Bundle = struct {
 
     pub fn inspectSectionPageBorders(self: *const Bundle, a: std.mem.Allocator, options: section_page_border.Options) !section_page_border.Report {
         return section_page_border.inspect(a, self.sections, options);
+    }
+
+    pub fn inspectSectionNoteShapes(self: *const Bundle, a: std.mem.Allocator, options: section_note_shapes.Options) !section_note_shapes.Report {
+        return section_note_shapes.inspect(a, self.sections, options);
     }
 
     pub fn deinit(self: *Bundle, a: std.mem.Allocator) void {

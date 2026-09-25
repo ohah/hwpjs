@@ -1,0 +1,19 @@
+# HWPX 구역 각주·미주 모양 원값
+
+`src/hwpx/section_note_shapes.zig`는 2011 section XML의 `hp:secPr` 바로 아래 `footNotePr`·`endNotePr`만 선택합니다. 두 종류 모두 직접 자식 `autoNumFormat`·`noteLine`·`noteSpacing`·`numbering`·`placement`를 별도 항목으로 보존합니다. section 순번과 부모/자식 요소 인덱스, 16개 알려진 속성의 XML 정규화 원값 및 부재, 중복과 미등록 속성·자식 개수를 보고합니다. `readXmlTrees().inspectSectionNoteShapes()`와 `Document.inspectKnown().section_note_shapes`는 이 구현을 공유하며, 반환된 소유 보고서는 `deinit`해야 합니다. `secPr` 직접 자식의 종류·개수 자체는 [구역 정의](hwpx-section-definitions.md)가 소유합니다.
+
+공식 한컴 OWPML 모델의 [각주](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Para/FootNoteShapeType.cpp)·[미주](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Para/EndNoteShapeType.cpp) 구조와 [자동 번호](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Para/AutoNumFormatType.cpp), [구분선](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Para/noteLine.cpp), [간격](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Para/noteSpacing.cpp), [번호](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Para/numbering.cpp), [배치](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Para/placement.cpp), [열거형](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/enumdef.h)을 기준으로 합니다. `section_note_fields.zig` 한곳이 속성→자료형 및 알려진 enum을 소유합니다. `noteLine/@length`는 signed32, `noteSpacing` 세 값은 unsigned32, `numbering/@newNum`은 양의 unsigned32, `supscript`·`beneathText`는 XML Boolean 어휘로 검사합니다. 이름·배치 enum은 각주와 미주의 허용 집합을 분리하고, 미지 값은 거부하지 않고 원값과 진단을 남깁니다. 색상은 `#` 뒤 6자리 hex인지 진단만 하며 원값을 고치지 않습니다.
+
+부재 속성을 모델 기본값으로 채우지 않습니다. 중복 note나 직접 자식도 첫 항목으로 합치지 않습니다. 외부 namespace와 중첩 동명 요소는 직접 2011 자식으로 오인하지 않습니다. 인식된 속성 값에는 개별 UTF-8 바이트 한도가, note·인식 자식·직접 자식 총수에는 독립 한도가 적용됩니다. 알 수 없는 속성의 내용이나 자식 안의 의미는 원본 XML 트리에 남습니다.
+
+2026-09-25의 독립 `tools/hwpx-section-note-shapes-oracle.py` ZIP/XML 조사에서 로컬 HWPX 484개 중 ZIP 거부 6개·암호화 2개를 제외한 476개 문서, `secPr` 555개에서 각주 551개·미주 551개를 관측했습니다. 수용 문서의 각 note에는 위 직접 자식이 종류별로 하나씩 있었습니다. 그러나 `userChar`·`prefixChar`·`suffixChar`는 각주·미주 각각 10개에서 **부재**했습니다. 한 실파일의 각주·미주 구분선 `width="4 mm"`는 공식 `4.0 mm` 표기와 다르고 각각 10개이며, 미주 `place="EACH_COLUMN"`도 공식 미주 enum 밖에서 10개 나왔습니다. 다른 실파일의 색상 8개는 7자리 hex여서 비정형입니다. 이 값은 거부 대신 원값과 진단으로 보존합니다. 이러한 실측 차이를 모든 버전의 허용 규칙으로 승격하지 않습니다.
+
+독립 oracle의 자체 반례는 외부 namespace·중첩 위장·비정형 값·잘못된 양수/Boolean·손상 ZIP을 다룹니다. Zig 합성 테스트는 원값과 부재, 중복, 잘못된 정수/Boolean, 정확한 한도, 할당 실패 뒤 해제를 다루고, 추적 실파일의 두 편차를 별도로 확인합니다. `hwpx_known_survey.zig`의 8개 ReleaseFast shard는 문서별 `secPr` 부모 개수와 note 자식 수, 타입별 정수 합계·부재·편차를 독립 oracle 기대값과 대조합니다. 전체 빌드·audit 결과는 이 단계 검증 완료 뒤에만 기록합니다.
+
+이 계층은 **모양 속성 관측**만 제공합니다. 각주/미주 본문 컨트롤 연결, 번호 매기기와 배치 적용, 렌더링, 편집·저장·무손실 왕복, 전체 HWPX 스키마 적합성은 아직 검증하지 않습니다.
+
+## 검증 기록과 적대적 재검토
+
+2026-09-25에 독립 oracle 자체 반례 및 전체 corpus 조사, Zig 전용 테스트의 Debug·ReleaseSafe·ReleaseFast, 선택 실파일 8개 ReleaseFast shard가 모두 통과했습니다. shard 합계는 수용 476개·ZIP 거부 6개·암호화 2개이며, 두 note의 각 551개와 구분선 길이·간격·새 번호 합계·문자 필드 부재/비어 있지 않음·비정형 값 분포가 독립 ZIP/XML 결과와 일치했습니다. `zig build test --summary all`은 5/5 단계·2416/2416 테스트, `zig build -Doptimize=ReleaseSafe`, `zig build compare -Doptimize=ReleaseSafe`, `zig build audit -Doptimize=ReleaseSafe --summary all`도 종료 코드 0으로 통과했습니다.
+
+적대적 재검토에서는 부모 `secPr`와 note의 직접 자식만 선택하는지, 외부 namespace·중첩 동명 요소·중복을 분리하는지, null과 빈 문자열을 구분하는지, 숫자/Boolean 오류 및 정확한 한도에서 누수를 남기지 않는지, 모델 밖 enum·색상을 수정/거부하지 않고 진단하는지를 확인했습니다. 실행 문서에 존재하지 않는 테스트 필터가 적힌 것도 발견해 실제 필터로 고쳤습니다. 이 검사는 관측 범위의 일치에 한정되며 전체 각주/미주 기능 완성의 증거가 아닙니다.

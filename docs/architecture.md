@@ -4,6 +4,8 @@
 
 [구역 직접 설정 원값](hwpx-section-direct-settings.md)은 소유 section 트리의 직접 `secPr` 자식만 읽습니다. XML 속성·숫자 어휘 공통 계층을 재사용하고 `strikeContinue` 관측 확장과 공식 필드를 구분합니다.
 
+[구역 각주·미주 모양 원값](hwpx-section-note-shapes.md)은 같은 소유 section 트리의 직접 `secPr` 하위 note와 다섯 직접 자식을 분리해 관측합니다. 필드 자료형·enum은 `section_note_fields.zig`가 소유하며 본문/배치 의미는 생성하지 않습니다.
+
 [구역 정의 ID 참조](hwpx-section-definition-references.md)는 기존 구역 정의 값과 header 리소스 ID 색인을 결합하는 진단 계층입니다. `0`·부재·미해결을 분리하고 원문 파싱을 재구현하지 않습니다.
 
 [HWPX 조건부 참조 선택](hwpx-switch-selection.md)은 한 정책을 이진·차트 스캐너가 공유하는 선택적 계층입니다. 기존 raw 검사와 전체 문서 분기 적용은 별개입니다.

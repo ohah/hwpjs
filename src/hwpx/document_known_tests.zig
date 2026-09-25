@@ -57,6 +57,11 @@ test "HWPX known inspections compose every currently exposed document report" {
     try std.testing.expectEqualStrings("BOTH", report.section_direct_settings.items[1].get(.page_starts_on).?);
     try std.testing.expectEqual(@as(usize, 3), report.section_page_borders.borders);
     try std.testing.expectEqual(@as(usize, 3), report.section_page_borders.offsets);
+    try std.testing.expectEqual(@as(usize, 1), report.section_note_shapes.foot_notes);
+    try std.testing.expectEqual(@as(usize, 1), report.section_note_shapes.end_notes);
+    try std.testing.expectEqual(@as(usize, 10), report.section_note_shapes.children.len);
+    try std.testing.expectEqualStrings("283", report.section_note_shapes.children[2].get(.between_notes).?);
+    try std.testing.expectEqualStrings("END_OF_DOCUMENT", report.section_note_shapes.children[9].get(.placement_place).?);
     try std.testing.expectEqual(@as(usize, 3), report.section_page_border_references.resolved);
     try std.testing.expectEqual(@as(usize, 0), report.section_page_border_references.missing_target);
     try std.testing.expectEqualStrings("BOTH", report.section_page_borders.items[0].get(.page_type).?);
@@ -121,6 +126,22 @@ test "HWPX known inspections retain repeated BOTH page borders in a real section
         }
         previous_ordinal = item.section_ordinal;
         previous_index = item.element_index;
+    }
+}
+
+test "HWPX section note shapes preserve observed width placement and color anomalies" {
+    const a = std.testing.allocator;
+    for ([_][]const u8{ "reference/rhwp/samples/hwpx/issue2019_floating_form_74312.hwpx", "reference/rhwp/samples/issue6551/113424_evaluation_guideline.hwpx" }, [_]usize{ 30, 0 }, [_]usize{ 0, 4 }) |path, expected_unknown, expected_color| {
+        const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, path, a, .limited(1_000_000));
+        defer a.free(bytes);
+        var document = try package.inspectDocument(a, bytes, .{});
+        defer document.deinit(a);
+        var trees = try document.readXmlTrees(a, .{});
+        defer trees.deinit(a);
+        var report = try trees.inspectSectionNoteShapes(a, .{});
+        defer report.deinit(a);
+        try std.testing.expectEqual(expected_unknown, report.unknown_enums);
+        try std.testing.expectEqual(expected_color, report.noncanonical_colors);
     }
 }
 
@@ -318,6 +339,7 @@ test "HWPX known inspections keep separate phase limits and release on late fail
     try std.testing.expectError(error.LimitExceeded, document.inspectKnown(a, .{ .begin_numbers = .{ .max_attribute_bytes = 0 } }));
     try std.testing.expectError(error.LimitExceeded, document.inspectKnown(a, .{ .section_direct_settings = .{ .max_items = 0 } }));
     try std.testing.expectError(error.LimitExceeded, document.inspectKnown(a, .{ .section_page_borders = .{ .max_items = 0 } }));
+    try std.testing.expectError(error.LimitExceeded, document.inspectKnown(a, .{ .section_note_shapes = .{ .max_notes = 0 } }));
     var retry = try document.inspectKnown(a, .{});
     retry.deinit(a);
     var checked: std.heap.DebugAllocator(.{ .safety = true, .enable_memory_limit = true }) = .init;
@@ -326,6 +348,7 @@ test "HWPX known inspections keep separate phase limits and release on late fail
     try std.testing.expectError(error.LimitExceeded, document.inspectKnown(checked.allocator(), .{ .begin_numbers = .{ .max_attribute_bytes = 0 } }));
     try std.testing.expectError(error.LimitExceeded, document.inspectKnown(checked.allocator(), .{ .section_direct_settings = .{ .max_items = 0 } }));
     try std.testing.expectError(error.LimitExceeded, document.inspectKnown(checked.allocator(), .{ .section_page_borders = .{ .max_items = 0 } }));
+    try std.testing.expectError(error.LimitExceeded, document.inspectKnown(checked.allocator(), .{ .section_note_shapes = .{ .max_notes = 0 } }));
     var checked_success = try document.inspectKnown(checked.allocator(), .{});
     checked_success.deinit(checked.allocator());
     try std.testing.expectEqual(@as(usize, 0), checked.total_requested_bytes);

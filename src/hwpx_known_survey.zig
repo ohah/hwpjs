@@ -4,6 +4,7 @@ const expected = @import("hwpx_corpus_expectations.zig");
 const para_list_attributes = @import("hwpx/para_list_attributes.zig");
 const section_definition = @import("hwpx/section_definition.zig");
 const section_direct_settings = @import("hwpx/section_direct_settings.zig");
+const section_note_fields = @import("hwpx/section_note_fields.zig");
 const xml_values = @import("hwpx/xml_values.zig");
 
 const sub_list_field_count = para_list_attributes.field_names.len;
@@ -268,6 +269,7 @@ const Statistics = struct {
     section_settings: SectionSettingsStats,
     section_page_borders: SectionPageBorderStats,
     section_page_border_refs: SectionPageBorderRefStats,
+    section_notes: SectionNoteStats,
     paragraphs: usize,
     paragraph_children: package.ParagraphChildrenReport,
     line_segments: package.LineSegmentsReport,
@@ -510,6 +512,117 @@ const SectionPageBorderStats = struct {
         self.header_inside += other.header_inside;
         self.footer_inside += other.footer_inside;
         for (&self.offset_sums, other.offset_sums) |*slot, value| slot.* += value;
+    }
+};
+
+const SectionNoteStats = struct {
+    counts: [2]usize = @splat(0),
+    line_lengths: [2]i64 = @splat(0),
+    spacing: [6]u64 = @splat(0),
+    new_nums: [2]u64 = @splat(0),
+    superscript: [2]usize = @splat(0),
+    // Unknown enums, noncanonical colors, foot/end "4 mm", end EACH_COLUMN.
+    anomalies: [5]usize = @splat(0),
+    // Foot user/prefix/suffix, end user/prefix/suffix.
+    missing_chars: [6]usize = @splat(0),
+    nonempty_chars: [6]usize = @splat(0),
+    // Foot USER_CHAR/ON_PAGE, end noteLine NONE/THICK_SLIM.
+    other_enums: [4]usize = @splat(0),
+
+    fn from(a: std.mem.Allocator, definitions: package.SectionDefinitionReport, report: package.SectionNoteShapeReport) !SectionNoteStats {
+        try std.testing.expectEqual(definitions.sections, report.sections);
+        try std.testing.expectEqual(@as(usize, 0), report.other_attributes);
+        const seen = try a.alloc([2]usize, definitions.definitions.len);
+        defer a.free(seen);
+        for (seen) |*entry| entry.* = @splat(0);
+        var stats: SectionNoteStats = .{};
+        for (report.notes, 0..) |note, note_index| {
+            const note_slot: usize = @intFromEnum(note.kind);
+            var parent_slot: ?usize = null;
+            for (definitions.definitions, 0..) |definition, slot| {
+                if (definition.section_ordinal == note.section_ordinal and definition.element_index == note.parent_element_index) {
+                    parent_slot = slot;
+                    break;
+                }
+            }
+            seen[parent_slot orelse return error.MissingSectionDefinition][note_slot] += 1;
+            stats.counts[note_slot] += 1;
+            try std.testing.expectEqual(@as(usize, 0), note.other_attributes);
+            try std.testing.expectEqual(@as(usize, 5), note.direct_children);
+            for (note.child_counts) |count| try std.testing.expectEqual(@as(usize, 1), count);
+            var child_count: usize = 0;
+            for (report.children) |child| {
+                if (child.note_index != note_index) continue;
+                child_count += 1;
+                try std.testing.expect(child.element_index > note.element_index);
+                try std.testing.expectEqual(@as(usize, 0), child.other_attributes + child.direct_children);
+                switch (child.kind) {
+                    .auto_num_format => {
+                        const number_type = child.get(.number_type) orelse return error.MissingNoteNumberType;
+                        try std.testing.expect(std.mem.eql(u8, number_type, "DIGIT") or (note.kind == .foot and std.mem.eql(u8, number_type, "USER_CHAR")));
+                        stats.other_enums[0] += @intFromBool(note.kind == .foot and std.mem.eql(u8, number_type, "USER_CHAR"));
+                        stats.superscript[note_slot] += @intFromBool(try xml_values.boolean(child.get(.supscript) orelse return error.MissingNoteSupscript));
+                        inline for (.{ .user_char, .prefix_char, .suffix_char }, 0..) |field, field_index| {
+                            const slot = note_slot * 3 + field_index;
+                            if (child.get(field)) |raw| {
+                                stats.nonempty_chars[slot] += @intFromBool(raw.len != 0);
+                            } else stats.missing_chars[slot] += 1;
+                        }
+                    },
+                    .note_line => {
+                        stats.line_lengths[note_slot] += try xml_values.signed32(child.get(.line_length) orelse return error.MissingNoteLineLength);
+                        const line_type = child.get(.line_type) orelse return error.MissingNoteLineType;
+                        try std.testing.expect(std.mem.eql(u8, line_type, "SOLID") or (note.kind == .end and (std.mem.eql(u8, line_type, "NONE") or std.mem.eql(u8, line_type, "THICK_SLIM"))));
+                        if (note.kind == .end) {
+                            stats.other_enums[2] += @intFromBool(std.mem.eql(u8, line_type, "NONE"));
+                            stats.other_enums[3] += @intFromBool(std.mem.eql(u8, line_type, "THICK_SLIM"));
+                        }
+                        const width = child.get(.line_width) orelse return error.MissingNoteLineWidth;
+                        if (std.mem.eql(u8, width, "4 mm")) stats.anomalies[2 + note_slot] += 1;
+                        const color = child.get(.line_color) orelse return error.MissingNoteLineColor;
+                        stats.anomalies[1] += @intFromBool(!section_note_fields.canonicalColor(color));
+                    },
+                    .note_spacing => {
+                        inline for (.{ .between_notes, .below_line, .above_line }, 0..) |field, slot| {
+                            stats.spacing[note_slot * 3 + slot] += try xml_values.unsigned32(child.get(field) orelse return error.MissingNoteSpacing);
+                        }
+                    },
+                    .numbering => {
+                        const numbering_type = child.get(.numbering_type) orelse return error.MissingNoteNumberingType;
+                        try std.testing.expect(std.mem.eql(u8, numbering_type, "CONTINUOUS") or (note.kind == .foot and std.mem.eql(u8, numbering_type, "ON_PAGE")));
+                        stats.other_enums[1] += @intFromBool(note.kind == .foot and std.mem.eql(u8, numbering_type, "ON_PAGE"));
+                        const new_num = try xml_values.unsigned32(child.get(.new_num) orelse return error.MissingNoteNewNum);
+                        try std.testing.expect(new_num > 0);
+                        stats.new_nums[note_slot] += new_num;
+                    },
+                    .placement => {
+                        const place = child.get(.placement_place) orelse return error.MissingNotePlacement;
+                        try std.testing.expect(if (note.kind == .foot) std.mem.eql(u8, place, "EACH_COLUMN") else std.mem.eql(u8, place, "END_OF_DOCUMENT") or std.mem.eql(u8, place, "EACH_COLUMN"));
+                        stats.anomalies[4] += @intFromBool(note.kind == .end and std.mem.eql(u8, place, "EACH_COLUMN"));
+                        try std.testing.expect(!(try xml_values.boolean(child.get(.beneath_text) orelse return error.MissingNoteBeneathText)));
+                    },
+                }
+            }
+            try std.testing.expectEqual(@as(usize, 5), child_count);
+        }
+        for (definitions.definitions, seen) |definition, observed| {
+            try std.testing.expectEqual(definition.childCount(.foot_note_pr), observed[0]);
+            try std.testing.expectEqual(definition.childCount(.end_note_pr), observed[1]);
+        }
+        try std.testing.expectEqual(report.foot_notes, stats.counts[0]);
+        try std.testing.expectEqual(report.end_notes, stats.counts[1]);
+        try std.testing.expectEqual(report.notes.len * 5, report.children.len);
+        try std.testing.expectEqual(report.children.len, report.direct_children);
+        stats.anomalies[0] = stats.anomalies[2] + stats.anomalies[3] + stats.anomalies[4];
+        try std.testing.expectEqual(report.unknown_enums, stats.anomalies[0]);
+        try std.testing.expectEqual(report.noncanonical_colors, stats.anomalies[1]);
+        return stats;
+    }
+
+    fn merge(self: *SectionNoteStats, other: SectionNoteStats) void {
+        inline for (.{ "counts", "line_lengths", "spacing", "new_nums", "superscript", "anomalies", "missing_chars", "nonempty_chars", "other_enums" }) |field| {
+            for (&@field(self, field), @field(other, field)) |*slot, value| slot.* += value;
+        }
     }
 };
 
@@ -922,6 +1035,7 @@ fn inspectOne(bytes: []const u8) !Outcome {
         .section_settings = try SectionSettingsStats.from(a, known.section_definitions, known.section_direct_settings),
         .section_page_borders = try SectionPageBorderStats.from(a, known.section_definitions, known.section_page_borders),
         .section_page_border_refs = try SectionPageBorderRefStats.from(known.section_page_borders, known.section_page_border_references),
+        .section_notes = try SectionNoteStats.from(a, known.section_definitions, known.section_note_shapes),
         .paragraphs = known.paragraph_metadata.paragraphs,
         .paragraph_children = known.paragraph_children,
         .line_segments = known.line_segments,
@@ -989,6 +1103,7 @@ fn surveyShard(shard: usize) !void {
     var section_settings: SectionSettingsStats = .{};
     var section_page_borders: SectionPageBorderStats = .{};
     var section_page_border_refs: SectionPageBorderRefStats = .{};
+    var section_notes: SectionNoteStats = .{};
     var paragraphs: usize = 0;
     var paragraph_children: package.ParagraphChildrenReport = .{};
     var line_segments: package.LineSegmentsReport = .{};
@@ -1076,6 +1191,7 @@ fn surveyShard(shard: usize) !void {
                     section_settings.merge(stats.section_settings);
                     section_page_borders.merge(stats.section_page_borders);
                     section_page_border_refs.merge(stats.section_page_border_refs);
+                    section_notes.merge(stats.section_notes);
                     page_geometry.pages += stats.page_geometry.pages;
                     page_geometry.widely += stats.page_geometry.widely;
                     page_geometry.left_right += stats.page_geometry.left_right;
@@ -1326,6 +1442,15 @@ fn surveyShard(shard: usize) !void {
     try std.testing.expectEqualSlices(u64, &expected.section_page_border_offset_sums[shard], &section_page_borders.offset_sums);
     try std.testing.expectEqual(expected.section_page_border_refs_resolved[shard], section_page_border_refs.resolved);
     try std.testing.expectEqual(expected.section_page_border_refs_missing_target[shard], section_page_border_refs.missing_target);
+    try std.testing.expectEqualSlices(usize, &expected.section_note_counts[shard], &section_notes.counts);
+    try std.testing.expectEqualSlices(i64, &expected.section_note_line_length_sums[shard], &section_notes.line_lengths);
+    try std.testing.expectEqualSlices(u64, &expected.section_note_spacing_sums[shard], &section_notes.spacing);
+    try std.testing.expectEqualSlices(u64, &expected.section_note_new_num_sums[shard], &section_notes.new_nums);
+    try std.testing.expectEqualSlices(usize, &expected.section_note_supscript_true[shard], &section_notes.superscript);
+    try std.testing.expectEqualSlices(usize, &expected.section_note_anomalies[shard], &section_notes.anomalies);
+    try std.testing.expectEqualSlices(usize, &expected.section_note_missing_chars[shard], &section_notes.missing_chars);
+    try std.testing.expectEqualSlices(usize, &expected.section_note_nonempty_chars[shard], &section_notes.nonempty_chars);
+    try std.testing.expectEqualSlices(usize, &expected.section_note_other_enums[shard], &section_notes.other_enums);
     try std.testing.expectEqual(expected.section_outline_zero[shard], section_definition_refs.outline_zero);
     try std.testing.expectEqual(expected.section_outline_resolved[shard], section_definition_refs.outline_resolved);
     try std.testing.expectEqual(expected.section_outline_absent_table[shard], section_definition_refs.outline_absent_table);

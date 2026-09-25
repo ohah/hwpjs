@@ -414,6 +414,56 @@ pub const section_page_border_offset_sums = [_][4]u64{
     .{ 253_643, 253_643, 253_643, 253_643 },
     .{ 333_001, 333_001, 333_001, 333_001 },
 };
+// Independent tools/hwpx-section-note-shapes-oracle.py census. Note order:
+// foot, end. Spacing order: foot between/below/above, end between/below/above.
+// Character order: foot user/prefix/suffix, end user/prefix/suffix.
+pub const section_note_counts = [_][2]usize{
+    .{ 75, 75 }, .{ 71, 71 }, .{ 72, 72 }, .{ 55, 55 },
+    .{ 64, 64 }, .{ 60, 60 }, .{ 63, 63 }, .{ 91, 91 },
+};
+pub const section_note_line_length_sums = [_][2]i64{
+    .{ -75, 602_485_526 }, .{ -71, 573_114_964 }, .{ -72, 617_150_860 }, .{ -55, 499_554_375 },
+    .{ -64, 543_689_134 }, .{ -60, 514_303_935 }, .{ -63, 558_368_079 }, .{ -91, 470_167_263 },
+};
+pub const section_note_spacing_sums = [_][6]u64{
+    .{ 28_043, 42_537, 58_676, 14_168, 42_649, 58_194 },
+    .{ 24_079, 40_274, 55_847, 10_201, 41_242, 57_940 },
+    .{ 26_063, 40_841, 56_700, 12_468, 46_070, 56_880 },
+    .{ 18_421, 31_190, 45_361, 4_250, 31_294, 45_517 },
+    .{ 22_662, 36_302, 50_460, 10_768, 36_414, 56_273 },
+    .{ 19_268, 34_036, 46_496, 16_722, 49_449, 63_671 },
+    .{ 23_507, 35_729, 50_736, 8_500, 35_793, 50_832 },
+    .{ 29_195, 45_962, 65_807, 9_350, 46_242, 65_601 },
+};
+pub const section_note_new_num_sums = [_][2]u64{
+    .{ 75, 75 }, .{ 71, 71 }, .{ 10_948, 10_952 }, .{ 55, 55 },
+    .{ 64, 64 }, .{ 60, 60 }, .{ 2_782, 2_783 },   .{ 2_810, 2_811 },
+};
+pub const section_note_supscript_true = [_][2]usize{
+    .{ 0, 0 }, .{ 0, 0 }, .{ 0, 0 }, .{ 0, 0 },
+    .{ 0, 0 }, .{ 0, 0 }, .{ 0, 0 }, .{ 11, 10 },
+};
+// Anomalies: unknown enum count, noncanonical color, foot width "4 mm",
+// end width "4 mm", end placement EACH_COLUMN.
+pub const section_note_anomalies = [_][5]usize{
+    .{ 0, 0, 0, 0, 0 }, .{ 0, 0, 0, 0, 0 }, .{ 0, 8, 0, 0, 0 }, .{ 0, 0, 0, 0, 0 },
+    .{ 0, 0, 0, 0, 0 }, .{ 0, 0, 0, 0, 0 }, .{ 0, 0, 0, 0, 0 }, .{ 30, 0, 10, 10, 10 },
+};
+pub const section_note_missing_chars = [_][6]usize{
+    .{ 0, 0, 0, 0, 0, 0 }, .{ 0, 0, 0, 0, 0, 0 }, .{ 0, 0, 0, 0, 0, 0 }, .{ 0, 0, 0, 0, 0, 0 },
+    .{ 0, 0, 0, 0, 0, 0 }, .{ 0, 0, 0, 0, 0, 0 }, .{ 0, 0, 0, 0, 0, 0 }, .{ 10, 10, 10, 10, 10, 10 },
+};
+pub const section_note_nonempty_chars = [_][6]usize{
+    .{ 0, 0, 75, 0, 2, 75 }, .{ 0, 0, 71, 0, 3, 71 },
+    .{ 0, 0, 72, 0, 2, 72 }, .{ 0, 0, 55, 0, 0, 55 },
+    .{ 0, 0, 64, 0, 2, 64 }, .{ 0, 0, 60, 0, 4, 60 },
+    .{ 1, 0, 62, 0, 0, 63 }, .{ 0, 0, 81, 0, 0, 81 },
+};
+// Foot USER_CHAR, foot ON_PAGE, end noteLine NONE, end THICK_SLIM.
+pub const section_note_other_enums = [_][4]usize{
+    .{ 0, 0, 12, 2 }, .{ 0, 0, 14, 3 }, .{ 0, 0, 15, 2 }, .{ 0, 0, 13, 0 },
+    .{ 0, 0, 12, 2 }, .{ 0, 0, 15, 3 }, .{ 1, 4, 8, 0 },  .{ 0, 0, 35, 0 },
+};
 // Independent tools/hwpx-section-definition-reference-oracle.py census.
 pub const section_outline_zero = [_]usize{ 16, 19, 13, 13, 14, 17, 11, 39 };
 pub const section_outline_resolved = [_]usize{ 55, 49, 56, 41, 47, 43, 48, 53 };

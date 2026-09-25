@@ -4,6 +4,8 @@
 
 `pageBorderFill`과 직접 `offset` 원값은 [구역 쪽 테두리·배경](hwpx-section-page-borders.md)이 별도 소유합니다.
 
+`footNotePr`·`endNotePr`의 내부 모양 원값은 [구역 각주·미주 모양](hwpx-section-note-shapes.md)이 별도 소유합니다.
+
 해당 `borderFillIDRef`의 header 대상 조회는 [구역 쪽 테두리 ID 참조](hwpx-section-page-border-references.md)가 소유합니다.
 
 `src/hwpx/section_definition.zig`는 패키지가 선택한 2011 namespace의 section XML 트리에서 모든 `hp:secPr`를 XML 순서대로 관측합니다. `section_ordinal`과 `element_index`를 남겨 한 section의 여러 정의를 합치지 않습니다. 반환 보고서는 독립 소유값이며 `deinit`해야 합니다. `readXmlTrees().inspectSectionDefinitions()`와 `Document.inspectKnown().section_definitions`가 같은 구현을 사용합니다.

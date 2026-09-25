@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[HWPX 구역 각주·미주 모양](hwpx-section-note-shapes.md)은 `zig test src/root.zig --test-filter 'HWPX section note shapes'`로 합성·한도·OOM 및 편차 실파일을 검사합니다. `python3 tools/hwpx-section-note-shapes-oracle.py --self-test`와 인자 없는 실행이 독립 반례·8개 shard 기대값을 생성합니다. 아래 `HWPX known document inspections shard N`을 N=0..7 각각 별도 ReleaseFast 프로세스로 실행해 원값 분포를 대조합니다.
+
 [HWPX 구역 쪽 테두리 ID 참조](hwpx-section-page-border-references.md)는 `zig test src/root.zig --test-filter 'HWPX page border references'`로 ID 0/표 부재/미해결 및 실파일을 확인합니다. `python3 tools/hwpx-section-page-border-oracle.py --self-test`와 인자 없는 실행은 header ID 집합과 section 참조를 독립 대조합니다. 아래 known survey 8개 ReleaseFast shard가 문서별 해결 분할과 첫 미해결 위치를 검증합니다.
 
 [HWPX 구역 쪽 테두리·배경](hwpx-section-page-borders.md)은 `zig test src/root.zig --test-filter 'HWPX section page borders'`로 합성·한도·할당 실패를, `--test-filter 'HWPX known inspections compose'`로 실파일 조립을 확인합니다. `python3 tools/hwpx-section-page-border-oracle.py --self-test`와 인자 없는 실행은 독립 반례·8개 shard 기대값을 제공합니다. 아래 `HWPX known document inspections shard N`을 N=0..7 각각 별도 ReleaseFast 프로세스로 실행해 대조합니다.
