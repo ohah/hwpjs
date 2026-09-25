@@ -1,5 +1,7 @@
 # Zig/WASM 구현 구조
 
+[OPF 이미지 후보 전수 검사](hwpx-manifest-image-payloads.md)는 참조 사이트와 무관한 manifest 항목 선택만 소유하고, 바이트 검사·MIME 진단은 기존 공통 이미지 코어를 재사용합니다. 전체 BinData 의미 검증과 문서 전역 이미지 예산은 아직 별도입니다.
+
 [내장 SVG 구조 검사](hwpx-svg-image-payloads.md)는 공통 XML 문법·namespace 파서를 재사용하며, HWPX 이미지 어댑터는 형식 후보·MIME·자원 예산만 소유합니다. 스크립트/외부 참조 실행과 렌더링은 하지 않습니다.
 
 [구역 쪽 테두리·배경 원값](hwpx-section-page-borders.md)은 기존 section 트리와 XML 숫자·Boolean 계층을 재사용합니다. `pageBorderFill`·`offset`의 부모 관계를 보존하고, 별도 [ID 참조 진단](hwpx-section-page-border-references.md)이 header 색인과 연결합니다. 레이아웃은 수행하지 않습니다.

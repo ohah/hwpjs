@@ -45,6 +45,7 @@ const fill_brush_image_payloads = @import("fill_brush_image_payloads.zig");
 const picture_image_links = @import("picture_image_links.zig");
 const masterpage_picture_image_links = @import("masterpage_picture_image_links.zig");
 const picture_image_payloads = @import("picture_image_payloads.zig");
+const manifest_image_payloads = @import("manifest_image_payloads.zig");
 const masterpage_fill_brush = @import("masterpage_fill_brush.zig");
 const section_page_border_refs = @import("section_page_border_refs.zig");
 const section_definition_refs = @import("section_definition_refs.zig");
@@ -214,6 +215,8 @@ pub const PictureImageLinkOptions = picture_image_links.Options;
 pub const PictureImageLinkReport = picture_image_links.Report;
 pub const PictureImagePayloadOptions = picture_image_payloads.Options;
 pub const PictureImagePayloadReport = picture_image_payloads.Report;
+pub const ManifestImagePayloadOptions = manifest_image_payloads.Options;
+pub const ManifestImagePayloadReport = manifest_image_payloads.Report;
 pub const PictureImageOptions = struct {
     trees: XmlTreesOptions = .{},
     links: PictureImageLinkOptions = .{},
@@ -349,6 +352,7 @@ pub const KnownOptions = struct {
     fill_brush_image_payloads: FillBrushImagePayloadOptions = .{},
     picture_image_links: PictureImageLinkOptions = .{},
     picture_image_payloads: PictureImagePayloadOptions = .{},
+    manifest_image_payloads: ManifestImagePayloadOptions = .{},
 };
 pub const DocumentOptions = struct {
     // The archive index also contains large BinData/section entries. Their
@@ -522,6 +526,12 @@ pub const Document = struct {
         var linked = try self.inspectPictureImageLinks(a, links_options);
         defer linked.deinit(a);
         return picture_image_payloads.inspect(a, self.archive, self.manifest, &linked, options);
+    }
+
+    /// Inspects image-declared or image-named OPF items, including items not
+    /// referenced from any picture or brush. External items are not fetched.
+    pub fn inspectManifestImagePayloads(self: *const Document, a: std.mem.Allocator, options: ManifestImagePayloadOptions) !ManifestImagePayloadReport {
+        return manifest_image_payloads.inspect(a, self.archive, self.manifest, options);
     }
 
     /// Per-element raw pic/img OPF links in manifest-selected master pages.

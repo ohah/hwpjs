@@ -19,6 +19,65 @@ PARAGRAPH = "{http://www.hancom.co.kr/hwpml/2011/paragraph}"
 ROOTS = (Path("legacy/rust/crates/hwp-core/tests/fixtures"), Path("reference/rhwp/samples"))
 MASTER = re.compile(r"Contents/masterpage[0-9]+\.xml\Z")
 SECTION = re.compile(r"Contents/section[0-9]+\.xml\Z")
+IMAGE_SUFFIXES = (".png", ".jpg", ".jpeg", ".bmp", ".gif", ".wmf", ".tif", ".tiff", ".pcx", ".svg")
+
+
+def manifest_image_candidate(item):
+    return (item.get("media-type") or "").lower().startswith("image/") or (item.get("href") or "").lower().endswith(IMAGE_SUFFIXES)
+
+
+def manifest_image_archive(archive):
+    counts = Counter()
+    items, _, parts = selected_items(archive)
+    image_ids = set()
+    for _, _, path in parts:
+        root = ET.fromstring(archive.read(path))
+        image_ids.update(leaf.get("binaryItemIDRef") for leaf in picture_leaves(root))
+        image_ids.update(leaf.get("binaryItemIDRef") for _, leaf in image_leaves(root))
+    for item in items:
+        if not manifest_image_candidate(item):
+            continue
+        counts["sites"] += 1
+        if item.get("isEmbeded") == "0":
+            counts["external"] += 1
+            continue
+        counts["without_picture_brush_ref"] += item.get("id") not in image_ids
+        href = item.get("href")
+        info = archive.getinfo(href)
+        if info.file_size > 64 * 1024 * 1024:
+            counts["oversize"] += 1
+            continue
+        data = archive.read(href)
+        kind = byte_format(data)
+        if kind == "unknown" and ((item.get("media-type") or "").lower() in ("image/svg+xml", "image/svg") or href.lower().endswith(".svg")):
+            kind = "svg"
+        counts["targets"] += 1
+        counts[kind] += 1
+        counts["encoded_bytes"] += len(data)
+        counts["media_mismatch"] += kind != "unknown" and not matching_media(kind, item.get("media-type"))
+        if kind == "svg":
+            counts["invalid_svg"] += svg_structure_status(data) != "ok"
+    return counts
+
+
+def collect_manifest_image_payloads():
+    shards = [Counter() for _ in range(8)]
+    for root_index, root in enumerate(ROOTS):
+        for path in root.rglob("*.hwpx"):
+            shard = (root_index + sum(os.fsencode(str(path.relative_to(root))))) % 8
+            counts = shards[shard]
+            counts["files"] += 1
+            try:
+                with zipfile.ZipFile(path) as archive:
+                    if encrypted(archive):
+                        counts["encrypted"] += 1
+                        continue
+                    document = manifest_image_archive(archive)
+            except (zipfile.BadZipFile, KeyError, OSError, ET.ParseError, ValueError):
+                counts["unreadable"] += 1
+            else:
+                counts.update(document)
+    return shards
 
 
 def selected_items(archive):
@@ -117,7 +176,7 @@ def picture_payload_archive(archive):
                 continue
             data = archive.read(target_href)
             kind = byte_format(data)
-            if kind == "unknown" and (item.get("media-type") == "image/svg+xml" or target_href.lower().endswith(".svg")):
+            if kind == "unknown" and ((item.get("media-type") or "").lower() in ("image/svg+xml", "image/svg") or target_href.lower().endswith(".svg")):
                 kind = "svg"
             counts[source + "_targets"] += 1
             counts[source + "_" + kind] += 1
@@ -232,7 +291,7 @@ def byte_format(data):
 
 
 def matching_media(kind, media):
-    return media in {"png": ("image/png",), "jpeg": ("image/jpeg", "image/jpg"), "bmp": ("image/bmp",), "gif": ("image/gif",), "wmf": ("image/wmf",), "tiff": ("image/tiff", "image/tif"), "pcx": ("image/pcx", "image/x-pcx", "image/vnd.zbrush.pcx"), "svg": ("image/svg+xml",)}.get(kind, ())
+    return (media or "").lower() in {"png": ("image/png",), "jpeg": ("image/jpeg", "image/jpg"), "bmp": ("image/bmp",), "gif": ("image/gif",), "wmf": ("image/wmf",), "tiff": ("image/tiff", "image/tif"), "pcx": ("image/pcx", "image/x-pcx", "image/vnd.zbrush.pcx"), "svg": ("image/svg+xml",)}.get(kind, ())
 
 
 def svg_structure_status(data):
@@ -492,6 +551,21 @@ def collect():
 
 
 def self_test():
+    assert manifest_image_candidate(ET.Element("item", {"href": "BinData/unused.SVG", "media-type": "application/octet-stream"}))
+    assert manifest_image_candidate(ET.Element("item", {"href": "BinData/unknown.bin", "media-type": "image/png"}))
+    assert manifest_image_candidate(ET.Element("item", {"href": "BinData/upper.bin", "media-type": "IMAGE/PNG"}))
+    assert not manifest_image_candidate(ET.Element("item", {"href": "BinData/unknown.bin", "media-type": "application/octet-stream"}))
+    inventory_bytes = io.BytesIO()
+    inventory_opf = "<o:package xmlns:o='http://www.idpf.org/2007/opf/'><o:manifest><o:item id='unused' href='BinData/unused.svg' media-type='application/octet-stream'/><o:item id='legacy' href='BinData/legacy.bin' media-type='IMAGE/SVG'/><o:item id='external' href='https://example.invalid/absent.png' media-type='image/png' isEmbeded='0'/><o:item id='other' href='BinData/other.bin' media-type='application/octet-stream'/></o:manifest><o:spine/></o:package>"
+    with zipfile.ZipFile(inventory_bytes, "w") as archive:
+        archive.writestr("Contents/content.hpf", inventory_opf)
+        archive.writestr("BinData/unused.svg", "<svg xmlns='http://www.w3.org/2000/svg'/>")
+        archive.writestr("BinData/legacy.bin", "<?xml version='1.0'?><svg xmlns='http://www.w3.org/2000/svg'/>")
+        archive.writestr("BinData/other.bin", b"opaque")
+    with zipfile.ZipFile(inventory_bytes) as archive:
+        census = manifest_image_archive(archive)
+    assert census["sites"] == 3 and census["external"] == 1 and census["targets"] == 2 and census["without_picture_brush_ref"] == 2
+    assert census["svg"] == 2 and census["invalid_svg"] == 0 and census["media_mismatch"] == 2
     pictured = ET.fromstring("<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph' xmlns:c='http://www.hancom.co.kr/hwpml/2011/core' xmlns:x='urn:other'><p:pic><c:img binaryItemIDRef='img&#49;'/><x:img/><p:container><c:img/></p:container></p:pic><x:pic><c:img/></x:pic></s:sec>")
     assert [leaf.get("binaryItemIDRef") for leaf in picture_leaves(pictured)] == ["img1"]
     picture_opf = "<o:package xmlns:o='http://www.idpf.org/2007/opf/'><o:manifest>" + "".join(
@@ -528,7 +602,7 @@ def self_test():
     assert byte_format(bytes.fromhex("ffd8")) == "jpeg"
     assert byte_format(b"<svg xmlns='http://www.w3.org/2000/svg'/>") == "svg"
     assert byte_format(b"<svgOther/>") == "unknown"
-    assert matching_media("svg", "image/svg+xml") and not matching_media("svg", "image/svg")
+    assert matching_media("svg", "image/svg+xml") and matching_media("svg", "IMAGE/SVG+XML") and not matching_media("svg", "image/svg")
     assert svg_structure_status(b"<svg xmlns='http://www.w3.org/2000/svg'/>") == "ok"
     assert svg_structure_status(b"<svg/>") == "root"
     assert svg_structure_status(b"<svg xmlns='http://www.w3.org/2000/svg'>") == "xml"
@@ -638,8 +712,12 @@ def main():
         for index, counts in enumerate(collect_picture_payloads()):
             print(index, dict(sorted(counts.items())))
         return
+    if sys.argv[1:] == ["--manifest-images"]:
+        for index, counts in enumerate(collect_manifest_image_payloads()):
+            print(index, dict(sorted(counts.items())))
+        return
     if len(sys.argv) != 1:
-        raise SystemExit("usage: hwpx-fill-brush-image-oracle.py [--self-test|--payloads|--pictures|--picture-payloads]")
+        raise SystemExit("usage: hwpx-fill-brush-image-oracle.py [--self-test|--payloads|--pictures|--picture-payloads|--manifest-images]")
     for index, counts in enumerate(collect()):
         print(index, dict(sorted(counts.items())))
 

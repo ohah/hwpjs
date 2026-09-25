@@ -85,6 +85,23 @@ fn inspectSvg(a: std.mem.Allocator, data: []const u8, media: []const u8, options
     return inspectSingleImageWithOptions(a, data, media, "BinData/image.svg", options);
 }
 
+test "HWPX image MIME names ignore ASCII case but not subtype differences" {
+    const core = @import("image_payloads.zig");
+    try std.testing.expectEqual(@as(?bool, true), core.mediaMatches(.png, "IMAGE/PNG"));
+    try std.testing.expectEqual(@as(?bool, true), core.mediaMatches(.svg, "Image/Svg+Xml"));
+    try std.testing.expectEqual(@as(?bool, false), core.mediaMatches(.svg, "image/svg"));
+    try std.testing.expectEqual(@as(?bool, false), core.mediaMatches(.svg, "image/svg+xml; charset=utf-8"));
+    var report = try inspectSingleImage(std.testing.allocator, "<svg xmlns='http://www.w3.org/2000/svg'/>", "IMAGE/SVG+XML", "BinData/image.bin");
+    defer report.deinit(std.testing.allocator);
+    try std.testing.expectEqual(payloads.Format.svg, report.targets[0].format);
+    try std.testing.expectEqual(@as(usize, 0), report.media_mismatches + report.inspection_failures);
+    var nonstandard = try inspectSingleImage(std.testing.allocator, "<?xml version='1.0'?><svg xmlns='http://www.w3.org/2000/svg'/>", "IMAGE/SVG", "BinData/image.bin");
+    defer nonstandard.deinit(std.testing.allocator);
+    try std.testing.expectEqual(payloads.Format.svg, nonstandard.targets[0].format);
+    try std.testing.expectEqual(@as(usize, 0), nonstandard.inspection_failures);
+    try std.testing.expectEqual(@as(usize, 1), nonstandard.media_mismatches);
+}
+
 test "HWPX picture image payloads validate SVG XML without trusting MIME over signatures" {
     const a = std.testing.allocator;
     const valid = "<svg xmlns='http://www.w3.org/2000/svg'><rect width='1'/></svg>";

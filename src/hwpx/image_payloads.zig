@@ -79,20 +79,20 @@ pub fn formatOf(bytes: []const u8) Format {
 
 pub fn mediaMatches(format: Format, media: []const u8) ?bool {
     return switch (format) {
-        .png => std.mem.eql(u8, media, "image/png"),
-        .jpeg => std.mem.eql(u8, media, "image/jpeg") or std.mem.eql(u8, media, "image/jpg"),
-        .bmp => std.mem.eql(u8, media, "image/bmp"),
-        .gif => std.mem.eql(u8, media, "image/gif"),
-        .wmf => std.mem.eql(u8, media, "image/wmf"),
-        .tiff => std.mem.eql(u8, media, "image/tiff") or std.mem.eql(u8, media, "image/tif"),
-        .pcx => std.mem.eql(u8, media, "image/pcx") or std.mem.eql(u8, media, "image/x-pcx") or std.mem.eql(u8, media, "image/vnd.zbrush.pcx"),
-        .svg => std.mem.eql(u8, media, "image/svg+xml"),
+        .png => std.ascii.eqlIgnoreCase(media, "image/png"),
+        .jpeg => std.ascii.eqlIgnoreCase(media, "image/jpeg") or std.ascii.eqlIgnoreCase(media, "image/jpg"),
+        .bmp => std.ascii.eqlIgnoreCase(media, "image/bmp"),
+        .gif => std.ascii.eqlIgnoreCase(media, "image/gif"),
+        .wmf => std.ascii.eqlIgnoreCase(media, "image/wmf"),
+        .tiff => std.ascii.eqlIgnoreCase(media, "image/tiff") or std.ascii.eqlIgnoreCase(media, "image/tif"),
+        .pcx => std.ascii.eqlIgnoreCase(media, "image/pcx") or std.ascii.eqlIgnoreCase(media, "image/x-pcx") or std.ascii.eqlIgnoreCase(media, "image/vnd.zbrush.pcx"),
+        .svg => std.ascii.eqlIgnoreCase(media, "image/svg+xml"),
         .unknown => null,
     };
 }
 
 fn svgCandidate(item: manifest.Item) bool {
-    if (std.mem.eql(u8, item.media_type, "image/svg+xml")) return true;
+    if (std.ascii.eqlIgnoreCase(item.media_type, "image/svg+xml") or std.ascii.eqlIgnoreCase(item.media_type, "image/svg")) return true;
     return item.href.len >= 4 and std.ascii.eqlIgnoreCase(item.href[item.href.len - 4 ..], ".svg");
 }
 

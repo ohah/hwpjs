@@ -18,6 +18,27 @@ const synthetic_sources = [_]fixture.Source{
 const encrypted_sources = synthetic_sources ++ [_]fixture.Source{.{ .name = "META-INF/manifest.xml", .data = "<m:manifest xmlns:m='urn:oasis:names:tc:opendocument:xmlns:manifest:1.0'><m:file-entry full-path='Contents/header.xml'><m:encryption-data/></m:file-entry></m:manifest>" }};
 const orphan_sources = synthetic_sources ++ [_]fixture.Source{.{ .name = "Unlisted/data.bin", .data = "hidden" }};
 
+test "HWPX known inspections include unreferenced manifest image diagnostics" {
+    const a = std.testing.allocator;
+    var sources = synthetic_sources ++ [_]fixture.Source{.{ .name = "BinData/unused.svg", .data = "<wrong xmlns='http://www.w3.org/2000/svg'/>" }};
+    sources[2].data = "<o:package xmlns:o='http://www.idpf.org/2007/opf/'><o:manifest><o:item id='h' href='Contents/header.xml' media-type='application/xml'/><o:item id='s' href='Contents/section0.xml' media-type='application/xml'/><o:item id='setting' href='settings.xml' media-type='application/xml'/><o:item id='unused' href='BinData/unused.svg' media-type='image/svg+xml'/></o:manifest><o:spine><o:itemref idref='h'/><o:itemref idref='s'/></o:spine></o:package>";
+    const bytes = try fixture.storedZip(a, &sources);
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    var report = try document.inspectKnown(a, .{});
+    defer report.deinit(a);
+    try std.testing.expectEqual(@as(usize, 1), report.manifest_image_payloads.targets.len);
+    try std.testing.expectEqual(@as(usize, 1), report.manifest_image_payloads.inspection_failures);
+    try std.testing.expectEqual(@as(usize, 0), report.picture_image_payloads.targets.len);
+    try std.testing.expectEqual(@as(usize, 0), report.fill_brush_image_payloads.targets.len);
+    try std.testing.expectError(error.LimitExceeded, document.inspectKnown(a, .{ .manifest_image_payloads = .{ .max_targets = 0 } }));
+    var checked: std.heap.DebugAllocator(.{ .safety = true, .enable_memory_limit = true }) = .init;
+    defer _ = checked.deinit();
+    try std.testing.expectError(error.LimitExceeded, document.inspectKnown(checked.allocator(), .{ .trees = .{ .max_total_elements = 1 } }));
+    try std.testing.expectEqual(@as(usize, 0), checked.total_requested_bytes);
+}
+
 fn load(a: std.mem.Allocator, name: []const u8) ![]u8 {
     const path = try std.fmt.allocPrint(a, "legacy/rust/crates/hwp-core/tests/fixtures/{s}.hwpx", .{name});
     defer a.free(path);

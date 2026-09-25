@@ -46,6 +46,7 @@ test {
     _ = @import("hwpx/fill_brush_image_links_tests.zig");
     _ = @import("hwpx/picture_image_links_tests.zig");
     _ = @import("hwpx/picture_image_payloads_tests.zig");
+    _ = @import("hwpx/manifest_image_payloads_tests.zig");
     _ = @import("image/tiff/structure_tests.zig");
     _ = @import("image/pcx/structure_tests.zig");
     _ = @import("hwpx/fill_brush_image_payloads_tests.zig");

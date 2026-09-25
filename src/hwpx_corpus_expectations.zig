@@ -527,6 +527,15 @@ pub const picture_image_external = [_]usize{ 0, 0, 0, 4, 3, 0, 0, 0 };
 pub const picture_image_empty = [_]usize{ 4, 8, 6, 5, 3, 5, 4, 6 };
 pub const picture_image_target_index_sums = [_]usize{ 2578, 2342, 3413, 2270, 2643, 4020, 3872, 41252 };
 pub const picture_payload_targets = [_]usize{ 202, 186, 186, 111, 184, 250, 155, 239 };
+// Independent Python OPF census. One target per embedded image-declared or
+// image-named manifest item, including items with no picture/brush site.
+pub const manifest_image_sites = [_]usize{ 239, 249, 268, 113, 247, 265, 190, 682 };
+pub const manifest_image_external = [_]usize{ 0, 0, 0, 1, 3, 0, 0, 0 };
+pub const manifest_image_targets = [_]usize{ 239, 249, 268, 112, 244, 265, 190, 682 };
+pub const manifest_image_formats = [_][9]usize{ .{ 114, 46, 71, 8, 0, 0, 0, 0, 0 }, .{ 118, 30, 100, 1, 0, 0, 0, 0, 0 }, .{ 69, 107, 86, 0, 6, 0, 0, 0, 0 }, .{ 21, 69, 15, 4, 0, 3, 0, 0, 0 }, .{ 122, 43, 79, 0, 0, 0, 0, 0, 0 }, .{ 92, 28, 130, 0, 13, 0, 0, 2, 0 }, .{ 61, 28, 100, 0, 0, 1, 0, 0, 0 }, .{ 96, 469, 103, 7, 4, 2, 1, 0, 0 } };
+pub const manifest_image_mismatches = [_]usize{ 26, 15, 61, 8, 7, 4, 11, 87 };
+pub const manifest_image_encoded_bytes = [_]usize{ 193603441, 201318878, 347106776, 42394905, 183293992, 339544753, 126980082, 115910052 };
+pub const manifest_image_without_picture_brush_ref = [_]usize{ 29, 62, 72, 1, 57, 11, 33, 81 };
 pub const picture_payload_formats = [_][9]usize{ .{ 82, 42, 71, 7, 0, 0, 0, 0, 0 }, .{ 56, 30, 99, 1, 0, 0, 0, 0, 0 }, .{ 39, 55, 86, 0, 6, 0, 0, 0, 0 }, .{ 20, 69, 15, 4, 0, 3, 0, 0, 0 }, .{ 63, 42, 79, 0, 0, 0, 0, 0, 0 }, .{ 80, 25, 130, 0, 13, 0, 0, 2, 0 }, .{ 35, 25, 94, 0, 0, 1, 0, 0, 0 }, .{ 66, 56, 103, 7, 4, 2, 1, 0, 0 } };
 pub const picture_payload_invalid_wmf = [_]usize{ 0, 0, 2, 0, 0, 0, 0, 1 };
 pub const picture_payload_invalid_tiff = [_]usize{ 0, 0, 0, 0, 0, 0, 0, 0 };

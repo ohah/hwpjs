@@ -4,7 +4,7 @@
 
 `src/image/svg/structure.zig`는 SVG를 **XML 문법·namespace·루트**까지만 검사합니다. 공통 `xml/document.zig`의 제한된 방문자를 사용하며 문서를 렌더링하거나 URL을 가져오지 않습니다. 루트는 [W3C SVG 문서 구조](https://www.w3.org/TR/SVG11/struct.html)에 따라 `http://www.w3.org/2000/svg` namespace의 `svg`여야 합니다. 접두사 표기와 UTF BOM은 공통 XML 계층에 맡기고, DTD/미해결 개체 참조는 거부합니다. `Options.svg.xml`의 입력·요소·깊이·이벤트·속성·참조 한도는 그대로 적용하되 namespace 검사는 끌 수 없습니다.
 
-`src/hwpx/image_payloads.zig`가 ZIP 해제·대상 중복 제거·MIME 대조·한도·실패 진단을 소유합니다. 기존 이미지 시그니처 판별을 우선하고, 그 뒤 `<svg` 시작 모양(선택적 UTF-8 BOM·XML 공백 포함) 또는 정확한 `image/svg+xml` 선언 또는 `.svg` 경로를 SVG 검사 후보로 선택합니다. 후보의 XML/루트 오류는 `Target.format=svg`, `inspection=svg_xml_structure`, `inspection_error`로 남기며 정상 SVG로 세지 않습니다. 정확한 XML namespace 루트 판정은 이미지 코어 한 곳에서만 수행합니다. 후보 근거가 없는 다른 바이트는 여전히 `unknown`입니다. PNG 바이트가 `.svg` 경로에 있어도 PNG 시그니처가 우선하고 MIME 불일치는 별도 기록됩니다.
+`src/hwpx/image_payloads.zig`가 ZIP 해제·대상 중복 제거·MIME 대조·한도·실패 진단을 소유합니다. 기존 이미지 시그니처 판별을 우선하고, 그 뒤 `<svg` 시작 모양(선택적 UTF-8 BOM·XML 공백 포함), 대소문자와 무관한 `image/svg+xml` 또는 실파일에서 관측된 비표준 `image/svg` 선언, `.svg` 경로 중 하나를 SVG 검사 후보로 선택합니다. 비표준 선언은 후보 근거일 뿐 MIME 일치로 바꾸지 않습니다. 후보의 XML/루트 오류는 `Target.format=svg`, `inspection=svg_xml_structure`, `inspection_error`로 남기며 정상 SVG로 세지 않습니다. 정확한 XML namespace 루트 판정은 이미지 코어 한 곳에서만 수행합니다. 후보 근거가 없는 다른 바이트는 여전히 `unknown`입니다. PNG 바이트가 `.svg` 경로에 있어도 PNG 시그니처가 우선하고 MIME 불일치는 별도 기록됩니다.
 
 등록된 SVG 미디어 타입은 [W3C 등록](https://www.w3.org/TR/SVG11/mimereg.html)의 `image/svg+xml`입니다. 실파일 OPF의 `image/svg`는 자동으로 같은 값으로 정규화하지 않고 `media_matches=false`로 남깁니다. 구조 검사 성공은 SVG 스키마·도형 속성·스타일·필터·글꼴·외부 참조·스크립트·렌더링 안전성이나 화면 동일성의 증거가 아닙니다. XML 방문자는 스크립트를 실행하지 않지만, 검사된 바이트를 다른 SVG 렌더러에 전달할 때 별도 보안 정책이 필요합니다.
 

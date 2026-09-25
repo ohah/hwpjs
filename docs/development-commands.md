@@ -1,5 +1,8 @@
 # 개발·검증 명령
 
+[OPF 이미지 후보 전수 검사](hwpx-manifest-image-payloads.md)는 `zig test src/root.zig --test-filter 'HWPX manifest image payloads'`와 `--test-filter 'HWPX known inspections include unreferenced'`로 합성·소유권·한도를 확인합니다. 독립 corpus 조사 `python3 tools/hwpx-fill-brush-image-oracle.py --self-test` 및 `--manifest-images` 결과는 아래 HWPX known shard 0~7과 대조합니다. 선택 shard는 로컬 `reference/rhwp`가 필요하고 기본 audit에는 포함되지 않습니다.
+
+
 [HWPX SVG 구조](hwpx-svg-image-payloads.md)는 `zig test src/root.zig --test-filter 'SVG structure'`, `zig test src/root.zig --test-filter 'HWPX picture image payloads'`, `zig test src/root.zig --test-filter 'HWPX fill brush image payloads'`로 합성·공통 연결을, `python3 tools/hwpx-fill-brush-image-oracle.py --self-test`와 `--picture-payloads`로 독립 분류를 검사합니다. 로컬 `reference/rhwp`가 있는 경우 `zig test src/hwpx_known_survey.zig -O ReleaseFast --test-filter 'HWPX known document inspections shard N'`을 N=0..7 각각 실행해 전체 corpus를 대조합니다. 실파일 8개 shard는 기본 audit에 포함되지 않습니다.
 
 [HWP BMP 32비트 상위 바이트](hwp5-bmp-high-byte.md)는 `zig test src/root.zig --test-filter 'BMP'`로 구조·컨테이너 합성 계약을, `zig test src/hwp5_bmp_seven_known_survey.zig -O ReleaseFast --test-filter 'HWP known seven BMP'`와 `node tests/hwp5/bmp-seven-survey.mjs`로 실제 HWP 7건의 독립 DocInfo·압축·픽셀/상위 바이트 대조를 확인합니다. 실파일 두 명령은 로컬 `reference/rhwp`가 필요하며 기본 audit에 포함되지 않습니다.
