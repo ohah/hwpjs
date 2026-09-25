@@ -18,6 +18,13 @@ pub const Report = struct {
     pixels_deferred: bool = true,
 };
 
+/// PCX has a one-byte magic. Require a matching version or RLE clue before
+/// claiming an otherwise opaque embedded binary as a PCX candidate.
+pub fn looksLike(bytes: []const u8) bool {
+    return bytes.len >= 3 and bytes[0] == 0x0a and
+        (bytes[2] == 1 or bytes[1] == 0 or bytes[1] == 2 or bytes[1] == 3 or bytes[1] == 4 or bytes[1] == 5);
+}
+
 /// Validates the PCX header and exact RLE byte count without allocating a
 /// pixel buffer. Runs may cross plane boundaries, but not scan lines.
 pub fn inspect(bytes: []const u8, options: Options) !Report {

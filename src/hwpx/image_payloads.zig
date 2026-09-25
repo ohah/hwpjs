@@ -71,7 +71,7 @@ pub fn formatOf(bytes: []const u8) Format {
     if (std.mem.startsWith(u8, bytes, &.{ 0xd7, 0xcd, 0xc6, 0x9a })) return .wmf;
     if (bytes.len >= 4 and (std.mem.eql(u8, bytes[0..2], &.{ 1, 0 }) or std.mem.eql(u8, bytes[0..2], &.{ 2, 0 })) and std.mem.eql(u8, bytes[2..4], &.{ 9, 0 })) return .wmf;
     if (std.mem.startsWith(u8, bytes, &.{ 0x49, 0x49, 0x2a, 0x00 }) or std.mem.startsWith(u8, bytes, &.{ 0x4d, 0x4d, 0x00, 0x2a })) return .tiff;
-    if (bytes.len >= 3 and bytes[0] == 0x0a and (bytes[2] == 1 or bytes[1] == 0 or bytes[1] == 2 or bytes[1] == 3 or bytes[1] == 4 or bytes[1] == 5)) return .pcx;
+    if (pcx.looksLike(bytes)) return .pcx;
     return .unknown;
 }
 

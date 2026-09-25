@@ -4,9 +4,12 @@ const jpeg = @import("jpeg_images.zig");
 const bmp = @import("bmp_images.zig");
 const bmp_profiles = @import("bmp_profiles.zig");
 const gif = @import("gif_images.zig");
+const pcx = @import("pcx_images.zig");
 const isExtension = @import("extension.zig").is;
 pub const Options = struct {
     gif: ?gif.Options = null,
+    pcx: ?pcx.Options = null,
+    max_total_pcx_decoded_bytes: usize = (pcx.Options{}).max_decoded_bytes,
     max_total_gif_index_bytes: usize = (gif.Options{}).max_total_pixels,
     max_total_gif_codes: usize = (gif.Options{}).max_total_codes,
     max_total_gif_frames: usize = (gif.Options{}).max_frames,
@@ -22,6 +25,7 @@ pub const Options = struct {
 };
 pub const Report = struct {
     gif: gif.Report = .{},
+    pcx: pcx.Report = .{},
     bmp_profile: bmp_profiles.Report = .{},
     bmp: bmp.Report = .{},
     jpeg: jpeg.Report = .{},
@@ -87,6 +91,17 @@ pub const Budget = struct {
                     var result = try gif.inspect(a, bytes, selected, self.options.max_total_gif_index_bytes - next.gif.index_bytes, self.options.max_total_gif_codes - next.gif.codes, self.options.max_total_gif_frames - next.gif.frames);
                     result.extension_disagreements = @intFromBool(!gif_hint and extension.len != 0);
                     next.gif = try next.gif.plus(result);
+                    self.report = next;
+                    return;
+                }
+            }
+            if (self.options.pcx) |selected| {
+                const pcx_hint = isExtension(extension, "pcx");
+                if (pcx_hint or @import("../../image/pcx/structure.zig").looksLike(bytes)) {
+                    if (next.pcx.decoded_bytes > self.options.max_total_pcx_decoded_bytes) return error.LimitExceeded;
+                    var result = try pcx.inspect(bytes, selected, self.options.max_total_pcx_decoded_bytes - next.pcx.decoded_bytes);
+                    result.extension_disagreements = @intFromBool(!pcx_hint and extension.len != 0);
+                    next.pcx = try next.pcx.plus(result);
                     self.report = next;
                     return;
                 }

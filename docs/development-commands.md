@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[HWP5 BinData PCX](hwp5-bin-data-pcx.md)는 `zig test src/root.zig --test-filter 'HWP PCX'`, `--test-filter 'HWP container PCX'`로 단위·컨테이너 연결을 검사합니다. 선택 실파일은 `zig test src/hwp5_pcx_known_survey.zig -O ReleaseFast --test-filter 'HWP PCX known'`, 독립 해시·압축 정책 조사는 `node tests/hwp5/pcx-corpus.mjs`로 재현합니다. 두 실파일 명령에는 로컬 `reference/rhwp`가 필요하며 기본 audit에는 포함하지 않습니다.
+
 [PCX 헤더·RLE 경계](pcx-structure.md)는 `zig test src/root.zig --test-filter 'PCX structure'`로 단위·반례를 검사하고, `--test-filter 'HWPX picture image payloads'`로 ZIP·MIME·오류 연결을 확인합니다. 독립 `python3 tools/hwpx-fill-brush-image-oracle.py --self-test`와 `--picture-payloads` 및 아래 known survey ReleaseFast shard 7이 실파일 PCX 1건의 RLE 경계를 대조합니다.
 
 [HWPX 그림 이미지 바이트 검사](hwpx-picture-image-payloads.md)는 `zig test src/root.zig --test-filter 'HWPX picture image payloads'`로 형식·WMF framing·TIFF 연결·중복·한도·오류·OOM·추적 파일·master 조립을 검사합니다. [TIFF 구조](tiff-structure.md)는 `zig test src/root.zig --test-filter 'TIFF structure'`로 별도 검사합니다. 기존 브러시의 동일 코어 회귀는 `--test-filter 'HWPX fill brush image payloads'`로 확인합니다. `python3 tools/hwpx-fill-brush-image-oracle.py --self-test`와 `--picture-payloads`는 독립 반례·실파일 형식/바이트 분포, WMF framing과 TIFF 구조 진단을 제공하며, 아래 known survey의 ReleaseFast 8개 shard가 제품 결과와 대조합니다.
