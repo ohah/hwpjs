@@ -81,6 +81,85 @@ fn inspectWmf(a: std.mem.Allocator, data: []const u8, media: []const u8) !payloa
     return inspectSingleImage(a, data, media, "BinData/image.wmf");
 }
 
+fn inspectSvg(a: std.mem.Allocator, data: []const u8, media: []const u8, options: payloads.Options) !payloads.Report {
+    return inspectSingleImageWithOptions(a, data, media, "BinData/image.svg", options);
+}
+
+test "HWPX picture image payloads validate SVG XML without trusting MIME over signatures" {
+    const a = std.testing.allocator;
+    const valid = "<svg xmlns='http://www.w3.org/2000/svg'><rect width='1'/></svg>";
+    var report = try inspectSvg(a, valid, "image/svg+xml", .{});
+    defer report.deinit(a);
+    try std.testing.expectEqual(payloads.Format.svg, report.targets[0].format);
+    try std.testing.expectEqual(payloads.Inspection.svg_xml_structure, report.targets[0].inspection);
+    try std.testing.expectEqual(@as(?anyerror, null), report.targets[0].inspection_error);
+    try std.testing.expectEqual(@as(usize, 0), report.unknown_formats + report.media_mismatches + report.inspection_failures);
+    var mismatch = try inspectSvg(a, valid, "image/png", .{});
+    defer mismatch.deinit(a);
+    try std.testing.expectEqual(@as(usize, 1), mismatch.media_mismatches);
+    const prefixed = "<?xml version='1.0'?><s:svg xmlns:s='http://www.w3.org/2000/svg'/>";
+    var declared = try inspectSvg(a, prefixed, "image/svg+xml", .{});
+    defer declared.deinit(a);
+    try std.testing.expectEqual(@as(?anyerror, null), declared.targets[0].inspection_error);
+    for ([_][]const u8{ "<svg/>", "<svg xmlns='urn:wrong'/>", "<!DOCTYPE svg><svg xmlns='http://www.w3.org/2000/svg'/>" }) |bad| {
+        var broken = try inspectSvg(a, bad, "image/svg+xml", .{});
+        defer broken.deinit(a);
+        try std.testing.expectEqual(payloads.Format.svg, broken.targets[0].format);
+        try std.testing.expectEqual(@as(usize, 1), broken.inspection_failures);
+        try std.testing.expectEqual(@as(usize, 0), broken.unknown_formats);
+    }
+    var invalid_xml = try inspectSvg(a, "not XML", "image/svg", .{});
+    defer invalid_xml.deinit(a);
+    try std.testing.expectEqual(@as(usize, 1), invalid_xml.inspection_failures);
+    try std.testing.expectEqual(@as(usize, 1), invalid_xml.media_mismatches);
+    var truncated = try inspectSvg(a, "<svg", "image/svg", .{});
+    defer truncated.deinit(a);
+    try std.testing.expectEqual(payloads.Format.svg, truncated.targets[0].format);
+    try std.testing.expectEqual(@as(usize, 1), truncated.inspection_failures);
+    const png = try @import("../image/png/pixels_fixture.zig").image(a, 0);
+    defer a.free(png);
+    var actual_png = try inspectSvg(a, png, "image/svg+xml", .{});
+    defer actual_png.deinit(a);
+    try std.testing.expectEqual(payloads.Format.png, actual_png.targets[0].format);
+    try std.testing.expectEqual(@as(usize, 1), actual_png.media_mismatches);
+    try std.testing.expectError(error.LimitExceeded, inspectSvg(a, valid, "image/svg+xml", .{ .svg = .{ .xml = .{ .max_elements = 1 } } }));
+}
+
+fn svgAllocationPaths(a: std.mem.Allocator) !void {
+    var report = try inspectSvg(a, "<svg xmlns='http://www.w3.org/2000/svg'><rect/></svg>", "image/svg+xml", .{});
+    defer report.deinit(a);
+    try std.testing.expectEqual(@as(usize, 1), report.targets.len);
+    try std.testing.expectEqual(@as(?anyerror, null), report.targets[0].inspection_error);
+}
+
+test "HWPX picture image payloads release SVG XML allocations on every failure" {
+    try svgAllocationPaths(std.testing.allocator);
+    try std.testing.checkAllAllocationFailures(std.testing.allocator, svgAllocationPaths, .{});
+}
+
+test "HWPX picture image payloads inspect two SVG resources in actual document" {
+    const a = std.testing.allocator;
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "reference/rhwp/samples/issue3460/svg_picture_repro.hwpx", a, .limited(1_000_000));
+    defer a.free(bytes);
+    const expected_sha = [_]u8{ 0x1d, 0x34, 0x89, 0x27, 0x59, 0x7b, 0x55, 0x19, 0xc6, 0x5a, 0xcf, 0x56, 0x20, 0x65, 0x61, 0x24, 0x70, 0x89, 0x72, 0x0e, 0x7e, 0xac, 0x76, 0x71, 0x1d, 0xca, 0x35, 0x41, 0x41, 0x6a, 0x4f, 0x2e };
+    var sha: [32]u8 = undefined;
+    std.crypto.hash.sha2.Sha256.hash(bytes, &sha, .{});
+    try std.testing.expectEqualSlices(u8, &expected_sha, &sha);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    var report = try document.inspectPictureImagePayloads(a, .{}, .{});
+    defer report.deinit(a);
+    try std.testing.expectEqual(@as(usize, 2), report.targets.len);
+    for (report.targets) |target| {
+        try std.testing.expectEqual(payloads.Format.svg, target.format);
+        try std.testing.expectEqual(payloads.Inspection.svg_xml_structure, target.inspection);
+        try std.testing.expectEqual(@as(?anyerror, null), target.inspection_error);
+        try std.testing.expectEqual(@as(?bool, false), target.media_matches);
+    }
+    try std.testing.expectEqual(@as(usize, 0), report.unknown_formats + report.inspection_failures);
+    try std.testing.expectEqual(@as(usize, 2), report.media_mismatches);
+}
+
 test "HWPX picture image payloads classify PCX RLE and retain malformed stream" {
     const a = std.testing.allocator;
     var bytes = [_]u8{0} ** 130;

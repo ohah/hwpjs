@@ -9,9 +9,10 @@ const wmf_header = @import("../image/wmf/header.zig");
 const wmf_records = @import("../image/wmf/records.zig");
 const tiff = @import("../image/tiff/structure.zig");
 const pcx = @import("../image/pcx/structure.zig");
+const svg = @import("../image/svg/structure.zig");
 
-pub const Format = enum { png, jpeg, bmp, gif, wmf, tiff, pcx, unknown };
-pub const Inspection = enum { png_scanlines, jpeg_framing, bmp_structure, gif_indices, wmf_framing, tiff_structure, pcx_rle, unsupported };
+pub const Format = enum { png, jpeg, bmp, gif, wmf, tiff, pcx, svg, unknown };
+pub const Inspection = enum { png_scanlines, jpeg_framing, bmp_structure, gif_indices, wmf_framing, tiff_structure, pcx_rle, svg_xml_structure, unsupported };
 
 pub const Options = struct {
     max_targets: usize = 100_000,
@@ -28,6 +29,7 @@ pub const Options = struct {
     gif: gif.Options = .{},
     tiff: tiff.Options = .{},
     pcx: pcx.Options = .{},
+    svg: svg.Options = .{},
 };
 
 pub const Target = struct {
@@ -71,6 +73,7 @@ pub fn formatOf(bytes: []const u8) Format {
     if (wmf_header.looksLike(bytes)) return .wmf;
     if (std.mem.startsWith(u8, bytes, &.{ 0x49, 0x49, 0x2a, 0x00 }) or std.mem.startsWith(u8, bytes, &.{ 0x4d, 0x4d, 0x00, 0x2a })) return .tiff;
     if (pcx.looksLike(bytes)) return .pcx;
+    if (svg.looksLike(bytes)) return .svg;
     return .unknown;
 }
 
@@ -83,8 +86,14 @@ pub fn mediaMatches(format: Format, media: []const u8) ?bool {
         .wmf => std.mem.eql(u8, media, "image/wmf"),
         .tiff => std.mem.eql(u8, media, "image/tiff") or std.mem.eql(u8, media, "image/tif"),
         .pcx => std.mem.eql(u8, media, "image/pcx") or std.mem.eql(u8, media, "image/x-pcx") or std.mem.eql(u8, media, "image/vnd.zbrush.pcx"),
+        .svg => std.mem.eql(u8, media, "image/svg+xml"),
         .unknown => null,
     };
+}
+
+fn svgCandidate(item: manifest.Item) bool {
+    if (std.mem.eql(u8, item.media_type, "image/svg+xml")) return true;
+    return item.href.len >= 4 and std.ascii.eqlIgnoreCase(item.href[item.href.len - 4 ..], ".svg");
 }
 
 const Evidence = struct { png_decoded_bytes: usize = 0, gif_indices: usize = 0, gif_codes: usize = 0, gif_frames: usize = 0, pcx_decoded_bytes: usize = 0 };
@@ -134,6 +143,10 @@ fn validate(a: std.mem.Allocator, bytes: []const u8, format: Format, options: Op
             const report = try pcx.inspect(bytes, selected);
             return .{ .pcx_decoded_bytes = report.decoded_bytes };
         },
+        .svg => {
+            _ = try svg.inspect(a, bytes, options.svg);
+            return .{};
+        },
         .unknown => return .{},
     }
 }
@@ -168,7 +181,8 @@ pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, items: manifest.Manif
         if (entry.uncompressed_size > options.max_entry_bytes or entry.uncompressed_size > options.max_total_encoded_bytes -| result.encoded_bytes) return error.LimitExceeded;
         const bytes = try archive.decode(entry, options.max_entry_bytes);
         defer archive.allocator.free(bytes);
-        const format = formatOf(bytes);
+        const signature_format = formatOf(bytes);
+        const format: Format = if (signature_format == .unknown and svgCandidate(item)) .svg else signature_format;
         var inspection_error: ?anyerror = null;
         const consumed: Evidence = .{ .png_decoded_bytes = result.png_decoded_bytes, .gif_indices = result.gif_indices, .gif_codes = result.gif_codes, .gif_frames = result.gif_frames, .pcx_decoded_bytes = result.pcx_decoded_bytes };
         const evidence = validate(a, bytes, format, options, consumed) catch |err| switch (err) {
@@ -194,6 +208,7 @@ pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, items: manifest.Manif
                 .wmf => .wmf_framing,
                 .tiff => .tiff_structure,
                 .pcx => .pcx_rle,
+                .svg => .svg_xml_structure,
                 .unknown => .unsupported,
             },
             .inspection_error = inspection_error,

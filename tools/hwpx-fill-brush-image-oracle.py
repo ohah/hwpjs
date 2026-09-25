@@ -117,6 +117,8 @@ def picture_payload_archive(archive):
                 continue
             data = archive.read(target_href)
             kind = byte_format(data)
+            if kind == "unknown" and (item.get("media-type") == "image/svg+xml" or target_href.lower().endswith(".svg")):
+                kind = "svg"
             counts[source + "_targets"] += 1
             counts[source + "_" + kind] += 1
             if kind == "unknown":
@@ -138,6 +140,9 @@ def picture_payload_archive(archive):
             if kind == "pcx":
                 status = pcx_structure_status(data)
                 counts[source + "_pcx_" + status] += 1
+            if kind == "svg":
+                if svg_structure_status(data) != "ok":
+                    counts[source + "_invalid_svg_targets"] += 1
     return counts
 
 
@@ -220,11 +225,24 @@ def byte_format(data):
         return "tiff"
     if len(data) >= 3 and data[0] == 10 and (data[2] == 1 or data[1] in (0, 2, 3, 4, 5)):
         return "pcx"
+    head = data.removeprefix(b"\xef\xbb\xbf").lstrip(b" \t\r\n")
+    if head.startswith(b"<svg") and len(head) > 4 and head[4:5] in (b" ", b"\t", b"\r", b"\n", b">", b"/"):
+        return "svg"
     return "unknown"
 
 
 def matching_media(kind, media):
-    return media in {"png": ("image/png",), "jpeg": ("image/jpeg", "image/jpg"), "bmp": ("image/bmp",), "gif": ("image/gif",), "wmf": ("image/wmf",), "tiff": ("image/tiff", "image/tif"), "pcx": ("image/pcx", "image/x-pcx", "image/vnd.zbrush.pcx")}.get(kind, ())
+    return media in {"png": ("image/png",), "jpeg": ("image/jpeg", "image/jpg"), "bmp": ("image/bmp",), "gif": ("image/gif",), "wmf": ("image/wmf",), "tiff": ("image/tiff", "image/tif"), "pcx": ("image/pcx", "image/x-pcx", "image/vnd.zbrush.pcx"), "svg": ("image/svg+xml",)}.get(kind, ())
+
+
+def svg_structure_status(data):
+    if b"<!DOCTYPE" in data:
+        return "dtd"
+    try:
+        root = ET.fromstring(data)
+    except ET.ParseError:
+        return "xml"
+    return "ok" if root.tag == "{http://www.w3.org/2000/svg}svg" else "root"
 
 
 def pcx_structure_status(data):
@@ -508,6 +526,13 @@ def self_test():
     assert picture_payload_counts["document_media_mismatch"] == 0 and picture_payload_counts["master_media_mismatch"] == 0
     assert byte_format(bytes.fromhex("89504e470d0a1a0a")) == "png"
     assert byte_format(bytes.fromhex("ffd8")) == "jpeg"
+    assert byte_format(b"<svg xmlns='http://www.w3.org/2000/svg'/>") == "svg"
+    assert byte_format(b"<svgOther/>") == "unknown"
+    assert matching_media("svg", "image/svg+xml") and not matching_media("svg", "image/svg")
+    assert svg_structure_status(b"<svg xmlns='http://www.w3.org/2000/svg'/>") == "ok"
+    assert svg_structure_status(b"<svg/>") == "root"
+    assert svg_structure_status(b"<svg xmlns='http://www.w3.org/2000/svg'>") == "xml"
+    assert svg_structure_status(b"<!DOCTYPE svg><svg xmlns='http://www.w3.org/2000/svg'/>") == "dtd"
     assert not matching_media("png", "image/jpg")
     standard_wmf = bytes.fromhex("0100090000030c0000000000030000000000030000000000")
     placeable_wmf = bytes.fromhex("d7cdc69a") + bytes(16) + bytes.fromhex("1157") + standard_wmf

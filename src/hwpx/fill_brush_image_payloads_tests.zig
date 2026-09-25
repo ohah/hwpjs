@@ -18,6 +18,28 @@ fn inspectSample(a: std.mem.Allocator, options: payloads.Options, corrupt_png: b
     return inspectSampleWithArchiveAllocator(a, a, options, corrupt_png);
 }
 
+test "HWPX fill brush image payloads share SVG structure and MIME diagnostics" {
+    const a = std.testing.allocator;
+    const source = "<svg xmlns='http://www.w3.org/2000/svg'><rect width='1'/></svg>";
+    const sources = [_]fixture.Source{.{ .name = "BinData/brush.svg", .data = source }};
+    const bytes = try fixture.storedZip(a, &sources);
+    defer a.free(bytes);
+    var archive = try zip.open(a, bytes, .{});
+    defer archive.deinit();
+    var items = [_]manifest.Item{item("svg", "BinData/brush.svg", "image/svg", 0)};
+    const opf: manifest.Manifest = .{ .items = &items, .spine = @constCast(&[_]manifest.SpineRef{}), .xml_bytes = 0 };
+    var sites = [_]links.Site{site(.embedded, 0)};
+    const raw: links.Report = .{ .header_and_sections = 1, .master_pages = 0, .sites = &sites, .counts = @splat(0) };
+    var report = try payloads.inspect(a, archive, opf, &raw, .{});
+    defer report.deinit(a);
+    try std.testing.expectEqual(@as(usize, 1), report.targets.len);
+    try std.testing.expectEqual(payloads.Format.svg, report.targets[0].format);
+    try std.testing.expectEqual(payloads.Inspection.svg_xml_structure, report.targets[0].inspection);
+    try std.testing.expectEqual(@as(?anyerror, null), report.targets[0].inspection_error);
+    try std.testing.expectEqual(@as(?bool, false), report.targets[0].media_matches);
+    try std.testing.expectEqual(@as(usize, 1), report.media_mismatches);
+}
+
 fn inspectSampleWithArchiveAllocator(a: std.mem.Allocator, archive_allocator: std.mem.Allocator, options: payloads.Options, corrupt_png: bool) !payloads.Report {
     const png = try @import("../image/png/pixels_fixture.zig").image(a, 0);
     defer a.free(png);

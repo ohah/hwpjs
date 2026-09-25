@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[HWPX SVG 구조](hwpx-svg-image-payloads.md)는 `zig test src/root.zig --test-filter 'SVG structure'`, `zig test src/root.zig --test-filter 'HWPX picture image payloads'`, `zig test src/root.zig --test-filter 'HWPX fill brush image payloads'`로 합성·공통 연결을, `python3 tools/hwpx-fill-brush-image-oracle.py --self-test`와 `--picture-payloads`로 독립 분류를 검사합니다. 로컬 `reference/rhwp`가 있는 경우 `zig test src/hwpx_known_survey.zig -O ReleaseFast --test-filter 'HWPX known document inspections shard N'`을 N=0..7 각각 실행해 전체 corpus를 대조합니다. 실파일 8개 shard는 기본 audit에 포함되지 않습니다.
+
 [HWP BMP 32비트 상위 바이트](hwp5-bmp-high-byte.md)는 `zig test src/root.zig --test-filter 'BMP'`로 구조·컨테이너 합성 계약을, `zig test src/hwp5_bmp_seven_known_survey.zig -O ReleaseFast --test-filter 'HWP known seven BMP'`와 `node tests/hwp5/bmp-seven-survey.mjs`로 실제 HWP 7건의 독립 DocInfo·압축·픽셀/상위 바이트 대조를 확인합니다. 실파일 두 명령은 로컬 `reference/rhwp`가 필요하며 기본 audit에 포함되지 않습니다.
 
 [HWP5 PNG 선언·JPEG 바이트 불일치](hwp5-png-declared-jpeg.md)는 `zig test src/root.zig --test-filter 'PNG-declared JPEG'`로 합성·CFB 경로·한도·OOM을, `node tests/hwp5/png-declared-jpeg-survey.mjs`로 독립 DocInfo·JPEG 프레임 분포를 검사합니다. 실파일 전체 검사 `zig test src/hwp5_png_jpeg_mismatch_known_survey.zig -O ReleaseFast --test-filter 'HWP PNG-declared JPEG known'`과 Node 조사는 로컬 `reference/rhwp`가 필요하며 기본 audit에는 포함되지 않습니다.

@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+SVG XML 루트 검사는 `src/image/svg/`가 소유하고, HWPX의 ZIP/OPF 선택·MIME 진단은 [내장 SVG 연결](hwpx-svg-image-payloads.md)에 기록합니다.
+
 HWPX 조건부 분기 정책은 `src/hwpx/compatibility_selection.zig`가 소유하고 이진·차트·서식 참조 및 section 텍스트 스캐너가 공유합니다. 이진·차트 참조의 선택 범위는 [조건부 참조 선택](hwpx-switch-selection.md)에 기록합니다.
 
 section 텍스트 스캐너도 같은 정책을 쓰되, 선택된 이벤트·순번의 계약은 [선택 분기 텍스트](hwpx-selected-section-text.md)가 소유합니다.
