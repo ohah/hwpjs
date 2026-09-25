@@ -3,6 +3,7 @@ pub const gif = @import("gif/document.zig");
 pub const bmp_header = @import("bmp/header.zig");
 pub const bmp_structure = @import("bmp/structure.zig");
 pub const tiff_structure = @import("tiff/structure.zig");
+pub const pcx_structure = @import("pcx/structure.zig");
 pub const bmp_pixels = @import("bmp/pixels.zig");
 pub const bmp_rle = @import("bmp/rle.zig");
 pub const bmp_profile_transport = @import("bmp/profile_transport.zig");

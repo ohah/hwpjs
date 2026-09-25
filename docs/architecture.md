@@ -18,6 +18,8 @@
 
 [TIFF 구조 검사](tiff-structure.md)는 이미지 바이트 계층에서 IFD·필드·strip/tile 범위만 소유하며, HWPX의 OPF·ZIP 선택과 압축/픽셀 복호화는 소유하지 않습니다.
 
+[PCX RLE 경계](pcx-structure.md)는 이미지 바이트 계층에서 헤더·scanline 용량·RLE 출력 길이만 소유하며, HWPX의 OPF·ZIP 선택과 픽셀·팔레트 색상 의미는 소유하지 않습니다.
+
 [구역 정의 ID 참조](hwpx-section-definition-references.md)는 기존 구역 정의 값과 header 리소스 ID 색인을 결합하는 진단 계층입니다. `0`·부재·미해결을 분리하고 원문 파싱을 재구현하지 않습니다.
 
 [HWPX 조건부 참조 선택](hwpx-switch-selection.md)은 한 정책을 이진·차트 스캐너가 공유하는 선택적 계층입니다. 기존 raw 검사와 전체 문서 분기 적용은 별개입니다.

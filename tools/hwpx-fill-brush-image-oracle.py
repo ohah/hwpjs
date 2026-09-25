@@ -135,6 +135,9 @@ def picture_payload_archive(archive):
             if kind == "tiff":
                 status = tiff_structure_status(data)
                 counts[source + "_tiff_" + status] += 1
+            if kind == "pcx":
+                status = pcx_structure_status(data)
+                counts[source + "_pcx_" + status] += 1
     return counts
 
 
@@ -215,11 +218,59 @@ def byte_format(data):
         return "wmf"
     if data.startswith(bytes.fromhex("49492a00")) or data.startswith(bytes.fromhex("4d4d002a")):
         return "tiff"
+    if len(data) >= 3 and data[0] == 10 and (data[2] == 1 or data[1] in (0, 2, 3, 4, 5)):
+        return "pcx"
     return "unknown"
 
 
 def matching_media(kind, media):
-    return media in {"png": ("image/png",), "jpeg": ("image/jpeg", "image/jpg"), "bmp": ("image/bmp",), "gif": ("image/gif",), "wmf": ("image/wmf",), "tiff": ("image/tiff", "image/tif")}.get(kind, ())
+    return media in {"png": ("image/png",), "jpeg": ("image/jpeg", "image/jpg"), "bmp": ("image/bmp",), "gif": ("image/gif",), "wmf": ("image/wmf",), "tiff": ("image/tiff", "image/tif"), "pcx": ("image/pcx", "image/x-pcx", "image/vnd.zbrush.pcx")}.get(kind, ())
+
+
+def pcx_structure_status(data):
+    """Independent header and exact RLE-length check; pixels are not rendered."""
+    if len(data) < 128:
+        return "short_header"
+    if data[0] != 10 or data[1] not in (0, 2, 3, 4, 5) or data[2] != 1 or data[3] not in (1, 2, 4, 8):
+        return "header"
+    x0, y0, x1, y1 = struct.unpack_from("<4H", data, 4)
+    if x1 < x0 or y1 < y0:
+        return "dimensions"
+    planes = data[65]
+    bpl = struct.unpack_from("<H", data, 66)[0]
+    width = x1 - x0 + 1
+    if not 1 <= planes <= 4 or bpl == 0 or bpl % 2 or bpl < (width * data[3] + 7) // 8:
+        return "scanline"
+    expected = (y1 - y0 + 1) * planes * bpl
+    row_length = planes * bpl
+    if expected > 256 * 1024 * 1024:
+        return "limit"
+    palette = data[1] == 5 and data[3] == 8 and planes == 1 and len(data) >= 128 + 769 and data[-769] == 12
+    stream_end = len(data) - 769 if palette else len(data)
+    decoded = 0
+    cursor = 128
+    while decoded < expected:
+        if cursor == stream_end:
+            return "truncated_image"
+        code = data[cursor]
+        cursor += 1
+        if code & 0xC0 == 0xC0:
+            count = code & 0x3F
+            if count == 0:
+                return "zero_run"
+            if cursor == stream_end:
+                return "truncated_run"
+            cursor += 1
+        else:
+            count = 1
+        if decoded + count > expected:
+            return "overrun"
+        if decoded % row_length + count > row_length:
+            return "cross_scanline"
+        decoded += count
+    if cursor != stream_end:
+        return "trailer"
+    return "ok_palette" if palette else "ok"
 
 
 def tiff_structure_status(data):
@@ -477,6 +528,31 @@ def self_test():
         assert tiff_structure_status(tiny_tiff[:-1]) == "data_extent"
         assert tiff_structure_status(tiny_tiff[:34] + struct.pack(endian + "I", 8) + tiny_tiff[38:]) == "cycle"
     assert matching_media("tiff", "image/tif") and not matching_media("tiff", "image/png")
+    pcx = bytearray(128) + bytes((0xC2, 0xFF))
+    pcx[0:4] = bytes((10, 5, 1, 1))
+    struct.pack_into("<4H", pcx, 4, 0, 0, 8, 0)
+    pcx[65] = 1
+    struct.pack_into("<H", pcx, 66, 2)
+    assert byte_format(pcx) == "pcx" and pcx_structure_status(pcx) == "ok"
+    wrong_version = bytearray(pcx)
+    wrong_version[1] = 6
+    assert byte_format(wrong_version) == "pcx" and pcx_structure_status(wrong_version) == "header"
+    assert matching_media("pcx", "image/pcx") and not matching_media("pcx", "image/png")
+    assert pcx_structure_status(pcx[:-1]) == "truncated_run"
+    pcx[128] = 0xC3
+    assert pcx_structure_status(pcx) == "overrun"
+    pcx[128] = 0xC0
+    assert pcx_structure_status(pcx) == "zero_run"
+    cross = bytearray(pcx[:128]) + bytes((0xC3, 1, 0xC1, 2))
+    struct.pack_into("<H", cross, 10, 1)
+    assert pcx_structure_status(cross) == "cross_scanline"
+    palette = bytearray(pcx[:128]) + bytes((1, 2, 12)) + bytes(768)
+    palette[3] = 8
+    struct.pack_into("<H", palette, 8, 1)
+    assert pcx_structure_status(palette) == "ok_palette"
+    short_image = bytearray(palette[:128]) + bytes((1, 12)) + bytes(768)
+    struct.pack_into("<H", short_image, 66, 770)
+    assert pcx_structure_status(short_image) == "truncated_image"
     valid_png = bytes.fromhex("89504e470d0a1a0a") + b"\0\0\0\0IEND" + zlib.crc32(b"IEND").to_bytes(4, "big")
     assert png_defects(valid_png) == (0, False)
     assert png_defects(valid_png[:-1] + bytes([valid_png[-1] ^ 1])) == (1, False)

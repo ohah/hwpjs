@@ -1584,6 +1584,7 @@ fn surveyShard(shard: usize) !void {
     try std.testing.expect(picture_payloads.document.png_failures >= expected.picture_payload_invalid_png_minimum[shard]);
     try std.testing.expectEqual(expected.picture_payload_invalid_wmf[shard], picture_payloads.document.wmf_failures);
     try std.testing.expectEqual(expected.picture_payload_invalid_tiff[shard], picture_payloads.document.tiff_failures);
+    try std.testing.expectEqual(expected.picture_payload_invalid_pcx[shard], picture_payloads.document.pcx_failures);
     try std.testing.expectEqual(expected.master_picture_image_sites[shard], picture_images.master.sites);
     try std.testing.expectEqual(expected.master_picture_image_sites[shard], picture_images.master.embedded);
     try std.testing.expectEqual(@as(usize, 0), picture_images.master.external + picture_images.master.empty);
@@ -1592,7 +1593,7 @@ fn surveyShard(shard: usize) !void {
     try std.testing.expectEqual(expected.master_picture_payload_encoded_bytes[shard], picture_payloads.master.encoded_bytes);
     try std.testing.expectEqual(expected.master_picture_image_sites[shard], picture_payloads.master.sites);
     try std.testing.expectEqual(@as(usize, 0), picture_payloads.master.non_embedded + picture_payloads.master.mismatches + picture_payloads.master.failures);
-    try std.testing.expectEqualSlices(usize, &[_]usize{ 0, picture_payloads.master.targets, 0, 0, 0, 0, 0 }, &picture_payloads.master.formats);
+    try std.testing.expectEqualSlices(usize, &[_]usize{ 0, picture_payloads.master.targets, 0, 0, 0, 0, 0, 0 }, &picture_payloads.master.formats);
     try std.testing.expectEqual(expected.fill_brush_image_link_sites[shard], fill_brush_image_links.document_embedded);
     try std.testing.expectEqual(expected.fill_brush_image_target_index_sums[shard], fill_brush_image_links.document_target_index_sum);
     try std.testing.expectEqual(expected.fill_brush_image_payload_targets[shard], fill_brush_image_payloads.targets);

@@ -60,7 +60,7 @@ fn wmfBytes(placeable: bool) [46]u8 {
     return bytes;
 }
 
-fn inspectSingleImage(a: std.mem.Allocator, data: []const u8, media: []const u8, path: []const u8) !payloads.Report {
+fn inspectSingleImageWithOptions(a: std.mem.Allocator, data: []const u8, media: []const u8, path: []const u8, options: payloads.Options) !payloads.Report {
     const sources = [_]fixture.Source{.{ .name = path, .data = data }};
     const bytes = try fixture.storedZip(a, &sources);
     defer a.free(bytes);
@@ -70,11 +70,84 @@ fn inspectSingleImage(a: std.mem.Allocator, data: []const u8, media: []const u8,
     const opf: manifest.Manifest = .{ .items = &items, .spine = @constCast(&[_]manifest.SpineRef{}), .xml_bytes = 0 };
     var sites = [_]links.Site{site("image", .embedded, 0)};
     const raw: links.Report = .{ .sections = 1, .master_pages = 0, .sites = &sites, .counts = @splat(0) };
-    return payloads.inspect(a, archive, opf, &raw, .{});
+    return payloads.inspect(a, archive, opf, &raw, options);
+}
+
+fn inspectSingleImage(a: std.mem.Allocator, data: []const u8, media: []const u8, path: []const u8) !payloads.Report {
+    return inspectSingleImageWithOptions(a, data, media, path, .{});
 }
 
 fn inspectWmf(a: std.mem.Allocator, data: []const u8, media: []const u8) !payloads.Report {
     return inspectSingleImage(a, data, media, "BinData/image.wmf");
+}
+
+test "HWPX picture image payloads classify PCX RLE and retain malformed stream" {
+    const a = std.testing.allocator;
+    var bytes = [_]u8{0} ** 130;
+    bytes[0] = 10;
+    bytes[1] = 5;
+    bytes[2] = 1;
+    bytes[3] = 1;
+    std.mem.writeInt(u16, bytes[8..10], 8, .little);
+    bytes[65] = 1;
+    std.mem.writeInt(u16, bytes[66..68], 2, .little);
+    bytes[128] = 0xc2;
+    bytes[129] = 0xff;
+    var valid = try inspectSingleImage(a, &bytes, "image/pcx", "BinData/image.pcx");
+    defer valid.deinit(a);
+    try std.testing.expectEqual(payloads.Format.pcx, valid.targets[0].format);
+    try std.testing.expectEqual(payloads.Inspection.pcx_rle, valid.targets[0].inspection);
+    try std.testing.expectEqual(@as(usize, 0), valid.unknown_formats + valid.inspection_failures + valid.media_mismatches);
+    try std.testing.expectEqual(@as(usize, 2), valid.pcx_decoded_bytes);
+    var exact = try inspectSingleImageWithOptions(a, &bytes, "image/pcx", "BinData/image.pcx", .{ .max_total_pcx_decoded_bytes = 2 });
+    defer exact.deinit(a);
+    try std.testing.expectError(error.LimitExceeded, inspectSingleImageWithOptions(a, &bytes, "image/pcx", "BinData/image.pcx", .{ .max_total_pcx_decoded_bytes = 1 }));
+    var mismatch = try inspectSingleImage(a, &bytes, "image/png", "BinData/image.pcx");
+    defer mismatch.deinit(a);
+    try std.testing.expectEqual(@as(usize, 1), mismatch.media_mismatches);
+    bytes[128] = 0xc3;
+    var broken = try inspectSingleImage(a, &bytes, "image/pcx", "BinData/image.pcx");
+    defer broken.deinit(a);
+    try std.testing.expectEqual(@as(?anyerror, error.PcxRunOverrun), broken.targets[0].inspection_error);
+    try std.testing.expectEqual(@as(usize, 0), broken.unknown_formats);
+    bytes[1] = 6;
+    var wrong_version = try inspectSingleImage(a, &bytes, "image/pcx", "BinData/image.pcx");
+    defer wrong_version.deinit(a);
+    try std.testing.expectEqual(payloads.Format.pcx, wrong_version.targets[0].format);
+    try std.testing.expectEqual(@as(?anyerror, error.UnsupportedPcxVersion), wrong_version.targets[0].inspection_error);
+}
+
+test "HWPX picture image payloads cap cumulative PCX RLE output" {
+    const a = std.testing.allocator;
+    var pcx_bytes = [_]u8{0} ** 130;
+    pcx_bytes[0] = 10;
+    pcx_bytes[1] = 5;
+    pcx_bytes[2] = 1;
+    pcx_bytes[3] = 1;
+    std.mem.writeInt(u16, pcx_bytes[8..10], 8, .little);
+    pcx_bytes[65] = 1;
+    std.mem.writeInt(u16, pcx_bytes[66..68], 2, .little);
+    pcx_bytes[128] = 0xc2;
+    pcx_bytes[129] = 0xff;
+    const sources = [_]fixture.Source{
+        .{ .name = "BinData/first.pcx", .data = &pcx_bytes },
+        .{ .name = "BinData/second.pcx", .data = &pcx_bytes },
+    };
+    const bytes = try fixture.storedZip(a, &sources);
+    defer a.free(bytes);
+    var archive = try zip.open(a, bytes, .{});
+    defer archive.deinit();
+    var items = [_]manifest.Item{
+        item("first", "BinData/first.pcx", "image/pcx", 0),
+        item("second", "BinData/second.pcx", "image/pcx", 1),
+    };
+    const opf: manifest.Manifest = .{ .items = &items, .spine = @constCast(&[_]manifest.SpineRef{}), .xml_bytes = 0 };
+    var sites = [_]links.Site{ site("first", .embedded, 0), site("second", .embedded, 1) };
+    const raw: links.Report = .{ .sections = 1, .master_pages = 0, .sites = &sites, .counts = @splat(0) };
+    var exact = try payloads.inspect(a, archive, opf, &raw, .{ .max_total_pcx_decoded_bytes = 4 });
+    defer exact.deinit(a);
+    try std.testing.expectEqual(@as(usize, 4), exact.pcx_decoded_bytes);
+    try std.testing.expectError(error.LimitExceeded, payloads.inspect(a, archive, opf, &raw, .{ .max_total_pcx_decoded_bytes = 3 }));
 }
 
 test "HWPX picture image payloads classify TIFF structure and retain inner errors" {

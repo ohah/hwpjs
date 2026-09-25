@@ -8,9 +8,10 @@ const gif = @import("../image/gif/document.zig");
 const wmf_header = @import("../image/wmf/header.zig");
 const wmf_records = @import("../image/wmf/records.zig");
 const tiff = @import("../image/tiff/structure.zig");
+const pcx = @import("../image/pcx/structure.zig");
 
-pub const Format = enum { png, jpeg, bmp, gif, wmf, tiff, unknown };
-pub const Inspection = enum { png_scanlines, jpeg_framing, bmp_structure, gif_indices, wmf_framing, tiff_structure, unsupported };
+pub const Format = enum { png, jpeg, bmp, gif, wmf, tiff, pcx, unknown };
+pub const Inspection = enum { png_scanlines, jpeg_framing, bmp_structure, gif_indices, wmf_framing, tiff_structure, pcx_rle, unsupported };
 
 pub const Options = struct {
     max_targets: usize = 100_000,
@@ -20,11 +21,13 @@ pub const Options = struct {
     max_total_gif_indices: usize = 256 * 1024 * 1024,
     max_total_gif_codes: usize = 256 * 1024 * 1024,
     max_total_gif_frames: usize = 10_000,
+    max_total_pcx_decoded_bytes: usize = 256 * 1024 * 1024,
     png: png.Options = .{},
     jpeg: jpeg.Options = .{},
     bmp: bmp.Options = .{},
     gif: gif.Options = .{},
     tiff: tiff.Options = .{},
+    pcx: pcx.Options = .{},
 };
 
 pub const Target = struct {
@@ -52,6 +55,7 @@ pub const Report = struct {
     gif_indices: usize,
     gif_codes: usize,
     gif_frames: usize,
+    pcx_decoded_bytes: usize,
 
     pub fn deinit(self: *Report, a: std.mem.Allocator) void {
         a.free(self.targets);
@@ -67,6 +71,7 @@ pub fn formatOf(bytes: []const u8) Format {
     if (std.mem.startsWith(u8, bytes, &.{ 0xd7, 0xcd, 0xc6, 0x9a })) return .wmf;
     if (bytes.len >= 4 and (std.mem.eql(u8, bytes[0..2], &.{ 1, 0 }) or std.mem.eql(u8, bytes[0..2], &.{ 2, 0 })) and std.mem.eql(u8, bytes[2..4], &.{ 9, 0 })) return .wmf;
     if (std.mem.startsWith(u8, bytes, &.{ 0x49, 0x49, 0x2a, 0x00 }) or std.mem.startsWith(u8, bytes, &.{ 0x4d, 0x4d, 0x00, 0x2a })) return .tiff;
+    if (bytes.len >= 3 and bytes[0] == 0x0a and (bytes[2] == 1 or bytes[1] == 0 or bytes[1] == 2 or bytes[1] == 3 or bytes[1] == 4 or bytes[1] == 5)) return .pcx;
     return .unknown;
 }
 
@@ -78,11 +83,12 @@ pub fn mediaMatches(format: Format, media: []const u8) ?bool {
         .gif => std.mem.eql(u8, media, "image/gif"),
         .wmf => std.mem.eql(u8, media, "image/wmf"),
         .tiff => std.mem.eql(u8, media, "image/tiff") or std.mem.eql(u8, media, "image/tif"),
+        .pcx => std.mem.eql(u8, media, "image/pcx") or std.mem.eql(u8, media, "image/x-pcx") or std.mem.eql(u8, media, "image/vnd.zbrush.pcx"),
         .unknown => null,
     };
 }
 
-const Evidence = struct { png_decoded_bytes: usize = 0, gif_indices: usize = 0, gif_codes: usize = 0, gif_frames: usize = 0 };
+const Evidence = struct { png_decoded_bytes: usize = 0, gif_indices: usize = 0, gif_codes: usize = 0, gif_frames: usize = 0, pcx_decoded_bytes: usize = 0 };
 
 fn validate(a: std.mem.Allocator, bytes: []const u8, format: Format, options: Options, consumed: Evidence) !Evidence {
     switch (format) {
@@ -123,6 +129,12 @@ fn validate(a: std.mem.Allocator, bytes: []const u8, format: Format, options: Op
             _ = try tiff.inspect(bytes, options.tiff);
             return .{};
         },
+        .pcx => {
+            var selected = options.pcx;
+            selected.max_decoded_bytes = @min(selected.max_decoded_bytes, options.max_total_pcx_decoded_bytes -| consumed.pcx_decoded_bytes);
+            const report = try pcx.inspect(bytes, selected);
+            return .{ .pcx_decoded_bytes = report.decoded_bytes };
+        },
         .unknown => return .{},
     }
 }
@@ -136,7 +148,7 @@ pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, items: manifest.Manif
     @memset(seen, null);
     var targets: std.ArrayList(Target) = .empty;
     errdefer targets.deinit(a);
-    var result: Report = .{ .sites = sites.len, .non_embedded_sites = 0, .targets = undefined, .media_mismatches = 0, .unknown_formats = 0, .inspection_failures = 0, .encoded_bytes = 0, .png_decoded_bytes = 0, .gif_indices = 0, .gif_codes = 0, .gif_frames = 0 };
+    var result: Report = .{ .sites = sites.len, .non_embedded_sites = 0, .targets = undefined, .media_mismatches = 0, .unknown_formats = 0, .inspection_failures = 0, .encoded_bytes = 0, .png_decoded_bytes = 0, .gif_indices = 0, .gif_codes = 0, .gif_frames = 0, .pcx_decoded_bytes = 0 };
     for (sites, 0..) |site, site_index| {
         if (site.target.state != .embedded) {
             result.non_embedded_sites += 1;
@@ -159,7 +171,7 @@ pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, items: manifest.Manif
         defer archive.allocator.free(bytes);
         const format = formatOf(bytes);
         var inspection_error: ?anyerror = null;
-        const consumed: Evidence = .{ .png_decoded_bytes = result.png_decoded_bytes, .gif_indices = result.gif_indices, .gif_codes = result.gif_codes, .gif_frames = result.gif_frames };
+        const consumed: Evidence = .{ .png_decoded_bytes = result.png_decoded_bytes, .gif_indices = result.gif_indices, .gif_codes = result.gif_codes, .gif_frames = result.gif_frames, .pcx_decoded_bytes = result.pcx_decoded_bytes };
         const evidence = validate(a, bytes, format, options, consumed) catch |err| switch (err) {
             error.OutOfMemory, error.LimitExceeded => return err,
             else => blk: {
@@ -182,6 +194,7 @@ pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, items: manifest.Manif
                 .gif => .gif_indices,
                 .wmf => .wmf_framing,
                 .tiff => .tiff_structure,
+                .pcx => .pcx_rle,
                 .unknown => .unsupported,
             },
             .inspection_error = inspection_error,
@@ -196,6 +209,7 @@ pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, items: manifest.Manif
         result.gif_indices += evidence.gif_indices;
         result.gif_codes += evidence.gif_codes;
         result.gif_frames += evidence.gif_frames;
+        result.pcx_decoded_bytes += evidence.pcx_decoded_bytes;
     }
     result.targets = try targets.toOwnedSlice(a);
     return result;
