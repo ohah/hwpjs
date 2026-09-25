@@ -247,6 +247,18 @@ test "HWPX picture image payloads preserve inner PNG error and reject forged IDs
     try std.testing.expectError(error.InvalidImageLinkReport, inspectSample(a, .{}, false, true));
 }
 
+test "HWPX picture image payloads keep post-IEND zero padding strict" {
+    const a = std.testing.allocator;
+    const png = try @import("../image/png/pixels_fixture.zig").image(a, 0);
+    defer a.free(png);
+    const padded = try std.mem.concat(a, u8, &.{ png, &.{ 0, 0 } });
+    defer a.free(padded);
+    var report = try inspectSingleImage(a, padded, "image/png", "BinData/img.png");
+    defer report.deinit(a);
+    try std.testing.expectEqual(@as(usize, 1), report.inspection_failures);
+    try std.testing.expectEqual(@as(?anyerror, error.TrailingData), report.targets[0].inspection_error);
+}
+
 test "HWPX picture image payloads propagate ZIP CRC failure before format diagnostics" {
     const a = std.testing.allocator;
     const name = "BinData/img.png";

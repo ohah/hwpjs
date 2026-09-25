@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[HWP5 PNG IEND 뒤 0 패딩](hwp5-png-post-iend.md)은 `zig test src/root.zig --test-filter 'PNG post-IEND'`와 `--test-filter 'HWP container PNG post-IEND'`, HWPX 기본 strict의 `--test-filter 'HWPX picture image payloads keep post-IEND'`, 독립 `node --test tests/hwp5/png-post-iend-evidence.test.mjs`로 검증합니다. 선택 실파일은 `zig test src/hwp5_png_post_iend_known_survey.zig -O ReleaseFast --test-filter 'HWP PNG known zero tail'`, 선언 PNG 전수 조사는 `node tests/hwp5/png-post-iend-survey.mjs`로 재현합니다. 마지막 두 명령은 로컬 `reference/rhwp`가 필요하며 기본 audit에는 포함되지 않습니다.
+
 [HWP5 BinData WMF](hwp5-bin-data-wmf.md)는 `zig test src/root.zig --test-filter 'HWP WMF'`, `--test-filter 'HWP container WMF'`로 선택·컨테이너 연결을, `node --test tests/hwp5/wmf-framing-evidence.test.mjs`로 독립 framing 반례를 확인합니다. 실파일은 `zig test src/hwp5_wmf_known_survey.zig -O ReleaseFast --test-filter 'HWP WMF known'`, 독립 DocInfo·압축·WMF framing 대조는 `node tests/hwp5/wmf-corpus.mjs`, 선언 WMF 전수 분류는 `node tests/hwp5/wmf-corpus-survey.mjs`입니다. 세 실파일 명령은 로컬 `reference/rhwp`가 필요하고 기본 audit에 포함되지 않습니다.
 
 [HWP5 BinData PCX](hwp5-bin-data-pcx.md)는 `zig test src/root.zig --test-filter 'HWP PCX'`, `--test-filter 'HWP container PCX'`로 단위·컨테이너 연결을 검사합니다. 선택 실파일은 `zig test src/hwp5_pcx_known_survey.zig -O ReleaseFast --test-filter 'HWP PCX known'`, 독립 해시·압축 정책 조사는 `node tests/hwp5/pcx-corpus.mjs`로 재현합니다. 두 실파일 명령에는 로컬 `reference/rhwp`가 필요하며 기본 audit에는 포함하지 않습니다.

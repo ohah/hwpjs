@@ -8,6 +8,7 @@
 - [ViewText 의미 검사 선택과 검증](hwp5-viewtext-semantic-inspection.md)는 공통 구역 검사기·선택 정책·뷰별 메모 참조·공유 예산과 검증 기록을 관리합니다.
 - [양식 문서 통합](hwp5-form-document.md)은 선택한 양식 검사·구역 진단·문서 전체 공유 예산을 관리합니다.
 - [BinData 이미지 검사](hwp5-bin-data-images.md)는 선택적 PNG 연결·이미지 예산·미지원 콘텐츠 진단을 관리합니다. [JPEG 연결](hwp5-bin-data-jpeg.md)은 별도 선택·RGB 예산·progressive 정밀도 진단을, [BMP 연결](hwp5-bin-data-bmp.md)은 별도 선택·RGBA 예산·메타데이터 보류를, [PCX 연결](hwp5-bin-data-pcx.md)은 공통 RLE 경계·별도 예산을, [WMF 연결](hwp5-bin-data-wmf.md)은 공통 header/record framing·별도 byte 예산을 관리합니다.
+- [PNG IEND 뒤 0 패딩](hwp5-png-post-iend.md)은 엄격한 기본값과 선택적 HWP5 호환성·비적합 바이트 진단을 관리합니다.
 
 - [배포용 형태 ViewText](hwp5-distribution-viewtext.md)는 별도 envelope·키 유도·블록·꼬리 검증과 배포용 플래그 문서 전체 지원의 차이를 관리합니다.
 - [배포용 문서 본문 선택 조사](hwp5-distribution-document-policy.md)는 BodyText와 ViewText의 실제 구역 수 차이 및 전체 정책 연결 전 검증 근거를 관리합니다.

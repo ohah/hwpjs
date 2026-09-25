@@ -4,6 +4,8 @@
 
 HWP5 표 17~18의 BinData 항목별 압축 정책으로 얻은 바이트를 PNG 검사기에 연결합니다. `container.Options.images`는 기본 null이며, 미선택을 정상 이미지 판정으로 해석하지 않습니다. 별도로 켜는 [JPEG 검사와 독립 RGB 예산](hwp5-bin-data-jpeg.md), [BMP 검사와 독립 RGBA 예산](hwp5-bin-data-bmp.md), [GIF 색인·코드·프레임 예산](hwp5-preview-image.md), [PCX 헤더·RLE 경계와 독립 출력 예산](hwp5-bin-data-pcx.md), [WMF 헤더·record 경계와 독립 byte 예산](hwp5-bin-data-wmf.md)은 해당 주제 문서가 소유합니다. 아래 PNG 기본 동작과 바이트 통계는 유지합니다.
 
+PNG 기본 strict는 유지하고, 실제 HWP의 비적합 [IEND 뒤 0 패딩](hwp5-png-post-iend.md)을 허용할 때만 명시적 한도·별도 통계를 사용합니다.
+
 - `container/binaries.zig`: 기존 정확한 경로 조회·항목별 압축 해제 뒤 이미지 예산에 전달합니다. LINK는 외부 접근 없이 보류합니다. 압축·이미지 오류 뒤 원본 fallback은 없습니다.
 - `container/images.zig`: 형식 선택·문서 전체 픽셀 바이트/항목 한도·scalar 통계만 소유합니다. PNG 청크·압축·ICC 규칙은 [PNG 검사기](png-profile-inspection.md)를 재사용합니다.
 - `container/validation.zig`: 선택 옵션·예산 수명·최종 보고서 연결을 소유합니다. 기존 BinData 보고서와 제품 JS ABI는 변경하지 않습니다.

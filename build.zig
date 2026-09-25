@@ -45,6 +45,8 @@ pub fn build(b: *std.Build) void {
     audit.dependOn(compare_step);
     const wmf_framing_tests = b.addSystemCommand(&.{ "node", "--test", "tests/hwp5/wmf-framing-evidence.test.mjs" });
     audit.dependOn(&wmf_framing_tests.step);
+    const png_post_iend_tests = b.addSystemCommand(&.{ "node", "--test", "tests/hwp5/png-post-iend-evidence.test.mjs" });
+    audit.dependOn(&png_post_iend_tests.step);
     const chart_fixture = b.addSystemCommand(&.{ "node", "tests/hwp5/chart-observed-fixture.mjs" });
     // Recheck the corpus and JS oracle on every invocation, not a stale
     // captured stdout result whose external read dependencies are invisible.

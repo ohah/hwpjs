@@ -17,6 +17,8 @@
 
 `inspect`는 동일 decode 경로를 호출하고 버퍼를 해제한 뒤 포인터 없는 값 기반 보고서를 반환합니다. 보고서는 구조 통계, decoded_bytes(필터 바이트 포함), scanlines, 비어 있지 않은 passes, zlib_trailing_bytes, reconstructed_crc32와 optional transparency/background/histogram 및 histogram_usage_validated를 포함합니다. CRC는 **필터 바이트를 제외한 pass 순서의 복원 행 바이트**에 적용하며 사용하지 않는 패딩 비트도 포함합니다. 서로 다른 인코딩 간 시각적 동일성 해시가 아닙니다.
 
+선택적 [IEND 뒤 0 패딩](hwp5-png-post-iend.md)이 있으면 첫 구조 순회에서 전체 바이트와 꼬리를 확인하고, IDAT·메타데이터의 두 번째 순회는 IEND에서 끝냅니다. `structure.post_iend_zero_bytes`가 0보다 크면 픽셀 검사 성공이어도 전체 입력을 적합 PNG라고 주장하지 않습니다.
+
 이 연결 경로는 모든 행 검사 후 structure.pixels_validated를 true로 설정합니다. 독립 structure.inspect는 여전히 false입니다. 이 플래그는 위 IDAT 데이터 범위의 성공이지 ancillary/APNG/렌더링까지 완료했다는 뜻이 아닙니다. 실패에는 부분 보고서나 부분 버퍼를 반환하지 않습니다.
 
 ## 한도·압축 후미

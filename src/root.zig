@@ -287,6 +287,7 @@ test {
     _ = @import("image/jpeg/header_tests.zig");
     _ = @import("image/jpeg/framing_tests.zig");
     _ = @import("hwp5/container/image_tests.zig");
+    _ = @import("hwp5/container/png_post_iend_tests.zig");
     _ = @import("hwp5/container/pcx_image_tests.zig");
     _ = @import("hwp5/container/wmf_image_tests.zig");
     _ = @import("hwp5/container/ole_binary_tests.zig");
@@ -315,6 +316,7 @@ test {
     _ = @import("image/png/tests.zig");
     _ = @import("image/png/filter_tests.zig");
     _ = @import("image/png/pixels_tests.zig");
+    _ = @import("image/png/post_iend_tests.zig");
     _ = @import("image/png/transparency_tests.zig");
     _ = @import("image/png/palette_metadata_tests.zig");
     _ = @import("image/png/sample_metadata_tests.zig");

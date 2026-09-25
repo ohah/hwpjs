@@ -13,6 +13,7 @@ pub const Options = struct {
     wmf: ?wmf.Options = null,
     max_total_pcx_decoded_bytes: usize = (pcx.Options{}).max_decoded_bytes,
     max_total_wmf_bytes: usize = 256 * 1024 * 1024,
+    max_total_png_post_iend_zero_bytes: usize = 64 * 1024 * 1024,
     max_total_gif_index_bytes: usize = (gif.Options{}).max_total_pixels,
     max_total_gif_codes: usize = (gif.Options{}).max_total_codes,
     max_total_gif_frames: usize = (gif.Options{}).max_frames,
@@ -42,6 +43,8 @@ pub const Report = struct {
     color_deferred_images: usize = 0,
     ancillary_chunks_deferred: usize = 0,
     png_zlib_trailing_bytes: usize = 0,
+    png_post_iend_zero_bytes: usize = 0,
+    png_post_iend_zero_images: usize = 0,
     semantics_deferred: bool = true,
 };
 /// Scalar-only evidence; does not retain decoded BinData or image buffers.
@@ -128,6 +131,10 @@ pub const Budget = struct {
         var options = self.options.png;
         if (next.pixel_bytes > self.options.max_total_pixel_bytes) return error.LimitExceeded;
         options.max_decoded_bytes = @min(options.max_decoded_bytes, self.options.max_total_pixel_bytes - next.pixel_bytes);
+        if (options.structure.post_iend == .zero_padding) {
+            if (next.png_post_iend_zero_bytes > self.options.max_total_png_post_iend_zero_bytes) return error.LimitExceeded;
+            options.structure.post_iend.zero_padding = @min(options.structure.post_iend.zero_padding, self.options.max_total_png_post_iend_zero_bytes - next.png_post_iend_zero_bytes);
+        }
         const result = try png.inspect(a, bytes, options);
         next.png_images = try add(next.png_images, 1);
         next.pixel_bytes = try add(next.pixel_bytes, result.decoded_bytes);
@@ -136,6 +143,8 @@ pub const Budget = struct {
         next.color_deferred_images = try add(next.color_deferred_images, @intFromBool(result.color_semantics_deferred));
         next.ancillary_chunks_deferred = try add(next.ancillary_chunks_deferred, result.structure.ancillary_chunks_deferred);
         next.png_zlib_trailing_bytes = try add(next.png_zlib_trailing_bytes, result.zlib_trailing_bytes);
+        next.png_post_iend_zero_bytes = try add(next.png_post_iend_zero_bytes, result.structure.post_iend_zero_bytes);
+        next.png_post_iend_zero_images = try add(next.png_post_iend_zero_images, @intFromBool(result.structure.post_iend_zero_bytes != 0));
         self.report = next;
     }
 };

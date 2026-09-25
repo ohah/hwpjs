@@ -72,6 +72,8 @@ pub fn decode(a: std.mem.Allocator, bytes: []const u8, options: Options) !Decode
             @memcpy(compressed[at..][0..chunk.payload.len], chunk.payload);
             at += chunk.payload.len;
         }
+        // The first pass already validated any explicitly accepted outer tail.
+        if (chunk.is("IEND")) break;
     }
     const decoded = try zlib.decodePrefix(a, compressed, layout.bytes);
     errdefer a.free(decoded.bytes);

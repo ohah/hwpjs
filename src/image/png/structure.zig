@@ -1,6 +1,8 @@
 pub const chunks = @import("chunks.zig");
+const std = @import("std");
 pub const Header = @import("header.zig").Header;
-pub const Options = struct { chunks: chunks.Options = .{}, max_pixels: u64 = 100_000_000 };
+pub const PostIend = union(enum) { reject, zero_padding: usize };
+pub const Options = struct { chunks: chunks.Options = .{}, max_pixels: u64 = 100_000_000, post_iend: PostIend = .reject };
 pub const Report = struct {
     header: Header,
     chunks: usize = 1,
@@ -11,6 +13,8 @@ pub const Report = struct {
     ancillary_bytes_deferred: usize = 0,
     reserved_bit_chunks: usize = 0,
     pixels_validated: bool = false,
+    /// Nonconforming bytes outside the PNG datastream, accepted only by policy.
+    post_iend_zero_bytes: usize = 0,
 };
 /// Critical envelope/order and CRC validation only. Does not inflate IDAT,
 /// validate pixels/ancillary metadata/APNG, or return a fully validated PNG claim.
@@ -35,7 +39,15 @@ pub fn inspect(bytes: []const u8, options: Options) !Report {
         } else if (chunk.is("IEND")) {
             if (chunk.payload.len != 0) return error.InvalidPngEnd;
             if (report.idat_chunks == 0) return error.MissingPngIdat;
-            if (it.reader.offset != bytes.len) return error.TrailingData;
+            const tail = bytes[it.reader.offset..];
+            switch (options.post_iend) {
+                .reject => if (tail.len != 0) return error.TrailingData,
+                .zero_padding => |limit| {
+                    if (tail.len > limit) return error.LimitExceeded;
+                    if (!std.mem.allEqual(u8, tail, 0)) return error.TrailingData;
+                    report.post_iend_zero_bytes = tail.len;
+                },
+            }
             return report;
         } else {
             if (chunk.critical()) return error.UnsupportedPngCriticalChunk;
