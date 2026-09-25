@@ -57,6 +57,8 @@ test "HWPX known inspections compose every currently exposed document report" {
     try std.testing.expectEqualStrings("BOTH", report.section_direct_settings.items[1].get(.page_starts_on).?);
     try std.testing.expectEqual(@as(usize, 3), report.section_page_borders.borders);
     try std.testing.expectEqual(@as(usize, 3), report.section_page_borders.offsets);
+    try std.testing.expectEqual(@as(usize, 3), report.section_page_border_references.resolved);
+    try std.testing.expectEqual(@as(usize, 0), report.section_page_border_references.missing_target);
     try std.testing.expectEqualStrings("BOTH", report.section_page_borders.items[0].get(.page_type).?);
     try std.testing.expectEqualStrings("1417", report.section_page_borders.items[1].get(.left).?);
     try std.testing.expectEqual(report.section_page_borders.items[0].element_index, report.section_page_borders.items[1].parent_element_index);

@@ -1,6 +1,6 @@
 # HWPX 현재 지원 검사 묶음
 
-`section_page_borders`는 [구역 쪽 테두리·배경 원값](hwpx-section-page-borders.md)을 소유 보고서로 노출합니다. header 리소스 ID의 실제 해결이나 페이지별 적용은 아직 하지 않습니다.
+`section_page_borders`는 [구역 쪽 테두리·배경 원값](hwpx-section-page-borders.md)을 소유 보고서로, `section_page_border_references`는 [header 리소스 ID 진단](hwpx-section-page-border-references.md)을 값 보고서로 노출합니다. 페이지별 적용은 아직 하지 않습니다.
 
 `section_direct_settings`는 [구역 직접 설정 원값](hwpx-section-direct-settings.md)을 별도 소유 보고서로 제공합니다. `secPr`의 자식 개수 인벤토리와 같은 부모 인덱스를 대조할 수 있지만 쪽 배치·번호 정책을 적용하지는 않습니다.
 

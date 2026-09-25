@@ -1,6 +1,6 @@
 # Zig/WASM 구현 구조
 
-[구역 쪽 테두리·배경 원값](hwpx-section-page-borders.md)은 기존 section 트리와 XML 숫자·Boolean 계층을 재사용합니다. `pageBorderFill`·`offset`의 부모 관계를 보존하며 ID 해석·레이아웃은 수행하지 않습니다.
+[구역 쪽 테두리·배경 원값](hwpx-section-page-borders.md)은 기존 section 트리와 XML 숫자·Boolean 계층을 재사용합니다. `pageBorderFill`·`offset`의 부모 관계를 보존하고, 별도 [ID 참조 진단](hwpx-section-page-border-references.md)이 header 색인과 연결합니다. 레이아웃은 수행하지 않습니다.
 
 [구역 직접 설정 원값](hwpx-section-direct-settings.md)은 소유 section 트리의 직접 `secPr` 자식만 읽습니다. XML 속성·숫자 어휘 공통 계층을 재사용하고 `strikeContinue` 관측 확장과 공식 필드를 구분합니다.
 

@@ -26,6 +26,7 @@ const page_geometry = @import("page_geometry.zig");
 const section_definition = @import("section_definition.zig");
 const section_direct_settings = @import("section_direct_settings.zig");
 const section_page_border = @import("section_page_border.zig");
+const section_page_border_refs = @import("section_page_border_refs.zig");
 const section_definition_refs = @import("section_definition_refs.zig");
 const table_geometry = @import("table_geometry.zig");
 const payload_integrity = @import("payload_integrity.zig");
@@ -75,6 +76,7 @@ pub const Report = struct {
     section_definitions: section_definition.Report,
     section_direct_settings: section_direct_settings.Report,
     section_page_borders: section_page_border.Report,
+    section_page_border_references: section_page_border_refs.Report,
     section_definition_references: section_definition_refs.Report,
 
     pub fn deinit(self: *Report, a: std.mem.Allocator) void {
@@ -154,6 +156,7 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
         errdefer section_direct_settings_report.deinit(a);
         var section_page_border_report = try trees.inspectSectionPageBorders(a, options.section_page_borders);
         errdefer section_page_border_report.deinit(a);
+        const section_page_border_ref_report = try section_page_border_refs.inspect(&section_page_border_report, resource_report.table(.border_fill));
         const section_definition_ref_report = try section_definition_refs.inspect(&section_definition_report, &resource_report);
         const paragraph_report = try trees.inspectParagraphMetadata(a, options.paragraph_metadata);
         const paragraph_children_report = try trees.inspectParagraphChildren(options.paragraph_children);
@@ -162,7 +165,7 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
         const topology_report = try trees.inspectRunTopology(a, options.run_topology);
         const text_nodes_report = try trees.inspectTextNodes(a, options.text_nodes);
         const table_report = try trees.inspectTableGeometryWithBorderFills(a, options.table_geometry, resource_report.table(.border_fill));
-        break :blk .{ .begin = begin_report, .page = page_report, .section_definitions = section_definition_report, .section_direct_settings = section_direct_settings_report, .section_page_borders = section_page_border_report, .section_definition_references = section_definition_ref_report, .paragraph = paragraph_report, .paragraph_children = paragraph_children_report, .line_segments = line_segment_report, .run = run_report, .topology = topology_report, .text_nodes = text_nodes_report, .table_geometry = table_report };
+        break :blk .{ .begin = begin_report, .page = page_report, .section_definitions = section_definition_report, .section_direct_settings = section_direct_settings_report, .section_page_borders = section_page_border_report, .section_page_border_references = section_page_border_ref_report, .section_definition_references = section_definition_ref_report, .paragraph = paragraph_report, .paragraph_children = paragraph_children_report, .line_segments = line_segment_report, .run = run_report, .topology = topology_report, .text_nodes = text_nodes_report, .table_geometry = table_report };
     };
     return .{
         .version = version,
@@ -202,6 +205,7 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
         .section_definitions = semantic.section_definitions,
         .section_direct_settings = semantic.section_direct_settings,
         .section_page_borders = semantic.section_page_borders,
+        .section_page_border_references = semantic.section_page_border_references,
         .section_definition_references = semantic.section_definition_references,
     };
 }

@@ -398,6 +398,10 @@ pub const section_page_border_types = [_][3]usize{
 };
 pub const section_page_border_id_sum = [_]u64{ 283, 222, 766, 341, 379, 739, 183, 1572 };
 pub const section_page_border_id_zero = [_]usize{ 0, 0, 0, 0, 0, 0, 0, 30 };
+// Independent oracle resolves every present ID against header borderFills;
+// 30 observed zero IDs are missing targets, not implicit sentinels.
+pub const section_page_border_refs_resolved = [_]usize{ 217, 206, 210, 163, 186, 178, 181, 244 };
+pub const section_page_border_refs_missing_target = [_]usize{ 0, 0, 0, 0, 0, 0, 0, 30 };
 pub const section_page_border_content = [_]usize{ 4, 4, 3, 1, 2, 5, 0, 0 };
 pub const section_page_border_inside = [_]usize{ 1, 1, 1, 1, 0, 1, 0, 0 };
 pub const section_page_border_offset_sums = [_][4]u64{

@@ -39,6 +39,7 @@ test {
     _ = @import("hwpx/section_definition_tests.zig");
     _ = @import("hwpx/section_direct_settings_tests.zig");
     _ = @import("hwpx/section_page_border_tests.zig");
+    _ = @import("hwpx/section_page_border_refs_tests.zig");
     _ = @import("hwpx/document_known_tests.zig");
     _ = @import("hwpx/table_geometry_tests.zig");
     _ = @import("hwpx/masterpage_table_geometry_tests.zig");
