@@ -60,17 +60,51 @@ fn wmfBytes(placeable: bool) [46]u8 {
     return bytes;
 }
 
-fn inspectWmf(a: std.mem.Allocator, data: []const u8, media: []const u8) !payloads.Report {
-    const sources = [_]fixture.Source{.{ .name = "BinData/image.wmf", .data = data }};
+fn inspectSingleImage(a: std.mem.Allocator, data: []const u8, media: []const u8, path: []const u8) !payloads.Report {
+    const sources = [_]fixture.Source{.{ .name = path, .data = data }};
     const bytes = try fixture.storedZip(a, &sources);
     defer a.free(bytes);
     var archive = try zip.open(a, bytes, .{});
     defer archive.deinit();
-    var items = [_]manifest.Item{item("wmf", "BinData/image.wmf", media, 0)};
+    var items = [_]manifest.Item{item("image", path, media, 0)};
     const opf: manifest.Manifest = .{ .items = &items, .spine = @constCast(&[_]manifest.SpineRef{}), .xml_bytes = 0 };
-    var sites = [_]links.Site{site("wmf", .embedded, 0)};
+    var sites = [_]links.Site{site("image", .embedded, 0)};
     const raw: links.Report = .{ .sections = 1, .master_pages = 0, .sites = &sites, .counts = @splat(0) };
     return payloads.inspect(a, archive, opf, &raw, .{});
+}
+
+fn inspectWmf(a: std.mem.Allocator, data: []const u8, media: []const u8) !payloads.Report {
+    return inspectSingleImage(a, data, media, "BinData/image.wmf");
+}
+
+test "HWPX picture image payloads classify TIFF structure and retain inner errors" {
+    const a = std.testing.allocator;
+    var bytes = [_]u8{0} ** 42;
+    @memcpy(bytes[0..4], &[_]u8{ 0x49, 0x49, 0x2a, 0 });
+    std.mem.writeInt(u32, bytes[4..8], 8, .little);
+    std.mem.writeInt(u16, bytes[8..10], 2, .little);
+    std.mem.writeInt(u16, bytes[10..12], 273, .little);
+    std.mem.writeInt(u16, bytes[12..14], 4, .little);
+    std.mem.writeInt(u32, bytes[14..18], 1, .little);
+    std.mem.writeInt(u32, bytes[18..22], 38, .little);
+    std.mem.writeInt(u16, bytes[22..24], 279, .little);
+    std.mem.writeInt(u16, bytes[24..26], 4, .little);
+    std.mem.writeInt(u32, bytes[26..30], 1, .little);
+    std.mem.writeInt(u32, bytes[30..34], 4, .little);
+    var valid = try inspectSingleImage(a, &bytes, "image/tif", "BinData/image.tif");
+    defer valid.deinit(a);
+    try std.testing.expectEqual(payloads.Format.tiff, valid.targets[0].format);
+    try std.testing.expectEqual(payloads.Inspection.tiff_structure, valid.targets[0].inspection);
+    try std.testing.expectEqual(@as(usize, 0), valid.unknown_formats + valid.inspection_failures + valid.media_mismatches);
+    var mismatched = try inspectSingleImage(a, &bytes, "image/png", "BinData/image.tif");
+    defer mismatched.deinit(a);
+    try std.testing.expectEqual(@as(usize, 1), mismatched.media_mismatches);
+    std.mem.writeInt(u32, bytes[30..34], 5, .little);
+    var damaged = try inspectSingleImage(a, &bytes, "image/tiff", "BinData/image.tif");
+    defer damaged.deinit(a);
+    try std.testing.expectEqual(@as(?anyerror, error.InvalidTiffDataExtent), damaged.targets[0].inspection_error);
+    try std.testing.expectEqual(@as(usize, 0), damaged.unknown_formats);
+    try std.testing.expectEqual(payloads.Format.unknown, @import("image_payloads.zig").formatOf(&.{ 0x49, 0x49, 0x2b, 0x00 }));
 }
 
 test "HWPX picture image payloads distinguish WMF framing and malformed bytes" {

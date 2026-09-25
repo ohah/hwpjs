@@ -6,6 +6,7 @@ import io
 import os
 from pathlib import Path
 import re
+import struct
 import sys
 import xml.etree.ElementTree as ET
 import zipfile
@@ -131,6 +132,9 @@ def picture_payload_archive(archive):
             if kind == "wmf":
                 counts[source + ("_wmf_placeable" if data.startswith(bytes.fromhex("d7cdc69a")) else "_wmf_standard")] += 1
                 counts[source + "_invalid_wmf_targets"] += not wmf_framing_ok(data)
+            if kind == "tiff":
+                status = tiff_structure_status(data)
+                counts[source + "_tiff_" + status] += 1
     return counts
 
 
@@ -209,11 +213,73 @@ def byte_format(data):
         return "gif"
     if data.startswith(bytes.fromhex("d7cdc69a")) or (len(data) >= 4 and data[:2] in (b"\x01\0", b"\x02\0") and data[2:4] == b"\x09\0"):
         return "wmf"
+    if data.startswith(bytes.fromhex("49492a00")) or data.startswith(bytes.fromhex("4d4d002a")):
+        return "tiff"
     return "unknown"
 
 
 def matching_media(kind, media):
-    return media in {"png": ("image/png",), "jpeg": ("image/jpeg", "image/jpg"), "bmp": ("image/bmp",), "gif": ("image/gif",), "wmf": ("image/wmf",)}.get(kind, ())
+    return media in {"png": ("image/png",), "jpeg": ("image/jpeg", "image/jpg"), "bmp": ("image/bmp",), "gif": ("image/gif",), "wmf": ("image/wmf",), "tiff": ("image/tiff", "image/tif")}.get(kind, ())
+
+
+def tiff_structure_status(data):
+    """Independent classic-TIFF IFD and strip/tile extent oracle."""
+    if len(data) < 8:
+        return "short_header"
+    endian = "<" if data[:4] == bytes.fromhex("49492a00") else ">" if data[:4] == bytes.fromhex("4d4d002a") else None
+    if endian is None:
+        return "signature"
+    u16 = lambda pos: struct.unpack_from(endian + "H", data, pos)[0]
+    u32 = lambda pos: struct.unpack_from(endian + "I", data, pos)[0]
+    offset = u32(4)
+    seen = set()
+    while offset:
+        if offset in seen:
+            return "cycle"
+        seen.add(offset)
+        if len(seen) > 1024:
+            return "ifd_limit"
+        if offset < 8 or offset % 2 or offset + 2 > len(data):
+            return "ifd_offset"
+        count = u16(offset)
+        end = offset + 2 + count * 12 + 4
+        if count == 0 or end > len(data):
+            return "ifd_extent"
+        previous = -1
+        ranges = {}
+        for at in range(offset + 2, end - 4, 12):
+            tag, typ, n = struct.unpack_from(endian + "HHI", data, at)
+            if tag <= previous:
+                return "tag_order"
+            previous = tag
+            width = {1: 1, 2: 1, 3: 2, 4: 4, 5: 8, 6: 1, 7: 1, 8: 2, 9: 4, 10: 8, 11: 4, 12: 8}.get(typ)
+            if width is None:
+                raw = None
+            elif n * width <= 4:
+                raw = data[at + 8:at + 8 + n * width]
+            else:
+                target = u32(at + 8)
+                if target % 2 or target > len(data) or n * width > len(data) - target:
+                    return "field_extent"
+                raw = data[target:target + n * width]
+            if tag in (273, 279, 324, 325):
+                ranges[tag] = (typ, n, raw)
+        for start_tag, size_tag in ((273, 279), (324, 325)):
+            if start_tag not in ranges and size_tag not in ranges:
+                continue
+            if start_tag not in ranges or size_tag not in ranges:
+                return "missing_data_pair"
+            st, sn, sb = ranges[start_tag]
+            lt, ln, lb = ranges[size_tag]
+            if st not in (1, 3, 4) or lt not in (1, 3, 4) or sn == 0 or sn != ln or sn > 100000:
+                return "data_type_or_count"
+            fmt = {1: "B", 3: "H", 4: "I"}
+            starts = struct.unpack(endian + str(sn) + fmt[st], sb)
+            lengths = struct.unpack(endian + str(ln) + fmt[lt], lb)
+            if any(a > len(data) or b > len(data) - a for a, b in zip(starts, lengths)):
+                return "data_extent"
+        offset = u32(end - 4)
+    return "ok" if seen else "missing_ifd"
 
 
 def wmf_framing_ok(data):
@@ -402,6 +468,15 @@ def self_test():
     assert not wmf_framing_ok(standard_wmf[:6] + bytes(4) + standard_wmf[10:])
     assert not wmf_framing_ok(placeable_wmf[:28] + bytes(4) + placeable_wmf[32:])
     assert not wmf_framing_ok(placeable_wmf[:20] + b"\0\0" + placeable_wmf[22:])
+    for endian, signature in (("<", bytes.fromhex("49492a00")), (">", bytes.fromhex("4d4d002a"))):
+        tiny_tiff = signature + struct.pack(endian + "I", 8) + struct.pack(endian + "H", 2)
+        tiny_tiff += struct.pack(endian + "HHII", 273, 4, 1, 38)
+        tiny_tiff += struct.pack(endian + "HHII", 279, 4, 1, 4)
+        tiny_tiff += struct.pack(endian + "I", 0) + b"data"
+        assert byte_format(tiny_tiff) == "tiff" and tiff_structure_status(tiny_tiff) == "ok"
+        assert tiff_structure_status(tiny_tiff[:-1]) == "data_extent"
+        assert tiff_structure_status(tiny_tiff[:34] + struct.pack(endian + "I", 8) + tiny_tiff[38:]) == "cycle"
+    assert matching_media("tiff", "image/tif") and not matching_media("tiff", "image/png")
     valid_png = bytes.fromhex("89504e470d0a1a0a") + b"\0\0\0\0IEND" + zlib.crc32(b"IEND").to_bytes(4, "big")
     assert png_defects(valid_png) == (0, False)
     assert png_defects(valid_png[:-1] + bytes([valid_png[-1] ^ 1])) == (1, False)

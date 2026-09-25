@@ -7,9 +7,10 @@ const bmp = @import("../image/bmp/structure.zig");
 const gif = @import("../image/gif/document.zig");
 const wmf_header = @import("../image/wmf/header.zig");
 const wmf_records = @import("../image/wmf/records.zig");
+const tiff = @import("../image/tiff/structure.zig");
 
-pub const Format = enum { png, jpeg, bmp, gif, wmf, unknown };
-pub const Inspection = enum { png_scanlines, jpeg_framing, bmp_structure, gif_indices, wmf_framing, unsupported };
+pub const Format = enum { png, jpeg, bmp, gif, wmf, tiff, unknown };
+pub const Inspection = enum { png_scanlines, jpeg_framing, bmp_structure, gif_indices, wmf_framing, tiff_structure, unsupported };
 
 pub const Options = struct {
     max_targets: usize = 100_000,
@@ -23,6 +24,7 @@ pub const Options = struct {
     jpeg: jpeg.Options = .{},
     bmp: bmp.Options = .{},
     gif: gif.Options = .{},
+    tiff: tiff.Options = .{},
 };
 
 pub const Target = struct {
@@ -64,6 +66,7 @@ pub fn formatOf(bytes: []const u8) Format {
     if (std.mem.startsWith(u8, bytes, "GIF")) return .gif;
     if (std.mem.startsWith(u8, bytes, &.{ 0xd7, 0xcd, 0xc6, 0x9a })) return .wmf;
     if (bytes.len >= 4 and (std.mem.eql(u8, bytes[0..2], &.{ 1, 0 }) or std.mem.eql(u8, bytes[0..2], &.{ 2, 0 })) and std.mem.eql(u8, bytes[2..4], &.{ 9, 0 })) return .wmf;
+    if (std.mem.startsWith(u8, bytes, &.{ 0x49, 0x49, 0x2a, 0x00 }) or std.mem.startsWith(u8, bytes, &.{ 0x4d, 0x4d, 0x00, 0x2a })) return .tiff;
     return .unknown;
 }
 
@@ -74,6 +77,7 @@ pub fn mediaMatches(format: Format, media: []const u8) ?bool {
         .bmp => std.mem.eql(u8, media, "image/bmp"),
         .gif => std.mem.eql(u8, media, "image/gif"),
         .wmf => std.mem.eql(u8, media, "image/wmf"),
+        .tiff => std.mem.eql(u8, media, "image/tiff") or std.mem.eql(u8, media, "image/tif"),
         .unknown => null,
     };
 }
@@ -113,6 +117,10 @@ fn validate(a: std.mem.Allocator, bytes: []const u8, format: Format, options: Op
                 const header = try wmf_header.parseStandard(bytes);
                 _ = try wmf_records.validate(bytes, header, .{});
             }
+            return .{};
+        },
+        .tiff => {
+            _ = try tiff.inspect(bytes, options.tiff);
             return .{};
         },
         .unknown => return .{},
@@ -173,6 +181,7 @@ pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, items: manifest.Manif
                 .bmp => .bmp_structure,
                 .gif => .gif_indices,
                 .wmf => .wmf_framing,
+                .tiff => .tiff_structure,
                 .unknown => .unsupported,
             },
             .inspection_error = inspection_error,

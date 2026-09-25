@@ -8,15 +8,16 @@ pub const Group = struct {
     sites: usize = 0,
     non_embedded: usize = 0,
     targets: usize = 0,
-    formats: [6]usize = @splat(0),
+    formats: [7]usize = @splat(0),
     mismatches: usize = 0,
     failures: usize = 0,
     png_failures: usize = 0,
     wmf_failures: usize = 0,
+    tiff_failures: usize = 0,
     encoded_bytes: usize = 0,
 
     fn merge(self: *Group, other: Group) void {
-        inline for (.{ "sites", "non_embedded", "targets", "mismatches", "failures", "png_failures", "wmf_failures", "encoded_bytes" }) |field| @field(self, field) += @field(other, field);
+        inline for (.{ "sites", "non_embedded", "targets", "mismatches", "failures", "png_failures", "wmf_failures", "tiff_failures", "encoded_bytes" }) |field| @field(self, field) += @field(other, field);
         for (&self.formats, other.formats) |*value, next| value.* += next;
     }
 };
@@ -66,6 +67,7 @@ fn check(items: manifest.Manifest, linked: *const links.Report, report: *const p
         failures += @intFromBool(target.inspection_error != null);
         if (target.format == .png and target.inspection_error != null) result.png_failures += 1;
         if (target.format == .wmf and target.inspection_error != null) result.wmf_failures += 1;
+        if (target.format == .tiff and target.inspection_error != null) result.tiff_failures += 1;
         result.formats[@intFromEnum(target.format)] += 1;
     }
     try std.testing.expectEqual(linked.count(.embedded), references);
