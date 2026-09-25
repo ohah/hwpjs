@@ -12,6 +12,7 @@ import zipfile
 
 
 CORE = "{http://www.hancom.co.kr/hwpml/2011/core}"
+OPF = "{http://www.idpf.org/2007/opf/}"
 ROOTS = (Path("legacy/rust/crates/hwp-core/tests/fixtures"), Path("reference/rhwp/samples"))
 FIELDS = {
     "winBrush": ("faceColor", "hatchColor", "hatchStyle", "alpha"),
@@ -76,6 +77,8 @@ def fields(node, kind, counts):
             counts["non_six_hex_colors"] += not six_hex(raw)
             counts[key + "_none"] += raw == "none"
             counts[key + "_eight_hex"] += re.fullmatch(r"#[0-9A-Fa-f]{8}", raw) is not None
+            if six_hex(raw):
+                counts[key + "_hex_sum"] += int(raw[1:], 16)
         elif kind == "img" and field == "binaryItemIDRef":
             counts["image_ref_nonempty"] += raw != ""
 
@@ -124,6 +127,22 @@ def inspect_archive(archive):
     return counts
 
 
+def inspect_master_archive(archive):
+    counts = Counter()
+    package = ET.fromstring(archive.read("Contents/content.hpf"))
+    for item in package.iter():
+        if item.tag != OPF + "item":
+            continue
+        href = item.get("href", "")
+        if not re.fullmatch(r"Contents/masterpage[0-9]+\.xml", href):
+            continue
+        if item.get("media-type") != "application/xml":
+            raise ValueError("bad master page media type")
+        counts["parts"] += 1
+        observe(ET.fromstring(archive.read(href)), counts, "master")
+    return counts
+
+
 def self_test():
     source = '<h:head xmlns:h="http://www.hancom.co.kr/hwpml/2011/head" xmlns:c="http://www.hancom.co.kr/hwpml/2011/core" xmlns:x="urn:other"><x:fillBrush/><h:borderFill><c:fillBrush><x:gradation/><c:winBrush faceColor="none" alpha=".5"/><c:gradation type="LINEAR" colorNum="2" alpha="1e-2"><c:color value="#123456"/></c:gradation><c:imgBrush mode="ZOOM"><c:img binaryItemIDRef="image1" bright="-1" effect="REAL_PIC"/></c:imgBrush></c:fillBrush></h:borderFill></h:head>'
     counts = Counter()
@@ -154,6 +173,26 @@ def self_test():
             pass
         else:
             raise AssertionError("partial malformed ZIP accepted")
+    memory = io.BytesIO()
+    with zipfile.ZipFile(memory, "w") as archive:
+        archive.writestr("Contents/content.hpf", "<o:package xmlns:o='http://www.idpf.org/2007/opf/'><o:manifest><o:item href='Contents/masterpage0.xml' media-type='application/xml'/><o:item href='Contents/masterpage1.xml' media-type='application/xml'/></o:manifest></o:package>")
+        archive.writestr("Contents/masterpage0.xml", "<masterPage xmlns:c='http://www.hancom.co.kr/hwpml/2011/core' xmlns:x='urn:other'><x:fillBrush/><c:fillBrush><c:winBrush faceColor='#010203'/></c:fillBrush></masterPage>")
+        archive.writestr("Contents/masterpage1.xml", "<broken")
+    with zipfile.ZipFile(memory) as archive:
+        try:
+            inspect_master_archive(archive)
+        except ET.ParseError:
+            pass
+        else:
+            raise AssertionError("partial malformed master archive accepted")
+    memory = io.BytesIO()
+    with zipfile.ZipFile(memory, "w") as archive:
+        archive.writestr("Contents/content.hpf", "<o:package xmlns:o='http://www.idpf.org/2007/opf/' xmlns:x='urn:other'><o:manifest><o:item href='Contents/masterpage0.xml' media-type='application/xml'/><o:item href='Contents/masterpage1.xml' media-type='application/xml'/><o:item href='Contents/not-masterpage.xml' media-type='application/xml'/><x:item href='Contents/masterpage2.xml' media-type='application/xml'/></o:manifest></o:package>")
+        archive.writestr("Contents/masterpage0.xml", "<masterPage xmlns:c='http://www.hancom.co.kr/hwpml/2011/core' xmlns:x='urn:other'><x:fillBrush/><c:fillBrush><c:winBrush faceColor='#010203'/></c:fillBrush></masterPage>")
+        archive.writestr("Contents/masterpage1.xml", "<masterPage/>")
+    with zipfile.ZipFile(memory) as archive:
+        master = inspect_master_archive(archive)
+        assert (master["parts"], master["brushes"], master["winBrush_faceColor_hex_sum"]) == (2, 1, 0x010203)
 
 
 def collect():
@@ -173,13 +212,34 @@ def collect():
     return shards
 
 
+def collect_master():
+    shards = [Counter() for _ in range(8)]
+    for root_index, root in enumerate(ROOTS):
+        for path in root.rglob("*.hwpx"):
+            shard = (root_index + sum(os.fsencode(str(path.relative_to(root))))) % 8
+            counts = shards[shard]
+            counts["files"] += 1
+            try:
+                with zipfile.ZipFile(path) as archive:
+                    file_counts = inspect_master_archive(archive)
+            except (zipfile.BadZipFile, KeyError, OSError, ET.ParseError, ValueError):
+                counts["unreadable"] += 1
+            else:
+                counts.update(file_counts)
+    return shards
+
+
 def main():
     if sys.argv[1:] == ["--self-test"]:
         self_test()
         print("fill brush oracle self-test passed")
         return
+    if sys.argv[1:] == ["--master"]:
+        for index, counts in enumerate(collect_master()):
+            print(index, dict(sorted(counts.items())))
+        return
     if len(sys.argv) != 1:
-        raise SystemExit("usage: hwpx-fill-brush-oracle.py [--self-test]")
+        raise SystemExit("usage: hwpx-fill-brush-oracle.py [--self-test|--master]")
     for index, counts in enumerate(collect()):
         print(index, dict(sorted(counts.items())))
 

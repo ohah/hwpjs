@@ -40,6 +40,7 @@ const section_page_border = @import("section_page_border.zig");
 const section_note_shapes = @import("section_note_shapes.zig");
 const section_presentation = @import("section_presentation.zig");
 const fill_brush = @import("fill_brush.zig");
+const masterpage_fill_brush = @import("masterpage_fill_brush.zig");
 const section_page_border_refs = @import("section_page_border_refs.zig");
 const section_definition_refs = @import("section_definition_refs.zig");
 const document_known = @import("document_known.zig");
@@ -200,6 +201,11 @@ pub const SectionPresentationOptions = section_presentation.Options;
 pub const SectionPresentationReport = section_presentation.Report;
 pub const FillBrushOptions = fill_brush.Options;
 pub const FillBrushReport = fill_brush.Report;
+pub const MasterPageFillBrushOptions = struct {
+    master_pages: MasterPageOptions = .{},
+    brushes: masterpage_fill_brush.Options = .{},
+};
+pub const MasterPageFillBrushReport = masterpage_fill_brush.Report;
 pub const SectionPageBorderReferenceReport = section_page_border_refs.Report;
 pub const SectionDefinitionReferenceReport = section_definition_refs.Report;
 pub const SectionDefinitionField = section_definition.Field;
@@ -284,6 +290,7 @@ pub const KnownOptions = struct {
     master_page_binary_references: masterpage_binary_references.Options = .{},
     master_page_chart_references: masterpage_chart_references.Options = .{},
     master_page_table_geometry: masterpage_table_geometry.Options = .{},
+    master_page_fill_brushes: masterpage_fill_brush.Options = .{},
     structure: StructureOptions = .{},
     header_resources: HeaderResourceOptions = .{},
     section_references: ReferenceOptions = .{},
@@ -461,6 +468,14 @@ pub const Document = struct {
         var pages = try self.inspectMasterPages(a, options.master_pages);
         defer pages.deinit(a);
         return text_node.inspectMasterPages(a, self.archive, pages.parts.parts, options.text_nodes);
+    }
+
+    /// Observes all 2011 fillBrush nodes in manifest-selected master pages.
+    /// This is a raw part view, not page application or rendered fill priority.
+    pub fn inspectMasterPageFillBrushes(self: *const Document, a: std.mem.Allocator, options: MasterPageFillBrushOptions) !MasterPageFillBrushReport {
+        var pages = try self.inspectMasterPages(a, options.master_pages);
+        defer pages.deinit(a);
+        return masterpage_fill_brush.inspect(a, self.archive, pages.parts.parts, options.brushes);
     }
 
     /// Runs all currently exposed HWPX inspections on this document. A

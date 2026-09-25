@@ -2,6 +2,8 @@
 
 [HWPX 공통 fillBrush](hwpx-fill-brush.md)는 `zig test src/root.zig --test-filter 'HWPX fill brushes'`로 합성·한도·OOM, `--test-filter 'HWPX known inspections compose'`와 실제 presentation 통합 테스트로 문서 API를 검사합니다. `zig test src/hwpx/xml_values.zig`는 공통 float 어휘를, `python3 tools/hwpx-fill-brush-oracle.py --self-test` 및 인자 없는 실행은 독립 반례·8개 shard 기대값을 확인합니다. 아래 `HWPX known document inspections shard N`을 N=0..7 각각 별도 ReleaseFast 프로세스로 실행합니다.
 
+[HWPX 마스터페이지 fillBrush](hwpx-master-fill-brush.md)는 `zig test src/root.zig --test-filter 'HWPX master fill brushes'`로 파트·원값·한도·OOM 및 문서 API를 검사합니다. `python3 tools/hwpx-fill-brush-oracle.py --self-test`와 `--master`는 별도 manifest 선택 반례 및 독립 마스터페이지 census를 확인합니다. 아래 known survey 8개 ReleaseFast shard가 파트·브러시 수와 색상 원값 합계를 대조합니다.
+
 [HWPX 구역 프레젠테이션 원값](hwpx-section-presentation.md)은 `zig test src/root.zig --test-filter 'HWPX section presentation'`으로 합성·실파일·한도·OOM을 검사합니다. `python3 tools/hwpx-section-presentation-oracle.py --self-test`와 인자 없는 실행은 독립 반례·8개 shard 기대값을 생성합니다. 아래 `HWPX known document inspections shard N`을 N=0..7 각각 별도 ReleaseFast 프로세스로 실행해 속성·직접 브러시 분포를 대조합니다.
 
 [HWPX 구역 각주·미주 모양](hwpx-section-note-shapes.md)은 `zig test src/root.zig --test-filter 'HWPX section note shapes'`로 합성·한도·OOM 및 편차 실파일을 검사합니다. `python3 tools/hwpx-section-note-shapes-oracle.py --self-test`와 인자 없는 실행이 독립 반례·8개 shard 기대값을 생성합니다. 아래 `HWPX known document inspections shard N`을 N=0..7 각각 별도 ReleaseFast 프로세스로 실행해 원값 분포를 대조합니다.

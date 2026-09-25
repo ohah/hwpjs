@@ -468,7 +468,7 @@ pub const section_note_other_enums = [_][4]usize{
 // Each observed presentation has one direct fillBrush and one brush child.
 pub const section_presentation_counts = [_]usize{ 3, 5, 2, 2, 4, 7, 0, 2 };
 // Independent tools/hwpx-fill-brush-oracle.py census over selected header and
-// section XML. Master-page fillBrush sites are a separate future scope.
+// section XML. Master-page values below are an independent part selection.
 pub const fill_brush_counts = [_]usize{ 657, 351, 833, 311, 531, 1660, 648, 1537 };
 pub const fill_brush_header_counts = [_]usize{ 598, 272, 778, 290, 492, 757, 631, 1346 };
 // Node order: winBrush, gradation, imgBrush, color, img.
@@ -516,6 +516,13 @@ pub const fill_brush_hatch_styles = [_][3]usize{
     .{ 0, 0, 0 }, .{ 1, 0, 0 }, .{ 0, 1, 1 }, .{ 0, 0, 0 },
     .{ 0, 0, 1 }, .{ 0, 1, 0 }, .{ 0, 0, 0 }, .{ 0, 0, 0 },
 };
+// Independent --master census from tools/hwpx-fill-brush-oracle.py. Only
+// manifest-selected canonical master pages are included; face/hatch sums use
+// the numeric value of exact six-digit hex spellings.
+pub const master_fill_brush_parts = [_]usize{ 14, 6, 19, 0, 0, 0, 3, 19 };
+pub const master_fill_brush_counts = [_]usize{ 7, 3, 13, 0, 0, 0, 3, 14 };
+pub const master_fill_brush_face_sums = [_]u64{ 46844616, 0, 46844616, 0, 0, 0, 0, 82570215 };
+pub const master_fill_brush_hatch_sums = [_]u64{ 0, 0, 0, 0, 0, 0, 0, 100663290 };
 // Independent tools/hwpx-section-definition-reference-oracle.py census.
 pub const section_outline_zero = [_]usize{ 16, 19, 13, 13, 14, 17, 11, 39 };
 pub const section_outline_resolved = [_]usize{ 55, 49, 56, 41, 47, 43, 48, 53 };

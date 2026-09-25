@@ -13,10 +13,12 @@ pub const Options = struct {
     max_nodes: usize = 500_000,
     max_direct_children: usize = 1_000_000,
     max_attribute_bytes: usize = 4096,
+    max_total_attribute_bytes: usize = 128 * 1024 * 1024,
 };
 
 pub const Brush = struct {
     part_kind: part_tree.PartKind,
+    part_item_index: usize,
     section_ordinal: ?usize,
     element_index: usize,
     parent_element_index: ?usize,
@@ -35,6 +37,7 @@ pub const Node = struct {
     parent_node_index: ?usize,
     element_index: usize,
     raw: [fields.descriptors.len]?[]u8 = @splat(null),
+    attribute_bytes: usize = 0,
     other_attributes: usize = 0,
     unknown_enums: usize = 0,
     non_six_hex_colors: usize = 0,
@@ -53,12 +56,14 @@ pub const Node = struct {
 
 pub const Report = struct {
     header_and_sections: usize,
+    master_pages: usize,
     brushes: []Brush,
     nodes: []Node,
     kind_counts: [@typeInfo(NodeKind).@"enum".fields.len]usize,
     other_attributes: usize,
     unknown_enums: usize,
     non_six_hex_colors: usize,
+    attribute_bytes: usize,
     direct_children: usize,
     color_count_mismatch: usize,
 
@@ -115,6 +120,7 @@ fn readAttributes(a: std.mem.Allocator, tree: *const part_tree.Tree, index: usiz
         if (selected) |slot| {
             const raw = try attribute.value.toUtf8(a, options.max_attribute_bytes);
             node.raw[slot] = raw;
+            node.attribute_bytes = std.math.add(usize, node.attribute_bytes, raw.len) catch return error.LimitExceeded;
             var diagnostics: fields.Diagnostics = .{};
             try fields.validate(node.kind, @enumFromInt(slot), raw, &diagnostics);
             node.unknown_enums += diagnostics.unknown_enums;
@@ -132,6 +138,7 @@ const Collector = struct {
     other_attributes: usize = 0,
     unknown_enums: usize = 0,
     non_six_hex_colors: usize = 0,
+    attribute_bytes: usize = 0,
     direct_children: usize = 0,
     color_count_mismatch: usize = 0,
 
@@ -140,10 +147,12 @@ const Collector = struct {
         var node: Node = .{ .kind = kind, .brush_index = brush_index, .parent_node_index = parent_node_index, .element_index = element_index };
         errdefer node.deinit(self.a);
         try readAttributes(self.a, tree, element_index, self.options, &node);
+        if (node.attribute_bytes > self.options.max_total_attribute_bytes -| self.attribute_bytes) return error.LimitExceeded;
         const node_index = self.nodes.items.len;
         self.other_attributes += node.other_attributes;
         self.unknown_enums += node.unknown_enums;
         self.non_six_hex_colors += node.non_six_hex_colors;
+        self.attribute_bytes += node.attribute_bytes;
         try self.nodes.append(self.a, node);
         self.kind_counts[@intFromEnum(kind)] += 1;
         return node_index;
@@ -155,13 +164,14 @@ const Collector = struct {
     }
 
     fn scanTree(self: *Collector, tree: *const part_tree.Tree) !void {
-        if (tree.elements.len == 0 or (tree.part_kind != .header and tree.part_kind != .section)) return error.InvalidPartKind;
+        if (tree.elements.len == 0) return error.InvalidPartKind;
         for (tree.elements, 0..) |element, element_index| {
             if (!element.is(document_xml.core_uri, "fillBrush")) continue;
             if (self.brushes.items.len == self.options.max_brushes) return error.LimitExceeded;
             const brush_index = self.brushes.items.len;
             const brush: Brush = .{
                 .part_kind = tree.part_kind,
+                .part_item_index = tree.item_index,
                 .section_ordinal = tree.section_ordinal,
                 .element_index = element_index,
                 .parent_element_index = element.parent,
@@ -204,6 +214,24 @@ const Collector = struct {
         self.nodes.deinit(self.a);
         self.brushes.deinit(self.a);
     }
+
+    fn finish(self: *Collector, header_and_sections: usize, master_pages: usize) !Report {
+        const owned_brushes = try self.brushes.toOwnedSlice(self.a);
+        errdefer self.a.free(owned_brushes);
+        return .{
+            .header_and_sections = header_and_sections,
+            .master_pages = master_pages,
+            .brushes = owned_brushes,
+            .nodes = try self.nodes.toOwnedSlice(self.a),
+            .kind_counts = self.kind_counts,
+            .other_attributes = self.other_attributes,
+            .unknown_enums = self.unknown_enums,
+            .non_six_hex_colors = self.non_six_hex_colors,
+            .attribute_bytes = self.attribute_bytes,
+            .direct_children = self.direct_children,
+            .color_count_mismatch = self.color_count_mismatch,
+        };
+    }
 };
 
 /// Reads every 2011 core fillBrush in selected header and section trees.
@@ -217,17 +245,17 @@ pub fn inspect(a: std.mem.Allocator, header: *const part_tree.Tree, sections: []
         if (tree.part_kind != .section or tree.section_ordinal != ordinal) return error.InvalidPartKind;
         try collector.scanTree(tree);
     }
-    const owned_brushes = try collector.brushes.toOwnedSlice(a);
-    errdefer a.free(owned_brushes);
-    return .{
-        .header_and_sections = sections.len + 1,
-        .brushes = owned_brushes,
-        .nodes = try collector.nodes.toOwnedSlice(a),
-        .kind_counts = collector.kind_counts,
-        .other_attributes = collector.other_attributes,
-        .unknown_enums = collector.unknown_enums,
-        .non_six_hex_colors = collector.non_six_hex_colors,
-        .direct_children = collector.direct_children,
-        .color_count_mismatch = collector.color_count_mismatch,
-    };
+    return collector.finish(sections.len + 1, 0);
+}
+
+/// Reuses the exact field and child rules for selected master-page XML trees.
+/// The caller owns part selection and decoded XML budgets.
+pub fn inspectMasterTrees(a: std.mem.Allocator, trees: []const part_tree.Tree, options: Options) !Report {
+    var collector: Collector = .{ .a = a, .options = options };
+    errdefer collector.deinit();
+    for (trees) |*tree| {
+        if (tree.part_kind != .master_page or tree.section_ordinal != null) return error.InvalidPartKind;
+        try collector.scanTree(tree);
+    }
+    return collector.finish(0, trees.len);
 }

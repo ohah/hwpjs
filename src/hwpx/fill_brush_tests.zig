@@ -74,6 +74,11 @@ test "HWPX fill brushes reject invalid scalar spellings and enforce exact budget
     try std.testing.expectError(error.LimitExceeded, inspect(a, header_prefix ++ "<c:fillBrush><c:gradation type='LINEAR'><c:color value='#112233'/></c:gradation></c:fillBrush></h:head>", empty_section, .{ .max_direct_children = 1 }));
     try std.testing.expectError(error.LimitExceeded, inspect(a, header_prefix ++ "<c:fillBrush><c:gradation><c:color value='#112233'><c:unknown/></c:color></c:gradation></c:fillBrush></h:head>", empty_section, .{ .max_direct_children = 2 }));
     try std.testing.expectError(error.LimitExceeded, inspect(a, header_prefix ++ "<c:fillBrush><c:winBrush faceColor='#FFFFFF'/></c:fillBrush></h:head>", empty_section, .{ .max_attribute_bytes = 6 }));
+    const two_colors = header_prefix ++ "<c:fillBrush><c:winBrush faceColor='#112233'/><c:winBrush hatchColor='#445566'/></c:fillBrush></h:head>";
+    try std.testing.expectError(error.LimitExceeded, inspect(a, two_colors, empty_section, .{ .max_total_attribute_bytes = 13 }));
+    var total_exact = try inspect(a, two_colors, empty_section, .{ .max_total_attribute_bytes = 14 });
+    try std.testing.expectEqual(@as(usize, 14), total_exact.attribute_bytes);
+    total_exact.deinit(a);
     var exact = try inspect(a, header_prefix ++ "<c:fillBrush><c:gradation colorNum='1'><c:color value='#112233'/></c:gradation></c:fillBrush></h:head>", empty_section, .{ .max_brushes = 1, .max_nodes = 2, .max_direct_children = 2, .max_attribute_bytes = 7 });
     exact.deinit(a);
 }

@@ -29,6 +29,7 @@ const section_page_border = @import("section_page_border.zig");
 const section_note_shapes = @import("section_note_shapes.zig");
 const section_presentation = @import("section_presentation.zig");
 const fill_brush = @import("fill_brush.zig");
+const masterpage_fill_brush = @import("masterpage_fill_brush.zig");
 const section_page_border_refs = @import("section_page_border_refs.zig");
 const section_definition_refs = @import("section_definition_refs.zig");
 const table_geometry = @import("table_geometry.zig");
@@ -57,6 +58,7 @@ pub const Report = struct {
     master_page_binary_references: masterpage_binary_refs.Report,
     master_page_chart_references: masterpage_chart_refs.Report,
     master_page_table_geometry: masterpage_table_geometry.Report,
+    master_page_fill_brushes: masterpage_fill_brush.Report,
     structure: structure.Report,
     resources: resources.Report,
     section_references: section_refs.Report,
@@ -92,6 +94,7 @@ pub const Report = struct {
         self.section_note_shapes.deinit(a);
         self.section_presentation.deinit(a);
         self.fill_brushes.deinit(a);
+        self.master_page_fill_brushes.deinit(a);
         self.page_geometry.deinit(a);
         self.begin_numbers.deinit(a);
         self.payload_integrity.deinit(a);
@@ -132,6 +135,8 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
     errdefer master_page_chart_report.deinit(a);
     const master_page_line_segment_report = try masterpage_line_segments.inspect(a, document.archive, master_page_report.parts.parts, options.master_page_line_segments);
     const master_page_paragraph_children_report = try masterpage_paragraph_children.inspect(a, document.archive, master_page_report.parts.parts, options.master_page_paragraph_children);
+    var master_page_fill_brush_report = try masterpage_fill_brush.inspect(a, document.archive, master_page_report.parts.parts, options.master_page_fill_brushes);
+    errdefer master_page_fill_brush_report.deinit(a);
     var version = try document.inspectVersion(a, options.version);
     errdefer version.deinit(a);
     var structure_report = try document.inspectStructure(a, options.structure);
@@ -198,6 +203,7 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
         .master_page_binary_references = master_page_binary_report,
         .master_page_chart_references = master_page_chart_report,
         .master_page_table_geometry = master_page_table_report,
+        .master_page_fill_brushes = master_page_fill_brush_report,
         .structure = structure_report,
         .resources = resource_report,
         .section_references = section_ref_report,

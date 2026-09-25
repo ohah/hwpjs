@@ -28,6 +28,7 @@ pub const Stats = struct {
         defer a.free(seen_node);
         @memset(seen_node, 0);
         var stats: Stats = .{};
+        var attribute_bytes: usize = 0;
         for (report.brushes) |brush| {
             stats.brushes += 1;
             if (brush.part_kind == .header) {
@@ -51,6 +52,7 @@ pub const Stats = struct {
             stats.nodes[@intFromEnum(node.kind)] += 1;
             stats.direct_children += node.direct_children;
             stats.non_six_hex_colors += node.non_six_hex_colors;
+            attribute_bytes += node.attribute_bytes;
             switch (node.kind) {
                 .win_brush, .gradation, .img_brush => {
                     try std.testing.expectEqual(@as(?usize, null), node.parent_node_index);
@@ -86,6 +88,7 @@ pub const Stats = struct {
         try std.testing.expectEqualSlices(usize, &report.kind_counts, &stats.nodes);
         try std.testing.expectEqual(report.direct_children, stats.direct_children);
         try std.testing.expectEqual(report.non_six_hex_colors, stats.non_six_hex_colors);
+        try std.testing.expectEqual(report.attribute_bytes, attribute_bytes);
         return stats;
     }
 

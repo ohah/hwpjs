@@ -10,6 +10,8 @@
 
 [공통 fillBrush 원값](hwpx-fill-brush.md)은 header·section 트리의 브러시·세 변형·직접 색/이미지 노드를 순서와 부모 연결을 유지해 검사합니다. 19개 필드의 어휘는 `fill_brush_fields.zig`가 소유하며, 브러시 효과·이미지 ID 대상/렌더링은 별도 계층입니다.
 
+[마스터페이지 fillBrush](hwpx-master-fill-brush.md)는 선택된 ZIP 파트의 바이트·요소 예산만 별도로 소유하고, 브러시 필드·노드 검사는 공통 계층을 재사용합니다. 원문 전체 관측과 조건부 활성 분기 적용은 구분합니다.
+
 [구역 정의 ID 참조](hwpx-section-definition-references.md)는 기존 구역 정의 값과 header 리소스 ID 색인을 결합하는 진단 계층입니다. `0`·부재·미해결을 분리하고 원문 파싱을 재구현하지 않습니다.
 
 [HWPX 조건부 참조 선택](hwpx-switch-selection.md)은 한 정책을 이진·차트 스캐너가 공유하는 선택적 계층입니다. 기존 raw 검사와 전체 문서 분기 적용은 별개입니다.

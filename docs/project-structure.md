@@ -16,7 +16,7 @@ section 문단·run 서식 참조의 선택 결과는 기존 `section_references
 
 `secPr`의 `presentation` 속성과 직접 `fillBrush` 위치는 [구역 프레젠테이션](hwpx-section-presentation.md)이 담당합니다. 내부 필드 원값은 별도 공통 브러시 검사가 맡고, 효과 적용은 후속 책임입니다.
 
-선택된 header·section의 공통 브러시 변형과 직접 색·이미지 값은 [공통 fillBrush](hwpx-fill-brush.md)가 담당합니다. 마스터페이지와 ID 대상 해결·렌더링은 별도 단계입니다.
+선택된 header·section의 공통 브러시 변형과 직접 색·이미지 값은 [공통 fillBrush](hwpx-fill-brush.md)가 담당합니다. [마스터페이지 브러시](hwpx-master-fill-brush.md)는 동일 필드 검사기를 별도 파트 경계에서 재사용하며, ID 대상 해결·렌더링은 후속 단계입니다.
 
 구역 정의의 번호·메모 모양 ID 연결은 [구역 참조 진단](hwpx-section-definition-references.md)이 소유합니다. 진단 결과를 HWPX 문서 전체 유효성 판정으로 사용하지 않습니다.
 
@@ -92,6 +92,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
 ## 상세 문서
 
 - [GIF 블록·LZW·색인 프레임](gif-indexed.md)
+- [HWPX 마스터페이지 fillBrush 원값](hwpx-master-fill-brush.md)
 - [PrvImage 소비·이미지 검사와 GIF 집계 연결](hwp5-preview-image.md)
 
 - [BMP 파일·DIB 헤더·저장 경계](bmp-structure.md)
