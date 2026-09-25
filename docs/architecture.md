@@ -102,6 +102,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [그림 이미지 연결](hwpx-picture-image-links.md)은 section과 마스터페이지 원문 XML 트리의 직접 `pic/img` 사이트를 공통 OPF ID 해결 규칙에 연결합니다. 마스터페이지 XML 트리 생성은 브러시·그림 연결이 같은 소유 모듈을 재사용하며, 이미지 내용 해석은 별도 후속 책임입니다.
 
+[그림 이미지 바이트 검사](hwpx-picture-image-payloads.md)는 이미 해결된 사이트를 공통 `image_payloads.zig`에 전달합니다. 브러시·그림의 ZIP/시그니처/한도 규칙을 중복하지 않으며, 이미지 내용의 미지원 형식과 부분 검사 깊이는 각 대상 결과에 명시합니다.
+
 [마스터페이지 차트 경로·XML 검사](hwpx-master-chart-references.md)는 section의 차트 경로 스캐너와 대상 Resolver를 재사용하고, 마스터페이지 직접 `subList` 범위와 별도 예산·보고서만 소유합니다. 기본 원문과 명시적 선택 분기를 구분합니다.
 
 [마스터페이지 표 격자](hwpx-master-table-geometry.md)는 같은 파트 선택·직접 `subList` 경계를 사용하고 section의 표·셀 필드 판정에 위임합니다. 별도 표 파서를 두지 않습니다.

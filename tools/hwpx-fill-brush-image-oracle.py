@@ -90,6 +90,67 @@ def picture_archive(archive):
     return counts
 
 
+def picture_payload_archive(archive):
+    counts = Counter()
+    _, by_id, parts = selected_items(archive)
+    seen = set()
+    for source, _, href in parts:
+        if source == "document" and href == "Contents/header.xml":
+            continue
+        for leaf in picture_leaves(ET.fromstring(archive.read(href))):
+            counts[source + "_sites"] += 1
+            pair = by_id.get(leaf.get("binaryItemIDRef"))
+            if pair is None or pair[1].get("isEmbeded") == "0":
+                counts[source + "_non_embedded"] += 1
+                continue
+            index, item = pair
+            if (source, index) in seen:
+                continue
+            seen.add((source, index))
+            target_href = item.get("href")
+            if target_href not in archive.namelist():
+                raise ValueError("missing embedded picture target")
+            info = archive.getinfo(target_href)
+            if info.file_size > 64 * 1024 * 1024:
+                counts[source + "_oversize"] += 1
+                continue
+            data = archive.read(target_href)
+            kind = byte_format(data)
+            counts[source + "_targets"] += 1
+            counts[source + "_" + kind] += 1
+            if kind == "unknown":
+                counts[source + "_unknown_media_" + str(item.get("media-type"))] += 1
+                counts[source + "_unknown_signature_" + data[:8].hex()] += 1
+            counts[source + "_media_mismatch"] += kind != "unknown" and not matching_media(kind, item.get("media-type"))
+            counts[source + "_encoded_bytes"] += len(data)
+            if kind == "png":
+                bad, malformed = png_defects(data)
+                counts[source + "_invalid_png_targets"] += bad != 0 or malformed
+                counts[source + "_bad_png_crc_chunks"] += bad
+                counts[source + "_malformed_png_targets"] += malformed
+    return counts
+
+
+def collect_picture_payloads():
+    shards = [Counter() for _ in range(8)]
+    for root_index, root in enumerate(ROOTS):
+        for path in root.rglob("*.hwpx"):
+            shard = (root_index + sum(os.fsencode(str(path.relative_to(root))))) % 8
+            counts = shards[shard]
+            counts["files"] += 1
+            try:
+                with zipfile.ZipFile(path) as archive:
+                    if encrypted(archive):
+                        counts["encrypted"] += 1
+                        continue
+                    document = picture_payload_archive(archive)
+            except (zipfile.BadZipFile, KeyError, OSError, ET.ParseError, ValueError):
+                counts["unreadable"] += 1
+            else:
+                counts.update(document)
+    return shards
+
+
 def collect_pictures():
     shards = [Counter() for _ in range(8)]
     for root_index, root in enumerate(ROOTS):
@@ -188,7 +249,7 @@ def payload_archive(archive):
             kind = byte_format(data)
             counts[source + "_targets"] += 1
             counts[source + "_" + kind] += 1
-            counts[source + "_media_mismatch"] += not matching_media(kind, item.get("media-type"))
+            counts[source + "_media_mismatch"] += kind != "unknown" and not matching_media(kind, item.get("media-type"))
             counts[source + "_encoded_bytes"] += len(data)
             if kind == "png":
                 bad, malformed = png_defects(data)
@@ -282,8 +343,12 @@ def self_test():
         archive.writestr("BinData/image.png", b"image")
     with zipfile.ZipFile(pictured_archive) as archive:
         picture_counts = picture_archive(archive)
+        picture_payload_counts = picture_payload_archive(archive)
     assert [picture_counts["document_" + state] for state in ("embedded", "external", "missing", "empty", "absent")] == [1] * 5
     assert picture_counts["master_embedded"] == 1 and picture_counts["document_sites"] == 5
+    assert picture_payload_counts["document_targets"] == 1 and picture_payload_counts["document_non_embedded"] == 4
+    assert picture_payload_counts["master_targets"] == 1 and picture_payload_counts["master_encoded_bytes"] == 5
+    assert picture_payload_counts["document_media_mismatch"] == 0 and picture_payload_counts["master_media_mismatch"] == 0
     assert byte_format(bytes.fromhex("89504e470d0a1a0a")) == "png"
     assert byte_format(bytes.fromhex("ffd8")) == "jpeg"
     assert not matching_media("png", "image/jpg")
@@ -343,8 +408,12 @@ def main():
         for index, counts in enumerate(collect_pictures()):
             print(index, dict(sorted(counts.items())))
         return
+    if sys.argv[1:] == ["--picture-payloads"]:
+        for index, counts in enumerate(collect_picture_payloads()):
+            print(index, dict(sorted(counts.items())))
+        return
     if len(sys.argv) != 1:
-        raise SystemExit("usage: hwpx-fill-brush-image-oracle.py [--self-test|--payloads|--pictures]")
+        raise SystemExit("usage: hwpx-fill-brush-image-oracle.py [--self-test|--payloads|--pictures|--picture-payloads]")
     for index, counts in enumerate(collect()):
         print(index, dict(sorted(counts.items())))
 

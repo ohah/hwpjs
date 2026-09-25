@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[HWPX 그림 이미지 바이트 검사](hwpx-picture-image-payloads.md)는 `zig test src/root.zig --test-filter 'HWPX picture image payloads'`로 형식·중복·한도·오류·OOM·추적 파일·master 조립을 검사합니다. 기존 브러시의 동일 코어 회귀는 `--test-filter 'HWPX fill brush image payloads'`로 확인합니다. `python3 tools/hwpx-fill-brush-image-oracle.py --self-test`와 `--picture-payloads`는 독립 반례·실파일 형식/바이트 분포를 제공하며, 아래 known survey의 ReleaseFast 8개 shard가 제품 결과와 대조합니다.
+
 [HWPX 그림 이미지 OPF 연결](hwpx-picture-image-links.md)은 `zig test src/root.zig --test-filter 'HWPX picture image links'`로 다섯 상태·직접 부모/namespace·한도·OOM·추적 실파일을 검사합니다. `python3 tools/hwpx-fill-brush-image-oracle.py --self-test`와 `--pictures`가 직접 `pic/img`의 독립 대조값을 생성합니다. 아래 `HWPX known document inspections shard N`을 N=0..7 각각 ReleaseFast 프로세스로 실행해 1993개 section/35개 마스터페이지 사이트와 OPF 항목 인덱스 합계를 확인합니다.
 
 [HWPX fillBrush 이미지 바이트 검사](hwpx-fill-brush-image-payloads.md)는 `zig test src/root.zig --test-filter 'HWPX fill brush image payloads'`로 형식·MIME 편차·중복·한도·내부 체크섬·OOM·추적 실파일을 검사합니다. `python3 tools/hwpx-fill-brush-image-oracle.py --self-test`와 `--payloads`가 선택 실파일의 형식·고유 대상·바이트·MIME 불일치를 독립 조사합니다. 아래 known survey의 8개 ReleaseFast shard를 N=0..7 각각 실행해 대조합니다.

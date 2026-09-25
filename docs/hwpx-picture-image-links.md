@@ -6,6 +6,8 @@
 
 이 보고서는 **원문 트리의 직접 부모 관계**를 검사합니다. 기존 스트리밍 [이진 참조 집계](hwpx-binary-references.md)는 section의 run/container/switch 범위 및 마스터페이지의 직접 `subList` 범위만 세므로, 임의 XML에서 두 결과가 같아야 한다고 가정하지 않습니다. 특히 마스터페이지의 `subList` 밖 그림은 이 원문 보고서에 남지만 스트리밍 보고서에는 없을 수 있습니다. 조건부 분기의 활성 선택, 그림 객체의 크기·자르기·회전·배치, 이미지 바이트 유효성·렌더링·편집·저장은 후속 책임입니다.
 
+해결된 내장 대상의 바이트 시그니처와 형식별 검사는 [그림 이미지 바이트 검사](hwpx-picture-image-payloads.md)가 별도로 소유합니다.
+
 ## 독립 대조와 적대적 경계
 
 `python3 tools/hwpx-fill-brush-image-oracle.py --pictures`는 Python의 ZIP/ElementTree로 선택 OPF 파트의 직접 `pic/img`만 독립 추출합니다. 로컬 HWPX 484개에서 ZIP 거부 6개·암호화 2개를 제외한 476개에서 section 참조 1993건(내장 1945, 외부 7, 빈 ID 41), 마스터페이지 참조 35건(전부 내장)을 관측했습니다. 이 표본의 absent/missing은 0건이나 합성 테스트에서 다섯 상태를 별도로 검사합니다. 선택 실파일 8개 ReleaseFast shard는 출처별 참조 수·상태·OPF 항목 인덱스 합계를 독립 조사값과 대조합니다. 표본 분포는 모든 HWPX의 유효성 증명이 아닙니다.

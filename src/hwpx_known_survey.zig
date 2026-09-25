@@ -10,6 +10,7 @@ const fill_brush_stats = @import("hwpx_fill_brush_survey_stats.zig");
 const fill_brush_image_stats = @import("hwpx_fill_brush_image_survey_stats.zig");
 const fill_brush_payload_stats = @import("hwpx_fill_brush_payload_survey_stats.zig");
 const picture_image_stats = @import("hwpx_picture_image_survey_stats.zig");
+const picture_payload_stats = @import("hwpx_picture_payload_survey_stats.zig");
 const master_fill_brush_stats = @import("hwpx_master_fill_brush_survey_stats.zig");
 
 const sub_list_field_count = para_list_attributes.field_names.len;
@@ -280,6 +281,7 @@ const Statistics = struct {
     fill_brush_image_links: fill_brush_image_stats.Stats,
     fill_brush_image_payloads: fill_brush_payload_stats.Stats,
     picture_images: picture_image_stats.Stats,
+    picture_payloads: picture_payload_stats.Stats,
     master_fill_brushes: master_fill_brush_stats.Stats,
     paragraphs: usize,
     paragraph_children: package.ParagraphChildrenReport,
@@ -1117,6 +1119,7 @@ fn inspectOne(bytes: []const u8) !Outcome {
         .fill_brush_image_links = try fill_brush_image_stats.Stats.from(document.manifest, &known),
         .fill_brush_image_payloads = try fill_brush_payload_stats.Stats.from(document.manifest, &known),
         .picture_images = try picture_image_stats.Stats.from(document.manifest, &known),
+        .picture_payloads = try picture_payload_stats.Stats.from(document.manifest, &known),
         .master_fill_brushes = try master_fill_brush_stats.Stats.from(known.master_page_fill_brushes, known.master_pages),
         .paragraphs = known.paragraph_metadata.paragraphs,
         .paragraph_children = known.paragraph_children,
@@ -1191,6 +1194,7 @@ fn surveyShard(shard: usize) !void {
     var fill_brush_image_links: fill_brush_image_stats.Stats = .{};
     var fill_brush_image_payloads: fill_brush_payload_stats.Stats = .{};
     var picture_images: picture_image_stats.Stats = .{};
+    var picture_payloads: picture_payload_stats.Stats = .{};
     var master_fill_brushes: master_fill_brush_stats.Stats = .{};
     var paragraphs: usize = 0;
     var paragraph_children: package.ParagraphChildrenReport = .{};
@@ -1285,6 +1289,7 @@ fn surveyShard(shard: usize) !void {
                     fill_brush_image_links.merge(stats.fill_brush_image_links);
                     fill_brush_image_payloads.merge(stats.fill_brush_image_payloads);
                     picture_images.merge(stats.picture_images);
+                    picture_payloads.merge(stats.picture_payloads);
                     master_fill_brushes.merge(stats.master_fill_brushes);
                     page_geometry.pages += stats.page_geometry.pages;
                     page_geometry.widely += stats.page_geometry.widely;
@@ -1571,10 +1576,21 @@ fn surveyShard(shard: usize) !void {
     try std.testing.expectEqual(expected.picture_image_external[shard], picture_images.document.external);
     try std.testing.expectEqual(expected.picture_image_empty[shard], picture_images.document.empty);
     try std.testing.expectEqual(expected.picture_image_target_index_sums[shard], picture_images.document.target_index_sum);
+    try std.testing.expectEqual(expected.picture_payload_targets[shard], picture_payloads.document.targets);
+    try std.testing.expectEqualSlices(usize, &expected.picture_payload_formats[shard], &picture_payloads.document.formats);
+    try std.testing.expectEqual(expected.picture_payload_media_mismatches[shard], picture_payloads.document.mismatches);
+    try std.testing.expectEqual(expected.picture_payload_encoded_bytes[shard], picture_payloads.document.encoded_bytes);
+    try std.testing.expectEqual(expected.picture_payload_non_embedded[shard], picture_payloads.document.non_embedded);
+    try std.testing.expect(picture_payloads.document.png_failures >= expected.picture_payload_invalid_png_minimum[shard]);
     try std.testing.expectEqual(expected.master_picture_image_sites[shard], picture_images.master.sites);
     try std.testing.expectEqual(expected.master_picture_image_sites[shard], picture_images.master.embedded);
     try std.testing.expectEqual(@as(usize, 0), picture_images.master.external + picture_images.master.empty);
     try std.testing.expectEqual(expected.master_picture_image_target_index_sums[shard], picture_images.master.target_index_sum);
+    try std.testing.expectEqual(expected.master_picture_payload_targets[shard], picture_payloads.master.targets);
+    try std.testing.expectEqual(expected.master_picture_payload_encoded_bytes[shard], picture_payloads.master.encoded_bytes);
+    try std.testing.expectEqual(expected.master_picture_image_sites[shard], picture_payloads.master.sites);
+    try std.testing.expectEqual(@as(usize, 0), picture_payloads.master.non_embedded + picture_payloads.master.mismatches + picture_payloads.master.failures);
+    try std.testing.expectEqualSlices(usize, &[_]usize{ 0, picture_payloads.master.targets, 0, 0, 0 }, &picture_payloads.master.formats);
     try std.testing.expectEqual(expected.fill_brush_image_link_sites[shard], fill_brush_image_links.document_embedded);
     try std.testing.expectEqual(expected.fill_brush_image_target_index_sums[shard], fill_brush_image_links.document_target_index_sum);
     try std.testing.expectEqual(expected.fill_brush_image_payload_targets[shard], fill_brush_image_payloads.targets);

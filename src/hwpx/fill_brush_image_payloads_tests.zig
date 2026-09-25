@@ -97,11 +97,11 @@ test "HWPX fill brush image payloads decode unique targets and preserve media di
     try std.testing.expectEqual(@as(usize, 4), report.non_embedded_sites);
     try std.testing.expectEqual(@as(usize, 2), report.targets.len);
     try std.testing.expectEqual(@as(usize, 2), report.targets[0].references);
-    try std.testing.expect(report.targets[0].format == .png and !report.targets[0].media_matches);
+    try std.testing.expect(report.targets[0].format == .png and report.targets[0].media_matches == false);
     try std.testing.expect(report.targets[0].inspection == .png_scanlines);
-    try std.testing.expect(report.targets[1].format == .unknown and !report.targets[1].media_matches);
+    try std.testing.expect(report.targets[1].format == .unknown and report.targets[1].media_matches == null);
     try std.testing.expect(report.targets[1].inspection == .unsupported);
-    try std.testing.expectEqual(@as(usize, 2), report.media_mismatches);
+    try std.testing.expectEqual(@as(usize, 1), report.media_mismatches);
     try std.testing.expectEqual(@as(usize, 1), report.unknown_formats);
     try std.testing.expect(report.encoded_bytes > 0);
     try std.testing.expect(report.png_decoded_bytes > 0);

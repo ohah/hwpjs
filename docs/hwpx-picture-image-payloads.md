@@ -1,0 +1,17 @@
+# HWPX 그림 이미지 바이트 검사
+
+선택 section·마스터페이지의 직접 `hp:pic/hc:img`가 [OPF 항목으로 해결된 뒤](hwpx-picture-image-links.md), `picture_image_payloads.zig`가 내장 항목의 실제 ZIP 바이트를 검사합니다. ZIP 해제·길이/CRC, 정확한 manifest `href` 대조, 고유 항목 중복 제거, 형식 시그니처와 MIME 진단, PNG/JPEG/BMP/GIF 검사, 합계 자원 한도는 `image_payloads.zig` 한 곳이 소유합니다. [브러시 이미지 바이트 검사](hwpx-fill-brush-image-payloads.md)도 같은 코어를 호출합니다. 그림 래퍼는 기존 OPF ID 해결 함수를 다시 호출해 사이트의 absent/empty/embedded/external/missing 상태와 항목 인덱스가 정규화 ID에 실제로 대응하는지 확인합니다. 조작된 상태로 내장 payload 검사를 우회할 수 없습니다. 내장 대상의 반복 참조는 한 번만 해제하며 `Target.references`로 보존합니다.
+
+`Document.inspectPictureImagePayloads()`와 `inspectMasterPagePictureImagePayloads()`는 각각 원문 링크·payload 검사를 개별 실행하고, `inspectKnown()`은 두 보고서를 독립 소유합니다. 외부 URL·빈 값·부재·미해결 ID는 읽지 않고 `non_embedded_sites`에만 셉니다. 각 보고서는 기본적으로 고유 대상 10만 개, 엔트리 64MiB, 인코딩 합계 512MiB, PNG 복원 바이트 256MiB 및 GIF 인덱스/코드/프레임 합계 한도를 적용합니다. 한도와 ZIP CRC 오류·메모리 부족은 함수 오류이며, 이미지 내부 형식 오류는 대상별 `inspection_error` 진단입니다. `inspectKnown()` 성공은 모든 대상이 유효한 이미지라는 뜻이 아닙니다.
+
+PNG는 픽셀/스캔라인, JPEG는 마커·엔트로피 **경계**, BMP는 파일·DIB·픽셀 영역 **구조**, GIF는 프레임 인덱스까지 검사합니다. JPEG 계수·색상 복원, BMP 픽셀 복호화, GIF 합성·색 관리와 화면 렌더링은 포함되지 않습니다. 현재 검사기가 인식하지 않는 시그니처는 `unknown_formats`이며 정상 이미지 판정이 아닙니다. ZIP 내부 길이/CRC가 맞아도 PNG 내부 CRC가 틀릴 수 있으므로 두 층을 분리합니다.
+
+## 독립 실측과 남은 범위
+
+`python3 tools/hwpx-fill-brush-image-oracle.py --picture-payloads`는 Python ZIP/OPF/XML에서 직접 `pic/img`를 독립 선택하고, 사이트별 내장 여부·고유 manifest 항목·ZIP 바이트 시그니처·선언 MIME·PNG 청크 CRC를 조사합니다. 로컬 HWPX 484개에서 ZIP 거부 6개·암호화 2개를 제외한 476개 문서의 section 그림 사이트는 1993건이며, 내장 1945건이 고유 OPF 대상 1513개를 가리킵니다. 내장 대상의 인코딩 바이트 합계는 1,513,489,451바이트입니다. 시그니처별로 PNG 441, JPEG 344, BMP 677, GIF 19, 미지원 32개이며 판별 가능한 형식의 선언 MIME 불일치는 104개입니다. 외부 7건과 빈 ID 41건은 읽지 않았습니다. 61개 선택 마스터페이지에는 그림 사이트 35건·고유 JPEG 대상 9개·인코딩 바이트 1,096,713개가 있습니다. 고유 대상 합계는 *보고서별*이므로 section과 master에서 같은 OPF item을 가리키면 각 보고서에서 한 번씩 셉니다.
+
+시그니처 미지원 32개는 선언 MIME 기준 WMF 23, TIFF/TIF 6, SVG 2, PCX 1개입니다. 이들은 ZIP 바이트를 읽고 형식 미지원으로 남기며, `image/wmf` 등의 선언을 근거로 PNG/JPEG/BMP/GIF 검사 성공으로 바꾸지 않습니다. `Target.media_matches=null`은 형식 미지원으로 MIME 대조 자체가 불가능하다는 뜻이며 실제 불일치(false)와 분리합니다. 독립 PNG 청크 조사에서 내부 오류 대상 최소 29개가 관측됐습니다. 실제 제품의 형식 내부 진단은 PNG 이외 형식의 미지원 변형도 포함할 수 있으므로 이 수치를 전체 `inspection_failures`의 정확한 기대값으로 사용하지 않습니다. 브러시와 그림 사이의 공통 OPF 항목을 합쳐 문서 전체에서 한 번만 검사하는 API는 아직 없고, 이 바이트 검사는 그림의 배치·자르기·회전·렌더링·편집·저장 또는 HWPX 전체 XSD/의미 유효성을 보증하지 않습니다.
+
+전용 테스트는 중복 참조, 외부/빈/부재/미해결 건너뛰기, MIME 불일치·unknown, ZIP CRC와 PNG 내부 CRC의 서로 다른 오류 경로, 위조된 사이트 ID·상태, 정확한 대상/바이트/PNG 한도, 모든 할당 실패, Git 추적 그림 HWPX, section과 master의 분리된 Known 조립을 검사합니다. ReleaseFast 8개 실파일 shard는 독립 조사기의 사이트·고유 대상·형식·MIME 불일치·인코딩 바이트 값과 대조합니다. 재현 명령은 [개발·검증 명령](development-commands.md)을 따릅니다.
+
+2026-09-25 최종 소스에서 전용 그림 테스트는 Debug·ReleaseSafe·ReleaseFast 각각 8/8, 기존 공통 코어 브러시 테스트는 각 모드 9/9 통과했습니다. 독립 oracle 자체 반례와 8개 ReleaseFast 실파일 shard도 통과했고, 전체 Debug `zig build test --summary all`은 종료 코드 0·5/5 단계·2,456/2,456 테스트를 통과했습니다. ReleaseSafe 제품 빌드·CFB 비교 47/47·전체 audit도 각각 종료 코드 0입니다. 전체 빌드와 audit 출력에는 `failed command` 러너 문구가 섞였으나 빌드 최종 요약과 프로세스 종료 상태는 성공입니다. 성공한 `inspectKnown()`도 대상별 내부 형식 오류·미지원 형식·MIME 불일치 진단이 0이라는 뜻은 아닙니다.

@@ -45,7 +45,7 @@ fn group(items: manifest.Manifest, linked: *const links.Report, report: *const p
         try std.testing.expect(target.format != .unknown);
         references += target.references;
         bytes += target.encoded_bytes;
-        mismatches += @intFromBool(!target.media_matches);
+        mismatches += @intFromBool(target.media_matches == false);
         invalid += @intFromBool(target.inspection_error != null);
         switch (target.format) {
             .png => result.png += 1,

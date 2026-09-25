@@ -1,10 +1,10 @@
 # HWPX fillBrush 이미지 바이트 검사
 
-`src/hwpx/fill_brush_image_payloads.zig`는 [이미지 OPF 연결](hwpx-fill-brush-image-links.md)이 embedded로 확인한 manifest 항목만 ZIP에서 읽습니다. OPF 항목 인덱스와 ZIP 엔트리 인덱스뿐 아니라 실제 ZIP 경로가 manifest `href`와 같은지도 확인합니다. 항목별로 한 번 해제하며 ZIP 길이·CRC는 기존 `Archive.decode`가 검사합니다. 다른 출처의 참조가 같은 항목을 가리키면 `Target.references`만 증가합니다. `Document.inspectKnown()`은 header·section과 마스터페이지의 원값·링크·바이트 보고서를 각각 소유합니다. 외부·부재·빈 값·미해결 ID는 네트워크/파일에 접근하지 않으며, 원래의 링크 상태를 보존하고 `non_embedded_sites`에 셉니다.
+`src/hwpx/fill_brush_image_payloads.zig`는 [이미지 OPF 연결](hwpx-fill-brush-image-links.md)이 embedded로 확인한 manifest 항목만 ZIP에서 읽습니다. ZIP/형식/한도 판정은 [그림 이미지 검사](hwpx-picture-image-payloads.md)도 재사용하는 `image_payloads.zig` 한 곳이 소유하고 브러시 모듈은 출처 보고서를 전달합니다. OPF 항목 인덱스와 ZIP 엔트리 인덱스뿐 아니라 실제 ZIP 경로가 manifest `href`와 같은지도 확인합니다. 항목별로 한 번 해제하며 ZIP 길이·CRC는 기존 `Archive.decode`가 검사합니다. 다른 출처의 참조가 같은 항목을 가리키면 `Target.references`만 증가합니다. `Document.inspectKnown()`은 header·section과 마스터페이지의 원값·링크·바이트 보고서를 각각 소유합니다. 외부·부재·빈 값·미해결 ID는 네트워크/파일에 접근하지 않으며, 원래의 링크 상태를 보존하고 `non_embedded_sites`에 셉니다.
 
 형식은 OPF `media-type`이나 파일 확장자가 아닌 바이트 시그니처로 고릅니다. PNG는 공통 PNG 픽셀/스캔라인 검사, JPEG는 공통 JPEG 마커·엔트로피 **경계** 검사, BMP는 공통 BMP 파일·DIB·픽셀 영역 **구조** 검사, GIF는 공통 GIF 프레임 인덱스 복호화를 적용합니다. 각 `Target.inspection`이 시도한 깊이를 명시하고 `inspection_error`는 실제 실패 이유를 별도로 보존합니다. 알 수 없는 형식은 `unknown_formats`로 남기고 유효한 이미지로 세지 않습니다. JPEG 계수/색상 복원과 BMP 픽셀 복호화, GIF 합성/색 관리, 이미지 렌더링은 아직 완료되지 않았습니다.
 
-`media_matches`는 알려진 형식과 선언된 media-type의 정확한 대응만 표시합니다. JPEG의 `image/jpeg`와 실파일에 관측된 `image/jpg`를 모두 대응으로 인정하지만 원문을 바꾸지 않습니다. 선언/바이트가 달라도 실제 형식 검사 결과를 버리거나 묵시적으로 교정하지 않으며 `media_mismatches`로 진단합니다. 화면 표시·저장 단계의 출력 MIME 정책을 여기서 추정하지 않습니다.
+`media_matches`는 알려진 형식과 선언된 media-type의 정확한 대응만 표시합니다. 시그니처를 모르는 형식은 `null`로 남겨 MIME 판정 불가와 실제 불일치(false)를 구분합니다. JPEG의 `image/jpeg`와 실파일에 관측된 `image/jpg`를 모두 대응으로 인정하지만 원문을 바꾸지 않습니다. 선언/바이트가 달라도 실제 형식 검사 결과를 버리거나 묵시적으로 교정하지 않으며 판별 가능한 형식의 불일치만 `media_mismatches`로 진단합니다. 화면 표시·저장 단계의 출력 MIME 정책을 여기서 추정하지 않습니다.
 
 `max_targets`, `max_entry_bytes`, `max_total_encoded_bytes`와 PNG 해제 스캔라인 바이트·GIF 인덱스/코드/프레임의 누적 한도는 각 보고서에 별도로 적용됩니다. `encoded_bytes`는 고유 manifest 항목의 해제된 바이트 합계이며 ZIP 해제 결과는 즉시 `archive.allocator`로 반환합니다. 보고서는 출처 사이트 인덱스와 항목/ZIP 인덱스 및 스칼라 결과만 소유하므로 원본 문서가 해제되면 ID·경로는 역참조할 수 없습니다. 검사에 실패하면 이전 보고서와 임시 버퍼를 모두 정리합니다.
 

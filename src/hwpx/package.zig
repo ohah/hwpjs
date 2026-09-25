@@ -44,6 +44,7 @@ const fill_brush_image_links = @import("fill_brush_image_links.zig");
 const fill_brush_image_payloads = @import("fill_brush_image_payloads.zig");
 const picture_image_links = @import("picture_image_links.zig");
 const masterpage_picture_image_links = @import("masterpage_picture_image_links.zig");
+const picture_image_payloads = @import("picture_image_payloads.zig");
 const masterpage_fill_brush = @import("masterpage_fill_brush.zig");
 const section_page_border_refs = @import("section_page_border_refs.zig");
 const section_definition_refs = @import("section_definition_refs.zig");
@@ -211,12 +212,16 @@ pub const FillBrushImagePayloadOptions = fill_brush_image_payloads.Options;
 pub const FillBrushImagePayloadReport = fill_brush_image_payloads.Report;
 pub const PictureImageLinkOptions = picture_image_links.Options;
 pub const PictureImageLinkReport = picture_image_links.Report;
+pub const PictureImagePayloadOptions = picture_image_payloads.Options;
+pub const PictureImagePayloadReport = picture_image_payloads.Report;
 pub const PictureImageOptions = struct {
     trees: XmlTreesOptions = .{},
     links: PictureImageLinkOptions = .{},
 };
 pub const MasterPagePictureImageLinkOptions = masterpage_picture_image_links.Options;
 pub const MasterPagePictureImageLinkReport = masterpage_picture_image_links.Report;
+pub const MasterPagePictureImagePayloadOptions = picture_image_payloads.Options;
+pub const MasterPagePictureImagePayloadReport = picture_image_payloads.Report;
 pub const MasterPagePictureImageOptions = struct {
     master_pages: MasterPageOptions = .{},
     pictures: MasterPagePictureImageLinkOptions = .{},
@@ -314,6 +319,7 @@ pub const KnownOptions = struct {
     master_page_fill_brush_image_links: fill_brush_image_links.Options = .{},
     master_page_fill_brush_image_payloads: fill_brush_image_payloads.Options = .{},
     master_page_picture_image_links: masterpage_picture_image_links.Options = .{},
+    master_page_picture_image_payloads: picture_image_payloads.Options = .{},
     structure: StructureOptions = .{},
     header_resources: HeaderResourceOptions = .{},
     section_references: ReferenceOptions = .{},
@@ -342,6 +348,7 @@ pub const KnownOptions = struct {
     fill_brush_image_links: FillBrushImageLinkOptions = .{},
     fill_brush_image_payloads: FillBrushImagePayloadOptions = .{},
     picture_image_links: PictureImageLinkOptions = .{},
+    picture_image_payloads: PictureImagePayloadOptions = .{},
 };
 pub const DocumentOptions = struct {
     // The archive index also contains large BinData/section entries. Their
@@ -511,11 +518,23 @@ pub const Document = struct {
         return picture_image_links.inspectSections(a, self.manifest, trees.sections, options.links);
     }
 
+    pub fn inspectPictureImagePayloads(self: *const Document, a: std.mem.Allocator, links_options: PictureImageOptions, options: PictureImagePayloadOptions) !PictureImagePayloadReport {
+        var linked = try self.inspectPictureImageLinks(a, links_options);
+        defer linked.deinit(a);
+        return picture_image_payloads.inspect(a, self.archive, self.manifest, &linked, options);
+    }
+
     /// Per-element raw pic/img OPF links in manifest-selected master pages.
     pub fn inspectMasterPagePictureImageLinks(self: *const Document, a: std.mem.Allocator, options: MasterPagePictureImageOptions) !MasterPagePictureImageLinkReport {
         var pages = try self.inspectMasterPages(a, options.master_pages);
         defer pages.deinit(a);
         return masterpage_picture_image_links.inspect(a, self.archive, self.manifest, pages.parts.parts, options.pictures);
+    }
+
+    pub fn inspectMasterPagePictureImagePayloads(self: *const Document, a: std.mem.Allocator, links_options: MasterPagePictureImageOptions, options: MasterPagePictureImagePayloadOptions) !MasterPagePictureImagePayloadReport {
+        var linked = try self.inspectMasterPagePictureImageLinks(a, links_options);
+        defer linked.deinit(a);
+        return picture_image_payloads.inspect(a, self.archive, self.manifest, &linked, options);
     }
 
     /// Runs all currently exposed HWPX inspections on this document. A
