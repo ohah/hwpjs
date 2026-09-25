@@ -1,5 +1,7 @@
 # HWPX OPF 이미지 후보 전수 검사
 
+[JPEG 후보는 기본적으로 경계까지만 검사하고, 명시적 선택 시 공통 JFIF RGB를 복호화합니다](hwpx-jpeg-pixels.md).
+
 [BMP 후보는 공통 RGBA 픽셀 검사](hwpx-bmp-pixels.md)를 기본으로 수행합니다. 구조 성공과 픽셀 성공, 누적 RGBA 바이트와 실패 진단은 별도 계약을 따릅니다.
 
 ## 범위와 소유권

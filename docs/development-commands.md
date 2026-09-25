@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[HWPX JPEG 선택 픽셀 검사](hwpx-jpeg-pixels.md)는 `zig test src/root.zig --test-filter 'HWPX manifest JPEG'`, `--test-filter 'HWP JPEG'`, `--test-filter 'HWPX known inspections opt into JPEG'`로 공유 코어·ZIP 연결·실파일 단일 사례를 검사합니다. `python3 tools/hwpx-fill-brush-image-oracle.py --self-test`와 `--jpeg-readiness`는 독립 후보·Pillow 해제 분포를 조사합니다. `zig test src/hwpx_jpeg_pixel_survey.zig -O ReleaseFast --test-filter 'HWPX JPEG pixel shard N'`의 N=0..7은 로컬 두 corpus가 필요한 선택 실파일 검사이며 기본 audit에 포함되지 않습니다.
+
 [HWPX BMP 픽셀 검사](hwpx-bmp-pixels.md)는 `zig test src/root.zig --test-filter 'HWPX manifest BMP'`와 그림·브러시의 기존 `HWPX picture image payloads`·`HWPX fill brush image payloads` 필터로 공유 경로를 검사합니다. 독립 Pillow 11.3.0 조사 `python3 tools/hwpx-fill-brush-image-oracle.py --bmp-pixels`와 `zig test src/hwpx_bmp_pixel_survey.zig -O ReleaseFast --test-filter 'HWPX BMP pixel shard N'`의 N=0..7은 로컬 `reference/rhwp`가 필요한 선택 실파일 검사이며 기본 audit에 포함되지 않습니다.
 
 [HWPX OLE 관측 편차 복사본 검사](hwpx-ole-observed-repairs.md)는 `zig test src/root.zig --test-filter 'CFB observed repairs'` 및 `--test-filter 'HWPX OLE payloads'`로 strict 분리·한도·OOM을 확인합니다. 독립 `python3 tools/hwpx-ole-payload-oracle.py --self-test` 및 로컬 BSD olefile 0.47이 있는 경우 `--compat`를 실행합니다. 8개 실파일 shard는 `zig test src/hwpx_ole_repair_survey.zig -O ReleaseFast --test-filter 'HWPX OLE normalized shard N'`을 N=0..7 각각 실행합니다. 이 선택 조사는 기본 audit에 포함되지 않습니다.

@@ -40,6 +40,25 @@ test "HWPX fill brush image payloads share SVG structure and MIME diagnostics" {
     try std.testing.expectEqual(@as(usize, 1), report.media_mismatches);
 }
 
+test "HWPX fill brush image payloads opt into shared JPEG RGB" {
+    const a = std.testing.allocator;
+    const encoded = &@import("../hwp5/container/jpeg_image_fixture.zig").sequential;
+    const sources = [_]fixture.Source{.{ .name = "BinData/brush.jpg", .data = encoded }};
+    const bytes = try fixture.storedZip(a, &sources);
+    defer a.free(bytes);
+    var archive = try zip.open(a, bytes, .{});
+    defer archive.deinit();
+    var items = [_]manifest.Item{item("jpeg", sources[0].name, "image/jpeg", 0)};
+    const opf: manifest.Manifest = .{ .items = &items, .spine = @constCast(&[_]manifest.SpineRef{}), .xml_bytes = 0 };
+    var sites = [_]links.Site{site(.embedded, 0)};
+    const raw: links.Report = .{ .header_and_sections = 1, .master_pages = 0, .sites = &sites, .counts = @splat(0) };
+    var report = try payloads.inspect(a, archive, opf, &raw, .{ .jpeg_pixels = .{} });
+    defer report.deinit(a);
+    try std.testing.expectEqual(@as(usize, 3), report.jpeg_rgb_bytes);
+    try std.testing.expectEqual(payloads.Inspection.jpeg_rgb, report.targets[0].inspection);
+    try std.testing.expectEqual(@as(?anyerror, null), report.targets[0].inspection_error);
+}
+
 fn inspectSampleWithArchiveAllocator(a: std.mem.Allocator, archive_allocator: std.mem.Allocator, options: payloads.Options, corrupt_png: bool) !payloads.Report {
     const png = try @import("../image/png/pixels_fixture.zig").image(a, 0);
     defer a.free(png);

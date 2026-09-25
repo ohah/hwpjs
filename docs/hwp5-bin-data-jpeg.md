@@ -15,7 +15,7 @@ PNG 확장자의 JPEG SOI는 기본값에서 여전히 PNG 오류입니다. 실�
 ## 책임과 단일 출처
 
 - `container/images.zig`: 형식 선택, 항목 수, PNG/JPEG의 문서별 누적 예산과 원자적인 보고서 갱신.
-- `container/jpeg_images.zig`: 구조 inspector의 콜백으로 SOF 식별 → 기존 두 JFIF RGB API 호출 → 소유 출력 해제 → scalar 근거 반환. JPEG 바이트 파서·색 공식·계수/정밀도 규칙은 구현하지 않습니다.
+- `image/jpeg/pixel_inspection.zig`: 구조 inspector의 콜백으로 SOF 식별 → 기존 두 JFIF RGB API 호출 → 소유 출력 해제 → 형식 공통 scalar 근거 반환. `container/jpeg_images.zig`는 이를 HWP 보고서로 변환하고 기존 미지원 오류 이름을 유지합니다. JPEG 바이트 파서·색 공식·계수/정밀도 규칙을 컨테이너에서 재구현하지 않습니다. [HWPX 선택 연결](hwpx-jpeg-pixels.md)도 이 형식 코어만 재사용합니다.
 - [순차 RGB](jpeg-rgb.md), [progressive RGB](jpeg-progressive-rgb.md): 원래 명시적 진입점·옵션은 그대로 유지합니다. adapter의 공통 structure/render/샘플 한도를 두 경로에 전달하며 기본 샘플/작업량 한도는 기존 Options에서 가져옵니다.
 
 프로세스 선택 때문에 전체 구조를 한 번 더 순회합니다. 단일 순회 최적화나 전체 실행 시간 상한을 입증한 것은 아닙니다. 기존 검사기를 공유하는 것이 규칙의 단일 출처이며, 순회 횟수를 하나로 만들었다는 뜻은 아닙니다.

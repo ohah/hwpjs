@@ -1,5 +1,7 @@
 # Zig/WASM 구현 구조
 
+[HWPX JPEG 선택 픽셀 검사](hwpx-jpeg-pixels.md)는 HWP5와 같은 형식 코어를 재사용하되 JPEG 구조 정책·ZIP 선택·보고서 예산은 HWPX가 소유합니다. 기본 구조 검사와 명시적 JFIF RGB 검사는 다른 깊이로 표시합니다.
+
 [HWPX BMP 픽셀 검사](hwpx-bmp-pixels.md)는 그림·브러시·OPF 전체 후보가 같은 BMP 구조·RGBA 디코더와 별도 누적 바이트 예산을 공유합니다. 구조만 본 결과와 픽셀까지 읽은 결과는 다른 검사 단계로 표시합니다.
 
 [CFB 관측 편차 복사본 검사](hwpx-ole-observed-repairs.md)는 HWPX OLE의 원본 strict 실패 뒤에만 선택적으로 호출하며, 넓은 비엄격 읽기 모드를 문서 유효성으로 승격하지 않습니다. CFB 구조 검증은 기존 strict reader가 계속 소유합니다.

@@ -143,6 +143,99 @@ def collect_bmp_pixels():
     return shards
 
 
+def jpeg_front(data):
+    """Classify only the first APP marker, not full JPEG/JFIF validity."""
+    if data[2:4] == bytes.fromhex("ffe0") and data[6:11] == bytes.fromhex("4a46494600"):
+        return "jfif_first"
+    if data[2:4] == bytes.fromhex("ffe1") and data[6:11] == bytes.fromhex("4578696600"):
+        return "exif_first"
+    return "other_first"
+
+
+def jpeg_header_metadata(data):
+    """Read marker payloads only until SOS; do not decode entropy or infer colour."""
+    result = Counter()
+    if not data.startswith(bytes.fromhex("ffd8")):
+        return result
+    at = 2
+    while at < len(data):
+        if data[at] != 0xff:
+            break
+        while at < len(data) and data[at] == 0xff:
+            at += 1
+        if at >= len(data):
+            break
+        code = data[at]
+        at += 1
+        if code == 0xda:
+            break
+        if code in (0xd8, 0xd9) or 0xd0 <= code <= 0xd7:
+            continue
+        if at + 2 > len(data):
+            break
+        size = int.from_bytes(data[at:at + 2], "big")
+        if size < 2 or at + size > len(data):
+            break
+        payload = data[at + 2:at + size]
+        at += size
+        if code == 0xe0 and payload.startswith(b"JFIF\x00"):
+            result["jfif_markers"] += 1
+        if code == 0xee and payload.startswith(b"Adobe") and len(payload) >= 12:
+            result["adobe_transform_" + str(payload[11])] += 1
+        if 0xc0 <= code <= 0xcf and code not in (0xc4, 0xc8, 0xcc) and len(payload) >= 6:
+            n = payload[5]
+            if len(payload) >= 6 + n * 3:
+                ids = tuple(payload[6 + i * 3] for i in range(n))
+                result["component_ids_" + "_".join(map(str, ids))] += 1
+    return result
+
+
+def collect_jpeg_readiness():
+    """Independent decoded-shape census before enabling JPEG pixels in HWPX."""
+    from PIL import Image, ImageFile
+
+    ImageFile.LOAD_TRUNCATED_IMAGES = False
+    shards = [Counter() for _ in range(8)]
+    for root_index, root in enumerate(ROOTS):
+        for path in root.rglob("*.hwpx"):
+            shard = (root_index + sum(os.fsencode(str(path.relative_to(root))))) % 8
+            counts = shards[shard]
+            document_rgb_bytes = 0
+            try:
+                with zipfile.ZipFile(path) as archive:
+                    if encrypted(archive):
+                        continue
+                    items, _, _ = selected_items(archive)
+                    for item in items:
+                        if not manifest_image_candidate(item) or item.get("isEmbeded") == "0":
+                            continue
+                        data = archive.read(item.get("href"))
+                        if byte_format(data) != "jpeg":
+                            continue
+                        counts["candidates"] += 1
+                        counts[jpeg_front(data)] += 1
+                        header = jpeg_header_metadata(data)
+                        counts.update(header)
+                        counts["jfif_three_adobe_zero"] += bool(header["jfif_markers"] and header["component_ids_1_2_3"] and header["adobe_transform_0"])
+                        try:
+                            with Image.open(io.BytesIO(data)) as image:
+                                image.load()
+                                counts["pillow_decoded"] += 1
+                                counts["mode_" + image.mode] += 1
+                                counts["progressive"] += bool(image.info.get("progressive"))
+                                rgb_bytes = image.width * image.height * 3
+                                counts["rgb_bytes"] += rgb_bytes
+                                document_rgb_bytes += rgb_bytes
+                                counts["max_single_rgb_bytes"] = max(counts["max_single_rgb_bytes"], rgb_bytes)
+                        except (OSError, ValueError):
+                            counts["pillow_failed"] += 1
+            except (zipfile.BadZipFile, KeyError, OSError, ET.ParseError, ValueError):
+                continue
+            counts["documents"] += 1
+            counts["max_document_rgb_bytes"] = max(counts["max_document_rgb_bytes"], document_rgb_bytes)
+    return shards
+
+
 def selected_items(archive):
     root = ET.fromstring(archive.read("Contents/content.hpf"))
     manifest_node = root.find(OPF + "manifest")
@@ -614,6 +707,14 @@ def collect():
 
 
 def self_test():
+    assert jpeg_front(bytes.fromhex("ffd8ffe000104a46494600")) == "jfif_first"
+    assert jpeg_front(bytes.fromhex("ffd8ffe100104578696600")) == "exif_first"
+    assert jpeg_front(bytes.fromhex("ffd8ffdb0004")) == "other_first"
+    assert jpeg_front(bytes.fromhex("ffd8ffdb00104a46494600")) == "other_first"
+    jfif = bytes.fromhex("ffe000104a46494600010201000100010000")
+    sof = bytes.fromhex("ffc00011080001000103") + bytes((0, 0x11, 0, 2, 0x11, 0, 3, 0x11, 0))
+    metadata = jpeg_header_metadata(bytes.fromhex("ffd8") + jfif + sof + bytes.fromhex("ffda0002"))
+    assert metadata["jfif_markers"] == 1 and metadata["component_ids_0_2_3"] == 1
     tiny_bmp = bytearray(70)
     tiny_bmp[:2] = b"BM"
     struct.pack_into("<I", tiny_bmp, 2, 70)
@@ -796,8 +897,12 @@ def main():
         for index, counts in enumerate(collect_bmp_pixels()):
             print(index, dict(sorted(counts.items())))
         return
+    if sys.argv[1:] == ["--jpeg-readiness"]:
+        for index, counts in enumerate(collect_jpeg_readiness()):
+            print(index, dict(sorted(counts.items())))
+        return
     if len(sys.argv) != 1:
-        raise SystemExit("usage: hwpx-fill-brush-image-oracle.py [--self-test|--payloads|--pictures|--picture-payloads|--manifest-images|--bmp-pixels]")
+        raise SystemExit("usage: hwpx-fill-brush-image-oracle.py [--self-test|--payloads|--pictures|--picture-payloads|--manifest-images|--bmp-pixels|--jpeg-readiness]")
     for index, counts in enumerate(collect()):
         print(index, dict(sorted(counts.items())))
 

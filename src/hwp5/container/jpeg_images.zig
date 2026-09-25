@@ -1,21 +1,7 @@
 const std = @import("std");
-const structure = @import("../../image/jpeg/structure.zig");
-const render = @import("../../image/jpeg/jfif_render.zig");
-const sequential = @import("../../image/jpeg/jfif_rgb.zig");
-const progressive = @import("../../image/jpeg/jfif_progressive_rgb.zig");
-const sequential_frame = @import("../../image/jpeg/sequential_frame.zig");
-const progressive_frame = @import("../../image/jpeg/progressive_frame.zig");
-const samples = @import("../../image/jpeg/sample_planes.zig");
+const pixels = @import("../../image/jpeg/pixel_inspection.zig");
 
-pub const Options = struct {
-    structure: structure.Options = .{},
-    render: render.Options,
-    completion: progressive_frame.Completion,
-    max_samples: usize = (samples.Options{}).max_samples,
-    max_sequential_blocks: usize = (sequential_frame.Options{}).max_blocks,
-    progressive_storage: @import("../../image/jpeg/coefficient_storage.zig").Options = .{},
-    max_progressive_block_visits: usize = (progressive_frame.Options{ .completion = .require_full }).max_block_visits,
-};
+pub const Options = pixels.Options;
 
 /// All fields are additive scalar evidence, never retained pixels/profile views.
 pub const Report = struct {
@@ -42,56 +28,29 @@ pub const Report = struct {
     }
 };
 
-const Process = struct {
-    code: u8 = 0,
-    fn accept(self: *Process, marker: @import("../../image/jpeg/markers.zig").Marker) !void {
-        if (structure.isFrame(marker.code)) self.code = marker.code;
-    }
-};
-
-fn evidence(image: render.Image, scans: usize) Report {
+fn fromEvidence(value: pixels.Evidence) Report {
     return .{
         .images = 1,
-        .rgb_bytes = image.raster.rgb.len,
-        .profile_images = @intFromBool(image.icc_chunks != 0),
-        .metadata_deferred_images = @intFromBool(image.metadata_deferred),
-        .scans = scans,
-        .adobe_headers = image.adobe_headers,
-        .unchecked_compressed_thumbnails = image.unchecked_compressed_thumbnails,
-        .unknown_extensions = image.unknown_extensions,
+        .progressive_images = @intFromBool(value.progressive),
+        .rgb_bytes = value.rgb_bytes,
+        .profile_images = @intFromBool(value.profile),
+        .metadata_deferred_images = @intFromBool(value.metadata_deferred),
+        .scans = value.scans,
+        .unseen_coefficients = value.unseen_coefficients,
+        .partial_coefficients = value.partial_coefficients,
+        .full_coefficients = value.full_coefficients,
+        .adobe_headers = value.adobe_headers,
+        .unchecked_compressed_thumbnails = value.unchecked_compressed_thumbnails,
+        .unknown_extensions = value.unknown_extensions,
     };
 }
 
-/// Dispatch from the validated SOF, never by catching a failed decoder and
-/// trying another. Every branch shares the same explicit structural policy.
+/// HWP retains its historical error name and report shape. JPEG byte parsing
+/// and pixel interpretation are owned by the format-level core.
 pub fn inspect(a: std.mem.Allocator, bytes: []const u8, options: Options, remaining_rgb_bytes: usize) !Report {
-    var process: Process = .{};
-    const boundaries = try structure.inspectWithContext(bytes, options.structure, &process, Process.accept);
-    const selected = try @import("../../image/jpeg/process.zig").fromMarker(process.code);
-    if (selected.coding != .huffman or selected.mode == .lossless) return error.UnsupportedHwpJpegProcess;
-    var rendering = options.render;
-    rendering.max_rgb_bytes = @min(rendering.max_rgb_bytes, remaining_rgb_bytes);
-    if (selected.mode == .progressive) {
-        var result = try progressive.decode(a, bytes, .{
-            .samples = .{ .frame = .{ .completion = options.completion, .structure = options.structure, .storage = options.progressive_storage, .max_block_visits = options.max_progressive_block_visits }, .max_samples = options.max_samples },
-            .render = rendering,
-        });
-        defer result.deinit(a);
-        var report = evidence(result.image, boundaries.scans);
-        report.progressive_images = 1;
-        report.unseen_coefficients = result.progression.unseen_coefficients;
-        report.partial_coefficients = result.progression.partial_coefficients;
-        report.full_coefficients = result.progression.full_coefficients;
-        return report;
-    }
-    var result = try sequential.decode(a, bytes, .{
-        .planes = .{ .frame = .{ .structure = options.structure, .max_blocks = options.max_sequential_blocks }, .max_samples = options.max_samples },
-        .upsampling = rendering.upsampling,
-        .colour_management = rendering.colour_management,
-        .max_rgb_bytes = rendering.max_rgb_bytes,
-        .max_adobe_markers = rendering.max_adobe_markers,
-        .max_icc_bytes = rendering.max_icc_bytes,
-    });
-    defer result.deinit(a);
-    return evidence(result, boundaries.scans);
+    const result = pixels.inspect(a, bytes, options, remaining_rgb_bytes) catch |err| switch (err) {
+        error.UnsupportedJpegProcess => return error.UnsupportedHwpJpegProcess,
+        else => return err,
+    };
+    return fromEvidence(result);
 }

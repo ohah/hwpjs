@@ -6,6 +6,7 @@ const payloads = @import("manifest_image_payloads.zig");
 const package = @import("package.zig");
 const bmp_fixture = @import("../image/bmp/test_fixture.zig");
 const image_core = @import("image_payloads.zig");
+const jpeg_fixture = @import("../hwp5/container/jpeg_image_fixture.zig");
 
 fn item(id: []const u8, href: []const u8, media: []const u8, entry_index: ?usize) manifest.Item {
     return .{ .id = @constCast(id), .href = @constCast(href), .media_type = @constCast(media), .embedded = if (entry_index == null) false else null, .entry_index = entry_index };
@@ -161,4 +162,84 @@ test "HWPX manifest BMP RGBA path releases every allocation failure" {
             report.deinit(a);
         }
     }.run, .{});
+}
+
+fn jpegSample(a: std.mem.Allocator, options: payloads.Options) !payloads.Report {
+    const sources = [_]fixture.Source{
+        .{ .name = "BinData/sequential.jpg", .data = &jpeg_fixture.sequential },
+        .{ .name = "BinData/progressive.jpg", .data = &jpeg_fixture.progressive },
+    };
+    const bytes = try fixture.storedZip(a, &sources);
+    defer a.free(bytes);
+    var archive = try zip.open(a, bytes, .{});
+    defer archive.deinit();
+    var items = [_]manifest.Item{
+        item("sequential", sources[0].name, "image/jpeg", 0),
+        item("progressive", sources[1].name, "image/jpeg", 1),
+    };
+    const opf: manifest.Manifest = .{ .items = &items, .spine = @constCast(&[_]manifest.SpineRef{}), .xml_bytes = 0 };
+    return payloads.inspect(a, archive, opf, options);
+}
+
+fn jpegSampleRaw(a: std.mem.Allocator, raw: []const u8, options: payloads.Options) !payloads.Report {
+    const sources = [_]fixture.Source{.{ .name = "BinData/image.jpg", .data = raw }};
+    const bytes = try fixture.storedZip(a, &sources);
+    defer a.free(bytes);
+    var archive = try zip.open(a, bytes, .{});
+    defer archive.deinit();
+    var items = [_]manifest.Item{item("image", sources[0].name, "image/jpeg", 0)};
+    const opf: manifest.Manifest = .{ .items = &items, .spine = @constCast(&[_]manifest.SpineRef{}), .xml_bytes = 0 };
+    return payloads.inspect(a, archive, opf, options);
+}
+
+test "HWPX manifest JPEG pixels are explicit and share one RGB budget" {
+    const a = std.testing.allocator;
+    var framing = try jpegSample(a, .{ .max_total_jpeg_rgb_bytes = 0 });
+    defer framing.deinit(a);
+    try std.testing.expectEqual(@as(usize, 0), framing.jpeg_rgb_bytes);
+    try std.testing.expectEqual(@as(usize, 0), framing.inspection_failures);
+    try std.testing.expectEqual(image_core.Inspection.jpeg_framing, framing.targets[0].inspection);
+    var decoded = try jpegSample(a, .{ .jpeg_pixels = .{} });
+    defer decoded.deinit(a);
+    try std.testing.expectEqual(@as(usize, 6), decoded.jpeg_rgb_bytes);
+    try std.testing.expectEqual(@as(usize, 0), decoded.inspection_failures);
+    try std.testing.expectEqual(image_core.Inspection.jpeg_rgb, decoded.targets[0].inspection);
+    try std.testing.expectEqual(image_core.Inspection.jpeg_rgb, decoded.targets[1].inspection);
+    try std.testing.expectError(error.LimitExceeded, jpegSample(a, .{ .jpeg_pixels = .{}, .max_total_jpeg_rgb_bytes = 5 }));
+    try std.testing.expectError(error.LimitExceeded, jpegSample(a, .{ .jpeg_pixels = .{ .render = .{ .upsampling = .nearest, .colour_management = .unmanaged, .max_rgb_bytes = 2 } } }));
+    try std.testing.expectError(error.LimitExceeded, jpegSample(a, .{ .jpeg_pixels = .{ .max_samples = 0 } }));
+    try std.testing.expectError(error.LimitExceeded, jpegSample(a, .{ .jpeg_pixels = .{}, .jpeg = .{ .max_scans = 0 } }));
+}
+
+test "HWPX manifest JPEG RGB path releases every allocation failure" {
+    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+        fn run(a: std.mem.Allocator) !void {
+            var report = try jpegSample(a, .{ .jpeg_pixels = .{} });
+            report.deinit(a);
+        }
+    }.run, .{});
+}
+
+test "HWPX manifest JPEG pixel errors remain target diagnostics" {
+    const a = std.testing.allocator;
+    var broken = jpeg_fixture.sequential;
+    broken[broken.len - 3] &= 0xfe;
+    var framing = try jpegSampleRaw(a, &broken, .{});
+    defer framing.deinit(a);
+    try std.testing.expectEqual(@as(usize, 0), framing.inspection_failures);
+    var pixels = try jpegSampleRaw(a, &broken, .{ .jpeg_pixels = .{} });
+    defer pixels.deinit(a);
+    try std.testing.expectEqual(@as(usize, 1), pixels.inspection_failures);
+    try std.testing.expectEqual(error.InvalidJpegEntropyPadding, pixels.targets[0].inspection_error.?);
+    try std.testing.expectEqual(@as(usize, 0), pixels.jpeg_rgb_bytes);
+    var arithmetic = jpeg_fixture.progressive;
+    const at = std.mem.indexOf(u8, &arithmetic, &.{ 255, 194 }).?;
+    arithmetic[at + 1] = 202;
+    var unsupported = try jpegSampleRaw(a, &arithmetic, .{ .jpeg_pixels = .{} });
+    defer unsupported.deinit(a);
+    try std.testing.expectEqual(error.UnsupportedJpegProcess, unsupported.targets[0].inspection_error.?);
+    var partial = try jpegSampleRaw(a, &jpeg_fixture.partial, .{ .jpeg_pixels = .{} });
+    defer partial.deinit(a);
+    try std.testing.expectEqual(error.IncompleteJpegProgressiveCoefficients, partial.targets[0].inspection_error.?);
+    try std.testing.expectEqual(@as(usize, 0), partial.jpeg_rgb_bytes);
 }

@@ -72,6 +72,23 @@ test "HWPX known inspections expose decoded BMP pixels in a real document" {
     try std.testing.expectEqual(@as(usize, 5), report.picture_image_payloads.targets[0].references);
 }
 
+test "HWPX known inspections opt into JPEG RGB for a real document" {
+    const a = std.testing.allocator;
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/shapecontainer-2.hwpx", a, .limited(100_000));
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    var report = try document.inspectKnown(a, .{ .manifest_image_payloads = .{ .jpeg_pixels = .{} }, .picture_image_payloads = .{ .jpeg_pixels = .{} } });
+    defer report.deinit(a);
+    try std.testing.expectEqual(@as(usize, 1), report.manifest_image_payloads.targets.len);
+    try std.testing.expectEqual(@as(usize, 312_480), report.manifest_image_payloads.jpeg_rgb_bytes);
+    try std.testing.expectEqual(@as(usize, 0), report.manifest_image_payloads.inspection_failures);
+    try std.testing.expectEqual(@import("image_payloads.zig").Inspection.jpeg_rgb, report.manifest_image_payloads.targets[0].inspection);
+    try std.testing.expectEqual(@as(usize, 1), report.picture_image_payloads.targets.len);
+    try std.testing.expectEqual(@as(usize, 312_480), report.picture_image_payloads.jpeg_rgb_bytes);
+    try std.testing.expectEqual(@import("image_payloads.zig").Inspection.jpeg_rgb, report.picture_image_payloads.targets[0].inspection);
+}
+
 test "HWPX known inspections include unreferenced manifest image diagnostics" {
     const a = std.testing.allocator;
     var sources = synthetic_sources ++ [_]fixture.Source{.{ .name = "BinData/unused.svg", .data = "<wrong xmlns='http://www.w3.org/2000/svg'/>" }};
