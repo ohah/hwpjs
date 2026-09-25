@@ -26,6 +26,8 @@ pub const JpegPixelOptions = struct {
     max_sequential_blocks: usize = (@import("../image/jpeg/sequential_frame.zig").Options{}).max_blocks,
     progressive_storage: @import("../image/jpeg/coefficient_storage.zig").Options = .{},
     max_progressive_block_visits: usize = (@import("../image/jpeg/progressive_frame.zig").Options{ .completion = .require_full }).max_block_visits,
+    /// Exif-first pixels require a compatible Adobe APP14 colour declaration.
+    exif_adobe_colour: bool = false,
 };
 
 /// BMP structure policy stays in Options.bmp. Pixel choices cannot silently
@@ -71,6 +73,8 @@ pub const Target = struct {
     media_matches: ?bool,
     /// True only after successful RGB decode using the explicit non-JFIF ID profile.
     observed_zero_based_jpeg_component_ids: bool = false,
+    /// Colour was selected from Adobe APP14 in an Exif-first JPEG, not JFIF.
+    jpeg_exif_adobe_colour: bool = false,
 };
 
 pub const Report = struct {
@@ -126,7 +130,7 @@ fn svgCandidate(item: manifest.Item) bool {
     return item.href.len >= 4 and std.ascii.eqlIgnoreCase(item.href[item.href.len - 4 ..], ".svg");
 }
 
-const Evidence = struct { png_decoded_bytes: usize = 0, jpeg_rgb_bytes: usize = 0, observed_zero_based_jpeg_component_ids: bool = false, bmp_rgba_bytes: usize = 0, gif_indices: usize = 0, gif_codes: usize = 0, gif_frames: usize = 0, pcx_decoded_bytes: usize = 0 };
+const Evidence = struct { png_decoded_bytes: usize = 0, jpeg_rgb_bytes: usize = 0, observed_zero_based_jpeg_component_ids: bool = false, jpeg_exif_adobe_colour: bool = false, bmp_rgba_bytes: usize = 0, gif_indices: usize = 0, gif_codes: usize = 0, gif_frames: usize = 0, pcx_decoded_bytes: usize = 0 };
 
 fn validate(a: std.mem.Allocator, bytes: []const u8, format: Format, options: Options, consumed: Evidence) !Evidence {
     switch (format) {
@@ -146,9 +150,10 @@ fn validate(a: std.mem.Allocator, bytes: []const u8, format: Format, options: Op
                     .max_sequential_blocks = pixel_options.max_sequential_blocks,
                     .progressive_storage = pixel_options.progressive_storage,
                     .max_progressive_block_visits = pixel_options.max_progressive_block_visits,
+                    .exif_adobe_colour = pixel_options.exif_adobe_colour,
                 };
                 const checked = try jpeg_pixels.inspect(a, bytes, selected, options.max_total_jpeg_rgb_bytes -| consumed.jpeg_rgb_bytes);
-                return .{ .jpeg_rgb_bytes = checked.rgb_bytes, .observed_zero_based_jpeg_component_ids = checked.observed_zero_based_component_ids };
+                return .{ .jpeg_rgb_bytes = checked.rgb_bytes, .observed_zero_based_jpeg_component_ids = checked.observed_zero_based_component_ids, .jpeg_exif_adobe_colour = checked.exif_adobe_colour };
             }
             _ = try jpeg.inspect(bytes, options.jpeg);
             return .{};
@@ -256,6 +261,7 @@ pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, items: manifest.Manif
             .encoded_bytes = bytes.len,
             .format = format,
             .observed_zero_based_jpeg_component_ids = evidence.observed_zero_based_jpeg_component_ids,
+            .jpeg_exif_adobe_colour = evidence.jpeg_exif_adobe_colour,
             .inspection = switch (format) {
                 .png => .png_scanlines,
                 .jpeg => if (options.jpeg_pixels != null) .jpeg_rgb else .jpeg_framing,

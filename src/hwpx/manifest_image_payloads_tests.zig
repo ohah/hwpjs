@@ -270,6 +270,83 @@ test "HWPX manifest JPEG zero-based component IDs require opt-in and remain visi
     }.run, .{ @as([]const u8, &raw), selected });
 }
 
+test "HWPX manifest Exif Adobe JPEG pixels require declared colour and keep errors" {
+    const a = std.testing.allocator;
+    const exif = [_]u8{ 255, 225, 0, 8 } ++ "Exif\x00\x00".*;
+    const adobe = [_]u8{ 255, 238, 0, 14 } ++ "Adobe".* ++ .{ 0, 100, 0, 0, 0, 0, 0 };
+    const suffix = jpeg_fixture.sequential[20..].*;
+    const raw = jpeg_fixture.sequential[0..2].* ++ exif ++ adobe ++ suffix;
+    var strict = try jpegSampleRaw(a, &raw, .{ .jpeg_pixels = .{} });
+    defer strict.deinit(a);
+    try std.testing.expectEqual(error.MissingJfifHeader, strict.targets[0].inspection_error.?);
+    try std.testing.expect(!strict.targets[0].jpeg_exif_adobe_colour);
+
+    const selected: payloads.Options = .{ .jpeg_pixels = .{ .exif_adobe_colour = true } };
+    var accepted = try jpegSampleRaw(a, &raw, selected);
+    defer accepted.deinit(a);
+    try std.testing.expectEqual(@as(?anyerror, null), accepted.targets[0].inspection_error);
+    try std.testing.expectEqual(@as(usize, 3), accepted.jpeg_rgb_bytes);
+    try std.testing.expect(accepted.targets[0].jpeg_exif_adobe_colour);
+    try std.testing.expect(!accepted.targets[0].observed_zero_based_jpeg_component_ids);
+    var ordinary_jfif = try jpegSampleRaw(a, &jpeg_fixture.sequential, selected);
+    defer ordinary_jfif.deinit(a);
+    try std.testing.expectEqual(@as(?anyerror, null), ordinary_jfif.targets[0].inspection_error);
+    try std.testing.expect(!ordinary_jfif.targets[0].jpeg_exif_adobe_colour);
+
+    var missing = try jpegSampleRaw(a, &(jpeg_fixture.sequential[0..2].* ++ exif ++ suffix), selected);
+    defer missing.deinit(a);
+    try std.testing.expectEqual(error.MissingAdobeColourDeclaration, missing.targets[0].inspection_error.?);
+    var conflicting = raw;
+    conflicting[std.mem.indexOf(u8, &conflicting, "Adobe").? + 11] = 1;
+    var conflict = try jpegSampleRaw(a, &conflicting, selected);
+    defer conflict.deinit(a);
+    try std.testing.expectEqual(error.UnsupportedExifAdobeColour, conflict.targets[0].inspection_error.?);
+    var wrong_print_id = raw;
+    wrong_print_id[std.mem.indexOf(u8, &wrong_print_id, "Adobe").? + 5] = 1;
+    var print_error = try jpegSampleRaw(a, &wrong_print_id, selected);
+    defer print_error.deinit(a);
+    try std.testing.expectEqual(error.InvalidPrintAdobeIdentifier, print_error.targets[0].inspection_error.?);
+    var invalid_identifier = raw;
+    invalid_identifier[std.mem.indexOf(u8, &invalid_identifier, "Exif").? + 2] ^= 1;
+    var not_exif = try jpegSampleRaw(a, &invalid_identifier, selected);
+    defer not_exif.deinit(a);
+    try std.testing.expectEqual(error.MissingJfifHeader, not_exif.targets[0].inspection_error.?);
+    var duplicate = try jpegSampleRaw(a, &(jpeg_fixture.sequential[0..2].* ++ exif ++ exif ++ adobe ++ suffix), selected);
+    defer duplicate.deinit(a);
+    try std.testing.expectEqual(error.DuplicateExifHeader, duplicate.targets[0].inspection_error.?);
+    var invalid_entropy = raw;
+    invalid_entropy[invalid_entropy.len - 3] &= 0xfe;
+    var entropy = try jpegSampleRaw(a, &invalid_entropy, selected);
+    defer entropy.deinit(a);
+    try std.testing.expectEqual(error.InvalidJpegEntropyPadding, entropy.targets[0].inspection_error.?);
+    const progressive_exif = jpeg_fixture.progressive[0..2].* ++ exif ++ adobe ++ jpeg_fixture.progressive[20..].*;
+    var progressive_ok = try jpegSampleRaw(a, &progressive_exif, selected);
+    defer progressive_ok.deinit(a);
+    try std.testing.expectEqual(@as(?anyerror, null), progressive_ok.targets[0].inspection_error);
+    try std.testing.expect(progressive_ok.targets[0].jpeg_exif_adobe_colour);
+    try std.testing.expectEqual(@as(usize, 3), progressive_ok.jpeg_rgb_bytes);
+    const partial_exif = jpeg_fixture.partial[0..2].* ++ exif ++ adobe ++ jpeg_fixture.partial[20..].*;
+    var partial = try jpegSampleRaw(a, &partial_exif, selected);
+    defer partial.deinit(a);
+    try std.testing.expectEqual(error.IncompleteJpegProgressiveCoefficients, partial.targets[0].inspection_error.?);
+    try std.testing.expectError(error.LimitExceeded, jpegSampleRaw(a, &raw, .{ .jpeg_pixels = selected.jpeg_pixels, .max_total_jpeg_rgb_bytes = 2 }));
+    try std.testing.expectError(error.LimitExceeded, jpegSampleRaw(a, &raw, .{ .jpeg_pixels = .{ .exif_adobe_colour = true, .max_samples = 0 } }));
+    try std.testing.expectError(error.LimitExceeded, jpegSampleRaw(a, &raw, .{ .jpeg_pixels = .{ .exif_adobe_colour = true, .render = .{ .upsampling = .nearest, .colour_management = .unmanaged, .max_adobe_markers = 0 } } }));
+    for (2..raw.len) |length| {
+        var truncated = try jpegSampleRaw(a, raw[0..length], selected);
+        defer truncated.deinit(a);
+        try std.testing.expect(truncated.targets[0].inspection_error != null);
+        try std.testing.expect(!truncated.targets[0].jpeg_exif_adobe_colour);
+    }
+
+    try std.testing.checkAllAllocationFailures(a, struct {
+        fn run(allocator: std.mem.Allocator, jpeg_bytes: []const u8, options: payloads.Options) !void {
+            var report = try jpegSampleRaw(allocator, jpeg_bytes, options);
+            report.deinit(allocator);
+        }
+    }.run, .{ @as([]const u8, &raw), selected });
+}
+
 test "HWPX manifest JPEG RGB path releases every allocation failure" {
     try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
         fn run(a: std.mem.Allocator) !void {

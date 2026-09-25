@@ -244,7 +244,7 @@ test "HWPX JPEG observed zero-based component ID sample" {
     try std.testing.expect(found_three and found_gray);
 }
 
-test "HWPX JPEG observed zero-based Exif header remains unsupported" {
+test "HWPX JPEG Exif Adobe zero-based sample requires both opt-ins" {
     const a = std.testing.allocator;
     const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "reference/rhwp/samples/issue5543_carried_anchor_ladder.hwpx", a, .limited(25_000_000));
     defer a.free(bytes);
@@ -254,7 +254,16 @@ test "HWPX JPEG observed zero-based Exif header remains unsupported" {
         if (!std.mem.eql(u8, entry.name, "BinData/image3.jpg")) continue;
         const encoded = try document.archive.decode(entry, 6_000_000);
         defer document.archive.allocator.free(encoded);
-        try std.testing.expectError(error.MissingJfifHeader, @import("image/jpeg/jfif_rgb.zig").decode(a, encoded, .{ .upsampling = .nearest, .colour_management = .unmanaged, .component_ids = .observed_zero_based_three }));
+        const pixels = @import("image/jpeg/pixel_inspection.zig");
+        const strict: pixels.Options = .{ .render = .{ .upsampling = .nearest, .colour_management = .unmanaged, .component_ids = .observed_zero_based_three }, .completion = .require_full };
+        try std.testing.expectError(error.MissingJfifHeader, pixels.inspect(a, encoded, strict, 64 * 1024 * 1024));
+        var selected = strict;
+        selected.exif_adobe_colour = true;
+        const accepted = try pixels.inspect(a, encoded, selected, 64 * 1024 * 1024);
+        try std.testing.expect(accepted.exif_adobe_colour and accepted.observed_zero_based_component_ids);
+        try std.testing.expectEqual(@as(usize, 3808 * 2539 * 3), accepted.rgb_bytes);
+        selected.render.component_ids = .strict;
+        try std.testing.expectError(error.UnsupportedExifComponentIds, pixels.inspect(a, encoded, selected, 64 * 1024 * 1024));
         return;
     }
     return error.MissingJpegFixture;
@@ -300,6 +309,94 @@ test "HWPX JPEG raw observed zero-based RGB stream" {
         var image = try @import("image/jpeg/jfif_rgb.zig").decode(a, encoded, .{ .upsampling = .nearest, .colour_management = .unmanaged, .component_ids = .observed_zero_based_three });
         defer image.deinit(a);
         try std.testing.expect(image.observed_zero_based_component_ids);
+        try std.Io.File.stdout().writeStreamingAll(std.testing.io, image.raster.rgb);
+        return;
+    }
+    return error.MissingJpegFixture;
+}
+
+test "HWPX JPEG Exif Adobe corpus candidate survey" {
+    const a = std.testing.allocator;
+    const roots = [_][]const u8{ "legacy/rust/crates/hwp-core/tests/fixtures", "reference/rhwp/samples" };
+    const pixels = @import("image/jpeg/pixel_inspection.zig");
+    const candidates = @import("hwpx/manifest_image_payloads.zig");
+    const marker = @import("image/jpeg/markers.zig");
+    const selected: pixels.Options = .{ .render = .{ .upsampling = .nearest, .colour_management = .unmanaged, .component_ids = .observed_zero_based_three }, .completion = .require_full, .exif_adobe_colour = true };
+    var seen: usize = 0;
+    var decoded: usize = 0;
+    var zero_based: usize = 0;
+    var missing_adobe: usize = 0;
+    var unsupported_components: usize = 0;
+    var rgb_bytes: usize = 0;
+    for (roots) |root| {
+        const dir = try std.Io.Dir.cwd().openDir(std.testing.io, root, .{ .iterate = true });
+        defer dir.close(std.testing.io);
+        var walker = try dir.walk(a);
+        defer walker.deinit();
+        while (try walker.next(std.testing.io)) |file| {
+            if (file.kind != .file or !std.mem.endsWith(u8, file.path, ".hwpx")) continue;
+            const bytes = try dir.readFileAlloc(std.testing.io, file.path, a, .limited(25_000_000));
+            defer a.free(bytes);
+            var document = package.inspectDocument(a, bytes, .{}) catch |err| {
+                if (err == error.MissingEndRecord) continue;
+                return err;
+            };
+            defer document.deinit(a);
+            var protection = try document.inspectProtection(a, .{});
+            defer protection.deinit(a);
+            if (protection.encrypted_paths.len != 0) continue;
+            for (document.manifest.items) |item| {
+                if (!candidates.isCandidate(item)) continue;
+                const entry_index = item.entry_index orelse continue;
+                const encoded = try document.archive.decode(document.archive.entries[entry_index], 64 * 1024 * 1024);
+                defer document.archive.allocator.free(encoded);
+                if (!std.mem.startsWith(u8, encoded, &.{ 255, 216 })) continue;
+                var it = try marker.Iterator.init(encoded, .{});
+                _ = try it.next();
+                const first = (try it.next()) orelse continue;
+                if (!@import("image/jpeg/exif_adobe_rgb.zig").isExifMarker(first)) continue;
+                seen += 1;
+                const result = pixels.inspect(a, encoded, selected, 128 * 1024 * 1024) catch |err| switch (err) {
+                    error.MissingAdobeColourDeclaration => {
+                        missing_adobe += 1;
+                        continue;
+                    },
+                    error.UnsupportedExifComponentCount => {
+                        unsupported_components += 1;
+                        continue;
+                    },
+                    else => return err,
+                };
+                try std.testing.expect(result.exif_adobe_colour);
+                decoded += 1;
+                zero_based += @intFromBool(result.observed_zero_based_component_ids);
+                rgb_bytes += result.rgb_bytes;
+            }
+        }
+    }
+    try std.testing.expectEqual(@as(usize, 34), seen);
+    try std.testing.expectEqual(@as(usize, 31), decoded);
+    try std.testing.expectEqual(@as(usize, 1), zero_based);
+    try std.testing.expectEqual(@as(usize, 1), missing_adobe);
+    try std.testing.expectEqual(@as(usize, 2), unsupported_components);
+    try std.testing.expectEqual(@as(usize, 168_563_982), rgb_bytes);
+    std.debug.print("HWPX Exif Adobe JPEG: seen={d} decoded={d} RGB={d} zero-based={d} no-Adobe={d} four-component={d}\n", .{ seen, decoded, rgb_bytes, zero_based, missing_adobe, unsupported_components });
+}
+
+// Read-only RGB pipe for a small Exif-first Adobe YCbCr corpus image.
+test "HWPX JPEG raw Exif Adobe RGB stream" {
+    const a = std.testing.allocator;
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "reference/rhwp/samples/2025 행정업무운영 편람(최종).hwpx", a, .limited(25_000_000));
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    for (document.archive.entries) |entry| {
+        if (!std.mem.eql(u8, entry.name, "BinData/image177.jpg")) continue;
+        const encoded = try document.archive.decode(entry, 1_000_000);
+        defer document.archive.allocator.free(encoded);
+        var image = try @import("image/jpeg/exif_adobe_rgb.zig").decode(a, encoded, .{ .render = .{ .upsampling = .nearest, .colour_management = .unmanaged }, .completion = .require_full });
+        defer image.deinit(a);
+        try std.testing.expectEqual(@as(usize, 2011 * 133 * 3), image.raster.rgb.len);
         try std.Io.File.stdout().writeStreamingAll(std.testing.io, image.raster.rgb);
         return;
     }

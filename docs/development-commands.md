@@ -4,7 +4,9 @@
 
 [JPEG 관측 성분 ID 호환 정책](jpeg-component-id-compatibility.md)은 `zig test src/root.zig --test-filter 'HWPX manifest JPEG zero-based component IDs'`와 `--test-filter 'JPEG JFIF layout reports explicitly selected'`로 합성·한도·OOM을 검사합니다. 선택 실파일은 `zig test src/hwpx_jpeg_pixel_survey.zig -O ReleaseFast --test-filter 'HWPX JPEG observed zero-based'`로 세 문서·예산·거부 반례를 확인합니다. 이 검사는 로컬 `reference/rhwp`가 필요하며 기본 audit 밖입니다.
 
-같은 선택 실파일의 실제 RGB는 `python3 tools/hwpx-jpeg-observed-pixel-diff.py`로 Pillow 11.3.0과 대조합니다. 로컬 `reference/rhwp`와 Pillow가 필요하며 픽셀 내용 동치가 아닌 차이 분포를 검사합니다.
+같은 선택 실파일의 실제 RGB는 `python3 tools/hwpx-jpeg-observed-pixel-diff.py --case zero-based`로 Pillow 11.3.0과 대조합니다. 로컬 `reference/rhwp`와 Pillow가 필요하며 픽셀 내용 동치가 아닌 차이 분포를 검사합니다.
+
+[Exif 선두 Adobe 색 선언 JPEG](jpeg-exif-adobe-rgb.md)은 `zig test src/root.zig --test-filter 'HWPX manifest Exif Adobe JPEG'`로 ZIP 연결·색 선언 오류·한도·OOM·progressive를, `zig test src/hwpx_jpeg_pixel_survey.zig -O ReleaseFast --test-filter 'HWPX JPEG Exif Adobe'`로 두 corpus 34개와 실제 `(0,1,2)` 옵션 교차를 검사합니다. 실파일 픽셀 차이는 `python3 tools/hwpx-jpeg-observed-pixel-diff.py --case exif-adobe`로 확인합니다. 두 선택 검사에는 로컬 `reference/rhwp`가 필요하고 Python 검사에는 Pillow 11.3.0이 필요합니다. 기본 audit에는 포함되지 않습니다.
 
 [HWPX BMP 픽셀 검사](hwpx-bmp-pixels.md)는 `zig test src/root.zig --test-filter 'HWPX manifest BMP'`와 그림·브러시의 기존 `HWPX picture image payloads`·`HWPX fill brush image payloads` 필터로 공유 경로를 검사합니다. 독립 Pillow 11.3.0 조사 `python3 tools/hwpx-fill-brush-image-oracle.py --bmp-pixels`와 `zig test src/hwpx_bmp_pixel_survey.zig -O ReleaseFast --test-filter 'HWPX BMP pixel shard N'`의 N=0..7은 로컬 `reference/rhwp`가 필요한 선택 실파일 검사이며 기본 audit에 포함되지 않습니다.
 

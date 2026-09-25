@@ -6,6 +6,7 @@ const progressive = @import("jfif_progressive_rgb.zig");
 const sequential_frame = @import("sequential_frame.zig");
 const progressive_frame = @import("progressive_frame.zig");
 const samples = @import("sample_planes.zig");
+const exif_adobe = @import("exif_adobe_rgb.zig");
 
 pub const Options = struct {
     structure: structure.Options = .{},
@@ -15,6 +16,7 @@ pub const Options = struct {
     max_sequential_blocks: usize = (sequential_frame.Options{}).max_blocks,
     progressive_storage: @import("coefficient_storage.zig").Options = .{},
     max_progressive_block_visits: usize = (progressive_frame.Options{ .completion = .require_full }).max_block_visits,
+    exif_adobe_colour: bool = false,
 };
 
 /// Pixel and metadata evidence only. No HWP or HWPX container policy lives here.
@@ -31,11 +33,18 @@ pub const Evidence = struct {
     unchecked_compressed_thumbnails: usize = 0,
     unknown_extensions: usize = 0,
     observed_zero_based_component_ids: bool = false,
+    exif_adobe_colour: bool = false,
 };
 
 const Process = struct {
     code: u8 = 0,
+    first_after_soi: bool = true,
+    exif_first: bool = false,
     fn accept(self: *Process, marker: @import("markers.zig").Marker) !void {
+        if (marker.code != 0xd8 and self.first_after_soi) {
+            self.first_after_soi = false;
+            self.exif_first = exif_adobe.isExifMarker(marker);
+        }
         if (structure.isFrame(marker.code)) self.code = marker.code;
     }
 };
@@ -62,6 +71,34 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, options: Options, remain
     if (selected.coding != .huffman or selected.mode == .lossless) return error.UnsupportedJpegProcess;
     var rendering = options.render;
     rendering.max_rgb_bytes = @min(rendering.max_rgb_bytes, remaining_rgb_bytes);
+    if (options.exif_adobe_colour and process.exif_first) {
+        var image = try exif_adobe.decode(a, bytes, .{
+            .structure = options.structure,
+            .render = rendering,
+            .completion = options.completion,
+            .max_samples = options.max_samples,
+            .max_sequential_blocks = options.max_sequential_blocks,
+            .progressive_storage = options.progressive_storage,
+            .max_progressive_block_visits = options.max_progressive_block_visits,
+        });
+        defer image.deinit(a);
+        var report: Evidence = .{
+            .progressive = selected.mode == .progressive,
+            .rgb_bytes = image.raster.rgb.len,
+            .profile = image.icc_chunks != 0,
+            .metadata_deferred = image.metadata_deferred,
+            .scans = boundaries.scans,
+            .adobe_headers = image.adobe_headers,
+            .observed_zero_based_component_ids = image.observed_zero_based_component_ids,
+            .exif_adobe_colour = true,
+        };
+        if (image.progression) |progression| {
+            report.unseen_coefficients = progression.unseen_coefficients;
+            report.partial_coefficients = progression.partial_coefficients;
+            report.full_coefficients = progression.full_coefficients;
+        }
+        return report;
+    }
     if (selected.mode == .progressive) {
         var result = try progressive.decode(a, bytes, .{
             .samples = .{ .frame = .{ .completion = options.completion, .structure = options.structure, .storage = options.progressive_storage, .max_block_visits = options.max_progressive_block_visits }, .max_samples = options.max_samples },
