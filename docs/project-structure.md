@@ -84,6 +84,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
   선택적 BinData PCX 연결은 [별도 계약](hwp5-bin-data-pcx.md)이 소유하고 `src/image/pcx/`의 공통 검사기를 재사용합니다.
   선택적 BinData WMF 연결은 [별도 계약](hwp5-bin-data-wmf.md)이 소유하고 `src/image/wmf/`의 공통 헤더·record 검사기를 재사용합니다.
   선택적 PNG IEND 뒤 0 패딩 정책은 [별도 계약](hwp5-png-post-iend.md)이 소유하며, 공통 구조 검사를 재사용하고 HWP5 문서 전체 예산만 연결합니다.
+  PNG 선언·JPEG 실제 바이트의 선택적 검사도 [별도 계약](hwp5-png-declared-jpeg.md)이 소유하며, 기존 JPEG 검사기를 재사용합니다.
 - `src/compression/`: bounded raw DEFLATE, [zlib 검증](zlib-validation.md), MIT Zig 디코더 로컬 수정본. HWP 플래그·trailer 정책을 넣지 않습니다.
 - `src/wasm/`, `js/`: WASM 메모리·문서 수명·엔트리 변환별 어댑터.
 - ABI 필드·버전·편집 모델 wire 형식은 `js/abi-schema.mjs`에서 정의합니다. 생성된 Zig 선언과 일치해야 하며 빌드에서 검사합니다. 레거시 검색은 `find.zig`, 명세 이름 비교·정렬·검색은 `name_order.zig`, 읽기/쓰기 공통 메타데이터 규칙은 `entry_rules.zig`에 둡니다.

@@ -8,6 +8,8 @@ const pcx = @import("pcx_images.zig");
 const wmf = @import("wmf_images.zig");
 const isExtension = @import("extension.zig").is;
 pub const Options = struct {
+    pub const PngDeclaredJpeg = enum { reject, inspect_jpeg };
+
     gif: ?gif.Options = null,
     pcx: ?pcx.Options = null,
     wmf: ?wmf.Options = null,
@@ -19,6 +21,7 @@ pub const Options = struct {
     max_total_gif_frames: usize = (gif.Options{}).max_frames,
     png: png.Options = .{},
     jpeg: ?jpeg.Options = null,
+    png_declared_jpeg: PngDeclaredJpeg = .reject,
     bmp: ?bmp.Options = null,
     bmp_profile: ?bmp_profiles.Options = null,
     max_total_bmp_profile_bytes: usize = 64 * 1024 * 1024,
@@ -45,6 +48,7 @@ pub const Report = struct {
     png_zlib_trailing_bytes: usize = 0,
     png_post_iend_zero_bytes: usize = 0,
     png_post_iend_zero_images: usize = 0,
+    png_declared_jpeg_images: usize = 0,
     semantics_deferred: bool = true,
 };
 /// Scalar-only evidence; does not retain decoded BinData or image buffers.
@@ -59,14 +63,18 @@ pub const Budget = struct {
         const extension: []const u8 = extension_utf16 orelse &.{};
         const hinted = isPngExtension(extension);
         const signature = std.mem.startsWith(u8, bytes, @import("../../image/png/chunks.zig").signature);
-        if (!hinted and !signature) {
+        const jpeg_signature = std.mem.startsWith(u8, bytes, &.{ 255, 216 });
+        const declared_png_jpeg = hinted and jpeg_signature and self.options.png_declared_jpeg == .inspect_jpeg;
+        if (declared_png_jpeg and self.options.jpeg == null) return error.MissingJpegInspector;
+        if ((!hinted or declared_png_jpeg) and !signature) {
             if (self.options.jpeg) |selected| {
                 const jpeg_hint = isExtension(extension, "jpg") or isExtension(extension, "jpeg");
-                if (jpeg_hint or std.mem.startsWith(u8, bytes, &.{ 255, 216 })) {
+                if (jpeg_hint or jpeg_signature) {
                     if (next.jpeg.rgb_bytes > self.options.max_total_jpeg_rgb_bytes) return error.LimitExceeded;
                     var result = try jpeg.inspect(a, bytes, selected, self.options.max_total_jpeg_rgb_bytes - next.jpeg.rgb_bytes);
                     result.extension_disagreements = @intFromBool(!jpeg_hint and extension.len != 0);
                     next.jpeg = try next.jpeg.plus(result);
+                    next.png_declared_jpeg_images = try add(next.png_declared_jpeg_images, @intFromBool(declared_png_jpeg));
                     self.report = next;
                     return;
                 }

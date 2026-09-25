@@ -16,7 +16,7 @@ HWP5 `container.Options.images.png.structure.post_iend`를 명시적으로 선�
 
 0 패딩 표본은 `reference/rhwp/samples/issue6060/30307_local_service_reform.hwp`의 `/BinData/BIN0002.png`입니다. 파일은 130,048바이트, SHA-256 `cc8668819b79ed51408a93c0ad7876569bf67e8fed56dbfb7febdd0c9a91cded`입니다. 해제 바이트 67,742개 중 유효 PNG 데이터스트림은 66,002바이트이며, IEND 뒤 1,740바이트가 모두 0입니다. Zig 전체 HWP 컨테이너 검사에서 기본 이미지 옵션은 `TrailingData`, 선택 한도 1,739는 `LimitExceeded`, 선택 한도 1,740은 PNG 픽셀 검사와 후속 WMF 구조 검사를 통과합니다. 성공 보고서에는 0 패딩 이미지 1개·1,740바이트와 placeable WMF 1개·77 record가 각각 남습니다. 이는 그 두 payload 경계에 관한 근거이지 문서 전체 의미·화면 결과 동치가 아닙니다.
 
-나머지 3개의 JPEG-선두/PNG-선언 편차는 별도 정책 없이 계속 오류입니다. 그 문서들의 제작 경위·표시 결과·무손실 재저장 규칙은 이번 파트에서 결정하지 않습니다.
+나머지 3개의 JPEG-선두/PNG-선언 편차는 기본 정책에서 계속 오류입니다. 후속 [명시적 JPEG 검사](hwp5-png-declared-jpeg.md)를 선택한 경우에만 별도 진단하며, 그 문서들의 제작 경위·표시 결과·무손실 재저장 규칙은 확정하지 않았습니다.
 
 ## 검증과 적대적 재검토
 

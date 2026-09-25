@@ -8,6 +8,8 @@ BinData 표 17~18의 내부 항목별 압축 정책으로 얻은 바이트에 JF
 
 기존 PNG 선택 규칙을 먼저 적용합니다. PNG 확장자는 PNG를 요구하고, PNG 서명이 있으면 다른 확장자여도 기존 불일치 통계와 함께 PNG를 검사합니다. 그 밖에 JPEG를 선택한 경우 대소문자 무관 UTF-16LE jpg/jpeg 힌트 또는 FF D8 시작 바이트로 JPEG 검사를 요구합니다. 비어 있지 않은 다른 확장자로 JPEG를 발견하면 JPEG extension_disagreements에 집계합니다. 후속 [BMP 선택 검사](hwp5-bin-data-bmp.md)를 켜지 않으면 BMP/OLE 등 다른 바이트는 unhandled로 남깁니다. 힌트 없는 FF FF D8 같은 추가 fill 식별까지 하는 범용 탐지기는 아닙니다.
 
+PNG 확장자의 JPEG SOI는 기본값에서 여전히 PNG 오류입니다. 실제 표본을 위한 명시적 [선언·바이트 불일치 선택](hwp5-png-declared-jpeg.md)만 이 한 경우를 JPEG 검사에 연결합니다.
+
 전체 구조 검사에서 얻은 SOF 프로세스로 Huffman 순차/baseline과 progressive를 분기합니다. 실패를 catch하여 다른 디코더나 썸네일을 시도하지 않습니다. 산술/lossless는 UnsupportedHwpJpegProcess, hierarchical은 기존 명시적 미지원 오류입니다. JFIF 헤더 부재·지원하지 않는 정밀도/성분·Adobe 충돌·잘린 엔트로피는 해당 검사 오류를 전파합니다. 미지원 오류를 구조 적합성 인증이나 파일 손상의 증명으로 해석하지 않습니다.
 
 ## 책임과 단일 출처

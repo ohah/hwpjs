@@ -26,6 +26,8 @@
 
 [PNG IEND 뒤 0 패딩](hwp5-png-post-iend.md)은 공통 PNG 구조 계층이 바이트 경계와 명시적 한도를 소유하고 HWP5 컨테이너가 선택·문서 합계만 소유합니다. 기본 strict와 HWPX의 선택은 변경하지 않습니다.
 
+[PNG 선언·JPEG 바이트 불일치](hwp5-png-declared-jpeg.md)는 HWP5 BinData의 정확한 경로·압축 정책 이후 이미지 선택 계층에서만 명시적으로 분기합니다. JPEG 검사기를 재사용하고 선언값·이미지 의미를 자동 수정하지 않습니다.
+
 [구역 정의 ID 참조](hwpx-section-definition-references.md)는 기존 구역 정의 값과 header 리소스 ID 색인을 결합하는 진단 계층입니다. `0`·부재·미해결을 분리하고 원문 파싱을 재구현하지 않습니다.
 
 [HWPX 조건부 참조 선택](hwpx-switch-selection.md)은 한 정책을 이진·차트 스캐너가 공유하는 선택적 계층입니다. 기존 raw 검사와 전체 문서 분기 적용은 별개입니다.
