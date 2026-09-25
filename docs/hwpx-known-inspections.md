@@ -6,6 +6,8 @@
 
 `section_note_shapes`는 [구역 각주·미주 모양 원값](hwpx-section-note-shapes.md)을 별도 소유 보고서로 제공합니다. 각주·미주 본문과 번호/배치 효과는 조립하지 않습니다.
 
+`section_presentation`은 [구역 프레젠테이션 원값](hwpx-section-presentation.md)을 별도 소유 보고서로 제공합니다. 직접 브러시의 위치만 남기며 내부 채움·전환 효과를 조립하지 않습니다.
+
 `section_definition_references`는 [구역 정의 번호·메모 모양 ID 진단](hwpx-section-definition-references.md)을 기존 `section_definitions`·`resources` 결과에서 계산합니다. 미해결 진단이 있어도 `inspectKnown`은 이를 전체 문서 거부로 승격하지 않습니다.
 
 `inspectKnown`은 조건부 참조의 양쪽 분기를 관측하며, 활성 분기만의 이진·차트 참조는 별도 [조건부 참조 선택](hwpx-switch-selection.md) API가 제공합니다.

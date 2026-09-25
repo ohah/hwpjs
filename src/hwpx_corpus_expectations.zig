@@ -464,6 +464,9 @@ pub const section_note_other_enums = [_][4]usize{
     .{ 0, 0, 12, 2 }, .{ 0, 0, 14, 3 }, .{ 0, 0, 15, 2 }, .{ 0, 0, 13, 0 },
     .{ 0, 0, 12, 2 }, .{ 0, 0, 15, 3 }, .{ 1, 4, 8, 0 },  .{ 0, 0, 35, 0 },
 };
+// Independent tools/hwpx-section-presentation-oracle.py census.
+// Each observed presentation has one direct fillBrush and one brush child.
+pub const section_presentation_counts = [_]usize{ 3, 5, 2, 2, 4, 7, 0, 2 };
 // Independent tools/hwpx-section-definition-reference-oracle.py census.
 pub const section_outline_zero = [_]usize{ 16, 19, 13, 13, 14, 17, 11, 39 };
 pub const section_outline_resolved = [_]usize{ 55, 49, 56, 41, 47, 43, 48, 53 };

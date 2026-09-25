@@ -270,6 +270,7 @@ const Statistics = struct {
     section_page_borders: SectionPageBorderStats,
     section_page_border_refs: SectionPageBorderRefStats,
     section_notes: SectionNoteStats,
+    section_presentation: PresentationStats,
     paragraphs: usize,
     paragraph_children: package.ParagraphChildrenReport,
     line_segments: package.LineSegmentsReport,
@@ -623,6 +624,71 @@ const SectionNoteStats = struct {
         inline for (.{ "counts", "line_lengths", "spacing", "new_nums", "superscript", "anomalies", "missing_chars", "nonempty_chars", "other_enums" }) |field| {
             for (&@field(self, field), @field(other, field)) |*slot, value| slot.* += value;
         }
+    }
+};
+
+const PresentationStats = struct {
+    items: usize = 0,
+    brushes: usize = 0,
+    brush_children: usize = 0,
+    invert_true: usize = 0,
+    autoshow_true: usize = 0,
+    showtime_sum: u64 = 0,
+
+    fn from(a: std.mem.Allocator, definitions: package.SectionDefinitionReport, report: package.SectionPresentationReport) !PresentationStats {
+        try std.testing.expectEqual(definitions.sections, report.sections);
+        try std.testing.expectEqual(@as(usize, 0), report.other_attributes + report.unknown_enums);
+        const seen = try a.alloc(usize, definitions.definitions.len);
+        defer a.free(seen);
+        @memset(seen, 0);
+        var stats: PresentationStats = .{};
+        for (report.items, 0..) |item, item_index| {
+            var parent_slot: ?usize = null;
+            for (definitions.definitions, 0..) |definition, slot| {
+                if (definition.section_ordinal == item.section_ordinal and definition.element_index == item.parent_element_index) {
+                    parent_slot = slot;
+                    break;
+                }
+            }
+            seen[parent_slot orelse return error.MissingSectionDefinition] += 1;
+            stats.items += 1;
+            try std.testing.expectEqual(@as(usize, 0), item.other_attributes + item.unknown_enums);
+            try std.testing.expectEqual(@as(usize, 1), item.direct_children);
+            try std.testing.expectEqual(@as(usize, 1), item.fill_brushes);
+            try std.testing.expectEqualStrings("none", item.get(.effect) orelse return error.MissingPresentationEffect);
+            try std.testing.expectEqualStrings("", item.get(.sound_id_ref) orelse return error.MissingPresentationSound);
+            try std.testing.expectEqualStrings("WholeDoc", item.get(.applyto) orelse return error.MissingPresentationApplyTo);
+            stats.invert_true += @intFromBool(try xml_values.boolean(item.get(.invert_text) orelse return error.MissingPresentationInvertText));
+            stats.autoshow_true += @intFromBool(try xml_values.boolean(item.get(.autoshow) orelse return error.MissingPresentationAutoshow));
+            stats.showtime_sum += try xml_values.unsigned32(item.get(.showtime) orelse return error.MissingPresentationShowtime);
+            var item_brushes: usize = 0;
+            for (report.fill_brushes) |brush| {
+                if (brush.presentation_index != item_index) continue;
+                item_brushes += 1;
+                stats.brushes += 1;
+                stats.brush_children += brush.direct_children;
+                try std.testing.expectEqual(item.section_ordinal, brush.section_ordinal);
+                try std.testing.expect(brush.element_index > item.element_index);
+                try std.testing.expectEqual(@as(usize, 0), brush.other_attributes);
+                try std.testing.expectEqual(@as(usize, 1), brush.direct_children);
+            }
+            try std.testing.expectEqual(@as(usize, 1), item_brushes);
+        }
+        for (definitions.definitions, seen) |definition, count| try std.testing.expectEqual(definition.childCount(.presentation), count);
+        try std.testing.expectEqual(stats.items, report.items.len);
+        try std.testing.expectEqual(stats.brushes, report.fill_brushes.len);
+        try std.testing.expectEqual(stats.brush_children, report.brush_children);
+        try std.testing.expectEqual(stats.items, report.direct_children);
+        return stats;
+    }
+
+    fn merge(self: *PresentationStats, other: PresentationStats) void {
+        self.items += other.items;
+        self.brushes += other.brushes;
+        self.brush_children += other.brush_children;
+        self.invert_true += other.invert_true;
+        self.autoshow_true += other.autoshow_true;
+        self.showtime_sum += other.showtime_sum;
     }
 };
 
@@ -1036,6 +1102,7 @@ fn inspectOne(bytes: []const u8) !Outcome {
         .section_page_borders = try SectionPageBorderStats.from(a, known.section_definitions, known.section_page_borders),
         .section_page_border_refs = try SectionPageBorderRefStats.from(known.section_page_borders, known.section_page_border_references),
         .section_notes = try SectionNoteStats.from(a, known.section_definitions, known.section_note_shapes),
+        .section_presentation = try PresentationStats.from(a, known.section_definitions, known.section_presentation),
         .paragraphs = known.paragraph_metadata.paragraphs,
         .paragraph_children = known.paragraph_children,
         .line_segments = known.line_segments,
@@ -1104,6 +1171,7 @@ fn surveyShard(shard: usize) !void {
     var section_page_borders: SectionPageBorderStats = .{};
     var section_page_border_refs: SectionPageBorderRefStats = .{};
     var section_notes: SectionNoteStats = .{};
+    var section_presentation: PresentationStats = .{};
     var paragraphs: usize = 0;
     var paragraph_children: package.ParagraphChildrenReport = .{};
     var line_segments: package.LineSegmentsReport = .{};
@@ -1192,6 +1260,7 @@ fn surveyShard(shard: usize) !void {
                     section_page_borders.merge(stats.section_page_borders);
                     section_page_border_refs.merge(stats.section_page_border_refs);
                     section_notes.merge(stats.section_notes);
+                    section_presentation.merge(stats.section_presentation);
                     page_geometry.pages += stats.page_geometry.pages;
                     page_geometry.widely += stats.page_geometry.widely;
                     page_geometry.left_right += stats.page_geometry.left_right;
@@ -1451,6 +1520,12 @@ fn surveyShard(shard: usize) !void {
     try std.testing.expectEqualSlices(usize, &expected.section_note_missing_chars[shard], &section_notes.missing_chars);
     try std.testing.expectEqualSlices(usize, &expected.section_note_nonempty_chars[shard], &section_notes.nonempty_chars);
     try std.testing.expectEqualSlices(usize, &expected.section_note_other_enums[shard], &section_notes.other_enums);
+    try std.testing.expectEqual(expected.section_presentation_counts[shard], section_presentation.items);
+    try std.testing.expectEqual(expected.section_presentation_counts[shard], section_presentation.brushes);
+    try std.testing.expectEqual(expected.section_presentation_counts[shard], section_presentation.brush_children);
+    try std.testing.expectEqual(expected.section_presentation_counts[shard], section_presentation.invert_true);
+    try std.testing.expectEqual(@as(usize, 0), section_presentation.autoshow_true);
+    try std.testing.expectEqual(@as(u64, 0), section_presentation.showtime_sum);
     try std.testing.expectEqual(expected.section_outline_zero[shard], section_definition_refs.outline_zero);
     try std.testing.expectEqual(expected.section_outline_resolved[shard], section_definition_refs.outline_resolved);
     try std.testing.expectEqual(expected.section_outline_absent_table[shard], section_definition_refs.outline_absent_table);

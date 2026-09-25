@@ -38,6 +38,7 @@ const section_definition = @import("section_definition.zig");
 const section_direct_settings = @import("section_direct_settings.zig");
 const section_page_border = @import("section_page_border.zig");
 const section_note_shapes = @import("section_note_shapes.zig");
+const section_presentation = @import("section_presentation.zig");
 const section_page_border_refs = @import("section_page_border_refs.zig");
 const section_definition_refs = @import("section_definition_refs.zig");
 const document_known = @import("document_known.zig");
@@ -194,6 +195,8 @@ pub const SectionPageBorderOptions = section_page_border.Options;
 pub const SectionPageBorderReport = section_page_border.Report;
 pub const SectionNoteShapeOptions = section_note_shapes.Options;
 pub const SectionNoteShapeReport = section_note_shapes.Report;
+pub const SectionPresentationOptions = section_presentation.Options;
+pub const SectionPresentationReport = section_presentation.Report;
 pub const SectionPageBorderReferenceReport = section_page_border_refs.Report;
 pub const SectionDefinitionReferenceReport = section_definition_refs.Report;
 pub const SectionDefinitionField = section_definition.Field;
@@ -301,6 +304,7 @@ pub const KnownOptions = struct {
     section_direct_settings: SectionDirectSettingsOptions = .{},
     section_page_borders: SectionPageBorderOptions = .{},
     section_note_shapes: SectionNoteShapeOptions = .{},
+    section_presentation: SectionPresentationOptions = .{},
 };
 pub const DocumentOptions = struct {
     // The archive index also contains large BinData/section entries. Their

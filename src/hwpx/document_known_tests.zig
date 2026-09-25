@@ -145,6 +145,31 @@ test "HWPX section note shapes preserve observed width placement and color anoma
     }
 }
 
+test "HWPX section presentation exposes real direct brush and all observed fields" {
+    const a = std.testing.allocator;
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "reference/rhwp/samples/hwp3-sample-hwpx.hwpx", a, .limited(1_000_000));
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    var report = try document.inspectKnown(a, .{});
+    defer report.deinit(a);
+    try std.testing.expectEqual(@as(usize, 1), report.section_presentation.items.len);
+    try std.testing.expectEqual(@as(usize, 1), report.section_presentation.fill_brushes.len);
+    const item = report.section_presentation.items[0];
+    try std.testing.expectEqualStrings("none", item.get(.effect).?);
+    try std.testing.expectEqualStrings("", item.get(.sound_id_ref).?);
+    try std.testing.expectEqualStrings("1", item.get(.invert_text).?);
+    try std.testing.expectEqualStrings("0", item.get(.autoshow).?);
+    try std.testing.expectEqualStrings("0", item.get(.showtime).?);
+    try std.testing.expectEqualStrings("WholeDoc", item.get(.applyto).?);
+    try std.testing.expectEqual(@as(usize, 1), report.section_presentation.fill_brushes[0].direct_children);
+    try std.testing.expectError(error.LimitExceeded, document.inspectKnown(a, .{ .section_presentation = .{ .max_items = 0 } }));
+    var checked: std.heap.DebugAllocator(.{ .safety = true, .enable_memory_limit = true }) = .init;
+    defer _ = checked.deinit();
+    try std.testing.expectError(error.LimitExceeded, document.inspectKnown(checked.allocator(), .{ .section_presentation = .{ .max_items = 0 } }));
+    try std.testing.expectEqual(@as(usize, 0), checked.total_requested_bytes);
+}
+
 test "HWPX known inspections resolve real memo shape resource" {
     const a = std.testing.allocator;
     const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "reference/rhwp/samples/누름틀-2024.hwpx", a, .limited(1_000_000));

@@ -14,6 +14,8 @@ section 문단·run 서식 참조의 선택 결과는 기존 `section_references
 
 `secPr`의 각주·미주 모양 다섯 직접 자식의 원값은 [구역 각주·미주 모양](hwpx-section-note-shapes.md)이 담당합니다. 본문 연결과 번호/배치 적용은 별개입니다.
 
+`secPr`의 `presentation` 속성과 직접 `fillBrush` 위치는 [구역 프레젠테이션](hwpx-section-presentation.md)이 담당합니다. 공통 브러시 내부와 효과 적용은 후속 책임입니다.
+
 구역 정의의 번호·메모 모양 ID 연결은 [구역 참조 진단](hwpx-section-definition-references.md)이 소유합니다. 진단 결과를 HWPX 문서 전체 유효성 판정으로 사용하지 않습니다.
 
 HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라이브러리입니다.
