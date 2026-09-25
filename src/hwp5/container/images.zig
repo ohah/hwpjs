@@ -5,11 +5,14 @@ const bmp = @import("bmp_images.zig");
 const bmp_profiles = @import("bmp_profiles.zig");
 const gif = @import("gif_images.zig");
 const pcx = @import("pcx_images.zig");
+const wmf = @import("wmf_images.zig");
 const isExtension = @import("extension.zig").is;
 pub const Options = struct {
     gif: ?gif.Options = null,
     pcx: ?pcx.Options = null,
+    wmf: ?wmf.Options = null,
     max_total_pcx_decoded_bytes: usize = (pcx.Options{}).max_decoded_bytes,
+    max_total_wmf_bytes: usize = 256 * 1024 * 1024,
     max_total_gif_index_bytes: usize = (gif.Options{}).max_total_pixels,
     max_total_gif_codes: usize = (gif.Options{}).max_total_codes,
     max_total_gif_frames: usize = (gif.Options{}).max_frames,
@@ -26,6 +29,7 @@ pub const Options = struct {
 pub const Report = struct {
     gif: gif.Report = .{},
     pcx: pcx.Report = .{},
+    wmf: wmf.Report = .{},
     bmp_profile: bmp_profiles.Report = .{},
     bmp: bmp.Report = .{},
     jpeg: jpeg.Report = .{},
@@ -102,6 +106,17 @@ pub const Budget = struct {
                     var result = try pcx.inspect(bytes, selected, self.options.max_total_pcx_decoded_bytes - next.pcx.decoded_bytes);
                     result.extension_disagreements = @intFromBool(!pcx_hint and extension.len != 0);
                     next.pcx = try next.pcx.plus(result);
+                    self.report = next;
+                    return;
+                }
+            }
+            if (self.options.wmf) |selected| {
+                const wmf_hint = isExtension(extension, "wmf");
+                if (wmf_hint or @import("../../image/wmf/header.zig").looksLike(bytes)) {
+                    if (next.wmf.bytes > self.options.max_total_wmf_bytes) return error.LimitExceeded;
+                    var result = try wmf.inspect(bytes, selected, self.options.max_total_wmf_bytes - next.wmf.bytes);
+                    result.extension_disagreements = @intFromBool(!wmf_hint and extension.len != 0);
+                    next.wmf = try next.wmf.plus(result);
                     self.report = next;
                     return;
                 }

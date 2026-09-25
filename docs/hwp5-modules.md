@@ -5,6 +5,7 @@
 - [문서 조립·컨테이너·별도 스트림](hwp5-document-contracts.md)
   - [문서 요약 property set 경계](hwp5-summary-property-sets.md)
   - [BinData PCX 선택 검사](hwp5-bin-data-pcx.md)
+  - [BinData WMF 선택 검사](hwp5-bin-data-wmf.md)
 - [내부 XML 검증 연결](hwp5-xml-validation.md)
 - [Bibliography 미확정 배치 조사](hwp5-bibliography-evidence.md)
 - [본문·문단·제어·문단 흐름](hwp5-body-contracts.md)

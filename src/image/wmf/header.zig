@@ -22,6 +22,14 @@ pub const Meta = struct {
 pub const Header = struct { placeable: Placeable, meta: Meta, records_offset: usize };
 pub const StandardHeader = struct { meta: Meta, records_offset: usize };
 
+/// Conservative dispatch clue shared by HWP5 and HWPX. Parsing remains strict.
+pub fn looksLike(bytes: []const u8) bool {
+    if (std.mem.startsWith(u8, bytes, &.{ 0xd7, 0xcd, 0xc6, 0x9a })) return true;
+    return bytes.len >= 4 and (std.mem.eql(u8, bytes[0..2], &.{ 1, 0 }) or
+        std.mem.eql(u8, bytes[0..2], &.{ 2, 0 })) and
+        std.mem.eql(u8, bytes[2..4], &.{ 9, 0 });
+}
+
 fn parseMeta(reader: *Reader) !Meta {
     const metafile_type = std.enums.fromInt(MetafileType, try reader.readInt(u16)) orelse return error.UnsupportedWmfMetafileType;
     if (try reader.readInt(u16) != 9) return error.InvalidWmfHeaderSize;

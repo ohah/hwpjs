@@ -22,6 +22,8 @@
 
 [HWP5 BinData PCX 연결](hwp5-bin-data-pcx.md)은 기존 정확한 스트림 선택·항목별 압축 해제 뒤 공통 PCX 검사기를 호출하며, HWPX 선택 규칙이나 PCX RLE 문법을 복제하지 않습니다.
 
+[HWP5 BinData WMF 연결](hwp5-bin-data-wmf.md)은 같은 스트림 선택 뒤 공통 WMF 헤더·record framing을 호출합니다. 후보 바이트 판정도 HWPX와 공유하지만 미지원 잔여 데이터나 렌더링을 통과 처리하지 않습니다.
+
 [구역 정의 ID 참조](hwpx-section-definition-references.md)는 기존 구역 정의 값과 header 리소스 ID 색인을 결합하는 진단 계층입니다. `0`·부재·미해결을 분리하고 원문 파싱을 재구현하지 않습니다.
 
 [HWPX 조건부 참조 선택](hwpx-switch-selection.md)은 한 정책을 이진·차트 스캐너가 공유하는 선택적 계층입니다. 기존 raw 검사와 전체 문서 분기 적용은 별개입니다.
