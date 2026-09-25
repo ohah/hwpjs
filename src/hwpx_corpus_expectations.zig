@@ -521,6 +521,13 @@ pub const fill_brush_hatch_styles = [_][3]usize{
 // the numeric value of exact six-digit hex spellings.
 pub const master_fill_brush_parts = [_]usize{ 14, 6, 19, 0, 0, 0, 3, 19 };
 pub const fill_brush_image_link_sites = [_]usize{ 8, 1, 12, 0, 3, 4, 2, 360 };
+pub const picture_image_sites = [_]usize{ 257, 199, 261, 337, 199, 271, 200, 269 };
+pub const picture_image_embedded = [_]usize{ 253, 191, 255, 328, 193, 266, 196, 263 };
+pub const picture_image_external = [_]usize{ 0, 0, 0, 4, 3, 0, 0, 0 };
+pub const picture_image_empty = [_]usize{ 4, 8, 6, 5, 3, 5, 4, 6 };
+pub const picture_image_target_index_sums = [_]usize{ 2578, 2342, 3413, 2270, 2643, 4020, 3872, 41252 };
+pub const master_picture_image_sites = [_]usize{ 4, 3, 10, 0, 0, 0, 3, 15 };
+pub const master_picture_image_target_index_sums = [_]usize{ 4, 3, 10, 0, 0, 0, 3, 4295 };
 pub const fill_brush_image_target_index_sums = [_]usize{ 9, 0, 57, 0, 0, 1, 1, 61786 };
 pub const fill_brush_image_payload_targets = [_]usize{ 8, 1, 10, 0, 3, 4, 2, 360 };
 pub const fill_brush_image_payload_formats = [_][4]usize{ .{ 3, 4, 0, 1 }, .{ 0, 0, 1, 0 }, .{ 8, 2, 0, 0 }, .{ 0, 0, 0, 0 }, .{ 2, 1, 0, 0 }, .{ 1, 3, 0, 0 }, .{ 0, 2, 0, 0 }, .{ 7, 353, 0, 0 } };

@@ -100,6 +100,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [마스터페이지 이진 리소스 참조](hwpx-master-binary-references.md)는 header/section과 동일한 OPF ID 색인·XML 개체 분류를 재사용하면서 파트 선택·직접 `subList` 범위·예산·결과를 분리합니다. 바이너리 payload 의미는 별개입니다.
 
+[그림 이미지 연결](hwpx-picture-image-links.md)은 section과 마스터페이지 원문 XML 트리의 직접 `pic/img` 사이트를 공통 OPF ID 해결 규칙에 연결합니다. 마스터페이지 XML 트리 생성은 브러시·그림 연결이 같은 소유 모듈을 재사용하며, 이미지 내용 해석은 별도 후속 책임입니다.
+
 [마스터페이지 차트 경로·XML 검사](hwpx-master-chart-references.md)는 section의 차트 경로 스캐너와 대상 Resolver를 재사용하고, 마스터페이지 직접 `subList` 범위와 별도 예산·보고서만 소유합니다. 기본 원문과 명시적 선택 분기를 구분합니다.
 
 [마스터페이지 표 격자](hwpx-master-table-geometry.md)는 같은 파트 선택·직접 `subList` 경계를 사용하고 section의 표·셀 필드 판정에 위임합니다. 별도 표 파서를 두지 않습니다.

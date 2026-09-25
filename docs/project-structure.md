@@ -18,6 +18,8 @@ section 문단·run 서식 참조의 선택 결과는 기존 `section_references
 
 선택된 header·section의 공통 브러시 변형과 직접 색·이미지 값은 [공통 fillBrush](hwpx-fill-brush.md)가 담당합니다. [마스터페이지 브러시](hwpx-master-fill-brush.md)는 동일 필드 검사기를 별도 파트 경계에서 재사용합니다. [이미지 OPF 연결](hwpx-fill-brush-image-links.md)은 각 이미지 ID를 기존 manifest 해결 규칙으로 연결하고 [이미지 바이트 검사](hwpx-fill-brush-image-payloads.md)는 내장 대상의 ZIP/형식 경계를 확인합니다. 전체 픽셀·렌더링은 후속 단계입니다.
 
+본문과 마스터페이지의 직접 `pic/img`별 OPF 대상은 [그림 이미지 연결](hwpx-picture-image-links.md)이 같은 ID 해결 규칙으로 관측합니다. 이미지 payload·그림 배치 의미는 아직 별개입니다.
+
 구역 정의의 번호·메모 모양 ID 연결은 [구역 참조 진단](hwpx-section-definition-references.md)이 소유합니다. 진단 결과를 HWPX 문서 전체 유효성 판정으로 사용하지 않습니다.
 
 HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라이브러리입니다.

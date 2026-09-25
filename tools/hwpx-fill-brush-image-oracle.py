@@ -14,6 +14,7 @@ import zlib
 
 OPF = "{http://www.idpf.org/2007/opf/}"
 CORE = "{http://www.hancom.co.kr/hwpml/2011/core}"
+PARAGRAPH = "{http://www.hancom.co.kr/hwpml/2011/paragraph}"
 ROOTS = (Path("legacy/rust/crates/hwp-core/tests/fixtures"), Path("reference/rhwp/samples"))
 MASTER = re.compile(r"Contents/masterpage[0-9]+\.xml\Z")
 SECTION = re.compile(r"Contents/section[0-9]+\.xml\Z")
@@ -56,6 +57,57 @@ def image_leaves(root):
                 for leaf in variant:
                     if leaf.tag == CORE + "img":
                         yield parent, leaf
+
+
+def picture_leaves(root):
+    for picture in root.iter(PARAGRAPH + "pic"):
+        for leaf in picture:
+            if leaf.tag == CORE + "img":
+                yield leaf
+
+
+def picture_archive(archive):
+    counts = Counter()
+    _, by_id, parts = selected_items(archive)
+    for source, _, href in parts:
+        if source == "document" and href == "Contents/header.xml":
+            continue
+        for leaf in picture_leaves(ET.fromstring(archive.read(href))):
+            raw = leaf.get("binaryItemIDRef")
+            if raw is None:
+                state, index = "absent", None
+            elif raw == "":
+                state, index = "empty", None
+            elif raw not in by_id:
+                state, index = "missing", None
+            else:
+                index, item = by_id[raw]
+                state = "external" if item.get("isEmbeded") == "0" else "embedded"
+            counts[source + "_" + state] += 1
+            counts[source + "_sites"] += 1
+            if index is not None:
+                counts[source + "_target_index_sum"] += index
+    return counts
+
+
+def collect_pictures():
+    shards = [Counter() for _ in range(8)]
+    for root_index, root in enumerate(ROOTS):
+        for path in root.rglob("*.hwpx"):
+            shard = (root_index + sum(os.fsencode(str(path.relative_to(root))))) % 8
+            counts = shards[shard]
+            counts["files"] += 1
+            try:
+                with zipfile.ZipFile(path) as archive:
+                    if encrypted(archive):
+                        counts["encrypted"] += 1
+                        continue
+                    document = picture_archive(archive)
+            except (zipfile.BadZipFile, KeyError, OSError, ET.ParseError, ValueError):
+                counts["unreadable"] += 1
+            else:
+                counts.update(document)
+    return shards
 
 
 def observe(root, source, items, by_id, names, counts):
@@ -204,6 +256,34 @@ def collect():
 
 
 def self_test():
+    pictured = ET.fromstring("<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph' xmlns:c='http://www.hancom.co.kr/hwpml/2011/core' xmlns:x='urn:other'><p:pic><c:img binaryItemIDRef='img&#49;'/><x:img/><p:container><c:img/></p:container></p:pic><x:pic><c:img/></x:pic></s:sec>")
+    assert [leaf.get("binaryItemIDRef") for leaf in picture_leaves(pictured)] == ["img1"]
+    picture_opf = "<o:package xmlns:o='http://www.idpf.org/2007/opf/'><o:manifest>" + "".join(
+        f"<o:item id='{name}' href='{href}' media-type='application/xml'{extra}/>"
+        for name, href, extra in (
+            ("h", "Contents/header.xml", ""),
+            ("s", "Contents/section0.xml", ""),
+            ("m", "Contents/masterpage0.xml", ""),
+            ("img1", "BinData/image.png", ""),
+            ("ext", "https://example.invalid/img.png", " isEmbeded='0'"),
+        )
+    ) + "</o:manifest><o:spine><o:itemref idref='h'/><o:itemref idref='s'/></o:spine></o:package>"
+    picture_section = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph' xmlns:c='http://www.hancom.co.kr/hwpml/2011/core'>" + "".join(
+        "<p:pic><c:img" + attribute + "/></p:pic>"
+        for attribute in (" binaryItemIDRef='img&#49;'", " binaryItemIDRef='ext'", " binaryItemIDRef='missing'", " binaryItemIDRef=''", "")
+    ) + "</s:sec>"
+    picture_master = "<masterPage xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph' xmlns:c='http://www.hancom.co.kr/hwpml/2011/core'><p:pic><c:img binaryItemIDRef='img1'/></p:pic></masterPage>"
+    pictured_archive = io.BytesIO()
+    with zipfile.ZipFile(pictured_archive, "w") as archive:
+        archive.writestr("Contents/content.hpf", picture_opf)
+        archive.writestr("Contents/header.xml", "<h:head xmlns:h='http://www.hancom.co.kr/hwpml/2011/head'/>")
+        archive.writestr("Contents/section0.xml", picture_section)
+        archive.writestr("Contents/masterpage0.xml", picture_master)
+        archive.writestr("BinData/image.png", b"image")
+    with zipfile.ZipFile(pictured_archive) as archive:
+        picture_counts = picture_archive(archive)
+    assert [picture_counts["document_" + state] for state in ("embedded", "external", "missing", "empty", "absent")] == [1] * 5
+    assert picture_counts["master_embedded"] == 1 and picture_counts["document_sites"] == 5
     assert byte_format(bytes.fromhex("89504e470d0a1a0a")) == "png"
     assert byte_format(bytes.fromhex("ffd8")) == "jpeg"
     assert not matching_media("png", "image/jpg")
@@ -259,8 +339,12 @@ def main():
         for index, counts in enumerate(collect_payloads()):
             print(index, dict(sorted(counts.items())))
         return
+    if sys.argv[1:] == ["--pictures"]:
+        for index, counts in enumerate(collect_pictures()):
+            print(index, dict(sorted(counts.items())))
+        return
     if len(sys.argv) != 1:
-        raise SystemExit("usage: hwpx-fill-brush-image-oracle.py [--self-test|--payloads]")
+        raise SystemExit("usage: hwpx-fill-brush-image-oracle.py [--self-test|--payloads|--pictures]")
     for index, counts in enumerate(collect()):
         print(index, dict(sorted(counts.items())))
 

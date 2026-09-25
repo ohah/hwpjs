@@ -42,6 +42,8 @@ const section_presentation = @import("section_presentation.zig");
 const fill_brush = @import("fill_brush.zig");
 const fill_brush_image_links = @import("fill_brush_image_links.zig");
 const fill_brush_image_payloads = @import("fill_brush_image_payloads.zig");
+const picture_image_links = @import("picture_image_links.zig");
+const masterpage_picture_image_links = @import("masterpage_picture_image_links.zig");
 const masterpage_fill_brush = @import("masterpage_fill_brush.zig");
 const section_page_border_refs = @import("section_page_border_refs.zig");
 const section_definition_refs = @import("section_definition_refs.zig");
@@ -207,6 +209,18 @@ pub const FillBrushImageLinkOptions = fill_brush_image_links.Options;
 pub const FillBrushImageLinkReport = fill_brush_image_links.Report;
 pub const FillBrushImagePayloadOptions = fill_brush_image_payloads.Options;
 pub const FillBrushImagePayloadReport = fill_brush_image_payloads.Report;
+pub const PictureImageLinkOptions = picture_image_links.Options;
+pub const PictureImageLinkReport = picture_image_links.Report;
+pub const PictureImageOptions = struct {
+    trees: XmlTreesOptions = .{},
+    links: PictureImageLinkOptions = .{},
+};
+pub const MasterPagePictureImageLinkOptions = masterpage_picture_image_links.Options;
+pub const MasterPagePictureImageLinkReport = masterpage_picture_image_links.Report;
+pub const MasterPagePictureImageOptions = struct {
+    master_pages: MasterPageOptions = .{},
+    pictures: MasterPagePictureImageLinkOptions = .{},
+};
 pub const MasterPageFillBrushOptions = struct {
     master_pages: MasterPageOptions = .{},
     brushes: masterpage_fill_brush.Options = .{},
@@ -299,6 +313,7 @@ pub const KnownOptions = struct {
     master_page_fill_brushes: masterpage_fill_brush.Options = .{},
     master_page_fill_brush_image_links: fill_brush_image_links.Options = .{},
     master_page_fill_brush_image_payloads: fill_brush_image_payloads.Options = .{},
+    master_page_picture_image_links: masterpage_picture_image_links.Options = .{},
     structure: StructureOptions = .{},
     header_resources: HeaderResourceOptions = .{},
     section_references: ReferenceOptions = .{},
@@ -326,6 +341,7 @@ pub const KnownOptions = struct {
     fill_brushes: FillBrushOptions = .{},
     fill_brush_image_links: FillBrushImageLinkOptions = .{},
     fill_brush_image_payloads: FillBrushImagePayloadOptions = .{},
+    picture_image_links: PictureImageLinkOptions = .{},
 };
 pub const DocumentOptions = struct {
     // The archive index also contains large BinData/section entries. Their
@@ -486,6 +502,20 @@ pub const Document = struct {
         var pages = try self.inspectMasterPages(a, options.master_pages);
         defer pages.deinit(a);
         return masterpage_fill_brush.inspect(a, self.archive, pages.parts.parts, options.brushes);
+    }
+
+    /// Per-element raw pic/img OPF links in structure-selected section XML.
+    pub fn inspectPictureImageLinks(self: *const Document, a: std.mem.Allocator, options: PictureImageOptions) !PictureImageLinkReport {
+        var trees = try self.readXmlTrees(a, options.trees);
+        defer trees.deinit(a);
+        return picture_image_links.inspectSections(a, self.manifest, trees.sections, options.links);
+    }
+
+    /// Per-element raw pic/img OPF links in manifest-selected master pages.
+    pub fn inspectMasterPagePictureImageLinks(self: *const Document, a: std.mem.Allocator, options: MasterPagePictureImageOptions) !MasterPagePictureImageLinkReport {
+        var pages = try self.inspectMasterPages(a, options.master_pages);
+        defer pages.deinit(a);
+        return masterpage_picture_image_links.inspect(a, self.archive, self.manifest, pages.parts.parts, options.pictures);
     }
 
     /// Runs all currently exposed HWPX inspections on this document. A

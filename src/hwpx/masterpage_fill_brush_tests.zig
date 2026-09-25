@@ -78,6 +78,41 @@ test "HWPX master fill brushes enforce part, XML, element and brush budgets" {
     try std.testing.expectError(error.UnexpectedEnd, inspect(a, page0, "<broken", .{}));
 }
 
+test "HWPX shared master XML trees reject a forged ZIP entry binding" {
+    const a = std.testing.allocator;
+    const bytes = try fixture.storedZip(a, &sources);
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    var selected = try document.inspectMasterPages(a, .{});
+    defer selected.deinit(a);
+    try std.testing.expect(selected.parts.parts.len > 0);
+    selected.parts.parts[0].entry_index = 0;
+    try std.testing.expectError(error.InvalidManifestEntryIndex, @import("masterpage_xml_trees.zig").read(a, document.archive, selected.parts.parts, .{}));
+}
+
+test "HWPX known report owns section and master raw picture links separately" {
+    const a = std.testing.allocator;
+    var changed = sources;
+    changed[5].data = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph' xmlns:c='http://www.hancom.co.kr/hwpml/2011/core'><p:pic><c:img binaryItemIDRef='missing'/></p:pic></s:sec>";
+    changed[6].data = "<masterPage id='masterpage0' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph' xmlns:c='http://www.hancom.co.kr/hwpml/2011/core'><p:pic><c:img binaryItemIDRef='missing'/></p:pic></masterPage>";
+    const bytes = try fixture.storedZip(a, &changed);
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    var known = try document.inspectKnown(a, .{});
+    defer known.deinit(a);
+    try std.testing.expectEqual(@as(usize, 1), known.picture_image_links.count(.missing));
+    try std.testing.expectEqual(@as(usize, 1), known.master_page_picture_image_links.count(.missing));
+    try std.testing.expectEqual(@as(usize, 0), known.master_page_binary_references.counts(.master_picture).sites);
+    var standalone = try document.inspectMasterPagePictureImageLinks(a, .{});
+    defer standalone.deinit(a);
+    try std.testing.expectEqual(@as(usize, 1), standalone.count(.missing));
+    try std.testing.expectError(error.LimitExceeded, document.inspectKnown(a, .{ .picture_image_links = .{ .max_sites = 0 } }));
+    try std.testing.expectError(error.LimitExceeded, document.inspectKnown(a, .{ .master_page_picture_image_links = .{ .links = .{ .max_sites = 0 } } }));
+    try std.testing.expectError(error.LimitExceeded, document.inspectMasterPagePictureImageLinks(a, .{ .pictures = .{ .links = .{ .max_sites = 0 } } }));
+}
+
 test "HWPX master fill brushes connect known report and release every failure" {
     const a = std.testing.allocator;
     const bytes = try fixture.storedZip(a, &sources);
