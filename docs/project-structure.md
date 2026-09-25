@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+[HWPX OLE 관측 편차 복사본 검사](hwpx-ole-observed-repairs.md)는 `src/cfb/observed_repairs.zig`가 세 가지 비준수 메타데이터 위치만 임시 치환하고 같은 strict reader를 다시 호출합니다. `src/hwpx/ole_payloads.zig`는 원본 실패와 복사본 결과를 분리합니다.
+
 [HWPX OLE 패키지 사본 검사](hwpx-ole-payloads.md)는 `src/hwpx/ole_payloads.zig`가 OPF 후보·외부 선언과 ZIP 내 사본을 분리하고 `src/ole/`의 공통 strict CFB 계층을 재사용합니다. HWP5의 `src/hwp5/ole/`은 같은 계층을 재노출합니다.
 
 [OPF 이미지 후보 전수 검사](hwpx-manifest-image-payloads.md)는 `src/hwpx/manifest_image_payloads.zig`가 선택하고 `image_payloads.zig`의 바이트 검사기를 공유합니다.

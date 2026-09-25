@@ -38,6 +38,24 @@ test "HWPX known inspections retain packaged OLE behind external declaration" {
     try std.testing.expectEqual(@as(usize, 0), checked.total_requested_bytes);
 }
 
+test "HWPX known inspections retain strict-invalid OLE with normalized copy evidence" {
+    const a = std.testing.allocator;
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "reference/rhwp/samples/issue5447/원형대원형-계열추가.hwpx", a, .limited(100_000));
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    var report = try document.inspectKnown(a, .{});
+    defer report.deinit(a);
+    try std.testing.expectEqual(@as(usize, 1), report.ole_payloads.candidates);
+    try std.testing.expectEqual(@as(usize, 1), report.ole_payloads.inspection_failures);
+    try std.testing.expectEqual(@as(usize, 1), report.ole_payloads.normalized_targets);
+    try std.testing.expectEqual(@as(usize, 0), report.ole_payloads.streams);
+    try std.testing.expect(report.ole_payloads.normalized_streams > 0);
+    try std.testing.expectEqual(error.InvalidFat, report.ole_payloads.targets[0].inspection_error.?);
+    try std.testing.expect(report.ole_payloads.targets[0].normalized.?.deviations.zero_mini_tail_slots > 0);
+    try std.testing.expectEqual(@as(?anyerror, null), report.ole_payloads.targets[0].normalization_error);
+}
+
 test "HWPX known inspections include unreferenced manifest image diagnostics" {
     const a = std.testing.allocator;
     var sources = synthetic_sources ++ [_]fixture.Source{.{ .name = "BinData/unused.svg", .data = "<wrong xmlns='http://www.w3.org/2000/svg'/>" }};

@@ -1606,6 +1606,13 @@ fn surveyShard(shard: usize) !void {
     try std.testing.expectEqual(expected.ole_fat_tail_nonfree[shard], ole_payloads.invalid_fat);
     try std.testing.expectEqual(expected.ole_invalid_root[shard] - expected.ole_fat_tail_nonfree[shard], ole_payloads.invalid_root);
     try std.testing.expectEqual(ole_payloads.failures, ole_payloads.invalid_root + ole_payloads.invalid_fat);
+    try std.testing.expectEqual(expected.ole_invalid_root[shard], ole_payloads.normalized_targets);
+    try std.testing.expectEqual(expected.ole_invalid_root[shard], ole_payloads.normalized_root_created);
+    try std.testing.expectEqual(expected.ole_fat_tail_nonfree[shard], ole_payloads.normalized_fat_tail);
+    try std.testing.expectEqual(expected.ole_mini_tail_nonfree[shard], ole_payloads.normalized_mini_tail);
+    try std.testing.expectEqual(expected.ole_compat_streams[shard], ole_payloads.streams + ole_payloads.normalized_streams);
+    try std.testing.expectEqual(expected.ole_compat_stream_bytes[shard], ole_payloads.stream_bytes + ole_payloads.normalized_stream_bytes);
+    try std.testing.expectEqual(@as(usize, 0), ole_payloads.normalization_errors);
     try std.testing.expectEqual(@as(usize, 0), ole_payloads.failed_external);
     try std.testing.expectEqual(ole_payloads.candidates - ole_payloads.external, ole_payloads.failures);
     try std.testing.expectEqual(@as(usize, 0), ole_payloads.missing + ole_payloads.raw + ole_payloads.unknown);

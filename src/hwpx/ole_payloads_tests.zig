@@ -5,6 +5,7 @@ const fixture = @import("test_package_fixture.zig");
 const manifest = @import("content_manifest.zig");
 const ole = @import("ole_payloads.zig");
 const package = @import("package.zig");
+const header = @import("../cfb/header.zig");
 
 fn item(id: []const u8, href: []const u8, media: []const u8, external: bool, entry_index: ?usize) manifest.Item {
     return .{ .id = @constCast(id), .href = @constCast(href), .media_type = @constCast(media), .embedded = if (external) false else null, .entry_index = entry_index };
@@ -47,6 +48,31 @@ fn sample(a: std.mem.Allocator, corrupt_size: bool, corrupt_cfb: bool, options: 
         item("missing", "BinData/missing.ole", "application/ole", true, null),
         item("other", "BinData/other.bin", "application/octet-stream", false, null),
     };
+    const opf: manifest.Manifest = .{ .items = &items, .spine = @constCast(&[_]manifest.SpineRef{}), .xml_bytes = 0 };
+    return ole.inspect(a, archive, opf, options);
+}
+
+fn normalizedSample(a: std.mem.Allocator, mini: bool, unsupported_tail: bool, options: ole.Options) !ole.Report {
+    const raw = try cfbBytes(a);
+    defer a.free(raw);
+    const head = try header.Header.parse(raw);
+    const root = (@as(usize, head.directory_start) + 1) * head.sector_size;
+    const fat = try header.int(u32, raw, 76);
+    const fat_tail = (@as(usize, fat) + 1) * head.sector_size + (raw.len / head.sector_size - 1) * 4;
+    std.mem.writeInt(u64, raw[root + 100 ..][0..8], 17, .little);
+    std.mem.writeInt(u32, raw[fat_tail..][0..4], if (unsupported_tail) 42 else 0, .little);
+    if (mini) {
+        const mini_tail = (@as(usize, head.mini_start) + 1) * head.sector_size + 4;
+        std.mem.writeInt(u32, raw[mini_tail..][0..4], 0, .little);
+    }
+    const wrapped = try prefixed(a, raw);
+    defer a.free(wrapped);
+    const sources = [_]fixture.Source{.{ .name = "BinData/deviant.ole", .data = wrapped }};
+    const bytes = try fixture.storedZip(a, &sources);
+    defer a.free(bytes);
+    var archive = try zip.open(a, bytes, .{});
+    defer archive.deinit();
+    var items = [_]manifest.Item{item("deviant", sources[0].name, "application/ole", false, 0)};
     const opf: manifest.Manifest = .{ .items = &items, .spine = @constCast(&[_]manifest.SpineRef{}), .xml_bytes = 0 };
     return ole.inspect(a, archive, opf, options);
 }
@@ -116,6 +142,48 @@ test "HWPX OLE payloads ignore forged external ZIP binding and reject embedded m
     var embedded_items = [_]manifest.Item{item("forged", sources[1].name, "application/ole", false, 0)};
     const embedded_manifest: manifest.Manifest = .{ .items = &embedded_items, .spine = @constCast(&[_]manifest.SpineRef{}), .xml_bytes = 0 };
     try std.testing.expectError(error.InvalidManifestEntryIndex, ole.inspect(a, archive, embedded_manifest, .{}));
+}
+
+test "HWPX OLE payloads keep strict failure while inspecting narrowly normalized copy" {
+    const a = std.testing.allocator;
+    var report = try normalizedSample(a, true, false, .{});
+    defer report.deinit(a);
+    try std.testing.expectEqual(@as(usize, 1), report.inspection_failures);
+    try std.testing.expectEqual(@as(usize, 1), report.normalized_targets);
+    try std.testing.expectEqual(@as(usize, 0), report.streams);
+    try std.testing.expectEqual(@as(usize, 1), report.normalized_streams);
+    try std.testing.expectEqual(error.InvalidFat, report.targets[0].inspection_error.?);
+    const normalized = report.targets[0].normalized.?;
+    try std.testing.expectEqual(@as(u64, 17), normalized.deviations.original_root_created);
+    try std.testing.expectEqual(@as(usize, 1), normalized.deviations.zero_fat_tail_slots);
+    try std.testing.expectEqual(@as(usize, 1), normalized.deviations.zero_mini_tail_slots);
+    try std.testing.expectEqual(@as(usize, 6), normalized.counts.stream_bytes);
+    var strict_only = try normalizedSample(a, true, false, .{ .inspect_observed_repairs = false });
+    defer strict_only.deinit(a);
+    try std.testing.expectEqual(@as(usize, 0), strict_only.normalized_targets);
+    try std.testing.expectEqual(error.InvalidFat, strict_only.targets[0].inspection_error.?);
+    try std.testing.expectError(error.LimitExceeded, normalizedSample(a, true, false, .{ .max_total_inner_stream_bytes = 5 }));
+    try std.testing.expectError(error.LimitExceeded, normalizedSample(a, true, false, .{ .max_total_entries = normalized.counts.entries - 1 }));
+    try std.testing.expectError(error.LimitExceeded, normalizedSample(a, true, false, .{ .max_total_path_bytes = normalized.counts.path_bytes - 1 }));
+}
+
+test "HWPX OLE payloads never repair nonzero FAT tail marker" {
+    const a = std.testing.allocator;
+    var report = try normalizedSample(a, false, true, .{});
+    defer report.deinit(a);
+    try std.testing.expectEqual(@as(usize, 1), report.inspection_failures);
+    try std.testing.expectEqual(@as(usize, 0), report.normalized_targets);
+    try std.testing.expectEqual(error.InvalidFat, report.targets[0].inspection_error.?);
+    try std.testing.expectEqual(error.UnsupportedObservedDeviation, report.targets[0].normalization_error.?);
+}
+
+test "HWPX OLE payloads normalized path releases all allocation failures" {
+    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+        fn run(a: std.mem.Allocator) !void {
+            var report = try normalizedSample(a, true, false, .{});
+            report.deinit(a);
+        }
+    }.run, .{});
 }
 
 test "HWPX OLE payloads release all allocation failure paths" {

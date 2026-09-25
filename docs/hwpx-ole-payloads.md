@@ -12,6 +12,8 @@ CFB 시그니처 상수는 `src/cfb/format.zig` 한 곳에서 읽기·쓰기·HW
 
 직접 `inspectOlePayloads` 호출은 암호화 manifest를 선제 판별하지 않습니다. 보호 여부까지 필요한 호출자는 `inspectProtection`을 먼저 사용하거나 암호 문서를 거부하는 `inspectKnown`을 사용해야 합니다. `inspection_error`가 있는 대상의 내부 스트림은 검증된 것으로 세지 않습니다.
 
+원본 strict 실패를 유지한 채 관측 편차를 **임시 복사본에서만** 바로잡아 내부 구조를 별도로 검사하는 [좁은 정규화 보고서](hwpx-ole-observed-repairs.md)가 추가됐습니다. `normalized` 결과는 원본 CFB의 strict 성공으로 합산하지 않습니다.
+
 ## 관측과 검증
 
 2026-09-26 기준 로컬 표본과 코드에서 확인했습니다.

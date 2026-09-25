@@ -11,6 +11,7 @@ pub const image = @import("image/root.zig");
 pub const text = @import("text/root.zig");
 
 test {
+    _ = @import("cfb/observed_repairs_tests.zig");
     _ = @import("hwpx/package_tests.zig");
     _ = @import("hwpx/list_references_tests.zig");
     _ = @import("hwpx/binary_references_tests.zig");

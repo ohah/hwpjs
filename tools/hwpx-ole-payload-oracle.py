@@ -3,6 +3,7 @@
 
 from collections import Counter
 import io
+import hashlib
 import os
 from pathlib import Path
 import struct
@@ -32,8 +33,8 @@ def root_metadata(raw):
     return name, entry[66], struct.unpack_from("<Q", entry, 100)[0]
 
 
-def fat_tail_nonfree(raw):
-    """Check only unused FAT slots beyond the actual file sector count."""
+def fat_tail_values(raw):
+    """Return non-FREESECT values beyond the actual file sector count."""
     if not raw.startswith(CFB_MAGIC) or len(raw) < 512:
         return None
     shift = struct.unpack_from("<H", raw, 30)[0]
@@ -44,6 +45,7 @@ def fat_tail_nonfree(raw):
     if fat_count > 109 or len(raw) % sector_size:
         return None
     sector_count = len(raw) // sector_size - 1
+    values = set()
     for index in range(fat_count):
         sid = struct.unpack_from("<I", raw, 76 + 4 * index)[0]
         part = raw[(sid + 1) * sector_size:(sid + 2) * sector_size]
@@ -51,8 +53,41 @@ def fat_tail_nonfree(raw):
             return None
         for slot in range(sector_size // 4):
             if index * (sector_size // 4) + slot >= sector_count and struct.unpack_from("<I", part, 4 * slot)[0] != 0xFFFFFFFF:
-                return True
-    return False
+                values.add(struct.unpack_from("<I", part, 4 * slot)[0])
+    return values
+
+
+def fat_tail_nonfree(raw):
+    values = fat_tail_values(raw)
+    return None if values is None else bool(values)
+
+
+def mini_tail_values(raw):
+    """Inspect MiniFAT slots beyond the root mini-stream capacity only."""
+    if not raw.startswith(CFB_MAGIC) or len(raw) < 512:
+        return None
+    shift = struct.unpack_from("<H", raw, 30)[0]
+    if shift not in (9, 12):
+        return None
+    sector_size = 1 << shift
+    if len(raw) % sector_size:
+        return None
+    directory_sid = struct.unpack_from("<I", raw, 48)[0]
+    root_offset = (directory_sid + 1) * sector_size
+    if root_offset + 128 > len(raw):
+        return None
+    root_size = struct.unpack_from("<I" if shift == 9 else "<Q", raw, root_offset + 120)[0]
+    capacity = (root_size + 63) // 64
+    mini_count = struct.unpack_from("<I", raw, 64)[0]
+    mini_start = struct.unpack_from("<I", raw, 60)[0]
+    if mini_count != 1:
+        return None
+    offset = (mini_start + 1) * sector_size
+    if offset + sector_size > len(raw):
+        return None
+    return {struct.unpack_from("<I", raw, offset + i * 4)[0]
+            for i in range(capacity, sector_size // 4)
+            if struct.unpack_from("<I", raw, offset + i * 4)[0] != 0xffffffff}
 
 
 def inspect(archive):
@@ -108,8 +143,18 @@ def inspect(archive):
         tail = fat_tail_nonfree(inner)
         if tail is True:
             counts["fat_tail_nonfree"] += 1
+            values = fat_tail_values(inner)
+            if values == {0}:
+                counts["fat_tail_zeros_only"] += 1
+            else:
+                counts["fat_tail_other_values"] += 1
         elif tail is None:
             counts["fat_tail_unreadable"] += 1
+        mini_tail = mini_tail_values(inner)
+        if mini_tail:
+            counts["mini_tail_nonfree"] += 1
+            if mini_tail == {0}:
+                counts["mini_tail_zeros_only"] += 1
     return counts
 
 
@@ -159,6 +204,17 @@ def self_test():
     assert fat_tail_nonfree(root) is False
     struct.pack_into("<I", root, 512 + 4, 0)
     assert fat_tail_nonfree(root) is True
+    mini = bytearray(1536)
+    mini[:8] = CFB_MAGIC
+    struct.pack_into("<H", mini, 30, 9)
+    struct.pack_into("<I", mini, 48, 0)
+    struct.pack_into("<I", mini, 60, 1)
+    struct.pack_into("<I", mini, 64, 1)
+    struct.pack_into("<I", mini, 512 + 120, 64)
+    mini[1024:1536] = b"\xff" * 512
+    assert mini_tail_values(mini) == set()
+    struct.pack_into("<I", mini, 1024 + 4, 0)
+    assert mini_tail_values(mini) == {0}
     xml = ("<p:package xmlns:p='http://www.idpf.org/2007/opf/'><p:manifest>"
            "<p:item href='BinData/external.ole' media-type='application/ole' isEmbeded='0'/>"
            "<p:item href='BinData/raw.OLE' media-type='application/octet-stream'/>"
@@ -219,6 +275,49 @@ def root_probe():
                 continue
 
 
+def compatible_streams():
+    """Optional BSD olefile cross-check; no result is a strict CFB verdict."""
+    import olefile
+
+    shards = [Counter() for _ in range(8)]
+    for root_index, root in enumerate(ROOTS):
+        for path in root.rglob("*.hwpx"):
+            shard = (root_index + sum(os.fsencode(str(path.relative_to(root))))) % 8
+            counts = shards[shard]
+            try:
+                with zipfile.ZipFile(path) as archive:
+                    if encrypted(archive):
+                        continue
+                    content = ET.fromstring(archive.read("Contents/content.hpf"))
+                    manifest = content.find(OPF + "manifest")
+                    if manifest is None:
+                        continue
+                    for item in manifest.findall(OPF + "item"):
+                        href = item.get("href", "")
+                        media = item.get("media-type", "").split(";", 1)[0].strip(" \t").lower()
+                        if (media != "application/ole" and not href.lower().endswith(".ole")) or href not in archive.namelist():
+                            continue
+                        data = archive.read(href)
+                        raw = data[4:] if data[4:12] == CFB_MAGIC else data
+                        counts["candidates"] += 1
+                        try:
+                            with olefile.OleFileIO(io.BytesIO(raw)) as compound:
+                                paths = compound.listdir(streams=True, storages=False)
+                                for name in paths:
+                                    stream = compound.openstream(name).read()
+                                    counts["streams"] += 1
+                                    counts["stream_bytes"] += len(stream)
+                                    counts["stream_hash_u64"] = (counts["stream_hash_u64"] +
+                                        int.from_bytes(hashlib.sha256(stream).digest()[:8], "little")) & 0xffffffffffffffff
+                            counts["opened"] += 1
+                        except (OSError, IOError, ValueError, TypeError) as exc:
+                            counts["olefile_errors"] += 1
+                            print("olefile failure", path, href, type(exc).__name__, str(exc), file=sys.stderr)
+            except (zipfile.BadZipFile, KeyError, OSError, ET.ParseError, ValueError):
+                continue
+    return shards
+
+
 if __name__ == "__main__":
     if sys.argv[1:] == ["--self-test"]:
         self_test()
@@ -227,5 +326,8 @@ if __name__ == "__main__":
             print(index, dict(sorted(counts.items())))
     elif sys.argv[1:] == ["--root-probe"]:
         root_probe()
+    elif sys.argv[1:] == ["--compat"]:
+        for index, counts in enumerate(compatible_streams()):
+            print(index, dict(sorted(counts.items())))
     else:
-        raise SystemExit("usage: hwpx-ole-payload-oracle.py [--self-test|--root-probe]")
+        raise SystemExit("usage: hwpx-ole-payload-oracle.py [--self-test|--root-probe|--compat]")

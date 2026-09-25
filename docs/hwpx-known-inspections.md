@@ -4,6 +4,8 @@
 
 `ole_payloads`는 [OPF OLE 패키지 사본](hwpx-ole-payloads.md)을 별도 소유 보고서로 포함합니다. 외부 선언과 ZIP 내 사본을 구분하며 strict CFB 실패도 대상별 진단으로 남깁니다. OLE 내부 `Contents` 의미·활성화는 포함하지 않습니다.
 
+같은 보고서의 [`normalized` 대상](hwpx-ole-observed-repairs.md)은 관측된 비준수 메타데이터만 복사본에서 고친 뒤 strict 검사를 다시 통과한 결과입니다. 원본 `inspection_error`와 `inspection_failures`는 지우지 않으며 전체 문서 성공 판정으로 승격하지 않습니다.
+
 그림·브러시의 공통 내장 이미지 보고서에는 [SVG XML 루트 검사](hwpx-svg-image-payloads.md)도 포함됩니다. 이 결과를 SVG 렌더링 가능성이나 안전한 실행 판정으로 승격하지 않습니다.
 
 `section_page_borders`는 [구역 쪽 테두리·배경 원값](hwpx-section-page-borders.md)을 소유 보고서로, `section_page_border_references`는 [header 리소스 ID 진단](hwpx-section-page-border-references.md)을 값 보고서로 노출합니다. 페이지별 적용은 아직 하지 않습니다.
