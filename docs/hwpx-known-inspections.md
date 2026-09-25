@@ -12,6 +12,8 @@
 
 `master_page_fill_brushes`는 [마스터페이지 fillBrush](hwpx-master-fill-brush.md)의 별도 파트 보고서입니다. 두 보고서가 같은 필드 판정기를 쓰지만 서로의 출처·선택 범위·예산을 합치지 않습니다.
 
+`fill_brush_image_links`와 `master_page_fill_brush_image_links`는 두 원값 보고서의 각 이미지 노드를 [OPF 항목에 연결](hwpx-fill-brush-image-links.md)하는 별도 소유 보고서입니다. 이미지 바이트·렌더링을 검증하지 않습니다.
+
 `section_definition_references`는 [구역 정의 번호·메모 모양 ID 진단](hwpx-section-definition-references.md)을 기존 `section_definitions`·`resources` 결과에서 계산합니다. 미해결 진단이 있어도 `inspectKnown`은 이를 전체 문서 거부로 승격하지 않습니다.
 
 `inspectKnown`은 조건부 참조의 양쪽 분기를 관측하며, 활성 분기만의 이진·차트 참조는 별도 [조건부 참조 선택](hwpx-switch-selection.md) API가 제공합니다.

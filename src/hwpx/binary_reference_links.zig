@@ -62,28 +62,42 @@ pub const Index = struct {
     }
 };
 
+pub const TargetState = enum { absent, empty, embedded, external, missing };
+pub const Target = struct {
+    state: TargetState,
+    item_index: ?usize = null,
+};
+
+/// Exact OPF ID lookup shared by the streaming reference counters and
+/// per-brush image links. No ZIP bytes or external URL is opened here.
+pub fn resolve(index: *const Index, manifest: content_manifest.Manifest, raw_id: ?[]const u8) Target {
+    const id = raw_id orelse return .{ .state = .absent };
+    if (id.len == 0) return .{ .state = .empty };
+    const item_index = index.by_id.get(id) orelse return .{ .state = .missing };
+    return .{
+        .state = if (manifest.items[item_index].entry_index != null) .embedded else .external,
+        .item_index = item_index,
+    };
+}
+
 /// Consumes the XML-normalized, owned attribute value. Matching is byte-exact
 /// against OPF item IDs; a ZIP filename or a list position is never an ID.
 pub fn note(a: std.mem.Allocator, report: *Report, index: *const Index, manifest: content_manifest.Manifest, kind: Kind, source_item_index: usize, raw_id: ?[]u8) !void {
     defer if (raw_id) |id| a.free(id);
     const counts = &report.counts_by_kind[@intFromEnum(kind)];
     counts.sites += 1;
-    const id = raw_id orelse {
-        counts.absent += 1;
-        return;
-    };
-    if (id.len == 0) {
-        counts.empty += 1;
-        return;
-    }
-    if (index.by_id.get(id)) |target_index| {
-        if (manifest.items[target_index].entry_index != null) counts.resolved_embedded += 1 else counts.resolved_external += 1;
-        return;
-    }
-    counts.missing_target += 1;
-    if (report.first_missing_id == null) {
-        report.first_missing_id = try a.dupe(u8, id);
-        report.first_missing_item_index = source_item_index;
+    switch (resolve(index, manifest, raw_id).state) {
+        .absent => counts.absent += 1,
+        .empty => counts.empty += 1,
+        .embedded => counts.resolved_embedded += 1,
+        .external => counts.resolved_external += 1,
+        .missing => {
+            counts.missing_target += 1;
+            if (report.first_missing_id == null) {
+                report.first_missing_id = try a.dupe(u8, raw_id.?);
+                report.first_missing_item_index = source_item_index;
+            }
+        },
     }
 }
 

@@ -520,6 +520,9 @@ pub const fill_brush_hatch_styles = [_][3]usize{
 // manifest-selected canonical master pages are included; face/hatch sums use
 // the numeric value of exact six-digit hex spellings.
 pub const master_fill_brush_parts = [_]usize{ 14, 6, 19, 0, 0, 0, 3, 19 };
+pub const fill_brush_image_link_sites = [_]usize{ 8, 1, 12, 0, 3, 4, 2, 360 };
+pub const fill_brush_image_target_index_sums = [_]usize{ 9, 0, 57, 0, 0, 1, 1, 61786 };
+pub const master_fill_brush_image_link_sites = [_]usize{ 0, 0, 0, 0, 0, 0, 0, 0 };
 pub const master_fill_brush_counts = [_]usize{ 7, 3, 13, 0, 0, 0, 3, 14 };
 pub const master_fill_brush_face_sums = [_]u64{ 46844616, 0, 46844616, 0, 0, 0, 0, 82570215 };
 pub const master_fill_brush_hatch_sums = [_]u64{ 0, 0, 0, 0, 0, 0, 0, 100663290 };

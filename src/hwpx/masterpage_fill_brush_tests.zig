@@ -88,6 +88,11 @@ test "HWPX master fill brushes connect known report and release every failure" {
     defer report.deinit(a);
     try std.testing.expectEqual(@as(usize, 3), report.master_page_fill_brushes.brushes.len);
     try std.testing.expectEqual(@as(usize, 0), report.fill_brushes.brushes.len);
+    try std.testing.expectEqual(@as(usize, 1), report.master_page_fill_brush_image_links.sites.len);
+    try std.testing.expectEqual(@as(usize, 1), report.master_page_fill_brush_image_links.count(.missing));
+    try std.testing.expectEqual(@as(usize, 0), report.master_page_binary_references.counts(.master_brush_image).sites);
+    try std.testing.expectEqual(@as(usize, 0), report.fill_brush_image_links.sites.len);
+    try std.testing.expectError(error.LimitExceeded, document.inspectKnown(a, .{ .master_page_fill_brush_image_links = .{ .max_sites = 0 } }));
     try std.testing.expectError(error.LimitExceeded, document.inspectKnown(a, .{ .master_page_fill_brushes = .{ .brush = .{ .max_nodes = 0 } } }));
     try std.testing.checkAllAllocationFailures(a, struct {
         fn run(allocator: std.mem.Allocator) !void {

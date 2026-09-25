@@ -7,6 +7,7 @@ const section_direct_settings = @import("hwpx/section_direct_settings.zig");
 const section_note_fields = @import("hwpx/section_note_fields.zig");
 const xml_values = @import("hwpx/xml_values.zig");
 const fill_brush_stats = @import("hwpx_fill_brush_survey_stats.zig");
+const fill_brush_image_stats = @import("hwpx_fill_brush_image_survey_stats.zig");
 const master_fill_brush_stats = @import("hwpx_master_fill_brush_survey_stats.zig");
 
 const sub_list_field_count = para_list_attributes.field_names.len;
@@ -274,6 +275,7 @@ const Statistics = struct {
     section_notes: SectionNoteStats,
     section_presentation: PresentationStats,
     fill_brushes: fill_brush_stats.Stats,
+    fill_brush_image_links: fill_brush_image_stats.Stats,
     master_fill_brushes: master_fill_brush_stats.Stats,
     paragraphs: usize,
     paragraph_children: package.ParagraphChildrenReport,
@@ -1108,6 +1110,7 @@ fn inspectOne(bytes: []const u8) !Outcome {
         .section_notes = try SectionNoteStats.from(a, known.section_definitions, known.section_note_shapes),
         .section_presentation = try PresentationStats.from(a, known.section_definitions, known.section_presentation),
         .fill_brushes = try fill_brush_stats.Stats.from(a, known.fill_brushes, known.section_presentation),
+        .fill_brush_image_links = try fill_brush_image_stats.Stats.from(document.manifest, &known),
         .master_fill_brushes = try master_fill_brush_stats.Stats.from(known.master_page_fill_brushes, known.master_pages),
         .paragraphs = known.paragraph_metadata.paragraphs,
         .paragraph_children = known.paragraph_children,
@@ -1179,6 +1182,7 @@ fn surveyShard(shard: usize) !void {
     var section_notes: SectionNoteStats = .{};
     var section_presentation: PresentationStats = .{};
     var fill_brushes: fill_brush_stats.Stats = .{};
+    var fill_brush_image_links: fill_brush_image_stats.Stats = .{};
     var master_fill_brushes: master_fill_brush_stats.Stats = .{};
     var paragraphs: usize = 0;
     var paragraph_children: package.ParagraphChildrenReport = .{};
@@ -1270,6 +1274,7 @@ fn surveyShard(shard: usize) !void {
                     section_notes.merge(stats.section_notes);
                     section_presentation.merge(stats.section_presentation);
                     fill_brushes.merge(stats.fill_brushes);
+                    fill_brush_image_links.merge(stats.fill_brush_image_links);
                     master_fill_brushes.merge(stats.master_fill_brushes);
                     page_geometry.pages += stats.page_geometry.pages;
                     page_geometry.widely += stats.page_geometry.widely;
@@ -1550,6 +1555,12 @@ fn surveyShard(shard: usize) !void {
     try std.testing.expectEqualSlices(usize, &expected.fill_brush_image_modes[shard], &fill_brushes.image_modes);
     try std.testing.expectEqualSlices(usize, &expected.fill_brush_image_effects[shard], &fill_brushes.image_effects);
     try std.testing.expectEqualSlices(usize, &expected.fill_brush_hatch_styles[shard], &fill_brushes.hatch_styles);
+    try std.testing.expectEqual(expected.fill_brush_image_link_sites[shard], fill_brush_image_links.document_sites);
+    try std.testing.expectEqual(expected.fill_brush_image_link_sites[shard], fill_brush_image_links.document_embedded);
+    try std.testing.expectEqual(expected.fill_brush_image_target_index_sums[shard], fill_brush_image_links.document_target_index_sum);
+    try std.testing.expectEqual(expected.master_fill_brush_image_link_sites[shard], fill_brush_image_links.master_sites);
+    try std.testing.expectEqual(expected.master_fill_brush_image_link_sites[shard], fill_brush_image_links.master_embedded);
+    try std.testing.expectEqual(@as(usize, 0), fill_brush_image_links.master_target_index_sum);
     try std.testing.expectEqual(expected.master_fill_brush_parts[shard], master_fill_brushes.parts);
     try std.testing.expectEqual(expected.master_fill_brush_counts[shard], master_fill_brushes.brushes);
     try std.testing.expectEqual(expected.master_fill_brush_face_sums[shard], master_fill_brushes.face_sum);
