@@ -12,6 +12,7 @@ const run_metadata = @import("run_metadata.zig");
 const run_topology = @import("run_topology.zig");
 const text_node = @import("text_node.zig");
 const header_begin_numbers = @import("header_begin_numbers.zig");
+const page_geometry = @import("page_geometry.zig");
 const table_geometry = @import("table_geometry.zig");
 const header_resources = @import("header_resources.zig");
 
@@ -78,6 +79,10 @@ pub const Bundle = struct {
 
     pub fn inspectBeginNumbers(self: *const Bundle, a: std.mem.Allocator, options: header_begin_numbers.Options) !header_begin_numbers.Report {
         return header_begin_numbers.inspect(a, &self.header, options);
+    }
+
+    pub fn inspectPageGeometry(self: *const Bundle, a: std.mem.Allocator, options: page_geometry.Options) !page_geometry.Report {
+        return page_geometry.inspect(a, self.sections, options);
     }
 
     pub fn deinit(self: *Bundle, a: std.mem.Allocator) void {

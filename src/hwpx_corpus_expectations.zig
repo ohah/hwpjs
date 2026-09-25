@@ -353,6 +353,24 @@ pub const master_title_mark_fields = [_][6]u64{[_]u64{0} ** 6} ** 8;
 pub const section_track_change_tag_fields = [_][20]u64{[_]u64{0} ** 20} ** 8;
 pub const master_track_change_tag_fields = [_][20]u64{[_]u64{0} ** 20} ** 8;
 pub const master_page_number_sum = [_]u64{ 0, 0, 4, 0, 0, 0, 0, 0 };
+// Independent Python zipfile/ElementTree survey of direct 2011 secPr/pagePr.
+// Same two roots and UTF-8 relative-path shard rule as hwpx_known_survey.zig.
+pub const page_geometry_pages = [_]usize{ 75, 72, 72, 55, 64, 62, 63, 92 };
+pub const page_geometry_widely = [_]usize{ 75, 71, 70, 53, 62, 61, 63, 89 };
+pub const page_geometry_left_right = [_]usize{ 5, 2, 5, 0, 0, 0, 0, 11 };
+pub const page_geometry_width_sum = [_]u64{ 4_489_254, 4_345_823, 4_359_991, 3_274_040, 3_809_792, 3_690_736, 3_774_924, 5_462_964 };
+pub const page_geometry_height_sum = [_]u64{ 6_348_935, 6_151_349, 6_166_090, 4_630_305, 5_387_991, 5_219_608, 5_338_654, 7_683_737 };
+// Field order: header, footer, gutter, left, right, top, bottom.
+pub const page_geometry_margin_sum = [_][7]u64{
+    .{ 220_262, 215_302, 0, 483_513, 510_990, 357_494, 296_874 },
+    .{ 217_738, 203_491, 0, 490_169, 479_285, 377_255, 296_125 },
+    .{ 219_417, 220_696, 0, 500_583, 528_938, 389_697, 304_989 },
+    .{ 163_774, 158_391, 0, 370_472, 360_560, 261_985, 216_665 },
+    .{ 211_986, 201_733, 0, 441_436, 431_995, 317_559, 255_178 },
+    .{ 183_031, 170_275, 2_268, 412_707, 402_795, 308_350, 247_172 },
+    .{ 192_717, 201_080, 0, 429_437, 423_773, 322_774, 256_773 },
+    .{ 254_404, 247_881, 0, 614_381, 597_741, 458_174, 366_345 },
+};
 pub const master_page_count_declarations = [_]usize{ 75, 72, 72, 55, 64, 62, 63, 92 };
 pub const master_page_type_counts = [_][5]usize{
     .{ 1, 6, 6, 1, 0 }, .{ 1, 2, 2, 1, 0 }, .{ 0, 8, 8, 2, 1 }, .{ 0, 0, 0, 0, 0 },

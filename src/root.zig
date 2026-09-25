@@ -35,6 +35,7 @@ test {
     _ = @import("hwpx/text_node_tests.zig");
     _ = @import("hwpx/tab_attributes_tests.zig");
     _ = @import("hwpx/header_begin_numbers_tests.zig");
+    _ = @import("hwpx/page_geometry_tests.zig");
     _ = @import("hwpx/document_known_tests.zig");
     _ = @import("hwpx/table_geometry_tests.zig");
     _ = @import("hwpx/masterpage_table_geometry_tests.zig");

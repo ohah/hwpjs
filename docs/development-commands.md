@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[HWPX 구역 쪽 설정](hwpx-page-geometry.md)은 `zig test src/root.zig --test-filter 'HWPX page geometry'`로 합성·숫자 경계·할당 실패를, `--test-filter 'HWPX known inspections expose page geometry'`와 기존 known-inspections 합성 테스트로 문서 API 연결 및 추적 HWPX 3개의 독립 XML 조사값을 대조합니다. `python3 tools/hwpx-page-geometry-oracle.py --self-test`와 인자 없는 실행은 로컬 두 corpus의 독립 XML 원값·8개 shard 기대값을 산출합니다. Zig 실파일 대조는 아래 `HWPX known document inspections shard N`을 N=0..7 각각 실행합니다.
+
 [HWPX 문단 직접 자식 구조](hwpx-paragraph-children.md)는 `zig test src/root.zig --test-filter 'HWPX paragraph children'`로 합성·한도 검사를, `python3 tools/hwpx-section-text-oracle.py`와 선택 실파일 known survey 8개 shard로 독립 집계를 대조합니다. 실파일 표본은 로컬 `reference/rhwp`가 필요합니다.
 
 [HWPX 문단 줄 조각](hwpx-line-segments.md)은 `zig test src/root.zig --test-filter 'HWPX line segments'`로 합성·숫자 경계·할당 실패를, 같은 독립 조사기와 선택 실파일 known survey 8개 shard로 원값 합계·부재·음수·상위 비트 편차를 대조합니다.

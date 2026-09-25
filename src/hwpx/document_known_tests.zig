@@ -44,7 +44,41 @@ test "HWPX known inspections compose every currently exposed document report" {
     try std.testing.expectEqual(report.paragraph_children.line_seg_arrays, report.line_segments.arrays);
     try std.testing.expectEqual(report.structure.sections.len, report.line_segments.sections);
     try std.testing.expectEqual(report.structure.sections.len, report.table_geometry.sections);
+    try std.testing.expectEqual(report.structure.sections.len, report.page_geometry.sections);
+    try std.testing.expectEqual(@as(usize, 1), report.page_geometry.pages.len);
+    try std.testing.expectEqual(package.PageGeometryPage{ .section_ordinal = 0, .element_index = report.page_geometry.pages[0].element_index, .orientation = .narrowly, .width = 59528, .height = 84188, .gutter_type = .left_only, .margin = .{ .header = 4252, .footer = 4252, .gutter = 0, .left = 8504, .right = 8504, .top = 5668, .bottom = 4252 } }, report.page_geometry.pages[0]);
     try std.testing.expect(report.paragraph_metadata.paragraphs > 0);
+}
+
+test "HWPX known inspections expose page geometry and independent file values" {
+    const a = std.testing.allocator;
+    for ([_][]const u8{ "noori", "page" }, [_]u32{ 5669, 8504 }, [_]u32{ 4251, 4252 }, [_]u32{ 2834, 5668 }, [_]u32{ 2834, 4252 }) |name, expected_left, expected_header, expected_top, expected_bottom| {
+        const bytes = try load(a, name);
+        defer a.free(bytes);
+        var document = try package.inspectDocument(a, bytes, .{});
+        defer document.deinit(a);
+        var report = try document.inspectKnown(a, .{});
+        defer report.deinit(a);
+        try std.testing.expectEqual(@as(usize, 1), report.page_geometry.pages.len);
+        const page = report.page_geometry.pages[0];
+        try std.testing.expectEqual(package.PageGeometryPage{ .section_ordinal = 0, .element_index = page.element_index, .orientation = .widely, .width = 59528, .height = 84188, .gutter_type = .left_only, .margin = .{ .header = expected_header, .footer = expected_header, .gutter = 0, .left = expected_left, .right = expected_left, .top = expected_top, .bottom = expected_bottom } }, page);
+        try std.testing.expectError(error.LimitExceeded, document.inspectKnown(a, .{ .page_geometry = .{ .max_pages = 0 } }));
+    }
+}
+
+test "HWPX known inspections release page geometry after later failure" {
+    var checked: std.heap.DebugAllocator(.{ .safety = true, .enable_memory_limit = true }) = .init;
+    defer _ = checked.deinit();
+    const a = checked.allocator();
+    var sources = synthetic_sources;
+    sources[5].data = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:p id='0' styleIDRef='0'><p:run><p:secPr><p:pagePr width='10' height='20'><p:margin left='1'/></p:pagePr></p:secPr><p:t>A</p:t></p:run></p:p></s:sec>";
+    const bytes = try fixture.storedZip(a, &sources);
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    const baseline = checked.total_requested_bytes;
+    try std.testing.expectError(error.LimitExceeded, document.inspectKnown(a, .{ .paragraph_metadata = .{ .max_paragraphs = 0 } }));
+    try std.testing.expectEqual(baseline, checked.total_requested_bytes);
 }
 
 test "HWPX known inspections include line segment raw values and limits" {

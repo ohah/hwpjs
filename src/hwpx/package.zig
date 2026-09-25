@@ -33,6 +33,7 @@ const markpen_attributes = @import("markpen_attributes.zig");
 const title_mark_attributes = @import("title_mark_attributes.zig");
 const track_change_tag_attributes = @import("track_change_tag_attributes.zig");
 const header_begin_numbers = @import("header_begin_numbers.zig");
+const page_geometry = @import("page_geometry.zig");
 const document_known = @import("document_known.zig");
 const table_geometry = @import("table_geometry.zig");
 const table_attributes = @import("table_attributes.zig");
@@ -176,6 +177,9 @@ pub const TrackChangeTagAttributeReport = track_change_tag_attributes.Report;
 pub const BeginNumberOptions = header_begin_numbers.Options;
 pub const BeginNumberReport = header_begin_numbers.Report;
 pub const BeginNumberField = header_begin_numbers.Field;
+pub const PageGeometryOptions = page_geometry.Options;
+pub const PageGeometryReport = page_geometry.Report;
+pub const PageGeometryPage = page_geometry.Page;
 pub const KnownReport = document_known.Report;
 pub const TableGeometryOptions = table_geometry.Options;
 pub const TableGeometryReport = table_geometry.Report;
@@ -274,6 +278,7 @@ pub const KnownOptions = struct {
     text_nodes: TextNodeOptions = .{},
     table_geometry: TableGeometryOptions = .{},
     begin_numbers: BeginNumberOptions = .{},
+    page_geometry: PageGeometryOptions = .{},
 };
 pub const DocumentOptions = struct {
     // The archive index also contains large BinData/section entries. Their

@@ -22,6 +22,7 @@ const run_metadata = @import("run_metadata.zig");
 const run_topology = @import("run_topology.zig");
 const text_node = @import("text_node.zig");
 const begin_numbers = @import("header_begin_numbers.zig");
+const page_geometry = @import("page_geometry.zig");
 const table_geometry = @import("table_geometry.zig");
 const payload_integrity = @import("payload_integrity.zig");
 const manifest_xml = @import("manifest_xml.zig");
@@ -66,8 +67,10 @@ pub const Report = struct {
     text_nodes: text_node.Report,
     table_geometry: table_geometry.Report,
     begin_numbers: begin_numbers.Report,
+    page_geometry: page_geometry.Report,
 
     pub fn deinit(self: *Report, a: std.mem.Allocator) void {
+        self.page_geometry.deinit(a);
         self.begin_numbers.deinit(a);
         self.payload_integrity.deinit(a);
         self.manifest_xml.deinit(a);
@@ -132,6 +135,8 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
         defer trees.deinit(a);
         var begin_report = try trees.inspectBeginNumbers(a, options.begin_numbers);
         errdefer begin_report.deinit(a);
+        var page_report = try trees.inspectPageGeometry(a, options.page_geometry);
+        errdefer page_report.deinit(a);
         const paragraph_report = try trees.inspectParagraphMetadata(a, options.paragraph_metadata);
         const paragraph_children_report = try trees.inspectParagraphChildren(options.paragraph_children);
         const line_segment_report = try trees.inspectLineSegments(a, options.line_segments);
@@ -139,7 +144,7 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
         const topology_report = try trees.inspectRunTopology(a, options.run_topology);
         const text_nodes_report = try trees.inspectTextNodes(a, options.text_nodes);
         const table_report = try trees.inspectTableGeometryWithBorderFills(a, options.table_geometry, resource_report.table(.border_fill));
-        break :blk .{ .begin = begin_report, .paragraph = paragraph_report, .paragraph_children = paragraph_children_report, .line_segments = line_segment_report, .run = run_report, .topology = topology_report, .text_nodes = text_nodes_report, .table_geometry = table_report };
+        break :blk .{ .begin = begin_report, .page = page_report, .paragraph = paragraph_report, .paragraph_children = paragraph_children_report, .line_segments = line_segment_report, .run = run_report, .topology = topology_report, .text_nodes = text_nodes_report, .table_geometry = table_report };
     };
     return .{
         .version = version,
@@ -175,5 +180,6 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
         .text_nodes = semantic.text_nodes,
         .table_geometry = semantic.table_geometry,
         .begin_numbers = semantic.begin,
+        .page_geometry = semantic.page,
     };
 }

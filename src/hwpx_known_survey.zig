@@ -259,6 +259,7 @@ const MasterStyleStats = struct {
 
 const Statistics = struct {
     sections: usize,
+    page_geometry: PageStats,
     paragraphs: usize,
     paragraph_children: package.ParagraphChildrenReport,
     line_segments: package.LineSegmentsReport,
@@ -316,6 +317,32 @@ const Outcome = union(enum) {
     rejected_zip,
     encrypted,
     accepted: Statistics,
+};
+
+const PageStats = struct {
+    pages: usize = 0,
+    widely: usize = 0,
+    left_right: usize = 0,
+    width_sum: u64 = 0,
+    height_sum: u64 = 0,
+    margin_sum: [7]u64 = @splat(0),
+
+    fn add(self: *PageStats, report: package.PageGeometryReport) !void {
+        try std.testing.expectEqual(@as(usize, 0), report.sections_without_page);
+        self.pages += report.pages.len;
+        for (report.pages) |page| {
+            const orientation = page.orientation orelse return error.MissingPageOrientation;
+            const gutter_type = page.gutter_type orelse return error.MissingPageGutterType;
+            if (orientation == .widely) self.widely += 1;
+            if (gutter_type == .left_right) self.left_right += 1;
+            self.width_sum += page.width orelse return error.MissingPageWidth;
+            self.height_sum += page.height orelse return error.MissingPageHeight;
+            const margin = page.margin orelse return error.MissingPageMargin;
+            const values = [_]?u32{ margin.header, margin.footer, margin.gutter, margin.left, margin.right, margin.top, margin.bottom };
+            for (values, 0..) |value, index| self.margin_sum[index] += value orelse return error.MissingPageMarginField;
+            try std.testing.expectEqual(@as(usize, 0), page.duplicate_margins);
+        }
+    }
 };
 
 fn inspectOne(bytes: []const u8) !Outcome {
@@ -550,6 +577,7 @@ fn inspectOne(bytes: []const u8) !Outcome {
     try std.testing.expectEqual(known.section_text.paragraphs_without_direct_run, known.paragraph_children.paragraphs_without_run);
     try std.testing.expectEqual(known.section_text.runs - known.section_text.non_direct_runs, known.paragraph_children.direct_runs);
     try std.testing.expectEqual(known.paragraph_children.sections, known.line_segments.sections);
+    try std.testing.expectEqual(count, known.page_geometry.sections);
     try std.testing.expectEqual(known.paragraph_children.line_seg_arrays, known.line_segments.arrays);
     for (known.line_segments.field_present, known.line_segments.field_missing) |present, missing| {
         try std.testing.expectEqual(known.line_segments.segments, present);
@@ -565,8 +593,11 @@ fn inspectOne(bytes: []const u8) !Outcome {
     try std.testing.expectEqual(known.section_text.inlineCount(.markpen_begin), known.text_nodes.markpen.begins);
     try std.testing.expectEqual(known.section_text.inlineCount(.markpen_end), known.text_nodes.markpen.ends);
     try std.testing.expectEqual(known.section_text.inlineCount(.title_mark), known.text_nodes.title_mark.marks);
+    var page_stats: PageStats = .{};
+    try page_stats.add(known.page_geometry);
     return .{ .accepted = .{
         .sections = count,
+        .page_geometry = page_stats,
         .paragraphs = known.paragraph_metadata.paragraphs,
         .paragraph_children = known.paragraph_children,
         .line_segments = known.line_segments,
@@ -628,6 +659,7 @@ fn surveyShard(shard: usize) !void {
     var rejected_zip: usize = 0;
     var encrypted: usize = 0;
     var sections: usize = 0;
+    var page_geometry: PageStats = .{};
     var paragraphs: usize = 0;
     var paragraph_children: package.ParagraphChildrenReport = .{};
     var line_segments: package.LineSegmentsReport = .{};
@@ -710,6 +742,12 @@ fn surveyShard(shard: usize) !void {
                     try std.testing.expectEqualSlices(usize, &expected_removed, &stats.switch_removed_case);
                     try std.testing.expectEqualSlices(usize, &expected_removed, &stats.switch_removed_default);
                     sections += stats.sections;
+                    page_geometry.pages += stats.page_geometry.pages;
+                    page_geometry.widely += stats.page_geometry.widely;
+                    page_geometry.left_right += stats.page_geometry.left_right;
+                    page_geometry.width_sum += stats.page_geometry.width_sum;
+                    page_geometry.height_sum += stats.page_geometry.height_sum;
+                    for (&page_geometry.margin_sum, stats.page_geometry.margin_sum) |*sum, value| sum.* += value;
                     paragraphs += stats.paragraphs;
                     addParagraphChildren(&paragraph_children, stats.paragraph_children);
                     addLineReport(&line_segments, stats.line_segments);
@@ -936,6 +974,12 @@ fn surveyShard(shard: usize) !void {
     try std.testing.expectEqual(expected.rejected_zip[shard], rejected_zip);
     try std.testing.expectEqual(expected.encrypted[shard], encrypted);
     try std.testing.expectEqual(expected.sections[shard], sections);
+    try std.testing.expectEqual(expected.page_geometry_pages[shard], page_geometry.pages);
+    try std.testing.expectEqual(expected.page_geometry_widely[shard], page_geometry.widely);
+    try std.testing.expectEqual(expected.page_geometry_left_right[shard], page_geometry.left_right);
+    try std.testing.expectEqual(expected.page_geometry_width_sum[shard], page_geometry.width_sum);
+    try std.testing.expectEqual(expected.page_geometry_height_sum[shard], page_geometry.height_sum);
+    try std.testing.expectEqualSlices(u64, &expected.page_geometry_margin_sum[shard], &page_geometry.margin_sum);
     try std.testing.expectEqual(expected.sections[shard], paragraph_children.sections);
     try std.testing.expectEqual(expected.paragraphs[shard], paragraph_children.paragraphs);
     try std.testing.expectEqual(expected.paragraph_direct_runs[shard], paragraph_children.direct_runs);

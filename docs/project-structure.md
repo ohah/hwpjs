@@ -42,6 +42,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
   마스터페이지의 직접 `subList` 범위 안 표 격자는 [마스터페이지 표 격자](hwpx-master-table-geometry.md)가 section의 표 판정을 재사용합니다.
   조건부 분기의 활성 표만 따로 보려면 [선택 분기 표 격자](hwpx-selected-table-geometry.md)가 공통 선택 정책과 같은 표 판정을 연결합니다.
   Header의 여섯 `beginNum` 원값과 부재 진단은 [Header 시작 번호](hwpx-header-begin-numbers.md)가 소유합니다.
+  section `secPr/pagePr/margin`의 치수·방향·여백 원값은 [HWPX 쪽 설정](hwpx-page-geometry.md)이 소유합니다.
   모든 ZIP 엔트리의 실제 해제·CRC와 OPF 목록 밖 항목 분류는 [바이트 무결성](hwpx-payload-integrity.md)이 소유합니다.
   OPF가 XML로 선언한 내장 항목의 전수 문법·namespace 검사와 합계 예산은 [manifest XML](hwpx-manifest-xml.md)이 소유합니다.
   `settings.xml`의 Caret·config 원값과 지원된 숫자/Boolean 검사는 [settings](hwpx-settings.md)가 소유합니다.
