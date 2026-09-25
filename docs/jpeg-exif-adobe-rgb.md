@@ -2,7 +2,7 @@
 
 ## 계약과 명세 경계
 
-기본 HWPX JPEG 검사는 기존처럼 구조만 보거나 엄격 JFIF 픽셀을 해제합니다. `jpeg_pixels.exif_adobe_colour = true`를 명시하면, SOI 바로 뒤 APP1이 `Exif\0\0`으로 시작하고 호환되는 Adobe APP14 색 선언이 있는 이미지에 한해 별도 `src/image/jpeg/exif_adobe_rgb.zig` 경로를 선택합니다. APP1의 TIFF/Exif 필드·방향·썸네일은 **파싱하지 않습니다**. 이 옵션은 Exif 파일 전체 유효성 또는 화면 표시용 색을 인증하지 않습니다.
+기본 HWPX JPEG 검사는 기존처럼 구조만 보거나 엄격 JFIF 픽셀을 해제합니다. `jpeg_pixels.exif_adobe_colour = true`를 명시하면, SOI 바로 뒤 APP1이 `Exif\0\0`으로 시작하고 호환되는 Adobe APP14 색 선언이 있는 이미지에 한해 별도 `src/image/jpeg/exif_adobe_rgb.zig` 경로를 선택합니다. 기본 옵션에서 APP1의 TIFF/Exif 필드·방향·썸네일은 **파싱하지 않습니다**. IFD0 방향 원값만 읽는 별도 선택은 [Exif 방향값 판독](jpeg-exif-orientation.md)이 소유합니다. 이 색 옵션만으로 Exif 파일 전체 유효성 또는 화면 표시용 색을 인증하지 않습니다.
 
 [ITU-T T.872 6.5.3](https://www.itu.int/rec/T-REC-T.872-201206-I/en)은 Adobe APP14 transform 1을 3성분 YCbCr로 정의합니다. 이 경로는 3성분 transform 1 또는 1성분 grayscale+transform 0만 받으며, 모든 Adobe 헤더의 식별자·transform을 검사합니다. Adobe 부재·충돌·4성분 CMYK/YCCK·다른 색 선언은 오류로 남깁니다. SOF ID는 공통 `jfif.classifyFrame`의 기본 `(1)`/`(1,2,3)` 검사를 재사용하고, 앞 단계의 [관측 `(0,1,2)` 예외](jpeg-component-id-compatibility.md)는 별도 옵션이 함께 켜졌을 때만 허용합니다. JFIF 선두 파일은 이 옵션과 무관하게 기존 경로를 사용합니다.
 

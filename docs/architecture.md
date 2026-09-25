@@ -6,6 +6,8 @@
 
 [Exif 선두 Adobe 색 선언 픽셀](jpeg-exif-adobe-rgb.md)은 JFIF 배치 규칙과 별개로 APP1 선두·APP14 색 선언을 확인하고 공통 샘플/RGB 코어만 공유합니다. Exif TIFF 의미와 화면 방향은 이 선택 경로에 섞지 않습니다.
 
+[Exif IFD0 방향 원값](jpeg-exif-orientation.md)은 같은 JPEG 경로의 별도 선택으로 TIFF 정수 읽기만 공유합니다. 포인터 대상·나머지 필드·방향의 화면 적용은 검증하거나 수행하지 않습니다.
+
 [HWPX BMP 픽셀 검사](hwpx-bmp-pixels.md)는 그림·브러시·OPF 전체 후보가 같은 BMP 구조·RGBA 디코더와 별도 누적 바이트 예산을 공유합니다. 구조만 본 결과와 픽셀까지 읽은 결과는 다른 검사 단계로 표시합니다.
 
 [CFB 관측 편차 복사본 검사](hwpx-ole-observed-repairs.md)는 HWPX OLE의 원본 strict 실패 뒤에만 선택적으로 호출하며, 넓은 비엄격 읽기 모드를 문서 유효성으로 승격하지 않습니다. CFB 구조 검증은 기존 strict reader가 계속 소유합니다.

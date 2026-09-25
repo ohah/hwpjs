@@ -17,6 +17,8 @@ pub const Options = struct {
     progressive_storage: @import("coefficient_storage.zig").Options = .{},
     max_progressive_block_visits: usize = (progressive_frame.Options{ .completion = .require_full }).max_block_visits,
     exif_adobe_colour: bool = false,
+    inspect_exif_orientation: bool = false,
+    exif_tiff: @import("exif_tiff.zig").Options = .{},
 };
 
 /// Pixel and metadata evidence only. No HWP or HWPX container policy lives here.
@@ -34,6 +36,9 @@ pub const Evidence = struct {
     unknown_extensions: usize = 0,
     observed_zero_based_component_ids: bool = false,
     exif_adobe_colour: bool = false,
+    exif_orientation_inspected: bool = false,
+    exif_orientation: ?u8 = null,
+    exif_nested_ifds_deferred: bool = false,
 };
 
 const Process = struct {
@@ -80,6 +85,8 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, options: Options, remain
             .max_sequential_blocks = options.max_sequential_blocks,
             .progressive_storage = options.progressive_storage,
             .max_progressive_block_visits = options.max_progressive_block_visits,
+            .inspect_exif_orientation = options.inspect_exif_orientation,
+            .exif_tiff = options.exif_tiff,
         });
         defer image.deinit(a);
         var report: Evidence = .{
@@ -91,6 +98,9 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, options: Options, remain
             .adobe_headers = image.adobe_headers,
             .observed_zero_based_component_ids = image.observed_zero_based_component_ids,
             .exif_adobe_colour = true,
+            .exif_orientation_inspected = image.exif_orientation_inspected,
+            .exif_orientation = image.exif_orientation,
+            .exif_nested_ifds_deferred = image.exif_nested_ifds_deferred,
         };
         if (image.progression) |progression| {
             report.unseen_coefficients = progression.unseen_coefficients;

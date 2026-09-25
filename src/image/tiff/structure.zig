@@ -27,14 +27,14 @@ const Field = struct {
     values: ?[]const u8,
 };
 
-fn u16At(bytes: []const u8, order: ByteOrder) u16 {
+pub fn u16At(bytes: []const u8, order: ByteOrder) u16 {
     return switch (order) {
         .little => std.mem.readInt(u16, bytes[0..2], .little),
         .big => std.mem.readInt(u16, bytes[0..2], .big),
     };
 }
 
-fn u32At(bytes: []const u8, order: ByteOrder) u32 {
+pub fn u32At(bytes: []const u8, order: ByteOrder) u32 {
     return switch (order) {
         .little => std.mem.readInt(u32, bytes[0..4], .little),
         .big => std.mem.readInt(u32, bytes[0..4], .big),

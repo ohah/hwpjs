@@ -328,6 +328,10 @@ test "HWPX JPEG Exif Adobe corpus candidate survey" {
     var missing_adobe: usize = 0;
     var unsupported_components: usize = 0;
     var rgb_bytes: usize = 0;
+    var orientation_checked: usize = 0;
+    var exif_orientation_present: usize = 0;
+    var all_exif_orientation_one: usize = 0;
+    var all_exif_orientation_missing: usize = 0;
     for (roots) |root| {
         const dir = try std.Io.Dir.cwd().openDir(std.testing.io, root, .{ .iterate = true });
         defer dir.close(std.testing.io);
@@ -356,6 +360,11 @@ test "HWPX JPEG Exif Adobe corpus candidate survey" {
                 const first = (try it.next()) orelse continue;
                 if (!@import("image/jpeg/exif_adobe_rgb.zig").isExifMarker(first)) continue;
                 seen += 1;
+                const envelope = try @import("image/jpeg/exif_tiff.zig").inspect(first.payload, .{});
+                if (envelope.orientation) |value| {
+                    try std.testing.expectEqual(@as(u8, 1), value);
+                    all_exif_orientation_one += 1;
+                } else all_exif_orientation_missing += 1;
                 const result = pixels.inspect(a, encoded, selected, 128 * 1024 * 1024) catch |err| switch (err) {
                     error.MissingAdobeColourDeclaration => {
                         missing_adobe += 1;
@@ -371,6 +380,14 @@ test "HWPX JPEG Exif Adobe corpus candidate survey" {
                 decoded += 1;
                 zero_based += @intFromBool(result.observed_zero_based_component_ids);
                 rgb_bytes += result.rgb_bytes;
+                var metadata_selected = selected;
+                metadata_selected.inspect_exif_orientation = true;
+                const metadata = try pixels.inspect(a, encoded, metadata_selected, 128 * 1024 * 1024);
+                try std.testing.expect(metadata.exif_orientation_inspected);
+                try std.testing.expectEqual(result.rgb_bytes, metadata.rgb_bytes);
+                try std.testing.expectEqual(envelope.orientation, metadata.exif_orientation);
+                orientation_checked += 1;
+                exif_orientation_present += @intFromBool(metadata.exif_orientation != null);
             }
         }
     }
@@ -380,7 +397,11 @@ test "HWPX JPEG Exif Adobe corpus candidate survey" {
     try std.testing.expectEqual(@as(usize, 1), missing_adobe);
     try std.testing.expectEqual(@as(usize, 2), unsupported_components);
     try std.testing.expectEqual(@as(usize, 168_563_982), rgb_bytes);
-    std.debug.print("HWPX Exif Adobe JPEG: seen={d} decoded={d} RGB={d} zero-based={d} no-Adobe={d} four-component={d}\n", .{ seen, decoded, rgb_bytes, zero_based, missing_adobe, unsupported_components });
+    try std.testing.expectEqual(@as(usize, 31), orientation_checked);
+    try std.testing.expectEqual(@as(usize, 29), exif_orientation_present);
+    try std.testing.expectEqual(@as(usize, 31), all_exif_orientation_one);
+    try std.testing.expectEqual(@as(usize, 3), all_exif_orientation_missing);
+    std.debug.print("HWPX Exif Adobe JPEG: seen={d} decoded={d} RGB={d} zero-based={d} no-Adobe={d} four-component={d} orientation={d} present={d} all-one={d} all-missing={d}\n", .{ seen, decoded, rgb_bytes, zero_based, missing_adobe, unsupported_components, orientation_checked, exif_orientation_present, all_exif_orientation_one, all_exif_orientation_missing });
 }
 
 // Read-only RGB pipe for a small Exif-first Adobe YCbCr corpus image.

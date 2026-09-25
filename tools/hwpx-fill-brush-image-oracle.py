@@ -236,6 +236,42 @@ def collect_jpeg_readiness():
     return shards
 
 
+def collect_exif_orientation():
+    """Independent Pillow orientation census for Exif-first OPF JPEGs."""
+    from PIL import Image
+
+    counts = Counter()
+    for root in ROOTS:
+        for path in root.rglob("*.hwpx"):
+            try:
+                with zipfile.ZipFile(path) as archive:
+                    if encrypted(archive):
+                        continue
+                    items, _, _ = selected_items(archive)
+                    for item in items:
+                        if not manifest_image_candidate(item) or item.get("isEmbeded") == "0":
+                            continue
+                        data = archive.read(item.get("href"))
+                        if byte_format(data) != "jpeg" or jpeg_front(data) != "exif_first":
+                            continue
+                        counts["candidates"] += 1
+                        try:
+                            with Image.open(io.BytesIO(data)) as image:
+                                value = image.getexif().get(274)
+                        except (OSError, ValueError):
+                            counts["pillow_failed"] += 1
+                            continue
+                        if value is None:
+                            counts["orientation_missing"] += 1
+                        elif isinstance(value, int) and 1 <= value <= 8:
+                            counts[f"orientation_{value}"] += 1
+                        else:
+                            counts["orientation_invalid"] += 1
+            except (zipfile.BadZipFile, KeyError, OSError, ET.ParseError, ValueError):
+                continue
+    return counts
+
+
 def selected_items(archive):
     root = ET.fromstring(archive.read("Contents/content.hpf"))
     manifest_node = root.find(OPF + "manifest")
@@ -901,8 +937,11 @@ def main():
         for index, counts in enumerate(collect_jpeg_readiness()):
             print(index, dict(sorted(counts.items())))
         return
+    if sys.argv[1:] == ["--exif-orientation"]:
+        print(dict(sorted(collect_exif_orientation().items())))
+        return
     if len(sys.argv) != 1:
-        raise SystemExit("usage: hwpx-fill-brush-image-oracle.py [--self-test|--payloads|--pictures|--picture-payloads|--manifest-images|--bmp-pixels|--jpeg-readiness]")
+        raise SystemExit("usage: hwpx-fill-brush-image-oracle.py [--self-test|--payloads|--pictures|--picture-payloads|--manifest-images|--bmp-pixels|--jpeg-readiness|--exif-orientation]")
     for index, counts in enumerate(collect()):
         print(index, dict(sorted(counts.items())))
 

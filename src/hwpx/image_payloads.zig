@@ -28,6 +28,9 @@ pub const JpegPixelOptions = struct {
     max_progressive_block_visits: usize = (@import("../image/jpeg/progressive_frame.zig").Options{ .completion = .require_full }).max_block_visits,
     /// Exif-first pixels require a compatible Adobe APP14 colour declaration.
     exif_adobe_colour: bool = false,
+    /// Read only the Exif IFD0 orientation; never rotate pixels.
+    inspect_exif_orientation: bool = false,
+    exif_tiff: @import("../image/jpeg/exif_tiff.zig").Options = .{},
 };
 
 /// BMP structure policy stays in Options.bmp. Pixel choices cannot silently
@@ -75,6 +78,9 @@ pub const Target = struct {
     observed_zero_based_jpeg_component_ids: bool = false,
     /// Colour was selected from Adobe APP14 in an Exif-first JPEG, not JFIF.
     jpeg_exif_adobe_colour: bool = false,
+    jpeg_exif_orientation_inspected: bool = false,
+    jpeg_exif_orientation: ?u8 = null,
+    jpeg_exif_nested_ifds_deferred: bool = false,
 };
 
 pub const Report = struct {
@@ -130,7 +136,7 @@ fn svgCandidate(item: manifest.Item) bool {
     return item.href.len >= 4 and std.ascii.eqlIgnoreCase(item.href[item.href.len - 4 ..], ".svg");
 }
 
-const Evidence = struct { png_decoded_bytes: usize = 0, jpeg_rgb_bytes: usize = 0, observed_zero_based_jpeg_component_ids: bool = false, jpeg_exif_adobe_colour: bool = false, bmp_rgba_bytes: usize = 0, gif_indices: usize = 0, gif_codes: usize = 0, gif_frames: usize = 0, pcx_decoded_bytes: usize = 0 };
+const Evidence = struct { png_decoded_bytes: usize = 0, jpeg_rgb_bytes: usize = 0, observed_zero_based_jpeg_component_ids: bool = false, jpeg_exif_adobe_colour: bool = false, jpeg_exif_orientation_inspected: bool = false, jpeg_exif_orientation: ?u8 = null, jpeg_exif_nested_ifds_deferred: bool = false, bmp_rgba_bytes: usize = 0, gif_indices: usize = 0, gif_codes: usize = 0, gif_frames: usize = 0, pcx_decoded_bytes: usize = 0 };
 
 fn validate(a: std.mem.Allocator, bytes: []const u8, format: Format, options: Options, consumed: Evidence) !Evidence {
     switch (format) {
@@ -151,9 +157,11 @@ fn validate(a: std.mem.Allocator, bytes: []const u8, format: Format, options: Op
                     .progressive_storage = pixel_options.progressive_storage,
                     .max_progressive_block_visits = pixel_options.max_progressive_block_visits,
                     .exif_adobe_colour = pixel_options.exif_adobe_colour,
+                    .inspect_exif_orientation = pixel_options.inspect_exif_orientation,
+                    .exif_tiff = pixel_options.exif_tiff,
                 };
                 const checked = try jpeg_pixels.inspect(a, bytes, selected, options.max_total_jpeg_rgb_bytes -| consumed.jpeg_rgb_bytes);
-                return .{ .jpeg_rgb_bytes = checked.rgb_bytes, .observed_zero_based_jpeg_component_ids = checked.observed_zero_based_component_ids, .jpeg_exif_adobe_colour = checked.exif_adobe_colour };
+                return .{ .jpeg_rgb_bytes = checked.rgb_bytes, .observed_zero_based_jpeg_component_ids = checked.observed_zero_based_component_ids, .jpeg_exif_adobe_colour = checked.exif_adobe_colour, .jpeg_exif_orientation_inspected = checked.exif_orientation_inspected, .jpeg_exif_orientation = checked.exif_orientation, .jpeg_exif_nested_ifds_deferred = checked.exif_nested_ifds_deferred };
             }
             _ = try jpeg.inspect(bytes, options.jpeg);
             return .{};
@@ -262,6 +270,9 @@ pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, items: manifest.Manif
             .format = format,
             .observed_zero_based_jpeg_component_ids = evidence.observed_zero_based_jpeg_component_ids,
             .jpeg_exif_adobe_colour = evidence.jpeg_exif_adobe_colour,
+            .jpeg_exif_orientation_inspected = evidence.jpeg_exif_orientation_inspected,
+            .jpeg_exif_orientation = evidence.jpeg_exif_orientation,
+            .jpeg_exif_nested_ifds_deferred = evidence.jpeg_exif_nested_ifds_deferred,
             .inspection = switch (format) {
                 .png => .png_scanlines,
                 .jpeg => if (options.jpeg_pixels != null) .jpeg_rgb else .jpeg_framing,

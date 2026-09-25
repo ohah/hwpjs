@@ -347,6 +347,46 @@ test "HWPX manifest Exif Adobe JPEG pixels require declared colour and keep erro
     }.run, .{ @as([]const u8, &raw), selected });
 }
 
+test "HWPX manifest Exif TIFF orientation is separately inspected without rotating pixels" {
+    const a = std.testing.allocator;
+    const exif = [_]u8{ 255, 225, 0, 34 } ++ "Exif\x00\x00".* ++ "II".* ++ .{ 42, 0, 8, 0, 0, 0, 1, 0, 0x12, 1, 3, 0, 1, 0, 0, 0, 6, 0, 0, 0, 0, 0, 0, 0 };
+    const adobe = [_]u8{ 255, 238, 0, 14 } ++ "Adobe".* ++ .{ 0, 100, 0, 0, 0, 0, 0 };
+    const raw = jpeg_fixture.sequential[0..2].* ++ exif ++ adobe ++ jpeg_fixture.sequential[20..].*;
+    var deferred = try jpegSampleRaw(a, &raw, .{ .jpeg_pixels = .{ .exif_adobe_colour = true } });
+    defer deferred.deinit(a);
+    try std.testing.expectEqual(@as(?anyerror, null), deferred.targets[0].inspection_error);
+    try std.testing.expect(!deferred.targets[0].jpeg_exif_orientation_inspected);
+    try std.testing.expectEqual(@as(?u8, null), deferred.targets[0].jpeg_exif_orientation);
+
+    const selected: payloads.Options = .{ .jpeg_pixels = .{ .exif_adobe_colour = true, .inspect_exif_orientation = true } };
+    var checked = try jpegSampleRaw(a, &raw, selected);
+    defer checked.deinit(a);
+    try std.testing.expectEqual(@as(?anyerror, null), checked.targets[0].inspection_error);
+    try std.testing.expect(checked.targets[0].jpeg_exif_adobe_colour);
+    try std.testing.expect(checked.targets[0].jpeg_exif_orientation_inspected);
+    try std.testing.expectEqual(@as(?u8, 6), checked.targets[0].jpeg_exif_orientation);
+    try std.testing.expectEqual(@as(usize, 3), checked.jpeg_rgb_bytes);
+    var jfif = try jpegSampleRaw(a, &jpeg_fixture.sequential, selected);
+    defer jfif.deinit(a);
+    try std.testing.expectEqual(@as(?anyerror, null), jfif.targets[0].inspection_error);
+    try std.testing.expect(!jfif.targets[0].jpeg_exif_orientation_inspected);
+
+    var invalid = raw;
+    invalid[2 + 4 + 24] = 9;
+    var rejected = try jpegSampleRaw(a, &invalid, selected);
+    defer rejected.deinit(a);
+    try std.testing.expectEqual(error.InvalidExifOrientation, rejected.targets[0].inspection_error.?);
+    try std.testing.expect(!rejected.targets[0].jpeg_exif_orientation_inspected);
+    try std.testing.expectEqual(@as(?u8, null), rejected.targets[0].jpeg_exif_orientation);
+    try std.testing.expectError(error.LimitExceeded, jpegSampleRaw(a, &raw, .{ .jpeg_pixels = .{ .exif_adobe_colour = true, .inspect_exif_orientation = true, .exif_tiff = .{ .max_fields = 0 } } }));
+    try std.testing.checkAllAllocationFailures(a, struct {
+        fn run(allocator: std.mem.Allocator, jpeg_bytes: []const u8, options: payloads.Options) !void {
+            var report = try jpegSampleRaw(allocator, jpeg_bytes, options);
+            report.deinit(allocator);
+        }
+    }.run, .{ @as([]const u8, &raw), selected });
+}
+
 test "HWPX manifest JPEG RGB path releases every allocation failure" {
     try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
         fn run(a: std.mem.Allocator) !void {
