@@ -44,6 +44,7 @@ test {
     _ = @import("hwpx/section_presentation_tests.zig");
     _ = @import("hwpx/fill_brush_tests.zig");
     _ = @import("hwpx/fill_brush_image_links_tests.zig");
+    _ = @import("hwpx/fill_brush_image_payloads_tests.zig");
     _ = @import("hwpx/masterpage_fill_brush_tests.zig");
     _ = @import("hwpx/document_known_tests.zig");
     _ = @import("hwpx/table_geometry_tests.zig");

@@ -103,6 +103,33 @@ test "HWPX master fill brushes connect known report and release every failure" {
     }.run, .{});
 }
 
+test "HWPX master fill brushes inspect an embedded image outside streaming scope" {
+    const a = std.testing.allocator;
+    const png = try @import("../image/png/pixels_fixture.zig").image(a, 0);
+    defer a.free(png);
+    const hpf_with_image = "<o:package xmlns:o='http://www.idpf.org/2007/opf/'><o:manifest>" ++
+        "<o:item id='h' href='Contents/header.xml' media-type='application/xml'/>" ++
+        "<o:item id='s' href='Contents/section0.xml' media-type='application/xml'/>" ++
+        "<o:item id='masterpage0' href='Contents/masterpage0.xml' media-type='application/xml'/>" ++
+        "<o:item id='masterpage1' href='Contents/masterpage1.xml' media-type='application/xml'/>" ++
+        "<o:item id='img1' href='BinData/img.png' media-type='image/png'/>" ++
+        "</o:manifest><o:spine><o:itemref idref='h'/><o:itemref idref='s'/></o:spine></o:package>";
+    var changed = sources ++ [_]fixture.Source{.{ .name = "BinData/img.png", .data = png }};
+    changed[2].data = hpf_with_image;
+    const bytes = try fixture.storedZip(a, &changed);
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    var known = try document.inspectKnown(a, .{});
+    defer known.deinit(a);
+    try std.testing.expectEqual(@as(usize, 0), known.master_page_binary_references.counts(.master_brush_image).sites);
+    try std.testing.expectEqual(@as(usize, 1), known.master_page_fill_brush_image_links.sites.len);
+    try std.testing.expectEqual(@as(usize, 1), known.master_page_fill_brush_image_payloads.targets.len);
+    try std.testing.expect(known.master_page_fill_brush_image_payloads.targets[0].inspection == .png_scanlines);
+    try std.testing.expectEqual(@as(?anyerror, null), known.master_page_fill_brush_image_payloads.targets[0].inspection_error);
+    try std.testing.expectError(error.LimitExceeded, document.inspectKnown(a, .{ .master_page_fill_brush_image_payloads = .{ .max_targets = 0 } }));
+}
+
 test "HWPX master fill brushes match independent values in a real document" {
     const a = std.testing.allocator;
     const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "reference/rhwp/samples/[2027] 온새미로 1 본교재.hwpx", a, .limited(1_000_000));

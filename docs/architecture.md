@@ -14,6 +14,8 @@
 
 [fillBrush 이미지 OPF 연결](hwpx-fill-brush-image-links.md)은 두 원값 보고서의 이미지 노드에 기존 이진 참조 ID 해결기를 적용합니다. 원값/선택 범위/대상 상태의 소유권을 합치지 않고 노드별 인덱스만 보관합니다.
 
+[fillBrush 이미지 바이트 검사](hwpx-fill-brush-image-payloads.md)는 embedded manifest 항목의 ZIP 해제·형식별 공통 검사기를 재사용하며 원값·참조 선택을 소유하지 않습니다. MIME 불일치는 진단으로 남기고 JPEG/BMP의 미완료 픽셀 의미를 보고서에 드러냅니다.
+
 [구역 정의 ID 참조](hwpx-section-definition-references.md)는 기존 구역 정의 값과 header 리소스 ID 색인을 결합하는 진단 계층입니다. `0`·부재·미해결을 분리하고 원문 파싱을 재구현하지 않습니다.
 
 [HWPX 조건부 참조 선택](hwpx-switch-selection.md)은 한 정책을 이진·차트 스캐너가 공유하는 선택적 계층입니다. 기존 raw 검사와 전체 문서 분기 적용은 별개입니다.

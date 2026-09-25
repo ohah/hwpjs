@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[HWPX fillBrush 이미지 바이트 검사](hwpx-fill-brush-image-payloads.md)는 `zig test src/root.zig --test-filter 'HWPX fill brush image payloads'`로 형식·MIME 편차·중복·한도·내부 체크섬·OOM·추적 실파일을 검사합니다. `python3 tools/hwpx-fill-brush-image-oracle.py --self-test`와 `--payloads`가 선택 실파일의 형식·고유 대상·바이트·MIME 불일치를 독립 조사합니다. 아래 known survey의 8개 ReleaseFast shard를 N=0..7 각각 실행해 대조합니다.
+
 [HWPX fillBrush 이미지 OPF 연결](hwpx-fill-brush-image-links.md)은 `zig test src/root.zig --test-filter 'HWPX fill brush image links'`로 다섯 상태·출처·예산·OOM을, `--test-filter 'HWPX master fill brushes connect known'`으로 마스터페이지와 스트리밍 범위 차이를 검사합니다. `python3 tools/hwpx-fill-brush-image-oracle.py --self-test` 및 인자 없는 실행이 독립 반례와 8개 shard의 manifest 대상 인덱스 합계를 제공합니다. 아래 `HWPX known document inspections shard N`을 N=0..7 각각 별도 ReleaseFast 프로세스로 실행해 실파일 390건을 대조합니다.
 
 [HWPX 공통 fillBrush](hwpx-fill-brush.md)는 `zig test src/root.zig --test-filter 'HWPX fill brushes'`로 합성·한도·OOM, `--test-filter 'HWPX known inspections compose'`와 실제 presentation 통합 테스트로 문서 API를 검사합니다. `zig test src/hwpx/xml_values.zig`는 공통 float 어휘를, `python3 tools/hwpx-fill-brush-oracle.py --self-test` 및 인자 없는 실행은 독립 반례·8개 shard 기대값을 확인합니다. 아래 `HWPX known document inspections shard N`을 N=0..7 각각 별도 ReleaseFast 프로세스로 실행합니다.

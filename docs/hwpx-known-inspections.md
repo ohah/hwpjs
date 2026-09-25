@@ -14,6 +14,8 @@
 
 `fill_brush_image_links`와 `master_page_fill_brush_image_links`는 두 원값 보고서의 각 이미지 노드를 [OPF 항목에 연결](hwpx-fill-brush-image-links.md)하는 별도 소유 보고서입니다. 이미지 바이트·렌더링을 검증하지 않습니다.
 
+`fill_brush_image_payloads`와 `master_page_fill_brush_image_payloads`는 연결된 내장 항목의 [이미지 바이트 검사를 수행](hwpx-fill-brush-image-payloads.md)합니다. 미지원 형식·미해결 링크와 형식별 검사 깊이를 보고하며 렌더링 성공 판정은 아닙니다.
+
 `section_definition_references`는 [구역 정의 번호·메모 모양 ID 진단](hwpx-section-definition-references.md)을 기존 `section_definitions`·`resources` 결과에서 계산합니다. 미해결 진단이 있어도 `inspectKnown`은 이를 전체 문서 거부로 승격하지 않습니다.
 
 `inspectKnown`은 조건부 참조의 양쪽 분기를 관측하며, 활성 분기만의 이진·차트 참조는 별도 [조건부 참조 선택](hwpx-switch-selection.md) API가 제공합니다.
@@ -70,7 +72,7 @@ section 텍스트 보고서도 원문 양쪽 분기를 유지합니다. 활성 �
 
 각 단계의 `options`와 메모리·해제 바이트 한도는 기존 검사 계약 그대로 독립 적용됩니다. 하나의 전역 해제량 예산이나 전체 문서 스키마 검증을 새로 제공하지 않습니다. 일부 XML을 여러 단계에서 다시 읽으므로 큰 문서에서는 비용이 높습니다. 호출 중 어느 단계에서든 오류가 나면 이전 단계의 소유 보고서와 임시 XML 트리를 정리합니다.
 
-`page_geometry`는 [구역 쪽 설정 원값](hwpx-page-geometry.md)을, `section_definitions`는 [구역 정의 속성·직접 자식](hwpx-section-definitions.md)을 같은 소유 XML 트리에서 추출합니다. 미구현 범위는 2011 외 OWPML namespace의 의미, 전체 header/section XSD 및 조건부 분기, settings/masterpage 의미, OPF 밖 XML과 BinData의 실제 포맷 의미 검사, 차트 수식의 의미·표시, 문서 모델·레이아웃, 편집·저장·무손실 왕복입니다. ZIP 바이트 CRC나 XML 문법 통과만으로는 내부 포맷을 보증하지 않습니다. 이 API의 이름을 `validateDocument`나 완료 판정으로 바꾸지 않는 이유입니다.
+`page_geometry`는 [구역 쪽 설정 원값](hwpx-page-geometry.md)을, `section_definitions`는 [구역 정의 속성·직접 자식](hwpx-section-definitions.md)을 같은 소유 XML 트리에서 추출합니다. 미구현 범위는 2011 외 OWPML namespace의 의미, 전체 header/section XSD 및 조건부 분기, settings/masterpage 의미, OPF 밖 XML과 BinData **전체**의 포맷 의미 검사(현재는 fillBrush 이미지 일부만 검사), 차트 수식의 의미·표시, 문서 모델·레이아웃, 편집·저장·무손실 왕복입니다. ZIP 바이트 CRC나 XML 문법 통과만으로는 내부 포맷을 보증하지 않습니다. 이 API의 이름을 `validateDocument`나 완료 판정으로 바꾸지 않는 이유입니다.
 
 [표 자체 속성 원값·테두리 ID 참조](hwpx-table-attributes.md)도 표 격자 보고서 안에서 확인할 수 있습니다. 원값 검사 성공을 표 표시·편집 완료로 해석하지 않습니다.
 [표 안쪽 여백·셀 구역](hwpx-table-children.md) 보고서도 같은 격자 보고서에 포함되며, 구역 겹침·표 배치의 의미는 판정하지 않습니다.
