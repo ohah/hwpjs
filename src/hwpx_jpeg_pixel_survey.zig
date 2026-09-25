@@ -214,3 +214,94 @@ test "HWPX JPEG dequantized grayscale block stream" {
     }
     try std.testing.expectEqual(@as(usize, 155 * 11), count);
 }
+
+test "HWPX JPEG observed zero-based component ID sample" {
+    const a = std.testing.allocator;
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "reference/rhwp/samples/2025 행정업무운영 편람(최종).hwpx", a, .limited(25_000_000));
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    const rgb = @import("image/jpeg/jfif_rgb.zig");
+    var found_three = false;
+    var found_gray = false;
+    for (document.archive.entries) |entry| {
+        if (std.mem.eql(u8, entry.name, "BinData/image353.jpg")) {
+            found_three = true;
+            const encoded = try document.archive.decode(entry, 1_000_000);
+            defer document.archive.allocator.free(encoded);
+            try std.testing.expectError(error.InvalidJfifComponentId, rgb.decode(a, encoded, .{ .upsampling = .nearest, .colour_management = .unmanaged }));
+            var image = try rgb.decode(a, encoded, .{ .upsampling = .nearest, .colour_management = .unmanaged, .component_ids = .observed_zero_based_three });
+            defer image.deinit(a);
+            try std.testing.expect(image.observed_zero_based_component_ids);
+            try std.testing.expectEqual(@as(usize, 2850 * 3900 * 3), image.raster.rgb.len);
+        } else if (std.mem.eql(u8, entry.name, "BinData/image401.jpg")) {
+            found_gray = true;
+            const encoded = try document.archive.decode(entry, 1_000_000);
+            defer document.archive.allocator.free(encoded);
+            try std.testing.expectError(error.InvalidJfifComponentId, rgb.decode(a, encoded, .{ .upsampling = .nearest, .colour_management = .unmanaged, .component_ids = .observed_zero_based_three }));
+        }
+    }
+    try std.testing.expect(found_three and found_gray);
+}
+
+test "HWPX JPEG observed zero-based Exif header remains unsupported" {
+    const a = std.testing.allocator;
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "reference/rhwp/samples/issue5543_carried_anchor_ladder.hwpx", a, .limited(25_000_000));
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    for (document.archive.entries) |entry| {
+        if (!std.mem.eql(u8, entry.name, "BinData/image3.jpg")) continue;
+        const encoded = try document.archive.decode(entry, 6_000_000);
+        defer document.archive.allocator.free(encoded);
+        try std.testing.expectError(error.MissingJfifHeader, @import("image/jpeg/jfif_rgb.zig").decode(a, encoded, .{ .upsampling = .nearest, .colour_management = .unmanaged, .component_ids = .observed_zero_based_three }));
+        return;
+    }
+    return error.MissingJpegFixture;
+}
+
+test "HWPX JPEG observed zero-based document stays within explicit RGB budget" {
+    const a = std.testing.allocator;
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "reference/rhwp/samples/issue2006/1790387_prep_final_report.hwpx", a, .limited(25_000_000));
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    const selected: @import("hwpx/image_payloads.zig").Options = .{
+        .jpeg_pixels = .{ .render = .{ .upsampling = .nearest, .colour_management = .unmanaged, .component_ids = .observed_zero_based_three } },
+        .max_total_jpeg_rgb_bytes = 2 * 1024 * 1024 * 1024,
+    };
+    var report = try document.inspectManifestImagePayloads(a, selected);
+    defer report.deinit(a);
+    var jpeg_count: usize = 0;
+    var nonstandard_count: usize = 0;
+    for (report.targets) |target| {
+        if (target.format != .jpeg) continue;
+        jpeg_count += 1;
+        if (target.inspection_error) |err| return err;
+        if (target.observed_zero_based_jpeg_component_ids) nonstandard_count += 1;
+    }
+    try std.testing.expectEqual(@as(usize, 36), jpeg_count);
+    try std.testing.expectEqual(@as(usize, 31), nonstandard_count);
+    try std.testing.expectEqual(@as(usize, 1_099_249_830), report.jpeg_rgb_bytes);
+    try std.testing.expectError(error.LimitExceeded, document.inspectManifestImagePayloads(a, .{ .jpeg_pixels = selected.jpeg_pixels, .max_total_jpeg_rgb_bytes = 256 * 1024 * 1024 }));
+}
+
+// Read-only pipe for independent colour order/upsampling comparisons.
+test "HWPX JPEG raw observed zero-based RGB stream" {
+    const a = std.testing.allocator;
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "reference/rhwp/samples/2025 행정업무운영 편람(최종).hwpx", a, .limited(25_000_000));
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    for (document.archive.entries) |entry| {
+        if (!std.mem.eql(u8, entry.name, "BinData/image353.jpg")) continue;
+        const encoded = try document.archive.decode(entry, 1_000_000);
+        defer document.archive.allocator.free(encoded);
+        var image = try @import("image/jpeg/jfif_rgb.zig").decode(a, encoded, .{ .upsampling = .nearest, .colour_management = .unmanaged, .component_ids = .observed_zero_based_three });
+        defer image.deinit(a);
+        try std.testing.expect(image.observed_zero_based_component_ids);
+        try std.Io.File.stdout().writeStreamingAll(std.testing.io, image.raster.rgb);
+        return;
+    }
+    return error.MissingJpegFixture;
+}

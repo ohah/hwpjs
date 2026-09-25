@@ -30,6 +30,7 @@ pub const Evidence = struct {
     adobe_headers: usize = 0,
     unchecked_compressed_thumbnails: usize = 0,
     unknown_extensions: usize = 0,
+    observed_zero_based_component_ids: bool = false,
 };
 
 const Process = struct {
@@ -48,6 +49,7 @@ fn evidence(image: render.Image, scans: usize) Evidence {
         .adobe_headers = image.adobe_headers,
         .unchecked_compressed_thumbnails = image.unchecked_compressed_thumbnails,
         .unknown_extensions = image.unknown_extensions,
+        .observed_zero_based_component_ids = image.observed_zero_based_component_ids,
     };
 }
 
@@ -80,6 +82,7 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, options: Options, remain
         .max_rgb_bytes = rendering.max_rgb_bytes,
         .max_adobe_markers = rendering.max_adobe_markers,
         .max_icc_bytes = rendering.max_icc_bytes,
+        .component_ids = rendering.component_ids,
     });
     defer result.deinit(a);
     return evidence(result, boundaries.scans);

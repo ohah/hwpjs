@@ -7,6 +7,7 @@ const adobe = @import("adobe_inspection.zig");
 const compatibility = @import("jfif_adobe.zig");
 const icc = @import("icc_extraction.zig");
 const upsampling = @import("upsampling.zig");
+const jfif = @import("jfif.zig");
 
 pub const default_rgb_bytes = 192000000;
 pub const default_adobe_markers = 256;
@@ -18,6 +19,8 @@ pub const Options = struct {
     max_rgb_bytes: usize = default_rgb_bytes,
     max_adobe_markers: usize = default_adobe_markers,
     max_icc_bytes: usize = default_icc_bytes,
+    /// Explicitly interpret one observed non-JFIF SOF ID profile; strict by default.
+    component_ids: jfif.ComponentIds = .strict,
 };
 
 pub const Image = struct {
@@ -28,6 +31,7 @@ pub const Image = struct {
     application_markers: usize,
     unchecked_compressed_thumbnails: usize,
     unknown_extensions: usize,
+    observed_zero_based_component_ids: bool,
     /// ICC content/CMM, Adobe flags, Exif orientation and other APP semantics.
     metadata_deferred: bool = true,
 
@@ -46,13 +50,13 @@ pub const Prepared = struct {
     options: Options,
 
     pub fn init(a: std.mem.Allocator, bytes: []const u8, boundaries: structure.Options, options: Options) !Prepared {
-        const jfif = try layout.inspect(bytes, boundaries);
-        _ = try raster.requiredBytes(jfif.structure.width, jfif.structure.effective_height, options.max_rgb_bytes);
+        const jfif_layout = try layout.inspectWithComponentIds(bytes, boundaries, options.component_ids);
+        _ = try raster.requiredBytes(jfif_layout.structure.width, jfif_layout.structure.effective_height, options.max_rgb_bytes);
         var headers = try adobe.inspect(a, bytes, .{ .structure = boundaries, .max_adobe_markers = options.max_adobe_markers });
         errdefer headers.deinit(a);
         var profile = try icc.extract(a, bytes, .{ .structure = boundaries, .max_profile_bytes = options.max_icc_bytes });
         defer profile.deinit(a);
-        return .{ .jfif = jfif, .headers = headers, .icc_chunks = profile.chunk_count, .options = options };
+        return .{ .jfif = jfif_layout, .headers = headers, .icc_chunks = profile.chunk_count, .options = options };
     }
 
     pub fn render(self: *const Prepared, a: std.mem.Allocator, image: samples.Image) !Image {
@@ -65,6 +69,7 @@ pub const Prepared = struct {
             .application_markers = self.jfif.application_markers,
             .unchecked_compressed_thumbnails = self.jfif.compressed_thumbnails_unchecked,
             .unknown_extensions = self.jfif.unknown_extensions,
+            .observed_zero_based_component_ids = self.jfif.observed_zero_based_component_ids,
         };
     }
 

@@ -141,6 +141,21 @@ test "JPEG progressive RGB uses frame colour order despite reordered differently
         try colourSuccessful(t.allocator, &full, method);
         try t.checkAllAllocationFailures(t.allocator, colourSuccessful, .{ @as([]const u8, &full), method });
     }
+    var zero_based = full;
+    const frame_at = std.mem.indexOf(u8, &zero_based, &.{ 255, 194 }).?;
+    for ([_]usize{ 10, 13, 16 }) |offset| zero_based[frame_at + offset] -= 1;
+    var next_at: usize = 0;
+    while (std.mem.indexOfPos(u8, &zero_based, next_at, &.{ 255, 218 })) |scan_at| {
+        zero_based[scan_at + 5] -= 1;
+        next_at = scan_at + 2;
+    }
+    try t.expectError(error.InvalidJfifComponentId, jpeg.decode(t.allocator, &zero_based, options));
+    var selected = options;
+    selected.render.component_ids = .observed_zero_based_three;
+    var accepted = try jpeg.decode(t.allocator, &zero_based, selected);
+    defer accepted.deinit(t.allocator);
+    try t.expect(accepted.image.observed_zero_based_component_ids);
+    try t.expectEqualSlices(u8, &.{ 130, 125, 132 }, accepted.image.raster.rgb);
     const unseen = [_]u8{ 255, 216 } ++ jfif ++ q ++ h ++ frame ++ dc ++ .{ 255, 217 };
     var preserve = options;
     preserve.samples.frame.completion = .preserve_partial;

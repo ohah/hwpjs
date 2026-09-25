@@ -211,6 +211,65 @@ test "HWPX manifest JPEG pixels are explicit and share one RGB budget" {
     try std.testing.expectError(error.LimitExceeded, jpegSample(a, .{ .jpeg_pixels = .{}, .jpeg = .{ .max_scans = 0 } }));
 }
 
+test "HWPX manifest JPEG zero-based component IDs require opt-in and remain visible" {
+    const a = std.testing.allocator;
+    const jfif = [_]u8{ 255, 224, 0, 16 } ++ "JFIF\x00".* ++ .{ 1, 2, 0, 0, 1, 0, 1, 0, 0 };
+    const adobe = [_]u8{ 255, 238, 0, 14 } ++ "Adobe".* ++ .{ 0, 100, 0, 0, 0, 0, 1 };
+    const q = [_]u8{ 255, 219, 0, 67, 0 } ++ [_]u8{8} ** 64;
+    const h = [_]u8{ 255, 196, 0, 38, 0, 1 } ++ [_]u8{0} ** 15 ++ .{ 1, 16, 1 } ++ [_]u8{0} ** 15 ++ .{0};
+    const frame = [_]u8{ 255, 192, 0, 17, 8, 0, 1, 0, 1, 3, 0, 17, 0, 1, 17, 0, 2, 17, 0 };
+    const scan = [_]u8{ 255, 218, 0, 12, 3, 0, 0, 1, 0, 2, 0, 0, 63, 0, 0x49, 0x7f, 255, 217 };
+    const raw = [_]u8{ 255, 216 } ++ jfif ++ adobe ++ q ++ h ++ frame ++ scan;
+    var strict = try jpegSampleRaw(a, &raw, .{ .jpeg_pixels = .{} });
+    defer strict.deinit(a);
+    try std.testing.expectEqual(error.InvalidJfifComponentId, strict.targets[0].inspection_error.?);
+    try std.testing.expectEqual(@as(usize, 0), strict.jpeg_rgb_bytes);
+    try std.testing.expect(!strict.targets[0].observed_zero_based_jpeg_component_ids);
+
+    const selected: payloads.Options = .{ .jpeg_pixels = .{ .render = .{ .upsampling = .nearest, .colour_management = .unmanaged, .component_ids = .observed_zero_based_three } } };
+    var accepted = try jpegSampleRaw(a, &raw, selected);
+    defer accepted.deinit(a);
+    try std.testing.expectEqual(@as(?anyerror, null), accepted.targets[0].inspection_error);
+    try std.testing.expectEqual(@as(usize, 3), accepted.jpeg_rgb_bytes);
+    try std.testing.expect(accepted.targets[0].observed_zero_based_jpeg_component_ids);
+    try std.testing.expectError(error.LimitExceeded, jpegSampleRaw(a, &raw, .{ .jpeg_pixels = selected.jpeg_pixels, .max_total_jpeg_rgb_bytes = 2 }));
+
+    var canonical = raw;
+    const sof_at = std.mem.indexOf(u8, &canonical, &.{ 255, 192 }).?;
+    const sos_at = std.mem.indexOf(u8, &canonical, &.{ 255, 218 }).?;
+    for ([_]usize{ 10, 13, 16 }) |offset| canonical[sof_at + offset] += 1;
+    for ([_]usize{ 5, 7, 9 }) |offset| canonical[sos_at + offset] += 1;
+    var ordinary = try jpegSampleRaw(a, &canonical, selected);
+    defer ordinary.deinit(a);
+    try std.testing.expectEqual(@as(?anyerror, null), ordinary.targets[0].inspection_error);
+    try std.testing.expect(!ordinary.targets[0].observed_zero_based_jpeg_component_ids);
+    var malformed = raw;
+    malformed[sof_at + 16] = 3;
+    malformed[sos_at + 9] = 3;
+    var rejected = try jpegSampleRaw(a, &malformed, selected);
+    defer rejected.deinit(a);
+    try std.testing.expectEqual(error.InvalidJfifComponentId, rejected.targets[0].inspection_error.?);
+    try std.testing.expect(!rejected.targets[0].observed_zero_based_jpeg_component_ids);
+
+    var conflicting = raw;
+    conflicting[std.mem.indexOf(u8, &conflicting, "Adobe").? + 11] = 0;
+    var colour_error = try jpegSampleRaw(a, &conflicting, selected);
+    defer colour_error.deinit(a);
+    try std.testing.expectEqual(error.ConflictingJfifAdobeColour, colour_error.targets[0].inspection_error.?);
+    var corrupt = raw;
+    corrupt[corrupt.len - 3] &= 0xfe;
+    var entropy_error = try jpegSampleRaw(a, &corrupt, selected);
+    defer entropy_error.deinit(a);
+    try std.testing.expectEqual(error.InvalidJpegEntropyPadding, entropy_error.targets[0].inspection_error.?);
+
+    try std.testing.checkAllAllocationFailures(a, struct {
+        fn run(allocator: std.mem.Allocator, jpeg_bytes: []const u8, options: payloads.Options) !void {
+            var report = try jpegSampleRaw(allocator, jpeg_bytes, options);
+            report.deinit(allocator);
+        }
+    }.run, .{ @as([]const u8, &raw), selected });
+}
+
 test "HWPX manifest JPEG RGB path releases every allocation failure" {
     try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
         fn run(a: std.mem.Allocator) !void {

@@ -14,12 +14,17 @@ pub const Report = struct {
     /// Layout inspection never certifies compressed thumbnail entropy.
     compressed_thumbnails_unchecked: usize,
     application_markers: usize,
+    observed_zero_based_component_ids: bool,
 };
 
 /// T.871 6.3-6.5 placement and known raw payload checks, not full JFIF
 /// conformance or pixel decoding. Uses the existing compatible JFIF 1.x reader.
 pub fn inspect(bytes: []const u8, options: structure.Options) !Report {
-    var state: State = .{};
+    return inspectWithComponentIds(bytes, options, .strict);
+}
+
+pub fn inspectWithComponentIds(bytes: []const u8, options: structure.Options, policy: jfif.ComponentIds) !Report {
+    var state: State = .{ .component_ids = policy };
     const report = try structure.inspectWithContext(bytes, options, &state, State.accept);
     return .{
         .structure = report,
@@ -28,10 +33,13 @@ pub fn inspect(bytes: []const u8, options: structure.Options) !Report {
         .unknown_extensions = state.unknown_extensions,
         .compressed_thumbnails_unchecked = state.compressed,
         .application_markers = state.applications,
+        .observed_zero_based_component_ids = state.observed_zero_based_component_ids,
     };
 }
 
 const State = struct {
+    component_ids: jfif.ComponentIds,
+    observed_zero_based_component_ids: bool = false,
     phase: enum { soi, header, extensions, rest } = .soi,
     header: ?jfif.Header = null,
     extensions: usize = 0,
@@ -74,7 +82,7 @@ const State = struct {
         }
         if (structure.isFrame(marker.code)) {
             const parsed = try frame.parse(marker.code, marker.payload, .{ .max_pixels = std.math.maxInt(u64) });
-            try jfif.validateFrame(parsed);
+            self.observed_zero_based_component_ids = try jfif.classifyFrame(parsed, self.component_ids);
         }
     }
 };

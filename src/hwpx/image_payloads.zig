@@ -69,6 +69,8 @@ pub const Target = struct {
     inspection_error: ?anyerror,
     /// null means the byte format is not recognized, so MIME cannot be judged.
     media_matches: ?bool,
+    /// True only after successful RGB decode using the explicit non-JFIF ID profile.
+    observed_zero_based_jpeg_component_ids: bool = false,
 };
 
 pub const Report = struct {
@@ -124,7 +126,7 @@ fn svgCandidate(item: manifest.Item) bool {
     return item.href.len >= 4 and std.ascii.eqlIgnoreCase(item.href[item.href.len - 4 ..], ".svg");
 }
 
-const Evidence = struct { png_decoded_bytes: usize = 0, jpeg_rgb_bytes: usize = 0, bmp_rgba_bytes: usize = 0, gif_indices: usize = 0, gif_codes: usize = 0, gif_frames: usize = 0, pcx_decoded_bytes: usize = 0 };
+const Evidence = struct { png_decoded_bytes: usize = 0, jpeg_rgb_bytes: usize = 0, observed_zero_based_jpeg_component_ids: bool = false, bmp_rgba_bytes: usize = 0, gif_indices: usize = 0, gif_codes: usize = 0, gif_frames: usize = 0, pcx_decoded_bytes: usize = 0 };
 
 fn validate(a: std.mem.Allocator, bytes: []const u8, format: Format, options: Options, consumed: Evidence) !Evidence {
     switch (format) {
@@ -146,7 +148,7 @@ fn validate(a: std.mem.Allocator, bytes: []const u8, format: Format, options: Op
                     .max_progressive_block_visits = pixel_options.max_progressive_block_visits,
                 };
                 const checked = try jpeg_pixels.inspect(a, bytes, selected, options.max_total_jpeg_rgb_bytes -| consumed.jpeg_rgb_bytes);
-                return .{ .jpeg_rgb_bytes = checked.rgb_bytes };
+                return .{ .jpeg_rgb_bytes = checked.rgb_bytes, .observed_zero_based_jpeg_component_ids = checked.observed_zero_based_component_ids };
             }
             _ = try jpeg.inspect(bytes, options.jpeg);
             return .{};
@@ -253,6 +255,7 @@ pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, items: manifest.Manif
             .references = 1,
             .encoded_bytes = bytes.len,
             .format = format,
+            .observed_zero_based_jpeg_component_ids = evidence.observed_zero_based_jpeg_component_ids,
             .inspection = switch (format) {
                 .png => .png_scanlines,
                 .jpeg => if (options.jpeg_pixels != null) .jpeg_rgb else .jpeg_framing,

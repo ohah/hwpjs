@@ -4,6 +4,7 @@ const Frame = @import("frame.zig").Frame;
 const Rgb = @import("thumbnail.zig").Rgb;
 
 pub const Units = enum(u8) { aspect_ratio = 0, dots_per_inch = 1, dots_per_centimetre = 2 };
+pub const ComponentIds = enum { strict, observed_zero_based_three };
 
 /// JFIF APP0 payload, excluding marker and segment length. Thumbnail borrows
 /// immutable input. Parsing does not certify placement or whole-file JFIF rules.
@@ -40,10 +41,26 @@ pub const Header = struct {
 /// payload parsing: callers must also establish SOI/APP0 placement and absence
 /// of conflicting metadata before selecting a colour interpretation.
 pub fn validateFrame(frame: Frame) !void {
+    _ = try classifyFrame(frame, .strict);
+}
+
+/// The observed profile is an explicit decoding exception, not JFIF validity.
+/// It accepts only three ordered components 0,1,2; grayscale ID 0 remains
+/// outside this exception.
+pub fn classifyFrame(frame: Frame, policy: ComponentIds) !bool {
     if (frame.precision != 8) return error.InvalidJfifPrecision;
     const count = frame.components.count();
     if (count != 1 and count != 3) return error.InvalidJfifComponentCount;
-    for (0..count) |i| if (frame.components.get(i).?.id != i + 1) return error.InvalidJfifComponentId;
+    var strict = true;
+    var zero_based = count == 3 and policy == .observed_zero_based_three;
+    for (0..count) |i| {
+        const id = frame.components.get(i).?.id;
+        strict = strict and id == i + 1;
+        zero_based = zero_based and id == i;
+    }
+    if (strict) return false;
+    if (zero_based) return true;
+    return error.InvalidJfifComponentId;
 }
 
 fn big16(reader: *Reader) !u16 {

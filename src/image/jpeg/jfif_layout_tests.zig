@@ -65,3 +65,19 @@ test "JPEG JFIF layout keeps payload frame and structural failure boundaries" {
     invalid_extension[9] = 19;
     try t.expectError(error.UnexpectedEnd, layout.inspect(&(soi ++ header ++ invalid_extension ++ rest), .{}));
 }
+
+test "JPEG JFIF layout reports explicitly selected zero-based three-component exception" {
+    const frame = [_]u8{ 255, 192, 0, 17, 8, 0, 1, 0, 1, 3, 0, 17, 0, 1, 17, 0, 2, 17, 0 };
+    const scan = [_]u8{ 255, 218, 0, 12, 3, 0, 0, 1, 0, 2, 0, 0, 63, 0, 0x7f, 255, 217 };
+    const raw = soi ++ header ++ frame ++ scan;
+    try t.expectError(error.InvalidJfifComponentId, layout.inspect(&raw, .{}));
+    const selected = try layout.inspectWithComponentIds(&raw, .{}, .observed_zero_based_three);
+    try t.expect(selected.observed_zero_based_component_ids);
+    var bad = raw;
+    bad[soi.len + header.len + 13] = 3;
+    try t.expectError(error.InvalidJfifComponentId, layout.inspectWithComponentIds(&bad, .{}, .observed_zero_based_three));
+    var gray = soi ++ header ++ rest;
+    gray[soi.len + header.len + 10] = 0;
+    gray[soi.len + header.len + 18] = 0;
+    try t.expectError(error.InvalidJfifComponentId, layout.inspectWithComponentIds(&gray, .{}, .observed_zero_based_three));
+}

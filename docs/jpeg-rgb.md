@@ -8,6 +8,8 @@
 
 후속 [progressive JFIF RGB](jpeg-progressive-rgb.md)는 별도 명시적 진입점으로 제공하며 메타데이터 준비/렌더링과 기존 Image 타입을 공유합니다. 이 문서의 기존 decode는 계속 순차 전용입니다.
 
+정규 JFIF 성분 ID와 별도로, 관측된 `(0,1,2)`의 선택적 해제 계약은 [JPEG 관측 성분 ID 호환 정책](jpeg-component-id-compatibility.md)이 소유합니다. 기본 엄격 해석은 변경하지 않습니다.
+
 ## 책임과 API
 
 - `rgb_raster.zig`: 빌린 sample_planes.Image를 받아 소유권 있는 packed RGB를 생성합니다. 호출자가 gray/rgb/ycbcr 해석과 nearest/bilinear 방법을 반드시 지정합니다. 성분 ID나 값에서 색을 추측하지 않습니다. 8비트 정밀도·성분 수·각 평면 크기/길이·0~255 샘플을 확인하며, u32 extent를 검사한 뒤 u16 축으로 전달합니다. 출력은 행 우선 RGBRGB 순서이고 반전이나 aspect 보정은 하지 않습니다.
