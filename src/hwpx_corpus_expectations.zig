@@ -371,6 +371,37 @@ pub const page_geometry_margin_sum = [_][7]u64{
     .{ 192_717, 201_080, 0, 429_437, 423_773, 322_774, 256_773 },
     .{ 254_404, 247_881, 0, 614_381, 597_741, 458_174, 366_345 },
 };
+// Independent section-definition oracle. Numeric order: spaceColumns,
+// tabStop, tabStopVal, outlineShapeIDRef, memoShapeIDRef, masterPageCnt.
+pub const section_definition_count = [_]usize{ 75, 72, 72, 55, 64, 62, 63, 92 };
+pub const section_definition_missing_id = [_]usize{ 0, 0, 0, 0, 0, 0, 0, 10 };
+pub const section_definition_empty_id = [_]usize{ 75, 72, 72, 55, 64, 62, 63, 82 };
+pub const section_definition_missing_new_tabs = [_]usize{ 9, 16, 10, 8, 16, 9, 5, 18 };
+pub const section_definition_unit_char = [_]usize{ 1, 0, 0, 0, 0, 0, 0, 0 };
+pub const section_definition_other_children = [_]usize{ 0, 0, 0, 0, 0, 4, 0, 0 };
+pub const section_definition_direct_children = [_]usize{ 759, 719, 735, 550, 638, 619, 625, 936 };
+pub const section_definition_numeric_sums = [_][6]i64{
+    .{ 85_051, 596_001, 262_000, 107, 29, 14 },
+    .{ 81_648, 576_000, 224_000, 59, 12, 6 },
+    .{ 81_636, 576_000, 248_000, 106, 23, 19 },
+    .{ 62_374, 440_000, 188_000, 55, 12, 0 },
+    .{ 72_576, 511_000, 191_500, 62, 9, 0 },
+    .{ 70_297, 496_000, 212_000, 47, 6, 0 },
+    .{ 71_442, 504_000, 232_000, 64, 12, 3 },
+    .{ 92_988, 656_000, 296_000, 62, 7, 19 },
+};
+// Child order follows section_definition.Child; model-unregistered children
+// are counted separately, never silently forced into an official category.
+pub const section_definition_child_counts = [_][12]usize{
+    .{ 75, 75, 75, 75, 75, 75, 75, 217, 14, 0, 3, 0 },
+    .{ 72, 72, 72, 72, 72, 71, 71, 206, 6, 0, 5, 0 },
+    .{ 72, 72, 72, 72, 72, 72, 72, 210, 19, 0, 2, 0 },
+    .{ 55, 55, 55, 55, 55, 55, 55, 163, 0, 0, 2, 0 },
+    .{ 64, 64, 64, 64, 64, 64, 64, 186, 0, 0, 4, 0 },
+    .{ 62, 62, 62, 62, 62, 60, 60, 178, 0, 0, 7, 0 },
+    .{ 63, 63, 63, 63, 63, 63, 63, 181, 3, 0, 0, 0 },
+    .{ 92, 92, 92, 91, 92, 91, 91, 274, 19, 0, 2, 0 },
+};
 pub const master_page_count_declarations = [_]usize{ 75, 72, 72, 55, 64, 62, 63, 92 };
 pub const master_page_type_counts = [_][5]usize{
     .{ 1, 6, 6, 1, 0 }, .{ 1, 2, 2, 1, 0 }, .{ 0, 8, 8, 2, 1 }, .{ 0, 0, 0, 0, 0 },

@@ -66,6 +66,16 @@ pub fn short(raw: []const u8) !i16 {
     return std.fmt.parseInt(i16, value, 10) catch error.InvalidXmlShort;
 }
 
+pub fn signed32(raw: []const u8) !i32 {
+    const value = std.mem.trim(u8, raw, " \t\r\n");
+    if (value.len == 0) return error.InvalidXmlSigned32;
+    var offset: usize = 0;
+    if (value[0] == '+' or value[0] == '-') offset = 1;
+    if (offset == value.len) return error.InvalidXmlSigned32;
+    for (value[offset..]) |byte| if (byte < '0' or byte > '9') return error.InvalidXmlSigned32;
+    return std.fmt.parseInt(i32, value, 10) catch error.InvalidXmlSigned32;
+}
+
 test "HWPX shared XML scalar lexical bounds" {
     try std.testing.expect(try nonNegative(" -000 "));
     try std.testing.expect(!(try nonNegative(" +12 ")));
@@ -76,6 +86,11 @@ test "HWPX shared XML scalar lexical bounds" {
     try std.testing.expectEqual(@as(i16, 32767), try short("+32767"));
     try std.testing.expectError(error.InvalidXmlShort, short("32768"));
     try std.testing.expectError(error.InvalidXmlShort, short("1_0"));
+    try std.testing.expectEqual(@as(i32, -2147483648), try signed32(" -2147483648 "));
+    try std.testing.expectEqual(@as(i32, 2147483647), try signed32("+2147483647"));
+    for ([_][]const u8{ "", "+", "1_0", "2147483648", "-2147483649" }) |bad| {
+        try std.testing.expectError(error.InvalidXmlSigned32, signed32(bad));
+    }
     try std.testing.expectEqual(@as(u32, 0), try unsigned32("-000"));
     try std.testing.expectEqual(@as(u32, 4294967295), try unsigned32("4294967295"));
     try std.testing.expectError(error.InvalidUnsigned32, unsigned32("4294967296"));

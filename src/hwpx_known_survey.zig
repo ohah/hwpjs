@@ -2,6 +2,8 @@ const std = @import("std");
 const package = @import("hwpx/package.zig");
 const expected = @import("hwpx_corpus_expectations.zig");
 const para_list_attributes = @import("hwpx/para_list_attributes.zig");
+const section_definition = @import("hwpx/section_definition.zig");
+const xml_values = @import("hwpx/xml_values.zig");
 
 const sub_list_field_count = para_list_attributes.field_names.len;
 
@@ -260,6 +262,7 @@ const MasterStyleStats = struct {
 const Statistics = struct {
     sections: usize,
     page_geometry: PageStats,
+    section_definitions: SectionDefinitionStats,
     paragraphs: usize,
     paragraph_children: package.ParagraphChildrenReport,
     line_segments: package.LineSegmentsReport,
@@ -342,6 +345,82 @@ const PageStats = struct {
             for (values, 0..) |value, index| self.margin_sum[index] += value orelse return error.MissingPageMarginField;
             try std.testing.expectEqual(@as(usize, 0), page.duplicate_margins);
         }
+    }
+};
+
+const section_number_fields = [_]section_definition.Field{
+    .space_columns, .tab_stop, .tab_stop_val, .outline_shape_id_ref, .memo_shape_id_ref, .master_page_count,
+};
+
+const SectionDefinitionStats = struct {
+    definitions: usize = 0,
+    missing_id: usize = 0,
+    empty_id: usize = 0,
+    missing_tab_stop_val: usize = 0,
+    missing_tab_stop_unit: usize = 0,
+    direction_horizontal: usize = 0,
+    unit_char: usize = 0,
+    vertical_width_true: usize = 0,
+    numeric_sums: [section_number_fields.len]i64 = @splat(0),
+    child_counts: [section_definition.child_names.len]usize = @splat(0),
+    direct_children: usize = 0,
+    other_paragraph_children: usize = 0,
+    foreign_children: usize = 0,
+    other_attributes: usize = 0,
+    unknown_enums: usize = 0,
+
+    fn add(self: *SectionDefinitionStats, report: package.SectionDefinitionReport) !void {
+        try std.testing.expectEqual(@as(usize, 0), report.sections_without_definition);
+        self.definitions += report.definitions.len;
+        self.direct_children += report.direct_children;
+        self.other_paragraph_children += report.other_paragraph_children;
+        self.foreign_children += report.foreign_children;
+        self.other_attributes += report.other_attributes;
+        self.unknown_enums += report.unknown_enums;
+        for (report.definitions) |definition| {
+            const id = definition.get(.id);
+            self.missing_id += @intFromBool(id == null);
+            if (id) |value| self.empty_id += @intFromBool(value.len == 0);
+            const direction = definition.get(.text_direction) orelse return error.MissingSectionTextDirection;
+            self.direction_horizontal += @intFromBool(std.mem.eql(u8, direction, "HORIZONTAL"));
+            self.missing_tab_stop_val += @intFromBool(definition.get(.tab_stop_val) == null);
+            const unit = definition.get(.tab_stop_unit);
+            self.missing_tab_stop_unit += @intFromBool(unit == null);
+            if (unit) |value| self.unit_char += @intFromBool(std.mem.eql(u8, value, "CHAR"));
+            const vertical = definition.get(.text_vertical_width_head) orelse return error.MissingSectionVerticalWidth;
+            self.vertical_width_true += @intFromBool(try xml_values.boolean(vertical));
+            for (section_number_fields, 0..) |field, index| {
+                const raw = definition.get(field) orelse {
+                    if (field == .tab_stop_val) continue;
+                    return error.MissingSectionNumberField;
+                };
+                const value: i64 = switch (field) {
+                    .space_columns, .tab_stop, .tab_stop_val => try xml_values.signed32(raw),
+                    .outline_shape_id_ref, .memo_shape_id_ref, .master_page_count => try xml_values.unsigned32(raw),
+                    else => unreachable,
+                };
+                self.numeric_sums[index] += value;
+            }
+            for (definition.child_counts, 0..) |value, index| self.child_counts[index] += value;
+        }
+    }
+
+    fn merge(self: *SectionDefinitionStats, other: SectionDefinitionStats) void {
+        self.definitions += other.definitions;
+        self.missing_id += other.missing_id;
+        self.empty_id += other.empty_id;
+        self.missing_tab_stop_val += other.missing_tab_stop_val;
+        self.missing_tab_stop_unit += other.missing_tab_stop_unit;
+        self.direction_horizontal += other.direction_horizontal;
+        self.unit_char += other.unit_char;
+        self.vertical_width_true += other.vertical_width_true;
+        self.direct_children += other.direct_children;
+        self.other_paragraph_children += other.other_paragraph_children;
+        self.foreign_children += other.foreign_children;
+        self.other_attributes += other.other_attributes;
+        self.unknown_enums += other.unknown_enums;
+        for (&self.numeric_sums, other.numeric_sums) |*sum, value| sum.* += value;
+        for (&self.child_counts, other.child_counts) |*sum, value| sum.* += value;
     }
 };
 
@@ -578,6 +657,13 @@ fn inspectOne(bytes: []const u8) !Outcome {
     try std.testing.expectEqual(known.section_text.runs - known.section_text.non_direct_runs, known.paragraph_children.direct_runs);
     try std.testing.expectEqual(known.paragraph_children.sections, known.line_segments.sections);
     try std.testing.expectEqual(count, known.page_geometry.sections);
+    try std.testing.expectEqual(count, known.section_definitions.sections);
+    try std.testing.expectEqual(known.page_geometry.pages.len, known.section_definitions.definitions.len);
+    try std.testing.expectEqual(known.master_pages.count_declarations.len, known.section_definitions.definitions.len);
+    for (known.section_definitions.definitions, known.master_pages.count_declarations) |definition, declaration| {
+        try std.testing.expectEqualStrings(definition.get(.master_page_count).?, declaration.raw);
+        try std.testing.expectEqual(definition.section_ordinal, declaration.section_ordinal);
+    }
     try std.testing.expectEqual(known.paragraph_children.line_seg_arrays, known.line_segments.arrays);
     for (known.line_segments.field_present, known.line_segments.field_missing) |present, missing| {
         try std.testing.expectEqual(known.line_segments.segments, present);
@@ -595,9 +681,12 @@ fn inspectOne(bytes: []const u8) !Outcome {
     try std.testing.expectEqual(known.section_text.inlineCount(.title_mark), known.text_nodes.title_mark.marks);
     var page_stats: PageStats = .{};
     try page_stats.add(known.page_geometry);
+    var section_definition_stats: SectionDefinitionStats = .{};
+    try section_definition_stats.add(known.section_definitions);
     return .{ .accepted = .{
         .sections = count,
         .page_geometry = page_stats,
+        .section_definitions = section_definition_stats,
         .paragraphs = known.paragraph_metadata.paragraphs,
         .paragraph_children = known.paragraph_children,
         .line_segments = known.line_segments,
@@ -660,6 +749,7 @@ fn surveyShard(shard: usize) !void {
     var encrypted: usize = 0;
     var sections: usize = 0;
     var page_geometry: PageStats = .{};
+    var section_definitions: SectionDefinitionStats = .{};
     var paragraphs: usize = 0;
     var paragraph_children: package.ParagraphChildrenReport = .{};
     var line_segments: package.LineSegmentsReport = .{};
@@ -742,6 +832,7 @@ fn surveyShard(shard: usize) !void {
                     try std.testing.expectEqualSlices(usize, &expected_removed, &stats.switch_removed_case);
                     try std.testing.expectEqualSlices(usize, &expected_removed, &stats.switch_removed_default);
                     sections += stats.sections;
+                    section_definitions.merge(stats.section_definitions);
                     page_geometry.pages += stats.page_geometry.pages;
                     page_geometry.widely += stats.page_geometry.widely;
                     page_geometry.left_right += stats.page_geometry.left_right;
@@ -975,6 +1066,18 @@ fn surveyShard(shard: usize) !void {
     try std.testing.expectEqual(expected.encrypted[shard], encrypted);
     try std.testing.expectEqual(expected.sections[shard], sections);
     try std.testing.expectEqual(expected.page_geometry_pages[shard], page_geometry.pages);
+    try std.testing.expectEqual(expected.section_definition_count[shard], section_definitions.definitions);
+    try std.testing.expectEqual(expected.section_definition_missing_id[shard], section_definitions.missing_id);
+    try std.testing.expectEqual(expected.section_definition_empty_id[shard], section_definitions.empty_id);
+    try std.testing.expectEqual(expected.section_definition_missing_new_tabs[shard], section_definitions.missing_tab_stop_val);
+    try std.testing.expectEqual(expected.section_definition_missing_new_tabs[shard], section_definitions.missing_tab_stop_unit);
+    try std.testing.expectEqual(expected.section_definition_count[shard], section_definitions.direction_horizontal);
+    try std.testing.expectEqual(expected.section_definition_unit_char[shard], section_definitions.unit_char);
+    try std.testing.expectEqual(@as(usize, 0), section_definitions.vertical_width_true + section_definitions.foreign_children + section_definitions.other_attributes + section_definitions.unknown_enums);
+    try std.testing.expectEqual(expected.section_definition_other_children[shard], section_definitions.other_paragraph_children);
+    try std.testing.expectEqual(expected.section_definition_direct_children[shard], section_definitions.direct_children);
+    try std.testing.expectEqualSlices(i64, &expected.section_definition_numeric_sums[shard], &section_definitions.numeric_sums);
+    try std.testing.expectEqualSlices(usize, &expected.section_definition_child_counts[shard], &section_definitions.child_counts);
     try std.testing.expectEqual(expected.page_geometry_widely[shard], page_geometry.widely);
     try std.testing.expectEqual(expected.page_geometry_left_right[shard], page_geometry.left_right);
     try std.testing.expectEqual(expected.page_geometry_width_sum[shard], page_geometry.width_sum);

@@ -66,7 +66,7 @@ test "HWPX known inspections expose page geometry and independent file values" {
     }
 }
 
-test "HWPX known inspections release page geometry after later failure" {
+test "HWPX known inspections release section reports after later failure" {
     var checked: std.heap.DebugAllocator(.{ .safety = true, .enable_memory_limit = true }) = .init;
     defer _ = checked.deinit();
     const a = checked.allocator();
@@ -79,6 +79,35 @@ test "HWPX known inspections release page geometry after later failure" {
     const baseline = checked.total_requested_bytes;
     try std.testing.expectError(error.LimitExceeded, document.inspectKnown(a, .{ .paragraph_metadata = .{ .max_paragraphs = 0 } }));
     try std.testing.expectEqual(baseline, checked.total_requested_bytes);
+}
+
+test "HWPX known inspections preserve tracked section definition fields" {
+    const a = std.testing.allocator;
+    for ([_][]const u8{ "example", "noori", "page" }, [_][]const u8{ "1", "2", "1" }) |name, outline_id| {
+        const bytes = try load(a, name);
+        defer a.free(bytes);
+        var document = try package.inspectDocument(a, bytes, .{});
+        defer document.deinit(a);
+        var report = try document.inspectKnown(a, .{});
+        defer report.deinit(a);
+        try std.testing.expectEqual(@as(usize, 1), report.section_definitions.sections);
+        try std.testing.expectEqual(@as(usize, 1), report.section_definitions.definitions.len);
+        const definition = &report.section_definitions.definitions[0];
+        try std.testing.expectEqualStrings("", definition.get(.id).?);
+        try std.testing.expectEqualStrings("HORIZONTAL", definition.get(.text_direction).?);
+        try std.testing.expectEqualStrings("1134", definition.get(.space_columns).?);
+        try std.testing.expectEqualStrings("8000", definition.get(.tab_stop).?);
+        try std.testing.expectEqual(@as(?[]const u8, null), definition.get(.tab_stop_val));
+        try std.testing.expectEqual(@as(?[]const u8, null), definition.get(.tab_stop_unit));
+        try std.testing.expectEqualStrings(outline_id, definition.get(.outline_shape_id_ref).?);
+        try std.testing.expectEqualStrings("0", definition.get(.memo_shape_id_ref).?);
+        try std.testing.expectEqualStrings("0", definition.get(.text_vertical_width_head).?);
+        try std.testing.expectEqualStrings("0", definition.get(.master_page_count).?);
+        try std.testing.expectEqual(@as(usize, 1), definition.childCount(.page_pr));
+        try std.testing.expectEqual(@as(usize, 3), definition.childCount(.page_border_fill));
+        try std.testing.expectEqual(@as(usize, 0), report.section_definitions.other_paragraph_children);
+        try std.testing.expectEqualStrings(definition.get(.master_page_count).?, report.master_pages.count_declarations[0].raw);
+    }
 }
 
 test "HWPX known inspections include line segment raw values and limits" {
