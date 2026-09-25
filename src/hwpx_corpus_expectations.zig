@@ -389,6 +389,27 @@ pub const section_setting_visibility_true = [_][6]usize{
     .{ 0, 0, 1, 0, 1, 0 }, .{ 0, 0, 1, 0, 0, 0 }, .{ 0, 0, 1, 0, 3, 0 }, .{ 0, 0, 0, 0, 0, 0 },
     .{ 2, 2, 0, 0, 2, 0 }, .{ 1, 0, 0, 1, 3, 0 }, .{ 0, 0, 1, 0, 0, 0 }, .{ 0, 0, 1, 0, 14, 0 },
 };
+// Independent tools/hwpx-section-page-border-oracle.py census. Type order:
+// BOTH, EVEN, ODD. Offset sum order: left, right, top, bottom.
+pub const section_page_border_count = [_]usize{ 217, 206, 210, 163, 186, 178, 181, 274 };
+pub const section_page_border_types = [_][3]usize{
+    .{ 75, 71, 71 }, .{ 72, 67, 67 }, .{ 72, 69, 69 }, .{ 55, 54, 54 },
+    .{ 64, 61, 61 }, .{ 62, 58, 58 }, .{ 63, 59, 59 }, .{ 112, 81, 81 },
+};
+pub const section_page_border_id_sum = [_]u64{ 283, 222, 766, 341, 379, 739, 183, 1572 };
+pub const section_page_border_id_zero = [_]usize{ 0, 0, 0, 0, 0, 0, 0, 30 };
+pub const section_page_border_content = [_]usize{ 4, 4, 3, 1, 2, 5, 0, 0 };
+pub const section_page_border_inside = [_]usize{ 1, 1, 1, 1, 0, 1, 0, 0 };
+pub const section_page_border_offset_sums = [_][4]u64{
+    .{ 305_789, 305_789, 313_159, 305_789 },
+    .{ 292_189, 292_189, 303_244, 292_189 },
+    .{ 290_202, 290_202, 297_572, 290_202 },
+    .{ 225_303, 225_303, 225_303, 225_303 },
+    .{ 263_279, 263_279, 270_649, 263_279 },
+    .{ 248_824, 248_824, 263_564, 248_824 },
+    .{ 253_643, 253_643, 253_643, 253_643 },
+    .{ 333_001, 333_001, 333_001, 333_001 },
+};
 // Independent tools/hwpx-section-definition-reference-oracle.py census.
 pub const section_outline_zero = [_]usize{ 16, 19, 13, 13, 14, 17, 11, 39 };
 pub const section_outline_resolved = [_]usize{ 55, 49, 56, 41, 47, 43, 48, 53 };

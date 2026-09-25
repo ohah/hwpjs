@@ -15,6 +15,7 @@ const header_begin_numbers = @import("header_begin_numbers.zig");
 const page_geometry = @import("page_geometry.zig");
 const section_definition = @import("section_definition.zig");
 const section_direct_settings = @import("section_direct_settings.zig");
+const section_page_border = @import("section_page_border.zig");
 const table_geometry = @import("table_geometry.zig");
 const header_resources = @import("header_resources.zig");
 
@@ -93,6 +94,10 @@ pub const Bundle = struct {
 
     pub fn inspectSectionDirectSettings(self: *const Bundle, a: std.mem.Allocator, options: section_direct_settings.Options) !section_direct_settings.Report {
         return section_direct_settings.inspect(a, self.sections, options);
+    }
+
+    pub fn inspectSectionPageBorders(self: *const Bundle, a: std.mem.Allocator, options: section_page_border.Options) !section_page_border.Report {
+        return section_page_border.inspect(a, self.sections, options);
     }
 
     pub fn deinit(self: *Bundle, a: std.mem.Allocator) void {

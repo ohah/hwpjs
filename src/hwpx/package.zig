@@ -36,6 +36,7 @@ const header_begin_numbers = @import("header_begin_numbers.zig");
 const page_geometry = @import("page_geometry.zig");
 const section_definition = @import("section_definition.zig");
 const section_direct_settings = @import("section_direct_settings.zig");
+const section_page_border = @import("section_page_border.zig");
 const section_definition_refs = @import("section_definition_refs.zig");
 const document_known = @import("document_known.zig");
 const table_geometry = @import("table_geometry.zig");
@@ -187,6 +188,8 @@ pub const SectionDefinitionOptions = section_definition.Options;
 pub const SectionDefinitionReport = section_definition.Report;
 pub const SectionDirectSettingsOptions = section_direct_settings.Options;
 pub const SectionDirectSettingsReport = section_direct_settings.Report;
+pub const SectionPageBorderOptions = section_page_border.Options;
+pub const SectionPageBorderReport = section_page_border.Report;
 pub const SectionDefinitionReferenceReport = section_definition_refs.Report;
 pub const SectionDefinitionField = section_definition.Field;
 pub const SectionDefinitionChild = section_definition.Child;
@@ -291,6 +294,7 @@ pub const KnownOptions = struct {
     page_geometry: PageGeometryOptions = .{},
     section_definitions: SectionDefinitionOptions = .{},
     section_direct_settings: SectionDirectSettingsOptions = .{},
+    section_page_borders: SectionPageBorderOptions = .{},
 };
 pub const DocumentOptions = struct {
     // The archive index also contains large BinData/section entries. Their

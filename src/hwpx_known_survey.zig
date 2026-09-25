@@ -266,6 +266,7 @@ const Statistics = struct {
     section_definitions: SectionDefinitionStats,
     section_definition_refs: SectionDefinitionRefStats,
     section_settings: SectionSettingsStats,
+    section_page_borders: SectionPageBorderStats,
     paragraphs: usize,
     paragraph_children: package.ParagraphChildrenReport,
     line_segments: package.LineSegmentsReport,
@@ -430,6 +431,84 @@ const SectionSettingsStats = struct {
         self.start_page_sum += other.start_page_sum;
         self.fill_show_first += other.fill_show_first;
         for (&self.visibility_true, other.visibility_true) |*slot, value| slot.* += value;
+    }
+};
+
+const SectionPageBorderStats = struct {
+    borders: usize = 0,
+    types: [3]usize = @splat(0),
+    id_sum: u64 = 0,
+    id_zero: usize = 0,
+    content: usize = 0,
+    header_inside: usize = 0,
+    footer_inside: usize = 0,
+    offset_sums: [4]u64 = @splat(0),
+
+    fn from(a: std.mem.Allocator, definitions: package.SectionDefinitionReport, report: package.SectionPageBorderReport) !SectionPageBorderStats {
+        try std.testing.expectEqual(definitions.sections, report.sections);
+        try std.testing.expectEqual(@as(usize, 0), report.other_attributes + report.unknown_enums);
+        try std.testing.expectEqual(report.borders, report.offsets);
+        try std.testing.expectEqual(report.borders, report.direct_children);
+        const seen = try a.alloc(usize, definitions.definitions.len);
+        defer a.free(seen);
+        @memset(seen, 0);
+        var stats: SectionPageBorderStats = .{};
+        for (report.items) |item| {
+            switch (item.kind) {
+                .border => {
+                    var parent_slot: ?usize = null;
+                    for (definitions.definitions, 0..) |definition, slot| {
+                        if (definition.section_ordinal == item.section_ordinal and definition.element_index == item.parent_element_index) {
+                            parent_slot = slot;
+                            break;
+                        }
+                    }
+                    seen[parent_slot orelse return error.MissingSectionDefinition] += 1;
+                    try std.testing.expectEqual(@as(usize, 1), item.direct_children);
+                    stats.borders += 1;
+                    const page_type = item.get(.page_type) orelse return error.MissingPageBorderType;
+                    const slot: usize = if (std.mem.eql(u8, page_type, "BOTH")) 0 else if (std.mem.eql(u8, page_type, "EVEN")) 1 else if (std.mem.eql(u8, page_type, "ODD")) 2 else return error.UnknownPageBorderType;
+                    stats.types[slot] += 1;
+                    const id = try xml_values.unsigned32(item.get(.border_fill_id_ref) orelse return error.MissingPageBorderId);
+                    stats.id_sum += id;
+                    stats.id_zero += @intFromBool(id == 0);
+                    const text_border = item.get(.text_border) orelse return error.MissingTextBorder;
+                    try std.testing.expect(std.mem.eql(u8, text_border, "PAPER") or std.mem.eql(u8, text_border, "CONTENT"));
+                    stats.content += @intFromBool(std.mem.eql(u8, text_border, "CONTENT"));
+                    stats.header_inside += @intFromBool(try xml_values.boolean(item.get(.header_inside) orelse return error.MissingHeaderInside));
+                    stats.footer_inside += @intFromBool(try xml_values.boolean(item.get(.footer_inside) orelse return error.MissingFooterInside));
+                    try std.testing.expectEqualStrings("PAPER", item.get(.fill_area) orelse return error.MissingFillArea);
+                },
+                .offset => {
+                    try std.testing.expectEqual(@as(usize, 0), item.direct_children);
+                    var parent_found = false;
+                    for (report.items) |candidate| {
+                        if (candidate.kind == .border and candidate.section_ordinal == item.section_ordinal and candidate.element_index == item.parent_element_index) {
+                            parent_found = true;
+                            break;
+                        }
+                    }
+                    try std.testing.expect(parent_found);
+                    inline for (.{ .left, .right, .top, .bottom }, 0..) |field, slot| {
+                        stats.offset_sums[slot] += try xml_values.unsigned32(item.get(field) orelse return error.MissingPageBorderOffset);
+                    }
+                },
+            }
+        }
+        for (definitions.definitions, seen) |definition, value| try std.testing.expectEqual(definition.childCount(.page_border_fill), value);
+        try std.testing.expectEqual(report.borders, stats.borders);
+        return stats;
+    }
+
+    fn merge(self: *SectionPageBorderStats, other: SectionPageBorderStats) void {
+        self.borders += other.borders;
+        for (&self.types, other.types) |*slot, value| slot.* += value;
+        self.id_sum += other.id_sum;
+        self.id_zero += other.id_zero;
+        self.content += other.content;
+        self.header_inside += other.header_inside;
+        self.footer_inside += other.footer_inside;
+        for (&self.offset_sums, other.offset_sums) |*slot, value| slot.* += value;
     }
 };
 
@@ -800,6 +879,7 @@ fn inspectOne(bytes: []const u8) !Outcome {
         .section_definitions = section_definition_stats,
         .section_definition_refs = try SectionDefinitionRefStats.from(known.section_definition_references, known.section_definitions.definitions.len),
         .section_settings = try SectionSettingsStats.from(a, known.section_definitions, known.section_direct_settings),
+        .section_page_borders = try SectionPageBorderStats.from(a, known.section_definitions, known.section_page_borders),
         .paragraphs = known.paragraph_metadata.paragraphs,
         .paragraph_children = known.paragraph_children,
         .line_segments = known.line_segments,
@@ -865,6 +945,7 @@ fn surveyShard(shard: usize) !void {
     var section_definitions: SectionDefinitionStats = .{};
     var section_definition_refs: SectionDefinitionRefStats = .{};
     var section_settings: SectionSettingsStats = .{};
+    var section_page_borders: SectionPageBorderStats = .{};
     var paragraphs: usize = 0;
     var paragraph_children: package.ParagraphChildrenReport = .{};
     var line_segments: package.LineSegmentsReport = .{};
@@ -950,6 +1031,7 @@ fn surveyShard(shard: usize) !void {
                     section_definitions.merge(stats.section_definitions);
                     section_definition_refs.merge(stats.section_definition_refs);
                     section_settings.merge(stats.section_settings);
+                    section_page_borders.merge(stats.section_page_borders);
                     page_geometry.pages += stats.page_geometry.pages;
                     page_geometry.widely += stats.page_geometry.widely;
                     page_geometry.left_right += stats.page_geometry.left_right;
@@ -1190,6 +1272,14 @@ fn surveyShard(shard: usize) !void {
     try std.testing.expectEqual(expected.section_setting_start_page_sum[shard], section_settings.start_page_sum);
     try std.testing.expectEqual(expected.section_setting_fill_show_first[shard], section_settings.fill_show_first);
     try std.testing.expectEqualSlices(usize, &expected.section_setting_visibility_true[shard], &section_settings.visibility_true);
+    try std.testing.expectEqual(expected.section_page_border_count[shard], section_page_borders.borders);
+    try std.testing.expectEqualSlices(usize, &expected.section_page_border_types[shard], &section_page_borders.types);
+    try std.testing.expectEqual(expected.section_page_border_id_sum[shard], section_page_borders.id_sum);
+    try std.testing.expectEqual(expected.section_page_border_id_zero[shard], section_page_borders.id_zero);
+    try std.testing.expectEqual(expected.section_page_border_content[shard], section_page_borders.content);
+    try std.testing.expectEqual(expected.section_page_border_inside[shard], section_page_borders.header_inside);
+    try std.testing.expectEqual(expected.section_page_border_inside[shard], section_page_borders.footer_inside);
+    try std.testing.expectEqualSlices(u64, &expected.section_page_border_offset_sums[shard], &section_page_borders.offset_sums);
     try std.testing.expectEqual(expected.section_outline_zero[shard], section_definition_refs.outline_zero);
     try std.testing.expectEqual(expected.section_outline_resolved[shard], section_definition_refs.outline_resolved);
     try std.testing.expectEqual(expected.section_outline_absent_table[shard], section_definition_refs.outline_absent_table);

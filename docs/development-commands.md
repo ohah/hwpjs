@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[HWPX 구역 쪽 테두리·배경](hwpx-section-page-borders.md)은 `zig test src/root.zig --test-filter 'HWPX section page borders'`로 합성·한도·할당 실패를, `--test-filter 'HWPX known inspections compose'`로 실파일 조립을 확인합니다. `python3 tools/hwpx-section-page-border-oracle.py --self-test`와 인자 없는 실행은 독립 반례·8개 shard 기대값을 제공합니다. 아래 `HWPX known document inspections shard N`을 N=0..7 각각 별도 ReleaseFast 프로세스로 실행해 대조합니다.
+
 [HWPX 구역 직접 설정](hwpx-section-direct-settings.md)은 `zig test src/root.zig --test-filter 'HWPX section direct settings'`로 합성·한도·할당 실패를, `--test-filter 'HWPX known inspections preserve observed grid'`로 확장 속성 실파일을 검사합니다. `python3 tools/hwpx-section-direct-settings-oracle.py --self-test`와 인자 없는 실행은 독립 반례·8개 shard 기대값을 생성합니다. 아래 `HWPX known document inspections shard N`을 N=0..7 각각 별도 ReleaseFast 프로세스로 실행해 대조합니다.
 
 [HWPX 구역 번호·메모 모양 ID 참조](hwpx-section-definition-references.md)는 `zig test src/root.zig --test-filter 'HWPX section definition references'`, `--test-filter 'HWPX header resources index memo'`, `--test-filter 'HWPX known inspections resolve real memo'`로 합성 분기·header 색인·실파일 연결을 검사합니다. `python3 tools/hwpx-section-definition-reference-oracle.py --self-test`와 인자 없는 실행이 독립 반례·8개 shard 기대값을 생성합니다. 실제 Zig 대조는 아래 `HWPX known document inspections shard N`을 N=0..7 각각 별도 프로세스로 실행합니다.
