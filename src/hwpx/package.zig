@@ -46,6 +46,7 @@ const picture_image_links = @import("picture_image_links.zig");
 const masterpage_picture_image_links = @import("masterpage_picture_image_links.zig");
 const picture_image_payloads = @import("picture_image_payloads.zig");
 const manifest_image_payloads = @import("manifest_image_payloads.zig");
+const ole_payloads = @import("ole_payloads.zig");
 const masterpage_fill_brush = @import("masterpage_fill_brush.zig");
 const section_page_border_refs = @import("section_page_border_refs.zig");
 const section_definition_refs = @import("section_definition_refs.zig");
@@ -217,6 +218,8 @@ pub const PictureImagePayloadOptions = picture_image_payloads.Options;
 pub const PictureImagePayloadReport = picture_image_payloads.Report;
 pub const ManifestImagePayloadOptions = manifest_image_payloads.Options;
 pub const ManifestImagePayloadReport = manifest_image_payloads.Report;
+pub const OlePayloadOptions = ole_payloads.Options;
+pub const OlePayloadReport = ole_payloads.Report;
 pub const PictureImageOptions = struct {
     trees: XmlTreesOptions = .{},
     links: PictureImageLinkOptions = .{},
@@ -353,6 +356,7 @@ pub const KnownOptions = struct {
     picture_image_links: PictureImageLinkOptions = .{},
     picture_image_payloads: PictureImagePayloadOptions = .{},
     manifest_image_payloads: ManifestImagePayloadOptions = .{},
+    ole_payloads: OlePayloadOptions = .{},
 };
 pub const DocumentOptions = struct {
     // The archive index also contains large BinData/section entries. Their
@@ -532,6 +536,12 @@ pub const Document = struct {
     /// referenced from any picture or brush. External items are not fetched.
     pub fn inspectManifestImagePayloads(self: *const Document, a: std.mem.Allocator, options: ManifestImagePayloadOptions) !ManifestImagePayloadReport {
         return manifest_image_payloads.inspect(a, self.archive, self.manifest, options);
+    }
+
+    /// Inspects packaged OLE copies while retaining the OPF isEmbeded flag.
+    /// An external declaration with no exact internal ZIP copy is not fetched.
+    pub fn inspectOlePayloads(self: *const Document, a: std.mem.Allocator, options: OlePayloadOptions) !OlePayloadReport {
+        return ole_payloads.inspect(a, self.archive, self.manifest, options);
     }
 
     /// Per-element raw pic/img OPF links in manifest-selected master pages.

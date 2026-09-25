@@ -536,6 +536,12 @@ pub const manifest_image_formats = [_][9]usize{ .{ 114, 46, 71, 8, 0, 0, 0, 0, 0
 pub const manifest_image_mismatches = [_]usize{ 26, 15, 61, 8, 7, 4, 11, 87 };
 pub const manifest_image_encoded_bytes = [_]usize{ 193603441, 201318878, 347106776, 42394905, 183293992, 339544753, 126980082, 115910052 };
 pub const manifest_image_without_picture_brush_ref = [_]usize{ 29, 62, 72, 1, 57, 11, 33, 81 };
+// Independent Python ZIP/OPF/envelope census; CFB internals are checked by Zig.
+pub const ole_candidates = [_]usize{ 12, 15, 15, 10, 14, 12, 12, 9 };
+pub const ole_external = [_]usize{ 7, 7, 11, 6, 12, 9, 8, 5 };
+pub const ole_encoded_bytes = [_]usize{ 3942960, 4188220, 4438588, 3768872, 3719224, 3482160, 3616816, 2793508 };
+pub const ole_invalid_root = [_]usize{ 5, 8, 4, 4, 2, 3, 4, 4 };
+pub const ole_fat_tail_nonfree = [_]usize{ 2, 3, 2, 2, 2, 2, 0, 1 };
 pub const picture_payload_formats = [_][9]usize{ .{ 82, 42, 71, 7, 0, 0, 0, 0, 0 }, .{ 56, 30, 99, 1, 0, 0, 0, 0, 0 }, .{ 39, 55, 86, 0, 6, 0, 0, 0, 0 }, .{ 20, 69, 15, 4, 0, 3, 0, 0, 0 }, .{ 63, 42, 79, 0, 0, 0, 0, 0, 0 }, .{ 80, 25, 130, 0, 13, 0, 0, 2, 0 }, .{ 35, 25, 94, 0, 0, 1, 0, 0, 0 }, .{ 66, 56, 103, 7, 4, 2, 1, 0, 0 } };
 pub const picture_payload_invalid_wmf = [_]usize{ 0, 0, 2, 0, 0, 0, 0, 1 };
 pub const picture_payload_invalid_tiff = [_]usize{ 0, 0, 0, 0, 0, 0, 0, 0 };

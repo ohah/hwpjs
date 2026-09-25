@@ -35,6 +35,7 @@ const picture_image_links = @import("picture_image_links.zig");
 const masterpage_picture_image_links = @import("masterpage_picture_image_links.zig");
 const picture_image_payloads = @import("picture_image_payloads.zig");
 const manifest_image_payloads = @import("manifest_image_payloads.zig");
+const ole_payloads = @import("ole_payloads.zig");
 const masterpage_fill_brush = @import("masterpage_fill_brush.zig");
 const section_page_border_refs = @import("section_page_border_refs.zig");
 const section_definition_refs = @import("section_definition_refs.zig");
@@ -53,6 +54,7 @@ pub const Report = struct {
     protection: protection.Report,
     payload_integrity: payload_integrity.Report,
     manifest_image_payloads: manifest_image_payloads.Report,
+    ole_payloads: ole_payloads.Report,
     manifest_xml: manifest_xml.Report,
     settings: settings.Report,
     master_pages: masterpage_references.Report,
@@ -122,6 +124,7 @@ pub const Report = struct {
         self.begin_numbers.deinit(a);
         self.payload_integrity.deinit(a);
         self.manifest_image_payloads.deinit(a);
+        self.ole_payloads.deinit(a);
         self.manifest_xml.deinit(a);
         self.settings.deinit(a);
         self.master_pages.deinit(a);
@@ -148,6 +151,8 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
     errdefer payload_report.deinit(a);
     var manifest_image_report = try document.inspectManifestImagePayloads(a, options.manifest_image_payloads);
     errdefer manifest_image_report.deinit(a);
+    var ole_report = try document.inspectOlePayloads(a, options.ole_payloads);
+    errdefer ole_report.deinit(a);
     var manifest_xml_report = try document.inspectManifestXml(a, options.manifest_xml);
     errdefer manifest_xml_report.deinit(a);
     var settings_report = try document.inspectSettings(a, options.settings);
@@ -234,6 +239,7 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
         .protection = protection_report,
         .payload_integrity = payload_report,
         .manifest_image_payloads = manifest_image_report,
+        .ole_payloads = ole_report,
         .manifest_xml = manifest_xml_report,
         .settings = settings_report,
         .master_pages = master_page_report,

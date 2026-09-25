@@ -2,6 +2,8 @@
 
 `manifest_image_payloads`는 [OPF 이미지 후보 전수 검사](hwpx-manifest-image-payloads.md)를 소유 보고서로 포함합니다. 그림·브러시에서 참조되지 않은 후보도 보지만 모든 BinData 내부 형식을 검증하는 것은 아닙니다.
 
+`ole_payloads`는 [OPF OLE 패키지 사본](hwpx-ole-payloads.md)을 별도 소유 보고서로 포함합니다. 외부 선언과 ZIP 내 사본을 구분하며 strict CFB 실패도 대상별 진단으로 남깁니다. OLE 내부 `Contents` 의미·활성화는 포함하지 않습니다.
+
 그림·브러시의 공통 내장 이미지 보고서에는 [SVG XML 루트 검사](hwpx-svg-image-payloads.md)도 포함됩니다. 이 결과를 SVG 렌더링 가능성이나 안전한 실행 판정으로 승격하지 않습니다.
 
 `section_page_borders`는 [구역 쪽 테두리·배경 원값](hwpx-section-page-borders.md)을 소유 보고서로, `section_page_border_references`는 [header 리소스 ID 진단](hwpx-section-page-border-references.md)을 값 보고서로 노출합니다. 페이지별 적용은 아직 하지 않습니다.
@@ -76,7 +78,7 @@ section 텍스트 보고서도 원문 양쪽 분기를 유지합니다. 활성 �
 
 각 단계의 `options`와 메모리·해제 바이트 한도는 기존 검사 계약 그대로 독립 적용됩니다. 하나의 전역 해제량 예산이나 전체 문서 스키마 검증을 새로 제공하지 않습니다. 일부 XML을 여러 단계에서 다시 읽으므로 큰 문서에서는 비용이 높습니다. 호출 중 어느 단계에서든 오류가 나면 이전 단계의 소유 보고서와 임시 XML 트리를 정리합니다.
 
-`page_geometry`는 [구역 쪽 설정 원값](hwpx-page-geometry.md)을, `section_definitions`는 [구역 정의 속성·직접 자식](hwpx-section-definitions.md)을 같은 소유 XML 트리에서 추출합니다. [그림 이미지 연결](hwpx-picture-image-links.md)은 section과 마스터페이지의 원문 `pic/img` 사이트를 별도 보고서로 남기고, [내장 그림 이미지 검사](hwpx-picture-image-payloads.md)는 공통 형식 검사에 연결합니다. 미구현 범위는 2011 외 OWPML namespace의 의미, 전체 header/section XSD 및 조건부 분기, settings/masterpage 의미, OPF 밖 XML과 BinData **전체**의 포맷 의미 검사(현재는 fillBrush·그림·manifest 이미지 후보까지), 차트 수식의 의미·표시, 문서 모델·레이아웃, 편집·저장·무손실 왕복입니다. ZIP 바이트 CRC나 XML 문법 통과만으로는 내부 포맷을 보증하지 않습니다. 이 API의 이름을 `validateDocument`나 완료 판정으로 바꾸지 않는 이유입니다.
+`page_geometry`는 [구역 쪽 설정 원값](hwpx-page-geometry.md)을, `section_definitions`는 [구역 정의 속성·직접 자식](hwpx-section-definitions.md)을 같은 소유 XML 트리에서 추출합니다. [그림 이미지 연결](hwpx-picture-image-links.md)은 section과 마스터페이지의 원문 `pic/img` 사이트를 별도 보고서로 남기고, [내장 그림 이미지 검사](hwpx-picture-image-payloads.md)는 공통 형식 검사에 연결합니다. [OPF OLE 사본 검사](hwpx-ole-payloads.md)는 외부 선언과 ZIP 내 사본을 분리해 strict CFB 구조만 검사합니다. 미구현 범위는 2011 외 OWPML namespace의 의미, 전체 header/section XSD 및 조건부 분기, settings/masterpage 의미, OPF 밖 XML과 BinData **전체**의 포맷 의미 검사(현재는 fillBrush·그림·manifest 이미지 후보와 OLE 사본까지), 차트 수식의 의미·표시, 문서 모델·레이아웃, 편집·저장·무손실 왕복입니다. ZIP 바이트 CRC나 XML 문법 통과만으로는 내부 포맷을 보증하지 않습니다. 이 API의 이름을 `validateDocument`나 완료 판정으로 바꾸지 않는 이유입니다.
 
 [표 자체 속성 원값·테두리 ID 참조](hwpx-table-attributes.md)도 표 격자 보고서 안에서 확인할 수 있습니다. 원값 검사 성공을 표 표시·편집 완료로 해석하지 않습니다.
 [표 안쪽 여백·셀 구역](hwpx-table-children.md) 보고서도 같은 격자 보고서에 포함되며, 구역 겹침·표 배치의 의미는 판정하지 않습니다.

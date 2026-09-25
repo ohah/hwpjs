@@ -12,6 +12,7 @@ const fill_brush_payload_stats = @import("hwpx_fill_brush_payload_survey_stats.z
 const picture_image_stats = @import("hwpx_picture_image_survey_stats.zig");
 const picture_payload_stats = @import("hwpx_picture_payload_survey_stats.zig");
 const manifest_image_stats = @import("hwpx_manifest_image_survey_stats.zig");
+const ole_payload_stats = @import("hwpx_ole_payload_survey_stats.zig");
 const master_fill_brush_stats = @import("hwpx_master_fill_brush_survey_stats.zig");
 
 const sub_list_field_count = para_list_attributes.field_names.len;
@@ -284,6 +285,7 @@ const Statistics = struct {
     picture_images: picture_image_stats.Stats,
     picture_payloads: picture_payload_stats.Stats,
     manifest_images: manifest_image_stats.Stats,
+    ole_payloads: ole_payload_stats.Stats,
     master_fill_brushes: master_fill_brush_stats.Stats,
     paragraphs: usize,
     paragraph_children: package.ParagraphChildrenReport,
@@ -1123,6 +1125,7 @@ fn inspectOne(bytes: []const u8) !Outcome {
         .picture_images = try picture_image_stats.Stats.from(document.manifest, &known),
         .picture_payloads = try picture_payload_stats.Stats.from(document.manifest, &known),
         .manifest_images = try manifest_image_stats.Stats.from(document.manifest, &known),
+        .ole_payloads = try ole_payload_stats.Stats.from(document.archive, document.manifest, &known),
         .master_fill_brushes = try master_fill_brush_stats.Stats.from(known.master_page_fill_brushes, known.master_pages),
         .paragraphs = known.paragraph_metadata.paragraphs,
         .paragraph_children = known.paragraph_children,
@@ -1199,6 +1202,7 @@ fn surveyShard(shard: usize) !void {
     var picture_images: picture_image_stats.Stats = .{};
     var picture_payloads: picture_payload_stats.Stats = .{};
     var manifest_images: manifest_image_stats.Stats = .{};
+    var ole_payloads: ole_payload_stats.Stats = .{};
     var master_fill_brushes: master_fill_brush_stats.Stats = .{};
     var paragraphs: usize = 0;
     var paragraph_children: package.ParagraphChildrenReport = .{};
@@ -1295,6 +1299,7 @@ fn surveyShard(shard: usize) !void {
                     picture_images.merge(stats.picture_images);
                     picture_payloads.merge(stats.picture_payloads);
                     manifest_images.merge(stats.manifest_images);
+                    ole_payloads.merge(stats.ole_payloads);
                     master_fill_brushes.merge(stats.master_fill_brushes);
                     page_geometry.pages += stats.page_geometry.pages;
                     page_geometry.widely += stats.page_geometry.widely;
@@ -1590,6 +1595,20 @@ fn surveyShard(shard: usize) !void {
     try std.testing.expectEqual(expected.manifest_image_encoded_bytes[shard], manifest_images.encoded_bytes);
     try std.testing.expectEqual(expected.manifest_image_without_picture_brush_ref[shard], manifest_images.without_picture_brush_ref);
     try std.testing.expectEqual(@as(usize, 0), manifest_images.invalid_svg);
+    try std.testing.expectEqual(expected.ole_candidates[shard], ole_payloads.candidates);
+    try std.testing.expectEqual(expected.ole_external[shard], ole_payloads.external);
+    try std.testing.expectEqual(expected.ole_candidates[shard], ole_payloads.copies);
+    try std.testing.expectEqual(expected.ole_external[shard], ole_payloads.external_copies);
+    try std.testing.expectEqual(expected.ole_encoded_bytes[shard], ole_payloads.encoded_bytes);
+    try std.testing.expectEqual(expected.ole_candidates[shard], ole_payloads.prefixed);
+    std.debug.print("HWPX OLE shard={d} candidates={d} external={d} copies={d} missing={d} failures={d} invalid_root={d} invalid_fat={d} streams={d} bytes={d}\n", .{ shard, ole_payloads.candidates, ole_payloads.external, ole_payloads.copies, ole_payloads.missing, ole_payloads.failures, ole_payloads.invalid_root, ole_payloads.invalid_fat, ole_payloads.streams, ole_payloads.stream_bytes });
+    try std.testing.expectEqual(expected.ole_invalid_root[shard], ole_payloads.failures);
+    try std.testing.expectEqual(expected.ole_fat_tail_nonfree[shard], ole_payloads.invalid_fat);
+    try std.testing.expectEqual(expected.ole_invalid_root[shard] - expected.ole_fat_tail_nonfree[shard], ole_payloads.invalid_root);
+    try std.testing.expectEqual(ole_payloads.failures, ole_payloads.invalid_root + ole_payloads.invalid_fat);
+    try std.testing.expectEqual(@as(usize, 0), ole_payloads.failed_external);
+    try std.testing.expectEqual(ole_payloads.candidates - ole_payloads.external, ole_payloads.failures);
+    try std.testing.expectEqual(@as(usize, 0), ole_payloads.missing + ole_payloads.raw + ole_payloads.unknown);
     try std.testing.expectEqualSlices(usize, &expected.picture_payload_formats[shard], &picture_payloads.document.formats);
     try std.testing.expectEqual(expected.picture_payload_media_mismatches[shard], picture_payloads.document.mismatches);
     try std.testing.expectEqual(expected.picture_payload_encoded_bytes[shard], picture_payloads.document.encoded_bytes);

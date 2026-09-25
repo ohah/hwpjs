@@ -44,7 +44,7 @@ pub const Header = struct {
             Diagnostic.note(diagnostic, "CFB file size {d} < 512", .{bytes.len});
             return error.Truncated;
         }
-        if (!std.mem.eql(u8, bytes[0..8], &.{ 0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1 })) {
+        if (!std.mem.eql(u8, bytes[0..8], &format.signature)) {
             Diagnostic.note(diagnostic, "Header Signature: Expected d0cf11e0a1b11ae1 saw {s}", .{std.fmt.bytesToHex(bytes[0..8].*, .lower)});
             return error.InvalidSignature;
         }

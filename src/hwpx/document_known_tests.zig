@@ -18,6 +18,26 @@ const synthetic_sources = [_]fixture.Source{
 const encrypted_sources = synthetic_sources ++ [_]fixture.Source{.{ .name = "META-INF/manifest.xml", .data = "<m:manifest xmlns:m='urn:oasis:names:tc:opendocument:xmlns:manifest:1.0'><m:file-entry full-path='Contents/header.xml'><m:encryption-data/></m:file-entry></m:manifest>" }};
 const orphan_sources = synthetic_sources ++ [_]fixture.Source{.{ .name = "Unlisted/data.bin", .data = "hidden" }};
 
+test "HWPX known inspections retain packaged OLE behind external declaration" {
+    const a = std.testing.allocator;
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "reference/rhwp/samples/SO-SUEOP.hwpx", a, .limited(1_000_000));
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    var report = try document.inspectKnown(a, .{});
+    defer report.deinit(a);
+    try std.testing.expectEqual(@as(usize, 1), report.ole_payloads.candidates);
+    try std.testing.expectEqual(@as(usize, 1), report.ole_payloads.declared_external);
+    try std.testing.expectEqual(@as(usize, 1), report.ole_payloads.external_packaged_copies);
+    try std.testing.expectEqual(@as(usize, 0), report.ole_payloads.inspection_failures);
+    try std.testing.expectEqual(@as(usize, 1), report.binary_references.counts(.section_ole).resolved_external);
+    try std.testing.expectError(error.LimitExceeded, document.inspectKnown(a, .{ .ole_payloads = .{ .max_targets = 0 } }));
+    var checked: std.heap.DebugAllocator(.{ .safety = true, .enable_memory_limit = true }) = .init;
+    defer _ = checked.deinit();
+    try std.testing.expectError(error.LimitExceeded, document.inspectKnown(checked.allocator(), .{ .trees = .{ .max_total_elements = 1 } }));
+    try std.testing.expectEqual(@as(usize, 0), checked.total_requested_bytes);
+}
+
 test "HWPX known inspections include unreferenced manifest image diagnostics" {
     const a = std.testing.allocator;
     var sources = synthetic_sources ++ [_]fixture.Source{.{ .name = "BinData/unused.svg", .data = "<wrong xmlns='http://www.w3.org/2000/svg'/>" }};

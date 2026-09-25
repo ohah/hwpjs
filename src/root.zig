@@ -1,4 +1,4 @@
-//! Zig library entrypoint: bounded binary/CFB operations and HWP5 framing.
+//! Zig library entrypoint: bounded CFB, HWP5, and HWPX inspection cores.
 pub const Reader = @import("binary/reader.zig").Reader;
 pub const cfb = @import("cfb/reader.zig");
 pub const hwp5 = @import("hwp5/root.zig");
@@ -47,6 +47,7 @@ test {
     _ = @import("hwpx/picture_image_links_tests.zig");
     _ = @import("hwpx/picture_image_payloads_tests.zig");
     _ = @import("hwpx/manifest_image_payloads_tests.zig");
+    _ = @import("hwpx/ole_payloads_tests.zig");
     _ = @import("image/tiff/structure_tests.zig");
     _ = @import("image/pcx/structure_tests.zig");
     _ = @import("hwpx/fill_brush_image_payloads_tests.zig");

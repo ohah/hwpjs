@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[HWPX OLE 패키지 사본 검사](hwpx-ole-payloads.md)는 `zig test src/root.zig --test-filter 'HWPX OLE payloads'`와 `--test-filter 'HWPX known inspections retain packaged OLE'`로 경계·소유권·실파일 연결을 검사합니다. 독립 봉투 조사 `python3 tools/hwpx-ole-payload-oracle.py --self-test` 및 인자 없는 전체 조사 결과는 아래 HWPX known shard 0~7과 대조합니다. 실파일 shard는 로컬 `reference/rhwp`가 필요하고 기본 audit에는 포함되지 않습니다.
+
 [OPF 이미지 후보 전수 검사](hwpx-manifest-image-payloads.md)는 `zig test src/root.zig --test-filter 'HWPX manifest image payloads'`와 `--test-filter 'HWPX known inspections include unreferenced'`로 합성·소유권·한도를 확인합니다. 독립 corpus 조사 `python3 tools/hwpx-fill-brush-image-oracle.py --self-test` 및 `--manifest-images` 결과는 아래 HWPX known shard 0~7과 대조합니다. 선택 shard는 로컬 `reference/rhwp`가 필요하고 기본 audit에는 포함되지 않습니다.
 
 

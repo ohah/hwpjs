@@ -1,5 +1,7 @@
 # Zig/WASM 구현 구조
 
+[HWPX OLE 패키지 사본](hwpx-ole-payloads.md)은 OPF 선택과 ZIP 내 정확한 사본 확인만 소유합니다. OLE 길이 봉투와 strict CFB 구조는 `src/ole/`을 HWP5와 공유하며 객체 활성화·내부 의미 해석은 하지 않습니다.
+
 [OPF 이미지 후보 전수 검사](hwpx-manifest-image-payloads.md)는 참조 사이트와 무관한 manifest 항목 선택만 소유하고, 바이트 검사·MIME 진단은 기존 공통 이미지 코어를 재사용합니다. 전체 BinData 의미 검증과 문서 전역 이미지 예산은 아직 별도입니다.
 
 [내장 SVG 구조 검사](hwpx-svg-image-payloads.md)는 공통 XML 문법·namespace 파서를 재사용하며, HWPX 이미지 어댑터는 형식 후보·MIME·자원 예산만 소유합니다. 스크립트/외부 참조 실행과 렌더링은 하지 않습니다.

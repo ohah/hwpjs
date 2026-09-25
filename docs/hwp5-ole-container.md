@@ -2,9 +2,9 @@
 
 ## 책임과 지원 경계
 
-`hwp5/ole/envelope.zig`는 이미 압축 해제된 BinData의 명시적 raw_cfb 또는 observed_size_prefix 배치를 처리합니다. 후자는 선두 u32 little-endian 값이 남은 전체 바이트 길이와 정확히 같아야 합니다. 잘림·후행 바이트를 허용하거나 다른 배치로 재시도하지 않습니다. 반환 슬라이스는 입력을 빌립니다. 빈 payload의 프레이밍 성공은 CFB 성공이 아닙니다.
+`hwp5/ole/envelope.zig`는 공통 `src/ole/envelope.zig`를 재노출합니다. 이미 압축 해제된 BinData의 명시적 raw_cfb 또는 observed_size_prefix 배치를 처리합니다. 후자는 선두 u32 little-endian 값이 남은 전체 바이트 길이와 정확히 같아야 합니다. 잘림·후행 바이트를 허용하거나 다른 배치로 재시도하지 않습니다. 반환 슬라이스는 입력을 빌립니다. 빈 payload의 프레이밍 성공은 CFB 성공이 아닙니다.
 
-`hwp5/ole/container.zig`는 그 결과를 기존 CFB File.open으로 전달하며 strict 검사를 강제합니다. 별도 CFB 파서·시그니처·섹터 규칙을 복제하지 않습니다. max_input_bytes는 접두사를 포함한 전체 decoded 입력에 적용하고, 나머지 CFB 자원 한도도 전달합니다. 반환 File은 입력과 독립적으로 소유되며 호출자가 deinit해야 합니다.
+`hwp5/ole/container.zig`도 공통 `src/ole/container.zig`를 재노출하며, 그 결과를 기존 CFB File.open으로 전달하고 strict 검사를 강제합니다. HWPX의 [OPF OLE 사본 검사](hwpx-ole-payloads.md)와 공유하지만 별도 CFB 파서·시그니처·섹터 규칙을 복제하지 않습니다. max_input_bytes는 접두사를 포함한 전체 decoded 입력에 적용하고, 나머지 CFB 자원 한도도 전달합니다. 반환 File은 입력과 독립적으로 소유되며 호출자가 deinit해야 합니다.
 
 이 문서는 독립 Zig API와 비공개 WASM 시험 연결을 다룹니다. 후속 HWP 컨테이너의 선택적 연결은 [BinData OLE 검사 연결](hwp5-ole-binaries.md)이 소유합니다. OLE 참조의 ordinal→저장 경로 해결, 내부 Contents/OlePres/Workbook/Package의 의미 해석, 차트 스키마, OLE 실행, 재귀 열기, 편집·저장은 완료하지 않았습니다. 제품 JS 공개 API도 변경하지 않습니다.
 

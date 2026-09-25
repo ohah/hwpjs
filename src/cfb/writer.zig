@@ -97,7 +97,7 @@ pub fn write(backing: std.mem.Allocator, nodes: []const Node, options: Options) 
         const part = plan.sector(bytes, fat_start + i);
         for (0..s / 4) |j| put(u32, part, j * 4, fat[i * (s / 4) + j]);
     }
-    @memcpy(bytes[0..8], &[_]u8{ 0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1 });
+    @memcpy(bytes[0..8], &format.signature);
     put(u16, bytes, 24, 62);
     put(u16, bytes, 26, options.version);
     put(u16, bytes, 28, 0xfffe);
