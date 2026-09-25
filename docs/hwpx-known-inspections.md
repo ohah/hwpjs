@@ -1,5 +1,7 @@
 # HWPX 현재 지원 검사 묶음
 
+그림·브러시·OPF 이미지 후보의 BMP는 [픽셀 검사](hwpx-bmp-pixels.md) 결과를 공유합니다. BMP RGBA 복호화 성공이 이미지 표시·쪽 배치 또는 문서 전체 유효성의 증거는 아닙니다.
+
 `manifest_image_payloads`는 [OPF 이미지 후보 전수 검사](hwpx-manifest-image-payloads.md)를 소유 보고서로 포함합니다. 그림·브러시에서 참조되지 않은 후보도 보지만 모든 BinData 내부 형식을 검증하는 것은 아닙니다.
 
 `ole_payloads`는 [OPF OLE 패키지 사본](hwpx-ole-payloads.md)을 별도 소유 보고서로 포함합니다. 외부 선언과 ZIP 내 사본을 구분하며 strict CFB 실패도 대상별 진단으로 남깁니다. OLE 내부 `Contents` 의미·활성화는 포함하지 않습니다.

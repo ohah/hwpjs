@@ -4,6 +4,9 @@ const manifest = @import("content_manifest.zig");
 const png = @import("../image/png/pixels.zig");
 const jpeg = @import("../image/jpeg/structure.zig");
 const bmp = @import("../image/bmp/structure.zig");
+const bmp_pixels = @import("../image/bmp/pixels.zig");
+const bmp_masks = @import("../image/bmp/masks.zig");
+const bmp_rle = @import("../image/bmp/rle_rgba.zig");
 const gif = @import("../image/gif/document.zig");
 const wmf_header = @import("../image/wmf/header.zig");
 const wmf_records = @import("../image/wmf/records.zig");
@@ -12,13 +15,22 @@ const pcx = @import("../image/pcx/structure.zig");
 const svg = @import("../image/svg/structure.zig");
 
 pub const Format = enum { png, jpeg, bmp, gif, wmf, tiff, pcx, svg, unknown };
-pub const Inspection = enum { png_scanlines, jpeg_framing, bmp_structure, gif_indices, wmf_framing, tiff_structure, pcx_rle, svg_xml_structure, unsupported };
+pub const Inspection = enum { png_scanlines, jpeg_framing, bmp_structure, bmp_rgba, gif_indices, wmf_framing, tiff_structure, pcx_rle, svg_xml_structure, unsupported };
+
+/// BMP structure policy stays in Options.bmp. Pixel choices cannot silently
+/// override it through the generic decoder's nested structure field.
+pub const BmpPixelOptions = struct {
+    mask_scaling: bmp_masks.Scaling = .nearest_normalized,
+    max_rgba_bytes: usize = 256 * 1024 * 1024,
+    rle: ?bmp_rle.Options = null,
+};
 
 pub const Options = struct {
     max_targets: usize = 100_000,
     max_entry_bytes: usize = 64 * 1024 * 1024,
     max_total_encoded_bytes: usize = 512 * 1024 * 1024,
     max_total_png_decoded_bytes: usize = 256 * 1024 * 1024,
+    max_total_bmp_rgba_bytes: usize = 256 * 1024 * 1024,
     max_total_gif_indices: usize = 256 * 1024 * 1024,
     max_total_gif_codes: usize = 256 * 1024 * 1024,
     max_total_gif_frames: usize = 10_000,
@@ -26,6 +38,7 @@ pub const Options = struct {
     png: png.Options = .{},
     jpeg: jpeg.Options = .{},
     bmp: bmp.Options = .{},
+    bmp_pixels: ?BmpPixelOptions = .{},
     gif: gif.Options = .{},
     tiff: tiff.Options = .{},
     pcx: pcx.Options = .{},
@@ -54,6 +67,7 @@ pub const Report = struct {
     inspection_failures: usize,
     encoded_bytes: usize,
     png_decoded_bytes: usize,
+    bmp_rgba_bytes: usize,
     gif_indices: usize,
     gif_codes: usize,
     gif_frames: usize,
@@ -96,7 +110,7 @@ fn svgCandidate(item: manifest.Item) bool {
     return item.href.len >= 4 and std.ascii.eqlIgnoreCase(item.href[item.href.len - 4 ..], ".svg");
 }
 
-const Evidence = struct { png_decoded_bytes: usize = 0, gif_indices: usize = 0, gif_codes: usize = 0, gif_frames: usize = 0, pcx_decoded_bytes: usize = 0 };
+const Evidence = struct { png_decoded_bytes: usize = 0, bmp_rgba_bytes: usize = 0, gif_indices: usize = 0, gif_codes: usize = 0, gif_frames: usize = 0, pcx_decoded_bytes: usize = 0 };
 
 fn validate(a: std.mem.Allocator, bytes: []const u8, format: Format, options: Options, consumed: Evidence) !Evidence {
     switch (format) {
@@ -111,6 +125,18 @@ fn validate(a: std.mem.Allocator, bytes: []const u8, format: Format, options: Op
             return .{};
         },
         .bmp => {
+            if (options.bmp_pixels) |pixel_options| {
+                const selected: bmp_pixels.Options = .{
+                    .structure = options.bmp,
+                    .colour_management = .unmanaged,
+                    .mask_scaling = pixel_options.mask_scaling,
+                    .max_rgba_bytes = @min(pixel_options.max_rgba_bytes, options.max_total_bmp_rgba_bytes -| consumed.bmp_rgba_bytes),
+                    .rle = pixel_options.rle,
+                };
+                var image = try bmp_pixels.decode(a, bytes, selected);
+                defer image.deinit(a);
+                return .{ .bmp_rgba_bytes = image.rgba.len };
+            }
             _ = try bmp.inspect(bytes, options.bmp);
             return .{};
         },
@@ -160,7 +186,7 @@ pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, items: manifest.Manif
     @memset(seen, null);
     var targets: std.ArrayList(Target) = .empty;
     errdefer targets.deinit(a);
-    var result: Report = .{ .sites = sites.len, .non_embedded_sites = 0, .targets = undefined, .media_mismatches = 0, .unknown_formats = 0, .inspection_failures = 0, .encoded_bytes = 0, .png_decoded_bytes = 0, .gif_indices = 0, .gif_codes = 0, .gif_frames = 0, .pcx_decoded_bytes = 0 };
+    var result: Report = .{ .sites = sites.len, .non_embedded_sites = 0, .targets = undefined, .media_mismatches = 0, .unknown_formats = 0, .inspection_failures = 0, .encoded_bytes = 0, .png_decoded_bytes = 0, .bmp_rgba_bytes = 0, .gif_indices = 0, .gif_codes = 0, .gif_frames = 0, .pcx_decoded_bytes = 0 };
     for (sites, 0..) |site, site_index| {
         if (site.target.state != .embedded) {
             result.non_embedded_sites += 1;
@@ -184,7 +210,7 @@ pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, items: manifest.Manif
         const signature_format = formatOf(bytes);
         const format: Format = if (signature_format == .unknown and svgCandidate(item)) .svg else signature_format;
         var inspection_error: ?anyerror = null;
-        const consumed: Evidence = .{ .png_decoded_bytes = result.png_decoded_bytes, .gif_indices = result.gif_indices, .gif_codes = result.gif_codes, .gif_frames = result.gif_frames, .pcx_decoded_bytes = result.pcx_decoded_bytes };
+        const consumed: Evidence = .{ .png_decoded_bytes = result.png_decoded_bytes, .bmp_rgba_bytes = result.bmp_rgba_bytes, .gif_indices = result.gif_indices, .gif_codes = result.gif_codes, .gif_frames = result.gif_frames, .pcx_decoded_bytes = result.pcx_decoded_bytes };
         const evidence = validate(a, bytes, format, options, consumed) catch |err| switch (err) {
             error.OutOfMemory, error.LimitExceeded => return err,
             else => blk: {
@@ -203,7 +229,7 @@ pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, items: manifest.Manif
             .inspection = switch (format) {
                 .png => .png_scanlines,
                 .jpeg => .jpeg_framing,
-                .bmp => .bmp_structure,
+                .bmp => if (options.bmp_pixels != null) .bmp_rgba else .bmp_structure,
                 .gif => .gif_indices,
                 .wmf => .wmf_framing,
                 .tiff => .tiff_structure,
@@ -220,6 +246,7 @@ pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, items: manifest.Manif
         result.unknown_formats += @intFromBool(format == .unknown);
         result.inspection_failures += @intFromBool(inspection_error != null);
         result.png_decoded_bytes += evidence.png_decoded_bytes;
+        result.bmp_rgba_bytes += evidence.bmp_rgba_bytes;
         result.gif_indices += evidence.gif_indices;
         result.gif_codes += evidence.gif_codes;
         result.gif_frames += evidence.gif_frames;

@@ -2,6 +2,7 @@
 """Independent OPF-ID census for raw HWPX fillBrush image leaves."""
 
 from collections import Counter
+import hashlib
 import io
 import os
 from pathlib import Path
@@ -77,6 +78,68 @@ def collect_manifest_image_payloads():
                 counts["unreadable"] += 1
             else:
                 counts.update(document)
+    return shards
+
+
+def bmp_header_status(data):
+    """Independent strict size check before Pillow's permissive pixel read."""
+    if len(data) < 54 or data[:2] != b"BM" or struct.unpack_from("<I", data, 14)[0] != 40:
+        return "unhandled"
+    file_size = struct.unpack_from("<I", data, 2)[0]
+    width = struct.unpack_from("<i", data, 18)[0]
+    height = struct.unpack_from("<i", data, 22)[0]
+    bits = struct.unpack_from("<H", data, 28)[0]
+    compression = struct.unpack_from("<I", data, 30)[0]
+    image_size = struct.unpack_from("<I", data, 34)[0]
+    if compression != 0 or width <= 0 or height == 0:
+        return "unhandled"
+    expected_image_size = ((width * bits + 31) // 32) * 4 * abs(height)
+    if file_size != len(data):
+        return "file_size_rejected"
+    if image_size not in (0, expected_image_size):
+        return "image_size_rejected"
+    return "ok"
+
+
+def collect_bmp_pixels():
+    """Optional independent Pillow check of embedded OPF BMP candidates."""
+    from PIL import Image, ImageFile
+
+    ImageFile.LOAD_TRUNCATED_IMAGES = False
+    shards = [Counter() for _ in range(8)]
+    for root_index, root in enumerate(ROOTS):
+        for path in root.rglob("*.hwpx"):
+            shard = (root_index + sum(os.fsencode(str(path.relative_to(root))))) % 8
+            counts = shards[shard]
+            try:
+                with zipfile.ZipFile(path) as archive:
+                    if encrypted(archive):
+                        continue
+                    items, _, _ = selected_items(archive)
+                    for item in items:
+                        if not manifest_image_candidate(item) or item.get("isEmbeded") == "0":
+                            continue
+                        data = archive.read(item.get("href"))
+                        if byte_format(data) != "bmp":
+                            continue
+                        counts["bmp_candidates"] += 1
+                        status = bmp_header_status(data)
+                        if status != "ok":
+                            counts["bmp_" + status] += 1
+                            continue
+                        try:
+                            with Image.open(io.BytesIO(data)) as image:
+                                rgba = image.convert("RGBA").tobytes()
+                        except (OSError, ValueError) as exc:
+                            counts["bmp_decode_errors"] += 1
+                            print("Pillow BMP failure", path, item.get("href"), type(exc).__name__, str(exc), file=sys.stderr)
+                            continue
+                        counts["bmp_decoded"] += 1
+                        counts["bmp_rgba_bytes"] += len(rgba)
+                        counts["bmp_rgba_hash_u64"] = (counts["bmp_rgba_hash_u64"] +
+                            int.from_bytes(hashlib.sha256(rgba).digest()[:8], "little")) & 0xffffffffffffffff
+            except (zipfile.BadZipFile, KeyError, OSError, ET.ParseError, ValueError):
+                continue
     return shards
 
 
@@ -551,6 +614,19 @@ def collect():
 
 
 def self_test():
+    tiny_bmp = bytearray(70)
+    tiny_bmp[:2] = b"BM"
+    struct.pack_into("<I", tiny_bmp, 2, 70)
+    struct.pack_into("<I", tiny_bmp, 14, 40)
+    struct.pack_into("<i", tiny_bmp, 18, 2)
+    struct.pack_into("<i", tiny_bmp, 22, 2)
+    struct.pack_into("<H", tiny_bmp, 28, 32)
+    assert bmp_header_status(tiny_bmp) == "ok"
+    struct.pack_into("<I", tiny_bmp, 2, 69)
+    assert bmp_header_status(tiny_bmp) == "file_size_rejected"
+    struct.pack_into("<I", tiny_bmp, 2, 70)
+    struct.pack_into("<I", tiny_bmp, 34, 15)
+    assert bmp_header_status(tiny_bmp) == "image_size_rejected"
     assert manifest_image_candidate(ET.Element("item", {"href": "BinData/unused.SVG", "media-type": "application/octet-stream"}))
     assert manifest_image_candidate(ET.Element("item", {"href": "BinData/unknown.bin", "media-type": "image/png"}))
     assert manifest_image_candidate(ET.Element("item", {"href": "BinData/upper.bin", "media-type": "IMAGE/PNG"}))
@@ -716,8 +792,12 @@ def main():
         for index, counts in enumerate(collect_manifest_image_payloads()):
             print(index, dict(sorted(counts.items())))
         return
+    if sys.argv[1:] == ["--bmp-pixels"]:
+        for index, counts in enumerate(collect_bmp_pixels()):
+            print(index, dict(sorted(counts.items())))
+        return
     if len(sys.argv) != 1:
-        raise SystemExit("usage: hwpx-fill-brush-image-oracle.py [--self-test|--payloads|--pictures|--picture-payloads|--manifest-images]")
+        raise SystemExit("usage: hwpx-fill-brush-image-oracle.py [--self-test|--payloads|--pictures|--picture-payloads|--manifest-images|--bmp-pixels]")
     for index, counts in enumerate(collect()):
         print(index, dict(sorted(counts.items())))
 

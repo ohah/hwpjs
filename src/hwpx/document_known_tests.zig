@@ -56,6 +56,22 @@ test "HWPX known inspections retain strict-invalid OLE with normalized copy evid
     try std.testing.expectEqual(@as(?anyerror, null), report.ole_payloads.targets[0].normalization_error);
 }
 
+test "HWPX known inspections expose decoded BMP pixels in a real document" {
+    const a = std.testing.allocator;
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "reference/rhwp/samples/test-image.hwpx", a, .limited(100_000));
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    var report = try document.inspectKnown(a, .{});
+    defer report.deinit(a);
+    try std.testing.expectEqual(@as(usize, 171296), report.manifest_image_payloads.bmp_rgba_bytes);
+    try std.testing.expectEqual(@as(usize, 0), report.manifest_image_payloads.inspection_failures);
+    try std.testing.expectEqual(@import("image_payloads.zig").Inspection.bmp_rgba, report.manifest_image_payloads.targets[0].inspection);
+    try std.testing.expectEqual(@as(usize, 171296), report.picture_image_payloads.bmp_rgba_bytes);
+    try std.testing.expectEqual(@as(usize, 1), report.picture_image_payloads.targets.len);
+    try std.testing.expectEqual(@as(usize, 5), report.picture_image_payloads.targets[0].references);
+}
+
 test "HWPX known inspections include unreferenced manifest image diagnostics" {
     const a = std.testing.allocator;
     var sources = synthetic_sources ++ [_]fixture.Source{.{ .name = "BinData/unused.svg", .data = "<wrong xmlns='http://www.w3.org/2000/svg'/>" }};

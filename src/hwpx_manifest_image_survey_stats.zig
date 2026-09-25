@@ -27,10 +27,15 @@ pub const Stats = struct {
     encoded_bytes: usize = 0,
     invalid_svg: usize = 0,
     without_picture_brush_ref: usize = 0,
+    bmp_decoded: usize = 0,
+    bmp_file_size_failures: usize = 0,
+    bmp_image_size_failures: usize = 0,
+    bmp_other_failures: usize = 0,
+    bmp_rgba_bytes: usize = 0,
 
     pub fn from(items: manifest.Manifest, known: *const package.KnownReport) !Stats {
         const report = &known.manifest_image_payloads;
-        var result: Stats = .{ .sites = report.sites, .external = report.non_embedded_sites, .targets = report.targets.len, .mismatches = report.media_mismatches, .encoded_bytes = report.encoded_bytes };
+        var result: Stats = .{ .sites = report.sites, .external = report.non_embedded_sites, .targets = report.targets.len, .mismatches = report.media_mismatches, .encoded_bytes = report.encoded_bytes, .bmp_rgba_bytes = report.bmp_rgba_bytes };
         var candidates: usize = 0;
         var external: usize = 0;
         var target_cursor: usize = 0;
@@ -60,6 +65,14 @@ pub const Stats = struct {
             bytes += target.encoded_bytes;
             mismatches += @intFromBool(target.media_matches == false);
             result.invalid_svg += @intFromBool(target.format == .svg and target.inspection_error != null);
+            if (target.format == .bmp) {
+                try std.testing.expectEqual(image.Inspection.bmp_rgba, target.inspection);
+                if (target.inspection_error) |err| switch (err) {
+                    error.TrailingBmpBytes, error.UnexpectedEnd => result.bmp_file_size_failures += 1,
+                    error.InvalidBmpImageSize => result.bmp_image_size_failures += 1,
+                    else => result.bmp_other_failures += 1,
+                } else result.bmp_decoded += 1;
+            }
             result.without_picture_brush_ref += @intFromBool(!referencedByPictureOrBrush(known, target.item_index));
         }
         try std.testing.expectEqual(report.encoded_bytes, bytes);
@@ -69,7 +82,7 @@ pub const Stats = struct {
     }
 
     pub fn merge(self: *Stats, other: Stats) void {
-        inline for (.{ "sites", "external", "targets", "mismatches", "encoded_bytes", "invalid_svg", "without_picture_brush_ref" }) |field| @field(self, field) += @field(other, field);
+        inline for (.{ "sites", "external", "targets", "mismatches", "encoded_bytes", "invalid_svg", "without_picture_brush_ref", "bmp_decoded", "bmp_file_size_failures", "bmp_image_size_failures", "bmp_other_failures", "bmp_rgba_bytes" }) |field| @field(self, field) += @field(other, field);
         for (&self.formats, other.formats) |*value, next| value.* += next;
     }
 };

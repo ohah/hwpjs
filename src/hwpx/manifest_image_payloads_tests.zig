@@ -4,6 +4,8 @@ const fixture = @import("test_package_fixture.zig");
 const manifest = @import("content_manifest.zig");
 const payloads = @import("manifest_image_payloads.zig");
 const package = @import("package.zig");
+const bmp_fixture = @import("../image/bmp/test_fixture.zig");
+const image_core = @import("image_payloads.zig");
 
 fn item(id: []const u8, href: []const u8, media: []const u8, entry_index: ?usize) manifest.Item {
     return .{ .id = @constCast(id), .href = @constCast(href), .media_type = @constCast(media), .embedded = if (entry_index == null) false else null, .entry_index = entry_index };
@@ -108,4 +110,55 @@ test "HWPX manifest image payloads retain distinct OPF declarations sharing a ZI
     try std.testing.expectEqual(@as(?bool, true), report.targets[0].media_matches);
     try std.testing.expectEqual(@as(?bool, false), report.targets[1].media_matches);
     try std.testing.expectEqual(@as(usize, 0), report.inspection_failures);
+}
+
+fn bmpSample(a: std.mem.Allocator, invalid_index: bool, options: payloads.Options) !payloads.Report {
+    var indexed = bmp_fixture.indexed();
+    if (invalid_index) indexed[62] = 2;
+    const sources = [_]fixture.Source{
+        .{ .name = "BinData/plain.bmp", .data = &bmp_fixture.plain },
+        .{ .name = "BinData/indexed.bmp", .data = &indexed },
+    };
+    const bytes = try fixture.storedZip(a, &sources);
+    defer a.free(bytes);
+    var archive = try zip.open(a, bytes, .{});
+    defer archive.deinit();
+    var items = [_]manifest.Item{
+        item("plain", sources[0].name, "image/bmp", 0),
+        item("indexed", sources[1].name, "image/bmp", 1),
+    };
+    const opf: manifest.Manifest = .{ .items = &items, .spine = @constCast(&[_]manifest.SpineRef{}), .xml_bytes = 0 };
+    return payloads.inspect(a, archive, opf, options);
+}
+
+test "HWPX manifest BMP pixels distinguish structure from RGBA validation" {
+    const a = std.testing.allocator;
+    var valid = try bmpSample(a, false, .{});
+    defer valid.deinit(a);
+    try std.testing.expectEqual(@as(usize, 2), valid.targets.len);
+    try std.testing.expectEqual(@as(usize, 20), valid.bmp_rgba_bytes);
+    try std.testing.expectEqual(@as(usize, 0), valid.inspection_failures);
+    try std.testing.expectEqual(image_core.Inspection.bmp_rgba, valid.targets[0].inspection);
+    var malformed = try bmpSample(a, true, .{});
+    defer malformed.deinit(a);
+    try std.testing.expectEqual(@as(usize, 16), malformed.bmp_rgba_bytes);
+    try std.testing.expectEqual(@as(usize, 1), malformed.inspection_failures);
+    try std.testing.expectEqual(error.InvalidBmpPaletteIndex, malformed.targets[1].inspection_error.?);
+    var structure_only = try bmpSample(a, true, .{ .bmp_pixels = null, .max_total_bmp_rgba_bytes = 0 });
+    defer structure_only.deinit(a);
+    try std.testing.expectEqual(@as(usize, 0), structure_only.bmp_rgba_bytes);
+    try std.testing.expectEqual(@as(usize, 0), structure_only.inspection_failures);
+    try std.testing.expectEqual(image_core.Inspection.bmp_structure, structure_only.targets[1].inspection);
+    try std.testing.expectError(error.LimitExceeded, bmpSample(a, false, .{ .max_total_bmp_rgba_bytes = 19 }));
+    try std.testing.expectError(error.LimitExceeded, bmpSample(a, false, .{ .bmp = .{ .max_bytes = 69 } }));
+    try std.testing.expectError(error.LimitExceeded, bmpSample(a, false, .{ .bmp_pixels = .{ .max_rgba_bytes = 15 } }));
+}
+
+test "HWPX manifest BMP RGBA path releases every allocation failure" {
+    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+        fn run(a: std.mem.Allocator) !void {
+            var report = try bmpSample(a, false, .{});
+            report.deinit(a);
+        }
+    }.run, .{});
 }

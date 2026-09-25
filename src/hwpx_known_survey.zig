@@ -1593,6 +1593,11 @@ fn surveyShard(shard: usize) !void {
     try std.testing.expectEqualSlices(usize, &expected.manifest_image_formats[shard], &manifest_images.formats);
     try std.testing.expectEqual(expected.manifest_image_mismatches[shard], manifest_images.mismatches);
     try std.testing.expectEqual(expected.manifest_image_encoded_bytes[shard], manifest_images.encoded_bytes);
+    try std.testing.expectEqual(expected.bmp_pixel_decoded[shard], manifest_images.bmp_decoded);
+    try std.testing.expectEqual(expected.bmp_pixel_file_size_rejected[shard], manifest_images.bmp_file_size_failures);
+    try std.testing.expectEqual(expected.bmp_pixel_image_size_rejected[shard], manifest_images.bmp_image_size_failures);
+    try std.testing.expectEqual(@as(usize, 0), manifest_images.bmp_other_failures);
+    try std.testing.expectEqual(expected.bmp_pixel_bytes[shard], manifest_images.bmp_rgba_bytes);
     try std.testing.expectEqual(expected.manifest_image_without_picture_brush_ref[shard], manifest_images.without_picture_brush_ref);
     try std.testing.expectEqual(@as(usize, 0), manifest_images.invalid_svg);
     try std.testing.expectEqual(expected.ole_candidates[shard], ole_payloads.candidates);

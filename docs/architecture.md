@@ -1,5 +1,7 @@
 # Zig/WASM 구현 구조
 
+[HWPX BMP 픽셀 검사](hwpx-bmp-pixels.md)는 그림·브러시·OPF 전체 후보가 같은 BMP 구조·RGBA 디코더와 별도 누적 바이트 예산을 공유합니다. 구조만 본 결과와 픽셀까지 읽은 결과는 다른 검사 단계로 표시합니다.
+
 [CFB 관측 편차 복사본 검사](hwpx-ole-observed-repairs.md)는 HWPX OLE의 원본 strict 실패 뒤에만 선택적으로 호출하며, 넓은 비엄격 읽기 모드를 문서 유효성으로 승격하지 않습니다. CFB 구조 검증은 기존 strict reader가 계속 소유합니다.
 
 [HWPX OLE 패키지 사본](hwpx-ole-payloads.md)은 OPF 선택과 ZIP 내 정확한 사본 확인만 소유합니다. OLE 길이 봉투와 strict CFB 구조는 `src/ole/`을 HWP5와 공유하며 객체 활성화·내부 의미 해석은 하지 않습니다.
@@ -22,7 +24,7 @@
 
 [fillBrush 이미지 OPF 연결](hwpx-fill-brush-image-links.md)은 두 원값 보고서의 이미지 노드에 기존 이진 참조 ID 해결기를 적용합니다. 원값/선택 범위/대상 상태의 소유권을 합치지 않고 노드별 인덱스만 보관합니다.
 
-[fillBrush 이미지 바이트 검사](hwpx-fill-brush-image-payloads.md)는 embedded manifest 항목의 ZIP 해제·형식별 공통 검사기를 재사용하며 원값·참조 선택을 소유하지 않습니다. MIME 불일치는 진단으로 남기고 JPEG/BMP의 미완료 픽셀 의미를 보고서에 드러냅니다.
+[fillBrush 이미지 바이트 검사](hwpx-fill-brush-image-payloads.md)는 embedded manifest 항목의 ZIP 해제·형식별 공통 검사기를 재사용하며 원값·참조 선택을 소유하지 않습니다. MIME 불일치는 진단으로 남기고 JPEG의 미완료 계수·픽셀 의미와 BMP의 미적용 색상·표시 의미를 보고서에 드러냅니다.
 
 [TIFF 구조 검사](tiff-structure.md)는 이미지 바이트 계층에서 IFD·필드·strip/tile 범위만 소유하며, HWPX의 OPF·ZIP 선택과 압축/픽셀 복호화는 소유하지 않습니다.
 

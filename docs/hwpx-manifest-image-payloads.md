@@ -1,5 +1,7 @@
 # HWPX OPF 이미지 후보 전수 검사
 
+[BMP 후보는 공통 RGBA 픽셀 검사](hwpx-bmp-pixels.md)를 기본으로 수행합니다. 구조 성공과 픽셀 성공, 누적 RGBA 바이트와 실패 진단은 별도 계약을 따릅니다.
+
 ## 범위와 소유권
 
 `Document.inspectManifestImagePayloads()`는 OPF `manifest/item` 중 `media-type`이 대소문자와 무관하게 `image/`로 시작하거나 `href`가 PNG/JPEG/BMP/GIF/WMF/TIFF/PCX/SVG 확장자로 끝나는 후보를 **참조 여부와 무관하게** 선택합니다. 선언과 경로 중 하나만 후보여도 선택하며, 대소문자 차이가 있는 확장자도 같습니다. `isEmbeded="0"`인 외부 항목은 사이트 수에는 포함하지만 네트워크·파일 접근을 하지 않고 `non_embedded_sites`로 셉니다. 그 밖의 항목은 manifest 바인딩의 ZIP 엔트리를 검사합니다.
