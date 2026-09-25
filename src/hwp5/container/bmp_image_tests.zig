@@ -11,7 +11,7 @@ fn repeated(a: std.mem.Allocator) !void {
     try b.consume(a, &f.plain, extension);
     try b.consume(a, &f.plain, null);
     try t.expectEqual(@as(usize, 2), b.report.binaries);
-    try t.expectEqualDeep(bmp.Report{ .images = 2, .rgba_bytes = 32, .metadata_deferred_images = 2 }, b.report.bmp);
+    try t.expectEqualDeep(bmp.Report{ .images = 2, .rgba_bytes = 32, .metadata_deferred_images = 2, .rgb32_high_byte_images = 2, .rgb32_high_byte_zero = 2, .rgb32_high_byte_ff = 2, .rgb32_high_byte_other = 4 }, b.report.bmp);
     try t.expectEqual(@as(usize, 0), b.report.pixel_bytes);
     try t.expectEqual(@as(usize, 0), b.report.jpeg.rgb_bytes);
     try t.expectEqual(@as(usize, 0), b.report.unhandled_binaries);
@@ -116,7 +116,7 @@ fn detached(a: std.mem.Allocator) !void {
     };
     defer report.deinit(a);
     try t.expectEqual(@as(usize, 2), report.binary_data.decoded);
-    try t.expectEqualDeep(bmp.Report{ .images = 2, .rgba_bytes = 32, .metadata_deferred_images = 2 }, report.images.?.bmp);
+    try t.expectEqualDeep(bmp.Report{ .images = 2, .rgba_bytes = 32, .metadata_deferred_images = 2, .rgb32_high_byte_images = 2, .rgb32_high_byte_zero = 2, .rgb32_high_byte_ff = 2, .rgb32_high_byte_other = 4 }, report.images.?.bmp);
     try t.expectEqual(@as(usize, 0), report.uninspected_streams);
 }
 test "HWP BMP container evidence outlives CFB and all image buffers" {

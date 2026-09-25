@@ -1,5 +1,6 @@
 const std = @import("std");
 const pixels = @import("../../image/bmp/pixels.zig");
+const high_byte = @import("../../image/bmp/rgb32_high_byte.zig");
 pub const Options = pixels.Options;
 
 /// Additive scalar evidence only; no retained BinData, palette or RGBA views.
@@ -8,6 +9,10 @@ pub const Report = struct {
     rgba_bytes: usize = 0,
     extension_disagreements: usize = 0,
     metadata_deferred_images: usize = 0,
+    rgb32_high_byte_images: usize = 0,
+    rgb32_high_byte_zero: usize = 0,
+    rgb32_high_byte_ff: usize = 0,
+    rgb32_high_byte_other: usize = 0,
     rle_images: usize = 0,
     rle_written_pixels: usize = 0,
     rle_unwritten_pixels: usize = 0,
@@ -39,6 +44,11 @@ pub fn inspectProfiled(a: std.mem.Allocator, bytes: []const u8, options: Options
     var image = try pixels.decodeView(a, view, selected);
     defer image.deinit(a);
     var report: Report = .{ .images = 1, .rgba_bytes = image.rgba.len, .metadata_deferred_images = @intFromBool(image.metadata_deferred) };
+    const raw = high_byte.inspect(view);
+    report.rgb32_high_byte_images = raw.images;
+    report.rgb32_high_byte_zero = raw.zero;
+    report.rgb32_high_byte_ff = raw.ff;
+    report.rgb32_high_byte_other = raw.other;
     if (image.rle) |evidence| {
         report.rle_images = 1;
         report.rle_written_pixels = evidence.written_pixels;

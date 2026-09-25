@@ -1,5 +1,7 @@
 # HWP5 BinData BMP 검사 연결
 
+[BI_RGB32 원본 상위 바이트 관측](hwp5-bmp-high-byte.md)은 BMP RGBA 해석과 분리된 HWP 컨테이너 통계를 소유합니다.
+
 ## 선택과 명세 경계
 
 BinData 표 17~18의 내부 항목별 압축 정책으로 얻은 바이트를 [BMP 비압축 복원](bmp-pixels.md)에 연결합니다. 확장자 예시 bmp를 모든 BMP 변형 지원의 보증으로 읽지 않습니다. LINK 외부 접근, 압축 오류 후 원본 fallback, 이미지 오류 후 빈 성공은 없습니다. 경로·압축 정책은 기존 [이미지 연결](hwp5-bin-data-images.md)과 binaries/paths가 소유합니다. 레거시 명세의 부가 구현 주석에 있는 fallback 권고를 현재 정책으로 채택하지 않습니다.

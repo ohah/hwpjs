@@ -295,6 +295,7 @@ test {
     _ = @import("hwp5/container/png_declared_jpeg_tests.zig");
     _ = @import("hwp5/container/bmp_image_tests.zig");
     _ = @import("image/bmp/tests.zig");
+    _ = @import("image/bmp/rgb32_high_byte_tests.zig");
     _ = @import("image/bmp/rle_tests.zig");
     _ = @import("image/bmp/rle_rgba_tests.zig");
     _ = @import("image/bmp/profile_transport_tests.zig");
