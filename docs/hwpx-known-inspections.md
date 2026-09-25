@@ -1,5 +1,7 @@
 # HWPX 현재 지원 검사 묶음
 
+`section_direct_settings`는 [구역 직접 설정 원값](hwpx-section-direct-settings.md)을 별도 소유 보고서로 제공합니다. `secPr`의 자식 개수 인벤토리와 같은 부모 인덱스를 대조할 수 있지만 쪽 배치·번호 정책을 적용하지는 않습니다.
+
 `section_definition_references`는 [구역 정의 번호·메모 모양 ID 진단](hwpx-section-definition-references.md)을 기존 `section_definitions`·`resources` 결과에서 계산합니다. 미해결 진단이 있어도 `inspectKnown`은 이를 전체 문서 거부로 승격하지 않습니다.
 
 `inspectKnown`은 조건부 참조의 양쪽 분기를 관측하며, 활성 분기만의 이진·차트 참조는 별도 [조건부 참조 선택](hwpx-switch-selection.md) API가 제공합니다.

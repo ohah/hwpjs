@@ -1,5 +1,7 @@
 # HWPX 구역 정의 속성·직접 자식
 
+`startNum`·`grid`·`visibility`·`lineNumberShape`의 내부 원값은 [구역 직접 설정](hwpx-section-direct-settings.md)이 별도 소유합니다.
+
 `src/hwpx/section_definition.zig`는 패키지가 선택한 2011 namespace의 section XML 트리에서 모든 `hp:secPr`를 XML 순서대로 관측합니다. `section_ordinal`과 `element_index`를 남겨 한 section의 여러 정의를 합치지 않습니다. 반환 보고서는 독립 소유값이며 `deinit`해야 합니다. `readXmlTrees().inspectSectionDefinitions()`와 `Document.inspectKnown().section_definitions`가 같은 구현을 사용합니다.
 
 공식 기준은 한컴 OWPML 모델의 [속성·자식 정의](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Para/SectionDefinitionType.cpp), [필드 자료형·버전 주석](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Para/SectionDefinitionType.h), [enum 목록](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/enumdef.h)입니다(`1453388472c703a4b299a0834f425cdac16644b9`). 열 속성은 `id`, `textDirection`, `spaceColumns`, `tabStop`, `tabStopVal`, `tabStopUnit`, `outlineShapeIDRef`, `memoShapeIDRef`, `textVerticalWidthHead`, `masterPageCnt`입니다. 세 정수형 `spaceColumns`·`tabStop`·`tabStopVal`은 공통 signed32 어휘, ID 참조·마스터페이지 개수는 공통 unsigned32 어휘, `textVerticalWidthHead`는 공통 XML Boolean 어휘로 검사합니다. enum은 알려진 값과 확장/미확정 값을 구분하되 후자는 원문을 보존하고 진단 수를 올립니다. 모든 필드의 XML 정규화 문자열과 부재를 그대로 구분합니다. `id`의 빈 문자열과 부재도 다릅니다.

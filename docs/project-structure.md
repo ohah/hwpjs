@@ -8,6 +8,8 @@ section 문단·run 서식 참조의 선택 결과는 기존 `section_references
 
 ## 프로젝트와 현재 범위
 
+`secPr`의 네 직접 설정 요소 원값은 [구역 직접 설정](hwpx-section-direct-settings.md)이 담당합니다. 원값 검사는 쪽 배치·번호 매기기 의미의 완성이 아닙니다.
+
 구역 정의의 번호·메모 모양 ID 연결은 [구역 참조 진단](hwpx-section-definition-references.md)이 소유합니다. 진단 결과를 HWPX 문서 전체 유효성 판정으로 사용하지 않습니다.
 
 HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라이브러리입니다.

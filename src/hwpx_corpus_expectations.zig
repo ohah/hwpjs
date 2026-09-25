@@ -374,6 +374,21 @@ pub const page_geometry_margin_sum = [_][7]u64{
 // Independent section-definition oracle. Numeric order: spaceColumns,
 // tabStop, tabStopVal, outlineShapeIDRef, memoShapeIDRef, masterPageCnt.
 pub const section_definition_count = [_]usize{ 75, 72, 72, 55, 64, 62, 63, 92 };
+// Independent tools/hwpx-section-direct-settings-oracle.py census. Kind order:
+// startNum, grid, visibility, lineNumberShape. Boolean order: first header,
+// first footer, first master page, first page number, first empty line, line number.
+pub const section_setting_counts = [_][4]usize{
+    .{ 75, 75, 75, 75 }, .{ 72, 72, 72, 72 }, .{ 72, 72, 72, 72 }, .{ 55, 55, 55, 55 },
+    .{ 64, 64, 64, 64 }, .{ 62, 62, 62, 62 }, .{ 63, 63, 63, 63 }, .{ 92, 92, 92, 91 },
+};
+pub const section_setting_extensions = [_]usize{ 4, 4, 3, 1, 3, 2, 4, 0 };
+pub const section_setting_start_odd = [_]usize{ 0, 0, 0, 0, 0, 0, 0, 1 };
+pub const section_setting_start_page_sum = [_]u64{ 0, 0, 0, 0, 0, 0, 0, 1 };
+pub const section_setting_fill_show_first = [_]usize{ 0, 1, 0, 0, 0, 0, 0, 1 };
+pub const section_setting_visibility_true = [_][6]usize{
+    .{ 0, 0, 1, 0, 1, 0 }, .{ 0, 0, 1, 0, 0, 0 }, .{ 0, 0, 1, 0, 3, 0 }, .{ 0, 0, 0, 0, 0, 0 },
+    .{ 2, 2, 0, 0, 2, 0 }, .{ 1, 0, 0, 1, 3, 0 }, .{ 0, 0, 1, 0, 0, 0 }, .{ 0, 0, 1, 0, 14, 0 },
+};
 // Independent tools/hwpx-section-definition-reference-oracle.py census.
 pub const section_outline_zero = [_]usize{ 16, 19, 13, 13, 14, 17, 11, 39 };
 pub const section_outline_resolved = [_]usize{ 55, 49, 56, 41, 47, 43, 48, 53 };

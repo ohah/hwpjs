@@ -14,6 +14,7 @@ const text_node = @import("text_node.zig");
 const header_begin_numbers = @import("header_begin_numbers.zig");
 const page_geometry = @import("page_geometry.zig");
 const section_definition = @import("section_definition.zig");
+const section_direct_settings = @import("section_direct_settings.zig");
 const table_geometry = @import("table_geometry.zig");
 const header_resources = @import("header_resources.zig");
 
@@ -88,6 +89,10 @@ pub const Bundle = struct {
 
     pub fn inspectSectionDefinitions(self: *const Bundle, a: std.mem.Allocator, options: section_definition.Options) !section_definition.Report {
         return section_definition.inspect(a, self.sections, options);
+    }
+
+    pub fn inspectSectionDirectSettings(self: *const Bundle, a: std.mem.Allocator, options: section_direct_settings.Options) !section_direct_settings.Report {
+        return section_direct_settings.inspect(a, self.sections, options);
     }
 
     pub fn deinit(self: *Bundle, a: std.mem.Allocator) void {

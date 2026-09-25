@@ -46,10 +46,35 @@ test "HWPX known inspections compose every currently exposed document report" {
     try std.testing.expectEqual(report.structure.sections.len, report.table_geometry.sections);
     try std.testing.expectEqual(report.structure.sections.len, report.page_geometry.sections);
     try std.testing.expectEqual(@as(usize, 1), report.page_geometry.pages.len);
+    try std.testing.expectEqual(@as(usize, 4), report.section_direct_settings.items.len);
+    try std.testing.expectEqual(@as(usize, 1), report.section_direct_settings.count(.start_num));
+    try std.testing.expectEqual(@as(usize, 1), report.section_direct_settings.count(.grid));
+    try std.testing.expectEqual(@as(usize, 1), report.section_direct_settings.count(.visibility));
+    try std.testing.expectEqual(@as(usize, 1), report.section_direct_settings.count(.line_number_shape));
+    try std.testing.expect(report.section_direct_settings.items[0].kind == .grid);
+    try std.testing.expectEqualStrings("0", report.section_direct_settings.items[0].get(.line_grid).?);
+    try std.testing.expectEqual(@as(?[]const u8, null), report.section_direct_settings.items[0].get(.strike_continue));
+    try std.testing.expectEqualStrings("BOTH", report.section_direct_settings.items[1].get(.page_starts_on).?);
     try std.testing.expectEqual(@as(usize, 1), report.section_definition_references.outline.resolved);
     try std.testing.expectEqual(@as(usize, 1), report.section_definition_references.memo.zero);
     try std.testing.expectEqual(package.PageGeometryPage{ .section_ordinal = 0, .element_index = report.page_geometry.pages[0].element_index, .orientation = .narrowly, .width = 59528, .height = 84188, .gutter_type = .left_only, .margin = .{ .header = 4252, .footer = 4252, .gutter = 0, .left = 8504, .right = 8504, .top = 5668, .bottom = 4252 } }, report.page_geometry.pages[0]);
     try std.testing.expect(report.paragraph_metadata.paragraphs > 0);
+}
+
+test "HWPX known inspections preserve observed grid strikeContinue extension" {
+    const a = std.testing.allocator;
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "reference/rhwp/samples/issue2527_empty_linesegs.hwpx", a, .limited(1_000_000));
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    var report = try document.inspectKnown(a, .{});
+    defer report.deinit(a);
+    try std.testing.expectEqual(@as(usize, 1), report.section_direct_settings.count(.grid));
+    try std.testing.expectEqual(@as(usize, 1), report.section_direct_settings.extension_attributes);
+    for (report.section_direct_settings.items) |item| {
+        if (item.kind != .grid) continue;
+        try std.testing.expectEqualStrings("0", item.get(.strike_continue).?);
+    }
 }
 
 test "HWPX known inspections resolve real memo shape resource" {
@@ -244,12 +269,14 @@ test "HWPX known inspections keep separate phase limits and release on late fail
     defer document.deinit(a);
     try std.testing.expectError(error.LimitExceeded, document.inspectKnown(a, .{ .trees = .{ .max_total_elements = 1 } }));
     try std.testing.expectError(error.LimitExceeded, document.inspectKnown(a, .{ .begin_numbers = .{ .max_attribute_bytes = 0 } }));
+    try std.testing.expectError(error.LimitExceeded, document.inspectKnown(a, .{ .section_direct_settings = .{ .max_items = 0 } }));
     var retry = try document.inspectKnown(a, .{});
     retry.deinit(a);
     var checked: std.heap.DebugAllocator(.{ .safety = true, .enable_memory_limit = true }) = .init;
     defer _ = checked.deinit();
     try std.testing.expectError(error.LimitExceeded, document.inspectKnown(checked.allocator(), .{ .trees = .{ .max_total_elements = 1 } }));
     try std.testing.expectError(error.LimitExceeded, document.inspectKnown(checked.allocator(), .{ .begin_numbers = .{ .max_attribute_bytes = 0 } }));
+    try std.testing.expectError(error.LimitExceeded, document.inspectKnown(checked.allocator(), .{ .section_direct_settings = .{ .max_items = 0 } }));
     var checked_success = try document.inspectKnown(checked.allocator(), .{});
     checked_success.deinit(checked.allocator());
     try std.testing.expectEqual(@as(usize, 0), checked.total_requested_bytes);
