@@ -142,3 +142,75 @@ test "HWPX JPEG independent grayscale pixel comparison sample" {
     for (image.raster.rgb) |channel| channel_sum += channel;
     std.debug.print("Zig JFIF grayscale SHA-256: {s}, channel sum: {d}\n", .{ std.fmt.bytesToHex(digest, .lower), channel_sum });
 }
+
+// Dedicated read-only pipe for the independent Python pixel difference tool.
+// This test is not imported by the default root or audit suite.
+test "HWPX JPEG raw grayscale pixel stream" {
+    const a = std.testing.allocator;
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/shapecontainer-2.hwpx", a, .limited(100_000));
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    var report = try document.inspectManifestImagePayloads(a, .{});
+    defer report.deinit(a);
+    try std.testing.expectEqual(@as(usize, 1), report.targets.len);
+    const encoded = try document.archive.decode(document.archive.entries[report.targets[0].entry_index], 64 * 1024 * 1024);
+    defer document.archive.allocator.free(encoded);
+    var image = try @import("image/jpeg/jfif_rgb.zig").decode(a, encoded, .{ .upsampling = .nearest, .colour_management = .unmanaged });
+    defer image.deinit(a);
+    try std.testing.expectEqual(@as(usize, 312_480), image.raster.rgb.len);
+    try std.Io.File.stdout().writeStreamingAll(std.testing.io, image.raster.rgb);
+}
+
+test "HWPX JPEG grayscale first mismatch IDCT evidence" {
+    const a = std.testing.allocator;
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/shapecontainer-2.hwpx", a, .limited(100_000));
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    var report = try document.inspectManifestImagePayloads(a, .{});
+    defer report.deinit(a);
+    const encoded = try document.archive.decode(document.archive.entries[report.targets[0].entry_index], 64 * 1024 * 1024);
+    defer document.archive.allocator.free(encoded);
+    var decoder = try @import("image/jpeg/sequential_frame.zig").Decoder.init(encoded, .{});
+    var found = false;
+    while (try decoder.next()) |packet| {
+        const block = packet.coefficients;
+        if (block.frame_component != 0 or block.x != 120 or block.y != 0) continue;
+        found = true;
+        const dequantized = @import("image/jpeg/dequantization.zig").block(block.values, packet.quantization);
+        const centered = @import("image/jpeg/idct.zig").transform(dequantized)[1 * 8 + 5];
+        std.debug.print("IDCT centered={d:.17} sample={d} sparse=", .{ centered, try (try @import("image/jpeg/sample_restoration.zig").Format.init(8)).sample(centered) });
+        for (dequantized, 0..) |value, index| if (value != 0) std.debug.print(" {d}:{d}", .{ index, value });
+        std.debug.print("\n", .{});
+    }
+    try std.testing.expect(found);
+}
+
+// Fixed-size records (x:u32, y:u32, 64 signed i64 raster coefficients) are
+// consumed by the independent Python DCT check; no source document is changed.
+test "HWPX JPEG dequantized grayscale block stream" {
+    const a = std.testing.allocator;
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/shapecontainer-2.hwpx", a, .limited(100_000));
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    var report = try document.inspectManifestImagePayloads(a, .{});
+    defer report.deinit(a);
+    const encoded = try document.archive.decode(document.archive.entries[report.targets[0].entry_index], 64 * 1024 * 1024);
+    defer document.archive.allocator.free(encoded);
+    var decoder = try @import("image/jpeg/sequential_frame.zig").Decoder.init(encoded, .{});
+    var count: usize = 0;
+    while (try decoder.next()) |packet| {
+        const block = packet.coefficients;
+        try std.testing.expectEqual(@as(usize, 0), block.frame_component);
+        const dequantized = @import("image/jpeg/dequantization.zig").block(block.values, packet.quantization);
+        var record: [520]u8 = undefined;
+        std.mem.writeInt(u32, record[0..4], block.x, .little);
+        std.mem.writeInt(u32, record[4..8], block.y, .little);
+        for (dequantized, 0..) |value, index| std.mem.writeInt(i64, record[8 + index * 8 ..][0..8], value, .little);
+        try std.Io.File.stdout().writeStreamingAll(std.testing.io, &record);
+        count += 1;
+    }
+    try std.testing.expectEqual(@as(usize, 155 * 11), count);
+}

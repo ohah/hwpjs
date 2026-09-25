@@ -1,6 +1,6 @@
 # 개발·검증 명령
 
-[HWPX JPEG 선택 픽셀 검사](hwpx-jpeg-pixels.md)는 `zig test src/root.zig --test-filter 'HWPX manifest JPEG'`, `--test-filter 'HWP JPEG'`, `--test-filter 'HWPX known inspections opt into JPEG'`로 공유 코어·ZIP 연결·실파일 단일 사례를 검사합니다. `python3 tools/hwpx-fill-brush-image-oracle.py --self-test`와 `--jpeg-readiness`는 독립 후보·Pillow 해제 분포를 조사합니다. `zig test src/hwpx_jpeg_pixel_survey.zig -O ReleaseFast --test-filter 'HWPX JPEG pixel shard N'`의 N=0..7은 로컬 두 corpus가 필요한 선택 실파일 검사이며 기본 audit에 포함되지 않습니다.
+[HWPX JPEG 선택 픽셀 검사](hwpx-jpeg-pixels.md)는 `zig test src/root.zig --test-filter 'HWPX manifest JPEG'`, `--test-filter 'HWP JPEG'`, `--test-filter 'HWPX known inspections opt into JPEG'`로 공유 코어·ZIP 연결·실파일 단일 사례를 검사합니다. `python3 tools/hwpx-fill-brush-image-oracle.py --self-test`와 `--jpeg-readiness`는 독립 후보·Pillow 해제 분포를 조사합니다. `python3 tools/hwpx-jpeg-pixel-diff.py`는 추적 fixture의 실제 RGB 바이트와 Zig 복호화 계수 기반 독립 IDCT 결과를 Pillow와 대조합니다(Pillow 필요, 기본 audit 밖). `zig test src/hwpx_jpeg_pixel_survey.zig -O ReleaseFast --test-filter 'HWPX JPEG pixel shard N'`의 N=0..7은 로컬 두 corpus가 필요한 선택 실파일 검사이며 기본 audit에 포함되지 않습니다.
 
 [HWPX BMP 픽셀 검사](hwpx-bmp-pixels.md)는 `zig test src/root.zig --test-filter 'HWPX manifest BMP'`와 그림·브러시의 기존 `HWPX picture image payloads`·`HWPX fill brush image payloads` 필터로 공유 경로를 검사합니다. 독립 Pillow 11.3.0 조사 `python3 tools/hwpx-fill-brush-image-oracle.py --bmp-pixels`와 `zig test src/hwpx_bmp_pixel_survey.zig -O ReleaseFast --test-filter 'HWPX BMP pixel shard N'`의 N=0..7은 로컬 `reference/rhwp`가 필요한 선택 실파일 검사이며 기본 audit에 포함되지 않습니다.
 
