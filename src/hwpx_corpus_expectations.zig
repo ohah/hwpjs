@@ -467,6 +467,55 @@ pub const section_note_other_enums = [_][4]usize{
 // Independent tools/hwpx-section-presentation-oracle.py census.
 // Each observed presentation has one direct fillBrush and one brush child.
 pub const section_presentation_counts = [_]usize{ 3, 5, 2, 2, 4, 7, 0, 2 };
+// Independent tools/hwpx-fill-brush-oracle.py census over selected header and
+// section XML. Master-page fillBrush sites are a separate future scope.
+pub const fill_brush_counts = [_]usize{ 657, 351, 833, 311, 531, 1660, 648, 1537 };
+pub const fill_brush_header_counts = [_]usize{ 598, 272, 778, 290, 492, 757, 631, 1346 };
+// Node order: winBrush, gradation, imgBrush, color, img.
+pub const fill_brush_node_counts = [_][5]usize{
+    .{ 643, 6, 8, 12, 8 },  .{ 325, 25, 1, 50, 1 },     .{ 765, 13, 12, 26, 12 }, .{ 305, 6, 0, 12, 0 },
+    .{ 513, 15, 3, 30, 3 }, .{ 1646, 794, 4, 1588, 4 }, .{ 640, 6, 2, 12, 2 },    .{ 1184, 28, 360, 56, 360 },
+};
+pub const fill_brush_direct_children = [_]usize{ 677, 402, 828, 323, 564, 4036, 662, 1988 };
+pub const fill_brush_non_six_hex = [_]usize{ 266, 158, 165, 163, 329, 165, 183, 234 };
+pub const fill_brush_multiple_variants = [_]usize{ 0, 0, 2, 0, 0, 784, 0, 35 };
+pub const fill_brush_missing_hatch_style = [_]usize{ 643, 324, 763, 305, 512, 1645, 640, 1184 };
+pub const fill_brush_missing_color_num = [_]usize{ 0, 0, 0, 0, 0, 3, 2, 3 };
+// Marker order: win faceColor="none", win hatchColor 8-hex.
+pub const fill_brush_color_markers = [_][2]usize{
+    .{ 141, 107 }, .{ 110, 41 }, .{ 106, 50 }, .{ 108, 27 },
+    .{ 102, 142 }, .{ 92, 42 },  .{ 112, 65 }, .{ 123, 103 },
+};
+// Signed sums: grad angle/centerX/centerY/step, unsigned colorNum, signed
+// stepCenter, img bright/contrast. Missing colorNum contributes nothing.
+pub const fill_brush_numeric_sums = [_][8]i64{
+    .{ 90, 250, 100, 655, 12, 300, 0, 0 },
+    .{ 180, 1092, 670, 2360, 50, 1250, 50, -15 },
+    .{ 1040, 190, 90, 394, 26, 356, 0, 0 },
+    .{ 360, 100, 0, 1220, 12, 300, 0, 0 },
+    .{ 720, 351, 154, 1337, 30, 746, 70, -50 },
+    .{ 28770, 29140, 28867, 41855, 1582, 39700, 0, 0 },
+    .{ 450, 90, 90, 1120, 8, 300, 0, 0 },
+    .{ 1310, 1004, 880, 2840, 50, 1400, 720, 0 },
+};
+// Gradation type LINEAR/RADIAL/CONICAL/SQUARE.
+pub const fill_brush_gradation_types = [_][4]usize{
+    .{ 5, 1, 0, 0 }, .{ 14, 10, 0, 1 },   .{ 13, 0, 0, 0 }, .{ 6, 0, 0, 0 },
+    .{ 7, 2, 5, 1 }, .{ 29, 691, 1, 73 }, .{ 6, 0, 0, 0 },  .{ 11, 17, 0, 0 },
+};
+// Image brush mode TOTAL/CENTER/TILE_VERT_RIGHT/ZOOM/TILE.
+pub const fill_brush_image_modes = [_][5]usize{
+    .{ 5, 0, 0, 3, 0 }, .{ 0, 1, 0, 0, 0 }, .{ 11, 0, 0, 0, 1 }, .{ 0, 0, 0, 0, 0 },
+    .{ 1, 1, 0, 1, 0 }, .{ 3, 0, 0, 1, 0 }, .{ 2, 0, 0, 0, 0 },  .{ 282, 70, 8, 0, 0 },
+};
+// Image effect REAL_PIC/GRAY_SCALE; hatch VERTICAL/BACK_SLASH/CROSS_DIAGONAL.
+pub const fill_brush_image_effects = [_][2]usize{
+    .{ 8, 0 }, .{ 1, 0 }, .{ 12, 0 }, .{ 0, 0 }, .{ 3, 0 }, .{ 4, 0 }, .{ 2, 0 }, .{ 348, 12 },
+};
+pub const fill_brush_hatch_styles = [_][3]usize{
+    .{ 0, 0, 0 }, .{ 1, 0, 0 }, .{ 0, 1, 1 }, .{ 0, 0, 0 },
+    .{ 0, 0, 1 }, .{ 0, 1, 0 }, .{ 0, 0, 0 }, .{ 0, 0, 0 },
+};
 // Independent tools/hwpx-section-definition-reference-oracle.py census.
 pub const section_outline_zero = [_]usize{ 16, 19, 13, 13, 14, 17, 11, 39 };
 pub const section_outline_resolved = [_]usize{ 55, 49, 56, 41, 47, 43, 48, 53 };

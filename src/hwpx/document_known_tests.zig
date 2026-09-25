@@ -62,6 +62,8 @@ test "HWPX known inspections compose every currently exposed document report" {
     try std.testing.expectEqual(@as(usize, 10), report.section_note_shapes.children.len);
     try std.testing.expectEqualStrings("283", report.section_note_shapes.children[2].get(.between_notes).?);
     try std.testing.expectEqualStrings("END_OF_DOCUMENT", report.section_note_shapes.children[9].get(.placement_place).?);
+    try std.testing.expectEqual(@as(usize, 2), report.fill_brushes.brushes.len);
+    try std.testing.expectEqual(@as(usize, 2), report.fill_brushes.count(.win_brush));
     try std.testing.expectEqual(@as(usize, 3), report.section_page_border_references.resolved);
     try std.testing.expectEqual(@as(usize, 0), report.section_page_border_references.missing_target);
     try std.testing.expectEqualStrings("BOTH", report.section_page_borders.items[0].get(.page_type).?);
@@ -163,6 +165,11 @@ test "HWPX section presentation exposes real direct brush and all observed field
     try std.testing.expectEqualStrings("0", item.get(.showtime).?);
     try std.testing.expectEqualStrings("WholeDoc", item.get(.applyto).?);
     try std.testing.expectEqual(@as(usize, 1), report.section_presentation.fill_brushes[0].direct_children);
+    var matched_brush = false;
+    for (report.fill_brushes.brushes) |brush| {
+        if (brush.part_kind == .section and brush.section_ordinal == item.section_ordinal and brush.element_index == report.section_presentation.fill_brushes[0].element_index) matched_brush = true;
+    }
+    try std.testing.expect(matched_brush);
     try std.testing.expectError(error.LimitExceeded, document.inspectKnown(a, .{ .section_presentation = .{ .max_items = 0 } }));
     var checked: std.heap.DebugAllocator(.{ .safety = true, .enable_memory_limit = true }) = .init;
     defer _ = checked.deinit();
@@ -365,6 +372,7 @@ test "HWPX known inspections keep separate phase limits and release on late fail
     try std.testing.expectError(error.LimitExceeded, document.inspectKnown(a, .{ .section_direct_settings = .{ .max_items = 0 } }));
     try std.testing.expectError(error.LimitExceeded, document.inspectKnown(a, .{ .section_page_borders = .{ .max_items = 0 } }));
     try std.testing.expectError(error.LimitExceeded, document.inspectKnown(a, .{ .section_note_shapes = .{ .max_notes = 0 } }));
+    try std.testing.expectError(error.LimitExceeded, document.inspectKnown(a, .{ .fill_brushes = .{ .max_brushes = 0 } }));
     var retry = try document.inspectKnown(a, .{});
     retry.deinit(a);
     var checked: std.heap.DebugAllocator(.{ .safety = true, .enable_memory_limit = true }) = .init;
@@ -374,6 +382,7 @@ test "HWPX known inspections keep separate phase limits and release on late fail
     try std.testing.expectError(error.LimitExceeded, document.inspectKnown(checked.allocator(), .{ .section_direct_settings = .{ .max_items = 0 } }));
     try std.testing.expectError(error.LimitExceeded, document.inspectKnown(checked.allocator(), .{ .section_page_borders = .{ .max_items = 0 } }));
     try std.testing.expectError(error.LimitExceeded, document.inspectKnown(checked.allocator(), .{ .section_note_shapes = .{ .max_notes = 0 } }));
+    try std.testing.expectError(error.LimitExceeded, document.inspectKnown(checked.allocator(), .{ .fill_brushes = .{ .max_brushes = 0 } }));
     var checked_success = try document.inspectKnown(checked.allocator(), .{});
     checked_success.deinit(checked.allocator());
     try std.testing.expectEqual(@as(usize, 0), checked.total_requested_bytes);

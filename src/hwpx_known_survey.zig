@@ -6,6 +6,7 @@ const section_definition = @import("hwpx/section_definition.zig");
 const section_direct_settings = @import("hwpx/section_direct_settings.zig");
 const section_note_fields = @import("hwpx/section_note_fields.zig");
 const xml_values = @import("hwpx/xml_values.zig");
+const fill_brush_stats = @import("hwpx_fill_brush_survey_stats.zig");
 
 const sub_list_field_count = para_list_attributes.field_names.len;
 
@@ -271,6 +272,7 @@ const Statistics = struct {
     section_page_border_refs: SectionPageBorderRefStats,
     section_notes: SectionNoteStats,
     section_presentation: PresentationStats,
+    fill_brushes: fill_brush_stats.Stats,
     paragraphs: usize,
     paragraph_children: package.ParagraphChildrenReport,
     line_segments: package.LineSegmentsReport,
@@ -1103,6 +1105,7 @@ fn inspectOne(bytes: []const u8) !Outcome {
         .section_page_border_refs = try SectionPageBorderRefStats.from(known.section_page_borders, known.section_page_border_references),
         .section_notes = try SectionNoteStats.from(a, known.section_definitions, known.section_note_shapes),
         .section_presentation = try PresentationStats.from(a, known.section_definitions, known.section_presentation),
+        .fill_brushes = try fill_brush_stats.Stats.from(a, known.fill_brushes, known.section_presentation),
         .paragraphs = known.paragraph_metadata.paragraphs,
         .paragraph_children = known.paragraph_children,
         .line_segments = known.line_segments,
@@ -1172,6 +1175,7 @@ fn surveyShard(shard: usize) !void {
     var section_page_border_refs: SectionPageBorderRefStats = .{};
     var section_notes: SectionNoteStats = .{};
     var section_presentation: PresentationStats = .{};
+    var fill_brushes: fill_brush_stats.Stats = .{};
     var paragraphs: usize = 0;
     var paragraph_children: package.ParagraphChildrenReport = .{};
     var line_segments: package.LineSegmentsReport = .{};
@@ -1261,6 +1265,7 @@ fn surveyShard(shard: usize) !void {
                     section_page_border_refs.merge(stats.section_page_border_refs);
                     section_notes.merge(stats.section_notes);
                     section_presentation.merge(stats.section_presentation);
+                    fill_brushes.merge(stats.fill_brushes);
                     page_geometry.pages += stats.page_geometry.pages;
                     page_geometry.widely += stats.page_geometry.widely;
                     page_geometry.left_right += stats.page_geometry.left_right;
@@ -1526,6 +1531,20 @@ fn surveyShard(shard: usize) !void {
     try std.testing.expectEqual(expected.section_presentation_counts[shard], section_presentation.invert_true);
     try std.testing.expectEqual(@as(usize, 0), section_presentation.autoshow_true);
     try std.testing.expectEqual(@as(u64, 0), section_presentation.showtime_sum);
+    try std.testing.expectEqual(expected.fill_brush_counts[shard], fill_brushes.brushes);
+    try std.testing.expectEqual(expected.fill_brush_header_counts[shard], fill_brushes.header_brushes);
+    try std.testing.expectEqualSlices(usize, &expected.fill_brush_node_counts[shard], &fill_brushes.nodes);
+    try std.testing.expectEqual(expected.fill_brush_direct_children[shard], fill_brushes.direct_children);
+    try std.testing.expectEqual(expected.fill_brush_non_six_hex[shard], fill_brushes.non_six_hex_colors);
+    try std.testing.expectEqual(expected.fill_brush_multiple_variants[shard], fill_brushes.multiple_variants);
+    try std.testing.expectEqual(expected.fill_brush_missing_hatch_style[shard], fill_brushes.missing_hatch_style);
+    try std.testing.expectEqual(expected.fill_brush_missing_color_num[shard], fill_brushes.missing_color_num);
+    try std.testing.expectEqualSlices(usize, &expected.fill_brush_color_markers[shard], &fill_brushes.color_markers);
+    try std.testing.expectEqualSlices(i64, &expected.fill_brush_numeric_sums[shard], &fill_brushes.numeric_sums);
+    try std.testing.expectEqualSlices(usize, &expected.fill_brush_gradation_types[shard], &fill_brushes.gradation_types);
+    try std.testing.expectEqualSlices(usize, &expected.fill_brush_image_modes[shard], &fill_brushes.image_modes);
+    try std.testing.expectEqualSlices(usize, &expected.fill_brush_image_effects[shard], &fill_brushes.image_effects);
+    try std.testing.expectEqualSlices(usize, &expected.fill_brush_hatch_styles[shard], &fill_brushes.hatch_styles);
     try std.testing.expectEqual(expected.section_outline_zero[shard], section_definition_refs.outline_zero);
     try std.testing.expectEqual(expected.section_outline_resolved[shard], section_definition_refs.outline_resolved);
     try std.testing.expectEqual(expected.section_outline_absent_table[shard], section_definition_refs.outline_absent_table);

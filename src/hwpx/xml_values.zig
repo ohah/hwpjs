@@ -76,6 +76,30 @@ pub fn signed32(raw: []const u8) !i32 {
     return std.fmt.parseInt(i32, value, 10) catch error.InvalidXmlSigned32;
 }
 
+/// XML float lexical form only. Numeric interpretation and rendering are
+/// separate; INF/-INF/NaN are valid XML Schema float spellings.
+pub fn floatLexical(raw: []const u8) !void {
+    const value = std.mem.trim(u8, raw, " \t\r\n");
+    if (std.mem.eql(u8, value, "INF") or std.mem.eql(u8, value, "-INF") or std.mem.eql(u8, value, "NaN")) return;
+    var cursor: usize = 0;
+    if (cursor < value.len and (value[cursor] == '+' or value[cursor] == '-')) cursor += 1;
+    var digits: usize = 0;
+    while (cursor < value.len and std.ascii.isDigit(value[cursor])) : (cursor += 1) digits += 1;
+    if (cursor < value.len and value[cursor] == '.') {
+        cursor += 1;
+        while (cursor < value.len and std.ascii.isDigit(value[cursor])) : (cursor += 1) digits += 1;
+    }
+    if (digits == 0) return error.InvalidXmlFloat;
+    if (cursor < value.len and (value[cursor] == 'e' or value[cursor] == 'E')) {
+        cursor += 1;
+        if (cursor < value.len and (value[cursor] == '+' or value[cursor] == '-')) cursor += 1;
+        const exponent_start = cursor;
+        while (cursor < value.len and std.ascii.isDigit(value[cursor])) : (cursor += 1) {}
+        if (cursor == exponent_start) return error.InvalidXmlFloat;
+    }
+    if (cursor != value.len) return error.InvalidXmlFloat;
+}
+
 test "HWPX shared XML scalar lexical bounds" {
     try std.testing.expect(try nonNegative(" -000 "));
     try std.testing.expect(!(try nonNegative(" +12 ")));
@@ -103,4 +127,6 @@ test "HWPX shared XML scalar lexical bounds" {
     for (bad_values) |bad| {
         try std.testing.expectError(error.InvalidSignedOrUnsigned32, signedOrUnsigned32(bad));
     }
+    for ([_][]const u8{ "0", "-1.5", ".25", "2.", "+1e-12", "INF", "-INF", "NaN" }) |good| try floatLexical(good);
+    for ([_][]const u8{ "", "+", ".", "1e", "1_0", "infinity", "+INF" }) |bad| try std.testing.expectError(error.InvalidXmlFloat, floatLexical(bad));
 }

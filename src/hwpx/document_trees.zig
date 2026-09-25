@@ -18,6 +18,7 @@ const section_direct_settings = @import("section_direct_settings.zig");
 const section_page_border = @import("section_page_border.zig");
 const section_note_shapes = @import("section_note_shapes.zig");
 const section_presentation = @import("section_presentation.zig");
+const fill_brush = @import("fill_brush.zig");
 const table_geometry = @import("table_geometry.zig");
 const header_resources = @import("header_resources.zig");
 
@@ -108,6 +109,10 @@ pub const Bundle = struct {
 
     pub fn inspectSectionPresentation(self: *const Bundle, a: std.mem.Allocator, options: section_presentation.Options) !section_presentation.Report {
         return section_presentation.inspect(a, self.sections, options);
+    }
+
+    pub fn inspectFillBrushes(self: *const Bundle, a: std.mem.Allocator, options: fill_brush.Options) !fill_brush.Report {
+        return fill_brush.inspect(a, &self.header, self.sections, options);
     }
 
     pub fn deinit(self: *Bundle, a: std.mem.Allocator) void {

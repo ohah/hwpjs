@@ -4,7 +4,9 @@
 
 한컴 OWPML 모델의 [presentation.h](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Para/presentation.h), [presentation.cpp](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Para/presentation.cpp), [열거형](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/enumdef.h)을 기준으로 `effect`와 `applyto`의 공식 표기를 진단합니다. 이 철자 집합과 속성→자료형은 `section_presentation_fields.zig` 한곳이 소유합니다. `invertText`·`autoshow`는 공통 XML Boolean, `showtime`은 공통 unsigned32 어휘로 검사하고, `soundIDRef`는 빈 문자열과 부재를 구분해 보존합니다. 공식 모델의 생성자 기본값을 누락된 XML 속성에 채우지 않습니다. 알 수 없는 enum은 거부하지 않고 원값과 진단을 남깁니다.
 
-공식 [FillBrushType](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Core/FillBrushType.cpp)은 `winBrush`·`gradation`·`imgBrush`를 갖는 공유 코어 구조입니다. 이 보고서는 `presentation`에서 직접 연결된 `fillBrush`의 위치와 직접 자식 수까지만 관측합니다. 브러시 내부 값/색상/이미지 참조 및 화면 전환·소리 적용은 아직 검증하지 않으며 후속 공통 계층에서 다뤄야 합니다. 해당 원문은 호출자가 소유한 XML 트리나 원본 문서 바이트에만 남고, 반환된 `KnownReport`가 브러시 payload를 보존하는 것은 아닙니다.
+공식 [FillBrushType](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Core/FillBrushType.cpp)은 `winBrush`·`gradation`·`imgBrush`를 갖는 공유 코어 구조입니다. 이 `section_presentation` 보고서는 `presentation`에서 직접 연결된 `fillBrush`의 위치와 직접 자식 수까지만 관측합니다. 내부 필드 원값은 별도 `fill_brushes` 보고서가 소유하며, 이미지 ID 대상 연결·화면 전환·소리 적용은 여전히 검증하지 않습니다. 전체 브러시 XML 원문은 호출자가 소유한 XML 트리나 원본 문서 바이트에 남고, 두 반환 보고서가 이를 무손실 payload로 보존하는 것은 아닙니다.
+
+선택된 header·section의 직접 브러시 내부 원값은 이제 [공통 fillBrush 검사](hwpx-fill-brush.md)가 별도 보고서로 소유합니다. `section_presentation`은 그 결과를 복제하지 않으며 두 보고서는 XML 요소 인덱스로 대조할 수 있습니다. 브러시 적용 의미와 저장은 여전히 남습니다.
 
 한도는 `presentation` 개수, 직접 `fillBrush` 개수, `presentation`의 전체 직접 자식 수, `fillBrush`의 전체 직접 자식 수, 알려진 속성 하나의 UTF-8 바이트 수에 별도로 적용됩니다. 외부 namespace·중첩 동명 요소는 선택하지 않으며 미등록 직접 자식과 속성은 개수로 진단하되 내용은 보고서가 아니라 원본 트리/문서 바이트에서만 다시 읽을 수 있습니다.
 
