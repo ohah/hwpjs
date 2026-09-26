@@ -68,13 +68,15 @@ Report는 정렬된 Entry 배열을 소유합니다. 각 Entry는 index, 시작 
 
 집중 검사 구성은 성공 15개·거부 22개입니다. 초기 테스트의 Buffer/Uint8Array 타입 차이로 발생한 불변성 assertion 실패는 양쪽을 Buffer로 비교하도록 수정했습니다. 바이트 손상이나 제품 파서 오류로 집계하지 않습니다.
 
-## 실행 결과
+## 이전 실행 결과와 현재 재검증
 
-최종 코드/테스트에서 Debug → ReleaseSafe → ReleaseFast 전체 audit를 순차 실행했습니다. 세 모드 모두 16/16 빌드 단계, 네이티브 299/299, Node 47/47 및 22/22, HWP5 WASM 검사 1,628,756건을 통과했습니다. 각 모드의 historyContainerResults도 성공 15·거부 22, 실파일 4항목·107,676바이트·28레코드로 일치합니다. 검사 건수는 지원 필드/파일 수가 아닙니다.
+이 기능을 처음 연결한 당시 Debug → ReleaseSafe → ReleaseFast 전체 audit를 순차 실행했습니다. 당시 세 모드 모두 16/16 빌드 단계, 네이티브 299/299, Node 47/47 및 22/22, HWP5 WASM 검사 1,628,756건을 통과했습니다. 당시 각 모드의 historyContainerResults도 성공 15·거부 22, 실파일 4항목·107,676바이트·28레코드로 일치했습니다. 이 수치는 현재 전체 audit 결과나 지원 필드/파일 수가 아닙니다.
 
-실행 로그는 `/tmp/hwpjs-history-container-debug.log`, `/tmp/hwpjs-history-container-safe.log`, `/tmp/hwpjs-history-container-fast.log`입니다. 로그는 로컬 임시 산출물이며 재현 명령은 [개발·검증 명령](development-commands.md)의 세 모드 audit입니다. ReleaseSafe/Fast의 실제 audit probe로 집중 검사도 별도 재실행했습니다.
+당시 로그를 둔 `/tmp/hwpjs-history-container-debug.log`, `/tmp/hwpjs-history-container-safe.log`, `/tmp/hwpjs-history-container-fast.log`는 현재 작업 환경에 남아 있지 않습니다. 재현 명령은 [개발·검증 명령](development-commands.md)의 세 모드 audit입니다. ReleaseSafe/Fast의 실제 audit probe로 집중 검사도 당시 별도 재실행했습니다.
 
-ReleaseSafe probe에서는 추가 수동 경계 검사로 잘못된 mode/start/date 값 3개와 선택 헤더의 0~18바이트 잘림 19개가 InvalidMode/UnexpectedEnd로 거부되는 것을 확인했습니다. 이 22건은 위 자동 audit 검사 건수에 포함하지 않습니다. Zig 포맷, 변경 JS 구문, 변경 문서의 로컬 링크, git diff 공백 검사도 통과했습니다.
+당시 ReleaseSafe probe에서는 추가 수동 경계 검사로 잘못된 mode/start/date 값 3개와 선택 헤더의 0~18바이트 잘림 19개가 InvalidMode/UnexpectedEnd로 거부되는 것을 확인했습니다. 이 22건은 당시 자동 audit 검사 건수에 포함하지 않습니다. 당시 Zig 포맷, 변경 JS 구문, 변경 문서의 로컬 링크, git diff 공백 검사도 통과했습니다.
+
+2026-09-27 현재 내용 재검증: 로컬 HWP5 3.2.11/4.4.1~4.4.2, 현 `numbered_stream.zig`·`history.zig`·`selected_encoding.zig`·`item.zig`의 선택·정렬·예산·소유 경계를 대조했습니다. `history container` 집중 테스트는 Debug·ReleaseSafe·ReleaseFast에서 각 1개, 번호 이름·최종 문서 한도·항목 framing은 ReleaseSafe에서 각 1개 통과했습니다. 제품 CFB strict 경로와 독립 Node zlib/레코드 순회로 실파일 VersionLog0~3의 decoded 길이 109/6,505/19,885/81,177, 합계 107,676바이트·28레코드를 다시 확인했습니다. 직전 문서 묶음의 ReleaseSafe `hwp5-audit`는 같은 제품 코드에서 독립 JS mode 114를 포함해 통과했으나, 이번 묶음에서 전체 audit와 과거 15/22건의 모드별 출력을 별도로 재실행하지 않았습니다. 다른 저장 방식·복호화·복원은 검증하지 않았습니다.
 
 ## 남은 범위
 
