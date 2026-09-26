@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "5c5fdedefc8b6dde2fe956d3a388f951563e24c07db9546bb7b6dfbfecbabc79",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail and RGBA evidence review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "411bf80b90b9507164b238a2da87c6780b25192f8512a0693942781a9ac1631b",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA and declared JPEG evidence review, architecture pending, full Debug Zig test incomplete"
+    },
+    "docs/hwp5-png-declared-jpeg.md": {
+      "sha256": "81ba538a00c81659af8d80576c13c99a578fe364508d0616a029be2f0165f5bb",
+      "evidence": "2026-09-27 current PNG declared JPEG selection and budgets, two HWP independent payload hashes and SOF0 census, Debug Safe focused and ReleaseFast two real files, BMP scope corrected"
     },
     "docs/hwp5-bin-data-png-rgba.md": {
       "sha256": "58b853ef5825abbab04c5066b4d97780925ddbeece8973876ba80f61eb15cf6e",

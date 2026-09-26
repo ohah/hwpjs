@@ -18,7 +18,7 @@ HWP5 BinData 표 17의 EMBEDDING 형식 이름은 CFB 스트림 경로를 고르
 | 같은 파일 | `/BinData/BIN0004.png` | 371,889 / `51172b15820153be699a7512653f09b622d30b6fc3f47c501b690dcf5d408910` | 1,339×1,948 / 7,825,116 |
 | `5ef5d5a3c48303122903a384744eba9a44c72e814c201c9908d4a92e990d0ffb` / 90,624 | `/BinData/BIN0002.PNG` | 10,395 / `abc7bd9bb0b79d114374be19c8e2b2e6a8c8239f9ec273a859d6e3eab069c3ab` | 118×118 / 41,772 |
 
-세 payload 모두 독립 JS에서 SOF0·스캔 1개, Zig JPEG 검사기에서 전체 RGB 복원 성공입니다. 첫 표본은 `reference/rhwp/samples/hwpx/hancom-hwp/hang_job_01.hwp`, 둘째는 `reference/rhwp/samples/task1749/saved_bounds_cumulative_vpos.hwp`입니다. 기본 전체 컨테이너 검사는 둘 다 `InvalidPngSignature`; 선택한 검사는 각각 `decoded=10, declared-PNG-JPEG=2, JPEG=3, RGB=21,288,063, PNG=0, unhandled=7`과 `decoded=2, declared-PNG-JPEG=1, JPEG=1, RGB=41,772, PNG=1, unhandled=0`을 반환합니다. 첫 파일의 선언 분포는 JPG 1·BMP 7·PNG 2이며, 미검사 7건은 이번 선택에서 BMP 검사기를 켜지 않았기 때문입니다. 이 BMP들의 실제 형식·내용과 두 문서의 기타 의미/화면 결과는 검증 완료가 아닙니다.
+세 payload 모두 독립 JS에서 SOF0·스캔 1개, Zig JPEG 검사기에서 전체 RGB 복원 성공입니다. 첫 표본은 `reference/rhwp/samples/hwpx/hancom-hwp/hang_job_01.hwp`, 둘째는 `reference/rhwp/samples/task1749/saved_bounds_cumulative_vpos.hwp`입니다. 기본 전체 컨테이너 검사는 둘 다 `InvalidPngSignature`; 선택한 검사는 각각 `decoded=10, declared-PNG-JPEG=2, JPEG=3, RGB=21,288,063, PNG=0, unhandled=7`과 `decoded=2, declared-PNG-JPEG=1, JPEG=1, RGB=41,772, PNG=1, unhandled=0`을 반환합니다. 첫 파일의 선언 분포는 JPG 1·BMP 7·PNG 2이며, 미검사 7건은 이번 선택에서 BMP 검사기를 켜지 않았기 때문입니다. 이 BMP의 구조·RGBA·원시 상위 바이트는 별도 [BMP 실파일 검사](hwp5-bmp-high-byte.md)에서 대조했지만, 이번 선택 보고서에 소급하거나 두 문서의 기타 의미·화면 결과 검증으로 확대하지 않습니다.
 
 ## 검증과 적대적 경계
 
@@ -26,4 +26,6 @@ HWP5 BinData 표 17의 EMBEDDING 형식 이름은 CFB 스트림 경로를 고르
 
 적대적 검토에서는 `png` 선언만으로 JPEG로 보내지 않는지, FF D8 뒤의 손상·미지원 JPEG가 성공으로 바뀌지 않는지, 이미지 한도 우회·이중 계수·부분 보고서 갱신이 없는지, PNG 기본 경로와 HWPX 기본 경로가 바뀌지 않는지 확인합니다. 별도 실파일에서 한글 프로그램의 표시·저장 동치를 확인하기 전에는 이 정책을 자동 기본값으로 승격하지 않습니다.
 
-최종 소스의 Debug `zig build test --summary all`은 5/5 단계·2,483/2,483 테스트, ReleaseSafe `zig build audit -Doptimize=ReleaseSafe --summary all`은 42/42 단계·2,522/2,522 테스트를 통과했습니다. ReleaseSafe 제품 빌드는 5/5 단계 통과했습니다. 새 PNG 선언·JPEG 검사 합성 테스트는 Debug·ReleaseSafe·ReleaseFast에서 각각 3/3(root 포함), 실제 두 파일의 개별/전체 컨테이너 검사는 세 모드에서 각각 2/2 통과했습니다. 기존 HWP JPEG 회귀 ReleaseSafe 9/9와 HWPX 그림 회귀 Debug 13/13도 확인했습니다. 이 결과는 전체 HWP/HWPX 문서 의미 검증 완료나 화면 동치를 뜻하지 않습니다.
+초기 구현 당시 최종 소스의 Debug `zig build test --summary all`은 5/5 단계·2,483/2,483 테스트, ReleaseSafe `zig build audit -Doptimize=ReleaseSafe --summary all`은 42/42 단계·2,522/2,522 테스트를 통과했습니다. ReleaseSafe 제품 빌드는 5/5 단계 통과했습니다. 새 PNG 선언·JPEG 검사 합성 테스트는 Debug·ReleaseSafe·ReleaseFast에서 각각 3/3(root 포함), 실제 두 파일의 개별/전체 컨테이너 검사는 세 모드에서 각각 2/2 통과했습니다. 기존 HWP JPEG 회귀 ReleaseSafe 9/9와 HWPX 그림 회귀 Debug 13/13도 확인했습니다. 이 전체 audit 수치는 당시 코드의 기록이지 현재 재실행 결과가 아닙니다. 이 결과는 전체 HWP/HWPX 문서 의미 검증 완료나 화면 동치를 뜻하지 않습니다.
+
+2026-09-27 현재 내용 재검증: HWP5 BinData 선언 경로·압축 정책과 `images.zig`의 기본 거부, JPEG SOI 선택, 별도 RGB 예산·원자성 경계를 코드에서 대조했습니다. 독립 Node 조사에서 두 파일의 PNG 선언/JPEG 바이트 3건의 원문 해시·크기·SOF0·스캔 1개와 프레임 치수 계산이 위 표와 일치했습니다. Debug·ReleaseSafe `PNG-declared JPEG` 필터 각 3/3, ReleaseFast 실제 두 파일의 JPEG 복원·전체 컨테이너 2/2가 통과했습니다. 이 집중 검사는 전체 audit 재실행이나 JPEG 픽셀의 외부 렌더러 동치·한글 화면 의미를 입증하지 않습니다.

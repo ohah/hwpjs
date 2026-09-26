@@ -79,3 +79,5 @@ HWP5 BinData WMF 선택 검사 문서는 공식 META_HEADER/PLACEABLE과 현재 
 HWP5 BinData PNG IEND 뒤 0 패딩 문서는 W3C의 끝 청크 규칙과 현재 PNG 구조·픽셀·컨테이너 누적 예산 및 HWPX 기본 strict 경계를 대조해 완료 목록에 넣었습니다. 독립 조사에서 584개 HWP 경로의 PNG 선언 332건은 정확 종료 328·0 패딩 1(1,740바이트)·JPEG 선두 3건으로 재확인됐습니다. 표본 해시와 구조 길이, Debug 집중/컨테이너/HWPX strict, ReleaseSafe `post-IEND` 6/6, ReleaseFast 선택 실파일 1/1이 통과했습니다. 명시적 0 패딩 허용은 PNG 적합성 선언이 아니며, 과거 전체 audit 기록을 이번 검증으로 소급하지 않습니다.
 
 HWP5 BinData PNG RGBA 선택 검사 문서는 현재 기본 null 정책, 복원 행과 RGBA의 독립 예산, 원자적 보고서 및 출력 수명을 코드·합성 테스트와 대조해 완료 목록에 넣었습니다. Debug PNG RGBA 집중 16/16, ReleaseSafe HWP 선택 3/3, ReleaseFast 실파일 HWP/HWPX 2/2가 통과했습니다. 독립 `olefile` 0.47·Pillow 11.3.0에서 HWP RGBA 153,664바이트의 SHA-256이 제품 출력과 일치했고 별도 HWPX 256바이트도 대조했습니다. 과거 전체 Debug 빌드 수치를 이번 재실행으로 세지 않으며, 픽셀 바이트 일치를 색 관리·화면·저장 동치로 확대하지 않습니다.
+
+HWP5 PNG 선언·JPEG 바이트 불일치 문서는 기본 `InvalidPngSignature`와 명시적 JPEG 선택·별도 RGB 예산·원자성 경계를 대조해 완료 목록에 넣었습니다. 독립 Node 조사에서 실제 두 HWP의 불일치 payload 3건의 해시·크기·SOF0·프레임 치수가 문서 표와 일치했고, Debug·ReleaseSafe 집중 각 3/3 및 ReleaseFast 실파일 2/2가 통과했습니다. 첫 파일의 BMP 7건은 이번 선택에서는 미검사지만 별도 BMP 문서의 구조·RGBA 검증이 있음을 반영했습니다. 과거 전체 audit 수치는 현재 결과로 세지 않으며 외부 JPEG 픽셀·한글 화면 동치는 미검증입니다.
