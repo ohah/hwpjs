@@ -21,3 +21,5 @@
 2026-09-26 최종 코드에서 Debug 전체 `zig build test --summary all`은 2,591/2,591 통과했습니다. metaTag 집중 테스트는 Debug·ReleaseSafe·ReleaseFast 각각 7/7, 공통 문자 경로를 공유하는 수식 24/24·파라미터 9/9도 세 모드 모두 통과했습니다. `zig build -Doptimize=ReleaseSafe --summary all`, `zig fmt --check build.zig src`, 독립 Python oracle 일반/`-O` self-test, 실제 known 양성 4건, 기존 known 문서 shard 0~7 및 세 파일별 corpus 대조도 통과했습니다. 실파일 검사와 shard는 기본 전체 테스트 밖에서 실행했습니다.
 
 적대적 검토는 (1) 공식 문자열 모델과 실파일 분포, (2) namespace·부모·원문 순서, (3) 문자 정규화·중첩·빈 값, (4) 예산·OOM·패키지 해제 후 소유권, (5) 독립 oracle 변이와 파일별 대조 및 known 연결을 별도로 확인합니다. 위 범위 밖의 스키마·문서 모델 완성은 주장하지 않습니다.
+
+2026-09-27 재검증: 한컴 고정 버전의 문자열 값 객체 및 `fieldBegin` 자식 정의와 현재 `meta_tags.zig`·공통 직접 텍스트 누적 경계를 대조했습니다. 집중 필터는 Debug·ReleaseSafe·ReleaseFast 각각 7/7, 양성 4개 파일의 단독/known 연결은 1/1, 독립 오라클의 일반·`-O` 자체검사는 각각 통과했습니다. 전체 파일별 대조는 허용 476개·ZIP 거부 6개·암호화 2개, 태그 4개·텍스트 72바이트로 다시 일치했습니다. 양성 4개를 별도 ZIP/XML로 열어 각각 `fieldBegin` 직접 자식·텍스트 18바이트·속성/하위 요소 0개임을 확인했습니다. 앞서 같은 제품 코드에서 통과한 known-inspections 8개 shard는 이번에 다시 실행하지 않았습니다. 태그 값의 제품 의미·표시·저장은 이 결과로 검증되지 않습니다.

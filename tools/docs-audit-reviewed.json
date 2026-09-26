@@ -6,8 +6,16 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "1c992aed9d918c7c5dd8e14ab6c62e1052426fa415e9fc3e69f764094658439b",
-      "evidence": "2026-09-27 tracker tests, 2515 inline link path probe, HWPX note, number, column, field, and inline review"
+      "sha256": "ce932ae49af1b638e9b2a19dfb2b882bae10d89a7ad3321af75f0629e7d8d3be",
+      "evidence": "2026-09-27 tracker tests, 2515 inline link path probe, HWPX note, number, column, field, inline, meta, and parameter review"
+    },
+    "docs/hwpx-meta-tags.md": {
+      "sha256": "583c0b010ad833269b85100b5bc7261d8935e789a4e6cf024fb6a7098da232a3",
+      "evidence": "2026-09-27 official model, Zig tests 3 modes, independent oracle corpus 476, positive XML inspection, known integration"
+    },
+    "docs/hwpx-parameter-lists.md": {
+      "sha256": "5cd2ba5ac782ffc0068e60e99ac2b7c03a2c3c1bf079d0ed182d8c0748f431ea",
+      "evidence": "2026-09-27 official model, Zig tests 3 modes, independent oracle corpus 476, child inventory, known integration"
     },
     "docs/hwpx-field-markers.md": {
       "sha256": "56e4a608a82881e36ab8d2ad9d3f99b8de2a747eb57018cbdf29b84cc727fd09",
