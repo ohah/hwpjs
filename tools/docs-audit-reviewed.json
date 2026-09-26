@@ -6,8 +6,20 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "0d4f6cf95aa1b557c59eda65b757be89c1cb33221e7fbc95107451c6d66c09a2",
-      "evidence": "2026-09-27 tracker tests, 2518 inline link path probe, HWPX note, number, column, field, inline, meta, parameter, equation, and table review"
+      "sha256": "28af84ef82c70a21db550cb2e355264fd3b682044adf0c95db02ba7f495d1579",
+      "evidence": "2026-09-27 tracker tests, 2518 inline link path probe, HWPX note, number, column, field, inline, meta, parameter, equation, table, section references, and masterpage review"
+    },
+    "docs/hwpx-section-references.md": {
+      "sha256": "80a7fb477d93eb3c5db98e523693895ff2e28e4b991fe74da3df077e8bae4dbf",
+      "evidence": "2026-09-27 current section ID scanner, official Hancom format reference, Zig tests 3 modes, product corpus 476 and absent styles 21 documents, known shards reused"
+    },
+    "docs/hwpx-master-style-references.md": {
+      "sha256": "89d16d8a7cbb2f6a3f283cda943d5755a234a5a4482fa71878e255ccdc1c5ab0",
+      "evidence": "2026-09-27 pinned official PType and RunType, current shared ID scanner, Zig tests 3 modes, independent master XML corpus 476, known shards reused"
+    },
+    "docs/hwpx-master-pages.md": {
+      "sha256": "d334f88cc0a2a70585ada2486c674d943083b5730097d9fb7b883ce3eeab0f6e",
+      "evidence": "2026-09-27 pinned official master model, current part and section ownership, Zig tests 3 modes, independent master XML corpus 476, known shards reused"
     },
     "docs/hwpx-selected-style-references.md": {
       "sha256": "65841d56df0ce8fcdddeecccd93e8f1b7e1b172fd25bd092d89c26dfc1f92ed5",

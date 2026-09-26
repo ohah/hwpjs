@@ -10,11 +10,11 @@
 
 manifest 경로와 루트 ID는 별도 색인으로 조회해, 많은 참조가 각 파트 전체를 반복 검색하지 않도록 합니다. 색인 키는 보고서가 소유한 문자열을 빌리며 실패·해제 경로에서도 독립 복제를 만들지 않습니다.
 
-한컴의 [MasterPageType 구현](https://github.com/hancom-io/hwpx-owpml-model/blob/main/OWPML/Class/Etc/MasterPageType.cpp)은 루트 이름, 다섯 속성, `subList`를 정의하고 [열거형](https://github.com/hancom-io/hwpx-owpml-model/blob/main/OWPML/Class/enumdef.h)은 다섯 `type` 값을 나열합니다. section-side [masterPage 참조 구현](https://github.com/hancom-io/hwpx-owpml-model/blob/main/OWPML/Class/Para/masterPage.cpp)은 `idRef`를 사용합니다. 이 공식 모델과 실파일 모두 바탕쪽 내부 문단·표·그림·서식/레이아웃 의미까지 이번 검사로 검증되었다는 근거는 아닙니다.
+한컴의 [MasterPageType 구현](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Etc/MasterPageType.cpp)은 루트 이름, 다섯 속성, `subList`를 정의하고 [열거형](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/enumdef.h)은 다섯 `type` 값을 나열합니다. section-side [masterPage 참조 구현](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Para/masterPage.cpp)은 `idRef`를 사용합니다. 이 공식 모델과 실파일 모두 바탕쪽 내부 문단·표·그림·서식/레이아웃 의미까지 이번 검사로 검증되었다는 근거는 아닙니다.
 
 실파일 corpus는 두 로컬 소스의 HWPX 484개이며, ZIP 거부 6개·암호화 2개를 제외한 476개에서 masterpage 파트 61개를 확인했습니다. 독립 Python ZIP/ElementTree 조사는 루트 타입별 `BOTH` 3·`EVEN` 21·`ODD` 30·`LAST_PAGE` 6·`OPTIONAL_PAGE` 1, 직접 subList 61개, section 참조 61개(모두 유일한 루트 ID에 연결), `pageNumber` 값 합계 4, `masterPageCnt` 선언 555개를 관측했습니다. 참조·파트 수가 일치한다는 사실은 이 corpus 밖의 문서나 모든 버전의 무결성을 증명하지 않습니다.
 
-후속 범위: subList 내부의 문단·서식·오브젝트 의미, 마스터페이지의 적용 순서/겹침/앞뒤 배치, 쪽 번호 조건, `masterPageCnt` 의미, 2011 외 namespace 및 저장·편집. 현재 API는 이 영역을 전체 문서 유효성 판정으로 승격하지 않습니다.
+후속 범위: subList 내부 값의 표시·적용 의미, 마스터페이지의 적용 순서/겹침/앞뒤 배치, 쪽 번호 조건, `masterPageCnt` 의미, 2011 외 namespace 및 저장·편집. 문단·서식 ID·오브젝트의 원값과 참조는 아래의 별도 검사기가 일부 다루지만 전체 문서 유효성 판정이나 배치 의미로 승격하지 않습니다.
 
 검증: 합성 ZIP에서 정상 연결·불일치 원값·누락/중복 ID·잘못된 루트 거부·미지원 타입 보존·media-type/외부·한도 경계·원본 해제 뒤 보고서 수명·별도 할당자·모든 할당 실패 지점을 검사했습니다. `zig test src/root.zig --test-filter 'HWPX master'`는 Debug·ReleaseSafe·ReleaseFast에서 각각 통과했습니다. 선택 실파일 8개 shard의 파트/참조/타입/수치 집계도 독립 Python oracle과 일치했고, 전체 Debug `zig build test --summary all`은 2,219/2,219 통과했습니다. 이 수치는 전체 HWPX 지원률이 아닙니다.
 
@@ -22,7 +22,7 @@ manifest 경로와 루트 ID는 별도 색인으로 조회해, 많은 참조가 
 
 후속 [직접 ParaListType 속성](hwpx-para-list.md) 단계에서 루트 직접 `hp:subList`의 소유 배열·원값·직접 문단 경계를 추가했습니다. 이 소스의 전체 Debug 테스트 2,224개와 실파일 8개 shard가 독립 조사와 일치했습니다. 위의 2,219개는 이전 단계의 기록입니다.
 
-이후 [공통 문단 메타 값](hwpx-paragraph-metadata.md)을 직접 `subList`의 모든 후손 `hp:p`에 재사용합니다. 직접 문단 63개와 중첩 포함 394개의 구분 및 실파일 값 집계는 문단 메타 주제 문서가 소유합니다. 문단/run의 서식 ID 연결과 바탕쪽 표시 의미는 여전히 후속입니다.
+이후 [공통 문단 메타 값](hwpx-paragraph-metadata.md)을 직접 `subList`의 모든 후손 `hp:p`에 재사용합니다. 직접 문단 63개와 중첩 포함 394개의 구분 및 실파일 값 집계는 문단 메타 주제 문서가 소유합니다. 문단/run의 서식 ID 연결은 아래 별도 문서가 다루며 바탕쪽 표시 의미는 여전히 후속입니다.
 
 문단/run 서식 ID의 별도 연결과 검증 경계는 [마스터페이지 서식 참조](hwpx-master-style-references.md)가 소유합니다. 이 문서의 루트·section `idRef` 계약과 혼합하지 않습니다.
 
