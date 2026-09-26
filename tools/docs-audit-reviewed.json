@@ -6,8 +6,20 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "e06d50c10df219037dcf66c2713984d641a0fcc8d28955fd9f9ab64153e69ba2",
+      "sha256": "62619f2cb5db881b53cb4186d1517b9d9634001576b91d52fe54f5b010416135",
       "evidence": "2026-09-27 tracker tests, 2518 inline link path probe, HWPX note, number, column, field, inline, meta, parameter, equation, and table review"
+    },
+    "docs/hwpx-switch-selection.md": {
+      "sha256": "be8ee181ab686423a46ac304d02058a1c1fa44b3b21b6c6fcacabf635b6e63eb",
+      "evidence": "2026-09-27 pinned official handler, shared selection policy, Zig tests 3 modes, independent switch oracle corpus 476, known shards reused"
+    },
+    "docs/hwpx-switch-shape.md": {
+      "sha256": "a179202176bbb57bf03454968c5d073d6158b2e9bd644628ae64916585a1c33a",
+      "evidence": "2026-09-27 current run and shape code, Zig tests 3 modes, independent 21-slot switch oracle corpus 476, known shards reused"
+    },
+    "docs/hwpx-selected-section-text.md": {
+      "sha256": "f6c10ae6c67ce1be2a4053591e391191c6fb758e8bc9b7308c56199435683b2b",
+      "evidence": "2026-09-27 current text selection, Zig tests 3 modes, independent per-file switch text oracle corpus 476, known shards reused"
     },
     "docs/hwpx-master-table-geometry.md": {
       "sha256": "6194c807c8d21b0eeda8d9a0c0a20f9ba48408bc3b0afd9eb4a2ec8c72f2f028",

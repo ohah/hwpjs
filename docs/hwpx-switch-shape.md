@@ -11,3 +11,5 @@
 합성 테스트는 빈 switch, 잘못된 순서·중복 default, 요구 namespace의 부재/빈 값/namespace 없는 변형, 추가 속성, 타 namespace·중첩 유사 요소, 분기 안의 다른 자식, section/마스터페이지 예산 및 할당 실패를 확인합니다. 이 보고서에 분기 선택은 없으며 전체 문서의 분기 적용·렌더링·편집/저장과 전체 HWPX 스키마 적합성은 후속입니다.
 
 2026-09-24 검증: 독립 Python oracle의 21개 슬롯과 선택 실파일 8개 shard의 Zig 보고서가 모두 일치했습니다. 같은 합성 입력을 Python 집계기에 넣은 별도 대조도 일치했습니다. 전체 Debug 테스트 2,259개, ReleaseSafe 제품 빌드·전체 audit, 전용 Debug·ReleaseSafe·ReleaseFast 테스트가 통과했습니다. 적대적 검증에서 직접 run 자식만 선택하는 범위, namespace 있는/없는 `required-namespace`의 구분, switch별 중복/순서 진단, 두 마스터페이지에 걸친 `max_switches` 한도 및 실패 시 할당 해제를 확인했습니다. 실파일의 모든 분기가 같은 chart/OLE 모양이라는 이유로 한쪽을 활성 분기로 선택하거나 상대 분기를 삭제하지 않습니다.
+
+2026-09-27 현재 내용 재검증: 현재 run 직접 자식 선택과 21개 구조 진단 필드를 대조하고 독립 ZIP/XML 조사기의 자체 반례 및 허용 476개 실파일 집계를 다시 실행했습니다. section `switch`는 93개, 선택 마스터페이지는 0개이며 93개 모두 case/default 각 하나, case 직접 chart·default 직접 OLE 각 하나였습니다. 누락·중복·역순·추가 속성·다른 직접 자식 진단은 0개입니다. 구조 집중 테스트는 Debug·ReleaseSafe·ReleaseFast 각 4개, 마스터페이지 포함 run topology 회귀는 Debug 7개가 통과했습니다. 이전 known-inspections 8개 shard는 제품 코드 불변을 확인해 이전 결과를 재사용했고 이번에 재실행한 것으로 세지 않습니다.
