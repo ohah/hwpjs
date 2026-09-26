@@ -6,8 +6,24 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "bf09319656dab00a3f1fd9e6306b2881a44b74572ab9909d7dd95bb073ef271d",
-      "evidence": "2026-09-27 tracker tests, inline links, HWPX header, font, list, and section definition review"
+      "sha256": "a244388d98600ca8534c8558496acb5205f02763514527a5b75f1da125982cd4",
+      "evidence": "2026-09-27 tracker tests, inline links, HWPX header, font, list, section definition, page geometry, and border review"
+    },
+    "docs/hwpx-page-geometry.md": {
+      "sha256": "7e26b164d65ae879fbf04b50a857ab190191874c169ff43bce47633b5e27c611",
+      "evidence": "2026-09-27 pinned official fields, current page scanner, Zig tests 3 modes, independent corpus 476, oracle lexical and atomic fixes, known shards reused"
+    },
+    "docs/hwpx-section-direct-settings.md": {
+      "sha256": "65eee87cb5f56adb8d39af920928c5aa73717ef38c5e1a40db70b89989ccd2e4",
+      "evidence": "2026-09-27 pinned official fields, current direct scanner, Zig tests 3 modes, independent corpus 476, oracle atomic fix, known shards reused"
+    },
+    "docs/hwpx-section-page-borders.md": {
+      "sha256": "77279f74cfc9964d06b652b31418d78fdc7e59f3ba7feb00ab7db037c11dbf7f",
+      "evidence": "2026-09-27 pinned official border fields, current scanner, Zig tests 3 modes, independent corpus 476 and repeated fixture, known shards reused"
+    },
+    "docs/hwpx-section-page-border-references.md": {
+      "sha256": "f83cf1a29417045835f2ba889c280d06ab5cc1718e8b6489a044a60e6cde8006",
+      "evidence": "2026-09-27 current ID zero policy, Zig tests 3 modes, independent corpus 476, optimized oracle mutation, known shards reused"
     },
     "docs/hwpx-font-references.md": {
       "sha256": "58513e69e9e793ad0884901aa3d16e2116b5f40eacfd0a3f7a2b215629c9afa2",

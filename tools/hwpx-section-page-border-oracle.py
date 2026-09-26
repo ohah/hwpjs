@@ -19,6 +19,11 @@ BORDER = ("type", "borderFillIDRef", "textBorder", "headerInside", "footerInside
 OFFSET = ("left", "right", "top", "bottom")
 
 
+def expect_equal(actual, expected):
+    if actual != expected:
+        raise AssertionError(f"page border oracle mismatch: {actual!r} != {expected!r}")
+
+
 def unsigned(raw):
     value = raw.strip(" \t\r\n")
     if not re.fullmatch(r"[+-]?[0-9]+", value) or not 0 <= int(value) <= 4294967295:
@@ -100,19 +105,19 @@ def self_test():
     section = ET.fromstring('<s:sec xmlns:s="http://www.hancom.co.kr/hwpml/2011/section" xmlns:p="http://www.hancom.co.kr/hwpml/2011/paragraph" xmlns:x="urn:other"><p:secPr><x:pageBorderFill/><p:wrapper><p:pageBorderFill type="ODD"/></p:wrapper><p:pageBorderFill type="BOTH" borderFillIDRef="+2" headerInside="true" x:type="ODD"><x:offset/><p:offset left="7"/><p:offset/></p:pageBorderFill></p:secPr><p:pageBorderFill type="EVEN"/></s:sec>')
     counts = Counter()
     observe(section, counts, {2})
-    assert (counts["borders"], counts["offsets"], counts["border_id_sum"], counts["sum_left"], counts["border_other_attributes"], counts["missing_right"], counts["true_headerInside"]) == (1, 2, 2, 7, 1, 2, 1)
-    assert counts["ref_resolved"] == 1
+    expect_equal((counts["borders"], counts["offsets"], counts["border_id_sum"], counts["sum_left"], counts["border_other_attributes"], counts["missing_right"], counts["true_headerInside"]), (1, 2, 2, 7, 1, 2, 1))
+    expect_equal(counts["ref_resolved"], 1)
     header = ET.fromstring('<h:head xmlns:h="http://www.hancom.co.kr/hwpml/2011/head"><h:refList><h:borderFills><h:borderFill id="0"/><h:borderFill id="7"/></h:borderFills></h:refList></h:head>')
-    assert border_ids(header) == {0, 7}
-    assert border_ids(ET.fromstring('<h:head xmlns:h="http://www.hancom.co.kr/hwpml/2011/head"><h:refList/></h:head>')) is None
+    expect_equal(border_ids(header), {0, 7})
+    expect_equal(border_ids(ET.fromstring('<h:head xmlns:h="http://www.hancom.co.kr/hwpml/2011/head"><h:refList/></h:head>')), None)
     zero_section = ET.fromstring('<s:sec xmlns:s="http://www.hancom.co.kr/hwpml/2011/section" xmlns:p="http://www.hancom.co.kr/hwpml/2011/paragraph"><p:secPr><p:pageBorderFill borderFillIDRef="0"/><p:pageBorderFill borderFillIDRef="8"/><p:pageBorderFill/></p:secPr></s:sec>')
     zero_counts = Counter()
     observe(zero_section, zero_counts, border_ids(header))
-    assert (zero_counts["ref_resolved"], zero_counts["ref_missing_target"], zero_counts["ref_absent"], zero_counts["border_id_zero"]) == (1, 1, 1, 1)
+    expect_equal((zero_counts["ref_resolved"], zero_counts["ref_missing_target"], zero_counts["ref_absent"], zero_counts["border_id_zero"]), (1, 1, 1, 1))
     absent_counts = Counter()
     observe(zero_section, absent_counts, None)
-    assert (absent_counts["ref_absent_table"], absent_counts["ref_absent"]) == (2, 1)
-    assert border_ids(ET.fromstring('<h:head xmlns:h="http://www.hancom.co.kr/hwpml/2011/head"/>')) is None
+    expect_equal((absent_counts["ref_absent_table"], absent_counts["ref_absent"]), (2, 1))
+    expect_equal(border_ids(ET.fromstring('<h:head xmlns:h="http://www.hancom.co.kr/hwpml/2011/head"/>')), None)
     memory = io.BytesIO()
     with zipfile.ZipFile(memory, "w") as archive:
         archive.writestr("Contents/header.xml", ET.tostring(header))

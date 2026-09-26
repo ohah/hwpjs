@@ -2,6 +2,7 @@
 """Independent ZIP/XML census of direct secPr setting fields."""
 
 from collections import Counter
+import io
 import os
 from pathlib import Path
 import re
@@ -75,11 +76,21 @@ def observe(section, counts):
             counts["other_attributes"] += sum(name not in FIELDS[kind] for name in child.attrib)
 
 
+def inspect_archive(archive):
+    counts = Counter()
+    for member in archive.namelist():
+        if member.startswith("Contents/section") and member.endswith(".xml"):
+            observe(ET.fromstring(archive.read(member)), counts)
+    return counts
+
+
 def self_test():
     section = ET.fromstring('<s:sec xmlns:s="http://www.hancom.co.kr/hwpml/2011/section" xmlns:p="http://www.hancom.co.kr/hwpml/2011/paragraph" xmlns:x="urn:wrong"><p:secPr><x:grid lineGrid="99"/><p:wrapper><p:grid lineGrid="88"/></p:wrapper><p:startNum pageStartsOn="ODD" page="+2"/><p:grid lineGrid="3" strikeContinue="true" x:charGrid="99"/><p:visibility border="SHOW_FIRST" hideFirstHeader="1"/></p:secPr><p:secPr><p:grid lineGrid="4"/></p:secPr></s:sec>')
     counts = Counter()
     observe(section, counts)
-    assert (counts["definitions"], counts["item_grid"], counts["sum_lineGrid"], counts["sum_page"], counts["strike_raw_true"], counts["other_attributes"], counts["missing_grid_charGrid"]) == (2, 2, 7, 2, 1, 1, 2)
+    observed = (counts["definitions"], counts["item_grid"], counts["sum_lineGrid"], counts["sum_page"], counts["strike_raw_true"], counts["other_attributes"], counts["missing_grid_charGrid"])
+    if observed != (2, 2, 7, 2, 1, 1, 2):
+        raise AssertionError(f"direct setting inventory mismatch: {observed}")
     for bad in ("1_0", "-1", "4294967296", ""):
         try:
             unsigned(bad)
@@ -93,6 +104,17 @@ def self_test():
         pass
     else:
         raise AssertionError("invalid boolean accepted")
+    memory = io.BytesIO()
+    with zipfile.ZipFile(memory, "w") as archive:
+        archive.writestr("Contents/section0.xml", ET.tostring(section))
+        archive.writestr("Contents/section1.xml", "<broken")
+    with zipfile.ZipFile(memory) as archive:
+        try:
+            inspect_archive(archive)
+        except ET.ParseError:
+            pass
+        else:
+            raise AssertionError("partial malformed file accepted")
 
 
 def main():
@@ -110,11 +132,11 @@ def main():
             counts["files"] += 1
             try:
                 with zipfile.ZipFile(path) as archive:
-                    for member in archive.namelist():
-                        if member.startswith("Contents/section") and member.endswith(".xml"):
-                            observe(ET.fromstring(archive.read(member)), counts)
+                    file_counts = inspect_archive(archive)
             except (zipfile.BadZipFile, KeyError, OSError, ET.ParseError):
                 counts["unreadable"] += 1
+            else:
+                counts.update(file_counts)
     for index, counts in enumerate(shards):
         print(index, dict(sorted(counts.items())))
 

@@ -7,8 +7,10 @@ inventory of selected-looking Contents/section*.xml entries, not OPF validation.
 """
 
 import collections
+import io
 import os
 from pathlib import Path
+import re
 import sys
 import xml.etree.ElementTree as ET
 import zipfile
@@ -20,6 +22,16 @@ ROOTS = (
     Path("legacy/rust/crates/hwp-core/tests/fixtures"),
     Path("reference/rhwp/samples"),
 )
+
+
+def unsigned(raw):
+    value = raw.strip(" \t\r\n")
+    if not re.fullmatch(r"[+-]?[0-9]+", value):
+        raise ValueError("invalid unsigned spelling")
+    number = int(value)
+    if not 0 <= number <= 4294967295:
+        raise ValueError("unsigned32 overflow")
+    return number
 
 
 def observe(root, totals):
@@ -38,14 +50,22 @@ def observe(root, totals):
             totals["missing_" + name] += name not in page.attrib
         for name in ("width", "height"):
             if name in page.attrib:
-                totals[name + "_sum"] += int(page.get(name))
+                totals[name + "_sum"] += unsigned(page.get(name))
         margins = [child for child in page if child.tag == PARA + "margin"]
         totals["margins"] += len(margins)
         for margin in margins:
             for name in ("header", "footer", "gutter", "left", "right", "top", "bottom"):
                 totals["missing_margin_" + name] += name not in margin.attrib
                 if name in margin.attrib:
-                    totals["margin_" + name + "_sum"] += int(margin.get(name))
+                    totals["margin_" + name + "_sum"] += unsigned(margin.get(name))
+
+
+def inspect_archive(archive):
+    totals = collections.Counter()
+    for member in archive.namelist():
+        if member.startswith("Contents/section") and member.endswith(".xml"):
+            observe(ET.fromstring(archive.read(member)), totals)
+    return totals
 
 
 def self_test():
@@ -59,8 +79,28 @@ def self_test():
     )
     totals = collections.Counter()
     observe(root, totals)
-    assert (totals["sections"], totals["pages"], totals["width_sum"],
-            totals["margin_left_sum"], totals["missing_margin_header"]) == (1, 1, 10, 3, 1)
+    observed = (totals["sections"], totals["pages"], totals["width_sum"],
+                totals["margin_left_sum"], totals["missing_margin_header"])
+    if observed != (1, 1, 10, 3, 1):
+        raise AssertionError(f"page geometry inventory mismatch: {observed}")
+    for bad in ("1_0", "4294967296", "-1", ""):
+        try:
+            unsigned(bad)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("invalid unsigned value accepted")
+    memory = io.BytesIO()
+    with zipfile.ZipFile(memory, "w") as archive:
+        archive.writestr("Contents/section0.xml", ET.tostring(root))
+        archive.writestr("Contents/section1.xml", "<broken")
+    with zipfile.ZipFile(memory) as archive:
+        try:
+            inspect_archive(archive)
+        except ET.ParseError:
+            pass
+        else:
+            raise AssertionError("partial malformed file accepted")
 
 
 def main():
@@ -78,15 +118,13 @@ def main():
             totals["files"] += 1
             try:
                 with zipfile.ZipFile(path) as archive:
-                    for member in archive.namelist():
-                        if not member.startswith("Contents/section") or not member.endswith(".xml"):
-                            continue
-                        try:
-                            observe(ET.fromstring(archive.read(member)), totals)
-                        except ET.ParseError:
-                            totals["unparsed_xml"] += 1
+                    file_totals = inspect_archive(archive)
+            except ET.ParseError:
+                totals["unparsed_xml"] += 1
             except (zipfile.BadZipFile, OSError):
                 totals["invalid_zip"] += 1
+            else:
+                totals.update(file_totals)
     for index, totals in enumerate(shards):
         print(index, dict(sorted(totals.items())))
 
