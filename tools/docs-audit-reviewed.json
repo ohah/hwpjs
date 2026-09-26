@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "c1a755a9bac50f45863b1218b01d97e63ea0a0d3ea9008b52a22705970b83971",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography and BMP high byte evidence review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "0a3dec56cf16727dd37a53e31977361d1ab58690e71eea6bef5645f653793cfb",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP and summary evidence review, architecture pending, full Debug Zig test incomplete"
+    },
+    "docs/hwp5-summary-property-sets.md": {
+      "sha256": "e6f245b37068e0dc2712c683390d968a3d9f0a4ae40df990a3550472178a77f2",
+      "evidence": "2026-09-27 MS-OLEPS primary specs and current parser, independent 584-path wire census, 481 summary probe, focused Zig tests, ReleaseSafe HWP5 audit 8905855"
     },
     "docs/hwp5-bmp-high-byte.md": {
       "sha256": "5784adaac3a6b4479af9ec6554e86ce224671a5fe5861814952ced4da0bd25ff",
