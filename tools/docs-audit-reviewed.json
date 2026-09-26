@@ -6,8 +6,16 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "2925a155f1267f906108dc3c2be8010ec6ddb268f7f48cc99dd16fe7b6be2e6d",
-      "evidence": "2026-09-27 tracker tests, 2515 inline link path probe, HWPX note, number, column, field, inline, meta, parameter, and equation review"
+      "sha256": "20d3aed4a33921fbde5820f5a7a054912ea0470570d3f9827d713d4ecff53125",
+      "evidence": "2026-09-27 tracker tests, 2518 inline link path probe, HWPX note, number, column, field, inline, meta, parameter, equation, and table review"
+    },
+    "docs/hwpx-para-list.md": {
+      "sha256": "67685f9c19d04e22ce3a1f0d597a3b4d53fc9de808221bde70319ac377189894",
+      "evidence": "2026-09-27 official pinned fields, current five caller paths, Zig focused tests, master XML oracle 476, known shards reused"
+    },
+    "docs/hwpx-table-shape.md": {
+      "sha256": "c717d8df32b7f85835c2b8636d694bb9b7126613609f4028e32a962a4c54c5bc",
+      "evidence": "2026-09-27 official model, Zig tests 3 modes, table XML oracle 476, known shards reused"
     },
     "docs/hwpx-equations.md": {
       "sha256": "5cfe3dc7bdf03588f144b1d7a1255c797a0c0855eed6b6c44aef79a9c70a5024",

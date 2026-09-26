@@ -1,6 +1,6 @@
 # HWPX ParaListType 직접 속성
 
-`src/hwpx/para_list_attributes.zig`는 `hp:subList`에 공통인 속성 원값의 소유·어휘 검사를 담당합니다. 호출자는 `masterpage_parts.zig`의 루트 직접 자식 `hp:subList`와 [표 셀의 직접 목록](hwpx-table-cell-sublists.md)입니다. 두 입력 경로는 같은 필드·값 판정을 사용하며 표 셀 경로는 이미 색인된 section XML 트리의 시작 태그를 읽습니다. [한컴 ParaListType 구현](https://github.com/hancom-io/hwpx-owpml-model/blob/main/OWPML/Class/Para/ParaListType.cpp) 및 [필드 선언](https://github.com/hancom-io/hwpx-owpml-model/blob/main/OWPML/Class/Para/ParaListType.h)을 필드 이름과 타입의 기준으로 삼습니다. 코드를 복사하거나 한컴 모델의 기본값을 입력 문서에 임의로 채우지 않습니다.
+`src/hwpx/para_list_attributes.zig`는 `hp:subList`에 공통인 속성 원값의 소유·어휘 검사를 담당합니다. 직접 호출자는 `masterpage_parts.zig`의 루트 직접 자식 `hp:subList`, [표 셀의 직접 목록](hwpx-table-cell-sublists.md), [각주·미주 본문](hwpx-note-bodies.md), `shape_caption.zig`입니다. 마지막 경로는 [표 도형](hwpx-table-shape.md)과 [수식 caption](hwpx-equation-captions.md)에서 재사용합니다. 마스터페이지는 스트리밍 시작 태그를, 나머지는 이미 색인된 section XML 트리의 시작 태그를 읽되 같은 필드·값 판정을 사용합니다. [한컴 ParaListType 구현](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Para/ParaListType.cpp) 및 [필드 선언](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Para/ParaListType.h)을 필드 이름과 타입의 기준으로 삼습니다. 코드를 복사하거나 한컴 모델의 기본값을 입력 문서에 임의로 채우지 않습니다.
 
 `Attributes.raw`는 `id`, `textDirection`, `lineWrap`, `vertAlign`, `linkListIDRef`, `linkListNextIDRef`, `textWidth`, `textHeight`, `hasTextRef`, `hasNumRef`, `metatag` 순서로 XML 정규화된 UTF-8 원값을 소유합니다. `null`은 부재, 빈 문자열은 실제 빈 값입니다. 방향·줄바꿈·세로 정렬의 알려진 열거값은 각각 `HORIZONTAL/VERTICAL/VERTICALALL`, `BREAK/SQUEEZE/KEEP`, `TOP/CENTER/BOTTOM`입니다. 미지 열거값은 버리지 않고 `unknown_enums`에 집계합니다. 네 참조·크기 값은 unsigned 32-bit, 두 플래그는 XML Boolean 어휘로 검사합니다. 알려지지 않은 무명·다른 namespace 속성은 `other_attributes`에 계수하며 의미를 추측하지 않습니다. `id` 및 `metatag`의 의미·유일성은 여기서 추측하지 않습니다.
 
@@ -10,4 +10,6 @@
 
 최종 소스에서 Debug·ReleaseSafe·ReleaseFast의 `HWPX master` 테스트 각각 13개, 전체 Debug `zig build test --summary all` 2,224개, 선택 실파일 8개 shard, `zig build -Doptimize=ReleaseSafe`, `zig build audit -Doptimize=ReleaseSafe --summary all`, `zig fmt --check build.zig src`가 통과했습니다. audit의 다른 포맷 검증은 ParaListType 내부 의미 완료의 근거가 아닙니다.
 
-후속: 도형 등 다른 ParaListType 호출자 연결, 표 셀·마스터페이지 문단 내용의 의미 조립, `metatag` 내용·쪽 배치·저장 정책. 이 단계의 보고서는 문서 모델이나 무손실 편집 지원을 뜻하지 않습니다.
+후속: 각 호출자의 리스트 참조 대상과 문단 내용의 의미 조립, `metatag` 내용·쪽 배치·저장 정책. 표·수식 caption 및 각주·미주 본문에 이미 연결된 원값 판독을 문서 모델이나 무손실 편집 지원으로 확대하지 않습니다.
+
+2026-09-27 재검증: 고정 버전 ParaListType의 11개 속성·타입과 현재 스트리밍/트리 판독기 및 다섯 사용 경로를 대조했습니다. `HWPX master` 필터는 Debug·ReleaseSafe·ReleaseFast 각각 60/60, 표 셀 목록 5/5·주석 본문 10/10·수식 caption 5/5·표 shape 5/5의 Debug 회귀가 통과했습니다. 독립 마스터페이지 ZIP/XML 오라클의 자체검사와 전체 집계에서 허용 476개, 직접 `subList` 61개·직접 문단 63개, 앞의 10개 속성은 각각 61건·`metatag` 0건, 미지 enum/미등록 속성 0건, `textWidth` 합 3,159,534·`textHeight` 합 4,466,417을 확인했습니다. 앞서 같은 제품 코드에서 통과한 known-inspections 8개 shard는 이번에 다시 실행하지 않았습니다. 마스터페이지 이외 사용 경로의 값 분포를 이 수치로 대신하지 않습니다.

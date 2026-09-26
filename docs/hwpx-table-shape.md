@@ -19,3 +19,5 @@
 ## 검증 기록
 
 2026-09-25: 독립 조사기 자체 반례와 476개 허용 문서의 전체 집계, ReleaseFast 선택 실파일 shard 0~7의 요소·숫자·확장 enum 대조가 통과했습니다. Debug 전체 `zig build test --summary all`은 2,314/2,314 테스트, ReleaseSafe·ReleaseFast 전체 `zig build audit -Doptimize=... --summary all`은 각각 종료 코드 0으로 통과했습니다. 세 모드의 shape 단독 테스트는 각각 5/5였습니다. 적대적 반례는 다른 namespace와 손자 요소, 부재와 공개 모델의 상충 기본값, 중복 뒤의 잘못된 숫자, 모델 밖 enum, 음수/상위 비트 값, 여러 표에 걸친 한도, 모든 할당 실패를 포함합니다. 이는 관측·어휘·직접 topology의 검증이지 전체 문서 의미 적합성 판정이 아닙니다.
+
+2026-09-27 재검증: 한컴 고정 버전의 표 공통 도형 자식·상속 속성과 현재 `shape_xml_children.zig`·`shape_xml_fields.zig`·`shape_caption.zig`의 공유 경계를 대조했습니다. 집중 필터는 Debug·ReleaseSafe·ReleaseFast 각각 5/5, 독립 표 오라클의 자체검사와 전체 허용 파일 집계가 통과했습니다. 표 4,182개에서 `sz`·`pos`·`outMargin` 각 4,182개, caption 134개·직접 목록 134개·직접 문단 151개, label 28개, `shapeComment`·`parameterset`·`metaTag` 0개가 다시 관측됐습니다. `dropcapstyle` 부재 5개, 모델 밖 `textWrap=THROUGH` 5개, `vertOffset` 음수 1개/상위 비트 양수 21개, `horzOffset` 상위 비트 양수 17개도 일치했습니다. 앞서 같은 제품 코드에서 통과한 known-inspections 8개 shard는 이번에 다시 실행하지 않았습니다. 표 배치·표시·편집·저장은 검증 범위 밖입니다.
