@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "b971be0039c26dec99d7a681515029e6e138ffb5f85d81ba48d99ae8e02848c3",
-      "evidence": "2026-09-27 tracker tests, 2523 inline links, HWP5 XML, XMLTemplate, DocHistory and HistoryLastDoc reviews, architecture pending, full Debug Zig test incomplete"
+      "sha256": "1c0f413ed83f7f49a71d693a60d85b090eef910b86809305c8925a55674016d5",
+      "evidence": "2026-09-27 tracker tests, 2523 inline links, HWP5 history date review and corpus, architecture pending, full Debug Zig test incomplete"
+    },
+    "docs/hwp5-history-dates.md": {
+      "sha256": "e6075ba05793eefc94ad8239c3cc571e56c3063c579d517a9b38ad9efa7d433f",
+      "evidence": "2026-09-27 local HWP5 SYSTEMDATE and Microsoft SYSTEMTIME, current date and calendar code, 3 modes focused, real four dates, old tmp logs absent"
     },
     "docs/hwp5-history-last-document.md": {
       "sha256": "bca534a7e80cb0a41bc49f5ac535dfeb19c0dfbab23c15dbf938a2e4d3992f57",
