@@ -25,6 +25,7 @@ const parameter_lists = @import("parameter_lists.zig");
 const meta_tags = @import("meta_tags.zig");
 const inline_string_controls = @import("inline_string_controls.zig");
 const field_markers = @import("field_markers.zig");
+const column_definitions = @import("column_definitions.zig");
 const paragraph_metadata = @import("paragraph_metadata.zig");
 const paragraph_children = @import("paragraph_children.zig");
 const masterpage_paragraph_children = @import("masterpage_paragraph_children.zig");
@@ -190,6 +191,8 @@ pub const InlineStringControlsOptions = struct { trees: XmlTreesOptions = .{}, c
 pub const InlineStringControlsReport = inline_string_controls.Report;
 pub const FieldMarkersOptions = struct { trees: XmlTreesOptions = .{}, markers: field_markers.Options = .{} };
 pub const FieldMarkersReport = field_markers.Report;
+pub const ColumnDefinitionsOptions = struct { trees: XmlTreesOptions = .{}, columns: column_definitions.Options = .{} };
+pub const ColumnDefinitionsReport = column_definitions.Report;
 pub const ParagraphMetadataOptions = paragraph_metadata.Options;
 pub const ParagraphMetadataReport = paragraph_metadata.Report;
 pub const ParagraphChildrenOptions = paragraph_children.Options;
@@ -367,6 +370,7 @@ pub const KnownOptions = struct {
     meta_tags: meta_tags.Options = .{},
     inline_string_controls: inline_string_controls.Options = .{},
     field_markers: field_markers.Options = .{},
+    column_definitions: column_definitions.Options = .{},
     paragraph_metadata: ParagraphMetadataOptions = .{},
     paragraph_children: ParagraphChildrenOptions = .{},
     line_segments: LineSegmentsOptions = .{},
@@ -727,6 +731,13 @@ pub const Document = struct {
         var trees = try self.readXmlTrees(a, options.trees);
         defer trees.deinit(a);
         return trees.inspectFieldMarkers(a, options.markers);
+    }
+
+    /// Owns exact column definitions and their ordered line/size children.
+    pub fn inspectColumnDefinitions(self: *const Document, a: std.mem.Allocator, options: ColumnDefinitionsOptions) !ColumnDefinitionsReport {
+        var trees = try self.readXmlTrees(a, options.trees);
+        defer trees.deinit(a);
+        return trees.inspectColumnDefinitions(a, options.columns);
     }
 
     /// Reuses the owned section trees and header border-fill IDs; inactive

@@ -46,6 +46,8 @@ section 문단·run 서식 참조의 선택 결과는 기존 `section_references
 
 [Section 필드 시작·끝 마커](hwpx-field-markers.md)는 `field_marker_fields.zig`가 어휘, `field_marker_links.zig`가 명시적 ID 연결, `field_markers.zig`가 section 순회·소유 결과를 맡습니다. `hwpx_field_markers_survey.zig`와 `tools/hwpx-field-markers-diff.py`는 별도 실파일 대조를 맡습니다.
 
+[Section 단 설정 원값](hwpx-column-definitions.md)은 `column_definitions.zig`가 순회·소유, `column_fields.zig`가 단/자식 속성, `line_style_values.zig`가 각주 구분선과 공유하는 선 어휘를 맡습니다. 실파일 대조는 `hwpx_column_definitions_survey.zig`와 `tools/hwpx-column-definitions-diff.py`가 맡습니다.
+
 `xml_direct_text.zig`는 수식 script·shapeComment, 파라미터 스칼라, section metaTag, indexmark·dutmal 문자열의 직접 XML 문자 청크 누적과 바이트 한도를 한 곳에서 처리합니다. 각 모듈은 대상 선택·예산 소유·보고서 형식만 맡고 XML 정규화를 다시 구현하지 않습니다.
 
 구역 정의의 번호·메모 모양 ID 연결은 [구역 참조 진단](hwpx-section-definition-references.md)이 소유합니다. 진단 결과를 HWPX 문서 전체 유효성 판정으로 사용하지 않습니다.
