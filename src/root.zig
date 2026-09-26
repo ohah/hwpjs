@@ -28,6 +28,7 @@ test {
     _ = @import("hwpx/equation_tests.zig");
     _ = @import("hwpx/equation_shape_tests.zig");
     _ = @import("hwpx/equation_comment_tests.zig");
+    _ = @import("hwpx/parameter_lists_tests.zig");
     _ = @import("hwpx/equation_caption_tests.zig");
     _ = @import("hwpx/paragraph_metadata_tests.zig");
     _ = @import("hwpx/paragraph_children_tests.zig");

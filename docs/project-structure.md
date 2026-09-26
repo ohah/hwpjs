@@ -38,6 +38,8 @@ section 문단·run 서식 참조의 선택 결과는 기존 `section_references
 
 [본문 수식 원문·script](hwpx-equations.md)는 `src/hwpx/equation.zig`가 소유하고, 여섯 전용 속성의 판정은 `equation_fields.zig`에 둡니다. [공통 도형 자식·필드](hwpx-equation-shapes.md)의 소유 원값은 `equation_shape.zig`, 표와 공유하는 자식 선택은 `shape_xml_children.zig`에 둡니다. [수식 caption 목록](hwpx-equation-captions.md)은 `equation_caption.zig`가 결과를 소유하고 `shape_caption.zig`가 표와 순회를 공유합니다. [수식 주석 문자열](hwpx-equation-comments.md)은 `equation_comment.zig`가 직접 텍스트를 소유합니다. XML/공통 도형 어휘를 재사용하지만 수식 해석·편집은 하지 않습니다.
 
+[Section 파라미터 목록](hwpx-parameter-lists.md)은 `parameter_lists.zig`가 도형 종류와 무관한 `parameterset` 재귀·소유 결과를 맡고, `hwpx_parameter_lists_survey.zig`와 `tools/hwpx-parameter-lists-diff.py`가 실파일의 독립 XML 대조를 맡습니다. 수식·표 자식 스캐너는 기존 원문 보존 책임을 유지합니다.
+
 구역 정의의 번호·메모 모양 ID 연결은 [구역 참조 진단](hwpx-section-definition-references.md)이 소유합니다. 진단 결과를 HWPX 문서 전체 유효성 판정으로 사용하지 않습니다.
 
 HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라이브러리입니다.

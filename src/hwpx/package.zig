@@ -21,6 +21,7 @@ const header_tree = @import("header_tree.zig");
 const section_tree = @import("section_tree.zig");
 const document_trees = @import("document_trees.zig");
 const equation = @import("equation.zig");
+const parameter_lists = @import("parameter_lists.zig");
 const paragraph_metadata = @import("paragraph_metadata.zig");
 const paragraph_children = @import("paragraph_children.zig");
 const masterpage_paragraph_children = @import("masterpage_paragraph_children.zig");
@@ -178,6 +179,8 @@ pub const XmlTrees = document_trees.Bundle;
 pub const XmlTreesOptions = document_trees.AllOptions;
 pub const EquationOptions = struct { trees: XmlTreesOptions = .{}, equations: equation.Options = .{} };
 pub const EquationReport = equation.Report;
+pub const ParameterListOptions = struct { trees: XmlTreesOptions = .{}, parameters: parameter_lists.Options = .{} };
+pub const ParameterListReport = parameter_lists.Report;
 pub const ParagraphMetadataOptions = paragraph_metadata.Options;
 pub const ParagraphMetadataReport = paragraph_metadata.Report;
 pub const ParagraphChildrenOptions = paragraph_children.Options;
@@ -351,6 +354,7 @@ pub const KnownOptions = struct {
     section_text: SectionTextOptions = .{},
     trees: XmlTreesOptions = .{},
     equations: equation.Options = .{},
+    parameter_lists: parameter_lists.Options = .{},
     paragraph_metadata: ParagraphMetadataOptions = .{},
     paragraph_children: ParagraphChildrenOptions = .{},
     line_segments: LineSegmentsOptions = .{},
@@ -681,6 +685,14 @@ pub const Document = struct {
         var trees = try self.readXmlTrees(a, options.trees);
         defer trees.deinit(a);
         return trees.inspectEquations(a, options.equations);
+    }
+
+    /// Preserves 2011 section parameter trees in source order without
+    /// interpreting application-specific names or scalar values.
+    pub fn inspectParameterLists(self: *const Document, a: std.mem.Allocator, options: ParameterListOptions) !ParameterListReport {
+        var trees = try self.readXmlTrees(a, options.trees);
+        defer trees.deinit(a);
+        return trees.inspectParameterLists(a, options.parameters);
     }
 
     /// Reuses the owned section trees and header border-fill IDs; inactive

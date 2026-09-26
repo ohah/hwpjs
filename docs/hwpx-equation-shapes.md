@@ -23,7 +23,7 @@
 
 위 25개 필드는 기존 표와 같은 어휘를 검사합니다. 부호가 있는 offset·여백·caption 폭/간격은 음수 i32 표기와 양수 u32 표기를 구분해 보존하며 상위 비트 양수를 자동으로 음수로 바꾸지 않습니다. 미지 enum은 문자열과 진단을 남깁니다. 값이 없는 요소를 필수성 위반으로 판정하지 않습니다.
 
-`shapeComment`의 직접 텍스트는 [수식 shapeComment](hwpx-equation-comments.md)가 별도로 소유합니다. `parameterset`, `metaTag`는 종류·원문·속성 수·직접 하위 요소 수만 보존하며 내부 의미를 해석하지 않습니다. 다른 namespace의 동명 자식·속성은 알려진 필드로 해석하지 않습니다. 알려진 자식 안에 중첩된 요소도 해당 부모 원문에 남기며, 그 하위 의미 검증은 별도 단계입니다.
+`shapeComment`의 직접 텍스트는 [수식 shapeComment](hwpx-equation-comments.md)가 별도로 소유합니다. 수식 자식 보고서의 `parameterset`·`metaTag` 자체는 종류·원문·속성 수·직접 하위 요소 수만 보존합니다. 별도 [공통 section 파라미터 트리](hwpx-parameter-lists.md) API가 `parameterset` 내부를 관측하며, 수식 보고서에 같은 내부 값을 복제하지 않습니다. `metaTag` 내부 텍스트는 아직 해석하지 않습니다. 다른 namespace의 동명 자식·속성은 알려진 필드로 해석하지 않습니다. 알려진 자식 안에 중첩된 요소도 해당 부모 원문에 남깁니다.
 
 `caption`의 직접 `subList` 속성·문단 경계는 [수식 caption 목록](hwpx-equation-captions.md)이 별도로 소유합니다.
 
