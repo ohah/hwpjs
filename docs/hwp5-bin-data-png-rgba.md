@@ -16,4 +16,6 @@
 
 재현 명령은 [개발·검증 명령](development-commands.md)이 소유합니다.
 
-이번 연결을 포함한 전체 Debug `zig build test --summary all`은 5/5 단계·2,545/2,545 테스트, ReleaseSafe 제품 빌드는 5/5 단계 통과했습니다. 두 결과는 이 선택적 이미지 경로의 회귀 근거이며 HWP5 전체 파싱 완료 판정은 아닙니다.
+초기 구현 당시 이 연결을 포함한 전체 Debug `zig build test --summary all`은 5/5 단계·2,545/2,545 테스트, ReleaseSafe 제품 빌드는 5/5 단계 통과했습니다. 이는 당시 코드의 실행 기록이며 현재 전체 빌드·테스트를 재실행한 수치가 아닙니다. 두 결과는 선택적 이미지 경로의 회귀 근거이지 HWP5 전체 파싱 완료 판정은 아닙니다.
+
+2026-09-27 현재 내용 재검증: `container/images.zig`의 기본 null 선택, 기존 PNG 행 예산과 별도의 RGBA 출력 예산, 실패 시 보고서 불변성·출력 수명을 코드와 테스트에서 대조했습니다. Debug `PNG RGBA` 집중 테스트 16/16, ReleaseSafe `HWP PNG RGBA` 3/3, ReleaseFast 제품 실파일 HWP/HWPX 2/2가 통과했습니다. 독립 `olefile` 0.47·Pillow 11.3.0 비교에서 HWP의 RGBA 153,664바이트와 위 SHA-256이 Zig 원시 출력과 일치했고, 별도 HWPX 표본의 256바이트도 일치했습니다. HWPX의 상세 계약은 해당 문서가 소유하며 이번 검증은 전체 HWP5 audit·색 관리·화면 결과·저장을 입증하지 않습니다.
