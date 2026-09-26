@@ -16,4 +16,4 @@
 
 합성 반례는 같은 문단의 반복 ID 두 건을 발생 순서대로 짝짓고, 표식 앞 한 코드 유닛 삽입 시 위치 변화가 고정 기대값을 깨는지 확인합니다. 중첩 주석 문단은 바깥 문단과 별도 위치를 가지며 `foot` 꼬리말을 주석으로 세지 않습니다. 잘못된 ID·코드, 빠진 헤더·빠진 토큰은 거부하고 정상 입력으로 복구됩니다. 이 검사는 네 실파일과 합성 입력의 **원문 표식 연결**만 증명합니다. 화면 조판·번호 순서·본문 주석 텍스트 편집·저장과 모든 HWP 버전의 호환성을 증명하지 않습니다.
 
-ReleaseSafe `zig build hwp5-audit -Doptimize=ReleaseSafe` 재검증에서 8,905,855회 검사와 추적 HWP 48개 처리가 통과했습니다. 변경된 JS 세 파일의 구문 검사와 `git diff --check`도 통과했습니다. 이 수치는 지원 기능 비율이나 전체 문서 검증률이 아닙니다.
+ReleaseSafe `zig build hwp5-audit -Doptimize=ReleaseSafe` 재검증에서 8,905,855회 검사와 추적 HWP 48개 처리가 통과했습니다. `zig build test --summary all`의 Debug 네이티브 테스트 2,655개, `zig build -Doptimize=ReleaseSafe`, Zig 포맷 검사, 변경된 JS 세 파일의 구문 검사와 `git diff --check`도 통과했습니다. 네이티브 테스트 출력의 `failed command:` 문구는 성공 요약과 함께 나타나는 러너 표기로, 판정 근거는 [별도 기록](zig-test-stderr.md)에 둡니다. 이 수치는 지원 기능 비율이나 전체 문서 검증률이 아닙니다.
