@@ -1,5 +1,7 @@
 # HWPX 각주·미주 본문 구조와 원값
 
+본문 내부의 `hp:t`별 문자 소유와 정규화 바이트는 [각주·미주 텍스트 소유](hwpx-note-text.md)가 별도 보고서로 제공합니다.
+
 `Document.inspectNoteBodies()`와 `XmlTrees.inspectNoteBodies()`는 구조가 선택한 2011 section XML의 정확한 `hp:footNote`·`hp:endNote`를 문서 순서대로 소유 보고서에 반환합니다. `Document.inspectKnown().note_bodies`도 같은 검사기를 사용합니다. 이 검사는 [구역 각주·미주 모양](hwpx-section-note-shapes.md)의 `footNotePr`·`endNotePr`와 별도입니다. 주석의 부모 이름/namespace·요소 인덱스·원문, 직접 `hp:subList`의 순서·중복·부재, 각 목록의 직접 `hp:p` 인덱스와 원문을 보존합니다. 다른 namespace의 동명 요소나 중첩 목록을 직접 자식으로 승격하지 않습니다.
 
 `note_bodies.zig`가 선택 범위·관계·원문 수명·한도를 소유하고, `note_body_fields.zig`가 주석 필드를 읽습니다. 공식 [한컴 NoteType 구현](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Para/NoteType.cpp)과 [선언](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Para/NoteType.h)의 `flag`·`instId`는 UINT32, `number`와 `userChar`·`prefixChar`·`suffixChar`는 UINT16 폭으로 검사합니다. 문자 필드는 UTF-16 **코드 단위 숫자**로 보존하며 서로게이트를 임의로 거부하거나 문자로 변환하지 않습니다. 관측된 `id` 속성은 모델의 여섯 필드와 구분해 불투명 원값으로 유지합니다. 부재와 빈 값은 구분하고 입력에 없던 모델 기본값을 채우지 않습니다. 직접 `subList`의 공통 11개 속성과 enum/숫자/Boolean 판정은 [ParaListType 단일 구현](hwpx-para-list.md)의 `para_list_attributes.zig`를 재사용합니다.

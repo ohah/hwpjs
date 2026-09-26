@@ -36,6 +36,7 @@ test {
     _ = @import("hwpx/number_controls_tests.zig");
     _ = @import("hwpx/note_bodies_tests.zig");
     _ = @import("hwpx/note_number_links_tests.zig");
+    _ = @import("hwpx/note_text_tests.zig");
     _ = @import("hwpx/equation_caption_tests.zig");
     _ = @import("hwpx/paragraph_metadata_tests.zig");
     _ = @import("hwpx/paragraph_children_tests.zig");

@@ -55,6 +55,7 @@ const column_definitions = @import("column_definitions.zig");
 const number_controls = @import("number_controls.zig");
 const note_bodies = @import("note_bodies.zig");
 const note_number_links = @import("note_number_links.zig");
+const note_text = @import("note_text.zig");
 
 /// Results of the currently implemented HWPX inspections only. A successful
 /// return does not assert complete schema, semantic or edit/save validity.
@@ -100,6 +101,7 @@ pub const Report = struct {
     number_controls: number_controls.Report,
     note_bodies: note_bodies.Report,
     note_number_links: note_number_links.Report,
+    note_text: note_text.Report,
     paragraph_metadata: paragraph_metadata.Report,
     paragraph_children: paragraph_children.Report,
     line_segments: line_segments.Report,
@@ -132,6 +134,7 @@ pub const Report = struct {
         self.number_controls.deinit();
         self.note_bodies.deinit();
         self.note_number_links.deinit();
+        self.note_text.deinit();
         self.section_definitions.deinit(a);
         self.section_direct_settings.deinit(a);
         self.section_page_borders.deinit(a);
@@ -276,6 +279,8 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
         errdefer note_body_report.deinit();
         var note_number_link_report = try trees.inspectNoteNumberLinks(a, &note_body_report, &number_control_report, options.note_number_links);
         errdefer note_number_link_report.deinit();
+        var note_text_report = try trees.inspectNoteText(a, &note_body_report, options.note_text);
+        errdefer note_text_report.deinit();
         const table_report = try trees.inspectTableGeometryWithBorderFills(a, options.table_geometry, resource_report.table(.border_fill));
         break :blk .{
             .begin = begin_report,
@@ -307,6 +312,7 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
             .number_controls = number_control_report,
             .note_bodies = note_body_report,
             .note_number_links = note_number_link_report,
+            .note_text = note_text_report,
             .table_geometry = table_report,
         };
     };
@@ -352,6 +358,7 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
         .number_controls = semantic.number_controls,
         .note_bodies = semantic.note_bodies,
         .note_number_links = semantic.note_number_links,
+        .note_text = semantic.note_text,
         .paragraph_metadata = semantic.paragraph,
         .paragraph_children = semantic.paragraph_children,
         .line_segments = semantic.line_segments,
