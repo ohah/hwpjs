@@ -11,3 +11,11 @@
 재현 명령은 [개발·검증 명령](development-commands.md)에 둡니다.
 
 이번 연결의 최종 검증은 전용 Debug·ReleaseSafe·ReleaseFast 각 5/5, 기존 section 텍스트 포함 Debug 15/15, 실제 파일 ReleaseFast 1/1 및 Python 바이트 대조, 전체 Debug `zig build test --summary all` 5/5 단계·2,549/2,549 테스트, ReleaseSafe 제품 빌드 5/5 단계, 기존 CFB 비교 47/47입니다. CFB 비교는 이 스냅샷의 독립 의미 검증으로 계산하지 않습니다.
+
+## corpus 파일별 독립 대조
+
+`src/hwpx_text_snapshot_corpus.zig`는 로컬 두 corpus의 `.hwpx` 후보마다 스냅샷을 새로 만들고 내용 이벤트를 spine 순서로 SHA-256에 넣습니다. 보고서의 문단/run/text 수는 복사된 시작·끝 이벤트 개수와 대조하고, UTF-8 바이트 수는 복사한 내용 합계와 대조합니다. `tools/hwpx-text-snapshot-corpus-diff.py`는 별도로 Python `zipfile`·`ElementTree`로 OPF spine을 따라 section의 `hp:t` 내용을 순서대로 연결해 같은 파일별 SHA-256과 여섯 개 수치를 비교합니다. 별도 순서 해시는 문단/run/text 시작·끝, 8종 인라인 종류와 미지원 종류의 시작·끝, 각 UTF-8 바이트를 순서대로 넣습니다. 빈 인라인과 명시적 시작·끝은 같은 의미 경계로 정규화해 XML 표기 차이와 이벤트 조각 분할에 의존하지 않습니다. 경로 해시로 정상·ZIP 거부·암호화 **세 파일 집합**을 일대일 대응시켜 특정 파일의 차이가 합계에서 상쇄되지 않게 합니다. 검증기 자체는 누락 파일·내용/순서 해시·수치·분류 교환·합계 변조를 실패로 잡는 반례를 일반 Python과 `python -O` 양쪽에서 실행합니다. `A<tab/>B`와 `AB<tab/>`처럼 연결 텍스트가 같고 위치만 다른 반례도 순서 해시가 구별합니다.
+
+2026-09-26 로컬 표본 484개 중 ZIP 거부 6개, 암호화 2개를 별도 분류한 정상 476개 모두에서 파일별 내용·순서 해시와 section·문단·run·`hp:t`·빈 `hp:t`·본문 UTF-8 길이가 일치했습니다. 정상 합계는 section 544, 문단 215,146, run 267,347, `hp:t` 230,677, 빈 `hp:t` 14,607, 본문 7,975,957바이트입니다. 로컬 `reference/rhwp`는 Git에 포함되지 않으므로 깨끗한 체크아웃의 기본 audit로 재현되지 않습니다. 이 대조는 선택된 section의 원문 텍스트 이벤트에 한정되며 글꼴·조건부 활성 선택·실제 화면 배치·비선택 XML·편집/저장·모든 HWPX 버전 적합성을 보증하지 않습니다.
+
+이 corpus 조사기 추가 뒤 기본 Debug `zig build test --summary all`을 다시 실행해 5/5 단계·2,549/2,549 테스트, ReleaseSafe 제품 빌드 5/5 단계를 확인했습니다. 기본 suite는 corpus 파일별 순서 해시를 실행하지 않으므로 위 Python 대조가 별도의 필수 근거입니다.
