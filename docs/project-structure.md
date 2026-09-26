@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+[Section 번호 컨트롤 원값](hwpx-number-controls.md)은 `number_controls.zig`가 트리 순회·원문·직접 자식·소유권, `number_control_fields.zig`가 속성 해석, `numbering_values.zig`가 각주/미주와 공유하는 번호 enum 어휘를 맡습니다. 실파일 대조는 `hwpx_number_controls_survey.zig`와 `tools/hwpx-number-controls-diff.py`가 맡습니다.
+
 [HWPX JPEG 선택 픽셀 검사](hwpx-jpeg-pixels.md)는 `src/image/jpeg/pixel_inspection.zig`의 공통 JFIF 복호화 코어를 HWP5와 공유하고, `src/hwpx/image_payloads.zig`가 HWPX의 ZIP 선택·옵션·보고서 한도를 소유합니다. 독립 corpus 조사는 `src/hwpx_jpeg_pixel_survey.zig`와 Python 조사기에 둡니다.
 
 [Adobe APP14 4성분 JPEG](jpeg-adobe-four-component.md)는 선택적 Exif 색 선언과 픽셀 산술을 분리하며, `src/image/jpeg/adobe_cmyk_colour.zig`가 unmanaged 변환을 소유합니다.

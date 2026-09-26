@@ -26,6 +26,7 @@ const meta_tags = @import("meta_tags.zig");
 const inline_string_controls = @import("inline_string_controls.zig");
 const field_markers = @import("field_markers.zig");
 const column_definitions = @import("column_definitions.zig");
+const number_controls = @import("number_controls.zig");
 const paragraph_metadata = @import("paragraph_metadata.zig");
 const paragraph_children = @import("paragraph_children.zig");
 const masterpage_paragraph_children = @import("masterpage_paragraph_children.zig");
@@ -193,6 +194,8 @@ pub const FieldMarkersOptions = struct { trees: XmlTreesOptions = .{}, markers: 
 pub const FieldMarkersReport = field_markers.Report;
 pub const ColumnDefinitionsOptions = struct { trees: XmlTreesOptions = .{}, columns: column_definitions.Options = .{} };
 pub const ColumnDefinitionsReport = column_definitions.Report;
+pub const NumberControlsOptions = struct { trees: XmlTreesOptions = .{}, controls: number_controls.Options = .{} };
+pub const NumberControlsReport = number_controls.Report;
 pub const ParagraphMetadataOptions = paragraph_metadata.Options;
 pub const ParagraphMetadataReport = paragraph_metadata.Report;
 pub const ParagraphChildrenOptions = paragraph_children.Options;
@@ -371,6 +374,7 @@ pub const KnownOptions = struct {
     inline_string_controls: inline_string_controls.Options = .{},
     field_markers: field_markers.Options = .{},
     column_definitions: column_definitions.Options = .{},
+    number_controls: number_controls.Options = .{},
     paragraph_metadata: ParagraphMetadataOptions = .{},
     paragraph_children: ParagraphChildrenOptions = .{},
     line_segments: LineSegmentsOptions = .{},
@@ -738,6 +742,12 @@ pub const Document = struct {
         var trees = try self.readXmlTrees(a, options.trees);
         defer trees.deinit(a);
         return trees.inspectColumnDefinitions(a, options.columns);
+    }
+
+    pub fn inspectNumberControls(self: *const Document, a: std.mem.Allocator, options: NumberControlsOptions) !NumberControlsReport {
+        var trees = try self.readXmlTrees(a, options.trees);
+        defer trees.deinit(a);
+        return trees.inspectNumberControls(a, options.controls);
     }
 
     /// Reuses the owned section trees and header border-fill IDs; inactive

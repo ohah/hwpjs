@@ -96,6 +96,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [Section 단 설정 원값](hwpx-column-definitions.md)은 section 트리의 `colPr`와 직접 `colLine`·`colSz`를 순서대로 보존하며 공개 모델 밖의 실물 enum은 진단으로 구분합니다. 선 종류·폭 어휘는 각주/미주 구분선과 공유하고, 단별 실제 폭 조판이나 편집·저장은 후속 계층입니다.
 
+[Section 번호 컨트롤 원값](hwpx-number-controls.md)은 `autoNum`·`newNum`·`pageNum`과 직접 `autoNumFormat`을 구조·속성 단위로 보존합니다. 번호 증가·재시작·쪽 표시 결과는 후속 문서 모델의 책임이며 원값 검사 성공으로 추론하지 않습니다.
+
 [공통 XML part 트리](hwpx-header-tree.md)는 header·section의 원문·요소 인덱스를 한 구현으로 소유합니다. [Section 원문·요소 인덱스](hwpx-section-tree.md)는 spine 선택을, header 트리는 정확한 manifest 선택과 암호화 거부를 적용합니다. 미지원 요소까지 남기되 텍스트 이벤트를 전체 문서 모델로 오인하지 않도록 의미 계층을 단계적으로 조립합니다.
 
 [문서 XML 트리 조립](hwpx-document-trees.md)은 구조 검사 결과를 한 번 확정하고 header·모든 section의 소유 트리를 spine 순서로 묶습니다. 전체 바이트·요소 예산과 실패 원자성을 조립 계층에서 소유하되, 구조·원문 파싱과 미지원 part의 의미 해석을 복제하지 않습니다.

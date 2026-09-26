@@ -1,6 +1,7 @@
 const std = @import("std");
 const values = @import("xml_values.zig");
 const line_style = @import("line_style_values.zig");
+const numbering = @import("numbering_values.zig");
 
 pub const NoteKind = enum(u8) { foot, end };
 pub const ChildKind = enum(u8) { auto_num_format, note_line, note_spacing, numbering, placement };
@@ -47,13 +48,6 @@ comptime {
     if (descriptors.len != @typeInfo(Field).@"enum".fields.len) @compileError("note field/descriptor mismatch");
 }
 
-const number_types = [_][]const u8{
-    "DIGIT",                 "CIRCLED_DIGIT",       "ROMAN_CAPITAL",     "ROMAN_SMALL",             "LATIN_CAPITAL",        "LATIN_SMALL",
-    "CIRCLED_LATIN_CAPITAL", "CIRCLED_LATIN_SMALL", "HANGUL_SYLLABLE",   "CIRCLED_HANGUL_SYLLABLE", "HANGUL_JAMO",          "CIRCLED_HANGUL_JAMO",
-    "HANGUL_PHONETIC",       "IDEOGRAPH",           "CIRCLED_IDEOGRAPH", "DECAGON_CIRCLE",          "DECAGON_CIRCLE_HANJA", "SYMBOL",
-    "USER_CHAR",             "SYMBOL2",             "IMAGE",             "2DIGIT",
-};
-
 pub const Diagnostics = struct { unknown_enums: usize = 0, noncanonical_colors: usize = 0 };
 
 fn known(raw: []const u8, allowed: []const []const u8) bool {
@@ -77,7 +71,7 @@ pub fn validate(kind: ChildKind, note_kind: NoteKind, field: Field, raw: []const
         .positive => {
             if (try values.unsigned32(raw) == 0) return error.InvalidPositiveInteger;
         },
-        .number_type => diagnostics.unknown_enums += @intFromBool(!known(raw, &number_types)),
+        .number_type => diagnostics.unknown_enums += @intFromBool(!numbering.numberTypeKnown(raw)),
         .line_type => diagnostics.unknown_enums += @intFromBool(!line_style.knownType(raw)),
         .width => diagnostics.unknown_enums += @intFromBool(!line_style.knownWidth(raw)),
         .color => diagnostics.noncanonical_colors += @intFromBool(!canonicalColor(raw)),

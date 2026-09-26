@@ -33,6 +33,7 @@ test {
     _ = @import("hwpx/inline_string_controls_tests.zig");
     _ = @import("hwpx/field_markers_tests.zig");
     _ = @import("hwpx/column_definitions_tests.zig");
+    _ = @import("hwpx/number_controls_tests.zig");
     _ = @import("hwpx/equation_caption_tests.zig");
     _ = @import("hwpx/paragraph_metadata_tests.zig");
     _ = @import("hwpx/paragraph_children_tests.zig");

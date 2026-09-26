@@ -93,6 +93,8 @@ section 텍스트 보고서도 원문 양쪽 분기를 유지합니다. 활성 �
 `field_markers`는 같은 section 트리의 [필드 시작·끝 마커](hwpx-field-markers.md)를 별도 소유 보고서로 반환합니다. 명시적 ID 연결과 불일치 진단까지만 제공하며 필드 내용 평가·표시·저장은 포함하지 않습니다.
 
 `column_definitions`는 같은 section 트리의 [단 설정 원값](hwpx-column-definitions.md)을 별도 소유 보고서로 반환합니다. 불균등 `colSz`를 그대로 남기고 개수 편차만 진단하며 실제 단 조판은 하지 않습니다.
+
+`number_controls`는 같은 section 트리의 [번호 컨트롤 원값](hwpx-number-controls.md)을 별도 소유 보고서로 반환합니다. 번호 배정이나 쪽 표시 결과를 계산하지 않습니다.
 [표 안쪽 여백·셀 구역](hwpx-table-children.md) 보고서도 같은 격자 보고서에 포함되며, 구역 겹침·표 배치의 의미는 판정하지 않습니다.
 [표 상속 shape 속성·직접 자식](hwpx-table-shape.md) 보고서도 같은 격자 보고서에 포함됩니다. 모델 밖 enum 관측을 전체 스키마 적합성이나 레이아웃 판정으로 승격하지 않습니다.
 [표 행·셀 직접 자식 topology](hwpx-table-child-topology.md) 보고서도 포함됩니다. 자식 순서 차이는 관측값이며 전체 XSD 적합성 판정이 아닙니다.

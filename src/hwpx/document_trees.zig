@@ -25,6 +25,7 @@ const meta_tags = @import("meta_tags.zig");
 const inline_string_controls = @import("inline_string_controls.zig");
 const field_markers = @import("field_markers.zig");
 const column_definitions = @import("column_definitions.zig");
+const number_controls = @import("number_controls.zig");
 const table_geometry = @import("table_geometry.zig");
 const header_resources = @import("header_resources.zig");
 
@@ -143,6 +144,10 @@ pub const Bundle = struct {
 
     pub fn inspectColumnDefinitions(self: *const Bundle, a: std.mem.Allocator, options: column_definitions.Options) !column_definitions.Report {
         return column_definitions.inspect(a, self.sections, options);
+    }
+
+    pub fn inspectNumberControls(self: *const Bundle, a: std.mem.Allocator, options: number_controls.Options) !number_controls.Report {
+        return number_controls.inspect(a, self.sections, options);
     }
 
     pub fn deinit(self: *Bundle, a: std.mem.Allocator) void {
