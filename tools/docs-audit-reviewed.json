@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "0a3dec56cf16727dd37a53e31977361d1ab58690e71eea6bef5645f653793cfb",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP and summary evidence review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "2312effeb5e4bde446206e8b44d4a8bb793714f97c38041e4aab0292bda321bc",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary and PCX evidence review, architecture pending, full Debug Zig test incomplete"
+    },
+    "docs/hwp5-bin-data-pcx.md": {
+      "sha256": "0039e909568316802ba4b6f5409b7a6b5871974a7c56a332f7c70b78d485a634",
+      "evidence": "2026-09-27 local HWP5 17-18 and current PCX selection code, HWP and HWPX paired payload hash, Debug Safe focused and ReleaseFast real fixture"
     },
     "docs/hwp5-summary-property-sets.md": {
       "sha256": "e6f245b37068e0dc2712c683390d968a3d9f0a4ae40df990a3550472178a77f2",
