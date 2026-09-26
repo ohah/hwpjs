@@ -18,5 +18,7 @@
 
 - 합성 BI_RGB32의 0x00/0xff/그 외 바이트를 서로 구별하고, top-down 행에서도 분포가 그대로임을 확인했습니다. 8 bpp 색인 BMP와 명시적 알파 마스크가 있는 32 bpp BI_BITFIELDS는 관측 대상에서 제외합니다.
 - 동일 BMP를 두 번 소비하면 각 카운터가 두 배가 되고, RGBA 예산 초과·카운터 overflow·파싱 실패 시 상위 보고서가 이전 값으로 남는 기존 원자성 검사를 통과했습니다. BMP 픽셀 디코더의 상위 바이트 무시 계약도 기존 테스트에서 유지됩니다.
-- 실제 HWP의 독립 Node 조사와 Zig의 개별 CRC·상위 바이트 대조는 각각 통과했습니다. 선택적 Zig 실파일 검사 2/2, Debug 전체 `zig build test --summary all` 2,484/2,484, ReleaseSafe `zig build audit -Doptimize=ReleaseSafe --summary all` 종료 코드 0, ReleaseSafe 제품 빌드 5/5를 확인했습니다. Debug 전체 실행 이후 BI_BITFIELDS 배제 반례를 추가했으며, 이 반례는 별도 Debug 필터와 후속 ReleaseSafe audit에서 통과했습니다.
+- 초기 구현 당시 실제 HWP의 독립 Node 조사와 Zig의 개별 CRC·상위 바이트 대조는 각각 통과했습니다. 선택적 Zig 실파일 검사 2/2, Debug 전체 `zig build test --summary all` 2,484/2,484, ReleaseSafe `zig build audit -Doptimize=ReleaseSafe --summary all` 종료 코드 0, ReleaseSafe 제품 빌드 5/5를 확인했습니다. Debug 전체 실행 이후 BI_BITFIELDS 배제 반례를 추가했으며, 이 반례는 별도 Debug 필터와 후속 ReleaseSafe audit에서 통과했습니다. 이 전체 audit 수치는 당시 코드의 기록이지 현재 재실행 결과가 아닙니다.
 - 실파일 CRC 일치는 현재 디코더와 독립 oracle이 같은 `BI_RGB32` 파일 해석을 따름을 증명하지만, 실제 한글 화면이 4,530개의 비-0xff 바이트를 투명도에 사용하는지 판정하지 않습니다.
+
+2026-09-27 현재 내용 재검증: Microsoft의 BITMAPINFOHEADER와 GDI 알파 합성 문서가 구별하는 두 경로, 현재 `rgb32_high_byte.zig`·BMP 컨테이너 집계·RGBA 정책과 원자성 테스트를 대조했습니다. 실파일 SHA-256과 독립 Node 조사기의 일곱 BMP 개별 CRC/상위 바이트, Zig의 선택적 실파일 검사 2/2가 일치했고 `zig test src/root.zig --test-filter BMP`의 59/59가 통과했습니다. 합계는 1,067,410픽셀 중 0x00 0개·0xff 1,062,880개·기타 4,530개입니다. 이번 집중 검사는 전체 Debug/ReleaseSafe audit나 실제 한글 화면의 알파 의미를 증명하지 않습니다.

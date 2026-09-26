@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "d2991092f3ee2e26fce01812ef3313111c4e1ace9ee1c0d080d1b8ca53fecf10",
-      "evidence": "2026-09-27 tracker tests, HWP5 history and bibliography evidence review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "c1a755a9bac50f45863b1218b01d97e63ea0a0d3ea9008b52a22705970b83971",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography and BMP high byte evidence review, architecture pending, full Debug Zig test incomplete"
+    },
+    "docs/hwp5-bmp-high-byte.md": {
+      "sha256": "5784adaac3a6b4479af9ec6554e86ce224671a5fe5861814952ced4da0bd25ff",
+      "evidence": "2026-09-27 Microsoft BMP and GDI sources, current Zig counter and atomicity code, BMP focused 59, real BMP 7 Zig 2 and independent Node CRC and high bytes"
     },
     "docs/hwp5-bibliography-evidence.md": {
       "sha256": "91855624917a13580ab458e0971b0270ef6ef5fc25a13367dd87ca3141cf8895",

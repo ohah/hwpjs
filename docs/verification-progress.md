@@ -67,3 +67,5 @@ HistoryLastDoc 단일 레코드 문서는 로컬 명세의 제한된 근거와 �
 이력 HWPML·DiffML 외부 XML 조사 문서는 실제 표본의 payload 5개와 decoded 13,292,279바이트, 루트·요소/속성 수, caret OLD 16/최종 32, 거부 입력 5개를 현재 조사기로 다시 확인해 완료 목록에 넣었습니다. 조사기 안전 테스트 6/6과 ReleaseSafe `history-xml-audit` 8/8 단계가 통과했습니다. 이미 구현된 제품 XML 구조 검사와 아직 없는 DiffML/HWPML 의미 해석·복원을 구별했고, 당시 전체 audit 수치 및 현재 사라진 여섯 `/tmp` 로그를 현재 재검증 증거로 사용하지 않습니다. 이번 집중 검사는 전체 Debug·ReleaseFast audit 또는 스키마 지원률을 입증하지 않습니다.
 
 Bibliography 저장 배치 조사 문서는 로컬 명세가 XML 형태만 정의한다는 점, 제품 Zig/JS의 미소비 경계, 외부 구조 지도의 미지원 표기를 다시 확인해 완료 목록에 넣었습니다. 현재 rhwp `.hwp` 536개 중 비 CFB 29개·strict 성공 434개·strict 거부 후 호환 성공 73개였고, CFB 507개의 별도 호환 모드 정확 루트 조회에서 Bibliography·XMLTemplate 모두 0개였습니다. Rust fixture 48개도 strict 성공·Bibliography 0개였으며 PrvImage 시그니처 집계도 문서와 일치했습니다. 표본에서 찾지 못한 사실은 저장 형식의 부재나 구현 완료의 근거가 아닙니다.
+
+HWP5 BMP 32비트 상위 바이트 조사 문서는 Microsoft의 BI_RGB 저장 바이트와 GDI 합성 경계, 현재 Zig의 비할당 카운터·컨테이너 원자성·RGBA alpha=255 정책을 대조해 완료 목록에 넣었습니다. SHA-256이 일치한 실파일의 BMP 7개를 독립 Node 조사와 Zig 실파일 검사 2/2로 재확인했고, BMP 집중 테스트 59/59가 통과했습니다. 1,067,410픽셀 중 0x00 0개·0xff 1,062,880개·기타 4,530개라는 값은 실제 한글 화면의 알파 의미가 아닙니다. 과거 전체 audit 수치는 이번 실행 결과로 세지 않습니다.
