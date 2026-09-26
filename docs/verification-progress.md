@@ -11,3 +11,5 @@
 2026-09-27 기준 첫 완료 파일은 [HWP5 각주·미주 원문 표식 위치](hwp5-note-source-sites.md)입니다. 해당 주제의 공식 명세·제품 코드·원시 레코드 대조와 반례, 감사 테스트 결과는 그 문서에 둡니다. [프로젝트 구조](project-structure.md)는 HWPX XML 트리·section·WMF/EMF 범위 표현을 교정했으나 파일 전체의 검증 완료로 세지 않습니다. 새 현황 문서까지 포함해 현재 존재하는 프로젝트 Markdown 560개에서 일반 인라인 로컬 링크 2,515개의 대상 파일이 모두 존재했습니다. 작업 트리에서 삭제된 `lint-rules.md`는 이 링크 검사에서 제외됩니다. 참조형 링크·앵커·외부 URL·문서 내용의 옳음까지 증명하는 검사는 아닙니다.
 
 진입점 [AGENTS.md](../AGENTS.md)는 링크 대상과 인덱스 전용 책임을, [커밋 규칙](../commit-rules.md)은 프로젝트 규칙·실제 빌드 명령·레거시 규칙 경로와의 일치를 확인해 완료 목록에 넣었습니다. [README](../README.md)도 빌드·공개 JS API·두 실행 예제를 확인했습니다. Node에서는 추적 HWP fixture의 `/BodyText/Section0`이 `Buffer` 402바이트였고, 실제 Chromium에서는 HTTP로 받은 WASM/fixture의 strict 읽기 후 `/FileHeader`가 값 256개의 배열이었습니다. README의 `sample.hwp`는 사용자가 제공할 입력 예시이므로 검사에는 같은 저장소의 추적 fixture를 사용했습니다.
+
+`docs/project-rules.md`는 실제 모듈·레거시 명세 경로, 진입점/상세 문서의 소유권, 현 커밋·검증 명령과 충돌하지 않는지 확인해 완료 목록에 넣었습니다. 구현 원칙은 정책이지 모든 HWP/HWPX 기능이 이를 이미 충족했다는 선언으로 읽지 않습니다.

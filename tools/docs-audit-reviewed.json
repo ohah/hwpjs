@@ -6,7 +6,7 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "efecab1f46c3992a6e4598385c25c48f2eb1f051c6e9df4cc902062a32615c57",
+      "sha256": "6fcb492e99cdb1b93b127b7db703bec1acbcffee666f5126cea63206ded6e505",
       "evidence": "2026-09-27 tracker tests, 2515 inline link path probe, and entry-doc review"
     },
     "AGENTS.md": {
@@ -20,6 +20,10 @@
     "README.md": {
       "sha256": "879be8f2b16057b4a0cc8af5b36420ea2cb57f28d45f01cdd167624fece4c637",
       "evidence": "2026-09-27 ReleaseSafe build, Node fixture read, Chromium HTTP WASM fixture read"
+    },
+    "docs/project-rules.md": {
+      "sha256": "30bccda49f70036d38bb609522d5826b101301f9c88cd07ecc3a2c9138a4a354",
+      "evidence": "2026-09-27 module and spec paths, document SSOT, validation and main-push policy checked"
     }
   }
 }
