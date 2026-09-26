@@ -19,8 +19,10 @@ CASES = (
 OPF = "{http://www.idpf.org/2007/opf/}"
 PARA = "{http://www.hancom.co.kr/hwpml/2011/paragraph}"
 SECTION = "{http://www.hancom.co.kr/hwpml/2011/section}sec"
-KINDS = ("parameterset", "booleanParam", "integerParam", "unsignedintegerParam", "bindataParam", "floatParam", "stringParam", "listParam", "arrayParam")
-LIST_KINDS = {"parameterset", "listParam", "arrayParam"}
+KINDS = ("parameterset", "booleanParam", "integerParam", "unsignedintegerParam", "bindataParam", "floatParam", "stringParam", "listParam", "arrayParam", "parameters")
+ROOT_KINDS = {"parameterset", "parameters"}
+CHILD_KINDS = set(KINDS[1:9])
+LIST_KINDS = {"parameterset", "parameters", "listParam", "arrayParam"}
 OWNER = {"pic": 0, "container": 1, "equation": 2}
 
 
@@ -55,9 +57,13 @@ def inspect_sections(sections):
         require(root.tag == SECTION, root.tag)
         parents = {child: parent for parent in root.iter() for child in parent}
         indices = {item: index for index, item in enumerate(root.iter())}
-        for item in root.iter(PARA + "parameterset"):
+        for item in root.iter():
+            if item.tag not in {PARA + kind for kind in ROOT_KINDS}:
+                continue
             parent = parents.get(item)
             if parent is None:
+                continue
+            if item.tag == PARA + "parameters" and parent.tag != PARA + "fieldBegin":
                 continue
             if parent.tag.startswith("{"):
                 parent_uri, owner_local = parent.tag[1:].split("}", 1)
@@ -72,7 +78,7 @@ def inspect_sections(sections):
                 nodes.append((node, parent_index, depth, kind))
                 if local in LIST_KINDS:
                     for child in node:
-                        if child.tag.startswith(PARA) and child.tag[len(PARA):] in KINDS[1:]:
+                        if child.tag.startswith(PARA) and child.tag[len(PARA):] in CHILD_KINDS:
                             visit(child, index, depth + 1)
 
             visit(item, None, 0)
@@ -92,7 +98,7 @@ def inspect_sections(sections):
         for item, parent_node, depth, kind in nodes:
             local = KINDS[kind]
             children = list(item)
-            unrecognized = sum(local not in LIST_KINDS or child.tag not in {PARA + name for name in KINDS[1:]} for child in children)
+            unrecognized = sum(local not in LIST_KINDS or child.tag not in {PARA + name for name in CHILD_KINDS} for child in children)
             declared = item.get("cnt")
             mismatch = declared is not None and local in LIST_KINDS and int(declared) != len(children)
             direct = None if local in LIST_KINDS else (item.text or "") + "".join(child.tail or "" for child in children)
@@ -163,6 +169,19 @@ def self_test():
         source.replace("<p:stringParam name='s'>", "<p:stringParam name='s'><p:future/>")
     ):
         require(first[0] != inspect_sections([changed.encode()])[0], "mutation escaped digest")
+    field = start + "<p:fieldBegin><p:parameters cnt='1'><p:stringParam name='s'>A&amp;<![CDATA[<]]></p:stringParam></p:parameters></p:fieldBegin></s:sec>"
+    field_digest = inspect_sections([field.encode()])
+    require(field_digest[1:4] == (1, 2, 3), "field parameter summary")
+    require(field_digest[0] == inspect_sections([field.replace("<![CDATA[<]]>", "&lt;").encode()])[0], "field equivalent text differs")
+    for changed in (
+        field.replace("<p:parameters", "<x:parameters").replace("</p:parameters>", "</x:parameters>"),
+        field.replace("<p:fieldBegin>", "<x:fieldBegin>").replace("</p:fieldBegin>", "</x:fieldBegin>"),
+        field.replace("cnt='1'", "cnt='2'"),
+        field.replace("A&amp;", "B&amp;"),
+        field.replace("<p:stringParam", "<x:stringParam").replace("</p:stringParam>", "</x:stringParam>"),
+        field.replace("</p:stringParam>", "<p:future/></p:stringParam>"),
+    ):
+        require(field_digest[0] != inspect_sections([changed.encode()])[0], "field mutation escaped digest")
 
 
 def main():

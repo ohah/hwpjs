@@ -5,8 +5,8 @@ const values = @import("xml_values.zig");
 const xml = @import("../xml/root.zig");
 const direct_text = @import("xml_direct_text.zig");
 
-pub const Kind = enum { parameter_set, boolean, integer, unsigned_integer, bindata, float, string, list, array };
-pub const names = [_][]const u8{ "parameterset", "booleanParam", "integerParam", "unsignedintegerParam", "bindataParam", "floatParam", "stringParam", "listParam", "arrayParam" };
+pub const Kind = enum { parameter_set, boolean, integer, unsigned_integer, bindata, float, string, list, array, parameters };
+pub const names = [_][]const u8{ "parameterset", "booleanParam", "integerParam", "unsignedintegerParam", "bindataParam", "floatParam", "stringParam", "listParam", "arrayParam", "parameters" };
 pub const Owner = enum { picture, container, equation, other };
 
 comptime {
@@ -92,7 +92,7 @@ fn kindOf(element: tree_mod.Element) ?Kind {
 }
 
 fn isList(kind: Kind) bool {
-    return kind == .parameter_set or kind == .list or kind == .array;
+    return kind == .parameter_set or kind == .parameters or kind == .list or kind == .array;
 }
 
 fn ownerOf(element: tree_mod.Element) Owner {
@@ -171,7 +171,7 @@ const Scan = struct {
         while (child) |child_index| : (child = self.tree.elements[child_index].next_sibling) {
             self.nodes.items[index].direct_children += 1;
             const child_kind = kindOf(self.tree.elements[child_index]);
-            if (isList(kind) and child_kind != null and child_kind.? != .parameter_set) {
+            if (isList(kind) and child_kind != null and child_kind.? != .parameter_set and child_kind.? != .parameters) {
                 try self.visit(root_index, child_index, index, depth + 1);
             } else {
                 self.nodes.items[index].unknown_children += 1;
@@ -189,7 +189,7 @@ const Scan = struct {
     }
 };
 
-/// Observes every 2011 hp:parameterset directly under any selected section
+/// Observes every 2011 hp:parameterset and fieldBegin's hp:parameters
 /// element. Parameter values remain strings; no application meaning is inferred.
 pub fn inspect(a: std.mem.Allocator, sections: []const tree_mod.Tree, options: Options) !Report {
     var arena = std.heap.ArenaAllocator.init(a);
@@ -221,8 +221,11 @@ pub fn inspect(a: std.mem.Allocator, sections: []const tree_mod.Tree, options: O
             .count_mismatches = &count_mismatches,
         };
         for (tree.elements, 0..) |element, element_index| {
-            if (!element.is(document_xml.paragraph_uri, "parameterset")) continue;
+            const parameter_set = element.is(document_xml.paragraph_uri, "parameterset");
+            const field_parameters = element.is(document_xml.paragraph_uri, "parameters");
+            if (!parameter_set and !field_parameters) continue;
             const parent = element.parent orelse continue;
+            if (field_parameters and !tree.elements[parent].is(document_xml.paragraph_uri, "fieldBegin")) continue;
             if (roots.items.len >= options.max_roots) return error.LimitExceeded;
             const source = try budget.copy(owned_a, tree.sourceOf(element_index));
             const parent_name = tree.elements[parent].name;

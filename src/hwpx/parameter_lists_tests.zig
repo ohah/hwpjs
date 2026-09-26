@@ -40,6 +40,41 @@ test "HWPX parameter lists preserve recursive node order attributes and direct t
     try std.testing.expect(std.mem.indexOf(u8, report.roots[0].raw_xml, "<![CDATA[<]]>") != null);
 }
 
+test "HWPX parameter lists preserve fieldBegin parameters in section order" {
+    const source = prefix ++
+        "<p:fieldBegin><p:parameters cnt='3' name=''><p:stringParam name='s'>A&amp;<![CDATA[<]]></p:stringParam><p:integerParam name='i'>-01</p:integerParam><p:booleanParam name='b'>FALSE</p:booleanParam></p:parameters></p:fieldBegin>" ++
+        "<p:pic><p:parameterset cnt='0'/></p:pic>" ++ suffix;
+    var report = try inspect(std.testing.allocator, source, .{});
+    defer report.deinit();
+    try std.testing.expectEqual(@as(usize, 2), report.roots.len);
+    try std.testing.expectEqual(@as(usize, 5), report.nodes.len);
+    try std.testing.expectEqual(parameter_lists.Owner.other, report.roots[0].owner);
+    try std.testing.expectEqualStrings("fieldBegin", report.roots[0].parent_local_name);
+    try std.testing.expectEqual(parameter_lists.Kind.parameters, report.nodes[0].kind);
+    try std.testing.expectEqual(@as(usize, 4), report.roots[0].node_count);
+    try std.testing.expectEqual(parameter_lists.Kind.parameter_set, report.nodes[4].kind);
+    try std.testing.expectEqualStrings("A&<", report.nodes[1].value.?);
+    try std.testing.expectEqualStrings("-01", report.nodes[2].value.?);
+    try std.testing.expectEqualStrings("FALSE", report.nodes[3].value.?);
+    try std.testing.expectEqualStrings("", report.nodes[0].name.?);
+    try std.testing.expectEqual(@as(usize, 0), report.count_mismatches);
+    try std.testing.expectEqual(@as(usize, 11), report.value_bytes);
+}
+
+test "HWPX parameter lists field roots keep namespace unknown children and count mismatch" {
+    const source = prefix ++
+        "<x:parameters cnt='0'><x:stringParam>ignored</x:stringParam></x:parameters>" ++
+        "<p:fieldBegin><p:parameters cnt='1'><p:stringParam>A</p:stringParam><x:stringParam>B</x:stringParam><p:parameters cnt='0'/></p:parameters></p:fieldBegin>" ++ suffix;
+    var report = try inspect(std.testing.allocator, source, .{});
+    defer report.deinit();
+    try std.testing.expectEqual(@as(usize, 2), report.nodes.len);
+    try std.testing.expectEqual(@as(usize, 1), report.roots.len);
+    try std.testing.expectEqual(@as(usize, 2), report.unknown_children);
+    try std.testing.expectEqual(@as(usize, 1), report.count_mismatches);
+    try std.testing.expectEqualStrings("A", report.nodes[1].value.?);
+    try std.testing.expectError(error.InvalidUnsigned32, inspect(std.testing.allocator, prefix ++ "<p:fieldBegin><p:parameters cnt='4294967296'/></p:fieldBegin>" ++ suffix, .{}));
+}
+
 test "HWPX parameter lists exclude foreign roots and preserve section order" {
     const a = std.testing.allocator;
     var first = try section_tree.parse(a, prefix ++ "<x:parameterset cnt='1'><x:stringParam>foreign</x:stringParam></x:parameterset><p:parameterset cnt='0'/><x:pic><p:parameterset cnt='0'/></x:pic>" ++ suffix, 0, 0, .{});
@@ -112,7 +147,7 @@ test "HWPX parameter lists enforce node depth attribute value and owned byte lim
 test "HWPX parameter lists release all allocation failures" {
     try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
         fn run(a: std.mem.Allocator) !void {
-            var report = try inspect(a, prefix ++ "<p:pic><p:parameterset cnt='1'><p:stringParam name='a'>A&amp;B</p:stringParam></p:parameterset></p:pic>" ++ suffix, .{});
+            var report = try inspect(a, prefix ++ "<p:pic><p:parameterset cnt='1'><p:stringParam name='a'>A&amp;B</p:stringParam></p:parameterset></p:pic><p:fieldBegin><p:parameters cnt='1'><p:integerParam name='i'>-01</p:integerParam></p:parameters></p:fieldBegin>" ++ suffix, .{});
             report.deinit();
         }
     }.run, .{});
@@ -120,7 +155,7 @@ test "HWPX parameter lists release all allocation failures" {
 
 test "HWPX parameter lists survive package and source tree release" {
     const a = std.testing.allocator;
-    const section = prefix ++ "<p:pic><p:parameterset cnt='1'><p:stringParam name='a'>A&amp;B</p:stringParam></p:parameterset></p:pic>" ++ suffix;
+    const section = prefix ++ "<p:pic><p:parameterset cnt='1'><p:stringParam name='a'>A&amp;B</p:stringParam></p:parameterset></p:pic><p:fieldBegin><p:parameters cnt='1'><p:integerParam name='i'>-01</p:integerParam></p:parameters></p:fieldBegin>" ++ suffix;
     const hpf = "<o:package xmlns:o='http://www.idpf.org/2007/opf/'><o:manifest><o:item id='h' href='Contents/header.xml' media-type='application/xml'/><o:item id='s' href='Contents/section0.xml' media-type='application/xml'/></o:manifest><o:spine><o:itemref idref='h'/><o:itemref idref='s'/></o:spine></o:package>";
     const sources = [_]fixture.Source{
         .{ .name = "mimetype", .data = package.mime },
@@ -150,6 +185,10 @@ test "HWPX parameter lists survive package and source tree release" {
     try std.testing.expectEqualStrings("A&B", standalone.nodes[1].value.?);
     try std.testing.expectEqualStrings("pic", standalone.roots[0].parent_local_name);
     try std.testing.expectEqualStrings("A&B", known.parameter_lists.nodes[1].value.?);
+    try std.testing.expectEqualStrings("-01", from_trees.nodes[3].value.?);
+    try std.testing.expectEqualStrings("-01", standalone.nodes[3].value.?);
+    try std.testing.expectEqualStrings("-01", known.parameter_lists.nodes[3].value.?);
+    try std.testing.expectEqual(parameter_lists.Kind.parameters, standalone.nodes[2].kind);
     try std.testing.expectEqualStrings(from_trees.roots[0].raw_xml, standalone.roots[0].raw_xml);
 }
 
@@ -157,7 +196,7 @@ test "HWPX parameter lists preserve UTF16 source and normalized value" {
     const a = std.testing.allocator;
     inline for (.{ std.builtin.Endian.little, std.builtin.Endian.big }) |order| {
         const encoding = if (order == .little) "UTF-16LE" else "UTF-16BE";
-        const ascii = "<?xml version='1.0' encoding='" ++ encoding ++ "'?><s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:p><p:run><p:parameterset cnt='1'><p:stringParam name='n'>&#xAC00;</p:stringParam></p:parameterset></p:run></p:p></s:sec>";
+        const ascii = "<?xml version='1.0' encoding='" ++ encoding ++ "'?><s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:p><p:run><p:parameterset cnt='1'><p:stringParam name='n'>&#xAC00;</p:stringParam></p:parameterset><p:fieldBegin><p:parameters cnt='1'><p:stringParam name='m'>&#xAC00;</p:stringParam></p:parameters></p:fieldBegin></p:run></p:p></s:sec>";
         const raw = try a.alloc(u8, 2 + ascii.len * 2);
         defer a.free(raw);
         @memcpy(raw[0..2], if (order == .little) "\xff\xfe" else "\xfe\xff");
@@ -165,6 +204,8 @@ test "HWPX parameter lists preserve UTF16 source and normalized value" {
         var report = try inspect(a, raw, .{});
         defer report.deinit();
         try std.testing.expectEqualStrings("가", report.nodes[1].value.?);
+        try std.testing.expectEqualStrings("가", report.nodes[3].value.?);
+        try std.testing.expectEqual(parameter_lists.Kind.parameters, report.nodes[2].kind);
         try std.testing.expectEqualStrings("run", report.roots[0].parent_local_name);
         try std.testing.expect(report.roots[0].raw_xml.len > ascii.len / 4);
     }

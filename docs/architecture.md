@@ -86,7 +86,7 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [HWPX 수식 원문·script 검사](hwpx-equations.md)는 소유 section 트리에서 run 직접 수식만 선택합니다. [수식 도형 자식](hwpx-equation-shapes.md)은 부모 원문 안의 부분 범위를 공유하고 속성 복제를 예산에 추가합니다. [caption 목록](hwpx-equation-captions.md)은 표와 같은 직접 목록·문단 순회를 재사용하며 속성 소유 결과만 수식 보고서에 추가합니다. [shapeComment 문자열](hwpx-equation-comments.md)은 script와 같은 section 문자 순회를 공유하되 별도 모듈에서 직접 텍스트만 소유합니다. 수식 문법·조판은 별도 후속 책임으로 둡니다.
 
-[Section parameterset 트리](hwpx-parameter-lists.md)는 도형별 검사기와 독립적으로 소유 section 트리의 모든 해당 요소를 재귀 순회합니다. 기존 수식·표 원문 보고서에 파라미터 값을 복제하지 않고, 상위 Document/XmlTrees API가 공통 검사기를 호출합니다. 값의 응용 의미와 저장은 후속 계층입니다.
+[Section 파라미터 원값 트리](hwpx-parameter-lists.md)는 도형별 검사기와 독립적으로 소유 section 트리의 `parameterset`과 `fieldBegin/parameters`를 공통 재귀 검사기로 순회합니다. 기존 수식·표 원문 보고서에 파라미터 값을 복제하지 않고, 상위 Document/XmlTrees API가 공통 검사기를 호출합니다. 값의 응용 의미와 저장은 후속 계층입니다.
 
 [Section metaTag 직접 텍스트](hwpx-meta-tags.md)는 부모가 fieldBegin·수식·도형 중 무엇이든 같은 section 트리 문자 이벤트에서 정확한 `hp:metaTag`만 선택합니다. 수식·표 자식 보고서는 원문을 유지하고, 별도 보고서가 정규화된 직접 텍스트를 소유합니다. 표시·JSON·편집 의미는 별도입니다.
 

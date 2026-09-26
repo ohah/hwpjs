@@ -85,7 +85,7 @@ test "HWPX parameter lists three real files independent XML digest" {
 
 test "HWPX parameter lists three real files known integration" {
     const a = std.testing.allocator;
-    for (cases) |relative| {
+    for (cases, 0..) |relative, case_index| {
         const file_name = try std.fmt.allocPrint(a, "reference/rhwp/samples/{s}", .{relative});
         defer a.free(file_name);
         const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, file_name, a, .limited(25_000_000));
@@ -99,12 +99,34 @@ test "HWPX parameter lists three real files known integration" {
         var standalone = try document.inspectParameterLists(alloc, .{});
         var known = try document.inspectKnown(alloc, .{});
         try std.testing.expectEqual(digest(&standalone), digest(&known.parameter_lists));
-        try std.testing.expectEqual(@as(usize, 1), known.parameter_lists.roots.len);
-        try std.testing.expectEqual(@as(usize, 3), known.parameter_lists.nodes.len);
+        try std.testing.expectEqual(@as(usize, if (case_index == 2) 2 else 1), known.parameter_lists.roots.len);
+        try std.testing.expectEqual(@as(usize, if (case_index == 2) 8 else 3), known.parameter_lists.nodes.len);
         known.deinit(alloc);
         standalone.deinit();
         document.deinit(alloc);
     }
+}
+
+test "HWPX parameter lists real fieldBegin known integration" {
+    const a = std.testing.allocator;
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/issue144-fields-crossing-lineseg-boundary.hwpx", a, .limited(25_000_000));
+    defer a.free(bytes);
+    var checked: std.heap.DebugAllocator(.{ .safety = true, .enable_memory_limit = true }) = .init;
+    checked.requested_memory_limit = 2 * 1024 * 1024 * 1024;
+    defer _ = checked.deinit();
+    defer if (checked.total_requested_bytes != 0) @panic("field parameter list inspection leaked allocations");
+    const alloc = checked.allocator();
+    var document = try package.inspectDocument(alloc, bytes, .{});
+    var standalone = try document.inspectParameterLists(alloc, .{});
+    var known = try document.inspectKnown(alloc, .{});
+    try std.testing.expectEqual(digest(&standalone), digest(&known.parameter_lists));
+    try std.testing.expectEqual(@as(usize, 2), standalone.roots.len);
+    try std.testing.expectEqual(@as(usize, 14), standalone.nodes.len);
+    try std.testing.expectEqual(parameters.Kind.parameters, standalone.nodes[0].kind);
+    try std.testing.expectEqualStrings("fieldBegin", standalone.roots[0].parent_local_name);
+    known.deinit(alloc);
+    standalone.deinit();
+    document.deinit(alloc);
 }
 
 const Inspected = union(enum) {
