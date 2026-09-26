@@ -6,8 +6,20 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "62619f2cb5db881b53cb4186d1517b9d9634001576b91d52fe54f5b010416135",
+      "sha256": "0d4f6cf95aa1b557c59eda65b757be89c1cb33221e7fbc95107451c6d66c09a2",
       "evidence": "2026-09-27 tracker tests, 2518 inline link path probe, HWPX note, number, column, field, inline, meta, parameter, equation, and table review"
+    },
+    "docs/hwpx-selected-style-references.md": {
+      "sha256": "65841d56df0ce8fcdddeecccd93e8f1b7e1b172fd25bd092d89c26dfc1f92ed5",
+      "evidence": "2026-09-27 current section style selection and ID mapping, Zig tests 3 modes, independent switch corpus 476, nested run limitation, known shards reused"
+    },
+    "docs/hwpx-selected-master-style-references.md": {
+      "sha256": "fe9b69caaf5203e433a527f51c95cc56af706952136a84350e97d269a231d082",
+      "evidence": "2026-09-27 current master style selection, Zig tests 3 modes, zero-positive master switch corpus 476, nested run limitation, known shards reused"
+    },
+    "docs/hwpx-section-text-snapshot.md": {
+      "sha256": "da530fb88308f74d424708e5b2a0ce5a4ffbe34cdfaabd2e87abe82c9a4cdcaa",
+      "evidence": "2026-09-27 current snapshot ownership, Zig tests 3 modes, single-file digest, independent corpus 476 per-file content and order 3 modes"
     },
     "docs/hwpx-switch-selection.md": {
       "sha256": "be8ee181ab686423a46ac304d02058a1c1fa44b3b21b6c6fcacabf635b6e63eb",
