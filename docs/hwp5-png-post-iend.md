@@ -24,4 +24,6 @@ HWP5 `container.Options.images.png.structure.post_iend`를 명시적으로 선�
 
 적대적 검토에서는 IEND 이전 CRC 오류를 0 패딩 정책이 숨기지 않는지, 두 번째 PNG나 비영 데이터가 뒤따르는지, 패딩 바이트가 입력·개별·문서 전체 예산에 모두 포함되는지, 반복 참조의 합계 한도를 우회하지 않는지, 실패 뒤 보고서가 불변인지 확인합니다. 기본 strict·HWPX strict와 IDAT 내부의 별도 zlib 후미 진단을 혼동하지 않습니다.
 
-최종 소스에서 Debug `zig build test --summary all`은 5/5 단계·2,481/2,481 테스트, ReleaseSafe `zig build audit -Doptimize=ReleaseSafe --summary all`은 42/42 단계·2,520/2,520 테스트를 통과했습니다. `zig build -Doptimize=ReleaseSafe --summary all`도 5/5 단계 통과했습니다. 새 PNG/HWPX 선택 반례는 ReleaseFast에서도 통과했고, 선택 실파일 HWP는 Debug·ReleaseSafe·ReleaseFast에서 각각 1/1 통과했습니다. 이 수치는 일반 HWP/HWPX 전체 문서 의미 검증 완료를 뜻하지 않습니다.
+초기 구현 당시 최종 소스에서 Debug `zig build test --summary all`은 5/5 단계·2,481/2,481 테스트, ReleaseSafe `zig build audit -Doptimize=ReleaseSafe --summary all`은 42/42 단계·2,520/2,520 테스트를 통과했습니다. `zig build -Doptimize=ReleaseSafe --summary all`도 5/5 단계 통과했습니다. 새 PNG/HWPX 선택 반례는 ReleaseFast에서도 통과했고, 선택 실파일 HWP는 Debug·ReleaseSafe·ReleaseFast에서 각각 1/1 통과했습니다. 이 전체 audit 수치는 당시 코드의 기록이며 현재 재실행 결과가 아닙니다. 이 수치는 일반 HWP/HWPX 전체 문서 의미 검증 완료를 뜻하지 않습니다.
+
+2026-09-27 현재 내용 재검증: W3C PNG 3판의 IEND 종료 규칙과 현재 `structure.zig`·픽셀 2단계 순회·HWP5 선택/누적 예산·HWPX 기본 strict를 대조했습니다. 독립 Node 전수 조사에서 `.hwp` 584개, PNG 선언 332건 중 IEND 정확 종료 328건·0 패딩 1건(1,740바이트)·JPEG 선두 3건이 일치했습니다. 표본의 130,048바이트와 SHA-256, PNG 데이터스트림 66,002바이트·꼬리 1,740바이트를 확인했습니다. 독립 JS 경계 반례 1/1, Debug 집중 필터 5/5·컨테이너 2/2·HWPX strict 2/2, ReleaseSafe `post-IEND` 6/6, ReleaseFast 선택 실파일 1/1이 통과했습니다. 이번 집중 검사는 전체 audit 재실행이나 PNG 적합성·화면 의미의 증거가 아닙니다.
