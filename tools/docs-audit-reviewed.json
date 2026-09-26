@@ -6,8 +6,16 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "5fa656b98fe1fa25d8399f1db344f88c1f940c453a250906f489942ba2ee0cca",
-      "evidence": "2026-09-27 tracker tests, inline links, HWPX header, font, list, section definition, page geometry, border, note shape, presentation, section tree, content, and text review"
+      "sha256": "e1b1a9934eb9836211bc224856357fa2e89074f9620a60cf2a7769fd31e2de8b",
+      "evidence": "2026-09-27 tracker tests, inline links, HWPX section reviews, migration and project structure review with incomplete full Zig test recorded"
+    },
+    "docs/migration.md": {
+      "sha256": "ff208406c964f5e7f457852077a0510c63f662344b8967e551f42948bf34ad27",
+      "evidence": "2026-09-27 move commit R100 count, current legacy and CI paths, cargo metadata and tests, Bun Vite startup, historical 1652 qualified"
+    },
+    "docs/project-structure.md": {
+      "sha256": "fdf9909650e9472231659353b2427c8be0105d37f83eeb3602aa0d9a55f8fc0a",
+      "evidence": "2026-09-27 current path and link inventory, Zig version and build graph, public CFB JS boundary, ReleaseSafe build and compare 47"
     },
     "docs/hwpx-section-tree.md": {
       "sha256": "d4fc99313dd5ccd62e091906206caac44d85b924b273535f4134d424f4a73ac9",
