@@ -1,5 +1,6 @@
 const std = @import("std");
 const tiff = @import("../tiff/structure.zig");
+const markers = @import("markers.zig");
 
 pub const Options = struct {
     max_fields: usize = 512,
@@ -13,6 +14,21 @@ pub const Report = struct {
     nested_ifds_deferred: bool = false,
     thumbnail_deferred: bool = false,
 };
+
+pub fn isExifMarker(marker: markers.Marker) bool {
+    return marker.code == 0xe1 and std.mem.startsWith(u8, marker.payload, "Exif\x00\x00");
+}
+
+/// Observes only the first marker after SOI; later APP1 markers do not
+/// silently replace the primary Exif metadata selection.
+pub fn inspectFirst(bytes: []const u8, marker_options: markers.Options, options: Options) !?Report {
+    var it = try markers.Iterator.init(bytes, marker_options);
+    const soi = (try it.next()) orelse return error.MissingJpegSoi;
+    if (soi.code != 0xd8) return error.MissingJpegSoi;
+    const first = (try it.next()) orelse return null;
+    if (!isExifMarker(first)) return null;
+    return try inspect(first.payload, options);
+}
 
 /// Reads only the primary-image Orientation tag from a bounded Exif APP1
 /// IFD0. Unrelated field values, pointer targets and tag order remain opaque.

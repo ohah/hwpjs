@@ -332,6 +332,8 @@ test "HWPX JPEG Exif Adobe corpus candidate survey" {
     var exif_orientation_present: usize = 0;
     var all_exif_orientation_one: usize = 0;
     var all_exif_orientation_missing: usize = 0;
+    var product_orientation_one: usize = 0;
+    var product_orientation_missing: usize = 0;
     for (roots) |root| {
         const dir = try std.Io.Dir.cwd().openDir(std.testing.io, root, .{ .iterate = true });
         defer dir.close(std.testing.io);
@@ -358,36 +360,43 @@ test "HWPX JPEG Exif Adobe corpus candidate survey" {
                 var it = try marker.Iterator.init(encoded, .{});
                 _ = try it.next();
                 const first = (try it.next()) orelse continue;
-                if (!@import("image/jpeg/exif_adobe_rgb.zig").isExifMarker(first)) continue;
+                if (!@import("image/jpeg/exif_tiff.zig").isExifMarker(first)) continue;
                 seen += 1;
                 const envelope = try @import("image/jpeg/exif_tiff.zig").inspect(first.payload, .{});
                 if (envelope.orientation) |value| {
                     try std.testing.expectEqual(@as(u8, 1), value);
                     all_exif_orientation_one += 1;
                 } else all_exif_orientation_missing += 1;
-                const result = pixels.inspect(a, encoded, selected, 128 * 1024 * 1024) catch |err| switch (err) {
-                    error.MissingAdobeColourDeclaration => {
-                        missing_adobe += 1;
-                        continue;
-                    },
-                    error.UnsupportedExifComponentCount => {
-                        unsupported_components += 1;
-                        continue;
-                    },
-                    else => return err,
+                var one_item = [_]@import("hwpx/content_manifest.zig").Item{item};
+                const one_manifest: @import("hwpx/content_manifest.zig").Manifest = .{ .items = &one_item, .spine = @constCast(&[_]@import("hwpx/content_manifest.zig").SpineRef{}), .xml_bytes = 0 };
+                var product = try candidates.inspect(a, document.archive, one_manifest, .{ .jpeg_exif_orientation = .{} });
+                defer product.deinit(a);
+                try std.testing.expectEqual(@as(usize, 1), product.targets.len);
+                try std.testing.expectEqual(@as(usize, 0), product.inspection_failures);
+                try std.testing.expectEqual(@as(usize, 0), product.jpeg_exif_orientation_failures);
+                try std.testing.expect(product.targets[0].jpeg_exif_orientation_inspected);
+                try std.testing.expectEqual(envelope.orientation, product.targets[0].jpeg_exif_orientation);
+                if (product.targets[0].jpeg_exif_orientation != null) product_orientation_one += 1 else product_orientation_missing += 1;
+                const result = pixels.inspect(a, encoded, selected, 128 * 1024 * 1024) catch |err| {
+                    switch (err) {
+                        error.MissingAdobeColourDeclaration => missing_adobe += 1,
+                        error.UnsupportedExifComponentCount => unsupported_components += 1,
+                        else => return err,
+                    }
+                    var product_failure = try candidates.inspect(a, document.archive, one_manifest, .{ .jpeg_pixels = .{ .exif_adobe_colour = true, .render = selected.render }, .jpeg_exif_orientation = .{} });
+                    defer product_failure.deinit(a);
+                    try std.testing.expectEqual(err, product_failure.targets[0].inspection_error.?);
+                    try std.testing.expectEqual(@as(usize, 1), product_failure.inspection_failures);
+                    try std.testing.expect(product_failure.targets[0].jpeg_exif_orientation_inspected);
+                    try std.testing.expectEqual(envelope.orientation, product_failure.targets[0].jpeg_exif_orientation);
+                    continue;
                 };
                 try std.testing.expect(result.exif_adobe_colour);
                 decoded += 1;
                 zero_based += @intFromBool(result.observed_zero_based_component_ids);
                 rgb_bytes += result.rgb_bytes;
-                var metadata_selected = selected;
-                metadata_selected.inspect_exif_orientation = true;
-                const metadata = try pixels.inspect(a, encoded, metadata_selected, 128 * 1024 * 1024);
-                try std.testing.expect(metadata.exif_orientation_inspected);
-                try std.testing.expectEqual(result.rgb_bytes, metadata.rgb_bytes);
-                try std.testing.expectEqual(envelope.orientation, metadata.exif_orientation);
                 orientation_checked += 1;
-                exif_orientation_present += @intFromBool(metadata.exif_orientation != null);
+                exif_orientation_present += @intFromBool(envelope.orientation != null);
             }
         }
     }
@@ -401,7 +410,9 @@ test "HWPX JPEG Exif Adobe corpus candidate survey" {
     try std.testing.expectEqual(@as(usize, 29), exif_orientation_present);
     try std.testing.expectEqual(@as(usize, 31), all_exif_orientation_one);
     try std.testing.expectEqual(@as(usize, 3), all_exif_orientation_missing);
-    std.debug.print("HWPX Exif Adobe JPEG: seen={d} decoded={d} RGB={d} zero-based={d} no-Adobe={d} four-component={d} orientation={d} present={d} all-one={d} all-missing={d}\n", .{ seen, decoded, rgb_bytes, zero_based, missing_adobe, unsupported_components, orientation_checked, exif_orientation_present, all_exif_orientation_one, all_exif_orientation_missing });
+    try std.testing.expectEqual(all_exif_orientation_one, product_orientation_one);
+    try std.testing.expectEqual(all_exif_orientation_missing, product_orientation_missing);
+    std.debug.print("HWPX Exif Adobe JPEG: seen={d} decoded={d} RGB={d} zero-based={d} no-Adobe={d} four-component={d} orientation={d} present={d} all-one={d} all-missing={d}\n", .{ seen, decoded, rgb_bytes, zero_based, missing_adobe, unsupported_components, orientation_checked, exif_orientation_present, product_orientation_one, product_orientation_missing });
 }
 
 // Read-only RGB pipe for a small Exif-first Adobe YCbCr corpus image.

@@ -15,6 +15,16 @@ test "JPEG Exif TIFF reads primary orientation in both byte orders" {
     try std.testing.expectEqual(@as(?u8, 8), be.orientation);
 }
 
+test "JPEG Exif TIFF selects only the first marker after SOI" {
+    const app1 = [_]u8{ 255, 225, 0, 34 } ++ little;
+    const first = [_]u8{ 255, 216 } ++ app1;
+    try std.testing.expectEqual(@as(?u8, 6), (try exif.inspectFirst(&first, .{}, .{})).?.orientation);
+    const later = [_]u8{ 255, 216, 255, 224, 0, 2 } ++ app1;
+    try std.testing.expectEqual(@as(?exif.Report, null), try exif.inspectFirst(&later, .{}, .{}));
+    try std.testing.expectError(error.MissingJpegSoi, exif.inspectFirst(&app1, .{}, .{}));
+    try std.testing.expectError(error.LimitExceeded, exif.inspectFirst(&first, .{ .max_payload_bytes = 0 }, .{}));
+}
+
 test "JPEG Exif TIFF reports bounds, deferred nested content, and bad orientation" {
     try std.testing.expectError(error.InvalidExifIdentifier, exif.inspect("Exif\x00", .{}));
     for (0..little.len) |length| {

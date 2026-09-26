@@ -358,7 +358,14 @@ test "HWPX manifest Exif TIFF orientation is separately inspected without rotati
     try std.testing.expect(!deferred.targets[0].jpeg_exif_orientation_inspected);
     try std.testing.expectEqual(@as(?u8, null), deferred.targets[0].jpeg_exif_orientation);
 
-    const selected: payloads.Options = .{ .jpeg_pixels = .{ .exif_adobe_colour = true, .inspect_exif_orientation = true } };
+    var framing = try jpegSampleRaw(a, &raw, .{ .jpeg_exif_orientation = .{} });
+    defer framing.deinit(a);
+    try std.testing.expectEqual(image_core.Inspection.jpeg_framing, framing.targets[0].inspection);
+    try std.testing.expectEqual(@as(usize, 0), framing.jpeg_rgb_bytes);
+    try std.testing.expect(framing.targets[0].jpeg_exif_orientation_inspected);
+    try std.testing.expectEqual(@as(?u8, 6), framing.targets[0].jpeg_exif_orientation);
+
+    const selected: payloads.Options = .{ .jpeg_pixels = .{ .exif_adobe_colour = true }, .jpeg_exif_orientation = .{} };
     var checked = try jpegSampleRaw(a, &raw, selected);
     defer checked.deinit(a);
     try std.testing.expectEqual(@as(?anyerror, null), checked.targets[0].inspection_error);
@@ -366,6 +373,14 @@ test "HWPX manifest Exif TIFF orientation is separately inspected without rotati
     try std.testing.expect(checked.targets[0].jpeg_exif_orientation_inspected);
     try std.testing.expectEqual(@as(?u8, 6), checked.targets[0].jpeg_exif_orientation);
     try std.testing.expectEqual(@as(usize, 3), checked.jpeg_rgb_bytes);
+    const without_adobe = jpeg_fixture.sequential[0..2].* ++ exif ++ jpeg_fixture.sequential[20..].*;
+    var colour_rejected = try jpegSampleRaw(a, &without_adobe, selected);
+    defer colour_rejected.deinit(a);
+    try std.testing.expectEqual(error.MissingAdobeColourDeclaration, colour_rejected.targets[0].inspection_error.?);
+    try std.testing.expect(colour_rejected.targets[0].jpeg_exif_orientation_inspected);
+    try std.testing.expectEqual(@as(?u8, 6), colour_rejected.targets[0].jpeg_exif_orientation);
+    try std.testing.expectEqual(@as(usize, 1), colour_rejected.inspection_failures);
+    try std.testing.expectEqual(@as(usize, 0), colour_rejected.jpeg_exif_orientation_failures);
     var jfif = try jpegSampleRaw(a, &jpeg_fixture.sequential, selected);
     defer jfif.deinit(a);
     try std.testing.expectEqual(@as(?anyerror, null), jfif.targets[0].inspection_error);
@@ -375,10 +390,13 @@ test "HWPX manifest Exif TIFF orientation is separately inspected without rotati
     invalid[2 + 4 + 24] = 9;
     var rejected = try jpegSampleRaw(a, &invalid, selected);
     defer rejected.deinit(a);
-    try std.testing.expectEqual(error.InvalidExifOrientation, rejected.targets[0].inspection_error.?);
+    try std.testing.expectEqual(@as(?anyerror, null), rejected.targets[0].inspection_error);
+    try std.testing.expectEqual(error.InvalidExifOrientation, rejected.targets[0].jpeg_exif_orientation_error.?);
     try std.testing.expect(!rejected.targets[0].jpeg_exif_orientation_inspected);
     try std.testing.expectEqual(@as(?u8, null), rejected.targets[0].jpeg_exif_orientation);
-    try std.testing.expectError(error.LimitExceeded, jpegSampleRaw(a, &raw, .{ .jpeg_pixels = .{ .exif_adobe_colour = true, .inspect_exif_orientation = true, .exif_tiff = .{ .max_fields = 0 } } }));
+    try std.testing.expectEqual(@as(usize, 0), rejected.inspection_failures);
+    try std.testing.expectEqual(@as(usize, 1), rejected.jpeg_exif_orientation_failures);
+    try std.testing.expectError(error.LimitExceeded, jpegSampleRaw(a, &raw, .{ .jpeg_exif_orientation = .{ .max_fields = 0 } }));
     try std.testing.checkAllAllocationFailures(a, struct {
         fn run(allocator: std.mem.Allocator, jpeg_bytes: []const u8, options: payloads.Options) !void {
             var report = try jpegSampleRaw(allocator, jpeg_bytes, options);

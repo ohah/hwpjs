@@ -5,6 +5,7 @@ const png = @import("../image/png/pixels.zig");
 const jpeg = @import("../image/jpeg/structure.zig");
 const jpeg_pixels = @import("../image/jpeg/pixel_inspection.zig");
 const jpeg_render = @import("../image/jpeg/jfif_render.zig");
+const jpeg_exif = @import("../image/jpeg/exif_tiff.zig");
 const bmp = @import("../image/bmp/structure.zig");
 const bmp_pixels = @import("../image/bmp/pixels.zig");
 const bmp_masks = @import("../image/bmp/masks.zig");
@@ -28,9 +29,6 @@ pub const JpegPixelOptions = struct {
     max_progressive_block_visits: usize = (@import("../image/jpeg/progressive_frame.zig").Options{ .completion = .require_full }).max_block_visits,
     /// Exif-first pixels require a compatible Adobe APP14 colour declaration.
     exif_adobe_colour: bool = false,
-    /// Read only the Exif IFD0 orientation; never rotate pixels.
-    inspect_exif_orientation: bool = false,
-    exif_tiff: @import("../image/jpeg/exif_tiff.zig").Options = .{},
 };
 
 /// BMP structure policy stays in Options.bmp. Pixel choices cannot silently
@@ -55,6 +53,8 @@ pub const Options = struct {
     png: png.Options = .{},
     jpeg: jpeg.Options = .{},
     jpeg_pixels: ?JpegPixelOptions = null,
+    /// Independent of RGB decoding; reads only first-APP1 IFD0 orientation.
+    jpeg_exif_orientation: ?jpeg_exif.Options = null,
     bmp: bmp.Options = .{},
     bmp_pixels: ?BmpPixelOptions = .{},
     gif: gif.Options = .{},
@@ -81,6 +81,7 @@ pub const Target = struct {
     jpeg_exif_orientation_inspected: bool = false,
     jpeg_exif_orientation: ?u8 = null,
     jpeg_exif_nested_ifds_deferred: bool = false,
+    jpeg_exif_orientation_error: ?anyerror = null,
 };
 
 pub const Report = struct {
@@ -90,6 +91,7 @@ pub const Report = struct {
     media_mismatches: usize,
     unknown_formats: usize,
     inspection_failures: usize,
+    jpeg_exif_orientation_failures: usize,
     encoded_bytes: usize,
     png_decoded_bytes: usize,
     jpeg_rgb_bytes: usize,
@@ -136,7 +138,7 @@ fn svgCandidate(item: manifest.Item) bool {
     return item.href.len >= 4 and std.ascii.eqlIgnoreCase(item.href[item.href.len - 4 ..], ".svg");
 }
 
-const Evidence = struct { png_decoded_bytes: usize = 0, jpeg_rgb_bytes: usize = 0, observed_zero_based_jpeg_component_ids: bool = false, jpeg_exif_adobe_colour: bool = false, jpeg_exif_orientation_inspected: bool = false, jpeg_exif_orientation: ?u8 = null, jpeg_exif_nested_ifds_deferred: bool = false, bmp_rgba_bytes: usize = 0, gif_indices: usize = 0, gif_codes: usize = 0, gif_frames: usize = 0, pcx_decoded_bytes: usize = 0 };
+const Evidence = struct { png_decoded_bytes: usize = 0, jpeg_rgb_bytes: usize = 0, observed_zero_based_jpeg_component_ids: bool = false, jpeg_exif_adobe_colour: bool = false, bmp_rgba_bytes: usize = 0, gif_indices: usize = 0, gif_codes: usize = 0, gif_frames: usize = 0, pcx_decoded_bytes: usize = 0 };
 
 fn validate(a: std.mem.Allocator, bytes: []const u8, format: Format, options: Options, consumed: Evidence) !Evidence {
     switch (format) {
@@ -157,11 +159,9 @@ fn validate(a: std.mem.Allocator, bytes: []const u8, format: Format, options: Op
                     .progressive_storage = pixel_options.progressive_storage,
                     .max_progressive_block_visits = pixel_options.max_progressive_block_visits,
                     .exif_adobe_colour = pixel_options.exif_adobe_colour,
-                    .inspect_exif_orientation = pixel_options.inspect_exif_orientation,
-                    .exif_tiff = pixel_options.exif_tiff,
                 };
                 const checked = try jpeg_pixels.inspect(a, bytes, selected, options.max_total_jpeg_rgb_bytes -| consumed.jpeg_rgb_bytes);
-                return .{ .jpeg_rgb_bytes = checked.rgb_bytes, .observed_zero_based_jpeg_component_ids = checked.observed_zero_based_component_ids, .jpeg_exif_adobe_colour = checked.exif_adobe_colour, .jpeg_exif_orientation_inspected = checked.exif_orientation_inspected, .jpeg_exif_orientation = checked.exif_orientation, .jpeg_exif_nested_ifds_deferred = checked.exif_nested_ifds_deferred };
+                return .{ .jpeg_rgb_bytes = checked.rgb_bytes, .observed_zero_based_jpeg_component_ids = checked.observed_zero_based_component_ids, .jpeg_exif_adobe_colour = checked.exif_adobe_colour };
             }
             _ = try jpeg.inspect(bytes, options.jpeg);
             return .{};
@@ -228,7 +228,7 @@ pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, items: manifest.Manif
     @memset(seen, null);
     var targets: std.ArrayList(Target) = .empty;
     errdefer targets.deinit(a);
-    var result: Report = .{ .sites = sites.len, .non_embedded_sites = 0, .targets = undefined, .media_mismatches = 0, .unknown_formats = 0, .inspection_failures = 0, .encoded_bytes = 0, .png_decoded_bytes = 0, .jpeg_rgb_bytes = 0, .bmp_rgba_bytes = 0, .gif_indices = 0, .gif_codes = 0, .gif_frames = 0, .pcx_decoded_bytes = 0 };
+    var result: Report = .{ .sites = sites.len, .non_embedded_sites = 0, .targets = undefined, .media_mismatches = 0, .unknown_formats = 0, .inspection_failures = 0, .jpeg_exif_orientation_failures = 0, .encoded_bytes = 0, .png_decoded_bytes = 0, .jpeg_rgb_bytes = 0, .bmp_rgba_bytes = 0, .gif_indices = 0, .gif_codes = 0, .gif_frames = 0, .pcx_decoded_bytes = 0 };
     for (sites, 0..) |site, site_index| {
         if (site.target.state != .embedded) {
             result.non_embedded_sites += 1;
@@ -260,6 +260,19 @@ pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, items: manifest.Manif
                 break :blk Evidence{};
             },
         };
+        var exif_metadata: ?jpeg_exif.Report = null;
+        var exif_error: ?anyerror = null;
+        if (format == .jpeg) {
+            if (options.jpeg_exif_orientation) |selected| {
+                exif_metadata = jpeg_exif.inspectFirst(bytes, options.jpeg.markers, selected) catch |err| switch (err) {
+                    error.LimitExceeded => return err,
+                    else => blk: {
+                        exif_error = err;
+                        break :blk null;
+                    },
+                };
+            }
+        }
         const matches = mediaMatches(format, item.media_type);
         try targets.append(a, .{
             .item_index = item_index,
@@ -270,9 +283,10 @@ pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, items: manifest.Manif
             .format = format,
             .observed_zero_based_jpeg_component_ids = evidence.observed_zero_based_jpeg_component_ids,
             .jpeg_exif_adobe_colour = evidence.jpeg_exif_adobe_colour,
-            .jpeg_exif_orientation_inspected = evidence.jpeg_exif_orientation_inspected,
-            .jpeg_exif_orientation = evidence.jpeg_exif_orientation,
-            .jpeg_exif_nested_ifds_deferred = evidence.jpeg_exif_nested_ifds_deferred,
+            .jpeg_exif_orientation_inspected = exif_metadata != null,
+            .jpeg_exif_orientation = if (exif_metadata) |meta| meta.orientation else null,
+            .jpeg_exif_nested_ifds_deferred = if (exif_metadata) |meta| meta.nested_ifds_deferred else false,
+            .jpeg_exif_orientation_error = exif_error,
             .inspection = switch (format) {
                 .png => .png_scanlines,
                 .jpeg => if (options.jpeg_pixels != null) .jpeg_rgb else .jpeg_framing,
@@ -292,6 +306,7 @@ pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, items: manifest.Manif
         result.media_mismatches += @intFromBool(matches == false);
         result.unknown_formats += @intFromBool(format == .unknown);
         result.inspection_failures += @intFromBool(inspection_error != null);
+        result.jpeg_exif_orientation_failures += @intFromBool(exif_error != null);
         result.png_decoded_bytes += evidence.png_decoded_bytes;
         result.jpeg_rgb_bytes += evidence.jpeg_rgb_bytes;
         result.bmp_rgba_bytes += evidence.bmp_rgba_bytes;

@@ -12,7 +12,7 @@ HWPX 그림·브러시·OPF 전체 이미지 후보는 `src/hwpx/image_payloads.
 
 Exif 선두 JPEG의 Adobe 선언 기반 픽셀 경로는 별도 `jpeg_pixels.exif_adobe_colour` 옵션으로만 열고, 성공 대상에만 `jpeg_exif_adobe_colour`를 남깁니다. 정확한 색 선언·미지원 범위·실측은 [Exif+Adobe 픽셀 검사](jpeg-exif-adobe-rgb.md)가 소유합니다.
 
-해당 경로의 APP1 IFD0 방향 원값은 별도 `jpeg_pixels.inspect_exif_orientation` 옵션과 [Exif 방향값 판독](jpeg-exif-orientation.md)이 소유합니다. 픽셀 회전은 하지 않습니다.
+Exif APP1 IFD0 방향 원값은 픽셀 옵션과 독립적인 `jpeg_exif_orientation = .{}` 및 [Exif 방향값 판독](jpeg-exif-orientation.md)이 소유합니다. 픽셀 오류와 방향 오류는 다른 대상별 결과이며, 픽셀 회전은 하지 않습니다.
 
 ## 독립 corpus 조사와 검증 경계
 
