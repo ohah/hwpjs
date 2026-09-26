@@ -64,7 +64,9 @@ def self_test():
     sec = ET.fromstring('<s:sec xmlns:s="http://www.hancom.co.kr/hwpml/2011/section" xmlns:p="http://www.hancom.co.kr/hwpml/2011/paragraph"><p:secPr/><p:secPr outlineShapeIDRef="0" memoShapeIDRef="0"/><p:secPr outlineShapeIDRef="7" memoShapeIDRef="3"/><p:secPr outlineShapeIDRef="8" memoShapeIDRef="4"/></s:sec>')
     counts = Counter()
     inspect(head, [sec], counts)
-    assert (counts["outline_absent"], counts["outline_zero"], counts["outline_resolved"], counts["outline_missing_target"], counts["memo_absent_table"]) == (1, 1, 1, 1, 2)
+    observed = (counts["outline_absent"], counts["outline_zero"], counts["outline_resolved"], counts["outline_missing_target"], counts["memo_absent_table"])
+    if observed != (1, 1, 1, 1, 2):
+        raise AssertionError(f"reference classification mismatch: {observed}")
     for bad in ("1_0", "4294967296", "-1", ""):
         try:
             parse_id(bad)

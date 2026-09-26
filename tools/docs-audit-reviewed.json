@@ -6,8 +6,24 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "2444b1ac8df0d66b3f33d143b4e763f41ee797fe8d5a380315acea1dbd052074",
-      "evidence": "2026-09-27 tracker tests, inline links, HWPX note, table, selection, masterpage, section references, and header foundation review"
+      "sha256": "bf09319656dab00a3f1fd9e6306b2881a44b74572ab9909d7dd95bb073ef271d",
+      "evidence": "2026-09-27 tracker tests, inline links, HWPX header, font, list, and section definition review"
+    },
+    "docs/hwpx-font-references.md": {
+      "sha256": "58513e69e9e793ad0884901aa3d16e2116b5f40eacfd0a3f7a2b215629c9afa2",
+      "evidence": "2026-09-27 pinned official font model, current scanner, Zig tests 3 modes, product corpus 476, two fixture ZIP XML probes"
+    },
+    "docs/hwpx-list-references.md": {
+      "sha256": "05572e5237b626eaa73e719e061ef47f316a610d2c49aac2cef904156e0af35d",
+      "evidence": "2026-09-27 pinned official heading and paraHead, current typed ID scanner, Zig tests 3 modes, product corpus 476, fixture XML probe"
+    },
+    "docs/hwpx-section-definition-references.md": {
+      "sha256": "71e6e1cf9e60feb741aa7db229ea03cda6bc34b18a2141b25b3af91fe58a1dbc",
+      "evidence": "2026-09-27 pinned official fields, current ID diagnostics, Zig tests 3 modes, independent oracle and eight known shards, optimized self-test mutation"
+    },
+    "docs/hwpx-section-definitions.md": {
+      "sha256": "69a1c49a462e591555b13c5bc1077e6870e68fc20b631d9867605805a1cbbdda",
+      "evidence": "2026-09-27 pinned official fields and children, current inventory, Zig tests 3 modes, independent oracle and eight known shards, optimized self-test mutation"
     },
     "docs/hwpx-document-structure.md": {
       "sha256": "45bef70962a08a36fbc0f6b21c04d42bff3074845301f451475ac5e75011127d",

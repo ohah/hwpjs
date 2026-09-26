@@ -83,9 +83,11 @@ def self_test():
     )
     counts = collections.Counter()
     observe(root, counts)
-    assert (counts["definitions"], counts["sum_tabStop"], counts["missing_tabStopVal"],
-            counts["child_pagePr"], counts["child_grid"], counts["other_paragraph_children"],
-            counts["foreign_children"], counts["other_attributes"]) == (1, -2, 1, 1, 0, 2, 1, 1)
+    observed = (counts["definitions"], counts["sum_tabStop"], counts["missing_tabStopVal"],
+                counts["child_pagePr"], counts["child_grid"], counts["other_paragraph_children"],
+                counts["foreign_children"], counts["other_attributes"])
+    if observed != (1, -2, 1, 1, 0, 2, 1, 1):
+        raise AssertionError(f"section definition inventory mismatch: {observed}")
     for bad in ("1_0", "4294967296", "-1"):
         try:
             parse_integer(bad, False)
@@ -93,6 +95,13 @@ def self_test():
             pass
         else:
             raise AssertionError("invalid unsigned value accepted")
+    for bad in ("1_0", "2147483648", "-2147483649"):
+        try:
+            parse_integer(bad, True)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("invalid signed value accepted")
 
 
 def main():

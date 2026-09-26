@@ -27,3 +27,5 @@
 적대적 검토에서는 `masterPageCnt`를 참조 개수와 강제로 맞추지 않는 정책, 구형/신형 탭 필드 분리, 빈 ID/부재, 직접 자식만 세는 경계, 미등록 자식 보존, signed32/unsigned32 오버플로, 전역 예산과 오류 후 메모리 정리를 확인했습니다. oracle도 Python `int()`가 허용하는 잘못된 어휘를 별도 거부하도록 보강했습니다. 이 검사는 값·구조 인벤토리입니다. 후속 [ID 참조 진단](hwpx-section-definition-references.md)은 별도 책임이며 구역 배치 의미는 여전히 남아 있습니다.
 
 같은 작업 상태의 `zig build test --summary all`은 Debug 2,395/2,395 테스트와 빌드 5/5 단계를 통과했습니다. `zig build -Doptimize=ReleaseSafe` 및 `zig build audit -Doptimize=ReleaseSafe --summary all`도 종료 코드 0으로 통과했습니다. 선택 corpus 8개 shard는 기본 audit 외에 각각 별도 ReleaseFast 프로세스로 실행했습니다. 이 결과를 전체 HWPX 스키마·레이아웃·편집/저장 검증 완료로 세지 않습니다.
+
+2026-09-27 현재 소스에서는 `HWPX section definition` 집중 테스트 5개와 추적 실파일 필드 테스트를 Debug·ReleaseSafe·ReleaseFast에서 통과했습니다. 독립 ZIP/XML 조사는 484개 후보 중 ZIP 거부 6개·해독되지 않은 XML 2개를 구분하고 section 544개·정의 555개, 빈 `id` 545개·부재 10개, 새 탭 필드 쌍의 부재 각 91개, 미등록 직접 자식 4개를 재확인했습니다. Zig `inspectKnown` 실파일 8개 shard도 각각 별도 ReleaseFast 프로세스로 통과했습니다. 조사기 자체 반례의 Python `assert`를 명시적 예외로 고쳐 `-O`에서도 무력화한 관측 함수를 검출하는지 확인했습니다. 2026-09-25의 전체 테스트/audit 개수는 당시 기록이며 이번 문서 재검증의 전체 실행 결과가 아닙니다.

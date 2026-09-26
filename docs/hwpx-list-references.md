@@ -18,6 +18,8 @@
 
 독립 소스 복사본에서 BULLET을 NUMBER 테이블에 연결하기, `refList` 조상 검사 제거, 실제 선언된 최대 u32 글자 모양을 표식으로 오분류하기, 리소스 목록 해제 제거의 네 변이를 주입했습니다. 앞의 세 변이는 각각 타입별 ID·조상 위장·최대 ID 테스트에서 실패했고 마지막은 ReleaseFast 할당 실패 검사에서 누수를 검출했습니다. 제품 소스는 변이하지 않았습니다.
 
-최종 소스의 HWPX 필터 테스트는 Debug·ReleaseFast 각각 71/71, 기본 전체 테스트는 2093/2093 통과했습니다. Debug·ReleaseSafe·ReleaseFast 정규 `audit`는 각 40/40 단계·2132/2132 테스트, ReleaseSafe `compare`는 8/8 단계·47/47 테스트 통과했습니다. ReleaseSafe 제품 빌드, Zig 포맷 검사, 변경 문서의 로컬 링크 검사도 통과했습니다. 정규 audit의 다른 형식 검사를 이 HWPX 계층의 의미 검증으로 계산하지 않습니다.
+2026-09-23 당시 소스의 HWPX 필터 테스트는 Debug·ReleaseFast 각각 71/71, 기본 전체 테스트는 2093/2093 통과했습니다. Debug·ReleaseSafe·ReleaseFast 정규 `audit`는 각 40/40 단계·2132/2132 테스트, ReleaseSafe `compare`는 8/8 단계·47/47 테스트 통과했습니다. ReleaseSafe 제품 빌드, Zig 포맷 검사, 변경 문서의 로컬 링크 검사도 통과했습니다. 이 개수는 현재 전체 테스트 수가 아니며 정규 audit의 다른 형식 검사를 이 HWPX 계층의 의미 검증으로 계산하지 않습니다.
+
+2026-09-27 현재 소스에서는 `HWPX list links` 집중 테스트 5개와 별도 실파일 표본 테스트를 Debug·ReleaseSafe·ReleaseFast에서 통과했습니다. 독립 ZIP/XML 조회에서도 `noori.hwpx`에 NUMBER·BULLET `heading`이 각각 1개 있었습니다. 단독 ReleaseFast corpus 조사는 문단 모양 28,144개·`heading` 27,766개, NUMBER 153개 전부 해결, BULLET 133개 중 128개 해결·5개 대상 그룹 부재, 번호·글머리표 `paraHead`의 최대 u32 표식 각각 4,332개·80개를 재확인했습니다. `OUTLINE` 2,358개의 ID를 번호 ID로 보정하지 않았습니다. 전체 audit·과거 변이 검사는 이번에 다시 실행하지 않았습니다.
 
 번호·글머리표의 텍스트 형식, `OUTLINE`의 실제 적용 관계, 이미지 글머리표, 문단별 렌더링, 2021/2024 namespace, 편집·저장 및 다른 header/section 내부 참조는 아직 미구현입니다. 이 보고서 하나로 전체 문서 검증이 끝난 것은 아닙니다.
