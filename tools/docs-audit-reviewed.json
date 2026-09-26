@@ -6,8 +6,20 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "28af84ef82c70a21db550cb2e355264fd3b682044adf0c95db02ba7f495d1579",
-      "evidence": "2026-09-27 tracker tests, 2518 inline link path probe, HWPX note, number, column, field, inline, meta, parameter, equation, table, section references, and masterpage review"
+      "sha256": "2444b1ac8df0d66b3f33d143b4e763f41ee797fe8d5a380315acea1dbd052074",
+      "evidence": "2026-09-27 tracker tests, inline links, HWPX note, table, selection, masterpage, section references, and header foundation review"
+    },
+    "docs/hwpx-document-structure.md": {
+      "sha256": "45bef70962a08a36fbc0f6b21c04d42bff3074845301f451475ac5e75011127d",
+      "evidence": "2026-09-27 current structure scanner, official Hancom structure and pinned head fields, Zig tests 3 modes, product corpus 476, header fixture XML probes"
+    },
+    "docs/hwpx-header-resources.md": {
+      "sha256": "f6e4cd7b93d82c2227e5536555260b9856408093650206022d6325588895d81c",
+      "evidence": "2026-09-27 current eight resource ID tables, pinned memo model, Zig tests 3 modes, seven-group corpus 476, two fixture XML probes"
+    },
+    "docs/hwpx-header-references.md": {
+      "sha256": "53201504f587a6ade0d795a8c90452a8e8e9ead265eb8f8a93a53f82bdffcae8",
+      "evidence": "2026-09-27 current six header links, pinned official model fields, Zig tests 3 modes, product corpus 476 with anomaly distributions"
     },
     "docs/hwpx-section-references.md": {
       "sha256": "80a7fb477d93eb3c5db98e523693895ff2e28e4b991fe74da3df077e8bae4dbf",

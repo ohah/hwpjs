@@ -14,4 +14,6 @@
 
 독립 소스 복사본에 ID를 위치 인덱스로 바꾸기, 중복 ID 검사를 제거하기, 보고서 ID 배열 해제를 제거하기의 세 변이를 주입했습니다. 각각 희소 ID 테스트·중복 ID 오류 테스트·ReleaseFast 할당 회계 테스트에서 실패했고 마지막 변이는 396바이트 누수로 검출됐습니다. 이 검증은 색인 계약에 국한되며 section의 서식 참조가 실제로 존재한다는 증거는 아닙니다.
 
-검증 실행 결과는 HWPX 전용 Debug·ReleaseFast 각각 47/47, 선택적 corpus 조사 ReleaseFast 22/22, 전체 기본 테스트 2069/2069 통과입니다. 전체 audit는 Debug·ReleaseSafe·ReleaseFast 각각 40/40 단계·2108/2108 테스트가 통과했고, ReleaseSafe 제품 빌드와 비교 검증도 통과했습니다. 이 수치를 section 내부 참조 검증 완료로 확대하지 않습니다.
+2026-09-23 당시 검증 실행 결과는 HWPX 전용 Debug·ReleaseFast 각각 47/47, 선택적 corpus 조사 ReleaseFast 22/22, 전체 기본 테스트 2069/2069 통과입니다. 전체 audit는 Debug·ReleaseSafe·ReleaseFast 각각 40/40 단계·2108/2108 테스트가 통과했고, ReleaseSafe 제품 빌드와 비교 검증도 통과했습니다. 이 개수는 현재 전체 테스트 수가 아니며 section 내부 참조 검증 완료로 확대하지 않습니다.
+
+2026-09-27 현재 소스의 `HWPX header resource` 합성 테스트 5개와 실파일 두 표본 검사를 Debug·ReleaseSafe·ReleaseFast에서 통과했습니다. 단독 ReleaseFast corpus 조사는 당시 일곱 그룹 순서로 선언 불일치 `[0,0,0,0,0,0,0]`, 그룹 부재 `[0,0,21,125,442,0,21]`을 다시 확인했습니다. `example.hwpx`의 글자 모양 12·문단 모양 16·스타일 18, borderFill ID 1·2·3과 `noori.hwpx`의 bullet ID 1은 별도 ZIP/XML 조회로도 확인했습니다. 이 일곱 그룹 조사는 여덟 번째 메모 그룹의 corpus 수치를 증명하지 않으며, 그 범위는 위에 연결한 별도 문서가 소유합니다. 전체 audit와 과거 변이 검사는 이번에 다시 실행하지 않았습니다.
