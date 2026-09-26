@@ -21,7 +21,7 @@ indexed tRNS 길이 0은 빈 alpha 표로 받아들여 전부 opaque로 해석�
 
 pixels 보고서의 transparency는 optional 값입니다. metadata에서 검사한 청크/바이트 수만 기존 ancillary deferred 통계에서 빼고, 나머지 vpAg·색상 프로필·텍스트 등은 그대로 남깁니다. 빈 tRNS는 검사 청크 1개/바이트 0개입니다. 오류에는 부분 보고서가 반환되지 않습니다. 새 동적 할당은 추가하지 않으며 기존 이미지 decode의 할당 실패 정리 경로를 재사용합니다.
 
-현재는 투명도 메타데이터의 해석·검증·보존까지입니다. 복원 행에 alpha를 합치거나 RGBA를 생성하는 단계, compositing·색상 변환·APNG·저장은 포함하지 않습니다.
+이 계층 자체는 투명도 메타데이터의 해석·검증·보존까지입니다. 별도 [PNG RGBA 조립](png-rgba.md)이 검증된 값을 픽셀에 적용합니다. compositing·색 관리 변환·APNG·저장은 포함하지 않습니다.
 
 ## 검증
 

@@ -324,6 +324,7 @@ test {
     _ = @import("image/png/tests.zig");
     _ = @import("image/png/filter_tests.zig");
     _ = @import("image/png/pixels_tests.zig");
+    _ = @import("image/png/rgba_tests.zig");
     _ = @import("image/png/post_iend_tests.zig");
     _ = @import("image/png/transparency_tests.zig");
     _ = @import("image/png/palette_metadata_tests.zig");

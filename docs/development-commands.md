@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[PNG RGBA 픽셀 조립](png-rgba.md)은 `zig test src/root.zig --test-filter 'PNG RGBA'`로 색 타입·저비트/16비트·투명도·Adam7·한도·OOM·위조 레이아웃을 검사합니다. 독립 실파일 대조 `python3 tools/png-rgba-corpus-diff.py`는 로컬 `reference/rhwp`, Pillow 11.3.0, BSD `olefile` 0.47이 필요합니다. 이 선택 대조는 기본 audit에 포함되지 않습니다.
+
 [HWPX JPEG 선택 픽셀 검사](hwpx-jpeg-pixels.md)는 `zig test src/root.zig --test-filter 'HWPX manifest JPEG'`, `--test-filter 'HWP JPEG'`, `--test-filter 'HWPX known inspections opt into JPEG'`로 공유 코어·ZIP 연결·실파일 단일 사례를 검사합니다. `python3 tools/hwpx-fill-brush-image-oracle.py --self-test`와 `--jpeg-readiness`는 독립 후보·Pillow 해제 분포를 조사합니다. `python3 tools/hwpx-jpeg-pixel-diff.py`는 추적 fixture의 실제 RGB 바이트와 Zig 복호화 계수 기반 독립 IDCT 결과를 Pillow와 대조합니다(Pillow 필요, 기본 audit 밖). `zig test src/hwpx_jpeg_pixel_survey.zig -O ReleaseFast --test-filter 'HWPX JPEG pixel shard N'`의 N=0..7은 로컬 두 corpus가 필요한 선택 실파일 검사이며 기본 audit에 포함되지 않습니다.
 
 [JPEG 관측 성분 ID 호환 정책](jpeg-component-id-compatibility.md)은 `zig test src/root.zig --test-filter 'HWPX manifest JPEG zero-based component IDs'`와 `--test-filter 'JPEG JFIF layout reports explicitly selected'`로 합성·한도·OOM을 검사합니다. 선택 실파일은 `zig test src/hwpx_jpeg_pixel_survey.zig -O ReleaseFast --test-filter 'HWPX JPEG observed zero-based'`로 세 문서·예산·거부 반례를 확인합니다. 이 검사는 로컬 `reference/rhwp`가 필요하며 기본 audit 밖입니다.

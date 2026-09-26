@@ -10,6 +10,7 @@ pub const bmp_profile_transport = @import("bmp/profile_transport.zig");
 pub const bmp_profile_inspection = @import("bmp/profile_inspection.zig");
 pub const png_filter = @import("png/filter.zig");
 pub const png_pixels = @import("png/pixels.zig");
+pub const png_rgba = @import("png/rgba.zig");
 pub const png_text = @import("png/text.zig");
 pub const png_compressed_text = @import("png/compressed_text.zig");
 pub const png_international_text = @import("png/international_text.zig");

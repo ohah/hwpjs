@@ -6,6 +6,7 @@ const indices = @import("palette_indices.zig");
 const metadata = @import("metadata.zig");
 const suggested_palettes = @import("suggested_palettes.zig");
 const profile_collector = @import("profile_collector.zig");
+const palette_colours = @import("palette_colours.zig");
 pub const Layout = @import("layout.zig").Layout;
 pub const Options = struct { structure: structure.Options = .{}, max_decoded_bytes: usize = 256 * 1024 * 1024, max_text_bytes: usize = 64 * 1024 * 1024, language: @import("international_text.zig").registry.Options = .{}, profile: @import("profile_inspection.zig").Options = .{ .layout = .bounded } };
 pub const Report = struct {
@@ -40,6 +41,8 @@ pub const Report = struct {
 pub const Decoded = struct {
     report: Report,
     layout: Layout,
+    /// Owned PLTE colours, independent of the encoded PNG's lifetime.
+    palette: ?palette_colours.Palette,
     /// Owned pass-order rows: each original filter byte followed by reconstructed
     /// packed bytes. Padding bits are preserved; not canonical RGBA pixels.
     bytes: []u8,
@@ -63,6 +66,7 @@ pub fn decode(a: std.mem.Allocator, bytes: []const u8, options: Options) !Decode
     var meta: metadata.State = .{};
     var suggested: suggested_palettes.Collector = .{};
     var profile: profile_collector.Collector = .{};
+    var palette: ?palette_colours.Palette = null;
     defer suggested.deinit(a);
     while (try it.next()) |chunk| {
         try profile.consume(a, envelope.header, chunk, options.profile);
@@ -72,6 +76,7 @@ pub fn decode(a: std.mem.Allocator, bytes: []const u8, options: Options) !Decode
             @memcpy(compressed[at..][0..chunk.payload.len], chunk.payload);
             at += chunk.payload.len;
         }
+        if (chunk.is("PLTE")) palette = try palette_colours.Palette.parse(envelope.header, chunk.payload);
         // The first pass already validated any explicitly accepted outer tail.
         if (chunk.is("IEND")) break;
     }
@@ -102,6 +107,7 @@ pub fn decode(a: std.mem.Allocator, bytes: []const u8, options: Options) !Decode
     return .{
         .bytes = decoded.bytes,
         .layout = layout,
+        .palette = palette,
         .report = .{
             .structure = envelope,
             .decoded_bytes = layout.bytes,
