@@ -21,3 +21,5 @@
 2026-09-24 적대적 검증에서는 직접 콘텐츠 합계가 같은 `A<x/>B`와 `AB<x/>`의 순서 해시가 달라지는 반례를 Zig·Python 양쪽에서 확인했습니다. 요소 이름·부모·원문 span 변조, 빈 태그와 명시적 빈 쌍의 구분, 콜백 중단 뒤 재시도, 모든 할당 실패 지점도 테스트했습니다. 기본 테스트 2,169개와 섹션 트리 Debug·ReleaseSafe·ReleaseFast 각 13개, ReleaseSafe 제품 WASM 빌드 및 Debug `zig build audit --summary all`이 통과했습니다. 로컬 476문서·544섹션·2,174,716개 요소를 8개 독립 프로세스로 다시 검사해 모든 shard의 요소 수·기존 직접 콘텐츠 해시·새 순서 해시가 독립 Python 결과와 일치했습니다. 이는 HWPX 전체 스키마·문서 모델 지원률이 아닙니다.
 
 `zig fmt --check build.zig src`, `git diff --check`, Debug `zig build audit --summary all`도 통과했습니다. 전체 audit는 기존 HWP5·CFB 등 다른 영역까지 실행하지만 이 결과가 HWPX 의미 모델·편집·저장 완성을 뜻하지는 않습니다.
+
+2026-09-27 현재 공유 `xml_part_content.zig`의 직접 부모 연결·빈 태그/명시적 쌍·문자/CDATA 소유 경계를 다시 확인했습니다. `HWPX section tree` 집중 테스트는 Debug·ReleaseSafe·ReleaseFast 각 14개가 통과했습니다. 독립 Python Expat의 요소별 직접 콘텐츠·순서 해시와 제품 ReleaseFast section-tree shard 8개를 각각 별도 실행해 수용 476개·section 544개·요소 2,174,716개에서 다시 대조했습니다. 공유 조사기의 Python `assert` 자체 반례는 일반·`-O`에서 실행되고 고장 주입도 실패했으며, 뒤늦은 ZIP 오류 시 앞부분이 집계에 남지 않는지 별도 `-O` 주입으로 확인했습니다. 개별 CharData 콜백 분할과 표시·편집·저장 의미까지 같다는 증거는 아닙니다.

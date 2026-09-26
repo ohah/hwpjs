@@ -6,8 +6,20 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "6ce64428175aa8abc858a2d3fada85cc0abb646d2d888c3951db5d7ff4d507ba",
-      "evidence": "2026-09-27 tracker tests, inline links, HWPX header, font, list, section definition, page geometry, border, note shape, and presentation review"
+      "sha256": "5fa656b98fe1fa25d8399f1db344f88c1f940c453a250906f489942ba2ee0cca",
+      "evidence": "2026-09-27 tracker tests, inline links, HWPX header, font, list, section definition, page geometry, border, note shape, presentation, section tree, content, and text review"
+    },
+    "docs/hwpx-section-tree.md": {
+      "sha256": "d4fc99313dd5ccd62e091906206caac44d85b924b273535f4134d424f4a73ac9",
+      "evidence": "2026-09-27 current tree and batch attribute API, Zig tests 3 modes, eight product shards, independent corpus 476 and optimized oracle rollback"
+    },
+    "docs/hwpx-section-content.md": {
+      "sha256": "80229be43c720a915e3bd4f07a542d5a212383d1d85691a76b0d08965bfc3803",
+      "evidence": "2026-09-27 current ordered and direct content replay, Zig tests 3 modes, eight product shards, independent Expat corpus 476"
+    },
+    "docs/hwpx-section-text.md": {
+      "sha256": "2be613cbf03bc9b82e1877de6af9521299a4ccf3c3c5e3ac164282e4d1538a0d",
+      "evidence": "2026-09-27 2011 namespace boundary, current text scanner, Zig tests 3 modes, product and independent corpus 476, layout-only regression"
     },
     "docs/hwpx-section-note-shapes.md": {
       "sha256": "c4871b2aa0ea1d31e0d002e1de3ad8e41781861cae02165740f047100a9151ad",

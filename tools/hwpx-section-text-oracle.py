@@ -8,7 +8,9 @@ visual rendering. Local reference/rhwp samples are intentionally not vendored.
 import hashlib
 import json
 import re
+import sys
 from collections import Counter
+from copy import deepcopy
 from pathlib import Path
 from xml.etree import ElementTree as ET
 from xml.parsers import expat
@@ -360,6 +362,11 @@ def inspect_text(node: ET.Element, parent: str, result: dict, inside_text: bool 
             note_other(node.tag, child.tail)
 
 
+def require(condition: bool, message: str) -> None:
+    if not condition:
+        raise AssertionError(message)
+
+
 def self_check() -> None:
     begin_counts = Counter()
     header_begin_numbers(ET.fromstring(
@@ -367,17 +374,17 @@ def self_check() -> None:
         '<h:other><h:beginNum page="9"/></h:other><h:beginNum page="1"/>'
         '</h:head>'
     ), begin_counts)
-    assert begin_counts == Counter({"header_version:None": 1, "elements": 1, "page_present": 1, "page_sum": 1, **{f + "_missing": 1 for f in BEGIN_NUMBER_FIELDS[1:]}})
+    require(begin_counts == Counter({"header_version:None": 1, "elements": 1, "page_present": 1, "page_sum": 1, **{f + "_missing": 1 for f in BEGIN_NUMBER_FIELDS[1:]}}), "begin number fields")
     header_begin_numbers(ET.fromstring(
         '<h:head xmlns:h="http://www.hancom.co.kr/hwpml/2011/head"/>'
     ), begin_counts)
-    assert begin_counts["missing"] == 1
+    require(begin_counts["missing"] == 1, "missing begin number")
     zero_counts = Counter()
     header_begin_numbers(ET.fromstring(
         '<h:head xmlns:h="http://www.hancom.co.kr/hwpml/2011/head">'
         '<h:beginNum page="0"/></h:head>'
     ), zero_counts)
-    assert zero_counts["page_nonpositive"] == 1
+    require(zero_counts["page_nonpositive"] == 1, "nonpositive begin page")
     try:
         header_begin_numbers(ET.fromstring(
             '<h:head xmlns:h="http://www.hancom.co.kr/hwpml/2011/head">'
@@ -402,33 +409,33 @@ def self_check() -> None:
         "non_text_content_chunks": 0, "other_content": Counter(),
     }
     inspect_text(ET.fromstring(source), "", result)
-    assert result["paragraphs"] == result["runs"] == result["text_elements"] == 1
-    assert result["paragraphs_without_direct_run"] == result["non_direct_runs"] == 0
-    assert result["text_bytes"] == 4
-    assert result["inline"] == Counter({"line_break": 1})
-    assert result["other_content"] == Counter({"script": 1})
+    require(result["paragraphs"] == result["runs"] == result["text_elements"] == 1, "paragraph/run/text counts")
+    require(result["paragraphs_without_direct_run"] == result["non_direct_runs"] == 0, "direct run counts")
+    require(result["text_bytes"] == 4, "text bytes")
+    require(result["inline"] == Counter({"line_break": 1}), "inline kinds")
+    require(result["other_content"] == Counter({"script": 1}), "ancillary content")
     branch = ET.fromstring(
         '<p:case xmlns:p="http://www.hancom.co.kr/hwpml/2011/paragraph">'
         '<p:p><p:run><p:t>가&amp;B<p:tab/></p:t></p:run></p:p></p:case>'
     )
-    assert branch_text_counts(branch) == [1, 1, 1, 5, 1]
+    require(branch_text_counts(branch) == [1, 1, 1, 5, 1], "branch text counts")
     layout_only = ET.fromstring(
         '<p:p xmlns:p="http://www.hancom.co.kr/hwpml/2011/paragraph">'
         '<p:linesegarray/></p:p>'
     )
     inspect_text(layout_only, "", result)
-    assert result["paragraphs_without_direct_run"] == 1
+    require(result["paragraphs_without_direct_run"] == 1, "layout-only paragraph")
     topology = Counter()
     inspect_paragraph_children(ET.fromstring(
         '<root xmlns:p="http://www.hancom.co.kr/hwpml/2011/paragraph" xmlns:x="urn:foreign">'
         '<p:p><p:run/><p:linesegarray/><p:linesegarray/><x:run/><p:other><p:run/></p:other></p:p>'
         '<p:p><x:run/></p:p></root>'
     ), topology)
-    assert topology == Counter({
+    require(topology == Counter({
         "paragraphs": 2, "direct_runs": 1, "line_seg_arrays": 2,
         "without_run": 1, "without_line_seg_array": 1,
         "multiple_line_seg_arrays": 1, "other_direct": 3, "foreign_direct": 2,
-    })
+    }), "paragraph topology")
     segments = Counter()
     inspect_line_segments(ET.fromstring(
         '<root xmlns:p="http://www.hancom.co.kr/hwpml/2011/paragraph" xmlns:x="urn:foreign">'
@@ -436,7 +443,7 @@ def self_check() -> None:
         'vertpos="-1" flags="4294967295" spare="x"><x:other/></p:lineseg></p:linesegarray>'
         '<p:linesegarray/></p:p></root>'
     ), segments)
-    assert Counter({key: value for key, value in segments.items() if value != 0}) == Counter({
+    require(Counter({key: value for key, value in segments.items() if value != 0}) == Counter({
         "arrays": 2, "empty_arrays": 1, "array_other_attributes": 1, "array_other_direct": 1,
         "array_foreign_direct": 1, "segments": 1,
         "segment_other_attributes": 1, "segment_direct_children": 1, "segment_foreign_direct": 1,
@@ -444,25 +451,25 @@ def self_check() -> None:
         "vertpos_present": 1, "vertpos_sum": -1, "vertpos_negative": 1,
         "flags_present": 1, "flags_sum": 4294967295, "flags_highbit": 1,
         **{field + "_missing": 1 for field in LINE_SEG_FIELDS if field not in ("textpos", "vertpos", "flags")},
-    }), segments
+    }), f"line segment fields: {segments}")
     empty = ET.fromstring('<p:p xmlns:p="http://www.hancom.co.kr/hwpml/2011/paragraph" id=""/>')
     absent = ET.fromstring('<p:p xmlns:p="http://www.hancom.co.kr/hwpml/2011/paragraph"/>')
     counts = {"P." + field: {"present": 0, "empty": 0} for field in ATTRIBUTE_FIELDS[PARAGRAPH + "p"][1]}
     counts.update({"R." + field: {"present": 0, "empty": 0} for field in ATTRIBUTE_FIELDS[PARAGRAPH + "run"][1]})
-    assert section_attribute_digest(empty, counts) != section_attribute_digest(absent, counts)
-    assert counts["P.id"] == {"present": 1, "empty": 1}
+    require(section_attribute_digest(empty, counts) != section_attribute_digest(absent, counts), "absent vs empty attribute")
+    require(counts["P.id"] == {"present": 1, "empty": 1}, "empty paragraph ID")
     metadata = Counter()
     section_paragraph_metadata(ET.fromstring(
         '<root xmlns:p="http://www.hancom.co.kr/hwpml/2011/paragraph">'
         '<p:p id="0" pageBreak="1"/><p:p columnBreak="true"/>'
         '<p:p id="-0" merged="false"/></root>'
     ), metadata)
-    assert metadata == Counter({
+    require(metadata == Counter({
         "paragraphs": 3, "zero_id": 2, "missing_id": 1,
         "missing_para_tc_id": 3, "pageBreak_true": 1,
         "pageBreak_absent": 2, "columnBreak_true": 1,
         "columnBreak_absent": 2, "merged_absent": 2,
-    })
+    }), "paragraph metadata")
     try:
         section_paragraph_metadata(ET.fromstring(
             '<p:p xmlns:p="http://www.hancom.co.kr/hwpml/2011/paragraph" pageBreak="yes"/>'
@@ -471,9 +478,9 @@ def self_check() -> None:
         pass
     else:
         raise AssertionError("paragraph metadata accepted an invalid Boolean")
-    assert section_direct_content_digest(b"<root>A&amp;<child/>B<![CDATA[C]]></root>") != section_direct_content_digest(b"<root>A&amp;<child>B</child><![CDATA[C]]></root>")
-    assert xml_ordered_digest(b"<root>A<child/>B</root>") != xml_ordered_digest(b"<root>AB<child/></root>")
-    assert xml_ordered_digest(b"<root>A&amp;<![CDATA[B]]></root>") == xml_ordered_digest(b"<root>A&amp;B</root>")
+    require(section_direct_content_digest(b"<root>A&amp;<child/>B<![CDATA[C]]></root>") != section_direct_content_digest(b"<root>A&amp;<child>B</child><![CDATA[C]]></root>"), "direct content ownership")
+    require(xml_ordered_digest(b"<root>A<child/>B</root>") != xml_ordered_digest(b"<root>AB<child/></root>"), "ordered text position")
+    require(xml_ordered_digest(b"<root>A&amp;<![CDATA[B]]></root>") == xml_ordered_digest(b"<root>A&amp;B</root>"), "CDATA normalization")
     try:
         section_direct_content_digest(b"<!DOCTYPE root><root/>")
     except ValueError:
@@ -532,7 +539,13 @@ def main() -> None:
     }
     for root_index, root in enumerate(ROOTS):
         for path in root.rglob("*.hwpx"):
-            shard = tree_shards[(sum(path.relative_to(root).as_posix().encode("utf-8")) + root_index) % len(tree_shards)]
+            shard_index = (sum(path.relative_to(root).as_posix().encode("utf-8")) + root_index) % len(tree_shards)
+            shard = tree_shards[shard_index]
+            # A late ZIP read can fail after header/section counters changed.
+            # Keep the census file-atomic before recording rejected_zip.
+            saved_result = deepcopy(result)
+            saved_shard = deepcopy(shard)
+            saved_attribute_counts = deepcopy(attribute_counts)
             before_case = result["switch_removed_case"].copy()
             before_default = result["switch_removed_default"].copy()
             before_empty_arrays = shard["line_segments"]["empty_arrays"]
@@ -609,8 +622,11 @@ def main() -> None:
                     result["accepted"] += 1
                     shard["accepted"] += 1
             except BadZipFile:
+                result = saved_result
+                tree_shards[shard_index] = saved_shard
+                attribute_counts = saved_attribute_counts
                 result["rejected_zip"] += 1
-                shard["rejected_zip"] += 1
+                tree_shards[shard_index]["rejected_zip"] += 1
     if sum(result["header_root_names"].values()) != result["accepted"]:
         raise ValueError("HWPX oracle counted header roots outside accepted documents")
     for shard in tree_shards:
@@ -632,4 +648,10 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    if sys.argv[1:] == ["--self-test"]:
+        self_check()
+        print("section text oracle self-test passed")
+    elif len(sys.argv) == 1:
+        main()
+    else:
+        raise SystemExit("usage: hwpx-section-text-oracle.py [--self-test]")
