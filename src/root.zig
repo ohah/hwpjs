@@ -21,6 +21,7 @@ test {
     _ = @import("hwpx/chart_cache_tests.zig");
     _ = @import("hwpx/xstring_tests.zig");
     _ = @import("hwpx/section_text_tests.zig");
+    _ = @import("hwpx/section_text_snapshot_tests.zig");
     _ = @import("hwpx/section_tree_tests.zig");
     _ = @import("hwpx/header_tree_tests.zig");
     _ = @import("hwpx/document_trees_tests.zig");

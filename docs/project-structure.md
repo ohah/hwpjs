@@ -58,6 +58,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
   공통 XML 본문 view를 이용한 차트 값·수식 길이·빈 값은 [차트 텍스트 관측](hwpx-chart-text.md)이 소유합니다.
   값 leaf의 `_xHHHH_` 해독과 서로게이트 진단은 [차트 ST_Xstring](hwpx-xstring.md)이 소유합니다.
   section의 `hp:t` 본문·내부 요소 이벤트는 [section 텍스트](hwpx-section-text.md)가 소유합니다.
+  이벤트의 소유 복사와 독립 자원 한도는 [section 텍스트 스냅샷](hwpx-section-text-snapshot.md)이 소유합니다.
   모든 header·section XML 요소의 원문 byte span·부모 관계는 공통 `xml_part_tree.zig`가 소유하며 각각 [header 구조 인덱스](hwpx-header-tree.md)·[section 구조 인덱스](hwpx-section-tree.md)가 선택 정책을 적용합니다.
   header·section 요소별 직접 문자·CDATA의 원문 순회와 부모 연결은 공통 `xml_part_content.zig`가 소유하며 계약은 [section 콘텐츠 순회](hwpx-section-content.md)와 [header 트리](hwpx-header-tree.md)에 기록합니다.
   모든 선택 XML 트리의 소유권·합계 한도는 [문서 XML 트리 조립](hwpx-document-trees.md)이 소유합니다.

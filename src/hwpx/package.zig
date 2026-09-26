@@ -16,6 +16,7 @@ const masterpage_binary_references = @import("masterpage_binary_references.zig")
 const chart_references = @import("chart_references.zig");
 const compatibility_selection = @import("compatibility_selection.zig");
 const section_text = @import("section_text.zig");
+const section_text_snapshot = @import("section_text_snapshot.zig");
 const header_tree = @import("header_tree.zig");
 const section_tree = @import("section_tree.zig");
 const document_trees = @import("document_trees.zig");
@@ -161,6 +162,11 @@ pub const SectionTextOptions = struct {
 pub const SectionTextReport = section_text.Report;
 pub const SectionTextVisitor = section_text.Visitor;
 pub const SectionTextEvent = section_text.Event;
+pub const SectionTextSnapshotOptions = struct {
+    scan: SectionTextOptions = .{},
+    storage: section_text_snapshot.Options = .{},
+};
+pub const SectionTextSnapshot = section_text_snapshot.Snapshot;
 pub const SectionTextInlineKind = section_text.InlineKind;
 pub const SectionOtherContentKind = section_text.OtherContentKind;
 pub const SectionTree = section_tree.Tree;
@@ -620,6 +626,15 @@ pub const Document = struct {
         var selected_options = options;
         selected_options.text.branch_policy = .{ .mode = .selected, .supported_namespaces = supported_namespaces };
         return self.inspectSectionText(a, selected_options, visitor);
+    }
+
+    /// Copies the existing section text event stream into an owned, bounded
+    /// snapshot. It retains boundaries and source tags, not edit semantics.
+    pub fn readSectionTextSnapshot(self: *const Document, a: std.mem.Allocator, options: SectionTextSnapshotOptions) !SectionTextSnapshot {
+        var builder = section_text_snapshot.Builder.init(a, options.storage);
+        errdefer builder.deinit();
+        const report = try self.inspectSectionText(a, options.scan, builder.visitor());
+        return builder.finish(report);
     }
 
     /// Materializes the exact package-selected, unencrypted header XML with

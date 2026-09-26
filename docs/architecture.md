@@ -82,6 +82,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [Section 텍스트 이벤트](hwpx-section-text.md)는 spine에서 선택한 문단·run·`hp:t`의 경계와 문자 조각·내부 요소를 순서대로 노출합니다. 텍스트 모델 조립·조건부 분기·편집은 별도 책임으로 남깁니다.
 
+[Section 텍스트 소유 스냅샷](hwpx-section-text-snapshot.md)은 같은 이벤트를 복사해 호출 수명 밖에 보존합니다. XML 스캐너 규칙이나 문서 의미 해석을 중복하지 않으며 전체 편집 모델은 후속 단계입니다.
+
 [공통 XML part 트리](hwpx-header-tree.md)는 header·section의 원문·요소 인덱스를 한 구현으로 소유합니다. [Section 원문·요소 인덱스](hwpx-section-tree.md)는 spine 선택을, header 트리는 정확한 manifest 선택과 암호화 거부를 적용합니다. 미지원 요소까지 남기되 텍스트 이벤트를 전체 문서 모델로 오인하지 않도록 의미 계층을 단계적으로 조립합니다.
 
 [문서 XML 트리 조립](hwpx-document-trees.md)은 구조 검사 결과를 한 번 확정하고 header·모든 section의 소유 트리를 spine 순서로 묶습니다. 전체 바이트·요소 예산과 실패 원자성을 조립 계층에서 소유하되, 구조·원문 파싱과 미지원 part의 의미 해석을 복제하지 않습니다.

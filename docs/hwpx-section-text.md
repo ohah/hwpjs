@@ -1,5 +1,7 @@
 # HWPX section 텍스트·내부 요소 이벤트
 
+호출 수명 밖에 이벤트·내용을 보관하려면 [소유 텍스트 스냅샷](hwpx-section-text-snapshot.md)을 사용합니다. 이벤트 파싱 규칙은 이 문서가 계속 소유합니다.
+
 이 문서의 기본 API는 양쪽 조건부 분기를 관측합니다. 활성 분기의 이벤트가 필요한 경우 별도 [선택 분기 텍스트](hwpx-selected-section-text.md) API를 사용합니다.
 
 동일한 문단/run/text 이벤트 스캐너를 마스터페이지 직접 `subList` 후손에도 재사용합니다. 파트 선택·위치와 독립 한도는 [마스터페이지 텍스트 이벤트](hwpx-master-text.md)가 소유합니다.
