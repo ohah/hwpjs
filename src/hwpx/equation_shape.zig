@@ -23,6 +23,8 @@ pub const Child = struct {
     values: []const ?[]const u8,
     other_attributes: usize = 0,
     direct_children: usize = 0,
+    first_caption_sub_list: usize = 0,
+    caption_sub_list_count: usize = 0,
 
     pub fn get(self: Child, name: []const u8) ?[]const u8 {
         for (children.specs(self.kind), self.values) |spec, value| {

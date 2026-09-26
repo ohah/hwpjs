@@ -1,6 +1,6 @@
 # HWPX 표의 상속 shape 필드·직접 자식 검사
 
-직접 자식 이름·namespace·필드 명세 선택은 `shape_xml_children.zig`의 table profile이 소유합니다. 필드 어휘와 `observe` 판정은 `shape_xml_fields.zig`에서 [수식 도형 자식](hwpx-equation-shapes.md)과 공유하되, 표의 caption subList 검사와 집계 계약은 이 문서에 유지합니다.
+직접 자식 이름·namespace·필드 명세 선택은 `shape_xml_children.zig`의 table profile이 소유합니다. 필드 어휘와 `observe` 판정은 `shape_xml_fields.zig`에서 [수식 도형 자식](hwpx-equation-shapes.md)과 공유합니다. caption의 직접 subList 순회는 `shape_caption.zig`에서 [수식 caption](hwpx-equation-captions.md)과 공유하고 표의 기존 집계 필드는 이 문서가 유지합니다.
 
 `src/hwpx/table_shape.zig`는 [표 격자](hwpx-table-geometry.md)가 고른 `hp:tbl`의 상속 shape 속성과 직접 자식 `sz`, `pos`, `outMargin`, `caption`, `shapeComment`, `parameterset`, `metaTag`, `label`만 관측합니다. 필드별 어휘와 공개 모델 enum 목록은 `shape_xml_fields.zig`가 소유합니다. `tr`, `inMargin`, `cellzoneList`는 각각 기존 격자·[표 직접 자식](hwpx-table-children.md) 검사기가 소유하며 여기서 다시 해석하지 않습니다. `caption`의 직접 `subList`는 기존 [ParaListType 속성](hwpx-para-list.md) 검사기를 재사용해 어휘·직접 문단 수를 관측합니다. 보고서는 `Document.inspectKnown(...).table_geometry.table_shape`에서도 노출됩니다.
 

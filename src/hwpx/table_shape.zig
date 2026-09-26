@@ -3,7 +3,7 @@ const tree_mod = @import("xml_part_tree.zig");
 const table_xml = @import("table_xml_fields.zig");
 const fields = @import("shape_xml_fields.zig");
 const children = @import("shape_xml_children.zig");
-const para_list = @import("para_list_attributes.zig");
+const shape_caption = @import("shape_caption.zig");
 
 pub const Options = struct {
     max_shape_children: usize = 1_000_000,
@@ -45,30 +45,26 @@ pub const Report = struct {
 const ChildKind = children.Kind;
 
 fn inspectCaptionSubLists(a: std.mem.Allocator, tree: *const tree_mod.Tree, caption: usize, max_bytes: usize, options: Options, report: *Report) !void {
-    var count: usize = 0;
-    var child = tree.elements[caption].first_child;
-    while (child) |index| : (child = tree.elements[index].next_sibling) {
-        if (!table_xml.childIs(tree, index, "subList")) {
-            report.caption_other_direct_children += 1;
-            continue;
-        }
-        if (report.caption_sub_lists == options.max_caption_sub_lists) return error.LimitExceeded;
-        report.caption_sub_lists += 1;
-        count += 1;
-        var attrs = try para_list.readTree(a, tree, index, max_bytes);
-        defer attrs.deinit(a);
-        report.caption_unknown_enums += attrs.unknown_enums;
-        report.caption_other_attributes += attrs.other_attributes;
-        var sub_child = tree.elements[index].first_child;
-        while (sub_child) |sub_index| : (sub_child = tree.elements[sub_index].next_sibling) {
-            if (table_xml.childIs(tree, sub_index, "p")) {
-                if (report.caption_direct_paragraphs == options.max_caption_direct_paragraphs) return error.LimitExceeded;
-                report.caption_direct_paragraphs += 1;
-            } else report.caption_other_direct_children += 1;
-        }
-    }
-    report.caption_missing_sub_list += @intFromBool(count == 0);
-    report.caption_duplicate_sub_list += @intFromBool(count > 1);
+    var counts: shape_caption.Counts = .{
+        .sub_lists = report.caption_sub_lists,
+        .missing_sub_list = report.caption_missing_sub_list,
+        .duplicate_sub_list = report.caption_duplicate_sub_list,
+        .direct_paragraphs = report.caption_direct_paragraphs,
+        .other_direct_children = report.caption_other_direct_children,
+        .unknown_enums = report.caption_unknown_enums,
+        .other_attributes = report.caption_other_attributes,
+    };
+    try shape_caption.inspect(a, tree, caption, max_bytes, .{
+        .max_sub_lists = options.max_caption_sub_lists,
+        .max_direct_paragraphs = options.max_caption_direct_paragraphs,
+    }, &counts, null);
+    report.caption_sub_lists = counts.sub_lists;
+    report.caption_missing_sub_list = counts.missing_sub_list;
+    report.caption_duplicate_sub_list = counts.duplicate_sub_list;
+    report.caption_direct_paragraphs = counts.direct_paragraphs;
+    report.caption_other_direct_children = counts.other_direct_children;
+    report.caption_unknown_enums = counts.unknown_enums;
+    report.caption_other_attributes = counts.other_attributes;
 }
 
 /// The caller owns hp:tbl selection. Only direct shape children are inspected.

@@ -25,6 +25,8 @@
 
 `shapeComment`, `parameterset`, `metaTag`는 종류·원문·속성 수·직접 하위 요소 수만 보존합니다. 내부 필드·텍스트/JSON/ParameterSet 의미를 해석했다고 표시하지 않습니다. 다른 namespace의 동명 자식·속성은 알려진 필드로 해석하지 않습니다. 알려진 자식 안에 중첩된 요소도 해당 부모 원문에 남기며, 그 하위 의미 검증은 별도 단계입니다.
 
+`caption`의 직접 `subList` 속성·문단 경계는 [수식 caption 목록](hwpx-equation-captions.md)이 별도로 소유합니다.
+
 `Report.shape.by_kind`는 일곱 공통 종류의 출현 수·수식별 부재/중복 및 필드별 집계를 반환합니다. `fields`의 유효 길이는 `shape_xml_children.specs(kind).len`이며 이후 슬롯은 사용하지 않습니다. 필드 `absent`는 **존재하는 해당 자식에서 속성이 없는 횟수**입니다. 자식 자체가 없을 때는 `missing_equations`로만 셉니다. 중복된 자식은 원문 순서대로 모두 보존·검사하므로 뒤쪽 잘못된 값이 숨지 않습니다.
 
 기존 `other_children`는 호환성을 위해 여전히 script 이외의 모든 직접 자식을 셉니다. 이 중 공통 자식은 `shape_children`, 나머지는 `shape.unknown_children`로 구분합니다. 미지 자식 자체의 원문도 수식 원문 안에 남습니다. section 순번·수식/자식 요소 인덱스를 통해 script와 shape 자식의 상대 위치를 확인할 수 있습니다.
@@ -43,10 +45,10 @@
 
 같은 OPF spine 선택의 독립 인벤토리에서 `sz`·`pos`·`outMargin`은 각각 23,236개, `shapeComment`는 111개이며, 세 기하 요소의 속성값은 합계 464,720개였습니다. `caption`·`parameterset`·`metaTag`는 이 실파일 표본에 없으므로 해당 경로는 합성 테스트 근거만 있습니다. 반환 형식이 같다는 이유로 실파일 검증까지 완료됐다고 확대하지 않습니다.
 
-2026-09-26 최종 소스의 Debug `zig build test --summary all`은 2,568/2,568, 수식 집중 테스트는 Debug·ReleaseSafe·ReleaseFast 각각 15/15, 표 shape 집중 테스트는 Debug 5/5로 통과했습니다. `zig build -Doptimize=ReleaseSafe --summary all`과 `zig fmt --check build.zig src`도 통과했습니다. 기존 문서 검사 8개 실파일 shard를 각각 별도 ReleaseFast 프로세스로 다시 실행해 모두 통과했고, 독립 equation corpus는 파일별 값·순서 해시까지 일치했습니다. 이 실파일 명령은 기본 전체 테스트에 포함되지 않습니다.
+2026-09-26 도형 자식 단계 소스의 Debug `zig build test --summary all`은 2,568/2,568, 수식 집중 테스트는 Debug·ReleaseSafe·ReleaseFast 각각 15/15, 표 shape 집중 테스트는 Debug 5/5로 통과했습니다. `zig build -Doptimize=ReleaseSafe --summary all`과 `zig fmt --check build.zig src`도 통과했습니다. 기존 문서 검사 8개 실파일 shard를 각각 별도 ReleaseFast 프로세스로 다시 실행해 모두 통과했고, 독립 equation corpus는 파일별 값·순서 해시까지 일치했습니다. 이 실파일 명령은 기본 전체 테스트에 포함되지 않습니다.
 
 적대적 검증은 (1) 부재·빈 enum·중복 뒤의 잘못된 값, (2) 다른 namespace·잘못된 부모·손자 요소, (3) unsigned/부호 있는 숫자·Boolean·한도 한 바이트 초과, (4) 양쪽 UTF-16·문자 참조·부분 범위·트리 해제 후 수명·모든 할당 실패, (5) 독립 oracle의 값·종류·script 앞뒤 위치·namespace·추가 속성·중첩 요소 변이 반례로 구성했습니다. 통과는 현재 검사한 2011 수식 자식과 주어진 corpus의 일치 증거이며 전체 스키마 또는 렌더링 검증이 아닙니다.
 
 ## 남은 범위
 
-caption의 subList 필드·본문 연결, 메타데이터 내부 의미, 수식 문법·렌더링·좌표 적용, 글꼴 연결, 조건부 활성 분기, 마스터페이지 수식, 다른 namespace 버전, 편집·저장·무손실 왕복은 남아 있습니다. 자식·필드 검사 성공이나 실파일 해시 일치를 전체 문서 지원 완료로 해석하지 않습니다.
+caption 문단의 본문 의미, 메타데이터 내부 의미, 수식 문법·렌더링·좌표 적용, 글꼴 연결, 조건부 활성 분기, 마스터페이지 수식, 다른 namespace 버전, 편집·저장·무손실 왕복은 남아 있습니다. 자식·필드 검사 성공이나 실파일 해시 일치를 전체 문서 지원 완료로 해석하지 않습니다.

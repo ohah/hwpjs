@@ -5,13 +5,18 @@ const fields = @import("equation_fields.zig");
 const shape = @import("shape_xml_fields.zig");
 const shape_children = @import("shape_xml_children.zig");
 const equation_shape = @import("equation_shape.zig");
+const shape_caption = @import("shape_caption.zig");
+const equation_caption = @import("equation_caption.zig");
 
 pub const ShapeChild = equation_shape.Child;
+pub const CaptionSubList = equation_caption.SubList;
 
 pub const Options = struct {
     max_equations: usize = 100_000,
     max_scripts: usize = 100_000,
     max_other_children: usize = 1_000_000,
+    max_caption_sub_lists: usize = 1_000_000,
+    max_caption_direct_paragraphs: usize = 1_000_000,
     max_attribute_bytes: usize = 4096,
     max_script_bytes: usize = 1024 * 1024,
     max_owned_bytes: usize = 128 * 1024 * 1024,
@@ -43,6 +48,8 @@ pub const Report = struct {
     scripts: []const Script,
     shape_children: []const ShapeChild,
     shape: equation_shape.Report,
+    caption_sub_lists: []const CaptionSubList,
+    caption: shape_caption.Counts,
     script_bytes: usize,
     owned_bytes: usize,
     without_script: usize,
@@ -100,6 +107,8 @@ pub fn inspect(a: std.mem.Allocator, sections: []const part_tree.Tree, options: 
     var scripts: std.ArrayList(ScriptBuilder) = .empty;
     var children: std.ArrayList(ShapeChild) = .empty;
     var shape_report: equation_shape.Report = .{};
+    var caption_sub_lists: std.ArrayList(CaptionSubList) = .empty;
+    var caption_counts: shape_caption.Counts = .{};
     var shape_counts: [shape.table_specs.len]shape.Counts = @splat(.{});
     var script_bytes: usize = 0;
     var without_script: usize = 0;
@@ -151,7 +160,15 @@ pub fn inspect(a: std.mem.Allocator, sections: []const part_tree.Tree, options: 
                     equation.other_children += 1;
                     other_children += 1;
                     if (shape_children.kindOf(tree, child_index, .common)) |kind| {
-                        const item = try equation_shape.read(a, owned_a, tree, index, child_index, equations.items.len, source, options.max_attribute_bytes, &budget, &shape_report);
+                        var item = try equation_shape.read(a, owned_a, tree, index, child_index, equations.items.len, source, options.max_attribute_bytes, &budget, &shape_report);
+                        if (kind == .caption) {
+                            item.first_caption_sub_list = caption_sub_lists.items.len;
+                            try equation_caption.inspect(a, owned_a, tree, index, child_index, children.items.len, source, options.max_attribute_bytes, .{
+                                .max_sub_lists = options.max_caption_sub_lists,
+                                .max_direct_paragraphs = options.max_caption_direct_paragraphs,
+                            }, &budget, &caption_counts, &caption_sub_lists);
+                            item.caption_sub_list_count = caption_sub_lists.items.len - item.first_caption_sub_list;
+                        }
                         try children.append(owned_a, item);
                         equation.shape_child_count += 1;
                         per_equation[@intFromEnum(kind)] += 1;
@@ -186,6 +203,7 @@ pub fn inspect(a: std.mem.Allocator, sections: []const part_tree.Tree, options: 
     };
     const owned_equations = try equations.toOwnedSlice(owned_a);
     const owned_children = try children.toOwnedSlice(owned_a);
+    const owned_caption_sub_lists = try caption_sub_lists.toOwnedSlice(owned_a);
     return .{
         .arena = arena,
         .sections = sections.len,
@@ -193,6 +211,8 @@ pub fn inspect(a: std.mem.Allocator, sections: []const part_tree.Tree, options: 
         .scripts = owned_scripts,
         .shape_children = owned_children,
         .shape = shape_report,
+        .caption_sub_lists = owned_caption_sub_lists,
+        .caption = caption_counts,
         .script_bytes = script_bytes,
         .owned_bytes = budget.used,
         .without_script = without_script,

@@ -36,7 +36,7 @@ section 문단·run 서식 참조의 선택 결과는 기존 `section_references
 
 본문과 마스터페이지의 직접 `pic/img`별 OPF 대상은 [그림 이미지 연결](hwpx-picture-image-links.md)이 같은 ID 해결 규칙으로 관측합니다. [그림 이미지 바이트 검사](hwpx-picture-image-payloads.md)는 내장 대상의 공통 ZIP/형식 판정, WMF framing·[TIFF 구조 검사](tiff-structure.md)·[PCX RLE 경계](pcx-structure.md)를 재사용합니다. 그림 배치·렌더링은 아직 별개입니다.
 
-[본문 수식 원문·script](hwpx-equations.md)는 `src/hwpx/equation.zig`가 소유하고, 여섯 전용 속성의 판정은 `equation_fields.zig`에 둡니다. [공통 도형 자식·필드](hwpx-equation-shapes.md)의 소유 원값은 `equation_shape.zig`, 표와 공유하는 자식 선택은 `shape_xml_children.zig`에 둡니다. XML/공통 도형 어휘를 재사용하지만 수식 해석·편집은 하지 않습니다.
+[본문 수식 원문·script](hwpx-equations.md)는 `src/hwpx/equation.zig`가 소유하고, 여섯 전용 속성의 판정은 `equation_fields.zig`에 둡니다. [공통 도형 자식·필드](hwpx-equation-shapes.md)의 소유 원값은 `equation_shape.zig`, 표와 공유하는 자식 선택은 `shape_xml_children.zig`에 둡니다. [수식 caption 목록](hwpx-equation-captions.md)은 `equation_caption.zig`가 결과를 소유하고 `shape_caption.zig`가 표와 순회를 공유합니다. XML/공통 도형 어휘를 재사용하지만 수식 해석·편집은 하지 않습니다.
 
 구역 정의의 번호·메모 모양 ID 연결은 [구역 참조 진단](hwpx-section-definition-references.md)이 소유합니다. 진단 결과를 HWPX 문서 전체 유효성 판정으로 사용하지 않습니다.
 

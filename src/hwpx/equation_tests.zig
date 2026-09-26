@@ -119,7 +119,7 @@ test "HWPX equation releases every allocation failure" {
 
 test "HWPX equation package and known inspections own independent results" {
     const a = std.testing.allocator;
-    const section = prefix ++ "<p:p id='0' styleIDRef='0'><p:run><p:equation version='v'><p:sz width='123'/><p:script>x+y</p:script></p:equation></p:run></p:p>" ++ suffix;
+    const section = prefix ++ "<p:p id='0' styleIDRef='0'><p:run><p:equation version='v'><p:sz width='123'/><p:caption><p:subList textDirection='HORIZONTAL'/></p:caption><p:script>x+y</p:script></p:equation></p:run></p:p>" ++ suffix;
     const hpf = "<o:package xmlns:o='http://www.idpf.org/2007/opf/'><o:manifest><o:item id='h' href='Contents/header.xml' media-type='application/xml'/><o:item id='s' href='Contents/section0.xml' media-type='application/xml'/></o:manifest><o:spine><o:itemref idref='h'/><o:itemref idref='s'/></o:spine></o:package>";
     const sources = [_]fixture.Source{
         .{ .name = "mimetype", .data = package.mime },
@@ -145,6 +145,8 @@ test "HWPX equation package and known inspections own independent results" {
     try std.testing.expectEqualStrings("x+y", known.equations.scripts[0].value);
     try std.testing.expectEqualStrings("123", standalone.shape_children[0].get("width").?);
     try std.testing.expectEqualStrings("123", known.equations.shape_children[0].get("width").?);
+    try std.testing.expectEqualStrings("HORIZONTAL", standalone.caption_sub_lists[0].get(.text_direction).?);
+    try std.testing.expectEqualStrings("HORIZONTAL", known.equations.caption_sub_lists[0].get(.text_direction).?);
     try std.testing.expectError(error.LimitExceeded, inspect(a, section, .{ .max_equations = 0 }));
 
     var with_table = sources;

@@ -27,6 +27,8 @@ SHAPE_FIELDS = {
     "caption": ("side", "fullSz", "width", "gap", "lastWidth"),
     "shapeComment": (), "parameterset": (), "metaTag": (),
 }
+PARALIST_FIELDS = ("id", "textDirection", "lineWrap", "vertAlign", "linkListIDRef", "linkListNextIDRef", "textWidth", "textHeight", "hasTextRef", "hasNumRef", "metatag")
+PARALIST_ENUMS = {"textDirection": ("HORIZONTAL", "VERTICAL", "VERTICALALL"), "lineWrap": ("BREAK", "SQUEEZE", "KEEP"), "vertAlign": ("TOP", "CENTER", "BOTTOM")}
 
 
 def require(condition, evidence):
@@ -45,7 +47,7 @@ def value(hash_obj, data):
 
 def inspect_sections(sections):
     digest = hashlib.sha256()
-    totals = [len(sections), 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    totals = [len(sections), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     for ordinal, xml in enumerate(sections):
         root = ET.fromstring(xml)
         require(root.tag == SECTION, (ordinal, root.tag))
@@ -93,6 +95,24 @@ def inspect_sections(sections):
                         digest.update(b"\x00")
                 number(digest, sum(name not in SHAPE_FIELDS[local] for name in child.attrib))
                 number(digest, len(child))
+                if local == "caption":
+                    sublists = [sub for sub in child if sub.tag == PARA + "subList"]
+                    number(digest, len(sublists))
+                    totals[10] += len(sublists)
+                    for sub in sublists:
+                        number(digest, element_indices[sub] - element_indices[child])
+                        for name in PARALIST_FIELDS:
+                            if name in sub.attrib:
+                                digest.update(b"\x01")
+                                value(digest, sub.attrib[name].encode("utf-8"))
+                            else:
+                                digest.update(b"\x00")
+                        paragraphs = sum(nested.tag == PARA + "p" for nested in sub)
+                        number(digest, paragraphs)
+                        number(digest, len(sub) - paragraphs)
+                        number(digest, sum(name in sub.attrib and sub.attrib[name] not in allowed for name, allowed in PARALIST_ENUMS.items()))
+                        number(digest, sum(name not in PARALIST_FIELDS for name in sub.attrib))
+                        totals[11] += paragraphs
     return (digest.hexdigest(), *totals)
 
 
@@ -135,7 +155,7 @@ def product():
     for line in result.stderr.splitlines():
         if "EQUATION_FILE " in line:
             _, root, path_hash, field_hash, *counts = line[line.index("EQUATION_FILE "):].split()
-            require(len(counts) == 10, line)
+            require(len(counts) == 12, line)
             key = (int(root), path_hash)
             require(key not in accepted, key)
             accepted[key] = (field_hash, *(int(count) for count in counts))
@@ -147,7 +167,7 @@ def product():
             encrypted.add((int(root), path_hash))
         elif line.startswith("EQUATION_TOTAL "):
             totals = tuple(int(value) for value in line.split()[1:])
-    require(totals is not None and len(totals) == 13, result.stderr[-2000:])
+    require(totals is not None and len(totals) == 15, result.stderr[-2000:])
     return accepted, rejected, encrypted, totals
 
 
@@ -159,7 +179,7 @@ def compare(expected, rejected, encrypted, actual, actual_rejected, actual_encry
     for key, row in expected.items():
         require(actual[key] == row, ("mismatch", key, actual[key], row))
     require(totals[:3] == (len(expected), len(rejected), len(encrypted)), totals)
-    require(totals[3:] == tuple(sum(row[index] for row in expected.values()) for index in range(1, 11)), totals)
+    require(totals[3:] == tuple(sum(row[index] for row in expected.values()) for index in range(1, 13)), totals)
 
 
 def self_test():
@@ -185,6 +205,16 @@ def self_test():
         shape.replace("<p:pos/>", "<p:pos xmlns:p='urn:foreign'/>"),
     ):
         require(shape_hash != inspect_sections([changed.encode()])[0], "shape mutation escaped digest")
+    caption = a.replace("<p:script>", "<p:caption><p:subList textWidth='1' textDirection='HORIZONTAL'><p:p/></p:subList></p:caption><p:script>")
+    caption_hash = inspect_sections([caption.encode()])[0]
+    for changed in (
+        caption.replace("textWidth='1'", "textWidth='2'"),
+        caption.replace("textDirection='HORIZONTAL'", ""),
+        caption.replace("<p:p/>", "<p:future/>"),
+        caption.replace("<p:subList", "<p:future").replace("</p:subList>", "</p:future>"),
+        caption.replace("textWidth='1'", "textWidth='1' future='x'"),
+    ):
+        require(caption_hash != inspect_sections([changed.encode()])[0], "caption mutation escaped digest")
 
 
 if __name__ == "__main__":
@@ -196,6 +226,6 @@ if __name__ == "__main__":
         actual, actual_rejected, actual_encrypted, totals = product()
         compare(expected, rejected, encrypted, actual, actual_rejected, actual_encrypted, totals)
         positive = sum(row[2] > 0 for row in expected.values())
-        print(f"matched files={len(expected)} rejected={len(rejected)} encrypted={len(encrypted)} positive={positive} sections={totals[3]} equations={totals[4]} scripts={totals[5]} bytes={totals[6]} shape_children={totals[11]} unknown_children={totals[12]}")
+        print(f"matched files={len(expected)} rejected={len(rejected)} encrypted={len(encrypted)} positive={positive} sections={totals[3]} equations={totals[4]} scripts={totals[5]} bytes={totals[6]} shape_children={totals[11]} unknown_children={totals[12]} caption_sub_lists={totals[13]} caption_paragraphs={totals[14]}")
     else:
         raise SystemExit("usage: hwpx-equation-corpus-diff.py [--self-test]")
