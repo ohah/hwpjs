@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "e1b1a9934eb9836211bc224856357fa2e89074f9620a60cf2a7769fd31e2de8b",
-      "evidence": "2026-09-27 tracker tests, inline links, HWPX section reviews, migration and project structure review with incomplete full Zig test recorded"
+      "sha256": "48dc6000961718b7e9a828da45886138cd1a97e2a640f3c8ec459fc4bbcc473f",
+      "evidence": "2026-09-27 tracker tests, 2523 inline links, HWP5 module index review, architecture corrections kept pending, incomplete full Zig test recorded"
+    },
+    "docs/hwp5-modules.md": {
+      "sha256": "1e5dd365303411c15be4bc5a8695c71a55a6ade50a21d95cac8e35af71f9733c",
+      "evidence": "2026-09-27 index scope and 85 links checked; current HWP5 chart patch, string fork, OLE modules and project rules corroborated; linked contracts remain separate"
     },
     "docs/migration.md": {
       "sha256": "ff208406c964f5e7f457852077a0510c63f662344b8967e551f42948bf34ad27",

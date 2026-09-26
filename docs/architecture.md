@@ -28,7 +28,7 @@
 
 [구역 각주·미주 모양 원값](hwpx-section-note-shapes.md)은 같은 소유 section 트리의 직접 `secPr` 하위 note와 다섯 직접 자식을 분리해 관측합니다. 필드 자료형·enum은 `section_note_fields.zig`가 소유하며 본문/배치 의미는 생성하지 않습니다.
 
-[구역 프레젠테이션 원값](hwpx-section-presentation.md)은 같은 트리에서 `presentation` 여섯 속성과 직접 `fillBrush` 연결만 관측합니다. 속성 어휘는 `section_presentation_fields.zig`가 소유하고, 공유 코어 브러시 내부는 이후 별도 계층이 소유합니다.
+[구역 프레젠테이션 원값](hwpx-section-presentation.md)은 같은 트리에서 `presentation` 여섯 속성과 직접 `fillBrush` 연결만 관측합니다. 속성 어휘는 `section_presentation_fields.zig`가 소유하고, 브러시 내부 원값은 별도 [공통 fillBrush 검사](hwpx-fill-brush.md)가 소유합니다.
 
 [공통 fillBrush 원값](hwpx-fill-brush.md)은 header·section 트리의 브러시·세 변형·직접 색/이미지 노드를 순서와 부모 연결을 유지해 검사합니다. 19개 필드의 어휘는 `fill_brush_fields.zig`가 소유하며, 브러시 효과·이미지 ID 대상/렌더링은 별도 계층입니다.
 
@@ -164,7 +164,7 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [마스터페이지 이진 리소스 참조](hwpx-master-binary-references.md)는 header/section과 동일한 OPF ID 색인·XML 개체 분류를 재사용하면서 파트 선택·직접 `subList` 범위·예산·결과를 분리합니다. 바이너리 payload 의미는 별개입니다.
 
-[그림 이미지 연결](hwpx-picture-image-links.md)은 section과 마스터페이지 원문 XML 트리의 직접 `pic/img` 사이트를 공통 OPF ID 해결 규칙에 연결합니다. 마스터페이지 XML 트리 생성은 브러시·그림 연결이 같은 소유 모듈을 재사용하며, 이미지 내용 해석은 별도 후속 책임입니다.
+[그림 이미지 연결](hwpx-picture-image-links.md)은 section과 마스터페이지 원문 XML 트리의 직접 `pic/img` 사이트를 공통 OPF ID 해결 규칙에 연결합니다. 마스터페이지 XML 트리 생성은 브러시·그림 연결이 같은 소유 모듈을 재사용하며, 이미지 바이트의 지원 형식별 검사는 별도 [그림 payload 검사](hwpx-picture-image-payloads.md)가 맡습니다.
 
 [그림 이미지 바이트 검사](hwpx-picture-image-payloads.md)는 이미 해결된 사이트를 공통 `image_payloads.zig`에 전달합니다. 브러시·그림의 ZIP/시그니처/한도 규칙을 중복하지 않으며, 이미지 내용의 미지원 형식과 부분 검사 깊이는 각 대상 결과에 명시합니다.
 
@@ -178,7 +178,7 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [Run 위치·직접 자식 진단](hwpx-run-topology.md)은 같은 두 범위의 부모·자식 관계와 `secPr` 위치를 별도 순회에서 관측합니다. 2021 스키마 순서를 2011 문서에 강제하지 않고 미등록 자식을 진단으로 보존합니다.
 
-[조건부 switch 구조](hwpx-switch-shape.md)는 직접 run 자식의 case/default 모양과 요구 namespace 원값을 관측합니다. 실제 분기 선택은 명시적 지원 프로필이 정해진 후속 계층에 남깁니다.
+[조건부 switch 구조](hwpx-switch-shape.md)는 직접 run 자식의 case/default 모양과 요구 namespace 원값을 관측합니다. 이 구조 보고서는 분기를 선택하지 않으며, 명시적 지원 namespace에 따른 선택은 별도 [공통 정책](hwpx-switch-selection.md)을 사용하는 검사기들이 맡습니다.
 
 [`hp:t` 원값·직접 자식 진단](hwpx-text-nodes.md)은 선택적 `charStyleIDRef`의 어휘·부재와 직접 내부 요소를 별도로 관측합니다. 문자 순서·표시 의미는 section 콘텐츠 계층, 서식 적용은 후속 문서 모델의 책임입니다.
 
@@ -387,12 +387,12 @@ src/
   compression/ bounded raw DEFLATE·MIT 디코더 경계 수정본 (구현)
   hwp5/        FileHeader·압축·레코드 경계·DocInfo 해석/참조 검증·본문 문단 헤더/텍스트 토큰 (구현), 문서 모델/나머지 의미 해석/쓰기 (예정)
   zip/         메모리 기반 ZIP 엔트리 읽기·제한된 해제
-  hwpx/        mimetype·패키지 관계 검사 (XML 문서 모델·쓰기 예정)
+  hwpx/        mimetype·패키지/ZIP·XML 트리·선택적 필드/참조/이미지 검사 (통합 의미 모델·쓰기 예정)
   model/       문서 공통 모델과 원본 정보 보존 (예정)
   root.zig     라이브러리 진입점
   wasm/        메모리 할당·CFB 수명·엔트리·원시 섹터 ABI
   wasm.zig     ABI 모듈 등록과 버전
-js/            읽기·쓰기 API·메모리 복사·엔트리/편집 모델 변환·검색·Node 파일 입력
+js/            CFB 읽기·쓰기 API·메모리 복사·엔트리/편집 모델 변환·검색·Node 파일 입력
 tests/cfb/     독립 JS 기준 구현과 비교, 브라우저 검증
 tests/hwp5/    테스트 전용 WASM bridge·독립 zlib/레코드 oracle·적대적 검증 5회
 ```
@@ -461,7 +461,7 @@ DocInfo 리소스는 BinData·글꼴·탭·번호·글머리표·스타일·테�
 
 버전별 필드 부재와 기본값을 구분하고, 미지원 레코드·스트림 및 보존에 필요한 CFB 메타데이터를 유지하는 정책을 설계해야 합니다. 단순 재저장도 정보 보존 검증 전에는 무손실이라고 주장하지 않습니다.
 
-구현 순서: CFB 읽기 → 새 CFB 쓰기 → 전체 스트림 왕복 비교 → HWP5 최소 읽기·쓰기 → 편집 후 저장 → HWPX 공통 모델 통합. 각 단계에서 기존 Rust fixture, 독립 리더, 손상 입력 테스트로 검증합니다.
+초기 CFB 순서는 읽기 → 새 컨테이너 쓰기 → 전체 스트림 왕복 비교였습니다. 현재 HWP5·HWPX는 여러 원값·구조 검사까지 병행 구현했으나 통합 편집 모델과 문서 저장은 미구현입니다. 앞으로의 마일스톤은 HWP5 문서 모델·쓰기와 편집 후 저장, HWPX 공통 모델 통합입니다. 각 마일스톤에서 기존 Rust fixture, 독립 리더, 손상 입력 테스트로 검증합니다.
 
 CFB 단계의 현재 경계: 읽기 기본값은 레거시 호환, strict는 명세 검증을 추가합니다. 쓰기는 항상 명세용 이름 비교와 공통 메타데이터 검사를 사용합니다. `writer_directory.zig`는 의미 모델/형제 트리, `writer_layout.zig`는 FAT/DIFAT 수와 Range Lock 예약 배치, `writer.zig`는 바이트 직렬화를 담당합니다. `name_order.zig`와 `entry_rules.zig`는 strict 읽기와 쓰기가 공유하며, JS는 이를 재구현하지 않습니다.
 
