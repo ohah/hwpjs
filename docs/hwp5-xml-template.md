@@ -59,15 +59,17 @@ SSOT 재검토에서 기존/신규 테스트의 컨테이너 끝 두 필드 위�
 
 실제 `treatise sample.hwp`는 XMLTemplate이 없는 컨테이너 기반으로만 사용하고, 추가 stream은 메모리에서 합성합니다. 원본 파일을 수정하지 않습니다. 실제 XMLTemplate 표본 검증 수는 0이며, 합성 성공을 실제 작성 프로그램/모든 버전 호환성으로 확대하지 않습니다.
 
-현재 `rg --files --iglob '*.hwp' reference legacy`의 789경로를 제품 CFB reader의 strict 모드로 다시 조사했습니다. 읽기 성공 599개에서 정확한 `/XMLTemplate`은 0개였고, `/FileHeader`의 bit 5가 켜진 경우는 7개였습니다. 읽기 실패 190개는 storage 부재로 판정하지 않습니다. 경로 수는 고유 파일 수가 아니며, 비트 선언과 실제 storage를 별도로 보고해야 한다는 근거입니다. 최초 전체 파일 목록 수집은 Node 자식 프로세스 출력 한도를 초과했으므로 HWP 확장자를 rg 단계에서 제한해 다시 실행한 최종 결과만 기록했습니다.
+2026-09-27 `rg --files --iglob '*.hwp' reference legacy`의 789경로를 제품 CFB reader의 strict 모드로 다시 조사했습니다. 읽기 성공 599개에서 정확한 `/XMLTemplate`은 0개였고, `/FileHeader`의 bit 5가 켜진 경우는 7개였습니다. 읽기 실패 190개는 storage 부재로 판정하지 않습니다. 경로 수는 고유 파일 수가 아니며, 비트 선언과 실제 storage를 별도로 보고해야 한다는 근거입니다. 최초 조사에서는 전체 파일 목록 수집이 Node 자식 프로세스 출력 한도를 초과해 HWP 확장자를 rg 단계에서 제한했고, 이번에도 같은 목록·제품 리더 정책으로 집계했습니다.
 
-## 최종 실행 결과
+## 이전 실행 기록과 현재 재검증
 
-테스트 위치 SSOT 수정 이후 Debug → ReleaseSafe → ReleaseFast의 전체 audit를 다시 순차 실행했습니다. 세 모드 모두 16/16 빌드 단계, 네이티브 300/300, Node 47/47 및 22/22, HWP5 WASM 검사 1,629,128건을 통과했습니다. XMLTemplate 집중 결과는 각 모드 정상 40·거부 117이며, 검사 건수는 지원 필드/파일 수가 아닙니다.
+이 기능을 처음 연결하고 테스트 위치 SSOT를 수정한 당시 Debug → ReleaseSafe → ReleaseFast의 전체 audit를 순차 실행했습니다. 당시 세 모드 모두 16/16 빌드 단계, 네이티브 300/300, Node 47/47 및 22/22, HWP5 WASM 검사 1,629,128건을 통과했습니다. 당시 XMLTemplate 집중 결과는 각 모드 정상 40·거부 117이며, 검사 건수는 지원 필드/파일 수가 아닙니다.
 
-최종 로그는 `/tmp/hwpjs-xml-container-final-debug.log`, `/tmp/hwpjs-xml-container-final-safe.log`, `/tmp/hwpjs-xml-container-final-fast.log`입니다. 수정 전의 실행 로그와 구분하며, 재현 명령은 [개발·검증 명령](development-commands.md)의 세 모드 audit입니다. ReleaseSafe/Fast의 실제 audit probe로 집중 검사도 별도 재실행했습니다.
+당시 로그를 둔 `/tmp/hwpjs-xml-container-final-debug.log`, `/tmp/hwpjs-xml-container-final-safe.log`, `/tmp/hwpjs-xml-container-final-fast.log`는 현재 작업 환경에 남아 있지 않습니다. 재현 명령은 [개발·검증 명령](development-commands.md)의 세 모드 audit입니다. ReleaseSafe/Fast의 실제 audit probe로 집중 검사도 당시 별도 재실행했습니다.
 
-공통 테스트 보고서 helper는 별도의 고정 바이트 입력에서 totals 읽기·소비량 갱신·원본 불변성을 수동 대조했습니다. 이 수동 검사는 위 자동 audit 건수에 포함하지 않습니다. 변경 Zig 포맷, JS 구문, 문서 로컬 링크 및 git diff 공백 검사도 통과했습니다. 실제 표본/의미 검증의 한계는 아래와 같으며 전체 문서 검증 완료로 표현하지 않습니다.
+공통 테스트 보고서 helper는 별도의 고정 바이트 입력에서 totals 읽기·소비량 갱신·원본 불변성을 수동 대조했습니다. 이 수동 검사는 당시 자동 audit 건수에 포함하지 않습니다. 당시 변경 Zig 포맷, JS 구문, 문서 로컬 링크 및 git diff 공백 검사도 통과했습니다. 실제 표본/의미 검증의 한계는 아래와 같으며 전체 문서 검증 완료로 표현하지 않습니다.
+
+2026-09-27 현재 내용 재검증: 로컬 HWP5 3.2.10 표 10~12, 현 문자열/envelope 파서·명시적 저장 codec·정확한 CFB 경로/부재/한도·레거시 Rust의 경고 후 생략 경계를 대조했습니다. `XMLTemplate` 필터의 원값·컨테이너 집중 테스트는 Debug·ReleaseSafe·ReleaseFast에서 각 3개가 통과했고, 위 789경로 조사의 성공/실패·storage/선언 수치도 다시 일치했습니다. 직전 문서 묶음에서 같은 제품 코드로 통과한 ReleaseSafe `hwp5-audit`는 독립 JS의 mode 115 검사까지 실행하지만, 이번 묶음에서 전체 audit나 과거 40/117건의 모드별 출력은 별도로 재실행하지 않았습니다. 미보유 XMLTemplate 양성 파일의 저장 codec·필수 stream·버전 호환성은 증명하지 않습니다.
 
 ## 남은 범위
 

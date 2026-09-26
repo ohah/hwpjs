@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "79326b6d6174e96c257ceb1d298fb36573af8c85dee9020a8054397fac631e38",
-      "evidence": "2026-09-27 tracker tests, 2523 inline links, HWP5 XML review and ReleaseSafe hwp5 audit 8905855, architecture pending, full Debug Zig test incomplete"
+      "sha256": "78b1efca472f6ad9adb8cd0502b63becda946b324674d770fc89b1e8eca92f74",
+      "evidence": "2026-09-27 tracker tests, 2523 inline links, HWP5 XML and XMLTemplate review, corpus 789 paths, architecture pending, full Debug Zig test incomplete"
+    },
+    "docs/hwp5-xml-template.md": {
+      "sha256": "69d764f7392d98563e469542d03f30c7e9043416b38528338948aa3ef0ceb195",
+      "evidence": "2026-09-27 HWP5 table 10-12, current string/container/codec and Rust boundary, 3 modes focused, current 789 paths strict 599 storage 0 declaration 7, old tmp logs absent"
     },
     "docs/hwp5-xml-validation.md": {
       "sha256": "fc0d603c848e587e2e0c952c67850c9a9fa4110976ad427f8e75ab012b7e15c1",
