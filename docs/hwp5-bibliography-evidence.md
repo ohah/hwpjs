@@ -26,6 +26,8 @@ strict 거부는 InvalidRoot 34개, InvalidFat 36개, InvalidUnusedEntry 3개였
 
 별도로 기존 Rust HWP fixture 48개는 모두 strict CFB로 열렸고 Bibliography가 없었습니다. 두 corpus에 중복이 있을 수 있으므로 독립 표본 수로 합산하지 않습니다.
 
+2026-09-27 현재 내용 재검증: 로컬 명세 §3.2.12와 현재 Zig/JS 소스의 Bibliography 미소비 경계를 대조했습니다. 동일 리비전의 rhwp `.hwp` 536개를 제품 WASM CFB로 다시 읽어 비 CFB 29개, strict 성공 434개, strict 거부 후 호환 성공 73개(InvalidRoot 34·InvalidFat 36·InvalidUnusedEntry 3), 64 MiB 초과 0개를 확인했습니다. CFB 507개 전부를 별도로 호환 모드로 열어 정확한 루트 조회에서 Bibliography·XMLTemplate 모두 0개였고, Rust fixture 48개도 strict 성공·Bibliography 0개였습니다. fixture의 PrvImage는 부재 1·PNG 32·GIF 14·JPEG 1로 다시 관측했습니다. 이 실측은 현재 표본의 경로·시그니처/저장소 존재만 확인하며 Bibliography 저장 형식이나 PrvImage 내용의 유효성을 증명하지 않습니다.
+
 ## 구현을 확정하지 않은 부분
 
 임의의 `Bibliography.xml` 이름, 모든 직접 자식이 UTF-16LE라는 정책, XMLTemplate과 같은 DWORD/WCHAR envelope를 추가하지 않았습니다. `.xml` 확장자만으로 자동 파싱하거나 FileHeader 압축 플래그를 적용하지도 않습니다. 해당 stream은 계속 미소비로 남습니다. 이는 Bibliography 지원 완료가 아니라, 추정 구현으로 파일을 잘못 거부하거나 성공으로 오인하지 않기 위한 명시적 미구현 경계입니다.

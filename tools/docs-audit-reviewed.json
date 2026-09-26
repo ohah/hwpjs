@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "688a4083feaa3091745b5a139f43b0f4fe0af8778923ec9958ab4701bd42d81b",
-      "evidence": "2026-09-27 tracker tests, 2524 inline links, HWP5 history date and XML evidence review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "d2991092f3ee2e26fce01812ef3313111c4e1ace9ee1c0d080d1b8ca53fecf10",
+      "evidence": "2026-09-27 tracker tests, HWP5 history and bibliography evidence review, architecture pending, full Debug Zig test incomplete"
+    },
+    "docs/hwp5-bibliography-evidence.md": {
+      "sha256": "91855624917a13580ab458e0971b0270ef6ef5fc25a13367dd87ca3141cf8895",
+      "evidence": "2026-09-27 local HWP5 3.2.12 and product unconsumed boundary, rhwp 536 paths 507 compat roots absent, Rust fixtures 48 roots absent, external support matrix"
     },
     "docs/hwp5-history-xml-evidence.md": {
       "sha256": "f5dbaa8f3084edc66272483038a6a9f8f4985fea6bc337f2ddfb749ba18e27c4",
