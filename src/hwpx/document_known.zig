@@ -53,6 +53,7 @@ const inline_string_controls = @import("inline_string_controls.zig");
 const field_markers = @import("field_markers.zig");
 const column_definitions = @import("column_definitions.zig");
 const number_controls = @import("number_controls.zig");
+const note_bodies = @import("note_bodies.zig");
 
 /// Results of the currently implemented HWPX inspections only. A successful
 /// return does not assert complete schema, semantic or edit/save validity.
@@ -96,6 +97,7 @@ pub const Report = struct {
     field_markers: field_markers.Report,
     column_definitions: column_definitions.Report,
     number_controls: number_controls.Report,
+    note_bodies: note_bodies.Report,
     paragraph_metadata: paragraph_metadata.Report,
     paragraph_children: paragraph_children.Report,
     line_segments: line_segments.Report,
@@ -126,6 +128,7 @@ pub const Report = struct {
         self.field_markers.deinit();
         self.column_definitions.deinit();
         self.number_controls.deinit();
+        self.note_bodies.deinit();
         self.section_definitions.deinit(a);
         self.section_direct_settings.deinit(a);
         self.section_page_borders.deinit(a);
@@ -266,6 +269,8 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
         errdefer column_definition_report.deinit();
         var number_control_report = try trees.inspectNumberControls(a, options.number_controls);
         errdefer number_control_report.deinit();
+        var note_body_report = try trees.inspectNoteBodies(a, options.note_bodies);
+        errdefer note_body_report.deinit();
         const table_report = try trees.inspectTableGeometryWithBorderFills(a, options.table_geometry, resource_report.table(.border_fill));
         break :blk .{
             .begin = begin_report,
@@ -295,6 +300,7 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
             .field_markers = field_marker_report,
             .column_definitions = column_definition_report,
             .number_controls = number_control_report,
+            .note_bodies = note_body_report,
             .table_geometry = table_report,
         };
     };
@@ -338,6 +344,7 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
         .field_markers = semantic.field_markers,
         .column_definitions = semantic.column_definitions,
         .number_controls = semantic.number_controls,
+        .note_bodies = semantic.note_bodies,
         .paragraph_metadata = semantic.paragraph,
         .paragraph_children = semantic.paragraph_children,
         .line_segments = semantic.line_segments,

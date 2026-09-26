@@ -35,6 +35,14 @@ pub fn unsigned32(raw: []const u8) !u32 {
     return std.fmt.parseInt(u32, digits, 10) catch error.InvalidUnsigned32;
 }
 
+/// XML UINT16 lexical value. UTF-16 code-unit fields may include surrogate
+/// values, so this checks only the numeric width, not Unicode scalar validity.
+pub fn unsigned16(raw: []const u8) !u16 {
+    const value = try unsigned32(raw);
+    if (value > std.math.maxInt(u16)) return error.InvalidUnsigned16;
+    return @intCast(value);
+}
+
 /// Some HWPX unit fields occur both as negative decimal i32 values and as
 /// unsigned 32-bit decimal values. Preserve the lexical numeric value; do not
 /// silently reinterpret a high-bit u32 as a negative signed value.

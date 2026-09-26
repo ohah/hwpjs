@@ -27,6 +27,7 @@ const inline_string_controls = @import("inline_string_controls.zig");
 const field_markers = @import("field_markers.zig");
 const column_definitions = @import("column_definitions.zig");
 const number_controls = @import("number_controls.zig");
+const note_bodies = @import("note_bodies.zig");
 const paragraph_metadata = @import("paragraph_metadata.zig");
 const paragraph_children = @import("paragraph_children.zig");
 const masterpage_paragraph_children = @import("masterpage_paragraph_children.zig");
@@ -196,6 +197,8 @@ pub const ColumnDefinitionsOptions = struct { trees: XmlTreesOptions = .{}, colu
 pub const ColumnDefinitionsReport = column_definitions.Report;
 pub const NumberControlsOptions = struct { trees: XmlTreesOptions = .{}, controls: number_controls.Options = .{} };
 pub const NumberControlsReport = number_controls.Report;
+pub const NoteBodiesOptions = struct { trees: XmlTreesOptions = .{}, notes: note_bodies.Options = .{} };
+pub const NoteBodiesReport = note_bodies.Report;
 pub const ParagraphMetadataOptions = paragraph_metadata.Options;
 pub const ParagraphMetadataReport = paragraph_metadata.Report;
 pub const ParagraphChildrenOptions = paragraph_children.Options;
@@ -375,6 +378,7 @@ pub const KnownOptions = struct {
     field_markers: field_markers.Options = .{},
     column_definitions: column_definitions.Options = .{},
     number_controls: number_controls.Options = .{},
+    note_bodies: note_bodies.Options = .{},
     paragraph_metadata: ParagraphMetadataOptions = .{},
     paragraph_children: ParagraphChildrenOptions = .{},
     line_segments: LineSegmentsOptions = .{},
@@ -748,6 +752,12 @@ pub const Document = struct {
         var trees = try self.readXmlTrees(a, options.trees);
         defer trees.deinit(a);
         return trees.inspectNumberControls(a, options.controls);
+    }
+
+    pub fn inspectNoteBodies(self: *const Document, a: std.mem.Allocator, options: NoteBodiesOptions) !NoteBodiesReport {
+        var trees = try self.readXmlTrees(a, options.trees);
+        defer trees.deinit(a);
+        return trees.inspectNoteBodies(a, options.notes);
     }
 
     /// Reuses the owned section trees and header border-fill IDs; inactive
