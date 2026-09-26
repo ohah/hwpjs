@@ -17,3 +17,5 @@
 2026-09-26: 최종 소스의 Debug `zig build test --summary all` 2,572/2,572, 수식 집중 검사는 Debug·ReleaseSafe·ReleaseFast 각각 19/19, 표 shape 집중 검사는 Debug 5/5로 통과했습니다. `zig fmt --check build.zig src`, `zig build -Doptimize=ReleaseSafe --summary all`도 통과했습니다. Python 독립 XML 조사기의 기본·`-O` 반례 검사와 파일별 476개 대조, Python이 계산한 SHA-256을 고정한 caption 합성 예제의 Zig 해시 검사도 통과했습니다. `inspectKnown()`의 ReleaseFast 실파일 8개 shard는 각각 별도 프로세스로 통과했고, 기본 전체 테스트 밖입니다.
 
 적대적 검증은 (1) 부재/빈 값/미지 enum·중복된 뒤쪽 목록 오류, (2) namespace·직접 자식/손자 경계, (3) 단일 필드·소유 바이트·전체 목록·직접 문단 한도, (4) 문서 해제 뒤 소유권과 모든 할당 실패, (5) 독립 XML 예제의 문자 참조·속성·위치·문단 개수 해시 및 표의 기존 실파일 집계 회귀를 각각 확인했습니다. 이는 검사 범위의 증거이며 본문 의미나 무손실 저장의 검증은 아닙니다.
+
+2026-09-27 재검증: 한컴 고정 버전의 caption 직접 `subList`와 현재 `shape_caption.zig`·`equation_caption.zig`의 분리 경계를 대조했습니다. `HWPX equation` 필터는 Debug·ReleaseSafe·ReleaseFast 각각 24/24, 공유 표 도형 회귀는 Debug 5/5, Python 독립 XML의 caption 변이 자체검사는 일반·`-O`에서 각각 통과했고, caption 고정 합성 해시 테스트는 1/1이었습니다. 허용 476개 파일의 수식 대조에서 caption·직접 `subList`·문단은 0개로 일치했습니다. 따라서 실제 caption 값 파싱의 실파일 양성은 여전히 없고, 필드·오류 경로는 합성 검사 근거입니다. 앞서 같은 제품 코드에서 통과한 known-inspections 8개 shard는 이번에 다시 실행하지 않았습니다. caption 텍스트 의미·수식 배치·저장은 검증 범위 밖입니다.

@@ -6,8 +6,24 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "ce932ae49af1b638e9b2a19dfb2b882bae10d89a7ad3321af75f0629e7d8d3be",
-      "evidence": "2026-09-27 tracker tests, 2515 inline link path probe, HWPX note, number, column, field, inline, meta, and parameter review"
+      "sha256": "2925a155f1267f906108dc3c2be8010ec6ddb268f7f48cc99dd16fe7b6be2e6d",
+      "evidence": "2026-09-27 tracker tests, 2515 inline link path probe, HWPX note, number, column, field, inline, meta, parameter, and equation review"
+    },
+    "docs/hwpx-equations.md": {
+      "sha256": "5cfe3dc7bdf03588f144b1d7a1255c797a0c0855eed6b6c44aef79a9c70a5024",
+      "evidence": "2026-09-27 official model, Zig tests 3 modes, independent equation oracle corpus 476, known integration"
+    },
+    "docs/hwpx-equation-shapes.md": {
+      "sha256": "073ee3e67cca1c440e4d2797e2140bd31ac3fb42aeb7adeb188347942d33075f",
+      "evidence": "2026-09-27 official fields, Zig tests 3 modes, independent equation oracle corpus 476, XML child inventory"
+    },
+    "docs/hwpx-equation-comments.md": {
+      "sha256": "d12c14c8f2242705103ae79757b606060c4f434dbb86d6e2793116dbb5904ac7",
+      "evidence": "2026-09-27 official string model, Zig tests 3 modes, independent equation oracle corpus 476, comment fixture and XML inventory"
+    },
+    "docs/hwpx-equation-captions.md": {
+      "sha256": "3cc472cd4d870b19f29e6256d7133b1d25c91f8a4bce0c068620c3858e86d94e",
+      "evidence": "2026-09-27 official caption child, Zig tests 3 modes, independent zero-corpus boundary, synthetic caption digest"
     },
     "docs/hwpx-meta-tags.md": {
       "sha256": "583c0b010ad833269b85100b5bc7261d8935e789a4e6cf024fb6a7098da232a3",

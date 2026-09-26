@@ -22,3 +22,5 @@
 최초 script 구현 단계의 전체 Debug `zig build test --summary all`은 2,561/2,561, 수식 집중 테스트는 Debug·ReleaseSafe·ReleaseFast에서 각각 8/8, `zig build -Doptimize=ReleaseSafe`와 `zig fmt --check build.zig src`도 통과했습니다. `inspectKnown`의 선택 실파일 8개 shard도 별도 ReleaseFast 프로세스로 모두 통과했으며, 이 실행은 기본 전체 테스트에 포함되지 않습니다. 후속 표 검사 실패 시 수식 보고서의 메모리 회수도 합성 테스트의 디버그 할당 회계에서 0바이트로 확인했습니다.
 
 최초 단계는 직접 script 문자열의 보존을 증명했고, 이후 [공통 도형 자식·필드](hwpx-equation-shapes.md)의 원값 검사가 추가됐습니다. script 문법·수식 의미, `sz`/`pos`/여백/색상 적용, 글꼴 연결, 조건부 분기의 활성 선택, 중첩 도형 의미, 마스터페이지 수식, 편집·저장·무손실 왕복 및 2011 이외 OWPML namespace는 남아 있습니다. `inspectKnown()` 성공이나 raw XML 보존만으로 전체 HWPX 문서가 유효하거나 완전하게 해석됐다고 판정하지 않습니다.
+
+2026-09-27 재검증: 한컴 고정 버전 EquationType의 일곱 공통 자식·직접 `script` 및 전용 속성과 현재 `equation.zig`의 run 직접 선택·소유 경계를 대조했습니다. `HWPX equation` 필터는 Debug·ReleaseSafe·ReleaseFast 각각 24/24, 독립 오라클의 일반·`-O` 변이 자체검사는 각각 통과했습니다. 전체 파일별 대조는 허용 476개·ZIP 거부 6개·암호화 2개, section 544개·수식/script 각각 23,236개·script UTF-8 429,953바이트·도형 자식 69,819개로 일치했습니다. 앞서 같은 제품 코드에서 통과한 known-inspections 8개 shard는 이번에 다시 실행하지 않았습니다. 수식 문법·렌더링·저장은 이 결과로 검증되지 않습니다.
