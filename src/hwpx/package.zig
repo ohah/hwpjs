@@ -28,6 +28,7 @@ const field_markers = @import("field_markers.zig");
 const column_definitions = @import("column_definitions.zig");
 const number_controls = @import("number_controls.zig");
 const note_bodies = @import("note_bodies.zig");
+const note_number_links = @import("note_number_links.zig");
 const paragraph_metadata = @import("paragraph_metadata.zig");
 const paragraph_children = @import("paragraph_children.zig");
 const masterpage_paragraph_children = @import("masterpage_paragraph_children.zig");
@@ -199,6 +200,8 @@ pub const NumberControlsOptions = struct { trees: XmlTreesOptions = .{}, control
 pub const NumberControlsReport = number_controls.Report;
 pub const NoteBodiesOptions = struct { trees: XmlTreesOptions = .{}, notes: note_bodies.Options = .{} };
 pub const NoteBodiesReport = note_bodies.Report;
+pub const NoteNumberLinksOptions = struct { trees: XmlTreesOptions = .{}, notes: note_bodies.Options = .{}, numbers: number_controls.Options = .{}, links: note_number_links.Options = .{} };
+pub const NoteNumberLinksReport = note_number_links.Report;
 pub const ParagraphMetadataOptions = paragraph_metadata.Options;
 pub const ParagraphMetadataReport = paragraph_metadata.Report;
 pub const ParagraphChildrenOptions = paragraph_children.Options;
@@ -379,6 +382,7 @@ pub const KnownOptions = struct {
     column_definitions: column_definitions.Options = .{},
     number_controls: number_controls.Options = .{},
     note_bodies: note_bodies.Options = .{},
+    note_number_links: note_number_links.Options = .{},
     paragraph_metadata: ParagraphMetadataOptions = .{},
     paragraph_children: ParagraphChildrenOptions = .{},
     line_segments: LineSegmentsOptions = .{},
@@ -758,6 +762,16 @@ pub const Document = struct {
         var trees = try self.readXmlTrees(a, options.trees);
         defer trees.deinit(a);
         return trees.inspectNoteBodies(a, options.notes);
+    }
+
+    pub fn inspectNoteNumberLinks(self: *const Document, a: std.mem.Allocator, options: NoteNumberLinksOptions) !NoteNumberLinksReport {
+        var trees = try self.readXmlTrees(a, options.trees);
+        defer trees.deinit(a);
+        var notes = try trees.inspectNoteBodies(a, options.notes);
+        defer notes.deinit();
+        var numbers = try trees.inspectNumberControls(a, options.numbers);
+        defer numbers.deinit();
+        return trees.inspectNoteNumberLinks(a, &notes, &numbers, options.links);
     }
 
     /// Reuses the owned section trees and header border-fill IDs; inactive

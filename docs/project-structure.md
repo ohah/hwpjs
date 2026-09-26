@@ -2,6 +2,8 @@
 
 [각주·미주 본문](hwpx-note-bodies.md)은 `note_bodies.zig`가 section 주석·목록·직접 문단의 관계와 원문 수명, `note_body_fields.zig`가 주석 속성, 기존 `para_list_attributes.zig`가 목록 속성을 소유합니다. 실파일 대조는 `hwpx_note_bodies_survey.zig`와 `tools/hwpx-note-bodies-diff.py`가 맡습니다.
 
+[각주·미주 안 번호 관계](hwpx-note-number-links.md)는 `note_number_links.zig`가 두 기존 보고서와 같은 section 트리의 부모 인덱스만 연결합니다. 원값 파서를 복제하지 않으며 독립 대조는 `hwpx_note_number_links_survey.zig`와 `tools/hwpx-note-number-links-diff.py`가 맡습니다.
+
 [Section 번호 컨트롤 원값](hwpx-number-controls.md)은 `number_controls.zig`가 트리 순회·원문·직접 자식·소유권, `number_control_fields.zig`가 속성 해석, `numbering_values.zig`가 각주/미주와 공유하는 번호 enum 어휘를 맡습니다. 실파일 대조는 `hwpx_number_controls_survey.zig`와 `tools/hwpx-number-controls-diff.py`가 맡습니다.
 
 [HWPX JPEG 선택 픽셀 검사](hwpx-jpeg-pixels.md)는 `src/image/jpeg/pixel_inspection.zig`의 공통 JFIF 복호화 코어를 HWP5와 공유하고, `src/hwpx/image_payloads.zig`가 HWPX의 ZIP 선택·옵션·보고서 한도를 소유합니다. 독립 corpus 조사는 `src/hwpx_jpeg_pixel_survey.zig`와 Python 조사기에 둡니다.

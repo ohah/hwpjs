@@ -27,6 +27,7 @@ const field_markers = @import("field_markers.zig");
 const column_definitions = @import("column_definitions.zig");
 const number_controls = @import("number_controls.zig");
 const note_bodies = @import("note_bodies.zig");
+const note_number_links = @import("note_number_links.zig");
 const table_geometry = @import("table_geometry.zig");
 const header_resources = @import("header_resources.zig");
 
@@ -153,6 +154,10 @@ pub const Bundle = struct {
 
     pub fn inspectNoteBodies(self: *const Bundle, a: std.mem.Allocator, options: note_bodies.Options) !note_bodies.Report {
         return note_bodies.inspect(a, self.sections, options);
+    }
+
+    pub fn inspectNoteNumberLinks(self: *const Bundle, a: std.mem.Allocator, notes: *const note_bodies.Report, numbers: *const number_controls.Report, options: note_number_links.Options) !note_number_links.Report {
+        return note_number_links.inspect(a, self.sections, notes, numbers, options);
     }
 
     pub fn deinit(self: *Bundle, a: std.mem.Allocator) void {

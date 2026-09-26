@@ -98,6 +98,8 @@ section 텍스트 보고서도 원문 양쪽 분기를 유지합니다. 활성 �
 
 `note_bodies`는 같은 section 트리의 [각주·미주 본문 구조](hwpx-note-bodies.md)를 별도 소유 보고서로 반환합니다. `section_note_shapes`의 모양 설정 및 번호 컨트롤과의 실제 표시 연결을 계산하지 않습니다.
 
+`note_number_links`는 이 두 보고서와 같은 트리에서 [주석 안 번호 컨트롤 포함 관계](hwpx-note-number-links.md)를 조립합니다. 번호 매기기·표시 결과는 계산하지 않습니다.
+
 [표 안쪽 여백·셀 구역](hwpx-table-children.md) 보고서도 같은 격자 보고서에 포함되며, 구역 겹침·표 배치의 의미는 판정하지 않습니다.
 [표 상속 shape 속성·직접 자식](hwpx-table-shape.md) 보고서도 같은 격자 보고서에 포함됩니다. 모델 밖 enum 관측을 전체 스키마 적합성이나 레이아웃 판정으로 승격하지 않습니다.
 [표 행·셀 직접 자식 topology](hwpx-table-child-topology.md) 보고서도 포함됩니다. 자식 순서 차이는 관측값이며 전체 XSD 적합성 판정이 아닙니다.
