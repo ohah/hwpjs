@@ -15,6 +15,7 @@ import { fieldsActual } from "./fields.mjs";
 import { rubyActual } from "./ruby.mjs";
 import { hiddenActual } from "./hidden-comment.mjs";
 import { noteActual } from "./note-validation.mjs";
+import { noteNumberLinksActual } from "./note-number-links.mjs";
 import { equationActual } from "./equation-validation.mjs";
 import { oleActual } from "./ole-validation.mjs";
 import { shapeActual } from "./shape-validation.mjs";
@@ -153,6 +154,7 @@ export function documentActual(call, h, doc, sections) {
       ...rubyActual(call, v, b).map(w),
       ...hiddenActual(call, v, b).map(w),
       ...noteActual(call, v, b).map(w),
+      ...noteNumberLinksActual(b).map(w),
       ...equationActual(call, v, b).map(w),
       ...oleActual(call, v, b).map(w),
       ...shapeActual(call, v, b).map(w),

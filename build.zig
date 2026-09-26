@@ -40,6 +40,8 @@ pub fn build(b: *std.Build) void {
     const mutations = b.addSystemCommand(&.{ "node", "tests/cfb/mutations.mjs" });
     mutations.step.dependOn(b.getInstallStep());
     const audit = b.step("audit", "Run regression contracts and deterministic malformed-input sweeps");
+    const note_number_oracle = b.addSystemCommand(&.{ "node", "--test", "tests/hwp5/note-number-links.test.mjs" });
+    audit.dependOn(&note_number_oracle.step);
     audit.dependOn(&mutations.step);
     audit.dependOn(&run_tests.step);
     audit.dependOn(compare_step);
@@ -144,6 +146,7 @@ pub fn build(b: *std.Build) void {
     hwp_probe.rdynamic = true;
     const install_hwp_probe = b.addInstallArtifact(hwp_probe, .{});
     const hwp_check = b.addSystemCommand(&.{ "node", "tests/hwp5/audit.mjs" });
+    hwp_check.step.dependOn(&note_number_oracle.step);
     const drawing_evidence_tests = b.addSystemCommand(&.{ "node", "--test", "tests/hwp5/drawing-section-evidence.test.mjs", "tests/hwp5/ole-paired-evidence.test.mjs" });
     hwp_check.step.dependOn(&drawing_evidence_tests.step);
     hwp_check.addArtifactArg(hwp_probe);

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { decodedDocumentInput, documentRecords } from "./documents.mjs";
+import { noteNumberLinksActual } from "./note-number-links.mjs";
 import {
   documentPrefixBytes,
   sectionReportBytes,
@@ -8,12 +9,15 @@ import {
 } from "./document-report-wire.mjs";
 export function reportWireEdges() {
   assert.equal(documentPrefixBytes, 132);
-  assert.equal(sectionReportBytes, 800);
+  assert.equal(sectionReportBytes, 832);
   assert.equal(sectionFieldOffset(0, "header_footer"), 280);
-  assert.equal(sectionFieldOffset(1, "number_controls", 2), 1108);
-  assert.equal(sectionFieldOffset(0, "forms"), 820);
-  assert.equal(sectionFieldOffset(1, "forms", 27), 1728);
-  assert.equal(reportBytes(2), 1732);
+  assert.equal(sectionFieldOffset(0, "notes"), 500);
+  assert.equal(sectionFieldOffset(0, "note_number_links"), 528);
+  assert.equal(sectionFieldOffset(0, "note_number_links", 7), 556);
+  assert.equal(sectionFieldOffset(1, "number_controls", 2), 1140);
+  assert.equal(sectionFieldOffset(0, "forms"), 852);
+  assert.equal(sectionFieldOffset(1, "forms", 27), 1792);
+  assert.equal(reportBytes(2), 1796);
   for (const index of [-1, 1.5, NaN, Infinity, 65536])
     assert.throws(() => reportBytes(index), RangeError);
   for (const [group, field] of [
@@ -21,6 +25,7 @@ export function reportWireEdges() {
     ["__proto__", 0],
     ["header_footer", 5],
     ["number_controls", -1],
+    ["note_number_links", 8],
     ["records", NaN],
     ["forms", 28],
   ])
@@ -50,6 +55,12 @@ export function reportOrderingEdges(call, h, doc, sections) {
       (changed.readUInt32LE(r.start + 4) | (numbering ? 15 : 3)) >>> 0,
       r.start + 4,
     );
+    if (numbering) {
+      const noteBase = sectionFieldOffset(0, "note_number_links") - documentPrefixBytes;
+      noteNumberLinksActual(changed).forEach((value, i) =>
+        second.writeUInt32LE(value, noteBase + 4 * i),
+      );
+    }
     const info = Buffer.from(doc),
       properties = documentRecords(doc).find((r) => r.tag === 16);
     info.writeUInt16LE(2, properties.start);

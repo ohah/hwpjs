@@ -1,5 +1,7 @@
 # Zig/WASM 구현 구조
 
+[HWP5 각주·미주 안 자동 번호 관계](hwp5-note-number-links.md)는 컨트롤 원값·논리 리스트 소유권·문서 보고서 사이의 진단 계층입니다. 주석당 번호 하나 또는 표시 순서를 강제하지 않으며 문서 모델과 저장을 대신하지 않습니다.
+
 [HWPX JPEG 선택 픽셀 검사](hwpx-jpeg-pixels.md)는 HWP5와 같은 형식 코어를 재사용하되 JPEG 구조 정책·ZIP 선택·보고서 예산은 HWPX가 소유합니다. 기본 구조 검사와 명시적 JFIF RGB 검사는 다른 깊이로 표시합니다.
 
 [관측 JPEG 성분 ID 호환 정책](jpeg-component-id-compatibility.md)은 JFIF 성분 ID 판정을 공통 배치 계층에 두고, HWPX는 명시적 선택과 대상별 비표준 표식만 연결합니다. 원본 ID를 바꾸거나 기본 strict를 완화하지 않습니다.
@@ -419,7 +421,7 @@ CFB에는 HWP 문단·표·글꼴 로직을 넣지 않습니다. 파일·시계�
 
 `parameter_sources.inspectDocInfo/inspectBody`는 parameter options·list layout·DocInfo BinData 리소스 개수를 받아 각 소스를 순회합니다. 파싱된 트리는 parameter_references와 cell_field.fromDocument에서 공유한 뒤 해제합니다. 미지원 타입은 전체 payload 단위로 보류하지만 그 뒤의 소스 검사는 계속합니다. 알려진 손상/참조 오류/할당 실패는 전파합니다. reported parsed는 구조 파싱 수이며 trailing/opaque/unknown 셀 Set을 완료로 치환하지 않습니다. ControlData 소유권과 컨트롤별 Set 의미, 전체 문서/CFB 조립은 별도 책임입니다.
 
-태그 dispatch는 용지 73·각주/미주 모양 74·쪽 테두리 75도 포함합니다. `section_def.zig`·`page_def.zig`·`note_shape.zig`·`page_border.zig`는 각 payload 배치를 소유하고 `section_validation.zig`는 트리 기반 구역 소유권/개수/참조를 검증합니다. 구역 정의 본체와 하위 레코드를 섞지 않습니다. 각주 구분선 길이는 관측 i32 배치를 기본으로 하며 spec26은 명시적으로만 선택합니다. 주석 컨트롤 연결 및 번호 ID 0은 아직 남아 있습니다.
+태그 dispatch는 용지 73·각주/미주 모양 74·쪽 테두리 75도 포함합니다. `section_def.zig`·`page_def.zig`·`note_shape.zig`·`page_border.zig`는 각 payload 배치를 소유하고 `section_validation.zig`는 트리 기반 구역 소유권/개수/참조를 검증합니다. 구역 정의 본체와 하위 레코드를 섞지 않습니다. 각주 구분선 길이는 관측 i32 배치를 기본으로 하며 spec26은 명시적으로만 선택합니다. 주석 컨트롤의 토큰 연결과 제한적 자동 번호 진단은 별도 계층이며, 표시 번호 의미와 번호 ID 0은 아직 남아 있습니다.
 
 `document/validation.zig`의 `inspectDecoded`는 헤더와 압축 해제된 DocInfo·인덱스별 구역을 받아 기존 검증기를 연결합니다. `docinfo.zig`가 확인한 리소스 개수를 `section.zig`의 문단·구역 정의·표·파라미터 참조에 전달하며 호출자가 임의 리소스 개수를 주입하지 않습니다. 구역 수/인덱스/전역 입력 한도만 새 조립 계층이 소유합니다. 구역 정의가 첫 루트 문단에 있어야 하는 규칙은 기존 section_validation에 둡니다. 파일 검색/압축 해제/BinData 스트림 조립 및 미지원 기능 검증은 이 API의 범위가 아닙니다.
 

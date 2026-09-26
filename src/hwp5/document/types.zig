@@ -67,6 +67,7 @@ pub const SectionReport = struct {
     ole: @import("../body/ole_validation.zig").Report = .{},
     equations: @import("../body/equation_validation.zig").Report = .{},
     notes: @import("../body/note_validation.zig").Report = .{},
+    note_number_links: @import("../body/note_number_links.zig").Report = .{},
     hidden_comments: @import("../body/hidden_comment.zig").Report = .{},
     ruby: @import("../body/ruby_validation.zig").Report = .{},
     fields: @import("../body/field_validation.zig").Report = .{},

@@ -207,6 +207,7 @@ pub fn serializeSections(a: std.mem.Allocator, out: *std.ArrayList(u8), sections
         try fields(a, out, s.ruby);
         try fields(a, out, s.hidden_comments);
         try fields(a, out, s.notes);
+        try fields(a, out, s.note_number_links);
         try fields(a, out, s.equations);
         try fields(a, out, s.ole);
         try fields(a, out, s.shapes);

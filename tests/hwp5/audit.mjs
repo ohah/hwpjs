@@ -758,8 +758,8 @@ const trackChangeResults = {edges:trackChangeEdges(call),document:trackChangeDoc
 const viewTextResults = viewTextDocument(call,cfb);
 const viewSemanticResults = viewSemanticActual(call,cfb);
 assert.deepEqual(viewSemanticResults.map(({strict,controlBytes,viewBytes,viewRecords})=>({strict,controlBytes,viewBytes,viewRecords})), [
-  {strict:'InvalidLinePosition',controlBytes:956,viewBytes:105182,viewRecords:2814},
-  {strict:956,controlBytes:956,viewBytes:8015903,viewRecords:265451},
+  {strict:'InvalidLinePosition',controlBytes:988,viewBytes:105182,viewRecords:2814},
+  {strict:988,controlBytes:988,viewBytes:8015903,viewRecords:265451},
 ]);
 const distributionResults = {edges:distributionEdges(call),actual:distributionActual(call,cfb)};
 const distributionPolicyResults = distributionPolicyEvidence(call,cfb);
@@ -767,10 +767,10 @@ const distributionContainerResults = distributionContainerActual(call,cfb);
 const distributionContainerEdgeResults = distributionContainerEdges(call,cfb);
 assert.deepEqual(distributionContainerEdgeResults,{targets:3,accepted:5,rejected:30});
 assert.deepEqual(distributionContainerResults.map(({flags,primarySource,sections,reportBytes,decodedBytes,uninspectedStreams})=>({flags,primarySource,sections,reportBytes,decodedBytes,uninspectedStreams})), [
-  {flags:5,primarySource:1,sections:1,reportBytes:1072,decodedBytes:570694,uninspectedStreams:3},
-  {flags:1,primarySource:0,sections:1,reportBytes:1072,decodedBytes:586234,uninspectedStreams:2},
-  {flags:131077,primarySource:1,sections:6,reportBytes:5072,decodedBytes:1106070,uninspectedStreams:3},
-  {flags:5,primarySource:1,sections:1,reportBytes:1072,decodedBytes:105188,uninspectedStreams:3},
+  {flags:5,primarySource:1,sections:1,reportBytes:1104,decodedBytes:570694,uninspectedStreams:3},
+  {flags:1,primarySource:0,sections:1,reportBytes:1104,decodedBytes:586234,uninspectedStreams:2},
+  {flags:131077,primarySource:1,sections:6,reportBytes:5264,decodedBytes:1106070,uninspectedStreams:3},
+  {flags:5,primarySource:1,sections:1,reportBytes:1104,decodedBytes:105188,uninspectedStreams:3},
 ]);
 const revisionDeleteResults = revisionDeleteEdges(call);
 const revisionSignResults = {edges:revisionSignEdges(call),actual:revisionSignActual(call,cfb)};

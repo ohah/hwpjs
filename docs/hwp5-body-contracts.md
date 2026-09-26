@@ -14,7 +14,7 @@
 
 - `header_footer.zig`는 관측 head/foot 컨트롤 속성과 리스트 확장의 텍스트 영역을 분리합니다. 제어 헤더 꼬리를 폭으로 추정하거나 누락을 0으로 채우지 않습니다. `header_footer_validation.zig`는 기존 Groups의 직접 소유 관계를 사용하며 section 보고서에 controls/lists/paragraphs/예약 페이지값/꼬리 바이트를 남깁니다. 실제 쪽 배치와 참조 비트 의미 검증은 별도입니다.
 
-- `number_control.zig`는 atno/nwno의 공통 속성·u16 번호, 자동 번호의 장식 코드 유닛을 소유합니다. 표 144의 6바이트 필드 합계/8바이트 총길이 모순은 extra로 보존하며 번호를 u32로 추정하지 않습니다. `number_control_validation.zig`는 구역의 개수/예약 종류/꼬리 진단만 집계합니다. 번호 재계산·표시 모양·각주 번호 의미 검증과 구분합니다.
+- `number_control.zig`는 atno/nwno의 공통 속성·u16 번호, 자동 번호의 장식 코드 유닛을 소유합니다. 표 144의 6바이트 필드 합계/8바이트 총길이 모순은 extra로 보존하며 번호를 u32로 추정하지 않습니다. `number_control_validation.zig`는 구역의 개수/예약 종류/꼬리 진단만 집계합니다. 주석 소유 자동 번호의 제한적 관계 진단은 [별도 계약](hwp5-note-number-links.md)이 맡으며 번호 재계산·표시 모양은 하지 않습니다.
 
 - `page_number.zig`는 pgnp 속성과 네 WCHAR 원값/꼬리, `page_number_validation.zig`는 구역의 예약 위치·비표준 dash 진단을 소유합니다. 실제 파일의 dash=0을 '-'로 보정하지 않습니다. 위치/모양 비트 추출과 실제 쪽 번호 조판은 별개입니다.
 
@@ -34,7 +34,7 @@
 
 - 각주 payload는 `note_shape.zig`에서 추가 해석합니다. 기본 28바이트/i32 구분선 길이, 명시적 spec26 경로를 구분하며 자동 길이 fallback을 금지합니다. `section_validation`은 note_shapes 개수를 보고하고 주석 문단/번호 의미는 별도입니다.
 
-- `note_control.zig`는 위 쪽 단위 모양과 별개인 fn/en 컨트롤 속성을 소유합니다. spec8은 불투명 원문, observed12/observed16은 전체 폭의 관측 필드이며 배치는 호출자가 선택합니다. observed12의 instance_id는 null이고 후속 바이트는 extra입니다. `note_validation.zig`는 Groups/OwnerCursor를 재사용해 직접 리스트 존재와 집계를 검증합니다. 문서 note_layout 기본값은 observed12이며 길이/버전으로 배치를 자동 추정하거나 짧은 입력을 기본값으로 채우지 않습니다.
+- `note_control.zig`는 위 쪽 단위 모양과 별개인 fn/en 컨트롤 속성을 소유합니다. spec8은 불투명 원문, observed12/observed16은 전체 폭의 관측 필드이며 배치는 호출자가 선택합니다. observed12의 instance_id는 null이고 후속 바이트는 extra입니다. `note_validation.zig`는 Groups/OwnerCursor를 재사용해 직접 리스트 존재와 집계를 검증하고, [자동 번호 관계](hwp5-note-number-links.md)는 직접 소유 문단의 `atno`만 진단합니다. 문서 note_layout 기본값은 observed12이며 길이/버전으로 배치를 자동 추정하거나 짧은 입력을 기본값으로 채우지 않습니다.
 
 - `control_links.zig`는 같은 문단의 확장 텍스트 토큰과 컨트롤 헤더를 발생 순서/ID로 연결합니다. `paragraph_children.zig`는 문단 직접 자식 수집/중복 검사의 SSOT이며 paragraphs와 links가 공유합니다. 연결 성공과 개별 컨트롤 의미 검증을 구분합니다.
 

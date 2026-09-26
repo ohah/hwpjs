@@ -21,6 +21,7 @@ const groups = Object.freeze({
   ruby: 6,
   hidden_comments: 6,
   notes: 7,
+  note_number_links: 8,
   equations: 8,
   ole: 7,
   shapes: 8,

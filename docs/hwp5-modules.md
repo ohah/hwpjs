@@ -13,6 +13,7 @@
 - [내부 XML 검증 연결](hwp5-xml-validation.md)
 - [Bibliography 미확정 배치 조사](hwp5-bibliography-evidence.md)
 - [본문·문단·제어·문단 흐름](hwp5-body-contracts.md)
+  - [각주·미주 안 자동 번호 관계](hwp5-note-number-links.md)
 - [필드·메모 참조](hwp5-fields-contracts.md)
 - [그리기·개체](hwp5-drawings-contracts.md)
   - [OLE 내부 컨테이너](hwp5-ole-container.md)

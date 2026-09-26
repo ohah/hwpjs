@@ -67,6 +67,7 @@ pub fn inspectCollected(a: std.mem.Allocator, bytes: []const u8, version: @impor
         .ole = ole.ole,
         .equations = try @import("../body/equation_validation.zig").inspect(tree, options.equation_layout),
         .notes = try @import("../body/note_validation.zig").inspect(tree, groups.items, options.note_layout, options.list_layout),
+        .note_number_links = try @import("../body/note_number_links.zig").inspect(tree, groups.items, options.note_layout),
         .hidden_comments = try @import("../body/hidden_comment.zig").inspect(tree, groups.items, options.list_layout),
         .ruby = try @import("../body/ruby_validation.zig").inspect(tree),
         .fields = field_report: {
