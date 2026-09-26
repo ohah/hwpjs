@@ -1,5 +1,7 @@
 # HWPX 선택 분기 텍스트 이벤트
 
+이벤트를 소유하는 [section 텍스트 스냅샷](hwpx-section-text-snapshot.md)은 같은 선택 정책을 옵션으로 전달합니다. 기본 원문과 두 명시적 capability의 파일별 내용·순서 대조는 그 문서에 기록합니다.
+
 같은 분기에서 문단·run의 header ID 참조를 검사하려면 [선택 분기 서식 참조](hwpx-selected-style-references.md)를 사용합니다. 텍스트 이벤트와 서식 참조는 서로의 보고서를 수정하지 않습니다.
 
 `Document.inspectSelectedSectionText(allocator, options, supported_namespaces, visitor)`는 기존 [section 텍스트 이벤트](hwpx-section-text.md) 스캐너에 호출자가 선언한 capability 집합을 적용합니다. `hp:run` 또는 활성 분기의 직접 자식 `hp:switch`에서 첫 일치 `case` 또는 첫 `default`만 이벤트·보고서에 포함합니다. 선택 정책의 유일한 구현은 [조건부 참조 선택](hwpx-switch-selection.md)의 `compatibility_selection.zig`입니다. 독립적인 namespace 판정이나 버전 추측을 추가하지 않습니다.

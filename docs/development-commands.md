@@ -4,6 +4,8 @@
 
 같은 스냅샷의 파일별 corpus 대조는 `python3 tools/hwpx-text-snapshot-corpus-diff.py --self-test`와 `python3 -O tools/hwpx-text-snapshot-corpus-diff.py --self-test`로 검증기 반례를 먼저 실행하고, `python3 tools/hwpx-text-snapshot-corpus-diff.py`로 실제 484개 후보를 독립 ZIP/XML 결과와 비교합니다. 마지막 명령이 내부에서 ReleaseFast Zig corpus 조사를 실행하며 두 로컬 corpus가 필요합니다. Git의 기본 audit에는 포함되지 않습니다.
 
+같은 corpus의 조건부 분기 결과는 `python3 tools/hwpx-text-snapshot-corpus-diff.py --selected-default`와 `python3 tools/hwpx-text-snapshot-corpus-diff.py --selected-chart`로 각각 검증합니다. 지원 capability가 없는 기본 분기와 명시적 차트 namespace case를 분리하며, 둘 다 기본 audit 밖의 로컬 corpus 검사입니다.
+
 [PNG RGBA 픽셀 조립](png-rgba.md)은 `zig test src/root.zig --test-filter 'PNG RGBA'`로 색 타입·저비트/16비트·투명도·Adam7·한도·OOM·위조 레이아웃을 검사합니다. 독립 실파일 대조 `python3 tools/png-rgba-corpus-diff.py`는 로컬 `reference/rhwp`, Pillow 11.3.0, BSD `olefile` 0.47이 필요합니다. 이 선택 대조는 기본 audit에 포함되지 않습니다.
 
 [HWP5 BinData PNG RGBA](hwp5-bin-data-png-rgba.md)와 [HWPX PNG RGBA](hwpx-png-rgba.md)는 `zig test src/root.zig --test-filter 'PNG RGBA'`로 합성 컨테이너·예산·오류·OOM을 검사합니다. 실제 HWP/HWPX 제품 보고서는 `zig test src/png_rgba_product_survey.zig -O ReleaseFast --test-filter 'PNG RGBA known'`, 각 이미지의 독립 픽셀 바이트는 `python3 tools/png-rgba-product-diff.py`로 대조합니다. 선택 실파일 검사에는 로컬 `reference/rhwp`, Pillow 11.3.0, `olefile` 0.47이 필요하며 기본 audit에는 포함되지 않습니다.

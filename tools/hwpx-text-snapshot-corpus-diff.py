@@ -17,6 +17,11 @@ SOURCES = (
 OPF = "{http://www.idpf.org/2007/opf/}"
 PARA = "{http://www.hancom.co.kr/hwpml/2011/paragraph}"
 SECTION = "{http://www.hancom.co.kr/hwpml/2011/section}sec"
+SWITCH = PARA + "switch"
+CASE = PARA + "case"
+DEFAULT = PARA + "default"
+RUN = PARA + "run"
+CHART = "http://www.hancom.co.kr/hwpml/2016/ooxmlchart"
 INLINE = {
     PARA + name: index
     for index, name in enumerate(("tab", "fwSpace", "nbSpace", "lineBreak", "titleMark", "markpenBegin", "markpenEnd", "hypen"))
@@ -28,42 +33,56 @@ def require(condition, detail):
         raise AssertionError(detail)
 
 
-def update_ordered(section, result):
+def update_ordered(section, result, payload, counts, mode):
     def content(value):
         if value is not None:
-            for byte in value.encode("utf-8"):
+            encoded = value.encode("utf-8")
+            payload.extend(encoded)
+            counts[5] += len(encoded)
+            for byte in encoded:
                 result.update(bytes((9, byte)))
 
-    def visit(node, in_text=False):
+    def visit(node, in_text=False, parent=None):
         if in_text:
             kind = INLINE.get(node.tag, 8)
             result.update(bytes((7, kind)))
         elif node.tag == PARA + "p":
+            counts[1] += 1
             result.update(b"\x01")
-        elif node.tag == PARA + "run":
+        elif node.tag == RUN:
+            counts[2] += 1
             result.update(b"\x03")
         elif node.tag == PARA + "t":
+            counts[3] += 1
             result.update(b"\x05")
         owns_text = in_text or node.tag == PARA + "t"
+        before_text = len(payload)
         if owns_text:
             content(node.text)
-        for child in node:
-            visit(child, owns_text)
+        children = list(node)
+        if mode != "raw" and not in_text and node.tag == SWITCH:
+            require(parent == RUN, ("unmodeled switch parent", parent))
+            require(len(children) == 2 and children[0].tag == CASE and children[1].tag == DEFAULT, "unmodeled switch children")
+            require(children[0].get(PARA + "required-namespace") == CHART, "unmodeled switch requirement")
+            children = [children[0] if mode == "selected_chart" else children[1]]
+        for child in children:
+            visit(child, owns_text, node.tag)
             if owns_text:
                 content(child.tail)
         if in_text:
             result.update(bytes((8, kind)))
         elif node.tag == PARA + "p":
             result.update(b"\x02")
-        elif node.tag == PARA + "run":
+        elif node.tag == RUN:
             result.update(b"\x04")
         elif node.tag == PARA + "t":
+            counts[4] += len(payload) == before_text
             result.update(b"\x06")
 
     visit(section)
 
 
-def oracle():
+def oracle(mode):
     files = {}
     rejected_zip = set()
     encrypted = set()
@@ -92,25 +111,31 @@ def oracle():
                         section = ET.fromstring(archive.read(name))
                         if section.tag != SECTION:
                             continue
-                        update_ordered(section, ordered)
                         counts[0] += 1
-                        counts[1] += sum(1 for _ in section.iter(PARA + "p"))
-                        counts[2] += sum(1 for _ in section.iter(PARA + "run"))
-                        for node in section.iter(PARA + "t"):
-                            counts[3] += 1
-                            encoded = "".join(node.itertext()).encode("utf-8")
-                            counts[4] += not encoded
-                            payload.extend(encoded)
-                    counts[5] = len(payload)
+                        before_payload = len(payload)
+                        before_counts = counts.copy()
+                        update_ordered(section, ordered, payload, counts, mode)
+                        if mode == "raw":
+                            direct_text = b"".join("".join(node.itertext()).encode("utf-8") for node in section.iter(PARA + "t"))
+                            require(bytes(payload[before_payload:]) == direct_text, (path, name, "raw text walk disagreement"))
+                            require(counts[1] - before_counts[1] == sum(1 for _ in section.iter(PARA + "p")), (path, name, "raw paragraph count disagreement"))
+                            require(counts[2] - before_counts[2] == sum(1 for _ in section.iter(RUN)), (path, name, "raw run count disagreement"))
+                            require(counts[3] - before_counts[3] == sum(1 for _ in section.iter(PARA + "t")), (path, name, "raw text count disagreement"))
+                    require(counts[5] == len(payload), path)
                     files[key] = (hashlib.sha256(payload).hexdigest(), ordered.hexdigest(), *counts)
             except zipfile.BadZipFile:
                 rejected_zip.add(key)
     return files, rejected_zip, encrypted
 
 
-def product():
+def product(mode):
+    filter_name = {
+        "raw": "HWPX section text snapshot corpus digest survey raw",
+        "selected_default": "HWPX section text snapshot corpus digest survey selected default",
+        "selected_chart": "HWPX section text snapshot corpus digest survey selected chart",
+    }[mode]
     result = subprocess.run(
-        ["zig", "test", "src/hwpx_text_snapshot_corpus.zig", "-O", "ReleaseFast", "--test-filter", "HWPX section text snapshot corpus digest survey"],
+        ["zig", "test", "src/hwpx_text_snapshot_corpus.zig", "-O", "ReleaseFast", "--test-filter", filter_name],
         cwd=ROOT,
         capture_output=True,
         text=True,
@@ -122,18 +147,23 @@ def product():
     totals = None
     for line in result.stderr.splitlines():
         if "SNAPSHOT_FILE " in line:
-            _, root, path_hash, content_hash, order_hash, *counts = line[line.index("SNAPSHOT_FILE ") :].split()
+            _, observed_mode, root, path_hash, content_hash, order_hash, *counts = line[line.index("SNAPSHOT_FILE ") :].split()
+            require(observed_mode == mode, observed_mode)
             key = (int(root), path_hash)
             require(key not in files, key)
             files[key] = (content_hash, order_hash, *(int(value) for value in counts))
         elif "SNAPSHOT_REJECTED " in line:
-            _, root, path_hash = line[line.index("SNAPSHOT_REJECTED ") :].split()
+            _, observed_mode, root, path_hash = line[line.index("SNAPSHOT_REJECTED ") :].split()
+            require(observed_mode == mode, observed_mode)
             rejected_zip.add((int(root), path_hash))
         elif "SNAPSHOT_ENCRYPTED " in line:
-            _, root, path_hash = line[line.index("SNAPSHOT_ENCRYPTED ") :].split()
+            _, observed_mode, root, path_hash = line[line.index("SNAPSHOT_ENCRYPTED ") :].split()
+            require(observed_mode == mode, observed_mode)
             encrypted.add((int(root), path_hash))
         elif line.startswith("SNAPSHOT_TOTAL "):
-            totals = tuple(int(value) for value in line.split()[1:])
+            _, observed_mode, *values = line.split()
+            require(observed_mode == mode, observed_mode)
+            totals = tuple(int(value) for value in values)
     require(totals is not None, result.stderr[-2000:])
     return files, rejected_zip, encrypted, totals
 
@@ -154,10 +184,26 @@ def self_test():
     moved = ET.fromstring("<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:p><p:run><p:t>AB<p:tab/></p:t></p:run></p:p></s:sec>")
     left_order = hashlib.sha256()
     right_order = hashlib.sha256()
-    update_ordered(first, left_order)
-    update_ordered(moved, right_order)
-    require("".join(first.itertext()) == "".join(moved.itertext()), "negative control changed plain text")
+    left_payload = bytearray()
+    right_payload = bytearray()
+    update_ordered(first, left_order, left_payload, [0] * 6, "raw")
+    update_ordered(moved, right_order, right_payload, [0] * 6, "raw")
+    require(left_payload == right_payload == b"AB", "negative control changed plain text")
     require(left_order.digest() != right_order.digest(), "ordered digest missed moved text")
+    branches = ET.fromstring("<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:p><p:run><p:switch><p:case p:required-namespace='" + CHART + "'><p:t>C</p:t></p:case><p:default><p:t>D</p:t></p:default></p:switch></p:run></p:p></s:sec>")
+    selected_payloads = []
+    for mode in ("raw", "selected_default", "selected_chart"):
+        payload = bytearray()
+        update_ordered(branches, hashlib.sha256(), payload, [0] * 6, mode)
+        selected_payloads.append(bytes(payload))
+    require(selected_payloads == [b"CD", b"D", b"C"], selected_payloads)
+    branches.find(".//" + CASE).set(PARA + "required-namespace", "urn:unexpected")
+    try:
+        update_ordered(branches, hashlib.sha256(), bytearray(), [0] * 6, "selected_chart")
+    except AssertionError:
+        pass
+    else:
+        raise AssertionError("selector accepted an unmodeled switch requirement")
     key = (0, "a" * 64)
     row = ("b" * 64, "d" * 64, 1, 2, 3, 4, 1, 5)
     expected = {key: row}
@@ -187,11 +233,13 @@ def main():
     if sys.argv[1:] == ["--self-test"]:
         print("HWPX snapshot corpus verifier negative controls passed")
         return
-    require(not sys.argv[1:], "unsupported arguments")
-    expected, rejected_zip, encrypted = oracle()
-    actual, actual_rejected, actual_encrypted, totals = product()
+    args = sys.argv[1:]
+    require(args in ([], ["--selected-default"], ["--selected-chart"]), "unsupported arguments")
+    mode = {(): "raw", ("--selected-default",): "selected_default", ("--selected-chart",): "selected_chart"}[tuple(args)]
+    expected, rejected_zip, encrypted = oracle(mode)
+    actual, actual_rejected, actual_encrypted, totals = product(mode)
     compare(expected, rejected_zip, encrypted, actual, actual_rejected, actual_encrypted, totals)
-    print("HWPX snapshot corpus documents={} rejected_zip={} encrypted={} sections={} paragraphs={} runs={} text_elements={} empty={} text_bytes={}".format(*totals))
+    print("HWPX snapshot corpus mode={} documents={} rejected_zip={} encrypted={} sections={} paragraphs={} runs={} text_elements={} empty={} text_bytes={}".format(mode, *totals))
 
 
 if __name__ == "__main__":

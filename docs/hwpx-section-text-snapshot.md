@@ -19,3 +19,11 @@
 2026-09-26 로컬 표본 484개 중 ZIP 거부 6개, 암호화 2개를 별도 분류한 정상 476개 모두에서 파일별 내용·순서 해시와 section·문단·run·`hp:t`·빈 `hp:t`·본문 UTF-8 길이가 일치했습니다. 정상 합계는 section 544, 문단 215,146, run 267,347, `hp:t` 230,677, 빈 `hp:t` 14,607, 본문 7,975,957바이트입니다. 로컬 `reference/rhwp`는 Git에 포함되지 않으므로 깨끗한 체크아웃의 기본 audit로 재현되지 않습니다. 이 대조는 선택된 section의 원문 텍스트 이벤트에 한정되며 글꼴·조건부 활성 선택·실제 화면 배치·비선택 XML·편집/저장·모든 HWPX 버전 적합성을 보증하지 않습니다.
 
 이 corpus 조사기 추가 뒤 기본 Debug `zig build test --summary all`을 다시 실행해 5/5 단계·2,549/2,549 테스트, ReleaseSafe 제품 빌드 5/5 단계를 확인했습니다. 기본 suite는 corpus 파일별 순서 해시를 실행하지 않으므로 위 Python 대조가 별도의 필수 근거입니다.
+
+## 조건부 선택 분기 corpus 대조
+
+같은 Zig 조사기와 Python ZIP/XML 조사기를 `raw`, 지원 namespace가 없는 `selected_default`, 차트 namespace `http://www.hancom.co.kr/hwpml/2016/ooxmlchart`를 명시한 `selected_chart` 세 모드로 실행합니다. 선택 모드는 기존 section 텍스트 스캐너에 `branch_policy`만 전달하고, Python 조사기는 관측된 직접 run 자식 `switch`의 정확한 `case/default` 순서와 요구 namespace를 별도로 확인합니다. 다른 분기 모양을 추정해 통과시키지 않습니다. 원문 모드는 순회식 결과 외에 `ElementTree.itertext()`의 직접 본문·문단/run/text 개수도 한 번 더 대조합니다.
+
+2026-09-26 로컬 정상 476개 모두에서 두 선택 모드의 파일별 내용·이벤트 순서 해시, section·문단·run·`hp:t`·빈 `hp:t`·본문 바이트 수가 각각 독립 조사와 일치했습니다. 두 선택 모드는 각각 section 544, 문단 215,144, run 267,345, `hp:t` 230,675, 빈 `hp:t` 14,607, 본문 7,975,784바이트입니다. 원문 양쪽 분기보다 문단/run/text가 각 2개, 본문이 173바이트 적으며 이 차이는 [기존 선택 텍스트 조사](hwpx-selected-section-text.md)의 차트/OLE 캡션 분기 파일에서 발생합니다. 두 선택 모드의 총계가 같아도 실제 차트·OLE 표현이나 화면 결과의 동치를 뜻하지 않습니다. 차트 namespace 선언은 호출자 capability를 시험한 것이지 차트 렌더링 구현 완료 선언이 아닙니다. 나머지 ZIP 거부 6개·암호화 2개도 모드별 파일 집합을 대조했으며, 이 결과는 해당 corpus와 명시한 capability 두 경우에 한정됩니다.
+
+선택 corpus 조사기 추가 뒤 `zig fmt --check build.zig src`, 세 모드의 ReleaseFast Zig/Python 파일별 대조, `python3`·`python3 -O` 검증기 반례, ReleaseSafe 제품 빌드 5/5 단계, 전체 Debug `zig build test --summary all` 5/5 단계·2,549/2,549 테스트가 통과했습니다. 선택 corpus 대조는 기본 suite에 포함되지 않으므로 세 모드의 별도 실행 결과가 필요합니다.
