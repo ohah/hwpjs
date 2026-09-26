@@ -33,3 +33,5 @@
 - [DocHistory 컨테이너 연결](hwp5-history-container.md)은 명시적으로 선택한 저장 방식의 VersionLog와 선택적 [최종 문서 구조](hwp5-history-last-document.md)를 검사합니다. 기본 미선택·HistoryLastDoc 미소비를 유지하며 파일 전체 바이트/레코드 예산을 공유합니다.
 
 - summary `strings.zig`는 counted 문자열의 경계·종결·패딩을 공유합니다. LPWSTR 길이는 UTF-16 유닛, LPSTR 길이는 바이트이며 CP1200일 때도 바이트입니다. parser는 PID1의 VT_I2를 먼저 확인해 뒤에 있는 코드페이지도 적용하며 u16 비트패턴을 보존합니다. `dictionary.zig`는 명시된 코드페이지에서 항목 경계/ID만 검사합니다. 이름 인코딩·중복 의미는 별도이며, 코드페이지가 없는 HWP dictionary에 자동 기본값을 적용하지 않습니다.
+
+2026-09-27 현재 내용 재검증: `document/validation.zig`의 decoded 입력·구역 수·공유 한도, `container/validation.zig`의 강제 strict CFB·정확한 스트림 조회·DocInfo backing 수명과 선택 스트림/미소비 집계, BinData·PrvText·summary·Scripts·XMLTemplate·DocHistory의 현 소유 코드를 대조했습니다. ReleaseSafe 집중 테스트 6개(문서/컨테이너/스크립트/이력/XMLTemplate/summary)와 ReleaseFast 3개(미리보기/BinData/이력)가 통과했습니다. 로컬 인라인 링크의 대상은 전체 링크 검사로 확인했습니다. 이번 묶음에서 실파일 corpus·전체 Zig audit와 링크된 각 주제 문서의 필드별 명세는 재검증하지 않았습니다. 이 상위 계약의 완료를 전체 HWP5 지원이나 그 하위 문서들의 완료로 세지 않습니다.

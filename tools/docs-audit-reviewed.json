@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "48dc6000961718b7e9a828da45886138cd1a97e2a640f3c8ec459fc4bbcc473f",
-      "evidence": "2026-09-27 tracker tests, 2523 inline links, HWP5 module index review, architecture corrections kept pending, incomplete full Zig test recorded"
+      "sha256": "27c72ff3bcf502ace07efe93e47bf7aa29c54c815c626cba23f18a5d39c1c737",
+      "evidence": "2026-09-27 tracker tests, 2523 inline links, HWP5 module index and document/container contract reviews, architecture pending, incomplete full Zig test recorded"
+    },
+    "docs/hwp5-document-contracts.md": {
+      "sha256": "1e64d66297c293a62b53a2daba2f7f32633a83badf7f98183ed9cfd994da2aec",
+      "evidence": "2026-09-27 current document/container ownership and selected stream boundaries; 6 ReleaseSafe and 3 ReleaseFast focused tests; corpus and linked detail docs excluded"
     },
     "docs/hwp5-modules.md": {
       "sha256": "1e5dd365303411c15be4bc5a8695c71a55a6ade50a21d95cac8e35af71f9733c",
