@@ -50,6 +50,8 @@ WCHAR payload는 UTF-16LE 외부 입력으로 공통 prolog에 전달합니다. 
 
 실제 `reference/rhwp/samples/basic/treatise sample.hwp`의 이력 XML 5개, payload 합계 13,291,898바이트를 컨테이너 경로에서 검사합니다. 이력 레코드·메타데이터를 포함한 decoded 13,292,279바이트와 구분합니다. 실제 XMLTemplate 양성 표본은 0개이며 추가한 XMLTemplate은 합성 데이터입니다. 저장 구조·payload 추출·통계 기대값은 기존 Node zlib/CFB/독립 XML oracle과 대조합니다.
 
-최종 Debug·ReleaseSafe·ReleaseFast audit 모두 17/17 단계, 네이티브 337/337, HWP5 감사 스크립트 3,082,967 checks를 통과했습니다. XML 컨테이너 전용 결과는 정상 106건·거부 122건입니다. 테스트용 XML 직렬화 공통화 후 Debug 전체 audit도 다시 실행했습니다. Zig 포맷·변경 JS 문법·문서 로컬 링크 36개·diff 공백을 검사했습니다. 검사 건수는 지원률이나 무결함 증명이 아닙니다.
+이 기능을 처음 연결한 당시 Debug·ReleaseSafe·ReleaseFast audit는 모두 17/17 단계, 네이티브 337/337, HWP5 감사 스크립트 3,082,967 checks를 통과했습니다. 당시 XML 컨테이너 전용 결과는 정상 106건·거부 122건이었습니다. 테스트용 XML 직렬화 공통화 후 Debug 전체 audit도 다시 실행했습니다. Zig 포맷·변경 JS 문법·당시 문서 로컬 링크 36개·diff 공백을 검사했습니다. 이 숫자는 과거 실행 기록이며 현재 전체 테스트 건수나 지원률·무결함 증명이 아닙니다.
+
+2026-09-27 현재 내용 재검증: 로컬 HWP5 명세의 XMLTemplate 표 10~12와 DocHistory 레코드 0x30/0x31, 현 `xml_validation.zig`·두 컨테이너 어댑터·`history/xml.zig`의 선택·수명·누적 예산을 대조했습니다. XML 연결의 Debug 1개, ReleaseSafe 4개, ReleaseFast 4개 집중 테스트와 독립 이력 조사기 안전 경계 6개 테스트가 통과했습니다. `history-xml-survey.mjs`가 현재 실파일의 이력 XML 5개와 decoded 13,292,279바이트를 다시 보고했고, 다섯 payload 길이 합계도 13,291,898바이트였습니다. `zig build hwp5-audit -Doptimize=ReleaseSafe --summary all`은 10/10 단계와 HWP5 독립 오라클 전체 8,905,855 checks로 통과했습니다. 이 검사는 전체 Debug·ReleaseFast audit의 재실행이나 XMLTemplate 실파일 양성 검증을 대신하지 않습니다.
 
 후속 범위 조사에서 기존 HWP fixture 48개를 strict CFB로 읽었고 Bibliography 루트는 0개였습니다. 이는 현재 표본에서의 부재이지 형식의 미존재를 뜻하지 않습니다. Bibliography와 다른 미선택 XML 경로, HWPML/DiffML/XSD 의미·복원·HWPX 통합은 이번 연결의 완료 범위에 포함하지 않습니다.
