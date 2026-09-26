@@ -69,6 +69,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라
   마스터페이지 문단의 run·배열 직접 자식 분류 재사용은 [마스터페이지 문단 직접 자식](hwpx-master-paragraph-children.md)이 소유합니다.
   마스터페이지의 `hp:t` 내용·인라인 이벤트는 [마스터페이지 텍스트](hwpx-master-text.md)가 section 공통 스캐너를 재사용하고 파트 범위만 별도로 소유합니다.
   그 이벤트의 호출 수명 밖 소유 복사는 [마스터페이지 텍스트 스냅샷](hwpx-master-text-snapshot.md)이 공통 스냅샷 빌더를 재사용합니다.
+  section·마스터페이지 스냅샷의 선택 실파일 내용/순서 해시는 `src/hwpx_text_snapshot_corpus_common.zig`가, Python XML 이벤트 규칙은 `tools/hwpx_text_snapshot_order.py`가 공유합니다. 파트 선택은 각 조사기가 따로 소유합니다.
   마스터페이지의 그림·도형·OLE manifest ID 연결은 [마스터페이지 이진 참조](hwpx-master-binary-references.md)가 기존 ID 색인·분류를 재사용합니다.
   마스터페이지의 차트 ZIP 경로·대상 XML 검사는 [마스터페이지 차트 참조](hwpx-master-chart-references.md)가 section 차트 Resolver를 재사용합니다.
   마스터페이지의 직접 `subList` 범위 안 표 격자는 [마스터페이지 표 격자](hwpx-master-table-geometry.md)가 section의 표 판정을 재사용합니다.

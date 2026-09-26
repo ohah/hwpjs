@@ -32,6 +32,7 @@ test {
     _ = @import("hwpx/masterpage_paragraph_children_tests.zig");
     _ = @import("hwpx/masterpage_text_tests.zig");
     _ = @import("hwpx/masterpage_text_snapshot_tests.zig");
+    _ = @import("hwpx_text_snapshot_corpus_common.zig");
     _ = @import("hwpx/masterpage_binary_references_tests.zig");
     _ = @import("hwpx/run_metadata_tests.zig");
     _ = @import("hwpx/run_topology_tests.zig");
