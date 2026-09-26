@@ -66,17 +66,11 @@ fn known(raw: []const u8, names: []const []const u8) bool {
     return false;
 }
 
-pub fn sixHexColor(raw: []const u8) bool {
-    if (raw.len != 7 or raw[0] != '#') return false;
-    for (raw[1..]) |byte| if (!std.ascii.isHex(byte)) return false;
-    return true;
-}
-
 pub fn validate(node: NodeKind, field: Field, raw: []const u8, diagnostics: *Diagnostics) !void {
     const descriptor = descriptors[@intFromEnum(field)];
     if (descriptor.node != node) return error.InvalidBrushField;
     switch (descriptor.value_kind) {
-        .color => diagnostics.non_six_hex_colors += @intFromBool(!sixHexColor(raw)),
+        .color => diagnostics.non_six_hex_colors += @intFromBool(!values.sixHexColor(raw)),
         .hatch_style => diagnostics.unknown_enums += @intFromBool(!known(raw, &hatch_styles)),
         .float => try values.floatLexical(raw),
         .gradation_type => diagnostics.unknown_enums += @intFromBool(!known(raw, &gradation_types)),

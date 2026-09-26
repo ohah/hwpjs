@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[HWPX 본문 수식 원문·script](hwpx-equations.md)는 `zig test src/root.zig --test-filter 'HWPX equation'`으로 합성·패키지·소유권·할당 실패를 검사합니다. 로컬 두 HWPX corpus가 있으면 `python3 tools/hwpx-equation-corpus-diff.py --self-test`와 `python3 tools/hwpx-equation-corpus-diff.py`로 독립 ZIP/ElementTree 파일별 결과를 대조합니다. 마지막 명령은 ReleaseFast Zig 제품 조사를 내부에서 실행하며 기본 audit에는 포함되지 않습니다.
+
 [HWPX 마스터페이지 텍스트 소유 스냅샷](hwpx-master-text-snapshot.md)은 `zig test src/root.zig --test-filter 'HWPX master text snapshot'`으로 합성 범위·한도·선택 분기·전 할당 실패를 확인합니다. 로컬 `reference/rhwp`가 있을 때만 `zig test src/hwpx_master_text_snapshot_survey.zig -O ReleaseFast --test-filter 'HWPX master text snapshot real file'`로 실제 한 파일의 스트리밍/소유 집계와 이벤트 내부 일관성을 검사합니다.
 
 같은 스냅샷의 파일별 corpus 대조는 `python3 tools/hwpx-master-text-snapshot-corpus-diff.py --self-test`와 `python3 -O tools/hwpx-master-text-snapshot-corpus-diff.py --self-test`로 검증기 반례를 확인한 뒤, `python3 tools/hwpx-master-text-snapshot-corpus-diff.py`, `python3 tools/hwpx-master-text-snapshot-corpus-diff.py --selected-default`, `python3 tools/hwpx-master-text-snapshot-corpus-diff.py --selected-chart`로 각각 실행합니다. 스크립트가 ReleaseFast Zig 조사를 실행하며 두 로컬 corpus가 필요합니다. 기본 audit에는 포함되지 않습니다.

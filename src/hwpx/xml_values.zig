@@ -1,5 +1,13 @@
 const std = @import("std");
 
+/// Observed OWPML #RRGGBB spelling; callers may report deviations without
+/// rejecting or interpreting the color.
+pub fn sixHexColor(raw: []const u8) bool {
+    if (raw.len != 7 or raw[0] != '#') return false;
+    for (raw[1..]) |byte| if (!std.ascii.isHex(byte)) return false;
+    return true;
+}
+
 pub fn nonNegative(raw: []const u8) !bool {
     const value = std.mem.trim(u8, raw, " \t\r\n");
     if (value.len == 0) return error.InvalidNonNegativeInteger;
@@ -101,6 +109,10 @@ pub fn floatLexical(raw: []const u8) !void {
 }
 
 test "HWPX shared XML scalar lexical bounds" {
+    try std.testing.expect(sixHexColor("#00aAbB"));
+    try std.testing.expect(!sixHexColor("#00aAb"));
+    try std.testing.expect(!sixHexColor("00aAbB"));
+    try std.testing.expect(!sixHexColor("#00aAbG"));
     try std.testing.expect(try nonNegative(" -000 "));
     try std.testing.expect(!(try nonNegative(" +12 ")));
     try std.testing.expectError(error.InvalidNonNegativeInteger, nonNegative("-1"));

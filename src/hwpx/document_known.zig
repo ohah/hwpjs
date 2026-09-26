@@ -46,6 +46,7 @@ const settings = @import("settings.zig");
 const masterpage_references = @import("masterpage_references.zig");
 const masterpage_style_references = @import("masterpage_style_references.zig");
 const masterpage_table_geometry = @import("masterpage_table_geometry.zig");
+const equation = @import("equation.zig");
 
 /// Results of the currently implemented HWPX inspections only. A successful
 /// return does not assert complete schema, semantic or edit/save validity.
@@ -82,6 +83,7 @@ pub const Report = struct {
     binary_references: binary_refs.Report,
     chart_references: chart_refs.Report,
     section_text: section_text.Report,
+    equations: equation.Report,
     paragraph_metadata: paragraph_metadata.Report,
     paragraph_children: paragraph_children.Report,
     line_segments: line_segments.Report,
@@ -105,6 +107,7 @@ pub const Report = struct {
     section_definition_references: section_definition_refs.Report,
 
     pub fn deinit(self: *Report, a: std.mem.Allocator) void {
+        self.equations.deinit();
         self.section_definitions.deinit(a);
         self.section_direct_settings.deinit(a);
         self.section_page_borders.deinit(a);
@@ -231,8 +234,10 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
         const run_report = try trees.inspectRunMetadata(a, options.run_metadata);
         const topology_report = try trees.inspectRunTopology(a, options.run_topology);
         const text_nodes_report = try trees.inspectTextNodes(a, options.text_nodes);
+        var equation_report = try trees.inspectEquations(a, options.equations);
+        errdefer equation_report.deinit();
         const table_report = try trees.inspectTableGeometryWithBorderFills(a, options.table_geometry, resource_report.table(.border_fill));
-        break :blk .{ .begin = begin_report, .page = page_report, .section_definitions = section_definition_report, .section_direct_settings = section_direct_settings_report, .section_page_borders = section_page_border_report, .section_note_shapes = section_note_shape_report, .section_presentation = section_presentation_report, .fill_brushes = fill_brush_report, .fill_brush_image_links = fill_brush_image_link_report, .fill_brush_image_payloads = fill_brush_image_payload_report, .picture_image_links = picture_image_link_report, .picture_image_payloads = picture_image_payload_report, .section_page_border_references = section_page_border_ref_report, .section_definition_references = section_definition_ref_report, .paragraph = paragraph_report, .paragraph_children = paragraph_children_report, .line_segments = line_segment_report, .run = run_report, .topology = topology_report, .text_nodes = text_nodes_report, .table_geometry = table_report };
+        break :blk .{ .begin = begin_report, .page = page_report, .section_definitions = section_definition_report, .section_direct_settings = section_direct_settings_report, .section_page_borders = section_page_border_report, .section_note_shapes = section_note_shape_report, .section_presentation = section_presentation_report, .fill_brushes = fill_brush_report, .fill_brush_image_links = fill_brush_image_link_report, .fill_brush_image_payloads = fill_brush_image_payload_report, .picture_image_links = picture_image_link_report, .picture_image_payloads = picture_image_payload_report, .section_page_border_references = section_page_border_ref_report, .section_definition_references = section_definition_ref_report, .paragraph = paragraph_report, .paragraph_children = paragraph_children_report, .line_segments = line_segment_report, .run = run_report, .topology = topology_report, .text_nodes = text_nodes_report, .equations = equation_report, .table_geometry = table_report };
     };
     return .{
         .version = version,
@@ -267,6 +272,7 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
         .binary_references = binary_ref_report,
         .chart_references = chart_ref_report,
         .section_text = text_report,
+        .equations = semantic.equations,
         .paragraph_metadata = semantic.paragraph,
         .paragraph_children = semantic.paragraph_children,
         .line_segments = semantic.line_segments,

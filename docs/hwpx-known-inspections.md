@@ -87,6 +87,8 @@ section 텍스트 보고서도 원문 양쪽 분기를 유지합니다. 활성 �
 `page_geometry`는 [구역 쪽 설정 원값](hwpx-page-geometry.md)을, `section_definitions`는 [구역 정의 속성·직접 자식](hwpx-section-definitions.md)을 같은 소유 XML 트리에서 추출합니다. [그림 이미지 연결](hwpx-picture-image-links.md)은 section과 마스터페이지의 원문 `pic/img` 사이트를 별도 보고서로 남기고, [내장 그림 이미지 검사](hwpx-picture-image-payloads.md)는 공통 형식 검사에 연결합니다. [OPF OLE 사본 검사](hwpx-ole-payloads.md)는 외부 선언과 ZIP 내 사본을 분리해 strict CFB 구조만 검사합니다. 미구현 범위는 2011 외 OWPML namespace의 의미, 전체 header/section XSD 및 조건부 분기, settings/masterpage 의미, OPF 밖 XML과 BinData **전체**의 포맷 의미 검사(현재는 fillBrush·그림·manifest 이미지 후보와 OLE 사본까지), 차트 수식의 의미·표시, 문서 모델·레이아웃, 편집·저장·무손실 왕복입니다. ZIP 바이트 CRC나 XML 문법 통과만으로는 내부 포맷을 보증하지 않습니다. 이 API의 이름을 `validateDocument`나 완료 판정으로 바꾸지 않는 이유입니다.
 
 [표 자체 속성 원값·테두리 ID 참조](hwpx-table-attributes.md)도 표 격자 보고서 안에서 확인할 수 있습니다. 원값 검사 성공을 표 표시·편집 완료로 해석하지 않습니다.
+
+`equations`는 같은 section 트리의 [본문 수식 원문·script](hwpx-equations.md)를 별도 소유 보고서로 반환합니다. 수식 문법·렌더링·저장 지원을 추가한 것은 아닙니다.
 [표 안쪽 여백·셀 구역](hwpx-table-children.md) 보고서도 같은 격자 보고서에 포함되며, 구역 겹침·표 배치의 의미는 판정하지 않습니다.
 [표 상속 shape 속성·직접 자식](hwpx-table-shape.md) 보고서도 같은 격자 보고서에 포함됩니다. 모델 밖 enum 관측을 전체 스키마 적합성이나 레이아웃 판정으로 승격하지 않습니다.
 [표 행·셀 직접 자식 topology](hwpx-table-child-topology.md) 보고서도 포함됩니다. 자식 순서 차이는 관측값이며 전체 XSD 적합성 판정이 아닙니다.

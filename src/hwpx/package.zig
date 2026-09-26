@@ -20,6 +20,7 @@ const section_text_snapshot = @import("section_text_snapshot.zig");
 const header_tree = @import("header_tree.zig");
 const section_tree = @import("section_tree.zig");
 const document_trees = @import("document_trees.zig");
+const equation = @import("equation.zig");
 const paragraph_metadata = @import("paragraph_metadata.zig");
 const paragraph_children = @import("paragraph_children.zig");
 const masterpage_paragraph_children = @import("masterpage_paragraph_children.zig");
@@ -175,6 +176,8 @@ pub const HeaderTreeOptions = document_trees.HeaderOptions;
 pub const SectionTreeOptions = document_trees.SectionOptions;
 pub const XmlTrees = document_trees.Bundle;
 pub const XmlTreesOptions = document_trees.AllOptions;
+pub const EquationOptions = struct { trees: XmlTreesOptions = .{}, equations: equation.Options = .{} };
+pub const EquationReport = equation.Report;
 pub const ParagraphMetadataOptions = paragraph_metadata.Options;
 pub const ParagraphMetadataReport = paragraph_metadata.Report;
 pub const ParagraphChildrenOptions = paragraph_children.Options;
@@ -347,6 +350,7 @@ pub const KnownOptions = struct {
     chart_references: ChartReferenceOptions = .{},
     section_text: SectionTextOptions = .{},
     trees: XmlTreesOptions = .{},
+    equations: equation.Options = .{},
     paragraph_metadata: ParagraphMetadataOptions = .{},
     paragraph_children: ParagraphChildrenOptions = .{},
     line_segments: LineSegmentsOptions = .{},
@@ -669,6 +673,14 @@ pub const Document = struct {
     /// materialized or validated by this API.
     pub fn readXmlTrees(self: *const Document, a: std.mem.Allocator, options: XmlTreesOptions) !XmlTrees {
         return document_trees.readAll(a, self.archive, self.manifest, options);
+    }
+
+    /// Owns run-direct equation XML, normalized script text, and observed
+    /// fields. This is not formula parsing or a document edit model.
+    pub fn inspectEquations(self: *const Document, a: std.mem.Allocator, options: EquationOptions) !EquationReport {
+        var trees = try self.readXmlTrees(a, options.trees);
+        defer trees.deinit(a);
+        return trees.inspectEquations(a, options.equations);
     }
 
     /// Reuses the owned section trees and header border-fill IDs; inactive
