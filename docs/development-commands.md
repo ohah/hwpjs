@@ -8,6 +8,8 @@
 
 [Exif 선두 Adobe 색 선언 JPEG](jpeg-exif-adobe-rgb.md)은 `zig test src/root.zig --test-filter 'HWPX manifest Exif Adobe JPEG'`로 ZIP 연결·색 선언 오류·한도·OOM·progressive를, `zig test src/hwpx_jpeg_pixel_survey.zig -O ReleaseFast --test-filter 'HWPX JPEG Exif Adobe'`로 두 corpus 34개와 실제 `(0,1,2)` 옵션 교차를 검사합니다. 실파일 픽셀 차이는 `python3 tools/hwpx-jpeg-observed-pixel-diff.py --case exif-adobe`로 확인합니다. 두 선택 검사에는 로컬 `reference/rhwp`가 필요하고 Python 검사에는 Pillow 11.3.0이 필요합니다. 기본 audit에는 포함되지 않습니다.
 
+[Adobe 4성분 JPEG](jpeg-adobe-four-component.md)는 `zig test src/root.zig --test-filter 'JPEG Adobe complemented CMYK'`, `--test-filter 'JPEG RGB raster uses all four Adobe'`, `--test-filter 'HWPX manifest Exif Adobe four-component'`로 색 산술·4평면·HWPX 연결을 검사합니다. 위 Exif corpus 검사와 `python3 tools/hwpx-jpeg-observed-pixel-diff.py --case exif-ycck`는 실제 YCCK 2건의 해제 개수·길이 및 한 건의 Pillow 11.3.0 RGB 차이를 독립 대조합니다. 선택 실파일 검사에는 로컬 `reference/rhwp`가 필요합니다.
+
 [Exif IFD0 방향 원값](jpeg-exif-orientation.md)은 `zig test src/root.zig --test-filter 'JPEG Exif TIFF'`와 `--test-filter 'HWPX manifest Exif TIFF orientation'`으로 양 endian·오류·한도·OOM·픽셀과 독립된 보고를 검사합니다. `python3 tools/hwpx-fill-brush-image-oracle.py --exif-orientation`은 Pillow의 독립 분포를, 위 Exif Adobe 선택 실파일 조사는 Zig의 34개 **제품 보고서** IFD0 분포와 픽셀 실패 3건의 메타데이터 보존을 비교합니다. 두 corpus와 Pillow 11.3.0이 필요한 실파일 검사는 기본 audit 밖입니다.
 
 [HWPX BMP 픽셀 검사](hwpx-bmp-pixels.md)는 `zig test src/root.zig --test-filter 'HWPX manifest BMP'`와 그림·브러시의 기존 `HWPX picture image payloads`·`HWPX fill brush image payloads` 필터로 공유 경로를 검사합니다. 독립 Pillow 11.3.0 조사 `python3 tools/hwpx-fill-brush-image-oracle.py --bmp-pixels`와 `zig test src/hwpx_bmp_pixel_survey.zig -O ReleaseFast --test-filter 'HWPX BMP pixel shard N'`의 N=0..7은 로컬 `reference/rhwp`가 필요한 선택 실파일 검사이며 기본 audit에 포함되지 않습니다.

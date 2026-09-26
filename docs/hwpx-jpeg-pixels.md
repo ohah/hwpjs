@@ -6,7 +6,7 @@ HWPX 그림·브러시·OPF 전체 이미지 후보는 `src/hwpx/image_payloads.
 
 픽셀 선택에서는 `render.upsampling`과 색 관리 미적용을 명시하고, progressive는 `require_full`로 고정해 부분 계수를 RGB 성공으로 표시하지 않습니다. 샘플/블록/계수·ICC/Adobe/개별 RGB 한도도 공통 코어에 전달합니다. `max_total_jpeg_rgb_bytes`는 한 이미지 보고서의 성공 RGB 바이트 누적 한도이고 기본 256 MiB입니다. `Report.jpeg_rgb_bytes`는 성공 대상만 합산합니다. 형식 내부 오류·미지원 프로세스는 대상별 `inspection_error`이고, ZIP 실패·한도·할당 실패는 호출 오류입니다. 복호화 버퍼는 호출 중 해제합니다. 기본값이 구조 검사인 이유는 아래 관측된 대형 문서·비JFIF 변형을 성공으로 가장하지 않고 기존 검사 범위와 자원 예산을 보존하기 위해서입니다.
 
-`jpeg_rgb`는 화면 출력용 sRGB, ICC 적용, Exif 방향, CMYK 변환, 그림 배치·자르기, 전체 HWPX 스키마, 편집·저장 완료를 뜻하지 않습니다. 구조만 성공한 `jpeg_framing`도 픽셀 의미를 인증하지 않습니다. 각 그림·브러시·OPF 보고서는 서로 별도 호출이므로 256 MiB 한도가 이들을 합친 프로세스 한도는 아닙니다.
+`jpeg_rgb`는 화면 출력용 sRGB, ICC 적용, Exif 방향, 일반 CMYK 자동 판별, 그림 배치·자르기, 전체 HWPX 스키마, 편집·저장 완료를 뜻하지 않습니다. [명시적 Exif+Adobe 4성분 선택](jpeg-adobe-four-component.md)에서만 unmanaged CMYK/YCCK 근사를 제공합니다. 구조만 성공한 `jpeg_framing`도 픽셀 의미를 인증하지 않습니다. 각 그림·브러시·OPF 보고서는 서로 별도 호출이므로 256 MiB 한도가 이들을 합친 프로세스 한도는 아닙니다.
 
 관측된 비표준 JPEG 성분 ID `(0,1,2)`는 기본적으로 계속 거부합니다. 필요한 호출자만 `jpeg_pixels.render.component_ids = .observed_zero_based_three`를 지정할 수 있으며, 성공 대상은 `observed_zero_based_jpeg_component_ids`로 표시합니다. 정확한 허용 집합·반례·실측은 [JPEG 관측 성분 ID 호환 정책](jpeg-component-id-compatibility.md)이 소유합니다.
 
@@ -22,7 +22,7 @@ Exif APP1 IFD0 방향 원값은 픽셀 옵션과 독립적인 `jpeg_exif_orienta
 
 선택적 Zig 실파일 검사 8개 shard의 후보 820개 중 JFIF RGB 715개·성공 RGB 합계 487,055,718바이트가 반환됐습니다. 나머지 105개는 선두 JFIF 부재 34, 마커 오류 13, JFIF 성분 ID 오류 33, JFIF/Adobe 색 선언 충돌 24, 중복 JFIF 1개로 대상별 오류를 남겼습니다. 독립 Python의 선두 APP·SOF ID·JFIF 개수·Pillow 오류 분포는 부재 34, ID가 `(0,1,2)`인 대형 문서 31개, 중복 JFIF 1개, Pillow 거부 13개와 3성분 JFIF에 Adobe transform 0이 붙은 24개를 별도 재현합니다. Pillow의 관대한 RGB 해제 807개와 Zig의 엄격 JFIF 성공 715개는 서로 다른 판정 범위이며, 성공 개수·크기 합계만으로 두 디코더의 픽셀 바이트 동치를 주장하지 않습니다.
 
-합성 ZIP의 순차·progressive JPEG 두 개에 대해 구조 전용 0바이트, 명시적 픽셀 선택 6 RGB 바이트, 누적/개별/샘플/구조 한도, 픽셀 단계 엔트로피 오류, 미지원 산술 프로세스의 대상별 오류, 모든 할당 실패를 검사합니다. `shapecontainer-2.hwpx`의 1,240×84 그레이스케일 JPEG는 `inspectKnown()`의 그림·OPF 두 보고서에서 각각 RGB 312,480바이트로 확인합니다. 보고서 간 중복 복호화와 별도 예산을 합쳐 하나의 전역 예산인 것처럼 주장하지 않습니다. 전체 corpus의 RGB 출력 내용에 대한 독립 바이트 동치, Exif TIFF 전체 구조·방향 적용·ICC 색 관리와 CMYK 의미는 아직 검증되지 않았습니다.
+합성 ZIP의 순차·progressive JPEG 두 개에 대해 구조 전용 0바이트, 명시적 픽셀 선택 6 RGB 바이트, 누적/개별/샘플/구조 한도, 픽셀 단계 엔트로피 오류, 미지원 산술 프로세스의 대상별 오류, 모든 할당 실패를 검사합니다. `shapecontainer-2.hwpx`의 1,240×84 그레이스케일 JPEG는 `inspectKnown()`의 그림·OPF 두 보고서에서 각각 RGB 312,480바이트로 확인합니다. 보고서 간 중복 복호화와 별도 예산을 합쳐 하나의 전역 예산인 것처럼 주장하지 않습니다. 전체 corpus의 RGB 출력 내용에 대한 독립 바이트 동치, Exif TIFF 전체 구조·방향 적용·ICC 색 관리 및 모든 CMYK 변형 지원은 아직 검증되지 않았습니다.
 
 적대적 픽셀 내용 대조에서는 위 그레이스케일 JPEG의 RGB SHA-256이 Zig `bb76fe42843734b3201859908bbe72fea06210ed008238f93bbb66c5e76de001`, Pillow `77edee45a0a7fbd1918d135a0ffb40a5842208c59a6ee6343d05575be5ff776e`로 **다릅니다**. `tools/hwpx-jpeg-pixel-diff.py`는 각 디코더의 실제 RGB 바이트를 비교해 104,160픽셀 중 152픽셀·456채널이 다르고, 모든 채널 차이의 절댓값이 1임을 확인했습니다. 첫 불일치에서 Zig의 IDCT 중간값은 `126.51395205020656`, 같은 Zig 복호화 계수에 독립적인 직접 2차원 IDCT 식을 적용한 값은 `126.51395205020657`입니다. 불일치 152곳 모두 직접 IDCT 값의 8비트 반올림·클램프 결과가 Zig 픽셀과 일치하고 Pillow와는 일치하지 않았습니다. 이 관측은 두 디코더의 역변환 구현 차이와 부합하지만 원인 확정은 아닙니다. 특히 계수·양자화 표·블록 좌표는 Zig가 제공했으므로 독립적인 JPEG 엔트로피 복호화나 공간 배치 전체의 검증은 아니며, Pillow와의 바이트 동치나 모든 JPEG의 정확성을 주장하지 않습니다.
 

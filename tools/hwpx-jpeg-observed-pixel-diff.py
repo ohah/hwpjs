@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read-only RGB byte comparisons for two observed HWPX JPEG colour paths."""
+"""Read-only RGB byte comparisons for observed HWPX JPEG colour paths."""
 
 import argparse
 from collections import Counter
@@ -31,6 +31,16 @@ CASES = {
         "pillow_sha256": "1abcbedf0573e2181d181fe7d29aaf733b0cf682f8d6025ebdf0b1ff2bdf8fdd",
         "different_channels": 650,
     },
+    "exif-ycck": {
+        "document": ROOT / "reference/rhwp/samples/issue6269/156739836_public_sector_jobs_stats.hwpx",
+        "entry": "BinData/image1.jpg",
+        "size": (1211, 355),
+        "mode": "CMYK",
+        "test": "HWPX JPEG raw Exif Adobe YCCK RGB stream",
+        "zig_sha256": "69ef7f808d6c286c51a5b1201d901ff2b7403d90f0c725b545c47c111befe8d8",
+        "pillow_sha256": "a627653a1a092eafc5f3de44019d9cdfd5153c851b54119521fed0c33d621131",
+        "different_channels": 3206,
+    },
 }
 
 
@@ -43,13 +53,13 @@ def main():
         raise ValueError("pixel baseline requires Pillow 11.3.0")
     command = ["zig", "test", "src/hwpx_jpeg_pixel_survey.zig", "-O", "ReleaseFast", "--test-filter", case["test"]]
     zig = subprocess.run(command, cwd=ROOT, capture_output=True, check=True).stdout
-    with zipfile.ZipFile(DOCUMENT) as archive:
+    with zipfile.ZipFile(case.get("document", DOCUMENT)) as archive:
         encoded = archive.read(case["entry"])
     with Image.open(io.BytesIO(encoded)) as image:
         image.load()
-        if image.mode != "RGB" or image.size != case["size"]:
+        if image.mode != case.get("mode", "RGB") or image.size != case["size"]:
             raise ValueError("tracked JPEG changed mode or dimensions")
-        pillow = image.tobytes()
+        pillow = image.convert("RGB").tobytes()
     if len(zig) != case["size"][0] * case["size"][1] * 3 or len(pillow) != len(zig):
         raise ValueError("RGB extent mismatch")
     zig_digest = hashlib.sha256(zig).hexdigest()

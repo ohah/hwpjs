@@ -2,6 +2,8 @@
 
 [HWPX JPEG 선택 픽셀 검사](hwpx-jpeg-pixels.md)는 `src/image/jpeg/pixel_inspection.zig`의 공통 JFIF 복호화 코어를 HWP5와 공유하고, `src/hwpx/image_payloads.zig`가 HWPX의 ZIP 선택·옵션·보고서 한도를 소유합니다. 독립 corpus 조사는 `src/hwpx_jpeg_pixel_survey.zig`와 Python 조사기에 둡니다.
 
+[Adobe APP14 4성분 JPEG](jpeg-adobe-four-component.md)는 선택적 Exif 색 선언과 픽셀 산술을 분리하며, `src/image/jpeg/adobe_cmyk_colour.zig`가 unmanaged 변환을 소유합니다.
+
 [HWPX BMP 픽셀 검사](hwpx-bmp-pixels.md)는 `src/hwpx/image_payloads.zig`가 세 이미지 보고서의 공통 ZIP·한도·결과를 소유하고 `src/image/bmp/pixels.zig`의 RGBA 디코더를 재사용합니다. 선택 실파일 대조는 `src/hwpx_bmp_pixel_survey.zig`에 둡니다.
 
 [HWPX OLE 관측 편차 복사본 검사](hwpx-ole-observed-repairs.md)는 `src/cfb/observed_repairs.zig`가 세 가지 비준수 메타데이터 위치만 임시 치환하고 같은 strict reader를 다시 호출합니다. `src/hwpx/ole_payloads.zig`는 원본 실패와 복사본 결과를 분리합니다.

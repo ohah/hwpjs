@@ -64,11 +64,16 @@ const State = struct {
             const parsed = try frame.parse(marker.code, marker.payload, .{ .max_pixels = std.math.maxInt(u64) });
             self.frame_code = marker.code;
             self.components = parsed.components.count();
-            self.observed_zero_based_component_ids = jfif.classifyFrame(parsed, self.component_ids) catch |err| switch (err) {
-                error.InvalidJfifComponentCount => return error.UnsupportedExifComponentCount,
-                error.InvalidJfifPrecision => return error.UnsupportedExifPrecision,
-                error.InvalidJfifComponentId => return error.UnsupportedExifComponentIds,
-            };
+            if (self.components == 4) {
+                if (parsed.precision != 8) return error.UnsupportedExifPrecision;
+                for (0..4) |index| if (parsed.components.get(index).?.id != index + 1) return error.UnsupportedExifComponentIds;
+            } else {
+                self.observed_zero_based_component_ids = jfif.classifyFrame(parsed, self.component_ids) catch |err| switch (err) {
+                    error.InvalidJfifComponentCount => return error.UnsupportedExifComponentCount,
+                    error.InvalidJfifPrecision => return error.UnsupportedExifPrecision,
+                    error.InvalidJfifComponentId => return error.UnsupportedExifComponentIds,
+                };
+            }
         }
     }
 };
@@ -91,15 +96,28 @@ pub fn decode(a: std.mem.Allocator, bytes: []const u8, options: Options) !Image 
     var headers = try adobe.inspect(a, bytes, .{ .structure = options.structure, .max_adobe_markers = options.render.max_adobe_markers });
     defer headers.deinit(a);
     if (headers.headers.len == 0) return error.MissingAdobeColourDeclaration;
+    var selected_encoding: ?raster.Encoding = null;
     for (headers.headers) |header| {
         if (!header.hasPrintIdentifier()) return error.InvalidPrintAdobeIdentifier;
-        if ((layout.components == 1 and header.transform != .untransformed) or
-            (layout.components == 3 and header.transform != .ycbcr)) return error.UnsupportedExifAdobeColour;
+        const encoding: raster.Encoding = if (layout.components == 1)
+            (if (header.transform == .untransformed) .gray else return error.UnsupportedExifAdobeColour)
+        else if (layout.components == 3 or layout.components == 4) blk: {
+            const declared = header.printEncoding(@intCast(layout.components)) catch return error.UnsupportedExifAdobeColour;
+            break :blk switch (declared) {
+                .ycbcr => if (layout.components == 3) .ycbcr else return error.UnsupportedExifAdobeColour,
+                .complemented_cmyk => .complemented_cmyk,
+                .ycck => .ycck,
+                .rgb => return error.UnsupportedExifAdobeColour,
+            };
+        } else return error.UnsupportedExifComponentCount;
+        if (selected_encoding) |previous| {
+            if (previous != encoding) return error.UnsupportedExifAdobeColour;
+        } else selected_encoding = encoding;
     }
     var profile = try icc.extract(a, bytes, .{ .structure = options.structure, .max_profile_bytes = options.render.max_icc_bytes });
     defer profile.deinit(a);
     const conversion: raster.Options = .{
-        .encoding = if (layout.components == 1) .gray else .ycbcr,
+        .encoding = selected_encoding.?,
         .upsampling = options.render.upsampling,
         .max_rgb_bytes = options.render.max_rgb_bytes,
     };

@@ -17,7 +17,7 @@ Report는 descriptor 배열을 소유하고 extra는 원본 JPEG를 빌립니다
 
 T.872 국소 색 대응의 성공은 전체 인쇄 적합성을 뜻하지 않습니다. 프레임 제약·ICC 배치·메타데이터 우선순위·progressive 픽셀 복호화·CMYK/YCCK 픽셀 변환·색 관리는 별도입니다. 원값 파싱은 RGB 출력이나 HWP BinData JPEG 연결 완료가 아닙니다. 제품 JS API는 변경하지 않았습니다.
 
-이후 명시적 [JFIF RGB 조립](jpeg-rgb.md)은 별도 충돌 정책을 적용합니다. printEncoding을 일반 JFIF 색 판별기로 재사용하지 않으며 원값 검사와 파일별 해석을 구분합니다.
+이후 명시적 [JFIF RGB 조립](jpeg-rgb.md)은 별도 충돌 정책을 적용합니다. printEncoding을 일반 JFIF 색 판별기로 재사용하지 않으며 원값 검사와 파일별 해석을 구분합니다. [Exif 선두 Adobe 4성분 선택](jpeg-adobe-four-component.md)은 이 국소 색 선언 해석을 재사용하지만 여전히 일반 JPEG 자동 판별은 아닙니다.
 
 ## 검증 기록
 

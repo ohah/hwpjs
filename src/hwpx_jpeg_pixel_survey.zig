@@ -401,18 +401,18 @@ test "HWPX JPEG Exif Adobe corpus candidate survey" {
         }
     }
     try std.testing.expectEqual(@as(usize, 34), seen);
-    try std.testing.expectEqual(@as(usize, 31), decoded);
+    try std.testing.expectEqual(@as(usize, 33), decoded);
     try std.testing.expectEqual(@as(usize, 1), zero_based);
     try std.testing.expectEqual(@as(usize, 1), missing_adobe);
-    try std.testing.expectEqual(@as(usize, 2), unsupported_components);
-    try std.testing.expectEqual(@as(usize, 168_563_982), rgb_bytes);
-    try std.testing.expectEqual(@as(usize, 31), orientation_checked);
-    try std.testing.expectEqual(@as(usize, 29), exif_orientation_present);
+    try std.testing.expectEqual(@as(usize, 0), unsupported_components);
+    try std.testing.expectEqual(@as(usize, 171_143_412), rgb_bytes);
+    try std.testing.expectEqual(@as(usize, 33), orientation_checked);
+    try std.testing.expectEqual(@as(usize, 31), exif_orientation_present);
     try std.testing.expectEqual(@as(usize, 31), all_exif_orientation_one);
     try std.testing.expectEqual(@as(usize, 3), all_exif_orientation_missing);
     try std.testing.expectEqual(all_exif_orientation_one, product_orientation_one);
     try std.testing.expectEqual(all_exif_orientation_missing, product_orientation_missing);
-    std.debug.print("HWPX Exif Adobe JPEG: seen={d} decoded={d} RGB={d} zero-based={d} no-Adobe={d} four-component={d} orientation={d} present={d} all-one={d} all-missing={d}\n", .{ seen, decoded, rgb_bytes, zero_based, missing_adobe, unsupported_components, orientation_checked, exif_orientation_present, product_orientation_one, product_orientation_missing });
+    std.debug.print("HWPX Exif Adobe JPEG: seen={d} decoded={d} RGB={d} zero-based={d} no-Adobe={d} unsupported-components={d} orientation={d} present={d} all-one={d} all-missing={d}\n", .{ seen, decoded, rgb_bytes, zero_based, missing_adobe, unsupported_components, orientation_checked, exif_orientation_present, product_orientation_one, product_orientation_missing });
 }
 
 // Read-only RGB pipe for a small Exif-first Adobe YCbCr corpus image.
@@ -429,6 +429,26 @@ test "HWPX JPEG raw Exif Adobe RGB stream" {
         var image = try @import("image/jpeg/exif_adobe_rgb.zig").decode(a, encoded, .{ .render = .{ .upsampling = .nearest, .colour_management = .unmanaged }, .completion = .require_full });
         defer image.deinit(a);
         try std.testing.expectEqual(@as(usize, 2011 * 133 * 3), image.raster.rgb.len);
+        try std.Io.File.stdout().writeStreamingAll(std.testing.io, image.raster.rgb);
+        return;
+    }
+    return error.MissingJpegFixture;
+}
+
+// Read-only pipe for independent Pillow CMYK/YCCK colour comparison.
+test "HWPX JPEG raw Exif Adobe YCCK RGB stream" {
+    const a = std.testing.allocator;
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "reference/rhwp/samples/issue6269/156739836_public_sector_jobs_stats.hwpx", a, .limited(25_000_000));
+    defer a.free(bytes);
+    var document = try package.inspectDocument(a, bytes, .{});
+    defer document.deinit(a);
+    for (document.archive.entries) |entry| {
+        if (!std.mem.eql(u8, entry.name, "BinData/image1.jpg")) continue;
+        const encoded = try document.archive.decode(entry, 2_000_000);
+        defer document.archive.allocator.free(encoded);
+        var image = try @import("image/jpeg/exif_adobe_rgb.zig").decode(a, encoded, .{ .render = .{ .upsampling = .nearest, .colour_management = .unmanaged }, .completion = .require_full });
+        defer image.deinit(a);
+        try std.testing.expectEqual(@as(usize, 1211 * 355 * 3), image.raster.rgb.len);
         try std.Io.File.stdout().writeStreamingAll(std.testing.io, image.raster.rgb);
         return;
     }

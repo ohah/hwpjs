@@ -2,9 +2,10 @@ const std = @import("std");
 const planes = @import("sample_planes.zig");
 const upsampling = @import("upsampling.zig");
 const colour = @import("jfif_colour.zig");
+const adobe_cmyk = @import("adobe_cmyk_colour.zig");
 
 /// Selected by the caller, never guessed from component IDs or sample values.
-pub const Encoding = enum { gray, rgb, ycbcr };
+pub const Encoding = enum { gray, rgb, ycbcr, complemented_cmyk, ycck };
 pub const Options = struct {
     encoding: Encoding,
     upsampling: upsampling.Method,
@@ -34,9 +35,13 @@ pub fn requiredBytes(width: u16, height: u16, maximum: usize) !usize {
 pub fn fromPlanes(a: std.mem.Allocator, input: planes.Image, options: Options) !Raster {
     const size = try requiredBytes(input.width, input.height, options.max_rgb_bytes);
     if (input.precision != 8) return error.UnsupportedJpegRgbPrecision;
-    const count: usize = if (options.encoding == .gray) 1 else 3;
+    const count: usize = switch (options.encoding) {
+        .gray => 1,
+        .rgb, .ycbcr => 3,
+        .complemented_cmyk, .ycck => 4,
+    };
     if (input.planes.len != count) return error.InvalidJpegRgbComponentCount;
-    var samplers: [3]upsampling.Sampler = undefined;
+    var samplers: [4]upsampling.Sampler = undefined;
     for (input.planes, 0..) |plane, i| {
         if (plane.extent.width > input.width or plane.extent.height > input.height) return error.InvalidJpegSampleAxis;
         samplers[i] = try upsampling.Sampler.fromDimensions(plane.samples, @intCast(plane.extent.width), @intCast(plane.extent.height), input.width, input.height, options.upsampling);
@@ -44,12 +49,14 @@ pub fn fromPlanes(a: std.mem.Allocator, input: planes.Image, options: Options) !
     }
     const rgb = try a.alloc(u8, size);
     for (0..input.height) |y| for (0..input.width) |x| {
-        var values: [3]u8 = undefined;
+        var values: [4]u8 = undefined;
         for (samplers[0..count], 0..) |sampler, i| values[i] = @intCast(sampler.sample(@intCast(x), @intCast(y)).?);
         const pixel = switch (options.encoding) {
             .gray => colour.grayscale(values[0]),
-            .rgb => values,
+            .rgb => values[0..3].*,
             .ycbcr => colour.toRgb(values[0], values[1], values[2]),
+            .complemented_cmyk => adobe_cmyk.complementedCmyk(values[0], values[1], values[2], values[3]),
+            .ycck => adobe_cmyk.ycck(values[0], values[1], values[2], values[3]),
         };
         @memcpy(rgb[(y * input.width + x) * 3 ..][0..3], &pixel);
     };

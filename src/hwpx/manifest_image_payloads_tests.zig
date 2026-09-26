@@ -347,6 +347,60 @@ test "HWPX manifest Exif Adobe JPEG pixels require declared colour and keep erro
     }.run, .{ @as([]const u8, &raw), selected });
 }
 
+test "HWPX manifest Exif Adobe four-component JPEG pixels require explicit colour" {
+    const a = std.testing.allocator;
+    const exif = [_]u8{ 255, 225, 0, 8 } ++ "Exif\x00\x00".*;
+    const adobe = [_]u8{ 255, 238, 0, 14 } ++ "Adobe".* ++ .{ 0, 100, 0, 0, 0, 0, 2 };
+    const q = [_]u8{ 255, 219, 0, 67, 0 } ++ [_]u8{8} ** 64;
+    const h = [_]u8{ 255, 196, 0, 38, 0, 1 } ++ [_]u8{0} ** 15 ++ .{ 1, 16, 1 } ++ [_]u8{0} ** 15 ++ .{0};
+    const frame = [_]u8{ 255, 192, 0, 20, 8, 0, 1, 0, 1, 4, 1, 17, 0, 2, 17, 0, 3, 17, 0, 4, 17, 0 };
+    const scan = [_]u8{ 255, 218, 0, 14, 4, 1, 0, 2, 0, 3, 0, 4, 0, 0, 63, 0, 0x49, 0x2f, 255, 217 };
+    const raw = [_]u8{ 255, 216 } ++ exif ++ adobe ++ q ++ h ++ frame ++ scan;
+    var strict = try jpegSampleRaw(a, &raw, .{ .jpeg_pixels = .{} });
+    defer strict.deinit(a);
+    try std.testing.expectEqual(error.MissingJfifHeader, strict.targets[0].inspection_error.?);
+    const selected: payloads.Options = .{ .jpeg_pixels = .{ .exif_adobe_colour = true } };
+    var accepted = try jpegSampleRaw(a, &raw, selected);
+    defer accepted.deinit(a);
+    try std.testing.expectEqual(@as(?anyerror, null), accepted.targets[0].inspection_error);
+    try std.testing.expect(accepted.targets[0].jpeg_exif_adobe_colour);
+    try std.testing.expectEqual(@as(usize, 3), accepted.jpeg_rgb_bytes);
+    var transformed = raw;
+    transformed[std.mem.indexOf(u8, &transformed, "Adobe").? + 11] = 0;
+    var cmyk = try jpegSampleRaw(a, &transformed, selected);
+    defer cmyk.deinit(a);
+    try std.testing.expectEqual(@as(?anyerror, null), cmyk.targets[0].inspection_error);
+    try std.testing.expectEqual(@as(usize, 3), cmyk.jpeg_rgb_bytes);
+    transformed[std.mem.indexOf(u8, &transformed, "Adobe").? + 11] = 1;
+    var invalid_transform = try jpegSampleRaw(a, &transformed, selected);
+    defer invalid_transform.deinit(a);
+    try std.testing.expectEqual(error.UnsupportedExifAdobeColour, invalid_transform.targets[0].inspection_error.?);
+    const conflict_raw = [_]u8{ 255, 216 } ++ exif ++ adobe ++
+        ([_]u8{ 255, 238, 0, 14 } ++ "Adobe".* ++ .{ 0, 100, 0, 0, 0, 0, 0 }) ++ q ++ h ++ frame ++ scan;
+    var conflicting = try jpegSampleRaw(a, &conflict_raw, selected);
+    defer conflicting.deinit(a);
+    try std.testing.expectEqual(error.UnsupportedExifAdobeColour, conflicting.targets[0].inspection_error.?);
+    var invalid_precision = raw;
+    invalid_precision[std.mem.indexOf(u8, &invalid_precision, &frame).? + 4] = 12;
+    var bad_precision = try jpegSampleRaw(a, &invalid_precision, selected);
+    defer bad_precision.deinit(a);
+    try std.testing.expectEqual(error.InvalidJpegPrecision, bad_precision.targets[0].inspection_error.?);
+    var invalid_id = raw;
+    invalid_id[std.mem.indexOf(u8, &invalid_id, &frame).? + 10] = 0;
+    invalid_id[std.mem.indexOf(u8, &invalid_id, &scan).? + 5] = 0;
+    var bad_id = try jpegSampleRaw(a, &invalid_id, selected);
+    defer bad_id.deinit(a);
+    try std.testing.expectEqual(error.UnsupportedExifComponentIds, bad_id.targets[0].inspection_error.?);
+    try std.testing.expectError(error.LimitExceeded, jpegSampleRaw(a, &raw, .{ .jpeg_pixels = selected.jpeg_pixels, .max_total_jpeg_rgb_bytes = 2 }));
+    try std.testing.expectError(error.LimitExceeded, jpegSampleRaw(a, &raw, .{ .jpeg_pixels = .{ .exif_adobe_colour = true, .max_samples = 3 } }));
+    try std.testing.checkAllAllocationFailures(a, struct {
+        fn run(allocator: std.mem.Allocator, jpeg_bytes: []const u8, options: payloads.Options) !void {
+            var report = try jpegSampleRaw(allocator, jpeg_bytes, options);
+            report.deinit(allocator);
+        }
+    }.run, .{ @as([]const u8, &raw), selected });
+}
+
 test "HWPX manifest Exif TIFF orientation is separately inspected without rotating pixels" {
     const a = std.testing.allocator;
     const exif = [_]u8{ 255, 225, 0, 34 } ++ "Exif\x00\x00".* ++ "II".* ++ .{ 42, 0, 8, 0, 0, 0, 1, 0, 0x12, 1, 3, 0, 1, 0, 0, 0, 6, 0, 0, 0, 0, 0, 0, 0 };

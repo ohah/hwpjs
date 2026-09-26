@@ -39,6 +39,31 @@ test "JPEG RGB raster uses shared colour conversion and owns output" {
     try t.expectEqualSlices(u8, &.{ 0, 0, 0, 255, 255, 255 }, out.rgb);
 }
 
+test "JPEG RGB raster uses all four Adobe channels and enforces sample budget" {
+    var c = [_]u16{ 255, 0 };
+    var m = [_]u16{ 255, 255 };
+    var y = [_]u16{ 255, 255 };
+    var k = [_]u16{ 255, 255 };
+    var pp = [_]planes.Plane{ plane(&c, 2, 1), plane(&m, 2, 1), plane(&y, 2, 1), plane(&k, 2, 1) };
+    const image: planes.Image = .{ .width = 2, .height = 1, .precision = 8, .planes = &pp };
+    var cmyk = try raster.fromPlanes(t.allocator, image, .{ .encoding = .complemented_cmyk, .upsampling = .nearest, .max_rgb_bytes = 6 });
+    defer cmyk.deinit(t.allocator);
+    try t.expectEqualSlices(u8, &.{ 255, 255, 255, 0, 255, 255 }, cmyk.rgb);
+    try t.expectError(error.LimitExceeded, raster.fromPlanes(t.allocator, image, .{ .encoding = .complemented_cmyk, .upsampling = .nearest, .max_rgb_bytes = 5 }));
+    c = .{ 0, 255 };
+    m = .{ 128, 128 };
+    y = .{ 128, 128 };
+    var ycck = try raster.fromPlanes(t.allocator, image, .{ .encoding = .ycck, .upsampling = .nearest });
+    defer ycck.deinit(t.allocator);
+    try t.expectEqualSlices(u8, &.{ 255, 255, 255, 0, 0, 0 }, ycck.rgb);
+    try t.checkAllAllocationFailures(t.allocator, struct {
+        fn run(a: std.mem.Allocator, input: planes.Image) !void {
+            var out = try raster.fromPlanes(a, input, .{ .encoding = .ycck, .upsampling = .nearest });
+            out.deinit(a);
+        }
+    }.run, .{image});
+}
+
 test "JPEG RGB raster rejects hostile dimensions precision counts lengths and samples" {
     var values = [_]u16{129};
     var pp = [_]planes.Plane{plane(&values, 1, 1)};
