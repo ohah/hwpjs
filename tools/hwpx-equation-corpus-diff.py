@@ -95,6 +95,9 @@ def inspect_sections(sections):
                         digest.update(b"\x00")
                 number(digest, sum(name not in SHAPE_FIELDS[local] for name in child.attrib))
                 number(digest, len(child))
+                if local == "shapeComment":
+                    direct = (child.text or "") + "".join(nested.tail or "" for nested in child)
+                    value(digest, direct.encode("utf-8"))
                 if local == "caption":
                     sublists = [sub for sub in child if sub.tag == PARA + "subList"]
                     number(digest, len(sublists))
@@ -183,7 +186,7 @@ def compare(expected, rejected, encrypted, actual, actual_rejected, actual_encry
 
 
 def self_test():
-    open_tag = f"<s:sec xmlns:s='{SECTION[1:-4]}' xmlns:p='{PARA[1:-1]}'>"
+    open_tag = f"<s:sec xmlns:s='{SECTION[1:-4]}' xmlns:p='{PARA[1:-1]}' xmlns:x='urn:foreign'>"
     a = open_tag + "<p:p><p:run><p:equation version=''><p:script><![CDATA[a < b]]>&amp;c</p:script></p:equation></p:run></p:p></s:sec>"
     first = inspect_sections([a.encode()])
     require(first[0] != inspect_sections([a.replace("version=''", "").encode()])[0], "absent/empty field escaped digest")
@@ -215,6 +218,16 @@ def self_test():
         caption.replace("textWidth='1'", "textWidth='1' future='x'"),
     ):
         require(caption_hash != inspect_sections([changed.encode()])[0], "caption mutation escaped digest")
+    comment = a.replace("<p:script>", "<p:shapeComment>A&amp;<![CDATA[<]]>&#xAC00;</p:shapeComment><p:script>")
+    comment_hash = inspect_sections([comment.encode()])[0]
+    for changed in (
+        comment.replace("&#xAC00;", "&#xAC01;"),
+        comment.replace("<p:shapeComment>", "<p:shapeComment future='x'>"),
+        comment.replace("<p:shapeComment>", "<p:shapeComment><p:future/>"),
+        comment.replace("<p:shapeComment>", "<x:shapeComment>").replace("</p:shapeComment>", "</x:shapeComment>"),
+    ):
+        require(comment_hash != inspect_sections([changed.encode()])[0], "comment mutation escaped digest")
+    require(comment_hash == inspect_sections([comment.replace("<![CDATA[<]]>", "&lt;").encode()])[0], "equivalent comment XML text differs")
 
 
 if __name__ == "__main__":

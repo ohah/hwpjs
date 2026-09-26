@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[HWPX 수식 shapeComment 직접 텍스트](hwpx-equation-comments.md)는 `zig test src/root.zig --test-filter 'HWPX equation comment'` 및 같은 필터의 `-O ReleaseSafe`·`-O ReleaseFast`로 합성·예산·OOM을 확인합니다. `zig test src/hwpx_equation_corpus.zig --test-filter 'HWPX equation comment independent XML digest fixture'`는 독립 XML 고정 해시를, `python3 tools/hwpx-equation-corpus-diff.py --self-test`와 인자 없는 실행은 변이 반례 및 실파일 파일별 대조를 확인합니다. 실파일 대조는 로컬 두 corpus가 필요하고 기본 audit 밖입니다.
+
 [HWPX 수식 caption 목록](hwpx-equation-captions.md)은 `zig test src/root.zig --test-filter 'HWPX equation caption'`으로 필드·원문·한도·OOM을, 같은 필터의 `-O ReleaseSafe`·`-O ReleaseFast`로 최적화 모드를 검사합니다. 공통 순회로 바뀐 표의 합성 회귀는 아래 `HWPX table shape` 필터, 실파일 회귀는 `HWPX known document inspections shard N` 8개 별도 프로세스로 검사합니다. 독립 Python XML과 고정한 수식 caption 예제 해시는 `zig test src/hwpx_equation_corpus.zig --test-filter 'HWPX equation caption independent XML digest fixture'`로 확인합니다. Python equation oracle의 `--self-test`는 caption 변이도 포함하며 실파일 파일별 해시는 현재 수식 caption 0개를 확인합니다.
 
 [HWPX 수식 도형 자식·필드](hwpx-equation-shapes.md)도 아래 `HWPX equation` 필터에 포함됩니다. 단독으로는 `zig test src/root.zig --test-filter 'HWPX equation shape'`를 사용합니다. `-O ReleaseSafe`와 `-O ReleaseFast`를 추가해 최적화 모드별 같은 반례를 검사합니다. 공유 어휘·자식 선택의 표 회귀는 `zig test src/root.zig --test-filter 'HWPX table shape'`, 실파일 문서 연결은 아래 known survey의 8개 shard로 검사합니다. 독립 equation corpus 해시는 공통 도형 자식의 종류·위치·필드까지 포함하며, `python3 -O tools/hwpx-equation-corpus-diff.py --self-test`로 Python 최적화 모드에서도 반례 검사가 유지되는지 확인합니다.

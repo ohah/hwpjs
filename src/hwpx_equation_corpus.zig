@@ -42,6 +42,7 @@ fn digest(report: *const package.EquationReport) !u256 {
             }
             number(&hash, child.other_attributes);
             number(&hash, child.direct_children);
+            if (child.kind == .shape_comment) value(&hash, child.comment_value.?);
             if (child.kind == .caption) {
                 number(&hash, child.caption_sub_list_count);
                 for (report.caption_sub_lists[child.first_caption_sub_list..][0..child.caption_sub_list_count]) |sub_list| {
@@ -84,6 +85,17 @@ test "HWPX equation caption independent XML digest fixture" {
     try std.testing.expectEqual(@as(u256, 0x80a6a32a5aee019fb8f335c06e721cf28e18bf9224f40762d3c2f9c9764ae33f), try digest(&report));
     try std.testing.expectEqual(@as(usize, 1), report.caption.sub_lists);
     try std.testing.expectEqual(@as(usize, 1), report.caption.direct_paragraphs);
+}
+
+test "HWPX equation comment independent XML digest fixture" {
+    const a = std.testing.allocator;
+    const source = "<s:sec xmlns:s=\"http://www.hancom.co.kr/hwpml/2011/section\" xmlns:p=\"http://www.hancom.co.kr/hwpml/2011/paragraph\"><p:p><p:run><p:equation><p:shapeComment>A&amp;<![CDATA[<]]>&#xAC00;</p:shapeComment><p:shapeComment/></p:equation></p:run></p:p></s:sec>";
+    var tree = try section_tree.parse(a, source, 0, 0, .{});
+    defer tree.deinit(a);
+    var report = try equation.inspect(a, &.{tree}, .{});
+    defer report.deinit();
+    try std.testing.expectEqual(@as(u256, 0x245c7d18fb87e474ab1ccb38a77fea70b17c4660c56db887a832e5a91ad6e31b), try digest(&report));
+    try std.testing.expectEqual(@as(usize, 6), report.comment_bytes);
 }
 
 fn inspectOne(a: std.mem.Allocator, bytes: []const u8) !Inspected {

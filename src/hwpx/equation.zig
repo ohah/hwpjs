@@ -7,6 +7,7 @@ const shape_children = @import("shape_xml_children.zig");
 const equation_shape = @import("equation_shape.zig");
 const shape_caption = @import("shape_caption.zig");
 const equation_caption = @import("equation_caption.zig");
+const equation_comment = @import("equation_comment.zig");
 
 pub const ShapeChild = equation_shape.Child;
 pub const CaptionSubList = equation_caption.SubList;
@@ -19,6 +20,7 @@ pub const Options = struct {
     max_caption_direct_paragraphs: usize = 1_000_000,
     max_attribute_bytes: usize = 4096,
     max_script_bytes: usize = 1024 * 1024,
+    max_comment_bytes: usize = 1024 * 1024,
     max_owned_bytes: usize = 128 * 1024 * 1024,
 };
 
@@ -51,6 +53,7 @@ pub const Report = struct {
     caption_sub_lists: []const CaptionSubList,
     caption: shape_caption.Counts,
     script_bytes: usize,
+    comment_bytes: usize,
     owned_bytes: usize,
     without_script: usize,
     multiple_scripts: usize,
@@ -81,9 +84,11 @@ const ContentContext = struct {
     max_script_bytes: usize,
     budget: *fields.Budget,
     script_bytes: *usize,
+    comments: *equation_comment.Capture,
 
     fn onContent(raw: *anyopaque, event: part_tree.Tree.ContentEvent) anyerror!void {
         const self: *ContentContext = @ptrCast(@alignCast(raw));
+        try self.comments.onContent(event);
         const index = self.script_indices.get(event.parent_index) orelse return;
         const builder = &self.builders[index];
         const remaining = @min(self.max_script_bytes -| builder.content.items.len, self.budget.max -| self.budget.used);
@@ -111,6 +116,7 @@ pub fn inspect(a: std.mem.Allocator, sections: []const part_tree.Tree, options: 
     var caption_counts: shape_caption.Counts = .{};
     var shape_counts: [shape.table_specs.len]shape.Counts = @splat(.{});
     var script_bytes: usize = 0;
+    var comment_bytes: usize = 0;
     var without_script: usize = 0;
     var multiple_scripts: usize = 0;
     var out_of_scope_equations: usize = 0;
@@ -122,6 +128,14 @@ pub fn inspect(a: std.mem.Allocator, sections: []const part_tree.Tree, options: 
         if (tree.part_kind != .section or tree.section_ordinal != ordinal or tree.elements.len == 0) return error.InvalidPartKind;
         var script_indices: std.AutoHashMapUnmanaged(usize, usize) = .empty;
         defer script_indices.deinit(a);
+        var comments: equation_comment.Capture = .{
+            .temp_a = a,
+            .owned_a = owned_a,
+            .max_comment_bytes = options.max_comment_bytes,
+            .budget = &budget,
+            .total_bytes = &comment_bytes,
+        };
+        defer comments.deinit();
         for (tree.elements, 0..) |element, index| {
             if (!element.is(document_xml.paragraph_uri, "equation")) continue;
             const parent_index = element.parent orelse {
@@ -169,6 +183,7 @@ pub fn inspect(a: std.mem.Allocator, sections: []const part_tree.Tree, options: 
                             }, &budget, &caption_counts, &caption_sub_lists);
                             item.caption_sub_list_count = caption_sub_lists.items.len - item.first_caption_sub_list;
                         }
+                        if (kind == .shape_comment) try comments.register(child_index, children.items.len);
                         try children.append(owned_a, item);
                         equation.shape_child_count += 1;
                         per_equation[@intFromEnum(kind)] += 1;
@@ -183,7 +198,7 @@ pub fn inspect(a: std.mem.Allocator, sections: []const part_tree.Tree, options: 
             non_six_hex_colors += specific.non_six_hex_colors;
             try equations.append(owned_a, equation);
         }
-        if (script_indices.count() == 0) continue;
+        if (script_indices.count() == 0 and comments.indices.count() == 0) continue;
         var content: ContentContext = .{
             .temp_a = a,
             .owned_a = owned_a,
@@ -192,8 +207,10 @@ pub fn inspect(a: std.mem.Allocator, sections: []const part_tree.Tree, options: 
             .max_script_bytes = options.max_script_bytes,
             .budget = &budget,
             .script_bytes = &script_bytes,
+            .comments = &comments,
         };
         try tree.visitContent(a, .{ .context = &content, .on_content = ContentContext.onContent });
+        try comments.finish(children.items);
     }
     const owned_scripts = try owned_a.alloc(Script, scripts.items.len);
     for (scripts.items, 0..) |*item, index| owned_scripts[index] = .{
@@ -214,6 +231,7 @@ pub fn inspect(a: std.mem.Allocator, sections: []const part_tree.Tree, options: 
         .caption_sub_lists = owned_caption_sub_lists,
         .caption = caption_counts,
         .script_bytes = script_bytes,
+        .comment_bytes = comment_bytes,
         .owned_bytes = budget.used,
         .without_script = without_script,
         .multiple_scripts = multiple_scripts,

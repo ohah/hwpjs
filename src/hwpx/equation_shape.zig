@@ -25,6 +25,8 @@ pub const Child = struct {
     direct_children: usize = 0,
     first_caption_sub_list: usize = 0,
     caption_sub_list_count: usize = 0,
+    /// Decoded direct text of shapeComment; null for every other child kind.
+    comment_value: ?[]const u8 = null,
 
     pub fn get(self: Child, name: []const u8) ?[]const u8 {
         for (children.specs(self.kind), self.values) |spec, value| {
@@ -60,8 +62,8 @@ pub const Report = struct {
     }
 };
 
-/// Reads common shape children only. Metadata and nested elements remain raw;
-/// neither object defaults nor layout/rendering semantics are inferred.
+/// Reads common shape children only. Comment text is captured separately;
+/// other metadata and nested elements remain raw. No layout is inferred.
 pub fn read(temp_a: std.mem.Allocator, owned_a: std.mem.Allocator, tree: *const tree_mod.Tree, parent: usize, index: usize, equation_index: usize, source: []const u8, max_attribute_bytes: usize, budget: *Budget, report: *Report) !Child {
     const kind = children.kindOf(tree, index, .common) orelse return error.InvalidShapeKind;
     const element = tree.elements[index];
