@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "1c0f413ed83f7f49a71d693a60d85b090eef910b86809305c8925a55674016d5",
-      "evidence": "2026-09-27 tracker tests, 2523 inline links, HWP5 history date review and corpus, architecture pending, full Debug Zig test incomplete"
+      "sha256": "688a4083feaa3091745b5a139f43b0f4fe0af8778923ec9958ab4701bd42d81b",
+      "evidence": "2026-09-27 tracker tests, 2524 inline links, HWP5 history date and XML evidence review, architecture pending, full Debug Zig test incomplete"
+    },
+    "docs/hwp5-history-xml-evidence.md": {
+      "sha256": "f5dbaa8f3084edc66272483038a6a9f8f4985fea6bc337f2ddfb749ba18e27c4",
+      "evidence": "2026-09-27 sample five XML payloads and decoded bytes, query tests 6, ReleaseSafe history XML audit 8, current product XML boundary, old tmp logs absent"
     },
     "docs/hwp5-history-dates.md": {
       "sha256": "e6075ba05793eefc94ad8239c3cc571e56c3063c579d517a9b38ad9efa7d433f",

@@ -51,9 +51,11 @@ xmllint는 `--nonet --xpath … -`로 stdin만 전달받습니다. shell, entity
 
 ## 실행 결과
 
-Debug → ReleaseSafe → ReleaseFast의 전체 `audit`를 순차 실행해 각각 17/17 빌드 단계, 네이티브 302/302, HWP5 1,629,453 checks가 통과했습니다. 새 XML 경계 테스트는 각 실행에서 6/6이며 기존 Node 테스트와 별도입니다. 각 모드의 `history-xml-audit`도 7/7 단계가 통과했고 위 다섯 payload의 통계, OLD/최종 caret 관측, 거부 입력 5개와 정상 입력 복구를 확인했습니다.
+초기 조사 당시 Debug → ReleaseSafe → ReleaseFast의 전체 `audit`를 순차 실행해 각각 17/17 빌드 단계, 네이티브 302/302, HWP5 1,629,453 checks가 통과했습니다. 새 XML 경계 테스트는 각 실행에서 6/6이며 기존 Node 테스트와 별도였습니다. 당시 각 모드의 `history-xml-audit`도 7/7 단계가 통과했고 위 다섯 payload의 통계, OLD/최종 caret 관측, 거부 입력 5개와 정상 입력 복구를 확인했습니다. 이는 당시 코드의 실행 기록이며 현재 전체 audit 재실행 결과가 아닙니다.
 
-로그는 `/tmp/hwpjs-history-xml-audit-{debug,safe,fast}.log`와 `/tmp/hwpjs-history-xml-survey-{debug,safe,fast}.log`입니다. `zig fmt --check build.zig src`, 변경 JS 네 파일의 `node --check`, `git diff --check`, 변경 문서의 로컬 링크 7개 존재 확인도 통과했습니다. 실행 수치는 표본과 경계 검사의 결과이지 전체 XML/HWP 스키마 지원률이 아닙니다.
+당시 로그 경로는 `/tmp/hwpjs-history-xml-audit-{debug,safe,fast}.log`와 `/tmp/hwpjs-history-xml-survey-{debug,safe,fast}.log`였으나 2026-09-27 현재 여섯 파일 모두 존재하지 않아 재사용 가능한 증거로 취급하지 않습니다. 당시 `zig fmt --check build.zig src`, 변경 JS 네 파일의 `node --check`, `git diff --check`, 변경 문서의 로컬 링크 7개 존재 확인도 통과했습니다. 실행 수치는 표본과 경계 검사의 결과이지 전체 XML/HWP 스키마 지원률이 아닙니다.
+
+2026-09-27 현재 내용 재검증: 조사기 표본을 다시 실행해 위 다섯 payload의 길이·루트·요소/속성 수, decoded 13,292,279바이트, caret OLD 16/최종 32 및 거부 입력 5개가 일치했습니다. 안전 단위 테스트는 6/6, `zig build history-xml-audit -Doptimize=ReleaseSafe --summary all`은 8/8 단계로 통과했습니다. 이 집중 검증은 제품의 전체 Debug·ReleaseFast audit, XML 스키마 의미 또는 이력 복원을 증명하지 않습니다.
 
 ## 외부 도구 부재 검증
 
@@ -61,6 +63,6 @@ Debug → ReleaseSafe → ReleaseFast의 전체 `audit`를 순차 실행해 각�
 
 ## 다음 구현의 통과 조건
 
-공통 제품 코어의 [XML 문자 입력 계층](xml-input.md)은 별도 계약으로 진행합니다. 이력 컨테이너의 기본 검사에 자동 연결하지 않으며 XML 문법 검증과 구별합니다.
+공통 제품 코어의 [XML 문자 입력 계층](xml-input.md)과 HWP5의 선택적 [XML 구조·namespace 검증](hwp5-xml-validation.md)은 이미 별도 계약으로 구현됐습니다. 기본 이력 컨테이너 검사에 자동 연결되지는 않으며, 문법·namespace 검사와 이력 의미 검증을 구별합니다.
 
-제품용 bounded XML 읽기와 노드/속성 소유권, DiffML 명령과 포함 문서의 구분, PATH/인덱스/문자 노드의 좌표, OLD와 삽입·삭제의 적용 방향/순서, 기준 버전이 필요합니다. 복원 전후를 확인할 수 있는 한글 생성 표본으로 이를 검증한 뒤 HWPML 모델과 연결해야 합니다. 현재는 독립 XML 파싱 성공만 추가로 확인했으며 복원·편집·저장은 미구현입니다.
+남은 것은 DiffML 명령과 포함 문서의 구분, PATH/인덱스/문자 노드의 좌표, OLD와 삽입·삭제의 적용 방향/순서, 기준 버전을 다루는 의미 모델입니다. 복원 전후를 확인할 수 있는 한글 생성 표본으로 이를 검증한 뒤 HWPML 모델과 연결해야 합니다. 현재 제품은 명시적으로 선택한 payload의 XML 구조를 검사할 수 있지만 DiffML/HWPML 의미 해석·복원·편집·저장은 미구현입니다.
