@@ -15,3 +15,5 @@
 직접 `inMargin`·`cellzoneList`는 [표 자식 검사](hwpx-table-children.md)가, inherited shape 속성·자식은 [표 shape 검사](hwpx-table-shape.md)가 별도로 소유합니다. 셀 내용 의미, 조건부 분기, 표 배치·반복 머리글 동작, 편집·저장·무손실 왕복은 아직 이 검사 범위 밖입니다. `inspectKnown` 성공은 전체 HWPX 스키마 적합성 또는 문서 검증 완료가 아닙니다.
 
 이번 파트의 최종 재검증에서는 독립 조사기 자체 반례와 실제 파일 집계, 최종 코드의 ReleaseFast shard 0~7, Debug 전체 2,306/2,306 테스트, ReleaseSafe·ReleaseFast 전체 감사 각 2,345/2,345 테스트, 두 최적화 모드의 표 속성 단독 테스트, 포맷·공백 검사가 통과했습니다. 적대적 점검은 ID 0을 부재/유효 기본값으로 오인하는 경로, 셀 참조 성공을 표 참조 성공으로 일반화하는 경로, header 없는 단독 검사의 0 카운트, 미지 열거값과 무접두 속성 선택, 잘못된 숫자·Boolean, 할당 실패 경로를 각각 반례로 확인했습니다. 이 결과는 이 파트의 관측 범위에 한정됩니다.
+
+2026-09-27 현재 내용 재검증: 고정 버전 모델과 무접두 속성·header 참조 판정 코드를 대조하고 독립 조사기 자체 반례 및 476개 실파일 집계를 다시 실행했습니다. 표 4,182개의 `pageBreak`는 CELL/NONE/TABLE 각각 3,152/1,004/26개, `repeatHeader=true` 3,917개, `noAdjust=true` 675개, `cellSpacing=0` 4,146개·합계 9,066입니다. 테두리 참조는 4,177개 해결, 5개 미해결이며 미해결 값은 모두 ID 0입니다. 집중 테스트는 Debug·ReleaseSafe·ReleaseFast에서 각각 5개 통과했습니다. 기존 known-inspections 8개 shard는 제품 코드가 바뀌지 않아 이전 실행 결과를 재사용했으며 이 날짜에 다시 실행한 것으로 세지 않습니다.

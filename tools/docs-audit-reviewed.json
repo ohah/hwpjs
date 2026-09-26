@@ -6,8 +6,20 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "20d3aed4a33921fbde5820f5a7a054912ea0470570d3f9827d713d4ecff53125",
+      "sha256": "9847e42fde73a6a1af6da49eaaf351e41a5425a431b454ea716e0cdb6b78eec8",
       "evidence": "2026-09-27 tracker tests, 2518 inline link path probe, HWPX note, number, column, field, inline, meta, parameter, equation, and table review"
+    },
+    "docs/hwpx-table-cell-sublists.md": {
+      "sha256": "e733353d9ba9dc09ee0b99cd173e694fb30d8def7848ec7ded53eefd3c96d17d",
+      "evidence": "2026-09-27 pinned official tc child, current code, Zig tests 3 modes, independent table oracle corpus 476, known shards reused"
+    },
+    "docs/hwpx-table-attributes.md": {
+      "sha256": "a1eb06411dcdaad58a960c93ea56260721f748ce63484c77fb9eb1e48f5edb1b",
+      "evidence": "2026-09-27 pinned official table attributes, current code, Zig tests 3 modes, independent table oracle corpus 476, known shards reused"
+    },
+    "docs/hwpx-table-children.md": {
+      "sha256": "6c3a3b1c48aa16a4d8fbe3bec95954b4f1a5cb30df65fdf02ec7376aac89ee74",
+      "evidence": "2026-09-27 pinned official table children, current code, Zig tests 3 modes, independent table oracle corpus 476, known shards reused"
     },
     "docs/hwpx-para-list.md": {
       "sha256": "67685f9c19d04e22ce3a1f0d597a3b4d53fc9de808221bde70319ac377189894",
