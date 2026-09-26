@@ -6,8 +6,20 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "9847e42fde73a6a1af6da49eaaf351e41a5425a431b454ea716e0cdb6b78eec8",
+      "sha256": "1e796ab869d5c493b9b45f5760b57fc1daf07fe3a3701474a3421e07483c7efc",
       "evidence": "2026-09-27 tracker tests, 2518 inline link path probe, HWPX note, number, column, field, inline, meta, parameter, equation, and table review"
+    },
+    "docs/hwpx-table-geometry.md": {
+      "sha256": "9593960243639d77ead094e1d714654a66f5e61f5b409e6b9356ca6858459692",
+      "evidence": "2026-09-27 pinned official fields, current code, Zig tests 3 modes, independent table oracle corpus 476, known shards reused"
+    },
+    "docs/hwpx-table-cell-fields.md": {
+      "sha256": "8501d1754b21bed4824a865fabf5608e00b86d764952a8a674ed92ec44eb1e03",
+      "evidence": "2026-09-27 pinned official cell fields, current code, Zig tests 3 modes, independent table oracle corpus 476, known shards reused"
+    },
+    "docs/hwpx-table-child-topology.md": {
+      "sha256": "ec0efd817aa45f17285fddeb249baf3e000d377b384b0b05ee0860e70a56a70c",
+      "evidence": "2026-09-27 pinned official child model, current code, Zig tests 3 modes, independent table oracle corpus 476, original XML XPath, known shards reused"
     },
     "docs/hwpx-table-cell-sublists.md": {
       "sha256": "e733353d9ba9dc09ee0b99cd173e694fb30d8def7848ec7ded53eefd3c96d17d",
