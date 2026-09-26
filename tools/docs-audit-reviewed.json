@@ -6,8 +6,16 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "ddd6dd874fe53a86c73bb7cb698c882077daf3a2bf3cebd0e6c3c091f0f79232",
-      "evidence": "2026-09-27 tracker tests, 2515 inline link path probe, and HWPX note review"
+      "sha256": "f3e660639305bfab2a1244b70764a24e0dfae732f96357fbf986388323188541",
+      "evidence": "2026-09-27 tracker tests, 2515 inline link path probe, HWPX note, number, and column review"
+    },
+    "docs/hwpx-number-controls.md": {
+      "sha256": "4eb9d88d213ceb7e0fcffc13edd49a55143bf1eb6ce2449fea09f9f3ece320d3",
+      "evidence": "2026-09-27 official model, Zig tests 3 modes, independent oracle corpus 476, standalone known integration"
+    },
+    "docs/hwpx-column-definitions.md": {
+      "sha256": "8bd742cb0e3b1cab81539bdbb42b81019daf202fd148e9d7ce62cbdd687d0de3",
+      "evidence": "2026-09-27 official model, Zig tests 3 modes, independent oracle corpus 476, standalone known integration"
     },
     "docs/hwpx-note-sites.md": {
       "sha256": "0596d5750ca3830e1d828e5c448cad69b1e8e89ff02a0c0e432e39d5f0bd5bfe",
