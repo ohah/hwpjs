@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[HWP5 각주·미주 원문 표식 위치](hwp5-note-source-sites.md)는 `zig build hwp5-audit -Doptimize=ReleaseSafe`에서 추적 `footnote-endnote.hwp`의 4건과 합성 ID·코드·누락·위치 이동 반례를 검증합니다. 로컬 `reference/rhwp/samples`가 있으면 같은 audit의 `noteControlReferenceResults`에서 추가 9·6·2건의 위치도 대조하고, 없으면 `skipped`로 구분합니다. `control_links`의 제품 코드는 재사용하며 새 파서 모드는 없습니다.
+
 [HWP5 각주·미주 안 자동 번호 관계](hwp5-note-number-links.md)는 `zig test src/root.zig --test-filter 'HWP5 note number links'` 및 `-O ReleaseSafe`·`-O ReleaseFast`로 소유 범위와 진단 반례를 검사합니다. `node --test tests/hwp5/note-number-links.test.mjs`는 oracle 자체의 변이 반례를 검사합니다. `zig build audit -Doptimize=ReleaseSafe`의 HWP5 테스트용 WASM 문서 보고서는 `tests/hwp5/note-number-links.mjs`의 원시 Section 레코드 독립 대조를 포함합니다. 해당 실파일 검사는 로컬 HWP corpus에 한정됩니다.
 
 [HWPX 각주·미주 원문 위치](hwpx-note-sites.md)는 `zig test src/root.zig --test-filter 'HWPX note site'`와 같은 필터의 `-O ReleaseSafe`·`-O ReleaseFast`로 직접 `ctrl`·바깥 주석·foreign namespace·UTF-16 원본 오프셋을 검사합니다. `zig test src/hwpx_note_bodies_survey.zig -O ReleaseFast --test-filter 'HWPX note bodies real files known integration'`은 단독/known 반환값을, `python3 tools/hwpx-note-sites-diff.py`는 허용 파일별 조상 인덱스를 독립 ZIP/XML과 대조합니다. Oracle 반례는 `python3 tools/hwpx-note-sites-diff.py --self-test` 및 `python3 -O tools/hwpx-note-sites-diff.py --self-test`로 확인합니다. 실파일 검사는 로컬 `reference/rhwp`가 필요하며 기본 audit 밖입니다.

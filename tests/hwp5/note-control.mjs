@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { inflateRawSync } from "node:zlib";
 import { documentRecords } from "./documents.mjs";
 import { noteDocument } from "./note-document.mjs";
+import { noteSourceSitesActual, noteSiteFixtures } from "./note-source-sites.mjs";
 const word = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
@@ -68,7 +69,9 @@ export function noteControlReference(call, cfb) {
     }
     assert.equal(count, expected);
     controls += count;
-    files.push({ name, count, document: noteDocument(call, cfb, readFileSync(path), h, body) });
+    const sites = noteSourceSitesActual(call, h.readUInt32LE(32), body, noteSiteFixtures[name]);
+    assert.equal(sites, count);
+    files.push({ name, count, sites, document: noteDocument(call, cfb, readFileSync(path), h, body) });
   }
   return { controls, rejected, files, skipped };
 }

@@ -318,6 +318,7 @@ import { treeActual, treeEdges } from "./tree.mjs";
 import { sectionActual, sectionEdges } from "./sections.mjs";
 import { notePair } from "./note-pair.mjs";
 import { linksActual, linkEdges } from "./links.mjs";
+import { noteSourceSiteEdges, noteSourceSitesActual, noteSiteFixtures } from "./note-source-sites.mjs";
 import { columnEdges, columnPair } from "./columns.mjs";
 import { listsActual, listEdges } from "./list-groups.mjs";
 import { typeActual, typeEdges } from "./control-types.mjs";
@@ -420,6 +421,8 @@ const controlEdgeResults = controlEdges(call);
 const treeEdgeResults = treeEdges(call);
 const sectionEdgeResults = sectionEdges(call);
 const linkEdgeResults = linkEdges(call);
+const noteSourceSiteEdgeResults = noteSourceSiteEdges(call);
+assert.equal(noteSourceSiteEdgeResults, 4);
 const columnEdgeResults = columnEdges(call);
 const listEdgeResults = listEdges(call);
 const typeEdgeResults = typeEdges(call);
@@ -1038,6 +1041,8 @@ try {
             readFileSync(new URL("multicolumns-widths.hwpx", fixtures)),
           );
         linkedControls += linksActual(call, hdr.readUInt32LE(32), plain);
+        if (name === "footnote-endnote.hwp" && entry.name === "Section0")
+          assert.equal(noteSourceSitesActual(call, hdr.readUInt32LE(32), plain, noteSiteFixtures[name]), 4);
         if (name === "footnote-endnote.hwp" && entry.name === "Section0")
           notePairResult = notePair(
             call,

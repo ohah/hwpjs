@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+[HWP5 각주·미주 원문 표식](hwp5-note-source-sites.md)은 기존 `src/hwp5/body/control_links.zig`가 원문 위치를 소유하고, `tests/hwp5/note-source-sites.mjs`가 원시 레코드 기반 기대 위치·변이 반례만 소유합니다. 주석 전용 제품 파서는 추가하지 않습니다.
+
 [HWP5 각주·미주 안 자동 번호 관계](hwp5-note-number-links.md)는 `src/hwp5/body/note_number_links.zig`가 기존 Tree/Groups와 번호 원값 파서를 연결하고, `tests/hwp5/note-number-links.mjs`가 테스트용 문서 보고서를 원시 레코드로 독립 대조합니다. 표시 번호 생성과 저장은 후속 책임입니다.
 
 [각주·미주 본문](hwpx-note-bodies.md)은 `note_bodies.zig`가 section 주석·목록·직접 문단의 관계와 원문 수명, `note_body_fields.zig`가 주석 속성, 기존 `para_list_attributes.zig`가 목록 속성을 소유합니다. 실파일 대조는 `hwpx_note_bodies_survey.zig`와 `tools/hwpx-note-bodies-diff.py`가 맡습니다.

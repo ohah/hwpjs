@@ -38,6 +38,8 @@
 
 - `control_links.zig`는 같은 문단의 확장 텍스트 토큰과 컨트롤 헤더를 발생 순서/ID로 연결합니다. `paragraph_children.zig`는 문단 직접 자식 수집/중복 검사의 SSOT이며 paragraphs와 links가 공유합니다. 연결 성공과 개별 컨트롤 의미 검증을 구분합니다.
 
+- [각주·미주 원문 표식 위치](hwp5-note-source-sites.md)는 이 공통 연결 결과의 주석 ID·코드 17·UTF-16 시작 위치를 독립 원시 레코드와 대조합니다. 별도 제품 파서나 주석 번호 추론을 추가하지 않습니다.
+
 - [문단 흐름 소유권](hwp5-paragraph-flows.md): LIST_HEADER별 소속 계약과 실제 파일·적대적 검증 기록.
 
 - `column_def.zig`는 cold의 공통 간격/개별 너비·간격 배치를 소유합니다. count 1 또는 동일 너비와 가변 너비를 구분하며, 개별 쌍은 record_array를 재사용합니다. section_validation에서 부모/개수를 검사하고 단위/레이아웃을 임의 보정하지 않습니다.
