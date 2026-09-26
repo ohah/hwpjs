@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[전체 `zig build test`의 stderr 표기 해석](zig-test-stderr.md)은 성공 요약과 함께 나타나는 `failed command:` 러너 문구의 재현 및 판정 근거를 소유합니다. 이 문구만으로 실패라고 판단하거나 종료 코드·테스트 실패 수를 무시하지 않습니다.
+
 [HWPX 각주·미주 본문](hwpx-note-bodies.md)은 `zig test src/root.zig --test-filter 'HWPX note bodies'`와 `-O ReleaseSafe`·`-O ReleaseFast`로 원값·직접 목록/문단·한도·OOM·소유권을 검증합니다. `zig test src/hwpx_note_bodies_survey.zig -O ReleaseFast --test-filter 'HWPX note bodies real files known integration'`은 실파일의 단독/known 경로를, `python3 tools/hwpx-note-bodies-diff.py`는 전체 허용 파일별 독립 ZIP/XML 해시와 분류를 대조합니다. `python3 tools/hwpx-note-bodies-diff.py --self-test`와 `python3 -O tools/hwpx-note-bodies-diff.py --self-test`는 oracle 변이 검출을 확인합니다. 실파일 명령에는 로컬 `reference/rhwp`가 필요하며 기본 audit 밖입니다.
 
 [HWPX 각주·미주 안 번호 관계](hwpx-note-number-links.md)는 `zig test src/root.zig --test-filter 'HWPX note number links'`와 `-O ReleaseSafe`·`-O ReleaseFast`로 부모 관계·진단·한도·OOM을 확인합니다. `zig test src/hwpx_note_number_links_survey.zig -O ReleaseFast --test-filter 'HWPX note number links real files standalone and known integration'`은 단독/known 경로를, `python3 tools/hwpx-note-number-links-diff.py`는 허용 파일별 독립 ZIP/XML 해시를 검사합니다. Oracle 변이는 `python3 tools/hwpx-note-number-links-diff.py --self-test`와 `python3 -O tools/hwpx-note-number-links-diff.py --self-test`로 확인합니다. 실파일 검사는 로컬 `reference/rhwp`가 필요하며 기본 audit 밖입니다.
