@@ -6,8 +6,24 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "6fcb492e99cdb1b93b127b7db703bec1acbcffee666f5126cea63206ded6e505",
-      "evidence": "2026-09-27 tracker tests, 2515 inline link path probe, and entry-doc review"
+      "sha256": "ddd6dd874fe53a86c73bb7cb698c882077daf3a2bf3cebd0e6c3c091f0f79232",
+      "evidence": "2026-09-27 tracker tests, 2515 inline link path probe, and HWPX note review"
+    },
+    "docs/hwpx-note-sites.md": {
+      "sha256": "0596d5750ca3830e1d828e5c448cad69b1e8e89ff02a0c0e432e39d5f0bd5bfe",
+      "evidence": "2026-09-27 official model, Zig tests 3 modes, independent oracle corpus 476, known survey 8 shards"
+    },
+    "docs/hwpx-note-bodies.md": {
+      "sha256": "27414b1b8c6f78980bd5513ecc26a628928bcf254bdb1e8a378607f690653a24",
+      "evidence": "2026-09-27 official field widths, Zig tests 3 modes, independent oracle corpus 476, known survey 8 shards"
+    },
+    "docs/hwpx-note-number-links.md": {
+      "sha256": "65abce15e4d54e52767063d2935a27645218c62555f2e89d2fd3605ad25be178",
+      "evidence": "2026-09-27 official number fields, Zig tests 3 modes, independent oracle corpus 476, known survey 8 shards"
+    },
+    "docs/hwpx-note-text.md": {
+      "sha256": "d49d0362d5404d0afbf09e466cfb498cbe2c5879c3293540f5c19d21baba071a",
+      "evidence": "2026-09-27 official text hierarchy, Zig tests 3 modes, independent oracle corpus 476, known survey 8 shards"
     },
     "AGENTS.md": {
       "sha256": "e1febd446a70e4f471d639da9269aaf0bd5be3267e2b9283205122ee6c62e6e9",
