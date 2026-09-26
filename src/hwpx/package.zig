@@ -22,6 +22,7 @@ const section_tree = @import("section_tree.zig");
 const document_trees = @import("document_trees.zig");
 const equation = @import("equation.zig");
 const parameter_lists = @import("parameter_lists.zig");
+const meta_tags = @import("meta_tags.zig");
 const paragraph_metadata = @import("paragraph_metadata.zig");
 const paragraph_children = @import("paragraph_children.zig");
 const masterpage_paragraph_children = @import("masterpage_paragraph_children.zig");
@@ -181,6 +182,8 @@ pub const EquationOptions = struct { trees: XmlTreesOptions = .{}, equations: eq
 pub const EquationReport = equation.Report;
 pub const ParameterListOptions = struct { trees: XmlTreesOptions = .{}, parameters: parameter_lists.Options = .{} };
 pub const ParameterListReport = parameter_lists.Report;
+pub const MetaTagOptions = struct { trees: XmlTreesOptions = .{}, tags: meta_tags.Options = .{} };
+pub const MetaTagReport = meta_tags.Report;
 pub const ParagraphMetadataOptions = paragraph_metadata.Options;
 pub const ParagraphMetadataReport = paragraph_metadata.Report;
 pub const ParagraphChildrenOptions = paragraph_children.Options;
@@ -355,6 +358,7 @@ pub const KnownOptions = struct {
     trees: XmlTreesOptions = .{},
     equations: equation.Options = .{},
     parameter_lists: parameter_lists.Options = .{},
+    meta_tags: meta_tags.Options = .{},
     paragraph_metadata: ParagraphMetadataOptions = .{},
     paragraph_children: ParagraphChildrenOptions = .{},
     line_segments: LineSegmentsOptions = .{},
@@ -693,6 +697,14 @@ pub const Document = struct {
         var trees = try self.readXmlTrees(a, options.trees);
         defer trees.deinit(a);
         return trees.inspectParameterLists(a, options.parameters);
+    }
+
+    /// Owns direct text and exact XML for section hp:metaTag elements without
+    /// interpreting application metadata or rendering behavior.
+    pub fn inspectMetaTags(self: *const Document, a: std.mem.Allocator, options: MetaTagOptions) !MetaTagReport {
+        var trees = try self.readXmlTrees(a, options.trees);
+        defer trees.deinit(a);
+        return trees.inspectMetaTags(a, options.tags);
     }
 
     /// Reuses the owned section trees and header border-fill IDs; inactive

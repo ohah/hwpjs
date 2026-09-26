@@ -8,6 +8,7 @@ const equation_shape = @import("equation_shape.zig");
 const shape_caption = @import("shape_caption.zig");
 const equation_caption = @import("equation_caption.zig");
 const equation_comment = @import("equation_comment.zig");
+const direct_text = @import("xml_direct_text.zig");
 
 pub const ShapeChild = equation_shape.Child;
 pub const CaptionSubList = equation_caption.SubList;
@@ -91,13 +92,7 @@ const ContentContext = struct {
         try self.comments.onContent(event);
         const index = self.script_indices.get(event.parent_index) orelse return;
         const builder = &self.builders[index];
-        const remaining = @min(self.max_script_bytes -| builder.content.items.len, self.budget.max -| self.budget.used);
-        const decoded = try event.value.toUtf8(self.temp_a, remaining);
-        defer self.temp_a.free(decoded);
-        if (decoded.len > remaining) return error.LimitExceeded;
-        try self.budget.note(decoded.len);
-        try builder.content.appendSlice(self.owned_a, decoded);
-        self.script_bytes.* += decoded.len;
+        try direct_text.append(self.temp_a, self.owned_a, &builder.content, event.value, self.max_script_bytes, self.budget, self.script_bytes);
     }
 };
 

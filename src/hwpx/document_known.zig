@@ -48,6 +48,7 @@ const masterpage_style_references = @import("masterpage_style_references.zig");
 const masterpage_table_geometry = @import("masterpage_table_geometry.zig");
 const equation = @import("equation.zig");
 const parameter_lists = @import("parameter_lists.zig");
+const meta_tags = @import("meta_tags.zig");
 
 /// Results of the currently implemented HWPX inspections only. A successful
 /// return does not assert complete schema, semantic or edit/save validity.
@@ -86,6 +87,7 @@ pub const Report = struct {
     section_text: section_text.Report,
     equations: equation.Report,
     parameter_lists: parameter_lists.Report,
+    meta_tags: meta_tags.Report,
     paragraph_metadata: paragraph_metadata.Report,
     paragraph_children: paragraph_children.Report,
     line_segments: line_segments.Report,
@@ -111,6 +113,7 @@ pub const Report = struct {
     pub fn deinit(self: *Report, a: std.mem.Allocator) void {
         self.equations.deinit();
         self.parameter_lists.deinit();
+        self.meta_tags.deinit();
         self.section_definitions.deinit(a);
         self.section_direct_settings.deinit(a);
         self.section_page_borders.deinit(a);
@@ -241,8 +244,35 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
         errdefer equation_report.deinit();
         var parameter_list_report = try trees.inspectParameterLists(a, options.parameter_lists);
         errdefer parameter_list_report.deinit();
+        var meta_tag_report = try trees.inspectMetaTags(a, options.meta_tags);
+        errdefer meta_tag_report.deinit();
         const table_report = try trees.inspectTableGeometryWithBorderFills(a, options.table_geometry, resource_report.table(.border_fill));
-        break :blk .{ .begin = begin_report, .page = page_report, .section_definitions = section_definition_report, .section_direct_settings = section_direct_settings_report, .section_page_borders = section_page_border_report, .section_note_shapes = section_note_shape_report, .section_presentation = section_presentation_report, .fill_brushes = fill_brush_report, .fill_brush_image_links = fill_brush_image_link_report, .fill_brush_image_payloads = fill_brush_image_payload_report, .picture_image_links = picture_image_link_report, .picture_image_payloads = picture_image_payload_report, .section_page_border_references = section_page_border_ref_report, .section_definition_references = section_definition_ref_report, .paragraph = paragraph_report, .paragraph_children = paragraph_children_report, .line_segments = line_segment_report, .run = run_report, .topology = topology_report, .text_nodes = text_nodes_report, .equations = equation_report, .parameter_lists = parameter_list_report, .table_geometry = table_report };
+        break :blk .{
+            .begin = begin_report,
+            .page = page_report,
+            .section_definitions = section_definition_report,
+            .section_direct_settings = section_direct_settings_report,
+            .section_page_borders = section_page_border_report,
+            .section_note_shapes = section_note_shape_report,
+            .section_presentation = section_presentation_report,
+            .fill_brushes = fill_brush_report,
+            .fill_brush_image_links = fill_brush_image_link_report,
+            .fill_brush_image_payloads = fill_brush_image_payload_report,
+            .picture_image_links = picture_image_link_report,
+            .picture_image_payloads = picture_image_payload_report,
+            .section_page_border_references = section_page_border_ref_report,
+            .section_definition_references = section_definition_ref_report,
+            .paragraph = paragraph_report,
+            .paragraph_children = paragraph_children_report,
+            .line_segments = line_segment_report,
+            .run = run_report,
+            .topology = topology_report,
+            .text_nodes = text_nodes_report,
+            .equations = equation_report,
+            .parameter_lists = parameter_list_report,
+            .meta_tags = meta_tag_report,
+            .table_geometry = table_report,
+        };
     };
     return .{
         .version = version,
@@ -279,6 +309,7 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
         .section_text = text_report,
         .equations = semantic.equations,
         .parameter_lists = semantic.parameter_lists,
+        .meta_tags = semantic.meta_tags,
         .paragraph_metadata = semantic.paragraph,
         .paragraph_children = semantic.paragraph_children,
         .line_segments = semantic.line_segments,

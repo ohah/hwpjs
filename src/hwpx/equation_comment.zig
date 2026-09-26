@@ -2,6 +2,7 @@ const std = @import("std");
 const part_tree = @import("xml_part_tree.zig");
 const Budget = @import("equation_fields.zig").Budget;
 const ShapeChild = @import("equation_shape.zig").Child;
+const direct_text = @import("xml_direct_text.zig");
 
 const Builder = struct {
     shape_child_index: usize,
@@ -31,13 +32,7 @@ pub const Capture = struct {
     pub fn onContent(self: *Capture, event: part_tree.Tree.ContentEvent) !void {
         const index = self.indices.get(event.parent_index) orelse return;
         const builder = &self.builders.items[index];
-        const remaining = @min(self.max_comment_bytes -| builder.content.items.len, self.budget.max -| self.budget.used);
-        const decoded = try event.value.toUtf8(self.temp_a, remaining);
-        defer self.temp_a.free(decoded);
-        if (decoded.len > remaining) return error.LimitExceeded;
-        try self.budget.note(decoded.len);
-        try builder.content.appendSlice(self.owned_a, decoded);
-        self.total_bytes.* += decoded.len;
+        try direct_text.append(self.temp_a, self.owned_a, &builder.content, event.value, self.max_comment_bytes, self.budget, self.total_bytes);
     }
 
     pub fn finish(self: *Capture, children: []ShapeChild) !void {

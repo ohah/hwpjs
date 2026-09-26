@@ -3,6 +3,7 @@ const tree_mod = @import("xml_part_tree.zig");
 const document_xml = @import("document_xml.zig");
 const values = @import("xml_values.zig");
 const xml = @import("../xml/root.zig");
+const direct_text = @import("xml_direct_text.zig");
 
 pub const Kind = enum { parameter_set, boolean, integer, unsigned_integer, bindata, float, string, list, array };
 pub const names = [_][]const u8{ "parameterset", "booleanParam", "integerParam", "unsignedintegerParam", "bindataParam", "floatParam", "stringParam", "listParam", "arrayParam" };
@@ -77,7 +78,7 @@ const Budget = struct {
         return owned;
     }
 
-    fn note(self: *Budget, count: usize) !void {
+    pub fn note(self: *Budget, count: usize) !void {
         if (count > self.max -| self.used) return error.LimitExceeded;
         self.used += count;
     }
@@ -114,13 +115,7 @@ const ContentContext = struct {
         const self: *ContentContext = @ptrCast(@alignCast(raw));
         const index = self.indices.get(event.parent_index) orelse return;
         const builder = &self.builders[index];
-        const remaining = @min(self.max_value_bytes -| builder.items.len, self.budget.max -| self.budget.used);
-        const decoded = try event.value.toUtf8(self.temp_a, remaining);
-        defer self.temp_a.free(decoded);
-        if (decoded.len > remaining) return error.LimitExceeded;
-        try self.budget.note(decoded.len);
-        try builder.appendSlice(self.owned_a, decoded);
-        self.value_bytes.* += decoded.len;
+        try direct_text.append(self.temp_a, self.owned_a, builder, event.value, self.max_value_bytes, self.budget, self.value_bytes);
     }
 };
 

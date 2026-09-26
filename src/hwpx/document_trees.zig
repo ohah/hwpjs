@@ -21,6 +21,7 @@ const section_presentation = @import("section_presentation.zig");
 const fill_brush = @import("fill_brush.zig");
 const equation = @import("equation.zig");
 const parameter_lists = @import("parameter_lists.zig");
+const meta_tags = @import("meta_tags.zig");
 const table_geometry = @import("table_geometry.zig");
 const header_resources = @import("header_resources.zig");
 
@@ -123,6 +124,10 @@ pub const Bundle = struct {
 
     pub fn inspectParameterLists(self: *const Bundle, a: std.mem.Allocator, options: parameter_lists.Options) !parameter_lists.Report {
         return parameter_lists.inspect(a, self.sections, options);
+    }
+
+    pub fn inspectMetaTags(self: *const Bundle, a: std.mem.Allocator, options: meta_tags.Options) !meta_tags.Report {
+        return meta_tags.inspect(a, self.sections, options);
     }
 
     pub fn deinit(self: *Bundle, a: std.mem.Allocator) void {
