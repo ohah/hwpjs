@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "verified": {
+    "docs/hwp5-note-source-sites.md": {
+      "sha256": "3f8d33fb4939ca3f9697d863e670c4218a8d3a1d617229e1378bd85c51fda76a",
+      "evidence": "d80409cc,d6ed23df"
+    },
+    "docs/verification-progress.md": {
+      "sha256": "e43f05660b3ab48bdab35c2b5f7be252dfc216a256e348cf96537d85c906270b",
+      "evidence": "2026-09-27 tracker tests and 2512 inline link path probe"
+    }
+  }
+}

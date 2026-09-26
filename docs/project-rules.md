@@ -28,4 +28,5 @@ HWP5 구현 시 `legacy/rust/documents/docs/spec/hwp-5.0.md`와 `legacy/rust/.cl
 - [HWP5 주제 문서](hwp5-modules.md)를 읽고 해당 계약을 갱신합니다. 새 주제는 별도 문서로 만들고 인덱스에 연결합니다. 같은 규칙을 여러 문서에서 독립적으로 관리하지 않습니다.
 - 실행 명령은 [개발·검증 명령](development-commands.md), 경로 안내는 [프로젝트 구조](project-structure.md), 계층·단계 설계는 [아키텍처](architecture.md)가 소유합니다.
 - 새 실측·적대적 검증 결과와 재현 근거는 해당 주제 문서에 계약과 함께 남깁니다. 주제가 커지면 [문단 흐름](hwp5-paragraph-flows.md)처럼 별도 문서로 분리하고 상위 주제에서 연결합니다. 기존 [공통 구현 기록](hwp5-foundation.md)은 이력으로 보존하며 과거 기록을 현재 지원 범위로 읽지 않습니다.
+- 전체 문서 검증의 파일별 현재 상태와 완료 기준은 [문서 검증 현황](verification-progress.md)을 따릅니다. 검증 결과의 상세 근거는 각 주제 문서가 계속 소유합니다.
 - AGENTS.md는 새 문서 진입점이 필요한 경우에만 링크를 갱신합니다. Maru의 문서 구성만 참고하며 이 프로젝트의 main 직접 푸시 정책을 변경하지 않습니다.

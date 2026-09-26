@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[프로젝트 문서 검증 현황](verification-progress.md)은 `node tools/docs-audit-status.mjs`로 확인합니다. `--list-pending`은 경로별 상태를, `--require-complete`는 모든 추적 프로젝트 Markdown이 현재 해시로 검증됐고 누락·미추적 문서가 없는지 검사합니다. `node tools/docs-inline-links.mjs`는 일반 인라인 로컬 링크의 대상 파일만 검사합니다. `node --test tests/docs/*.test.mjs`로 두 도구의 반례를 검증합니다. 이 명령들은 문서 내용의 정확성을 자동 증명하지 않으며 최종 적대적 검증을 대신하지 않습니다.
+
 [HWP5 각주·미주 원문 표식 위치](hwp5-note-source-sites.md)는 `zig build hwp5-audit -Doptimize=ReleaseSafe`에서 추적 `footnote-endnote.hwp`의 4건과 합성 ID·코드·누락·위치 이동 반례를 검증합니다. 로컬 `reference/rhwp/samples`가 있으면 같은 audit의 `noteControlReferenceResults`에서 추가 9·6·2건의 위치도 대조하고, 없으면 `skipped`로 구분합니다. `control_links`의 제품 코드는 재사용하며 새 파서 모드는 없습니다.
 
 [HWP5 각주·미주 안 자동 번호 관계](hwp5-note-number-links.md)는 `zig test src/root.zig --test-filter 'HWP5 note number links'` 및 `-O ReleaseSafe`·`-O ReleaseFast`로 소유 범위와 진단 반례를 검사합니다. `node --test tests/hwp5/note-number-links.test.mjs`는 oracle 자체의 변이 반례를 검사합니다. `zig build audit -Doptimize=ReleaseSafe`의 HWP5 테스트용 WASM 문서 보고서는 `tests/hwp5/note-number-links.mjs`의 원시 Section 레코드 독립 대조를 포함합니다. 해당 실파일 검사는 로컬 HWP corpus에 한정됩니다.
