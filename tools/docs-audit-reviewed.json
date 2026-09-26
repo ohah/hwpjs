@@ -6,8 +6,16 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "1e796ab869d5c493b9b45f5760b57fc1daf07fe3a3701474a3421e07483c7efc",
+      "sha256": "e06d50c10df219037dcf66c2713984d641a0fcc8d28955fd9f9ab64153e69ba2",
       "evidence": "2026-09-27 tracker tests, 2518 inline link path probe, HWPX note, number, column, field, inline, meta, parameter, equation, and table review"
+    },
+    "docs/hwpx-master-table-geometry.md": {
+      "sha256": "6194c807c8d21b0eeda8d9a0c0a20f9ba48408bc3b0afd9eb4a2ec8c72f2f028",
+      "evidence": "2026-09-27 current master table scope and budgets, Zig tests 3 modes, independent oracle corpus 476, known shards reused"
+    },
+    "docs/hwpx-selected-table-geometry.md": {
+      "sha256": "603c0df66736107b6067e07324081973600c11104cf6fa493d31e353c920ae58",
+      "evidence": "2026-09-27 current switch selection policy, Zig tests 3 modes and policy regressions, zero-positive corpus boundary, known shards reused"
     },
     "docs/hwpx-table-geometry.md": {
       "sha256": "9593960243639d77ead094e1d714654a66f5e61f5b409e6b9356ca6858459692",

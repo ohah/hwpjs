@@ -21,3 +21,5 @@
 8개 shard는 최종 Zig 보고서와 독립 Python 기대값을 각각 별도 ReleaseFast 프로세스에서 대조해 모두 통과했습니다. 표가 있는 shard 0·1·2·6·7뿐 아니라 표가 없는 3·4·5도 0건 경계를 확인했습니다. 합성 테스트 6개는 Debug·ReleaseSafe·ReleaseFast에서 통과했고, 공통 트리 회귀로 section 14개·header 7개를 다시 확인했습니다. 적대적 검토에서는 직접 `subList` 밖 표·외국 namespace 위장, 중첩 표, 음수 격자 값, 테두리 ID 누락, 파트별 바이트 및 여러 파트의 요소·표·격자 누적 한도와 할당 실패를 반례로 검사했습니다.
 
 최종 소스에서 `zig build test --summary all`은 2,353/2,353, ReleaseSafe 제품 빌드·전체 audit, JS/CFB 비교 47/47, `zig fmt --check build.zig src`, staged diff 검사가 통과했습니다. 이는 현재 선택한 표 구조·필드·참조의 관측 근거일 뿐 HWPX 전체 문서 유효성, 레이아웃, 편집·저장 완료 증거는 아닙니다.
+
+2026-09-27 현재 내용 재검증: 파트별 임시 트리·누적 예산·루트 직접 `subList` 범위와 section 표 공통 판독 코드, 독립 표 조사기의 자체 반례 및 허용 476개 실파일을 다시 대조했습니다. 마스터페이지 61개·직접 목록 61개에서 XML 578,075바이트·요소 7,346개, 표/행/셀 48/72/154개, 격자 선언/점유 각 178개입니다. 표 테두리 48개·셀 테두리 154개는 모두 header ID에 연결됐고 `label` 표는 16개입니다. 마스터 표 집중 테스트는 Debug·ReleaseSafe·ReleaseFast 각 6개, 합성 known 연결은 Debug 2개가 통과했습니다. 이전 known-inspections 8개 shard는 제품 코드가 바뀌지 않아 결과를 재사용했으며 이번에 재실행한 것으로 세지 않습니다.

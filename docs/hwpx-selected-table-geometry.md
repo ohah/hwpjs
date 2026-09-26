@@ -19,3 +19,5 @@
 선택적 `hwpx_known_survey.zig`의 8개 shard를 각각 실행해 전부 통과했습니다. 실제 switch 문서에서는 위 독립 조사와 같이 선택/원문 표 개수가 같았지만, 이 결과는 **분기 속 표 선택의 실파일 양성 검증이 아니라** 기존 표 검사 회귀 확인입니다. 합성 선택 표 테스트는 Debug·ReleaseSafe·ReleaseFast 각각 10/10 통과했으며, 텍스트 안쪽 동명 run과 비활성 표의 한도 미소비 반례를 포함합니다.
 
 최종 전체 `zig build test --summary all`은 Debug 2362/2362 통과했고, `zig build -Doptimize=ReleaseSafe --summary all`, `zig build audit -Doptimize=ReleaseSafe --summary all`, `zig build compare -Doptimize=ReleaseSafe --summary all`도 통과했습니다. JS 비교는 47/47이며 CFB 제품 API 회귀 검사이지 이번 Zig 코어의 HWPX 선택 API 공개 검증은 아닙니다. `zig fmt --check build.zig src`, `git diff --check`, 독립 조사기 `--self-test`도 통과했습니다.
+
+2026-09-27 현재 내용 재검증: 공유 선택 정책·section/마스터페이지 활성 프레임·표 검사 위임 코드를 대조하고 독립 표 조사기 자체 반례 및 허용 476개 실파일을 다시 실행했습니다. section과 마스터페이지의 `switch` 후손 표는 각각 0개여서 실파일 양성 선택 근거는 여전히 없습니다. 선택 표 합성 테스트는 Debug·ReleaseSafe·ReleaseFast 각 10개가 통과했고, 공유 정책 회귀의 선택 참조·section 텍스트·서식 참조·마스터페이지 서식 참조는 Debug에서 각각 9/5/5/6개 통과했습니다. 기존 known-inspections 8개 shard는 제품 코드 불변을 확인해 이전 결과만 재사용했으며 이번에 재실행한 것으로 세지 않습니다. 선택 표의 화면 표시나 JS/WASM 공개까지 검증한 결과가 아닙니다.
