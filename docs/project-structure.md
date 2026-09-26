@@ -42,7 +42,9 @@ section 문단·run 서식 참조의 선택 결과는 기존 `section_references
 
 [Section metaTag 직접 텍스트](hwpx-meta-tags.md)는 `meta_tags.zig`가 부모 종류와 무관한 선택·소유 결과를 맡고, `hwpx_meta_tags_survey.zig`와 `tools/hwpx-meta-tags-diff.py`가 실파일의 독립 XML 대조를 맡습니다. 수식·표 스캐너의 원문 보존과 별도 API입니다.
 
-`xml_direct_text.zig`는 수식 script·shapeComment, 파라미터 스칼라, section metaTag의 직접 XML 문자 청크 누적과 바이트 한도를 한 곳에서 처리합니다. 각 모듈은 대상 선택·예산 소유·보고서 형식만 맡고 XML 정규화를 다시 구현하지 않습니다.
+[Section indexmark·dutmal 문자열 컨트롤](hwpx-inline-string-controls.md)은 `inline_string_controls.zig`가 두 부모의 직접 자식·속성·소유 결과를 맡고, `hwpx_inline_string_controls_survey.zig`와 `tools/hwpx-inline-string-controls-diff.py`가 실파일의 독립 XML 대조를 맡습니다.
+
+`xml_direct_text.zig`는 수식 script·shapeComment, 파라미터 스칼라, section metaTag, indexmark·dutmal 문자열의 직접 XML 문자 청크 누적과 바이트 한도를 한 곳에서 처리합니다. 각 모듈은 대상 선택·예산 소유·보고서 형식만 맡고 XML 정규화를 다시 구현하지 않습니다.
 
 구역 정의의 번호·메모 모양 ID 연결은 [구역 참조 진단](hwpx-section-definition-references.md)이 소유합니다. 진단 결과를 HWPX 문서 전체 유효성 판정으로 사용하지 않습니다.
 

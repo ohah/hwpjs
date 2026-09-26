@@ -49,6 +49,7 @@ const masterpage_table_geometry = @import("masterpage_table_geometry.zig");
 const equation = @import("equation.zig");
 const parameter_lists = @import("parameter_lists.zig");
 const meta_tags = @import("meta_tags.zig");
+const inline_string_controls = @import("inline_string_controls.zig");
 
 /// Results of the currently implemented HWPX inspections only. A successful
 /// return does not assert complete schema, semantic or edit/save validity.
@@ -88,6 +89,7 @@ pub const Report = struct {
     equations: equation.Report,
     parameter_lists: parameter_lists.Report,
     meta_tags: meta_tags.Report,
+    inline_string_controls: inline_string_controls.Report,
     paragraph_metadata: paragraph_metadata.Report,
     paragraph_children: paragraph_children.Report,
     line_segments: line_segments.Report,
@@ -114,6 +116,7 @@ pub const Report = struct {
         self.equations.deinit();
         self.parameter_lists.deinit();
         self.meta_tags.deinit();
+        self.inline_string_controls.deinit();
         self.section_definitions.deinit(a);
         self.section_direct_settings.deinit(a);
         self.section_page_borders.deinit(a);
@@ -246,6 +249,8 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
         errdefer parameter_list_report.deinit();
         var meta_tag_report = try trees.inspectMetaTags(a, options.meta_tags);
         errdefer meta_tag_report.deinit();
+        var inline_string_control_report = try trees.inspectInlineStringControls(a, options.inline_string_controls);
+        errdefer inline_string_control_report.deinit();
         const table_report = try trees.inspectTableGeometryWithBorderFills(a, options.table_geometry, resource_report.table(.border_fill));
         break :blk .{
             .begin = begin_report,
@@ -271,6 +276,7 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
             .equations = equation_report,
             .parameter_lists = parameter_list_report,
             .meta_tags = meta_tag_report,
+            .inline_string_controls = inline_string_control_report,
             .table_geometry = table_report,
         };
     };
@@ -310,6 +316,7 @@ pub fn inspect(a: std.mem.Allocator, document: anytype, options: anytype) !Repor
         .equations = semantic.equations,
         .parameter_lists = semantic.parameter_lists,
         .meta_tags = semantic.meta_tags,
+        .inline_string_controls = semantic.inline_string_controls,
         .paragraph_metadata = semantic.paragraph,
         .paragraph_children = semantic.paragraph_children,
         .line_segments = semantic.line_segments,

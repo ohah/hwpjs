@@ -14,6 +14,8 @@
 
 `hp:t` 바깥의 비공백 XML 본문은 곧바로 손상으로 판정하지 않습니다. 실제 corpus에 `script`, `stringParam`, `shapeComment`, `integerParam`, `booleanParam`, `metaTag`, `firstKey`, `mainText`, `subText`의 텍스트가 있으므로 각각 관측 건수로 분리합니다. 이들은 표시용 `hp:t`가 아니며 이 계층은 내용 의미를 해석하지 않습니다. 그 밖의 부모 요소에 있는 비공백 본문은 `unknown`으로 집계하고 문제 건수에 포함합니다.
 
+`firstKey`·`mainText`·`subText`의 소유 직접 텍스트와 `secondKey` 모델 자식은 별도 [indexmark·dutmal 문자열 컨트롤](hwpx-inline-string-controls.md)이 검사합니다. 이 이벤트 분류의 집계를 자식 문자열 결과와 혼동하지 않습니다.
+
 보고서의 `text_bytes`는 `hp:t` 하위의 UTF-8 내용 합계이고, `empty_text_elements`는 문자 내용이 0바이트인 `t` 수입니다. 내부 제어 요소가 있어도 문자 내용이 없으면 여기서는 비어 있다고 셉니다. 기본 한도는 section XML 하나 128 MiB·합계 256 MiB, `t` 200만 개·내부 요소 200만 개·본문 UTF-8 64 MiB이며 XML 공통 문법·깊이 한도도 유지합니다. 이 수치는 가시 문자 수나 렌더링 결과가 아닙니다. 기본 보고서는 조건부 분기를 모두 관측하고, 선택적 텍스트 이벤트는 별도 API가 제공합니다. 표·도형 내부 텍스트의 화면상 순서, 필드 의미, 다른 버전 namespace, 원문 왕복·저장은 후속 검증 대상입니다.
 
 후속 [run 위치·자식 진단](hwpx-run-topology.md)은 section 텍스트 이벤트를 바꾸지 않고, 같은 `hp:run`의 직접 부모와 직접 자식·`secPr` 위치를 별도 보고서로 관측합니다. 두 보고서의 run 수·비직접 run 수는 실파일 검증에서 대조합니다.
