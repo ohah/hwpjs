@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "8f613c0ff7786faae3e6d1f6be54836ba83376635b7ffd8b5e2436215bc13976",
-      "evidence": "2026-09-27 tracker tests, 2523 inline links, HWP5 XML, XMLTemplate, DocHistory reviews, architecture pending, full Debug Zig test incomplete"
+      "sha256": "b971be0039c26dec99d7a681515029e6e138ffb5f85d81ba48d99ae8e02848c3",
+      "evidence": "2026-09-27 tracker tests, 2523 inline links, HWP5 XML, XMLTemplate, DocHistory and HistoryLastDoc reviews, architecture pending, full Debug Zig test incomplete"
+    },
+    "docs/hwp5-history-last-document.md": {
+      "sha256": "bca534a7e80cb0a41bc49f5ac535dfeb19c0dfbab23c15dbf938a2e4d3992f57",
+      "evidence": "2026-09-27 HWP5 section 3.2.11 and 4.4.2.8, current last-document reader and budget, 3 modes focused, real CFB zlib CRC32 payload and old tmp logs absent"
     },
     "docs/hwp5-history-container.md": {
       "sha256": "490338901898a8124842159fbb24c670f7b8e60ebba78347fbf63e68767faa7c",

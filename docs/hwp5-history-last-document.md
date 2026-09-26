@@ -58,11 +58,13 @@ decoded 버퍼는 stream 검사 뒤 해제하고 컨테이너에는 scalar만 �
 
 전역 레코드 한도도 추가 수동 대조했습니다. Node zlib/레코드 framing으로 DocInfo·BodyText 735레코드를 독립 집계하고, VersionLog 28개와 작은 대체 최종 문서 1개를 더했습니다. 전역 한도 764에서 성공, 763에서 LimitExceeded, 다시 764에서 동일 결과로 복구했습니다. 이 수동 검사 역시 자동 audit 건수와 별도입니다.
 
-## 최종 실행 결과
+## 이전 실행 결과와 현재 재검증
 
-Debug → ReleaseSafe → ReleaseFast 전체 audit를 순차 실행했습니다. 세 모드 모두 16/16 빌드 단계, 네이티브 302/302, Node 47/47 및 22/22, HWP5 WASM 검사 1,629,453건을 통과했습니다. 각 모드의 historyLastDocumentResults는 정상 13·거부 285 및 위 실파일 수치와 일치합니다. 검사 건수는 지원 필드/파일 수가 아닙니다.
+이 기능을 처음 연결한 당시 Debug → ReleaseSafe → ReleaseFast 전체 audit를 순차 실행했습니다. 당시 세 모드 모두 16/16 빌드 단계, 네이티브 302/302, Node 47/47 및 22/22, HWP5 WASM 검사 1,629,453건을 통과했습니다. 당시 각 모드의 historyLastDocumentResults는 정상 13·거부 285 및 위 실파일 수치와 일치했습니다. 이 숫자는 현재 전체 audit 결과나 지원 필드/파일 수가 아닙니다.
 
-로그는 `/tmp/hwpjs-history-last-document-debug.log`, `/tmp/hwpjs-history-last-document-safe.log`, `/tmp/hwpjs-history-last-document-fast.log`입니다. 재현 명령은 [개발·검증 명령](development-commands.md)의 세 모드 audit입니다. ReleaseSafe/Fast의 실제 audit probe로 집중 검사도 별도 재실행했습니다. Zig 포맷, 변경 JS 구문, 문서 로컬 링크와 git diff 공백 검사도 통과했습니다.
+당시 로그를 둔 `/tmp/hwpjs-history-last-document-debug.log`, `/tmp/hwpjs-history-last-document-safe.log`, `/tmp/hwpjs-history-last-document-fast.log`는 현재 작업 환경에 남아 있지 않습니다. 재현 명령은 [개발·검증 명령](development-commands.md)의 세 모드 audit입니다. ReleaseSafe/Fast의 실제 audit probe로 집중 검사도 당시 별도 재실행했습니다. 당시 Zig 포맷, 변경 JS 구문, 문서 로컬 링크와 git diff 공백 검사도 통과했습니다.
+
+2026-09-27 현재 내용 재검증: 로컬 HWP5 3.2.11/4.4.2.8의 명세 경계, 현 `last_document.zig`·`container/history.zig`의 명시적 선택·한도·미소비·소유권을 대조했습니다. `last document` 필터의 단일 레코드/최종 stream 예산/내부 VersionLog XML 구분 테스트는 Debug·ReleaseSafe·ReleaseFast에서 각 3개 통과했습니다. 제품 CFB strict 조회와 독립 Node zlib/CRC32 검사로 실제 표본의 저장 580,758바이트, DEFLATE 소비 580,750바이트, 유효한 8바이트 꼬리, decoded 13,184,603바이트, 0x31 payload 13,184,598바이트·6,592,299 UTF-16 유닛을 다시 확인했습니다. 직전 문서 묶음의 ReleaseSafe `hwp5-audit`는 같은 제품 코드에서 독립 JS mode 116/117을 포함해 통과했으나, 이번 묶음에서 전체 audit나 과거 13/285건의 모드별 출력을 별도로 재실행하지 않았습니다. HWPML 의미·복원 가능성은 증명하지 않습니다.
 
 ## 남은 범위
 
