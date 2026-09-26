@@ -92,6 +92,8 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [Section indexmark·dutmal 문자열 컨트롤](hwpx-inline-string-controls.md)은 같은 section 트리와 직접 텍스트 누적기를 재사용해 두 컨트롤의 정확한 자식 문자열과 원문 속성을 소유합니다. 인덱스 생성·덧말 배치 및 style ID 연결은 여기서 임의로 구현하지 않습니다.
 
+[Section 필드 시작·끝 마커](hwpx-field-markers.md)는 section 트리에서 어휘·직접 자식·원문을 소유하고, 별도 연결기가 `beginIDRef`만으로 같은 section의 시작과 끝을 짝짓습니다. 필드 내용 평가·표시·저장은 후속 계층이며, `parameters`와 `metaTag` 내부 값은 기존 공통 검사기의 단일 책임으로 남깁니다.
+
 [공통 XML part 트리](hwpx-header-tree.md)는 header·section의 원문·요소 인덱스를 한 구현으로 소유합니다. [Section 원문·요소 인덱스](hwpx-section-tree.md)는 spine 선택을, header 트리는 정확한 manifest 선택과 암호화 거부를 적용합니다. 미지원 요소까지 남기되 텍스트 이벤트를 전체 문서 모델로 오인하지 않도록 의미 계층을 단계적으로 조립합니다.
 
 [문서 XML 트리 조립](hwpx-document-trees.md)은 구조 검사 결과를 한 번 확정하고 header·모든 section의 소유 트리를 spine 순서로 묶습니다. 전체 바이트·요소 예산과 실패 원자성을 조립 계층에서 소유하되, 구조·원문 파싱과 미지원 part의 의미 해석을 복제하지 않습니다.

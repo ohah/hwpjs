@@ -89,6 +89,8 @@ section 텍스트 보고서도 원문 양쪽 분기를 유지합니다. 활성 �
 [표 자체 속성 원값·테두리 ID 참조](hwpx-table-attributes.md)도 표 격자 보고서 안에서 확인할 수 있습니다. 원값 검사 성공을 표 표시·편집 완료로 해석하지 않습니다.
 
 `equations`는 같은 section 트리의 [본문 수식 원문·script](hwpx-equations.md)를 별도 소유 보고서로 반환합니다. 수식 문법·렌더링·저장 지원을 추가한 것은 아닙니다.
+
+`field_markers`는 같은 section 트리의 [필드 시작·끝 마커](hwpx-field-markers.md)를 별도 소유 보고서로 반환합니다. 명시적 ID 연결과 불일치 진단까지만 제공하며 필드 내용 평가·표시·저장은 포함하지 않습니다.
 [표 안쪽 여백·셀 구역](hwpx-table-children.md) 보고서도 같은 격자 보고서에 포함되며, 구역 겹침·표 배치의 의미는 판정하지 않습니다.
 [표 상속 shape 속성·직접 자식](hwpx-table-shape.md) 보고서도 같은 격자 보고서에 포함됩니다. 모델 밖 enum 관측을 전체 스키마 적합성이나 레이아웃 판정으로 승격하지 않습니다.
 [표 행·셀 직접 자식 topology](hwpx-table-child-topology.md) 보고서도 포함됩니다. 자식 순서 차이는 관측값이며 전체 XSD 적합성 판정이 아닙니다.

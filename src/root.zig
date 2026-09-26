@@ -31,6 +31,7 @@ test {
     _ = @import("hwpx/parameter_lists_tests.zig");
     _ = @import("hwpx/meta_tags_tests.zig");
     _ = @import("hwpx/inline_string_controls_tests.zig");
+    _ = @import("hwpx/field_markers_tests.zig");
     _ = @import("hwpx/equation_caption_tests.zig");
     _ = @import("hwpx/paragraph_metadata_tests.zig");
     _ = @import("hwpx/paragraph_children_tests.zig");

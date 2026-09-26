@@ -24,6 +24,7 @@ const equation = @import("equation.zig");
 const parameter_lists = @import("parameter_lists.zig");
 const meta_tags = @import("meta_tags.zig");
 const inline_string_controls = @import("inline_string_controls.zig");
+const field_markers = @import("field_markers.zig");
 const paragraph_metadata = @import("paragraph_metadata.zig");
 const paragraph_children = @import("paragraph_children.zig");
 const masterpage_paragraph_children = @import("masterpage_paragraph_children.zig");
@@ -187,6 +188,8 @@ pub const MetaTagOptions = struct { trees: XmlTreesOptions = .{}, tags: meta_tag
 pub const MetaTagReport = meta_tags.Report;
 pub const InlineStringControlsOptions = struct { trees: XmlTreesOptions = .{}, controls: inline_string_controls.Options = .{} };
 pub const InlineStringControlsReport = inline_string_controls.Report;
+pub const FieldMarkersOptions = struct { trees: XmlTreesOptions = .{}, markers: field_markers.Options = .{} };
+pub const FieldMarkersReport = field_markers.Report;
 pub const ParagraphMetadataOptions = paragraph_metadata.Options;
 pub const ParagraphMetadataReport = paragraph_metadata.Report;
 pub const ParagraphChildrenOptions = paragraph_children.Options;
@@ -363,6 +366,7 @@ pub const KnownOptions = struct {
     parameter_lists: parameter_lists.Options = .{},
     meta_tags: meta_tags.Options = .{},
     inline_string_controls: inline_string_controls.Options = .{},
+    field_markers: field_markers.Options = .{},
     paragraph_metadata: ParagraphMetadataOptions = .{},
     paragraph_children: ParagraphChildrenOptions = .{},
     line_segments: LineSegmentsOptions = .{},
@@ -716,6 +720,13 @@ pub const Document = struct {
         var trees = try self.readXmlTrees(a, options.trees);
         defer trees.deinit(a);
         return trees.inspectInlineStringControls(a, options.controls);
+    }
+
+    /// Owns field marker XML and lexical attributes and diagnoses explicit links.
+    pub fn inspectFieldMarkers(self: *const Document, a: std.mem.Allocator, options: FieldMarkersOptions) !FieldMarkersReport {
+        var trees = try self.readXmlTrees(a, options.trees);
+        defer trees.deinit(a);
+        return trees.inspectFieldMarkers(a, options.markers);
     }
 
     /// Reuses the owned section trees and header border-fill IDs; inactive

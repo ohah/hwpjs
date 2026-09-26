@@ -23,6 +23,7 @@ const equation = @import("equation.zig");
 const parameter_lists = @import("parameter_lists.zig");
 const meta_tags = @import("meta_tags.zig");
 const inline_string_controls = @import("inline_string_controls.zig");
+const field_markers = @import("field_markers.zig");
 const table_geometry = @import("table_geometry.zig");
 const header_resources = @import("header_resources.zig");
 
@@ -133,6 +134,10 @@ pub const Bundle = struct {
 
     pub fn inspectInlineStringControls(self: *const Bundle, a: std.mem.Allocator, options: inline_string_controls.Options) !inline_string_controls.Report {
         return inline_string_controls.inspect(a, self.sections, options);
+    }
+
+    pub fn inspectFieldMarkers(self: *const Bundle, a: std.mem.Allocator, options: field_markers.Options) !field_markers.Report {
+        return field_markers.inspect(a, self.sections, options);
     }
 
     pub fn deinit(self: *Bundle, a: std.mem.Allocator) void {
