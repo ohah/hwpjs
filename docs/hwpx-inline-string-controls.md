@@ -16,6 +16,8 @@
 
 로컬 두 corpus의 HWPX 후보 484개에서 ZIP 종료 레코드 거부 6개·암호화 2개를 제외한 허용 476개를 독립 Python ZIP/ElementTree oracle과 **파일별 해시**로 대조했습니다. 실제 양성은 파일 2개에 `indexmark` 3건(`firstKey` 3건, 모두 `hp:ctrl` 직접 자식)과 `dutmal` 1건(`mainText`·`subText` 각 1건, `hp:run` 직접 자식), 컨트롤 4건·문자 자식 5건·UTF-8 직접 텍스트 82바이트입니다. 미등록 직접 자식·모델 밖 속성은 0건입니다. `secondKey` 실파일 양성은 0건이라 합성 근거만 있습니다. 두 양성 파일의 standalone과 known 보고서 해시도 일치했습니다. 재현 명령은 [개발·검증 명령](development-commands.md)에 있습니다.
 
-적대적 검토는 (1) 공식 부모/자식·속성 모델과 실파일 양성, (2) namespace 위장·잘못된 자식 종류·미등록 원문 보존, (3) 문자 참조·CDATA·UTF-16·직접 텍스트와 후손 텍스트 분리, (4) 속성 부재/빈 값/숫자·enum 오류와 자원 한도·모든 할당 실패, (5) 독립 오라클의 값·속성·부모·자식·namespace 변이 검출과 전체 파일별 해시를 검사합니다. 이 검증은 모든 OWPML 버전, 화면 결과, 저장 왕복 또는 문서 전체 스키마 적합성의 증명이 아닙니다.
+적대적 검토는 (1) 공식 직접 자식·속성 모델과 실파일의 부모 위치 관측, (2) namespace 위장·잘못된 자식 종류·미등록 원문 보존, (3) 문자 참조·CDATA·UTF-16·직접 텍스트와 후손 텍스트 분리, (4) 속성 부재/빈 값/숫자·enum 오류와 자원 한도·모든 할당 실패, (5) 독립 오라클의 값·속성·부모·자식·namespace 변이 검출과 전체 파일별 해시를 검사합니다. 이 검증은 모든 OWPML 버전, 화면 결과, 저장 왕복 또는 문서 전체 스키마 적합성의 증명이 아닙니다.
 
 2026-09-26의 Debug 전체 `zig build test --summary all`은 2,601/2,601, 집중 테스트는 Debug·ReleaseSafe·ReleaseFast 각각 9/9를 통과했습니다. Python oracle의 일반/`-O` 변이 self-test와 전체 corpus 대조, `zig fmt --check build.zig src`, ReleaseSafe 제품 빌드 및 known 문서 shard 0~7도 통과했습니다. 실파일 corpus와 known 연결은 기본 전체 테스트 밖의 선택 검사입니다.
+
+2026-09-27 재검증: 한컴 고정 버전 모델의 네 문자열 자식과 `dutmal` 속성·enum을 현재 검사기에 대조했습니다. 전용 필터는 Debug·ReleaseSafe·ReleaseFast 각각 9/9, 양성 실파일의 단독/known 연결은 1/1, 독립 오라클의 일반·`-O` 자체검사는 각각 통과했습니다. 전체 파일별 대조는 허용 476개·ZIP 거부 6개·암호화 2개, 컨트롤 4개·직접 문자열 자식 5개·정규화 직접 텍스트 82바이트로 일치했습니다. 앞서 같은 제품 코드에서 통과한 known-inspections 8개 shard는 이번에 다시 실행하지 않았습니다. `secondKey`의 실파일 양성과 표시·편집·저장은 이 결과로 검증되지 않습니다.
