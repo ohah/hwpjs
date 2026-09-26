@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[HWPX 수식 도형 자식·필드](hwpx-equation-shapes.md)도 아래 `HWPX equation` 필터에 포함됩니다. 단독으로는 `zig test src/root.zig --test-filter 'HWPX equation shape'`를 사용합니다. `-O ReleaseSafe`와 `-O ReleaseFast`를 추가해 최적화 모드별 같은 반례를 검사합니다. 공유 어휘·자식 선택의 표 회귀는 `zig test src/root.zig --test-filter 'HWPX table shape'`, 실파일 문서 연결은 아래 known survey의 8개 shard로 검사합니다. 독립 equation corpus 해시는 공통 도형 자식의 종류·위치·필드까지 포함하며, `python3 -O tools/hwpx-equation-corpus-diff.py --self-test`로 Python 최적화 모드에서도 반례 검사가 유지되는지 확인합니다.
+
 [HWPX 본문 수식 원문·script](hwpx-equations.md)는 `zig test src/root.zig --test-filter 'HWPX equation'`으로 합성·패키지·소유권·할당 실패를 검사합니다. 로컬 두 HWPX corpus가 있으면 `python3 tools/hwpx-equation-corpus-diff.py --self-test`와 `python3 tools/hwpx-equation-corpus-diff.py`로 독립 ZIP/ElementTree 파일별 결과를 대조합니다. 마지막 명령은 ReleaseFast Zig 제품 조사를 내부에서 실행하며 기본 audit에는 포함되지 않습니다.
 
 [HWPX 마스터페이지 텍스트 소유 스냅샷](hwpx-master-text-snapshot.md)은 `zig test src/root.zig --test-filter 'HWPX master text snapshot'`으로 합성 범위·한도·선택 분기·전 할당 실패를 확인합니다. 로컬 `reference/rhwp`가 있을 때만 `zig test src/hwpx_master_text_snapshot_survey.zig -O ReleaseFast --test-filter 'HWPX master text snapshot real file'`로 실제 한 파일의 스트리밍/소유 집계와 이벤트 내부 일관성을 검사합니다.

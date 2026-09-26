@@ -119,7 +119,7 @@ test "HWPX equation releases every allocation failure" {
 
 test "HWPX equation package and known inspections own independent results" {
     const a = std.testing.allocator;
-    const section = prefix ++ "<p:p id='0' styleIDRef='0'><p:run><p:equation version='v'><p:script>x+y</p:script></p:equation></p:run></p:p>" ++ suffix;
+    const section = prefix ++ "<p:p id='0' styleIDRef='0'><p:run><p:equation version='v'><p:sz width='123'/><p:script>x+y</p:script></p:equation></p:run></p:p>" ++ suffix;
     const hpf = "<o:package xmlns:o='http://www.idpf.org/2007/opf/'><o:manifest><o:item id='h' href='Contents/header.xml' media-type='application/xml'/><o:item id='s' href='Contents/section0.xml' media-type='application/xml'/></o:manifest><o:spine><o:itemref idref='h'/><o:itemref idref='s'/></o:spine></o:package>";
     const sources = [_]fixture.Source{
         .{ .name = "mimetype", .data = package.mime },
@@ -143,10 +143,12 @@ test "HWPX equation package and known inspections own independent results" {
     defer known.deinit(a);
     try std.testing.expectEqualStrings("x+y", standalone.scripts[0].value);
     try std.testing.expectEqualStrings("x+y", known.equations.scripts[0].value);
+    try std.testing.expectEqualStrings("123", standalone.shape_children[0].get("width").?);
+    try std.testing.expectEqualStrings("123", known.equations.shape_children[0].get("width").?);
     try std.testing.expectError(error.LimitExceeded, inspect(a, section, .{ .max_equations = 0 }));
 
     var with_table = sources;
-    with_table[5].data = prefix ++ "<p:p id='0' styleIDRef='0'><p:run><p:equation><p:script>x</p:script></p:equation><p:tbl rowCnt='0' colCnt='0'/></p:run></p:p>" ++ suffix;
+    with_table[5].data = prefix ++ "<p:p id='0' styleIDRef='0'><p:run><p:equation><p:sz width='123'/><p:script>x</p:script></p:equation><p:tbl rowCnt='0' colCnt='0'/></p:run></p:p>" ++ suffix;
     const later_bytes = try fixture.storedZip(a, &with_table);
     defer a.free(later_bytes);
     var later_document = try package.inspectDocument(a, later_bytes, .{});

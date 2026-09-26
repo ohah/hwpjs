@@ -2,6 +2,7 @@ const std = @import("std");
 const tree_mod = @import("xml_part_tree.zig");
 const table_xml = @import("table_xml_fields.zig");
 const fields = @import("shape_xml_fields.zig");
+const children = @import("shape_xml_children.zig");
 const para_list = @import("para_list_attributes.zig");
 
 pub const Options = struct {
@@ -41,15 +42,7 @@ pub const Report = struct {
     caption_other_attributes: usize = 0,
 };
 
-const ChildKind = enum { size, position, out_margin, caption, shape_comment, parameter_set, meta_tag, label };
-const child_names = [_][]const u8{ "sz", "pos", "outMargin", "caption", "shapeComment", "parameterset", "metaTag", "label" };
-
-fn childKind(tree: *const tree_mod.Tree, index: usize) ?ChildKind {
-    inline for (child_names, 0..) |name, field| {
-        if (table_xml.childIs(tree, index, name)) return @enumFromInt(field);
-    }
-    return null;
-}
+const ChildKind = children.Kind;
 
 fn inspectCaptionSubLists(a: std.mem.Allocator, tree: *const tree_mod.Tree, caption: usize, max_bytes: usize, options: Options, report: *Report) !void {
     var count: usize = 0;
@@ -82,10 +75,10 @@ fn inspectCaptionSubLists(a: std.mem.Allocator, tree: *const tree_mod.Tree, capt
 pub fn inspectTable(a: std.mem.Allocator, tree: *const tree_mod.Tree, table: usize, max_bytes: usize, options: Options, report: *Report) !void {
     report.tables += 1;
     try fields.inspect(&fields.table_specs, a, tree, table, max_bytes, &report.table_fields);
-    var per_table: [child_names.len]usize = @splat(0);
+    var per_table: [children.names.len]usize = @splat(0);
     var child = tree.elements[table].first_child;
     while (child) |index| : (child = tree.elements[index].next_sibling) {
-        const kind = childKind(tree, index) orelse {
+        const kind = children.kindOf(tree, index, .table) orelse {
             if (!table_xml.childIs(tree, index, "tr") and !table_xml.childIs(tree, index, "inMargin") and !table_xml.childIs(tree, index, "cellzoneList")) report.other_direct_children += 1;
             continue;
         };

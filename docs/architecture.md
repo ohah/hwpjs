@@ -84,7 +84,7 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [Section 텍스트 소유 스냅샷](hwpx-section-text-snapshot.md)은 같은 이벤트를 복사해 호출 수명 밖에 보존합니다. XML 스캐너 규칙이나 문서 의미 해석을 중복하지 않으며 전체 편집 모델은 후속 단계입니다.
 
-[HWPX 수식 원문·script 검사](hwpx-equations.md)는 소유 section 트리에서 run 직접 수식만 선택합니다. 공통 도형 속성 검사와 XML 콘텐츠 해독을 재사용하고 수식 문법·조판은 별도 후속 책임으로 둡니다.
+[HWPX 수식 원문·script 검사](hwpx-equations.md)는 소유 section 트리에서 run 직접 수식만 선택합니다. [수식 도형 자식](hwpx-equation-shapes.md)은 부모 원문 안의 부분 범위를 공유하고 속성 복제만 예산에 추가합니다. 표와 같은 자식 선택·필드 어휘와 XML 콘텐츠 해독을 재사용하고 수식 문법·조판은 별도 후속 책임으로 둡니다.
 
 [공통 XML part 트리](hwpx-header-tree.md)는 header·section의 원문·요소 인덱스를 한 구현으로 소유합니다. [Section 원문·요소 인덱스](hwpx-section-tree.md)는 spine 선택을, header 트리는 정확한 manifest 선택과 암호화 거부를 적용합니다. 미지원 요소까지 남기되 텍스트 이벤트를 전체 문서 모델로 오인하지 않도록 의미 계층을 단계적으로 조립합니다.
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare Zig equation field/script order against independent ZIP/ElementTree."""
+"""Compare Zig equation fields, scripts and shape fields with independent XML."""
 
 import hashlib
 import pathlib
@@ -19,6 +19,14 @@ PARA = "{http://www.hancom.co.kr/hwpml/2011/paragraph}"
 SECTION = "{http://www.hancom.co.kr/hwpml/2011/section}sec"
 FIELDS = ("version", "baseLine", "textColor", "baseUnit", "lineMode", "font")
 INHERITED = ("id", "zOrder", "numberingType", "textWrap", "textFlow", "lock", "dropcapstyle")
+# Independent oracle: do not import/generate expected fields from product code.
+SHAPE_FIELDS = {
+    "sz": ("width", "widthRelTo", "height", "heightRelTo", "protect"),
+    "pos": ("treatAsChar", "affectLSpacing", "flowWithText", "allowOverlap", "holdAnchorAndSO", "vertRelTo", "horzRelTo", "vertAlign", "horzAlign", "vertOffset", "horzOffset"),
+    "outMargin": ("left", "right", "top", "bottom"),
+    "caption": ("side", "fullSz", "width", "gap", "lastWidth"),
+    "shapeComment": (), "parameterset": (), "metaTag": (),
+}
 
 
 def require(condition, evidence):
@@ -37,11 +45,12 @@ def value(hash_obj, data):
 
 def inspect_sections(sections):
     digest = hashlib.sha256()
-    totals = [len(sections), 0, 0, 0, 0, 0, 0, 0]
+    totals = [len(sections), 0, 0, 0, 0, 0, 0, 0, 0, 0]
     for ordinal, xml in enumerate(sections):
         root = ET.fromstring(xml)
         require(root.tag == SECTION, (ordinal, root.tag))
         parents = {child: parent for parent in root.iter() for child in parent}
+        element_indices = {element: index for index, element in enumerate(root.iter())}
         for item in root.iter(PARA + "equation"):
             parent = parents.get(item)
             if parent is None or parent.tag != PARA + "run":
@@ -68,6 +77,22 @@ def inspect_sections(sections):
             number(digest, other)
             totals[6] += other
             totals[7] += sum(name not in FIELDS and name not in INHERITED for name in item.attrib)
+            shapes = [child for child in item if child.tag.startswith(PARA) and child.tag[len(PARA):] in SHAPE_FIELDS]
+            totals[8] += len(shapes)
+            totals[9] += other - len(shapes)
+            number(digest, len(shapes))
+            for child in shapes:
+                local = child.tag[len(PARA):]
+                value(digest, local.encode("utf-8"))
+                number(digest, element_indices[child] - element_indices[item])
+                for name in SHAPE_FIELDS[local]:
+                    if name in child.attrib:
+                        digest.update(b"\x01")
+                        value(digest, child.attrib[name].encode("utf-8"))
+                    else:
+                        digest.update(b"\x00")
+                number(digest, sum(name not in SHAPE_FIELDS[local] for name in child.attrib))
+                number(digest, len(child))
     return (digest.hexdigest(), *totals)
 
 
@@ -110,7 +135,7 @@ def product():
     for line in result.stderr.splitlines():
         if "EQUATION_FILE " in line:
             _, root, path_hash, field_hash, *counts = line[line.index("EQUATION_FILE "):].split()
-            require(len(counts) == 8, line)
+            require(len(counts) == 10, line)
             key = (int(root), path_hash)
             require(key not in accepted, key)
             accepted[key] = (field_hash, *(int(count) for count in counts))
@@ -122,7 +147,7 @@ def product():
             encrypted.add((int(root), path_hash))
         elif line.startswith("EQUATION_TOTAL "):
             totals = tuple(int(value) for value in line.split()[1:])
-    require(totals is not None and len(totals) == 11, result.stderr[-2000:])
+    require(totals is not None and len(totals) == 13, result.stderr[-2000:])
     return accepted, rejected, encrypted, totals
 
 
@@ -134,7 +159,7 @@ def compare(expected, rejected, encrypted, actual, actual_rejected, actual_encry
     for key, row in expected.items():
         require(actual[key] == row, ("mismatch", key, actual[key], row))
     require(totals[:3] == (len(expected), len(rejected), len(encrypted)), totals)
-    require(totals[3:] == tuple(sum(row[index] for row in expected.values()) for index in range(1, 9)), totals)
+    require(totals[3:] == tuple(sum(row[index] for row in expected.values()) for index in range(1, 11)), totals)
 
 
 def self_test():
@@ -147,7 +172,19 @@ def self_test():
     require(first[1:5] == (1, 1, 1, 7), first)
     empty = (open_tag + "</s:sec>").encode()
     require(inspect_sections([empty, a.encode()])[0] != first[0], "section placement escaped digest")
-    require(inspect_sections([a.replace("version=''", "version='' future='x'").encode()])[-1] == 1, "other attribute count escaped")
+    require(inspect_sections([a.replace("version=''", "version='' future='x'").encode()])[8] == 1, "other attribute count escaped")
+    shape = a.replace("<p:script>", "<p:sz width='1' widthRelTo=''/><p:pos/><p:script>")
+    shape_hash = inspect_sections([shape.encode()])[0]
+    for changed in (
+        shape.replace("width='1'", "width='2'"),
+        shape.replace("widthRelTo=''", ""),
+        shape.replace("<p:pos/>", "<p:outMargin/>"),
+        shape.replace("<p:pos/>", "").replace("</p:script>", "</p:script><p:pos/>"),
+        shape.replace("<p:pos/>", "<p:pos future='v'/>"),
+        shape.replace("<p:pos/>", "<p:pos><p:future/></p:pos>"),
+        shape.replace("<p:pos/>", "<p:pos xmlns:p='urn:foreign'/>"),
+    ):
+        require(shape_hash != inspect_sections([changed.encode()])[0], "shape mutation escaped digest")
 
 
 if __name__ == "__main__":
@@ -159,6 +196,6 @@ if __name__ == "__main__":
         actual, actual_rejected, actual_encrypted, totals = product()
         compare(expected, rejected, encrypted, actual, actual_rejected, actual_encrypted, totals)
         positive = sum(row[2] > 0 for row in expected.values())
-        print(f"matched files={len(expected)} rejected={len(rejected)} encrypted={len(encrypted)} positive={positive} sections={totals[3]} equations={totals[4]} scripts={totals[5]} bytes={totals[6]}")
+        print(f"matched files={len(expected)} rejected={len(rejected)} encrypted={len(encrypted)} positive={positive} sections={totals[3]} equations={totals[4]} scripts={totals[5]} bytes={totals[6]} shape_children={totals[11]} unknown_children={totals[12]}")
     else:
         raise SystemExit("usage: hwpx-equation-corpus-diff.py [--self-test]")

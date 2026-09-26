@@ -3,6 +3,10 @@ const part_tree = @import("xml_part_tree.zig");
 const document_xml = @import("document_xml.zig");
 const fields = @import("equation_fields.zig");
 const shape = @import("shape_xml_fields.zig");
+const shape_children = @import("shape_xml_children.zig");
+const equation_shape = @import("equation_shape.zig");
+
+pub const ShapeChild = equation_shape.Child;
 
 pub const Options = struct {
     max_equations: usize = 100_000,
@@ -20,6 +24,8 @@ pub const Equation = struct {
     raw_xml: []const u8,
     attributes: fields.Fields,
     first_script: usize,
+    first_shape_child: usize,
+    shape_child_count: usize = 0,
     script_count: usize = 0,
     other_children: usize = 0,
 };
@@ -35,6 +41,8 @@ pub const Report = struct {
     sections: usize,
     equations: []const Equation,
     scripts: []const Script,
+    shape_children: []const ShapeChild,
+    shape: equation_shape.Report,
     script_bytes: usize,
     owned_bytes: usize,
     without_script: usize,
@@ -90,6 +98,8 @@ pub fn inspect(a: std.mem.Allocator, sections: []const part_tree.Tree, options: 
     var budget: fields.Budget = .{ .max = options.max_owned_bytes };
     var equations: std.ArrayList(Equation) = .empty;
     var scripts: std.ArrayList(ScriptBuilder) = .empty;
+    var children: std.ArrayList(ShapeChild) = .empty;
+    var shape_report: equation_shape.Report = .{};
     var shape_counts: [shape.table_specs.len]shape.Counts = @splat(.{});
     var script_bytes: usize = 0;
     var without_script: usize = 0;
@@ -124,7 +134,9 @@ pub fn inspect(a: std.mem.Allocator, sections: []const part_tree.Tree, options: 
                 .raw_xml = source,
                 .attributes = specific,
                 .first_script = scripts.items.len,
+                .first_shape_child = children.items.len,
             };
+            var per_equation: [equation_shape.common_count]usize = @splat(0);
             var child = element.first_child;
             while (child) |child_index| : (child = tree.elements[child_index].next_sibling) {
                 const child_element = tree.elements[child_index];
@@ -138,8 +150,15 @@ pub fn inspect(a: std.mem.Allocator, sections: []const part_tree.Tree, options: 
                     if (other_children == options.max_other_children) return error.LimitExceeded;
                     equation.other_children += 1;
                     other_children += 1;
+                    if (shape_children.kindOf(tree, child_index, .common)) |kind| {
+                        const item = try equation_shape.read(a, owned_a, tree, index, child_index, equations.items.len, source, options.max_attribute_bytes, &budget, &shape_report);
+                        try children.append(owned_a, item);
+                        equation.shape_child_count += 1;
+                        per_equation[@intFromEnum(kind)] += 1;
+                    } else shape_report.unknown_children += 1;
                 }
             }
+            shape_report.finishEquation(per_equation);
             without_script += @intFromBool(equation.script_count == 0);
             multiple_scripts += @intFromBool(equation.script_count > 1);
             other_attributes += specific.other_attributes;
@@ -166,11 +185,14 @@ pub fn inspect(a: std.mem.Allocator, sections: []const part_tree.Tree, options: 
         .value = try item.content.toOwnedSlice(owned_a),
     };
     const owned_equations = try equations.toOwnedSlice(owned_a);
+    const owned_children = try children.toOwnedSlice(owned_a);
     return .{
         .arena = arena,
         .sections = sections.len,
         .equations = owned_equations,
         .scripts = owned_scripts,
+        .shape_children = owned_children,
+        .shape = shape_report,
         .script_bytes = script_bytes,
         .owned_bytes = budget.used,
         .without_script = without_script,

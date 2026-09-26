@@ -2,6 +2,7 @@ const std = @import("std");
 const xml = @import("../xml/root.zig");
 const tree_mod = @import("xml_part_tree.zig");
 const table_xml = @import("table_xml_fields.zig");
+const values = @import("xml_values.zig");
 
 pub const Kind = enum { unsigned, signed_or_unsigned, boolean, enumeration };
 pub const Spec = struct {
@@ -90,6 +91,34 @@ fn contains(choices: []const []const u8, value: []const u8) bool {
     return false;
 }
 
+/// Shared lexical rules for borrowed inspection and independently owned values.
+pub fn observe(spec: Spec, raw: ?[]const u8, counts: *Counts) !void {
+    const value = raw orelse {
+        counts.absent += 1;
+        return;
+    };
+    counts.present += 1;
+    switch (spec.kind) {
+        .unsigned, .signed_or_unsigned => {
+            const numeric: i64 = if (spec.kind == .unsigned) try values.unsigned32(value) else try values.signedOrUnsigned32(value);
+            counts.zero += @intFromBool(numeric == 0);
+            counts.negative += @intFromBool(numeric < 0);
+            counts.highbit += @intFromBool(numeric >= 0x80000000);
+            counts.sum = std.math.add(i64, counts.sum, numeric) catch return error.LimitExceeded;
+        },
+        .boolean => {
+            if (try values.boolean(value)) counts.true_value += 1 else counts.false_value += 1;
+        },
+        .enumeration => {
+            if (contains(spec.model_values, value)) {
+                // The public model recognizes this exact spelling.
+            } else if (contains(spec.known_extensions, value)) {
+                counts.extension_enum += 1;
+            } else counts.unknown_enum += 1;
+        },
+    }
+}
+
 /// Values are observations. No schema-requiredness or object defaults are inferred.
 pub fn inspect(comptime specs: []const Spec, a: std.mem.Allocator, tree: *const tree_mod.Tree, index: usize, max_bytes: usize, counts: *[specs.len]Counts) !void {
     var names: [specs.len][]const u8 = undefined;
@@ -98,29 +127,9 @@ pub fn inspect(comptime specs: []const Spec, a: std.mem.Allocator, tree: *const 
     try tree.unprefixedAttributeValues(a, index, &names, &raw);
     inline for (specs, 0..) |spec, field| {
         if (raw[field]) |present| {
-            counts[field].present += 1;
-            switch (spec.kind) {
-                .unsigned, .signed_or_unsigned => {
-                    const value: i64 = if (spec.kind == .unsigned) try table_xml.unsigned(a, present, max_bytes) else try table_xml.margin(a, present, max_bytes);
-                    counts[field].zero += @intFromBool(value == 0);
-                    counts[field].negative += @intFromBool(value < 0);
-                    counts[field].highbit += @intFromBool(value >= 0x80000000);
-                    counts[field].sum = std.math.add(i64, counts[field].sum, value) catch return error.LimitExceeded;
-                },
-                .boolean => {
-                    const value = try table_xml.boolean(a, present, max_bytes);
-                    if (value) counts[field].true_value += 1 else counts[field].false_value += 1;
-                },
-                .enumeration => {
-                    const value = try present.toUtf8(a, max_bytes);
-                    defer a.free(value);
-                    if (contains(spec.model_values, value)) {
-                        // The public model recognizes this exact spelling.
-                    } else if (contains(spec.known_extensions, value)) {
-                        counts[field].extension_enum += 1;
-                    } else counts[field].unknown_enum += 1;
-                },
-            }
-        } else counts[field].absent += 1;
+            const decoded = try present.toUtf8(a, max_bytes);
+            defer a.free(decoded);
+            try observe(spec, decoded, &counts[field]);
+        } else try observe(spec, null, &counts[field]);
     }
 }
