@@ -88,7 +88,9 @@ def self_test():
     source = '<s:sec xmlns:s="http://www.hancom.co.kr/hwpml/2011/section" xmlns:p="http://www.hancom.co.kr/hwpml/2011/paragraph" xmlns:c="http://www.hancom.co.kr/hwpml/2011/core" xmlns:x="urn:other"><p:secPr><x:presentation/><p:wrapper><p:presentation/></p:wrapper><p:presentation effect="future" soundIDRef="" invertText="true" autoshow="0" showtime="+2" applyto="NewSection"><c:fillBrush><c:gradation/></c:fillBrush></p:presentation></p:secPr></s:sec>'
     counts = Counter()
     observe(ET.fromstring(source), counts)
-    assert (counts["presentations"], counts["fill_brushes"], counts["brush_gradation"], counts["unknown_enums"], counts["sound_empty"], counts["invertText_true"], counts["showtime_sum"]) == (1, 1, 1, 1, 1, 1, 2)
+    observed = (counts["presentations"], counts["fill_brushes"], counts["brush_gradation"], counts["unknown_enums"], counts["sound_empty"], counts["invertText_true"], counts["showtime_sum"])
+    if observed != (1, 1, 1, 1, 1, 1, 2):
+        raise AssertionError(f"presentation observation mismatch: {observed}")
     for bad in ("1_0", "4294967296", "-1", ""):
         try:
             unsigned32(bad)

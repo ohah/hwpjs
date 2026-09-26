@@ -121,7 +121,9 @@ def self_test():
     source = '<s:sec xmlns:s="http://www.hancom.co.kr/hwpml/2011/section" xmlns:p="http://www.hancom.co.kr/hwpml/2011/paragraph" xmlns:x="urn:other"><p:secPr><x:footNotePr/><p:wrapper><p:footNotePr/></p:wrapper><p:footNotePr><p:autoNumFormat type="USER_CHAR" userChar="*"/><p:noteLine length="-4" width="4 mm" color="#A10FCA0"/><p:numbering newNum="+2" type="ON_PAGE"/></p:footNotePr><p:endNotePr><p:placement place="EACH_COLUMN"/></p:endNotePr></p:secPr></s:sec>'
     counts = Counter()
     observe(ET.fromstring(source), counts)
-    assert (counts["notes_foot"], counts["notes_end"], counts["unknown_enums"], counts["noncanonical_colors"], counts["foot_line_length_sum"], counts["foot_new_num_sum"], counts["missing_end_placement_beneathText"]) == (1, 1, 2, 1, -4, 2, 1)
+    observed = (counts["notes_foot"], counts["notes_end"], counts["unknown_enums"], counts["noncanonical_colors"], counts["foot_line_length_sum"], counts["foot_new_num_sum"], counts["missing_end_placement_beneathText"])
+    if observed != (1, 1, 2, 1, -4, 2, 1):
+        raise AssertionError(f"note shape observation mismatch: {observed}")
     for bad in ("1_0", "4294967296", "-1", "", "0"):
         try:
             integer(bad, positive=True)

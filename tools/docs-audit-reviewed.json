@@ -6,8 +6,16 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "a244388d98600ca8534c8558496acb5205f02763514527a5b75f1da125982cd4",
-      "evidence": "2026-09-27 tracker tests, inline links, HWPX header, font, list, section definition, page geometry, and border review"
+      "sha256": "6ce64428175aa8abc858a2d3fada85cc0abb646d2d888c3951db5d7ff4d507ba",
+      "evidence": "2026-09-27 tracker tests, inline links, HWPX header, font, list, section definition, page geometry, border, note shape, and presentation review"
+    },
+    "docs/hwpx-section-note-shapes.md": {
+      "sha256": "c4871b2aa0ea1d31e0d002e1de3ad8e41781861cae02165740f047100a9151ad",
+      "evidence": "2026-09-27 pinned official note model, current scanner, Zig tests 3 modes, independent corpus 476, optimized oracle mutation, known shards reused"
+    },
+    "docs/hwpx-section-presentation.md": {
+      "sha256": "ce07ea817f15885e722aa72f4391220c55f871bad15df75d9a9e30a493e5cba0",
+      "evidence": "2026-09-27 pinned official presentation fields, current scanner, Zig tests 3 modes, independent corpus 476, optimized oracle mutation, known shards reused"
     },
     "docs/hwpx-page-geometry.md": {
       "sha256": "7e26b164d65ae879fbf04b50a857ab190191874c169ff43bce47633b5e27c611",

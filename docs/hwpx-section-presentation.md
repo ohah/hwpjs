@@ -21,3 +21,5 @@
 적대적 재검토에서는 외부 namespace/중첩 위장, 빈 `soundIDRef`와 부재, 중복 `presentation`·`fillBrush`, 모델 밖 enum, 숫자·Boolean 오류, 마지막 단계 실패 후 소유권을 확인했습니다. 처음 검사에서는 `fillBrush` 직접 자식 순회 한도가 빠진 것을 찾아 별도 전체 한도와 정확한 0/1 경계 테스트를 추가했습니다. 또한 `KnownReport`가 브러시 내부 payload까지 보존한다는 오해를 막도록 원문 소유 경계를 명시했습니다. 이 검증은 공유 `fillBrush` 의미나 효과 적용을 포함하지 않습니다.
 
 이 검사 성공은 전체 HWPX 문서 유효성이나 프레젠테이션 효과의 적용·재생·편집·저장·무손실 왕복을 뜻하지 않습니다.
+
+2026-09-27 현재 소스의 프레젠테이션 집중 테스트와 실파일 `inspectKnown` 연결 테스트를 Debug·ReleaseSafe·ReleaseFast에서 재실행했습니다. 독립 ZIP/XML 조사에서는 484개 후보 중 읽기 실패 8개, `secPr` 555개, `presentation`·직접 `fillBrush`·그 직접 `gradation` 각 25개를 재확인했습니다. 25개의 빈 `soundIDRef`와 `invertText` 참값을 부재나 모델 기본값으로 바꾸지 않았습니다. 자체 반례의 Python `assert`를 명시적 실패로 바꾸고 일반·`-O`의 전체 shard 출력 일치 및 `-O` 고장 주입 실패를 확인했습니다. 앞선 묶음에서 같은 제품 코드로 통과한 known 8개 shard는 이번에 다시 실행하지 않았으며 브러시 내부 의미·효과 적용·저장 지원도 증명하지 않습니다.

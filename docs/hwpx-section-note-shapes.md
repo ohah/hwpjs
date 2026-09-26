@@ -17,3 +17,5 @@
 2026-09-25에 독립 oracle 자체 반례 및 전체 corpus 조사, Zig 전용 테스트의 Debug·ReleaseSafe·ReleaseFast, 선택 실파일 8개 ReleaseFast shard가 모두 통과했습니다. shard 합계는 수용 476개·ZIP 거부 6개·암호화 2개이며, 두 note의 각 551개와 구분선 길이·간격·새 번호 합계·문자 필드 부재/비어 있지 않음·비정형 값 분포가 독립 ZIP/XML 결과와 일치했습니다. `zig build test --summary all`은 5/5 단계·2416/2416 테스트, `zig build -Doptimize=ReleaseSafe`, `zig build compare -Doptimize=ReleaseSafe`, `zig build audit -Doptimize=ReleaseSafe --summary all`도 종료 코드 0으로 통과했습니다.
 
 적대적 재검토에서는 부모 `secPr`와 note의 직접 자식만 선택하는지, 외부 namespace·중첩 동명 요소·중복을 분리하는지, null과 빈 문자열을 구분하는지, 숫자/Boolean 오류 및 정확한 한도에서 누수를 남기지 않는지, 모델 밖 enum·색상을 수정/거부하지 않고 진단하는지를 확인했습니다. 실행 문서에 존재하지 않는 테스트 필터가 적힌 것도 발견해 실제 필터로 고쳤습니다. 이 검사는 관측 범위의 일치에 한정되며 전체 각주/미주 기능 완성의 증거가 아닙니다.
+
+2026-09-27 현재 소스의 note 모양 집중 테스트와 편차 실파일 테스트를 Debug·ReleaseSafe·ReleaseFast에서 재실행했습니다. 독립 ZIP/XML 조사기는 484개 후보 중 8개를 읽지 못했고, 수용 파일의 `secPr` 555개·각주/미주 모양 각 551개, 문자 속성 부재 각 10개, 양쪽 `width="4 mm"` 각 10개, 미주 `EACH_COLUMN` 10개와 비정형 색상 8개를 재확인했습니다. 자체 반례의 Python `assert`를 명시적 실패로 바꾸고 일반·`-O`의 전체 shard 출력 일치 및 `-O` 고장 주입 실패를 확인했습니다. 앞선 묶음에서 같은 제품 코드로 통과한 known 8개 shard는 이번에 다시 실행하지 않았습니다. 이 실측은 note 모양 관측 범위에 한정되고 번호 적용·렌더링·저장은 포함하지 않습니다.
