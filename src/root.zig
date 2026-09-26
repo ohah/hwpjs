@@ -35,6 +35,7 @@ test {
     _ = @import("hwpx/column_definitions_tests.zig");
     _ = @import("hwpx/number_controls_tests.zig");
     _ = @import("hwpx/note_bodies_tests.zig");
+    _ = @import("hwpx/note_site_tests.zig");
     _ = @import("hwpx/note_number_links_tests.zig");
     _ = @import("hwpx/note_text_tests.zig");
     _ = @import("hwpx/equation_caption_tests.zig");

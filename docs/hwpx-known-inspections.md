@@ -98,6 +98,8 @@ section 텍스트 보고서도 원문 양쪽 분기를 유지합니다. 활성 �
 
 `note_bodies`는 같은 section 트리의 [각주·미주 본문 구조](hwpx-note-bodies.md)를 별도 소유 보고서로 반환합니다. `section_note_shapes`의 모양 설정 및 번호 컨트롤과의 실제 표시 연결을 계산하지 않습니다.
 
+각 주석의 `note_bodies.notes[].site`는 [XML 원문 위치](hwpx-note-sites.md)를 제공하지만 표시 문자 위치나 렌더링 번호는 계산하지 않습니다.
+
 `note_text`는 같은 트리와 `note_bodies`를 사용해 [각주·미주 내부 `hp:t` 문자](hwpx-note-text.md)를 별도 소유 보고서로 반환합니다. 화면 표시 문자열은 합성하지 않습니다.
 
 `note_number_links`는 이 두 보고서와 같은 트리에서 [주석 안 번호 컨트롤 포함 관계](hwpx-note-number-links.md)를 조립합니다. 번호 매기기·표시 결과는 계산하지 않습니다.

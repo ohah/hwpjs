@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[HWPX 각주·미주 원문 위치](hwpx-note-sites.md)는 `zig test src/root.zig --test-filter 'HWPX note site'`와 같은 필터의 `-O ReleaseSafe`·`-O ReleaseFast`로 직접 `ctrl`·바깥 주석·foreign namespace·UTF-16 원본 오프셋을 검사합니다. `zig test src/hwpx_note_bodies_survey.zig -O ReleaseFast --test-filter 'HWPX note bodies real files known integration'`은 단독/known 반환값을, `python3 tools/hwpx-note-sites-diff.py`는 허용 파일별 조상 인덱스를 독립 ZIP/XML과 대조합니다. Oracle 반례는 `python3 tools/hwpx-note-sites-diff.py --self-test` 및 `python3 -O tools/hwpx-note-sites-diff.py --self-test`로 확인합니다. 실파일 검사는 로컬 `reference/rhwp`가 필요하며 기본 audit 밖입니다.
+
 [HWPX 각주·미주 텍스트 소유](hwpx-note-text.md)는 `zig test src/root.zig --test-filter 'HWPX note text'`와 같은 필터의 `-O ReleaseSafe`·`-O ReleaseFast`로 namespace·중첩 소유·XML 정규화·빈 요소·한도·OOM·UTF-16을 검증합니다. `zig test src/hwpx_note_text_survey.zig -O ReleaseFast --test-filter 'HWPX note text real files standalone and known integration'`은 실파일의 단독/known 결과를, `python3 tools/hwpx-note-text-diff.py`는 허용 파일별 독립 ZIP/XML 해시와 거부/암호화 분류를 대조합니다. Oracle 변이는 `python3 tools/hwpx-note-text-diff.py --self-test`와 `python3 -O tools/hwpx-note-text-diff.py --self-test`로 확인합니다. 실파일 검사는 로컬 `reference/rhwp`가 필요하며 기본 audit 밖입니다.
 
 [전체 `zig build test`의 stderr 표기 해석](zig-test-stderr.md)은 성공 요약과 함께 나타나는 `failed command:` 러너 문구의 재현 및 판정 근거를 소유합니다. 이 문구만으로 실패라고 판단하거나 종료 코드·테스트 실패 수를 무시하지 않습니다.

@@ -19,6 +19,33 @@ fn optional(hash: *Sha256, bytes: ?[]const u8) void {
         value(hash, raw);
     } else hash.update(&.{0});
 }
+fn optionalIndex(hash: *Sha256, index: ?usize) void {
+    if (index) |value_index| {
+        hash.update(&.{1});
+        count(hash, value_index);
+    } else hash.update(&.{0});
+}
+fn siteDigest(report: *const notes.Report) u256 {
+    var hash = Sha256.init(.{});
+    count(&hash, report.sections);
+    count(&hash, report.notes.len);
+    for (report.notes) |note| {
+        count(&hash, @intFromEnum(note.kind));
+        count(&hash, note.section_ordinal);
+        count(&hash, note.element_index);
+        count(&hash, note.parent_element_index);
+        count(&hash, note.site.byte_offset);
+        optionalIndex(&hash, note.site.control_element_index);
+        optionalIndex(&hash, note.site.paragraph_element_index);
+        optionalIndex(&hash, note.site.run_element_index);
+        optionalIndex(&hash, note.site.text_element_index);
+        optionalIndex(&hash, note.site.sub_list_element_index);
+        optionalIndex(&hash, note.site.enclosing_note_element_index);
+    }
+    var output: [32]u8 = undefined;
+    hash.final(&output);
+    return std.mem.readInt(u256, &output, .big);
+}
 fn digest(report: *const notes.Report) u256 {
     var hash = Sha256.init(.{});
     count(&hash, report.sections);
@@ -74,6 +101,7 @@ test "HWPX note bodies real files known integration" {
         var known = try document.inspectKnown(alloc, .{});
         defer known.deinit(alloc);
         try std.testing.expectEqual(digest(&standalone), digest(&known.note_bodies));
+        try std.testing.expectEqual(siteDigest(&standalone), siteDigest(&known.note_bodies));
         if (case.root == 0) {
             try std.testing.expectEqual(@as(usize, 2), standalone.foot_notes);
             try std.testing.expectEqual(@as(usize, 2), standalone.end_notes);
@@ -118,6 +146,8 @@ test "HWPX note bodies corpus per-file independent XML digest" {
             defer report.deinit();
             for (report.notes) |note| {
                 try std.testing.expectEqualSlices(u8, trees.sections[note.section_ordinal].sourceOf(note.element_index), note.raw_xml);
+                const source = trees.sections[note.section_ordinal].source;
+                try std.testing.expectEqualSlices(u8, note.raw_xml, source[note.site.byte_offset..][0..note.raw_xml.len]);
             }
             for (report.sub_lists) |list| {
                 try std.testing.expectEqualSlices(u8, trees.sections[list.section_ordinal].sourceOf(list.element_index), list.raw_xml);
@@ -126,6 +156,20 @@ test "HWPX note bodies corpus per-file independent XML digest" {
                 try std.testing.expectEqualSlices(u8, trees.sections[paragraph.section_ordinal].sourceOf(paragraph.element_index), paragraph.raw_xml);
             }
             accepted += 1;
+            var site_counts: [6]usize = @splat(0);
+            for (report.notes) |note| {
+                site_counts[0] += @intFromBool(note.site.control_element_index != null);
+                site_counts[1] += @intFromBool(note.site.paragraph_element_index != null);
+                site_counts[2] += @intFromBool(note.site.run_element_index != null);
+                site_counts[3] += @intFromBool(note.site.text_element_index != null);
+                site_counts[4] += @intFromBool(note.site.sub_list_element_index != null);
+                site_counts[5] += @intFromBool(note.site.enclosing_note_element_index != null);
+            }
+            std.debug.print("NOTE_SITE_FILE {d} {x:0>64} {x:0>64} {d} {d} {d} {d} {d} {d} {d}\n", .{
+                root_index,     common.pathDigest(entry.path), siteDigest(&report), report.notes.len,
+                site_counts[0], site_counts[1],                site_counts[2],      site_counts[3],
+                site_counts[4], site_counts[5],
+            });
             std.debug.print("NOTE_CORPUS_FILE {d} {x:0>64} {x:0>64} {d} {d} {d} {d} {d} {d} {d}\n", .{
                 root_index,           common.pathDigest(entry.path), digest(&report),          report.foot_notes,          report.end_notes,
                 report.sub_lists.len, report.paragraphs.len,         report.missing_sub_lists, report.duplicate_sub_lists, report.other_attributes,

@@ -4,6 +4,7 @@ const tree_mod = @import("xml_part_tree.zig");
 const document_xml = @import("document_xml.zig");
 const fields = @import("note_body_fields.zig");
 const para_list = @import("para_list_attributes.zig");
+const note_site = @import("note_site.zig");
 
 pub const Options = struct {
     max_notes: usize = 200_000,
@@ -22,6 +23,7 @@ pub const Note = struct {
     parent_element_index: usize,
     parent_uri: []const u8,
     parent_local_name: []const u8,
+    site: note_site.Site,
     raw_xml: []const u8,
     attributes: fields.Attributes,
     first_sub_list: usize,
@@ -151,6 +153,7 @@ pub fn inspect(a: std.mem.Allocator, sections: []const tree_mod.Tree, options: O
                 .parent_element_index = parent_index,
                 .parent_uri = try budget.copy(owned_a, parent_name.uri),
                 .parent_local_name = try budget.copy(owned_a, parent_local),
+                .site = try note_site.locate(tree, index),
                 .raw_xml = try budget.copy(owned_a, tree.sourceOf(index)),
                 .attributes = try fields.read(a, owned_a, tree, index, options.max_attribute_bytes, &budget),
                 .first_sub_list = sub_lists.items.len,
