@@ -8,6 +8,7 @@
   - [BinData PCX 선택 검사](hwp5-bin-data-pcx.md)
   - [BinData WMF 선택 검사](hwp5-bin-data-wmf.md)
   - [BinData PNG IEND 뒤 0 패딩](hwp5-png-post-iend.md)
+  - [BinData PNG RGBA 선택 검사](hwp5-bin-data-png-rgba.md)
   - [BinData PNG 선언·JPEG 바이트 불일치](hwp5-png-declared-jpeg.md)
 - [내부 XML 검증 연결](hwp5-xml-validation.md)
 - [Bibliography 미확정 배치 조사](hwp5-bibliography-evidence.md)

@@ -48,6 +48,7 @@ test {
     _ = @import("hwpx/picture_image_links_tests.zig");
     _ = @import("hwpx/picture_image_payloads_tests.zig");
     _ = @import("hwpx/manifest_image_payloads_tests.zig");
+    _ = @import("hwpx/png_rgba_payloads_tests.zig");
     _ = @import("hwpx/ole_payloads_tests.zig");
     _ = @import("image/tiff/structure_tests.zig");
     _ = @import("image/pcx/structure_tests.zig");
@@ -292,6 +293,7 @@ test {
     _ = @import("image/jpeg/header_tests.zig");
     _ = @import("image/jpeg/framing_tests.zig");
     _ = @import("hwp5/container/image_tests.zig");
+    _ = @import("hwp5/container/png_rgba_image_tests.zig");
     _ = @import("hwp5/container/png_post_iend_tests.zig");
     _ = @import("hwp5/container/pcx_image_tests.zig");
     _ = @import("hwp5/container/wmf_image_tests.zig");

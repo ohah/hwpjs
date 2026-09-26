@@ -8,7 +8,7 @@
 
 출력 한도 `max_rgba_bytes`는 기본 256 MiB입니다. PNG 구조를 검사한 뒤 `width × height × 4`의 overflow와 출력 한도를 **IDAT 해제 전에** 확인합니다. 복원 행 한도 `pixels.max_decoded_bytes`와 별도이며 두 버퍼·압축 입력이 동시에 존재할 수 있으므로 전체 프로세스 메모리 한도가 아닙니다. 직접 `fromDecoded`를 호출해도 canonical layout·행 버퍼 길이를 확인하고 잘못된 레이아웃은 인덱싱 전에 거부합니다.
 
-현재는 이미지 공통 코어의 명시적 API입니다. HWP5/HWPX 이미지 보고서의 RGBA 누적 예산과 제품 JS API는 아직 연결하지 않았고, `pixels.inspect`의 기존 구조·복원 보고서 계약도 변경하지 않았습니다.
+이미지 공통 코어의 명시적 API이며, 선택적 [HWP5 BinData 연결](hwp5-bin-data-png-rgba.md)과 [HWPX 이미지 보고서 연결](hwpx-png-rgba.md)이 별도 누적 예산으로 호출합니다. 제품 JS API는 아직 연결하지 않았고, `pixels.inspect`의 기존 구조·복원 보고서 계약도 변경하지 않았습니다.
 
 ## 실측과 적대적 검증
 
@@ -18,4 +18,4 @@ Pillow 11.3.0의 `convert("RGBA")`를 독립 기준으로 삼고 PNG 파일 자�
 
 재현 명령은 [개발·검증 명령](development-commands.md)이 소유합니다.
 
-변경 후 `zig build test --summary all`은 Debug 2,539/2,539개·5/5단계, `zig build -Doptimize=ReleaseSafe --summary all`은 5/5단계 통과했습니다. PNG 필터 87/87개와 위 89개 실파일 대조도 통과했습니다. 테스트 통과는 아직 미연결인 HWP5/HWPX RGBA 보고서·JS API나 전체 문서 파싱의 완성을 뜻하지 않습니다.
+공통 코어 도입 당시 `zig build test --summary all`은 Debug 2,539/2,539개·5/5단계, `zig build -Doptimize=ReleaseSafe --summary all`은 5/5단계 통과했습니다. PNG 필터 87/87개와 위 89개 실파일 대조도 통과했습니다. 이후 상위 보고서 연결의 검증 결과는 각 주제 문서가 소유합니다. 이 코어 결과는 JS API나 전체 문서 파싱의 완성을 뜻하지 않습니다.

@@ -77,6 +77,17 @@ fn inspectSingleImage(a: std.mem.Allocator, data: []const u8, media: []const u8,
     return inspectSingleImageWithOptions(a, data, media, path, .{});
 }
 
+test "HWPX picture PNG RGBA shares the manifest pixel policy" {
+    const a = std.testing.allocator;
+    var report = try inspectSample(a, .{ .png_pixels = .{} }, false, false);
+    defer report.deinit(a);
+    try std.testing.expectEqual(@as(usize, 4), report.png_rgba_bytes);
+    try std.testing.expectEqual(@as(usize, 2), report.png_decoded_bytes);
+    try std.testing.expectEqual(@as(usize, 2), report.targets[0].references);
+    try std.testing.expectEqual(payloads.Inspection.png_rgba, report.targets[0].inspection);
+    try std.testing.expectEqual(@as(?anyerror, null), report.targets[0].inspection_error);
+}
+
 fn inspectWmf(a: std.mem.Allocator, data: []const u8, media: []const u8) !payloads.Report {
     return inspectSingleImage(a, data, media, "BinData/image.wmf");
 }

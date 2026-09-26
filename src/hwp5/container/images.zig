@@ -1,5 +1,6 @@
 const std = @import("std");
 const png = @import("../../image/png/pixels.zig");
+const png_rgba = @import("../../image/png/rgba.zig");
 const jpeg = @import("jpeg_images.zig");
 const bmp = @import("bmp_images.zig");
 const bmp_profiles = @import("bmp_profiles.zig");
@@ -9,6 +10,7 @@ const wmf = @import("wmf_images.zig");
 const isExtension = @import("extension.zig").is;
 pub const Options = struct {
     pub const PngDeclaredJpeg = enum { reject, inspect_jpeg };
+    pub const PngPixelOptions = struct { max_rgba_bytes: usize = 256 * 1024 * 1024 };
 
     gif: ?gif.Options = null,
     pcx: ?pcx.Options = null,
@@ -20,6 +22,8 @@ pub const Options = struct {
     max_total_gif_codes: usize = (gif.Options{}).max_total_codes,
     max_total_gif_frames: usize = (gif.Options{}).max_frames,
     png: png.Options = .{},
+    png_pixels: ?PngPixelOptions = null,
+    max_total_png_rgba_bytes: usize = 256 * 1024 * 1024,
     jpeg: ?jpeg.Options = null,
     png_declared_jpeg: PngDeclaredJpeg = .reject,
     bmp: ?bmp.Options = null,
@@ -39,6 +43,8 @@ pub const Report = struct {
     jpeg: jpeg.Report = .{},
     binaries: usize = 0,
     png_images: usize = 0,
+    png_rgba_images: usize = 0,
+    png_rgba_bytes: usize = 0,
     unhandled_binaries: usize = 0,
     pixel_bytes: usize = 0,
     png_extension_disagreements: usize = 0,
@@ -143,7 +149,17 @@ pub const Budget = struct {
             if (next.png_post_iend_zero_bytes > self.options.max_total_png_post_iend_zero_bytes) return error.LimitExceeded;
             options.structure.post_iend.zero_padding = @min(options.structure.post_iend.zero_padding, self.options.max_total_png_post_iend_zero_bytes - next.png_post_iend_zero_bytes);
         }
-        const result = try png.inspect(a, bytes, options);
+        const result = if (self.options.png_pixels) |selected| blk: {
+            if (next.png_rgba_bytes > self.options.max_total_png_rgba_bytes) return error.LimitExceeded;
+            var image = try png_rgba.decode(a, bytes, .{
+                .pixels = options,
+                .max_rgba_bytes = @min(selected.max_rgba_bytes, self.options.max_total_png_rgba_bytes - next.png_rgba_bytes),
+            });
+            defer image.deinit(a);
+            next.png_rgba_images = try add(next.png_rgba_images, 1);
+            next.png_rgba_bytes = try add(next.png_rgba_bytes, image.raster.rgba.len);
+            break :blk image.report;
+        } else try png.inspect(a, bytes, options);
         next.png_images = try add(next.png_images, 1);
         next.pixel_bytes = try add(next.pixel_bytes, result.decoded_bytes);
         next.png_extension_disagreements = try add(next.png_extension_disagreements, @intFromBool(!hinted and extension.len != 0));

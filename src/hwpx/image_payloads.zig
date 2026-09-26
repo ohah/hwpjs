@@ -2,6 +2,7 @@ const std = @import("std");
 const zip = @import("../zip/archive.zig");
 const manifest = @import("content_manifest.zig");
 const png = @import("../image/png/pixels.zig");
+const png_rgba = @import("../image/png/rgba.zig");
 const jpeg = @import("../image/jpeg/structure.zig");
 const jpeg_pixels = @import("../image/jpeg/pixel_inspection.zig");
 const jpeg_render = @import("../image/jpeg/jfif_render.zig");
@@ -18,7 +19,9 @@ const pcx = @import("../image/pcx/structure.zig");
 const svg = @import("../image/svg/structure.zig");
 
 pub const Format = enum { png, jpeg, bmp, gif, wmf, tiff, pcx, svg, unknown };
-pub const Inspection = enum { png_scanlines, jpeg_framing, jpeg_rgb, bmp_structure, bmp_rgba, gif_indices, wmf_framing, tiff_structure, pcx_rle, svg_xml_structure, unsupported };
+pub const Inspection = enum { png_scanlines, png_rgba, jpeg_framing, jpeg_rgb, bmp_structure, bmp_rgba, gif_indices, wmf_framing, tiff_structure, pcx_rle, svg_xml_structure, unsupported };
+
+pub const PngPixelOptions = struct { max_rgba_bytes: usize = 256 * 1024 * 1024 };
 
 /// JPEG marker policy stays in Options.jpeg. Pixel policy cannot override it.
 pub const JpegPixelOptions = struct {
@@ -44,6 +47,7 @@ pub const Options = struct {
     max_entry_bytes: usize = 64 * 1024 * 1024,
     max_total_encoded_bytes: usize = 512 * 1024 * 1024,
     max_total_png_decoded_bytes: usize = 256 * 1024 * 1024,
+    max_total_png_rgba_bytes: usize = 256 * 1024 * 1024,
     max_total_jpeg_rgb_bytes: usize = 256 * 1024 * 1024,
     max_total_bmp_rgba_bytes: usize = 256 * 1024 * 1024,
     max_total_gif_indices: usize = 256 * 1024 * 1024,
@@ -51,6 +55,7 @@ pub const Options = struct {
     max_total_gif_frames: usize = 10_000,
     max_total_pcx_decoded_bytes: usize = 256 * 1024 * 1024,
     png: png.Options = .{},
+    png_pixels: ?PngPixelOptions = null,
     jpeg: jpeg.Options = .{},
     jpeg_pixels: ?JpegPixelOptions = null,
     /// Independent of RGB decoding; reads only first-APP1 IFD0 orientation.
@@ -94,6 +99,7 @@ pub const Report = struct {
     jpeg_exif_orientation_failures: usize,
     encoded_bytes: usize,
     png_decoded_bytes: usize,
+    png_rgba_bytes: usize,
     jpeg_rgb_bytes: usize,
     bmp_rgba_bytes: usize,
     gif_indices: usize,
@@ -138,13 +144,21 @@ fn svgCandidate(item: manifest.Item) bool {
     return item.href.len >= 4 and std.ascii.eqlIgnoreCase(item.href[item.href.len - 4 ..], ".svg");
 }
 
-const Evidence = struct { png_decoded_bytes: usize = 0, jpeg_rgb_bytes: usize = 0, observed_zero_based_jpeg_component_ids: bool = false, jpeg_exif_adobe_colour: bool = false, bmp_rgba_bytes: usize = 0, gif_indices: usize = 0, gif_codes: usize = 0, gif_frames: usize = 0, pcx_decoded_bytes: usize = 0 };
+const Evidence = struct { png_decoded_bytes: usize = 0, png_rgba_bytes: usize = 0, jpeg_rgb_bytes: usize = 0, observed_zero_based_jpeg_component_ids: bool = false, jpeg_exif_adobe_colour: bool = false, bmp_rgba_bytes: usize = 0, gif_indices: usize = 0, gif_codes: usize = 0, gif_frames: usize = 0, pcx_decoded_bytes: usize = 0 };
 
 fn validate(a: std.mem.Allocator, bytes: []const u8, format: Format, options: Options, consumed: Evidence) !Evidence {
     switch (format) {
         .png => {
             var selected = options.png;
             selected.max_decoded_bytes = @min(selected.max_decoded_bytes, options.max_total_png_decoded_bytes - consumed.png_decoded_bytes);
+            if (options.png_pixels) |pixel_options| {
+                var image = try png_rgba.decode(a, bytes, .{
+                    .pixels = selected,
+                    .max_rgba_bytes = @min(pixel_options.max_rgba_bytes, options.max_total_png_rgba_bytes -| consumed.png_rgba_bytes),
+                });
+                defer image.deinit(a);
+                return .{ .png_decoded_bytes = image.report.decoded_bytes, .png_rgba_bytes = image.raster.rgba.len };
+            }
             const report = try png.inspect(a, bytes, selected);
             return .{ .png_decoded_bytes = report.decoded_bytes };
         },
@@ -228,7 +242,7 @@ pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, items: manifest.Manif
     @memset(seen, null);
     var targets: std.ArrayList(Target) = .empty;
     errdefer targets.deinit(a);
-    var result: Report = .{ .sites = sites.len, .non_embedded_sites = 0, .targets = undefined, .media_mismatches = 0, .unknown_formats = 0, .inspection_failures = 0, .jpeg_exif_orientation_failures = 0, .encoded_bytes = 0, .png_decoded_bytes = 0, .jpeg_rgb_bytes = 0, .bmp_rgba_bytes = 0, .gif_indices = 0, .gif_codes = 0, .gif_frames = 0, .pcx_decoded_bytes = 0 };
+    var result: Report = .{ .sites = sites.len, .non_embedded_sites = 0, .targets = undefined, .media_mismatches = 0, .unknown_formats = 0, .inspection_failures = 0, .jpeg_exif_orientation_failures = 0, .encoded_bytes = 0, .png_decoded_bytes = 0, .png_rgba_bytes = 0, .jpeg_rgb_bytes = 0, .bmp_rgba_bytes = 0, .gif_indices = 0, .gif_codes = 0, .gif_frames = 0, .pcx_decoded_bytes = 0 };
     for (sites, 0..) |site, site_index| {
         if (site.target.state != .embedded) {
             result.non_embedded_sites += 1;
@@ -252,7 +266,7 @@ pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, items: manifest.Manif
         const signature_format = formatOf(bytes);
         const format: Format = if (signature_format == .unknown and svgCandidate(item)) .svg else signature_format;
         var inspection_error: ?anyerror = null;
-        const consumed: Evidence = .{ .png_decoded_bytes = result.png_decoded_bytes, .jpeg_rgb_bytes = result.jpeg_rgb_bytes, .bmp_rgba_bytes = result.bmp_rgba_bytes, .gif_indices = result.gif_indices, .gif_codes = result.gif_codes, .gif_frames = result.gif_frames, .pcx_decoded_bytes = result.pcx_decoded_bytes };
+        const consumed: Evidence = .{ .png_decoded_bytes = result.png_decoded_bytes, .png_rgba_bytes = result.png_rgba_bytes, .jpeg_rgb_bytes = result.jpeg_rgb_bytes, .bmp_rgba_bytes = result.bmp_rgba_bytes, .gif_indices = result.gif_indices, .gif_codes = result.gif_codes, .gif_frames = result.gif_frames, .pcx_decoded_bytes = result.pcx_decoded_bytes };
         const evidence = validate(a, bytes, format, options, consumed) catch |err| switch (err) {
             error.OutOfMemory, error.LimitExceeded => return err,
             else => blk: {
@@ -288,7 +302,7 @@ pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, items: manifest.Manif
             .jpeg_exif_nested_ifds_deferred = if (exif_metadata) |meta| meta.nested_ifds_deferred else false,
             .jpeg_exif_orientation_error = exif_error,
             .inspection = switch (format) {
-                .png => .png_scanlines,
+                .png => if (options.png_pixels != null) .png_rgba else .png_scanlines,
                 .jpeg => if (options.jpeg_pixels != null) .jpeg_rgb else .jpeg_framing,
                 .bmp => if (options.bmp_pixels != null) .bmp_rgba else .bmp_structure,
                 .gif => .gif_indices,
@@ -308,6 +322,7 @@ pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, items: manifest.Manif
         result.inspection_failures += @intFromBool(inspection_error != null);
         result.jpeg_exif_orientation_failures += @intFromBool(exif_error != null);
         result.png_decoded_bytes += evidence.png_decoded_bytes;
+        result.png_rgba_bytes += evidence.png_rgba_bytes;
         result.jpeg_rgb_bytes += evidence.jpeg_rgb_bytes;
         result.bmp_rgba_bytes += evidence.bmp_rgba_bytes;
         result.gif_indices += evidence.gif_indices;

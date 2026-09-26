@@ -2,7 +2,7 @@
 
 ## 범위와 책임
 
-HWP5 표 17~18의 BinData 항목별 압축 정책으로 얻은 바이트를 PNG 검사기에 연결합니다. `container.Options.images`는 기본 null이며, 미선택을 정상 이미지 판정으로 해석하지 않습니다. 별도로 켜는 [JPEG 검사와 독립 RGB 예산](hwp5-bin-data-jpeg.md), [BMP 검사와 독립 RGBA 예산](hwp5-bin-data-bmp.md), [GIF 색인·코드·프레임 예산](hwp5-preview-image.md), [PCX 헤더·RLE 경계와 독립 출력 예산](hwp5-bin-data-pcx.md), [WMF 헤더·record 경계와 독립 byte 예산](hwp5-bin-data-wmf.md)은 해당 주제 문서가 소유합니다. 아래 PNG 기본 동작과 바이트 통계는 유지합니다.
+HWP5 표 17~18의 BinData 항목별 압축 정책으로 얻은 바이트를 PNG 검사기에 연결합니다. `container.Options.images`는 기본 null이며, 미선택을 정상 이미지 판정으로 해석하지 않습니다. 별도로 켜는 [PNG RGBA와 독립 출력 예산](hwp5-bin-data-png-rgba.md), [JPEG 검사와 독립 RGB 예산](hwp5-bin-data-jpeg.md), [BMP 검사와 독립 RGBA 예산](hwp5-bin-data-bmp.md), [GIF 색인·코드·프레임 예산](hwp5-preview-image.md), [PCX 헤더·RLE 경계와 독립 출력 예산](hwp5-bin-data-pcx.md), [WMF 헤더·record 경계와 독립 byte 예산](hwp5-bin-data-wmf.md)은 해당 주제 문서가 소유합니다. 아래 PNG 기본 동작과 바이트 통계는 유지합니다.
 
 PNG 기본 strict는 유지하고, 실제 HWP의 비적합 [IEND 뒤 0 패딩](hwp5-png-post-iend.md)을 허용할 때만 명시적 한도·별도 통계를 사용합니다.
 [PNG 선언·JPEG 바이트 불일치](hwp5-png-declared-jpeg.md)도 자동 보정하지 않으며, 명시적으로 선택한 경우에만 JPEG 검사와 별도 진단을 적용합니다.

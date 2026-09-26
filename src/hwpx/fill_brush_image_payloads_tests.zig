@@ -59,6 +59,17 @@ test "HWPX fill brush image payloads opt into shared JPEG RGB" {
     try std.testing.expectEqual(@as(?anyerror, null), report.targets[0].inspection_error);
 }
 
+test "HWPX fill brush PNG RGBA counts a shared target once" {
+    const a = std.testing.allocator;
+    var report = try inspectSample(a, .{ .png_pixels = .{} }, false);
+    defer report.deinit(a);
+    try std.testing.expectEqual(@as(usize, 4), report.png_rgba_bytes);
+    try std.testing.expectEqual(@as(usize, 2), report.png_decoded_bytes);
+    try std.testing.expectEqual(@as(usize, 2), report.targets[0].references);
+    try std.testing.expectEqual(payloads.Inspection.png_rgba, report.targets[0].inspection);
+    try std.testing.expectEqual(@as(?anyerror, null), report.targets[0].inspection_error);
+}
+
 fn inspectSampleWithArchiveAllocator(a: std.mem.Allocator, archive_allocator: std.mem.Allocator, options: payloads.Options, corrupt_png: bool) !payloads.Report {
     const png = try @import("../image/png/pixels_fixture.zig").image(a, 0);
     defer a.free(png);

@@ -68,7 +68,7 @@ XML 공통 문자 입력은 [XML 입력 계약](xml-input.md)에 분리합니다
 
 [Adobe APP14 4성분 JPEG](jpeg-adobe-four-component.md)는 구조·색 선언을 해석하는 Exif 경로와 재사용 평면 샘플링/색 산술을 분리합니다. HWPX 보고서는 선택과 예산만 맡고 색 공식·ICC 의미를 복제하지 않습니다.
 
-[PNG RGBA 픽셀 조립](png-rgba.md)은 기존 청크/IDAT/행 복원과 출력 좌표 배치를 분리합니다. 선택적 상위 HWP5/HWPX 경로가 연결되더라도 색 깊이 축소·투명도 비교·Adam7 배치는 공통 이미지 계층만 소유합니다.
+[PNG RGBA 픽셀 조립](png-rgba.md)은 기존 청크/IDAT/행 복원과 출력 좌표 배치를 분리합니다. 선택적 [HWP5 BinData](hwp5-bin-data-png-rgba.md)·[HWPX ZIP 이미지](hwpx-png-rgba.md) 연결은 대상 선택·예산·보고만 소유하고, 색 깊이 축소·투명도 비교·Adam7 배치는 공통 이미지 계층만 소유합니다.
 
 [XML 네임스페이스 버전 경계](hwpx-namespace-profiles.md)는 2011 지원과 후속 OWPML 계열의 미지원 진단을 구분합니다. 숫자 버전이나 URI 모양만으로 스키마·의미 지원을 활성화하지 않습니다.
 
