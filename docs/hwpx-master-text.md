@@ -2,6 +2,8 @@
 
 `Document.inspectMasterPageText`는 [마스터페이지 파트 선택](hwpx-master-pages.md)이 고른 OPF 파트를 manifest 순서대로 읽고, 각 루트의 직접 `hp:subList` 아래만 순회합니다. 외국 namespace의 동명 요소와 `subList` 밖 문단은 텍스트로 합치지 않습니다. 중첩된 표 등의 후손 문단은 포함합니다. `inspectKnown`의 `master_page_text`에도 같은 검사 결과가 들어갑니다.
 
+호출 수명을 넘겨 이벤트를 보관하는 경로는 [마스터페이지 텍스트 소유 스냅샷](hwpx-master-text-snapshot.md)이 맡습니다.
+
 문단·run·`hp:t` 경계, XML 정규화된 UTF-8 문자 내용, 인라인 요소의 시작·끝·빈 태그와 조건부 분기 관측 규칙은 [section 텍스트 이벤트](hwpx-section-text.md)의 단일 스캐너를 공유합니다. `Location.part_kind=.master_page`와 `part_ordinal`은 마스터페이지의 manifest 선택 순번이며 `item_index`는 원본 manifest 항목입니다. 기존 section 이벤트는 `part_kind=.section`이고 기존 `section_ordinal`을 유지합니다. 마스터페이지 이벤트에서 `section_ordinal`은 유효한 section 위치가 아니므로 `part_ordinal`을 사용합니다. 문단/run/text 순번은 보고서 전체에 걸친 관측 순번이지 페이지 표시 순서가 아닙니다.
 
 기본 모드는 조건부 분기를 모두 관측합니다. 호출자가 `text.scan.branch_policy.mode=.selected`와 실제 지원 namespace를 명시하면 활성 분기만 이벤트·개수에 남깁니다. 이때 비활성 분기 안의 중첩 문단 수는 원본 파트 메타데이터 수보다 적을 수 있으므로 두 값을 무조건 같다고 강제하지 않습니다. XML 문법 자체는 비활성 분기도 검사합니다.

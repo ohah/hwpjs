@@ -41,6 +41,18 @@ pub const Snapshot = struct {
     }
 };
 
+pub const MasterSnapshot = struct {
+    snapshot: Snapshot,
+    parts: usize,
+    sub_lists: usize,
+    xml_bytes: usize,
+
+    pub fn deinit(self: *MasterSnapshot) void {
+        self.snapshot.deinit();
+        self.* = undefined;
+    }
+};
+
 /// Consumes the existing section scanner's callback, never reparses XML.
 /// On any failure the caller must deinit the builder; no partial snapshot escapes.
 pub const Builder = struct {
@@ -92,5 +104,14 @@ pub const Builder = struct {
         const result: Snapshot = .{ .arena = self.arena, .events = events, .report = report, .owned_bytes = self.owned_bytes };
         self.* = undefined;
         return result;
+    }
+
+    pub fn finishMaster(self: *Builder, report: text.MasterReport) !MasterSnapshot {
+        return .{
+            .snapshot = try self.finish(report.text),
+            .parts = report.parts,
+            .sub_lists = report.sub_lists,
+            .xml_bytes = report.xml_bytes,
+        };
     }
 };

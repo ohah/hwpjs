@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[HWPX 마스터페이지 텍스트 소유 스냅샷](hwpx-master-text-snapshot.md)은 `zig test src/root.zig --test-filter 'HWPX master text snapshot'`으로 합성 범위·한도·선택 분기·전 할당 실패를 확인합니다. 로컬 `reference/rhwp`가 있을 때만 `zig test src/hwpx_master_text_snapshot_survey.zig -O ReleaseFast --test-filter 'HWPX master text snapshot real file'`로 실제 한 파일의 스트리밍/소유 집계와 이벤트 내부 일관성을 검사합니다. 독립 XML 집계는 문서에 기록했으며 전체 corpus 소유 이벤트 대조는 아직 없습니다.
+
 [HWPX section 텍스트 소유 스냅샷](hwpx-section-text-snapshot.md)은 `zig test src/root.zig --test-filter 'HWPX section text snapshot'`으로 합성·한도·할당 실패를, `zig test src/hwpx_section_text_snapshot_survey.zig -O ReleaseFast --test-filter 'HWPX section text snapshot known'`으로 실파일 보고서를, `python3 tools/hwpx-section-text-snapshot-diff.py`로 독립 XML 본문 바이트를 검사합니다. 실파일 두 명령은 로컬 `reference/rhwp`가 필요하고 기본 audit 밖입니다.
 
 같은 스냅샷의 파일별 corpus 대조는 `python3 tools/hwpx-text-snapshot-corpus-diff.py --self-test`와 `python3 -O tools/hwpx-text-snapshot-corpus-diff.py --self-test`로 검증기 반례를 먼저 실행하고, `python3 tools/hwpx-text-snapshot-corpus-diff.py`로 실제 484개 후보를 독립 ZIP/XML 결과와 비교합니다. 마지막 명령이 내부에서 ReleaseFast Zig corpus 조사를 실행하며 두 로컬 corpus가 필요합니다. Git의 기본 audit에는 포함되지 않습니다.

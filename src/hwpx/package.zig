@@ -281,6 +281,11 @@ pub const MasterPageTextOptions = struct {
     text: section_text.MasterOptions = .{},
 };
 pub const MasterPageTextReport = section_text.MasterReport;
+pub const MasterPageTextSnapshotOptions = struct {
+    scan: MasterPageTextOptions = .{},
+    storage: section_text_snapshot.Options = .{},
+};
+pub const MasterPageTextSnapshot = section_text_snapshot.MasterSnapshot;
 pub const MasterPageParagraphChildrenOptions = struct {
     master_pages: MasterPageOptions = .{},
     children: masterpage_paragraph_children.Options = .{},
@@ -433,6 +438,15 @@ pub const Document = struct {
         var pages = try self.inspectMasterPages(a, options.master_pages);
         defer pages.deinit(a);
         return section_text.inspectMasterPages(a, self.archive, pages.parts.parts, options.text, visitor);
+    }
+
+    /// Owns the existing master-page text events without adding page layout
+    /// or edit semantics. The same snapshot storage policy serves sections.
+    pub fn readMasterPageTextSnapshot(self: *const Document, a: std.mem.Allocator, options: MasterPageTextSnapshotOptions) !MasterPageTextSnapshot {
+        var builder = section_text_snapshot.Builder.init(a, options.storage);
+        errdefer builder.deinit();
+        const report = try self.inspectMasterPageText(a, options.scan, builder.visitor());
+        return builder.finishMaster(report);
     }
 
     /// Resolves binaryItemIDRef in selected master-page subLists without
