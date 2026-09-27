@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "dee47340b9242d9b6323df331ca3a24133aa121b3308b20b582fb0189c21dda2",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader and compatibility evidence review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "adf0815080faa8ca3bf0c03f2d533f73fbbdd84cc9c9652b6c0edcf89a26be7a",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility and third-party notice evidence review, architecture pending, full Debug Zig test incomplete"
+    },
+    "THIRD_PARTY_NOTICES.md": {
+      "sha256": "9d8b89d82c9ab174f564afa3b294f186b9ab12fa0dc354bf16818b3a7cf04d55",
+      "evidence": "2026-09-27 current rhwp Zig Unicode SheetJS licenses and source adaptation, pinned Unicode and Node generators, IANA LoC ICC data provenance; LoC ICC redistribution rights unresolved and disclosed"
     },
     "docs/cfb-compatibility.md": {
       "sha256": "c7a906e4b53a01db38b905a834673467f12d934ebfba2214ce2be207b7df3737",

@@ -38,6 +38,35 @@ field 12. Generator: `tools/generate-simple-uppercase.mjs`.
 Copyright © 1991-2026 Unicode, Inc. License: [Unicode License V3](licenses/Unicode-3.0.txt).
 Surrogate units are unchanged, as required by MS-CFB §2.6.4.
 
+## Public registry-derived identifier data
+
+`src/text/bcp47/data/source.json` records the pinned [IANA Language Subtag
+Registry](https://www.iana.org/assignments/language-subtag-registry/language-subtag-registry)
+and [Language Tag Extensions Registry](https://www.iana.org/assignments/language-tag-extensions-registry/language-tag-extensions-registry)
+URLs, source dates and hashes. `tools/language-registry.mjs` generates reduced
+identifier tables from that snapshot. IANA and IETF's [protocol-registry licensing
+statement](https://www.iana.org/help/licensing-terms) applies CC0 1.0 to rights
+they hold in the protocol registries; it does not warrant third-party rights or
+cover linked RFC text.
+
+`src/text/iso639/alpha2.txt` contains two-letter language identifiers projected
+from the [Library of Congress ISO 639-2 code list](https://www.loc.gov/standards/iso639-2/php/code_list.php).
+`src/text/iso639/source.json` records the capture date and limits; the ISO
+standard's full text is not bundled.
+
+`src/image/icc/registry/source.json` contains extracted identifier values and
+source hashes from the International Color Consortium's [CMM](https://registry.color.org/cmm-signatures/cmm-signatures.csv),
+[manufacturer](https://registry.color.org/manufacturer-signatures/manufacturer-signatures.csv)
+and [device](https://registry.color.org/device-signatures/device-signatures.csv)
+signature registries. `tools/icc-registry/generate.mjs` derives the lookup table;
+the original CSV files and contact fields are not bundled.
+
+The LoC and ICC links above establish provenance, **not** a license grant. Their
+applicable redistribution terms for these extracted tables have not been
+confirmed here. Neither the project's MIT license nor IANA's CC0 statement is
+asserted to license the LoC or ICC source material; confirm the relevant rights
+before relying on this notice for redistribution clearance.
+
 ## SheetJS CFB
 
 `legacy/cfb.js` identifies itself as SheetJS CFB 1.2.0, Copyright (C) 2013-present SheetJS.
