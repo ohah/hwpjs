@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "817416ff8a9787b65ab7b15083dcedbefd8b08178dc74722773a6dd447d64d7c",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels and BMP RLE RGBA review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "500bc30022a4326e7b034e4b971ca2220f630ba2607711a589f1dfd31b843df3",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA and BMP RLE index review, architecture pending, full Debug Zig test incomplete"
+    },
+    "docs/bmp-rle.md": {
+      "sha256": "335fe55da01883eba0d1e4464fe639a69469ab83aab8e1a6c4ff8789e417c04d",
+      "evidence": "2026-09-27 Microsoft GDI and MS-WMF RLE4 rules current Zig commands raster and structure, Debug Safe Fast BMP RLE broad 19 tests each, local ReleaseSafe probe JS oracle 3174 comparisons 2621 rejects 3 error class guards and seed mutation 3000; historical real-file source mutants and full audit not rerun"
     },
     "docs/bmp-rle-rgba.md": {
       "sha256": "855362f04660782e1aea2bef26b220470bbad6f34aa802b13ffa4c709bfec72c",

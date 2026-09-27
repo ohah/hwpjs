@@ -29,9 +29,15 @@ completion=.preserve_unwritten은 미지정 값을 남기고, .require_full은 E
 
 width×height는 u64에서 계산하고 max_index_bytes/2와 비교한 뒤 첫 출력 버퍼를 할당합니다. 기본 256 MiB는 u16 색인 평면 크기이지 RGBA 예산이 아닙니다. commands.max_bytes/max_commands, BMP 구조 한도와도 별개입니다. 예산 초과·파싱 오류·색인 오류·완료 오류에서 출력을 해제합니다. 반환 Image는 indices를 소유하며 deinit으로 해제합니다. 입력 BMP/명령/팔레트가 사라져도 반환된 색인 평면은 유효합니다.
 
-Image의 written_pixels/unwritten_pixels, commands, consumed_bytes, trailing_bytes는 복호화 근거입니다. 색인→색 변환·색 관리·ICC·한글 화면 동일성의 완료를 뜻하지 않습니다. V5 프로파일 의미는 기존 BMP 구조 문서의 미완료 범위로 남습니다.
+Image의 written_pixels/unwritten_pixels, commands, consumed_bytes, trailing_bytes는 복호화 근거입니다. 색인→RGBA 복원은 별도 [선택형 연결](bmp-rle-rgba.md)이 소유하고, 색 관리·ICC·한글 화면 동일성의 완료를 뜻하지 않습니다. V5 범위·ICC의 선택 검사는 [BMP 프로파일 문서](bmp-profile.md)가 소유하며 색 변환은 여전히 미지원입니다.
 
 ## 검증 기록
+
+### 현재 재검증 (2026-09-27)
+
+Microsoft의 [GDI Bitmap Compression](https://learn.microsoft.com/en-us/windows/win32/gdi/bitmap-compression)과 [MS-WMF RLE4](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/73b57f24-6d78-4eeb-9c06-8f892d88f1ab)를 현재 `rle_commands.zig`·`rle_raster.zig`·`rle.zig`와 대조했습니다. 현재 `BMP RLE` 필터는 Debug/ReleaseSafe/ReleaseFast 각각 root 포함 19/19개 통과했으며, 이 수는 색인 전용이 아니라 RGBA·HWP 연결 테스트도 포함합니다. 로컬 ReleaseSafe probe WASM의 독립 JS 검사는 comparisons=3,174·rejected=2,621·오류 클래스 방어 3건, seed=1129466949 변이 3,000건(accepted=1,040·rejected=1,960·recoveries=48·traps=0)이었습니다. 이번에는 세 모드 WASM·실제 RLE BMP·소스 변형·전체 audit를 재실행하지 않았으며 아래 숫자는 당시 기록으로만 읽습니다.
+
+### 과거 검증 기록
 
 네이티브 BMP RLE 필터는 Debug/ReleaseSafe/ReleaseFast 각각 root 포함 10/10개를 통과했습니다. 모든 encoded/absolute 길이, 홀수 nibble/패딩, Iterator 실패 시 위치 유지, 두 공식 예제, 입력 해제 뒤 출력 수명, 미지정/색인 0 구분, 모든 명령 종류·EOB/후행·행 초과·delta 255 및 누적 이동, 팔레트 오류, 개별 한도와 모든 할당 실패를 검사했습니다. 명시적 safety/accounting 할당자로 정상 및 실패 경로의 해제량도 확인했습니다.
 
@@ -43,7 +49,7 @@ JS fixture는 헤더·명령 스트림을 직접 생성합니다. 독립 oracle�
 
 실제 HWP fixture의 BMP 2참조와 별도 `reference/rhwp/samples/3-09월_교육_통합_2022.hwp`의 26참조를 다시 조사했습니다. 각각 BI_RGB32/BI_RGB24이며 RLE가 아니었습니다. 세 모드에서 기존 BMP 헤더/구간/RGBA 대조는 그대로 통과했고 새 RLE 전용 진입점은 명시적 형식 오류로 거부했습니다. 조사한 reference 및 핵심 fixture 트리에서도 독립 .bmp/.rle 파일은 찾지 못했습니다. 실제 제작 프로그램이 저장한 RLE BMP 표본을 검증했다는 주장은 하지 않습니다.
 
-격리 경로 `/tmp/hwpjs-bmp-rle-mutants.niv3Ui/`에 nibble 순서 반전·행 방향 반전·미지정 값을 0으로 채움·delta y 누적 대신 대입·require_full 무시·패딩 검사 무시·색인 버퍼 한도 무시·실패 시 해제 누락·팔레트 범위 검사 누락·명령 수 한도 무시의 10종 결함을 주입했습니다. 세 모드 모두 컴파일 이후 테스트 실패로 검출했습니다(root 포함 10개 중 실패 수는 순서대로 4/3/4/1/1/1/1/1/2/1개). ReleaseFast 해제 누락에서는 명시적 회계의 0 대 2바이트 불일치를 확인했습니다. 제품 소스는 변형하지 않았으며 해당 경로에 소스와 로그를 남겼습니다.
+당시 격리 경로 `/tmp/hwpjs-bmp-rle-mutants.niv3Ui/`에 nibble 순서 반전·행 방향 반전·미지정 값을 0으로 채움·delta y 누적 대신 대입·require_full 무시·패딩 검사 무시·색인 버퍼 한도 무시·실패 시 해제 누락·팔레트 범위 검사 누락·명령 수 한도 무시의 10종 결함을 주입했습니다. 세 모드 모두 컴파일 이후 테스트 실패로 검출했습니다(root 포함 10개 중 실패 수는 순서대로 4/3/4/1/1/1/1/1/2/1개). ReleaseFast 해제 누락에서는 명시적 회계의 0 대 2바이트 불일치를 확인했습니다. 제품 소스는 변형하지 않았으며 해당 경로에 소스와 로그를 남겼으나 현재 로컬에는 없습니다.
 
 ## 예외 종류 검증의 사각지대 보강
 
@@ -51,9 +57,9 @@ JS fixture는 헤더·명령 스트림을 직접 생성합니다. 독립 oracle�
 
 첫 회귀는 Debug/Safe까지 끝난 뒤 실행 중인 Fast의 정확한 build 프로세스를 중단했고 shell 종료 코드 143 및 남은 build/audit 프로세스 부재를 확인했습니다. 기존 로그는 보존합니다. 제품/네이티브 코드는 바꾸지 않고 RLE의 모든 JS 거부 검사에 일반 Error와 기대 파서 오류명 확인을 추가했습니다. RuntimeError/RangeError/TypeError가 메시지를 흉내 내도 거부되도록 오류 클래스 방어 3건을 정규 검사에 넣었습니다. 독립 oracle도 의도한 검증 오류와 missing EOB 외의 예외는 다시 던집니다.
 
-수정 후 세 모드 직접 검사는 각각 기존 3,174대조/2,621거부와 변이 3,000건(1,040승인/1,960거부), 복구 48건, traps=0으로 통과했습니다. 같은 trap 주입 wrapper는 세 모드에서 첫 주입 즉시 AssertionError로 실패함을 확인했습니다. 전체 회귀를 수정된 테스트로 처음부터 다시 실행했습니다. RGBA/HWP 연결 및 전체 문서 검증 완료를 선언하지 않습니다.
+수정 후 당시 세 모드 직접 검사는 각각 기존 3,174대조/2,621거부와 변이 3,000건(1,040승인/1,960거부), 복구 48건, traps=0으로 통과했습니다. 같은 trap 주입 wrapper는 세 모드에서 첫 주입 즉시 AssertionError로 실패함을 확인했습니다. 전체 회귀를 수정된 테스트로 처음부터 다시 실행했습니다. RGBA/HWP 연결은 현재 별도 문서가 소유하며 이 과거 색인 검사만으로 그 연결이나 전체 문서 검증 완료를 선언하지 않습니다.
 
-Debug → ReleaseSafe → ReleaseFast 전체 재회귀는 각각 20/20단계·네이티브 916/916개·checks=7,827,383건으로 통과했습니다. 최종 로그는 `/tmp/hwpjs-bmp-rle-{Debug,ReleaseSafe,ReleaseFast}-audit-v2.log`이며, v2 없는 첫 실행 로그와 구분합니다. 검사 횟수는 기존 전체 회귀를 포함한 도구 집계이지 RLE 지원율이나 독립 제작 RLE 표본 수가 아닙니다.
+당시 Debug → ReleaseSafe → ReleaseFast 전체 재회귀는 각각 20/20단계·네이티브 916/916개·checks=7,827,383건으로 통과했습니다. 최종 로그 경로는 `/tmp/hwpjs-bmp-rle-{Debug,ReleaseSafe,ReleaseFast}-audit-v2.log`였지만 현재 로컬에는 없습니다. v2 없는 첫 실행 로그와 구분하며, 검사 횟수는 기존 전체 회귀를 포함한 도구 집계이지 RLE 지원율이나 독립 제작 RLE 표본 수가 아닙니다.
 
 격리 변형 10개의 src 파일 829개씩을 현재 제품 src와 바이트 대조하여 각 변형에서 주입 대상 파일 하나만 다르고 네이티브 테스트는 동일함을 확인했습니다.
 
