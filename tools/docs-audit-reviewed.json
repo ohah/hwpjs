@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "6e0a6ba88bfa4aca6afc6addaf7f4652437a4b4b172957792c2b87adeba4bf4a",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile and PCX structure review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "ed2a15e889a3a251fa3b73605dcf82e3a3eda32d7a91adb4f09b67a6dffb206b",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure and TIFF structure review, architecture pending, full Debug Zig test incomplete"
+    },
+    "docs/tiff-structure.md": {
+      "sha256": "50b24eb78c9e9da7a610bb5faab9859448d79d2f9c4a2ab3c2d01584d6c12d97",
+      "evidence": "2026-09-27 TIFF 6.0 and RFC3302 current Zig classic TIFF IFD strip tile bounds, Debug Safe Fast TIFF filter 6 each, ReleaseFast picture 16, Python oracle 6 real TIFF ok in shards 3 6 7 and three ReleaseFast known shards pass; historic full audit not rerun"
     },
     "docs/pcx-structure.md": {
       "sha256": "8822643175c921549da365ba1cfb7e4e1475152bbaeca1a339ba542db68d2d91",

@@ -1,6 +1,6 @@
 # TIFF 6.0 구조 검사
 
-`src/image/tiff/structure.zig`는 고전 TIFF의 바이트 순서, 값 42, 첫 IFD와 후속 IFD 연결, 태그 정렬, 알려진 필드 타입의 값 범위, strip/tile offset·byte-count 쌍의 범위를 검사합니다. 근거는 [TIFF 6.0 원문 2절](https://www.itu.int/itudoc/itu-t/com16/tiff-fx/docs/tiff6.pdf)의 8바이트 헤더, 12바이트 IFD 항목, 값의 인라인/외부 위치와 strip 정의입니다. `image/tiff` 식별은 [RFC 3302](https://datatracker.ietf.org/doc/html/rfc3302)를 따릅니다. 로컬 문서에서 관측된 `image/tif`는 별도 호환 표기이며 정식 MIME과 혼동하지 않습니다.
+`src/image/tiff/structure.zig`는 고전 TIFF의 바이트 순서, 값 42, 첫 IFD와 후속 IFD 연결, 태그 정렬, 알려진 필드 타입의 값 범위, strip/tile offset·byte-count 쌍의 범위를 검사합니다. 근거는 [TIFF 6.0 원문](https://www.itu.int/itudoc/itu-t/com16/tiff-fx/docs/tiff6.pdf)의 2절(8바이트 헤더·12바이트 IFD 항목·값의 인라인/외부 위치)과 별도 strip/tile 정의입니다. `image/tiff` 식별은 [RFC 3302](https://datatracker.ietf.org/doc/html/rfc3302)를 따릅니다. 로컬 문서에서 관측된 `image/tif`는 별도 호환 표기이며 정식 MIME과 혼동하지 않습니다.
 
 `inspect(bytes, options)`는 파일을 빌려 검사하고 할당하지 않으며 바이트 순서·IFD/필드/strip/tile 수와 첫 압축값을 스칼라 보고서로 반환합니다. IFD의 다음 offset이 0이 될 때까지 방문하고, 중복 offset은 순환으로 거부합니다. 필드 타입 1~12의 byte width로 외부 값 범위를 계산하고, 아직 정의되지 않은 타입은 값을 추정하지 않고 `unknown_types`에 셉니다. 미지 타입은 길이를 알 수 없어 해당 값 포인터의 범위도 검증하지 않습니다. strip/tile의 offset·byte count는 둘 다 있을 때 개수·자료형·범위를 대조하며, 한쪽만 있으면 오류입니다. byte count와 offset이 범위 안에 있다고 해서 이미지 내용이나 압축 해제가 성공했다는 뜻은 아닙니다. 모든 IFD가 이미지 데이터를 가진다고 가정하지 않아 strip/tile 쌍이 둘 다 없는 IFD는 이 계층에서 허용합니다.
 
@@ -10,7 +10,13 @@
 
 ## 검증과 적대적 재검토
 
-`zig test src/root.zig --test-filter 'TIFF structure'`는 Debug·ReleaseSafe·ReleaseFast 각각 6/6 통과했습니다. 합성 반례에는 두 바이트 순서, IFD가 이미지 앞/뒤에 있는 경우, 후속 IFD·순환, 태그 역순, 헤더·IFD 잘림, 미지 타입 보존, 인라인 값과 외부 strip 배열, 두 엔디언의 외부 배열, strip 쌍 누락·범위·개수 오류, 정확한 데이터 블록 한도를 포함합니다. HWPX 연결 테스트도 세 모드에서 각각 10/10 통과했습니다.
+### 현재 재검증 (2026-09-27)
+
+TIFF 6.0 원문의 양쪽 바이트 순서·값 42·IFD 항목과 tag 오름차순·값의 짝수 offset 규칙을 현재 `src/image/tiff/structure.zig`와 대조했습니다. Debug/ReleaseSafe/ReleaseFast의 `TIFF structure` 필터는 각각 root 포함 6/6개 통과했으나, 이 수에는 HWPX 연결 테스트 1개가 포함되어 TIFF 구조 전용 6개가 아닙니다. ReleaseFast의 넓은 `HWPX picture image payloads` 필터는 16/16개 통과했습니다. 독립 Python 조사기의 self-test와 전체 `--picture-payloads`가 통과했고, TIFF 대상은 shard 3/6/7에 각각 3/1/2개, 여섯 개 모두 `ok`였습니다. 같은 세 ReleaseFast Zig known-shard 테스트도 각각 1/1 통과했습니다. 아래 전체 Debug 회귀·전체 audit·다른 다섯 shard의 Zig 실행 수치는 이번 결과가 아닌 과거 기록입니다.
+
+### 과거 검증 기록
+
+당시 `zig test src/root.zig --test-filter 'TIFF structure'`는 Debug·ReleaseSafe·ReleaseFast 각각 root 포함 6/6 통과했습니다. 합성 반례에는 두 바이트 순서, IFD가 이미지 앞/뒤에 있는 경우, 후속 IFD·순환, 태그 역순, 헤더·IFD 잘림, 미지 타입 보존, 인라인 값과 외부 strip 배열, 두 엔디언의 외부 배열, strip 쌍 누락·범위·개수 오류, 정확한 데이터 블록 한도를 포함합니다. 당시 HWPX 연결 필터는 세 모드 각각 10/10이었으나 현재 넓은 필터는 16개입니다.
 
 독립 `python3 tools/hwpx-fill-brush-image-oracle.py --self-test`와 `--picture-payloads`가 통과했고, ReleaseFast 실파일 shard 0~7이 모두 독립 기대값과 일치했습니다. TIFF는 shard 3/6/7에 각각 3/1/2개이며 Zig 구조 오류는 모두 0건입니다. 최종 전체 Debug `zig build test --summary all`은 종료 코드 0·5/5 단계·2,462/2,462 테스트, ReleaseSafe 제품 빌드와 전체 감사도 종료 코드 0입니다. 빌드 출력의 `failed command` 러너 문구는 최종 성공 요약과 구별합니다.
 
