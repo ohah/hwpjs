@@ -15,3 +15,5 @@
 변이 없는 최종 소스의 세 모드 전체 `zig build audit --summary all`은 각각 40/40 단계, 2,050/2,050 테스트를 통과했습니다. Debug·ReleaseSafe·ReleaseFast 로그는 `/tmp/hwpjs-path-dash-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다. 각 로그에서 HWP/WASM 검사 `checks=8,905,827`, `imports=0`을 확인했습니다. 이 수치는 원본 point/flag 투영과 기존 회귀 검증의 근거이며 실제 점선 출력의 근거가 아닙니다.
 
 별도의 `zig build test --summary all`은 5/5 단계·2,011/2,011 native 테스트, `zig build -Doptimize=ReleaseSafe --summary all`은 5/5 빌드 단계를 통과했습니다.
+
+위 변이·전체 `audit`·빌드 수치는 작성 당시의 이력이며 이번에 재실행하지 않았습니다. 기재된 `/tmp` 로그는 2026-09-28 현재 남아 있지 않습니다. 이번에는 공식 Path의 point/type 대응과 현재 source point 역할·전역/figure별 index·오류 원자성 및 marker/dash 재사용을 대조했고, Debug·ReleaseSafe·ReleaseFast root `EMF+` 필터 각 560/560, ReleaseSafe의 source point 직접 필터 3/3·공개 marker 3/3·dash 2/2를 통과했습니다. 이는 실제 점선 stroke·marker 렌더링 동등성의 증거가 아닙니다.
