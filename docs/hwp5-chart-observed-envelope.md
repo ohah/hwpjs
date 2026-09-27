@@ -30,7 +30,7 @@ ReleaseSafe 실측은 정상·변형 817건, 기본 오류 946건입니다. 모�
 | Surface | 172 | 5,934 |
 | Tail | 129 | 3,870 |
 
-HEAD의 기존 함수와 공통 출력 추출 후 함수를 같은 WASM으로 실행했습니다. Plot/Surface는 mode·limit·입력 길이·바이트 순서가 30,272개 호출에서 같고 SHA-256은 `b2f3e4e4c6298c70b23acd92438e08c4fbb3f81d2e0b0a28cf7ab122d9cc9bc9`입니다. Tail은 7,869개 호출, `5af43fc4b396c821300ab32cb80e4f5b077105351a734e97903df00e50daece7`이며 검사 결과도 일치합니다.
+당시 HEAD의 기존 함수와 공통 출력 추출 후 함수를 같은 WASM으로 실행했습니다. Plot/Surface는 mode·limit·입력 길이·바이트 순서가 30,272개 호출에서 같고 SHA-256은 `b2f3e4e4c6298c70b23acd92438e08c4fbb3f81d2e0b0a28cf7ab122d9cc9bc9`입니다. Tail은 7,869개 호출, `5af43fc4b396c821300ab32cb80e4f5b077105351a734e97903df00e50daece7`이며 검사 결과도 일치합니다.
 
 ## 적대적 검증
 
@@ -48,3 +48,7 @@ HEAD의 기존 함수와 공통 출력 추출 후 함수를 같은 WASM으로 �
 Debug·ReleaseSafe·ReleaseFast의 48건 모두 컴파일 성공 후 실제 wire 대조에서 ERR_ASSERTION·종료 코드 1로 실패했습니다. Series 경계 손상은 첫 항목에 주입한 검사이며 모든 Series 위치에 주입했다고 확대하지 않습니다. 정상 코어의 작은 mode 336 bridge는 세 모드 각각 정상·변형 817건, 기본 오류 946건을 통과했습니다. compile/run 로그는 해당 임시 경로의 `*.compile.log`·`*.log`에 있습니다.
 
 동일 메시지의 호스트 예외 3종·출력 바이트 변조 8종도 검출했습니다. 이 확장은 정규 audit의 smoke에 연결됐고 후속 누적 세 모드 전체 audit도 통과했습니다. 최종 수치와 로그는 [사전 엔트리 대조](hwp5-chart-observed-tables.md)가 소유합니다.
+
+## 2026-09-28 재검증
+
+현재 mode 336의 제품 Plot·Surface·Tail 반환값과 독립 oracle의 선택 배치를 ReleaseSafe 실제 Contents 43개에서 다시 대조했습니다. 전체 조립 정상·변형 1,452건·예상 거부 946건, 마지막 바이트 잘림 43건이 통과했습니다. 개별 Plot 172/9,030, Surface 172/5,934, Tail 129/3,870(정상/거부)과 검사기 예외 3종·반환값 변조 8종도 통과했습니다. `chart ` 집중 네이티브 테스트는 Debug·ReleaseSafe·ReleaseFast 각 141/141 통과했습니다. 위 817/946 단계·모든 잘림 382,411건·16종 소스 변이와 호출열 해시는 당시의 이력으로 이번에 다시 수행하지 않았습니다. 전체 Plot/Surface 의미·자동 배치 판별·렌더링/저장은 이 wire 검사의 범위 밖입니다.

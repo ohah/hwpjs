@@ -10,11 +10,11 @@
 
 이번 확장 후 Debug·ReleaseSafe·ReleaseFast 각각 전체 조립 정상·변형 1,452건, 기본 거부 946건이 통과했습니다. ReleaseSafe의 원본 43개 Contents 모든 잘림은 382,411개 위치이며, 기타 오류를 합한 거부 383,314건이 통과했습니다. 이는 경로 기준 표본 수이고 모든 합성 입력의 모든 위치를 자른 결과는 아닙니다. 각 거부 뒤 원본 반환 wire를 재대조합니다.
 
-개별 Backdrop ReleaseSafe 검사는 정상 129건·거부 8,944건 통과했습니다. HEAD와 현재 개별 검사 결과 및 호출열 18,017개가 동일하며 `(mode, limit, input length, input bytes)` SHA-256은 `2fcf2b46ffbbd37fa93b8f33a04bdf039a86806fdeed04795e46b10580a5c44f`입니다. JS oracle 자체는 이번에 변경하지 않았습니다.
+당시 개별 Backdrop ReleaseSafe 검사는 정상 129건·거부 8,944건 통과했습니다. 당시 HEAD와 추출 후 개별 검사 결과 및 호출열 18,017개가 동일하며 `(mode, limit, input length, input bytes)` SHA-256은 `2fcf2b46ffbbd37fa93b8f33a04bdf039a86806fdeed04795e46b10580a5c44f`입니다. JS oracle 자체는 그 단계에서 변경하지 않았습니다.
 
 임시 코어 복사본에서 ID 3개를 각각 변경, raw_backdrop/raw_fill/raw_picture를 각각 초기화, suffix 변경, Backdrop.end와 transition.end를 각각 변경하는 9종 결함을 주입했습니다. 세 모드 총 27개 모두 컴파일 종료 코드 0 후 실제 반환값 대조의 `ERR_ASSERTION`·실행 종료 코드 1로 검출했습니다. 로그는 `/tmp/hwpjs-transition-mutants.eyK3yx`의 `종류-모드.compile.log`·`종류-모드.log`이며 임시 파일의 영구 보존을 보장하지 않습니다. 제품 소스에는 결함을 반영하지 않았습니다.
 
-검사기 자체의 동일 메시지 RuntimeError/TypeError/RangeError 3종 및 반환 바이트 변조 8종 검출도 다시 통과했습니다. 이번 확장은 기존의 선택된 empty-Picture 전환에 한정합니다. 이후 개별 타입/객체 값 검사는 [사전 엔트리 대조](hwp5-chart-observed-tables.md)에 연결했으며 다른 중첩 필드 검사는 남아 있습니다. 현재 누적 변경의 세 모드 전체 audit 완료 여부는 각 파트의 단독 실측과 구분합니다.
+검사기 자체의 동일 메시지 RuntimeError/TypeError/RangeError 3종 및 반환 바이트 변조 8종 검출도 다시 통과했습니다. 이 단계의 확장은 기존의 선택된 empty-Picture 전환에 한정합니다. 이후 개별 타입/객체 값 검사는 [사전 엔트리 대조](hwp5-chart-observed-tables.md)에 연결했으며 다른 중첩 필드 검사는 남아 있습니다. 당시 누적 변경의 세 모드 전체 audit 완료 여부는 각 파트의 단독 실측과 구분했습니다.
 
 ## 범위와 SSOT
 
@@ -34,9 +34,9 @@ Grid Prelude의 원시 필드는 아래 후속 절에서 확장합니다. 이후
 
 ReleaseSafe 전체 조립 probe에서 정상·변형 1,065건과 기본 오류 946건이 통과했습니다. 모든 잘림 실행은 잘림 382,411건, 다른 오류를 합쳐 거부 383,314건과 정상·변형 1,065건을 통과했습니다. 거부 뒤 원본 반환 wire도 재대조합니다.
 
-기존 개별 Grid 검사는 43차트·750슬롯·51null·ID와 위치가 다른 10슬롯에서 정상 291건·오류 28,765건을 통과했습니다. HEAD 함수와 추출 후 함수를 같은 새 ReleaseSafe 전체 probe로 실행했으며 57,821개 호출의 mode·limit·입력 길이·바이트 순서 및 결과가 같습니다. SHA-256은 `bd0a33775aba4b29e17e19ebec54d5d3286b143c574ff344630e466eb7dcde1d`입니다.
+기존 개별 Grid 검사는 43차트·750슬롯·51null·ID와 위치가 다른 10슬롯에서 정상 291건·오류 28,765건을 통과했습니다. 당시 HEAD 함수와 추출 후 함수를 같은 새 ReleaseSafe 전체 probe로 실행했으며 57,821개 호출의 mode·limit·입력 길이·바이트 순서 및 결과가 같습니다. SHA-256은 `bd0a33775aba4b29e17e19ebec54d5d3286b143c574ff344630e466eb7dcde1d`입니다.
 
-별도로 HEAD의 Grid oracle과 공통 wire 추출 후 oracle을 원본·값 변형 291건에서 비교해 반환 필드·Map·Buffer·wire 전체가 같음을 확인했습니다.
+별도로 당시 HEAD의 Grid oracle과 공통 wire 추출 후 oracle을 원본·값 변형 291건에서 비교해 반환 필드·Map·Buffer·wire 전체가 같음을 확인했습니다.
 
 ## 적대적 검증
 
@@ -54,6 +54,10 @@ Debug·ReleaseSafe·ReleaseFast의 30건 모두 컴파일 성공 후 실제 대�
 
 `gridPreludeRawVariant`가 두 검사의 원시 prefix/word 변형을 공유합니다. 앞 32바이트는 0xa5, root word는 0xffffffff, grid word는 42, collection word는 65535로 바꾸며 extent는 유지합니다. 이 word에 객체 ID·개수 의미를 새로 부여하지 않습니다. 제품 소스는 변경하지 않았습니다.
 
-ReleaseSafe 전체 조립의 후속 결과는 정상·변형 1,108건, 기본 오류 946건입니다. 모든 잘림 382,411건과 기타 오류를 합한 거부 383,314건도 통과했습니다. 기존 Prelude 검사는 새 전체 ReleaseSafe probe에서 정상 473건·거부 6,493건(68바이트 wire)을 통과했습니다. HEAD 함수와 추출 후 함수의 결과 및 13,459개 호출의 mode·limit·입력 길이·바이트 순서가 같고 SHA-256은 `47b3964ba5f62c6bed491e8ad26107d724a375bce978914eb9ccf1fe560d4b6b`입니다.
+ReleaseSafe 전체 조립의 후속 결과는 정상·변형 1,108건, 기본 오류 946건입니다. 모든 잘림 382,411건과 기타 오류를 합한 거부 383,314건도 통과했습니다. 기존 Prelude 검사는 새 전체 ReleaseSafe probe에서 정상 473건·거부 6,493건(68바이트 wire)을 통과했습니다. 당시 HEAD 함수와 추출 후 함수의 결과 및 13,459개 호출의 mode·limit·입력 길이·바이트 순서가 같고 SHA-256은 `47b3964ba5f62c6bed491e8ad26107d724a375bce978914eb9ccf1fe560d4b6b`입니다.
 
 `/tmp/hwpjs-prelude-return-mutants.PbIxqp`의 임시 코어에서 prefix 첫 바이트, 복사된 extent 바이트, root/grid/collection word, payload_offset, 타입 이름 바이트 총계의 7종 손상을 주입했습니다. 세 모드 21건 모두 컴파일 성공 후 실제 wire 대조의 ERR_ASSERTION·종료 코드 1로 실패했습니다. 정상 코어의 작은 mode 336 bridge는 세 모드 각각 정상·변형 1,108건·기본 오류 946건을 통과했습니다. compile/run 로그는 위 임시 경로에 있습니다. 이 추가 단계도 전체 audit 완료로 계산하지 않습니다.
+
+## 2026-09-28 재검증
+
+현재 mode 336의 제품 Grid 셀·Prelude·전환 Backdrop 반환값과 독립 oracle의 선택 배치를 ReleaseSafe 실제 Contents 43개에서 다시 대조했습니다. 전체 조립 정상·변형 1,452건·예상 거부 946건, 마지막 바이트 잘림 43건이 통과했습니다. 개별 Grid는 750슬롯(51 null·ID/위치 차이 10), 정상 291/거부 28,765; Prelude 정상 473/거부 6,493(68바이트 wire); Backdrop 정상 129/거부 8,944였습니다. 검사기 예외 3종·반환값 변조 8종과 `chart ` 집중 네이티브 테스트 Debug·ReleaseSafe·ReleaseFast 각 141/141도 통과했습니다. 위 단계별 1,065·1,108건, 모든 잘림 382,411건, 변이 디렉터리와 호출열 해시는 당시 검증 이력이며 이번에 다시 수행하지 않았습니다. 43개 선택 Contents의 반환값 일치가 모든 Grid 배치·필드 의미·저장 지원을 뜻하지는 않습니다.
