@@ -14,9 +14,15 @@ Context는 판본·클래스·색공간·PCS·모델·측정 백색 근거를 �
 
 반환값은 required·missing과 adaptation_condition_deferred·payloads_deferred·computational_model_deferred입니다. 전체 valid 판정은 제공하지 않습니다. 이름만 받으므로 중복·payload 타입/길이·프로파일 배치·필수 태그의 실질적 데이터·단조성·역함수·행렬·LUT 변환을 검사하지 않습니다. 모든 이름이 있어 missing이 비어도 payload와 계산 모델은 계속 보류합니다. 알 수 없는 이름은 요구 집합에 영향을 주지 않으며, 입력 순서와 중복은 누락 집합에 영향을 주지 않습니다. 중복의 허용 여부를 판정하는 기존 태그 테이블 검사를 대체하지 않습니다.
 
-§8.10의 변환 선택 우선순위는 필수 존재 조건과 별개입니다. 선택적 DToB/BToD 태그가 있다고 필수 AToB/BToA 태그의 누락을 지우지 않습니다. 우선순위 선택기·지원 processing element 검사·payload 연결·v2 차이 검증은 후속 작업입니다.
+§8.10의 변환 선택 우선순위는 필수 존재 조건과 별개입니다. 선택적 DToB/BToD 태그가 있다고 필수 AToB/BToA 태그의 누락을 지우지 않습니다. 이 이름 검사기는 payload를 읽지 않습니다. 별도의 [선택형 payload 검사](icc-tag-payload-dispatch.md)와 [PNG 연결](png-profile-inspection.md)이 있으나 모든 태그 타입·계산 모델을 검증하지 않습니다. 변환 선택 우선순위·전체 processing element·v2 차이 검증은 남아 있습니다.
 
-## 검증 진행
+## 2026-09-27 현재 내용 재검증
+
+ICC.1:2022 §8.2–8.9의 필수 이름·클래스별 조건을 현재 `required_tag_set`·`required_plan`·`required_presence`와 대조했습니다. 이름 검사와 헤더/태그 테이블·선택형 payload/PNG 검사의 책임은 분리되어 있습니다. Debug·ReleaseSafe·ReleaseFast에서 필수 계획·xCLR 입력·보류 의미의 집중 테스트가 각 필터 root 포함 2/2로 통과했고, 기존 로컬 WASM mode163의 독립 JS 대조는 비교 623건·오류 거부 51건이 일치했습니다. 이번에는 WASM을 재빌드하지 않았습니다.
+
+아래 2026-09-08 전체 감사·macOS 실파일 수치는 당시 기록이며 이번에 재실행하지 않았습니다. 인용된 `/tmp` 로그도 현재 없어 과거 종료 코드와 총계를 현 실측으로 세지 않습니다. 이름의 존재만으로 payload·색 변환·프로파일 전체 유효성을 인증하지 않습니다.
+
+## 2026-09-08 검증 기록
 
 2026-09-08 네이티브 전체 테스트가 5/5 단계, 449/449로 통과했습니다. 신규 3개 테스트는 ReleaseSafe·ReleaseFast 직접 실행에서도 통과했습니다. 클래스별 개수와 조건, CMYK/xCLR 입력·출력 분리, GRAY/Lab 허용, 비RGB 3성분 matrix, 금지 모델·판본, 태그별 누락·의미 보류를 검사합니다.
 
