@@ -31,4 +31,8 @@ Debug·ReleaseSafe·ReleaseFast 전체 audit는 각각 종료 코드 0으로 완
 
 Window 직전 4바이트의 ID 여부, 원시 필드 의미, 임의 List 요소·버전, 전체 객체 그래프·모델·렌더링·편집·저장은 별도입니다. 43개 표본의 끝 위치 일치는 전체 포맷 지원 증거가 아닙니다.
 
-이 단계에서 남았던 테스트 전용 Plot·Surface 접두부의 코어 분리와 후속 검증 상태는 [Plot·Surface 접두부 코어](hwp5-chart-plot-surface-prefix.md)가 소유합니다. tail까지 WASM 검증을 연결한 것만으로 전체 Contents 제품 파서가 조립된 것은 아닙니다. 배열 개수·축 개수의 자동 판정은 별도 근거가 필요합니다.
+이 단계에서 남았던 테스트 전용 Plot·Surface 접두부의 코어 분리와 후속 검증 상태는 [Plot·Surface 접두부 코어](hwp5-chart-plot-surface-prefix.md)가 소유합니다. 이후 [선택된 Contents 제품 조립](hwp5-chart-observed-contents.md)은 추가됐지만, 이 Tail 코어만으로 자동 배열·축 개수 판정이나 전체 버전 지원을 증명하지 않습니다.
+
+## 현재 재검증
+
+위 전체 audit와 결함 주입은 당시 기록입니다. 현재 `list_header.zig`·`collection_header.zig`·`window_type_body.zig`·`tail.zig`의 ID·타입·원시 word·Reader 실패 경계를 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 `tail` 필터는 각각 32/32개 통과했고 그 안에 Tail 전용 5개 테스트가 포함됩니다. 기존 ReleaseSafe probe의 독립 mode 333 오라클은 실파일 43개에서 수락 129건·거부 3,870건을 다시 통과했습니다. 이번에는 세 모드 전체 audit와 변이 검사를 재실행하지 않았습니다.

@@ -54,3 +54,7 @@ node tests/hwp5/chart-tail-survey.mjs --verify
 ## 다음 범위
 
 후속 코어와 검증 진행 상태는 [List·Window 코어](hwp5-chart-tail.md)가 소유합니다. Window 앞의 ID 후보, raw26·계열 raw106의 필드 의미, 표본 밖 List 요소·버전, 전체 그래프의 의미 해석은 별도로 남아 있습니다. 스트림 끝까지 위치가 연결된 사실을 전체 필드 지원 완료로 해석하지 않습니다.
+
+## 현재 재검증
+
+위 결함 주입과 세 모드 기존 경로 회귀는 당시 기록입니다. 현재 독립 `chart-*evidence.test.mjs`는 56/56개 통과했고, `chart-tail-survey.mjs --verify`는 HWP 584개 중 선택된 Contents 43개에서 List 29바이트·raw26·Window 타입 구간 23바이트와 정확한 EOF를 다시 확인했습니다. 두 word·Window 앞 DWORD는 모두 0이었으며 이는 일반 유효값 제약이나 ID 확정의 근거가 아닙니다. 잘림 3,354건·List ID 거부 86건·선언 변형 172건·참조 변형 215건·raw/word 변형 43건을 재현했습니다. 변이 검사는 이번에 재실행하지 않았습니다.

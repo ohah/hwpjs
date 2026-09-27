@@ -1,6 +1,18 @@
 {
   "schema": 1,
   "verified": {
+    "docs/hwp5-chart-tail-evidence.md": {
+      "sha256": "8c9932b46c38ce295874f1ef73bf1027c50215394e77c9d8dc471ffa2a9b83c2",
+      "evidence": "2026-09-28 current independent tail survey 584 HWP 43 selected Contents 29 List 26 opaque 23 Window exact EOF 3354 cuts 86 IDs 172 declarations 215 references 43 raw variants, JS chart evidence 56 tests; Window identity unresolved and historic mutants not rerun"
+    },
+    "docs/hwp5-chart-tail.md": {
+      "sha256": "c62ebe42e55d3c34eb4ffe5eab3b255eebe6b22df18ad542c9a8efb5212d4db9",
+      "evidence": "2026-09-28 current Zig List Collection Window Tail reader boundary and selected Contents integration; Debug Safe Fast tail filter 32 each including five dedicated tail tests; ReleaseSafe mode333 43 roots 129 accepted 3870 rejected; historic mutants full audits not rerun"
+    },
+    "docs/hwp5-chart-observed-contents.md": {
+      "sha256": "7cf3e61507335bdd42bc8b2b2fac2ca53edf0d7e1849c2c6cb9ca8a46776d303",
+      "evidence": "2026-09-28 current Zig explicit Layout ownership EOF versus ReleaseSafe mode336 43 roots default 1452 accepted 946 rejected 43 final cuts full 382411 cuts 383314 total rejects, guards 3 exceptions 8 corruptions; ReleaseSafe ownership audit 10 steps 31 tests; historic three-mode full audit mutants not rerun"
+    },
     "docs/hwp5-chart-nullable-format.md": {
       "sha256": "6cfb3ac81801341c603df6542bbfbe59b732b481645a6ca6c868f0a31dadafac",
       "evidence": "2026-09-28 current Zig required and nullable TextFormat shared reader, null span versus selected suffix integration; Debug Safe Fast focused 3 each; ReleaseSafe mode329 43 roots 86 formats two null codes 426 accepted 9004 rejected; historic mutants full audits not rerun"
@@ -526,8 +538,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "89ed67f2f1361f7f2c41c7732cd41ccd0ad12667edf72a469e6641c543727514",
-      "evidence": "2026-09-28 tracker updated with nullable TextFormat Picture Title evidence and core current surveys, Debug Safe Fast focused tests, ReleaseSafe independent probe 43 roots; historic full audits and mutants not rerun"
+      "sha256": "d48d84b01366e29f9747e76d19560a33a4a2640bb8cd3aaa9502eeed36aab356",
+      "evidence": "2026-09-28 tracker updated with Tail evidence core and selected Contents current full cuts, Debug Safe Fast focused tests, ReleaseSafe 31 ownership tests; historic full audits and mutants not rerun"
     },
     "docs/bcp47-syntax.md": {
       "sha256": "ae0d91a0bb5ca2f8a5194b5ffa76494427cc058784f11446fd905458020f5b11",
