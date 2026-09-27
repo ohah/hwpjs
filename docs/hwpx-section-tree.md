@@ -12,7 +12,7 @@
 
 원문 문자·CDATA 조각의 부모 요소 연결은 별도 [section 직접 콘텐츠 순회](hwpx-section-content.md)가 소유합니다.
 
-한 section의 기본 상한은 해제 XML 128 MiB, 인덱스 요소 200만 개이며 공통 XML 이벤트·속성·참조·깊이 제한도 적용됩니다. `readSectionTree`는 지정 section을 읽기 전에 구조 검사를 다시 수행하므로 여러 section을 연속해서 읽을 때는 구조 XML을 반복 해제합니다. 대량 문서 조립용 캐시/배치 API는 아직 없습니다.
+한 section의 기본 상한은 해제 XML 128 MiB, 인덱스 요소 200만 개이며 공통 XML 이벤트·속성·참조·깊이 제한도 적용됩니다. `readSectionTree`는 지정 section을 읽기 전에 구조 검사를 다시 수행하므로 여러 section을 연속해서 읽을 때는 구조 XML을 반복 해제합니다. 전체 선택 파트를 한 번에 소유하는 [문서 XML 트리 조립](hwpx-document-trees.md)의 `readXmlTrees`는 이미 있으며, 선택한 header·section에 별도 총량 한도를 적용합니다. 단일 section API가 내부 캐시를 공유하거나 선택되지 않은 파트를 조립한다는 뜻은 아닙니다.
 
 ## 검증
 
@@ -27,3 +27,5 @@
 구조 연결 목록을 적대적으로 재검토해 부모 번호만 맞고 자식 체인에서는 누락되는 경우도 실패하도록, 모든 비루트 요소가 정확히 한 번 연결되는 검사와 첫·마지막 자식 일치 검사를 추가한 뒤 8개 shard를 다시 통과시켰습니다. 그때 `zig fmt --check build.zig src`, `git diff --check`, 기본 `zig build test --summary all` 2,160/2,160개, 구조 인덱스 Debug·ReleaseFast 전용 각 6/6개, ReleaseSafe 제품 빌드·기존 JS 비교 47/47개와 Debug·ReleaseSafe·ReleaseFast `zig build audit --summary all`이 통과했습니다. 속성 조회를 추가한 뒤 기본 테스트는 2,162/2,162개, Debug·ReleaseSafe·ReleaseFast 구조 인덱스 전용 테스트는 각 8/8개가 통과했습니다. 기본 감사에는 선택 shard 실파일 조사가 포함되지 않습니다.
 
 2026-09-27 현재 `xml_part_tree.zig`와 호출 경로를 다시 확인해, 뒤에 추가된 비접두 속성 일괄 조회 API를 위 계약에 반영했습니다. 원문·속성·콘텐츠·순서 집중 테스트는 Debug·ReleaseSafe·ReleaseFast 각 14개가 통과했습니다. 독립 Python ZIP/XML 조사에서는 수용 476개·ZIP 거부 6개·암호화 2개, section 544개·요소 2,174,716개가 재현됐고 일반·`-O` 전체 출력이 일치했습니다. 제품 ReleaseFast section-tree shard 8개를 각각 별도 프로세스로 실행해 section 수·요소 수와 여섯 속성/직접 콘텐츠/순서 해시가 모두 일치했습니다. 공유 조사기의 Python `assert` 자체 반례와 늦은 ZIP 오류 시 파일 부분 집계도 수정해 `-O` 고장 주입으로 확인했습니다. 이는 현재 corpus와 지정 필드의 구조 일치이며 모든 속성·버전·저장 의미의 증거가 아닙니다.
+
+2026-09-28 현재 소스 재검증: Debug·ReleaseSafe·ReleaseFast `HWPX section tree` 집중 각 14/14개와 ReleaseFast 실파일 shard 8/8개를 각각 별도 프로세스에서 통과했습니다. 독립 Python 조사도 일반·`-O` 자체 반례를 통과하고 허용 476개·section 544개·요소 2,174,716개, 최대 단일 section 10,443,753바이트·133,721요소 및 8개 shard의 선택 속성/직접 콘텐츠/순서 지문을 재확인했습니다. 오래된 ‘배치 API 없음’ 문구는 현재 `readXmlTrees`의 총량 한도와 단일 section API의 반복 구조 검사 차이로 교정했습니다. 과거 세 모드 전체 audit와 Python corpus 전체의 일반/`-O` 출력 비교는 이번 묶음에서 재실행하지 않았습니다.

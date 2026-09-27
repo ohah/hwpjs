@@ -630,8 +630,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "c03e688c4c5c1588bcf7963e28067e21656105aeb42d6081689d69bce14b507a",
-      "evidence": "2026-09-28 tracker updated with HWPX header tree begin numbers and XML structure evidence, three-mode focused tests current corpus and historical audits distinguished"
+      "sha256": "c6375c3f21dbb14874ed372e708bc0b6082cac3c4c54bd1fb9f1ba6f8e2e9b17",
+      "evidence": "2026-09-28 tracker updated with two new HWPX paragraph docs and reverified existing section tree, three-mode focused tests independent corpus and eight section shards; historic known audit distinguished"
     },
     "docs/hwpx-ole-payloads.md": {
       "sha256": "a7c214c0760d575237afcb960b7ff1fe976a0d99468e1083066e36c889deabad",
@@ -1470,8 +1470,8 @@
       "evidence": "2026-09-27 current path and link inventory, Zig version and build graph, public CFB JS boundary, ReleaseSafe build and compare 47"
     },
     "docs/hwpx-section-tree.md": {
-      "sha256": "d4fc99313dd5ccd62e091906206caac44d85b924b273535f4134d424f4a73ac9",
-      "evidence": "2026-09-27 current tree and batch attribute API, Zig tests 3 modes, eight product shards, independent corpus 476 and optimized oracle rollback"
+      "sha256": "62280fe17d2880b8a4c1f0706378f911b272f9b7cf75f0b2b0e4830c36764467",
+      "evidence": "2026-09-28 reverified source section tree and corrected readXmlTrees boundary, Debug Safe Fast focused fourteen each, ReleaseFast section shards eight and independent Python 476 documents 544 sections 2174716 elements three digests"
     },
     "docs/hwpx-section-content.md": {
       "sha256": "80229be43c720a915e3bd4f07a542d5a212383d1d85691a76b0d08965bfc3803",
@@ -1844,6 +1844,14 @@
     "docs/hwpx-xml-structure-evidence.md": {
       "sha256": "0e9d1ba613b35f10df9a5e68620075771062e38353d817f1fff381ad2dbb7413",
       "evidence": "2026-09-28 source read-only XML survey ReleaseFast 1498 accepted 3 text-outside 1 invalid encoding, encrypted sample reproduction one passed, historical next-step wording corrected to current protection classification"
+    },
+    "docs/hwpx-paragraph-metadata.md": {
+      "sha256": "3a0a90a1b354587005012b86d6766f9ecd92babfa697b02bbd730f856bc3471f",
+      "evidence": "2026-09-28 source shared PType scalar rules and official Hancom XSD forum conflict, Debug Safe Fast focused five each, Python section 215146 paragraphs 57893 zero IDs master 394 paragraphs; historic known master not rerun"
+    },
+    "docs/hwpx-paragraph-children.md": {
+      "sha256": "5588634168cc95899024a2711aeced05c55c7d7aed42e132b6ecb9a32da24792",
+      "evidence": "2026-09-28 source direct PType children versus official model, Debug Safe Fast focused four each, Python 215146 paragraphs 267347 runs 213905 arrays one no-run; known real Zig shards not rerun this batch"
     }
   }
 }

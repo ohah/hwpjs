@@ -25,3 +25,5 @@
 같은 변경에서 네이티브 Debug 전체 테스트 2,183개, 전용 단위 테스트 5개(Debug·ReleaseSafe·ReleaseFast), ReleaseSafe 제품 빌드 및 전체 Debug `zig build audit --summary all`이 통과했습니다. 선택 실파일 8개 shard는 기본 audit에 포함되지 않으며 위에서 별도 실행했습니다.
 
 마스터페이지 재사용 단계의 최종 소스에서는 `HWPX master` 15개 테스트가 Debug·ReleaseSafe·ReleaseFast에서 각각 통과했고, 전체 Debug `zig build test --summary all`은 2,226/2,226개가 통과했습니다. 선택 실파일 8개 shard는 독립 Python 조사와 다시 대조했고, `zig build -Doptimize=ReleaseSafe`, `zig build audit -Doptimize=ReleaseSafe --summary all`, `zig fmt --check build.zig src`도 성공했습니다. 이는 위 2,183개 기록을 소급 수정한 수치가 아니며 전체 문서 검증 완료를 뜻하지 않습니다.
+
+2026-09-28 현재 소스 재검증: Debug·ReleaseSafe·ReleaseFast `HWPX paragraph metadata` 집중 각 5/5개와 독립 Python 조사기의 일반·최적화 자체 반례가 통과했습니다. section 544개의 문단 215,146개에서 ID 부재 0개·명시적 0은 57,893개, `paraTcId` 부재 215,146개, `pageBreak=true` 1,536개·`columnBreak=true` 231개·`merged` 부재 987개를 재확인했습니다. 마스터페이지 61개 직접 `subList`의 중첩 포함 문단 394개·ID 0은 69개도 별도 Python 조사와 일치했습니다. 직전 문서 트리 묶음의 ReleaseFast 실파일 8개 shard는 현재 제품 소스의 section 메타 경로를 검사했지만, 이번 묶음에서 전체 test/audit와 마스터페이지 `inspectKnown` shard를 다시 실행하지는 않았습니다.
