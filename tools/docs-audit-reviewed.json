@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "46aa7a29a0e61ed69bd51c9ff95b936d061e7ea3a772e42302717a6af829c351",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE and replacement evidence review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "11c7aaa7e0db6f36325c3b6d1f8c365ebb1dea28995d3687b5332176bb463d38",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement and CFB batch evidence review, architecture pending, full Debug Zig test incomplete"
+    },
+    "docs/cfb-atomic-stream-replacement.md": {
+      "sha256": "e0f6ee1f506d533c19a167eab30fcf13acbeaaf9539019ce9d046d7dd4c7b12d",
+      "evidence": "2026-09-27 current CFB exact selection compact map and writer code, Debug Safe Fast 4 focused tests each; historical mutants not rerun"
     },
     "docs/hwp5-bin-data-replacement.md": {
       "sha256": "3425c6ad3552091bb0341c00abe44cb722f5a8a0ced54d8c239b60b93dcb776f",
