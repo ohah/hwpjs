@@ -22,3 +22,5 @@ Microsoft [Clipping Record Types](https://learn.microsoft.com/en-us/openspecs/wi
 정상 소스의 Debug·ReleaseSafe·ReleaseFast 전체 audit은 각 `40/40` 단계와 `1,364/1,364` 테스트를 통과했다.
 
 이 파트는 wire 구조를 검증할 뿐 clipping 결과를 계산하거나 렌더링하지 않는다. 현재 실제 HWP corpus에는 EMF BinData가 없어 실제 한글 생성기의 clipping record 다양성을 검증했다는 뜻도 아니다.
+
+2026-09-27 재검증에서는 공식 clipping record 종류와 현재 `clipping_records.zig`·공통 extent·framing의 책임을 대조했다. 전용 파일 테스트는 Debug·ReleaseSafe·ReleaseFast 각 8/8개, 임시 `src/` import 진입점의 관련·Object Table 테스트는 각 102/102개, 루트 `EMF framing` 필터는 각 97/97개 통과했다. 넓은 수치를 고정 clipping 전용 수로 읽지 않으며, 위 7종 변이와 세 모드 전체 `audit`은 이번에 재실행하지 않았다.

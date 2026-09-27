@@ -2,7 +2,7 @@
 
 ## 명세와 책임
 
-Microsoft [EMR_FILLRGN](https://learn.microsoft.com/ja-jp/openspecs/windows_protocols/ms-emf/a1bb0f88-bb22-4956-b45a-7005546561cc), [EMR_FRAMERGN](https://winprotocoldoc.z19.web.core.windows.net/MS-EMF/%5BMS-EMF%5D-220429.pdf), [EMR_INVERTRGN](https://winprotocoldoc.z19.web.core.windows.net/MS-EMF/%5BMS-EMF%5D-220429.pdf), [EMR_PAINTRGN](https://winprotocoldoc.z19.web.core.windows.net/MS-EMF/%5BMS-EMF%5D-220429.pdf)과 [EMF record 공통 호환성 규칙](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/e0137630-f3ad-492c-bde9-e68866e255ba)을 기준으로 한다.
+Microsoft [EMR_FILLRGN](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/a1bb0f88-bb22-4956-b45a-7005546561cc), [EMR_FRAMERGN](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/c370fc16-9045-467b-a125-7239428df6b3), [EMR_INVERTRGN](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/5cbc44de-ad40-47b6-a0f8-6179b9eef738), [EMR_PAINTRGN](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/68c457dc-6df3-4609-b6f9-e28e5ca4d9c1)과 [EMF record 공통 호환성 규칙](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/e0137630-f3ad-492c-bde9-e68866e255ba)을 기준으로 한다.
 
 `region_drawing.zig`는 같은 RegionData를 사용하는 네 레코드의 조립만 소유한다.
 
@@ -24,3 +24,5 @@ FILLRGN 분류 제거, PAINTRGN/INVERTRGN 교환, FRAMERGN width/height 교환, 
 정상 소스의 Debug·ReleaseSafe·ReleaseFast 전체 audit은 각 `40/40` 단계와 `1,374/1,374` 테스트를 통과했다.
 
 RegionData rectangle 병합, bounds 최적화 사용, 실제 fill/frame/invert/paint 픽셀 재생은 구현 범위가 아니다. 실제 HWP corpus에는 EMF BinData가 없어 한글 생성기 표본 호환성 근거로 확대하지 않는다.
+
+2026-09-27 재검증에서는 네 공식 record의 고정 필드와 현재 `region_drawing.zig`·공통 RegionData parser·Object Table의 brush handle 검사 경계를 대조했다. 전용 파일 테스트는 Debug·ReleaseSafe·ReleaseFast 각 10/10개, 임시 `src/` import 진입점의 관련·Object Table 테스트는 각 102/102개, 루트 `EMF framing` 필터는 각 97/97개 통과했다. 넓은 수치를 region drawing 전용 수로 읽지 않으며, 위 11종 변이와 세 모드 전체 `audit`은 이번에 재실행하지 않았다.

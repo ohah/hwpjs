@@ -2,7 +2,7 @@
 
 ## 명세와 책임
 
-Microsoft [EMR_SELECTCLIPPATH](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/4a26bcf8-6607-4a09-8ec3-a8768eadc8e8), [EMR_EXTSELECTCLIPRGN](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/c6b9f4e6-27f6-4a4d-a383-c2daf5da11d9), [RegionMode](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/b7f99f50-dd2f-4528-9624-f74140368019), [RegionData](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/e66601f2-9b5c-4619-8476-ddb7b087551b), [RegionDataHeader](https://learn.microsoft.com/kk-kz/openspecs/windows_protocols/ms-emf/5ca68a15-1811-45b6-a51b-5e40d1055ccc)를 기준으로 한다.
+Microsoft [EMR_SELECTCLIPPATH](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/4a26bcf8-6607-4a09-8ec3-a8768eadc8e8), [EMR_EXTSELECTCLIPRGN](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/c6b9f4e6-27f6-4a4d-a383-c2daf5da11d9), [RegionMode](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/b7f99f50-dd2f-4528-9624-f74140368019), [RegionData](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/e66601f2-9b5c-4619-8476-ddb7b087551b), [RegionDataHeader](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/5ca68a15-1811-45b6-a51b-5e40d1055ccc)를 기준으로 한다.
 
 책임은 다음처럼 분리한다.
 
@@ -27,3 +27,5 @@ EXTSELECTCLIPRGN에서 `RgnDataSize=0`은 mode가 COPY일 때만 RegionData 부�
 정상 소스의 Debug·ReleaseSafe·ReleaseFast 전체 audit은 각 `40/40` 단계와 `1,370/1,370` 테스트를 통과했다.
 
 실제 HWP corpus에는 EMF BinData가 없어 실제 한글 생성기의 RegionData 변형을 검증했다는 뜻은 아니다. 이 파트는 바이트 구조와 보존 경계이며 clipping 결과 렌더링 완료가 아니다.
+
+2026-09-27 재검증에서는 공식 RegionDataHeader와 Win32의 `nRgnSize=0` 허용 설명을 현재 parser의 원값 보존·nested extent 정책과 대조했다. 전용 파일 테스트는 Debug·ReleaseSafe·ReleaseFast 각 11/11개, 임시 `src/` import 진입점의 관련·Object Table 테스트는 각 102/102개, 루트 `EMF framing` 필터는 각 97/97개 통과했다. 넓은 수치를 selection 전용 수로 읽지 않으며, 위 11종 변이와 세 모드 전체 `audit`은 이번에 재실행하지 않았다.

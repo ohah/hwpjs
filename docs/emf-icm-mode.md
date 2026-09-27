@@ -16,6 +16,8 @@
 - 교정과 확장 record framing 테스트를 모두 반영한 최종 `audit`는 Debug, ReleaseSafe, ReleaseFast에서 각각 40/40 단계와 1,450/1,450 테스트를 통과했습니다.
 - 현재 재귀 HWP corpus에는 확인된 EMF 후보가 없으므로 실제 한글 생성기의 SETICMMODE 표본 호환성을 주장하지 않습니다.
 
+2026-09-27 재검증에서는 공식 12바이트 record와 공통 후행 호환성 규칙, 현재 `icm_mode.zig`의 구분을 대조했습니다. 전용 파일 테스트는 Debug·ReleaseSafe·ReleaseFast 각 5/5개, 임시 `src/` import 진입점의 관련·Object Table 테스트는 각 102/102개, 루트 `EMF framing` 필터는 각 97/97개 통과했습니다. 102개와 97개는 ICM 전용 수가 아닙니다. 위 11종 변이와 세 모드 전체 `audit`은 이번에 재실행하지 않았습니다.
+
 ## 근거
 
 - Microsoft MS-EMF 2.3.11.14 `EMR_SETICMMODE Record`
