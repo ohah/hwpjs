@@ -87,3 +87,5 @@ HWP5 본문 상위 계약 문서는 로컬 명세의 표 144·145·151, 현재 �
 HWP5 BinData 인코딩 정책 문서는 로컬 명세 표 18의 압축값·현재 encode/decode 공통 정책과 CFB 교체 계층을 대조해 완료 목록에 넣었습니다. Debug·ReleaseSafe·ReleaseFast 인코딩 집중 테스트가 각각 3/3, ReleaseSafe CFB 다중 교체 연결이 2/2 통과했습니다. 과거 변이 로그 경로는 현재 없어서 새 검증으로 세지 않았고, 실파일 저장 동치·DocInfo 편집은 범위 밖입니다. 개발 명령 문서에는 이 필터의 재현 방법만 추가했으며 그 문서 전체를 완료 처리하지 않았습니다.
 
 Raw DEFLATE stored encoder 문서는 RFC 1951 §3.2.4와 현재 블록 인코더·독립 walker 테스트를 대조해 완료 목록에 넣었습니다. 집중 필터는 Debug·ReleaseSafe·ReleaseFast 각각 2/2 통과했습니다. 과거 변이 로그 경로는 현재 없어 이번 실측에서 제외했고, 현재 BinData 정책·CFB 교체와 선택적 trailer 읽기/쓰기의 책임을 구분했습니다. 개발 명령 문서는 재현 필터만 추가했으며 아직 전체 검증 완료가 아닙니다.
+
+HWP5 바깥 BinData 교체 문서는 단일 `replaceOpened`와 순번 기반 batch 경로의 실제 분기, DocInfo의 알려진 리소스 전체 검증, 공통 CFB exact 재생성을 대조해 완료 목록에 넣었습니다. 세 모드에서 집중 필터 각각 6/6·3/3·2/2, ReleaseSafe 차트 소유권 audit 31/31이 통과했습니다. 차트 통합 테스트는 실제 추출 `Contents`와 합성 HWP/OLE 컨테이너를 연결하므로 실제 HWP 파일 전체 저장 동치의 근거가 아닙니다. 과거 변이 로그 경로는 현재 없어 재실측으로 세지 않았습니다.

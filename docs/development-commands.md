@@ -85,6 +85,8 @@
 
 [HWP5 BinData 인코딩 정책](hwp5-bin-data-encoding.md)은 `zig test src/root.zig -O ReleaseSafe --test-filter 'BinData encode'`로 여섯 압축 조합·오류·할당 실패를 검사합니다. `-O Debug`·`-O ReleaseFast`도 같은 필터로 실행할 수 있습니다. 상위 CFB 다중 교체 연결은 `zig test src/root.zig -O ReleaseSafe --test-filter 'outer HWP BinData batch resolves'`로 별도 확인합니다. 이 집중 명령은 실파일 저장 동치나 과거 변이 시험을 재현하지 않습니다.
 
+[HWP5 바깥 BinData 교체](hwp5-bin-data-replacement.md)는 `zig test src/root.zig -O ReleaseSafe --test-filter 'outer HWP BinData'`, `--test-filter 'DocInfo-bound replacement'`, `--test-filter 'outer HWP replacement resolves'`를 각각 실행해 압축/CFB·순번/리소스·batch 오류를 검사합니다. 같은 세 필터를 `-O Debug`·`-O ReleaseFast`로도 실행할 수 있습니다. `zig build chart-ownership-audit -Doptimize=ReleaseSafe --summary all`은 실제 추출 `Contents`와 합성 HWP/OLE CFB를 잇는 차트 통합 검사도 포함합니다. 이는 실제 HWP 전체 편집/재열기나 과거 변이 시험을 재현하지 않습니다.
+
 [Raw DEFLATE stored encoder](raw-deflate-stored-encoder.md)는 `zig test src/root.zig -O ReleaseSafe --test-filter 'raw DEFLATE stored encoder'`로 블록 wire·경계·한도·할당 실패를 검사합니다. 같은 필터를 `-O Debug`·`-O ReleaseFast`에서도 실행할 수 있습니다. 과거 변이 실행이나 외부 구현과의 실파일 저장 비교는 포함하지 않습니다.
 
 [PCX 헤더·RLE 경계](pcx-structure.md)는 `zig test src/root.zig --test-filter 'PCX structure'`로 단위·반례를 검사하고, `--test-filter 'HWPX picture image payloads'`로 ZIP·MIME·오류 연결을 확인합니다. 독립 `python3 tools/hwpx-fill-brush-image-oracle.py --self-test`와 `--picture-payloads` 및 아래 known survey ReleaseFast shard 7이 실파일 PCX 1건의 RLE 경계를 대조합니다.

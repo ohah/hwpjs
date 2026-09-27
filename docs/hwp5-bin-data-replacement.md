@@ -4,7 +4,7 @@
 
 `hwp5/container/bin_data_replace.zig`의 고수준 `replaceDecodedAt`는 HWP CFB 자체에서 `/FileHeader`와 `/DocInfo`를 strict exact 경로로 읽고, 실제 DocInfo의 1-based `BinData` 순번을 storage ID와 혼동하지 않고 선택합니다. DocInfo는 같은 Header의 일반 stream 정책으로 bounded decode합니다. 기존 `docinfo/resources.zig`의 단일 전체 순회가 선택과 실제 리소스 집계를 함께 수행하므로 뒤쪽 오류를 숨기거나 별도 선택 목록을 만들지 않습니다. 이어 `validateKnownCounts`로 IdMappings의 BinData·7개 언어 글꼴·서식 7종과 버전상 존재하는 선택 리소스 선언을 실제 레코드 수와 대조한 뒤, 선택된 실제 항목의 정확한 `/BinData/BINhhhh[.extension]` stream만 교체합니다.
 
-저수준 `replaceDecoded`는 이미 신뢰할 수 있는 `BinData` 값을 가진 내부 조합용으로 유지합니다. 두 API 모두 caller가 Header나 경로 문자열을 주입할 수 없고, 공통 `replaceOpened`가 압축·경로·CFB 저장을 한 번만 소유합니다.
+저수준 `replaceDecoded`는 이미 신뢰할 수 있는 `BinData` 값을 가진 내부 조합용으로 유지합니다. 두 API 모두 caller가 Header나 경로 문자열을 주입할 수 없습니다. 저수준 단일 교체는 `replaceOpened`에서 인코딩·경로·CFB 저장을 조립하고, 순번 기반 `replaceDecodedAt`는 아래 batch 경로를 사용합니다. 두 경로의 최종 exact stream 선택·CFB 재생성만 공통 `cfb/stream_replace.zig`가 소유합니다.
 
 `replaceDecodedBatch`는 1-based 순번이 엄격히 증가하는 하나 이상의 편집을 받습니다. `max_edits`로 명령 수를 제한하고 DocInfo를 한 번만 해제·순회해 모든 항목과 known resource count를 검증합니다. 각 항목은 `max_encoded_bytes`와 감소하는 `max_total_encoded_bytes`를 동시에 적용해 준비하며, 모든 확장자 경로와 실제 stream 존재를 확인한 뒤 [CFB 원자적 다중 교체](cfb-atomic-stream-replacement.md)를 한 번 호출합니다. 같은 물리 stream을 가리키는 서로 다른 DocInfo 레코드는 `DuplicateStreamReplacement`로 거부됩니다. `replaceDecodedAt`는 이 batch에 원소 하나를 전달하는 래퍼입니다.
 
@@ -20,17 +20,21 @@ batch 검증은 압축/비압축 DocInfo에서 순번 1·2의 서로 다른 stre
 
 없는 저장 ID, reserved 압축, encoded 한도, 최종 CFB 한도와 strict CFB 헤더 위반은 정확한 오류로 거부합니다.
 
+아래 네 변이 검증 문단은 과거 수행 기록이며, 이번 재검증에서는 소스 변형을 재실행하지 않았습니다.
+
 DocInfo 순번 결합의 적대적 변이 검증은 0번 허용, 선택 직후 조기 반환, DocInfo 압축 해제 우회, 순번 +1 오선택, storage ID +1 오선택을 각각 주입했습니다. Debug·ReleaseSafe·ReleaseFast의 15개 실행 모두 컴파일 성공 뒤 테스트 실패로 검출했습니다.
 
 IdMappings 일관성 강화의 적대적 변이 검증은 known 검증을 구형 부분 검증으로 축소, 검증 전체 우회, 첫 BinData로 선택 고정, 선택 직후 순회 중단, BinData 선언 슬롯을 한국어 글꼴 슬롯으로 오독하는 다섯 결함을 주입했습니다. 최초 순회 중단 변이가 살아남아 레코드 한도 검사의 위치 편향을 확인했고, 한도를 선택 직후로 옮긴 뒤 재실행했습니다. 보강 후 Debug·ReleaseSafe·ReleaseFast의 15개 실행 모두 컴파일 성공 뒤 테스트 실패로 검출했습니다.
 
 HWP batch의 적대적 변이 검증은 중복 순번 허용, 두 번째 DocInfo 선택 누락, 총 encoded 예산 우회, 첫 replacement만 CFB에 전달, 두 번째 HWP 경로 사전검증 생략을 각각 주입했습니다. Debug·ReleaseSafe·ReleaseFast의 15개 실행 모두 컴파일 성공 뒤 테스트 실패로 검출했습니다.
 
-적대적 변이 검증에서는 strict 읽기 해제, BinData ID를 다음 값으로 오선택, 압축 인코딩 우회, compact CFB node를 다음 값으로 오선택, 출력 CFB version 3 강제의 다섯 결함을 각각 주입했습니다. Debug·ReleaseSafe·ReleaseFast의 15개 실행 모두 컴파일 성공 뒤 런타임 assertion 실패로 검출했습니다. 실행 로그는 `/tmp/hwpjs-outer-bin-data-mutants.Xkj0fS`에 남겼습니다.
+적대적 변이 검증에서는 strict 읽기 해제, BinData ID를 다음 값으로 오선택, 압축 인코딩 우회, compact CFB node를 다음 값으로 오선택, 출력 CFB version 3 강제의 다섯 결함을 각각 주입했습니다. 당시 Debug·ReleaseSafe·ReleaseFast의 15개 실행 모두 컴파일 성공 뒤 런타임 assertion 실패로 검출했습니다. 당시 실행 로그 경로 `/tmp/hwpjs-outer-bin-data-mutants.Xkj0fS`는 현재 존재하지 않으므로 이 변이 결과를 이번 재실측으로 세지 않습니다.
+
+2026-09-27 재검증: 현재 `bin_data_replace.zig`·`docinfo/resources.zig`·`cfb/stream_replace.zig`의 순번·리소스 개수·strict CFB·단일/batch 경계를 대조했습니다. [개발·검증 명령](development-commands.md)의 세 집중 필터는 Debug·ReleaseSafe·ReleaseFast에서 각각 6/6·3/3·2/2(러너 포함) 통과했습니다. 차트 소유권 audit도 ReleaseSafe에서 31/31 통과했으나 아래의 실제/합성 입력 경계를 유지합니다.
 
 ## 실제 차트 전체 연결
 
-실제 차트 fixture로 String fork, 내부 OLE `/Contents` 교체, 실제 압축 DocInfo의 첫 `BinData` 순번 선택, 기본 압축이 켜진 바깥 HWP `BIN0001.OLE` 교체를 연속 실행합니다. 저장 결과를 strict HWP CFB로 다시 열어 raw DEFLATE를 해제하고, strict 내부 CFB로 다시 연 뒤 최종 Contents를 재파싱합니다. 바깥 v3·안쪽 v4, 양쪽 보존 stream, 새 object ID·문자열·trailer를 끝단에서 대조하므로 각 계층의 단독 성공만 확인하는 테스트가 아닙니다.
+실제 HWP 표본에서 해시로 고정해 추출한 차트 `Contents`를 사용하지만, 이 통합 테스트의 바깥 HWP CFB·DocInfo와 안쪽 OLE CFB는 합성 fixture입니다. String fork, 내부 OLE `/Contents` 교체, 합성 압축 DocInfo의 첫 `BinData` 순번 선택, 기본 압축이 켜진 바깥 `BIN0001.OLE` 교체를 연속 실행합니다. 저장 결과를 strict HWP CFB로 다시 열어 raw DEFLATE를 해제하고, strict 내부 CFB로 다시 연 뒤 최종 Contents를 재파싱합니다. 바깥 v3·안쪽 v4, 양쪽 보존 stream, 새 object ID·문자열·trailer를 끝단에서 대조하므로 각 계층의 단독 성공만 확인하는 테스트가 아닙니다. 실제 HWP 컨테이너 전체를 편집·재열기 한 결과로 확대하지 않습니다.
 
 전체 연결의 적대적 검증은 내부 Contents 경로 오선택, 바깥 BinData ID 오선택, FileHeader 압축 플래그 제거, 저장 stream 압축 해제 우회, 최종 원본 Contents 재파싱을 각각 주입했습니다. 다섯 실행 모두 컴파일 뒤 정확히 새 전체 연결 테스트에서 실패해 계층별 우회를 검출했습니다.
 

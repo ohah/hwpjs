@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "33d8e4e8b71ed5011ca7d93833c165feae90a000ef061a9591555d31dc4fa886",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding and raw stored DEFLATE evidence review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "46aa7a29a0e61ed69bd51c9ff95b936d061e7ea3a772e42302717a6af829c351",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE and replacement evidence review, architecture pending, full Debug Zig test incomplete"
+    },
+    "docs/hwp5-bin-data-replacement.md": {
+      "sha256": "3425c6ad3552091bb0341c00abe44cb722f5a8a0ced54d8c239b60b93dcb776f",
+      "evidence": "2026-09-27 current ordinal batch CFB code, 3 modes 6+3+2 focused and Safe chart ownership 31; synthetic outer HWP and missing historical mutant log clarified"
     },
     "docs/raw-deflate-stored-encoder.md": {
       "sha256": "3c77aa9ff33d563eb67a9123b80b123c96aa4afdd4611c8d65d41818247492a1",
