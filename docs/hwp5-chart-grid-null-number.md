@@ -15,3 +15,7 @@ String과 Double materialization은 같은 null 좌표의 상호배타적 대안
 ## 적대적 검증
 
 object ID 변경, bits 최하위 비트 반전, trailer 최하위 비트 반전, `VtValue` 버전을 2로 변경, 원본 null sentinel 검증 제거의 다섯 결함을 각각 주입했다. `Debug`, `ReleaseSafe`, `ReleaseFast`의 유효한 15회 모두 컴파일 성공 후 직접 wire 또는 실제 HWP 재파싱 assertion에서 검출됐다.
+
+## 현재 재검증
+
+현재 `grid_null_target.zig`는 null을 포함한 배열 좌표를 검사하고 `grid_number_materialize.zig`는 원본 4바이트 sentinel, 서로 다른 새 object/type ID와 51바이트의 원시 Double 정의를 검증·생성합니다. `chart_edit_session`은 이 String 대안과 상호배타적인 typed 편집으로 연결합니다. 해시 고정 실제 Contents를 합성 HWP에 담은 `chart-ownership-audit`는 Debug·ReleaseSafe·ReleaseFast 각각 10/10 단계·31/31 테스트로 통과했습니다. 과거 다섯 소스 변이는 이번에 재실행하지 않았고, 임의 원본 HWP의 편집·화면 결과까지 검증한 것은 아닙니다.

@@ -15,3 +15,7 @@ Grid 좌표는 object ID가 아니라 null을 포함한 `row * columns + column`
 ## 적대적 검증
 
 행·열 전치, 행 범위를 columns로 검사, 열 범위를 rows로 검사, 공유 object ID 허용, payload 시작 위치 1바이트 이동의 다섯 결함을 각각 주입했다. 최초 공유성 변형은 기존 검사에서 통과했으므로 검출로 세지 않고 target resolver와 직접 공유 참조 테스트를 추가한 뒤 재실행했다. 보강 후 유효한 다섯 결함은 `Debug`, `ReleaseSafe`, `ReleaseFast` 총 15회 모두 컴파일 성공 후 실제 assertion 실패로 검출됐다.
+
+## 현재 재검증
+
+현재 `grid_number_target.zig`는 row/column 범위·값 종류·객체 유일 참조를 확인하고, 고정폭 payload는 `contents_number_edit`가 검증·직렬화합니다. 위 74개 batch는 Grid String·null 생성 전 단계의 기록이며 현재 고정 Contents 지원 대상의 합성 HWP 테스트는 82개 명령의 한 batch를 포함합니다. `chart-ownership-audit`는 Debug·ReleaseSafe·ReleaseFast 각각 10/10 단계·31/31 테스트로 통과했습니다. 과거 다섯 소스 변이는 이번에 재실행하지 않았고, 임의 원본 HWP의 전체 저장 호환성을 주장하지 않습니다.

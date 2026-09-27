@@ -1,6 +1,30 @@
 {
   "schema": 1,
   "verified": {
+    "docs/hwp5-chart-grid-cell-nullify.md": {
+      "sha256": "88600840257f0c94d00455c251f83e06276d60afa559b82db3634fe931c7fe99",
+      "evidence": "2026-09-28 current Grid String or Double nullify coordinate kind alias graph unique number and type relocation versus pinned actual Contents in synthetic HWP, Debug Safe Fast ownership audit 10 steps 31 tests each; historic mutants not rerun"
+    },
+    "docs/hwp5-chart-grid-null-number.md": {
+      "sha256": "ad08bf574bc4bcfbae68cce75d0717f1f438659d6a01cbcda98a9a989e6681e0",
+      "evidence": "2026-09-28 current null target and 51 byte inline Double new type and object IDs versus pinned actual Contents synthetic HWP, Debug Safe Fast ownership audit 31 tests each; mutually exclusive String alternative historical mutants not rerun"
+    },
+    "docs/hwp5-chart-grid-null-string.md": {
+      "sha256": "bdf459a37b992969b8d1afdc7d46bbe906f460eddc25b1ba812e9ad3ca37a6ca",
+      "evidence": "2026-09-28 current null target String materialization span ID type name and raw bytes versus 82 edit batch with pinned actual Contents synthetic HWP, Debug Safe Fast ownership audit 31 each; Double alternative separate historic mutants not rerun"
+    },
+    "docs/hwp5-chart-grid-number-edit.md": {
+      "sha256": "2703904f5fc755627e8ad324958d409dc414a3a71ec006b93975c9a4cb68673f",
+      "evidence": "2026-09-28 current Grid number coordinate kind unique reference and shared payload versus pinned actual Contents synthetic HWP 82 edit batch, Debug Safe Fast ownership audit 31 each; 74 historic and mutants not rerun"
+    },
+    "docs/hwp5-chart-grid-string-edit.md": {
+      "sha256": "e7a93c8b5391fefda2e8957d54dfa26b469be0196a03e318a691a65b75b1077f",
+      "evidence": "2026-09-28 current Grid inline String coordinate span and fork isolation versus pinned actual Contents synthetic HWP 82 edit batch, Debug Safe Fast ownership audit 31 each; 81 historic and mutants not rerun"
+    },
+    "docs/hwp5-chart-grid-type-relocation.md": {
+      "sha256": "5133a47e7ca8112280f8985d4ef3d3cce307e3b2d6485e3114265d21bf2deb66",
+      "evidence": "2026-09-28 current type reference span and declaration relocation to first surviving nonedited reference versus pinned actual Contents synthetic HWP four cell nullification, Debug Safe Fast ownership audit 31 each; historic mutants not rerun"
+    },
     "docs/hwp5-chart-source-preservation.md": {
       "sha256": "50f611c0d5ae8d14c3fe7c399a585229919e888de1f3b9f8ba619ab7d87463ac",
       "evidence": "2026-09-28 current borrowed Contents source and owned copyOriginal boundaries versus pinned real Contents, Debug Safe Fast chart ownership audit 10 steps 31 tests each; synthetic outer HWP and historic mutants distinguished"
@@ -606,8 +630,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "c9ac8c6033c6133765a059f97a3d1bdaa9f64fe45a2e96b176acf5f331e175b0",
-      "evidence": "2026-09-28 tracker updated with Contents source patch allocator and file session contracts, three-mode ownership audit 31 each and synthetic HWP provenance; historic mutants not rerun"
+      "sha256": "f7c85db6a4f1339c59b96aa9965471580c09758ae2c26115287929ed5627c877",
+      "evidence": "2026-09-28 tracker updated with six Grid edit and relocation contracts, three-mode ownership audit 31 each, 82 edit batch and synthetic HWP scope; historic mutants not rerun"
     },
     "docs/bcp47-syntax.md": {
       "sha256": "ae0d91a0bb5ca2f8a5194b5ffa76494427cc058784f11446fd905458020f5b11",

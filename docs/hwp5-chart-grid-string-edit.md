@@ -15,3 +15,7 @@ null/Number 셀의 String materialization, 행·열 추가, 문자열 인코딩 
 ## 적대적 검증
 
 행·열 전치, 행 범위를 columns로 검사, 열 범위를 rows로 검사, inline 정의를 alias로 오표기, 정의 시작 위치를 1바이트 이동하는 다섯 결함을 각각 주입했다. `Debug`, `ReleaseSafe`, `ReleaseFast`의 유효한 15회 모두 컴파일 성공 후 좌표·종류·span 또는 실제 HWP 재파싱 assertion에서 검출됐다.
+
+## 현재 재검증
+
+현재 `grid_string_target.zig`는 null 포함 배열 좌표에서 기존 inline String의 정의 span을 반환하고, `contents_inline_fork`가 새 ID 격리 및 필요한 기존 정의 이전을 처리합니다. 위 81개 batch는 null String 생성 전 단계의 기록이며 현재 합성 HWP 검증은 82개 지원 대상의 한 batch를 포함합니다. 해시 고정 실제 Contents의 `chart-ownership-audit`는 Debug·ReleaseSafe·ReleaseFast 각각 10/10 단계·31/31 테스트로 통과했습니다. 과거 다섯 소스 변이는 이번에 재실행하지 않았고, 원 corpus HWP 파일 전체를 편집한 증거는 아닙니다.

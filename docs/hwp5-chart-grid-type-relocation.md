@@ -15,3 +15,7 @@
 직접 wire 검사는 이동 대상이 원래 네 바이트 참조이고 replacement가 원 선언 전체이며 ID가 같은지 확인한다. 타입 선언 원본 이름 손상도 파싱 후 편집 시점 검증에서 거부한다. allocation-failure 전수 경로에서 target·객체 이동·타입 이동 replacement와 메타데이터 배열이 모두 해제되는지 검사한다.
 
 String known 길이를 1바이트 크게 계산, 같은 batch 편집 목적지를 건너뛰지 않음, 선언 대신 기존 4바이트 참조를 복사, 선언을 한 바이트 밀어 ID·payload를 변조, 원본 타입 참조 검증 제거의 다섯 결함을 각각 주입했다. `Debug`, `ReleaseSafe`, `ReleaseFast`의 유효한 15회 모두 컴파일 성공 후 실제 HWP 재파싱, 겹침 검사, 정확 wire 또는 손상 원본 오류 assertion에서 검출됐다.
+
+## 현재 재검증
+
+현재 `type_declaration_relocation.zig`는 타입 테이블의 원본 참조 span·선언명·버전을 검증하고 known wire 길이와 선언 확장분으로 제거 셀의 전체 span을 설명해야 이동을 허용합니다. 같은 batch에서 편집할 목적지는 건너뛰며 남는 첫 참조가 없으면 이동 patch를 만들지 않습니다. 해시 고정 실제 Contents를 합성 HWP에 담은 `chart-ownership-audit`는 Debug·ReleaseSafe·ReleaseFast 각각 10/10 단계·31/31 테스트로 통과했고, 네 셀 동시 null화의 재파싱을 포함합니다. 과거 다섯 소스 변이는 이번에 재실행하지 않았으며 이 결과는 임의 버전의 Grid 선언 이동 규칙을 증명하지 않습니다.

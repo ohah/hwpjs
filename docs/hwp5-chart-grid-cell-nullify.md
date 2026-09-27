@@ -17,3 +17,7 @@ null 셀 재선택, 행·열 범위 밖과 손상된 Number·타입 원본을 �
 ## 적대적 검증
 
 known-type 셀만 지원하던 초기 단계에서는 선언 소유 셀 오허용 두 종류, String·Double null sentinel 변조와 Number 원본 payload 검증 제거를 세 모드에서 검출했다. 최초 선언 셀을 지원하는 현재 계약의 길이·목적지·선언 복사·ID·원본 검증 변이는 [Grid 타입 선언 이동](hwp5-chart-grid-type-relocation.md)에 별도로 기록한다.
+
+## 현재 재검증
+
+현재 `chart_edit_session.zig`는 좌표·종류를 확인하고 String은 `contents_inline_fork`의 정의/alias 그래프, Double은 `grid_number_target`의 유일 참조와 `contents_number_edit`의 원본 payload 검증을 재사용합니다. 최초 선언 셀 제거 시 타입 이동은 별도 `type_declaration_relocation` 경로입니다. 해시 고정 실제 Contents를 합성 HWP 컨테이너에 담은 `chart-ownership-audit`는 Debug·ReleaseSafe·ReleaseFast 각각 10/10 단계·31/31 테스트로 통과했습니다. 따라서 문서의 “실제 HWP”는 원 corpus HWP 파일을 직접 수정한 증거가 아닙니다. 과거 결함 주입은 이번에 재실행하지 않았습니다.

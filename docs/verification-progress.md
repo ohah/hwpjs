@@ -22,6 +22,8 @@ Value 객체·ValueBlock·TextBlock 본문·TextFormat 네 제품 계약 문서�
 
 원본 Contents 보존·span patch writer·객체 ID 선택·차트 파일 편집 네 문서를 현재 Zig의 borrowed/owned 수명, 원본 좌표 patch·extent, 비예약 ID 선택, `Edit`/`applyCharts` 컨테이너 조립에 대조해 완료 목록에 넣었습니다. 해시 고정 실제 Contents를 합성 외부 HWP에 담은 소유권 감사가 Debug·ReleaseSafe·ReleaseFast 각각 10/10 단계·31/31개, ReleaseSafe ID 선택 집중 테스트 3/3개로 통과했습니다. 현 테스트에는 82개 typed 명령의 한 저장과 두 차트의 다중 저장이 있지만 임의 corpus 원본 HWP의 전 스트림 무손실 재저장을 입증하지 않습니다. 과거 소스 변이는 재실행하지 않았고, `copyOriginal`·patch writer·ID allocator 자체는 의미 직렬화나 자동 span/ID 전역 판정을 하지 않습니다.
 
+Grid 기존 String/Double 편집, null String/Double 생성, 기존 셀 null화와 타입 선언 이동 여섯 문서를 현재 좌표 선택·원본 span·ID/타입 예약·공유 참조·선언 이전 코드에 대조해 완료 목록에 넣었습니다. 해시 고정 실제 Contents를 합성 외부 HWP에 담는 `chart-ownership-audit`가 Debug·ReleaseSafe·ReleaseFast 각각 10/10 단계·31/31 테스트로 통과했습니다. 현재 82개 선택 편집 명령의 단일 저장과 별도 null Double·네 셀 동시 null화 경로를 포함합니다. String/Double null 생성은 같은 셀의 상호배타적 대안이며, 과거 74/81개 batch는 당시 범위입니다. 과거 소스 결함 주입은 이번에 재실행하지 않았고 임의 corpus 원본 HWP·차트 버전·OOXML 캐시와의 호환성을 입증하지 않습니다.
+
 검증 대상은 Git이 추적하는 현재 프로젝트의 Markdown 문서입니다. `legacy/`와 `reference/`는 이전 구현·외부 참고 자료이므로 이 집계에서 제외하고, 별도로 인용할 때 해당 부분을 확인합니다. 현재 작업 트리에서 삭제 상태인 `lint-rules.md`는 사용자의 변경을 보존하며 `missing`으로 표시합니다. 존재하지 않는 파일을 임의로 복구하거나 검증 완료로 세지 않습니다.
 
 `tools/docs-audit-status.mjs`가 추적 대상·현재 내용 해시가 일치하는 검증 완료 파일·미검증·변경 후 재검증 필요·작업 트리 누락·새 미추적 문서를 구분합니다. 실행 방법은 [개발·검증 명령](development-commands.md)이 소유합니다. 완료 게이트는 **목록/해시 관점의** 검사일 뿐입니다. 검증 완료 목록의 단일 출처는 `tools/docs-audit-reviewed.json`이며, 문서가 바뀌면 해당 항목은 자동으로 `stale`이 됩니다. 이 수치는 제품 구현률이 아닙니다.
