@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "11c7aaa7e0db6f36325c3b6d1f8c365ebb1dea28995d3687b5332176bb463d38",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement and CFB batch evidence review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "b2f3528afff6c65464ada1cadb3d1a700e0758c02a874cb2ef64a106746e95d6",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch and reader evidence review, architecture pending, full Debug Zig test incomplete"
+    },
+    "docs/cfb-reader.md": {
+      "sha256": "343b08e9838ade80031263f2a4cf2d529dfa245ad2b2c8472fba21e5c4a8ce9c",
+      "evidence": "2026-09-27 MS-CFB12 and current CFB JS Zig ABI limits and build; Safe compare 47 and 60 files 483 streams 5496 searches, Safe native 2655; historical Chromium and mutation not rerun"
     },
     "docs/cfb-atomic-stream-replacement.md": {
       "sha256": "e0f6ee1f506d533c19a167eab30fcf13acbeaaf9539019ce9d046d7dd4c7b12d",

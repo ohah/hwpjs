@@ -101,7 +101,7 @@ strict는 헤더 CLSID/BOM/v4 패딩, 최소/전체 섹터 크기, FAT/DIFAT 목
 
 네이티브 max_entries는 읽기/쓰기 모두 섹터 패딩의 미사용 디렉터리 슬롯까지 셉니다. max_path_bytes 역시 미사용 슬롯의 `/` 경로를 포함하며, 같은 경로 생성기로 계산합니다. 루트만 있는 파일의 최소 한도는 v3에서 엔트리 4개·경로 14바이트, v4에서 32개·42바이트입니다.
 
-이번 검증: 네이티브 21개·Node/WASM 47개, 실제 HWP 48개 × v3/v4 재저장(스트림 904개)과 모든 편집 모델 필드, 16 MiB 다중 DIFAT, 생성 계층 64개, strict 변이 2,048건, 할당 실패 전수 주입, 손상된 wire·실패 후 복구를 검사합니다. 추가 회귀 테스트는 v3/v4 제한값 경계 120조합과 JS 옵션 getter·입력 오류·할당/결과 변환 실패 주입 후 상태 일치를 확인합니다. 이전 Chromium 검증에서는 기존 읽기 비교 외에 생성·수정 14조합을 확인했습니다. HWP 본문 의미/렌더링의 검증은 아닙니다.
+2026-09-05 당시 검증: 네이티브 21개·Node/WASM 47개, 실제 HWP 48개 × v3/v4 재저장(스트림 904개)과 모든 편집 모델 필드, 16 MiB 다중 DIFAT, 생성 계층 64개, strict 변이 2,048건, 할당 실패 전수 주입, 손상된 wire·실패 후 복구를 검사했습니다. 추가 회귀 테스트는 v3/v4 제한값 경계 120조합과 JS 옵션 getter·입력 오류·할당/결과 변환 실패 주입 후 상태 일치를 확인했습니다. 당시 Chromium 검증에서는 기존 읽기 비교 외에 생성·수정 14조합을 확인했습니다. HWP 본문 의미/렌더링의 검증은 아닙니다.
 
 ## 레거시 읽기 호환성과 의도적 차이
 
@@ -119,12 +119,7 @@ strict는 헤더 CLSID/BOM/v4 패딩, 최소/전체 섹터 크기, FAT/DIFAT 목
 
 ## 검증
 
-```sh
-zig build test
-zig build compare -Doptimize=ReleaseSafe
-node tests/cfb/serve.mjs
-# Chromium 등에서 http://127.0.0.1:11309 열기
-```
+재현 명령은 [개발·검증 명령](development-commands.md)이 소유합니다. 브라우저 검사는 서버를 띄운 뒤 실제 Chromium에서 별도로 실행해야 하며, 네이티브·Node 명령의 성공만으로 소급하지 않습니다.
 
 2026-09-05 결과: HWP 48개 + 합성 12개 = 60개, 스트림 483개, 검색 5,496건 일치. 합성 입력에는 Unicode 경로·0/1/63/64/65/4095/4096/4097바이트·8 MiB 확장 DIFAT·v4·일반/MiniFAT 단편화 스트림·CLSID·상태·타임스탬프가 포함됩니다. 손상 입력 16개를 WASM에서 거부합니다. 네이티브 테스트는 할당 실패 전수 주입, 미니 스트림, 제한 및 오류 경로를 검사합니다. Chromium에서 HWP 48개·스트림 452개를 레거시 JS와 비교합니다.
 
@@ -134,12 +129,7 @@ node tests/cfb/serve.mjs
 
 후속 두 수정 회차에서 BOM 이름 손실, 디렉터리·FREESECT 검증 누락, unsigned FILETIME, 바이트 절삭, 다른 실행 컨텍스트의 버퍼 거부를 재현하고 수정했습니다. 해당 회차의 네이티브 테스트 10개와 Node 테스트 22개가 통과했습니다. 네이티브 테스트에는 변이 입력 4,096건의 반환 데이터 크기·메모리 정리 검사가 포함됩니다.
 
-```sh
-zig build audit -Doptimize=ReleaseSafe
-# audit는 네이티브 테스트, 레거시 비교, 계약 테스트, WASM 변이 12,000건을 실행
-CFB_MUTATION_SEED=3735928559 node tests/cfb/mutations.mjs
-CFB_MUTATION_SEED=305419896 node tests/cfb/mutations.mjs
-```
+당시 `audit`와 추가 시드 실행 방법은 [개발·검증 명령](development-commands.md)에 둡니다. `audit`의 기본 시드는 WASM 변이 12,000건을 포함합니다.
 
 기본 시드 `12648430`과 위 두 시드의 총 36,000건에서 트랩·검사 불변식 위반은 발견되지 않았습니다. 변이 뒤에도 정상 파일을 열 수 있는지 총 360회 확인합니다. 정상 상태로 남은 변이를 전부 오류로 거부하도록 강제하지 않으며, 변이 파일은 레거시 파서에 전달하지 않습니다. Debug/ReleaseSafe/ReleaseFast의 audit 및 Chromium의 실제 HWP 48개·BOM/FILETIME/iframe 버퍼 검증을 수행합니다. 재리뷰에서 확인한 범위 내 추가 중요 지적은 없었으나, 전체 입력 공간이나 메모리 고갈 상황에 대한 완전성 보장은 아닙니다.
 
@@ -158,3 +148,5 @@ CFB_MUTATION_SEED=305419896 node tests/cfb/mutations.mjs
 명세: [MS-CFB](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-cfb/53989ce4-7b05-4f8d-829b-d08d6148375b). 제3자 코드 고지는 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)에 있습니다.
 
 소스 대조 회차의 함수 대응표, 엄격 비교 범위와 승인 대기 차이는 [cfb-compatibility.md](cfb-compatibility.md)를 확인합니다. 앞선 회차의 테스트 개수는 당시 결과이며, 현재 테스트 목록은 `build.zig`의 audit에 연결되어 있습니다.
+
+2026-09-27 재검증: 공개 JS/Zig API·ABI 5·기본 자원 제한과 `build.zig`의 생성 ABI 검사 연결을 현재 코드에서 대조했습니다. 공식 MS-CFB 12.0 게시 상태도 확인했습니다. `zig build compare -Doptimize=ReleaseSafe --summary all`은 8/8 단계와 Node 계약 테스트 47/47이 통과했고, 레거시 대조는 60개 파일·483개 stream·5,496개 검색 일치 및 손상 입력 16개 거부였습니다. `zig build test -Doptimize=ReleaseSafe --summary all`은 종료 코드 0, 5/5 단계·2,655/2,655 테스트 통과였습니다. 출력의 `failed command:` 러너 문구는 빌드 실패가 아니며 [별도 해석](zig-test-stderr.md)을 따릅니다. 실제 HWP 48개의 v3/v4 재저장·904개 stream 대조는 현재 Node 테스트의 assertion과 실행 성공을 함께 확인했습니다. 과거 Chromium·세 시드 36,000건 변이·Debug/ReleaseFast 전체 audit는 이번에 재실행하지 않았고, 현재 결과로 소급하지 않습니다.

@@ -89,6 +89,8 @@
 
 [CFB 원자적 다중 stream 교체](cfb-atomic-stream-replacement.md)는 `zig test src/root.zig -O ReleaseSafe --test-filter 'CFB exact batch replacement'`로 합성 v3/v4의 다중 exact 교체·중복/오류·compact node 매핑을 검사합니다. 같은 필터를 `-O Debug`·`-O ReleaseFast`로도 실행할 수 있습니다. 과거 변이 시험과 실제 HWP 저장 동치의 재현 명령은 아닙니다.
 
+[CFB 읽기·검증·쓰기](cfb-reader.md)의 현재 네이티브·레거시 비교는 `zig build test -Doptimize=ReleaseSafe --summary all` 및 `zig build compare -Doptimize=ReleaseSafe --summary all`로 실행합니다. `node tests/cfb/serve.mjs`는 수동 Chromium 검사용 서버만 시작하며 브라우저 검사를 대신하지 않습니다. 과거 WASM 변이 sweep은 `zig build audit -Doptimize=ReleaseSafe`의 기본 시드 12,000건과 `CFB_MUTATION_SEED=3735928559 node tests/cfb/mutations.mjs`, `CFB_MUTATION_SEED=305419896 node tests/cfb/mutations.mjs`로 다시 실행할 수 있지만, 이 세 명령은 2026-09-27 재검증에서는 실행하지 않았습니다.
+
 [Raw DEFLATE stored encoder](raw-deflate-stored-encoder.md)는 `zig test src/root.zig -O ReleaseSafe --test-filter 'raw DEFLATE stored encoder'`로 블록 wire·경계·한도·할당 실패를 검사합니다. 같은 필터를 `-O Debug`·`-O ReleaseFast`에서도 실행할 수 있습니다. 과거 변이 실행이나 외부 구현과의 실파일 저장 비교는 포함하지 않습니다.
 
 [PCX 헤더·RLE 경계](pcx-structure.md)는 `zig test src/root.zig --test-filter 'PCX structure'`로 단위·반례를 검사하고, `--test-filter 'HWPX picture image payloads'`로 ZIP·MIME·오류 연결을 확인합니다. 독립 `python3 tools/hwpx-fill-brush-image-oracle.py --self-test`와 `--picture-payloads` 및 아래 known survey ReleaseFast shard 7이 실파일 PCX 1건의 RLE 경계를 대조합니다.
