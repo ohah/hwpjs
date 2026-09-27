@@ -32,6 +32,8 @@ Document는 프레임 배열과 각 색인 평면을 소유합니다. 헤더/팔
 
 ## 검증 경계와 실측
 
+아래 전체 감사·격리 소스 변이·세 WASM 모드 수치는 당시 기록입니다. 현재 코드와 실파일로 다시 실행한 범위는 마지막 절에 분리합니다.
+
 테스트 전용 WASM mode 295는 trailing u8 뒤 파일/블록/하위 블록/프레임/픽셀/코드 한도 u32 여섯 개를 받습니다(25바이트). 출력은 문서 20개 u32(80바이트)와 전역 팔레트, 프레임별 18개 u32(72바이트)와 지역 팔레트·색인 바이트입니다. 기존 probe 형식이나 제품 ABI를 바꾸지 않았습니다. probe limit은 직렬화 크기이며 실제 크기를 선계산해 검사합니다.
 
 Debug/ReleaseSafe/ReleaseFast의 네이티브 GIF 필터는 root 포함 11/11개를 통과했습니다. 모든 파일 접두부, sub-block cursor 원자성, 제어 적용, 팔레트 부재, KwKwK, 초기 Clear 부재, height 1~33 인터레이스, 10,000리터럴/12비트 사전 유지, 반복 프레임 공유 예산, 모든 할당 실패와 명시적 오류 경로 할당 회계를 검사합니다.
@@ -49,3 +51,11 @@ Debug/ReleaseSafe/ReleaseFast의 네이티브 GIF 필터는 root 포함 11/11개
 관련 문서 4개의 로컬 링크 63개와 변경 코드의 포맷·구문·diff 검사를 확인했습니다. 전체 audit를 Debug → ReleaseSafe → ReleaseFast 순서로 실행하여 각 모드 23/23 단계·954/954 네이티브 테스트·7,839,634개 HWP/WASM 검사를 통과했습니다. 실행 셸 종료 코드 0을 확인했으며 로그는 `/tmp/hwpjs-gif-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.
 
 최종 `zig build test --summary all`은 5/5 단계·954/954 테스트, `zig build -Doptimize=ReleaseSafe --summary all`은 5/5 단계로 모두 종료 코드 0입니다. GIF 전부·PrvImage 통합·전체 HWP 문서 검증 완료를 선언하지 않습니다.
+
+## 현재 코드 재검증 (2026-09-27)
+
+W3C가 보관한 GIF89a 원문의 interlace 행 순서·LSB-first LZW·deferred clear 설명과 현재 `src/image/gif/`의 모듈 책임·원문 차용·할당 해제·미지원 의미 경계를 대조했습니다. `src/root.zig` 진입점의 `image.gif` 집중 테스트는 Debug·ReleaseSafe·ReleaseFast 각각 11/11(root 포함) 통과했습니다. 현재 probe WASM의 `gifEdges`는 정상 대조 283·의도적 거부 94, seed 1195984437의 변이 4,000건 중 정상 889·거부 3,111·정상 복구 63건을 재현했습니다. 이 실행은 한 WASM 산출물에 한정하며 과거 세 모드 전체 감사를 다시 실행한 것은 아닙니다.
+
+기본 fixture와 rhwp 직접 자식의 `.hwp` 336경로에서 non-CFB/strict CFB 거부 41개를 제외하고 루트 `PrvImage` GIF89a 133개를 재검사했습니다. 고유 바이트열 110개·모두 단일 프레임·색인 픽셀 5,884,250개였고, `gifActual`의 독립 JS 색인 결과와 제품 WASM 반환 바이트가 같았습니다. 같은 133개를 현재 빌드한 macOS ImageIO oracle로도 대조해 단일 프레임의 팔레트 기반 RGBA 5,884,250픽셀이 일치했습니다. 기본 fixture 14개·619,500픽셀도 이 집계에 포함됩니다. ImageIO 비교는 원점·단일 프레임·명시적 팔레트를 요구하므로 투명도/배치/disposal의 일반 캔버스 동치가 아닙니다.
+
+과거 생성 입력 30개·40,733픽셀의 ImageIO 대조, 출력 779바이트 전수 변이, 격리 소스 변형 10종과 세 모드 전체 감사는 이번에 재실행하지 않았습니다. 해당 `/tmp/hwpjs-gif-*` 로그도 현재 없어 새 검증 근거로 사용하지 않습니다. 제품 JS 공개 GIF API, 일반 텍스트·응용 의미, 애니메이션 합성·화면 렌더링은 여전히 범위 밖입니다.
