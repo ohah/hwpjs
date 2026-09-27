@@ -4,9 +4,9 @@ u512 목표값과 i1024/u1024 중간 계산 확장은 [넓은 목표값의 근 �
 
 ## 범위
 
-`normalized_power_level.solve(g, offset, n, d)`는 정규화 u128 목표값 n/d에 대해 `z^(g/65536)+offset/65536=n/d`의 정확한 실수 **밑 변수 z** 해를 보존합니다. [기존 signed 16.16 수준 해](icc-power-level.md)와 달리 목표값을 i32로 재양자화하지 않습니다. [선형 분기의 u128 역상 입력](icc-linear-preimage.md)과 같은 목표값 폭을 다루기 위한 준비 단계입니다.
+`normalized_power_level.solve(g, offset, n, d)`는 정규화 u128 목표값 n/d에 대해 `z^(g/65536)+offset/65536=n/d`의 정확한 실수 **밑 변수 z** 해를 보존합니다. [기존 signed 16.16 수준 해](icc-power-level.md)와 달리 목표값을 i32로 재양자화하지 않습니다. [선형 분기의 u128 역상 입력](icc-linear-preimage.md)과 같은 목표값 폭을 제공하는 저수준 계층입니다.
 
-이 결과는 아직 x 좌표·활성 구간의 역상·출력 클리핑 후 역상·선형/거듭제곱 합집합이 아닙니다. a=0인 상수 밑과 근의 위치는 [활성 구간 위치](icc-normalized-root-locations.md)가 [넓은 근의 좌표 비교](icc-normalized-root-compare.md)를 사용해 처리합니다. y=0/1 클리핑 평탄 구간과 전체 역상 선택은 후속 범위입니다. 새 넓은 Root를 기존 좁은 power_root_compare에 축소해서 전달하지 않습니다.
+이 결과 자체는 x 좌표·활성 구간의 역상·출력 클리핑 후 역상·선형/거듭제곱 합집합이 아닙니다. a=0인 상수 밑과 근의 위치는 [활성 구간 위치](icc-normalized-root-locations.md)가 [넓은 근의 좌표 비교](icc-normalized-root-compare.md)를 사용해 처리합니다. y=0/1 [클리핑 평탄 구간](icc-power-clipping.md)과 [전체 역상 선택](icc-parametric-attained-inverse.md)은 현재 별도 계층의 책임입니다. 새 넓은 Root를 기존 좁은 power_root_compare에 축소해서 전달하지 않습니다.
 
 ## 표현과 정확성
 
@@ -48,4 +48,6 @@ Debug·ReleaseSafe·ReleaseFast 전체 audit가 각각 20/20 단계, 네이티�
 
 ReleaseFast 산출물을 직접 인스턴스화한 재검사도 같은 결과였습니다. 두 근 중 음의 근을 제거하고 출력 길이·count까지 맞추는 임시 반환값 변형을 ERR_ASSERTION으로 검출했습니다. 단순 wire 일관성이 아니라 근 집합의 완전성을 검사하는 근거이며 제품 파일에는 변형을 남기지 않았습니다.
 
-최종 코드 검토에서는 목표값 선행 검증, i256/u256 연산 폭, i32 최솟값의 unsigned 절댓값, count 안에서만 초기화된 슬롯 접근, 공통 부호/개수 판정과 표현 어댑터의 책임 분리를 확인했습니다. 이 검증은 본 모듈과 기존 경로의 회귀 범위에 한정되며, 넓은 근의 좌표 비교·활성 구간 연결이나 전체 ICC 역변환 완료를 뜻하지 않습니다.
+당시 최종 코드 검토에서는 목표값 선행 검증, i256/u256 연산 폭, i32 최솟값의 unsigned 절댓값, count 안에서만 초기화된 슬롯 접근, 공통 부호/개수 판정과 표현 어댑터의 책임 분리를 확인했습니다. 이 검증은 본 모듈과 기존 경로의 회귀 범위에 한정되며, 현재 별도 계층에 구현된 넓은 근의 좌표 비교·활성 구간 연결이나 전체 ICC 역변환의 성공 증거가 아닙니다.
+
+2026-09-27 재검증에서는 공식 ICC.1:2022 Table 68의 분기 거듭제곱 식과 현재 `normalized_power_level.solveFor`·`power_level_shape.classify`·`normalized_power_level_types.Of`의 u128 목표·i256/u256 중간값·기호근 소유권을 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 `normalized power level` 집중 테스트는 각각 4/4 통과했습니다. 기존 로컬 WASM mode195의 독립 BigInt 대조는 비교 1,412건·예상 거부 45건·근 1,198개·좁은/넓은 경로 연결 350회가 일치했습니다. 현 시스템 ICC 다섯 파일의 para TRC 15개에서 0·1/3·1/2·2/3·1의 목표값 75건을 재확인했습니다. 과거 `/tmp` 전체 감사 로그는 현재 없으며 이번에 전체 감사·WASM 재빌드·반환값 변형을 재실행한 것으로 세지 않습니다.
