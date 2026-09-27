@@ -2,7 +2,7 @@
 
 ## 명세와 현재 처리
 
-HWP 5.0 3.2.8과 로컬 `legacy/rust/.claude/skills/hwp-spec/3-2-8-문서-옵션.md`는 `_LinkDoc`의 역할을 연결 문서 경로 저장이라고 설명하지만 필드 배치·인코딩·길이·종결·패딩은 정의하지 않습니다. DRM·인증서·서명 관련 6개 스트림도 역할 설명만 있습니다. 3.1의 압축 표시는 사용 안 함입니다.
+[한컴 공식 HWP 5.0 revision 1.3](https://cdn.hancom.com/link/docs/%ED%95%9C%EA%B8%80%EB%AC%B8%EC%84%9C%ED%8C%8C%EC%9D%BC%ED%98%95%EC%8B%9D_5.0_revision1.3.pdf) 3.2.8과 로컬 `legacy/rust/.claude/skills/hwp-spec/3-2-8-문서-옵션.md`는 `_LinkDoc`의 역할을 연결 문서 경로 저장이라고 설명하지만 필드 배치·인코딩·길이·종결·패딩은 정의하지 않습니다. DRM·인증서·서명 관련 6개 스트림도 역할 설명만 있습니다. 3.1의 압축 표시는 사용 안 함입니다.
 
 현재 제품은 DocOptions 의미를 검사하지 않으며 해당 스트림은 uninspected로 남습니다. CFB 원본을 통한 보존과 필드 검증 완료를 구분합니다. 경로를 열거나, 전체 바이트를 NUL 종결 문자열로 해석하거나, 일반적인 길이를 필수 규칙으로 강제하지 않습니다.
 
@@ -24,6 +24,8 @@ rhwp `src/parser/hwpx/contract_streams.rs`는 변환 시 `_LinkDoc` 대응 데�
 
 ## 재현한 결함과 검증 기록
 
+이 절의 소스 변형·전체 audit·빌드 수치는 당시 기록입니다. 현재 남아 있지 않은 임시 로그를 이번 재검증 증거로 세지 않습니다.
+
 SSOT 검토에서 이름 비교 중복의 결함을 실제 생성 CFB로 재현했습니다. CFB 명세 비교는 `DocOptionſ`를 `/DocOptions`로 조회하지만 JS toLowerCase로 다시 검색하면 MissingDocOptionsSnapshot을 반환했습니다. 스토리지 인덱스는 CFB 조회 결과의 원래 이름과 정확히 대응시키고, 알려진 자식도 각 CFB 조회가 반환한 원래 이름 집합으로 집계하도록 수정했습니다. `DrmLicenſe`까지 포함한 생성 CFB 회귀를 추가했습니다. 한컴 표본에서 이 이름을 관측했다는 뜻은 아닙니다.
 
 관련 테스트 15/15(DocOptions 6·공통 관측 4·PrvImage 5)가 통과했습니다. 빈 입력과 0 채움, 짧고 홀수인 입력, 524 외 길이, 0 단어 뒤 비영 데이터, 정렬·little-endian·부분 뷰, 원본 불변성, 루트/항목 종류·미지 자식, trap/미분류 오류 전파, 종료 시 close를 검사합니다.
@@ -35,3 +37,11 @@ SSOT 검토에서 이름 비교 중복의 결함을 실제 생성 CFB로 재현�
 첫 전체 audit(`/tmp/hwpjs-doc-options-{Debug,ReleaseSafe,ReleaseFast}-audit.log`) 실행 도중 이름 비교 결함을 수정했으므로 이 실행은 최종 판정에서 제외합니다. 종료 코드 0을 확인한 뒤 수정본을 고정하여 전체 audit를 Debug → ReleaseSafe → ReleaseFast 순서로 다시 실행했습니다. 각 모드 26/26 단계·963/963 네이티브 테스트·7,840,706개 HWP/WASM 검사를 통과했고 순차 실행 셸 종료 코드 0을 확인했습니다. 최종 근거는 `/tmp/hwpjs-doc-options-{Debug,ReleaseSafe,ReleaseFast}-audit-v2.log`입니다. 두 실행을 중첩하지 않았습니다.
 
 최종 `zig build test --summary all`은 5/5 단계·963/963 테스트, `zig build -Doptimize=ReleaseSafe --summary all`은 5/5 단계로 모두 종료 코드 0입니다. 관련 문서 3개의 로컬 링크 26개, Zig 포맷·JS 구문·diff 검사도 통과했습니다. 전체 문서 검증 완료가 아니라 관측 도구·근거 보강의 완료이며 DocOptions 필드 의미는 계속 미확정입니다.
+
+## 현재 조사 재검증 (2026-09-27)
+
+공식 3.1·3.2.8, 현재 `container/validation.zig`의 미소비 스트림 집계, `doc-options-evidence.mjs`·`hwp-corpus-evidence.mjs`의 원문 관측 경계를 대조했습니다. 관련 Node 테스트 15/15가 통과했고, CFB 조회 결과의 Unicode 이름을 재사용하는 실제 CFB 반례도 포함됩니다. rhwp `e8800c8de`의 524바이트 fallback과 hwpers 분석 기록은 별도 출처로 확인했으며 한컴 프로그램에서 이번에 다시 시험한 것은 아닙니다.
+
+위 두 디렉터리의 직접 자식 `.hwp` 336개를 현재 파일 바이트로 다시 조사했습니다. 순서 있는 `{file,sha256}` 목록의 SHA-256은 `57d0bf2f4b922d328b02aeaaa0fa7f14e562dd84e99330440b45e3ca0e412107`로 기존 inventory와 일치합니다. 고유 파일 331개, strict CFB/HWP5 접두부 관측 295개, CFB 거부 17개, non-CFB 24개였습니다. 관측 295개 모두 DocOptions와 `_LinkDoc` 스트림이 있었고 다른 여섯 알려진 스트림 및 미지 직접 자식은 0개였습니다.
+
+`_LinkDoc`은 24바이트 1개·524바이트 294개, 합계 154,080바이트·고유 바이트열 211개였습니다. 전부 0인 스트림 36개, 첫 단어 비영 1개, 첫 0 단어 뒤 비영 바이트가 있는 스트림 259개도 재현했습니다. 24바이트 사례는 앞서 적은 hwpers 파일입니다. 이 수치들은 제품 CFB reader와 JS 관측기를 사용한 제한된 corpus의 구조 통계이며 필드 인코딩·정상 길이·연결 문서 동작의 검증이 아닙니다. 과거 13종 변이와 세 모드 전체 audit는 이번에 재실행하지 않았습니다.
