@@ -10,9 +10,15 @@ raw>0이면 실수 함수는 전체 [0,1]에서 연속·엄격 증가이고 양 
 
 좌표 검사·거듭제곱·출력 범위 제한은 기존 curve_math를 재사용합니다. 잘못된 좌표는 감마 검사보다 먼저 InvalidIccCurveCoordinate를 반환합니다. raw=256은 입력을 그대로 반환하여 항등 계산에서 최소 양의 f64도 보존합니다. 모든 경로에서 strict float 정책을 사용합니다. 비할당 순수 계산이며 f64 전수 정확 반올림이나 임의 정밀도는 보증하지 않습니다.
 
-이 함수는 감마 역변환만 소유합니다. 행렬 결과의 0~1 제한, 정확 분수의 명시적 근사 변환, identity·sample·para를 연결하는 TRC 역방향 디스패처, 파라메트릭 곡선 전체 단조성·역함수, 프로파일·픽셀 연결은 후속 범위입니다. 기존 [샘플 역변환](icc-sampled-inverse.md)과 [감마·파라메트릭 순방향](icc-analytic-forward.md)의 책임을 합치지 않습니다.
+이 함수는 근사 f64 감마 역변환만 소유합니다. 행렬 결과의 0~1 제한은 별도 `linear_rgb_target`, 정확·기호적 감마 역방향 선택은 별도 [넓은 감마 역변환](icc-gamma-wide-inverse.md), identity·sample·para를 포함한 TRC 선택과 명시적 matrix/TRC 연결은 별도 `trc_inverse`·`matrix_trc_inverse`가 맡습니다. 이 함수만으로 프로파일 의미·LUT 우선순위·공개 픽셀 색상 변환은 완료되지 않습니다. 기존 [샘플 역변환](icc-sampled-inverse.md)과 [감마·파라메트릭 순방향](icc-analytic-forward.md)의 책임을 합치지 않습니다.
 
-## 검증 설계와 실행 기록
+## 2026-09-27 재검증
+
+[ICC.1:2022 §10.6·Annex F.1](https://www.color.org/specifications/ICC.1-2022-05.pdf)의 순방향 지수 및 비상수 역상 조건을 현재 `gamma_inverse.evaluate`·`curve_math`와 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 `gamma inverse` 집중 필터는 각 모드 root 포함 4/4 통과했습니다. 기존 로컬 WASM probe mode178을 독립 JS 기준으로 다시 실행해 비교 534,900건·예상 오류 거부 49건이 일치했습니다. WASM 자체는 이번에 재빌드하지 않았습니다.
+
+현재 macOS 시스템 ICC 네 파일에서 원시 감마 TRC 10개(raw 256·563·461)를 읽어 태그당 일곱 f64 입력, 총 70건을 독립 거듭제곱 수식과 상대 오차 계약으로 다시 대조했습니다. 이 검사는 전체 f64 정의역의 정확 반올림이나 프로파일 색상 출력 동치를 입증하지 않습니다. 아래 2026-09-09의 전체 감사·Decimal 고정밀·변형·일부 구간 인접 단조성 수동 검사는 이번에 재실행하지 않았고 당시 `/tmp/hwpjs-icc-gamma-inverse-{Debug,ReleaseSafe,ReleaseFast}-final.log`도 현재 없습니다. 아래 수치는 당시 이력으로만 읽습니다.
+
+## 2026-09-09 검증 설계와 실행 기록
 
 후속 파라메트릭 역변환의 선행 조건은 [전체 정의역 검사](icc-parametric-domain.md)에서 관리합니다. 이 검사를 감마 계산이나 역변환 전체 완료와 혼동하지 않습니다.
 
@@ -40,4 +46,4 @@ ReleaseSafe 전체 감사는 `/tmp/hwpjs-icc-gamma-inverse-ReleaseSafe-final.log
 
 ReleaseFast 전체 감사도 `/tmp/hwpjs-icc-gamma-inverse-ReleaseFast-final.log`에서 종료 코드 0, 20/20 단계·네이티브 482/482·WASM 5,683,787건으로 통과했습니다. 감마 역변환 비교/거부 수도 동일합니다. 이로써 세 모드 확인을 마쳤으며 위 완료 전 표현은 실행 당시의 기록입니다.
 
-최종 적대적 검토에서 양의 지수 범위, 0 감마의 점과 무관한 역변환 거부, 좌표 검사 순서, 항등의 비정규수 보존, ReleaseFast의 strict 계산, 기존 mode159/160 wire 유지와 결과 메모리 경계를 확인했습니다. 제품 수치 정책은 curve_math를 공유하며 입력 생성과 probe 파싱도 기존 구현을 재사용합니다. 이번 범위에서 추가 결함은 발견하지 못했습니다. 포맷·변경 JS 문법·diff 공백·문서 로컬 링크 4개 검사도 통과했습니다. 근사 수치 계약 및 남은 파라메트릭/모델 연결 범위를 전체 문서 검증 완료와 혼동하지 않습니다.
+당시 최종 적대적 검토에서 양의 지수 범위, 0 감마의 점과 무관한 역변환 거부, 좌표 검사 순서, 항등의 비정규수 보존, ReleaseFast의 strict 계산, 기존 mode159/160 wire 유지와 결과 메모리 경계를 확인했습니다. 제품 수치 정책은 curve_math를 공유하며 입력 생성과 probe 파싱도 기존 구현을 재사용합니다. 당시 범위에서 추가 결함은 발견하지 못했습니다. 포맷·변경 JS 문법·diff 공백·문서 로컬 링크 4개 검사도 통과했습니다. 현재 별도 파라메트릭·TRC·행렬 역방향 모듈의 존재를 이 근사 함수의 전체 프로파일 변환 완료로 혼동하지 않습니다.

@@ -6,8 +6,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "2fc836c9a0aea78084637b4161c8d1866c0c83e65cb301b0891086a02a7e5f59",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope PNG ICC inspection PNG RGBA BCP47 syntax registry alpha2 history ICC IANA matching mluc selection mluc structure mluc Unicode ICC v2 Unicode v2 text tag payload dispatch tag table structure header identifiers v4 and v2 header numeric header verification ICC registry source lookup required tags overview presence table XYZ type XYZ tags curve type TRC tags parametric curve analytic forward TRC forward sampled forward sampled inverse and sampled wide inverse review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "8752b88dfb7c901584c55fa75088e5208e38b9f9d9a4effbd1810a7e2d9e16f5",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope PNG ICC inspection PNG RGBA BCP47 syntax registry alpha2 history ICC IANA matching mluc selection mluc structure mluc Unicode ICC v2 Unicode v2 text tag payload dispatch tag table structure header identifiers v4 and v2 header numeric header verification ICC registry source lookup required tags overview presence table XYZ type XYZ tags curve type TRC tags parametric curve analytic forward TRC forward sampled forward sampled inverse sampled wide inverse and gamma inverse review, architecture pending, full Debug Zig test incomplete"
     },
     "docs/bcp47-syntax.md": {
       "sha256": "ae0d91a0bb5ca2f8a5194b5ffa76494427cc058784f11446fd905458020f5b11",
@@ -132,6 +132,10 @@
     "docs/icc-sampled-wide-inverse.md": {
       "sha256": "9e15f41c7c42b7bce751f72e2f90fc6925a08b9544a47b23e9404da9ef59d21b",
       "evidence": "2026-09-27 ICC.1 2022 section10.6 Annex F.1 sampled u512 target u1024 result current Zig, Debug Safe Fast focused 5 each, existing local WASM mode219 independent JS 1815 comparisons 5904 rejected, macOS two profiles four TRC 24 points and 65537-sample synthetic rising falling 10 points; historic full audit mutation tests wasm rebuild not rerun temp logs absent"
+    },
+    "docs/icc-gamma-inverse.md": {
+      "sha256": "8fc5c5a7761dbd81fdb53666dbd7b9fce919b40fd90a10db578837ec0104619f",
+      "evidence": "2026-09-27 ICC.1 2022 section10.6 Annex F.1 current gamma approximate f64 inverse and separate symbolic TRC matrix paths, Debug Safe Fast focused 4 each, existing local WASM mode178 independent JS 534900 comparisons 49 rejected, macOS four profiles ten gamma TRC 70 points raw256 563 461; historic full audit decimal mutation tests wasm rebuild not rerun temp logs absent"
     },
     "docs/png-rgba.md": {
       "sha256": "caa9320a6c1b5d93529d7461b2482d7bc3ba414c8817663a34028dad68f53f5b",
