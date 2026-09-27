@@ -28,6 +28,8 @@
 
 ## 적대적 검증 기록
 
+2026-09-28 현행 재검증에서 공식 Path의 R/C flag·점/타입 배열·padding을 현재 기본 `specification` 모드와 대조하고, `independent_rle`는 외부 구현 편차용 명시적 선택임을 확인했습니다. [emf-rs의 편차 기록](https://github.com/mythrnr/emf-rs/blob/master/AGENTS.md)과 [LibreOffice의 0x800 PointR 분기](https://github.com/LibreOffice/core/blob/master/drawinglayer/source/tools/emfppath.cxx)도 현재 링크에서 재확인했습니다. Debug·ReleaseSafe·ReleaseFast의 루트 `EMF+` 필터는 각 560/560개, `EMF+ Path` 집중 필터는 각 52/52개 통과했습니다. 아래 변이 42회와 세 모드 전체 audit는 과거 실행 이력이고, 선택 모드를 한컴 실파일로 검증한 결과는 아닙니다.
+
 14개 결함(정수 byte order·부호 확장, point 원자성, 상대/RLE flag 해석, RLE marker·run 초과·0 run, point kind·flag, 전체 정렬·padding, point 한도, ObjectType)을 각각 독립 복사본에 주입했습니다. 캐시를 분리한 Debug·ReleaseSafe·ReleaseFast에서 총 42/42를 모두 검출했습니다. 자동 치환이 실제 diff를 만들지 못한 정수 byte order와 point flag 두 항목은 diff를 확인한 수동 변이로 다시 실행했으며, 무효 실행은 42회에 포함하지 않았습니다. 변이 로그는 `/tmp/hwpjs-emfplus-path-mutants.UDq3zL`에 남겼습니다.
 
 전체 `audit`도 Debug·ReleaseSafe·ReleaseFast에서 각각 40/40 step과 1,555/1,555 test를 통과했습니다. 모드별 구성은 native 1,516, chart ownership 31, WMF contents 8이며, 각 HWP/WASM 감사 결과는 8,905,827 checks와 imports 0입니다. 최종 로그는 `/tmp/hwpjs-emfplus-path-{Debug,ReleaseSafe,ReleaseFast}-final-audit.log`에 남겼습니다.

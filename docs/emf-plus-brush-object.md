@@ -16,9 +16,11 @@
 
 합성 fixture는 다섯 BrushType dispatch, 53개 HatchStyle, 모든 정의 BrushData flag와 예약 비트, 정확한 고정 크기와 모든 prefix 잘림, WrapMode, reserved 값, 선택 필드 순서·충돌, 주변색·PointF 폭·signed 경계, 중첩 Path/Image 위임, 선언 한도, 후행 바이트와 잘못된 ObjectType을 검사합니다. Texture fixture는 gamma flag와 독립된 Transform 비트만으로 행렬 존재를 검증합니다.
 
-현재 corpus에는 EMF+ Brush Object 실표본이 확인되지 않았으므로 한컴 버전별 payload나 렌더링 동등성을 실측 완료했다고 주장하지 않습니다. 이 계층은 wire 구조를 빌려 읽을 뿐 brush 렌더링, gamma 보정, WrapMode sampling, gradient 색 보간, Path fill, Image 복호화·재생, Object Table 적용이나 재직렬화를 구현하지 않습니다. reserved DWORD와 정의되었지만 해당 brush에서 무관한 flag는 의미를 추정하지 않고 보존합니다.
+현재 corpus에는 EMF+ Brush Object 실표본이 확인되지 않았으므로 한컴 버전별 payload나 렌더링 동등성을 실측 완료했다고 주장하지 않습니다. 이 Brush payload 파서는 wire 구조를 빌려 읽을 뿐 brush 렌더링, gamma 보정, WrapMode sampling, gradient 색 보간, Path fill, Image 복호화·재생이나 재직렬화를 구현하지 않습니다. [Object record·stream](emf-plus-object-record.md)은 별도로 Object Table의 종류·생존 및 drawing record의 Brush 참조를 추적하지만 Brush payload의 재생까지 하지는 않습니다. reserved DWORD와 정의되었지만 해당 brush에서 무관한 flag는 의미를 추정하지 않고 보존합니다.
 
 ## 적대적 검증 기록
+
+2026-09-28 현행 재검증에서 공식 Brush 객체의 다섯 종류와 BrushData flag·Texture optional Image 계약을 현재 dispatch·하위 파서·stream의 종류 추적과 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 루트 `EMF+` 필터는 각 560/560개, `EMF+ Brush` 집중 필터는 각 4/4개 통과했습니다. 아래 변이 66회와 세 모드 전체 audit는 과거 실행 이력이며 실제 EMF+ 양성 HWP 호환성도 이번에 검증하지 않았습니다.
 
 22개 결함(BrushType, ObjectType, 전체 크기 한도, Solid/Hatch 크기, HatchStyle, 예약 flag, linear flag 충돌·factor 순서·후행 바이트·reserved 순서, path boundary 선택·signed size·signed count·PointF 폭·색상 한도·선택 필드 순서·Path 위임, texture Transform 비트·Image 부재·Image 위임·무관한 정의 flag 승인)을 각각 독립 복사본에 주입했습니다. 최초 실행은 개별 모듈을 직접 진입점으로 삼아 import 경계 컴파일 오류를 검출로 오판했으므로 폐기했습니다. 제품 `src/root.zig`에서 실제 대상 테스트가 수집되는지 확인하고 변이별 로컬·전역 캐시를 새로 만든 Debug·ReleaseSafe·ReleaseFast에서 다시 실행해 총 66/66을 검출했습니다. 엄격 재실행에는 컴파일 실패나 분류되지 않은 종료가 없습니다. 이 과정에서 정확한 크기보다 1바이트 큰 Solid/Hatch 입력이 빠진 위치 편향을 찾아 양쪽 fixture를 보강했습니다. 변이 복사본은 `/tmp/hwpjs-emfplus-brush-mutants.JqYuiv`, 유효한 모드별 로그는 `/tmp/hwpjs-strict-<변이>-<모드>.log`에 남겼습니다.
 

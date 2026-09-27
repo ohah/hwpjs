@@ -16,9 +16,11 @@
 
 합성 fixture는 세 ImageDataType, 모든 BitmapDataType과 MetafileDataType, 공식 PixelFormat 전체, indexed palette, 양수·음수 stride, alignment padding 0~3, 압축 payload의 undefined 헤더, 모든 고정 prefix 잘림, 선언 크기 초과, 잘못된 enum·flag·stride·palette 의미, count·byte 한도와 잘못된 ObjectType을 검사합니다. 현재 HWP corpus 조사에는 EMF BinData 후보가 없고 EMF+ Image Object 실표본도 없으므로, 한컴 버전별 Image payload 또는 렌더링 동등성을 실측 완료했다고 주장하지 않습니다.
 
-Image parser는 wire 구조와 직접 계산 가능한 크기·enum·palette 계약까지만 보증합니다. 압축 이미지 시그니처/CRC·픽셀 복호화, raw pixel 색상 변환, palette index 범위, 중첩 metafile 유효성·재생, DrawImage 적용과 ImageAttributes 처리는 미지원입니다. 기존 PNG/JPEG/GIF/BMP/WMF/EMF parser 연결은 payload 종류가 명시적으로 선택된 후 별도 계층에서 수행해야 하며, 바이트 모양을 근거로 ImageDataType을 바꾸지 않습니다.
+Image payload parser는 wire 구조와 직접 계산 가능한 크기·enum·palette 계약까지만 보증합니다. 압축 이미지 시그니처/CRC·픽셀 복호화, raw pixel 색상 변환, palette index 범위, 중첩 metafile 유효성·재생, 실제 픽셀 합성과 ImageAttributes 효과 적용은 미지원입니다. 다만 [DrawImage record](emf-plus-draw-image-record.md)의 구조·Image/ImageAttributes 참조 검사, [ImageAttributes 객체](emf-plus-image-attributes-object.md)의 wire 파싱과 [source→device map](emf-plus-image-source-device-map.md)의 좌표 변환은 별도 계층에서 구현되어 있습니다. 기존 PNG/JPEG/GIF/BMP/WMF/EMF parser 연결은 payload 종류가 명시적으로 선택된 후 별도 계층에서 수행해야 하며, 바이트 모양을 근거로 ImageDataType을 바꾸지 않습니다.
 
 ## 적대적 검증 기록
+
+2026-09-28 현행 재검증에서 공식 Image·Bitmap·Metafile 객체의 타입·가변 payload와 현재 Zig dispatch·크기/참조 경계를 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 루트 `EMF+` 필터는 각 560/560개, `EMF+ Image` 집중 필터는 각 7/7개 통과했습니다. 아래 변이 54회와 세 모드 전체 audit는 과거 실행 이력이며 실제 EMF+ 양성 HWP·픽셀 렌더링은 이번에 검증하지 않았습니다.
 
 18개 결함(Image/Bitmap/Metafile enum 범위, 압축 header 오검증, PixelFormat 승인, stride 배수·정확값, pixel 높이·signed magnitude 계산, bitmap/metafile padding, indexed palette 존재·flag·alpha·grayscale, metafile 선언 크기, ObjectType, image 한도)을 각각 독립 복사본에 주입했습니다. 캐시를 분리한 Debug·ReleaseSafe·ReleaseFast에서 총 54/54를 모두 검출했습니다. 최초 stride 배수 변이는 stride 정확값 검사에도 함께 걸리는 fixture 위치 편향 때문에 생존했으며, PixelFormatUndefined·height 0에서 나머지 1·2·3을 각각 검사하도록 배수 규칙을 독립시킨 뒤 세 모드 모두 검출했습니다. 변이 복사본은 `/tmp/hwpjs-emfplus-image-mutants.58vWIt`에 남겼습니다.
 
