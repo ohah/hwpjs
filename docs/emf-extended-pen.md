@@ -34,3 +34,5 @@ Microsoft [EMR_EXTCREATEPEN](https://learn.microsoft.com/en-us/openspecs/windows
 - LogPenEx 소비 끝이 record 범위를 넘는 직접 호출 허용
 
 실제 HWP corpus 584개에는 EMF가 0개이므로 실생성기 호환성 근거로 확대하지 않는다. 최종 `zig build audit --summary all`은 Debug·ReleaseSafe·ReleaseFast 모두 40/40 단계와 1,353/1,353 테스트를 통과했다. 이 중 native test는 1,314개이고 HWP5 감사에서 8,905,827개 조건을 검사했다.
+
+2026-09-27 재검증에서는 공식 `EMR_EXTCREATEPEN`·`LogPenEx`의 필드와 현재 가변 style 끝·선택 DIB 분리·Object Table 연결을 다시 대조했다. `src/` 임시 import 진입점에서 글꼴·브러시·펜·Object Table 관련 테스트를 Debug·ReleaseSafe·ReleaseFast 각각 95/95개 수집해 통과했고, 루트 `EMF framing` 필터도 각 97/97개 통과했다. 넓은 테스트 수를 확장 펜 전용 수로 읽지 않으며, 위 9종 변이와 세 모드 전체 `audit`은 이번에 재실행하지 않았다. 임시 진입점은 검증 뒤 제거했다.

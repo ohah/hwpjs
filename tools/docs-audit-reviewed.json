@@ -6,7 +6,7 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "a81ae24018ed8a874a64ea8fe09713e6449fb129b1673cb8ccd9c26b80d32d4b",
+      "sha256": "00bbd609e699ec14af15acd23323dcfd83b5864dda87267233b216e1fd582e0f",
       "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope PNG ICC inspection PNG RGBA BCP47 syntax registry alpha2 history ICC IANA matching mluc selection mluc structure mluc Unicode ICC v2 Unicode v2 text tag payload dispatch tag table structure header identifiers v4 and v2 header numeric header verification ICC registry source lookup required tags overview presence table XYZ type XYZ tags curve type TRC tags parametric curve analytic forward TRC forward sampled forward sampled inverse sampled wide inverse gamma inverse wide gamma inverse TRC inverse and extended TRC inverse matrix TRC inverse matrix TRC model matrix TRC forward fraction matrix inverse fraction matrix TRC inverse wide linear target wide positive bounds normalized and extended root compare normalized and extended root locations clipped and extended power preimage whole and extended whole parametric preimage normalized and extended whole bounds normalized and extended attained F.1a whole and extended nearest normalized and extended full inverse topology segments jump trend domain partition power clipping power level root compare active root locations rational power order normalized power level wide power level normalized root order power range power nearest ordinate order extended ordinate order ordinate distance extended ordinate distance linear range parametric range rational range nearest linear preimage extended linear preimage chromatic adaptation matrix transform ICC foundation verification review, architecture pending, full Debug Zig test 2656 passed and ReleaseFast HWP5 audit 10 steps 8905855 checks"
     },
     "docs/bcp47-syntax.md": {
@@ -476,6 +476,18 @@
     "docs/emf-poly-record-compatibility.md": {
       "sha256": "82595cdda15ad93bfcae8c7f5e681a431860de8f17876e791c381d027859f89d",
       "evidence": "2026-09-27 MS-EMF generic record Polyline and PolyDraw16 Count current Zig shared extent and 32 16 bit payloads, direct three files Debug Safe Fast 14 each, root EMF framing 97 each, full Debug build test 2656; historic 21 mutation runs and full audits not rerun, real EMF corpus zero"
+    },
+    "docs/emf-font-creation.md": {
+      "sha256": "1b288d80fe0b1c3c892f86a51f522b9dfbdbbf3505df583720e36cac99d0f5fb",
+      "evidence": "2026-09-27 MS-EMF ExtCreateFontIndirectW Panose ExDv DesignVector current Zig field parsers and object table, temporary src root Debug Safe Fast 95 each and EMF framing 97 each; historical 5 plus 7 mutants full audits not rerun, real EMF corpus zero"
+    },
+    "docs/emf-bitmap-brush.md": {
+      "sha256": "09e43fd1f9ed9924c43237c2232c1bf5b4b6afba765a4393cae88ac6e33dc5e8",
+      "evidence": "2026-09-27 MS-EMF CreateMonoBrush CreateDibPatternBrushPt packed DIB current Zig brush sections payload object table, temporary src root Debug Safe Fast 95 each and EMF framing 97 each; historical 7 mutants full audits not rerun, real EMF corpus zero"
+    },
+    "docs/emf-extended-pen.md": {
+      "sha256": "43efe232a33f13a0cc97fc84168fc5bfe6889a72038fd9e3f3da8d6b4fc312f4",
+      "evidence": "2026-09-27 MS-EMF ExtCreatePen LogPenEx style count optional DIB current Zig pen sections and object table, temporary src root Debug Safe Fast 95 each and EMF framing 97 each; historical 9 mutants full audits not rerun, real EMF corpus zero"
     },
     "docs/tiff-structure.md": {
       "sha256": "50b24eb78c9e9da7a610bb5faab9859448d79d2f9c4a2ab3c2d01584d6c12d97",

@@ -335,3 +335,5 @@ EMF public comment와 EOF 팔레트 문서는 공식 MS-EMF 필드, 현재 하�
 EMF Header 가변 payload와 PIXELFORMAT record 문서는 공식 MS-EMF의 고정 prefix·가변 범위·공통 descriptor와 현재 Zig 모듈 경계를 대조해 완료 목록에 넣었습니다. Header payload의 직접 파일 테스트는 모듈 경계를 벗어난 import로 실패하므로 `src/` 임시 import 진입점에서 Debug·ReleaseSafe·ReleaseFast 각 13/13개를 수집해 통과했고, PIXELFORMAT record 직접 테스트는 세 모드 각 7/7개가 통과했습니다. 루트 `Header payload` 필터는 실제 대상 테스트를 수집하지 않아 근거에서 제외했습니다. 과거 변이·전체 감사와 실제 EMF 양성 HWP 표본 호환성은 이번 검증으로 소급하지 않습니다.
 
 EMF color-space 생성 record와 poly 후행 호환성 문서는 공식 MS-EMF의 4바이트 정렬·미규정 후행 데이터·각 Count 및 현재 Zig의 의미 범위·Object Table 연결을 대조해 완료 목록에 넣었습니다. Color-space는 임시 `src/` import 진입점에서 세 모드 각 15/15, poly 32/16비트와 POLYDRAW는 각 파일 세 모드 14/14, 루트 `EMF framing`은 세 모드 97/97개를 통과했습니다. 앞서 진행 중이던 전체 Debug `zig build test`도 5/5 단계·2,656/2,656개로 종료됐습니다. 과거 변이·세 모드 전체 audit과 실제 EMF 양성 HWP 호환성은 재검증으로 소급하지 않습니다.
+
+EMF 글꼴 생성, 비트맵 브러시, 확장 펜의 세 문서는 공식 MS-EMF의 가변 글꼴 분류·두 브러시 DIB 필드·확장 펜 style/DIB와 현재 Zig의 각각 다른 payload 깊이 및 Object Table 실패 원자성을 대조해 완료 목록에 넣었습니다. 임시 `src/` import 진입점에서 세 모드 각 95/95개, 루트 `EMF framing`에서 각 97/97개가 통과했습니다. 95개는 세 주제와 의존 모듈의 합계이지 각 주제별 전용 테스트 수가 아닙니다. 과거 소스 변이·세 모드 전체 audit과 실제 EMF 양성 HWP 호환성은 이번 결과로 소급하지 않습니다.

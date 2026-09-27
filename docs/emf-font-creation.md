@@ -44,3 +44,5 @@
 재검증 후 최종 `zig build audit --summary all`은 Debug·ReleaseSafe·ReleaseFast 모두 40/40 단계와 1,353/1,353 테스트를 통과했다. HWP corpus 584개 파일에서 8,905,827개 조건을 검사했으며 실제 EMF가 0개라는 표본 한계는 그대로다.
 
 글꼴 파일 로딩, FaceName과 설치 글꼴의 CharacterSet 일치, font mapper, DesignVector의 실제 축 의미, 텍스트 shaping·재생·편집은 이 구조 parser의 완료 범위가 아니다. 원문 필드를 보존하지만 EMF writer나 무손실 재저장을 제공한다는 뜻도 아니다.
+
+2026-09-27 재검증에서는 공식 `elw = Size - 12` 분류와 현재 `font_creation`·`extended_font`·Object Table 연결을 다시 대조했다. `src/` 임시 import 진입점에서 글꼴·브러시·펜·Object Table 관련 테스트를 Debug·ReleaseSafe·ReleaseFast 각각 95/95개 수집해 통과했고, 루트 `EMF framing` 필터도 각 97/97개 통과했다. 두 과거 변이 묶음(5종·7종)과 세 모드 전체 `audit`은 이번에 재실행하지 않았다. 임시 진입점은 검증 뒤 제거했다.
