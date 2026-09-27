@@ -11,13 +11,17 @@
 
 gAMA와 cHRM의 동반 기록은 필수가 아닙니다. 있는 경우에만 sRGB 기준과 정확히 대조합니다. 값 불일치를 보정·반올림·허용 오차로 숨기지 않습니다. 표시용 라이브러리가 불일치 청크를 경고 후 무시하는 것과, 이 검사기의 파일 일관성 오류를 구분합니다.
 
-sRGB가 있으면 `color_semantics_deferred=true`를 유지합니다. 청크의 필드 검사 완료와 실제 색상 변환·픽셀의 색 공간 적합성 검증은 다릅니다. iCCP 동시 존재를 피하라는 권고를 필수 오류로 만들지 않습니다. iCCP/cICP의 구조·프로파일 의미·우선순위는 아직 미구현이며 해당 청크는 ancillary deferred로 남습니다. sRGB와 동반 청크 일치만으로 전체 색상 지원 완료를 주장하지 않습니다. 제품 JS ABI도 변경하지 않았습니다.
+sRGB가 있으면 `color_semantics_deferred=true`를 유지합니다. 청크의 필드 검사 완료와 실제 색상 변환·픽셀의 색 공간 적합성 검증은 다릅니다. iCCP 동시 존재를 피하라는 권고를 필수 오류로 만들지 않습니다. 현재 공통 PNG 픽셀 경로는 iCCP의 압축 봉투·ICC 구조·색 공간 대응을 별도 Collector에서 검사하지만, 프로파일의 완전한 의미와 색 정보 우선순위는 보류합니다. iCCP는 구조 검사 후에도 ancillary deferred 통계에 남고, cICP는 이 경로에서 별도 의미 해석 없이 deferred로 남습니다. sRGB와 동반 청크 일치만으로 전체 색상 지원 완료를 주장하지 않습니다. 제품 JS ABI도 변경하지 않았습니다.
 
 ## 독립·적대적 검증
 
+2026-09-27 현재 재검증에서는 [PNG Third Edition의 sRGB intent·동반 gAMA/cHRM 값·청크 순서](https://www.w3.org/TR/2025/REC-png-3-20250624/#11sRGB)를 현재 Zig sRGB/metadata/픽셀 경계와 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 `PNG sRGB` 집중 필터는 각각 root 포함 4/4 통과했고, iCCP 연결 확인용 ReleaseSafe `PNG profile` 필터는 root 포함 5/5 통과했습니다. 로컬 probe/CFB WASM과 독립 JS 대조는 정상 156건·거부 18,896건이 일치했고, 추적 HWP 미리보기 PNG 32개에는 sRGB가 32개·gAMA가 32개·cHRM이 0개였습니다. 아래의 전체 audit 3모드와 4×4 중복/복구 수동 검사는 이번에 다시 실행하지 않은 과거 기록입니다. 실제 HWP 내부 cHRM 동반 sRGB 양성 파일이나 색상 변환·렌더링·저장은 이번 검증 근거가 아닙니다.
+
+### 과거 검증 기록
+
 `tests/hwp5/png-srgb-evidence.mjs`는 Node 기반 독립 정수·배열 비교를 사용합니다. mode 142는 7개 u32 LE(존재, intent, gAMA 존재, cHRM 존재, 색상 의미 보류, 미검사 ancillary 개수/바이트)를 반환합니다. mode 141의 기존 원값 보고서와도 대조합니다. 색상 의미 보류의 독립 기대값은 `png-transparency-evidence.mjs` 조립 계층에서 한 번 계산하고 두 wire가 공유합니다.
 
-`png-srgb.mjs`는 intent 256값, 길이 0..8, 세 색상 청크의 부분집합/순열, 36개 동반 payload 위치의 256값 변형을 앞/뒤 양쪽 순서로 검사합니다. 5청크의 120개 순열, 중복, IHDR/IDAT/IEND 경계, 모든 PNG 색상 유형과 4개 intent, 미지원 프로파일의 deferred 유지, 입력 한도 및 오류 후 복구도 포함합니다. 픽셀 mode 130 대조는 색상 보정 결과가 아니라 복원 행 바이트 대조입니다.
+`png-srgb.mjs`는 intent 256값, 길이 0..8, 세 색상 청크의 부분집합/순열, 36개 동반 payload 위치의 256값 변형을 앞/뒤 양쪽 순서로 검사합니다. 5청크의 120개 순열, 중복, IHDR/IDAT/IEND 경계, 모든 PNG 색상 유형과 4개 intent, 검사 가능한 iCCP의 의미/ancillary deferred 유지와 cICP의 deferred 유지, 입력 한도 및 오류 후 복구도 포함합니다. 픽셀 mode 130 대조는 색상 보정 결과가 아니라 복원 행 바이트 대조입니다.
 
 네이티브 테스트는 intent 전수 검사, 부재 보존, 동반 값 오류의 두 도착 순서에서 State 보존, 중복 0 intent, PLTE/IDAT 이후 거부, 통합 정상/손상 입력의 모든 할당 실패 지점 정리를 확인합니다. 2026-09-07 `zig build test --summary all`은 397/397 통과했습니다. Debug/ReleaseSafe/ReleaseFast 전체 audit도 순차 실행하여 각각 17/17 단계, 네이티브 397/397, 감사 스크립트 3,779,341 checks 통과를 확인했습니다. 로그는 `/tmp/hwpjs-png-srgb-{Debug,ReleaseSafe,ReleaseFast}.log`입니다. 포맷과 변경 JS 문법도 확인했습니다.
 

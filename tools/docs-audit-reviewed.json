@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "4585db0d86b10ee5eb27e6a120bcaf5e5c7042118544329d15d27aad08b8ea17",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette and PNG color fixed review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "38666c01300aefd49326cc49f31a2a17623dbcc01ff8962aa69c289481063530",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed and PNG sRGB review, architecture pending, full Debug Zig test incomplete"
+    },
+    "docs/png-srgb.md": {
+      "sha256": "87fa46fb111718e0b37244b8b21e37048b8715e851a79278b8aeeb5f32a68384",
+      "evidence": "2026-09-27 W3C PNG Third Edition sRGB intent companion gamma chroma order current Zig metadata iCCP inspection boundary, Debug Safe Fast focused 4 each ReleaseSafe PNG profile 5, local probe CFB independent JS 156 accepted 18896 rejected 32 real PNG all sRGB, historic full audit and manual duplicate recovery not rerun"
     },
     "docs/png-color-fixed.md": {
       "sha256": "3f32d38c09bf948855ef9c2f84679f50939a0bd094d2d20051459309337f7019",
