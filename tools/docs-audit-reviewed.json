@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "50480269371411e5218da206518a7407509cec1814b226fdbb69c50ef48596b1",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure and BMP pixels review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "817416ff8a9787b65ab7b15083dcedbefd8b08178dc74722773a6dd447d64d7c",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels and BMP RLE RGBA review, architecture pending, full Debug Zig test incomplete"
+    },
+    "docs/bmp-rle-rgba.md": {
+      "sha256": "855362f04660782e1aea2bef26b220470bbad6f34aa802b13ffa4c709bfec72c",
+      "evidence": "2026-09-27 Microsoft bitmap compression RLE4 RLE8 and current Zig RLE RGBA fill ownership output limits, Debug Safe Fast focused 7 tests each, local ReleaseSafe probe JS oracle 216 comparisons 161 rejects and seed mutation 2000; historical real-file source mutants and full audit not rerun"
     },
     "docs/bmp-pixels.md": {
       "sha256": "665a345f00a49e53ac1c582123c52b26672a10fbee1c42b5792d980bad2c0dd1",

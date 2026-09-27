@@ -135,3 +135,5 @@ HWP5 BMP V5 프로필 선택 문서는 Microsoft V5 헤더의 내장/링크·오
 BMP 구조 문서는 Microsoft의 파일/CORE/INFO/V4/V5 헤더와 MS-WMF 압축 열거형을 현재 Zig의 헤더·저장 경계 코드에 대조해 완료 목록에 넣었습니다. BI_CMYK/CMYKRLE8/CMYKRLE4를 모두 미지원으로 쓰던 설명을 구조 읽기는 허용하되 픽셀 복원은 거부하는 실제 정책으로 교정했습니다. Debug·ReleaseSafe·ReleaseFast `BMP ` 필터는 각 59/59, 현재 ReleaseSafe probe의 독립 JS 합성 대조는 비교 3,349건·거부 163건이 통과했습니다. 넓은 필터의 59개를 구조 전용 테스트로 세지 않았고, 실파일 전수·하위 픽셀 계약·색 관리·저장 동치는 이 문서 검증에 포함하지 않습니다.
 
 BMP 비압축 RGBA 복원 문서는 Microsoft INFO/V5의 BI_RGB32 알파 구분과 현재 Zig의 소유 버퍼·한도·CMYK 거부·프로파일 선택형 책임을 대조해 완료 목록에 넣었습니다. Debug·ReleaseSafe·ReleaseFast의 넓은 `BMP ` 필터 각 59/59와 로컬 ReleaseSafe probe의 독립 JS 합성 비교 3,349건·거부 163건을 확인했습니다. 과거 실파일 28참조·세 모드 WASM·9종 변이·전체 audit의 수치는 현재 재실행 결과와 분리했고, 당시 `/tmp` 로그는 현재 없음을 명시했습니다. 픽셀 전용 59개 테스트나 실제 파일 재대조, 색 변환·화면·저장 동치를 주장하지 않습니다.
+
+BMP RLE→RGBA 연결 문서는 Microsoft RLE4/8 명령 형식과 현재 Zig의 명시적 채움 정책·출력 사전 한도·색인/최종 버퍼 수명·원래 미지정 수 보존을 대조해 완료 목록에 넣었습니다. Debug·ReleaseSafe·ReleaseFast의 `BMP RLE RGBA` 집중 필터는 각각 root 포함 7/7, 로컬 ReleaseSafe probe의 독립 JS 합성 대조 216건·거부 161건 및 고정 seed 변이 2,000건이 통과했습니다. 과거 세 모드 WASM·실파일 28참조·8종 소스 변형·전체 audit는 다시 실행하지 않았고, `/tmp` 로그도 현재 없음을 명시했습니다. 실제 RLE BMP 양성 표본이나 화면 채움값의 표준 동치를 주장하지 않습니다.

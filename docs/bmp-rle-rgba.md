@@ -24,18 +24,24 @@ BMP 파일/DIB/팔레트/저장 경계는 pixels.decode에서 한 번만 검사�
 
 ## 검증 기록
 
+### 현재 재검증 (2026-09-27)
+
+[Microsoft의 BMP RLE4/8 설명](https://learn.microsoft.com/en-us/windows/win32/gdi/bitmap-compression)은 색인 명령·종료·delta·absolute padding의 형식을 정의합니다. 미지정 픽셀의 RGBA 채움값까지 고정하는 근거는 아니므로 reject/palette_zero/transparent는 이 API의 명시적 정책으로 유지합니다. 현재 `pixels.zig`·`rle_rgba.zig`·`pixel_image.zig`·관련 테스트를 대조했습니다. `pixels.decode`가 구조를 한 번 검사하고 RLE 선택 경로로 넘기며, RGBA 바이트 한도는 색인 평면 할당 전에 검사하고 성공 결과는 RGBA만 소유합니다. Debug/ReleaseSafe/ReleaseFast의 `BMP RLE RGBA` 집중 필터는 각각 root 포함 7/7개 통과했습니다. 현재 로컬 ReleaseSafe probe WASM과 독립 JS oracle의 합성 대조는 comparisons=216·rejected=161, 고정 seed 변이 2,000건은 accepted=423·rejected=1,577·traps=0이었습니다. 세 모드 WASM·실파일·소스 결함 주입·전체 audit는 이번에 재실행하지 않았습니다.
+
+### 과거 검증 기록
+
 기존 RLE를 포함한 네이티브 BMP RLE 필터는 Debug/ReleaseSafe/ReleaseFast 각각 root 포함 19/19개를 통과했습니다. 새 테스트는 실제 색인 0/투명 구분·팔레트 채움·두 단계 거부·완전한 이미지의 세 정책·색인 전 출력 사전 검사·개별 한도 전달·패딩/후행/손상 오류·비압축 불변성·입력 수명·모든 할당 실패와 명시적 누수 회계를 검사합니다. HWP 쪽 근거는 위 별도 연결 문서에서 관리합니다.
 
 테스트용 mode 290은 RLE 선택 17바이트, RGBA 한도 u32, BMP 입력을 받습니다. 출력은 width/height/RGBA 길이/metadata_deferred/RLE 존재와 정책/지정 수/미지정 수/명령 수/소비 바이트/후행 바이트의 11 DWORD(44바이트) 뒤 RGBA입니다. mode 287/289의 기존 형식은 유지합니다. RLE 선택 읽기는 HWP 테스트 경로와 bmp-rle-options.zig를 공유합니다.
 
 독립 JS는 기존 저장 행별 RLE 색인 oracle과 별도 팔레트 색 조립으로 기대 RGBA와 진단을 만듭니다. 세 모드 각각 대조 216건·거부 161건을 통과했습니다. seed=1380401729의 명령 변이 2,000건도 승인 423/거부 1,577이 일치했고 traps=0입니다. 고정 검사 377호출 이후 첫 변이의 정상 오류를 같은 메시지의 RuntimeError로 바꾸면 세 모드 모두 378번째 호출에서 실패했습니다.
 
-두 비트 깊이×두 채움 정책의 출력 2,224바이트를 각각 XOR 1로 바꾸어 세 모드 모두 검출했습니다. 오류 종류 검증은 bmp-errors.mjs에 공유하며 기존 RLE의 호스트 예외 방어 3건도 유지합니다. 기존 BMP/색인/HWP BMP 직접 검사는 세 모드에서 이전 결과 그대로 통과했습니다. 기존 BMP comparisons=3,337에는 압축 미지원 4건이 포함되어 있으므로 전부 정상 출력 대조로 읽지 않습니다.
+두 비트 깊이×두 채움 정책의 출력 2,224바이트를 각각 XOR 1로 바꾸어 세 모드 모두 검출했습니다. 오류 종류 검증은 bmp-errors.mjs에 공유하며 기존 RLE의 호스트 예외 방어 3건도 유지합니다. 당시 기존 BMP/색인/HWP BMP 직접 검사는 세 모드에서 이전 결과 그대로 통과했습니다. 당시 BMP comparisons=3,337에는 압축 미지원 4건이 포함되어 있으므로 전부 정상 출력 대조로 읽지 않습니다. 현재 BMP 합성 검사 수 3,349와도 구분합니다.
 
 실제 비압축 BMP 28참조의 기존 RGBA 결과는 유지했습니다. 조사 표본에 실제 제작 RLE BMP는 없으므로 생성기/명세 예제 검증을 실제 RLE 원본 대조라고 부르지 않습니다.
 
-격리 복사본에서 실제 색인 0을 미지정으로 오인, 투명 채움을 팔레트 0으로 변경, 미지정 통계를 0으로 변경, require_full 무시, HWP 남은 예산 무시, RGBA 한도 검사 제거, 색인 버퍼 해제 제거, 투명 채움 보고 누락의 소스 결함 8종을 주입했습니다. Debug/ReleaseSafe/ReleaseFast 각각 19개 필터 테스트가 실행되었고 각 변형의 실패 수는 순서대로 3/2/6/2/2/3/4/2개로 일치했습니다. 해제 제거는 ReleaseFast에서도 명시적 회계가 expected 0, found 8로 검출했습니다. 임시 근거는 `/tmp/hwpjs-bmp-rle-rgba-mutants.ySuFX7/`의 변형별·모드별 로그입니다.
+격리 복사본에서 실제 색인 0을 미지정으로 오인, 투명 채움을 팔레트 0으로 변경, 미지정 통계를 0으로 변경, require_full 무시, HWP 남은 예산 무시, RGBA 한도 검사 제거, 색인 버퍼 해제 제거, 투명 채움 보고 누락의 소스 결함 8종을 주입했습니다. Debug/ReleaseSafe/ReleaseFast 각각 19개 필터 테스트가 실행되었고 각 변형의 실패 수는 순서대로 3/2/6/2/2/3/4/2개로 일치했습니다. 해제 제거는 ReleaseFast에서도 명시적 회계가 expected 0, found 8로 검출했습니다. 당시 임시 근거는 `/tmp/hwpjs-bmp-rle-rgba-mutants.ySuFX7/`의 변형별·모드별 로그였지만 현재 로컬에는 없습니다.
 
-후행 정책 입력 도구를 보강한 뒤 전체 audit를 Debug → ReleaseSafe → ReleaseFast 순서로 다시 실행했습니다. 세 모드 각각 20/20 build steps, 925/925 네이티브 테스트, 7,830,242개 검사 항목을 통과했습니다. 정규 회귀에서도 RGBA 대조 216/거부 161, 변이 승인 423/거부 1,577/traps 0, HWP 대조 65/거부 228이 일치했습니다. 전체 로그는 `/tmp/hwpjs-bmp-rle-rgba-{Debug,ReleaseSafe,ReleaseFast}-audit-v2.log`입니다. 중단한 첫 Debug 로그는 완료 근거에서 제외합니다.
+후행 정책 입력 도구를 보강한 뒤 당시 전체 audit를 Debug → ReleaseSafe → ReleaseFast 순서로 다시 실행했습니다. 세 모드 각각 20/20 build steps, 925/925 네이티브 테스트, 7,830,242개 검사 항목을 통과했습니다. 정규 회귀에서도 RGBA 대조 216/거부 161, 변이 승인 423/거부 1,577/traps 0, HWP 대조 65/거부 228이 일치했습니다. 전체 로그 경로는 `/tmp/hwpjs-bmp-rle-rgba-{Debug,ReleaseSafe,ReleaseFast}-audit-v2.log`였지만 현재 로컬에는 없습니다. 중단한 첫 Debug 로그는 완료 근거에서 제외합니다.
 
 마지막 `zig build test --summary all`은 925/925 테스트, `zig build -Doptimize=ReleaseSafe --summary all`은 5/5 단계를 통과했습니다. 변경 Zig/JS 구문·포맷과 diff 검사, 관련 문서 6개의 로컬 링크 62개도 확인했습니다. 전체 BMP/HWP/HWPX 검증 완료를 선언하지 않습니다.
