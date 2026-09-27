@@ -630,8 +630,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "81a788ad9c10d9940d86720b6138097edad57f588e68135baf57cd04429d05a6",
-      "evidence": "2026-09-28 tracker updated with HWPX ZIP package and payload docs, Windows drive path regression, current 2664 Debug tests and eight known shards; prior OLE evidence retained"
+      "sha256": "89135d9bbecc40d8d031e9f2686ed0f02b71f53a2d615080eb7077ebe2ef1de4",
+      "evidence": "2026-09-28 tracker updated with HWPX version protection namespace batch after focused Zig tests and independent corpus oracle; prior full audit and mutants distinguished"
     },
     "docs/hwpx-ole-payloads.md": {
       "sha256": "a7c214c0760d575237afcb960b7ff1fe976a0d99468e1083066e36c889deabad",
@@ -1808,6 +1808,18 @@
     "docs/emf-plus-get-dc-interleaving.md": {
       "sha256": "1f9d07695bde1cab1fc900b0fbddd93a89c605c6a771083680fc23fd4f4daa74",
       "evidence": "2026-09-28 official GetDC SHOULD process and next EMF+ record terminates versus Zig stream interval observation, framing carrier exclusion and checked counters; Debug Safe Fast direct stream 2 and framing 2 each; historic mutants and audit not rerun"
+    },
+    "docs/hwpx-version.md": {
+      "sha256": "9a00b6937aa526da1995c4e16500bd42384d0ef654ad66acede37c8aba622928",
+      "evidence": "2026-09-28 source version XML ownership and fields, Debug focused 4 and ReleaseSafe corpus 2 with 478 accepted 6 ZIP rejected minor0 6 patch variant 1; historic audit and mutants not rerun"
+    },
+    "docs/hwpx-protection.md": {
+      "sha256": "058ed4f0bdb45d3f347d0784ae19faef42f562bf693f5d767e457ca3fd471c0e",
+      "evidence": "2026-09-28 source manifest direct encryption-data limits and ownership, ReleaseSafe focused 5 and corpus 2 with present 473 absent 5 encrypted 2; decryption unsupported"
+    },
+    "docs/hwpx-namespace-profiles.md": {
+      "sha256": "72873a70f3e46f597a37033a313c7cd0f5d021843d4f9e3b92619ac4459926a7",
+      "evidence": "2026-09-28 source root matcher head sec app master-page, ReleaseFast focused 3 ReleaseSafe settings and master roots 2 each, independent Python 476 accepted header 476 section 544 all 2011; future version real files absent"
     }
   }
 }

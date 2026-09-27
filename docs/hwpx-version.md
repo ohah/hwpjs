@@ -12,8 +12,10 @@
 
 2026-09-23 두 corpus의 `.hwpx` 484개 중 패키지로 열린 478개 모두 버전 XML 파서가 통과했습니다. 나머지 6개는 기존 ZIP 단계의 `MissingEndRecord`입니다. 열린 478개의 `major`는 모두 5였고 `minor=0`은 6개, `minor=1`은 472개였습니다. 한 `minor=0` 파일은 `micro`·`buildNumber` 대신 `patch`·`revision`을 사용하므로 네 값을 독립적으로 보존합니다. 관측 `xmlVersion`은 `1.1`, `1.2`, `1.3`, `1.31`, `1.4`, `1.5`로 다양합니다. 이 숫자는 필드별 구현 완료율이 아닙니다.
 
-실파일 양쪽 변형, 잘못된 namespace·누락된 필수 숫자·음수·`u32` 초과, XML 참조를 사용한 속성 값, 정확한 바이트 한도, 모든 할당 실패와 명시적 해제 회계를 테스트합니다. 후속 [암호화 분류](hwpx-protection.md), [header·spine 구조](hwpx-document-structure.md), [header 리소스 ID 색인](hwpx-header-resources.md)은 별도 책임으로 구현됐습니다. [section p/run 서식 참조](hwpx-section-references.md)는 별도 계층이며, 나머지 section 내부 자원 참조와 편집·저장은 남아 있습니다.
+실파일 양쪽 변형, 잘못된 namespace·누락된 필수 숫자·음수·`u32` 초과, XML 참조를 사용한 속성 값, 정확한 바이트 한도, 모든 할당 실패와 명시적 해제 회계를 테스트합니다. 후속 [암호화 분류](hwpx-protection.md), [header·spine 구조](hwpx-document-structure.md), [header 리소스 ID 색인](hwpx-header-resources.md)은 별도 책임으로 구현됐습니다. [section p/run 서식 참조](hwpx-section-references.md)를 비롯한 section 내부의 선택된 참조·자원 검사도 별도 계층에 있으며, 이 버전 판독만으로 그 전체 의미나 편집·저장 호환성을 보장하지 않습니다.
 
 적대적 검증은 원본과 분리한 소스 복사본에서 필수 `major` 누락 허용, `patch`를 `micro` 기본값으로 합치기, namespace 선언을 일반 속성으로 취급하기, `application` 문자열 해제 누락을 각각 주입했습니다. 앞의 세 변이는 Debug 테스트에서, 마지막 변이는 ReleaseFast의 명시적 할당 회계에서 실패했습니다. 컴파일 실패가 아니라 계약 위반을 검출한 결과이며, 임시 변이는 제품 소스에 반영하지 않았습니다.
 
 최종 소스에서 HWPX 전용 테스트 28/28, `zig build test --summary all` 2050/2050, ReleaseSafe 제품 빌드 5/5 단계, `zig build compare -Doptimize=ReleaseSafe --summary all` 8/8 단계를 통과했습니다. 전체 `zig build audit --summary all`은 Debug·ReleaseSafe·ReleaseFast에서 모두 종료 코드 0이었고, ReleaseSafe·ReleaseFast 출력은 각각 40/40 단계·2089/2089 테스트였습니다. `zig fmt --check build.zig src`, 변경 문서 링크, diff 공백 검사도 확인합니다. 이 수치는 전체 HWPX 본문 의미 검증의 완료율이 아닙니다.
+
+2026-09-28 현재 소스 재검증: Debug `HWPX version XML` 집중 4/4개, ReleaseSafe corpus 조사 2/2개가 통과했고 수락 478개·ZIP 거부 6개·`minor=0` 6개·`patch` 변형 1개를 재확인했습니다. 위 전체 audit와 소스 변이 시험은 이번 묶음에서 재실행하지 않은 과거 기록입니다.

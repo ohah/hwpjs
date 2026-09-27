@@ -5,3 +5,5 @@
 기본 한도는 manifest XML 1MiB, 속성 값 4096바이트, 암호화 경로 65,535개입니다. 암호화 방식·키·체크섬을 해석하거나 복호화하지 않습니다. [한컴의 HWPX 구성요소 설명](https://tech.hancom.com/hwpxformat/)은 암호 문서의 `META-INF/manifest.xml`에 엔트리별 암호화 정보가 있다고 설명합니다. `Document.inspectStructure`는 보고된 암호화 경로가 하나라도 있으면 본문 XML을 파싱하기 전에 `EncryptedDocument`를 반환합니다. 보호된 일부 리소스만 있더라도 전체 문서 검증 완료로 오인하지 않기 위한 경계이며, 호출자는 먼저 `inspectProtection`으로 해당 경로를 볼 수 있습니다.
 
 두 corpus에서 패키지로 열린 `.hwpx` 478개 중 manifest가 있는 파일은 473개, 없는 파일은 5개, 실제 암호화 경로가 있는 파일은 2개였습니다. 암호화 2개 모두 header와 section0 경로를 포함했습니다. 합성 XML의 namespace 위장·주석 위장·문자 참조 경로·잘못된 구조·정확한 한도, 모든 할당 실패와 명시적 해제 회계를 검사했습니다. 암호 문서 본문이 평문 XML 문법 오류로 잘못 분류되지 않는지도 실파일로 검사했습니다.
+
+2026-09-28 현재 소스 재검증: ReleaseSafe `HWPX protection manifest` 집중 5/5개, corpus 조사 2/2개가 통과했고 manifest 존재 473개·부재 5개·암호화 경로 보유 2개를 재확인했습니다. 합성 테스트는 암호화 표시의 구조적 분류를 검증할 뿐 암호 알고리즘이나 복호화를 검증하지 않습니다.
