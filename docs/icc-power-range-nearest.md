@@ -41,4 +41,6 @@ ReleaseSafe·ReleaseFast의 실제 감사 산출물 직접 실행에서도 같�
 
 ## 남은 범위
 
-하위 후보와의 결합은 [전체 최근접 출력 선택](icc-parametric-nearest.md)에서 구현·검증 상태를 관리합니다. 최종 F.1(a) 역변환 입력 선택은 미완료입니다. 전체 ICC 역변환·PNG 픽셀 연결·HWP/HWPX 전체 문서 검증 완료를 의미하지 않습니다.
+하위 후보와의 결합은 [전체 최근접 출력 선택](icc-parametric-nearest.md), F.1(a) 역변환 입력 선택은 [전체 역변환](icc-parametric-inverse.md)에서 각각 구현·검증 상태를 관리합니다. 이 상위 분기 후보만으로 최종 입력 선택·전체 ICC 색상 변환·PNG 픽셀 연결·HWP/HWPX 전체 문서 검증 완료를 증명하지 않습니다.
+
+2026-09-27 재검증에서는 공식 ICC.1:2022 Table 68의 곡선·클리핑과 Annex F.1(b)의 미도달 목표 선택을 현재 `power_range_nearest.selectFor`·`power_range.build`·`power_ordinate_order` 및 `parametric_nearest` 호출 관계와 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 `power nearest` 집중 테스트는 각각 4/4 통과했습니다. 기존 로컬 WASM mode209의 독립 BigInt 대조는 목표 반환 3,597건·끝점 반환 3,293건·비활성 1,308건·예상 거부 4,881건·미확정 1건으로 일치했습니다. 과거 `/tmp` 전체 audit 로그는 현재 없으며 이번에 전체 audit·WASM 재빌드·변형·시스템 ICC 30건을 재실행한 것으로 세지 않습니다.

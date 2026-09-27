@@ -51,4 +51,6 @@ ReleaseSafe·ReleaseFast 산출물 직접 실행도 같은 신규 수치로 통�
 
 ## 남은 범위
 
-하위 선형 분기와의 조립은 [전체 출력 범위](icc-parametric-range.md)에서 구현·검증 상태를 관리합니다. 서로 다른 기호적 출력값의 거리 비교, 최근접 출력의 존재/동률과 F.1(a) 연결은 미완료입니다. 전체 ICC 역변환이나 HWP/HWPX 문서 기능 완료로 해석하지 않습니다.
+하위 선형 분기와의 조립은 [전체 출력 범위](icc-parametric-range.md), 기호적 출력값의 거리 비교는 [출력 거리](icc-ordinate-distance.md), 최근접 출력의 존재·동률은 [전체 최근접 선택](icc-parametric-nearest.md), F.1 입력 선택은 [전체 역변환](icc-parametric-inverse.md)에서 각각 구현·검증 상태를 관리합니다. 이 상위 분기 범위 결과만으로 그 계층들의 정확성이나 전체 ICC 역변환·HWP/HWPX 문서 기능 완료를 증명하지 않습니다.
+
+2026-09-27 재검증에서는 공식 ICC.1:2022 Table 68의 분기식·[0,1] 클리핑과 현재 `power_range.build`·`same_power_order.compare`·`power_ordinate.at`의 닫힌 활성 구간, 접힘의 내부 밑 영점, 포함되는 증거점, 미확정 전파를 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 `power range` 집중 테스트는 각각 4/4 통과했습니다. 기존 로컬 WASM mode205/206 독립 BigInt 대조는 범위 1,743건·비활성 324건·예상 거부 1,271건·점 3건·미확정 1건으로 일치했습니다. 과거 `/tmp` 전체 audit 로그는 현재 없으며 이번에 전체 audit·WASM 재빌드·출력/소스 변형·시스템 ICC 15건을 재실행한 것으로 세지 않습니다.
