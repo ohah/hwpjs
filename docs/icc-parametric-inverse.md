@@ -19,7 +19,7 @@ ConstantIccCurve·NonMonotonicIccCurve·실수 정의역 오류를 먼저 거부
 
 parametric_inverse_gate가 기존 parametric_trend의 비상수·단조 전제를 검사합니다. 기존 도달 목표용 parametric_attained_inverse도 이 gate를 재사용합니다. 전체 역변환 조립기는 gate 뒤 [전체 최근접 출력](icc-parametric-nearest.md)을 호출하고, parametric_inverse_choice가 출력에서 입력을 선택합니다. 타입은 parametric_inverse_types에 둡니다.
 
-유리수 출력과 클리핑된 0/1은 기존 parametric_attained_inverse에 전달하여 역상 전체 범위와 F.1(a) 평탄 구간 규칙을 재사용합니다. 현재 factory의 선형 출력 분모는 최대 80비트, 분자는 그 이하이며 원래 목표는 u128입니다. u256 표현을 u128로 넘길 때에도 checked cast를 사용합니다. factory가 증명한 실제 출력에 역상이 없다는 결과가 나오면 불변식 오류로 보고하고 임의 좌표로 대체하지 않습니다.
+유리수 출력과 클리핑된 0/1은 기존 parametric_attained_inverse에 전달하여 역상 전체 범위와 F.1(a) 평탄 구간 규칙을 재사용합니다. 선형 factory 유리수의 분자와 분모는 서로 다른 폭의 계산에서 나오므로 “분자가 분모보다 작은 비트폭”이라는 보장은 두지 않습니다. u256 표현을 u128로 넘길 때에는 `std.math.cast`로 각각 검사하며, 원래 u128 목표도 손실 없이 유지합니다. factory가 증명한 실제 출력에 역상이 없다는 결과가 나오면 불변식 오류로 보고하고 임의 좌표로 대체하지 않습니다.
 
 ## 내부 거듭제곱 출력 증거점을 사용할 수 있는 근거
 
@@ -33,7 +33,7 @@ a=0 또는 g=0이면 상위 분기 전체가 상수이며 그 구간은 1까지 
 
 이 전제 덕분에 selected power 표현의 factory 증거점을 정확한 rational 입력으로 유지할 수 있습니다. rational 0/1이나 임의로 만들어진 power 표현에는 이 단축을 적용하지 않습니다.
 
-## 검증 진행
+## 구현 당시 검증 진행 기록
 
 신규 네이티브 5개와 기존 도달 목표 선택 테스트 4개가 통과했습니다. 도달 목표 1/3, 시작/종료 클리핑 평탄부, 상위 a=0·g=0 상수 평탄부, 감소 곡선의 종료 평탄부, 내부 값의 단일 끝점과 영점 도함수 사례, 출력 부재·동률 모호성·최대 입력 부재, 상수·비단조 거부를 검사합니다.
 
@@ -47,7 +47,7 @@ a=0 또는 g=0이면 상위 분기 전체가 상수이며 그 구간은 1까지 
 
 별도 `/tmp` 소스 복사본에서 gate의 비단조 곡선 거부를 허용으로 바꿨습니다. Debug·ReleaseSafe·ReleaseFast 모두 TestExpectedError로 실패하여 비단조 곡선의 실제 입력 좌표가 반환되는 잘못된 경로를 검출했습니다. 원본에는 변형을 적용하지 않았습니다.
 
-## 실제 프로파일 대조
+## 구현 당시 실제 프로파일 대조
 
 DCI(P3) RGB·Display P3·ITU-2020·ITU-709·ROMM RGB의 RGB TRC 15개에서 목표 0/1과 type3 하위 좌극한을 대조했습니다. 양의 지수·기울기, 내부 분기점, a+b=65536, 상위 시작 밑과 하위 좌극한이 (0,1)임을 먼저 확인했습니다. g/65536=p/q, D=65536², N=a*d+b*65536, L=c*d로 놓고 `N^p*D^q`와 `L^q*D^p`를 BigInt로 비교해 분기 점프의 방향을 독립 판정했습니다.
 
@@ -55,12 +55,20 @@ DCI(P3)·Display P3·ITU-2020의 18개 끝점 목표는 정확한 출력과 입�
 
 ## 최종 확인
 
-Debug·ReleaseSafe·ReleaseFast 전체 audit가 각각 종료 코드 0, 20/20 단계, 네이티브 598/598, WASM checks=6,614,870으로 통과했습니다. 신규 7,828건이 이전 6,607,042건에 추가됐습니다. 신규 결과는 세 모드 모두 selected=3595/unattained=26/ambiguous=88/rejected=4118/undecided=1입니다. 로그는 `/tmp/hwpjs-icc-parametric-inverse-{Debug,ReleaseSafe,ReleaseFast}.log`입니다.
+당시 Debug·ReleaseSafe·ReleaseFast 전체 audit가 각각 종료 코드 0, 20/20 단계, 네이티브 598/598, WASM checks=6,614,870으로 통과했습니다. 신규 7,828건이 이전 6,607,042건에 추가됐습니다. 신규 결과는 세 모드 모두 selected=3595/unattained=26/ambiguous=88/rejected=4118/undecided=1입니다. 당시 로그 경로는 `/tmp/hwpjs-icc-parametric-inverse-{Debug,ReleaseSafe,ReleaseFast}.log`였으나 현재 파일은 존재하지 않습니다.
 
 ReleaseSafe·ReleaseFast의 실제 감사 산출물 직접 실행에서도 같은 신규 수치를 확인하고 내부 출력의 입력을 무조건 1로 바꾸는 변형을 각각 ERR_ASSERTION으로 검출했습니다. 변경 Zig 포맷·JS 문법·diff 공백과 관련 문서 로컬 링크 5개도 확인했습니다.
 
-최종 재검토에서는 목표 선행 검증, 공유 비상수·단조 gate, 유리수 역상 전체 범위의 기존 F.1(a) 규칙, 내부 출력 증거점 단축의 factory/단조 전제, a=0·g=0·감소 평탄부·마지막 단일점, 미도달 출력과 최대 입력 부재의 구분, 동률 모호성·미확정 보존을 확인했습니다. 임시 출력 버퍼는 defer로 해제하고 결과 할당 이후 오류 가능한 작업이 없으며 모든 바이트를 초기화합니다. 이번 범위에서 추가 결함은 발견하지 않았습니다.
+당시 재검토에서는 목표 선행 검증, 공유 비상수·단조 gate, 유리수 역상 전체 범위의 기존 F.1(a) 규칙, 내부 출력 증거점 단축의 factory/단조 전제, a=0·g=0·감소 평탄부·마지막 단일점, 미도달 출력과 최대 입력 부재의 구분, 동률 모호성·미확정 보존을 확인했습니다. 임시 출력 버퍼는 defer로 해제하고 결과 할당 이후 오류 가능한 작업이 없으며 모든 바이트를 초기화합니다. 당시 범위에서 추가 결함은 발견하지 않았습니다.
 
 ## 남은 범위
 
 동률·최대/최소 입력 부재에 대한 임의 보정 정책은 제공하지 않습니다. 표준이 지정하지 않은 정책과 정확한 실패/모호성 보고를 구분합니다. 상위 연결은 [TRC 공통 역변환](icc-trc-inverse.md)에서 관리합니다. 실제 색상 변환 경로의 왕복·렌더링 검증, HWP/HWPX 전체 문서 검증은 아직 미완료입니다.
+
+## 2026-09-27 문서 재검증
+
+공식 ICC.1:2022 Annex F.1의 단조·비상수 전제, 평탄부의 입력 선택, 미도달 목표의 최근접 실제 출력을 현재 `parametric_inverse.selectFor`와 대조했습니다. 정규화 목표 검증→`parametric_inverse_gate`→`parametric_nearest`→`parametric_inverse_choice` 순서입니다. 최근접 출력이 없으면 unattained, 서로 다른 같은 거리 출력은 임의 정책을 추가하지 않고 ambiguous, 비교 미확정은 undecided로 보존합니다. 선택된 유리수 출력은 `parametric_attained_inverse`에 넘겨 완전한 역상의 F.1(a)를 적용하고, 내부 power 출력 증거점 단축은 factory가 만든 choice와 전체 단조 gate를 통과한 경우에만 사용합니다. 잘못된 해 부재는 불변식 오류이며 좌표로 대체하지 않습니다.
+
+Debug·ReleaseSafe·ReleaseFast의 `zig test src/image/icc/parametric_inverse_tests.zig -O <모드>`는 각 5/5 통과했습니다. 로컬 ReleaseFast 테스트용 WASM mode212 독립 단조성·선형 역상 critical-cell 대조는 selected=3,595·unattained=26·ambiguous=88·rejected=4,118·undecided=1로 일치했습니다. 같은 제품 코드로 앞 문서 검증에서 실행한 ReleaseFast HWP5 전체 감사 10/10 단계·WASM checks=8,905,855는 재사용 근거로만 세었습니다.
+
+과거 Debug·ReleaseSafe 전체 감사·출력/소스 변형·시스템 ICC 15개 태그 42건 대조는 이번에 재실행하지 않았습니다. 이번 증거는 동률 보정 정책이나 전체 프로파일 색상 변환·HWP/HWPX 표시·저장 동치를 입증하지 않습니다.
