@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "55e99f7ec2165274d1e1337a1c634fd544fb0f76408c45e791a25c4eb65a8559",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters and PNG pixels review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "fb8d3b88a0daf6029eced2bf8182aafbb99b509dc7b154f76f69be8833c37a63",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels and PNG transparency review, architecture pending, full Debug Zig test incomplete"
+    },
+    "docs/png-transparency.md": {
+      "sha256": "3831a665d71a6ca1a3df3980bba5332acbe4e813729a31300610525d1624c620",
+      "evidence": "2026-09-27 W3C PNG Third Edition tRNS sample depth palette and order current Zig metadata and pixels connection, Debug Safe Fast focused 5 each, local probe CFB independent JS oracle 405 accepted 522 rejected 32 actual PNG 0 tRNS, historic full audit not rerun; ancillary text and sPLT deferred accounting corrected"
     },
     "docs/png-pixels.md": {
       "sha256": "d60f12b68b6fb9de9fc3b344143a28d1c495aa6fda0f3a7e672267bad0f45134",

@@ -19,11 +19,19 @@ indexed tRNS 길이 0은 빈 alpha 표로 받아들여 전부 opaque로 해석�
 
 `metadata.State.consume`는 이미 critical envelope가 검증된 청크를 받습니다. 실패 시 상태를 바꾸지 않습니다. 아직 PLTE가 오지 않은 indexed tRNS, IDAT 이후 tRNS, 중복 tRNS, tRNS 뒤에 나오는 선택적 truecolor PLTE를 거부합니다. 같은 상태 계층의 [bKGD/hIST 검사](png-palette-metadata.md)는 별도 주제에서 관리합니다.
 
-pixels 보고서의 transparency는 optional 값입니다. metadata에서 검사한 청크/바이트 수만 기존 ancillary deferred 통계에서 빼고, 나머지 vpAg·색상 프로필·텍스트 등은 그대로 남깁니다. 빈 tRNS는 검사 청크 1개/바이트 0개입니다. 오류에는 부분 보고서가 반환되지 않습니다. 새 동적 할당은 추가하지 않으며 기존 이미지 decode의 할당 실패 정리 경로를 재사용합니다.
+pixels 보고서의 transparency는 optional 값입니다. tRNS 등 `metadata`가 검사한 청크/바이트와 별도 수집한 sPLT는 ancillary deferred 통계에서 뺍니다. 현재 tEXt·zTXt·iTXt도 검사 후 차감하지만, 미선택 vpAg와 색 의미 검증이 남은 iCCP는 deferred로 유지합니다. 빈 tRNS는 검사 청크 1개/바이트 0개입니다. 오류에는 부분 보고서가 반환되지 않습니다. tRNS 파싱 자체에는 동적 할당이 없으며 전체 이미지 decode의 기존 할당 실패 정리 경로를 재사용합니다.
 
 이 계층 자체는 투명도 메타데이터의 해석·검증·보존까지입니다. 별도 [PNG RGBA 조립](png-rgba.md)이 검증된 값을 픽셀에 적용합니다. compositing·색 관리 변환·APNG·저장은 포함하지 않습니다.
 
 ## 검증
+
+### 현재 재검증 (2026-09-27)
+
+[PNG Third Edition §5.6·§11.3.1.1](https://www.w3.org/TR/png-3/)과 현재 `transparency.zig`·`sample.zig`·`metadata.zig`·`pixels.zig`를 대조했습니다. 표의 0/2/3별 길이, 색 유형 4/6 금지, 16비트 미만의 하위 비트 마스킹, indexed alpha의 255 보완과 PLTE/IDAT 순서가 현재 코드와 일치합니다. 빈 indexed tRNS 허용은 명시적인 최소 길이 조항이 없는 문구의 구현 해석으로 남기며, 모든 외부 디코더와의 수용 동치로 주장하지 않습니다.
+
+Debug·ReleaseSafe·ReleaseFast의 `PNG transparency` 집중 테스트는 각각 root 포함 5/5 통과했습니다. 로컬 probe와 독립 JS oracle의 합성·추적 파일 대조는 정상 405건·거부 522건이며, 실제 HWP의 PrvImage PNG 32개에서 tRNS는 0개였습니다. 이 수치는 투명도 양성 실파일이나 화면 합성의 검증이 아닙니다. 아래 전체 audit·네이티브 총계는 이 단계의 과거 기록이며 이번에 재실행한 수치로 세지 않습니다.
+
+### 과거 검증 기록
 
 네이티브는 grayscale depth 1/2/4/8/16 각각의 모든 u16 원값을 검사하고 RGB raw/value 보존을 확인합니다. palette 길이 0~256, 생략 alpha, 원문 변경 후 값 보존, 잘못된 Header·색상·크기, 실패 상태 불변성, 중복·순서 및 통합 할당 실패 정리를 검사합니다.
 
