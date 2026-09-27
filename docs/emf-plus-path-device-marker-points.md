@@ -20,4 +20,6 @@
 
 최종 소스의 Debug → ReleaseSafe → ReleaseFast 전체 audit는 모드별 40/40 단계·2,045/2,045 테스트(native 2,006개, 차트 31개, WMF 8개)를 통과했습니다. 각 로그의 HWP/WASM `checks=8,905,827`, `imports=0`, CFB `mutations=12,000`·`traps=0`을 확인했습니다. 로그는 `/tmp/hwpjs-path-device-marker-final-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다. 이 검증은 marker 위치·metadata 투영의 근거이며 marker 적용이나 실제 한컴 렌더링 동등성의 근거가 아닙니다.
 
-위 51회 변이·2,045개 테스트는 공유 point 순회기 도입 이전 이력입니다. 현재 구현은 [새 원본 point 순회 검증](emf-plus-path-device-source-points.md)의 PathMarker 필터 변이와 세 모드 전체 audit에 다시 포함됐습니다.
+위 51회 변이·2,045개 테스트는 공유 point 순회기 도입 이전 이력입니다. 공유 순회기 도입 당시의 PathMarker 필터 변이·전체 audit 기록은 [원본 point 순회 문서](emf-plus-path-device-source-points.md)에 있으며 이번에 재실행하지 않았습니다. 기재된 `/private/tmp` 캠페인·`/tmp` 로그는 2026-09-28 현재 남아 있지 않습니다.
+
+이번에는 공식 PathMarker flag와 현재 공유 source-point 필터·역할/index·공개 `Path.deviceMarkerPoints()` 연결을 대조했습니다. Debug·ReleaseSafe·ReleaseFast root `EMF+` 필터 각 560/560, ReleaseSafe의 marker 직접 필터 3/3·공개 marker 필터 3/3을 통과했습니다. 이 결과는 marker 처리나 실제 한컴 렌더링 동등성을 뜻하지 않습니다.

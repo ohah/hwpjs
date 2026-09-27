@@ -13,3 +13,5 @@
 합성 device command 테스트는 비대칭 변환의 Move, Bézier control1·endpoint, 닫힌 빈 figure Move, 다른 figure의 Line endpoint에서 flag 선택·역할·index·좌표·raw type을 대조합니다. 플래그가 없는 point도 index에 반영합니다. 잘못된 Bézier와 플래그 없는 정상 EOF의 상태를 검사합니다. 공개 Path API 테스트는 실제 i16 Path 바이트의 control/end 플래그와 상대 PointR·RLE type의 플래그·B 값을 검사합니다.
 
 공유 역할·index 및 DashMode 필터의 독립 변이 21/21회와 세 모드 전체 audit 결과는 [원본 point 순회 검증 기록](emf-plus-path-device-source-points.md)에 둡니다.
+
+위 변이·전체 audit는 작성 당시의 이력이며 이번에 재실행하지 않았습니다. 2026-09-28에는 공식 DashMode flag와 현재 source-point 필터·control point 역할/index·`Path.deviceDashPoints()` 공개 연결을 대조했고, Debug·ReleaseSafe·ReleaseFast root `EMF+` 필터 각 560/560, ReleaseSafe의 dash 직접 필터 3/3·공개 dash 필터 2/2를 통과했습니다. 실제 Pen dash 적용이나 픽셀 출력 동등성은 입증하지 않습니다.

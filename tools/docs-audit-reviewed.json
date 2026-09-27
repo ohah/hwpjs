@@ -334,7 +334,7 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "cb61ff3613117e17c87a4b1847d1522d9717dda95ff0e20984066417abab9af6",
+      "sha256": "5e27081b65592cd31848c40814754020ad17bd1bd5be57731d3be4e6f59235fe",
       "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope PNG ICC inspection PNG RGBA BCP47 syntax registry alpha2 history ICC IANA matching mluc selection mluc structure mluc Unicode ICC v2 Unicode v2 text tag payload dispatch tag table structure header identifiers v4 and v2 header numeric header verification ICC registry source lookup required tags overview presence table XYZ type XYZ tags curve type TRC tags parametric curve analytic forward TRC forward sampled forward sampled inverse sampled wide inverse gamma inverse wide gamma inverse TRC inverse and extended TRC inverse matrix TRC inverse matrix TRC model matrix TRC forward fraction matrix inverse fraction matrix TRC inverse wide linear target wide positive bounds normalized and extended root compare normalized and extended root locations clipped and extended power preimage whole and extended whole parametric preimage normalized and extended whole bounds normalized and extended attained F.1a whole and extended nearest normalized and extended full inverse topology segments jump trend domain partition power clipping power level root compare active root locations rational power order normalized power level wide power level normalized root order power range power nearest ordinate order extended ordinate order ordinate distance extended ordinate distance linear range parametric range rational range nearest linear preimage extended linear preimage chromatic adaptation matrix transform ICC foundation verification review, architecture pending, full Debug Zig test 2656 passed and ReleaseFast HWP5 audit 10 steps 8905855 checks, EMF ICM and three clipping region docs direct tests and 102 shared tests each mode"
     },
     "docs/bcp47-syntax.md": {
@@ -1412,6 +1412,18 @@
     "docs/emf-plus-path-device-segments.md": {
       "sha256": "18292221c375c5d3362ecb2c31f28ca288fd3d65dfb51d975946b0248e197d9f",
       "evidence": "2026-09-28 current shared Line Bezier mapping, close tag and metadata, stroke fill iterator rollback and Path API delegation; Debug Safe Fast EMF root 560 each, ReleaseSafe segments 3 fill segments 2 and public stroke fill 2; historic mutation and audit not rerun"
+    },
+    "docs/emf-plus-path-device-marker-points.md": {
+      "sha256": "deb131bf7dc3eda4ee2bbfcaf4ddfdee19922f7d7dc8bd09ce2750a84492195b",
+      "evidence": "2026-09-28 official MS-EMFPLUS PathMarker flag and current source point filtering, role index metadata and Path.deviceMarkerPoints delegation; Debug Safe Fast EMF root 560 each, ReleaseSafe marker 3 public marker 3; historic mutation and audit not rerun"
+    },
+    "docs/emf-plus-path-device-dash-points.md": {
+      "sha256": "42d0bb7d7a3436918bb8a2f51d3d3e028845a5278e7281fbd7cca7e68021ae08",
+      "evidence": "2026-09-28 official MS-EMFPLUS DashMode flag and current source point filtering, control roles and Path.deviceDashPoints delegation; Debug Safe Fast EMF root 560 each, ReleaseSafe dash 3 public dash 2; historic mutation and audit not rerun"
+    },
+    "docs/emf-plus-path-device-polyline.md": {
+      "sha256": "09bcaeed275a4ff58ccbac9ad6348b621d1058cc7b8a468aecc99ea45ccdfd39",
+      "evidence": "2026-09-28 current Path figure polyline ownership, source command snapshot, point metadata ranges and global budget against cubic flattening and Path.devicePolyline; Debug Safe Fast EMF root 560 each, ReleaseSafe polyline 6 and public Path stroke fill connection 2; historic mutation and audit not rerun"
     }
   }
 }
