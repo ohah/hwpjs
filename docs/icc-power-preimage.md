@@ -6,13 +6,15 @@ u512 목표값의 solveWide 확장은 [넓은 클리핑 역상](icc-extended-pow
 
 [전체 도달 역상](icc-parametric-preimage.md)은 이 결과를 하위 선형 분기의 역상과 함께 보존합니다. 본 모듈은 거듭제곱 분기만 소유합니다.
 
+[ICC.1:2022 §10.18 Table 68·Annex F.1](https://www.color.org/specification/ICC.1-2022-05.pdf)은 파라메트릭 곡선의 분기식·출력 클리핑과 1차원 역상 선택 조건을 규정합니다. 아래의 기호 구간·기호근 합집합은 이 구현의 중간 표현이며, 명세가 그 배열 배치나 기호근 알고리즘을 정한 것은 아닙니다.
+
 `power_preimage.solve(precision, curve, n, d)`는 활성 거듭제곱 분기에서 clip(f(x))=n/d인 모든 실제 x의 집합을 구합니다. 정규화 u128 목표 검증과 전체 곡선 정의역 검증은 [근 위치 계층](icc-normalized-root-locations.md)이 선행합니다. 결과는 inactive, undecided, 또는 set입니다. 빈 set은 활성 분기는 있으나 해가 없다는 뜻이며 inactive와 다릅니다. undecided에는 부분 결과를 넣지 않습니다.
 
 set은 원본 Power source, 최대 여섯 기호 구간과 최대 두 위치가 판정된 기호근을 보존합니다. 구간 끝점은 기존 power_clip_types.Interval을 재사용하며 원래 포함 플래그를 유지합니다. 근과 기호 구간 경계는 source의 a/b를 통해 x를 뜻하고 f64 좌표를 생성하지 않습니다. 배열은 각 count 안에서만 읽습니다.
 
 결과의 의미는 모든 구간과 점의 **집합 합집합**입니다. 정렬·병합·중복 제거된 목록이 아니며, 점이 구간 안에 있거나 경계와 중복될 수 있습니다. 기호근은 양수·음수 생성 순서로서 x 오름차순을 보장하지 않습니다. 개별 항목에 F.1 선택을 먼저 적용해서는 안 됩니다.
 
-하위 선형 분기의 역상, 두 분기의 정규화된 전체 합집합, 단조성·비상수성에 따른 역변환 적격성, F.1 선택과 가장 가까운 출력값의 존재 여부는 후속 범위입니다.
+하위 선형 분기의 역상과 상위 분기와의 결합은 현재 [전체 도달 역상](icc-parametric-preimage.md)이 **분기별 기호 결과를 유지하는 형태**로 다룹니다. 두 분기의 결과를 정렬·병합한 단일 정규 구간 목록은 이 모듈도 전체 도달 역상도 반환하지 않습니다. 단조성·비상수성에 따른 적격성, F.1 선택과 가장 가까운 출력값 판정은 [파라메트릭 역변환](icc-parametric-inverse.md)·[최근접 출력](icc-parametric-nearest.md)의 별도 책임입니다. 이 분리된 구현이 모든 실제 곡선·색상 변환을 증명하지는 않습니다.
 
 ## 완전성과 책임 분리
 
@@ -57,3 +59,13 @@ Debug 직접 검사는 comparisons=6440, rejected=3351, undecided=1, membershipC
 Debug·ReleaseSafe·ReleaseFast 전체 audit가 각각 20/20 단계, 네이티브 544/544, WASM checks=6,549,294로 통과했습니다. comparisons/rejected/undecided 합계 9,792건이 이전 6,539,502건에 추가됐습니다. membershipChecks는 추가 WASM 호출로 세지 않습니다. 로컬 로그 `/tmp/hwpjs-icc-power-preimage-{Debug,ReleaseSafe,ReleaseFast}.log`는 임시 파일입니다.
 
 ReleaseSafe·ReleaseFast 산출물 직접 대조도 같은 신규 수치로 통과했고 점 누락 변형을 각각 검출했습니다. 로컬 문서 링크 7개·Zig 포맷·JS 문법·diff 공백 검사가 통과했습니다. 최종 재검토에서는 클리핑 경계 단독 해의 보존, 미확정의 부분 결과 비노출, 공유 source와 경계 표현, 고정 배열 count, 집합 중복 표현과 최종 역변환 선택의 구분을 확인했습니다. 해당 범위에서 추가 결함을 발견하지 않았습니다. 하위 선형 분기와의 합집합 정리 및 전체 역변환 선택은 여전히 미완료입니다.
+
+위의 전체 감사·오류 주입·실제 ICC 태그 대조와 “여전히 미완료” 문장은 최초 구현 시점의 기록입니다. 당시 `/tmp` 로그는 현재 존재하지 않으며, 아래 재검증 결과와 혼동하지 않습니다. 현재도 **정렬·병합된 단일 전체 합집합**을 만들지는 않지만, 분기별 전체 도달 역상과 역변환 선택은 위의 별도 모듈에서 다룹니다.
+
+## 2026-09-27 문서 재검증
+
+현재 `solveFor`는 `normalized_level_locations.inspect`의 목표·전체 curve 선검증을 사용하고, 활성 분기의 `entire`를 원본 구간 하나로, 위치 미확정을 부분 결과 없는 `undecided`로 보존합니다. 내부 목표는 판정된 등식 근만 반환합니다. y=0/1에서는 공통 `power_clip.partition`의 해당 평탄 조각과 정확한 등식 근을 함께 수집합니다. `power_preimage_types`의 최대 6구간·2점은 count 안에서만 읽으며, 결과는 정렬·중복 제거된 목록이 아닙니다.
+
+Debug·ReleaseSafe·ReleaseFast의 `zig test src/root.zig --test-filter 'clipped power preimage'`는 각 모드 root 포함 5/5 통과했습니다. 현재 ReleaseFast 테스트용 WASM의 mode199 독립 집합 대조는 comparisons=6,440·rejected=3,351·undecided=1·membershipChecks=18,994로 일치했습니다. `membershipChecks`는 추가 WASM 호출이 아닌 반환 집합 내부의 포함 여부 대조 횟수입니다. 같은 제품 코드로 앞 문서 검증에서 실행한 전체 `zig build hwp5-audit -Doptimize=ReleaseFast --summary all`은 10/10 단계·WASM checks=8,905,855였습니다.
+
+후속 기호 결합·역변환 경로는 ReleaseFast의 `whole preimages` 11/11과 `full inverse` 7/7 집중 테스트로 확인했습니다. 이 결과로 후속 문서 전체를 자동 승인하지 않습니다. 과거 Debug·ReleaseSafe 전체 감사·오류 주입·실제 프로파일 역상 30건/포함 여부 90건은 이번에 재실행하지 않았으며, 전체 ICC/HWP/HWPX 표시 동치도 입증하지 않습니다.
