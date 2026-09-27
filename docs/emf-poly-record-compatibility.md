@@ -2,7 +2,7 @@
 
 ## 공통 record 경계
 
-Microsoft [EMF Records](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/e0137630-f3ad-492c-bde9-e68866e255ba)는 모든 record의 4바이트 정렬과 명세되지 않은 끝 extra data 무시를 규정한다. 개별 poly record의 Count는 의미 배열 길이를 정의한다. 따라서 parser는 Count-derived 의미 범위가 record 안에 완전히 존재하는지는 요구하지만 그 범위가 record 끝과 같아야 한다고 강제하지 않는다.
+Microsoft [EMF Records](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/e0137630-f3ad-492c-bde9-e68866e255ba)는 모든 record의 4바이트 정렬과 명세되지 않은 끝 extra data 무시를 규정한다. [EMR_POLYLINE](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/9ce6c9bb-1a13-48a5-9aa2-d95b334b5358)과 [EMR_POLYDRAW16](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/57f0cfe7-2139-4199-b6ad-61fb61a1d4ec)처럼 개별 poly record의 Count는 의미 배열 길이를 정의한다. 따라서 parser는 Count-derived 의미 범위가 record 안에 완전히 존재하는지는 요구하지만 그 범위가 record 끝과 같아야 한다고 강제하지 않는다.
 
 `record_extent.requiredEnd`가 다음 공통 계약을 단독 소유한다.
 
@@ -21,3 +21,5 @@ Count를 늘리면 기존 후행 bytes가 새 point/type data로 재분류될 �
 임시 복사본에 선언 크기 검사 제거, 공용 exact-size 회귀, 단일·다중 point slice 오염, POLYDRAW padding 오염·exact-size 회귀, 다중 point extent 누락의 7개 변이를 각각 주입했다. Debug·ReleaseSafe·ReleaseFast의 21회 실행에서 모두 검출됐다.
 
 최종 `zig build audit --summary all`은 Debug·ReleaseSafe·ReleaseFast 모두 40/40 단계와 1,352/1,352 테스트를 통과했다. native test는 1,313개이고 HWP corpus 584개 파일에서 8,905,827개 조건을 검사했다. 실제 corpus에는 EMF가 없으므로 실제 한글 생성기 호환성 근거로 확대하지 않는다.
+
+2026-09-27 재검증에서는 `poly_records.zig`·`poly_records_16.zig`·`poly_draw.zig`를 각각 직접 실행해 Debug·ReleaseSafe·ReleaseFast에서 각 파일 14/14개(의존 모듈 포함)를 통과했다. 루트 `EMF framing` 필터도 세 모드 각각 97/97개, 전체 Debug `zig build test`는 5/5 단계·2,656/2,656개가 통과했다. 위 7종 변이와 세 모드 전체 `audit`은 이번에 재실행하지 않았다.
