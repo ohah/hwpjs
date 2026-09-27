@@ -83,6 +83,8 @@
 
 공통 WMF 헤더·객체·상태·도형·텍스트의 집중 회귀는 `zig test src/root.zig -O Debug --test-filter WMF`로 실행하고, 같은 명령의 `-O ReleaseSafe`·`-O ReleaseFast`도 실행합니다. 고정 HWP/OLE `CONTENTS` 실파일과 공개 API 합성 계약은 `zig build wmf-contents-audit -Doptimize=ReleaseSafe --summary all`로 검증하며, 다른 모드는 `-Doptimize` 값만 바꿉니다. 이 audit은 hash-pinned 로컬 `reference/rhwp` 표본이 없으면 실패하고 명세 밖 비준수 escape를 EMF로 추정하지 않습니다. 계약과 범위는 [WMF 헤더](wmf-header.md) 및 연결된 주제 문서가 소유합니다.
 
+[WMF 내장 EMF](wmf-enhanced-metafile.md)는 `zig test src/root.zig -O Debug --test-filter 'WMF enhanced'`와 `--test-filter 'WMF embedded'`를 각각 실행하고 `-O ReleaseSafe`·`-O ReleaseFast`에서도 반복합니다. [EMF comment envelope](emf-comment-envelope.md)는 같은 세 모드에서 `zig test src/root.zig -O Debug --test-filter COMMENT`를 실행합니다. 실제 HWP의 EMF signature 후보 조사는 `zig build emf-corpus-audit -Doptimize=ReleaseFast --summary all`로 재현하며 로컬 `reference/rhwp` corpus가 필요합니다. 다중 조각 EMF의 실제 호환성이나 EMF 렌더링을 입증하는 명령은 아닙니다.
+
 [HWP5 BinData PCX](hwp5-bin-data-pcx.md)는 `zig test src/root.zig --test-filter 'HWP PCX'`, `--test-filter 'HWP container PCX'`로 단위·컨테이너 연결을 검사합니다. 선택 실파일은 `zig test src/hwp5_pcx_known_survey.zig -O ReleaseFast --test-filter 'HWP PCX known'`, 독립 해시·압축 정책 조사는 `node tests/hwp5/pcx-corpus.mjs`로 재현합니다. 두 실파일 명령에는 로컬 `reference/rhwp`가 필요하며 기본 audit에는 포함하지 않습니다.
 
 [HWP5 BinData 인코딩 정책](hwp5-bin-data-encoding.md)은 `zig test src/root.zig -O ReleaseSafe --test-filter 'BinData encode'`로 여섯 압축 조합·오류·할당 실패를 검사합니다. `-O Debug`·`-O ReleaseFast`도 같은 필터로 실행할 수 있습니다. 상위 CFB 다중 교체 연결은 `zig test src/root.zig -O ReleaseSafe --test-filter 'outer HWP BinData batch resolves'`로 별도 확인합니다. 이 집중 명령은 실파일 저장 동치나 과거 변이 시험을 재현하지 않습니다.

@@ -2,14 +2,16 @@
 
 ## 명세 경계
 
-Microsoft [META_ESCAPE_ENHANCED_METAFILE](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/cfc88064-d86d-4b52-9374-3ce27d456179)은 `META_ESCAPE`의 EscapeFunction `0x000f` payload에 34바이트 comment header와 EMF 조각을 넣는다. `enhanced_metafile.zig`는 다음 MUST 조건을 strict하게 검사한다.
+Microsoft [META_ESCAPE_ENHANCED_METAFILE](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/cfc88064-d86d-4b52-9374-3ce27d456179)은 `META_ESCAPE`의 EscapeFunction `0x000f` payload에 34바이트 comment header와 EMF 조각을 넣는다. `enhanced_metafile.zig`는 아래의 필수 필드를 검사한다. 단, `ByteCount`에는 아래와 같은 공식 문서 내부 불일치가 있어, 현재 구현을 문자 그대로의 명세와 완전 동일하다고 주장하지 않는다.
 
 - CommentIdentifier `0x43464D57`, CommentType `1`, Flags `0`
-- ByteCount가 `34 + CurrentRecordSize`와 일치
+- 현재 해석에서는 ByteCount가 `34 + CurrentRecordSize`와 일치
 - CommentRecordCount가 0이 아니고 CurrentRecordSize가 8,192 이하
 - 현재 조각과 RemainingBytes가 전체 EnhancedMetafileDataSize를 넘지 않음
 
 Version `0x00010000`은 SHOULD이므로 원문 값을 보존하며 거부 조건으로 삼지 않는다. Checksum은 완성된 EMF stream 전체에 대한 값이므로 조각 parser는 보존만 하고, 시퀀스 재조립 단계가 검증한다.
+
+`ByteCount`의 공식 필드 설명은 `34 + EnhancedMetafileDataSize`라고 적지만, 같은 항목은 `EnhancedMetafileDataSize`를 시퀀스 전체 크기, `CurrentRecordSize`를 현재 조각 크기라고 정의한다. 공통 [META_ESCAPE](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/a2f3ad96-e655-4f24-a371-d968aeb53852)의 `ByteCount`는 해당 record의 데이터 길이다. 따라서 조각이 여러 개인 경우 이 문자 그대로의 식과 record 안의 실제 길이를 동시에 만족시킬 수 없다. 현재 parser는 후자의 wire 길이에 맞춘 조각 크기 식을 적용한다. 이것은 명세 문구의 불일치를 해석한 정책이지, 실제 다중 조각 파일과의 호환성이 입증됐다는 뜻은 아니다.
 
 ## 실제 HWP 관찰
 
@@ -19,7 +21,7 @@ hash-pinned HWP의 WMF에는 EscapeFunction이 `0x000f`인 META_ESCAPE가 118개
 
 `enhanced_metafile_sequence.zig`는 명세 준수 청크 배열의 record count, 공통 metadata, 입력 순서에 따른 RemainingBytes, 전체 크기와 XOR checksum을 검증한다. caller가 지정한 최대 바이트를 넘으면 할당 전에 거부하고, 모든 검증이 끝난 뒤 정확한 전체 크기를 한 번만 할당해 순서대로 복사한다. 빈 입력과 홀수 길이 EMF stream은 checksum WORD 계약을 만족할 수 없어 거부한다.
 
-`enhanced_metafile_records.zig`는 WMF record iterator에서 첫 strict 청크가 선언한 개수만큼 바로 다음 레코드를 소비한다. 중간에 다른 record/function이 나타나거나 후속 청크가 strict payload가 아니면 연속성 오류다. caller가 지정한 레코드 수 제한을 확인한 뒤 임시 chunk view 배열을 할당하고, 공통 sequence validator를 호출해 필드 규칙을 복제하지 않는다. 비준수 `0x000f` 후보는 시작 청크로 추정하지 않고 기존 관찰 리포트에만 센다. 재조립된 EMF의 자체 framing 검증은 후속 단계다.
+`enhanced_metafile_records.zig`는 WMF record iterator에서 첫 strict 청크가 선언한 개수만큼 바로 다음 레코드를 소비한다. 중간에 다른 record/function이 나타나거나 후속 청크가 strict payload가 아니면 연속성 오류다. caller가 지정한 레코드 수 제한을 확인한 뒤 임시 chunk view 배열을 할당하고, 공통 sequence validator를 호출해 필드 규칙을 복제하지 않는다. 비준수 `0x000f` 후보는 시작 청크로 추정하지 않고 기존 관찰 리포트에만 센다. [별도 EMF framing](emf-framing.md)은 구현돼 있지만, 여기서 재조립한 바이트를 그 검사기에 연결하는 단계는 아직 완료되지 않았다.
 
 ## 적대적 검증
 
@@ -38,3 +40,5 @@ hash-pinned HWP의 WMF에는 EscapeFunction이 `0x000f`인 META_ESCAPE가 118개
 구현 자체의 적대적 검토에서는 각 청크 길이를 짝수로 강제하던 초기 오류를 발견했다. 명세는 전체 EMF checksum을 WORD 단위로 정의할 뿐 청크 경계를 WORD 경계로 제한하지 않는다. 따라서 홀수 청크의 마지막 바이트를 다음 청크의 첫 바이트와 결합하도록 고쳤고, 1바이트/3바이트 분할 회귀 테스트로 고정했다. 전체 stream 길이가 홀수인 경우만 거부한다.
 
 물리적 scanner에는 비연속 레코드를 오류 없이 부분 리포트로 반환, record limit 제거, byte limit 전달 누락, sequence validator 오류를 부분 성공으로 변환, 후속 후보 계수 누락의 5개 변이를 적용했다. Debug/ReleaseSafe/ReleaseFast의 유효한 15회 모두 각각 데이터 잘림, 제한 우회, 오류 은폐 또는 report 손실로 탐지됐다. 모든 변이를 제거한 정상 구현은 별도로 전체 검증한다.
+
+2026-09-27 재검증: 공식 필드 정의·공통 ESCAPE 길이와 현재 조각/시퀀스/물리 scanner 코드를 대조해 위 `ByteCount` 불일치를 확인했다. [개발·검증 명령](development-commands.md)의 세 모드 집중 테스트는 enhanced 10/10 및 embedded scanner 5/5씩, ReleaseFast 고정 HWP/OLE 감사는 8/8 통과했다. 실제 표본의 후보 118개는 모두 비준수여서 올바른 다중 조각 EMF의 실파일 호환성 근거가 아니다. 과거 변이 45회는 이번에 다시 주입하지 않았다.

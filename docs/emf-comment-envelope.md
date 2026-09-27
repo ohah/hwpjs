@@ -41,10 +41,12 @@ Predefined identifier는 `EMR_COMMENT_EMFSPOOL=0x00000000`, `EMR_COMMENT_EMFPLUS
 
 ## 미구현 경계와 후속 순서
 
-이번 파트는 공통 envelope 완료입니다. 다음 내부 payload는 아직 검증 완료가 아닙니다.
+이 파트는 공통 envelope의 분류·경계 계약만 소유합니다. 하위 payload는 각각 별도 계약과 완료 상태를 가집니다.
 
 1. [public comment의 BeginGroup, EndGroup, MultiFormats, embedded WMF 및 reserved identifier](emf-public-comments.md)는 후속 계층에서 구현했습니다.
 2. [EMF+ 공통 record stream](emf-plus-record-stream.md)과 [58개 RecordType wire 지원 매트릭스](emf-plus-record-coverage.md)를 후속 계층에서 구현했습니다. 공식 개별 payload 정의가 없는 StrokeFillPath만 opaque 보존하며, graphics replay·렌더링·저장은 별도 미구현 범위입니다.
 3. EMFSPOOL record stream은 미구현입니다.
 
 Private data는 정의상 vendor 전용이므로 실행하거나 내용을 추측하지 않고 원문을 보존합니다. EMF+/EMFSPOOL/public 분류 성공도 embedded record의 안전성·렌더링·실행 지원을 뜻하지 않습니다.
+
+2026-09-27 재검증: 공식 Comment Record Types의 `DataSize`·세 predefined identifier·padding과 공통 후행 확장 규칙을 현재 `comment_identifier.zig`·`comment_record.zig` 및 상위 `framing.zig` 분류에 대조했습니다. 세 모드 `COMMENT` 집중 테스트는 각각 7/7, ReleaseFast EMF corpus 감사는 10/10 단계와 Node 회귀 3/3이 통과했습니다. corpus는 HWP 584개·BinData 2,167개에서 EMF signature 후보 0개였으므로 실제 HWP comment payload 검증은 아닙니다. 과거 변이 69회와 세 모드 전체 audit은 이번에 재실행하지 않았습니다.
