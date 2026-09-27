@@ -20,6 +20,14 @@
 
 ## 적대적 검증
 
+### 현재 재검증 (2026-09-27)
+
+[PNG Third Edition §11.3.3.3](https://www.w3.org/TR/png-3/#11zTXt)의 키워드·방식 0·독립 zlib 스트림과 현재 `compressed_text.zig`·`metadata.zig`·`pixels.zig`·공통 `zlib.zig`를 대조했습니다. zTXt의 해제된 본문은 소유하고 키워드는 입력을 빌리며, 스트림 뒤 바이트는 IDAT과 달리 거부하는 경계를 확인했습니다.
+
+Debug·ReleaseSafe·ReleaseFast의 `PNG compressed text` 집중 필터는 각각 root 포함 5/5 통과했습니다. 로컬 probe와 독립 Node oracle은 정상 739건·거부 1,920건을 대조했습니다. 추적 HWP PrvImage PNG 32개에는 zTXt가 0개라 양성 실파일 검증은 합성 입력에 한정됩니다. 아래 전체 audit 총계와 수동 64/65 MiB 반복 검사는 과거 기록이며 이번에 재실행한 결과가 아닙니다.
+
+### 과거 검증 기록
+
 네이티브는 방식 바이트 0..255, payload 모든 잘림, 출력 정확한 한도와 1바이트 부족, 빈 본문/0 한도, 빌린 키워드·소유 본문, 문자 오류, tEXt/zTXt 양 순서 합계 한도, 실패 상태 불변·usize 경계, 모든 할당 실패와 inflate 이후 오류 정리를 검사합니다.
 
 테스트 전용 WASM mode 136 입력은 u32 LE 본문 합계 한도 + PNG입니다. 출력은 8개 u32 LE(tEXt 청크/키워드/본문, zTXt 청크/키워드/본문, deferred 청크/바이트)와 입력 순서의 텍스트 항목입니다. 각 항목은 종류(0=tEXt, 1=zTXt)·키워드 길이·본문 길이(u32 LE 각각) 뒤에 두 원문 바이트를 붙입니다. 제품 JS ABI는 변경하지 않습니다.
