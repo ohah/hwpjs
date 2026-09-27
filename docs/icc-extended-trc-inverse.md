@@ -8,11 +8,17 @@ identity는 목표 분자·분모를 그대로 확장합니다. 샘플 곡선은
 
 파라메트릭 경로의 selected 좌표, undecided, unattained, ambiguous와 오류를 그대로 전달합니다. 곡선 전체의 단조성·평탄부·최근접 출력 선택은 [확장 파라메트릭 역변환](icc-extended-parametric-inverse.md)이 소유합니다. 이 진입점은 signed 입력 클리핑이나 프로파일 의미 검증을 수행하지 않습니다.
 
-## 진행 중인 검증
+## 2026-09-27 재검증
+
+[ICC.1:2022 Annex F.1/F.3](https://www.color.org/specifications/ICC.1-2022-05.pdf)의 곡선 역상·행렬 이후 채널별 범위 제한 순서를 현재 `trc_inverse.selectWide`, 공통 `selectFor`, `sampled_inverse.invertWide`, `parametric_inverse.selectWide`와 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 `wide TRC` 집중 필터는 각 모드 root 포함 4/4 통과했습니다. 기존 로컬 WASM probe의 현재 JS 대조는 mode213/214의 기존 경로에서 selected 722건·거부 232건, mode236/237의 확장 경로에서 selected 722건·거부 424건이 일치했고 양쪽 모두 unattained·ambiguous·undecided 각 1건을 확인했습니다.
+
+macOS 시스템 ICC 네 파일의 감마 TRC 10개를 실제 판본에 따라 mode236(v2)/237(v4)로 읽어 u512 목표 0·1·1/2, 총 30건에서 채널·의미 보류·좌표를 대조했습니다. 내부 목표는 기호근의 밑이 확대 분수일 수 있으므로 원분수와 교차 곱으로 비교하고 지수·affine 계수를 별도 확인했습니다. WASM 자체는 이번에 재빌드하지 않았습니다. 아래 구현 당시 전체 감사·출력/소스 변형은 재실행하지 않았고 `/tmp/hwpjs-wide-trc-{Debug,ReleaseSafe,ReleaseFast}.log`도 현재 없습니다. 아래 수치는 당시 이력입니다.
+
+## 2026-09-09 구현 당시 검증 기록
 
 신규 네이티브 테스트는 최대 u512 identity 보존, u512를 넘는 샘플 결과, 감마/파라메트릭의 정확한 제곱근, 큰 목표의 동률, 목표 검증 우선순위, 잘못된 감마·비단조 샘플 거부를 검사합니다. 결과 union과 optional 태그를 먼저 검증합니다.
 
-확장 행렬 역변환 연결과 제품 JS API는 포함하지 않습니다. 이 변경의 완료된 검증은 아래에 기록합니다.
+당시 이 변경에는 확장 행렬 역변환 연결과 제품 JS API가 포함되지 않았습니다. 현재는 별도 `matrix_trc_inverse.evaluateFraction`이 이 u512 TRC 경로를 호출하지만, 공개 제품 JS 색상 변환이 완성됐다는 뜻은 아닙니다. 당시 완료된 검증은 아래에 기록합니다.
 
 ## WASM 직접 대조
 
@@ -28,8 +34,10 @@ Debug 직접 대조는 기존 selected=722/rejected=232, 확장 selected=722/rej
 
 macOS 시스템 ICC의 curv 감마 TRC 10개에서 원시 태그를 mode237로 전달하고, 최대 u512 분모의 목표 0/1에 대한 정확한 좌표와 채널·의미 보류 플래그를 독립 검사했습니다. 20건이 통과했습니다. 이 수동 검사는 정규 audit 건수에 포함하지 않으며, OS 색상 엔진이나 HWP 렌더링과의 일치 검증은 아닙니다.
 
-## 최종 감사
+## 당시 최종 감사와 현재 범위
 
 Debug·ReleaseSafe·ReleaseFast 순차 전체 audit가 모두 종료 코드 0, 20/20 단계, 네이티브 685/685, WASM checks=6,987,904로 완료됐습니다. 이전 6,986,563에 기존 경로의 큰 샘플 보간 192건과 확장 경로 1,149건이 추가됐습니다. 로그는 `/tmp/hwpjs-wide-trc-{Debug,ReleaseSafe,ReleaseFast}.log`입니다. ReleaseSafe·ReleaseFast 실제 감사 산출물에서도 기존/확장 직접 대조 및 네 출력 변형 검출이 통과했습니다.
 
 최종 소스 검토에서는 목표 검증 선행, 분기별 기존 수학 모듈 재사용, 분자·분모 손실 없는 전달, 상태와 오류 보존, 채널·판본 정책 분리, wire 전체 초기화와 임시 버퍼 해제를 확인했습니다. 이번 범위에서 추가 결함은 발견하지 못했습니다. 변경 Zig 포맷·JS 문법·diff 공백·문서 로컬 링크 6개를 확인했습니다. 전체 HWP/HWPX 문서 검증·편집·저장·렌더링 완료를 의미하지 않습니다.
+
+현재도 이 진입점 자체는 signed XYZ 입력 클리핑·LUT 우선순위·전체 프로파일 의미를 수행하지 않습니다. 별도 분수 Matrix/TRC 연결의 존재를 전체 ICC 색상 변환이나 HWP/HWPX 문서 기능 완성으로 확대하지 않습니다.
