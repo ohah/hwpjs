@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "a00dabaae163cb6758d8ca2fb3e23de60f2e0185aba2efd2b21e0dd2f7cd9eec",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG and body contract evidence review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "5cccb1cd2d381469f2b75ff99edc6bec2ee353726e21d033d178a78f7fe7bede",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body and BinData encoding evidence review, architecture pending, full Debug Zig test incomplete"
+    },
+    "docs/hwp5-bin-data-encoding.md": {
+      "sha256": "0d1a67a9bc55b015b174edfbe7ed9b9d44bf7dfc8c3dbeb7dfd8f631a801f088",
+      "evidence": "2026-09-27 local HWP5 table 18 and current compression policy, Debug Safe Fast focused encode and Safe CFB batch test; stale outer-layer and historical tmp log clarified"
     },
     "docs/hwp5-body-contracts.md": {
       "sha256": "2020c991fdf856096ffc7fbbddf08ad6421066322e243eb6cc2b677008765405",

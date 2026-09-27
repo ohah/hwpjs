@@ -14,8 +14,10 @@ FileHeader 기본 압축 true/false와 항목 default/compressed/uncompressed의
 
 reserved/LINK/미지 종류와 distribution 기본 거부를 정확한 오류로 확인하고, 명시적인 observed distribution 정책에서만 인코딩을 허용합니다.
 
-최종 공통 정책 함수의 압축 판정을 항상 false로 고정, FileHeader 기본 압축값 반전, encode 비압축 복사의 마지막 바이트 제거, 공통 feature gate 제거, 공통 LINK 오류 변경의 다섯 소스 변형을 Debug·ReleaseSafe·ReleaseFast에서 실행했습니다. 15개 조합 모두 컴파일 성공 후 실제 assertion 실패와 종료 코드 1로 검출했습니다. 컴파일 실패나 trap은 검출로 세지 않았습니다. 격리 로그는 `/tmp/hwpjs-bin-data-policy-mutants.CbF3cV`에 남겼습니다. 공통화 전 encode 중복 코드에 수행한 초기 15회는 최종 실적으로 사용하지 않습니다.
+최종 공통 정책 함수의 압축 판정을 항상 false로 고정, FileHeader 기본 압축값 반전, encode 비압축 복사의 마지막 바이트 제거, 공통 feature gate 제거, 공통 LINK 오류 변경의 다섯 소스 변형을 Debug·ReleaseSafe·ReleaseFast에서 실행했습니다. 당시 15개 조합 모두 컴파일 성공 후 실제 assertion 실패와 종료 코드 1로 검출했습니다. 컴파일 실패나 trap은 검출로 세지 않았습니다. 당시 격리 로그 경로 `/tmp/hwpjs-bin-data-policy-mutants.CbF3cV`는 현재 존재하지 않으므로 이 변이 결과를 이번 재실측으로 세지 않습니다. 공통화 전 encode 중복 코드에 수행한 초기 15회는 최종 실적으로 사용하지 않습니다.
+
+2026-09-27 재검증: 로컬 HWP5 명세 표 18의 기본/강제 압축 비트를 현재 `BinData.isCompressed`·공통 `compressionPolicy`와 대조했습니다. [개발·검증 명령](development-commands.md)의 인코딩 필터는 Debug·ReleaseSafe·ReleaseFast 각각 3/3(러너 포함), CFB 다중 교체 연결은 ReleaseSafe 2/2(러너 포함) 통과했습니다. 독립 구현의 저장 바이트나 실파일 round-trip은 이번 집중 검사 대상이 아닙니다.
 
 ## 남은 범위
 
-이 API는 저장할 CFB 경로를 선택하거나 FileHeader/DocInfo를 수정하지 않습니다. 바깥 HWP CFB의 정확한 BinData stream 교체와 전체 파일 재생성은 다음 상위 계층이 담당합니다. stored block은 호환되지만 기존 압축 stream보다 커질 수 있습니다.
+이 API는 저장할 CFB 경로를 선택하거나 FileHeader/DocInfo를 수정하지 않습니다. 바깥 HWP CFB의 정확한 BinData stream 교체와 전체 파일 재생성은 이미 구현된 [별도 상위 계층](hwp5-bin-data-replacement.md)이 담당합니다. 그 계층도 DocInfo 수정·항목 추가/삭제는 지원하지 않습니다. stored block은 호환되지만 기존 압축 stream보다 커질 수 있습니다.
