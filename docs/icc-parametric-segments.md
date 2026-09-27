@@ -10,7 +10,7 @@ Linear는 원본 signed 16.16 slope/offset, Power는 a/b/g/offset을 보관합�
 
 unit_interval.Interval은 비어 있지 않은 정규화 구간의 검증과 정확한 포함 검사를 소유합니다. 양 끝의 분수 유효성·순서·한 점 구간의 양 끝 포함을 확인합니다. 비교에 u64 두 값의 u128 곱만 사용하여 최대 분모에서도 오버플로와 반올림을 피합니다. 역전 구간은 InvalidIccIntervalOrder, 열린 한 점 구간은 EmptyIccInterval입니다. 잘못된 분수는 공통 Fraction 오류를 유지합니다.
 
-이 모델은 Table 68의 원본 분기를 표현할 뿐입니다. [반례 조사](icc-parametric-inverse-topology.md)에서 확인한 클리핑 경계/밑의 영점에 따른 추가 분할, 단조성·상수성·점프 비교, 달성 가능한 역상과 실제 역함수 계산은 아직 남아 있습니다. 기존 점 평가기는 변경하지 않았으며 이번 조립 성공을 역변환 가능성으로 해석하지 않습니다.
+이 모델은 Table 68의 원본 분기를 표현할 뿐입니다. [반례 조사](icc-parametric-inverse-topology.md)에서 확인한 클리핑 경계/밑의 영점에 따른 추가 분할, [단조성·상수성](icc-parametric-trend.md)·[점프 비교](icc-parametric-jump.md), [도달 역상](icc-parametric-attained-inverse.md)과 [전체 역변환](icc-parametric-inverse.md)은 현재 별도 계층에 구현되어 있습니다. 이 조립 성공만으로 역변환 가능성을 판정하지 않습니다.
 
 ## 검증
 
@@ -36,4 +36,6 @@ ReleaseSafe·ReleaseFast 전체 감사도 `/tmp/hwpjs-icc-segments-ReleaseSafe.l
 
 추가 단언을 포함한 네이티브 Debug·ReleaseSafe·ReleaseFast 재실행이 모두 종료 코드 0, 5/5 단계·488/488로 통과했습니다. 로그는 `/tmp/hwpjs-icc-segments-native-{Debug,ReleaseSafe,ReleaseFast}.log`입니다. 위 완료 전 표현은 각 실행 당시 기록입니다.
 
-최종 적대적 검토에서 빈 분기와 한 점 구간의 구분, 분기점의 단일 소유권, u64 분수의 u128 곱 범위, 서로 다른 e/f 보존, 정의역 오류 전파, 비할당 모델과 probe의 출력 메모리 경계를 확인했습니다. 추가 결함은 발견하지 못했습니다. 구간 포함 규칙은 unit_interval, 분기점은 parametric_domain, 원본 분기 조립은 parametric_segments로 책임을 분리했습니다. 포맷·변경 JS 문법·diff 공백·문서 로컬 링크 2개 검사도 통과했습니다. 전체 문서 검증 및 단조성·역함수 완성을 뜻하지 않습니다.
+당시 최종 적대적 검토에서 빈 분기와 한 점 구간의 구분, 분기점의 단일 소유권, u64 분수의 u128 곱 범위, 서로 다른 e/f 보존, 정의역 오류 전파, 비할당 모델과 probe의 출력 메모리 경계를 확인했습니다. 추가 결함은 발견하지 못했습니다. 구간 포함 규칙은 unit_interval, 분기점은 parametric_domain, 원본 분기 조립은 parametric_segments로 책임을 분리했습니다. 포맷·변경 JS 문법·diff 공백·문서 로컬 링크 2개 검사도 통과했습니다. 이 문서 단독의 검증은 전체 문서 검증이나 후속 역변환의 성공 증거가 아닙니다.
+
+2026-09-27 재검증에서는 [ICC.1:2022 Table 68](https://www.color.org/specifications/ICC.1-2022-05.pdf)의 `x<d`/`x>=d` 분기·클리핑과 현재 `parametric_domain`·`unit_interval`·`parametric_segments`의 경계 소유권을 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 `parametric` 집중 테스트는 각각 62/62, Debug `unit intervals`는 2/2 통과했습니다. 기존 로컬 WASM mode180의 독립 JS 대조는 비교 3,016건·예상 거부 1,377건이 일치했습니다. 현재 시스템 ICC 다섯 파일에서 15개 para TRC를 다시 읽어 type0 3개의 하위 분기 부재와 type3 12개의 양쪽 분기를 확인했습니다. 과거 `/tmp` 전체 감사 로그는 현재 없으며 이번에 전체 감사·WASM 재빌드·반환값 변형을 재실행한 것으로 세지 않습니다.

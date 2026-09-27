@@ -13,7 +13,7 @@
 
 경계가 x=0이면 하위 분기가 없어 none입니다. x=1이면 상위 한 점과 하위 열린 끝점이 연결되므로 boundary입니다. d>1이면 활성 상위 분기가 없어 none입니다. 이 조건을 따로 재구현하지 않고 기존 구간 조립 결과를 사용합니다.
 
-이 단계는 분기 사이의 점프만 다룹니다. [각 분기 내부 클리핑 구간](icc-power-clipping.md)의 방향, 전체 곡선의 단조성·상수성, 열린 역상의 최대/최근접값 존재, 역변환은 별도 후속 계층입니다. 한 점에서 eq여도 곡선 전체가 상수라는 뜻이 아닙니다.
+이 단계는 분기 사이의 점프만 다룹니다. [각 분기 내부 클리핑 구간](icc-power-clipping.md)의 방향, [전체 곡선의 단조성·상수성](icc-parametric-trend.md), [열린 역상의 최대값](icc-parametric-attained-inverse.md)·[최근접 출력 존재](icc-parametric-nearest.md), [전체 역변환](icc-parametric-inverse.md)은 현재 별도 계층의 책임입니다. 한 점에서 eq여도 곡선 전체가 상수라는 뜻이 아닙니다.
 
 ## 정확한 값 비교와 책임
 
@@ -51,4 +51,6 @@ WASM mode191은 precision u32 BE와 para payload를 받습니다. 출력은 24�
 
 ReleaseFast 산출물 직접 대조 역시 같은 신규 검사 수로 통과했고, x=1 경계 삭제 변형을 ERR_ASSERTION으로 검출했습니다. 최종 적대적 검토에서 열린 선형 끝점의 좌극한 계산, 0/1 양쪽 클리핑과 내부 목표값의 순서 보존, i128/u128 오프셋 차감 범위, 전체 정의역 검증 우선순위, 경계 부재와 미확정의 구분, 끝점 경계 유지와 오류 후 복구를 재확인했습니다. 해당 범위에서 추가 결함은 발견하지 않았습니다. 변경 Zig 포맷·JS 문법·로컬 문서 링크 7개·diff 공백 검사도 통과했습니다.
 
-다음 구현은 이 경계 순서와 각 클리핑 구간의 방향을 결합하는 전체 단조성/상수성 판정입니다. 역변환과 전체 문서 검증 목표는 아직 미완료입니다.
+당시 다음 구현이었던 경계 순서와 각 클리핑 구간 방향의 결합은 현재 `parametric_trend.inspect`가 담당합니다. 전체 역변환도 별도 구현이지만 이 점프 판정만으로 역변환 가능성을 보장하지 않습니다. 전체 문서 검증 목표는 아직 미완료입니다.
+
+2026-09-27 재검증에서는 [ICC.1:2022 Table 68](https://www.color.org/specifications/ICC.1-2022-05.pdf)의 열린 하위/닫힌 상위 분기와 현재 `parametric_segments`·`affine_value`·`power_level_order`·`rational_power_order`의 연결을 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 `parametric` 집중 테스트는 각각 62/62 통과했고, 기존 로컬 WASM mode191의 독립 JS 대조는 비교 4,073건·예상 거부 10,463건·경계 부재 9,852건이 일치했습니다. 현재 시스템 ICC 다섯 파일의 15개 para TRC에서 type0 3건은 경계 부재, type3 12건은 Display P3·ITU-2020의 상향과 ITU-709·ROMM RGB의 하향으로 재확인했습니다. 과거 `/tmp` 전체 감사 로그는 현재 없으며 이번에 전체 감사·WASM 재빌드·반환값 변형을 재실행한 것으로 세지 않습니다.
