@@ -18,9 +18,9 @@ hash-pinned WMF 표본에는 SETTEXTALIGN 120개가 있고 baseline 0x18과 upda
 
 EXTTEXTOUT 60개는 option 0이라 `from_options`에서 Rect가 없고, 문자열 248바이트와 Dx 248개가 정확히 대응한다. 홀수 문자열 padding은 8개이며 그중 6개가 0이 아니다. x 합 136,594, y 합 133,130, Dx 합 13,484를 독립 Node 순회와 Zig 공개 API에서 대조한다.
 
-ESCAPE 118개는 모두 function 0x000f(META_ESCAPE_ENHANCED_METAFILE)이고 data 합은 1,689바이트다. 홀수 data는 한 건이며 padding은 0이다. 현재는 이 payload의 내부 EMF chunk 의미를 완료로 세지 않는다.
+ESCAPE 118개는 모두 function 0x000f(META_ESCAPE_ENHANCED_METAFILE)이고 data 합은 1,689바이트다. 홀수 data는 한 건이며 padding은 0이다. 별도 [embedded EMF 검사](wmf-enhanced-metafile.md)는 명세에 맞는 조각의 연속성·재조립을 검증하지만, 이 표본의 118개는 모두 그 comment 형식에 맞지 않아 준수 EMF 조각으로 해석하지 않는다.
 
-합성 검증은 alignment flag/optional Reserved, signed YX, 음수·홀수 문자열, nonzero padding, Rect 명시 정책, Dx 부재/정확/잘림, escape enum/count/padding을 검사한다. font 선택과 charset decoding, text shaping, current-position 전이, clipping/opaque 적용, enhanced metafile 재조립 및 렌더링은 후속 단계다.
+합성 검증은 alignment flag/optional Reserved, signed YX, 음수·홀수 문자열, nonzero padding, Rect 명시 정책, Dx 부재/정확/잘림, escape enum/count/padding을 검사한다. font 선택과 charset decoding, text shaping, current-position 전이, clipping/opaque 적용 및 렌더링은 후속 단계다. 명세 준수 enhanced metafile의 조각 재조립은 별도 모듈 범위이고, 재조립된 EMF의 실제 그리기 의미는 이 검사 범위가 아니다.
 
 ## 적대적 검증
 
@@ -33,3 +33,5 @@ ESCAPE 118개는 모두 function 0x000f(META_ESCAPE_ENHANCED_METAFILE)이고 dat
 5. ESCAPE의 선언된 ByteCount를 무시하고 남은 record 길이에서 유도
 
 15회 모두 기존 계약 또는 hash-pinned 실제 HWP 대조가 실패해 결함을 탐지했고, 각 변이를 제거한 뒤 정상 구현을 다시 검증한다. 특히 마지막 변이는 실제 ESCAPE data 합을 1,689바이트에서 1,690바이트로 바꾸어 세 최적화 모드 모두에서 탐지됐다. ByteCount를 3에서 4로 바꾸는 경우 기존 홀수 padding이 네 번째 데이터가 되어 구조적으로 유효하므로, 잘림 계약은 ByteCount 5로 검증한다.
+
+2026-09-27 재검증: 공식 SETTEXTALIGN·EXTTEXTOUT·ESCAPE 및 escape 열거값과 현재 `text_align.zig`·`ext_text_out.zig`·`escape.zig`·`text_records.zig`를 대조했다. 세 모드 WMF 집중 테스트는 각각 48/48, ReleaseSafe 고정 HWP/OLE 감사는 8/8 통과해 텍스트 길이·padding·Dx·escape 집계를 재확인했다. 위 15회 변이와 별도 독립 Node 집계는 이번에 재실행하지 않은 과거 기록이다.

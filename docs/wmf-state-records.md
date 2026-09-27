@@ -14,6 +14,8 @@ hash-pinned WMF 표본은 SETBKMODE 148개(transparent 60, opaque 88), SETROP2 1
 
 window origin은 `(x=60,y=1008)`, extent는 `(5464,2173)` 한 개씩이다. MOVETO 96개의 합은 x 267,579/y 143,072이고 LINETO 8개의 합은 x 20,994/y 13,754다. 독립 Node 순회와 Zig 집계가 이 수치와 일치한다. 좌표 합은 parser 오프셋·축 순서 검증용 fingerprint이지 기하 정당성이나 렌더링 결과가 아니다.
 
-합성 검증은 XY/YX가 서로 다른 signed 값, function/크기 불일치, optional Reserved의 null/원값, mode 경계와 ColorRef strict/observed 분리를 검사한다. 현재 위치와 선을 연결한 path 의미, device-context 상태 전이, clipping/map mode 변환, polygon·ellipse·rectangle 및 픽셀 렌더링은 아직 완료로 세지 않는다.
+합성 검증은 XY/YX가 서로 다른 signed 값, function/크기 불일치, optional Reserved의 null/원값, mode 경계와 ColorRef strict/observed 분리를 검사한다. [polygon·ellipse·rectangle 필드 검사](wmf-drawing-records.md)는 별도 모듈이 소유한다. 현재 위치와 선을 연결한 path 의미, device-context 상태 전이, clipping/map mode 변환 및 픽셀 렌더링은 이 원값 검사로 완료됐다고 세지 않는다.
 
 적대적 검증은 (1) optional Reserved 없는 4 WORD mode 제거, (2) polygon mode 3 허용, (3) YX 좌표를 XY로 읽기, (4) text color를 항상 observed 정책으로 읽기, (5) move X 합에 Y를 연결하는 다섯 변이를 주입했다. Debug·ReleaseSafe·ReleaseFast의 15회 모두 실제 표본 또는 공개 API 합성 감사가 검출했고 각 변이는 원복했다.
+
+2026-09-27 재검증: 공식 SETBKMODE·좌표 record와 현재 `mode_record.zig`·`point_record.zig`·`text_color.zig`·`state_records.zig`의 크기·원값·정책을 대조했다. 세 모드 WMF 집중 테스트는 각각 48/48, ReleaseSafe 고정 HWP/OLE 감사는 8/8 통과해 표본의 mode/색/좌표 집계를 재확인했다. 위 15회 변이와 별도 독립 Node 집계는 이번에 재실행하지 않은 과거 기록이다.

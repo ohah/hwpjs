@@ -17,3 +17,5 @@ ellipse 64개와 rectangle 46개는 모두 7 WORD다. ellipse의 left/top/right/
 합성 검증은 signed XY, 배열 끝 인덱스, 잘린·남는 byte, 음수/0/1/2점, function/크기 불일치와 Bottom/Right/Top/Left 오프셋을 검사한다. polygon 닫힘, 선분 연결, fill rule 적용, 사각형 정규화, 현재 pen/brush 선택, clipping 및 픽셀 렌더링은 아직 완료로 세지 않는다.
 
 적대적 검증은 (1) polygon 1점 허용, (2) 선언 record WORD 크기 대조 우회, (3) PointS를 YX로 읽기, (4) Rect left를 top 오프셋에서 읽기, (5) 공통 집계의 X 합에 Y를 연결하는 다섯 변이를 주입했다. Debug·ReleaseSafe·ReleaseFast의 15회 모두 실제 표본 또는 공개 API 합성 감사가 검출했고 각 변이는 원복했다.
+
+2026-09-27 재검증: 공식 POLYGON·POLYLINE·ELLIPSE·RECTANGLE의 점 개수와 좌표 순서를 현재 `poly_record.zig`·`point_array.zig`·`rect_record.zig`·`drawing_records.zig`에 대조했다. 세 모드 WMF 집중 테스트는 각각 48/48, ReleaseSafe 고정 HWP/OLE 감사는 8/8 통과해 표본의 점 수와 네 사각 좌표 합을 재확인했다. 위 15회 변이와 별도 독립 Node 집계는 이번에 재실행하지 않은 과거 기록이다.
