@@ -11,3 +11,5 @@ section 검사는 소유 `XmlTrees.inspectRunTopology`, 마스터페이지 검�
 후속 [직접 switch 구조 진단](hwpx-switch-shape.md)은 `switch`의 case/default 모양을 별도 파일에서 관측합니다. 이 문서의 직접 자식 분류는 계속 run topology가 소유하며, 실제 분기 선택은 두 보고서 모두 제공하지 않습니다.
 
 2026-09-24 검증: 독립 oracle과 제품 보고서의 8개 corpus shard를 대조했으며, 전체 Debug 테스트 2,243개, ReleaseSafe 빌드, ReleaseSafe 전체 audit 40단계·2,282개 테스트, 전용 ReleaseFast 테스트가 통과했습니다. 합성 입력에서는 비직접 run, 중첩 문단, 중복·늦은 `secPr`, 모델 미등록·타 namespace 자식, 마스터페이지 선택 범위, 파트별 위치, 크기 한도와 할당 실패를 점검했습니다. 이 결과는 위 진단 범위의 일치만 뒷받침하며 전체 HWPX 문서 모델의 완성이나 모든 파일에 대한 무손실 편집을 뜻하지 않습니다.
+
+2026-09-28 현재 소스 재검증: Debug·ReleaseSafe·ReleaseFast `HWPX run topology` 집중 각 7/7개가 통과했습니다. 독립 Python 조사는 허용 476개에서 section run 267,347개·마스터페이지 run 521개, 비직접 run·중복 `secPr` 각각 0개, section의 늦은 `secPr` 32개, 직접 자식 모델 269,498개·`bookmark` 9개·`switch` 93개 및 마스터페이지 모델 자식 633개를 재확인했습니다. 과거 전체 audit와 Zig known 실파일 8개 shard는 이번 묶음에서 재실행하지 않았으며, 이 분류를 2011 전체 스키마 허용 목록으로 승격하지 않습니다.

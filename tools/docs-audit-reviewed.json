@@ -630,8 +630,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "c6375c3f21dbb14874ed372e708bc0b6082cac3c4c54bd1fb9f1ba6f8e2e9b17",
-      "evidence": "2026-09-28 tracker updated with two new HWPX paragraph docs and reverified existing section tree, three-mode focused tests independent corpus and eight section shards; historic known audit distinguished"
+      "sha256": "11518f4a9cfb842b29ac8039cf201bfe6db3bb5a02ae9ce9bca98e6df3c61bb6",
+      "evidence": "2026-09-28 tracker updated with HWPX run topology metadata and line segments, three-mode focused tests independent ZIP XML corpus and historic known audit distinguished"
     },
     "docs/hwpx-ole-payloads.md": {
       "sha256": "a7c214c0760d575237afcb960b7ff1fe976a0d99468e1083066e36c889deabad",
@@ -1852,6 +1852,18 @@
     "docs/hwpx-paragraph-children.md": {
       "sha256": "5588634168cc95899024a2711aeced05c55c7d7aed42e132b6ecb9a32da24792",
       "evidence": "2026-09-28 source direct PType children versus official model, Debug Safe Fast focused four each, Python 215146 paragraphs 267347 runs 213905 arrays one no-run; known real Zig shards not rerun this batch"
+    },
+    "docs/hwpx-run-topology.md": {
+      "sha256": "cde2ccb264e2b267e6e28bcff36b8d0eaed439fc3e0e637f41875c8cfeaddebb",
+      "evidence": "2026-09-28 official RunType 30 model names versus Zig diagnostic and independent Python 476 docs 267347 section runs 521 master runs late secPr 32, Debug Safe Fast focused seven each; known shards historic"
+    },
+    "docs/hwpx-run-metadata.md": {
+      "sha256": "76a764390d870f12dfa5ca6b4f079be0e574fd5d08f2719ff0dfcae225197d22",
+      "evidence": "2026-09-28 official charTcId write and paraTcId read fallback versus Zig independent field census, Debug Safe Fast focused seven each, Python 267347 plus 521 runs all absent; explicit values synthetic only"
+    },
+    "docs/hwpx-line-segments.md": {
+      "sha256": "2fd9e55dbc52ed4e5f244420d84de26a6ab60a56d8278886206a1de64a1c26b6",
+      "evidence": "2026-09-28 official PType nine scalar fields versus Zig signed unsigned policy, Debug Safe Fast focused six each, Python 213905 arrays 254480 segments 6 empty 5790 flag highbit; known shards historic"
     }
   }
 }
