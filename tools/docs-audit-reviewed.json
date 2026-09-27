@@ -1,6 +1,26 @@
 {
   "schema": 1,
   "verified": {
+    "docs/emf-plus-clear-record.md": {
+      "sha256": "c3631f0acfba0dd7747ee2014a687f6b77aad52256e3ef8fbdc44ad511820200",
+      "evidence": "2026-09-28 official EMF+ Clear exact 16-byte record and ignored flags versus Zig ARGB parser and tracked stream; ReleaseSafe EMF+ 560, links 2772, docs tests 2; historic mutants and full audits not rerun"
+    },
+    "docs/emf-plus-fill-rects-record.md": {
+      "sha256": "d8caac12ea85b22c5ed94822a2233fcbae240fbe5b00b72b31a800dfe765fe54",
+      "evidence": "2026-09-28 official EMF+ FillRects S C Count sizes versus Zig shared brush and rect array parser, conditional Object Table lookup and tracked stream; ReleaseSafe EMF+ 560; historic mutants and full audits not rerun"
+    },
+    "docs/emf-plus-draw-rects-record.md": {
+      "sha256": "fc812d11ccaf28e0a42406f4dd1495c2db02d88fe0c27a08ce22d7ef707986ef",
+      "evidence": "2026-09-28 official EMF+ DrawRects C Pen Count sizes versus Zig shared rect array and object lookup, fixed stale FillRects wording; ReleaseSafe EMF+ 560; historic mutants and full audits not rerun"
+    },
+    "docs/emf-plus-fill-ellipse-record.md": {
+      "sha256": "5a6407153d5bf20f6af616b530fb759b0a4c26df59c23b79cc5c4e141227cc9a",
+      "evidence": "2026-09-28 official EMF+ FillEllipse S C sizes versus Zig brush rectangle parser conditional lookup and geometry adapters; ReleaseSafe EMF+ 560; historic mutants and full audits not rerun"
+    },
+    "docs/emf-plus-draw-ellipse-record.md": {
+      "sha256": "90c3740dd4fd44035b52a2376b399bf3376e344e3777c06e986a9dc5e598231c",
+      "evidence": "2026-09-28 official EMF+ DrawEllipse C Pen sizes versus Zig rectangle parser object lookup and geometry adapters; ReleaseSafe EMF+ 560; historic mutants and full audits not rerun"
+    },
     "docs/emf-plus-set-ts-clip-record.md": {
       "sha256": "3ed02148860877500e049aac22ab059a053868b0da85dff26aed84bdb0255152",
       "evidence": "2026-09-28 official EMF+ SetTSClip C count sizes signed 7 and 15-bit delta algorithm versus Zig parser rectangle iterator tracked stream; Debug Safe Fast root EMF+ 560 each and direct tests collected; historic mutants and full audits not rerun"
@@ -230,7 +250,7 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "ebe2e4ec0348636f9bcbdbf5ab608069ae864267c63ca3ac293906d15b6b6d41",
+      "sha256": "c6bedfd337719138536982823035d6adb9c047a7e698d56a434ff37b0fa28931",
       "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope PNG ICC inspection PNG RGBA BCP47 syntax registry alpha2 history ICC IANA matching mluc selection mluc structure mluc Unicode ICC v2 Unicode v2 text tag payload dispatch tag table structure header identifiers v4 and v2 header numeric header verification ICC registry source lookup required tags overview presence table XYZ type XYZ tags curve type TRC tags parametric curve analytic forward TRC forward sampled forward sampled inverse sampled wide inverse gamma inverse wide gamma inverse TRC inverse and extended TRC inverse matrix TRC inverse matrix TRC model matrix TRC forward fraction matrix inverse fraction matrix TRC inverse wide linear target wide positive bounds normalized and extended root compare normalized and extended root locations clipped and extended power preimage whole and extended whole parametric preimage normalized and extended whole bounds normalized and extended attained F.1a whole and extended nearest normalized and extended full inverse topology segments jump trend domain partition power clipping power level root compare active root locations rational power order normalized power level wide power level normalized root order power range power nearest ordinate order extended ordinate order ordinate distance extended ordinate distance linear range parametric range rational range nearest linear preimage extended linear preimage chromatic adaptation matrix transform ICC foundation verification review, architecture pending, full Debug Zig test 2656 passed and ReleaseFast HWP5 audit 10 steps 8905855 checks, EMF ICM and three clipping region docs direct tests and 102 shared tests each mode"
     },
     "docs/bcp47-syntax.md": {

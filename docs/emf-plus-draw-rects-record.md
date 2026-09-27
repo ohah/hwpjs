@@ -2,7 +2,7 @@
 
 ## 범위와 단일 출처
 
-`emf_plus_draw_rects.zig`는 MS-EMFPLUS 2.3.4.13의 Type, Flags, Size/DataSize, Count와 RectData 배열을 조립합니다. C와 Pen ObjectID는 `emf_plus_record_flags.zig`, Rect/RectF 선택은 `emf_plus_rect_data.zig`가 소유합니다. Count 최소값·한도, C별 원소 폭, 정확한 배열 길이와 borrowed iterator는 `emf_plus_rect_array.zig`가 단일 출처이며 후속 FillRects도 재사용할 수 있습니다.
+`emf_plus_draw_rects.zig`는 [MS-EMFPLUS 2.3.4.13](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/0f98925c-fecf-450c-ade0-dc837044ee4f)의 Type, Flags, Size/DataSize, Count와 RectData 배열을 조립합니다. C와 Pen ObjectID는 `emf_plus_record_flags.zig`, Rect/RectF 선택은 `emf_plus_rect_data.zig`가 소유합니다. Count 최소값·한도, C별 원소 폭, 정확한 배열 길이와 borrowed iterator는 `emf_plus_rect_array.zig`가 단일 출처이며 FillRects도 이를 재사용합니다.
 
 Count는 명세의 MUST에 따라 1 이상이어야 합니다. C가 set이면 `DataSize = 4 + Count * 8`, clear이면 `DataSize = 4 + Count * 16`이고 `Size = DataSize + 12`여야 합니다. Size의 DWORD 정렬, Size/DataSize 관계와 실제 slice를 독립적으로 검사하고 모든 곱셈과 count 한도를 검사합니다. 기본 최대값은 16 Mi rectangles입니다.
 
@@ -12,7 +12,7 @@ reserved Flags는 MUST be ignored에 따라 원값으로 보존합니다. RectF�
 
 stream은 Pen ObjectID 슬롯이 존재하고 ObjectTypePen인지 확인합니다. 누락 Pen, 다른 객체 타입, payload·한도·집계 오류는 comment 전체 상태를 원복하고 상위 EMF framing은 같은 경로를 사용합니다.
 
-현재 로컬 HWP corpus에는 EMF+ signature가 없어 실제 한컴 DrawRects 표본과 렌더링 결과는 관측하지 못했습니다. 구현 범위는 wire 구조, borrowed rectangle iteration, Pen 참조, stream/framing과 [공개 device-corner iterator 연결](emf-plus-rect-record-device-corners.md)입니다. clipping·stroke 재생과 저장은 미구현입니다.
+당시 조사한 로컬 HWP corpus에는 EMF+ signature가 없어 실제 한컴 DrawRects 표본과 렌더링 결과는 관측하지 못했습니다. 구현 범위는 wire 구조, borrowed rectangle iteration, Pen 참조, stream/framing과 [공개 device-corner iterator 연결](emf-plus-rect-record-device-corners.md)입니다. clipping·stroke 재생과 저장은 미구현입니다.
 
 ## 검증 기록
 
@@ -23,3 +23,5 @@ RecordType, 최소 envelope, Size/DataSize 관계·실제 slice, C 해석, RectA
 첫 캠페인에서는 실제 slice 검사를 제거한 변이가 생존했습니다. 기존 fixture가 downstream RectArray 길이 검사에서도 실패해 envelope 축을 독립 증명하지 못한 테스트 위치 편향이었습니다. 선언 DataSize는 한 rectangle이지만 실제 slice는 완전한 두 rectangle인 fixture를 추가했습니다. options 무시 변이도 미사용 매개변수 컴파일 오류라 원래 한도를 소비하면서 1만 늘리도록 교체했습니다. 두 번째 캠페인의 count 최소값·배열 길이 제거는 Zig의 추론 error set을 바꿔 6회 컴파일 오류였으므로, 오류 경로는 유지하면서 정상 조건만 우회하는 변이로 교체했습니다. 앞선 두 캠페인을 폐기하고 위 세 번째 캠페인을 처음부터 수행했습니다.
 
 최종 제품 트리의 전체 `audit`를 Debug·ReleaseSafe·ReleaseFast 순서로 실행했습니다. 세 모드 모두 40/40 단계와 1,705/1,705 테스트, HWP 감사 8,905,827 checks, WASM imports 0으로 통과했습니다. 로그는 `/tmp/hwpjs-emfplus-draw-rects-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.
+
+위 변이·전체 `audit` 수치는 당시 실행 기록이며 이번 문서 재검증에서 재실행한 결과는 아닙니다.
