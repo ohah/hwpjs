@@ -2,6 +2,14 @@
 
 [식별자 스냅샷](icc-registry.md)에서 만든 Zig 테이블을 조회합니다. 네트워크·파일·할당자·호스트 시간에 의존하지 않습니다. 표에 속하는지와 전체 ICC 유효성은 구분합니다.
 
+## 2026-09-27 현재 내용 재검증
+
+`source.json`→`generate.mjs`→`data.zig`→`registry/lookup.zig`→`header_registry.inspect`의 소유 경계와 상태 0~3, mode 149의 네 u32 LE 반환을 다시 대조했습니다. 생성기 `--check`와 `zig build icc-registry-audit --summary all`이 각각 통과했고 후자는 3/3 단계·Node 14/14 테스트였습니다. Debug·ReleaseSafe·ReleaseFast에서 `ICC binary lookup`·`ICC registry membership` 필터는 각 모드 각각 root 포함 2/2·2/2 통과했습니다.
+
+기존 로컬 WASM probe를 **재빌드하지 않고** 정규 `iccRegistryEdges`를 실행해 독립 `source.json` Set 기준의 비교 13,887건·거부 130건이 일치했습니다. [공식 ICC 프로파일 네 파일](icc-verification.md#공식-외부-파일-비교)도 현재 메모리로 다시 받아 SHA-256과 mode 149의 네 상태를 대조했고 아래 수동 기록과 일치했습니다. 이 파일 대조는 헤더 등록 상태에 한정됩니다. 과거 세 모드 **전체** audit·실제 HWP/PNG 삽입 파일·색 변환은 이번에 재실행하지 않았고, 아래에 적힌 `/tmp` 로그는 현재 존재하지 않습니다.
+
+현재 필수 태그 존재·일부 태그 내용 검사와 PNG 픽셀 경유 선택형 ICC 보고서는 별도 계층에 구현돼 있습니다. mode 149가 이들을 자동 호출하지 않으며 제품 공개 JS/WASM API도 여전히 CFB 중심입니다. 스냅샷 미발견/판정 보류를 영구 미등록이나 전체 프로파일 오류로 승격하지 않습니다.
+
 ## SSOT와 상태
 
 `registry/source.json`이 추출 사실과 불확실성의 단일 출처입니다. `tools/icc-registry/generate.mjs`가 검증 후 `registry/data.zig` 내용을 표준 출력으로 생성합니다. `--check`는 저장된 생성 파일과 정확히 비교하며 자동 덮어쓰지 않습니다. 빌드의 네이티브 테스트·제품 WASM·테스트 WASM 컴파일은 이 검사에 의존합니다. 데이터의 snapshot_sha256은 JSON.stringify 결과의 SHA-256이며 원문 CSV 각각의 해시와 다릅니다.
@@ -19,7 +27,7 @@
 
 `header_registry.inspect(Header)`는 CMM·제조사·모델·작성자 상태 네 개를 반환합니다. 작성자는 제조사 표를 조회하지만 권고를 필수 오류로 승격하지 않습니다. 헤더 버전·식별자 종류·날짜·ID 해시·태그·색상 변환을 검사하지 않습니다. 기존 `header_identifiers`의 미대조 개수를 조용히 변경하지 않고 별도 결과를 제공합니다. 성공 개수에서 미확정 개수를 빼서 전체 유효성으로 취급하지 않습니다.
 
-## 검증
+## 2026-09-07 검증 기록
 
 최종 재검토에서 [분할 다운로드의 조각 메모리 문제](icc-registry.md#다운로드-조각-메모리-보강)를 수정했고 등록부 도구 테스트는 14/14 통과했습니다. 수정된 downloader로 공식 세 CSV를 다시 읽어 저장 스냅샷의 모든 필드와 deepEqual 대조했으며 일치했습니다(행 31/281/3071, 문제 0/3/44). 수정 후 Debug·ReleaseSafe·ReleaseFast 전체 감사는 각각 20/20 단계, 네이티브 422/422, 등록부 도구 14/14, HWP 감사 프로그램 검사 4,413,054건으로 통과했습니다. 최종 실행 로그는 로컬 `/tmp/hwpjs-icc-registry-Debug-final.log`, `/tmp/hwpjs-icc-registry-ReleaseSafe-final.log`, `/tmp/hwpjs-icc-registry-ReleaseFast-final.log`입니다. 검사 건수는 반복·변형 검사를 포함하며 실제 문서 수나 전체 포맷 지원률이 아닙니다.
 
@@ -27,9 +35,9 @@
 
 테스트용 mode 149는 정확히 128바이트 헤더를 받아 CMM/제조사/모델/작성자 상태 네 개 u32 LE를 반환합니다. limit은 입력 전체 한도입니다. `tests/hwp5/icc-registry.mjs`는 생성 Zig가 아닌 source.json에서 독립 Set을 만들고 전체 등록 항목·키 앞뒤 값·부모 부재/변형·부호 경계·잘림·한도·오류 후 복구를 대조합니다. 정규 HWP5 audit에 연결했습니다.
 
-`zig build hwp5-audit -Doptimize=ReleaseSafe --summary all`은 종료 코드 0, 8/8 단계, HWP 검사 4,413,054건, WASM import 0으로 통과했습니다. 신규 조회 비교 13,887건·손상 거부 130건이며 31개 CMM, 278개 제조사, 3,027개 장치 쌍 전체를 포함합니다. 로컬 임시 로그는 `/tmp/hwpjs-icc-registry-wasm.log`입니다. 당시 변경 JS 11개 문법과 관련 문서 로컬 링크 9개도 통과했습니다. 이후 전체 세 모드 감사 결과는 위 최종 기록을 따릅니다. 제품 JS API 연결, 프로파일 종류별 필수 태그·타입 의미 검증, PNG 픽셀 경로 연결과 색상 변환은 아직 미완료입니다.
+`zig build hwp5-audit -Doptimize=ReleaseSafe --summary all`은 종료 코드 0, 8/8 단계, HWP 검사 4,413,054건, WASM import 0으로 통과했습니다. 신규 조회 비교 13,887건·손상 거부 130건이며 31개 CMM, 278개 제조사, 3,027개 장치 쌍 전체를 포함합니다. 로컬 임시 로그는 `/tmp/hwpjs-icc-registry-wasm.log`입니다. 당시 변경 JS 11개 문법과 관련 문서 로컬 링크 9개도 통과했습니다. 이후 당시 전체 세 모드 감사 결과는 위 최종 기록을 따릅니다. 그 시점에는 제품 JS API 연결, 필수 태그·타입 내용 검사, PNG 픽셀 경로 연결과 색상 변환이 미완료였으며 현재 범위는 상단 재검증 구획과 각 주제 문서가 소유합니다.
 
-## 공식 파일의 수동 헤더 대조
+## 2026-09-07 공식 파일 수동 헤더 대조와 2026-09-27 재확인
 
 후속 의미 검증의 명세 대조와 미완료 항목은 [필수 태그 검증 작업](icc-required-tags.md)에 분리합니다.
 
