@@ -7,7 +7,7 @@
 - `emf_plus_font.zig`는 Version, EmSize, SizeUnit, style, ignored Reserved, Length 기반 FamilyName과 객체 정렬 바이트를 조립합니다.
 - float 원비트, GraphicsVersion, UTF-16 scalar 검사와 Object type은 기존 공통 계층을 재사용합니다.
 
-기준은 Microsoft [MS-EMFPLUS] 2.1.1.32, 2.1.2.4와 2.2.1.3입니다. 기존 Pen 전용 값 파일에 있던 UnitType은 중복 정의 없이 공통 모듈로 이동했고 PenData도 같은 parser를 사용합니다.
+기준은 Microsoft [EmfPlusFont 객체](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/b7d36375-b4e2-491d-aa73-bc7809d4af4f)와 [MS-EMFPLUS] 2.1.1.32, 2.1.2.4입니다. 기존 Pen 전용 값 파일에 있던 UnitType은 중복 정의 없이 공통 모듈로 이동했고 PenData도 같은 parser를 사용합니다.
 
 ## 표현과 검증
 
@@ -26,3 +26,5 @@ FontStyleFlags는 명세의 Bold, Italic, Underline, Strikeout 네 비트만 허
 독립 복사본에서 UnitType domain, style 예약 비트, Version·EmSize·SizeUnit·style·Reserved 필드, 이름 길이 배수·한도·시작 위치·반환 Length, UTF-16 검사·endianness, padding 시작 위치·임의 폭 허용·필요 폭 오산·검사 제거, 잘못된 Reserved 검증, Object type과 전체 크기 한도를 망가뜨린 20개 유효 의미 변이를 실행했습니다. Debug·ReleaseSafe·ReleaseFast의 60회 모두 테스트가 검출했고 컴파일 실패·생존·누락은 각각 0회였습니다. 복사본은 `/tmp/hwpjs-emfplus-font-mutants.ahXwmu`, 로그는 `/tmp/hwpjs-font-mutation-<변이>-<모드>.log`이며 각 실행은 별도의 새 cache/global-cache 경로를 사용했습니다.
 
 정확한 padding 정책으로 수정한 뒤 전체 audit를 세 모드에서 다시 순차 실행했습니다. 각 모드는 40/40 단계와 1,625/1,625 테스트(네이티브 1,586, 차트 31, WMF 8), HWP 감사 8,905,827 checks와 import 오류 0으로 통과했습니다. 최종 로그는 `/tmp/hwpjs-emfplus-font-final-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다. 이 수치는 Font wire parser와 전체 회귀 범위이며 설치 글꼴 조회, glyph shaping 또는 실제 EMF+ Font corpus 관측을 의미하지 않습니다.
+
+위 변이·전체 audit는 작성 당시의 이력이며 이번에 다시 실행하지 않았습니다. 2026-09-28 현재 Microsoft Font 필드와 Zig parser의 길이·원값·한도·UTF-16·padding·Object type 계약을 대조했고, Debug·ReleaseSafe·ReleaseFast의 `EMF+ Font` 직접 필터가 각각 7/7 통과했습니다. 실제 한컴 Font 양성 표본이나 글꼴 선택 결과는 검증하지 않았습니다.

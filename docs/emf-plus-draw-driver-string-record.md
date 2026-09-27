@@ -4,7 +4,7 @@
 
 `emf_plus_draw_driver_string.zig`는 MS-EMFPLUS 2.3.4.6의 Type, Flags, BrushId, DriverStringOptionsFlags, MatrixPresent, GlyphCount, Glyphs, GlyphPos와 선택 TransformMatrix를 조립합니다. Flags의 하위 ObjectID는 Font 슬롯이며 S `0x8000`이 켜지면 BrushId DWORD를 literal ARGB로, 꺼지면 0~63 Brush 슬롯으로 해석합니다. 이 선택은 `emf_plus_brush_id.zig`, S/ObjectID 비트는 `emf_plus_record_flags.zig`, ARGB·PointF·TransformMatrix wire 값은 기존 공통 모듈이 소유합니다.
 
-DriverStringOptionsFlags는 CmapLookup, Vertical, RealizedAdvance, LimitSubpixel 네 비트만 허용합니다. MatrixPresent는 명세의 BOOLEAN 값 0 또는 1만 허용하고 임의의 nonzero를 true로 보정하지 않습니다. Glyph는 UTF-16 문자열로 해석하지 않는 u16 glyph index 배열이므로 고립 surrogate를 포함한 모든 원값을 보존합니다. PointF와 행렬도 명세에 별도 유한성 제약이 없어 IEEE 754 원비트를 유지합니다.
+DriverStringOptionsFlags는 CmapLookup, Vertical, RealizedAdvance, LimitSubpixel 네 비트만 허용합니다. MatrixPresent는 명세의 BOOLEAN 값 0 또는 1만 허용하고 임의의 nonzero를 true로 보정하지 않습니다. 공식 [EmfPlusDrawDriverString 레코드](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/b794b780-e9a8-4682-af65-9b614aecfbe6)는 CmapLookup이 켜지면 각 Glyphs u16 값을 Unicode 문자로, 꺼지면 Font의 glyph index로 해석합니다. 현재 parser는 어느 쪽이든 u16 원값만 보존하며 CMap 조회나 Unicode scalar 유효성 검사를 하지 않으므로 고립 surrogate 값도 수용합니다. 이는 Unicode 문자로서 유효하다는 판정이 아닙니다. PointF와 행렬도 명세에 별도 유한성 제약이 없어 IEEE 754 원비트를 유지합니다.
 
 ## 배열 배치와 크기 정책
 
@@ -29,3 +29,5 @@ S mask와 Brush ID 63 경계·선택, option 정의 비트·예약 비트, Matri
 최초 캠페인은 Brush ID 63 변이가 DriverString 통합 필터에서 생존해 전체 결과를 폐기했습니다. 공통 BrushIdOrColor 단위 테스트가 별도 필터에 있었던 실행 범위 편향이므로 같은 변이 복사본에서 두 필터를 모두 실행하도록 수정한 뒤 처음부터 재실행했으며, 위 수치는 두 번째 캠페인만 포함합니다.
 
 최종 제품 트리의 전체 `audit`를 Debug·ReleaseSafe·ReleaseFast 순서로 실행했습니다. 세 모드 모두 40/40 단계와 1,667/1,667 테스트, HWP 감사 8,905,827 checks, WASM imports 0으로 통과했습니다. 로그는 `/tmp/hwpjs-emfplus-draw-driver-string-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.
+
+위 변이·전체 audit는 작성 당시의 이력이며 이번에 다시 실행하지 않았습니다. 2026-09-28 공식 CmapLookup별 Glyphs 의미·연속 배열·MatrixPresent·RealizedAdvance 조건과 현재 Zig parser/stream의 원값·Font·조건부 Brush 조회를 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 `EMF+ DrawDriverString` 직접 필터는 각 4/4, stream 참조 필터는 각 2/2 통과했습니다. CmapLookup 텍스트 해석과 화면 출력은 검증 범위 밖입니다.

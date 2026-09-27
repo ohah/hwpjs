@@ -8,7 +8,7 @@
 - `emf_plus_string_format.zig`는 60바이트 고정 헤더, 가변부 연결, 전체 크기와 Object type을 소유합니다.
 - float 원비트 읽기는 `emf_plus_values.zig`, GraphicsVersion과 Object 조립은 기존 공통 계층을 재사용합니다.
 
-기준은 Microsoft [MS-EMFPLUS] 2.1.1.14, 2.1.1.28~30, 2.1.2.8, 2.2.1.9, 2.2.2.8, 2.2.2.23, 2.2.2.44입니다.
+기준은 Microsoft [EmfPlusStringFormat 객체](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/9df612d2-fb87-44f7-93fb-0fa0b7b2f276), [StringFormatData](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/9567fbcd-d999-4c70-873f-12d320f02dc3), [StringFormat flags](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/03efbd65-8249-4bb6-b2d6-1ce05dcfaf51)와 [MS-EMFPLUS] 2.1.1.14, 2.1.1.28~30, 2.2.2.8, 2.2.2.23입니다.
 
 ## 표현과 검증
 
@@ -27,3 +27,5 @@ Tab stop float는 IEEE 754 원비트를 보존합니다. CharacterRange의 First
 독립 복사본에서 enum domain, Hotkey 값, sparse flag mask, LCID 두 bit field, 두 signed count, 두 count 한도, tab/range stride와 합산 길이, 길이 off-by-one, 후행 data, CharacterRange view stride, line alignment·tracking 필드 연결, Object type과 전체 크기 한도를 망가뜨린 21개 유효 의미 변이를 실행했습니다. Debug·ReleaseSafe·ReleaseFast의 63회 모두 테스트가 검출했고 컴파일 실패·생존·누락은 각각 0회였습니다. 선언되지 않은 enum tag나 음수 unsafe cast를 유발한 초기 변이는 유효 결과에서 제외하고 명시적 잘못된 값 수용 변이로 교체했습니다. 복사본은 `/tmp/hwpjs-emfplus-string-format-mutants.UoZZFp`, 최종 로그는 `/tmp/hwpjs-string-format-mutation-<변이>-<모드>.log`입니다. 각 실행은 별도의 새 cache/global-cache 경로를 사용했습니다.
 
 같은 날 전체 audit를 세 모드에서 순차 실행했습니다. 각 모드는 40/40 단계와 1,618/1,618 테스트(네이티브 1,579, 차트 31, WMF 8), HWP 감사 8,905,827 checks와 import 오류 0으로 통과했습니다. 로그는 `/tmp/hwpjs-emfplus-string-format-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다. 이 수치는 현재 회귀 범위이며 StringFormat 렌더링이나 실제 EMF+ StringFormat corpus 관측을 의미하지 않습니다.
+
+위 변이·전체 audit는 작성 당시의 이력이며 이번에 다시 실행하지 않았습니다. 2026-09-28 현재 공식 고정 필드·두 가변 배열·flags와 Zig의 signed count·원값·한도 경계를 대조했고, Debug·ReleaseSafe·ReleaseFast의 `EMF+ StringFormat` 직접 필터가 각각 9/9 통과했습니다. DrawString은 Object Table의 타입만 추적하므로 CharacterRange와 대상 문자열의 관계를 검사하지 않으며, 실제 텍스트 배치도 검증하지 않았습니다.

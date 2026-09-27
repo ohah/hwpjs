@@ -4,6 +4,8 @@
 
 `emf_plus_draw_string.zig`는 MS-EMFPLUS 2.3.4.14의 Type, Flags, Size/DataSize, BrushId, FormatID, Length, LayoutRect, StringData와 AlignmentPadding을 조립합니다. Flags 하위 ObjectID는 Font 슬롯이며, S 비트에 따른 Brush 객체/ARGB 선택은 `emf_plus_brush_id.zig`, RectF wire 값은 `emf_plus_geometry.zig`, UTF-16 scalar 검사는 `text/utf16.zig`를 재사용합니다.
 
+공식 근거는 Microsoft [EmfPlusDrawString 레코드](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/ae7927c3-e416-4069-a9b8-3200113d6c41)입니다.
+
 `emf_plus_optional_object_id.zig`는 optional u32 객체 참조의 단일 출처입니다. 0~63은 객체 테이블 ID로 노출하고 그 밖의 값은 raw를 보존한 채 참조 없음으로 둡니다. 명세가 FormatID의 특정 부재 sentinel을 정의하지 않으므로 `0xffffffff`만 특별 취급하지 않습니다. 기존 DrawImage 계열의 ImageAttributes ID도 같은 표현을 재사용합니다.
 
 Length는 명세 최소 크기에 따라 1 이상이고 기본 최대값은 16 Mi 코드 유닛입니다. `DataSize = align4(28 + Length * 2)`, `Size = DataSize + 12`를 요구하며 선언 Size/DataSize, 실제 slice, 산술 한계와 모든 잘림을 검사합니다. StringData는 NUL 종결 문자열이 아니라 정확히 Length개의 UTF-16LE 코드 유닛입니다. 유효한 surrogate pair는 한 scalar로 세고 고립 surrogate는 거부하며 NUL·BOM은 제거하거나 정규화하지 않습니다. AlignmentPadding은 최대 3바이트를 빌려 보존하고 값은 검사하지 않습니다.
@@ -25,3 +27,5 @@ RecordType, 최소 envelope, DWORD 정렬, Size/DataSize 관계와 실제 slice,
 첫 캠페인은 반환 Length를 직접 확인하지 않은 공백과, Font 타입 변이가 앞선 DrawDriverString 검사에 적용된 위치 편향을 드러냈습니다. 두 테스트를 보강했습니다. Brush 값·조건부 참조 변이는 미사용 값과 문법 오류를 만든 무효 치환이라 결과에서 제외하고 동작은 유지한 채 의미만 잘못되도록 교체했습니다. FormatID 63 경계 테스트의 optional 강제 해제는 Debug·ReleaseSafe에서 panic으로 검출되어 nullable 값 자체를 비교하도록 고쳤고, 세 모드 모두 assertion 실패가 되는 유효 변이로 다시 실행했습니다.
 
 최종 제품 트리의 전체 `audit`를 Debug·ReleaseSafe·ReleaseFast 순서로 실행했습니다. 세 모드 모두 40/40 단계와 1,712/1,712 테스트(네이티브 1,673, 차트 31, WMF 8), HWP 감사 8,905,827 checks, WASM imports 0으로 통과했습니다. 로그는 `/tmp/hwpjs-emfplus-draw-string-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.
+
+위 변이·전체 audit는 작성 당시의 이력이며 이번에 다시 실행하지 않았습니다. 2026-09-28 공식 필드 순서·Size/DataSize·문자 배열·선택적 FormatID와 현재 Zig parser/stream의 Font·Brush·StringFormat 타입 조회를 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 `EMF+ DrawString` 직접 필터는 각 5/5, stream 참조 필터는 각 2/2 통과했습니다. 전체 렌더링이나 CharacterRange-문자열 연결을 검증한 것은 아닙니다.
