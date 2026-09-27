@@ -2,7 +2,7 @@
 
 ## 범위와 계약
 
-`normalized_power_level.solveWide(g, offset, n, d)`는 u512 정규화 목표값에 대해 `z^(g/65536)+offset/65536=n/d`의 밑 변수 z의 실근을 반환합니다. 기존 [u128 목표값 경로](icc-normalized-power-level.md)와 부호·해 개수·역지수 규칙을 공유합니다. 넓은 [gamma 역상](icc-gamma-wide-inverse.md)에 이어 일반 parametric 역변환을 준비하는 기반이며, 아직 전체 곡선 역변환은 아닙니다.
+`normalized_power_level.solveWide(g, offset, n, d)`는 u512 정규화 목표값에 대해 `z^(g/65536)+offset/65536=n/d`의 밑 변수 z의 실근을 반환합니다. 기존 [u128 목표값 경로](icc-normalized-power-level.md)와 부호·해 개수·역지수 규칙을 공유합니다. 넓은 [gamma 역상](icc-gamma-wide-inverse.md)과 [parametric 역변환](icc-extended-parametric-inverse.md)이 사용하는 저수준 해 생성 계층이며, 이 결과 자체가 전체 곡선 역변환은 아닙니다.
 
 `n>d` 또는 `d=0`은 공통 Normalized 검증에서 `InvalidIccCurveCoordinate`입니다. 이후 `N=65536*n-offset*d`, `D=65536*d`를 i1024/u1024로 계산합니다. i32 offset과 u512 입력에서 |N|<2^544, D<2^528이므로 중간 계산까지 손실 없이 들어갑니다. 목표 입력 폭인 512비트로 중간 결과를 자르지 않습니다.
 
@@ -35,6 +35,8 @@ Debug 직접 실행은 comparisons=1,812, rejected=140으로 통과했습니다.
 
 Debug·ReleaseSafe·ReleaseFast 전체 audit는 모두 종료 코드 0, 20/20 단계, 네이티브 626/626, WASM checks=6,918,492로 통과했습니다. 기존 6,916,540에 신규 1,952회 호출이 추가됐습니다. 로그는 `/tmp/hwpjs-wide-power-level-{Debug,ReleaseSafe,ReleaseFast}.log`이며 임시 로컬 산출물입니다. Safe/Fast의 실제 audit WASM을 직접 실행한 신규·기존 normalized 검사와 출력 오류 주입 4종도 같은 결과였습니다.
 
-## 남은 구현
+## 현재 후속 계층과 범위
 
-이 모듈은 밑 변수의 해 생성만 담당합니다. 유리수 밑 좌표와의 비교는 [1024비트 기호근 비교](icc-extended-root-compare.md)에 연결할 수 있습니다. 수치 평가, affine x 역변환, 활성 분기 포함 검사, 출력 클리핑, 최근접 출력 선택, 넓은 parametric/TRC 모델 조립은 후속 범위입니다. 기존 u256 근 비교기에 좁혀 전달하지 않습니다. 전체 ICC 렌더링이나 HWP/HWPX 문서 검증 완료를 뜻하지 않습니다.
+이 모듈은 밑 변수의 해 생성만 담당합니다. 유리수 밑 좌표와의 비교는 [1024비트 기호근 비교](icc-extended-root-compare.md), 활성 분기의 affine x 역변환과 포함 검사는 [넓은 거듭제곱 역상](icc-extended-power-preimage.md)이 담당합니다. [넓은 parametric 역상](icc-extended-parametric-preimage.md)과 [넓은 역변환](icc-extended-parametric-inverse.md)도 별도 계층에 있습니다. 이 근 생성 결과만으로 출력 클리핑·최근접 선택·전체 ICC 렌더링 또는 HWP/HWPX 문서 검증을 증명하지 않습니다. 기존 u256 근 비교기에 좁혀 전달하지 않습니다.
+
+2026-09-27 재검증에서는 공식 ICC.1:2022 Table 68의 거듭제곱 분기와 현재 `normalized_power_level.solveFor`·`normalized_power_level_types.Of(512)`·`power_level_shape.classifyWide`의 목표값 검증·중간 폭·해 집합·역지수 규칙을 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 `wide power levels` 집중 테스트는 각각 4/4 통과했습니다. 기존 로컬 WASM mode221의 독립 BigInt 대조는 비교 1,812건·예상 거부 140건이 일치했습니다. 과거 `/tmp` 전체 audit·변형 로그는 현재 없으며 이번에 전체 audit·WASM 재빌드·실제 ICC 프로파일 75건을 다시 실행한 것으로 세지 않습니다.

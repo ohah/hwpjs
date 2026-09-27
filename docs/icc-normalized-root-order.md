@@ -8,7 +8,7 @@
 
 기존 power_root_order는 power_level.widen을 통해 이 비교를 재사용합니다. widen은 기존 분자 한도 4294967295를 검증한 뒤 고정 분모 65536을 명시하는 무손실 변환입니다. 기존 근 대 유리수 비교도 이 어댑터를 공유합니다. 기존 입력 한도를 넓히거나 오류 계약을 바꾸지 않습니다.
 
-이 모듈은 내부 비교 기반입니다. 전체 역상의 최솟값·최댓값 조립, 열린 끝점의 실제 도달 여부, F.1 선택과 최근접 출력 판정은 아직 구현 범위에 포함하지 않습니다.
+이 모듈은 내부 비교 기반입니다. 전체 역상의 최솟값·최댓값 조립과 열린 끝점의 실제 도달 여부는 [역상 경계](icc-preimage-bounds.md), F.1 선택과 최근접 출력 판정은 [역변환](icc-parametric-inverse.md)과 [최근접 선택](icc-parametric-nearest.md) 계층이 소유합니다. 이 순서 비교만으로 그 결과를 검증한 것은 아닙니다.
 
 ## 검증
 
@@ -23,3 +23,5 @@
 Debug·ReleaseSafe·ReleaseFast 전체 audit가 각각 종료 코드 0, 20/20 단계, 네이티브 552/552, WASM checks=6,557,470으로 통과했습니다. 기존 WASM 경로를 공통화했으며 신규 probe 호출은 없으므로 WASM 건수는 이전과 같습니다. 로그는 `/tmp/hwpjs-icc-wide-order-{Debug,ReleaseSafe,ReleaseFast}.log`입니다.
 
 신규 네이티브 테스트 3개를 ReleaseSafe·ReleaseFast에서 별도로 실행해 모두 통과했습니다. 하위 비트 손실 변형은 두 Release 모드에서도 각각 2개 실패로 검출됐습니다. Zig 포맷·diff 공백·변경 문서 로컬 링크 3개를 확인했습니다. 적대적 재검토는 입력 검증 선행, 기존 범위와 오류 유지, 최대 교차곱 폭, 음의 지수·음수 근·음의 affine 기울기 반전, 0 기울기 오류를 대상으로 했고 추가 결함은 발견하지 않았습니다. 전체 문서 검증이나 역변환 완성을 주장하지 않습니다.
+
+2026-09-27 재검증에서는 현재 `normalized_root_order.compareFor`·`affineFor`, `power_root_order`의 좁은 근 어댑터와 넓은 근 경계 소비자의 호출 관계를 다시 확인했습니다. Debug·ReleaseSafe·ReleaseFast의 `wide root order` 집중 테스트는 각각 4/4 통과했습니다. 기존 로컬 WASM mode229의 u1024 근 순서 독립 BigInt 대조는 비교 6,635건·예상 거부 557건이 일치했으나 이는 확장 폭 경로이며 본 문서의 u256 경로를 직접 대체 검증한 수치는 아닙니다. 과거 `/tmp` 전체 audit·변형 로그는 현재 없으며 이번에 전체 audit·WASM 재빌드·변형을 재실행한 것으로 세지 않습니다.
