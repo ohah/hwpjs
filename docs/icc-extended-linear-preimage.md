@@ -40,4 +40,6 @@ Safe/Fast 최종 audit WASM의 직접 대조에서도 신규·기존 선형 검�
 
 ## 미완료 경계
 
-이 모듈은 선형 기여분을 소유합니다. [넓은 전체 도달 역상](icc-extended-parametric-preimage.md)이 거듭제곱 기여분과의 합집합을 조립합니다. 정규화·정렬·경계 선택, 단조성 판정, 최근접 출력과 넓은 TRC 모델 통합은 후속 범위입니다. 전체 ICC/HWP/HWPX 문서 검증은 미완료입니다.
+이 모듈은 선형 기여분을 소유합니다. [넓은 전체 도달 역상](icc-extended-parametric-preimage.md)이 거듭제곱 기여분과의 합집합을 조립하고, [넓은 역상 경계](icc-extended-preimage-bounds.md)·[넓은 최근접 출력](icc-extended-parametric-nearest.md)·[넓은 역변환](icc-extended-parametric-inverse.md)은 후속 선택을 별도 소유합니다. 이 선형 기여분만으로 정규화·정렬·단조성 판정 또는 전체 ICC/HWP/HWPX 문서 검증을 증명하지 않습니다.
+
+2026-09-27 재검증에서는 현재 `linear_preimage.solveFor(512)`·`fraction.Normalized(1024)`·`unit_interval.ExtendedInterval`의 목표 검증·i1024 교점·u2048 교차 곱·열린 끝점·공통 구간 교집합을 대조했습니다. `fraction.Normalized.toFloat`의 넓은 값 경로는 손실 가능한 근사이며 역상 판정에 쓰이지 않음을 확인했습니다. Debug·ReleaseSafe·ReleaseFast의 `extended_linear_preimage_tests.zig`는 각각 5/5 통과했습니다. 기존 로컬 WASM mode226의 독립 BigInt 대조는 일치 804건·빈 역상 1,971건·예상 거부 1,062건, mode227의 IEEE 754 유리수 복원 대조는 211건·예상 거부 473건이 일치했습니다. 과거 `/tmp` 전체 audit·변형 로그는 현재 없으며 이번에 전체 audit·WASM 재빌드·시스템 ICC 수동 36건을 재실행한 것으로 세지 않습니다.
