@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "406ef1e7213c54ad3433f7637b5c413e97f68aa0c63da01fb062c90e20436f6f",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation and PNG filters review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "55e99f7ec2165274d1e1337a1c634fd544fb0f76408c45e791a25c4eb65a8559",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters and PNG pixels review, architecture pending, full Debug Zig test incomplete"
+    },
+    "docs/png-pixels.md": {
+      "sha256": "d60f12b68b6fb9de9fc3b344143a28d1c495aa6fda0f3a7e672267bad0f45134",
+      "evidence": "2026-09-27 W3C PNG Third Edition scanlines Adam7 palette IDAT and current Zig layout pixels metadata connection, Debug Safe Fast broad PNG 91 each, current ReleaseSafe hwp5 audit passed, local probe CFB JS oracle 2097 accepted 4379 rejected 32 real PrvImage PNG 94928296 bytes 0 interlaced; historical 351 tests and 3166780 checks separated"
     },
     "docs/png-filters.md": {
       "sha256": "15da463ffc6ea4368aac28d4431ff0e34106b3c964b043dcbee3d85989286ca3",

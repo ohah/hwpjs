@@ -4,7 +4,7 @@
 
 `src/image/png/pixels.zig`는 [청크 구조 검사](png-structure.md), [zlib 해제](zlib-validation.md), [행 필터 복원](png-filters.md)을 연결합니다. IHDR 기반 scanline 길이, 비인터레이스/Adam7 pass, 5종 필터와 indexed-color의 실제 사용 인덱스를 검사합니다. 기준은 [PNG §7~10 및 §11.2](https://www.w3.org/TR/png-3/)입니다.
 
-이는 기본 IDAT 이미지 데이터 검증, [tRNS 메타데이터](png-transparency.md), [배경색·히스토그램](png-palette-metadata.md), [물리적 크기·유효 비트](png-sample-metadata.md), [수정 시각](png-timestamp.md), [비압축 텍스트](png-text.md), [압축 텍스트](png-compressed-text.md), [국제 텍스트](png-international-text.md), [추천 팔레트](png-suggested-palettes.md) 검증입니다. 그 외 ancillary chunk 의미·순서·중복은 deferred 보고를 유지합니다. 별도 명시적 [RGBA 픽셀 조립](png-rgba.md)은 복원 행을 재사용합니다. 기존 `pixels.decode` 자체는 계속 pass 순서의 packed bytes를 반환하고 APNG frame, 색상 프로필 적용, 화면 렌더링, 이미지 저장은 구현하지 않습니다. 제품 JS API는 계속 CFB만 제공합니다.
+이는 기본 IDAT 이미지 데이터와 선택한 ancillary chunk의 검증입니다. 선택 범위는 [tRNS](png-transparency.md), [배경색·히스토그램](png-palette-metadata.md), [물리적 크기·유효 비트](png-sample-metadata.md), [수정 시각](png-timestamp.md), [비압축 텍스트](png-text.md), [압축 텍스트](png-compressed-text.md), [국제 텍스트](png-international-text.md), [추천 팔레트](png-suggested-palettes.md), [gAMA/cHRM](png-color-fixed.md), [sRGB](png-srgb.md), [iCCP](png-profile-inspection.md)입니다. 이 범위 밖의 ancillary 의미는 deferred 보고를 유지하며 iCCP도 색 의미가 미완료라 deferred 카운터를 차감하지 않습니다. 별도 명시적 [RGBA 픽셀 조립](png-rgba.md)은 복원 행을 재사용합니다. 기존 `pixels.decode` 자체는 계속 pass 순서의 packed bytes를 반환하고 APNG frame, 색상 프로필 적용, 화면 렌더링, 이미지 저장은 구현하지 않습니다. 제품 JS API는 계속 CFB만 제공합니다.
 
 ## 책임과 반환값
 
@@ -15,7 +15,7 @@
 
 `decode(allocator, bytes, options)`는 Decoded를 반환합니다. bytes는 소유한 pass 순서의 행 버퍼이며, 각 행에 **원래 필터 바이트 1개 + 복원된 packed bytes**가 있습니다. 패딩 비트와 16-bit sample의 바이트 순서를 보존합니다. 이는 deinterlace된 전체 이미지 배열이나 canonical RGBA가 아닙니다. layout의 pass offset/row_bytes로 접근하며 `deinit(allocator)`로 해제합니다. 입력 PNG의 수명을 반환 이후 유지할 필요는 없습니다.
 
-`inspect`는 동일 decode 경로를 호출하고 버퍼를 해제한 뒤 포인터 없는 값 기반 보고서를 반환합니다. 보고서는 구조 통계, decoded_bytes(필터 바이트 포함), scanlines, 비어 있지 않은 passes, zlib_trailing_bytes, reconstructed_crc32와 optional transparency/background/histogram 및 histogram_usage_validated를 포함합니다. CRC는 **필터 바이트를 제외한 pass 순서의 복원 행 바이트**에 적용하며 사용하지 않는 패딩 비트도 포함합니다. 서로 다른 인코딩 간 시각적 동일성 해시가 아닙니다.
+`inspect`는 동일 decode 경로를 호출하고 버퍼를 해제한 뒤 포인터 없는 값 기반 보고서를 반환합니다. 보고서는 구조 통계, decoded_bytes(필터 바이트 포함), scanlines, 비어 있지 않은 passes, zlib_trailing_bytes, reconstructed_crc32와 위에서 선택한 메타데이터의 원값·통계를 포함합니다. `histogram_usage_validated`는 indexed-color의 실제 사용 인덱스 검사 여부를 나타내며, 색 의미는 별도 `color_semantics_deferred`로 남습니다. CRC는 **필터 바이트를 제외한 pass 순서의 복원 행 바이트**에 적용하며 사용하지 않는 패딩 비트도 포함합니다. 서로 다른 인코딩 간 시각적 동일성 해시가 아닙니다.
 
 선택적 [IEND 뒤 0 패딩](hwp5-png-post-iend.md)이 있으면 첫 구조 순회에서 전체 바이트와 꼬리를 확인하고, IDAT·메타데이터의 두 번째 순회는 IEND에서 끝냅니다. `structure.post_iend_zero_bytes`가 0보다 크면 픽셀 검사 성공이어도 전체 입력을 적합 PNG라고 주장하지 않습니다.
 
@@ -30,6 +30,14 @@
 [PNG §11.2.3](https://www.w3.org/TR/png-3/#11IDAT)의 decoder 권고에 따라 zlib 종료 후 사용하지 않은 압축 후미는 해석하지 않고 zlib_trailing_bytes로 보고합니다. 두 번째 zlib 스트림처럼 보이는 후미도 별도 이미지로 해제하지 않습니다. PNG IEND 뒤 바이트의 구조 오류와는 다릅니다.
 
 ## 검증
+
+### 현재 재검증 (2026-09-27)
+
+[PNG Third Edition §7.2·§8.1·§9·§11.2](https://www.w3.org/TR/png-3/)의 scanline 직렬화, Adam7 빈 pass, 바이트 단위 필터, indexed-color 팔레트 범위와 연속 IDAT 규칙을 현재 `header.zig`·`layout.zig`·`palette_indices.zig`·`pixels.zig` 및 관련 메타데이터 수집기에 대조했습니다. 아래 단계별 수치는 과거 기록이며, 이 절의 실측만 현재 재검증으로 셉니다.
+
+Debug·ReleaseSafe·ReleaseFast에서 넓은 `PNG ` 테스트 필터는 각각 root 포함 91/91 통과했습니다. 이는 이미지 데이터 전용 91개가 아니라 HWP/HWPX 연결과 메타데이터·프로필 등 PNG 명칭 테스트를 합친 수치입니다. 현재 `zig build hwp5-audit -Doptimize=ReleaseSafe`도 통과했습니다. ReleaseSafe 로컬 probe의 독립 JS 이미지 데이터 oracle은 정상 2,097건·거부 4,379건을 대조했고, 추적 HWP fixture의 PrvImage PNG 32개에서 복원 버퍼 총 94,928,296바이트가 일치했습니다. 이 32개에는 Adam7 실파일이 없어서 인터레이스 양성은 합성 입력으로만 검증했습니다. `pixels.decode`의 출력은 RGBA/화면 결과가 아니고, iCCP의 내용 검사도 색 변환 완료를 뜻하지 않습니다.
+
+### 과거 검증 기록
 
 네이티브는 폭/높이 1~17의 Adam7 pass를 명세 8×8 반복 표와 대조하고, 정확/부족 총 예산·최대 치수·잘못된 Header·packed index 전체 바이트 값·패딩을 검사합니다. 1×1 Adam7의 빈 pass, zlib 각 바이트가 별도 IDAT인 입력, 모든 할당 실패와 늦은 palette 오류에서의 정리도 검사합니다.
 
