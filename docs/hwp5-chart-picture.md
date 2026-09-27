@@ -42,4 +42,8 @@ Debug·ReleaseSafe·ReleaseFast 전체 audit가 모두 종료 코드 0으로 완
 
 ## 남은 범위
 
-실파일의 Picture 자체는 비어 있는 형태만 확인했습니다. Picture 뒤의 타입처럼 보이는 숫자와 다른 필드 해석의 모호성은 해결되지 않았습니다. 이후 경계·필드 의미·계열 반복·일반 배열 규칙, 전체 Chart 조립·렌더링·저장은 미완료이며 제품 JS API도 변경하지 않았습니다.
+실파일의 Picture 자체는 비어 있는 형태만 확인했습니다. Picture 뒤의 타입처럼 보이는 숫자와 다른 필드 해석의 모호성은 해결되지 않았습니다. 후속 선택 배치는 뒤의 raw106·계열 반복·Title/Tail·Contents를 연결했지만, 해당 필드 의미·일반 배열 규칙·자동 배치 판정·전체 버전·렌더링·저장은 미완료이며 제품 JS API도 변경하지 않았습니다.
+
+## 현재 재검증
+
+위 전체 audit·결함 주입은 당시 기록입니다. 현재 `picture.zig`·`series_picture.zig`·`backdrop.zig`의 빈 데이터 정책과 공유 본문·오류 우선순위를 다시 대조했습니다. Debug·ReleaseSafe·ReleaseFast에서 `chart picture`와 `chart backdrop` 집중 테스트는 각각 4/4개씩 통과했습니다. 기존 ReleaseSafe probe의 독립 mode 330 오라클은 실파일 43개에서 수락 172건·거부 3,010건을 다시 통과했습니다. 이번에는 세 모드 전체 audit와 변이 검사를 재실행하지 않았습니다.

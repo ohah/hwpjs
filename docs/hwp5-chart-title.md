@@ -45,6 +45,10 @@ Debug·ReleaseSafe·ReleaseFast 전체 audit가 각각 종료 코드 0으로 완
 
 ## 남은 범위
 
-뒤쪽 78바이트, 계열 raw106의 필드 의미, 표본 밖 버전·자동 배열 형태 선택, 전체 Chart 모델·렌더링·편집·저장은 미완료입니다. 이 단계의 성공을 전체 문서 파서 완료로 해석하지 않습니다.
+이 Title 코어는 뒤쪽 78바이트를 소비하지 않지만 후속 선택 배치의 `tail.zig`와 `observed_contents.zig`가 그 경계를 연결합니다. 계열 raw106의 필드 의미, 표본 밖 버전·자동 배열 형태 선택, 전체 Chart 모델·렌더링·편집·저장은 미완료입니다. 이 단계의 성공을 전체 문서 파서 완료로 해석하지 않습니다.
 
 뒤쪽 78바이트의 후속 실측·적대적 검증과 Window 앞 4바이트의 미확정 ID 후보는 [List·Window 타입 구간 조사](hwp5-chart-tail-evidence.md)가 소유합니다. 조사 결과를 제품 지원 범위로 해석하지 않습니다.
+
+## 현재 재검증
+
+위 전체 audit·결함 주입·선행 계열 해제 변형은 당시 기록입니다. 현재 `title.zig`·`chart_text.zig`·`chart_section.zig`·`backdrop.zig`의 Title 헤더/본문·전역 객체 범위·String 수명·오류 우선순위를 다시 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 `chart title` 집중 테스트는 각각 5/5개 통과했습니다. 기존 ReleaseSafe probe의 독립 mode 332 오라클은 실파일 43개에서 수락 301건·거부 15,386건을 다시 통과했습니다. 이번에는 세 모드 전체 audit와 변이 검사를 재실행하지 않았습니다.

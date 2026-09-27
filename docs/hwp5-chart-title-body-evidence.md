@@ -51,6 +51,10 @@ node tests/hwp5/chart-title-body-survey.mjs --verify
 
 ## 다음 단계
 
-기존 ChartSection/Backdrop 코어의 전체 객체 범위 검사와 필드 읽기를 공유하여 선택된 Title 구간을 Zig·WASM에 연결해야 합니다. 이어 남은 78바이트와 미해석 계열 raw106을 조사합니다. 자동 형식 선택·전체 Chart 모델·렌더링·편집·저장은 여전히 미완료입니다.
+조사 당시 필요했던 ChartSection/Backdrop 코어의 전체 객체 범위 검사와 Title의 Zig·WASM 연결은 후속 [Title 코어](hwp5-chart-title.md)에서 구현했습니다. 당시 남은 78바이트도 선택 배치의 `tail.zig`·`observed_contents.zig`에 연결됐지만, raw106의 의미·자동 형식 선택·전체 버전/Chart 모델·렌더링·편집·저장은 여전히 미완료입니다.
 
 위 내용은 조사 단계의 이력입니다. 후속 구현·WASM 검증의 현재 범위는 [Title 코어](hwp5-chart-title.md)가 소유합니다.
+
+## 현재 재검증
+
+위 결함 주입과 세 모드 기존 경로 회귀는 당시 기록입니다. 현재 `chart-*evidence.test.mjs`는 56/56개 통과했고, `chart-title-body-survey.mjs --verify`는 HWP 584개 중 선택된 Contents 43개에서 Section 164바이트·뒤쪽 78바이트·객체 7개/String 2개 도입, 잘림 13,752건·ID 거부 301건·타입 거부 817건·non-null Picture 거부 172건·raw 변형 43건을 다시 확인했습니다. 43개 원본의 null Title text와 보조 Backdrop은 모두 0개였으며 합성 변형의 지원 증거와 구분합니다. 당시 53개 테스트와 변이 12종을 현재 실행 수치로 소급하지 않았습니다.

@@ -18,13 +18,13 @@ nullable 결과의 `code_start/code_end`는 null sentinel도 4바이트 구간�
 
 span 검증은 null·빈 String·신규 String·별칭 fixture 각각에서 `code_start`와 정확한 소비 길이를 확인합니다. 실제 9,876바이트 Contents의 nullable format은 null 경로를 검증하고, non-null Reference 경계는 합성 fixture와 전체 corpus 독립 oracle 대조가 담당합니다.
 
-span을 포함한 nullable format wire는 현재 세 모드 전체 audit에서 각각 32/32 단계, native 1,102/1,102개와 HWP/WASM 8,905,815회를 통과했습니다. 검사 횟수는 지원 포맷 완성도를 뜻하지 않습니다.
+span을 포함한 nullable format wire는 당시 세 모드 전체 audit에서 각각 32/32 단계, native 1,102/1,102개와 HWP/WASM 8,905,815회를 통과했습니다. 검사 횟수는 지원 포맷 완성도를 뜻하지 않으며, 아래 현재 재검증의 실행 수치와 구분합니다.
 
 ## 실제 파일 연결과 SSOT
 
 `chart-series-label-prefix.zig`는 기존 mode 328의 선행 조립·직렬화를 소유합니다. mode 328은 생성된 wire 소유권만 반환하고 선행 상태를 해제하며, 새 mode 329는 같은 상태를 이어 사용한 뒤 wire와 상태를 함께 해제합니다. 앞부분을 다시 스캔하거나 객체/타입 사전을 새로 추정하지 않습니다. 공통 prefix의 중간 wire 생성은 테스트 전용 비용이며 제품 공개 ABI에 추가한 비용이 아닙니다.
 
-mode 329는 기존 nullable inline TextBlock, raw u16, nullable TextFormat 두 개를 조립합니다. 중간 u16을 원소 개수로 해석하지 않으며 두 개는 선택된 조사 경로입니다. 제품 Series suffix 파서나 전체 Chart 진입점을 새로 제공한 것은 아닙니다.
+mode 329는 기존 nullable inline TextBlock, raw u16, nullable TextFormat 두 개를 조립합니다. 중간 u16을 원소 개수로 해석하지 않으며 두 개는 선택된 조사 경로입니다. 이 테스트 mode 자체가 제품 Series suffix 파서나 전체 Chart 진입점을 추가한 것은 아닙니다. 현재 선택 배치의 제품 조립은 `series_suffix.zig`와 `observed_contents.zig`가 소유합니다.
 
 `chart-series-suffix-oracle.mjs`는 독립 조사 상태와 공통 `textBodyWire`로 기대값을 만들고, 제품 serializer에서 기대값을 생성하지 않습니다. ID·소비 끝·텍스트 본문 raw·code 존재 여부/바이트/길이/trailer/도입 여부·객체/타입 수·문자열 저장량을 비교합니다.
 
@@ -46,6 +46,10 @@ Debug·ReleaseSafe·ReleaseFast 전체 audit가 모두 종료 코드 0으로 완
 
 ## 남은 범위
 
-새 nullable 경로는 기존 필수 API를 대체하지 않습니다. 뒤쪽 raw 꼬리의 경계·의미, Series 전체 조립·계열 반복·일반 배열 규칙, 전체 Chart 조립·렌더링·저장은 미완료입니다. 공식 API 속성 표를 바이너리 저장 순서로 해석하지 않습니다.
+새 nullable 경로는 기존 필수 API를 대체하지 않습니다. 후속 선택 배치의 Picture·raw106·계열 반복 및 Contents 조립은 구현됐지만 raw 필드 의미·일반 배열 규칙·자동 배치 판정·전체 버전·렌더링·저장은 미완료입니다. 공식 API 속성 표를 바이너리 저장 순서로 해석하지 않습니다.
 
 후속 [빈 Picture 조사](hwp5-chart-series-picture-evidence.md)에서 다음 Picture의 끝과 그 뒤 기반 타입 가설의 모호성을 검증했습니다. 조사 결과와 제품 지원 범위는 구분합니다.
+
+## 현재 재검증
+
+위 전체 audit·변이 검사는 당시 기록입니다. 현재 `text_format.zig`의 필수/nullable 진입점과 null span·String 도입 여부·Reader 실패 경계를 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 `chart nullable format` 집중 테스트는 각각 3/3개, 기존 ReleaseSafe probe의 독립 mode 329 오라클은 실파일 43개·Format 86개·null code 2개에서 수락 426건·거부 9,004건을 다시 통과했습니다. 이번에는 세 모드 전체 audit와 변이 검사를 재실행하지 않았습니다.

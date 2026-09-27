@@ -1,6 +1,22 @@
 {
   "schema": 1,
   "verified": {
+    "docs/hwp5-chart-nullable-format.md": {
+      "sha256": "6cfb3ac81801341c603df6542bbfbe59b732b481645a6ca6c868f0a31dadafac",
+      "evidence": "2026-09-28 current Zig required and nullable TextFormat shared reader, null span versus selected suffix integration; Debug Safe Fast focused 3 each; ReleaseSafe mode329 43 roots 86 formats two null codes 426 accepted 9004 rejected; historic mutants full audits not rerun"
+    },
+    "docs/hwp5-chart-picture.md": {
+      "sha256": "dc8b0cc916ac1c1ebcdd1af115ebbfbeacfd8593dbf333c4144f2303831c33f1",
+      "evidence": "2026-09-28 current Zig shared empty Picture Body Backdrop and Series ordering and failure policy; Debug Safe Fast picture and backdrop focus 4 each; ReleaseSafe mode330 43 roots 172 accepted 3010 rejected; historic mutants full audits not rerun"
+    },
+    "docs/hwp5-chart-title-body-evidence.md": {
+      "sha256": "b85f1047007c7d3fcffbdc4acbb64603b1cbfd1c7f9bce2696a14c7ba37d08a5",
+      "evidence": "2026-09-28 current independent title body survey 584 HWP 43 selected Contents Section 164 bytes tail 78 7 new objects 2 Strings 13752 cuts 301 IDs 817 type rejects 172 nonnull data 43 raw variants; 56 chart evidence tests; historic mutants full audits not rerun"
+    },
+    "docs/hwp5-chart-title.md": {
+      "sha256": "4a64a139fa1966122494384fd4cc3514a35e3e8deb656208a7ebb1d7bd30f7a6",
+      "evidence": "2026-09-28 current Zig Title ChartText Section Backdrop scope failure versus selected Tail Contents integration; Debug Safe Fast title focus 5 each; ReleaseSafe mode332 43 roots 301 accepted 15386 rejected; historic mutants full audits not rerun"
+    },
     "docs/hwp5-chart-series-branch-evidence.md": {
       "sha256": "c7233bcebb476b37cd39758903e566c04277af3fb4e205a0d8807ed0b5ed5d2d",
       "evidence": "2026-09-28 current JS explicit tail or point survey 584 HWP 43 selected Contents 41 tail 2 point 5316 cuts 213 type rejects 129 IDs 82 variants, tests 2; later selected Series Contents exists but automatic branch policy not proven, historic mutants full audits not rerun"
@@ -510,8 +526,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "0de8e5c1dc2213683ca0560b87de5f79dd04fe6b9ef70658f18ddb092ed75924",
-      "evidence": "2026-09-28 tracker updated with Series branch Label Point suffix Picture evidence and core current surveys, Debug Safe Fast focused tests, ReleaseSafe independent probe 43 roots; historic full audits and mutants not rerun"
+      "sha256": "89ed67f2f1361f7f2c41c7732cd41ccd0ad12667edf72a469e6641c543727514",
+      "evidence": "2026-09-28 tracker updated with nullable TextFormat Picture Title evidence and core current surveys, Debug Safe Fast focused tests, ReleaseSafe independent probe 43 roots; historic full audits and mutants not rerun"
     },
     "docs/bcp47-syntax.md": {
       "sha256": "ae0d91a0bb5ca2f8a5194b5ffa76494427cc058784f11446fd905458020f5b11",

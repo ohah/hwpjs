@@ -8,6 +8,8 @@ Series 접두부 조사·코어와 계열 반복 조사·코어 네 문서도 �
 
 Series 본문 분기·Label/Point 조사와 코어·suffix 조사·빈 Picture 조사 다섯 문서는 현 독립 조사기와 Zig 공통 TextBlock/Format/Picture 재사용 경계를 대조해 완료 목록에 넣었습니다. 독립 테스트 10/10개와 HWP 584개 중 선택된 Contents 43개에서 분기 tail 41·point 2, 첫 Series Point 5개·Label 48개, nullable Format code 2개, 빈 Picture 43개 및 문서별 잘림/타입/ID 변형 수치를 다시 확인했습니다. Debug·ReleaseSafe·ReleaseFast의 Label/Point 4/4·nullable Format 3/3·Picture 4/4·Series 반복 5/5 집중 테스트와 기존 ReleaseSafe probe의 mode 328 182/11,304·mode 329 426/9,004·mode 330 172/3,010 수락/거부가 통과했습니다. 과거 변이 검사·세 모드 전체 audit는 재실행하지 않았습니다. 자동 분기/배열 의미, raw 필드 의미와 렌더링·저장은 검증 범위가 아닙니다.
 
+nullable TextFormat 코어·빈 Picture 코어·Title 본문 조사·Title 코어 네 문서도 현재 Zig의 필수/nullable 경계, 빈 데이터 거부, Title 객체 범위/실패 우선순위와 독립 조사기에 대조해 완료 목록에 넣었습니다. `chart-*evidence.test.mjs`는 56/56개 통과했고, Title 조사는 HWP 584개 중 선택된 Contents 43개에서 Section 164바이트·잔여 78바이트·새 객체 7/String 2, 잘림 13,752건·ID 301건·타입 817건·non-null 데이터 172건·raw 43건의 반례를 재현했습니다. Debug·ReleaseSafe·ReleaseFast 집중 테스트는 nullable Format 각 3/3·Picture 각 4/4·Backdrop 각 4/4·Title 각 5/5개, 기존 ReleaseSafe probe는 suffix 426/9,004·Picture 172/3,010·Title 301/15,386건의 수락/거부를 통과했습니다. 과거 변이 검사·세 모드 전체 audit는 재실행하지 않았으며 자동 버전/배열 판정·의미 해석·렌더링/저장은 검증 범위가 아닙니다.
+
 검증 대상은 Git이 추적하는 현재 프로젝트의 Markdown 문서입니다. `legacy/`와 `reference/`는 이전 구현·외부 참고 자료이므로 이 집계에서 제외하고, 별도로 인용할 때 해당 부분을 확인합니다. 현재 작업 트리에서 삭제 상태인 `lint-rules.md`는 사용자의 변경을 보존하며 `missing`으로 표시합니다. 존재하지 않는 파일을 임의로 복구하거나 검증 완료로 세지 않습니다.
 
 `tools/docs-audit-status.mjs`가 추적 대상·현재 내용 해시가 일치하는 검증 완료 파일·미검증·변경 후 재검증 필요·작업 트리 누락·새 미추적 문서를 구분합니다. 실행 방법은 [개발·검증 명령](development-commands.md)이 소유합니다. 완료 게이트는 **목록/해시 관점의** 검사일 뿐입니다. 검증 완료 목록의 단일 출처는 `tools/docs-audit-reviewed.json`이며, 문서가 바뀌면 해당 항목은 자동으로 `stale`이 됩니다. 이 수치는 제품 구현률이 아닙니다.
