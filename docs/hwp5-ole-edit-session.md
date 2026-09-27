@@ -18,4 +18,4 @@
 
 ## 남은 범위
 
-이 계층은 replacement bytes의 의미를 해석하지 않습니다. 실제 차트 typed 계층이 한 차트와 여러 BinData의 Contents writer 결과를 이 명령 배열로 만들어 한 번에 저장하는 연결은 검증되어 있습니다. DocInfo 항목 추가·삭제, 본문 참조 수정, 암호화/DRM, 외부 LINK, 차트 외 OLE 애플리케이션 의미는 지원 범위가 아닙니다.
+이 계층은 replacement bytes의 의미를 해석하지 않습니다. [차트 파일 편집](hwp5-chart-file-edit.md)의 typed 계층이 한 차트와 여러 BinData의 Contents writer 결과를 이 명령 배열로 만들어 한 번에 저장하는 연결은 검증되어 있습니다. 이 검증은 합성한 바깥 HWP와 내부 OLE에 실제 추출 Contents를 넣은 범위이며, 임의 원본 HWP 전체의 편집·재열기 호환성을 증명하지 않습니다. DocInfo 항목 추가·삭제, 본문 참조 수정, 암호화/DRM, 외부 LINK, 차트 외 OLE 애플리케이션 의미는 지원 범위가 아닙니다.

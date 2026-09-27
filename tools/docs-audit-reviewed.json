@@ -630,8 +630,28 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "f7c85db6a4f1339c59b96aa9965471580c09758ae2c26115287929ed5627c877",
-      "evidence": "2026-09-28 tracker updated with six Grid edit and relocation contracts, three-mode ownership audit 31 each, 82 edit batch and synthetic HWP scope; historic mutants not rerun"
+      "sha256": "9fe82cef317335ee74aaa120faea6d9fb45d4d90627b8711cf12e9c4b7bab836",
+      "evidence": "2026-09-28 tracker updated with five OLE documents, current ReleaseSafe OLE 30 tests, paired XML and 584 path survey; historical full audits and mutants not rerun"
+    },
+    "docs/hwp5-ole-binaries.md": {
+      "sha256": "9b557156d079baeddc5fb1d1bf014efcd56fdf37c172afa77a1ccbe322429c3e",
+      "evidence": "2026-09-28 current selection budget and shared OLE container versus code, ReleaseSafe OLE filter 30 tests, survey 52 selected size-prefixed strict CFB; historical full audits mutants not rerun"
+    },
+    "docs/hwp5-ole-container.md": {
+      "sha256": "957dece91a4bbbcdcc0232365621d670771064b71cc171d54a43a94d032c85d0",
+      "evidence": "2026-09-28 current shared envelope strict CFB and local HWP5 spec versus 584 path survey with 52 selected accepted, ReleaseSafe OLE filter 30 tests; historical full audits mutants not rerun"
+    },
+    "docs/hwp5-ole-edit-session.md": {
+      "sha256": "5213c65088eaf73dd0edf849c8f919c3705675a5a2c5c73b47601427670b4b56",
+      "evidence": "2026-09-28 current DocInfo ordinal decode limits single outer batch and chart applyCharts wiring versus source, ReleaseSafe session 3 tests; synthetic outer HWP and historical mutants distinguished"
+    },
+    "docs/hwp5-ole-reference-evidence.md": {
+      "sha256": "3b4469d43b01ba35ea48ad7544bb433c1715d63e0faa5f2dacce2353d290762f",
+      "evidence": "2026-09-28 local HWP5 spec and current pending ordinal policy versus ReleaseSafe OLE 30 tests, Node paired 3 tests and actual HWP HWPX XML 4119 bytes storage ID 3 digest; historical full audits mutants not rerun"
+    },
+    "docs/hwp5-ole-stream-replacement.md": {
+      "sha256": "44eb84f26e7dfb49db9f3f38a94cca3f29459d39a05db276a06931854fbed628",
+      "evidence": "2026-09-28 current strict inner batch replacement envelope and chart session integration versus source, ReleaseSafe OLE 30 tests; historical mutants and arbitrary real HWP save not rerun"
     },
     "docs/bcp47-syntax.md": {
       "sha256": "ae0d91a0bb5ca2f8a5194b5ffa76494427cc058784f11446fd905458020f5b11",

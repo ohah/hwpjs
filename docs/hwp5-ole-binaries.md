@@ -34,4 +34,4 @@ ReleaseSafe/ReleaseFast 실제 WASM에서도 같은 결과(각 모드 정상 합
 
 ## 남은 범위
 
-이 선택은 BinData 항목의 내부 CFB 구조만 검사합니다. 본문 OLE ID→DocInfo→저장 대상의 의미적 일치, 내부 Contents/OOXMLChartContents/Workbook/Package 스키마, OLE 실행, 렌더링·편집·저장 및 모든 버전 지원은 별도입니다. 본문 ordinal 보고서는 이 검사로 자동 완료 처리하지 않습니다.
+이 선택은 BinData 항목의 내부 CFB 구조만 검사합니다. 본문 OLE ID→DocInfo→저장 대상의 의미적 일치, 내부 Contents/OOXMLChartContents/Workbook/Package 스키마, OLE 실행, 렌더링 및 모든 버전 지원은 이 검사 범위 밖입니다. 선택된 Contents 편집과 바깥 HWP 저장은 [파일 단위 OLE 편집 세션](hwp5-ole-edit-session.md) 및 [차트 파일 편집](hwp5-chart-file-edit.md)의 제한된 계약이며, 이 구조 검사가 그 기능을 수행하거나 임의 실파일의 무손실 저장을 증명하지 않습니다. 본문 ordinal 보고서는 이 검사로 자동 완료 처리하지 않습니다.

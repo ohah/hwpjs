@@ -25,7 +25,7 @@ ID 0은 `task1725/text_footnote_tail_overpagination.hwp`에서 1개 관측했습
 - XML SHA-256은 `a041d9589ff08bf241eaf47ef2fd558b9f27f4d695158e43c3a20487cae21b8a`입니다.
 - 외부 OLE envelope 전체 해시는 HWP/HWPX 사이에 다르므로 전체 바이너리 동일성을 주장하지 않습니다.
 
-이 표본에서는 DocInfo 항목 순번을 거쳐 storage ID 3으로 가는 해석을 뒷받침합니다. 다른 버전·ID 0·외부 링크·다른 개체 종류까지의 보편 규칙으로 확장하지 않습니다. 제품의 pending 값은 유지합니다.
+이 표본에서는 DocInfo 항목 순번을 거쳐 storage ID 3으로 가는 해석을 뒷받침합니다. 다른 버전·ID 0·외부 링크·다른 개체 종류까지의 보편 규칙으로 확장하지 않습니다. 제품의 기본 pending 값은 유지하며, 아래 선택적 순번 범위 검사도 실제 storage ID를 결정하지 않습니다.
 
 ## 회귀 테스트
 

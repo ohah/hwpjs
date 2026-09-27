@@ -24,4 +24,4 @@ strict 검사 해제, compact node target을 다음 항목으로 변경, 출력 
 
 ## 남은 범위
 
-이 API는 압축 해제된 BinData 값 하나의 내부 CFB만 재생성하며 replacement bytes를 해석하지 않습니다. 바깥 HWP의 DocInfo 선택·[BinData 인코딩 및 원자적 저장](hwp5-bin-data-replacement.md)은 별도 계층에 연결되어 있습니다. 여러 OLE BinData를 각각 의미 편집하고 그 결과를 바깥 batch에 조합하는 상위 명령 계층, DocInfo 자체 수정과 차트 외 내부 stream 의미 writer는 아직 별도 범위입니다.
+이 API는 압축 해제된 BinData 값 하나의 내부 CFB만 재생성하며 replacement bytes를 해석하지 않습니다. 바깥 HWP의 DocInfo 선택·[BinData 인코딩 및 원자적 저장](hwp5-bin-data-replacement.md)은 별도 계층에 연결되어 있습니다. 여러 OLE BinData를 바깥 batch에 조합하는 상위 명령 계층은 [파일 단위 OLE 편집 세션](hwp5-ole-edit-session.md)으로 구현되어 있고, 선택된 차트 Contents 의미 편집은 [차트 파일 편집](hwp5-chart-file-edit.md)이 담당합니다. DocInfo 자체 수정과 차트 외 내부 stream 의미 writer, 임의 원본 HWP의 무손실 저장은 아직 검증 범위 밖입니다.
