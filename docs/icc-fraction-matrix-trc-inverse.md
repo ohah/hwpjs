@@ -1,5 +1,11 @@
 # 분수 XYZ의 Matrix/TRC 역변환 연결
 
+## 2026-09-27 현재 재검증
+
+[ICC.1:2022 Annex F.3 식 F.7~F.16](https://www.color.org/specifications/ICC.1-2022-05.pdf)의 역행렬→선형 RGB 채널별 0~1 제한→각 TRC 역상 순서를 현재 `evaluateFraction`과 고정 경로가 공유하는 `finish`에 대조했습니다. i512/u512 선형 결과의 원값을 보존한 뒤 공통 범위 제한·확장 TRC 역변환으로 넘기는 연결, 의미·우선순위 보류 플래그와 오류 전파도 코드에서 확인했습니다.
+
+Debug·ReleaseSafe·ReleaseFast의 `fraction matrix TRC` 집중 테스트는 각각 root 포함 4/4 통과했습니다. 기존 로컬 WASM mode 238의 독립 JS 대조는 정상 3,335건·거부 1,217건이 일치했습니다. macOS 시스템의 ACESCG Linear·DCI(P3) RGB 프로파일에서 원문 XYZ 열과 양의 TRC 지수를 독립 확인하고, RGB 끝점 세 조합씩에서 계산한 합성 XYZ 입력의 선형값·장치 결과 6건을 다시 대조했습니다. 이번에 WASM을 재빌드하거나 과거 전체 감사·출력/소스 변형 검사·추가 수동 왕복 24건을 재실행하지 않았고 아래 `/tmp` 로그도 현재 없습니다. 끝점 일치는 중간 색상이나 렌더링 일치를 입증하지 않습니다.
+
 ## 계약과 책임
 
 `matrix_trc_inverse.evaluateFraction(precision,model,xyz)`는 i256 분자 3개/u256 공통 분모의 실제 XYZ 좌표를 받습니다. PCSXYZ wire 인코딩이 아닙니다. 기존 `evaluateFixed`의 signed 16.16 입력 계약은 유지합니다.
@@ -10,7 +16,7 @@
 
 채널별 selected/ambiguous/unattained/undecided를 보존하며 앞 채널이 미확정이어도 뒤 채널을 검사합니다. 뒤 채널의 잘못된 곡선은 전체 호출의 오류로 전파합니다. 분모 0·특이행렬은 TRC 전에 거부합니다. 파일 접근·할당·실수 근사는 추가하지 않습니다.
 
-## 검증 진행 중
+## 당시 검증 진행
 
 신규 네이티브 3개는 큰 XYZ 분수와 u256보다 큰 중간 분모, 비대칭 혼합 후 clipping, 음수 행렬식, 샘플 endpoint plateau·감마·identity 채널 분리, 동률·출력 부재와 뒤 채널 오류, 입력 오류 우선순위를 검사합니다. union/optional 태그를 먼저 assert합니다.
 
@@ -18,7 +24,7 @@
 
 이 변경의 완료된 검증 결과는 아래에 기록합니다. 실제 렌더링·HWP/HWPX 전체 문서 검증 완료를 의미하지 않습니다.
 
-## WASM 직접 대조
+## 당시 WASM 직접 대조
 
 mode238은 precision과 i256 XYZ 분자 3개/u256 분모의 132바이트 BE prefix 뒤 ICC 프로파일을 받아 실제 태그 테이블·모델 조립을 거칩니다. 기존 mode215와 probe를 공유합니다. 출력은 보류 플래그 8바이트, i512 분자 3개/u512 분모 256바이트, clipping 12바이트, 채널 payload 길이 12바이트 뒤 기존 확장 TRC wire 3개입니다. 모든 채널 임시 버퍼는 실패 경로에서도 해제합니다.
 
@@ -26,7 +32,7 @@ Debug 직접 실행은 기존 고정소수점 3,331 비교/1,099 거부, 분수 
 
 세 모드 전체 감사 결과는 아래 최종 감사 기록을 참조합니다.
 
-## 적대적 검사·실제 프로파일
+## 당시 적대적 검사·실제 프로파일
 
 Debug WASM 출력에서 첫 두 선형 채널 교환, 첫 선형 좌표 상위 비트 삭제, clipping을 none으로 변경, ambiguous를 unattained로 변경, 첫 payload 길이를 1 증가시키는 다섯 변형은 모두 ERR_ASSERTION으로 검출했습니다. 이는 출력 검사 민감도이며 모든 구현 오류 검출을 뜻하지 않습니다.
 
@@ -36,7 +42,7 @@ Debug WASM 출력에서 첫 두 선형 채널 교환, 첫 선형 좌표 상위 �
 
 추가 Debug 수동 왕복은 행렬 3종(identity·부호 혼합·큰 계수 상쇄)과 identity/엄격 증가 샘플의 채널 조합 8종으로 24건을 검사했습니다. 입력은 1/3, 2/5, 4/7입니다. mode176 순방향을 독립 계산으로 먼저 대조한 뒤 원시 i256/u256 결과를 그대로 mode238에 전달했습니다. 선형 결과는 독립 샘플 순방향 값과, 장치 좌표는 원래 입력 분수와 정확히 일치했습니다. 샘플 plateau의 역상 비유일성이나 비유리수 감마 왕복을 검증한 것은 아닙니다. 수동 건수는 정규 audit에 합산하지 않습니다.
 
-## 최종 감사
+## 당시 최종 감사
 
 Debug·ReleaseSafe·ReleaseFast 전체 audit는 모두 종료 코드 0, 20/20 단계, 네이티브 688/688, WASM checks=6,992,456으로 통과했습니다. 이전 6,987,904에 신규 4,552건이 추가됐습니다. 로그는 `/tmp/hwpjs-fraction-model-{Debug,ReleaseSafe,ReleaseFast}.log`입니다. ReleaseSafe·ReleaseFast 실제 감사 산출물에서도 기존/분수 직접 대조와 출력 변형 5종 검출이 통과했습니다.
 
