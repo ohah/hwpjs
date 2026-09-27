@@ -8,6 +8,8 @@ Move·Line·Bézier의 source point 수와 CloseSubpath 판정은 [device comman
 
 ## stroke·fill closure 계약
 
+[GDI+의 열린 figure 채우기 설명](https://learn.microsoft.com/en-us/windows/win32/gdiplus/-gdiplus-filling-open-figures-use)은 열린 figure를 끝점→시작점의 직선으로 닫은 것처럼 채운다고 명시합니다. 여기서 `Closure`와 추가 point의 보존 방식은 그 의미를 표현하는 프로젝트의 geometry API 정책이며 실제 fill rule·픽셀 재생을 구현한 것은 아닙니다.
+
 drawable command가 있는 명시적 closed figure는 stroke와 fill 모두 마지막 point 뒤에 시작 좌표를 한 번 추가하고 `Closure.explicit`으로 기록합니다. 열린 drawable figure는 stroke에서 그대로 두고 `Closure.none`, fill에서는 시작 좌표를 추가하고 `Closure.implicit`으로 기록합니다. Move만 있는 빈 figure는 Move 자체의 CloseSubpath 여부와 무관하게 두 정책 모두 point를 추가하지 않고 `Closure.none`입니다.
 
 마지막 point와 시작점의 좌표 비트가 같아도 명시적·암묵적 closure point를 제거하지 않습니다. 좌표 일치만으로 cap/join 또는 fill boundary 의미를 없앨 수 없기 때문입니다. 원래 polyline point와 일반/RLE metadata는 그대로 복사하고, point 배열에 없던 의미상 closing edge의 끝점은 시작 좌표와 `source_type=null`을 갖습니다.
@@ -29,3 +31,5 @@ drawable command가 있는 명시적 closed figure는 stroke와 fill 모두 마�
 적대적 검증은 source point/command 연속성·전체 소비, 빈 source, Move bit 일치, closure 요약 검증, Move·Line·Bézier `closesFigure()`와 geometry 위임, drawable 판정, stroke/fill 정책, closure 추가·좌표·metadata, source point 복제, 두 exact global limit gate, source index와 output range, accessor 오류·bounds, 성공·오류 경로 해제, collect 정책, 공개 stroke 정책·mapping·flattening/boundary options라는 33개 의미 변이를 source-only 복사본에 적용했습니다. 변이·모드마다 새 local/global Zig cache를 사용한 Debug·ReleaseSafe·ReleaseFast 99/99회가 모두 기대 assertion으로 검출됐고 생존·compile error·panic은 없습니다. 최종 캠페인은 `/private/tmp/hwpjs-path-boundary-polyline-mutants.9D3uCZ`입니다. 빈 figure closure 변이의 미사용 매개변수 compile error, collect policy의 미사용 매개변수 compile error, closure 없는 exact slice 경계 미관측을 드러낸 선행 캠페인은 완료 수치에서 제외하고 변이와 fixture를 보정했습니다. closure SSOT 리팩터링과 Move 초기 closed 중복 제거 후 전체 캠페인을 매번 새 캐시로 다시 실행했습니다.
 
 최종 closure SSOT 소스와 테스트를 고정한 Debug → ReleaseSafe → ReleaseFast 전체 audit는 모드별 40/40 단계·2,038/2,038 테스트(공통 native 1,999개, 차트 31개, WMF 8개)를 통과했습니다. 각 로그에서 HWP/WASM `checks=8,905,827`, `imports=0`, CFB `mutations=12,000`·`traps=0`을 한 번씩 확인했습니다. 최종 로그는 `/tmp/hwpjs-path-boundary-polyline-final2-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다. 이 결과는 Path device boundary polyline의 closure 정책·소유·range·한도 계약 근거이며 실제 stroke/fill/rasterization이나 한컴 렌더링 동등성의 근거가 아닙니다.
+
+위 변이·전체 audit 수치는 작성 당시의 이력이며 기재된 `/private/tmp` 캠페인과 `/tmp` 로그는 2026-09-28 현재 남아 있지 않습니다. 이번에는 현재 stroke/fill `Closure` 선택, source range·metadata·전역 point budget 검증, 공개 `Path.strokeDevicePolyline()`·`fillDevicePolyline()` 연결을 대조하고 Debug·ReleaseSafe·ReleaseFast root `EMF+` 필터 각 560/560, ReleaseSafe의 boundary polyline 직접 필터 5/5·closure 정책 필터 2/2·공개 Path 연결 2/2를 통과했습니다. 과거 변이·전체 audit는 재실행하지 않았습니다.

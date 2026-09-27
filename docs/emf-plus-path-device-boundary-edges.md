@@ -30,3 +30,5 @@ figure의 원본 index와 point range는 0부터 연속이어야 하고 EOF에�
 교정한 최종 캠페인은 검증 gate, closed figure의 최소 drawable endpoint, Move-only 진행, Move·Edge의 모든 반환 필드, flattened/source endpoint와 explicit/implicit 역할, figure 종료 진행이라는 25개 의미 변이를 독립 `src/` 복사본에 적용했습니다. 변이·모드마다 새 local/global Zig cache를 사용한 Debug·ReleaseSafe·ReleaseFast 75/75회가 모두 assertion으로 검출됐고 생존·compile error·panic은 없습니다. 결과는 `/private/tmp/hwpjs-path-boundary-edges-mutants.lNKVCM`에 있습니다.
 
 최종 소스와 문서를 고정한 Debug → ReleaseSafe → ReleaseFast 전체 audit는 모드별 40/40 단계·2,041/2,041 테스트(공통 native 2,002개, 차트 31개, WMF 8개)를 통과했습니다. 각 로그에서 HWP/WASM `checks=8,905,827`, `imports=0`, CFB `mutations=12,000`·`traps=0`을 확인했습니다. 로그는 `/tmp/hwpjs-path-boundary-edges-final-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다. 이 결과는 boundary edge 이벤트의 분류·metadata·진행 계약 근거이며 실제 stroke/fill/rasterization이나 한컴 렌더링 동등성의 근거가 아닙니다.
+
+위 변이·전체 audit 수치는 작성 당시의 이력이며 기재된 `/private/tmp` 캠페인·`/tmp` 로그는 2026-09-28 현재 남아 있지 않습니다. 이번에는 현재 borrowed iterator의 Move-only figure 진행, range·closure 사전검사, edge role/metadata 분류와 오류 원자성을 대조하고 Debug·ReleaseSafe·ReleaseFast root `EMF+` 필터 각 560/560, ReleaseSafe의 boundary edge 직접 필터 4/4를 통과했습니다. 과거 변이·전체 audit는 재실행하지 않았습니다.
