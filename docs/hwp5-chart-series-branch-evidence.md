@@ -36,6 +36,10 @@ String 사전 반환 추가 후 기존 ReleaseSafe 테스트 WASM으로 Series �
 
 ## 남은 범위
 
-다음은 이 두 경로를 코어로 연결하고 SeriesLabel 본문을 검증하는 작업입니다. SeriesPoint 원소의 끝과 반복, SeriesLabel의 실제 소유 관계, 뒤쪽 계열·raw 의미·전체 Chart 조립·렌더링·저장은 미완료입니다. 0/0 표본만으로 나머지 두 경로를 완료했다고 판단하지 않습니다.
+당시 다음 작업은 두 경로를 코어로 연결하고 SeriesLabel 본문을 검증하는 것이었습니다. 후속 선택 배치에서는 SeriesPoint 원소·반복과 Label 본문, 계열 반복 및 Contents 조립을 구현했습니다. 이 분기 조사만으로 SeriesLabel의 일반 소유 관계, 배열 값의 일반 개수 의미, raw 의미·전체 버전·렌더링·저장을 확정하지는 않습니다. 0/0 표본만으로 나머지 두 경로를 완료했다고 판단하지 않습니다.
 
 후속 [SeriesLabel 본문·Point 반복 조사](hwp5-chart-series-label-evidence.md)에서 공통 TextBlock 본문과 5개 Point의 끝·반복을 검증했습니다. 현재 확인 범위는 해당 문서가 소유하며 일반 소유 관계·전체 Series 완료를 뜻하지 않습니다.
+
+## 현재 재검증
+
+위 변이 검사와 당시 ReleaseSafe 회귀 수치는 이력입니다. 현재 독립 단위 테스트 2/2개가 통과했고, `chart-series-branch-survey.mjs --verify`에서 HWP 584개 중 선택된 Contents 43개의 tail 41·point 2 분기, 잘림 5,316건·타입 거부 213건·ID 거부 129건·원값/별칭 변형 82건을 다시 확인했습니다. 제품의 자동 분기 판정 증거로 확대하지 않으며, 이번에는 변이 검사와 세 모드 전체 audit를 재실행하지 않았습니다.

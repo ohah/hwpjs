@@ -1,6 +1,26 @@
 {
   "schema": 1,
   "verified": {
+    "docs/hwp5-chart-series-branch-evidence.md": {
+      "sha256": "c7233bcebb476b37cd39758903e566c04277af3fb4e205a0d8807ed0b5ed5d2d",
+      "evidence": "2026-09-28 current JS explicit tail or point survey 584 HWP 43 selected Contents 41 tail 2 point 5316 cuts 213 type rejects 129 IDs 82 variants, tests 2; later selected Series Contents exists but automatic branch policy not proven, historic mutants full audits not rerun"
+    },
+    "docs/hwp5-chart-series-label-evidence.md": {
+      "sha256": "44ac12b0cb883ea395db4ec1b2f86349653ff645387023de7657b62fe6c0dcf8",
+      "evidence": "2026-09-28 current JS first Series label and point survey 584 HWP 43 selected Contents 5 points 48 labels 812 point cuts 5184 label cuts 48 collisions 53 raw variants 149 type rejects, tests 3; historic mutants full audits not rerun"
+    },
+    "docs/hwp5-chart-series-label.md": {
+      "sha256": "8848dcf07c9e353c720dc16e7f7a23481b842f44619fe923d81f1933bc3ba8fa",
+      "evidence": "2026-09-28 current Zig selected SeriesLabel and SeriesPoint shared TextBlock and raw failure semantics; Debug Safe Fast focused 4 each; current ReleaseSafe mode328 43 roots 5 points 182 accepted 11304 rejected; historic mutants full audits not rerun"
+    },
+    "docs/hwp5-chart-series-suffix-evidence.md": {
+      "sha256": "8b95f82892255980cf8fafdb8ccb6697555299266bf66eee22d216578f40056e",
+      "evidence": "2026-09-28 current JS suffix survey 584 HWP 43 selected Contents 8468 cuts 258 IDs 266 types 129 raw variants, tests 3; current Zig required versus nullable TextFormat and ReleaseSafe mode329 86 formats two null codes 426 accepted 9004 rejected; historic mutants full audits not rerun"
+    },
+    "docs/hwp5-chart-series-picture-evidence.md": {
+      "sha256": "ed41a702dfbd8428caf911486f8d85b5db005a79c50850ee154b08158a226083",
+      "evidence": "2026-09-28 current JS picture survey 584 HWP 43 selected Contents 2580 cuts 86 IDs 86 types 172 nonnull data rejects 43 raw variants, tests 2; current Zig empty Picture and ReleaseSafe mode330 172 accepted 3010 rejected; historic mutants full audits not rerun"
+    },
     "docs/hwp5-chart-series-prefix-evidence.md": {
       "sha256": "92c8039e086c6dee80207aabb0e3d0808fb422ea57a91c45db8d124e4de2af89",
       "evidence": "2026-09-28 official Hancom chart rev1.2 Series API versus independent prefix oracle; current 56 JS chart evidence tests, 584 HWP 43 selected Contents 107 byte prefix raw66 two variants 4601 cuts 215 type rejects 215 ID rejects 86 variants; historic mutants and full audits not rerun"
@@ -490,8 +510,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "55c949392782bbc94dde559d7f7f9776ec074da8e1b71d898576e9c39a00ff55",
-      "evidence": "2026-09-28 tracker updated with Series prefix and collection evidence and core current surveys, Debug Safe Fast focused tests, ReleaseSafe independent probe 43 roots; historic full audits and mutants not rerun"
+      "sha256": "0de8e5c1dc2213683ca0560b87de5f79dd04fe6b9ef70658f18ddb092ed75924",
+      "evidence": "2026-09-28 tracker updated with Series branch Label Point suffix Picture evidence and core current surveys, Debug Safe Fast focused tests, ReleaseSafe independent probe 43 roots; historic full audits and mutants not rerun"
     },
     "docs/bcp47-syntax.md": {
       "sha256": "ae0d91a0bb5ca2f8a5194b5ffa76494427cc058784f11446fd905458020f5b11",

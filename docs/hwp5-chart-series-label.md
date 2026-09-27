@@ -38,6 +38,10 @@ Debug·ReleaseSafe·ReleaseFast 전체 audit가 모두 종료 코드 0으로 완
 
 ## 남은 범위
 
-제품 JS API는 변경하지 않았습니다. 일반 Series 배열 규칙·tail 전체 코어·Label 이후 inline TextBlock·계열 끝과 반복·raw 의미·전체 Chart 조립·렌더링·저장은 여전히 미완료입니다. 본 파트 통과는 전체 차트나 HWP 문서 지원 완료가 아닙니다.
+제품 JS API는 변경하지 않았습니다. 이 Label·Point 코어만으로 일반 Series 배열 규칙이나 뒤쪽 구간을 확정하지 않습니다. 후속 선택 배치의 suffix·빈 Picture·계열 반복·Title/Tail·Contents 조립은 각각 `series_suffix.zig`·`series_picture.zig`·`series_collection.zig`·`title.zig`·`tail.zig`·`observed_contents.zig`가 소유합니다. raw 의미·자동 배치 판정·전체 버전·렌더링·저장은 미완료이며, 본 파트 통과는 전체 차트나 HWP 문서 지원 완료가 아닙니다.
 
 후속 [TextBlock·TextFormat 조사](hwp5-chart-series-suffix-evidence.md)에서 뒤쪽 두 Format의 nullable code 예외를 확인했습니다. 조사 완료와 제품 지원 범위는 구분하며 현재 근거는 해당 문서가 소유합니다.
+
+## 현재 재검증
+
+위 전체 audit와 결함 주입은 당시 기록입니다. 현재 `series_label.zig`·`series_point.zig`의 공통 TextBlock 본문, ID 범위, Reader 실패 원자성·raw 수명을 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 `chart series label point` 집중 테스트는 각각 4/4개 통과했고, 기존 ReleaseSafe probe의 독립 mode 328 오라클은 실파일 43개·Point 5개에서 수락 182건·거부 11,304건을 다시 통과했습니다. 이번에는 세 모드 전체 audit와 변이 검사를 재실행하지 않았습니다.

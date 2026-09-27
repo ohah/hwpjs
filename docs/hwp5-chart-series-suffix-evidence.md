@@ -36,6 +36,10 @@ node tests/hwp5/chart-series-suffix-survey.mjs --verify
 
 ## 다음 범위
 
-기존 필수 TextFormat API를 보존한 nullable code 코어 연결과 새 실제 WASM 대조가 필요합니다. 그 뒤의 원시 꼬리, 계열 끝·반복·일반 배열 의미, 전체 Chart 조립·렌더링·저장은 미완료입니다. 공식 차트 API 속성 표만으로 이 바이트 순서나 의미를 확정하지 않습니다.
+조사 당시 필요했던 nullable code 코어와 실제 WASM 대조는 후속 [nullable code 코어](hwp5-chart-nullable-format.md)에서 구현했습니다. 선택 배치의 빈 Picture·raw106·계열 반복·Contents 조립도 후속 모듈에 연결됐습니다. 일반 배열 의미·raw 필드 의미·자동 배치 판정·전체 버전·렌더링·저장은 미완료입니다. 공식 차트 API 속성 표만으로 이 바이트 순서나 의미를 확정하지 않습니다.
 
 후속 구현·실제 WASM 연결의 현재 범위는 [nullable code 코어](hwp5-chart-nullable-format.md)가 소유합니다. 위 조사 수치를 제품 실행 수치로 읽지 않습니다.
+
+## 현재 재검증
+
+위 변이 검사와 세 모드 기존 경로 회귀는 당시 기록입니다. 현재 독립 단위 테스트 3/3개가 통과했고, `chart-series-suffix-survey.mjs --verify`에서 HWP 584개 중 선택된 Contents 43개의 잘림 8,468건·ID 거부 258건·타입 거부 266건·원값 변형 129건을 다시 확인했습니다. `text_format.zig`의 필수 code와 선택 nullable code를 구분했고, 기존 ReleaseSafe probe의 독립 mode 329 오라클은 43개에서 Format 86개·null code 2개, 수락 426건·거부 9,004건을 다시 통과했습니다. 이번에는 변이 검사와 세 모드 전체 audit를 재실행하지 않았습니다.

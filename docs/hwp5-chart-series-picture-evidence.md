@@ -33,8 +33,12 @@ node tests/hwp5/chart-series-picture-survey.mjs --verify
 
 ## 다음 범위
 
-기존 Backdrop의 빈 Picture 코어와 필드 읽기를 공유해 새 구간을 실제 WASM으로 대조해야 합니다. Picture 뒤의 불명확한 바이트·계열 끝·반복·일반 배열 규칙, 전체 Chart 조립·렌더링·저장은 미완료입니다. 공식 API 속성 표만으로 바이트 순서나 소유 관계를 확정하지 않습니다.
+조사 당시 필요했던 빈 Picture 공통 코어와 실제 WASM 대조는 후속 [Picture 코어](hwp5-chart-picture.md)에서 구현했습니다. Picture 뒤 raw106과 계열 반복·선택 Contents 조립도 후속 모듈에 연결됐지만, 불명확한 원시 필드 의미·일반 배열 규칙·자동 배치 판정·전체 버전·렌더링·저장은 미완료입니다. 공식 API 속성 표만으로 바이트 순서나 소유 관계를 확정하지 않습니다.
 
 후속 구현·WASM 연결의 현재 범위는 [빈 Picture 공통 코어](hwp5-chart-picture.md)가 소유합니다. 위 조사 수치를 제품 실행 수치로 해석하지 않습니다.
 
 뒤쪽 raw106과 계열 반복의 후속 관측은 [Series 반복·Title 헤더 경계 조사](hwp5-chart-series-collection-evidence.md)를 참고합니다. 내부 필드 의미와 위에서 폐기한 타입 가설은 여전히 미확정입니다.
+
+## 현재 재검증
+
+위 변이 검사와 기존 경로 회귀는 당시 기록입니다. 현재 독립 단위 테스트 2/2개가 통과했고, `chart-series-picture-survey.mjs --verify`에서 HWP 584개 중 선택된 Contents 43개의 잘림 2,580건·ID 거부 86건·타입 거부 86건·non-null 데이터 거부 172건·raw 변형 43건을 다시 확인했습니다. `picture.zig`·`series_picture.zig`의 빈 데이터 정책을 대조했고, 기존 ReleaseSafe probe의 독립 mode 330 오라클은 43개에서 수락 172건·거부 3,010건을 다시 통과했습니다. 이번에는 변이 검사와 세 모드 전체 audit를 재실행하지 않았습니다.

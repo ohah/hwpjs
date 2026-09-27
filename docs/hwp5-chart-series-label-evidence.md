@@ -39,6 +39,10 @@ node tests/hwp5/chart-series-label-survey.mjs --verify
 
 ## 남은 범위
 
-다음은 이미 검증한 분기·공통 Label 본문·Point 꼬리를 코어에 연결하고 실제 WASM으로 대조하는 작업입니다. 일반 계열 Label 다음에도 별도 inline TextBlock으로 보이는 데이터가 남습니다. 이후 계열의 끝·다른 계열 반복·일반 배열 규칙·raw 의미·Chart 조립·렌더링·저장은 미완료입니다.
+당시 다음 작업은 검증한 분기·공통 Label 본문·Point 꼬리를 코어에 연결하고 실제 WASM으로 대조하는 것이었습니다. 이후 선택 배치의 Label·Point, 뒤쪽 TextBlock/Format, 계열 반복 및 Contents 조립도 구현됐습니다. 이 첫 Series 조사만으로 일반 배열 규칙·상위 소유 관계·raw 의미·전체 버전·렌더링·저장을 확정하지는 않습니다.
 
 후속 코어 연결과 WASM 검증 범위는 [SeriesLabel·SeriesPoint 코어](hwp5-chart-series-label.md)가 소유합니다. 위 조사 수치를 제품 실행 수치로 해석하지 않습니다.
+
+## 현재 재검증
+
+위 변이 검사는 당시 기록입니다. 현재 독립 단위 테스트 3/3개가 통과했고, `chart-series-label-survey.mjs --verify`에서 HWP 584개 중 선택된 Contents 43개·Point 5개·Label 본문 48개의 잘림 812+5,184건, 객체 충돌 48건·원값 변형 53건·타입 거부 149건을 다시 확인했습니다. 조사기는 첫 Series만 선택하므로 전체 계열의 Label 일반 규칙을 증명하지 않습니다. 이번에는 변이 검사와 세 모드 전체 audit를 재실행하지 않았습니다.
