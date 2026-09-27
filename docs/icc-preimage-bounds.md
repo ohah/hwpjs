@@ -2,6 +2,8 @@
 
 ## 계약
 
+[ICC.1:2022 §10.18 Table 68·Annex F.1](https://www.color.org/specification/ICC.1-2022-05.pdf)은 파라메트릭 곡선과 역함수의 단조성·평탄 구간·미도달 출력 처리를 규정합니다. 여기의 하한·상한·attained는 프로젝트가 F.1 선택 전에 보존하는 중간 결과이며, 명세가 이 결과 타입이나 wire를 요구하는 것은 아닙니다.
+
 `parametric_preimage_bounds.solve(precision, curve, n, d)`는 전체 clip(f(x))=n/d 역상의 하한(infimum)과 상한(supremum)을 구합니다. 각 경계의 attained가 참일 때만 실제 최솟값·최댓값입니다. empty, undecided, bounds를 구분하며 원래 집합이나 경계 비교가 미확정이면 부분 경계를 반환하지 않습니다.
 
 정확한 좌표는 u256 분수 또는 기호근과 affine 계수 a/b로 보존합니다. 기호근은 밑 z를 나타내며 x=(65536*z−b)/a입니다. 수치 근사로 바꾸지 않습니다. 전체 정의역·목표 입력 검증은 기존 전체 역상 solver가 먼저 수행합니다. 비단조 곡선도 해 집합의 경계는 구할 수 있으므로 단조성 제한을 추가하지 않습니다.
@@ -12,7 +14,7 @@
 
 [u512 목표의 확장 경계](icc-extended-preimage-bounds.md)는 기존 경로와 폭별 타입·경계 병합 구현을 공유합니다. 내부 병합 소유자는 `power_preimage_bounds_impl.zig`이며 `power_preimage_bounds.zig`는 폭별 별칭을 제공합니다.
 
-후속 [도달 목표의 F.1(a) 선택](icc-parametric-attained-inverse.md)은 전체 곡선 검증과 경계 선택을 연결합니다. 최근접 출력 처리는 별도 미완료 범위입니다.
+별도 [도달 목표의 F.1(a) 선택](icc-parametric-attained-inverse.md)은 전체 곡선 검증과 경계 선택을 연결합니다. [최근접 출력](icc-parametric-nearest.md)·[전체 역변환](icc-parametric-inverse.md)은 현재 별도 계층이며, 이 모듈에 합치지 않습니다.
 
 - `parametric_preimage_bounds_types.zig`: 외부 결과 타입과 좌표 표현.
 - `parametric_preimage_bounds.zig`: 기존 전체 역상 호출과 두 분기의 경계 조립. 하위 분기의 모든 x가 상위 분기의 모든 x보다 작은 성질은 parametric_segments의 기존 분기 소유권을 사용합니다. 큰 선형 좌표를 u128로 줄이거나 기호근과 불필요하게 비교하지 않습니다.
@@ -20,7 +22,7 @@
 
 두 내부 모듈은 할당·파일 접근·부동소수점 계산을 하지 않습니다. 파라미터 검증·역상 생성·근 비교 규칙을 이 계층에 복제하지 않습니다. 테스트용 mode201은 제품 JS 공개 API가 아닙니다.
 
-## 검증 진행
+## 구현 당시 검증 진행 기록
 
 신규 네이티브 검사는 열린 상한과 빈 출력 틈, terminal 단일점, 세 분리 해, 음의 기울기의 두 근 순서, 클리핑 경계의 포함 정보 병합, 미확정 전파, 전체 정의역 오류, u128을 넘는 선형 좌표를 포함합니다. 독립 이차식 기준은 양·음 기울기 8개 × offset 9개 × 목표 3개, 총 216개 조합에서 원본 도메인 끝점과 ±sqrt(y) 해를 정확한 유리수로 열거해 경계를 대조합니다.
 
@@ -34,14 +36,22 @@ JS는 정확한 BigInt 이차식 후보 열거와 독립 근 등식 비교를 �
 
 임시 소스 복사본에서 동일 경계의 attained OR 병합을 AND로 바꾸어 신규 네이티브 테스트를 실행했습니다. 6개 중 포함 정보 병합과 독립 이차식 대조 2개가 실패했고 종료 코드 1로 검출됐습니다. 제품 소스는 변형하지 않았습니다. 로그는 `/tmp/hwpjs-preimage-bounds-mutation-tie.log`입니다.
 
-## 실제 ICC 태그 대조
+## 구현 당시 실제 ICC 태그 대조
 
 시스템 DCI(P3) RGB·Display P3·ITU-2020·ITU-709·ROMM RGB의 RGB TRC para 태그 15개를 읽기 전용으로 검사했습니다. type0/type3, 양의 g/a, 단위 범위 내 분기 시작, type3 하위 기울기 0<c≤65536을 확인한 뒤 목표 0/1에서 상위의 정확한 근 x=(65536*y−b)/a 및 하위 원점을 독립적으로 구성했습니다. 30개 해 집합의 빈 여부·양 끝 좌표·도달 여부가 일치했습니다. 실제 HWP 문서 렌더링이나 전체 ICC 변환을 검증한 것은 아니며 이 수동 건수는 정규 audit 호출 수에 합산하지 않습니다.
 
 ## 최종 감사와 재검토
 
-Debug·ReleaseSafe·ReleaseFast 전체 audit가 각각 종료 코드 0, 20/20 단계, 네이티브 558/558, WASM checks=6,558,415로 통과했습니다. 신규 945건이 이전 6,557,470건에 추가됐습니다. 각 신규 결과는 comparisons=886/rejected=58/undecided=1입니다. 로그는 `/tmp/hwpjs-icc-preimage-bounds-{Debug,ReleaseSafe,ReleaseFast}.log`입니다. 앞의 진행 중·초기 수치는 이력이며 최종 결과는 이 절을 기준으로 합니다.
+당시 Debug·ReleaseSafe·ReleaseFast 전체 audit가 각각 종료 코드 0, 20/20 단계, 네이티브 558/558, WASM checks=6,558,415로 통과했습니다. 신규 945건이 이전 6,557,470건에 추가됐습니다. 각 신규 결과는 comparisons=886/rejected=58/undecided=1입니다. 당시 로그 경로는 `/tmp/hwpjs-icc-preimage-bounds-{Debug,ReleaseSafe,ReleaseFast}.log`입니다. 앞의 진행 중·초기 수치는 이력이며 이 절의 값은 당시 최종 결과입니다.
 
 ReleaseSafe·ReleaseFast 산출물 직접 실행도 같은 신규 수치로 통과했고 열린 상한을 강제로 포함시키는 변형을 각각 검출했습니다. 변경 Zig 포맷·JS 문법·diff 공백·문서 로컬 링크 4개를 확인했습니다.
 
-최종 적대적 재검토에서는 전체 입력/정의역 선행 검증, 미확정 시 부분 결과 비노출, 분기 순서 재사용, 음의 affine 기울기, 동일 경계의 포함 정보 OR 병합, terminal 좌표의 유리수 보존, u256 선형 좌표 유지, 결과 버퍼의 전체 초기화와 할당 후 오류 경로 부재를 확인했습니다. 이 범위에서 추가 결함은 발견하지 않았습니다. F.1 최종 선택·역변환 적격성·최근접 출력 존재 여부와 전체 HWP/HWPX 문서 검증은 여전히 미완료입니다.
+당시 적대적 재검토에서는 전체 입력/정의역 선행 검증, 미확정 시 부분 결과 비노출, 분기 순서 재사용, 음의 affine 기울기, 동일 경계의 포함 정보 OR 병합, terminal 좌표의 유리수 보존, u256 선형 좌표 유지, 결과 버퍼의 전체 초기화와 할당 후 오류 경로 부재를 확인했습니다. 당시 범위에서 추가 결함은 발견하지 않았습니다. 당시 미완료였던 F.1 선택·역변환 적격성·최근접 출력 판정은 위 별도 계층의 현행 범위에서 확인해야 합니다. 전체 HWP/HWPX 문서 검증은 여전히 미완료입니다.
+
+## 2026-09-27 문서 재검증
+
+현재 `parametric_preimage_bounds.solveFor`는 u128/u512 경로를 공유하고 먼저 전체 `parametric_preimage` 결과를 구합니다. undecided면 경계를 노출하지 않고, 하위 선형 구간의 시작·끝·포함 여부를 그대로 옮긴 다음 상위 power 집합을 `power_preimage_bounds.inspect`로 조사합니다. 상위 경계가 있으면 분리된 입력 도메인의 순서에 따라 전체 상한을 교체하고, 하위가 없으면 상·하한을 함께 설정합니다. power 내부의 같은 경계 병합과 attained OR는 `power_preimage_bounds_impl`가 소유합니다. 이 계층은 여전히 F.1 선택이나 최근접 출력을 수행하지 않습니다.
+
+Debug·ReleaseSafe·ReleaseFast의 `zig test src/root.zig -O <모드> --test-filter 'bounds'`는 각 모드 root 포함 56/56 통과했습니다. 이는 프로젝트의 넓은 bounds 필터이며 이 문서의 6개 좁은 테스트만을 센 수치가 아닙니다. 로컬 ReleaseFast 테스트용 WASM mode201의 독립 이차식·끝점 대조는 comparisons=886·rejected=58·undecided=1로 일치했습니다. 같은 제품 코드에서 앞서 실행한 ReleaseFast HWP5 전체 감사 10/10 단계·WASM checks=8,905,855는 재사용 근거로만 세었습니다.
+
+과거 세 모드 전체 audit·출력/소스 변형·시스템 ICC 15개 태그는 이번에 재실행하지 않았고 당시 `/tmp` 로그도 현재 존재하지 않습니다. 이 재검증은 모든 ICC 곡선·실제 HWP/HWPX 표시·저장 동치를 입증하지 않습니다.
