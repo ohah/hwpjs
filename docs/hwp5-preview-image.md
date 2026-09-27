@@ -4,11 +4,11 @@
 
 `src/hwp5/container/preview_image.zig`는 선택한 루트 미리보기 스트림의 조회·크기 한도·소비 상태를 소유합니다. `container.validation.Options.preview_image`는 기본 null이며, 선택하지 않으면 기존 미검사 스트림 집계가 유지됩니다. 선택한 경우 보고서의 absent/empty/inspected/unhandled를 구분합니다. `inspected`는 선택 코덱의 검사 성공이지 전체 렌더링 의미의 검증 완료가 아닙니다.
 
-조회는 기존 CFB `findExact`를 사용합니다. 루트 상대 계층과 CFB 이름 비교 규칙을 따르므로 대소문자 변형을 허용하되 하위 폴더 basename 검색으로 대체하지 않습니다. 잘못된 항목 종류는 오류입니다. 원문 3.1·3.2.7에 따라 PrvImage에는 문서 압축 플래그를 적용하지 않습니다.
+조회는 기존 CFB `findExact`를 사용합니다. 루트 상대 계층과 CFB 이름 비교 규칙을 따르므로 대소문자 변형을 허용하되 하위 폴더 basename 검색으로 대체하지 않습니다. 잘못된 항목 종류는 오류입니다. [한컴 공식 HWP 5.0 revision 1.3](https://cdn.hancom.com/link/docs/%ED%95%9C%EA%B8%80%EB%AC%B8%EC%84%9C%ED%8C%8C%EC%9D%BC%ED%98%95%EC%8B%9D_5.0_revision1.3.pdf) 3.1·3.2.7에 따라 PrvImage에는 문서 압축 플래그를 적용하지 않습니다.
 
 호출자는 `images`, `empty`, `unhandled` 정책을 명시합니다. 빈 입력과 미지원 입력은 각각 preserve/reject를 선택합니다. preserve는 스트림을 소비하지만 이미지 검증 성공으로 표시하지 않습니다. 미지원 코덱과 손상된 선택 코덱을 혼동하지 않습니다. 선택 코덱의 오류는 다른 디코더로 재시도하거나 unhandled 성공으로 바꾸지 않습니다. 부재·빈 스트림은 코덱을 호출하지 않으며 이미지 선택 옵션의 유효성도 검사하지 않습니다.
 
-스트림은 자체 max_bytes와 남은 전체 문서 바이트 한도를 모두 만족해야 합니다. BinData와 미리보기는 서로 독립적인 이미지 예산을 갖습니다. 기존 `container/images.zig`가 PNG/JPEG/BMP/GIF 선택과 코덱 호출을 소유하며, PrvImage는 별도 형식 판별기를 갖지 않습니다. 모든 정책·디코더 검사가 성공한 뒤에만 문서 잔여 바이트와 used 표시를 갱신합니다. 반환 보고서는 스칼라만 보유하며 CFB 입력과 이미지 버퍼를 참조하지 않습니다.
+스트림은 자체 max_bytes와 남은 전체 문서 바이트 한도를 모두 만족해야 합니다. BinData와 미리보기는 서로 독립적인 이미지 예산을 갖습니다. 기존 `container/images.zig`가 PNG/선택 JPEG·BMP·GIF·PCX·WMF의 형식 선택과 코덱 호출을 소유하며, PrvImage는 별도 형식 판별기를 갖지 않습니다. 이 문서의 실파일 양성 증거는 아래 PNG/JPEG/GIF 표본에 한정하고, 추가 선택 코덱의 PrvImage 실파일 지원까지 주장하지 않습니다. 모든 정책·디코더 검사가 성공한 뒤에만 문서 잔여 바이트와 used 표시를 갱신합니다. 반환 보고서는 스칼라만 보유하며 CFB 입력과 이미지 버퍼를 참조하지 않습니다.
 
 ## GIF 연결
 
@@ -17,6 +17,8 @@
 `images.Options.gif`의 기본은 null입니다. 기존 PNG → 선택 JPEG → 선택 BMP의 우선순위 이후 GIF를 검사합니다. UTF-16 gif 힌트 또는 GIF 접두부로 선택하므로 미지원 GIF 버전도 명시적 오류가 됩니다. 실패 시 전체 이미지 보고서를 유지합니다. 프레임 합성·애니메이션·일반 텍스트와 응용 확장 의미는 여전히 별도 미완료 영역입니다.
 
 ## 검증 기록
+
+아래 2026-09-12의 전체 감사·변이 검사 수치는 당시 기록입니다. 현재 실행한 범위는 마지막 절에서 분리합니다.
 
 네이티브 테스트에 반복 참조의 세 가지 독립 누적 한도, 이미지별 한도, 전체 필드 오버플로, 잘림·미지원 버전, 할당 실패 주입, ReleaseFast에서도 활성인 명시적 할당 회계를 추가했습니다. PrvImage 테스트는 루트/중첩/대소문자/종류, 빈 입력/미지원 입력 정책, 소비 원자성, 문서 압축 플래그, CFB 입력 해제 후 보고서 수명을 검사합니다.
 
@@ -35,3 +37,11 @@
 전체 audit를 Debug → ReleaseSafe → ReleaseFast 순서로 실행하여 각 모드 23/23 단계·963/963 네이티브 테스트·7,840,706개 HWP/WASM 검사를 통과했습니다. 순차 실행 셸 종료 코드 0을 확인했습니다. 로그는 `/tmp/hwpjs-preview-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다. 앞선 [실파일 시그니처 조사](hwp5-preview-image-evidence.md)와 GIF 코어의 픽셀 대조 결과를 이 연결의 검증 완료 증거로 대체하지 않습니다. 이번 연결 검증을 전체 이미지 의미·전체 HWP/HWPX 문서 모델·편집·저장 완료로 확대하지 않습니다.
 
 최종 `zig build test --summary all`은 5/5 단계·963/963 테스트, `zig build -Doptimize=ReleaseSafe --summary all`은 5/5 단계로 모두 종료 코드 0입니다. 관련 문서 6개의 로컬 링크 79개, 변경 코드 포맷·JS 구문·diff 검사를 확인했습니다. PrvImage 조회/소비, 이미지 선택/예산, GIF 복호화의 책임을 각각 기존 계층에 유지하며 AGENTS/README에 상세 계약을 중복하지 않았습니다.
+
+## 현재 코드 재검증 (2026-09-27)
+
+공식 3.1·3.2.7, 현재 `preview_image.zig`·`validation.zig`·공유 `images.zig`·`gif_images.zig`의 선택·예산·보고서 경계를 대조했습니다. `src/root.zig` 진입점의 `PrvImage` 집중 테스트는 Debug·ReleaseSafe·ReleaseFast 각 5/5(root 포함), `HWP GIF`는 각 6/6(root 포함) 통과했습니다. 테스트용 mode 296은 현재도 선택 prefix와 보고서 직렬화를 공유하지만 공개 JS ABI는 아닙니다.
+
+현재 probe/CFB WASM에서 `previewImageEdges`의 생성 대조 93건·의도적 거부 196건이 재현됐습니다. 기본 fixture 48개 중 암호화·배포용·DRM 플래그 3개를 제외한 45개는 모두 선택형 미리보기 보고서의 `inspected` 상태였고, 이 검사는 실제 문서 경로와 코덱 선택의 결합을 확인합니다. 첫 3개를 raw 이미지 코덱 실패로 분류하지 않습니다. 원본 fixture를 수정하지 않았고, 이번 검사를 화면 렌더링·애니메이션 합성·이미지별 픽셀 동치로 확대하지 않습니다.
+
+과거 1,620바이트 보고서 전 바이트 변이, 격리 소스 변형 9종, 세 모드 전체 audit와 963개 네이티브 테스트는 이번에 재실행하지 않았습니다. 기록된 `/tmp/hwpjs-preview-*` 산출물도 현재 없으므로 새 검증의 근거로 세지 않습니다. 추가 PCX/WMF 선택의 실파일 PrvImage 양성, 미관측 버전과 모든 코덱의 표시 결과는 여전히 이 문서의 완료 범위 밖입니다.
