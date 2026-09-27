@@ -1,6 +1,14 @@
 {
   "schema": 1,
   "verified": {
+    "docs/hwp5-chart-plot-evidence.md": {
+      "sha256": "c812769fefdd7401ec566fb6cc205bb733061fda8cd97fc0755eddbaf9fb9015",
+      "evidence": "2026-09-28 official chart revision1.2 Plot Light API versus selected observation and current Zig Plot prefix Contents; Node 8 tests ReleaseSafe combined Zig 5 tests 584 HWP 43 chart Contents light counts 5 one 38 two first digest; historical cuts mutants full audits not rerun"
+    },
+    "docs/hwp5-chart-surface-evidence.md": {
+      "sha256": "05db0d2f4870a61ebb1063f96c1178b885f2a70907b17286ed7e095e342191e5",
+      "evidence": "2026-09-28 official chart revision1.2 Surface API versus selected observation and current Zig Surface prefix Contents; Node 2 tests ReleaseSafe combined Zig 5 tests 584 HWP 43 chart Contents 5246 cuts 43 versions; historical mutants full audits not rerun"
+    },
     "docs/hwp5-chart-tail-evidence.md": {
       "sha256": "8c9932b46c38ce295874f1ef73bf1027c50215394e77c9d8dc471ffa2a9b83c2",
       "evidence": "2026-09-28 current independent tail survey 584 HWP 43 selected Contents 29 List 26 opaque 23 Window exact EOF 3354 cuts 86 IDs 172 declarations 215 references 43 raw variants, JS chart evidence 56 tests; Window identity unresolved and historic mutants not rerun"
@@ -538,8 +546,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "d48d84b01366e29f9747e76d19560a33a4a2640bb8cd3aaa9502eeed36aab356",
-      "evidence": "2026-09-28 tracker updated with Tail evidence core and selected Contents current full cuts, Debug Safe Fast focused tests, ReleaseSafe 31 ownership tests; historic full audits and mutants not rerun"
+      "sha256": "4ed6fff1bd01a807cecf1670467752f98668304f17ed7bc8919b3b03942588b4",
+      "evidence": "2026-09-28 tracker updated with Plot and Surface independent observations, current Zig boundary, 43 actual chart Contents and Surface 5246 cuts 43 versions; historic Plot cuts mutants full audits not rerun"
     },
     "docs/bcp47-syntax.md": {
       "sha256": "ae0d91a0bb5ca2f8a5194b5ffa76494427cc058784f11446fd905458020f5b11",

@@ -30,3 +30,7 @@ node tests/hwp5/chart-surface-survey.mjs --verify
 조사에는 기존 제품 WASM 빌드가 필요합니다. 이번 변경은 독립 조사 코드와 문서뿐이며 이전 Axis 전체 회귀 결과를 이번 조사에서 재실행한 결과로 주장하지 않습니다.
 
 후속 [Plot·Surface 접두부 코어](hwp5-chart-plot-surface-prefix.md)의 구현·직접 WASM 대조·전체 회귀 상태는 별도 문서에서 관리합니다. 조사기에 추가된 타입 참조·word 위치 메타데이터도 해당 직접 대조에서 사용합니다.
+
+## 현재 재검증
+
+공식 revision 1.2의 Surface API 속성 표는 Base·Brush·Wireframe 등을 열거하지만 raw30·raw46의 실제 직렬화 순서나 소유 관계를 정하지 않음을 다시 확인했습니다. 현재 `surface_prefix.zig`의 복사된 원값·빈 배열·Reader 실패 경계와 `observed_contents.zig`의 명시적 호출을 대조했습니다. 독립 Node 조사기 2/2개, Plot·Surface Zig 집중 테스트 ReleaseSafe 5/5개 중 관련 경로가 통과했습니다. `chart-surface-survey.mjs --verify`는 HWP 584개 중 선택된 Contents 43개에서 잘림 5,246건·버전 변형 43건을 다시 거부했습니다. 당시 변이 7종과 세 모드 전체 audit는 이번에 재실행하지 않았습니다. 이 결과는 접두부의 선택 배치만 지지하며 일반 Surface 구조나 뒤따르는 Axis 의미를 확정하지 않습니다.

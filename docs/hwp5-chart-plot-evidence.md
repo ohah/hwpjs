@@ -39,6 +39,10 @@ node --test tests/hwp5/chart-plot-evidence.test.mjs
 node tests/hwp5/chart-plot-survey.mjs
 ```
 
-후속 Zig 구현은 [배열 헤더](hwp5-chart-array-header.md)와 [광원 객체](hwp5-chart-light.md)로 책임을 분리했습니다. 소유권·할당 실패·한도·실파일 대조 결과는 해당 계약이 소유하며, 이 조사 기록과 구분합니다. Plot 전체, Axis, 일반 객체 재참조, 비어 있지 않은 첫 배열과 다른 버전은 여전히 남아 있습니다.
+후속 Zig 구현은 [배열 헤더](hwp5-chart-array-header.md)와 [광원 객체](hwp5-chart-light.md)로 책임을 분리했습니다. 소유권·할당 실패·한도·실파일 대조 결과는 해당 계약이 소유하며, 이 조사 기록과 구분합니다. 선택된 Contents 조립은 이후 추가됐지만 일반 Plot 배치·객체 재참조·비어 있지 않은 첫 배열과 다른 버전은 여전히 남아 있습니다.
 
 Plot 접두부 자체의 후속 코어·직접 WASM 대조·전체 회귀 상태는 [Plot·Surface 접두부 코어](hwp5-chart-plot-surface-prefix.md)를 참고합니다.
+
+## 현재 재검증
+
+공식 revision 1.2의 Plot·Light API 속성 표에는 이 조사에서 선택한 직렬화 순서나 배열 word 해석이 제시되지 않음을 다시 확인했습니다. 현재 `plot_prefix.zig`의 Plot v4·빈 배열·raw136 경계와 `observed_contents.zig`의 명시적 조립을 대조했습니다. 독립 Node 조사기 8/8개, Plot·Surface Zig 집중 테스트 ReleaseSafe 5/5개 중 관련 경로가 통과했고, corpus 584개 중 선택된 차트 Contents 43개에서 광원 1개 5건·2개 38건과 첫 표본 해시를 재확인했습니다. 이번에는 이 조사기의 실파일 잘림 14,394건·변이 6종·세 모드 전체 audit를 재실행하지 않았습니다. 후속 제품 직접 대조 결과는 접두부 코어 문서가 소유하며, 이 증거만으로 전체 Plot 파싱을 주장하지 않습니다.
