@@ -12,9 +12,15 @@ power_radical.Of(256/512)가 기존 기호적 근 필드·유효성 검사를 �
 
 raw×256의 최대값은 16,776,960으로 i32/u32에 들어갑니다. 목표의 거듭제곱을 실제 계산하거나 분수를 f64로 바꾸지 않으므로 매우 작은 목표의 역상도 0으로 언더플로시키지 않습니다. 기존 gamma_inverse.evaluate의 근사 API는 변경하지 않습니다. 비할당 값 타입입니다.
 
-이번 경로는 정확한 gamma 역상 표현의 생성입니다. 일반적인 512비트 근 비교/수치 평가, 넓은 parametric 분기·TRC 조립·렌더링은 별도 범위이며 기존 u256 근 비교기에 임의 narrowing하지 않습니다.
+이 경로는 정확한 gamma 역상 **표현 생성**만 맡습니다. 넓은 근 비교와 parametric·TRC·명시적 matrix/TRC 역방향 선택은 현재 별도 모듈에 있으나 이 함수가 직접 수행하지 않습니다. 기호식을 f64로 반올림해 반환하거나 기존 u256 근 비교기로 임의 narrowing하지 않으며, 렌더링·전체 프로파일 의미 판단도 이 계약 밖입니다.
 
-## 검증 진행
+## 2026-09-27 재검증
+
+[ICC.1:2022 §10.6·Annex F.1](https://www.color.org/specifications/ICC.1-2022-05.pdf)의 u8Fixed8 순방향 지수와 비상수 감마의 역상을 현재 `gamma_wide_inverse.invert`·`gamma_parametric.curve`·공통 `power_radical` 타입에 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 `wide gamma` 집중 필터는 각 모드 root 포함 5/5 통과했습니다. 기존 로컬 WASM probe mode220을 독립 JS 분기·역지수 식으로 다시 실행해 rational 131,075건·power 131,081건·예상 오류 거부 151건이 일치했습니다.
+
+macOS 시스템 ICC 네 파일에서 원시 감마 TRC 10개(raw 256·563·461)를 읽어 다섯 목표씩 50건의 반환 종류·원분수·역지수 비례식을 대조했습니다(rational 29건·power 21건). 이 검사는 기호식의 수치 평가나 전체 픽셀 색상 변환의 증거가 아닙니다. WASM 재빌드·아래 당시 전체 감사/변형 검사는 이번에 재실행하지 않았고 `/tmp/hwpjs-gamma-wide-inverse-{Debug,ReleaseSafe,ReleaseFast}.log`도 현재 없습니다. 아래 수치는 당시 이력으로만 읽습니다.
+
+## 2026-09-09 구현 당시 검증 기록
 
 신규 네이티브 4개와 기존 normalized power level 4개가 통과했습니다. 모든 양의 u16 gamma에 대한 양 끝점과 최대 폭 내부 목표, 항등의 원분수 보존, 작은 목표의 비반올림 표현, 제곱근 역지수, gamma 0과 잘못된 목표의 오류 순서, 공유 descriptor 검증을 포함합니다.
 
@@ -28,10 +34,10 @@ Debug WASM 직접 실행에서 rational 131,075·power 131,081·rejected 151(합
 
 추가 Debug WASM 수동 검사에서 macOS ACESCG Linear·AdobeRGB1998·Generic Gray Profile·Generic RGB Profile의 curv gamma 태그 10개 원값을 읽어 목표 5종(0/1, 최대 폭 내부 목표, 1/4)에 적용했습니다. 분수 보존과 역지수 비례식 p×raw=q×256을 확인한 50건이 일치했습니다. 파일은 읽기 전용으로 사용했고 정규 audit 수에 합산하지 않습니다. 전체 프로파일/픽셀 변환 검증은 아닙니다.
 
-## 최종 확인과 남은 범위
+## 당시 최종 확인과 현재 범위
 
 전체 세 모드 audit가 `/tmp/hwpjs-gamma-wide-inverse-{Debug,ReleaseSafe,ReleaseFast}.log`에서 모두 종료 코드 0, 20/20 단계, 네이티브 622/622, WASM checks=6,916,540으로 완료됐습니다. 이전 6,654,233에 신규 262,307건이 추가됐습니다. ReleaseSafe·ReleaseFast 실제 audit 산출물의 직접 실행에서도 신규 rational 131,075/power 131,081/rejected 151과 기존 normalized power level·TRC 회귀가 일치했고 출력 변형 3종을 모두 검출했습니다.
 
 최종 적대적 검토에서는 목표 선행 검증과 gamma 0의 끝점 우회 방지, 항등/끝점의 원분수 보존, 양의 유일 역상, gamma 단위 변환 재사용, 근 descriptor 검증 공유와 기존 256비트 계약 유지, 고정 wire 크기/limit와 전체 초기화를 확인했습니다. 추가 결함은 발견하지 못했습니다. Zig 포맷·변경 JS 문법·diff 공백과 관련 로컬 문서 링크 5개도 확인했습니다.
 
-이번 완료 범위는 넓은 gamma 목표의 정확한 역상 표현입니다. 넓은 근의 일반 비교/수치 평가, parametric/TRC 모델 통합, 색상 왕복·렌더링 및 전체 HWP/HWPX 문서 검증은 아직 남아 있습니다.
+이 문서의 완료 범위는 넓은 gamma 목표의 정확한 역상 표현입니다. 넓은 근 비교와 parametric/TRC·명시적 matrix/TRC 역방향 연결은 현재 별도 구현이지만, 이 함수의 기호식 수치 평가·전체 프로파일 의미 판단·공개 색상 왕복·렌더링 및 전체 HWP/HWPX 문서 검증까지 완료했다는 뜻은 아닙니다.
