@@ -1,6 +1,49 @@
 const std = @import("std");
 const A = @import("positive_bounds.zig").Arithmetic(128);
 
+fn expectWideInterval(comptime bits: u16, interval: anytype, exact_n: u4096, exact_d: u4096) !void {
+    for ([_]bool{ false, true }) |upper| {
+        const endpoint = if (upper) interval.upper else interval.lower;
+        try std.testing.expect(endpoint.significand >= @as(@TypeOf(endpoint.significand), 1) << (bits - 1));
+        var left: u4096 = @as(u4096, endpoint.significand) * exact_d;
+        var right: u4096 = exact_n;
+        if (endpoint.exponent >= 0) left <<= @intCast(endpoint.exponent) else right <<= @intCast(-endpoint.exponent);
+        try std.testing.expect(if (upper) left >= right else left <= right);
+    }
+}
+
+fn expectWideFractionEnclosure(comptime bits: u16, comptime width: u16, n: std.meta.Int(.unsigned, width), d: std.meta.Int(.unsigned, width)) !void {
+    const B = @import("positive_bounds.zig").Arithmetic(bits);
+    const interval = if (width == 512) try B.fractionWide(n, d) else try B.fractionExtended(n, d);
+    try expectWideInterval(bits, interval, n, d);
+    try expectWideInterval(bits, try B.power(interval, 2), @as(u4096, n) * n, @as(u4096, d) * d);
+}
+
+test "u512 and u1024 fraction bounds enclose extreme ratios at every precision" {
+    inline for (.{ 512, 1024 }) |width| {
+        const U = std.meta.Int(.unsigned, width);
+        const max = std.math.maxInt(U);
+        const midpoint: U = @as(U, 1) << (width - 1);
+        inline for (.{ 128, 256, 512, 1024 }) |bits| {
+            for ([_][2]U{
+                .{ 1, max },
+                .{ max, 1 },
+                .{ max - 1, max },
+                .{ midpoint + 1, midpoint - 1 },
+                .{ midpoint - 1, midpoint + 1 },
+            }) |pair| try expectWideFractionEnclosure(bits, width, pair[0], pair[1]);
+            const B = @import("positive_bounds.zig").Arithmetic(bits);
+            if (width == 512) {
+                try std.testing.expectError(error.InvalidIccPositiveFraction, B.fractionWide(0, max));
+                try std.testing.expectError(error.InvalidIccPositiveFraction, B.fractionWide(max, 0));
+            } else {
+                try std.testing.expectError(error.InvalidIccPositiveFraction, B.fractionExtended(0, max));
+                try std.testing.expectError(error.InvalidIccPositiveFraction, B.fractionExtended(max, 0));
+            }
+        }
+    }
+}
+
 test "u256 fraction bounds enclose exact powers across every precision and shift sign" {
     const max = std.math.maxInt(u256);
     const values = [_]u256{ 1, 2, 3, (@as(u256, 1) << 127) - 1, @as(u256, 1) << 128, (@as(u256, 1) << 255) - 1, @as(u256, 1) << 255, max - 1, max };
