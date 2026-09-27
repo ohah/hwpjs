@@ -40,7 +40,7 @@
 | `한글문서파일형식_5.0_revision1.3.hwp` | 131,077 | 2,142 | 34 |
 | `issue5756/156732409_superscript_advance.hwp` | 5 | 30,378 | 706 |
 
-네 파일에서 Node의 독립 BigInt 키 유도·AES·zlib 결과와 디코더 출력 전체 바이트가 일치하고 CRC/크기 블록도 맞았습니다. `20250130-hongbo.hwp`는 복호화된 ViewText가 BodyText와 바이트 단위로 같으며, mode 98 컨테이너 결과 `[0,1,1,306,15540,306]`을 확인했습니다. 이 파일의 잘린 암호문은 mode 25/98 모두 거부하고 원본 재처리는 복구됩니다. 나머지 세 파일은 배포용 플래그 때문에 일반 컨테이너 경로에서는 여전히 미지원입니다.
+네 파일에서 Node의 독립 BigInt 키 유도·AES·zlib 결과와 디코더 출력 전체 바이트가 일치하고 CRC/크기 블록도 맞았습니다. `20250130-hongbo.hwp`는 복호화된 ViewText가 BodyText와 바이트 단위로 같으며, mode 98 컨테이너 결과 `[0,1,1,306,15540,306]`을 확인했습니다. 이 파일의 잘린 암호문은 mode 25/98 모두 거부하고 원본 재처리는 복구됩니다. 나머지 세 파일은 배포용 플래그 때문에 **기본 거부 정책**에서는 미지원입니다. 명시적 `observed_viewtext` 컨테이너 경로의 후속 지원과 9개 구역 검증은 [본문 선택 정책](hwp5-distribution-document-policy.md)에 분리해 기록합니다.
 
 ## 적대적 검증
 
@@ -48,10 +48,12 @@
 
 네이티브 테스트는 성공·늦은 checksum 실패의 모든 할당 실패와 해제를 검사합니다. 컨테이너 통합에서는 배포 형태 비압축 ViewText의 모든 할당 실패, 암호문 한도 실패, 반환 보고서와 디코딩 버퍼 소유권을 확인합니다. 입력 CFB의 디렉터리 ID를 빈 항목이 제거된 toNodes 인덱스로 재사용하지 않습니다.
 
-Debug/ReleaseSafe/ReleaseFast 순차 전체 감사는 각각 Node 47/47, WASM 1,382,347회를 통과했습니다. 최초 Debug 전체 감사의 네이티브는 264/264였고, 컨테이너 할당 실패 테스트 추가 후 Safe/Fast 및 최종 Debug 네이티브 재실행에서 265/265를 확인했습니다. 추가된 16개 정렬 위치의 합성 입력도 별도 Debug WASM 실행과 Safe/Fast 감사에서 통과했습니다. 전용 테스트 결과는 정상 513건·거부 347건과 네 실제 스트림 대조입니다. 포맷·JS 구문·diff·문서 링크·라이선스 원문 일치도 확인했습니다. 로그는 `/tmp/hwpjs-distribution-{debug,safe,fast}.log`, `/tmp/hwpjs-distribution-final-native-debug.log`입니다.
+초기 구현 당시 Debug/ReleaseSafe/ReleaseFast 순차 전체 감사는 각각 Node 47/47, WASM 1,382,347회를 통과했습니다. 최초 Debug 전체 감사의 네이티브는 264/264였고, 컨테이너 할당 실패 테스트 추가 후 Safe/Fast 및 최종 Debug 네이티브 재실행에서 265/265를 확인했습니다. 추가된 16개 정렬 위치의 합성 입력도 별도 Debug WASM 실행과 Safe/Fast 감사에서 통과했습니다. 당시 로그 경로 `/tmp/hwpjs-distribution-{debug,safe,fast}.log`와 `/tmp/hwpjs-distribution-final-native-debug.log`는 현재 존재하지 않아 이번 재검증의 증거로 세지 않습니다.
+
+2026-09-27 현재 소스에서 `distribution` 집중 네이티브 테스트는 Debug·ReleaseSafe·ReleaseFast 각각 14/14 통과했습니다(이름에 distribution이 포함된 별도 grid 테스트 1개 포함). ReleaseSafe `zig build hwp5-audit -Doptimize=ReleaseSafe --summary all`은 10/10 단계·WASM 감사 8,905,855 checks로 종료 코드 0이었고, 같은 빌드의 probe와 CFB WASM으로 전용 오라클을 재실행해 정상 513건·거부 347건 및 위 네 실파일의 구역 0 바이트·레코드 수를 확인했습니다. 이 실측은 과거 세 모드 전체 감사 수치나 모든 배포용 변형을 현재 다시 확인했다는 뜻이 아닙니다.
 
 ## 남은 범위
 
-전체 구역 실측과 명시적 primary 소스 선택·Scripts 처리·컨테이너 검증 기록은 [배포용 문서 본문 선택 정책](hwp5-distribution-document-policy.md)에 분리합니다. 비배포 문서의 선택적 보조 ViewText 의미 검사는 [별도 계약](hwp5-viewtext-semantic-inspection.md)을 따릅니다.
+초기 디코더 이후 추가된 전체 구역 실측과 명시적 primary 소스 선택·Scripts 처리·컨테이너 검증 기록은 [배포용 문서 본문 선택 정책](hwp5-distribution-document-policy.md)에 분리합니다. 비배포 문서의 선택적 보조 ViewText 의미 검사는 [별도 계약](hwp5-viewtext-semantic-inspection.md)을 따릅니다.
 
 관측하지 못한 배포용 인코딩·꼬리 형식, 일반 비밀번호/DRM 처리, 미지원 payload 및 모든 문서 변형의 의미 검증은 남아 있습니다. 현재 명시적 관측 정책의 성공을 범용 배포용 문서 지원 완료로 표시하지 않습니다.
