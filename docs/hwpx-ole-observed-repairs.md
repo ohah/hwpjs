@@ -19,3 +19,7 @@ Microsoft [MS-CFB 루트 항목](https://learn.microsoft.com/en-us/openspecs/win
 합성 반례는 원본 바이트 불변, 세 필드의 단독·복합 편차, 비영 꼬리 마커 거부, 실제 사용 중인 FAT 슬롯 손상 거부, 잘못된 루트 이름, 자원 한도 및 모든 할당 실패를 검사합니다. 기본 테스트는 `zig test src/root.zig --test-filter 'CFB observed repairs'`와 `--test-filter 'HWPX OLE payloads'`입니다. 실파일 스트림 대조는 `zig test src/hwpx_ole_repair_survey.zig -O ReleaseFast --test-filter 'HWPX OLE normalized shard N'`을 N=0..7 각각 실행합니다. 실파일 shard는 로컬 `reference/rhwp`가 필요하고 기본 audit에 포함되지 않습니다.
 
 2026-09-26 확인: 복사본 검사 합성 6개는 Debug·ReleaseSafe·ReleaseFast에서 통과했고, 제품 OLE 합성 10개와 실제 `inspectKnown` 연결도 통과했습니다. 독립 Python `--self-test`, 기본 관측, `--compat` 및 전용 OLE 실파일 8개 shard와 전체 HWPX known 8개 shard가 일치했습니다. 최종 소스의 Debug 전체 테스트 2,512/2,512, ReleaseSafe 전체 audit와 ReleaseSafe 제품 빌드도 통과했습니다. 이 결과는 원본의 strict 실패 34건을 정상 파일로 판정하거나, OLE 내부 `Contents`의 의미를 해석했다는 뜻이 아닙니다.
+
+## 2026-09-28 재검증
+
+현행 `observed_repairs.zig`의 임시 복사본·세 필드 한정·strict 재검사와 `ole_payloads.zig`의 원본 실패 보존을 확인했습니다. MS-CFB 2.6.2의 루트 생성 시간 0 요구와 FAT/MiniFAT 공개 예시의 FREESECT 값을 다시 대조했습니다. Python 독립 조사 `--self-test`·기본·`--compat`가 통과했고, ReleaseFast 전용 실파일 shard 8/8은 OLE 99개 중 원본 strict 65개·복사본 재검사 34개, 루트 생성 시간 34개·FAT 꼬리 14개·MiniFAT 꼬리 2개와 스트림 수·바이트·해시 합계가 일치했습니다. Debug·ReleaseSafe·ReleaseFast 집중 복구는 각 6/6개, HWPX OLE는 각 10/10개가 통과했습니다. 앞 절의 Debug 전체 2,512개·전체 HWPX known shard 8개·ReleaseSafe 전체 audit는 이번에 재실행하지 않았습니다.

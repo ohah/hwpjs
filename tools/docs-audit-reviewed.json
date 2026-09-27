@@ -630,8 +630,16 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "9fe82cef317335ee74aaa120faea6d9fb45d4d90627b8711cf12e9c4b7bab836",
-      "evidence": "2026-09-28 tracker updated with five OLE documents, current ReleaseSafe OLE 30 tests, paired XML and 584 path survey; historical full audits and mutants not rerun"
+      "sha256": "6aa4d68618efcd852862c0e5b408601708fb05acc323d0756bce890fe290d792",
+      "evidence": "2026-09-28 tracker updated with two HWPX OLE documents, three-mode focused tests and eight real-file repair shards plus independent olefile oracle; earlier HWP5 OLE evidence retained"
+    },
+    "docs/hwpx-ole-payloads.md": {
+      "sha256": "f524fedcd24748b7a723fe5d4eeb521bc59a7dc084cb3897fff7ff0fbd080850",
+      "evidence": "2026-09-28 current OPF OLE exact package selection strict reader and scoped normalization versus source, Python independent 476 HWPX 99 OLE, Debug Safe Fast focused 10 each, ReleaseSafe known 2 and ReleaseFast repair shards 8; old full audit not rerun"
+    },
+    "docs/hwpx-ole-observed-repairs.md": {
+      "sha256": "1d9ff88a5177c7f06f276095907a332d4fabbe403fec7d46a77ca19f3ccd0df7",
+      "evidence": "2026-09-28 MS CFB root timestamp and FAT MiniFAT examples versus copy-only Zig strict path, Python self baseline and olefile 0.47 compat, Debug Safe Fast repairs 6 OLE 10 each, ReleaseFast eight shards 65 strict 34 repaired 14 FAT 2 MiniFAT and stream hashes; old full audit not rerun"
     },
     "docs/hwp5-ole-binaries.md": {
       "sha256": "9b557156d079baeddc5fb1d1bf014efcd56fdf37c172afa77a1ccbe322429c3e",

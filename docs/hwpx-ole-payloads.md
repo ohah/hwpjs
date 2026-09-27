@@ -29,3 +29,7 @@ CFB 시그니처 상수는 `src/cfb/format.zig` 한 곳에서 읽기·쓰기·HW
 공통 시그니처 SSOT 정리 후 `zig build -Doptimize=ReleaseSafe --summary all`과 `zig build audit -Doptimize=ReleaseSafe --summary all`이 종료 코드 0으로 끝났습니다. corpus 8개 shard는 기본 audit에 포함되지 않으므로 위 별도 실행을 유지합니다.
 
 동일 최종 소스로 `zig build test --summary all`도 5/5 단계, 2,503/2,503 네이티브 테스트 통과 및 종료 코드 0을 확인했습니다. 완료 판정은 위 파트의 검사 계약에 한정합니다.
+
+## 2026-09-28 재검증
+
+현행 `ole_payloads.zig`의 MIME/확장자 후보, 외부 선언과 정확한 ZIP 사본의 분리, strict CFB 실패와 선택적 복사본 검사, 누적 한도를 다시 대조했습니다. 독립 Python `--self-test`와 전체 조사에서 허용 HWPX 476개·OLE 후보 99개(외부 선언 65·내장 선언 34), 크기 접두사 99개를 재확인했습니다. ReleaseFast 전용 OLE 실파일 shard 8/8은 제품 보고서의 원본 strict 65개·편차 복사본 34개와 스트림 수·바이트·해시 합계를 대조해 통과했습니다. Debug·ReleaseSafe·ReleaseFast 집중 `HWPX OLE payloads`는 각 10/10개, ReleaseSafe 실제 `inspectKnown` 연결은 2/2개 통과했습니다. 앞 절의 2,503개 전체 테스트 및 전체 HWPX known shard 8개는 이번에 재실행하지 않았습니다. 원본 strict 실패 34개를 정상으로 세거나 내부 콘텐츠의 의미를 해석하지 않습니다.
