@@ -2,7 +2,7 @@
 
 ## 공식 자료
 
-한컴 [공식 공개 페이지](https://www.hancom.com/support/downloadCenter/hwpOwpml)의 [차트 revision 1.2 PDF](https://cdn.hancom.com/link/docs/%ED%95%9C%EA%B8%80%EB%AC%B8%EC%84%9C%ED%8C%8C%EC%9D%BC%ED%98%95%EC%8B%9D_%EC%B0%A8%ED%8A%B8_revision1.2.pdf)를 확인했습니다. 판본 표기는 20141120이며 전체 47페이지입니다. 받은 원본의 SHA-256은 `e014db3e4b55bc57d93b3aba0b186151b3487575e3a6397a2983715b43beeeb1`입니다. 원본은 조사용 `/tmp/hwpjs-chart-spec.mHJXWV/chart.pdf`에 두었고 수정·재배포하지 않았습니다.
+한컴 [공식 공개 페이지](https://www.hancom.com/support/downloadCenter/hwpOwpml)의 [차트 revision 1.2 PDF](https://cdn.hancom.com/link/docs/%ED%95%9C%EA%B8%80%EB%AC%B8%EC%84%9C%ED%8C%8C%EC%9D%BC%ED%98%95%EC%8B%9D_%EC%B0%A8%ED%8A%B8_revision1.2.pdf)를 확인했습니다. 판본 표기는 20141120이며 전체 47페이지입니다. 받은 원본의 SHA-256은 `e014db3e4b55bc57d93b3aba0b186151b3487575e3a6397a2983715b43beeeb1`입니다. 원본은 당시 조사용 `/tmp/hwpjs-chart-spec.mHJXWV/chart.pdf`에 두었고 수정·재배포하지 않았습니다. 현재 그 임시 파일은 없으며 공식 URL의 바이트 해시는 다시 확인했습니다.
 
 PDF 8번째 페이지(인쇄 쪽 2)의 그림을 렌더링해 확인했습니다. 객체는 id, StoredtypeId, StoredName, StoredVersion, ChartObjData 순서이며 같은 타입의 재등장에서는 이름/버전 부분이 생략됩니다. 그림의 타입 표기만으로 문자열의 실제 직렬화 길이, 정수 폭, Contents 시작 전 부가 헤더, 각 객체 데이터의 종료 위치까지 확정하지 않습니다. VtChart 속성 표의 API 의미 설명을 그대로 저장 순서·바이트 오프셋으로 사용하지 않습니다.
 
@@ -28,6 +28,8 @@ rhwp의 legacy_chart_object_start 후보는 선두 네 번째 값을 사용합�
 
 단위 테스트 4/4 통과: 0~15바이트 헤더 부재와 값 0의 구분, 0/1/16/46/96/127 위치의 문자열, NUL·대소문자·중복의 첫 위치, 바이트 관측 결과의 입력 독립성을 검사했습니다. 별도 `/tmp/hwpjs-chart-evidence-mutants.LTSuDp`에서 위치를 46으로 고정, NUL 요구 제거, 짧은 헤더를 0으로 보완한 변형은 각각 3/1/1개 assertion 실패·종료 코드 1로 검출했습니다. import/실행 오류를 검출 성공으로 세지 않았습니다.
 
-변경 JS 구문·공백과 문서 로컬 링크 26개(실행 명령 anchor 포함) 검사도 통과했습니다. 실제 조사 출력은 `/tmp/hwpjs-chart-spec.mHJXWV/survey.json`에 남겼습니다.
+당시 변경 JS 구문·공백과 문서 로컬 링크 26개(실행 명령 anchor 포함) 검사도 통과했습니다. 당시 조사 출력은 `/tmp/hwpjs-chart-spec.mHJXWV/survey.json`에 남겼으나 현재 그 임시 파일은 없습니다. 같은 조사는 아래 연결된 명령으로 다시 실행할 수 있습니다.
 
-공식 문서 확보와 관측 도구 검증 단계입니다. 제품 Zig/WASM 소스는 바꾸지 않았고 기존 990개 테스트를 차트 의미 지원의 증거로 사용하지 않습니다. 다음 단계는 실제 타입 정의 헤더의 이름 길이·버전 폭·재등장 규칙을 검증하고, 객체별 데이터 경계를 확정하는 것입니다. 아직 확인하지 않은 값을 기본값으로 채우거나 임의 위치에서 재탐색하지 않습니다.
+이 문서는 공식 문서 확보와 초기 관측 도구의 경계를 기록합니다. 초기 단계에서는 제품 Zig/WASM 소스를 바꾸지 않았고 당시 990개 테스트를 차트 의미 지원의 증거로 사용하지 않았습니다. 이후 제품에는 [타입 선언·재등장](hwp5-chart-type-table.md)과 [명시적 관측 Contents 조립](hwp5-chart-observed-contents.md)이 추가됐습니다. 일부 객체 경계를 선택한 배치로 읽을 수 있지만, 모든 버전의 객체 그래프·필드 의미가 확정됐거나 자동 판별이 구현됐다는 뜻은 아닙니다. 아직 확인하지 않은 값을 기본값으로 채우거나 임의 위치에서 재탐색하지 않습니다.
+
+2026-09-28 재검증에서는 공식 PDF 47페이지·revision 1.2 표기와 다운로드 바이트 SHA-256을 다시 확인했습니다. 현재 OLE corpus 584개 경로·52개 내부 항목에서 Contents 44개(실제 이름 Contents 43/CONTENTS 1), VtChart NUL 마커 43개 전부 offset 46, 나머지 한 항목의 크기 24,746바이트·선두·해시가 문서 수치와 일치했습니다. 선두 네 u32의 두 관측 패턴도 42/1개로 재현됐고, 관측기 단위 테스트는 4/4 통과했습니다. rhwp의 로컬 `src/ole_chart/parser.rs`도 현재 여전히 전체 객체 그래프 미해석·차트 종류 Unknown이며 선두 네 번째 word를 후보 offset으로 사용합니다. 과거 변이 실험과 전체 Zig audit는 이번에 재실행하지 않았습니다.

@@ -2,7 +2,7 @@
 
 ## 선택 범위
 
-`chart/backdrop.zig`는 호출자가 확정한 inline Backdrop 위치부터 VtBackdrop·VtFill·VtPicture v1의 관측 레이아웃을 읽습니다. [셀 이후 조사](hwp5-chart-grid-tail-evidence.md)의 26바이트를 자동으로 찾거나 건너뛰는 제품 기능이 아닙니다. 전체 차트 버전 판별·스타일 의미 해석·그림 데이터 복호화·편집/저장은 아직 제공하지 않습니다.
+`chart/backdrop.zig`는 호출자가 확정한 inline Backdrop 위치부터 VtBackdrop·VtFill·VtPicture v1의 관측 레이아웃을 읽습니다. 이 함수 자체는 [셀 이후 조사](hwp5-chart-grid-tail-evidence.md)의 26바이트를 자동으로 찾거나 건너뛰지 않습니다. 선택된 배치의 상위 `grid_backdrop.zig`가 그 구간을 소비합니다. 이 모듈 단독으로 전체 차트 버전을 판별하거나 스타일 의미·그림 데이터·편집/저장을 제공하지 않습니다.
 
 공식 차트 revision 1.2의 3.4/3.11/3.26/3.28/3.53은 Picture·Backdrop·Fill·Frame·Shadow의 API 속성을 설명합니다. 그 표가 직렬화 바이트 순서를 정의한다고 가정하지 않았습니다. 특히 Picture 표에 Filename·Embedded·Map·Type이 있어도 아래 원시 필드에 그 이름을 임의 대응시키지 않습니다. 이번 43개 표본에서는 Frame·Shadow·Brush·Color 이름 마커가 해당 후속 영역에서 관측되지 않았습니다. 이것만으로 해당 속성이 없거나 지원되지 않는다고 결론 내리지 않습니다.
 
@@ -15,9 +15,9 @@
 3. 객체 ID, VtPicture v1 타입 참조, 원시 4바이트, 관측 null 참조 u32=FFFFFFFF
 4. VtObject v1 타입 참조, Fill 후속 원시 u16, VtObject v1 타입 참조 두 개
 
-세 객체 ID와 원시 필드는 복사해 반환합니다. API 속성 이름을 추측해서 부여하거나 수치를 정규화하지 않습니다. 관측 null 참조가 다른 값이면 UnsupportedChartPictureData로 거부합니다. 실제 그림이 있는 변형의 길이를 모르는 상태에서 같은 폭으로 계속 읽지 않습니다. 세 inline ID 중 null 또는 서로 중복인 ID는 UnsupportedChartObjectReference입니다. 이전 셀이나 다른 객체와의 전역 객체 동일성/재참조는 호출자가 별도로 관리해야 하며 이 모듈의 지원 범위가 아닙니다.
+세 객체 ID와 원시 필드는 복사해 반환합니다. API 속성 이름을 추측해서 부여하거나 수치를 정규화하지 않습니다. 관측 null 참조가 다른 값이면 UnsupportedChartPictureData로 거부합니다. 실제 그림이 있는 변형의 길이를 모르는 상태에서 같은 폭으로 계속 읽지 않습니다. 세 inline ID 중 null 또는 서로 중복인 ID는 UnsupportedChartObjectReference입니다. 기본 `readObservedEmptyPicture`는 이전 셀이나 다른 객체와의 전역 객체 동일성/재참조를 판정하지 않습니다. 별도 `readObservedEmptyPictureWithObjects`는 완성된 Backdrop을 호출자가 전달한 객체 목록에 등록합니다. 그 목록의 소유·실패 시 폐기는 상위 범위의 책임입니다.
 
-성공한 end는 위 관측 블록 뒤의 위치입니다. 43개 실제 표본 모두 그 뒤에서 VtChartFootnote 선언 후보가 관측됐지만, 이번 파서는 Footnote를 읽지 않습니다. 고정 관측 폭을 모든 작성기·버전의 일반 객체 경계로 확대하지 않습니다.
+성공한 end는 위 관측 블록 뒤의 위치입니다. 43개 실제 표본 모두 그 뒤에서 VtChartFootnote 선언 후보가 관측됐지만, 이 Backdrop 함수 자체는 Footnote를 읽지 않습니다. 현재 상위 `contents_prefix.zig`는 별도 Footnote 파서를 이어서 호출합니다. 고정 관측 폭을 모든 작성기·버전의 일반 객체 경계로 확대하지 않습니다.
 
 ## 소유권과 실패
 
@@ -31,10 +31,12 @@
 
 네이티브는 비정렬 위치·ID 0·비연속 객체/타입 ID·입력 변경 이후 원시 결과 유지·모든 잘림·잘못된 참조/클래스/버전·타입 개수 제한·OOM 주입을 검사합니다. 성공과 실패 경로 모두 safety=true allocator로 해제 잔량을 확인합니다.
 
-Debug/ReleaseSafe/ReleaseFast 전용 WASM에서 각각 실제 43개·정상 129건·오류 8,944건을 통과했습니다. ReleaseFast 빌드가 끝나기 전 실행한 첫 호스트 호출은 파일 부재 ENOENT였으며 파서 검증으로 세지 않았습니다. 해당 빌드의 종료 코드 0 확인 후 다시 실행해 통과했습니다.
+당시 Debug/ReleaseSafe/ReleaseFast 전용 WASM에서 각각 실제 43개·정상 129건·오류 8,944건을 통과했습니다. ReleaseFast 빌드가 끝나기 전 실행한 첫 호스트 호출은 파일 부재 ENOENT였으며 파서 검증으로 세지 않았습니다. 해당 빌드의 종료 코드 0 확인 후 다시 실행해 통과했습니다.
 
 `/tmp/hwpjs-chart-backdrop-mutants.NxagsT`의 원시 Backdrop 삭제(raw), Picture 참조 검사 생략(picture), 실패 커서 변경(cursor), 호출자 타입 목록 해제 생략(leak) 변형 모두 세 모드에서 assertion 또는 MemoryLeakDetected·종료 코드 1로 검출했습니다. 컴파일 실패가 아닙니다. 첫 표본의 응답 132바이트를 한 바이트씩 XOR 1 한 변형과 같은 오류 메시지의 WebAssembly.RuntimeError 대체도 세 모드에서 모두 검출했습니다.
 
-소스·테스트를 고정한 뒤 Debug → ReleaseSafe → ReleaseFast 전체 audit를 순차 실행했고 최종 종료 코드는 0입니다. `/tmp/hwpjs-chart-backdrop-{Debug,ReleaseSafe,ReleaseFast}-audit.log`에서 각 모드 27/27 단계·1,013/1,013 네이티브 테스트·HWP/WASM 7,938,562회 검사, chartBackdropResults의 43/129/8,944를 확인했습니다. 포맷·JS 구문·공백과 관련 문서 로컬 링크 23개도 검사했습니다. 전체 검사 수는 현재 검사 계약의 결과이며 모든 차트 속성이나 전체 문서 구현 완료를 뜻하지 않습니다.
+당시 소스·테스트를 고정한 뒤 Debug → ReleaseSafe → ReleaseFast 전체 audit를 순차 실행했고 최종 종료 코드는 0입니다. `/tmp/hwpjs-chart-backdrop-{Debug,ReleaseSafe,ReleaseFast}-audit.log`에서 각 모드 27/27 단계·1,013/1,013 네이티브 테스트·HWP/WASM 7,938,562회 검사, chartBackdropResults의 43/129/8,944를 확인했습니다. 포맷·JS 구문·공백과 관련 문서 로컬 링크 23개도 검사했습니다. 이 과거 전체 검사 수는 당시 계약의 결과이며 모든 차트 속성이나 전체 문서 구현 완료를 뜻하지 않습니다.
 
-최종 `zig build test --summary all`은 5/5 단계·1,013/1,013 테스트, `zig build -Doptimize=ReleaseSafe --summary all`은 5/5 단계로 통과했습니다(종료 코드 0).
+당시 최종 `zig build test --summary all`은 5/5 단계·1,013/1,013 테스트, `zig build -Doptimize=ReleaseSafe --summary all`은 5/5 단계로 통과했습니다(종료 코드 0).
+
+2026-09-28 재검증에서는 공식 차트 PDF의 Picture·Backdrop·Fill·Frame·Shadow 속성 표와 현재 Zig의 선택된 raw 50/34/4바이트, 빈 Picture 거부, 세 inline ID의 지역 검사 및 호출자 소유 목록을 구분했습니다. Debug·ReleaseSafe·ReleaseFast `chart backdrop` 집중 테스트는 각각 root 포함 4/4 통과했고, 현재 ReleaseSafe WASM의 독립 Contents 오라클은 43개 표본의 정상 129건·거부 8,944건을 재현했습니다. 선택 표본을 포함한 ReleaseSafe 차트 소유권 감사는 31/31 통과했습니다. 과거 변이·세 모드 전체 audit는 이번에 재실행하지 않았으며 API 속성 표만으로 모든 Backdrop 직렬화 변형을 지원한다고 주장하지 않습니다.
