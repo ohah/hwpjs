@@ -10,7 +10,7 @@
 
 `Iterator.next()`는 source iterator의 임시 복사본에서 완전한 cubic segment를 얻고 네 점을 모두 변환한 뒤에만 진행 상태를 교체합니다. borrowed PointR가 control point나 endpoint 중간에서 잘리면 source offset·remaining·누적 좌표·공유 endpoint가 함께 유지됩니다.
 
-이 계층은 DrawBeziers endpoint와 control point의 device 좌표를 만들고 각 segment의 `pointAt()`·`splitAt()`·`tangentAt()`·`maximumControlDistanceSquared()`·`flatten()`을 [공용 cubic evaluator](emf-plus-cubic-evaluation.md), [subdivision](emf-plus-cubic-subdivision.md), [분석](emf-plus-cubic-analysis.md), [flattening 계층](emf-plus-cubic-flattening.md)에 위임합니다. DrawBeziers의 여러 segment 병합은 [별도 connected polyline 계층](emf-plus-bezier-device-polyline.md)이 담당합니다. clip, Pen 폭·cap·join·dash, anti-aliasing, rasterization과 저장은 미구현입니다. `EmfPlusPath`의 Bézier command는 별도 Path geometry이며 이 iterator에 합치지 않습니다. SetTSGraphics의 별도 WorldToDevice도 일반 mapper에 병합하지 않습니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 픽셀 출력 동등성을 주장하지 않습니다.
+이 계층은 DrawBeziers endpoint와 control point의 device 좌표를 만들고 각 segment의 `pointAt()`·`splitAt()`·`tangentAt()`·`maximumControlDistanceSquared()`·`flatten()`을 [공용 cubic evaluator](emf-plus-cubic-evaluation.md), [subdivision](emf-plus-cubic-subdivision.md), [분석](emf-plus-cubic-analysis.md), [flattening 계층](emf-plus-cubic-flattening.md)에 위임합니다. DrawBeziers의 여러 segment 병합은 [별도 connected polyline 계층](emf-plus-bezier-device-polyline.md)이 담당합니다. clip, Pen 폭·cap·join·dash, anti-aliasing, rasterization과 저장은 미구현입니다. `EmfPlusPath`의 Bézier command는 별도 Path geometry이며 이 iterator에 합치지 않습니다. SetTSGraphics의 별도 WorldToDevice도 일반 mapper에 병합하지 않습니다. 당시 조사한 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 픽셀 출력 동등성을 주장하지 않습니다.
 
 ## 검증 기록
 
@@ -19,3 +19,5 @@
 적대적 검증은 정수/PointF x·y 교환, 공용 resolved 변환 생략·축 교환, 네 역할의 오배치·control 교환, 이전 segment 반복, 실패 시 상태 소비, mapper identity, DrawBeziers 공개 연결 단절의 14개 의미 변이를 독립 복사본에 적용했습니다. 변이·모드별 local/global cache를 분리한 Debug·ReleaseSafe·ReleaseFast 42/42회가 모두 assertion 실패로 검출됐고 컴파일 오류·panic·timeout은 없습니다. 최초 공개 연결 변이는 첫 점을 읽어 같은 값으로 다시 지정한 의미상 동등 변이라 3회 생존했고 유효 검출에서 제외했습니다. 실제 시작점을 `(0,0)`으로 바꾸는 변이를 새 복사본·cache에서 다시 실행해 세 모드 모두 검출했습니다. 제품 작업 트리에는 변이를 적용하지 않았습니다.
 
 변경 소스를 고정하고 프로젝트 루트 `.zig-cache`를 제거한 뒤 전체 audit를 순차 실행했습니다. Debug·ReleaseSafe·ReleaseFast가 각각 40/40 단계와 1961/1961 테스트(native 1922, chart ownership 31, WMF Contents 8)를 통과했습니다. 각 모드의 corpus 검사는 8,905,827 checks, imports 0이었고 strict CFB mutation sweep는 12,000 mutations, traps 0이었습니다. 로그는 `/tmp/hwpjs-device-bezier-final-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.
+
+위 변이·전체 `audit` 수치는 당시 실행 기록이며 이번 문서 재검증에서 재실행한 결과는 아닙니다.

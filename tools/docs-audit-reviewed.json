@@ -1,6 +1,30 @@
 {
   "schema": 1,
   "verified": {
+    "docs/emf-plus-draw-curve-record.md": {
+      "sha256": "67a3104af2652e547600a4afd40843ada7b76415115407981f5c8cdbf0958c18",
+      "evidence": "2026-09-28 official EMF+ DrawCurve C Pen Count fields sizes versus Zig parser and cardinal geometry selection; Debug Safe Fast EMF+ 560 each and direct Safe 5; historic mutants and full audits not rerun"
+    },
+    "docs/emf-plus-draw-beziers-record.md": {
+      "sha256": "912d0a956ebafa5153dfd8f91401186a2d09b42cc9ae79552d59812fdf987bf5",
+      "evidence": "2026-09-28 official EMF+ DrawBeziers P C Pen Count and variable PointR versus Zig parser geometry device segments and connected flattening; Debug Safe Fast EMF+ 560 each and direct Safe 6; historic mutants and full audits not rerun"
+    },
+    "docs/emf-plus-cardinal-spans.md": {
+      "sha256": "a4988c9dce6673c929371904d2b1ba82ad97d5aa9127b817b33128371e51f18f",
+      "evidence": "2026-09-28 official EMF+ DrawCurve and GDI+ DrawCurve consecutive endpoint semantics versus Zig open closed cardinal iterators and atomic tests; noted GDI+ bound wording conflict; Debug Safe Fast EMF+ 560 each, direct Safe open 3 closed 2 atomic 2; historic mutants and full audits not rerun"
+    },
+    "docs/emf-plus-cardinal-device-spans.md": {
+      "sha256": "f85ce107ee00f65f944c7f07ae5ec3e9302d8aaed15b91acd47788c4026aac2e",
+      "evidence": "2026-09-28 Zig cardinal topology to general mapper source atomicity and record adapters against documented geometry scope; Debug Safe Fast EMF+ 560 each and direct Safe 3; historic mutants and full audits not rerun"
+    },
+    "docs/emf-plus-bezier-device-segments.md": {
+      "sha256": "461e066edc70c4af944b130f63c0abe48113514505698557fda502fd92d4702e",
+      "evidence": "2026-09-28 official EMF+ DrawBeziers four-point role versus Zig shared resolved mapper atomic device iterator and cubic APIs; Debug Safe Fast EMF+ 560 each and direct Safe 3; historic mutants and full audits not rerun"
+    },
+    "docs/emf-plus-bezier-device-polyline.md": {
+      "sha256": "e0fa2c3b285b6abdaa1d2337efe0e90b3da9b2b8c922af5af2f892ade93f96d2",
+      "evidence": "2026-09-28 Zig connected device Bezier flattening ownership bitwise continuity global budget allocation failure and DrawBeziers adapter versus documented scope; Debug Safe Fast EMF+ 560 each and direct Safe 4; historic mutants and full audits not rerun"
+    },
     "docs/emf-plus-draw-path-record.md": {
       "sha256": "ad1572ec938ccc2c1d74a2e4bd4cedb49dddfa3f9845e47293f228a510b4c38b",
       "evidence": "2026-09-28 official EMF+ DrawPath fixed fields and Path Pen IDs versus Zig parser tracked object lookup and missing payload retention; Debug Safe Fast EMF+ 560 each and direct Safe 3; historic mutants and full audits not rerun"
@@ -294,7 +318,7 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "619d6568d7943895195fd4cb81239dbcc33c615c6600fb89d46cbd35fa820eea",
+      "sha256": "71e18f8e0fe9c403689f365bddbef25d7dafc5571623023e16ae2e13ff64cf95",
       "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope PNG ICC inspection PNG RGBA BCP47 syntax registry alpha2 history ICC IANA matching mluc selection mluc structure mluc Unicode ICC v2 Unicode v2 text tag payload dispatch tag table structure header identifiers v4 and v2 header numeric header verification ICC registry source lookup required tags overview presence table XYZ type XYZ tags curve type TRC tags parametric curve analytic forward TRC forward sampled forward sampled inverse sampled wide inverse gamma inverse wide gamma inverse TRC inverse and extended TRC inverse matrix TRC inverse matrix TRC model matrix TRC forward fraction matrix inverse fraction matrix TRC inverse wide linear target wide positive bounds normalized and extended root compare normalized and extended root locations clipped and extended power preimage whole and extended whole parametric preimage normalized and extended whole bounds normalized and extended attained F.1a whole and extended nearest normalized and extended full inverse topology segments jump trend domain partition power clipping power level root compare active root locations rational power order normalized power level wide power level normalized root order power range power nearest ordinate order extended ordinate order ordinate distance extended ordinate distance linear range parametric range rational range nearest linear preimage extended linear preimage chromatic adaptation matrix transform ICC foundation verification review, architecture pending, full Debug Zig test 2656 passed and ReleaseFast HWP5 audit 10 steps 8905855 checks, EMF ICM and three clipping region docs direct tests and 102 shared tests each mode"
     },
     "docs/bcp47-syntax.md": {

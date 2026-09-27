@@ -14,7 +14,7 @@
 
 ## 지원 경계
 
-이 계층은 하나의 DrawBeziers record가 나타내는 연결 cubic sequence까지만 병합합니다. 여러 record 연결, DashMode·PathMarker, Pen 폭·cap·join·dash, clipping, hit testing, anti-aliasing, rasterization과 저장은 후속 책임입니다. Path의 Move·figure·command metadata 소유는 [별도 device figure geometry](emf-plus-path-device-geometry.md)가, figure별 평탄화는 [Path device figure polyline](emf-plus-path-device-polyline.md)이 담당합니다. 실제 한컴 EMF+ corpus 표본이 없으므로 렌더링 동등성을 주장하지 않습니다.
+이 계층은 하나의 DrawBeziers record가 나타내는 연결 cubic sequence까지만 병합합니다. 여러 record 연결, DashMode·PathMarker, Pen 폭·cap·join·dash, clipping, hit testing, anti-aliasing, rasterization과 저장은 후속 책임입니다. Path의 Move·figure·command metadata 소유는 [별도 device figure geometry](emf-plus-path-device-geometry.md)가, figure별 평탄화는 [Path device figure polyline](emf-plus-path-device-polyline.md)이 담당합니다. 당시 조사한 실제 한컴 EMF+ corpus에 양성 표본이 없어 렌더링 동등성을 주장하지 않습니다.
 
 ## 검증 기록
 
@@ -23,3 +23,5 @@
 적대적 검증은 option 선검증, iterator 오류 전파, segment tolerance·depth 전달, continuity gate, 첫 segment 전체 append, 후속 collapsed dedup, aggregate global-budget gate, segment count·empty gate, x/y와 signed-zero bit equality, DrawBeziers mapping·options 연결이라는 15개 의미 변이를 source-only 복사본에 적용했습니다. 변이·모드마다 새 local/global Zig cache를 사용한 Debug·ReleaseSafe·ReleaseFast 45/45회가 모두 기대 assertion으로 검출됐고 생존·compile error·panic은 없습니다. 최종 캠페인은 `/private/tmp/hwpjs-bezier-polyline-mutants.TIRfc3`입니다. 넉넉한 depth fixture, 하위 segment limit으로 이미 제거되는 global gate, 후속 shared start를 다른 dedup이 제거한 의미상 동등 변이, mapping 인자 미사용 컴파일 오류를 드러낸 선행 캠페인은 완료 수치에서 제외하고 테스트·변이를 보정했습니다. 최종 적대적 리뷰에서 첫 segment가 예산을 모두 소진한 뒤 후속 segment의 endpoint가 한 점 초과하는 결함을 재현했고, append 직전의 aggregate gate와 전용 회귀·변이 테스트로 보강했습니다. 이 gate 뒤에서 remaining·segment-limit을 넓히는 변이는 출력과 오류가 동일한 의미상 동등이므로 최종 변이 수에 포함하지 않았습니다.
 
 소스와 테스트를 고정한 최종 Debug → ReleaseSafe → ReleaseFast 전체 audit는 모드별 40/40 단계·2,023/2,023 테스트(공통 native 1,984개, 차트 31개, WMF 8개)를 통과했습니다. 각 로그에서 HWP/WASM `checks=8,905,827`, `imports=0`, CFB `mutations=12,000`·`traps=0`을 한 번씩 확인했습니다. 로그는 `/tmp/hwpjs-bezier-polyline-fixed-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다. 이 결과는 하나의 DrawBeziers record 내 연결 cubic device polyline 계약의 근거이며 Path figure 재생이나 실제 한컴 렌더링 동등성의 근거가 아닙니다.
+
+위 변이·전체 `audit` 수치는 당시 실행 기록이며 이번 문서 재검증에서 재실행한 결과는 아닙니다.
