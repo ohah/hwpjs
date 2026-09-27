@@ -6,7 +6,7 @@
 
 `parametric_attained_inverse.selectWide(precision, curve, n, d)`는 u512 목표를 검증한 뒤 전체 곡선의 정의역·비상수 단조성을 검사하고 [확장 경계](icc-extended-preimage-bounds.md)를 이용해 선택합니다. 결과는 selected·missing_preimage·undecided이며 selected의 좌표는 u1024 유리수 또는 기호근과 affine 계수입니다. 미확정은 해 없음이 아니며, 해 없음은 최근접 출력 부재의 증명이 아닙니다. 필요한 극값이 도달되지 않으면 기존 UnattainedIccPreimageMaximum/Minimum 오류를 유지합니다.
 
-이 API는 도달 목표에 대한 F.1(a)이며 F.1(b)의 최근접 출력 검색을 포함하지 않습니다. 전체 고정밀 역변환·제품 JS API·HWP 이미지 통합 완료를 의미하지 않습니다.
+이 API는 도달 목표에 대한 F.1(a)이며 F.1(b)의 최근접 출력 검색을 포함하지 않습니다. 후자는 [확장 최근접 출력](icc-extended-parametric-nearest.md)·[확장 전체 역변환](icc-extended-parametric-inverse.md)의 현재 별도 구현 범위입니다. 이 모듈만으로 제품 JS API·HWP 이미지 통합 완료를 의미하지 않습니다.
 
 ## SSOT
 
@@ -30,6 +30,14 @@ u512 최대 분모로 표현한 목표 0/1에서 비상수 단조 18건은 정�
 
 ## 최종 감사
 
-Debug·ReleaseSafe·ReleaseFast 전체 audit는 모두 종료 코드 0, 20/20 단계, 네이티브 662/662, WASM checks=6,956,927로 통과했습니다. 이전 6,955,401에 확장 selector의 1,526회 호출이 추가됐습니다. 로그는 `/tmp/hwpjs-extended-attained-{Debug,ReleaseSafe,ReleaseFast}.log`입니다. ReleaseSafe·ReleaseFast 산출물 직접 실행도 같은 신규 수치로 통과하고 항상 상한 선택 변형을 검출했습니다.
+당시 Debug·ReleaseSafe·ReleaseFast 전체 audit는 모두 종료 코드 0, 20/20 단계, 네이티브 662/662, WASM checks=6,956,927로 통과했습니다. 이전 6,955,401에 확장 selector의 1,526회 호출이 추가됐습니다. 당시 로그 경로는 `/tmp/hwpjs-extended-attained-{Debug,ReleaseSafe,ReleaseFast}.log`였으나 현재 파일은 존재하지 않습니다. 당시 ReleaseSafe·ReleaseFast 산출물 직접 실행도 같은 신규 수치로 통과하고 항상 상한 선택 변형을 검출했습니다.
 
-변경 Zig 포맷·JS 문법·diff 공백·로컬 문서 링크 7개를 확인했습니다. 최종 재검토에서 목표 검증 우선순위, 전체 곡선 gate 유지, 끝점 예외와 attained의 결합, 미확정 전파, 폭 보존, 기존 선택 규칙·경계 serializer 재사용, 출력 전체 초기화·할당 후 오류 경로 부재를 확인했습니다. 이번 범위에서 추가 결함은 발견하지 않았습니다. 고정밀 최근접 출력 검색·전체 ICC 역변환·전체 HWP/HWPX 문서 검증은 여전히 미완료입니다.
+당시 변경 Zig 포맷·JS 문법·diff 공백·로컬 문서 링크 7개를 확인했습니다. 최종 재검토에서 목표 검증 우선순위, 전체 곡선 gate 유지, 끝점 예외와 attained의 결합, 미확정 전파, 폭 보존, 기존 선택 규칙·경계 serializer 재사용, 출력 전체 초기화·할당 후 오류 경로 부재를 확인했습니다. 당시 범위에서 추가 결함은 발견하지 않았습니다. 당시 후속이었던 고정밀 최근접 출력·전체 역변환은 위 별도 계층에 구현됐으나, 전체 ICC 색상 관리와 HWP/HWPX 문서 검증은 여전히 미완료입니다.
+
+## 2026-09-27 문서 재검증
+
+공식 ICC.1:2022 Annex F.1(a)의 평탄 역상 선택을 현재 `parametric_attained_inverse.selectFor`의 u128/u512 공유 경로와 다시 대조했습니다. u512 목표를 검증한 뒤 `parametric_inverse_gate`로 전체 곡선의 비상수·단조성을 확인하고, `parametric_preimage_bounds.solveWide`의 complete 경계에서 빈 역상·미확정·열린 극값을 구분합니다. 상한이 attained일 때만 기호근 또는 유리수 x=1을 정확 비교한 뒤 공통 `preimage_choice_rule`을 적용합니다. 선택 좌표를 u128로 좁히지 않으며 `missing_preimage`는 이 API에서 해가 없다는 뜻으로만 유지합니다.
+
+Debug·ReleaseSafe·ReleaseFast의 `zig test src/image/icc/extended_attained_inverse_tests.zig -O <모드>`는 각 5/5 통과했습니다. 로컬 ReleaseFast 테스트용 WASM mode231 독립 선형 critical-cell 대조는 selected=439·missing=88·rejected=998·undecided=1로 일치했습니다. 앞 문서 검증에서 같은 제품 코드로 실행한 ReleaseFast HWP5 전체 감사 10/10 단계·WASM checks=8,905,855와 이 턴의 확장 전체 역변환 ReleaseFast 단독 6/6은 연결 근거이지 각 후속 문서 전체 검증 완료가 아닙니다.
+
+과거 세 모드 전체 감사·출력/소스 변형·시스템 ICC 15개 태그와 수동 30건은 이번에 재실행하지 않았습니다. 이 범위에서 임의 ICC 프로파일이나 실제 HWP/HWPX 표시·저장 동치를 주장하지 않습니다.
