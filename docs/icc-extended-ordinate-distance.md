@@ -10,7 +10,7 @@
 
 ordinate_distance의 절댓값 차이·교차 곱, ordinate_distance_band의 원래 후보·반사값·분모, power_ordinate_distance의 안/밖/경계/미확정 판정은 각각 기존·확장 경로가 공유합니다. power_ordinate_rational_order.Of(768)는 기존 offset 적용을 사용하고 rational_power_order.Of(1024)의 정확 등식·방향성 경계에 연결합니다. 할당·파일 접근·실수 근사는 추가하지 않습니다.
 
-직접 구성한 power 값은 원래 식이며 자동 클리핑하지 않습니다. 임계값 비교·거리 비교는 서로 다른 두 기호적 출력의 일반 거리 비교나 최근접 후보 선택 API가 아닙니다. 고정밀 최근접 출력 선택·전체 ICC 역변환·HWP 이미지 통합은 후속 범위입니다.
+직접 구성한 power 값은 원래 식이며 자동 클리핑하지 않습니다. 임계값 비교·거리 비교는 서로 다른 두 기호적 출력의 일반 거리 비교나 최근접 후보 선택 API가 아닙니다. [u512 최근접 출력](icc-extended-parametric-nearest.md)·[u512 역변환](icc-extended-parametric-inverse.md)은 별도 계층이며, HWP 이미지 통합은 이 비교기의 범위가 아닙니다.
 
 ## 독립 검증과 wire
 
@@ -30,4 +30,6 @@ mode233은 기존 확장 출력 비교의 200바이트 입력 뒤 r의 n/d u256 
 
 Debug·ReleaseSafe·ReleaseFast 전체 audit는 모두 종료 코드 0, 20/20 단계, 네이티브 670/670, WASM checks=6,965,389로 통과했습니다. 이전 6,958,939에 신규 6,450회 호출이 추가됐습니다. 로그는 `/tmp/hwpjs-extended-distance-{Debug,ReleaseSafe,ReleaseFast}.log`입니다. ReleaseSafe·ReleaseFast 산출물의 기존·확장 직접 대조와 네 출력/입력 변형 검출도 동일하게 통과했습니다.
 
-변경 Zig 포맷·JS 문법·diff 공백·문서 로컬 링크 3개를 확인했습니다. 최종 재검토에서는 목표·후보 검증 우선순위, 반사 구간의 비클리핑·부호·분모 양수, 정확한 동률과 미확정의 구분, offset 적용 폭, 유리수 거리 교차 곱 폭, 기존 경로·parser 재사용, 출력 초기화를 확인했습니다. 이번 범위에서 추가 결함은 발견하지 않았습니다. 고정밀 최근접 출력 선택·전체 ICC 역변환·전체 HWP/HWPX 문서 검증은 미완료입니다.
+변경 Zig 포맷·JS 문법·diff 공백·문서 로컬 링크 3개를 확인했습니다. 최종 재검토에서는 목표·후보 검증 우선순위, 반사 구간의 비클리핑·부호·분모 양수, 정확한 동률과 미확정의 구분, offset 적용 폭, 유리수 거리 교차 곱 폭, 기존 경로·parser 재사용, 출력 초기화를 확인했습니다. 당시 범위에서 추가 결함은 발견하지 않았습니다. 당시 후속이었던 고정밀 최근접 출력과 역변환은 현재 별도 계층에 있지만, 이 거리 비교 결과만으로 전체 ICC 색상 변환이나 HWP/HWPX 문서 검증을 증명하지 않습니다.
+
+2026-09-27 재검증에서는 현재 `power_ordinate_distance.compareWide`·`ordinate_distance_band.buildWide`·`power_ordinate_rational_order.Of(768)`의 u512 목표·u256 후보·i1024/u1024 임계값 계산과 기존 거리 비교 SSOT를 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 `extended_ordinate_distance_tests.zig`는 각각 4/4 통과했습니다. 기존 로컬 WASM mode233의 독립 BigInt 대조는 비교 5,453건·예상 거부 996건·미확정 1건이 일치했습니다. 과거 `/tmp` 전체 audit·변형 로그는 현재 없으며 이번에 전체 audit·WASM 재빌드·시스템 ICC 120건을 다시 실행한 것으로 세지 않습니다.

@@ -8,7 +8,7 @@
 
 compareFor는 기존·확장 경로의 검증과 값 분기를 공유합니다. rational_power_order.Of(1024)는 기존 정의역·부호·역수·정확 동등성·방향성 경계 비교 흐름을 사용하고 큰 비율 초기화만 기존 fractionExtended에 연결합니다. 정확 등식은 rational_power_equality.Of(1024), 방향성 경계는 positive_bounds가 소유합니다. 기존 API와 [기존 출력 비교](icc-ordinate-order.md)는 유지하며 파일 접근·할당·부동소수점 근사를 추가하지 않습니다.
 
-직접 구성한 power 값은 원래 식을 비교하며 자동 클리핑하지 않습니다. 순서 비교는 거리·동률 후보 선택·역함수 입력 선택이 아닙니다. 확장 최근접 출력 검색의 의존 계층이며 아직 검색 전체에 연결하지 않았습니다. 제품 JS API·전체 HWP/HWPX 지원 완료도 의미하지 않습니다.
+직접 구성한 power 값은 원래 식을 비교하며 자동 클리핑하지 않습니다. 순서 비교는 거리·동률 후보 선택·역함수 입력 선택이 아닙니다. [u512 최근접 출력](icc-extended-parametric-nearest.md)과 [u512 역변환](icc-extended-parametric-inverse.md)이 사용하는 별도 의존 계층입니다. 제품 JS API·전체 HWP/HWPX 지원 완료도 의미하지 않습니다.
 
 ## 독립 검증
 
@@ -28,4 +28,6 @@ JS 독립 기준은 유리수 교차 곱과 정확한 유리수 거듭제곱 비
 
 Debug·ReleaseSafe·ReleaseFast 전체 audit는 모두 종료 코드 0, 20/20 단계, 네이티브 666/666, WASM checks=6,958,939로 통과했습니다. 이전 6,956,927에 신규 2,012회 호출이 추가됐습니다. 로그는 `/tmp/hwpjs-extended-ordinate-{Debug,ReleaseSafe,ReleaseFast}.log`입니다. ReleaseSafe·ReleaseFast 산출물의 신규 직접 대조도 같은 수치로 통과하고 동률을 lt로 변경한 변형을 검출했습니다.
 
-변경 Zig 포맷·JS 문법·diff 공백·문서 로컬 링크 5개를 확인했습니다. 최종 재검토에서는 목표 검증 우선순위, 잘못된 값·실수 정의역 오류 전파, offset 적용 폭, 최소 signed 값의 절댓값, 음의 지수·밑 부호, 정확 등식 검사 선행, 미확정 유지, 기존 parser 계약·출력 초기화를 확인했습니다. 이번 범위에서 추가 결함은 발견하지 않았습니다. 고정밀 거리 비교·최근접 출력 선택·전체 ICC 역변환·전체 HWP/HWPX 문서 검증은 미완료입니다.
+변경 Zig 포맷·JS 문법·diff 공백·문서 로컬 링크 5개를 확인했습니다. 최종 재검토에서는 목표 검증 우선순위, 잘못된 값·실수 정의역 오류 전파, offset 적용 폭, 최소 signed 값의 절댓값, 음의 지수·밑 부호, 정확 등식 검사 선행, 미확정 유지, 기존 parser 계약·출력 초기화를 확인했습니다. 당시 범위에서 추가 결함은 발견하지 않았습니다. 당시 후속이었던 [확장 거리 비교](icc-extended-ordinate-distance.md)·최근접 출력·역변환은 현재 별도 계층에 있지만, 이 순서 비교 결과만으로 전체 ICC 색상 변환이나 HWP/HWPX 문서 검증을 증명하지 않습니다.
+
+2026-09-27 재검증에서는 현재 `power_ordinate_order.compareWide`·`power_ordinate_rational_order.Of(512)`·`rational_power_order.Of(1024)`의 u512 목표 검증과 i1024/u1024 오프셋 차감 경로를 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 `extended_ordinate_order_tests.zig`는 각각 4/4 통과했습니다. 기존 로컬 WASM mode232의 독립 BigInt 대조는 비교 1,441건·예상 거부 570건·미확정 1건이 일치했습니다. 과거 `/tmp` 전체 audit·변형 로그는 현재 없으며 이번에 전체 audit·WASM 재빌드·시스템 ICC 60건을 다시 실행한 것으로 세지 않습니다.

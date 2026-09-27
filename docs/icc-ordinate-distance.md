@@ -44,4 +44,6 @@ ReleaseSafe·ReleaseFast의 실제 감사 산출물 직접 실행에서도 같�
 
 ## 남은 범위
 
-이 비교 결과를 사용하는 [전체 최근접 출력 선택](icc-parametric-nearest.md)의 구현·검증 상태는 별도 관리합니다. F.1(a) 역변환 입력 선택 연결과 전체 HWP/HWPX 문서 검증은 미완료입니다.
+이 비교 결과를 사용하는 [전체 최근접 출력 선택](icc-parametric-nearest.md)과 [F.1 역변환 입력 선택](icc-parametric-inverse.md)의 구현·검증 상태는 별도 관리합니다. 이 거리 비교 결과만으로 전체 ICC 색상 변환이나 HWP/HWPX 문서 검증을 증명하지 않습니다.
+
+2026-09-27 재검증에서는 현재 `power_ordinate_distance.compareFor`·`ordinate_distance_band.buildFor`·`power_ordinate_rational_order.Of(384)`의 반사 구간·입력 선검증·오프셋 적용 폭·미확정 전파를 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 `power_ordinate_distance_tests.zig`는 각각 4/4 통과했습니다. 기존 로컬 WASM mode210의 독립 BigInt 대조는 비교 5,390건·예상 거부 900건·미확정 1건이 일치했습니다. 과거 `/tmp` 전체 audit·변형 로그는 현재 없으며 이번에 전체 audit·WASM 재빌드·시스템 ICC 120건을 다시 실행한 것으로 세지 않습니다.

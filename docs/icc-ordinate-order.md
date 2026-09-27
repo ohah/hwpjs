@@ -38,4 +38,6 @@ ReleaseSafe·ReleaseFast의 실제 감사 산출물 직접 실행에서도 같�
 
 ## 남은 범위
 
-이 단계는 출력 하나와 u128 목표값의 순서 비교입니다. 이를 사용하는 [거듭제곱 분기 최근접 출력](icc-power-range-nearest.md)의 구현·검증 상태는 별도 관리합니다. 두 기호적 출력 간 거리 비교, 전체 곡선의 최근접 출력 존재/동률 결정, 역변환 입력 선택과 HWP/HWPX 전체 문서 검증은 아직 미완료입니다. 목표를 u256까지 확장하려면 오프셋 차감이 256비트도 넘을 수 있으므로 현재 함수를 단순 캐스팅으로 확장하지 않습니다.
+이 단계는 출력 하나와 u128 목표값의 순서 비교입니다. 이를 사용하는 [거듭제곱 분기 최근접 출력](icc-power-range-nearest.md), [전체 곡선의 최근접 출력](icc-parametric-nearest.md), [역변환 입력 선택](icc-parametric-inverse.md)은 별도 계층에서 구현·검증 상태를 관리합니다. [u512 목표 비교](icc-extended-ordinate-order.md)는 단순 캐스팅이 아니라 더 넓은 오프셋 차감 경로를 공유합니다. 서로 다른 두 기호적 출력 사이의 일반 거리 비교와 HWP/HWPX 전체 문서 검증은 이 모듈의 범위가 아닙니다.
+
+2026-09-27 재검증에서는 공식 ICC.1:2022 Table 68의 거듭제곱 식과 현재 `power_ordinate_order.compareFor`·`power_ordinate_rational_order.Of(128)`·`rational_power_order.Of`의 목표 검증·오프셋 차감·실수 정의역·미확정 전파를 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 `power_ordinate_order_tests.zig`는 각각 4/4 통과했습니다. 기존 로컬 WASM mode208의 독립 BigInt 대조는 비교 1,350건·예상 거부 474건·미확정 1건이 일치했습니다. 과거 `/tmp` 전체 audit·변형 로그는 현재 없으며 이번에 전체 audit·WASM 재빌드·시스템 ICC 60건을 다시 실행한 것으로 세지 않습니다.
