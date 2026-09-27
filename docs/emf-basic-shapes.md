@@ -39,3 +39,5 @@ union tag는 같은 payload를 가진 ELLIPSE/RECTANGLE과 ARC/ARCTO/CHORD/PIE�
 호환성 수정 후 최종 `zig build audit --summary all`을 처음부터 재실행했다. Debug·ReleaseSafe·ReleaseFast 모두 40/40 단계와 1,352/1,352 테스트를 통과했다. 이 중 native test는 1,313개이고, HWP corpus는 584개 파일에 대해 8,905,827개 조건을 검사했다.
 
 실제 HWP corpus에는 EMF가 없어 실제 한글 생성기 표본으로 검증하지 못했다.
+
+2026-09-27 재검증에서는 공식 ANGLEARC·ROUNDRECT·ARC의 고정 필드와 나머지 도형 분류를 현재 `basic_shapes.zig`·공통 `record_extent.zig`에 대조했다. 도형 파일 단독 테스트는 Debug·ReleaseSafe·ReleaseFast 각 9/9개, 기본 점과 함께 구성한 `src/image/` 임시 import 진입점은 각 13/13개, 루트 `EMF framing`은 각 97/97개 통과했다. 넓은 테스트 수를 도형 전용 수로 읽지 않으며, 위 7종 변이와 세 모드 전체 audit은 이번에 재실행하지 않았다.

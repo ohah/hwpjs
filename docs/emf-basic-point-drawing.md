@@ -2,9 +2,9 @@
 
 ## 범위와 명세
 
-`basic_point_drawing.zig`는 Microsoft [EMR_LINETO](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/9b3eccf9-4a55-4a9c-b0df-3c495e7b9a8c)와 EMR_SETPIXELV의 wire payload만 구분한다. LINETO는 Type/Size와 PointL을 합친 16바이트 필수 prefix이며, SETPIXELV는 그 뒤 ColorRef를 추가한 20바이트 필수 prefix다. 선언 Size와 실제 slice 길이는 같아야 하며 필수 prefix 뒤의 미정의 extra data는 공식 상위 규칙대로 무시한다.
+`basic_point_drawing.zig`는 Microsoft [EMR_LINETO](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/9b3eccf9-4a55-4a9c-b0df-3c495e7b9a8c)와 [EMR_SETPIXELV](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/21d44fb9-b3c7-4ce7-a402-7601f34d0cda)의 wire payload만 구분한다. LINETO는 Type/Size와 PointL을 합친 16바이트 필수 prefix이며, SETPIXELV는 그 뒤 ColorRef를 추가한 20바이트 필수 prefix다. 선언 Size와 실제 slice 길이는 같아야 하며 필수 prefix 뒤의 미정의 extra data는 공식 상위 규칙대로 무시한다.
 
-PointL의 signed i32 little-endian XY는 `geometry.zig`가 단독 소유한다. SETPIXELV의 ColorRef는 `color_records.zig`와 같은 `wmf/color_ref.zig`를 재사용해 Red/Green/Blue/Reserved 순서와 Reserved=0을 적용한다. EMF 전용 색상 순서를 새로 복제하지 않는다.
+PointL의 signed i32 little-endian XY는 `geometry.zig`가 단독 소유한다. SETPIXELV의 [ColorRef](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/0fdf54fc-6357-4cdd-b27f-795dee14cf86)는 `color_records.zig`와 같은 `wmf/color_ref.zig`를 재사용해 Red/Green/Blue/Reserved 순서와 Reserved=0을 적용한다. EMF 전용 색상 순서를 새로 복제하지 않는다.
 
 ## 책임 경계와 검증
 
@@ -24,3 +24,5 @@ PointL의 signed i32 little-endian XY는 `geometry.zig`가 단독 소유한다. 
 호환성 수정 후 최종 `zig build audit --summary all`을 처음부터 재실행했다. Debug·ReleaseSafe·ReleaseFast 모두 40/40 단계와 1,352/1,352 테스트를 통과했다. 이 중 native test는 1,313개이고, HWP corpus는 584개 파일에 대해 8,905,827개 조건을 검사했다.
 
 LINETO가 갱신하는 current position, path bracket 안에서의 선 추가, pen/brush 적용과 SETPIXELV의 clipping·장치 색상 근사는 재생 계층의 책임이다. 구조 파싱 성공을 픽셀 렌더링 지원으로 확대하지 않는다. 실제 HWP corpus 584개에는 EMF가 없어 실제 한글 생성기 표본 근거도 없다.
+
+2026-09-27 재검증에서는 공식 LINETO·SETPIXELV 필드 순서와 현재 `basic_point_drawing.zig`의 16/20바이트 prefix·공유 ColorRef를 대조했다. `src/image/` 임시 import 진입점에서 Debug·ReleaseSafe·ReleaseFast 각 13/13개, 루트 `EMF framing`에서 각 97/97개 통과했다. 13개는 두 모듈과 의존 모듈의 합계다. 파일 단독 `zig test`는 WMF 상대 import가 module path 밖이어서 실패했으며, 파서 실패로 세지 않는다. 과거 변이와 세 모드 전체 audit은 이번에 재실행하지 않았다.
