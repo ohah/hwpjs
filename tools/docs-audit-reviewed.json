@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "5c19eb1432b32ba09037e951b8b1a74d2b803f091a63d3a0a8b232e986c4e449",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure and PNG structure review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "554fc7c69d0c72cca72c446e5432f48f5ac92b0d391dde5e0a776d3d5f666f39",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure and zlib validation review, architecture pending, full Debug Zig test incomplete"
+    },
+    "docs/zlib-validation.md": {
+      "sha256": "27bdaf91b8cd7ebff8fcafc4d3eb14e8a55d194474a109e0e6414c1f51518506",
+      "evidence": "2026-09-27 RFC1950 and W3C PNG Third Edition IDAT trailing rule current Zig strict prefix window and PNG pixels connection, Debug Safe Fast zlib broad 7 each, local ReleaseSafe probe CFB Node oracle 156 accept 65855 reject 32 real PNG IDAT 94928296 bytes; historical full audit and 5000 bit mutations not rerun"
     },
     "docs/png-structure.md": {
       "sha256": "3cee196713a5fd49fc361bbe6cc9f8fc3028b2a1e5d71b27a89918b81c87bb72",

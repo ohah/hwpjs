@@ -17,12 +17,20 @@
 
 PNG structure.inspect에는 연결하지 않고 별도 [이미지 데이터 검증](png-pixels.md)에서 decodePrefix를 사용합니다. 해당 계층이 필터 복원, scanline 길이, Adam7, palette 인덱스를 검사합니다. zlib 성공만으로 pixels_validated를 true로 바꾸지 않습니다. 이미지 의미·렌더링은 별도 범위입니다. HWP 압축 trailer는 CRC32/ISIZE 형식으로 별도이며 zlib Adler32와 혼합하지 않습니다.
 
+PNG의 iCCP·zTXt·압축 iTXt 같은 독립 메타데이터 스트림은 각각 선택형 검사 계층에서 strict `decode`를 사용합니다. 이 문서의 IDAT 후미 허용은 그 메타데이터 스트림이나 HWP 압축 정책으로 자동 전파되지 않습니다.
+
 ## 검증
+
+### 현재 재검증 (2026-09-27)
+
+[RFC 1950](https://www.rfc-editor.org/rfc/rfc1950.txt)의 CMF/FLG·FDICT·Adler32와 [PNG Third Edition §10·§11.2.3](https://www.w3.org/TR/png-3/#11IDAT)의 단일 IDAT zlib 스트림·마지막 IDAT 미사용 후미 권고를 현재 `src/compression/zlib.zig`·`raw_deflate.zig`·`src/image/png/pixels.zig`와 대조했습니다. Debug/ReleaseSafe/ReleaseFast의 넓은 `zlib ` 필터는 각각 root 포함 7/7개 통과했으며, 공통 flate 저수준 테스트 3개도 포함합니다. 로컬 ReleaseSafe probe/CFB WASM의 독립 Node 대조는 정상 156건·거부 65,855건, 실제 PrvImage PNG 32개의 IDAT 해제 합계 94,928,296바이트가 일치했습니다. 이는 이 테스트에서 추출한 압축 바이트 대조이며 현재 제품 `PrvImage` 통합·픽셀·화면 동치를 대신 증명하지 않습니다. 아래 전체 audit·일회성 비트 변형 수치는 이번에 재실행하지 않은 과거 기록입니다.
+
+### 과거 검증 기록
 
 네이티브는 65,536가지 헤더, 알려진 빈 스트림/abc 체크섬, 모든 잘림 위치, 후미/연결 스트림, 정확·부족 출력 한도와 할당 실패 정리를 검사합니다. 초기 할당 실패 테스트가 의도적으로 주입된 OutOfMemory를 InvalidChecksum으로 기대한 오류를 확인하고, OOM은 주입 검사기로 전파하도록 테스트를 수정했습니다.
 
 테스트 전용 WASM mode 127은 strict 출력, mode 128은 consumed(u32 LE)+prefix 출력을 제공합니다. Node zlib와 stored/fixed/dynamic, 32 KiB 이상 반복 입력, 모든 헤더, 손상 체크섬, 잘림, 후미·연결 스트림을 대조합니다. 직접 작성한 fixed Huffman bit fixture로 각 CINFO의 정확한 최대 거리와 한 칸 초과를 구분하고 dynamic 경로도 별도로 초과를 검사합니다. 정상 데이터의 해제 결과는 Node로 대조하지만 손상된 window 선언의 기대값은 명세와 직접 구성한 거리가 기준입니다.
 
-실제 HWP의 PNG IDAT는 테스트에서 추출·연결해 Node inflate 결과와 바이트 단위로 비교합니다. 이는 이미지 픽셀 검사나 제품 PrvImage 연결이 아닙니다.
+실제 HWP의 PNG IDAT는 테스트에서 추출·연결해 Node inflate 결과와 바이트 단위로 비교했습니다. 이는 이미지 픽셀 검사나 현재 존재하는 별도 [제품 PrvImage 경로](hwp5-preview-image.md)의 통합 검증이 아닙니다.
 
-최종 Debug·ReleaseSafe·ReleaseFast 전체 audit가 각각 17/17 단계, 네이티브 344/344, 감사 스크립트 3,149,467 checks를 통과했습니다. zlib 전용 WASM은 정상 156건·거부 65,855건이며 실제 PNG 32개, 해제 결과 94,928,296바이트가 Node와 일치했습니다. 별도 일회성 단일 비트 변형 5,000회도 양쪽 모두 거부했고 수락/거부 차이는 없었습니다. 이 추가 실험은 기본 audit 검사 수에 포함하지 않습니다. 포맷·변경 JS 문법·관련 로컬 문서 링크 15개도 확인했습니다.
+당시 최종 Debug·ReleaseSafe·ReleaseFast 전체 audit가 각각 17/17 단계, 네이티브 344/344, 감사 스크립트 3,149,467 checks를 통과했습니다. zlib 전용 WASM은 정상 156건·거부 65,855건이며 실제 PNG 32개, 해제 결과 94,928,296바이트가 Node와 일치했습니다. 별도 일회성 단일 비트 변형 5,000회도 양쪽 모두 거부했고 수락/거부 차이는 없었습니다. 이 추가 실험은 기본 audit 검사 수에 포함하지 않습니다. 포맷·변경 JS 문법·관련 로컬 문서 링크 15개도 확인했습니다. 이 과거 전체 감사 수치는 이번 실행 결과로 소급하지 않습니다.
