@@ -12,13 +12,17 @@ Report.syntax.registry_validated=true는 고정된 등록부에 대한 위 검�
 
 ## 데이터와 SSOT
 
-선택된 식별자와 extlang Prefix의 단일 출처는 `src/text/bcp47/data/source.json`입니다. 공식 [IANA Language Subtag Registry](https://www.iana.org/assignments/language-subtag-registry/language-subtag-registry)의 File-Date는 2026-08-08, [Language Tag Extensions Registry](https://www.iana.org/assignments/language-tag-extensions-registry/language-tag-extensions-registry)는 2014-04-02입니다. 원본 전체의 SHA-256과 출처 URL을 source.json에 기록합니다. 두 글자 language/region의 Deprecated·Preferred-Value는 [이력 조회](bcp47-alpha2-history.md)에 추가 보존합니다. 그 외 권장 값·설명·variant Prefix 등은 이 축약 파일에 포함하지 않습니다. 외부 파서 코드를 가져온 것이 아닙니다.
+선택된 식별자와 extlang Prefix의 단일 출처는 `src/text/bcp47/data/source.json`입니다. 이 파일에 고정된 [IANA Language Subtag Registry](https://www.iana.org/assignments/language-subtag-registry/language-subtag-registry)의 File-Date는 2026-08-08, [Language Tag Extensions Registry](https://www.iana.org/assignments/language-tag-extensions-registry/language-tag-extensions-registry)는 2014-04-02입니다. 이는 현재 원격 등록부의 날짜를 뜻하지 않습니다. 고정 당시 원본 전체의 SHA-256과 출처 URL을 source.json에 기록합니다. 두 글자 language/region의 Deprecated·Preferred-Value는 [이력 조회](bcp47-alpha2-history.md)에 추가 보존합니다. 그 외 권장 값·설명·variant Prefix 등은 이 축약 파일에 포함하지 않습니다. 외부 파서 코드를 가져온 것이 아닙니다.
 
 `tools/language-registry.mjs`가 private-use 범위를 포함해 고정 폭 정렬 테이블과 날짜 상수를 결정적으로 생성합니다. `registry_data.zig`는 테이블 조회만, `registry.zig`는 문법 결과와 등록 규칙 조립만 담당합니다. 빌드·파싱 중 네트워크 요청은 없습니다. `--check`는 로컬 축약 데이터와 파생 파일의 일치를 확인할 뿐, 원본 해시를 원격에서 재검증하지 않습니다.
 
-원본 레코드는 language 8,276·script 225·region 305·variant 139·extlang 258개입니다. 범위 확장 뒤에는 각각 8,795·274·343·139·258개이며 extension singleton은 t/u 2개입니다. API는 입력을 빌리며 문법 검사 임시 메모리를 호출 내 해제합니다. 기본 입력/부분 태그 한도는 문법 API와 공유합니다.
+고정 스냅샷의 원본 레코드는 language 8,276·script 225·region 305·variant 139·extlang 258개입니다. 범위 확장 뒤에는 각각 8,795·274·343·139·258개이며 extension singleton은 t/u 2개입니다. API는 입력을 빌리며 문법 검사 임시 메모리를 호출 내 해제합니다. 기본 입력/부분 태그 한도는 문법 API와 공유합니다.
 
 ## 검증 구성
+
+2026-09-27 재검증에서 RFC 5646 §2.2.2·§2.2.6·§2.2.9, `registry.zig`·`registry_data.zig`·`source.json`·생성기·iTXt 소비자 경계를 대조했습니다. `node tools/language-registry.mjs --check`는 고정 스냅샷의 파생 8개 파일 일치를 확인했습니다. 같은 날 `--fetch`로 받은 현재 IANA subtag 원본은 File-Date 2026-09-17, extension 원본은 2014-04-02였습니다. 현재 원본 SHA-256은 고정 원본과 다르지만, 생성된 축약 catalog를 비교하면 `date`·`sha256` 외의 키(선택 식별자, extlang Prefix, 두 글자 폐기/권장 이력, 레코드 수 포함)는 동일했습니다. 따라서 이 검사는 고정 스냅샷의 현재 선택 데이터가 최신 원본과 같다는 관측이지, 생략한 등록부 필드까지 같다는 증명이 아닙니다. Debug·ReleaseSafe·ReleaseFast의 root 진입 `BCP47 registry` 필터는 각각 4/4(등록 테스트 3개·root 1개), 기존 로컬 `hwp5-probe.wasm` mode 138과 독립 JS의 재실행은 정상 19,194건·거부 468,057건이 일치했습니다. WASM을 이번에 새로 빌드하지 않았고 JS는 같은 고정 source.json을 데이터로 사용합니다. 과거 전체 audit·수동 146건·실파일 iTXt 검사는 이번에 재실행하지 않았습니다.
+
+### 과거 검증 기록
 
 네이티브는 모든 테이블의 정렬·폭·중복·대소문자 조회, extlang Prefix 등록, private-use 범위와 폐기 코드, 등록 실패 시 할당 정리를 검사합니다.
 
