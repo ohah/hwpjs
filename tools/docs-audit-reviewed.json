@@ -1,6 +1,18 @@
 {
   "schema": 1,
   "verified": {
+    "docs/emf-plus-object-record.md": {
+      "sha256": "241d605b6a82dc4e59b9fd6926725246d82bbdaa37e37eed7830b2e98ec04833",
+      "evidence": "2026-09-28 official EMF+ Object C Type ID and conflicting TotalObjectSize wording against shared Zig state assembler, Debug Safe Fast root EMF+ 560 each object focus 9 each; historic mutants and full audits not rerun, framing table type-only and no positive corpus"
+    },
+    "docs/emf-plus-serializable-object.md": {
+      "sha256": "d3db3d276eda573470fd7f18998e997478f423330f622f9750f5b03d4c74db05",
+      "evidence": "2026-09-28 official SerializableObject BufferSize and eleven GUID effects plus Microsoft SharpenParams against Zig envelope effect dispatch stream, Debug Safe Fast root EMF+ 560 each with three record six effect one GUID tests, narrow filters empty excluded; historic mutants and full audits not rerun"
+    },
+    "docs/emf-plus-image-attributes-object.md": {
+      "sha256": "15c12d8e5b2795be3293f56b794d4c6def6685e0810073ba0eec0b0e613e0511",
+      "evidence": "2026-09-28 official ImageAttributes fields ignored Reserved ObjectClamp 0 1 against Zig 24-byte parser and type-only object table references, Debug Safe Fast root EMF+ 560 each ImageAttributes focus 5 each; historic mutants and full audits not rerun, no positive corpus"
+    },
     "docs/emf-plus-brush-object.md": {
       "sha256": "3b621bfd90b7146d997c5710b14f15a6971b069d377d5445bf7878d799fbd897",
       "evidence": "2026-09-28 official EMF+ Brush five types flags optional Texture Image against Zig payload dispatch and type-only stream table boundary, Debug Safe Fast root EMF+ 560 each Brush focus 4 each; historic mutants and full audits not rerun, no real positive EMF+"
@@ -46,7 +58,7 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "a930ee01eea1c6b79af97954b51dda8838d988d4089c5f718f63aa41849f17b0",
+      "sha256": "68dd627eb48b34ba83000530caf9b3addddf85bdbfb57245527bb786c4713643",
       "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope PNG ICC inspection PNG RGBA BCP47 syntax registry alpha2 history ICC IANA matching mluc selection mluc structure mluc Unicode ICC v2 Unicode v2 text tag payload dispatch tag table structure header identifiers v4 and v2 header numeric header verification ICC registry source lookup required tags overview presence table XYZ type XYZ tags curve type TRC tags parametric curve analytic forward TRC forward sampled forward sampled inverse sampled wide inverse gamma inverse wide gamma inverse TRC inverse and extended TRC inverse matrix TRC inverse matrix TRC model matrix TRC forward fraction matrix inverse fraction matrix TRC inverse wide linear target wide positive bounds normalized and extended root compare normalized and extended root locations clipped and extended power preimage whole and extended whole parametric preimage normalized and extended whole bounds normalized and extended attained F.1a whole and extended nearest normalized and extended full inverse topology segments jump trend domain partition power clipping power level root compare active root locations rational power order normalized power level wide power level normalized root order power range power nearest ordinate order extended ordinate order ordinate distance extended ordinate distance linear range parametric range rational range nearest linear preimage extended linear preimage chromatic adaptation matrix transform ICC foundation verification review, architecture pending, full Debug Zig test 2656 passed and ReleaseFast HWP5 audit 10 steps 8905855 checks, EMF ICM and three clipping region docs direct tests and 102 shared tests each mode"
     },
     "docs/bcp47-syntax.md": {

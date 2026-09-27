@@ -34,4 +34,6 @@ Assembler 추가 후에는 선언 한도 검사 제거, 마지막 padding의 pay
 
 제품 트리의 전체 audit는 Debug·ReleaseSafe·ReleaseFast에서 각각 40/40 단계, 1,507/1,507 테스트를 통과했습니다. 각 모드는 네이티브 1,468개, 차트 소유권 31개, WMF 8개와 HWP/WASM 8,905,827회 검사, WASM imports 0개를 포함합니다. 로그는 `/tmp/hwpjs-emfplus-object-{Debug,ReleaseSafe,ReleaseFast}-audit.log`에 남겼습니다. 이 수치는 위에 명시한 객체 payload·실제 EMF+ 표본 공백을 완료로 바꾸지 않습니다.
 
-Assembler가 포함된 최종 제품 트리의 순차 전체 audit는 Debug·ReleaseSafe·ReleaseFast에서 각각 40/40 단계, 1,524/1,524 테스트를 통과했습니다. 각 모드는 네이티브 1,485개, 차트 소유권 31개, WMF 8개, HWP/WASM 8,905,827회 검사와 WASM imports 0개를 포함합니다. 앞 단락은 객체 table 단계의 이력이며 이 수치가 현재 결과입니다. 실제 EMF+ corpus 표본과 객체별 payload 해석 공백은 그대로 구분합니다.
+Assembler가 포함된 당시 제품 트리의 순차 전체 audit는 Debug·ReleaseSafe·ReleaseFast에서 각각 40/40 단계, 1,524/1,524 테스트를 통과했습니다. 각 모드는 네이티브 1,485개, 차트 소유권 31개, WMF 8개, HWP/WASM 8,905,827회 검사와 WASM imports 0개를 포함합니다. 앞 단락은 객체 table 단계의 더 이른 이력입니다. 이후 객체별 payload 파서는 별도 문서·코드에서 추가되었지만 공통 framing은 여전히 타입 전용 table을 사용하며 assembler의 전체 연결, 실제 EMF+ corpus 표본과 재생은 별도 범위로 남습니다.
+
+2026-09-28 현행 재검증에서 공식 Object record의 C·ObjectType·ObjectID와 분할 TotalObjectSize 설명을 현재 공유 전이 함수·State·Assembler에 대조했습니다. 마지막 조각의 TotalObjectSize는 공식 표와 본문 설명이 달라 기존 문서에 표시된 구현 선택을 유지합니다. Debug·ReleaseSafe·ReleaseFast 루트 `EMF+` 필터는 각 560/560개, `EMF+ object` 집중 필터는 각 9/9개 통과했습니다. 위 두 전체 audit와 변이 45회는 과거 실행 이력으로 이번 결과에 합산하지 않습니다.

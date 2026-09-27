@@ -21,6 +21,8 @@ Reserved1은 MUST be ignored, Reserved2는 SHOULD be zero이고 MUST be ignored�
 
 독립 복사본에는 WrapMode 5 수용, ObjectClamp 2 수용, 25번째 바이트 수용, Version 및 각 필드 손실, 원본 bytes view 손실, ClampColor의 WrapMode 조건부 제거, 잘못된 ObjectType 수용, LinearGradient의 공용 WrapMode 우회를 포함한 13개 유효 의미 결함을 주입했습니다. 각 실행은 새로운 local/global Zig cache를 사용했고 Debug·ReleaseSafe·ReleaseFast의 39/39회에서 테스트가 검출했습니다. 최초 WrapMode 변이는 enum에 존재하지 않는 5를 직접 만들며 safety panic을 일으켜 결과에서 제외하고, 5를 기존 값으로 잘못 보정하는 유효 결함으로 교체해 세 모드에서 다시 검출했습니다. 복사본은 `/tmp/hwpjs-emfplus-image-attributes-mutants.t1MOOr`, 로그는 `/tmp/hwpjs-image-attributes-mutation-<변이>-<모드>.log`와 교체 변이의 `wrap_accept_5-valid` 로그에 남겼습니다.
 
-실제 EMF+ ImageAttributes corpus와 한컴 버전별 사용 방식은 아직 관측하지 않았습니다. 따라서 이 결과는 공식 wire 구조와 합성·변이 회귀 범위이며 이미지 색 보정, 렌더링, Object Table 적용 또는 재직렬화 완료를 뜻하지 않습니다.
+실제 EMF+ ImageAttributes corpus와 한컴 버전별 사용 방식은 아직 관측하지 않았습니다. 따라서 이 결과는 공식 wire 구조와 합성·변이 회귀 범위이며 이미지 색 보정, 렌더링이나 재직렬화 완료를 뜻하지 않습니다. 이 payload parser는 Object Table을 갱신하지 않지만 [Object record·stream](emf-plus-object-record.md)은 별도로 타입 슬롯과 DrawImage/DrawImagePoints의 ImageAttributes 참조를 추적합니다. 타입 추적을 효과 적용이나 payload 의미를 저장한 객체 table로 해석하지 않습니다.
+
+2026-09-28 현행 재검증에서 공식 ImageAttributes의 24바이트 배치·Reserved 무시·ObjectClamp 0/1을 현재 Zig 파서·공유 WrapMode 및 stream 참조 검사에 대조했습니다. Debug·ReleaseSafe·ReleaseFast 루트 `EMF+` 필터는 각 560/560개, `EMF+ ImageAttributes` 집중 필터는 각 5/5개 통과했습니다. 아래 변이 39회와 세 모드 전체 audit는 과거 실행 이력입니다.
 
 최종 제품 트리의 전체 `audit`를 공유 산출물이 겹치지 않도록 순차 실행했습니다. Debug·ReleaseSafe·ReleaseFast 모두 40/40 단계와 1,631/1,631 테스트(네이티브 1,592, 차트 31, WMF 8), HWP 감사 8,905,827 checks, WASM imports 0으로 통과했습니다. 로그는 `/tmp/hwpjs-emfplus-image-attributes-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.

@@ -33,6 +33,8 @@ RedEye의 RectL은 이 계층에서 16바이트 원시 배열로 빌립니다. �
 
 ## 적대적 검증
 
+2026-09-28 현행 재검증에서 공식 SerializableObject의 GUID·BufferSize 산식과 11개 ImageEffects 식별자를 현재 envelope·effect dispatch·stream 집계에 대조했습니다. Sharpen radius의 추가 범위 근거인 Microsoft `SharpenParams`도 현재 페이지에서 확인했습니다. Debug·ReleaseSafe·ReleaseFast 루트 `EMF+` 필터는 각 560/560개이며, 그 안에 SerializableObject 전용 3개와 effect 전용 6개·GUID 1개가 포함됩니다. 좁은 `EMF+ serializable object`/`EMF+ image effect` 필터는 대상 테스트를 수집하지 않아 근거로 세지 않습니다. 아래 변이 45회와 세 모드 전체 audit는 과거 실행 이력입니다.
+
 공식 문자열 11개를 테스트 상수와 공유하지 않는 canonical GUID 변환기로 packet bytes와 대조해 11/11 일치를 확인했습니다. 모든 효과의 정상 dispatch, 정확/짧음/후행 크기, 각 스칼라 경계, 네 필수 Matrix 0 위치, RedEye 음수·개수 불일치, envelope 정렬·크기·미지 GUID, stream 실패 원자성을 검사합니다.
 
 독립 임시 복사본에는 Buffer 정렬 제거, envelope 후행 허용, 미지 GUID의 Tint 대체, 고정 크기 후행 허용, 공통 범위 조건 약화, Blur NaN 허용, Boolean 2 허용, Curve enum 범위 확대, Matrix 필수 0 하나 누락, RedEye 후행 허용, Sharpen 상한 확대, 직접 Record의 DataSize/Size 검사 제거까지 15개 결함을 각각 주입했습니다. 캐시를 공유하지 않은 Debug·ReleaseSafe·ReleaseFast 45회에서 모두 검출했습니다. 처음 두 실행에서 비교 방향과 동명이 필드 선택이 잘못된 동등·오대상 변이를 확인해 변이 생성 자체를 수정한 뒤 본체 39회를 처음부터 다시 통과했고, 후속 선언 필드 6회도 별도 통과했습니다.
