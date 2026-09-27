@@ -12,9 +12,15 @@
 
 matrix3_fixed.cofactor가 signed 여인수 공식을 소유합니다. 행렬식은 첫 행과 여인수의 내적으로 계산하고, 넓은 역변환은 전치된 여인수 행렬을 사용합니다. 기존 고정소수점 역변환의 Cramer 경로도 같은 determinantNumerator를 계속 사용합니다. 계수 스케일·분수 산술은 새 전용 파일에서 조립하며 메모리를 할당하지 않습니다.
 
-이 결과를 현재 TRC의 정규화 u128 목표로 임의 narrowing하지 않습니다. 모델 수준 범위 제한 및 넓은 목표의 후속 TRC 연결은 별도 작업입니다. 고정소수점 모델 진입점은 [Matrix/TRC 역방향](icc-matrix-trc-inverse.md)과 구분합니다.
+이 결과를 TRC의 u128 목표로 임의 narrowing하지 않습니다. 모델 수준 범위 제한과 넓은 목표의 TRC 연결은 현재 별도 [분수 Matrix/TRC 역변환](icc-fraction-matrix-trc-inverse.md)이 소유합니다. 고정소수점 모델 진입점은 [Matrix/TRC 역방향](icc-matrix-trc-inverse.md)과 구분합니다.
 
-## 검증 진행
+## 2026-09-27 현재 재검증
+
+[ICC.1:2022 Annex F.3 식 F.7](https://www.color.org/specifications/ICC.1-2022-05.pdf)의 역행렬 관계와 실제 행렬이 signed 16.16 계수라는 점을 현재 `matrix3_fraction_inverse`의 65536 배율·여인수 전치·양수 분모 정규화에 대조했습니다. i256/u256 입력 전체 폭의 중간값이 i512/u512 안에 드는 계산 경계와 분모 0 선거부, 특이행렬 처리도 소스·테스트에서 확인했습니다. 임의 정밀도나 PCSXYZ wire의 직접 입력을 지원한다는 뜻은 아닙니다.
+
+Debug·ReleaseSafe·ReleaseFast의 `fraction matrix inverse` 집중 테스트는 각각 root 포함 4/4, 별도 순·역 왕복 필터는 각각 2/2 통과했습니다. 기존 로컬 WASM mode 216의 독립 가우스 소거/원방정식 대조는 정상 12,339건·거부 8,043건이 일치했습니다. macOS 시스템 v4 ICC 여섯 파일의 XYZ 열로 행렬을 독립 조립하고 각 네 입력에 적용한 24건도 가우스 소거 결과와 일치했습니다. 이번에 WASM을 재빌드하거나 과거 전체 감사·출력/소스 변형 검사를 재실행하지 않았고, 아래 `/tmp` 감사 로그도 현재 없습니다.
+
+## 당시 검증 진행
 
 신규 네이티브 4개가 통과했습니다. i256 최솟값/최댓값·u256 최대 분모, 비대칭 여인수 전치, 음수 행렬식, 큰 곱 상쇄, 입력 오류 우선순위, signed/범위 초과 출력 보존, 서로 다른 최대 부근 u64 분모의 정확한 forward/inverse 왕복을 검사합니다. 추가로 원래 방정식 A×결과×입력분모 = 입력분자×결과분모×65536에 대입하며 검증식은 i1024에서 계산합니다.
 
@@ -32,12 +38,12 @@ Debug WASM 직접 실행에서 비교 12,339건·오류 거부 8,043건(합계 2
 
 추가 Debug WASM 수동 대조에서 macOS ACESCG Linear·DCI(P3) RGB·Display P3·ITU-2020·ITU-709·ROMM RGB 프로파일의 XYZ 열 태그를 읽어 행렬을 조립했습니다. 각 행렬에 i256 최솟값/최댓값과 u256 최대 분모·분모 1·일반 분수·영벡터의 4종을 적용한 24건이 독립 가우스 소거 결과와 일치했습니다. 프로파일은 읽기 전용으로 사용했고 이 수동 검사 수는 정규 audit에 합산하지 않습니다. TRC 비단조성·전체 모델·렌더링 검증은 별도입니다.
 
-## 최종 확인과 남은 범위
+## 당시 최종 확인과 현재 범위
 
 Debug·ReleaseSafe·ReleaseFast 전체 audit가 `/tmp/hwpjs-fraction-matrix-inverse-{Debug,ReleaseSafe,ReleaseFast}.log`에서 모두 종료 코드 0, 20/20 단계, 네이티브 610/610, WASM checks=6,640,447로 완료됐습니다. 이전 6,620,065에 신규 20,382건이 추가됐습니다. ReleaseSafe·ReleaseFast 실제 audit 산출물의 직접 실행에서도 신규 12,339 비교/8,043 거부, 기존 행렬 36,367 비교/8,223 거부가 일치했으며 출력 변형 3종을 모두 검출했습니다.
 
 최종 적대적 리뷰에서는 순환 인덱스의 여인수 부호와 adjugate 전치, 기존 determinant 호출 재사용, 전체 폭 입력의 누산/스케일/부호 반전 범위, 분모 0의 오류 우선순위, clipping·narrowing 부재, wire 길이와 전체 초기화를 확인했습니다. 추가 결함은 발견하지 못했습니다. Zig 포맷·변경 JS 문법·diff 공백과 관련 문서 로컬 링크 3개도 확인했습니다.
 
-이번 완료 범위는 넓은 분수 XYZ의 선형 역행렬 계산입니다. i512/u512 결과를 정확하게 정규화하여 TRC에 전달하는 모델 연결, 기호적·분수 색상 변환 왕복, PCSXYZ 인코딩·렌더링과 전체 HWP/HWPX 문서 검증은 아직 남아 있습니다.
+이 문서의 완료 범위는 넓은 분수 XYZ의 선형 역행렬 계산입니다. i512/u512 결과를 정규화해 TRC에 전달하는 모델 연결은 별도 [분수 Matrix/TRC 역변환](icc-fraction-matrix-trc-inverse.md)에 구현·기록됐습니다. 임의 정밀도 입력, 전체 기호적·분수 색상 변환 왕복, PCSXYZ 인코딩·렌더링과 전체 HWP/HWPX 문서 검증은 여기서 입증하지 않습니다.
 
-범위 제한의 후속 진행은 [넓은 선형 RGB 목표](icc-wide-linear-target.md)에서 관리합니다.
+범위 제한의 세부 계약은 [넓은 선형 RGB 목표](icc-wide-linear-target.md)에서 관리합니다.
