@@ -6,8 +6,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "c185835cfd1b007946fb3977d5ad52bbbeba99179c352a7bb196dace4304fb96",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics and track-change boundary evidence review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "14370f6c953c3a88c9f7a5be7a4d9950717b602a80d04fe5a25232c76b0e511b",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary and track-change DocInfo evidence review, architecture pending, full Debug Zig test incomplete"
     },
     "THIRD_PARTY_NOTICES.md": {
       "sha256": "9d8b89d82c9ab174f564afa3b294f186b9ab12fa0dc354bf16818b3a7cf04d55",
@@ -28,6 +28,10 @@
     "docs/hwp5-track-change-viewtext.md": {
       "sha256": "a8aecd13a5a8dfd8771c051fb00abc884fa45cd48270d6b4555115e9e676483d",
       "evidence": "2026-09-27 Hancom forum and local table 62, current Zig default and distribution boundary, Debug Safe Fast ViewText 16 each, same-code Safe HWP5 audit, Node 4 accepted 24 rejected, survey two HWP and 439 HWPX with 2048 heap, nine line overruns; historical counts separated"
+    },
+    "docs/hwp5-track-changes.md": {
+      "sha256": "a75ef97fc856cec8c9ebff6af6209d07da5fb6cb01997299932f2aa795b6604a",
+      "evidence": "2026-09-27 local HWP5 tables 4 13 16 and current DocInfo Zig Rust rhwp sources, Debug Safe Fast root track change tests four each, same-code Safe HWP5 audit, 536 HWP corpus 430 DocInfo exact census, probe 64 8440 and 4 51, three paired HWP HWPX flags 56; old logs unavailable"
     },
     "docs/cfb-compatibility.md": {
       "sha256": "c7a906e4b53a01db38b905a834673467f12d934ebfba2214ce2be207b7df3737",

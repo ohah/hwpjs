@@ -12,6 +12,8 @@
 
 이번 구현은 레코드 경계와 개수 검증입니다. payload의 필드 의미를 해석한 것은 아닙니다. 두 레코드는 계속 `Value.unknown`이며 참조 보고서의 `unknown_records`에도 남습니다.
 
+아래 초기 테스트·전체 감사 수치는 당시 기록입니다. 현재 코드로 다시 확인한 범위는 마지막 절에 분리하며, 과거 임시 로그를 새 검증 증거로 소급하지 않습니다.
+
 ## 책임 분리와 보존
 
 `docinfo/track_change_info.zig`의 `View.parse()`는 표 4의 1,032바이트 코어와 후속 extra를 나눠 빌립니다. 짧으면 `UnexpectedEnd`이고, 긴 입력은 잘라 버리지 않습니다. extra 허용은 향후 확장의 원문 보존 정책이며 추가 필드가 명세에 정의되었다는 주장이 아닙니다. 코어의 첫 DWORD를 56으로 보정하거나 나머지 바이트를 0으로 만들지 않습니다.
@@ -52,10 +54,18 @@ rhwp `reference/rhwp/src/serializer/hwpx/header.rs`의 `track_change_flags()`는
 
 별도 Debug WASM 인스턴스에서 변경 추적 전용 테스트를 실행해 합성 정상 64건·거부 8,440건, 실제 문서 변조 정상 4건·세 경로 합계 거부 51건을 확인했습니다. 정상 원본 재처리와 원문 바이트 비교도 포함합니다. 전체 감사는 [개발·검증 명령](development-commands.md#세-빌드-모드-회귀-검증)의 순차 실행을 따릅니다.
 
-Debug → ReleaseSafe → ReleaseFast 전체 감사가 모두 성공했습니다. 각 모드에서 네이티브 258/258, Node 47/47, HWP5 WASM 검사 1,381,068회를 통과했습니다. CFB 변형 12,000건의 trap은 0이었습니다. Zig 포맷·변경 JS 구문·diff 공백과 주제 문서 링크도 검사했습니다. 실행 로그는 `/tmp/hwpjs-track-change-{debug,safe,fast}.log`입니다. 이 횟수는 변경 추적 필드 의미나 전체 문서 구현의 완성도를 뜻하지 않습니다.
+당시 Debug → ReleaseSafe → ReleaseFast 전체 감사가 모두 성공했습니다. 각 모드에서 네이티브 258/258, Node 47/47, HWP5 WASM 검사 1,381,068회를 통과했습니다. CFB 변형 12,000건의 trap은 0이었습니다. 당시 실행 로그 경로 `/tmp/hwpjs-track-change-{debug,safe,fast}.log`는 현재 없어 이번 재검증으로 세지 않습니다. 이 횟수는 변경 추적 필드 의미나 전체 문서 구현의 완성도를 뜻하지 않습니다.
 
 ## 남은 범위
 
 [payload·ViewText 계약·조사](hwp5-track-change-viewtext.md)에 공개 답변, 실제 스트림 차이, 과거 미검사 재현과 현재 경계 검증·남은 의미 검증을 기록했습니다.
 
 내용/작성자 payload 필드, 작성자 ID와 내용 참조, 변경 이력의 적용·취소, 편집·저장·HWPX 변환은 미완료입니다. 정보 코어 경계와 매핑 개수를 검증했다고 변경 추적 전체 지원으로 표시하지 않습니다.
+
+## 현재 코드 재검증 (2026-09-27)
+
+로컬 명세 표 4·13·16과 현재 `track_change_info.zig`·`reader.zig`·`resources.zig`, 레거시 및 고정 rhwp 참조를 대조했습니다. `src/root.zig` 진입점의 `track_change_tests` 필터는 Debug·ReleaseSafe·ReleaseFast 각각 4/4(root 포함) 통과했습니다. 테스트 파일을 단독 `zig test` 진입점으로 사용하면 상대 import가 모듈 밖으로 나가 컴파일되지 않으므로 그 실패를 제품 테스트 실패로 세지 않습니다. 앞선 같은 제품 코드의 ReleaseSafe `hwp5-audit`는 10/10 단계·8,905,855 checks로 통과했으며 이번에 전체 audit는 다시 실행하지 않았습니다.
+
+이번에 로컬 `reference/rhwp/samples`의 `.hwp` 536경로를 strict CFB·FileHeader 지원 플래그·Node raw DEFLATE·독립 JS 레코드 순회로 다시 조사했습니다. 430개 DocInfo가 조사 가능했고 106개는 CFB/스트림 거부 또는 암호화·배포 플래그로 제외됐습니다. 위 표의 태그 32 282건(전부 1,032바이트·레벨 1; 첫 DWORD 56은 279건, 60은 3건), 태그 96 230건(26바이트 168·30바이트 62; 전부 레벨 1), 슬롯 16 부재 147·존재 283·불일치 0이 모두 재현됐습니다. 이 조사는 제품 CFB reader와 테스트용 JS 레코드 순회를 사용하므로 독립 CFB 구현 전체와의 일치 주장은 아닙니다.
+
+같은 ReleaseSafe probe/CFB WASM의 `trackChangeEdges`·`trackChangeDocument`를 다시 실행해 합성 정상 64·거부 8,440, 실파일 변조 정상 4·세 경로 거부 51 및 오류 후 원본 복구를 확인했습니다. HWP↔HWPX 세 쌍의 태그 32 첫 DWORD와 XML `trackchageConfig/@flags`도 각각 56/56으로 재확인했습니다. 값 60의 의미·비트별 의미, 레코드 payload 해석, HWPX 변환 및 저장은 이번 결과로 입증되지 않습니다.
