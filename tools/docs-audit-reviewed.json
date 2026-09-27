@@ -6,7 +6,7 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "46cd9f1f796b0378dd6ba21e12e910b283e0f1bbba91bdd66a431f8d1c72dab4",
+      "sha256": "a3dcfac528eec4890cd65460c04e415ad8fa95f3375590ef901aebf4daccb7ba",
       "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope PNG ICC inspection PNG RGBA BCP47 syntax registry alpha2 history ICC IANA matching mluc selection mluc structure mluc Unicode ICC v2 Unicode v2 text tag payload dispatch tag table structure header identifiers v4 and v2 header numeric header verification ICC registry source lookup required tags overview presence table XYZ type XYZ tags curve type TRC tags parametric curve analytic forward TRC forward sampled forward sampled inverse sampled wide inverse gamma inverse wide gamma inverse TRC inverse and extended TRC inverse matrix TRC inverse matrix TRC model matrix TRC forward fraction matrix inverse fraction matrix TRC inverse wide linear target wide positive bounds normalized and extended root compare normalized and extended root locations clipped and extended power preimage whole and extended whole parametric preimage normalized and extended whole bounds normalized and extended attained F.1a whole and extended nearest normalized and extended full inverse topology segments jump trend domain partition power clipping power level root compare active root locations rational power order normalized power level wide power level normalized root order power range power nearest ordinate order extended ordinate order ordinate distance extended ordinate distance linear range parametric range rational range nearest linear preimage extended linear preimage chromatic adaptation matrix transform ICC foundation verification review, architecture pending, full Debug Zig test 2656 passed and ReleaseFast HWP5 audit 10 steps 8905855 checks, EMF ICM and three clipping region docs direct tests and 102 shared tests each mode"
     },
     "docs/bcp47-syntax.md": {
@@ -556,6 +556,22 @@
     "docs/emf-color-match-target.md": {
       "sha256": "70cb99b05915473f231ee79a0784b78047f81ea0de3237f84dc3e48e5c719378",
       "evidence": "2026-09-28 MS-EMF COLORMATCHTOTARGETW enums byte ranges current Zig parser and framing checked; Debug Safe Fast root COLORMATCHTOTARGETW 4 each and values 1 each; historical mutants and full audits not rerun, real EMF corpus zero"
+    },
+    "docs/emf-layout-mode.md": {
+      "sha256": "52f5d27d968097d75f4f85c99743fb6b67ec03a88782a378956b04c7b71ad34d",
+      "evidence": "2026-09-28 MS-EMF SETLAYOUT flags and Win32 SetLayout combinations checked against current Zig parser and framing; Debug Safe Fast root SETLAYOUT 5 each; historic mutants and full audits not rerun, real EMF corpus zero"
+    },
+    "docs/emf-linked-ufis.md": {
+      "sha256": "dea5355057ee75a85f531723100f0a2dae98ee8ecf03443e583a6518f7578238",
+      "evidence": "2026-09-28 MS-EMF SETLINKEDUFIS count array Reserved and UniversalFontId checked against current Zig parser and framing; Debug Safe Fast root SETLINKEDUFIS 4 and UFI direct 2 each; historic mutants and full audits not rerun, real EMF corpus zero"
+    },
+    "docs/emf-force-ufi-mapping.md": {
+      "sha256": "46b527faf6b5323e85e93db4563bdd18137da9312a09d52a4d2e8c61d9fa0830",
+      "evidence": "2026-09-28 MS-EMF FORCEUFIMAPPING UniversalFontId checksum index checked against current Zig parser and framing; Debug Safe Fast root FORCEUFIMAPPING 4 and UFI direct 2 each; historic mutants and full audits not rerun, real EMF corpus zero"
+    },
+    "docs/emf-text-justification.md": {
+      "sha256": "69451e6e48a3e0b411a7b00ddcd1e168b5b54839215833f5d29892649dfb4b49",
+      "evidence": "2026-09-28 MS-EMF SETTEXTJUSTIFICATION signed fields and current Zig parser framing checked; Debug Safe Fast root text justification 4 each; historic mutants not rerun, real EMF corpus zero"
     },
     "docs/tiff-structure.md": {
       "sha256": "50b24eb78c9e9da7a610bb5faab9859448d79d2f9c4a2ab3c2d01584d6c12d97",

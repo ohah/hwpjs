@@ -19,6 +19,8 @@
 - 교정 후 최종 `audit`는 Debug, ReleaseSafe, ReleaseFast에서 각각 40/40 단계와 1,450/1,450 테스트를 통과했습니다.
 - 기존 HWP corpus에는 EMF 표본이 관측되지 않았으므로 실제 문서 font lookup 호환 완료를 주장하지 않습니다.
 
+2026-09-28 현행 재검증에서는 공식 [UniversalFontId 객체](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/34502dab-22b4-4855-b9b2-88f00a4a0c52)의 8바이트 구성과 SETLINKEDUFIS의 `count × 8` 배열 뒤 Reserved 8바이트를 현재 파서·framing에 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 루트 `SETLINKEDUFIS` 필터는 각 4/4, UFI 단독 테스트는 각 2/2개 통과했습니다. 같은 제품 코드의 전체 Debug 테스트 2,661/2,661개를 확인했지만, 위의 17개 변이·세 모드 전체 `audit`·실제 EMF 양성 HWP 파일은 재실행하지 않았습니다.
+
 ## 근거
 
 - Microsoft MS-EMF 2.2.27 `UniversalFontId Object`

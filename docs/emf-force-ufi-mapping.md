@@ -14,6 +14,8 @@
 - 세 모드 전체 audit는 각각 1,444/1,444 테스트를 통과했습니다.
 - 현재 재귀 HWP corpus에는 확인된 EMF 후보가 없으므로 실제 한글 생성기의 FORCEUFIMAPPING 표본 호환성을 주장하지 않습니다.
 
+2026-09-28 현행 재검증에서는 공식 FORCEUFIMAPPING record의 UFI 8바이트와 공통 UniversalFontId Checksum·Index 순서를 현재 파서·framing에 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 루트 `FORCEUFIMAPPING` 필터는 각 4/4, UFI 단독 테스트는 각 2/2개 통과했습니다. 같은 제품 코드의 전체 Debug 테스트 2,661/2,661개를 확인했지만, 위의 10개 변이·세 모드 전체 `audit`·실제 EMF 양성 HWP 파일은 재실행하지 않았습니다.
+
 ## 근거
 
 - Microsoft MS-EMF 2.3.11.2 `EMR_FORCEUFIMAPPING Record`

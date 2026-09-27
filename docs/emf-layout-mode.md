@@ -17,6 +17,8 @@
 - Win32 `SetLayout`도 인자를 두 값 중 하나 이상으로 정의하므로 두 비트를 합친 0x9를 유효하게 유지합니다. 교정 후 최종 `audit`는 Debug, ReleaseSafe, ReleaseFast에서 각각 40/40 단계와 1,450/1,450 테스트를 통과했습니다.
 - 기존 HWP corpus에는 EMF 표본이 관측되지 않았으므로 실제 문서 playback 호환 완료를 주장하지 않습니다.
 
+2026-09-28 현행 재검증에서는 MS-EMF의 세 정의값과 Win32 `SetLayout`의 복합 플래그 허용을 현재 비트마스크·framing에 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 루트 `SETLAYOUT` 필터는 각 5/5개 통과했습니다. 앞 묶음과 같은 제품 코드의 전체 Debug 테스트 2,661/2,661개도 통과했지만, 위의 13개 변이·세 모드 전체 `audit`·실제 EMF 양성 HWP 파일은 이번에 재실행하지 않았습니다.
+
 ## 근거
 
 - Microsoft MS-EMF 2.3.11.17 `EMR_SETLAYOUT Record`

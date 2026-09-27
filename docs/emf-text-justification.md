@@ -15,6 +15,8 @@
 - dispatch, prefix·선언 크기, 두 field의 offset·endianness·signed 보존, trailing view와 framing 연결의 11개 독립 변이를 Debug/ReleaseSafe/ReleaseFast에서 실행해 33/33 검출했습니다.
 - 기존 HWP corpus에는 EMF 표본이 관측되지 않았으므로 실제 문서 텍스트 배치 호환 완료를 주장하지 않습니다.
 
+2026-09-28 현행 재검증에서는 공식 [EMR_SETTEXTJUSTIFICATION](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/edbc2be0-1da0-45d6-9c05-677cbcaa2d47)의 signed 필드 두 개와 현재 파서·framing을 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 루트 `text justification` 필터는 각 4/4개 통과했습니다. 같은 제품 코드의 전체 Debug 테스트 2,661/2,661개를 확인했지만, 위의 11개 변이·실제 EMF 양성 HWP 파일은 재실행하지 않았습니다.
+
 ## 근거
 
 - Microsoft MS-EMF 2.3.11.27 `EMR_SETTEXTJUSTIFICATION Record`
