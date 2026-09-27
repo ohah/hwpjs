@@ -15,3 +15,5 @@
 XML 공통 테스트는 참조 문자와 CDATA의 차이, literal CRLF와 numeric CR, 빈 CDATA, UTF-16LE/BE의 CDATA 종결 위치, 정확한 UTF-8 바이트 한도와 모든 할당 실패를 검사합니다. 차트 테스트는 분할된 본문·CDATA의 값 길이, 비숫자 `ST_Xstring` 허용, 빈 leaf의 별도 계수, leaf·문서 총량의 정확/부족 경계, 여러 차트 파트 간 총량 공유 및 실패 후 소유권 해제를 검사합니다. 이 계약은 [XML 문서 구조](xml-document.md)의 파싱 검증을 재구현하지 않습니다.
 
 차트 텍스트 관측 커밋 `af88998e` 당시 기본 `zig build test --summary all`은 5/5 단계·2,137/2,137 테스트, HWPX ReleaseFast는 112/112 테스트를 통과했습니다. Debug·ReleaseSafe·ReleaseFast `zig build audit --summary all`은 각각 40/40 단계·2,176/2,176 테스트 통과했습니다. ReleaseSafe 제품 빌드와 기존 JS 비교는 5/5·8/8 단계 통과했습니다. 위 선택 실파일 조사와 독립 oracle도 같은 텍스트 합계·최댓값을 재확인했습니다. 이 수치는 전체 문서 의미 검증이나 무손실 편집·저장을 증명하지 않습니다.
+
+2026-09-28 재검증: 현재 차트 캐시·수식의 `onContent` 경로와 공통 XML 본문 이벤트를 대조했습니다. `HWPX chart` 집중 테스트는 Debug·ReleaseSafe·ReleaseFast 각 43/43개, `XML content visitor`는 각 4/4개 통과했습니다. ReleaseFast 제품 실파일 조사 1/1과 독립 Python ZIP/XML 조사가 값 2,296개·12,374바이트·최대 21바이트, 수식 736개·10,540바이트·최대 17바이트에서 일치했습니다. oracle은 모든 차트 멤버의 원문 집계이며 도달성·Xstring 해독·수식 의미 검사는 아닙니다. 과거 전체 audit는 이번에 재실행하지 않았습니다.

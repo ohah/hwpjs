@@ -19,3 +19,5 @@ section의 `p/run/chart`와 `p/run/switch/case|default/chart`를 검사합니다
 적대적 할당자 테스트에서는 `Document`를 만든 할당자와 검사 보고서의 할당자를 다르게 주자 기존 `document_xml.read`의 ZIP 해제 버퍼를 잘못된 할당자로 반환해 DebugAllocator가 실제로 중단됐습니다. `Archive.decode`가 반환한 버퍼는 `archive.allocator`가 소유한다는 규칙을 HWPX XML 소비자 전반에 적용했고, 차트 검사와 기존 문서 검사 API를 두 할당자로 다시 실행해 양쪽 할당량이 0으로 돌아오는 것을 확인했습니다. 이 변경은 차트 payload의 의미 검증을 뜻하지 않습니다.
 
 차트 경로·XML 경계 커밋 `6d45fe96` 당시 기본 `zig build test --summary all`은 5/5 단계·2,112/2,112 테스트, HWPX 전용 ReleaseFast는 90/90 테스트를 통과했습니다. Debug·ReleaseSafe·ReleaseFast `zig build audit --summary all`은 각각 40/40 단계·2,151/2,151 테스트 통과했습니다. 이후 추가한 캐시 구조의 현재 검증 결과는 [차트 캐시 문서](hwpx-chart-cache.md)가 소유합니다. 전체 HWPX 의미·편집·저장 검증을 통과했다는 뜻은 아닙니다.
+
+2026-09-28 재검증: 현재 `chart_reference_scan.zig`·`chart_parts.zig`의 정확한 ZIP 경로 선택·중복 해제·보고서 소유권을 한컴 고정 리비전 모델의 `chartIDRef` 읽기와 대조했습니다. `HWPX chart` 집중 테스트는 Debug·ReleaseSafe·ReleaseFast 각 43/43개 통과했습니다. ReleaseFast 제품 실파일 조사 1/1에서 수용 476개·section 544개·참조/해결/고유 차트 각 93개와 미분류·경로 누락 0개를 재확인했습니다. 독립 Python 차트 조사는 차트 멤버 93개를 확인했지만 section 도달성의 독립 증명은 아니며, 과거 전체 audit는 이번에 재실행하지 않았습니다.

@@ -23,3 +23,5 @@
 최종 소스에서 차트 전용 테스트 43개가 ReleaseSafe·ReleaseFast에서 각각 통과했고, 선택 실파일 476개/고유 차트 93개의 제품 조사도 통과했습니다. 서로 다른 두 차트의 레벨 누적 한도와 다중 레벨 뒤 오류의 정상 할당 해제를 별도 반례로 확인했습니다.
 
 전체 Debug `zig build test --summary all`은 2,379/2,379개, ReleaseSafe 전체 audit와 제품 빌드·JS 비교 47/47도 통과했습니다. 이 결과는 기존 차트 회귀와 다단계 합성 입력을 포함하지만 실제 다단계 차트의 표시·편집·저장 동치는 포함하지 않습니다.
+
+2026-09-28 재검증: 현재 `chart_cache.zig`·공통 namespace·차트 Resolver의 분리와 Open XML SDK 고정 스키마의 `ptCount`·`lvl` 순서를 대조했습니다. `HWPX chart` 집중 테스트는 Debug·ReleaseSafe·ReleaseFast 각 43/43개 통과했습니다. ReleaseFast 제품 실파일 조사 1/1에서 수용 476개·차트 93개·캐시 736개·리터럴 16개·포인트 2,296개·구조 진단 0개를 재확인했습니다. 독립 Python ZIP/XML 조사의 93개 차트에서 다단계 캐시·레벨·포인트는 모두 0개였습니다. 과거 전체 audit는 재실행하지 않았으며, 다단계 양성 실파일의 동치는 여전히 미검증입니다.
