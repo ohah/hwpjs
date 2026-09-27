@@ -15,3 +15,5 @@ hash-pinned `reference/rhwp/samples/issue5724/2689441_wmf_contents_ole.hwp`의 `
 실표본 수치는 독립 Node 순회와 Zig 공개 API 결과를 정확히 대조한다. 합성 검증은 두 슬롯 생성, index 1 선택, index 0 삭제, 새 생성의 index 0 재사용과 dead 선택·dead 삭제·테이블 초과를 구분한다. framing 성공을 객체 payload나 렌더링 완료로 세지 않는다.
 
 적대적 검증은 (1) pen 생성 분류 제거, (2) 최저 슬롯 대신 높은 슬롯부터 배정, (3) dead 선택 허용, (4) 삭제 후 슬롯 미반환, (5) 선언 슬롯 수를 bitset WORD 경계로 반올림하는 다섯 변이를 주입했다. Debug·ReleaseSafe·ReleaseFast의 유효 15회 모두 실제 표본 또는 공개 API 합성 계약이 검출했고 각 변이는 원복했다. 이 과정에서 bitset `capacity()`를 명세 슬롯 수로 오인하는 실제 초기 결함과, record용 synthetic helper 인자를 객체 슬롯으로 오해한 테스트 결함도 수정했다.
+
+2026-09-27 재검증: 공식 Object Table의 최저 빈 인덱스·삭제 후 재사용 규칙과 현재 `objects.zig`의 7종 생성/3종 선택/삭제 분기, 실파일 fixture의 197/680/192·peak 9·final 5 단언을 대조했다. 세 빌드 모드의 WMF 집중 테스트는 각각 48/48, ReleaseFast 고정 실파일 감사는 8/8 통과했다. 15회 변이와 별도 독립 Node 전수 순회는 이번에 재실행하지 않은 과거 기록이다. 이 모듈은 종류별 선택 적합성이나 playback 결과를 검증하지 않는다.

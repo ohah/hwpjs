@@ -4,7 +4,7 @@
 
 `src/image/wmf/header.zig`는 22바이트 META_PLACEABLE과 바로 뒤 18바이트 META_HEADER를 읽으며, [EMF public comment](emf-public-comments.md)가 제공하는 Placeable 없는 표준 META_HEADER 진입점도 같은 필드 파서를 재사용한다. `src/image/wmf/records.zig`는 두 헤더 형식 뒤의 generic META_RECORD DWORD 크기와 WORD 함수, 최대 record 크기, 종단 META_EOF를 검증한다. Microsoft [MS-WMF META_PLACEABLE](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/828e1864-7fe7-42d8-ab0a-1de161b32f27)의 key `0x9AC6CDD7`, reserved 0, 앞선 10 WORD의 XOR checksum과 disk형 handle 0을 검사한다. bounding box의 signed 좌표, inch, handle과 checksum 원값을 보존하며 좌표 방향이나 inch 1440을 강제하지 않는다.
 
-[MS-WMF META_HEADER](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/d169108a-e3fe-436a-bb44-bea61a46ce56)의 type 1/2, header size 9 WORD, version 0x0100/0x0300을 검사한다. object 수, 최대 record WORD 수와 권고값인 number of members는 원값으로 보존한다. record framing 단계는 선언 최대값과 EOF까지 검증하지만 객체 인덱스·그리기 명령 의미는 아직 검증하지 않는다.
+[MS-WMF META_HEADER](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/d169108a-e3fe-436a-bb44-bea61a46ce56)의 type 1/2, header size 9 WORD, version 0x0100/0x0300을 검사한다. object 수, 최대 record WORD 수와 권고값인 number of members는 원값으로 보존한다. 이 헤더·generic record framing 모듈은 선언 최대값과 EOF까지 검증하고, 객체 인덱스·개별 명령 필드 검증은 별도 모듈에 맡긴다.
 
 ## 크기 정책과 실제 한글 편차
 
@@ -22,4 +22,6 @@
 
 record 파트는 (1) 최소 크기를 3에서 2 WORD로 완화, (2) 함수 WORD를 잘못된 오프셋에서 읽기, (3) EOF 뒤 record data 허용, (4) trailing zero 내용 검사 우회, (5) 선언 `MaxRecord` 대조 우회의 다섯 변이를 같은 세 모드에서 주입했다. 최초 최소 크기 변이는 전체 단위 테스트만 잡고 전용 감사가 놓치는 위치 편향을 드러냈다. 공개 API 합성 계약을 전용 감사에도 추가한 뒤 재실행한 유효 15회는 모두 검출됐고 코드는 원복했다.
 
-이 파트는 WMF 헤더와 generic record framing, 한 실제 HWP envelope의 분류 근거다. 후속 [Object Table 수명 검증](wmf-object-table.md)은 생성·선택·삭제 인덱스를 검사한다. 개별 객체 payload와 그리기 record 파라미터, EMF/BMP/수식 `Contents`, `OlePres000`, SVG/픽셀 렌더링과 제품 JS API 연결은 남아 있다. 구조 검증 성공을 안전한 렌더링이나 전체 WMF/HWP 지원으로 세지 않는다.
+이 파트는 WMF 헤더와 generic record framing, 한 실제 HWP envelope의 분류 근거다. 별도 [Object Table 수명 검증](wmf-object-table.md)은 생성·선택·삭제 인덱스를 검사하고, [pen·brush·font](wmf-create-payloads.md) 및 [상태](wmf-state-records.md)·[도형](wmf-drawing-records.md)·[텍스트·escape](wmf-text-escape-records.md)는 각 문서 범위에서 명령 필드를 검사한다. 그 밖의 객체 payload, EMF/BMP/수식 `Contents`, `OlePres000`, SVG/픽셀 렌더링과 제품 JS API 연결은 이 검증의 완료 범위가 아니다. 구조 검증 성공을 안전한 렌더링이나 전체 WMF/HWP 지원으로 세지 않는다.
+
+2026-09-27 재검증: 공식 META_PLACEABLE·META_HEADER와 현재 `header.zig`·`records.zig`, 고정 실파일 fixture 및 공개 API 감사의 헤더/record 단언을 대조했다. `zig test src/root.zig -O <모드> --test-filter WMF`는 Debug·ReleaseSafe·ReleaseFast 각각 48/48, `zig build wmf-contents-audit -Doptimize=ReleaseFast --summary all`은 8/8, 독립 framing Node 테스트는 1/1 통과했다. 위 변이 30회와 584개 HWP 전체 재조사는 이번에 재실행하지 않았으므로 과거 검증 기록이다.

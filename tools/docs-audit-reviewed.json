@@ -6,7 +6,7 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "919fe52825bb4169fa0dd27988a84ab6e8b6e2aa4cd792ac6323f6e80111fd4d",
+      "sha256": "cd1afa22706950172941ef87b53a03634682675537b2bb49f6eb252b802453ed",
       "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope PNG ICC inspection PNG RGBA BCP47 syntax registry alpha2 history ICC IANA matching mluc selection mluc structure mluc Unicode ICC v2 Unicode v2 text tag payload dispatch tag table structure header identifiers v4 and v2 header numeric header verification ICC registry source lookup required tags overview presence table XYZ type XYZ tags curve type TRC tags parametric curve analytic forward TRC forward sampled forward sampled inverse sampled wide inverse gamma inverse wide gamma inverse TRC inverse and extended TRC inverse matrix TRC inverse matrix TRC model matrix TRC forward fraction matrix inverse fraction matrix TRC inverse wide linear target wide positive bounds normalized and extended root compare normalized and extended root locations clipped and extended power preimage whole and extended whole parametric preimage normalized and extended whole bounds normalized and extended attained F.1a whole and extended nearest normalized and extended full inverse topology segments jump trend domain partition power clipping power level root compare active root locations rational power order normalized power level wide power level normalized root order power range power nearest ordinate order extended ordinate order ordinate distance extended ordinate distance linear range parametric range rational range nearest linear preimage extended linear preimage chromatic adaptation matrix transform ICC foundation verification review, architecture pending, full Debug Zig test 2656 passed and ReleaseFast HWP5 audit 10 steps 8905855 checks"
     },
     "docs/bcp47-syntax.md": {
@@ -420,6 +420,18 @@
     "docs/png-structure.md": {
       "sha256": "3cee196713a5fd49fc361bbe6cc9f8fc3028b2a1e5d71b27a89918b81c87bb72",
       "evidence": "2026-09-27 W3C PNG Third Edition current Zig chunks header structure, Debug Safe Fast four focused filters 2 each, local ReleaseSafe probe CFB JS oracle 65 accept 424 reject including 32 real PrvImage PNG; historical full audit not rerun"
+    },
+    "docs/wmf-header.md": {
+      "sha256": "3eaf188068a56a34607a6264704e4b025c3b109a861f959184b2eef98abc4c3b",
+      "evidence": "2026-09-27 MS-WMF placeable and meta header current Zig header records; Debug Safe Fast WMF focus 48 each, ReleaseFast pinned HWP OLE audit 8, Node framing 1; historic mutations and 584 HWP census not rerun"
+    },
+    "docs/wmf-object-table.md": {
+      "sha256": "1d7094f407e342844ed097ea79c885dabc4c21dab449ab9901770ded0391ba6e",
+      "evidence": "2026-09-27 MS-WMF Object Table lowest free index and reuse current Zig objects 7 create 3 select delete, Debug Safe Fast WMF focus 48 each, ReleaseFast pinned HWP OLE audit 8; historic 15 mutations and independent Node census not rerun"
+    },
+    "docs/wmf-create-payloads.md": {
+      "sha256": "997b24ffc25f751abfb47c38411a597982075850cc2ea820867090e15e77ce81",
+      "evidence": "2026-09-27 MS-WMF pen brush font current Zig exact payload and ColorRef policy, Debug Safe Fast WMF focus 48 each, ReleaseFast pinned HWP OLE audit 8; historic 15 mutations and manual face bytes tally not rerun"
     },
     "docs/tiff-structure.md": {
       "sha256": "50b24eb78c9e9da7a610bb5faab9859448d79d2f9c4a2ab3c2d01584d6c12d97",

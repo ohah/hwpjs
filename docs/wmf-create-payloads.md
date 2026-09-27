@@ -17,3 +17,5 @@ hash-pinned WMF 표본에는 pen 128개, brush 43개, font 26개가 있으며 �
 실표본 감사는 세 종류 전체가 파싱되는지와 위 집계, strict 거부를 고정한다. 합성 감사는 signed pen 폭, ColorRef 채널/정책, brush hatch, font Boolean/NUL과 정확한 function/record 크기를 검사한다. charset과 face name 일치, 글꼴 대체, 객체 종류별 선택 적합성, bitmap/palette/region 생성 payload 및 실제 렌더링은 아직 완료로 세지 않는다.
 
 적대적 검증은 (1) ColorRef strict reserved 검사 우회, (2) pen width x를 y 오프셋에서 읽기, (3) hatched brush 범위 검사 우회, (4) 첫 font Boolean을 검사 범위에서 제외, (5) NUL 없는 32바이트 face를 허용하는 다섯 변이를 주입했다. Debug·ReleaseSafe·ReleaseFast의 15회 모두 실제 표본 또는 공개 API 합성 감사가 검출했으며 각 변이는 원복했다.
+
+2026-09-27 재검증: 공식 생성 레코드 링크와 현재 `pen.zig`·`brush.zig`·`font.zig`·`color_ref.zig`·`create_payloads.zig`의 크기·필드·명시적 reserved 정책을 대조했다. 세 모드 WMF 집중 테스트는 각각 48/48, ReleaseFast 실파일 감사 8/8은 pen 128·brush 43·font 26·reserved 비영 75와 strict 거부를 재확인했다. 15회 변이와 face 원문에 대한 별도 수동 재집계는 이번에 재실행하지 않은 과거 기록이다.
