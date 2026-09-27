@@ -8,7 +8,7 @@
 
 BeginGroup은 RectL, `nDescription`, 정확히 그 수만큼의 UTF-16LE code unit을 읽습니다. 0이면 설명이 부재하고, 0보다 크면 유효한 UTF-16이며 마지막 하나만 NUL이어야 합니다. EndGroup은 추가 parameter를 허용하지 않습니다. framing의 별도 상태는 중첩 깊이·시작/끝 수·최대 깊이를 세고, 선행 시작 없는 끝과 EOF까지 닫히지 않은 그룹을 거부합니다.
 
-MultiFormats는 RectL, 형식 수, 16바이트 `EmrFormat` 배열과 뒤의 FormatData를 분리합니다. 각 항목은 Signature, Version, SizeData, offData를 보존합니다. 공식 Enhanced Metafile `0x464D4520`과 EPS `0x46535045`를 분류하고 EPS일 때만 Version 1을 강제합니다. 그 밖의 signature는 raw 값과 데이터를 보존하고 unknown으로 집계합니다. 이는 LibreOffice가 Microsoft Office의 관측 `PDF ` signature/Version 0을 별도로 지원하는 호환성 사례를 구조 파서가 손실하지 않기 위한 것이며, PDF 해석 지원을 뜻하지 않습니다. offData는 CommentIdentifier 시작 기준이고 4바이트 정렬이어야 합니다. 배열 순서대로 각 범위가 정확히 이어지고 SizeData 합이 전체 FormatData 크기와 같아야 합니다. 반환 iterator와 데이터 slice는 입력을 빌리며 형식 수만큼 할당하지 않습니다.
+MultiFormats는 RectL, 형식 수, 16바이트 `EmrFormat` 배열과 뒤의 FormatData를 분리합니다. 각 항목은 Signature, Version, SizeData, offData를 보존합니다. 공식 Enhanced Metafile `0x464D4520`과 EPS `0x46535045`를 분류하고 EPS일 때만 Version 1을 강제합니다. 그 밖의 signature는 raw 값과 데이터를 보존하고 unknown으로 집계합니다. 이는 LibreOffice가 Microsoft Office의 관측 `PDF ` signature/Version 0을 별도로 지원하는 호환성 사례를 구조 파서가 손실하지 않기 위한 것이며, PDF 해석 지원을 뜻하지 않습니다. offData는 CommentIdentifier 시작 기준이고 4바이트 정렬이어야 합니다. 현재 구현은 descriptor 배열 순서대로 데이터 범위가 정확히 이어지고 SizeData 합이 전체 FormatData 크기와 같도록 요구합니다. 공식 설명은 descriptor의 선호 순서와 각 데이터 offset·크기는 정의하지만 데이터 블록도 같은 순서로 연속 배치해야 한다고 명시하지 않으므로, 이 부분은 명세 자체의 필수 조건이 아니라 구현의 더 엄격한 정책입니다. 다른 배치를 쓰는 실파일과의 호환성은 미검증입니다. 반환 iterator와 데이터 slice는 입력을 빌리며 형식 수만큼 할당하지 않습니다.
 
 Windows Metafile은 외부 Version 0x0100/0x0300, Reserved 0, Checksum 원값, Flags 0, WinMetafileSize와 정확한 buffer를 검사합니다. buffer는 Placeable 확장이 아닌 18바이트 표준 META_HEADER로 시작해야 하며 기존 WMF generic record framing을 재사용해 유일한 META_EOF와 MaxRecord를 검증합니다. 공식 문서는 Checksum의 알고리즘이나 MUST 검증 규칙을 정의하지 않으므로 값을 보존하지만 임의 알고리즘을 만들어 일치 검증하지 않습니다. 외부 Version과 내부 META_HEADER Version의 동일성도 명세가 요구하지 않아 각각 보존합니다.
 
@@ -32,4 +32,6 @@ Windows Metafile은 외부 Version 0x0100/0x0300, Reserved 0, Checksum 원값, F
 
 최종 세 모드 전체 `audit`는 각각 40/40 단계와 1484/1484 테스트가 통과했습니다. 이 중 공통 native test는 1445개이고 별도 차트 31개, WMF 8개가 추가됩니다. CFB 12,000회 변이 trap 0, 584개 HWP의 2,167개 BinData 조사, Zig format·JS·문서 링크 검사도 같은 audit에 포함됐습니다.
 
-MultiFormats 안의 Enhanced EMF/EPS 내용을 재귀적으로 해석하거나 EPS를 실행하지 않습니다. Windows Metafile의 개별 record payload·Object Table·렌더링도 이번 계층의 완료 범위가 아닙니다. EMF+와 EMFSPOOL comment stream은 계속 별도 후속 파트이며, HWP corpus에서 EMF signature 표본이 발견되지 않았으므로 실제 HWP public comment 동등성을 주장하지 않습니다.
+2026-09-27 재검증에서는 루트 기준 `EMF` 필터 각 636/636, `public` 필터 각 18/18이 Debug·ReleaseSafe·ReleaseFast에서 통과했습니다. 이 넓은 필터에는 다른 EMF 하위 테스트도 포함되므로 public comment 전용 테스트 수로 읽지 않습니다. 기존 33회 변이와 세 모드 전체 `audit` 기록은 이번에 재실행하지 않았습니다.
+
+MultiFormats 안의 Enhanced EMF/EPS 내용을 재귀적으로 해석하거나 EPS를 실행하지 않습니다. Windows Metafile의 개별 record payload·Object Table·렌더링도 이번 계층의 완료 범위가 아닙니다. EMF+ record stream은 [별도 모듈](emf-plus-record-stream.md)에 구현되어 있지만 EMFSPOOL stream은 미구현입니다. HWP corpus에서 EMF signature 표본이 발견되지 않았으므로 실제 HWP public comment 동등성을 주장하지 않습니다.

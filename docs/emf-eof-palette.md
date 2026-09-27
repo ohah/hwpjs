@@ -28,3 +28,5 @@ entry 수가 0이면 `offPalEntries`는 무시하며 16바이트 prefix와 마�
 - palette 조립기에서 `eof.parse`를 우회
 
 실제 HWP corpus 584개에는 EMF가 0개이므로 실생성기 호환성 근거로 확대하지 않는다. 최종 `zig build audit --summary all`은 Debug·ReleaseSafe·ReleaseFast 모두 40/40 단계와 1,357/1,357 테스트를 통과했다. 이 중 native test는 1,318개이고 HWP5 감사에서 8,905,827개 조건을 검사했다.
+
+2026-09-27 재검증에서는 루트 기준 `EMF` 필터 각 636/636, `EOF` 필터 각 16/16이 Debug·ReleaseSafe·ReleaseFast에서 통과했다. 넓은 필터에는 다른 EMF/EMF+ 테스트도 포함되므로 EOF 팔레트 전용 테스트 수가 아니다. 위 10종 변형과 세 모드 전체 `audit`의 과거 수치는 이번에 재실행하지 않았으며, EMF 양성 HWP 실파일도 확보하지 못했다.
