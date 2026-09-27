@@ -37,3 +37,5 @@ P  = (b0*start + b1*control + b2*end) / d
 적대적 검증은 parameter의 유한성·하한·상한, weight의 유한성·0 거부·상한, 두 endpoint fast path, `1-t`, start/control/end basis, control의 2와 weight, homogeneous denominator, x end·y control 역할, x denominator 나눗셈, metadata 비관여라는 18개 의미 변이를 변이별 새 local/global cache에서 Debug·ReleaseSafe·ReleaseFast로 실행했습니다. 54/54회가 모두 assertion 실패로 검출됐고 생존·컴파일 오류·panic·무변이는 없습니다. 캠페인은 `/tmp/hwpjs-arc-evaluation-mutants.82KTxC`에 있습니다.
 
 최종 전체 감사는 Debug·ReleaseSafe·ReleaseFast 각각 `40/40` 단계와 `1,999/1,999` 테스트를 통과했습니다. 각 모드에서 HWP5 감사 `8,905,827` checks·imports 0과 CFB 변이 `12,000`건·traps 0을 다시 확인했습니다. 로그는 `/tmp/hwpjs-arc-segment-evaluation-final-{Debug,ReleaseSafe,ReleaseFast}-audit.log`에 있습니다.
+
+위 변이 캠페인·전체 감사는 작성 당시의 이력이며, 기재된 `/tmp` 자료는 2026-09-28 현재 남아 있지 않습니다. 이번 재검증에서는 현재 소스의 위 연산·경계와 대조하고 `zig test src/root.zig -O {Debug,ReleaseSafe,ReleaseFast} --test-filter 'EMF+ Arc rational quadratic'`을 각 5/5로 통과했습니다. 이전의 변이·전체 `audit`를 재실행한 결과는 아닙니다.

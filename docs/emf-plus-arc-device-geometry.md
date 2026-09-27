@@ -30,3 +30,5 @@ sweep             -> clamp(sweep, -360, 360)
 첫 캠페인의 modulo 180 변이 3회는 450°와 360° fixture만으로 구별되지 않아 생존했으므로 제외했습니다. 270° 반례를 추가한 새 복사본에서 3/3회를 검출했습니다. 세 record 연결 제거의 최초 9회는 pointless discard 컴파일 오류였으므로 제외하고, 원래 계산을 실제로 소비한 뒤 결과만 null로 만드는 변이로 교체해 9/9회를 검출했습니다. 원 캠페인은 `/tmp/hwpjs-arc-device-geometry-mutants.RZ0qNJ`, 교정 캠페인은 `/tmp/hwpjs-arc-device-geometry-corrected.n33Vrz`에 있습니다.
 
 제품 트리를 고정한 뒤 전체 `audit`를 Debug·ReleaseSafe·ReleaseFast 순서로 실행했습니다. 세 모드 모두 40/40 단계와 1,986/1,986 테스트(native 1,947, chart ownership 31, WMF Contents 8)를 통과했습니다. 각 모드의 corpus 검사는 8,905,827 checks, WASM imports 0이었고 strict CFB mutation sweep는 12,000 mutations, traps 0이었습니다. 로그는 `/tmp/hwpjs-arc-device-geometry-final-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.
+
+위 변이·전체 `audit` 수치는 작성 당시의 이력이며 기재된 `/tmp` 캠페인·로그는 2026-09-28 현재 남아 있지 않습니다. 이번에는 공식 DrawPie 레코드·GDI+ AddArc 설명과 현재 각도 해석·공용 builder·세 record의 위임을 다시 대조했고, root `EMF+` 테스트를 Debug·ReleaseSafe·ReleaseFast에서 각 560/560 통과했습니다. 과거 변이·전체 `audit`는 재실행하지 않았습니다.

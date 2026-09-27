@@ -334,7 +334,7 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "85055246db86d648d0430303f82d8ca3e8ce887114a006eeafcf77f09c4a7a54",
+      "sha256": "1af9ce51124a6e2e2d14799076b222ea899acd3f83f0aa51f19863bf68e94f7b",
       "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope PNG ICC inspection PNG RGBA BCP47 syntax registry alpha2 history ICC IANA matching mluc selection mluc structure mluc Unicode ICC v2 Unicode v2 text tag payload dispatch tag table structure header identifiers v4 and v2 header numeric header verification ICC registry source lookup required tags overview presence table XYZ type XYZ tags curve type TRC tags parametric curve analytic forward TRC forward sampled forward sampled inverse sampled wide inverse gamma inverse wide gamma inverse TRC inverse and extended TRC inverse matrix TRC inverse matrix TRC model matrix TRC forward fraction matrix inverse fraction matrix TRC inverse wide linear target wide positive bounds normalized and extended root compare normalized and extended root locations clipped and extended power preimage whole and extended whole parametric preimage normalized and extended whole bounds normalized and extended attained F.1a whole and extended nearest normalized and extended full inverse topology segments jump trend domain partition power clipping power level root compare active root locations rational power order normalized power level wide power level normalized root order power range power nearest ordinate order extended ordinate order ordinate distance extended ordinate distance linear range parametric range rational range nearest linear preimage extended linear preimage chromatic adaptation matrix transform ICC foundation verification review, architecture pending, full Debug Zig test 2656 passed and ReleaseFast HWP5 audit 10 steps 8905855 checks, EMF ICM and three clipping region docs direct tests and 102 shared tests each mode"
     },
     "docs/bcp47-syntax.md": {
@@ -1344,6 +1344,22 @@
     "docs/project-rules.md": {
       "sha256": "30bccda49f70036d38bb609522d5826b101301f9c88cd07ecc3a2c9138a4a354",
       "evidence": "2026-09-27 module and spec paths, document SSOT, validation and main-push policy checked"
+    },
+    "docs/emf-plus-arc-segment-evaluation.md": {
+      "sha256": "638f445a21bdaeda2fdacb7c672fccf253a680ce4b162c14c9530ed3b13c5e78",
+      "evidence": "2026-09-28 current rational quadratic evaluator and endpoint bit path against generated conic and manual fixture; Debug Safe Fast direct Arc evaluation 5 each and EMF root 560 each; old mutation and audit not rerun"
+    },
+    "docs/emf-plus-arc-segment-flattening.md": {
+      "sha256": "080f495596b33af178ff0f90e165031533e0de542e15c2e087241b4baba2213e",
+      "evidence": "2026-09-28 official MS-EMFPLUS DrawArc record and current homogeneous subdivision, f64 chord metric, f32 output limit; Debug Safe Fast EMF root 560 each, ReleaseSafe direct flattening 5; historic mutation and audit not rerun"
+    },
+    "docs/emf-plus-arc-device-geometry.md": {
+      "sha256": "dbc6fea79431ef60e12ab857c4b91a5148f0bc6e7e6f34ea8f93185a0babb0d6",
+      "evidence": "2026-09-28 official MS-EMFPLUS DrawPie and GDI+ AddArc against angle resolver, affine builder, DrawArc DrawPie FillPie delegation; Debug Safe Fast EMF root 560 each, ReleaseSafe direct geometry 3 angles 3 and three record filters 4 each; historic mutation and audit not rerun"
+    },
+    "docs/emf-plus-ellipse-device-basis.md": {
+      "sha256": "9cd4d225da0f0c8dafebdab9953a4209736559b843e18e36f8df0f18ba5540c0",
+      "evidence": "2026-09-28 official GDI+ DrawEllipse and transform docs against current corner basis and DrawEllipse FillEllipse delegation; Debug Safe Fast EMF root 560 each, ReleaseSafe direct basis 3 and two record filters 4 each; historic mutation and audit not rerun"
     }
   }
 }

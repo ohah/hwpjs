@@ -27,3 +27,5 @@ center            = upper_left + horizontal_radius + vertical_radius
 적대적 검증은 두 반축의 x/y source 교환, 각 성분의 1/2 배율 제거, 중심의 네 반축 성분 누락, 음수 horizontal/vertical 축 절댓값화, DrawEllipse·FillEllipse 공개 연결 제거라는 16개 의미 변이를 변이별 새 local/global cache에서 Debug·ReleaseSafe·ReleaseFast로 실행했습니다. 48/48회가 모두 assertion 실패로 검출됐고 생존·컴파일 오류·panic·timeout은 없습니다. 로그와 source diff는 `/tmp/hwpjs-ellipse-device-basis-mutants.j2QIZJ`에 있습니다.
 
 제품 트리를 고정한 뒤 전체 `audit`를 Debug·ReleaseSafe·ReleaseFast 순서로 실행했습니다. 세 모드 모두 40/40 단계와 1,982/1,982 테스트(native 1,943, chart ownership 31, WMF Contents 8)를 통과했습니다. 각 모드의 corpus 검사는 8,905,827 checks, WASM imports 0이었고 strict CFB mutation sweep는 12,000 mutations, traps 0이었습니다. 로그는 `/tmp/hwpjs-ellipse-device-basis-final-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.
+
+위 변이·전체 `audit` 수치는 작성 당시의 이력이며 기재된 `/tmp` 캠페인·로그는 2026-09-28 현재 남아 있지 않습니다. 이번에는 공식 GDI+ ellipse·변환 설명과 현재 corner→basis·두 record의 위임을 대조했고, root `EMF+` 테스트를 Debug·ReleaseSafe·ReleaseFast에서 각 560/560 통과했습니다. 과거 변이·전체 `audit`는 재실행하지 않았습니다.
