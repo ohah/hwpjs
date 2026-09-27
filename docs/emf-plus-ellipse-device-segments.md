@@ -25,3 +25,5 @@ DrawEllipse와 FillEllipse의 `deviceSegments()`는 기존 `deviceEllipse()` 결
 적대적 검증은 시작각 변경, 완전 회전을 359도로 축소, 두 affine radius 교환, 첫 segment 선소비, DrawEllipse·FillEllipse 공개 helper의 radius 교환이라는 6개 의미 변이를 변이별 새 local/global cache에서 Debug·ReleaseSafe·ReleaseFast로 실행했습니다. 최종 18/18회가 모두 assertion 실패로 검출됐고 생존·컴파일 오류·panic은 없습니다. 조기 종료를 `.?` panic으로 검출하던 초기 테스트는 명시적 `TestExpectedEllipseSegment` 오류로 교정한 뒤 전체 캠페인을 새 복사본에서 다시 실행했습니다. 최종 캠페인은 `/tmp/hwpjs-ellipse-segment-mutants.mM5ysM`에 있습니다.
 
 최종 전체 감사는 Debug·ReleaseSafe·ReleaseFast 각각 `40/40` 단계와 `2,001/2,001` 테스트(native 1,962, chart ownership 31, WMF Contents 8)를 통과했습니다. 각 모드에서 HWP5 감사 `8,905,827` checks·imports 0과 CFB 변이 `12,000`건·traps 0을 다시 확인했습니다. 로그는 `/tmp/hwpjs-ellipse-device-segments-final-{Debug,ReleaseSafe,ReleaseFast}-audit.log`에 있습니다.
+
+위 변이·전체 감사 수치는 작성 당시의 이력입니다. 기재된 `/tmp` 캠페인·로그는 2026-09-28 현재 남아 있지 않습니다. 이번에는 현재 정규 Arc 위임·네 조각·두 ellipse record 위임을 대조하고 Debug·ReleaseSafe·ReleaseFast의 root `EMF+` 필터 각 560/560, ReleaseSafe의 ellipse segment 직접 필터 3/3을 통과했습니다. 과거 변이·전체 `audit`는 재실행하지 않았습니다.

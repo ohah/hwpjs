@@ -31,3 +31,5 @@ DrawArc의 `deviceEndpoints()`와 DrawPie·FillPie의 `deviceRadialEdges()`는 �
 최초 스크립트의 3회는 zsh scalar를 변이 배열로 잘못 사용해 소스가 바뀌지 않았으므로 캠페인에서 제외했습니다. 교정한 전체 캠페인의 DrawArc 연결 변이 3회는 기존 공개 fixture가 `-720`을 `-360`으로 clamp한 완전 회전이라 start/end 단절을 구별하지 못해 생존했습니다. 비완전 `-90` sweep 반례를 추가한 뒤 독립 재실행 3/3회가 assertion으로 검출됐습니다. 교정 전체 캠페인은 `/tmp/hwpjs-arc-points-mutants-corrected.J15jWG`, DrawArc 재검증은 `/tmp/hwpjs-arc-points-draw-arc-corrected.M4tl9e`에 있습니다.
 
 최종 제품 트리의 전체 `audit`를 Debug·ReleaseSafe·ReleaseFast 순서로 실행했습니다. 세 모드 모두 40/40 단계와 1,989/1,989 테스트(native 1,950, chart ownership 31, WMF Contents 8)를 통과했습니다. 각 모드의 corpus 검사는 8,905,827 checks, WASM imports 0이었고 strict CFB mutation sweep는 12,000 mutations, traps 0이었습니다. 로그는 `/tmp/hwpjs-arc-device-points-final-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.
+
+위 변이·전체 `audit` 수치는 작성 당시의 이력입니다. 기재된 `/tmp` 캠페인·로그는 2026-09-28 현재 남아 있지 않습니다. 이번에는 현재 point/radial 계산 및 세 record 위임을 코드에서 대조하고 Debug·ReleaseSafe·ReleaseFast의 root `EMF+` 필터를 각 560/560, ReleaseSafe의 point·endpoint·radial 직접 필터를 각 2/2로 통과했습니다. 과거 변이·전체 `audit`는 재실행하지 않았습니다.
