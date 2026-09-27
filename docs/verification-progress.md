@@ -8,6 +8,8 @@
 
 기존 문서의 과거 테스트 기록은 이 목록에 자동 소급하지 않습니다. 이 목록의 비율은 새 기준에 따라 **현재 내용 전체를 다시 검증한 파일의 비율**이며, 이전 구현 진행률이나 과거 검증 작업량의 추정치가 아닙니다.
 
+2026-09-28에는 HWP5 차트 객체 목록·TextBlock 보조 객체·String 참조 span 세 문서를 현재 Zig와 선택 Contents 실파일 테스트에 대조했습니다. 객체 목록 문서에서 누락됐던 참조 저장소와 독립 `max_references` 한도를 반영하고, TextBlock probe의 Axis 82바이트 조사와 현재 제품 Axis v3 파서를 구분했습니다. Debug·ReleaseSafe·ReleaseFast 집중 테스트는 객체 목록 각 6/6, TextBlock 보조 객체 각 4/4 통과했습니다. 현재 ReleaseSafe WASM의 독립 Axis 제목 오라클은 43개 표본에서 정상 516/거부 13,244, Legend 재참조 오라클은 41/2 분포·정상 258/거부 11,211을 재현했습니다. 선택 Contents 소유권·span 감사는 10/10 단계·31/31 통과했습니다. 과거 변이·전체 HWP5 audit와 모든 객체 그래프의 자동 탐색은 이번 결과에 포함하지 않습니다.
+
 2026-09-28에는 HWP5 차트 Footnote·TextBlock·Legend 세 문서를 공식 차트 PDF의 API 속성 표와 현재 Zig의 선택적 wire·ID 목록·수명 경계에 대조했습니다. Debug·ReleaseSafe·ReleaseFast 집중 테스트는 Footnote 각 5/5, TextBlock 각 7/7, Legend 각 3/3 통과했습니다. 현재 ReleaseSafe WASM 독립 Contents 오라클은 43개 표본의 Footnote 정상 301/거부 21,199, TextBlock 정상 258/거부 9,890, Legend 정상 258/거부 11,211 및 이름 재참조 41/새 정의 2를 재현했습니다. 두 Contents 해시의 이름 ID·offset도 재확인했고 차트 소유권 감사 31/31이 통과했습니다. 과거 변이·전체 audit, 다른 모드 WASM, 모든 차트 버전의 일반 재참조·렌더링·저장은 이번 검증 결과에 포함하지 않습니다.
 
 2026-09-28에는 HWP5 차트 Contents 명세·실측 경계와 Backdrop·빈 Picture 두 문서를 재검증했습니다. 공식 차트 PDF revision 1.2·47페이지·SHA-256, 로컬 rhwp 코드와 OLE corpus 584개 경로/52개 내부 항목의 Contents 44개·마커 43개를 대조했습니다. 초기 조사 당시 Zig/WASM을 변경하지 않았다는 기록을 현재 선택된 배치의 `observed_contents.zig` 및 상위 Footnote·객체 목록 연결과 분리해 교정했습니다. Contents 관측기 Node 테스트 4/4, Backdrop Debug·ReleaseSafe·ReleaseFast 각 4/4, ReleaseSafe WASM 실제 43개에서 정상 129/거부 8,944, 차트 소유권 감사 31/31이 통과했습니다. 과거 변이·전체 audit와 모든 차트 버전의 자동 판별·속성 의미 지원은 이번 결과에 포함하지 않습니다.

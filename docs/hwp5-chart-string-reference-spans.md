@@ -12,7 +12,9 @@ SHA-256 고정 9,876바이트 Contents에서 새로 도입되는 Legend Font 이
 
 ## 적대적 검증
 
-참조 시작을 1바이트 뒤로 이동, 끝을 1바이트 앞으로 이동, inline 정의 끝을 시작+4로 축소한 세 변이를 Debug·ReleaseSafe·ReleaseFast에서 각각 컴파일·실행했습니다. 9개 조합은 모두 컴파일에 성공한 뒤 실제 fixture assertion 실패로 거부됐으며 컴파일 실패나 trap은 결과로 세지 않았습니다.
+이전 변이 실험에서는 참조 시작을 1바이트 뒤로 이동, 끝을 1바이트 앞으로 이동, inline 정의 끝을 시작+4로 축소한 세 변이를 Debug·ReleaseSafe·ReleaseFast에서 각각 컴파일·실행했습니다. 9개 조합은 모두 컴파일에 성공한 뒤 실제 fixture assertion 실패로 거부됐으며 컴파일 실패나 trap은 결과로 세지 않았습니다. 이 변이 사본은 아래 재검증에서 다시 실행하지 않았습니다.
+
+2026-09-28 재검증에서는 Font·TextBlock·TextFormat의 공개 span 필드가 공통 `object_table.Reference` 또는 null/inline Reader 위치에서 결정되는지 현재 코드를 대조했습니다. SHA-256 고정 Contents의 참조 span·정의 길이·ID 검사를 포함한 ReleaseSafe `chart-ownership-audit`는 10/10 단계·31/31 테스트를 통과했습니다. 이는 선택된 실제 Contents의 span 정확성과 소유권 검증이며, 모든 버전의 String 참조나 편집 후 실제 한글 프로그램에서의 표시 동등성을 입증하지 않습니다.
 
 ## 미구현 범위
 

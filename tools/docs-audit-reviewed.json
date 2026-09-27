@@ -1,6 +1,18 @@
 {
   "schema": 1,
   "verified": {
+    "docs/hwp5-chart-object-table.md": {
+      "sha256": "0130095ff7abcd6ae616ef2b6e511533b58c4e0886541d4bd3a51abd1b346bc9",
+      "evidence": "2026-09-28 Zig shared chart object map and reference spans independent max_references String Number Other and atomic reader versus selected corpus scope; Debug Safe Fast focused 6 each; ReleaseSafe Legend WASM 43 roots 41 reused 2 introduced 258 accepted 11211 rejected; chart ownership audit 31"
+    },
+    "docs/hwp5-chart-text-block-objects.md": {
+      "sha256": "42cfb67f0e892a8550fa4f994355297a560da61f6769e5281494ecc06985938e",
+      "evidence": "2026-09-28 Zig TextBlock inline auxiliary Backdrop String references budgets and selected Axis v3 parser distinct from mode318 prefix; Debug Safe Fast focused 4 each; ReleaseSafe WASM independent Axis title oracle 43 roots 516 accepted 13244 rejected; chart ownership audit 31; historic mutants full audits not rerun"
+    },
+    "docs/hwp5-chart-string-reference-spans.md": {
+      "sha256": "23277e42e70a45102b82b71f25bb350b2d7216209a1ba0fe68600663bf03ee44",
+      "evidence": "2026-09-28 Zig Font TextBlock TextFormat start end propagation from object Reference or null inline reader versus hash-pinned actual Contents; ReleaseSafe chart ownership audit 10 steps 31 tests; historic 9 mutation combinations not rerun"
+    },
     "docs/hwp5-chart-footnote.md": {
       "sha256": "dc9b602e32750b4b961ca255dd3905295b775dc46b91131cc8de476696bc7cdd",
       "evidence": "2026-09-28 official Hancom chart Footnote API versus Zig selected Footnote ChartText TextBlock Section and local IDs; Debug Safe Fast focused 5 each; ReleaseSafe WASM independent Contents oracle 43 roots 301 accepted 21199 rejected 436 bytes each; two Legend name cases rechecked; historic mutants and full audits not rerun"
@@ -386,7 +398,7 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "f6c2d4066f03a51e6d000760febc9baa90fa2750e330c7515c45a00b984acd05",
+      "sha256": "f58fc1e8bf86111cf6ae3814aa6f5b2945af583b63d19124ff73a0323263796d",
       "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope PNG ICC inspection PNG RGBA BCP47 syntax registry alpha2 history ICC IANA matching mluc selection mluc structure mluc Unicode ICC v2 Unicode v2 text tag payload dispatch tag table structure header identifiers v4 and v2 header numeric header verification ICC registry source lookup required tags overview presence table XYZ type XYZ tags curve type TRC tags parametric curve analytic forward TRC forward sampled forward sampled inverse sampled wide inverse gamma inverse wide gamma inverse TRC inverse and extended TRC inverse matrix TRC inverse matrix TRC model matrix TRC forward fraction matrix inverse fraction matrix TRC inverse wide linear target wide positive bounds normalized and extended root compare normalized and extended root locations clipped and extended power preimage whole and extended whole parametric preimage normalized and extended whole bounds normalized and extended attained F.1a whole and extended nearest normalized and extended full inverse topology segments jump trend domain partition power clipping power level root compare active root locations rational power order normalized power level wide power level normalized root order power range power nearest ordinate order extended ordinate order ordinate distance extended ordinate distance linear range parametric range rational range nearest linear preimage extended linear preimage chromatic adaptation matrix transform ICC foundation verification review, architecture pending, full Debug Zig test 2656 passed and ReleaseFast HWP5 audit 10 steps 8905855 checks, EMF ICM and three clipping region docs direct tests and 102 shared tests each mode"
     },
     "docs/bcp47-syntax.md": {
