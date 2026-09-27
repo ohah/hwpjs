@@ -630,8 +630,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "89135d9bbecc40d8d031e9f2686ed0f02b71f53a2d615080eb7077ebe2ef1de4",
-      "evidence": "2026-09-28 tracker updated with HWPX version protection namespace batch after focused Zig tests and independent corpus oracle; prior full audit and mutants distinguished"
+      "sha256": "3ef8f37976086ad88dbc74e8157dd3110e1967f6f4b63415ac96e7c62c71d13a",
+      "evidence": "2026-09-28 tracker updated with HWPX settings manifest XML and document tree batch after three-mode focused tests, tree shards eight and independent corpus; historical full audit distinguished"
     },
     "docs/hwpx-ole-payloads.md": {
       "sha256": "a7c214c0760d575237afcb960b7ff1fe976a0d99468e1083066e36c889deabad",
@@ -1820,6 +1820,18 @@
     "docs/hwpx-namespace-profiles.md": {
       "sha256": "72873a70f3e46f597a37033a313c7cd0f5d021843d4f9e3b92619ac4459926a7",
       "evidence": "2026-09-28 source root matcher head sec app master-page, ReleaseFast focused 3 ReleaseSafe settings and master roots 2 each, independent Python 476 accepted header 476 section 544 all 2011; future version real files absent"
+    },
+    "docs/hwpx-settings.md": {
+      "sha256": "139dcee8b2105a936f2a6571bd5b4096266228010c1dde624453403fc9d888c1",
+      "evidence": "2026-09-28 source exact settings XML selection raw optional caret config, Debug Safe Fast focused eight each and independent Python 476 accepted settings 455 carets 455 sets 104 items 816; known shards historic not rerun"
+    },
+    "docs/hwpx-manifest-xml.md": {
+      "sha256": "f49fd3b8460e5cfa2c4381ee787749c9ba1f78f9e555fe8f5fd6891bf02ef8cd",
+      "evidence": "2026-09-28 source OPF application XML selection dedupe bounds, Debug Safe Fast focused five each and independent Python 1536 XML 246540603 bytes 3384514 elements; known shards historic not rerun"
+    },
+    "docs/hwpx-document-trees.md": {
+      "sha256": "07ec0c85b9d3b7b86b26638ff54a17c00fe4f40866781168aeb4b08f2205eaeb",
+      "evidence": "2026-09-28 source tree ownership preflight and diagnostics, Debug Safe Fast focused five each, ReleaseFast real tree shards eight, independent Python 476 docs 476 header 544 sections and element byte sums; full audit historic"
     }
   }
 }

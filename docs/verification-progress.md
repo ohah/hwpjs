@@ -1,5 +1,7 @@
 # 프로젝트 문서 검증 현황
 
+HWPX 설정 원값·OPF 선언 XML 문법·문서 XML 트리 세 문서를 현재 소스와 독립 ZIP/XML corpus, 세 빌드 모드 집중 테스트에 다시 대조해 완료 목록에 넣었습니다. 설정은 455파트·Caret 455개·config set 104개·item 816개, 선언 XML은 1,536엔트리·246,540,603바이트·3,384,514요소를 재확인했습니다. 트리 조립 ReleaseFast 실파일 8개 shard가 각각 별도 프로세스에서 통과했고, 독립 조사는 허용 476문서·header 476개·section 544개 및 요소/바이트 합계를 다시 확인했습니다. 설정·manifest의 Zig `inspectKnown` 실파일 shard와 과거 전체 audit는 이번 묶음에서 재실행하지 않았으며, 문법·원문 트리 결과를 전체 스키마/표시 의미·편집·저장 보장으로 확대하지 않습니다.
+
 HWPX 버전 XML·보호 manifest·네임스페이스 경계 세 문서를 현재 구현과 집중 테스트, 독립 실파일 조사에 대조해 완료 목록에 넣었습니다. 버전 XML은 수락 478개·ZIP 거부 6개·minor 0 여섯 개·patch 변형 한 개, 보호 manifest는 존재 473개·부재 5개·암호화 2개를 재확인했습니다. 독립 구조 조사는 허용 476개·2011 header 476개·section 544개였고, 설정·마스터페이지도 합성 후속 네임스페이스를 미지원으로 거부함을 확인했습니다. 오래된 ‘나머지 section 자원 참조 미구현’ 문구를 현 계층 범위에 맞게 교정했습니다. 과거 세 모드 전체 audit·변이 시험은 이번 묶음에서 재실행하지 않았고, 실제 후속 버전 파일의 읽기 정확도·복호화·편집·저장은 검증 범위가 아닙니다.
 
 HWPX ZIP 읽기·패키지 관계·모든 payload 무결성 세 문서를 현재 ZIP/OPF/무결성 계층, PKWARE APPNOTE와 W3C OCF/OPF 참고 범위에 대조해 완료 목록에 넣었습니다. 경로 검사가 Windows `C:/...`·`c:...` ZIP 엔트리를 허용하던 반례를 먼저 재현한 뒤 거부하도록 고쳤고, 세 빌드 모드의 새 회귀 테스트 각 2/2개가 통과했습니다. ReleaseFast 패키지 조사 484개는 성공 478개·EOCD 부재 6개, 독립 `unzip -tqq`도 478/6, Python 표준 ZIP의 유효 `mimetype`은 저장 451개·DEFLATE 27개였습니다. ReleaseFast known 실파일 shard 8/8은 일반 문서 476개·암호화 2개·ZIP 거부 6개와 전체 엔트리 수/manifest 분할을 다시 확인했습니다. Debug·ReleaseSafe·ReleaseFast payload 집중 6/6개, ReleaseSafe 패키지 집중 3/3개, 전체 Debug Zig 테스트 5/5 단계·2,664/2,664개(약 21분·종료 코드 0), ReleaseSafe 제품 빌드 5/5 단계가 통과했습니다. 과거 전체 audit·변이 시험은 재실행하지 않았으며 ZIP 길이/CRC 확인을 BinData 내부 의미나 완전한 HWPX 문서 유효성으로 확대하지 않습니다.

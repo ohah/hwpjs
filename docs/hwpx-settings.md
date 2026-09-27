@@ -13,3 +13,5 @@ Caret의 `listIDRef`·`paraIDRef`·`pos`는 존재/부재를 구별하고 XML �
 2026-09-24 선택 실파일 대조: HWPX 484개 중 ZIP 거부 6개·암호화 2개를 제외한 476개에서 `settings.xml` 455개, Caret 455개, config set 104개, config item 816개였습니다. Caret `pos`의 값 합계 9,116, `short` 값 합계 20,842, 참인 `boolean` 0개, 미지원 타입 0개가 Zig `inspectKnown`의 8개 shard와 독립 Python ZIP/ElementTree 조사에서 일치했습니다. 이 corpus에는 참인 Boolean이나 미지원 config 타입의 실파일 검증이 없으며, 2011 외 버전과 전체 settings 스키마 적합성도 입증하지 않습니다.
 
 최종 소스에서 `zig build test --summary all`의 Debug 2,212/2,212 테스트, `zig build audit -Doptimize=ReleaseSafe --summary all`, `zig build -Doptimize=ReleaseSafe`, `zig fmt --check build.zig src`, `git diff --check`가 통과했습니다. settings 단위 테스트는 Debug·ReleaseSafe·ReleaseFast에서 각각 통과했고, `inspectKnown` 실파일 8개 shard도 최종 소스로 다시 실행했습니다. 이 검증은 지원한 부분의 회귀 검사이며 전체 HWPX 문서 의미의 완성도 주장은 아닙니다.
+
+2026-09-28 현재 소스 재검증: Debug·ReleaseSafe·ReleaseFast `HWPX settings` 집중 각 8/8개와 독립 Python oracle 자체 반례가 통과했습니다. 같은 oracle의 두 corpus 재조사는 허용 476개에서 settings 455개·Caret 455개·config set 104개·item 816개, `pos` 합계 9,116·`short` 합계 20,842를 재확인했습니다. 위 전체 audit 수치와 실파일 `inspectKnown` 8개 shard는 과거 실행 기록이며 이번 묶음에서 다시 실행하지 않았습니다. 제품 소스는 그 후 변경되지 않았지만, 이를 새 실파일 Zig 실행으로 표기하지 않습니다.

@@ -15,3 +15,5 @@ XML 문법은 기존 `document_xml.visitBytes`와 공통 `xml.document.visit`가
 최종 제품 검사에서도 별도 프로세스의 8개 shard가 모두 통과했으며, 각 shard의 XML 엔트리 수·해제 바이트·요소 수·settings·masterpage 수를 독립 oracle의 고정 결과와 대조했습니다. 검사 대상은 암호화 이전 분류를 통과한 476개 문서뿐입니다. 이 통과를 settings/masterpage 스키마 적합성이나 전 HWPX 버전 호환성으로 확대하지 않습니다.
 
 같은 최종 소스에서 새 전용 5개 테스트(루트 포함)는 Debug·ReleaseSafe·ReleaseFast, `inspectKnown` 통합 8개 테스트는 Debug·ReleaseSafe에서 통과했습니다. 네이티브 `zig build test --summary all`은 2,204/2,204, ReleaseSafe 제품 빌드와 `zig build compare -Doptimize=ReleaseSafe --summary all`(JS 비교 47/47), Debug `zig build audit --summary all`, `zig fmt --check build.zig src`도 종료 코드 0이었습니다. 선택 실파일 shard는 기본 audit에 포함되지 않습니다.
+
+2026-09-28 현재 소스 재검증: Debug·ReleaseSafe·ReleaseFast `HWPX manifest XML` 집중 각 5/5개와 독립 Python oracle 자체 반례가 통과했습니다. corpus 재조사에서 허용 476개·내장 XML 1,536개·246,540,603바이트·3,384,514요소, 외부 항목과 중복 바인딩 각각 0개를 확인했습니다. 위 전체 test/audit·JS 비교·선택 Zig `inspectKnown` shard는 이번 묶음에서 재실행하지 않은 과거 기록입니다. XML 문법 통과를 스키마나 의미 적합성으로 승격하지 않습니다.

@@ -15,3 +15,5 @@
 2026-09-24 실측에서 로컬 HWPX 484개 중 ZIP 거부 6개·암호화 2개를 제외한 476개 문서의 header 476개·section 544개를 조립했습니다. header 요소 1,200,622개, section 요소 2,174,716개 및 선택 XML 바이트 수가 8개 shard마다 독립 조사와 일치했습니다. 이 집계는 문서별 필드 의미·조건부 분기·비선택 part·원본 재저장 동치를 증명하지 않습니다.
 
 같은 변경에서 전체 네이티브 테스트 2,179개(Debug), HWPX 필터 테스트 154개(ReleaseSafe), 전용 조립 테스트 5개(Debug·ReleaseSafe·ReleaseFast), `zig build -Doptimize=ReleaseSafe` 및 전체 Debug `zig build audit --summary all`이 통과했습니다. 이 테스트 수는 위의 실파일 독립 대조 범위나 전체 HWPX 문서 의미 검증 범위를 넓히지 않습니다.
+
+2026-09-28 현재 소스 재검증: Debug·ReleaseSafe·ReleaseFast `HWPX XML trees` 집중 각 5/5개와 ReleaseFast 실파일 트리 shard 8/8개를 각각 별도 프로세스에서 통과했습니다. 독립 Python ZIP/XML 조사도 허용 476개·암호화 2개·ZIP 거부 6개, header 476개·section 544개, header 요소 1,200,622개·section 요소 2,174,716개, 선택 XML 바이트 각각 77,774,947·167,990,886을 재확인했습니다. 위 전체 test/audit는 이번 묶음에서 재실행하지 않은 과거 기록입니다. 이 조립 검사로 다른 manifest 파트의 의미나 무손실 재저장을 주장하지 않습니다.
