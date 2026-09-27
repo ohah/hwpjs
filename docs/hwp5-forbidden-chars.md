@@ -6,7 +6,7 @@
 
 명세 3.2.2 표 4는 FORBIDDEN_CHAR를 가변 길이·레벨 0으로, 4.2 표 13은 태그 94로 나열합니다. 선택한 로컬 명세에는 상세 payload 표가 없습니다. 레거시 Rust는 payload를 raw_data로 보존합니다. 로컬 rhwp `e8800c8de`의 HWPX header 변환 코드는 태그 94·레벨 1·16바이트 0을 생성하지만, 이것만으로 전체 형식을 확정할 수 없습니다.
 
-공식 PDF 사본(`/tmp/hwp5-spec.uK0MG9/spec.pdf`, SHA-256 `1d1da9e6fe22563ae2c5285bbbfc6762974fb7f002278084cbc11e5266bdc782`)의 표 4/13에서도 레벨 0/태그 값을 재확인했습니다. 로컬 요약 문서만 보고 레벨 차이를 판단하지 않았습니다.
+현재 공개된 [한컴 공식 HWP 5.0 revision 1.3 PDF](https://cdn.hancom.com/link/docs/%ED%95%9C%EA%B8%80%EB%AC%B8%EC%84%9C%ED%8C%8C%EC%9D%BC%ED%98%95%EC%8B%9D_5.0_revision1.3.pdf)의 표 4/13에서도 레벨 0/`HWPTAG_BEGIN+78`을 재확인했습니다. 과거 검사에 사용한 `/tmp/hwp5-spec.uK0MG9/spec.pdf` 사본은 현재 없으므로 그 해시를 이번 검증의 증거로 사용하지 않습니다. 로컬 요약 문서만 보고 레벨 차이를 판단하지 않았습니다.
 
 실제 표본과 대응 HWPX의 목록 길이를 근거로 **명시적으로 선택하는 관측 뷰**를 구현했습니다. 첫 두 DWORD는 실제 표본에서 항상 0이므로 비어 있지 않은 첫 두 목록의 형식은 실파일로 확인하지 못했습니다. 네 DWORD를 길이로 해석하는 모델의 이 경계를 숨기지 않습니다. 목록 순번별 언어/행두/행말 의미도 확정하지 않습니다.
 
@@ -53,13 +53,15 @@
 
 ## 2026-09-07 검증 결과
 
+이 절과 아래 두 절의 전체 감사 수치·임시 로그는 당시 기록입니다. 현재 코드의 재검증 범위는 마지막 절에서 구분합니다.
+
 Debug/ReleaseSafe/ReleaseFast 전체 audit가 각각 네이티브 252/252, Node 47/47, HWP5 WASM 1,371,775건을 통과했습니다. 금칙 문자 합성 정상·복구 429건/거부 159건, 실제 레코드 420개 및 대응 HWPX 비교를 포함합니다. CFB 변형 12,000건은 trap 0입니다. Zig 포맷·변경 JS 문법·문서 링크·diff 검사도 통과했습니다.
 
-실행 로그는 `/tmp/hwpjs-forbidden-chars-{debug,safe,fast}.log`입니다. 이 결과는 명시적 관측 배치의 경계·보존 검증이며 전체 금칙 처리 의미, 자동 문서 연결 또는 HWPX 제품 파서의 완료 증거가 아닙니다.
+당시 실행 로그 경로는 `/tmp/hwpjs-forbidden-chars-{debug,safe,fast}.log`입니다. 현재 해당 로그는 없어 새 검증 증거로 세지 않습니다. 이 결과는 명시적 관측 배치의 경계·보존 검증이며 전체 금칙 처리 의미, 자동 문서 연결 또는 HWPX 제품 파서의 완료 증거가 아닙니다.
 
 ### 문서 선택 정책 연결 후 검증
 
-Debug/ReleaseSafe/ReleaseFast audit 모두 네이티브 253/253, Node 47/47, HWP5 WASM 1,371,918건을 통과했습니다. 새 문서 정책 테스트는 정상 5건/거부 35건과 기본 모드·원본 복구 대조를 포함합니다. CFB 변형 12,000건/trap 0, 포맷·JS 문법·diff 검사도 통과했습니다. 로그는 `/tmp/hwpjs-forbidden-document-{debug,safe,fast}.log`입니다. 이 단계는 선택 정책과 집계의 문서 연결을 검증하며 목록의 언어별 의미·행 나눔·무손실 저장은 여전히 범위 밖입니다.
+당시 Debug/ReleaseSafe/ReleaseFast audit 모두 네이티브 253/253, Node 47/47, HWP5 WASM 1,371,918건을 통과했습니다. 새 문서 정책 테스트는 정상 5건/거부 35건과 기본 모드·원본 복구 대조를 포함합니다. CFB 변형 12,000건/trap 0, 포맷·JS 문법·diff 검사도 당시 통과했습니다. 로그 경로 `/tmp/hwpjs-forbidden-document-{debug,safe,fast}.log`의 파일은 현재 없습니다. 이 단계는 선택 정책과 집계의 문서 연결을 검증하며 목록의 언어별 의미·행 나눔·무손실 저장은 여전히 범위 밖입니다.
 
 ### CFB 파일 입력 대조
 
@@ -69,4 +71,12 @@ Debug/ReleaseSafe/ReleaseFast audit 모두 네이티브 253/253, Node 47/47, HWP
 
 2026-09-07 실측: Debug 전체 audit는 네이티브 253/253, Node 47/47, HWP5 WASM 1,372,027건을 통과했습니다. 실행 도중 추가한 원본 CFB 두 선택 검사는 동일 Debug 산출물의 최종 집중 검사(254개 호출, 109회 경로 대조)로 확인했습니다. 최종 테스트가 포함된 ReleaseSafe/ReleaseFast 전체 audit는 각각 네이티브 253/253, Node 47/47, WASM 1,372,029건을 통과했습니다. 각 전체 audit의 CFB 변형 12,000건은 trap 0입니다.
 
-로그는 `/tmp/hwpjs-forbidden-container-{debug,safe,fast}.log`, 추가 Debug 집중 검사는 `/tmp/hwpjs-forbidden-container-final-debug-focus.log`입니다. 포맷·JS 문법·diff 검사도 통과했습니다. 이 결과는 두 입력 경로의 선택 정책 전파를 입증하며 전체 HWP 문서 지원 완료를 뜻하지 않습니다.
+당시 로그 경로는 `/tmp/hwpjs-forbidden-container-{debug,safe,fast}.log`, 추가 Debug 집중 검사는 `/tmp/hwpjs-forbidden-container-final-debug-focus.log`이며 현재 로그는 없습니다. 포맷·JS 문법·diff 검사도 당시 통과했습니다. 이 결과는 두 입력 경로의 선택 정책 전파를 입증하며 전체 HWP 문서 지원 완료를 뜻하지 않습니다.
+
+## 현재 코드 재검증 (2026-09-27)
+
+공식 revision 1.3의 표 4·13, 로컬 명세, 레거시 Rust raw 보존, 고정 rhwp `e8800c8de`의 HWPX→HWP 레코드 생성, 현재 Zig의 `forbidden_chars.zig`·`forbidden_validation.zig`·문서/컨테이너 연결을 대조했습니다. `src/root.zig` 진입점의 `hwp5.docinfo.forbidden` 필터는 Debug·ReleaseSafe·ReleaseFast 각각 4/4(root 포함) 통과했습니다.
+
+현재 ReleaseSafe probe/CFB WASM의 `forbiddenCharEdges`는 합성 정상·복구 429건/거부 159건, `forbiddenDocument`는 정상 5건/거부 35건과 decoded/CFB 경로 109회 비교를 재현했습니다. 별도 Node raw DEFLATE·레코드 순회 조사에서도 `.hwp` 536경로 중 430개 DocInfo에서 태그 94가 420건(모두 레벨 1), 최근 레벨 0 태그 17/27이 각각 300/120건, payload 16/196/302바이트가 417/1/2건이었습니다. 비어 있지 않은 세 파일의 길이 네 개는 위 표와 일치하고 extra는 모두 0바이트였습니다. 해당 JS 회귀는 세 HWP/HWPX 쌍의 비어 있지 않은 목록 5개 동일·빈 목록 7개 공백 대체도 확인했습니다.
+
+위 corpus 조사는 제품 strict CFB reader를 사용하며, 독립 CFB 구현과의 전수 동치나 제외 106개 파일의 지원을 증명하지 않습니다. 명세 레벨 0과 관측 레벨 1의 차이도 다른 버전의 포맷 규칙으로 일반화하지 않습니다. 과거 전체 Debug·ReleaseSafe·ReleaseFast audit, CFB 변형 12,000건과 현재 없는 `/tmp` 로그는 이번 검증으로 다시 실행한 결과가 아닙니다. 목록 순번 의미·행 나눔·HWPX 제품 파서·무손실 저장은 여전히 미검증입니다.
