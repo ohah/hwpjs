@@ -6,8 +6,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "925d2779697cb6e362491074b1ed795c3b1a681dd90d7ec6e556289253aaae72",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope PNG ICC inspection PNG RGBA BCP47 syntax registry alpha2 history ICC IANA matching mluc selection mluc structure mluc Unicode ICC v2 Unicode v2 text tag payload dispatch tag table structure header identifiers v4 and v2 header numeric and header verification review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "46df8e62708f6abf9e9a4396572ebfbafd8c6f62056ee403e0d7d63a9ad89b9b",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope PNG ICC inspection PNG RGBA BCP47 syntax registry alpha2 history ICC IANA matching mluc selection mluc structure mluc Unicode ICC v2 Unicode v2 text tag payload dispatch tag table structure header identifiers v4 and v2 header numeric header verification and ICC registry source review, architecture pending, full Debug Zig test incomplete"
     },
     "docs/bcp47-syntax.md": {
       "sha256": "ae0d91a0bb5ca2f8a5194b5ffa76494427cc058784f11446fd905458020f5b11",
@@ -72,6 +72,10 @@
     "docs/icc-header-verification.md": {
       "sha256": "c307d5f990503c114b79104531692685f51c770bf7e7c0fbf6dffa53ee2da7c0",
       "evidence": "2026-09-27 current mode146-148 ABI oracle and consumers, Debug Safe Fast broad ICC 51 each, existing local WASM regular semantics 185356 accepted 372611 rejected, official ICC four live files sha and report match; historic full audits logs absent and manual multimutations format not rerun"
+    },
+    "docs/icc-registry.md": {
+      "sha256": "fc2ead29f0ddf73e4f3af28e01aa604c9303b424ac888238627301070f35fe93",
+      "evidence": "2026-09-27 official live CSV three deep equal pinned snapshot sha and counts cmm31 manufacturer278 issues3 device3027 issues44 parent0, Node CSV download snapshot generator 14 tests, Debug Safe Fast ICC registry 2 each; historic memory sample full audit not rerun"
     },
     "docs/png-rgba.md": {
       "sha256": "caa9320a6c1b5d93529d7461b2482d7bc3ba414c8817663a34028dad68f53f5b",
