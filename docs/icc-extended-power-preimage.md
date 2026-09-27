@@ -2,6 +2,8 @@
 
 ## 계약
 
+[ICC.1:2022 §10.18 Table 68·Annex F.1](https://www.color.org/specification/ICC.1-2022-05.pdf)은 파라메트릭 곡선의 분기식·출력 클리핑 및 1차원 역상 선택 조건을 규정합니다. 아래의 u512 목표와 기호 집합 배열은 프로젝트 내부 표현이며, 명세가 그 폭·배치나 근 비교 알고리즘을 지정한 것은 아닙니다.
+
 `power_preimage.solveWide(precision, curve, n, d)`는 u512 정규화 목표값에 대해 활성 거듭제곱 분기에서 clip(f(x))=n/d인 실제 x의 집합을 보존합니다. [넓은 활성 근 위치](icc-extended-locations.md)가 목표와 전체 곡선 정의역을 먼저 검증합니다. 결과는 inactive/undecided/set이며 빈 set과 inactive를 구분합니다. undecided에는 부분 집합을 노출하지 않습니다.
 
 `Wide.Set`은 source, 최대 여섯 기호 구간, 최대 두 u1024 radicand 기호근을 담습니다. count 밖 항목은 읽지 않습니다. 결과는 점과 구간의 집합 합집합이며 정렬·병합·중복 제거된 목록은 아닙니다. 기호근 순서는 x 순서가 아니고 각 항목에 역상 선택을 개별 적용해서는 안 됩니다. source의 a/b를 통해 x를 뜻하며 근사 좌표를 생성하지 않습니다.
@@ -38,4 +40,14 @@ Safe/Fast 실제 audit WASM의 직접 집합 대조·기존 경로 회귀·출�
 
 ## 남은 구현
 
-이 모듈은 상위 거듭제곱 분기의 클리핑 역상을 소유합니다. 하위 선형 분기와의 합집합은 [넓은 전체 도달 역상](icc-extended-parametric-preimage.md)에 분리합니다. 정규화·정렬, 단조성·비상수성 판정, F.1 역상 선택, 최근접 출력과 넓은 TRC 모델 통합은 후속 범위입니다. 전체 ICC/HWP/HWPX 문서 검증은 미완료입니다.
+이 모듈은 상위 거듭제곱 분기의 클리핑 역상만 소유합니다. 하위 선형 분기와의 결합은 [넓은 전체 도달 역상](icc-extended-parametric-preimage.md)이 **분기별 기호 결과를 보존하는 형태**로 다룹니다. 단조성·비상수성 판정, F.1 선택과 최근접 출력은 [넓은 역변환](icc-extended-parametric-inverse.md)·[넓은 최근접 출력](icc-extended-parametric-nearest.md)에, TRC 조립은 [확장 TRC 역변환](icc-extended-trc-inverse.md)에 분리되어 있습니다. 두 분기를 정렬·병합한 단일 정규 구간 목록은 이 모듈이나 전체 도달 역상이 제공하지 않습니다. 당시 후속 범위와 현재 다른 계층의 구현을 구분해야 하며, 전체 ICC/HWP/HWPX 문서 검증과 렌더링 동치는 미완료입니다.
+
+위의 세 모드 전체 감사·변형 주입·실파일 호환성은 최초 구현 시점의 기록입니다. 인용된 `/tmp` 로그와 임시 소스 변형은 현재 존재하지 않으며 아래의 재검증 결과와 구분합니다.
+
+## 2026-09-27 문서 재검증
+
+현재 `power_preimage.solveWide`는 u128 경로와 같은 `solveFor`를 사용합니다. u512 목표·전체 정의역 선검증과 u1024 기호근 위치는 넓은 위치기를, y=0/1 평탄 조각은 공통 `power_clip.partition`을 사용합니다. 내부 목표는 정확한 등식 근만 보존하며, 위치·분할이 미확정이면 부분 집합을 노출하지 않습니다. `power_preimage_types.Of(512)`는 원본 source·최대 6구간·2점과 count를 유지하고, x의 근삿값이나 정렬된 단일 구간 목록을 만들지 않습니다.
+
+Debug·ReleaseSafe·ReleaseFast의 `zig test src/root.zig --test-filter 'extended power preimage'`는 각 모드 root 포함 5/5 통과했습니다. 현재 ReleaseFast 테스트용 WASM의 mode225 독립 critical-cell 집합 대조는 comparisons=6,448·rejected=3,447·undecided=1·membershipChecks=19,026으로 일치했습니다. 마지막 값은 추가 WASM 호출이 아닌 반환 집합 내부 포함 여부의 대조 횟수입니다. 같은 제품 코드로 앞 문서 검증에서 실행한 전체 `zig build hwp5-audit -Doptimize=ReleaseFast --summary all`은 10/10 단계·WASM checks=8,905,855였습니다.
+
+후속 기호 결합과 역변환의 현행 경로는 ReleaseFast `extended whole preimages` 6/6·`extended full inverse` 4/4 집중 테스트로 확인했습니다. 이 결과만으로 후속 문서 전체를 승인하지 않습니다. 과거 Debug·ReleaseSafe 전체 감사·변형 주입·시스템 프로파일 호환성 30건은 이번에 재실행하지 않았으며, 실제 색상 변환이나 HWP/HWPX 표시 동치를 증명하지 않습니다.
