@@ -6,11 +6,17 @@ u512 목표를 받는 공통 진입점의 계약과 후속 검증은 [확장 TRC
 
 `src/image/icc/trc_inverse.zig`는 이미 파싱한 TRC를 받아 정규화 u128 목표의 역변환 좌표를 반환합니다. identity는 원래 분수를 u256으로 보존하고, sampled는 기존 [sampled 역변환](icc-sampled-inverse.md)을 호출합니다. gamma는 `gamma_parametric.zig`에서 u8.8 원값을 256배 하여 정확한 s15.16 지수로 변환합니다. gamma와 parametric은 기존 [파라메트릭 역변환](icc-parametric-inverse.md)을 재사용합니다. raw gamma 0은 NonInvertibleIccGamma로 거부합니다.
 
-타입은 trc_inverse_types가 소유합니다. selected는 유리수 또는 기호적 거듭제곱 근 좌표이며, f64 근사로 대체하지 않습니다. unattained·ambiguous·undecided를 구분하고 기존 오류를 전파합니다. 목표 유효성을 분기 선택 전에 검사합니다. 전역 단조 검사와 평탄부 입력 선택 규칙을 여기서 재구현하지 않습니다.
+타입은 trc_inverse_types가 소유합니다. selected는 유리수 또는 기호적 거듭제곱 근 좌표이며, f64 근사로 대체하지 않습니다. 감마 raw=256의 내부 목표도 공통 parametric 경로에서는 지수 1의 기호근일 수 있고, 근의 밑은 같은 유리수를 나타내는 확대 분수일 수 있습니다. 따라서 수학적으로 유리수인 결과가 반드시 rational 태그이거나 약분된 밑으로 반환된다고 가정하지 않습니다. unattained·ambiguous·undecided를 구분하고 기존 오류를 전파합니다. 목표 유효성을 분기 선택 전에 검사합니다. 전역 단조 검사와 평탄부 입력 선택 규칙을 여기서 재구현하지 않습니다.
 
 TRC 태그 파싱·edition 허용 여부는 [trc_tag](icc-trc-tags.md), 전체 프로파일 모델과 색상 변환 정책은 상위 계층의 책임입니다. 성공해도 Parsed.semantics_deferred를 해소하지 않습니다. 기존 근사 gamma_inverse API는 변경하지 않습니다. 제품 JS 공개 API와 실제 픽셀 변환 연결은 추가하지 않았습니다.
 
-## 검증 진행
+## 2026-09-27 재검증
+
+[ICC.1:2022 §10.6·Annex F.1/F.3](https://www.color.org/specifications/ICC.1-2022-05.pdf)의 curveType 감마/샘플 역상과 별도 행렬 계산 경계를 현재 `trc_inverse.select`, `parametric_inverse`, `sampled_inverse`, `gamma_parametric`에 대조했습니다. Debug·ReleaseSafe·ReleaseFast에서 `TRC inverse` 필터는 각 root 포함 3/3, `TRC gamma inversion`과 `TRC parametric` 필터는 각 2/2 통과했습니다. 기존 로컬 WASM probe mode213/214의 현재 독립 JS 대조는 selected 722건·거부 232건·unattained/ambiguous/undecided 각 1건이 일치했습니다. 당시 아래의 selected 530건과 달리 현재 테스트는 큰 샘플 보간 사례가 추가된 버전입니다.
+
+macOS 시스템 ICC 네 파일의 감마 TRC 10개를 판본에 따라 mode213(v2)/214(v4)로 읽어 목표 0·1·1/2, 총 30건에서 채널·의미 보류·선택 좌표를 대조했습니다. 내부 목표의 기호근 지수와 확대 밑 분수는 원값에서 독립적으로 계산한 비례식으로 비교했습니다. WASM 자체는 이번에 재빌드하지 않았고, 전체 프로파일 색상 변환·픽셀 렌더링도 검증하지 않았습니다. 아래 구현 당시 전체 감사·출력 변형·65,535개 감마 수동 검사는 이번에 재실행하지 않았으며 `/tmp/hwpjs-trc-inverse-{Debug,ReleaseSafe,ReleaseFast}.log`도 현재 없습니다. 아래 수치는 당시 이력입니다.
+
+## 2026-09-09 구현 당시 검증 기록
 
 네이티브 테스트 4개가 통과했습니다. u128 identity 보존, 시작/끝 plateau, gamma 정확 변환과 극값, 출력 부재·동률, 잘못된 목표 및 전체 sampled 비단조 거부를 포함합니다.
 
@@ -28,12 +34,12 @@ Debug WASM 직접 실행에서 765건(selected 530, rejected 232, unattained 1, 
 
 실제 macOS ACESCG Linear·AdobeRGB1998·Generic Gray Profile·Generic RGB Profile의 gamma TRC 10개 원시 태그를 ReleaseSafe WASM에 전달했습니다. 목표 0/1의 정확한 좌표와 1/2의 기호적 근 지수를 대조한 30건이 통과했습니다. 파일을 수정하지 않았고 공유 태그를 포함한 채널별 검사 수입니다. 실제 색상 엔진의 렌더링 대조는 아닙니다.
 
-## 최종 audit와 남은 범위
+## 당시 최종 audit와 현재 범위
 
 전체 세 빌드 모드 audit가 `/tmp/hwpjs-trc-inverse-{Debug,ReleaseSafe,ReleaseFast}.log`에서 순차 실행되어 모두 종료 코드 0으로 완료됐습니다. 각 모드 20/20 단계, 602/602 네이티브 테스트, WASM checks=6,615,635로 통과했습니다. 기존 검사 수 6,614,870에 신규 765건이 추가됐습니다. ReleaseSafe·ReleaseFast 실제 audit 산출물 직접 실행에서도 신규 765건과 네 가지 출력 변조 검출이 일치했습니다.
 
 최종 적대적 검토에서는 목표 선행 검증, 감마 단위 변환의 i32 범위, 전체 sampled 단조 검사 재사용, 동률/미확정 보존, 태그 판본 정책 분리, borrowed 입력 수명과 임시 출력 버퍼 해제를 확인했습니다. 이번 범위에서 추가 결함은 발견하지 못했습니다. 관련 문서 로컬 링크 8개도 확인했습니다.
 
-모델 수준의 역행렬·정규화·TRC 연결, 실제 색상 변환 왕복·렌더링 검증, HWP/HWPX 전체 문서 검증은 아직 남아 있습니다. 이번 결과는 전체 문서 검증, 편집·저장·렌더링 완료를 의미하지 않습니다.
+모델 수준의 역행렬·정규화·TRC 연결은 현재 별도 `matrix_trc_inverse`에 있습니다. 이 공통 TRC 함수만으로 자동 LUT 우선순위·전체 프로파일 의미·공개 색상 변환 왕복·렌더링 검증이나 HWP/HWPX 전체 문서 검증을 완료한 것은 아닙니다.
 
 모델 계층의 후속 구현과 검증 상태는 [Matrix/TRC 역방향 연결](icc-matrix-trc-inverse.md)에서 관리합니다.

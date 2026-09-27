@@ -6,8 +6,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "ee1ceb5a8186ef959d7ac3d9fdd39147f933a0fb1489d801a3cd64b93f24d84b",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope PNG ICC inspection PNG RGBA BCP47 syntax registry alpha2 history ICC IANA matching mluc selection mluc structure mluc Unicode ICC v2 Unicode v2 text tag payload dispatch tag table structure header identifiers v4 and v2 header numeric header verification ICC registry source lookup required tags overview presence table XYZ type XYZ tags curve type TRC tags parametric curve analytic forward TRC forward sampled forward sampled inverse sampled wide inverse gamma inverse and wide gamma inverse review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "9779dc9601a9ea002603ea7139283af0a33e6756e867f141492c7d3a33f3f5a0",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope PNG ICC inspection PNG RGBA BCP47 syntax registry alpha2 history ICC IANA matching mluc selection mluc structure mluc Unicode ICC v2 Unicode v2 text tag payload dispatch tag table structure header identifiers v4 and v2 header numeric header verification ICC registry source lookup required tags overview presence table XYZ type XYZ tags curve type TRC tags parametric curve analytic forward TRC forward sampled forward sampled inverse sampled wide inverse gamma inverse wide gamma inverse and TRC inverse review, architecture pending, full Debug Zig test incomplete"
     },
     "docs/bcp47-syntax.md": {
       "sha256": "ae0d91a0bb5ca2f8a5194b5ffa76494427cc058784f11446fd905458020f5b11",
@@ -140,6 +140,10 @@
     "docs/icc-gamma-wide-inverse.md": {
       "sha256": "b0515a3069fd8db9596fc5358eaf7256a7ed001cca17bc561791902393e8f91a",
       "evidence": "2026-09-27 ICC.1 2022 section10.6 Annex F.1 gamma u512 symbolic exact inverse, Debug Safe Fast focused 5 each, existing local WASM mode220 independent JS 131075 rational 131081 power 151 rejected, macOS four profiles ten gamma TRC 50 targets 29 rational 21 power; historic full audit mutation tests wasm rebuild not rerun temp logs absent"
+    },
+    "docs/icc-trc-inverse.md": {
+      "sha256": "d5142bc2b38165208747cdb1828ea2bd8296da432486c530270ecb056f3269a6",
+      "evidence": "2026-09-27 ICC.1 2022 section10.6 Annex F.1 F.3 current TRC u128 inverse states and semantics deferred, Debug Safe Fast filters TRC inverse 3 gamma 2 parametric 2 each, existing local WASM mode213 214 JS 722 selected 232 rejected three other states one each, macOS four profiles ten gamma TRC 30 targets v2 v4 symbolic root and expanded radicand; historic full audit mutation manual gamma sweep wasm rebuild not rerun temp logs absent"
     },
     "docs/png-rgba.md": {
       "sha256": "caa9320a6c1b5d93529d7461b2482d7bc3ba414c8817663a34028dad68f53f5b",
