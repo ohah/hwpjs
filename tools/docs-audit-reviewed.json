@@ -6,8 +6,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "093ddb4fb1a6059823dea2adbfc90ac3ea83f7db9b8976a0de01275434a73f4d",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText and document policy and view semantics evidence review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "c185835cfd1b007946fb3977d5ad52bbbeba99179c352a7bb196dace4304fb96",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics and track-change boundary evidence review, architecture pending, full Debug Zig test incomplete"
     },
     "THIRD_PARTY_NOTICES.md": {
       "sha256": "9d8b89d82c9ab174f564afa3b294f186b9ab12fa0dc354bf16818b3a7cf04d55",
@@ -24,6 +24,10 @@
     "docs/hwp5-viewtext-semantic-inspection.md": {
       "sha256": "f9a429b031fb27954f4428fa558724b5a53cba5fa5b151eb757988ec1951f44f",
       "evidence": "2026-09-27 current Zig view semantics and section set, Debug Safe Fast six focused each and Safe memo three, same-code Safe HWP5 audit 8905855, independent linked Node two real files issue5169 rejection and task2070 current 988 bytes; historical logs missing"
+    },
+    "docs/hwp5-track-change-viewtext.md": {
+      "sha256": "a8aecd13a5a8dfd8771c051fb00abc884fa45cd48270d6b4555115e9e676483d",
+      "evidence": "2026-09-27 Hancom forum and local table 62, current Zig default and distribution boundary, Debug Safe Fast ViewText 16 each, same-code Safe HWP5 audit, Node 4 accepted 24 rejected, survey two HWP and 439 HWPX with 2048 heap, nine line overruns; historical counts separated"
     },
     "docs/cfb-compatibility.md": {
       "sha256": "c7a906e4b53a01db38b905a834673467f12d934ebfba2214ce2be207b7df3737",
