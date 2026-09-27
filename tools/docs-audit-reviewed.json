@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "da21ee964f5391d4612c4e769ba9ccc7995e53ccc88701bc6b8c091d83a22333",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "2b1ffccf105044b8830cbe0730e4b19d18adc4a4662954645aaa9cb2f2fff747",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP review, architecture pending, full Debug Zig test incomplete"
+    },
+    "docs/hwp5-bin-data-bmp.md": {
+      "sha256": "cb43b4e18cb398ae3e1bfcc99e4e6081b5ebd505a7c26d358a057d4082c89b92",
+      "evidence": "2026-09-27 official HWP5 revision1.3 tables 17 18 and Microsoft BMP headers, current Zig BMP selector core report and limits, Debug Safe Fast HWP BMP 17 tests each, current ReleaseSafe probe and CFB synthetic 428 comparisons 507 rejects; historical real file and audit logs separated"
     },
     "docs/hwp5-bin-data-jpeg.md": {
       "sha256": "623040490f87a2dbfb75e76c2888fa239d77093ab05b34cb40ee70c869a2d13f",

@@ -12,7 +12,7 @@ BinData 표 17~18의 내부 항목별 압축 정책으로 얻은 바이트를 [B
 
 예를 들어 bmp 확장자의 PNG 서명은 PNG로 처리하고, JPEG를 켰다면 bmp 확장자의 FF D8은 JPEG로 처리합니다. 반대로 jpg 확장자의 BM은 JPEG를 켰으면 JPEG 오류이며, JPEG를 끄고 BMP를 켰다면 BMP 불일치 통계로 처리합니다. 우선순위는 자동 형식 복구 휴리스틱이 아니라 기존 선택 규칙을 보존하는 명시적 정책입니다.
 
-RLE4/8은 [별도 RGBA 선택](hwp5-bin-data-bmp-rle.md)으로 연결합니다. 기본 rle=null과 내장 JPEG/PNG는 UnsupportedBmpPixelCompression으로 거부합니다. OS/2 등 미지원 헤더·packed DIB·V5 프로파일 의미 검사·색 관리·한글 화면 동일성까지 지원했다고 주장하지 않습니다. V5 raw profile offset/size를 보존하는 기존 메타데이터 보류 정책도 완화하거나 완료로 바꾸지 않습니다.
+RLE4/8은 [별도 RGBA 선택](hwp5-bin-data-bmp-rle.md)으로 연결합니다. 기본 rle=null과 내장 JPEG/PNG는 UnsupportedBmpPixelCompression으로 거부합니다. 12바이트 CORE 헤더는 처리하지만 그 밖의 OS/2 헤더와 packed DIB는 지원하지 않습니다. 기본 BMP 선택만으로 V5 프로파일 의미 검사·색 관리·한글 화면 동일성까지 지원했다고 주장하지 않습니다. V5 raw profile offset/size를 보존하는 기존 메타데이터 보류 정책도 완화하거나 완료로 바꾸지 않습니다.
 
 ## 책임·한도·소유권
 
@@ -26,9 +26,13 @@ V5 프로파일의 범위·ICC 검사는 [별도 HWP 선택 연결](hwp5-bin-dat
 
 max_binaries는 모든 처리/미처리 항목 수입니다. 동일 스트림을 반복 참조해도 매 항목마다 RGBA와 항목 수를 계산합니다. BMP 파일 바이트·헤더 픽셀 수·팔레트 수·저장 바이트·trailing 정책은 원래 개별 Options를 그대로 전달합니다. RGBA 한도 초과는 복원 버퍼 할당 전에 거부됩니다.
 
-`Report.bmp`의 기본 통계는 images, rgba_bytes, extension_disagreements, metadata_deferred_images 네 가산 scalar이며, 후속 RLE 통계는 위 별도 주제 문서가 소유합니다. overflow는 LimitExceeded이며, 파싱·복원·가산이 모두 성공한 뒤에만 보고서를 교체합니다. 상위 semantics_deferred와 BMP metadata_deferred_images는 그대로 남습니다. 보고서는 입력 CFB·decoded BinData·픽셀 버퍼를 빌리지 않습니다.
+`Report.bmp`의 기본 통계는 images, rgba_bytes, extension_disagreements, metadata_deferred_images 네 가산 scalar입니다. 현재 보고서에는 [BI_RGB32 상위 바이트](hwp5-bmp-high-byte.md) 통계와 선택형 [RLE 통계](hwp5-bin-data-bmp-rle.md)도 추가되어 있으나, 해당 해석은 각 주제 문서가 소유합니다. overflow는 LimitExceeded이며, 파싱·복원·가산이 모두 성공한 뒤에만 보고서를 교체합니다. 상위 semantics_deferred와 BMP metadata_deferred_images는 그대로 남습니다. 보고서는 입력 CFB·decoded BinData·픽셀 버퍼를 빌리지 않습니다.
 
-## 독립 검증 기록
+## 현재 문서 재검증 (2026-09-27)
+
+한컴 HWP5 revision 1.3 표 17~18의 EMBEDDING/압축 정책, Microsoft BITMAPINFOHEADER·BITMAPV5HEADER의 압축·프로필 필드, 현재 `container/images.zig`·`bmp_images.zig`·`image/bmp/`를 대조했습니다. Debug/ReleaseSafe/ReleaseFast `zig test src/root.zig --test-filter 'HWP BMP'`는 각각 17/17 통과했습니다(기본 BMP 8개, 프로필 8개와 root). 현재 ReleaseSafe probe/CFB WASM의 독립 JS `containerBmpEdges`는 합성 비교 428건·거부 507건을 재현했습니다. 이 결과는 기본 BMP 선택과 합성 경계를 검사하며 아래 실제 HWP 45개 및 추가 문서의 수치, 과거 전체 audit·변이를 이번에 재실행했다는 뜻은 아닙니다. 독립 BMP 구조·RLE·프로필 문서의 완료 여부도 각각 별도입니다.
+
+## BMP 최초 연결 당시 독립 검증 기록
 
 네이티브 HWP BMP 필터는 Debug/ReleaseSafe/ReleaseFast 각각 root 포함 9/9개 통과했습니다. 반복 예산·선택 꺼짐·PNG/JPEG 우선순위·확장자 불일치·모든 절단 위치·압축 미지원·개별/문서 한도·옵션 전달·trailing·보고서 수명·카운터 overflow를 확인했습니다. CFB 2회 참조와 반복 consume의 모든 할당 실패 위치, 명시적 safety/accounting 할당자의 정상/오류 경로 해제량도 검사했습니다.
 
@@ -42,8 +46,8 @@ max_binaries는 모든 처리/미처리 항목 수입니다. 동일 스트림을
 
 세 모드에서 V5 bitfield 2회 참조 보고서의 확장 120바이트를 각각 XOR 1로 바꿔 모두 독립 대조 실패로 검출했습니다. 전체 문서/픽셀 의미 검증이나 소스 결함 검출을 이 출력 변형으로 대신하지 않습니다.
 
-격리 경로 `/tmp/hwpjs-container-bmp-mutants.VguQJF/`에 남은 RGBA 예산 무시·누적 보고서 덮기·메타데이터 보류 삭제·개별 RGBA 한도 무시·구조 옵션 초기화·복원 오류를 빈 성공으로 바꾸기·출력 해제 누락·검사 전 보고서 갱신의 8종 결함을 주입했습니다. 각각 세 모드에서 컴파일 후 테스트 실패로 검출했습니다(root 포함 9개 중 실패 수는 순서대로 2/6/4/1/2/7/3/7개). ReleaseFast 해제 누락에서는 명시적 할당 회계의 0 대 32바이트 불일치를 확인했습니다. 제품 소스에는 결함을 적용하지 않았고 소스/로그를 해당 격리 경로에 남겼습니다.
+당시 격리 경로 `/tmp/hwpjs-container-bmp-mutants.VguQJF/`에서 RGBA 예산 무시·누적 보고서 덮기·메타데이터 보류 삭제·개별 RGBA 한도 무시·구조 옵션 초기화·복원 오류를 빈 성공으로 바꾸기·출력 해제 누락·검사 전 보고서 갱신의 8종 결함을 주입했습니다. 각각 세 모드에서 컴파일 후 테스트 실패로 검출했습니다(root 포함 9개 중 실패 수는 순서대로 2/6/4/1/2/7/3/7개). ReleaseFast 해제 누락에서는 명시적 할당 회계의 0 대 32바이트 불일치를 확인했습니다. 제품 소스에는 결함을 적용하지 않았습니다. 현재 이 격리 경로와 소스/로그는 존재하지 않습니다.
 
-Debug → ReleaseSafe → ReleaseFast 전체 audit는 각각 20/20단계·네이티브 907/907개·checks=7,818,540건으로 통과했습니다. 로그는 `/tmp/hwpjs-container-bmp-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다. 전체 회귀에는 기존 검사도 포함되므로 BMP 전용 검사 수나 지원율로 읽지 않습니다. 전체 BMP·HWP/HWPX 문서 검증 완료를 선언하지 않습니다.
+당시 Debug → ReleaseSafe → ReleaseFast 전체 audit는 각각 20/20단계·네이티브 907/907개·checks=7,818,540건으로 통과했습니다. 로그 경로 `/tmp/hwpjs-container-bmp-{Debug,ReleaseSafe,ReleaseFast}-audit.log`는 현재 존재하지 않습니다. 전체 회귀에는 기존 검사도 포함되므로 BMP 전용 검사 수나 지원율로 읽지 않습니다. 전체 BMP·HWP/HWPX 문서 검증 완료를 선언하지 않습니다.
 
 전체 회귀 이후 최종 기본 `zig build test --summary all`도 907/907개, 제품 `zig build -Doptimize=ReleaseSafe --summary all`은 5/5단계를 통과했습니다. 변경 Zig 포맷·JS 문법·diff 공백 검사와 관련 문서 7개의 로컬 링크 74개를 확인했습니다. 문서 진입점에는 링크만 연결하고 BMP 계약·검증 기록은 이 주제와 기존 독립 코어 문서에 분리했습니다.
