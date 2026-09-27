@@ -2,7 +2,7 @@
 
 ## 범위와 단일 출처
 
-`src/image/emf/emf_plus_scale_world_transform.zig`는 MS-EMFPLUS 2.3.9.4의 EmfPlusScaleWorldTransform wire record를 소유합니다. Type `0x402E`, Size 20, DataSize와 실제 data 길이 8을 각각 검사하고 `Sx`, `Sy`를 little-endian IEEE 754 binary32 순서로 읽습니다.
+`src/image/emf/emf_plus_scale_world_transform.zig`는 [MS-EMFPLUS 2.3.9.4](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/fc77b4c7-def1-43b1-8eb3-59f5e0410df7)의 EmfPlusScaleWorldTransform wire record를 소유합니다. Type `0x402E`, Size 20, DataSize와 실제 data 길이 8을 각각 검사하고 `Sx`, `Sy`를 little-endian IEEE 754 binary32 순서로 읽습니다.
 
 A flag는 `0x2000`이며 set이면 post-multiply, clear이면 pre-multiply입니다. 공용 `emf_plus_record_flags.zig`의 의미별 `isPostMultiply` 해석을 재사용하고 나머지 reserved Flags 원값을 보존합니다. float의 NaN, 무한대와 signed zero를 정규화하지 않습니다.
 
@@ -24,4 +24,4 @@ A clear/set와 reserved Flags, `Sx`/`Sy` 순서와 원시 float bit, 모든 payl
 
 Type, Size, DataSize, data slice, A flag, `Sx`/`Sy` 순서, `Sy` bit, stream parser와 stream counter의 고유 의미 변이 9개를 Debug·ReleaseSafe·ReleaseFast에서 각각 실행했습니다. 컴파일 성공 후 테스트 실패 집계가 있는 실행만 인정했으며 최종 27/27회가 검출됐고 생존·컴파일 오류·timeout은 0입니다. 산출물은 `/tmp/hwpjs-scale-mutants-run`입니다.
 
-전체 `audit`도 세 모드에서 각각 40/40 단계와 1,808/1,808 테스트(native 1,769, chart 31, WMF 8)를 통과했습니다. HWP/WASM 검사는 각 모드 8,905,827회, import 위반 0이며 CFB 변이 12,000회에서 trap 0입니다. 로그는 `/tmp/hwpjs-emfplus-scale-world-transform-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.
+아래 전체 `audit`와 위 변이 검출 수치는 당시 기록이며 2026-09-28 재검증에서는 재실행하지 않았습니다. 당시 전체 `audit`도 세 모드에서 각각 40/40 단계와 1,808/1,808 테스트(native 1,769, chart 31, WMF 8)를 통과했습니다. HWP/WASM 검사는 각 모드 8,905,827회, import 위반 0이며 CFB 변이 12,000회에서 trap 0입니다. 로그는 `/tmp/hwpjs-emfplus-scale-world-transform-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.

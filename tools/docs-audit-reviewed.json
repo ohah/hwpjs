@@ -1,6 +1,34 @@
 {
   "schema": 1,
   "verified": {
+    "docs/emf-plus-reset-world-transform-record.md": {
+      "sha256": "bf5fad1d38c9e76f0a36372450e7c5dcc01eff2cdd005192bc55e0084176cb5e",
+      "evidence": "2026-09-28 official EMF+ ResetWorldTransform type ignored flags empty payload against Zig parser tracked state framing, Debug Safe Fast root EMF+ 560 each with two direct tests; historic mutants and full audits not rerun"
+    },
+    "docs/emf-plus-translate-world-transform-record.md": {
+      "sha256": "d14d27cc22fdc143a4679e9574a901a6bd439c34d90a7dde30c9d755a3cd2cfe",
+      "evidence": "2026-09-28 official EMF+ TranslateWorldTransform A bit dx dy sizes against Zig parser shared matrix tracked state framing, Debug Safe Fast root EMF+ 560 each with two direct tests; historic mutants and full audits not rerun"
+    },
+    "docs/emf-plus-scale-world-transform-record.md": {
+      "sha256": "683acba10ad3e60338f47ac52213f4694218099f9b1e288db3598aba1f0b0ca2",
+      "evidence": "2026-09-28 official EMF+ ScaleWorldTransform A bit Sx Sy sizes against Zig parser shared matrix tracked state framing, Debug Safe Fast root EMF+ 560 each with two direct tests; historic mutants and full audits not rerun"
+    },
+    "docs/emf-plus-rotate-world-transform-record.md": {
+      "sha256": "c59b2a8bbc5ee0b42c96763822060a45944695ec4340da5e029a93f2d5078b66",
+      "evidence": "2026-09-28 official EMF+ RotateWorldTransform A bit degree Angle sizes against Zig parser shared matrix tracked state framing, Debug Safe Fast root EMF+ 560 each with two direct tests; historic mutants and full audits not rerun"
+    },
+    "docs/emf-plus-begin-container-record.md": {
+      "sha256": "4bbeacbee20a14767c30d03a96f5c98238c44090ba49481e5642b596c65b7f79",
+      "evidence": "2026-09-28 official EMF+ BeginContainer unit rectangle StackIndex versus Zig parser and tracked container stack, Debug Safe Fast root EMF+ 560 each with two direct tests; historic mutants and full audits not rerun, no positive HWP EMF+"
+    },
+    "docs/emf-plus-begin-container-no-params-record.md": {
+      "sha256": "3e7612002037026b28349c774427a91b7b3ce3b37d6f99aa590002a4e5c9461c",
+      "evidence": "2026-09-28 official EMF+ BeginContainerNoParams record and 20240423 PDF bytes against Zig common StackIndex parser tracked stack and framing, Debug Safe Fast root EMF+ 560 each with three direct tests; historic mutants and full audits not rerun"
+    },
+    "docs/emf-plus-end-container-record.md": {
+      "sha256": "b05bfceab8fe0ee874b9fe8d9713ac6a4990fa56324db35915438fd468cd7d9e",
+      "evidence": "2026-09-28 official EMF+ EndContainer record and 20240423 PDF split hex plus parent comment dump against Zig common StackIndex parser tracked close and framing, Debug Safe Fast root EMF+ 560 each with three direct tests; historic mutants and full audits not rerun"
+    },
     "docs/emf-plus-graphics-state.md": {
       "sha256": "f3f91f86ff12771bd50c8e41e93e94c9cc21fffac4fbef3aac5fcc4bd77c86ab",
       "evidence": "2026-09-28 official GDI+ row-vector and container stack behavior against Zig matrix state owned deep clone tracked stream, Debug Safe Fast root EMF+ 560 each with matrix stack stream tests collected; historical mutants and full audits not rerun"
@@ -118,7 +146,7 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "4081264decc8bd3a14a1c1e86c6d82f644313dfd2be1a88ef4526d89ecc7bb1e",
+      "sha256": "07650ff093bc44a294187280ab8bdf7176724c7bef7aa15ca6947f1e821b0de2",
       "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope PNG ICC inspection PNG RGBA BCP47 syntax registry alpha2 history ICC IANA matching mluc selection mluc structure mluc Unicode ICC v2 Unicode v2 text tag payload dispatch tag table structure header identifiers v4 and v2 header numeric header verification ICC registry source lookup required tags overview presence table XYZ type XYZ tags curve type TRC tags parametric curve analytic forward TRC forward sampled forward sampled inverse sampled wide inverse gamma inverse wide gamma inverse TRC inverse and extended TRC inverse matrix TRC inverse matrix TRC model matrix TRC forward fraction matrix inverse fraction matrix TRC inverse wide linear target wide positive bounds normalized and extended root compare normalized and extended root locations clipped and extended power preimage whole and extended whole parametric preimage normalized and extended whole bounds normalized and extended attained F.1a whole and extended nearest normalized and extended full inverse topology segments jump trend domain partition power clipping power level root compare active root locations rational power order normalized power level wide power level normalized root order power range power nearest ordinate order extended ordinate order ordinate distance extended ordinate distance linear range parametric range rational range nearest linear preimage extended linear preimage chromatic adaptation matrix transform ICC foundation verification review, architecture pending, full Debug Zig test 2656 passed and ReleaseFast HWP5 audit 10 steps 8905855 checks, EMF ICM and three clipping region docs direct tests and 102 shared tests each mode"
     },
     "docs/bcp47-syntax.md": {

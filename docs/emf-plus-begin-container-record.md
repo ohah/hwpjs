@@ -2,7 +2,7 @@
 
 ## 범위와 단일 출처
 
-`src/image/emf/emf_plus_begin_container.zig`는 MS-EMFPLUS 2.3.7.1의 EmfPlusBeginContainer wire record를 소유합니다. Type `0x4027`, Size 48, DataSize와 실제 data slice 36을 독립 검사하고, 공용 `emf_plus_geometry.readRectF`로 DestRect와 SrcRect를 순서대로 읽은 뒤 little-endian u32 StackIndex를 보존합니다. RectF의 NaN·무한대·음수·signed zero를 parser가 임의 보정하지 않습니다.
+`src/image/emf/emf_plus_begin_container.zig`는 [MS-EMFPLUS 2.3.7.1](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/9d8d1b89-349e-42da-aa74-8a68a3401601)의 EmfPlusBeginContainer wire record를 소유합니다. Type `0x4027`, Size 48, DataSize와 실제 data slice 36을 독립 검사하고, 공용 `emf_plus_geometry.readRectF`로 DestRect와 SrcRect를 순서대로 읽은 뒤 little-endian u32 StackIndex를 보존합니다. RectF의 NaN·무한대·음수·signed zero를 parser가 임의 보정하지 않습니다.
 
 Flags의 low byte는 공용 `UnitType` 0~6을 재사용하고 명세 도표에서 0으로 고정된 high byte는 거부합니다. World와 Display는 명세의 SHOULD NOT 값이지만 Windows가 수신 시 허용한다고 각주 28이 명시하므로 파싱은 성공시키고 `discouraged_page_unit`과 stream 경고 계수로 구분합니다. 이 값의 재생 결과는 정의하지 않습니다.
 
@@ -18,4 +18,4 @@ tracked stream은 유효 BeginContainer를 공용 graphics-state stack의 Contai
 
 17개 의미 변이(RecordType, Size/DataSize/slice, high-byte 고정값, PageUnit byte 선택·SHOULD 경고, DestRect/SrcRect 순서, StackIndex, Flags 보존, stream routing·두 checked count·경고 분기·stack kind/push/index)를 모드별 격리 cache와 120초 watchdog 아래 Debug·ReleaseSafe·ReleaseFast에서 실행했습니다. 최초 wrapping overflow 변이 2개는 Debug/ReleaseSafe panic으로 검출되어 최종 증거에서 제외하고, overflow를 잘못된 정상 오류로 반환하는 유효 결함으로 교체했습니다. 최종 51/51회가 assertion 또는 expected-error 의미 실패이며 생존·컴파일 오류·panic·timeout은 각각 0입니다. 개별 로그는 `/tmp/hwpjs-begin-mutant-*-{Debug,ReleaseSafe,ReleaseFast}.log`입니다.
 
-변경 소스를 고정한 뒤 세 모드 전체 `audit`를 순차 실행했습니다. 각 모드는 40/40 단계와 1,768/1,768 테스트(공통 native 1,729, chart 31, WMF 8), HWP/WASM 8,905,827 checks, imports 0을 통과했고 CFB 12,000 변이의 trap은 0입니다. 로그는 `/tmp/hwpjs-emfplus-begin-container-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.
+아래 전체 `audit`와 위 변이 검출 수치는 당시 기록이며 2026-09-28 재검증에서는 재실행하지 않았습니다. 당시 변경 소스를 고정한 뒤 세 모드 전체 `audit`를 순차 실행했습니다. 각 모드는 40/40 단계와 1,768/1,768 테스트(공통 native 1,729, chart 31, WMF 8), HWP/WASM 8,905,827 checks, imports 0을 통과했고 CFB 12,000 변이의 trap은 0입니다. 로그는 `/tmp/hwpjs-emfplus-begin-container-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.

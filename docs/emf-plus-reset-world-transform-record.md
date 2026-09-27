@@ -2,7 +2,7 @@
 
 ## 범위와 단일 출처
 
-`src/image/emf/emf_plus_reset_world_transform.zig`는 MS-EMFPLUS 2.3.9.2의 EmfPlusResetWorldTransform wire record를 소유합니다. Type `0x402B`, Size 12, DataSize와 실제 data 길이 0을 각각 검사합니다. Flags는 사용되지 않고 SHOULD zero이지만 수신 시 MUST ignore이므로 16비트 원값을 보존하며 nonzero를 거부하거나 정규화하지 않습니다.
+`src/image/emf/emf_plus_reset_world_transform.zig`는 [MS-EMFPLUS 2.3.9.2](https://winprotocoldoc.z19.web.core.windows.net/MS-EMFPLUS/%5BMS-EMFPLUS%5D.pdf)의 EmfPlusResetWorldTransform wire record를 소유합니다. Type `0x402B`, Size 12, DataSize와 실제 data 길이 0을 각각 검사합니다. Flags는 사용되지 않고 SHOULD zero이지만 수신 시 MUST ignore이므로 16비트 원값을 보존하며 nonzero를 거부하거나 정규화하지 않습니다.
 
 ## 미지원 경계
 
@@ -20,4 +20,4 @@
 
 Type, Size, DataSize, data slice, Flags 보존, stream parser 호출과 stream counter의 고유 변이 7개를 Debug·ReleaseSafe·ReleaseFast에서 각각 실행해 총 21/21을 검출했습니다. 집중 변이 산출물은 `/tmp/hwpjs-reset-transform-mutants-run`에 남겼습니다.
 
-전체 `audit`도 세 모드에서 각각 40/40 단계와 1,800/1,800 테스트(native 1,761, chart 31, WMF 8)를 통과했습니다. HWP/WASM 검사는 각 모드 8,905,827회, import 위반 0이며 CFB 변이 12,000회에서 trap 0입니다. 로그는 `/tmp/hwpjs-emfplus-reset-world-transform-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.
+아래 전체 `audit`와 위 변이 검출 수치는 당시 기록이며 2026-09-28 재검증에서는 재실행하지 않았습니다. 당시 전체 `audit`도 세 모드에서 각각 40/40 단계와 1,800/1,800 테스트(native 1,761, chart 31, WMF 8)를 통과했습니다. HWP/WASM 검사는 각 모드 8,905,827회, import 위반 0이며 CFB 변이 12,000회에서 trap 0입니다. 로그는 `/tmp/hwpjs-emfplus-reset-world-transform-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.

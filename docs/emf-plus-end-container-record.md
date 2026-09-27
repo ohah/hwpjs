@@ -2,9 +2,9 @@
 
 ## 범위와 단일 출처
 
-`src/image/emf/emf_plus_end_container.zig`는 MS-EMFPLUS 2.3.7.3의 EmfPlusEndContainer wire record를 소유합니다. Type `0x4029`, Size 16, DataSize와 실제 data slice 4를 검사하고 little-endian u32 StackIndex 전 범위를 보존합니다.
+`src/image/emf/emf_plus_end_container.zig`는 [MS-EMFPLUS 2.3.7.3](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/6480c3e6-ed84-46fd-a908-8d101476c124)의 EmfPlusEndContainer wire record를 소유합니다. Type `0x4029`, Size 16, DataSize와 실제 data slice 4를 검사하고 little-endian u32 StackIndex 전 범위를 보존합니다.
 
-Save·Restore·BeginContainerNoParams와 같은 고정 StackIndex payload이므로 크기와 endian 해석은 `emf_plus_stack_index_record.zig`만 소유하고 wrapper는 기대 RecordType과 외부 오류 이름만 구분합니다. Flags는 사용되지 않고 SHOULD zero이지만 수신 시 MUST be ignored이므로 nonzero를 거부하거나 정규화하지 않습니다. 공식 3.2.67.1 예제 전체 바이트 `29 40 00 00 10 00 00 00 04 00 00 00 01 00 00 00`을 Iterator부터 검증합니다. 예제 설명의 `PointData` 표현은 이 레코드에 없는 필드이므로 본문과 wire 배치를 우선합니다.
+Save·Restore·BeginContainerNoParams와 같은 고정 StackIndex payload이므로 크기와 endian 해석은 `emf_plus_stack_index_record.zig`만 소유하고 wrapper는 기대 RecordType과 외부 오류 이름만 구분합니다. Flags는 사용되지 않고 SHOULD zero이지만 수신 시 MUST be ignored이므로 nonzero를 거부하거나 정규화하지 않습니다. [공식 v20240423 PDF](https://winprotocoldoc.z19.web.core.windows.net/MS-EMFPLUS/%5BMS-EMFPLUS%5D.pdf) 3.2.67.1 예제의 분리된 hex 줄과 상위 EMF comment dump를 함께 대조한 전체 record 바이트 `29 40 00 00 10 00 00 00 04 00 00 00 01 00 00 00`을 Iterator부터 검증합니다. 예제 설명의 `PointData` 표현은 이 레코드에 없는 필드이므로 본문과 wire 배치를 우선합니다.
 
 ## 공유 stack과 미지원 경계
 
@@ -18,4 +18,4 @@ tracked stream은 StackIndex가 일치하는 가장 가까운 Container entry를
 
 15개 의미 변이(공용 parser RecordType 위임, 두 오류 변환, Flags·StackIndex 보존, stream routing·report·overflow·close kind/presence/index, stack target 포함 제거·kind 구분, framing tracked consume·finish)를 모드별 격리 cache와 120초 watchdog 아래 Debug·ReleaseSafe·ReleaseFast에서 실행했습니다. 최초 병렬 실행에서 한 변이가 메모리 압박으로 exit 137을 받아 결과에서 제외했습니다. 후반 record 실패 rollback 테스트를 보강한 최종 소스에서는 다섯 변이씩 실행해 45/45회가 assertion 또는 unhandled expected-error 의미 실패였습니다. 생존·컴파일 오류·panic·timeout은 각각 0입니다. 최종 로그는 `/tmp/hwpjs-end-postreview-mutant-*-{Debug,ReleaseSafe,ReleaseFast}.log`입니다.
 
-변경 소스를 고정한 뒤 세 모드 전체 `audit`를 순차 실행했습니다. 적대적 리뷰에서 End 성공 뒤 같은 comment의 후반 record 실패가 stack/report를 원복하는 assertion을 추가한 후 세 모드를 모두 다시 실행했습니다. 최종 각 모드는 40/40 단계와 1,776/1,776 테스트(공통 native 1,737, chart 31, WMF 8), HWP/WASM 8,905,827 checks, imports 0을 통과했고 CFB 12,000 변이의 trap은 0입니다. 최종 로그는 `/tmp/hwpjs-emfplus-end-container-postreview-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.
+아래 전체 `audit`와 위 변이 검출 수치는 당시 기록이며 2026-09-28 재검증에서는 재실행하지 않았습니다. 당시 변경 소스를 고정한 뒤 세 모드 전체 `audit`를 순차 실행했습니다. 적대적 리뷰에서 End 성공 뒤 같은 comment의 후반 record 실패가 stack/report를 원복하는 assertion을 추가한 후 세 모드를 모두 다시 실행했습니다. 최종 각 모드는 40/40 단계와 1,776/1,776 테스트(공통 native 1,737, chart 31, WMF 8), HWP/WASM 8,905,827 checks, imports 0을 통과했고 CFB 12,000 변이의 trap은 0입니다. 최종 로그는 `/tmp/hwpjs-emfplus-end-container-postreview-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.

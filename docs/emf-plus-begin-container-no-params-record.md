@@ -2,7 +2,7 @@
 
 ## 범위와 단일 출처
 
-`src/image/emf/emf_plus_begin_container_no_params.zig`는 MS-EMFPLUS 2.3.7.2의 EmfPlusBeginContainerNoParams wire record를 소유합니다. Type `0x4028`, Size 16, DataSize와 실제 data slice 4를 검사하고 little-endian u32 StackIndex 전 범위를 보존합니다.
+`src/image/emf/emf_plus_begin_container_no_params.zig`는 [MS-EMFPLUS 2.3.7.2](https://learn.microsoft.com/en-us/openspecs/windows_protocols/MS-EMFPLUS/a7d12a9f-c4a8-4668-af29-fce0aa53b39c)의 EmfPlusBeginContainerNoParams wire record를 소유합니다. Type `0x4028`, Size 16, DataSize와 실제 data slice 4를 검사하고 little-endian u32 StackIndex 전 범위를 보존합니다.
 
 이 레코드는 Save·Restore와 같은 4바이트 StackIndex payload를 사용하므로 크기와 endian 해석은 `emf_plus_stack_index_record.zig`만 소유합니다. 각 wrapper는 기대 RecordType과 외부 오류 이름만 구분합니다. Flags는 사용되지 않고 SHOULD zero이지만 수신 시 MUST be ignored이므로 nonzero를 거부하거나 정규화하지 않고 u16 원값을 보존합니다. 공식 3.2.32.10 예제는 전체 바이트 `28 40 00 00 10 00 00 00 04 00 00 00 01 00 00 00`과 StackIndex 1을 제시합니다.
 
@@ -18,4 +18,4 @@ tracked stream은 유효 레코드를 공용 graphics-state stack의 Container e
 
 12개 의미 변이(공용 parser의 RecordType 위임, 두 오류 변환, Flags·StackIndex 보존, stream routing·report 대상·overflow 오류·Container kind/push/index, 미지원 분기)를 모드별 격리 cache와 120초 watchdog 아래 Debug·ReleaseSafe·ReleaseFast에서 실행했습니다. 최초 push 변이 3개가 동일 문장의 앞선 BeginContainer 분기를 바꾼 위치 편향을 발견해 주변 count 문맥까지 고정하고 재실행했습니다. 최종 36/36회가 assertion 또는 expected-error 의미 실패이며 생존·컴파일 오류·panic·timeout은 각각 0입니다. 로그는 `/tmp/hwpjs-bcnp-final-mutant-*-{Debug,ReleaseSafe,ReleaseFast}.log`입니다.
 
-변경 소스를 고정한 뒤 세 모드 전체 `audit`를 순차 실행했습니다. 각 모드는 40/40 단계와 1,773/1,773 테스트(공통 native 1,734, chart 31, WMF 8), HWP/WASM 8,905,827 checks, imports 0을 통과했고 CFB 12,000 변이의 trap은 0입니다. 로그는 `/tmp/hwpjs-emfplus-begin-container-no-params-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.
+아래 전체 `audit`와 위 변이 검출 수치는 당시 기록이며 2026-09-28 재검증에서는 재실행하지 않았습니다. 당시 변경 소스를 고정한 뒤 세 모드 전체 `audit`를 순차 실행했습니다. 각 모드는 40/40 단계와 1,773/1,773 테스트(공통 native 1,734, chart 31, WMF 8), HWP/WASM 8,905,827 checks, imports 0을 통과했고 CFB 12,000 변이의 trap은 0입니다. 로그는 `/tmp/hwpjs-emfplus-begin-container-no-params-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.

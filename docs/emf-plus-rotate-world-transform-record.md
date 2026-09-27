@@ -2,7 +2,7 @@
 
 ## 범위와 단일 출처
 
-`src/image/emf/emf_plus_rotate_world_transform.zig`는 MS-EMFPLUS 2.3.9.3의 EmfPlusRotateWorldTransform wire record를 소유합니다. Type `0x402F`, Size 16, DataSize와 실제 data 길이 4를 각각 검사하고 degree 단위 `Angle`을 little-endian IEEE 754 binary32로 읽습니다.
+`src/image/emf/emf_plus_rotate_world_transform.zig`는 [MS-EMFPLUS 2.3.9.3](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/bf0811ba-bab6-4e01-ae19-e750be630391)의 EmfPlusRotateWorldTransform wire record를 소유합니다. Type `0x402F`, Size 16, DataSize와 실제 data 길이 4를 각각 검사하고 degree 단위 `Angle`을 little-endian IEEE 754 binary32로 읽습니다.
 
 A flag는 `0x2000`이며 set이면 post-multiply, clear이면 pre-multiply입니다. 공용 `emf_plus_record_flags.zig`의 의미별 `isPostMultiply` 해석을 재사용하고 나머지 reserved Flags 원값을 보존합니다. angle의 NaN, 무한대와 signed zero를 정규화하지 않습니다.
 
@@ -24,4 +24,4 @@ A clear/set와 reserved Flags, Angle 원시 float bit, 모든 payload 잘림, Re
 
 Type, Size, DataSize, data slice, A flag, Angle bit, stream parser와 stream counter의 고유 의미 변이 8개를 Debug·ReleaseSafe·ReleaseFast에서 각각 실행했습니다. 컴파일 성공 후 테스트 실패 집계가 있는 실행만 인정했으며 최종 24/24회가 검출됐고 생존·컴파일 오류·timeout은 0입니다. 산출물은 복제본과 cache를 제거하고 24개 실행 로그만 남긴 `/tmp/hwpjs-rotate-mutants-run`입니다.
 
-최초 전체 감사의 Debug 실행은 테스트가 끝났더라도 변이 복제본으로 디스크가 가득 차 로그 기록이 실패했으므로 결과에서 제외했습니다. 복제본·cache만 제거해 가용 공간을 복구한 뒤 세 모드를 처음부터 다시 실행했습니다. 유효한 전체 `audit`는 각 모드 40/40 단계와 1,812/1,812 테스트(native 1,773, chart 31, WMF 8)를 통과했습니다. HWP/WASM 검사는 각 모드 8,905,827회, import 위반 0이며 CFB 변이 12,000회에서 trap 0입니다. 로그는 `/tmp/hwpjs-emfplus-rotate-world-transform-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.
+위 변이 및 아래 전체 감사 수치는 당시 기록이며 2026-09-28 재검증에서는 재실행하지 않았습니다. 당시 최초 전체 감사의 Debug 실행은 테스트가 끝났더라도 변이 복제본으로 디스크가 가득 차 로그 기록이 실패했으므로 결과에서 제외했습니다. 복제본·cache만 제거해 가용 공간을 복구한 뒤 세 모드를 처음부터 다시 실행했습니다. 유효한 전체 `audit`는 각 모드 40/40 단계와 1,812/1,812 테스트(native 1,773, chart 31, WMF 8)를 통과했습니다. HWP/WASM 검사는 각 모드 8,905,827회, import 위반 0이며 CFB 변이 12,000회에서 trap 0입니다. 로그는 `/tmp/hwpjs-emfplus-rotate-world-transform-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.
