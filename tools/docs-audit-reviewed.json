@@ -6,8 +6,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "da30333df9a2fc22f5dfb5a3744409efbd6074f0df23cf0c6606c28b5c58d982",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope PNG ICC inspection PNG RGBA BCP47 syntax registry alpha2 history ICC IANA matching mluc selection mluc structure mluc Unicode and ICC v2 Unicode review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "11fbce6ea5dcad2f52aaf30aeba4a15c9a9f488deb4dad2c6f77e8353cabbedc",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope PNG ICC inspection PNG RGBA BCP47 syntax registry alpha2 history ICC IANA matching mluc selection mluc structure mluc Unicode ICC v2 Unicode and v2 text review, architecture pending, full Debug Zig test incomplete"
     },
     "docs/bcp47-syntax.md": {
       "sha256": "ae0d91a0bb5ca2f8a5194b5ffa76494427cc058784f11446fd905458020f5b11",
@@ -40,6 +40,10 @@
     "docs/icc-v2-unicode.md": {
       "sha256": "b32d1a8b0ad7ec394227dc4b3e1984cad54ae7eb6120453dcd30dab3472950cd",
       "evidence": "2026-09-27 ICC.1:2001-04 section6.5.17 two byte units null and current Zig explicit UTF16BE opt in PNG report, Debug Safe Fast description focus 4 each PNG focus 2 each, existing local WASM mode243 Node independent 314 accepted 479 rejected; historic full audit mutants macOS v2 profiles v4 manual not rerun"
+    },
+    "docs/icc-v2-text.md": {
+      "sha256": "c0730151aa7810f4623c2ff87c551a48ec3801b04db2fdd154e4e05fab1514ea",
+      "evidence": "2026-09-27 ICC.1:2001-04 sections6.5.17-18 ASCII Unicode ScriptCode counts null misalignment current Zig raw text description dispatch PNG default deferral opt in Unicode, Debug Safe Fast v2 text 2 description 4 PNG 2 dispatch 3 each, existing local WASM modes241 242 JS 165 accepted 107 rejected; historic full audit macOS profiles mutants not rerun"
     },
     "docs/png-rgba.md": {
       "sha256": "caa9320a6c1b5d93529d7461b2482d7bc3ba414c8817663a34028dad68f53f5b",
