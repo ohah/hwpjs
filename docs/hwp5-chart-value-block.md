@@ -34,4 +34,8 @@ Debug·ReleaseSafe·ReleaseFast WASM에서 실제 차트 43개, 블록 69개(숫
 
 읽기 전용 추가 점검에서 같은 43개 차트의 그리드 비-null 셀, 초기 Backdrop, Footnote, Legend, Plot/Light 및 연속 Axis 172개의 관측된 신규 ID를 차트별 Map에 순서대로 등록했습니다. 총 3,671개 등록에서 충돌은 0개였습니다. Axis/기반 본문의 objectOffsets, 선택 값·서식 코드·라벨의 introduced, 서식 헤더 ID를 사용했고, 재참조 및 ValueBlock의 원시 header_word는 신규 ID로 세지 않았습니다. Plot 조사기가 미리 본 첫 Axis ID도 Plot 등록 목록에서 제외해 실제 Axis 경계에서 한 번만 등록했습니다.
 
-이는 관측된 구간의 ID 충돌 점검이지 모든 객체의 발견이나 전체 객체 그래프 의미 검증은 아닙니다. 특히 Chart/DataGrid 앞부분의 미확정 원시 헤더와 마지막 Axis 이후 Plot 데이터는 범위 밖입니다. 다음 제품 Axis 조립에서는 기존 String/Number와 비문자열 객체 사전을 연결하고 이 범위를 제품 오류 경로로 검증해야 합니다.
+이는 관측된 구간의 ID 충돌 점검이지 모든 객체의 발견이나 전체 객체 그래프 의미 검증은 아닙니다. 특히 Chart/DataGrid 앞부분의 미확정 원시 헤더와 마지막 Axis 이후 Plot 데이터는 이 점검 범위 밖입니다. 후속 [Axis 조립](hwp5-chart-axis.md)은 기존 String/Number와 비문자열 객체 사전을 선택된 배치에 연결하지만 모든 배치의 전역 객체 그래프 증명은 아닙니다.
+
+## 현재 재검증
+
+현재 `value_block.zig`·`axis_scale.zig`의 원시 header word 비등록, 다섯 null 슬롯, String 필드별 예산과 Number 비차감, null/서식/라벨/본문 조립 및 Reader 실패 경계를 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 `chart value block` 집중 테스트는 각각 3/3개 통과했습니다. 현재 ReleaseSafe HWP5 전체 감사는 10/10 단계·8,905,855회 검사로 통과했고, 같은 빌드의 독립 블록 오라클은 43개 차트·69개 ValueBlock(숫자 선택 값 2개)에서 수락 276건·거부 25,326건을 다시 확인했습니다. 과거 8종 소스 변이와 세 모드 전체 감사는 이번에 재실행하지 않았습니다. 선택된 블록의 성공을 모든 Axis 배치나 전역 객체 충돌 검사 완료로 확대하지 않습니다.

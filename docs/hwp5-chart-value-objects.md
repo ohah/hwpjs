@@ -34,4 +34,8 @@ Debug·ReleaseSafe·ReleaseFast의 `zig test src/root.zig --test-filter 'chart'`
 
 최종 `zig build test --summary all`도 1,040/1,040 테스트, 5/5 steps로 통과했고, `zig build -Doptimize=ReleaseSafe --summary all`은 5/5 steps로 통과했습니다. 변경 Zig 포맷·JS 문법 및 `git diff --check`도 확인했습니다.
 
-관련 테스트 통과를 전체 구현 완료로 해석하지 않습니다. 다음 범위는 ValueBlock/TextFormat 및 Axis 조립이며, 전체 차트·HWP/HWPX 편집·저장 완료를 의미하지 않습니다.
+관련 테스트 통과를 전체 구현 완료로 해석하지 않습니다. ValueBlock/TextFormat 및 선택된 Axis 조립은 후속 단계에서 추가됐지만, 일반 차트 배치·HWP/HWPX 편집·저장 완료를 의미하지 않습니다.
+
+## 현재 재검증
+
+현재 `value_object.zig`·`object_table.zig`의 String/Double/Other 단일 ID 공간, Number 비트 복사와 참조 span, 실패 시 Reader 유지 및 객체 사전의 논리 회계를 다시 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 `chart number` 집중 테스트는 각각 5/5개 통과했습니다. 현재 ReleaseSafe HWP5 전체 감사는 10/10 단계·8,905,855회 검사로 통과했고, 같은 빌드의 테스트 전용 probe에서 독립 Value 오라클은 실제 43개 차트의 String 272개·Double 427개, 수락 137건·거부 23,272건을 다시 확인했습니다. 과거 8종 소스 변이와 세 모드 전체 감사는 이번에 재실행하지 않았습니다.

@@ -1,6 +1,22 @@
 {
   "schema": 1,
   "verified": {
+    "docs/hwp5-chart-value-objects.md": {
+      "sha256": "a3d45dc41326676654df4051a90576143ee75f71e7b8140e7aa49f1cade88db6",
+      "evidence": "2026-09-28 current Zig Value Object Table identity and bytes versus Debug Safe Fast number 5 each; fresh ReleaseSafe hwp5 audit 10 steps 8905855 checks and independent probe 43 roots 272 Strings 427 Doubles 137 accepted 23272 rejected; historical mutants and other full modes not rerun"
+    },
+    "docs/hwp5-chart-value-block.md": {
+      "sha256": "5c4cea3acdd188eaaa95284d66f45e1fdff9774f4b5b45a7491f8f49e983b4f1",
+      "evidence": "2026-09-28 current Zig ValueBlock AxisScale raw header not ID alias budgets and failure; Debug Safe Fast block 3 each; fresh ReleaseSafe hwp5 audit 10 steps 8905855 checks and independent probe 43 roots 69 blocks 2 numbers 276 accepted 25326 rejected; historical mutants other full modes not rerun"
+    },
+    "docs/hwp5-chart-text-block-body.md": {
+      "sha256": "4c722e837d980b8d9819258d247b4a6eddf31b788a942f433500bfb47033ca23",
+      "evidence": "2026-09-28 current Zig TextBlock Body null empty alias span budgets and failure; Debug Safe Fast body 3 each; fresh ReleaseSafe hwp5 audit 10 steps 8905855 checks and independent probe 43 roots 69 bodies 66 null 345 accepted 18483 rejected; historical mutants other full modes not rerun"
+    },
+    "docs/hwp5-chart-text-format.md": {
+      "sha256": "b8034b8eea4c2cfa612836c9be94f0451ced3296b735fe9d24d9dbe3d21cea4c",
+      "evidence": "2026-09-28 current Zig TextFormat required and nullable separate spans identities budgets and failure; Debug Safe Fast format 3 each; fresh ReleaseSafe hwp5 audit 10 steps 8905855 checks and independent probe 43 roots 50 formats 200 accepted 3749 rejected; historical mutants other full modes not rerun"
+    },
     "docs/hwp5-chart-value-prefix-evidence.md": {
       "sha256": "70bd830830d0f14a2211634da1cc28187b5531b319da66abce57222b04b3c50f",
       "evidence": "2026-09-28 current prefix survey 584 HWP 43 charts 34 first scales 9 absent 3875 cuts 51 versions 17 formats 1 String reference; axis survey 172 axes 69 blocks header 0 34 and 65536 35; Node 3 tests Debug Safe Fast value block 3 each; historic mutants full audits not rerun"
@@ -558,8 +574,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "e41bdc34f6c317fa3a667a4051edd6b8e3f20cd70ec29e7147a5e62286e00c22",
-      "evidence": "2026-09-28 tracker updated with Value prefix TextBlock and Double independent observations, current Zig focused three modes, real 34 first scale 34 second scale 69 total blocks; historic mutants full audits not rerun"
+      "sha256": "b578404936fc2d5dd2c3d2858801dbb8c64c4785938b72ae21d2ab7a5e83e76f",
+      "evidence": "2026-09-28 tracker updated with current Value Object Block TextBody TextFormat focused three modes and ReleaseSafe full HWP5 audit 8905855 checks plus independent probe counts; historic mutants Debug Fast full audits not rerun"
     },
     "docs/bcp47-syntax.md": {
       "sha256": "ae0d91a0bb5ca2f8a5194b5ffa76494427cc058784f11446fd905458020f5b11",

@@ -32,8 +32,12 @@ Debug·ReleaseSafe·ReleaseFast 각각 실제 43개 차트의 서식 50개를 �
 
 최종 기본 테스트도 1,042/1,042 tests, 5/5 steps로 통과했고 ReleaseSafe 제품 빌드는 5/5 steps로 통과했습니다. 변경 Zig 포맷·JS 문법·문서 링크와 diff 공백 검사도 통과했습니다.
 
-이 검증은 선택된 TextFormat v1 범위의 결과이며 전체 차트 구현 완료를 뜻하지 않습니다. 다음 작업은 ValueBlock 및 Axis 조립입니다.
+이 검증은 선택된 TextFormat v1 범위의 결과이며 전체 차트 구현 완료를 뜻하지 않습니다. ValueBlock 및 선택된 Axis 조립은 이후 추가됐지만 일반 배치 지원과 별개입니다.
 
 현재 span 추가 상태에서는 필수 TextFormat probe, ValueBlock, Series suffix, 전체 Series collection wire와 각 독립 JS oracle이 `code_start/code_end`를 함께 대조합니다. SHA-256 고정 9,876바이트 Contents에서는 axis ValueBlock format과 모든 series nullable format의 ID 또는 null sentinel을 원본 span에 직접 확인합니다.
 
-현재 정규 audit는 Debug·ReleaseSafe·ReleaseFast 모두 32/32 단계, native 1,102/1,102개, Contents 16/16개, HWP/WASM 8,905,815회, imports 0으로 통과했습니다. 전체 기본 Zig 테스트는 1,086/1,086개입니다. 위의 과거 단계별 수치는 당시 범위의 기록이고 이 문단이 span 추가 후 통합 수치입니다.
+span 추가 당시 정규 audit는 Debug·ReleaseSafe·ReleaseFast 모두 32/32 단계, native 1,102/1,102개, Contents 16/16개, HWP/WASM 8,905,815회, imports 0으로 통과했습니다. 전체 기본 Zig 테스트는 1,086/1,086개였습니다. 위의 단계별 수치는 당시 범위의 기록이며 현재 통합 검증 수치는 아래 재검증을 따릅니다.
+
+## 현재 재검증
+
+현재 `text_format.zig`의 필수 code 경로, 별도 nullable code 경로, 원본 span, 객체·문자열 사전 연결과 Reader 실패 경계를 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 `chart text format` 집중 테스트는 각각 3/3개 통과했습니다. 현재 ReleaseSafe HWP5 전체 감사는 10/10 단계·8,905,855회 검사로 통과했고, 같은 빌드의 독립 Format 오라클은 43개 차트·50개 서식에서 수락 200건·거부 3,749건을 다시 확인했습니다. 과거 span·소스 변이와 이번에 실행하지 않은 Debug·ReleaseFast 전체 감사는 재실행 결과로 세지 않습니다.

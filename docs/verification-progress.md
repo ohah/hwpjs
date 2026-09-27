@@ -16,6 +16,8 @@ Plot·Surface 독립 조사 문서 두 개도 공식 차트 API 표, 현재 선�
 
 Value 접두부·TextBlock 기반 본문·String/Double 선택 필드 독립 조사 세 문서를 공식 차트 API 표, 후속 제품 `value_block`·`value_object`·`text_block_body` 경계와 대조해 완료 목록에 넣었습니다. Node 11/11개와 Zig의 ValueBlock 3/3·Number 5/5·TextBody 3/3 집중 테스트가 Debug·ReleaseSafe·ReleaseFast에서 각각 통과했습니다. HWP 584개 중 선택된 차트 43개에서 첫 축 배율 34개·부재 9개, 첫 값 prefix 3,875 cuts/51 versions, 본문 12,855 cuts/51 versions, 두 번째 축 값 13,107 cuts와 Double 1개를 재확인했습니다. 연속 축은 172개, ValueBlock 69개의 header word는 0이 34개·65536이 35개였습니다. 과거 변이 검사·세 모드 전체 audit는 재실행하지 않았고, 진단용 +54/+78 후보 재시도는 일반 제품 규칙이 아닙니다.
 
+Value 객체·ValueBlock·TextBlock 본문·TextFormat 네 제품 계약 문서도 현재 Zig 원본의 ID 공간, 원시값·span, null/alias, 문자열 회계와 실패 경계에 대조해 완료 목록에 넣었습니다. Debug·ReleaseSafe·ReleaseFast의 관련 집중 테스트는 각각 Number 5/5·Block 3/3·Body 3/3·Format 3/3개 통과했습니다. 새로 실행한 ReleaseSafe HWP5 전체 감사는 10/10 단계·8,905,855회 검사·WASM imports 0으로 종료됐고, 같은 빌드의 독립 오라클은 43개 차트에서 값 객체 137/23,272(String 272·Double 427), 블록 276/25,326(69개·숫자 2개), 본문 345/18,483(69개·null 66개), 서식 200/3,749(50개)의 수락/거부를 재확인했습니다. 과거 소스 변이·Debug/ReleaseFast 전체 감사는 이번에 재실행하지 않았으며, 테스트용 사전 주입은 모든 비문자열 객체의 전역 그래프 검증이 아닙니다.
+
 검증 대상은 Git이 추적하는 현재 프로젝트의 Markdown 문서입니다. `legacy/`와 `reference/`는 이전 구현·외부 참고 자료이므로 이 집계에서 제외하고, 별도로 인용할 때 해당 부분을 확인합니다. 현재 작업 트리에서 삭제 상태인 `lint-rules.md`는 사용자의 변경을 보존하며 `missing`으로 표시합니다. 존재하지 않는 파일을 임의로 복구하거나 검증 완료로 세지 않습니다.
 
 `tools/docs-audit-status.mjs`가 추적 대상·현재 내용 해시가 일치하는 검증 완료 파일·미검증·변경 후 재검증 필요·작업 트리 누락·새 미추적 문서를 구분합니다. 실행 방법은 [개발·검증 명령](development-commands.md)이 소유합니다. 완료 게이트는 **목록/해시 관점의** 검사일 뿐입니다. 검증 완료 목록의 단일 출처는 `tools/docs-audit-reviewed.json`이며, 문서가 바뀌면 해당 항목은 자동으로 `stale`이 됩니다. 이 수치는 제품 구현률이 아닙니다.
