@@ -27,3 +27,5 @@ MS-EMFPLUS 2.2.2.11과 2.2.2.15의 개별 객체 설명은 각각 일반 `PenDat
 최초 배치에서 음수 Compound 값을 허용한 결함이 세 모드에서 생존해 하한·상한·NaN fixture를 추가했습니다. 또한 Brush 시작을 뒤로 이동한 최초 결함은 안전 모드에서 slice trap을 일으켜 유효 변이에서 제외하고, 앞의 유효 바이트부터 Brush로 오인하는 동작 결함으로 교체했습니다. 두 교체 결함은 세 모드 6/6에서 검출했습니다. 변이 복사본은 `/tmp/hwpjs-emfplus-pen-mutants.v78dnT`, 유효 로그는 `/tmp/hwpjs-pen-mutation-<변이>-<모드>.log`와 두 교체 결과의 `/tmp/hwpjs-pen-mutation-rerun-<변이>-<모드>.log`입니다.
 
 전체 감사는 Debug·ReleaseSafe·ReleaseFast를 순차 실행했고 각 모드에서 40/40 단계와 1599/1599 테스트가 통과했습니다. 구성은 제품 루트 네이티브 1560개, 차트 소유권 31개, WMF Contents 8개이며 HWP/WASM 감사도 각 모드에서 8,905,827 checks와 imports 0을 보고했습니다. 로그는 `/tmp/hwpjs-emfplus-pen-Debug-audit.log`, `/tmp/hwpjs-emfplus-pen-ReleaseSafe-audit.log`, `/tmp/hwpjs-emfplus-pen-ReleaseFast-audit.log`입니다.
+
+위 변이·전체 감사는 작성 당시 이력으로, 이번에 다시 실행하지 않았습니다. 2026-09-28 공식 Pen/PenOptionalData 및 CompoundLineData와 현재 Zig의 flag별 wire 순서·원자적 reader·Brush 경계·custom cap 중첩·Object type을 대조했습니다. Debug·ReleaseSafe·ReleaseFast root `EMF+` 필터는 각 562/562, ReleaseSafe 직접 필터는 Pen 6/6·pen float array 2/2 통과했습니다. 이 검사는 실제 Pen 래스터화나 한컴 파일의 stroke 결과를 입증하지 않습니다.

@@ -334,7 +334,7 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "d669fbd9b57dfdfa87390d28148b4ed0631019f17bef77c8fd44f28d8ffdafa3",
+      "sha256": "73509327ddb95d7317824dbac062eb50f2fb3d913922f863ce4457fd5c914a46",
       "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope PNG ICC inspection PNG RGBA BCP47 syntax registry alpha2 history ICC IANA matching mluc selection mluc structure mluc Unicode ICC v2 Unicode v2 text tag payload dispatch tag table structure header identifiers v4 and v2 header numeric header verification ICC registry source lookup required tags overview presence table XYZ type XYZ tags curve type TRC tags parametric curve analytic forward TRC forward sampled forward sampled inverse sampled wide inverse gamma inverse wide gamma inverse TRC inverse and extended TRC inverse matrix TRC inverse matrix TRC model matrix TRC forward fraction matrix inverse fraction matrix TRC inverse wide linear target wide positive bounds normalized and extended root compare normalized and extended root locations clipped and extended power preimage whole and extended whole parametric preimage normalized and extended whole bounds normalized and extended attained F.1a whole and extended nearest normalized and extended full inverse topology segments jump trend domain partition power clipping power level root compare active root locations rational power order normalized power level wide power level normalized root order power range power nearest ordinate order extended ordinate order ordinate distance extended ordinate distance linear range parametric range rational range nearest linear preimage extended linear preimage chromatic adaptation matrix transform ICC foundation verification review, architecture pending, full Debug Zig test 2656 passed and ReleaseFast HWP5 audit 10 steps 8905855 checks, EMF ICM and three clipping region docs direct tests and 102 shared tests each mode"
     },
     "docs/bcp47-syntax.md": {
@@ -1456,6 +1456,18 @@
     "docs/emf-plus-draw-driver-string-record.md": {
       "sha256": "51c696cb47d072954813cc6e621475648aa5a2be7a100ee9d365e33630248124",
       "evidence": "2026-09-28 official DrawDriverString CmapLookup Unicode versus glyph index semantics, contiguous arrays matrix and Zig raw parser Font Brush stream lookup; Debug Safe Fast direct 4 and stream 2 each; historic mutants and full audit not rerun"
+    },
+    "docs/emf-plus-pen-object.md": {
+      "sha256": "bd47f344a2e42e1fc9ace93c38d8e2cf7203ad210ea082b680038cc0c06ffa95",
+      "evidence": "2026-09-28 official Pen PenOptionalData CompoundLine versus Zig ordered flag parser atomic reader brush boundary nested custom cap and object type; Debug Safe Fast EMF root 562 each, Safe direct Pen 6 array 2; historic mutants and full audit not rerun"
+    },
+    "docs/emf-plus-custom-line-cap.md": {
+      "sha256": "7a6a3c3ce05124d64f2dceec5cd43b3fb30684d17f288b6ec21ec2bdaef4220d",
+      "evidence": "2026-09-28 corrected three official CustomLineCap ArrowData DefaultData links and field names versus Zig dispatch exact sizes nested Paths and object type; Debug Safe Fast EMF root 562 each, Safe direct 3 4 3; historic mutants and full audit not rerun"
+    },
+    "docs/emf-plus-region-object.md": {
+      "sha256": "8662f9acba0e9bb4f27f94aa048a807312ab66b12b1ce2512507b5468ea1bdce",
+      "evidence": "2026-09-28 official Region count plus one and ChildNodes tree versus Zig preorder iterator bounds exact end nested Path and object type; Debug Safe Fast EMF root 562 each, Safe direct Region 11; historic mutants and full audit not rerun"
     }
   }
 }

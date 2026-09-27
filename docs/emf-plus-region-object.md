@@ -7,7 +7,7 @@
 - `emf_plus_region.zig`는 GraphicsVersion, `RegionNodeCount`, 전체 크기·노드 수·정확한 종료와 Object type 연결을 소유합니다.
 - Rect는 `emf_plus_geometry.zig`, signed 길이 Path는 `emf_plus_sized_path.zig`, Path 내부는 `emf_plus_path.zig`를 재사용합니다. 이 문서나 Region 계층에서 해당 wire 규칙을 복제하지 않습니다.
 
-기준은 Microsoft [MS-EMFPLUS] 2.1.1.26, 2.2.1.8, 2.2.2.40~42입니다. `RegionNodeCount`는 루트를 제외한 자식 노드 수이므로 실제 트리는 정확히 `RegionNodeCount + 1`개 노드를 가져야 합니다.
+기준은 Microsoft [EmfPlusRegion 객체](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/3f8c4a6a-a0af-4ba2-8bb2-0d2f4569c493)와 [RegionNode](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/118a1cab-68ee-4658-b7a8-7b03aa1fafe3), [RegionNodeChildNodes](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/07891e54-946e-45e4-ad68-213a21be5c3d) 및 [MS-EMFPLUS] 2.1.1.26, 2.2.2.42입니다. `RegionNodeCount`는 루트를 제외한 자식 노드 수이므로 실제 트리는 정확히 `RegionNodeCount + 1`개 노드를 가져야 합니다.
 
 ## 표현과 검증
 
@@ -26,3 +26,5 @@ Empty와 Infinite 뒤에 별도 data가 없는지는 트리 구조와 최종 exa
 독립 복사본에서 type domain, combine/terminal 분류, `count + 1`, Region·노드·Path exact 한도, count overflow, 조기 완료, 미완성 트리, 후행 data, 깊이 경계·설정, 자식 수, Rect 값·dispatch, Path dispatch, Object type과 형제 depth 복원을 망가뜨린 18개 의미 변이를 실행했습니다. Debug·ReleaseSafe·ReleaseFast의 54회 모두 테스트가 검출했고 컴파일 실패·생존 변이는 각각 0회였습니다. 복사본은 `/tmp/hwpjs-emfplus-region-mutants.F5D2Iz`, 실행 로그는 `/tmp/hwpjs-region-mutation-<변이>-<모드>.log`에 남겼습니다. 각 실행은 서로 다른 새 cache/global-cache 경로를 사용해 결과 재사용을 차단했습니다.
 
 같은 날 전체 audit를 세 모드에서 순차 실행했습니다. 각 모드는 40/40 단계와 1,609/1,609 테스트(네이티브 1,570, 차트 31, WMF 8), HWP 감사 8,905,827 checks와 import 오류 0으로 통과했습니다. 로그는 `/tmp/hwpjs-emfplus-region-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다. 이 수치는 현재 회귀 범위이며 Region 렌더링이나 실제 EMF+ Region corpus가 관측되었다는 뜻은 아닙니다.
+
+위 변이·전체 audit는 작성 당시 이력으로, 이번에 다시 실행하지 않았습니다. 2026-09-28 공식 `RegionNodeCount + 1`·ChildNodes 좌우 자식 구조와 현재 Zig의 전위 순회·정확한 종료·깊이/노드 한도·중첩 Path·Object type을 대조했습니다. Debug·ReleaseSafe·ReleaseFast root `EMF+` 필터는 각 562/562, ReleaseSafe Region 직접 필터는 11/11 통과했습니다. 실제 clip boolean 연산·픽셀 출력은 검증하지 않았습니다.
