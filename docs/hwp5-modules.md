@@ -22,6 +22,7 @@
   - [차트 Contents 명세·실측](hwp5-chart-contents-evidence.md)
   - [차트 타입 선언](hwp5-chart-type-declaration.md)
   - [차트 타입 목록·재등장](hwp5-chart-type-table.md)
+  - [차트 타입 참조 span](hwp5-chart-type-reference-spans.md)
   - [관측 차트 격자 전처리](hwp5-chart-grid-prelude.md)
   - [관측 차트 셀 배열·null 위치](hwp5-chart-grid-cells.md)
   - [관측 차트 문자열 해석](hwp5-chart-strings.md)

@@ -30,4 +30,6 @@ WASM 실험은 해당 위치를 두 번씩 읽고, 순서를 바꿔도 같은 ID
 
 소스·테스트를 고정해 Debug → ReleaseSafe → ReleaseFast 전체 audit를 순차 실행했습니다. `/tmp/hwpjs-chart-type-table-{Debug,ReleaseSafe,ReleaseFast}-audit.log`에서 각 모드 27/27 단계·997/997 네이티브 테스트·HWP/WASM 7,844,366회 검사 통과와 종료 코드 0을 확인했습니다. 포맷·JS 구문·공백과 문서 로컬 링크 17개 검사도 통과했습니다. 이 결과는 타입 목록의 검증이며 전체 객체 그래프나 데이터 해석 완료가 아닙니다.
 
-최종 `zig build test --summary all`은 5/5 단계·997/997 테스트, `zig build -Doptimize=ReleaseSafe --summary all`은 5/5 단계로 통과했습니다(종료 코드 0).
+당시 최종 `zig build test --summary all`은 5/5 단계·997/997 테스트, `zig build -Doptimize=ReleaseSafe --summary all`은 5/5 단계로 통과했습니다(종료 코드 0).
+
+2026-09-28 재검증에서는 공식 차트 명세의 반복 StoredtypeID에서 이름·버전을 생략하는 계약과 현재 `Table.readObserved16`의 u32 ID 조회, 신규 이름 복사, 반복 ID의 4바이트 소비, 논리 상태의 실패 원자성을 대조했습니다. 현재 테스트에는 이후 추가된 최저 ID 조회 사례가 있어 Debug·ReleaseSafe·ReleaseFast의 `chart type table` 집중 필터는 각각 root 포함 6/6 통과했습니다. 현재 ReleaseSafe WASM probe와 독립 Contents 오라클에서는 43개 표본의 정상 86건·거부 258건, 288바이트 보고서를 재확인했습니다. 두 번째 참조는 동일 오프셋을 재사용한 구성 실험이며 실제 객체 그래프 순회를 증명하지 않습니다. 위 과거 변이·전체 audit 로그는 이번에 재실행하지 않았습니다.

@@ -8,6 +8,8 @@
 
 기존 문서의 과거 테스트 기록은 이 목록에 자동 소급하지 않습니다. 이 목록의 비율은 새 기준에 따라 **현재 내용 전체를 다시 검증한 파일의 비율**이며, 이전 구현 진행률이나 과거 검증 작업량의 추정치가 아닙니다.
 
+2026-09-28에는 HWP5 차트 타입 선언·목록·참조 span 세 문서를 공식 차트 명세의 반복 StoredtypeID 생략 규칙, 현재 Zig의 관측 배치·소유권·실패 원자성과 대조했습니다. Debug·ReleaseSafe·ReleaseFast 집중 테스트는 선언 각 4/4, 목록 각 6/6 통과했습니다. ReleaseSafe WASM의 독립 Contents 오라클은 43개 표본에서 선언 정상 215·거부 688, 목록 정상 86·거부 258을 재현했고, ReleaseSafe 차트 소유권 감사는 10/10 단계·31/31 테스트를 통과했습니다. 과거 변이·전체 HWP5 audit는 이번에 재실행하지 않았으며, 참조 재등장 확인에 사용한 두 번째 위치는 구성 실험이지 객체 그래프 자동 순회가 아닙니다. 차트 타입 참조 span 문서를 모듈 인덱스에도 연결했습니다.
+
 2026-09-28에 앞서 시작한 Debug 전체 `zig build test --summary all`이 종료 코드 0, 빌드 5/5 단계 및 테스트 2,661/2,661개 통과로 완료됐습니다(약 21분). 출력의 `failed command:` 문구는 성공한 테스트의 stderr가 남을 때도 나타날 수 있으며, 이 실행의 판정은 종료 코드와 최종 요약에 따릅니다. 원인과 반례는 [Zig 테스트 stderr 기록](zig-test-stderr.md)에 있습니다. 이 전체 테스트 통과는 문서별 명세 적합성이나 실제 한컴 렌더링 동등성의 증거가 아닙니다.
 
 2026-09-28에는 EMF+ polyline geometry·device segments와 FillPolygon record의 닫힘 계약을 공식 DrawLines/FillPolygon 정의와 현재 Zig iterator에 대조했습니다. FillPolygon은 마지막 점과 첫 점이 이미 같으면 마지막 변을 추가하지 않는 명세 조건이 기존 코드·문서에서 누락돼 있어, 공용 선분 계층에 polygon 전용 distinct 닫힘을 추가하고 source/device 공개 연결 회귀를 만들었습니다. DrawLines L의 명시적 닫힘은 그대로 유지합니다. Debug·ReleaseSafe·ReleaseFast root `EMF+` 필터는 각각 562/562 통과했고 전체 Debug `zig build test --summary all`도 종료 코드 0·5/5 단계·2,663/2,663개 통과했습니다. ReleaseSafe 제품 빌드도 통과했습니다. 세 문서의 과거 변이·전체 audit 수치는 이번에 재실행하지 않았으며, 이 합성 검증은 실제 HWP EMF+ 픽셀 동등성이나 Brush fill 구현을 입증하지 않습니다.

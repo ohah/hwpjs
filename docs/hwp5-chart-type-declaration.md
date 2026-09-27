@@ -28,4 +28,6 @@ ReleaseSafe/ReleaseFast 실제 WASM에서도 정상 215건·오류 688건을 각
 
 소스·테스트를 고정해 Debug → ReleaseSafe → ReleaseFast 전체 audit를 순차 실행했습니다. `/tmp/hwpjs-chart-declaration-{Debug,ReleaseSafe,ReleaseFast}-audit.log`에서 각 모드 27/27 단계·993/993 네이티브 테스트·HWP/WASM 7,843,764회 검사 통과와 종료 코드 0을 확인했습니다. 포맷·JS 구문·공백과 문서 로컬 링크 16개 검사도 통과했습니다. 타입 선언을 읽을 수 있다는 사실을 객체 데이터 경계·타입 테이블·전체 차트 파싱 완료로 대체하지 않습니다.
 
-최종 `zig build test --summary all`은 5/5 단계·993/993 테스트, `zig build -Doptimize=ReleaseSafe --summary all`은 5/5 단계로 통과했습니다(종료 코드 0).
+당시 최종 `zig build test --summary all`은 5/5 단계·993/993 테스트, `zig build -Doptimize=ReleaseSafe --summary all`은 5/5 단계로 통과했습니다(종료 코드 0).
+
+2026-09-28 재검증에서는 공식 차트 명세의 재등장 시 StoredName/StoredVersion 생략 설명을 현재 코드의 새 선언·반복 참조 책임과 대조했습니다. 현재 `readObserved16`은 관측 배치의 u16 길이·원시 이름·u16 버전만 읽고 실패 시 호출자 Reader를 확정하지 않습니다. Debug·ReleaseSafe·ReleaseFast의 `chart declaration` 집중 테스트는 각각 root 포함 4/4 통과했습니다. 현재 ReleaseSafe WASM probe와 독립 Contents 오라클에서는 43개 표본의 정상 215건·거부 688건 및 문자열 마커가 없는 Contents 1개를 재확인했습니다. 위 과거 변이·전체 audit 로그는 이번에 재실행하지 않았고, 고정 오프셋 관측을 모든 차트 버전의 자동 배치 규칙으로 확대하지 않습니다.
