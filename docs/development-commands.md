@@ -85,6 +85,8 @@
 
 [HWP5 BinData 인코딩 정책](hwp5-bin-data-encoding.md)은 `zig test src/root.zig -O ReleaseSafe --test-filter 'BinData encode'`로 여섯 압축 조합·오류·할당 실패를 검사합니다. `-O Debug`·`-O ReleaseFast`도 같은 필터로 실행할 수 있습니다. 상위 CFB 다중 교체 연결은 `zig test src/root.zig -O ReleaseSafe --test-filter 'outer HWP BinData batch resolves'`로 별도 확인합니다. 이 집중 명령은 실파일 저장 동치나 과거 변이 시험을 재현하지 않습니다.
 
+[Raw DEFLATE stored encoder](raw-deflate-stored-encoder.md)는 `zig test src/root.zig -O ReleaseSafe --test-filter 'raw DEFLATE stored encoder'`로 블록 wire·경계·한도·할당 실패를 검사합니다. 같은 필터를 `-O Debug`·`-O ReleaseFast`에서도 실행할 수 있습니다. 과거 변이 실행이나 외부 구현과의 실파일 저장 비교는 포함하지 않습니다.
+
 [PCX 헤더·RLE 경계](pcx-structure.md)는 `zig test src/root.zig --test-filter 'PCX structure'`로 단위·반례를 검사하고, `--test-filter 'HWPX picture image payloads'`로 ZIP·MIME·오류 연결을 확인합니다. 독립 `python3 tools/hwpx-fill-brush-image-oracle.py --self-test`와 `--picture-payloads` 및 아래 known survey ReleaseFast shard 7이 실파일 PCX 1건의 RLE 경계를 대조합니다.
 
 [HWPX 그림 이미지 바이트 검사](hwpx-picture-image-payloads.md)는 `zig test src/root.zig --test-filter 'HWPX picture image payloads'`로 형식·WMF framing·TIFF 연결·중복·한도·오류·OOM·추적 파일·master 조립을 검사합니다. [TIFF 구조](tiff-structure.md)는 `zig test src/root.zig --test-filter 'TIFF structure'`로 별도 검사합니다. 기존 브러시의 동일 코어 회귀는 `--test-filter 'HWPX fill brush image payloads'`로 확인합니다. `python3 tools/hwpx-fill-brush-image-oracle.py --self-test`와 `--picture-payloads`는 독립 반례·실파일 형식/바이트 분포, WMF framing과 TIFF 구조 진단을 제공하며, 아래 known survey의 ReleaseFast 8개 shard가 제품 결과와 대조합니다.
