@@ -24,9 +24,11 @@ BlendFactors는 명세의 MUST에 따라 count 2 이상, 첫 position 0, 마지�
 
 ## 범위
 
-이 계층은 Brush/Pen/Path/Image가 공유하는 값과 gradient 보조 객체만 소유합니다. BoundaryPath/BoundaryPoint의 중첩 Path 검증, 다섯 BrushData 조합, Image 및 실제 렌더링은 완료 범위가 아닙니다. 현재 HWP corpus에는 EMF+ 실파일 표본이 없어 합성 wire 검증을 한컴 버전별 렌더링 동등성으로 확대하지 않습니다.
+이 계층은 Brush/Pen/Path/Image가 공유하는 값과 gradient 보조 객체만 소유합니다. BoundaryPath/BoundaryPoint의 중첩 Path와 다섯 BrushData 조합은 [Brush 객체](emf-plus-brush-object.md)가, Image의 구조는 [Image 객체](emf-plus-image-object.md)가 별도로 소유합니다. 이 공통값 문서의 검증을 그 파서들의 완료 근거로 합치지 않으며, 실제 렌더링도 범위 밖입니다. 현재 HWP corpus에는 EMF+ 실파일 표본이 없어 합성 wire 검증을 한컴 버전별 렌더링 동등성으로 확대하지 않습니다.
 
 ## 검증 기록
+
+2026-09-28 현행 재검증에서 공식 GraphicsVersion·BlendFactors·BlendColors의 필드/값 제약과 현재 공통 파서 및 Brush/Image 별도 소유권을 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 루트 `EMF+` 필터는 각 560/560개 통과했습니다. 전용 파일을 직접 `zig test`하면 상대 import의 module path 제약으로 컴파일되지 않아 해당 실행은 근거에 세지 않고, 유효한 루트 진입점의 결과만 사용했습니다. 아래 변이 27회와 전체 audit는 과거 실행 이력입니다.
 
 정상 값, 모든 고정 구조 잘림 위치, enum 양 끝과 범위 밖, 예약 flag 보존, vendor graphics version, 배열 잘림·산술 한계, 0/1 경계, 범위 밖·무한대·NaN, BlendFactors endpoint 및 비증가 중간 position을 검사합니다.
 

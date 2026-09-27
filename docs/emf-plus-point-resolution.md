@@ -16,6 +16,8 @@
 
 ## 검증 기록
 
+2026-09-28 현행 재검증에서 공식 drawing record의 P/C 좌표 의미와 현재 공용 PointData·resolver를 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 루트 `EMF+` 필터는 각 560/560개이며, 그 안에 resolver 전용 테스트 4개가 포함됩니다. 파일 단독 `zig test`는 상대 import의 module path 제약으로 실패했으므로 통과 근거로 세지 않습니다. 아래 변이 15회와 세 모드 전체 audit는 과거 실행 이력입니다.
+
 합성 fixture는 첫 원점 기준, 혼합 Integer7/15 폭, 양·음 delta의 연속 누적과 i16 범위 초과, 절대 i16의 i64 보존, PointF signed zero·NaN 원비트, 종료와 잘림 오류 원자성을 검사합니다.
 
 원점 초기값, X에 Y delta 사용, Y 비누적, 절대 정수 X/Y 교환, PointF X/Y 교환의 5개 의미 변이를 독립 source와 모드별 새 cache에서 Debug·ReleaseSafe·ReleaseFast로 실행했습니다. 유효 15/15회가 assertion 의미 실패로 검출됐고 생존·컴파일 오류·panic·timeout은 0입니다. 최초 정수·PointF 변이 6회는 복사본 준비가 끝난 뒤 source가 원본으로 덮여 실제 diff가 없었으므로 결과에서 제외하고, diff를 재확인한 v2 로그만 사용했습니다. 로그는 `/tmp/hwpjs-point-resolution-mutants.6OlNnC/{origin,x_from_y,y_non_cumulative}-{Debug,ReleaseSafe,ReleaseFast}.log`와 `{integer_swap,float_swap}-v2-{Debug,ReleaseSafe,ReleaseFast}.log`입니다.

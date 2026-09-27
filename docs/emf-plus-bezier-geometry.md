@@ -6,6 +6,8 @@
 
 [MS-EMFPLUS EmfPlusDrawBeziers](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/3be0d4c9-a28b-4206-9532-5044cc07b8cc)는 점 순서를 start, control point 1, control point 2, end로 정의합니다. Microsoft GDI+의 [Drawing Bézier Splines](https://learn.microsoft.com/en-us/windows/win32/gdiplus/-gdiplus-drawing-bezier-splines-use)는 연결된 다음 곡선이 앞 곡선의 end를 start로 공유하고 새 control1·control2·end 세 점을 소비하는 7점 예제를 제시합니다. iterator는 첫 segment에 4점, 이후 segment마다 3점을 소비하며 공유 endpoint를 source에서 다시 읽지 않습니다.
 
+공식 DrawBeziers 페이지의 하단 PointData 표는 `P=0, C=1`의 EmfPlusPoint를 상대 위치라고 쓰지만, 같은 페이지의 Flags 설명과 [EmfPlusPoint 자체 정의](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/a0558721-f6df-4325-b455-a0e6edf63cf4)는 절대 위치라고 규정하고 [FillClosedCurve의 PointData 표](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/d7b561b0-3dc7-4444-b7ac-55492b5af0f4)도 절대 위치로 명시합니다. 따라서 공용 resolver는 `P=0, C=1`을 절대 i16 좌표로 읽고, `P=1`일 때에만 PointR 상대 누적을 적용합니다. 이는 공식 페이지 내부 불일치를 해소한 해석이며 별도 구현별 호환성 근거는 아닙니다.
+
 ## wire와 geometry 경계
 
 공식 EMF+ record의 명시적 Count 제약은 최소 4이므로 `emf_plus_draw_beziers.zig` parser는 `(Count - 1) % 3 == 0`을 wire 오류로 추가하지 않습니다. 반면 완전한 cubic sequence를 만들려면 Count가 `1 + 3n`이어야 하므로 `DrawBeziers.segments()`와 공용 constructor는 그 조건을 만족하지 않는 4 미만·5·6 등의 입력에 `InvalidEmfPlusBezierTopology`를 반환합니다. 유효 wire를 조용히 잘라 그릴 수 있는 일부 geometry로 축소하지 않습니다.
@@ -17,6 +19,8 @@
 이 계층은 cubic topology까지만 구현하고 [Bézier device segment 계층](emf-plus-bezier-device-segments.md)이 네 역할에 일반 world/page/device 변환과 segment별 평가·flattening을, [connected polyline 계층](emf-plus-bezier-device-polyline.md)이 DrawBeziers segment 병합을 담당합니다. clipping, Pen width/cap/join, anti-aliasing·rasterization과 저장은 후속 범위입니다. `EmfPlusPath`의 point type 배열과 개별 subpath는 별도 geometry 조립이 필요하므로 이 API에 섞지 않습니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 0개라 실제 한컴 렌더링 동등성도 주장하지 않습니다.
 
 ## 검증 기록
+
+2026-09-28 현행 재검증에서 공식 DrawBeziers의 Count 최소 4·P/C 의미와 현재 wire 파서·geometry iterator의 경계를 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 루트 `EMF+` 필터는 각 560/560개이며 그 안에 Bézier segment 전용 4개와 DrawBeziers parser/geometry 테스트 5개가 포함됩니다. 파일 단독 `zig test`는 상대 import의 module path 제약으로 실패했으므로 통과 근거로 세지 않습니다. 아래 변이 24회와 세 모드 전체 audit는 과거 실행 이력입니다.
 
 합성 fixture는 4점 단일 segment, 7점 연결 segment와 endpoint 공유, PointR 누적, 절대 i16→i64, PointF signed zero·NaN·양/음 무한대 원비트, Count 0·1·2·3·5·6 geometry 거부, Count 4 승인, 반복 종료와 그룹 중간 잘림 원자성을 검사합니다. DrawBeziers parser 결과에서 네 역할과 wire-valid Count 5의 geometry 거부도 통합 검사합니다.
 
