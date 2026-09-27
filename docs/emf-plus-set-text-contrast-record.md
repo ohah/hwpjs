@@ -2,7 +2,7 @@
 
 ## 범위와 단일 출처
 
-`src/image/emf/emf_plus_set_text_contrast.zig`는 MS-EMFPLUS 2.3.6.7의 EmfPlusSetTextContrast record를 소유합니다. Type은 `0x4020`, Size는 정확히 12, DataSize와 실제 data slice는 0이어야 합니다.
+`src/image/emf/emf_plus_set_text_contrast.zig`는 [MS-EMFPLUS 2.3.6.7](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/3b0259a8-727d-4d25-a6d7-976a738f8aab)의 EmfPlusSetTextContrast record를 소유합니다. Type은 `0x4020`, Size는 정확히 12, DataSize와 실제 data slice는 0이어야 합니다.
 
 Flags 하위 12비트는 gamma correction 값에 1000을 곱한 TextContrast이고 허용 범위는 1000–2200을 양 끝 포함합니다. 상위 4비트는 reserved이며 MUST be ignored이므로 어떤 조합도 승인하고 전체 Flags 원값을 보존합니다. 범위 상수와 추출은 전용 parser 한 곳에만 둡니다.
 
@@ -15,6 +15,8 @@ MS-EMFPLUS 2.3.8의 terminal-server payload에도 TextContrast라는 2바이트 
 tracked stream은 [공용 property 상태](emf-plus-property-state.md)에 값을 적용하고 Save/Container 수명주기와 report에 연결합니다. 실제 gamma correction, glyph rasterization과 저장은 미구현입니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 한컴 텍스트 출력과의 동등성도 주장하지 않습니다.
 
 ## 검증 기록
+
+아래 변이·전체 `audit` 수치와 `/tmp` 로그는 최초 구현 당시 기록입니다. 이번 문서 검증에서 변이·전체 `audit`를 재실행한 결과로 세지 않습니다.
 
 합성 fixture는 1000·1500·2200, 범위 밖 999·2201·4095, 모든 reserved bits set, 잘못된 RecordType, 독립 Size/DataSize/slice 불일치, stream 정상·range 오류·count overflow 원자성과 실제 EMF framing 연결을 검사합니다.
 

@@ -2,7 +2,7 @@
 
 ## 범위와 단일 출처
 
-`src/image/emf/emf_plus_set_pixel_offset_mode.zig`는 MS-EMFPLUS 2.3.6.5의 EmfPlusSetPixelOffsetMode record를 조립합니다. `emf_plus_pixel_offset_mode.zig`는 MS-EMFPLUS 2.1.1.25의 PixelOffsetMode 0~4를 소유하며 record parser는 enum domain을 복제하지 않습니다.
+`src/image/emf/emf_plus_set_pixel_offset_mode.zig`는 [MS-EMFPLUS 2.3.6.5](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/679d2b1d-e618-4730-9400-fea5f4fd3b92)의 EmfPlusSetPixelOffsetMode record를 조립합니다. `emf_plus_pixel_offset_mode.zig`는 [MS-EMFPLUS 2.1.1.25](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/e15c92d2-6054-48a0-b6dc-3155aab3203c)의 PixelOffsetMode 0~4를 소유하며 record parser는 enum domain을 복제하지 않습니다.
 
 Type은 `0x4022`, Size는 정확히 12, DataSize와 실제 data slice는 0이어야 합니다. Flags low byte가 PixelOffsetMode이고 high byte는 reserved입니다. reserved bits는 MUST be ignored이므로 모두 승인하고 전체 Flags 원값을 보존합니다. enum은 Default 0, HighSpeed 1, HighQuality 2, None 3, Half 4만 승인합니다.
 
@@ -15,6 +15,8 @@ Type은 `0x4022`, Size는 정확히 12, DataSize와 실제 data slice는 0이어
 Default/HighSpeed/HighQuality 별칭을 None/Half로 정규화하지 않고 wire enum을 그대로 보존합니다. tracked stream은 [공용 property 상태](emf-plus-property-state.md)와 Save/Container 수명주기에 값을 적용합니다. 실제 pixel-center 이동, rasterization과 저장은 미구현입니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 한컴 렌더링과의 동등성도 주장하지 않습니다.
 
 ## 검증 기록
+
+아래 변이·전체 `audit` 수치와 `/tmp` 로그는 최초 구현 당시 기록입니다. 이번 문서 검증에서 변이·전체 `audit`를 재실행한 결과로 세지 않습니다.
 
 합성 fixture는 다섯 PixelOffsetMode, 모든 reserved bits set, 공식 Flags `0x0003`, enum 5·255, 잘못된 RecordType, 독립 Size/DataSize/slice 불일치, stream 정상·enum 오류·count overflow 원자성과 실제 EMF framing 연결을 검사합니다.
 

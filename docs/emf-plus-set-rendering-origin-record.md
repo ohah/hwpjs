@@ -2,7 +2,7 @@
 
 ## 범위와 단일 출처
 
-`src/image/emf/emf_plus_set_rendering_origin.zig`는 MS-EMFPLUS 2.3.6.6의 EmfPlusSetRenderingOrigin wire 구조를 소유합니다. 공통 `emf_plus_record.zig`가 12바이트 record 머리와 comment 내부 framing을 담당하고, 전용 parser는 고정 payload와 signed 좌표만 해석합니다. stream과 상위 EMF framing은 payload 필드 배치를 다시 구현하지 않습니다.
+`src/image/emf/emf_plus_set_rendering_origin.zig`는 [MS-EMFPLUS 2.3.6.6](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/4f88414d-a117-4aea-9817-c05338585777)의 EmfPlusSetRenderingOrigin wire 구조를 소유합니다. 공통 `emf_plus_record.zig`가 12바이트 record 머리와 comment 내부 framing을 담당하고, 전용 parser는 고정 payload와 signed 좌표만 해석합니다. stream과 상위 EMF framing은 payload 필드 배치를 다시 구현하지 않습니다.
 
 Type은 `0x401d`, Size는 정확히 20, DataSize와 실제 data slice는 각각 정확히 8바이트여야 합니다. `x`, `y`는 little-endian signed i32이며 최솟값과 최댓값을 포함한 전체 범위를 보존합니다. Flags는 SHOULD zero이지만 MUST be ignored이므로 모든 u16을 승인하고 원값을 반환합니다.
 
@@ -10,9 +10,11 @@ Type은 `0x401d`, Size는 정확히 20, DataSize와 실제 data slice는 각각 
 
 `emf_plus_stream.zig`는 record를 전용 parser로 검증한 뒤 유효 record 수를 보고합니다. payload 오류와 집계 overflow는 comment 전체 상태를 원복하고, 실제 EMF comment 경로도 같은 parser를 통과합니다.
 
-명세상 rendering origin은 hatch brush와 8/16-bpp dither pattern에 적용됩니다. tracked stream은 [공용 property 상태](emf-plus-property-state.md)에 signed x/y를 적용하고 Save/Container 수명주기와 report에 연결합니다. hatch/dither rasterization, 렌더링과 저장은 구현하지 않습니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력과의 동등성도 주장하지 않습니다.
+[GDI+ API 설명](https://learn.microsoft.com/en-us/windows/win32/api/gdiplusgraphics/nf-gdiplusgraphics-graphics-setrenderingorigin)에 따르면 rendering origin은 hatch brush와 8/16-bpp dither pattern에 적용됩니다. tracked stream은 [공용 property 상태](emf-plus-property-state.md)에 signed x/y를 적용하고 Save/Container 수명주기와 report에 연결합니다. hatch/dither rasterization, 렌더링과 저장은 구현하지 않습니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력과의 동등성도 주장하지 않습니다.
 
 ## 검증 기록
+
+아래 변이·전체 `audit` 수치와 `/tmp` 로그는 최초 구현 당시 기록입니다. 이번 문서 검증에서 변이·전체 `audit`를 재실행한 결과로 세지 않습니다.
 
 합성 fixture는 i32 양 끝, 서로 다른 x/y 값, 비zero Flags, 0~7바이트 모든 잘림과 9바이트 초과, 독립 Size/DataSize/slice 불일치, 잘못된 RecordType, stream 정상·payload 오류·count overflow 원자성과 실제 EMF framing 연결을 검사합니다.
 

@@ -2,11 +2,11 @@
 
 ## 범위와 단일 출처
 
-`src/image/emf/emf_plus_set_text_rendering_hint.zig`는 MS-EMFPLUS 2.3.6.8의 EmfPlusSetTextRenderingHint record를 조립합니다. `emf_plus_text_rendering_hint.zig`는 MS-EMFPLUS 2.1.1.31의 TextRenderingHint 0~5를 소유하며 record parser는 enum domain을 복제하지 않습니다. 공통 record framing은 `emf_plus_record.zig`가 담당합니다.
+`src/image/emf/emf_plus_set_text_rendering_hint.zig`는 [MS-EMFPLUS 2.3.6.8](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/a05c335d-0777-4897-862a-aa35c0b684d8)의 EmfPlusSetTextRenderingHint record를 조립합니다. `emf_plus_text_rendering_hint.zig`는 [MS-EMFPLUS 2.1.1.31](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/2fb31108-f374-4e39-b01a-d4c130359970)의 TextRenderingHint 0~5를 소유하며 record parser는 enum domain을 복제하지 않습니다. 공통 record framing은 `emf_plus_record.zig`가 담당합니다.
 
 Type은 `0x401f`, Size는 정확히 12, DataSize와 실제 data slice는 0이어야 합니다. Flags의 low byte가 TextRenderingHint이고 high byte는 reserved입니다. reserved bits는 MUST be ignored이므로 모두 승인하고 전체 Flags 원값을 보존합니다. TextRenderingHint는 SystemDefault 0, SingleBitPerPixelGridFit 1, SingleBitPerPixel 2, AntialiasGridFit 3, Antialias 4, ClearTypeGridFit 5만 승인합니다.
 
-공식 3.2.32.5와 3.2.32.15의 두 예제는 Flags `0x0005`를 ClearTypeGridFit으로 명시합니다. 따라서 low byte를 직접 해석하며 1비트 이동하지 않습니다. 참고 구현의 서로 다른 해석보다 공식 wire 예제를 우선합니다.
+공식 3.2.32.5와 3.2.32.15의 두 예제는 Flags `0x0005`를 ClearTypeGridFit으로 명시합니다. 따라서 low byte를 직접 해석하며 1비트 이동하지 않습니다.
 
 ## stream 연결과 미지원 경계
 
@@ -15,6 +15,8 @@ Type은 `0x401f`, Size는 정확히 12, DataSize와 실제 data slice는 0이어
 tracked stream은 [공용 property 상태](emf-plus-property-state.md)에 wire enum을 적용하고 Save/Container 수명주기와 report에 연결합니다. 실제 glyph hinting, ClearType subpixel 처리, 플랫폼 글꼴 설정과 저장은 미구현입니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 텍스트 출력과의 동등성도 주장하지 않습니다.
 
 ## 검증 기록
+
+아래 변이·전체 `audit` 수치와 `/tmp` 로그는 최초 구현 당시 기록입니다. 이번 문서 검증에서 변이·전체 `audit`를 재실행한 결과로 세지 않습니다.
 
 합성 fixture는 여섯 TextRenderingHint, 모든 reserved bits set, 공식 Flags `0x0005`, enum 6·255, 잘못된 RecordType, 독립 Size/DataSize/slice 불일치, stream 정상·enum 오류·count overflow 원자성과 실제 EMF framing 연결을 검사합니다.
 
