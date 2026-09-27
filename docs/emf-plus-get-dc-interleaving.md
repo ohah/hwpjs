@@ -2,7 +2,7 @@
 
 ## 범위와 상태 소유권
 
-MS-EMFPLUS 2.3.3.2의 `EmfPlusGetDC (0x4004)`는 이후 만나는 일반 EMF record를 처리하도록 전환하고, 다음 EMF+ record에서 그 처리를 끝냅니다. `emf_plus_stream.State`가 이 구간의 활성 여부를 소유하며 `get_dc_records`와 활성 구간에서 관측한 `get_dc_emf_records`를 checked addition으로 집계합니다.
+[MS-EMFPLUS 2.3.3.2](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/b7879ac2-355d-4419-8e65-e2e4de4fa4a9)의 `EmfPlusGetDC (0x4004)`는 이후 만나는 일반 EMF record를 처리할 것을 `SHOULD`로 규정하고, 다음 EMF+ record에서 처리를 끝낸다고 명시합니다. 현재 구현은 실제 처리가 아니라 그 구간을 관측하는 정책을 채택합니다. `emf_plus_stream.State`가 활성 여부를 소유하며 `get_dc_records`와 활성 구간에서 관측한 `get_dc_emf_records`를 checked addition으로 집계합니다.
 
 각 EMF+ record를 읽기 직전에 이전 GetDC 활성 상태를 끄고, 현재 record가 GetDC이면 다시 켭니다. 따라서 같은 `EMR_COMMENT_EMFPLUS` 안에서 GetDC 뒤 다른 EMF+ record가 이어지면 중간에 일반 EMF record가 없으므로 활성 상태가 남지 않습니다. GetDC가 comment의 마지막 EMF+ record이면 다음 외부 EMF record부터 활성화됩니다. 연속 GetDC도 마지막 record의 활성 상태 하나로 귀결되며 record 수는 각각 집계합니다.
 
@@ -29,3 +29,5 @@ stream 테스트는 Header 전 비활성, GetDC 활성, 두 일반 record 관측
 활성 시작·종료, 비활성 관측, 관측 count 값·overflow·반환값, GetDC count 값, framing carrier 조건·classification과 다음 record 종료를 각각 훼손한 10종 의미 변이를 독립 복사본과 모드별 새 cache에서 실행했습니다. Debug, ReleaseSafe, ReleaseFast의 30/30 실행이 모두 컴파일 오류·panic·timeout이 아닌 실제 테스트 실패로 검출됐고 임시 복사본·cache·실행기는 제거했습니다.
 
 최종 `zig build audit --summary all`, `-Doptimize=ReleaseSafe`, `-Doptimize=ReleaseFast`는 각 모드에서 40/40 step과 1885/1885 test를 통과했습니다. 모드별 구성은 native 1846, chart ownership 31, WMF contents 8이며, 각 실행은 8,905,827 checks, imports 0과 CFB 12,000 mutation의 traps 0을 기록했습니다.
+
+위 변이·전체 감사는 작성 당시의 이력이며 이번에 다시 실행하지 않았습니다. 2026-09-28 공식 GetDC의 Size 12/DataSize 0·ignored Flags·다음 EMF+ record 종료를 현재 stream·framing 경계와 대조했습니다. Debug·ReleaseSafe·ReleaseFast에서 직접 GetDC 상태 필터와 외부 EMF framing 필터가 각각 2/2 통과했습니다. 이는 합성 구간 집계 검증이지 일반 EMF record의 GDI+ surface 재생이나 실파일 픽셀 동등성 검증이 아닙니다.
