@@ -1,6 +1,14 @@
 {
   "schema": 1,
   "verified": {
+    "docs/hwp5-chart-grid-tail-evidence.md": {
+      "sha256": "2b775f6f71df28196e71fc02425db2863cb0692104051f3e3ee34ab3101730af",
+      "evidence": "2026-09-28 independent Node tail observer tests 4 and real OLE Contents survey 43 Backdrop v1 candidates type IDs 8/7 split 41/2 raw26 10 variants dimensions and next ID 43 each; official Hancom Backdrop API table does not prove wire layout; historic mutants not rerun"
+    },
+    "docs/hwp5-chart-grid-transition.md": {
+      "sha256": "7bef0433f6f63ec7323b5f19c40897e8567e9e2aabf375a3c0eb329d28aae7d8",
+      "evidence": "2026-09-28 Zig shared Collection and Grid Backdrop source versus current selected observed_contents composition; Debug Safe Fast focused prelude 6 grid backdrop 3 backdrop 4 each; ReleaseSafe WASM prelude 473 accepted 6493 rejected backdrop 129 accepted 8944 rejected; selected chart ownership audit 31; historic mutants full audits and prior-versus-current WASM not rerun"
+    },
     "docs/hwp5-chart-grid-prelude.md": {
       "sha256": "5b985be3f5ac0e234311495674200cae15c94f817ad48e9887d602cb7434e194",
       "evidence": "2026-09-28 Zig selected chart prelude extent raw fields type checks and bounds versus official chart overview and independent Contents oracle; Debug Safe Fast focused 6 each; ReleaseSafe WASM 43 roots 473 accepted 6493 rejected; historic mutants and full audits not rerun"
@@ -358,7 +366,7 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "0da31f1d48e24806b04a4c4c9b81867e0144e255c2ab07bd1bd70eac2ae64218",
+      "sha256": "90f5d3f6baa45c3e48a7cfe1b58e09bce6095e1da549b81cd7742c92e89eb4be",
       "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope PNG ICC inspection PNG RGBA BCP47 syntax registry alpha2 history ICC IANA matching mluc selection mluc structure mluc Unicode ICC v2 Unicode v2 text tag payload dispatch tag table structure header identifiers v4 and v2 header numeric header verification ICC registry source lookup required tags overview presence table XYZ type XYZ tags curve type TRC tags parametric curve analytic forward TRC forward sampled forward sampled inverse sampled wide inverse gamma inverse wide gamma inverse TRC inverse and extended TRC inverse matrix TRC inverse matrix TRC model matrix TRC forward fraction matrix inverse fraction matrix TRC inverse wide linear target wide positive bounds normalized and extended root compare normalized and extended root locations clipped and extended power preimage whole and extended whole parametric preimage normalized and extended whole bounds normalized and extended attained F.1a whole and extended nearest normalized and extended full inverse topology segments jump trend domain partition power clipping power level root compare active root locations rational power order normalized power level wide power level normalized root order power range power nearest ordinate order extended ordinate order ordinate distance extended ordinate distance linear range parametric range rational range nearest linear preimage extended linear preimage chromatic adaptation matrix transform ICC foundation verification review, architecture pending, full Debug Zig test 2656 passed and ReleaseFast HWP5 audit 10 steps 8905855 checks, EMF ICM and three clipping region docs direct tests and 102 shared tests each mode"
     },
     "docs/bcp47-syntax.md": {

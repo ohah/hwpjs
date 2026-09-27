@@ -8,6 +8,8 @@
 
 기존 문서의 과거 테스트 기록은 이 목록에 자동 소급하지 않습니다. 이 목록의 비율은 새 기준에 따라 **현재 내용 전체를 다시 검증한 파일의 비율**이며, 이전 구현 진행률이나 과거 검증 작업량의 추정치가 아닙니다.
 
+2026-09-28에는 HWP5 차트 셀 뒤 원시 구간 조사와 Grid 공통 Collection·Backdrop 조립 두 문서를 재검증했습니다. Node 단위 4/4와 실제 43개 Contents 재조사에서 Backdrop v1 후보 43건, 타입 ID 8/7 분포 41/2, raw26 10종 및 치수·다음 ID 상관관계 43/43을 확인했습니다. Debug·ReleaseSafe·ReleaseFast의 현재 집중 테스트는 Prelude 각 6/6·Grid Backdrop 각 3/3·Backdrop 각 4/4, ReleaseSafe WASM의 Prelude 정상 473/거부 6,493·Backdrop 정상 129/거부 8,944를 통과했습니다. 공통화 문서의 낡은 “전체 Contents는 테스트 Prefix에만 있음”을 현재 `observed_contents.zig`의 명시적 배치 제품 조립으로 교정했습니다. 과거 변이·전체 audit와 일반 차트 배치 자동 판별은 이번 결과에 포함하지 않습니다.
+
 2026-09-28에는 HWP5 차트 Grid 전처리·셀 배열·이중 문자열 세 문서를 현재 Zig와 독립 Contents/Node 오라클에 대조했습니다. Debug·ReleaseSafe·ReleaseFast 집중 테스트는 Grid 전처리 각 6/6, 셀 각 4/4, 문자열 각 5/5 통과했습니다. 현재 ReleaseSafe WASM은 43개 Contents에서 전처리 정상 473·거부 6,493, 셀 750개/null 51개·정상 291·거부 28,765, 문자열 272개·정상 547·거부 2,176을 재현했습니다. 과거 변이·전체 audit와 이번 외의 WASM 최적화 모드, 전 Unicode scalar 열거는 재실행하지 않았습니다. 표본 관측 배치를 모든 차트 버전의 자동 판별·편집·저장 계약으로 확대하지 않습니다.
 
 2026-09-28에는 HWP5 차트 타입 선언·목록·참조 span 세 문서를 공식 차트 명세의 반복 StoredtypeID 생략 규칙, 현재 Zig의 관측 배치·소유권·실패 원자성과 대조했습니다. Debug·ReleaseSafe·ReleaseFast 집중 테스트는 선언 각 4/4, 목록 각 6/6 통과했습니다. ReleaseSafe WASM의 독립 Contents 오라클은 43개 표본에서 선언 정상 215·거부 688, 목록 정상 86·거부 258을 재현했고, ReleaseSafe 차트 소유권 감사는 10/10 단계·31/31 테스트를 통과했습니다. 과거 변이·전체 HWP5 audit는 이번에 재실행하지 않았으며, 참조 재등장 확인에 사용한 두 번째 위치는 구성 실험이지 객체 그래프 자동 순회가 아닙니다. 차트 타입 참조 span 문서를 모듈 인덱스에도 연결했습니다.

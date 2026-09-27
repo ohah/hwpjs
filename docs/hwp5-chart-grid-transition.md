@@ -10,9 +10,9 @@ Backdrop 내부의 세 inline ID는 기존 지역 중복 검사만 적용합니�
 
 테스트 조립 `chart-footnote-prefix.zig`는 새 코어를 사용하고 `raw_grid_tail`에 원시 구간을 보존합니다. mode 313의 `chart-backdrop-probe.zig`도 이 조립을 공유하여 해당 필드를 직접 출력합니다. 기존 wire 형식은 바꾸지 않습니다.
 
-line-items 앞의 word는 이미 `chart-line-items-prefix.zig`의 `Prefix.word`에 보존돼 있습니다. 이를 버리는 필드로 설명한 것은 잘못입니다. 별도 단일-word 파서를 추가하지 않으며, 향후 전체 제품 조립에서도 이 원시값을 유지해야 합니다.
+line-items 앞의 word는 당시 테스트 조립 `chart-line-items-prefix.zig`의 `Prefix.word`에 보존됐습니다. 이를 버리는 필드로 설명한 것은 잘못입니다. 현재 제품 `observed_contents.zig`도 별도 단일-word 파서를 만들지 않고 `line_word`에 원시값을 보존합니다.
 
-## 검증 진행
+## 초기 검증 기록
 
 기존 Backdrop 합성 입력 생성기를 `backdrop_test_fixture.zig`로 분리해 기존 Backdrop 검사와 새 Grid 조립 검사가 공유합니다. 제품 serializer에서 fixture를 만들지 않습니다.
 
@@ -30,6 +30,8 @@ Debug·ReleaseSafe·ReleaseFast 전체 audit는 각각 종료 코드 0으로 완
 
 최종 `zig build test --summary all`의 native 1,085개와 `zig build -Doptimize=ReleaseSafe --summary all`의 5/5 단계 성공도 다시 확인했습니다.
 
-## 다음 조립 단계
+## 후속 조립의 현재 상태
 
-개별 구간의 코어 호출을 이어 주는 전체 Contents 조립은 아직 테스트 Prefix 계층에 있습니다. 다음 작업은 원본 버퍼를 빌리는 문자열, 소유한 Grid·타입 목록·Light 원소·Series/Point 배열의 수명과 실패 시 해제를 하나의 명시적 선택 배치 진입점으로 정리하는 것입니다. 테스트에 고정된 네 축·두 선 항목·Series별 Point 개수를 일반 포맷의 자동 판정 규칙으로 옮기지 않습니다. 전체 HWP 문서 검사와 OLE 내부 차트 의미 검증 연결도 이 개별 코어 검증만으로 완료됐다고 주장하지 않습니다.
+초기 단계의 위 계획과 달리, 현재 `src/hwp5/chart/contents_prefix.zig`는 Grid·전환 구간·Footnote·Legend를 제품 코드에서 조립하고, `observed_contents.zig`는 호출자가 축·선 항목·Series별 Point 개수를 명시한 **한 가지 관측 배치**를 끝까지 소비합니다. 원본 Contents는 빌리고 소유한 중간 결과는 실패 시 해제합니다. 이 후속 구현의 상세 계약과 실파일 범위는 [Contents 조립](hwp5-chart-observed-contents.md)이 소유합니다. 선택한 개수를 일반 포맷의 자동 판정 규칙으로 옮기거나 전체 HWP 문서의 차트 의미·편집·저장 완료로 해석하지 않습니다.
+
+2026-09-28 재검증에서는 `collection_header.zig`의 VtCollection v1·원시 u16 word·VtObject v1 순서, `grid_backdrop.zig`의 raw26 복사·Backdrop 위임·Reader 보존을 현재 소스와 대조했습니다. Debug·ReleaseSafe·ReleaseFast에서 `chart grid prelude` 6/6, `grid backdrop` 3/3, `chart backdrop` 4/4가 각각 통과했습니다. 현재 ReleaseSafe WASM의 독립 Contents 오라클은 Prelude 정상 473/거부 6,493 및 Backdrop 정상 129/거부 8,944를 재현했습니다. 위의 과거 21회 변이·세 모드 전체 audit·변경 전후 WASM 비교와 tail 수치는 이번에 재실행하지 않았습니다.

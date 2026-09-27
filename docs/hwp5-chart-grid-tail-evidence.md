@@ -8,7 +8,7 @@
 
 ## 실측
 
-2026-09-13, 기존 OLE corpus의 차트 Contents 43개를 다시 조사했습니다. 재현 출력은 `/tmp/hwpjs-chart-grid-tail-survey.json`입니다. 각 행은 내부 Contents SHA-256과 cellEnd를 포함합니다.
+2026-09-13, 기존 OLE corpus의 차트 Contents 43개를 다시 조사했습니다. 당시 출력은 `/tmp/hwpjs-chart-grid-tail-survey.json`에 두었으나 현재 그 임시 파일은 없습니다. 아래 명령의 표준 출력에서 다시 생성할 수 있으며, 각 행은 내부 Contents SHA-256과 cellEnd를 포함합니다.
 
 - 43/43에서 cellEnd+26의 객체 ID 뒤에 VtBackdrop NUL 종료 이름과 버전 1의 선언 후보가 있습니다.
 - 타입 ID는 8이 41개, 7이 2개입니다. 타입 ID 7인 두 표본에는 수치 셀이 없습니다. 8을 상수로 강제할 수 없습니다.
@@ -32,3 +32,5 @@
 node --test tests/hwp5/chart-grid-tail-evidence.test.mjs
 node tests/hwp5/chart-grid-tail-survey.mjs
 ```
+
+2026-09-28 재검증에서는 Node 조사기 단위 테스트 4/4와 실제 OLE corpus 재조사를 실행했습니다. 43개 후보 모두 VtBackdrop 버전 1이고 타입 ID는 8이 41개·7이 2개, 원시 26바이트는 10종이었습니다. 치수−1 및 다음 객체 ID 상관관계는 각각 43/43이며 타입 ID 7의 두 표본에는 수치 셀이 0개였습니다. 위의 과거 변이 실험은 이번에 재실행하지 않았습니다. 공식 Backdrop 속성 표와 이 후보 바이트 배치의 관계는 추론이며, 26바이트의 의미나 일반 차트 버전의 경계로 승격하지 않습니다.
