@@ -4,14 +4,14 @@
 
 Microsoft [EMR_GRADIENTFILL](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/1a3849c8-be6c-4d30-b5d3-f43b4c70ca0d), [GradientFill enumeration](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/699e75a0-28af-4d6f-b7aa-dc76e1b0001a), [TriVertex](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/33578509-8349-46b6-8f8f-107c3f70bace), [GradientRectangle](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/93ba94f7-84fc-4dd5-8c94-3d476aa7588b), [GradientTriangle](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/9aa3346c-dc29-448d-9dcf-6a4f6b77d229)을 기준으로 한다.
 
-36바이트 고정부 뒤에 `nVer * 16`바이트 TriVertex 배열과 `nTri * 12`바이트 mesh 배열이 온다. 사각형 mode의 mesh는 8바이트 GradientRectangle 뒤 반드시 존재하지만 무시하는 4바이트 padding이고, triangle mode는 12바이트 GradientTriangle이다.
+36바이트 고정부 뒤에 `nVer * 16`바이트 TriVertex 배열이 온다. 사각형 mode에서는 `nTri * 8`바이트 GradientRectangle 인덱스 배열 전체 뒤에 반드시 존재하지만 무시하는 `nTri * 4`바이트 VertexPadding 배열이 따로 온다. 삼각형 mode에서는 `nTri * 12`바이트 GradientTriangle 배열만 오고 VertexPadding은 없다. 총 길이는 두 mode 모두 mesh당 12바이트지만 사각형의 인덱스와 padding을 mesh마다 번갈아 읽으면 안 된다.
 
 ## 책임
 
 - `gradient_fill_mode.zig`: 수평·수직 사각형과 삼각형 mode 0~2의 값 영역
 - `tri_vertex.zig`: signed x/y와 16비트 Red, Green, Blue, Alpha 원값
-- `gradient_mesh.zig`: mode별 index/padding 구분 및 모든 index의 `index < nVer` 검사
-- `gradient_fill.zig`: Bounds·count·mode와 checked u64 배열 extent 조립, indexed accessor, 의미 끝 뒤 `trailing_data` 보존
+- `gradient_mesh.zig`: mode별 8/12바이트 index 객체와 별도 전달된 padding의 검사 및 모든 index의 `index < nVer` 검사
+- `gradient_fill.zig`: Bounds·count·mode와 checked u64 배열 extent 조립, 사각형 index 배열 뒤의 별도 padding 배열 분할, indexed accessor, 의미 끝 뒤 `trailing_data` 보존
 - `framing.zig`: 전체 record 순회 연결과 `gradient_fill_records` 집계
 
 명세에 따라 Alpha 필드는 gradient fill 자체에서는 무시하지만 원본 u16 값은 보존한다. Bounds 재계산, 색 보간·dithering, 뒤따르는 ALPHABLEND 결합과 실제 픽셀 렌더링은 playback 계층 책임이다.
@@ -25,3 +25,5 @@ mode 범위 확장, Red/Green 교환, Alpha 손실, rectangle padding offset 이
 첫 Type 분류 제거의 ReleaseFast 실행은 테스트가 nullable parse 결과를 `.?`로 강제 해제하여 실패 대신 정의되지 않은 값으로 진행하고 거대 반복에 빠졌다. 이 실행은 변이 탐지 근거에서 제외하고 중단했다. 테스트 전용 `expectParsed`가 null을 명시적 오류로 바꾸도록 보강한 뒤 정상 세 모드 기준선과 동일 변이 세 모드를 다시 실행했고, ReleaseFast도 즉시 실패하는 것을 확인했다.
 
 동적 절단 검사 보강 후 최종 전체 audit는 Debug·ReleaseSafe·ReleaseFast에서 각각 `40/40` 단계와 `1390/1390` 테스트를 통과했다.
+
+2026-09-28 재검증에서는 공식 EMR_GRADIENTFILL의 `VertexIndexes` 다음 `VertexPadding` 배열 순서를 다시 대조했다. 기존 파서는 한 사각형에서는 드러나지 않는 8+4바이트 교차 배치를 가정해 두 사각형의 정상 record를 정점 인덱스 오류로 거부했다. 이를 먼저 회귀로 재현하고 두 배열을 분리했으며 원본 padding을 각 indexed mesh에 연결한다. 두 사각형의 index·padding 값과 둘째 index 오류 전파를 합성 record 및 전체 framing에서 검사했다. 임시 `src/image/` import 진입점과 루트 `EMF framing` 테스트는 Debug·ReleaseSafe·ReleaseFast 각 21/21개·99/99개 통과했다. 위의 과거 변이와 전체 audit는 수정된 배열 배치의 완료 근거가 아니며 이번에 재실행하지 않았다.

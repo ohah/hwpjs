@@ -20,3 +20,5 @@ i32 양 극값 좌표, RGB 채널 순서, 두 mode 값, 모든 0~23바이트 절
 mode 범위 확장, Type 분류 제거, Start offset 이동, ColorRef Reserved 정책 완화, mode offset 이동, 필수 크기 약화, trailing data 손실, framing 집계 제거의 8개 독립 변이를 적용했다. Debug·ReleaseSafe·ReleaseFast의 `24/24` 변이 실행이 모두 실패하여 해당 회귀를 탐지했다.
 
 최종 전체 audit는 Debug·ReleaseSafe·ReleaseFast에서 각각 `40/40` 단계와 `1381/1381` 테스트를 통과했다.
+
+2026-09-28 재검증에서는 공식 EXTFLOODFILL의 Start·Color·FloodFillMode와 현재 `flood_fill.zig`의 24바이트 의미 prefix 및 WMF ColorRef 재사용을 대조했다. 임시 `src/image/` import 진입점의 세 주제·의존 모듈 테스트는 Debug·ReleaseSafe·ReleaseFast 각 21/21개, 루트 `EMF framing`은 각 99/99개 통과했다. 이 합계는 flood fill 전용 테스트 수가 아니다. 과거 8종 변이와 세 모드 전체 audit은 이번에 재실행하지 않았다.

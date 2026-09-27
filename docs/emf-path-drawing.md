@@ -20,3 +20,5 @@ Microsoft [EMR_FILLPATH](https://learn.microsoft.com/en-us/openspecs/windows_pro
 세 Type 각각의 분류 제거, Bounds left/top 교환, 필수 크기 약화, 후행 data 손실, framing 집계 제거의 7개 독립 변이를 적용했다. Debug·ReleaseSafe·ReleaseFast의 `21/21` 변이 실행이 모두 실패하여 해당 회귀를 탐지했다.
 
 최종 전체 audit는 Debug·ReleaseSafe·ReleaseFast에서 각각 `40/40` 단계와 `1377/1377` 테스트를 통과했다.
+
+2026-09-28 재검증에서는 공식 FILLPATH·STROKEANDFILLPATH·STROKEPATH의 Type/Size/Bounds와 현재 `path_drawing.zig`의 union·후행 보존 경계를 대조했다. 임시 `src/image/` import 진입점의 세 주제·의존 모듈 테스트는 Debug·ReleaseSafe·ReleaseFast 각 21/21개, 루트 `EMF framing`은 각 99/99개 통과했다. 이 합계는 path drawing 전용 테스트 수가 아니다. 과거 7종 변이와 세 모드 전체 audit은 이번에 재실행하지 않았다.

@@ -2042,6 +2042,29 @@ test "EMF framing connects GRADIENTFILL arrays and index validation" {
     try t.expectError(error.EmfGradientVertexIndexOutOfBounds, framing.validate(t.allocator, &bytes));
 }
 
+test "EMF framing keeps multiple GRADIENTFILL rectangle indexes before padding" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 216;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 3, .little);
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.gradientfill), .little);
+    std.mem.writeInt(u32, bytes[92..96], 108, .little);
+    std.mem.writeInt(u32, bytes[112..116], 3, .little);
+    std.mem.writeInt(u32, bytes[116..120], 2, .little);
+    std.mem.writeInt(u32, bytes[120..124], @intFromEnum(@import("gradient_fill_mode.zig").GradientFillMode.rectangle_vertical), .little);
+    std.mem.writeInt(u32, bytes[172..176], 0, .little);
+    std.mem.writeInt(u32, bytes[176..180], 1, .little);
+    std.mem.writeInt(u32, bytes[180..184], 1, .little);
+    std.mem.writeInt(u32, bytes[184..188], 2, .little);
+    bytes[188..196].* = .{ 9, 8, 7, 6, 5, 4, 3, 2 };
+    @memcpy(bytes[196..216], original[88..108]);
+
+    try t.expectEqual(@as(usize, 1), (try framing.validate(t.allocator, &bytes)).gradient_fill_records);
+    std.mem.writeInt(u32, bytes[184..188], 3, .little);
+    try t.expectError(error.EmfGradientVertexIndexOutOfBounds, framing.validate(t.allocator, &bytes));
+}
+
 test "EMF framing connects BITBLT and propagates missing source errors" {
     const original = fixture();
     var bytes = [_]u8{0} ** 208;

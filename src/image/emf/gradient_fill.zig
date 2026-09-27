@@ -15,6 +15,7 @@ pub const GradientFill = struct {
     mode: gradient_fill_mode.GradientFillMode,
     vertex_bytes: []const u8,
     mesh_bytes: []const u8,
+    padding_bytes: []const u8,
     trailing_data: []const u8,
 
     pub fn vertex(self: GradientFill, index: usize) !tri_vertex.TriVertex {
@@ -25,8 +26,13 @@ pub const GradientFill = struct {
 
     pub fn mesh(self: GradientFill, index: usize) !gradient_mesh.Mesh {
         if (index >= self.mesh_count) return error.EmfGradientMeshIndexOutOfBounds;
-        const start = index * gradient_mesh.byte_size;
-        return gradient_mesh.parse(self.mesh_bytes[start .. start + gradient_mesh.byte_size], self.mode, self.vertex_count);
+        const mesh_width = gradient_mesh.objectSize(self.mode);
+        const start = index * mesh_width;
+        const padding: []const u8 = if (self.mode.isRectangle()) blk: {
+            const padding_start = index * gradient_mesh.rectangle_padding_size;
+            break :blk self.padding_bytes[padding_start .. padding_start + gradient_mesh.rectangle_padding_size];
+        } else &.{};
+        return gradient_mesh.parse(self.mesh_bytes[start .. start + mesh_width], padding, self.mode, self.vertex_count);
     }
 };
 
@@ -37,16 +43,19 @@ pub fn parse(record: records.Record) !?GradientFill {
     const mesh_count = std.mem.readInt(u32, record.bytes[28..32], .little);
     const mode = try gradient_fill_mode.parse(std.mem.readInt(u32, record.bytes[32..36], .little));
     const vertices_end: u64 = fixed_size + @as(u64, vertex_count) * tri_vertex.byte_size;
-    const semantic_end_u64 = vertices_end + @as(u64, mesh_count) * gradient_mesh.byte_size;
+    const meshes_end: u64 = vertices_end + @as(u64, mesh_count) * gradient_mesh.objectSize(mode);
+    const semantic_end_u64 = meshes_end + @as(u64, mesh_count) * (if (mode.isRectangle()) @as(u64, gradient_mesh.rectangle_padding_size) else 0);
     const semantic_end = record_extent.requiredEnd(record, semantic_end_u64) orelse return error.InvalidEmfGradientFillSize;
     const vertices_end_usize: usize = @intCast(vertices_end);
+    const meshes_end_usize: usize = @intCast(meshes_end);
     const value: GradientFill = .{
         .bounds = try geometry.parseRectL(record.bytes[8..24]),
         .vertex_count = vertex_count,
         .mesh_count = mesh_count,
         .mode = mode,
         .vertex_bytes = record.bytes[fixed_size..vertices_end_usize],
-        .mesh_bytes = record.bytes[vertices_end_usize..semantic_end],
+        .mesh_bytes = record.bytes[vertices_end_usize..meshes_end_usize],
+        .padding_bytes = record.bytes[meshes_end_usize..semantic_end],
         .trailing_data = record.bytes[semantic_end..],
     };
     for (0..mesh_count) |index| _ = try value.mesh(index);
@@ -137,4 +146,25 @@ test "GRADIENTFILL preserves empty arrays and indexes later meshes independently
     try std.testing.expectEqual(@as(u32, 0), (try value.mesh(0)).triangle.vertex1);
     try std.testing.expectEqual(@as(u32, 2), (try value.mesh(1)).triangle.vertex1);
     try std.testing.expectEqual(@as(u32, 0), (try value.mesh(1)).triangle.vertex3);
+}
+
+test "GRADIENTFILL keeps rectangle index array before separate padding array" {
+    var bytes = [_]u8{0} ** 108;
+    std.mem.writeInt(u32, bytes[24..28], 3, .little);
+    std.mem.writeInt(u32, bytes[28..32], 2, .little);
+    std.mem.writeInt(u32, bytes[32..36], @intFromEnum(gradient_fill_mode.GradientFillMode.rectangle_vertical), .little);
+    std.mem.writeInt(u32, bytes[84..88], 0, .little);
+    std.mem.writeInt(u32, bytes[88..92], 1, .little);
+    std.mem.writeInt(u32, bytes[92..96], 1, .little);
+    std.mem.writeInt(u32, bytes[96..100], 2, .little);
+    bytes[100..104].* = .{ 9, 8, 7, 6 };
+    bytes[104..108].* = .{ 5, 4, 3, 2 };
+
+    const value = try expectParsed(fixture(&bytes));
+    try std.testing.expectEqual(@as(u32, 0), (try value.mesh(0)).rectangle.upper_left);
+    try std.testing.expectEqual(@as(u32, 1), (try value.mesh(0)).rectangle.lower_right);
+    try std.testing.expectEqualSlices(u8, &.{ 9, 8, 7, 6 }, (try value.mesh(0)).rectangle.padding);
+    try std.testing.expectEqual(@as(u32, 1), (try value.mesh(1)).rectangle.upper_left);
+    try std.testing.expectEqual(@as(u32, 2), (try value.mesh(1)).rectangle.lower_right);
+    try std.testing.expectEqualSlices(u8, &.{ 5, 4, 3, 2 }, (try value.mesh(1)).rectangle.padding);
 }
