@@ -6,8 +6,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "5f033ac901b75bdfb0012d546327c423e5d2ed59a927912a79e864cc15a27963",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope PNG ICC inspection PNG RGBA BCP47 syntax registry alpha2 history ICC IANA matching mluc selection mluc structure mluc Unicode ICC v2 Unicode v2 text tag payload dispatch tag table structure header identifiers v4 and v2 header numeric header verification ICC registry source lookup required tags overview presence table XYZ type XYZ tags curve type TRC tags parametric curve analytic forward and TRC forward review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "fa3f74e7b12bd29263a27e898f52bb7c3bb1863630b3556b4db93e6095b10cab",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope PNG ICC inspection PNG RGBA BCP47 syntax registry alpha2 history ICC IANA matching mluc selection mluc structure mluc Unicode ICC v2 Unicode v2 text tag payload dispatch tag table structure header identifiers v4 and v2 header numeric header verification ICC registry source lookup required tags overview presence table XYZ type XYZ tags curve type TRC tags parametric curve analytic forward TRC forward and sampled forward review, architecture pending, full Debug Zig test incomplete"
     },
     "docs/bcp47-syntax.md": {
       "sha256": "ae0d91a0bb5ca2f8a5194b5ffa76494427cc058784f11446fd905458020f5b11",
@@ -120,6 +120,10 @@
     "docs/icc-trc-forward.md": {
       "sha256": "e32faf744e6876d03e785c3060bec5aed60abd612df54bc1d0ef186c095c3e9f",
       "evidence": "2026-09-27 current TRC forward exact identity samples vs approximate gamma para Fraction semantics and separate matrix core, Debug Safe Fast three focused filters 2 each, existing local WASM mode161 162 independent JS 118 comparisons 96 rejected, macOS 11 profiles 29 TRC 493 points gamma samples para0 para3 and max u64 adjacent identity preserved gamma collapse; historic full audit wasm rebuild not rerun temp logs absent"
+    },
+    "docs/icc-sampled-forward.md": {
+      "sha256": "23af99842a03b4b08d5ce4ad6ee032df04100c99f5e21116f4cc05ff8eca24c8",
+      "evidence": "2026-09-27 ICC.1 2022 section10.6 sampled uniform linear exact Fraction and u64 bounds current Zig, Debug Safe Fast two focused filters 2 each, existing local WASM mode158 independent BigInt 7689 comparisons 39 rejected 40 roundTrips, macOS two profiles four sampled TRC tags 28 points; historic full audit wasm rebuild not rerun temp logs absent"
     },
     "docs/png-rgba.md": {
       "sha256": "caa9320a6c1b5d93529d7461b2482d7bc3ba414c8817663a34028dad68f53f5b",

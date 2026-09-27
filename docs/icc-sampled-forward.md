@@ -10,9 +10,15 @@ Fraction은 `fraction.zig`, 샘플 배열의 유효 개수 검사는 `curve_type
 
 끝점 x=1은 마지막 샘플을 직접 반환하며 배열 끝을 넘지 않습니다. 샘플 두 개만 조회하므로 시간·추가 공간은 O(1)이고 할당하지 않습니다. 상수·비단조 곡선도 순방향 평가는 가능하므로 역변환의 단조성 제약을 적용하지 않습니다. 원본 입력을 변경하거나 결과에 포인터를 남기지 않습니다.
 
-이 API는 샘플 곡선만 다룹니다. identity/gamma/para 평가, 전체 TRC 모델, 행렬·PCS 변환과 필수 태그 검증은 아직 남아 있습니다. 분모 상한 때문에 임의 정밀도의 모든 유리수를 지원한다고 주장하지 않습니다.
+이 API는 샘플 곡선만 다룹니다. identity·gamma·para의 점 평가는 별도 `trc_forward`, 명시적으로 선택한 matrix/TRC의 조립·평가는 별도 `matrix_trc_model`·`matrix_trc_forward`가 맡으며, 필수 태그 계획·검사도 별도 모듈에 있습니다. 이 함수만으로 프로파일 의미 검증, LUT 우선순위·PCS 인코딩 또는 공개 JS의 전체 색상 변환이 완성된 것은 아닙니다. 분모 상한 때문에 임의 정밀도의 모든 유리수를 지원한다고 주장하지 않습니다.
 
 ## 검증
+
+2026-09-27 재검증: 공식 §10.6의 균일 간격·u16 출력·선형 보간을 현재 `sampled_forward.evaluate`, `curve_type.Samples.checkedCount`, `fraction.Fraction`과 대조했습니다. Debug·ReleaseSafe·ReleaseFast에서 두 집중 필터(`sample forward`, `forward preserves nonmonotonic`)가 각각 root 포함 2/2 통과했습니다. 기존 로컬 WASM probe의 mode 158을 독립 BigInt 기준으로 다시 실행해 비교 7,689건·오류 거부 39건·역변환 왕복 40건이 일치했습니다. WASM 자체는 이번에 재빌드하지 않았습니다.
+
+macOS 기본 Generic Gray Gamma 2.2 Profile의 `kTRC`와 sRGB Profile의 `rTRC`·`gTRC`·`bTRC`를 현재 파일에서 읽어 각각 1,024개 샘플을 확인하고, 태그당 7개 분수 입력 총 28건의 결과를 독립 식과 교차 곱으로 대조했습니다. 최대 입력 분모 281479271743489, 최대 출력 분모 18446744073709551615와 u32 최대 샘플 개수에서의 최대 중간 위치 1208944266077223612448766도 BigInt로 다시 계산했습니다. 실제 시스템 프로파일 검증은 네 곡선의 해당 28점에만 해당하며 전체 프로파일·색상 출력 동치가 아닙니다.
+
+아래 2026-09-07 기록의 전체 감사·모드별 통과 수와 다른 수동 검사는 이번에 재실행하지 않았습니다. 당시 `/tmp/hwpjs-icc-forward-{Debug,ReleaseSafe,ReleaseFast}-final.log`도 현재 남아 있지 않습니다. 따라서 아래 수치는 현재 전체 회귀의 증거로 세지 않습니다.
 
 2026-09-07 포맷 검사와 `zig build test --summary all`이 5/5 단계, 네이티브 438/438로 통과했습니다. 기존 역변환 테스트도 공통 경계 검사 추출 후 통과했습니다.
 
