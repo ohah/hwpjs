@@ -12,6 +12,14 @@
 
 ## 검증 경로
 
+### 현재 재검증 (2026-09-27)
+
+[PNG Third Edition §5.6·§11.3.5.1](https://www.w3.org/TR/png-3/)의 tIME 길이·필드 범위·윤초 60·UTC 권고와 현재 `timestamp.zig`·`metadata.zig`·`pixels.zig`의 값 검사 및 순서 연결을 대조했습니다. 입력의 실제 UTC 여부와 그레고리력상 날짜의 존재는 검증하지 않는 경계를 유지합니다.
+
+Debug·ReleaseSafe·ReleaseFast의 `PNG timestamp` 집중 필터는 각각 root 포함 4/4 통과했습니다. 로컬 probe와 독립 JS oracle은 정상 243건·거부 1,437건을 대조했습니다. 추적 HWP의 PrvImage PNG 32개에 tIME는 0개여서 양성 실파일 검증이 아닙니다. 아래 전체 audit 총계와 Debug WASM 전 연도 수동 검사는 과거 기록이며 이번에 재실행한 증거로 세지 않습니다.
+
+### 과거 검증 기록
+
 네이티브는 전체 u16 연도 65,536개, 각 날짜·시간 바이트의 0..255, 길이 경계, 소유 값 보존, IDAT 이후 허용, 오류 시 상태 불변, 모든 할당 실패 시 정리를 검사합니다.
 
 테스트 전용 WASM mode 134는 전체 PNG와 입력 한도를 받아 9개 u32 LE(36바이트)를 반환합니다: 존재 여부·연도·월·일·시·분·초·deferred 청크·바이트. `png-timestamp-evidence.mjs`가 Buffer 읽기와 독립 범위표로 기대값을 계산합니다. 제품 코드나 호스트 Date의 날짜 정규화를 기대값에 사용하지 않습니다.

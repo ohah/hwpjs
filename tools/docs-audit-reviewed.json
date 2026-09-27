@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "e002cb0122e20f4a3aed02a4a5090ffcc2e009862e29dddcc728e081e7114708",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata and PNG sample metadata review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "2b5da2ce183b9dc8dfe17ffade3aa845ea987efd0ed7d2a284c63902e6de36b9",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata and PNG timestamp review, architecture pending, full Debug Zig test incomplete"
+    },
+    "docs/png-timestamp.md": {
+      "sha256": "f93681bfe3290308faac504f6afb8e8599db1532acb6a9e669c4d988e8271ca8",
+      "evidence": "2026-09-27 W3C PNG Third Edition tIME ranges and UTC recommendation current Zig metadata and pixels connection, Debug Safe Fast focused 4 each, local probe CFB independent JS oracle 243 accepted 1437 rejected 32 real PNG 0 tIME; historic full audit and all-year WASM manual test not rerun"
     },
     "docs/png-sample-metadata.md": {
       "sha256": "0dde11de1619de03631bd9ba6f62422bfa00ed3e8ab2bc83928f0ca26fbf9ddd",
