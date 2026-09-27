@@ -4,7 +4,7 @@
 
 `chart/light.zig`는 inline VtLight3 v1을 [배열 헤더](hwp5-chart-array-header.md), inline VtInfLight3 v1 원소 목록, 원시 10바이트, VtObject v1 기반 타입으로 읽습니다. `chart/light_source.zig`는 원소 하나의 ID·원시 16바이트·시작/끝 위치만 소유합니다. 표본의 두 word 동일성을 명시적으로 선택하는 API이며, 값이 다르면 UnsupportedChartArrayLayout입니다. 일반 배열 의미·다른 광원 클래스·객체 재참조 지원을 추정하지 않습니다.
 
-공식 차트 3.36~3.38과 원본 배치 근거는 [Plot 조사](hwp5-chart-plot-evidence.md)에 둡니다. 원시 비트를 float로 정규화하거나 위치·세기·단위를 확정하지 않습니다. Plot 전체·Axis·렌더링·저장 구현 완료가 아닙니다.
+공식 차트 3.36~3.38과 원본 배치 근거는 [Plot 조사](hwp5-chart-plot-evidence.md)에 둡니다. 원시 비트를 float로 정규화하거나 위치·세기·단위를 확정하지 않습니다. 이 Light 코어만으로 Plot 전체나 Axis 지원을 증명하지 않습니다. 현재 선택 배치의 Axis 및 Contents 조립은 각각 `src/hwp5/chart/axis.zig`와 `src/hwp5/chart/observed_contents.zig`가 소유하며, 자동 배치 판정·렌더링·저장은 여전히 지원하지 않습니다.
 
 ## 소유권·한도·실패
 
@@ -37,3 +37,7 @@ Mode 317 입력은 max_sources·max_objects u32 두 개와 Contents이며 별도
 최종 할당 실패 전용 테스트를 포함한 네이티브 전용 실행은 세 모드 각각 6/6개(root 테스트 포함)를 통과했습니다. 소스·정규 테스트를 고정한 뒤 Debug·ReleaseSafe·ReleaseFast 전체 audit가 각각 27/27 단계, 네이티브 1,030/1,030개, HWP/WASM 8,037,592회 검사를 통과했습니다. 각 모드 Light 결과는 원본 43개·정상 173건·거부 6,720건입니다. 로그는 `/tmp/hwpjs-chart-light-{Debug,ReleaseSafe,ReleaseFast}-audit.log`이며, 세 모드 순차 실행 명령의 종료 코드 0도 확인했습니다. 검사 횟수는 모든 입력의 무결함이나 전체 차트 지원을 뜻하지 않습니다.
 
 전체 audit 이후 최종 `zig build test --summary all`은 5/5 단계·1,030/1,030개, 제품 `zig build -Doptimize=ReleaseSafe --summary all`은 5/5 단계를 통과했습니다. 변경 Zig 포맷·JS 구문·diff 공백과 관련 문서 로컬 링크 36개도 확인했습니다.
+
+## 현재 재검증
+
+위 전체 audit와 변이 검사 수치는 당시 기록입니다. 문서 검증 시점에는 현재 소스의 소유권·한도·실패 경계를 다시 대조했고, Debug·ReleaseSafe·ReleaseFast의 `chart ` 집중 테스트가 각각 141/141개 통과했습니다. 기존 ReleaseSafe probe의 독립 Light 오라클은 실파일 43개, 수락 173건·거부 6,720건을 다시 통과했습니다. 이번에는 세 모드 전체 audit와 변이 검사를 재실행하지 않았습니다.

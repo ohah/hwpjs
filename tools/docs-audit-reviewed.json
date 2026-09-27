@@ -1,6 +1,18 @@
 {
   "schema": 1,
   "verified": {
+    "docs/hwp5-chart-light.md": {
+      "sha256": "d9210f213fa545460936f49fee498a1c0bf9df0dcc4cfa7bb0e0d54b17f8d3c7",
+      "evidence": "2026-09-28 current Zig Light source copied raw cursor failure and selected Contents ownership; Debug Safe Fast chart tests 141 each; current ReleaseSafe independent 43 roots 173 accepted 6720 rejected; historic full audits and mutants not rerun"
+    },
+    "docs/hwp5-chart-plot-surface-prefix.md": {
+      "sha256": "11cb9d39eb790362597c2caa74509559e5daa54a779c0f6b7c0865962718171a",
+      "evidence": "2026-09-28 current Zig Plot Surface prefix array errors and selected Contents routing; Debug Safe Fast chart tests 141 each; current ReleaseSafe independent 43 roots Plot 172 accepted 9030 rejected Surface 172 accepted 5934 rejected; historic full audits and mutants not rerun"
+    },
+    "docs/hwp5-chart-post-line.md": {
+      "sha256": "48f84c30e4d91705eb3213b337cc4f264b837f32e12bf76a8265079a475204d5",
+      "evidence": "2026-09-28 current Zig PostLine raw and array boundary versus Series and selected Contents integration; Debug Safe Fast chart tests 141 each; current ReleaseSafe independent 43 roots 215 accepted 9718 rejected; historic full audits and mutants not rerun"
+    },
     "docs/hwp5-chart-observed-initial-text.md": {
       "sha256": "e9bfe73c25fd92ecde5f87f9da9ab11877f78d2836a5ff70b0baab2a9abff957",
       "evidence": "2026-09-28 current mode336 43 selected Contents 1452 accepted 946 rejected 43 final-byte cuts; Footnote 301/21199 Legend 258/11211 names reused 41 introduced 2 and flags 1/1/0; guards 3 exceptions 8 corruptions; native chart Debug Safe Fast 141 each; ReleaseSafe ownership 31; historic mutants full cuts not rerun"
@@ -450,8 +462,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "c8554a0d947d8187924f7347298dfe787c3d4841c0ad6a2612aa7eb492c470c3",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope PNG ICC inspection PNG RGBA BCP47 syntax registry alpha2 history ICC IANA matching mluc selection mluc structure mluc Unicode ICC v2 Unicode v2 text tag payload dispatch tag table structure header identifiers v4 and v2 header numeric header verification ICC registry source lookup required tags overview presence table XYZ type XYZ tags curve type TRC tags parametric curve analytic forward TRC forward sampled forward sampled inverse sampled wide inverse gamma inverse wide gamma inverse TRC inverse and extended TRC inverse matrix TRC inverse matrix TRC model matrix TRC forward fraction matrix inverse fraction matrix TRC inverse wide linear target wide positive bounds normalized and extended root compare normalized and extended root locations clipped and extended power preimage whole and extended whole parametric preimage normalized and extended whole bounds normalized and extended attained F.1a whole and extended nearest normalized and extended full inverse topology segments jump trend domain partition power clipping power level root compare active root locations rational power order normalized power level wide power level normalized root order power range power nearest ordinate order extended ordinate order ordinate distance extended ordinate distance linear range parametric range rational range nearest linear preimage extended linear preimage chromatic adaptation matrix transform ICC foundation verification review, architecture pending, full Debug Zig test 2656 passed and ReleaseFast HWP5 audit 10 steps 8905855 checks, EMF ICM and three clipping region docs direct tests and 102 shared tests each mode"
+      "sha256": "529fa846063e4c0b441cc5ec9249719d41850259f60529119c2a6056305ea608",
+      "evidence": "2026-09-28 tracker updated with Chart Light Plot Surface PostLine verification, chart tests 141 each Debug Safe Fast, ReleaseSafe independent 43 roots each; historic full audits and mutants not rerun"
     },
     "docs/bcp47-syntax.md": {
       "sha256": "ae0d91a0bb5ca2f8a5194b5ffa76494427cc058784f11446fd905458020f5b11",

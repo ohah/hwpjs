@@ -12,7 +12,7 @@
 
 기존 테스트 경로의 오류 구분을 유지합니다. 배열 word 불일치는 둘 다 UnsupportedChartArrayLayout입니다. 같은 비영 word는 Plot에서 UnsupportedChartInitialArray, Surface에서 선택 경로의 0개 제한에 따른 LimitExceeded입니다. 전체 형식의 유효/무효 판정이 아니라 현재 선택 배치의 지원 제한입니다.
 
-`tests/hwp5/chart-light-prefix.zig`와 `chart-nullable-title-prefix.zig`의 중복 파싱을 위 코어 호출로 교체했습니다. 네 축의 선택·개수와 뒤쪽 nullable 제목 처리는 여전히 테스트 경로의 책임이며 일반 Contents 제품 라우팅이 아닙니다.
+`tests/hwp5/chart-light-prefix.zig`와 `chart-nullable-title-prefix.zig`의 중복 파싱을 위 코어 호출로 교체했습니다. 이 probe 접두부 조립은 테스트 전용입니다. 현재 제품의 `src/hwp5/chart/observed_contents.zig`는 별도로 호출자가 지정한 축·line item·series point 개수에 따라 선택된 Contents를 조립합니다. 자동 배치 판정이나 일반 버전 라우팅은 아닙니다.
 
 ## 검증 진행
 
@@ -32,10 +32,14 @@ Surface 조사기에 새로 추가한 참조·word 위치 정보만 제외하면
 
 별도 복사본에서 Reader 복원 누락 2종, ID 등록 누락 2종, 타입 버전 검사 누락 2종, 배열 배치 검사 누락 2종, 원시 영역 강제 0 변형 3종을 주입했습니다. 총 11종이 Debug·ReleaseSafe·ReleaseFast에서 모두 컴파일에 성공한 뒤 실제 테스트 실패·종료 코드 1로 검출됐습니다. 33개 컴파일 로그는 비어 있고 실행 로그 모두 FAIL을 확인했습니다. 로그는 `/tmp/hwpjs-plot-surface-mutants.TvPfLg`입니다.
 
-Debug·ReleaseSafe·ReleaseFast 전체 audit는 각각 종료 코드 0으로 완료됐습니다. 각 모드에서 27/27 단계, native 1,082/1,082개, WASM 검사 8,902,460회, imports 0입니다. 소스·probe를 고정하고 순차 실행한 전체 로그는 `/tmp/hwpjs-plot-surface-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다. 이 결과는 선택된 접두부와 기존 회귀의 통과이며 전체 Contents 라우팅·미확정 필드 지원 완료가 아닙니다.
+당시 Debug·ReleaseSafe·ReleaseFast 전체 audit는 각각 종료 코드 0으로 완료됐습니다. 각 모드에서 27/27 단계, native 1,082/1,082개, WASM 검사 8,902,460회, imports 0입니다. 소스·probe를 고정하고 순차 실행한 전체 로그는 `/tmp/hwpjs-plot-surface-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다. 이 결과는 선택된 접두부와 당시 기존 회귀의 통과이며 자동 Contents 판정·미확정 필드 지원 완료가 아닙니다.
 
 최종 `zig build test --summary all`의 native 1,082개와 `zig build -Doptimize=ReleaseSafe --summary all`의 5/5 단계 성공도 다시 확인했습니다.
 
 ## 다음 연결 공백
 
 Grid의 Collection 중복 읽기와 셀 이후 raw26 보존의 후속 구현·검증은 [Grid 공통 Collection·원시 구간](hwp5-chart-grid-transition.md)이 소유합니다. line-items 앞 word는 이미 테스트 Prefix에 보존돼 있으며 전체 제품 조립에서도 유지해야 합니다. 자동 배열·축 선택, 미확정 ID·필드 의미까지 이번 접두부 코어 완료에 포함하지 않습니다.
+
+## 현재 재검증
+
+위 전체 audit와 변이 검사는 당시 이력입니다. 문서 검증 시점에 두 코어와 선택된 제품 조립 경계를 다시 대조했고, Debug·ReleaseSafe·ReleaseFast의 `chart ` 집중 테스트가 각각 141/141개 통과했습니다. 기존 ReleaseSafe probe의 독립 직접 오라클은 43개 실파일에서 Plot 수락 172건·거부 9,030건, Surface 수락 172건·거부 5,934건을 다시 통과했습니다. 이번에는 세 모드 전체 audit와 변이 검사를 재실행하지 않았습니다.

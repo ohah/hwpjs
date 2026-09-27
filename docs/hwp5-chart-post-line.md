@@ -12,7 +12,7 @@
 
 mode 326은 기존 nullable 축·CLineItem 객체 사전을 유지하고 그 뒤에서 코어를 실행합니다. `chart-line-items-prefix.zig`가 nullable 축 다음 raw u16까지의 조립과 수명을 소유하도록 mode 325에서 분리했습니다. 기존 mode 325와 새 mode 326이 이를 공유합니다. 앞의 u16을 항목 개수로 해석하지 않으며, mode 326의 두 CLineItem 반복은 선택된 corpus 연결에만 존재합니다.
 
-`chart-post-line-oracle.mjs`는 독립 JS 관측 결과에서 기대 wire를 생성합니다. raw194·객체 ID·각 u16·소비 끝·사전 수를 제품 출력과 대조합니다. 이 조립은 테스트 전용이며 제품 JS 공개 API나 전체 Chart 조립을 추가하지 않습니다.
+`chart-post-line-oracle.mjs`는 독립 JS 관측 결과에서 기대 wire를 생성합니다. raw194·객체 ID·각 u16·소비 끝·사전 수를 probe 출력과 대조합니다. 이 mode 326 조립은 테스트 전용이며 제품 JS 공개 API를 추가하지 않습니다. 현재 선택된 Contents 제품 조립은 별도 `src/hwp5/chart/observed_contents.zig`가 소유합니다.
 
 ## 네이티브·적대적 검증
 
@@ -32,10 +32,14 @@ Debug·ReleaseSafe·ReleaseFast 전체 `zig build audit --summary all`(최적화
 
 최종 `zig build test --summary all`도 1,054/1,054, `zig build -Doptimize=ReleaseSafe --summary all`은 5/5 단계로 통과했습니다. 변경 Zig 포맷·JS 구문·diff 공백 검사도 통과했습니다.
 
-Series 원소·배열 소유권·raw 의미·전체 Chart 조립·렌더링·저장은 여전히 미완료입니다.
+이 PostLine 코어는 Series 원소를 읽지 않고 배열 소유권·raw 의미를 확정하지 않습니다. 후속 선택 배치의 Series 원소와 Contents 조립은 각각 `src/hwp5/chart/series_collection.zig`와 `src/hwp5/chart/observed_contents.zig`가 맡습니다. 자동 배치 판정·전체 버전 지원·렌더링·저장은 미완료입니다.
 
 ## 다음 Series 후보
 
-전체 회귀 대기 중 코어 대상 뒤의 정확한 소비 위치에서 읽기 전용 헤더 진단을 수행했습니다. 43개 모두 선행 사전에 없는 객체 ID·새 타입 ID·VtSeries v2 선언이었고 해당 헤더는 21바이트였습니다. 이름 검색으로 시작 위치를 정하지 않았습니다. Series 본문·버전별 필드·배열 원소 전체는 아직 읽지 않았으므로 다음 단계에서 별도 경계 검증이 필요합니다.
+당시 전체 회귀 대기 중 코어 대상 뒤의 정확한 소비 위치에서 읽기 전용 헤더 진단을 수행했습니다. 43개 모두 선행 사전에 없는 객체 ID·새 타입 ID·VtSeries v2 선언이었고 해당 헤더는 21바이트였습니다. 이름 검색으로 시작 위치를 정하지 않았습니다. 당시에는 Series 본문·버전별 필드·배열 원소 전체를 읽지 않았으며, 후속 선택 배치 구현의 범위는 [Series 접두부 조사](hwp5-chart-series-prefix-evidence.md)와 Series 구현 문서가 소유합니다.
 
 후속 [Series 접두부 조사](hwp5-chart-series-prefix-evidence.md)에서 raw66·배열 헤더까지의 경계와 반례를 검증했습니다. 현재 범위와 미완료 분기는 해당 문서가 소유합니다.
+
+## 현재 재검증
+
+위 전체 audit와 변이 검사는 당시 기록입니다. 문서 검증 시점에는 현재 코어와 조립 책임을 다시 대조했고, Debug·ReleaseSafe·ReleaseFast의 `chart ` 집중 테스트가 각각 141/141개 통과했습니다. 기존 ReleaseSafe probe의 독립 PostLine 오라클은 실파일 43개에서 수락 215건·거부 9,718건을 다시 통과했습니다. 이번에는 세 모드 전체 audit와 변이 검사를 재실행하지 않았습니다.
