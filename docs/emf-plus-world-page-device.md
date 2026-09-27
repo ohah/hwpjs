@@ -27,4 +27,4 @@ BeginContainer의 World/Display source unit 때문에 world transform이 unknown
 
 이름을 `world-to-device`에서 현재 책임을 정확히 나타내는 `world-page-device`로 좁힌 뒤 첫 최종 캠페인에서는 상태 연결 테스트 이름이 옛 이름에 남아 공개 연결 변이가 3모드에서 생존했습니다. 이 세 실행은 유효 검출로 세지 않았습니다. 테스트 이름을 같은 책임명으로 고쳐 필터가 4개가 아니라 5개 테스트를 수집하는지 확인하고, 새 복사본·cache에서 해당 변이를 다시 실행해 세 모드 모두 검출했습니다. 최종 유효 30회는 이름 변경 후 고정 소스에 대한 27회와 교정 재실행 3회입니다. 제품 작업 트리에는 변이를 적용하지 않았습니다.
 
-변경 소스를 고정한 뒤 전체 audit를 순차 실행했습니다. Debug·ReleaseSafe·ReleaseFast가 각각 40/40 단계와 1953/1953 테스트(native 1914, chart ownership 31, WMF Contents 8)를 통과했습니다. 각 모드의 corpus 검사는 8,905,827 checks, imports 0이었고 strict CFB mutation sweep는 12,000 mutations, traps 0이었습니다. 로그는 `/tmp/hwpjs-world-page-device-final-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.
+아래 전체 audit와 위 변이 검출 수치는 당시 기록이며 2026-09-28 재검증에서는 재실행하지 않았습니다. 당시 변경 소스를 고정한 뒤 전체 audit를 순차 실행했습니다. Debug·ReleaseSafe·ReleaseFast가 각각 40/40 단계와 1953/1953 테스트(native 1914, chart ownership 31, WMF Contents 8)를 통과했습니다. 각 모드의 corpus 검사는 8,905,827 checks, imports 0이었고 strict CFB mutation sweep는 12,000 mutations, traps 0이었습니다. 로그는 `/tmp/hwpjs-world-page-device-final-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.

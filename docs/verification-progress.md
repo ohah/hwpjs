@@ -8,6 +8,8 @@
 
 기존 문서의 과거 테스트 기록은 이 목록에 자동 소급하지 않습니다. 이 목록의 비율은 새 기준에 따라 **현재 내용 전체를 다시 검증한 파일의 비율**이며, 이전 구현 진행률이나 과거 검증 작업량의 추정치가 아닙니다.
 
+2026-09-28에는 EMF+ image affine map·RectData/device corner·rectangle record 연결·world/page/device mapper·page transform 다섯 문서를 Microsoft의 DrawImagePoints/Rect/SetPageTransform/UnitType 및 GDI+ 행렬·좌표계 설명, 현재 Zig의 affine·공용 단위 환산·stream/상태 연결과 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 root `EMF+` 필터는 각각 560/560 통과했고 각 대상 모듈 테스트가 실제 수집된 것도 출력으로 확인했습니다. 기존 변이·전체 audit 수치는 당시 기록으로 명시했으며 이번에 재실행하지 않았습니다. 실제 한컴 EMF+ 양성 파일·픽셀 동등성도 이번 문서 검증으로 입증하지 않습니다.
+
 2026-09-28에는 EMF+ DrawImage·DrawImagePoints 및 image parallelogram·rectangle/source→device map 다섯 문서를 공식 MS-EMFPLUS record 정의, 고정 Wine playback/test 원문, 현재 Zig의 parser·stream·좌표 책임과 대조했습니다. 세 빌드 모드의 root `EMF+` 필터는 각각 560/560 통과했고 대상 모듈의 테스트 16개가 실제로 수집됐음을 확인했습니다. Wine의 범위 밖 ImageAttributes ID 무시 정책은 공식 명세의 sentinel 규칙이 아니라 관측된 호환 정책으로 유지합니다. rectangle 문서의 `stream replay` 미구현 표현은 실제 구조·참조 검증과 그래픽 재생을 구별하도록 바로잡았습니다. 다섯 문서의 과거 변이·전체 audit 수치는 이번에 재실행하지 않았고, 실제 한컴 EMF+ 양성 파일이나 픽셀 동등성은 검증하지 않았습니다.
 
 2026-09-27 기준 첫 완료 파일은 [HWP5 각주·미주 원문 표식 위치](hwp5-note-source-sites.md)입니다. 해당 주제의 공식 명세·제품 코드·원시 레코드 대조와 반례, 감사 테스트 결과는 그 문서에 둡니다. [프로젝트 구조](project-structure.md)는 HWPX XML 트리·section·WMF/EMF 범위 표현을 교정했으나 파일 전체의 검증 완료로 세지 않습니다. 새 현황 문서까지 포함해 현재 존재하는 프로젝트 Markdown 560개에서 일반 인라인 로컬 링크 2,518개의 대상 파일이 모두 존재했습니다. 작업 트리에서 삭제된 `lint-rules.md`는 이 링크 검사에서 제외됩니다. 참조형 링크·앵커·외부 URL·문서 내용의 옳음까지 증명하는 검사는 아닙니다.

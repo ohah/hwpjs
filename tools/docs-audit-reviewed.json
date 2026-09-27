@@ -1,6 +1,26 @@
 {
   "schema": 1,
   "verified": {
+    "docs/emf-plus-image-affine-map.md": {
+      "sha256": "6ea6265cc83352b15823aa6b9525e9334ec7da4b7bb0640d8ffca7d58c6a671c",
+      "evidence": "2026-09-28 official DrawImagePoints and GDI+ Matrix affine point mapping against Zig common buildFromBasis and record adapter, Debug Safe Fast root EMF+ 560 each with three direct affine tests; historical mutants and full audits not rerun"
+    },
+    "docs/emf-plus-rect-device-corners.md": {
+      "sha256": "923ef7de4cf33690943649a6d57471dd2c2b127ee7c6e5f823822fcce28fee4c",
+      "evidence": "2026-09-28 official EmfPlusRect and GDI+ coordinate spaces against Zig RectData corners device mapper and iterator, Debug Safe Fast root EMF+ 560 each with four direct corner tests; historical mutants and full audits not rerun"
+    },
+    "docs/emf-plus-rect-record-device-corners.md": {
+      "sha256": "d8672d95e16ad8937bb984ac32809069e1482a03a3e5c77dcf124316654f58c8",
+      "evidence": "2026-09-28 current Zig FillRects DrawRects FillEllipse DrawEllipse DrawArc DrawPie FillPie public corner delegation against shared mapper, Debug Safe Fast root EMF+ 560 each with caller fixtures collected; historical mutants and full audits not rerun"
+    },
+    "docs/emf-plus-world-page-device.md": {
+      "sha256": "bc101fcf2c9dbe4f5557677bbaa30527ebc5803c3d1c82dc8b96b7224e7d2a60",
+      "evidence": "2026-09-28 official GDI+ world page device coordinate order and Zig sequential mapper unknown handling state wrapper, Debug Safe Fast root EMF+ 560 each with three direct mapper tests and state test; historical mutants and full audits not rerun"
+    },
+    "docs/emf-plus-page-transform.md": {
+      "sha256": "605d53e20daa74844d7a8fdd39973aa88b494260da1dc06a15dfe038473b3e9e",
+      "evidence": "2026-09-28 official EMF+ SetPageTransform SHOULD NOT World Display and UnitType units against Zig unit scale page state stream snapshot, Debug Safe Fast root EMF+ 560 each with direct unit page stream tests; historical mutants and full audits not rerun"
+    },
     "docs/emf-plus-draw-image-record.md": {
       "sha256": "68f3358907e77dde8dbb6d34384fd02d2406a9e9092c4c6b468365d744c94d75",
       "evidence": "2026-09-28 official MS-EMFPLUS DrawImage and pinned Wine GDI+ playback tests against Zig parser stream and rectangle mapper; Debug Safe Fast root EMF+ 560 each with four direct record tests; historical mutants and full audits not rerun, no real positive EMF+"
@@ -78,7 +98,7 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "acd881326ceb89fd74acc45e878f8566529fd54866ea8c446345468843487de9",
+      "sha256": "6fc244c4895a41819c05ae29fb11908d306440ad6b9ab9719d439dbe6596b25b",
       "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope PNG ICC inspection PNG RGBA BCP47 syntax registry alpha2 history ICC IANA matching mluc selection mluc structure mluc Unicode ICC v2 Unicode v2 text tag payload dispatch tag table structure header identifiers v4 and v2 header numeric header verification ICC registry source lookup required tags overview presence table XYZ type XYZ tags curve type TRC tags parametric curve analytic forward TRC forward sampled forward sampled inverse sampled wide inverse gamma inverse wide gamma inverse TRC inverse and extended TRC inverse matrix TRC inverse matrix TRC model matrix TRC forward fraction matrix inverse fraction matrix TRC inverse wide linear target wide positive bounds normalized and extended root compare normalized and extended root locations clipped and extended power preimage whole and extended whole parametric preimage normalized and extended whole bounds normalized and extended attained F.1a whole and extended nearest normalized and extended full inverse topology segments jump trend domain partition power clipping power level root compare active root locations rational power order normalized power level wide power level normalized root order power range power nearest ordinate order extended ordinate order ordinate distance extended ordinate distance linear range parametric range rational range nearest linear preimage extended linear preimage chromatic adaptation matrix transform ICC foundation verification review, architecture pending, full Debug Zig test 2656 passed and ReleaseFast HWP5 audit 10 steps 8905855 checks, EMF ICM and three clipping region docs direct tests and 102 shared tests each mode"
     },
     "docs/bcp47-syntax.md": {

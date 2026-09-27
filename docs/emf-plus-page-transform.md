@@ -6,7 +6,7 @@
 
 `src/image/emf/emf_plus_page_transform.zig`는 wire 값인 PageUnit·PageScale과 계산된 page-to-device x/y scale을 분리해 보존합니다. x/y는 EmfPlusHeader의 LogicalDpiX/Y를 각각 사용하고 물리 단위의 device scale은 `unit scale * PageScale`입니다. world transform은 별도 상태이므로 두 변환을 하나의 행렬로 조기에 합치지 않습니다.
 
-World와 Display는 SetPageTransform에서 SHOULD NOT인 호환 입력입니다. parser와 경고 계수는 원값을 보존하지만 문서만으로 device scale을 확정하지 않고 `device_scale = null`로 둡니다. PageScale의 signed zero, NaN, 무한대와 0 DPI도 IEEE-754 의미를 임의 보정하지 않습니다.
+[MS-EMFPLUS SetPageTransform](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/9bf3fad2-4551-4e7b-9aaf-1bf017e7a473)에 따르면 World와 Display는 SHOULD NOT인 호환 입력입니다. parser와 경고 계수는 원값을 보존하지만 문서만으로 device scale을 확정하지 않고 `device_scale = null`로 둡니다. PageScale의 signed zero, NaN, 무한대와 0 DPI도 IEEE-754 의미를 임의 보정하지 않습니다.
 
 tracked stream은 SetPageTransform을 현재 graphics state에 적용하고 성공한 comment 뒤 `Report.page_transform`에 같은 값을 노출합니다. Save와 BeginContainer snapshot은 page transform도 값으로 저장하며 Restore와 EndContainer가 함께 복원합니다. 실패한 comment는 cloned stack과 report를 모두 폐기합니다. allocation-free `State.consume`은 상태 재생 API가 아니므로 report 값이 `null`입니다.
 
@@ -23,4 +23,4 @@ tracked stream은 SetPageTransform을 현재 graphics state에 적용하고 성�
 
 위 일곱 의미 변이를 세 모드에서 실행한 최종 유효 결과는 21/21 테스트 의미 실패이며 생존·컴파일 오류·timeout은 0입니다. 상태 적용을 제거해 Zig unused-local 컴파일 오류만 만든 최초 변이는 증거에서 제외하고, 입력을 소비하면서 잘못된 pixel 상태를 적용하는 유효 변이로 다시 검사했습니다. 로그는 `/tmp/hwpjs-mutant-{point,axis,scale,apply,snapshot,report,context}-{Debug,ReleaseSafe,ReleaseFast}.log`입니다.
 
-BeginContainer/EndContainer 복원 검사까지 추가한 최종 소스를 고정한 뒤 전체 `audit`를 세 모드에서 다시 순차 실행했습니다. 각 모드는 40/40 단계와 1,900/1,900 테스트(native 1,861, chart 31, WMF 8), HWP/WASM 8,905,827 checks, imports 0을 통과했습니다. 로그는 `/tmp/hwpjs-page-transform-final-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.
+아래 전체 `audit`와 위 변이 검출 수치는 당시 기록이며 2026-09-28 재검증에서는 재실행하지 않았습니다. 당시 BeginContainer/EndContainer 복원 검사까지 추가한 최종 소스를 고정한 뒤 전체 `audit`를 세 모드에서 다시 순차 실행했습니다. 각 모드는 40/40 단계와 1,900/1,900 테스트(native 1,861, chart 31, WMF 8), HWP/WASM 8,905,827 checks, imports 0을 통과했습니다. 로그는 `/tmp/hwpjs-page-transform-final-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.
