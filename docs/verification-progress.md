@@ -8,6 +8,8 @@
 
 기존 문서의 과거 테스트 기록은 이 목록에 자동 소급하지 않습니다. 이 목록의 비율은 새 기준에 따라 **현재 내용 전체를 다시 검증한 파일의 비율**이며, 이전 구현 진행률이나 과거 검증 작업량의 추정치가 아닙니다.
 
+2026-09-28에는 EMF+ DrawPath·FillPath·FillRegion·StrokeFillPath·FillClosedCurve·DrawClosedCurve 여섯 문서를 공식 MS-EMFPLUS 개별 정의·RecordType/2.3 인덱스·FillClosedCurve errata와 현재 Zig의 Object Table 종류 조회·공용 FillObject/ClosedCurveData·불투명 관측 경로에 대조했습니다. StrokeFillPath는 공개된 개별 payload 정의를 확인할 수 없는 상태라 타입·원문 관측 이상을 주장하지 않도록 근거를 좁혔고, 오래된 전체 `audit` 수치는 이번 실행과 분리했습니다. Debug·ReleaseSafe·ReleaseFast root `EMF+` 필터는 각 560/560, ReleaseSafe의 여섯 직접 필터는 순서대로 3/3·5/5·3/3·3/3·5/5·5/5 통과했습니다. Object Table은 Path payload를 장기 소유하지 않으므로 record replay·fill/stroke 렌더링은 여전히 미지원이며 실제 한컴 EMF+ 양성 파일도 이번에 검증하지 않았습니다.
+
 2026-09-28에는 EMF+ DrawLines·FillPolygon·FillPie·DrawPie·DrawArc 다섯 문서를 공식 MS-EMFPLUS 2.3.4.10/19/18/12/2와 현재 Zig의 공용 PointData·ArcData·BrushId·ObjectID·stream 연결에 대조했습니다. DrawArc의 개요로 잘못 연결된 명세 링크를 레코드 정의로 고치고 출처가 불분명한 Rust 구현 비교를 제거했습니다. Debug·ReleaseSafe·ReleaseFast root `EMF+` 필터가 각각 560/560 통과했고 ReleaseSafe의 다섯 parser 직접 필터가 각각 5/5·5/5·4/4·4/4·4/4로 실제 수집됐습니다. 과거 변이·전체 `audit` 수치는 이번에 재실행하지 않았습니다. 실제 한컴 EMF+ 양성 표본, fill/stroke rasterization 및 저장 동등성은 입증하지 않습니다.
 
 2026-09-28에는 EMF+ Clear·FillRects·DrawRects·FillEllipse·DrawEllipse 다섯 문서를 공식 MS-EMFPLUS 2.3.4.1/7/13/16/20과 현재 Zig parser·공유 rectangle/brush 규칙·Object Table 조건부 조회·stream 집계에 대조했습니다. 잘못된 Clear 명세 링크와 이미 구현된 FillRects를 미래 작업으로 적은 표현을 수정했습니다. ReleaseSafe root `EMF+` 필터 560/560, 문서 링크 2,772개, 문서 도구 테스트 2/2가 통과했습니다. 과거 변이·전체 `audit` 수치와 당시 corpus 조사는 이번 실행 결과와 분리했습니다. 실제 한컴 EMF+ 양성 표본, fill/stroke rasterization, 저장 동등성은 검증하지 않았습니다.

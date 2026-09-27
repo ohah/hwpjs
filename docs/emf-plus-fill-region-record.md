@@ -8,7 +8,7 @@ record는 항상 `Size=16`, `DataSize=4`입니다. ObjectId는 0~63의 Region �
 
 ## stream 연결과 미지원 경계
 
-stream은 Region 슬롯의 존재와 ObjectTypeRegion을 항상 검사합니다. S가 clear일 때만 Brush 슬롯 존재와 ObjectTypeBrush를 추가 검사하며, 오류와 count overflow에서 comment 상태를 원복합니다. Region tree 해석은 기존 Region 객체 모듈의 책임이고 이 record에서 다시 파싱하지 않습니다. region fill, transform·clipping 적용, 렌더링 및 저장은 구현하지 않았습니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성도 주장하지 않습니다.
+stream은 Region 슬롯의 존재와 ObjectTypeRegion을 항상 검사합니다. S가 clear일 때만 Brush 슬롯 존재와 ObjectTypeBrush를 추가 검사하며, 오류와 count overflow에서 comment 상태를 원복합니다. Region tree 해석은 기존 Region 객체 모듈의 책임이고 이 record에서 다시 파싱하지 않습니다. region fill, transform·clipping 적용, 렌더링 및 저장은 구현하지 않았습니다. 당시 조사한 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성도 주장하지 않습니다.
 
 ## 공식 근거
 
@@ -23,3 +23,5 @@ Region/Brush ID 0·63·64 경계, 객체/literal Brush 양쪽, 예약 flag 보�
 RecordType, Size/DataSize/실제 slice 세 축, BrushId endian, Region ObjectId, Brush 값·S 선택, 반환 Flags, stream routing·Region 존재/타입·literal 분기·Brush 존재/타입·집계 값·집계 대상을 각각 훼손한 17종 의미 변이를 독립 복사본과 모드별 새 cache에서 실행했습니다. Debug, ReleaseSafe, ReleaseFast의 51/51 실행이 모두 컴파일 오류·panic·timeout이 아닌 실제 테스트 실패로 검출됐고 임시 작업 복사본은 제거했습니다.
 
 FillPath와 공통 wire 계층으로 합친 뒤 다시 실행한 최종 `zig build audit --summary all`, `-Doptimize=ReleaseSafe`, `-Doptimize=ReleaseFast`는 각 모드에서 40/40 step과 1875/1875 test를 통과했습니다. 모드별 구성은 native 1836, chart ownership 31, WMF contents 8이며, 각 실행은 8,905,827 checks, imports 0과 CFB 12,000 mutation의 traps 0을 기록했습니다.
+
+위 변이·전체 `audit` 수치는 당시 실행 기록이며 이번 문서 재검증에서 재실행한 결과는 아닙니다.

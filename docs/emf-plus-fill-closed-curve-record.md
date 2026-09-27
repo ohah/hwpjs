@@ -17,7 +17,7 @@ stream은 S가 clear일 때만 Brush 슬롯 존재와 ObjectTypeBrush를 검사�
 - [MS-EMFPLUS EmfPlusFillClosedCurve](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/d7b561b0-3dc7-4444-b7ac-55492b5af0f4)
 - [MS-WINERRATA FillClosedCurve fill-rule 정정](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-winerrata/a4fc60b3-edd1-4fde-a639-74ed85e5d0eb)
 
-현재 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 FillClosedCurve 출력과 렌더링 결과는 관측하지 못했습니다. 구현 범위는 wire 구조, borrowed point iteration, [공용 상대좌표 누적](emf-plus-point-resolution.md), [마지막→첫 span 조립](emf-plus-cardinal-spans.md), [span 통과점의 일반 world/page/device 변환](emf-plus-cardinal-device-spans.md), 조건부 Brush 참조와 stream/framing 연결입니다. Tension 기반 tangent/control point 계산, 곡선 평가, alternate/winding rasterization, clip 적용, 재생·렌더링과 저장은 미구현입니다.
+당시 조사한 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 FillClosedCurve 출력과 렌더링 결과는 관측하지 못했습니다. 구현 범위는 wire 구조, borrowed point iteration, [공용 상대좌표 누적](emf-plus-point-resolution.md), [마지막→첫 span 조립](emf-plus-cardinal-spans.md), [span 통과점의 일반 world/page/device 변환](emf-plus-cardinal-device-spans.md), 조건부 Brush 참조와 stream/framing 연결입니다. Tension 기반 tangent/control point 계산, 곡선 평가, alternate/winding rasterization, clip 적용, 재생·렌더링과 저장은 미구현입니다.
 
 ## 검증 기록
 
@@ -28,3 +28,5 @@ stream은 S가 clear일 때만 Brush 슬롯 존재와 ObjectTypeBrush를 검사�
 W/P/C mask, Count 최소·전달, point slice·count, record type·정렬, Brush endian·S, 반환 flags/W/P/C/Tension/Count, 공통 오류 매핑, stream routing·Brush 존재/타입·집계 값·집계 대상과 Fill payload offset을 각각 훼손한 24종 의미 변이를 독립 복사본과 모드별 새 cache에서 실행했습니다. Debug, ReleaseSafe, ReleaseFast의 72/72 실행이 모두 컴파일 오류·panic·timeout이 아닌 실제 테스트 실패로 검출됐고 임시 복사본·cache·실행기는 제거했습니다.
 
 최종 `zig build audit --summary all`, `-Doptimize=ReleaseSafe`, `-Doptimize=ReleaseFast`는 각 모드에서 40/40 step과 1882/1882 test를 통과했습니다. 모드별 구성은 native 1843, chart ownership 31, WMF contents 8이며, 각 실행은 8,905,827 checks, imports 0과 CFB 12,000 mutation의 traps 0을 기록했습니다.
+
+위 변이·전체 `audit` 수치는 당시 실행 기록이며 이번 문서 재검증에서 재실행한 결과는 아닙니다.
