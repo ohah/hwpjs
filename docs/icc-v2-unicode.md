@@ -8,7 +8,13 @@
 
 결과는 present·inspected_bytes·scalar/NUL/BOM 수·NUL 종료 여부를 반환합니다. Unicode 영역 없음과 NUL만 있는 빈 문자열을 구분합니다. 바이트 한도를 내용 검사보다 먼저 적용합니다. 원시 view의 unicode_deferred는 변경하지 않으며 언어 코드와 ScriptCode 의미 보류도 유지합니다.
 
-## 검증 진행
+## 2026-09-27 재검증
+
+[ICC.1:2001-04 §6.5.17](https://www.color.org/specification/ICC.1-2001-04.pdf)의 Unicode 영역 길이(종료 NUL을 포함한 2바이트 단위 수)와 [ICC 기술 노트 01-2002](https://www.color.org/unicode/)의 v4/ICC.2 적용 범위를 다시 확인했습니다. 현재 `text_description.parse`는 원시 영역을 빌려 보존하고, `description_unicode.inspectUtf16BE`만 명시적 선택 시 공통 UTF-16 검사기를 호출합니다. PNG 경로의 기본값은 미선택이며 선택 여부·실제 검사 개수·검사 바이트·미검증 바이트를 구분합니다. UTF-16BE 선택의 적합성을 모든 v2 파일에 대해 인증하는 것은 아닙니다.
+
+Debug·ReleaseSafe·ReleaseFast에서 `ICC description UTF16BE` 필터는 각 모드 root 포함 4/4, `PNG explicit v2 UTF16BE` 필터는 각각 2/2로 통과했습니다. 단일 코드 단위 65,536개와 surrogate 쌍 끝값, 부재/빈 영역, 한도·기본 보존·선택 거부·할당 실패가 관련 테스트에 포함됩니다. 기존 로컬 `hwp5-probe.wasm` mode243과 독립 Node TextDecoder 대조는 정상 314건·거부 479건이 일치했습니다. 이번에는 WASM을 새로 빌드하지 않았고, 과거 세 모드 전체 감사·출력 변형·macOS v2 프로파일 8개·v4 수동 2건을 재실행하지 않았습니다. 원래 프로파일의 인코딩 적합성·언어/ScriptCode 의미·렌더링·저장 동치는 이 집중 검사 결과가 아닙니다.
+
+## 과거 검증 기록
 
 네이티브 테스트는 영역 부재/빈 문자열, 정확한 한도/초과, surrogate pair와 고립 surrogate, 내부 NUL·BOM 통계, 단일 16비트 단위 65,536개 및 surrogate pair 끝값 조합을 검사합니다. 공통 테스트 fixture를 분리해 기존 구조 테스트와 새 내용 테스트가 같은 배치 생성기를 사용합니다. 기대 문자 범위와 통계는 파서 결과에서 생성하지 않습니다.
 
