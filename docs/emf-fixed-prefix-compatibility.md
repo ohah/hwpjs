@@ -10,7 +10,7 @@ Microsoft [EMF Records](https://learn.microsoft.com/en-us/openspecs/windows_prot
 - `record.size >= required_size`로 필수 prefix 보장
 - prefix 뒤 extra data는 필드 해석에 사용하지 않음
 
-가변 배열 parser는 같은 파일의 `requiredEnd`를 사용해 u64 의미 끝을 검사하고 안전한 `usize` slice 끝을 받는다. 적용 범위와 배열 분리는 [poly record 후행 호환성](emf-poly-record-compatibility.md)이 소유한다.
+가변 배열 중 poly parser는 같은 파일의 `requiredEnd`로 u64 의미 끝을 검사하고 안전한 `usize` slice 끝을 받는다. 팔레트 배열은 별도 `palette_records.zig`의 `requiredArrayEnd`가 같은 범위 정책을 적용한다. 적용 범위와 poly 배열 분리는 [poly record 후행 호환성](emf-poly-record-compatibility.md)이 소유한다.
 
 4바이트 정렬과 stream 범위는 기존 `records.Iterator`가 먼저 검사한다. `PointL`, `SizeL`, `RectL`, `XForm`처럼 정확한 field slice를 받는 공용 객체 parser는 record 호환성 정책을 소유하지 않으므로 정확한 자신의 크기를 계속 요구한다.
 
@@ -46,3 +46,5 @@ Microsoft [EMF Records](https://learn.microsoft.com/en-us/openspecs/windows_prot
 - RESTOREDC를 다시 로컬 정확 12바이트 조건으로 변경
 
 최종 `zig build audit --summary all`은 Debug·ReleaseSafe·ReleaseFast 모두 40/40 단계와 1,352/1,352 테스트를 통과했다. 이 중 native test는 1,313개이고, HWP corpus는 584개 파일에 대해 8,905,827개 조건을 검사했다. 실제 corpus에 EMF가 없으므로 실생성기 extra data 호환성 근거로 확대하지 않는다.
+
+2026-09-27 재검증에서는 공식 [EMF Records](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/e0137630-f3ad-492c-bde9-e68866e255ba)의 4바이트 정렬·미사용 끝 필드 잘림·미규정 후행 데이터 규칙을 현재 `record_extent.zig`와 적용 모듈에 대조했다. 임시 `src/` import 진입점의 공통·의존 테스트는 Debug·ReleaseSafe·ReleaseFast 각 122/122개, 루트 `EMF framing`은 각 97/97개 통과했다. 122개는 이 문서만의 전용 테스트 수가 아니다. 위 6종 소스 변이와 세 모드 전체 audit은 이번에 재실행하지 않았다.

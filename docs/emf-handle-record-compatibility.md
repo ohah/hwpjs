@@ -23,3 +23,5 @@ color-space creation은 [전용 호환성 문서](emf-color-space-record-compati
 임시 복사본에 공용 경계의 잘림·길이 불일치 허용 및 후행 data 거부, palette 가변 배열의 exact-size 회귀 및 의미 배열 오염, CREATEPEN·DELETEOBJECT의 exact-size 회귀 등 7개 결함을 각각 주입했다. Debug·ReleaseSafe·ReleaseFast의 21회 변이 실행에서 모두 검출됐다.
 
 최종 `zig build audit --summary all`은 Debug·ReleaseSafe·ReleaseFast 모두 40/40 단계와 1,352/1,352 테스트를 통과했다. native test는 1,313개이고 HWP corpus 584개 파일에서 8,905,827개 조건을 검사했다. 실제 corpus에는 EMF가 없으므로 실생성기 호환성 근거로 확대하지 않는다.
+
+2026-09-27 재검증에서는 공식 [SETPALETTEENTRIES](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/88348296-3c9a-488f-bbf7-19c897535372)의 count-derived 배열, [SELECTOBJECT](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/145b063d-5f96-41fe-b7ae-1e615b2bc2bf)의 핸들 및 [DELETEOBJECT](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/6f0f12a3-111a-478b-8251-a9505168f9a9)의 삭제·선택 해제 조건을 현재 팔레트 parser·Object Table에 대조했다. 임시 `src/` import 진입점의 공통·의존 테스트는 Debug·ReleaseSafe·ReleaseFast 각 122/122개, 루트 `EMF framing`은 각 97/97개 통과했다. 122개는 이 문서만의 전용 테스트 수가 아니다. 위 7종 소스 변이와 세 모드 전체 audit은 이번에 재실행하지 않았다.
