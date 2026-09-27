@@ -10,11 +10,13 @@ tracked stream은 다섯 clipping record를 이 상태에 적용하고 `Report.c
 
 ## 의도적인 한계
 
-현재 Object Table은 Path/Region 슬롯의 타입과 수명만 보존하고 완성된 객체 payload를 장기 소유하지 않습니다. 또한 SetClip operand는 당시 world/page transform으로 device space에 변환된 뒤 결합되지만 현재 clip state는 그 device geometry를 소유하지 않습니다. 이 해석은 Wine의 독립 playback 경로가 `get_graphics_transform(... Device, World ...)` 뒤 region을 변환하고 결합하는 [실제 소스](https://github.com/wine-mirror/wine/blob/master/dlls/gdiplus/metafile.c)와도 대조했습니다. 따라서 RectF·Path·Region의 실제 boolean 결과나 clipping mask를 만들 수 없습니다. `complex`는 지원 완료 표기가 아니라 이 정보 경계를 드러내는 보수적 상태입니다. 정확한 clipping에는 객체 payload 소유 모델, 변환 시점의 device geometry와 region/path boolean 계층이 먼저 필요합니다.
+현재 Object Table은 Path/Region 슬롯의 타입과 수명만 보존하고 완성된 객체 payload를 장기 소유하지 않습니다. 현재 clip state도 operand의 device geometry를 소유하지 않습니다. 독립 구현인 Wine의 [고정된 playback 소스](https://github.com/wine-mirror/wine/blob/4e819f054dd2d9ee855ee3f1e30d8c1bb8f80fcf/dlls/gdiplus/metafile.c#L2756-L2764)는 `get_graphics_transform(... Device, World ...)`로 얻은 변환을 region에 적용한 뒤 결합합니다. 이는 Wine의 구현 경로이지 명세가 모든 구현에 강제하는 내부 표현은 아닙니다. 따라서 여기서는 RectF·Path·Region의 실제 boolean 결과나 clipping mask를 만들 수 없습니다. `complex`는 지원 완료 표기가 아니라 이 정보 경계를 드러내는 보수적 상태입니다. 정확한 clipping에는 객체 payload 소유 모델, 변환 시점의 device geometry와 region/path boolean 계층이 먼저 필요합니다.
 
 RectF의 NaN, 무한대, signed zero와 음수 크기는 wire parser가 그대로 유지합니다. 추상 상태는 이 값을 임의 정규화하거나 geometry 결과로 오인하지 않습니다. OffsetClip도 무한·공집합·복합이라는 추상 분류만 보존합니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력과의 픽셀 동등성은 주장하지 않습니다.
 
 ## 검증 계약
+
+아래 변이·전체 `audit` 수치와 `/tmp` 로그는 최초 구현 당시 기록입니다. 이번 문서 검증에서 변이·전체 `audit`를 재실행한 결과로 세지 않습니다.
 
 - 여섯 CombineMode 각각에 대해 무한/공집합에서 증명 가능한 항등식과 보수적 승격을 검사합니다.
 - SetClipRect/Path/Region, OffsetClip과 Reset의 추상 상태 연결을 검사합니다.

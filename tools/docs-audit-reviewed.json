@@ -1,6 +1,30 @@
 {
   "schema": 1,
   "verified": {
+    "docs/emf-plus-clip-state.md": {
+      "sha256": "208f47ac09fe3a2394e34c8cada090d826aaf16e0b3416ab1549bb41f0804f96",
+      "evidence": "2026-09-28 official EMF+ clipping and CombineMode against Zig conservative state, tracked stream snapshots and pinned Wine device-region implementation as observation only; Debug Safe Fast root EMF+ 560 each with 20 related tests collected; historic mutants and full audits not rerun"
+    },
+    "docs/emf-plus-reset-clip-record.md": {
+      "sha256": "08b844e6aa827f14aae9f22c535cc360da04165c5faebc418e0878831936de69",
+      "evidence": "2026-09-28 official EMF+ ResetClip fields against Zig parser tracked infinity reset and framing; Debug Safe Fast root EMF+ 560 each with direct tests collected; historic mutants and full audits not rerun"
+    },
+    "docs/emf-plus-set-clip-rect-record.md": {
+      "sha256": "ead8e7ecef2b50f5bcd871d5c1cba08243e19d9dac50ea4902311ca95215a50e",
+      "evidence": "2026-09-28 official EMF+ SetClipRect fields CombineMode and RectF against Zig parser abstract clip tracked stream; Debug Safe Fast root EMF+ 560 each with direct tests collected; historic mutants and full audits not rerun"
+    },
+    "docs/emf-plus-set-clip-path-record.md": {
+      "sha256": "1399fb7653ef9b4da30622932a55f1de9c267c799738ef9fcd6bd05b632b06b5",
+      "evidence": "2026-09-28 official EMF+ SetClipPath fields ObjectID and CombineMode against Zig parser Object Table type lookup and tracked abstract clip; Debug Safe Fast root EMF+ 560 each with direct tests collected; historic mutants and full audits not rerun"
+    },
+    "docs/emf-plus-set-clip-region-record.md": {
+      "sha256": "aec7587d83885ec98dc8a84a70ba19d6307c81579c139756eaa842b50574fff9",
+      "evidence": "2026-09-28 official EMF+ SetClipRegion fields ObjectID and CombineMode against Zig parser Object Table type lookup and tracked abstract clip; Debug Safe Fast root EMF+ 560 each with direct tests collected; historic mutants and full audits not rerun"
+    },
+    "docs/emf-plus-offset-clip-record.md": {
+      "sha256": "c86142d43a2908c182b4010c0b49b9aaa62e6c2f53171a22deed43859049ec88",
+      "evidence": "2026-09-28 official EMF+ OffsetClip fields dx dy against Zig float parser and conservative tracked offset; Debug Safe Fast root EMF+ 560 each with direct tests collected; historic mutants and full audits not rerun"
+    },
     "docs/emf-plus-set-rendering-origin-record.md": {
       "sha256": "4af14822e024537f5311055995ee8973a4ee9623d5472e0e5fe2938fd586e09f",
       "evidence": "2026-09-28 official EMF+ RenderingOrigin record and GDI+ hatch dither API against Zig signed parser tracked property stream; Debug Safe Fast root EMF+ 560 each and 15 related tests collected; historic mutants and full audits not rerun"
@@ -190,7 +214,7 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "997d1637ed3ef9c9eab741645dd897d081192c67066dca82438d89b8dc219391",
+      "sha256": "b862b58f7b455f896357e04835830939c09d43b700747fd5fc1faae54f1de635",
       "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope PNG ICC inspection PNG RGBA BCP47 syntax registry alpha2 history ICC IANA matching mluc selection mluc structure mluc Unicode ICC v2 Unicode v2 text tag payload dispatch tag table structure header identifiers v4 and v2 header numeric header verification ICC registry source lookup required tags overview presence table XYZ type XYZ tags curve type TRC tags parametric curve analytic forward TRC forward sampled forward sampled inverse sampled wide inverse gamma inverse wide gamma inverse TRC inverse and extended TRC inverse matrix TRC inverse matrix TRC model matrix TRC forward fraction matrix inverse fraction matrix TRC inverse wide linear target wide positive bounds normalized and extended root compare normalized and extended root locations clipped and extended power preimage whole and extended whole parametric preimage normalized and extended whole bounds normalized and extended attained F.1a whole and extended nearest normalized and extended full inverse topology segments jump trend domain partition power clipping power level root compare active root locations rational power order normalized power level wide power level normalized root order power range power nearest ordinate order extended ordinate order ordinate distance extended ordinate distance linear range parametric range rational range nearest linear preimage extended linear preimage chromatic adaptation matrix transform ICC foundation verification review, architecture pending, full Debug Zig test 2656 passed and ReleaseFast HWP5 audit 10 steps 8905855 checks, EMF ICM and three clipping region docs direct tests and 102 shared tests each mode"
     },
     "docs/bcp47-syntax.md": {

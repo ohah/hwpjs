@@ -2,13 +2,15 @@
 
 ## 범위와 단일 출처
 
-`src/image/emf/emf_plus_reset_clip.zig`는 MS-EMFPLUS 2.3.1.2의 EmfPlusResetClip wire record를 소유합니다. Type `0x4031`, Size 12, DataSize와 실제 data 길이 0을 각각 검사합니다. Flags는 reserved/MUST ignore이므로 16비트 원값을 보존하며 nonzero를 거부하거나 정규화하지 않습니다.
+`src/image/emf/emf_plus_reset_clip.zig`는 [MS-EMFPLUS 2.3.1.2](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/2967ec23-0202-451a-bef3-acdeca216276)의 EmfPlusResetClip wire record를 소유합니다. Type `0x4031`, Size 12, DataSize와 실제 data 길이 0을 각각 검사합니다. Flags는 reserved/MUST ignore이므로 16비트 원값을 보존하며 nonzero를 거부하거나 정규화하지 않습니다.
 
 ## stream 연결과 지원 경계
 
 반환값은 wire 명령만 표현하고 tracked stream은 [clipping state](emf-plus-clip-state.md)를 정확한 무한 영역으로 reset합니다. Save/Container snapshot에도 포함되지만 실제 clipping mask와 렌더링은 구현하지 않았습니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성도 주장하지 않습니다.
 
 ## 검증 기록
+
+아래 변이·전체 `audit` 수치와 `/tmp` 로그는 최초 구현 당시 기록입니다. 이번 문서 검증에서 변이·전체 `audit`를 재실행한 결과로 세지 않습니다.
 
 Flags 0과 모든 bit set, RecordType과 세 size 축, 공통 framing에는 유효하지만 전용 크기는 잘못된 stream, count overflow·comment rollback 및 실제 EMF framing을 검사합니다.
 

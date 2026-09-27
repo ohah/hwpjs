@@ -2,7 +2,7 @@
 
 ## 범위와 단일 출처
 
-`src/image/emf/emf_plus_set_clip_region.zig`는 MS-EMFPLUS 2.3.1.5의 EmfPlusSetClipRegion wire record를 소유합니다. Type `0x4034`, Size 12, DataSize와 실제 data 길이 0을 각각 검사합니다.
+`src/image/emf/emf_plus_set_clip_region.zig`는 [MS-EMFPLUS 2.3.1.5](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/a9d596a3-08cb-4232-8ea6-4b58717c4c04)의 EmfPlusSetClipRegion wire record를 소유합니다. Type `0x4034`, Size 12, DataSize와 실제 data 길이 0을 각각 검사합니다.
 
 Flags low byte의 ObjectID는 공용 `emf_plus_record_flags.zig`가 0~63 범위를 검사하고 bits 8~11의 CM은 `emf_plus_combine_mode.zig`가 CombineMode 0~5를 검사합니다. 상위 4비트는 reserved/MUST ignore이므로 Flags 16비트 원값을 보존합니다. stream은 해당 Object Table 슬롯이 이미 존재하고 ObjectTypeRegion인지 확인합니다.
 
@@ -11,6 +11,8 @@ Flags low byte의 ObjectID는 공용 `emf_plus_record_flags.zig`가 0~63 범위�
 반환값은 Region 객체 참조와 논리 결합 wire 명령을 표현합니다. tracked stream은 객체 타입 확인 뒤 [clipping state](emf-plus-clip-state.md)에 증명 가능한 무한/공집합 항등식을 적용하고 나머지는 `complex`로 표시합니다. Object Table이 Region payload를 장기 보존하지 않으므로 실제 tree boolean·mask·렌더링은 미지원입니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성도 주장하지 않습니다.
 
 ## 검증 기록
+
+아래 변이·전체 `audit` 수치와 `/tmp` 로그는 최초 구현 당시 기록입니다. 이번 문서 검증에서 변이·전체 `audit`를 재실행한 결과로 세지 않습니다.
 
 ObjectID 0·63 및 64·255, 여섯 CombineMode와 6~15, reserved Flags 보존, RecordType과 세 size 축, Object Table 슬롯의 부재·타입 불일치, stream count overflow·comment rollback 및 실제 EMF framing을 검사합니다.
 

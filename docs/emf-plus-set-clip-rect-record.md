@@ -2,7 +2,7 @@
 
 ## 범위와 단일 출처
 
-`src/image/emf/emf_plus_set_clip_rect.zig`는 MS-EMFPLUS 2.3.1.4의 EmfPlusSetClipRect wire record를 소유합니다. Type `0x4032`, Size 28, DataSize와 실제 data 길이 16을 각각 검사하고 ClipRect를 공용 `RectF`로 읽습니다.
+`src/image/emf/emf_plus_set_clip_rect.zig`는 [MS-EMFPLUS 2.3.1.4](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/835e495a-83c9-4a6f-a2df-b5b5ea3fd15e)의 EmfPlusSetClipRect wire record를 소유합니다. Type `0x4032`, Size 28, DataSize와 실제 data 길이 16을 각각 검사하고 ClipRect를 공용 `RectF`로 읽습니다.
 
 `src/image/emf/emf_plus_combine_mode.zig`는 clipping record가 공유할 CombineMode 값 0~5의 단일 출처입니다. Flags의 bits 8~11만 CombineMode이며 나머지는 reserved/MUST ignore이므로 16비트 원값을 보존합니다. 유효하지 않은 6~15는 거부하고 RectF의 IEEE 754 bit pattern은 정규화하지 않습니다.
 
@@ -11,6 +11,8 @@
 반환값은 rectangle과 논리 결합 wire 명령을 표현하고 tracked stream은 [보수적 clipping state](emf-plus-clip-state.md)에 적용합니다. operand geometry에 무관하게 증명되는 무한/공집합 항등식만 정확히 유지하고 나머지는 `complex`로 표시합니다. 당시 world/page transform을 적용한 device geometry와 실제 clipping mask·렌더링은 구현하지 않았습니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성도 주장하지 않습니다.
 
 ## 검증 기록
+
+아래 변이·전체 `audit` 수치와 `/tmp` 로그는 최초 구현 당시 기록입니다. 이번 문서 검증에서 변이·전체 `audit`를 재실행한 결과로 세지 않습니다.
 
 여섯 CombineMode와 나머지 모든 4비트 값, reserved Flags 보존, signed zero·무한대·NaN을 포함한 RectF 원시 bit, 모든 payload 잘림, RecordType과 세 size 축, 공통 framing에는 유효하지만 전용 크기는 잘못된 stream, count overflow·comment rollback 및 실제 EMF framing을 검사합니다.
 

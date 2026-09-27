@@ -2,7 +2,7 @@
 
 ## 범위와 단일 출처
 
-`src/image/emf/emf_plus_offset_clip.zig`는 MS-EMFPLUS 2.3.1.1의 EmfPlusOffsetClip wire record를 소유합니다. Type `0x4035`, Size 20, DataSize와 실제 data 길이 8을 각각 검사하고 dx, dy를 공용 little-endian IEEE 754 binary32 reader로 읽습니다.
+`src/image/emf/emf_plus_offset_clip.zig`는 [MS-EMFPLUS 2.3.1.1](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/a3cf7ce4-f038-443c-b071-c8ae2a358aee)의 EmfPlusOffsetClip wire record를 소유합니다. Type `0x4035`, Size 20, DataSize와 실제 data 길이 8을 각각 검사하고 dx, dy를 공용 little-endian IEEE 754 binary32 reader로 읽습니다.
 
 Flags는 reserved/MUST ignore이므로 16비트 원값을 보존하며 특정 bit 의미를 부여하거나 nonzero 값을 거부하지 않습니다. float의 signed zero, 무한대와 NaN payload도 정규화하지 않습니다.
 
@@ -11,6 +11,8 @@ Flags는 reserved/MUST ignore이므로 16비트 원값을 보존하며 특정 bi
 반환값은 clipping translation wire 명령을 표현하고 tracked stream은 [clipping state](emf-plus-clip-state.md)의 무한·공집합·복합 추상 분류를 유지합니다. device geometry를 소유하지 않으므로 dx/dy를 실제 경계에 적용했다고 주장하지 않습니다. snapshot에는 포함되지만 실제 mask와 렌더링은 구현하지 않았습니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성도 주장하지 않습니다.
 
 ## 검증 기록
+
+아래 변이·전체 `audit` 수치는 최초 구현 당시 기록입니다. 이번 문서 검증에서 변이·전체 `audit`를 재실행한 결과로 세지 않습니다.
 
 Flags 0과 모든 bit set, dx/dy 순서와 원시 float bit, 모든 payload 잘림, RecordType과 세 size 축, 공통 framing에는 유효하지만 전용 크기는 잘못된 stream, count overflow·comment rollback 및 실제 EMF framing을 검사합니다.
 
