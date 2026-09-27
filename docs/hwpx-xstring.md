@@ -6,8 +6,12 @@
 
 기존 `value_text_bytes`·`max_observed_value_bytes`·`empty_values`는 XML 정규화 직후의 바이트 수입니다. 추가한 `xstring_escape_sequences`는 인식한 이스케이프 수, `xstring_decoded_values`·`xstring_decoded_bytes`는 해독 가능한 leaf의 수와 해독 직후 UTF-8 바이트 합계입니다. 해독 버퍼는 관측 후 해제하며 보고서에는 값 자체가 없습니다. 입력 leaf 1 MiB·전체 64 MiB 한도는 기존 XML 정규화 바이트에 적용하고 해독 출력에도 leaf 한도를 적용합니다. `unsupported_xstring_surrogates`는 캐시 문제 합계와 첫 문제 ZIP 경로에 포함됩니다.
 
+Microsoft의 위 ST_Xstring 참고 페이지는 Office가 본문에서 줄바꿈·탭 이스케이프를 허용하지 않는다고 설명합니다. 이 해독기는 해당 패턴도 원값 관측용으로 디코딩하며, 그 입력을 Office 생산 규칙에 맞는 파일이라고 인증하지 않습니다. 현재 corpus에는 이스케이프 양성값이 없어 이 차이에 대한 한컴 실파일 동작은 확인되지 않았습니다.
+
 ## 검증 경계
 
 단위·통합 테스트는 제어문자, 한글, 대소문자 16진수, 이스케이프 리터럴 밑줄, XML CharData·CDATA 경계, 서로게이트 쌍·짝 없음, 유효하지 않은 패턴, 정확한 출력 한도·UTF-8 손상·할당 실패를 검사합니다. 수식에 있는 `_x0008_`가 일반 문자열로 남는 것도 검사합니다. 선택 제품 조사 `zig test src/hwpx_structure_survey.zig -O ReleaseFast --test-filter 'HWPX corpus chart path and XML read-only survey'`는 `reference/rhwp`와 레거시 fixture의 HWPX 484개 중 476개 수용 문서·차트 파트 93개에서 값 2,296개를 읽었고, 이스케이프 0개·짝 없는 서로게이트 0개·해독 값 2,296개·해독 UTF-8 합계 12,374바이트를 관측했습니다. corpus에 이스케이프가 없으므로 실파일이 해독 규칙의 정확성을 증명하지는 않습니다. 새 인코딩 표본이 들어오면 별도 독립 구현과 대조해야 합니다.
 
 이 변경에서 HWPX ReleaseFast 전용 테스트 120개, 기본 `zig build test --summary all` 2,145개, Debug·ReleaseSafe·ReleaseFast 전체 `zig build audit --summary all`, ReleaseSafe 제품 빌드·JS 비교, 독립 Python 원문 텍스트 조사 모두 통과했습니다. 독립 조사는 Xstring 해독을 수행하지 않으므로 원문 길이·개수 회귀 대조일 뿐 해독 oracle이 아닙니다. 전체 HWPX 문서 모델이나 편집·저장 지원을 뜻하지 않습니다.
+
+2026-09-28 재검증: 현재 `xstring.zig`와 차트 값 연결 코드를 Microsoft ST_Xstring 참고 페이지 및 테스트에 대조했습니다. `HWPX Xstring` 집중 테스트는 Debug·ReleaseSafe·ReleaseFast 각 5/5개, 차트 캐시 경계 테스트는 각 2/2개 통과했습니다. ReleaseFast 제품 실파일 조사 1/1에서 수용 476문서·차트 값 2,296개·이스케이프 0개·해독 원문과 동일한 12,374바이트를 확인했고, 독립 Python XML 조사도 값 개수·원문 바이트가 같았습니다. Microsoft 페이지의 Office 제한은 한컴 HWPX 생산 규칙의 근거가 아니며, 이스케이프 양성 실파일이 없으므로 이 조사로 한컴 해독 동등성을 주장하지 않습니다. 과거 전체 audit는 이번에 재실행하지 않았습니다.

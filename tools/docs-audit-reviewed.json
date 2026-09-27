@@ -630,8 +630,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "441149762b4bdfbffd343bded3147dc92850ab1aafdbd3eb87eb66054977fe85",
-      "evidence": "2026-09-28 tracker updated with HWPX text nodes inline annotation and tab verification, three-mode focused tests independent ZIP XML corpus and historic known audit distinguished"
+      "sha256": "6aa19e101e394b3e54ed8e6404930ee29870f72d3cfda75881f08de57f676a31",
+      "evidence": "2026-09-28 tracker updated with HWPX track change tags and Xstring verification, three-mode focused tests, independent XML counts, current chart survey and historic full audit distinguished"
     },
     "docs/hwpx-ole-payloads.md": {
       "sha256": "a7c214c0760d575237afcb960b7ff1fe976a0d99468e1083066e36c889deabad",
@@ -1652,6 +1652,14 @@
     "docs/hwpx-inline-tab.md": {
       "sha256": "553f7981791e240393242d927228682af8b0fa175eb1ada6df215e639b8092ab",
       "evidence": "2026-09-28 current Hancom model and local XSD versus Zig source, independent oracle self-test and 476 corpus, focused Debug Safe Fast 5 each; type 4 distribution and known shards historic, full audit not rerun"
+    },
+    "docs/hwpx-track-change-tags.md": {
+      "sha256": "808963912737866f88aec57435cec5aa657ab96e5e062deaeb439c1682d18211",
+      "evidence": "2026-09-28 current Hancom model and local XSD versus Zig source, independent oracle self-test 476 corpus all zero, focused Debug Safe Fast 3 each; positive real input and historic known shards unproven"
+    },
+    "docs/hwpx-xstring.md": {
+      "sha256": "baacb9ac104d6442d1a424874c7c6cfb11d0419026556d7728668998242cd1e1",
+      "evidence": "2026-09-28 current decoder and chart integration versus Microsoft Office ST_Xstring limits, focused Debug Safe Fast Xstring 5 and cache 2 each, current chart survey 476 and independent raw XML values 2296 bytes 12374; no positive escape real file"
     },
     "docs/hwpx-number-controls.md": {
       "sha256": "4eb9d88d213ceb7e0fcffc13edd49a55143bf1eb6ce2449fea09f9f3ece320d3",

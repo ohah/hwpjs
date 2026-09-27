@@ -7,3 +7,5 @@
 독립 Python ZIP/ElementTree oracle(`tools/hwpx-manifest-xml-oracle.py`)이 수용한 로컬 HWPX 476개 문서에서는 section과 선택 마스터페이지의 네 태그가 모두 0개였습니다. 각 8개 shard의 20개 필드 슬롯을 Zig 보고서와 대조하지만 이는 실파일 필드값의 동치 증거가 아닙니다. 합성 XML에서 네 종류·명시적 0·부재·32비트 초과·잘못된 정수/Boolean·추가 속성·타 namespace/중첩 요소·다중 section 및 마스터페이지 합산 한도·할당 실패를 검증합니다. 시작/끝 쌍, 변경 추적 대상 표와의 참조, 문단 간 범위, 삽입·삭제 적용 및 편집/저장은 후속 범위입니다.
 
 2026-09-24 검증: 전체 Debug 테스트 2,256개, ReleaseSafe 제품 빌드·전체 audit, 전용 Debug·ReleaseSafe·ReleaseFast 테스트가 통과했습니다. 독립 Python 집계기를 Zig 합성 사례와 같은 원값 조합으로 별도 실행해 20개 슬롯도 대조했습니다. 적대적 점검은 32비트 초과를 XSD 오류로 강제하지 않는 점, 시작 `paraend`를 무조건 무시하지 않는 점, namespace 선언/타 namespace 속성의 구분, 부재와 0/false의 구분, 네 종류 합산 한도의 파트 간 적용을 확인했습니다. 실파일 8개 shard의 대조는 별도 선택 검사이며 기본 audit에 포함되지 않습니다.
+
+2026-09-28 재검증: 고정 리비전 한컴 모델과 로컬 2011 XSD 사본, 현재 `track_change_tag_attributes.zig`·`text_node.zig`를 대조했습니다. 독립 oracle self-test 및 기본 476문서 조사에서 section·선택 마스터페이지의 20개 필드 슬롯은 각각 전부 0이었습니다. `HWPX track change tag` 집중 테스트는 Debug·ReleaseSafe·ReleaseFast 각 3/3개 통과했습니다. 이 결과는 태그가 있는 실파일의 속성값이나 시작/끝 짝 관계를 검증하지 않습니다. 이전 전체 audit와 Zig 실파일 shard는 이번 묶음에서 재실행하지 않았습니다.
