@@ -4,7 +4,7 @@
 
 `src/image/png/structure.zig`의 `inspect`는 PNG 시그니처, 청크 경계·CRC, IHDR 필드, PLTE 규칙, 연속 IDAT와 마지막 IEND를 검사합니다. [PNG Third Edition](https://www.w3.org/TR/png-3/)의 §5.2~5.6 및 §11.2가 기준입니다. HWP 전용 레코드 규칙을 넣지 않고 메모리 기반 이미지 계층으로 분리합니다.
 
-**완전한 PNG 디코더/유효성 검사기는 아닙니다.** IDAT의 zlib·필터·픽셀 값·palette 인덱스를 아직 검사하지 않습니다. ancillary chunk는 CRC/경계만 검사하고 의미·순서·중복 조건은 deferred로 보고합니다. APNG·색상 프로필·텍스트 메타데이터·렌더링·저장도 미구현입니다. `pixels_validated`는 항상 false입니다. `IDAT='not zlib'`처럼 CRC와 청크 구조만 맞는 데이터가 이 단계에 성공할 수 있다는 회귀 테스트를 명시적으로 둡니다.
+**이 API는 완전한 PNG 디코더/유효성 검사기가 아닙니다.** `structure.inspect` 자체는 IDAT의 zlib·필터·픽셀 값·palette 인덱스를 검사하지 않습니다. ancillary chunk는 CRC/경계만 검사하고 의미·순서·중복 조건은 deferred로 보고합니다. 픽셀·색상 프로필·텍스트 메타데이터는 별도 선택형 API와 문서가 소유하며, 이 구조 보고서가 대신 인증하지 않습니다. APNG·렌더링·저장은 여전히 범위 밖입니다. `pixels_validated`는 항상 false입니다. `IDAT='not zlib'`처럼 CRC와 청크 구조만 맞는 데이터가 이 단계에 성공할 수 있다는 회귀 테스트를 명시적으로 둡니다.
 
 ## 책임과 SSOT
 
@@ -27,8 +27,14 @@
 후속 [zlib 압축 검증](zlib-validation.md)은 별도 계층에 구현했습니다. 현재 structure.inspect의 IDAT 의미 미검사 계약과 pixels_validated=false는 그대로입니다.
 행 단위 [필터 복원](png-filters.md)과 zlib를 연결한 [이미지 데이터 검증](png-pixels.md)은 별도 API입니다. structure.inspect 자체의 범위는 변경하지 않습니다.
 
+### 현재 재검증 (2026-09-27)
+
+[PNG Third Edition](https://www.w3.org/TR/png-3/)의 시그니처·청크 길이/CRC·IHDR·PLTE/IDAT/IEND 순서와 현재 `chunks.zig`·`header.zig`·`structure.zig`를 대조했습니다. 네이티브 `PNG IHDR`·`PNG structure`·`PNG chunks`·`PNG critical chunk` 네 집중 필터는 Debug/ReleaseSafe/ReleaseFast 각각 root 포함 2/2개씩 통과했습니다. 이는 서로 다른 필터의 결과이며 전체 PNG 테스트 수가 아닙니다. 로컬 ReleaseSafe probe/CFB WASM을 쓴 독립 JS 구조 oracle은 정상 65건·거부 424건, 실제 HWP fixture 48개 중 PrvImage PNG 32건의 구조 대조를 다시 통과했고 `pixelsValidated=false`를 유지했습니다. 이 검사는 별도 `png_pixels`·`png_rgba`·ICC·텍스트 API나 제품 `PrvImage` 통합의 현재 실파일 동치를 증명하지 않습니다. 아래 전체 audit 수치는 이번에 재실행하지 않은 과거 기록입니다.
+
+### 과거 검증 기록
+
 네이티브에서 color type/bit depth 256×256 조합, compression/filter/interlace 각 바이트, 치수 경계, 정확/부족 예산, 잘림 전체 위치, palette와 IDAT 순서, 실패 상태 불변성을 검사합니다. IEND CRC의 고정값 `AE426082`도 대조합니다. 테스트용 WASM mode 126은 동일 보고서를 Node Buffer big-endian 읽기·Node CRC32·독립 배열 순서 oracle과 비교합니다. 합성 입력의 모든 바이트에 단일 비트를 뒤집고 청크 CRC/길이/타입/순서 손상을 검사합니다.
 
-실제 HWP fixture 48개에서 PrvImage 부재 1, PNG 32, GIF 14, JPEG 1, BMP 0개를 관측했습니다. PNG 32개 전체의 청크 구조/CRC와 통계가 독립 oracle과 일치했습니다. 이는 테스트 연결이며 HWP 컨테이너의 PrvImage stream을 제품 검사에서 소비하도록 연결한 상태는 아닙니다. GIF·JPEG·BMP 검증은 후속 범위이며 PNG 행 데이터 복원은 별도 이미지 데이터 검증 API가 담당합니다.
+실제 HWP fixture 48개에서 PrvImage 부재 1, PNG 32, GIF 14, JPEG 1, BMP 0개를 관측했습니다. PNG 32개 전체의 청크 구조/CRC와 통계가 독립 oracle과 일치했습니다. 이 수치는 구조 검사 테스트의 독립 대조입니다. 현재 HWP 컨테이너의 `PrvImage`는 별도 [제품 검사 경로](hwp5-preview-image.md)가 소유하므로, 이 구조 테스트만으로 그 선택형 연결이나 픽셀 검증을 증명하지 않습니다. PNG 행 데이터 복원도 별도 이미지 데이터 검증 API가 담당합니다.
 
-최종 Debug·ReleaseSafe·ReleaseFast audit 모두 17/17 단계, 네이티브 341/341, HWP5 감사 스크립트 3,083,456 checks를 통과했습니다. PNG WASM 전용 결과는 정상 65건·거부 424건이며 실제 PNG 32개가 정상 건에 포함됩니다. 폭/높이 양쪽 경계 및 최대 u64 픽셀 수 검사를 보강한 뒤 최종 Debug 네이티브 전체 검사도 341/341로 재실행했고 Safe/Fast 전체 audit에는 해당 보강이 포함됐습니다. 포맷·변경 JS 문법·관련 문서 로컬 링크 24개를 확인했습니다. 이 수치는 픽셀 디코딩이나 완전한 PNG 지원의 증명이 아닙니다.
+당시 최종 Debug·ReleaseSafe·ReleaseFast audit 모두 17/17 단계, 네이티브 341/341, HWP5 감사 스크립트 3,083,456 checks를 통과했습니다. 당시 PNG WASM 전용 결과는 정상 65건·거부 424건이며 실제 PNG 32개가 정상 건에 포함됩니다. 폭/높이 양쪽 경계 및 최대 u64 픽셀 수 검사를 보강한 뒤 최종 Debug 네이티브 전체 검사도 341/341로 재실행했고 Safe/Fast 전체 audit에는 해당 보강이 포함됐습니다. 포맷·변경 JS 문법·관련 문서 로컬 링크 24개를 확인했습니다. 이 과거 전체 audit 수치를 이번 실행 결과나 픽셀 디코딩·완전한 PNG 지원의 증명으로 소급하지 않습니다.
