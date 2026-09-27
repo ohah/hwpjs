@@ -8,13 +8,13 @@
 
 결과는 selected(정확한 유리수 또는 affine 기호근), missing_preimage(해 없음), undecided(검증·비교 정밀도 부족)입니다. 선택해야 할 최댓값/최솟값이 도달되지 않으면 UnattainedIccPreimageMaximum/Minimum 오류입니다. 명세 자체가 이 오류 이름을 정의한 것은 아니며 열린 구간 반례를 정확히 다루기 위한 구현 계약입니다.
 
-F.1(b)의 최근접 출력 검색은 **아직 이 API에 포함되지 않습니다**. missing_preimage는 최근접 출력이 존재하지 않는다는 뜻도, 역변환을 완료했다는 뜻도 아닙니다. 범위 밖·점프 틈 모두 후속 처리가 필요합니다. 상한을 가장 가까운 실수 입력으로 반올림하거나 임의 fallback으로 반환하지 않습니다.
+F.1(b)의 최근접 출력 검색은 **이 도달 목표 전용 API에 포함되지 않습니다**. missing_preimage는 최근접 출력이 존재하지 않는다는 뜻도, 역변환을 완료했다는 뜻도 아닙니다. 범위 밖·점프 틈은 [최근접 출력 계층](icc-parametric-nearest.md)과 [전체 역변환 계층](icc-parametric-inverse.md)에서 별도로 다룹니다. 상한을 가장 가까운 실수 입력으로 반올림하거나 임의 fallback으로 반환하지 않습니다.
 
 ## SSOT와 책임
 
 [u512 목표 확장](icc-extended-attained-inverse.md)은 같은 선택 순서와 정책을 공유하며 결과 좌표 폭만 확장합니다.
 
-이 도달 목표 전용 API는 그대로 유지합니다. 후속 [전체 parametric 역변환](icc-parametric-inverse.md)에서 최근접 출력 검색·단조성 gate 공유·입력 선택 연결의 구현 및 검증 상태를 관리합니다. 아래의 F.1(b) 미구현 문장은 이 도달 목표 전용 단계의 이력입니다.
+이 도달 목표 전용 API는 그대로 유지합니다. [전체 parametric 역변환](icc-parametric-inverse.md)에서 최근접 출력 검색·단조성 gate 공유·입력 선택 연결의 구현 및 검증 상태를 관리합니다. 아래 구현 당시의 F.1(b) 미완료 문장은 이 도달 목표 전용 단계의 이력입니다.
 
 `preimage_choice_rule.zig`가 경계의 실제 포함 여부와 정의역 끝 여부로 선택할 쪽을 결정합니다. 기존 connected interval용 preimage_choice와 새 파라메트릭 경로가 공유합니다. 샘플 곡선의 최근접 목표 클램프는 기존 sampled_inverse가 소유하며 이 변경으로 제거하지 않습니다.
 
@@ -22,7 +22,7 @@ F.1(b)의 최근접 출력 검색은 **아직 이 API에 포함되지 않습니�
 
 코어에 파일 접근·할당·부동소수점 계산은 없습니다. 제품 JS API는 변경하지 않았습니다. 테스트 mode202는 기존 36바이트 정밀도/목표 헤더 뒤 para 태그를 받습니다. 결과 status u32 LE는 0=missing_preimage, 1=undecided, 2=selected입니다. 앞의 두 결과는 4바이트, selected는 status와 기존 92바이트 경계 wire를 합친 96바이트이며 attained=true입니다. 경계 serializer를 icc-preimage-endpoint-wire.zig로 추출하여 mode201과 공유했고 기존 바이트 계약을 유지했습니다.
 
-## 검증 진행
+## 구현 당시 검증 진행 기록
 
 네이티브 562/562가 통과했습니다. 신규 4개 테스트는 증가/감소 곡선의 양쪽 평탄 구간, 열린 최대 해, 빈 틈, 정밀도별 미확정, 전체 상수·비단조·정의역 검증, 기호근 보존, terminal 단일점을 다룹니다.
 
@@ -42,8 +42,16 @@ Display P3·ITU-2020은 양수, ITU-709·ROMM RGB는 음수였습니다. 각 분
 
 ## 최종 감사와 적대적 재검토
 
-Debug·ReleaseSafe·ReleaseFast 전체 audit가 각각 종료 코드 0, 20/20 단계, 네이티브 562/562, WASM checks=6,559,828로 통과했습니다. 신규 1,413건이 이전 6,558,415건에 추가됐습니다. 각 모드의 신규 결과는 selected=422/missing=88/rejected=902/undecided=1입니다. 로그는 `/tmp/hwpjs-icc-attained-inverse-{Debug,ReleaseSafe,ReleaseFast}.log`입니다. 앞의 진행 중 문장은 이력이며 최종 결과는 이 절을 기준으로 합니다.
+당시 Debug·ReleaseSafe·ReleaseFast 전체 audit가 각각 종료 코드 0, 20/20 단계, 네이티브 562/562, WASM checks=6,559,828로 통과했습니다. 신규 1,413건이 이전 6,558,415건에 추가됐습니다. 각 모드의 신규 결과는 selected=422/missing=88/rejected=902/undecided=1입니다. 당시 로그 경로는 `/tmp/hwpjs-icc-attained-inverse-{Debug,ReleaseSafe,ReleaseFast}.log`였으나 현재 파일은 존재하지 않습니다. 앞의 진행 중 문장은 이력이며 이 절의 값은 당시 최종 결과입니다.
 
 ReleaseSafe·ReleaseFast 산출물 직접 실행도 같은 신규 수치로 통과했고 항상 상한을 선택하는 변형을 각각 검출했습니다. 변경 Zig 포맷·JS 문법·diff 공백·문서 로컬 링크 1개를 확인했습니다.
 
-최종 재검토는 전체 목표/정의역/단조성 선행 검증, 비상수 조건, 미확정과 해 없음 구분, 열린 극값 오류, 감소 곡선에서도 x 기준 선택 유지, 기호근의 정확한 domain-end 판정, 공유 F.1(a) 규칙, 기존 sampled 경로와 mode201 wire 보존, 할당 이후 전체 출력 초기화를 확인했습니다. 이 범위에서 추가 결함은 발견하지 않았습니다. F.1(b) 최근접 출력 존재·검색·동률 처리, 전체 TRC 역변환 연결, 전체 HWP/HWPX 문서 검증은 아직 미완료입니다.
+당시 최종 재검토는 전체 목표/정의역/단조성 선행 검증, 비상수 조건, 미확정과 해 없음 구분, 열린 극값 오류, 감소 곡선에서도 x 기준 선택 유지, 기호근의 정확한 domain-end 판정, 공유 F.1(a) 규칙, 기존 sampled 경로와 mode201 wire 보존, 할당 이후 전체 출력 초기화를 확인했습니다. 당시 범위에서 추가 결함은 발견하지 않았습니다. 당시 후속이었던 F.1(b) 최근접 출력·동률 처리와 TRC 역변환은 지금은 별도 계층에 구현돼 있지만, 전체 HWP/HWPX 문서·색 변환 검증을 뜻하지 않습니다.
+
+## 2026-09-27 문서 재검증
+
+현재 `selectFor`는 u128/u512 입력 폭을 공유하고, 정규화 목표 유효성 검사를 먼저 수행한 다음 `parametric_inverse_gate.validate`에서 전체 곡선의 비상수·단조성을 판정합니다. 이어 `parametric_preimage_bounds`의 complete 경계를 사용해 빈 역상과 미확정을 분리합니다. 상한이 실제 도달할 때만 x=1과의 정확 비교를 수행하며, 그 결과와 두 attained 플래그를 `preimage_choice_rule.select`에 전달합니다. 감소 곡선도 출력 방향이 아니라 x의 가장 작은/큰 값 규칙을 따릅니다. 이 전용 API의 missing_preimage를 최근접 출력의 부재로 해석하지 않습니다.
+
+Debug·ReleaseSafe·ReleaseFast의 `zig test src/image/icc/parametric_attained_inverse_tests.zig -O <모드>`는 각 4/4 통과했습니다. 로컬 ReleaseFast 테스트용 WASM mode202의 독립 선형 critical-cell 대조는 selected=422·missing=88·rejected=902·undecided=1로 일치했습니다. 후속 ReleaseFast `parametric_inverse_tests.zig` 단독 5/5는 현재 연결 확인일 뿐 그 문서 전체의 검증 완료를 의미하지 않습니다. 같은 제품 코드로 앞 문서 검증에서 실행한 ReleaseFast HWP5 전체 감사 10/10 단계·WASM checks=8,905,855는 재사용 근거입니다.
+
+과거 세 모드 전체 감사·출력 변형·실제 시스템 ICC 15개 태그와 수동 30건은 이번에 재실행하지 않았습니다. 이 범위에서 임의 ICC 프로파일의 전체 표시·저장 동치를 주장하지 않습니다.
