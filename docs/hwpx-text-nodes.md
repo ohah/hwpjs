@@ -17,3 +17,5 @@ section은 소유 `XmlTrees.inspectTextNodes`, 마스터페이지는 `Document.i
 적대적 점검에서 기존 section 텍스트 검사와 이번 검사에 이름 8개가 중복되어 있던 문제를 찾아 공통 이름 모듈로 합쳤습니다. 실파일에 없는 모델 자식까지 14개 전부 합성 테스트에 포함하고, `hyphen`만 있는 경우에도 첫 모델 미등록 자식 위치가 남는지 검사합니다. 32비트 초과 값 0건은 Zig 결과만으로 주장하지 않고 독립 Python oracle에도 별도 카운터를 두어 대조합니다. XML 어휘 오류·속성 바이트 한도·중첩/타 namespace `t`·마스터페이지 선택 범위·할당 실패도 합성 테스트로 확인합니다.
 
 2026-09-24 검증: 전체 Debug 테스트 2,248개, ReleaseSafe 제품 빌드와 전체 audit 40단계·2,287개 테스트, 전용 Debug·ReleaseSafe·ReleaseFast 테스트가 통과했습니다. 수정된 독립 oracle의 section·마스터페이지 `hp:t` 원값·자식 분류 수치를 선택 실파일 8개 shard의 Zig 보고서와 대조해 모두 일치했습니다. 실파일 shard는 기본 audit에 포함되지 않습니다. 이 숫자는 `hp:t` 의미 해석이나 HWPX 전체 문서 유효성의 완료율이 아닙니다.
+
+2026-09-28 재검증: 고정 리비전 한컴 모델과 로컬 XSD 사본, 현재 `text_node.zig`·`text_child_names.zig`를 대조했습니다. 독립 oracle self-test 및 기본 476문서 조사를 다시 실행해 section `hp:t` 230,677개·마스터페이지 371개, 속성 부재 230,131개·371개, 직접 자식 15,255개·78개를 재확인했습니다. 전용 `HWPX text node` 테스트는 Debug·ReleaseSafe·ReleaseFast 각 6/6개 통과했습니다. 제품 소스는 이전 전체 테스트 이후 변경이 없지만 이번 묶음에서 전체 테스트·Zig 실파일 shard는 재실행하지 않았습니다. 미관측 버전·표시·편집·저장은 여전히 별도 범위입니다.

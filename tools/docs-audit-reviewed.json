@@ -630,8 +630,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "11518f4a9cfb842b29ac8039cf201bfe6db3bb5a02ae9ce9bca98e6df3c61bb6",
-      "evidence": "2026-09-28 tracker updated with HWPX run topology metadata and line segments, three-mode focused tests independent ZIP XML corpus and historic known audit distinguished"
+      "sha256": "441149762b4bdfbffd343bded3147dc92850ab1aafdbd3eb87eb66054977fe85",
+      "evidence": "2026-09-28 tracker updated with HWPX text nodes inline annotation and tab verification, three-mode focused tests independent ZIP XML corpus and historic known audit distinguished"
     },
     "docs/hwpx-ole-payloads.md": {
       "sha256": "a7c214c0760d575237afcb960b7ff1fe976a0d99468e1083066e36c889deabad",
@@ -1640,6 +1640,18 @@
     "docs/hwpx-inline-string-controls.md": {
       "sha256": "94eca04f419994bb47f020df0a0248e973ffffe564fbc060beadd1ae19d7e7d7",
       "evidence": "2026-09-27 official model, Zig tests 3 modes, independent oracle corpus 476, known integration"
+    },
+    "docs/hwpx-text-nodes.md": {
+      "sha256": "fcc95e234046e48c3868aea924cb1e7d2eeffa2b073e9aa6269ff9125d92868a",
+      "evidence": "2026-09-28 current Hancom model and local XSD versus Zig source, independent oracle self-test and 476 corpus, focused Debug Safe Fast 6 each; historic known shards and full audit not rerun"
+    },
+    "docs/hwpx-inline-annotations.md": {
+      "sha256": "e2f0211a14e8517823ed4f9761be98bd20e6e660deef6897cfa253d796f79daf",
+      "evidence": "2026-09-28 current Hancom model and local XSD versus Zig source, independent oracle self-test and 476 corpus, focused Debug Safe Fast 3 each; historic known shards and full audit not rerun"
+    },
+    "docs/hwpx-inline-tab.md": {
+      "sha256": "553f7981791e240393242d927228682af8b0fa175eb1ada6df215e639b8092ab",
+      "evidence": "2026-09-28 current Hancom model and local XSD versus Zig source, independent oracle self-test and 476 corpus, focused Debug Safe Fast 5 each; type 4 distribution and known shards historic, full audit not rerun"
     },
     "docs/hwpx-number-controls.md": {
       "sha256": "4eb9d88d213ceb7e0fcffc13edd49a55143bf1eb6ce2449fea09f9f3ece320d3",

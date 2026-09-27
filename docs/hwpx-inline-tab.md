@@ -9,3 +9,5 @@
 보고서는 section `XmlTrees.inspectTextNodes`와 마스터페이지 `Document.inspectMasterPageTextNodes`의 `tab` 필드에 포함되고, `inspectKnown`에도 같은 필드로 노출됩니다. 원문 바이트는 상위 XML 트리가 소유하고 보고서는 개수·합계만 소유합니다. 탭의 자식 콘텐츠, 줄 배치, `type` 숫자의 의미, 다른 인라인 요소의 속성, 편집·저장은 후속입니다.
 
 2026-09-24 검증: 독립 oracle의 `section_tab_fields`·`master_tab_fields` 21개 지표를 선택 실파일 8개 shard의 Zig 보고서와 대조해 모두 일치했습니다. 합성 테스트에서는 숫자형·이름형·모델 확장명·미인식값, 누락·0·32비트 초과·잘못된 너비, 타 namespace·중첩 탭, 두 마스터페이지에 걸친 `max_tabs` 한도와 할당 실패를 확인했습니다. XSD의 네 `type` 이름과 모델의 18 `leader` 이름도 각각 전수 분류 테스트에 넣었습니다. 전체 Debug 테스트 2,252개, ReleaseSafe 제품 빌드, 전체 audit 40단계·2,291개 테스트, 전용 ReleaseSafe·ReleaseFast 테스트가 통과했습니다. 이 결과는 인라인 탭 속성 진단 범위의 근거이며 모든 HWPX 파일의 XSD 적합성이나 탭 렌더링 동치 증명이 아닙니다.
+
+2026-09-28 재검증: 한컴 고정 리비전 `CTab`·enum, 로컬 XSD 사본과 현재 `tab_attributes.zig`를 대조했습니다. 독립 oracle self-test 및 기본 476문서 조사에서 section 탭 7,582개·마스터페이지 0개, 너비 합 42,342,698·type 합 6,687·leader 합 2,340을 재확인했습니다. 전용 `HWPX tab attributes` 테스트는 Debug·ReleaseSafe·ReleaseFast 각 5/5개 통과했습니다. `type="4"` 36개는 이전 별도 원값 분포 조사의 기록이며 이번 기본 oracle이 분포를 재계산한 결과는 아닙니다. 이번 묶음에서 전체 테스트·Zig 실파일 shard는 재실행하지 않았습니다.

@@ -9,3 +9,5 @@
 합성 검사는 부재·0 색상·소문자 16진수·잘못된 색상/Boolean·추가 속성·타 namespace·중첩 요소·두 마스터페이지를 넘는 합산 한도와 할당 실패를 다룹니다. 실파일 검사는 독립 oracle의 section/마스터페이지별 `markpen_fields` 9개·`title_mark_fields` 6개 값을 8개 shard의 Zig 보고서와 대조합니다. 원문 삽입/삭제·표시·마커 짝 관계·편집/저장이나 HWPX 전체 유효성 판정은 후속 범위입니다.
 
 2026-09-24 검증: 전체 Debug 2,254개 테스트, ReleaseSafe 제품 빌드·전체 audit, 전용 Debug·ReleaseSafe·ReleaseFast 테스트와 실파일 8개 shard가 통과했습니다. 적대적 재검토에서는 필드 판정을 `text_node.zig`에 복제하지 않고 두 속성 파일에 나눈 점, namespace 선언을 추가 속성으로 세지 않는 점, `ignore` 부재를 명시적 false와 구별하는 점, malformed 값에서 원문을 보존하는 점을 확인했습니다. 시작 27개/끝 31개를 같은 수로 맞추는 오류 규칙은 추가하지 않았습니다. 관측되지 않은 버전과 렌더링 의미는 검증 완료가 아닙니다.
+
+2026-09-28 재검증: 고정 리비전 한컴 모델·로컬 XSD 사본과 현재 `markpen_attributes.zig`·`title_mark_attributes.zig`·`text_node.zig`를 대조했습니다. 독립 oracle self-test 및 기본 476문서 조사에서 section 시작 27개·끝 31개·제목 마커 367개, 선택 마스터페이지 각각 0개를 재확인했습니다. 전용 `HWPX inline annotation` 테스트는 Debug·ReleaseSafe·ReleaseFast 각 3/3개 통과했습니다. 불균형은 관측 사실이지 이 계층의 오류가 아닙니다. 이번 묶음에서는 전체 테스트·Zig 실파일 shard를 재실행하지 않았습니다.
