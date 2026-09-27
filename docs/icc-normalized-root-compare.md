@@ -6,9 +6,11 @@ u1024 radicand와 i1024/u1024 좌표를 받는 compareWide 확장은 [1024비트
 
 [활성 구간 위치 판정](icc-normalized-root-locations.md)이 이 비교를 사용합니다. 위치·끝점 소유권과 전체 분기 해 수집은 해당 계층의 책임입니다.
 
+[ICC.1:2022 §10.18 Table 68·Annex F.1](https://www.color.org/specification/ICC.1-2022-05.pdf)은 파라메트릭 곡선의 거듭제곱 분기와 1차원 곡선 역상 조건을 규정합니다. 아래의 기호근·정수 교차 곱·방향성 상하한은 이를 다루기 위한 이 구현의 계산 방법이며, 명세가 특정 비트 폭이나 비교 알고리즘을 요구한다는 뜻은 아닙니다.
+
 `normalized_power_root_compare.compare(precision, root, n, d)`는 [정규화 거듭제곱 근](icc-normalized-power-level.md)과 signed i256/u256 밑 좌표 n/d를 비교합니다. d=0 또는 잘못 구성된 비영 근은 부호 조기 반환 전에 거부합니다. 결과는 증명된 lt/eq/gt 또는 선택 정밀도에서 미확정인 null입니다. null을 같음이나 근 부재로 바꾸지 않습니다.
 
-`at`은 기존 u64 정규화 x를 공통 affine_value로 정확한 밑 좌표로 바꿉니다. x 좌표순 정렬, 활성 구간 포함 판정, 넓은 x 분수, 출력 클리핑 역상·전체 역변환은 아직 이 계층이 처리하지 않습니다.
+`at`은 기존 u64 정규화 x를 공통 affine_value로 정확한 밑 좌표로 바꿉니다. x 좌표순 정렬, 활성 구간 포함 판정, 넓은 x 분수, 출력 클리핑 역상·전체 역변환은 이 **비교 함수의 책임이 아닙니다**. 활성 위치는 [정규화 근 위치](icc-normalized-root-locations.md)·[확장 근 위치](icc-extended-locations.md), 클리핑 후 역상은 [거듭제곱 역상](icc-power-preimage.md), 전체 분기 선택은 [파라메트릭 역변환](icc-parametric-inverse.md) 등 후속 계층에 각각 구현되어 있습니다. 이 연결이 모든 ICC 색 변환·표시 의미를 완성한다는 뜻은 아닙니다.
 
 ## SSOT와 계산
 
@@ -38,4 +40,12 @@ Debug 산출물 직접 검사는 comparisons=1810, rejected=155, undecided=1로 
 
 Debug·ReleaseSafe·ReleaseFast 전체 audit는 각각 20/20 단계, 네이티브 537/537, WASM checks=6,521,772로 통과했습니다. 신규 comparisons/rejected/undecided의 합계 1,966건이 이전 checks=6,519,806에 추가됐습니다. 로컬 로그는 `/tmp/hwpjs-icc-normalized-root-compare-{Debug,ReleaseSafe,ReleaseFast}.log`이며 임시 파일입니다. 변경 문서의 로컬 링크 15개와 Zig 포맷·JS 문법·diff 공백 검사도 통과했습니다.
 
-최종 재검토에서는 양수·유효 역지수 전제의 검증 순서, 256비트 완전근 탐색의 종료·오버플로 경계, 기약 지수 동등성, 부호·역수 처리, 미확정 전파, 기존 좁은 Root 선행 검증 및 입력 승격을 확인했습니다. 해당 범위에서 추가 결함을 발견하지 않았습니다. 활성 구간 위치 판정과 전체 역변환은 아직 미완료입니다.
+당시 최종 재검토에서는 양수·유효 역지수 전제의 검증 순서, 256비트 완전근 탐색의 종료·오버플로 경계, 기약 지수 동등성, 부호·역수 처리, 미확정 전파, 기존 좁은 Root 선행 검증 및 입력 승격을 확인했습니다. 당시 범위에서 추가 결함을 발견하지 않았습니다. 당시 미완료였던 활성 구간 위치 판정과 전체 역변환은 위의 별도 모듈 문서에서 현재 범위를 확인해야 합니다. 위의 전체 audit 수치와 `/tmp` 경로는 최초 구현 시점의 기록이며 현재 재실행 결과가 아닙니다.
+
+## 2026-09-27 문서 재검증
+
+현재 `compare`/`compareWide`는 동일한 `compareFor`를 사용합니다. 분모·비영 근을 먼저 검증하고, 부호를 분리한 뒤 정확한 거듭제곱 등식을 판정하며, 등식이 아니면 공통 방향성 상하한이 **분리될 때만** 순서를 반환합니다. `null`은 정밀도 내에서 판정하지 못한 값으로 그대로 남습니다. `power_root_compare`의 기존 Root 선행 검증과 `affine_value.at` 경로도 코드에서 다시 확인했습니다. 이 계약은 Table 68의 수학적 분기와 모순되지 않지만, ICC 명세가 이 내부 알고리즘의 완전성이나 모든 입력에 대한 결정을 인증하지는 않습니다.
+
+`zig test src/root.zig --test-filter 'wide root comparison'`과 `--test-filter 'normalized generated roots compare'`를 Debug·ReleaseSafe·ReleaseFast에서 각각 실행해 root 포함 3/3·2/2가 모두 통과했습니다. 현재 코드로 만든 ReleaseFast 테스트용 WASM에 기존 독립 BigInt mode196 대조를 직접 재실행해 comparisons=1,810·rejected=155·undecided=1이 일치했습니다. `zig build hwp5-audit -Doptimize=ReleaseFast --summary all`은 10/10 단계 성공, WASM checks=8,905,855였습니다. 이 전체 수치는 mode196만의 호출 수가 아닙니다.
+
+과거 Debug·ReleaseSafe 전체 audit·변형 주입과 `/tmp` 임시 로그는 이번에 재실행하거나 확보하지 않았습니다. 실파일 프로파일의 모든 파라메트릭 곡선·구간 선택, 최종 색 변환, HWP/HWPX 표시 동치도 이 재검증의 결론이 아닙니다.
