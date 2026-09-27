@@ -6,7 +6,7 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "50b859d075d156e6446d54c6dcf01073e54a9fa3006b18d33af31308eb56e2e6",
+      "sha256": "3ec4c3ddc5534bfb576f5e93bef36a4c340c21632e5f950ffbf36cabcb2374a6",
       "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope PNG ICC inspection PNG RGBA BCP47 syntax registry alpha2 history ICC IANA matching mluc selection mluc structure mluc Unicode ICC v2 Unicode v2 text tag payload dispatch tag table structure header identifiers v4 and v2 header numeric header verification ICC registry source lookup required tags overview presence table XYZ type XYZ tags curve type TRC tags parametric curve analytic forward TRC forward sampled forward sampled inverse sampled wide inverse gamma inverse wide gamma inverse TRC inverse and extended TRC inverse matrix TRC inverse matrix TRC model matrix TRC forward fraction matrix inverse fraction matrix TRC inverse wide linear target wide positive bounds normalized and extended root compare normalized and extended root locations clipped and extended power preimage whole and extended whole parametric preimage normalized and extended whole bounds normalized and extended attained F.1a whole and extended nearest normalized and extended full inverse topology segments jump trend domain partition power clipping power level root compare active root locations rational power order normalized power level wide power level normalized root order power range power nearest ordinate order extended ordinate order ordinate distance extended ordinate distance linear range parametric range rational range nearest linear preimage extended linear preimage chromatic adaptation matrix transform ICC foundation verification review, architecture pending, full Debug Zig test 2656 passed and ReleaseFast HWP5 audit 10 steps 8905855 checks"
     },
     "docs/bcp47-syntax.md": {
@@ -460,6 +460,14 @@
     "docs/emf-eof-palette.md": {
       "sha256": "1c27ace4b42db864135f8571b6e02101506456272195439b1f702846668dd30f",
       "evidence": "2026-09-27 MS-EMF EOF record and palette fields current Zig EOF palette framing, Debug Safe Fast EMF 636 EOF 16 each, actual EMF corpus zero; historic 30 mutation runs and full audits not rerun"
+    },
+    "docs/emf-header-payload.md": {
+      "sha256": "df1d91b024abe7ed6465d133927d27ef0bb800e25bbbcf1bc5e4d80439239237",
+      "evidence": "2026-09-27 MS-EMF header extension variants optional data pixel descriptor current Zig, temporary src import root Debug Safe Fast 13 each with 3 header payload tests; root narrow filter collected none, historical 11 mutations and full audits not rerun, real EMF corpus zero"
+    },
+    "docs/emf-pixel-format-record.md": {
+      "sha256": "2028e87bba4ae05a9b6fd70298da39cf9a9c9021534b69fbe12dbddaedb5c006",
+      "evidence": "2026-09-27 MS-EMF PIXELFORMAT 48 bytes descriptor and current Zig shared parser framing, direct record Debug Safe Fast 7 each plus Debug descriptor 2, historical 14 mutations and full audits not rerun, real EMF corpus zero"
     },
     "docs/tiff-structure.md": {
       "sha256": "50b24eb78c9e9da7a610bb5faab9859448d79d2f9c4a2ab3c2d01584d6c12d97",

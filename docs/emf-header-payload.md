@@ -22,4 +22,6 @@ Header 선언/실제 extent, 호출자 stream size 전달, 100·108 경계, desc
 
 정상 소스의 Debug·ReleaseSafe·ReleaseFast 전체 audit은 각 `40/40` 단계와 `1,361/1,361` 테스트를 통과했다.
 
+2026-09-27 재검증에서는 `src/`를 루트로 둔 임시 import 테스트 진입점에서 `header_payload.zig`를 직접 수집해 Debug·ReleaseSafe·ReleaseFast 각각 13/13개(진입점 1개, Header payload 자체 3개와 의존 모듈 9개)를 통과했다. 이 진입점은 검증 뒤 제거했다. `src/root.zig --test-filter 'Header payload'`는 해당 테스트를 수집하지 않고 빈 루트 테스트 1개만 통과했으므로 검증 근거로 세지 않는다. 위 11종 변이와 세 모드 전체 audit은 이번에 재실행하지 않았다.
+
 저장소 실제 HWP corpus에는 EMF BinData가 없으므로 이 결과는 합성 wire fixture의 명세 대조이며 실제 생성기 호환성 완료 주장이 아니다. 렌더링과 drawing playback도 이 파트의 범위가 아니다.
