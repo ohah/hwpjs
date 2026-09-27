@@ -2,6 +2,8 @@
 
 ## 계약과 책임
 
+[ICC.1:2022 Annex F.1(b)](https://www.color.org/specification/ICC.1-2022-05.pdf#page=115)은 역함수에서 입력 목표에 대응하는 x가 없으면 원곡선의 실제 범위에서 가장 가까운 y를 찾도록 규정합니다. 이 모듈은 그 출력 후보만 구하는 프로젝트 중간 계층입니다. 명세의 비상수·전체 단조성 전제와 F.1(a) 입력 선택은 [전체 역변환](icc-parametric-inverse.md)이 별도로 적용합니다.
+
 [u512 목표의 최근접 출력 선택](icc-extended-parametric-nearest.md)은 기존 흐름·후보 조합을 공유하며 큰 목표를 원래 폭으로 보존합니다.
 
 `parametric_nearest.select(precision,curve,target)`는 선형·거듭제곱 두 분기의 클리핑 출력 합집합에서 목표 u128 분수에 가장 가까운 실제 출력값을 선택합니다. 전체 실수 정의역을 검증하며, 곡선의 단조성·비상수성이나 F.1 역변환 입력 선택은 별도 계약입니다. 비단조 곡선도 최근접 출력 자체는 정의될 수 있습니다.
@@ -23,7 +25,7 @@
 
 parametric_nearest_candidates는 [정확한 거리 비교](icc-ordinate-distance.md)를 호출합니다. 하위 후보가 더 가까우나 열린 끝이어서 도달하지 못하면 unattained입니다. 같은 거리의 실제 상위 출력이 있다면 상위를 선택합니다. 두 실제 후보가 동률일 때 목표의 같은 쪽이면 같은 값이므로 중복 제거하고, 반대쪽이면 tie로 보존합니다. 미확정은 미도달과 혼동하지 않습니다. 타입·분기 조립·후보 결합·직렬화를 별도 파일로 나눕니다.
 
-## 검증 진행
+## 구현 당시 검증 진행 기록
 
 네이티브 신규 4개가 통과했습니다. 출력 `[0,1/2) ∪ {1}`의 목표 3/5는 unattained, 3/4는 상위 1입니다. `{0,1}`의 목표 1/2는 tie입니다. 두 분기의 같은 1/4 출력은 중복 제거합니다. 감소 선형 분기와 상위 비활성도 검사합니다.
 
@@ -39,7 +41,7 @@ type3 `[32768,0,32768,0,32768]`과 목표 11749380235262596085/16616132878186749
 
 별도 `/tmp` 소스 복사본에서 linearOnly가 attained를 무시하도록 바꿨습니다. Debug·ReleaseSafe·ReleaseFast 모두 `[0,1/2) ∪ {1}`의 목표 3/5에서 TestUnexpectedResult로 실패하여 열린 끝의 가짜 선택을 검출했습니다. 원본에는 변형을 적용하지 않았습니다.
 
-## 실제 프로파일 대조
+## 구현 당시 실제 프로파일 대조
 
 시스템 DCI(P3) RGB·Display P3·ITU-2020·ITU-709·ROMM RGB의 RGB TRC 15개에서 목표 0/1이 그대로 선택됨을 확인했습니다. type3 태그 12개에서는 추가로 하위 좌극한 `L/D=c*d/65536²`를 목표로 넣었습니다. 양의 지수·기울기, 내부 분기점, a+b=65536, N=a*d+b*65536과 L이 모두 (0,D)임을 먼저 확인했습니다.
 
@@ -49,12 +51,20 @@ g/65536=p/q를 기약화한 뒤 상위 시작값과 하위 좌극한의 순서�
 
 ## 최종 확인
 
-Debug·ReleaseSafe·ReleaseFast 전체 audit가 각각 종료 코드 0, 20/20 단계, 네이티브 593/593, WASM checks=6,607,042로 통과했습니다. 신규 13,082건이 이전 6,593,960건에 추가됐습니다. 신규 결과는 세 모드 모두 selected=7725/ties=180/unattained=294/rejected=4882/undecided=1입니다. 로그는 `/tmp/hwpjs-icc-parametric-nearest-{Debug,ReleaseSafe,ReleaseFast}.log`입니다.
+당시 Debug·ReleaseSafe·ReleaseFast 전체 audit가 각각 종료 코드 0, 20/20 단계, 네이티브 593/593, WASM checks=6,607,042로 통과했습니다. 신규 13,082건이 이전 6,593,960건에 추가됐습니다. 신규 결과는 세 모드 모두 selected=7725/ties=180/unattained=294/rejected=4882/undecided=1입니다. 당시 로그 경로는 `/tmp/hwpjs-icc-parametric-nearest-{Debug,ReleaseSafe,ReleaseFast}.log`였으나 현재 파일은 존재하지 않습니다.
 
 ReleaseSafe·ReleaseFast의 실제 감사 산출물 직접 실행에서도 같은 신규 수치를 확인하고 동률 후보 하나를 버리는 변형을 각각 ERR_ASSERTION으로 검출했습니다. 변경 Zig 포맷·JS 문법·diff 공백과 관련 문서 로컬 링크 6개도 확인했습니다.
 
-최종 적대적 재검토에서는 전체 정의역 검증 선행, 하위 정확한 목표의 정밀도 독립성, 열린 끝을 최단 거리 비교에서 제외하지 않는 규칙, 같은 거리의 실제 출력 우선, 동일 값 중복 제거와 서로 다른 동률 값 보존, 분기 비활성과 미도달·미확정의 구분, 증거점과 역변환 선택의 구분을 확인했습니다. 단일 유리수 구간 후보 생성기를 추출한 뒤에도 기존 다중 구간의 전체 입력 선행 검증이 유지됩니다. 이번 범위에서 추가 결함은 발견하지 않았습니다.
+당시 적대적 재검토에서는 전체 정의역 검증 선행, 하위 정확한 목표의 정밀도 독립성, 열린 끝을 최단 거리 비교에서 제외하지 않는 규칙, 같은 거리의 실제 출력 우선, 동일 값 중복 제거와 서로 다른 동률 값 보존, 분기 비활성과 미도달·미확정의 구분, 증거점과 역변환 선택의 구분을 확인했습니다. 단일 유리수 구간 후보 생성기를 추출한 뒤에도 기존 다중 구간의 전체 입력 선행 검증이 유지됩니다. 당시 범위에서 추가 결함은 발견하지 않았습니다.
 
 ## 남은 범위
 
 [F.1 역변환 조립](icc-parametric-inverse.md)에서 단조·비상수 gate, 최근접 출력의 입력 좌표 선택과 모호성 보고의 구현·검증 상태를 관리합니다. 이번 결과만으로 전체 ICC 색상 변환이나 HWP/HWPX 문서 기능·전체 문서 검증 완료를 주장하지 않습니다.
+
+## 2026-09-27 문서 재검증
+
+현재 `parametric_nearest.selectFor`는 u128/u512 목표 검증과 `parametric_segments.assemble`의 전체 정의역 검증을 먼저 수행합니다. `linear_range`·`rational_interval_nearest`가 만든 하위 실제 도달 목표는 거리 0이므로 즉시 반환하지만, 상위의 정의역 오류를 무시하지 않습니다. 나머지는 `power_range_nearest`의 상위 후보와 `parametric_nearest_candidates`의 정확한 거리·출력 순서 비교로 합칩니다. 하위 끝이 열린 경우 그 거리의 하한만 존재하는지, 같은 거리에 실제 상위 출력이 있는지 구분하고, 같은 값은 중복 제거하며 서로 다른 실제 동률은 tie로 유지합니다. 상위 증거점을 F.1(a) 입력값으로 취급하지 않습니다.
+
+Debug·ReleaseSafe·ReleaseFast의 `zig test src/image/icc/parametric_nearest_tests.zig -O <모드>`는 각 4/4 통과했습니다. 로컬 ReleaseFast 테스트용 WASM mode211의 독립 출력 구간·거리 대조는 selected=7,725·ties=180·unattained=294·rejected=4,882·undecided=1로 일치했습니다. 후속 ReleaseFast `parametric_inverse_tests.zig` 단독 5/5는 현재 연결 확인일 뿐 그 문서 전체를 자동 승인하지 않습니다. 같은 제품 코드로 앞 문서 검증에서 실행한 ReleaseFast HWP5 전체 감사 10/10 단계·WASM checks=8,905,855는 재사용 근거입니다.
+
+과거 세 모드 전체 감사·출력/소스 변형·시스템 ICC 15개 태그 42건 대조는 이번에 재실행하지 않았습니다. 최근접 후보 자체는 비단조 곡선도 처리할 수 있지만 이것을 ICC F.1 역함수 적격성이나 임의 프로파일의 렌더링 동치로 확대하지 않습니다.
