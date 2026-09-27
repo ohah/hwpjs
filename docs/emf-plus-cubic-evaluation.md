@@ -22,7 +22,7 @@ P    = lerp(P012, P123)
 
 ## 지원 경계
 
-이 계층은 cubic 한 개의 단일 parameter 점만 계산하며 [정확한 subdivision 계층](emf-plus-cubic-subdivision.md)이 같은 de Casteljau 중간점을 재사용합니다. derivative와 flatness metric은 [별도 분석 계층](emf-plus-cubic-analysis.md), 단일 cubic의 adaptive polyline은 [flattening 계층](emf-plus-cubic-flattening.md)이 담당합니다. curvature, 여러 segment 병합, 길이, hit testing, Pen stroke·dash·cap·join, clipping, anti-aliasing, rasterization과 저장은 미구현입니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 픽셀 출력 동등성을 주장하지 않습니다.
+이 계층은 cubic 한 개의 단일 parameter 점만 계산하며 [de Casteljau subdivision 계층](emf-plus-cubic-subdivision.md)이 같은 중간점을 재사용합니다. derivative와 flatness metric은 [별도 분석 계층](emf-plus-cubic-analysis.md), 단일 cubic의 adaptive polyline은 [flattening 계층](emf-plus-cubic-flattening.md)이 담당합니다. curvature, 여러 segment 병합, 길이, hit testing, Pen stroke·dash·cap·join, clipping, anti-aliasing, rasterization과 저장은 미구현입니다. 당시 조사한 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 픽셀 출력 동등성을 주장하지 않습니다.
 
 ## 검증 기록
 
@@ -31,3 +31,5 @@ P    = lerp(P012, P123)
 적대적 검증은 parameter 유한성·하한·상한, 두 endpoint fast path, `1-t`, 첫째·둘째·셋째 1차 보간의 point 역할, 두 2차 보간의 역할, 최종 보간 weight, x·y 좌표 역할, DrawBeziers·Path adapter의 control 순서라는 16개 의미 변이를 변이별 새 local/global cache에서 Debug·ReleaseSafe·ReleaseFast로 실행했습니다. 48/48회가 모두 assertion 실패로 검출됐고 생존·컴파일 오류·panic·무변이는 없습니다. 최종 캠페인은 `/tmp/hwpjs-cubic-evaluation-mutants.GKzs3t`에 있습니다.
 
 최종 전체 감사는 Debug·ReleaseSafe·ReleaseFast 각각 `40/40` 단계와 `2,004/2,004` 테스트(native 1,965, chart ownership 31, WMF Contents 8)를 통과했습니다. 각 모드에서 HWP5 감사 `8,905,827` checks·imports 0과 CFB 변이 `12,000`건·traps 0을 다시 확인했습니다. 로그는 `/tmp/hwpjs-cubic-evaluation-final-{Debug,ReleaseSafe,ReleaseFast}-audit.log`에 있습니다.
+
+위 변이·전체 감사 수치는 당시 실행 기록이며 이번 문서 재검증에서 재실행한 결과는 아닙니다.

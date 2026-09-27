@@ -1,6 +1,22 @@
 {
   "schema": 1,
   "verified": {
+    "docs/emf-plus-cubic-evaluation.md": {
+      "sha256": "909a89acfe99a8ec5985af1b18419fdd69802dfc1221b106e4ae8785058957a8",
+      "evidence": "2026-09-28 Zig shared de Casteljau parameter validation endpoint bit preservation and DrawBeziers Path adapters against documented cubic evaluation scope; Debug Safe Fast EMF+ 560 each and direct Safe 3 plus endpoint 2; historic mutants and full audits not rerun"
+    },
+    "docs/emf-plus-cubic-subdivision.md": {
+      "sha256": "1582ea7cfff61812d1b13e4db2eda4032ec30b00261701594e738cf65386fbb0",
+      "evidence": "2026-09-28 Zig shared de Casteljau levels left right cubic construction endpoint fast paths and f32 precision boundary versus documented scope; Debug Safe Fast EMF+ 560 each and direct Safe 4; historic mutants and full audits not rerun"
+    },
+    "docs/emf-plus-cubic-analysis.md": {
+      "sha256": "0af8736105e59a3f7c43d3f4b6babb7230b622c24c5bcabf92129d6c54172ba4",
+      "evidence": "2026-09-28 Zig derivative endpoint handling f64 finite chord distance metric degenerate and overshoot cases against documented scope; Debug Safe Fast EMF+ 560 each and direct Safe derivative 5 flatness 4; historic mutants and full audits not rerun"
+    },
+    "docs/emf-plus-cubic-flattening.md": {
+      "sha256": "59f71f7af1f1a77a7c8b8ddf534fa98dc1e9e6113e4c14b13298336c3646560a",
+      "evidence": "2026-09-28 Zig adaptive cubic DFS finite chord metric tolerance depth and point budgets ownership and allocation failure against documented scope; clarified f32 rounding limit; Debug Safe Fast EMF+ 560 each and direct Safe 6; historic mutants and full audits not rerun"
+    },
     "docs/emf-plus-draw-curve-record.md": {
       "sha256": "67a3104af2652e547600a4afd40843ada7b76415115407981f5c8cdbf0958c18",
       "evidence": "2026-09-28 official EMF+ DrawCurve C Pen Count fields sizes versus Zig parser and cardinal geometry selection; Debug Safe Fast EMF+ 560 each and direct Safe 5; historic mutants and full audits not rerun"
@@ -318,7 +334,7 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "71e18f8e0fe9c403689f365bddbef25d7dafc5571623023e16ae2e13ff64cf95",
+      "sha256": "daa5d49deccef535722a72ed8714d311bff2b3fbf0e9108c251558b7bea08e41",
       "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope PNG ICC inspection PNG RGBA BCP47 syntax registry alpha2 history ICC IANA matching mluc selection mluc structure mluc Unicode ICC v2 Unicode v2 text tag payload dispatch tag table structure header identifiers v4 and v2 header numeric header verification ICC registry source lookup required tags overview presence table XYZ type XYZ tags curve type TRC tags parametric curve analytic forward TRC forward sampled forward sampled inverse sampled wide inverse gamma inverse wide gamma inverse TRC inverse and extended TRC inverse matrix TRC inverse matrix TRC model matrix TRC forward fraction matrix inverse fraction matrix TRC inverse wide linear target wide positive bounds normalized and extended root compare normalized and extended root locations clipped and extended power preimage whole and extended whole parametric preimage normalized and extended whole bounds normalized and extended attained F.1a whole and extended nearest normalized and extended full inverse topology segments jump trend domain partition power clipping power level root compare active root locations rational power order normalized power level wide power level normalized root order power range power nearest ordinate order extended ordinate order ordinate distance extended ordinate distance linear range parametric range rational range nearest linear preimage extended linear preimage chromatic adaptation matrix transform ICC foundation verification review, architecture pending, full Debug Zig test 2656 passed and ReleaseFast HWP5 audit 10 steps 8905855 checks, EMF ICM and three clipping region docs direct tests and 102 shared tests each mode"
     },
     "docs/bcp47-syntax.md": {
