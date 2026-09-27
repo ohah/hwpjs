@@ -8,6 +8,8 @@
 
 기존 문서의 과거 테스트 기록은 이 목록에 자동 소급하지 않습니다. 이 목록의 비율은 새 기준에 따라 **현재 내용 전체를 다시 검증한 파일의 비율**이며, 이전 구현 진행률이나 과거 검증 작업량의 추정치가 아닙니다.
 
+2026-09-28에 앞서 시작한 Debug 전체 `zig build test --summary all`이 종료 코드 0, 빌드 5/5 단계 및 테스트 2,661/2,661개 통과로 완료됐습니다(약 21분). 출력의 `failed command:` 문구는 성공한 테스트의 stderr가 남을 때도 나타날 수 있으며, 이 실행의 판정은 종료 코드와 최종 요약에 따릅니다. 원인과 반례는 [Zig 테스트 stderr 기록](zig-test-stderr.md)에 있습니다. 이 전체 테스트 통과는 문서별 명세 적합성이나 실제 한컴 렌더링 동등성의 증거가 아닙니다.
+
 2026-09-28에는 EMF+ cubic 평가·분할·미분/flatness·adaptive flattening 네 문서를 현재 Zig의 공용 de Casteljau parameter 검증·endpoint fast path·f64 chord metric·반복 DFS·소유권 정리와 대조했습니다. f32 분할 반올림을 고려하면 chord metric의 이론상 기하학적 경계와 모든 입력에 대한 엄밀한 실측 오차 보증을 동일시할 수 없어 문서의 표현을 좁혔습니다. Debug·ReleaseSafe·ReleaseFast root `EMF+` 필터는 각 560/560, ReleaseSafe 직접 필터는 evaluation 3/3와 endpoint 2/2, subdivision 4/4, derivative 5/5, flatness 4/4, flattening 6/6 통과했습니다. 과거 변이·전체 `audit` 수치는 재실행하지 않았고 실제 한컴 EMF+ 렌더링 동등성도 입증하지 않습니다.
 
 2026-09-28에는 EMF+ DrawCurve·DrawBeziers·cardinal span·cardinal device span·Bézier device segment·connected device polyline 여섯 문서를 공식 MS-EMFPLUS 2.3.4.5/3, GDI+ DrawCurve API 및 현재 Zig의 parser·borrowed iterator·좌표 mapper·cubic flattening·global point budget과 대조했습니다. GDI+ API의 `count - offset + 1` 상한 문구는 같은 페이지의 연속 두 점당 한 segment 설명과 모순되므로 wire MUST로 적용하지 않고 geometry API의 안전한 endpoint 범위를 별도로 명시했습니다. Debug·ReleaseSafe·ReleaseFast root `EMF+` 필터는 각 560/560, ReleaseSafe 직접 필터는 DrawCurve 5/5·DrawBeziers 6/6·cardinal open 3/3·closed 2/2·원자성 2/2·device cardinal 3/3·device Bézier 3/3·connected flattening 4/4 통과했습니다. 과거 변이·전체 `audit`는 재실행하지 않았고 실제 한컴 EMF+ 양성 표본이나 stroke/rasterization 동등성도 입증하지 않습니다.
