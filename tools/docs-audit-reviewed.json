@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "38666c01300aefd49326cc49f31a2a17623dbcc01ff8962aa69c289481063530",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed and PNG sRGB review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "4567889263f98d7357bbdb50b94d3e136c741cde724471149fc1064507f858b4",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB and PNG iCCP envelope review, architecture pending, full Debug Zig test incomplete"
+    },
+    "docs/png-embedded-profile.md": {
+      "sha256": "4a2fc71afd29725c5c9443e9d4eee8d0d95f389843ad3b0fa6460cc01db83847",
+      "evidence": "2026-09-27 W3C PNG Third Edition iCCP envelope and current Zig ICC PNG connection, Debug Safe Fast envelope focused 5 each, local probe independent JS ICC broad 38178 accepted 23551 rejected 1380 envelope mutations and mode239 profile 43 accepted 288 rejected; historical full test not rerun"
     },
     "docs/png-srgb.md": {
       "sha256": "87fa46fb111718e0b37244b8b21e37048b8715e851a79278b8aeeb5f32a68384",
