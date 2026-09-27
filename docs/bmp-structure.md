@@ -24,7 +24,7 @@ Header.info는 CORE에서 null이고 INFO 이후에는 image_bytes·부호 있�
 
 ## 형식·팔레트·마스크
 
-CORE는 1/4/8/24 bpp, INFO 이후 BI_RGB는 1/4/8/16/24/32 bpp를 허용합니다. BI_RLE8/4는 각각 8/4 bpp, BI_BITFIELDS는 16/32 bpp, BI_JPEG/PNG는 0 bpp를 요구합니다. 다른 압축 값은 명시적 미지원 오류입니다. 압축된 형식에는 음수 높이를 허용하지 않습니다.
+CORE는 1/4/8/24 bpp, INFO 이후 BI_RGB는 1/4/8/16/24/32 bpp를 허용합니다. BI_RLE8/4는 각각 8/4 bpp, BI_BITFIELDS는 16/32 bpp, BI_JPEG/PNG는 0 bpp를 요구합니다. [MS-WMF 압축 열거형](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/4e588f70-bd92-4a6f-b77f-35d0feaf7a57)에 있는 BI_CMYK(11), BI_CMYKRLE8(12), BI_CMYKRLE4(13)도 각각 1/4/8/16/24/32, 8, 4 bpp의 헤더·저장 경계까지만 읽습니다. CMYK 픽셀은 [픽셀 디코더](bmp-pixels.md)가 `UnsupportedBmpPixelCompression`으로 거부하며 일반 BMP 파일 지원을 뜻하지 않습니다. 이 외 압축 값은 `UnsupportedBmpCompression`으로 거부합니다. 압축된 형식에는 음수 높이를 허용하지 않습니다.
 
 색인 이미지에서 colours_used=0은 2^bpp개 팔레트이고, 비영 값은 그 이하의 선언 개수입니다. true-colour의 비영 colours_used는 선택적 최적화 팔레트로 읽지만 픽셀 색인으로 사용하지 않습니다. CORE는 3바이트 BGR, 나머지는 4바이트 BGR+예약 0입니다. [RGBQUAD](https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-rgbquad)의 예약 바이트를 알파로 바꾸지 않습니다.
 
@@ -40,4 +40,8 @@ header.max_pixels는 기본 100,000,000픽셀, max_bytes는 64 MiB, max_palette_
 
 픽셀 앞 gap, 픽셀 뒤 after_pixels, 선언 파일 밖 trailing은 별도 borrowed slice로 유지합니다. after_pixels에 포함될 수 있는 V5 프로파일을 검증한 것으로 세지 않습니다. 행 패딩과 홀수 폭의 사용하지 않는 마지막 비트/nibble은 색인으로 읽지 않습니다. metadata_deferred는 항상 true입니다.
 
-구현·독립 대조·실파일·적대적 검증 기록은 [비압축 픽셀 작업](bmp-pixels.md)에서 관리합니다.
+## 현재 문서 재검증 (2026-09-27)
+
+Microsoft의 위 파일/DIB 헤더 문서와 MS-WMF 압축 열거형, 현재 `file_header.zig`·`header.zig`·`structure.zig`·`masks.zig`·`palette.zig`를 대조했습니다. CMYK 계열을 모두 미지원으로 쓰던 표현을 구조 읽기와 픽셀 거부의 실제 경계에 맞게 고쳤습니다. Debug/ReleaseSafe/ReleaseFast의 `zig test src/root.zig --test-filter 'BMP '`는 각각 59/59 통과했으며, 현재 ReleaseSafe probe의 독립 JS `bmpEdges`가 헤더·레이아웃·선택 픽셀의 합성 비교 3,349건·거부 163건을 재현했습니다. 이 필터는 HWPX/HWP 연결·RLE·프로필 테스트도 포함하므로 59개가 구조 전용 테스트 수는 아닙니다. 실제 BMP 전체 corpus·하위 픽셀 문서·색 관리/렌더링·저장 동치의 재검증으로 확대하지 않습니다.
+
+구현·독립 대조·실파일·적대적 검증의 기존 기록은 [비압축 픽셀 작업](bmp-pixels.md)에서 관리합니다. 그 문서의 현재 검증 완료 여부는 별도로 판단합니다.

@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "3691e352cab0e4f6cf63c6fa1965c9b995de78fe8f4bb50c0f7ed9657a404f79",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "92e1e36909227ab689fc11a85165b2705344e85ce44a925bb44cb114d6f9f054",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile and BMP structure review, architecture pending, full Debug Zig test incomplete"
+    },
+    "docs/bmp-structure.md": {
+      "sha256": "7d53bdb130b95fcacf20460b1172331731aaecd99ee5fa8f56d806e502922a5e",
+      "evidence": "2026-09-27 Microsoft BMP file CORE INFO V4 V5 header and MS-WMF CMYK enum, current Zig structure header masks palette bounds, Debug Safe Fast BMP broad filter 59 tests each, current ReleaseSafe probe JS synthetic 3349 comparisons 163 rejects; child pixels and real corpus not verified"
     },
     "docs/hwp5-bin-data-bmp-profile.md": {
       "sha256": "7783d6846f8ce6ffbdb0b2879016495b8e95f8a852e42f335b11cf28e81ed6b5",
