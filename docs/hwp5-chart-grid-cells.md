@@ -47,4 +47,6 @@ rhwp의 `ole_chart/grid.rs`는 현재 cell_header에서 읽은 번호를 인덱�
 
 소스와 테스트를 고정해 Debug → ReleaseSafe → ReleaseFast 전체 audit를 순차 실행했습니다. `/tmp/hwpjs-chart-grid-cells-{Debug,ReleaseSafe,ReleaseFast}-audit.log`에서 각 모드 27/27 단계·1,006/1,006 네이티브 테스트·HWP/WASM 7,915,646회 검사 통과를 확인했습니다. Debug 실행 및 뒤이은 두 최적화 모드의 순차 실행 모두 종료 코드 0입니다. 포맷·JS 구문·공백과 문서 로컬 링크 19개도 검사했습니다. 이 결과는 셀 배열의 현재 계약을 포함한 검사이며 전체 차트·전체 문서의 의미 해석 완료를 뜻하지 않습니다.
 
-최종 `zig build test --summary all`은 5/5 단계·1,006/1,006 테스트, `zig build -Doptimize=ReleaseSafe --summary all`은 5/5 단계로 통과했습니다(종료 코드 0).
+당시 최종 `zig build test --summary all`은 5/5 단계·1,006/1,006 테스트, `zig build -Doptimize=ReleaseSafe --summary all`은 5/5 단계로 통과했습니다(종료 코드 0).
+
+2026-09-28 재검증에서는 현재 Zig의 null `FFFFFFFF` 4바이트 소비, 슬롯 위치 기준 좌표, 중복 객체 ID 거부, 원시 문자열/수치 보존, 셀 이후 offset 경계를 독립 JS 셀 오라클과 대조했습니다. Debug·ReleaseSafe·ReleaseFast `chart grid cells` 필터는 각각 root 포함 4/4 통과했습니다. 현재 ReleaseSafe WASM probe는 43개 표본의 750개 슬롯·null 51개·null 이후 위치와 ID가 다른 값 10개를 재현했고 정상 291건·거부 28,765건을 통과했습니다. 두 Contents 해시의 null 위치와 OOXMLChartContents 대조도 오라클에서 재실행했습니다. 위의 과거 변이·전체 audit 및 다른 최적화 모드의 WASM 실험은 이번에 재실행하지 않았습니다. 이 결과를 셀 의미나 차트 저장의 전면 지원으로 확대하지 않습니다.

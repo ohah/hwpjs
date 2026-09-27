@@ -30,4 +30,6 @@ Text는 UTF-8 버퍼만 소유합니다. legacy_bytes와 utf16le는 입력을 �
 
 공간 복구 후 Debug → ReleaseSafe → ReleaseFast 전체 audit를 순차 재실행했습니다. `/tmp/hwpjs-chart-strings-{Debug,ReleaseSafe,ReleaseFast}-recheck-audit.log`에서 각 모드 27/27 단계·1,010/1,010 네이티브 테스트·HWP/WASM 7,920,545회 검사와 chartStringResults의 정상 547건·오류 2,176건을 확인했습니다. Debug 실행과 뒤이은 두 최적화 모드의 순차 실행 모두 종료 코드 0입니다. 포맷·JS 구문·공백 및 문서 로컬 링크 20개 검사도 통과했습니다. 차트 문자열을 모든 문서의 텍스트 지원 완료로 취급하지 않습니다.
 
-최종 `zig build test --summary all`은 5/5 단계·1,010/1,010 테스트, `zig build -Doptimize=ReleaseSafe --summary all`은 5/5 단계로 통과했습니다(종료 코드 0).
+당시 최종 `zig build test --summary all`은 5/5 단계·1,010/1,010 테스트, `zig build -Doptimize=ReleaseSafe --summary all`은 5/5 단계로 통과했습니다(종료 코드 0).
+
+2026-09-28 재검증에서는 현재 Zig의 첫 `00 00` 구분·UTF-16LE 종결자·Unicode scalar 검사·UTF-8 소유권과 CP949 불해석 경계를 소스 및 독립 Node 오라클과 대조했습니다. Debug·ReleaseSafe·ReleaseFast `chart string dual` 필터는 각각 root 포함 5/5 통과했습니다. 현재 ReleaseSafe WASM probe는 43개 Contents의 문자열 272개·홀수 UTF-16 시작 27개, 합성 사례를 포함한 정상 547건·거부 2,176건을 재현했습니다. 위의 과거 변이·전체 audit·전 scalar 열거 및 다른 최적화 모드의 WASM 실험은 이번에 재실행하지 않았습니다. 이 결과는 CP949 단독 레이아웃이나 모든 문자열 조합 지원을 증명하지 않습니다.
