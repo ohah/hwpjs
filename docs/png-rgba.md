@@ -12,6 +12,10 @@
 
 ## 실측과 적대적 검증
 
+2026-09-27 현재 재검증에서는 [PNG Third Edition의 색 타입·Adam7·tRNS·표본 깊이 축소 규칙](https://www.w3.org/TR/png-3/)을 현재 `rgba.zig`·`rgba_raster.zig`·공통 픽셀 검사와 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 `PNG RGBA` 필터는 각각 root와 HWP/HWPX 연결을 포함해 16/16 통과했습니다. Pillow 11.3.0·olefile 0.47을 사용한 독립 실파일 대조도 로컬 PNG 57개·HWP PrvImage PNG 32개, 합계 89개·146,401,688 RGBA 바이트에서 다시 일치했습니다. 이 실파일 분포는 8비트 RGB/RGBA 위주이므로 저비트·16비트·Adam7은 아래 합성 검사와 구분합니다. 과거 전체 Debug/ReleaseSafe 빌드·87개 넓은 PNG 필터는 이번에 재실행하지 않았고, HWP/HWPX 제품 보고서의 선택형 실파일 검증도 별도 주제 문서 범위입니다.
+
+### 과거 검증 기록
+
 합성 PNG는 모든 색 타입, 저비트 회색/팔레트, 16비트 tRNS의 축소 전 비교, 명시적 알파, Adam7 8×8 전 픽셀, 출력 한도, 모든 할당 실패와 직접 위조한 레이아웃을 검사합니다. 저비트 마지막 패딩은 픽셀로 해석하지 않습니다.
 
 Pillow 11.3.0의 `convert("RGBA")`를 독립 기준으로 삼고 PNG 파일 자체에 ICC 변환은 적용하지 않았습니다. 로컬 PNG 57개(RGB 42·RGBA 15, 51,505,560 RGBA 바이트)와 HWP `PrvImage` PNG 32개(94,896,128바이트)를 **바이트 단위로** 대조했습니다. HWP 스트림은 Zig CFB와 Python `olefile`이 각각 독립적으로 추출합니다. 합계 89개·146,401,688바이트가 일치했습니다. 이 실파일은 8비트 RGB/RGBA 위주이며, 저비트·16비트·Adam7 양성 근거는 합성 테스트입니다. 임의 PNG·모든 ancillary 의미·HWP/HWPX 전체 문서의 동치를 뜻하지 않습니다.

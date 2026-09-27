@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "7872ebbd0af07669ee23aa675d13763532852e0a9a34c016c98ec2fcdbbe985a",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope and PNG ICC inspection review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "8bb25b0d218ede5c0702e55b90c68b59899ad09017a591c082d740b069dd3ff7",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope PNG ICC inspection and PNG RGBA review, architecture pending, full Debug Zig test incomplete"
+    },
+    "docs/png-rgba.md": {
+      "sha256": "caa9320a6c1b5d93529d7461b2482d7bc3ba414c8817663a34028dad68f53f5b",
+      "evidence": "2026-09-27 W3C PNG Third Edition color types Adam7 tRNS depth current Zig owned raster layout budgets, Debug Safe Fast PNG RGBA 16 each, Pillow 11.3.0 olefile 0.47 independent 57 local 32 HWP preview 146401688 bytes; historic full builds and wide 87 tests not rerun"
     },
     "docs/png-profile-inspection.md": {
       "sha256": "c1c55c40ee5340971a0879b164d689b23acf1a0a931f6bf51905dc904a484a53",
