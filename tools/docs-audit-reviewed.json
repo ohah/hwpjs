@@ -6,7 +6,7 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "e384d5eb803cc1dea61002a634685b37dd59455d1e4b06b44fef033130bda7ef",
+      "sha256": "33e2deedd7107031e289156cb05be46bb4ada4ce1031eef7639ca3e3216fea17",
       "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope PNG ICC inspection PNG RGBA BCP47 syntax registry alpha2 history ICC IANA matching mluc selection mluc structure mluc Unicode ICC v2 Unicode v2 text tag payload dispatch tag table structure header identifiers v4 and v2 header numeric header verification ICC registry source lookup required tags overview presence table XYZ type XYZ tags curve type TRC tags parametric curve analytic forward TRC forward sampled forward sampled inverse sampled wide inverse gamma inverse wide gamma inverse TRC inverse and extended TRC inverse matrix TRC inverse matrix TRC model matrix TRC forward fraction matrix inverse fraction matrix TRC inverse wide linear target wide positive bounds normalized and extended root compare normalized and extended root locations clipped and extended power preimage whole and extended whole parametric preimage normalized and extended whole bounds normalized and extended attained F.1a whole and extended nearest normalized and extended full inverse topology segments jump trend domain partition power clipping power level root compare active root locations rational power order normalized power level wide power level normalized root order power range power nearest ordinate order extended ordinate order ordinate distance extended ordinate distance linear range parametric range rational range nearest linear preimage extended linear preimage chromatic adaptation matrix transform ICC foundation verification review, architecture pending, full Debug Zig test 2656 passed and ReleaseFast HWP5 audit 10 steps 8905855 checks, EMF ICM and three clipping region docs direct tests and 102 shared tests each mode"
     },
     "docs/bcp47-syntax.md": {
@@ -580,6 +580,22 @@
     "docs/emf-transparent-blt.md": {
       "sha256": "69e26ff057da373bf0d043c487cf71c480721b5be1aa20882dc724ebe6f7eb78",
       "evidence": "2026-09-28 MS-EMF TRANSPARENTBLT 108-byte fields signed sizes ColorRef shared bitmap source checked; Debug Safe Fast root TRANSPARENTBLT 4 each; standalone shared transfer module path invalid, historical mutants and real EMF not rerun"
+    },
+    "docs/emf-bit-block-transfer.md": {
+      "sha256": "1527c5da61bd566215f2459fa7213e5af1eba73f6f74c3539e6a77669206d6dd",
+      "evidence": "2026-09-28 MS-EMF BITBLT fixed 100 bytes optional source per ROP3 and Zig shared source checked; Debug Safe Fast root BITBLT 4 and ROP3 direct 3 each; historical mutants full audits real EMF not rerun"
+    },
+    "docs/emf-stretch-block-transfer.md": {
+      "sha256": "1eeb9feee186ba14a9b7cc89bc680cdee3e61e683fa53b4d348863637ee881ee",
+      "evidence": "2026-09-28 MS-EMF STRETCHBLT fixed 108 bytes signed source sizes optional source per ROP3 and Zig shared source checked; Debug Safe Fast root STRETCHBLT 4 and ROP3 direct 3 each; historical mutants full audits real EMF not rerun"
+    },
+    "docs/emf-mask-block-transfer.md": {
+      "sha256": "718c36e1329454b1121cce0173ddb376f6012d7c1a55f5a384b7be1fab2e6aa1",
+      "evidence": "2026-09-28 MS-EMF MASKBLT fixed 128 bytes ROP4 source mask order monochrome and Zig bitmap pair checked; Debug Safe Fast root MASKBLT 4 and ROP4 direct 4 each; historical mutants full audits real EMF not rerun"
+    },
+    "docs/emf-parallelogram-block-transfer.md": {
+      "sha256": "ca54b473a508a2a450390916b6dfd24221b6242b8c75e325481ec5cc4797046b",
+      "evidence": "2026-09-28 MS-EMF PLGBLT fixed 140 bytes three destination points bitmap pair monochrome checked; Debug Safe Fast root PLGBLT 4 and destination points direct 4 each; historical mutants full audits real EMF not rerun"
     },
     "docs/tiff-structure.md": {
       "sha256": "50b24eb78c9e9da7a610bb5faab9859448d79d2f9c4a2ab3c2d01584d6c12d97",

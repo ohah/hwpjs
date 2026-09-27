@@ -25,3 +25,5 @@ SRCCOPY와 PATCOPY/DSTINVERT source 의존성, signed 좌표, FLOAT 특수 비�
 source 의존성 제거, `cbBitsSrc == 0` 부분 상태 허용, BmiSrc/BitsSrc 겹침 허용, Type 분류 제거, source 필수 검사 제거, ROP3 하위 code 대조 제거의 6개 독립 변이를 적용했다. 최초 부분 상태 변이는 기존 테스트가 `offBitsSrc == 0`도 함께 바꾼 사례만 가져 탐지하지 못했다. `cbBitsSrc`만 0인 직교 사례를 추가한 뒤 다시 실행했으며 Debug·ReleaseSafe·ReleaseFast의 최종 `18/18` 변이 실행이 모두 실패해 각 회귀를 탐지했다.
 
 최종 전체 audit는 Debug·ReleaseSafe·ReleaseFast에서 각각 `40/40` 단계와 `1398/1398` 테스트를 통과했다. 이 중 코어 단위 테스트는 `1359/1359`이고 차트·WMF ownership 보조 테스트가 39개다.
+
+2026-09-28 현행 재검증에서는 공식 BITBLT의 100바이트 고정부와 source 비의존 ROP일 때의 BitmapBuffer 생략을 현재 `bit_blt_core`·`bitmap_source`·framing에 대조했다. Debug·ReleaseSafe·ReleaseFast 루트 `BITBLT` 필터는 각 4/4, ROP3 단독 테스트는 각 3/3개 통과했다. 같은 제품 코드의 전체 Debug 테스트 2,661/2,661개를 확인했지만, 위의 6개 변이·세 모드 전체 audit와 실제 EMF 양성 HWP 파일은 이번에 재실행하지 않았다. 구조 읽기 결과를 ROP 픽셀 합성 지원으로 해석하지 않는다.

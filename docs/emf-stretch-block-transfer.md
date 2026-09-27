@@ -22,3 +22,5 @@ signed source width/height와 공통 필드, 108바이트 이후 UndefinedSpace1
 source 크기 offset 이동, 고정 길이 8바이트 축소, 공통 코어에 잘못된 100바이트 fixed-end 전달, Type 분류 제거, framing 집계 제거의 5개 독립 변이를 적용했다. Debug·ReleaseSafe·ReleaseFast의 `15/15` 변이 실행이 모두 실패하여 해당 회귀를 탐지했다.
 
 최종 전체 audit는 Debug·ReleaseSafe·ReleaseFast에서 각각 `40/40` 단계와 `1402/1402` 테스트를 통과했다. 이 중 코어 단위 테스트는 `1363/1363`이고 차트·WMF ownership 보조 테스트가 39개다.
+
+2026-09-28 현행 재검증에서는 공식 STRETCHBLT의 108바이트 고정부와 signed source 크기, BITBLT와 공유하는 source 생략 조건을 현재 `bit_blt_core`·framing에 대조했다. Debug·ReleaseSafe·ReleaseFast 루트 `STRETCHBLT` 필터는 각 4/4, ROP3 단독 테스트는 각 3/3개 통과했다. 같은 제품 코드의 전체 Debug 테스트 2,661/2,661개를 확인했지만, 위의 5개 변이·세 모드 전체 audit와 실제 EMF 양성 HWP 파일은 이번에 재실행하지 않았다. 확대·축소 픽셀 출력은 이 구조 검증의 범위가 아니다.

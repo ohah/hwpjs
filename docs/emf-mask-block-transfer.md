@@ -26,3 +26,5 @@ ROP4 byte 순서와 reserved 보존, 양쪽 index 범위, signed 좌표, source-
 DIB span 겹침 검사 제거, mask 1bpp 정책 제거, ROP4 foreground/background byte 교환, source-first 순서 강제, Type 분류 제거, framing 집계 제거의 6개 독립 변이를 적용했다. Debug·ReleaseSafe·ReleaseFast의 `18/18` 변이 실행이 모두 실패하여 각 회귀를 탐지했다.
 
 최종 전체 audit는 Debug·ReleaseSafe·ReleaseFast에서 각각 `40/40` 단계와 `1407/1407` 테스트를 통과했다. 이 중 코어 단위 테스트는 `1368/1368`이고 차트·WMF ownership 보조 테스트가 39개다.
+
+2026-09-28 현행 재검증에서는 공식 MASKBLT의 128바이트 고정부, ROP4 예약/두 index, source·mask의 임의 순서와 단색 mask 조건을 현재 `bitmap_pair`·framing에 대조했다. Debug·ReleaseSafe·ReleaseFast 루트 `MASKBLT` 필터는 각 4/4, ROP4 단독 테스트는 각 4/4개 통과했다. 같은 제품 코드의 전체 Debug 테스트 2,661/2,661개를 확인했지만, 위의 6개 변이·세 모드 전체 audit와 실제 EMF 양성 HWP 파일은 이번에 재실행하지 않았다. mask 반복·ROP4 픽셀 합성은 구현 범위가 아니다.

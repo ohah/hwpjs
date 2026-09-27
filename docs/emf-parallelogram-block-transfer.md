@@ -22,3 +22,5 @@ Microsoft [EMR_PLGBLT](https://learn.microsoft.com/en-us/openspecs/windows_proto
 destination 시작 offset 이동, 네 번째 점 산식 부호 변경, 고정 길이 축소, mask BMI offset을 source offset으로 교체, Type 분류 제거, framing 집계 제거의 6개 독립 변이를 적용했다. 최초 고정 길이 축소 변이의 ReleaseFast 실행은 테스트 절단 범위도 구현의 `fixed_size`를 공유하여 회귀를 탐지하지 못했다. 공식 wire 길이 140을 독립 기대값으로 추가하고 세 모드에서 다시 실행했다. 보강 후 최종 Debug·ReleaseSafe·ReleaseFast의 `18/18` 변이 실행이 모두 실패하여 각 회귀를 탐지했다.
 
 최종 전체 audit는 Debug·ReleaseSafe·ReleaseFast에서 각각 `40/40` 단계와 `1411/1411` 테스트를 통과했다. 이 중 코어 단위 테스트는 `1372/1372`이고 차트·WMF ownership 보조 테스트가 39개다.
+
+2026-09-28 현행 재검증에서는 공식 PLGBLT의 140바이트 고정부, 세 점→암시적 네 번째 점, source·mask 임의 순서와 단색 mask 조건을 현재 `destination_parallelogram`·`bitmap_pair`·framing에 대조했다. Debug·ReleaseSafe·ReleaseFast 루트 `PLGBLT` 필터는 각 4/4, 세 점 단독 테스트는 각 4/4개 통과했다. 같은 제품 코드의 전체 Debug 테스트 2,661/2,661개를 확인했지만, 위의 6개 변이·세 모드 전체 audit와 실제 EMF 양성 HWP 파일은 이번에 재실행하지 않았다. 실제 좌표 투영·mask 반복은 구현 범위가 아니다.
