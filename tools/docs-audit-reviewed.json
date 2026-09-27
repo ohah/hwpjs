@@ -6,8 +6,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "cc3fcb957db5d509e6f75fd22b9f3906df724771d17ab616c399bfa090262cf6",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope PNG ICC inspection PNG RGBA BCP47 syntax registry alpha2 history ICC IANA matching mluc selection mluc structure mluc Unicode ICC v2 Unicode v2 text tag payload dispatch tag table structure header identifiers v4 and v2 header numeric header verification ICC registry source lookup required tags overview presence table XYZ type XYZ tags and curve type review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "161f52286c9f27185aac176c79ad7413652855d054143f10660bbadf38cefb05",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope PNG ICC inspection PNG RGBA BCP47 syntax registry alpha2 history ICC IANA matching mluc selection mluc structure mluc Unicode ICC v2 Unicode v2 text tag payload dispatch tag table structure header identifiers v4 and v2 header numeric header verification ICC registry source lookup required tags overview presence table XYZ type XYZ tags curve type and TRC tags review, architecture pending, full Debug Zig test incomplete"
     },
     "docs/bcp47-syntax.md": {
       "sha256": "ae0d91a0bb5ca2f8a5194b5ffa76494427cc058784f11446fd905458020f5b11",
@@ -104,6 +104,10 @@
     "docs/icc-curve-type.md": {
       "sha256": "07cfa46a58771501adb74e9d8bc384108870f0f749861821828913b9218fc7bd",
       "evidence": "2026-09-27 ICC.1 2022 section10.6 Table35 and 2001 section6.5.3 Table37 count identity gamma samples, Zig exact unpadded parser vs later TRC forward parametric PNG, Debug Safe Fast two focused filters 2 each, existing local WASM mode153 JS 65793 comparisons 332 rejected, official sRGB2014 three curv tags 3072 samples match; historic full audit wasm rebuild not rerun temp logs absent"
+    },
+    "docs/icc-trc-tags.md": {
+      "sha256": "668378398269f7a4b2f437aefa5b17ab261b31e325804aa3f692e96181c389de",
+      "evidence": "2026-09-27 ICC.1 2001 section6.4 and 2022 section9.2 four TRC signatures edition types, Zig tag curve parametric and deferred, Debug Safe Fast two focused filters 2 each, existing local WASM mode155 156 JS 50 comparisons 1196 rejected, macOS 11 profiles 29 TRC v2 11 v4 18 raw match; historic full audit wasm rebuild not rerun temp logs absent"
     },
     "docs/png-rgba.md": {
       "sha256": "caa9320a6c1b5d93529d7461b2482d7bc3ba414c8817663a34028dad68f53f5b",
