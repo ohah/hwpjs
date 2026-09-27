@@ -28,6 +28,8 @@
 
 ## 검증 기록
 
+2026-09-28 현행 재검증에서 공식 RecordType의 연속 58개 값과 reserved 세 값을 현재 enum·exhaustive 정책에 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 지원표 단독 테스트는 각 2/2개, 루트 `EMF+ stream` 필터는 각각 77/77개 통과했습니다. 이 결과는 정책의 분류와 선택된 통합 경로를 확인한 것이며, 모든 형식의 실파일 다양성이나 그래픽 재생을 증명하지 않습니다. 아래 변이 24회와 세 모드 전체 audit는 과거 실행 이력입니다.
+
 독립 숫자 oracle은 `0x4001..0x403A`를 전부 순회해 `0x4005..0x4007`만 forbidden, `0x4037`만 opaque, 나머지는 wire-validated인지 검사하고 정책별 `54/1/3`, 전체 58을 확인합니다. 기존 stream·framing 테스트는 세 reserved 값 거부와 StrokeFillPath 원문 보존·집계, 각 개별 record parser 연결을 검사합니다.
 
 다섯 관점의 적대적 검토로 (1) 공식 58개 enum 값과 연속 범위, (2) reserved MUST NOT 세 값, (3) StrokeFillPath 문서 공백과 opaque 경계, (4) exhaustive 정책 SSOT와 stream 실제 사용, (5) wire 검증·replay·실파일 동등성의 분리를 대조합니다.

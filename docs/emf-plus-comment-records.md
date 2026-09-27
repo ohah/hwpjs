@@ -17,6 +17,8 @@
 
 ## 검증과 남은 범위
 
+2026-09-28 현행 재검증에서 공식 EmfPlusComment의 무시 대상 Flags·정렬된 DataSize와 RecordType의 reserved 세 값을 현재 private parser·stream 정책에 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 루트 `EMF+ stream` 필터는 각각 77/77개, Comment 단독 테스트는 각 4/4개 통과했습니다. 아래 변이 21회와 세 모드 전체 audit 수치는 과거 실행 이력이며 이번 재검증 범위에 포함되지 않습니다.
+
 단위 테스트는 nonzero Flags, 빈 private data, 전체 u8 경계가 섞인 data, 비대상 레코드, 여러 comment 집계, 세 reserved 값, 실패 상태 원자성, 두 집계 필드의 usize overflow를 검사합니다. 상위 EMF framing 테스트도 private 수·바이트를 확인하고 세 reserved 오류가 그대로 전파되는지 검사합니다.
 
 적대적 검토는 (1) 공식 RecordType와 MUST NOT, (2) private 원문·Flags, (3) 합계 overflow와 실패 원자성, (4) comment 간 상태, (5) 상위 framing·SSOT의 다섯 관점으로 반복했습니다. 격리 복사본과 별도 Zig cache에서 Comment 분류, Flags 보존, private slice, reserved 거부, comment 수, data 바이트 수, pending 상태를 각각 손상시킨 7개 유효 변형을 Debug·ReleaseSafe·ReleaseFast로 실행했고 21/21회를 모두 검출했습니다. 미사용 변수로 컴파일이 깨진 byte 집계 변형은 유효 결과에 포함하지 않고, 같은 동작 결함을 유지하면서 컴파일되는 변형으로 교체했습니다.

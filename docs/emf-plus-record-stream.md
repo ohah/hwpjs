@@ -4,7 +4,7 @@
 
 `emf_plus_record_type.zig`는 공식 EMF+ `RecordType` 값 0x4001~0x403A의 단일 대응표를 소유하고, [RecordType wire 지원 매트릭스](emf-plus-record-coverage.md)는 exhaustive 정책과 완료 경계를 소유합니다. `emf_plus_record.zig`는 모든 EMF+ 레코드가 공유하는 12바이트 머리와 comment 내부 iterator를, `emf_plus_header.zig`는 Header 전용 필드를, `emf_plus_stream.zig`는 여러 `EMR_COMMENT_EMFPLUS` 사이의 시작·종료 상태를 소유합니다. 외부 `EMR_COMMENT`의 DataSize·identifier·padding은 [comment envelope](emf-comment-envelope.md)가 계속 소유합니다.
 
-각 EMF+ 레코드는 Type u16, Flags u16, Size u32, DataSize u32와 data로 구성됩니다. Size와 DataSize는 4바이트 정렬이어야 하고 `Size == 12 + DataSize`여야 합니다. iterator는 선언 크기가 현재 comment를 벗어나면 거부하며 다음 comment에서 조각을 보충하지 않습니다. 공식 `EMR_COMMENT_EMFPLUS`가 각 comment에 **하나 이상의 EMF+ records**를 요구하므로 빈 parameter와 잘린 마지막 레코드도 오류입니다.
+각 EMF+ 레코드는 Type u16, Flags u16, Size u32, DataSize u32와 data로 구성됩니다. Size와 DataSize는 4바이트 정렬이어야 하고 `Size == 12 + DataSize`여야 합니다. iterator는 선언 크기가 현재 comment를 벗어나면 거부하며 다음 comment에서 조각을 보충하지 않습니다. 공식 `EMR_COMMENT_EMFPLUS`가 각 comment에 **하나 이상의 EMF+ records**를 요구하므로 빈 EMF+ record 배열과 잘린 마지막 레코드도 오류입니다.
 
 Header는 EMF Header 바로 다음 EMF record의 첫 EMF+ record여야 합니다. 정확한 Size 28/DataSize 16, `EmfPlusGraphicsVersion`의 20비트 signature 0xDBC01을 검사하고 12비트 graphics version은 원값으로 보존합니다. 명세가 vendor extension을 허용하므로 알려진 1/2 이외 값을 임의로 거부하지 않습니다. Header Flags의 D와 EmfPlusFlags의 V를 해석하되 나머지 비트는 명세대로 무시하면서 원값을 보존합니다.
 
@@ -25,6 +25,8 @@ EndOfFile과 GetDC는 Size 12/DataSize 0을 검사하고 사용되지 않는 Fla
 별도 [SetTSGraphics 소유 상태](emf-plus-ts-graphics-state.md)는 고정부와 Palette bytes를 현재 상태와 Save/Container snapshot에 보존하고 tracked report에는 slice 없는 값 요약을 노출합니다. 일반 property/world transform과의 병합 및 실제 device 적용은 하지 않습니다.
 
 ## 검증과 미구현 경계
+
+2026-09-28 현행 재검증에서 공식 EMR_COMMENT_EMFPLUS·RecordType·Header·Comment 정의를 현재 `emf_plus_record.zig`·`emf_plus_header.zig`·`emf_plus_stream.zig`와 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 루트 `EMF+ stream` 필터는 각각 77/77개, 레코드 단독 테스트는 각 3/3개, Header 단독 테스트는 각 5/5개 통과했습니다. 아래 변이 33회와 세 모드 전체 audit 수치는 과거 실행 이력으로, 이번에 재실행한 결과가 아닙니다.
 
 단위 테스트는 전체 type 범위와 양쪽 인접값, 모든 1~11바이트 header 잘림, 최소/비정렬/불일치/최대 선언 크기, iterator 실패 원자성, Header signature와 크기, 여러 comment의 상태 연속, 빈 comment, Header 위치·중복, EOF 누락·후속 record를 검사합니다. 상위 framing 테스트는 정상 Header/EOF 보고서와 signature·빈 comment·지연 Header·EOF 누락 오류 전파를 확인합니다.
 
