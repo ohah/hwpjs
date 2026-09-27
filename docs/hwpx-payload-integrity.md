@@ -13,3 +13,7 @@
 2026-09-24 선택 실파일 조사에서 로컬 두 corpus의 HWPX 484개 중 ZIP 인덱스 거부 6개와 암호화 2개를 제외한 일반 문서 476개를 `inspectKnown`의 새 무결성 단계까지 검사했습니다. 보호된 2개는 이 단계에 진입하지 않습니다. 시스템 `unzip -tqq`로 **모든 484개 ZIP의 엔트리**를 독립 대조한 결과는 성공 478개·거부 6개였으며, 제품의 476개 일반 문서와 2개 보호 문서에 대한 ZIP 바이트 관측과 모순되지 않습니다. 이 대조는 동일 문서 내 media-type이나 XML 의미의 독립 검증이 아닙니다.
 
 최종 소스에서 선택 실파일 8개 shard가 모두 통과했고, 각 문서는 `validated_entries == archive.entries.len` 및 `manifested_entries + unmanifested_entries.len == archive.entries.len`도 확인했습니다. 전용 6개 테스트는 Debug·ReleaseSafe·ReleaseFast 모두 통과했습니다. `inspectKnown` 통합 7개 테스트는 Debug·ReleaseSafe에서 통과했습니다. 전체 `zig build test --summary all`은 2,199/2,199 통과, `zig build -Doptimize=ReleaseSafe --summary all`, `zig build compare -Doptimize=ReleaseSafe --summary all`, Debug `zig build audit --summary all`, `zig fmt --check build.zig src`도 종료 코드 0이었습니다. 실파일 shard는 기본 audit에 포함되지 않습니다.
+
+## 2026-09-28 재검증
+
+현행 `payload_integrity.inspect`가 OPF 바인딩 분류와 별도로 ZIP 인덱스 순서의 모든 엔트리를 공통 `Archive.decode`로 해제·길이/CRC 검사하고, ZIP 할당자로 즉시 반환하며 단일 총량 예산을 차감하는지 소스와 테스트에 대조했습니다. Debug·ReleaseSafe·ReleaseFast 전용 필터는 각각 root 포함 6/6개 통과했습니다. ReleaseFast `HWPX known document inspections shard N`의 N=0..7을 별도 프로세스로 모두 실행해 일반 문서 476개에서 전체 엔트리 수와 manifest/비manifest 분할 단언을 다시 통과했습니다. 암호화 2개는 이 단계 전에 분류됐고 ZIP 거부는 6개였습니다. 독립 `unzip -tqq`의 corpus 484개 결과는 ZIP 478개 통과·6개 거부였으나 OPF 바인딩 의미까지 독립 검증한 것은 아닙니다. 현재 전체 `zig build test --summary all`은 5/5 단계·2,664/2,664 테스트·종료 코드 0으로 통과했으나 위 과거 전체 audit·compare 결과를 현재 실행으로 소급하지 않습니다.

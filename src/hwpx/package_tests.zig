@@ -167,6 +167,24 @@ test "HWPX central, path, mimetype and CRC adversarial edits" {
     try std.testing.expectError(error.InvalidMimeType, package.open(a, copy, .{}));
 }
 
+test "HWPX ZIP rejects Windows drive-root entry paths" {
+    const a = std.testing.allocator;
+    for ([_][]const u8{ "C:/escape.xml", "c:relative.xml" }) |name| {
+        const sources = [_]fixture.Source{
+            .{ .name = "mimetype", .data = package.mime },
+            .{ .name = name, .data = "<x/>" },
+        };
+        const bytes = try fixture.storedZip(a, &sources);
+        defer a.free(bytes);
+        if (package.open(a, bytes, .{})) |value| {
+            var unexpected = value;
+            unexpected.deinit();
+            return error.TestExpectedError;
+        } else |err| try std.testing.expectEqual(error.InvalidEntryName, err);
+    }
+    try std.testing.expect(zip.validPath("Contents/header.xml"));
+}
+
 fn descriptorZip(a: std.mem.Allocator, signed: bool) ![]u8 {
     const name = "mimetype";
     const payload = package.mime;

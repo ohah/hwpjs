@@ -630,16 +630,28 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "6aa4d68618efcd852862c0e5b408601708fb05acc323d0756bce890fe290d792",
-      "evidence": "2026-09-28 tracker updated with two HWPX OLE documents, three-mode focused tests and eight real-file repair shards plus independent olefile oracle; earlier HWP5 OLE evidence retained"
+      "sha256": "81a788ad9c10d9940d86720b6138097edad57f588e68135baf57cd04429d05a6",
+      "evidence": "2026-09-28 tracker updated with HWPX ZIP package and payload docs, Windows drive path regression, current 2664 Debug tests and eight known shards; prior OLE evidence retained"
     },
     "docs/hwpx-ole-payloads.md": {
-      "sha256": "f524fedcd24748b7a723fe5d4eeb521bc59a7dc084cb3897fff7ff0fbd080850",
-      "evidence": "2026-09-28 current OPF OLE exact package selection strict reader and scoped normalization versus source, Python independent 476 HWPX 99 OLE, Debug Safe Fast focused 10 each, ReleaseSafe known 2 and ReleaseFast repair shards 8; old full audit not rerun"
+      "sha256": "a7c214c0760d575237afcb960b7ff1fe976a0d99468e1083066e36c889deabad",
+      "evidence": "2026-09-28 prior OLE current source Python 99 candidates and eight repair shards preserved; follow-up HWPX known eight shards current, historic full audit distinguished"
     },
     "docs/hwpx-ole-observed-repairs.md": {
-      "sha256": "1d9ff88a5177c7f06f276095907a332d4fabbe403fec7d46a77ca19f3ccd0df7",
-      "evidence": "2026-09-28 MS CFB root timestamp and FAT MiniFAT examples versus copy-only Zig strict path, Python self baseline and olefile 0.47 compat, Debug Safe Fast repairs 6 OLE 10 each, ReleaseFast eight shards 65 strict 34 repaired 14 FAT 2 MiniFAT and stream hashes; old full audit not rerun"
+      "sha256": "df431ecb6b0b0d0cfd642a80a61950f4b083da2043564e8a37ad038117d73245",
+      "evidence": "2026-09-28 prior MS CFB and copy-only repair evidence 65 strict 34 normalized eight shards preserved; follow-up HWPX known eight shards current, old full audit distinguished"
+    },
+    "docs/hwpx-zip-container.md": {
+      "sha256": "d1c59d14d949dd06893fb0c767308f4472a996bb1ef90a698b54dec6f7ac07a0",
+      "evidence": "2026-09-28 PKWARE ZIP headers descriptor central EOCD versus current Zig; reproduced drive path acceptance then fixed with Debug Safe Fast two-test regression; corpus 484 478 accepted six rejected and independent unzip, full Debug test 2664 and ReleaseSafe product build; old mutants audit not rerun"
+    },
+    "docs/hwpx-package-relationships.md": {
+      "sha256": "2506d491a5bef6505d767505f9492df76e3ee0602ef3392631df3f1041a9ccb3",
+      "evidence": "2026-09-28 current OCF OPF ZIP and allocator contracts versus ReleaseSafe package three tests, ReleaseFast 484 corpus 478 accepted six EOCD, independent unzip 478 six and Python mimetype 451 stored 27 deflate, full Debug test 2664; old mutants audit not rerun"
+    },
+    "docs/hwpx-payload-integrity.md": {
+      "sha256": "b2141b4e7849eeabfb9a85cd3ea9d9f319d1b28e60439609987e9148669c115e",
+      "evidence": "2026-09-28 current all ZIP entry decode CRC and shared budgets versus Debug Safe Fast six focused each, ReleaseFast known shards eight with 476 documents two encrypted six ZIP rejects and entry invariants, independent unzip 478 six, full Debug test 2664; old audit compare not rerun"
     },
     "docs/hwp5-ole-binaries.md": {
       "sha256": "9b557156d079baeddc5fb1d1bf014efcd56fdf37c172afa77a1ccbe322429c3e",

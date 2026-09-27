@@ -65,6 +65,8 @@ fn checkedSlice(bytes: []const u8, start: usize, len: usize) ![]const u8 {
 
 pub fn validPath(name: []const u8) bool {
     if (name.len == 0 or name[0] == '/') return false;
+    // A drive-qualified first component is not a relative ZIP entry path.
+    if (name.len >= 2 and std.ascii.isAlphabetic(name[0]) and name[1] == ':') return false;
     var part_start: usize = 0;
     for (name, 0..) |c, i| {
         if (c == 0 or c == '\\') return false;
