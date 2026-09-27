@@ -8,13 +8,19 @@
 
 `xyz_tag_values.inspectV4(class, value)`는 명시적으로 선택한 2022 판본의 추가 규칙입니다. display의 wtpt는 §9.2.36이 지정하는 PCS illuminant 값을 기존 `pcs_illuminant.validateV4`로 검사합니다. D50 상수나 반올림을 복제하지 않습니다. 나머지 문맥 의존 검사는 context_deferred로 남깁니다. lumi의 X/Z 비영 값은 §9.2.33의 NOTE에 따른 별도 진단이며 강제 오류나 값 보정으로 바꾸지 않습니다.
 
-헤더 판본 선택·필수 태그 존재·v2 음수 제약 조립·행렬과 TRC의 상호 관계·백색 적응의 측정 근거·제품 PNG 연결은 이 단계에서 검사하지 않습니다. 특히 display 백색점 검사 성공은 전체 프로파일 의미 검증 완료가 아닙니다.
+이 함수 자체는 헤더 판본 선택·필수 태그 존재·v2 음수 제약 조립·행렬과 TRC의 상호 관계·백색 적응의 측정 근거·PNG 연결을 검사하지 않습니다. [선택형 payload 집계](icc-tag-payload-dispatch.md)와 [PNG 연결](png-profile-inspection.md)은 별도로 구현되어 있지만, 현재 집계의 v2 XYZ 경로에도 음수 금지 검사가 자동 적용되지는 않습니다. 특히 display 백색점 검사 성공은 전체 프로파일 의미 검증 완료가 아닙니다.
 
-## 검증
+## 2026-09-27 현재 내용 재검증
+
+ICC.1:2022 §9.2.4·31·33·36·46의 다섯 서명·타입과 display 백색점 규칙, luminance의 NOTE를 현재 `xyz_tag`·`xyz_tag_values`·공통 D50 검사기에 대조했습니다. Debug·ReleaseSafe·ReleaseFast에서 `known XYZ tags`와 `display white point` 집중 필터는 각 모드 각각 root 포함 2/2로 통과했습니다. 기존 로컬 WASM mode152의 독립 JS 대조는 비교 127건·오류 거부 238건이 일치했습니다. 이번에는 WASM을 재빌드하지 않았습니다.
+
+아래 두 공식 v4 sRGB 파일을 다시 메모리에서 읽어 각각 `spac`·`mntr` 헤더와 `wtpt` 한 개를 확인했습니다. 기존 mode152의 소유 정수 결과는 원본 big-endian 값과 같았고 display의 D50 조건은 별도 BigInt 구간 판정과 일치했습니다. 파일은 저장하지 않았습니다. 아래 전체 감사·변형 검사 수치는 2026-09-07 당시 기록이며 재실행하지 않았고, 인용된 `/tmp` 로그도 현재 없습니다. 이 결과를 전체 ICC 의미·색상 출력 동치로 확대하지 않습니다.
+
+## 2026-09-07 검증 기록
 
 공식 RGB 등록부의 [v4 preference](https://registry.color.org/rgb-registry/profiles/sRGB_v4_ICC_preference.icc)와 [v4 displayclass](https://registry.color.org/rgb-registry/profiles/sRGB_v4_ICC_preference_displayclass.icc)를 메모리로 읽고 실제 헤더 클래스를 사용해 mode 152를 실행했습니다. 각각 spac·mntr이며 대상 wtpt 태그가 각 1개였습니다. 원시 정수와 진단을 독립 JS 기대값과 대조해 일치했고 display의 D50 조건도 별도 BigInt 구간 비교로 확인했습니다. v2 파일에 v4 정책을 적용하지 않았습니다. 파일 전체의 유효성이나 색상 출력 대조가 아니며 이 수동 결과는 자동 감사 수에 더하지 않습니다.
 
-최신 실행: mode 152를 포함한 최종 Debug·ReleaseSafe·ReleaseFast 전체 감사가 모두 종료 코드 0, 20/20 단계, 네이티브 427/427, 감사 검사 4,414,057건으로 통과했습니다. 신규 비교 127건·예상 오류 거부 238건도 세 모드 모두 확인했습니다. 최종 로그는 로컬 `/tmp/hwpjs-icc-xyz-tags-Debug-final.log`, `/tmp/hwpjs-icc-xyz-tags-ReleaseSafe-final.log`, `/tmp/hwpjs-icc-xyz-tags-ReleaseFast-final.log`입니다. 검사 건수는 변형·반복을 포함하며 문서 수나 포맷 지원률이 아닙니다.
+당시 최종 실행: mode 152를 포함한 Debug·ReleaseSafe·ReleaseFast 전체 감사가 모두 종료 코드 0, 20/20 단계, 네이티브 427/427, 감사 검사 4,414,057건으로 통과했습니다. 신규 비교 127건·예상 오류 거부 238건도 세 모드 모두 확인했습니다. 최종 로그는 로컬 `/tmp/hwpjs-icc-xyz-tags-Debug-final.log`, `/tmp/hwpjs-icc-xyz-tags-ReleaseSafe-final.log`, `/tmp/hwpjs-icc-xyz-tags-ReleaseFast-final.log`입니다. 검사 건수는 변형·반복을 포함하며 문서 수나 포맷 지원률이 아닙니다.
 
 재검토에서 원시 XYZ 파서·태그 요소 수·클래스별 값 규칙의 책임 분리와 D50 규칙 재사용을 확인했습니다. 미지원 null과 문맥 보류가 전체 유효성으로 승격되지 않으며 추가 결함은 발견하지 못했습니다. 포맷·JS 문법·diff 공백 검사도 통과했습니다.
 
