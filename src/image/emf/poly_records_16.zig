@@ -120,3 +120,14 @@ test "PointS multi-poly rejects impossible u32 extents before slicing and permit
     std.mem.writeInt(u32, bytes[28..32], std.math.maxInt(u32), .little);
     try std.testing.expectError(error.InvalidEmfPoly16RecordSize, parse(fixture(.polypolyline16, &bytes)));
 }
+
+test "16-bit POLYPOLYLINE retains zero and one point groups without a stated minimum" {
+    var bytes = [_]u8{0} ** 40;
+    std.mem.writeInt(u32, bytes[24..28], 1, .little);
+    for ([_]u32{ 0, 1 }) |count| {
+        std.mem.writeInt(u32, bytes[28..32], count, .little);
+        std.mem.writeInt(u32, bytes[32..36], count, .little);
+        const length = multiple_header_size + 4 + @as(usize, count) * point_s_array.width;
+        try std.testing.expectEqual(count, (try parse(fixture(.polypolyline16, bytes[0..length]))).?.multiple.point_count);
+    }
+}

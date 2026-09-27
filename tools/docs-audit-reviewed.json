@@ -6,7 +6,7 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "798ccc538c8b62e1fc52e9d646b0a91b2e355d070060975a27a45c939a3099f3",
+      "sha256": "db668e4a7f4fe5340b425685a96e03e61548850d3d2dd822959ac52a6a433ca2",
       "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope PNG ICC inspection PNG RGBA BCP47 syntax registry alpha2 history ICC IANA matching mluc selection mluc structure mluc Unicode ICC v2 Unicode v2 text tag payload dispatch tag table structure header identifiers v4 and v2 header numeric header verification ICC registry source lookup required tags overview presence table XYZ type XYZ tags curve type TRC tags parametric curve analytic forward TRC forward sampled forward sampled inverse sampled wide inverse gamma inverse wide gamma inverse TRC inverse and extended TRC inverse matrix TRC inverse matrix TRC model matrix TRC forward fraction matrix inverse fraction matrix TRC inverse wide linear target wide positive bounds normalized and extended root compare normalized and extended root locations clipped and extended power preimage whole and extended whole parametric preimage normalized and extended whole bounds normalized and extended attained F.1a whole and extended nearest normalized and extended full inverse topology segments jump trend domain partition power clipping power level root compare active root locations rational power order normalized power level wide power level normalized root order power range power nearest ordinate order extended ordinate order ordinate distance extended ordinate distance linear range parametric range rational range nearest linear preimage extended linear preimage chromatic adaptation matrix transform ICC foundation verification review, architecture pending, full Debug Zig test 2656 passed and ReleaseFast HWP5 audit 10 steps 8905855 checks, EMF ICM and three clipping region docs direct tests and 102 shared tests each mode"
     },
     "docs/bcp47-syntax.md": {
@@ -520,6 +520,18 @@
     "docs/emf-basic-shapes.md": {
       "sha256": "005d8b1002177d13aa545597569225dd01414815e675ff0f1aaaa3bf46806982",
       "evidence": "2026-09-27 MS-EMF eight basic shapes current Zig fixed payload and float bits, direct shapes Debug Safe Fast 9 each, temporary src image root 13 each, EMF framing 97 each; historic mutants full audits not rerun, real EMF corpus zero"
+    },
+    "docs/emf-poly-records.md": {
+      "sha256": "58e94a61a6cfc7dd7973036a98c6c598b3619aef90f719f6dcdbb65414e823af",
+      "evidence": "2026-09-27 MS-EMF POLYPOLYLINE per-subline MUST >=2 defect reproduced then fixed only for long variant, direct Debug Safe Fast 15 each, EMF framing 98 each; historical mutants full audit not rerun, real EMF corpus zero"
+    },
+    "docs/emf-poly-records-16.md": {
+      "sha256": "9edf5eb7405ca45e82559cbdb2989f88c020c8b13a7268107f46f52a82d868f1",
+      "evidence": "2026-09-27 MS-EMF short PolyPoly record lacks long per-subline MUST, Zig short zero and one point groups preserved, direct Debug Safe Fast 15 each and EMF framing 98 each; historical mutants full audit not rerun, real EMF corpus zero"
+    },
+    "docs/emf-poly-draw.md": {
+      "sha256": "2e2b51073d67c25cf0d3c03aa10c4017afab8ae807fdaed7e2b12c9d38431429",
+      "evidence": "2026-09-27 MS-EMF POLYDRAW 32 and 16 parallel arrays Point enumeration current Zig parser, direct Debug Safe Fast 14 each and EMF framing 98 each; historical mutants full audit not rerun, real EMF corpus zero"
     },
     "docs/tiff-structure.md": {
       "sha256": "50b24eb78c9e9da7a610bb5faab9859448d79d2f9c4a2ab3c2d01584d6c12d97",

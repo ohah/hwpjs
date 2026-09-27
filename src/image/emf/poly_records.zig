@@ -138,3 +138,19 @@ test "multi-poly checked extents reject impossible counts before slicing" {
     std.mem.writeInt(u32, bytes[28..32], std.math.maxInt(u32), .little);
     try std.testing.expectError(error.InvalidEmfPolyRecordSize, parse(fixture(.polypolyline, &bytes)));
 }
+
+test "32-bit POLYPOLYLINE rejects sublines with fewer than two points" {
+    var bytes = [_]u8{0} ** 52;
+    std.mem.writeInt(u32, bytes[24..28], 1, .little);
+    for ([_]u32{ 0, 1, 2 }) |count| {
+        std.mem.writeInt(u32, bytes[28..32], count, .little);
+        std.mem.writeInt(u32, bytes[32..36], count, .little);
+        const length = multiple_header_size + 4 + @as(usize, count) * point_l_array.width;
+        if (count < 2) {
+            try std.testing.expectError(error.InvalidEmfPolyPolylinePointCount, parse(fixture(.polypolyline, bytes[0..length])));
+            try std.testing.expectEqual(count, (try parse(fixture(.polypolygon, bytes[0..length]))).?.multiple.point_count);
+        } else {
+            try std.testing.expectEqual(count, (try parse(fixture(.polypolyline, bytes[0..length]))).?.multiple.point_count);
+        }
+    }
+}

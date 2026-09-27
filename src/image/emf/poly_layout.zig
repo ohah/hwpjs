@@ -38,7 +38,7 @@ pub fn parse(record: records.Record, coordinate: poly_rules.Coordinate, point_wi
     const semantic_end = record_extent.requiredEnd(record, expected) orelse return sizeError(coordinate);
     const counts_end_usize: usize = @intCast(counts_end);
     const count_bytes = record.bytes[multiple_header_size..counts_end_usize];
-    if (try poly_rules.sumCounts(count_bytes, shape_count) != point_count) return error.InvalidEmfPolyPointCountTotal;
+    if (try poly_rules.sumCounts(count_bytes, shape_count, info) != point_count) return error.InvalidEmfPolyPointCountTotal;
     return .{ .multiple = .{
         .bounds = try geometry.parseRectL(record.bytes[8..24]),
         .shape_count = shape_count,

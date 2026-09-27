@@ -2942,6 +2942,24 @@ test "EMF framing validates 32-bit poly drawing arrays" {
     try t.expectError(error.InvalidEmfPolyRecordSize, framing.validate(t.allocator, &bytes));
 }
 
+test "EMF framing rejects a one-point 32-bit POLYPOLYLINE subline" {
+    const original = fixture();
+    var bytes = [_]u8{0} ** 152;
+    @memcpy(bytes[0..88], original[0..88]);
+    std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
+    std.mem.writeInt(u32, bytes[52..56], 3, .little);
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.polypolyline), .little);
+    std.mem.writeInt(u32, bytes[92..96], 44, .little);
+    std.mem.writeInt(u32, bytes[112..116], 1, .little);
+    std.mem.writeInt(u32, bytes[116..120], 1, .little);
+    std.mem.writeInt(u32, bytes[120..124], 1, .little);
+    @memcpy(bytes[132..152], original[88..108]);
+    try t.expectError(error.InvalidEmfPolyPolylinePointCount, framing.validate(t.allocator, &bytes));
+
+    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.polypolygon), .little);
+    try t.expectEqual(@as(usize, 3), (try framing.validate(t.allocator, &bytes)).records);
+}
+
 test "EMF framing validates 16-bit poly drawing arrays" {
     const original = fixture();
     var bytes = [_]u8{0} ** 148;

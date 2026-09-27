@@ -2,11 +2,11 @@
 
 ## 범위와 명세
 
-`poly_records.zig`는 Microsoft [EMR_POLYBEZIER](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/4e53793a-95af-49d4-ae1f-4c407eda9440), [EMR_POLYGON](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/eb916781-58b6-4e92-b606-68071aa65733), [EMR_POLYLINE](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/9ce6c9bb-1a13-48a5-9aa2-d95b334b5358), [EMR_POLYBEZIERTO](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/28431e45-a874-41dc-864d-8f4f69e8e831), [EMR_POLYLINETO](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/a2d8b738-8351-4a9c-9f3a-a6a8481c4c6f), [EMR_POLYPOLYGON](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/c60ff127-2711-42d3-85d4-502ca2e4caef) 및 같은 배치의 POLYPOLYLINE을 구분한다.
+`poly_records.zig`는 Microsoft [EMR_POLYBEZIER](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/4e53793a-95af-49d4-ae1f-4c407eda9440), [EMR_POLYGON](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/eb916781-58b6-4e92-b606-68071aa65733), [EMR_POLYLINE](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/9ce6c9bb-1a13-48a5-9aa2-d95b334b5358), [EMR_POLYBEZIERTO](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/28431e45-a874-41dc-864d-8f4f69e8e831), [EMR_POLYLINETO](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/a2d8b738-8351-4a9c-9f3a-a6a8481c4c6f), [EMR_POLYPOLYGON](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/c60ff127-2711-42d3-85d4-502ca2e4caef) 및 [EMR_POLYPOLYLINE](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/e23f75fd-3af6-49f3-8c86-ef121ff61701)을 구분한다.
 
 단일 도형은 Type/Size 8바이트, RectL 16바이트, Count 4바이트와 `Count * 8` PointL 배열의 완전한 의미 범위를 요구한다. POLYBEZIER는 한 개 이상의 곡선을 나타내므로 Count가 4 이상이면서 `3n+1`, POLYBEZIERTO는 3 이상이면서 `3n`이어야 한다. 일반 polygon/polyline 계열에는 명세가 별도의 wire-level 최소 Count를 MUST로 두지 않으므로 0·1점도 원문 구조로 보존한다. 재생 시 선이나 면을 만들 수 있는지는 별도 의미 계층의 책임이다.
 
-다중 도형은 32바이트 고정부 뒤 NumberOfPolygons개의 u32 count와 Count개의 PointL이 완전히 이어져야 한다. 각 하위 count의 u64 합은 전체 Count와 같아야 한다. 0개 도형·0점 하위 도형은 명시적인 금지 규칙이 없어 구조적으로 보존한다. Count를 남은 바이트에 맞춰 줄이거나 누락점을 0으로 채우지 않는다.
+다중 도형은 32바이트 고정부 뒤 하위 도형 수만큼의 u32 count와 Count개의 PointL이 완전히 이어져야 한다. 각 하위 count의 u64 합은 전체 Count와 같아야 한다. 32비트 POLYPOLYLINE의 각 `aPolylinePointCount`는 공식 명세의 `MUST be >= 2`를 적용한다. POLYPOLYGON의 0·1점 하위 도형과 하위 도형이 전혀 없는 배열은 별도 금지 규칙이 없어 구조적으로 보존한다. Count를 남은 바이트에 맞춰 줄이거나 누락점을 0으로 채우지 않는다.
 
 명세의 16K/1,360 최대점 표는 현재 pen 폭과 playback device의 wide-line 지원에 따라 달라진다. 메모리 구조 parser는 장치 상태를 갖지 않으므로 이를 고정 입력 상한으로 사용하지 않으며, 큰 count는 checked record extent로 제한한다.
 
@@ -33,6 +33,8 @@
 
 적대적 검증은 (1) 단일 record의 count-derived 정확 extent 제거, (2) POLYBEZIER의 `3n+1` 나머지 검사 제거, (3) PolyPoly 하위 count 합계 검사 제거, (4) Count endian 반전, (5) framing 연결 제거의 다섯 변이를 임시 복사본에 각각 주입했다. Debug·ReleaseSafe·ReleaseFast의 15회 실행이 모두 정확 크기·Bezier 문법·합계·wire byte order·전체 stream 회귀로 변이를 탐지했다. 변이는 제품 작업 트리에 적용하지 않았다.
 
-최초 구현 검토에서는 polygon/polyline 및 PolyPoly 하위 도형에 2점 이상을 강제했으나, 공식 record 문서가 이를 wire-level `MUST`로 규정하지 않는다는 반례를 확인했다. 해당 과잉 거부를 제거하고 0·1점 및 빈 PolyPoly를 보존하는 회귀를 추가한 뒤 전체 검증을 처음부터 다시 수행했다. 최종 원복 상태의 Debug·ReleaseSafe·ReleaseFast audit는 각 40/40 단계와 전체 1,326/1,326 테스트(네이티브 1,287개), HWP 검사 8,905,827건을 통과했다.
+최초 구현 검토에서는 polygon/polyline 및 PolyPoly 하위 도형에 일괄적으로 2점 이상을 강제했다가 과잉 거부로 판단해 제거했다. 당시 실행한 최종 원복 상태의 Debug·ReleaseSafe·ReleaseFast audit는 각 40/40 단계와 전체 1,326/1,326 테스트(네이티브 1,287개), HWP 검사 8,905,827건을 통과했다. 하지만 그 결론은 32비트 POLYPOLYLINE의 명시적 최소 2점 조건을 놓쳤으므로 현재 계약의 완전성 근거로 사용하지 않는다.
 
 16비트 PointS 변형은 [별도 어댑터 계약](emf-poly-records-16.md)이 같은 공통 규칙을 사용한다. POLYDRAW/16의 point-type 배열은 다른 record이므로 [별도 parser 계약](emf-poly-draw.md)이 claim한다. 실제 HWP corpus 584개에는 EMF가 없어 실제 한글 생성기 표본 근거는 없고, 현재 증거는 공식 wire 명세와 합성 framing에 한정한다.
+
+2026-09-27 재검증에서는 공식 POLYPOLYLINE의 하위 count 조건 누락을 회귀로 먼저 재현하고 `poly_rules.zig`의 32비트 해당 종류에만 검사하도록 수정했다. POLYPOLYGON의 0·1점 하위 도형은 그대로 수용한다. 전용 모듈의 Debug·ReleaseSafe·ReleaseFast 테스트는 각 15/15개이고 루트 framing에는 한 점짜리 POLYPOLYLINE 거부·동일 바이트 POLYPOLYGON 수용 검사를 추가했다. 과거 다섯 변이와 전체 audit 수치를 수정 후 검증으로 소급하지 않는다.

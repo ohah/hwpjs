@@ -38,10 +38,15 @@ pub fn validateSingleCount(shape: Shape, count: u32) !void {
     }
 }
 
-pub fn sumCounts(bytes: []const u8, count: u32) !u64 {
+pub fn sumCounts(bytes: []const u8, count: u32, info: Info) !u64 {
     if (@as(u64, count) * 4 != bytes.len) return error.InvalidEmfPolyCountArraySize;
     var sum: u64 = 0;
-    for (0..count) |index| sum += std.mem.readInt(u32, bytes[index * 4 ..][0..4], .little);
+    for (0..count) |index| {
+        const group_count = std.mem.readInt(u32, bytes[index * 4 ..][0..4], .little);
+        if (info.shape == .poly_polyline and info.coordinate == .long and group_count < 2)
+            return error.InvalidEmfPolyPolylinePointCount;
+        sum += group_count;
+    }
     return sum;
 }
 
@@ -63,6 +68,7 @@ test "poly count sum uses u64 and exact little-endian array extent" {
     var bytes = [_]u8{0} ** 8;
     std.mem.writeInt(u32, bytes[0..4], std.math.maxInt(u32), .little);
     std.mem.writeInt(u32, bytes[4..8], std.math.maxInt(u32), .little);
-    try std.testing.expectEqual(@as(u64, 8589934590), try sumCounts(&bytes, 2));
-    try std.testing.expectError(error.InvalidEmfPolyCountArraySize, sumCounts(bytes[0..4], 2));
+    const info = Info{ .shape = .poly_polyline, .coordinate = .long };
+    try std.testing.expectEqual(@as(u64, 8589934590), try sumCounts(&bytes, 2, info));
+    try std.testing.expectError(error.InvalidEmfPolyCountArraySize, sumCounts(bytes[0..4], 2, info));
 }

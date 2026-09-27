@@ -2,7 +2,7 @@
 
 ## 범위와 명세
 
-`poly_draw.zig`는 Microsoft [EMR_POLYDRAW16](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/57f0cfe7-2139-4199-b6ad-61fb61a1d4ec) 및 같은 PointL 배치의 EMR_POLYDRAW를 구분한다. 두 record는 Type/Size, RectL, Count 뒤 Count개의 점과 정확히 Count바이트인 type 배열을 순서대로 가진다. `POLYDRAW`는 8바이트 PointL, `POLYDRAW16`은 4바이트 PointS를 사용한다.
+`poly_draw.zig`는 Microsoft [EMR_POLYDRAW16](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/57f0cfe7-2139-4199-b6ad-61fb61a1d4ec) 및 [EMR_POLYDRAW](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/95794faf-eed8-4d5b-b6ff-c6765a58166e)를 구분한다. 두 record는 Type/Size, RectL, Count 뒤 Count개의 점과 정확히 Count바이트인 type 배열을 순서대로 가진다. `POLYDRAW`는 8바이트 PointL, `POLYDRAW16`은 4바이트 PointS를 사용한다.
 
 내용 끝은 4바이트 record 경계로 올림하며 0~3바이트 padding은 의미를 부여하지 않고 빌려 보존한다. `28 + Count * (point_width + 1)`과 정렬을 u64에서 계산하고 선언/실제 record 길이 일치와 의미 범위 포함을 확인한 뒤에만 usize offset으로 바꾼다. 그 뒤 후행 data는 padding에 포함하지 않으며 [공통 호환성 문서](emf-poly-record-compatibility.md)가 이 경계를 소유한다. 입력 길이에 맞춰 Count를 줄이거나 type을 생성하지 않는다.
 
@@ -35,3 +35,5 @@ points와 types는 같은 Count에서 파생되어 개수가 항상 같지만 �
 최종 원복 상태의 Debug·ReleaseSafe·ReleaseFast audit는 각 40/40 단계와 전체 1,343/1,343 테스트(네이티브 1,304개), HWP 검사 8,905,827건을 통과했다.
 
 그림 상태 전이와 렌더링, POLYDRAW가 path 안팎에서 만드는 결과는 아직 미구현이다. 실제 HWP corpus 584개에는 EMF가 없어 실제 한글 생성기 표본과 비교했다는 뜻도 아니다.
+
+2026-09-27 재검증에서는 공식 POLYDRAW/16의 병렬 배열과 Point Enumeration을 현재 `poly_draw.zig`·`point_type_array.zig`에 대조했다. Debug·ReleaseSafe·ReleaseFast 전용 모듈 테스트는 각 14/14개, 루트 `EMF framing`은 32비트 POLYPOLYLINE 회귀 추가 후 각 98/98개 통과했다. 과거 다섯 변이와 세 모드 전체 audit은 이번에 재실행하지 않았다.
