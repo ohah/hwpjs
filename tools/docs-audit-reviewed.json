@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "fb8d3b88a0daf6029eced2bf8182aafbb99b509dc7b154f76f69be8833c37a63",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels and PNG transparency review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "5082d6022341f281c6a9c6b111be34857c7a7d71db0441672f7ee7dcfbe421f5",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency and PNG palette metadata review, architecture pending, full Debug Zig test incomplete"
+    },
+    "docs/png-palette-metadata.md": {
+      "sha256": "92fab7ee3b70d338027c6c60c713a1a78d0beff0bd7790eccc3ec2737425ac52",
+      "evidence": "2026-09-27 W3C PNG Third Edition bKGD hIST order sample and histogram zero semantics current Zig metadata palette indices and pixels, Debug Safe Fast focused 5 each, local probe CFB independent JS oracle 143 accepted 382 rejected 32 actual PNG 0 bKGD 0 hIST; historic full audit not rerun"
     },
     "docs/png-transparency.md": {
       "sha256": "3831a665d71a6ca1a3df3980bba5332acbe4e813729a31300610525d1624c620",

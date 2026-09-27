@@ -25,6 +25,14 @@ pixels 보고서에는 optional background/histogram과 histogram_usage_validate
 
 ## 검증
 
+### 현재 재검증 (2026-09-27)
+
+[PNG Third Edition §5.6·§11.3.4.1·§11.3.4.2](https://www.w3.org/TR/png-3/)의 bKGD 색 유형별 길이·표본값, hIST의 PLTE 항목당 u16 빈도와 0의 의미, PLTE/IDAT 순서 규칙을 현재 `background.zig`·`histogram.zig`·`metadata.zig`·`palette_indices.zig`·`pixels.zig`에 대조했습니다. truecolor의 hIST는 권장 palette에 대한 근사치라 현재 코드가 픽셀-항목 매핑을 검증하지 않는 경계도 확인했습니다.
+
+Debug·ReleaseSafe·ReleaseFast의 `PNG palette metadata` 집중 필터는 각각 root 포함 5/5 통과했습니다. 로컬 probe와 독립 JS oracle의 합성·추적 파일 대조는 정상 143건·거부 382건입니다. 실제 HWP의 PrvImage PNG 32개에서는 bKGD·hIST가 모두 0개여서 양성 실파일 검증으로 세지 않습니다. 아래 전체 audit·네이티브 총계는 과거 단계의 기록이고 이번에 재실행한 수치가 아닙니다.
+
+### 과거 검증 기록
+
 네이티브는 배경색의 alpha 유무별 길이/값, 마스킹, 모든 8-bit 배경 인덱스, histogram 항목 수 1~256·u16 경계·원문 변경 후 보존, 잘못된 한도/길이, 패딩과 실제 마지막 픽셀의 구분을 검사합니다. 초기 bKGD 오류와 해제 후 hIST 사용 오류에서 모든 할당 실패 정리도 검사합니다.
 
 테스트용 WASM mode 132는 PNG를 받아 13개 u32 LE 보고서와 frequencies[256]의 u16 LE 배열을 반환합니다. 보고서 순서는 배경 종류(없음 0/gray 1/RGB 2/indexed 3), 배경 인덱스, raw 3개, value 3개, hIST 존재, 항목 수, 사용 검사 여부, 남은 ancillary 청크/바이트입니다. 제품 JS API에 추가한 모드는 아닙니다.
