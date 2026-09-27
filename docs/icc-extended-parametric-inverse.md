@@ -2,6 +2,8 @@
 
 ## 계약
 
+[ICC.1:2022 Annex F.1](https://www.color.org/specification/ICC.1-2022-05.pdf#page=115)은 비상수·전체 단조성, 평탄 역상의 입력 선택, 미도달 목표의 최근접 실제 출력을 요구합니다. 이 문서의 `ambiguous`·`unattained`·`undecided`는 규칙을 임의로 보정하지 않기 위한 프로젝트 결과 구분이지 명세가 정의한 ABI가 아닙니다.
+
 `parametric_inverse.selectWide(precision,curve,target)`는 u512 목표에 대해 전체 곡선의 비상수·단조성을 검증한 뒤 최근접 출력과 그에 대응하는 입력을 구합니다. selected는 u512 유리수/기호적 출력과 u1024 유리수/기호근 입력입니다. unattained는 최근접 실제 출력 부재, ambiguous는 서로 다른 같은 거리 출력 두 개, undecided는 비교 정밀도 부족입니다. 출력 동률의 임의 우선순위는 추가하지 않습니다.
 
 실제 출력은 있어도 규칙상 필요한 최대/최소 입력이 없으면 기존 UnattainedIccPreimageMaximum/Minimum 오류를 전파합니다. 이는 unattained 출력 상태와 다릅니다. ConstantIccCurve·NonMonotonicIccCurve·실수 정의역 오류도 기존처럼 거부합니다. [기존 전체 역변환 계약과 F.1 근거](icc-parametric-inverse.md)를 그대로 적용합니다.
@@ -28,6 +30,14 @@ witness 입력을 항상 1로 변경, ambiguous를 출력 부재로 변경, unde
 
 ## 최종 감사
 
-Debug·ReleaseSafe·ReleaseFast 전체 audit는 모두 종료 코드 0, 20/20 단계, 네이티브 682/682, WASM checks=6,986,563으로 통과했습니다. 이전 6,978,603에 신규 7,960회 호출이 추가됐습니다. 로그는 `/tmp/hwpjs-extended-inverse-{Debug,ReleaseSafe,ReleaseFast}.log`입니다. ReleaseSafe·ReleaseFast 산출물의 신규 직접 대조와 네 출력 변형 검출도 모두 통과했습니다.
+당시 Debug·ReleaseSafe·ReleaseFast 전체 audit는 모두 종료 코드 0, 20/20 단계, 네이티브 682/682, WASM checks=6,986,563으로 통과했습니다. 이전 6,978,603에 신규 7,960회 호출이 추가됐습니다. 당시 로그 경로는 `/tmp/hwpjs-extended-inverse-{Debug,ReleaseSafe,ReleaseFast}.log`였으나 현재 파일은 존재하지 않습니다. 당시 ReleaseSafe·ReleaseFast 산출물의 신규 직접 대조와 네 출력 변형 검출도 모두 통과했습니다.
 
-변경 Zig 포맷·JS 문법·diff 공백·문서 로컬 링크 6개를 확인했습니다. 최종 재검토에서는 전체 곡선 gate 선행, 원래 목표 폭과 checked 변환, factory 증거점의 제한된 사용, 유리수 출력의 공통 역상 선택, 출력 부재·모호성·미확정·입력 극값 부재 구분, 결과 태그 선행 확인, 기존 wire 계약·임시 버퍼 해제·전체 초기화를 확인했습니다. 이번 범위에서 추가 결함은 발견하지 않았습니다. TRC/행렬 전체 역변환 연결·제품 JS API·전체 HWP/HWPX 문서 검증은 아직 완료되지 않았습니다.
+당시 변경 Zig 포맷·JS 문법·diff 공백·문서 로컬 링크 6개를 확인했습니다. 당시 최종 재검토에서는 전체 곡선 gate 선행, 원래 목표 폭과 checked 변환, factory 증거점의 제한된 사용, 유리수 출력의 공통 역상 선택, 출력 부재·모호성·미확정·입력 극값 부재 구분, 결과 태그 선행 확인, 기존 wire 계약·임시 버퍼 해제·전체 초기화를 확인했습니다. 당시 범위에서 추가 결함은 발견하지 않았습니다. 당시 미완료였던 [확장 TRC](icc-extended-trc-inverse.md)·[분수 Matrix/TRC](icc-fraction-matrix-trc-inverse.md) 연결은 지금은 별도 계층에 구현됐지만, 제품 JS API·전체 HWP/HWPX 문서 검증 완료를 뜻하지 않습니다.
+
+## 2026-09-27 문서 재검증
+
+현재 `parametric_inverse.selectFor`는 u128/u512 목표 폭을 공유하며 목표 유효성 검사→전체 비상수·단조 gate→최근접 출력→입력 선택 순서를 유지합니다. `parametric_inverse_choice.resolveFor`는 유리수·클리핑 0/1 출력에 `parametric_attained_inverse.selectWide`를 사용하고, 내부 power 출력의 witness는 factory choice와 gate 증거가 있는 경우에만 반환합니다. 확장 목표를 u128로 좁히지 않고 유리수 변환도 checked cast를 거칩니다. 출력 미도달·서로 다른 동률·비교 미확정·입력 극값 부재는 서로 다른 결과 또는 오류로 남깁니다.
+
+Debug·ReleaseSafe·ReleaseFast의 `zig test src/image/icc/extended_parametric_inverse_tests.zig -O <모드>`는 각 6/6 통과했습니다. 로컬 ReleaseFast 테스트용 WASM mode235 독립 단조성·선형 역상 critical-cell 대조는 selected=3,625·unattained=28·ambiguous=89·rejected=4,217·undecided=1로 일치했습니다. 후속 ReleaseFast 단독 `trc_inverse_tests.zig` 4/4와 `matrix_trc_fraction_inverse_tests.zig` 3/3은 연결 확인일 뿐 그 문서 전체를 자동 승인하지 않습니다. 앞 문서 검증의 동일 제품 코드 ReleaseFast HWP5 전체 감사 10/10 단계·WASM checks=8,905,855는 재사용 근거입니다.
+
+과거 Debug·ReleaseSafe 전체 감사·출력/소스 변형·시스템 ICC 15개 태그 30건 대조는 이번에 재실행하지 않았습니다. 이번 결과를 제품 JS 색상 변환, 임의 프로파일, 실제 HWP/HWPX 표시·저장 동치로 확대하지 않습니다.
