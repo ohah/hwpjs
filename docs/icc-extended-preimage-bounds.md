@@ -2,9 +2,11 @@
 
 ## 계약과 미완료 경계
 
+[ICC.1:2022 §10.18 Table 68·Annex F.1](https://www.color.org/specification/ICC.1-2022-05.pdf)은 곡선 분기·클리핑과 단조 역함수의 평탄/미도달 출력 선택을 규정합니다. 이 문서의 경계·attained 및 기호근 순서 표현은 F.1 선택 전에 쓰는 프로젝트 중간 계약이지 명세의 반환 타입은 아닙니다.
+
 `parametric_preimage_bounds.solveWide(precision, curve, n, d)`는 u512 목표의 전체 도달 역상에서 하한·상한과 각각의 attained를 반환합니다. 좌표는 u1024 유리수 또는 u1024 기호근과 affine 계수입니다. attained=false인 상한은 실제 최댓값이 아닙니다. empty·undecided·bounds를 구분하며 어느 단계라도 미확정이면 부분 경계를 노출하지 않습니다.
 
-전체 정의역·목표 검증과 역상 생성은 [확장 전체 역상](icc-extended-parametric-preimage.md)이 소유합니다. 이번 확장은 F.1 역함수 값 선택·최근접 출력 선택·전체 ICC 역변환 완료를 의미하지 않습니다. 제품 JS API도 바꾸지 않습니다.
+전체 정의역·목표 검증과 역상 생성은 [확장 전체 역상](icc-extended-parametric-preimage.md)이 소유합니다. F.1 선택은 [확장 도달 목표 선택](icc-extended-attained-inverse.md), 최근접 출력과 역변환은 [확장 최근접 출력](icc-extended-parametric-nearest.md)·[확장 전체 역변환](icc-extended-parametric-inverse.md)의 별도 현재 구현 범위입니다. 이 경계 모듈만으로 전체 ICC 역변환 완료나 제품 JS API 제공을 주장하지 않습니다.
 
 `normalized_root_order.Wide.compare`는 동일하게 인코딩한 지수 p/q의 근을 정확 비교합니다. 두 u1024 비율의 교차 곱은 u2048로 계산합니다. 음의 근·역수 지수는 순서를 뒤집고 `inAffine`은 음의 기울기에 대해 다시 뒤집습니다. zero는 지수와 무관하게 비교할 수 있지만, 두 nonzero의 지수가 다르면 부호가 달라도 IncompatibleIccPowerRoots입니다. 유효성 검사는 부호 단축보다 먼저 하며 기울기 0은 NonIsolatedIccAffineRoot입니다. 서로 다른 지수의 일반 근 비교 API는 아닙니다.
 
@@ -39,8 +41,16 @@ Debug WASM 출력에 경계 교환, attained 제거, undecided를 empty로 변�
 
 ## 최종 감사
 
-Debug·ReleaseSafe·ReleaseFast 전체 audit는 모두 종료 코드 0, 20/20 단계, 네이티브 657/657, WASM checks=6,955,401로 통과했습니다. 이전 6,947,166에 확장 경계 1,043회와 근 순서 7,192회, 총 8,235회 호출이 추가됐습니다. 로그는 `/tmp/hwpjs-extended-bounds-{Debug,ReleaseSafe,ReleaseFast}.log`입니다.
+당시 Debug·ReleaseSafe·ReleaseFast 전체 audit는 모두 종료 코드 0, 20/20 단계, 네이티브 657/657, WASM checks=6,955,401로 통과했습니다. 이전 6,947,166에 확장 경계 1,043회와 근 순서 7,192회, 총 8,235회 호출이 추가됐습니다. 당시 로그 경로는 `/tmp/hwpjs-extended-bounds-{Debug,ReleaseSafe,ReleaseFast}.log`였으나 현재 파일은 존재하지 않습니다.
 
 ReleaseSafe·ReleaseFast 실제 산출물의 신규 직접 대조도 각각 같은 수치로 통과했고 열린 경계 강제 포함 변형을 검출했습니다. 변경 Zig 포맷·JS 문법·diff 공백과 문서 로컬 링크 8개를 확인했습니다.
 
-최종 재검토는 입력 선행 검증, 미확정 시 부분 결과 비노출, 분기 순서 소유권, 음의 근·역수·affine 기울기, 같은 경계의 attained OR, 정확한 유리수 끝점 우선, 교차 곱의 전체 폭, 출력 초기화·할당 후 오류 경로 부재를 확인했습니다. 이번 범위에서 추가 결함은 발견하지 않았습니다. 확장 F.1 선택·최근접 출력·전체 ICC 역변환 및 전체 HWP/HWPX 문서 검증은 여전히 미완료입니다.
+당시 최종 재검토는 입력 선행 검증, 미확정 시 부분 결과 비노출, 분기 순서 소유권, 음의 근·역수·affine 기울기, 같은 경계의 attained OR, 정확한 유리수 끝점 우선, 교차 곱의 전체 폭, 출력 초기화·할당 후 오류 경로 부재를 확인했습니다. 당시 범위에서 추가 결함은 발견하지 않았습니다. 당시 미완료였던 F.1 선택·최근접·전체 역변환은 지금은 위 별도 계층에 구현돼 있으나, 전체 ICC 색상 관리와 HWP/HWPX 표시·저장 동치는 여전히 미검증입니다.
+
+## 2026-09-27 문서 재검증
+
+현재 `parametric_preimage_bounds.solveFor`는 기존·u512 역상 결과를 먼저 구해 undecided를 전파하고, 하위 선형 경계와 상위 power 경계를 분리된 입력 도메인의 순서대로 조립합니다. `power_preimage_bounds_impl.Of`는 폭별 구현을 공유하고 동일 좌표의 attained를 OR로 합치며 정확히 일치한 유리수 끝점을 유지합니다. `normalized_root_order.Wide.compare`는 유효성·동일 지수 확인 후 두 u1024 비율을 u2048 교차 곱으로 비교하고 음수/역수/음의 affine 기울기의 순서를 반전합니다.
+
+Debug·ReleaseSafe·ReleaseFast에서 `zig test src/image/icc/extended_preimage_bounds_tests.zig -O <모드>`는 각 6/6, `zig test src/image/icc/extended_root_order_tests.zig -O <모드>`는 각 3/3 통과했습니다. 로컬 ReleaseFast 테스트용 WASM의 mode230 독립 경계 대조는 comparisons=888·rejected=154·undecided=1, mode229 근 순서 대조는 comparisons=6,635·rejected=557로 일치했습니다. 후속 ReleaseFast 단독 테스트는 확장 도달 목표 선택 5/5·전체 역변환 6/6이었지만 각 후속 문서 전체를 자동 승인하지 않습니다.
+
+같은 제품 코드로 앞 문서 검증에서 실행한 ReleaseFast HWP5 전체 감사 10/10 단계·WASM checks=8,905,855는 재사용 근거로만 세었습니다. 과거 Debug·ReleaseSafe 전체 감사·출력/소스 변형·시스템 ICC 15개 태그 대조는 이번에 재실행하지 않았습니다. 현재 수치로 임의 프로파일의 표시·저장 동치를 주장하지 않습니다.
