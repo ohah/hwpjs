@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "4567889263f98d7357bbdb50b94d3e136c741cde724471149fc1064507f858b4",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB and PNG iCCP envelope review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "7872ebbd0af07669ee23aa675d13763532852e0a9a34c016c98ec2fcdbbe985a",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope and PNG ICC inspection review, architecture pending, full Debug Zig test incomplete"
+    },
+    "docs/png-profile-inspection.md": {
+      "sha256": "c1c55c40ee5340971a0879b164d689b23acf1a0a931f6bf51905dc904a484a53",
+      "evidence": "2026-09-27 W3C PNG Third Edition iCCP and current Zig profile inspection collector ownership optional required payload reports, Debug Safe Fast PNG profile 5 each Safe selections 2 each, local probe mode239 independent JS 43 accepted 288 rejected mode145 non ICC envelope; historic full audit mutants and system profiles not rerun"
     },
     "docs/png-embedded-profile.md": {
       "sha256": "4a2fc71afd29725c5c9443e9d4eee8d0d95f389843ad3b0fa6460cc01db83847",

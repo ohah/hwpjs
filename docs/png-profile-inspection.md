@@ -12,9 +12,13 @@
 
 레이아웃 정책은 호출자가 bounded/icc_2022를 명시합니다. 버전 major만 보고 최신 배치 규칙을 소급 적용하지 않습니다. bounded의 중첩·미참조 바이트 보고와 layout_validated는 그대로 보존합니다. 압축 입력·출력 한도와 태그 수 한도는 기존 검사기에 전달합니다.
 
-semantics_deferred는 항상 true입니다. 여기서는 ICC 헤더 scalar·식별자·필수 태그·태그별 의미·색변환을 모두 인증하지 않습니다. 빈 태그 테이블의 경계 검사가 성공해도 완전한 프로파일 검증 성공은 아닙니다. CRC·순서·중복·색 정보 우선순위는 PNG 조립 계층이 소유합니다. sRGB/iCCP 동시 존재 권고를 이 모듈에서 무조건 오류로 바꾸지 않습니다.
+semantics_deferred는 항상 true입니다. 기본 검사에는 ICC 헤더·태그 테이블 구조와 PNG 색 공간 대응이 포함되며, 필수 태그와 태그 payload 검사는 `Options.required`·`Options.payloads`로 명시적으로 선택할 수 있습니다. 어느 경로도 모든 태그 의미나 색변환을 인증하지 않습니다. 빈 태그 테이블의 경계 검사가 성공해도 완전한 프로파일 검증 성공은 아닙니다. CRC·순서·중복은 PNG 조립 계층이 검사하지만 색 정보 우선순위의 실제 선택은 아직 보류합니다. sRGB/iCCP 동시 존재 권고를 이 모듈에서 무조건 오류로 바꾸지 않습니다.
 
-## 검증과 남은 연결
+## 현재 재검증과 과거 기록
+
+2026-09-27 현재 재검증에서는 [PNG Third Edition §11.3.2.3의 iCCP 색 공간 대응·압축 프로파일 규칙](https://www.w3.org/TR/2025/REC-png-3-20250624/#11iCCP)을 현재 `profile_inspection`·`profile_collector`·`pixels` 경계에 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 `PNG profile` 집중 필터는 각각 root 포함 5/5, ReleaseSafe의 `PNG required selection`·`PNG payload selection`은 각각 root 포함 2/2 통과했습니다. 로컬 probe mode239의 독립 JS 대조는 정상 43건·거부 288건이 일치했고, mode145가 임의의 비ICC 압축 본문을 봉투 해제만 하는 계약도 별도로 재확인했습니다. 아래의 전체 audit 3모드·변형 5종·macOS 시스템 프로파일 11개/합성 PNG 31건은 이번에 재실행하지 않은 과거 기록입니다. 실제 HWP/HWPX 내부 iCCP 양성 파일이나 색변환·렌더링·저장 동치는 현재 근거가 아닙니다.
+
+### 과거 검증 기록
 
 신규 네이티브 테스트는 color type 256값×RGB/GRAY/CMYK, 팔레트·알파 대응, 임의 압축 해제 결과 거부, 색 공간 불일치, 출력 한도, borrowed 이름, 명시적 레이아웃 정책과 의미 보류, 모든 정상 경로 할당 실패 지점 정리를 확인합니다. 압축 fixture 생성은 기존 봉투 테스트와 별도 파일에서 공유합니다.
 
@@ -24,7 +28,7 @@ semantics_deferred는 항상 true입니다. 여기서는 ICC 헤더 scalar·식�
 
 pixels.decode/inspect는 profile_collector를 기본 실행합니다. Options.profile의 기본 배치 정책은 bounded이고 호출자가 icc_2022를 명시할 수 있습니다. collector가 iCCP 중복과 PLTE/IDAT 이후 배치를 거부하고, 기존 structure/chunks가 CRC와 컨테이너 경계를 검사합니다. 압축 payload·출력·태그 수 한도는 Options.profile로 전달합니다.
 
-보고서는 프로파일 바이트 수·태그 수·버전 major·색 공간·배치 통계만 복사합니다. 이름·태그 슬라이스·해제 버퍼를 픽셀 보고서에 남기지 않습니다. iCCP 의미 검증이 미완료이므로 ancillary deferred 카운터는 차감하지 않고 color_semantics_deferred도 true로 유지합니다. sRGB와의 동시 존재를 자동 거부하지 않습니다.
+보고서는 프로파일 바이트 수·태그 수·버전 major·색 공간·배치 통계와, 선택했다면 필수 태그/태그 payload 검사 결과를 값으로 복사합니다. 이름·태그 슬라이스·해제 버퍼를 픽셀 보고서에 남기지 않습니다. iCCP 의미 검증이 미완료이므로 ancillary deferred 카운터는 차감하지 않고 color_semantics_deferred도 true로 유지합니다. sRGB와의 동시 존재를 자동 거부하지 않습니다.
 
 신규 픽셀 테스트는 기본 연결과 모든 할당 실패, 중복·PLTE/IDAT 뒤 배치, 팔레트 RGB/GRAY 불일치, 압축 해제 한도를 검사합니다. 기존 sRGB 테스트의 임의 iCCP 바이트는 구조적으로 검사 가능한 GRAY fixture로 변경했습니다. WASM 독립 대조와 세 모드 전체 감사·적대적 검증 결과는 아래에 기록합니다.
 
@@ -54,4 +58,4 @@ macOS 시스템 프로파일 중 RGB/GRAY 11개를 원본 그대로 zlib 압축�
 
 수정 후 Debug·ReleaseSafe·ReleaseFast 전체 audit가 모두 종료 코드 0, 20/20 단계, 네이티브 694/694, WASM checks=6,992,787로 통과했습니다. 이전 6,992,456에 신규 331건이 추가됐습니다. ReleaseSafe·ReleaseFast 실제 감사 산출물에서도 신규 직접 대조와 변형 5종 검출이 통과했습니다. 기존 mode145 파일은 변경 없이 보존했습니다.
 
-최종 재검토에서는 PNG 구조/ICC 경계/색 공간/collector의 책임 분리, 보류 카운터 유지, 이름·태그·해제 버퍼 수명, 실패 경로 정리, 명시적 배치 정책과 한도 전달, 중복·순서 및 기존 probe 계약을 확인했습니다. 발견한 파일 충돌을 수정한 후 이번 범위에서 추가 결함은 발견하지 못했습니다. 포맷·JS 문법·diff 공백·문서 로컬 링크 4개를 확인했습니다. ICC 전체 태그 의미·필수 태그 통합·색 정보 우선순위·렌더링·HWP/HWPX 전체 문서 검증은 아직 미완료입니다.
+당시 최종 재검토에서는 PNG 구조/ICC 경계/색 공간/collector의 책임 분리, 보류 카운터 유지, 이름·태그·해제 버퍼 수명, 실패 경로 정리, 명시적 배치 정책과 한도 전달, 중복·순서 및 기존 probe 계약을 확인했습니다. 발견한 파일 충돌을 수정한 후 당시 범위에서 추가 결함은 발견하지 못했습니다. 포맷·JS 문법·diff 공백·문서 로컬 링크 4개를 확인했습니다. 이후 필수 태그와 태그 payload의 선택형 통합이 추가됐지만, ICC 전체 태그 의미·색 정보 우선순위·렌더링·HWP/HWPX 전체 문서 검증은 아직 미완료입니다.
