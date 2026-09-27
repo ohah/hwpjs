@@ -30,3 +30,5 @@
 - 전체 `audit`는 Debug, ReleaseSafe, ReleaseFast에서 각각 40/40 step과 1454/1454 test가 통과했습니다. 이 중 native Zig test는 1415개입니다.
 
 프로젝트의 HWP 표본 코퍼스에서는 이 레코드가 발견되지 않았으므로 실제 표본 동등성 주장은 하지 않습니다. 합성 표본은 공식 wire 계약과 상위 framing을 함께 검증하기 위한 것입니다.
+
+2026-09-28 현행 재검증에서는 공식 24바이트 record의 핸들·첫 항목·개수·미정의 예약 필드와 현재 파서·Object Table 참조 검사를 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 루트 `COLORCORRECTPALETTE` 필터는 각 5/5개 통과했고, 같은 제품 코드의 전체 Debug 테스트는 2,661/2,661개 통과했습니다. 범위 검사와 빈 끝 범위 허용은 현재 프로젝트의 의미 검증 정책이지 명세가 직접 요구하는 wire 필드는 아닙니다. 위의 14개 변이·세 모드 전체 `audit`와 실제 EMF 양성 실파일 검사는 이번에 재실행하지 않았습니다.

@@ -33,6 +33,8 @@ record의 필수 prefix는 32바이트입니다. MS-EMF 공통 호환성 규칙�
 
 최종 Debug, ReleaseSafe, ReleaseFast `audit`는 각각 40/40 step과 1460/1460 test가 통과했습니다. 이 중 native Zig test는 1421개입니다. 584개 HWP corpus의 2,167개 BinData 중 확장자가 WMF인 항목은 66개였지만 EMF signature 후보는 0개였으므로, 이번 record의 실제 HWP 표본 동등성은 주장하지 않습니다.
 
+2026-09-28 현행 재검증에서는 공식 ColorAdjustment 객체의 12개 2바이트 필드·권고 범위와 SETCOLORADJUSTMENT record의 32바이트 prefix를 현재 파서에 다시 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 루트 `SETCOLORADJUSTMENT` 필터는 각 4/4, 객체 파일 테스트는 각 3/3개 통과했습니다. 같은 제품 코드의 전체 Debug `zig build test --summary all`은 2,661/2,661개 통과했습니다. 위의 24개 변이·세 모드 전체 `audit`와 실제 EMF 양성 실파일 검사는 이번에 재실행하지 않았으며, 당시 수치를 현재 재검증으로 소급하지 않습니다.
+
 ## 미구현 경계
 
 현재 구현은 wire 구조 검증과 원값 보존까지입니다. playback device context에 값을 적용하거나 SaveDC/RestoreDC 상태로 복원하는 동작, halftone bitmap transfer의 실제 색 조정, 색 변환과 렌더링은 구현하지 않았습니다. 구조 파싱 성공을 시각적 출력 지원으로 해석하지 않습니다.
