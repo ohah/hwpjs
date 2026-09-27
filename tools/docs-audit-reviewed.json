@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "7ded8198ff68c5888bec0ffcf3146c7f7db57c825c502846a95fbd311ee4b9a6",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo and author evidence review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "ea5b7915b65749cbc6802290b9b3ca6a7d687ad60793e4d8ba45e0620ac8cb41",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author and parent contract evidence review, architecture pending, full Debug Zig test incomplete"
+    },
+    "docs/hwp5-docinfo-contracts.md": {
+      "sha256": "2d442518d1c9a9a9f0e06190bd143d32380477c923ffcc481afbf036ec6d9986",
+      "evidence": "2026-09-27 local HWP5 tables 4 13 16 and current reader resources references document container ownership, corrected tag94 unknown boundary, Debug Safe Fast docinfo-focused tests 40 each; child contract real-file semantics excluded"
     },
     "docs/hwp5-track-authors.md": {
       "sha256": "e9143ecc443a4bebb10e8824a8df325d856069429b436ae1f4d112047220814f",

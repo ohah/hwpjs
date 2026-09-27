@@ -4,7 +4,7 @@
 
 이 문서는 해당 주제의 현재 책임·소유권·미지원 경계를 소유합니다. 계약과 새 검증 결과는 해당 주제에서 관리하고, 내용이 커지면 별도 문서로 분리하여 연결합니다.
 
-- [금칙 문자 관측 배치](hwp5-forbidden-chars.md)는 태그 94의 명시적 목록 뷰와 실제 HWP/HWPX 차이를 관리합니다. 기본 reader dispatch·레벨 정책·금칙 행 나눔 지원과 구분합니다.
+- [금칙 문자 관측 배치](hwp5-forbidden-chars.md)는 태그 94의 명시적 목록 뷰와 실제 HWP/HWPX 차이를 관리합니다. 기본 DocInfo reader는 태그 94를 `unknown`으로 보존하며, 선택된 문서 검증 경로의 `forbidden_validation.zig`가 레벨·관측 배치를 별도로 검사합니다. 금칙 행 나눔 지원과도 구분합니다.
 
 - [변경 추적 작성자](hwp5-track-authors.md)는 태그 97의 레벨·선택적 매핑 개수 검증과 미해석 payload 경계를 관리합니다.
 
@@ -23,3 +23,9 @@
 - `src/hwp5/docinfo/resources.zig`: 주요 리소스 실측 개수와 ID 매핑 비교. `reference_rules.zig`는 ID 기준/부재 값, `references.zig`는 활성 참조 순회·진단을 소유합니다. `validateKnown()` 성공을 전체 문서 유효성으로 해석하지 말고 deferred/unknown_records와 미검증 범위를 확인합니다.
 
 - `src/hwp5/docinfo/border_fill.zig`, `fill.zig`, `char_shape.zig`, `para_shape.zig`: 테두리·채우기·글자·문단 모양을 분리합니다. 그림 정보의 5바이트 배치는 `picture_info.zig`에서 글머리표와 공유합니다. 미지의 채우기 비트는 후속 필드 순서를 추정하지 않고 원본 보존합니다.
+
+## 현재 계약 재검증 (2026-09-27)
+
+로컬 HWP5 명세 표 4·13·16의 레코드 태그·레벨·관측 길이와 현재 `docinfo/reader.zig`·`resources.zig`·`references.zig`, `document/docinfo.zig`의 연결을 대조했습니다. `container/validation.zig`의 기본 storage layout은 `observed_optional_extension`이며 `BinData.target()`의 명시적 `specified` 분기와 혼동하지 않습니다. 독립 레코드의 레벨·크기 검사와 문서 수준의 호환성 소유권·리소스/참조 검사는 별개 단계입니다.
+
+`zig test src/root.zig --test-filter 'hwp5.docinfo'`를 Debug·ReleaseSafe·ReleaseFast에서 각각 실행해 40/40(root 포함) 통과했습니다. 이 필터에는 memo_shape, 저장 꼬리, 호환성 소유권, 선택 매핑 슬롯, 참조 진단과 unknown 보존 반례가 포함됩니다. 이는 상위 책임 분리와 합성 입력의 현재 회귀 증거이며, 링크된 하위 계약 전체의 실파일 대조·의미 지원이나 문서 무손실 저장을 입증하지 않습니다.
