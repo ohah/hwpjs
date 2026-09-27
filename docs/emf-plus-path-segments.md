@@ -27,3 +27,5 @@
 최초 캠페인의 동일 좌표 제거 변이는 NaN이 자기 자신과 같지 않아 기존 floating fixture에서 생존했고, closure 선방출 변이는 열린 첫 line에서 optional unwrap panic을 일으켰습니다. 두 실행군은 유효 검출로 세지 않았습니다. 동일한 integer 좌표 fixture를 추가하고, 닫힌 line에서만 원래 segment를 생략하는 변이로 교체한 뒤 새 복사본·cache에서 6회를 재실행했습니다. 최종 유효 36/36회에는 생존·컴파일 오류·panic·timeout이 없습니다. 제품 작업 트리에는 변이를 적용하지 않았습니다.
 
 변경 소스를 고정한 뒤 전체 audit를 순차 실행했습니다. Debug·ReleaseSafe·ReleaseFast가 각각 40/40 단계와 1938/1938 테스트(코어 1899, chart ownership 31, WMF Contents 8)를 통과했습니다. 각 모드의 corpus 검사는 8,905,827 checks, imports 0이었고, strict mutation sweep는 12,000 mutations, traps 0이었습니다.
+
+위 변이·전체 audit는 작성 당시의 이력이며 이번에 다시 실행하지 않았습니다. 2026-09-28에는 현재 closing iterator의 pending 상태·원자성 및 `Path.segments()` 연결을 대조하고, Debug·ReleaseSafe·ReleaseFast root `EMF+` 필터를 각 560/560, ReleaseSafe의 Path segments 직접 필터를 4/4 통과했습니다. 실제 Pen cap/join이나 한컴 픽셀 출력은 검증하지 않았습니다.

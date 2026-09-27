@@ -27,3 +27,5 @@ Line과 cubic Bézier는 원래 순서와 endpoint metadata를 그대로 반환�
 최초 캠페인의 좌표 오염 네 변이는 미사용 변수 오류, Move 방출 변이는 도달 불가 코드 오류로 컴파일에 실패했습니다. 이 15회는 유효 검출로 세지 않았습니다. 같은 의미를 유지하면서 원래 값을 명시적으로 소비하고 조건부 제어 흐름을 사용하는 변이로 교체해 새 복사본·cache에서 재실행했습니다. 이후 명시적 closure 예약 제거 변이 3회를 별도 새 복사본·cache에서 추가했습니다. 최종 유효 45/45회에는 생존·컴파일 오류·panic·timeout이 없습니다. 제품 작업 트리에는 변이를 적용하지 않았습니다.
 
 변경 소스를 고정한 뒤 전체 audit를 순차 실행했습니다. Debug·ReleaseSafe·ReleaseFast가 각각 40/40 단계와 1941/1941 테스트(코어 1902, chart ownership 31, WMF Contents 8)를 통과했습니다. 각 모드의 corpus 검사는 8,905,827 checks, imports 0이었고, strict mutation sweep는 12,000 mutations, traps 0이었습니다.
+
+위 변이·전체 audit는 작성 당시의 이력이며 이번에 다시 실행하지 않았습니다. 2026-09-28에는 Microsoft GDI+의 열린 figure fill 규칙과 현재 Start/EOF 암묵적 closure·명시적 closure 비중복·`Path.fillSegments()` 연결을 대조하고, Debug·ReleaseSafe·ReleaseFast root `EMF+` 필터 각 560/560, ReleaseSafe의 fill segments 직접 필터 4/4를 통과했습니다. FillMode 계산이나 실제 한컴 픽셀 출력은 검증하지 않았습니다.

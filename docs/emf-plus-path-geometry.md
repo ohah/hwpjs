@@ -12,7 +12,7 @@
 
 각 line/Bézier command는 figure 시작점을 함께 반환하므로 후속 fill/stroke 계층이 CloseSubpath 연결을 다시 검색할 필요가 없습니다. DashMode·PathMarker와 원래 일반/RLE type 정보는 각 `TypedPoint`에 남깁니다.
 
-RLE type에서는 Start가 figure 경계로 우선하고, Start가 아닌 point의 line/Bézier 역할은 공식 `EmfPlusPathPointTypeRLE`의 B bit로 결정합니다. 따라서 B=1·중첩 Line은 Bézier로, B=0·중첩 Bezier는 Line으로 조립하되 중첩 PointType flags와 원값은 보존합니다. wire parser는 두 표현을 미리 합치거나 일치한다고 추정하지 않습니다.
+RLE type에서는 Start가 figure 경계로 우선하고, Start가 아닌 point의 line/Bézier 역할은 공식 [EmfPlusPathPointTypeRLE](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/1acc6ffc-ff99-40fe-925e-b90869b7d02c)의 B bit로 결정합니다. 따라서 B=1·중첩 Line은 Bézier로, B=0·중첩 Bezier는 Line으로 조립하되 중첩 PointType flags와 원값은 보존합니다. wire parser는 두 표현을 미리 합치거나 일치한다고 추정하지 않습니다.
 
 ## 원자성과 지원 경계
 
@@ -29,3 +29,5 @@ RLE type에서는 Start가 figure 경계로 우선하고, Start가 아닌 point�
 최초 캠페인에서는 Start 검사 제거가 null-state panic을 일으켰고, Bézier 닫힘 무시 변이는 닫힘 뒤 다음 입력도 Start라 생존했으며, RLE Start 변이는 enum literal 추론 컴파일 오류, 비원자 변이는 command tag 변경으로 테스트 panic을 일으켰습니다. 이 실행들은 유효 검출로 세지 않았습니다. 비-Start의 암묵적 Move 수용, 닫힌 Bé지어 뒤 Line 반례, 명시적 enum 반환, Bé지어 group 중간 조기 소비로 변이를 교체했고 테스트가 union tag를 먼저 단언하도록 보강한 뒤 네 변이의 12회를 새 복사본·cache에서 재실행했습니다. 제품 작업 트리에는 변이를 적용하지 않았습니다.
 
 프로젝트 `.zig-cache`를 제거한 뒤 전체 audit를 순차 재실행했습니다. Debug·ReleaseSafe·ReleaseFast가 각각 40/40 단계와 1935/1935 테스트(코어 1896, chart ownership 31, WMF Contents 8)를 통과했습니다. 각 모드의 corpus 검사는 8,905,827 checks, imports 0이었고, strict mutation sweep는 12,000 mutations, traps 0이었습니다.
+
+위 변이·전체 audit는 작성 당시의 이력이며 이번에 다시 실행하지 않았습니다. 2026-09-28에는 현재 command parser·RLE B 우선순위·원자성 및 `Path.commands()` 연결을 대조하고, Debug·ReleaseSafe·ReleaseFast root `EMF+` 필터를 각 560/560, ReleaseSafe의 Path geometry 직접 필터를 5/5 통과했습니다. 전체 테스트 통과만으로 모든 Path wire variant나 실제 한컴 출력 동등성이 증명되지는 않습니다.

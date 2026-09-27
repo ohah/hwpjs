@@ -334,7 +334,7 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "59b508a22aa3a889eb867775250045e25f6db02bc69c5942af9c23c91756ad18",
+      "sha256": "981665595d73ef66da39a664756911168976b59a14ec75e9daaaa2a5c10b3283",
       "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope PNG ICC inspection PNG RGBA BCP47 syntax registry alpha2 history ICC IANA matching mluc selection mluc structure mluc Unicode ICC v2 Unicode v2 text tag payload dispatch tag table structure header identifiers v4 and v2 header numeric header verification ICC registry source lookup required tags overview presence table XYZ type XYZ tags curve type TRC tags parametric curve analytic forward TRC forward sampled forward sampled inverse sampled wide inverse gamma inverse wide gamma inverse TRC inverse and extended TRC inverse matrix TRC inverse matrix TRC model matrix TRC forward fraction matrix inverse fraction matrix TRC inverse wide linear target wide positive bounds normalized and extended root compare normalized and extended root locations clipped and extended power preimage whole and extended whole parametric preimage normalized and extended whole bounds normalized and extended attained F.1a whole and extended nearest normalized and extended full inverse topology segments jump trend domain partition power clipping power level root compare active root locations rational power order normalized power level wide power level normalized root order power range power nearest ordinate order extended ordinate order ordinate distance extended ordinate distance linear range parametric range rational range nearest linear preimage extended linear preimage chromatic adaptation matrix transform ICC foundation verification review, architecture pending, full Debug Zig test 2656 passed and ReleaseFast HWP5 audit 10 steps 8905855 checks, EMF ICM and three clipping region docs direct tests and 102 shared tests each mode"
     },
     "docs/bcp47-syntax.md": {
@@ -1384,6 +1384,22 @@
     "docs/emf-plus-pie-device-polyline.md": {
       "sha256": "d55096d87af1492813cd175a5a08dc4a12b87b95387487b57e8ed64c1bd31864",
       "evidence": "2026-09-28 current Pie polyline direct radial and Arc collector composition, zero sweep separate path, strict normalized angle and budget checks, DrawPie FillPie delegation; Debug Safe Fast EMF root 560 each, ReleaseSafe Pie polyline 4 and DrawPie FillPie 4 each; historic mutation and audit not rerun"
+    },
+    "docs/emf-plus-path-geometry.md": {
+      "sha256": "5bdd42bcb080493371fde53e36c6a3d1df334e2d216c68cf9c297d166b268271",
+      "evidence": "2026-09-28 official MS-EMFPLUS Path PathPointType RLE B CloseSubpath and current borrowed command parser with PointR atomicity and Path.commands delegation; Debug Safe Fast EMF root 560 each, ReleaseSafe Path geometry 5 and public parse 2; historic mutation and audit not rerun"
+    },
+    "docs/emf-plus-path-segments.md": {
+      "sha256": "f305f2325cbb4e56d821a4fc04676721d0c152de24ffded62a4c4b561cbf4599",
+      "evidence": "2026-09-28 official CloseSubpath and GDI+ CloseFigure against current explicit closing iterator, pending state rollback and Path.segments delegation; Debug Safe Fast EMF root 560 each, ReleaseSafe segments 4 and public parse 2; historic mutation and audit not rerun"
+    },
+    "docs/emf-plus-path-fill-segments.md": {
+      "sha256": "f830124d91418c9150a656b54cb463a650cd2d0fd07921c1e76b511debf5fdd2",
+      "evidence": "2026-09-28 official GDI+ Filling Open Figures against current Start EOF implicit and explicit closing iterator, rollback and Path.fillSegments delegation; Debug Safe Fast EMF root 560 each, ReleaseSafe fill segments 4 and public parse 2; historic mutation and audit not rerun"
+    },
+    "docs/emf-plus-path-device-geometry.md": {
+      "sha256": "071c9d68533949fbd7fe38591e47c0fe42029fa8f55063889c75d8ef050c9462",
+      "evidence": "2026-09-28 current owned Path figure geometry, independent count limits, allocator failure and source error cleanup, Path.deviceGeometry delegation; Debug Safe Fast EMF root 560 each, ReleaseSafe device geometry 5 and public stroke fill connection 2; historic mutation and audit not rerun"
     }
   }
 }
