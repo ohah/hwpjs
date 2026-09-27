@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "2477cccdeb65e8aefb3745f60de23d5822ecebf488b19143b3e1c622cebe83e0",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container and GIF core review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "430c1fad30e38ddd369f15b760afe01d4af6832fca3fb8dff091d9ac4f43f6f1",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent review, architecture pending, full Debug Zig test incomplete"
+    },
+    "docs/hwp5-bin-data-images.md": {
+      "sha256": "20097797976fdf3a3821d8e060f70d229b7d845a3849d074fdf5b324ac2b2820",
+      "evidence": "2026-09-27 official HWP5 revision1.3 tables 17 18 and current Zig BinData image selection ownership, Debug Safe Fast HWP container PNG 4 tests each, current ReleaseSafe WASM and CFB synthetic comparisons 26 rejected 14; historical 45 file and full audit results separated"
     },
     "docs/gif-indexed.md": {
       "sha256": "96e66c0fd5e318d1262a85c7b243720303a35cbad9caa7a4549a527f970dc4c1",

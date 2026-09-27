@@ -8,10 +8,10 @@ PNG 기본 strict는 유지하고, 실제 HWP의 비적합 [IEND 뒤 0 패딩](h
 [PNG 선언·JPEG 바이트 불일치](hwp5-png-declared-jpeg.md)도 자동 보정하지 않으며, 명시적으로 선택한 경우에만 JPEG 검사와 별도 진단을 적용합니다.
 
 - `container/binaries.zig`: 기존 정확한 경로 조회·항목별 압축 해제 뒤 이미지 예산에 전달합니다. LINK는 외부 접근 없이 보류합니다. 압축·이미지 오류 뒤 원본 fallback은 없습니다.
-- `container/images.zig`: 형식 선택·문서 전체 픽셀 바이트/항목 한도·scalar 통계만 소유합니다. PNG 청크·압축·ICC 규칙은 [PNG 검사기](png-profile-inspection.md)를 재사용합니다.
+- `container/images.zig`: 형식 선택·문서 전체 픽셀 바이트/항목 한도·scalar 통계만 소유합니다. PNG 청크·압축·픽셀 규칙은 [PNG 검사기](png-pixels.md)를, ICC 규칙은 [프로필 검사](png-profile-inspection.md)를 재사용합니다.
 - `container/validation.zig`: 선택 옵션·예산 수명·최종 보고서 연결을 소유합니다. 기존 BinData 보고서와 제품 JS ABI는 변경하지 않습니다.
 
-UTF-16LE 확장자가 ASCII 대소문자 무관하게 png이면 PNG 검사를 요구합니다. 그렇지 않아도 PNG 서명이 있으면 검사하며, 비어 있지 않은 다른 확장자는 불일치 통계로 남깁니다. 경로/확장자 유효성은 기존 paths 책임입니다. JPEG/BMP/GIF를 별도로 선택하지 않은 기본 동작에서 다른 이미지 및 OLE는 `unhandled_binaries`로 남기며 유효성을 보증하지 않습니다.
+UTF-16LE 확장자가 ASCII 대소문자 무관하게 png이면 PNG 검사를 요구합니다. 그렇지 않아도 PNG 서명이 있으면 검사하며, 비어 있지 않은 다른 확장자는 불일치 통계로 남깁니다. 경로/확장자 유효성은 기존 paths 책임입니다. JPEG/BMP/GIF/PCX/WMF를 별도로 선택하지 않은 기본 동작에서 다른 이미지 및 OLE는 `unhandled_binaries`로 남기며 유효성을 보증하지 않습니다. 이미지 선택은 `container.Options.images`의 null 여부와 각 형식 옵션의 null 여부를 별도로 구분합니다.
 
 ## 한도와 수명
 
@@ -19,7 +19,13 @@ UTF-16LE 확장자가 ASCII 대소문자 무관하게 png이면 PNG 검사를 �
 
 실패한 consume은 누적 보고서를 변경하지 않습니다. 보고서는 scalar만 복사하여 임시 decoded BinData/PNG/ICC 버퍼를 보유하지 않습니다. `semantics_deferred`는 항상 남으며 구조·픽셀 검사 성공을 렌더링/색상 의미 완료로 바꾸지 않습니다. ICC 상세 검사와 v2 UTF-16BE 해석은 기존 명시적 PNG 옵션을 그대로 전달합니다.
 
-## PNG 최초 연결 시 검증 기록
+## 현재 문서 재검증 (2026-09-27)
+
+한컴 HWP5 revision 1.3 표 17~18의 LINK/EMBEDDING/STORAGE와 항목별 압축값을 현재 `binaries.zig`의 정확한 경로·압축 해제·외부 LINK 보류 및 `images.zig`의 선택 분기와 대조했습니다. 기본 컨테이너 이미지 옵션은 null이고, 이를 켜도 PNG 이외의 JPEG/BMP/GIF/PCX/WMF는 각 형식을 다시 명시적으로 선택해야 합니다. `pixel_bytes`는 PNG의 복원 scanline 바이트만 합산하며 다른 형식의 출력 예산은 별도입니다. `validation.zig`는 보고서의 소유권과 선택을 연결하지만, 제품 JS 공개 API가 이미지 검사를 제공한다는 뜻은 아닙니다.
+
+현재 소스의 Debug/ReleaseSafe/ReleaseFast `zig test src/root.zig --test-filter 'HWP container PNG'`가 각 4/4 통과했습니다. 현재 ReleaseSafe `hwp5-probe.wasm`의 mode 244와 현재 CFB WASM으로 독립 JS `containerImagesEdges`를 직접 실행해 비교 26건·한도/손상 거부 14건을 재현했습니다. 이 합성 fixture 검사는 반복 참조·압축/비압축·원자성과 보고서 접두부를 다루지만 실제 HWP 45개 재검증, 모든 이미지 형식의 완전한 의미·렌더링·저장 동치를 입증하지 않습니다. 아래 수치 중 이번에 재실행하지 않은 것은 최초 연결 당시의 기록입니다. 하위 형식 문서의 검증 완료 여부는 각각 별도로 판단합니다.
+
+## PNG 최초 연결 당시 기록 (이번 재검증과 구분)
 
 - 네이티브: 반복 참조의 한도 경계, 미선택 손상 PNG 보존, 선택 시 잘림/CRC 오류 전파, 입력 해제 뒤 보고서 수명, ICC 옵션 전달 및 미지원 의미 유지, 할당 실패 정리 검사.
 - 테스트용 WASM mode 244: 기존 mode 25 보고서 뒤 44바이트 선택/이미지 통계를 추가합니다. 독립 JS 생성기로 압축/비압축 × 1/2/5회 참조, 정확한 한도와 한도-1, 오류 뒤 재호출을 대조했습니다. 세 모드 직접 실행에서 각각 비교 26건·거부 14건 통과.
