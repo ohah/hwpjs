@@ -12,7 +12,7 @@
 - `chart-value-text-evidence.mjs`는 앞선 값 블록 조사 결과에서 타입/문자열 사전을 이어 받고, 원시 3바이트와 TextBlock 기반 클래스를 조립합니다. String/Backdrop 본문을 다시 구현하지 않습니다.
 - `chart-value-text-survey.mjs`는 corpus와 검증 집계를 담당합니다. 결과에 입력 SHA-256을 남깁니다.
 
-입력/사전은 복사하고 결과 문자열·원시 값도 복사합니다. 전체 비문자열 객체 목록, 임베디드 객체 ID, 모든 ValueBlock/AxisScaleBlock/Axis 꼬리 및 의미 해석은 아직 미확인입니다. 제품 Zig TextBlock의 null 본문 지원을 추가한 단계는 아닙니다.
+입력/사전은 복사하고 결과 문자열·원시 값도 복사합니다. 전체 비문자열 객체 목록, 임베디드 객체 ID, 모든 ValueBlock/AxisScaleBlock/Axis 꼬리 및 의미 해석은 이 조사 단계에서 미확인입니다. 이 조사 자체는 제품 Zig TextBlock의 null 본문 지원을 추가하지 않았습니다. 후속 선택된 제품 경로는 [TextBlock 본문](hwp5-chart-text-block-body.md)과 [ValueBlock](hwp5-chart-value-block.md)이 소유합니다.
 
 ## 적대적 검증
 
@@ -48,4 +48,8 @@ node tests/hwp5/chart-axis-prefix-survey.mjs --verify
 
 추가 진단에서 첫 Axis 원시 영역의 +6 u16은 긴 꼬리 5개에서 1, 짧은 꼬리 29개에서 0이었습니다. 상관관계일 뿐 조건 필드의 의미나 일반 규칙이 입증된 것은 아닙니다. 공식 DateScale(3.23)/ValueScale(3.59) API 표도 확인했지만 wire 순서를 제공하지 않아 24바이트를 날짜 속성으로 확정하지 않았습니다.
 
-후보 다음의 **두 번째 Axis**로 조사 범위를 확장하면 기존 값/String 전제는 33개에서 통과하고 1개에서 실패합니다. 해당 표본의 Contents 절대 위치 3275까지 읽은 타입은 ID 7, `VtDouble v1`인데 조사기는 `VtString v1`을 기대했습니다. 첫 Axis 34개 통과를 모든 축 지원으로 확대할 수 없는 반례입니다. 다음 구현 전 해당 값 위치의 String/Double 변형과 참조 규칙을 확인해야 하며, 이를 손상 파일이라고 분류하거나 String으로 강제 변환하지 않습니다.
+후보 다음의 **두 번째 Axis**로 조사 범위를 확장하면 기존 값/String 전제는 33개에서 통과하고 1개에서 실패합니다. 해당 표본의 Contents 절대 위치 3275까지 읽은 타입은 ID 7, `VtDouble v1`인데 조사기는 `VtString v1`을 기대했습니다. 첫 Axis 34개 통과를 모든 축 지원으로 확대할 수 없는 반례입니다. 후속 [선택 필드 조사](hwp5-chart-value-number-evidence.md)에서 이 위치의 String/Double 변형을 확인했으며, 이를 손상 파일이라고 분류하거나 String으로 강제 변환하지 않습니다.
+
+## 현재 재검증
+
+현재 `text_block_body.zig`의 선택된 null 본문 경로와 `value_block.zig`의 원시 3바이트·기반 클래스 연결을 대조했습니다. 독립 TextBlock 조사 2/2개와 기존 Axis·prefix·숫자 조사를 합친 Node 11/11개가 통과했고, Zig `chart text body` 집중 테스트는 Debug·ReleaseSafe·ReleaseFast 각각 3/3개였습니다. 실제 584개 HWP 중 첫 축 배율 34개의 라벨 뒤 본문에서 잘림 12,855건·버전 변형 51건을 다시 거부했으며, 두 번째 축 숫자 반례 1개도 별도 조사로 확인했습니다. 이 문서의 과거 세 모드 전체 audit·변이 5종은 이번에 재실행하지 않았습니다. 선택된 기반 본문 파싱을 모든 버전의 TextBlock 의미 지원으로 확대하지 않습니다.

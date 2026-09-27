@@ -48,3 +48,7 @@ node tests/hwp5/chart-value-prefix-survey.mjs --verify
 ```
 
 survey에는 먼저 빌드한 `zig-out/bin/hwpjs.wasm`이 필요합니다. 이번 변경은 독립 조사 도구와 문서뿐이므로 Zig 전체 3모드 audit를 재실행한 결과로 주장하지 않습니다.
+
+## 현재 재검증
+
+공식 차트 revision 1.2의 AxisScale·ValueScale 속성은 이 선택 배치의 직렬화 순서를 확정하지 않습니다. 현재 `value_block.zig`는 첫 축뿐 아니라 선택된 ValueBlock을 조립하고, 원시 header word를 ID로 등록하지 않습니다. 독립 prefix 조사 3/3개와 관련 Zig `chart value block` 집중 테스트가 Debug·ReleaseSafe·ReleaseFast 각각 3/3개 통과했습니다. HWP 584개 중 차트 Contents 43개에서 첫 축의 배율이 있는 34개·없는 9개, prefix 잘림 3,875건·버전 변형 51건, 첫 값 서식 17개·기존 String 참조 1개·원시 word 0인 34개를 다시 확인했습니다. 별도 연속 Axis 조사에서는 172개 축의 ValueBlock 69개 중 header word 0은 34개, 65536은 35개였습니다. 과거 7종 변이·세 모드 전체 audit는 이번에 재실행하지 않았습니다.

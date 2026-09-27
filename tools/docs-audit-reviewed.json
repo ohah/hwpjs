@@ -1,6 +1,18 @@
 {
   "schema": 1,
   "verified": {
+    "docs/hwp5-chart-value-prefix-evidence.md": {
+      "sha256": "70bd830830d0f14a2211634da1cc28187b5531b319da66abce57222b04b3c50f",
+      "evidence": "2026-09-28 current prefix survey 584 HWP 43 charts 34 first scales 9 absent 3875 cuts 51 versions 17 formats 1 String reference; axis survey 172 axes 69 blocks header 0 34 and 65536 35; Node 3 tests Debug Safe Fast value block 3 each; historic mutants full audits not rerun"
+    },
+    "docs/hwp5-chart-value-number-evidence.md": {
+      "sha256": "7605699ab085cad511242c3396acceb87a167c9dea4c57b976241462be2952e8",
+      "evidence": "2026-09-28 official chart ValueScale API versus current Value Object Table Block; second axis diagnostic 34 values 1 Double 13107 cuts 29 delta54 5 delta78; Node 2 numeric tests Debug Safe Fast number 5 each; historic mutants full audits not rerun"
+    },
+    "docs/hwp5-chart-value-text-evidence.md": {
+      "sha256": "08477d7058831b22bf68e64149011db8c62541f3ac4d6f0ca5698c70b20daef3",
+      "evidence": "2026-09-28 current nullable TextBlock base and ValueBlock raw3 versus independent 584 HWP 34 first scales 12855 cuts 51 versions and second axis Double; Node aggregate 11 tests Debug Safe Fast text body 3 each; historic mutants full audits not rerun"
+    },
     "docs/hwp5-chart-plot-evidence.md": {
       "sha256": "c812769fefdd7401ec566fb6cc205bb733061fda8cd97fc0755eddbaf9fb9015",
       "evidence": "2026-09-28 official chart revision1.2 Plot Light API versus selected observation and current Zig Plot prefix Contents; Node 8 tests ReleaseSafe combined Zig 5 tests 584 HWP 43 chart Contents light counts 5 one 38 two first digest; historical cuts mutants full audits not rerun"
@@ -546,8 +558,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "4ed6fff1bd01a807cecf1670467752f98668304f17ed7bc8919b3b03942588b4",
-      "evidence": "2026-09-28 tracker updated with Plot and Surface independent observations, current Zig boundary, 43 actual chart Contents and Surface 5246 cuts 43 versions; historic Plot cuts mutants full audits not rerun"
+      "sha256": "e41bdc34f6c317fa3a667a4051edd6b8e3f20cd70ec29e7147a5e62286e00c22",
+      "evidence": "2026-09-28 tracker updated with Value prefix TextBlock and Double independent observations, current Zig focused three modes, real 34 first scale 34 second scale 69 total blocks; historic mutants full audits not rerun"
     },
     "docs/bcp47-syntax.md": {
       "sha256": "ae0d91a0bb5ca2f8a5194b5ffa76494427cc058784f11446fd905458020f5b11",

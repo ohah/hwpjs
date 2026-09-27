@@ -28,4 +28,8 @@ node tests/hwp5/chart-value-prefix-survey.mjs --verify
 node tests/hwp5/chart-value-text-survey.mjs --verify
 ```
 
-이번에는 제품·공통 Axis 조사기·정규 audit 경로를 변경하지 않았습니다. 직전 단계의 세 모드 전체 audit를 이번 변경의 재실행 결과로 주장하지 않습니다. 다음 과제는 숫자/문자열 값과 전역 객체 사전의 제품 통합, 가변 꼬리 선택 조건과 전체 축 경계 규명입니다.
+이번 조사 단계에서는 제품·공통 Axis 조사기·정규 audit 경로를 변경하지 않았습니다. 직전 단계의 세 모드 전체 audit를 이 조사의 재실행 결과로 주장하지 않습니다. 숫자/문자열 값과 객체 사전의 제품 통합, 선택된 Axis 조립은 이후 추가됐습니다. 일반 객체 그래프·배치 자동 판정은 여전히 별도입니다.
+
+## 현재 재검증
+
+공식 차트 revision 1.2의 ValueScale 속성 목록은 `VtDouble`의 이 wire 위치나 참조 규칙을 제공하지 않습니다. 현재 `value_object.zig`·`object_table.zig`·`value_block.zig`가 String/Double의 구분과 원시 숫자 비트를 처리하는지 대조했습니다. 독립 숫자 조사 2/2개와 Zig `chart number` 집중 테스트는 Debug·ReleaseSafe·ReleaseFast 각각 5/5개 통과했습니다. 두 번째 축 진단 조사에서 배율 있는 34개 모두 관측했고, 숫자 선택 값 1개와 잘림 13,107건, 진단 후보 거리 +54인 29개·+78인 5개를 다시 확인했습니다. 첫 값 회귀도 prefix 잘림 3,875건·버전 변형 51건, 기반 본문 잘림 12,855건·버전 변형 51건으로 재현했습니다. 과거 변이 6종·세 모드 전체 audit는 이번에 재실행하지 않았고, +54/+78 재시도는 제품의 일반 파싱 규칙이 아닙니다.
