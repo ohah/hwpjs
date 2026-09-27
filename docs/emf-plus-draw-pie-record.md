@@ -2,7 +2,7 @@
 
 ## 범위와 단일 출처
 
-`emf_plus_draw_pie.zig`는 MS-EMFPLUS 2.3.4.12의 Type, Flags, Size/DataSize와 pie payload를 조립합니다. C와 Pen ObjectID는 `emf_plus_record_flags.zig`, Rect/RectF 선택은 `emf_plus_rect_data.zig`가 소유합니다. DrawArc와 동일한 StartAngle·SweepAngle·RectData 순서 및 C별 byte length는 `emf_plus_arc_data.zig`가 단일 출처이며 두 record parser가 이를 재사용합니다.
+`emf_plus_draw_pie.zig`는 [MS-EMFPLUS 2.3.4.12](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/bd93aa68-e96f-42f1-8aea-390920f327fd)의 Type, Flags, Size/DataSize와 pie payload를 조립합니다. C와 Pen ObjectID는 `emf_plus_record_flags.zig`, Rect/RectF 선택은 `emf_plus_rect_data.zig`가 소유합니다. DrawArc와 동일한 StartAngle·SweepAngle·RectData 순서 및 C별 byte length는 `emf_plus_arc_data.zig`가 단일 출처이며 두 record parser가 이를 재사용합니다.
 
 C가 set이면 Size 28/DataSize 16/실제 data 16바이트, clear이면 Size 36/DataSize 24/실제 data 24바이트여야 합니다. 세 크기 축은 독립적으로 검사하고 ObjectID는 0–63만 허용합니다. reserved Flags는 MUST be ignored에 따라 원값으로 보존합니다.
 
@@ -12,7 +12,7 @@ StartAngle과 SweepAngle은 IEEE 754 wire 값을 보존합니다. 명세의 Star
 
 stream은 Pen ObjectID 슬롯이 존재하고 ObjectTypePen인지 확인합니다. 누락 Pen, 다른 객체 타입, payload·집계 오류는 comment 전체 상태를 원복하고 상위 EMF framing은 같은 경로를 사용합니다.
 
-현재 로컬 HWP corpus에는 EMF+ signature가 없어 실제 한컴 DrawPie 표본과 렌더링 결과는 관측하지 못했습니다. 구현 범위는 wire 구조, Pen 참조, stream/framing, [공개 device-corner 연결](emf-plus-rect-record-device-corners.md), [affine arc geometry](emf-plus-arc-device-geometry.md), [endpoint·radial edge 평가](emf-plus-arc-device-points.md), [exact conic segment](emf-plus-arc-device-segments.md), [단일 parameter conic 평가](emf-plus-arc-segment-evaluation.md), [닫힌 의미 boundary](emf-plus-pie-device-boundary.md)와 [선형 boundary](emf-plus-pie-device-polyline.md)입니다. clipping·stroke·rasterization과 저장은 미구현입니다.
+당시 조사한 로컬 HWP corpus에는 EMF+ signature가 없어 실제 한컴 DrawPie 표본과 렌더링 결과는 관측하지 못했습니다. 구현 범위는 wire 구조, Pen 참조, stream/framing, [공개 device-corner 연결](emf-plus-rect-record-device-corners.md), [affine arc geometry](emf-plus-arc-device-geometry.md), [endpoint·radial edge 평가](emf-plus-arc-device-points.md), [exact conic segment](emf-plus-arc-device-segments.md), [단일 parameter conic 평가](emf-plus-arc-segment-evaluation.md), [닫힌 의미 boundary](emf-plus-pie-device-boundary.md)와 [선형 boundary](emf-plus-pie-device-polyline.md)입니다. clipping·stroke·rasterization과 저장은 미구현입니다.
 
 ## 검증 기록
 
@@ -23,3 +23,5 @@ RecordType, C 해석, Size/DataSize/실제 slice, ObjectID 범위, 반환 Flags�
 첫 캠페인의 Pen ID 반환 변이는 기존 지역 변수를 미사용으로 만들어 3회 컴파일 오류였고, 두 번째 캠페인의 Rect 선택 변이도 `compressed` 매개변수를 미사용으로 만들어 3회 컴파일 오류였으므로 두 캠페인을 폐기했습니다. 반환 변이는 원래 ID를 소비한 XOR로, Rect 변이는 `compressed and false`로 입력을 소비하면서 의미만 훼손하도록 바꾼 뒤 위 세 번째 캠페인을 처음부터 수행했습니다.
 
 최종 제품 트리의 전체 `audit`를 Debug·ReleaseSafe·ReleaseFast 순서로 실행했습니다. 세 모드 모두 40/40 단계와 1,698/1,698 테스트, HWP 감사 8,905,827 checks, WASM imports 0으로 통과했습니다. 로그는 `/tmp/hwpjs-emfplus-draw-pie-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.
+
+위 변이·전체 `audit` 수치는 당시 실행 기록이며 이번 문서 재검증에서 재실행한 결과는 아닙니다.

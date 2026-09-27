@@ -2,7 +2,7 @@
 
 ## 범위와 단일 출처
 
-`emf_plus_draw_lines.zig`는 MS-EMFPLUS 2.3.4.10의 Type, Flags, Size/DataSize, Count와 PointData를 조립합니다. ObjectID는 Pen 슬롯이며 P/C와 0x2000 L flag는 `emf_plus_record_flags.zig`, 세 point wire 표현과 가변 PointR 소비는 `emf_plus_point_data.zig`가 소유합니다. 0x2000 값은 DrawImagePoints의 E와 동일하지만 `closesFigure`와 `hasEffect`를 record별 호출자가 명시적으로 선택하므로 의미를 혼용하지 않습니다.
+`emf_plus_draw_lines.zig`는 [MS-EMFPLUS 2.3.4.10](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/a5c0bc88-ab0e-4126-b68f-47b04bfc5cad)의 Type, Flags, Size/DataSize, Count와 PointData를 조립합니다. ObjectID는 Pen 슬롯이며 P/C와 0x2000 L flag는 `emf_plus_record_flags.zig`, 세 point wire 표현과 가변 PointR 소비는 `emf_plus_point_data.zig`가 소유합니다. 0x2000 값은 DrawImagePoints의 E와 동일하지만 `closesFigure`와 `hasEffect`를 record별 호출자가 명시적으로 선택하므로 의미를 혼용하지 않습니다.
 
 Count는 명세의 MUST에 따라 2 이상이어야 하며 기본 최대값은 공용 PointData와 같은 16 Mi points입니다. P가 clear이면 C에 따라 `Count * 4` Point 또는 `Count * 8` PointF가 정확히 따라야 합니다. P가 set이면 C를 무시하고 PointR을 순서대로 소비한 뒤 최대 3바이트의 record 정렬 원문을 보존합니다. L이 set이면 마지막 점과 첫 점을 잇는 재생 의미를 `closes_figure`로 노출하지만 parser가 선분을 새로 만들지는 않습니다.
 
@@ -14,7 +14,7 @@ reserved flags는 MUST be ignored에 따라 원값으로 보존합니다. PointF
 
 stream은 Pen ObjectID 슬롯이 존재하고 ObjectTypePen인지 확인합니다. 누락 Pen, 다른 객체 타입, payload·한도·집계 오류는 comment 전체 상태를 원복하고 상위 EMF framing은 같은 경로를 사용합니다.
 
-현재 로컬 HWP corpus에는 EMF+ signature가 없어 실제 한컴 DrawLines 표본과 렌더링 결과는 관측하지 못했습니다. 구현 범위는 wire 구조, borrowed point iteration, 공용 PointR 절대 좌표·open/closed 선분 해석, [일반 world/page/device endpoint 변환](emf-plus-polyline-device-segments.md), Pen 참조와 stream/framing 연결입니다. clipping·Pen stroke 재생과 저장은 미구현입니다.
+당시 조사한 로컬 HWP corpus에는 EMF+ signature가 없어 실제 한컴 DrawLines 표본과 렌더링 결과는 관측하지 못했습니다. 구현 범위는 wire 구조, borrowed point iteration, 공용 PointR 절대 좌표·open/closed 선분 해석, [일반 world/page/device endpoint 변환](emf-plus-polyline-device-segments.md), Pen 참조와 stream/framing 연결입니다. clipping·Pen stroke 재생과 저장은 미구현입니다.
 
 ## 검증 기록
 
@@ -25,3 +25,5 @@ stream은 Pen ObjectID 슬롯이 존재하고 ObjectTypePen인지 확인합니�
 첫 캠페인에서는 실제 slice 검사를 제거한 변이가 생존했습니다. 기존 floating wrong-slice fixture가 downstream 고정 PointData 길이에서도 실패해 envelope 축을 독립적으로 증명하지 못한 테스트 위치 편향이었습니다. 유효 relative PointR은 실제 slice로 완성되지만 선언 DataSize만 더 큰 fixture를 추가한 뒤 전체 캠페인을 처음부터 재실행했으며 위 수치는 두 번째 캠페인만 포함합니다.
 
 최종 제품 트리의 전체 `audit`를 Debug·ReleaseSafe·ReleaseFast 순서로 실행했습니다. 세 모드 모두 40/40 단계와 1,688/1,688 테스트, HWP 감사 8,905,827 checks, WASM imports 0으로 통과했습니다. 로그는 `/tmp/hwpjs-emfplus-draw-lines-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.
+
+위 변이·전체 `audit` 수치는 당시 실행 기록이며 이번 문서 재검증에서 재실행한 결과는 아닙니다.

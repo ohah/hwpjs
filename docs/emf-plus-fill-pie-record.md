@@ -8,7 +8,7 @@ C가 set이면 BrushId 4바이트와 ArcData 16바이트로 `DataSize=20`, `Size
 
 ## stream 연결과 미지원 경계
 
-stream은 S가 clear일 때만 Brush 슬롯 존재와 ObjectTypeBrush를 검사하며 오류와 count overflow에서 comment 상태를 원복합니다. wire parser는 비유한 값을 포함한 원시 f32 비트를 보존하고 [affine arc geometry](emf-plus-arc-device-geometry.md)가 공식 modulo·clamp를 적용합니다. [공개 device-corner 연결](emf-plus-rect-record-device-corners.md), [endpoint·radial edge 평가](emf-plus-arc-device-points.md), [exact conic segment](emf-plus-arc-device-segments.md), [단일 parameter conic 평가](emf-plus-arc-segment-evaluation.md), [닫힌 의미 boundary](emf-plus-pie-device-boundary.md)와 [선형 boundary](emf-plus-pie-device-polyline.md)도 구현했지만 Brush fill rule·sampling, clipping·rasterization 및 저장은 구현하지 않았습니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성도 주장하지 않습니다.
+stream은 S가 clear일 때만 Brush 슬롯 존재와 ObjectTypeBrush를 검사하며 오류와 count overflow에서 comment 상태를 원복합니다. wire parser는 비유한 값을 포함한 원시 f32 비트를 보존하고 [affine arc geometry](emf-plus-arc-device-geometry.md)가 공식 modulo·clamp를 적용합니다. [공개 device-corner 연결](emf-plus-rect-record-device-corners.md), [endpoint·radial edge 평가](emf-plus-arc-device-points.md), [exact conic segment](emf-plus-arc-device-segments.md), [단일 parameter conic 평가](emf-plus-arc-segment-evaluation.md), [닫힌 의미 boundary](emf-plus-pie-device-boundary.md)와 [선형 boundary](emf-plus-pie-device-polyline.md)도 구현했지만 Brush fill rule·sampling, clipping·rasterization 및 저장은 구현하지 않았습니다. 당시 조사한 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성도 주장하지 않습니다.
 
 ## 공식 근거
 
@@ -23,3 +23,5 @@ S/C 네 조합, Brush ID 경계와 literal ARGB, 각도·RectF 원시 비트, i1
 RecordType, C·DataSize 선택, Size/DataSize/실제 slice 세 축, Brush 값·S 선택, ArcData C 선택·시작 위치, 반환 Flags·각도 매핑, stream routing·literal 분기·Brush 타입·집계 값·집계 대상을 각각 훼손한 17종 의미 변이를 독립 복사본과 모드별 새 cache에서 실행했습니다. Debug, ReleaseSafe, ReleaseFast의 51/51 실행이 모두 컴파일 오류·panic·timeout이 아닌 실제 테스트 실패로 검출됐고 임시 작업 복사본은 제거했습니다.
 
 최종 `zig build audit --summary all`, `-Doptimize=ReleaseSafe`, `-Doptimize=ReleaseFast`는 각 모드에서 40/40 step과 1865/1865 test를 통과했습니다. 모드별 구성은 native 1826, chart ownership 31, WMF contents 8이며, 각 실행은 8,905,827 checks, imports 0과 CFB 12,000 mutation의 traps 0을 기록했습니다.
+
+위 변이·전체 `audit` 수치는 당시 실행 기록이며 이번 문서 재검증에서 재실행한 결과는 아닙니다.
