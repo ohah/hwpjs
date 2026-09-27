@@ -13,3 +13,5 @@
 로컬 HWPX 484개 중 ZIP 거부 6개·암호화 2개를 제외한 476개 header, 요소 1,200,622개를 제품 Zig 트리와 독립 Python `ElementTree`로 대조했습니다. 요소 경계 사이에서 합친 직접 문자 순서는 독립 Expat SHA-256의 전체 합계 `3aa151e548bf2d2034ff5fa208b3a6fd7fad03f116a9d2315ad8762aec3a9662`와 일치했습니다. 합계 방식이므로 각 문서별 원문 바이트 동치나 모든 header 필드 의미를 증명하지 않습니다. 이 corpus의 header 루트는 모두 2011 namespace이며 후속 버전 실파일은 포함되지 않습니다. 재현 명령은 [개발·검증 명령](development-commands.md)에 둡니다.
 
 2026-09-24 공통 part 트리 분리 후 섹션 8개 shard를 다시 실행해 기존 요소·속성·직접 콘텐츠·순서 해시가 모두 유지됐습니다. 기본 테스트 2,175개, header 전용 Debug·ReleaseSafe·ReleaseFast 각 7개, ReleaseSafe 제품 WASM 빌드, Debug `zig build audit --summary all`, `zig fmt --check build.zig src`가 통과했습니다. 마지막에 추가한 ReleaseFast 잔여 할당 0바이트 검사는 전용 테스트와 최종 기본 테스트에서 별도로 통과했습니다. 정규 audit에는 선택 실파일 header·section 조사가 포함되지 않아 별도 실행했습니다.
+
+2026-09-28 현재 소스 재검증: Debug·ReleaseSafe·ReleaseFast `HWPX header tree` 집중 각 7/7개, ReleaseFast 제품 header corpus 1/1개가 통과했습니다. 제품 조사와 독립 Python XML 조사는 모두 허용 header 476개·요소 1,200,622개와 순서 지문 `3aa151e548bf2d2034ff5fa208b3a6fd7fad03f116a9d2315ad8762aec3a9662`를 확인했습니다. 위 전체 test/audit·WASM 빌드 및 별도 section 트리 shard는 이번 묶음에서 재실행하지 않은 과거 기록입니다. 이 지문은 header 요소 이벤트의 합계 대조이지 전 필드 의미나 재저장 검증이 아닙니다.

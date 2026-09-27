@@ -630,8 +630,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "3ef8f37976086ad88dbc74e8157dd3110e1967f6f4b63415ac96e7c62c71d13a",
-      "evidence": "2026-09-28 tracker updated with HWPX settings manifest XML and document tree batch after three-mode focused tests, tree shards eight and independent corpus; historical full audit distinguished"
+      "sha256": "c03e688c4c5c1588bcf7963e28067e21656105aeb42d6081689d69bce14b507a",
+      "evidence": "2026-09-28 tracker updated with HWPX header tree begin numbers and XML structure evidence, three-mode focused tests current corpus and historical audits distinguished"
     },
     "docs/hwpx-ole-payloads.md": {
       "sha256": "a7c214c0760d575237afcb960b7ff1fe976a0d99468e1083066e36c889deabad",
@@ -1832,6 +1832,18 @@
     "docs/hwpx-document-trees.md": {
       "sha256": "07ec0c85b9d3b7b86b26638ff54a17c00fe4f40866781168aeb4b08f2205eaeb",
       "evidence": "2026-09-28 source tree ownership preflight and diagnostics, Debug Safe Fast focused five each, ReleaseFast real tree shards eight, independent Python 476 docs 476 header 544 sections and element byte sums; full audit historic"
+    },
+    "docs/hwpx-header-tree.md": {
+      "sha256": "5176b830cf8ace6f388f4565049eb3df577ee0e289a1fc79a3e7d5904bf4d981",
+      "evidence": "2026-09-28 source header tree ownership namespace limits and common tree API, Debug Safe Fast focused seven each, ReleaseFast corpus 476 header 1200622 elements digest matched independent Expat; full audit historic"
+    },
+    "docs/hwpx-header-begin-numbers.md": {
+      "sha256": "07f643d681aa704bb6e9d15c79b18839ad4b1c29416378fbbd0a7f70b0d51ec6",
+      "evidence": "2026-09-28 official Hancom six positiveInteger beginNum attrs versus source optional 2011 observation, Debug Safe Fast focused six each, independent Python present 455 absent 21 all version1.4; prior tree shards eight"
+    },
+    "docs/hwpx-xml-structure-evidence.md": {
+      "sha256": "0e9d1ba613b35f10df9a5e68620075771062e38353d817f1fff381ad2dbb7413",
+      "evidence": "2026-09-28 source read-only XML survey ReleaseFast 1498 accepted 3 text-outside 1 invalid encoding, encrypted sample reproduction one passed, historical next-step wording corrected to current protection classification"
     }
   }
 }

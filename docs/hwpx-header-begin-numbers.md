@@ -13,3 +13,5 @@
 부재 21개는 모두 header `version="1.4"`였지만, 같은 버전 197개 중 176개에는 `beginNum`이 있습니다. 따라서 버전 문자열만으로 요소 존재를 추론하거나 임의 기본값을 적용하지 않습니다. 이 분포는 독립 Python 조사에서 확인한 해당 두 corpus의 관측값이며 모든 1.4 문서에 대한 규칙은 아닙니다.
 
 같은 변경에서 네이티브 Debug 전체 테스트 2,188개, 전용 단위 테스트 6개(Debug·ReleaseSafe·ReleaseFast), ReleaseSafe 제품 빌드 및 전체 Debug `zig build audit --summary all`이 통과했습니다. 선택 실파일 8개 shard도 버전 연결을 포함해 별도로 모두 통과했습니다. 이 shard들은 기본 audit에 포함되지 않습니다.
+
+2026-09-28 현재 소스 재검증: Debug·ReleaseSafe·ReleaseFast `HWPX begin numbers` 집중 각 6/6개가 통과했습니다. 독립 Python XML 조사는 허용 header 476개 중 직접 `beginNum` 존재 455개·부재 21개(부재 모두 `version="1.4"`), `page`·`footnote`·`equation` 값 합계 각각 455를 재확인했습니다. 직전 문서 트리 묶음의 ReleaseFast 실파일 shard 8/8개는 현재 제품 소스로 통과했으며 그 안에서 `beginNum` 존재·속성·값을 검사합니다. 위 전체 test/audit는 이번 묶음에서 재실행하지 않았고 실제 번호 배정 의미는 검증 대상이 아닙니다.
