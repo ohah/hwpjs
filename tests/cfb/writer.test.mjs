@@ -439,6 +439,7 @@ test("strict rejects spec violations, legacy-compatible parse remains separate",
     b = Buffer.concat([b, Buffer.alloc(512, 255)]);
     b.writeUInt32LE(n, 520);
     b.writeUInt32LE(0xfffffffe, 512 + n * 4);
+    assert.doesNotThrow(() => api.parse(b));
     assert.throws(() => api.parse(b, { strict: true }), {
       message: "InvalidMiniCount",
     });
@@ -447,6 +448,7 @@ test("strict rejects spec violations, legacy-compatible parse remains separate",
     b.writeUInt32LE(0, 64);
     b.writeUInt32LE(0xffffffff, 520);
     b.writeUInt32LE(0xffffffff, 1100);
+    assert.doesNotThrow(() => api.parse(b));
     assert.throws(() => api.parse(b, { strict: true }), {
       message: "InvalidFileSize",
     });

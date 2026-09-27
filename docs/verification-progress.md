@@ -93,3 +93,5 @@ HWP5 바깥 BinData 교체 문서는 단일 `replaceOpened`와 순번 기반 bat
 CFB 원자적 다중 stream 교체 문서는 exact 경로의 entry identity·compact node 매핑·검증 후 단일 writer 호출과 합성 v3/v4 테스트를 대조해 완료 목록에 넣었습니다. Debug·ReleaseSafe·ReleaseFast 집중 필터가 각각 4/4 통과했습니다. 과거 변이 15회는 이번에 재실행하지 않았으며, 실제 HWP 파일의 무손실 저장·추가/삭제 기능으로 확대하지 않습니다.
 
 CFB 읽기·검증·쓰기 문서는 공식 MS-CFB 12.0의 기준 버전, 현재 책임 경계·JS/Zig API·ABI 5·기본 한도와 빌드 연결을 대조해 완료 목록에 넣었습니다. ReleaseSafe `compare` 8/8 단계·Node 47/47·레거시 대조 60파일/483 stream/5,496검색·16거부, 전체 `test` 5/5 단계·2,655/2,655 통과를 확인했습니다. 48개 실제 HWP의 v3/v4 재저장 904 stream도 현재 Node assertion에 포함됩니다. 과거 Chromium·36,000건 변이·Debug/ReleaseFast 전체 audit는 이번 결과에 합산하지 않았고, HWP 본문 의미나 모든 CFB 입력에 대한 보증은 아닙니다.
+
+CFB 레거시 호환성·예외 문서는 현재 1.2.0 레거시 소스·고지, Zig의 호환/명세 검색 분리, 공식 MS-CFB 설명과 E1~E3 독립 fixture·공개 이슈 #15를 대조해 완료 목록에 넣었습니다. ReleaseSafe 비교 8/8 단계·Node 47/47·60파일/483 stream/5,496검색·16거부 및 E1~E3 예외 테스트 4/4가 통과했습니다. 비준수 17건의 기본 수용/strict 거부는 누락된 두 기본 수용 assertion을 테스트에 추가해 현재 1/1 집중 필터로 확인했습니다. 과거 다른 빌드 모드·브라우저·변이 audit와 공식 PDF 전체 재감사는 이번 결과가 아닙니다.

@@ -39,7 +39,7 @@ SSOT는 제품의 규칙에 적용합니다. content 존재 여부·FAT 분류·
 | E2 | 129바이트 스트림의 MiniFAT이 64바이트 뒤 종료 | size=129, content.length=64로 성공 | `InvalidMiniSector` | 데이터 잘림을 성공으로 숨기지 않고 거부 |
 | E3 | 부모 Folder가 자식 A/B보다 뒤에 배치 | B 경로가 `B`로 반환 | `Root Entry/Folder/B` | 올바른 부모 경로 유지 |
 
-`exceptions.test.mjs`와 독립 `exception-fixtures.mjs`로 세 경우를 재현합니다. 손상 파일은 VM 시간 제한 안에서만 레거시에 전달합니다. E3는 공개 이슈 #15와 같은 부모/형제 순서 문제를 독립 fixture로 확인한 것이며, 이슈 첨부 파일을 사용한 것은 아닙니다.
+`exceptions.test.mjs`와 독립 `exception-fixtures.mjs`로 세 경우를 재현합니다. 손상 파일은 VM 시간 제한 안에서만 레거시에 전달합니다. E3는 [SheetJS 공개 이슈 #15](https://github.com/SheetJS/js-cfb/issues/15)와 같은 부모/형제 순서 문제를 독립 fixture로 확인한 것이며, 이슈 첨부 파일을 사용한 것은 아닙니다.
 
 기타 기존 차이도 포괄 승인하지 않습니다: v4 directory count/FAT 마커·이름·참조의 추가 검증, v4 u64 크기와 자원 제한, JS 비정상 바이트/인코딩 거부, 변경된 결과 메타데이터 검색, raw 원본 alias. 특히 이 차이 전부를 “레거시 버그”라고 부르지 않습니다. 필요한 호환 범위와 실제 파일 근거를 정한 뒤 개별 결정해야 합니다.
 
@@ -107,7 +107,7 @@ Node 24 / 실제 WASM `createCfbReader().parse()`에서 아래 17건이 모두 �
 
 재현 fixture에서 storage 시작값을 0으로, unused 엔트리의 L/R/C를 NOSTREAM으로 고치고, 빈 스트림에 불필요했던 할당 섹터를 제거했습니다. 해당 필드를 직접 확인하는 회귀 검사도 추가했습니다. 수정 후에도 E1/E2/E3의 차이가 재현됩니다. E1/E2는 의도적으로 손상된 입력입니다.
 
-`zig build audit -Doptimize=ReleaseSafe --summary all`: 네이티브 14개, Node/WASM 38개 통과. 컨테이너 60개·스트림 483개·검색 5496건 차등 비교 실패 0, 변이 12000건 trap 0. 실제 HWP 48개에 대한 반환 형태·스트림 바이트 비교도 통과했습니다. 이는 HWP 레코드/화면 렌더링 비교가 아니며 전체 명세 적합성의 증명도 아닙니다.
+당시 ReleaseSafe audit에서는 네이티브 14개, Node/WASM 38개가 통과했습니다. 컨테이너 60개·스트림 483개·검색 5496건 차등 비교 실패 0, 변이 12000건 trap 0이었고, 실제 HWP 48개에 대한 반환 형태·스트림 바이트 비교도 통과했습니다. 이는 HWP 레코드/화면 렌더링 비교가 아니며 전체 명세 적합성의 증명도 아닙니다. 재현 명령은 [개발·검증 명령](development-commands.md)을 따릅니다.
 
 후속 구현은 메타데이터·할당표·이름 비교 각각의 코어 책임 안에서 진행해야 합니다. 엄격 검증과 레거시 호환의 충돌을 명시한 뒤 정책을 정하고, 같은 검사를 JS에 재구현하지 않습니다. 이번 비교만으로 기본 API의 거부 범위를 변경하지 않았습니다.
 
@@ -117,6 +117,8 @@ Node 24 / 실제 WASM `createCfbReader().parse()`에서 아래 17건이 모두 �
 
 `name_order.zig`는 명세 비교를 strict 트리 검증·writer 정렬/중복 검사·exact 검색에 공통 제공하며, `entry_rules.zig`는 읽기·쓰기 메타데이터 검사를 공유합니다. 기존 `find.zig`는 레거시 API의 별도 호환 정책입니다. ABI 5는 strict open·exact lookup·편집 모델·writer 출력을 추가하며 wire 레이아웃도 기존 ABI 스키마에서 생성합니다.
 
-저장 후 실제 HWP 48개 × v3/v4의 모든 활성 모델 필드와 904개 stream 바이트가 보존됐고, 독립 JS 파서도 출력 stream을 동일하게 읽었습니다. 네이티브 20개와 Node/WASM 46개에는 생성·수정·삭제·이름/부모 관계, 다중 DIFAT, strict 위반, wire 손상, 할당 실패 및 복구 테스트가 포함됩니다. 명세용 생성과 검증이 서로 같은 오류를 숨기지 않도록 독립 파서/직접 바이트 변이를 함께 사용합니다.
+당시 저장 후 실제 HWP 48개 × v3/v4의 모든 활성 모델 필드와 904개 stream 바이트가 보존됐고, 독립 JS 파서도 출력 stream을 동일하게 읽었습니다. 당시 네이티브 20개와 Node/WASM 46개에는 생성·수정·삭제·이름/부모 관계, 다중 DIFAT, strict 위반, wire 손상, 할당 실패 및 복구 테스트가 포함됐습니다. 명세용 생성과 검증이 서로 같은 오류를 숨기지 않도록 독립 파서/직접 바이트 변이를 함께 사용합니다.
 
 Range Lock은 배치 예약·체인 참조 금지·마커 검사와 경계 계산 테스트를 추가했습니다. 실제 2 GiB 초과 파일 왕복이나 16 TiB 전체 크기 지원을 실측한 것은 아닙니다. 기본 자원 제한은 유지됩니다. 물리 바이트 동일 저장, 파일시스템 제자리 수정/트랜잭션, HWP 본문 인코더는 이 CFB API가 제공하지 않습니다. 따라서 이 변경도 모든 입력 공간의 무결함 또는 전체 HWP 구현 완료 선언은 아닙니다.
+
+2026-09-27 재검증: 로컬 `legacy/cfb.js`의 1.2.0 버전과 Apache-2.0 고지, 현재 Zig 검색/명세 이름 비교 분리, MS-CFB 공식 헤더·디렉터리·트리 설명, 공개 이슈 #15 및 E1~E3 독립 fixture를 대조했습니다. ReleaseSafe `zig build compare -Doptimize=ReleaseSafe --summary all`은 8/8 단계·Node 47/47·60개 파일/483개 stream/5,496개 검색·16개 거부로 통과했습니다. 세 예외 테스트는 4/4 통과했고, `writer.test.mjs`의 기존 15건에 MiniFAT 개수·최소 파일 크기 2건의 기본 호환 읽기 assertion을 추가해 **17건 모두 기본 읽기 수용/strict 거부**를 확인했습니다. 실제 HWP 48개의 v3/v4 재저장·904 stream 비교도 현재 Node assertion으로 확인했습니다. 과거 Debug/ReleaseFast·Chromium·12,000건 변이 audit는 이번에 재실행하지 않았으며 공식 PDF 원문 전체의 재감사나 모든 명세 조항의 적합성 증명으로 확대하지 않습니다.
