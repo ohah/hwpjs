@@ -8,7 +8,7 @@ Microsoft [EMR_HEADER Record Types](https://learn.microsoft.com/en-us/openspecs/
 
 EOF의 선언/실제 Size, 마지막 SizeLast와 선택 palette의 정확한 계약은 [EMF EOF 팔레트](emf-eof-palette.md)가 소유한다.
 
-`framing.zig`는 첫 record가 유일한 header이고 EOF가 유일한 마지막 record이며, 실제 record 수가 Header의 Records와 일치하는지 조립한다. record별 drawing/state 의미는 이 단계의 완료 범위가 아니다.
+`framing.zig`는 첫 record가 유일한 header이고 EOF가 유일한 마지막 record이며, 실제 record 수가 Header의 Records와 일치하는지 조립한다. 구현된 하위 parser의 구조·일부 상태 검증을 연결하지만, 119개 Type의 enum 보존이 곧 119개 payload의 의미 검증이나 drawing 재생 완료를 뜻하지는 않는다.
 
 고정 clipping 레코드 네 종류의 구조·분류·집계는 [EMF 고정 clipping records](emf-fixed-clipping-records.md)가 단일 출처다.
 
@@ -42,7 +42,7 @@ RegionData를 사용하는 네 drawing record와 brush 참조의 구조·집계�
 
 `log_palette_entry.zig`는 [LogPaletteEntry](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/c1f7b285-be16-4112-a4e6-0b2fd4c1d148)의 Reserved/Blue/Green/Red 순서를 단독 소유하며 EOF palette와 `palette_records.zig`가 이를 공유한다. Reserved는 MUST-ignore이므로 값을 보존한다. `palette_records.zig`는 CREATEPALETTE, SELECTPALETTE, SETPALETTEENTRIES, RESIZEPALETTE, REALIZEPALETTE를 구분한다. 각 필수 prefix와 CREATE/SET의 count-derived entry 끝을 요구하고 그 뒤 data는 의미 배열에서 제외한다. 상세 경계와 검증은 [핸들·팔레트 record 호환성](emf-handle-record-compatibility.md)이 단일 출처다.
 
-`palette_records.zig`는 각 레코드의 wire 계약만 소유한다. handle이 Header Handles 범위에 있는지, CREATE가 빈 slot을 쓰는지, SELECT/SET/RESIZE가 살아 있는 LogPalette를 가리키는지, Start+count가 현재 palette 크기를 넘는지는 아래 [EMF Object Table](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/e4fa4e63-9096-4cdc-b776-85e2a1e4e1f4) 상태가 소유한다.
+`palette_records.zig`는 각 레코드의 wire 계약만 소유한다. handle이 Header Handles 범위에 있는지, CREATE가 유효한 slot을 새로 점유하거나 기존 객체를 교체하는지, SELECT/SET/RESIZE가 살아 있는 LogPalette를 가리키는지, Start+count가 현재 palette 크기를 넘는지는 아래 [EMF Object Table](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/e4fa4e63-9096-4cdc-b776-85e2a1e4e1f4) 상태가 소유한다.
 
 `object_table.zig`는 Header의 Handles가 지정한 최대 index에 예약 index 0을 더한 배열을 호출자 allocator로 생성한다. 모든 9종 object creation record의 명시적 handle을 점유시키며 0·stock·범위 밖 index를 거부한다. 명세는 CREATE 시 해당 element를 updated한다고 하며 기존 점유에 대한 실패를 규정하지 않으므로 같은 index의 새 CREATE는 slot을 교체하고 live 수를 늘리지 않는다. 12바이트 필수 prefix의 [DELETEOBJECT](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/6f0f12a3-111a-478b-8251-a9505168f9a9)는 살아 있는 non-stock object만 삭제하고 slot 재사용을 허용한다. Palette object는 현재 entry count를 함께 보존하여 SELECT/SET/RESIZE의 생존·종류를 검사하고, SET의 `Start + NumberOfEntries`가 현재 크기를 넘지 않게 하며 RESIZE 후 크기를 갱신한다. `framing.validate`는 allocator를 필수로 받고 구조 검증 성공 후 이 상태 재생을 항상 수행하며 Summary에 create/delete/palette 동작·peak/final live 수를 제공한다.
 
@@ -95,6 +95,8 @@ Object Table은 brush/pen/font/palette의 현재 명시적 선택을 별도로 �
 `tests/hwp5/emf-corpus-evidence.mjs`가 HWP CFB의 FileHeader와 DocInfo `HWPTAG_BIN_DATA`를 읽어 정확한 `/BinData/BINxxxx.ext` stream을 선택하고, 문서 기본값과 항목별 compression 정책에 따라 해제한다. 확장자 `emf`뿐 아니라 offset 40의 EMF signature도 독립적으로 확인하므로 잘못된 확장자의 실제 EMF를 놓치지 않으며, `emf`로 선언됐지만 signature가 다른 값은 별도 실패 증거로 남긴다. 해제된 bytes는 test-only WASM mode 337을 통해 제품 `framing.validate`에 전달하고 summary와 record type 순서를 반환한다.
 
 현재 저장소의 실제 표본 584개를 전수 조사한 최초 baseline은 지원 가능한 HWP 475개와 BinData 2,167개 중 EMF 0개였다. 따라서 이 수치는 실제 EMF 호환성 증거가 아니라 표본 공백을 드러내는 값이다. 종단간 계약은 기존 실제 HWP CFB fixture의 compressed BinData 한 항목에 object/palette EMF를 주입해 CFB → DocInfo 선택 → inflate → signature → Zig framing/object-table 경계를 검증한다. 외부에서 유래한 실제 EMF 포함 HWP가 확보되면 같은 survey에 자동 편입되며 record type coverage가 보고된다.
+
+2026-09-28 현행 재검증에서 `zig build emf-corpus-audit -Doptimize=ReleaseFast --summary all`은 10/10 단계와 corpus Node 테스트 3/3개를 통과했다. 584개 HWP 중 해석 가능한 문서 475개에서 BinData 2,167개를 확인했으나 EMF 후보·검증 성공은 모두 0개였다. 이 실행은 과거에 기록된 변이 실험이나 EMF가 들어 있는 실파일의 양성 호환성을 재검증한 것이 아니다.
 
 Header base와 Extension1/2 판별, description, PixelFormatDescriptor의 현재 계약과 검증 기록은 [EMF Header 가변 payload](emf-header-payload.md)가 단일 출처다.
 
