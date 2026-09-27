@@ -6,9 +6,24 @@ pub const Segment = struct {
     end: resolved.Value,
 };
 
+pub const Closing = enum { none, always, if_distinct };
+
+fn samePosition(a: resolved.Value, b: resolved.Value) bool {
+    return switch (a) {
+        .integer => |left| switch (b) {
+            .integer => |right| left.x == right.x and left.y == right.y,
+            .floating => false,
+        },
+        .floating => |left| switch (b) {
+            .integer => false,
+            .floating => |right| left.x == right.x and left.y == right.y,
+        },
+    };
+}
+
 pub const Iterator = struct {
     source: resolved.Iterator,
-    close_requested: bool,
+    closing: Closing,
     first: ?resolved.Value = null,
     previous: ?resolved.Value = null,
     segments_emitted: u32 = 0,
@@ -35,7 +50,10 @@ pub const Iterator = struct {
             return result;
         }
 
-        if (pending.close_requested and pending.segments_emitted != 0) {
+        if (pending.segments_emitted != 0 and
+            (pending.closing == .always or
+                (pending.closing == .if_distinct and !samePosition(pending.previous.?, pending.first.?))))
+        {
             const result: Segment = .{ .start = pending.previous.?, .end = pending.first.? };
             pending.done = true;
             self.* = pending;
@@ -49,7 +67,11 @@ pub const Iterator = struct {
 };
 
 pub fn segments(source: point_data.PointData, close: bool) Iterator {
-    return .{ .source = resolved.points(source), .close_requested = close };
+    return .{ .source = resolved.points(source), .closing = if (close) .always else .none };
+}
+
+pub fn polygonBoundary(source: point_data.PointData) Iterator {
+    return .{ .source = resolved.points(source), .closing = .if_distinct };
 }
 
 const std = @import("std");
@@ -87,6 +109,31 @@ test "EMF+ polyline segments preserve floating point bits and explicit degenerat
         try std.testing.expectEqual(@as(u32, 0x7fc00001), @as(u32, @bitCast(value.floating.y)));
     }
     try std.testing.expect((try iterator.next()) == null);
+}
+
+test "EMF+ polygon boundary omits coincident closing side without changing DrawLines closure" {
+    const integers = [_]u8{ 1, 0, 2, 0, 3, 0, 4, 0, 1, 0, 2, 0 };
+    const source = try point_data.parse(&integers, 3, false, true, .{});
+    var polygon = polygonBoundary(source);
+    _ = (try polygon.next()).?;
+    _ = (try polygon.next()).?;
+    try std.testing.expect((try polygon.next()) == null);
+    try std.testing.expect((try polygon.next()) == null);
+
+    var lines = segments(source, true);
+    _ = (try lines.next()).?;
+    _ = (try lines.next()).?;
+    const closing = (try lines.next()).?;
+    try std.testing.expectEqual(resolved.IntegerPoint{ .x = 1, .y = 2 }, closing.start.integer);
+    try std.testing.expectEqual(closing.start.integer, closing.end.integer);
+
+    var floats = [_]u8{0} ** 24;
+    for ([_]u32{ 0x80000000, 0, 0x3f800000, 0, 0, 0x80000000 }, 0..) |bits, index|
+        std.mem.writeInt(u32, floats[index * 4 ..][0..4], bits, .little);
+    var signed_zero = polygonBoundary(try point_data.parse(&floats, 3, false, false, .{}));
+    _ = (try signed_zero.next()).?;
+    _ = (try signed_zero.next()).?;
+    try std.testing.expect((try signed_zero.next()) == null);
 }
 
 test "EMF+ polyline segments require two points and fail atomically" {

@@ -8,7 +8,7 @@ Count는 3 이상입니다. P가 clear이면 C에 따라 `DataSize = 8 + Count *
 
 ## stream 연결과 미지원 경계
 
-stream은 S가 clear일 때만 Brush 슬롯 존재와 ObjectTypeBrush를 검사하며 오류·한도·count overflow에서 comment 상태를 원복합니다. 상대 좌표 누적은 [공용 PointData resolver](emf-plus-point-resolution.md)가, 마지막 점과 첫 점의 닫힌 경계는 [공용 선분 계층](emf-plus-polyline-geometry.md)이 담당합니다. [Device segment 계층](emf-plus-polyline-device-segments.md)은 이 경계의 endpoint에 일반 world/page/device 변환을 적용합니다. Brush fill·clipping 및 저장은 구현하지 않았습니다. 당시 조사한 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성도 주장하지 않습니다.
+stream은 S가 clear일 때만 Brush 슬롯 존재와 ObjectTypeBrush를 검사하며 오류·한도·count overflow에서 comment 상태를 원복합니다. 상대 좌표 누적은 [공용 PointData resolver](emf-plus-point-resolution.md)가, 마지막 점과 첫 점이 다를 때의 닫힌 경계는 [공용 선분 계층](emf-plus-polyline-geometry.md)이 담당합니다. [Device segment 계층](emf-plus-polyline-device-segments.md)은 이 경계의 endpoint에 일반 world/page/device 변환을 적용합니다. Brush fill·clipping 및 저장은 구현하지 않았습니다. 당시 조사한 로컬 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 출력 동등성도 주장하지 않습니다.
 
 ## 공식 근거
 
@@ -25,3 +25,5 @@ RecordType, DataSize 관계, 실제 slice, Count 최소값, P/C 선택, PointR �
 최종 `zig build audit --summary all`, `-Doptimize=ReleaseSafe`, `-Doptimize=ReleaseFast`는 각 모드에서 40/40 step과 1855/1855 test를 통과했습니다. 모드별 구성은 native 1816, chart ownership 31, WMF contents 8이며, 각 실행은 8,905,827 checks, imports 0과 CFB 12,000 mutation의 traps 0을 기록했습니다.
 
 위 변이·전체 `audit` 수치는 당시 실행 기록이며 이번 문서 재검증에서 재실행한 결과는 아닙니다.
+
+2026-09-28 공식 마지막 변 조건에 맞춰 동일점 입력에서 source/device iterator가 중복 닫힘 선분을 내지 않는 회귀를 추가했습니다. 이 변경은 wire parser나 Brush 참조 정책을 바꾸지 않습니다.

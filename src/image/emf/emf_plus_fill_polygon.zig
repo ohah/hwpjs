@@ -22,7 +22,7 @@ pub const FillPolygon = struct {
     point_data: point_data.PointData,
 
     pub fn segments(self: FillPolygon) polyline_segments.Iterator {
-        return polyline_segments.segments(self.point_data, true);
+        return polyline_segments.polygonBoundary(self.point_data);
     }
 
     pub fn deviceSegments(self: FillPolygon, mapping: world_page_device.Mapper) polyline_device_segments.Iterator {
@@ -124,6 +124,24 @@ test "EMF+ FillPolygon exposes shared closed device polyline segments" {
     try std.testing.expectEqual(geometry.PointF{ .x = 10, .y = 12 }, closing.start);
     try std.testing.expectEqual(first.start, closing.end);
     try std.testing.expect((try boundary.next()) == null);
+}
+
+test "EMF+ FillPolygon omits an already coincident closing side in source and device space" {
+    var data = [_]u8{0} ** 20;
+    std.mem.writeInt(u32, data[4..8], 3, .little);
+    for ([_]i16{ 1, 2, 3, 4, 1, 2 }, 0..) |coordinate, index|
+        std.mem.writeInt(i16, data[8 + index * 2 ..][0..2], coordinate, .little);
+    const value = try parse(makeRecord(&data, 0x4000), .{});
+    var source = value.segments();
+    _ = (try source.next()).?;
+    _ = (try source.next()).?;
+    try std.testing.expect((try source.next()) == null);
+
+    const mapping = world_page_device.resolve(transform_matrix.TransformMatrix.identity, page_transform.build(.pixel, 1, .{ .x = 96, .y = 96 })).?;
+    var device = value.deviceSegments(mapping);
+    _ = (try device.next()).?;
+    _ = (try device.next()).?;
+    try std.testing.expect((try device.next()) == null);
 }
 
 test "EMF+ FillPolygon parses variable PointR padding and ignores C" {

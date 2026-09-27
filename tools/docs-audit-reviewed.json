@@ -70,8 +70,8 @@
       "evidence": "2026-09-28 official EMF+ DrawLines P C L Count ObjectID and size rules versus Zig point parser shared segments and tracked Pen lookup; Debug Safe Fast EMF+ 560 each and direct Safe 5; historic mutants and full audits not rerun"
     },
     "docs/emf-plus-fill-polygon-record.md": {
-      "sha256": "41580f8f31cc633c3aa288dbf6f5440fcc379ac7252613967da0cb84436cf54a",
-      "evidence": "2026-09-28 official EMF+ FillPolygon S P C Count and size rules versus Zig point parser closed segments conditional Brush lookup and stream; Debug Safe Fast EMF+ 560 each and direct Safe 5; historic mutants and full audits not rerun"
+      "sha256": "3c1733f4886d30a48360bb0858699ae0ae644c1b6e7a811ea12030e5d523db7c",
+      "evidence": "2026-09-28 official EMF+ FillPolygon S P C Count size and conditional final side versus Zig parser Brush lookup stream and corrected polygon boundary; Debug Safe Fast EMF+ 562 each; historic mutants and full audits not rerun"
     },
     "docs/emf-plus-fill-pie-record.md": {
       "sha256": "78548c59963616110cca6006de6dd92fecad4646ba6a224d6d7965a695a5ec46",
@@ -334,7 +334,7 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "c59ddff409c492a4c24c0e4a585919f7087bdf2cb0d69b966edb1398bb6cc30e",
+      "sha256": "7fda44955429b2eb465fa9439325d07fcca4f2b52f76af1105b704ea42d762df",
       "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope PNG ICC inspection PNG RGBA BCP47 syntax registry alpha2 history ICC IANA matching mluc selection mluc structure mluc Unicode ICC v2 Unicode v2 text tag payload dispatch tag table structure header identifiers v4 and v2 header numeric header verification ICC registry source lookup required tags overview presence table XYZ type XYZ tags curve type TRC tags parametric curve analytic forward TRC forward sampled forward sampled inverse sampled wide inverse gamma inverse wide gamma inverse TRC inverse and extended TRC inverse matrix TRC inverse matrix TRC model matrix TRC forward fraction matrix inverse fraction matrix TRC inverse wide linear target wide positive bounds normalized and extended root compare normalized and extended root locations clipped and extended power preimage whole and extended whole parametric preimage normalized and extended whole bounds normalized and extended attained F.1a whole and extended nearest normalized and extended full inverse topology segments jump trend domain partition power clipping power level root compare active root locations rational power order normalized power level wide power level normalized root order power range power nearest ordinate order extended ordinate order ordinate distance extended ordinate distance linear range parametric range rational range nearest linear preimage extended linear preimage chromatic adaptation matrix transform ICC foundation verification review, architecture pending, full Debug Zig test 2656 passed and ReleaseFast HWP5 audit 10 steps 8905855 checks, EMF ICM and three clipping region docs direct tests and 102 shared tests each mode"
     },
     "docs/bcp47-syntax.md": {
@@ -1432,6 +1432,14 @@
     "docs/emf-plus-path-device-boundary-polyline.md": {
       "sha256": "177e90117b307c98067b5cb41fc98c1642a5e0902b0949043759cbe96e903c22",
       "evidence": "2026-09-28 official GDI+ Filling Open Figures and current Path stroke fill Closure policy, source ranges global point budget, Path public delegation; Debug Safe Fast EMF root 560 each, ReleaseSafe boundary polyline 5 policy 2 public Path 2; historic mutation and audit not rerun"
+    },
+    "docs/emf-plus-polyline-geometry.md": {
+      "sha256": "a69e942565f84b482d106b403c1baa65b3e9d53422ea740278310bf945855863",
+      "evidence": "2026-09-28 official DrawLines L and FillPolygon conditional last side against shared Zig polyline iterator and new distinct closure regression; Debug Safe Fast EMF root 562 each; historic mutation and full audit not rerun"
+    },
+    "docs/emf-plus-polyline-device-segments.md": {
+      "sha256": "65a5444955e8fbd32f53e108a86e5f9bf9ce8bd09f44a27056f54180201af1ab",
+      "evidence": "2026-09-28 Zig source iterator closure policy device mapping and public FillPolygon source device regression; Debug Safe Fast EMF root 562 each; historic mutation and full audit not rerun"
     }
   }
 }

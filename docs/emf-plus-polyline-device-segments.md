@@ -6,7 +6,7 @@
 
 `resolved.Value`의 i64 정수 좌표를 f32로 바꾸는 경계는 `emf_plus_resolved_point_data.zig`의 `toPointF()` 한 곳으로 옮겼습니다. PointF는 원비트를 그대로 반환하며 정수는 Zig `@floatFromInt`의 f32 반올림을 따릅니다. [DrawImagePoints affine map](emf-plus-image-affine-map.md)도 같은 함수를 재사용합니다.
 
-`DrawLines.deviceSegments()`는 기존 L 기반 `segments()`를, `FillPolygon.deviceSegments()`는 기존 강제 닫힘 `segments()`를 그대로 감쌉니다. 두 record가 닫힘 정책이나 좌표 변환을 다시 구현하지 않습니다. mapper는 unknown world/page를 사전에 거부한 `world_page_device.Mapper`이므로 iterator 도중 identity나 pixel 단위로 추정하지 않습니다.
+`DrawLines.deviceSegments()`는 기존 L 기반 `segments()`를, `FillPolygon.deviceSegments()`는 양 끝점이 다를 때만 닫는 `segments()`를 그대로 감쌉니다. 두 record가 닫힘 정책이나 좌표 변환을 다시 구현하지 않습니다. mapper는 unknown world/page를 사전에 거부한 `world_page_device.Mapper`이므로 iterator 도중 identity나 pixel 단위로 추정하지 않습니다.
 
 ## 원자성과 지원 경계
 
@@ -23,3 +23,5 @@
 첫 실행에서 unknown 두 변이는 기존 world-page-device 테스트가 필터에 포함되지 않아 6회 생존했고, 두 record 닫힘 변이는 optional unwrap panic 6회, 진행 상태 변이는 Zig 컴파일 오류 3회로 종료됐습니다. 이 15회는 유효 검출에서 제외했습니다. 필터에 기존 mapper 검사를 포함하고 closing presence assertion을 추가했으며, 진행 상태를 값은 반환하되 source만 미커밋하는 변이로 교체해 다섯 변이를 새 복사본·cache에서 재실행했습니다. 최종 유효 42회는 최초 9종의 27회와 교정 5종의 15회입니다. 제품 작업 트리에는 변이를 적용하지 않았습니다.
 
 변경 소스를 고정한 뒤 전체 audit를 순차 실행했습니다. Debug·ReleaseSafe·ReleaseFast가 각각 40/40 단계와 1958/1958 테스트(native 1919, chart ownership 31, WMF Contents 8)를 통과했습니다. 각 모드의 corpus 검사는 8,905,827 checks, imports 0이었고 strict CFB mutation sweep는 12,000 mutations, traps 0이었습니다. 로그는 `/tmp/hwpjs-device-polyline-final-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.
+
+위 변이·전체 audit는 작성 당시의 이력이며 이번 재검증에서 다시 실행하지 않았습니다. 2026-09-28 FillPolygon의 동일점 닫힘 생략을 source iterator에서 결정하고 device iterator가 그대로 전달하는 공개 연결 회귀를 추가했습니다.
