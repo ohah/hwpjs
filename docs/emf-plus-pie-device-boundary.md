@@ -4,6 +4,8 @@
 
 `src/image/emf/emf_plus_pie_device_boundary.zig`는 [Pie radial edge](emf-plus-arc-device-points.md)와 [exact Arc conic segment](emf-plus-arc-device-segments.md)를 닫힌 의미 경계 순서로 조립하는 allocation-free iterator입니다.
 
+[MS-EMFPLUS DrawPie](https://learn.microsoft.com/en-gb/openspecs/windows_protocols/ms-emfplus/bd93aa68-e96f-42f1-8aea-390920f327fd)와 [FillPie](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/59c3a6cc-1ab5-436c-b39a-b341779af88f)는 타원 내부의 pie wedge와 각도 방향·한도를 정의하지만 아래 tagged union 순서와 퇴화 edge 보존은 이 프로젝트의 geometry 표현 정책입니다.
+
 ```text
 center_to_start
 arc segment 0..4
@@ -29,3 +31,5 @@ DrawPie와 FillPie의 `deviceBoundary()`는 기존 `deviceArc()`가 성공한 �
 최초 Arc tag 변이 3회는 계산 결과 capture를 소비하지 않아 컴파일 오류가 났으므로 제외했습니다. control weight를 소비한 뒤 tag만 바꾸는 동등 변이로 교체해 3/3회 assertion 검출했습니다. 기본 캠페인은 `/tmp/hwpjs-pie-boundary-mutants.yA2on8`, 교정 실행은 `/tmp/hwpjs-pie-boundary-arc-tag-corrected.MpVlvB`에 있습니다.
 
 최종 제품 트리의 전체 `audit`를 Debug·ReleaseSafe·ReleaseFast 순서로 실행했습니다. 세 모드 모두 40/40 단계와 1,995/1,995 테스트(native 1,956, chart ownership 31, WMF Contents 8)를 통과했습니다. 각 모드의 corpus 검사는 8,905,827 checks, WASM imports 0이었고 strict CFB mutation sweep는 12,000 mutations, traps 0이었습니다. 로그는 `/tmp/hwpjs-pie-device-boundary-final-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.
+
+위 변이·전체 `audit` 수치는 작성 당시의 이력입니다. 기재된 `/tmp` 캠페인·로그는 2026-09-28 현재 남아 있지 않습니다. 이번에는 현재 iterator의 역할 순서·zero/full sweep·두 record 위임을 대조하고 Debug·ReleaseSafe·ReleaseFast root `EMF+` 필터 각 560/560, ReleaseSafe의 boundary 직접 필터 4/4와 DrawPie·FillPie 직접 필터 각 4/4를 통과했습니다. 과거 변이·전체 `audit`는 재실행하지 않았습니다.
