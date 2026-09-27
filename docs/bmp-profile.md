@@ -24,7 +24,11 @@ Profile은 태그 descriptor 배열만 소유하므로 deinit이 필요합니다
 
 두 API 모두 semantics_deferred=true입니다. BMP 색공간·intent·endpoints/gamma의 의미 검증, ICC 색 변환과 렌더링 동일성은 별도입니다. 기존 pixels.decode는 자동 프로파일 검사를 하지 않습니다. 후속 [HWP 선택 연결](hwp5-bin-data-bmp-profile.md)은 별도 계약이며, 제품 JS API는 여전히 CFB 전용입니다.
 
-## 현재 검증 기록
+## 현재 재검증 (2026-09-27)
+
+Microsoft [BITMAPV5HEADER](https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-bitmapv5header)의 DIB 시작 기준 offset·내장 크기·링크 CP1252/NUL·파일/메모리 배치 구분을 현재 `profile_transport.zig`·`profile_inspection.zig`와 대조했습니다. BMP 파일 경로는 활성 V5 프로파일만 읽고 픽셀 뒤·선언 파일 안 범위를 검사하며, ICC 내용 검사는 별도 선택으로 남습니다. Debug/ReleaseSafe/ReleaseFast의 넓은 `BMP profile` 필터는 각각 root 포함 20/20개 통과했습니다. 이는 BMP 단독 테스트뿐 아니라 HWP 연결 테스트도 포함한 수입니다. 로컬 ReleaseSafe probe WASM의 독립 JS 검사는 comparisons=198·rejected=1,801, seed=1112952885 변이 2,000건은 accepted=1,058·rejected=942·traps=0이었습니다. 이번에는 세 모드 WASM·실파일·소스 변형·전체 audit를 재실행하지 않았고, 아래 수치는 당시 검증 기록입니다.
+
+## 과거 검증 기록
 
 네이티브 필터는 root 포함 12개로 Debug/ReleaseSafe/ReleaseFast 모두 통과했습니다. offset/size 교차 조합, 활성/비활성/버전, 입력 모든 잘림, 각 한도, 파일 밖 NUL, 링크 선언 크기 무시, borrowed 수명, ICC ID·배치 정책·옵션 전달, OOM과 ReleaseFast 명시적 누수 회계를 검사합니다.
 
@@ -34,10 +38,10 @@ Profile은 태그 descriptor 배열만 소유하므로 deinit이 필요합니다
 
 내장 v2/v4·링크·부재 출력 총 829바이트를 각각 XOR 1로 바꾸어 세 모드 모두 검출했습니다. 실파일 검사는 세 모드 각각 일반 HWP 45개와 추가 reference 문서의 BMP 2+26참조를 대조했으며 활성 V5 프로파일이 없었습니다. 배포용 2/암호화 1개는 기존 정책으로 제외했습니다. 따라서 실제 제작 V5 내장/링크 표본 검증 완료로 읽지 않습니다.
 
-격리 소스에서 DIB 기준 14바이트 누락, 내장 크기 상한 무시, 링크를 ProfileSize로 제한, 링크 data에 NUL 포함, after_profile 손실, ID 검사 생략, 실패 경로 descriptor 해제 제거, layout을 bounded로 강제하는 결함 8종을 주입했습니다. 세 모드 각각 12개 테스트가 실행되고 변형별 실패 수는 순서대로 10/2/1/1/2/2/2/1개였습니다. 해제 제거는 ReleaseFast에서도 ID 오류와 payload 한도 오류 양쪽에서 expected 0, found 32로 검출했습니다. 근거는 `/tmp/hwpjs-bmp-profile-mutants.8Csooz/`의 변형별 로그입니다.
+격리 소스에서 DIB 기준 14바이트 누락, 내장 크기 상한 무시, 링크를 ProfileSize로 제한, 링크 data에 NUL 포함, after_profile 손실, ID 검사 생략, 실패 경로 descriptor 해제 제거, layout을 bounded로 강제하는 결함 8종을 주입했습니다. 세 모드 각각 12개 테스트가 실행되고 변형별 실패 수는 순서대로 10/2/1/1/2/2/2/1개였습니다. 해제 제거는 ReleaseFast에서도 ID 오류와 payload 한도 오류 양쪽에서 expected 0, found 32로 검출했습니다. 당시 근거인 `/tmp/hwpjs-bmp-profile-mutants.8Csooz/`의 변형별 로그는 현재 로컬에 없습니다.
 
 ID 검사 호출을 완전히 삭제한 첫 변형은 오류 집합 변경 때문에 컴파일되지 않아 런타임 검출 근거에서 제외했습니다. 유효한 비영 크기에서 검사를 건너뛰되 오류 집합을 유지하는 변형으로 다시 검사해 위 실패를 확인했습니다. ID/해제/layout의 최종 근거는 해당 모드의 `-v2.log`입니다. 제품 코드와 정규 테스트를 이 변형을 위해 수정하지 않았습니다.
 
-전체 audit를 Debug → ReleaseSafe → ReleaseFast 순서로 실행하여 각 모드 20/20 build steps, 936/936 네이티브 테스트, 7,834,331개 검사 항목을 통과했습니다. 실행 셸의 종료 코드 0도 확인했습니다. 로그는 `/tmp/hwpjs-bmp-profile-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다. 정규 회귀에 새 WASM 대조와 실파일 프로파일 검사를 포함했으며, 검사 중 제품 코드와 테스트를 변경하지 않았습니다.
+당시 전체 audit를 Debug → ReleaseSafe → ReleaseFast 순서로 실행하여 각 모드 20/20 build steps, 936/936 네이티브 테스트, 7,834,331개 검사 항목을 통과했습니다. 실행 셸의 종료 코드 0도 확인했습니다. 로그 경로는 `/tmp/hwpjs-bmp-profile-{Debug,ReleaseSafe,ReleaseFast}-audit.log`였지만 현재 로컬에는 없습니다. 정규 회귀에 새 WASM 대조와 실파일 프로파일 검사를 포함했으며, 검사 중 제품 코드와 테스트를 변경하지 않았습니다.
 
 관련 문서 3개의 로컬 링크 55개와 변경 파일의 구문·포맷·diff 검사를 통과했습니다. 마지막 `zig build test --summary all`은 936/936 테스트, `zig build -Doptimize=ReleaseSafe --summary all`은 5/5 단계를 통과했습니다. 이 문서는 전체 문서 검증 완료 기록이 아닙니다.
