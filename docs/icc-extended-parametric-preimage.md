@@ -2,6 +2,8 @@
 
 ## 계약
 
+[ICC.1:2022 §10.18 Table 68·Annex F.1](https://www.color.org/specification/ICC.1-2022-05.pdf)은 파라메트릭 곡선의 분기·클리핑과 역함수의 단조성·평탄 구간·미도달 출력 처리를 정의합니다. 여기의 분기별 기호 집합과 u512/u1024 폭은 프로젝트의 구현 계약이지 명세가 요구하는 반환 wire가 아닙니다.
+
 `parametric_preimage.solveWide(precision, curve, n, d)`는 [0,1]에서 clip(f(x))=n/d인 모든 실제 x를 선형·거듭제곱 분기의 기여분 합집합으로 보존합니다. 목표는 정규화 u512이며 결과는 undecided 또는 set입니다. 목표와 전체 곡선 정의역을 먼저 검사합니다. 상위가 미확정이면 확정된 하위 해도 부분적으로 노출하지 않습니다.
 
 `Wide.Set.linear`는 [넓은 선형 역상](icc-extended-linear-preimage.md)의 optional ExtendedInterval이고, power는 [넓은 클리핑 역상](icc-extended-power-preimage.md)의 optional Set입니다. linear=null은 하위 기여분 부재입니다. power=null은 상위 분기 비활성이고, 활성이나 해가 없으면 source를 가진 빈 Set을 유지합니다. isEmpty는 두 기여분을 모두 확인합니다.
@@ -10,7 +12,7 @@
 
 ## 경계와 SSOT
 
-전체 집합의 하한·상한과 도달 여부는 [확장 경계](icc-extended-preimage-bounds.md)에서 별도로 구합니다. 집합 조립과 역함수 선택의 책임은 합치지 않습니다.
+전체 집합의 하한·상한과 도달 여부는 [확장 경계](icc-extended-preimage-bounds.md)에서 별도로 구합니다. [확장 도달 목표 선택](icc-extended-attained-inverse.md)·[확장 최근접 출력](icc-extended-parametric-nearest.md)·[확장 전체 역변환](icc-extended-parametric-inverse.md)도 현재 별도 계층입니다. 집합 조립과 역함수 선택의 책임은 합치지 않습니다.
 
 기존 [u128 전체 역상](icc-parametric-preimage.md)과 solveFor가 검증 순서·분기 조립을 공유합니다. parametric_preimage_types.Of가 두 폭의 Set/Result와 isEmpty를 공유하며 별도의 합집합 알고리즘을 복제하지 않습니다.
 
@@ -34,10 +36,18 @@ JS 기준은 독립 정의역/분기 기준으로 하위 식과 열린 구간을
 
 ## 최종 회귀 결과
 
-Debug·ReleaseSafe·ReleaseFast 전체 audit는 모두 종료 코드 0, 20/20 단계, 네이티브 648/648, WASM checks=6,947,166으로 통과했습니다. 이전 6,938,874에 신규 8,292회 호출이 추가됐으며 membershipChecks는 별도 호출로 더하지 않습니다. 로그는 `/tmp/hwpjs-extended-parametric-{Debug,ReleaseSafe,ReleaseFast}.log`이며 임시 로컬 산출물입니다.
+당시 Debug·ReleaseSafe·ReleaseFast 전체 audit는 모두 종료 코드 0, 20/20 단계, 네이티브 648/648, WASM checks=6,947,166으로 통과했습니다. 이전 6,938,874에 신규 8,292회 호출이 추가됐으며 membershipChecks는 별도 호출로 더하지 않습니다. 당시 로그 경로는 `/tmp/hwpjs-extended-parametric-{Debug,ReleaseSafe,ReleaseFast}.log`였으나 현재 파일은 존재하지 않습니다.
 
 Safe/Fast 실제 audit WASM의 직접 대조에서도 신규·기존 결과와 출력 변형 4종 검출이 일치했습니다. 소스 변형은 세 모드 네이티브 테스트에서 검출했습니다. 변경 문서의 로컬 링크 13개, Zig 포맷·JS 문법·diff 공백을 확인했습니다. 전체 정의역 선행 검사, 미확정의 부분 결과 비노출, 분기 끝점 소유권, source를 가진 빈 상위 집합과 비활성의 구분, 임시 serializer 버퍼 수명을 재검토했습니다.
 
 ## 미완료 경계
 
-두 분기의 넓은 도달 역상 합집합까지 연결했습니다. 표준 구간 목록 정리, 전체 역상의 경계 순서·실제 극값과 F.1 선택, 단조성·비상수성에 따른 역함수 적격성, 최근접 출력 및 넓은 TRC 모델 통합은 후속 범위입니다. 전체 ICC/HWP/HWPX 문서 검증은 미완료입니다.
+두 분기의 넓은 도달 역상 합집합까지 연결했습니다. 당시 후속 범위였던 경계 순서·F.1 선택·역함수 적격성·최근접 출력은 지금은 위 별도 계층에 구현돼 있습니다. [확장 TRC 역변환](icc-extended-trc-inverse.md)도 별도 계층입니다. 이 모듈은 여전히 표준 정렬·병합 구간 목록을 제공하지 않으며, 전체 ICC/HWP/HWPX 표시·저장 동치를 주장하지 않습니다.
+
+## 2026-09-27 문서 재검증
+
+현재 `solveWide`는 u128과 공유한 `solveFor`에 u512 목표를 전달합니다. `power_preimage.solveWide`로 목표·전체 실수 정의역을 먼저 검증하고 상위가 undecided면 하위 기여분을 만들지 않습니다. 이후 `parametric_segments.assemble`의 분기 소유권과 `linear_preimage.solveWide`를 사용해 두 기여분을 별도 필드에 보존합니다. `parametric_preimage_types.Of(512).Set.isEmpty`는 양쪽이 모두 비었을 때만 참입니다. 이 결과를 정규화 목록이나 선택된 역함수 값으로 설명하지 않습니다.
+
+Debug·ReleaseSafe·ReleaseFast의 `zig test src/root.zig -O <모드> --test-filter 'extended whole preimages'`는 각 모드 root 포함 6/6 통과했습니다. 로컬 ReleaseFast 테스트용 WASM의 mode228 독립 critical-cell 대조는 comparisons=5,060·rejected=3,231·undecided=1·membershipChecks=13,495로 일치했습니다. 마지막 수치는 상위 집합 내부 검사이지 별도 WASM 호출이 아닙니다. 후속 연결의 ReleaseFast 집중 필터는 `extended whole bounds` 4/4, `extended whole nearest` 6/6, `extended full inverse` 4/4였지만 각 후속 문서 전체의 검증 완료를 의미하지 않습니다.
+
+위의 과거 전체 audit·변형 주입·실제 시스템 ICC 15개 태그 대조는 이번에 재실행하지 않았습니다. 앞 문서 검증에서 같은 제품 코드로 실행한 ReleaseFast HWP5 전체 감사 10/10 단계·WASM checks=8,905,855는 재사용 근거로만 세며, Debug·ReleaseSafe 전체 감사나 임의 실파일·렌더링 동치를 새로 입증한 것으로 확대하지 않습니다.
