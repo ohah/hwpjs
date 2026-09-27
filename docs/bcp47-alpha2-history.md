@@ -1,6 +1,6 @@
 # IANA 두 글자 언어·지역 이력 조회
 
-후속 [ICC 명시적 IANA 비교](icc-localized-iana-matching.md)에서 이력 조회를 재사용합니다. 해당 작업의 공식 문서 재검토로 발견한 Preferred-Value/Deprecated 필수 관계 누락과 수정 기록도 그 문서에 둡니다. 아래 검증 기록은 당시 결과이며 후속 수정본의 전체 감사 완료를 의미하지 않습니다.
+후속 [ICC 명시적 IANA 비교](icc-localized-iana-matching.md)에서 이력 조회를 재사용합니다. 해당 작업의 공식 문서 재검토로 발견한 Preferred-Value/Deprecated 필수 관계 누락과 수정 기록도 그 문서에 둡니다. 아래의 과거 전체 감사 수치는 각 실행 당시 결과이며, 이번 재검증의 범위와 구분합니다.
 
 ## 근거와 데이터
 
@@ -21,6 +21,10 @@
 [ISO와 IANA 이력 대조](iso639-history-evidence.md)의 날짜 차이는 유지합니다. 전체 ISO 과거 이력·ISO 국가 코드 등록·ICC 언어 매칭·HWPX 문서 모델·제품 JS API는 아직 남아 있습니다. 기존 mluc_selection의 원시 코드 비교와 locale 보류 상태는 변경하지 않았습니다.
 
 ## 검증 진행
+
+2026-09-27 재검증에서 RFC 5646 §3.1.6·§3.1.7의 Deprecated/Preferred-Value 관계와 현재 `alpha2_history.zig`·`tools/language-history.mjs`·고정 `source.json`·ICC 소비자 경계를 대조했습니다. `node tools/language-registry.mjs --check`는 파생 파일 8개의 일치를 확인했고 생성기 반례는 정상 4건·거부 48건이 통과했습니다. 현재 IANA 원본은 File-Date 2026-09-17이며, 고정 2026-08-08 축약 catalog와 비교하면 날짜·원본 SHA-256 외의 키가 같고 두 글자 이력 language 6개·region 11개도 일치합니다. 이는 고정 선택 필드의 현재 일치이지 생략된 원본 필드 전체의 동치 증명이 아닙니다. Debug·ReleaseSafe·ReleaseFast의 root 진입 `IANA alpha2 history` 필터는 각각 3/3(이력 2개·root 1개) 통과했습니다. 기존 로컬 `hwp5-probe.wasm` mode 169의 독립 JS 대조는 비교 131,073건·오류 거부 7건, 등록 입력 언어 760·지역 1,248건, 폐기 입력 언어 24·지역 44건이 일치했습니다. 이 JS는 같은 고정 source.json을 데이터로 사용하며 WASM은 이번에 새로 빌드하지 않았습니다. 과거 세 모드 전체 audit와 수동 189,433건은 재실행하지 않았고, ISO 전체 이력·자동 canonicalization도 범위 밖입니다.
+
+### 과거 검증 기록
 
 Debug 네이티브 5/5 단계·462/462 테스트가 통과했습니다. bh/mo의 IANA 날짜, 권장 값의 원본 길이/대소문자, 폐기 날짜는 있지만 권장 값은 없는 지역, 이력 없는 등록 코드, 미등록 코드·NUL·비ASCII를 검사합니다. 생성기 직접 검사는 정상 4건·거부 20건이 통과했습니다. 윤년·월/일 범위·중복 Type/Subtag/Deprecated/Preferred-Value·중복 레코드·미등록 대상·자기 참조·잘못된 자료형과 source→tables 연결 오류를 포함합니다.
 

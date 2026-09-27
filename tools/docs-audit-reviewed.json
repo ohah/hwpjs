@@ -6,8 +6,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "afe6897521c5e49589e31204bc3c4a4636b339e2f2ada76a3105022432247c8c",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope PNG ICC inspection PNG RGBA BCP47 syntax and BCP47 registry review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "98f3525388e71f64abb917c97b7a0cdb4fb8bfcd1866235445aa0605667f59f0",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope PNG ICC inspection PNG RGBA BCP47 syntax registry and alpha2 history review, architecture pending, full Debug Zig test incomplete"
     },
     "docs/bcp47-syntax.md": {
       "sha256": "ae0d91a0bb5ca2f8a5194b5ffa76494427cc058784f11446fd905458020f5b11",
@@ -16,6 +16,10 @@
     "docs/bcp47-registry.md": {
       "sha256": "151ff796b66014e97f13f230073bfa74b9e5dd560fb662a1df173cd2ff4b89ae",
       "evidence": "2026-09-27 RFC 5646 current Zig registry and generator plus PNG consumer, pinned derived eight files match, live IANA 20260917 catalog only date and sha differ from 20260808 snapshot, Debug Safe Fast registry focus 4 each, existing local WASM mode138 same pinned data JS 19194 accepted 468057 rejected; historic full audit manual and real iTXt not rerun"
+    },
+    "docs/bcp47-alpha2-history.md": {
+      "sha256": "2b7086530f2022ce27027b5ebfb5e07b57f0f12c6063d2c060b06534cdb002cb",
+      "evidence": "2026-09-27 RFC 5646 deprecated preferred relation current Zig history generator ICC consumer, pinned eight derived files match live IANA 20260917 alpha2 history 6 language 11 region unchanged, Debug Safe Fast alpha2 focus 3 each, generator 4 accepted 48 rejected, existing local WASM mode169 same pinned source JS 131073 comparisons 7 rejected; historic full audit manual not rerun"
     },
     "docs/png-rgba.md": {
       "sha256": "caa9320a6c1b5d93529d7461b2482d7bc3ba414c8817663a34028dad68f53f5b",
