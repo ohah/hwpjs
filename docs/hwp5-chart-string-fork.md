@@ -35,4 +35,8 @@ TextFormat adapter에는 required 시작+1·끝-1·introduced=true, nullable nul
 
 ## 미구현 범위
 
-범용 API는 `object_table.Reference`, String arm의 `ValueReference`, Font 이름, TextBlock 본문과 TextFormat code에 적용할 수 있습니다. Number와 null을 String으로 재형식화하지 않습니다. 값을 평탄화한 다른 필드는 별도 span 보존과 얇은 adapter가 필요합니다. 자동 ID 선택은 별도 모듈을 명시적으로 호출하며 예약형 편집 세션은 제공하지 않습니다. 새 type ID·선언 생성, 문자열 인코딩 변환과 여러 편집의 일괄 트랜잭션도 제공하지 않습니다. 생성한 Contents를 압축 해제된 OLE BinData 내부 CFB에 넣는 경계는 [OLE 내부 스트림 교체](hwp5-ole-stream-replacement.md)가 담당합니다.
+범용 단일 대상 API는 `object_table.Reference`, String arm의 `ValueReference`, Font 이름, TextBlock 본문과 TextFormat code에 적용할 수 있습니다. Number와 null을 String으로 재형식화하지 않습니다. 값을 평탄화한 다른 필드는 별도 span 보존과 얇은 adapter가 필요합니다. 자동 ID 선택은 별도 모듈을 명시적으로 호출하며 예약형 편집 세션은 제공하지 않습니다. 단일 alias 분리 API 자체는 새 type ID·선언 생성이나 문자열 인코딩 변환을 제공하지 않습니다. 여러 대상의 한 Contents 원본 좌표계 일괄 patch는 현재 같은 파일의 `forkMany`가 소유하고, 생성한 Contents를 압축 해제된 OLE BinData 내부 CFB에 넣는 경계는 [OLE 내부 스트림 교체](hwp5-ole-stream-replacement.md)가 담당합니다.
+
+## 현재 재검증
+
+현재 `contents_string_fork.zig`의 alias-only span·원본 ID 검증, 타입 테이블 재사용, 공통 `string_wire.zig` 직렬화와 `forkMany`의 사전 target 수집·원본 좌표계 정렬 patch를 대조했습니다. 현재 batch는 Grid null화와 타입 선언 이전까지 포함해 요청당 최대 5개 patch 공간을 확보하므로 초기 alias-only 설명을 배열 상한으로 사용하면 안 됩니다. 해시 고정 실제 Contents fixture의 단일·혼합 batch를 포함한 `chart-ownership-audit`는 Debug·ReleaseSafe·ReleaseFast 각각 10/10 단계·31/31 테스트로 통과했습니다. 과거 소스 변이와 별도 실제 TextFormat alias 양성 표본 부재는 이번 실행으로 해소됐다고 주장하지 않습니다.

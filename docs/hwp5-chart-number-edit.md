@@ -13,3 +13,7 @@ observed V6 고정 Contents의 69개 ValueBlock 중 Double 선택 값은 primary
 직접 검증은 String 전달, 중복 payload patch, 손상된 원본 bits, 공유 참조를 거부한다. 새 payload 생성은 allocation-failure 전수 검사에도 포함한다. 이 계약은 raw bits 보존과 target-local 저장 범위이며 축척 계산·표시 형식·NaN 의미·차트 렌더링 동일성을 주장하지 않는다.
 
 적대적 검증은 저장된 payload span을 1바이트 이동, bits 최하위 비트 반전, trailer 최하위 비트 반전, axis 1/2 오배선, 공유 참조 허용의 다섯 결함을 주입했다. `Debug`, `ReleaseSafe`, `ReleaseFast`의 유효한 15회가 모두 컴파일 뒤 span·실제 파일 끝단·공유 계약 검사에서 실패했다.
+
+## 현재 재검증
+
+현재 `contents_number_edit.zig`는 등록된 Number의 ID·bits·trailer·10바이트 원본 span을 검증한 뒤 고정 길이 replacement를 만들고, `chart_edit_session.zig`의 축 adapter가 target-local 편집 전에 유일 참조를 확인합니다. 해시 고정 실제 Contents를 검증용 바깥 HWP 컨테이너에 넣는 `chart-ownership-audit`는 Debug·ReleaseSafe·ReleaseFast 각각 10/10 단계·31/31 테스트로 통과했습니다. 현재 같은 테스트에는 String·Format·Grid 편집까지 합친 82개 명령의 단일 저장·재파싱도 포함됩니다. 위 62/74개 batch는 당시 범위의 기록이며 임의 실제 HWP 원본 파일 전체의 편집 호환성을 뜻하지 않습니다. 과거 5종 결함 주입은 이번에 재실행하지 않았습니다.

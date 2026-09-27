@@ -16,10 +16,14 @@ observed V6 실제 Contents에는 inline Font 이름 3개와 inline Text 6개가
 
 적대적 검증은 원래 정의를 마지막 alias로 이전, 정의 이전 생략, 대상에 원래 object ID 유지, 대상 payload 1바이트 변조, 이전 정의에 새 trailer 사용의 다섯 결함을 각각 주입했다. `Debug`, `ReleaseSafe`, `ReleaseFast`의 유효한 15회 모두 컴파일 뒤 실제 Contents 재파싱 또는 끝단 identity/payload 검사에서 실패했다.
 
-HWP 파일 adapter는 footnote·legend·root-title Font와 footnote·primary-axis 4개·root-title Text의 실제 inline 9곳을 typed target으로 제공한다. 아홉 명령을 wire 역순으로 한 batch에 넣고도 각 위치가 서로 다른 새 ID·bytes·trailer로 저장되며, footnote와 legend의 기존 공유 객체는 원래 값을 유지하는지 바깥 HWP부터 내부 Contents까지 다시 연다. shared 정의 이전은 한 명령에서 patch 두 개를 만들 수 있으므로 compositor의 patch·replacement 배열은 명령 수의 두 배를 상한으로 잡고 실제 사용 개수를 연속 관리한다.
+HWP 파일 adapter는 footnote·legend·root-title Font와 footnote·primary-axis 4개·root-title Text의 실제 inline 9곳을 typed target으로 제공한다. 아홉 명령을 wire 역순으로 한 batch에 넣고도 각 위치가 서로 다른 새 ID·bytes·trailer로 저장되며, footnote와 legend의 기존 공유 객체는 원래 값을 유지하는지 바깥 HWP부터 내부 Contents까지 다시 연다. 이 단계에서는 shared 정의 이전이 한 명령에서 patch 두 개를 만들 수 있어 compositor의 patch·replacement 배열을 명령 수의 두 배로 잡고 실제 사용 개수를 연속 관리했다. 현재 구현에는 추가 patch 종류가 있어 이 상한을 그대로 적용하지 않는다.
 
-파일 adapter 적대적 검증은 footnote를 legend에 오배선, axis index 순환 이동, inline trailer 폐기, 기존 object ID 강제, relocation patch 범위 확장의 다섯 결함을 주입했다. 세 최적화 모드의 유효한 15회가 모두 실제 파일 끝단 검증 또는 overlap/identity 검증에서 실패했다. 통합 중 inline의 두 replacement 뒤 일반 요청 소유권을 명령 인덱스로 기록해 이중 해제가 발생하는 결함도 allocation-failure 검사로 발견했고, 모든 replacement를 연속 `built` 인덱스 하나로 관리하도록 수정했다.
+파일 adapter 적대적 검증은 footnote를 legend에 오배선, axis index 순환 이동, inline trailer 폐기, 기존 object ID 강제, relocation patch 범위 확장의 다섯 결함을 주입했다. 세 최적화 모드의 유효한 15회가 모두 실제 파일 끝단 검증 또는 overlap/identity 검증에서 실패했다. 통합 중 inline의 두 replacement 뒤 일반 요청 소유권을 명령 인덱스로 기록해 이중 해제가 발생하는 결함도 allocation-failure 검사로 발견했고, 모든 replacement를 연속 `built` 인덱스 하나로 관리하도록 수정했다. 앞 절의 요청당 두 patch 상한은 당시 구현의 이력이며, 현재 batch 구현은 아래 재검증을 따른다.
 
 inline과 alias를 함께 편집할 때는 compositor가 모든 명령의 원본 target span을 먼저 한 번 수집한다. 정의 이전은 이 span과 정확히 같은 alias를 건너뛰고 첫 미편집 alias를 선택한다. 편집되는 alias에 원래 정의를 삽입해 두 patch가 겹치거나, 아직 원래 ID를 쓰는 alias가 있는데 정의 이전을 생략하지 않는다. 실제 fixture에서 inline 9개와 alias Font 23개 혼합 batch, 이어서 Font 26개·Text 25개·TextFormat 9개인 지원 inventory 60개 전체를 단일 HWP 저장으로 재파싱했다.
 
 전체 inventory batch 적대적 검증은 회피 span 전체 누락, 첫 span만 전달, 회피 목록이 있으면 정의 이전 생략, footnote/legend 오배선, 이전 정의 trailer 변조를 주입했다. `Debug`, `ReleaseSafe`, `ReleaseFast`의 유효한 15회가 모두 overlap, 재파싱 또는 끝단 값 검사에서 실패했다.
+
+## 현재 재검증
+
+현재 `contents_inline_fork.zig`는 원래 정의를 교체하되 이후 미편집 alias가 있으면 첫 alias에 원래 정의를 이전합니다. `contents_string_fork.zig`의 `forkMany`는 모든 target span을 먼저 수집하고 현재 Grid null화·타입 선언 이전까지 고려해 요청당 최대 5개 patch/replacement 공간을 확보합니다. 따라서 초기 두 개 상한을 현재 불변식으로 읽지 않습니다. 해시 고정 실제 Contents를 검증용 HWP 컨테이너에 넣어 재파싱하는 `chart-ownership-audit`는 Debug·ReleaseSafe·ReleaseFast 각각 10/10 단계·31/31 테스트로 통과했고, 현재 82개 편집 명령의 단일 batch도 포함합니다. 과거 결함 주입은 이번에 재실행하지 않았으며 임의 원본 HWP 파일 전체에 대한 편집 호환성을 입증하지 않습니다.

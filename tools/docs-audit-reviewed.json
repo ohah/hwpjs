@@ -1,6 +1,22 @@
 {
   "schema": 1,
   "verified": {
+    "docs/hwp5-chart-number-edit.md": {
+      "sha256": "6561628f78b417e8a89c3c4a00b7c533968e130b40809ae8fd17f5981a7d376e",
+      "evidence": "2026-09-28 current Number payload bits trailer span and unique target versus synthetic outer HWP with pinned actual Contents; Debug Safe Fast chart ownership audit 10 steps 31 tests each including current 82 edit batch; historical mutants not rerun real original HWP edits unproven"
+    },
+    "docs/hwp5-chart-string-edit.md": {
+      "sha256": "aaf686a8306d13f0906eeff6716ef4d50e73545474afe1796466ec7028e69a68",
+      "evidence": "2026-09-28 current String definition replacement length trailer source validation and shared identity versus pinned Contents; Debug Safe Fast chart ownership audit 10 steps 31 tests each; fork and file save separate historical mutants not rerun"
+    },
+    "docs/hwp5-chart-string-fork.md": {
+      "sha256": "e7d0f7120793cd869816c768b454c653406ac1c4786c21fda1cb2183ff63c5c4",
+      "evidence": "2026-09-28 current alias fork adapters string wire and forkMany original spans up to five patches per request versus pinned Contents; Debug Safe Fast chart ownership audit 10 steps 31 tests each; historical mutants real TextFormat alias sample still absent"
+    },
+    "docs/hwp5-chart-inline-string-edit.md": {
+      "sha256": "bafbaa026a3c7beb38cd0aa34e40fe4dbe49bdfab200eb9bf005d4535229b733",
+      "evidence": "2026-09-28 current inline definition relocation and forkMany exclusion five patch capacity versus synthetic outer HWP pinned actual Contents 82 command batch; Debug Safe Fast chart ownership audit 10 steps 31 tests each; historical mutants and arbitrary original HWP write not rerun"
+    },
     "docs/hwp5-chart-value-objects.md": {
       "sha256": "a3d45dc41326676654df4051a90576143ee75f71e7b8140e7aa49f1cade88db6",
       "evidence": "2026-09-28 current Zig Value Object Table identity and bytes versus Debug Safe Fast number 5 each; fresh ReleaseSafe hwp5 audit 10 steps 8905855 checks and independent probe 43 roots 272 Strings 427 Doubles 137 accepted 23272 rejected; historical mutants and other full modes not rerun"
@@ -574,8 +590,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "b578404936fc2d5dd2c3d2858801dbb8c64c4785938b72ae21d2ab7a5e83e76f",
-      "evidence": "2026-09-28 tracker updated with current Value Object Block TextBody TextFormat focused three modes and ReleaseSafe full HWP5 audit 8905855 checks plus independent probe counts; historic mutants Debug Fast full audits not rerun"
+      "sha256": "601c522519b665ab253a8f79602a866bf4a840fb432eb7f34acd114b760d9c53",
+      "evidence": "2026-09-28 tracker updated with Number String edit alias and inline fork current contracts, three mode ownership audit 31 each and synthetic HWP 82 edit batch; historic mutants not rerun"
     },
     "docs/bcp47-syntax.md": {
       "sha256": "ae0d91a0bb5ca2f8a5194b5ffa76494427cc058784f11446fd905458020f5b11",

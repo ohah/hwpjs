@@ -6,7 +6,7 @@
 
 replacement는 `u16 새 길이 + 새 원시 bytes + 새 trailer` 한 구간입니다. [원본 span patch writer](hwp5-chart-patch-writer.md)가 후속 바이트 이동, 전체 Contents extent와 출력 한도를 담당합니다. 최대 String 길이는 wire 폭과 같은 65,535바이트입니다. 문자열 인코딩을 추정하거나 변환하지 않고 caller가 준 바이트를 그대로 저장합니다.
 
-이 API는 객체 **정의**를 바꾸므로 같은 object ID를 재참조하는 모든 필드가 함께 변경됩니다. 한 참조만 새 값으로 분리하려면 새 object/type 선언과 해당 참조 ID patch가 필요하며 현재 범위가 아닙니다. Other·Number entry, 없는 ID, 사전 값 내부 ID 불일치, source 밖 slice, 길이/trailer 불일치는 거부합니다.
+이 API는 객체 **정의**를 바꾸므로 같은 object ID를 재참조하는 모든 필드가 함께 변경됩니다. 한 참조만 새 값으로 분리하는 작업은 이 API의 범위가 아니며, 후속 [String 참조 분리](hwp5-chart-string-fork.md)가 기존 타입 선언을 재사용하는 선택 경로를 소유합니다. Other·Number entry, 없는 ID, 사전 값 내부 ID 불일치, source 밖 slice, 길이/trailer 불일치는 거부합니다.
 
 ## 실제 재파싱 검증
 
@@ -27,4 +27,8 @@ SHA-256 고정 9,876바이트 Contents fixture에서 다음을 확인합니다.
 
 ## 미구현 범위
 
-UTF-16/CP949 의미 변환, 텍스트 정규화, 한 참조만 분리하는 copy-on-write, String ID 신규 할당, 타입 선언 추가, 편집된 CFB 스트림 저장은 제공하지 않습니다. 현재 파서가 명시적 Layout으로 성공한 Contents와 그 객체 사전에 등록된 inline String만 대상입니다.
+`replaceStringObject` 자체는 UTF-16/CP949 의미 변환, 텍스트 정규화, 한 참조만의 분리, 새 String ID 선택·타입 선언 추가, CFB 스트림 저장을 제공하지 않습니다. 별도 분리·ID 선택·파일 저장 경계는 각각 [String 참조 분리](hwp5-chart-string-fork.md)·[ID 선택](hwp5-chart-object-id-allocation.md)·[차트 파일 편집](hwp5-chart-file-edit.md)이 소유합니다. 이 함수의 대상은 명시적 Layout으로 파싱된 Contents와 사전에 등록된 inline String 정의입니다.
+
+## 현재 재검증
+
+현재 `contents_string_edit.zig`의 원본 slice 주소·u16 길이·trailer 재검사와 `contents_patch.zig`로의 단일 patch 위임을 대조했습니다. 해시 고정 실제 Contents fixture를 사용하는 `chart-ownership-audit`는 Debug·ReleaseSafe·ReleaseFast 각각 10/10 단계·31/31 테스트로 통과했습니다. 이 테스트의 바깥 HWP는 해당 Contents를 넣어 만든 검증용 컨테이너이므로 임의 원본 HWP 파일을 편집해 재오픈한 증거는 아닙니다. 과거 5종 소스 변이는 이번에 다시 실행하지 않았습니다.
