@@ -33,4 +33,8 @@ SHA-256 고정 실제 9,876바이트 Contents에서 다음을 native로 검사�
 
 ## 미구현 범위
 
-현재 API는 caller가 확정한 span만 다룹니다. 첫 필드별 adapter인 [String 객체 편집](hwp5-chart-string-edit.md)은 길이·payload·trailer span과 전체 재파싱을 담당합니다. 다른 타입/객체 참조와 후속 오프셋, 그 밖의 의미 필드 span은 아직 자동으로 찾지 않습니다. patch writer 자체는 결과를 다시 파싱하지 않으며 CFB 스트림 압축·교체도 하지 않습니다.
+`applyOriginal` 자체는 caller가 확정한 span만 다룹니다. [String 객체 편집](hwp5-chart-string-edit.md)을 시작으로 ValueBlock·Grid·type 선언 이전 등 여러 adapter가 후속 추가됐지만, 이 writer가 임의 타입/객체 참조와 의미 필드 span을 자동 발견하지는 않습니다. 결과 재파싱과 CFB 스트림 압축·교체도 상위 계층의 책임입니다.
+
+## 현재 재검증
+
+현재 `contents_patch.zig`의 원본 extent 확인, 정렬·비중첩·extent 보호, 최종 길이 overflow/한도 계산과 owned 출력 복사를 대조했습니다. 해시 고정 실제 Contents를 사용하는 `chart-ownership-audit`는 Debug·ReleaseSafe·ReleaseFast 각각 10/10 단계·31/31 테스트로 통과했습니다. 원본 좌표 patch는 상위 `forkMany`가 정렬해 전달하며 writer는 입력을 자동 정렬하지 않습니다. 과거 7종 소스 결함 주입은 이번에 재실행하지 않았고, 선택된 fixture 결과를 임의 Contents의 span 자동 발견으로 일반화하지 않습니다.

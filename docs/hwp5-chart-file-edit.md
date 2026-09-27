@@ -1,22 +1,24 @@
-# HWP5 실제 차트 파일 편집
+# HWP5 차트 파일 편집 — 선택 배치
 
 ## typed 계약
 
-`src/hwp5/container/chart_edit_session.zig`의 typed 함수들은 HWP 파일에서 실제 DocInfo `BinData` 순번 하나를 선택하고, 해당 OLE의 루트 `/Contents`를 명시된 observed chart layout으로 파싱한 뒤 Font 이름 alias, Text alias/null 또는 nullable TextFormat의 null code를 새 String object로 분리·생성합니다. Font 대상은 primary/secondary axis title, series main label, series point label과 series suffix block입니다. Text 대상은 series main/suffix label alias, secondary-axis null title과 null point label입니다. TextFormat code 대상은 series suffix의 두 slot입니다. caller는 1-based DocInfo 순번·storage 배치·OLE envelope 배치·차트 구조 count·대상 index·새 raw string bytes와 trailer만 지정합니다. 이 계층은 encoding을 UTF-8로 강제하거나 변환하지 않습니다. 물리 storage ID, CFB 경로와 새 chart object ID는 API가 실제 파일에서 유도합니다.
+`src/hwp5/container/chart_edit_session.zig`의 typed 함수들은 HWP 파일에서 DocInfo `BinData` 순번 하나를 선택하고, 해당 OLE의 루트 `/Contents`를 명시된 observed chart layout으로 파싱해 선택된 Font/Text/String·TextFormat·축 Number·Grid 셀 편집을 수행합니다. Font 대상은 primary/secondary axis title, series main/point label과 series suffix block입니다. Text 대상은 series main/suffix label, secondary-axis title과 point label입니다. TextFormat code 대상은 series suffix의 두 slot이고 축 scale의 부재 TextFormat도 별도 variant가 다룹니다. caller는 1-based DocInfo 순번·storage 배치·OLE envelope 배치·차트 구조 count·대상 index와 편집 종류별 raw bytes/bits·trailer를 지정합니다. 이 계층은 문자열 encoding을 UTF-8로 강제하거나 변환하지 않습니다. 물리 storage ID와 CFB 경로는 파일에서 유도하며, 새 chart object ID는 파싱된 객체 범위에서 선택합니다.
 
-새 ID는 `chart_object_id_allocator.findLowestAvailable`이 기존 chart object table을 기준으로 선택하고, Font 이름에서는 enclosing Font ID도 제외합니다. 실제 String fork와 Contents extent 갱신은 기존 `chart_contents_string_fork`가 소유합니다. 두 공개 함수는 대상만 tagged union으로 전달하고 파일 개방·검증·파싱·저장 경로는 내부 `forkString` 하나를 공유합니다. 결과 Contents는 [파일 단위 OLE 편집 세션](hwp5-ole-edit-session.md)의 `/Contents` replacement 하나로 전달되며, 내부 OLE와 바깥 HWP의 원자적 저장 규칙을 그대로 사용합니다.
+새 ID는 `chart_object_id_allocator.findLowestAvailable`이 기존 chart object table을 기준으로 선택하고, Font 이름에서는 enclosing Font ID도 제외합니다. 실제 String fork와 Contents extent 갱신은 기존 `chart_contents_string_fork`가 소유합니다. 공개 typed wrapper들은 대상만 `Edit` variant로 전달하고 파일 개방·검증·파싱·저장 경로는 `applyEdits`/`applyCharts`로 공유합니다. 결과 Contents는 [파일 단위 OLE 편집 세션](hwp5-ole-edit-session.md)의 `/Contents` replacement로 전달되며, 내부 OLE와 바깥 HWP의 원자적 저장 규칙을 그대로 사용합니다.
 
 차트 adapter는 의미 편집 전에 같은 불변 HWP의 Header·DocInfo·BinData·내부 OLE·Contents를 직접 검증합니다. 하위 OLE 세션과 HWP batch의 재검증은 방어 계층이며 별도 경로 추측이나 object ID 상태를 만들지 않습니다. `max_contents_bytes`는 원본 Contents, `max_edited_contents_bytes`는 fork 결과를 제한하고 하위 세션의 decoded/OLE/encoded/최종 HWP 한도도 모두 적용됩니다.
 
 `applyEdits`는 typed target variant를 한 배치에 조합합니다. 이전 문자열 전용 공개 이름인 `StringEdit`와 `applyStringEdits`는 소스 호환 별칭으로만 유지합니다. 기존 alias인 다섯 Font 위치군과 두 Text 위치군은 독립 String으로 fork하며, 두 null Text 위치군과 한 null TextFormat code 위치군은 `0xffffffff` sentinel을 새 inline String 정의로 materialize합니다. axis scale의 outer null은 `ValueBlock`이 소유한 정확한 optional span을 새 TextFormat 객체와 필수 code String 객체로 함께 바꿉니다. 각 객체에는 서로 다른 새 object ID를 배정하고, 삽입 지점보다 뒤에서 처음 선언되던 `VtTextFormat`을 섣불리 참조하지 않도록 새 type ID와 선언도 그 자리에서 생성합니다. 각 공개 target은 내부 `Resolved` 분기 하나로만 정규화됩니다. 빈 배치와 `max_edits` 초과를 파일 개방 전에 거부하고, 한 번 파싱한 원본 Contents에서 모든 target을 해석합니다. 새 ID는 명령 배열 순서가 아니라 원본 wire offset 순으로 예약하며 모든 enclosing ID와 앞서 예약한 ID를 제외합니다. 요청 배열 역시 wire 순서로 연속 구성하고 `chart_contents_string_fork.forkMany`가 중복 ID를 거부한 뒤 원본 좌표 patch를 한 번만 적용합니다. 중복 대상은 overlapping patch로 거부되므로 부분 결과는 저장되지 않습니다.
 
-`applyCharts`는 엄격히 증가하는 DocInfo BinData 순번별로 OLE layout, chart layout과 typed String edit 배열을 받습니다. FileHeader와 DocInfo는 한 번 읽고 `inspectBinDataOrdinals`가 모든 실제 resource를 동시에 선택합니다. 각 BinData의 압축 해제·OLE `/Contents` 파싱·의미 편집 결과가 전부 준비된 뒤에만 기존 `ole_edit_session.apply`를 한 번 호출하므로 바깥 HWP CFB도 한 번만 재작성됩니다. 단일 차트 API들은 모두 이 함수의 한 명령 wrapper입니다.
+`applyCharts`는 엄격히 증가하는 DocInfo BinData 순번별로 OLE layout, chart layout과 typed `Edit` 배열을 받습니다. FileHeader와 DocInfo는 한 번 읽고 `inspectBinDataOrdinals`가 모든 실제 resource를 동시에 선택합니다. 각 BinData의 압축 해제·OLE `/Contents` 파싱·의미 편집 결과가 전부 준비된 뒤에만 기존 `ole_edit_session.apply`를 한 번 호출하므로 바깥 HWP CFB도 한 번만 재작성됩니다. 단일 차트 API들은 모두 이 함수의 한 명령 wrapper입니다.
 
 다중 준비 단계에는 항목별·전체 decoded BinData 한도와 항목별·전체 edited Contents 한도를 적용합니다. `max_total_edited_contents_bytes`는 하위 OLE 전체 결과 한도와 구분됩니다. 각 결과와 command/replacement backing 배열은 최종 세션 호출까지 소유하며, 성공한 HWP 외에는 실패 시 모두 해제합니다.
 
-## 실제 검증
+## 실파일 Contents를 이용한 검증용 HWP 왕복
 
 SHA-256가 고정된 9,876바이트 실제 Contents를 내부 CFB v4에 넣고, 이를 유효한 압축 DocInfo와 raw-DEFLATE OLE BinData를 가진 바깥 HWP CFB v3에 연결합니다. typed API로 primary axis 0의 title Font 이름과 series 0의 main-label 본문을 각각 수정한 뒤 최종 HWP·BinData 압축·내부 OLE·Contents를 모두 다시 열어 새 최저 object ID, raw bytes, trailer, 양쪽 CFB version과 내부·외부 형제 stream 보존을 확인합니다.
+
+이 바깥 HWP는 테스트가 구성한 컨테이너이며, 원래 corpus의 HWP 파일을 직접 편집해 같은 파일의 모든 스트림을 보존했는지 검증한 것은 아닙니다. 아래의 “실제 파일”·“실제 HWP 왕복”이라는 이전 검증 표현은 실제 Contents payload를 포함한 이 구성 파일을 가리킵니다.
 
 axis 범위 밖, 원본 Contents 한도, 편집 Contents 한도와 잘못 선택한 size-prefix envelope는 typed API 경계에서 정확한 오류로 거부합니다. 실제 fixture의 초기 BinData도 FileHeader 기본 압축 정책과 일치하는 raw DEFLATE로 저장해 합성 전제 불일치를 허용하지 않습니다.
 
@@ -49,3 +51,7 @@ axis scale의 3개 outer null은 TextFormat 객체 전체와 그 code String을 
 같은 null 셀의 [Double materialization](hwp5-chart-grid-null-number.md)은 String과 상호배타적이므로 82개에 중복 합산하지 않고 별도 실제 HWP 왕복으로 검증합니다.
 
 [기존 Grid 셀 null화](hwp5-chart-grid-cell-nullify.md)도 같은 셀의 값 편집과 상호배타적이므로 별도 실제 HWP batch로 검증합니다.
+
+## 현재 재검증
+
+현재 `chart_edit_session.zig`의 `Edit` union, 단일/다중 차트 `applyEdits`·`applyCharts`, wire 순서 ID 예약과 파일·Contents 한도, `contents_patch.zig`·OLE 세션에 위임하는 저장 경계를 대조했습니다. 해시 고정 실제 Contents를 검증용 바깥 HWP에 담는 `chart-ownership-audit`는 Debug·ReleaseSafe·ReleaseFast 각각 10/10 단계·31/31 테스트로 통과했습니다. 82개 선택 target의 한 batch와 두 차트의 원자적 편집을 포함하지만, 임의 원본 HWP 파일·차트 버전·렌더링 결과의 호환성을 증명하지 않습니다. 과거 파일 adapter 소스 변이들은 이번에 재실행하지 않았습니다.

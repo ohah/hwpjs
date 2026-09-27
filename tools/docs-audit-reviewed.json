@@ -1,6 +1,22 @@
 {
   "schema": 1,
   "verified": {
+    "docs/hwp5-chart-source-preservation.md": {
+      "sha256": "50f611c0d5ae8d14c3fe7c399a585229919e888de1f3b9f8ba619ab7d87463ac",
+      "evidence": "2026-09-28 current borrowed Contents source and owned copyOriginal boundaries versus pinned real Contents, Debug Safe Fast chart ownership audit 10 steps 31 tests each; synthetic outer HWP and historic mutants distinguished"
+    },
+    "docs/hwp5-chart-patch-writer.md": {
+      "sha256": "badcb2e3be39d216f94d1a6c4127070b90e5d23208687ae2267609a596c8e59c",
+      "evidence": "2026-09-28 current original-coordinate sorted patch extent and size checks versus pinned real Contents, Debug Safe Fast chart ownership audit 10 steps 31 tests each; writer not span discoverer historic mutants not rerun"
+    },
+    "docs/hwp5-chart-object-id-allocation.md": {
+      "sha256": "1901018dd4e605771b85f4b141104e197d0593a9b50e6d69bd82556500092a7d",
+      "evidence": "2026-09-28 current lowest ID from object scope plus forbidden set nonreserving, ReleaseSafe 3 focused tests and Debug Safe Fast ownership audit 31 each, file adapter wire order reservation separate; historic mutants not rerun"
+    },
+    "docs/hwp5-chart-file-edit.md": {
+      "sha256": "de2c6764c8bc49ced01187dfff37852919932d46b63e8f0e897875f26659d825",
+      "evidence": "2026-09-28 current Edit union and applyCharts for selected fields 82-command and two-chart tests with pinned real Contents in synthetic HWP; Debug Safe Fast ownership audit 10 steps 31 tests each; arbitrary original HWP losslessness unproven historical mutants not rerun"
+    },
     "docs/hwp5-chart-number-edit.md": {
       "sha256": "6561628f78b417e8a89c3c4a00b7c533968e130b40809ae8fd17f5981a7d376e",
       "evidence": "2026-09-28 current Number payload bits trailer span and unique target versus synthetic outer HWP with pinned actual Contents; Debug Safe Fast chart ownership audit 10 steps 31 tests each including current 82 edit batch; historical mutants not rerun real original HWP edits unproven"
@@ -590,8 +606,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "601c522519b665ab253a8f79602a866bf4a840fb432eb7f34acd114b760d9c53",
-      "evidence": "2026-09-28 tracker updated with Number String edit alias and inline fork current contracts, three mode ownership audit 31 each and synthetic HWP 82 edit batch; historic mutants not rerun"
+      "sha256": "c9ac8c6033c6133765a059f97a3d1bdaa9f64fe45a2e96b176acf5f331e175b0",
+      "evidence": "2026-09-28 tracker updated with Contents source patch allocator and file session contracts, three-mode ownership audit 31 each and synthetic HWP provenance; historic mutants not rerun"
     },
     "docs/bcp47-syntax.md": {
       "sha256": "ae0d91a0bb5ca2f8a5194b5ffa76494427cc058784f11446fd905458020f5b11",

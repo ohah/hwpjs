@@ -12,7 +12,7 @@
 
 `chart/contents_original.zig`의 `copyOriginal`은 source를 caller allocator의 새 버퍼로 byte-for-byte 복제합니다. `end == source.len`을 확인하고 명시적 최대 출력 크기를 적용합니다. 반환 버퍼는 caller가 해제하며 이후 입력 변경과 분리됩니다. 이름 그대로 원본 복제 전용이고 의미 필드를 직렬화하거나 변경 내용을 반영하지 않습니다. 수정된 모델을 이 API에 전달해도 변경 저장이 되는 것처럼 가장하지 않도록 일반 `save` 이름을 사용하지 않습니다.
 
-확정된 원본 span의 안전한 조립은 후속 [차트 patch writer](hwp5-chart-patch-writer.md)에 연결했습니다. 필드별 span/serializer, CFB 스트림 교체와 파일 전체 round trip은 여전히 별도입니다.
+확정된 원본 span의 안전한 조립은 후속 [차트 patch writer](hwp5-chart-patch-writer.md)에 연결했습니다. 필드별 span/serializer, CFB 스트림 교체와 파일 단위 저장은 `copyOriginal`과 다른 계층이 소유하며 후속 [차트 파일 편집](hwp5-chart-file-edit.md)에 선택 경로가 추가됐습니다.
 
 ## 검증
 
@@ -42,3 +42,7 @@ Debug·ReleaseSafe·ReleaseFast의 대조군 3개는 각각 5/5를 통과했습�
 ## 범위 제한
 
 source는 성공한 **하나의 명시적 선택 배치** 전체입니다. CFB의 `/Contents` 스트림 경로·압축 상태·디렉터리 메타데이터와 HWP 파일 전체를 포함하지 않습니다. 입력을 호출자가 변경하면 source도 변경되므로 immutable snapshot이 필요한 상위 계층은 별도로 복사해야 합니다. 보안상 민감한 원문을 자동 복제하지 않는 대신 이 수명 계약을 API 문서에서 숨기지 않습니다.
+
+## 현재 재검증
+
+현재 `observed_contents.zig`의 borrowed source와 `contents_original.zig`의 owned byte-for-byte 복제를 대조했습니다. 해시 고정 실제 Contents를 사용하는 `chart-ownership-audit`는 Debug·ReleaseSafe·ReleaseFast 각각 10/10 단계·31/31 테스트로 통과했고, `copyOriginal`의 원본 독립성과 경계 오류는 해당 테스트에 포함됩니다. 과거 source/copy 소스 변이는 이번에 재실행하지 않았습니다. 바깥 HWP 왕복 테스트는 실물 Contents를 합성 CFB에 넣은 것이지 임의 원본 HWP의 무손실 재저장 증거는 아닙니다.
