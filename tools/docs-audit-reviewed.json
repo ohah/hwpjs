@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "2d8859ddd2bd577134c73eab1cc50452d13a8431ee37de2f8183ae944abe5452",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars and DocOptions evidence review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "75bbce003ed664c8caf302f10d2510e09b7fe37cbea44ff8b8c28727f8ba7bf0",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions and PrvImage evidence review, architecture pending, full Debug Zig test incomplete"
+    },
+    "docs/hwp5-preview-image-evidence.md": {
+      "sha256": "e65bd0c46da3a49a68f188d024704bd0db1b50f727348f21ef1766ec7b0b6e79",
+      "evidence": "2026-09-27 Hancom HWP5 3.2.7 W3C GIF89a, current optional preview image Zig policy and JS survey, Node tests 5 audit 8 steps Zig three modes 5 each, 336 direct HWP inventory hash and 295 observed 17 CFB rejected 24 non-CFB, signature counts 133 GIF 158 PNG 1 JPEG 1 empty 2 absent; old mutation and full audit logs unavailable"
     },
     "docs/hwp5-doc-options-evidence.md": {
       "sha256": "601697d7938f4c50e2177288ad74291e1bf477453fcf9c3117476c70957f4d42",
