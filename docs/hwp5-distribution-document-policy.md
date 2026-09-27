@@ -2,9 +2,11 @@
 
 ## 확인한 문제
 
-배포용 문서 지원은 UnsupportedDistribution만 제거하는 작업이 아닙니다. 현재 컨테이너는 BodyText를 DocInfo 구역 수와 대조한 뒤 ViewText를 같은 수의 보조 뷰로 검사합니다. 실제 배포용 표본에는 BodyText 1구역과 ViewText 6구역이 있어 이 계약을 그대로 적용할 수 없습니다.
+배포용 문서 지원은 UnsupportedDistribution만 제거하는 작업이 아닙니다. 초기 컨테이너는 BodyText를 DocInfo 구역 수와 대조한 뒤 ViewText를 같은 수의 보조 뷰로 검사했습니다. 실제 배포용 표본에는 BodyText 1구역과 ViewText 6구역이 있어 이 계약을 그대로 적용할 수 없었습니다. 현재는 명시적 관측 정책에서 ViewText를 primary로 선택하고, 기본 정책에서는 배포용 플래그를 계속 거부합니다.
 
 기본 컨테이너 지원 게이트는 유지합니다. 이 문서는 조사와 정책 연결 진행 기록이며 배포용 문서 전체 지원 완료를 뜻하지 않습니다.
+
+아래 중간 단계의 테스트 수치와 임시 경로는 당시 기록입니다. 현재 코드의 재검증 결과는 마지막 절에 따로 적으며, 과거 결과를 현재의 전체 빌드 통과나 변형 검사 재실행으로 간주하지 않습니다.
 
 ## 재현과 관측
 
@@ -19,7 +21,7 @@ tests/hwp5/distribution-policy-evidence.mjs는 기존 distributionSamples 네 �
 | 한글문서파일형식_5.0_revision1.3.hwp | 131077 | 1 / 521 / 11 | 6 / 885,120 / 27,159 |
 | issue5756/156732409_superscript_advance.hwp | 5 | 1 / 521 / 11 | 1 / 30,378 / 706 |
 
-6구역 표본에서 DocInfo 선언 구역 수는 6이며, BodyText 진단은 SectionCountMismatch,전체 ViewText 진단은 통과했습니다. 6개 ViewText의 해제 크기는 순서대로 2,142 / 23,134 / 4,745 / 849,154 / 3,401 / 2,544바이트입니다. 종전 배포 디코더 실파일 검사는 이 파일의 Section0만 대조했으나 이번에는 전체 6개를 포함한 총 9개 스트림으로 확장했습니다.
+6구역 표본에서 DocInfo 선언 구역 수는 6이며, BodyText 진단은 SectionCountMismatch, 전체 ViewText 진단은 통과했습니다. 6개 ViewText의 해제 크기는 순서대로 2,142 / 23,134 / 4,745 / 849,154 / 3,401 / 2,544바이트입니다. 종전 배포 디코더 실파일 검사는 이 파일의 Section0만 대조했으나 이번에는 전체 6개를 포함한 총 9개 스트림으로 확장했습니다.
 
 5e724236의 standalone Debug/ReleaseSafe/ReleaseFast WASM에서 오라클 바이트 대조와 진단 검사 모두 종료 코드 0입니다. 첫 기대값 작성에서 6구역 파일 BodyText 크기를 529로 잘못 적어 assertion이 실패했고, 실제 해제 길이 521을 확인해 테스트 기대값만 수정했습니다. 제품 파서 수정이나 오류 허용 확대는 없습니다.
 
@@ -75,7 +77,7 @@ scripts/stream.zig는 원본 배포 플래그와 선택 정책에 따라 배포 
 
 distribution-container.mjs는 독립 오라클로 모든 ViewText와 Scripts를 해제하고, 인메모리 대조 CFB에서 ViewText를 BodyText로 옮기며 원래 BodyText는 보조 저장소로 유지합니다. 헤더 비트 변경은 대조군에만 적용하고 기대 보고서의 flags는 원본 값으로 대조합니다. 원본 정책 경로의 결과를 이 대조군과 바이트 단위로 비교합니다. 정규 검사에서 원본 헤더를 지우는 구현은 없습니다.
 
-수정 후 Debug WASM에서 네 파일의 보고서가 각각 1,064 / 1,064 / 5,064 / 1,064바이트로 일치했습니다. 전체 해제 소비량은 570,694 / 586,234 / 1,106,070 / 105,188바이트, 미검사 스트림은 3 / 2 / 3 / 3개입니다. 원본 플래그 유지·기본 배포 거부·정확한 총 바이트/레코드 한도·1 부족·잘못된 정책·오류 후 복구도 통과했습니다. 이 검사를 정규 audit에 연결했으며 Safe/Fast 및 후속 검증 결과는 아래에 기록합니다.
+당시 수정 후 Debug WASM에서 네 파일의 보고서가 각각 1,064 / 1,064 / 5,064 / 1,064바이트로 일치했습니다. 이후 보고서 필드가 늘어 현재 크기는 달라졌으며, 아래 최신 실측을 따릅니다. 전체 해제 소비량은 570,694 / 586,234 / 1,106,070 / 105,188바이트, 미검사 스트림은 3 / 2 / 3 / 3개였습니다. 원본 플래그 유지·기본 배포 거부·정확한 총 바이트/레코드 한도·1 부족·잘못된 정책·오류 후 복구도 통과했습니다. 이 검사를 정규 audit에 연결했으며 Safe/Fast 및 후속 검증 결과는 아래에 기록합니다.
 
 Scripts 수정 후 전용 네이티브 테스트는 세 모드 각각 4/4(root 포함), 전체 네이티브는 5/5 단계·977/977 테스트로 재통과했습니다. ReleaseSafe standalone WASM에서도 위 네 실파일 보고서와 한도·오류 복구 결과가 Debug와 일치했습니다.
 
@@ -108,3 +110,18 @@ ReleaseFast에서도 명시적 할당 회계에 primary 버퍼 1,800바이트와
 소스·테스트를 고정해 Debug → ReleaseSafe → ReleaseFast 전체 audit를 순차 실행했습니다. 세 모드 각각 26/26 단계·978/978 네이티브 테스트·HWP/WASM 7,840,885회 검사로 통과했으며 종료 코드 0을 확인했습니다. 로그는 /tmp/hwpjs-distribution-container-{Debug,ReleaseSafe,ReleaseFast}-audit.log입니다. 변경 문서 3개의 로컬 링크 25개와 변경 파일 포맷·공백 검사도 통과했습니다. 최종 제품 빌드와 게시 게이트는 별도로 확인합니다.
 
 audit 이후 최종 zig build test --summary all은 5/5 단계·978/978 테스트, zig build -Doptimize=ReleaseSafe --summary all은 5/5 단계로 통과했습니다(각 종료 코드 0). 이 단계는 명시적으로 선택한 관측 배포용 정책의 구현·검증입니다. 비밀번호/DRM 해제, 미관측 배포 변형, 미지원 payload, HWPX·편집/쓰기·공개 HWP JS API 완료를 뜻하지 않습니다.
+
+## 현재 코드 재검증 (2026-09-27)
+
+로컬 rhwp 기준 커밋 `e8800c8def63449808a4092798442652ed460552`와 현재 `feature_policy.zig`·`primary_sections.zig`·`validation.zig`·Scripts 정책을 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 `distribution` 집중 네이티브 필터는 각각 14/14 통과했습니다. 이 필터에는 이름이 우연히 일치하는 grid 테스트 1개가 포함됩니다. 앞선 ViewText 문서 검증과 같은 제품 코드에서 실행한 ReleaseSafe `hwp5-audit`는 10/10 단계·8,905,855 checks로 통과했습니다. 이번에는 그 전체 audit를 다시 실행하지 않았습니다.
+
+같은 ReleaseSafe WASM 빌드의 독립 Node 오라클을 현재 다시 실행해 네 실파일의 ViewText 총 9구역, 기본 배포 거부, 명시적 primary 선택, 한도 경계와 오류 후 복구를 확인했습니다. 현재 보고서 값은 다음과 같습니다.
+
+| 표본 순서 | primary | 구역 | 보고서 바이트 | 총 해제 바이트 | 미검사 스트림 |
+|---|---:|---:|---:|---:|---:|
+| `20250130-hongbo-no.hwp` | ViewText | 1 | 1,104 | 570,694 | 3 |
+| `20250130-hongbo.hwp` | BodyText | 1 | 1,104 | 586,234 | 2 |
+| `한글문서파일형식_5.0_revision1.3.hwp` | ViewText | 6 | 5,264 | 1,106,070 | 3 |
+| `issue5756/156732409_superscript_advance.hwp` | ViewText | 1 | 1,104 | 105,188 | 3 |
+
+손상 스트림 검사는 선택 대상 3개, 정상 재인코딩/보조 변경 5건, 거부 30건이 현재 모두 통과했습니다. 과거 `/tmp/hwpjs-distribution-container-{Debug,ReleaseSafe,ReleaseFast}-audit.log`와 변형 사본은 현재 없어 변형 검출 9회·세 모드 전체 감사 7,840,885회는 이번 재검증으로 세지 않습니다. 이 결과는 관측된 배포용 문서 네 파일과 합성 반례의 읽기 정책에 한정하며 저장·범용 배포용 변형 지원을 입증하지 않습니다.

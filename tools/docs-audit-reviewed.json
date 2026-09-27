@@ -6,8 +6,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "b526392b7216b05eafaee57b651df958792406e747775bdddb5c0d210f8ea003",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice and distribution ViewText evidence review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "37d403c9d11e17b99fe9ecdb51cfb674c27c647e6ba908bef1af84f1e3965ded",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText and document policy evidence review, architecture pending, full Debug Zig test incomplete"
     },
     "THIRD_PARTY_NOTICES.md": {
       "sha256": "9d8b89d82c9ab174f564afa3b294f186b9ab12fa0dc354bf16818b3a7cf04d55",
@@ -16,6 +16,10 @@
     "docs/hwp5-distribution-viewtext.md": {
       "sha256": "a44f6a685fd6c407b0dd154f825adede79c13f93b9ae3af74491b9b713cc3a6c",
       "evidence": "2026-09-27 local HWP5 table 53, current rhwp legacy Zig decoder and container policy, Debug Safe Fast 14 focused each, Safe HWP5 audit 8905855, independent Node oracle 513 accepted 347 rejected and four real section0 streams; old logs unavailable"
+    },
+    "docs/hwp5-distribution-document-policy.md": {
+      "sha256": "d61b882dac05b50f4b1dbf4d70a1979fc9b085c22020742cd4585ebc46e4db9b",
+      "evidence": "2026-09-27 current rhwp and Zig primary policy, three modes 14 focused each, same-code Safe HWP5 audit 8905855, independent Node four files nine ViewText sections and container results, five accepted thirty rejected; historical logs missing"
     },
     "docs/cfb-compatibility.md": {
       "sha256": "c7a906e4b53a01db38b905a834673467f12d934ebfba2214ce2be207b7df3737",
