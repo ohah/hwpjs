@@ -6,8 +6,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "0271f677bc6c17b19939de9dabe8dbbd58a1a9036beca44e3ee2131081164b1d",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope PNG ICC inspection PNG RGBA BCP47 syntax registry alpha2 history ICC IANA matching and ICC mluc selection review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "58acfeb3e61978d9bfc791be822737cbb7a3afe4dc77d228497c877711bc5e09",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope PNG ICC inspection PNG RGBA BCP47 syntax registry alpha2 history ICC IANA matching mluc selection and mluc structure review, architecture pending, full Debug Zig test incomplete"
     },
     "docs/bcp47-syntax.md": {
       "sha256": "ae0d91a0bb5ca2f8a5194b5ffa76494427cc058784f11446fd905458020f5b11",
@@ -28,6 +28,10 @@
     "docs/icc-localized-selection.md": {
       "sha256": "364a5ba579a91fd675cf405c3921d7de4854c9f580adf4301b993d8009cdb8ca",
       "evidence": "2026-09-27 ICC.1:2022 section 10.15 fallback and current Zig raw default opt-in IANA selection deferred flags, Debug Safe Fast mluc selection and IANA selection 3 each, existing local WASM mode167 independent JS 3425 accepted 52 rejected mode170 210 accepted 49 rejected; historic full audit macOS profiles large limit manual not rerun"
+    },
+    "docs/icc-localized-structure.md": {
+      "sha256": "10cfff99ab751d9120af57c6469e6d2fc6a6c54f550dd3f4541513d8bc566f66",
+      "evidence": "2026-09-27 ICC.1:2022 section 10.15 Table54 stride shared storage current Zig mluc v4 localized v2 integrated split and later Unicode selection, Debug Safe Fast broad mluc 10 each localized dispatch 2 each, existing local WASM mode164 165 JS 148 accepted 138 rejected; historic full audit macOS twelve tags manual shared stress not rerun"
     },
     "docs/png-rgba.md": {
       "sha256": "caa9320a6c1b5d93529d7461b2482d7bc3ba414c8817663a34028dad68f53f5b",
