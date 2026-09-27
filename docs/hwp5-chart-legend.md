@@ -32,6 +32,8 @@ Mode 316은 이름 바이트 상한·객체 개수 상한·저장 String 합계 
 
 첫 표본 응답 204바이트의 개별 XOR 1 변형과 같은 오류 메시지의 WebAssembly.RuntimeError 대체도 세 모드에서 모두 검출했습니다. 늦은 객체 맵 할당 OOM의 상태 보존을 보강한 후 소스·정규 테스트를 고정해 전체 회귀 검증을 실행했습니다.
 
-Debug·ReleaseSafe·ReleaseFast 전체 audit가 각각 27/27 단계, 네이티브 1,025/1,025개, HWP/WASM 8,023,979회 검사를 통과했습니다. 각 모드의 Legend 결과는 원본 43개(재참조 41개·새 정의 2개), 정상 258건·거부 11,211건입니다. 로그는 `/tmp/hwpjs-chart-legend-{Debug,ReleaseSafe,ReleaseFast}-audit.log`에 남겼습니다. 검사 횟수는 지원 범위나 모든 입력의 무결함을 뜻하지 않습니다.
+당시 Debug·ReleaseSafe·ReleaseFast 전체 audit가 각각 27/27 단계, 네이티브 1,025/1,025개, HWP/WASM 8,023,979회 검사를 통과했습니다. 각 모드의 Legend 결과는 원본 43개(재참조 41개·새 정의 2개), 정상 258건·거부 11,211건입니다. 로그는 `/tmp/hwpjs-chart-legend-{Debug,ReleaseSafe,ReleaseFast}-audit.log`에 남겼습니다. 이 과거 검사 횟수는 지원 범위나 모든 입력의 무결함을 뜻하지 않습니다.
 
-전체 audit 이후 최종 `zig build test --summary all`은 5/5 단계·1,025/1,025개, 제품 `zig build -Doptimize=ReleaseSafe --summary all`은 5/5 단계를 통과했습니다. 변경 Zig/JS의 포맷·구문 검사, diff 공백 검사와 관련 문서의 로컬 링크 31개도 확인했습니다.
+당시 전체 audit 이후 최종 `zig build test --summary all`은 5/5 단계·1,025/1,025개, 제품 `zig build -Doptimize=ReleaseSafe --summary all`은 5/5 단계를 통과했습니다. 변경 Zig/JS의 포맷·구문 검사, diff 공백 검사와 관련 문서의 로컬 링크 31개도 확인했습니다.
+
+2026-09-28 재검증에서는 공식 Legend API 속성 표와 현재 Zig의 Font 이름 String만 객체 목록으로 해결하는 선택적 경계, 타입 참조와 객체 재참조의 분리, 등록·한도·실패 시 두 목록 폐기를 대조했습니다. Debug·ReleaseSafe·ReleaseFast `chart legend` 집중 테스트는 각각 root 포함 3/3 통과했습니다. 현재 ReleaseSafe WASM과 독립 Contents 오라클은 43개 표본에서 기존 이름 재참조 41건·새 정의 2건, 정상 258건·거부 11,211건을 재현했습니다. 과거 변이·전체 audit 및 다른 최적화 모드의 WASM 실험은 이번에 재실행하지 않았습니다.

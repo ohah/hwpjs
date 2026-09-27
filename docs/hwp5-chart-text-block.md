@@ -35,12 +35,14 @@ HWP 명세의 차트 항목과 공식 차트 revision 1.2의 3.3 VtFont, 3.27 Fo
 
 ## 적대적 검증
 
-Debug/ReleaseSafe/ReleaseFast 전용 WASM에서 각각 실제 43개·정상 258건·오류 9,890건을 통과했습니다. 정상 변형은 원시 필드/문자열/후속 값, 비연속 새 타입 ID, 두 문자열 길이 각각 0/1/65,535를 포함합니다. 문자열 길이 변경 시 전체 extent를 다시 계산해 깊은 읽기까지 도달시켰습니다. 각 거부 뒤 원본을 재호출하고 Error 생성자와 기대 오류명을 모두 확인합니다.
+당시 Debug/ReleaseSafe/ReleaseFast 전용 WASM에서 각각 실제 43개·정상 258건·오류 9,890건을 통과했습니다. 정상 변형은 원시 필드/문자열/후속 값, 비연속 새 타입 ID, 두 문자열 길이 각각 0/1/65,535를 포함합니다. 문자열 길이 변경 시 전체 extent를 다시 계산해 깊은 읽기까지 도달시켰습니다. 각 거부 뒤 원본을 재호출하고 Error 생성자와 기대 오류명을 모두 확인합니다.
 
 `/tmp/hwpjs-chart-text-block-mutants.XMTmfJ`의 원시 Font 삭제(raw), 누적 한도 차감 생략(total), 보조 참조 검사 생략(auxiliary), 그룹 중복 검사 생략(duplicate), 실패 커서 변경(cursor), 호출자 해제 생략(leak)을 검사했습니다. 여섯 변형 모두 세 모드에서 assertion 또는 MemoryLeakDetected·종료 코드 1로 검출했습니다. 변형 패치의 첫 부분 문자열 매칭 실패는 실행 결과에 포함하지 않았고, 실제 줄 전체에 적용한 후 컴파일·실행한 결과만 셌습니다.
 
 첫 표본 응답 148바이트를 한 바이트씩 XOR 1 한 변형과 같은 메시지의 WebAssembly.RuntimeError 대체도 세 모드에서 모두 검출했습니다. 정상 입력·오류 입력을 구분하지 않는 포괄적인 예외 처리를 통과 조건으로 쓰지 않습니다.
 
-소스·정규 테스트를 고정한 뒤 Debug → ReleaseSafe → ReleaseFast 전체 audit를 순차 실행했고 최종 종료 코드는 0입니다. `/tmp/hwpjs-chart-text-block-{Debug,ReleaseSafe,ReleaseFast}-audit.log`에서 각 모드 27/27 단계·1,016/1,016 네이티브 테스트·HWP/WASM 7,958,600회 검사와 chartTextBlockResults의 43/258/9,890을 확인했습니다. 포맷·JS 구문·공백, 관련 문서 로컬 링크 23개도 검사했습니다. 검사 수는 현재 계약의 검증 범위이며 전체 차트·전체 문서 지원 완료를 뜻하지 않습니다.
+당시 소스·정규 테스트를 고정한 뒤 Debug → ReleaseSafe → ReleaseFast 전체 audit를 순차 실행했고 최종 종료 코드는 0입니다. `/tmp/hwpjs-chart-text-block-{Debug,ReleaseSafe,ReleaseFast}-audit.log`에서 각 모드 27/27 단계·1,016/1,016 네이티브 테스트·HWP/WASM 7,958,600회 검사와 chartTextBlockResults의 43/258/9,890을 확인했습니다. 포맷·JS 구문·공백, 관련 문서 로컬 링크 23개도 검사했습니다. 이 과거 검사 수는 당시 계약의 검증 범위이며 전체 차트·전체 문서 지원 완료를 뜻하지 않습니다.
 
-최종 `zig build test --summary all`은 5/5 단계·1,016/1,016 테스트, `zig build -Doptimize=ReleaseSafe --summary all`은 5/5 단계로 통과했습니다(종료 코드 0).
+당시 최종 `zig build test --summary all`은 5/5 단계·1,016/1,016 테스트, `zig build -Doptimize=ReleaseSafe --summary all`은 5/5 단계로 통과했습니다(종료 코드 0).
+
+2026-09-28 재검증에서는 공식 VtFont·Footnote·TextLayout의 API 속성 표를 wire 배치의 증명으로 삼지 않고 현재 Zig의 inline null 보조 참조, 두 String 예산·대여 수명, 원시 필드 복사, 확장 `readObservedWithObjects` 책임 분리와 대조했습니다. Debug·ReleaseSafe·ReleaseFast `chart text block` 필터는 현재 확장 객체 회귀를 포함해 각각 root 포함 7/7 통과했습니다. 현재 ReleaseSafe WASM과 독립 Contents 오라클은 43개 표본의 정상 258건·거부 9,890건을 재현했습니다. 과거 변이·전체 audit 및 다른 최적화 모드의 WASM 실험은 이번에 재실행하지 않았습니다.
