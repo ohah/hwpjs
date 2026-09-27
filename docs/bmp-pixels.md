@@ -4,7 +4,7 @@
 
 `image.bmp_pixels.decode(allocator, bytes, options)`는 [BMP 구조 검사](bmp-structure.md) 이후 BI_RGB/BI_BITFIELDS의 픽셀을 복원합니다. 1/4/8 bpp 색인, RGB555, BGR24, BGRX32, 명시적 16/32비트 마스크를 지원합니다. 팔레트/헤더/마스크/stride를 다시 파싱하지 않습니다. 후속 [HWP BinData BMP 연결](hwp5-bin-data-bmp.md)은 별도 adapter가 소유하며 제품 JS 공개 API는 CFB 전용입니다.
 
-RLE4/8은 별도 선택의 [RGBA 연결](bmp-rle-rgba.md)을 제공합니다. 기본 rle=null과 내장 JPEG/PNG는 UnsupportedBmpPixelCompression으로 거부합니다. 썸네일이나 다른 형식을 대신 반환하지 않습니다. V5 프로파일 수명·extent·ICC와 색 변환도 아직 검사하지 않으며, raw 필드 보존과 실제 의미 검증을 구분합니다.
+RLE4/8은 별도 선택의 [RGBA 연결](bmp-rle-rgba.md)을 제공합니다. 기본 rle=null과 내장 JPEG/PNG는 UnsupportedBmpPixelCompression으로 거부합니다. 썸네일이나 다른 형식을 대신 반환하지 않습니다. 이 `decode`는 V5 프로파일을 자동 검사하거나 색 변환하지 않습니다. 프로파일 범위·수명·ICC 내용은 별도 선택형 [BMP 프로파일 검사](bmp-profile.md)가 소유하며, 그 결과도 색 변환이나 화면 동치를 보증하지 않습니다.
 
 options.colour_management=.unmanaged와 mask_scaling=.nearest_normalized를 반드시 지정합니다. 전자는 색 관리된 sRGB/화면 동일성을 주장하지 않는 선택이고, 후자는 n비트 채널을 0..255로 정규화해 가장 가까운 정수로 만드는 명시적 수치 정책입니다. Windows/libjpeg·브라우저와 모든 반올림/색상 결과가 같다는 근거로 사용하지 않습니다.
 
@@ -12,7 +12,11 @@ options.colour_management=.unmanaged와 mask_scaling=.nearest_normalized를 반�
 
 max_rgba_bytes 기본 256 MiB는 구조의 파일/픽셀 저장 한도와 독립적입니다. width×height가 출력 한도를 넘으면 할당 전에 거부합니다. 색인 범위 오류 등 할당 후 실패에서도 출력 메모리를 해제합니다. Image.metadata_deferred는 true로 남습니다.
 
-## 명세와 실제 표본
+## 현재 재검증 (2026-09-27)
+
+Microsoft의 INFO·V5 헤더 정의와 현재 `src/image/bmp/pixels.zig`·`pixel_image.zig`·관련 테스트를 대조했습니다. `decode`는 구조 검사 결과를 사용해 소유 RGBA를 만들고, BI_RGB32 상위 바이트를 알파로 취급하지 않으며, 구조상 읽을 수 있는 CMYK 압축도 픽셀 복원에서는 거부합니다. 넓은 `BMP ` 필터는 Debug/ReleaseSafe/ReleaseFast 각각 59/59개 통과했으나, 이 수는 BMP 픽셀 전용 테스트 개수가 아닙니다. 현재 로컬 ReleaseSafe probe WASM에 대한 독립 JS 합성 검사는 comparisons=3,349·rejected=163이었습니다. 현재 실파일 28참조·세 모드 WASM·소스 변형·전체 audit는 재실행하지 않았으며, 아래 숫자는 당시 검증 기록으로만 읽습니다.
+
+## 명세와 실제 표본 (과거 검증 기록)
 
 헤더별 근거는 구조 문서에 연결했습니다. 특히 GDI INFO의 [32비트 BI_RGB 정의](https://learn.microsoft.com/en-us/previous-versions/dd183376(v=vs.85))에서 상위 바이트가 미사용임을 확인했고, [V5 비트필드](https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-bitmapv5header)의 명시적 alpha와 혼용하지 않았습니다. 5/6/10/30비트 채널 정규화는 위 API가 선택하는 수치 정책이며 Microsoft의 렌더러 구현 코드를 이식한 것은 아닙니다.
 
@@ -20,7 +24,7 @@ max_rgba_bytes 기본 256 MiB는 구조의 파일/픽셀 저장 한도와 독립
 
 별도 `reference/rhwp/samples/3-09월_교육_통합_2022.hwp`의 BMP 26참조는 모두 INFO·BI_RGB24입니다. 총 28,689,681픽셀, RGBA 114,758,724바이트를 대조했습니다. 참조 수는 고유 이미지 수가 아니며, 이 추가 표본을 기존 fixture 2개와 혼동하지 않습니다. 원본 한글 화면 캡처 대조가 아니라 독립 바이트/픽셀 oracle과의 비교입니다.
 
-## 네이티브·WASM 검증
+## 네이티브·WASM 검증 (과거 검증 기록)
 
 네이티브 BMP 필터는 Debug/ReleaseSafe/ReleaseFast 각각 root 포함 9/9개 통과했습니다. 입력 제거 후 출력 수명, BI_RGB 상위 바이트 변화, 양/음수 높이, CORE 필드 부재와 INFO 0 구분, V4/V5 signed/fixed 원값, 모든 절단 위치, 크기·offset·stride·trailing, i32 최소 높이, 독립 한도, 부정 마스크, unused nibble/padding, 알파, RGB555, 잘못된 색인에서 할당 후 해제와 모든 할당 실패 위치를 검사했습니다.
 
@@ -34,14 +38,14 @@ max_rgba_bytes 기본 256 MiB는 구조의 파일/픽셀 저장 한도와 독립
 
 CORE 색인과 V5 alpha-bitfield 표본의 mode 285/286/287 출력 총 840바이트를 각각 XOR 1로 바꿔 세 모드에서 모두 검출했습니다. 원본 픽셀뿐 아니라 optional 필드와 raw 구간도 포함합니다.
 
-## 누수 검증의 모드 편향 수정
+## 누수 검증의 모드 편향 수정 (과거 검증 기록)
 
 격리 소스에서 pixels.decode의 errdefer 해제를 제거했을 때 초기 Debug/Safe는 누수를 검출했으나 ReleaseFast는 root 포함 9/9개가 통과했습니다. 로컬 Zig 0.16 std/testing.zig와 heap/debug_allocator.zig에서 기본 testing allocator의 safety가 runtime_safety를 따르고 deinit의 leak 검사가 safety에 의존함을 확인했습니다. checkAllAllocationFailures는 유도한 OOM 경로의 할당/해제량을 확인하지만 최초 무제한 실행의 성공 반환에서는 같은 회계를 비교하지 않았습니다. 기대한 색인 오류를 잡아 테스트 성공으로 바꾼 경우 이 차이가 드러났습니다.
 
-실행 중인 첫 전체 audit의 정확한 프로세스를 중단하고, 명시적 `.safety=true, .enable_memory_limit=true` 검사 할당자에서 정상 복원/해제와 잘못된 색인 오류 후의 total_requested_bytes=0을 별도로 확인하도록 보강했습니다. 제품 디코더의 해제 코드는 원래 존재했으며, 발견한 문제는 테스트가 결함을 놓치는 조건입니다. 수정 후 정상 네이티브 필터는 세 모드 각각 9/9개를 다시 통과했습니다. 이전 누수 변형 로그를 보존하며 모든 소스 변형도 수정된 검사로 다시 실행합니다.
+실행 중인 첫 전체 audit의 정확한 프로세스를 중단하고, 명시적 `.safety=true, .enable_memory_limit=true` 검사 할당자에서 정상 복원/해제와 잘못된 색인 오류 후의 total_requested_bytes=0을 별도로 확인하도록 보강했습니다. 제품 디코더의 해제 코드는 원래 존재했으며, 발견한 문제는 테스트가 결함을 놓치는 조건입니다. 수정 후 정상 네이티브 필터는 세 모드 각각 9/9개를 다시 통과했습니다. 당시 이전 누수 변형 로그를 보존한 뒤 모든 소스 변형도 수정된 검사로 다시 실행했습니다.
 
-수정된 테스트를 `/tmp/hwpjs-bmp-mutants.ekVztB/`의 모든 변형에 반영하여 세 모드에서 다시 컴파일·실행했습니다. 저장 행 뒤집기 누락·BI_RGB32 상위 바이트를 alpha로 해석·팔레트 간격 3바이트 고정·DWORD 행 패딩 누락·RGBA 한도 무시·마스크 연속성 검사 누락·실패 시 해제 누락·CORE의 없는 info를 0값 구조로 치환·정규화 반올림 버림의 9종 모두 실패로 검출했습니다. root 포함 9개 중 실패 수는 세 모드 각각 순서대로 3/2/1/1/1/1/1/1/1개입니다. 누수 변형의 Fast 실패는 명시적 할당 회계의 0 대 4바이트 불일치로 확인했습니다. 변형은 제품 소스에 적용하지 않았으며 `*-v2.log`에 재검증 결과를 남겼습니다.
+당시 수정된 테스트를 `/tmp/hwpjs-bmp-mutants.ekVztB/`의 모든 변형에 반영하여 세 모드에서 다시 컴파일·실행했습니다. 저장 행 뒤집기 누락·BI_RGB32 상위 바이트를 alpha로 해석·팔레트 간격 3바이트 고정·DWORD 행 패딩 누락·RGBA 한도 무시·마스크 연속성 검사 누락·실패 시 해제 누락·CORE의 없는 info를 0값 구조로 치환·정규화 반올림 버림의 9종 모두 실패로 검출했습니다. root 포함 9개 중 실패 수는 세 모드 각각 순서대로 3/2/1/1/1/1/1/1/1개입니다. 누수 변형의 Fast 실패는 명시적 할당 회계의 0 대 4바이트 불일치로 확인했습니다. 변형은 제품 소스에 적용하지 않았으며 당시 `*-v2.log`에 재검증 결과를 남겼습니다. 해당 임시 디렉터리와 로그는 현재 로컬에 없어 이번 검증 근거로 재사용하지 않습니다.
 
-Debug/ReleaseSafe/ReleaseFast 전체 audit를 순차 실행하여 각각 20/20단계, 네이티브 899/899개, 독립 검사 checks=7,817,053건을 통과했습니다. 로그는 `/tmp/hwpjs-bmp-{Debug,ReleaseSafe,ReleaseFast}-audit-v2.log`에 남겼습니다. 이 숫자는 BMP 전용 검사 수나 지원율이 아니라 기존 회귀를 포함한 실행 집계입니다. 전체 BMP·전체 HWP/HWPX 검증 완료를 선언하지 않습니다.
+당시 Debug/ReleaseSafe/ReleaseFast 전체 audit를 순차 실행하여 각각 20/20단계, 네이티브 899/899개, 독립 검사 checks=7,817,053건을 통과했습니다. 로그 경로는 `/tmp/hwpjs-bmp-{Debug,ReleaseSafe,ReleaseFast}-audit-v2.log`였지만 현재 로컬에는 없습니다. 이 숫자는 BMP 전용 검사 수나 지원율이 아니라 기존 회귀를 포함한 실행 집계입니다. 전체 BMP·전체 HWP/HWPX 검증 완료를 선언하지 않습니다.
 
 전체 회귀 이후 기본 `zig build test --summary all`도 899/899개, 제품 `zig build -Doptimize=ReleaseSafe --summary all`은 5/5단계를 통과했습니다. 변경 Zig/JS 구문·포맷, diff 공백 검사와 관련 문서 4개의 로컬 링크 52개를 확인했습니다. 파일 헤더·DIB 필드·마스크·팔레트·구간 구조·소유 픽셀 복원을 책임별로 분리하고, 픽셀 계층은 기존 구조 검사 결과를 재사용합니다.
