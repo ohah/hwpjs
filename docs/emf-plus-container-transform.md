@@ -2,9 +2,11 @@
 
 ## 근거와 해석
 
-MS-EMFPLUS 2.3.7.1은 DestRect와 SrcRect가 컨테이너 transform을 지정한다고 정의합니다. 해당 표의 “DestRect에 적용하면 SrcRect” 문장은 Microsoft GDI+ `Graphics::BeginContainer(dstrect, srcrect, unit)` API 설명 및 공식 예제의 SrcRect→DestRect 결과와 방향이 반대입니다. 공식 예제의 source `(0,0,200,100)`과 destination `(100,100,200,200)`은 컨테이너 안에서 `(100,100)` 이동과 y축 2배 확대가 적용된다고 명시합니다.
+[MS-EMFPLUS 2.3.7.1](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/9d8d1b89-349e-42da-aa74-8a68a3401601)은 DestRect와 SrcRect가 컨테이너 transform을 지정한다고 정의합니다. 해당 표의 “DestRect에 적용하면 SrcRect” 문장은 Microsoft [GDI+ `Graphics::BeginContainer(dstrect, srcrect, unit)`](https://learn.microsoft.com/en-us/windows/win32/api/gdiplusgraphics/nf-gdiplusgraphics-graphics-begincontainer%28constrectf__constrectf__unit%29) API 설명 및 공식 예제의 SrcRect→DestRect 결과와 방향이 반대입니다. 공식 예제의 source `(0,0,200,100)`과 destination `(100,100,200,200)`은 컨테이너 안에서 `(100,100)` 이동과 y축 2배 확대가 적용된다고 명시합니다.
 
-명세가 행렬 산식을 직접 주지 않는 부분은 Windows 호환 구현의 실제 재생 경로를 독립 대조했습니다. Wine `dlls/gdiplus/metafile.c`는 LogicalDpiX/Y로 source 단위를 pixel로 바꾸고 `dest.width / scaled_source.width`, `dest.height / scaled_source.height`, `dest.x - scaled_source.x`, `dest.y - scaled_source.y`를 구성한 뒤 기존 world transform에 prepend합니다. 이 프로젝트는 코드를 복제하지 않고 같은 관측 계약을 별도 Zig 산술로 구현합니다.
+명세가 행렬 산식을 직접 주지 않는 부분은 Windows 호환 구현의 실제 재생 경로를 독립 대조했습니다. [Wine `dlls/gdiplus/metafile.c`](https://github.com/wine-mirror/wine/blob/7b3fff76fa5178f6ce0141b2c776afa2a822f101/dlls/gdiplus/metafile.c)는 LogicalDpiX/Y로 source 단위를 pixel로 바꾸고 `dest.width / scaled_source.width`, `dest.height / scaled_source.height`, `dest.x - scaled_source.x`, `dest.y - scaled_source.y`를 구성한 뒤 기존 world transform에 prepend합니다. 이 프로젝트는 코드를 복제하지 않고 같은 관측 계약을 별도 Zig 산술로 구현합니다.
+
+Wine식 이동항은 일반적인 rectangle-to-rectangle affine식의 `dest.x - scale_x * scaled_source.x`와 다릅니다. source 원점이 0이 아니고 배율이 1이 아니면 이 단독 행렬이 source 원점을 dest 원점에 보내지 않을 수 있습니다. 따라서 이 경로는 Wine 재생식과의 구조 대조이지, 비영 원점에서 Windows GDI+의 실제 픽셀 결과까지 입증한 것은 아닙니다.
 
 ## 책임과 단일 출처
 
@@ -24,4 +26,4 @@ MS-EMFPLUS가 SHOULD NOT으로 표시한 World와 Display는 parser 단계에서
 
 point 환산, height ratio, source offset, discouraged 단위 처리, x/y DPI 선택, prepend 순서, unknown 상태, 적용 counter와 stack 복원의 9개 의미 변이를 독립 source 복사본과 mode별 cache, 120초 watchdog으로 Debug·ReleaseSafe·ReleaseFast에서 실행했습니다. 첫 실행에서 순수 모듈 테스트가 filter에 수집되지 않는 문제와 무효 변이 1개를 발견해 root 인덱스와 변이를 고친 뒤 재검증했습니다. 최종 유효 결과는 27/27 테스트 의미 실패이며 생존·컴파일 오류·timeout 0입니다. 로그는 `/tmp/hwpjs-container-transform-mutants`에 있습니다.
 
-변경 소스를 고정한 뒤 전체 `audit`를 세 모드에서 순차 실행했습니다. 각 모드는 40/40 단계와 1,896/1,896 테스트(native 1,857, chart 31, WMF 8), HWP/WASM 8,905,827 checks, imports 0을 통과했고 CFB 12,000 변이의 trap은 0입니다. 로그는 `/tmp/hwpjs-emfplus-container-transform-final-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.
+아래 전체 `audit`와 위 변이 검출 수치는 당시 기록이며 2026-09-28 재검증에서는 재실행하지 않았습니다. 당시 변경 소스를 고정한 뒤 전체 `audit`를 세 모드에서 순차 실행했습니다. 각 모드는 40/40 단계와 1,896/1,896 테스트(native 1,857, chart 31, WMF 8), HWP/WASM 8,905,827 checks, imports 0을 통과했고 CFB 12,000 변이의 trap은 0입니다. 로그는 `/tmp/hwpjs-emfplus-container-transform-final-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.

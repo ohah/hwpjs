@@ -8,6 +8,8 @@
 
 기존 문서의 과거 테스트 기록은 이 목록에 자동 소급하지 않습니다. 이 목록의 비율은 새 기준에 따라 **현재 내용 전체를 다시 검증한 파일의 비율**이며, 이전 구현 진행률이나 과거 검증 작업량의 추정치가 아닙니다.
 
+2026-09-28에는 EMF+ graphics state·BeginContainer transform·SetPageTransform·SetWorldTransform·MultiplyWorldTransform 다섯 문서를 Microsoft의 레코드 정의·GDI+ BeginContainer API와 고정 Wine playback 원문, 현재 Zig의 행렬·소유 상태 stack·tracked stream 연결에 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 root `EMF+` 필터는 각각 560/560 통과했고 대상 leaf·stream·framing 테스트의 실제 수집을 확인했습니다. 상태 snapshot의 terminal-server 소유 자원은 단순 값 복사가 아니라 깊은 복제임을 바로잡았습니다. BeginContainer는 공식 레코드 표와 API 설명의 방향 차이뿐 아니라 Wine식 이동항이 일반적인 비영 source 원점의 affine 대응식과 다르다는 한계를 명시했습니다. 이는 Windows 픽셀 출력 검증이 아니며 과거 전체 audit·변이 검사는 이번에 재실행하지 않았습니다.
+
 2026-09-28에는 EMF+ image affine map·RectData/device corner·rectangle record 연결·world/page/device mapper·page transform 다섯 문서를 Microsoft의 DrawImagePoints/Rect/SetPageTransform/UnitType 및 GDI+ 행렬·좌표계 설명, 현재 Zig의 affine·공용 단위 환산·stream/상태 연결과 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 root `EMF+` 필터는 각각 560/560 통과했고 각 대상 모듈 테스트가 실제 수집된 것도 출력으로 확인했습니다. 기존 변이·전체 audit 수치는 당시 기록으로 명시했으며 이번에 재실행하지 않았습니다. 실제 한컴 EMF+ 양성 파일·픽셀 동등성도 이번 문서 검증으로 입증하지 않습니다.
 
 2026-09-28에는 EMF+ DrawImage·DrawImagePoints 및 image parallelogram·rectangle/source→device map 다섯 문서를 공식 MS-EMFPLUS record 정의, 고정 Wine playback/test 원문, 현재 Zig의 parser·stream·좌표 책임과 대조했습니다. 세 빌드 모드의 root `EMF+` 필터는 각각 560/560 통과했고 대상 모듈의 테스트 16개가 실제로 수집됐음을 확인했습니다. Wine의 범위 밖 ImageAttributes ID 무시 정책은 공식 명세의 sentinel 규칙이 아니라 관측된 호환 정책으로 유지합니다. rectangle 문서의 `stream replay` 미구현 표현은 실제 구조·참조 검증과 그래픽 재생을 구별하도록 바로잡았습니다. 다섯 문서의 과거 변이·전체 audit 수치는 이번에 재실행하지 않았고, 실제 한컴 EMF+ 양성 파일이나 픽셀 동등성은 검증하지 않았습니다.
