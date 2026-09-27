@@ -10,9 +10,11 @@
 
 `emf_plus_graphics_state_stack.zig`는 현재 terminal-server graphics 상태와 Palette를 소유하고 Save/Container push, stack clone, Restore/EndContainer에서 깊은 복사·복원을 수행합니다. 새 SetTSGraphics를 적용할 때는 replacement를 먼저 완성한 뒤 이전 값을 해제하므로 할당 실패가 기존 상태를 훼손하지 않습니다. 같은 comment의 후속 record가 실패하면 tracked stream의 임시 stack과 report를 폐기해 적용 전 상태로 돌아갑니다.
 
-Palette와 WorldToDevice를 실제 device context나 renderer에 적용하는 기능은 아직 없습니다. Windows가 이 record를 생성하지 않는다고 명시하고 로컬 지원 HWP corpus에도 EMF+ signature 표본이 0개이므로, 합성 wire 검증을 실제 한컴 출력 또는 픽셀 동등성으로 확대해 주장하지 않습니다.
+Palette와 WorldToDevice를 실제 device context나 renderer에 적용하는 기능은 아직 없습니다. 공식 Product Behavior는 Windows가 이 record를 생성하지 않는다고 명시합니다. 이전 로컬 지원 HWP corpus 조사에는 EMF+ signature 표본이 0개였지만 이번에는 재조사하지 않았으므로, 합성 wire 검증을 실제 한컴 출력 또는 픽셀 동등성으로 확대해 주장하지 않습니다.
 
 ## 검증 기록
+
+아래 변이·전체 `audit` 수치와 `/tmp` 로그는 최초 구현 당시 기록입니다. 이번 문서 검증에서 변이·전체 `audit`를 재실행한 결과로 세지 않습니다.
 
 단위 테스트는 고정부의 모든 필드, Palette 원본과 clone의 독립 소유, Palette 없는 replacement, Save/Restore, BeginContainerNoParams/EndContainer, stack 전체 clone, malformed 후속 record rollback과 모든 할당 실패를 검사합니다. ReleaseFast에서도 해제 누락을 놓치지 않도록 safety가 켜진 명시적 할당 회계로 snapshot과 replacement의 최종 outstanding bytes가 0인지 확인합니다.
 

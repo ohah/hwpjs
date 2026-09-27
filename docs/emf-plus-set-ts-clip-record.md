@@ -2,17 +2,19 @@
 
 ## 범위와 단일 출처
 
-`src/image/emf/emf_plus_set_ts_clip.zig`는 MS-EMFPLUS 2.3.8.1의 EmfPlusSetTSClip record envelope를 소유합니다. Type `0x403A`, Flags의 최상위 C bit와 하위 15비트 NumRects, C별 `Size = 12 + NumRects * (C ? 4 : 8)`, DataSize와 실제 slice를 서로 독립적으로 검사합니다. `emf_plus_ts_clip_rects.zig`만 rectangle delta wire와 누적 좌표를 소유하며 stream은 parser 결과를 집계하고 별도 상태 계층에 전달합니다.
+`src/image/emf/emf_plus_set_ts_clip.zig`는 [MS-EMFPLUS 2.3.8.1](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/0dfb6f4f-e53c-413b-80cf-57a3cadd5d38)의 EmfPlusSetTSClip record envelope를 소유합니다. Type `0x403A`, Flags의 최상위 C bit와 하위 15비트 NumRects, C별 `Size = 12 + NumRects * (C ? 4 : 8)`, DataSize와 실제 slice를 서로 독립적으로 검사합니다. `emf_plus_ts_clip_rects.zig`만 rectangle delta wire와 누적 좌표를 소유하며 stream은 parser 결과를 집계하고 별도 상태 계층에 전달합니다.
 
 C=1의 각 좌표는 최상위 bit가 1인 signed 7-bit 한 바이트입니다. C=0은 첫 바이트 최상위 bit가 0인 big-endian signed 15-bit 두 바이트입니다. 이는 최상위 bit가 0이면 한 바이트인 일반 EMF+ PointR 압축과 반대이므로 해당 decoder를 재사용하지 않습니다. 네 값은 이전 rectangle의 left, top, right에 대한 delta와 현재 top에서 bottom까지의 delta로 해석하며 첫 rectangle의 이전 좌표는 0입니다. 반환 rectangle은 i32 누적 좌표이고 원본 bytes도 빌려 보존합니다.
 
-공식 문서에는 SetTSClip 전체 record 예제가 없고 Windows는 이 record를 생성하지 않으며 GDI+ 1.1만 지원한다고 명시합니다. 따라서 합성 wire로 검증하며 제3 구현의 C=0 little-endian RectS 해석은 공식 압축 알고리즘과 충돌하므로 oracle로 채택하지 않았습니다.
+공식 문서에는 SetTSClip 전체 record 예제가 없고 Windows는 이 record를 생성하지 않으며 GDI+ 1.1만 지원한다고 명시합니다. 따라서 합성 wire로 검증하며 C=0의 바이트 순서는 공식 압축 알고리즘의 high-order-byte-first 정의를 따릅니다.
 
 ## 상태 연결과 미지원 경계
 
-tracked stream은 복원된 rectangle을 [소유 terminal-server clip 상태](emf-plus-ts-clip-state.md)로 물질화하고 Save/Container snapshot·report·rollback에 연결합니다. 빈 배열은 empty, 비어 있지 않은 배열은 union geometry 미계산을 나타내는 complex로 분류합니다. 실제 rectangle union, transform 적용, clipping mask와 렌더링은 구현하지 않았습니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없으므로 실제 한컴 출력 동등성도 주장하지 않습니다.
+tracked stream은 복원된 rectangle을 [소유 terminal-server clip 상태](emf-plus-ts-clip-state.md)로 물질화하고 Save/Container snapshot·report·rollback에 연결합니다. 빈 배열은 empty, 비어 있지 않은 배열은 union geometry 미계산을 나타내는 complex로 분류합니다. 실제 rectangle union, transform 적용, clipping mask와 렌더링은 구현하지 않았습니다. 이전 로컬 HWP corpus 조사에는 EMF+ signature 표본이 없었으며, 이번 문서 검증에서 corpus를 재조사하지 않았으므로 실제 한컴 출력 동등성도 주장하지 않습니다.
 
 ## 검증 기록
+
+아래 변이·전체 `audit` 수치와 `/tmp` 로그는 최초 구현 당시 기록입니다. 이번 문서 검증에서 변이·전체 `audit`를 재실행한 결과로 세지 않습니다.
 
 두 C 형식의 모든 signed wire 값(7-bit 128개, 15-bit 32,768개), 다중 rectangle 누적과 bottom 규칙, NumRects 0·15-bit 최댓값, marker 반전, 모든 size 축, count 불일치, iterator 실패 원자성, stream count overflow·comment rollback 및 실제 EMF framing을 검사합니다.
 

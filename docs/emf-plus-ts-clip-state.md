@@ -2,7 +2,7 @@
 
 ## 근거와 해석 경계
 
-MS-EMFPLUS 2.3.8.1은 EmfPlusSetTSClip이 terminal server의 graphics device context에 clipping areas를 지정하며 `Rects`가 `NumRects`개의 clipping rectangle 배열이라고 정의합니다. 이 프로젝트는 그 배열을 새 terminal-server clip 상태로 교체합니다. `NumRects == 0`은 표현된 clipping area가 하나도 없는 상태이므로 추상 clip을 `empty`, 하나 이상이면 실제 union geometry를 아직 계산하지 않으므로 `complex`로 분류합니다. 이는 픽셀 렌더링 결과나 Windows 생성 동등성을 뜻하지 않습니다. 공식 Product Behavior에 따르면 Windows는 이 record를 생성하지 않습니다.
+[MS-EMFPLUS 2.3.8.1](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/0dfb6f4f-e53c-413b-80cf-57a3cadd5d38)은 EmfPlusSetTSClip이 terminal server의 graphics device context에 clipping areas를 지정하며 `Rects`가 `NumRects`개의 clipping rectangle 배열이라고 정의합니다. 이 프로젝트는 그 배열을 새 terminal-server clip 상태로 교체합니다. `NumRects == 0`은 표현된 clipping area가 하나도 없는 상태이므로 추상 clip을 `empty`, 하나 이상이면 실제 union geometry를 아직 계산하지 않으므로 `complex`로 분류합니다. 이는 픽셀 렌더링 결과나 Windows 생성 동등성을 뜻하지 않습니다. [공식 Product Behavior](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/55111093-ff77-4fb7-9065-c246a07e42c6)에 따르면 Windows는 이 record를 생성하지 않습니다.
 
 ## 책임과 소유권
 
@@ -14,9 +14,11 @@ ResetClip, SetClipRect, SetClipPath, SetClipRegion, OffsetClip이 뒤따르면 �
 
 ## 미지원 경계
 
-rectangle union geometry, world/page transform과의 좌표 결합, 실제 clipping mask와 rasterization은 구현하지 않습니다. 로컬 HWP corpus에는 EMF+ signature 표본이 없어 한컴 출력의 terminal-server record 사용이나 픽셀 동등성도 주장하지 않습니다.
+rectangle union geometry, world/page transform과의 좌표 결합, 실제 clipping mask와 rasterization은 구현하지 않습니다. 이전 로컬 HWP corpus 조사에는 EMF+ signature 표본이 없었으며 이번에는 재조사하지 않았으므로 한컴 출력의 terminal-server record 사용이나 픽셀 동등성도 주장하지 않습니다.
 
 ## 검증 기록
+
+아래 변이·전체 `audit` 수치와 `/tmp` 로그는 최초 구현 당시 기록입니다. 이번 문서 검증에서 변이·전체 `audit`를 재실행한 결과로 세지 않습니다.
 
 두 rectangle 소유 복사와 독립 clone, 모든 할당 실패, Save/Restore, BeginContainerNoParams/EndContainer, 새 record의 기존 상태 교체, 0개·1개 분류, report 동기화, 후반 malformed record rollback, 다섯 일반 clip 전이의 exact 배열 폐기를 검사합니다. safety를 명시한 `DebugAllocator`의 `total_requested_bytes`로 전이 및 deep stack lifecycle의 해제량을 세 빌드 모드에서 검사합니다.
 

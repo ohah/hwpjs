@@ -35,7 +35,6 @@ pub fn parse(value: record.Record, options: Options) !SetTSGraphics {
     const minimum_data_size: u32 = if (palette_present) 44 else 36;
     if (value.data_size < minimum_data_size or @as(u64, value.size) != @as(u64, value.data_size) + record.header_size or value.data.len != value.data_size)
         return error.InvalidEmfPlusSetTSGraphicsSize;
-    if (basic_vga and !palette_present) return error.EmfPlusSetTSGraphicsBasicVgaWithoutPalette;
 
     var reader: binary.Reader = .{ .bytes = value.data };
     const anti_alias = try smoothing_mode.SmoothingMode.parse(try reader.readInt(u8));
@@ -54,7 +53,9 @@ pub fn parse(value: record.Record, options: Options) !SetTSGraphics {
     else
         null;
     if (reader.offset != value.data.len) return error.InvalidEmfPlusSetTSGraphicsSize;
-    if (basic_vga) try validateBasicVga(palette.?);
+    if (palette) |present| {
+        if (basic_vga) try validateBasicVga(present);
+    }
 
     return .{
         .flags = value.flags,
@@ -162,6 +163,10 @@ test "EMF+ SetTSGraphics parses optional palette and validates VGA claim" {
     try std.testing.expectError(error.InvalidEmfPlusSetTSGraphicsBasicVgaColor, parse(makeRecord(3, &non_vga), .{}));
     const unrestricted = try parse(makeRecord(1, &non_vga), .{});
     try std.testing.expect(!unrestricted.basic_vga);
+
+    const claim_without_palette = try parse(makeRecord(2, &fixed), .{});
+    try std.testing.expect(claim_without_palette.basic_vga);
+    try std.testing.expect(claim_without_palette.palette == null);
 }
 
 test "EMF+ SetTSGraphics rejects flags sizes limits and trailing palette data" {
@@ -172,7 +177,6 @@ test "EMF+ SetTSGraphics rejects flags sizes limits and trailing palette data" {
     @memcpy(short_palette[0..36], &data);
     for (36..44) |cut|
         try std.testing.expectError(error.InvalidEmfPlusSetTSGraphicsSize, parse(makeRecord(1, short_palette[0..cut]), .{}));
-    try std.testing.expectError(error.EmfPlusSetTSGraphicsBasicVgaWithoutPalette, parse(makeRecord(2, &data), .{}));
     var wrong_type = makeRecord(0, &data);
     wrong_type.kind = .set_ts_clip;
     try std.testing.expectError(error.NotEmfPlusSetTSGraphics, parse(wrong_type, .{}));
