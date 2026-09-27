@@ -16,6 +16,10 @@ sRGB 동반 시 정해진 gAMA/cHRM 값과의 대조는 [sRGB 검사](png-srgb.m
 
 ## 독립·적대적 검증
 
+2026-09-27 현재 재검증에서는 [PNG Third Edition의 cHRM·gAMA 필드](https://www.w3.org/TR/2025/REC-png-3-20250624/#11cHRM)와 31비트 PNG 정수·청크 순서를 현재 Zig 원값 검사/조립 경계에 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 `PNG fixed color` 집중 필터는 각각 root 포함 4/4 통과했습니다. 로컬 probe/CFB WASM과 독립 JS 대조는 정상 8,189건·거부 9,527건이 일치했습니다. 추적 HWP 미리보기 PNG 32개는 모두 gAMA를 포함하지만 cHRM은 0개였습니다. 아래 고정 PngSuite PNG 20개는 원본 SHA-256과 mode 141 원값·mode 130 복원 행을 독립 JS와 다시 대조해 모두 일치했으며, 그중 2개가 cHRM 양성입니다. 아래의 전체 audit 3모드·별도 수동 검증 로그는 이번에 다시 실행하지 않은 과거 기록입니다. 실제 HWP/HWPX 내부 cHRM 양성 파일이나 색상 변환·렌더링·저장은 이번 검증 근거가 아닙니다.
+
+### 과거 검증 기록
+
 `tests/hwp5/png-color-fixed-evidence.mjs`는 제품 코드와 분리한 Node 정수 읽기·청크 위치 대조를 사용합니다. 테스트 전용 mode 141은 14개 u32 LE를 반환합니다: gamma 존재/원값, cHRM 존재/8좌표, 색상 의미 보류, ancillary 보류 청크/바이트 수. 기대값은 제품 serializer로 생성하지 않습니다.
 
 `png-color-fixed.mjs`는 서로 다른 8좌표, 0·최댓값·상위 비트 경계, 잘림·초과 길이, 36개 payload 바이트 위치별 256값(9,216개 변형), 중복, 5청크의 120개 배치 순열, 모든 PNG 색상 유형, 파일 한도와 오류 후 복구를 검사합니다. 기존 HWP fixture의 PrvImage도 동일한 독립 기준으로 비교합니다. 실제 fixture에 해당 필드가 존재하는지와 합성 입력 검증은 구분합니다.
