@@ -30,7 +30,9 @@
 
 최종 기본 테스트도 1,048/1,048 tests, 5/5 steps로 통과했고 ReleaseSafe 제품 빌드는 5/5 steps로 통과했습니다. 변경 Zig 포맷·JS 문법·문서 링크·diff 공백 검사도 통과했습니다.
 
-이 결과는 선택된 Axis v3 배치의 조립·범위 검증입니다. 전체 Axis 필드 의미나 Plot 이후 데이터·전체 차트 지원 완료를 뜻하지 않습니다.
+위 변이 30회·세 모드 전체 audit·8,420,698 checks와 `/tmp` 로그는 구현 당시의 이력입니다. 현재 재검증 결과로 소급하지 않습니다. 2026-09-28에는 `chart axis ` 집중 테스트를 Debug·ReleaseSafe·ReleaseFast 각 5/5, `chart nullable title`을 각 3/3 실행했고 ReleaseSafe 차트 소유권 감사 31/31을 확인했습니다. 독립 Node 조사기는 [연속 Axis](hwp5-chart-axis-evidence.md) 43개·172축, [Surface 뒤 nullable 제목](hwp5-chart-axis-null-title.md) 43개를 현재 corpus에서 재현했습니다. 현재 `observed_contents.zig`는 명시적으로 선택된 배치에서 주축 배열과 Surface 뒤 nullable 축을 이 파서로 연결합니다. 자동 버전 판별·전체 Axis 필드 의미·레이아웃·저장은 검증하지 않습니다.
+
+이 결과는 선택된 Axis v3 배치의 조립·범위 검증입니다. 전체 Axis 필드 의미나 Plot 이후 데이터 전반·전체 차트 지원 완료를 뜻하지 않습니다.
 
 ## 다음 미해석 구간의 경계 후보
 

@@ -2,7 +2,7 @@
 
 ## 범위와 근거
 
-이 단계는 `tests/hwp5/chart-axis-prefix-evidence.mjs`의 읽기 전용 배치 조사입니다. [광원 구현](hwp5-chart-light.md) 이후 Axis 시작 위치를 앞선 독립 조사로 계산하며, 그 이후 문자열 검색으로 경계를 찾지 않습니다. `chart-axis-prefix-survey.mjs`는 corpus 순회·타입/문자열 사전 준비·입력 SHA-256·집계를 담당합니다. 제품 Zig 파서나 정규 audit는 변경하지 않았습니다.
+이 문서가 기록한 단계는 `tests/hwp5/chart-axis-prefix-evidence.mjs`의 읽기 전용 배치 조사입니다. [광원 구현](hwp5-chart-light.md) 이후 Axis 시작 위치를 앞선 독립 조사로 계산하며, 그 이후 문자열 검색으로 경계를 찾지 않습니다. `chart-axis-prefix-survey.mjs`는 corpus 순회·타입/문자열 사전 준비·입력 SHA-256·집계를 담당합니다. 이 조사 단계에서는 제품 Zig 파서나 정규 audit를 변경하지 않았습니다. 현재 제품의 선택된 Axis v3 조립 범위는 [별도 계약](hwp5-chart-axis.md)을 따릅니다.
 
 공식 차트 revision 1.2의 3.7~3.10 Axis/AxisGrid/AxisScale/AxisTitle 표를 읽었습니다. API 속성 표만으로 wire 순서나 원시 영역의 의미를 확정하지 않습니다. 특히 제목의 Backdrop과 글꼴을 설명하는 API 표는 참고 근거이며, 아래 바이트 배치는 실측 근거입니다. 원문 링크는 [Plot 조사](hwp5-chart-plot-evidence.md)에 둡니다.
 
@@ -45,6 +45,8 @@ node tests/hwp5/chart-axis-prefix-survey.mjs --verify
 
 ## 다음 구현 경계
 
-기존 TextBlock의 readObservedV2는 보조 값 null과 inline String 이름만 지원합니다. 이번 실제 Axis 제목에는 Backdrop 보조 객체와 이름 재참조가 있어 그대로 연결하면 UnsupportedChartTextReference가 납니다. 후속 [TextBlock 확장 경로](hwp5-chart-text-block-objects.md)는 기존 진입점 계약을 유지하면서 Backdrop 소비와 객체 목록 기반 Font/String 해석을 재사용합니다. Axis와 선택적 배율 객체의 전체 조립은 아직 남아 있습니다.
+조사 당시의 기본 TextBlock `readObservedV2`는 보조 값 null과 inline String 이름만 지원했습니다. 실제 Axis 제목에는 Backdrop 보조 객체와 이름 재참조가 있어 이 기본 경로만 연결하면 UnsupportedChartTextReference가 납니다. 이후 [TextBlock 확장 경로](hwp5-chart-text-block-objects.md)가 Backdrop 소비와 객체 목록 기반 Font/String 해석을 추가했고, [Axis v3 조립](hwp5-chart-axis.md)이 선택된 배율 객체까지 읽습니다. 이는 모든 Axis 버전·API 속성의 의미 지원을 뜻하지 않습니다.
+
+2026-09-28 재검증에서는 위 Node 합성 테스트 4/4와 현재 corpus의 접두부 43/43, Backdrop 43, 기존 글꼴명 참조 43, 선택 배율 34를 확인했습니다. `--verify`의 잘림 18,823건·선언 버전 변형 77건도 다시 통과했습니다. 과거 `/tmp` 변이 디렉터리와 정규 전체 audit는 이번에 재실행하지 않았습니다.
 
 후속 정규 대조와 타입/문자열 사전 준비를 중복하지 않도록 `chart-axis-context.mjs`를 공유합니다. 관측 결과에는 문자열 정의/참조 위치, Backdrop 끝, 타입 참조·객체 위치 메타데이터를 추가했으며 기존 원시 값과 경계 계약은 유지합니다.

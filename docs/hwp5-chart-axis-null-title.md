@@ -4,7 +4,7 @@
 
 [Surface 접두부 조사](hwp5-chart-surface-evidence.md) 이후 기존 Axis 관측기가 실패한 FFFFFFFF는 글꼴명이 아닌 제목 텍스트 자리였습니다. 읽기 전용 진단으로 String 읽기 단계, 직전 VtObject 기반 타입, 상대 위치 +172를 43개 모두 확인했습니다. 제목 앞 24바이트 raw의 바로 다음 위치이며 문자열 검색으로 찾지 않았습니다.
 
-기존 필수 제목 경로를 바꾸지 않고 `observeAxisPrefixNullableTitle`과 `observeAxisNullableTitle`을 추가했습니다. 기존 private 읽기 경로를 공유하되 제목 null 허용만 명시적으로 선택합니다. 글꼴명은 여전히 필수 String이며 null은 빈 String·새 String·기존 String 참조와 구별합니다. 제품 Zig TextBlock/Axis 파서는 아직 변경하지 않았습니다.
+조사 당시 기존 필수 제목 경로를 바꾸지 않고 `observeAxisPrefixNullableTitle`과 `observeAxisNullableTitle`을 추가했습니다. 기존 private 읽기 경로를 공유하되 제목 null 허용만 명시적으로 선택합니다. 글꼴명은 여전히 필수 String이며 null은 빈 String·새 String·기존 String 참조와 구별합니다. 이 조사 단계에서는 제품 Zig TextBlock/Axis 파서를 변경하지 않았습니다. 현재 선택된 제품 경로는 [Axis v3 조립](hwp5-chart-axis.md)을 따릅니다.
 
 ## 실제 결과
 
@@ -27,7 +27,9 @@ node tests/hwp5/chart-axis-null-title-survey.mjs --verify
 
 최종 기본 테스트도 1,048/1,048 tests, 5/5 steps로 통과했고 ReleaseSafe 제품 빌드는 5/5 steps로 통과했습니다. 변경 JS 문법·문서 링크·diff 공백 검사도 통과했습니다.
 
-이 단계는 조사이며 제품의 nullable 제목 지원 완료를 의미하지 않습니다. 다음 제품 구현에서는 기존 필수 제목 계약을 유지하며 nullable 반환 타입·합계 제한·실패 경로를 검증해야 합니다.
+이 단계는 조사였으며 당시 제품의 nullable 제목 지원 완료를 의미하지 않았습니다. 이후 제품에는 별도 `readNullableTitleObservedV3`가 추가돼 선택된 Surface 뒤 축을 읽습니다. `readObservedV3`의 필수 제목 계약은 유지하며 nullable 반환 타입·문자열 한도·실패 경로는 현재 `nullable_title_tests.zig`에서 검증합니다. 모든 차트 버전의 nullable 제목이나 화면 표시·저장은 검증하지 않습니다.
+
+2026-09-28 재검증에서는 Node 합성 2/2, 실파일 `--verify`의 nullable 제목 43/43·배율 없음 43/43, 잘림 11,868건·타입 버전 변형 258건·제목 값 변형 86건을 확인했습니다. 제품 nullable 제목 집중 테스트 Debug·ReleaseSafe·ReleaseFast 각 3/3, ReleaseSafe 차트 소유권 감사 31/31이 통과했습니다. 위 `/tmp` 변이 디렉터리와 과거 전체 audit 수치는 이번에 재실행하지 않았습니다.
 
 ## 다음 CLineItem 배치 후보
 

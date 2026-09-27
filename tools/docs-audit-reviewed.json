@@ -1,6 +1,22 @@
 {
   "schema": 1,
   "verified": {
+    "docs/hwp5-chart-axis.md": {
+      "sha256": "d9496ac08b646bf276abfc215d82a8126df994b2ecfc2a147d3dcf90524d4f50",
+      "evidence": "2026-09-28 official Hancom chart API versus selected Zig Axis v3 and observed Contents integration; Debug Safe Fast axis 5 and nullable 3 each; ReleaseSafe chart ownership audit 31; independent Node 43 roots 172 primary axes and 43 nullable; historical mutants full audits not rerun"
+    },
+    "docs/hwp5-chart-axis-evidence.md": {
+      "sha256": "211e510e445ca223c468f0f64631faacf03894978216121ac2272c51aafbf46a",
+      "evidence": "2026-09-28 Node selected Axis tail survey 43 Contents 172 axes 69 scaled 103 unscaled 6 long; 106011 cuts and selector/base mutations 172 each; tail synthetic tests 2; Zig axis three modes 5 each and chart ownership 31; historical mutants full audits not rerun"
+    },
+    "docs/hwp5-chart-axis-prefix-evidence.md": {
+      "sha256": "aad976b80d302b69401c1bf5956624d8f21b684359a49536c9fd8bb2e0a1ee6e",
+      "evidence": "2026-09-28 Node first Axis prefix synthetic 4; real Contents 43 with Backdrop 43 reused font names 43 scale header 34; 18823 cuts 77 version mutations; selected product Axis v3 now exists but historical probe is not complete wire semantics"
+    },
+    "docs/hwp5-chart-axis-null-title.md": {
+      "sha256": "362179525a473a72d3b10b9a9df6a03af3ef876ef30ce8ec870fb97329641388",
+      "evidence": "2026-09-28 Node nullable synthetic 2 and real Contents 43 all null title no scale with 11868 cuts 258 versions 86 variants; Zig nullable three modes 3 each and selected observed Contents integration; historical mutants full audits not rerun"
+    },
     "docs/hwp5-chart-object-table.md": {
       "sha256": "0130095ff7abcd6ae616ef2b6e511533b58c4e0886541d4bd3a51abd1b346bc9",
       "evidence": "2026-09-28 Zig shared chart object map and reference spans independent max_references String Number Other and atomic reader versus selected corpus scope; Debug Safe Fast focused 6 each; ReleaseSafe Legend WASM 43 roots 41 reused 2 introduced 258 accepted 11211 rejected; chart ownership audit 31"
@@ -398,7 +414,7 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "f58fc1e8bf86111cf6ae3814aa6f5b2945af583b63d19124ff73a0323263796d",
+      "sha256": "6629544938f670cf652a3269f047cf9572281c16ac83b5e640b440481ce7e668",
       "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope PNG ICC inspection PNG RGBA BCP47 syntax registry alpha2 history ICC IANA matching mluc selection mluc structure mluc Unicode ICC v2 Unicode v2 text tag payload dispatch tag table structure header identifiers v4 and v2 header numeric header verification ICC registry source lookup required tags overview presence table XYZ type XYZ tags curve type TRC tags parametric curve analytic forward TRC forward sampled forward sampled inverse sampled wide inverse gamma inverse wide gamma inverse TRC inverse and extended TRC inverse matrix TRC inverse matrix TRC model matrix TRC forward fraction matrix inverse fraction matrix TRC inverse wide linear target wide positive bounds normalized and extended root compare normalized and extended root locations clipped and extended power preimage whole and extended whole parametric preimage normalized and extended whole bounds normalized and extended attained F.1a whole and extended nearest normalized and extended full inverse topology segments jump trend domain partition power clipping power level root compare active root locations rational power order normalized power level wide power level normalized root order power range power nearest ordinate order extended ordinate order ordinate distance extended ordinate distance linear range parametric range rational range nearest linear preimage extended linear preimage chromatic adaptation matrix transform ICC foundation verification review, architecture pending, full Debug Zig test 2656 passed and ReleaseFast HWP5 audit 10 steps 8905855 checks, EMF ICM and three clipping region docs direct tests and 102 shared tests each mode"
     },
     "docs/bcp47-syntax.md": {
