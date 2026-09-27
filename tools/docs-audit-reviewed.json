@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "411bf80b90b9507164b238a2da87c6780b25192f8512a0693942781a9ac1631b",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA and declared JPEG evidence review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "a00dabaae163cb6758d8ca2fb3e23de60f2e0185aba2efd2b21e0dd2f7cd9eec",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG and body contract evidence review, architecture pending, full Debug Zig test incomplete"
+    },
+    "docs/hwp5-body-contracts.md": {
+      "sha256": "2020c991fdf856096ffc7fbbddf08ad6421066322e243eb6cc2b677008765405",
+      "evidence": "2026-09-27 local HWP5 tables 144 145 151 and current body ownership and layout defaults, ReleaseSafe focused tree list ruby note and number tests; linked details excluded"
     },
     "docs/hwp5-png-declared-jpeg.md": {
       "sha256": "81ba538a00c81659af8d80576c13c99a578fe364508d0616a029be2f0165f5bb",

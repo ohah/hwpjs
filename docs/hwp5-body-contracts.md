@@ -47,3 +47,5 @@
 - `list_groups.zig`는 같은 부모의 리스트 헤더 사이에서 직접 문단을 묶고 count_raw와 대조합니다. 중간 표/개체 레코드가 있다고 그룹을 닫지 않으며, Tree의 부모를 변경하지 않습니다. 그룹 범위/개수 검증과 셀/캡션 속성 검증은 구분합니다.
 
 - `control_rules.zig`는 공식 ID/코드 대응과 MAKE_4CHID의 SSOT, `control_type_validation.zig`는 연결 결과의 종류 검증을 소유합니다. 미지 ID는 deferred로 남기며 접두사나 잘못된 요약 별칭으로 자동 분류하지 않습니다.
+
+2026-09-27 재검증: 로컬 HWP5 명세의 표 144(필드 6바이트/표기 8바이트), 표 151(두 문자열 길이와 다섯 UINT의 합계/표기 18바이트), 감추기 표 145와 현재 `reader`·`tree`·`list_groups`·`paragraph_children`·`control_links`·`control_rules`·`note_shape`·`ruby`·`number_control` 및 문서 옵션의 명시적 배치 기본값을 대조했습니다. ReleaseSafe 집중 필터에서 트리 형제/오류, 그룹 OwnerCursor, 덧말 원값, 주석 배치, 주석-자동번호 관계 테스트가 각각 2/2·2/2·2/2·2/2·5/5 통과했습니다. 이는 상위 책임·소유권 계약의 표본 검증이며, 연결된 개별 주제 문서의 모든 필드·실파일·전체 HWP5 파서 또는 조판/저장 완료를 입증하지 않습니다.
