@@ -6,11 +6,15 @@
 
 기본 rle=null은 기존 동작입니다. 선택 시 raster의 명령·패딩·완료·후행·색인 예산과 RGBA 채움 정책을 그대로 전달합니다. HWP 전역 max_total_bmp_rgba_bytes의 남은 양과 개별 max_rgba_bytes 중 작은 값을 적용하고, 이 RGBA 예산은 RLE 색인 평면을 할당하기 전에 확인합니다. PNG/JPEG 예산을 대신 차감하지 않습니다. 동일 물리 스트림의 반복 참조도 각각 집계합니다.
 
-`container/bmp_images.zig`는 기존 scalar 네 항목에 rle_images, rle_written_pixels, rle_unwritten_pixels, rle_commands, rle_consumed_bytes, rle_trailing_bytes, rle_palette_zero_pixels, rle_transparent_pixels의 여덟 항목을 추가합니다. 비압축에서는 모두 0이고, 채움이 발생해도 원래 미지정 픽셀 수는 유지합니다. 두 채움 통계는 실제 미지정 픽셀에 적용한 정책만 세며 원래 색인 0의 픽셀을 세지 않습니다.
+`container/bmp_images.zig`의 RLE 통계는 rle_images, rle_written_pixels, rle_unwritten_pixels, rle_commands, rle_consumed_bytes, rle_trailing_bytes, rle_palette_zero_pixels, rle_transparent_pixels의 여덟 항목입니다. 기존 BMP 기본 scalar 네 항목과 [BI_RGB32 상위 바이트 관측 통계](hwp5-bmp-high-byte.md)는 별도입니다. 비압축에서는 RLE 통계가 모두 0이고, 채움이 발생해도 원래 미지정 픽셀 수는 유지합니다. 두 채움 통계는 실제 미지정 픽셀에 적용한 정책만 세며 원래 색인 0의 픽셀을 세지 않습니다.
 
 공통 BMP Report.plus의 checked 가산과 images.Budget의 임시 보고서 교체 규칙을 재사용합니다. 새 통계 overflow나 픽셀 오류가 나면 이전 보고서를 유지합니다. 이미지/색인/CFB 버퍼는 반환 전에 해제하고 보고서는 포인터를 보유하지 않습니다. metadata_deferred와 semantics_deferred는 유지합니다. 제품 JS API는 아직 CFB 전용입니다.
 
-## 테스트 보고서와 독립 검증
+## 현재 문서 재검증 (2026-09-27)
+
+[Microsoft Bitmap Compression](https://learn.microsoft.com/en-us/windows/win32/gdi/bitmap-compression)의 RLE4/8 구분과 현재 `pixels.zig`의 기본 null/명시적 분기, `rle_rgba.zig`의 RGBA 선한도·색인 수명, `bmp_images.zig`의 스칼라 보고서를 대조했습니다. Debug/ReleaseSafe/ReleaseFast의 `zig test src/root.zig --test-filter 'BMP RLE'`는 각 19/19 통과했습니다(형식 코어·RGBA·HWP 연결 포함). 현재 ReleaseSafe probe/CFB WASM으로 독립 JS `containerBmpRleEdges`를 직접 실행해 합성 비교 65건·거부 228건을 재현했습니다. 파일 끝과 RLE EOB 뒤 후행 정책의 16조합도 이 JS 검사에 포함됩니다. 이는 생성 HWP에서의 선택 동작이며 실제 RLE BMP를 담은 HWP 파일의 양성 검증, 전체 화면·편집·저장 동치는 아닙니다. 아래의 실파일·세 모드 WASM·변이·전체 회귀 기록은 이번에 다시 실행하지 않은 당시 결과입니다.
+
+## 최초 연결 당시 테스트 보고서와 독립 검증
 
 기존 mode 288은 새 필드가 생겨도 원래 네 BMP 통계만 직렬화하도록 고정했습니다. 새 mode 291은 기존 BMP 옵션 26바이트 뒤 RLE 선택 17바이트, 문서 한도 u32와 CFB를 받습니다. 출력은 기존 이미지 확장 120바이트 뒤 RLE 선택 및 여덟 통계 36바이트를 더해 확장 156바이트입니다. 제품 ABI가 아니며 기존 문서/이미지 wire를 바꾸지 않습니다.
 
@@ -32,4 +36,4 @@
 
 실행 중인 정확한 Debug audit/build 프로세스를 종료하고 shell 코드 143 및 남은 해당 프로세스 부재를 확인한 뒤 수정했습니다. 새 helper의 fileTrailing은 기존 BMP 파일 플래그, trailing은 RLE 플래그만 소유합니다. 독립 oracle은 외부 파일 범위를 먼저 검사한 뒤 그 안의 압축 구간을 읽습니다. 파일/RLE 꼬리 존재×두 허용 플래그의 16조합(성공 9/거부 7)을 추가했고 세 모드 모두 통과했습니다.
 
-호출 직전 두 플래그를 다시 결합하는 입력 변형은 세 모드 모두 AssertionError로 검출했습니다. 첫 전체 로그는 유지하고 수정된 테스트로 전체 회귀를 처음부터 다시 실행해 세 모드 모두 통과했습니다. 제품/네이티브 테스트는 이 도구 보강에서 변경하지 않았습니다.
+당시 호출 직전 두 플래그를 다시 결합하는 입력 변형은 세 모드 모두 AssertionError로 검출했습니다. 첫 전체 로그를 유지하고 수정된 테스트로 전체 회귀를 처음부터 다시 실행해 세 모드 모두 통과했습니다. 이번에는 그 로그와 전체 회귀를 재확인하지 않았습니다. 제품/네이티브 테스트는 당시 도구 보강에서 변경하지 않았습니다.

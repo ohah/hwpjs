@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "2b1ffccf105044b8830cbe0730e4b19d18adc4a4662954645aaa9cb2f2fff747",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "23cda518a267b005cf74ab8e54aa123c4db8c83eb450060fc5a92f5963228c9b",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE review, architecture pending, full Debug Zig test incomplete"
+    },
+    "docs/hwp5-bin-data-bmp-rle.md": {
+      "sha256": "88d8bdcf972f44bd98a20bc0585bc52cb5751707725e17dd77a800ff34a7edf1",
+      "evidence": "2026-09-27 Microsoft bitmap RLE4 RLE8 official format and current Zig options budget scalar report and independent trailing policies, Debug Safe Fast BMP RLE 19 tests each, current ReleaseSafe probe and CFB synthetic 65 comparisons 228 rejects including 16 trailing combinations; real RLE HWP file not verified"
     },
     "docs/hwp5-bin-data-bmp.md": {
       "sha256": "cb43b4e18cb398ae3e1bfcc99e4e6081b5ebd505a7c26d358a057d4082c89b92",
