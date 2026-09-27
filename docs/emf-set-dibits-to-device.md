@@ -14,7 +14,7 @@ Microsoft [EMR_SETDIBITSTODEVICE](https://learn.microsoft.com/en-us/openspecs/wi
 - `set_dibits_to_device.zig`: SETDIBITSTODEVICE의 76바이트 field offset, signed geometry, unsigned scanline 원값과 trailing data
 - `framing.zig`: 전체 순회 연결과 `set_dibits_to_device_records` 집계
 
-Microsoft [SetDIBitsToDevice API](https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-setdibitstodevice)는 `cScans`를 bits 배열에 포함된 scanline 수로 정의하며, 큰 DIB의 일부만 반복 전달하는 banding을 명시한다. 따라서 비압축 bits 길이는 전체 DIB 높이가 아니라 `cScans` 행으로 검사하고, `iStartScan + cScans`는 overflow 없이 DIB 높이 안에 있어야 한다. 비압축 BITMAPINFO의 0이 아닌 `biSizeImage`는 계속 전체 이미지 크기와 대조한다. 실제 scanline 복사와 clipping은 playback 계층의 후속 책임이다. JPEG/PNG compression은 `biSizeImage` 기반 공통 DIB 구조 검사를 통과하지만 이미지 자체 복호화·렌더링을 의미하지 않는다.
+Microsoft [SetDIBitsToDevice API](https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-setdibitstodevice)는 `cScans`를 bits 배열에 포함된 scanline 수로 정의하며, 큰 DIB의 일부만 반복 전달하는 banding을 명시한다. 이에 따라 현재 파서는 비압축 bits 길이를 전체 DIB 높이가 아니라 `cScans` 행으로 검사하고, `iStartScan + cScans`가 overflow 없이 DIB 높이 안에 있도록 의미 검증한다. 이 높이 제한은 EMF record 페이지에 별도 MUST로 적힌 조건이 아니라 API 동작에 근거한 파서 정책이다. 비압축 BITMAPINFO의 0이 아닌 `biSizeImage`는 계속 전체 이미지 크기와 대조한다. 실제 scanline 복사와 clipping은 playback 계층의 후속 책임이다. JPEG/PNG compression은 `biSizeImage` 기반 공통 DIB 구조 검사를 통과하지만 이미지 자체 복호화·렌더링을 의미하지 않는다.
 
 ## 검증 기록
 
@@ -23,3 +23,5 @@ signed Bounds/destination/source 원점·크기, scanline 구간의 exact edge·
 고정 길이 축소, source 좌표 offset을 destination으로 교체, 시작 scanline offset을 개수로 교체, BmiSrc offset을 BitsSrc offset으로 교체, 필수 source를 null로 완화, Type 분류 교체, framing 집계 제거, `cScans` 대신 전체 DIB 높이 사용, scanline 높이 경계 제거, INFO `biSizeImage`를 band 크기와 비교하는 10개 독립 변이를 적용했다. 대상 파서와 framing integration을 직접 import하는 임시 test root의 기준선을 먼저 확인했으며, Debug·ReleaseSafe·ReleaseFast의 `30/30` 변이 실행이 모두 실패하여 각 회귀를 탐지했다. 복원 후 세 모드 기준선도 각각 통과했으며 임시 test root는 제거했다.
 
 최종 전체 audit는 Debug·ReleaseSafe·ReleaseFast에서 각각 `40/40` 단계와 `1416/1416` 테스트를 통과했다. 이 중 코어 단위 테스트는 `1377/1377`이고 차트·WMF ownership 보조 테스트가 39개다. 재귀 HWP corpus 584개에서 EMF 후보는 0개였으므로 실파일 존재를 주장하지 않는다. 이 레코드의 직접 근거는 공식 wire 배치와 독립 합성 record, 모든 절단 및 적대적 변이 검사다.
+
+2026-09-28 현행 재검증에서는 공식 76바이트 필드와 Win32의 banding 설명을 현재 `scanline_range`·DIB payload·framing에 대조했다. Debug·ReleaseSafe·ReleaseFast 루트 `SETDIBITSTODEVICE` 필터는 각 4/4, scanline range 단독 테스트는 각 1/1개 통과했다. 같은 제품 코드의 전체 Debug 테스트 2,661/2,661개를 확인했지만, 위의 10개 변이·세 모드 전체 audit·실제 EMF 양성 HWP 파일은 이번에 재실행하지 않았다.

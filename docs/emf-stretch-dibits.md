@@ -22,3 +22,5 @@ signed Bounds와 source/destination의 모든 원점·크기, 부호가 다른 �
 고정 길이 축소, source 원점을 destination offset으로 교체, destination 크기를 source 크기로 교체, ROP offset을 Usage로 교체, bitmap에 잘못된 76바이트 fixed-end 전달, BmiSrc offset을 BitsSrc offset으로 교체, ROP source 필수 검사 제거, Type 분류 교체, trailing data 손실, framing 집계 제거의 10개 독립 변이를 적용했다. 대상 파서와 framing integration을 직접 import하는 임시 test root의 기준선을 먼저 확인했으며, Debug·ReleaseSafe·ReleaseFast의 `30/30` 변이 실행이 모두 실패하여 각 회귀를 탐지했다. 복원 후 세 모드 기준선도 각각 통과했고 임시 test root는 제거했다.
 
 최종 전체 audit는 Debug·ReleaseSafe·ReleaseFast에서 각각 `40/40` 단계와 `1419/1419` 테스트를 통과했다. 이 중 코어 단위 테스트는 `1380/1380`이고 차트·WMF ownership 보조 테스트가 39개다. 재귀 HWP corpus 584개에서 EMF 후보는 0개였으므로 실파일 존재를 주장하지 않는다. 이 레코드의 직접 근거는 공식 wire 배치와 독립 합성 record, 모든 절단 및 적대적 변이 검사다.
+
+2026-09-28 현행 재검증에서는 공식 80바이트 필드, ROP source 비의존 시 BitmapBuffer 생략, source/destination 크기 부호 차이의 mirror 의미와 현재 파서·framing을 대조했다. Debug·ReleaseSafe·ReleaseFast 루트 `STRETCHDIBITS` 필터는 각 4/4개 통과했다. 같은 제품 코드의 전체 Debug 테스트 2,661/2,661개를 확인했지만, 위의 10개 변이·세 모드 전체 audit·실제 EMF 양성 HWP 파일은 이번에 재실행하지 않았다. 구조 파서는 mirror 픽셀을 생성하지 않는다.
