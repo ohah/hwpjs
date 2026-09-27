@@ -4,6 +4,8 @@ Chart Light·Plot/Surface 접두부·PostLine 세 문서는 현재 Zig 코어의
 
 CLineItem 경계 조사·v1 코어·PostLine 경계 조사 세 문서는 한컴 5.0 차트 참조의 적용 범위를 현 독립 조사기와 Zig 코어·probe·선택된 Contents 조립에 대조해 완료 목록에 넣었습니다. 독립 조사기 4/4개, Zig `chart line item` 및 `chart post line` 집중 테스트가 Debug·ReleaseSafe·ReleaseFast에서 각각 3/3개, 선택 실파일 43개에서 조사기의 6,192·9,374개 잘림과 타입/ID 변형, 기존 ReleaseSafe probe의 LineItem 301/6,751·PostLine 215/9,718 수락/거부를 재확인했습니다. 과거 변이 검사·세 모드 전체 audit는 재실행하지 않았습니다. raw 의미·일반 원소 개수·전체 버전·렌더링/저장은 검증 범위가 아닙니다.
 
+Series 접두부 조사·코어와 계열 반복 조사·코어 네 문서도 공식 차트 revision 1.2의 공개 API와 현재 독립 JS 조사기·Zig의 명시적 개수/소유권/실패 계약을 대조해 완료 목록에 넣었습니다. `chart-*evidence.test.mjs`는 현행 56/56개, 두 실파일 조사는 Contents 43개에서 첫 접두부 107바이트·raw66 2종·잘림 4,601건과 Series 213개/Point 16개·잘림 147,396건을 재확인했습니다. Debug·ReleaseSafe·ReleaseFast의 접두부 집중 테스트는 각 3/3개, 계열 반복은 각 5/5개 통과했습니다. 기존 ReleaseSafe probe의 독립 오라클은 접두부 215/4,988, 반복 172/148,209건의 수락/거부를 다시 통과했습니다. 과거 세 모드 전체 audit·변이 검사는 재실행하지 않았습니다. 자동 배치 판정·일반 버전·raw 필드 의미·렌더링/편집/저장은 검증 범위가 아닙니다.
+
 검증 대상은 Git이 추적하는 현재 프로젝트의 Markdown 문서입니다. `legacy/`와 `reference/`는 이전 구현·외부 참고 자료이므로 이 집계에서 제외하고, 별도로 인용할 때 해당 부분을 확인합니다. 현재 작업 트리에서 삭제 상태인 `lint-rules.md`는 사용자의 변경을 보존하며 `missing`으로 표시합니다. 존재하지 않는 파일을 임의로 복구하거나 검증 완료로 세지 않습니다.
 
 `tools/docs-audit-status.mjs`가 추적 대상·현재 내용 해시가 일치하는 검증 완료 파일·미검증·변경 후 재검증 필요·작업 트리 누락·새 미추적 문서를 구분합니다. 실행 방법은 [개발·검증 명령](development-commands.md)이 소유합니다. 완료 게이트는 **목록/해시 관점의** 검사일 뿐입니다. 검증 완료 목록의 단일 출처는 `tools/docs-audit-reviewed.json`이며, 문서가 바뀌면 해당 항목은 자동으로 `stale`이 됩니다. 이 수치는 제품 구현률이 아닙니다.

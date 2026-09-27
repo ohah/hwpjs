@@ -44,6 +44,10 @@ node tests/hwp5/chart-series-collection-survey.mjs --verify
 
 ## 남은 범위
 
-제품 코어의 전체 계열 조립·WASM 연결, raw106의 필드 의미, Title 본문과 나머지 Chart, 표본 밖 버전·배열 형태는 미완료입니다. 이번 조사 결과를 전체 차트 지원·렌더링·무손실 저장 완료로 해석하지 않습니다.
+조사 당시 제품 코어의 계열 반복·WASM 연결은 미완료였지만 후속 [Series 조립·Title 헤더 코어](hwp5-chart-series-collection.md)에서 선택 배치로 구현했습니다. Title 본문과 뒤쪽 선택 배치도 각각 `src/hwp5/chart/title.zig`·`tail.zig`·`observed_contents.zig`에 연결됐습니다. raw106의 필드 의미, 표본 밖 버전·배열 형태, 자동 배치 판정은 여전히 미완료이며 이 조사 결과를 전체 차트 지원·렌더링·무손실 저장 완료로 해석하지 않습니다.
 
 위 내용은 조사 단계의 이력입니다. 후속 제품 조립과 검증의 현재 범위는 [Series 조립·Title 헤더 코어](hwp5-chart-series-collection.md)가 소유합니다.
+
+## 현재 재검증
+
+위 변이 11종과 세 모드 WASM은 당시 기록입니다. 문서 검증 시점에 반복 조사기의 호출자 개수 제한·상태 전달·Title 경계·원시 복사 범위를 다시 대조했습니다. 현재 `chart-*evidence.test.mjs`는 56/56개 통과했고, `chart-series-collection-survey.mjs --verify`는 HWP 584개 중 선택된 Contents 43개·Series 213개·Point 16개에서 잘림 147,396건·ID 거부 256건·Title 타입 거부 86건·raw106 변형 213건·개수 불일치 86건을 다시 확인했습니다. 뒤쪽 잔여 길이는 440/430/396바이트입니다. 당시 50개 테스트와 결함 주입 수치는 이번 결과로 소급하지 않았습니다.

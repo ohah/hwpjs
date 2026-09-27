@@ -1,6 +1,22 @@
 {
   "schema": 1,
   "verified": {
+    "docs/hwp5-chart-series-prefix-evidence.md": {
+      "sha256": "92c8039e086c6dee80207aabb0e3d0808fb422ea57a91c45db8d124e4de2af89",
+      "evidence": "2026-09-28 official Hancom chart rev1.2 Series API versus independent prefix oracle; current 56 JS chart evidence tests, 584 HWP 43 selected Contents 107 byte prefix raw66 two variants 4601 cuts 215 type rejects 215 ID rejects 86 variants; historic mutants and full audits not rerun"
+    },
+    "docs/hwp5-chart-series-prefix.md": {
+      "sha256": "b1e12a21cef15fb35526aff208c4d1f43f7242c560e896698541ee9626a27de2",
+      "evidence": "2026-09-28 current Zig Series v2 prefix raw66 and shared array header versus selected Contents integration; Debug Safe Fast focused 3 each; current ReleaseSafe mode327 43 roots 215 accepted 4988 rejected; historic mutants and full audits not rerun"
+    },
+    "docs/hwp5-chart-series-collection-evidence.md": {
+      "sha256": "588c43d9007a776a1819fba40286e6397a02c64b1746a78e228d2057924d449f",
+      "evidence": "2026-09-28 current independent series collection survey 584 HWP 43 selected Contents 213 series 16 points 147396 cuts 256 IDs 86 Title types 213 raw variants 86 count mismatches, 56 JS chart evidence tests; historic mutants and full audits not rerun"
+    },
+    "docs/hwp5-chart-series-collection.md": {
+      "sha256": "1a9aecdf612375e0709f356a8ce16dc0fad4b1aeb1c6a8503e98d4ca3d74ab08",
+      "evidence": "2026-09-28 current Zig selected Series Point counts and Title header ownership versus later Title Tail Contents integration; Debug Safe Fast collection focus 5 each; current ReleaseSafe mode331 43 roots 213 series 16 points 172 accepted 148209 rejected; historic mutants full audits not rerun"
+    },
     "docs/hwp5-chart-line-item.md": {
       "sha256": "15297ac66d3270923fa8127456ec81fcc2419cc413508429a39c2458e11ae268",
       "evidence": "2026-09-28 current Zig CLineItem raw52 types IDs failure versus mode325 and selected Contents; Debug Safe Fast line item focus 3 each; current ReleaseSafe probe 43 roots 86 items 301 accepted 6751 rejected; historic full audits and mutants not rerun"
@@ -474,8 +490,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "8d83c49e2a7ff5747df14044793081f037374fe5560eaca5157531a4a22aad1a",
-      "evidence": "2026-09-28 tracker updated with CLineItem and PostLine evidence and core current surveys, Debug Safe Fast focused tests, ReleaseSafe independent probe 43 roots; historic full audits and mutants not rerun"
+      "sha256": "55c949392782bbc94dde559d7f7f9776ec074da8e1b71d898576e9c39a00ff55",
+      "evidence": "2026-09-28 tracker updated with Series prefix and collection evidence and core current surveys, Debug Safe Fast focused tests, ReleaseSafe independent probe 43 roots; historic full audits and mutants not rerun"
     },
     "docs/bcp47-syntax.md": {
       "sha256": "ae0d91a0bb5ca2f8a5194b5ffa76494427cc058784f11446fd905458020f5b11",

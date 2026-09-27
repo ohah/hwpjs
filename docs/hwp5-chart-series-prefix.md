@@ -8,7 +8,7 @@
 
 ## 조립과 검증 책임
 
-`series_prefix_test_fixture.zig`는 새/기존 타입 fixture 및 seed, 테스트 파일은 비교와 OOM·해제 회계를 소유합니다. `chart-post-line-prefix.zig`는 앞선 테스트 조립과 수명을 기존 mode 326에서 분리합니다. mode 326·327이 공통 조립을 사용하며, 사전 접근 함수를 통해 중첩 구조 경로를 새 소비자에 복제하지 않습니다. 제품 JS 공개 API나 전체 Chart 조립은 변경하지 않습니다.
+`series_prefix_test_fixture.zig`는 새/기존 타입 fixture 및 seed, 테스트 파일은 비교와 OOM·해제 회계를 소유합니다. `chart-post-line-prefix.zig`는 앞선 테스트 조립과 수명을 기존 mode 326에서 분리합니다. mode 326·327이 공통 조립을 사용하며, 사전 접근 함수를 통해 중첩 구조 경로를 새 소비자에 복제하지 않습니다. 이 mode 327 조립은 제품 JS 공개 API를 변경하지 않았습니다. 현재 선택된 Contents 제품 조립은 별도 `src/hwp5/chart/observed_contents.zig`가 소유합니다.
 
 mode 327의 기대 wire는 `chart-series-prefix-oracle.mjs`가 독립 JS 관측 결과에서 생성합니다. 실제 43개 첫 Series의 전체 선행 객체 사전을 유지하며 객체 ID·raw·배열 각 값·소비 끝·사전 수를 대조합니다.
 
@@ -30,10 +30,14 @@ Debug·ReleaseSafe·ReleaseFast 전체 `zig build audit --summary all`(최적화
 
 최종 `zig build test --summary all`도 1,056/1,056, `zig build -Doptimize=ReleaseSafe --summary all`은 5/5 단계로 통과했습니다. 변경 Zig 포맷·JS 구문·diff 공백 검사도 통과했습니다.
 
-실파일 대조는 첫 Series 접두부에 한정하며 원소·나머지 계열·raw 의미·Series 전체 본문·Chart 조립·렌더링·저장은 미완료입니다.
+이 mode 327 실파일 대조는 첫 Series 접두부에 한정합니다. 후속 선택 배치의 원소·계열 반복·Contents 조립은 `series_collection.zig`와 `observed_contents.zig`가 소유합니다. raw 의미·자동 배치 판정·전체 버전 지원·렌더링·저장은 미완료입니다.
 
 ## 다음 분기 후보
 
 전체 회귀 대기 중 0/0 표본 41개에서 접두부의 정확한 끝 +66을 읽기 전용으로 조사했습니다. 모두 신규 String 객체 ID·알려진 VtString v1·길이 접두사·원문·trailer·VtValue v1/VtObject v1 이후 새 VtSeriesLabel v1 헤더 배치가 관측됐습니다. 이는 다음 단계의 경계 후보이며 두 번째 raw66이나 String의 API 의미를 확정하지 않습니다. 별도 잘림/변형 검증이 필요합니다. 1/1·4/4의 두 표본은 VtSeriesPoint v1부터 시작하므로 이 후보로 건너뛰지 않습니다.
 
 후속 [Series 본문 두 분기 조사](hwp5-chart-series-branch-evidence.md)에서 두 경로의 SeriesLabel 헤더까지 잘림·별칭·타입/ID 반례를 검증했습니다. 현재 검증 범위와 미완료 본문은 해당 문서가 소유합니다.
+
+## 현재 재검증
+
+위 전체 audit와 변이 검사는 당시 기록입니다. 문서 검증 시점에 코어와 선택된 Series 조립의 소유·실패 경계를 다시 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 `chart series prefix` 집중 테스트는 각각 3/3개 통과했습니다. 기존 ReleaseSafe probe의 독립 첫 접두부 오라클은 실파일 43개에서 수락 215건·거부 4,988건을 다시 통과했습니다. 이번에는 세 모드 전체 audit와 변이 검사를 재실행하지 않았습니다.

@@ -50,10 +50,14 @@ Debug·ReleaseSafe·ReleaseFast 전체 audit가 모두 종료 코드 0으로 끝
 
 ## 남은 작업
 
-raw106 내부 필드 해석, Title 본문과 이후 Chart 데이터, 자동 버전·배열 형태 선택, 일반 문서 API 연결, 렌더링·편집·무손실 저장은 미완료입니다. OOXMLChartContents/HWPX 지원을 이 작업의 결과로 주장하지 않습니다.
+raw106 내부 필드 해석, 자동 버전·배열 형태 선택, 일반 문서 API 연결, 렌더링·편집·무손실 저장은 미완료입니다. 이 Series 코어는 Title 헤더에서 멈추지만, 후속 선택 배치의 Title 본문·Tail 및 Contents 조립은 `src/hwp5/chart/title.zig`·`tail.zig`·`observed_contents.zig`가 소유합니다. OOXMLChartContents/HWPX 지원을 이 작업의 결과로 주장하지 않습니다.
 
 다음 조사 후보를 읽기 전용으로 확인했습니다. 43개 모두 Title 헤더 직후는 알려진 `VtChartText` v1 타입이며, 그 다음 inline TextBlock ID를 등록한 뒤 기존 본문 조사기를 적용하면 190/180/146바이트 본문(각 1/1/41개)을 지나 `VtChartSection` v1 타입에서 멈춥니다. 이후는 모두 242바이트가 남습니다. 이 후보에 대한 잘림·참조·버전 변형 검증과 코어 연결은 아직 하지 않았으므로 Title 구현 완료의 증거가 아닙니다.
 
 이어서 기존 Footnote의 ChartSection 순서를 엄격히 적용한 읽기 전용 후보 검사에서는 43개 모두 164바이트를 소비하고 78바이트가 남았습니다. 남은 원문에 `VtList`·`VtWindow` 선언이 보이나 해당 경계·필드·버전은 다음 조사 대상입니다. 숫자나 이름의 출현만으로 일반 파싱 규칙을 확정하지 않습니다.
 
 위 후보의 후속 잘림·참조·버전 검증 결과는 [Title의 ChartText·ChartSection 구간 조사](hwp5-chart-title-body-evidence.md)가 소유합니다.
+
+## 현재 재검증
+
+위 전체 audit·결함 주입·위치 편향 보강 기록은 당시 결과입니다. 문서 검증 시점에 현재 `series_label_section`·`series_suffix`·`series`·`title_header`·`series_collection`의 소유권과 명시적 Point 수·제한값 선검사를 다시 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 `chart series collection` 집중 테스트는 각각 5/5개 통과했습니다. 기존 ReleaseSafe probe의 독립 mode 331 오라클은 실파일 43개·Series 213개·Point 16개에서 수락 172건·거부 148,209건을 다시 통과했습니다. 이번에는 세 모드 전체 audit와 변이 검사를 재실행하지 않았습니다.

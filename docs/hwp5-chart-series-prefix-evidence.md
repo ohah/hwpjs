@@ -2,7 +2,7 @@
 
 ## 근거와 범위
 
-차트 revision 1.2 문서 3.49 SeriesCollection·3.50 Series의 공개 속성을 확인했습니다. 계열의 Pen/LegendText/DataPoints/SeriesLabel 등 API 속성은 설명하지만 이 목록 순서를 내부 raw 바이트 순서로 채택하지 않았습니다. CLineItem 뒤의 [raw·배열 코어](hwp5-chart-post-line.md)가 소비한 정확한 다음 위치에서 조사를 시작합니다.
+[차트 revision 1.2](https://cdn.hancom.com/link/docs/%ED%95%9C%EA%B8%80%EB%AC%B8%EC%84%9C%ED%8C%8C%EC%9D%BC%ED%98%95%EC%8B%9D_%EC%B0%A8%ED%8A%B8_revision1.2.pdf) 문서 3.49 SeriesCollection·3.50 Series의 공개 속성을 확인했습니다. 계열의 Pen/LegendText/DataPoints/SeriesLabel 등 API 속성은 설명하지만 이 목록 순서를 내부 raw 바이트 순서로 채택하지 않았습니다. CLineItem 뒤의 [raw·배열 코어](hwp5-chart-post-line.md)가 소비한 정확한 다음 위치에서 조사를 시작합니다.
 
 초기 읽기 전용 진단에서는 알려진 Array/Collection/Object 참조 조합으로 후보 위치를 찾았습니다. 최종 `chart-series-prefix-evidence.mjs`는 검색 없이 Series 객체 ID → VtSeries v2 타입 → raw66 → 배열 객체 ID → VtArray v1 → 첫 u16 → VtCollection v1 → 둘째 u16 → VtObject v1을 순서대로 읽습니다. 새 선언과 기존 타입 참조를 모두 지원합니다. 두 객체 ID는 전체 선행 범위와 서로 중복될 수 없고, null은 거부하되 ID 0은 허용합니다.
 
@@ -31,6 +31,10 @@ node tests/hwp5/chart-series-prefix-survey.mjs --verify
 
 ## 남은 범위
 
-다음은 이 접두부의 코어·WASM 대조와 뒤쪽 배열/Series 본문 검증입니다. 두 1/1·4/4 표본에서는 접두부 끝의 다음 헤더가 VtSeriesPoint v1(26바이트)로 관측됐습니다. 본문이나 원소 수를 검증한 것은 아니며 41개 0/0 표본의 뒤쪽 경로와 구별해 조사해야 합니다. 첫 Series만 대상으로 했으므로 나머지 계열·배열 소유권·raw 의미·전체 Chart 조립·렌더링·저장은 미완료입니다.
+당시 다음 단계는 이 접두부의 코어·WASM 대조와 뒤쪽 배열/Series 본문 검증이었습니다. 두 1/1·4/4 표본에서는 접두부 끝의 다음 헤더가 VtSeriesPoint v1(26바이트)로 관측됐습니다. 이 접두부 조사만으로 본문이나 원소 수를 검증한 것은 아니며 41개 0/0 표본의 뒤쪽 경로와 구별해야 합니다. 후속 선택 배치의 Series 반복·Contents 조립은 구현됐지만, 배열 일반 소유권·raw 의미·자동 배치 판정·전체 버전·렌더링·저장은 미완료입니다.
 
 후속 [접두부 코어·WASM 검증](hwp5-chart-series-prefix.md)은 별도 계약으로 기록합니다. 위 문단은 조사 당시 후속 범위이며 현재 제품 검증 결과는 해당 문서가 소유합니다.
+
+## 현재 재검증
+
+위 적대적 변형은 당시 기록입니다. 문서 검증 시점에 공식 API 표와 현 독립 조사기의 타입/ID·복사·경계 정책을 다시 대조했습니다. 현재 `chart-*evidence.test.mjs` 전체는 56/56개 통과했으며, `chart-series-prefix-survey.mjs --verify`는 HWP 584개 중 선택된 Contents 43개에서 107바이트 접두부, raw66 2종, 잘림 4,601건·타입 거부 215건·ID 거부 215건·원값 변형 86건을 재확인했습니다. 당시 16/16개와 변이 10종은 이번 테스트 수치로 소급하지 않았습니다. 세 모드 전체 audit와 변이 검사는 재실행하지 않았습니다.
