@@ -12,6 +12,12 @@ kind 5~255, stride 0/9 이상, 이전 행 길이 불일치, 이전 행과 목적
 
 ## 검증
 
+### 현재 재검증 (2026-09-27)
+
+[PNG Third Edition §9](https://www.w3.org/TR/png-3/#9Filters)의 바이트 단위 None/Sub/Up/Average/Paeth·첫 행 0·9비트 이상 Average 합계·Paeth 동점 순서를 현재 `filter.zig`와 대조했습니다. `png/pixels.zig`가 Adam7 pass마다 previous를 null로 다시 시작하고 같은 필터 코어를 호출하는 것도 확인했습니다. Debug/ReleaseSafe/ReleaseFast에서 `PNG Paeth exhaustive`·`PNG filters wrapping`·`PNG filter rejection` 세 집중 필터가 각각 root 포함 2/2개씩 통과했습니다. Paeth 테스트에는 256³ 조합이 포함되지만 이를 세 개의 독립 오라클이나 전체 PNG 픽셀 검증으로 세지 않습니다. 로컬 ReleaseSafe probe WASM의 독립 JS 행 oracle은 accepted=5,321·rejected=5,516을 통과했습니다. 아래 전체 audit와 테스트 기대값 수정 기록은 당시 이력이며 이번에 전체 audit를 재실행하지 않았습니다.
+
+### 과거 검증 기록
+
 - Paeth 전체 256³=16,777,216 조합을 일반적인 최근접 후보 선택 oracle과 네이티브에서 대조합니다. 후보 동점은 기존 후보를 유지합니다.
 - 고정 행으로 wrapping·Average 9-bit 합계·Paeth·첫 행을 확인합니다. 초기 Paeth 고정 기대값의 네 번째 바이트를 252로 잘못 적어 테스트가 실패했으며, 독립 JS 계산과 명세를 대조해 올바른 127로 수정했습니다. 제품 알고리즘을 기대값에 맞춰 변경하지 않았습니다.
 - 오류 시 불변성, 동일/부분 중첩 양방향, 정확히 인접한 행, 빈 행, 전체 잘못된 필터 값을 검사합니다.
@@ -20,4 +26,4 @@ kind 5~255, stride 0/9 이상, 이전 행 길이 불일치, 이전 행과 목적
 
 이 모듈 자체는 행 복원만 담당합니다. scanline 길이·Adam7 pass·palette 인덱스와 zlib/청크 조립은 별도 [이미지 데이터 검증](png-pixels.md)에 연결했습니다. 기존 structure.inspect의 pixels_validated=false는 바꾸지 않습니다.
 
-최종 Debug·ReleaseSafe·ReleaseFast 전체 audit가 각각 17/17 단계, 네이티브 347/347, 감사 스크립트 3,160,304 checks를 통과했습니다. 필터 전용 WASM 결과는 정상 5,321건·거부 5,516건입니다. Paeth 전수 대조를 별도 네이티브 실행으로도 재확인했습니다. 포맷·변경 JS 문법·관련 로컬 문서 링크 17개를 확인했습니다. 이는 전체 PNG 디코딩이나 실제 이미지 픽셀 일치 검증을 완료했다는 뜻이 아닙니다.
+당시 최종 Debug·ReleaseSafe·ReleaseFast 전체 audit가 각각 17/17 단계, 네이티브 347/347, 감사 스크립트 3,160,304 checks를 통과했습니다. 필터 전용 WASM 결과는 정상 5,321건·거부 5,516건이었습니다. Paeth 전수 대조를 별도 네이티브 실행으로도 재확인했습니다. 포맷·변경 JS 문법·관련 로컬 문서 링크 17개를 확인했습니다. 이 과거 전체 audit는 이번 실측이 아니며 전체 PNG 디코딩이나 실제 이미지 픽셀 일치 검증의 증명도 아닙니다.
