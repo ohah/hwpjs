@@ -16,6 +16,8 @@ premultiplied RGB 채널 값 자체의 검사와 픽셀 합성·렌더링은 아
 - 고정 크기, 목적지/원본 양수 조건, blend operation/alpha format, source 필수성, 32bpp, ColorRef 예약값, bitmap semantic end, framing 연결의 10개 독립 변이를 Debug/ReleaseSafe/ReleaseFast에서 각각 실행했습니다. 최초 검증에서 `cxSrc == 0` 변이가 빠져나가는 테스트 누락을 재현했고 0 경계를 추가한 뒤 30/30 검출을 확인했습니다.
 - 실제 HWP corpus에서 EMF 표본이 관측되지 않았으므로 실제 문서 호환 완료를 주장하지 않습니다.
 
+2026-09-28 현행 재검증에서는 공식 [EMR_ALPHABLEND](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/34e07d4f-aee6-4b63-a4bb-96996ad47669)의 108바이트 고정 필드, 두 양수 크기, BLENDFUNCTION의 32bpp alpha 조건과 현재 공유 source-transfer·DIB 경계를 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 루트 `ALPHABLEND` 필터는 각 4/4, BLENDFUNCTION 단독 테스트는 각 2/2개 통과했습니다. 같은 제품 코드의 전체 Debug 테스트 2,661/2,661개를 확인했지만, 위의 10개 변이·실제 EMF 양성 HWP 파일은 이번에 재실행하지 않았습니다. 공유 bitmap-source-transfer 파일 단독 테스트는 Zig module path 제약으로 수집하지 못했으므로 별도 통과 수에 넣지 않습니다.
+
 ## 근거
 
 - Microsoft MS-EMF 2.3.1.1 `EMR_ALPHABLEND Record`

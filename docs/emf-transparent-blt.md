@@ -15,6 +15,8 @@ TransparentColor와 BkColorSrc는 ColorRef로 해석하고 예약 바이트를 �
 - 공통 크기·색상 키/source-size/usage offset, source 필수성, 두 ColorRef, semantic end, record dispatch, signed 크기 보존, 32bpp 허용, framing 연결의 12개 독립 변이를 Debug/ReleaseSafe/ReleaseFast에서 각각 실행해 36/36 검출했습니다.
 - 기존 HWP corpus에서는 EMF 표본이 관측되지 않았으므로 실제 문서 호환 완료를 주장하지 않습니다.
 
+2026-09-28 현행 재검증에서는 공식 [EMR_TRANSPARENTBLT](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/aa216051-2dc0-4317-b343-525431cfa103)의 108바이트 고정 필드, 양수 MUST가 없는 signed 크기, 두 ColorRef와 DIB offset을 현재 공유 source-transfer·DIB 경계에 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 루트 `TRANSPARENTBLT` 필터는 각 4/4개 통과했고, 같은 제품 코드의 전체 Debug 테스트는 2,661/2,661개 통과했습니다. 위의 12개 변이·실제 EMF 양성 HWP 파일은 이번에 재실행하지 않았습니다. 공유 bitmap-source-transfer 파일 단독 테스트는 Zig module path 제약으로 수집하지 못했으므로 별도 통과 수에 넣지 않습니다.
+
 ## 근거
 
 - Microsoft MS-EMF 2.3.1.8 `EMR_TRANSPARENTBLT Record`
