@@ -36,8 +36,16 @@ payload는 계속 `Value.unknown`이며 framing의 입력 슬라이스로 빌립
 
 네이티브 `src/hwp5/docinfo/track_author_tests.zig`는 실패 재호출의 원자성, unknown payload 보존, 실제 슬롯 유무, 음수·최댓값 및 작성자 없는 0개 선언을 검사합니다. 실행은 [세 빌드 모드 감사 명령](development-commands.md#세-빌드-모드-회귀-검증)을 따릅니다.
 
-Debug → ReleaseSafe → ReleaseFast 순차 감사는 모두 성공했습니다. 각 모드에서 네이티브 255/255, Node 47/47, HWP5 WASM 검사 1,372,281회를 통과했습니다. 작성자 전용 합성 결과는 정상 32건·거부 88건, 실제 문서 변조 거부는 세 경로 합계 30건입니다. 원문과 오류 후 복구 비교는 별도로 포함됩니다. 포맷·JS 구문·diff 공백 검사 및 주제 문서 링크도 확인했습니다. 검사 횟수는 미해석 필드의 구현 완성도를 뜻하지 않습니다.
+당시 Debug → ReleaseSafe → ReleaseFast 순차 감사는 모두 성공했습니다. 각 모드에서 네이티브 255/255, Node 47/47, HWP5 WASM 검사 1,372,281회를 통과했습니다. 작성자 전용 합성 결과는 정상 32건·거부 88건, 실제 문서 변조 거부는 세 경로 합계 30건입니다. 원문과 오류 후 복구 비교는 별도로 포함됩니다. 포맷·JS 구문·diff 공백 검사 및 주제 문서 링크도 확인했습니다. 이 전체 감사 횟수는 당시 기록이며 현재 재실행 결과가 아닙니다. 검사 횟수는 미해석 필드의 구현 완성도를 뜻하지 않습니다.
 
 ## 남은 범위
 
 작성자 payload 필드 해석, 작성자 ID 참조 연결, 변경 적용·취소·편집·저장은 미완료입니다. 변경 추적 내용/정보 레코드(태그 96/32)와 매핑 슬롯 16의 경계 검증은 [별도 계약](hwp5-track-changes.md)이 소유합니다. 이번 개수·레벨 검사를 변경 추적 전체 지원으로 해석하지 않습니다.
+
+## 현재 코드 재검증 (2026-09-27)
+
+로컬 명세 표 4·13·16, 레거시 raw-copy 구현, 현재 `reader.zig`·`id_mappings.zig`·`resources.zig`를 대조했습니다. `src/root.zig` 진입점의 `track author` 집중 테스트는 Debug·ReleaseSafe·ReleaseFast에서 각각 3/3(root 포함) 통과했습니다. 작성자 payload는 여전히 `unknown`이고 슬롯 17은 실제 길이에 따라 null 또는 signed count로 남습니다.
+
+로컬 `.hwp` 536경로를 제품 strict CFB·FileHeader 플래그·Node raw DEFLATE·독립 JS 레코드 순회로 재조사했습니다. DocInfo 430개가 조사 가능했고 106개는 제외됐습니다. 태그 97은 5건(레벨 1 전부, payload 길이 18·18·20·20·24바이트), 슬롯 17은 부재 147·존재 283·불일치 0건이었습니다. 양성 파일은 위 두 표본뿐입니다. 이 조사는 독립 CFB 구현과의 전체 동치나 제외 파일의 지원을 증명하지 않습니다.
+
+같은 제품 코드의 ReleaseSafe probe/CFB WASM으로 `trackAuthorEdges`와 `trackAuthorDocument`를 다시 실행해 합성 정상 32·거부 88건, 두 실파일 원본의 작성자 수·길이, 실제 문서 변조 세 경로 거부 30건 및 오류 뒤 원본 복구를 확인했습니다. 앞선 ReleaseSafe HWP5 전체 감사 10/10 단계·8,905,855 checks는 같은 제품 코드의 이전 실행이며 이번에는 전체 Debug·ReleaseSafe·ReleaseFast 감사를 다시 실행하지 않았습니다. 당시 255/255·1,372,281 checks 수치를 현재 테스트 수치로 사용하지 않습니다.

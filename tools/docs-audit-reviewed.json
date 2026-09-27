@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "14370f6c953c3a88c9f7a5be7a4d9950717b602a80d04fe5a25232c76b0e511b",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary and track-change DocInfo evidence review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "7ded8198ff68c5888bec0ffcf3146c7f7db57c825c502846a95fbd311ee4b9a6",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo and author evidence review, architecture pending, full Debug Zig test incomplete"
+    },
+    "docs/hwp5-track-authors.md": {
+      "sha256": "e9143ecc443a4bebb10e8824a8df325d856069429b436ae1f4d112047220814f",
+      "evidence": "2026-09-27 local spec tables 4 13 16 and current Zig reader/resources, Debug Safe Fast focused tests 3 each, 536 HWP paths 430 DocInfo 5 authors 147 absent slots, ReleaseSafe WASM 32 accepted 88 rejected 30 real mutation rejects; historical audits separated"
     },
     "THIRD_PARTY_NOTICES.md": {
       "sha256": "9d8b89d82c9ab174f564afa3b294f186b9ab12fa0dc354bf16818b3a7cf04d55",
