@@ -30,7 +30,7 @@ export function pngTextEdges(call,cfb){
   good(png(hd,...Array.from({length:1024},()=>tx('K')),id,end));
   const all=[chunk('IHDR',header(1,3)),chunk('sBIT',Buffer.from([8,7,6])),chunk('PLTE',Buffer.alloc(3)),chunk('pHYs',Buffer.from([0,0,0,1,0,0,0,1,0])),chunk('tRNS',Buffer.from([0])),chunk('bKGD',Buffer.from([0])),chunk('hIST',Buffer.from([0,1])),chunk('tIME',Buffer.from([7,234,9,7,12,34,60])),chunk('vpAg',Buffer.from([1,2])),id,end];
   for(let i=1;i<all.length;i++){const parts=[...all];parts.splice(i,0,...repeated);const t=good(png(...parts));assert.equal(t.deferredChunks,1);assert.equal(t.deferredBytes,2);}
-  // Unimplemented textual envelopes remain deferred; do not certify them as tEXt.
+  // Unknown ancillary stays deferred; malformed iTXt is rejected by its own parser.
   const pending=good(png(hd,tx('K'),chunk('vpAg',Buffer.from([3])),id,end));assert.equal(pending.deferredChunks,1);assert.equal(pending.deferredBytes,1);
   bad(png(hd,tx('K'),chunk('iTXt',Buffer.from([3])),id,end));
   bad(png(tx('K'),hd,id,end));bad(png(hd,id,end,tx('K')));bad(png(hd,id,tx('K'),chunk('IDAT'),end));

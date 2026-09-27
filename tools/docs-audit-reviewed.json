@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "2b5da2ce183b9dc8dfe17ffade3aa845ea987efd0ed7d2a284c63902e6de36b9",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata and PNG timestamp review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "1984b4fdd4591af781ea1ff2fb6b531248162fc27bb11e47d549eb7841c388a3",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp and PNG text review, architecture pending, full Debug Zig test incomplete"
+    },
+    "docs/png-text.md": {
+      "sha256": "98cf916eabab98c16aba2c68dd8e3a82be30a14cb37746c635ddca8d6588dac1",
+      "evidence": "2026-09-27 W3C PNG Third Edition tEXt keyword Latin-1 and current Zig text metadata aggregate budget and report, Debug Safe Fast focused 5 each, local probe CFB independent JS oracle 1274 accepted 1768 rejected 32 actual PNG 0 tEXt; historical full audit and 79 by 256 manual mutations not rerun"
     },
     "docs/png-timestamp.md": {
       "sha256": "f93681bfe3290308faac504f6afb8e8599db1532acb6a9e669c4d988e8271ca8",
