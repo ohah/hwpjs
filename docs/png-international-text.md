@@ -8,7 +8,7 @@
 
 번역 키워드와 본문은 엄격한 UTF-8이며 NUL은 금지합니다. 잘림·overlong·surrogate·U+10FFFF 초과는 거부합니다. 비권장 제어문자 U+0001~0009/U+000B~001F/U+007F~009F는 Unicode scalar 기준으로 세되 거부하지 않습니다. 번역 키워드의 LF도 별도 집계합니다. BOM·비문자·줄바꿈·대소문자를 제거하거나 정규화하지 않습니다. 번역 내용의 정확성이나 키워드별 XMP/날짜 의미는 검증하지 않습니다.
 
-언어 extension 내부 어휘는 `international_text.extension_semantics_deferred`에 남습니다. iTXt 구조·문자·등록 검사를 성공해 청크가 ancillary deferred에서 제외되어도, 이 수치가 0보다 크면 extension 의미까지 검증한 것은 아닙니다. 렌더링·편집·저장·제품 JS 텍스트 API·HWP 이미지 스트림 연결은 별도 미완료 범위입니다.
+언어 extension 내부 어휘는 `international_text.extension_semantics_deferred`에 남습니다. iTXt 구조·문자·등록 검사를 성공해 청크가 ancillary deferred에서 제외되어도, 이 수치가 0보다 크면 extension 의미까지 검증한 것은 아닙니다. HWP BinData 이미지와 HWPX 이미지 선택 경로는 공통 PNG 검사기를 호출하므로 iTXt 유효성 검사도 거칩니다. 다만 문서 수준 이미지 집계는 iTXt 개별 원문을 제공하지 않습니다. 렌더링·편집·저장·제품 JS 텍스트 API는 별도 미완료 범위입니다.
 
 ## 책임과 수명
 
@@ -26,6 +26,10 @@
 standalone decode는 Options.max_text_bytes로 자신의 본문만 제한합니다. Options.language와 pixels.Options.language는 공통 BCP 47 한도(기본 4096바이트·512 subtags)를 노출합니다. 긴 private-use 태그도 명시적으로 한도를 늘려 검사할 수 있습니다. 빈 언어는 언어 한도가 0이어도 허용합니다. State.consumeBounded는 기본 언어 옵션을 사용하는 호환 진입점이고, 비할당 State.consume는 iTXt/zTXt를 소비하지 않습니다.
 
 ## 검증
+
+2026-09-27 현재 재검증에서는 [W3C PNG Third Edition의 iTXt 필드·압축 방식 규칙](https://www.w3.org/TR/png-3/#11iTXt)을 현재 Zig 헤더·UTF-8·언어 등록·zlib·메타데이터 합산 경계에 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 `PNG international text` 집중 필터는 각각 root 포함 6/6 통과했습니다. 로컬 probe/CFB WASM과 독립 JS 대조는 정상 2,457건·거부 10,547건이 일치했고, 추적 HWP 미리보기 PNG 32개에 iTXt는 0개였습니다. 아래의 전체 audit·65,536개 플래그/방식 수동 검사·외부 PngSuite 파일 대조는 이번에 다시 실행하지 않은 과거 기록입니다. 실제 HWP/HWPX 안의 iTXt 양성 파일, 압축 iTXt 외부 실파일, 표시·편집·저장 동치는 현재 검증 근거가 아닙니다.
+
+### 과거 검증 기록
 
 네이티브는 모든 플래그·방식 바이트, 빈 필드·구분자 잘림, 언어 오류와 한도, UTF-8 오류/비권장 scalar, 압축/비압축 수명, 합산 한도의 순서 독립성과 실패 상태 불변, usize 경계, 등록/해제/PNG 조립의 모든 할당 실패 정리를 검사합니다.
 

@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "8daeb749a1e8d11b74d29f5119f58f17ee9fa04bf4bbe1af08b99681eca427fa",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text and PNG compressed text review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "c1280672288cad18d8980b3ad84288c61052f0e423b2ce72b940c461fc568036",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text and PNG international text review, architecture pending, full Debug Zig test incomplete"
+    },
+    "docs/png-international-text.md": {
+      "sha256": "9356736beab7d2e1b8e45b11519f991ba391e6e3b5f9541f052f329363548f9a",
+      "evidence": "2026-09-27 W3C PNG Third Edition iTXt fields UTF8 and compression method current Zig language registry ownership aggregate text budget HWP HWPX image selection, Debug Safe Fast focused 6 each, local probe CFB independent JS oracle 2457 accepted 10547 rejected 32 real PNG 0 iTXt; historical full audit method combinations and external PngSuite not rerun"
     },
     "docs/png-compressed-text.md": {
       "sha256": "2addbdf1c3fd11db8bd2124e67590ecf6d5bad46fd789bec847c3cf16ad60a1a",
