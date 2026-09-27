@@ -2,7 +2,7 @@
 
 ## 범위와 단일 출처
 
-`emf_plus_draw_image.zig`는 MS-EMFPLUS 2.3.4.8의 Type, Flags, Size/DataSize, ImageAttributesID, SrcUnit, SrcRect와 RectData를 조립합니다. Flags의 ObjectID는 Image 슬롯이며 C는 destination RectData의 Rect/RectF 표현만 선택합니다. C/ObjectID는 `emf_plus_record_flags.zig`, RectF와 RectData는 기존 geometry 계층이 소유합니다.
+`emf_plus_draw_image.zig`는 [MS-EMFPLUS 2.3.4.8](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emfplus/778bfc49-e058-4fb2-b19d-9f801f8e458a)의 Type, Flags, Size/DataSize, ImageAttributesID, SrcUnit, SrcRect와 RectData를 조립합니다. Flags의 ObjectID는 Image 슬롯이며 C는 destination RectData의 Rect/RectF 표현만 선택합니다. C/ObjectID는 `emf_plus_record_flags.zig`, RectF와 RectData는 기존 geometry 계층이 소유합니다.
 
 ImageAttributesID의 optional 해석은 `emf_plus_image_attributes_id.zig`가 소유합니다. 원문 u32를 항상 보존하고 0~63은 Object Table ID, 64 이상은 속성 없음으로 노출합니다. 이 공통 값은 다음 DrawImagePoints에서도 재사용하며 각 record가 sentinel 정책을 복제하지 않습니다.
 
@@ -12,7 +12,7 @@ data는 ImageAttributesID 4바이트, SrcUnit 4바이트, SrcRect RectF 16바이
 
 ## optional ImageAttributes 호환 정책
 
-공식 문서는 ImageAttributesID를 optional object의 index라고만 설명하고 부재 sentinel이나 범위 밖 값의 동작을 정의하지 않습니다. Wine GDI+ playback과 그 테스트는 `0xFFFFFFFF`, `0xFFFFFFFE`, 64 이상 및 범위 안의 미존재 슬롯을 모두 attributes 없음으로 처리합니다. 확인한 Wine revision은 `7b3fff76fa5178f6ce0141b2c776afa2a822f101`입니다.
+공식 문서는 ImageAttributesID를 optional object의 index라고만 설명하고 부재 sentinel이나 범위 밖 값의 동작을 정의하지 않습니다. [Wine GDI+ playback](https://github.com/wine-mirror/wine/blob/7b3fff76fa5178f6ce0141b2c776afa2a822f101/dlls/gdiplus/metafile.c)과 [그 테스트](https://github.com/wine-mirror/wine/blob/7b3fff76fa5178f6ce0141b2c776afa2a822f101/dlls/gdiplus/tests/metafile.c)는 `0xFFFFFFFF`, `0xFFFFFFFE`, 64 및 범위 안의 미존재 슬롯을 모두 attributes 없음으로 처리합니다. 확인한 Wine revision은 `7b3fff76fa5178f6ce0141b2c776afa2a822f101`입니다.
 
 wire parser는 이 관측과 optional 표현을 반영해 64 이상을 null로 보존합니다. strict stream은 0~63이면 실제 슬롯이 존재하고 ObjectTypeImageAttributes인지 요구합니다. 따라서 명시된 유효 범위의 깨진 참조를 조용히 null로 바꾸지는 않습니다. 이 선택은 공식 문서에 없는 값을 하나의 sentinel로 추정하지 않으면서 raw 값을 잃지 않는 명시적 호환 정책이며 휴리스틱이 아닙니다.
 
@@ -28,4 +28,4 @@ optional attributes ID 63 경계·raw 보존, 공용 C mask·Image ObjectID 64, 
 
 최초 캠페인은 변이 도구가 `@intCast`를 Perl 배열로 보간해 optional ID 경계 치환이 적용되지 않았으므로 실행 전에 전체 결과를 폐기했습니다. 모드 독립적인 ID 63 과소수용 변이로 교체해 처음부터 재실행한 두 번째 캠페인만 위 수치에 포함했습니다.
 
-최종 제품 트리의 전체 `audit`를 Debug·ReleaseSafe·ReleaseFast 순서로 실행했습니다. 세 모드 모두 40/40 단계와 1,678/1,678 테스트, HWP 감사 8,905,827 checks, WASM imports 0으로 통과했습니다. 로그는 `/tmp/hwpjs-emfplus-draw-image-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.
+아래 전체 `audit`와 위 변이 검출 수치는 당시 검증 기록이며 2026-09-28 재검증에서는 재실행하지 않았습니다. 당시 최종 제품 트리의 전체 `audit`를 Debug·ReleaseSafe·ReleaseFast 순서로 실행했습니다. 세 모드 모두 40/40 단계와 1,678/1,678 테스트, HWP 감사 8,905,827 checks, WASM imports 0으로 통과했습니다. 로그는 `/tmp/hwpjs-emfplus-draw-image-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.

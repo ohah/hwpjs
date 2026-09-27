@@ -24,4 +24,4 @@ PointR은 원점부터 누적한 i64 절대 좌표 세 개를 사용합니다. a
 
 최초 float origin fixture가 `-0, 0`이라 origin을 더하는 두 변이가 6회 생존했고, PointR 치환은 Perl의 `@as` 해석 때문에 소스가 바뀌지 않은 채 3회 생존했습니다. 공개 method를 Count 오류로 바꾼 3회는 assertion이 아니라 예상 밖 오류 반환으로 종료했습니다. 이 12회는 유효 검출로 세지 않았습니다. non-zero float 원점 fixture를 추가하고, 실제 source diff를 확인한 PointR 변이와 값은 반환하되 lower-right를 훼손하는 공개 method 변이로 각각 새 복사본·cache에서 재실행했습니다. 최종 유효 42/42회에는 생존·컴파일 오류·panic·timeout이 없습니다. 제품 작업 트리에는 변이를 적용하지 않았습니다.
 
-변경 소스를 고정한 뒤 전체 audit를 순차 실행했습니다. Debug·ReleaseSafe·ReleaseFast가 각각 40/40 단계와 1945/1945 테스트(코어 1906, chart ownership 31, WMF Contents 8)를 통과했습니다. 각 모드의 corpus 검사는 8,905,827 checks, imports 0이었고, strict mutation sweep는 12,000 mutations, traps 0이었습니다.
+아래 전체 audit와 위 변이 검출 수치는 당시 검증 기록이며 2026-09-28 재검증에서는 재실행하지 않았습니다. 당시 변경 소스를 고정한 뒤 전체 audit를 순차 실행했습니다. Debug·ReleaseSafe·ReleaseFast가 각각 40/40 단계와 1945/1945 테스트(코어 1906, chart ownership 31, WMF Contents 8)를 통과했습니다. 각 모드의 corpus 검사는 8,905,827 checks, imports 0이었고, strict mutation sweep는 12,000 mutations, traps 0이었습니다.

@@ -10,7 +10,7 @@ destination rectangle의 upper-left·upper-right·lower-left 역할을 공용 co
 
 compressed destination의 i16 값은 f32로 정확히 변환하고 floating destination은 원값을 그대로 전달합니다. 음수 source/destination 크기와 signed zero·NaN·무한대를 보정하지 않습니다. source 너비나 높이가 0이면 공용 affine 계산에서 무한대 또는 NaN 계수가 생길 수 있습니다.
 
-구현 범위는 좌표 map까지입니다. source crop과 픽셀 sampling, Image/ImageAttributes 및 효과 적용, clipping, interpolation·pixel-offset·compositing, rasterization, stream replay와 저장은 미구현입니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 픽셀 출력 동등성을 주장하지 않습니다.
+구현 범위는 좌표 map까지입니다. source crop과 픽셀 sampling, Image/ImageAttributes 및 효과 적용, clipping, interpolation·pixel-offset·compositing, rasterization, 그래픽 재생과 저장은 미구현입니다. EMF+ stream의 구조·참조 검증은 별도 계층에 이미 있습니다. 로컬 지원 HWP corpus에는 EMF+ signature 표본이 없어 실제 한컴 픽셀 출력 동등성을 주장하지 않습니다.
 
 ## 검증 기록
 
@@ -20,4 +20,4 @@ compressed destination의 i16 값은 f32로 정확히 변환하고 floating dest
 
 첫 실행에서는 compressed RectData 축·크기 교환과 음수 source width 절댓값화의 9회가 생존해 결과를 승인하지 않았습니다. `RectData` 테스트 이름이 `rectangle` 필터에서 빠지는 위치 편향을 고치고 네 필드와 음수 affine 계수를 직접 검증하도록 보강했습니다. 세 변이를 의도한 제품 식에 고정하고 source diff를 확인한 새 복사본·cache에서 9/9회를 다시 검출했습니다. 최초 9회는 최종 수치에서 제외했으며 원래 캠페인 로그는 `/tmp/hwpjs-image-rect-device-mutants.WgiGnO`, 교정 로그와 diff는 `/tmp/hwpjs-image-rect-corrected-mutants.f8ysql`에 있습니다.
 
-제품 트리를 고정한 뒤 전체 `audit`를 Debug·ReleaseSafe·ReleaseFast 순서로 실행했습니다. 세 모드 모두 40/40 단계와 1,976/1,976 테스트(native 1,937, chart ownership 31, WMF Contents 8)를 통과했습니다. 각 모드의 corpus 검사는 8,905,827 checks, WASM imports 0이었고 strict CFB mutation sweep는 12,000 mutations, traps 0이었습니다. 로그는 `/tmp/hwpjs-image-rect-device-final-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.
+아래 전체 `audit`와 위 변이 검출 수치는 당시 검증 기록이며 2026-09-28 재검증에서는 재실행하지 않았습니다. 당시 제품 트리를 고정한 뒤 전체 `audit`를 Debug·ReleaseSafe·ReleaseFast 순서로 실행했습니다. 세 모드 모두 40/40 단계와 1,976/1,976 테스트(native 1,937, chart ownership 31, WMF Contents 8)를 통과했습니다. 각 모드의 corpus 검사는 8,905,827 checks, WASM imports 0이었고 strict CFB mutation sweep는 12,000 mutations, traps 0이었습니다. 로그는 `/tmp/hwpjs-image-rect-device-final-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.

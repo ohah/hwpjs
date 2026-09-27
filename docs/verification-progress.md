@@ -8,6 +8,8 @@
 
 기존 문서의 과거 테스트 기록은 이 목록에 자동 소급하지 않습니다. 이 목록의 비율은 새 기준에 따라 **현재 내용 전체를 다시 검증한 파일의 비율**이며, 이전 구현 진행률이나 과거 검증 작업량의 추정치가 아닙니다.
 
+2026-09-28에는 EMF+ DrawImage·DrawImagePoints 및 image parallelogram·rectangle/source→device map 다섯 문서를 공식 MS-EMFPLUS record 정의, 고정 Wine playback/test 원문, 현재 Zig의 parser·stream·좌표 책임과 대조했습니다. 세 빌드 모드의 root `EMF+` 필터는 각각 560/560 통과했고 대상 모듈의 테스트 16개가 실제로 수집됐음을 확인했습니다. Wine의 범위 밖 ImageAttributes ID 무시 정책은 공식 명세의 sentinel 규칙이 아니라 관측된 호환 정책으로 유지합니다. rectangle 문서의 `stream replay` 미구현 표현은 실제 구조·참조 검증과 그래픽 재생을 구별하도록 바로잡았습니다. 다섯 문서의 과거 변이·전체 audit 수치는 이번에 재실행하지 않았고, 실제 한컴 EMF+ 양성 파일이나 픽셀 동등성은 검증하지 않았습니다.
+
 2026-09-27 기준 첫 완료 파일은 [HWP5 각주·미주 원문 표식 위치](hwp5-note-source-sites.md)입니다. 해당 주제의 공식 명세·제품 코드·원시 레코드 대조와 반례, 감사 테스트 결과는 그 문서에 둡니다. [프로젝트 구조](project-structure.md)는 HWPX XML 트리·section·WMF/EMF 범위 표현을 교정했으나 파일 전체의 검증 완료로 세지 않습니다. 새 현황 문서까지 포함해 현재 존재하는 프로젝트 Markdown 560개에서 일반 인라인 로컬 링크 2,518개의 대상 파일이 모두 존재했습니다. 작업 트리에서 삭제된 `lint-rules.md`는 이 링크 검사에서 제외됩니다. 참조형 링크·앵커·외부 URL·문서 내용의 옳음까지 증명하는 검사는 아닙니다.
 
 진입점 [AGENTS.md](../AGENTS.md)는 링크 대상과 인덱스 전용 책임을, [커밋 규칙](../commit-rules.md)은 프로젝트 규칙·실제 빌드 명령·레거시 규칙 경로와의 일치를 확인해 완료 목록에 넣었습니다. [README](../README.md)도 빌드·공개 JS API·두 실행 예제를 확인했습니다. Node에서는 추적 HWP fixture의 `/BodyText/Section0`이 `Buffer` 402바이트였고, 실제 Chromium에서는 HTTP로 받은 WASM/fixture의 strict 읽기 후 `/FileHeader`가 값 256개의 배열이었습니다. README의 `sample.hwp`는 사용자가 제공할 입력 예시이므로 검사에는 같은 저장소의 추적 fixture를 사용했습니다.

@@ -25,4 +25,4 @@ device = world_page_device.mapPoint(world)
 
 최초 source identity 변이는 함수 인자를 미사용으로 만들어 세 모드에서 컴파일 오류가 났으므로 유효 검출에서 제외했습니다. 인자를 명시적으로 소비하면서 identity를 적용하는 동일 의미 변이를 새 복사본·cache에서 실행해 세 모드 모두 검출했습니다. 최종 유효 실행에는 생존·컴파일 오류·panic·timeout이 없고 제품 작업 트리에는 변이를 적용하지 않았습니다. 로그는 `/tmp/hwpjs-image-source-device-mutants.sFkqY5/logs`입니다.
 
-변경 소스를 고정한 뒤 전체 audit를 순차 실행했습니다. Debug·ReleaseSafe·ReleaseFast가 각각 40/40 단계와 1973/1973 테스트(native 1934, chart ownership 31, WMF Contents 8)를 통과했습니다. 각 모드의 corpus 검사는 8,905,827 checks, imports 0이었고 strict CFB mutation sweep는 12,000 mutations, traps 0이었습니다. 로그는 `/tmp/hwpjs-image-source-device-final-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.
+아래 전체 audit와 위 변이 검출 수치는 당시 검증 기록이며 2026-09-28 재검증에서는 재실행하지 않았습니다. 당시 변경 소스를 고정한 뒤 전체 audit를 순차 실행했습니다. Debug·ReleaseSafe·ReleaseFast가 각각 40/40 단계와 1973/1973 테스트(native 1934, chart ownership 31, WMF Contents 8)를 통과했습니다. 각 모드의 corpus 검사는 8,905,827 checks, imports 0이었고 strict CFB mutation sweep는 12,000 mutations, traps 0이었습니다. 로그는 `/tmp/hwpjs-image-source-device-final-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다.
