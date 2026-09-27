@@ -14,6 +14,14 @@
 
 ## 독립·적대적 검증
 
+### 현재 재검증 (2026-09-27)
+
+[PNG Third Edition의 four-byte unsigned integer 정의와 §11.3.4.3·§11.3.2.4](https://www.w3.org/TR/png-3/)를 현재 `physical.zig`·`significant_bits.zig`·`metadata.zig`·`pixels.zig`에 대조했습니다. pHYs 축의 0..2³¹−1·단위 0/1, sBIT의 색 유형별 필드 수·indexed RGB 표본 깊이 8, PLTE/IDAT 배치와 값 기반 보고서 경계가 일치합니다.
+
+Debug·ReleaseSafe·ReleaseFast의 `PNG sample metadata` 집중 필터는 각각 root 포함 4/4 통과했습니다. 로컬 probe와 독립 JS oracle은 정상 424건·거부 9,425건을 대조했습니다. 추적 HWP의 PrvImage PNG 32개에서 pHYs 32개를 대조했고 sBIT는 0개였습니다. 따라서 실제 sBIT 양성이나 DPI/화면 표시 동치는 주장하지 않습니다. 아래 전체 audit 수치와 720개 순열은 과거 기록이며 이번에 재실행한 실측으로 세지 않습니다.
+
+### 과거 검증 기록
+
 네이티브는 단위 바이트 0..255, 양 축의 31-bit 경계, 잘못된 길이, 모든 유효 색상/depth 조합에서 각 sBIT 위치의 0..255, 중복·순서·실패 상태를 검사합니다.
 
 테스트 전용 WASM mode 133은 전체 PNG를 받아 12개 u32 LE(48바이트)를 반환합니다: pHYs 존재·X·Y·단위, sBIT 존재·count·bits 4개, deferred 청크·바이트. 독립 JS는 Buffer big-endian 읽기와 청크 배열 위치로 기대값을 계산하며 기존 픽셀/투명도 보고서도 함께 대조합니다. 전용 값 규칙은 `png-sample-metadata-evidence.mjs` 한 곳에서 소유합니다.

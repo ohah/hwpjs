@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "5082d6022341f281c6a9c6b111be34857c7a7d71db0441672f7ee7dcfbe421f5",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency and PNG palette metadata review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "e002cb0122e20f4a3aed02a4a5090ffcc2e009862e29dddcc728e081e7114708",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata and PNG sample metadata review, architecture pending, full Debug Zig test incomplete"
+    },
+    "docs/png-sample-metadata.md": {
+      "sha256": "0dde11de1619de03631bd9ba6f62422bfa00ed3e8ab2bc83928f0ca26fbf9ddd",
+      "evidence": "2026-09-27 W3C PNG Third Edition 31-bit four-byte integer pHYs sBIT and current Zig metadata pixels connection, Debug Safe Fast focused 4 each, local probe CFB independent JS oracle 424 accepted 9425 rejected 32 real PNG 32 pHYs 0 sBIT, historic full audit and 720 permutations not rerun"
     },
     "docs/png-palette-metadata.md": {
       "sha256": "92fab7ee3b70d338027c6c60c713a1a78d0beff0bd7790eccc3ec2737425ac52",
