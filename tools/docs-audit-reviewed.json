@@ -1,6 +1,18 @@
 {
   "schema": 1,
   "verified": {
+    "docs/hwp5-chart-observed-initial-text.md": {
+      "sha256": "e9bfe73c25fd92ecde5f87f9da9ab11877f78d2836a5ff70b0baab2a9abff957",
+      "evidence": "2026-09-28 current mode336 43 selected Contents 1452 accepted 946 rejected 43 final-byte cuts; Footnote 301/21199 Legend 258/11211 names reused 41 introduced 2 and flags 1/1/0; guards 3 exceptions 8 corruptions; native chart Debug Safe Fast 141 each; ReleaseSafe ownership 31; historic mutants full cuts not rerun"
+    },
+    "docs/hwp5-chart-observed-tables.md": {
+      "sha256": "c6d68575838d6311f095f9a18ceda542ab54efca1ed9af1167250974a5e03c0b",
+      "evidence": "2026-09-28 current Zig sorted type and object table wire versus independent final-map oracle in mode336 43 Contents 1452 accepted 946 rejected 43 final-byte cuts; native chart three modes 141 each and ReleaseSafe ownership 31; Number payload spans omitted from table wire; historic mutants full cuts not rerun"
+    },
+    "docs/hwp5-chart-observed-field-contract.md": {
+      "sha256": "e11120976043985a71ef7fdd9777df2e79c47f471ed38640353da291ec81d011",
+      "evidence": "2026-09-28 inspected 45 selected struct declarations and mode336 assertCurrent call; current ReleaseSafe probe 43 roots 1452 accepted 946 rejected guards 3/8 and native chart three modes 141 each; contract detects compile-time shape not values and known Number Grid Cell ValueBlock span fields absent from wire; historic compile mutants not rerun"
+    },
     "docs/hwp5-chart-observed-light-lines.md": {
       "sha256": "b8664041c9a2c4e2704666284d41870dd5e8dc18d4bc006673bd47df4f622d72",
       "evidence": "2026-09-28 mode336 current ReleaseSafe selected Contents 43 roots 1452 accepted 946 rejected 43 final-byte cuts; individual Light 173/6720 LineItems 301/6751 PostLine 215/9718; 3 host exceptions and 8 corruptions detected; chart native Debug Safe Fast 141 each; historic full cuts mutants call hashes not rerun"
@@ -438,7 +450,7 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "569bce3fe494734532db068f399624a5da74ce5cfc7d477a5e30446ea4593a87",
+      "sha256": "c8554a0d947d8187924f7347298dfe787c3d4841c0ad6a2612aa7eb492c470c3",
       "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text PNG suggested palette PNG color fixed PNG sRGB PNG iCCP envelope PNG ICC inspection PNG RGBA BCP47 syntax registry alpha2 history ICC IANA matching mluc selection mluc structure mluc Unicode ICC v2 Unicode v2 text tag payload dispatch tag table structure header identifiers v4 and v2 header numeric header verification ICC registry source lookup required tags overview presence table XYZ type XYZ tags curve type TRC tags parametric curve analytic forward TRC forward sampled forward sampled inverse sampled wide inverse gamma inverse wide gamma inverse TRC inverse and extended TRC inverse matrix TRC inverse matrix TRC model matrix TRC forward fraction matrix inverse fraction matrix TRC inverse wide linear target wide positive bounds normalized and extended root compare normalized and extended root locations clipped and extended power preimage whole and extended whole parametric preimage normalized and extended whole bounds normalized and extended attained F.1a whole and extended nearest normalized and extended full inverse topology segments jump trend domain partition power clipping power level root compare active root locations rational power order normalized power level wide power level normalized root order power range power nearest ordinate order extended ordinate order ordinate distance extended ordinate distance linear range parametric range rational range nearest linear preimage extended linear preimage chromatic adaptation matrix transform ICC foundation verification review, architecture pending, full Debug Zig test 2656 passed and ReleaseFast HWP5 audit 10 steps 8905855 checks, EMF ICM and three clipping region docs direct tests and 102 shared tests each mode"
     },
     "docs/bcp47-syntax.md": {

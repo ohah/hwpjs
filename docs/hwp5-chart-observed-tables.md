@@ -44,9 +44,13 @@ JS `objectTableWire`는 최종 Tail의 객체 ID 집합, Title까지 누적한 �
 
 객체 사전 wire를 포함한 ReleaseSafe 재검사에서도 원본의 잘림 382,411개 위치, 기타 오류를 합한 거부 383,314건, 정상·변형 1,452건이 통과했습니다. 모든 거부 뒤 원본의 사전 포함 wire를 다시 대조했습니다.
 
-타입/객체 테이블의 allocator/options는 파일에서 복호화한 엔트리 필드가 아니며 이 wire에 포함하지 않습니다. ValueBlock의 반환된 reference start/end는 후속 [축 반환값 대조](hwp5-chart-observed-axes.md)에 연결했습니다. 다른 구조의 참조 메타데이터와 제품 모델이 보존하지 않는 위치는 사전 엔트리와 별개입니다. 독립 oracle이 지원하지 않는 배치까지 사전 검증을 완료한 것은 아닙니다.
+타입/객체 테이블의 allocator/options는 파일에서 복호화한 엔트리 필드가 아니며 이 wire에 포함하지 않습니다. ValueBlock의 반환된 reference start/end는 후속 [축 반환값 대조](hwp5-chart-observed-axes.md)에 연결했습니다. 제품 Number 값에는 `payload_start/payload_end`도 있지만 현재 객체 사전 wire는 이 두 위치를 직렬화하지 않습니다. 선택된 표본의 숫자 payload 위치는 별도 소유권 검사에서 다루며, 이 표의 엔트리 wire 일치만으로 모든 Number 위치를 검증했다고 할 수 없습니다. 다른 구조의 참조 메타데이터와 제품 모델이 보존하지 않는 위치는 사전 엔트리와 별개입니다. 독립 oracle이 지원하지 않는 배치까지 사전 검증을 완료한 것은 아닙니다.
 
 이 누적 반환값 확장을 고정한 세 모드 전체 audit 결과는 아래 공통 실측을 따릅니다. 본 결과를 전체 문서 검증 완료로 해석하지 않습니다.
 
 - Debug·ReleaseSafe·ReleaseFast 각각 빌드 단계 32/32, native 1,089/1,089(코어 1,085 + 소유권 4), WASM 검사 8,905,815건, imports 0.
 - 로그: `/tmp/hwpjs-chart-return-expansion-{Debug,ReleaseSafe,ReleaseFast}-audit.log`.
+
+## 2026-09-28 재검증
+
+현재 mode 336은 제품 타입 정의와 객체 사전을 각각 u32 ID 오름차순으로 직렬화하고, 독립 oracle은 최종 관측 타입/객체 상태로 별도 기대 wire를 만듭니다. ReleaseSafe 실제 Contents 43개에서 사전 포함 전체 반환값 정상·변형 1,452건·예상 거부 946건, 마지막 바이트 잘림 43건이 통과했습니다. 검사기 예외 3종·반환값 변조 8종, `chart ` 집중 네이티브 테스트 Debug·ReleaseSafe·ReleaseFast 각 141/141, ReleaseSafe 선택 Contents 소유권 감사 31/31도 통과했습니다. 위 타입 9종·객체 9종 소스 변이, 382,411개 모든 잘림과 세 모드 전체 감사 8,905,815회는 당시 이력으로 이번에 다시 수행하지 않았습니다. Number payload 위치 등 wire 밖의 필드를 엔트리 완전 대조로 승격하지 않습니다.

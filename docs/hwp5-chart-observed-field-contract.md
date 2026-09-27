@@ -2,7 +2,7 @@
 
 ## 목적
 
-개별 wire 대조가 많아져도 제품 struct에 새 필드가 추가됐을 때 기존 검사가 조용히 통과하면 SSOT가 아닙니다. `tests/hwp5/chart-observed-field-contract.zig`는 mode 336의 선택된 Contents 조립에서 도달하는 제품 struct 45개의 필드 이름과 선언 순서를 컴파일 시점에 고정합니다. 전체 조립 probe가 이 계약을 직접 호출하므로 정규 audit의 WASM 컴파일 경로에 포함됩니다.
+개별 wire 대조가 많아져도 제품 struct에 새 필드가 추가됐을 때 기존 검사가 조용히 통과하면 SSOT가 아닙니다. `tests/hwp5/chart-observed-field-contract.zig`는 mode 336의 선택된 Contents 조립에 대해 **선정한** 제품 반환 struct 45개의 필드 이름과 선언 순서를 컴파일 시점에 고정합니다. 모든 도달 가능한 내부 struct의 전수 목록은 아닙니다. 전체 조립 probe가 이 계약을 직접 호출하므로 정규 audit의 WASM 컴파일 경로에 포함됩니다.
 
 필드 목록은 **변경 감지 계약**입니다. 목록에 있다는 사실만으로 해당 필드 값이 독립 wire와 대조된다고 주장하지 않습니다. 값 대조는 `chart-observed-contents-probe.zig`와 주제별 공통 serializer, 기대값은 `chart-observed-contents-oracle.mjs`와 주제별 독립 oracle이 소유합니다. 새 필드 추가 시 계약 목록만 갱신해서는 안 되며 값 대조 또는 명시적 제외 근거를 함께 갱신해야 합니다.
 
@@ -22,3 +22,5 @@ allocator, source, options, HashMap 저장소처럼 파일의 의미 필드가 �
 ## 한계
 
 현재 계약은 선택된 Contents 조립 그래프의 제품 결과 struct를 대상으로 합니다. 함수 지역 변수, Options의 개별 필드, 독립 조사 전용 JS 객체, 아직 제품 파서가 지원하지 않는 차트 배치는 대상이 아닙니다. 필드 순서 변경은 감지하지만 의미 변경이나 잘못된 값은 주제별 oracle·결함 주입으로 검증해야 합니다. 전체 HWP 문서 모델이나 저장 포맷의 필드 완전성 계약도 아닙니다.
+
+2026-09-28 현재 목록의 `fields` 선언 45개와 mode 336의 `assertCurrent()` 호출을 다시 확인했습니다. ReleaseSafe probe의 선택 Contents 43개 정상·변형 1,452건·예상 거부 946건 및 검사기 예외 3종·반환값 변조 8종, `chart ` 집중 네이티브 테스트 Debug·ReleaseSafe·ReleaseFast 각 141/141이 통과했습니다. 그러나 이 런타임 대조는 위 두 컴파일 실패 변이를 재실행한 증거가 아닙니다. 예를 들어 목록에 포함된 Number의 `payload_start/payload_end`, Grid Cell의 `payload_start/payload_end`, ValueBlock의 `format_start/format_end`는 현재 mode 336 wire에서 개별 수치로 비교하지 않습니다. 목록 확인과 일부 필드의 독립 값 대조를 모든 필드 값 검증으로 확대하지 않으며, 당시 두 소스 변이·세 모드 전체 감사는 이번에 재실행하지 않았습니다.

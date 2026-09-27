@@ -22,14 +22,14 @@
 
 전체 조립 숫자는 앞선 파트의 변형도 포함한 누적 검사입니다. 이번에 추가한 입력은 원시 구간 변형 43건과 Footnote/Legend 문자열 길이 0·1·65535 변형 258건입니다. 모든 잘림은 원본 43개에서 382,411개 위치를 검사했으며, 모든 변형 입력의 모든 위치를 자른 것은 아닙니다. 거부 뒤 원본의 전체 반환 wire를 다시 대조했습니다. 기대 오류는 정확한 `Error` 생성자와 오류명으로 검사하여 host 예외나 WASM trap을 성공으로 세지 않습니다.
 
-Legend 원본에서는 기존 문자열 재참조 41건, 새 문자열 도입 2건을 확인했습니다. 직렬화 분리 전 HEAD와 현재 개별 테스트의 `(mode, limit, input length, input bytes)` 호출열 및 결과를 대조했습니다.
+Legend 원본에서는 기존 문자열 재참조 41건, 새 문자열 도입 2건을 확인했습니다. 직렬화 분리 전 당시 HEAD와 분리 후 개별 테스트의 `(mode, limit, input length, input bytes)` 호출열 및 결과를 대조했습니다.
 
 | 검사 | 호출 수 | 호출열 SHA-256 |
 |---|---:|---|
 | Footnote | 42,699 | `e7741424843d0b1409fde6e3b37750d5c39b4d629b50ac757d0af5fa695d2290` |
 | Legend | 22,680 | `5b7945fbf8ad9fa5f53813be5e4cdd4fc563a4c7bf515f3ee2cd75c63a48b691` |
 
-Legend oracle 자체도 원본 43건에서 새로 노출한 8개 메타데이터 필드를 제외한 모든 기존 결과와 wire가 HEAD와 같았습니다.
+Legend oracle 자체도 원본 43건에서 새로 노출한 8개 메타데이터 필드를 제외한 모든 기존 결과와 wire가 당시 HEAD와 같았습니다.
 
 ## 실제 코어 결함 주입
 
@@ -52,3 +52,7 @@ Legend oracle 자체도 원본 43건에서 새로 노출한 8개 메타데이터
 Footnote의 위 상태값은 후속 검사에 연결했습니다. 현재 선택 배치에서 허용하지 않는 non-null 보조 Backdrop의 내용을 이 검사로 검증했다고 해석하지 않습니다. Grid 전환 Backdrop은 후속 [Grid 반환값 검사](hwp5-chart-observed-grid.md), 개별 타입/객체 값은 [사전 엔트리 대조](hwp5-chart-observed-tables.md), 현재 제품이 반환하는 객체 Reference 위치는 [축 반환값 대조](hwp5-chart-observed-axes.md)와 기존 Series wire에 연결했습니다. 합계가 같다는 사실은 각 엔트리가 같다는 증거가 아닙니다.
 
 이후 사전 엔트리 검사까지 포함한 누적 세 모드 전체 audit가 통과했습니다. 최종 수치와 로그는 [사전 엔트리 대조](hwp5-chart-observed-tables.md)가 소유합니다. 전체 문서 검증 완료나 모든 차트 배치 지원을 뜻하지 않습니다.
+
+## 2026-09-28 재검증
+
+현재 ReleaseSafe mode 336의 제품 반환값과 독립 `observedContentsCase`를 실제 Contents 43개에서 다시 대조해 정상·변형 1,452건·예상 거부 946건, 마지막 바이트 잘림 43건이 통과했습니다. 개별 Footnote는 정상 301/거부 21,199, Legend는 정상 258/거부 11,211이고 원본 이름은 재참조 41/신규 2건입니다. 전체 wire의 두 Footnote String 도입·null 보조 상태 1/1/0과 Section·Backdrop·Prefix 종료 필드도 현재 serializer/기대값에 포함됩니다. 검사기 예외 3종·반환값 변조 8종, `chart ` 집중 네이티브 테스트 Debug·ReleaseSafe·ReleaseFast 각 141/141, ReleaseSafe 선택 Contents 소유권 감사 31/31도 통과했습니다. 위 1,409건 단계·모든 잘림 382,411건·소스 변이와 호출열 해시는 당시 이력으로 이번에 다시 수행하지 않았습니다. 선택 배치 밖의 보조 Backdrop 내용·문서 모델·저장은 검증하지 않습니다.
