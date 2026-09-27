@@ -4,11 +4,13 @@ import {iccHeaderWire,iccDigest} from './icc-header-evidence.mjs';
 import {iccTableWire} from './icc-table-evidence.mjs';
 import {profileEnvelopeWire} from './png-profile-evidence.mjs';
 import {iccFixture} from './icc-fixture.mjs';
+export function expectedOracleError(e){return e instanceof assert.AssertionError || (e instanceof Error && typeof e.code==='string' && e.code.startsWith('Z_')) || (e instanceof RangeError && e.code==='ERR_BUFFER_TOO_LARGE');}
+export function expectedProbeError(e){return e?.constructor===Error&&/^(Invalid|Unsupported|Missing|Duplicate|LimitExceeded|UnexpectedEnd|TrailingData)/.test(e.message);}
 export function iccEdges(call){
   let accepted=0,rejected=0,headerMutations=0,tableMutations=0,envelopeMutations=0;
-  function compare(mode,input,expectedFn,limit){let expected;try{expected=expectedFn();}catch{}
+  function compare(mode,input,expectedFn,limit){let expected;try{expected=expectedFn();}catch(e){assert.ok(expectedOracleError(e),`independent ICC oracle failed unexpectedly: ${e?.constructor?.name} ${e?.code ?? ''}`);}
     if(expected){assert.deepEqual(call(mode,input,limit),expected);accepted++;return expected;}
-    assert.throws(()=>call(mode,input,limit),e=>!(e instanceof WebAssembly.RuntimeError));rejected++;
+    assert.throws(()=>call(mode,input,limit),expectedProbeError);rejected++;
   }
   const head=(b,limit=b.length)=>compare(143,b,()=>iccHeaderWire(b,limit),limit);
   const table=(b,policy,maxTags=100000,limit=b.length)=>{const options=Buffer.alloc(8);options.writeUInt32LE(maxTags);options.writeUInt32LE(policy,4);return compare(144,Buffer.concat([options,b]),()=>iccTableWire(b,policy,maxTags,limit),limit);};

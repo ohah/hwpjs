@@ -2,7 +2,7 @@
 
 ## 테스트 연결과 검증 경계
 
-`src/image/icc/root.zig`가 Zig 코어의 헤더·extent·ID·태그 테이블 진입점을 모읍니다. PNG 압축 봉투와 ICC는 별도 모듈입니다. 아래 mode는 `tests/hwp5/probe.zig`의 테스트 전용 인터페이스이며 제품 JS/WASM ABI는 여전히 CFB만 제공합니다.
+`src/image/icc/root.zig`는 ICC 헤더·extent·ID·태그 테이블과 이후 추가된 타입·곡선·행렬 계층의 Zig 진입점을 모읍니다. 이 문서는 처음 구축한 **헤더·테이블·PNG 압축 봉투 독립 검증**의 이력이며, 이후 ICC 기능 전체의 완료 증거는 아닙니다. PNG 압축 봉투와 ICC는 별도 모듈입니다. 아래 mode는 `tests/hwp5/probe.zig`의 테스트 전용 인터페이스이며 제품 JS/WASM ABI는 여전히 CFB만 제공합니다.
 
 - mode 143: ICC 전체 버퍼 → 148바이트. 헤더의 모든 필드를 다시 직렬화한 128바이트, ID 상태 u32 LE(0 v2 미정의 / 1 v4 미계산 / 2 일치), 계산한 ID 16바이트(v2는 0)입니다. 헤더 숫자는 LE로 변환하고 버전 네 바이트는 major/minor/bugfix/0입니다. 나머지 서명·tail은 원값입니다.
 - mode 144: max_tags u32 LE + policy u32 LE(0 bounded / 1 icc_2022) + ICC 버퍼를 받습니다. 8개 u32 LE(태그 수, 테이블 끝, 고유 요소, 공유 항목, 겹치는 요소, 미참조 바이트, 검사된 패딩, 배치 검증 여부) 뒤에 원래 순서의 20바이트 태그 보고서를 반환합니다. 각 행은 서명 4바이트, offset/size u32 LE, 타입 서명 4바이트, 원시 data CRC32 u32 LE입니다. 공유된 큰 data를 항목마다 복제하지 않습니다.
@@ -46,4 +46,6 @@ sRGB_v4_ICC_preference_displayclass.icc        f54b145a18e4b12112750e672f1c79cac
 added-bytes.icc                               45eaa55b6a5214c16537a0d02f3dbd72d1ea16807bc8c64f293a14ae914899c8
 ```
 
-검증 범위는 [헤더·ID](icc-structure.md), [태그 테이블](icc-tag-table.md), [PNG 압축 봉투](png-embedded-profile.md)의 계약을 따릅니다. 헤더 의미·필수 태그·개별 태그 내용·PNG 연결·색상 변환은 여전히 미완료입니다.
+검증 범위는 [헤더·ID](icc-structure.md), [태그 테이블](icc-tag-table.md), [PNG 압축 봉투](png-embedded-profile.md)의 당시 계약을 따릅니다. 이후 [헤더 의미 검증](icc-header-verification.md)·[필수 태그](icc-required-tags.md)·[PNG 프로파일 검사](png-profile-inspection.md)·[matrix/TRC 순방향](icc-matrix-trc-forward.md)과 [역방향](icc-matrix-trc-inverse.md) 등은 별도 문서와 테스트에서 관리합니다. 이 초기 세 mode만으로 전체 ICC 색상 변환이나 HWP/HWPX 문서 지원을 입증하지 않습니다.
+
+2026-09-27 재검증에서는 현재 `src/image/icc/root.zig`·`tests/hwp5/probe.zig`의 진입점과 mode143/144/145 연결, `icc.mjs`의 Node 정수·CRC32·zlib 독립 기대값 및 제품 JS 공개 범위를 대조했습니다. 기존 로컬 테스트용 WASM 직접 실행은 정상 비교 38,178건·예상 거부 23,551건(헤더 변형 32,768·테이블 변형 26,624·압축 봉투 변형 1,380)이 일치했습니다. 거부 검사에서 호스트 `TypeError`도 통과할 수 있던 약점을 재현해, 독립 기준의 예상 오류 종류와 제품의 파서 오류 종류를 제한했습니다. 새 거부 가드 테스트 2/2와 인위적 호스트 `TypeError` 주입이 실패를 검출했고, 보강 후 같은 대조 결과가 유지됐습니다. 공식 ICC 외부 파일 네 개의 SHA-256도 원본 URL을 다시 읽어 위 기록과 일치했습니다. ReleaseFast `zig build hwp5-audit -Doptimize=ReleaseFast --summary all`은 10/10 단계·8,905,855검사로 통과했습니다. 과거 `/tmp` 세 모드 전체 audit 로그는 현재 없으며 이번에 세 모드 전체 audit·실제 PNG/HWP 내장 ICC를 재실행한 것으로 세지 않습니다. 이 빌드의 테스트용 WASM 컴파일 단계는 캐시 재사용이므로 새 WASM 재빌드 증거로 세지 않습니다.
