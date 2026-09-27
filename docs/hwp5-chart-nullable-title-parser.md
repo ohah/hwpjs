@@ -18,7 +18,7 @@ Debug·ReleaseSafe·ReleaseFast의 차트 관련 테스트는 각 61/61으로 �
 
 ## 실제 파일의 WASM 대조
 
-테스트 mode 324는 앞선 Grid/Legend/Plot/Light와 첫 4개 축의 객체 사전을 유지하고, 관측된 Surface 접두사 뒤의 nullable 축을 코어로 읽습니다. Surface의 raw 30/46바이트와 빈 배열을 지나가는 코드는 테스트 전용입니다. 제품 Surface 파서·일반적인 축 개수 규칙·전체 Chart 지원으로 승격하지 않습니다. 제품 JS 공개 API도 변경하지 않습니다.
+테스트 mode 324는 앞선 Grid/Legend/Plot/Light와 첫 4개 축의 객체 사전을 유지하고, 관측된 Surface 접두사 뒤의 nullable 축을 코어로 읽습니다. 이 mode의 Surface 건너뛰기와 4축 선택은 테스트 전용입니다. 이후 제품에는 [Surface 접두부 코어](hwp5-chart-plot-surface-prefix.md)와 [명시적 Contents 조립](hwp5-chart-observed-contents.md)이 추가됐지만, 일반적인 축 개수 규칙·자동 배치 판별·전체 Chart 지원으로 승격하지 않습니다. 제품 JS 공개 API도 이 mode로 변경되지 않습니다.
 
 독립 JS `chart-nullable-title-oracle.mjs`는 기존 관측기의 타입·String·Number 상태와 앞선 객체 ID 집합을 이어 받고 새 객체 중복도 검사합니다. 기존/nullable 축의 테스트 wire는 Zig와 JS 각각의 공통 serializer로 분리했으며, JS 기대 바이트를 Zig 출력으로 생성하지 않습니다.
 
@@ -32,4 +32,8 @@ Debug·ReleaseSafe·ReleaseFast에서 각각 실제 차트 43개를 대상으로
 
 최종 `zig build test --summary all`은 1,050/1,050, `zig build -Doptimize=ReleaseSafe --summary all`은 5/5 단계로 통과했습니다. 변경 Zig 포맷·JS 구문·diff 공백 검사도 통과했습니다.
 
-이번 범위는 nullable 제목의 inline TextBlock과 Axis 코어입니다. 실제 43개는 제목 null·배율 없음이며, 빈/신규/별칭 및 배율 조합은 변형 입력·네이티브 fixture로 별도 검증했습니다. Surface 필드 의미, 이후 CLineItem과 전체 Chart 조립·렌더링·저장은 아직 미완료입니다. 다음 작업은 nullable 축 다음의 CLineItem 경계 검증입니다.
+이 구현 단계의 범위는 nullable 제목의 inline TextBlock과 Axis 코어였습니다. 실제 43개는 제목 null·배율 없음이며, 빈/신규/별칭 및 배율 조합은 변형 입력·네이티브 fixture로 별도 검증했습니다. 이후 [CLineItem](hwp5-chart-line-item.md)과 [선택된 Contents 조립](hwp5-chart-observed-contents.md)은 구현됐지만, Surface 필드 의미·자동 배치 판별·렌더링·저장은 여전히 미완료입니다. 당시 다음 작업은 nullable 축 뒤 CLineItem 경계 검증이었습니다.
+
+## 2026-09-28 재검증
+
+현재 `chart nullable title` 루트 집중 테스트는 Debug·ReleaseSafe·ReleaseFast 각 3/3 통과했습니다. 현재 ReleaseSafe probe mode 324와 독립 oracle은 실파일 43개에서 정상·변형 301건, 예상 거부 12,298건을 재현했고, 같은 소스의 HWP5 전체 감사는 10/10 단계·8,905,855회 검사로 통과했습니다. 위의 변이 6종·세 모드 전체 audit·61/61 테스트 수치는 당시 이력이며 이번에 재실행하지 않았습니다. mode 324가 증명하는 것은 선택된 축 경로의 반환값이지 모든 차트 버전의 제목 의미가 아닙니다.

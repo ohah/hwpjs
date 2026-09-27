@@ -18,7 +18,7 @@
 
 ReleaseSafe 전체 조립 probe에서 실제 차트 43개를 기반으로 정상·변형 430건과 기본 오류 172건이 통과했습니다. 모든 잘림 실행도 정상·변형 430건, 잘림 382,411건, 한도·후행 바이트 포함 오류 382,540건을 통과했습니다. 오류 뒤 원본 반환 wire를 다시 대조합니다.
 
-기존 개별 보조축 검사는 정상 301건·오류 12,298건입니다. HEAD의 검사 함수와 공통 생성기 추출 후 함수를 같은 WASM으로 실행하고 호출 mode·limit·입력 길이·바이트를 순서대로 해시했습니다. 24,897개 호출과 결과가 일치했으며 SHA-256은 `df785011c0a9bbe54d203ef2f2b690cdc9795e19b41060e38c6bc7e7c31a21ec`입니다. 첫 비교 시 임시 data-module의 상위 상대 import를 해결하지 못한 실행은 제외하고, 모든 상대 import를 절대 경로로 해석한 뒤 성공을 확인했습니다.
+기존 개별 보조축 검사는 정상 301건·오류 12,298건입니다. 당시 HEAD의 검사 함수와 공통 생성기 추출 후 함수를 같은 WASM으로 실행하고 호출 mode·limit·입력 길이·바이트를 순서대로 해시했습니다. 24,897개 호출과 결과가 일치했으며 SHA-256은 `df785011c0a9bbe54d203ef2f2b690cdc9795e19b41060e38c6bc7e7c31a21ec`입니다. 첫 비교 시 임시 data-module의 상위 상대 import를 해결하지 못한 실행은 제외하고, 모든 상대 import를 절대 경로로 해석한 뒤 성공을 확인했습니다.
 
 ## 적대적 검증
 
@@ -48,4 +48,10 @@ ReleaseSafe에서 실제 차트 경로 43개, ValueBlock 69개(숫자 reference 
 
 임시 코어 복사본에서 주축 Scale의 non-null reference start/end 및 필수 label start/end를 각각 변경했습니다. Debug·ReleaseSafe·ReleaseFast 총 12건 모두 컴파일 종료 코드 0 뒤 실제 wire 대조의 `ERR_ASSERTION`·실행 종료 코드 1로 검출했습니다. 최초 두 번의 임시 결함 컴파일은 Zig 단일문장 `for/if` 문법 오류였으며 검출 실적으로 세지 않았습니다. 수정한 로그는 `/tmp/hwpjs-value-reference-mutants.izmT6i`에 있습니다.
 
-TextFormat은 현재 제품 구조가 code 값과 `code_introduced`·Format end만 보존하고 내부 String reference의 start/end는 보존하지 않습니다. 따라서 이번 검사는 **현재 반환되는** ValueBlock reference 메타데이터의 대조이며, 파서가 버린 위치 정보까지 지원한다는 뜻이 아닙니다. 그 필드를 API로 보존할지는 별도 모델 계약 변경입니다.
+이 문단 작성 당시와 달리 현재 TextFormat 코어는 코드 String의 `code_start/code_end`도 보존합니다. [TextFormat 계약](hwp5-chart-text-format.md)대로 필수/nullable 반환 경로와 공통 ValueBlock wire는 이 값을 독립 oracle과 대조하며, 전체 축 조립도 ValueBlock wire를 재사용합니다. 반면 ValueBlock 자체의 `format_start/format_end`는 제품 구조에 존재하지만 현재 축 wire에서 별도 수치로 비교하지 않습니다. 따라서 위치 필드 전부가 동적 대조를 통과했다는 뜻은 아닙니다.
+
+위 `/tmp` 변이 디렉터리·호출 해시·모든 잘림 및 세 모드 전체 audit 수치는 당시의 검증 이력입니다. 현재 검증에서 재실행하지 않은 항목을 현행 통과로 소급하지 않습니다. 공개 문서 모델·편집·저장은 이 시험 mode의 반환값 대조 범위가 아닙니다.
+
+## 2026-09-28 재검증
+
+현재 ReleaseSafe probe mode 336과 독립 `observedContentsCase`를 다시 실행해 실파일 43개 기반 정상·변형 1,452건, 예상 거부 946건을 대조했습니다. 이번 기본 실행의 잘림은 각 표본 마지막 1바이트씩 43건입니다. 검사기 자체의 호스트 예외 3종·반환 바이트 변조 8종도 모두 탐지했습니다. 과거 382,411개 모든 잘림이나 24,897개 호출 해시 동치, 10종 소스 변이·TextFormat span 변이는 다시 수행하지 않았습니다. 현재 ReleaseSafe HWP5 전체 감사 10/10 단계·8,905,855회 검사가 통과했지만, 이는 축 wire에 없는 `format_start/format_end`의 값 대조를 증명하지 않습니다.
