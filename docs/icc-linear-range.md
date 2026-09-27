@@ -44,4 +44,6 @@ ReleaseSafe·ReleaseFast 산출물 직접 실행도 같은 신규 수치로 통�
 
 거듭제곱 분기의 현재 구현과 검증은 [거듭제곱 출력 범위](icc-power-range.md)에서 관리합니다. 아래 나머지 전체 연결 범위와 구분합니다.
 
-이 모듈은 선형 분기만 다룹니다. 전체 곡선의 범위 조립, 기호적 거리 비교와 F.1(b)→F.1(a) 연결은 미완료입니다. 실제 HWP 문서 렌더링이나 전체 ICC 역변환 완료로 해석하지 않습니다.
+이 모듈은 선형 분기만 다룹니다. [전체 곡선의 범위 조립](icc-parametric-range.md), [기호적 거리 비교](icc-ordinate-distance.md), [F.1(b) 최근접 출력](icc-parametric-nearest.md)과 [F.1(a) 입력 선택](icc-parametric-inverse.md)은 현재 별도 계층의 책임입니다. 이 선형 범위만으로 그 계층들의 정확성이나 실제 HWP 문서 렌더링을 증명하지 않습니다.
+
+2026-09-27 재검증에서는 공식 ICC.1:2022 Table 68의 선형 분기·[0,1] 클리핑과 현재 `linear_range.build`·`linear_clip.partition`·`affine_value.at`의 열린 끝점, 감소 방향의 포함 여부, 상수 출력의 닫힌 단일점, 넓은 분모 보존을 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 `linear_range_tests.zig`는 각각 4/4 통과했습니다. 기존 로컬 WASM mode204/203의 독립 BigInt 대조는 범위 895건·최근접 연결 3,580건·예상 거부 345건이 일치했습니다. 과거 `/tmp` 전체 audit 로그는 현재 없으며 이번에 전체 audit·WASM 재빌드·변형·시스템 ICC 수동 24호출을 재실행한 것으로 세지 않습니다.

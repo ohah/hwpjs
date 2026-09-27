@@ -36,4 +36,6 @@ ReleaseSafe·ReleaseFast의 실제 감사 산출물을 직접 실행해 같은 �
 
 ## 남은 범위
 
-출력 하나와 목표 분수의 순서 비교는 [출력값 비교](icc-ordinate-order.md)에서 구현·검증 상태를 관리합니다. 서로 다른 기호적 출력값의 거리 비교, 최근접 출력의 존재·동률 처리 및 F.1(a) 연결은 미구현입니다. 전체 ICC 역변환, PNG 픽셀 연결, HWP/HWPX 문서 기능 완료를 의미하지 않습니다.
+출력 하나와 목표 분수의 순서 비교는 [출력값 비교](icc-ordinate-order.md), 기호적 출력값과 유리수 후보의 거리 비교는 [출력 거리](icc-ordinate-distance.md), 최근접 출력의 존재·동률 처리는 [전체 최근접 선택](icc-parametric-nearest.md), F.1(a) 입력 선택은 [전체 역변환](icc-parametric-inverse.md)에서 각각 구현·검증 상태를 관리합니다. 서로 다른 두 기호적 출력의 일반 거리 비교와 이 범위 집합의 검증을 혼동하지 않습니다. 이 결과만으로 전체 ICC 색상 변환·PNG 픽셀 연결·HWP/HWPX 문서 기능 완료를 증명하지 않습니다.
+
+2026-09-27 재검증에서는 공식 ICC.1:2022 Table 68의 분기·클리핑과 현재 `parametric_range.build`가 `power_range.build`의 전체 정의역 검증·미확정 전파 뒤 `parametric_segments.assemble`·`linear_range.build`의 두 출력 기여를 합집합으로 보존하는 호출 관계를 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 `parametric_range_tests.zig`는 각각 3/3 통과했습니다. 기존 로컬 WASM mode207의 독립 BigInt 대조는 정상 범위 2,063건·예상 거부 1,229건이 일치했습니다. 이 직접 대조는 전체 범위의 미확정 분기를 재현하지 못했으므로 미확정 경로를 독립 입증한 수치로 세지 않습니다. 과거 `/tmp` 전체 audit 로그는 현재 없으며 이번에 전체 audit·WASM 재빌드·변형·시스템 ICC 15건을 재실행한 것으로 세지 않습니다.
