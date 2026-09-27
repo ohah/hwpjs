@@ -10,7 +10,7 @@
 
 mode 325는 기존 nullable 축까지의 사전을 이어 받아 요청한 수만큼 단일 객체를 읽습니다. 앞의 u16은 반환만 하며 0xffff 변형도 보존합니다. 테스트 요청 개수 상한 32는 테스트 bridge의 제한이며 코어의 차트 항목 개수 규칙이 아닙니다.
 
-`chart-nullable-title-prefix.zig`가 앞선 Grid/Legend/Plot/Light/축/Surface 후보 조립과 수명을 소유하도록 기존 mode 324에서 분리했습니다. mode 324·325가 이 경로를 공유하며 Surface 배치를 중복 구현하지 않습니다. 이는 여전히 테스트 전용 조립이고 전체 제품 Surface/Chart 파서가 아닙니다. 제품 JS 공개 API는 변경하지 않습니다.
+`chart-nullable-title-prefix.zig`가 앞선 Grid/Legend/Plot/Light/축/Surface 후보 조립과 수명을 소유하도록 기존 mode 324에서 분리했습니다. mode 324·325가 이 경로를 공유하며 Surface 배치를 중복 구현하지 않습니다. 이 probe 조립은 여전히 테스트 전용입니다. 현재 선택된 Contents 제품 조립은 별도 `src/hwp5/chart/observed_contents.zig`가 소유하며 자동 배치 판정이나 전체 Chart 버전 지원은 아닙니다. 제품 JS 공개 API는 변경하지 않습니다.
 
 JS `chart-line-items-oracle.mjs`는 독립 관측기의 타입·객체 사전을 이어 사용해 기대 wire를 만듭니다. 기대값을 제품 출력에서 생성하지 않습니다. mode 325의 항목 수 0/1/2, 전체 사전 수, 원시 prefix·raw52, 객체 ID와 정확한 소비 끝을 비교합니다.
 
@@ -34,7 +34,7 @@ Debug·ReleaseSafe·ReleaseFast 전체 `zig build audit --summary all`(최적화
 
 최종 `zig build test --summary all`도 1,052/1,052, `zig build -Doptimize=ReleaseSafe --summary all`은 5/5 단계로 통과했습니다. 변경 Zig 포맷·JS 구문·diff 공백 검사도 통과했습니다.
 
-전체 Chart 조립·raw 의미 해석·렌더링·저장은 여전히 미완료입니다.
+이 CLineItem 코어는 전체 Chart 조립이나 raw 의미 해석을 소유하지 않습니다. 후속 선택 배치의 Contents 조립은 `src/hwp5/chart/observed_contents.zig`에 있지만 자동 배치 판정·전체 버전 지원·렌더링·저장은 미완료입니다.
 
 ## 다음 경계 후보
 
@@ -43,3 +43,7 @@ Debug·ReleaseSafe·ReleaseFast 전체 `zig build audit --summary all`(최적화
 이는 raw194·기반 타입·배열 헤더를 다음에 검증할 근거이며, 해당 raw의 의미나 소유권·배열 원소 전체를 확정한 결과가 아닙니다. 별도 잘림/변형 조사 전에 제품 배치 규칙으로 사용하지 않습니다.
 
 후속 [raw·배열 경계 조사](hwp5-chart-post-line-evidence.md)에서 실제 잘림·변형 검증을 수행했습니다. 위 문단은 최초 후보 관측 이력이며 현재 검증 범위는 후속 문서가 소유합니다.
+
+## 현재 재검증
+
+위 전체 audit와 변이 검사 수치는 당시 기록입니다. 문서 검증 시점에 코어·mode 325·선택된 Contents 조립의 책임을 다시 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 `chart line item` 집중 테스트는 각각 3/3개 통과했고, 기존 ReleaseSafe probe의 독립 오라클은 실파일 43개·원소 86개에서 수락 301건·거부 6,751건을 다시 통과했습니다. 이번에는 세 모드 전체 audit와 변이 검사를 재실행하지 않았습니다.

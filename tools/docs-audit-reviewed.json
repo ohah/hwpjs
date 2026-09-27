@@ -1,6 +1,18 @@
 {
   "schema": 1,
   "verified": {
+    "docs/hwp5-chart-line-item.md": {
+      "sha256": "15297ac66d3270923fa8127456ec81fcc2419cc413508429a39c2458e11ae268",
+      "evidence": "2026-09-28 current Zig CLineItem raw52 types IDs failure versus mode325 and selected Contents; Debug Safe Fast line item focus 3 each; current ReleaseSafe probe 43 roots 86 items 301 accepted 6751 rejected; historic full audits and mutants not rerun"
+    },
+    "docs/hwp5-chart-line-item-evidence.md": {
+      "sha256": "e63fe36e54326004953a67a72ff80cbe2594590a8e1d0d96c2f695dfffea919d",
+      "evidence": "2026-09-28 official Hancom chart API not raw layout; current independent survey 584 HWP 43 selected Contents 86 items two raw52 variants 6192 cuts 215 type rejects 172 ID rejects 86 raw changes; evidence tests 2; historic mutants not rerun"
+    },
+    "docs/hwp5-chart-post-line-evidence.md": {
+      "sha256": "5a9f4246032ee1c875e0af4d1b76964152ec9caf825288fa1fc24ebbfc63e1fe",
+      "evidence": "2026-09-28 current independent post line survey 584 HWP 43 selected Contents 218 bytes 3/3 or 5/5 words 15 raw variants 9374 cuts 387 type rejects 86 ID rejects 86 variants; evidence tests 2; historic mutants full audits not rerun"
+    },
     "docs/hwp5-chart-light.md": {
       "sha256": "d9210f213fa545460936f49fee498a1c0bf9df0dcc4cfa7bb0e0d54b17f8d3c7",
       "evidence": "2026-09-28 current Zig Light source copied raw cursor failure and selected Contents ownership; Debug Safe Fast chart tests 141 each; current ReleaseSafe independent 43 roots 173 accepted 6720 rejected; historic full audits and mutants not rerun"
@@ -462,8 +474,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "529fa846063e4c0b441cc5ec9249719d41850259f60529119c2a6056305ea608",
-      "evidence": "2026-09-28 tracker updated with Chart Light Plot Surface PostLine verification, chart tests 141 each Debug Safe Fast, ReleaseSafe independent 43 roots each; historic full audits and mutants not rerun"
+      "sha256": "8d83c49e2a7ff5747df14044793081f037374fe5560eaca5157531a4a22aad1a",
+      "evidence": "2026-09-28 tracker updated with CLineItem and PostLine evidence and core current surveys, Debug Safe Fast focused tests, ReleaseSafe independent probe 43 roots; historic full audits and mutants not rerun"
     },
     "docs/bcp47-syntax.md": {
       "sha256": "ae0d91a0bb5ca2f8a5194b5ffa76494427cc058784f11446fd905458020f5b11",

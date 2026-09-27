@@ -33,4 +33,8 @@ node tests/hwp5/chart-line-item-survey.mjs --verify
 
 ## 남은 범위
 
-raw52의 의미와 일반 버전/확장 배치, 앞의 u16 의미, 두 항목의 소유 관계, 뒤쪽 데이터 조립은 아직 미확인입니다. 후속 단일 CLineItem 코어와 실제 WASM 대조는 [코어 계약·검증](hwp5-chart-line-item.md)에 기록합니다. Chart 전체 지원이나 렌더링 완료를 주장하지 않습니다.
+raw52의 의미와 일반 버전/확장 배치, 앞의 u16 의미, 두 항목의 일반 소유 관계는 아직 미확인입니다. 후속 단일 CLineItem 코어와 실제 WASM 대조는 [코어 계약·검증](hwp5-chart-line-item.md)에 기록합니다. 현재 선택된 뒤쪽 조립은 `src/hwp5/chart/observed_contents.zig`가 맡지만 자동 배치 판정이나 Chart 전체 지원·렌더링 완료를 주장하지 않습니다.
+
+## 현재 재검증
+
+위 변이 검사는 당시 기록입니다. 문서 검증 시점에 조사기의 복사·타입/ID·경계 정책을 현 소스와 다시 대조하고 독립 단위 테스트 2/2개를 통과했습니다. `chart-line-item-survey.mjs --verify`는 584개 HWP 중 선택된 차트 Contents 43개·원소 86개에서 앞 word 1, raw52 2종, 잘림 6,192건·타입 거부 215건·ID 거부 172건·raw 변형 86건을 다시 확인했습니다. 이 결과는 관측 배치의 증거이며 다른 버전의 유효값 정책이 아닙니다. 변이 검사와 세 모드 전체 audit는 이번에 재실행하지 않았습니다.

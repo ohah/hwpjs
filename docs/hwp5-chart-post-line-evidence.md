@@ -31,4 +31,8 @@ node tests/hwp5/chart-post-line-survey.mjs --verify
 
 ## 다음 작업과 미완료 범위
 
-후속 [코어·WASM 검증](hwp5-chart-post-line.md)은 공통 타입 사전과 배열 헤더를 재사용하고 새 선언 경로도 별도로 검증합니다. 이 문서는 기존 참조에 한정한 독립 조사 기록입니다. Series 원소·배열 소유권·raw 의미·전체 Chart 조립과 렌더링·저장은 미완료입니다.
+후속 [코어·WASM 검증](hwp5-chart-post-line.md)은 공통 타입 사전과 배열 헤더를 재사용하고 새 선언 경로도 별도로 검증합니다. 이 문서는 기존 참조에 한정한 독립 조사 기록입니다. 이 조사기만으로 Series 원소·배열 소유권·raw 의미를 확정할 수 없습니다. 후속 선택 배치의 Series와 Contents 조립은 `src/hwp5/chart/series_collection.zig`와 `src/hwp5/chart/observed_contents.zig`가 소유하지만 자동 배치 판정·전체 버전 지원·렌더링·저장은 미완료입니다.
+
+## 현재 재검증
+
+위 변이 검사는 당시 기록입니다. 문서 검증 시점에 조사기의 알려진 타입 참조·독립 배열 word·복사 경계를 현 소스와 다시 대조하고 독립 단위 테스트 2/2개를 통과했습니다. `chart-post-line-survey.mjs --verify`는 584개 HWP 중 선택된 차트 Contents 43개에서 길이 218바이트, 배열 word 3/3 또는 5/5, raw194 15종, 잘림 9,374건·타입 거부 387건·ID 거부 86건·원값 변형 86건을 다시 확인했습니다. 다른 배치의 유효값이나 Series 소유권을 증명하지 않으며, 변이 검사와 세 모드 전체 audit는 이번에 재실행하지 않았습니다.
