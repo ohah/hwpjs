@@ -1,8 +1,8 @@
 # ICC 행렬/TRC 모델 조립
 
-후속 [행렬/TRC 순방향 점 계산](icc-matrix-trc-forward.md)은 조립된 모델과 기존 곡선 점 계산기를 연결하고 세 모드 전체 감사를 통과했습니다.
+별도 [행렬/TRC 순방향 점 계산](icc-matrix-trc-forward.md)과 [역방향 연결](icc-matrix-trc-inverse.md)은 이 조립 모델을 사용합니다. 각 점 계산의 계약·검증은 해당 문서가 소유합니다.
 
-현재 조립 계층은 구현 후 세 모드 전체 감사를 통과했습니다. 전체 프로파일·변환 우선순위·점 계산 통합은 아래 보류 범위와 구분합니다.
+조립 계층의 당시 세 모드 전체 감사 기록은 아래에 보존합니다. 전체 프로파일·변환 우선순위 검증은 이 조립기의 범위가 아닙니다.
 
 ## 명세와 현재 범위
 
@@ -12,7 +12,13 @@ XYZ 태그는 행이 아니라 열입니다. rXYZ/gXYZ/bXYZ의 각 XYZ를 행 �
 
 이 API는 호출자가 행렬/TRC 모델을 명시적으로 선택한 경우의 조립기입니다. 공통 desc/cprt/wtpt/chad의 존재·payload 검증, 헤더 의미 검증, LUT 우선순위, 전체 곡선 유효성·역함수, 프로파일 변환 성공을 보증하지 않습니다. profile_semantics_deferred와 transform_priority_deferred는 true입니다. required_plan이 만든 공통 필수 태그 집합을 모두 검증했다고 주장하지 않습니다. 순방향 조립 자체에 명세상 근거 없이 비특이 조건을 추가하지 않으며 역행렬이 필요한 계산 단계가 특이성을 처리합니다.
 
-## 검증 진행
+## 2026-09-27 현재 재검증
+
+[ICC.1:2022 §8.3.3·§8.4.3·Annex G](https://www.color.org/specifications/ICC.1-2022-05.pdf)의 입력·디스플레이 프로파일용 XYZ 열 세 개와 TRC 세 개, 3성분/PCSXYZ 조건을 `required_plan`과 현재 조립 코드에 다시 대조했습니다. `tag_table`은 descriptor만 소유하고 payload는 입력을 빌리며, `matrix_trc_model`도 곡선 샘플을 빌립니다. 따라서 조립 결과를 사용하는 동안 원본 프로파일 바이트를 유지해야 합니다.
+
+Debug·ReleaseSafe·ReleaseFast의 `matrix TRC assembly` 집중 테스트는 각각 root 포함 3/3 통과했습니다. 기존 로컬 WASM mode 175에서 태그 여섯 개의 720개 순열을 포함한 독립 JS 기대값과 정상 742건·거부 330건이 일치했습니다. macOS 시스템 v4 ICC 여섯 파일도 태그 표에서 별도 추출한 XYZ·TRC payload 전체를 기대값으로 만들어 각각 mode 175 출력과 대조했습니다. 이번에 WASM을 재빌드하거나 과거 전체 감사·수동 변형 22건을 재실행하지 않았고, 아래 `/tmp` 감사 로그도 현재 없습니다. 이 결과를 전체 프로파일 적합성이나 자동 LUT 우선순위 결정으로 확대하지 않습니다.
+
+## 당시 검증 진행
 
 네이티브 테스트는 실제 바이트에서 tag_table.parse를 거쳐 조립합니다. 비대칭 열의 행/열 순서, descriptor 순서 교환, 각 필수 모델 태그의 독립 누락과 identity TRC를 검사합니다. 헤더 조건 테스트는 분리된 헤더 값에 3CLR 허용, CMYK/PCSLAB/출력 클래스 거부와 미지원 판본을 대조합니다. WASM 독립 비교·실프로파일 연결·세 모드 전체 감사는 아직 남아 있습니다.
 
