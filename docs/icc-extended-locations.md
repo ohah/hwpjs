@@ -2,6 +2,8 @@
 
 ## 계약과 범위
 
+[ICC.1:2022 §10.18 Table 68·Annex F.1](https://www.color.org/specification/ICC.1-2022-05.pdf)은 파라메트릭 곡선의 분기식과 1차원 역상 선택 조건을 규정합니다. 아래의 512비트 목표·1024비트 기호근 위치는 프로젝트 내부 표현이며, 활성 근 위치만으로 전체 곡선의 역변환 조건이 충족되었다는 뜻은 아닙니다.
+
 `normalized_root_location.Wide.locate(precision, root, a, b, interval)`는 u1024 radicand를 가진 근이 `(a*x+b)/65536`을 통해 주어진 u64 유리수 구간의 어디에 놓이는지 판정합니다. [1024비트 근 비교](icc-extended-root-compare.md)를 사용하며 기존 absent/start/interior/end/singleton/entire/undecided를 반환합니다. x의 근삿값을 만들거나 근을 좁히지 않습니다.
 
 `normalized_level_locations.inspectWide(precision, curve, n, d)`는 u512 정규화 목표값을 검증하고 전체 곡선의 정의역을 확인한 뒤 활성 상위 거듭제곱 분기의 근과 위치를 수집합니다. 반환값은 inactive/entire/roots이고 최대 두 근을 보존합니다. inactive에서도 d=0 또는 n>d를 거부합니다. 근 배열 순서는 생성기의 양수·음수 순서이며 x 오름차순이 아닙니다.
@@ -38,6 +40,16 @@ Debug 직접 대조는 locations=1,743, curves=734, rejected=2,389, undecided=1�
 
 최종 Debug 및 Safe/Fast 실제 audit WASM의 직접 대조와 입출력 변형 4종도 동일하게 통과했습니다. 소스 변형은 보강된 네이티브 테스트로 세 모드 모두 검출했습니다. 주제 문서 로컬 링크 7개, Zig 포맷, 변경 JS 문법과 diff 공백을 확인했습니다. 구간 규칙·근 수집·분기 조립을 공유하며 테스트 기대값은 독립 BigInt 계산을 유지합니다.
 
+위의 세 모드 전체 감사·변형 실험·시스템 프로파일 대조는 최초 구현 시점의 기록입니다. 인용된 `/tmp` 최종 로그와 임시 변형 소스는 현재 존재하지 않으며 아래의 재검증 결과와 구분합니다.
+
 ## 남은 구현
 
-이 계층은 클리핑 전 상위 거듭제곱 분기의 근 위치만 소유합니다. 출력 0/1의 평탄 구간을 포함하는 조립은 [넓은 클리핑 역상](icc-extended-power-preimage.md)에 분리합니다. 하위 선형 분기와의 전체 합집합, F.1 역상 선택, 최근접 출력, 넓은 TRC 모델 연결과 렌더링은 후속 범위입니다. 전체 ICC/HWP/HWPX 검증 완료가 아닙니다.
+이 계층은 클리핑 전 상위 거듭제곱 분기의 근 위치만 소유합니다. 출력 0/1의 평탄 구간은 [넓은 클리핑 역상](icc-extended-power-preimage.md), 하위 선형 분기와의 합집합은 [넓은 전체 역상](icc-extended-parametric-preimage.md), 최근접 출력과 F.1 선택은 [넓은 최근접 출력](icc-extended-parametric-nearest.md)·[넓은 파라메트릭 역변환](icc-extended-parametric-inverse.md), TRC 조립은 [확장 TRC 역변환](icc-extended-trc-inverse.md)이 각각 별도로 다룹니다. 당시 후속 범위였다는 기록과 현재 다른 계층의 구현을 구분합니다. 이 위치 결과만으로 렌더링·전체 ICC/HWP/HWPX 검증이 완료되지는 않습니다.
+
+## 2026-09-27 문서 재검증
+
+현재 `normalized_root_location.Wide`는 공유 `affine_root_location.With`에 1024비트 비교기의 `Wide.at`을 주입합니다. `normalized_level_locations.inspectWide`는 `inspectFor`를 통해 목표 선검증·전체 curve 조립·활성 거듭제곱 분기 선택을 공유하고, `power_location_set.Of`가 부재 제외·미확정 보존·전체 해 승격을 소유합니다. 정확한 밑 좌표는 `affine_value.at`에서 i128/u128로 만든 뒤 넓은 비교 입력으로 손실 없이 승격합니다. 이 계층이 넓은 x의 단일 정확 좌표를 생성하지는 않습니다.
+
+Debug·ReleaseSafe·ReleaseFast의 `extended locations`·`extended active levels`·`extended constant branch` 집중 필터는 각 모드 root 포함 3/3·2/2·2/2 통과했습니다. 현재 ReleaseFast 테스트용 WASM의 mode223/224 독립 BigInt 대조는 locations=1,743·curves=734·rejected=2,389·undecided=1로 일치했습니다. 같은 제품 코드로 앞 문서 검증에서 실행한 전체 `zig build hwp5-audit -Doptimize=ReleaseFast --summary all`은 10/10 단계·WASM checks=8,905,855였으며 이 두 모드만의 건수가 아닙니다.
+
+후속 계층의 현행 연결은 ReleaseFast에서 클리핑 역상 5/5, 전체 분기 역상 6/6, 최근접 출력 6/6, 전체 역변환 4/4, TRC 4/4 집중 테스트로 확인했습니다. 이 확인만으로 후속 문서 전체를 승인하지 않습니다. 과거 Debug·ReleaseSafe 전체 감사·변형 주입·시스템 프로파일 30건은 이번에 재실행하지 않았고, 실제 색상 변환·표시 동치도 증명하지 않습니다.
