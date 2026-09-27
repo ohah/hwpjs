@@ -2,9 +2,9 @@
 
 ## 현재 범위
 
-IANA 등록 검증은 별도 [등록 검사 API](bcp47-registry.md)에 추가했습니다. 아래 문법 API 자체의 계약과 과거 검증 기록은 변경하지 않습니다.
+IANA 등록 검증은 별도 [등록 검사 API](bcp47-registry.md)가 소유합니다. 이 문서는 문법 API의 현재 계약과 검증 범위를 기록합니다.
 
-국제 텍스트 iTXt에서도 재사용하는 공통 언어 태그 기반입니다. [RFC 5646 §2.1](https://www.rfc-editor.org/rfc/rfc5646.html#section-2.1)의 ABNF와 [§2.2.9](https://www.rfc-editor.org/rfc/rfc5646.html#section-2.2.9)의 중복 variant/singleton 금지를 검사합니다. **이 문법 API는 IANA 등록 여부·extlang prefix·extension 내부 의미·권장 표기 변환·언어 매칭을 검사하지 않습니다.** [iTXt 소비자](png-international-text.md)는 별도 등록 검사 API를 통해 연결됩니다.
+국제 텍스트 iTXt에서도 재사용하는 공통 언어 태그 기반입니다. [RFC 5646 §2.1](https://www.rfc-editor.org/rfc/rfc5646.html#section-2.1)의 ABNF와 [§2.2.5](https://www.rfc-editor.org/rfc/rfc5646.html#section-2.2.5)·[§2.2.6](https://www.rfc-editor.org/rfc/rfc5646.html#section-2.2.6)의 중복 variant/singleton 금지를 검사합니다. [§2.2.9](https://www.rfc-editor.org/rfc/rfc5646.html#section-2.2.9)의 well-formed/valid 구분상 이 성공은 완전한 valid 판정이 아닙니다. **이 문법 API는 IANA 등록 여부·extlang prefix·extension 내부 의미·권장 표기 변환·언어 매칭을 검사하지 않습니다.** [iTXt 소비자](png-international-text.md)는 별도 등록 검사 API를 통해 연결됩니다.
 
 `text.bcp47.inspect(allocator, bytes, options)` 성공은 위 문법과 중복 조건만 통과했다는 뜻입니다. Report.registry_validated는 false입니다. RFC의 well-formed와 valid를 혼용하지 않습니다. 예약된 4글자 primary나 문법상 가능한 2~3개 extlang도 구조적으로 해석할 수 있지만, 실제 등록된 태그라는 보증은 아닙니다. 빈 문자열은 언어 태그가 아니므로 거부합니다. iTXt의 빈 언어 필드(미지정)는 iTXt 호출자가 별도로 처리합니다.
 
@@ -22,6 +22,10 @@ variant 중복은 최대 8글자의 대소문자 무시 영숫자를 충돌 없�
 기본 한도는 4096바이트·512개 부분 태그이며 호출자가 조절할 수 있습니다. 이는 RFC의 언어 태그 최대 길이가 아닙니다. 초과 시 LimitExceeded를 반환하고 자르지 않습니다. [§4.4.1](https://www.rfc-editor.org/rfc/rfc5646.html#section-4.4.1)의 제한 명시 원칙에 따라 이 동작을 분리합니다. 코어는 네트워크나 로컬 언어 설정을 조회하지 않습니다.
 
 ## 검증
+
+2026-09-27 재검증에서 RFC 5646 §2.1의 ABNF, §2.2.5·§2.2.6의 중복 금지, §2.2.9의 well-formed/valid 구분과 현재 `parser.zig`·`tokens.zig`·`grandfathered.zig`·`types.zig`를 대조했습니다. `inspect`는 등록 검증을 하지 않고 원문 슬라이스를 빌리며, iTXt의 등록 검사 연결은 별도 문서가 소유합니다. Debug·ReleaseSafe·ReleaseFast의 `zig test src/root.zig -O <mode> --test-filter BCP47`는 각각 10/10 통과했습니다. 이 넓은 필터의 10개에는 문법 6개 외에 등록 검사 3개와 root 테스트 1개가 포함됩니다. 기존 로컬 `zig-out/bin/hwp5-probe.wasm` mode 137과 독립 JS `bcp47Edges` 재실행은 정상 4,582건·거부 23,758건·바이트 치환/무작위 변이 16,520건이 일치했습니다. 이 WASM은 이번에 새로 빌드한 산출물이 아닙니다. 과거 전체 audit 총계·수동 4,096개 variant 검사는 재실행하지 않았고, 실제 iTXt 양성 파일의 언어 태그 대조도 이번 범위 밖입니다.
+
+### 과거 검증 기록
 
 네이티브는 구간별 원문·개수, grandfathered 대소문자, private-use, 잘못된 순서·문자·길이·중복, primary의 전체 바이트 값, 정확한 한도, 8191바이트 태그의 명시적 한도 확대, 모든 variant 집합 할당 실패 정리를 검사합니다.
 
