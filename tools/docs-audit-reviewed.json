@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "c1280672288cad18d8980b3ad84288c61052f0e423b2ce72b940c461fc568036",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text and PNG international text review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "bb07be631027e2c7fb0bb6dfaa56bda8aa7ef2ff86081206037603ecb61a5733",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile BMP structure BMP pixels BMP RLE RGBA BMP RLE index BMP profile PCX structure TIFF structure PNG structure zlib validation PNG filters PNG pixels PNG transparency PNG palette metadata PNG sample metadata PNG timestamp PNG text PNG compressed text PNG international text and PNG suggested palette review, architecture pending, full Debug Zig test incomplete"
+    },
+    "docs/png-suggested-palettes.md": {
+      "sha256": "9cf2f41bb646cddca0d423a02eea07cb54c973af1551ce1d195fffbc5da82ede",
+      "evidence": "2026-09-27 W3C PNG Third Edition sPLT fields names frequency current Zig borrowed entry collector HWP HWPX PNG path, Debug Safe Fast focused 5 each, local probe CFB independent JS 10149 accepted 12107 rejected 32 real PNG 0 sPLT, pinned PngSuite 4 SHA and mode 140 130 independent match; historic full audit and u16 exhaustives not rerun"
     },
     "docs/png-international-text.md": {
       "sha256": "9356736beab7d2e1b8e45b11519f991ba391e6e3b5f9541f052f329363548f9a",
