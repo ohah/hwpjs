@@ -8,7 +8,13 @@
 
 ## 검증·적대적 재검토
 
-`zig test src/root.zig --test-filter 'PCX structure'`는 버전·헤더·geometry·최소 선 길이·짝수 패딩·RLE 경계·한도·VGA palette를 검사합니다. Debug·ReleaseSafe·ReleaseFast에서 각각 5/5 통과했습니다. `HWPX picture image payloads` 테스트는 MIME 불일치·내부 오류 분리·누적 해제량 한도를 검사하며 세 모드에서 각각 12/12 통과했습니다. `python3 tools/hwpx-fill-brush-image-oracle.py --self-test`의 독립 반례도 통과했고, `--picture-payloads`는 shard 7의 PCX 1건을 `ok`로 집계했습니다. 제품의 동일 실파일 결과는 `HWPX known document inspections shard 7`에서 대조합니다.
+### 현재 재검증 (2026-09-27)
+
+[IANA 등록](https://www.iana.org/assignments/media-types/image/vnd.zbrush.pcx)의 버전 집합·MIME 별칭과 위 ZSoft 원문 미러의 헤더·행별 RLE 중단 규칙을 현재 `src/image/pcx/structure.zig`와 대조했습니다. Debug/ReleaseSafe/ReleaseFast `PCX structure` 집중 필터는 각각 root 포함 5/5, 넓은 `HWPX picture image payloads` 필터는 각각 16/16개 통과했습니다. 넓은 필터 16개를 PCX 전용 검사 수로 세지 않습니다. 독립 Python 조사기의 self-test와 `--picture-payloads`가 통과했고, 전체 HWPX 후보 중 shard 7의 PCX 1건을 `ok`로 집계했습니다. ReleaseFast `HWPX known document inspections shard 7`도 1/1 통과해 같은 shard의 제품 연결을 확인했습니다. 추적 `복학원서.hwpx`에서 추출한 파일은 현재 41,315바이트이며 시스템 `file`은 878×1001·1비트·RLE PCX로 식별했습니다. 아래 전체 회귀·나머지 shard 수치는 이번 실행 결과가 아닌 과거 기록입니다.
+
+### 과거 검증 기록
+
+당시 `zig test src/root.zig --test-filter 'PCX structure'`는 버전·헤더·geometry·최소 선 길이·짝수 패딩·RLE 경계·한도·VGA palette를 검사했고 Debug·ReleaseSafe·ReleaseFast에서 각각 5/5 통과했습니다. 당시 `HWPX picture image payloads` 테스트는 MIME 불일치·내부 오류 분리·누적 해제량 한도를 검사하며 세 모드에서 각각 12/12 통과했습니다. 이후 넓은 필터는 이번 기준 16개로 늘었습니다. 당시 독립 조사기는 shard 7의 PCX 1건을 `ok`로 집계했고, 제품 실파일 결과는 `HWPX known document inspections shard 7`에서 대조했습니다.
 
 최종 ReleaseFast 실파일 shard 0~7은 모두 통과했고, PCX 대상은 shard 7에서만 1건·내부 검사 실패 0건이었습니다. 최종 `zig build test --summary all`은 종료 코드 0·5/5 단계·2,468/2,468 테스트였고, `zig build -Doptimize=ReleaseSafe --summary all`도 5/5 단계로 통과했습니다. `zig build audit -Doptimize=ReleaseSafe --summary all`도 종료 코드 0으로 통과했습니다. 전체 Debug 출력의 `failed command` 러너 문구는 최종 성공 요약·프로세스 종료 코드와 구별합니다.
 
