@@ -8,6 +8,8 @@
 
 기존 문서의 과거 테스트 기록은 이 목록에 자동 소급하지 않습니다. 이 목록의 비율은 새 기준에 따라 **현재 내용 전체를 다시 검증한 파일의 비율**이며, 이전 구현 진행률이나 과거 검증 작업량의 추정치가 아닙니다.
 
+2026-09-28에는 EMF+ Save·Restore·graphics property 상태와 SetAntiAliasMode·SetCompositingMode·SetCompositingQuality·SetInterpolationMode의 일곱 문서를 공식 MS-EMFPLUS 레코드 정의 및 제품 동작 주석, 현재 Zig의 공유 StackIndex parser·소유 상태 stack·tracked stream과 대조했습니다. Debug·ReleaseSafe·ReleaseFast에서 root `EMF+` 필터가 각각 560/560 통과했고 Debug 출력에서 이 주제의 parser·stack·property·stream 테스트 30개가 실제 수집된 것도 확인했습니다. AntiAlias 문서의 렌더링 대상 표현을 명세에 맞게 좁히고 Restore 문서에서 현재 지원되는 Container를 미지원으로 읽을 수 있는 과거 표현을 제거했습니다. 각 문서의 변이·전체 `audit` 숫자는 당시 기록으로 분리했으며 이번에 재실행하지 않았습니다. 실제 HWP의 EMF+ 양성 표본이나 Windows 픽셀 출력 동등성도 이번 검증으로 입증하지 않습니다.
+
 2026-09-28에는 EMF+ Reset·Translate·Scale·RotateWorldTransform과 BeginContainer·BeginContainerNoParams·EndContainer의 일곱 wire 문서를 공식 MS-EMFPLUS 레코드 정의·v20240423 PDF의 두 container 예제, 현재 Zig의 개별 parser·공용 StackIndex·tracked stream에 대조했습니다. 세 빌드 모드에서 root `EMF+` 필터가 각각 560/560 통과했고 일곱 대상의 직접 테스트 16개가 실제 수집된 것도 확인했습니다. EndContainer 예제의 hex는 PDF 본문의 분리된 줄과 상위 comment dump를 함께 대조한 전체 record로 표현을 좁혔습니다. 각 문서의 과거 변이·전체 audit 수치는 당시 기록으로 명시했으며 이번에 재실행하지 않았고, 실파일 양성 EMF+ 출력 동등성도 검증하지 않았습니다.
 
 2026-09-28에는 EMF+ graphics state·BeginContainer transform·SetPageTransform·SetWorldTransform·MultiplyWorldTransform 다섯 문서를 Microsoft의 레코드 정의·GDI+ BeginContainer API와 고정 Wine playback 원문, 현재 Zig의 행렬·소유 상태 stack·tracked stream 연결에 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 root `EMF+` 필터는 각각 560/560 통과했고 대상 leaf·stream·framing 테스트의 실제 수집을 확인했습니다. 상태 snapshot의 terminal-server 소유 자원은 단순 값 복사가 아니라 깊은 복제임을 바로잡았습니다. BeginContainer는 공식 레코드 표와 API 설명의 방향 차이뿐 아니라 Wine식 이동항이 일반적인 비영 source 원점의 affine 대응식과 다르다는 한계를 명시했습니다. 이는 Windows 픽셀 출력 검증이 아니며 과거 전체 audit·변이 검사는 이번에 재실행하지 않았습니다.

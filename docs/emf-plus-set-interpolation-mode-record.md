@@ -16,6 +16,8 @@ Default/LowQuality/HighQuality 별칭을 해당 구체 모드로 정규화하지
 
 ## 검증 기록
 
+아래 변이·전체 `audit` 수치와 `/tmp` 로그는 최초 구현 당시 기록입니다. 이번 문서 검증에서 변이·전체 `audit`를 재실행한 결과로 세지 않습니다.
+
 합성 fixture는 여덟 InterpolationMode, 모든 reserved bits set, 공식 Flags `0x0007`, enum 8·255, 잘못된 RecordType, 독립 Size/DataSize/slice 불일치, stream 정상·enum 오류·count overflow 원자성과 실제 EMF framing 연결을 검사합니다.
 
 InterpolationMode domain, RecordType, Size/DataSize/실제 slice, 잘못된 1비트 shift, high-byte 오독, Flags 반환, reserved bits 거부, stream routing, payload parser 우회, report 대상과 overflow를 각각 망가뜨린 13개 유효 의미 변이를 독립 복사본에 주입했습니다. 변이·모드별 local/global cache와 120초 watchdog 아래 Debug·ReleaseSafe·ReleaseFast 총 39/39회를 모두 검출했습니다. 39개 로그를 재분류해 모두 assertion 또는 expected-error 실패이며 컴파일 오류·panic·시간 초과가 없음을 확인했습니다. 결과는 `/tmp/hwpjs-emfplus-set-interpolation-mode-mutants.0WXIsp`입니다.

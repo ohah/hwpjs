@@ -14,6 +14,8 @@ tracked stream은 성공한 comment 끝에 `Report.properties`를 현재 상태�
 
 ## 검증 기록
 
+아래 변이·전체 `audit` 수치와 `/tmp` 로그는 최초 구현 당시 기록입니다. 이번 문서 검증에서 변이·전체 `audit`를 재실행한 결과로 세지 않습니다.
+
 합성 stream은 여덟 property를 서로 구별되는 값으로 적용하고, 미관측 상태, Save/Restore, BeginContainerNoParams/EndContainer, invalid CompositingQuality 원값, malformed comment rollback과 report 동기화를 검사합니다. 독립 상태 테스트는 모든 optional 필드와 정의·미정의 wire 값을 검사합니다.
 
 필드별 오적용 8개, stack snapshot 누락 1개, report 연결 누락 1개의 유효 의미 변이를 변이·모드별 새 cache에서 Debug·ReleaseSafe·ReleaseFast로 실행했습니다. 30/30 실행이 모두 assertion 실패로 검출됐습니다. 컴파일만 실패한 최초 TextRenderingHint 상수 변이는 폐기하고 유효 enum 오매핑으로 교체했으므로 결과에 포함하지 않습니다.

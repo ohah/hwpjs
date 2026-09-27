@@ -16,6 +16,8 @@ SourceOver와 SourceCopy를 wire enum 그대로 보존합니다. tracked stream�
 
 ## 검증 기록
 
+아래 변이·전체 `audit` 수치와 `/tmp` 로그는 최초 구현 당시 기록입니다. 이번 문서 검증에서 변이·전체 `audit`를 재실행한 결과로 세지 않습니다.
+
 합성 fixture는 두 CompositingMode, 모든 reserved bits set, enum 2·255, 잘못된 RecordType, 독립 Size/DataSize/slice 불일치, stream 정상·enum 오류·count overflow 원자성과 실제 EMF framing 연결을 검사합니다.
 
 13개 의미 변이(enum domain, RecordType, Size/DataSize/slice, low-byte shift/high-byte 오독, Flags 원값 손실, reserved 거부, stream 오라우팅, parser 오류 우회, report 오집계, wrapping overflow)를 Debug·ReleaseSafe·ReleaseFast에서 독립 실행했습니다. 총 39/39를 테스트 의미 실패로 검출했고 생존·무효·timeout·panic은 각각 0입니다. 로그는 `/tmp/hwpjs-emfplus-set-compositing-mode-mutants.1oXfJQ`에 있습니다.

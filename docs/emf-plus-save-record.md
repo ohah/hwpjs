@@ -14,6 +14,8 @@ Flags는 사용되지 않고 SHOULD zero이지만 수신 시 MUST be ignored이�
 
 ## 검증 기록
 
+아래 변이·전체 `audit` 수치와 `/tmp` 로그는 최초 구현 당시 기록입니다. 이번 문서 검증에서 변이·전체 `audit`를 재실행한 결과로 세지 않습니다.
+
 합성 fixture는 StackIndex 0·1·비대칭 바이트·u32 최대값, 모든 Flags set, 공식 예제 값, 잘못된 RecordType, 독립 Size/DataSize/slice 불일치, stream 정상·payload 오류·count overflow 원자성과 실제 EMF framing 연결을 검사합니다.
 
 12개 의미 변이(RecordType, Size/DataSize/slice, endian, StackIndex 상수화, Flags 원값 손실, reserved 거부, stream 오라우팅, parser 우회, report 오집계, wrapping overflow)를 Debug·ReleaseSafe·ReleaseFast에서 독립 실행했습니다. 총 36/36을 테스트 의미 실패로 검출했고 생존·무효·컴파일 오류·panic·timeout은 각각 0입니다. 로그는 `/tmp/hwpjs-emfplus-save-mutants.2Ztk1Y`에 있습니다.
