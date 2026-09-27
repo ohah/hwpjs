@@ -6,8 +6,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "23cda518a267b005cf74ab8e54aa123c4db8c83eb450060fc5a92f5963228c9b",
-      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE review, architecture pending, full Debug Zig test incomplete"
+      "sha256": "3691e352cab0e4f6cf63c6fa1965c9b995de78fe8f4bb50c0f7ed9657a404f79",
+      "evidence": "2026-09-27 tracker tests, HWP5 history bibliography BMP summary PCX WMF PNG tail RGBA declared JPEG body BinData encoding raw DEFLATE replacement CFB batch reader compatibility third-party notice distribution ViewText document policy optional semantics track-change boundary DocInfo author parent forbidden chars DocOptions PrvImage evidence optional container GIF core and BinData image parent JPEG BMP RLE V5 profile review, architecture pending, full Debug Zig test incomplete"
+    },
+    "docs/hwp5-bin-data-bmp-profile.md": {
+      "sha256": "7783d6846f8ce6ffbdb0b2879016495b8e95f8a852e42f335b11cf28e81ed6b5",
+      "evidence": "2026-09-27 Microsoft BITMAPV5HEADER embedded linked profile fields, current Zig BMP profile transport inspection budgets reports, Debug Safe Fast HWP BMP profile 9 tests each, current ReleaseSafe probe and CFB synthetic 96 comparisons 218 rejects; historical real-file and audit logs separated"
     },
     "docs/hwp5-bin-data-bmp-rle.md": {
       "sha256": "88d8bdcf972f44bd98a20bc0585bc52cb5751707725e17dd77a800ff34a7edf1",
