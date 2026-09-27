@@ -2,9 +2,11 @@
 
 ## 계약과 SSOT
 
+[ICC.1:2022 Annex F.1(b)](https://www.color.org/specification/ICC.1-2022-05.pdf#page=115)은 역함수 목표에 해당하는 입력이 없을 때 실제 출력 범위의 가장 가까운 y를 찾도록 규정합니다. 이 모듈은 그 출력 후보를 u512 목표로 구하는 프로젝트 중간 계약이며, 전체 비상수·단조 gate와 입력 선택은 [확장 전체 역변환](icc-extended-parametric-inverse.md)이 별도로 소유합니다.
+
 `parametric_nearest.selectWide(precision,curve,target)`는 u512 목표에 가장 가까운 실제 출력 후보를 선택합니다. selected의 유리수는 u512, power_endpoint는 기존 출력 식과 실제 witness입니다. 서로 다른 같은 거리 출력은 tie, 최근접 값이 도달되지 않으면 unattained, 필요한 비교가 미확정이면 undecided입니다. tie는 source branch 순서이며 임의 숫자 우선순위를 적용하지 않습니다. witness는 F.1의 선호 입력이 아닙니다.
 
-비단조·상수 곡선도 출력 집합 검색은 가능하므로 여기서 역변환 적격성을 요구하지 않습니다. 전체 정의역 검증은 먼저 수행합니다. 하위 선형 범위에 목표가 실제 포함되면 상위의 불필요한 비교 미확정을 거치지 않고 목표를 반환합니다. 전체 고정밀 역변환 연결·제품 JS API·HWP 렌더링은 후속 범위입니다.
+비단조·상수 곡선도 출력 집합 검색은 가능하므로 여기서 역변환 적격성을 요구하지 않습니다. 전체 정의역 검증은 먼저 수행합니다. 하위 선형 범위에 목표가 실제 포함되면 상위의 불필요한 비교 미확정을 거치지 않고 목표를 반환합니다. 전체 고정밀 역변환 연결은 위 별도 계층에 구현됐지만 제품 JS API·HWP 렌더링은 이 모듈의 범위가 아닙니다.
 
 기존 [최근접 출력 선택](icc-parametric-nearest.md)과 selectFor가 같은 흐름을 사용합니다. rational_interval_nearest.project는 target 또는 endpoint(Candidate)를 구분합니다. 큰 목표를 u256 끝점에 넣지 않습니다. endpoint는 원래 u256 범위 끝점이므로 [고정밀 거리 비교](icc-extended-ordinate-distance.md)에 그대로 전달합니다. 기존 candidate API도 같은 판정을 쓰고 target만 u128에서 u256으로 올립니다.
 
@@ -20,7 +22,7 @@ JS는 독립 선형/거듭제곱 출력 범위와 유리수 최근접 집합 기
 
 확장 네이티브는 큰 목표 보존, 열린 interval의 target/endpoint, 양 끝 포함 여부, 중점 이웃의 다른 선택, 동률·미도달·중복, 전체 정의역 선행 검증, 512비트 비축약 목표의 하위 정확 일치와 진짜 미확정을 검사합니다.
 
-## 적대적 검사와 발견한 테스트 빈틈
+## 구현 당시 적대적 검사와 발견한 테스트 빈틈
 
 동률 한쪽 제거, 미확정을 unattained로 변경, unattained를 selected로 위장, 큰 좌표 잘림의 네 출력 변형을 ERR_ASSERTION으로 검출했습니다. 임시 소스에서 같은 출력의 중복 제거를 끄자 초기 네이티브는 Debug·ReleaseSafe에서 union 접근 오류를 냈지만 ReleaseFast는 잘못된 분기 접근을 검증하지 못하고 통과했습니다.
 
@@ -28,12 +30,20 @@ JS는 독립 선형/거듭제곱 출력 범위와 유리수 최근접 집합 기
 
 공통 contains 재사용과 interval projection 검사를 반영한 최신 임시 복사본에서도 세 모드 모두 6개 중 1개가 assertion 실패로 검출됐습니다. 현재 코드 기준 로그는 `/tmp/hwpjs-extended-nearest-mutant-{Debug,ReleaseSafe,ReleaseFast}-current.log`입니다.
 
-## 실제 ICC 대조
+## 구현 당시 실제 ICC 대조
 
 시스템 para TRC 15개의 type0/type3·양의 g/a·type3 양의 하위 기울기·내부 시작점·a+b=65536을 확인했습니다. 전체 곡선의 x=0/1에서 출력 0/1이 실제 존재하므로 최대 u512 분모의 목표 0/1에 대해 해당 분자·분모를 그대로 반환하는지 확인했고 30건이 일치했습니다. 최근접 검색은 단조성 gate가 아니므로 비단조 프로파일을 역변환 가능하다고 인증하지 않습니다. 이 수동 건수는 정규 audit에 합산하지 않습니다.
 
 ## 최종 감사
 
-SSOT 수정 후 Debug·ReleaseSafe·ReleaseFast 전체 audit는 모두 종료 코드 0, 20/20 단계, 네이티브 676/676, WASM checks=6,978,603으로 통과했습니다. 이전 6,965,389에 신규 13,214회 호출이 추가됐습니다. 최종 로그는 `/tmp/hwpjs-extended-nearest-{Debug,ReleaseSafe,ReleaseFast}-final.log`입니다. 수정 전 중단 로그는 이 결과에 포함하지 않습니다.
+당시 SSOT 수정 후 Debug·ReleaseSafe·ReleaseFast 전체 audit는 모두 종료 코드 0, 20/20 단계, 네이티브 676/676, WASM checks=6,978,603으로 통과했습니다. 이전 6,965,389에 신규 13,214회 호출이 추가됐습니다. 당시 최종 로그 경로는 `/tmp/hwpjs-extended-nearest-{Debug,ReleaseSafe,ReleaseFast}-final.log`였으나 현재 파일은 존재하지 않습니다. 수정 전 중단 로그는 이 결과에 포함하지 않습니다.
 
-최종 세 모드 산출물의 신규 직접 대조와 네 출력 변형 검출도 모두 통과했습니다. 변경 Zig 포맷·JS 문법·diff 공백·문서 로컬 링크 7개를 확인했습니다. 최종 재검토에서는 전체 정의역 선행 검증, 목표와 끝점의 타입 분리, contains의 단일 소유자, 미도달·미확정 구분, 실제 후보의 동률 우선권, 동일 출력 중복 제거, 원래 큰 목표 보존, witness와 F.1 입력의 구분, 기존 wire 계약·출력 초기화를 확인했습니다. 고정밀 전체 역변환 연결과 전체 HWP/HWPX 문서 검증은 여전히 미완료입니다.
+당시 최종 세 모드 산출물의 신규 직접 대조와 네 출력 변형 검출도 모두 통과했습니다. 변경 Zig 포맷·JS 문법·diff 공백·문서 로컬 링크 7개를 확인했습니다. 당시 최종 재검토에서는 전체 정의역 선행 검증, 목표와 끝점의 타입 분리, contains의 단일 소유자, 미도달·미확정 구분, 실제 후보의 동률 우선권, 동일 출력 중복 제거, 원래 큰 목표 보존, witness와 F.1 입력의 구분, 기존 wire 계약·출력 초기화를 확인했습니다. 당시 미완료였던 고정밀 전체 역변환 연결은 현재 별도 계층에 있으며, 전체 HWP/HWPX 문서 검증은 여전히 미완료입니다.
+
+## 2026-09-27 문서 재검증
+
+현재 `parametric_nearest.selectFor`는 u128/u512 목표 폭을 공유하고 `parametric_segments.assemble`로 전체 정의역을 검증합니다. 하위 `rational_interval_nearest.project`가 실제 목표 포함을 확정하면 거리 0을 반환하지만, 상위 정의역 오류는 먼저 검출합니다. 그렇지 않으면 `power_range_nearest.selectWide`와 `parametric_nearest_candidates.combineFor`가 정확한 거리·출력 순서에 따라 열린 끝의 미도달, 상위 실제 후보 우선, 같은 출력 중복 제거, 서로 다른 동률과 미확정을 구분합니다. u512 목표를 u256 끝점으로 좁히지 않고 witness를 F.1(a) 입력으로 간주하지 않습니다.
+
+Debug·ReleaseSafe·ReleaseFast의 `zig test src/image/icc/extended_parametric_nearest_tests.zig -O <모드>`는 각 6/6 통과했습니다. 로컬 ReleaseFast 테스트용 WASM mode234 독립 출력 구간·거리 대조는 selected=7,758·ties=181·unattained=296·rejected=4,978·undecided=1로 일치했습니다. 후속 ReleaseFast `extended_parametric_inverse_tests.zig` 단독 6/6은 연결 확인일 뿐 그 문서 전체를 자동 승인하지 않습니다. 앞 문서 검증의 동일 제품 코드 ReleaseFast HWP5 전체 감사 10/10 단계·WASM checks=8,905,855는 재사용 근거로만 세었습니다.
+
+과거 세 모드 전체 감사·출력/소스 변형·시스템 ICC 15개 태그 30건 대조는 이번에 재실행하지 않았습니다. 당시 변형용 `/tmp` 로그도 현재 없습니다. 이 범위로 임의 ICC 프로파일이나 실제 HWP/HWPX 표시·저장 동치를 주장하지 않습니다.
