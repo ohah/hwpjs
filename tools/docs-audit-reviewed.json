@@ -630,8 +630,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "cc4226d12a22e4f06a789ff5f8e70bbf05c9504306cbf2bee6feb3dad8862909",
-      "evidence": "2026-09-28 JFXX ICC Adobe versus T871 T872 ICC.1 2022 and current Zig boundaries, Debug Safe Fast JPEG 192 each; prior same product code ReleaseSafe HWP5 audit 10 steps 8905855 checks, dedicated oracles and mutations not rerun"
+      "sha256": "131d908248f221902ec17daf15c27dc97b1a5992299edce728919a6614f660b2",
+      "evidence": "2026-09-28 JPEG upsampling progressive RGB and observed component IDs versus T871 and current Zig boundaries, Debug Safe Fast JPEG 192 each; dedicated real file Pillow oracles mutations and historic full audit not rerun"
     },
     "docs/hwpx-ole-payloads.md": {
       "sha256": "a7c214c0760d575237afcb960b7ff1fe976a0d99468e1083066e36c889deabad",
@@ -2096,6 +2096,18 @@
     "docs/jpeg-adobe.md": {
       "sha256": "f35202ae4d3d122f2dc101b5d08a018ea5657659f818ad03c64908b36b925361",
       "evidence": "2026-09-28 T872 Adobe APP14 versus Zig raw inspection and separate explicit Exif Adobe pixels, Debug Safe Fast JPEG 192 each; historic modes 274 to 276 real files mutations not rerun"
+    },
+    "docs/jpeg-upsampling.md": {
+      "sha256": "163b1c48275d5c47a30e01888cf56f7b453d30574f1fb4d510593772ab8f52b6",
+      "evidence": "2026-09-28 T871 clause 9 actual component dimensions versus Zig axis and sampler shared by sequential progressive raster, Debug Safe Fast JPEG 192 each; historic modes 269 270 real files mutants not rerun"
+    },
+    "docs/jpeg-progressive-rgb.md": {
+      "sha256": "abe80498405ee1b252637eda71fefe7dc806f3744022f44fcf8b359d048aafa4",
+      "evidence": "2026-09-28 T871 progressive JFIF interpretation versus Zig explicit progressive decoder and common HWP5 pixel dispatch, Debug Safe Fast JPEG 192 each; historic mode 283 real pixels mutants full audit not rerun"
+    },
+    "docs/jpeg-component-id-compatibility.md": {
+      "sha256": "65f7fdcbfce535835a51c2650307b0baf67b6478a89d34e2252b330898bd679d",
+      "evidence": "2026-09-28 T871 SOF IDs versus Zig strict and explicit observed 012 exception with HWPX target evidence, Debug Safe Fast JPEG 192 each; historic large HWPX Pillow and full audit not rerun"
     }
   }
 }

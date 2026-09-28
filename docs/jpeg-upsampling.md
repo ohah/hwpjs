@@ -24,7 +24,7 @@
 
 `tests/hwp5/jpeg-upsampling.mjs`는 공식 중심 좌표를 직접 역산해 축을 대조하고, bilinear는 네 모서리의 BigInt 가중합을 한꺼번에 계산합니다. 제품의 두 행 중간 합 계산과 별개입니다. Debug에서 비교 2,307건·거부 287건·축 좌표 5,821,821개가 통과했습니다. reference 1~256의 모든 source/좌표, 모든 u16 reference의 경계/중앙 좌표, 1~8의 source 가로/세로와 여러 reference 크기, 비정사각형·65535 경계·잘림·방법 바이트·출력 한도를 포함합니다. 출력 200바이트 개별 XOR 1 변조도 검출했습니다.
 
-실제 HWP의 순차 JPEG 참조 7건에서 기존 독립 평면 검증을 먼저 통과시킨 후 새 샘플러를 두 방법으로 대조했습니다. 방법별 reference 샘플 수는 borderfill 450000, noori 순차 17145, sample-5017-pics 두 참조 각 450000, sample-5017 450000, shapecontainer-2 104160, shapepict-scaled 450000입니다. Progressive 참조 1건의 픽셀 복호화는 보류합니다. 참조 수는 고유 이미지 수가 아니며, 결과는 개별 성분이고 RGB 렌더링 또는 한글 출력 일치 검증이 아닙니다.
+실제 HWP의 순차 JPEG 참조 7건에서 기존 독립 평면 검증을 먼저 통과시킨 후 새 샘플러를 두 방법으로 대조했습니다. 방법별 reference 샘플 수는 borderfill 450000, noori 순차 17145, sample-5017-pics 두 참조 각 450000, sample-5017 450000, shapecontainer-2 104160, shapepict-scaled 450000입니다. 이 단계에서는 progressive 참조 1건의 픽셀 복호화를 보류했습니다. 참조 수는 고유 이미지 수가 아니며, 결과는 개별 성분이고 RGB 렌더링 또는 한글 출력 일치 검증이 아닙니다. 이후의 progressive RGB/실파일 검증은 [별도 문서](jpeg-progressive-rgb.md)가 소유합니다.
 
 직사각형 보강 후 JPEG 네이티브 105/105개가 다시 통과했습니다. ReleaseSafe와 ReleaseFast WASM에서도 각각 비교 2,307건·거부 287건·축 좌표 5,821,821개, 출력 200바이트 개별 변조 검출 및 위 실 HWP 성분 대조가 통과했습니다.
 
@@ -33,3 +33,5 @@
 직사각형 테스트 보강 후 전체 회귀를 Debug → ReleaseSafe → ReleaseFast 순서로 다시 완료했습니다. 각 모드 모두 20/20 단계, 네이티브 821/821개, checks 7,659,485건이 통과했습니다. 로그는 `/tmp/hwpjs-upsampling-{Debug,ReleaseSafe,ReleaseFast}-audit.log`에 남겼습니다. 중단한 보강 전 실행은 성공 근거에 포함하지 않습니다.
 
 SSOT 검토에서는 좌표·가중치가 `sample_axis.zig`, bilinear 반올림이 `sample_interpolation.zig`, 평면 길이와 인덱싱이 `upsampling.zig`에 분리되어 있고, 테스트 bridge가 좌표나 보간 공식을 복제하지 않는 것을 확인했습니다. 검사 수는 전체 포맷 지원률이나 한글과의 픽셀 일치 증명이 아닙니다. 이후의 명시적 JFIF 파일 연결은 [RGB 샘플 조립](jpeg-rgb.md)이 소유하며 일반 메타데이터 자동 선택·색 관리는 별도입니다.
+
+2026-09-28 현재 재검증에서는 T.871 9절의 실제 성분 치수 비율과 `sample_axis.zig`·`upsampling.zig`·순차/progressive 공통 RGB 렌더링의 책임을 대조했습니다. Debug·ReleaseSafe·ReleaseFast JPEG 집중 테스트는 각각 192/192개 통과했습니다. 위 mode 269/270 독립 oracle·실파일·변이·과거 전체 audit는 이번에 재실행하지 않았습니다. 공식 중심 위치를 따른다는 사실이 nearest/bilinear 필터의 유일성이나 외부 디코더 픽셀 동치를 뜻하지는 않습니다.
