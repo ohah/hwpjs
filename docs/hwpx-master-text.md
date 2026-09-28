@@ -23,3 +23,5 @@
 적대적 재검토에서 선택 모드의 비활성 분기 안에 중첩 문단이 있으면, 원본 파트 메타데이터의 전체 문단 수와 선택 이벤트의 문단 수를 잘못 강제 대조해 `InconsistentMasterPageSelection`이 나는 결함을 재현했습니다. 선택 모드에서만 그 대조를 생략하고, 기본 양쪽 분기 모드에서는 일치 검사를 유지했습니다. 같은 반례가 수정 전에는 실패하고 수정 뒤에는 통과하며, 비활성 분기의 잘못된 XML 문자 참조는 여전히 오류가 됩니다.
 
 최종 소스에서 마스터페이지 합성 테스트 6/6은 Debug·ReleaseSafe·ReleaseFast에서, section 스캐너 회귀 테스트 11/11은 Debug에서 통과했습니다. 전체 Debug `zig build test --summary all`은 2,341/2,341, ReleaseSafe 제품 빌드, JS 비교 47/47, ReleaseSafe 전체 `zig build audit -Doptimize=ReleaseSafe --summary all`, `zig fmt --check build.zig src`, `git diff --check`, 독립 Python oracle 자체 테스트가 통과했습니다. 선택 실파일 8개 shard는 원본 양쪽 분기 모드에서 통과했습니다. 그 뒤 변경은 선택 모드의 문단 수 대조 조건에만 한정되며, 최종 소스의 shard 0도 다시 통과했습니다.
+
+2026-09-28 재검증: 현재 `section_text.zig`의 마스터페이지 선택·이벤트 위치·원문/선택 분기 경계와 `Document.inspectMasterPageText` 연결을 대조했습니다. `HWPX master text` 집중 테스트는 Debug·ReleaseSafe·ReleaseFast 각 10/10개, 공유 `HWPX section text`는 각 15/15개 통과했습니다. 독립 ZIP/XML oracle self-test 및 기본 476문서 조사에서 마스터페이지 61개·문단 394개·run 521개·`hp:t` 371개·빈 `t` 165개·내용 3,280바이트를 재확인했습니다. 같은 제품 소스의 known shard 8/8은 직전 묶음에서 실행됐고 이번에는 반복하지 않았습니다. 전체 audit·페이지 표시/편집/저장은 이번 검증 범위가 아닙니다.

@@ -13,3 +13,5 @@
 적대적 검토에서는 외부 namespace 동명 요소와 손자 run 오계수, 빈 문단·중복 배열 진단, 정확한 문단/직접 자식·파트/합계 XML 한도, 두 마스터페이지를 지나는 직접 자식 전역 한도, OOM 후 소유 버퍼 해제를 각각 확인했습니다. section과 마스터페이지의 자식 분류는 하나의 `paragraph_children.zig` 함수로, 루트·직접 `subList` 선택은 `masterpage_parts.zig` 함수로 공유합니다. 실제 파일의 run/배열이 모두 존재한다는 사실을 필수 규칙으로 승격하지 않습니다.
 
 검증 결과: 독립 조사기 반례와 476개 corpus 분포, 전용 합성 테스트 Debug·ReleaseSafe·ReleaseFast 각 4/4(`root.test_0` 포함 5/5), 기존 section 자식 분류 테스트 Debug·ReleaseSafe·ReleaseFast 각 3/3(`root.test_0` 포함 4/4)가 통과했습니다. 제품 ReleaseFast known survey shard 0~7도 독립 기대값과 모두 일치했습니다. 최종 소스의 전체 Debug `zig build test --summary all`은 2,336/2,336, `zig build -Doptimize=ReleaseSafe --summary all`은 5/5 단계 통과했습니다. 검사 범위는 직접 자식 구조에 한정되며 문서 전체 의미의 완료는 아닙니다.
+
+2026-09-28 재검증: 현재 `masterpage_paragraph_children.zig`의 직접 `subList` 범위와 공유 `paragraph_children.zig`의 분류·전역 한도를 대조했습니다. `HWPX master paragraph children` 테스트는 Debug·ReleaseSafe·ReleaseFast 각 5/5개, 공유 `HWPX paragraph children`은 각 4/4개 통과했습니다. 독립 ZIP/XML oracle self-test 및 기본 476문서 조사에서 마스터페이지 61개·문단 394개·직접 run 521개·직접 배열 394개, 기타 직접 자식/부재/중복 0개를 재확인했습니다. 같은 제품 소스의 known shard 8/8은 직전 묶음에서 실행됐고 이번에는 반복하지 않았습니다. 이 관측을 필수 자식 규칙으로 승격하지 않습니다.

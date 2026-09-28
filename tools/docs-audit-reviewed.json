@@ -630,8 +630,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "25a84ce34341a79b984cf584bebb7ed680eee1f9e3706a0c9ffea8f469910e0d",
-      "evidence": "2026-09-28 tracker updated with HWPX master chart and binary plus section binary reference verification, three-mode tests, current binary survey, independent master XML census and 8 known shards; historic full audit distinguished"
+      "sha256": "e153790a1dab39947ad4ac0f5f06a6399bf9390948d80d5211cdeef8c9300c7d",
+      "evidence": "2026-09-28 tracker updated with HWPX master text snapshot paragraph children line segments, three-mode focused tests, independent 476 corpus and three snapshot mode per-file diff; recent known shards and historic full audit distinguished"
     },
     "docs/hwpx-ole-payloads.md": {
       "sha256": "a7c214c0760d575237afcb960b7ff1fe976a0d99468e1083066e36c889deabad",
@@ -1684,6 +1684,22 @@
     "docs/hwpx-master-binary-references.md": {
       "sha256": "99db6f217b35fa4f483eeef70f512e1fc2ae5f7c595e92dfa23e5621283d8402",
       "evidence": "2026-09-28 current master binary adapter shared scanner and OPF ID lookup versus Hancom ImageType, Debug Safe Fast master 7 section 7 each, independent Python 476 corpus 35 embedded and ReleaseFast known 8 shards"
+    },
+    "docs/hwpx-master-text.md": {
+      "sha256": "2c5f53f790698d29059a6351422103ad3e718accfadf4e7d9127903c01931cd4",
+      "evidence": "2026-09-28 current master section text scanner and location policy, Debug Safe Fast master 10 section 15 each, independent Python 476 corpus 61 pages 371 text nodes 3280 bytes; recent same-source known shards not rerun"
+    },
+    "docs/hwpx-master-text-snapshot.md": {
+      "sha256": "ea649466411355b5628f8cb973792524b4fbc591b5cf5e0fa6e8bb42048f1936",
+      "evidence": "2026-09-28 current shared snapshot builder and master adapter, Debug Safe Fast master text 10 each, Python verifier self-test normal optimized and raw selected default chart per-file 476 accepted 6 ZIP reject 2 encrypted"
+    },
+    "docs/hwpx-master-paragraph-children.md": {
+      "sha256": "5954fbc52bee632bb84328cf7022d977984ae52779538f84a160b36f6fcadf92",
+      "evidence": "2026-09-28 current master adapter shared paragraph child classifier, Debug Safe Fast master 5 section 4 each, independent Python 476 corpus 394 paragraphs 521 runs 394 arrays; recent same-source known shards not rerun"
+    },
+    "docs/hwpx-master-line-segments.md": {
+      "sha256": "159ba5233e092c206c2872615d2516c127b56b89d22232756a733d310384a29e",
+      "evidence": "2026-09-28 current master adapter shared nine line fields, Debug Safe Fast master 5 section 6 each, independent Python 476 corpus 394 arrays 418 segments spacing negative 39; recent same-source known shards not rerun"
     },
     "docs/hwpx-binary-references.md": {
       "sha256": "4e445bb4756c9d9e29272606285408c3dccaf16a74bee6a0dd0b40ba14e7c5d2",
