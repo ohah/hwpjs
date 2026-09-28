@@ -630,8 +630,16 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "266d782dd6bb1756ab3aaaecd371c4c9e3527d9dfc97f9955697d4c8b7f3cebf",
-      "evidence": "2026-09-28 progress log updated for HWP5 video inventory correction; ReleaseSafe HWP5 audit 10 steps 8905855 checks and Node inventory tests 5 passed; local reference corpus present, positive video unverified"
+      "sha256": "b0e6ab29c05467d902029859211adae5b3fb0212a44dba3c10497a1f8de0ff9e",
+      "evidence": "2026-09-28 progress log updated for ISO alpha2 and IANA history recheck with current official LoC history and 20260917 IANA registry, pinned 183 list and seven differences, ReleaseSafe ISO 2 and IANA 3 passed; LoC full list current fetch unavailable"
+    },
+    "docs/iso639-alpha2.md": {
+      "sha256": "b83ea974d9818e3a0e7fc607dd8a69359be2f06a86ed914304e880d3009ebf90",
+      "evidence": "2026-09-28 pinned LoC 183 sorted table hash source and current Zig lookup against official LoC indexed dates, ReleaseSafe ISO direct 2 passed and current IANA 190 versus ISO seven difference; current full LoC raw 403, no full-source equality claim"
+    },
+    "docs/iso639-history-evidence.md": {
+      "sha256": "c2ac19d6ac242f03d3d94ffe9273709b18a8ab95be848d9891ef35492f83944a",
+      "evidence": "2026-09-28 official LoC change notice bh mo in iw ji jw sh entries versus current IANA 20260917 raw fields and pinned source, corrected previously unconfirmed five rows and kept product bh mo only; ReleaseSafe IANA history 3 passed"
     },
     "docs/hwp5-video-evidence.md": {
       "sha256": "819894e5be432e5b74cd3a53f079ba783d4f5b6475ead86e4dddf06a24b6755e",
