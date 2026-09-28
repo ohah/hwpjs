@@ -1,5 +1,7 @@
 # 프로젝트 문서 검증 현황
 
+Zig 테스트 stderr 해석과 HWPX `inspectKnown` 묶음 문서를 현재 Zig 0.16 러너·`document_known.Report`/호출·해제 경로와 대조했습니다. 2026-09-28 Debug 전체 `zig build test --summary all`은 종료 코드 0, 5/5 단계, 2,664/2,664 테스트 통과였고 `run test w`·`failed command:`도 함께 출력됐습니다(약 21분, 최대 RSS 9 GiB). 묶음 문서에는 누락됐던 마스터페이지 그림 두 보고서와 section 파라미터 목록·metaTag·문자열 컨트롤을 연결했습니다. 과거 stderr 임시 빌드의 출력 제거/실패 반례와 HWPX 선택 실파일 8개 shard·독립 Python oracle은 이번에 재실행하지 않았으며, 전체 테스트 성공을 HWPX 문서 의미·레이아웃·편집/저장 완료로 승격하지 않습니다.
+
 ISO 639 두 글자 조회와 ISO/IANA 이력 차이 두 문서를 현재 Zig의 고정 LoC 183개 목록·bh/mo 이력·BCP 47 고정 이력 및 공식 LoC 변경 기록·현재 IANA 원본과 대조했습니다. 기존 조사에서 미확정이던 in/iw/ji/jw/sh의 LoC 폐기 행을 확인해 출처별 날짜 차이를 기록했습니다. ReleaseSafe ISO 조회 2/2·IANA 이력 3/3 직접 테스트, 표 해시·정렬·190개 IANA 언어 코드와의 7개 차이가 일치했습니다. IANA 현재 File-Date 2026-09-17은 제품의 고정 2026-08-08 스냅샷과 원본 해시가 다르지만 이 비교 항목은 일치합니다. LoC 전체 목록 원문은 현재 403으로 재수집하지 못했으므로 183개가 현행 전체와 완전히 일치한다는 증거는 아닙니다. ISO 미구현 이력의 제품 반영·ICC locale 의미 검증은 범위 밖입니다.
 
 HWP5 동영상 근거 문서를 공식 HWP5 revision 1.3의 VIDEO_DATA 태그·payload 표와 현재 Zig/JS 검사 경계에 재대조했습니다. 실파일 0건을 반환하던 테스트 상수를 제거하고, 로컬 `reference/rhwp/samples`가 있는 경우 `drawingStyleSurvey.videoRecords`의 실제 배열이 비어 있는지 HWP5 audit에서 검사하도록 보강했습니다. 표본 부재 시에는 건너뛰기로 남겨 0건의 증거로 삼지 않습니다. 현재 표본이 있는 상태에서 ReleaseSafe HWP5 감사 10/10 단계·8,905,855회 검사·imports 0, 조사 순서 Node 테스트 5/5가 통과했습니다. 이 감사의 조사 진입 조건은 별도 584개 경로 조사보다 좁고, 실제 양성 동영상 파일·소유권·재생·편집/저장은 여전히 검증되지 않았습니다.

@@ -630,8 +630,16 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "b0e6ab29c05467d902029859211adae5b3fb0212a44dba3c10497a1f8de0ff9e",
-      "evidence": "2026-09-28 progress log updated for ISO alpha2 and IANA history recheck with current official LoC history and 20260917 IANA registry, pinned 183 list and seven differences, ReleaseSafe ISO 2 and IANA 3 passed; LoC full list current fetch unavailable"
+      "sha256": "13f30c814b1fb93a9336c4a81274965da826ca56a95f008dfd5325a06c9998d6",
+      "evidence": "2026-09-28 progress log updated for current Zig stderr and HWPX known composition; Debug full test 5 steps 2664 passed with stderr warning and exit zero; prior eight real file shards and Python oracle not rerun"
+    },
+    "docs/zig-test-stderr.md": {
+      "sha256": "9133676bc38bac48fab5f9ba8a04ec972697d32e7a051a851d6b158c444c66b5",
+      "evidence": "2026-09-28 local Zig 0.16 Run and build runner stderr paths checked; current zig build test summary all exit zero 5 steps 2664 pass with run test w and failed command label, 21m 9G; historical independent mutation not rerun"
+    },
+    "docs/hwpx-known-inspections.md": {
+      "sha256": "69a13874ec77b756dbfedecc0e057d467e183ca9b4d0ddea53ede8055b49be08",
+      "evidence": "2026-09-28 current document_known Report fields inspect calls deinit and four missing report groups reconciled; Debug full test 5 steps 2664 pass including known unit paths, selected eight real file shards and independent Python oracle not rerun"
     },
     "docs/iso639-alpha2.md": {
       "sha256": "b83ea974d9818e3a0e7fc607dd8a69359be2f06a86ed914304e880d3009ebf90",

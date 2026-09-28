@@ -9,3 +9,5 @@
 검증 결과를 기록할 때는 프로세스 종료 코드, 빌드 단계 및 테스트 pass/fail/crash/timeout 수를 함께 적습니다. stderr의 진단을 잃지 않기 위해 corpus 출력을 무조건 숨기거나 `failed command:` 문자열만 필터링하지 않습니다.
 
 적대적 확인 경계는 (1) 프로젝트의 실제 `std.debug.print` 호출과 출력 내용 대조, (2) Zig 0.16 러너의 정상 종료·stderr 보존 경로, (3) 성공 테스트+stderr 독립 재현, (4) 출력문만 제거한 반례, (5) stderr를 유지한 실제 실패 반례의 비영 종료 코드입니다. 이 결론은 확인한 Zig 0.16 설치본과 관측 로그에 한정하며, 다른 버전의 러너나 앞으로 나올 모든 `failed command:` 문구에 자동 적용하지 않습니다.
+
+2026-09-28 재검증에서 같은 Zig 0.16.0 설치본의 `evalZigTest` 정상 종료 후 `result_stderr` 보존, `makeStep`의 성공과 별개인 stderr 출력, `printStepFailure`의 `w` 분기 및 `failed command:` 레이블을 다시 대조했습니다. 현재 `zig build test --summary all`은 종료 코드 0·5/5 단계·2,664/2,664 테스트 통과였고, 출력에는 실제 corpus `std.debug.print` 통계와 함께 `run test w`·`failed command:`가 있었습니다. 실행 시간은 약 21분, Zig 요약의 최대 RSS는 9 GiB였습니다. 이번에는 위 독립 임시 빌드의 출력 제거·실패 반례를 다시 실행하지 않았으며, 이 관측도 다른 실패 로그를 성공으로 재분류하는 근거가 아닙니다.
