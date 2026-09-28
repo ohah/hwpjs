@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
-import { deflateRawSync, inflateRawSync } from "node:zlib";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { deflateRawSync, deflateSync, inflateRawSync, inflateSync } from "node:zlib";
 import test from "node:test";
 import { createCfbReader } from "../../js/cfb.mjs";
 import { createHwp5Reader } from "../../js/hwp5.mjs";
@@ -35,6 +35,64 @@ test("HWP5 public preview preserves exact text-token bytes from two real files",
     }
     assert.equal(hwp.readText(fixture("example.hwp")).sections[0].paragraphs[0].text, "삼강오륜");
     assert.equal(hwp.readText(fixture("footnote-endnote.hwp")).sections[0].paragraphs[0].text, "각주참조");
+  } finally {
+    cfb.close();
+    hwp.close();
+  }
+});
+
+test("HWP5 preview accepts zlib-wrapped DocInfo and Section with strict envelope validation", async () => {
+  const hwp = await createHwp5Reader(wasm);
+  const cfb = await createCfbReader(wasm);
+  try {
+    const original = fixture("example.hwp");
+    const expected = hwp.readText(original);
+    cfb.parse(original, { strict: true });
+    const document = cfb.document();
+    const info = document.nodes.find(node => node.name === "DocInfo");
+    const section = document.nodes.find(node => node.name === "Section0");
+    assert.ok(info && section);
+    const rawInfo = inflateRawSync(info.content);
+    const rawSection = inflateRawSync(section.content);
+    info.content = deflateSync(rawInfo);
+    section.content = deflateSync(rawSection);
+    assert.deepEqual(inflateSync(info.content), rawInfo);
+    assert.deepEqual(inflateSync(section.content), rawSection);
+    assert.deepEqual(hwp.readText(cfb.write(document)), expected);
+
+    const valid = Buffer.from(section.content);
+    section.content = Buffer.from(valid);
+    section.content[section.content.length - 1] ^= 1;
+    assert.throws(() => hwp.readText(cfb.write(document)), { message: "InvalidChecksum" });
+    section.content = Buffer.concat([valid, Buffer.of(0)]);
+    assert.throws(() => hwp.readText(cfb.write(document)), { message: "TrailingData" });
+    section.content = valid;
+    info.content = Buffer.from(info.content);
+    info.content[1] ^= 1;
+    assert.throws(() => hwp.readText(cfb.write(document)));
+    assert.deepEqual(hwp.readText(original), expected);
+  } finally {
+    cfb.close();
+    hwp.close();
+  }
+});
+
+const wrappedCorpusFile = new URL("../../reference/hwpers/converted_output.hwp", import.meta.url);
+test("observed wrapped HWP reaches its separately short DocumentProperties", { skip: !existsSync(wrappedCorpusFile) }, async () => {
+  const hwp = await createHwp5Reader(wasm);
+  const cfb = await createCfbReader(wasm);
+  try {
+    const bytes = readFileSync(wrappedCorpusFile);
+    cfb.parse(bytes, { strict: true });
+    const info = cfb.findExact("/DocInfo").content;
+    const section = cfb.findExact("/BodyText/Section0").content;
+    assert.throws(() => inflateRawSync(info));
+    assert.throws(() => inflateRawSync(section));
+    const decodedInfo = inflateSync(info);
+    assert.equal(decodedInfo.readUInt32LE(0) & 1023, 16);
+    assert.equal(decodedInfo.readUInt32LE(0) >>> 20, 4);
+    assert.equal(inflateSync(section).length, 8782);
+    assert.throws(() => hwp.readText(bytes), { message: "UnexpectedEnd" });
   } finally {
     cfb.close();
     hwp.close();

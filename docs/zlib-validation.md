@@ -15,7 +15,7 @@
 
 [PNG §10](https://www.w3.org/TR/png-3/#10Compression)은 dictionary 없는 zlib를 사용하며 IDAT payload를 합친 하나의 스트림을 해제합니다. 청크 경계는 zlib 헤더·블록·체크섬을 나눌 수 있습니다. [§11.2.3](https://www.w3.org/TR/png-3/#11IDAT)은 마지막 IDAT의 사용하지 않은 후미 바이트를 decoder가 무시하도록 권고하므로, 후속 PNG 연결은 strict decode의 후미 거부를 그대로 적용하지 않고 decodePrefix의 consumed를 이용해야 합니다.
 
-PNG structure.inspect에는 연결하지 않고 별도 [이미지 데이터 검증](png-pixels.md)에서 decodePrefix를 사용합니다. 해당 계층이 필터 복원, scanline 길이, Adam7, palette 인덱스를 검사합니다. zlib 성공만으로 pixels_validated를 true로 바꾸지 않습니다. 이미지 의미·렌더링은 별도 범위입니다. HWP 압축 trailer는 CRC32/ISIZE 형식으로 별도이며 zlib Adler32와 혼합하지 않습니다.
+PNG structure.inspect에는 연결하지 않고 별도 [이미지 데이터 검증](png-pixels.md)에서 decodePrefix를 사용합니다. 해당 계층이 필터 복원, scanline 길이, Adam7, palette 인덱스를 검사합니다. zlib 성공만으로 pixels_validated를 true로 바꾸지 않습니다. 이미지 의미·렌더링은 별도 범위입니다. HWP5의 [관측 zlib 래퍼 호환 경로](hwp5-text-preview-api.md#2026-09-29-zlib-래퍼-호환-경계)도 공통 디코더를 재사용하지만, 기존 raw DEFLATE 뒤의 선택적 CRC32/ISIZE trailer와 zlib Adler32는 서로 다른 형식이므로 혼합하지 않습니다.
 
 PNG의 iCCP·zTXt·압축 iTXt 같은 독립 메타데이터 스트림은 각각 선택형 검사 계층에서 strict `decode`를 사용합니다. 이 문서의 IDAT 후미 허용은 그 메타데이터 스트림이나 HWP 압축 정책으로 자동 전파되지 않습니다.
 

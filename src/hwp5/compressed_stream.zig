@@ -1,10 +1,18 @@
 const std = @import("std");
 const deflate = @import("../compression/raw_deflate.zig");
+const zlib = @import("../compression/zlib.zig");
 
-/// Observed HWP streams have either no trailer or a CRC32 + ISIZE gzip-style
-/// trailer after raw DEFLATE. Never silently discard arbitrary suffixes.
+/// Raw DEFLATE remains the primary HWP encoding. Some observed HWP streams use
+/// a complete RFC1950 zlib envelope instead. The two checksums/trailers are
+/// distinct; neither path silently discards suffix bytes.
 pub fn decode(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
-    const result = try deflate.decodePrefix(a, bytes, limit);
+    const result = deflate.decodePrefix(a, bytes, limit) catch |err| switch (err) {
+        error.InvalidDeflate => {
+            if (zlib.hasHeader(bytes)) return zlib.decode(a, bytes, limit);
+            return err;
+        },
+        else => return err,
+    };
     errdefer a.free(result.bytes);
     const tail = bytes[result.consumed..];
     if (tail.len != 0) {

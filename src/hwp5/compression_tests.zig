@@ -102,3 +102,47 @@ test "HWP trailer checks CRC and length and cleans up errors" {
     defer a.free(no_trailer);
     try std.testing.expectEqualStrings("abc", no_trailer);
 }
+
+fn zlibExercise(allocator: std.mem.Allocator) !void {
+    const compressed = @import("compressed_stream.zig");
+    // RFC1950 header + stored DEFLATE block + Adler32('abc').
+    const wrapped = [_]u8{ 0x78, 1, 1, 3, 0, 0xfc, 0xff, 'a', 'b', 'c', 2, 0x4d, 1, 0x27 };
+    const out = try compressed.decode(allocator, &wrapped, 3);
+    defer allocator.free(out);
+    try std.testing.expectEqualStrings("abc", out);
+    var bad = wrapped;
+    bad[13] ^= 1;
+    if (compressed.decode(allocator, &bad, 3)) |unexpected| {
+        allocator.free(unexpected);
+        return error.ExpectedInvalidChecksum;
+    } else |err| switch (err) {
+        error.OutOfMemory => return err,
+        else => try std.testing.expectEqual(error.InvalidChecksum, err),
+    }
+}
+
+test "HWP compressed stream accepts complete zlib envelope only after raw decode fails" {
+    const compressed = @import("compressed_stream.zig");
+    const wrapped = [_]u8{ 0x78, 1, 1, 3, 0, 0xfc, 0xff, 'a', 'b', 'c', 2, 0x4d, 1, 0x27 };
+    try std.testing.checkAllAllocationFailures(a, zlibExercise, .{});
+    try std.testing.expectError(error.LimitExceeded, compressed.decode(a, &wrapped, 2));
+    try std.testing.expectError(error.TrailingData, compressed.decode(a, &(wrapped ++ .{0}), 3));
+    try std.testing.expectError(error.TrailingData, compressed.decode(a, &(wrapped ++ wrapped), 3));
+    try std.testing.expectError(error.InvalidDeflate, compressed.decode(a, &.{ 0x78, 0x9d, 0 }, 3));
+    var dictionary = wrapped;
+    dictionary[1] = 0x20;
+    try std.testing.expectError(error.UnsupportedZlibDictionary, compressed.decode(a, &dictionary, 3));
+}
+
+test "HWP zlib compatibility covers every RFC1950 window and compression-level header" {
+    const compressed = @import("compressed_stream.zig");
+    for (0..8) |cinfo| for (0..4) |flevel| {
+        const cmf: u8 = (@as(u8, @intCast(cinfo)) << 4) | 8;
+        const base: u16 = (@as(u16, cmf) << 8) | (@as(u16, @intCast(flevel)) << 6);
+        const fcheck: u8 = @intCast((31 - base % 31) % 31);
+        const wrapped = [_]u8{ cmf, (@as(u8, @intCast(flevel)) << 6) | fcheck } ++ stored ++ [_]u8{ 2, 0x4d, 1, 0x27 };
+        const out = try compressed.decode(a, &wrapped, 3);
+        defer a.free(out);
+        try std.testing.expectEqualStrings("abc", out);
+    };
+}

@@ -1,7 +1,7 @@
 // Optional, read-only local corpus audit. Paths are emitted only with --files.
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { inflateRawSync } from "node:zlib";
+import { inflateRawSync, inflateSync } from "node:zlib";
 import { createCfbReader } from "../js/cfb.mjs";
 import { createHwp5Reader } from "../js/hwp5.mjs";
 import { rawParagraphTexts } from "./hwp5-preview-record-oracle.mjs";
@@ -20,8 +20,22 @@ function filesUnder(root) {
   return files;
 }
 
-function category(error, bytes) {
+function category(error, bytes, cfb) {
   if (!error) return "preview_ok";
+  if (error === "UnexpectedEnd") {
+    try {
+      cfb.parse(bytes);
+      const header = cfb.findExact("/FileHeader")?.content;
+      const info = cfb.findExact("/DocInfo")?.content;
+      if (((header?.[36] ?? 0) & 1) !== 0 && info) {
+        const decoded = inflateSync(info, { maxOutputLength: 32 * 1024 * 1024 });
+        if (decoded.length >= 4) {
+          const first = decoded.readUInt32LE(0);
+          if ((first & 1023) === 16 && (first >>> 20) < 14) return "short_document_properties";
+        }
+      }
+    } catch { /* Keep the original parser error if the independent check fails. */ }
+  }
   if (error === "InvalidSignature") {
     if (bytes.subarray(0, 8).toString() === "HWP Docu") return "legacy_signature_not_cfb";
     if (bytes.subarray(0, 2).toString() === "PK") return "zip_not_hwp5";
@@ -38,7 +52,14 @@ function compareText(cfb, bytes, preview) {
   for (const section of preview.sections) {
     const encoded = cfb.findExact(`/BodyText/Section${section.index}`)?.content;
     if (!encoded) throw new Error("oracle missing Section");
-    const raw = header[36] & 1 ? inflateRawSync(encoded, { maxOutputLength: 32 * 1024 * 1024 }) : encoded;
+    let raw = encoded;
+    if (header[36] & 1) {
+      try { raw = inflateRawSync(encoded, { maxOutputLength: 32 * 1024 * 1024 }); }
+      catch (err) {
+        if (err.code !== "Z_DATA_ERROR") throw err;
+        raw = inflateSync(encoded, { maxOutputLength: 32 * 1024 * 1024 });
+      }
+    }
     const expected = rawParagraphTexts(raw);
     if (expected.length !== section.paragraphs.length) throw new Error("oracle paragraph count mismatch");
     for (let i = 0; i < expected.length; i++) {
@@ -68,7 +89,7 @@ try {
     let result;
     let error = null;
     try { result = preview.readText(bytes); } catch (err) { error = err.message; }
-    const key = category(error, bytes);
+    const key = category(error, bytes, cfb);
     const group = groups.get(key) ?? [];
     group.push(path);
     groups.set(key, group);
@@ -97,5 +118,6 @@ const known = new Set([
   "preview_ok", "legacy_signature_not_cfb", "zip_not_hwp5", "non_document_bytes",
   "UnsupportedDistribution", "UnsupportedEncryption", "UnsupportedVersion",
   "InvalidDeflate", "SectionCountMismatch",
+  "short_document_properties",
 ]);
 if (oracle.failures.length || [...groups.keys()].some(key => !known.has(key))) process.exitCode = 1;

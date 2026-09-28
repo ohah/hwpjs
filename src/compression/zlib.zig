@@ -11,13 +11,18 @@ pub fn decode(a: std.mem.Allocator, bytes: []const u8, max_output: usize) ![]u8 
 }
 
 pub const Result = struct { bytes: []u8, consumed: usize };
+/// RFC1950 CMF/FLG framing, including streams that require an unsupported dictionary.
+pub fn hasHeader(bytes: []const u8) bool {
+    if (bytes.len < 2) return false;
+    const cmf = bytes[0];
+    return cmf & 15 == 8 and cmf >> 4 <= 7 and std.mem.readInt(u16, bytes[0..2], .big) % 31 == 0;
+}
 /// Validates one complete stream, leaving enclosing-format trailing policy to caller.
 pub fn decodePrefix(a: std.mem.Allocator, bytes: []const u8, max_output: usize) !Result {
     if (bytes.len < 2) return error.UnexpectedEnd;
     const cmf = bytes[0];
     const flg = bytes[1];
-    if (cmf & 15 != 8 or cmf >> 4 > 7 or std.mem.readInt(u16, bytes[0..2], .big) % 31 != 0)
-        return error.InvalidZlibHeader;
+    if (!hasHeader(bytes)) return error.InvalidZlibHeader;
     if (flg & 32 != 0) return error.UnsupportedZlibDictionary;
     const shift: u4 = @intCast((cmf >> 4) + 8);
     const result = try raw.decodePrefixWindow(a, bytes[2..], max_output, @as(u16, 1) << shift);
