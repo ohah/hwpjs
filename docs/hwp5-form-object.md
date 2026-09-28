@@ -4,9 +4,9 @@
 
 ## 명세와 실제 근거
 
-공개 명세 표 57은 `HWPTAG_FORM_OBJECT = HWPTAG_BEGIN+75`(태그 91)를 정의하고 표 5는 가변 길이·예시 레벨 2로 나열합니다. 양식 속성 문자열의 상세 내부 배치는 이 표에 정의되어 있지 않습니다. 절대 레벨 2를 모든 중첩 양식에 적용하는 검사는 추가하지 않았습니다.
+[한컴 HWP5 공개 명세 revision 1.3](https://cdn.hancom.com/link/docs/%ED%95%9C%EA%B8%80%EB%AC%B8%EC%84%9C%ED%8C%8C%EC%9D%BC%ED%98%95%EC%8B%9D_5.0_revision1.3.pdf) 표 57은 `HWPTAG_FORM_OBJECT = HWPTAG_BEGIN+75`(태그 91)를 정의하고 표 5는 가변 길이·예시 레벨 2로 나열합니다. 양식 속성 문자열의 상세 내부 배치는 이 표에 정의되어 있지 않습니다. 절대 레벨 2를 모든 중첩 양식에 적용하는 검사는 추가하지 않았습니다.
 
-분할 요약본 `legacy/rust/.claude/skills/hwp-spec/3-2-3-본문.md`의 양식 행은 레벨 1로 적혀 있어 공식 PDF 표 5의 2와 다릅니다. 이번 확인에서는 공식 PDF(`/tmp/hwp5-spec.uK0MG9/spec.pdf`, SHA-256 `1d1da9e6fe22563ae2c5285bbbfc6762974fb7f002278084cbc11e5266bdc782`)를 직접 대조했고, 요약본의 1을 검증 규칙으로 채택하지 않았습니다. 보관된 레거시·레퍼런스 원문은 수정하지 않았습니다.
+분할 요약본 `legacy/rust/.claude/skills/hwp-spec/3-2-3-본문.md`의 양식 행은 레벨 1로 적혀 있어 공식 PDF 표 5의 2와 다릅니다. 당시 내려받은 공식 PDF(`/tmp/hwp5-spec.uK0MG9/spec.pdf`, SHA-256 `1d1da9e6fe22563ae2c5285bbbfc6762974fb7f002278084cbc11e5266bdc782`)도 직접 대조했으며, 임시 경로의 현재 존재를 전제하지 않습니다. 요약본의 1을 검증 규칙으로 채택하지 않았고 보관된 레거시·레퍼런스 원문은 수정하지 않았습니다.
 
 `reference/rhwp/samples/form-01.hwp`와 `form-02.hwp`는 모두 HWP 5.0.3.0이며 BodyText/Section0에 양식 레코드가 각각 5개 있습니다. 아래 배치가 열 개 모두에 맞고 추가 꼬리는 없습니다.
 
@@ -48,3 +48,5 @@ rhwp 로컬 `e8800c8de`의 `src/parser/control.rs::parse_form_control`도 첫 ID
 Debug → ReleaseSafe → ReleaseFast 전체 audit가 성공했습니다. 각 모드 네이티브 278/278, 기존 Node 47/47 및 조사 도구 Node 22/22, 빌드 단계 16/16이며 HWP5 WASM 검사 호출은 각 1,394,393회입니다. 완료 후 세 모드 산출물에서 양식 전용 합성·실파일 적대적 검사를 다시 실행하여 위 건수와 모든 반환 바이트를 재확인했습니다. 전체 로그는 `/tmp/hwpjs-form-object-{debug,safe,fast}.log`입니다.
 
 재검토에서는 미지 타입의 기본값 치환, 두 길이·ID의 의미 혼동, UTF-16 원문 손실과 빌린 입력 수명, 최대 길이·잘림·오류 후 복구, 공식 PDF와 분할 요약본의 레벨 불일치를 확인했습니다. 공통 길이 리더와 별도 양식 책임을 유지하며, 기본 파서의 미해석 진단을 성공으로 바꾸지 않았습니다. 포맷·JS 구문·문서 링크·diff 검사도 통과했습니다. 전체 양식 문법·문서 의미 검증이 완료되었다는 의미는 아닙니다.
+
+2026-09-28 현재 재검증에서는 공식 PDF 표 5·57과 `form_object.zig`의 tag·두 ID·원시 DWORD·UTF-16 차용 뷰, 명시적 호출 경계를 대조했습니다. Debug·ReleaseSafe·ReleaseFast root `form` 필터는 각각 199/199개 통과했습니다. 이 필터에는 이름이 겹치는 비양식 테스트도 포함되므로 전용 양식 199개라는 뜻은 아닙니다. 별도로 ReleaseSafe `zig build hwp5-audit`는 10/10 단계·8,905,855회 검사·imports 0으로 통과했고, `tests/hwp5/audit.mjs`의 mode 104 합성/두 실파일 대조를 실행했습니다. Debug·ReleaseFast 전용 WASM 대조와 과거 변이·전체 세 모드 audit는 이번에 재실행하지 않았습니다.

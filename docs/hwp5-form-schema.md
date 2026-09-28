@@ -58,3 +58,5 @@ rhwp `e8800c8de`의 `src/serializer/control.rs::build_common_set`, `build_char_s
 ## 남은 범위
 
 양식 속성의 모든 값 범위·기본값·표시 활성 조건·리스트 항목·이벤트 의미, 원본 프로그램의 비 BMP 길이 및 다른 버전, 렌더링·편집·저장은 남아 있습니다. [문서·CFB 통합](hwp5-form-document.md)은 선택한 관측 스키마 검사와 저장 참조 진단을 구역 보고서에 연결합니다. 명시적 경로의 자료형/저장 참조 검사를 전체 양식 의미 검증으로 집계하지 않습니다.
+
+2026-09-28 현재 재검증에서는 공개 HWP5 명세의 양식 태그·DocInfo 참조 범위와 현재 `form_schema_rules.zig`의 33필드/34경로, `form_schema.zig`의 직접 자식만 선택하는 규칙, `form_references.zig`의 zero-based 저장 ID 진단을 대조했습니다. Debug·ReleaseSafe·ReleaseFast root `form` 필터는 각각 199/199개 통과했지만 모두 양식 전용은 아닙니다. 별도로 ReleaseSafe `zig build hwp5-audit`는 10/10 단계·8,905,855회 검사·imports 0으로 통과했고, `tests/hwp5/audit.mjs`의 mode 108 독립 oracle·두 실파일/DocInfo 대조를 실행했습니다. Debug·ReleaseFast 전용 WASM 대조와 과거 변이·전체 세 모드 audit는 이번에 재실행하지 않았습니다. 관측 스키마 성공을 전 버전의 필수 필드나 활성 참조/표시 의미로 승격하지 않습니다.

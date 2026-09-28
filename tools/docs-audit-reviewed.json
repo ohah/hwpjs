@@ -630,8 +630,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "d391e3c9bfd2f10c85a6c6dbb86194b0af104a0e66c7c854ae45b2eb48b18af8",
-      "evidence": "2026-09-28 JPEG Exif Adobe 1 and 4 components and IFD0 orientation versus T872 CIPA Exif 2.3 and Zig explicit pixel metadata paths, Debug Safe Fast JPEG 192 each; historic real files Pillow full builds and mutations not rerun"
+      "sha256": "b43387b5c7d18ebabab9ce3f5812bf82e4a6127cafbc9e888b8e3accb91e917b",
+      "evidence": "2026-09-28 HWP5 form envelope property tree schema versus official Hancom rev 1.3 and Zig, Debug Safe Fast form name filter 199 each, ReleaseSafe HWP5 audit 10 steps 8905855 checks with form oracle real files; historic mutations and other WASM modes not rerun"
     },
     "docs/hwpx-ole-payloads.md": {
       "sha256": "a7c214c0760d575237afcb960b7ff1fe976a0d99468e1083066e36c889deabad",
@@ -2120,6 +2120,18 @@
     "docs/jpeg-exif-orientation.md": {
       "sha256": "2ae1f117626a16bed3cfe553c060e054d1f7f0ddc15108702c4a8c8ca5f0ce30",
       "evidence": "2026-09-28 CIPA Exif 2.3 IFD0 orientation versus Zig first APP1 limited parser and separate HWPX evidence, Debug Safe Fast JPEG 192 each; 34 real files and full builds not rerun"
+    },
+    "docs/hwp5-form-object.md": {
+      "sha256": "07cafbc81e3cb3da366d9652153e3321699a8c8334dcfe8d132e802493e27b29",
+      "evidence": "2026-09-28 official Hancom HWP5 rev 1.3 tables 5 57 versus Zig tag91 observed envelope borrowed UTF16, Debug Safe Fast form name filter 199 each, ReleaseSafe HWP5 audit mode104 real files 10 steps 8905855 checks; mutations not rerun"
+    },
+    "docs/hwp5-form-properties.md": {
+      "sha256": "ec58c0dab065dff92cfe59f7c7054b74db96feec04878664ee1665e67f2cacb5",
+      "evidence": "2026-09-28 official HWP5 form unspecified internals versus Zig observed UTF16 token and tree global limits, Debug Safe Fast form name filter 199 each, ReleaseSafe HWP5 audit mode105 real files 10 steps 8905855 checks; mutations not rerun"
+    },
+    "docs/hwp5-form-schema.md": {
+      "sha256": "83ec8d26e7e1aca2a81683ece28279015499095ad7c9b4612f71081ca3454afb",
+      "evidence": "2026-09-28 HWP5 observed 5.0.3.0 form schema versus Zig 33 fields 34 paths and stored CharShapeID, Debug Safe Fast form name filter 199 each, ReleaseSafe HWP5 audit mode108 DocInfo real files 10 steps 8905855 checks; mutations not rerun"
     }
   }
 }
