@@ -4,7 +4,7 @@
 
 [ITU-T T.81](https://www.w3.org/Graphics/JPEG/itu-t81.pdf)의 A.1~A.2, B.2.4, E.2, G.1~G.2와 기존 [스캔 이력](jpeg-progression.md)·[스캔 복호화](jpeg-progressive-scan.md)를 연결합니다. Huffman progressive DCT의 받은 스캔을 EOI까지 복호화하여 소유권이 있는 계수 격자를 반환합니다. 양자화 표가 같은 목적지를 공유해도, 앞 성분의 마지막 스캔 이후 다른 성분용으로 바뀐 표를 앞 성분에 소급 적용하지 않습니다.
 
-이는 8/12비트 양자화 계수 단계입니다. 후속 샘플·IDCT 연결은 [샘플 평면 계약](jpeg-progressive-samples.md), RGB 조립은 [progressive JFIF RGB](jpeg-progressive-rgb.md)가 소유합니다. 후속 [HWP BinData JPEG 검사](hwp5-bin-data-jpeg.md)는 별도 선택으로 연결하며 제품 HWP JS API는 미완료입니다. 산술·lossless·hierarchical 처리나 실제 한글 화면과의 픽셀 동일성을 주장하지 않습니다. 제품 JS API는 CFB-only 그대로입니다.
+이는 8/12비트 양자화 계수 단계입니다. 샘플·IDCT 연결은 [샘플 평면 계약](jpeg-progressive-samples.md), RGB 조립은 [progressive JFIF RGB](jpeg-progressive-rgb.md)가 소유합니다. [HWP BinData JPEG 검사](hwp5-bin-data-jpeg.md)는 명시적 선택으로 연결하며 제품 HWP JS API는 미완료입니다. 산술·lossless·hierarchical 처리나 실제 한글 화면과의 픽셀 동일성을 주장하지 않습니다. 제품 JS API는 CFB-only 그대로입니다.
 
 ## 책임과 SSOT
 
@@ -33,6 +33,8 @@ Grid는 모든 interleaved MCU 위치를 포함할 수 있도록 패딩하여 �
 ## 독립 한도와 메타데이터 경계
 
 Options.structure는 입력·마커·픽셀·스캔·RST 수·trailing 정책을 기존 구조 검사에 전달합니다. DNL은 구조 검사에서 해결하며 별도 높이 추측은 없습니다.
+
+2026-09-28 재검증: 현재 `progressive_frame.zig`의 EOI까지의 스캔 조립, `progressive_image.zig`의 partial/full 정책, `quantization_snapshot.zig`의 성분별 표 보존과 저장/방문 한도를 T.81 B.2.4/G.1~G.2에 대조했습니다. 직접 계수 API와 별도로 HWP5가 사용하는 `pixel_inspection.zig`는 progressive RGB로 분기합니다. 세 모드 JPEG 집중 테스트는 각각 192/192개 통과했습니다. 아래 mode 281·실파일·변이·과거 전체 audit는 이번에 재실행하지 않았습니다. 픽셀 바이트 동치나 제품 JS API 지원을 주장하지 않습니다.
 
 Options.storage는 기본 1,000,000 저장 블록·256 MiB 계수 배열 바이트를 제한합니다. 여러 성분의 전체 합을 u64로 사전 계산하고 usize/배열 바이트 범위를 확인한 뒤 할당합니다. 이 바이트 한도는 계수 배열을 대상으로 하며 최대 4개 plane descriptor와 함수 스택은 포함하지 않습니다. padded 공간도 한도에 포함합니다.
 

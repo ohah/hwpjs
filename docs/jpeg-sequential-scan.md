@@ -35,6 +35,6 @@ Huffman sequential 단일 스캔의 계수 복호화를 구현했습니다. 이 
 
 Debug/ReleaseSafe/ReleaseFast 전체 audit는 각각 20/20 단계, 네이티브 777/777 테스트, 총 7,314,803건 검사로 통과했습니다. 전체 회귀 합계이며 전체 문서 구현이나 픽셀 동일성의 증명은 아닙니다.
 
-여러 스캔 간 성분 중복/누락 검사와 이미지 단위 연결은 [sequential 프레임 작업](jpeg-sequential-frame.md)이 소유합니다. Progressive 계수 스캔은 `progressive_scan.zig`·`progressive_frame.zig`, 역양자화·IDCT·픽셀 조립은 별도 이미지 계층이 소유합니다. Lossless·산술 복호화는 여전히 미지원이며, 현재 JFIF RGB 제품 경로는 progressive entropy를 거부합니다.
+여러 스캔 간 성분 중복/누락 검사와 이미지 단위 연결은 [sequential 프레임 작업](jpeg-sequential-frame.md)이 소유합니다. Progressive 계수 스캔은 `progressive_scan.zig`·`progressive_frame.zig`, 역양자화·IDCT·픽셀 조립은 별도 이미지 계층이 소유합니다. Lossless·산술 복호화는 여전히 미지원입니다. 직접 `jfif_rgb.zig` 진입점은 순차 전용이지만 HWP5가 쓰는 공통 `pixel_inspection.zig`는 progressive RGB 경로를 선택합니다.
 
 2026-09-28 재검증: 현재 `mcu_layout.zig`·`sequential_scan.zig`·`scan_entropy.zig`의 성분 순서, 재시작 예측값 초기화, 마지막 패딩/완료 조건과 T.81 A/E/F를 대조했습니다. 세 모드 JPEG 집중 테스트는 각각 192/192개 통과했습니다. 아래 mode 253·실파일 전체 블록·출력/소스 변이/전체 audit 수치는 도입 당시 기록으로, 이번에 재실행하지 않았습니다. HWP5의 선택적 BinData JPEG 연결은 별도 문서의 계약입니다.

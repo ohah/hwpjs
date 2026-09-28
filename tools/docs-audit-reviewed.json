@@ -630,8 +630,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "3562354725d035568d70ffc83a1c485affe7fc5fa1507f6aaf7e7b4ce5b4d1e4",
-      "evidence": "2026-09-28 tracker updated with JPEG table selection progression entropy sequential block scan current T81 comparison, Debug Safe Fast JPEG 192 each, ReleaseSafe HWP5 audit 10 steps 8905855 checks imports zero; historic mutants and dedicated mode oracles not rerun"
+      "sha256": "5cc4c3a501787c97dce871fad09b3f25207cfb1c1ca7d992975119bf12299b3d",
+      "evidence": "2026-09-28 JPEG sequential frame progressive block scan frame and previous JFIF direct versus product dispatch correction, T81 versus Zig, Debug Safe Fast JPEG 192 each; preceding ReleaseSafe HWP5 audit same product code 10 steps 8905855 checks, dedicated mode oracles and mutations not rerun"
     },
     "docs/hwpx-ole-payloads.md": {
       "sha256": "a7c214c0760d575237afcb960b7ff1fe976a0d99468e1083066e36c889deabad",
@@ -2018,20 +2018,36 @@
       "evidence": "2026-09-28 T81 B2 G1 table selection versus Zig store scan resolver and optional HWP5 JPEG, Debug Safe Fast JPEG 192 each; historic mode 248 mutations full audits not rerun"
     },
     "docs/jpeg-progression.md": {
-      "sha256": "8983a969a32ab0acb5bef285ec35da89167f434afa4b7f6c0f583e5af90d41d7",
-      "evidence": "2026-09-28 T81 G1 progression versus Zig history state and later progressive frame, Debug Safe Fast JPEG 192 each; historic mode 249 real file mutations not rerun"
+      "sha256": "1bab3e7c9f2ead7727902ddb100ffa32a8b2157a49e497aab76888ecda886e77",
+      "evidence": "2026-09-28 T81 G1 progression versus Zig history and pixel inspection progressive dispatch corrected, Debug Safe Fast JPEG 192 each; historic mode 249 real file mutations not rerun"
     },
     "docs/jpeg-entropy-codec.md": {
-      "sha256": "5ae113151e215eddd55cc048cb1165990c5920e3970c730f4bde9d0e18e15bdf",
-      "evidence": "2026-09-28 T81 Annex C F2 Huffman entropy versus Zig bit cursor and decoder, Debug Safe Fast JPEG 192 each; historic mode 251 real file mutations not rerun"
+      "sha256": "abcf631ed942d44860e61642291689a2727383b5b430f3aa84e59468408bcb76",
+      "evidence": "2026-09-28 T81 Annex C F2 Huffman entropy versus Zig bit cursor decoder and HWP5 pixel inspection dispatch clarified, Debug Safe Fast JPEG 192 each; historic mode 251 real file mutations not rerun"
     },
     "docs/jpeg-sequential-block.md": {
       "sha256": "f40fc3aae431bd70df80c6ebc6647fd59bf8b05076ff89b3b11f6af8c65302c1",
       "evidence": "2026-09-28 T81 F1 F2 sequential block versus Zig amplitude symbols decoder, Debug Safe Fast JPEG 192 each; historic mode 252 real file mutations not rerun"
     },
     "docs/jpeg-sequential-scan.md": {
-      "sha256": "df9ef1752e40c82126dd77856775d13903d60140164722adcd7d7719df9edbfd",
-      "evidence": "2026-09-28 T81 A E F sequential scan versus Zig MCU entropy restart completion, Debug Safe Fast JPEG 192 each; historic mode 253 real file mutations not rerun"
+      "sha256": "afb418fed0ee108e5648e06ac0c10534a485dc3bf405281990a3120f65334228",
+      "evidence": "2026-09-28 T81 A E F sequential scan versus Zig MCU entropy and product progressive dispatch corrected, Debug Safe Fast JPEG 192 each; historic mode 253 real file mutations not rerun"
+    },
+    "docs/jpeg-sequential-frame.md": {
+      "sha256": "8744d355a4402b2e4a541e61ed09763c1ce40eefc620bb996e89730bfe5f776c",
+      "evidence": "2026-09-28 T81 A2 B2 frame coverage versus Zig sequential coverage frame decoder and sample plane consumer, Debug Safe Fast JPEG 192 each; historic mode 254 real file mutations not rerun"
+    },
+    "docs/jpeg-progressive-block.md": {
+      "sha256": "2c297ba0bebaf7327296547cba60de1c4239022db5bfa8ee7f9a81cd62deed76",
+      "evidence": "2026-09-28 T81 A4 G1 G2 progressive block versus Zig values AC and block plus later RGB consumer, Debug Safe Fast JPEG 192 each; historic mode 279 real file mutations not rerun"
+    },
+    "docs/jpeg-progressive-scan.md": {
+      "sha256": "c0cc32b5e26273b7066bdb1f365041d6544f1bcb2265f020ee67001fc5a8ed5a",
+      "evidence": "2026-09-28 T81 A E G progressive scan versus Zig scan shared entropy and product dispatch, Debug Safe Fast JPEG 192 each; historic mode 280 real file mutations not rerun"
+    },
+    "docs/jpeg-progressive-frame.md": {
+      "sha256": "d5ee052f10559313829b82330c305b009cabd125919a9a64875b08862f90673c",
+      "evidence": "2026-09-28 T81 B2 G1 G2 progressive frame versus Zig owned image completion Q snapshot and pixel inspection consumer, Debug Safe Fast JPEG 192 each; historic mode 281 real file mutations not rerun"
     }
   }
 }

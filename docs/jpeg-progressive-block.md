@@ -4,7 +4,7 @@
 
 [ITU-T T.81](https://www.w3.org/Graphics/JPEG/itu-t81.pdf)의 A.4, G.1.1~G.1.2.3, G.2를 대조했습니다. DC와 AC의 point transform은 음수 처리에서 다르며, DC 보정은 비트 덧붙이기, AC 보정은 부호를 유지한 크기 증가입니다. G.2는 별도 디코더 흐름도 대신 인코더 절차의 역변환을 정의합니다.
 
-이 작업은 Huffman progressive의 블록 계수 네 경로(DC 초기/보정, AC 초기/보정)를 구현합니다. 후속 [스캔 계층](jpeg-progressive-scan.md)은 MCU·restart 순회, [프레임 계층](jpeg-progressive-frame.md)은 계수 저장과 스캔 이력을 조립하며 [샘플 평면](jpeg-progressive-samples.md)이 샘플 복원을 소유합니다. 이 블록 단계가 Progressive RGB 연결, 실 HWP의 progressive JPEG 지원 완료를 뜻하지 않습니다. arithmetic·hierarchical 처리는 포함하지 않습니다.
+이 작업은 Huffman progressive의 블록 계수 네 경로(DC 초기/보정, AC 초기/보정)를 구현합니다. 상위 [스캔 계층](jpeg-progressive-scan.md)은 MCU·restart 순회, [프레임 계층](jpeg-progressive-frame.md)은 계수 저장과 스캔 이력을 조립하며 [샘플 평면](jpeg-progressive-samples.md)이 샘플 복원을 소유합니다. 이 블록 단계만으로 Progressive RGB 연결이나 실 HWP의 progressive JPEG 지원 완료를 증명하지 않습니다. arithmetic·hierarchical 처리는 포함하지 않습니다.
 
 ## 책임과 수명
 
@@ -14,6 +14,8 @@
 - `progressive_block.zig`: 기존 scan.parse·Huffman·Bits·amplitude를 조립합니다. 스캔 문법/허프먼 표 해석을 복제하지 않습니다. 블록·비트 상태·State를 임시 복사하고 모두 성공한 경우에만 반영합니다.
 
 Decoder.init은 파싱된 Frame과 SOS payload, 필요한 한 개의 허프먼 표를 받습니다. DC 보정은 표가 필요 없습니다. Decoder의 심벌 slice와 Bits는 입력을 빌리므로 그 입력을 불변·유효하게 유지합니다. Decoder와 State의 필드를 수동으로 변조한 상태는 정상 생성 계약 밖입니다.
+
+2026-09-28 재검증: 현재 `progressive_values.zig`·`progressive_ac.zig`·`progressive_block.zig`의 DC/AC point transform 차이, EOBRUN·ZRL·보정 비트 순서, 실패 원자성을 T.81 A.4/G.1~G.2에 대조했습니다. 상위 `jfif_progressive_rgb.zig` 및 HWP5의 명시적 JPEG 선택은 이미 별도 구현돼 있으므로 도입 당시의 ‘후속’ 표현을 현재 책임 경계로 고쳤습니다. 세 모드 JPEG 집중 테스트는 각각 192/192개 통과했습니다. 아래 mode 279·외부 변환 실파일·변이·과거 전체 audit는 이번에 재실행하지 않았습니다.
 
 계수는 dequantization 이전의 i32 zig-zag 64개입니다. 선택 대역 밖은 보존합니다. 초기 대역은 영 값이어야 하며, 보정 대역은 이전 Ah 정밀도에 맞게 정렬되어 있어야 합니다. 중복 초기 스캔에서 값이 우연히 영인 경우까지 이 검사로 판별할 수는 없으므로 기존 progression.History 검사가 별도로 필요합니다.
 

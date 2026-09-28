@@ -4,7 +4,9 @@
 
 [ITU-T T.81](https://www.w3.org/Graphics/JPEG/itu-t81.pdf)의 A.1~A.2, E.2.3~E.2.5, G.1~G.2를 대조했습니다. Restart 간격은 블록이 아닌 MCU 수입니다. 구간 시작에는 성분별 DC 예측값과 EOBRUN을 초기화하며, run이 다음 구간으로 넘어가도록 허용하지 않습니다. Huffman 구간 끝에는 남은 비트의 1-padding을 확인합니다.
 
-`progressive_scan.Decoder`는 8/12비트 Huffman progressive DCT의 한 스캔을 복호화합니다. DC 초기/보정과 AC 초기/보정을 지원하며, 이전 계수를 받아 새 계수와 위치를 반환합니다. 전체 프레임의 스캔 이력·DQT 수명·계수 저장소는 후속 [프레임 계층](jpeg-progressive-frame.md)이 조립하고 샘플 복원은 [샘플 평면](jpeg-progressive-samples.md)이 담당합니다. RGB는 후속 [progressive JFIF RGB](jpeg-progressive-rgb.md)를 참조하며 [HWP BinData JPEG 검사](hwp5-bin-data-jpeg.md)는 별도 선택으로 연결합니다. 산술·lossless·hierarchical JPEG를 지원한다고 주장하지 않습니다. 제품 JS API는 CFB-only 그대로입니다.
+`progressive_scan.Decoder`는 8/12비트 Huffman progressive DCT의 한 스캔을 복호화합니다. DC 초기/보정과 AC 초기/보정을 지원하며, 이전 계수를 받아 새 계수와 위치를 반환합니다. 전체 프레임의 스캔 이력·DQT 수명·계수 저장소는 상위 [프레임 계층](jpeg-progressive-frame.md)이 조립하고 샘플 복원은 [샘플 평면](jpeg-progressive-samples.md)이 담당합니다. RGB는 [progressive JFIF RGB](jpeg-progressive-rgb.md)를 참조하며 [HWP BinData JPEG 검사](hwp5-bin-data-jpeg.md)는 명시적 선택으로 연결합니다. 산술·lossless·hierarchical JPEG를 지원한다고 주장하지 않습니다. 제품 JS API는 CFB-only 그대로입니다.
+
+2026-09-28 재검증: 현재 `progressive_scan.zig`의 이전 계수 전달·완료 검사, 공유 `scan_entropy.zig`의 MCU 기준 restart/패딩/한도, 상위 `progressive_frame.zig`의 소비 경계를 T.81 A/E/G에 대조했습니다. 공통 `pixel_inspection.zig`가 progressive RGB 경로를 선택하므로 이 스캔만으로 제품 전체가 미지원이라는 도입 당시 인상을 교정했습니다. Debug·ReleaseSafe·ReleaseFast JPEG 집중 테스트는 각각 192/192개 통과했습니다. 아래 mode 280·실파일·변이·과거 전체 audit는 이번에 재실행하지 않았습니다.
 
 ## 책임과 SSOT
 
