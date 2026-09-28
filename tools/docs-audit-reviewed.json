@@ -630,8 +630,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "6f9a0c435c203a31dcca439cdd857a6c2d997ce8afe66895fd0aa1cf6fbe73d2",
-      "evidence": "2026-09-28 progress log updated for HWP5 revision grouping projection and line cache versus official rev1.3, ReleaseSafe focused tests and line-cache audit 8 steps 22 Node tests 55277 line starts; prior full audit distinguished"
+      "sha256": "f9ca0dba1cd7e26419340a59c88acee37363c3556228f7112e5522f1e1f209cf",
+      "evidence": "2026-09-28 progress log updated for HWP5 paragraph flows memo ranges and note number links versus official rev1.3 Zig focused tests and one JS oracle; prior full audit distinguished"
     },
     "docs/hwpx-ole-payloads.md": {
       "sha256": "a7c214c0760d575237afcb960b7ff1fe976a0d99468e1083066e36c889deabad",
@@ -2180,6 +2180,18 @@
     "docs/hwp5-line-cache-coordinates.md": {
       "sha256": "41d7d5746c1b249fd96a93da41fe7aac176f181fd2677fb16e4dba6bcb30275d",
       "evidence": "2026-09-28 official HWP5 rev1.3 tables58 60 62 63 versus read only declared axis hypothesis, ReleaseSafe line-cache audit 8 steps Node 22 tests 55277 line starts 45 removed; actual layout remains unproven"
+    },
+    "docs/hwp5-paragraph-flows.md": {
+      "sha256": "4e1ef2791e2727655f821dd96875e1c00b92eebc3885858616278f402cdea028",
+      "evidence": "2026-09-28 current Zig Tree Groups direct flow ownership and memo collection consumer, ReleaseSafe paragraph flows 3 passed 2 direct; prior same code HWP5 audit six files 41 sections not rerun"
+    },
+    "docs/hwp5-memo-ranges.md": {
+      "sha256": "d0ba94d1025e2da6a83a8b8167d8b026455c7f58256c3d979e8f457fd65510fc",
+      "evidence": "2026-09-28 official HWP5 rev1.3 field and text bounds versus Zig LIFO diagnostic and collection, ReleaseSafe memo range 5 and event collection 3 passed; prior same code HWP5 audit real six files mutations not rerun"
+    },
+    "docs/hwp5-note-number-links.md": {
+      "sha256": "3e8045195c9319a1b8019d491fa231979cf34f77e25d3c92049360768a0d7f82",
+      "evidence": "2026-09-28 official HWP5 rev1.3 tables127 142 143 versus Zig direct note lists and diagnostic numbers, ReleaseSafe focused 5 passed 4 direct Node oracle 1; prior full audit and manual extra corpus not rerun"
     }
   }
 }

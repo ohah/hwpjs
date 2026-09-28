@@ -6,7 +6,7 @@
 
 ## 현재 계약
 
-- `paragraph_flows.Flows`는 같은 Tree/Groups의 문단 소속을 매핑합니다. root 문단은 scope 0, 나머지는 직접 소유 LIST_HEADER 노드 인덱스이며 키는 구역 내부에서만 유효합니다. Group.begin/end와 subtree_end를 재사용해 중첩 자손을 바깥 리스트에 포함하지 않고, 같은 부모의 별개 리스트를 합치지 않습니다. payload·선언 문단 수를 다시 읽지 않으며 누락/중복 소속은 오류입니다. 원시 Tree는 변경하지 않습니다. mode 93에서 문단 노드/흐름 키를 검증하며 문서 필드 범위 검사 연결은 별도입니다.
+- `paragraph_flows.Flows`는 같은 Tree/Groups의 문단 소속을 매핑합니다. root 문단은 scope 0, 나머지는 직접 소유 LIST_HEADER 노드 인덱스이며 키는 구역 내부에서만 유효합니다. Group.begin/end와 subtree_end를 재사용해 중첩 자손을 바깥 리스트에 포함하지 않고, 같은 부모의 별개 리스트를 합치지 않습니다. payload·선언 문단 수를 다시 읽지 않으며 누락/중복 소속은 오류입니다. 원시 Tree는 변경하지 않습니다. mode 93에서 문단 노드/흐름 키를 검증합니다. 현재 문서 메모 범위 진단은 별도 [수집 계층](hwp5-memo-ranges.md)이 이 매핑을 소비하며, 다른 필드 종류의 일반 범위 검증까지 완료된 것은 아닙니다.
 
 ## 구현·검증 기록
 
@@ -23,3 +23,7 @@ Flows는 관측 노드 수에 비례한 소속 배열을 소유합니다. Groups
 적대적 검증은 중첩 리스트 전후의 바깥 흐름 유지, 빈 리스트와 같은 부모의 다음 리스트, unknown 형제 삽입, 여러 root 문단, 빈 Tree, 고아 리스트/문단, 선언 개수 불일치, 레벨 점프, 직접 전달한 그룹의 누락/중복/범위 초과 및 모든 네이티브 할당 실패를 포함합니다. WASM 합성 정상/복구 9회·거부 4회를 검사합니다. 이 소속 검증에는 시작/끝의 짝·닫힘·중첩 규칙을 포함하지 않았으며, 후속 진단은 [메모 범위](hwp5-memo-ranges.md)에서 별도로 기록합니다. 원본 fixture는 수정하지 않았습니다.
 
 최종 Debug·ReleaseSafe·ReleaseFast audit 모두 네이티브 244/244, Node 47/47, HWP5 WASM 1,370,253회 검사 통과했습니다. CFB 12,000회 변이 trap 0이며 Zig 포맷·변경 JS 문법·diff 검사도 통과했습니다. 로그는 `/tmp/hwpjs-paragraph-flows-{debug,safe,fast}.log`입니다. 이 결과는 문단 흐름 소유권 계층의 검증이며 시작·끝 범위 검증 완료가 아닙니다.
+
+## 현재 코드 재검증 (2026-09-28)
+
+현재 `paragraph_flows.zig`의 구역 내부 LIST_HEADER 키·직접 자식 순회·누락/중복 거부와 `memo_range_collection.zig`의 관측 이벤트가 있을 때만 생성하는 경로를 대조했습니다. ReleaseSafe `zig test src/root.zig --test-filter 'paragraph flows'`는 3/3개(root 포함·직접 2) 통과했습니다. 같은 제품 코드의 직전 ReleaseSafe HWP5 감사에는 `paragraphFlowEdges`·`paragraphFlowActual`이 포함됐지만 이번에는 6개 실파일/41개 구역의 전체 WASM 행 대조와 세 모드 전체 audit를 재실행하지 않았습니다. 흐름 키는 원본 Tree에 묶이며 문서 전역 메모 번호가 아닙니다.

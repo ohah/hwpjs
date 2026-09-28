@@ -18,7 +18,7 @@
 
 ## 명세와 미완료 경계
 
-명세 4.3.10.15의 공통 필드와 4.3.2의 원본 텍스트 위치를 참고했습니다. 메모 선택 번호와 끝 표식은 별도 관측 형식이며 공통 명세가 전체 메모 중첩 의미를 정의한다고 주장하지 않습니다.
+[한컴 HWP5 revision 1.3](https://cdn.hancom.com/link/docs/%ED%95%9C%EA%B8%80%EB%AC%B8%EC%84%9C%ED%8C%8C%EC%9D%BC%ED%98%95%EC%8B%9D_5.0_revision1.3.pdf) 4.3.10.15의 공통 필드와 4.3.2의 원본 텍스트 위치를 참고했습니다. 메모 선택 번호와 끝 표식은 별도 관측 형식이며 공통 명세가 전체 메모 중첩 의미를 정의한다고 주장하지 않습니다.
 
 이 코어는 **문서 보고서에 연결된 진단이며 범위 이상을 강제 오류로 처리하지 않습니다**. 현재 전역 번호→리스트 검사는 계속 별도의 `memo_references` 책임입니다. 관측 밖의 끝 표식, 모든 필드 종류의 범위, 교차/중첩 허용 의미와 렌더링/편집은 남아 있습니다. 일반 코드 4나 미지 표식을 메모 끝으로 추측하여 닫지 않습니다.
 
@@ -58,3 +58,7 @@ document.validation이 구역 검사 및 기존 번호 참조 검사 후 범위 
 최종 Debug/ReleaseSafe/ReleaseFast `zig build audit --summary all`(각 optimize 옵션) 모두 네이티브 250/250, Node 47/47, HWP5 WASM 1,370,333건을 통과했습니다. CFB 변형 12,000건/trap 0이며 새 실제 파일 6개 대조와 4개 변형 검사가 포함됩니다. 코드 포맷·변경 JS 문법·문서 링크·diff 검사도 통과했습니다.
 
 로그는 `/tmp/hwpjs-memo-range-integration-final-debug.log`, `/tmp/hwpjs-memo-range-integration-safe.log`, `/tmp/hwpjs-memo-range-integration-fast.log`입니다. 이 결과는 관측 메모 범위 수집/진단의 연결 증거이지 전체 필드 문법이나 전체 HWP/HWPX 지원 완료의 증거가 아닙니다.
+
+## 현재 코드 재검증 (2026-09-28)
+
+현재 `memo_ranges.zig`의 구역을 넘는 root 흐름 정책·리스트 격리·LIFO 진단, `memo_range_collection.zig`의 시작/끝 수집, `document/section_set.zig`의 문서 보고서 연결을 대조했습니다. ReleaseSafe `--test-filter 'memo range'`는 5/5개(root 포함·직접 4), `--test-filter 'memo event collection'`은 3/3개(root 포함·직접 2) 통과했습니다. 같은 제품 코드의 직전 ReleaseSafe HWP5 감사에는 `memoRangesActual`·`memoRangeMutations`가 포함됐지만 이번에는 6개 실파일의 28쌍·변형과 세 모드 전체 audit를 다시 실행하지 않았습니다. 16,384개 조합은 네이티브 코어 테스트 범위이고, 원본 한글 프로그램의 모든 메모 중첩 허용 규칙을 뜻하지 않습니다.
