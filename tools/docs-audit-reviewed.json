@@ -630,8 +630,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "7ead10a4b4a6fa622bad7011b4733f92e5303440b4d039e8fa07184468d4e842",
-      "evidence": "2026-09-28 tracker updated with HWPX chart cache formula text reference verification, three-mode focused tests, current product survey and independent raw XML counts; historic full audit distinguished"
+      "sha256": "25a84ce34341a79b984cf584bebb7ed680eee1f9e3706a0c9ffea8f469910e0d",
+      "evidence": "2026-09-28 tracker updated with HWPX master chart and binary plus section binary reference verification, three-mode tests, current binary survey, independent master XML census and 8 known shards; historic full audit distinguished"
     },
     "docs/hwpx-ole-payloads.md": {
       "sha256": "a7c214c0760d575237afcb960b7ff1fe976a0d99468e1083066e36c889deabad",
@@ -1676,6 +1676,18 @@
     "docs/hwpx-chart-references.md": {
       "sha256": "001c69e5946fbeda6c82f64dbb101638b65ad9a0f37a0e1a8a472c470091fe69",
       "evidence": "2026-09-28 current chart path resolver versus Hancom model, Debug Safe Fast chart 43 each, ReleaseFast product 476 docs 544 sections 93 sites resolved charts and Python chart member census; independent reachability not proven"
+    },
+    "docs/hwpx-master-chart-references.md": {
+      "sha256": "34e25b84500c076e9d5f2f1f0e2d91f1c37c70d16ec3cb09c7ad7f0344038da9",
+      "evidence": "2026-09-28 current master chart adapter shared scanner resolver versus Hancom RunType, Debug Safe Fast master 8 section 16 each, independent Python 476 corpus zero and ReleaseFast known 8 shards; positive master chart absent"
+    },
+    "docs/hwpx-master-binary-references.md": {
+      "sha256": "99db6f217b35fa4f483eeef70f512e1fc2ae5f7c595e92dfa23e5621283d8402",
+      "evidence": "2026-09-28 current master binary adapter shared scanner and OPF ID lookup versus Hancom ImageType, Debug Safe Fast master 7 section 7 each, independent Python 476 corpus 35 embedded and ReleaseFast known 8 shards"
+    },
+    "docs/hwpx-binary-references.md": {
+      "sha256": "4e445bb4756c9d9e29272606285408c3dccaf16a74bee6a0dd0b40ba14e7c5d2",
+      "evidence": "2026-09-28 current header section binary scanner OPF ID index versus Hancom image OLE font model, Debug Safe Fast binary 7 each, ReleaseFast product corpus 476 docs 25549 sites; independent section oracle and historic mutants not rerun"
     },
     "docs/hwpx-number-controls.md": {
       "sha256": "4eb9d88d213ceb7e0fcffc13edd49a55143bf1eb6ce2449fea09f9f3ece320d3",

@@ -13,3 +13,5 @@
 독립 `tools/hwpx-manifest-xml-oracle.py`는 로컬 476개 허용 HWPX의 마스터페이지 직접 `subList` 전체를 ElementTree로 조사했습니다. `hp:chart`와 `chartIDRef`가 있는 요소는 각각 **0개**입니다. 이는 제품 분류기의 가능한 양성 입력을 포함하는 상한 조사이지만, 실제 마스터페이지 차트 경로·대상 XML의 동치 검증은 아닙니다. 실파일 known survey 8개 shard가 모두 통과해 이 0건과 원문/선택 보고서 범위를 확인했고, 양성 차트 참조·분기 선택은 합성 ZIP에 한해 검증합니다.
 
 전용 테스트는 Debug·ReleaseSafe·ReleaseFast에서 각 8개 통과했고, 기존 section 차트 회귀 테스트 15개와 ReleaseSafe JS 비교 테스트 47개가 통과했습니다. 최종 소스의 Debug 전체 테스트 2,374개, ReleaseSafe 빌드·audit도 통과했습니다.
+
+2026-09-28 재검증: 현재 `masterpage_chart_references.zig`가 직접 `subList` 범위·별도 예산을 맡고, `chart_reference_scan.zig`·`chart_parts.zig`가 section과 같은 경로·대상 검사를 맡는 것을 확인했습니다. 한컴 고정 리비전 RunType의 `chart` 자식도 대조했습니다. `HWPX master chart links` 테스트는 Debug·ReleaseSafe·ReleaseFast 각 8/8개, section 차트 회귀 `HWPX chart links`는 각 16/16개 통과했습니다. 독립 ZIP/XML oracle self-test 및 기본 476문서 조사에서 마스터페이지 61개·차트 요소/속성 각 0개였고, ReleaseFast known 실파일 shard 8/8의 원문/선택 보고서도 통과했습니다. 양성 마스터페이지 차트의 실파일 동치는 여전히 합성 테스트만으로 입증되지 않습니다. 과거 전체 audit는 이번에 재실행하지 않았습니다.

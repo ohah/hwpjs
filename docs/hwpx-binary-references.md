@@ -36,3 +36,5 @@ XML은 namespace·문법을 전체 검사합니다. 기본 한도는 header 32Mi
 독립 소스 복사본에 manifest ID 대신 ZIP 경로로 조회하기, `hp:switch` 분기 경계 제거, 미분류 속성 조용히 버리기, 소유한 첫 미해결 ID 해제 제거의 네 변이를 주입했습니다. 앞의 세 변이는 해당 값·분기·미분류 테스트에서 실패했고 마지막은 ReleaseFast의 할당 실패 검사에서 7바이트 누수를 검출했습니다. 제품 소스에는 변이를 반영하지 않았습니다.
 
 기본 `zig build test`는 2,100/2,100, Debug·ReleaseSafe·ReleaseFast의 `zig build audit --summary all`은 각각 40/40 단계 및 2,139/2,139 테스트를 통과했습니다. `zig build -Doptimize=ReleaseSafe`는 5/5 단계, 기존 JS 비교 테스트는 47/47을 통과했습니다. 선택 corpus 조사는 위의 필터를 단독 실행한 결과이며 전체 선택 조사 묶음의 통과를 뜻하지 않습니다.
+
+2026-09-28 재검증: 현재 `binary_references.zig`는 header/section 선택만, `binary_reference_scan.zig`는 XML 출처/위치·예산, `binary_reference_links.zig`는 정확한 OPF ID 연결·소유 진단만 맡음을 확인했습니다. 한컴 고정 리비전 ImageType·OLEType·font·substFont의 `binaryItemIDRef` 읽기와 대조했습니다. `HWPX binary links` 테스트는 Debug·ReleaseSafe·ReleaseFast 각 7/7개 통과했습니다. ReleaseFast 제품 실파일 조사 1/1에서 수용 476문서·section 544개·참조 위치 25,549개, 미분류·대상 누락 0개와 위 출처별 표를 재현했습니다. 이는 제품 경로의 현재 측정이며 독립 Python section 참조 oracle을 재실행한 결과는 아닙니다. 과거 변이 시험·전체 audit는 이번에 재실행하지 않았고 payload 바이트·표시·편집·저장은 검증하지 않습니다.
