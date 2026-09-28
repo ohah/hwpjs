@@ -17,7 +17,14 @@ pub const Tree = struct {
     }
     /// Whole Section stream, whose roots must have level zero. No tag inference.
     pub fn parse(a: std.mem.Allocator, bytes: []const u8, version: Version, options: framing.Options) !Tree {
-        var it = try body.Iterator.init(bytes, version, options);
+        return parseWithIterator(a, try body.Iterator.init(bytes, version, options));
+    }
+    /// Same hierarchy/framing, but only paragraph header and text payloads are decoded.
+    pub fn parseTextPreview(a: std.mem.Allocator, bytes: []const u8, version: Version, options: framing.Options) !Tree {
+        return parseWithIterator(a, try body.Iterator.initTextPreview(bytes, version, options));
+    }
+    fn parseWithIterator(a: std.mem.Allocator, iterator: body.Iterator) !Tree {
+        var it = iterator;
         var nodes: std.ArrayList(Node) = .empty;
         errdefer nodes.deinit(a);
         var stack: [1024]usize = undefined;

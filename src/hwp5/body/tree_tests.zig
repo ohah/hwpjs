@@ -30,3 +30,21 @@ test "tree sibling and root closures, unknown bytes and malformed cleanup" {
     std.mem.writeInt(u32, bytes[16..20], 1023 | (3 << 10), .little);
     try t.expectError(error.InvalidRecordHierarchy, Tree.parse(t.allocator, &bytes, version, .{}));
 }
+
+test "text preview tree decodes only paragraph records with unchanged framing" {
+    var bytes = [_]u8{0} ** 31;
+    std.mem.writeInt(u32, bytes[0..4], 66 | (22 << 20), .little);
+    std.mem.writeInt(u32, bytes[26..30], 77 | (1 << 10) | (1 << 20), .little);
+    bytes[30] = 0xa5;
+    try t.expectError(error.UnexpectedEnd, Tree.parse(t.allocator, &bytes, version, .{}));
+    var projected = try Tree.parseTextPreview(t.allocator, &bytes, version, .{});
+    defer projected.deinit(t.allocator);
+    try t.expectEqual(2, projected.nodes.len);
+    try t.expect(projected.nodes[0].record.value == .header);
+    try t.expect(projected.nodes[1].record.value == .unknown);
+    try t.expectEqual(0, projected.nodes[1].parent.?);
+    try t.expectEqualSlices(u8, bytes[26..31], projected.nodes[1].record.framing.raw);
+    try t.expectError(error.UnexpectedEnd, Tree.parseTextPreview(t.allocator, bytes[0..30], version, .{}));
+    std.mem.writeInt(u32, bytes[0..4], 66 | (21 << 20), .little);
+    try t.expectError(error.UnexpectedEnd, Tree.parseTextPreview(t.allocator, &bytes, version, .{}));
+}

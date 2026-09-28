@@ -2,8 +2,8 @@
   "schema": 1,
   "verified": {
     "docs/hwp5-text-preview-api.md": {
-      "sha256": "48644cacca055778e882f638c3cbc0c1e13669c355290bb8954cd5a1116fbb0a",
-      "evidence": "2026-09-28 current HWP5 preview copy-only CFB repair: 789 paths, 91 original strict CFB rejects all strict-reopened on copies, 90 default Zig and cfb.js 1175 stream matches plus last FAT marker sample five, 667 preview successes and ten downstream rejects; seven focused JS tests pass"
+      "sha256": "a6fe532a2d22e14a5edc3768cae10d5ba7f6a0aa6cf9957424e3afe87da1f672",
+      "evidence": "2026-09-28 current local preview census 791 paths, 677 accepted and 114 categorized rejects; independent JS record and raw DEFLATE oracle matched 459401 paragraphs across 676 files, one bad FAT original unavailable to baseline; focused JS and Zig projection regressions pass, documented spec 26 bytes versus observed 14-byte preview exception"
     },
     "docs/hwp5-chart-grid-cell-nullify.md": {
       "sha256": "88600840257f0c94d00455c251f83e06276d60afa559b82db3634fe931c7fe99",
@@ -646,8 +646,8 @@
       "evidence": "2026-09-28 current architecture plus HWP5 preview seam CFB and HWP5 core to WASM owned output to JS copy checked against source; ReleaseSafe WASM build and focused real file tests pass; edit and render remain out of scope"
     },
     "docs/development-commands.md": {
-      "sha256": "0846c3940231a82f3915795cf6538667683596dcda4e4623ee4416cb22d9fff3",
-      "evidence": "2026-09-28 added optional CFB seven-file 137 stream exact differential command after executing ReleaseSafe survey; focused root CFB preview and HWPX OLE commands executed, eight OLE real shards pass; historical unrelated commands not rerun"
+      "sha256": "2a591ec6fff4de963f5a6476aa73b9796969279af55e91e9e6ee1f6ce319771b",
+      "evidence": "2026-09-28 current preview command and focused JS 12 tests, optional 791-path corpus audit and oracle executed; Debug build test 2672 of 2672 in 21m 9 GiB, isolated HWPX Debug and ReleaseSafe pass, ReleaseSafe full audit pass; other historical command entries not rerun"
     },
     "docs/zig-test-stderr.md": {
       "sha256": "9133676bc38bac48fab5f9ba8a04ec972697d32e7a051a851d6b158c444c66b5",
@@ -1502,8 +1502,8 @@
       "evidence": "2026-09-27 move commit R100 count, current legacy and CI paths, cargo metadata and tests, Bun Vite startup, historical 1652 qualified"
     },
     "docs/project-structure.md": {
-      "sha256": "d16cd9a4ee4e6954681b757fe420490084452d8afe37e7590e5af06d62a94741",
-      "evidence": "2026-09-28 CFB repair optional seven-file survey path and HWP5 preview adapter checked against current source; original strict API unchanged, ReleaseSafe build and focused 13 CFB seven preview ten HWPX OLE tests pass"
+      "sha256": "2a8fe391ba1d1883cbc23782e57785b6f77632af50161e1b688e2541d0356d6d",
+      "evidence": "2026-09-28 preview adapter, shared body projection, independent oracle and optional census tool paths checked against current source; public CFB strict API unchanged and focused projection and JS regressions pass"
     },
     "docs/hwpx-section-tree.md": {
       "sha256": "62280fe17d2880b8a4c1f0706378f911b272f9b7cf75f0b2b0e4830c36764467",

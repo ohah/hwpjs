@@ -1,6 +1,6 @@
 # 개발·검증 명령
 
-[HWP5 문단 텍스트 미리보기 API](hwp5-text-preview-api.md)는 `zig build -Doptimize=ReleaseSafe` 후 `node tools/hwp5-text-preview.mjs legacy/rust/crates/hwp-core/tests/fixtures/example.hwp`로 직접 확인합니다. `node --test tests/hwp5/text-preview.test.mjs`는 추적 실파일 48개 중 45개의 독립 레코드·raw DEFLATE 원시 바이트 대조와 배포용/암호화 거부·손상 반례를 검사하며 `zig build audit`에도 포함됩니다. 명령 출력은 문서 전체 조판 결과가 아닌 문단 토큰 미리보기입니다.
+[HWP5 문단 텍스트 미리보기 API](hwp5-text-preview-api.md)는 `zig build -Doptimize=ReleaseSafe` 후 `node tools/hwp5-text-preview.mjs legacy/rust/crates/hwp-core/tests/fixtures/example.hwp`로 직접 확인합니다. `node --test tests/hwp5/text-preview.test.mjs tests/hwp5/preview-record-oracle.test.mjs`는 추적 실파일 48개 중 45개의 독립 레코드·raw DEFLATE 원시 바이트 대조, 미리보기 전용 projection·caret 생략·손상 반례와 오라클 자체 반례를 검사합니다. `node tools/hwp5-preview-corpus-audit.mjs`는 선택적 로컬 `reference`·`legacy` corpus를 파일별로 분류하고 허용 문단의 원시 바이트를 독립 대조하며, `--files`는 파일별 분류를 출력합니다. 마지막 명령은 기본 audit에 포함되지 않습니다. 명령 출력은 문서 전체 조판 결과가 아닌 문단 토큰 미리보기입니다.
 
 [프로젝트 문서 검증 현황](verification-progress.md)은 `node tools/docs-audit-status.mjs`로 확인합니다. `--list-pending`은 경로별 상태를, `--require-complete`는 모든 추적 프로젝트 Markdown이 현재 해시로 검증됐고 누락·미추적 문서가 없는지 검사합니다. `node tools/docs-inline-links.mjs`는 일반 인라인 로컬 링크의 대상 파일만 검사합니다. `node --test tests/docs/*.test.mjs`로 두 도구의 반례를 검증합니다. 이 명령들은 문서 내용의 정확성을 자동 증명하지 않으며 최종 적대적 검증을 대신하지 않습니다.
 
@@ -293,4 +293,6 @@ ReleaseFast의 누수 검증을 std.testing.allocator의 기본 안전 검사에
 
 WASM 거부 테스트는 임의 예외나 메시지만으로 성공을 판정하지 않습니다. 파서가 반환한 정상 오류의 종류와 기대 오류명을 확인하고, WebAssembly.RuntimeError 및 호스트 TypeError/RangeError는 테스트 실패로 남깁니다. 독립 oracle도 의도한 검증 실패와 자체 실행 오류를 구분합니다. 실제 trap 주입이 거부 통계에 숨었던 재현과 방어 검사는 [BMP RLE 검증](bmp-rle.md)을 참고합니다.
 
-2026-09-28 명령 문서 재검증에서는 문서에 적힌 프로젝트 경로 89개, `zig build` 단계 이름 12개, 명시적 Zig 테스트 필터 160개와 네 종류의 0~7 shard 이름이 현재 파일·`build.zig`·테스트 선언에 대응하는지 확인했습니다. 104곳의 Python 명령에서 사용한 옵션 문자열도 해당 스크립트에 존재했습니다. 현재 `zig build test --summary all`은 5/5 단계·2,664/2,664 테스트로 통과했고, ReleaseSafe HWP5 감사는 별도 실행에서 10/10 단계·8,905,855회 검사로 통과했습니다. 선택적 corpus/세 빌드 모드/외부 도구 명령을 이번에 전부 실행한 것은 아니며, 경로·필터 일치가 각 조사기의 의미 정확성을 증명하지 않습니다.
+2026-09-28 명령 문서 재검증에서는 문서에 적힌 프로젝트 경로 89개, `zig build` 단계 이름 12개, 명시적 Zig 테스트 필터 160개와 네 종류의 0~7 shard 이름이 당시 파일·`build.zig`·테스트 선언에 대응하는지 확인했습니다. 104곳의 Python 명령에서 사용한 옵션 문자열도 해당 스크립트에 존재했습니다. 당시 `zig build test --summary all`은 5/5 단계·2,664/2,664 테스트로 통과했고, ReleaseSafe HWP5 감사는 별도 실행에서 10/10 단계·8,905,855회 검사로 통과했습니다. 선택적 corpus/세 빌드 모드/외부 도구 명령을 당시 전부 실행한 것은 아니며, 경로·필터 일치가 각 조사기의 의미 정확성을 증명하지 않습니다.
+
+2026-09-28 HWP5 미리보기 거부 원인 분류 후 재실행에서는 `zig build test --summary all` 5/5 단계·2,672/2,672개가 약 21분·최대 9 GiB로 통과했습니다. 오래 걸린 `HWPX known inspections include table geometry diagnostics and limits`만 분리해도 Debug 약 7분, ReleaseSafe 수십 초가 소요되며 둘 다 통과했습니다. 새 미리보기 오라클 테스트를 연결한 `zig build audit -Doptimize=ReleaseSafe --summary all`도 통과했습니다. 이 실행 시간은 현 로컬 환경의 실측이지 모든 환경의 성능 보장은 아닙니다.

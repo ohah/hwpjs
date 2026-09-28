@@ -50,7 +50,7 @@ pub fn encode(backing: std.mem.Allocator, input: []const u8) ![]u8 {
         const path = try std.fmt.allocPrint(a, "/BodyText/Section{d}", .{section_index});
         const raw = try file.readStream(a, path);
         const decoded = try stream.decode(section_allocator, &header, raw, max_stream);
-        var tree = try Tree.parse(section_allocator, decoded, header.version(), .{});
+        var tree = try Tree.parseTextPreview(section_allocator, decoded, header.version(), .{});
         defer tree.deinit(section_allocator);
         try word(a, &out, @intCast(section_index));
         const count_pos = out.items.len;
@@ -102,12 +102,19 @@ fn openCfb(a: std.mem.Allocator, input: []const u8) !Cfb {
 }
 
 fn sectionCount(bytes: []const u8, version: @import("version.zig").Version) !u16 {
-    var it = try docinfo.Iterator.init(bytes, version, .{});
+    try version.requireSupported();
+    var it = @import("record.zig").Iterator.init(bytes, .{});
     var count: ?u16 = null;
     while (try it.next()) |record| {
-        if (record.value != .properties) continue;
+        if (record.tag != @intFromEnum(docinfo.Tag.document_properties)) continue;
         if (count != null) return error.DuplicateDocumentProperties;
-        count = record.value.properties.section_count;
+        if (record.level != 0) return error.InvalidDocInfoLevel;
+        // Two observed generated HWP5 files omit all three trailing caret
+        // coordinates. The preview needs only the first seven u16 fields;
+        // reject a partly present caret tuple instead of synthesizing it.
+        const len = record.payload.len;
+        if (len != docinfo.Properties.base_len and len < docinfo.Properties.full_len) return error.UnexpectedEnd;
+        count = std.mem.readInt(u16, record.payload[0..2], .little);
     }
     return count orelse error.MissingDocumentProperties;
 }

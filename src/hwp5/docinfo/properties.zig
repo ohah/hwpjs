@@ -3,6 +3,8 @@ const Reader = @import("../../binary/reader.zig").Reader;
 /// Seven u16 values followed by three u32 caret coordinates (§4.2.1).
 /// Unknown extension bytes are borrowed, never silently discarded.
 pub const Properties = struct {
+    pub const base_len = 7 * @sizeOf(u16);
+    pub const full_len = base_len + 3 * @sizeOf(u32);
     section_count: u16,
     page_start: u16,
     footnote_start: u16,

@@ -36,14 +36,22 @@ pub const Record = struct { framing: framing.Record, value: Value };
 pub const Iterator = struct {
     records: framing.Iterator,
     version: Version,
+    projection: enum { all, text_preview } = .all,
     pub fn init(bytes: []const u8, version: Version, options: framing.Options) !Iterator {
         try version.requireSupported();
         return .{ .records = framing.Iterator.init(bytes, options), .version = version };
     }
+    /// Decode only the records needed by the read-only paragraph preview.
+    /// Every other record still passes through the shared framing iterator.
+    pub fn initTextPreview(bytes: []const u8, version: Version, options: framing.Options) !Iterator {
+        var result = try init(bytes, version, options);
+        result.projection = .text_preview;
+        return result;
+    }
     pub fn next(self: *Iterator) !?Record {
         var candidate = self.records;
         const r = (try candidate.next()) orelse return null;
-        const value: Value = switch (r.tag) {
+        const value: Value = if (self.projection == .text_preview and r.tag != @intFromEnum(Tag.paragraph_header) and r.tag != @intFromEnum(Tag.paragraph_text)) .unknown else switch (r.tag) {
             @intFromEnum(Tag.paragraph_header) => .{ .header = try Header.parse(r.payload, self.version) },
             @intFromEnum(Tag.paragraph_text) => .{ .text = try Text.parse(r.payload) },
             @intFromEnum(Tag.char_runs) => .{ .char_runs = try Runs.parse(r.payload) },

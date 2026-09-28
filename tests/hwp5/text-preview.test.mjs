@@ -5,41 +5,10 @@ import test from "node:test";
 import { createCfbReader } from "../../js/cfb.mjs";
 import { createHwp5Reader } from "../../js/hwp5.mjs";
 import { decodeHwp5Text } from "../../js/hwp5-text-wire.mjs";
+import { rawParagraphTexts } from "../../tools/hwp5-preview-record-oracle.mjs";
 
 const wasm = readFileSync(new URL("../../zig-out/bin/hwpjs.wasm", import.meta.url));
 const fixture = name => readFileSync(new URL(`../../legacy/rust/crates/hwp-core/tests/fixtures/${name}`, import.meta.url));
-
-// Separate JS record-header walk; it never calls the Zig HWP5 record or text parser.
-function rawParagraphTexts(section) {
-  const view = new DataView(section.buffer, section.byteOffset, section.byteLength);
-  const paragraphs = [];
-  const atLevel = [];
-  for (let offset = 0; offset < section.length;) {
-    if (offset + 4 > section.length) throw new Error("truncated record");
-    const bits = view.getUint32(offset, true);
-    offset += 4;
-    const tag = bits & 1023;
-    const level = (bits >>> 10) & 1023;
-    let length = bits >>> 20;
-    if (length === 4095) {
-      if (offset + 4 > section.length) throw new Error("truncated length");
-      length = view.getUint32(offset, true);
-      offset += 4;
-    }
-    if (length > section.length - offset) throw new Error("truncated payload");
-    const data = section.subarray(offset, offset + length);
-    offset += length;
-    if (tag === 66) {
-      atLevel[level] = paragraphs.length;
-      paragraphs.push(null);
-    } else if (tag === 67) {
-      const paragraph = atLevel[level - 1];
-      if (paragraph === undefined || paragraphs[paragraph] !== null) throw new Error("invalid text owner");
-      paragraphs[paragraph] = Buffer.from(data);
-    }
-  }
-  return paragraphs;
-}
 
 test("HWP5 public preview preserves exact text-token bytes from two real files", async () => {
   const hwp = await createHwp5Reader(wasm);
@@ -94,6 +63,65 @@ test("HWP5 preview repairs only observed CFB metadata without changing text", as
   } finally {
     preview.close();
     cfb.close();
+  }
+});
+
+test("HWP5 preview skips unrelated malformed semantic records but keeps framing and text strict", async () => {
+  const hwp = await createHwp5Reader(wasm);
+  const cfb = await createCfbReader(wasm);
+  const framed = (tag, level, payload) => {
+    const out = Buffer.alloc(4 + payload.length);
+    out.writeUInt32LE((payload.length << 20) | (level << 10) | tag, 0);
+    Buffer.from(payload).copy(out, 4);
+    return out;
+  };
+  try {
+    const bytes = fixture("example.hwp");
+    const original = hwp.readText(bytes);
+    cfb.parse(bytes, { strict: true });
+    const document = cfb.document();
+    const info = document.nodes.find(node => node.name === "DocInfo");
+    const section = document.nodes.find(node => node.name === "Section0");
+    assert.ok(info && section);
+    info.content = deflateRawSync(Buffer.concat([inflateRawSync(info.content), framed(21, 1, [0])]));
+    section.content = deflateRawSync(Buffer.concat([inflateRawSync(section.content), framed(77, 0, [0])]));
+    const malformedUnrelated = cfb.write(document);
+    assert.deepEqual(hwp.readText(malformedUnrelated), original);
+
+    section.content = deflateRawSync(Buffer.concat([inflateRawSync(section.content), Buffer.of(1)]));
+    assert.throws(() => hwp.readText(cfb.write(document)), { message: "UnexpectedEnd" });
+  } finally {
+    cfb.close();
+    hwp.close();
+  }
+});
+
+test("HWP5 preview accepts complete base DocumentProperties without caret and rejects partial tails", async () => {
+  const hwp = await createHwp5Reader(wasm);
+  const cfb = await createCfbReader(wasm);
+  try {
+    const bytes = fixture("example.hwp");
+    const expected = hwp.readText(bytes);
+    cfb.parse(bytes, { strict: true });
+    const document = cfb.document();
+    const info = document.nodes.find(node => node.name === "DocInfo");
+    assert.ok(info);
+    const raw = inflateRawSync(info.content);
+    const bits = raw.readUInt32LE(0);
+    assert.equal(bits & 1023, 16);
+    const oldLength = bits >>> 20;
+    assert.ok(oldLength >= 26 && oldLength < 4095);
+    for (const length of [14, 13, 15, 25]) {
+      const first = Buffer.from(raw.subarray(0, 4));
+      first.writeUInt32LE((length << 20) | (bits & 0xfffff));
+      info.content = deflateRawSync(Buffer.concat([first, raw.subarray(4, 4 + length), raw.subarray(4 + oldLength)]));
+      const changed = cfb.write(document);
+      if (length === 14) assert.deepEqual(hwp.readText(changed), expected);
+      else assert.throws(() => hwp.readText(changed), { message: "UnexpectedEnd" });
+    }
+  } finally {
+    cfb.close();
+    hwp.close();
   }
 });
 

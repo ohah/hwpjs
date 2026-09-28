@@ -40,7 +40,7 @@ pub fn build(b: *std.Build) void {
     const mutations = b.addSystemCommand(&.{ "node", "tests/cfb/mutations.mjs" });
     mutations.step.dependOn(b.getInstallStep());
     const audit = b.step("audit", "Run regression contracts and deterministic malformed-input sweeps");
-    const hwp5_text_api = b.addSystemCommand(&.{ "node", "--test", "tests/hwp5/text-preview.test.mjs" });
+    const hwp5_text_api = b.addSystemCommand(&.{ "node", "--test", "tests/hwp5/text-preview.test.mjs", "tests/hwp5/preview-record-oracle.test.mjs" });
     hwp5_text_api.step.dependOn(b.getInstallStep());
     audit.dependOn(&hwp5_text_api.step);
     const note_number_oracle = b.addSystemCommand(&.{ "node", "--test", "tests/hwp5/note-number-links.test.mjs" });
