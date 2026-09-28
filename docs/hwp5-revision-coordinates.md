@@ -6,7 +6,7 @@
 
 `body/revision_coordinates.zig`의 `Map.buildObserved(allocator, units, ranges, max_ranges)`가 종류 `0x11`의 비어 있지 않은 범위를 복사·정렬·합집합으로 합치고 누적 제거 길이를 계산합니다. 바이트 생성과 좌표 조회가 이 같은 맵을 사용하므로 삭제 구간 계산을 각각 구현하지 않습니다. 범위 wire와 `start<=end<=units` 검사는 기존 `range_tags.Ranges.parse`와 `Range.validateBounds`가 소유합니다. 선택하지 않은 종류도 길이·위치·전체 범위 개수 한도를 검사합니다.
 
-공개 명세 표 63은 영역의 중첩 가능성과 종류/데이터 배치를 정의하지만, `0x11`을 모든 버전의 삭제 규칙으로 정의하지 않습니다. 이 모듈은 실파일 대조에 근거한 명시적 관측 API입니다. 원본 태그·하위 24비트·텍스트를 변경하지 않으며 기본 문서/컨테이너 경로와 제품 JS API에는 자동 적용하지 않습니다.
+[한컴 공개 명세 revision 1.3](https://cdn.hancom.com/link/docs/%ED%95%9C%EA%B8%80%EB%AC%B8%EC%84%9C%ED%8C%8C%EC%9D%BC%ED%98%95%EC%8B%9D_5.0_revision1.3.pdf)의 표 63은 영역의 중첩 가능성과 종류/데이터 배치를 정의하지만, `0x11`을 모든 버전의 삭제 규칙으로 정의하지 않습니다. 이 모듈은 실파일 대조에 근거한 명시적 관측 API입니다. 원본 태그·하위 24비트·텍스트를 변경하지 않으며 기본 문서/컨테이너 경로와 제품 JS API에는 자동 적용하지 않습니다.
 
 ## 좌표 계약
 
@@ -52,3 +52,7 @@ Map은 선택 범위 배열을 소유하고 원본 텍스트나 범위의 포인
 Debug → ReleaseSafe → ReleaseFast 전체 audit가 성공했습니다. 각 모드 네이티브 276/276, 기존 Node 47/47 및 조사 도구 Node 15/15, 빌드 단계 16/16이며 HWP5 WASM 검사 호출은 각 1,384,982회입니다. 완료 후 같은 세 모드 산출물에서 좌표 전용 합성·실파일 검사를 다시 실행하여 위 결과를 재확인했습니다. 전체 로그는 `/tmp/hwpjs-revision-coordinates-{debug,safe,fast}.log`입니다.
 
 적대적 재검토는 합집합 산술·끝 경계, 입력 수명과 실패 정리, 비연속 문단/노드 조회, 실제 원본 및 독립 oracle 대조, SSOT·문서 지원 범위의 다섯 관점으로 수행했습니다. 정렬·합집합 책임이 이전 변환기에 있다고 적힌 문서와 내부 좌표 미지원 문구를 현재 코드에 맞춰 수정했습니다. 포맷·JS 구문·상대 링크·diff 검사도 통과했습니다. 이 단계의 검증 성공을 전체 명세 구현 완료로 보지 않습니다.
+
+## 현재 코드 재검증 (2026-09-28)
+
+공식 표 62·63과 현재 `revision_coordinates.zig`·`revision_projection.zig`·`revision_text.zig`를 재대조했습니다. ReleaseSafe의 `--test-filter 'coordinate map'`은 9/9개 통과했으나, 그중 이 좌표 맵의 직접 테스트는 3개이고 나머지 5개는 EMF+ 좌표 테스트 및 root 진입 테스트입니다. 현재 맵의 인접 구간 합집합, 반열린 끝 경계, 소유 배열 전체 해제와 문단 노드 조회를 확인했습니다. 아래 932,289개 실파일 경계 대조와 세 모드 전체 audit는 이번 묶음에서 재실행하지 않았습니다. 같은 제품 코드의 직전 ReleaseSafe 감사에 `revisionCoordinateEdges`·`revisionCoordinateActual`이 포함된 사실과 새로 실행한 직접 테스트를 구분합니다.

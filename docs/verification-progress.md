@@ -1,5 +1,7 @@
 # 프로젝트 문서 검증 현황
 
+HWP5 변경 추적 묶음 텍스트·서명 필드·UTF-16 좌표 세 문서를 공식 HWP5 revision 1.3 표 62·63·128·152, 현재 Zig의 선택적 관측 투영·정확한 서명 명령·ViewText 기본/선택 의미 검사 경계에 재대조했습니다. ReleaseSafe 직접 테스트는 텍스트 3/3(root 포함·직접 2), 좌표 이름 필터 9/9(root·EMF+ 포함·직접 3), 서명 2/2(root 포함·직접 1) 통과했습니다. 같은 제품 코드의 직전 ReleaseSafe HWP5 감사에는 세 문서의 독립 JS oracle·실파일 검사가 포함됐지만 이번에 전용 실파일·변이·세 모드 전체 audit를 다시 실행하지 않았습니다. `0x11` 삭제, `%sig`/`%unk` 별칭, 줄 캐시와 역방향 좌표의 한계를 그대로 남깁니다.
+
 HWP5 양식 FollowContext/TriState 조건 판정과 문서·구역·CFB 통합 두 문서를 한컴 양식 도움말 및 현재 Zig의 저장 참조/활성 출처·공통 Tree/Links·전역 예산과 재대조했습니다. 문서 통합의 남은 범위에서 “활성 참조 전체 미구현”으로 읽히던 문장을 제한적 출처/참조 진단과 미구현 주변 글자 모양 실제 ID·렌더링으로 분리했습니다. ReleaseSafe 직접 필터 `form source selection`·`choice state two`·`form document validation`·`zero form budgets`는 각각 2/2개 통과했습니다. 동일 제품 코드의 직전 ReleaseSafe HWP5 감사는 10/10 단계·8,905,855회 검사·imports 0으로 mode 111/109/110의 독립 oracle·실파일·다중 구역을 실행했지만 이번 묶음에서는 재실행하지 않았습니다. 과거 변이·세 모드 전체 audit와 실제 한글 프로그램의 표시/편집은 미검증입니다.
 
 HWP5 양식 컨트롤 조립·텍스트 토큰 연결·입력 상자 MaxLength 세 문서를 공식 HWP5 표 5·6·64, 한컴 양식 도움말 및 현재 Zig 계층에 재대조했습니다. `form_links`의 기존 공통 `Links` 재사용 진입점과 문서 통합 호출이 기존 설명에서 빠진 것을 보강했고, MaxLength의 수학적 -1 분류를 원본 프로그램의 모든 표기 허용과 구분했습니다. ReleaseSafe 직접 필터는 `form assembly` 2/2·`form limits` 2/2·`linked forms` 2/2·`MaxLength` 3/3 통과했습니다. 동일 제품 코드의 직전 ReleaseSafe HWP5 감사는 10/10 단계·8,905,855회 검사·imports 0으로 mode 106/107/112와 두 실파일을 실행했지만 이번 묶음에서 재실행하지 않았습니다. 과거 변이·세 모드 전체 audit와 다른 버전/원본 프로그램의 입력 동작은 미검증입니다.

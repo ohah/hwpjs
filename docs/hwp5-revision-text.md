@@ -49,3 +49,7 @@ issue5169의 루트 99묶음 결과는 원본 BodyText 루트 99문단과 순서
 ## 실행 결과
 
 Debug → ReleaseSafe → ReleaseFast 전체 audit가 성공했습니다. 각 모드 네이티브 273/273, 기존 Node 47/47과 조사 도구 Node 15/15, 빌드 단계 16/16입니다. WASM 호출은 Debug 1,384,954회, Safe/Fast 1,384,962회입니다. Debug 실행 후 개수 오류·빈 결과 테스트를 보강했으며, 최종 전용 검사는 세 모드 산출물에서 모두 재실행했습니다(합성 정상 14건·거부 9건과 위 네 실제 스트림의 전체 보고서 대조·예산 경계·복구). 포맷·JS 구문·문서 링크·diff 검사도 통과했습니다. 전체 로그는 `/tmp/hwpjs-revision-text-{debug,safe,fast}.log`입니다. 전체 변경 추적·줄 레이아웃·문서 편집이 완료되었다는 의미는 아닙니다.
+
+## 현재 코드 재검증 (2026-09-28)
+
+현재 `revision_text.zig`가 묶음 소유권을 Index에서, 문단별 삭제/좌표를 `revision_projection.projectObservedMapped`에서 받고, 입력·출력·범위의 세 예산을 모든 문단에 공유하는 것을 재확인했습니다. ReleaseSafe `zig test src/root.zig --test-filter 'revision text'`는 3/3개 통과했습니다(root 진입 1개와 이 모듈의 직접 테스트 2개). 위 네 실파일의 전체 보고서 대조·변이·세 모드 전체 audit는 이번 묶음에서 재실행하지 않았습니다. 같은 제품 코드의 직전 ReleaseSafe 감사에 `revisionTextEdges`·`revisionTextActual`이 포함된 것은 새 실파일 실행 결과와 구분합니다. 이 API는 원시 코드 유닛의 선택적 투영이며 표시 문장·줄 캐시·저장용 문서 모델을 만들지 않습니다.

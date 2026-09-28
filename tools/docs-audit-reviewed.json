@@ -630,8 +630,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "b25742ec994c5908d5cf372f239bbd834191e250759ff9524a12910d15396237",
-      "evidence": "2026-09-28 HWP5 form conditional semantics and document integration versus Hancom help and Zig reports budgets, direct ReleaseSafe filters 2 each; prior same code HWP5 audit 10 steps 8905855 checks modes111 109 110; not rerun this batch"
+      "sha256": "eadfda208c99560722977b6c60d2d7fa269558a1e75a5c6152890759ead9e063",
+      "evidence": "2026-09-28 progress log updated for HWP5 revision text sign coordinates against official rev1.3 and Zig ReleaseSafe focused tests; prior same code HWP5 audit clearly distinguished from current direct tests"
     },
     "docs/hwpx-ole-payloads.md": {
       "sha256": "a7c214c0760d575237afcb960b7ff1fe976a0d99468e1083066e36c889deabad",
@@ -2152,6 +2152,18 @@
     "docs/hwp5-form-document.md": {
       "sha256": "814af4bba9c1e4df161623ffbcefb21cca7e03b9628dc083b25affd105ef4ff4",
       "evidence": "2026-09-28 Zig HWP5 shared Tree Links 28 scalar form report and section budgets versus observed 5.0.3.0 forms, ReleaseSafe direct two filters 2 each; prior same code HWP5 audit modes109 110 real CFB multi sections 10 steps 8905855 checks"
+    },
+    "docs/hwp5-revision-text.md": {
+      "sha256": "819c6ec6e2edb862ba8e4da70cc147671aae8fe5cc6cc16fcb9822183fc801de",
+      "evidence": "2026-09-28 current Zig revision text ownership projection maps and shared budgets, ReleaseSafe root filter 3 passed 2 direct; prior same code HWP5 audit JS oracle and four real streams, not rerun this batch"
+    },
+    "docs/hwp5-revision-sign.md": {
+      "sha256": "f858ad3c1fcb57f4c1fb550ffd63d9f53e816b9fe4010f67fede218fe08ff8dc",
+      "evidence": "2026-09-28 official HWP5 rev1.3 tables128 152 versus exact Zig command alias and optional ViewText semantics, ReleaseSafe root filter 2 passed 1 direct; prior same code HWP5 audit real two streams not rerun"
+    },
+    "docs/hwp5-revision-coordinates.md": {
+      "sha256": "4f0da2ea79b9db0be6e2f419552ecbf40c1cdb889098f6546199079971081d02",
+      "evidence": "2026-09-28 official HWP5 rev1.3 tables62 63 versus Zig observed half open 0x11 union and owned map; ReleaseSafe coordinate map filter 9 passed 3 direct; prior same code audit 932289 real boundaries not rerun"
     }
   }
 }
