@@ -630,8 +630,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "b43387b5c7d18ebabab9ce3f5812bf82e4a6127cafbc9e888b8e3accb91e917b",
-      "evidence": "2026-09-28 HWP5 form envelope property tree schema versus official Hancom rev 1.3 and Zig, Debug Safe Fast form name filter 199 each, ReleaseSafe HWP5 audit 10 steps 8905855 checks with form oracle real files; historic mutations and other WASM modes not rerun"
+      "sha256": "c01110505ded337fd569fccef32766f3b8964f21e04f4d2b5f8841001d24b895",
+      "evidence": "2026-09-28 HWP5 form assembly links MaxLength versus official HWP5 and Hancom help and Zig shared Links path, direct ReleaseSafe filters 2 2 2 3; prior same code HWP5 audit 10 steps 8905855 checks modes106 107 112; not rerun this batch"
     },
     "docs/hwpx-ole-payloads.md": {
       "sha256": "a7c214c0760d575237afcb960b7ff1fe976a0d99468e1083066e36c889deabad",
@@ -2132,6 +2132,18 @@
     "docs/hwp5-form-schema.md": {
       "sha256": "83ec8d26e7e1aca2a81683ece28279015499095ad7c9b4612f71081ca3454afb",
       "evidence": "2026-09-28 HWP5 observed 5.0.3.0 form schema versus Zig 33 fields 34 paths and stored CharShapeID, Debug Safe Fast form name filter 199 each, ReleaseSafe HWP5 audit mode108 DocInfo real files 10 steps 8905855 checks; mutations not rerun"
+    },
+    "docs/hwp5-form-controls.md": {
+      "sha256": "26cbde3818a83985a517c715212c26f637536b9b1b4f4ab54c3b908856f4380d",
+      "evidence": "2026-09-28 official HWP5 tables 5 64 versus Zig form direct ownership and global property budgets, ReleaseSafe direct assembly and limits 2 each; prior same code HWP5 audit mode106 real files 10 steps 8905855 checks"
+    },
+    "docs/hwp5-form-links.md": {
+      "sha256": "7a87ac30acc2ed801ad5e748ef9cc1bb76b53c6b5233978951e308b5784ae654",
+      "evidence": "2026-09-28 official HWP5 extended control and header versus Zig observed code11 association plus shared Links consumer, ReleaseSafe linked forms 2; prior same code HWP5 audit mode107 real files 10 steps 8905855 checks"
+    },
+    "docs/hwp5-form-max-length.md": {
+      "sha256": "5db3c48e0c240073bc1b675250f2f51731ccae2819b0049ab7fd396947d4f788",
+      "evidence": "2026-09-28 Hancom form help MaxLength -1 versus Zig borrowed decimal view and report counters, ReleaseSafe MaxLength 3; prior same code HWP5 audit mode112 real files 10 steps 8905855 checks"
     }
   }
 }

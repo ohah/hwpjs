@@ -16,8 +16,10 @@ rhwp 로컬 `e8800c8de`의 `src/serializer/body_text.rs`도 `Control::Form`을 `
 
 `hwp5.form_links.collectObservedUnits(allocator, tree, options)`는 변경되지 않은 `body_tree.Tree.parse` 결과를 받습니다. 결과 `forms`는 기존 양식 조립 Report이고, `links[i]`는 `forms.forms[i]`와 대응하는 기존 `control_links.Link`의 값 복사입니다.
 
+`collectWithLinksObservedUnits(allocator, tree, options, all)`은 같은 Tree에서 이미 생성한 `control_links.Links`를 재사용하는 진입점입니다. 문서/구역의 `form_validation.inspect`가 이 경로를 사용해 전체 토큰 연결을 중복 생성하지 않습니다. 호출자는 `all`이 바로 그 변경되지 않은 Tree의 결과이고 호출 동안 유효함을 보장해야 합니다. 이 함수가 임의의 다른 Tree에서 만든 링크를 재검증·복구하지는 않습니다.
+
 - 공통 속성·envelope·속성 Tree와 공유 양식 예산은 `form_control`에 위임합니다. 옵션은 그대로 전달합니다.
-- 문단별 직접 자식 수집, 텍스트 토큰의 파싱, 등장 순서·ID 일치·누락·중복 검사는 `control_links.Links.build`에 위임합니다. 같은 Tree의 모든 컨트롤을 연결하므로 양식 이외의 컨트롤에서 연결 오류가 나도 실패합니다.
+- 문단별 직접 자식 수집, 텍스트 토큰의 파싱, 등장 순서·ID 일치·누락·중복 검사는 `control_links.Links.build`가 소유합니다. 독립 진입점은 이를 호출하고 재사용 진입점은 호출자가 같은 Tree로 만든 결과를 받습니다. 어느 쪽이든 전체 Tree의 컨트롤 연결 오류가 있으면 양식 이외의 컨트롤에서 발생한 오류도 유지합니다.
 - 양식의 관측 제어코드 11은 `form_links.observed_code` 한곳에 둡니다. 다른 확장 코드이면 `FormControlCodeMismatch`입니다. 일반 제어코드 대응표와 기본 문서의 deferred 분류는 바꾸지 않습니다.
 - 양식 결과는 컨트롤 노드 순서입니다. 일반 Links는 문단별 순서라서 바깥 문단의 뒤쪽 형제가 중첩 문단의 컨트롤보다 먼저 나올 수 있습니다. 두 배열을 같은 순서로 가정하지 않고 각 양식 연결을 컨트롤 노드 번호의 이진 검색으로 대응시킵니다. ID를 전역 키로 삼지 않아 반복되는 `form`도 각각 유지합니다.
 
@@ -52,3 +54,5 @@ Report가 Form 배열·속성 노드 배열·양식 Link 배열을 소유합니�
 최종 WASM 세 산출물에서 토큰 연결과 이전 양식 조립의 전용 검사를 따로 재실행하여 위 결과가 일치함을 확인했습니다. Debug 캐시 ID는 `f63665a39a82bddad91ef1ae8b6de163`, ReleaseSafe는 `914e2e83ec8f9423e71c5402cc63cf7b`, ReleaseFast는 `d1094f592ca7859b65c8b459fc44896e`입니다. 캐시나 임시 로그는 보관을 전제하지 않으며 재빌드한 audit에 검사가 포함됩니다.
 
 재검토는 중첩/반복 ID의 순서 대응, 토큰과 헤더의 누락·불일치, 부분 할당과 늦은 실패의 정리, 원문 수명, SSOT와 기본 진단 유지로 나누어 수행했습니다. 현재 계약 아래 새 결함은 발견하지 못했습니다. 포맷·JS 문법·변경 문서 링크·diff 검사도 통과했습니다. 명세 스킬의 해당 본문/텍스트/컨트롤 파트를 참조하되 관측된 양식 연결을 공식 대응표와 혼합하지 않았습니다. 이 결과는 전체 문서 검증 완료나 양식 의미·편집 지원 완료를 뜻하지 않습니다.
+
+2026-09-28 현재 재검증에서는 공식 HWP5 명세 표 6·64의 확장 토큰/헤더와 `form_links.zig`의 관측 코드 11·컨트롤 노드별 대응, `form_validation.zig`의 기존 `Links` 재사용 호출을 대조했습니다. ReleaseSafe root `linked forms` 직접 필터는 2/2개 통과했습니다. 동일 제품·테스트 코드에 대한 직전 ReleaseSafe HWP5 감사는 10/10 단계·8,905,855회 검사·imports 0으로 mode 107 합성/두 실파일 대조를 실행했지만 이번 묶음에서 다시 실행하지 않았습니다. 과거 Debug·ReleaseFast WASM/변이·세 모드 전체 audit도 재실행하지 않았습니다. 코드 11 관측을 공식적인 모든 버전의 `form` 제어코드 대응으로 확대하지 않습니다.
