@@ -4,7 +4,7 @@
 
 ## 범위와 책임
 
-`hwp5.revision_groups.Index.buildObserved(allocator, tree, flows)`는 **한 Section**의 원본 Tree와 그 Tree에서 만든 기존 Flows를 받아 관측 0/1 병합 표식의 인덱스를 생성합니다. 명세 표 58은 5.0.3.2 이상의 문단 헤더에 변경추적 병합 문단여부 UINT16을 정의합니다. 실제 바이트 연결과 0/1 동작의 대조 근거는 위 실측 문서가 소유합니다.
+`hwp5.revision_groups.Index.buildObserved(allocator, tree, flows)`는 **한 Section**의 원본 Tree와 그 Tree에서 만든 기존 Flows를 받아 관측 0/1 병합 표식의 인덱스를 생성합니다. [한컴 HWP5 revision 1.3](https://cdn.hancom.com/link/docs/%ED%95%9C%EA%B8%80%EB%AC%B8%EC%84%9C%ED%8C%8C%EC%9D%BC%ED%98%95%EC%8B%9D_5.0_revision1.3.pdf)의 표 58은 5.0.3.2 이상의 문단 헤더에 변경추적 병합 문단여부 UINT16을 정의합니다. 실제 바이트 연결과 0/1 동작의 대조 근거는 위 실측 문서가 소유합니다.
 
 0은 해당 흐름에 새 묶음을 시작하며 1은 같은 흐름에서 직전 묶음에 참여합니다. 선두가 없으면 `OrphanRevisionMerge`입니다. 부재(null)와 2 이상 미지 값은 `UnsupportedRevisionMergeValue`로 거부하며 0으로 보충하지 않습니다. 원본 헤더의 값은 그대로 남습니다. 구버전/부재 표식의 일반 문단 처리를 완료했다고 주장하지 않으며 기본 문서·컨테이너 경로에는 이 관측 API를 자동 적용하지 않습니다.
 
@@ -47,3 +47,7 @@ issue5169 ViewText에는 루트 외 흐름에서 후속 병합 문단 1건도 �
 ## 실행 결과
 
 Debug → ReleaseSafe → ReleaseFast 전체 audit가 모두 성공했습니다. 각 모드 네이티브 271/271, 기존 Node 47/47 및 조사 도구 Node 15/15, 빌드 단계 16/16입니다. WASM 호출은 각각 1,384,902 / 1,384,910 / 1,384,911회입니다. 실행 중 실제 중첩 문단 변조·복구와 선두 미지 레코드 삽입 검사를 추가했으며, 최종 전용 테스트는 세 모드 산출물에서 모두 재실행했습니다(합성 정상 15건·거부 10건, 실제 네 스트림의 모든 행 대조 및 변조 거부·복구). 포맷·JS 구문·문서 링크·diff 검사도 통과했습니다. 전체 로그는 `/tmp/hwpjs-revision-groups-{debug,safe,fast}.log`입니다. 검사 횟수는 전체 변경 추적 지원 완성도를 뜻하지 않습니다.
+
+## 현재 코드 재검증 (2026-09-28)
+
+표 58과 현재 `paragraph_header.zig`의 버전별 nullable 필드, `revision_groups.zig`의 흐름별 마지막 묶음 및 선언 유닛 합산을 다시 대조했습니다. ReleaseSafe `zig test src/root.zig --test-filter 'revision groups'`는 3/3개 통과했습니다(root 진입 1개·직접 테스트 2개). 이번에는 위 네 스트림의 전체 Index 행, 변이 및 세 모드 전체 audit를 다시 실행하지 않았습니다. 같은 제품 코드의 직전 ReleaseSafe HWP5 감사에 `revisionGroupEdges`·`revisionGroupActual`이 포함된 사실과 이번 직접 검사를 구분합니다. 병합 값 0/1의 의미는 여전히 표본으로 확인한 관측 규칙입니다.

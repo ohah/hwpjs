@@ -630,8 +630,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "eadfda208c99560722977b6c60d2d7fa269558a1e75a5c6152890759ead9e063",
-      "evidence": "2026-09-28 progress log updated for HWP5 revision text sign coordinates against official rev1.3 and Zig ReleaseSafe focused tests; prior same code HWP5 audit clearly distinguished from current direct tests"
+      "sha256": "6f9a0c435c203a31dcca439cdd857a6c2d997ce8afe66895fd0aa1cf6fbe73d2",
+      "evidence": "2026-09-28 progress log updated for HWP5 revision grouping projection and line cache versus official rev1.3, ReleaseSafe focused tests and line-cache audit 8 steps 22 Node tests 55277 line starts; prior full audit distinguished"
     },
     "docs/hwpx-ole-payloads.md": {
       "sha256": "a7c214c0760d575237afcb960b7ff1fe976a0d99468e1083066e36c889deabad",
@@ -2164,6 +2164,22 @@
     "docs/hwp5-revision-coordinates.md": {
       "sha256": "4f0da2ea79b9db0be6e2f419552ecbf40c1cdb889098f6546199079971081d02",
       "evidence": "2026-09-28 official HWP5 rev1.3 tables62 63 versus Zig observed half open 0x11 union and owned map; ReleaseSafe coordinate map filter 9 passed 3 direct; prior same code audit 932289 real boundaries not rerun"
+    },
+    "docs/hwp5-revision-groups.md": {
+      "sha256": "5e227039f365934f1f9554a1dc4c62f1ed9d921d713a085695e0419cae353fae",
+      "evidence": "2026-09-28 official HWP5 rev1.3 table58 versus Zig nullable merge and per-flow groups, ReleaseSafe root filter 3 passed 2 direct; prior same code HWP5 audit real four streams not rerun"
+    },
+    "docs/hwp5-revision-projection.md": {
+      "sha256": "f1e0b0421a71b314081a463ce99066a31a066ba08429711945fa120bf1c80312",
+      "evidence": "2026-09-28 official HWP5 rev1.3 table63 versus Zig observed 0x11 owned mapped bytes, ReleaseSafe root two filters 3 and 2 passed 3 direct; prior same code HWP5 audit 99 ordered roots not rerun"
+    },
+    "docs/hwp5-merged-line-cache.md": {
+      "sha256": "ac0aad0691658af20cbf7e515f00d426b2a86ccfecc07b996c2c0e9f4397d720",
+      "evidence": "2026-09-28 official HWP5 rev1.3 tables58 62 63 versus read only evidence and rhwp pinned head, current ReleaseSafe line-cache audit 8 steps Node 22 tests real issue5169 task2070; prior three mode full audit not rerun"
+    },
+    "docs/hwp5-line-cache-coordinates.md": {
+      "sha256": "41d7d5746c1b249fd96a93da41fe7aac176f181fd2677fb16e4dba6bcb30275d",
+      "evidence": "2026-09-28 official HWP5 rev1.3 tables58 60 62 63 versus read only declared axis hypothesis, ReleaseSafe line-cache audit 8 steps Node 22 tests 55277 line starts 45 removed; actual layout remains unproven"
     }
   }
 }

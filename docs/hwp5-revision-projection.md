@@ -8,7 +8,7 @@
 
 ## 명시적으로 선택하는 코어 API
 
-`hwp5.revision_projection.projectObserved(allocator, text, units, ranges, options)`는 한 문단의 원본 UTF-16 바이트에서 종류 `0x11`의 반열린 범위 `[start,end)` 합집합을 제외한 새 바이트 배열을 반환합니다. 호출자가 반환 배열을 해제하며 입력 텍스트·범위 배열은 변경하지 않습니다. 이 종류의 해석은 issue5169 루트 문단의 실측에 근거한 관측 계약이며 공개 명세가 모든 버전의 삭제 처리로 정의한 것은 아닙니다.
+`hwp5.revision_projection.projectObserved(allocator, text, units, ranges, options)`는 한 문단의 원본 UTF-16 바이트에서 종류 `0x11`의 반열린 범위 `[start,end)` 합집합을 제외한 새 바이트 배열을 반환합니다. 호출자가 반환 배열을 해제하며 입력 텍스트·범위 배열은 변경하지 않습니다. 이 종류의 해석은 issue5169 루트 문단의 실측에 근거한 관측 계약이며 [한컴 HWP5 revision 1.3](https://cdn.hancom.com/link/docs/%ED%95%9C%EA%B8%80%EB%AC%B8%EC%84%9C%ED%8C%8C%EC%9D%BC%ED%98%95%EC%8B%9D_5.0_revision1.3.pdf)의 표 63이 모든 버전의 삭제 처리로 정의한 것은 아닙니다.
 
 `text=null`은 기본적으로 `UnsupportedMissingRevisionText`입니다. 호출자가 `missing_text=.observed_cr`를 선택하고 선언 길이가 정확히 1일 때만 CR 1유닛을 후보 원문으로 사용합니다. 존재하는 빈 바이트 배열과 부재를 구분하며 선언 크기만큼 빈 문자를 생성하지 않습니다.
 
@@ -35,3 +35,7 @@
 ## 실행 결과
 
 Debug → ReleaseSafe → ReleaseFast 전체 audit가 모두 성공했습니다. 각 모드 네이티브 269/269, 기존 Node 47/47 및 조사 도구 Node 15/15, 빌드 단계 16/16입니다. WASM 호출은 Debug 1,384,347회, Safe/Fast 1,384,862회입니다. Debug 실행 후 다중 범위·잘못된 플래그 테스트를 추가했고, 최종 100,000개 경계 테스트까지 포함한 전용 회귀 검사는 세 모드 산출물에서 모두 재실행해 위 최종 1,317/65 및 실제 변형 270건을 확인했습니다. 포맷·JS 구문·문서 링크·diff 검사도 통과했습니다. 전체 로그는 `/tmp/hwpjs-revision-projection-{debug,safe,fast}.log`입니다.
+
+## 현재 코드 재검증 (2026-09-28)
+
+현재 `revision_projection.zig`가 `revision_coordinates.Map.buildObserved`의 합집합 결과로 출력 길이를 정하고 바이트를 복사하며, `projectObserved`가 맵만 해제하고 바이트를 소유 반환하는 것을 대조했습니다. ReleaseSafe의 `--test-filter 'observed projection'` 3/3개(root 포함·직접 2)와 `--test-filter 'projection validates'` 2/2개(root 포함·직접 1)가 통과했습니다. 이번에는 위 99개 BodyText 대조·WASM 변이·세 모드 전체 audit를 재실행하지 않았습니다. 같은 제품 코드의 직전 ReleaseSafe HWP5 감사에 `revisionProjectionEdges`·`revisionProjectionActual`이 포함된 사실과 현재 직접 테스트를 구분합니다. 바이트 동일성은 원시 투영 범위에 한하며 줄 캐시나 저장 가능한 문서의 동등성이 아닙니다.
