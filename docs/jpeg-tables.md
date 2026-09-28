@@ -36,3 +36,5 @@
 재현은 별도 소스 복사본에 위 변경 하나를 적용한 뒤 `zig test <copy>/src/root.zig -ODebug --test-filter JPEG`를 실행하고 ReleaseSafe/ReleaseFast로 반복합니다. 양자화 값 검사는 첫 원소에만 편향되지 않으며, Huffman 검사는 초과 배정뿐 아니라 정확히 꽉 찬 코드 공간도 구분합니다.
 
 WASM mode 247 출력에만 결함을 주입하는 별도 검사도 수행했습니다. DQT 출력 오프셋 0/4/8/12/16, DHT 출력 오프셋 0/4/8/12/16/20/24/40의 첫 바이트를 각각 XOR 1로 변조한 후 `jpegTablesEdges`를 실행합니다. 세 모드 각각 13종 모두 독립 비교 assertion으로 검출했습니다. 이는 출력 대조 민감도이며 위 소스 결함 주입과 별개입니다.
+
+2026-09-28에는 현재 `quantization.zig`·`huffman_lengths.zig`·`huffman.zig`의 DQT 64개 원값, 길이 1~16 코드 공간과 all-ones 예약, 정의/사용 제약 분리를 T.81 B.2.4·Annex C에 대조했습니다. 세 모드 JPEG 집중 테스트는 각각 192/192, ReleaseSafe HWP5 WASM audit는 10/10 단계·8,905,855 checks 통과입니다. 위 도입 당시 원소·길이 변이 및 세 모드 mode 247 개별 횟수는 이번에 재실행하지 않았습니다. 테이블 원값 유효성을 엔트로피·픽셀 의미 동치로 승격하지 않습니다.

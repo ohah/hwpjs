@@ -4,7 +4,7 @@
 
 [ITU-T T.81 원문](https://www.w3.org/Graphics/JPEG/itu-t81.pdf)의 B.1.1.1~B.1.1.5, Table B.1, F.1.2.3을 기준으로 구현했습니다. 외부 구현 코드를 복사하거나 새 의존성을 추가하지 않았습니다.
 
-이 모듈은 JPEG 검증에 필요한 바이트 경계 계층입니다. SOI/EOI 순서, 프레임·스캔·테이블 의미, restart 순번/간격, DNL/TEM의 위치, Huffman/arithmetic 복호화, 계수·픽셀 및 JFIF/Exif/ICC 메타데이터는 아직 검증하지 않습니다. 단독 성공을 정상 JPEG로 판정하지 않으며 HWP BinData 검사기의 JPEG `unhandled_binaries`를 감소시키지 않습니다.
+이 모듈은 JPEG 검증에 필요한 바이트 경계 계층입니다. 이 계층 단독으로는 SOI/EOI 순서, 프레임·스캔·테이블 의미, restart 순번/간격, DNL/TEM의 위치, Huffman/arithmetic 복호화, 계수·픽셀 및 JFIF/Exif/ICC 메타데이터를 검증하지 않습니다. 단독 성공을 정상 JPEG로 판정하거나 HWP BinData의 JPEG 지원으로 집계해서는 안 됩니다. 현재 HWP5는 별도 `container/images.zig`의 명시적 JPEG 옵션으로 공통 픽셀 검사기를 선택할 수 있으며, 기본값 null과 이 프레이밍 계층의 성공을 혼동하지 않습니다.
 
 ## SSOT와 수명
 
@@ -28,3 +28,5 @@
 [프레임/스캔 필드와 참조 검사](jpeg-headers.md), [테이블 내용](jpeg-tables.md), [테이블 선택](jpeg-table-selection.md), [progressive 이력](jpeg-progression.md), [파일 구조·DRI/DNL/RST](jpeg-structure.md)는 별도 계층입니다. 복호화에 의존하는 MCU/계수/픽셀 검증은 이 경계 계층의 완료 범위가 아닙니다. 후속 [HWP BinData 연결](hwp5-bin-data-jpeg.md)은 기존 복원 계층을 조립하는 별도 계약입니다.
 
 실제 8개 참조의 독립 바이트 조사에서 SOF0 7건·SOF2 1건, precision 8, 성분 수 1 또는 3을 관측했습니다. `noori.hwp`의 SOF2는 7개 스캔에 분산된 주파수 구간을 사용했습니다. 따라서 다음 프레임/스캔 계층을 baseline 단일 스캔 전용으로 설계하지 않습니다. 관측값이 명세의 전체 허용값을 대체하지는 않습니다.
+
+2026-09-28에는 현재 `marker_code.zig`·`markers.zig`·`entropy.zig`의 marker 분류, 길이 필드와 stuffed FF 경계를 T.81에 재대조했습니다. Debug·ReleaseSafe·ReleaseFast JPEG 집중 테스트는 각각 192/192, 현재 ReleaseSafe HWP5 WASM audit는 10/10 단계·8,905,855 checks 통과했습니다. 이 합산 audit에는 프레이밍 독립 검사와 HWP 연결이 포함되지만 위 도입 당시 세 모드 8가지 변형·전체 audit 수치를 이번에 재실행했다는 뜻은 아닙니다. 현재 상위 구조/픽셀 지원도 프레이밍 모듈의 단독 보증으로 바꾸지 않습니다.

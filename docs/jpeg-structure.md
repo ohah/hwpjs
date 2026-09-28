@@ -2,9 +2,9 @@
 
 ## 근거와 책임
 
-[ITU-T T.81](https://www.w3.org/Graphics/JPEG/itu-t81.pdf) B.2.1/B.2.4.4/B.2.5와 F.2.1의 마커 위치를 참조합니다. 공식 PDF의 Table B.7/B.10을 이미지로 확인했습니다. 텍스트 추출의 숫자 잔상과 달리 DRI/DNL 세그먼트 길이는 둘 다 4이며, 실제 payload는 2바이트입니다. 외부 코드를 추가하지 않았습니다.
+[ITU-T T.81](https://www.w3.org/Graphics/JPEG/itu-t81.pdf) B.2.1/B.2.4.4/B.2.5와 F.2.1의 마커 위치를 참조합니다. Table B.7은 DRI 세그먼트 길이 4를 명시합니다. 반면 Table B.10의 DNL 길이 칸은 **4–65,535**로 인쇄돼 있고 Figure B.12에는 길이 뒤 `NL` 필드만 표시됩니다. 현재 코드는 DRI와 DNL 모두 길이 4, 즉 payload 정확히 2바이트만 허용합니다. 따라서 DNL의 더 긴 길이를 명세상 불가능하다고 단정하지 않으며, 이 인쇄 표와 도형 사이의 해석 차이 및 미관측 확장 길이를 지원 범위의 공백으로 둡니다. 외부 코드를 추가하지 않았습니다.
 
-- `scan_fields.zig`: 정확히 2바이트인 big-endian DRI/DNL payload를 읽습니다. Ri는 0~65535, NL은 1~65535입니다. 필드 원값 검사와 사용 시점을 분리합니다.
+- `scan_fields.zig`: 이 구현에서 정확히 2바이트인 big-endian DRI/DNL payload를 읽습니다. Ri는 0~65535, NL은 1~65535입니다. 필드 원값 검사와 사용 시점을 분리합니다.
 - `restarts.zig`: 재시작 활성화와 번호 순서를 소유합니다. 새 이미지의 Ri는 0, DRI는 이후 스캔에 적용되며 Ri=0이면 비활성화합니다. 각 스캔은 RST0부터 시작하고 RST7 다음은 RST0입니다. 실패 시 다음 번호·누적 개수를 변경하지 않습니다. 실제 MCU 간격 계산은 이 계층에 넣지 않습니다.
 - `structure.zig`: 기존 marker/entropy/frame/scan 파서를 조립합니다. SOI·단일 비계층 Frame·하나 이상의 SOS·EOI를 요구하고 DRI/DNL/RST 위치를 검사합니다. DNL 뒤에는 마커 읽기로 돌아갑니다. 기본적으로 EOI 뒤 바이트는 거부하며 `allow_trailing_bytes`를 명시하면 개수를 보고합니다.
 
@@ -15,6 +15,8 @@
 DNL은 첫 스캔을 종료하는 위치에서 한 번만 허용됩니다. SOF의 Y=0이면 필수이며, Y가 이미 있어도 DNL로 다시 정의할 수 있으므로 두 값의 불일치를 오류로 삼지 않습니다. 보고서에 `header_height`와 `effective_height`를 따로 둡니다. DNL 이전에 다른 마커로 첫 스캔이 끝났거나, 두 번째 스캔 이후/중복 위치에 등장하면 거부합니다.
 
 재정의한 높이와 실제로 부호화된 MCU 행의 일치, DNL 위치가 정수 MCU 행 경계인지, Ri와 실제 MCU 개수/마지막 간격의 일치, lossless Ri의 MCU 행 배수 조건은 아직 복호화 계층의 후속 검사입니다. 빈 엔트로피 구간·누락 재시작을 헤더만으로 완전히 검증했다고 주장하지 않습니다.
+
+Table B.10의 길이 4–65,535 표기와 달리 이 파서는 길이 4 초과 DNL을 `InvalidJpegScanFieldLength`로 거부합니다. 현재 HWP JPEG 표본 8건에는 DNL 자체가 없어, 실제 파일 호환성이나 더 긴 DNL의 의미는 확인되지 않았습니다. 이 제약을 `DNL 길이는 명세상 반드시 4` 또는 모든 DNL 적합성 검증 완료로 표현하지 않습니다.
 
 이 검사는 테이블 payload/선택/progressive 이력을 재구현하지 않습니다. 실제 HWP 검증은 기존 해당 검사와 함께 실행합니다. 구조 보고서는 `semantics_deferred=true`이며 테이블 없는 합성 구조가 통과해도 완전한 JPEG라는 뜻은 아닙니다. 계층형 이미지·tables-only 생략 형식·TEM/미해석 확장 마커는 현재 이 진입점에서 지원하지 않습니다. APP/COM/DQT/DHT/DAC는 경계만 통과시키고 내용 의미는 별도입니다. 이 구조 단계 당시 제품 JS API와 HWP JPEG 미지원 집계는 변경하지 않았습니다. 현재 선택적 [BinData 연결](hwp5-bin-data-jpeg.md)은 별도 계약입니다.
 
@@ -35,3 +37,5 @@ DNL은 첫 스캔을 종료하는 위치에서 한 번만 허용됩니다. SOF�
 - DNL에서 스캔 종료를 건너뛰도록 변경 → 높이 미정 사례의 잘못된 `MissingJpegDnl`과 DNL 뒤 데이터의 오허용을 검출.
 
 별도 mode 250 출력의 13개 u32 필드 각각 첫 바이트를 XOR 1로 변조했습니다. 세 모드 각각 13종 모두 독립 JS assertion으로 검출했습니다. 소스 결함 검출과 출력 비교 민감도는 별도 결과입니다.
+
+2026-09-28에는 현재 `scan_fields.zig`·`restarts.zig`·`structure.zig`와 T.81의 DRI/DNL 인쇄 표·마커 위치를 재대조했습니다. 위 DNL 길이 단정을 교정하고 코드의 엄격한 2바이트 payload 정책을 미지원 경계로 남겼습니다. Debug·ReleaseSafe·ReleaseFast JPEG 집중 테스트는 각각 192/192, ReleaseSafe HWP5 WASM audit는 10/10 단계·8,905,855 checks 통과입니다. 과거 세 모드 전체 audit·변이 횟수는 이번에 재실행하지 않았고, 8개 HWP JPEG의 DNL 양성 근거도 여전히 없습니다.

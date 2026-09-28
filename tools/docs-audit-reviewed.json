@@ -630,8 +630,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "2488e2d97bca19b03089256f2845e1940beb3f0933577b415be0c4fde70ff1f5",
-      "evidence": "2026-09-28 tracker updated with common XML six docs current source and W3C comparison, Debug Safe Fast XML 91 each, ReleaseSafe HWP5 WASM audit 10 steps 8905855 checks, stale HWPX and HWP5 integration wording corrected"
+      "sha256": "6be4351e2863fea5b566490280e9eca3d2fc87569bdab22ec4cfdc6f726378de",
+      "evidence": "2026-09-28 tracker updated with JPEG framing headers tables structure current T81 comparison, Debug Safe Fast JPEG 192 each, ReleaseSafe HWP5 WASM audit 10 steps 8905855 checks, DNL printed range versus strict local policy recorded"
     },
     "docs/hwpx-ole-payloads.md": {
       "sha256": "a7c214c0760d575237afcb960b7ff1fe976a0d99468e1083066e36c889deabad",
@@ -1996,6 +1996,22 @@
     "docs/xml-document.md": {
       "sha256": "a1197b621d43f82c80c1d005b9624a47cb4a4b3eb08aacb08388ee364bf75915",
       "evidence": "2026-09-28 current document root DTD refusal content visitor and upper HWPX HWP5 connections versus W3C XML 1.0, Debug Safe Fast XML 91 each, ReleaseSafe HWP5 WASM audit 10 steps 8905855 checks; historic xmllint not rerun"
+    },
+    "docs/jpeg-framing.md": {
+      "sha256": "56f43a78dddc527cbc66f4889fb400b59c41f8123516ac857c1b09c6c124ec29",
+      "evidence": "2026-09-28 current marker code length and stuffing boundaries versus T81 and optional HWP JPEG connection, Debug Safe Fast JPEG 192 each, ReleaseSafe HWP5 WASM audit 10 steps 8905855 checks; old mutations not rerun"
+    },
+    "docs/jpeg-headers.md": {
+      "sha256": "4984549f5d35344c0398f5da14cbd2bdc351016e157497df198c84dbdd146c08",
+      "evidence": "2026-09-28 current process frame scan fields versus T81 B2 and optional HWP JPEG connection, Debug Safe Fast JPEG 192 each, ReleaseSafe HWP5 WASM audit 10 steps 8905855 checks; old output mutations not rerun"
+    },
+    "docs/jpeg-tables.md": {
+      "sha256": "9926ad52faf8a2b1378f32934b22d944c5494a9b067653a166ee6a01edf93956",
+      "evidence": "2026-09-28 current DQT DHT ranges code space and use-site constraints versus T81 Annex C, Debug Safe Fast JPEG 192 each, ReleaseSafe HWP5 WASM audit 10 steps 8905855 checks; old mutations not rerun"
+    },
+    "docs/jpeg-structure.md": {
+      "sha256": "92cd21cd5682aeddcf6c3ef84676129c011fbf9fa4a015415d695f97b31c46f7",
+      "evidence": "2026-09-28 current DRI DNL RST structure versus T81 B2; Table B10 prints DNL length 4 to 65535 while local parser requires 4 and real DNL absent, Debug Safe Fast JPEG 192 each, ReleaseSafe HWP5 WASM audit 10 steps 8905855 checks"
     }
   }
 }

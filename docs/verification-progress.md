@@ -1,5 +1,7 @@
 # 프로젝트 문서 검증 현황
 
+JPEG 프레이밍·프레임/스캔 헤더·DQT/DHT 테이블·파일 구조 네 문서를 현재 Zig 모듈과 ITU-T T.81, 세 모드 집중 테스트 및 ReleaseSafe HWP5 WASM audit에 재대조했습니다. JPEG 필터는 Debug·ReleaseSafe·ReleaseFast 각각 192/192, HWP5 audit는 10/10 단계·8,905,855 checks 통과입니다. 프레이밍/헤더 도입 당시의 ‘HWP BinData JPEG 미연결’ 현재형 문장을 선택적 연결의 현재 경계로 고쳤습니다. T.81 Table B.7은 DRI 길이 4이지만 B.10은 DNL 길이 4–65,535로 인쇄돼 있는데 코드가 둘 다 정확히 4만 허용하는 차이를 발견해 DNL 길이>4를 미지원·실파일 미관측으로 기록했습니다. 과거 세 모드 전체 audit·변이 시험은 이번에 재실행하지 않았으며 이 결과가 JPEG 픽셀 바이트 동치나 모든 DNL 변형의 적합성을 입증하지는 않습니다.
+
 공통 XML 문자 입력·선언/인코딩·이름/참조·태그/속성·namespace·문서 구조 여섯 문서를 현재 Zig 모듈과 W3C XML 1.0 Fifth Edition/Namespaces 1.0 Third Edition, 세 모드 집중 테스트 및 ReleaseSafe HWP5 WASM audit에 재대조했습니다. XML 필터는 Debug·ReleaseSafe·ReleaseFast 각각 91/91, HWP5 audit는 10/10 단계·8,905,855 checks 통과입니다. 현재 HWPX의 선택된 XML 파트와 HWP5의 명시적 XML 옵션 연결을 확인해 ‘HWPX 통합 미구현’·‘HWP5 미연결’이라는 도입 당시 문장을 교정했습니다. 도입 당시의 개별 WASM 입력 전수·xmllint 수치와 전체 세 모드 audit는 이번에 재실행하지 않았고, DTD·전체 HWPX 스키마·편집/저장·화면 동등성은 검증되지 않았습니다.
 
 HWPX PNG RGBA·BMP RGBA·선택 JPEG RGB·SVG 구조 네 이미지 문서를 현재 공통 이미지 코어, 세 모드 집중 테스트 및 독립 실파일 조사에 재대조했습니다. 세 모드의 PNG 16/16·manifest BMP 3/3·manifest JPEG 5/5·SVG 구조 3/3·그림 payload 16/16·브러시 payload 11/11이 각각 통과했습니다. ReleaseFast 제품 PNG 선택 2/2, BMP 픽셀 8/8·JPEG 픽셀 8/8·HWPX known 8/8, Pillow PNG 픽셀 해시·BMP 677개 엄격 성공의 shard별 해시가 재현됐습니다. JPEG는 엄격 성공 715개/후보 820개와 실제 그레이스케일의 Pillow 대비 152픽셀·456채널 차이를 그대로 기록했습니다. 도입 당시 전체 빌드·audit를 이번 결과로 재주장하지 않으며, SVG 렌더링 안전성·JPEG 바이트 동치·화면 출력·편집/저장은 미검증입니다.
