@@ -70,4 +70,6 @@
 
 ## 남은 범위
 
-양식 전체의 값 범위·기본값·활성 참조·리스트/이벤트 의미, 다른 버전/비 BMP 원본 프로그램의 길이 규칙, ViewText 양식 의미 검사, 렌더링·편집·저장은 남아 있습니다. 이번 통합은 기존 문서 검증 경로에서 관측 양식 검사를 선택하고 누락·오류·미해석 진단을 받는 단계입니다.
+양식 전체의 값 범위·기본값·주변 글자 모양의 실제 참조 선택·리스트/이벤트 의미, 다른 버전/비 BMP 원본 프로그램의 길이 규칙, ViewText 양식 의미 검사, 렌더링·편집·저장은 남아 있습니다. 명시적 FollowContext와 저장 CharShapeID를 이용한 제한적 활성 출처/참조 진단은 이미 [조건 해석](hwp5-form-semantics.md)에 있으나, 그 결과를 화면 조판이나 모든 버전의 활성 참조로 확대하지 않습니다. 이번 통합은 기존 문서 검증 경로에서 관측 양식 검사를 선택하고 누락·오류·미해석 진단을 받는 단계입니다.
+
+2026-09-28 현재 재검증에서는 `document/section.zig`의 공통 Tree/Links 재사용, `form_validation.zig`의 28개 scalar 진단, `document/form_budget.zig`의 구역 간 예산 차감과 컨테이너 선택 전달을 대조했습니다. ReleaseSafe root의 `form document validation`·`zero form budgets` 직접 필터는 각각 2/2개 통과했습니다. 동일 제품·테스트 코드의 직전 ReleaseSafe HWP5 감사는 10/10 단계·8,905,855회 검사·imports 0으로 mode 109/110의 원본 CFB/decoded 문서·두 실파일·다중 구역 대조를 실행했지만 이번 묶음에서 재실행하지 않았습니다. 과거 Debug·ReleaseFast WASM/변이·세 모드 전체 audit도 재실행하지 않았고, ViewText 양식 의미나 화면 편집 동작은 검증하지 않았습니다.

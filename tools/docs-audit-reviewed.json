@@ -630,8 +630,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "c01110505ded337fd569fccef32766f3b8964f21e04f4d2b5f8841001d24b895",
-      "evidence": "2026-09-28 HWP5 form assembly links MaxLength versus official HWP5 and Hancom help and Zig shared Links path, direct ReleaseSafe filters 2 2 2 3; prior same code HWP5 audit 10 steps 8905855 checks modes106 107 112; not rerun this batch"
+      "sha256": "b25742ec994c5908d5cf372f239bbd834191e250759ff9524a12910d15396237",
+      "evidence": "2026-09-28 HWP5 form conditional semantics and document integration versus Hancom help and Zig reports budgets, direct ReleaseSafe filters 2 each; prior same code HWP5 audit 10 steps 8905855 checks modes111 109 110; not rerun this batch"
     },
     "docs/hwpx-ole-payloads.md": {
       "sha256": "a7c214c0760d575237afcb960b7ff1fe976a0d99468e1083066e36c889deabad",
@@ -2144,6 +2144,14 @@
     "docs/hwp5-form-max-length.md": {
       "sha256": "5db3c48e0c240073bc1b675250f2f51731ccae2819b0049ab7fd396947d4f788",
       "evidence": "2026-09-28 Hancom form help MaxLength -1 versus Zig borrowed decimal view and report counters, ReleaseSafe MaxLength 3; prior same code HWP5 audit mode112 real files 10 steps 8905855 checks"
+    },
+    "docs/hwp5-form-semantics.md": {
+      "sha256": "98dd11495c5c6723b9e2feb119e169127fa9b075cec1f56c8107c575d3617f9b",
+      "evidence": "2026-09-28 Hancom FollowContext TriState versus Zig explicit 0 1 2 observed semantics and separate stored active diagnostics, ReleaseSafe direct two filters 2 each; prior same code HWP5 audit mode111 and form document mutations 10 steps 8905855 checks"
+    },
+    "docs/hwp5-form-document.md": {
+      "sha256": "814af4bba9c1e4df161623ffbcefb21cca7e03b9628dc083b25affd105ef4ff4",
+      "evidence": "2026-09-28 Zig HWP5 shared Tree Links 28 scalar form report and section budgets versus observed 5.0.3.0 forms, ReleaseSafe direct two filters 2 each; prior same code HWP5 audit modes109 110 real CFB multi sections 10 steps 8905855 checks"
     }
   }
 }

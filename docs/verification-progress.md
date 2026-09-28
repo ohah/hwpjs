@@ -1,5 +1,7 @@
 # 프로젝트 문서 검증 현황
 
+HWP5 양식 FollowContext/TriState 조건 판정과 문서·구역·CFB 통합 두 문서를 한컴 양식 도움말 및 현재 Zig의 저장 참조/활성 출처·공통 Tree/Links·전역 예산과 재대조했습니다. 문서 통합의 남은 범위에서 “활성 참조 전체 미구현”으로 읽히던 문장을 제한적 출처/참조 진단과 미구현 주변 글자 모양 실제 ID·렌더링으로 분리했습니다. ReleaseSafe 직접 필터 `form source selection`·`choice state two`·`form document validation`·`zero form budgets`는 각각 2/2개 통과했습니다. 동일 제품 코드의 직전 ReleaseSafe HWP5 감사는 10/10 단계·8,905,855회 검사·imports 0으로 mode 111/109/110의 독립 oracle·실파일·다중 구역을 실행했지만 이번 묶음에서는 재실행하지 않았습니다. 과거 변이·세 모드 전체 audit와 실제 한글 프로그램의 표시/편집은 미검증입니다.
+
 HWP5 양식 컨트롤 조립·텍스트 토큰 연결·입력 상자 MaxLength 세 문서를 공식 HWP5 표 5·6·64, 한컴 양식 도움말 및 현재 Zig 계층에 재대조했습니다. `form_links`의 기존 공통 `Links` 재사용 진입점과 문서 통합 호출이 기존 설명에서 빠진 것을 보강했고, MaxLength의 수학적 -1 분류를 원본 프로그램의 모든 표기 허용과 구분했습니다. ReleaseSafe 직접 필터는 `form assembly` 2/2·`form limits` 2/2·`linked forms` 2/2·`MaxLength` 3/3 통과했습니다. 동일 제품 코드의 직전 ReleaseSafe HWP5 감사는 10/10 단계·8,905,855회 검사·imports 0으로 mode 106/107/112와 두 실파일을 실행했지만 이번 묶음에서 재실행하지 않았습니다. 과거 변이·세 모드 전체 audit와 다른 버전/원본 프로그램의 입력 동작은 미검증입니다.
 
 HWP5 양식 개체 접두부·UTF-16 속성 토큰/트리·관측 스키마 세 문서를 공식 한컴 HWP5 revision 1.3 표 5·57과 현재 Zig의 명시적 양식 계층에 재대조했습니다. 공개 명세가 양식 내부 문자열 문법을 정의하지 않는 점과 관측 5.0.3.0 표본 기반의 선택 규칙을 분리했고, 접두부 기록의 사라질 수 있는 `/tmp` PDF 경로 대신 공식 링크를 추가했습니다. Debug·ReleaseSafe·ReleaseFast root `form` 필터는 각각 199/199개 통과했으나 비양식 이름 일치 테스트도 포함됩니다. 현재 ReleaseSafe `zig build hwp5-audit`는 10/10 단계·8,905,855회 검사·imports 0으로 통과했고 mode 104/105/108의 독립 oracle·두 실파일 대조를 실행했습니다. Debug·ReleaseFast WASM 전용 대조와 과거 변이·세 모드 전체 audit는 이번에 재실행하지 않았습니다. 다른 버전·비 BMP 길이·렌더링·편집/저장은 미검증입니다.

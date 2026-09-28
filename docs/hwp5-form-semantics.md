@@ -56,3 +56,5 @@ choice는 check_box/radio_button만 대상입니다. Value 0/1은 TriState 누�
 ## 남은 범위
 
 주변 글자 모양의 정확한 해석, 다른 속성의 모든 값 범위·기본값·적용 조건, 리스트·이벤트·레이아웃·편집·저장, 다른 버전/비 BMP 원본 프로그램의 속성 길이 검증은 별도 작업입니다. 이 조건 해석으로 전체 양식이나 전체 HWP 지원 완료를 주장하지 않습니다.
+
+2026-09-28 현재 재검증에서는 한컴 양식 도움말의 FollowContext·TriState/Value 설명과 `form_semantics.zig`의 명시적 0/1·2 선택 정책, `form_validation.zig`의 저장 ID/활성 출처 분리 집계를 대조했습니다. ReleaseSafe root의 `form source selection`·`choice state two` 직접 필터는 각각 2/2개 통과했습니다. 동일 제품·테스트 코드의 직전 ReleaseSafe HWP5 감사는 10/10 단계·8,905,855회 검사·imports 0으로 mode 111 독립 조건 oracle과 두 실파일의 조건 변조를 실행했지만 이번 묶음에서 재실행하지 않았습니다. Debug·ReleaseFast WASM 전용 대조와 과거 변이·세 모드 전체 audit도 재실행하지 않았습니다. `surrounding`은 출처 분류이지 실제 주변 CharShapeID 또는 렌더링 결과가 아닙니다.
