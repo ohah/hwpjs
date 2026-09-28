@@ -1,5 +1,7 @@
 # Zig/WASM 구현 구조
 
+이 문서는 계층 간 책임과 연결을 안내합니다. 필드·예외·검증 실측의 단일 출처는 각 링크의 주제 문서이며, 아래 디렉터리 트리는 역할 요약이지 모든 파일의 목록이 아닙니다. 현재 구현과 계획은 `(구현)`·`(부분 구현)`·`(예정)`으로 구분합니다.
+
 [HWP5 주석 원문 표식 위치](hwp5-note-source-sites.md)는 공통 `control_links.Links`의 코드 유닛 위치를 그대로 사용하고 주석 내용·자동 번호·화면 위치를 합치지 않습니다. 실파일 대조와 반례는 테스트 계층에 분리합니다.
 
 [HWP5 각주·미주 안 자동 번호 관계](hwp5-note-number-links.md)는 컨트롤 원값·논리 리스트 소유권·문서 보고서 사이의 진단 계층입니다. 주석당 번호 하나 또는 표시 순서를 강제하지 않으며 문서 모델과 저장을 대신하지 않습니다.
@@ -386,6 +388,10 @@ src/
   cfb/         컨테이너 읽기·검증·새 컨테이너 쓰기 (구현)
   compression/ bounded raw DEFLATE·MIT 디코더 경계 수정본 (구현)
   hwp5/        FileHeader·압축·레코드 경계·DocInfo 해석/참조 검증·본문 문단 헤더/텍스트 토큰 (구현), 문서 모델/나머지 의미 해석/쓰기 (예정)
+  image/       PNG·JPEG·GIF·BMP·SVG·WMF·EMF·PCX·TIFF·ICC 형식별 검사/선택 복호화 (부분 구현)
+  ole/         HWP5·HWPX에서 공유하는 OLE/CFB 봉투 검사 (구현)
+  text/        UTF-16·언어 코드와 BCP 47 공통 규칙 (구현)
+  xml/         공통 XML 문법·이름·namespace 순회 (구현)
   zip/         메모리 기반 ZIP 엔트리 읽기·제한된 해제
   hwpx/        mimetype·패키지/ZIP·XML 트리·선택적 필드/참조/이미지 검사 (통합 의미 모델·쓰기 예정)
   model/       문서 공통 모델과 원본 정보 보존 (예정)
@@ -394,7 +400,7 @@ src/
   wasm.zig     ABI 모듈 등록과 버전
 js/            CFB 읽기·쓰기 API·메모리 복사·엔트리/편집 모델 변환·검색·Node 파일 입력
 tests/cfb/     독립 JS 기준 구현과 비교, 브라우저 검증
-tests/hwp5/    테스트 전용 WASM bridge·독립 zlib/레코드 oracle·적대적 검증 5회
+tests/hwp5/    테스트 전용 WASM bridge·독립 zlib/레코드 oracle·주제별 적대적 회귀
 ```
 
 CFB에는 HWP 문단·표·글꼴 로직을 넣지 않습니다. 파일·시계·브라우저 API에 직접 의존하지 않는 메모리 기반 읽기·쓰기를 우선합니다.
@@ -466,3 +472,5 @@ DocInfo 리소스는 BinData·글꼴·탭·번호·글머리표·스타일·테�
 CFB 단계의 현재 경계: 읽기 기본값은 레거시 호환, strict는 명세 검증을 추가합니다. 쓰기는 항상 명세용 이름 비교와 공통 메타데이터 검사를 사용합니다. `writer_directory.zig`는 의미 모델/형제 트리, `writer_layout.zig`는 FAT/DIFAT 수와 Range Lock 예약 배치, `writer.zig`는 바이트 직렬화를 담당합니다. `name_order.zig`와 `entry_rules.zig`는 strict 읽기와 쓰기가 공유하며, JS는 이를 재구현하지 않습니다.
 
 이전 `benchmarks/zig-spike`는 실험이며 제품 파서로 승격하지 않았습니다. 기존 실험은 `legacy/rust/benchmarks/`에서 확인할 수 있습니다.
+
+2026-09-28 재검증에서는 현재 `src/` 디렉터리와 제품/테스트 경계를 대조해 위 역할 요약의 누락을 고쳤습니다. 이 문서가 연결한 주제 문서 237개는 모두 파일이 존재하고, 236개는 현재 내용 해시로 검증 목록에 있으며 `hwp5-foundation.md`만 별도 이력 검증을 남겼습니다. 본문에 적힌 `.zig` 파일명 75개도 현재 소스에서 확인했습니다. Debug 전체 테스트 5/5 단계·2,664/2,664개, ReleaseSafe 제품 빌드 5/5 단계가 통과했습니다. 이 구조·빌드 검사는 모든 EMF+/HWP5/HWPX 의미 필드의 구현 완료나 화면·저장 동치를 뜻하지 않습니다.

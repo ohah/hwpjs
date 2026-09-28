@@ -630,8 +630,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "64bc8c8259412d153b518db7333205005de89902313a567cfa69eef4e3d0b6da",
-      "evidence": "2026-09-28 progress log updated for development command inventory, 89 local paths 12 build steps 160 literal test filters four shard families 104 Python calls checked; Debug full test and ReleaseSafe HWP5 audit passed, optional commands not all rerun"
+      "sha256": "1fb8b43b1b3d0cd40b5a5aaacfafd5efb8f293e951c3ff27cb5e94215259637c",
+      "evidence": "2026-09-28 progress log updated for architecture tree and source boundaries, 237 linked topic files 236 current and foundation pending, 75 Zig names present, Debug full test and ReleaseSafe product build pass; semantic completeness not claimed"
+    },
+    "docs/architecture.md": {
+      "sha256": "117f06c666bdf093822e37cc7a3f9ebcb419d5b51b7d6a8248ed8e447623d1ad",
+      "evidence": "2026-09-28 current source directory roles and 75 Zig names checked, 237 topic links exist with 236 current and foundation historic pending, corrected omitted image ole text xml and blanket five-round claim; Debug full test 2664 pass ReleaseSafe product build 5 steps pass"
     },
     "docs/development-commands.md": {
       "sha256": "bf0692f53120c410d857f8661294357c44b5cb6b7b4f387cbebd86cdf789eceb",
