@@ -60,6 +60,8 @@ section 텍스트 보고서도 원문 양쪽 분기를 유지합니다. 활성 �
 
 [마스터페이지 차트 참조](hwpx-master-chart-references.md)는 같은 범위의 `chartIDRef` ZIP 경로와 대상 차트 XML 구조를 별도 소유 보고서로 반환합니다. section 차트와 예산·결과를 합치지 않습니다.
 
+`master_page_picture_image_links`와 `master_page_picture_image_payloads`는 마스터페이지의 [그림 이미지 연결](hwpx-picture-image-links.md)과 [내장 이미지 검사](hwpx-picture-image-payloads.md)를 section 결과와 별도로 반환합니다. 파일 경로·형식 검사 결과를 페이지 적용이나 그림 렌더링 성공으로 해석하지 않습니다.
+
 [마스터페이지 표 격자](hwpx-master-table-geometry.md)는 같은 범위의 표·행·셀을 section 공통 규칙으로 검사하고 별도 보고서로 반환합니다. 실제 쪽 배치나 표 레이아웃은 판정하지 않습니다.
 
 활성 분기의 표만 필요한 경우 [선택 분기 표 격자](hwpx-selected-table-geometry.md)의 별도 API를 사용합니다. `inspectKnown`의 표 보고서는 원문 양쪽 분기 관측으로 유지합니다.
@@ -89,6 +91,8 @@ section 텍스트 보고서도 원문 양쪽 분기를 유지합니다. 활성 �
 [표 자체 속성 원값·테두리 ID 참조](hwpx-table-attributes.md)도 표 격자 보고서 안에서 확인할 수 있습니다. 원값 검사 성공을 표 표시·편집 완료로 해석하지 않습니다.
 
 `equations`는 같은 section 트리의 [본문 수식 원문·script](hwpx-equations.md)를 별도 소유 보고서로 반환합니다. 수식 문법·렌더링·저장 지원을 추가한 것은 아닙니다.
+
+`parameter_lists`는 같은 section 트리의 [`parameterset`·필드 매개변수 목록](hwpx-parameter-lists.md)을, `meta_tags`는 [직접 `metaTag` 텍스트](hwpx-meta-tags.md)를, `inline_string_controls`는 [indexmark·dutmal 문자열 컨트롤](hwpx-inline-string-controls.md)을 각각 별도 소유 보고서로 반환합니다. 이 묶음은 세 파서의 원값·부모 선택 규칙을 재사용하며 필드 실행, 색인 생성, 표시 문자열 합성 또는 저장을 수행하지 않습니다.
 
 `field_markers`는 같은 section 트리의 [필드 시작·끝 마커](hwpx-field-markers.md)를 별도 소유 보고서로 반환합니다. 명시적 ID 연결과 불일치 진단까지만 제공하며 필드 내용 평가·표시·저장은 포함하지 않습니다.
 
