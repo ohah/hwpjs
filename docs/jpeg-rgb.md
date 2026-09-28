@@ -4,9 +4,9 @@
 
 [ITU-T T.871](https://www.itu.int/rec/T-REC-T.871-201105-I/en) 6.1~6.2의 8비트 1/3성분, 7절 색 좌표, 8절 위에서 아래로의 행 순서, 9절 성분 위치를 기존 구현과 연결합니다. [샘플 평면](jpeg-sample-planes.md), [중심 정렬 업샘플링](jpeg-upsampling.md), [JFIF 색 변환](jpeg-jfif-colour.md)의 공식과 경계 규칙은 각 기존 모듈이 소유합니다. 이 연결 계층에 계수·IDCT·보간식을 다시 구현하지 않습니다.
 
-출력은 JFIF로 명시적으로 해석한 RGB 샘플입니다. 색 관리된 sRGB·화면 렌더링·한글 프로그램과의 픽셀 동일성·모든 JPEG 프로세스 지원을 뜻하지 않습니다. 제품 JS API는 아직 CFB 전용이며, 후속 [HWP BinData JPEG 검사](hwp5-bin-data-jpeg.md)는 별도 선택으로 연결합니다.
+출력은 JFIF로 명시적으로 해석한 RGB 샘플입니다. 색 관리된 sRGB·화면 렌더링·한글 프로그램과의 픽셀 동일성·모든 JPEG 프로세스 지원을 뜻하지 않습니다. 제품 JS API는 아직 CFB 전용이며, [HWP BinData JPEG 검사](hwp5-bin-data-jpeg.md)는 명시적 선택으로 연결합니다.
 
-후속 [progressive JFIF RGB](jpeg-progressive-rgb.md)는 별도 명시적 진입점으로 제공하며 메타데이터 준비/렌더링과 기존 Image 타입을 공유합니다. 이 문서의 기존 decode는 계속 순차 전용입니다.
+[progressive JFIF RGB](jpeg-progressive-rgb.md)는 별도 명시적 진입점으로 제공하며 메타데이터 준비/렌더링과 기존 Image 타입을 공유합니다. 이 문서의 `jfif_rgb.decode`는 계속 순차 전용이지만 HWP5 공통 `pixel_inspection.zig`는 SOF에 따라 두 경로를 선택합니다.
 
 정규 JFIF 성분 ID와 별도로, 관측된 `(0,1,2)`의 선택적 해제 계약은 [JPEG 관측 성분 ID 호환 정책](jpeg-component-id-compatibility.md)이 소유합니다. 기본 엄격 해석은 변경하지 않습니다.
 
@@ -16,7 +16,7 @@ JFIF가 아닌 Exif 선두 JPEG의 명시적 Adobe 색 선언 경로는 [별도 
 
 ## 책임과 API
 
-- `rgb_raster.zig`: 빌린 sample_planes.Image를 받아 소유권 있는 packed RGB를 생성합니다. 호출자가 gray/rgb/ycbcr 해석과 nearest/bilinear 방법을 반드시 지정합니다. 성분 ID나 값에서 색을 추측하지 않습니다. 8비트 정밀도·성분 수·각 평면 크기/길이·0~255 샘플을 확인하며, u32 extent를 검사한 뒤 u16 축으로 전달합니다. 출력은 행 우선 RGBRGB 순서이고 반전이나 aspect 보정은 하지 않습니다.
+- `rgb_raster.zig`: 빌린 성분 `Image`를 받아 소유권 있는 packed RGB를 생성합니다. 호출자가 gray/rgb/ycbcr 또는 별도 Adobe 경로의 complemented_cmyk/ycck 해석과 nearest/bilinear 방법을 반드시 지정합니다. 성분 ID나 값에서 색을 추측하지 않습니다. 8비트 정밀도·성분 수·각 평면 크기/길이·0~255 샘플을 확인하며, u32 extent를 검사한 뒤 u16 축으로 전달합니다. 출력은 행 우선 RGBRGB 순서이고 반전이나 aspect 보정은 하지 않습니다. JFIF 준비/렌더링은 이 중 gray/ycbcr만 선택합니다.
 - `jfif_adobe.zig`: JFIF 해석을 선택한 경우에만 적용하는 보수적인 충돌 정책입니다. 3성분은 Adobe transform 1, gray는 transform 0만 허용하고 모든 헤더를 확인합니다. 뒤의 정상 헤더가 앞의 충돌을 덮지 않습니다. 미지 transform은 별도 미지원 오류입니다. Adobe 버전/flags 의미 인증이나 T.872의 인쇄용 식별자 검사로 대체하지 않습니다.
 - `jfif_render.zig`: 순차/progressive 공통 JFIF 전체 배치 검사 → 출력 크기 사전 검사 → Adobe 전체 순회 → ICC 조각 재조립의 준비 단계와, 샘플 이후의 Adobe 충돌 검사 → RGB 조립을 소유합니다. Image와 렌더링 기본 한도도 공유합니다.
 - `jfif_rgb.zig`: 위 공통 준비와 렌더링 사이에 순차 샘플 복원을 호출합니다. 구조 순회는 여러 번 수행하지만 마커 파서를 복제하지 않습니다. 색 해석은 API 이름이 지정하는 JFIF이며 일반 JPEG 자동 판별기는 아닙니다.
@@ -26,6 +26,8 @@ JFIF가 아닌 Exif 선두 JPEG의 명시적 Adobe 색 선언 경로는 [별도 
 `metadata_deferred`는 항상 true입니다. ICC는 조각 연결만 확인하고 내부 프로파일 유효성·CMM은 확인하지 않습니다. 예를 들어 번호가 완비된 3바이트 ICC 내용도 unmanaged 출력은 만들 수 있지만 유효 프로파일로 인증하지 않습니다. Exif orientation·다른 APP 의미·Adobe flags·미지 JFXX·압축 썸네일 의미도 완료로 보고하지 않습니다. JFIF 버전·Adobe 개수·ICC 조각 수·기타 APP 수·미검사 압축 썸네일·미지 확장 개수를 별도로 반환합니다. orientation·density 보정은 RGB 바이트에 적용하지 않습니다.
 
 기존 순차 decode는 progressive 및 그 밖의 미지원 엔트로피를 오류로 반환하며 썸네일이나 미리보기로 대체하지 않습니다. 순차 디코더의 마지막 EOI·성분 coverage·엔트로피 padding 검사를 통과한 뒤에만 출력합니다. trailing 정책은 기존 structure 옵션을 따릅니다.
+
+2026-09-28 재검증: 현재 `rgb_raster.zig`의 명시적 인코딩별 성분 수·RGB 바이트 예산과 `jfif_render.zig`의 JFIF/Adobe/ICC 준비, 순차 `jfif_rgb.zig`·별도 `jfif_progressive_rgb.zig`의 공유 결과를 T.871 6~9절에 대조했습니다. 직접 순차 진입점의 progressive 거부를 HWP5 이미지 검사기 전체의 미지원으로 확대하지 않습니다. 세 모드 JPEG 집중 테스트는 각각 192/192개 통과했습니다. 아래 mode 277/278·실파일·변이/과거 전체 audit 수치는 도입 당시 기록으로 이번에 재실행하지 않았습니다.
 
 ## 자원 경계
 

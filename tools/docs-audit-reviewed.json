@@ -630,8 +630,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "0889696ab0a7303ec50429e2d818a6bf27647ae33cda918117d31a7237a5a002",
-      "evidence": "2026-09-28 JPEG dequantization IDCT rounding sequential and progressive sample planes versus T81 and current Zig, Debug Safe Fast JPEG 192 each; prior same product code ReleaseSafe HWP5 audit 10 steps 8905855 checks, dedicated mode oracles and mutations not rerun"
+      "sha256": "e1aaed84293859f3dce0c807781b18ca727647a1703f6502c98c9db5d50a73d9",
+      "evidence": "2026-09-28 JFIF header layout colour RGB versus T871 and current Zig sequential progressive HWP5 dispatch, Debug Safe Fast JPEG 192 each; prior same product code ReleaseSafe HWP5 audit 10 steps 8905855 checks, dedicated mode oracles and mutations not rerun"
     },
     "docs/hwpx-ole-payloads.md": {
       "sha256": "a7c214c0760d575237afcb960b7ff1fe976a0d99468e1083066e36c889deabad",
@@ -2068,6 +2068,22 @@
     "docs/jpeg-progressive-samples.md": {
       "sha256": "ae4e1d0294cbe6b6aec9373e6b3e0ca122da7d66b6dd21d3110af318b6edfbe0",
       "evidence": "2026-09-28 T81 A1 A3 G1 progressive samples versus Zig owned frame common sample image and visible copy, Debug Safe Fast JPEG 192 each; historic mode 282 real files mutations not rerun"
+    },
+    "docs/jpeg-jfif.md": {
+      "sha256": "675bc0ba4a1d190e9c97d3159870c9194c84ae21c843b124513b14ee055ab77b",
+      "evidence": "2026-09-28 T871 JFIF APP0 version units thumbnail frame versus Zig payload and layout, Debug Safe Fast JPEG 192 each; historic modes 261 262 real files mutations not rerun"
+    },
+    "docs/jpeg-jfif-layout.md": {
+      "sha256": "38cf2629c1e13d16ca8d5885e877d0f8d800387b858c7cc84504f14ef04bf31c",
+      "evidence": "2026-09-28 T871 JFIF JFXX marker placement and unknown extension versus Zig layout and HWP5 optional path, Debug Safe Fast JPEG 192 each; historic mode 265 exhaustive mutants not rerun"
+    },
+    "docs/jpeg-jfif-colour.md": {
+      "sha256": "963200cd31e28543165c225f15aa4ef27b8422b7b09edc28e09a902ec0a8f755",
+      "evidence": "2026-09-28 T871 clause 7 exact rational colour and tie clamp versus Zig colour used by both JFIF RGB processes, Debug Safe Fast JPEG 192 each; historic modes 266 267 268 exhaustive inputs mutations not rerun"
+    },
+    "docs/jpeg-rgb.md": {
+      "sha256": "a4f53ef083876ca8d1b1ad1e95ad673e365197acf9f64089e79ed7ffd173bbc4",
+      "evidence": "2026-09-28 T871 JFIF RGB versus Zig raster render sequential progressive and distinct Adobe four component modes, Debug Safe Fast JPEG 192 each; historic modes 277 278 real files mutations not rerun"
     }
   }
 }

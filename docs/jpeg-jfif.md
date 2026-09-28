@@ -2,7 +2,7 @@
 
 JFIF 헤더 해석과 아래 범위의 검증을 구현했습니다. APP0 payload 해석 성공은 전체 JFIF 적합성이나 색 변환 완료를 뜻하지 않습니다.
 
-후속 [JFXX 확장 작업](jpeg-jfxx.md)은 별도 계약과 검증 기록으로 관리합니다.
+[JFXX 확장 검사](jpeg-jfxx.md)는 별도 계약과 검증 기록으로 관리합니다.
 파일 내 순서·중복·연속성은 [JFIF/JFXX 배치 검사](jpeg-jfif-layout.md)가 소유합니다.
 단일 8비트 성분의 양방향 변환은 [JFIF 색 변환](jpeg-jfif-colour.md)이 소유합니다.
 [JPEG ICC 조각 재조립](jpeg-icc.md)은 별도 메타데이터 계층이며 색 해석 선택과 구분합니다.
@@ -24,6 +24,8 @@ JFIF 헤더 해석과 아래 범위의 검증을 구현했습니다. APP0 payloa
 - `validateFrame`은 이미 파싱된 프레임의 정밀도 8, 성분 수 1 또는 3, 선언 순서의 ID 1/2/3을 확인합니다. 마커 위치와 다른 메타데이터의 충돌은 확인하지 않습니다.
 
 할당하지 않으며 썸네일 뷰를 쓰는 동안 입력을 불변·유효하게 유지해야 합니다. JFXX 확장과 APP0 위치·중복·연속성, 단일 샘플 색 변환은 위의 별도 모듈이 소유합니다. [성분 업샘플링](jpeg-upsampling.md)은 좌표와 보간 책임을 분리합니다. 명시적 unmanaged JFIF 파일 연결은 [RGB 샘플 조립](jpeg-rgb.md)이 소유하며 일반 Exif/Adobe/ICC 자동 선택·색 관리는 아직 별도입니다. HWP 쪽 선택·집계는 [BinData JPEG 검사](hwp5-bin-data-jpeg.md)를 참조합니다.
+
+2026-09-28 재검증: 현재 `jfif.zig`의 APP0 payload/1.x 입력 정책·엄격 성분 ID와 `jfif_layout.zig`의 배치 책임을 T.871 6.1~6.5/10.1에 대조했습니다. T.871의 1.02 생성 조건을 입력의 모든 1.x 호환성 인증으로 확대하지 않습니다. HWP5의 JPEG는 명시적 선택으로 연결되고 제품 JS 공개 API에는 아직 노출되지 않습니다. Debug·ReleaseSafe·ReleaseFast JPEG 집중 테스트는 각각 192/192개 통과했습니다. 아래 mode 261/262·실파일/변이/과거 전체 audit 수치는 도입 당시 기록으로 이번에 재실행하지 않았습니다.
 
 ## 현재 검증과 관측
 
