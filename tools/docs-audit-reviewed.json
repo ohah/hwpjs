@@ -630,8 +630,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "e1aaed84293859f3dce0c807781b18ca727647a1703f6502c98c9db5d50a73d9",
-      "evidence": "2026-09-28 JFIF header layout colour RGB versus T871 and current Zig sequential progressive HWP5 dispatch, Debug Safe Fast JPEG 192 each; prior same product code ReleaseSafe HWP5 audit 10 steps 8905855 checks, dedicated mode oracles and mutations not rerun"
+      "sha256": "cc4226d12a22e4f06a789ff5f8e70bbf05c9504306cbf2bee6feb3dad8862909",
+      "evidence": "2026-09-28 JFXX ICC Adobe versus T871 T872 ICC.1 2022 and current Zig boundaries, Debug Safe Fast JPEG 192 each; prior same product code ReleaseSafe HWP5 audit 10 steps 8905855 checks, dedicated oracles and mutations not rerun"
     },
     "docs/hwpx-ole-payloads.md": {
       "sha256": "a7c214c0760d575237afcb960b7ff1fe976a0d99468e1083066e36c889deabad",
@@ -2084,6 +2084,18 @@
     "docs/jpeg-rgb.md": {
       "sha256": "a4f53ef083876ca8d1b1ad1e95ad673e365197acf9f64089e79ed7ffd173bbc4",
       "evidence": "2026-09-28 T871 JFIF RGB versus Zig raster render sequential progressive and distinct Adobe four component modes, Debug Safe Fast JPEG 192 each; historic modes 277 278 real files mutations not rerun"
+    },
+    "docs/jpeg-jfxx.md": {
+      "sha256": "a5e751dab942ca14aa95ea47f0ed686fcf0745d6efe98cba1248c29023f6dccd",
+      "evidence": "2026-09-28 T871 JFXX extensions versus Zig borrowed payload and explicit baseline thumbnail planes, Debug Safe Fast JPEG 192 each; historic modes 263 264 real files mutations not rerun, no positive JFXX sample"
+    },
+    "docs/jpeg-icc.md": {
+      "sha256": "d79fe2ddf5c6a7294532d2137aa02e95d64e076d4aca6a2008c069b6167026b1",
+      "evidence": "2026-09-28 ICC.1 2022 tech note and T872 versus Zig APP2 reassembly profile inspection no CMM, Debug Safe Fast JPEG 192 each; historic modes 271 to 273 real files mutations not rerun, no positive ICC sample"
+    },
+    "docs/jpeg-adobe.md": {
+      "sha256": "f35202ae4d3d122f2dc101b5d08a018ea5657659f818ad03c64908b36b925361",
+      "evidence": "2026-09-28 T872 Adobe APP14 versus Zig raw inspection and separate explicit Exif Adobe pixels, Debug Safe Fast JPEG 192 each; historic modes 274 to 276 real files mutations not rerun"
     }
   }
 }

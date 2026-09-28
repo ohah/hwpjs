@@ -49,10 +49,12 @@ Debug JPEG 네이티브 95/95개 통과. 정상 baseline, 모든 할당 실패 �
 
 ReleaseSafe와 ReleaseFast의 별도 WASM에서도 각각 비압축/미지 확장 비교 3,736건·거부 1,207건, 압축 썸네일 비교 271건·거부 159건, 기존 JFIF 비교 67,414건·거부 66,003건이 통과했습니다. 비압축/미검증 출력 1,026바이트와 압축 평면 출력 978바이트의 개별 변조도 두 모드 모두 검출했습니다.
 
-실제 HWP의 JPEG 참조 8건과 `reference/rhwp/samples/s1.jpg`의 JFIF 헤더·프레임 제약도 두 릴리즈 모드에서 다시 일치했습니다. 참조 수는 고유 이미지 수가 아니며, 이 회귀 검사는 실제 JFXX 복호화나 progressive 픽셀 복호화를 입증하지 않습니다. 제품 JS API는 여전히 CFB만 제공합니다. 후속 파일 전체 [RGB 출력](jpeg-rgb.md)과 [HWP BinData 연결](hwp5-bin-data-jpeg.md)은 이 JFXX 헤더 검증과 구분합니다.
+실제 HWP의 JPEG 참조 8건과 `reference/rhwp/samples/s1.jpg`의 JFIF 헤더·프레임 제약도 두 릴리즈 모드에서 다시 일치했습니다. 참조 수는 고유 이미지 수가 아니며, 이 회귀 검사는 실제 JFXX 복호화나 progressive 픽셀 복호화를 입증하지 않습니다. 제품 JS API는 여전히 CFB만 제공합니다. 현재 파일 전체 [RGB 출력](jpeg-rgb.md)과 명시적 [HWP BinData JPEG 검사](hwp5-bin-data-jpeg.md)는 별도로 구현됐지만, 공통 픽셀 검사기는 JFXX 0x10을 자동으로 썸네일 RGB로 복호화하지 않습니다. 이 문서의 `jfxx_jpeg.decode`는 압축 썸네일을 별도 호출할 때 성분 평면까지만 반환합니다.
 
 ## 전체 회귀 검증
 
 Debug → ReleaseSafe → ReleaseFast 순서로 `zig build audit --summary all`에 각 최적화 옵션을 적용했습니다. 세 모드 모두 20/20 단계, 네이티브 811/811개, 독립 audit의 checks 7,655,824건이 통과했습니다. 로그는 `/tmp/hwpjs-jfxx-{Debug,ReleaseSafe,ReleaseFast}-audit.log`에 남겼습니다. 이 검사 수는 포맷 지원률이나 모든 입력에 대한 무결함 보증이 아닙니다.
 
 SSOT 검토에서는 JFIF/JFXX의 RGB 바이트 읽기와 픽셀 조회를 `thumbnail.zig`로 공유하고, 압축 썸네일의 구조·프레임·테이블·엔트로피·평면 복호화는 기존 JPEG 계층을 재사용하는 것을 확인했습니다. 확장 payload 해석, 압축 내부 제약, 테스트용 직렬화는 별도 책임으로 유지합니다.
+
+2026-09-28 현재 재검증에서는 T.871 10.2~10.5와 `jfxx.zig`·`jfxx_jpeg.zig`·공통 이미지 검사기의 책임 경계를 대조했습니다. Debug·ReleaseSafe·ReleaseFast JPEG 집중 테스트는 각각 192/192개 통과했습니다. 위 mode 263/264 독립 oracle·변이·세 모드 전체 audit 수치는 당시 기록이며 이번에 재실행하지 않았습니다. 실제 JFXX 포함 파일의 양성 픽셀 대조도 아직 없습니다.

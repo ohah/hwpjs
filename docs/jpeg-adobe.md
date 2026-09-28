@@ -15,7 +15,7 @@
 
 Report는 descriptor 배열을 소유하고 extra는 원본 JPEG를 빌립니다. 입력 수명을 유지하고 Report.deinit으로 배열을 해제해야 합니다. 기본 최대 헤더 수는 256이며 추가 전에 검사합니다. 뒤쪽 JPEG 손상과 할당 실패에도 임시 배열을 정리합니다.
 
-T.872 국소 색 대응의 성공은 전체 인쇄 적합성을 뜻하지 않습니다. 프레임 제약·ICC 배치·메타데이터 우선순위·progressive 픽셀 복호화·CMYK/YCCK 픽셀 변환·색 관리는 별도입니다. 원값 파싱은 RGB 출력이나 HWP BinData JPEG 연결 완료가 아닙니다. 제품 JS API는 변경하지 않았습니다.
+T.872 국소 색 대응의 성공은 전체 인쇄 적합성을 뜻하지 않습니다. 프레임 제약·ICC 배치·메타데이터 우선순위·색 관리는 이 APP14 원값 파서의 책임 밖입니다. 현재 별도 [Exif 선두 Adobe RGB](jpeg-exif-adobe-rgb.md) 경로는 명시적 선택 아래 순차·progressive 픽셀과 제한된 CMYK/YCCK의 unmanaged RGB 변환을 지원합니다. [HWP BinData JPEG 검사](hwp5-bin-data-jpeg.md)도 선택적 연결이 있지만, 이 원값 파싱만으로 픽셀 출력·전체 인쇄 적합성·제품 JS API 지원이 자동 성립하지는 않습니다.
 
 이후 명시적 [JFIF RGB 조립](jpeg-rgb.md)은 별도 충돌 정책을 적용합니다. printEncoding을 일반 JFIF 색 판별기로 재사용하지 않으며 원값 검사와 파일별 해석을 구분합니다. [Exif 선두 Adobe 4성분 선택](jpeg-adobe-four-component.md)은 이 국소 색 선언 해석을 재사용하지만 여전히 일반 JPEG 자동 판별은 아닙니다.
 
@@ -34,3 +34,5 @@ ReleaseFast 독립 WASM에서도 비교 65,812건·거부 998건, 출력 82바�
 `/tmp/hwpjs-jpeg-adobe-mutants.h39f55/`의 격리 소스 복사본에서 endian 반전, extra 삭제, 인쇄 식별자 검사 무력화, 수집 한도 off-by-one을 주입했습니다. 네 변형 모두 세 빌드 모드에서 컴파일 후 테스트 실패로 검출했습니다. 각 필터 5개 중 실패는 순서대로 3/3/2/1개입니다. 제품 소스에는 변형을 적용하지 않았습니다.
 
 전체 회귀를 Debug → ReleaseSafe → ReleaseFast 순서로 완료했습니다. 각 모드 모두 20/20단계·831/831 네이티브 테스트·checks 7,793,133건으로 통과했습니다. 로그는 `/tmp/hwpjs-jpeg-adobe-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다. 검사 수는 지원률이나 전체 JPEG/HWP 적합성의 증명이 아닙니다. 전체 회귀 후 최종 네이티브 831/831 테스트와 제품 ReleaseSafe 빌드 5/5단계도 확인했습니다.
+
+2026-09-28 현재 재검증에서는 T.872 6.5.3의 인쇄용 식별자/국소 색 선언과 `adobe.zig`·`adobe_inspection.zig`·명시적 Exif 픽셀 경로를 대조했습니다. Debug·ReleaseSafe·ReleaseFast JPEG 집중 테스트는 각각 192/192개 통과했습니다. 위 mode 274~276 독립 oracle·실파일·변이·세 모드 전체 audit 수치는 당시 기록이며 이번에 재실행하지 않았습니다. APP14 양성 실파일의 헤더 관측은 CMYK/YCCK 출력의 외부 픽셀 동치나 모든 Adobe 플래그 의미를 증명하지 않습니다.

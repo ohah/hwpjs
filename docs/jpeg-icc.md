@@ -2,7 +2,7 @@
 
 ## 공식 근거와 범위
 
-[ICC 프로파일 삽입 안내](https://www.color.org/profile_embedding/)와 [ICC Technical Note: Embedding ICC profiles](https://archive.color.org/files/technotes/ICC-Technote-ProfileEmbedding.pdf)의 JFIF 절을 확인했습니다. ICC.1:2022의 변경 이력은 예전 Annex B 삽입 설명을 이 기술 문서 참조로 대체했다고 명시합니다.
+[ICC 프로파일 삽입 안내](https://www.color.org/profile_embedding/)와 [ICC Technical Note: Embedding ICC profiles](https://archive.color.org/files/technotes/ICC-Technote-ProfileEmbedding.pdf)의 JFIF 절을 확인했습니다. [ICC.1:2022](https://www.color.org/specifications/ICC.1-2022-05.pdf)의 변경 이력은 예전 Annex B의 상세 삽입 설명을 이 기술 문서 참조로 대체했다고 명시합니다. Annex B 제목은 남아 있으며 ICC 웹 안내와 본문의 일부 옛 참조도 여전히 Annex B를 가리키므로, 이를 Annex B 자체가 삭제됐다는 뜻으로 읽지 않습니다.
 
 APP2 payload는 정확한 `ICC_PROFILE` + NUL 식별자, 1부터 시작하는 조각 번호, 전체 조각 수, 데이터로 구성됩니다. 조각당 데이터 상한은 65,519바이트이며 최대 255조각·16,707,345바이트입니다. 번호 순으로 재조립하므로 파일에 저장된 물리적 순서를 가정하지 않습니다. 조각 수 불일치·번호 중복·누락은 오류입니다. 동일 데이터를 가진 중복 번호도 정상 조각으로 덮어쓰지 않습니다.
 
@@ -18,7 +18,7 @@ ICC가 없으면 null입니다. 번호가 완비된 빈 조각 데이터는 재�
 
 [T.872 인쇄 응용](https://www.itu.int/rec/T-REC-T.872-201206-I/en) 6.5.2는 여러 ICC APP2 조각이 첫 SOS 전에 있어야 한다고 요구합니다. 현재 일반 추출기는 이 인쇄용 위치 규칙을 적용하지 않으므로 T.872 적합성 검사로 사용하지 않습니다. 관련 [Adobe APP14 해석](jpeg-adobe.md)도 원값 보존과 응용별 규칙을 구분합니다.
 
-ICC 내용 진입점도 헤더 의미·필수 태그·모든 payload 의미·색 공간과 JPEG 성분의 호환성·색 변환을 완료하지 않습니다. `semantics_deferred`는 유지합니다. v4 프로파일 ID는 명세의 MD5 식별자 검사이지 인증 수단이 아닙니다. Adobe/Exif와의 우선순위 및 RGB 출력 선택은 후속 범위입니다.
+ICC 내용 진입점도 헤더 의미·필수 태그·모든 payload 의미·색 공간과 JPEG 성분의 호환성·색 변환을 완료하지 않습니다. `semantics_deferred`는 유지합니다. v4 프로파일 ID는 명세의 MD5 식별자 검사이지 인증 수단이 아닙니다. 현재 명시적 [JFIF RGB](jpeg-rgb.md)와 [Exif 선두 Adobe RGB](jpeg-exif-adobe-rgb.md) 경로는 ICC 조각 수를 관측할 수 있지만, 프로파일을 색 변환에 적용하거나 ICC/Adobe/Exif 사이의 범용 우선순위를 결정하지 않습니다.
 
 ## 검증 기록
 
@@ -37,3 +37,5 @@ ReleaseSafe와 ReleaseFast의 별도 WASM에서도 각각 비교 817건·거부 
 전체 회귀를 Debug → ReleaseSafe → ReleaseFast 순서로 완료했습니다. 각 모드 모두 20/20 단계, 네이티브 827/827개, checks 7,726,323건이 통과했습니다. 로그는 `/tmp/hwpjs-jpeg-icc-{Debug,ReleaseSafe,ReleaseFast}-audit.log`에 남겼습니다. 검사 건수는 ICC 의미 검증이나 JPEG 전체 지원률을 뜻하지 않습니다.
 
 SSOT 검토에서는 조각 규칙과 재조립을 `icc_chunks.zig`, JPEG 연결을 `icc_extraction.zig`, 기존 ICC 검사기의 조립과 소유권을 `icc_profile.zig`로 분리한 것을 확인했습니다. 태그 파서·배치 정책·ID 알고리즘을 JPEG 계층에 다시 구현하지 않았습니다.
+
+2026-09-28 현재 재검증에서는 ICC.1:2022·공식 삽입 안내·T.872 6.5.2와 세 모듈 및 명시적 픽셀 경로를 대조했습니다. Debug·ReleaseSafe·ReleaseFast JPEG 집중 테스트는 각각 192/192개 통과했습니다. 위 mode 271~273 독립 oracle·실파일·변이·세 모드 전체 audit 수치는 당시 기록이며 이번에 재실행하지 않았습니다. 현재 실파일 관측에는 ICC 양성 JPEG가 없어 색 관리나 실파일 재조립의 검증으로 확대할 수 없습니다.
