@@ -2,6 +2,8 @@
 
 이 문서는 [IDCT·샘플 복원](jpeg-idct.md)의 반 정수 경계 수정과 근거를 소유합니다. Progressive·순차 샘플 경로가 같은 구현을 사용합니다. 프레임/평면 조립과 실제 파일 전체 회귀 상태는 [progressive 샘플 평면](jpeg-progressive-samples.md)에 있습니다.
 
+2026-09-28 재검증: 현재 `idct_rational.zig`의 정확한 상쇄 판정과 `idct.zig`의 해당 값 우선 사용, `sample_restoration.zig`의 level shift 이전 tie 판정을 T.81 A.3.1/A.3.3과 대조했습니다. 순차·progressive가 공통 `sample_block.zig`를 통해 이 계산을 사용합니다. Debug·ReleaseSafe·ReleaseFast JPEG 집중 테스트는 각각 192/192개 통과했습니다. 아래 moogung.jpg 53개 차이 재현·독립 BigInt/WASM·변이/과거 전체 audit 수치는 당시 기록이며 이번에 재실행하지 않았습니다. 일반 비유리수·외부 디코더 픽셀·T.83 적합성은 여전히 미검증입니다.
+
 ## 재현한 두 원인
 
 수정 전 `reference/rhwp/samples/images/moogung.jpg`의 785,000샘플 중 53개에서 제품과 독립 직접 2차원 IDCT 수식의 정수 샘플이 1만큼 달랐습니다. 세 모드에서 같은 차이를 확인했습니다. 계수 프레임 wire·샘플 헤더·progression/levels는 일치했고, 개별 블록 mode 257의 샘플은 평면 mode 282와 일치했습니다. 차이 위치의 두 f64 계산 사이 최대 차이는 `4.263256414560601e-14`였습니다.

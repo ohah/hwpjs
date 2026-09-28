@@ -630,8 +630,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "5cc4c3a501787c97dce871fad09b3f25207cfb1c1ca7d992975119bf12299b3d",
-      "evidence": "2026-09-28 JPEG sequential frame progressive block scan frame and previous JFIF direct versus product dispatch correction, T81 versus Zig, Debug Safe Fast JPEG 192 each; preceding ReleaseSafe HWP5 audit same product code 10 steps 8905855 checks, dedicated mode oracles and mutations not rerun"
+      "sha256": "0889696ab0a7303ec50429e2d818a6bf27647ae33cda918117d31a7237a5a002",
+      "evidence": "2026-09-28 JPEG dequantization IDCT rounding sequential and progressive sample planes versus T81 and current Zig, Debug Safe Fast JPEG 192 each; prior same product code ReleaseSafe HWP5 audit 10 steps 8905855 checks, dedicated mode oracles and mutations not rerun"
     },
     "docs/hwpx-ole-payloads.md": {
       "sha256": "a7c214c0760d575237afcb960b7ff1fe976a0d99468e1083066e36c889deabad",
@@ -2048,6 +2048,26 @@
     "docs/jpeg-progressive-frame.md": {
       "sha256": "d5ee052f10559313829b82330c305b009cabd125919a9a64875b08862f90673c",
       "evidence": "2026-09-28 T81 B2 G1 G2 progressive frame versus Zig owned image completion Q snapshot and pixel inspection consumer, Debug Safe Fast JPEG 192 each; historic mode 281 real file mutations not rerun"
+    },
+    "docs/jpeg-dequantization.md": {
+      "sha256": "ba607a5604e81606928d26d25eb30583f07993c758d90e77aadabda3d1f01dcc",
+      "evidence": "2026-09-28 T81 A34 A36 zigzag and dequantization versus Zig exact i64 and active table view, Debug Safe Fast JPEG 192 each; historic mode 255 256 real files mutations not rerun"
+    },
+    "docs/jpeg-idct.md": {
+      "sha256": "910ea21aeec9f3d2c3cd7309b55c3342294380b3430027333fef3641a06eb0b0",
+      "evidence": "2026-09-28 T81 A31 A33 IDCT and sample restoration versus Zig rational cancellation and prelevel rounding, Debug Safe Fast JPEG 192 each; historic mode 257 to 259 real files mutations not rerun"
+    },
+    "docs/jpeg-idct-rounding.md": {
+      "sha256": "7ca4c9684e3511d8f5394d7d81e32a19589957c21c8166d962730e9d69eb2f0a",
+      "evidence": "2026-09-28 T81 A31 A33 exact rational cancellation and tie handling versus Zig; Debug Safe Fast JPEG 192 each; historic moogung 53 mismatches BigInt WASM mutations not rerun, generic irrational rounding unproven"
+    },
+    "docs/jpeg-sample-planes.md": {
+      "sha256": "6821464fdd683feb0865603523307c016628766f6792ec72c5dbe309ee568cc5",
+      "evidence": "2026-09-28 T81 A11 A2 component dimensions versus Zig geometry sequential sample image and block, Debug Safe Fast JPEG 192 each; historic mode 260 real files mutations not rerun"
+    },
+    "docs/jpeg-progressive-samples.md": {
+      "sha256": "ae4e1d0294cbe6b6aec9373e6b3e0ca122da7d66b6dd21d3110af318b6edfbe0",
+      "evidence": "2026-09-28 T81 A1 A3 G1 progressive samples versus Zig owned frame common sample image and visible copy, Debug Safe Fast JPEG 192 each; historic mode 282 real files mutations not rerun"
     }
   }
 }

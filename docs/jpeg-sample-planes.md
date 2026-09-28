@@ -2,7 +2,7 @@
 
 성분 평면 조립과 아래 범위의 검증을 구현했습니다. 출력은 원래 샘플링 해상도의 성분 평면이며 RGB 이미지가 아닙니다.
 
-색 해석을 위한 후속 [JFIF 헤더 작업](jpeg-jfif.md)은 별도 계약과 검증 기록으로 관리합니다.
+색 해석을 위한 [JFIF 헤더](jpeg-jfif.md)는 별도 계약과 검증 기록으로 관리합니다.
 
 ## 근거와 책임
 
@@ -17,6 +17,8 @@
 `max_samples`는 프레임 픽셀 수가 아니라 모든 성분의 실제 샘플 개수 합계입니다. 평면 할당 전에 합계를 확인하며 u16 저장 바이트의 usize 범위도 검사합니다. 프레임 바이트·픽셀·스캔·블록 제한은 기존 디코더 옵션으로 별도 적용합니다. 정밀도는 결과에 보존하고 성분 ID를 색상 의미로 추측하지 않습니다.
 
 각 평면은 기존 `FrameComponent` 값도 복사하여 소유합니다. ID·원래 H/V sampling 바이트·Q destination을 보존하고 H/V 해석은 기존 접근자를 재사용합니다. Q destination은 프레임의 원래 선택자이며 이전 양자화 테이블의 값을 보존한다는 뜻은 아닙니다. 같은 1×1 평면이라도 H/V가 3×1, 1×2, 1×1일 수 있어, 성분 크기만으로 샘플링 인수를 추정하지 않습니다.
+
+2026-09-28 재검증: 현재 `component_geometry.zig`의 올림 크기·패딩 블록 경계, `sample_planes.zig`·공통 `sample_image.zig`/`sample_block.zig`의 성분별 소유권·샘플 예산·실패 해제를 T.81 A.1.1/A.2에 대조했습니다. 이 순차 평면은 상위 JFIF RGB 경로의 입력이지만 색 해석은 여기서 수행하지 않습니다. Debug·ReleaseSafe·ReleaseFast JPEG 집중 테스트는 각각 192/192개 통과했습니다. 아래 mode 260·실파일·변이/과거 전체 audit는 이번에 재실행하지 않았습니다.
 
 ## 현재 검증
 
@@ -49,4 +51,4 @@ Debug의 17×17·3성분·역순 스캔·Q 재정의 입력에서 헤더/평면 
 
 수정본 Debug/ReleaseSafe/ReleaseFast 전체 audit는 각각 20/20 단계, 네이티브 799/799개, 총 7,517,016건 검사로 통과했습니다. 로그는 `/tmp/hwpjs-planes-{Debug,ReleaseSafe,ReleaseFast}-audit.log`에 있습니다. 전체 회귀 합계이며 전체 문서 지원 완료나 한글과의 렌더링 동일성을 뜻하지 않습니다.
 
-이 평면 작업의 완료는 progressive 복호화·제품 HWP 이미지 지원 연결을 대신하지 않습니다. 이후 [업샘플링](jpeg-upsampling.md)·[색 변환](jpeg-jfif-colour.md)·[JFIF RGB 조립](jpeg-rgb.md)의 계약과 실측은 각 주제 문서에서 관리합니다.
+이 평면 작업의 완료만으로 progressive 복호화·제품 HWP 이미지 지원 연결을 증명하지 않습니다. 현재 별도 구현된 [업샘플링](jpeg-upsampling.md)·[색 변환](jpeg-jfif-colour.md)·[JFIF RGB 조립](jpeg-rgb.md)의 계약과 실측은 각 주제 문서에서 관리합니다.

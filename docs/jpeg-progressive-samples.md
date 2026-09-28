@@ -1,6 +1,6 @@
 # Progressive JPEG 샘플 평면
 
-프레임 계수에서 성분별 샘플 평면을 만드는 코드를 구현했습니다. 실제 파일에서 발견한 IDCT 반올림 차이도 수정했으며 아래 독립 대조·적대적 검사·세 모드 전체 회귀를 통과했습니다. RGB 조립이나 제품 HWP 지원 완료와는 구분합니다.
+프레임 계수에서 성분별 샘플 평면을 만드는 코드를 구현했습니다. 실제 파일에서 발견한 IDCT 반올림 차이도 수정했으며 아래 독립 대조·적대적 검사·세 모드 전체 회귀를 통과했습니다. 이 평면 단계의 검증은 별도 RGB 조립이나 HWP5의 명시적 이미지 선택 경로 검증과 구분합니다.
 
 ## 책임과 현재 계약
 
@@ -11,9 +11,11 @@
 
 완료 정책은 [프레임 계약](jpeg-progressive-frame.md)의 preserve_partial/require_full을 명시적으로 선택합니다. 미전송 AC와 낮은 정밀도를 허용한 경우에도 levels와 progression을 반환하여 상태를 숨기지 않습니다. 한 번도 전송하지 않아 Q가 없는 성분은 `UnseenJpegProgressiveComponent`이며 임의의 중간색으로 채우지 않습니다.
 
-샘플 평면은 RGB가 아닙니다. 기존 jfif_rgb 진입점은 순차 전용으로 유지하며 후속 [progressive JFIF RGB](jpeg-progressive-rgb.md)를 별도로 제공합니다. 후속 [HWP BinData JPEG 검사](hwp5-bin-data-jpeg.md)는 별도 선택으로 연결하며 제품 HWP JS API는 미완료입니다.
+샘플 평면은 RGB가 아닙니다. 기존 jfif_rgb 진입점은 순차 전용이며 [progressive JFIF RGB](jpeg-progressive-rgb.md)를 별도로 제공합니다. [HWP BinData JPEG 검사](hwp5-bin-data-jpeg.md)는 명시적 선택으로 연결하며 제품 HWP JS API는 미완료입니다.
 
 `jpeg_progressive_samples.decode(allocator, jpeg_bytes, options)`의 frame 옵션은 기존 프레임의 입력·마커·픽셀·저장 블록·처리량·스캔/RST 한도와 완료 정책을 전달합니다. max_samples 기본값은 64,000,000이며 모든 성분의 visible 샘플 수 합계입니다. 계수 저장 한도와 독립적이며 샘플 배열 바이트의 usize 범위도 할당 전에 검사합니다. 계수 프레임을 완성한 뒤 샘플을 조립하므로 두 저장소가 동시에 존재하는 구간이 있습니다.
+
+2026-09-28 재검증: 현재 `progressive_samples.zig`의 계수 격자 수명·completion 전달·unseen 성분 거부와 공통 `sample_image.zig`/`sample_block.zig`의 visible 영역 복원을 T.81 A.1/A.3/G.1에 대조했습니다. HWP5 공통 `pixel_inspection.zig`가 이 평면을 거친 별도 progressive RGB 경로로 분기하지만 평면 결과 자체는 RGB가 아닙니다. 세 모드 JPEG 집중 테스트는 각각 192/192개 통과했습니다. 아래 mode 282·실파일/변이/과거 전체 audit는 이번에 재실행하지 않았습니다.
 
 Result는 Image와 progression, 최대 4성분의 levels를 소유합니다. levels 중 image.planes.len만 활성입니다. 입력을 변경·보관하지 않으며 `result.deinit(allocator)`로 해제합니다. Image의 width/height/precision, 선언 순서의 각 성분 ID·sampling·Q destination과 실제 크기·row-major u16 샘플을 유지합니다. 완성 중 오류가 나면 모든 할당을 해제하며 부분 평면을 반환하지 않습니다.
 
@@ -40,4 +42,4 @@ Debug → ReleaseSafe → ReleaseFast 전체 audit가 각각 20/20단계·876/87
 
 전체 회귀 종료 후 최종 `zig build test --summary all`도 876/876개, 제품 `zig build -Doptimize=ReleaseSafe --summary all`도 5/5단계로 통과했습니다. 포맷·변경 JS 문법·diff 공백·변경 문서 8개의 로컬 링크 69개 검사도 통과했습니다.
 
-한글/libjpeg 픽셀 동일성과 T.83 적합성을 주장하지 않습니다. 이 샘플 단계의 실제 HWP 독립 대조만으로 제품 BinData 검사 지원을 입증한 것은 아닙니다. 후속 RGB 연결은 [progressive JFIF RGB](jpeg-progressive-rgb.md)가 소유하며 색 관리·orientation, 제품 HWP API는 미완료입니다.
+한글/libjpeg 픽셀 동일성과 T.83 적합성을 주장하지 않습니다. 이 샘플 단계의 실제 HWP 독립 대조만으로 제품 BinData 검사 지원을 입증한 것은 아닙니다. 현재 별도 RGB 연결은 [progressive JFIF RGB](jpeg-progressive-rgb.md)가 소유하며 색 관리·orientation, 제품 HWP API는 미완료입니다.
