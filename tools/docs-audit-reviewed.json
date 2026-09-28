@@ -630,8 +630,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "e153790a1dab39947ad4ac0f5f06a6399bf9390948d80d5211cdeef8c9300c7d",
-      "evidence": "2026-09-28 tracker updated with HWPX master text snapshot paragraph children line segments, three-mode focused tests, independent 476 corpus and three snapshot mode per-file diff; recent known shards and historic full audit distinguished"
+      "sha256": "fdf8ddb3bd40bf1ef46881821eda899444f5f459478cd8e376fd554f9c6d94c1",
+      "evidence": "2026-09-28 tracker updated with HWPX common master fill brush image links and payloads, three-mode focused tests and independent ZIP OPF XML 476 corpus; recent known shards and historic audit distinguished"
     },
     "docs/hwpx-ole-payloads.md": {
       "sha256": "a7c214c0760d575237afcb960b7ff1fe976a0d99468e1083066e36c889deabad",
@@ -1700,6 +1700,22 @@
     "docs/hwpx-master-line-segments.md": {
       "sha256": "159ba5233e092c206c2872615d2516c127b56b89d22232756a733d310384a29e",
       "evidence": "2026-09-28 current master adapter shared nine line fields, Debug Safe Fast master 5 section 6 each, independent Python 476 corpus 394 arrays 418 segments spacing negative 39; recent same-source known shards not rerun"
+    },
+    "docs/hwpx-fill-brush.md": {
+      "sha256": "14094cf6c1d665696eda246a310d1db68de449735b9bb3dc21076d851dbaf4e9",
+      "evidence": "2026-09-28 current Hancom FillBrush and Zig raw field ownership, Debug Safe Fast brush 5 known 2 each, independent Python self-test and 476 corpus 6528 brushes; recent same-source known shards not rerun"
+    },
+    "docs/hwpx-master-fill-brush.md": {
+      "sha256": "7266e0af77a94bd1cfc4d63bb294f8b4179cafdcfc5de8395beaa47aa0ef6ed9",
+      "evidence": "2026-09-28 current master part adapter shared brush scanner, Debug Safe Fast master 6 each, independent Python 476 corpus 61 parts 40 brushes; no positive master image brush and recent known shards not rerun"
+    },
+    "docs/hwpx-fill-brush-image-links.md": {
+      "sha256": "c5d26623bf5e37682cb008d9bf0ddb60218eb3ccd8377427a4489ba1cce6256a",
+      "evidence": "2026-09-28 current node provenance and shared exact OPF ID resolution, Debug Safe Fast links 4 known 2 each, independent Python 476 corpus 390 embedded sites index sum 61854; recent known shards not rerun"
+    },
+    "docs/hwpx-fill-brush-image-payloads.md": {
+      "sha256": "a5085bbcecefd6c5358308e1bb81c032933afb4bea7e2bbe369643febbed5bb7",
+      "evidence": "2026-09-28 current shared image payload core inspection scope, Debug Safe Fast brush payloads 11 each, independent Python 476 corpus 390 sites 388 targets 8631009 bytes 7 MIME and 8 PNG CRC diagnostics; recent known shards not rerun"
     },
     "docs/hwpx-binary-references.md": {
       "sha256": "4e445bb4756c9d9e29272606285408c3dccaf16a74bee6a0dd0b40ba14e7c5d2",

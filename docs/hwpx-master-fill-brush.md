@@ -15,3 +15,5 @@
 [이미지 ID 대상 연결](hwpx-fill-brush-image-links.md)은 마스터페이지의 원값 `imgBrush/img`에도 적용하며 기존 직접 `subList` 범위의 스트리밍 이진 참조 집계와는 별개입니다. 이 corpus에는 마스터페이지 이미지 노드가 없어 연결의 양성 실파일 대조는 아직 없습니다. 전체 XSD·조건부 적용·레이아웃·편집·저장·무손실 왕복은 아직 구현 완료가 아닙니다.
 
 [내장 이미지 바이트 검사](hwpx-fill-brush-image-payloads.md)는 같은 원값 연결 결과를 사용합니다. 합성 마스터페이지의 실제 PNG 항목 1개를 검사하지만, 실파일 corpus에는 양성 이미지 브러시가 없으므로 마스터페이지 파일별 형식 호환성은 아직 검증되지 않았습니다.
+
+2026-09-28 재검증: 현재 `masterpage_fill_brush.zig`가 선택 파트·XML 예산을 맡고 공통 `fill_brush.zig`가 필드를 판정하는 것을 확인했습니다. `HWPX master fill brushes` 테스트는 Debug·ReleaseSafe·ReleaseFast 각 6/6개 통과했습니다. 독립 ZIP/XML oracle의 일반·`python -O` 자체 반례와 `--master` 조사에서 선택 파트 61개·브러시 40개(모두 winBrush, hatchStyle 부재)가 재현됐습니다. 같은 제품 소스의 known shard 8/8은 앞선 묶음에서 실행됐고 이번에는 반복하지 않았습니다. 마스터페이지 gradation/imgBrush 양성 실파일과 페이지 적용 결과는 여전히 미검증입니다.
