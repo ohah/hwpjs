@@ -9,3 +9,7 @@
 - `hwp5/parameters/types.zig`는 배치/노드 계약, `parser.zig`는 bounded ParameterSet 트리를 소유합니다. 헤더 4/6바이트와 NULL 4/0바이트 선택을 숨기지 않으며 배열은 관측 shared-ID 형식입니다. 원본 정수 4바이트/UTF-16과 소비하지 않은 꼬리를 보존합니다. 알 수 없는 타입을 건너뛰지 않고 UnsupportedParameterType으로 반환합니다. `cell_field.inspect`는 이 공통 파서로 지정된 root set의 직접 이름 항목만 검사합니다.
 
 - `parameters/references.zig`는 중첩 PIT_BINDATA의 1-based 참조, `sources.zig`는 DocData/ControlData/표 셀 확장 순회와 진단 집계를 소유합니다. secd의 직접 ControlData에만 section_control 문맥을 전달하며 `presentation_reference.zig`가 관측된 정확한 Set/Item 경로와 단일 그라데이션 플래그 4에서 사용하지 않는 이미지 ID 0을 인정합니다. 다른 채우기 종류/문맥으로 일반화하지 않습니다. binary_refs는 이 비활성 부재를 포함한 검사 항목 수이지 실제 스트림 해결 수가 아닙니다. `cell_field.fromDocument`를 재사용해 같은 Set을 다시 파싱하지 않습니다. UnsupportedParameterType만 보류로 바꾸고 잘림·한도·참조·셀 이름 오류는 전파합니다. parsed/unsupported/opaque/trailing을 전체 완료 수로 합산하지 않습니다.
+
+## 현재 계약 재검증 (2026-09-28)
+
+현재 `parameters/sources.zig`의 한 번 파싱한 Document 재사용·Context별 참조 검사·미지원 타입만 보류하는 실패 경계를 `references.zig`·`presentation_reference.zig`와 대조했습니다. ReleaseSafe `--test-filter 'parameter source'`는 3/3개(root 포함·직접 2) 통과했습니다. 이 실행은 PIT_BINDATA의 모든 실파일 값·Set 종류·전체 문서 API를 전수 대조한 것은 아니며 이전 전체 HWP5 감사와 변이도 이번에 재실행하지 않았습니다. `binary_refs`는 검사한 항목의 수이지 해결한 BinData 저장 스트림 수가 아닙니다.

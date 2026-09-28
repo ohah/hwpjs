@@ -630,8 +630,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "f9ca0dba1cd7e26419340a59c88acee37363c3556228f7112e5522f1e1f209cf",
-      "evidence": "2026-09-28 progress log updated for HWP5 paragraph flows memo ranges and note number links versus official rev1.3 Zig focused tests and one JS oracle; prior full audit distinguished"
+      "sha256": "7f190e32917ce65b49008b2ff7469f980f1498218a8b2441f03c89d2c7c97aba",
+      "evidence": "2026-09-28 progress log updated for HWP5 fields parameters tables drawings against current Zig and official rev1.3; focused ReleaseSafe tests and independent small grid oracle passed, broad table run unconfirmed, prior full audit distinguished"
     },
     "docs/hwpx-ole-payloads.md": {
       "sha256": "a7c214c0760d575237afcb960b7ff1fe976a0d99468e1083066e36c889deabad",
@@ -2192,6 +2192,22 @@
     "docs/hwp5-note-number-links.md": {
       "sha256": "3e8045195c9319a1b8019d491fa231979cf34f77e25d3c92049360768a0d7f82",
       "evidence": "2026-09-28 official HWP5 rev1.3 tables127 142 143 versus Zig direct note lists and diagnostic numbers, ReleaseSafe focused 5 passed 4 direct Node oracle 1; prior full audit and manual extra corpus not rerun"
+    },
+    "docs/hwp5-fields-contracts.md": {
+      "sha256": "fbd6026b67b39333dca0e0cebc515aad231856733ac93016e09a7d10237c28fc",
+      "evidence": "2026-09-28 official HWP5 rev1.3 table152 versus current Zig field and memo end collection integration, ReleaseSafe focused field validation 2 passed 1 direct; prior same code full audit not rerun"
+    },
+    "docs/hwp5-parameters-contracts.md": {
+      "sha256": "a6a220b3cb7d5031230dfab253e9c95fd3c6bea9615aa2cfce85e321932cf8a7",
+      "evidence": "2026-09-28 current Zig parameter sources references presentation and cell name reuse, ReleaseSafe source filter 3 passed 2 direct and wider parameter filter 26 passed including 8 direct; prior full audit not rerun"
+    },
+    "docs/hwp5-tables-contracts.md": {
+      "sha256": "906d62dabfc8501a9b2442828ebfd9cac3a00095f4b2ad8056200ef9ee08b5b2",
+      "evidence": "2026-09-28 current Zig table validation grid SSOT chosen layouts and remaining tails, ReleaseSafe owner traversal and grid sweep each 2 passed one direct each; broad table run unconfirmed prior full audit real files not rerun"
+    },
+    "docs/hwp5-drawings-contracts.md": {
+      "sha256": "4c163dfab26f55eee3f0c80938aaa3ff573873e2ca64519761fffe12947ab599",
+      "evidence": "2026-09-28 official HWP5 rev1.3 objects border group versus Zig optional OLE ordinal and selected BinData CFB, ReleaseSafe style diagnostics 2 passed 1 direct wider shape 29 passed including HWP5 tests; prior full audit not rerun"
     }
   }
 }

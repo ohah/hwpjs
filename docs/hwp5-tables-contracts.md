@@ -9,3 +9,7 @@
 - `table_grid.zig`는 Rectangle의 병합 경계 SSOT, 행별 시작 셀 수, 비중첩/완전 격자 채움을 소유합니다. table_validation은 할당자를 받아 이 검사를 호출합니다. 칸 수만큼 메모리를 할당하거나 총면적만으로 비중첩을 가정하지 않습니다. 공유 행 경계에서는 제거를 추가보다 먼저 처리합니다.
 
 - `cell_attributes.zig`는 호출자가 선택한 list view의 셀별 bit 16~19를 해석하고 원값을 보존합니다. `cell_extension.zig`는 명시적으로 선택한 관측 꼬리의 선택 text_width/marker와 remaining 원문만 소유합니다. 0xff는 ParameterSet 표시이지 고정 offset 필드명이나 유효성 보장이 아닙니다. Cell.parse는 여전히 꼬리 전체를 보존하며 자동으로 확장 형식을 가정하지 않습니다.
+
+## 현재 계약 재검증 (2026-09-28)
+
+현재 `table_validation.zig`가 명시적 list/zone 배치를 받아 부모·ID·셀 수를 검사하고 `table_grid.zig`에 행 분포/비중첩/채움 검사를 위임하는 것을 대조했습니다. ReleaseSafe `--test-filter 'table owner traversal'`과 `--test-filter 'grid sweep'`은 각각 2/2개(root 포함·직접 1) 통과했고 뒤 필터는 2×2 사각형 부분집합의 독립 dense oracle 대조를 실행했습니다. 이번 집중 테스트는 모든 실제 표·셀 배치나 시각적 조판을 전수 대조하지 않으며 이전 전체 HWP5 감사·변이를 재실행하지 않았습니다. 확장 꼬리의 의미와 저장은 계속 별도 범위입니다.

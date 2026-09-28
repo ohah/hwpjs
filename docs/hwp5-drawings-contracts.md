@@ -9,7 +9,7 @@
 
 - `equation.zig`는 EQEDIT 전용 payload이며 eqed의 object_common 헤더를 중복 소비하지 않습니다. 관측 version_only/with_font 배치는 명시적이고 baseline 뒤 미지 u16을 보존합니다. counted UTF-16은 utf16_string을 공유하며 폰트 부재/null과 빈 문자열을 구분합니다. `equation_validation.zig`는 Tree의 직접 부모/서브트리 경계로 eqed당 EQEDIT 하나와 고아·중복·누락을 검사합니다. 문서 equation_layout 기본값은 version_only이고 이후 폰트 바이트는 extra입니다. 수식 언어 실행/조판은 별도입니다.
 
-- `ole.zig`는 SHAPE_COMPONENT_OLE의 spec24/observed26 payload를 명시적으로 구분합니다. 속성은 각각 u16/u32이지만 BinData ID는 두 배치 모두 u16이며 테두리 색을 ID에 섞지 않습니다. `ole_validation.zig`는 첫 ID가 $ole인 SHAPE_COMPONENT의 직접 payload 한 개를 검증합니다. `owned_record.find`는 수식/OLE가 공유하는 직접 자식 검색 SSOT입니다. 문서 ole_layout 기본값은 observed26이며 BinData 해석은 pending_references로 남깁니다. 상위 도형의 전체 계층/기하 의미나 외부 링크·임베디드 프로그램 실행은 검사하지 않습니다.
+- `ole.zig`는 SHAPE_COMPONENT_OLE의 spec24/observed26 payload를 명시적으로 구분합니다. 속성은 각각 u16/u32이지만 BinData ID는 두 배치 모두 u16이며 테두리 색을 ID에 섞지 않습니다. `ole_validation.zig`는 첫 ID가 $ole인 SHAPE_COMPONENT의 직접 payload 한 개를 검증합니다. `owned_record.find`는 수식/OLE가 공유하는 직접 자식 검색 SSOT입니다. 문서 ole_layout 기본값은 observed26이고 `ole_references` 기본값은 uninspected라 pending_references로 남습니다. 명시적 observed_ordinal 정책에서는 양수 ID의 DocInfo 항목 범위만 검사하며 ID 0과 실제 저장 경로·내부 콘텐츠 의미는 미확정입니다([OLE 참조 계약](hwp5-ole-reference-evidence.md)). 별도 [BinData OLE 선택 검사](hwp5-ole-binaries.md)도 본문 ID와 저장 대상의 완전한 의미 연결은 아닙니다. 상위 도형의 전체 계층/기하 의미나 외부 링크·임베디드 프로그램 실행은 검사하지 않습니다.
 
 - `shape_component.zig`는 명시적 single_id/double_id와 42바이트 구성요소 필드를 소유합니다. 동일한 인접 DWORD를 보고 ID 개수를 추정하지 않습니다. `rendering.zig`는 translation 및 scale/rotation 쌍을 소유하고 binary.record_array로 96바이트 쌍의 borrowed 접근을 공유합니다. `shape_validation.zig`는 gso의 직접 구성요소 하나와 $con 아래 그룹 구성요소를 검증하며 부모에 따라 ID 배치를 선택합니다. 이중 ID 불일치·미지 비트·비유한 행렬 값은 별도 진단입니다. 문서 검사에 연결했지만 종류별 꼬리·행렬 합성·조판 의미는 아직 남았습니다.
 
@@ -52,3 +52,7 @@
 - `picture_additional.zig`는 최초 이미지 크기 u32 두 개와 선택 INT8 투명도를 소유합니다. dimensions8/with_alpha9를 명시적으로 선택하며 null과 0·-1을 구분합니다. alphaByte는 같은 비트의 unsigned view이지 백분율 변환이 아닙니다. `picture_tail.zig`는 명시적 instance-id prefix 이후의 Effects→선택 Additional 조립을 소유하고 두 읽기 전체의 커서를 원자적으로 갱신합니다. 효과가 가변 길이인데 마지막 바이트나 고정 offset에서 크기/투명도를 추정하지 않습니다.
 
 - `object_common.zig`는 tbl/gso/eqed 헤더의 공통 속성만 해석합니다. ID는 control_rules를 공유하고 UTF-16 길이 검사는 utf16_string을 재사용합니다. 설명 부재/빈 값, signed 위치와 unsigned 크기, 원시 플래그/꼬리를 보존하며 캡션·셀·도형 자식 레코드를 인라인 속성으로 소비하지 않습니다.
+
+## 현재 계약 재검증 (2026-09-28)
+
+[한컴 HWP5 revision 1.3](https://cdn.hancom.com/link/docs/%ED%95%9C%EA%B8%80%EB%AC%B8%EC%84%9C%ED%8C%8C%EC%9D%BC%ED%98%95%EC%8B%9D_5.0_revision1.3.pdf)의 개체 공통/테두리/묶음 표와 현재 `document/types.zig`의 명시적 배치·기본 미선택 정책, `ole_validation.zig`·`picture_validation.zig`·`drawing_style_validation.zig`의 진단/참조 책임을 재대조했습니다. ReleaseSafe `--test-filter 'style diagnostics'`는 2/2개(root 포함·직접 1) 통과했습니다. 이 집중 테스트는 나열한 모든 그리기 payload·실파일·종류별 스타일을 전수 검증하지 않으며 과거 세 모드 전체 audit와 변이도 이번에 재실행하지 않았습니다. 특히 OLE 순번 범위 확인과 BinData 내부 CFB 검사 성공을 렌더링·실행 또는 임의 HWP의 무손실 저장으로 확대하지 않습니다.

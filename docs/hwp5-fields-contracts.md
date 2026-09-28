@@ -10,7 +10,7 @@
 
 [메모 범위 진단](hwp5-memo-ranges.md)은 기존 파싱 결과에서 수집한 시작·끝 이벤트의 흐름별 짝과 순서를 소유하며 문서 보고서에 연결합니다. 번호 대상 존재 검사와 구분하고, 범위 진단 자체를 강제 오류로 처리하지 않습니다.
 
-- `body/memo_list.zig`는 태그 93의 u32 메모 번호와 extra를 보존하며 body reader가 재사용합니다. 0/비연속/상위 비트를 정규화하지 않고 번호를 DocInfo 메모 모양 ID나 문단 수로 취급하지 않습니다. payload 잘림은 문서/CFB까지 전파되지만 level 1 소유권·후속 LIST_HEADER·구역 간 필드 연결은 별도 검증 대상입니다. typed payload 분류를 메모 의미 검증 완료로 세지 않습니다.
+- `body/memo_list.zig`는 태그 93의 u32 메모 번호와 extra를 보존하며 body reader가 재사용합니다. 0/비연속/상위 비트를 정규화하지 않고 번호를 DocInfo 메모 모양 ID나 문단 수로 취급하지 않습니다. payload 잘림은 문서/CFB까지 전파됩니다. level 1 소유권·후속 LIST_HEADER는 `memo_validation`이, 문서 전역 필드 번호 연결은 `memo_references`가 별도로 검사하며 이 저수준 파서의 성공만으로 완료되지 않습니다.
 
 - `memo_list_header.Header.parse`는 기존 ListHeader의 observed8 view를 재사용해 메모용 signed 32비트 문단 수·속성·u32 텍스트 폭/높이·extra를 소유합니다. Groups.build는 같은 부모의 바로 앞 직접 형제가 MEMO_LIST인 경우에만 이 문맥을 선택하고 Group.memo에 번호 노드/해석한 헤더를 보존합니다. 메모는 음수/전체 32비트 개수를 검사하고 다른 리스트의 u16/opaque 상위 워드 계약은 유지합니다. 메모 표식 누락·중복·문서 전역 필드 연결 검증과 구분합니다.
 
@@ -22,8 +22,12 @@
 
 - `hwp5/memo_references.zig`는 문서 전역 메모 번호 인덱스와 진단을 소유합니다. section은 기존 Group.memo와 field_validation의 파싱 결과에서 번호/구역만 수집하고 document.validation은 모든 구역 검사 후 정렬/대조합니다. 번호 크기로 배열을 할당하지 않습니다. 부재 번호는 null 진단, 알려진 번호의 대상 누락/여러 대상은 오류이며 참조 없는 리스트·중복 필드 번호 자체는 진단입니다. DocInfo 모양/instance ID와 섞지 않고 미참조 리스트의 변경 추적 의미를 추정하지 않습니다. 반환 Report는 scalar 집계만 보유하며 임시 인덱스는 성공/실패 모두 해제합니다. 기존 section wire는 유지하고 테스트 mode 90에서 전역 보고서를 노출합니다.
 
-- `body/memo_end.zig`는 호출자가 선택한 code 4의 12바이트 data 중 관측 표식 0x00256d65와 가운데 미확정 DWORD/메모 번호를 읽습니다. 다른 표식은 null이며 보통 CTRL_HEADER ID와 같다고 가정하지 않습니다. 가운데 원값을 bool/고정값으로 축소하지 않고 0/UINT32_MAX 번호를 보존합니다. Text.Iterator가 토큰 폭·종결자/UTF-16 위치를 소유하며 테스트 mode 91은 이를 재사용합니다. 끝 토큰 해석과 문단 간 필드 범위·전역 메모 참조 검증 연결은 별도입니다.
+- `body/memo_end.zig`는 호출자가 선택한 code 4의 12바이트 data 중 관측 표식 0x00256d65와 가운데 미확정 DWORD/메모 번호를 읽습니다. 다른 표식은 null이며 보통 CTRL_HEADER ID와 같다고 가정하지 않습니다. 가운데 원값을 bool/고정값으로 축소하지 않고 0/UINT32_MAX 번호를 보존합니다. Text.Iterator가 토큰 폭·종결자/UTF-16 위치를 소유하며 테스트 mode 91은 이를 재사용합니다. 끝 토큰의 전역 대상 참조는 `memo_end_collection`/`memo_references`가, 관측 문단 간 시작·끝 짝 진단은 [메모 범위 계층](hwp5-memo-ranges.md)이 별도로 연결합니다. 이 파서 자체가 모든 필드 범위를 검증하지는 않습니다.
 
 - `memo_end_collection.zig`는 이미 만든 Tree의 Text.Iterator/memo_end 결과에서 끝 번호를 수집하며, 범위 수집기가 있으면 같은 결과의 원본 위치도 전달합니다. memo_references.Index는 ends와 fields의 출처 목록을 구분하되 하나의 lists 목록과 inspectRows 대조 함수를 공유합니다. document는 헤더 필드 참조 이후 EndReport를 검사해 끝의 대상 누락/모호함을 MissingMemoEndTarget/AmbiguousMemoEndTarget으로 전파합니다. 코드 4 전체를 메모로 추정하거나 문단별 닫힘을 강제하지 않습니다. mode 92는 ends 전용 9개 진단이며 기존 문서 wire는 유지합니다. 끝→리스트 참조와 시작·끝 범위의 짝/순서/중첩 검증은 구분합니다.
 
 - `field_validation.zig`는 control_rules에서 code 3으로 정의한 알려진 필드만 공통 파서로 검사하고 구역 개수·command 길이·속성 진단·꼬리를 집계합니다. '%' 접두사나 요약의 '%%%%'를 wildcard로 쓰지 않습니다. 읽기 전용 수정/수정됨/업데이트 종류는 원시 비트 view이며 실제 권한·링크 상태로 단정하지 않습니다. 전역 instance ID 유일성과 명령 종류별 의미 검증은 별도입니다.
+
+## 현재 계약 재검증 (2026-09-28)
+
+[한컴 HWP5 revision 1.3](https://cdn.hancom.com/link/docs/%ED%95%9C%EA%B8%80%EB%AC%B8%EC%84%9C%ED%8C%8C%EC%9D%BC%ED%98%95%EC%8B%9D_5.0_revision1.3.pdf) 표 152의 공통 필드와 현재 `field_validation`·`memo_end_collection`·`memo_range_collection`의 분리 경계를 대조했습니다. ReleaseSafe `--test-filter 'field validation allocation'`은 2/2개(root 포함·직접 1) 통과했습니다. 직전 같은 제품 코드의 ReleaseSafe HWP5 감사에는 필드/메모의 독립 실파일 검사가 포함됐지만 이번에는 전용 WASM 변이·전체 감사는 재실행하지 않았습니다. 시작·끝 짝은 관측 메모에 대한 진단이고 모든 필드 명령/인스턴스 의미의 검증이 아닙니다.
