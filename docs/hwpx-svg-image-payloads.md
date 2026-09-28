@@ -15,3 +15,5 @@
 합성 반례는 접두사 루트·잘못된 namespace·SVG 아닌 루트·DTD·미해결 개체·절단 XML·선언만 SVG인 임의 바이트·PNG 시그니처 우선·비표준 MIME·XML 요소 한도를 구분합니다. 형식 내부 오류는 다른 이미지 대상 검사를 막지 않되, 한도·할당 실패는 전체 검사 오류로 전파합니다. 위 한 개 추적 HWPX 테스트는 기본 root 테스트에 포함되지만, 8개 corpus shard 전체 대조는 기본 audit에 포함되지 않습니다. 재현 명령은 [개발·검증 명령](development-commands.md)에 둡니다.
 
 최종 소스에서는 SVG 코어·그림·브러시 선택 검사와 모든 할당 실패 경로, 독립 Python oracle 자체 반례, ReleaseFast corpus shard 0~7이 통과했습니다. 공유 이미지 코어의 SVG 분기를 브러시 보고서에서도 직접 확인했으며, corpus 브러시 SVG는 0건입니다. ReleaseSafe 전체 audit는 종료 코드 0, 제품 빌드는 5/5단계로 통과했습니다. 최종 Debug 전체 `zig build test --summary all`은 5/5단계·2,489/2,489 테스트를 통과했습니다.
+
+2026-09-28 재검증에서는 현재 SVG 코어의 강제 namespace 검사와 W3C의 SVG 루트·등록 MIME 정의, HWPX의 시그니처 우선·비표준 `image/svg` MIME 불일치 분기를 다시 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 SVG 구조 각 3/3·그림 payload 각 16/16·브러시 payload 각 11/11, 독립 Python oracle 자체 반례와 그림 후보 조사, ReleaseFast HWPX known 8/8이 통과했습니다. 이 결과는 XML 구조 및 후보 분류에 한정되며 SVG 렌더링 안전성·표시 동일성은 입증하지 않습니다. 앞 문단의 전체 Debug·audit 수치는 도입 당시 이력으로 이번에 재실행하지 않았습니다.

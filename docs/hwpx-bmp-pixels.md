@@ -21,3 +21,5 @@ Pillow는 선택적 로컬 비교 도구에만 사용하며 Zig 제품 빌드 �
 합성 반례는 구조만 통과하는 범위 밖 팔레트 색인, 픽셀 검사 비활성화, 두 BMP의 누적 RGBA 한도, 구조와 픽셀의 독립 한도, 모든 할당 실패를 검사합니다. 그림·브러시·manifest의 기존 공유 검사 회귀도 실행합니다. 최종 소스에서 전체 Debug 테스트 2,515/2,515개, ReleaseSafe 빌드·audit, 독립 BMP 픽셀 조사 8/8 shard, HWPX `inspectKnown()` 실파일 조사 8/8 shard가 통과했습니다. BMP 성공 대상의 RGBA 합계는 1,840,218,424바이트이며 독립 Pillow 해시 합계와 shard별로 일치했습니다. 기본 audit에는 실파일 shard가 포함되지 않으므로 이 검증을 재현하려면 [개발·검증 명령](development-commands.md)의 선택 명령을 별도로 실행해야 합니다.
 
 실제 `test-image.hwpx`의 `image1.bmp`는 그림 사이트 5개가 하나의 OPF 항목을 가리킵니다. `inspectKnown()`의 그림 보고서는 이를 대상 1개·참조 5개·RGBA 171,296바이트로, OPF 전체 후보 보고서는 별도 대상 1개·RGBA 171,296바이트로 반환합니다. 두 보고서를 합친 전역 이미지 예산이나 다섯 번의 픽셀 복호화를 주장하지 않습니다.
+
+2026-09-28 재검증에서는 현재 `image_payloads.zig`의 기본 BMP RGBA·선택적 구조 전용 경계와 오류/한도 전파를 대조했습니다. Debug·ReleaseSafe·ReleaseFast의 manifest BMP 3/3, 그림 payload 16/16, 브러시 payload 11/11이 각 모드에서 통과했습니다. 독립 Pillow 조사와 현재 ReleaseFast BMP 픽셀 조사 8/8은 후보 684개·엄격 수용 677개·파일 길이 오류 6개·영상 길이 오류 1개, 성공 RGBA 1,840,218,424바이트와 shard별 해시 합계를 일치시켰습니다. HWPX known 8/8도 통과했지만 BMP 색 관리·후속 배치·편집/저장 동등성은 검증하지 않습니다. 앞 문단의 전체 Debug·audit 결과는 도입 당시 이력이며 이번에 재실행하지 않았습니다.

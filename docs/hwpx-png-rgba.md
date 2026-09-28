@@ -15,3 +15,5 @@
 재현 명령은 [개발·검증 명령](development-commands.md)이 소유합니다.
 
 이번 연결을 포함한 전체 Debug `zig build test --summary all`은 5/5 단계·2,545/2,545 테스트, ReleaseSafe 제품 빌드는 5/5 단계 통과했습니다. 두 결과는 이 선택적 이미지 경로의 회귀 근거이며 HWPX 전체 파싱 완료 판정은 아닙니다.
+
+2026-09-28 재검증에서는 현재 공통 이미지 코어의 기본 scanline/명시적 RGBA 분기와 보고서별 독립 예산을 확인했습니다. Debug·ReleaseSafe·ReleaseFast의 `PNG RGBA` 집중 테스트는 각각 16/16 통과했고, ReleaseFast 제품 실파일 선택 조사 2/2 및 독립 Pillow 픽셀 대조에서 위 HWPX 256바이트 SHA-256을 재현했습니다. 같은 소스의 HWPX known 조사 8/8은 문서 연결 회귀이며 전체 HWPX PNG 픽셀의 독립 바이트 동치나 렌더링·저장 검증은 아닙니다. 앞 문단의 전체 빌드 수치는 도입 당시 이력으로, 이번에 재실행한 결과가 아닙니다.

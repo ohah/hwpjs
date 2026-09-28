@@ -630,8 +630,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "3b38ba1d799fa6844df58207ba546114ce4c9ba0ff582bb8b06dfdd6a49fcbce",
-      "evidence": "2026-09-28 tracker updated with HWPX picture links payloads and manifest image candidates, three-mode focused tests and independent ZIP OPF XML 476 corpus; source comment ownership corrected and historic known audit distinguished"
+      "sha256": "77c518080de772f55a122dd0d53787bbe0b89e0e5de67981ff5c37e2fd0b77a1",
+      "evidence": "2026-09-28 tracker updated with HWPX PNG BMP JPEG SVG image checks, three-mode focused tests and product PNG BMP JPEG known surveys, independent Pillow and Python oracles; historic full audits separated"
     },
     "docs/hwpx-ole-payloads.md": {
       "sha256": "a7c214c0760d575237afcb960b7ff1fe976a0d99468e1083066e36c889deabad",
@@ -1956,6 +1956,22 @@
     "docs/hwpx-line-segments.md": {
       "sha256": "2fd9e55dbc52ed4e5f244420d84de26a6ab60a56d8278886206a1de64a1c26b6",
       "evidence": "2026-09-28 official PType nine scalar fields versus Zig signed unsigned policy, Debug Safe Fast focused six each, Python 213905 arrays 254480 segments 6 empty 5790 flag highbit; known shards historic"
+    },
+    "docs/hwpx-png-rgba.md": {
+      "sha256": "284e1d147ec0ae0f2f5fa47bb6f5fdc2dbc877c92b0482a58ebaf7340b0fd202",
+      "evidence": "2026-09-28 current image core default versus optional RGBA, Debug Safe Fast 16 focused each, ReleaseFast product PNG 2 and known 8 shards, Pillow HWPX 256 byte pixel SHA match; whole image equivalence not claimed"
+    },
+    "docs/hwpx-bmp-pixels.md": {
+      "sha256": "31356c3318090dff40f6746e9f9af53c144d9f7f35cc06c9dc0fa1994caadb2e",
+      "evidence": "2026-09-28 current BMP default pixels and separate structure policy, Debug Safe Fast manifest 3 picture 16 brush 11 each, independent Pillow and Zig 8 shards 684 candidates 677 strict RGBA 1840218424 bytes, known 8 shards"
+    },
+    "docs/hwpx-jpeg-pixels.md": {
+      "sha256": "dd79ef0d2e7d4115bc344304e3b34717ba0a9145a10c98190739ffcac0dca0dd",
+      "evidence": "2026-09-28 current optional JFIF RGB and require_full, Debug Safe Fast manifest 5 picture 16 brush 11 each, Zig 8 shards 715 of 820 and 487055718 bytes, Pillow difference 152 pixels 456 channels preserved, known 8 shards"
+    },
+    "docs/hwpx-svg-image-payloads.md": {
+      "sha256": "0b4aa1dff872fe461d3ed7cd446489f510c71e7cdcdb799294a59ad937468729",
+      "evidence": "2026-09-28 W3C SVG root MIME versus current namespace and MIME diagnostic, Debug Safe Fast SVG 3 picture 16 brush 11 each, Python oracle self test picture census and Zig known 8 shards; rendering safety not claimed"
     }
   }
 }

@@ -31,3 +31,5 @@ Exif APP1 IFD0 방향 원값은 픽셀 옵션과 독립적인 `jpeg_exif_orienta
 JPEG 픽셀 검사 도입 단계의 전체 Debug `zig build test --summary all`은 종료 코드 0·2,520/2,520 테스트, ReleaseSafe 제품 빌드는 5/5 단계, ReleaseSafe 전체 `audit`과 `compare`도 종료 코드 0으로 통과했습니다. 8개 JPEG 선택 실파일 shard는 기본 audit에 포함되지 않으며 별도로 모두 통과했습니다. 전체 빌드 출력의 `failed command` 러너 문구는 최종 성공 종료 코드와 빌드 요약을 대체하지 않습니다.
 
 적대적 검토에서는 부분 progressive 계수를 RGB 성공으로 표시할 수 있던 옵션을 HWPX에서 제거해 `require_full`로 고정했고, 부분·산술·잘못된 엔트로피를 대상별 오류로 확인했습니다. 독립 조사기는 선두 APP의 실제 마커 코드를 확인하도록 보강했으며, 476개 문서와 후보 820개를 제품 조사와 분할별로 대조했습니다. 비준수 성분 ID를 조용히 `(1,2,3)`으로 바꾸거나 Adobe 색 충돌을 무시하지 않고, 큰 문서의 자원 한도를 근거 없이 늘리지 않았습니다. RGB 길이 일치를 픽셀 바이트 일치라고 주장하지 않는 것이 이번 검토의 중요한 결론입니다.
+
+2026-09-28 재검증에서는 현재 공통 `pixel_inspection.zig` 연결, 기본 framing/선택 RGB 및 `require_full` 정책을 확인했습니다. Debug manifest JPEG 5/5·HWP JPEG 9/9·known 선택 2/2와 세 모드의 manifest JPEG 각 5/5·그림 16/16·브러시 11/11이 통과했습니다. 독립 Python 후보 조사와 ReleaseFast 픽셀 조사 8/8은 후보 820개·엄격 JFIF RGB 성공 715개·거부 105개·성공 RGB 487,055,718바이트를 재현했습니다. `hwpx-jpeg-pixel-diff.py`도 위 그레이스케일 실파일의 152픽셀·456채널, 최대 절댓값 1의 Pillow 불일치를 재현했습니다. 따라서 픽셀 바이트 동치 주장은 여전히 불가합니다. HWPX known 8/8은 연결 회귀이고 앞 문단의 전체 빌드·audit 결과는 이번에 재실행하지 않은 도입 당시 이력입니다.
