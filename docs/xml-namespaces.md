@@ -38,4 +38,6 @@ prefix와 local은 한 문서의 동일 strict 인코딩 원문을 빌립니다.
 
 Debug·ReleaseSafe·ReleaseFast 전체 audit 모두 17/17 단계와 HWP5 감사 스크립트 3,082,533 checks를 통과했습니다. namespace 전용 WASM 검사는 정상 138건·거부 602건이며 정상 건에 실제 이력 XML 5개를 포함합니다. 초기 Debug audit는 네이티브 331/331이었고, scope 상태 직접 검사 추가 후 최종 Debug `zig build test`와 Safe/Fast 전체 audit는 각각 332/332입니다. 외부 진단 회귀 테스트 6/6 및 실제 `history-xml-audit`도 통과했습니다. 포맷·변경 JS 문법·문서 로컬 링크 42개를 검사했습니다.
 
-검사 횟수는 지원률이나 무결함 보장이 아닙니다. 후속 [HWP5 내부 XML 검증 연결](hwp5-xml-validation.md)은 별도 계약입니다. HWPX 통합과 DTD·스키마·문서 의미 검증은 여전히 남아 있습니다.
+검사 횟수는 지원률이나 무결함 보장이 아닙니다. [HWP5 내부 XML 검증 연결](hwp5-xml-validation.md)은 별도 계약입니다. 현재 HWPX의 `document_xml.zig`도 `validate_namespaces = true`로 이 공통 계층을 재사용합니다. 이는 HWPX의 선택된 XML 파트 연결이지 전체 스키마·문서 모델 완성이 아닙니다. DTD·스키마·문서 의미 검증은 여전히 남아 있습니다.
+
+2026-09-28에는 현재 `qname.zig`·`namespace_uri.zig`·`namespaces.zig`의 선언 선행 수집·scope 복원·확장 이름 중복과 W3C Namespaces 1.0 Third Edition의 예약 prefix/URI 경계를 재대조했습니다. 세 모드의 공통 XML 집중 테스트는 각각 91/91, 현재 ReleaseSafe HWP5 WASM audit는 10/10 단계·8,905,855 checks 통과입니다. HWPX 사용 사실은 제품 소스로 확인했지만 이번 audit의 HWP5 실파일 결과를 전체 HWPX namespace 동치로 확대하지 않습니다. 앞 문단의 332개 전체 테스트·외부 xmllint 결과는 도입 당시 이력입니다.

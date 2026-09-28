@@ -4,7 +4,7 @@
 
 `src/xml/document.zig`의 `inspect`는 입력 끝까지 읽어 단일 루트, 시작/종료 태그 이름과 중첩, 루트 밖 공백·주석·PI, 본문·CDATA를 검사합니다. 기준은 [W3C XML 1.0 Fifth Edition](https://www.w3.org/TR/2008/REC-xml-20081126/)의 문서·CharData·Comment·PI·CDSect·element 문법입니다.
 
-**DTD를 포함한 전체 XML 지원은 아닙니다.** DOCTYPE은 `UnsupportedXmlDtd`, 본문/속성의 미해결 엔터티는 `UnresolvedXmlEntity`로 거부합니다. 외부 파일이나 네트워크를 조회하지 않습니다. 기본 모드의 `namespaces_validated`는 false이며, `<p:r/>`의 구조 검사 성공은 prefix 바인딩 성공을 뜻하지 않습니다. `validate_namespaces = true`의 추가 검사·예산은 [namespace 검증](xml-namespaces.md)이 소유합니다. HWPML/HWPX 스키마·필드 의미, DiffML 복원, ZIP 연결, 문서 모델과 편집·저장은 후속 범위입니다. 제품 JS API는 여전히 CFB만 제공합니다.
+**DTD를 포함한 전체 XML 지원은 아닙니다.** DOCTYPE은 `UnsupportedXmlDtd`, 본문/속성의 미해결 엔터티는 `UnresolvedXmlEntity`로 거부합니다. 외부 파일이나 네트워크를 조회하지 않습니다. 기본 모드의 `namespaces_validated`는 false이며, `<p:r/>`의 구조 검사 성공은 prefix 바인딩 성공을 뜻하지 않습니다. `validate_namespaces = true`의 추가 검사·예산은 [namespace 검증](xml-namespaces.md)이 소유합니다. HWPX ZIP/파트와 HWP5 선택적 내부 XML의 연결은 현재 상위 계층에 있지만 이 범용 XML 검사기의 책임은 아닙니다. HWPML/HWPX 전체 스키마·필드 의미, DiffML 복원, 문서 모델과 편집·저장은 후속 범위입니다. 제품 JS API는 여전히 CFB만 제공합니다.
 
 - `document.zig`: 루트 상태, 빌린 이름의 스택, 태그 짝, 문서 전체 예산과 scalar 보고서.
 - `markup.zig`: 주석·CDATA·PI 구분과 종결 문법. 참조 해석이나 PI 실행은 하지 않습니다.
@@ -51,3 +51,5 @@
 기본 실행 명령은 [개발·검증 명령](development-commands.md)의 세 모드 audit를 사용합니다. Debug·ReleaseSafe·ReleaseFast 모두 17/17 단계, 네이티브 327/327 테스트, HWP5 감사 스크립트 3,081,655 checks를 통과했습니다. XML 문서 전용 WASM 검사는 정상 42건·거부 427건이며 정상 건에는 실파일 XML 5개가 포함됩니다. 이는 호출/테스트의 수이지 지원률이 아닙니다.
 
 마지막 네이티브 경계 사례는 첫 Debug/Safe audit 후 추가했습니다. 해당 추가분까지 포함한 최종 Debug/Safe `zig build test`도 각각 327/327 통과했고 ReleaseFast 전체 audit에는 처음부터 포함되었습니다. 포맷·변경 JS 문법·문서 로컬 링크 32개도 검사했습니다. 이 파트의 통과가 전체 문서 지원이나 결함 부재를 보장하지는 않습니다.
+
+2026-09-28 재검증에서는 현재 `document.zig`의 단일 루트·DTD 거부·namespace 선택·본문 이벤트 및 HWPX `document_xml.zig`와 HWP5 `xml_validation.zig`의 서로 다른 연결 경계를 확인했습니다. Debug·ReleaseSafe·ReleaseFast 공통 XML 집중 테스트는 각각 91/91, ReleaseSafe HWP5 WASM audit는 10/10 단계·8,905,855 checks 통과입니다. 이 audit에는 HWP5 실파일 oracle이 포함되지만 위 도입 당시 외부 xmllint 수치나 모든 HWPX XML 파트의 독립 전수 대조를 이번에 재실행한 것은 아닙니다. DTD·스키마·렌더링·편집·저장 지원으로 확대하지 않습니다.

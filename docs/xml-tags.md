@@ -43,7 +43,7 @@ Value.iterator는 별도 읽기 전용 순회이며 원래 문서 Input의 예�
 
 적대적 재검토는 태그/값의 구분자 경계, literal/참조 정규화, 중복 이름/namespace 범위, 여러 예산/비영점 offset/할당 실패, SSOT·독립 기준·실측 범위로 나누었습니다. 비영점 offset의 정확/부족 태그 한도와 문자·따옴표 조합을 보강했습니다. 최종 검사에서 추가 제품 결함은 발견하지 못했습니다.
 
-실파일 treatise sample.hwp의 이력 XML 다섯 payload에서는 **첫 루트 태그만** 검사했습니다. VersionLog0은 20바이트 빈 요소 태그, 나머지 VersionLog는 각 18바이트 시작 태그이며 속성이 없습니다. HistoryLastDoc의 루트 시작 태그는 112바이트·속성 3개입니다. 이 결과를 나머지 XML의 중첩/문서 검증 성공으로 확대하지 않습니다.
+태그 계층 도입 당시 실파일 treatise sample.hwp의 이력 XML 다섯 payload에서는 **첫 루트 태그만** 검사했습니다. VersionLog0은 20바이트 빈 요소 태그, 나머지 VersionLog는 각 18바이트 시작 태그이며 속성이 없습니다. HistoryLastDoc의 루트 시작 태그는 112바이트·속성 3개입니다. 이후 전체 XML 검사 연결은 [문서 구조 검증](xml-document.md)의 별도 근거이며, 이 초기 태그 검사 자체를 전체 문서 성공으로 확대하지 않습니다.
 
 별도 수동 확인에서는 literal 공백/TAB/CRLF와 숫자 TAB/LF/CR·기본 엔터티가 섞인 속성 값을 xmllint로 읽었습니다. UTF-8·UTF-16LE·UTF-16BE 모두 기대 scalar 열과 일치했습니다. 기본 audit에 외부 도구 의존성을 추가하지 않았습니다.
 
@@ -52,3 +52,5 @@ Value.iterator는 별도 읽기 전용 순회이며 원래 문서 Input의 예�
 Debug → ReleaseSafe → ReleaseFast 전체 audit는 각각 17/17 단계·네이티브 322/322이 통과했습니다. Debug 전체는 테스트 보강 전 3,072,864 checks였으며, 이후 최종 네이티브 Debug 322/322과 최종 WASM 집중 검증(정상 1,377·거부 5,871)을 별도로 통과했습니다. 제품 태그 처리 로직은 보강 중 변경하지 않았습니다. 최종 구성의 ReleaseSafe/ReleaseFast 전체는 각각 3,081,141 checks입니다. 기존 Node 47개·조사 22개·XML 외부 경계 6개도 통과했습니다.
 
 전체 로그는 `/tmp/hwpjs-xml-tag-{debug,safe,fast}.log`, 최종 네이티브 Debug 로그는 `/tmp/hwpjs-xml-tag-native-debug-final.log`입니다. 최종 Debug 집중 검증은 `.zig-cache/o/a241cce4617671d2a5e9c87809883736/hwp5-probe.wasm`에서 수행했습니다. 캐시가 없어도 audit 재빌드로 최종 검사를 실행합니다. 포맷·변경 JS 문법·diff 검사와 변경 문서의 로컬 링크 19개 존재 확인도 통과했습니다.
+
+2026-09-28에는 현재 `tags.zig`·`attribute_value.zig`의 태그별 원자성·literal/참조 공백 정규화·중복 속성 책임을 XML 1.0 Fifth Edition과 대조했습니다. Debug·ReleaseSafe·ReleaseFast 공통 XML 집중 테스트는 각각 91/91, ReleaseSafe HWP5 WASM audit는 10/10 단계·8,905,855 checks 통과입니다. 이는 도입 당시 mode 122 정상 1,377/거부 5,871 호출을 이번에 단독 재실행했다는 뜻이 아닙니다. 태그 단독 검사를 전체 문서/namespace 판정으로 승격하지 않습니다.

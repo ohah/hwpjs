@@ -630,8 +630,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "77c518080de772f55a122dd0d53787bbe0b89e0e5de67981ff5c37e2fd0b77a1",
-      "evidence": "2026-09-28 tracker updated with HWPX PNG BMP JPEG SVG image checks, three-mode focused tests and product PNG BMP JPEG known surveys, independent Pillow and Python oracles; historic full audits separated"
+      "sha256": "2488e2d97bca19b03089256f2845e1940beb3f0933577b415be0c4fde70ff1f5",
+      "evidence": "2026-09-28 tracker updated with common XML six docs current source and W3C comparison, Debug Safe Fast XML 91 each, ReleaseSafe HWP5 WASM audit 10 steps 8905855 checks, stale HWPX and HWP5 integration wording corrected"
     },
     "docs/hwpx-ole-payloads.md": {
       "sha256": "a7c214c0760d575237afcb960b7ff1fe976a0d99468e1083066e36c889deabad",
@@ -1972,6 +1972,30 @@
     "docs/hwpx-svg-image-payloads.md": {
       "sha256": "0b4aa1dff872fe461d3ed7cd446489f510c71e7cdcdb799294a59ad937468729",
       "evidence": "2026-09-28 W3C SVG root MIME versus current namespace and MIME diagnostic, Debug Safe Fast SVG 3 picture 16 brush 11 each, Python oracle self test picture census and Zig known 8 shards; rendering safety not claimed"
+    },
+    "docs/xml-input.md": {
+      "sha256": "cbb263fba145fc7edf2f5950589e4993bed03b3448303e01533ab458bfcb9ec9",
+      "evidence": "2026-09-28 current Unicode scalar XML Char CRLF and budgets versus W3C XML 1.0, Debug Safe Fast XML 91 each, ReleaseSafe HWP5 WASM audit 10 steps 8905855 checks; historical mode 118 counts not rerun"
+    },
+    "docs/xml-declaration.md": {
+      "sha256": "be2c9f09da91f8cc65807b166cce54a97bf29c2c32c4238a6e830cb1d5c3183c",
+      "evidence": "2026-09-28 current BOM declaration external encoding policy and optional HWP5 XML connection versus W3C XML 1.0, Debug Safe Fast XML 91 each, ReleaseSafe HWP5 WASM audit 10 steps 8905855 checks; historical mode 119 counts not rerun"
+    },
+    "docs/xml-names-references.md": {
+      "sha256": "65ad77a2254b457e5939a412acaa1cdec8f6d7b32e227f226956c9dd8b3b247e",
+      "evidence": "2026-09-28 current Name ranges and numeric predefined unresolved reference policy versus W3C XML 1.0, Debug Safe Fast XML 91 each, ReleaseSafe HWP5 WASM audit 10 steps 8905855 checks; historical exhaustive oracle not rerun"
+    },
+    "docs/xml-tags.md": {
+      "sha256": "415d3111384fddef811273b1fd390e9056e9f248b29ea985f229a1a581512e71",
+      "evidence": "2026-09-28 current tags attributes atomicity whitespace and duplicate policy versus W3C XML 1.0, Debug Safe Fast XML 91 each, ReleaseSafe HWP5 WASM audit 10 steps 8905855 checks; historic first root only scope clarified"
+    },
+    "docs/xml-namespaces.md": {
+      "sha256": "9e662f6a406d2d75358c429fc03f37990220e1128518b70fe00be6751b63ec9c",
+      "evidence": "2026-09-28 current namespace QName scope URI reservations and HWPX selected part integration versus W3C Namespaces third edition, Debug Safe Fast XML 91 each, ReleaseSafe HWP5 WASM audit 10 steps 8905855 checks"
+    },
+    "docs/xml-document.md": {
+      "sha256": "a1197b621d43f82c80c1d005b9624a47cb4a4b3eb08aacb08388ee364bf75915",
+      "evidence": "2026-09-28 current document root DTD refusal content visitor and upper HWPX HWP5 connections versus W3C XML 1.0, Debug Safe Fast XML 91 each, ReleaseSafe HWP5 WASM audit 10 steps 8905855 checks; historic xmllint not rerun"
     }
   }
 }

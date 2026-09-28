@@ -2,7 +2,7 @@
 
 ## 범위와 기준
 
-HWPML·HWPX XML 파서에 공통으로 사용할 메모리 기반 문자 읽기 계층입니다. **아직 태그 파서나 XML 문서 검증기가 아닙니다.** 기존 HWP5 raw UTF-16 보존 정책과 공개 CFB JS API는 변경하지 않습니다.
+HWP5의 선택적 내부 XML 검사와 HWPX 파서가 재사용하는 메모리 기반 문자 읽기 계층입니다. **이 계층 자체는 태그 파서나 XML 문서 검증기가 아닙니다.** 기존 HWP5 raw UTF-16 보존 정책과 공개 CFB JS API는 변경하지 않습니다.
 
 기준은 [W3C XML 1.0 Fifth Edition §2.2](https://www.w3.org/TR/2008/REC-xml-20081126/#charsets)의 Char 생성 규칙과 [§2.11](https://www.w3.org/TR/2008/REC-xml-20081126/#sec-line-ends)의 외부 parsed entity 줄바꿈 처리입니다. 권고하지 않는 문자와 문법상 금지 문자를 구별합니다. 예를 들어 U+FDD0·U+10FFFF는 허용하고 U+FFFE·U+FFFF는 거부합니다. XML 1.1 규칙을 섞지 않습니다.
 
@@ -23,7 +23,7 @@ HWPML·HWPX XML 파서에 공통으로 사용할 메모리 기반 문자 읽기 
 
 이 저수준 Input의 인코딩은 호출자가 명시해야 합니다. BOM 인식/제거와 XML 선언·인코딩의 일치 검사는 별도 [선언·인코딩 시작 계층](xml-declaration.md)이 소유합니다. Input 자체는 U+FEFF를 위치에 관계없이 문자로 반환합니다. 이 동작을 완성된 XML entity 처리로 해석하면 안 됩니다.
 
-Input 자체는 `&#13;`을 literal 문자들로 반환하며 해석은 참조 토큰 계층이 소유합니다. 참조 결과의 CR을 이 계층에 다시 넣으면 잘못 LF로 바뀌므로 재정규화하지 않아야 합니다. [태그·속성 계층](xml-tags.md)이 CDATA 방식 속성 정규화를, [문서 구조 계층](xml-document.md)이 중첩·주석·CDATA·PI 검사를, [namespace 계층](xml-namespaces.md)이 선택적 prefix·확장 이름 검사를 소유합니다. 일반 entity 확장·DTD·스키마·DiffML 경로/복원, HWPX ZIP과 문서 모델 연결은 미구현입니다. 입력이 `<` 한 문자여도 이 계층의 문자 검사는 통과하지만 XML 문법은 불완전합니다.
+Input 자체는 `&#13;`을 literal 문자들로 반환하며 해석은 참조 토큰 계층이 소유합니다. 참조 결과의 CR을 이 계층에 다시 넣으면 잘못 LF로 바뀌므로 재정규화하지 않아야 합니다. [태그·속성 계층](xml-tags.md)이 CDATA 방식 속성 정규화를, [문서 구조 계층](xml-document.md)이 중첩·주석·CDATA·PI 검사를, [namespace 계층](xml-namespaces.md)이 선택적 prefix·확장 이름 검사를 소유합니다. HWPX ZIP 연결과 선택적 HWP5 내부 XML 검사는 상위 계층에 존재하지만 이 Input의 책임이 아닙니다. 일반 entity 확장·DTD·스키마·DiffML 복원과 전체 편집 모델은 미구현입니다. 입력이 `<` 한 문자여도 이 계층의 문자 검사는 통과하지만 XML 문법은 불완전합니다.
 
 ## 독립·적대적 검증
 
@@ -42,3 +42,5 @@ Input 자체는 `&#13;`을 literal 문자들로 반환하며 해석은 참조 �
 세 모드의 전체 audit를 순차 실행했고 모두 17/17 단계·네이티브 307/307이 통과했습니다. Debug 전체 실행은 위 테스트 보강 전 구성으로 1,826,440 checks였습니다. 이후 최종 네이티브 Debug 테스트 307/307과 최종 WASM 집중 검증(accepted 138,848/rejected 58,275)을 별도로 다시 통과했습니다. 제품 문자 읽기 코드는 그 사이 변경하지 않았습니다. 보강 후 ReleaseSafe와 ReleaseFast 전체 audit는 각각 1,826,609 checks로 통과했습니다. 서로 다른 테스트 구성을 같은 실행 수치로 기록하지 않습니다.
 
 전체 로그는 `/tmp/hwpjs-xml-input-{debug,safe,fast}.log`, 최종 네이티브 Debug 로그는 `/tmp/hwpjs-xml-input-native-debug-final.log`입니다. 최종 Debug 집중 검증은 `.zig-cache/o/d58860b0912835011b57e369d0e17a38/hwp5-probe.wasm`에서 수행했습니다. 이 캐시가 없어도 전체 audit를 재빌드하면 보강한 검사를 실행합니다. Node 기존 47개·조사 도구 22개·XML 외부 경계 6개도 통과했습니다. 포맷/JS 문법/diff 검사와 변경 문서의 로컬 링크 17개 존재 확인을 통과했습니다.
+
+2026-09-28 현재 코드·W3C XML 1.0 Fifth Edition의 Char/줄바꿈 경계를 재대조했습니다. Debug·ReleaseSafe·ReleaseFast의 공통 XML 집중 테스트는 각각 91/91 통과했고 현재 ReleaseSafe HWP5 WASM audit는 10/10 단계·8,905,855 checks를 통과했습니다. 이 audit는 여러 주제의 합산이며 위 역사적 mode 118 개별 횟수를 재측정한 값은 아닙니다. HWPX 문서 연결은 별도 상위 계층의 현재 코드로 확인했으며 Input만으로 문서 적합성을 주장하지 않습니다.

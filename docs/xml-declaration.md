@@ -30,7 +30,7 @@ BOM은 전체 바이트 한도에 포함하되 문자 예산에는 포함하지 
 
 ## 실파일과 적대적 검증
 
-기존 treatise sample.hwp의 이력 XML 다섯 payload는 모두 BOM·XMLDecl이 없는 UTF-16LE였습니다. Node 독립 압축 해제 원문을 사용하고 external_encoding=utf16le로 읽습니다. 일반 UTF-8 자동 선택과 섞지 않습니다. 기존 HWP5 컨테이너 검사에 자동 연결하지 않았으며 공개 JS API도 변경하지 않았습니다.
+기존 treatise sample.hwp의 이력 XML 다섯 payload는 모두 BOM·XMLDecl이 없는 UTF-16LE였습니다. Node 독립 압축 해제 원문을 사용하고 external_encoding=utf16le로 읽습니다. 일반 UTF-8 자동 선택과 섞지 않습니다. 도입 당시에는 HWP5 컨테이너 검사에 연결하지 않았지만, 현재 `src/hwp5/container/validation.zig`는 명시적 `xml` 옵션을 선택했을 때 같은 문서 검사 계층을 연결합니다. 기본값은 null이며 공개 JS API는 변경하지 않았습니다.
 
 네이티브 검사는 선언 원문·borrowed 위치·미선택/실패 원자성, 순서/중복/따옴표/빈 값/이름/문자 참조, 잘림, UTF-8/양쪽 UTF-16/BOM/외부 지정 조합, generic UTF-16 BOM 필수, 미지원 인코딩, 바이트/문자/선언의 정확·부족 한도를 포함합니다. 선언 다음 NUL, 두 번째 BOM과 남은 예산도 검사합니다.
 
@@ -49,3 +49,5 @@ mode 119의 테스트 접두부는 external u8(0=자동, 1=UTF-8, 2=UTF-16LE, 3=
 Debug → ReleaseSafe → ReleaseFast 전체 audit는 각각 17/17 단계·네이티브 313/313이 통과했습니다. Debug 전체는 테스트 보강 전 1,827,040 checks이며, 이후 같은 선언 처리 로직의 Debug WASM에서 최종 집중 검사 accepted 82/rejected 338을 다시 통과했습니다. 최종 구성의 ReleaseSafe/ReleaseFast 전체는 각각 1,827,113 checks입니다. 기존 Node 47개·조사 22개·XML 외부 경계 6개도 통과했습니다. 검사 수치를 전체 XML 문법 지원률로 해석하지 않습니다.
 
 전체 로그는 `/tmp/hwpjs-xml-prolog-{debug,safe,fast}.log`이고, Debug 집중 검증 산출물은 `.zig-cache/o/b13eb234abe2e00791f966df79c5f5ac/hwp5-probe.wasm`입니다. 캐시가 없어도 audit 재빌드로 최종 검사를 실행합니다. 포맷·변경 JS 문법·diff 검사와 변경 문서의 로컬 링크 12개 존재 확인도 통과했습니다.
+
+2026-09-28 재검증에서는 현재 `declaration.zig`·`encoding.zig`·`prolog.zig`의 BOM·선언·외부 인코딩 우선순위와 원자적 오류 경계를 XML 1.0 Fifth Edition에 다시 대조했습니다. 공통 XML 집중 테스트는 Debug·ReleaseSafe·ReleaseFast 각각 91/91, 현재 ReleaseSafe HWP5 WASM audit는 10/10 단계·8,905,855 checks 통과입니다. 앞 문단의 초기 컴파일 실패와 전체 313개 테스트 수는 도입 당시 이력이며 이번 결과가 아닙니다. 외부 TextDecl·DTD·XML 1.1 지원은 여전히 주장하지 않습니다.

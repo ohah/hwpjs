@@ -48,3 +48,5 @@ XML 1.0의 Name과 Reference를 읽는 공통 토큰 계층입니다. 기준은 
 Debug → ReleaseSafe → ReleaseFast 전체 audit가 각각 17/17 단계·네이티브 317/317을 통과했습니다. Debug 전체는 보강 전 테스트 구성의 2,941,418 checks였으며, 이후 같은 제품 로직의 Debug WASM에서 위 최종 집중 검증을 다시 통과했습니다. 최종 구성의 ReleaseSafe/ReleaseFast 전체는 각각 3,072,516 checks입니다. 기존 Node 47개·조사 22개·XML 외부 경계 6개도 통과했습니다. 기존 선언/인코딩/문자 입력 검사가 포함되므로 shared View 이동에 따른 회귀도 대조합니다.
 
 전체 로그는 `/tmp/hwpjs-xml-reference-{debug,safe,fast}.log`, 최종 Debug 집중 검증 산출물은 `.zig-cache/o/d1098b8b3746e8317da105480d67f308/hwp5-probe.wasm`입니다. 캐시가 없어도 audit 재빌드로 최종 검사를 실행합니다. 포맷·변경 JS 문법·diff 검사와 변경 문서의 로컬 링크 14개 존재 확인도 통과했습니다.
+
+2026-09-28에는 현재 `characters.zig`의 NameStartChar/NameChar 범위와 `references.zig`의 숫자·기본·미해결 참조 분기를 XML 1.0 Fifth Edition과 대조했습니다. 공통 XML 집중 테스트는 Debug·ReleaseSafe·ReleaseFast 각각 91/91, ReleaseSafe HWP5 WASM audit는 10/10 단계·8,905,855 checks 통과입니다. 이 합산 audit 수치가 위 도입 당시 이름 1,114,114개·BMP 숫자 참조 전수 비교의 이번 재실행을 의미하지는 않습니다. QName·엔터티 선언 의미는 상위 또는 미지원 책임으로 남깁니다.

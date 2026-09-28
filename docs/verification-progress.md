@@ -1,5 +1,7 @@
 # 프로젝트 문서 검증 현황
 
+공통 XML 문자 입력·선언/인코딩·이름/참조·태그/속성·namespace·문서 구조 여섯 문서를 현재 Zig 모듈과 W3C XML 1.0 Fifth Edition/Namespaces 1.0 Third Edition, 세 모드 집중 테스트 및 ReleaseSafe HWP5 WASM audit에 재대조했습니다. XML 필터는 Debug·ReleaseSafe·ReleaseFast 각각 91/91, HWP5 audit는 10/10 단계·8,905,855 checks 통과입니다. 현재 HWPX의 선택된 XML 파트와 HWP5의 명시적 XML 옵션 연결을 확인해 ‘HWPX 통합 미구현’·‘HWP5 미연결’이라는 도입 당시 문장을 교정했습니다. 도입 당시의 개별 WASM 입력 전수·xmllint 수치와 전체 세 모드 audit는 이번에 재실행하지 않았고, DTD·전체 HWPX 스키마·편집/저장·화면 동등성은 검증되지 않았습니다.
+
 HWPX PNG RGBA·BMP RGBA·선택 JPEG RGB·SVG 구조 네 이미지 문서를 현재 공통 이미지 코어, 세 모드 집중 테스트 및 독립 실파일 조사에 재대조했습니다. 세 모드의 PNG 16/16·manifest BMP 3/3·manifest JPEG 5/5·SVG 구조 3/3·그림 payload 16/16·브러시 payload 11/11이 각각 통과했습니다. ReleaseFast 제품 PNG 선택 2/2, BMP 픽셀 8/8·JPEG 픽셀 8/8·HWPX known 8/8, Pillow PNG 픽셀 해시·BMP 677개 엄격 성공의 shard별 해시가 재현됐습니다. JPEG는 엄격 성공 715개/후보 820개와 실제 그레이스케일의 Pillow 대비 152픽셀·456채널 차이를 그대로 기록했습니다. 도입 당시 전체 빌드·audit를 이번 결과로 재주장하지 않으며, SVG 렌더링 안전성·JPEG 바이트 동치·화면 출력·편집/저장은 미검증입니다.
 
 HWPX 그림 이미지 OPF 연결·그림 payload·OPF 전체 이미지 후보 세 문서를 현재 Zig의 참조/manifest/공통 이미지 코어 경계, 세 모드 집중 테스트와 독립 ZIP/OPF/XML 조사에 대조했습니다. Debug·ReleaseSafe·ReleaseFast에서 그림 링크 각 7/7·payload 각 16/16·manifest 후보 각 6/6개와 미참조 known 연결 각 2/2개가 통과했습니다. 독립 조사 수용 476문서의 그림 사이트는 section 1,993개·마스터페이지 35개, 그림 고유 내장 대상은 1,513개이며 OPF 전체 후보는 2,253건(내장 2,249·외부 4), 선택된 그림·브러시 사이트 미참조 346건이었습니다. 그림의 MIME 불일치 106건·PNG 내부 오류 최소 29대상, OPF 전체 MIME 불일치 219건을 서로 다른 보고서 계수로 유지했습니다. 그림 ID 소유권과 반대로 적힌 코드 주석을 고쳤지만 실행 의미는 바꾸지 않았습니다. 이전 known shard 8/8·전체 audit는 이번에 재실행하지 않았고, 미참조를 모든 참조 부재로 일반화하거나 렌더링·편집·저장 지원으로 확대하지 않습니다.
