@@ -72,6 +72,31 @@ test("HWP5 public preview preserves exact text-token bytes from two real files",
   }
 });
 
+test("HWP5 preview repairs only observed CFB metadata without changing text", async () => {
+  const bytes = fixture("example.hwp");
+  const input = Buffer.from(bytes);
+  const sectorSize = 1 << input.readUInt16LE(30);
+  const sectors = input.length / sectorSize - 1;
+  const root = (input.readUInt32LE(48) + 1) * sectorSize;
+  const fat = (input.readUInt32LE(76) + 1) * sectorSize;
+  input.writeBigUInt64LE(17n, root + 100);
+  input.writeUInt32LE(0, fat + sectors * 4);
+  const preview = await createHwp5Reader(wasm);
+  const cfb = await createCfbReader(wasm);
+  try {
+    const expected = preview.readText(bytes);
+    assert.throws(() => cfb.parse(input, { strict: true }), /InvalidFat/);
+    assert.deepEqual(preview.readText(input), expected);
+    assert.deepEqual(bytes, fixture("example.hwp"));
+    const broken = Buffer.from(input);
+    broken.writeUInt32LE(0xffffffff, fat + input.readUInt32LE(76) * 4);
+    assert.throws(() => preview.readText(broken), /InvalidFat/);
+  } finally {
+    preview.close();
+    cfb.close();
+  }
+});
+
 test("HWP5 preview matches raw section text across all tracked HWP fixtures", async () => {
   const hwp = await createHwp5Reader(wasm);
   const cfb = await createCfbReader(wasm);

@@ -24,7 +24,7 @@
 
 [HWPX BMP 픽셀 검사](hwpx-bmp-pixels.md)는 `src/hwpx/image_payloads.zig`가 세 이미지 보고서의 공통 ZIP·한도·결과를 소유하고 `src/image/bmp/pixels.zig`의 RGBA 디코더를 재사용합니다. 선택 실파일 대조는 `src/hwpx_bmp_pixel_survey.zig`에 둡니다.
 
-[HWPX OLE 관측 편차 복사본 검사](hwpx-ole-observed-repairs.md)는 `src/cfb/observed_repairs.zig`가 세 가지 비준수 메타데이터 위치만 임시 치환하고 같은 strict reader를 다시 호출합니다. `src/hwpx/ole_payloads.zig`는 원본 실패와 복사본 결과를 분리합니다.
+[CFB 관측 편차 복사본 검사](hwpx-ole-observed-repairs.md)는 `src/cfb/observed_repairs.zig`가 관측된 비준수 메타데이터만 임시 치환하고 같은 strict reader를 다시 호출합니다. `src/hwpx/ole_payloads.zig`는 원본 실패와 복사본 결과를 분리하며, `src/hwp5/text_preview.zig`는 strict 실패 뒤 좁은 복구가 통과한 경우에만 미리보기를 진행합니다. `src/cfb_observed_repair_survey.zig`는 선택적 실파일 스트림 대조만 소유합니다.
 
 [HWPX OLE 패키지 사본 검사](hwpx-ole-payloads.md)는 `src/hwpx/ole_payloads.zig`가 OPF 후보·외부 선언과 ZIP 내 사본을 분리하고 `src/ole/`의 공통 strict CFB 계층을 재사용합니다. HWP5의 `src/hwp5/ole/`은 같은 계층을 재노출합니다.
 

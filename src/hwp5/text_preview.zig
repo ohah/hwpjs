@@ -1,6 +1,7 @@
 //! Bounded, read-only HWP5 paragraph-token preview. Not a document model.
 const std = @import("std");
 const Cfb = @import("../cfb/reader.zig").File;
+const observed_repairs = @import("../cfb/observed_repairs.zig");
 const Header = @import("file_header.zig").Header;
 const docinfo = @import("docinfo/reader.zig");
 const Tree = @import("body/tree.zig").Tree;
@@ -20,7 +21,7 @@ pub fn encode(backing: std.mem.Allocator, input: []const u8) ![]u8 {
     var arena = std.heap.ArenaAllocator.init(backing);
     defer arena.deinit();
     const a = arena.allocator();
-    var file = try Cfb.open(a, input, .{ .strict = true, .max_input_bytes = max_input, .max_stream_bytes = max_stream, .max_total_stream_bytes = max_input });
+    var file = try openCfb(backing, input);
     defer file.deinit();
     const header = try Header.parse(try file.readStream(a, "/FileHeader"));
     try @import("feature_policy.zig").requireSupported(&header, .reject);
@@ -84,6 +85,20 @@ pub fn encode(backing: std.mem.Allocator, input: []const u8) ![]u8 {
         std.mem.writeInt(u32, out.items[count_pos..][0..4], count, .little);
     }
     return backing.dupe(u8, out.items);
+}
+
+fn openCfb(a: std.mem.Allocator, input: []const u8) !Cfb {
+    const limits: @import("../cfb/reader.zig").Options = .{ .strict = true, .max_input_bytes = max_input, .max_stream_bytes = max_stream, .max_total_stream_bytes = max_input };
+    return Cfb.open(a, input, limits) catch |strict_err| switch (strict_err) {
+        error.InvalidRoot, error.InvalidFat, error.InvalidUnusedEntry, error.UnclaimedMiniSector => {
+            const repaired = observed_repairs.open(a, input, limits) catch |repair_err| switch (repair_err) {
+                error.OutOfMemory, error.LimitExceeded => return repair_err,
+                else => return strict_err,
+            };
+            return repaired.file;
+        },
+        else => return strict_err,
+    };
 }
 
 fn sectionCount(bytes: []const u8, version: @import("version.zig").Version) !u16 {

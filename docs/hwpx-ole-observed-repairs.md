@@ -2,9 +2,11 @@
 
 ## 범위와 판정
 
-`src/cfb/observed_repairs.zig`는 원본 CFB가 strict 검사에서 `InvalidRoot` 또는 `InvalidFat`으로 실패한 경우에만 HWPX OLE 계층이 호출합니다. 원본 바이트와 원래 `Target.inspection_error`는 그대로 둡니다. 임시 복사본의 **루트 생성 시간**, **파일 끝 이후 FAT 슬롯의 0**, **루트 mini-stream 용량 밖 MiniFAT 슬롯의 0**만 명세값으로 치환한 뒤 기존 strict CFB reader 전체를 다시 실행합니다. 다른 값·위치·구조 오류는 고치지 않고 `normalization_error`로 남깁니다. 이것은 원본의 명세 적합성 인정도 파일 저장/수정도 아닙니다.
+`src/cfb/observed_repairs.zig`는 원본 CFB가 strict 검사에서 `InvalidRoot` 또는 `InvalidFat`으로 실패한 경우에만 HWPX OLE 계층이 호출합니다. HWP5 미리보기는 `InvalidUnusedEntry`·`UnclaimedMiniSector`도 후보로 삼지만, 이 네 오류 외에는 우회하지 않습니다. 원본 바이트와 HWPX의 원래 `Target.inspection_error`는 그대로 둡니다. 임시 복사본에서만 아래에 명시한 관측 편차를 치환한 뒤 기존 strict CFB reader 전체를 다시 실행합니다. 다른 값·위치·구조 오류는 고치지 않고 `normalization_error`로 남깁니다. 이것은 원본의 명세 적합성 인정도 파일 저장/수정도 아닙니다.
 
-FAT 복구는 DIFAT 섹터가 없고 헤더의 FAT 목록이 109개 이내인 입력에 한정합니다. MiniFAT 복구는 MiniFAT 섹터가 정확히 하나일 때만 수행합니다. 이 제한은 관측 표본의 좁은 편차만 대상으로 삼기 위한 것이며, 더 복잡한 CFB를 비엄격 파서로 자동 우회하지 않습니다. 정상 strict 결과는 변경하지 않습니다. `Options.inspect_observed_repairs=false`로 별도 조사를 끌 수 있습니다.
+FAT 복구는 DIFAT 섹터가 없고 헤더의 FAT 목록이 109개 이내인 입력에 한정합니다. 고치는 값은 파일 끝 이후 FAT의 0, 마지막 FAT 섹터 자신의 값이 물리 섹터 수로 기록된 단일 off-by-one 표식, 그리고 기존 CFB 할당기가 전체 디렉터리·스트림 순회를 마친 뒤 **미할당으로 확인한** FAT 셀의 0 또는 ENDOFCHAIN뿐입니다. 마지막 표식은 독립 DIFAT 목록과 대조하고 FATSECT로 바꾼 뒤에도 전체 strict 검사를 요구합니다. 활성 스트림·디렉터리·MiniFAT의 FAT 체인 항목은 바꾸지 않습니다.
+
+MiniFAT는 선언된 섹터 체인을 따라가며 루트 mini-stream 용량 밖 0과, 기본 CFB 읽기가 확정한 활성 미니 스트림 체인 이외의 0만 고칩니다. 디렉터리는 정확히 128바이트 전부가 0인 미사용 항목, 또는 이름·포인터·CLSID·시각이 비어 있고 유형 0인데 색상 1·시작 ENDOFCHAIN·과거 크기만 남은 항목에 한정합니다. 후자는 참조되지 않는 항목임을 기존 디렉터리 트리 검사로 다시 확인합니다. 더 복잡한 CFB를 비엄격 파서로 자동 우회하지 않으며, 최종 strict 재검사 실패는 그대로 실패입니다. 정상 strict 결과는 변경하지 않습니다. `Options.inspect_observed_repairs=false`로 HWPX OLE의 별도 조사를 끌 수 있습니다.
 
 `Target.normalized`에는 **복사본 strict 재검사**의 편차 원값·변경 슬롯 수·내부 엔트리/스트림 계수를 둡니다. `Target.inspection_error`와 `Report.inspection_failures`는 원본의 strict 실패를 계속 나타냅니다. strict 계수와 normalized 계수는 섞지 않되, 작업 한도는 둘을 합산해 적용합니다. 정규화 실패를 정상 컨테이너로 세지 않으며 OOM·한도 초과는 호출 오류로 전파합니다. 내부 스트림 `Contents`의 의미, OLE 활성화, 렌더링, 편집·저장은 여전히 범위 밖입니다.
 
@@ -16,10 +18,14 @@ Microsoft [MS-CFB 루트 항목](https://learn.microsoft.com/en-us/openspecs/win
 
 선택적 독립 조사 `python3 tools/hwpx-ole-payload-oracle.py --compat`는 로컬 BSD `olefile` 0.47을 사용합니다. 제품 의존성이 아닙니다. 독립 파서가 추출한 99개 OLE의 스트림 수·총 바이트·각 스트림 SHA-256 앞 64비트의 순서 무관 합을 8개 shard에서 Zig의 복사본 strict 결과와 전부 대조했습니다. 이 해시 대조는 같은 내용에 대한 강한 표본 근거이지만, 전체 스키마·표시·편집 동일성의 증명은 아닙니다. Python의 기본 ZIP/XML·루트/FAT/MiniFAT 관측은 `--self-test`와 인자 없는 실행으로 재현합니다.
 
-합성 반례는 원본 바이트 불변, 세 필드의 단독·복합 편차, 비영 꼬리 마커 거부, 실제 사용 중인 FAT 슬롯 손상 거부, 잘못된 루트 이름, 자원 한도 및 모든 할당 실패를 검사합니다. 기본 테스트는 `zig test src/root.zig --test-filter 'CFB observed repairs'`와 `--test-filter 'HWPX OLE payloads'`입니다. 실파일 스트림 대조는 `zig test src/hwpx_ole_repair_survey.zig -O ReleaseFast --test-filter 'HWPX OLE normalized shard N'`을 N=0..7 각각 실행합니다. 실파일 shard는 로컬 `reference/rhwp`가 필요하고 기본 audit에 포함되지 않습니다.
+합성 반례는 원본 바이트 불변, 관측 편차의 단독·복합 패턴, 다중 MiniFAT, 미사용 디렉터리 잔여 필드, FAT의 마지막 표식/미할당 0·END, 비영 꼬리 마커·실제 사용 중인 FAT 슬롯 손상·다른 미사용 항목 거부, 잘못된 루트 이름, 자원 한도 및 모든 할당 실패를 검사합니다. 기본 테스트는 `zig test src/root.zig --test-filter 'CFB observed repairs'`와 `--test-filter 'HWPX OLE payloads'`입니다. HWP5 CFB 후속 7개 실파일의 활성 스트림 바이트 대조는 `zig test src/cfb_observed_repair_survey.zig -O ReleaseSafe`로, HWPX OLE 실파일 대조는 `zig test src/hwpx_ole_repair_survey.zig -O ReleaseFast --test-filter 'HWPX OLE normalized shard N'`을 N=0..7 각각 실행합니다. 실파일 검사는 로컬 `reference/rhwp`가 필요하고 기본 audit에 포함되지 않습니다.
 
 2026-09-26 확인: 복사본 검사 합성 6개는 Debug·ReleaseSafe·ReleaseFast에서 통과했고, 제품 OLE 합성 10개와 실제 `inspectKnown` 연결도 통과했습니다. 독립 Python `--self-test`, 기본 관측, `--compat` 및 전용 OLE 실파일 8개 shard와 전체 HWPX known 8개 shard가 일치했습니다. 최종 소스의 Debug 전체 테스트 2,512/2,512, ReleaseSafe 전체 audit와 ReleaseSafe 제품 빌드도 통과했습니다. 이 결과는 원본의 strict 실패 34건을 정상 파일로 판정하거나, OLE 내부 `Contents`의 의미를 해석했다는 뜻이 아닙니다.
 
 ## 2026-09-28 재검증
 
 현행 `observed_repairs.zig`의 임시 복사본·세 필드 한정·strict 재검사와 `ole_payloads.zig`의 원본 실패 보존을 확인했습니다. MS-CFB 2.6.2의 루트 생성 시간 0 요구와 FAT/MiniFAT 공개 예시의 FREESECT 값을 다시 대조했습니다. Python 독립 조사 `--self-test`·기본·`--compat`가 통과했고, ReleaseFast 전용 실파일 shard 8/8은 OLE 99개 중 원본 strict 65개·복사본 재검사 34개, 루트 생성 시간 34개·FAT 꼬리 14개·MiniFAT 꼬리 2개와 스트림 수·바이트·해시 합계가 일치했습니다. Debug·ReleaseSafe·ReleaseFast 집중 복구는 각 6/6개, HWPX OLE는 각 10/10개가 통과했습니다. 이 OLE 재검증 단계에서는 앞 절의 Debug 전체 2,512개·일반 HWPX known shard 8개·ReleaseSafe 전체 audit를 재실행하지 않았고, 일반 known shard는 [후속 ZIP 무결성 검증](hwpx-payload-integrity.md)에서 별도로 재실행했습니다.
+
+## 2026-09-28 HWP5 CFB 호환성 확장
+
+앞의 세 필드·MiniFAT 한 섹터 한정은 당시 구현의 기록입니다. 현재는 위의 제한된 추가 패턴까지 복사본에서 다룹니다. `src/hwp5/text_preview.zig`만 strict 실패 뒤 복구된 CFB를 미리보기에 사용하고, 기본 CFB strict API와 HWPX OLE의 원본 실패 기록은 유지합니다. 합성 복구 13/13, HWPX OLE 10/10, 실파일 OLE shard 8/8, HWP5 미리보기 7/7, 후속 7개 실파일 활성 스트림 137개 대조가 통과했습니다. HWP5 corpus의 개수·남은 거부 원인은 [미리보기 API 검증](hwp5-text-preview-api.md)에 기록합니다. 현 corpus의 CFB strict 실패 91개는 모두 복사본 strict 재검사에 성공했으며, 원본 strict 실패 자체는 그대로 보존합니다. 할당 실패 주입에서 발견된 오류 전파 문제도 수정해 복구 도중 OutOfMemory/LimitExceeded를 다른 오류로 바꾸지 않습니다.
