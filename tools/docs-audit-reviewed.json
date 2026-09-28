@@ -630,8 +630,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "1fb8b43b1b3d0cd40b5a5aaacfafd5efb8f293e951c3ff27cb5e94215259637c",
-      "evidence": "2026-09-28 progress log updated for architecture tree and source boundaries, 237 linked topic files 236 current and foundation pending, 75 Zig names present, Debug full test and ReleaseSafe product build pass; semantic completeness not claimed"
+      "sha256": "4166e374aee9b65c3a4212d8ed0b7fd74b795799a23130805c32a7d6d611ad55",
+      "evidence": "2026-09-28 progress log updated for HWP5 foundation historic scope, 99 commits Sep 5 to 7, official PDF hash and rhwp checkout confirmed, Debug 2664 tests and ReleaseSafe HWP5 audit pass; historical per-stage experiments not all rerun"
+    },
+    "docs/hwp5-foundation.md": {
+      "sha256": "b897ec7fde9882fcc753a253c54ef4a93777a08e43fec814804d4ae01ccb4d17",
+      "evidence": "2026-09-28 historic Sep 5 to 7 log of 99 commits verified as history not current support, official rev1.3 PDF SHA matches and rhwp e8800c8de present, current topic docs linked and video zero correction linked; Debug 2664 tests and ReleaseSafe HWP5 audit 8905855 checks pass, old per-stage counts not rerun"
     },
     "docs/architecture.md": {
       "sha256": "117f06c666bdf093822e37cc7a3f9ebcb419d5b51b7d6a8248ed8e447623d1ad",
