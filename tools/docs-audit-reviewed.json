@@ -630,8 +630,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "7f190e32917ce65b49008b2ff7469f980f1498218a8b2441f03c89d2c7c97aba",
-      "evidence": "2026-09-28 progress log updated for HWP5 fields parameters tables drawings against current Zig and official rev1.3; focused ReleaseSafe tests and independent small grid oracle passed, broad table run unconfirmed, prior full audit distinguished"
+      "sha256": "266d782dd6bb1756ab3aaaecd371c4c9e3527d9dfc97f9955697d4c8b7f3cebf",
+      "evidence": "2026-09-28 progress log updated for HWP5 video inventory correction; ReleaseSafe HWP5 audit 10 steps 8905855 checks and Node inventory tests 5 passed; local reference corpus present, positive video unverified"
+    },
+    "docs/hwp5-video-evidence.md": {
+      "sha256": "819894e5be432e5b74cd3a53f079ba783d4f5b6475ead86e4dddf06a24b6755e",
+      "evidence": "2026-09-28 official HWP5 rev1.3 table 57 and video payload tables, Zig video parser and current JS survey scope; removed hardcoded actualVideoFiles zero, ReleaseSafe HWP5 audit 10 steps 8905855 checks with local corpus, Node inventory tests 5; no positive real video file"
     },
     "docs/hwpx-ole-payloads.md": {
       "sha256": "a7c214c0760d575237afcb960b7ff1fe976a0d99468e1083066e36c889deabad",

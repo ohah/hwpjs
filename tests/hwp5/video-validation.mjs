@@ -47,5 +47,5 @@ export function videoValidationActual(call,cfb){
       }
     }
   }
-  return {accepted,rejected,actualVideoFiles:0,syntheticPayloadVariants:variants.length};
+  return {accepted,rejected,syntheticPayloadVariants:variants.length};
 }

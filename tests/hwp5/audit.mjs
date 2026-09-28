@@ -876,8 +876,12 @@ assert.deepEqual(oleReferencePolicyResults.map(r=>[r.originalId,r.binItems,r.acc
 const shapeComponentReferenceResults = shapeComponentReference(call, cfb);
 const shapeBorderReferenceResults = shapeBorderReference(call, cfb);
 const drawingStyleSurveyResults = drawingStyleSurvey(call, cfb);
+if (!drawingStyleSurveyResults.skipped) {
+  assert.ok(Array.isArray(drawingStyleSurveyResults.videoRecords), 'drawing survey did not report VIDEO_DATA inventory');
+  assert.equal(drawingStyleSurveyResults.videoRecords.length, 0, 'drawing survey found VIDEO_DATA records');
+}
 const videoValidationResults = videoValidationActual(call, cfb);
-assert.deepEqual(videoValidationResults,{accepted:10,rejected:52,actualVideoFiles:0,syntheticPayloadVariants:2});
+assert.deepEqual(videoValidationResults,{accepted:10,rejected:52,syntheticPayloadVariants:2});
 const styleDocumentReferenceResults = styleDocumentReference(call, cfb);
 const lineDocumentReferenceResults = lineDocumentReference(call, cfb);
 const rectanglePairResults = rectanglePair(call,cfb);

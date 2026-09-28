@@ -29,6 +29,10 @@
 
 ## 전체 검증
 
+### 현재 audit의 실파일 0건 주장 경계
+
+과거 `videoValidationActual`의 `actualVideoFiles: 0`은 실파일 조사를 세지 않는 상수였으므로, 그 필드 자체는 실파일 부재의 증거가 아닙니다. 현재 HWP5 audit는 로컬 `reference/rhwp/samples`가 있을 때 `drawingStyleSurvey`의 실제 `videoRecords` 배열이 비어 있는지 직접 검사합니다. 표본이 없으면 이 검사는 `skipped`로 남아 부재를 입증하지 않습니다. 이 조사는 strict CFB·보안·DocInfo·BodyText 선택을 통과한 구역에서만 decode/framing 후 태그 98을 수집합니다. 위 584개 경로의 별도 조사와 대상·진입 조건이 같지 않으므로 두 결과를 하나의 전수 집계로 합치지 않습니다.
+
 소스·테스트를 고정해 Debug → ReleaseSafe → ReleaseFast 전체 audit를 순차 실행했습니다. 세 모드 각각 27/27 단계·979/979 네이티브 테스트·HWP/WASM 7,840,885회 검사로 통과했고 실행 종료 코드 0을 확인했습니다. 로그는 `/tmp/hwpjs-video-inventory-{Debug,ReleaseSafe,ReleaseFast}-audit.log`입니다. 수정된 drawing survey의 실제 `videoRecords`도 각 모드에서 빈 배열입니다. 변경 문서의 로컬 링크 4개와 변경 파일 포맷·공백 검사도 통과했습니다. 동영상 문서 지원은 별도 후속 작업이며 이 조사기 검증으로 완료를 주장하지 않습니다.
 
 최종 `zig build test --summary all`은 5/5 단계·979/979 테스트, `zig build -Doptimize=ReleaseSafe --summary all`은 5/5 단계로 통과했습니다(종료 코드 0).
