@@ -630,8 +630,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "131d908248f221902ec17daf15c27dc97b1a5992299edce728919a6614f660b2",
-      "evidence": "2026-09-28 JPEG upsampling progressive RGB and observed component IDs versus T871 and current Zig boundaries, Debug Safe Fast JPEG 192 each; dedicated real file Pillow oracles mutations and historic full audit not rerun"
+      "sha256": "d391e3c9bfd2f10c85a6c6dbb86194b0af104a0e66c7c854ae45b2eb48b18af8",
+      "evidence": "2026-09-28 JPEG Exif Adobe 1 and 4 components and IFD0 orientation versus T872 CIPA Exif 2.3 and Zig explicit pixel metadata paths, Debug Safe Fast JPEG 192 each; historic real files Pillow full builds and mutations not rerun"
     },
     "docs/hwpx-ole-payloads.md": {
       "sha256": "a7c214c0760d575237afcb960b7ff1fe976a0d99468e1083066e36c889deabad",
@@ -2108,6 +2108,18 @@
     "docs/jpeg-component-id-compatibility.md": {
       "sha256": "65f7fdcbfce535835a51c2650307b0baf67b6478a89d34e2252b330898bd679d",
       "evidence": "2026-09-28 T871 SOF IDs versus Zig strict and explicit observed 012 exception with HWPX target evidence, Debug Safe Fast JPEG 192 each; historic large HWPX Pillow and full audit not rerun"
+    },
+    "docs/jpeg-exif-adobe-rgb.md": {
+      "sha256": "6811483468b8ed98d8304cbef68e7ae9ac8c4eb4c54ed1ca8d44befd33e15ae2",
+      "evidence": "2026-09-28 T872 APP14 transform 1 and local 1 component transform 0 policy versus Zig Exif first explicit pixel path, Debug Safe Fast JPEG 192 each; historic 34 real files Pillow full builds not rerun"
+    },
+    "docs/jpeg-adobe-four-component.md": {
+      "sha256": "a4ba989fa9cac2c7f36e3900c32603e904339303a73cef26229f100f90fe0a31",
+      "evidence": "2026-09-28 T872 4 component complemented CMYK YCCK versus Zig fixed unmanaged conversion and explicit Exif path, Debug Safe Fast JPEG 192 each; print conformance and historic Pillow real files not rerun"
+    },
+    "docs/jpeg-exif-orientation.md": {
+      "sha256": "2ae1f117626a16bed3cfe553c060e054d1f7f0ddc15108702c4a8c8ca5f0ce30",
+      "evidence": "2026-09-28 CIPA Exif 2.3 IFD0 orientation versus Zig first APP1 limited parser and separate HWPX evidence, Debug Safe Fast JPEG 192 each; 34 real files and full builds not rerun"
     }
   }
 }

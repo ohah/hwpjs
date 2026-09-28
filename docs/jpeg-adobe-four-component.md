@@ -2,7 +2,7 @@
 
 ## 범위와 색 계약
 
-[ITU-T T.872 6.3·6.5.3·7](https://www.itu.int/rec/T-REC-T.872-201206-I/en)의 Adobe APP14 선언이 있는 Exif 선두 JPEG에 한해 8비트 4성분을 명시적 선택 옵션으로 해제합니다. SOF 성분 ID는 현재 관측된 `(1,2,3,4)`만 허용하며, 다른 ID 배치는 미지원 오류입니다. JFIF 기본 경로와 일반 JPEG 자동 판별은 변경하지 않습니다.
+[ITU-T T.872 6.3·6.5.3·7](https://www.itu.int/rec/T-REC-T.872-201206-I/en)의 Adobe APP14 선언이 있는 Exif 선두 JPEG에 한해 8비트 4성분을 명시적 선택 옵션으로 해제합니다. SOF 성분 ID는 현재 관측된 `(1,2,3,4)`만 허용하며, 다른 ID 배치는 미지원 오류입니다. JFIF 기본 경로와 일반 JPEG 자동 판별은 변경하지 않습니다. 이 경로는 T.872의 모든 SOF·DNL 금지·ICC 위치 규칙을 함께 검사하는 인쇄 파일 적합성 검사기가 아닙니다.
 
 - transform 0: 네 성분을 complemented CMYK로 해석합니다. unmanaged RGB는 각각 `round(C′×K′/255)`, `round(M′×K′/255)`, `round(Y′×K′/255)`로 만듭니다.
 - transform 2: 첫 세 성분을 YCbCr 방식으로 *uncomplemented* CMY로 복원한 뒤 각 성분을 반전하고 complemented K와 곱합니다. 기존 `jfif_colour.toRgb`의 고정 소수점 양자화와 `rgb_raster`의 샘플링 정책을 재사용합니다.
@@ -21,3 +21,5 @@
 재현 명령은 [개발·검증 명령](development-commands.md)이 소유합니다.
 
 이번 변경 후 `zig build test --summary all`은 Debug 2,530/2,530개·5/5단계, `zig build -Doptimize=ReleaseSafe --summary all`은 5/5단계 통과했습니다. JPEG 필터 192/192개, 선택 Exif corpus 34개, 세 가지 독립 Pillow RGB 대조도 통과했습니다. 이 수치는 테스트 집합의 결과이지 HWP/HWPX 전체 파서나 화면 픽셀 일치율이 아닙니다.
+
+2026-09-28 현재 재검증에서는 T.872 6.5.3·7의 보수 CMYK/YCCK 선언과 `adobe_cmyk_colour.zig`·`exif_adobe_rgb.zig`·공통 래스터의 역할을 대조했습니다. Debug·ReleaseSafe·ReleaseFast JPEG 집중 테스트는 각각 192/192개 통과했습니다. 위 실제 YCCK·Pillow 3개 대조·전체 빌드와 별도 변이는 이번에 재실행하지 않았습니다. 고정 산술의 unmanaged RGB는 프로파일 적용 결과나 외부 디코더와의 바이트 동치가 아닙니다.
