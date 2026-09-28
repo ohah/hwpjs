@@ -630,8 +630,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "4166e374aee9b65c3a4212d8ed0b7fd74b795799a23130805c32a7d6d611ad55",
-      "evidence": "2026-09-28 progress log updated for HWP5 foundation historic scope, 99 commits Sep 5 to 7, official PDF hash and rhwp checkout confirmed, Debug 2664 tests and ReleaseSafe HWP5 audit pass; historical per-stage experiments not all rerun"
+      "sha256": "bf876ddbee3fcf30bb32df23ab59d6d7ee60b588a2ac451e1743036b8168b4c3",
+      "evidence": "2026-09-28 final adversarial review: 560 current hashes, 2859 local inline link targets, 2 docs tests, entrypoint scope and CFB versus internal HWP5 HWPX boundaries; user-approved obsolete Rust lint rules removed, dated progress contradiction corrected; full semantic and external link proof not claimed"
     },
     "docs/hwp5-foundation.md": {
       "sha256": "b897ec7fde9882fcc753a253c54ef4a93777a08e43fec814804d4ae01ccb4d17",
