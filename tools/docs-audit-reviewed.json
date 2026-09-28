@@ -630,8 +630,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "fdf8ddb3bd40bf1ef46881821eda899444f5f459478cd8e376fd554f9c6d94c1",
-      "evidence": "2026-09-28 tracker updated with HWPX common master fill brush image links and payloads, three-mode focused tests and independent ZIP OPF XML 476 corpus; recent known shards and historic audit distinguished"
+      "sha256": "3b38ba1d799fa6844df58207ba546114ce4c9ba0ff582bb8b06dfdd6a49fcbce",
+      "evidence": "2026-09-28 tracker updated with HWPX picture links payloads and manifest image candidates, three-mode focused tests and independent ZIP OPF XML 476 corpus; source comment ownership corrected and historic known audit distinguished"
     },
     "docs/hwpx-ole-payloads.md": {
       "sha256": "a7c214c0760d575237afcb960b7ff1fe976a0d99468e1083066e36c889deabad",
@@ -1716,6 +1716,18 @@
     "docs/hwpx-fill-brush-image-payloads.md": {
       "sha256": "a5085bbcecefd6c5358308e1bb81c032933afb4bea7e2bbe369643febbed5bb7",
       "evidence": "2026-09-28 current shared image payload core inspection scope, Debug Safe Fast brush payloads 11 each, independent Python 476 corpus 390 sites 388 targets 8631009 bytes 7 MIME and 8 PNG CRC diagnostics; recent known shards not rerun"
+    },
+    "docs/hwpx-picture-image-links.md": {
+      "sha256": "e3411e3f71077672e152646419f7e6bbf8dfeeaaf9d1b9cc6e5cf9f1878108ca",
+      "evidence": "2026-09-28 current direct pic img ancestry and owned ID comment correction, Debug Safe Fast links 7 each, independent Python 476 corpus 1993 section 35 master sites; historic known shards not rerun"
+    },
+    "docs/hwpx-picture-image-payloads.md": {
+      "sha256": "53b7d3e5304d8c8535f36a4604889765ba37912131d7df3b428adb94ee75badd",
+      "evidence": "2026-09-28 current picture wrapper and shared image core, Debug Safe Fast picture 16 SVG 3 TIFF 6 PCX 5 each, independent Python 476 corpus 1513 section targets 35 master sites and 106 MIME mismatches; historic full audit not rerun"
+    },
+    "docs/hwpx-manifest-image-payloads.md": {
+      "sha256": "8520b1925112d35dec867fc262c2f3430d40b0a9ce7b45ee16532d180fd40b8f",
+      "evidence": "2026-09-28 current image MIME or extension selection and shared core versus RFC 6838 case rule, Debug Safe Fast manifest 6 known unreferenced 2 each, independent Python 476 corpus 2253 sites 2249 embedded 346 no picture brush reference; historic known shards not rerun"
     },
     "docs/hwpx-binary-references.md": {
       "sha256": "4e445bb4756c9d9e29272606285408c3dccaf16a74bee6a0dd0b40ba14e7c5d2",

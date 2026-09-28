@@ -82,7 +82,8 @@ const Collector = struct {
 };
 
 /// Raw, namespace-aware direct pic/img sites in structure-selected sections.
-/// The report borrows no XML or OPF strings; it preserves only scalar indices.
+/// The report owns each normalized image ID and preserves scalar provenance;
+/// it borrows no XML tree or OPF strings.
 pub fn inspectSections(a: std.mem.Allocator, items: manifest.Manifest, sections: []const part_tree.Tree, options: Options) !Report {
     var collector: Collector = .{ .a = a, .items = items, .index = try binary_links.Index.init(a, items), .options = options };
     defer collector.deinit();
