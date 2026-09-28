@@ -630,8 +630,12 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "13f30c814b1fb93a9336c4a81274965da826ca56a95f008dfd5325a06c9998d6",
-      "evidence": "2026-09-28 progress log updated for current Zig stderr and HWPX known composition; Debug full test 5 steps 2664 passed with stderr warning and exit zero; prior eight real file shards and Python oracle not rerun"
+      "sha256": "64bc8c8259412d153b518db7333205005de89902313a567cfa69eef4e3d0b6da",
+      "evidence": "2026-09-28 progress log updated for development command inventory, 89 local paths 12 build steps 160 literal test filters four shard families 104 Python calls checked; Debug full test and ReleaseSafe HWP5 audit passed, optional commands not all rerun"
+    },
+    "docs/development-commands.md": {
+      "sha256": "bf0692f53120c410d857f8661294357c44b5cb6b7b4f387cbebd86cdf789eceb",
+      "evidence": "2026-09-28 current file paths 89 build steps 12 literal test filters 160 four shard families 0 to 7 and Python flags from 104 calls checked; Debug full test 5 steps 2664 pass and ReleaseSafe HWP5 audit 10 steps 8905855 checks; optional commands not all rerun"
     },
     "docs/zig-test-stderr.md": {
       "sha256": "9133676bc38bac48fab5f9ba8a04ec972697d32e7a051a851d6b158c444c66b5",
