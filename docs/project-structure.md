@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+[HWP5 문단 텍스트 미리보기](hwp5-text-preview-api.md)는 `src/hwp5/text_preview.zig`가 CFB·HWP5 스트림·문단 토큰 조립을, `src/wasm/hwp5_text.zig`가 WASM 출력 수명을, `js/hwp5.mjs`와 `js/hwp5-text-wire.mjs`가 공개 API·결과 복사를 소유합니다. 사용자 명령은 `tools/hwp5-text-preview.mjs`, 독립 실파일 검증은 `tests/hwp5/text-preview.test.mjs`에 둡니다. 편집 모델·저장·화면 텍스트는 후속 범위입니다.
+
 [HWP5 각주·미주 원문 표식](hwp5-note-source-sites.md)은 기존 `src/hwp5/body/control_links.zig`가 원문 위치를 소유하고, `tests/hwp5/note-source-sites.mjs`가 원시 레코드 기반 기대 위치·변이 반례만 소유합니다. 주석 전용 제품 파서는 추가하지 않습니다.
 
 [HWP5 각주·미주 안 자동 번호 관계](hwp5-note-number-links.md)는 `src/hwp5/body/note_number_links.zig`가 기존 Tree/Groups와 번호 원값 파서를 연결하고, `tests/hwp5/note-number-links.mjs`가 테스트용 문서 보고서를 원시 레코드로 독립 대조합니다. 표시 번호 생성과 저장은 후속 책임입니다.
@@ -67,7 +69,7 @@ section 문단·run 서식 참조의 선택 결과는 기존 `section_references
 구역 정의의 번호·메모 모양 ID 연결은 [구역 참조 진단](hwpx-section-definition-references.md)이 소유합니다. 진단 결과를 HWPX 문서 전체 유효성 판정으로 사용하지 않습니다.
 
 HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.16.0 / WebAssembly 라이브러리입니다.
-현재는 바이트 리더, CFB v3/v4 읽기·strict 검증·새 컨테이너 생성/재저장, HWP5 헤더·압축 스트림·레코드 경계와 DocInfo 주요 리소스 해석·활성 참조 검증, 본문 문단 헤더·UTF-16 텍스트/제어문자 토큰 코어가 구현되어 있습니다. HWPX에는 [ZIP·mimetype 읽기 경계](hwpx-zip-container.md), [패키지 관계 검증](hwpx-package-relationships.md), [버전 XML 검증](hwpx-version.md), [암호화 분류](hwpx-protection.md), [header·spine 구조 검증](hwpx-document-structure.md), [header 리소스 ID 색인](hwpx-header-resources.md), [section 서식 참조 진단](hwpx-section-references.md), [header 내부 서식 참조](hwpx-header-references.md), [언어별 글꼴 ID 참조](hwpx-font-references.md), [번호·글머리표 내부 참조](hwpx-list-references.md), [이진 리소스 manifest 연결](hwpx-binary-references.md), [차트 ZIP 경로·XML 경계](hwpx-chart-references.md), [section 텍스트 토큰 이벤트](hwpx-section-text.md), [header 원문·요소 인덱스](hwpx-header-tree.md), [section 원문·요소 인덱스](hwpx-section-tree.md), [문서 XML 트리 조립](hwpx-document-trees.md), [문단 메타 속성 검사](hwpx-paragraph-metadata.md), [본문 수식 원문·script](hwpx-equations.md) 등이 추가됐으며 전체 의미 문서 모델·레이아웃·본문 편집·저장은 미구현입니다. HWP5 코어는 테스트용 WASM에서 검증하며 제품 JS 공개 API는 아직 CFB만 제공합니다. 지원 범위는 구현·테스트로 확인하고, 예정 기능을 완료된 기능처럼 설명하지 않습니다.
+현재는 바이트 리더, CFB v3/v4 읽기·strict 검증·새 컨테이너 생성/재저장, HWP5 헤더·압축 스트림·레코드 경계와 DocInfo 주요 리소스 해석·활성 참조 검증, 본문 문단 헤더·UTF-16 텍스트/제어문자 토큰 코어가 구현되어 있습니다. HWPX에는 [ZIP·mimetype 읽기 경계](hwpx-zip-container.md), [패키지 관계 검증](hwpx-package-relationships.md), [버전 XML 검증](hwpx-version.md), [암호화 분류](hwpx-protection.md), [header·spine 구조 검증](hwpx-document-structure.md), [header 리소스 ID 색인](hwpx-header-resources.md), [section 서식 참조 진단](hwpx-section-references.md), [header 내부 서식 참조](hwpx-header-references.md), [언어별 글꼴 ID 참조](hwpx-font-references.md), [번호·글머리표 내부 참조](hwpx-list-references.md), [이진 리소스 manifest 연결](hwpx-binary-references.md), [차트 ZIP 경로·XML 경계](hwpx-chart-references.md), [section 텍스트 토큰 이벤트](hwpx-section-text.md), [header 원문·요소 인덱스](hwpx-header-tree.md), [section 원문·요소 인덱스](hwpx-section-tree.md), [문서 XML 트리 조립](hwpx-document-trees.md), [문단 메타 속성 검사](hwpx-paragraph-metadata.md), [본문 수식 원문·script](hwpx-equations.md) 등이 추가됐으며 전체 의미 문서 모델·레이아웃·본문 편집·저장은 미구현입니다. HWP5 코어의 광범위한 검사는 테스트용 WASM에 남아 있고 제품 JS 공개 API는 CFB와 읽기 전용 문단 텍스트 미리보기만 제공합니다. 지원 범위는 구현·테스트로 확인하고, 예정 기능을 완료된 기능처럼 설명하지 않습니다.
 
 ## 진입점과 공통 계층
 

@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[HWP5 문단 텍스트 미리보기 API](hwp5-text-preview-api.md)는 `zig build -Doptimize=ReleaseSafe` 후 `node tools/hwp5-text-preview.mjs legacy/rust/crates/hwp-core/tests/fixtures/example.hwp`로 직접 확인합니다. `node --test tests/hwp5/text-preview.test.mjs`는 추적 실파일 48개 중 45개의 독립 레코드·raw DEFLATE 원시 바이트 대조와 배포용/암호화 거부·손상 반례를 검사하며 `zig build audit`에도 포함됩니다. 명령 출력은 문서 전체 조판 결과가 아닌 문단 토큰 미리보기입니다.
+
 [프로젝트 문서 검증 현황](verification-progress.md)은 `node tools/docs-audit-status.mjs`로 확인합니다. `--list-pending`은 경로별 상태를, `--require-complete`는 모든 추적 프로젝트 Markdown이 현재 해시로 검증됐고 누락·미추적 문서가 없는지 검사합니다. `node tools/docs-inline-links.mjs`는 일반 인라인 로컬 링크의 대상 파일만 검사합니다. `node --test tests/docs/*.test.mjs`로 두 도구의 반례를 검증합니다. 이 명령들은 문서 내용의 정확성을 자동 증명하지 않으며 최종 적대적 검증을 대신하지 않습니다.
 
 [HWP5 각주·미주 원문 표식 위치](hwp5-note-source-sites.md)는 `zig build hwp5-audit -Doptimize=ReleaseSafe`에서 추적 `footnote-endnote.hwp`의 4건과 합성 ID·코드·누락·위치 이동 반례를 검증합니다. 로컬 `reference/rhwp/samples`가 있으면 같은 audit의 `noteControlReferenceResults`에서 추가 9·6·2건의 위치도 대조하고, 없으면 `skipped`로 구분합니다. `control_links`의 제품 코드는 재사용하며 새 파서 모드는 없습니다.

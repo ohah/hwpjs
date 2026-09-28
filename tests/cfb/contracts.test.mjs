@@ -66,7 +66,7 @@ test("reject a WASM module with no ABI", async () => {
 });
 
 test("reject an unsupported ABI before exposing a reader", async () => {
-  for (const version of [2, 3, 4, 63])
+  for (const version of [2, 3, 4, 5, 63])
     await assert.rejects(
       createCfbReader(versionModule(version)),
       /Unsupported.*ABI/,
@@ -75,14 +75,14 @@ test("reject an unsupported ABI before exposing a reader", async () => {
 
 test("reject a supported version with missing required exports", async () => {
   await assert.rejects(
-    createCfbReader(versionModule(5)),
+    createCfbReader(versionModule(6)),
     /Missing.*ABI export/,
   );
 });
 
 test("reject missing ABI memory and verify the independently pinned ABI version", async () => {
   const { exports } = await WebAssembly.instantiate(module, {});
-  assert.equal(exports.hwpjs_abi_version(), 5);
+  assert.equal(exports.hwpjs_abi_version(), 6);
   assert.doesNotThrow(() => validateAbi(exports));
   assert.throws(
     () => validateAbi({ ...exports, memory: undefined }),

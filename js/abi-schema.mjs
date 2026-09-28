@@ -1,6 +1,6 @@
 // Authoritative ABI schema. tools/generate-abi.mjs derives the Zig declarations.
 // Breaking changes require a version bump and an independently pinned contract test.
-export const ABI_VERSION = 5;
+export const ABI_VERSION = 6;
 export const DOCUMENT = Object.freeze({
   header_bytes: 8,
   node_bytes: 56,
@@ -55,4 +55,8 @@ export const REQUIRED_FUNCTIONS = Object.freeze([
   "cfb_sector_count",
   "cfb_raw_ptr",
   "cfb_raw_len",
+  "hwp5_text_read",
+  "hwp5_text_ptr",
+  "hwp5_text_len",
+  "hwp5_text_free",
 ]);
