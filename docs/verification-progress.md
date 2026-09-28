@@ -1,5 +1,7 @@
 # 프로젝트 문서 검증 현황
 
+JPEG 테이블 설치/선택·progressive 이력·엔트로피 비트/Huffman·sequential 블록·스캔 다섯 문서를 현재 Zig 계층과 ITU-T T.81에 재대조했습니다. 도입 당시의 ‘후속’과 ‘HWP JPEG 미연결’을 현재의 독립 프레임/픽셀 계층 및 HWP5 명시적 선택 경계로 분리했고, lossless·산술 코딩 및 현재 JFIF RGB 경로의 progressive entropy 미지원을 유지했습니다. Debug·ReleaseSafe·ReleaseFast JPEG 집중 테스트는 각각 192/192개, ReleaseSafe HWP5 전체 WASM 감사는 10/10 단계·8,905,855회 검사·imports 0으로 통과했습니다. 아래 개별 문서의 mode 248·249·251·252·253 전용 실파일/출력 비교·변이와 과거 세 모드 전체 audit는 이번에 재실행하지 않았습니다. 현재 전체 감사의 통과도 모든 실제 JPEG 픽셀의 바이트 동치나 제품 JS API의 JPEG 지원을 증명하지 않습니다.
+
 JPEG 프레이밍·프레임/스캔 헤더·DQT/DHT 테이블·파일 구조 네 문서를 현재 Zig 모듈과 ITU-T T.81, 세 모드 집중 테스트 및 ReleaseSafe HWP5 WASM audit에 재대조했습니다. JPEG 필터는 Debug·ReleaseSafe·ReleaseFast 각각 192/192, HWP5 audit는 10/10 단계·8,905,855 checks 통과입니다. 프레이밍/헤더 도입 당시의 ‘HWP BinData JPEG 미연결’ 현재형 문장을 선택적 연결의 현재 경계로 고쳤습니다. T.81 Table B.7은 DRI 길이 4이지만 B.10은 DNL 길이 4–65,535로 인쇄돼 있는데 코드가 둘 다 정확히 4만 허용하는 차이를 발견해 DNL 길이>4를 미지원·실파일 미관측으로 기록했습니다. 과거 세 모드 전체 audit·변이 시험은 이번에 재실행하지 않았으며 이 결과가 JPEG 픽셀 바이트 동치나 모든 DNL 변형의 적합성을 입증하지는 않습니다.
 
 공통 XML 문자 입력·선언/인코딩·이름/참조·태그/속성·namespace·문서 구조 여섯 문서를 현재 Zig 모듈과 W3C XML 1.0 Fifth Edition/Namespaces 1.0 Third Edition, 세 모드 집중 테스트 및 ReleaseSafe HWP5 WASM audit에 재대조했습니다. XML 필터는 Debug·ReleaseSafe·ReleaseFast 각각 91/91, HWP5 audit는 10/10 단계·8,905,855 checks 통과입니다. 현재 HWPX의 선택된 XML 파트와 HWP5의 명시적 XML 옵션 연결을 확인해 ‘HWPX 통합 미구현’·‘HWP5 미연결’이라는 도입 당시 문장을 교정했습니다. 도입 당시의 개별 WASM 입력 전수·xmllint 수치와 전체 세 모드 audit는 이번에 재실행하지 않았고, DTD·전체 HWPX 스키마·편집/저장·화면 동등성은 검증되지 않았습니다.

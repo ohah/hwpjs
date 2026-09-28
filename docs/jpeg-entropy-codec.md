@@ -11,7 +11,9 @@
 
 ## 지원 범위
 
-Huffman 출력은 원시 u8 심볼입니다. 중복 심볼도 prefix 해석 차원에서는 보존하며 DC category·AC run/size 의미 검증을 대신하지 않습니다. amplitude 부호 확장·DC 차이 합산·AC 계수 배치는 [sequential 계수 블록](jpeg-sequential-block.md)이 소유합니다. progressive 보정/EOB run·lossless 예측·산술 복호화·MCU 간격/행·역양자화/IDCT/픽셀은 후속입니다. 한 심볼 복호화 성공을 완전한 JPEG 이미지 복호화로 인증하지 않습니다. 제품 JS API와 HWP JPEG 미지원 집계는 변경하지 않았습니다.
+Huffman 출력은 원시 u8 심볼입니다. 중복 심볼도 prefix 해석 차원에서는 보존하며 DC category·AC run/size 의미 검증을 대신하지 않습니다. amplitude 부호 확장·DC 차이 합산·AC 계수 배치는 [sequential 계수 블록](jpeg-sequential-block.md)이 소유합니다. progressive 보정/EOB run·MCU 간격/행·역양자화/IDCT/픽셀은 별도 계층의 책임입니다. lossless 예측·산술 복호화는 여전히 미지원입니다. 한 심볼 복호화 성공을 완전한 JPEG 이미지 복호화로 인증하지 않습니다. 도입 당시 제품 JS API와 HWP JPEG 미지원 집계는 변경하지 않았지만 현재 HWP5에는 명시적 JPEG 선택 경로가 있습니다.
+
+2026-09-28 재검증: 현재 `entropy_bits.zig`의 MSB/스터핑/패딩과 `huffman_decoder.zig`의 길이별 canonical prefix·실패 시 커서 보존을 T.81 Annex C·F.2.2.3에 대조했습니다. 세 모드 JPEG 집중 테스트는 각각 192/192개 통과했습니다. 아래 mode 251·실파일 엔트로피 구간/정의·변이/전체 audit 수치는 도입 당시 기록이며 이번에 재실행하지 않았습니다. 현재 제품 JS 공개 API에는 JPEG가 연결되지 않았습니다.
 
 ## 검증 기록
 

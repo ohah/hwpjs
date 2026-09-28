@@ -630,8 +630,8 @@
       "evidence": "d80409cc,d6ed23df"
     },
     "docs/verification-progress.md": {
-      "sha256": "6be4351e2863fea5b566490280e9eca3d2fc87569bdab22ec4cfdc6f726378de",
-      "evidence": "2026-09-28 tracker updated with JPEG framing headers tables structure current T81 comparison, Debug Safe Fast JPEG 192 each, ReleaseSafe HWP5 WASM audit 10 steps 8905855 checks, DNL printed range versus strict local policy recorded"
+      "sha256": "3562354725d035568d70ffc83a1c485affe7fc5fa1507f6aaf7e7b4ce5b4d1e4",
+      "evidence": "2026-09-28 tracker updated with JPEG table selection progression entropy sequential block scan current T81 comparison, Debug Safe Fast JPEG 192 each, ReleaseSafe HWP5 audit 10 steps 8905855 checks imports zero; historic mutants and dedicated mode oracles not rerun"
     },
     "docs/hwpx-ole-payloads.md": {
       "sha256": "a7c214c0760d575237afcb960b7ff1fe976a0d99468e1083066e36c889deabad",
@@ -2012,6 +2012,26 @@
     "docs/jpeg-structure.md": {
       "sha256": "92cd21cd5682aeddcf6c3ef84676129c011fbf9fa4a015415d695f97b31c46f7",
       "evidence": "2026-09-28 current DRI DNL RST structure versus T81 B2; Table B10 prints DNL length 4 to 65535 while local parser requires 4 and real DNL absent, Debug Safe Fast JPEG 192 each, ReleaseSafe HWP5 WASM audit 10 steps 8905855 checks"
+    },
+    "docs/jpeg-table-selection.md": {
+      "sha256": "75948fb051246b1d05fa50d4628bb1065e28ebc96be8c311de1dca91b64218e0",
+      "evidence": "2026-09-28 T81 B2 G1 table selection versus Zig store scan resolver and optional HWP5 JPEG, Debug Safe Fast JPEG 192 each; historic mode 248 mutations full audits not rerun"
+    },
+    "docs/jpeg-progression.md": {
+      "sha256": "8983a969a32ab0acb5bef285ec35da89167f434afa4b7f6c0f583e5af90d41d7",
+      "evidence": "2026-09-28 T81 G1 progression versus Zig history state and later progressive frame, Debug Safe Fast JPEG 192 each; historic mode 249 real file mutations not rerun"
+    },
+    "docs/jpeg-entropy-codec.md": {
+      "sha256": "5ae113151e215eddd55cc048cb1165990c5920e3970c730f4bde9d0e18e15bdf",
+      "evidence": "2026-09-28 T81 Annex C F2 Huffman entropy versus Zig bit cursor and decoder, Debug Safe Fast JPEG 192 each; historic mode 251 real file mutations not rerun"
+    },
+    "docs/jpeg-sequential-block.md": {
+      "sha256": "f40fc3aae431bd70df80c6ebc6647fd59bf8b05076ff89b3b11f6af8c65302c1",
+      "evidence": "2026-09-28 T81 F1 F2 sequential block versus Zig amplitude symbols decoder, Debug Safe Fast JPEG 192 each; historic mode 252 real file mutations not rerun"
+    },
+    "docs/jpeg-sequential-scan.md": {
+      "sha256": "df9ef1752e40c82126dd77856775d13903d60140164722adcd7d7719df9edbfd",
+      "evidence": "2026-09-28 T81 A E F sequential scan versus Zig MCU entropy restart completion, Debug Safe Fast JPEG 192 each; historic mode 253 real file mutations not rerun"
     }
   }
 }
