@@ -113,7 +113,7 @@ fn sectionCount(bytes: []const u8, version: @import("version.zig").Version) !u16
         // coordinates. The preview needs only the first seven u16 fields;
         // reject a partly present caret tuple instead of synthesizing it.
         const len = record.payload.len;
-        if (len != docinfo.Properties.base_len and len < docinfo.Properties.full_len) return error.UnexpectedEnd;
+        if (len != docinfo.Properties.base_len and len < docinfo.Properties.full_len) return error.InvalidDocumentPropertiesLength;
         count = std.mem.readInt(u16, record.payload[0..2], .little);
     }
     return count orelse error.MissingDocumentProperties;

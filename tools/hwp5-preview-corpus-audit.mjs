@@ -22,7 +22,7 @@ function filesUnder(root) {
 
 function category(error, bytes, cfb) {
   if (!error) return "preview_ok";
-  if (error === "UnexpectedEnd") {
+  if (error === "InvalidDocumentPropertiesLength") {
     try {
       cfb.parse(bytes);
       const header = cfb.findExact("/FileHeader")?.content;

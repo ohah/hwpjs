@@ -2,8 +2,8 @@
   "schema": 1,
   "verified": {
     "docs/hwp5-text-preview-api.md": {
-      "sha256": "71f3931a1113a8104bf579a61cf3b97f61b10448701aa2616aa6dd2ecdd2a4ff",
-      "evidence": "2026-09-29 HWP5 compressed stream zlib fallback checked against source; local 791 paths remain 677 accepted, wrapped hwpers file reaches short 4-byte DocumentProperties; 676 files and 459401 paragraphs match Node oracle; JS 14 tests, HWP5 audit 10 of 10 with 8905855 checks, Debug full test 2673 of 2673 pass; last added 32-header test checked separately in three modes"
+      "sha256": "fdc93d0a9028043acfb3bc2cad3fab62c11de49114ad50e77303162535a709db",
+      "evidence": "2026-09-29 Rust source and HWP5 26-byte contract checked against four-byte corpus record; Zig preview reports InvalidDocumentPropertiesLength without accepting it; JS 15 tests include 175 zlib combinations, local corpus 677 of 791 accepted with 459401 paragraphs oracle-matched; current Debug full Zig 2674 of 2674 and ReleaseSafe HWP5 audit 10 of 10 with 8905855 checks pass"
     },
     "docs/hwp5-chart-grid-cell-nullify.md": {
       "sha256": "88600840257f0c94d00455c251f83e06276d60afa559b82db3634fe931c7fe99",

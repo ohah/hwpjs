@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { deflateRawSync, deflateSync, inflateRawSync, inflateSync } from "node:zlib";
+import { constants, deflateRawSync, deflateSync, inflateRawSync, inflateSync } from "node:zlib";
 import test from "node:test";
 import { createCfbReader } from "../../js/cfb.mjs";
 import { createHwp5Reader } from "../../js/hwp5.mjs";
@@ -77,6 +77,38 @@ test("HWP5 preview accepts zlib-wrapped DocInfo and Section with strict envelope
   }
 });
 
+test("HWP5 preview agrees across zlib levels, strategies and window sizes", async () => {
+  const hwp = await createHwp5Reader(wasm);
+  const cfb = await createCfbReader(wasm);
+  try {
+    const original = fixture("example.hwp");
+    const expected = hwp.readText(original);
+    cfb.parse(original, { strict: true });
+    const document = cfb.document();
+    const info = document.nodes.find(node => node.name === "DocInfo");
+    const section = document.nodes.find(node => node.name === "Section0");
+    assert.ok(info && section);
+    const rawInfo = inflateRawSync(info.content);
+    const rawSection = inflateRawSync(section.content);
+    let checked = 0;
+    for (const level of [0, 1, 3, 6, 9]) {
+      for (const strategy of [constants.Z_DEFAULT_STRATEGY, constants.Z_FILTERED, constants.Z_HUFFMAN_ONLY, constants.Z_RLE, constants.Z_FIXED]) {
+        for (const windowBits of [9, 10, 11, 12, 13, 14, 15]) {
+          const options = { level, strategy, windowBits };
+          info.content = deflateSync(rawInfo, options);
+          section.content = deflateSync(rawSection, options);
+          assert.deepEqual(hwp.readText(cfb.write(document)), expected, JSON.stringify(options));
+          checked++;
+        }
+      }
+    }
+    assert.equal(checked, 175);
+  } finally {
+    cfb.close();
+    hwp.close();
+  }
+});
+
 const wrappedCorpusFile = new URL("../../reference/hwpers/converted_output.hwp", import.meta.url);
 test("observed wrapped HWP reaches its separately short DocumentProperties", { skip: !existsSync(wrappedCorpusFile) }, async () => {
   const hwp = await createHwp5Reader(wasm);
@@ -92,7 +124,7 @@ test("observed wrapped HWP reaches its separately short DocumentProperties", { s
     assert.equal(decodedInfo.readUInt32LE(0) & 1023, 16);
     assert.equal(decodedInfo.readUInt32LE(0) >>> 20, 4);
     assert.equal(inflateSync(section).length, 8782);
-    assert.throws(() => hwp.readText(bytes), { message: "UnexpectedEnd" });
+    assert.throws(() => hwp.readText(bytes), { message: "InvalidDocumentPropertiesLength" });
   } finally {
     cfb.close();
     hwp.close();
@@ -169,13 +201,13 @@ test("HWP5 preview accepts complete base DocumentProperties without caret and re
     assert.equal(bits & 1023, 16);
     const oldLength = bits >>> 20;
     assert.ok(oldLength >= 26 && oldLength < 4095);
-    for (const length of [14, 13, 15, 25]) {
+    for (const length of [4, 14, 13, 15, 25]) {
       const first = Buffer.from(raw.subarray(0, 4));
       first.writeUInt32LE((length << 20) | (bits & 0xfffff));
       info.content = deflateRawSync(Buffer.concat([first, raw.subarray(4, 4 + length), raw.subarray(4 + oldLength)]));
       const changed = cfb.write(document);
       if (length === 14) assert.deepEqual(hwp.readText(changed), expected);
-      else assert.throws(() => hwp.readText(changed), { message: "UnexpectedEnd" });
+      else assert.throws(() => hwp.readText(changed), { message: "InvalidDocumentPropertiesLength" });
     }
   } finally {
     cfb.close();

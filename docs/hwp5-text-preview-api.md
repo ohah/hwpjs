@@ -43,9 +43,17 @@ try {
 
 위 2026-09-28 수치는 당시 검사 기록입니다. HWP5 일반 압축 스트림의 제품 디코딩은 `src/hwp5/compressed_stream.zig`가 소유합니다. 기존 raw DEFLATE(+선택적 CRC32/ISIZE 8바이트)를 먼저 시도하고, raw 해제 자체가 `InvalidDeflate`이며 입력의 RFC1950 헤더가 유효한 경우에만 공통 `src/compression/zlib.zig`의 **완전한 단일 zlib 스트림** 검증으로 전환합니다. zlib 경로는 CMF/FLG·사전 사용 금지·Adler32·출력 한도·후미 바이트 거부를 적용하며, raw CRC32/ISIZE와 섞지 않습니다. raw 해제가 성공한 경우의 기존 해석과 오류는 유지합니다. HWP5 압축 플래그가 없는 스트림에는 자동 감지를 적용하지 않습니다. 이는 관측 입력을 위한 호환 경로이며 모든 HWP5 스트림이 RFC1950 래퍼를 사용한다는 명세 주장은 아닙니다.
 
-`reference/hwpers/converted_output.hwp`의 DocInfo(압축 719→해제 3,516바이트)와 Section0(3,128→8,782바이트)은 Node `inflateSync`로 정상 해제되며 raw 해제는 실패합니다. 제품도 이제 압축 단계를 지나지만, 독립적으로 읽은 첫 DocInfo `DocumentProperties` 레코드의 payload가 **4바이트**여서 미리보기 최소 14바이트 계약에서 `UnexpectedEnd`로 거부됩니다. 문서를 임의 보정하지 않습니다. 선택적 로컬 corpus 감사는 이 파일을 `short_document_properties`로 구분하고, 여전히 677/791 경로 성공·676개 오라클 대조·459,401문단 원시 바이트 일치를 보고했습니다. 원본 문서 형식의 적합성이나 다른 생성기 출력의 지원을 뜻하지 않습니다.
+`reference/hwpers/converted_output.hwp`의 DocInfo(압축 719→해제 3,516바이트)와 Section0(3,128→8,782바이트)은 Node `inflateSync`로 정상 해제되며 raw 해제는 실패합니다. 제품도 이제 압축 단계를 지나지만, 독립적으로 읽은 첫 DocInfo `DocumentProperties` 레코드의 payload가 **4바이트**여서 미리보기 최소 14바이트 계약에서 `InvalidDocumentPropertiesLength`로 거부됩니다. 문서를 임의 보정하지 않습니다. 선택적 로컬 corpus 감사는 이 파일을 `short_document_properties`로 구분하고, 여전히 677/791 경로 성공·676개 오라클 대조·459,401문단 원시 바이트 일치를 보고했습니다. 원본 문서 형식의 적합성이나 다른 생성기 출력의 지원을 뜻하지 않습니다.
 
-추적 실파일 45개 raw 경로 회귀와 합성 문서의 zlib DocInfo·Section 조합을 JS/WASM 미리보기로 검사했습니다. 로컬 표본이 있을 때는 위 `converted_output.hwp`의 두 스트림 독립 해제와 4바이트 첫 payload·제품 `UnexpectedEnd`도 자동 대조합니다. 정상 출력은 Node의 독립 `deflateSync`/`inflateSync` 및 기존 미리보기와 일치하며, 체크섬 손상·후미 바이트·잘못된 헤더를 거부합니다. Zig 집중 검사는 RFC1950의 창 크기 8종×압축 레벨 표시 4종 헤더, 정확한 출력 한도, 연속 zlib 스트림 거부, 사전 사용 거부, 실패 경로 할당 정리와 기존 raw 경로를 포함합니다. 압축 호환 경로의 성공을 문서 전체 의미 검증으로 세지 않습니다.
+추적 실파일 45개 raw 경로 회귀와 합성 문서의 zlib DocInfo·Section 조합을 JS/WASM 미리보기로 검사했습니다. `DocumentProperties`의 4·13·15·25바이트 거부와 14바이트 관측 예외를 추적 fixture 변이로 검사하고, 로컬 표본이 있을 때는 위 `converted_output.hwp`의 두 스트림 독립 해제와 4바이트 첫 payload·제품 `InvalidDocumentPropertiesLength`도 자동 대조합니다. 정상 출력은 Node의 독립 `deflateSync`/`inflateSync` 및 기존 미리보기와 일치하며, 체크섬 손상·후미 바이트·잘못된 헤더를 거부합니다. Zig 집중 검사는 RFC1950의 창 크기 8종×압축 레벨 표시 4종 헤더, 정확한 출력 한도, 연속 zlib 스트림 거부, 사전 사용 거부, 실패 경로 할당 정리와 기존 raw 경로를 포함합니다. 압축 호환 경로의 성공을 문서 전체 의미 검증으로 세지 않습니다.
+
+## 2026-09-29 레거시 Rust 대조와 적대적 점검
+
+레거시 `hwp-core`의 DocInfo 경로는 압축 플래그가 있으면 `decompress_deflate`만 호출하므로 이 zlib 래퍼 입력은 압축 단계에서 실패합니다. 별도로 해제한 첫 레코드를 레거시 `DocumentProperties::parse` 계약에 대조해도 최소 **26바이트**가 필요하므로 4바이트는 거부 대상입니다. 현재 `reference/hwpers` writer 역시 26바이트를 기록합니다. 표본은 95,744바이트이고 SHA-256은 `73a47ed24329cca8a26936ba95501580ee127cdf9f63becf87d9057ec0738194`입니다. 따라서 4바이트를 새 기본값으로 보충해 허용하지 않았고, 기존 `UnexpectedEnd` 대신 레코드 길이를 가리키는 `InvalidDocumentPropertiesLength`로 진단만 명확히 했습니다. 이는 Rust 코드를 실행한 결과가 아니라 해당 소스의 분기·길이 검사와 독립 해제 바이트를 대조한 결론입니다.
+
+한컴 명세의 zlib 사용 언급은 HWP5의 모든 압축 스트림이 RFC1950 래퍼라는 보장이 아닙니다. [한컴의 DocInfo 파싱 예제](https://tech.hancom.com/python-hwp-parsing-1/)는 `zlib.decompress(data, -15)`로 raw DEFLATE를 사용하며, 본문 예제도 같은 방식입니다. 공통 디코더의 RFC1950 CMF/FLG·Adler32와 raw RFC1951 경계를 구분해 검토했고, 합성 문서에서 Node의 5개 압축 수준×5개 strategy×7개 windowBits, 총 175개 zlib 조합이 기존 미리보기와 일치했습니다. 사전 사용 스트림은 의도적으로 `UnsupportedZlibDictionary`이며, 암호화·배포용 문서나 모든 생성기 출력의 지원까지 검증한 것은 아닙니다.
+
+이번 진단 변경 뒤 `node --test tests/hwp5/text-preview.test.mjs tests/hwp5/preview-record-oracle.test.mjs`는 15/15, `node tools/hwp5-preview-corpus-audit.mjs`는 677/791 허용·676개 오라클 파일·459,401문단 일치, `zig build hwp5-audit -Doptimize=ReleaseSafe --summary all`은 10/10 단계·8,905,855회 검사, `zig build test --summary all`은 5/5 단계·2,674/2,674개 통과했습니다. 전체 Zig 테스트의 `failed command:` 표기는 [별도 해석](zig-test-stderr.md)에 기록된 러너 stderr이며 종료 코드는 0입니다. 이 수치가 한컴 프로그램이나 전체 HWP5 필드의 동등성을 보증하지 않습니다.
 
 이번 변경 뒤 `zig build hwp5-audit -Doptimize=ReleaseSafe --summary all`은 10/10 단계·8,905,855회 검사·WASM imports 0으로 통과했습니다. 이 감사는 추적 fixture와 해당 감사 입력에 한정되며 선택적 791개 로컬 corpus 감사와는 별도로 실행했습니다.
 
