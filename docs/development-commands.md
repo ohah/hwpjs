@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[HWP5 읽기 전용 문서 모델 첫 연결](hwp5-model-projection.md)은 `zig test src/root.zig -O ReleaseSafe --test-filter 'HWP5 projection'`로 합성·실파일·할당 실패 경계를 검사합니다. 공개 JSON 동등성 검사는 아직 없습니다.
+
 [HWP5 문단 텍스트 미리보기 API](hwp5-text-preview-api.md)는 `zig build -Doptimize=ReleaseSafe` 후 `node tools/hwp5-text-preview.mjs legacy/rust/crates/hwp-core/tests/fixtures/example.hwp`로 직접 확인합니다. `node --test tests/hwp5/text-preview.test.mjs tests/hwp5/preview-record-oracle.test.mjs`는 추적 실파일 48개 중 45개의 독립 레코드·raw DEFLATE 원시 바이트 대조, 합성 zlib DocInfo/Section 호환성, 미리보기 전용 projection·caret 생략·손상 반례와 오라클 자체 반례를 검사합니다. `node tools/hwp5-preview-corpus-audit.mjs`는 선택적 로컬 `reference`·`legacy` corpus를 파일별로 분류하고 허용 문단의 원시 바이트를 Node raw/zlib 디코더로 독립 대조하며, `--files`는 파일별 분류를 출력합니다. 마지막 명령은 기본 audit에 포함되지 않습니다. 명령 출력은 문서 전체 조판 결과가 아닌 문단 토큰 미리보기입니다.
 
 [프로젝트 문서 검증 현황](verification-progress.md)은 `node tools/docs-audit-status.mjs`로 확인합니다. `--list-pending`은 경로별 상태를, `--require-complete`는 모든 추적 프로젝트 Markdown이 현재 해시로 검증됐고 누락·미추적 문서가 없는지 검사합니다. `node tools/docs-inline-links.mjs`는 일반 인라인 로컬 링크의 대상 파일만 검사합니다. `node --test tests/docs/*.test.mjs`로 두 도구의 반례를 검증합니다. 이 명령들은 문서 내용의 정확성을 자동 증명하지 않으며 최종 적대적 검증을 대신하지 않습니다.

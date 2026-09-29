@@ -9,8 +9,10 @@ pub const zip = @import("zip/archive.zig");
 pub const hwpx = @import("hwpx/package.zig");
 pub const image = @import("image/root.zig");
 pub const text = @import("text/root.zig");
+pub const model = @import("model/document.zig");
 
 test {
+    _ = @import("hwp5/model_projection_tests.zig");
     _ = @import("cfb/observed_repairs_tests.zig");
     _ = @import("hwpx/package_tests.zig");
     _ = @import("hwpx/list_references_tests.zig");

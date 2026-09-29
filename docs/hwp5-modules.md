@@ -3,6 +3,7 @@
 현재 모듈별 책임·소유권·미지원 경계는 주제 문서에서 관리합니다. 구현 변경 시 해당 문서를 갱신하고 AGENTS.md에 상세를 누적하지 않습니다.
 
 - [읽기 전용 문단 텍스트 미리보기 API](hwp5-text-preview-api.md)
+- [읽기 전용 문서 모델 첫 연결과 JSON 호환 경계](hwp5-model-projection.md)
 
 - [문서 조립·컨테이너·별도 스트림](hwp5-document-contracts.md)
   - [BMP 32비트 상위 바이트 관측](hwp5-bmp-high-byte.md)

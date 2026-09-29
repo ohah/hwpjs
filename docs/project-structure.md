@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+[읽기 전용 HWP5 문서 모델 첫 연결](hwp5-model-projection.md)은 `src/model/document.zig`가 소유 타입과 해제를, `src/hwp5/model_projection.zig`가 문단 텍스트·서식 참조로의 부분 투영을 소유합니다. 파일 입력 경계는 미리보기와 공통 `src/hwp5/text_source.zig`가 담당하며, 공개 JSON API는 아직 없습니다.
+
 [HWP5 문단 텍스트 미리보기](hwp5-text-preview-api.md)는 `src/hwp5/text_preview.zig`가 CFB·HWP5 스트림·문단 토큰 조립을, `src/hwp5/body/reader.zig`·`tree.zig`가 공통 framing/계층 위 미리보기 projection을, `src/wasm/hwp5_text.zig`가 WASM 출력 수명을, `js/hwp5.mjs`와 `js/hwp5-text-wire.mjs`가 공개 API·결과 복사를 소유합니다. 사용자 명령은 `tools/hwp5-text-preview.mjs`, 독립 원시 텍스트 오라클은 `tools/hwp5-preview-record-oracle.mjs`, 선택적 전수 조사는 `tools/hwp5-preview-corpus-audit.mjs`, 추적 회귀는 `tests/hwp5/text-preview.test.mjs`·`preview-record-oracle.test.mjs`에 둡니다. 편집 모델·저장·화면 텍스트는 후속 범위입니다.
 
 [HWP5 각주·미주 원문 표식](hwp5-note-source-sites.md)은 기존 `src/hwp5/body/control_links.zig`가 원문 위치를 소유하고, `tests/hwp5/note-source-sites.mjs`가 원시 레코드 기반 기대 위치·변이 반례만 소유합니다. 주석 전용 제품 파서는 추가하지 않습니다.

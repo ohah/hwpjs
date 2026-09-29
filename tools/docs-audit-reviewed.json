@@ -642,12 +642,12 @@
       "evidence": "2026-09-28 historic Sep 5 to 7 log of 99 commits verified as history not current support, official rev1.3 PDF SHA matches and rhwp e8800c8de present, current topic docs linked and video zero correction linked; Debug 2664 tests and ReleaseSafe HWP5 audit 8905855 checks pass, old per-stage counts not rerun"
     },
     "docs/architecture.md": {
-      "sha256": "b04569066c357d27426bd69855a3ee8a58e64efcf005d3e148980c5932de3bef",
-      "evidence": "2026-09-28 current architecture plus HWP5 preview seam CFB and HWP5 core to WASM owned output to JS copy checked against source; ReleaseSafe WASM build and focused real file tests pass; edit and render remain out of scope"
+      "sha256": "c04b9bf53de2126fa4177f52c9769ef40fb7e5b1e47efe8fd2c3286c3f0cc100",
+      "evidence": "2026-09-29 read-only model partial status checked against model/document and HWP5 projection; ReleaseSafe focused real-file and ownership tests pass; full model edit and render remain out of scope"
     },
     "docs/development-commands.md": {
-      "sha256": "2cfff1710e59952b0dae7cfb765243c4223ea745eff82fcd5b5bdf1611e52672",
-      "evidence": "2026-09-29 focused JS 14 tests, optional 791-path corpus audit and independent raw/zlib oracle, Debug full test 2673 of 2673, ReleaseSafe HWP5 audit 10 of 10 executed; other historical command entries not rerun in this change"
+      "sha256": "57e45eb1c8861b870b487daf853f3c4d3923b25853ae1ad67b0e0087348d689f",
+      "evidence": "2026-09-29 new HWP5 projection focused command executed and source checked; prior preview JS 15 tests and 791-path optional corpus audit rerun; other historical commands not all rerun in this change"
     },
     "docs/zig-test-stderr.md": {
       "sha256": "9133676bc38bac48fab5f9ba8a04ec972697d32e7a051a851d6b158c444c66b5",
@@ -1493,17 +1493,21 @@
       "sha256": "1e64d66297c293a62b53a2daba2f7f32633a83badf7f98183ed9cfd994da2aec",
       "evidence": "2026-09-27 current document/container ownership and selected stream boundaries; 6 ReleaseSafe and 3 ReleaseFast focused tests; corpus and linked detail docs excluded"
     },
+    "docs/hwp5-model-projection.md": {
+      "sha256": "d693067b27efb470637b4152ef003ba0215e5e14966ea55902c92939fbf3336b",
+      "evidence": "2026-09-29 source and legacy toJson schema checked; HWP5 projection Debug Safe Fast 8 each, four real files, invalid version and empty section rejection, and allocation failure paths; full zig build test 2681 pass; preview JS 15, 791 corpus paths with 676 oracle matches and 459401 paragraphs; HWP5 audit 10 steps 8905855 checks imports zero; public JSON not implemented"
+    },
     "docs/hwp5-modules.md": {
-      "sha256": "be99729fd4c552f5bc59de14a50b81b9e833930186a22c9be5a88af6b7cc1edc",
-      "evidence": "2026-09-28 existing HWP5 module index plus new public text preview contract link exists; implementation owned separately from historic foundation and CFB API"
+      "sha256": "b48e360bf511c5e02556496eb3d2002f88da2c121d6d064583a6b7a121b0b2bd",
+      "evidence": "2026-09-29 HWP5 model projection and preview contract links exist; module responsibilities remain in separate topic docs"
     },
     "docs/migration.md": {
       "sha256": "ff208406c964f5e7f457852077a0510c63f662344b8967e551f42948bf34ad27",
       "evidence": "2026-09-27 move commit R100 count, current legacy and CI paths, cargo metadata and tests, Bun Vite startup, historical 1652 qualified"
     },
     "docs/project-structure.md": {
-      "sha256": "2a8fe391ba1d1883cbc23782e57785b6f77632af50161e1b688e2541d0356d6d",
-      "evidence": "2026-09-28 preview adapter, shared body projection, independent oracle and optional census tool paths checked against current source; public CFB strict API unchanged and focused projection and JS regressions pass"
+      "sha256": "eb84484e57bf66820ac6d807f9700acec9541973c68a2b5df109064bfc3646cc",
+      "evidence": "2026-09-29 new model/document, HWP5 model_projection and shared text_source paths verified; file input projection and preview regressions pass; public JSON remains absent"
     },
     "docs/hwpx-section-tree.md": {
       "sha256": "62280fe17d2880b8a4c1f0706378f911b272f9b7cf75f0b2b0e4830c36764467",

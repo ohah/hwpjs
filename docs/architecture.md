@@ -396,7 +396,7 @@ src/
   xml/         공통 XML 문법·이름·namespace 순회 (구현)
   zip/         메모리 기반 ZIP 엔트리 읽기·제한된 해제
   hwpx/        mimetype·패키지/ZIP·XML 트리·선택적 필드/참조/이미지 검사 (통합 의미 모델·쓰기 예정)
-  model/       문서 공통 모델과 원본 정보 보존 (예정)
+  model/       읽기 전용 문단·텍스트·서식 참조 부분 모델 (구현), 전체 공통 모델과 원본 정보 보존 (예정)
   root.zig     라이브러리 진입점
   wasm/        메모리 할당·CFB 수명·엔트리·원시 섹터 ABI
   wasm.zig     ABI 모듈 등록과 버전

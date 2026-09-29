@@ -1,17 +1,10 @@
 //! Bounded, read-only HWP5 paragraph-token preview. Not a document model.
 const std = @import("std");
-const Cfb = @import("../cfb/reader.zig").File;
-const observed_repairs = @import("../cfb/observed_repairs.zig");
-const Header = @import("file_header.zig").Header;
-const docinfo = @import("docinfo/reader.zig");
+const Source = @import("text_source.zig").Source;
 const Tree = @import("body/tree.zig").Tree;
 const children = @import("body/paragraph_children.zig");
-const stream = @import("stream.zig");
 
-const max_input = 64 * 1024 * 1024;
-const max_stream = 32 * 1024 * 1024;
 const max_output = 64 * 1024 * 1024;
-const max_sections = 1024;
 
 /// H5T1 + version + section count; section(index,count);
 /// paragraph(node,parent,declared units,text-present,count);
@@ -21,36 +14,19 @@ pub fn encode(backing: std.mem.Allocator, input: []const u8) ![]u8 {
     var arena = std.heap.ArenaAllocator.init(backing);
     defer arena.deinit();
     const a = arena.allocator();
-    var file = try openCfb(backing, input);
-    defer file.deinit();
-    const header = try Header.parse(try file.readStream(a, "/FileHeader"));
-    try @import("feature_policy.zig").requireSupported(&header, .reject);
-    const info = try stream.decode(a, &header, try file.readStream(a, "/DocInfo"), max_stream);
-    const section_count = try sectionCount(info, header.version());
-    if (section_count == 0 or section_count > max_sections) return error.InvalidSectionCount;
-    const body_index = try file.findExact("/BodyText") orelse return error.StreamNotFound;
-    if (file.entries[body_index].kind != 1) return error.NotAStorage;
-    var found: usize = 0;
-    for (file.entries) |entry| {
-        if (entry.parent != body_index or entry.kind != 2) continue;
-        const index = (try @import("container/numbered_stream.zig").index(u16, "Section", entry.name)) orelse return error.UnexpectedBodyStream;
-        if (index >= section_count) return error.SectionCountMismatch;
-        found += 1;
-    }
-    if (found != section_count) return error.SectionCountMismatch;
+    var source = try Source.open(backing, input);
+    defer source.deinit();
 
     var out: std.ArrayList(u8) = .empty;
     try append(a, &out, "H5T1");
-    try word(a, &out, header.version().raw);
-    try word(a, &out, section_count);
-    for (0..section_count) |section_index| {
+    try word(a, &out, source.header.version().raw);
+    try word(a, &out, source.section_count);
+    for (0..source.section_count) |section_index| {
         var section_arena = std.heap.ArenaAllocator.init(backing);
         defer section_arena.deinit();
         const section_allocator = section_arena.allocator();
-        const path = try std.fmt.allocPrint(a, "/BodyText/Section{d}", .{section_index});
-        const raw = try file.readStream(a, path);
-        const decoded = try stream.decode(section_allocator, &header, raw, max_stream);
-        var tree = try Tree.parseTextPreview(section_allocator, decoded, header.version(), .{});
+        const decoded = try source.decodeSection(section_allocator, section_index);
+        var tree = try Tree.parseTextPreview(section_allocator, decoded, source.header.version(), .{});
         defer tree.deinit(section_allocator);
         try word(a, &out, @intCast(section_index));
         const count_pos = out.items.len;
@@ -85,38 +61,6 @@ pub fn encode(backing: std.mem.Allocator, input: []const u8) ![]u8 {
         std.mem.writeInt(u32, out.items[count_pos..][0..4], count, .little);
     }
     return backing.dupe(u8, out.items);
-}
-
-fn openCfb(a: std.mem.Allocator, input: []const u8) !Cfb {
-    const limits: @import("../cfb/reader.zig").Options = .{ .strict = true, .max_input_bytes = max_input, .max_stream_bytes = max_stream, .max_total_stream_bytes = max_input };
-    return Cfb.open(a, input, limits) catch |strict_err| switch (strict_err) {
-        error.InvalidRoot, error.InvalidFat, error.InvalidUnusedEntry, error.UnclaimedMiniSector => {
-            const repaired = observed_repairs.open(a, input, limits) catch |repair_err| switch (repair_err) {
-                error.OutOfMemory, error.LimitExceeded => return repair_err,
-                else => return strict_err,
-            };
-            return repaired.file;
-        },
-        else => return strict_err,
-    };
-}
-
-fn sectionCount(bytes: []const u8, version: @import("version.zig").Version) !u16 {
-    try version.requireSupported();
-    var it = @import("record.zig").Iterator.init(bytes, .{});
-    var count: ?u16 = null;
-    while (try it.next()) |record| {
-        if (record.tag != @intFromEnum(docinfo.Tag.document_properties)) continue;
-        if (count != null) return error.DuplicateDocumentProperties;
-        if (record.level != 0) return error.InvalidDocInfoLevel;
-        // Two observed generated HWP5 files omit all three trailing caret
-        // coordinates. The preview needs only the first seven u16 fields;
-        // reject a partly present caret tuple instead of synthesizing it.
-        const len = record.payload.len;
-        if (len != docinfo.Properties.base_len and len < docinfo.Properties.full_len) return error.InvalidDocumentPropertiesLength;
-        count = std.mem.readInt(u16, record.payload[0..2], .little);
-    }
-    return count orelse error.MissingDocumentProperties;
 }
 
 fn cast(value: usize) !u32 {
