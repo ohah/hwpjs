@@ -97,6 +97,17 @@ try {
   check(high, 1, 0, 0, "X", "high-bit-edit");
   const witness = fixture(base, b => b, "witness", false, true);
   check(witness, 1, 0, 0, "X", "witness-edit");
+  // Known non-paragraph roots also end a paragraph's ownership. Every
+  // serializer-sensitive descendant must remain raw under the new root.
+  const lastParagraph = records(inspect(base).sections[0].bytes).filter(r => r.tag === 66).length - 1;
+  for (const tag of [67, 68, 69, 70, 73]) {
+    const foreignPayload = tag === 67 ? Buffer.from("WITNESS\r", "utf16le") : Buffer.alloc(tag === 68 ? 8 : tag === 69 ? 36 : tag === 70 ? 12 : 40, 0x51);
+    const foreign = fixture(base, b => Buffer.concat([b, encodeRecord(73, 0, Buffer.alloc(40)), encodeRecord(tag, 1, foreignPayload, true)]), `foreign-root-${tag}`);
+    for (const paragraph of [1, lastParagraph]) {
+      const after = check(foreign, paragraph, 0, 0, "X", `foreign-root-${tag}-paragraph-${paragraph}`);
+      assert.deepEqual(records(inspect(after).sections[0].bytes).at(-1).raw, encodeRecord(tag, 1, foreignPayload, true));
+    }
+  }
   writer.parse(base, { strict: true });
   const multiDoc = writer.document(), original = inspect(base);
   const bodyIndex = multiDoc.nodes.findIndex(n => n.kind === 1 && n.name === "BodyText" && n.parent === 0);

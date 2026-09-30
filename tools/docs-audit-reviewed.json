@@ -2,8 +2,8 @@
   "schema": 1,
   "verified": {
     "docs/hwp5-plain-text-edit-experiment.md": {
-      "sha256": "8190172510ee303f4b9d54408b4edd71e684b2ec08672cf4d01bc6b4e387b122",
-      "evidence": "2026-09-30 Debug Safe Fast 10 steps four native tests each; five HWP 75 edits 56 exhaustive boundaries 11 synthetic edits 20 refusals 3 oracle counterexamples and 4 latest ReleaseSafe runtime source mutants detected; final default 7 steps 2685 tests passed core runtime 21 minutes; Safe WASM build passed; GUI and HWPX editing not proved"
+      "sha256": "40e141cba6352892f6ce14d4505170fcc6421bd2ea74dd5d948ae070febcb95d",
+      "evidence": "2026-09-30 paragraph ownership closes at sibling or ancestor independent of tag per HWP5 4.1; old Safe probe fails new foreign-root regression; fixed Debug Safe Fast four native tests each plus five HWP 75 edits 56 boundaries 21 synthetic edits including ten foreign-root raw framing preservation cases 20 refusals 3 oracle counterexamples; fixed Safe full 2685 tests exit zero and WASM build pass, style four tests twelve edits and Node seventeen tests pass; initial default and four source mutant results historical; GUI and HWPX editing not proved"
     },
     "docs/hwp5-style-preservation-experiment.md": {
       "sha256": "1619904fbf80ed84e720e279704e0423a5ac8eba96ae94b8dd1d4765a077d2cb",

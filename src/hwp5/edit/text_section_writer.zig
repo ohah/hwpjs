@@ -14,6 +14,9 @@ pub fn write(a: std.mem.Allocator, source: []const u8, section: model.Section, l
     var current: ?model.Paragraph = null;
     var level: u10 = 0;
     while (try it.next()) |record| {
+        // A sibling or ancestor closes this paragraph's subtree, regardless
+        // of its tag. Later descendants belong to that new owner, not to us.
+        if (current != null and record.level <= level) current = null;
         if (record.tag == @intFromEnum(body.Tag.paragraph_header)) {
             if (paragraph_index >= section.paragraphs.len) return error.SourceBindingMismatch;
             const p = section.paragraphs[paragraph_index];
