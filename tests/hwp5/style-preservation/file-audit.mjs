@@ -204,6 +204,18 @@ try {
   verify(injected.bytes, after, 0, 0, style);
   unknownCases++;
 
+  // A short payload can still use an extended-size source header. A fixed
+  // style-byte edit must not silently canonicalize that unrelated framing.
+  const extendedShort = inject(input, bytes => {
+    const header = Buffer.alloc(8);
+    header.writeUInt32LE((66 | (0xfff << 20)) >>> 0);
+    header.writeUInt32LE(first.end - first.payload, 4);
+    return Buffer.concat([bytes.subarray(0, first.start), header, bytes.subarray(first.payload)]);
+  }, "extended-short-header", false);
+  const extendedAfter = run(extendedShort.path, 0, 0, style, "allow-stale-layout", true, "extended-short-edited");
+  verify(extendedShort.bytes, extendedAfter, 0, 0, style);
+  unknownCases++;
+
   // An unknown child before a paragraph makes record-node and paragraph ordinals diverge.
   const shifted = inject(input, bytes => {
     const opaque = Buffer.alloc(5);

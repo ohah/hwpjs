@@ -1,5 +1,5 @@
 //! Experimental proof: one editable model with an immutable HWP5 sidecar.
-//! Only existing paragraph style references may change. Layout is not recomputed.
+//! Controlled style references and plain-text splices; no layout engine.
 const std = @import("std");
 const Source = @import("../text_source.zig").Source;
 const projection = @import("../model_projection.zig");
@@ -8,6 +8,7 @@ const framing = @import("../record.zig");
 const Header = @import("../body/paragraph_header.zig").Header;
 const Tag = @import("../body/reader.zig").Tag;
 const cfb = @import("../../cfb/reader.zig");
+pub const TextSplice = @import("plain_text.zig").Splice;
 const max_bytes = 64 * 1024 * 1024;
 const max_stream = 32 * 1024 * 1024;
 
@@ -16,6 +17,7 @@ pub const Command = union(enum) {
     set_style: struct { section: usize, paragraph: usize, style_id: u8 },
     insert_text: struct { section: usize, paragraph: usize, utf8: []const u8 },
     delete_paragraph: struct { section: usize, paragraph: usize },
+    splice_text: TextSplice,
 };
 pub const SaveOptions = struct {
     /// Byte-preservation experiments only; does not certify Hancom layout.
@@ -32,6 +34,7 @@ const State = struct {
     document: model.Document,
     style_offsets: [][]usize,
     style_count: usize,
+    char_count: usize,
 
     fn deinit(self: *State) void {
         const a = self.allocator;
@@ -93,7 +96,7 @@ pub const Session = opaque {
             if (paragraph_index != section.paragraphs.len) return error.SourceBindingMismatch;
         }
         const owned = try a.create(State);
-        owned.* = .{ .allocator = a, .source = source, .decoded = decoded, .document = document, .style_offsets = offsets, .style_count = style_count };
+        owned.* = .{ .allocator = a, .source = source, .decoded = decoded, .document = document, .style_offsets = offsets, .style_count = style_count, .char_count = resources.count(.char_shape) };
         return @ptrCast(owned);
     }
 
@@ -120,6 +123,12 @@ pub const Session = opaque {
         return .{ .source_node = p.source_node, .parent_node = p.parent_node, .style_id = p.style_id };
     }
 
+    /// Owned UTF-16LE token bytes, including the original paragraph terminator.
+    pub fn copyText(self: *const Session, a: std.mem.Allocator, section: usize, index: usize) ![]u8 {
+        if (index >= try self.paragraphCount(section)) return error.InvalidParagraph;
+        return @import("plain_text.zig").textBytes(a, self.stateConst().document.sections[section].paragraphs[index]);
+    }
+
     pub fn apply(self: *Session, command: Command) !void {
         switch (command) {
             .set_style => |edit| {
@@ -127,6 +136,15 @@ pub const Session = opaque {
                 const state = self.getState();
                 if (edit.style_id >= state.style_count) return error.InvalidStyleReference;
                 state.document.sections[edit.section].paragraphs[edit.paragraph].style_id = edit.style_id;
+            },
+            .splice_text => |edit| {
+                if (edit.paragraph >= try self.paragraphCount(edit.section)) return error.InvalidParagraph;
+                const state = self.getState();
+                // Other sections can also contain opaque references into the target.
+                for (state.decoded, 0..) |bytes, index| {
+                    if (index != edit.section) try @import("plain_text_source.zig").validateSection(bytes);
+                }
+                try @import("plain_text.zig").apply(state.allocator, state.decoded[edit.section], state.source.header.version(), &state.document.sections[edit.section].paragraphs[edit.paragraph], edit, state.char_count);
             },
             // No promise to relocate unknown cross-references after structure edits.
             .insert_text, .delete_paragraph => return error.UnsupportedStructuralEdit,
@@ -150,8 +168,7 @@ pub const Session = opaque {
         var replacements: std.ArrayList(cfb.stream_replace.Replacement) = .empty;
         for (state.document.sections, 0..) |section, index| {
             if (!sectionChanged(state, index, section)) continue;
-            const decoded = try scratch.dupe(u8, state.decoded[index]);
-            for (section.paragraphs, state.style_offsets[index]) |p, offset| decoded[offset] = p.style_id;
+            const decoded = try @import("text_section_writer.zig").write(scratch, state.decoded[index], section, max_stream);
             const encoded = if (state.source.header.has(.compressed))
                 try @import("../../compression/raw_deflate.zig").encodeStored(scratch, decoded, max_stream)
             else
@@ -174,7 +191,7 @@ pub const Session = opaque {
 
 fn sectionChanged(state: *const State, index: usize, section: model.Section) bool {
     for (section.paragraphs, state.style_offsets[index]) |p, offset| {
-        if (p.style_id != state.decoded[index][offset]) return true;
+        if (p.style_id != state.decoded[index][offset] or p.range_tags != null) return true;
     }
     return false;
 }

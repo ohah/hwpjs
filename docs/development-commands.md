@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[단순 문단 텍스트 편집 실험](hwp5-plain-text-edit-experiment.md)은 `zig build text-splice-audit --summary all` 및 `-Doptimize=ReleaseSafe`·`-Doptimize=ReleaseFast`로 실행합니다. 집중 Zig 검사와 실제 HWP 5개·파생 반례의 CFB.js/Node/Rust 대조를 포함하며 임시 출력 경로를 표시합니다. 집중 Zig 검사는 기본 `zig build test`에도 포함됩니다. 실파일 audit은 기존 native Rust oracle이 필요해 기본 test/audit 밖에 있습니다. 조판·미리보기 갱신·한컴 GUI·HWPX 편집 검증은 아닙니다.
+
 [스타일 참조 편집·원본 보존 실험](hwp5-style-preservation-experiment.md)은 `zig build style-preservation-audit --summary all`과 `-Doptimize=ReleaseSafe`·`-Doptimize=ReleaseFast`로 실행합니다. 집중 Zig 검사와 실파일의 CFB.js·Node zlib·Rust `toJson` 대조가 포함되며 출력 HWP의 임시 경로를 표시합니다. Rust oracle은 `legacy/rust/packages/hwpjs/dist/index.js`와 현재 플랫폼의 기존 native binding이 필요합니다. 이 audit은 기본 test/audit 밖에 있으며, 일반 편집·한컴 조판·HWPX 저장 동등성을 검증하지 않습니다.
 
 [HWP5 읽기 전용 문서 모델 첫 연결](hwp5-model-projection.md)은 `zig test src/root.zig -O ReleaseSafe --test-filter 'HWP5 projection'`로 합성·실파일·할당 실패 경계를 검사합니다. 공개 JSON 동등성 검사는 아직 없습니다.

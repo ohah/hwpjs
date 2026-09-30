@@ -1,9 +1,13 @@
 {
   "schema": 1,
   "verified": {
+    "docs/hwp5-plain-text-edit-experiment.md": {
+      "sha256": "8190172510ee303f4b9d54408b4edd71e684b2ec08672cf4d01bc6b4e387b122",
+      "evidence": "2026-09-30 Debug Safe Fast 10 steps four native tests each; five HWP 75 edits 56 exhaustive boundaries 11 synthetic edits 20 refusals 3 oracle counterexamples and 4 latest ReleaseSafe runtime source mutants detected; final default 7 steps 2685 tests passed core runtime 21 minutes; Safe WASM build passed; GUI and HWPX editing not proved"
+    },
     "docs/hwp5-style-preservation-experiment.md": {
-      "sha256": "b4f76c752861268c34963ca038d0855cfaeb137514f5575cdc22b662f83a13c7",
-      "evidence": "2026-09-30 Debug Safe Fast audit 10 steps four tests each; four real HWP twelve edits and four synthetic edits; eight refusals three counterexamples four runtime mutants detected; full Debug core 2681 passed in 22 minutes; no GUI or HWPX proof"
+      "sha256": "1619904fbf80ed84e720e279704e0423a5ac8eba96ae94b8dd1d4765a077d2cb",
+      "evidence": "2026-09-30 Historical style proof separated from new splice command; Safe style regression four tests twelve real edits and three opaque or extended framing cases pass"
     },
     "docs/hwp5-text-preview-api.md": {
       "sha256": "fdc93d0a9028043acfb3bc2cad3fab62c11de49114ad50e77303162535a709db",
@@ -650,8 +654,8 @@
       "evidence": "2026-09-30 Controlled style proof linked separately; general editing and layout unproven"
     },
     "docs/development-commands.md": {
-      "sha256": "2f3a0b992a0d7e93440841626b20de4f3f91a2e6730237d99b676029b862c728",
-      "evidence": "2026-09-30 Debug Safe Fast style audit executed 10 steps four tests each; Safe WASM build Node 17 passed; other commands not rerun"
+      "sha256": "890ef975f22f0079aaee4602ce3ed932d136bba27c08194d5e93211673c87a34",
+      "evidence": "2026-09-30 Text splice native coverage wired into default test and audit; full file audit Debug Safe Fast 4 native tests 75 real edits 56 boundaries 11 synthetic edits 20 refusals; existing Rust oracle required only for optional file audit"
     },
     "docs/zig-test-stderr.md": {
       "sha256": "9133676bc38bac48fab5f9ba8a04ec972697d32e7a051a851d6b158c444c66b5",
@@ -1498,20 +1502,20 @@
       "evidence": "2026-09-27 current document/container ownership and selected stream boundaries; 6 ReleaseSafe and 3 ReleaseFast focused tests; corpus and linked detail docs excluded"
     },
     "docs/hwp5-model-projection.md": {
-      "sha256": "35c911baeee735f8a9b014d072a109ac5cc6138bf8e1d765741b65145a983ec2",
-      "evidence": "2026-09-30 Read-only model reused by opaque edit experiment; four real HWP twelve edits independently checked; general save absent"
+      "sha256": "4751e34636b4a62713189828a90c55e327dcd3073a1b8446810309d637dcb775",
+      "evidence": "2026-09-30 Read-only ranges remain null; controlled Session owns materialized ranges; Node full Section unit-wise oracle Rust JSON and four allocation and command tests checked"
     },
     "docs/hwp5-modules.md": {
-      "sha256": "17d6d6af607c25e09b63e47bc56e96ca0f9999be7d0d836a17e30114707f3841",
-      "evidence": "2026-09-30 Separate style experiment indexed; 2885 local links checked"
+      "sha256": "b6a791ea4a74685d059656c284c9b77e4d1a693b3b175ad0292797f5e20dd0f9",
+      "evidence": "2026-09-30 Separate plain text edit topic linked; all 2893 inline local destinations checked"
     },
     "docs/migration.md": {
       "sha256": "ff208406c964f5e7f457852077a0510c63f662344b8967e551f42948bf34ad27",
       "evidence": "2026-09-27 move commit R100 count, current legacy and CI paths, cargo metadata and tests, Bun Vite startup, historical 1652 qualified"
     },
     "docs/project-structure.md": {
-      "sha256": "41fc2a48627643cc80e3253f5660bf6fdc674f788d6720b5f387a994fa19d14b",
-      "evidence": "2026-09-30 Edit module session probe and audit responsibilities checked; shared parser compression CFB writer reused"
+      "sha256": "effc2b8ebb68088bf4bdf75351c39889d59aca097abfda078f9d605e518559de",
+      "evidence": "2026-09-30 Source eligibility mutable splice Section output framing and file boundary responsibilities checked against new separate files; no duplicate parser or CFB compression implementation"
     },
     "docs/hwpx-section-tree.md": {
       "sha256": "62280fe17d2880b8a4c1f0706378f911b272f9b7cf75f0b2b0e4830c36764467",

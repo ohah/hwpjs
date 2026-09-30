@@ -14,7 +14,8 @@ pub fn build(b: *std.Build) void {
     tests.step.dependOn(&icc_registry_check.step);
     const run_tests = b.addRunArtifact(tests);
     run_tests.step.dependOn(&abi_check.step);
-    b.step("test", "Run core unit tests").dependOn(&run_tests.step);
+    const core_test_step = b.step("test", "Run core and controlled text unit tests");
+    core_test_step.dependOn(&run_tests.step);
 
     const preservation_module = b.createModule(.{
         .root_source_file = b.path("tests/hwp5/style-preservation/session.test.zig"),
@@ -37,6 +38,21 @@ pub fn build(b: *std.Build) void {
     preservation_step.dependOn(&preservation_tests.step);
     preservation_step.dependOn(&preservation_oracle.step);
 
+    const text_tests_module = b.createModule(.{ .root_source_file = b.path("tests/hwp5/style-preservation/text.test.zig"), .target = target, .optimize = optimize });
+    text_tests_module.addImport("hwpjs", core);
+    const text_tests = b.addRunArtifact(b.addTest(.{ .root_module = text_tests_module, .filters = &.{"text splice"} }));
+    const text_probe_module = b.createModule(.{ .root_source_file = b.path("tests/hwp5/style-preservation/text-probe.zig"), .target = target, .optimize = optimize });
+    text_probe_module.addImport("hwpjs", core);
+    const text_probe = b.addExecutable(.{ .name = "text-splice-probe", .root_module = text_probe_module });
+    const text_oracle = b.addSystemCommand(&.{ "node", "tests/hwp5/style-preservation/text-file-audit.mjs" });
+    text_oracle.addArtifactArg(text_probe);
+    text_oracle.has_side_effects = true;
+    const text_step = b.step("text-splice-audit", "Verify controlled text editing with real HWP fixtures and independent adversarial oracle");
+    text_step.dependOn(&text_tests.step);
+    text_step.dependOn(&text_oracle.step);
+    // Native unit coverage must not depend on the optional Rust JSON oracle.
+    core_test_step.dependOn(&text_tests.step);
+
     const wasm = b.addExecutable(.{
         .name = "hwpjs",
         .root_module = b.createModule(.{
@@ -51,6 +67,7 @@ pub fn build(b: *std.Build) void {
     wasm.step.dependOn(&icc_registry_check.step);
     b.installArtifact(wasm);
     preservation_oracle.step.dependOn(b.getInstallStep());
+    text_oracle.step.dependOn(b.getInstallStep());
 
     const compare = b.addSystemCommand(&.{ "node", "tests/cfb/compare.mjs" });
     compare.step.dependOn(b.getInstallStep());
@@ -68,7 +85,7 @@ pub fn build(b: *std.Build) void {
     const note_number_oracle = b.addSystemCommand(&.{ "node", "--test", "tests/hwp5/note-number-links.test.mjs" });
     audit.dependOn(&note_number_oracle.step);
     audit.dependOn(&mutations.step);
-    audit.dependOn(&run_tests.step);
+    audit.dependOn(core_test_step);
     audit.dependOn(compare_step);
     const wmf_framing_tests = b.addSystemCommand(&.{ "node", "--test", "tests/hwp5/wmf-framing-evidence.test.mjs" });
     audit.dependOn(&wmf_framing_tests.step);

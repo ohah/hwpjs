@@ -4,6 +4,19 @@ const Version = @import("../version.zig").Version;
 pub const Header = struct {
     /// Fixed PARA_HEADER field location, shared by parsing and narrow writers.
     pub const style_id_offset = 10;
+    pub const character_count_offset = 0;
+    pub const char_shape_count_offset = 12;
+    pub const range_tag_count_offset = 14;
+    pub const line_segment_count_offset = 16;
+
+    /// Replaces only fields owned by a controlled text writer. Preserves flags.
+    pub fn writeTextCounts(bytes: []u8, units: u32, runs: u16, ranges: u16) void {
+        const old = std.mem.readInt(u32, bytes[character_count_offset..][0..4], .little);
+        std.mem.writeInt(u32, bytes[character_count_offset..][0..4], (old & 0x80000000) | units, .little);
+        std.mem.writeInt(u16, bytes[char_shape_count_offset..][0..2], runs, .little);
+        std.mem.writeInt(u16, bytes[range_tag_count_offset..][0..2], ranges, .little);
+        std.mem.writeInt(u16, bytes[line_segment_count_offset..][0..2], 0, .little);
+    }
     chars_raw: u32,
     control_mask: u32,
     para_shape_id: u16,

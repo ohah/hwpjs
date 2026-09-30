@@ -1,5 +1,7 @@
 # 편집 모델과 원본 보존의 제한적 구현 실험
 
+후속 [단순 문단 텍스트 편집 실험](hwp5-plain-text-edit-experiment.md)은 별도 `splice_text` 명령과 그 거부·조판 경계를 소유합니다. 아래 기록은 최초 스타일 참조 실험이며, 기존 `insert_text`·`delete_paragraph` 명령의 미지원 계약은 유지됩니다.
+
 [모듈 인덱스](hwp5-modules.md) · [현재 읽기 전용 모델](hwp5-model-projection.md)
 
 ## 검증하려는 주장

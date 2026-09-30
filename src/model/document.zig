@@ -15,6 +15,7 @@ pub const Token = struct {
 };
 
 pub const CharacterRun = struct { start_unit: u32, char_shape_id: u32 };
+pub const TextRange = struct { start_unit: u32, end_unit: u32, tag: u32 };
 
 pub const Paragraph = struct {
     source_node: u32,
@@ -25,6 +26,8 @@ pub const Paragraph = struct {
     style_id: u8,
     tokens: []Token,
     character_runs: []CharacterRun,
+    /// Null means not projected; controlled editors may own explicit ranges.
+    range_tags: ?[]TextRange = null,
     /// Direct records not represented by this projection. Never treated as saved.
     deferred_direct_records: usize,
 
@@ -32,6 +35,7 @@ pub const Paragraph = struct {
         for (self.tokens) |token| a.free(token.raw);
         a.free(self.tokens);
         a.free(self.character_runs);
+        if (self.range_tags) |ranges| a.free(ranges);
         self.* = undefined;
     }
 };
