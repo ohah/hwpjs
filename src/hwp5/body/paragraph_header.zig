@@ -1,6 +1,9 @@
+const std = @import("std");
 const Reader = @import("../../binary/reader.zig").Reader;
 const Version = @import("../version.zig").Version;
 pub const Header = struct {
+    /// Fixed PARA_HEADER field location, shared by parsing and narrow writers.
+    pub const style_id_offset = 10;
     chars_raw: u32,
     control_mask: u32,
     para_shape_id: u16,
@@ -27,6 +30,7 @@ pub const Header = struct {
         h.chars_raw = try r.readInt(u32);
         h.control_mask = try r.readInt(u32);
         h.para_shape_id = try r.readInt(u16);
+        std.debug.assert(r.offset == style_id_offset);
         h.style_id = try r.readInt(u8);
         h.break_flags = try r.readInt(u8);
         h.char_shape_count = try r.readInt(u16);

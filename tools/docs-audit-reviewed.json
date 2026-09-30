@@ -1,6 +1,10 @@
 {
   "schema": 1,
   "verified": {
+    "docs/hwp5-style-preservation-experiment.md": {
+      "sha256": "b4f76c752861268c34963ca038d0855cfaeb137514f5575cdc22b662f83a13c7",
+      "evidence": "2026-09-30 Debug Safe Fast audit 10 steps four tests each; four real HWP twelve edits and four synthetic edits; eight refusals three counterexamples four runtime mutants detected; full Debug core 2681 passed in 22 minutes; no GUI or HWPX proof"
+    },
     "docs/hwp5-text-preview-api.md": {
       "sha256": "fdc93d0a9028043acfb3bc2cad3fab62c11de49114ad50e77303162535a709db",
       "evidence": "2026-09-29 Rust source and HWP5 26-byte contract checked against four-byte corpus record; Zig preview reports InvalidDocumentPropertiesLength without accepting it; JS 15 tests include 175 zlib combinations, local corpus 677 of 791 accepted with 459401 paragraphs oracle-matched; current Debug full Zig 2674 of 2674 and ReleaseSafe HWP5 audit 10 of 10 with 8905855 checks pass"
@@ -642,12 +646,12 @@
       "evidence": "2026-09-28 historic Sep 5 to 7 log of 99 commits verified as history not current support, official rev1.3 PDF SHA matches and rhwp e8800c8de present, current topic docs linked and video zero correction linked; Debug 2664 tests and ReleaseSafe HWP5 audit 8905855 checks pass, old per-stage counts not rerun"
     },
     "docs/architecture.md": {
-      "sha256": "c04b9bf53de2126fa4177f52c9769ef40fb7e5b1e47efe8fd2c3286c3f0cc100",
-      "evidence": "2026-09-29 read-only model partial status checked against model/document and HWP5 projection; ReleaseSafe focused real-file and ownership tests pass; full model edit and render remain out of scope"
+      "sha256": "a14042eee89c2af6cd32b6d0a937df4ed4a8973c698242a4b69fd047e9de988b",
+      "evidence": "2026-09-30 Controlled style proof linked separately; general editing and layout unproven"
     },
     "docs/development-commands.md": {
-      "sha256": "57e45eb1c8861b870b487daf853f3c4d3923b25853ae1ad67b0e0087348d689f",
-      "evidence": "2026-09-29 new HWP5 projection focused command executed and source checked; prior preview JS 15 tests and 791-path optional corpus audit rerun; other historical commands not all rerun in this change"
+      "sha256": "2f3a0b992a0d7e93440841626b20de4f3f91a2e6730237d99b676029b862c728",
+      "evidence": "2026-09-30 Debug Safe Fast style audit executed 10 steps four tests each; Safe WASM build Node 17 passed; other commands not rerun"
     },
     "docs/zig-test-stderr.md": {
       "sha256": "9133676bc38bac48fab5f9ba8a04ec972697d32e7a051a851d6b158c444c66b5",
@@ -1494,20 +1498,20 @@
       "evidence": "2026-09-27 current document/container ownership and selected stream boundaries; 6 ReleaseSafe and 3 ReleaseFast focused tests; corpus and linked detail docs excluded"
     },
     "docs/hwp5-model-projection.md": {
-      "sha256": "d693067b27efb470637b4152ef003ba0215e5e14966ea55902c92939fbf3336b",
-      "evidence": "2026-09-29 source and legacy toJson schema checked; HWP5 projection Debug Safe Fast 8 each, four real files, invalid version and empty section rejection, and allocation failure paths; full zig build test 2681 pass; preview JS 15, 791 corpus paths with 676 oracle matches and 459401 paragraphs; HWP5 audit 10 steps 8905855 checks imports zero; public JSON not implemented"
+      "sha256": "35c911baeee735f8a9b014d072a109ac5cc6138bf8e1d765741b65145a983ec2",
+      "evidence": "2026-09-30 Read-only model reused by opaque edit experiment; four real HWP twelve edits independently checked; general save absent"
     },
     "docs/hwp5-modules.md": {
-      "sha256": "b48e360bf511c5e02556496eb3d2002f88da2c121d6d064583a6b7a121b0b2bd",
-      "evidence": "2026-09-29 HWP5 model projection and preview contract links exist; module responsibilities remain in separate topic docs"
+      "sha256": "17d6d6af607c25e09b63e47bc56e96ca0f9999be7d0d836a17e30114707f3841",
+      "evidence": "2026-09-30 Separate style experiment indexed; 2885 local links checked"
     },
     "docs/migration.md": {
       "sha256": "ff208406c964f5e7f457852077a0510c63f662344b8967e551f42948bf34ad27",
       "evidence": "2026-09-27 move commit R100 count, current legacy and CI paths, cargo metadata and tests, Bun Vite startup, historical 1652 qualified"
     },
     "docs/project-structure.md": {
-      "sha256": "eb84484e57bf66820ac6d807f9700acec9541973c68a2b5df109064bfc3646cc",
-      "evidence": "2026-09-29 new model/document, HWP5 model_projection and shared text_source paths verified; file input projection and preview regressions pass; public JSON remains absent"
+      "sha256": "41fc2a48627643cc80e3253f5660bf6fdc674f788d6720b5f387a994fa19d14b",
+      "evidence": "2026-09-30 Edit module session probe and audit responsibilities checked; shared parser compression CFB writer reused"
     },
     "docs/hwpx-section-tree.md": {
       "sha256": "62280fe17d2880b8a4c1f0706378f911b272f9b7cf75f0b2b0e4830c36764467",

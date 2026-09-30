@@ -12,6 +12,8 @@
 
 ## 외부 JSON 계약
 
+별도 [스타일 참조 편집·원본 보존 실험](hwp5-style-preservation-experiment.md)은 이 모델을 opaque 세션 내부에 넣어 제한적 편집과 저장 바이트 대조에 사용합니다. 여기의 공개 읽기 전용 모델을 일반 저장 모델로 확장한 것은 아니며 실험의 조판·구조 편집 제한은 해당 문서가 소유합니다.
+
 기존 Rust hwpjs의 `toJson(Buffer): string`은 파싱 구조를 직렬화합니다. 실제 `example.hwp` 출력의 최상위 키는 `file_header`, `doc_info`, `body_text`, `bin_data`, `preview_text`, `preview_image`, `scripts`, `xml_template`, `summary_information`이며, `body_text.sections[].paragraphs[]`는 `para_header`와 `records`를 갖습니다. 이 스키마는 현재 내부 `Document`와 다릅니다. 기존 공개 `toJson`을 호환 목표로 두되, 내부 모델을 그대로 JSON 직렬화하거나 누락 필드를 기본값으로 꾸며 내지 않습니다. Zig/JS 공개 `toJson`은 아직 제공하지 않으며, 별도 호환 어댑터와 필드별 실파일 대조가 필요합니다.
 
 참고 `rhwp`는 HWP/HWPX 파서를 공통 `Document` IR에 연결하고 WASM `HwpDocument`의 조회·편집·렌더 메서드와 CLI별 JSON 결과를 그 위에 둡니다. `rhwp`의 JSON이 레거시 hwpjs `toJson`의 계약이라는 뜻은 아닙니다.

@@ -16,6 +16,27 @@ pub fn build(b: *std.Build) void {
     run_tests.step.dependOn(&abi_check.step);
     b.step("test", "Run core unit tests").dependOn(&run_tests.step);
 
+    const preservation_module = b.createModule(.{
+        .root_source_file = b.path("tests/hwp5/style-preservation/session.test.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    preservation_module.addImport("hwpjs", core);
+    const preservation_tests = b.addRunArtifact(b.addTest(.{ .root_module = preservation_module, .filters = &.{"style preservation"} }));
+    const preservation_probe_module = b.createModule(.{
+        .root_source_file = b.path("tests/hwp5/style-preservation/probe.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    preservation_probe_module.addImport("hwpjs", core);
+    const preservation_probe = b.addExecutable(.{ .name = "style-preservation-probe", .root_module = preservation_probe_module });
+    const preservation_oracle = b.addSystemCommand(&.{ "node", "tests/hwp5/style-preservation/file-audit.mjs" });
+    preservation_oracle.addArtifactArg(preservation_probe);
+    preservation_oracle.has_side_effects = true;
+    const preservation_step = b.step("style-preservation-audit", "Test experimental editable model and immutable HWP5 source preservation");
+    preservation_step.dependOn(&preservation_tests.step);
+    preservation_step.dependOn(&preservation_oracle.step);
+
     const wasm = b.addExecutable(.{
         .name = "hwpjs",
         .root_module = b.createModule(.{
@@ -29,6 +50,7 @@ pub fn build(b: *std.Build) void {
     wasm.step.dependOn(&abi_check.step);
     wasm.step.dependOn(&icc_registry_check.step);
     b.installArtifact(wasm);
+    preservation_oracle.step.dependOn(b.getInstallStep());
 
     const compare = b.addSystemCommand(&.{ "node", "tests/cfb/compare.mjs" });
     compare.step.dependOn(b.getInstallStep());

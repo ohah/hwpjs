@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[스타일 참조 편집·원본 보존 실험](hwp5-style-preservation-experiment.md)은 `zig build style-preservation-audit --summary all`과 `-Doptimize=ReleaseSafe`·`-Doptimize=ReleaseFast`로 실행합니다. 집중 Zig 검사와 실파일의 CFB.js·Node zlib·Rust `toJson` 대조가 포함되며 출력 HWP의 임시 경로를 표시합니다. Rust oracle은 `legacy/rust/packages/hwpjs/dist/index.js`와 현재 플랫폼의 기존 native binding이 필요합니다. 이 audit은 기본 test/audit 밖에 있으며, 일반 편집·한컴 조판·HWPX 저장 동등성을 검증하지 않습니다.
+
 [HWP5 읽기 전용 문서 모델 첫 연결](hwp5-model-projection.md)은 `zig test src/root.zig -O ReleaseSafe --test-filter 'HWP5 projection'`로 합성·실파일·할당 실패 경계를 검사합니다. 공개 JSON 동등성 검사는 아직 없습니다.
 
 [HWP5 문단 텍스트 미리보기 API](hwp5-text-preview-api.md)는 `zig build -Doptimize=ReleaseSafe` 후 `node tools/hwp5-text-preview.mjs legacy/rust/crates/hwp-core/tests/fixtures/example.hwp`로 직접 확인합니다. `node --test tests/hwp5/text-preview.test.mjs tests/hwp5/preview-record-oracle.test.mjs`는 추적 실파일 48개 중 45개의 독립 레코드·raw DEFLATE 원시 바이트 대조, 합성 zlib DocInfo/Section 호환성, 미리보기 전용 projection·caret 생략·손상 반례와 오라클 자체 반례를 검사합니다. `node tools/hwp5-preview-corpus-audit.mjs`는 선택적 로컬 `reference`·`legacy` corpus를 파일별로 분류하고 허용 문단의 원시 바이트를 Node raw/zlib 디코더로 독립 대조하며, `--files`는 파일별 분류를 출력합니다. 마지막 명령은 기본 audit에 포함되지 않습니다. 명령 출력은 문서 전체 조판 결과가 아닌 문단 토큰 미리보기입니다.
