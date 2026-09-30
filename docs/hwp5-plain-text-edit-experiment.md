@@ -10,6 +10,8 @@
 
 ## 책임과 SSOT
 
+2026-10-01 [기존 글자 모양 적용](hwp5-character-format-edit.md) 연결 후 텍스트 바이트·scalar 경계 검증은 `plain_text_content.zig`, 서식 경계 검증·교체는 `character_runs.zig`를 단일 출처로 공유합니다. `plain_text.zig`는 splice와 범위 이동·원자적 반영만 담당합니다. 이후 검증 기록은 해당 글자 모양 문서에서 관리합니다.
+
 - `plain_text_source.zig`: 기존 framing·Tree·직접 자식 수집·Metadata를 재사용해 문단의 편집 가능성과 원본 개수·리소스를 검증합니다. 어느 Section이든 미해석 tag, 표·리스트·메모 구조, 구역/단 설정 이외의 컨트롤이 있으면 거부합니다. 알려진 generic CTRL_HEADER tag라도 필드 등의 불투명 참조는 안전하다고 취급하지 않습니다. 대상 문단의 미해석 헤더 꼬리, 변경추적 병합, 알려지지 않은 직접 자식도 거부합니다.
 - `plain_text.zig`: 텍스트·글자 모양·범위의 갱신값을 전부 준비한 뒤 소유 모델에 한 번에 반영합니다. 실패 시 기존 값이 유지됩니다. 원본 위치는 기존 문단 source binding으로만 식별합니다.
 - `src/model/document.zig`: 토큰·글자 모양과 선택적으로 materialize한 `range_tags`를 소유합니다. null은 읽기 전용 projection에서 미투영 상태이고, 빈 소유 slice는 명시적으로 투영한 빈 범위 목록입니다. 같은 필드의 mutable 원본 캐시를 두지 않습니다.

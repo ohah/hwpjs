@@ -4,6 +4,59 @@ const edit = core.hwp5.experimental_style_preservation;
 const a = std.testing.allocator;
 const fixture = "legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwp";
 
+test "text splice character format mixed commands and atomic refusals" {
+    const bytes = try input();
+    defer a.free(bytes);
+    const session = try edit.Session.open(a, bytes);
+    defer session.close();
+    const original = try session.copyText(a, 0, 1);
+    defer a.free(original);
+    try session.apply(.{ .set_character_format = .{ .section = 0, .paragraph = 1, .start_unit = 0, .end_unit = 0, .char_shape_id = 0 } });
+    const noop = try session.save(a, .{});
+    defer a.free(noop.bytes);
+    try std.testing.expectEqualSlices(u8, bytes, noop.bytes);
+    try session.apply(.{ .set_character_format = .{ .section = 0, .paragraph = 1, .start_unit = 1, .end_unit = 5, .char_shape_id = 0 } });
+    const unchanged_text = try session.copyText(a, 0, 1);
+    defer a.free(unchanged_text);
+    try std.testing.expectEqualSlices(u8, original, unchanged_text);
+    try session.apply(.{ .splice_text = .{ .section = 0, .paragraph = 1, .start_unit = 2, .end_unit = 2, .utf8 = "😀" } });
+    try session.apply(.{ .set_character_format = .{ .section = 0, .paragraph = 1, .start_unit = 2, .end_unit = 4, .char_shape_id = 1 } });
+    const saved = try session.save(a, .{ .allow_stale_layout = true });
+    defer a.free(saved.bytes);
+    try std.testing.expectError(error.LayoutReflowRequired, session.save(a, .{}));
+    try std.testing.expectError(error.SplitSurrogatePair, session.apply(.{ .set_character_format = .{ .section = 0, .paragraph = 1, .start_unit = 3, .end_unit = 4, .char_shape_id = 0 } }));
+    try std.testing.expectError(error.InvalidResourceReference, session.apply(.{ .set_character_format = .{ .section = 0, .paragraph = 1, .start_unit = 0, .end_unit = 1, .char_shape_id = 0xffffffff } }));
+    const after = try session.save(a, .{ .allow_stale_layout = true });
+    defer a.free(after.bytes);
+    try std.testing.expectEqualSlices(u8, saved.bytes, after.bytes);
+    var model = try core.hwp5.model_projection.fromFile(a, saved.bytes);
+    defer model.deinit(a);
+    var found = false;
+    for (model.sections[0].paragraphs[1].character_runs) |r| {
+        if (r.start_unit == 2 and r.char_shape_id == 1) found = true;
+    }
+    try std.testing.expect(found);
+}
+
+test "text splice character format allocation failures preserve complete model" {
+    const bytes = try input();
+    defer a.free(bytes);
+    try std.testing.checkAllAllocationFailures(a, struct {
+        fn run(allocator: std.mem.Allocator, source: []const u8) !void {
+            const session = try edit.Session.open(allocator, source);
+            defer session.close();
+            session.apply(.{ .set_character_format = .{ .section = 0, .paragraph = 1, .start_unit = 1, .end_unit = 5, .char_shape_id = 0 } }) catch |err| {
+                const after = try session.save(a, .{});
+                defer a.free(after.bytes);
+                try std.testing.expectEqualSlices(u8, source, after.bytes);
+                return err;
+            };
+            const saved = try session.save(allocator, .{ .allow_stale_layout = true });
+            defer allocator.free(saved.bytes);
+        }
+    }.run, .{bytes});
+}
+
 fn input() ![]u8 {
     return std.Io.Dir.cwd().readFileAlloc(std.testing.io, fixture, a, .limited(2_000_000));
 }

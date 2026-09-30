@@ -1,9 +1,13 @@
 {
   "schema": 1,
   "verified": {
+    "docs/hwp5-character-format-edit.md": {
+      "sha256": "05ad3c05257375f2e4c57be2770b0292f6a57dff1be5999a3a3d56acfd91660b",
+      "evidence": "2026-10-01 character format contract shared runs and content SSOT verified; Debug Safe Fast six tests and 152 edits 20 refusals two oracle counterexamples each; wrong ID mutant detected; Safe full 2687 tests, style audit and WASM build pass; Node 17 tests; GUI and HWPX editing unproved"
+    },
     "docs/hwp5-plain-text-edit-experiment.md": {
-      "sha256": "40e141cba6352892f6ce14d4505170fcc6421bd2ea74dd5d948ae070febcb95d",
-      "evidence": "2026-09-30 paragraph ownership closes at sibling or ancestor independent of tag per HWP5 4.1; old Safe probe fails new foreign-root regression; fixed Debug Safe Fast four native tests each plus five HWP 75 edits 56 boundaries 21 synthetic edits including ten foreign-root raw framing preservation cases 20 refusals 3 oracle counterexamples; fixed Safe full 2685 tests exit zero and WASM build pass, style four tests twelve edits and Node seventeen tests pass; initial default and four source mutant results historical; GUI and HWPX editing not proved"
+      "sha256": "11e76f6523c8978f5af9ffbca30ce77faa5209a58a92ba363206097c028bbfc4",
+      "evidence": "2026-10-01 character format contract shared runs and content SSOT verified; Debug Safe Fast six tests and 152 edits 20 refusals two oracle counterexamples each; wrong ID mutant detected; Safe full 2687 tests, style audit and WASM build pass; Node 17 tests; GUI and HWPX editing unproved"
     },
     "docs/hwp5-style-preservation-experiment.md": {
       "sha256": "1619904fbf80ed84e720e279704e0423a5ac8eba96ae94b8dd1d4765a077d2cb",
@@ -650,12 +654,12 @@
       "evidence": "2026-09-28 historic Sep 5 to 7 log of 99 commits verified as history not current support, official rev1.3 PDF SHA matches and rhwp e8800c8de present, current topic docs linked and video zero correction linked; Debug 2664 tests and ReleaseSafe HWP5 audit 8905855 checks pass, old per-stage counts not rerun"
     },
     "docs/architecture.md": {
-      "sha256": "a14042eee89c2af6cd32b6d0a937df4ed4a8973c698242a4b69fd047e9de988b",
-      "evidence": "2026-09-30 Controlled style proof linked separately; general editing and layout unproven"
+      "sha256": "3db88c7ec63dad09c2c8dd8e82fd2e8d005ac65f6302a1f9ae84291e64eeea95",
+      "evidence": "2026-10-01 character format contract shared runs and content SSOT verified; Debug Safe Fast six tests and 152 edits 20 refusals two oracle counterexamples each; wrong ID mutant detected; Safe full 2687 tests, style audit and WASM build pass; Node 17 tests; GUI and HWPX editing unproved"
     },
     "docs/development-commands.md": {
-      "sha256": "890ef975f22f0079aaee4602ce3ed932d136bba27c08194d5e93211673c87a34",
-      "evidence": "2026-09-30 Text splice native coverage wired into default test and audit; full file audit Debug Safe Fast 4 native tests 75 real edits 56 boundaries 11 synthetic edits 20 refusals; existing Rust oracle required only for optional file audit"
+      "sha256": "fa32f25ee7472689cdac28ba25d9cd94e3687411e1816ea9bf71fb1ffc6c0be4",
+      "evidence": "2026-10-01 character format contract shared runs and content SSOT verified; Debug Safe Fast six tests and 152 edits 20 refusals two oracle counterexamples each; wrong ID mutant detected; Safe full 2687 tests, style audit and WASM build pass; Node 17 tests; GUI and HWPX editing unproved"
     },
     "docs/zig-test-stderr.md": {
       "sha256": "9133676bc38bac48fab5f9ba8a04ec972697d32e7a051a851d6b158c444c66b5",
@@ -1506,16 +1510,16 @@
       "evidence": "2026-09-30 Read-only ranges remain null; controlled Session owns materialized ranges; Node full Section unit-wise oracle Rust JSON and four allocation and command tests checked"
     },
     "docs/hwp5-modules.md": {
-      "sha256": "b6a791ea4a74685d059656c284c9b77e4d1a693b3b175ad0292797f5e20dd0f9",
-      "evidence": "2026-09-30 Separate plain text edit topic linked; all 2893 inline local destinations checked"
+      "sha256": "1c058969b08c02c0fdc3cd0ec044a702c860b5bfab3970c6655c917c33c2bebe",
+      "evidence": "2026-10-01 character format contract shared runs and content SSOT verified; Debug Safe Fast six tests and 152 edits 20 refusals two oracle counterexamples each; wrong ID mutant detected; Safe full 2687 tests, style audit and WASM build pass; Node 17 tests; GUI and HWPX editing unproved"
     },
     "docs/migration.md": {
       "sha256": "ff208406c964f5e7f457852077a0510c63f662344b8967e551f42948bf34ad27",
       "evidence": "2026-09-27 move commit R100 count, current legacy and CI paths, cargo metadata and tests, Bun Vite startup, historical 1652 qualified"
     },
     "docs/project-structure.md": {
-      "sha256": "effc2b8ebb68088bf4bdf75351c39889d59aca097abfda078f9d605e518559de",
-      "evidence": "2026-09-30 Source eligibility mutable splice Section output framing and file boundary responsibilities checked against new separate files; no duplicate parser or CFB compression implementation"
+      "sha256": "58a0f55d27f4ff3026d5a7cc88a2c0e472d5b01890bd20485f8907e462791fb7",
+      "evidence": "2026-10-01 character format contract shared runs and content SSOT verified; Debug Safe Fast six tests and 152 edits 20 refusals two oracle counterexamples each; wrong ID mutant detected; Safe full 2687 tests, style audit and WASM build pass; Node 17 tests; GUI and HWPX editing unproved"
     },
     "docs/hwpx-section-tree.md": {
       "sha256": "62280fe17d2880b8a4c1f0706378f911b272f9b7cf75f0b2b0e4830c36764467",

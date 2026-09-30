@@ -15,33 +15,9 @@ pub const Splice = struct {
     range_policy: enum { reject, half_open } = .reject,
 };
 
-pub fn textBytes(a: std.mem.Allocator, p: model.Paragraph) ![]u8 {
-    var out: std.ArrayList(u8) = .empty;
-    errdefer out.deinit(a);
-    for (p.tokens) |token| try out.appendSlice(a, token.raw);
-    return out.toOwnedSlice(a);
-}
-
-fn boundary(bytes: []const u8, unit: u32) !void {
-    if (unit > bytes.len / 2) return error.InvalidTextPosition;
-    const at = @as(usize, unit) * 2;
-    if (at > 0 and at < bytes.len) {
-        const previous = std.mem.readInt(u16, bytes[at - 2 ..][0..2], .little);
-        const next = std.mem.readInt(u16, bytes[at..][0..2], .little);
-        if (previous >= 0xd800 and previous <= 0xdbff and next >= 0xdc00 and next <= 0xdfff)
-            return error.SplitSurrogatePair;
-    }
-}
-
-fn validatePlain(bytes: []const u8) !void {
-    if (bytes.len < 2 or std.mem.readInt(u16, bytes[bytes.len - 2 ..][0..2], .little) != 13)
-        return error.UnsupportedParagraphTerminator;
-    var offset: usize = 0;
-    while (try scalars.read(bytes[0 .. bytes.len - 2], offset, .utf16le)) |c| {
-        if (c.value < 32) return error.UnsupportedTextControl;
-        offset = c.end;
-    }
-}
+pub const textBytes = @import("plain_text_content.zig").textBytes;
+const boundary = @import("plain_text_content.zig").boundary;
+const validatePlain = @import("plain_text_content.zig").validatePlain;
 
 fn inserted(a: std.mem.Allocator, utf8: []const u8) ![]u8 {
     if (utf8.len > 4 * 1024 * 1024) return error.LimitExceeded;
@@ -92,30 +68,10 @@ pub fn apply(a: std.mem.Allocator, source: []const u8, version: Version, p: *mod
     @memcpy(after[start + add.len ..], before[end..]);
     if (std.mem.eql(u8, before, after)) return;
     const units: u32 = @intCast(add.len / 2);
-    var mapped_runs: std.ArrayList(model.CharacterRun) = .empty;
-    defer mapped_runs.deinit(a);
-    var inherited: u32 = 0;
-    for (p.character_runs, 0..) |run, i| {
-        try boundary(before, run.start_unit);
-        if (i > 0 and run.start_unit <= p.character_runs[i - 1].start_unit) return error.AmbiguousCharacterRuns;
-        if (run.start_unit <= edit.start_unit) inherited = run.char_shape_id;
-    }
-    if (p.character_runs.len == 0) return error.UnsupportedMissingCharacterRuns;
-    for (p.character_runs) |run| {
-        if (run.start_unit >= edit.start_unit) break;
-        try mapped_runs.append(a, run);
-    }
-    // An inserted span inherits the style at its start; survivors retain theirs.
-    if (units != 0) try appendRun(a, &mapped_runs, edit.start_unit, inherited);
-    var end_style = inherited;
-    for (p.character_runs) |run| {
-        if (run.start_unit <= edit.end_unit) end_style = run.char_shape_id;
-    }
-    try appendRun(a, &mapped_runs, edit.start_unit + units, end_style);
-    for (p.character_runs) |run| {
-        if (run.start_unit > edit.end_unit)
-            try appendRun(a, &mapped_runs, position(run.start_unit, edit.start_unit, edit.end_unit, units), run.char_shape_id);
-    }
+    const run_editor = @import("character_runs.zig");
+    try run_editor.validate(p.character_runs, before, char_count);
+    const owned_runs = try run_editor.replace(a, p.character_runs, edit.start_unit, edit.end_unit, units, null);
+    errdefer a.free(owned_runs);
     var mapped_ranges: std.ArrayList(model.TextRange) = .empty;
     defer mapped_ranges.deinit(a);
     const original_ranges = if (ranges) |r| r.count() else 0;
@@ -128,9 +84,7 @@ pub fn apply(a: std.mem.Allocator, source: []const u8, version: Version, p: *mod
         const e = position(r.end_unit, edit.start_unit, edit.end_unit, units);
         if (s < e) try mapped_ranges.append(a, .{ .start_unit = s, .end_unit = e, .tag = r.tag });
     }
-    if (mapped_runs.items.len > 65535 or mapped_ranges.items.len > 65535) return error.LimitExceeded;
-    const owned_runs = try mapped_runs.toOwnedSlice(a);
-    errdefer a.free(owned_runs);
+    if (mapped_ranges.items.len > 65535) return error.LimitExceeded;
     const owned_ranges = try mapped_ranges.toOwnedSlice(a);
     errdefer a.free(owned_ranges);
     const value = try body.Text.parse(after);
@@ -155,16 +109,4 @@ pub fn apply(a: std.mem.Allocator, source: []const u8, version: Version, p: *mod
     p.range_tags = owned_ranges;
     p.declared_units = @intCast(after.len / 2);
     p.deferred_direct_records = 0;
-}
-
-fn appendRun(a: std.mem.Allocator, list: *std.ArrayList(model.CharacterRun), at: u32, id: u32) !void {
-    if (list.items.len > 0) {
-        const last = &list.items[list.items.len - 1];
-        if (last.start_unit == at) {
-            last.char_shape_id = id;
-            return;
-        }
-        if (last.char_shape_id == id) return;
-    }
-    try list.append(a, .{ .start_unit = at, .char_shape_id = id });
 }

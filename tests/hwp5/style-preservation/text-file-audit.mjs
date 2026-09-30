@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import { deflateRawSync } from "node:zlib";
 import { createCfbReader } from "../../../js/cfb.mjs";
 import { inspect, records, paragraphRecords, encodeRecord, verify } from "./text-oracle.mjs";
+import { auditCharacterFormat } from "./character-format-audit.mjs";
 const probe = resolve(process.argv[2]);
 const artifacts = mkdtempSync(join(tmpdir(), "hwpjs-text-splice-"));
 const writer = await createCfbReader(readFileSync("zig-out/bin/hwpjs.wasm"));
@@ -176,5 +177,6 @@ try {
   const good = run(basePath, 1, 0, 0, "X", "oracle-good");
   const damaged = fixture(good, b => replaceParagraph(b, 1, p => p.all.slice(p.at, p.end).map(r => { if (r.tag !== 68) return r.raw; const v = Buffer.from(r.payload); v.writeUInt32LE(v.readUInt32LE(4) + 1, 4); return encodeRecord(68, 1, v); })), "wrong-style");
   assert.throws(() => verify(base, damaged.bytes, 0, 1, 0, 0, "X"), /complete Section/); oracleCounterexamples++;
+  auditCharacterFormat(probe, artifacts, fixture);
   console.log(JSON.stringify({ real_files: 5, edited, synthetic, boundary_cases: boundaryCases, refused, oracle_counterexamples: oracleCounterexamples, independent_oracles: ["legacy CFB.js", "Node zlib and unit-wise styles", "Rust toJson"], artifacts }));
 } finally { writer.close(); }

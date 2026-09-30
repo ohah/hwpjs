@@ -6,6 +6,7 @@
 - [읽기 전용 문서 모델 첫 연결과 JSON 호환 경계](hwp5-model-projection.md)
 - [편집 모델과 원본 보존의 제한적 구현 실험](hwp5-style-preservation-experiment.md)
 - [단순 문단 텍스트 삽입·삭제와 저장 실험](hwp5-plain-text-edit-experiment.md)
+- [선택 범위에 기존 글자 모양 적용](hwp5-character-format-edit.md)
 
 - [문서 조립·컨테이너·별도 스트림](hwp5-document-contracts.md)
   - [BMP 32비트 상위 바이트 관측](hwp5-bmp-high-byte.md)

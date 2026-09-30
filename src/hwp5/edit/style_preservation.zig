@@ -9,6 +9,7 @@ const Header = @import("../body/paragraph_header.zig").Header;
 const Tag = @import("../body/reader.zig").Tag;
 const cfb = @import("../../cfb/reader.zig");
 pub const TextSplice = @import("plain_text.zig").Splice;
+pub const CharacterFormat = @import("character_format.zig").Edit;
 const max_bytes = 64 * 1024 * 1024;
 const max_stream = 32 * 1024 * 1024;
 
@@ -18,6 +19,7 @@ pub const Command = union(enum) {
     insert_text: struct { section: usize, paragraph: usize, utf8: []const u8 },
     delete_paragraph: struct { section: usize, paragraph: usize },
     splice_text: TextSplice,
+    set_character_format: CharacterFormat,
 };
 pub const SaveOptions = struct {
     /// Byte-preservation experiments only; does not certify Hancom layout.
@@ -145,6 +147,14 @@ pub const Session = opaque {
                     if (index != edit.section) try @import("plain_text_source.zig").validateSection(bytes);
                 }
                 try @import("plain_text.zig").apply(state.allocator, state.decoded[edit.section], state.source.header.version(), &state.document.sections[edit.section].paragraphs[edit.paragraph], edit, state.char_count);
+            },
+            .set_character_format => |edit| {
+                if (edit.paragraph >= try self.paragraphCount(edit.section)) return error.InvalidParagraph;
+                const state = self.getState();
+                for (state.decoded, 0..) |bytes, index| {
+                    if (index != edit.section) try @import("plain_text_source.zig").validateSection(bytes);
+                }
+                try @import("character_format.zig").apply(state.allocator, state.decoded[edit.section], state.source.header.version(), &state.document.sections[edit.section].paragraphs[edit.paragraph], edit, state.char_count);
             },
             // No promise to relocate unknown cross-references after structure edits.
             .insert_text, .delete_paragraph => return error.UnsupportedStructuralEdit,

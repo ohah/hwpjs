@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+[기존 글자 모양 적용](hwp5-character-format-edit.md)은 `src/hwp5/edit/character_format.zig`가 명령·원자적 반영을, `character_runs.zig`가 텍스트/서식 편집의 공통 경계를, `plain_text_content.zig`가 공통 내용·Unicode 검증을 소유합니다. 파일 대조는 `tests/hwp5/style-preservation/character-format-audit.mjs`에 분리합니다.
+
 [단순 문단 텍스트 편집 실험](hwp5-plain-text-edit-experiment.md)은 `src/hwp5/edit/plain_text_source.zig`가 원본 적격성, `plain_text.zig`가 원자적 모델 편집, `text_section_writer.zig`가 모델 기반 Section 출력을 소유합니다. 공통 가변 길이 framing은 `src/hwp5/record_writer.zig`, 필드 위치는 기존 문단 헤더 모듈, 세션은 기존 `style_preservation.zig`가 담당합니다. `tests/hwp5/style-preservation/text*`는 집중 검사·probe·독립 오라클·픽스쳐 실측을 분리합니다.
 
 [스타일 참조 편집·원본 보존 실험](hwp5-style-preservation-experiment.md)은 `src/hwp5/edit/style_preservation.zig`가 opaque 세션과 제한적 명령·저장을, `tests/hwp5/style-preservation/`가 집중 검사·파일 입출력 probe·독립 대조를 소유합니다. 일반 편집기나 공개 JS 저장 API는 아직 없습니다.

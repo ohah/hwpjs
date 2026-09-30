@@ -8,7 +8,15 @@ pub fn main(init: std.process.Init) !void {
     defer a.free(input);
     const session = try edit.Session.open(a, input);
     defer session.close();
-    try session.apply(.{ .splice_text = .{
+    if (std.mem.eql(u8, args[8], "char-shape")) {
+        try session.apply(.{ .set_character_format = .{
+            .section = try std.fmt.parseInt(usize, args[3], 10),
+            .paragraph = try std.fmt.parseInt(usize, args[4], 10),
+            .start_unit = try std.fmt.parseInt(u32, args[5], 10),
+            .end_unit = try std.fmt.parseInt(u32, args[6], 10),
+            .char_shape_id = try std.fmt.parseInt(u32, args[7], 10),
+        } });
+    } else try session.apply(.{ .splice_text = .{
         .section = try std.fmt.parseInt(usize, args[3], 10),
         .paragraph = try std.fmt.parseInt(usize, args[4], 10),
         .start_unit = try std.fmt.parseInt(u32, args[5], 10),
