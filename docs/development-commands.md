@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[HWPX 필드 라벨 편집](hwpx-field-text-edit.md)은 `zig test src/root.zig -O ReleaseSafe --test-filter 'HWPX field'`로 마커·범위·현재 위치·소유·라벨 거래·dirty 검사를, `'HWPX editor session field'` 필터로 native 조회/명령과 할당 실패를 검사합니다. Debug·ReleaseFast에서도 같은 필터를 사용합니다. 제품 빌드 후 `node --test tests/hwpx/editor.test.mjs tests/hwpx/canvas-preview.test.mjs`는 공개 API·독립 XML/ZIP 대조·7개 라벨 왕복·44개 Worker 로드를 포함합니다. 실제 브라우저·OS IME·전체 필드 종류/조판 검증은 별도입니다.
+
 [HWPX 탭 위치](hwpx-paragraph-text-positions.md)는 `zig test src/root.zig -O ReleaseSafe --test-filter 'HWPX paragraph positions'` 및 일반 문단 필터로 검사합니다. `python3 tools/hwpx-tab-edit-oracle.py --self-test`와 Python `-O`는 독립 탭 oracle 반례를, 제품 빌드 후 공개 HWPX editor 검사와 `hwpx-text-audit`는 실제 네 경계의 XML/ZIP 대조를 포함합니다. 전체 컨트롤 편집·조판 증명은 아닙니다.
 
 [HWPX native 편집 세션](hwpx-editor-session.md)은 `zig test src/root.zig -O ReleaseSafe --test-filter 'HWPX editor session'`로 실제 파일의 소유·편집·저장·재열기·복원, 한도·암호화 거부, 전체 할당 실패를 검사합니다. 공개 API·브라우저 편집 검증은 별도입니다.

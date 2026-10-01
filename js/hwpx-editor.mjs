@@ -16,6 +16,12 @@ export async function createHwpxEditor(source) {
     if (!Number.isInteger(value) || value < 0 || value > 0xffffffff) throw new RangeError("InvalidInteger");
     return value;
   }
+  function encodedText(text) {
+    if (typeof text !== "string" || !text.isWellFormed()) throw new TypeError("InvalidText");
+    const bytes = new TextEncoder().encode(text);
+    if (bytes.length > 4 * 1024 * 1024) throw new RangeError("LimitExceeded");
+    return bytes;
+  }
   return {
     canEdit(section, paragraph) {
       ready(); uint(section); uint(paragraph);
@@ -35,13 +41,37 @@ export async function createHwpxEditor(source) {
     splice(section, paragraph, start, deleted, text) {
       ready();
       [section, paragraph, start, deleted].forEach(uint);
-      if (typeof text !== "string") throw new TypeError("InvalidText");
-      if (!text.isWellFormed()) throw new TypeError("InvalidText");
-      const bytes = new TextEncoder().encode(text);
-      if (bytes.length > 4 * 1024 * 1024) throw new RangeError("LimitExceeded");
+      const bytes = encodedText(text);
       memory.withBytes(bytes, (ptr, size) => {
         if (!wasm.hwpx_edit_splice(section, paragraph, start, deleted, ptr, size)) throw memory.error();
       });
+    },
+    spliceFieldLabel(section, paragraph, beginElement, start, deleted, text) {
+      ready();
+      [section, paragraph, beginElement, start, deleted].forEach(uint);
+      if (typeof wasm.hwpx_edit_splice_field_label !== "function") throw new Error("HwpxFieldEditAbiUnavailable");
+      const bytes = encodedText(text);
+      memory.withBytes(bytes, (ptr, size) => {
+        if (!wasm.hwpx_edit_splice_field_label(section, paragraph, beginElement, start, deleted, ptr, size)) throw memory.error();
+      });
+    },
+    fieldLabels(section, paragraph) {
+      ready(); uint(section); uint(paragraph);
+      if (typeof wasm.hwpx_edit_field_labels !== "function") throw new Error("HwpxFieldEditAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_field_labels(section, paragraph)) throw memory.error();
+        const bytes = memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len());
+        if (bytes.length < 4) throw new Error("InvalidFieldTargets");
+        const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+        const count = view.getUint32(0, true);
+        if (count > 4096 || bytes.length !== 4 + count * 12) throw new Error("InvalidFieldTargets");
+        return Array.from({ length: count }, (_, index) => {
+          const offset = 4 + index * 12;
+          const target = { beginElement: view.getUint32(offset, true), start: view.getUint32(offset + 4, true), end: view.getUint32(offset + 8, true) };
+          if (target.end < target.start) throw new Error("InvalidFieldTargets");
+          return target;
+        });
+      } finally { wasm.hwpx_edit_output_free(); }
     },
     save() {
       ready();

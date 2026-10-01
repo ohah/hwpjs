@@ -70,4 +70,31 @@ test("actual HWPX Worker edits native plain text and refuses unsupported control
   assert.equal(notes.content.paragraphs[0].editable, false);
   const refused = await send({ kind: "splice", section: 0, paragraph: 0, startUnit: 0, endUnit: 0, text: "안됨" });
   assert.equal(refused.error, "UnsupportedParagraphControl"); assert.equal(refused.applied, false);
+  const hyperlink = await send({ kind: "load", format: "hwpx", bytes: readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/hyperlink.hwpx") });
+  assert.equal(hyperlink.error, undefined);
+  const labelParagraph = hyperlink.content.paragraphs.find(p => p.fieldLabels.length > 0);
+  assert(labelParagraph); assert.equal(labelParagraph.editable, true); assert.equal(labelParagraph.plainEditable, false);
+  const target = labelParagraph.fieldLabels[0];
+  const labelEdited = await send({ kind: "splice", section: labelParagraph.section, paragraph: labelParagraph.paragraph, startUnit: target.start, endUnit: target.start, text: "검증😀" });
+  assert.equal(labelEdited.error, undefined);
+  const current = labelEdited.content.paragraphs.find(p => p.paragraph === labelParagraph.paragraph);
+  assert.equal(current.text, labelParagraph.text.slice(0, target.start) + "검증😀" + labelParagraph.text.slice(target.start));
+  assert.equal(current.fieldLabels[0].end, target.end + 4);
+  const outside = await send({ kind: "splice", section: current.section, paragraph: current.paragraph, startUnit: current.fieldLabels.at(-1).end + 1, endUnit: current.fieldLabels.at(-1).end + 1, text: "안됨" });
+  assert.equal(outside.error, "UnsupportedFieldLabelRange"); assert.equal(outside.applied, false);
+  const labelRestored = await send({ kind: "splice", section: current.section, paragraph: current.paragraph, startUnit: target.start, endUnit: target.start + 4, text: "" });
+  assert.equal(labelRestored.error, undefined);
+  assert.equal(labelRestored.content.paragraphs.find(p => p.paragraph === current.paragraph).text, labelParagraph.text);
+  const corpus = execFileSync("git", ["ls-files", "-z"]).toString().split("\0").filter(path => path.includes("/fixtures/") && path.endsWith(".hwpx"));
+  let readable = 0, encrypted = 0, fieldCount = 0;
+  for (const path of corpus) {
+    const result = await send({ kind: "load", format: "hwpx", bytes: readFileSync(path) });
+    if (path.endsWith("/password-12345.hwpx")) {
+      assert.equal(result.error, "EncryptedDocument"); encrypted++;
+    } else {
+      assert.equal(result.error, undefined, path); readable++;
+      fieldCount += result.content.paragraphs.reduce((sum, p) => sum + p.fieldLabels.length, 0);
+    }
+  }
+  assert.equal(readable, 44); assert.equal(encrypted, 1); assert.equal(fieldCount, 7);
 });

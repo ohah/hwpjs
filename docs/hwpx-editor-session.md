@@ -1,5 +1,7 @@
 # HWPX native 편집 세션
 
+일반 문단 `canEdit/splice` 외에 명시적 [필드 라벨 조회·편집](hwpx-field-text-edit.md)을 연결했습니다. 해당 주제가 종류별 정책·dirty 상태·공개 명령·Worker/Canvas·최신 필드 검증을 소유합니다. 아래 일반 문단 검증 수치는 당시 이력이며 모든 필드/객체 지원 범위로 읽지 않습니다.
+
 `src/hwpx/editor_session.zig`는 패키지 선택·원본 소유·일반 문단 명령·ZIP 저장을 조립합니다. XML/ZIP 파서나 텍스트 경계 규칙을 별도로 구현하지 않습니다. `src/wasm/hwpx_edit.zig`와 `js/hwpx-editor.mjs`에 실험용 공개 세션을 연결하고 기존 Worker·Canvas 입력 경로를 재사용합니다. 편집 가능 여부는 `canEdit`가 실제 명령과 같은 native 정책을 적용하며 UI에 별도 규칙을 두지 않습니다.
 
 ## 소유권과 위치
@@ -14,7 +16,7 @@
 
 `createHwpxEditor(wasmBytesOrModule)`는 별도 WASM 인스턴스를 생성합니다. 반환 객체의 `open(documentBytes)`는 `{ sectionCount }`를 반환합니다. 성공하면 이전 세션을 교체하고, 실패하면 이전 세션을 유지합니다. `canEdit(section, paragraph)`는 Boolean, `splice(section, paragraph, start, deleted, text)`는 성공 시 반환값 없이 현재 모델을 수정합니다. `save()`는 독립 소유 `Uint8Array` ZIP을 반환합니다. `close()`는 반복 호출할 수 있고, 이후 다른 메서드는 `EditorClosed`를 던집니다.
 
-숫자는 u32 범위 정수만 받으며 강제 형변환하지 않습니다. 입력 문자열의 단독 서로게이트를 거부하고, 삽입 UTF-8은 4 MiB까지 제한합니다. 현재 일반 문단의 텍스트만 편집하며 서식 명령·실행 취소·문단 분할은 아직 제공하지 않습니다. `save()`는 원본 줄 배치 정보를 재조판하지 않으므로 결과를 최종 한컴 조판과 동일하다고 보지 않습니다.
+숫자는 u32 범위 정수만 받으며 강제 형변환하지 않습니다. 입력 문자열의 단독 서로게이트를 거부하고, 삽입 UTF-8은 4 MiB까지 제한합니다. 일반 문단과 별도 명시적 필드 라벨 명령을 제공하며 서식 명령·실행 취소·문단 분할은 아직 제공하지 않습니다. `save()`는 원본 줄 배치 정보를 재조판하지 않으므로 결과를 최종 한컴 조판과 동일하다고 보지 않습니다.
 
 ```js
 const editor = await createHwpxEditor(wasm);

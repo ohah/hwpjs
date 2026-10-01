@@ -8,8 +8,18 @@ let module, bytes, preview, editor, format;
 function hwpxDisplay() {
   const content = displayHwpxContent(preview);
   for (const paragraph of content.paragraphs) {
-    paragraph.editable = !paragraph.clipped && editor.canEdit(paragraph.section, paragraph.paragraph + 1);
-    if (paragraph.editable) paragraph.label = paragraph.label.replace("읽기 전용", "일반 텍스트 편집");
+    paragraph.plainEditable = !paragraph.clipped && editor.canEdit(paragraph.section, paragraph.paragraph + 1);
+    paragraph.fieldLabels = [];
+    if (!paragraph.clipped && !paragraph.plainEditable) {
+      try {
+        paragraph.fieldLabels = editor.fieldLabels(paragraph.section, paragraph.paragraph + 1);
+      } catch (error) {
+        if (!["InvalidFieldLinks", "SourceBindingMismatch", "UnsupportedTextPositionProjection", "HwpxFieldEditAbiUnavailable"].includes(error.message)) throw error;
+        paragraph.fieldReadOnlyReason = error.message;
+      }
+    }
+    paragraph.editable = paragraph.plainEditable || paragraph.fieldLabels.length > 0;
+    if (paragraph.editable) paragraph.label = paragraph.label.replace("읽기 전용", paragraph.plainEditable ? "일반 텍스트 편집" : "필드 라벨만 편집");
   }
   content.readOnly = !content.paragraphs.some(paragraph => paragraph.editable);
   return content;
@@ -58,7 +68,19 @@ self.onmessage = async event => {
         if (message.kind !== "splice") throw new Error("UnsupportedHwpxFormatting");
         if (message.rangePolicy && message.rangePolicy !== "reject") throw new Error("InvalidRangePolicy");
         if (!Number.isInteger(message.startUnit) || !Number.isInteger(message.endUnit) || message.endUnit < message.startUnit) throw new Error("InvalidTextPosition");
-        editor.splice(message.section, message.paragraph + 1, message.startUnit, message.endUnit - message.startUnit, message.text);
+        if (editor.canEdit(message.section, message.paragraph + 1)) {
+          editor.splice(message.section, message.paragraph + 1, message.startUnit, message.endUnit - message.startUnit, message.text);
+        } else {
+          const targets = editor.fieldLabels(message.section, message.paragraph + 1);
+          if (targets.length === 0) {
+            // Preserve the native refusal classification for ordinary paths.
+            editor.splice(message.section, message.paragraph + 1, message.startUnit, message.endUnit - message.startUnit, message.text);
+          } else {
+            const matches = targets.filter(target => message.startUnit >= target.start && message.endUnit <= target.end);
+            if (matches.length !== 1) throw new Error("UnsupportedFieldLabelRange");
+            editor.spliceFieldLabel(message.section, message.paragraph + 1, matches[0].beginElement, message.startUnit, message.endUnit - message.startUnit, message.text);
+          }
+        }
         applied = true;
         reader = await createHwpxReader(module);
         preview = reader.readTextEvents(editor.save());

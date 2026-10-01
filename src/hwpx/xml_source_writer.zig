@@ -2,7 +2,7 @@
 //! callers must supply whole CharData/CDATA-container spans from the XML tree.
 const std = @import("std");
 const text_writer = @import("../xml/text_writer.zig");
-pub const Change = struct { start: usize, end: usize, text: []const u8, expand_empty_element: bool = false, run_opening: ?@import("xml_part_tree.zig").Span = null };
+pub const Change = struct { start: usize, end: usize, text: []const u8, expand_empty_element: bool = false, run_opening: ?@import("xml_part_tree.zig").Span = null, start_tag: ?[]const u8 = null };
 
 /// UTF-8 XML source only. Sorted, nonoverlapping spans are replaced with XML
 /// CharData; everything outside those spans is copied byte-for-byte.
@@ -18,6 +18,20 @@ pub fn write(a: std.mem.Allocator, source: []const u8, changes: []const Change, 
     var cursor: usize = 0;
     for (changes) |change| {
         try append(a, &output, source[cursor..change.start], max_bytes);
+        if (change.start_tag) |replacement| {
+            if (change.expand_empty_element or change.run_opening != null or change.text.len != 0) return error.InvalidSourceSpan;
+            const original = source[change.start..change.end];
+            var before_input = try @import("../xml/input.zig").Input.init(original, .utf8, .{ .max_bytes = original.len, .max_characters = original.len });
+            var before = try @import("../xml/tags.zig").parse(a, &before_input, .{ .max_bytes = original.len });
+            defer before.deinit(a);
+            var after_input = try @import("../xml/input.zig").Input.init(replacement, .utf8, .{ .max_bytes = replacement.len, .max_characters = replacement.len });
+            var after = try @import("../xml/tags.zig").parse(a, &after_input, .{ .max_bytes = replacement.len });
+            defer after.deinit(a);
+            if (before_input.offset != original.len or after_input.offset != replacement.len or before.kind == .end or before.kind != after.kind or !std.mem.eql(u8, before.name.raw, after.name.raw)) return error.InvalidSourceSpan;
+            try append(a, &output, replacement, max_bytes);
+            cursor = change.end;
+            continue;
+        }
         var tag: ?@import("../xml/tags.zig").Tag = null;
         defer if (tag) |*value| value.deinit(a);
         if (change.expand_empty_element) {
@@ -80,4 +94,16 @@ test "HWPX XML source writer preserves opaque markup outside text sites" {
     try std.testing.expectError(error.InvalidSourceSpan, write(a, source, &.{.{ .start = 10, .end = 9, .text = "" }}, 1000));
     try std.testing.expectError(error.InvalidSourceSpan, write(a, source, &.{ .{ .start = 1, .end = 5, .text = "" }, .{ .start = 3, .end = 6, .text = "" } }, 1000));
     try std.testing.expectError(error.LimitExceeded, write(a, source, &.{}, source.len - 1));
+}
+
+test "HWPX XML source writer combines validated start tags with escaped text" {
+    const a = std.testing.allocator;
+    const source = "<p:fieldBegin dirty='0'/>A<p:fieldEnd/>";
+    const boundary = std.mem.indexOf(u8, source, "A").?;
+    const output = try write(a, source, &.{ .{ .start = 0, .end = boundary, .text = "", .start_tag = "<p:fieldBegin dirty='1'/>" }, .{ .start = boundary, .end = boundary + 1, .text = "한<&" } }, 1000);
+    defer a.free(output);
+    try std.testing.expectEqualStrings("<p:fieldBegin dirty='1'/>한&lt;&amp;<p:fieldEnd/>", output);
+    try std.testing.expectError(error.InvalidSourceSpan, write(a, source, &.{.{ .start = 0, .end = boundary, .text = "", .start_tag = "<p:other/>" }}, 1000));
+    try std.testing.expectError(error.InvalidSourceSpan, write(a, source, &.{.{ .start = 0, .end = boundary, .text = "", .start_tag = "<p:fieldBegin>" }}, 1000));
+    try std.testing.expectError(error.InvalidSourceSpan, write(a, source, &.{.{ .start = 0, .end = boundary, .text = "", .start_tag = "<p:fieldBegin/><p:extra/>" }}, 1000));
 }

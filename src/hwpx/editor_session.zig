@@ -22,7 +22,9 @@ pub const Section = struct {
     entry_index: usize,
     first_paragraph: usize,
     last_paragraph: usize,
+    field_dirty: std.ArrayList(@import("text_sites_save.zig").FieldDirty) = .empty,
     fn deinit(self: *Section, a: std.mem.Allocator) void {
+        self.field_dirty.deinit(a);
         a.free(self.locations);
         self.sites.deinit(a);
         self.tree.deinit(a);
@@ -67,6 +69,13 @@ pub const Session = struct {
         return true;
     }
 
+    pub fn spliceFieldLabel(self: *Session, section_index: usize, paragraph: usize, begin_element: usize, start: u32, deleted: u32, inserted: []const u8) !bool {
+        return @import("field_label_session.zig").splice(self, section_index, paragraph, begin_element, start, deleted, inserted);
+    }
+    pub fn fieldLabels(self: *const Session, section_index: usize, paragraph: usize) ![]@import("field_label_targets.zig").Target {
+        return @import("field_label_targets.zig").list(self, section_index, paragraph, 4096);
+    }
+
     /// Caller owns the result with Session.allocator. Save is side-effect free.
     pub fn save(self: *const Session) ![]u8 {
         const a = self.allocator;
@@ -77,7 +86,7 @@ pub const Session = struct {
         }
         var xml_bytes: usize = 0;
         for (self.sections) |*section| {
-            const bytes = try @import("text_sites_save.zig").write(a, &section.tree, &section.sites, siteOptions(self.options), self.options.max_xml_bytes -| xml_bytes);
+            const bytes = try @import("text_sites_save.zig").writeWithFieldDirty(a, &section.tree, &section.sites, siteOptions(self.options), section.field_dirty.items, self.options.max_xml_bytes -| xml_bytes);
             errdefer a.free(bytes);
             try replacements.append(a, .{ .entry_index = section.entry_index, .bytes = bytes });
             xml_bytes += bytes.len;

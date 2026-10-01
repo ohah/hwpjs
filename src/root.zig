@@ -467,6 +467,11 @@ test {
     _ = @import("hwpx/plain_paragraph_edit_tests.zig");
     _ = @import("hwpx/editor_session_tests.zig");
     _ = @import("hwpx/paragraph_text_positions.zig");
+    _ = @import("hwpx/field_text_ranges.zig");
+    _ = @import("hwpx/field_text_positions.zig");
+    _ = @import("hwpx/field_label_splice.zig");
+    _ = @import("hwpx/field_dirty_tag.zig");
+    _ = @import("hwpx/field_marker_ownership.zig");
     _ = @import("xml/namespace_tests.zig");
     _ = @import("hwp5/container/xml_validation_tests.zig");
     _ = @import("binary/reader.zig");
