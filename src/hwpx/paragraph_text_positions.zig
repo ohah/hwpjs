@@ -43,6 +43,7 @@ pub fn build(a: std.mem.Allocator, tree: *const tree_module.Tree, sites: *const 
     for (sites.items, locations, 0..) |site, location, index| {
         if (location.paragraph_ordinal != paragraph) continue;
         if (site.element_index >= tree.elements.len) return error.InvalidTextSites;
+        if (tree.elements[site.element_index].is(uri, "run") and !site.missing_text) return error.UnsupportedTextPositionProjection;
         owners[site.element_index] = true;
         found = true;
         try segments.append(a, .{ .kind = .text, .index = index, .source_start = site.start });
@@ -50,7 +51,7 @@ pub fn build(a: std.mem.Allocator, tree: *const tree_module.Tree, sites: *const 
     if (!found) return error.MissingTextSite;
     for (tree.elements, 0..) |text_element, text_index| {
         if (!owners[text_index]) continue;
-        if (text_element.is(uri, "run") and text_element.first_child == null) continue;
+        if (text_element.is(uri, "run")) continue;
         if (!text_element.is(uri, "t")) return error.UnsupportedTextPositionProjection;
         var child = text_element.first_child;
         while (child) |index| {

@@ -9,6 +9,7 @@ pub const Site = struct {
     text: []u8,
     empty_element: bool = false,
     missing_text: bool = false,
+    anchor_boundary: bool = false,
 };
 pub const Sites = struct {
     items: []Site,
@@ -20,6 +21,7 @@ pub const Sites = struct {
 };
 pub const Options = struct {
     materialize_tab_boundaries: bool = false,
+    materialize_anchor_boundaries: bool = false,
     max_sites: usize = 1_000_000,
     max_text_bytes: usize = 64 * 1024 * 1024,
     branch_policy: @import("compatibility_selection.zig").Policy = .{},
@@ -112,6 +114,19 @@ pub fn collect(a: std.mem.Allocator, tree: *const tree_module.Tree, options: Opt
             .empty_element = element.end_tag == null,
             .missing_text = true,
         });
+    }
+    if (options.materialize_anchor_boundaries) {
+        for (tree.elements, 0..) |element, index| {
+            if (!frames[index].active or frames[index].kind != .run or covered[index]) continue;
+            var boundaries = @import("run_text_boundaries.zig").Iterator.init(tree, index);
+            while (boundaries.next()) |offset| {
+                if (element.name.local.encoding != .utf8) return error.UnsupportedEditEncoding;
+                if (builder.items.items.len == options.max_sites) return error.LimitExceeded;
+                const empty = try a.dupe(u8, "");
+                errdefer a.free(empty);
+                try builder.items.append(a, .{ .element_index = index, .start = offset, .end = offset, .text = empty, .missing_text = true, .anchor_boundary = true });
+            }
+        }
     }
     if (options.materialize_tab_boundaries) {
         std.mem.sort(Site, builder.items.items, {}, siteLess);

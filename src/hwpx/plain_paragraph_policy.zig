@@ -68,6 +68,9 @@ fn validateMode(tree: *const tree_module.Tree, sites: *const sites_module.Sites,
     }
     for (sites.items, locations) |site, location| {
         if (location.paragraph_ordinal != paragraph) continue;
+        // Synthetic run sites have no inline text children. Direct run
+        // controls were checked above, including the protected-anchor mode.
+        if (site.missing_text and tree.elements[site.element_index].is(uri, "run")) continue;
         var inline_child = tree.elements[site.element_index].first_child;
         while (inline_child) |inline_index| {
             const inline_element = tree.elements[inline_index];

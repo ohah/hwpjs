@@ -161,5 +161,5 @@ pub fn open(a: std.mem.Allocator, input: []const u8, options: Options) !Session 
 }
 
 fn siteOptions(options: Options) sites_module.Options {
-    return .{ .materialize_tab_boundaries = true, .branch_policy = .{ .mode = .selected }, .max_text_bytes = options.max_text_bytes, .max_sites = options.max_sites };
+    return .{ .materialize_tab_boundaries = true, .materialize_anchor_boundaries = true, .branch_policy = .{ .mode = .selected }, .max_text_bytes = options.max_text_bytes, .max_sites = options.max_sites };
 }

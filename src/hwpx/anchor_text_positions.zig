@@ -27,7 +27,7 @@ pub fn build(a: std.mem.Allocator, tree: *const trees.Tree, sites: *const sites_
         }
         if (ancestor == null) return error.SourceBindingMismatch;
         const element = tree.elements[site.element_index];
-        const run_index = if (element.is(uri, "run") and element.first_child == null) site.element_index else element.parent orelse return error.SourceBindingMismatch;
+        const run_index = if (element.is(uri, "run") and site.missing_text) site.element_index else element.parent orelse return error.SourceBindingMismatch;
         const run = tree.elements[run_index];
         if (!run.is(uri, "run") or run.parent != owner.?) return error.SourceBindingMismatch;
     }

@@ -17,6 +17,17 @@ pub fn spliceProjected(a: std.mem.Allocator, sites: *sites_module.Sites, positio
     const start_byte = try edit.bytePosition(current.items, start);
     const end_byte = try edit.bytePosition(current.items, end);
     if (std.mem.eql(u8, current.items[start_byte..end_byte], inserted)) return false;
+    // Existing source text retains insertion affinity; derived empty anchor
+    // boundaries are fallback sites only, never a new styling preference.
+    const target_site = insertion_site orelse blk: {
+        var fallback: ?usize = null;
+        for (positions) |position| {
+            if (position.kind != .text or start < position.start_unit or start > position.end_unit) continue;
+            if (!sites.items[position.index].anchor_boundary) break :blk @as(?usize, position.index);
+            if (fallback == null) fallback = position.index;
+        }
+        break :blk fallback;
+    };
     // Draft owns every current string; no original site is touched on failure.
     const items = try a.alloc(sites_module.Site, sites.items.len);
     var owned: usize = 0;
@@ -37,7 +48,7 @@ pub fn spliceProjected(a: std.mem.Allocator, sites: *sites_module.Sites, positio
         const index = position.index;
         const cursor = position.start_unit;
         const stop = position.end_unit;
-        const insert_here = !inserted_once and (insertion_site == null or insertion_site.? == index) and start >= cursor and start <= stop;
+        const insert_here = !inserted_once and target_site == index and start >= cursor and start <= stop;
         const low = @max(@as(usize, start), cursor);
         const high = @min(@as(usize, end), stop);
         if (insert_here or high > low) {

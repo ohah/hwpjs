@@ -42,7 +42,7 @@ pub fn writeWithChanges(a: std.mem.Allocator, tree: *const tree_module.Tree, cur
     }
     var total: usize = 0;
     for (original.items, current.items) |before, after| {
-        if (before.element_index != after.element_index or before.start != after.start or before.end != after.end or before.empty_element != after.empty_element or before.missing_text != after.missing_text) return error.InvalidTextSites;
+        if (before.element_index != after.element_index or before.start != after.start or before.end != after.end or before.empty_element != after.empty_element or before.missing_text != after.missing_text or before.anchor_boundary != after.anchor_boundary) return error.InvalidTextSites;
         if (after.text.len > options.max_text_bytes -| total) return error.LimitExceeded;
         total += after.text.len;
         if (!std.mem.eql(u8, before.text, after.text)) try changes.append(a, .{ .start = before.start, .end = before.end, .text = after.text, .expand_empty_element = before.empty_element, .run_opening = if (before.missing_text) tree.elements[before.element_index].start_tag else null });

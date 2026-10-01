@@ -9,7 +9,8 @@ const wasm = readFileSync("zig-out/bin/hwpjs.wasm");
 const editor = await createHwpxEditor(wasm), reader = await createHwpxReader(wasm);
 const files = execFileSync("git", ["ls-files", "-z"]).toString().split("\0").filter(path => path.includes("/fixtures/") && path.endsWith(".hwpx"));
 const prefix = "검증😀";
-const totals = { files: files.length, encrypted: 0, candidates: 0, accepted: 0, refused: {} };
+const leadingBoundary = process.argv.includes("--leading-boundary");
+const totals = { boundary: leadingBoundary ? "leading" : "after-leading-anchors", files: files.length, encrypted: 0, candidates: 0, accepted: 0, refused: {} };
 try {
   for (const path of files) {
     const input = readFileSync(path);
@@ -27,7 +28,7 @@ try {
         before = editor.anchorText(paragraph.section, paragraph.paragraph);
         // Choose the boundary after leading protected anchors, not an
         // unmaterialized position before an object-only run.
-        while (before[start] === "\ufffc") start++;
+        if (!leadingBoundary) while (before[start] === "\ufffc") start++;
         editor.spliceAnchored(paragraph.section, paragraph.paragraph, start, 0, prefix);
       } catch (error) {
         assert(["UnsupportedParagraphControl", "UnsupportedInlineControl", "MissingTextSite", "SourceBindingMismatch", "InvalidTextPosition", "InvalidFormulaNumber"].includes(error.message), `${path}: ${error.message}`);

@@ -18,7 +18,7 @@
 
 ## 현재 제한
 
-UTF-8 원문 조각 편집만 지원합니다. UTF-16 XML 편집은 명시적 미지원입니다. 활성 분기·문단 위치·빈 run 연결은 native 기반이며 일반 사용자용 문단 API는 아직 공개하지 않습니다. 여러 사이트에 걸친 제한적 splice는 [일반 문단 편집](hwpx-plain-paragraph-edit.md)이 소유합니다. 컨트롤 경계 편집, 줄 조각 재조판, 필드 의미 갱신·보호, 표/이미지 객체 편집·Canvas/WASM 세션은 후속 작업입니다. 기존 lineseg 원값이 유지된다는 것을 새 텍스트에 올바른 조판이라고 해석하지 않습니다.
+UTF-8 원문 조각 편집만 지원합니다. UTF-16 XML 편집은 명시적 미지원입니다. 활성 분기·문단 위치·빈 run 연결은 native 기반입니다. 여러 사이트에 걸친 제한적 splice는 [일반 문단 편집](hwpx-plain-paragraph-edit.md), 공개 연결은 [native 편집 세션](hwpx-editor-session.md), 보호 개체의 빈 run 입력 경계는 [앵커 위치](hwpx-anchor-text-positions.md)가 소유합니다. 줄 조각 재조판·표/이미지 객체의 구조 편집은 미완료입니다. 기존 lineseg 원값이 유지된다는 것을 새 텍스트에 올바른 조판이라고 해석하지 않습니다.
 
 ## 2026-10-01 검증
 
