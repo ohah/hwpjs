@@ -7,10 +7,11 @@ import { createCanvasEditor } from "../../web/preview/canvas-editor.mjs";
 import { displayContent } from "../../web/preview/content.mjs";
 import { layoutContent } from "../../web/preview/layout.mjs";
 import { caretGeometry } from "../../web/preview/text-geometry.mjs";
+import { verifyRaw } from "./style-preservation/text-record-oracle.mjs";
 
 const wasm = readFileSync("zig-out/bin/hwpjs.wasm");
 function dispatch(node, type, values = {}) { const event = new Event(type, { cancelable: true }); Object.assign(event, values); node.dispatchEvent(event); return event; }
-async function harness(t, name = "charshape", choose = p => p.editable && p.text.length > 0) {
+async function harness(t, name = "charshape", choose = p => p.editable && !p.sourceOffsets && p.text.length > 0) {
   const bytes = readFileSync(`legacy/rust/crates/hwp-core/tests/fixtures/${name}.hwp`);
   const native = await createExperimentalHwp5Editor(wasm, bytes), reader = await createHwp5Reader(wasm);
   let content;
@@ -85,6 +86,41 @@ test("canvas tab offsets map queued text edits to native source and reject contr
   assert(h.note.textContent.includes("UnsupportedControlDeletion"));
   assert.equal(h.input.value, "\t한😀끝"); assert.deepEqual(h.native.copyText(0, 33), committed);
 });
+test("canvas retains actual shape anchor through queued typing and refuses its deletion", async t => {
+  const h = await harness(t, "software", p => p.paragraph === 44 && p.editable);
+  const before = h.native.copyText(0, 44), original = h.input.value;
+  assert.equal(original[0], "\ufffc");
+  h.type("\ufffc한😀" + original.slice(1));
+  h.type("\ufffc한😀끝" + original.slice(1));
+  assert.equal(h.requests[0].startUnit, 8); h.ack(); h.ack();
+  const committed = h.native.copyText(0, 44);
+  assert.deepEqual(committed.subarray(0, 16), before.subarray(0, 16));
+  const display = h.input.value;
+  h.type(display.slice(1)); h.ack();
+  assert(h.note.textContent.includes("UnsupportedControlDeletion"));
+  assert.equal(h.input.value, display);
+  assert.deepEqual(h.native.copyText(0, 44), committed);
+});
+test("canvas hyperlink label uses source offsets and preserves protected field ends", async t => {
+  const h = await harness(t, "software", p => p.paragraph === 93 && p.editable);
+  const before = h.native.copyText(0, 93);
+  assert.equal(h.input.value, "«mozuAPI»");
+  h.type("«한😀»"); h.type("«한😀끝»");
+  assert.equal(h.requests[0].startUnit, 8); assert.equal(h.requests[0].endUnit, 15);
+  h.ack();
+  const firstSave = h.native.save({ allowStaleLayout: true }).bytes;
+  verifyRaw(readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/software.hwp"), firstSave, 0, 93, 8, 15, "한😀");
+  h.ack();
+  assert.equal(h.input.value, "«한😀끝»");
+  const committed = h.native.copyText(0, 93);
+  verifyRaw(firstSave, h.native.save({ allowStaleLayout: true }).bytes, 0, 93, 11, 11, "끝");
+  assert.deepEqual(committed.subarray(0, 16), before.subarray(0, 16));
+  assert.deepEqual(committed.subarray(24), before.subarray(30));
+  h.type("«한😀끝"); h.ack();
+  assert(h.note.textContent.includes("UnsupportedControlDeletion"));
+  assert.equal(h.input.value, "«한😀끝»");
+  assert.deepEqual(h.native.copyText(0, 93), committed);
+});
 test("composition commits once after final DOM value and never during intermediate input", async t => {
   const h = await harness(t), before = h.input.value;
   dispatch(h.input, "compositionstart"); h.type("가" + before); h.type("각" + before);
@@ -102,6 +138,20 @@ test("canvas software application title edits its actual nested table paragraph"
   assert.equal(h.input.value, "한😀" + before);
   assert.equal(h.native.text(0, 2), "한😀" + before + "\r");
   assert.equal(h.requests.length, 1); assert(!h.note.textContent.includes("실패"));
+});
+test("canvas edits actual direct drawing caption without changing its owner records", async t => {
+  const h = await harness(t, "textbox", p => p.paragraph === 1 && p.editable);
+  const before = h.input.value;
+  h.type("한😀" + before); h.ack();
+  assert.equal(h.input.value, "한😀" + before);
+  verifyRaw(readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/textbox.hwp"), h.native.save({ allowStaleLayout: true }).bytes, 0, 1, 0, 0, "한😀");
+});
+test("canvas edits the actual section master-page paragraph without flattening its records", async t => {
+  const h = await harness(t, "table-bug", p => p.paragraph === 1 && p.editable);
+  assert.equal(h.input.value, "");
+  h.type("바탕😀"); h.ack();
+  assert.equal(h.input.value, "바탕😀");
+  verifyRaw(readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/table-bug.hwp"), h.native.save({ allowStaleLayout: true }).bytes, 0, 1, 0, 0, "바탕😀");
 });
 test("canvas input materializes an originally empty table cell and handles queued typing", async t => {
   const h = await harness(t, "table", p => p.paragraph === 1 && p.editable);

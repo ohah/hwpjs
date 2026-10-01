@@ -5,16 +5,18 @@ const Text = @import("../body/text.zig").Text;
 const content = @import("plain_text_content.zig");
 const scalars = @import("../../text/scalars.zig");
 
-pub const retained_mask: u32 = (1 << 9) | (1 << 13);
+pub const retained_mask: u32 = (1 << 2) | (1 << 3) | (1 << 4) | (1 << 9) | (1 << 11) | (1 << 13) | (1 << 16) | (1 << 17) | (1 << 18) | (1 << 21) | (1 << 22) | (1 << 23);
 
-/// Currently connected inline control: tab only. Other control ownership and
-/// field linkage must be validated before extending this policy.
+/// Retained tabs and known anchors. Source eligibility separately validates
+/// extended control/header linkage and local hyperlink marker ownership.
 pub fn validateRetainedText(bytes: []const u8) !void {
     const text = try Text.parse(bytes);
     var it = text.tokens();
     while (try it.next()) |token| switch (token.value) {
         .control => |c| {
-            if (c.code != 9 and !(c.code == 13 and token.start_unit + 1 == text.unitCount()))
+            if (c.code == 13) {
+                if (token.start_unit + 1 != text.unitCount()) return error.UnsupportedTextControl;
+            } else if (c.code >= 32 or retained_mask & (@as(u32, 1) << @intCast(c.code)) == 0)
                 return error.UnsupportedTextControl;
         },
         .text => |raw| {

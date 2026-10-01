@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { displayContent, clipText } from "../../web/preview/content.mjs";
 import { layoutContent } from "../../web/preview/layout.mjs";
-import { tabTextView, sourceTextChange } from "../../web/preview/text-offsets.mjs";
+import { retainedTextView, sourceTextChange } from "../../web/preview/text-offsets.mjs";
 const result = text => ({ version: [5, 0, 3, 2], sections: [{ index: 0, paragraphs: [{ text, textPresent: true, parentNodeIndex: null, tokens: [] }] }] });
 test("display projection reports clipping and does not split a surrogate", () => {
   const original = result("가😀나"), copy = structuredClone(original);
@@ -37,7 +37,7 @@ test("tab display offsets retain emoji units, multiple control widths and clippi
   const control = (startUnit, code, bytes) => ({ type: "control", startUnit, code, raw: new Uint8Array(bytes) });
   const p = { text: "😀A", textPresent: true, parentNodeIndex: null, declaredUnits: 20,
     tokens: [token(0, "😀"), control(2, 9, 16), token(10, "A"), control(11, 9, 16), control(19, 13, 2)] };
-  const before = structuredClone(p), view = tabTextView(p);
+  const before = structuredClone(p), view = retainedTextView(p);
   assert.equal(view.text, "😀\tA\t");
   assert.deepEqual([0, 1, 2, 3, 4, 5].map(unit => sourceTextChange({ startUnit: unit, endUnit: unit, text: "X" }, view.offsets).startUnit), [0, 1, 2, 10, 11, 19]);
   const r = { version: [5, 0, 3, 2], sections: [{ index: 0, paragraphs: [p] }] };
@@ -46,6 +46,22 @@ test("tab display offsets retain emoji units, multiple control widths and clippi
   assert.equal(clipped.paragraphs[0].sourceOffsets, undefined); assert.deepEqual(p, before);
   const layout = layoutContent({ paragraphs: [full], limited: false }, 100, text => text.length);
   assert.equal(layout.rows.find(r => r.kind === "text").boundaries.find(b => b.unit === 3).x, 6);
-  assert.equal(tabTextView({ ...p, declaredUnits: 19 }), null);
-  assert.equal(tabTextView({ ...p, tokens: p.tokens.map(t => t.code === 9 ? { ...t, code: 11 } : t) }), null);
+  assert.equal(retainedTextView({ ...p, declaredUnits: 19 }), null);
+  const anchors = retainedTextView({ ...p, tokens: p.tokens.map(t => t.code === 9 ? { ...t, code: 11 } : t) });
+  assert.equal(anchors.text, "😀\ufffcA\ufffc");
+  assert.deepEqual(anchors.offsets, view.offsets);
+  assert.equal(retainedTextView({ ...p, tokens: p.tokens.map(t => t.code === 9 ? { ...t, code: 12 } : t) }), null);
+});
+
+test("visible field boundaries map independently without zero-width ambiguity", () => {
+  const p = { declaredUnits: 20, tokens: [
+    { type: "control", startUnit: 0, code: 3, raw: new Uint8Array(16) },
+    { type: "text", startUnit: 8, text: "한😀", raw: new Uint8Array(6) },
+    { type: "control", startUnit: 11, code: 4, raw: new Uint8Array(16) },
+    { type: "control", startUnit: 19, code: 13, raw: new Uint8Array(2) },
+  ] };
+  const view = retainedTextView(p);
+  assert.equal(view.text, "«한😀»");
+  assert.deepEqual(sourceTextChange({ startUnit: 1, endUnit: 4, text: "X" }, view.offsets), { startUnit: 8, endUnit: 11, text: "X" });
+  assert.deepEqual(sourceTextChange({ startUnit: 4, endUnit: 5, text: "" }, view.offsets), { startUnit: 11, endUnit: 19, text: "" });
 });

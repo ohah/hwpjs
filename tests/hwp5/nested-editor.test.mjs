@@ -77,6 +77,36 @@ test("nested ownership rejects missing list/table and duplicate table markers wi
   });
 });
 
+test("direct caption and master-page lists reject broken payload, count and missing owner atomically", async t => {
+  for (const [name, shortLength] of [["textbox", 21], ["table-bug", 17]]) {
+    const original = readFileSync(`legacy/rust/crates/hwp-core/tests/fixtures/${name}.hwp`);
+    const all = records(inspect(original).sections[0].bytes);
+    const caption = paragraphRecords(inspect(original).sections[0].bytes, 1);
+    const list = all.slice(0, caption.at).findLast(r => r.tag === 72);
+    assert(list); assert.equal(list.level, caption.head.level);
+    for (const [label, payload, tag, expected] of [
+      ["short area", list.payload.subarray(0, shortLength), 72, "UnexpectedEnd"],
+      ["wrong count", (() => { const b = Buffer.from(list.payload); b.writeUInt16LE(b.readUInt16LE(0) + 1, 0); return b; })(), 72, "ListParagraphCountMismatch"],
+      ["missing list", list.payload, 73, "OrphanListParagraph"],
+    ]) await t.test(`${name}: ${label}`, async () => {
+      const writer = await createCfbReader(wasm);
+      let bytes;
+      try {
+        writer.parse(original, { strict: true }); const doc = writer.document();
+        const section = doc.nodes.find(n => n.name === "Section0" && doc.nodes[n.parent]?.name === "BodyText");
+        section.content = deflateRawSync(Buffer.concat(all.map(r => r === list ? encodeRecord(tag, r.level, payload) : r.raw)));
+        bytes = writer.write(doc);
+      } finally { writer.close(); }
+      const editor = await createExperimentalHwp5Editor(wasm, bytes);
+      try {
+        const before = editor.copyText(0, 1);
+        assert.throws(() => editor.splice({ section: 0, paragraph: 1, startUnit: 0, endUnit: 0, text: "X" }), { message: expected });
+        assert.deepEqual(editor.copyText(0, 1), before);
+        assert.deepEqual(editor.save().bytes, bytes);
+      } finally { editor.close(); }
+    });
+  }
+});
 test("nested full-record oracle catches ignored edit and a change in a different cell", async () => {
   assert.throws(() => verifyRaw(source, source, 0, 2, 0, 0, "X"), /complete Section/);
   const editor = await createExperimentalHwp5Editor(wasm, source);

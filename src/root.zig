@@ -611,6 +611,14 @@ test {
     _ = @import("hwp5/container/script_tests.zig");
     _ = @import("hwp5/compression_tests.zig");
     _ = @import("hwp5/edit/control_boundaries.zig");
+    _ = @import("hwp5/edit/text_section_writer_tests.zig");
+    _ = @import("hwp5/edit/hyperlink_source.zig");
+    _ = @import("hwp5/body/master_page.zig");
+    _ = @import("hwp5/body/formula_command.zig");
+    _ = @import("hwp5/body/formula_command_tests.zig");
+    _ = @import("hwp5/body/formula_range.zig");
+    _ = @import("hwp5/body/formula_number.zig");
+    _ = @import("hwp5/body/formula_format.zig");
     _ = @import("hwp5/bin_data_stream_tests.zig");
     _ = @import("hwp5/container/bin_data_replace_tests.zig");
     _ = @import("hwp5/container/ole_edit_session_tests.zig");

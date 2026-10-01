@@ -12,22 +12,28 @@ const Version = @import("../version.zig").Version;
 pub fn write(a: std.mem.Allocator, source: []const u8, section: model.Section, version: Version, limit: usize) ![]u8 {
     var tree = try Tree.parseTextPreview(a, source, version, .{});
     defer tree.deinit(a);
+    const paragraph_by_node = try a.alloc(?usize, tree.nodes.len);
+    defer a.free(paragraph_by_node);
+    @memset(paragraph_by_node, null);
+    for (section.paragraphs, 0..) |p, index| {
+        if (p.source_node >= tree.nodes.len or tree.nodes[p.source_node].record.value != .header or paragraph_by_node[p.source_node] != null)
+            return error.SourceBindingMismatch;
+        paragraph_by_node[p.source_node] = index;
+    }
     var out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(a);
     var it = framing.Iterator.init(source, .{});
     var paragraph_index: usize = 0;
-    var current: ?model.Paragraph = null;
-    var level: u10 = 0;
+    var record_index: usize = 0;
     while (try it.next()) |record| {
-        // A sibling or ancestor closes this paragraph's subtree, regardless
-        // of its tag. Later descendants belong to that new owner, not to us.
-        if (current != null and record.level <= level) current = null;
+        const node_index = record_index;
+        record_index += 1;
+        const parent_paragraph = if (tree.nodes[node_index].parent) |parent| paragraph_by_node[parent] else null;
         if (record.tag == @intFromEnum(body.Tag.paragraph_header)) {
             if (paragraph_index >= section.paragraphs.len) return error.SourceBindingMismatch;
             const p = section.paragraphs[paragraph_index];
+            if (p.source_node != node_index) return error.SourceBindingMismatch;
             paragraph_index += 1;
-            current = p;
-            level = record.level;
             const bytes = try a.dupe(u8, record.payload);
             defer a.free(bytes);
             bytes[body.Header.style_id_offset] = p.style_id;
@@ -51,8 +57,8 @@ pub fn write(a: std.mem.Allocator, source: []const u8, section: model.Section, v
                 defer a.free(text);
                 try writer.append(a, &out, @intFromEnum(body.Tag.paragraph_text), record.level + 1, text, limit);
             }
-        } else if (current != null and current.?.range_tags != null and record.level == level + 1) {
-            const p = current.?;
+        } else if (parent_paragraph != null and section.paragraphs[parent_paragraph.?].range_tags != null) {
+            const p = section.paragraphs[parent_paragraph.?];
             switch (record.tag) {
                 @intFromEnum(body.Tag.paragraph_text) => {
                     const bytes = try plain.textBytes(a, p);
@@ -79,6 +85,16 @@ pub fn write(a: std.mem.Allocator, source: []const u8, section: model.Section, v
                     try writer.append(a, &out, record.tag, record.level, bytes, limit);
                 },
                 @intFromEnum(body.Tag.line_segments) => {}, // Invalid cache, never guessed.
+                @intFromEnum(body.Tag.control_header) => {
+                    const attributes = if (p.field_attributes) |fields| @import("field_attributes.zig").find(fields, node_index) else null;
+                    if (attributes) |value| {
+                        if (record.payload.len < 8) return error.SourceBindingMismatch;
+                        const bytes = try a.dupe(u8, record.raw);
+                        defer a.free(bytes);
+                        std.mem.writeInt(u32, bytes[record.raw.len - record.payload.len + 4 ..][0..4], value, .little);
+                        try out.appendSlice(a, bytes);
+                    } else try out.appendSlice(a, record.raw);
+                },
                 else => return error.UnsupportedParagraphRecord,
             }
         } else try out.appendSlice(a, record.raw);

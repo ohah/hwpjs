@@ -9,7 +9,8 @@ pub const Edit = struct { section: usize, paragraph: usize, start_unit: u32, end
 
 pub fn apply(a: std.mem.Allocator, source: []const u8, version: Version, p: *model.Paragraph, edit: Edit, count: usize) !void {
     if (edit.char_shape_id >= count) return error.InvalidResourceReference;
-    const original_ranges = try @import("plain_text_source.zig").validate(a, source, version, p.*, count);
+    const validated = try @import("plain_text_source.zig").validate(a, source, version, p.*, count);
+    const original_ranges = validated.ranges;
     const text = try plain.editableTextBytes(a, p.*);
     defer a.free(text);
     try plain.validatePlain(text);
@@ -45,5 +46,5 @@ pub fn apply(a: std.mem.Allocator, source: []const u8, version: Version, p: *mod
     if (p.range_tags) |r| a.free(r);
     p.character_runs = owned;
     p.range_tags = ranges;
-    p.deferred_direct_records = 0;
+    p.deferred_direct_records = validated.preserved_direct_records;
 }

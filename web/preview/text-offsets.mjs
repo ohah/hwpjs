@@ -1,6 +1,9 @@
 // Derived display offsets only; never parse raw control payload or save it.
-export function tabTextView(paragraph) {
-  if (!paragraph.tokens.some(t => t.type === "control" && t.code === 9)) return null;
+export function retainedTextView(paragraph) {
+  // Extended anchors get a visible protected position, not a fake rendered
+  // object. Native linkage validation remains the authority for eligibility.
+  const retained = code => [2, 3, 4, 9, 11, 18].includes(code);
+  if (!paragraph.tokens.some(t => t.type === "control" && retained(t.code))) return null;
   const chunks = [], offsets = [{ at: 0, source: 0 }];
   let source = 0, display = 0, ended = false;
   for (const t of paragraph.tokens) {
@@ -8,8 +11,8 @@ export function tabTextView(paragraph) {
     if (t.type === "text") {
       if (t.raw.length !== t.text.length * 2) return null;
       chunks.push(t.text); display += t.text.length;
-    } else if (t.code === 9) {
-      chunks.push("\t"); display++;
+    } else if (retained(t.code) && t.raw.length === 16) {
+      chunks.push(t.code === 9 ? "\t" : t.code === 3 ? "«" : t.code === 4 ? "»" : "\ufffc"); display++;
       offsets.push({ at: display, source: source + t.raw.length / 2 });
     } else if (t.code === 13 && t.raw.length === 2) ended = true;
     else return null;

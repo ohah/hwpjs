@@ -7,9 +7,10 @@ const children = @import("../body/paragraph_children.zig");
 const Version = @import("../version.zig").Version;
 
 pub const validateSection = @import("source_policy.zig").validate;
+pub const Validation = struct { ranges: ?body.Ranges, preserved_direct_records: usize };
 
 /// Returned ranges borrow source, not the temporary Tree nodes.
-pub fn validate(a: std.mem.Allocator, source: []const u8, version: Version, p: model.Paragraph, char_count: usize) !?body.Ranges {
+pub fn validate(a: std.mem.Allocator, source: []const u8, version: Version, p: model.Paragraph, char_count: usize) !Validation {
     var tree = try Tree.parseTextPreview(a, source, version, .{});
     defer tree.deinit(a);
     const node = tree.nodes[p.source_node];
@@ -18,13 +19,23 @@ pub fn validate(a: std.mem.Allocator, source: []const u8, version: Version, p: m
     if (h.control_mask & ~@import("control_boundaries.zig").retained_mask != 0) return error.UnsupportedTextControl;
     try validateSection(source);
     try @import("paragraph_owner.zig").validate(a, tree, p.source_node, version);
+    var links_checked = false;
+    var preserved_direct_records: usize = 0;
     var runs: ?body.Runs = null;
     var ranges: ?body.Ranges = null;
     var lines: ?body.Segments = null;
     var child = @as(usize, p.source_node) + 1;
-    while (child < node.subtree_end) : (child += 1) {
+    while (child < node.subtree_end) {
         const entry = tree.nodes[child];
-        if (entry.parent != p.source_node or entry.subtree_end != child + 1) return error.UnsupportedParagraphRecord;
+        if (entry.parent != p.source_node) return error.UnsupportedParagraphRecord;
+        if (entry.record.framing.tag == @intFromEnum(body.Tag.control_header)) {
+            preserved_direct_records += 1;
+            if (!links_checked) try @import("control_source.zig").validate(a, tree);
+            links_checked = true;
+            child = entry.subtree_end;
+            continue;
+        }
+        if (entry.subtree_end != child + 1) return error.UnsupportedParagraphRecord;
         switch (entry.record.framing.tag) {
             @intFromEnum(body.Tag.paragraph_text) => {},
             @intFromEnum(body.Tag.char_runs) => {
@@ -41,11 +52,23 @@ pub fn validate(a: std.mem.Allocator, source: []const u8, version: Version, p: m
             },
             else => return error.UnsupportedParagraphRecord,
         }
+        child = entry.subtree_end;
     }
     try (body.Metadata{ .runs = runs, .ranges = ranges, .lines = lines }).validate(h, char_count);
     const parts = try children.collect(tree, p.source_node);
     if (parts.text_node) |text_node| {
-        try tree.nodes[text_node].record.value.text.validateCount(h);
+        const text = tree.nodes[text_node].record.value.text;
+        try text.validateCount(h);
+        try @import("hyperlink_source.zig").validate(text.raw);
+        if (!links_checked) {
+            var tokens = text.tokens();
+            while (try tokens.next()) |token| {
+                if (token.value == .control and token.value.control.kind == .extended) {
+                    try @import("control_source.zig").validate(a, tree);
+                    break;
+                }
+            }
+        }
     } else if (h.characterUnits() > 1) return error.UnsupportedMissingText;
-    return ranges;
+    return .{ .ranges = ranges, .preserved_direct_records = preserved_direct_records };
 }

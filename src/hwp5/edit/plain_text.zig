@@ -46,7 +46,8 @@ fn position(pos: u32, start: u32, end: u32, added: u32) u32 {
 }
 
 pub fn apply(a: std.mem.Allocator, source: []const u8, version: Version, p: *model.Paragraph, edit: Splice, char_count: usize) !void {
-    const ranges = try @import("plain_text_source.zig").validate(a, source, version, p.*, char_count);
+    const validated = try @import("plain_text_source.zig").validate(a, source, version, p.*, char_count);
+    const ranges = validated.ranges;
     const before = try @import("plain_text_content.zig").editableTextBytes(a, p.*);
     defer a.free(before);
     try @import("control_boundaries.zig").validateRetainedText(before);
@@ -84,6 +85,8 @@ pub fn apply(a: std.mem.Allocator, source: []const u8, version: Version, p: *mod
     if (mapped_ranges.items.len > 65535) return error.LimitExceeded;
     const owned_ranges = try mapped_ranges.toOwnedSlice(a);
     errdefer a.free(owned_ranges);
+    const owned_fields = try @import("field_attributes.zig").prepare(a, source, version, p.*, before, edit.start_unit, edit.end_unit);
+    errdefer if (owned_fields) |fields| a.free(fields);
     const value = try body.Text.parse(after);
     var tokens: std.ArrayList(model.Token) = .empty;
     errdefer {
@@ -101,10 +104,12 @@ pub fn apply(a: std.mem.Allocator, source: []const u8, version: Version, p: *mod
     a.free(p.tokens);
     a.free(p.character_runs);
     if (p.range_tags) |rr| a.free(rr);
+    if (p.field_attributes) |fields| a.free(fields);
     p.tokens = owned_tokens;
     p.text_present = true;
     p.character_runs = owned_runs;
     p.range_tags = owned_ranges;
+    p.field_attributes = owned_fields;
     p.declared_units = @intCast(after.len / 2);
-    p.deferred_direct_records = 0;
+    p.deferred_direct_records = validated.preserved_direct_records;
 }

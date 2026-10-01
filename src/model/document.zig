@@ -1,4 +1,4 @@
-//! Read-only, owned document projection shared by format adapters.
+//! Owned partial document projection shared by format adapters and editors.
 //! This is deliberately not the legacy hwpjs JSON schema or a save model.
 const std = @import("std");
 
@@ -16,6 +16,7 @@ pub const Token = struct {
 
 pub const CharacterRun = struct { start_unit: u32, char_shape_id: u32 };
 pub const TextRange = struct { start_unit: u32, end_unit: u32, tag: u32 };
+pub const FieldAttributes = struct { source_node: u32, attributes: u32 };
 
 pub const Paragraph = struct {
     source_node: u32,
@@ -28,6 +29,8 @@ pub const Paragraph = struct {
     character_runs: []CharacterRun,
     /// Null means not projected; controlled editors may own explicit ranges.
     range_tags: ?[]TextRange = null,
+    /// Materialized field values, not raw command copies or a second save model.
+    field_attributes: ?[]FieldAttributes = null,
     /// Direct records not represented by this projection. Never treated as saved.
     deferred_direct_records: usize,
 
@@ -36,6 +39,7 @@ pub const Paragraph = struct {
         a.free(self.tokens);
         a.free(self.character_runs);
         if (self.range_tags) |ranges| a.free(ranges);
+        if (self.field_attributes) |fields| a.free(fields);
         self.* = undefined;
     }
 };

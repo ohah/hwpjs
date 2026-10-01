@@ -34,10 +34,25 @@ pub fn validate(a: std.mem.Allocator, tree: Tree, paragraph: usize, version: Ver
     const node = tree.nodes[parent];
     if (node.record.value == .control_header) {
         const id = node.record.value.control_header.id;
+        if (id == controls.section_id) {
+            const root = node.parent orelse return error.OrphanSectionDefinition;
+            if (tree.nodes[root].record.value != .header or tree.nodes[root].parent != null) return error.OrphanSectionDefinition;
+            _ = try body.section_def.Definition.parse(node.record.value.control_header.properties, version);
+            const view = try tree.nodes[list].record.value.list_header.view(.observed8);
+            _ = try @import("../body/master_page.zig").Area.parse(view.extra);
+            return;
+        }
         if (id == controls.table_id) {
             var it = try tables.Iterator.init(tree, parent);
             while (it.next()) |entry| if (entry.node == list) return;
             return error.InvalidTableOwner;
+        }
+        if (id == controls.drawing_id) {
+            // Direct drawing lists are captions; text boxes live beneath a
+            // SHAPE_COMPONENT. Keep these two owners distinct.
+            const view = try tree.nodes[list].record.value.list_header.view(.observed8);
+            _ = try body.Caption.parse(view.extra);
+            return;
         }
         if (id == controls.id("head") or id == controls.id("foot") or id == controls.id("fn  ") or id == controls.id("en  ")) return;
     }

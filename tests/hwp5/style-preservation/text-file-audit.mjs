@@ -157,7 +157,8 @@ try {
   refuseFixture("invalid-shape", b => replaceParagraph(b, 1, p => p.all.slice(p.at, p.end).map(r => { if (r.tag !== 68) return r.raw; const v = Buffer.from(r.payload); v.writeUInt32LE(0xffffffff, 4); return encodeRecord(68, 1, v); })), /InvalidResourceReference/);
   run(basePath, 1, 0, 0, "\n", "control-refused", /UnsupportedTextControl/);
   run(basePath, 1, 0, 999, "", "terminator-refused", /InvalidTextPosition/);
-  run(basePath, 0, 0, 0, "X", "section-control-refused", /UnsupportedTextControl|UnsupportedParagraphRecord/);
+  const anchorAfter = run(basePath, 0, 0, 0, "X", "section-control-retained");
+  verifyRaw(readFileSync(basePath), anchorAfter, 0, 0, 0, 0, "X"); synthetic++;
   run(basePath, 1, 0, 0, "X", "layout-refused", /LayoutReflowRequired/, "reject", "require-layout");
   const unicodeAfter = run(basePath, 1, 0, 0, "😀", "unicode-first");
   const unicodePath = join(artifacts, "unicode-first.hwp");

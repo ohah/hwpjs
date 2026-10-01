@@ -47,13 +47,26 @@ export function encodeRecord(tag, level, payload, extended = payload.length >= 4
 }
 
 export function expectedSection(bytes, index, start, end, utf8) {
-  const owner = paragraphRecords(bytes, index), originalText = owner.direct.find(r => r.tag === 67);
+  const owner = paragraphRecords(bytes, index), own = owner.direct.filter(r => r.level === owner.head.level + 1), originalText = own.find(r => r.tag === 67);
   const declared = owner.head.payload.readUInt32LE(0) & 0x7fffffff;
   assert(originalText || declared <= 1, "oracle cannot invent missing nonempty text");
   const text = originalText?.payload.length ? originalText.payload : Buffer.from("\r", "utf16le");
   const add = Buffer.from(utf8, "utf16le"), output = Buffer.concat([text.subarray(0, start * 2), add, text.subarray(end * 2)]);
   if (output.equals(text)) return bytes;
-  const rows = owner.direct.find(r => r.tag === 68).payload;
+  const fieldHeaders = own.filter(r => r.tag === 71 && r.payload.length >= 8 && r.payload.readUInt32LE(0) === 0x25686c6b);
+  const modifiedFields = new Set(), opened = [];
+  let fieldIndex = 0;
+  for (let unit = 0; unit < text.length / 2;) {
+    const code = text.readUInt16LE(unit * 2);
+    const width = code >= 1 && code <= 23 && code !== 10 && code !== 13 ? 8 : 1;
+    if (code === 3) opened.push({ index: fieldIndex++, begin: unit + width });
+    if (code === 4) {
+      const field = opened.pop(); assert(field, "oracle missing field start");
+      if (start === end ? start >= field.begin && start <= unit : start < unit && end > field.begin) modifiedFields.add(fieldHeaders[field.index]);
+    }
+    unit += width;
+  }
+  const rows = own.find(r => r.tag === 68).payload;
   const oldRuns = Array.from({ length: rows.length / 8 }, (_, i) => ({ at: rows.readUInt32LE(i * 8), id: rows.readUInt32LE(i * 8 + 4) }));
   // Unit-wise style map, independently of the product's boundary algorithm.
   const shapes = Array.from({ length: text.length / 2 + 1 }, (_, unit) => oldRuns.findLast(r => r.at <= unit).id);
@@ -61,7 +74,7 @@ export function expectedSection(bytes, index, start, end, utf8) {
   const runs = newShapes.flatMap((id, unit) => unit === 0 || newShapes[unit - 1] !== id ? [{ at: unit, id }] : []);
   const runPayload = Buffer.alloc(runs.length * 8);
   runs.forEach((r, i) => { runPayload.writeUInt32LE(r.at, i * 8); runPayload.writeUInt32LE(r.id, i * 8 + 4); });
-  const rangeRecord = owner.direct.find(r => r.tag === 70), rangeValues = [];
+  const rangeRecord = own.find(r => r.tag === 70), rangeValues = [];
   if (rangeRecord) {
     const map = point => point < start ? point : point >= end ? point + add.length / 2 - (end - start) : start;
     for (let i = 0; i < rangeRecord.payload.length; i += 12) {
@@ -77,6 +90,11 @@ export function expectedSection(bytes, index, start, end, utf8) {
   const changed = [Buffer.concat([owner.head.raw.subarray(0, owner.head.raw.length - owner.head.payload.length), header])];
   if (!originalText) changed.push(encodeRecord(67, owner.head.level + 1, output));
   for (const r of owner.direct) {
+    if (modifiedFields.has(r)) {
+      const raw = Buffer.from(r.raw), offset = raw.length - r.payload.length + 4;
+      raw.writeUInt32LE((raw.readUInt32LE(offset) | 0x8000) >>> 0, offset); changed.push(raw); continue;
+    }
+    if (r.level !== owner.head.level + 1 || ![67, 68, 69, 70].includes(r.tag)) { changed.push(r.raw); continue; }
     if (r.tag === 69) continue;
     const payload = r.tag === 67 ? output : r.tag === 68 ? runPayload : r.tag === 70 ? rangePayload : r.payload;
     changed.push(encodeRecord(r.tag, r.level, payload));

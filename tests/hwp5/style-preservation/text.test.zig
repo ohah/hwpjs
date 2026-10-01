@@ -4,6 +4,42 @@ const edit = core.hwp5.experimental_style_preservation;
 const a = std.testing.allocator;
 const fixture = "legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwp";
 
+test "text splice retained anchor linkage allocation failures stay atomic" {
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/software.hwp", a, .limited(2_000_000));
+    defer a.free(bytes);
+    const Run = struct {
+        fn run(allocator: std.mem.Allocator, source: []const u8, paragraph: usize) !void {
+            const session = try edit.Session.open(allocator, source);
+            defer session.close();
+            const before = try session.copyText(a, 0, paragraph);
+            defer a.free(before);
+            session.apply(.{ .splice_text = .{ .section = 0, .paragraph = paragraph, .start_unit = if (paragraph == 0) 0 else 8, .end_unit = if (paragraph == 0) 0 else 15, .utf8 = "한😀" } }) catch |err| {
+                const after = try session.copyText(a, 0, paragraph);
+                defer a.free(after);
+                try std.testing.expectEqualSlices(u8, before, after);
+                const saved = try session.save(a, .{});
+                defer a.free(saved.bytes);
+                try std.testing.expectEqualSlices(u8, source, saved.bytes);
+                return err;
+            };
+            const saved = try session.save(allocator, .{ .allow_stale_layout = true });
+            defer allocator.free(saved.bytes);
+            const reopened = try edit.Session.open(a, saved.bytes);
+            defer reopened.close();
+            const after = try reopened.copyText(a, 0, paragraph);
+            defer a.free(after);
+            if (paragraph == 0) {
+                try std.testing.expectEqualSlices(u8, before, after[6..]);
+            } else {
+                try std.testing.expectEqualSlices(u8, before[0..16], after[0..16]);
+                try std.testing.expectEqualSlices(u8, before[30..], after[22..]);
+            }
+        }
+    };
+    try std.testing.checkAllAllocationFailures(a, Run.run, .{ bytes, @as(usize, 0) });
+    try std.testing.checkAllAllocationFailures(a, Run.run, .{ bytes, @as(usize, 93) });
+}
+
 test "text splice omitted empty cell allocation failures preserve source and absence" {
     const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/table.hwp", a, .limited(2_000_000));
     defer a.free(bytes);

@@ -1,12 +1,24 @@
 # HWP5 중첩 목록 문단 텍스트 편집
 
+## 직접 도형 캡션 소유 연결
+
+아래 캡션·table-bug 거부 조사와 1,303개 성공 수치는 바탕쪽 연결 전 기록입니다. 당시의 ‘현재’·‘추가 검증 필요’는 해당 단계만 가리킵니다. 이후 소유·영역 파서와 현재 검증 결과는 [바탕쪽 목록 계약](hwp5-master-page-edit.md)이 소유하며 중첩 소유 거부는 현재 0개입니다. 캡션 손상 반례와 바탕쪽 연결까지 포함한 ReleaseSafe 제품 편집 63개·전체 Zig 2,703개가 통과했습니다. 캡션·바탕쪽의 실제 브라우저 입력은 아직 미검증입니다.
+
+남은 table-bug 문단 1의 실제 조상은 root PARA_HEADER → secd CTRL_HEADER입니다. LIST_HEADER와 PARA_HEADER는 level 2 형제이고 목록 payload는 34바이트, 선언 문단 수는 1입니다. 목록 공통 observed8 뒤 폭/높이 후보와 추가 바이트가 존재하지만, 이를 도형 캡션으로 읽을 근거는 없습니다. 구역 정의 공식 표 137의 바탕쪽 정보(10바이트)와 실제 확장 목록 배치를 별도로 연결해야 하며 길이가 충분하다는 이유만으로 Caption.parse를 적용하지 않습니다. 현재는 UnsupportedNestedParagraph 거부를 유지합니다.
+
+실제 textbox에서 파생한 짧은 캡션 payload(목록 헤더 뒤 13바이트), 선언 문단 수 불일치, 목록 헤더 부재를 각각 검사했습니다. 오류는 UnexpectedEnd·ListParagraphCountMismatch·OrphanListParagraph이며 실패 후 대상 텍스트와 byte-exact 원본 저장을 확인했습니다. 이 반례를 포함한 중첩 집중 검사 11개가 통과했습니다. 파생 파일은 메모리에서 만들며 추적 원본은 변경하지 않습니다.
+
+후속 전수 조사에서 `textbox.hwp`의 거부 문단은 SHAPE_COMPONENT 내부 글상자가 아니라 gso CTRL_HEADER의 직접 캡션 목록이었습니다. `paragraph_owner.zig`는 기존 Groups의 선언 문단 수/소유 검사 후 drawing 직접 목록의 observed8 view와 기존 Caption.parse를 사용합니다. 글상자 경로와 혼합하거나 부모를 평탄화하지 않습니다. Canvas는 캡션의 기존 자동 번호(code 18)를 보호 표식으로 표시하며 새 번호 생성/삭제는 허용하지 않습니다.
+
+실제 textbox 캡션의 삽입·저장을 제품 WASM 및 독립 전체 Section/비대상 스트림 oracle로 대조했고 Canvas 집중 17개가 통과했습니다. 추적 전수 검사에서 1,481문단 중 1,303개 삽입 성공이며 남은 거부는 SectionControl 175개, CrossParagraphField 2개, NestedParagraph 1개입니다. 같은 직접 캡션 소유 연결로 multicolumns-in-common-controls 문단도 허용됐습니다. table-bug의 구역 정의 아래 목록은 별도 원인이므로 임의 허용하지 않았습니다. 최신 native 변경의 전체 Zig 회귀·손상 캡션 반례·실제 브라우저 캡션 입력은 아직 추가 검증이 필요합니다.
+
 [텍스트 명령·저장 계약](hwp5-plain-text-edit-experiment.md)의 원자적 splice·서식·범위 정책은 유지하면서, 검증된 목록 소유 문단을 연결합니다. 표 셀의 논리 텍스트를 편집하는 구현이며 Canvas에 원본 표 격자·페이지를 재현한 구현은 아닙니다.
 
 ## 책임과 보존 정책
 
 - `edit/source_policy.zig`: 구역의 보존 가능 레코드/컨트롤 정책. 기존 body Tag와 도형 모듈의 tag 상수를 재사용합니다. 구역/단 설정 외 표·도형·머리말 등 알려진 컨트롤이 다른 문단에 있다는 이유만으로 단순 텍스트를 막지 않습니다. 알려진 도형 payload를 그대로 보존하는 것과 그 의미·조판을 검증하는 것은 구분합니다. 미지 tag/ID·메모 목록·하이퍼링크 외 필드 컨트롤은 계속 거부합니다.
 - `edit/paragraph_owner.zig`: 원본 Tree에 소유 관계 확인에 필요한 CTRL_HEADER·LIST_HEADER·TABLE만 해석합니다. `list_groups.Groups.build`의 형제 목록 범위와 선언 문단 수를 재사용합니다. LIST_HEADER를 문단의 부모라고 추정하지 않습니다. 표는 `table_lists.Iterator`의 단일 TABLE 마커와 셀/캡션 목록 관계를 확인합니다. head/foot/fn/en 목록과 gso 아래 SHAPE_COMPONENT 목록도 같은 그룹 계약을 사용합니다.
-- `edit/plain_text_source.zig`: 대상 문단의 기존 직접 자식·헤더 확장·개수·리소스 검사를 유지하며 위 두 소유자에 위임합니다. 실제 텍스트는 여전히 일반 Unicode와 끝 PARA_BREAK만 허용합니다. 대상 문단 자체의 필드·개체·번호·탭 등 제어는 거부합니다. 텍스트 부재의 제한적 허용은 [빈 문단 계약](hwp5-empty-text-edit.md)이 소유합니다.
+- `edit/plain_text_source.zig`: 대상 문단의 기존 직접 자식·헤더 확장·개수·리소스 검사를 유지하며 위 두 소유자에 위임합니다. 대상 문단 자체의 기존 탭·알려진 anchor·같은 문단 하이퍼링크를 보존하는 확장은 [제어 보존 계약](hwp5-control-text-edit.md)이 소유합니다. 제어 생성/삭제나 일반 필드 의미 편집은 아닙니다. 텍스트 부재의 제한적 허용은 [빈 문단 계약](hwp5-empty-text-edit.md)이 소유합니다.
 - 기존 `plain_text.zig`·`character_format.zig`·`text_section_writer.zig`: 명령·원자적 모델 반영·출력의 단일 출처를 유지합니다. 셀 편집 전용 텍스트 사본이나 별도 저장기를 만들지 않습니다.
 
 목록 소유 확인은 셀 주소·병합 격자·6/8바이트 배치·테두리·시각 배치를 새로 검증했다는 뜻이 아닙니다. 셀/표 구조 자체는 변경하지 않습니다. 해당 의미 파서·검증기는 기존 body 모듈이 소유합니다. 다른 문단에 있는 하이퍼링크를 보존할 수 있다는 정책은 하이퍼링크 제어를 포함한 대상 텍스트의 편집 지원과 다릅니다.

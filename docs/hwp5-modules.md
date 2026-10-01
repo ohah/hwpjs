@@ -12,8 +12,11 @@
 - [편집 모델과 원본 보존의 제한적 구현 실험](hwp5-style-preservation-experiment.md)
 - [단순 문단 텍스트 삽입·삭제와 저장 실험](hwp5-plain-text-edit-experiment.md)
 - [중첩 목록 문단 텍스트 편집](hwp5-nested-text-edit.md)
+- [바탕쪽 목록 텍스트 편집](hwp5-master-page-edit.md)
+- [계산식 command 분리](hwp5-formula-command.md)
 - [기존 빈 문단 텍스트 편집](hwp5-empty-text-edit.md)
 - [제어 포함 텍스트 편집 확장 작업](hwp5-control-text-edit.md)
+- [편집 모델의 하이퍼링크 수정 속성](hwp5-field-attribute-edit.md)
 - [선택 범위에 기존 글자 모양 적용](hwp5-character-format-edit.md)
 
 - [문서 조립·컨테이너·별도 스트림](hwp5-document-contracts.md)
