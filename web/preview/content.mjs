@@ -18,7 +18,8 @@ export function displayContent(result, { maxUnits = 200000, maxParagraphs = 2000
       }
       units += text.length;
       const controls = p.tokens.filter(t => t.type === "control").length;
-      paragraphs.push({ label: `구역 ${section.index + 1} · 문단 ${index + 1}${p.parentNodeIndex !== null ? " · 중첩" : ""}${controls ? ` · 제어 표식 ${controls}개 (표시 의미 미적용)` : ""}`, text: p.textPresent ? text : "[직접 텍스트 없음]" });
+      const editable = p.textPresent && p.parentNodeIndex === null && text.length === p.text.length && p.tokens.every(t => t.type !== "control" || t.code === 13);
+      paragraphs.push({ section: section.index, paragraph: index, editable, label: `구역 ${section.index + 1} · 문단 ${index + 1}${p.parentNodeIndex !== null ? " · 중첩" : ""}${controls ? ` · 제어 표식 ${controls}개 (표시 의미 미적용)` : ""}`, text: p.textPresent ? text : "[직접 텍스트 없음]" });
     }
   }
   return { version: result.version.join("."), paragraphs, totalParagraphs, limited };

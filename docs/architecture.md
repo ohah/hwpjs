@@ -2,11 +2,11 @@
 
 ## 웹 미리보기 렌더링 방향 — 확정, 텍스트 표시 부분 구현
 
-2026-10-01 사용자 결정: 웹 문서 미리보기의 화면 렌더링은 **Canvas 기반**으로 구현합니다. [첫 문단 텍스트 화면](canvas-text-preview.md)은 기존 읽기 API를 Worker에서 호출하고 시스템 글꼴의 실험용 줄 흐름을 Canvas 2D로 표시합니다. 전체 조판 엔진·원본 폰트 처리·편집 입력 방식·구현 일정은 확정하지 않습니다. 문서 모델·조판·화면 그리기의 책임 분리는 유지하며 텍스트 표시를 원본 문서의 페이지 렌더링 완료로 해석하지 않습니다.
+2026-10-01 사용자 결정: 웹 문서 미리보기의 화면 렌더링은 **Canvas 기반**으로 구현합니다. [첫 문단 텍스트 화면](canvas-text-preview.md)은 기존 읽기 API를 Worker에서 호출하고 시스템 글꼴의 실험용 줄 흐름을 Canvas 2D로 표시합니다. 입력은 [Canvas 직접 입력](canvas-direct-input.md)의 hit-test/caret/선택과 caret 근처 textarea의 키보드/IME 이벤트를 연결합니다. 전체 조판 엔진·원본 폰트 처리·구현 일정은 확정하지 않습니다. 문서 모델·조판·화면 그리기의 책임 분리는 유지하며 텍스트 표시를 원본 문서의 페이지 렌더링 완료로 해석하지 않습니다.
 
 ## 현재 계층과 연결
 
-[실험용 HWP5 편집 API](hwp5-editor-api.md)는 native 소유 세션을 별도 optional WASM/JS 경계와 웹 명령 폼에 연결합니다. 폼은 Canvas 내부 편집 입력/IME 방식의 확정이나 구현이 아닙니다. 변경 값의 SSOT는 native 모델이며 Worker의 텍스트 표시 projection은 저장 입력으로 사용하지 않습니다.
+[실험용 HWP5 편집 API](hwp5-editor-api.md)는 native 소유 세션을 별도 optional WASM/JS 경계에 연결합니다. Canvas 직접 입력과 고급 폼이 같은 명령 경로를 사용합니다. 변경 값의 SSOT는 native 모델이며 Worker의 표시 projection과 textarea의 임시 조합/대기 입력은 저장 모델이 아닙니다.
 
 [기존 글자 모양 적용](hwp5-character-format-edit.md)은 텍스트 splice와 같은 소유 모델·서식 경계 교체·내용 검증·Section writer를 재사용합니다. 서식 명령과 범위 보존 정책만 별도 모듈에 두며 리소스 생성·조판은 추가하지 않습니다. JS 경계는 위 별도 API가 소유합니다.
 

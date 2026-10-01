@@ -5,6 +5,7 @@ let module, bytes, preview, editor;
 self.onmessage = async event => {
   let reader;
   const message = event.data;
+  const reply = value => self.postMessage({ origin: message.origin, ...value });
   let applied = false;
   try {
     if (message.kind === "load") {
@@ -14,10 +15,10 @@ self.onmessage = async event => {
       reader = await createHwp5Reader(module);
       bytes = new Uint8Array(message.bytes);
       preview = reader.readText(bytes);
-      self.postMessage({ kind: "load", content: displayContent(preview) });
+      reply({ kind: "load", content: displayContent(preview) });
     } else if (message.kind === "enable") {
       editor ??= await createExperimentalHwp5Editor(module, bytes);
-      self.postMessage({ kind: "enable", charShapeCount: editor.characterShapeCount() });
+      reply({ kind: "enable", charShapeCount: editor.characterShapeCount() });
     } else if (message.kind === "splice" || message.kind === "format") {
       if (!editor) throw new Error("EditorNotOpen");
       if (message.kind === "splice") editor.splice(message);
@@ -32,8 +33,8 @@ self.onmessage = async event => {
         { type: "text", startUnit: 0, text, raw: raw.subarray(0, -2) },
         { type: "control", startUnit: raw.length / 2 - 1, code: 13, raw: raw.subarray(-2) },
       ] };
-      self.postMessage({ kind: message.kind, content: displayContent(preview) });
+      reply({ kind: message.kind, content: displayContent(preview) });
     } else throw new Error("UnknownPreviewCommand");
-  } catch (error) { self.postMessage({ kind: message.kind, applied, error: error.message || String(error) }); }
+  } catch (error) { reply({ kind: message.kind, applied, error: error.message || String(error) }); }
   finally { reader?.close(); }
 };

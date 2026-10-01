@@ -4,6 +4,7 @@
 
 - [읽기 전용 문단 텍스트 미리보기 API](hwp5-text-preview-api.md)
 - [Canvas 문단 텍스트 미리보기 화면](canvas-text-preview.md)
+- [Canvas 직접 입력·선택·조합 실험](canvas-direct-input.md)
 - [실험용 HWP5 편집 JS/WASM API](hwp5-editor-api.md)
 - [읽기 전용 문서 모델 첫 연결과 JSON 호환 경계](hwp5-model-projection.md)
 - [편집 모델과 원본 보존의 제한적 구현 실험](hwp5-style-preservation-experiment.md)

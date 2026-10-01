@@ -5,12 +5,15 @@ export function createEditorControls(send) {
   const form = document.querySelector("#edit-form");
   let ready = false, busy = false, broken = false;
   const state = () => { enable.disabled = busy || ready || broken; fields.disabled = busy || !ready || broken; };
-  const run = message => { busy = true; state(); note.textContent = "처리 중…"; send(message); };
+  const run = message => { if (busy || broken || (message.kind !== "enable" && !ready)) return false; busy = true; state(); note.textContent = "처리 중…"; send(message); return true; };
   enable.addEventListener("click", () => run({ kind: "enable" }));
   const values = () => Object.fromEntries(["section", "paragraph", "startUnit", "endUnit"].map(key => [key, Number(form.elements[key].value)]));
   form.addEventListener("submit", event => { event.preventDefault(); if (busy || !ready || !form.reportValidity()) return; run({ kind: "splice", ...values(), text: form.elements.text.value }); });
   document.querySelector("#format-button").addEventListener("click", () => { if (busy || !ready || !form.reportValidity()) return; run({ kind: "format", ...values(), charShapeId: Number(form.elements.charShapeId.value) }); });
   return {
+    request: run,
+    ready: () => ready && !broken,
+    busy: () => busy,
     reset() { panel.hidden = true; ready = false; busy = false; broken = false; note.textContent = ""; state(); },
     loaded() { panel.hidden = false; state(); },
     message(message) {

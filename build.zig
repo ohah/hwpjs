@@ -82,7 +82,7 @@ pub fn build(b: *std.Build) void {
     const hwp5_text_api = b.addSystemCommand(&.{ "node", "--test", "tests/hwp5/text-preview.test.mjs", "tests/hwp5/preview-record-oracle.test.mjs", "tests/hwp5/canvas-preview.test.mjs" });
     hwp5_text_api.step.dependOn(b.getInstallStep());
     audit.dependOn(&hwp5_text_api.step);
-    const editor_api_tests = b.addSystemCommand(&.{ "node", "--test", "tests/hwp5/editor.test.mjs", "tests/hwp5/editor-controls.test.mjs" });
+    const editor_api_tests = b.addSystemCommand(&.{ "node", "--test", "tests/hwp5/editor.test.mjs", "tests/hwp5/editor-controls.test.mjs", "tests/hwp5/canvas-edit.test.mjs", "tests/hwp5/canvas-editor.test.mjs" });
     editor_api_tests.step.dependOn(b.getInstallStep());
     editor_api_tests.has_side_effects = true;
     audit.dependOn(&editor_api_tests.step);

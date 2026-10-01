@@ -1,21 +1,25 @@
 {
   "schema": 1,
   "verified": {
+    "docs/canvas-direct-input.md": {
+      "sha256": "5a4b5492080da50c384f2ce4a206c4dba099da18b878442b68893f443a15c69b",
+      "evidence": "2026-10-01 direct Canvas hit test grapheme UTF16 selection native acknowledgement and temporary composition SSOT checked against source; Debug Safe Fast 21 API input tests and full Safe 2687 Zig plus 51 Node regressions pass; five actual fixtures use native WASM with mocked DOM; Chromium public URL pointer typing selection wrap errors composition reset and explicit Meta A empty reinput verified; real OS IME candidate clipboard permissions and HWPX layout remain unverified"
+    },
     "docs/hwp5-editor-api.md": {
-      "sha256": "8acb47608904ea85186b3df2ff3fc8abaa6277a3a44aeb7a9a613a77ea22e128",
-      "evidence": "2026-10-01 experimental editor API and native SSOT bridge checked against source; Debug Safe Fast five API UI tests, Safe full 2687 Zig tests, native text 75 and character format 152 actual edits with independent oracles and 30 Node regressions pass; Chromium public URL edit Unicode rejection reselection and narrow viewport checked; no Canvas direct input styled layout web download or HWPX editing"
+      "sha256": "61b62c5c1e9ca07e20dba858e731d0b67dd9598aa96c387bde0350850d3783fc",
+      "evidence": "2026-10-01 direct Canvas hit test grapheme UTF16 selection native acknowledgement and temporary composition SSOT checked against source; Debug Safe Fast 21 API input tests and full Safe 2687 Zig plus 51 Node regressions pass; five actual fixtures use native WASM with mocked DOM; Chromium public URL pointer typing selection wrap errors composition reset and explicit Meta A empty reinput verified; real OS IME candidate clipboard permissions and HWPX layout remain unverified"
     },
     "docs/canvas-text-preview.md": {
-      "sha256": "d6f63fabd6befbab4f3e5ab98bdf406d2a205b94055a9de41cbb4648625dfed9",
-      "evidence": "2026-10-01 experimental editor API and native SSOT bridge checked against source; Debug Safe Fast five API UI tests, Safe full 2687 Zig tests, native text 75 and character format 152 actual edits with independent oracles and 30 Node regressions pass; Chromium public URL edit Unicode rejection reselection and narrow viewport checked; no Canvas direct input styled layout web download or HWPX editing"
+      "sha256": "8cdd15a7a2fecb2f23214aacbbf11ec20e6ec101d96e0cf6759c894145994977",
+      "evidence": "2026-10-01 direct Canvas hit test grapheme UTF16 selection native acknowledgement and temporary composition SSOT checked against source; Debug Safe Fast 21 API input tests and full Safe 2687 Zig plus 51 Node regressions pass; five actual fixtures use native WASM with mocked DOM; Chromium public URL pointer typing selection wrap errors composition reset and explicit Meta A empty reinput verified; real OS IME candidate clipboard permissions and HWPX layout remain unverified"
     },
     "docs/hwp5-character-format-edit.md": {
       "sha256": "3625d2e7bee4a5d3c1e3516fff2dcb708d0d6a8c56df108cc2dec9acb89d4e2a",
       "evidence": "2026-10-01 experimental editor API and native SSOT bridge checked against source; Debug Safe Fast five API UI tests, Safe full 2687 Zig tests, native text 75 and character format 152 actual edits with independent oracles and 30 Node regressions pass; Chromium public URL edit Unicode rejection reselection and narrow viewport checked; no Canvas direct input styled layout web download or HWPX editing"
     },
     "docs/hwp5-plain-text-edit-experiment.md": {
-      "sha256": "2d4f0ac63eef7d29b14d325a4f6fbe337f8e2633b8a3d8d7a315506d3aa49648",
-      "evidence": "2026-10-01 experimental editor API and native SSOT bridge checked against source; Debug Safe Fast five API UI tests, Safe full 2687 Zig tests, native text 75 and character format 152 actual edits with independent oracles and 30 Node regressions pass; Chromium public URL edit Unicode rejection reselection and narrow viewport checked; no Canvas direct input styled layout web download or HWPX editing"
+      "sha256": "16f91d9e32811b31a0dcd34ca04be2a3f49bdb6f71cd5aafccde36170bf7bc85",
+      "evidence": "2026-10-01 direct Canvas hit test grapheme UTF16 selection native acknowledgement and temporary composition SSOT checked against source; Debug Safe Fast 21 API input tests and full Safe 2687 Zig plus 51 Node regressions pass; five actual fixtures use native WASM with mocked DOM; Chromium public URL pointer typing selection wrap errors composition reset and explicit Meta A empty reinput verified; real OS IME candidate clipboard permissions and HWPX layout remain unverified"
     },
     "docs/hwp5-style-preservation-experiment.md": {
       "sha256": "1619904fbf80ed84e720e279704e0423a5ac8eba96ae94b8dd1d4765a077d2cb",
@@ -662,12 +666,12 @@
       "evidence": "2026-09-28 historic Sep 5 to 7 log of 99 commits verified as history not current support, official rev1.3 PDF SHA matches and rhwp e8800c8de present, current topic docs linked and video zero correction linked; Debug 2664 tests and ReleaseSafe HWP5 audit 8905855 checks pass, old per-stage counts not rerun"
     },
     "docs/architecture.md": {
-      "sha256": "4a21e8bad20f1b296f2a45fa20afd231ccabb19420a1306862a566cfc35cccb6",
-      "evidence": "2026-10-01 experimental editor API and native SSOT bridge checked against source; Debug Safe Fast five API UI tests, Safe full 2687 Zig tests, native text 75 and character format 152 actual edits with independent oracles and 30 Node regressions pass; Chromium public URL edit Unicode rejection reselection and narrow viewport checked; no Canvas direct input styled layout web download or HWPX editing"
+      "sha256": "6a9236a7052621cacbfdcd29baa02b1b9eb8d1d963b4f40a6991eba860c0de8b",
+      "evidence": "2026-10-01 direct Canvas hit test grapheme UTF16 selection native acknowledgement and temporary composition SSOT checked against source; Debug Safe Fast 21 API input tests and full Safe 2687 Zig plus 51 Node regressions pass; five actual fixtures use native WASM with mocked DOM; Chromium public URL pointer typing selection wrap errors composition reset and explicit Meta A empty reinput verified; real OS IME candidate clipboard permissions and HWPX layout remain unverified"
     },
     "docs/development-commands.md": {
-      "sha256": "0de6cbb9dc607e4c6f5f6e75430e50b78a1bce4d116e22f47e9d8f2cc1289186",
-      "evidence": "2026-10-01 experimental editor API and native SSOT bridge checked against source; Debug Safe Fast five API UI tests, Safe full 2687 Zig tests, native text 75 and character format 152 actual edits with independent oracles and 30 Node regressions pass; Chromium public URL edit Unicode rejection reselection and narrow viewport checked; no Canvas direct input styled layout web download or HWPX editing"
+      "sha256": "86f8cdf9deb79e65bad821e600e4421ee657d02ec59bc64a3ddf76b49d060de3",
+      "evidence": "2026-10-01 direct Canvas hit test grapheme UTF16 selection native acknowledgement and temporary composition SSOT checked against source; Debug Safe Fast 21 API input tests and full Safe 2687 Zig plus 51 Node regressions pass; five actual fixtures use native WASM with mocked DOM; Chromium public URL pointer typing selection wrap errors composition reset and explicit Meta A empty reinput verified; real OS IME candidate clipboard permissions and HWPX layout remain unverified"
     },
     "docs/zig-test-stderr.md": {
       "sha256": "9133676bc38bac48fab5f9ba8a04ec972697d32e7a051a851d6b158c444c66b5",
@@ -1518,16 +1522,16 @@
       "evidence": "2026-09-30 Read-only ranges remain null; controlled Session owns materialized ranges; Node full Section unit-wise oracle Rust JSON and four allocation and command tests checked"
     },
     "docs/hwp5-modules.md": {
-      "sha256": "495891fa2b7ea4142a3642eaf42a302285344c77f2438cced67219db7dfe77a7",
-      "evidence": "2026-10-01 experimental editor API and native SSOT bridge checked against source; Debug Safe Fast five API UI tests, Safe full 2687 Zig tests, native text 75 and character format 152 actual edits with independent oracles and 30 Node regressions pass; Chromium public URL edit Unicode rejection reselection and narrow viewport checked; no Canvas direct input styled layout web download or HWPX editing"
+      "sha256": "35962bb9ad207843b33784b05c537a057a7805be2f47f0238eef8ffe166e4489",
+      "evidence": "2026-10-01 direct Canvas hit test grapheme UTF16 selection native acknowledgement and temporary composition SSOT checked against source; Debug Safe Fast 21 API input tests and full Safe 2687 Zig plus 51 Node regressions pass; five actual fixtures use native WASM with mocked DOM; Chromium public URL pointer typing selection wrap errors composition reset and explicit Meta A empty reinput verified; real OS IME candidate clipboard permissions and HWPX layout remain unverified"
     },
     "docs/migration.md": {
       "sha256": "ff208406c964f5e7f457852077a0510c63f662344b8967e551f42948bf34ad27",
       "evidence": "2026-09-27 move commit R100 count, current legacy and CI paths, cargo metadata and tests, Bun Vite startup, historical 1652 qualified"
     },
     "docs/project-structure.md": {
-      "sha256": "a2b1ddf0574ff85a4f50f8db99e3a4a4408ad7499ade163647689ee8fa286261",
-      "evidence": "2026-10-01 experimental editor API and native SSOT bridge checked against source; Debug Safe Fast five API UI tests, Safe full 2687 Zig tests, native text 75 and character format 152 actual edits with independent oracles and 30 Node regressions pass; Chromium public URL edit Unicode rejection reselection and narrow viewport checked; no Canvas direct input styled layout web download or HWPX editing"
+      "sha256": "5beddaa2bc4618808517b73b27f663fcad0631b65a655a17c15d78c620fa925c",
+      "evidence": "2026-10-01 direct Canvas hit test grapheme UTF16 selection native acknowledgement and temporary composition SSOT checked against source; Debug Safe Fast 21 API input tests and full Safe 2687 Zig plus 51 Node regressions pass; five actual fixtures use native WASM with mocked DOM; Chromium public URL pointer typing selection wrap errors composition reset and explicit Meta A empty reinput verified; real OS IME candidate clipboard permissions and HWPX layout remain unverified"
     },
     "docs/hwpx-section-tree.md": {
       "sha256": "62280fe17d2880b8a4c1f0706378f911b272f9b7cf75f0b2b0e4830c36764467",
@@ -1826,8 +1830,8 @@
       "evidence": "2026-09-27 commands, project rules, and legacy path checked"
     },
     "README.md": {
-      "sha256": "f95f3a9558abfa954010fd68e93b786e3401e67c62d23e3c3bf07309362974f8",
-      "evidence": "2026-10-01 experimental editor API and native SSOT bridge checked against source; Debug Safe Fast five API UI tests, Safe full 2687 Zig tests, native text 75 and character format 152 actual edits with independent oracles and 30 Node regressions pass; Chromium public URL edit Unicode rejection reselection and narrow viewport checked; no Canvas direct input styled layout web download or HWPX editing"
+      "sha256": "a75691ab65c90c446bd001f00ced2428d7af1828bce28bc1e8479245810a1d81",
+      "evidence": "2026-10-01 direct Canvas hit test grapheme UTF16 selection native acknowledgement and temporary composition SSOT checked against source; Debug Safe Fast 21 API input tests and full Safe 2687 Zig plus 51 Node regressions pass; five actual fixtures use native WASM with mocked DOM; Chromium public URL pointer typing selection wrap errors composition reset and explicit Meta A empty reinput verified; real OS IME candidate clipboard permissions and HWPX layout remain unverified"
     },
     "docs/project-rules.md": {
       "sha256": "30bccda49f70036d38bb609522d5826b101301f9c88cd07ecc3a2c9138a4a354",

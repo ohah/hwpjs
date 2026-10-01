@@ -1,6 +1,6 @@
 # HWP5 단순 문단 텍스트 편집 실험
 
-이 문서는 native 명령·보존·저장 계약을 소유합니다. 아래 초기 구현 기록의 공개 API 부재는 당시 범위이며, 현재 제한적 JS/WASM 연결과 웹 명령 폼은 별도 [실험용 편집 API](hwp5-editor-api.md)를 따릅니다. 일반 편집기·Canvas 직접 입력·재조판 구현은 여전히 아닙니다.
+이 문서는 native 명령·보존·저장 계약을 소유합니다. 아래 초기 구현 기록의 공개 API 부재는 당시 범위이며, 현재 제한적 JS/WASM 연결은 별도 [실험용 편집 API](hwp5-editor-api.md), 웹 입력은 [Canvas 직접 입력](canvas-direct-input.md)을 따릅니다. 일반 편집기·재조판 구현은 여전히 아닙니다.
 
 [모듈 인덱스](hwp5-modules.md) · [이전 스타일 참조 실험](hwp5-style-preservation-experiment.md)
 
