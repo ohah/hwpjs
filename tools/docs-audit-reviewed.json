@@ -654,8 +654,8 @@
       "evidence": "2026-09-28 historic Sep 5 to 7 log of 99 commits verified as history not current support, official rev1.3 PDF SHA matches and rhwp e8800c8de present, current topic docs linked and video zero correction linked; Debug 2664 tests and ReleaseSafe HWP5 audit 8905855 checks pass, old per-stage counts not rerun"
     },
     "docs/architecture.md": {
-      "sha256": "3db88c7ec63dad09c2c8dd8e82fd2e8d005ac65f6302a1f9ae84291e64eeea95",
-      "evidence": "2026-10-01 character format contract shared runs and content SSOT verified; Debug Safe Fast six tests and 152 edits 20 refusals two oracle counterexamples each; wrong ID mutant detected; Safe full 2687 tests, style audit and WASM build pass; Node 17 tests; GUI and HWPX editing unproved"
+      "sha256": "86dddedd848dcb8e1443a4f2e5616cca9d238f97cb277f06742d11adf53b711a",
+      "evidence": "2026-10-01 user confirms Canvas for web document preview only; planned rendering distinguished from existing text extraction, detailed Canvas API layout fonts input and schedule undecided; documentation-only change checked against request, inline links and current hashes verified; previous character format test evidence remains historical"
     },
     "docs/development-commands.md": {
       "sha256": "fa32f25ee7472689cdac28ba25d9cd94e3687411e1816ea9bf71fb1ffc6c0be4",
