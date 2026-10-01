@@ -67,6 +67,17 @@ test("actual HWPX Worker edits native plain text and refuses unsupported control
   const edited = await send({ kind: "splice", section: 0, paragraph: 1, startUnit: 0, endUnit: 0, text: "검증😀" });
   assert.equal(edited.error, undefined);
   assert(edited.content.paragraphs[1].text.startsWith("검증😀"));
+  const saved = await send({ kind: "save" });
+  assert.equal(saved.error, undefined);
+  assert.equal(saved.format, "hwpx");
+  assert.equal(saved.layoutRequiresReflow, true);
+  const savedReader = await createHwpxReader(readFileSync("zig-out/bin/hwpjs.wasm"));
+  try { assert(savedReader.readTextEvents(saved.bytes).events.some(e => e.kind === "content" && e.value.startsWith("검증😀"))); }
+  finally { savedReader.close(); }
+  const refusedSave = await send({ kind: "save", allowStaleLayout: null });
+  assert.equal(refusedSave.error, "InvalidStaleLayoutPolicy");
+  assert.equal(refusedSave.applied, false);
+  assert.deepEqual((await send({ kind: "save" })).bytes, saved.bytes);
   const format = await send({ kind: "format" });
   assert.equal(format.error, "UnsupportedHwpxFormatting"); assert.equal(format.applied, false);
   const restored = await send({ kind: "splice", section: 0, paragraph: 1, startUnit: 0, endUnit: 4, text: "" });
@@ -135,11 +146,16 @@ test("actual HWPX Worker edits native plain text and refuses unsupported control
   const corpus = execFileSync("git", ["ls-files", "-z"]).toString().split("\0").filter(path => path.includes("/fixtures/") && path.endsWith(".hwpx"));
   let readable = 0, encrypted = 0, fieldCount = 0;
   for (const path of corpus) {
-    const result = await send({ kind: "load", format: "hwpx", bytes: readFileSync(path) });
+    const original = readFileSync(path);
+    const result = await send({ kind: "load", format: "hwpx", bytes: original });
     if (path.endsWith("/password-12345.hwpx")) {
       assert.equal(result.error, "EncryptedDocument"); encrypted++;
+      assert.equal((await send({ kind: "save" })).error, "EditorNotOpen");
     } else {
       assert.equal(result.error, undefined, path); readable++;
+      const saved = await send({ kind: "save" });
+      assert.equal(saved.error, undefined, path);
+      assert.deepEqual(Buffer.from(saved.bytes), original, path);
       fieldCount += result.content.paragraphs.reduce((sum, p) => sum + p.fieldLabels.length, 0);
     }
   }

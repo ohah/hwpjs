@@ -1,6 +1,10 @@
 {
   "schema": 1,
   "verified": {
+    "docs/canvas-document-download.md": {
+      "sha256": "dfbf29d4f10b7266c860a16bff7eed53918e356c81632013f5a30c785e314709",
+      "evidence": "2026-10-02 native snapshot download generation guard reviewed; Safe HWP5 75 HWPX 26 tests 9 steps pass; focused Canvas save 22 passes; actual external Chromium both format downloads native reopen web reupload checkbox reset verified; full Safe native 2791 tests 7 steps pass OS IME original layout unverified; actual HWP5 Worker save failure retry no-op bytes and native reopen 3 pass latest HWP5 74 tests 7 steps pass; final snapshot corpus HWPX 44 byte exact one encrypted HWP5 45 byte exact three protected refusals classified"
+    },
     "docs/hwpx-header-footer-edit.md": {
       "sha256": "813e262826ab1c9c9d05110057086ea51050c1fe4f6bb0e0ee7debfc79ff7648",
       "evidence": "2026-10-02 official pinned HeaderFooterType subList id applyPageType compared; retained shape source gaps and independent paragraph ownership reviewed; Debug Safe Fast focused 3 each full Safe native 2789 tests 7 steps pass; product Safe 5 steps HWPX 25 HWP5 69 tests 7 steps each pass; actual owner header footer sequential prefix independent complete XML ZIP normal optimized save reopen restoration verified; oracle rejects header id footer text other body corruption in both modes; Worker 5 passes empty owner input restoration; plain corpus 1379 paragraphs 1174 successes 157 controls 48 numeric refusals anchored 157 candidates 137 successes 20 computed field refusals classified; external Chromium pointer owner header footer input screenshot directly viewed; links 3036 no missing tools 2 fmt diff pass; area generation attributes editing original page layout RHWP UI incomplete"
@@ -746,8 +750,8 @@
       "evidence": "2026-10-01 direct Canvas hit test grapheme UTF16 selection native acknowledgement and temporary composition SSOT checked against source; Debug Safe Fast 21 API input tests and full Safe 2687 Zig plus 51 Node regressions pass; five actual fixtures use native WASM with mocked DOM; Chromium public URL pointer typing selection wrap errors composition reset and explicit Meta A empty reinput verified; real OS IME candidate clipboard permissions and HWPX layout remain unverified"
     },
     "docs/development-commands.md": {
-      "sha256": "f471a5642a655da6b449c343f75f14fa19db135700c433eadac4a4fe42045377",
-      "evidence": "2026-10-02 run boundary native filters Debug Safe Fast 3 each and object boundary public regression path audit inclusion checked; leading-boundary corpus option executed; current Safe HWPX 26 HWP5 editor 69 pass; links 3038 missing zero tools 2 pass; full Safe native 2791 tests 7 steps pass and browser OS IME distinct"
+      "sha256": "4c788176515d0b1799da6c6a5436299916276fa17ded76ddd6a0510dff9ab850",
+      "evidence": "2026-10-02 native snapshot download generation guard reviewed; Safe HWP5 75 HWPX 26 tests 9 steps pass; focused Canvas save 22 passes; actual external Chromium both format downloads native reopen web reupload checkbox reset verified; full Safe native 2791 tests 7 steps pass OS IME original layout unverified; usage topic links reviewed; final snapshot corpus HWPX 44 byte exact one encrypted HWP5 45 byte exact three protected refusals classified"
     },
     "docs/zig-test-stderr.md": {
       "sha256": "9133676bc38bac48fab5f9ba8a04ec972697d32e7a051a851d6b158c444c66b5",
@@ -1606,8 +1610,8 @@
       "evidence": "2026-09-27 move commit R100 count, current legacy and CI paths, cargo metadata and tests, Bun Vite startup, historical 1652 qualified"
     },
     "docs/project-structure.md": {
-      "sha256": "aaffb1d75c29d144a5819c80b7713d94ee74b1be7098be7a46003b6c37fe7aa6",
-      "evidence": "2026-10-02 header footer shape permission and separate native public oracle files checked against current source and topic contract; shared metadata policy positions transaction writer retained; full Safe native 2789 HWPX 25 HWP5 69 pass; broader parser editor original layout RHWP UI incomplete"
+      "sha256": "400a2f24e17223ce20baa77a47e160f073baeb57edaabdd6baea234fcf2753e0",
+      "evidence": "2026-10-02 native snapshot download generation guard reviewed; Safe HWP5 75 HWPX 26 tests 9 steps pass; focused Canvas save 22 passes; actual external Chromium both format downloads native reopen web reupload checkbox reset verified; full Safe native 2791 tests 7 steps pass OS IME original layout unverified; usage topic links reviewed; final snapshot corpus HWPX 44 byte exact one encrypted HWP5 45 byte exact three protected refusals classified"
     },
     "docs/hwpx-section-tree.md": {
       "sha256": "62280fe17d2880b8a4c1f0706378f911b272f9b7cf75f0b2b0e4830c36764467",
@@ -1906,8 +1910,8 @@
       "evidence": "2026-09-27 commands, project rules, and legacy path checked"
     },
     "README.md": {
-      "sha256": "a75691ab65c90c446bd001f00ced2428d7af1828bce28bc1e8479245810a1d81",
-      "evidence": "2026-10-01 direct Canvas hit test grapheme UTF16 selection native acknowledgement and temporary composition SSOT checked against source; Debug Safe Fast 21 API input tests and full Safe 2687 Zig plus 51 Node regressions pass; five actual fixtures use native WASM with mocked DOM; Chromium public URL pointer typing selection wrap errors composition reset and explicit Meta A empty reinput verified; real OS IME candidate clipboard permissions and HWPX layout remain unverified"
+      "sha256": "3de4a907cf516e9f919052a5c937e91c74a32284497906acc9ee6fd3e92d847d",
+      "evidence": "2026-10-02 native snapshot download generation guard reviewed; Safe HWP5 75 HWPX 26 tests 9 steps pass; focused Canvas save 22 passes; actual external Chromium both format downloads native reopen web reupload checkbox reset verified; full Safe native 2791 tests 7 steps pass OS IME original layout unverified; usage topic links reviewed; final snapshot corpus HWPX 44 byte exact one encrypted HWP5 45 byte exact three protected refusals classified"
     },
     "docs/project-rules.md": {
       "sha256": "30bccda49f70036d38bb609522d5826b101301f9c88cd07ecc3a2c9138a4a354",

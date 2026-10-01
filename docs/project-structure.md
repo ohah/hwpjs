@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+웹 편집본 저장·다운로드의 책임과 검증 범위는 [Canvas 편집본 다운로드](canvas-document-download.md)가 소유합니다. native snapshot·브라우저 Blob·Worker generation guard를 별도 모듈에 두고 화면 초안을 저장 모델로 사용하지 않습니다.
+
 [HWPX 머리말·꼬리말 소유 문단 편집](hwpx-header-footer-edit.md)은 `retained_header_footer.zig`가 보존 컨테이너 모양을, `header_footer_edit_tests.zig`와 `tests/hwpx/header-footer-editor.test.mjs`가 native·공개 독립 비교를 소유합니다. 기존 run metadata·문단 정책·위치·거래·저장 경로를 재사용합니다.
 
 [HWPX 개체 앵커 위치](hwpx-anchor-text-positions.md)는 `run_anchor.zig`가 구조적 후보 분류를, `anchor_text_positions.zig`가 기존 텍스트/탭 위치 조립을, `anchor_paragraph_edit.zig`가 opt-in 정책·명령·표시 문자열 조립을 소유합니다. 두 별도 native 테스트 파일과 `tests/hwpx/anchor-editor.test.mjs`가 검증을 분리합니다. 기존 세션·WASM·Worker·Canvas를 재사용하며 전수 시도는 `tools/hwpx-anchor-corpus-audit.mjs`가 담당합니다.

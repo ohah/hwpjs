@@ -1,6 +1,31 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
+
+test("actual HWP5 Worker save refusal retains edits and native session for retry", async t => {
+  const originalSelf = globalThis.self, originalFetch = globalThis.fetch, replies = [];
+  globalThis.self = { postMessage(message) { replies.push(message); } };
+  globalThis.fetch = async () => new Response(readFileSync("zig-out/bin/hwpjs.wasm"));
+  t.after(() => { globalThis.fetch = originalFetch; if (originalSelf === undefined) delete globalThis.self; else globalThis.self = originalSelf; });
+  await import(`../../web/preview/reader-worker.mjs?save-regression=${Date.now()}`);
+  const send = async message => { await self.onmessage({ data: { origin: "save-test", ...message } }); const reply = replies.shift(); assert(reply); assert.equal(replies.length, 0); return reply; };
+  const source = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwp");
+  assert.equal((await send({ kind: "load", bytes: source })).error, undefined);
+  assert.equal((await send({ kind: "save" })).error, "EditorNotOpen");
+  assert.equal((await send({ kind: "enable" })).error, undefined);
+  assert.deepEqual(Buffer.from((await send({ kind: "save" })).bytes), source);
+  assert.equal((await send({ kind: "splice", section: 0, paragraph: 1, startUnit: 0, endUnit: 0, text: "검증😀" })).error, undefined);
+  const refused = await send({ kind: "save" });
+  assert.equal(refused.error, "LayoutReflowRequired"); assert.equal(refused.applied, false);
+  assert.equal((await send({ kind: "save", allowStaleLayout: "true" })).error, "InvalidStaleLayoutPolicy");
+  assert.equal((await send({ kind: "splice", section: 0, paragraph: 1, startUnit: 4, endUnit: 4, text: "다음" })).error, undefined);
+  const saved = await send({ kind: "save", allowStaleLayout: true });
+  assert.equal(saved.error, undefined); assert.equal(saved.layoutRequiresReflow, true); assert.equal(saved.format, "hwp5");
+  const reopened = await createExperimentalHwp5Editor(readFileSync("zig-out/bin/hwpjs.wasm"), saved.bytes);
+  try { assert(reopened.text(0, 1).startsWith("검증😀다음")); } finally { reopened.close(); }
+  assert.deepEqual((await send({ kind: "save", allowStaleLayout: true })).bytes, saved.bytes);
+});
 
 test("actual Worker refreshes dependent chart formula after a plain numeric cell edit", async t => {
   const originalSelf = globalThis.self, originalFetch = globalThis.fetch, replies = [];

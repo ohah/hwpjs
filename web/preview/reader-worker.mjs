@@ -5,6 +5,7 @@ import { displayHwpxContent } from "./hwpx-content.mjs";
 import { displayContent } from "./content.mjs";
 import { clipText } from "./content.mjs";
 import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
+import { saveDocument } from "./document-save.mjs";
 let module, bytes, preview, editor, format;
 function anchorView(section, paragraph) {
   try { return editor.anchorText(section, paragraph); }
@@ -71,6 +72,9 @@ self.onmessage = async event => {
       reader = await createHwp5Reader(module);
       preview = reader.readText(bytes);
       reply({ kind: "load", content: displayContent(preview) });
+    } else if (message.kind === "save") {
+      const saved = saveDocument(editor, format, message.allowStaleLayout === undefined ? false : message.allowStaleLayout);
+      reply({ kind: "save", ...saved });
     } else if (message.kind === "enable") {
       if (format === "hwpx") {
         if (!editor) {

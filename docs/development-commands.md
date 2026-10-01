@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[Canvas 편집본 다운로드](canvas-document-download.md)는 `node --test tests/hwp5/document-save.test.mjs tests/hwp5/canvas-editor.test.mjs tests/hwpx/canvas-preview.test.mjs`로 저장 위임·초안 대기·조합·다운로드 정리 및 실제 HWPX Worker snapshot을 검사합니다. 정규 hwp5-editor-audit와 hwpx-text-audit에도 포함되며 실제 브라우저 파일 다운로드·OS IME는 별도입니다.
+
 HWPX 개체의 빈 run 입력 경계는 `zig test src/root.zig -O ReleaseSafe --test-filter 'HWPX run text boundaries'` 및 Debug·ReleaseFast로 검사합니다. 제품 빌드 후 `node --test tests/hwpx/object-boundary-editor.test.mjs`는 실제 shapeline의 세 입력 위치·독립 전체 XML/ZIP·개체 속성 손상 반례를 검사하며 정규 hwpx-text-audit에도 포함됩니다. `node tools/hwpx-anchor-corpus-audit.mjs --leading-boundary`는 일반 편집 불가 문단의 위치 0 삽입을 조사합니다. 모든 위치·조판·실제 OS IME 검증은 아닙니다.
 
 [HWPX 머리말·꼬리말 소유 문단 편집](hwpx-header-footer-edit.md)은 `zig test src/root.zig -O ReleaseSafe --test-filter 'HWPX header footer edit'` 및 Debug·ReleaseFast로 소유·거부·할당 실패를 검사합니다. 제품 빌드 후 `node --test tests/hwpx/header-footer-editor.test.mjs`는 실제 소유 문단 세 개의 공개 편집과 Python 일반/최적화 전체 XML/ZIP 비교를 실행하며 `hwpx-text-audit`에도 포함됩니다. 실제 브라우저·영역 조판 검증은 별도입니다.

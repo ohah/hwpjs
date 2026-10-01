@@ -42,6 +42,7 @@ async function harness(t, name = "charshape", choose = p => p.editable && !p.sou
   dispatch(canvas, "pointerup", { pointerId: 1 });
   return {
     input, canvas, native, controller, note, requests, paragraph,
+    setBusy(value) { busy = value; },
     type(text) { input.value = text; input.setSelectionRange(text.length, text.length); dispatch(input, "input"); },
     ack({ clipped = false } = {}) {
       const message = queue.shift(); assert(message);
@@ -60,6 +61,43 @@ async function harness(t, name = "charshape", choose = p => p.editable && !p.sou
     },
   };
 }
+
+test("canvas export gate rejects composition and pending drafts without resetting selection", async t => {
+  const h = await harness(t), before = h.input.value;
+  assert.equal(h.controller.settled(), true);
+  dispatch(h.input, "compositionstart");
+  assert.equal(h.controller.settled(), false);
+  h.type("저장😀" + before);
+  assert.equal(h.requests.length, 0);
+  dispatch(h.input, "compositionend");
+  await Promise.resolve();
+  assert.equal(h.controller.settled(), false);
+  h.ack();
+  assert.equal(h.controller.settled(), true);
+  const selection = [h.input.selectionStart, h.input.selectionEnd];
+  h.controller.external({ kind: "save", origin: "download" });
+  assert.equal(h.input.value, "저장😀" + before);
+  assert.deepEqual([h.input.selectionStart, h.input.selectionEnd], selection);
+  h.controller.message({ kind: "save", origin: "download", error: "SaveFailed" });
+  assert.equal(h.controller.settled(), true);
+  assert.equal(h.input.value, "저장😀" + before);
+});
+
+test("canvas queued typing resumes after failed save without exporting the draft", async t => {
+  const h = await harness(t), before = h.input.value;
+  h.setBusy(true);
+  h.controller.external({ kind: "save", origin: "download" });
+  h.type("대기😀" + before);
+  assert.equal(h.requests.length, 0);
+  assert.equal(h.controller.settled(), false);
+  assert.equal(h.native.text(h.paragraph.section, h.paragraph.paragraph), before + "\r");
+  h.setBusy(false);
+  h.controller.message({ kind: "save", origin: "download", error: "LayoutReflowRequired" });
+  assert.equal(h.requests.length, 1);
+  h.ack();
+  assert.equal(h.controller.settled(), true);
+  assert.equal(h.native.text(h.paragraph.section, h.paragraph.paragraph), "대기😀" + before + "\r");
+});
 
 test("canvas input uses native text on five real fixtures and queues fast typing", async t => {
   for (const name of ["charshape", "parashape", "linespacing", "facename", "underline-styles"]) {

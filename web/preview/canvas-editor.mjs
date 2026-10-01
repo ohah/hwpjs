@@ -116,13 +116,15 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
   listen(input, "keyup", sync); listen(input, "select", sync);
   listen(input, "focus", paint); listen(input, "blur", paint);
   return {
+    settled: () => !composing && !pending && (!target || input.value === committed),
     reset() {
       if (drag !== null && canvas.hasPointerCapture(drag)) canvas.releasePointerCapture(drag);
       composing = false; drag = null; target = null; pending = null; anchor = null; focus = null; committed = "";
       input.value = ""; input.disabled = true; input.setAttribute("aria-busy", "false"); canvas.style.cursor = "default"; report(""); renderer.preview(null); paint();
     },
-    external(message) { if (message.origin !== "canvas" && message.kind !== "enable") this.reset(); },
+    external(message) { if (message.origin !== "canvas" && !["enable", "save"].includes(message.kind)) this.reset(); },
     message(message) {
+      if (message.kind === "save") { pump(); return; }
       if (message.applied && message.error) { this.reset(); return; }
       if (message.kind === "enable") { input.readOnly = !controls.ready(); report(message.error ? `편집 시작 실패: ${message.error}` : "클릭·드래그 선택 후 입력하세요. 변경 후 재조판이 필요합니다."); pump(); return; }
       if (message.origin !== "canvas" || !pending || !target) return;
