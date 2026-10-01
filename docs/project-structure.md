@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+[HWPX 일반 문단 편집](hwpx-plain-paragraph-edit.md)은 `plain_paragraph_policy.zig`가 적격성, `plain_paragraph_edit.zig`가 다중 사이트 원자적 splice, `plain_paragraph_edit_tests.zig`가 반례를 소유합니다. `text_site_locations.zig`는 공통 section 스캐너로 위치를 연결하고 `src/hwpx_paragraph_edit_survey.zig`가 모든 section·문단의 시도와 거부를 집계합니다.
+
 [HWPX 텍스트 조각 편집](hwpx-text-site-edit.md)은 `text_sites.zig`의 원문 위치 연결, `text_site_edit.zig`의 현재 텍스트 splice, `text_sites_save.zig`의 원본 대조, `xml_source_writer.zig`의 부분 출력, `src/xml/text_writer.zig`의 CharData escaping을 분리합니다. 실제 파일/할당 실패는 `text_sites_tests.zig`, 독립 corpus는 기존 ZIP survey/oracle을 재사용합니다. 활성 문단·공개 세션 연결은 아직 미완료입니다.
 
 [ZIP 선택 항목 교체 저장](zip-replacement-writer.md)은 `src/zip/archive.zig`의 검증된 원문 범위를 재사용하며 `replace_writer.zig`가 새 ZIP 출력만 소유합니다. 집중 반례는 `replace_writer_tests.zig`, 독립 전수 비교는 `src/zip_replacement_survey.zig`와 `tools/zip-replacement-oracle.py`로 분리합니다. HWPX XML 편집 모델·공개 세션은 별도 후속 책임입니다.

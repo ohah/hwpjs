@@ -75,6 +75,9 @@ fn editedXml(a: std.mem.Allocator, xml: []const u8) ![]u8 {
     defer tree.deinit(a);
     var sites = try @import("hwpx/text_sites.zig").collect(a, &tree, .{});
     defer sites.deinit(a);
+    const locations = try @import("hwpx/text_site_locations.zig").build(a, &tree, &sites, .{});
+    defer a.free(locations);
+    for (locations) |location| if (location.paragraph_ordinal == 0) return error.MissingParagraphOwner;
     if (sites.items.len == 0) return error.MissingTextSite;
     _ = try @import("hwpx/text_site_edit.zig").splice(a, &sites, 0, 0, 0, "검증😀<&\r", 64 * 1024 * 1024);
     return @import("hwpx/text_sites_save.zig").write(a, &tree, &sites, .{}, 64 * 1024 * 1024);

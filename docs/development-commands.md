@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[HWPX 일반 문단 편집](hwpx-plain-paragraph-edit.md)은 `zig test src/root.zig -O ReleaseSafe --test-filter 'HWPX plain paragraph'` 및 Debug·ReleaseFast로 무변경 서식·다중 사이트 원자성·할당 실패·컨트롤 거부를 검사합니다. `zig test src/hwpx_paragraph_edit_survey.zig -O ReleaseSafe --test-filter 'HWPX selected paragraph edit fixture survey'`는 모든 fixture section 문단의 prefix 삽입·저장·재파싱·복원을 시도하고 거부를 분리합니다. 한정적 native XML 조사이며 공개 편집·조판 완료 증명은 아닙니다.
+
 [HWPX 텍스트 조각 편집](hwpx-text-site-edit.md)은 `zig test src/root.zig -O ReleaseSafe --test-filter 'HWPX text sites'`, `'HWPX text site edit'`, `'HWPX XML source writer'`, `'XML text writer'`로 책임별 집중 검사를 실행합니다. Debug·ReleaseFast에서도 동일 필터를 사용합니다. `python3 tools/zip-replacement-oracle.py --text-edit`와 Python `-O` 실행은 44개 파일의 첫 텍스트 사이트 삽입·ZIP 저장을 독립 XML/ZIP 구현으로 비교합니다. 같은 도구의 `--self-test`와 Python `-O` 실행은 oracle 자체 반례를 검사합니다. 전체 문단·활성 분기·공개 편집 UI 완료 증명은 아닙니다.
 
 [ZIP 선택 항목 교체 저장](zip-replacement-writer.md)은 `zig test src/root.zig -O ReleaseSafe --test-filter 'ZIP replacement writer'`로 집중 반례·할당 실패를 검사합니다. Debug·ReleaseFast도 같은 필터로 실행합니다. `python3 tools/zip-replacement-oracle.py`와 `python3 -O tools/zip-replacement-oracle.py`는 추적 비암호화 HWPX 44개의 생성 ZIP을 독립 decoder로 비교합니다. 전체 native test에도 집중 검사가 포함되며 HWPX 문서 편집·조판 증명은 아닙니다.

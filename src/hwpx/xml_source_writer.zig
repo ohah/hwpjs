@@ -2,7 +2,7 @@
 //! callers must supply whole CharData/CDATA-container spans from the XML tree.
 const std = @import("std");
 const text_writer = @import("../xml/text_writer.zig");
-pub const Change = struct { start: usize, end: usize, text: []const u8, expand_empty_element: bool = false };
+pub const Change = struct { start: usize, end: usize, text: []const u8, expand_empty_element: bool = false, run_opening: ?@import("xml_part_tree.zig").Span = null };
 
 /// UTF-8 XML source only. Sorted, nonoverlapping spans are replaced with XML
 /// CharData; everything outside those spans is copied byte-for-byte.
@@ -28,10 +28,31 @@ pub fn write(a: std.mem.Allocator, source: []const u8, changes: []const Change, 
             try append(a, &output, raw[0 .. raw.len - 2], max_bytes);
             try append(a, &output, ">", max_bytes);
         }
+        if (change.run_opening) |opening| {
+            if (opening.start > opening.end or opening.end > source.len) return error.InvalidSourceSpan;
+            if (tag == null) {
+                const raw = source[opening.start..opening.end];
+                var input = try @import("../xml/input.zig").Input.init(raw, .utf8, .{ .max_bytes = raw.len, .max_characters = raw.len });
+                tag = try @import("../xml/tags.zig").parse(a, &input, .{ .max_bytes = raw.len });
+                if (tag.?.kind != .start or input.offset != raw.len) return error.InvalidSourceSpan;
+            }
+            const name = tag.?.name.raw;
+            if (!std.mem.endsWith(u8, name, "run")) return error.InvalidSourceSpan;
+            try append(a, &output, "<", max_bytes);
+            try append(a, &output, name[0 .. name.len - 3], max_bytes);
+            try append(a, &output, "t>", max_bytes);
+        }
         const encoded = try text_writer.encode(a, change.text, max_bytes -| output.items.len);
         defer a.free(encoded);
         try append(a, &output, encoded, max_bytes);
-        if (tag) |value| {
+        if (change.run_opening != null) {
+            const name = tag.?.name.raw;
+            try append(a, &output, "</", max_bytes);
+            try append(a, &output, name[0 .. name.len - 3], max_bytes);
+            try append(a, &output, "t>", max_bytes);
+        }
+        if (change.expand_empty_element) {
+            const value = tag.?;
             try append(a, &output, "</", max_bytes);
             try append(a, &output, value.name.raw, max_bytes);
             try append(a, &output, ">", max_bytes);

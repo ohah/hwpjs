@@ -27,7 +27,7 @@ pub fn splice(a: std.mem.Allocator, sites: *sites_module.Sites, index: usize, st
     return true;
 }
 
-fn bytePosition(text: []const u8, wanted: u32) !usize {
+pub fn bytePosition(text: []const u8, wanted: u32) !usize {
     var units: usize = 0;
     var offset: usize = 0;
     while (try scalars.read(text, offset, .utf8)) |scalar| {

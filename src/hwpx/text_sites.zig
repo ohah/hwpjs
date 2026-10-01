@@ -1,4 +1,4 @@
-//! Source bindings only: raw branch observation, not active-branch selection.
+//! Source bindings with the existing shared compatibility selection policy.
 const std = @import("std");
 const tree_module = @import("xml_part_tree.zig");
 const uri = @import("document_xml.zig").paragraph_uri;
@@ -8,6 +8,7 @@ pub const Site = struct {
     end: usize,
     text: []u8,
     empty_element: bool = false,
+    missing_text: bool = false,
 };
 pub const Sites = struct {
     items: []Site,
@@ -17,11 +18,18 @@ pub const Sites = struct {
         self.* = undefined;
     }
 };
-pub const Options = struct { max_sites: usize = 1_000_000, max_text_bytes: usize = 64 * 1024 * 1024 };
+pub const Options = struct {
+    max_sites: usize = 1_000_000,
+    max_text_bytes: usize = 64 * 1024 * 1024,
+    branch_policy: @import("compatibility_selection.zig").Policy = .{},
+    max_attribute_bytes: usize = 4096,
+};
 
 /// Owns decoded strings and integer source bindings. Tree must remain unchanged
 /// while applying these bindings. No pointers into source survive this call.
 pub fn collect(a: std.mem.Allocator, tree: *const tree_module.Tree, options: Options) !Sites {
+    const frames = try @import("xml_tree_selection.zig").build(a, tree, options.branch_policy, options.max_attribute_bytes);
+    defer a.free(frames);
     const covered = try a.alloc(bool, tree.elements.len);
     defer a.free(covered);
     @memset(covered, false);
@@ -30,12 +38,23 @@ pub fn collect(a: std.mem.Allocator, tree: *const tree_module.Tree, options: Opt
         tree: *const tree_module.Tree,
         options: Options,
         covered: []bool,
+        frames: []const @import("xml_tree_selection.zig").Frame,
         text_bytes: usize = 0,
         items: std.ArrayList(Site) = .empty,
 
         fn onContent(raw: *anyopaque, event: tree_module.Tree.ContentEvent) anyerror!void {
             const self: *@This() = @ptrCast(@alignCast(raw));
-            if (!self.tree.elements[event.parent_index].is(uri, "t")) return;
+            if (!self.frames[event.parent_index].active) return;
+            if (self.frames[event.parent_index].kind == .run) {
+                const value = try event.value.toUtf8(self.a, self.options.max_text_bytes);
+                defer self.a.free(value);
+                for (value) |byte| if (!std.ascii.isWhitespace(byte)) {
+                    self.covered[event.parent_index] = true;
+                    break;
+                };
+                return;
+            }
+            if (!isTextElement(self.tree, self.frames, event.parent_index)) return;
             if (event.value.encoding != .utf8) return error.UnsupportedEditEncoding;
             if (self.items.items.len == self.options.max_sites) return error.LimitExceeded;
             const base = @intFromPtr(self.tree.source.ptr);
@@ -57,14 +76,14 @@ pub fn collect(a: std.mem.Allocator, tree: *const tree_module.Tree, options: Opt
             self.text_bytes += text.len;
         }
     };
-    var builder: Builder = .{ .a = a, .tree = tree, .options = options, .covered = covered };
+    var builder: Builder = .{ .a = a, .tree = tree, .options = options, .covered = covered, .frames = frames };
     defer {
         for (builder.items.items) |item| a.free(item.text);
         builder.items.deinit(a);
     }
     try tree.visitContent(a, .{ .context = &builder, .on_content = Builder.onContent });
     for (tree.elements, 0..) |element, index| {
-        if (!element.is(uri, "t") or element.first_child != null) continue;
+        if (!frames[index].active or !isTextElement(tree, frames, index) or element.first_child != null) continue;
         if (covered[index]) continue;
         if (element.name.local.encoding != .utf8) return error.UnsupportedEditEncoding;
         if (builder.items.items.len == options.max_sites) return error.LimitExceeded;
@@ -78,12 +97,36 @@ pub fn collect(a: std.mem.Allocator, tree: *const tree_module.Tree, options: Opt
             .empty_element = element.end_tag == null,
         });
     }
+    for (tree.elements, 0..) |element, index| {
+        if (!frames[index].active or frames[index].kind != .run or element.first_child != null or covered[index]) continue;
+        if (element.name.local.encoding != .utf8) return error.UnsupportedEditEncoding;
+        if (builder.items.items.len == options.max_sites) return error.LimitExceeded;
+        const empty = try a.dupe(u8, "");
+        errdefer a.free(empty);
+        try builder.items.append(a, .{
+            .element_index = index,
+            .start = if (element.end_tag == null) element.start_tag.start else element.start_tag.end,
+            .end = element.start_tag.end,
+            .text = empty,
+            .empty_element = element.end_tag == null,
+            .missing_text = true,
+        });
+    }
     std.mem.sort(Site, builder.items.items, {}, struct {
         fn less(_: void, lhs: Site, rhs: Site) bool {
             return lhs.start < rhs.start;
         }
     }.less);
     return .{ .items = try builder.items.toOwnedSlice(a) };
+}
+
+fn isTextElement(tree: *const tree_module.Tree, frames: []const @import("xml_tree_selection.zig").Frame, index: usize) bool {
+    const element = tree.elements[index];
+    if (!element.is(uri, "t")) return false;
+    // Same shared scanner rule: descendants of an existing hp:t are inline
+    // controls, even when their names happen to be hp:p, hp:run, or hp:t.
+    const parent = element.parent orelse return false;
+    return !frames[parent].in_text;
 }
 
 test "HWPX text sites bind exact namespace direct text and complete CDATA container" {

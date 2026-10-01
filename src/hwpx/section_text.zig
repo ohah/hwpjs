@@ -364,12 +364,21 @@ pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, manifest: content_man
         const max_bytes = @min(options.max_section_xml_bytes, remaining);
         const bytes = try archive.decode(archive.entries[entry_index], max_bytes);
         defer archive.allocator.free(bytes);
-        var scanner: Scanner = .{ .allocator = a, .options = options, .report = &report, .visitor = visitor, .section_ordinal = ordinal, .item_index = section.item_index };
-        _ = try document_xml.visitBytes(a, bytes, max_bytes, options.xml, .{ .context = &scanner, .on_tag = Scanner.onTag, .on_content = Scanner.onContent });
+        try scanSource(a, bytes, ordinal, section.item_index, options, &report, visitor);
         remaining -= bytes.len;
     }
     report.decoded_xml_bytes = options.max_total_section_xml_bytes - remaining;
     return report;
+}
+
+/// Common section event scanner over borrowed decoded XML. Report counters may
+/// accumulate across sections; package metadata and decode budgets stay with
+/// the caller. Tags borrow these exact bytes, enabling source bindings without
+/// duplicating paragraph/run/text ordinal rules.
+pub fn scanSource(a: std.mem.Allocator, bytes: []const u8, ordinal: usize, item_index: usize, options: Options, report: *Report, visitor: ?Visitor) !void {
+    try selection.validate(options.branch_policy);
+    var scanner: Scanner = .{ .allocator = a, .options = options, .report = report, .visitor = visitor, .section_ordinal = ordinal, .item_index = item_index };
+    _ = try document_xml.visitBytes(a, bytes, options.max_section_xml_bytes, options.xml, .{ .context = &scanner, .on_tag = Scanner.onTag, .on_content = Scanner.onContent });
 }
 
 /// Reuses the section token scanner for selected master-page subLists while

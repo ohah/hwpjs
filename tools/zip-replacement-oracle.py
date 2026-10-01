@@ -70,23 +70,33 @@ def compare_text_edit(before, after):
     original = ET.fromstring(before, parser=parser())
     current = ET.fromstring(after, parser=parser())
     text_tag = "{http://www.hancom.co.kr/hwpml/2011/paragraph}t"
-    found = False
-    for element in original.iter(text_tag):
-        if not list(element) and not element.text:
-            element.text = "검증😀<&\r"
-            found = True
-            break
-        if element.text:
-            element.text = "검증😀<&\r" + element.text
-            found = True
-            break
-        for child in element:
-            if child.tail:
-                child.tail = "검증😀<&\r" + child.tail
-                found = True
-                break
-        if found:
-            break
+    run_tag = "{http://www.hancom.co.kr/hwpml/2011/paragraph}run"
+
+    def insert_first(element, in_text=False):
+        actual_children = [child for child in element if isinstance(child.tag, str)]
+        if not in_text and element.tag == run_tag and not actual_children:
+            direct = (element.text or "") + "".join(child.tail or "" for child in element)
+            if not direct.strip(" \t\r\n"):
+                created = ET.Element(text_tag)
+                created.text = "검증😀<&\r"
+                created.tail = element.text
+                element.text = None
+                element.insert(0, created)
+                return True
+        if not in_text and element.tag == text_tag:
+            if element.text:
+                element.text = "검증😀<&\r" + element.text
+                return True
+            for child in element:
+                if child.tail:
+                    child.tail = "검증😀<&\r" + child.tail
+                    return True
+            if not actual_children:
+                element.text = "검증😀<&\r"
+                return True
+        return any(insert_first(child, in_text or element.tag == text_tag) for child in element)
+
+    found = insert_first(original)
     if not found or ET.tostring(original) != ET.tostring(current):
         raise ValueError("Edited XML differs from independently derived text insertion")
 
@@ -112,7 +122,14 @@ def self_test():
     empty = (prefix + "<p:t a='1'/></r>").encode()
     expanded = (prefix + "<p:t a='1'>검증😀&lt;&amp;&#13;</p:t></r>").encode()
     compare_text_edit(empty, expanded)
-    print("Independent text edit oracle: valid/empty cases and five corruptions verified")
+    for body in ("<p:run a='1'/>", "<p:run a='1'>\n<!--keep--></p:run>"):
+        original_run = (prefix + body + "</r>").encode()
+        if "<!--keep-->" in body:
+            edited_run = (prefix + "<p:run a='1'><p:t>검증😀&lt;&amp;&#13;</p:t>\n<!--keep--></p:run></r>").encode()
+        else:
+            edited_run = (prefix + "<p:run a='1'><p:t>검증😀&lt;&amp;&#13;</p:t></p:run></r>").encode()
+        compare_text_edit(original_run, edited_run)
+    print("Independent text edit oracle: text/empty/empty-run cases and five corruptions verified")
 
 
 if __name__ == "__main__":
