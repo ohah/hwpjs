@@ -20,7 +20,7 @@ Zig 세션이 확정된 문서 값의 단일 출처입니다. textarea 값은 �
 
 투명한 2px textarea를 `display:none`이나 화면 밖에 숨기지 않고 실제 caret 근처에 배치합니다. 클릭 시 포커스를 전달하고 브라우저의 문자열 입력·삭제·plain-text clipboard 경로를 사용합니다. Canvas는 폰트/원본 조판 대신 현재 시스템 글꼴의 실험용 흐름을 계속 사용합니다.
 
-Left/Right는 grapheme 경계, Up/Down은 현재 표시 줄, Home/End는 표시 줄 끝으로 이동합니다. Shift는 같은 문단의 선택을 확장하고 Ctrl/Meta+Home/End는 문단 끝으로 이동합니다. Ctrl/Meta+A는 현재 문단 전체를 명시적으로 선택합니다. 일반 브라우저의 복사/잘라내기/붙여넣기도 현재 textarea 문단 범위입니다. 문서 전체 선택이 아닙니다. 포인터 드래그는 같은 문단으로 제한합니다. 문단 분할/병합·Enter·실행 취소/다시 실행·단어 이동 규칙·완전한 키보드 접근성·모바일 선택 핸들은 미구현입니다.
+Left/Right는 grapheme 경계, Up/Down은 현재 표시 줄, Home/End는 표시 줄 끝으로 이동합니다. Shift는 같은 문단의 선택을 확장하고 Ctrl/Meta+Home/End는 문단 끝으로 이동합니다. Ctrl/Meta+A는 현재 문단 전체를 명시적으로 선택합니다. 일반 브라우저의 복사/잘라내기/붙여넣기도 현재 textarea 문단 범위입니다. 문서 전체 선택이 아닙니다. 포인터 드래그는 같은 문단으로 제한합니다. HWPX 실행 취소/다시 실행은 [Canvas 편집 이력](canvas-edit-history.md)이 소유합니다. 문단 분할/병합·Enter·HWP5 이력·단어 이동 규칙·완전한 키보드 접근성·모바일 선택 핸들은 미구현입니다.
 
 `compositionstart`부터 중간 DOM 값을 임시 Canvas에 표시하되 native 명령은 보내지 않습니다. `compositionend` 뒤 최종 DOM 값을 반영하며 뒤따르는 최종 input 이벤트와 중복 적용하지 않습니다. IME 문자열은 이벤트 data를 수동 이어 붙이지 않습니다. 파일 재선택은 조합/임시 선택을 비우고 이전 Worker를 종료합니다.
 

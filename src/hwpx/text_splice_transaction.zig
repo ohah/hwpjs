@@ -29,18 +29,8 @@ pub fn spliceProjected(a: std.mem.Allocator, sites: *sites_module.Sites, positio
         break :blk fallback;
     };
     // Draft owns every current string; no original site is touched on failure.
-    const items = try a.alloc(sites_module.Site, sites.items.len);
-    var owned: usize = 0;
-    errdefer {
-        for (items[0..owned]) |site| a.free(site.text);
-        a.free(items);
-    }
-    for (sites.items, items) |site, *copy| {
-        copy.* = site;
-        copy.text = try a.dupe(u8, site.text);
-        owned += 1;
-    }
-    var draft: sites_module.Sites = .{ .items = items };
+    var draft = try sites.clone(a);
+    errdefer draft.deinit(a);
     var inserted_once = false;
     var changed = false;
     for (positions) |position| {
@@ -66,7 +56,6 @@ pub fn spliceProjected(a: std.mem.Allocator, sites: *sites_module.Sites, positio
     }
     if (!changed) {
         draft.deinit(a);
-        owned = 0;
         return false;
     }
     sites.deinit(a);

@@ -82,13 +82,13 @@ pub fn build(b: *std.Build) void {
     const hwp5_text_api = b.addSystemCommand(&.{ "node", "--test", "tests/hwp5/text-preview.test.mjs", "tests/hwp5/preview-record-oracle.test.mjs", "tests/hwp5/canvas-preview.test.mjs" });
     hwp5_text_api.step.dependOn(b.getInstallStep());
     audit.dependOn(&hwp5_text_api.step);
-    const editor_api_tests = b.addSystemCommand(&.{ "node", "--test", "tests/hwp5/editor.test.mjs", "tests/hwp5/editor-controls.test.mjs", "tests/hwp5/canvas-edit.test.mjs", "tests/hwp5/canvas-editor.test.mjs", "tests/hwp5/document-save.test.mjs", "tests/hwp5/edit-corpus.test.mjs", "tests/hwp5/nested-editor.test.mjs", "tests/hwp5/empty-editor.test.mjs", "tests/hwp5/control-editor.test.mjs", "tests/hwp5/reader-worker.test.mjs" });
+    const editor_api_tests = b.addSystemCommand(&.{ "node", "--test", "tests/hwp5/editor.test.mjs", "tests/hwp5/editor-controls.test.mjs", "tests/hwp5/history-controls.test.mjs", "tests/hwp5/canvas-edit.test.mjs", "tests/hwp5/canvas-editor.test.mjs", "tests/hwp5/document-save.test.mjs", "tests/hwp5/edit-corpus.test.mjs", "tests/hwp5/nested-editor.test.mjs", "tests/hwp5/empty-editor.test.mjs", "tests/hwp5/control-editor.test.mjs", "tests/hwp5/reader-worker.test.mjs" });
     editor_api_tests.step.dependOn(b.getInstallStep());
     editor_api_tests.has_side_effects = true;
     audit.dependOn(&editor_api_tests.step);
     const editor_api_step = b.step("hwp5-editor-audit", "Test experimental JS WASM HWP5 editor boundary");
     editor_api_step.dependOn(&editor_api_tests.step);
-    const hwpx_text_tests = b.addSystemCommand(&.{ "node", "--test", "tests/hwpx/text-reader.test.mjs", "tests/hwpx/canvas-preview.test.mjs", "tests/hwpx/editor.test.mjs", "tests/hwpx/formula-editor.test.mjs", "tests/hwpx/note-editor.test.mjs", "tests/hwpx/anchor-editor.test.mjs", "tests/hwpx/header-footer-editor.test.mjs", "tests/hwpx/object-boundary-editor.test.mjs" });
+    const hwpx_text_tests = b.addSystemCommand(&.{ "node", "--test", "tests/hwpx/text-reader.test.mjs", "tests/hwpx/canvas-preview.test.mjs", "tests/hwpx/editor.test.mjs", "tests/hwpx/formula-editor.test.mjs", "tests/hwpx/note-editor.test.mjs", "tests/hwpx/anchor-editor.test.mjs", "tests/hwpx/header-footer-editor.test.mjs", "tests/hwpx/object-boundary-editor.test.mjs", "tests/hwpx/history-editor.test.mjs" });
     hwpx_text_tests.step.dependOn(b.getInstallStep());
     hwpx_text_tests.has_side_effects = true;
     audit.dependOn(&hwpx_text_tests.step);

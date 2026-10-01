@@ -13,6 +13,20 @@ pub const Site = struct {
 };
 pub const Sites = struct {
     items: []Site,
+    pub fn clone(self: *const Sites, a: std.mem.Allocator) !Sites {
+        const items = try a.alloc(Site, self.items.len);
+        var initialized: usize = 0;
+        errdefer {
+            for (items[0..initialized]) |site| a.free(site.text);
+            a.free(items);
+        }
+        for (self.items, items) |site, *copy| {
+            copy.* = site;
+            copy.text = try a.dupe(u8, site.text);
+            initialized += 1;
+        }
+        return .{ .items = items };
+    }
     pub fn deinit(self: *Sites, a: std.mem.Allocator) void {
         for (self.items) |item| a.free(item.text);
         a.free(self.items);

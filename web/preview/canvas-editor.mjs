@@ -8,6 +8,7 @@ import { sourceTextChange } from "./text-offsets.mjs";
 export function createCanvasEditor({ canvas, viewport, input, renderer, controls, note }) {
   const events = new AbortController(), listen = (node, type, fn) => node.addEventListener(type, fn, { signal: events.signal });
   let target = null, committed = "", anchor = null, focus = null, pending = null, composing = false, drag = null;
+  let historyAvailable = false, historyPending = false;
   const report = text => { note.textContent = text; };
   const place = () => {
     const caret = caretGeometry(renderer.layout(), focus);
@@ -42,7 +43,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     paint();
   };
   const pump = () => {
-    if (!target || composing || pending || !controls.ready() || controls.busy()) return;
+    if (!target || composing || pending || historyPending || !controls.ready() || controls.busy()) return;
     const change = textChange(committed, input.value);
     if (!change) return;
     pending = { start: change.startUnit, end: change.endUnit };
@@ -75,7 +76,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     const next = point(event);
     if (!next) { input.blur(); return; }
     event.preventDefault();
-    if (composing || ((pending || input.value !== committed) && !sameParagraph(next, target))) { report("입력 반영 중입니다. 같은 문단에서 이어서 입력하거나 잠시 기다리세요."); return; }
+    if (historyPending || composing || ((pending || input.value !== committed) && !sameParagraph(next, target))) { report("입력 반영 중입니다. 같은 문단에서 이어서 입력하거나 잠시 기다리세요."); return; }
     if (!sameParagraph(next, target)) {
       target = { section: next.section, paragraph: next.paragraph };
       committed = renderer.paragraph(next).text; input.value = committed;
@@ -88,9 +89,19 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
   });
   const release = event => { if (drag === event.pointerId) { drag = null; if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId); paint(); } };
   listen(canvas, "pointerup", release); listen(canvas, "pointercancel", release);
+  const travel = kind => {
+    if (!["undo", "redo"].includes(kind)) return false;
+    if (!historyAvailable) { report("이 문서 형식은 실행 취소/다시 실행을 아직 지원하지 않습니다."); return false; }
+    if (composing || pending || historyPending || (target && input.value !== committed) || !controls.ready() || controls.busy()) { report("입력 반영이 끝난 뒤 실행 취소/다시 실행하세요."); return false; }
+    historyPending = true; input.readOnly = true;
+    if (!controls.request({ kind, origin: "canvas" })) { historyPending = false; input.readOnly = !controls.ready(); return false; }
+    input.setAttribute("aria-busy", "true");
+    return true;
+  };
   listen(input, "beforeinput", event => {
-    if (!target || !controls.ready()) { event.preventDefault(); return; }
-    if (["insertLineBreak", "insertParagraph", "historyUndo", "historyRedo"].includes(event.inputType)) { event.preventDefault(); report("문단 분할·병합과 실행 취소는 아직 지원하지 않습니다."); }
+    if (!target || !controls.ready() || historyPending) { event.preventDefault(); return; }
+    if (["historyUndo", "historyRedo"].includes(event.inputType)) { event.preventDefault(); travel(event.inputType === "historyUndo" ? "undo" : "redo"); return; }
+    if (["insertLineBreak", "insertParagraph"].includes(event.inputType)) { event.preventDefault(); report("문단 분할·병합은 아직 지원하지 않습니다."); }
   });
   listen(input, "input", () => { if (!target) return; preview(); if (!composing) pump(); });
   listen(input, "compositionstart", () => { if (!target || !controls.ready()) return; composing = true; paint(); });
@@ -104,7 +115,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     if ((event.metaKey || event.ctrlKey) && key.toLowerCase() === "a") {
       event.preventDefault(); setSelection({ ...target, unit: 0 }, { ...target, unit: input.value.length }); reveal(); return;
     }
-    if ((event.metaKey || event.ctrlKey) && ["z", "y"].includes(key.toLowerCase())) { event.preventDefault(); report("실행 취소/다시 실행은 아직 지원하지 않습니다."); return; }
+    if ((event.metaKey || event.ctrlKey) && ["z", "y"].includes(key.toLowerCase())) { event.preventDefault(); travel(key.toLowerCase() === "y" || event.shiftKey ? "redo" : "undo"); return; }
     if (key === "Enter") { event.preventDefault(); report("문단 분할·병합은 아직 지원하지 않습니다."); return; }
     if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(key) || event.altKey) return;
     event.preventDefault();
@@ -116,17 +127,35 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
   listen(input, "keyup", sync); listen(input, "select", sync);
   listen(input, "focus", paint); listen(input, "blur", paint);
   return {
-    settled: () => !composing && !pending && (!target || input.value === committed),
+    settled: () => !composing && !pending && !historyPending && (!target || input.value === committed),
+    canHistory: () => historyAvailable && !composing && !pending && !historyPending && (!target || input.value === committed) && controls.ready() && !controls.busy(),
+    history: travel,
     reset() {
       if (drag !== null && canvas.hasPointerCapture(drag)) canvas.releasePointerCapture(drag);
       composing = false; drag = null; target = null; pending = null; anchor = null; focus = null; committed = "";
+      historyAvailable = false; historyPending = false;
       input.value = ""; input.disabled = true; input.setAttribute("aria-busy", "false"); canvas.style.cursor = "default"; report(""); renderer.preview(null); paint();
     },
-    external(message) { if (message.origin !== "canvas" && !["enable", "save"].includes(message.kind)) this.reset(); },
+    external(message) {
+      if (message.origin !== "canvas" && !["enable", "save"].includes(message.kind)) {
+        const available = historyAvailable; this.reset(); historyAvailable = available;
+      }
+    },
     message(message) {
       if (message.kind === "save") { pump(); return; }
       if (message.applied && message.error) { this.reset(); return; }
-      if (message.kind === "enable") { input.readOnly = !controls.ready(); report(message.error ? `편집 시작 실패: ${message.error}` : "클릭·드래그 선택 후 입력하세요. 변경 후 재조판이 필요합니다."); pump(); return; }
+      if (message.kind === "enable") { if (!message.error) historyAvailable = message.historyAvailable === true; input.readOnly = !controls.ready(); report(message.error ? `편집 시작 실패: ${message.error}` : "클릭·드래그 선택 후 입력하세요. 변경 후 재조판이 필요합니다."); pump(); return; }
+      if (["undo", "redo"].includes(message.kind) && message.origin === "canvas" && historyPending) {
+        historyPending = false; input.readOnly = !controls.ready(); input.setAttribute("aria-busy", "false");
+        if (message.error) { report(`실행 취소/다시 실행 실패: ${message.error}`); return; }
+        if (!target) { report(message.changed ? "실행 취소/다시 실행 적용 · 재조판 필요" : "이동할 편집 이력이 없습니다."); return; }
+        const paragraph = renderer.paragraph(target);
+        if (!paragraph?.editable) { this.reset(); return; }
+        const a = anchor?.unit ?? 0, f = focus?.unit ?? 0;
+        committed = paragraph.text; input.value = committed; renderer.preview(null);
+        setSelection({ ...target, unit: snapUnit(committed, Math.min(a, committed.length)) }, { ...target, unit: snapUnit(committed, Math.min(f, committed.length)) });
+        report(message.changed ? "실행 취소/다시 실행 적용 · 재조판 필요" : "이동할 편집 이력이 없습니다."); return;
+      }
       if (message.origin !== "canvas" || !pending || !target) return;
       const previous = pending; pending = null; input.setAttribute("aria-busy", "false");
       if (message.error) {

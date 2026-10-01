@@ -42,7 +42,17 @@ async function harness(t, name = "charshape", choose = p => p.editable && !p.sou
   dispatch(canvas, "pointerup", { pointerId: 1 });
   return {
     input, canvas, native, controller, note, requests, paragraph,
+    selectTarget() {
+      const point = caretGeometry(layout, { ...paragraph, unit: 0 }); assert(point);
+      dispatch(canvas, "pointerdown", { button: 0, pointerId: 1, clientX: point.x, clientY: point.y });
+      dispatch(canvas, "pointerup", { pointerId: 1 });
+    },
     setBusy(value) { busy = value; },
+    ackHistory(text, error) {
+      const message = queue.shift(); assert(message); assert(["undo", "redo"].includes(message.kind));
+      if (!error) { content = { ...content, paragraphs: content.paragraphs.map(p => p === paragraph || (p.section === paragraph.section && p.paragraph === paragraph.paragraph) ? { ...p, text } : p) }; draft = null; reflow(); }
+      busy = false; controller.message({ kind: message.kind, origin: "canvas", changed: true, error });
+    },
     type(text) { input.value = text; input.setSelectionRange(text.length, text.length); dispatch(input, "input"); },
     ack({ clipped = false } = {}) {
       const message = queue.shift(); assert(message);
@@ -61,6 +71,46 @@ async function harness(t, name = "charshape", choose = p => p.editable && !p.sou
     },
   };
 }
+
+test("canvas history consumes acknowledged projection and blocks overlapping drafts and composition", async t => {
+  const h = await harness(t), before = h.input.value;
+  assert.equal(h.controller.history("undo"), false);
+  h.controller.message({ kind: "enable", historyAvailable: true });
+  const key = dispatch(h.input, "keydown", { key: "z", metaKey: true });
+  assert.equal(key.defaultPrevented, true);
+  assert.equal(h.requests.at(-1).kind, "undo");
+  assert.equal(h.input.readOnly, true); assert.equal(h.controller.settled(), false);
+  assert.equal(dispatch(h.input, "beforeinput", { inputType: "insertText" }).defaultPrevented, true);
+  assert.equal(h.controller.history("redo"), false);
+  h.ackHistory("새😀");
+  assert.equal(h.input.value, "새😀"); assert.equal(h.input.readOnly, false);
+  assert.equal(h.controller.settled(), true);
+  dispatch(h.input, "keydown", { key: "z", ctrlKey: true, shiftKey: true });
+  assert.equal(h.requests.at(-1).kind, "redo");
+  h.ackHistory(before);
+  assert.equal(h.input.value, before);
+  dispatch(h.input, "compositionstart");
+  assert.equal(h.controller.history("undo"), false);
+  dispatch(h.input, "compositionend"); await Promise.resolve();
+  const event = dispatch(h.input, "beforeinput", { inputType: "historyUndo" });
+  assert.equal(event.defaultPrevented, true);
+  h.ackHistory(before, "HistoryFailure");
+  assert.equal(h.input.value, before); assert.equal(h.input.readOnly, false);
+  h.type("입력" + before);
+  assert.equal(h.controller.history("undo"), false);
+  h.ack();
+  h.controller.external({ kind: "splice", origin: "form" });
+  assert.equal(h.controller.canHistory(), true);
+  assert.equal(h.controller.history("undo"), true);
+  h.ackHistory(before);
+  assert.equal(h.input.disabled, true);
+  h.selectTarget();
+  assert.equal(h.controller.history("undo"), true);
+  h.ackHistory(before);
+  assert.equal(h.controller.history("not-a-command"), false);
+  h.controller.reset();
+  assert.equal(h.controller.history("undo"), false);
+});
 
 test("canvas export gate rejects composition and pending drafts without resetting selection", async t => {
   const h = await harness(t), before = h.input.value;

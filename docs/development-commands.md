@@ -1,5 +1,9 @@
 # 개발·검증 명령
 
+`node tools/hwpx-edit-corpus-audit.mjs --history`는 모든 추적 HWPX 일반 문단의 prefix 시도에 native undo/redo·원본/편집 ZIP 일치·거부 후 redo 보존을 추가합니다. 암호화·컨트롤·숫자 입력 거부를 별도로 집계하며 전체 컨트롤 지원이나 독립 decoder 비교의 대체가 아닙니다. 이력 없이 기존 편집 복원 조사는 같은 명령에서 --history를 생략합니다.
+
+[HWPX native 이력](hwpx-edit-history.md)은 `zig test src/root.zig -O ReleaseSafe --test-filter 'HWPX native history'`와 `'HWPX checkpoint'`로 집중 검사합니다. Debug·ReleaseFast도 같은 필터를 사용합니다. 제품 빌드 후 `node --test tests/hwpx/history-editor.test.mjs tests/hwpx/canvas-preview.test.mjs tests/hwp5/history-controls.test.mjs tests/hwp5/canvas-editor.test.mjs`는 공개 이력·Worker·Canvas·버튼 경계를 검사하며 정규 두 editor audit에도 포함됩니다. 실제 브라우저·OS IME·전체 조판 검증은 별도입니다.
+
 [Canvas 편집본 다운로드](canvas-document-download.md)는 `node --test tests/hwp5/document-save.test.mjs tests/hwp5/canvas-editor.test.mjs tests/hwpx/canvas-preview.test.mjs`로 저장 위임·초안 대기·조합·다운로드 정리 및 실제 HWPX Worker snapshot을 검사합니다. 정규 hwp5-editor-audit와 hwpx-text-audit에도 포함되며 실제 브라우저 파일 다운로드·OS IME는 별도입니다.
 
 HWPX 개체의 빈 run 입력 경계는 `zig test src/root.zig -O ReleaseSafe --test-filter 'HWPX run text boundaries'` 및 Debug·ReleaseFast로 검사합니다. 제품 빌드 후 `node --test tests/hwpx/object-boundary-editor.test.mjs`는 실제 shapeline의 세 입력 위치·독립 전체 XML/ZIP·개체 속성 손상 반례를 검사하며 정규 hwpx-text-audit에도 포함됩니다. `node tools/hwpx-anchor-corpus-audit.mjs --leading-boundary`는 일반 편집 불가 문단의 위치 0 삽입을 조사합니다. 모든 위치·조판·실제 OS IME 검증은 아닙니다.

@@ -2,6 +2,8 @@
 
 ## 책임과 SSOT
 
+`Sites.clone`은 source 바인딩·빈 요소·missing_text·anchor_boundary와 소유 텍스트의 deep-copy를 단일 구현으로 제공합니다. 일반 텍스트 거래와 계산 필드 거래가 같은 복사를 사용합니다. 실패 시 복사본만 해제하고 현재 텍스트와 원문 바인딩은 바꾸지 않습니다. 이 복사 기반만으로 실행 취소·다시 실행이 구현됐다고 해석하지 않습니다. 별도 native 체크포인트는 Sites와 field_dirty를 함께 소유해야 하며 JS 표시 캐시는 복원 모델이 될 수 없습니다.
+
 `text_sites.zig`는 기존 `xml_part_tree.Tree.visitContent`를 재사용하여 정확한 paragraph namespace의 `t` 직접 문자 이벤트와 원본 범위를 연결합니다. 외부 namespace·자식 내부 문자열은 직접 텍스트로 오인하지 않습니다. 텍스트 문자열은 소유 UTF-8이며 source 범위는 정수입니다. CDATA는 전체 delimiter까지 연결합니다. 문자 이벤트가 없는 자식 없는 빈 `t`는 별도 삽입 위치를 만듭니다. 요소별 방문 표식으로 반복 검색을 피하고 마지막에 원문 순서로 정렬합니다. 사이트 수·합계 텍스트 바이트 예산을 적용합니다.
 
 `text_site_edit.zig`는 한 사이트의 현재 텍스트만 변경합니다. UTF-16 단위 위치를 공통 Unicode scalar reader로 UTF-8 경계에 연결하며 surrogate 중간·범위 초과·금지 XML 문자·할당 실패를 성공처럼 처리하지 않습니다. 출력 할당과 복사가 끝난 뒤 현재 텍스트를 교체합니다. 할당자는 사이트 소유 할당자와 같아야 합니다. 원본 정수 범위는 편집 후에도 바꾸지 않습니다.

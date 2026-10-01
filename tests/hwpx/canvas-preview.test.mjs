@@ -63,7 +63,10 @@ test("actual HWPX Worker edits native plain text and refuses unsupported control
   assert.equal(loaded.content.paragraphs[0].editable, true);
   assert.equal(loaded.content.paragraphs[1].editable, true);
   assert.equal(loaded.content.readOnly, false);
+  assert.equal((await send({ kind: "undo" })).error, "HistoryNotEnabled");
   assert.equal((await send({ kind: "enable" })).error, undefined);
+  assert.equal((await send({ kind: "enable" })).historyAvailable, true);
+  assert.equal((await send({ kind: "undo" })).changed, false);
   const edited = await send({ kind: "splice", section: 0, paragraph: 1, startUnit: 0, endUnit: 0, text: "검증😀" });
   assert.equal(edited.error, undefined);
   assert(edited.content.paragraphs[1].text.startsWith("검증😀"));
@@ -71,6 +74,15 @@ test("actual HWPX Worker edits native plain text and refuses unsupported control
   assert.equal(saved.error, undefined);
   assert.equal(saved.format, "hwpx");
   assert.equal(saved.layoutRequiresReflow, true);
+  const undone = await send({ kind: "undo" });
+  assert.equal(undone.changed, true);
+  assert.deepEqual(undone.content, loaded.content);
+  assert.deepEqual(Buffer.from((await send({ kind: "save" })).bytes), readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwpx"));
+  assert.equal((await send({ kind: "format" })).error, "UnsupportedHwpxFormatting");
+  const redone = await send({ kind: "redo" });
+  assert.equal(redone.changed, true);
+  assert.deepEqual(redone.content, edited.content);
+  assert.deepEqual((await send({ kind: "save" })).bytes, saved.bytes);
   const savedReader = await createHwpxReader(readFileSync("zig-out/bin/hwpjs.wasm"));
   try { assert(savedReader.readTextEvents(saved.bytes).events.some(e => e.kind === "content" && e.value.startsWith("검증😀"))); }
   finally { savedReader.close(); }
@@ -85,6 +97,7 @@ test("actual HWPX Worker edits native plain text and refuses unsupported control
   assert.equal(restored.content.paragraphs[1].text, loaded.content.paragraphs[1].text);
   const notes = await send({ kind: "load", format: "hwpx", bytes: readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/footnote-endnote.hwpx") });
   assert.equal(notes.error, undefined);
+  assert.equal((await send({ kind: "redo" })).error, "HistoryNotEnabled");
   assert.equal(notes.content.paragraphs[0].editable, true);
   assert.equal(notes.content.paragraphs[0].anchorEditable, true);
   assert.equal(notes.content.paragraphs[0].text, "각주참조\ufffc\ufffc");
@@ -120,11 +133,19 @@ test("actual HWPX Worker edits native plain text and refuses unsupported control
   const labelParagraph = hyperlink.content.paragraphs.find(p => p.fieldLabels.length > 0);
   assert(labelParagraph); assert.equal(labelParagraph.editable, true); assert.equal(labelParagraph.plainEditable, false);
   const target = labelParagraph.fieldLabels[0];
+  assert.equal((await send({ kind: "enable" })).historyAvailable, true);
   const labelEdited = await send({ kind: "splice", section: labelParagraph.section, paragraph: labelParagraph.paragraph, startUnit: target.start, endUnit: target.start, text: "검증😀" });
   assert.equal(labelEdited.error, undefined);
   const current = labelEdited.content.paragraphs.find(p => p.paragraph === labelParagraph.paragraph);
   assert.equal(current.text, labelParagraph.text.slice(0, target.start) + "검증😀" + labelParagraph.text.slice(target.start));
   assert.equal(current.fieldLabels[0].end, target.end + 4);
+  const labelUndo = await send({ kind: "undo" });
+  assert.equal(labelUndo.changed, true);
+  assert.deepEqual(labelUndo.content, hyperlink.content);
+  assert.deepEqual(Buffer.from((await send({ kind: "save" })).bytes), readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/hyperlink.hwpx"));
+  const labelRedo = await send({ kind: "redo" });
+  assert.equal(labelRedo.changed, true);
+  assert.deepEqual(labelRedo.content, labelEdited.content);
   const outside = await send({ kind: "splice", section: current.section, paragraph: current.paragraph, startUnit: current.fieldLabels.at(-1).end + 1, endUnit: current.fieldLabels.at(-1).end + 1, text: "안됨" });
   assert.equal(outside.error, "UnsupportedFieldLabelRange"); assert.equal(outside.applied, false);
   const labelRestored = await send({ kind: "splice", section: current.section, paragraph: current.paragraph, startUnit: target.start, endUnit: target.start + 4, text: "" });
@@ -135,9 +156,17 @@ test("actual HWPX Worker edits native plain text and refuses unsupported control
   const numeric = chart.content.paragraphs.find(p => p.text === "11.2");
   const formula = chart.content.paragraphs.find(p => p.text === "67.5");
   assert(numeric?.editable); assert(formula); assert.equal(formula.editable, false);
+  assert.equal((await send({ kind: "enable" })).historyAvailable, true);
   const calculated = await send({ kind: "splice", section: numeric.section, paragraph: numeric.paragraph, startUnit: 0, endUnit: 4, text: "100" });
   assert.equal(calculated.error, undefined);
   assert.equal(calculated.content.paragraphs.find(p => p.paragraph === formula.paragraph).text, "156.3");
+  const calculationUndo = await send({ kind: "undo" });
+  assert.equal(calculationUndo.changed, true);
+  assert.deepEqual(calculationUndo.content, chart.content);
+  assert.deepEqual(Buffer.from((await send({ kind: "save" })).bytes), readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx"));
+  const calculationRedo = await send({ kind: "redo" });
+  assert.equal(calculationRedo.changed, true);
+  assert.deepEqual(calculationRedo.content, calculated.content);
   const invalidNumber = await send({ kind: "splice", section: numeric.section, paragraph: numeric.paragraph, startUnit: 0, endUnit: 3, text: "bad" });
   assert.equal(invalidNumber.error, "InvalidFormulaNumber"); assert.equal(invalidNumber.applied, false);
   const numericRestored = await send({ kind: "splice", section: numeric.section, paragraph: numeric.paragraph, startUnit: 0, endUnit: 3, text: "11.2" });

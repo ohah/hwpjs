@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+[HWPX native 편집 이력](hwpx-edit-history.md)은 `editor_checkpoint.zig`가 소유 값 복원, `editor_history.zig`가 스택·분기·한도, 각 `_tests.zig`가 native 반례를 맡습니다. [Worker 이력](hwpx-worker-history.md)은 기존 reader-worker, [Canvas 이력](canvas-edit-history.md)은 canvas-editor와 버튼 전용 history-controls를 연결하며 JS에 별도 편집 이력을 만들지 않습니다.
+
 웹 편집본 저장·다운로드의 책임과 검증 범위는 [Canvas 편집본 다운로드](canvas-document-download.md)가 소유합니다. native snapshot·브라우저 Blob·Worker generation guard를 별도 모듈에 두고 화면 초안을 저장 모델로 사용하지 않습니다.
 
 [HWPX 머리말·꼬리말 소유 문단 편집](hwpx-header-footer-edit.md)은 `retained_header_footer.zig`가 보존 컨테이너 모양을, `header_footer_edit_tests.zig`와 `tests/hwpx/header-footer-editor.test.mjs`가 native·공개 독립 비교를 소유합니다. 기존 run metadata·문단 정책·위치·거래·저장 경로를 재사용합니다.
@@ -22,11 +24,11 @@
 
 [HWPX 일반 문단 편집](hwpx-plain-paragraph-edit.md)은 `plain_paragraph_policy.zig`가 적격성, `retained_run_metadata.zig`가 단·쪽 번호 설정의 원문 보존 모양, `plain_paragraph_edit.zig`가 문단 위치 연결, `text_splice_transaction.zig`가 필드와 공유하는 원자적 문자열 거래, `plain_paragraph_edit_tests.zig`가 반례를 소유합니다. 숨은 source gap 검사는 `element_whitespace_gaps.zig`를 번호·개체 앵커와 공유합니다. `text_site_locations.zig`는 공통 section 스캐너로 위치를 연결하고 `src/hwpx_paragraph_edit_survey.zig`가 모든 section·문단의 시도와 거부를 집계합니다.
 
-[HWPX 텍스트 조각 편집](hwpx-text-site-edit.md)은 `text_sites.zig`의 원문 위치 연결, `text_site_edit.zig`의 현재 텍스트 splice, `text_sites_save.zig`의 원본 대조, `xml_source_writer.zig`의 부분 출력, `src/xml/text_writer.zig`의 CharData escaping을 분리합니다. 실제 파일/할당 실패는 `text_sites_tests.zig`, 독립 corpus는 기존 ZIP survey/oracle을 재사용합니다. 활성 문단·공개 세션 연결은 아직 미완료입니다.
+[HWPX 텍스트 조각 편집](hwpx-text-site-edit.md)은 `text_sites.zig`의 원문 위치 연결, `text_site_edit.zig`의 현재 텍스트 splice, `text_sites_save.zig`의 원본 대조, `xml_source_writer.zig`의 부분 출력, `src/xml/text_writer.zig`의 CharData escaping을 분리합니다. 실제 파일/할당 실패는 `text_sites_tests.zig`, 독립 corpus는 기존 ZIP survey/oracle을 재사용합니다. 활성 문단·공개 세션 연결은 해당 편집 세션 문서가 소유하며 전체 개체 구조 편집·조판은 미완료입니다.
 
 [ZIP 선택 항목 교체 저장](zip-replacement-writer.md)은 `src/zip/archive.zig`의 검증된 원문 범위를 재사용하며 `replace_writer.zig`가 새 ZIP 출력만 소유합니다. 집중 반례는 `replace_writer_tests.zig`, 독립 전수 비교는 `src/zip_replacement_survey.zig`와 `tools/zip-replacement-oracle.py`로 분리합니다. HWPX XML 편집 모델·공개 세션은 별도 후속 책임입니다.
 
-[HWPX 공개 텍스트 이벤트/Canvas](hwpx-text-api.md)는 `src/hwpx/text_preview.zig`의 기존 스캐너 연결, `src/wasm/hwpx_text.zig`의 출력 수명, `js/hwpx.mjs`·`hwpx-text-wire.mjs`의 공개 경계를 분리합니다. `web/preview/hwpx-content.mjs`는 읽기 전용 표시만 소유하고 HWP5와 Worker/렌더러를 공유합니다. 제품 경계와 표시 반례는 `tests/hwpx/`에 둡니다.
+[HWPX 공개 텍스트 이벤트/Canvas](hwpx-text-api.md)는 `src/hwpx/text_preview.zig`의 기존 스캐너 연결, `src/wasm/hwpx_text.zig`의 출력 수명, `js/hwpx.mjs`·`hwpx-text-wire.mjs`의 공개 경계를 분리합니다. `web/preview/hwpx-content.mjs`는 파생 표시만 소유하고 HWP5와 Worker/렌더러를 공유합니다. 제품 경계와 표시 반례는 `tests/hwpx/`에 둡니다.
 
 [Canvas 직접 입력](canvas-direct-input.md)은 `web/preview/text-geometry.mjs`의 hit-test/선택, `text-navigation.mjs`의 키 이동, `text-input.mjs`의 문자열 차이, `canvas-editor.mjs`의 입력/조합/native 응답 조정을 분리합니다. 기존 layout/renderer/Worker는 재사용하고 집중 검사는 `tests/hwp5/canvas-edit.test.mjs`·`canvas-editor.test.mjs`에 둡니다.
 

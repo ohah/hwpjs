@@ -470,6 +470,9 @@ test {
     _ = @import("hwpx/anchor_text_positions_tests.zig");
     _ = @import("hwpx/anchor_paragraph_edit_tests.zig");
     _ = @import("hwpx/run_text_boundary_tests.zig");
+    _ = @import("hwpx/text_sites_clone_tests.zig");
+    _ = @import("hwpx/editor_checkpoint_tests.zig");
+    _ = @import("hwpx/editor_history_tests.zig");
     _ = @import("hwpx/editor_session_tests.zig");
     _ = @import("hwpx/paragraph_text_positions.zig");
     _ = @import("hwpx/field_text_ranges.zig");

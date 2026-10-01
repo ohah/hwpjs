@@ -7,6 +7,7 @@ import { clipText } from "./content.mjs";
 import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
 import { saveDocument } from "./document-save.mjs";
 let module, bytes, preview, editor, format;
+let historyEnabled = false;
 function anchorView(section, paragraph) {
   try { return editor.anchorText(section, paragraph); }
   catch (error) {
@@ -54,6 +55,7 @@ self.onmessage = async event => {
   try {
     if (message.kind === "load") {
       editor?.close(); editor = undefined; preview = undefined;
+      historyEnabled = false;
       format = message.format ?? "hwp5";
       if (format !== "hwp5" && format !== "hwpx") throw new Error("UnknownDocumentFormat");
       const response = await fetch("../../zig-out/bin/hwpjs.wasm");
@@ -82,11 +84,20 @@ self.onmessage = async event => {
           try { next.open(bytes); } catch (error) { next.close(); throw error; }
           editor = next;
         }
-        reply({ kind: "enable", charShapeCount: 0 });
+        if (!historyEnabled) { editor.enableHistory(); historyEnabled = true; }
+        reply({ kind: "enable", charShapeCount: 0, historyAvailable: true });
         return;
       }
       editor ??= await createExperimentalHwp5Editor(module, bytes);
       reply({ kind: "enable", charShapeCount: editor.characterShapeCount() });
+    } else if (message.kind === "undo" || message.kind === "redo") {
+      if (!editor) throw new Error("EditorNotOpen");
+      if (format !== "hwpx") throw new Error("UnsupportedHistory");
+      const changed = message.kind === "undo" ? editor.undo() : editor.redo();
+      applied = changed;
+      reader = await createHwpxReader(module);
+      preview = reader.readTextEvents(editor.save());
+      reply({ kind: message.kind, changed, content: hwpxDisplay() });
     } else if (message.kind === "splice" || message.kind === "format") {
       if (!editor) throw new Error("EditorNotOpen");
       if (format === "hwpx") {

@@ -6,6 +6,8 @@
 
 ## 소유권과 위치
 
+실행 취소·재실행의 소유·한도·공개 API·검증은 [HWPX native 편집 이력](hwpx-edit-history.md)이 소유합니다. HWP5 이력은 아직 미구현입니다.
+
 `open(allocator, input, options)`는 입력 ZIP을 복사하고 spine 순서대로 section 원문 트리, 현재 텍스트 사이트, 원본 위치를 소유합니다. 호출자는 입력을 해제할 수 있습니다. `Session.deinit()`는 같은 할당자로 전체 상태를 해제하며 중복 호출할 수 없습니다.
 
 `splice(section_index, paragraph, start, deleted, inserted)`의 section 인덱스는 0부터, 문단은 공통 section 스캐너의 문서 전체 1-based 순번입니다. 텍스트 위치와 삭제 길이는 UTF-16 단위입니다. 이모지의 서로게이트 중간 위치는 거부합니다. 편집 가능 범위는 [일반 문단 계약](hwpx-plain-paragraph-edit.md)을 그대로 따릅니다. 컨트롤을 제거하거나 표시 문자열로 평탄화하지 않습니다.
@@ -14,9 +16,11 @@
 
 ## 공개 JS 경계
 
+Worker 메시지는 [Worker 이력 연결](hwpx-worker-history.md), 단축키·버튼·실제 브라우저 검증은 [Canvas 편집 이력](canvas-edit-history.md)이 소유합니다.
+
 `createHwpxEditor(wasmBytesOrModule)`는 별도 WASM 인스턴스를 생성합니다. 반환 객체의 `open(documentBytes)`는 `{ sectionCount }`를 반환합니다. 성공하면 이전 세션을 교체하고, 실패하면 이전 세션을 유지합니다. `canEdit(section, paragraph)`는 Boolean, `splice(section, paragraph, start, deleted, text)`는 성공 시 반환값 없이 현재 모델을 수정합니다. `save()`는 독립 소유 `Uint8Array` ZIP을 반환합니다. `close()`는 반복 호출할 수 있고, 이후 다른 메서드는 `EditorClosed`를 던집니다.
 
-숫자는 u32 범위 정수만 받으며 강제 형변환하지 않습니다. 입력 문자열의 단독 서로게이트를 거부하고, 삽입 UTF-8은 4 MiB까지 제한합니다. 일반 문단과 별도 명시적 필드 라벨 명령을 제공하며 서식 명령·실행 취소·문단 분할은 아직 제공하지 않습니다. `save()`는 원본 줄 배치 정보를 재조판하지 않으므로 결과를 최종 한컴 조판과 동일하다고 보지 않습니다.
+숫자는 u32 범위 정수만 받으며 강제 형변환하지 않습니다. 입력 문자열의 단독 서로게이트를 거부하고, 삽입 UTF-8은 4 MiB까지 제한합니다. 일반 문단과 별도 명시적 필드 라벨 명령 및 명시적 실행 취소 이력을 제공하며 서식 명령·문단 분할은 아직 제공하지 않습니다. `save()`는 원본 줄 배치 정보를 재조판하지 않으므로 결과를 최종 한컴 조판과 동일하다고 보지 않습니다.
 
 ```js
 const editor = await createHwpxEditor(wasm);

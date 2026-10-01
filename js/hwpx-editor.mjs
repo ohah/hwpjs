@@ -23,6 +23,25 @@ export async function createHwpxEditor(source) {
     return bytes;
   }
   return {
+    enableHistory({ maxEntries = 16, maxCheckpointBytes = 8 * 1024 * 1024 } = {}) {
+      ready(); uint(maxEntries); uint(maxCheckpointBytes);
+      if (typeof wasm.hwpx_edit_history_enable !== "function") throw new Error("HwpxHistoryAbiUnavailable");
+      if (!wasm.hwpx_edit_history_enable(maxEntries, maxCheckpointBytes)) throw memory.error();
+    },
+    undo() {
+      ready();
+      if (typeof wasm.hwpx_edit_undo !== "function") throw new Error("HwpxHistoryAbiUnavailable");
+      const value = wasm.hwpx_edit_undo();
+      if (value > 1) throw memory.error();
+      return value === 1;
+    },
+    redo() {
+      ready();
+      if (typeof wasm.hwpx_edit_redo !== "function") throw new Error("HwpxHistoryAbiUnavailable");
+      const value = wasm.hwpx_edit_redo();
+      if (value > 1) throw memory.error();
+      return value === 1;
+    },
     canEdit(section, paragraph) {
       ready(); uint(section); uint(paragraph);
       const result = wasm.hwpx_edit_can_edit(section, paragraph);

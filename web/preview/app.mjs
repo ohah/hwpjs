@@ -4,18 +4,21 @@ import { createEditorControls } from "./editor-controls.mjs";
 import { createCanvasEditor } from "./canvas-editor.mjs";
 import { downloadDocument } from "./document-download.mjs";
 import { guardGeneration } from "./worker-generation.mjs";
+import { createHistoryControls } from "./history-controls.mjs";
 const input = document.querySelector("#file"), status = document.querySelector("#status");
 const accessible = document.querySelector("#accessible");
 const renderer = createRenderer(document.querySelector("#canvas"), document.querySelector("#viewport"), document.querySelector("#spacer"), layout => { document.querySelector("#limit").hidden = !layout.limited; });
-let worker, generation = 0, direct;
+let worker, generation = 0, direct, historyControls;
 const download = document.querySelector("#download"), staleLayout = document.querySelector("#allow-stale-layout"), downloadStatus = document.querySelector("#download-status");
 function updateSave() {
   const enabled = Boolean(worker) && controls.ready() && !controls.busy() && direct.settled();
   download.disabled = !enabled;
   staleLayout.disabled = !enabled || /\.hwpx$/i.test(input.files[0]?.name ?? "");
+  historyControls?.update();
 }
 const controls = createEditorControls(message => { direct.external(message); worker?.postMessage(message); updateSave(); });
 direct = createCanvasEditor({ canvas: document.querySelector("#canvas"), viewport: document.querySelector("#viewport"), input: document.querySelector("#canvas-input"), renderer, controls, note: document.querySelector("#canvas-edit-status") });
+historyControls = createHistoryControls({ undo: document.querySelector("#undo"), redo: document.querySelector("#redo"), canRequest: () => Boolean(worker) && direct.canHistory(), request: kind => direct.history(kind) });
 controls.reset();
 direct.reset();
 download.addEventListener("click", () => {
@@ -73,4 +76,4 @@ input.addEventListener("change", async () => {
     job.postMessage({ kind: "load", format, bytes }, [bytes]);
   } catch (error) { if (epoch === generation) status.textContent = `오류: ${error.message}`; }
 });
-window.addEventListener("pagehide", event => { if (!event.persisted) { generation++; worker?.terminate(); direct.close(); renderer.close(); } });
+window.addEventListener("pagehide", event => { if (!event.persisted) { generation++; worker?.terminate(); historyControls.close(); direct.close(); renderer.close(); } });

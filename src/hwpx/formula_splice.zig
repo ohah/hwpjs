@@ -8,23 +8,8 @@ pub fn splice(a: std.mem.Allocator, trees: []const @import("xml_part_tree.zig").
 
 pub fn spliceMode(a: std.mem.Allocator, trees: []const @import("xml_part_tree.zig").Tree, section: usize, current: *sites_mod.Sites, locations: []const @import("section_text.zig").Location, paragraph: usize, start: u32, deleted: u32, inserted: []const u8, max_bytes: usize, anchored: bool) !bool {
     if (section >= trees.len) return error.InvalidSectionIndex;
-    var draft = try clone(a, current);
+    var draft = try current.clone(a);
     return finish(a, trees, section, current, &draft, locations, paragraph, start, deleted, inserted, max_bytes, anchored);
-}
-
-fn clone(a: std.mem.Allocator, current: *const sites_mod.Sites) !sites_mod.Sites {
-    const items = try a.alloc(sites_mod.Site, current.items.len);
-    var initialized: usize = 0;
-    errdefer {
-        for (items[0..initialized]) |item| a.free(item.text);
-        a.free(items);
-    }
-    for (current.items, items) |site, *copy| {
-        copy.* = site;
-        copy.text = try a.dupe(u8, site.text);
-        initialized += 1;
-    }
-    return .{ .items = items };
 }
 
 fn finish(a: std.mem.Allocator, trees: []const @import("xml_part_tree.zig").Tree, section: usize, current: *sites_mod.Sites, draft: *sites_mod.Sites, locations: []const @import("section_text.zig").Location, paragraph: usize, start: u32, deleted: u32, inserted: []const u8, max_bytes: usize, anchored: bool) !bool {
