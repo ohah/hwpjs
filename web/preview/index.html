@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hwpjs · Canvas 텍스트 미리보기</title>
+<link rel="stylesheet" href="./preview.css">
+<main>
+  <header><h1>HWP Canvas 미리보기</h1><span>읽기 전용 실험</span></header>
+  <p>문단 텍스트만 표시합니다. 원본 글꼴·표·이미지·줄 배치·페이지 조판은 재현하지 않습니다. 편집·저장은 지원하지 않습니다.</p>
+  <label for="file">HWP 파일 선택 (최대 64 MiB, HWPX 미지원)</label>
+  <input id="file" type="file" accept=".hwp">
+  <p class="privacy">파일은 브라우저 안에서 처리하며 서버로 전송하지 않습니다.</p>
+  <p id="status" role="status" aria-live="polite">파일을 선택하세요.</p>
+  <p id="limit" hidden role="status">표시 한도에 도달해 일부만 표시합니다.</p>
+  <div id="viewport" tabindex="0" aria-label="스크롤 가능한 문단 텍스트 미리보기">
+    <canvas id="canvas" aria-label="문단 텍스트 Canvas">텍스트 결과는 아래 대체 텍스트에서 확인할 수 있습니다.</canvas>
+    <div id="spacer" aria-hidden="true"></div>
+  </div>
+  <details><summary>접근성용 대체 텍스트 (최대 50,000 UTF-16 단위)</summary><textarea id="accessible" readonly aria-label="미리보기 대체 텍스트"></textarea></details>
+</main>
+<script type="module" src="./app.mjs"></script>
+</html>

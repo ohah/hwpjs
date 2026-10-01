@@ -47,4 +47,10 @@ try {
 
 HTML·JS·WASM·입력 파일을 HTTP 서버에서 제공하고 실행합니다.
 
+## Canvas 텍스트 미리보기 실행
+
+빌드 후 `node tools/serve-preview.mjs`를 실행하고 [로컬 미리보기](http://127.0.0.1:8080/web/preview/index.html)에서 `.hwp` 파일을 선택하세요. 다른 포트는 `node tools/serve-preview.mjs 8081`처럼 지정합니다.
+
+파일은 브라우저 안에서 처리합니다. 문단 텍스트만 표시하는 읽기 전용 실험이며 원본 서식·표·이미지·페이지 배치·HWPX·편집·저장은 지원하지 않습니다. [지원 범위와 표시 한도](docs/canvas-text-preview.md)를 참고하세요.
+
 스트림 추가·교체·저장과 옵션·자원 제한은 [CFB API](docs/cfb-reader.md#api)를 참고하세요.

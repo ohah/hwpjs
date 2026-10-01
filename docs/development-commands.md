@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[Canvas 텍스트 미리보기](canvas-text-preview.md)는 `zig build -Doptimize=ReleaseSafe` 후 `node tools/serve-preview.mjs`로 실행합니다. 주소는 `http://127.0.0.1:8080/web/preview/index.html`이며 포트 인수를 지정할 수 있습니다. `node --test tests/hwp5/canvas-preview.test.mjs`는 표시 projection/실험용 줄 흐름을 검사하고 정규 `zig build audit`의 미리보기 Node 검사에도 포함됩니다. 브라우저 통합 검증은 별도이며, 텍스트 전용 표시 성공을 문서 조판 성공으로 보지 않습니다.
+
 [기존 글자 모양 적용](hwp5-character-format-edit.md) 검증도 아래 `text-splice-audit` 단계에 포함됩니다. 같은 probe를 사용하며 서식 전용 독립 oracle 결과를 별도로 출력합니다. 기본 `zig build test`에도 혼합 명령·서식 할당 실패 집중 검사가 포함됩니다.
 
 [단순 문단 텍스트 편집 실험](hwp5-plain-text-edit-experiment.md)은 `zig build text-splice-audit --summary all` 및 `-Doptimize=ReleaseSafe`·`-Doptimize=ReleaseFast`로 실행합니다. 집중 Zig 검사와 실제 HWP 5개·파생 반례의 CFB.js/Node/Rust 대조를 포함하며 임시 출력 경로를 표시합니다. 집중 Zig 검사는 기본 `zig build test`에도 포함됩니다. 실파일 audit은 기존 native Rust oracle이 필요해 기본 test/audit 밖에 있습니다. 조판·미리보기 갱신·한컴 GUI·HWPX 편집 검증은 아닙니다.
