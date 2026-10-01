@@ -465,6 +465,7 @@ test {
     _ = @import("hwpx/text_sites_tests.zig");
     _ = @import("hwpx/text_site_edit.zig");
     _ = @import("hwpx/plain_paragraph_edit_tests.zig");
+    _ = @import("hwpx/editor_session_tests.zig");
     _ = @import("xml/namespace_tests.zig");
     _ = @import("hwp5/container/xml_validation_tests.zig");
     _ = @import("binary/reader.zig");

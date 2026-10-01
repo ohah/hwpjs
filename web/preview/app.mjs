@@ -40,7 +40,7 @@ input.addEventListener("change", async () => {
       try {
         const content = event.data.content, layout = renderer.show(content, { preserveScroll: event.data.kind !== "load" });
         accessible.value = clipText(content.paragraphs.map(p => `${p.label}\n${p.text}`).join("\n\n"), 50000);
-        const formatLabel = content.format === "hwpx" ? "HWPX · 읽기 전용" : `HWP ${content.version}`;
+        const formatLabel = content.format === "hwpx" ? `HWPX · ${content.readOnly ? "읽기 전용" : "일반 텍스트 편집 실험"}` : `HWP ${content.version}`;
         status.textContent = `${selected.name} · ${formatLabel} · ${content.totalParagraphs}문단 · 텍스트 미리보기${layout.limited ? " · 표시 한도에 도달해 일부만 표시" : ""}`;
         if (event.data.kind === "load" && !content.readOnly) controls.loaded();
         direct.message(event.data);

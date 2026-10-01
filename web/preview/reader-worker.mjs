@@ -1,9 +1,19 @@
 import { createHwp5Reader } from "../../js/hwp5.mjs";
 import { createHwpxReader } from "../../js/hwpx.mjs";
+import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
 import { displayHwpxContent } from "./hwpx-content.mjs";
 import { displayContent } from "./content.mjs";
 import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
 let module, bytes, preview, editor, format;
+function hwpxDisplay() {
+  const content = displayHwpxContent(preview);
+  for (const paragraph of content.paragraphs) {
+    paragraph.editable = !paragraph.clipped && editor.canEdit(paragraph.section, paragraph.paragraph + 1);
+    if (paragraph.editable) paragraph.label = paragraph.label.replace("읽기 전용", "일반 텍스트 편집");
+  }
+  content.readOnly = !content.paragraphs.some(paragraph => paragraph.editable);
+  return content;
+}
 self.onmessage = async event => {
   let reader;
   const message = event.data;
@@ -21,19 +31,40 @@ self.onmessage = async event => {
       if (format === "hwpx") {
         reader = await createHwpxReader(module);
         preview = reader.readTextEvents(bytes);
-        reply({ kind: "load", content: displayHwpxContent(preview) });
+        const next = await createHwpxEditor(module);
+        try { next.open(bytes); } catch (error) { next.close(); throw error; }
+        editor = next;
+        reply({ kind: "load", content: hwpxDisplay() });
         return;
       }
       reader = await createHwp5Reader(module);
       preview = reader.readText(bytes);
       reply({ kind: "load", content: displayContent(preview) });
     } else if (message.kind === "enable") {
-      if (format === "hwpx") throw new Error("UnsupportedHwpxEditing");
+      if (format === "hwpx") {
+        if (!editor) {
+          const next = await createHwpxEditor(module);
+          try { next.open(bytes); } catch (error) { next.close(); throw error; }
+          editor = next;
+        }
+        reply({ kind: "enable", charShapeCount: 0 });
+        return;
+      }
       editor ??= await createExperimentalHwp5Editor(module, bytes);
       reply({ kind: "enable", charShapeCount: editor.characterShapeCount() });
     } else if (message.kind === "splice" || message.kind === "format") {
-      if (format === "hwpx") throw new Error("UnsupportedHwpxEditing");
       if (!editor) throw new Error("EditorNotOpen");
+      if (format === "hwpx") {
+        if (message.kind !== "splice") throw new Error("UnsupportedHwpxFormatting");
+        if (message.rangePolicy && message.rangePolicy !== "reject") throw new Error("InvalidRangePolicy");
+        if (!Number.isInteger(message.startUnit) || !Number.isInteger(message.endUnit) || message.endUnit < message.startUnit) throw new Error("InvalidTextPosition");
+        editor.splice(message.section, message.paragraph + 1, message.startUnit, message.endUnit - message.startUnit, message.text);
+        applied = true;
+        reader = await createHwpxReader(module);
+        preview = reader.readTextEvents(editor.save());
+        reply({ kind: message.kind, content: hwpxDisplay() });
+        return;
+      }
       if (message.kind === "splice") editor.splice(message);
       else editor.setCharacterFormat(message);
       applied = true;

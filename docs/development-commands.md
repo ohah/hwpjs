@@ -1,5 +1,9 @@
 # 개발·검증 명령
 
+[HWPX native 편집 세션](hwpx-editor-session.md)은 `zig test src/root.zig -O ReleaseSafe --test-filter 'HWPX editor session'`로 실제 파일의 소유·편집·저장·재열기·복원, 한도·암호화 거부, 전체 할당 실패를 검사합니다. 공개 API·브라우저 편집 검증은 별도입니다.
+
+HWPX 공개 세션은 제품 WASM 빌드 후 `node --test tests/hwpx/editor.test.mjs tests/hwpx/canvas-preview.test.mjs`로 검사하며 `hwpx-text-audit`에도 포함됩니다. `node tools/hwpx-edit-corpus-audit.mjs`는 모든 추적 fixture 문단에 공개 API 삽입·저장·재열기·원본 복원을 시도하고 미지원 거부를 별도로 집계합니다. 제품 자체 재열기 검사이며 독립 XML/ZIP oracle이나 실제 브라우저 E2E의 대체가 아닙니다.
+
 [HWPX 일반 문단 편집](hwpx-plain-paragraph-edit.md)은 `zig test src/root.zig -O ReleaseSafe --test-filter 'HWPX plain paragraph'` 및 Debug·ReleaseFast로 무변경 서식·다중 사이트 원자성·할당 실패·컨트롤 거부를 검사합니다. `zig test src/hwpx_paragraph_edit_survey.zig -O ReleaseSafe --test-filter 'HWPX selected paragraph edit fixture survey'`는 모든 fixture section 문단의 prefix 삽입·저장·재파싱·복원을 시도하고 거부를 분리합니다. 한정적 native XML 조사이며 공개 편집·조판 완료 증명은 아닙니다.
 
 [HWPX 텍스트 조각 편집](hwpx-text-site-edit.md)은 `zig test src/root.zig -O ReleaseSafe --test-filter 'HWPX text sites'`, `'HWPX text site edit'`, `'HWPX XML source writer'`, `'XML text writer'`로 책임별 집중 검사를 실행합니다. Debug·ReleaseFast에서도 동일 필터를 사용합니다. `python3 tools/zip-replacement-oracle.py --text-edit`와 Python `-O` 실행은 44개 파일의 첫 텍스트 사이트 삽입·ZIP 저장을 독립 XML/ZIP 구현으로 비교합니다. 같은 도구의 `--self-test`와 Python `-O` 실행은 oracle 자체 반례를 검사합니다. 전체 문단·활성 분기·공개 편집 UI 완료 증명은 아닙니다.

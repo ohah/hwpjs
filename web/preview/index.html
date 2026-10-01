@@ -7,12 +7,12 @@
 <main>
   <header><h1>HWP Canvas 미리보기</h1><span>Canvas 직접 입력 실험</span></header>
   <p>문단 텍스트만 표시합니다. 원본 글꼴·표·이미지·줄 배치·페이지 조판은 재현하지 않습니다. 제한적인 문단 편집 실험만 지원하며 일반 저장·다운로드는 지원하지 않습니다.</p>
-  <label for="file">HWP/HWPX 파일 선택 (최대 64 MiB, HWPX 읽기 전용)</label>
+  <label for="file">HWP/HWPX 파일 선택 (최대 64 MiB)</label>
   <input id="file" type="file" accept=".hwp,.hwpx">
   <p class="privacy">파일은 브라우저 안에서 처리하며 서버로 전송하지 않습니다.</p>
   <p id="status" role="status" aria-live="polite">파일을 선택하세요.</p>
   <p id="limit" hidden role="status">표시 한도에 도달해 일부만 표시합니다.</p>
-  <p>HWP5의 일반 텍스트 문단을 클릭해 입력하세요. 드래그 선택·방향키·삭제·붙여넣기를 지원합니다. 문단 간 편집·Enter·실행 취소는 아직 지원하지 않습니다. HWPX는 현재 읽기 전용입니다.</p>
+  <p>편집 가능한 HWP5/HWPX 일반 텍스트 문단을 클릭해 입력하세요. 드래그 선택·방향키·삭제·붙여넣기를 지원합니다. 문단 간 편집·Enter·실행 취소는 아직 지원하지 않습니다. 미지원 컨트롤이 있는 문단은 읽기 전용입니다.</p>
   <p id="canvas-edit-status" role="status" aria-live="polite"></p>
   <details id="editor-panel" hidden>
     <summary>고급 편집 API 실험 폼</summary>

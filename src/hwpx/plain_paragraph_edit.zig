@@ -15,8 +15,6 @@ pub fn splice(a: std.mem.Allocator, tree: *const tree_module.Tree, sites: *sites
     for (sites.items, locations) |site, location| {
         if (location.paragraph_ordinal != paragraph) continue;
         found = true;
-        if (site.element_index >= tree.elements.len) return error.InvalidTextSites;
-        if (tree.elements[site.element_index].first_child != null) return error.UnsupportedInlineControl;
         total = std.math.add(usize, total, try unitCount(site.text)) catch return error.LimitExceeded;
     }
     if (!found) return error.MissingTextSite;

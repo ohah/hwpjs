@@ -21,6 +21,8 @@ test("HWPX display clips a contiguous prefix without split surrogate or later ch
   const clipped = displayHwpxContent(sample, { maxUnits: 2 });
   assert.equal(clipped.limited, true);
   assert.deepEqual(clipped.paragraphs.map(p => p.text), ["A", ""]);
+  assert(clipped.paragraphs.every(p => p.clipped === true));
+  assert(displayHwpxContent(sample).paragraphs.every(p => !p.clipped));
   assert.equal(displayHwpxContent(sample, { maxParagraphs: 0 }).paragraphs.length, 0);
   assert.throws(() => displayHwpxContent(sample, { maxUnits: -1 }), { message: "InvalidDisplayBounds" });
   for (const events of [[event(1, "paragraph_end")], [event(1, "paragraph_start"), event(2, "content", "x")], [event(1, "paragraph_start")], [event(1, "paragraph_start"), event(1, "paragraph_start")]])
@@ -42,7 +44,7 @@ test("every tracked readable HWPX has a bounded read-only Canvas projection", as
   } finally { reader.close(); }
 });
 
-test("actual HWPX Worker loads Canvas content but rejects editing without mutation", async t => {
+test("actual HWPX Worker edits native plain text and refuses unsupported controls", async t => {
   const originalSelf = globalThis.self, originalFetch = globalThis.fetch, replies = [];
   globalThis.self = { postMessage(message) { replies.push(message); } };
   globalThis.fetch = async () => new Response(readFileSync("zig-out/bin/hwpjs.wasm"));
@@ -51,9 +53,18 @@ test("actual HWPX Worker loads Canvas content but rejects editing without mutati
   const send = async message => { await self.onmessage({ data: message }); const reply = replies.shift(); assert(reply); assert.equal(replies.length, 0); return reply; };
   const loaded = await send({ kind: "load", format: "hwpx", bytes: readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwpx") });
   assert.equal(loaded.error, undefined); assert.equal(loaded.content.totalParagraphs, 7);
-  assert(loaded.content.paragraphs.every(p => !p.editable));
-  for (const kind of ["enable", "splice", "format"]) {
-    const rejected = await send({ kind, section: 0, paragraph: 0, startUnit: 0, endUnit: 0, text: "안됨" });
-    assert.equal(rejected.error, "UnsupportedHwpxEditing"); assert.equal(rejected.applied, false);
-  }
+  assert.equal(loaded.content.paragraphs[0].editable, false);
+  assert.equal(loaded.content.paragraphs[1].editable, true);
+  assert.equal(loaded.content.readOnly, false);
+  assert.equal((await send({ kind: "enable" })).error, undefined);
+  const edited = await send({ kind: "splice", section: 0, paragraph: 1, startUnit: 0, endUnit: 0, text: "검증😀" });
+  assert.equal(edited.error, undefined);
+  assert(edited.content.paragraphs[1].text.startsWith("검증😀"));
+  const refused = await send({ kind: "splice", section: 0, paragraph: 0, startUnit: 0, endUnit: 0, text: "안됨" });
+  assert.equal(refused.error, "UnsupportedParagraphControl"); assert.equal(refused.applied, false);
+  const format = await send({ kind: "format" });
+  assert.equal(format.error, "UnsupportedHwpxFormatting"); assert.equal(format.applied, false);
+  const restored = await send({ kind: "splice", section: 0, paragraph: 1, startUnit: 0, endUnit: 4, text: "" });
+  assert.equal(restored.error, undefined);
+  assert.equal(restored.content.paragraphs[1].text, loaded.content.paragraphs[1].text);
 });

@@ -8,9 +8,9 @@ export function displayHwpxContent(result, { maxUnits = 200000, maxParagraphs = 
   let units = 0, limited = false, textClipped = false;
   const append = (frame, text) => {
     if (!frame.visible) { if (text) limited = true; return; }
-    if (textClipped) return;
+    if (textClipped) { if (text) frame.value.clipped = true; return; }
     const clipped = clipText(text, maxUnits - units);
-    if (clipped.length !== text.length) { limited = true; textClipped = true; }
+    if (clipped.length !== text.length) { limited = true; textClipped = true; frame.value.clipped = true; }
     frame.value.text += clipped; units += clipped.length;
   };
   for (const event of result.events) {

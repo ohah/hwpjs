@@ -5,6 +5,7 @@ const scanner = @import("section_text.zig");
 const uri = @import("document_xml.zig").paragraph_uri;
 
 pub fn validate(tree: *const tree_module.Tree, sites: *const sites_module.Sites, locations: []const scanner.Location, paragraph: usize) !void {
+    if (locations.len != sites.items.len or paragraph == 0) return error.InvalidTextSites;
     var owner: ?usize = null;
     for (sites.items, locations) |site, location| {
         if (location.paragraph_ordinal != paragraph) continue;
@@ -38,5 +39,8 @@ pub fn validate(tree: *const tree_module.Tree, sites: *const sites_module.Sites,
             }
         } else if (!element.is(uri, "linesegarray")) return error.UnsupportedParagraphControl;
         child = element.next_sibling;
+    }
+    for (sites.items, locations) |site, location| {
+        if (location.paragraph_ordinal == paragraph and tree.elements[site.element_index].first_child != null) return error.UnsupportedInlineControl;
     }
 }
