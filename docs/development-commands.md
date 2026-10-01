@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[기존 빈 문단 편집](hwp5-empty-text-edit.md)은 제품 WASM 빌드 후 `node --test tests/hwp5/empty-editor.test.mjs`로 검사하며 `hwp5-editor-audit`에도 포함합니다. 표시 후보 반례는 `canvas-preview.test.mjs`, native 할당 실패 원자성은 기본 `zig build test`가 검사합니다.
+
 [추적 픽스쳐 편집 전수 검사](fixture-editor-coverage.md)는 제품 WASM 빌드 후 `node tools/hwp5-edit-corpus-audit.mjs`로 실행합니다. 모든 추적 HWP 문단에 실제 삽입을 시도하고 저장 텍스트·비본문 스트림을 독립 CFB.js로 대조합니다. 정상 종료는 지원 거부가 없다는 뜻이 아닙니다. HWPX 공개 연결 미구현도 별도 집계합니다. 검사 도구의 반례는 `node --test tests/hwp5/edit-corpus.test.mjs` 및 `hwp5-editor-audit`에 포함합니다.
 
 [중첩 목록 문단 편집](hwp5-nested-text-edit.md)은 `node --test tests/hwp5/nested-editor.test.mjs` 및 `hwp5-editor-audit`에서 실제 software 제목/중간/끝 셀의 전체 레코드 대조와 소유 관계 반례를 검사합니다. `text-splice-audit`는 별도 native 중첩 삽입/서식을, 기본 `zig build test`는 중첩 소유 파싱의 할당 실패 원자성을 포함합니다. 실행 전 제품 WASM을 해당 모드로 빌드합니다.

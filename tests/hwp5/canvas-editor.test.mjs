@@ -87,6 +87,16 @@ test("canvas software application title edits its actual nested table paragraph"
   assert.equal(h.native.text(0, 2), "한😀" + before + "\r");
   assert.equal(h.requests.length, 1); assert(!h.note.textContent.includes("실패"));
 });
+test("canvas input materializes an originally empty table cell and handles queued typing", async t => {
+  const h = await harness(t, "table", p => p.paragraph === 1 && p.editable);
+  assert.equal(h.input.value, ""); assert.match(h.paragraph.label, /빈 문단/);
+  h.type("한"); h.type("한😀");
+  assert.equal(h.requests.length, 1); h.ack(); h.ack();
+  assert.equal(h.native.text(0, 1), "한😀\r");
+  assert.equal(h.input.value, "한😀");
+  h.type(""); h.ack(); assert.equal(h.native.text(0, 1), "\r");
+  h.type("재입력"); h.ack(); assert.equal(h.input.value, "재입력");
+});
 test("native rejected newline rolls draft back without another queued edit", async t => {
   const h = await harness(t), before = h.input.value;
   h.type("bad\n" + before); h.type("bad\nqueued" + before); h.ack();

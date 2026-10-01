@@ -20,8 +20,9 @@ export function displayContent(result, { maxUnits = 200000, maxParagraphs = 2000
       const controls = p.tokens.filter(t => t.type === "control").length;
       // This is a display candidate, not an independently reimplemented native
       // ownership policy. The native command validates logical list membership.
-      const editable = p.textPresent && text.length === p.text.length && p.tokens.every(t => t.type !== "control" || t.code === 13);
-      paragraphs.push({ section: section.index, paragraph: index, editable, label: `구역 ${section.index + 1} · 문단 ${index + 1}${p.parentNodeIndex !== null ? " · 중첩" : ""}${controls ? ` · 제어 표식 ${controls}개 (표시 의미 미적용)` : ""}`, text: p.textPresent ? text : "[직접 텍스트 없음]" });
+      const empty = !p.textPresent && p.declaredUnits <= 1;
+      const editable = (p.textPresent || empty) && text.length === p.text.length && p.tokens.every(t => t.type !== "control" || t.code === 13);
+      paragraphs.push({ section: section.index, paragraph: index, editable, label: `구역 ${section.index + 1} · 문단 ${index + 1}${p.parentNodeIndex !== null ? " · 중첩" : ""}${empty ? " · 빈 문단" : ""}${controls ? ` · 제어 표식 ${controls}개 (표시 의미 미적용)` : ""}`, text: p.textPresent || empty ? text : "[직접 텍스트 없음]" });
     }
   }
   return { version: result.version.join("."), paragraphs, totalParagraphs, limited };

@@ -4,6 +4,33 @@ const edit = core.hwp5.experimental_style_preservation;
 const a = std.testing.allocator;
 const fixture = "legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwp";
 
+test "text splice omitted empty cell allocation failures preserve source and absence" {
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/table.hwp", a, .limited(2_000_000));
+    defer a.free(bytes);
+    try std.testing.checkAllAllocationFailures(a, struct {
+        fn run(allocator: std.mem.Allocator, source: []const u8) !void {
+            const session = try edit.Session.open(allocator, source);
+            defer session.close();
+            session.apply(.{ .splice_text = .{ .section = 0, .paragraph = 1, .start_unit = 0, .end_unit = 0, .utf8 = "한😀" } }) catch |err| {
+                const text = try session.copyText(a, 0, 1);
+                defer a.free(text);
+                try std.testing.expectEqual(@as(usize, 0), text.len);
+                const saved = try session.save(a, .{});
+                defer a.free(saved.bytes);
+                try std.testing.expectEqualSlices(u8, source, saved.bytes);
+                return err;
+            };
+            const saved = try session.save(allocator, .{ .allow_stale_layout = true });
+            defer allocator.free(saved.bytes);
+            const reopened = try edit.Session.open(a, saved.bytes);
+            defer reopened.close();
+            const text = try reopened.copyText(a, 0, 1);
+            defer a.free(text);
+            try std.testing.expectEqualSlices(u8, &.{ 0x5c, 0xd5, 0x3d, 0xd8, 0x00, 0xde, 13, 0 }, text);
+        }
+    }.run, .{bytes});
+}
+
 test "text splice nested table ownership allocation failures stay atomic" {
     const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/software.hwp", a, .limited(2_000_000));
     defer a.free(bytes);

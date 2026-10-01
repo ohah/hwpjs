@@ -44,7 +44,8 @@ pub fn validate(a: std.mem.Allocator, source: []const u8, version: Version, p: m
     }
     try (body.Metadata{ .runs = runs, .ranges = ranges, .lines = lines }).validate(h, char_count);
     const parts = try children.collect(tree, p.source_node);
-    const text_node = parts.text_node orelse return error.UnsupportedMissingText;
-    try tree.nodes[text_node].record.value.text.validateCount(h);
+    if (parts.text_node) |text_node| {
+        try tree.nodes[text_node].record.value.text.validateCount(h);
+    } else if (h.characterUnits() > 1) return error.UnsupportedMissingText;
     return ranges;
 }

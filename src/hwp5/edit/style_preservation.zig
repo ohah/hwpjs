@@ -182,7 +182,7 @@ pub const Session = opaque {
         var replacements: std.ArrayList(cfb.stream_replace.Replacement) = .empty;
         for (state.document.sections, 0..) |section, index| {
             if (!sectionChanged(state, index, section)) continue;
-            const decoded = try @import("text_section_writer.zig").write(scratch, state.decoded[index], section, max_stream);
+            const decoded = try @import("text_section_writer.zig").write(scratch, state.decoded[index], section, state.source.header.version(), max_stream);
             const encoded = if (state.source.header.has(.compressed))
                 try @import("../../compression/raw_deflate.zig").encodeStored(scratch, decoded, max_stream)
             else

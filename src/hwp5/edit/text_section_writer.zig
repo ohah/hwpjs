@@ -5,8 +5,13 @@ const framing = @import("../record.zig");
 const writer = @import("../record_writer.zig");
 const body = @import("../body/reader.zig");
 const plain = @import("plain_text.zig");
+const Tree = @import("../body/tree.zig").Tree;
+const children = @import("../body/paragraph_children.zig");
+const Version = @import("../version.zig").Version;
 
-pub fn write(a: std.mem.Allocator, source: []const u8, section: model.Section, limit: usize) ![]u8 {
+pub fn write(a: std.mem.Allocator, source: []const u8, section: model.Section, version: Version, limit: usize) ![]u8 {
+    var tree = try Tree.parseTextPreview(a, source, version, .{});
+    defer tree.deinit(a);
     var out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(a);
     var it = framing.Iterator.init(source, .{});
@@ -37,6 +42,14 @@ pub fn write(a: std.mem.Allocator, source: []const u8, section: model.Section, l
                 // a noncanonical extended-size representation of a short payload.
                 try out.appendSlice(a, record.raw[0 .. record.raw.len - record.payload.len]);
                 try out.appendSlice(a, bytes);
+            }
+            // Bind to immutable source presence, not a mutable duplicate flag.
+            // New text precedes metadata, even when the paragraph had no text.
+            if (p.range_tags != null and (try children.collect(tree, p.source_node)).text_node == null) {
+                if (record.level == std.math.maxInt(u10)) return error.LimitExceeded;
+                const text = try plain.textBytes(a, p);
+                defer a.free(text);
+                try writer.append(a, &out, @intFromEnum(body.Tag.paragraph_text), record.level + 1, text, limit);
             }
         } else if (current != null and current.?.range_tags != null and record.level == level + 1) {
             const p = current.?;

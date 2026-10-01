@@ -10,6 +10,13 @@ pub fn textBytes(a: std.mem.Allocator, p: model.Paragraph) ![]u8 {
     return out.toOwnedSlice(a);
 }
 
+/// Editing view only: observed omitted/zero-length empty text has an implicit
+/// terminator. Raw copyText and no-op saves retain the original absence.
+pub fn editableTextBytes(a: std.mem.Allocator, p: model.Paragraph) ![]u8 {
+    if (p.tokens.len == 0 and p.declared_units <= 1) return a.dupe(u8, &.{ 13, 0 });
+    return textBytes(a, p);
+}
+
 pub fn boundary(bytes: []const u8, unit: u32) !void {
     if (unit > bytes.len / 2) return error.InvalidTextPosition;
     const at = @as(usize, unit) * 2;

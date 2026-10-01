@@ -29,7 +29,7 @@ self.onmessage = async event => {
       const raw = editor.copyText(message.section, message.paragraph);
       const text = new TextDecoder("utf-16le", { fatal: true, ignoreBOM: true }).decode(raw.subarray(0, -2));
       const p = preview.sections[message.section].paragraphs[message.paragraph];
-      preview.sections[message.section].paragraphs[message.paragraph] = { ...p, text, declaredUnits: raw.length / 2, tokens: [
+      preview.sections[message.section].paragraphs[message.paragraph] = raw.length === 0 ? p : { ...p, text, textPresent: true, declaredUnits: raw.length / 2, tokens: [
         { type: "text", startUnit: 0, text, raw: raw.subarray(0, -2) },
         { type: "control", startUnit: raw.length / 2 - 1, code: 13, raw: raw.subarray(-2) },
       ] };

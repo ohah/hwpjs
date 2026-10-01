@@ -48,7 +48,7 @@ fn position(pos: u32, start: u32, end: u32, added: u32) u32 {
 
 pub fn apply(a: std.mem.Allocator, source: []const u8, version: Version, p: *model.Paragraph, edit: Splice, char_count: usize) !void {
     const ranges = try @import("plain_text_source.zig").validate(a, source, version, p.*, char_count);
-    const before = try textBytes(a, p.*);
+    const before = try @import("plain_text_content.zig").editableTextBytes(a, p.*);
     defer a.free(before);
     try validatePlain(before);
     if (edit.start_unit > edit.end_unit or edit.end_unit > before.len / 2 - 1) return error.InvalidTextPosition;
@@ -105,6 +105,7 @@ pub fn apply(a: std.mem.Allocator, source: []const u8, version: Version, p: *mod
     a.free(p.character_runs);
     if (p.range_tags) |rr| a.free(rr);
     p.tokens = owned_tokens;
+    p.text_present = true;
     p.character_runs = owned_runs;
     p.range_tags = owned_ranges;
     p.declared_units = @intCast(after.len / 2);

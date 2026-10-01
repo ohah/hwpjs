@@ -58,7 +58,7 @@ export function exerciseEditor(editor, expected) {
         failures[error.message] = (failures[error.message] ?? 0) + 1;
         continue;
       }
-      const after = Buffer.concat([Buffer.from(marker, "utf16le"), before]);
+      const after = Buffer.concat([Buffer.from(marker, "utf16le"), before.length ? before : Buffer.from("\r", "utf16le")]);
       assert.deepEqual(Buffer.from(editor.copyText(section, paragraph)), after, "accepted edit did not insert marker");
       texts[paragraph] = after;
       edits.push({ section, paragraph });

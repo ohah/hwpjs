@@ -47,7 +47,10 @@ export function encodeRecord(tag, level, payload, extended = payload.length >= 4
 }
 
 export function expectedSection(bytes, index, start, end, utf8) {
-  const owner = paragraphRecords(bytes, index), text = owner.direct.find(r => r.tag === 67).payload;
+  const owner = paragraphRecords(bytes, index), originalText = owner.direct.find(r => r.tag === 67);
+  const declared = owner.head.payload.readUInt32LE(0) & 0x7fffffff;
+  assert(originalText || declared <= 1, "oracle cannot invent missing nonempty text");
+  const text = originalText?.payload.length ? originalText.payload : Buffer.from("\r", "utf16le");
   const add = Buffer.from(utf8, "utf16le"), output = Buffer.concat([text.subarray(0, start * 2), add, text.subarray(end * 2)]);
   if (output.equals(text)) return bytes;
   const rows = owner.direct.find(r => r.tag === 68).payload;
@@ -72,6 +75,7 @@ export function expectedSection(bytes, index, start, end, utf8) {
   header.writeUInt32LE(((header.readUInt32LE(0) & 0x80000000) | (output.length / 2)) >>> 0, 0);
   header.writeUInt16LE(runs.length, 12); header.writeUInt16LE(rangeValues.length, 14); header.writeUInt16LE(0, 16);
   const changed = [Buffer.concat([owner.head.raw.subarray(0, owner.head.raw.length - owner.head.payload.length), header])];
+  if (!originalText) changed.push(encodeRecord(67, owner.head.level + 1, output));
   for (const r of owner.direct) {
     if (r.tag === 69) continue;
     const payload = r.tag === 67 ? output : r.tag === 68 ? runPayload : r.tag === 70 ? rangePayload : r.payload;

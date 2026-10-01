@@ -10,7 +10,7 @@ pub const Edit = struct { section: usize, paragraph: usize, start_unit: u32, end
 pub fn apply(a: std.mem.Allocator, source: []const u8, version: Version, p: *model.Paragraph, edit: Edit, count: usize) !void {
     if (edit.char_shape_id >= count) return error.InvalidResourceReference;
     const original_ranges = try @import("plain_text_source.zig").validate(a, source, version, p.*, count);
-    const text = try plain.textBytes(a, p.*);
+    const text = try plain.editableTextBytes(a, p.*);
     defer a.free(text);
     try plain.validatePlain(text);
     if (edit.start_unit > edit.end_unit or edit.end_unit > text.len / 2 - 1) return error.InvalidTextPosition;

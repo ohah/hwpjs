@@ -24,7 +24,7 @@ try {
 `wasmBytes`는 WASM 바이트 또는 컴파일된 `WebAssembly.Module`입니다. HWP 입력은 기존 JS 입력 어댑터와 같은 ArrayBuffer/Uint8Array 계열이며 최대 64 MiB입니다. 각 factory 호출은 독립 WASM 인스턴스와 native 세션을 만들고 원본을 소유 복사합니다.
 
 - `sectionCount()`, `paragraphCount(section)`, `characterShapeCount()`는 정수 개수를 반환합니다. 문단 인덱스는 기존 미리보기의 구역별 전체 문단 순서(중첩 포함)를 따르지만 변경 가능한 대상은 native 적격성 검사로 제한합니다.
-- `copyText(section, paragraph)`는 마지막 PARA_BREAK(13)까지 포함한 UTF-16LE의 소유 `Uint8Array` 복사본, `text(...)`는 같은 내용을 문자열로 반환합니다. 끝 표식은 편집할 수 없습니다.
+- `copyText(section, paragraph)`는 원본 또는 확정 모델 텍스트의 UTF-16LE 소유 `Uint8Array` 복사본, `text(...)`는 같은 내용을 문자열로 반환합니다. 텍스트가 있으면 마지막 PARA_BREAK(13)를 포함하며 끝 표식은 편집할 수 없습니다. [원본 빈 문단](hwp5-empty-text-edit.md)의 생략 텍스트는 실제 삽입 전까지 0바이트입니다.
 - `splice({...})`는 현재 UTF-16 위치의 반열린 범위 `[startUnit, endUnit)`를 교체하며 반환값은 없습니다. 기본 `rangePolicy: 'reject'`, 명시적 `'half-open'`의 의미와 range tag 이동은 native 계약을 따릅니다. 입력 UTF-8은 최대 4 MiB이며 잘못된 surrogate를 대체 문자로 자동 보정하지 않습니다.
 - `setCharacterFormat({...})`는 기존 0-based CharShape ID만 적용하고 반환값은 없습니다. 새 글꼴·서식 리소스 생성은 없습니다.
 - 인덱스·위치·ID는 실제 정수 `0..0xffffffff`만 허용합니다. 음수·소수·NaN·문자열·Boolean의 암묵적 변환을 거부합니다. 예상 가능한 입력/대상 오류는 JS 예외로 전달되며 실패한 native 편집은 모델을 바꾸지 않습니다.

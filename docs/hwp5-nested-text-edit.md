@@ -6,7 +6,7 @@
 
 - `edit/source_policy.zig`: 구역의 보존 가능 레코드/컨트롤 정책. 기존 body Tag와 도형 모듈의 tag 상수를 재사용합니다. 구역/단 설정 외 표·도형·머리말 등 알려진 컨트롤이 다른 문단에 있다는 이유만으로 단순 텍스트를 막지 않습니다. 알려진 도형 payload를 그대로 보존하는 것과 그 의미·조판을 검증하는 것은 구분합니다. 미지 tag/ID·메모 목록·하이퍼링크 외 필드 컨트롤은 계속 거부합니다.
 - `edit/paragraph_owner.zig`: 원본 Tree에 소유 관계 확인에 필요한 CTRL_HEADER·LIST_HEADER·TABLE만 해석합니다. `list_groups.Groups.build`의 형제 목록 범위와 선언 문단 수를 재사용합니다. LIST_HEADER를 문단의 부모라고 추정하지 않습니다. 표는 `table_lists.Iterator`의 단일 TABLE 마커와 셀/캡션 목록 관계를 확인합니다. head/foot/fn/en 목록과 gso 아래 SHAPE_COMPONENT 목록도 같은 그룹 계약을 사용합니다.
-- `edit/plain_text_source.zig`: 대상 문단의 기존 직접 자식·헤더 확장·개수·리소스 검사를 유지하며 위 두 소유자에 위임합니다. 실제 텍스트는 여전히 일반 Unicode와 끝 PARA_BREAK만 허용합니다. 대상 문단 자체에 필드·개체·번호·탭 등 제어가 있거나 텍스트 레코드가 없으면 거부합니다.
+- `edit/plain_text_source.zig`: 대상 문단의 기존 직접 자식·헤더 확장·개수·리소스 검사를 유지하며 위 두 소유자에 위임합니다. 실제 텍스트는 여전히 일반 Unicode와 끝 PARA_BREAK만 허용합니다. 대상 문단 자체의 필드·개체·번호·탭 등 제어는 거부합니다. 텍스트 부재의 제한적 허용은 [빈 문단 계약](hwp5-empty-text-edit.md)이 소유합니다.
 - 기존 `plain_text.zig`·`character_format.zig`·`text_section_writer.zig`: 명령·원자적 모델 반영·출력의 단일 출처를 유지합니다. 셀 편집 전용 텍스트 사본이나 별도 저장기를 만들지 않습니다.
 
 목록 소유 확인은 셀 주소·병합 격자·6/8바이트 배치·테두리·시각 배치를 새로 검증했다는 뜻이 아닙니다. 셀/표 구조 자체는 변경하지 않습니다. 해당 의미 파서·검증기는 기존 body 모듈이 소유합니다. 다른 문단에 있는 하이퍼링크를 보존할 수 있다는 정책은 하이퍼링크 제어를 포함한 대상 텍스트의 편집 지원과 다릅니다.
@@ -31,4 +31,4 @@
 
 Debug·ReleaseSafe·ReleaseFast 제품 편집 집중 검사 34개, ReleaseSafe 전체 Zig 2,688개가 통과했습니다. ReleaseSafe native audit은 집중 검사 7개, 기존 실제 텍스트 편집 75건·경계 56건·합성 21건·중첩 실제 삽입 1건, 서식 153건과 거부/독립 oracle 반례를 통과했습니다. 전체 Zig 성공 요약의 러너 stderr 문구는 [별도 판정 계약](zig-test-stderr.md)을 따릅니다.
 
-실행 명령은 [개발·검증 명령](development-commands.md)을 따릅니다. HWPX 편집·빈 원본 문단·제어 포함 텍스트·문단 간 편집·재조판·rhwp 형태의 완성 UI는 남은 목표입니다.
+위 실측은 빈 문단 연결 전 단계입니다. 이후 기존 빈 문단 지원과 검증은 [별도 계약](hwp5-empty-text-edit.md)을 따릅니다. 실행 명령은 [개발·검증 명령](development-commands.md)을 따릅니다. HWPX 편집·제어 포함 텍스트·문단 간 편집·재조판·rhwp 형태의 완성 UI는 남은 목표입니다.

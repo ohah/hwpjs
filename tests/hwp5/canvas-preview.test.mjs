@@ -23,3 +23,10 @@ test("bounded rows and paragraph projection explicitly report omissions", () => 
   assert.throws(() => layoutContent(displayContent(result("a")), 0, () => 1), /InvalidLayoutBounds/);
   assert.throws(() => layoutContent(displayContent(result("a")), 1, () => NaN), /InvalidTextMeasurement/);
 });
+test("omitted empty text is a display candidate, but missing nonempty text is not", () => {
+  const r = result("");
+  r.sections[0].paragraphs = [0, 1, 2].map(declaredUnits => ({ text: "", textPresent: false, parentNodeIndex: 1, declaredUnits, tokens: [] }));
+  const content = displayContent(r);
+  assert.deepEqual(content.paragraphs.map(p => p.editable), [true, true, false]);
+  assert.deepEqual(content.paragraphs.map(p => p.text), ["", "", "[직접 텍스트 없음]"]);
+});
