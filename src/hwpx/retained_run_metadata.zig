@@ -21,7 +21,7 @@ pub fn supported(tree: *const trees.Tree, index: usize) bool {
                     leaf.first_child != null or !gaps.empty(tree, nested_index)) return false;
                 nested = leaf.next_sibling;
             }
-        } else return false;
+        } else if (!@import("retained_header_footer.zig").supported(tree, child)) return false;
         child = setting.next_sibling orelse return true;
     }
 }

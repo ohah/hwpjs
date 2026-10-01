@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[HWPX 머리말·꼬리말 소유 문단 편집](hwpx-header-footer-edit.md)은 `zig test src/root.zig -O ReleaseSafe --test-filter 'HWPX header footer edit'` 및 Debug·ReleaseFast로 소유·거부·할당 실패를 검사합니다. 제품 빌드 후 `node --test tests/hwpx/header-footer-editor.test.mjs`는 실제 소유 문단 세 개의 공개 편집과 Python 일반/최적화 전체 XML/ZIP 비교를 실행하며 `hwpx-text-audit`에도 포함됩니다. 실제 브라우저·영역 조판 검증은 별도입니다.
+
 [HWPX 개체 앵커 위치](hwpx-anchor-text-positions.md)는 `zig test src/root.zig -O ReleaseSafe --test-filter 'HWPX anchor positions'`로 위치를, `'HWPX anchored paragraph'` 필터로 정책·거래·할당 실패를 검사합니다. Debug·ReleaseFast도 같은 필터를 사용합니다. 기존 회귀는 `'HWPX field'`·`'HWPX plain paragraph'`·`'HWPX formula splice'` 필터로 별도 실행합니다. 제품 빌드 후 `node --test tests/hwpx/anchor-editor.test.mjs tests/hwpx/canvas-preview.test.mjs`는 공개 API·독립 XML/ZIP·Worker를 검사하고 `node tools/hwpx-anchor-corpus-audit.mjs`는 일반 편집 불가 문단의 보호 앵커 경계 편집·저장·재열기·복원을 시도합니다. 전체 위치 물질화·조판 검증은 아닙니다.
 
 [HWPX 주석 본문 편집](hwpx-note-text-edit.md)은 `zig test src/root.zig -O ReleaseSafe --test-filter 'HWPX note edit'`로 실제 네 본문·번호 원문 보존·거부 반례·할당 실패를 검사합니다. Debug·ReleaseFast도 같은 필터를 사용합니다. 제품 빌드 후 `node --test tests/hwpx/note-editor.test.mjs`는 공개 편집·독립 Python 일반/최적화 전체 XML·ZIP 비교를 실행하며 `hwpx-text-audit`에도 포함됩니다. 실제 브라우저·번호 생성·주석 조판은 별도입니다.

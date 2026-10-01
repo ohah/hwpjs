@@ -91,7 +91,7 @@ test("actual HWPX Worker edits native plain text and refuses unsupported control
   const captionEdited = await send({ kind: "splice", section: caption.section, paragraph: caption.paragraph, startUnit: 3, endUnit: 3, text: "검증😀" });
   assert.equal(captionEdited.error, undefined);
   assert.equal(captionEdited.content.paragraphs.find(p => p.paragraph === caption.paragraph).text, "표 \ufffc검증😀 위 캡션");
-  for (const [name, ordinal] of [["noori", 13], ["page", 1], ["table-bug", 1]]) {
+  for (const [name, ordinal] of [["noori", 13], ["page", 1], ["table-bug", 1], ["headerfooter", 2]]) {
     const pageSettings = await send({ kind: "load", format: "hwpx", bytes: readFileSync(`legacy/rust/crates/hwp-core/tests/fixtures/${name}.hwpx`) });
     assert.equal(pageSettings.error, undefined);
     const target = pageSettings.content.paragraphs[ordinal - 1];

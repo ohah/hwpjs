@@ -2,6 +2,8 @@
 
 ## 책임과 계약
 
+[머리말·꼬리말 소유 문단 편집](hwpx-header-footer-edit.md)은 기존 run metadata 보존 경로를 확장하며 중첩 본문과 바깥 소유 문단을 합치지 않습니다. 컨테이너 모양·검증 수치는 해당 문서가 소유합니다.
+
 일반 문단은 `plain_paragraph_edit.zig`가 위치와 정책을 연결하고 `text_splice_transaction.zig`가 원자적 문자열 거래를 소유합니다. [명시적 필드 라벨 편집](hwpx-field-text-edit.md)도 같은 거래를 재사용하며 plain 정책에서 필드를 통과시키지는 않습니다. 아래 파일 책임과 검사 수치는 분리 전 이력도 포함합니다.
 
 plain 진입점은 inline을 거부하며 공개 세션은 선택적으로 같은 원자적 명령의 탭-aware 경로를 사용합니다. 최신 탭 경계·사이트·검증 수치는 [탭 보존 위치](hwpx-paragraph-text-positions.md)가 소유합니다. 아래 inline 거부와 단 설정 수치는 각 경로 및 당시 단계의 범위를 구분해서 읽습니다.

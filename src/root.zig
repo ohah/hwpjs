@@ -465,6 +465,7 @@ test {
     _ = @import("hwpx/text_sites_tests.zig");
     _ = @import("hwpx/text_site_edit.zig");
     _ = @import("hwpx/plain_paragraph_edit_tests.zig");
+    _ = @import("hwpx/header_footer_edit_tests.zig");
     _ = @import("hwpx/note_edit_tests.zig");
     _ = @import("hwpx/anchor_text_positions_tests.zig");
     _ = @import("hwpx/anchor_paragraph_edit_tests.zig");

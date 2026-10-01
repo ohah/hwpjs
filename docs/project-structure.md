@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+[HWPX 머리말·꼬리말 소유 문단 편집](hwpx-header-footer-edit.md)은 `retained_header_footer.zig`가 보존 컨테이너 모양을, `header_footer_edit_tests.zig`와 `tests/hwpx/header-footer-editor.test.mjs`가 native·공개 독립 비교를 소유합니다. 기존 run metadata·문단 정책·위치·거래·저장 경로를 재사용합니다.
+
 [HWPX 개체 앵커 위치](hwpx-anchor-text-positions.md)는 `run_anchor.zig`가 구조적 후보 분류를, `anchor_text_positions.zig`가 기존 텍스트/탭 위치 조립을, `anchor_paragraph_edit.zig`가 opt-in 정책·명령·표시 문자열 조립을 소유합니다. 두 별도 native 테스트 파일과 `tests/hwpx/anchor-editor.test.mjs`가 검증을 분리합니다. 기존 세션·WASM·Worker·Canvas를 재사용하며 전수 시도는 `tools/hwpx-anchor-corpus-audit.mjs`가 담당합니다.
 
 [HWPX 주석 본문 편집](hwpx-note-text-edit.md)은 `retained_note_number.zig`가 번호 prefix의 원문 보존 적격성을, `note_edit_tests.zig`가 native 반례·실파일·할당 실패를 담당합니다. 기존 문단 정책·세션·저장기를 사용하며 `tests/hwpx/note-editor.test.mjs`가 공개 API와 독립 전체 XML/ZIP 비교를 분리합니다.

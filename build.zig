@@ -88,7 +88,7 @@ pub fn build(b: *std.Build) void {
     audit.dependOn(&editor_api_tests.step);
     const editor_api_step = b.step("hwp5-editor-audit", "Test experimental JS WASM HWP5 editor boundary");
     editor_api_step.dependOn(&editor_api_tests.step);
-    const hwpx_text_tests = b.addSystemCommand(&.{ "node", "--test", "tests/hwpx/text-reader.test.mjs", "tests/hwpx/canvas-preview.test.mjs", "tests/hwpx/editor.test.mjs", "tests/hwpx/formula-editor.test.mjs", "tests/hwpx/note-editor.test.mjs", "tests/hwpx/anchor-editor.test.mjs" });
+    const hwpx_text_tests = b.addSystemCommand(&.{ "node", "--test", "tests/hwpx/text-reader.test.mjs", "tests/hwpx/canvas-preview.test.mjs", "tests/hwpx/editor.test.mjs", "tests/hwpx/formula-editor.test.mjs", "tests/hwpx/note-editor.test.mjs", "tests/hwpx/anchor-editor.test.mjs", "tests/hwpx/header-footer-editor.test.mjs" });
     hwpx_text_tests.step.dependOn(b.getInstallStep());
     hwpx_text_tests.has_side_effects = true;
     audit.dependOn(&hwpx_text_tests.step);
