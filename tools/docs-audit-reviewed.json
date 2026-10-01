@@ -1,6 +1,10 @@
 {
   "schema": 1,
   "verified": {
+    "docs/fixture-editor-coverage.md": {
+      "sha256": "5d4736c43970f465a6b5ac72cd33e85bf3d288612d442dca0367567009f06e5f",
+      "evidence": "2026-10-01 Git inventory 48 HWP and 45 HWPX; 45 HWP opens, 1481 real splice attempts and 269 accepted saved text oracles using independent CFB.js Node zlib; all 45 saved editors reopen; software 0 of 101 confirmed; five corpus verifier tests catch ignored commands mutation and stream text loss; no formatting layout UI or HWPX public editing completion claim"
+    },
     "docs/canvas-direct-input.md": {
       "sha256": "5a4b5492080da50c384f2ce4a206c4dba099da18b878442b68893f443a15c69b",
       "evidence": "2026-10-01 direct Canvas hit test grapheme UTF16 selection native acknowledgement and temporary composition SSOT checked against source; Debug Safe Fast 21 API input tests and full Safe 2687 Zig plus 51 Node regressions pass; five actual fixtures use native WASM with mocked DOM; Chromium public URL pointer typing selection wrap errors composition reset and explicit Meta A empty reinput verified; real OS IME candidate clipboard permissions and HWPX layout remain unverified"
@@ -670,8 +674,8 @@
       "evidence": "2026-10-01 direct Canvas hit test grapheme UTF16 selection native acknowledgement and temporary composition SSOT checked against source; Debug Safe Fast 21 API input tests and full Safe 2687 Zig plus 51 Node regressions pass; five actual fixtures use native WASM with mocked DOM; Chromium public URL pointer typing selection wrap errors composition reset and explicit Meta A empty reinput verified; real OS IME candidate clipboard permissions and HWPX layout remain unverified"
     },
     "docs/development-commands.md": {
-      "sha256": "86f8cdf9deb79e65bad821e600e4421ee657d02ec59bc64a3ddf76b49d060de3",
-      "evidence": "2026-10-01 direct Canvas hit test grapheme UTF16 selection native acknowledgement and temporary composition SSOT checked against source; Debug Safe Fast 21 API input tests and full Safe 2687 Zig plus 51 Node regressions pass; five actual fixtures use native WASM with mocked DOM; Chromium public URL pointer typing selection wrap errors composition reset and explicit Meta A empty reinput verified; real OS IME candidate clipboard permissions and HWPX layout remain unverified"
+      "sha256": "d8fee0181d3568fae21c0eeafb68b28ad265744683ec76234b6db056ebff5dfc",
+      "evidence": "2026-10-01 prior Canvas command checks retained; new full fixture corpus command run against Safe WASM: 93 tracked fixtures, 1481 attempts, 269 edits and 45 saved session reopens independently checked; new five oracle counterexample tests included in Safe 26 editor audit tests; formatting layout browser and HWPX public editing are separate incomplete gates"
     },
     "docs/zig-test-stderr.md": {
       "sha256": "9133676bc38bac48fab5f9ba8a04ec972697d32e7a051a851d6b158c444c66b5",
@@ -1522,8 +1526,8 @@
       "evidence": "2026-09-30 Read-only ranges remain null; controlled Session owns materialized ranges; Node full Section unit-wise oracle Rust JSON and four allocation and command tests checked"
     },
     "docs/hwp5-modules.md": {
-      "sha256": "35962bb9ad207843b33784b05c537a057a7805be2f47f0238eef8ffe166e4489",
-      "evidence": "2026-10-01 direct Canvas hit test grapheme UTF16 selection native acknowledgement and temporary composition SSOT checked against source; Debug Safe Fast 21 API input tests and full Safe 2687 Zig plus 51 Node regressions pass; five actual fixtures use native WASM with mocked DOM; Chromium public URL pointer typing selection wrap errors composition reset and explicit Meta A empty reinput verified; real OS IME candidate clipboard permissions and HWPX layout remain unverified"
+      "sha256": "684c9ce15b42327077427a5f58d1c04cd95c501917a4f68226a6f3178c5f2dd7",
+      "evidence": "2026-10-01 prior module links retained; new fixture-editor-coverage topic checked against Git inventory and native source guards, full 93 fixture audit and saved editor reopens; 569 Markdown files and 2932 inline links checked; parser editor and Canvas completion gates remain explicitly incomplete"
     },
     "docs/migration.md": {
       "sha256": "ff208406c964f5e7f457852077a0510c63f662344b8967e551f42948bf34ad27",

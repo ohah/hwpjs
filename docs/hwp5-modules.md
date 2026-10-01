@@ -6,6 +6,7 @@
 - [Canvas 문단 텍스트 미리보기 화면](canvas-text-preview.md)
 - [Canvas 직접 입력·선택·조합 실험](canvas-direct-input.md)
 - [실험용 HWP5 편집 JS/WASM API](hwp5-editor-api.md)
+- [추적 픽스쳐 편집 지원 전수 기준](fixture-editor-coverage.md)
 - [읽기 전용 문서 모델 첫 연결과 JSON 호환 경계](hwp5-model-projection.md)
 - [편집 모델과 원본 보존의 제한적 구현 실험](hwp5-style-preservation-experiment.md)
 - [단순 문단 텍스트 삽입·삭제와 저장 실험](hwp5-plain-text-edit-experiment.md)
