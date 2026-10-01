@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+`node tools/hwp5-edit-corpus-audit.mjs --history`는 모든 추적 HWP5 문단 prefix 시도에 native undo/redo와 전체 저장값·reflow 복원을 추가합니다. 최종 문단 텍스트·비본문 스트림은 독립 CFB.js/Node로 검사합니다. 숫자 입력 및 보호 파일 거부는 별도 집계하며 전체 편집 위치·서식·조판 지원의 증명은 아닙니다. HWPX 편집은 별도 HWPX corpus 명령이 소유합니다.
+
 `node tools/hwpx-edit-corpus-audit.mjs --history`는 모든 추적 HWPX 일반 문단의 prefix 시도에 native undo/redo·원본/편집 ZIP 일치·거부 후 redo 보존을 추가합니다. 암호화·컨트롤·숫자 입력 거부를 별도로 집계하며 전체 컨트롤 지원이나 독립 decoder 비교의 대체가 아닙니다. 이력 없이 기존 편집 복원 조사는 같은 명령에서 --history를 생략합니다.
 
 [HWPX native 이력](hwpx-edit-history.md)은 `zig test src/root.zig -O ReleaseSafe --test-filter 'HWPX native history'`와 `'HWPX checkpoint'`로 집중 검사합니다. Debug·ReleaseFast도 같은 필터를 사용합니다. 제품 빌드 후 `node --test tests/hwpx/history-editor.test.mjs tests/hwpx/canvas-preview.test.mjs tests/hwp5/history-controls.test.mjs tests/hwp5/canvas-editor.test.mjs`는 공개 이력·Worker·Canvas·버튼 경계를 검사하며 정규 두 editor audit에도 포함됩니다. 실제 브라우저·OS IME·전체 조판 검증은 별도입니다.

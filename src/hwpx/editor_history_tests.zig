@@ -26,20 +26,20 @@ test "HWPX native history every allocation failure retains current model and sta
             defer h.deinit();
             _ = h.apply(&session, .{ .kind = .anchored, .paragraph = 1, .start = 0, .deleted = 0, .inserted = "검증😀" }) catch |err| {
                 try std.testing.expectEqualStrings("A", session.sections[0].sites.items[0].text);
-                try std.testing.expectEqual(@as(usize, 0), h.undo_stack.items.len);
-                try std.testing.expectEqual(@as(usize, 0), h.redo_stack.items.len);
+                try std.testing.expectEqual(@as(usize, 0), h.stack.undo.items.len);
+                try std.testing.expectEqual(@as(usize, 0), h.stack.redo.items.len);
                 return err;
             };
             _ = h.undo(&session) catch |err| {
                 try std.testing.expectEqualStrings("검증😀A", session.sections[0].sites.items[0].text);
-                try std.testing.expectEqual(@as(usize, 1), h.undo_stack.items.len);
-                try std.testing.expectEqual(@as(usize, 0), h.redo_stack.items.len);
+                try std.testing.expectEqual(@as(usize, 1), h.stack.undo.items.len);
+                try std.testing.expectEqual(@as(usize, 0), h.stack.redo.items.len);
                 return err;
             };
             _ = h.redo(&session) catch |err| {
                 try std.testing.expectEqualStrings("A", session.sections[0].sites.items[0].text);
-                try std.testing.expectEqual(@as(usize, 0), h.undo_stack.items.len);
-                try std.testing.expectEqual(@as(usize, 1), h.redo_stack.items.len);
+                try std.testing.expectEqual(@as(usize, 0), h.stack.undo.items.len);
+                try std.testing.expectEqual(@as(usize, 1), h.stack.redo.items.len);
                 return err;
             };
             try std.testing.expectEqualStrings("검증😀A", session.sections[0].sites.items[0].text);
@@ -61,14 +61,14 @@ test "HWPX native history undo redo branches failures and bounded eviction" {
     const after_limit = try session.save();
     defer a.free(after_limit);
     try std.testing.expectEqualSlices(u8, bytes, after_limit);
-    try std.testing.expectEqual(@as(usize, 0), h.undo_stack.items.len);
+    try std.testing.expectEqual(@as(usize, 0), h.stack.undo.items.len);
     h.max_checkpoint_bytes = 4_000_000;
     try std.testing.expect(try h.apply(&session, .{ .kind = .anchored, .paragraph = 1, .start = 0, .deleted = 0, .inserted = "A" }));
     try std.testing.expect(try h.apply(&session, .{ .kind = .anchored, .paragraph = 1, .start = 1, .deleted = 0, .inserted = "B" }));
     try std.testing.expect(try h.undo(&session));
     try std.testing.expectError(error.ProtectedInlineControl, h.apply(&session, .{ .kind = .anchored, .paragraph = 1, .start = 1, .deleted = 1, .inserted = "" }));
     try std.testing.expect(!try h.apply(&session, .{ .kind = .anchored, .paragraph = 1, .start = 0, .deleted = 1, .inserted = "A" }));
-    try std.testing.expectEqual(@as(usize, 1), h.redo_stack.items.len);
+    try std.testing.expectEqual(@as(usize, 1), h.stack.redo.items.len);
     try std.testing.expect(try h.redo(&session));
     try std.testing.expect(try h.undo(&session));
     try std.testing.expect(try h.undo(&session));
@@ -78,7 +78,7 @@ test "HWPX native history undo redo branches failures and bounded eviction" {
     try std.testing.expect(try h.apply(&session, .{ .kind = .anchored, .paragraph = 1, .start = 0, .deleted = 0, .inserted = "C" }));
     try std.testing.expect(!try h.redo(&session));
     for (0..3) |_| try std.testing.expect(try h.apply(&session, .{ .kind = .anchored, .paragraph = 1, .start = 0, .deleted = 0, .inserted = "D" }));
-    try std.testing.expectEqual(@as(usize, 2), h.undo_stack.items.len);
+    try std.testing.expectEqual(@as(usize, 2), h.stack.undo.items.len);
     try std.testing.expect(try h.undo(&session));
     try std.testing.expect(try h.undo(&session));
     try std.testing.expect(!try h.undo(&session));

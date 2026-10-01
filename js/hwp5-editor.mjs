@@ -2,6 +2,7 @@ import { validateAbi } from "./abi.mjs";
 import { createMemory } from "./wasm-memory.mjs";
 import { inputBytes } from "./input.mjs";
 import { EXPERIMENTAL_EDITOR_FUNCTIONS } from "./abi-schema.mjs";
+import { createHistoryApi } from "./editor-history.mjs";
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder("utf-16le", { fatal: true, ignoreBOM: true });
@@ -27,6 +28,7 @@ export async function createExperimentalHwp5Editor(source, input) {
   memory.withBytes(bytes, (ptr, size) => success(wasm.hwp5_edit_open(ptr, size)));
   const copyText = (section, paragraph) => { check(); return output(() => wasm.hwp5_edit_copy_text(u32(section, "section"), u32(paragraph, "paragraph"))).bytes; };
   return {
+    ...createHistoryApi({ wasm, memory, check, uint: u32, prefix: "hwp5_edit", unavailable: "Hwp5HistoryAbiUnavailable" }),
     sectionCount() { check(); return count(wasm.hwp5_edit_section_count()); },
     paragraphCount(section) { check(); return count(wasm.hwp5_edit_paragraph_count(u32(section, "section"))); },
     characterShapeCount() { check(); return count(wasm.hwp5_edit_char_shape_count()); },

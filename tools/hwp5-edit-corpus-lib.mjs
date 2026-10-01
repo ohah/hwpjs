@@ -40,8 +40,10 @@ export function verifySaved(beforeStreams, afterStreams, expected) {
   }
 }
 
-export function exerciseEditor(editor, expected) {
+export function exerciseEditor(editor, expected, { history = false } = {}) {
   const failures = {}, edits = [];
+  let historyVerified = 0;
+  if (history) editor.enableHistory();
   let attempted = 0;
   assert.equal(editor.sectionCount(), expected.size, "editor section count differs from oracle");
   for (const [section, texts] of expected) {
@@ -52,14 +54,25 @@ export function exerciseEditor(editor, expected) {
       try { before = Buffer.from(editor.copyText(section, paragraph)); }
       catch (error) { failures[`copyText:${error.message}`] = (failures[`copyText:${error.message}`] ?? 0) + 1; continue; }
       assert.deepEqual(before, texts[paragraph] ?? Buffer.alloc(0), "source text differs from independent oracle");
+      const prior = history ? editor.save({ allowStaleLayout: true }) : null;
       try { editor.splice({ section, paragraph, startUnit: 0, endUnit: 0, text: marker }); }
       catch (error) {
         assert.deepEqual(Buffer.from(editor.copyText(section, paragraph)), before, "refused edit mutated paragraph");
+        if (history) assert.deepEqual(editor.save({ allowStaleLayout: true }), prior, "refused edit changed document or layout state");
         failures[error.message] = (failures[error.message] ?? 0) + 1;
         continue;
       }
       const after = Buffer.concat([Buffer.from(marker, "utf16le"), before.length ? before : Buffer.from("\r", "utf16le")]);
       assert.deepEqual(Buffer.from(editor.copyText(section, paragraph)), after, "accepted edit did not insert marker");
+      if (history) {
+        const changed = editor.save({ allowStaleLayout: true });
+        assert.equal(editor.undo(), true, "accepted command missing undo");
+        assert.deepEqual(editor.save({ allowStaleLayout: true }), prior, "undo differs from previous complete document");
+        if (edits.length === 0) assert.deepEqual(editor.save(), prior, "first undo failed to restore strict layout state");
+        assert.equal(editor.redo(), true, "accepted command missing redo");
+        assert.deepEqual(editor.save({ allowStaleLayout: true }), changed, "redo differs from edited complete document");
+        historyVerified++;
+      }
       texts[paragraph] = after;
       edits.push({ section, paragraph });
     }
@@ -67,5 +80,5 @@ export function exerciseEditor(editor, expected) {
   if (edits.length) assert.throws(() => editor.save(), { message: "LayoutReflowRequired" });
   const saved = editor.save({ allowStaleLayout: true });
   assert.equal(saved.layoutRequiresReflow, edits.length > 0, "save reflow status differs from applied edits");
-  return { attempted, edited: edits.length, failures, saved };
+  return { attempted, edited: edits.length, failures, saved, ...(history ? { historyVerified } : {}) };
 }

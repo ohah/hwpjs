@@ -10,6 +10,8 @@
 
 `editor_history.zig`는 undo/redo 스택을 소유합니다. 실패·무변경은 redo를 유지하고 새 편집 성공만 redo를 해제합니다. 항목 수 한도에서는 새 명령 성공 후 가장 오래된 undo를 제거합니다. 변경 후 checkpoint 크기 초과는 native 텍스트·dirty를 복구하고 이력 개수를 유지합니다. 스택 이동은 대상 목록 용량을 먼저 준비하므로 할당 실패 시 현재 모델을 교환하지 않습니다.
 
+이후 HWP5 이력 연결에서 항목 소유·용량 준비·분기·오래된 항목 제거·undo/redo 이동을 `model/history_stack.zig`로 분리했습니다. 두 포맷이 같은 스택 정책을 사용하고 HWPX 어댑터는 source 바인딩·명령·checkpoint 복원만 유지합니다. 공개 WASM/JS 이력 API는 변경하지 않습니다.
+
 한도는 항목 수와 개별 checkpoint 바이트이며 스택 목록 메모리·현재 세션·일시적인 거래 초안까지 포함한 전체 메모리 한도가 아닙니다. 크기 산정은 Sites 배열·소유 텍스트·dirty 용량·section state 배열을 검사하며 정수 오버플로를 거부합니다.
 
 ## 공개 API

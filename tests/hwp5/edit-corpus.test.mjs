@@ -19,6 +19,26 @@ function editor({ ignore = false, mutateOnError = false } = {}) {
   };
 }
 const expected = () => new Map([[0, [Buffer.from("A\r", "utf16le"), Buffer.from("B\r", "utf16le")]]]);
+test("history corpus rejects lying undo redo and stale layout restoration", () => {
+  const make = fault => {
+    let text = Buffer.from("A\r", "utf16le"), changed = false, before, after;
+    return {
+      enableHistory() {}, sectionCount: () => 1, paragraphCount: () => 1,
+      copyText: () => Buffer.from(text),
+      splice() { before = Buffer.from(text); text = Buffer.concat([Buffer.from(marker, "utf16le"), text]); after = Buffer.from(text); changed = true; },
+      undo() { if (fault !== "undo") text = Buffer.from(before); if (fault !== "layout") changed = false; return true; },
+      redo() { if (fault !== "redo") text = Buffer.from(after); changed = true; return true; },
+      save(options = {}) {
+        if (changed && !options.allowStaleLayout) throw new Error("LayoutReflowRequired");
+        return { bytes: Buffer.from(text), layoutRequiresReflow: changed };
+      },
+    };
+  };
+  const source = () => new Map([[0, [Buffer.from("A\r", "utf16le")]]]);
+  assert.equal(exerciseEditor(make(), source(), { history: true }).historyVerified, 1);
+  for (const fault of ["undo", "layout"]) assert.throws(() => exerciseEditor(make(fault), source(), { history: true }), /undo differs/);
+  assert.throws(() => exerciseEditor(make("redo"), source(), { history: true }), /redo differs/);
+});
 test("corpus exercises actual insertion and counts rejection, not no-op eligibility", () => {
   const result = exerciseEditor(editor(), expected());
   assert.equal(result.attempted, 2); assert.equal(result.edited, 1);

@@ -2,6 +2,7 @@
 const std = @import("std");
 const editor = @import("editor_session.zig");
 const checkpoints = @import("editor_checkpoint.zig");
+const Stacks = @import("../model/history_stack.zig").Stack(checkpoints.Checkpoint, release);
 
 pub const Command = struct {
     kind: enum { plain, anchored, field } = .plain,
@@ -15,21 +16,16 @@ pub const Command = struct {
 pub const History = struct {
     allocator: std.mem.Allocator,
     source_pointer: [*]const u8,
-    max_entries: usize,
     max_checkpoint_bytes: usize,
-    undo_stack: std.ArrayList(checkpoints.Checkpoint) = .empty,
-    redo_stack: std.ArrayList(checkpoints.Checkpoint) = .empty,
+    stack: Stacks,
 
     pub fn init(session: *const editor.Session, max_entries: usize, max_checkpoint_bytes: usize) !History {
         if (max_entries == 0 or max_checkpoint_bytes == 0) return error.LimitExceeded;
         _ = std.math.mul(usize, max_entries, max_checkpoint_bytes) catch return error.LimitExceeded;
-        return .{ .allocator = session.allocator, .source_pointer = session.source.ptr, .max_entries = max_entries, .max_checkpoint_bytes = max_checkpoint_bytes };
+        return .{ .allocator = session.allocator, .source_pointer = session.source.ptr, .max_checkpoint_bytes = max_checkpoint_bytes, .stack = try Stacks.init(session.allocator, max_entries) };
     }
     pub fn deinit(self: *History) void {
-        clear(&self.undo_stack);
-        clear(&self.redo_stack);
-        self.undo_stack.deinit(self.allocator);
-        self.redo_stack.deinit(self.allocator);
+        self.stack.deinit();
         self.* = undefined;
     }
     fn bind(self: *const History, session: *const editor.Session) !void {
@@ -40,7 +36,7 @@ pub const History = struct {
         var before = try checkpoints.capture(session, self.max_checkpoint_bytes);
         var transferred = false;
         defer if (!transferred) before.deinit();
-        if (self.undo_stack.items.len < self.max_entries) try self.undo_stack.ensureUnusedCapacity(self.allocator, 1);
+        try self.stack.prepare();
         const changed = switch (command.kind) {
             .plain => try session.splice(command.section, command.paragraph, command.start, command.deleted, command.inserted),
             .anchored => try session.spliceAnchored(command.section, command.paragraph, command.start, command.deleted, command.inserted),
@@ -53,31 +49,22 @@ pub const History = struct {
             try before.exchange(session);
             return err;
         };
-        clear(&self.redo_stack);
-        if (self.undo_stack.items.len == self.max_entries) {
-            var oldest = self.undo_stack.orderedRemove(0);
-            oldest.deinit();
-        }
-        self.undo_stack.appendAssumeCapacity(before);
+        self.stack.commit(before);
         transferred = true;
         return true;
     }
     pub fn undo(self: *History, session: *editor.Session) !bool {
-        return self.move(session, &self.undo_stack, &self.redo_stack);
+        try self.bind(session);
+        return self.stack.move(false, session, exchange);
     }
     pub fn redo(self: *History, session: *editor.Session) !bool {
-        return self.move(session, &self.redo_stack, &self.undo_stack);
-    }
-    fn move(self: *History, session: *editor.Session, from: *std.ArrayList(checkpoints.Checkpoint), to: *std.ArrayList(checkpoints.Checkpoint)) !bool {
         try self.bind(session);
-        if (from.items.len == 0) return false;
-        try to.ensureUnusedCapacity(self.allocator, 1);
-        try from.items[from.items.len - 1].exchange(session);
-        to.appendAssumeCapacity(from.pop().?);
-        return true;
+        return self.stack.move(true, session, exchange);
     }
 };
-fn clear(stack: *std.ArrayList(checkpoints.Checkpoint)) void {
-    for (stack.items) |*entry| entry.deinit();
-    stack.clearRetainingCapacity();
+fn release(checkpoint: *checkpoints.Checkpoint) void {
+    checkpoint.deinit();
+}
+fn exchange(checkpoint: *checkpoints.Checkpoint, session: *editor.Session) !void {
+    try checkpoint.exchange(session);
 }

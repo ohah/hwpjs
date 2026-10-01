@@ -3,6 +3,47 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
 
+test("actual HWP5 Worker history restores whole fixture projections and saved bytes", async t => {
+  const originalSelf = globalThis.self, originalFetch = globalThis.fetch, replies = [];
+  globalThis.self = { postMessage(message) { replies.push(message); } };
+  globalThis.fetch = async () => new Response(readFileSync("zig-out/bin/hwpjs.wasm"));
+  t.after(() => { globalThis.fetch = originalFetch; if (originalSelf === undefined) delete globalThis.self; else globalThis.self = originalSelf; });
+  await import(`../../web/preview/reader-worker.mjs?history-regression=${Date.now()}`);
+  const send = async message => {
+    await self.onmessage({ data: { origin: "history", ...message } });
+    const reply = replies.shift(); assert(reply); assert.equal(replies.length, 0); return reply;
+  };
+  const cases = [
+    ["charshape", { kind: "splice", paragraph: 1, startUnit: 0, endUnit: 0, text: "이력😀" }],
+    ["software", { kind: "splice", paragraph: 2, startUnit: 0, endUnit: 0, text: "공모😀" }],
+    ["chart", { kind: "splice", paragraph: 19, startUnit: 1, endUnit: 2, text: "2" }],
+    ["issue144-fields-crossing-lineseg-boundary", { kind: "splice", paragraph: 2, startUnit: 0, endUnit: 4, text: "필드😀" }],
+    ["table", { kind: "splice", paragraph: 1, startUnit: 0, endUnit: 0, text: "빈셀😀" }],
+    ["charshape", { kind: "format", paragraph: 1, startUnit: 0, endUnit: 1, charShapeId: 0 }],
+  ];
+  for (const [name, command] of cases) {
+    const source = readFileSync(`legacy/rust/crates/hwp-core/tests/fixtures/${name}.hwp`);
+    const loaded = await send({ kind: "load", bytes: source }); assert.equal(loaded.error, undefined);
+    assert.equal((await send({ kind: "undo" })).error, "EditorNotOpen");
+    const enabled = await send({ kind: "enable" }); assert.equal(enabled.error, undefined); assert.equal(enabled.historyAvailable, true);
+    assert.equal((await send({ kind: "undo" })).changed, false);
+    const edited = await send({ section: 0, ...command }); assert.equal(edited.error, undefined, name);
+    const saved = await send({ kind: "save", allowStaleLayout: true }); assert.equal(saved.error, undefined);
+    assert.notDeepEqual(Buffer.from(saved.bytes), source);
+    const undone = await send({ kind: "undo" }); assert.equal(undone.error, undefined); assert.equal(undone.changed, true);
+    assert.deepEqual(undone.content, loaded.content, `${name}: all projection metadata must restore`);
+    const original = await send({ kind: "save" }); assert.equal(original.error, undefined); assert.equal(original.layoutRequiresReflow, false);
+    assert.deepEqual(Buffer.from(original.bytes), source);
+    assert.equal((await send({ kind: "enable" })).historyAvailable, true, "repeated enable must not reset redo");
+    const refused = await send({ kind: "splice", section: 0, paragraph: 999999, startUnit: 0, endUnit: 0, text: "실패" });
+    assert(refused.error); assert.equal(refused.applied, false);
+    const redone = await send({ kind: "redo" }); assert.equal(redone.error, undefined); assert.equal(redone.changed, true);
+    assert.deepEqual(redone.content, edited.content, `${name}: dependent projections must redo`);
+    assert.deepEqual((await send({ kind: "save", allowStaleLayout: true })).bytes, saved.bytes);
+    assert.equal((await send({ kind: "redo" })).changed, false);
+  }
+});
+
 test("actual HWP5 Worker save refusal retains edits and native session for retry", async t => {
   const originalSelf = globalThis.self, originalFetch = globalThis.fetch, replies = [];
   globalThis.self = { postMessage(message) { replies.push(message); } };

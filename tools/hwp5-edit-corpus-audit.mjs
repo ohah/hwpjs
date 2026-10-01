@@ -10,6 +10,8 @@ import { createExperimentalHwp5Editor } from "../js/hwp5-editor.mjs";
 import { fixturePaths, sectionTexts, exerciseEditor, verifySaved } from "./hwp5-edit-corpus-lib.mjs";
 
 const module = await WebAssembly.compile(readFileSync("zig-out/bin/hwpjs.wasm"));
+const history = process.argv.includes("--history");
+for (const argument of process.argv.slice(2)) if (argument !== "--history") throw new Error(`Unknown argument: ${argument}`);
 const context = { module: { exports: {} }, require: createRequire(import.meta.url), Buffer, process };
 runInNewContext(readFileSync("legacy/cfb.js", "utf8"), context);
 function streams(bytes) {
@@ -30,7 +32,7 @@ try {
         const preview = hwpxReader.readTextEvents(readFileSync(path));
         result.previewParagraphs = preview.paragraphCount;
         result.previewEvents = preview.events.length;
-        result.status = "hwpx_public_editor_not_connected";
+        result.status = "hwpx_edit_audited_separately";
       } catch (error) { result.status = "hwpx_preview_refused"; result.error = error.message; }
       continue;
     }
@@ -45,7 +47,7 @@ try {
     catch (error) { result.status = "editor_open_refused"; result.error = error.message; continue; }
     try {
       const before = streams(bytes), expected = sectionTexts(before);
-      const { saved, ...audit } = exerciseEditor(editor, expected);
+      const { saved, ...audit } = exerciseEditor(editor, expected, { history });
       Object.assign(result, audit);
       verifySaved(before, streams(saved.bytes), expected);
       if (!audit.edited) assert.deepEqual(Buffer.from(saved.bytes), bytes, "fully refused document must save byte-exact source");
@@ -68,10 +70,11 @@ try {
 } finally { reader.close(); hwpxReader.close(); }
 const counts = {};
 for (const file of files) counts[file.status] = (counts[file.status] ?? 0) + 1;
-const totals = { attempted: 0, edited: 0, failures: {} };
+const totals = { attempted: 0, edited: 0, ...(history ? { historyVerified: 0 } : {}), failures: {} };
 for (const file of files) {
   totals.attempted += file.attempted ?? 0;
   totals.edited += file.edited ?? 0;
+  if (history) totals.historyVerified += file.historyVerified ?? 0;
   for (const [error, count] of Object.entries(file.failures ?? {})) totals.failures[error] = (totals.failures[error] ?? 0) + count;
 }
-console.log(JSON.stringify({ scope: "tracked fixtures, every HWP5 paragraph, real prefix splice and saved text oracle; not layout/format/UI proof", counts, totals, files }, null, 2));
+console.log(JSON.stringify({ scope: "tracked fixtures, every HWP5 paragraph, real prefix splice and saved text oracle; not layout/format/UI proof", history, counts, totals, files }, null, 2));

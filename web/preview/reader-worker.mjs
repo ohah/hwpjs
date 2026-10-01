@@ -89,15 +89,23 @@ self.onmessage = async event => {
         return;
       }
       editor ??= await createExperimentalHwp5Editor(module, bytes);
-      reply({ kind: "enable", charShapeCount: editor.characterShapeCount() });
+      if (!historyEnabled) { editor.enableHistory(); historyEnabled = true; }
+      reply({ kind: "enable", charShapeCount: editor.characterShapeCount(), historyAvailable: true });
     } else if (message.kind === "undo" || message.kind === "redo") {
       if (!editor) throw new Error("EditorNotOpen");
-      if (format !== "hwpx") throw new Error("UnsupportedHistory");
       const changed = message.kind === "undo" ? editor.undo() : editor.redo();
       applied = changed;
-      reader = await createHwpxReader(module);
-      preview = reader.readTextEvents(editor.save());
-      reply({ kind: message.kind, changed, content: hwpxDisplay() });
+      if (format === "hwpx") {
+        reader = await createHwpxReader(module);
+        preview = reader.readTextEvents(editor.save());
+        reply({ kind: message.kind, changed, content: hwpxDisplay() });
+      } else {
+        // Restore every derived paragraph/control/formula from native state.
+        // Neither the original load bytes nor a JS inverse edit is authoritative.
+        reader = await createHwp5Reader(module);
+        preview = reader.readText(editor.save({ allowStaleLayout: true }).bytes);
+        reply({ kind: message.kind, changed, content: displayContent(preview) });
+      }
     } else if (message.kind === "splice" || message.kind === "format") {
       if (!editor) throw new Error("EditorNotOpen");
       if (format === "hwpx") {

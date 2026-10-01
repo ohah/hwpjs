@@ -27,6 +27,7 @@ pub const SaveOptions = struct {
     max_output_bytes: usize = max_bytes,
 };
 pub const Saved = struct { bytes: []u8, layout_requires_reflow: bool };
+pub const Checkpoint = @import("editor_checkpoint.zig").Checkpoint;
 
 // Allocated once; the public opaque pointer prevents direct model/sidecar writes.
 const State = struct {
@@ -50,6 +51,38 @@ const State = struct {
 };
 
 pub const Session = opaque {
+    /// Checkpoint must represent the current model; history reserves first.
+    pub fn applyCheckpointed(self: *Session, checkpoint: *Checkpoint, limit: usize, command: Command) !bool {
+        if (!try self.matchesCheckpoint(checkpoint)) return error.SourceBindingMismatch;
+        try self.apply(command);
+        if (try self.matchesCheckpoint(checkpoint)) return false;
+        _ = self.checkpointSize(limit) catch |err| {
+            const state = self.getState();
+            try @import("editor_checkpoint.zig").rollback(checkpoint, state.allocator, self, &state.document);
+            return err;
+        };
+        return true;
+    }
+
+    pub fn matchesCheckpoint(self: *const Session, checkpoint: *const Checkpoint) !bool {
+        const state = self.stateConst();
+        return @import("editor_checkpoint.zig").matches(checkpoint, state.allocator, self, &state.document);
+    }
+
+    pub fn checkpointSize(self: *const Session, limit: usize) !usize {
+        return @import("editor_checkpoint.zig").size(&self.stateConst().document, limit);
+    }
+
+    pub fn createCheckpoint(self: *const Session, max_checkpoint_bytes: usize) !*Checkpoint {
+        const state = self.stateConst();
+        return @import("editor_checkpoint.zig").capture(state.allocator, self, &state.document, max_checkpoint_bytes);
+    }
+
+    pub fn restoreCheckpoint(self: *Session, checkpoint: *Checkpoint) !void {
+        const state = self.getState();
+        try @import("editor_checkpoint.zig").exchange(checkpoint, state.allocator, self, &state.document);
+    }
+
     pub fn open(a: std.mem.Allocator, input: []const u8) !*Session {
         var source = try Source.open(a, input);
         errdefer source.deinit();

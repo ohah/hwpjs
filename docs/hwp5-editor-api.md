@@ -2,6 +2,8 @@
 
 기존 native [텍스트 편집](hwp5-plain-text-edit-experiment.md)·[글자 모양 적용](hwp5-character-format-edit.md)을 제한적으로 JS에 연결합니다. 일반 문서 편집기·기존 Rust JSON 호환 API·HWPX 편집 API가 아닙니다. 원본 적격성·범위·리소스 참조·저장 정책은 위 native 계약이 단일 출처입니다.
 
+선택적 `enableHistory()`·`undo()`·`redo()`의 한도·반환값·수명·WASM 오류 계약과 검증 기록은 [HWP5 편집 이력](hwp5-edit-history.md)이 소유합니다. 이력 활성화 뒤 기존 텍스트/글자 모양 명령도 같은 native 이력에 포함됩니다.
+
 ## 사용과 반환값
 
 ```js
@@ -39,7 +41,7 @@ ABI 6의 필수 읽기 export는 그대로 두고 `js/abi-schema.mjs`의 별도 
 
 ## 웹 연결과 남은 범위
 
-[Canvas 직접 입력](canvas-direct-input.md) 또는 접힌 고급 ‘편집 실험’ 폼에서 같은 명령을 보냅니다. caret·선택·임시 조합과 UI 입력 계약은 직접 입력 문서가 소유합니다. 글자 모양 ID는 native 모델에 적용되지만 현재 Canvas는 시스템 글꼴의 텍스트만 그리며 서식 변화를 표시하지 않습니다. 웹 저장/다운로드 버튼도 없습니다.
+[Canvas 직접 입력](canvas-direct-input.md) 또는 접힌 고급 ‘편집 실험’ 폼에서 같은 명령을 보냅니다. caret·선택·임시 조합과 UI 입력 계약은 직접 입력 문서가 소유합니다. 글자 모양 ID는 native 모델에 적용되지만 현재 Canvas는 시스템 글꼴의 텍스트만 그리며 서식 변화를 표시하지 않습니다. [웹 다운로드](canvas-document-download.md) 및 [이력 입력](canvas-edit-history.md)은 별도 계약으로 연결됐으며 재조판 완료를 뜻하지 않습니다.
 
 Worker는 파일마다 유지되는 세션을 소유하고 변경 후 native text에서 표시용 스냅샷만 갱신합니다. 표시 스냅샷은 저장이나 명령의 원본으로 사용하지 않습니다. 파일 재선택은 Worker를 종료해 이전 세션을 버리고 원본을 다시 읽습니다. native 거부는 표시를 유지하고, 변경 성공 뒤 표시 갱신 실패는 화면을 비우고 재선택을 요구합니다.
 

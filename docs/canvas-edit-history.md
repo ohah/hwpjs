@@ -1,6 +1,6 @@
 # Canvas 편집 이력 입력
 
-[HWPX Worker](hwpx-worker-history.md)의 native 실행 취소·재실행을 Canvas 단축키와 버튼에 연결합니다. HWP5 이력, 문단 분할·병합은 아직 미구현입니다.
+[HWPX Worker](hwpx-worker-history.md)와 [HWP5 Worker](hwp5-edit-history.md)의 native 실행 취소·재실행을 Canvas 단축키와 버튼에 연결합니다. 문단 분할·병합은 아직 미구현입니다. HWP5 software 제목의 실제 브라우저·다운로드 검증 기록은 HWP5 주제 문서가 소유합니다.
 
 편집 세션 enable 응답의 historyAvailable=true를 확인한 경우 Ctrl/Meta+Z는 undo, Ctrl/Meta+Shift+Z 및 Ctrl/Meta+Y는 redo를 요청합니다. beforeinput의 historyUndo/historyRedo도 같은 명령 경로를 사용하며 textarea의 브라우저 자체 이력은 적용하지 않습니다.
 
@@ -8,7 +8,7 @@
 
 native 변경 후 표시 오류는 기존 fail-closed 경로를 사용합니다. 변경 전 오류는 입력값을 보존하고 다시 입력할 수 있습니다. 파일 변경은 capability를 초기화하고 같은 세션의 고급 폼 편집은 capability를 유지합니다.
 
-`history-controls.mjs`는 두 버튼의 활성 상태를 Canvas canHistory에서 도출하고 같은 history 명령을 호출합니다. Canvas 선택이 없는 고급 폼 편집 후에도 문서 이력을 이동할 수 있습니다. HWP5·미활성 세션·입력 대기에서는 버튼을 비활성화하며 빈 이력은 native changed=false와 안내로 처리합니다. 스택 개수나 editable 값을 JS에 복제하지 않습니다.
+`history-controls.mjs`는 두 버튼의 활성 상태를 Canvas canHistory에서 도출하고 같은 history 명령을 호출합니다. Canvas 선택이 없는 고급 폼 편집 후에도 문서 이력을 이동할 수 있습니다. 미활성 세션·입력 대기에서는 버튼을 비활성화하며 빈 이력은 native changed=false와 안내로 처리합니다. 스택 개수나 editable 값을 JS에 복제하지 않습니다.
 
 버튼·Canvas 집중 검사는 22/22로 통과했습니다. 클릭 직전 재검사·연속 명령 차단·close 이벤트 해제·선택 없는 이력 응답·잘못된 명령 거부를 포함합니다. 외부 실제 Chromium에서 shapeline의 `버튼😀` 입력 후 undo/redo 버튼을 클릭해 원본과 편집값 전환을 확인하고 `/private/tmp/hwpjs-history-buttons-e2e.png`를 캡처·확인했습니다. HWP5 파일로 교체하면 두 버튼이 비활성화됩니다. agent-browser의 자동 브라우저 검사이며 OS IME 검증은 아닙니다.
 
