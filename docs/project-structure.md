@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+[ZIP 선택 항목 교체 저장](zip-replacement-writer.md)은 `src/zip/archive.zig`의 검증된 원문 범위를 재사용하며 `replace_writer.zig`가 새 ZIP 출력만 소유합니다. 집중 반례는 `replace_writer_tests.zig`, 독립 전수 비교는 `src/zip_replacement_survey.zig`와 `tools/zip-replacement-oracle.py`로 분리합니다. HWPX XML 편집 모델·공개 세션은 별도 후속 책임입니다.
+
 [HWPX 공개 텍스트 이벤트/Canvas](hwpx-text-api.md)는 `src/hwpx/text_preview.zig`의 기존 스캐너 연결, `src/wasm/hwpx_text.zig`의 출력 수명, `js/hwpx.mjs`·`hwpx-text-wire.mjs`의 공개 경계를 분리합니다. `web/preview/hwpx-content.mjs`는 읽기 전용 표시만 소유하고 HWP5와 Worker/렌더러를 공유합니다. 제품 경계와 표시 반례는 `tests/hwpx/`에 둡니다.
 
 [Canvas 직접 입력](canvas-direct-input.md)은 `web/preview/text-geometry.mjs`의 hit-test/선택, `text-navigation.mjs`의 키 이동, `text-input.mjs`의 문자열 차이, `canvas-editor.mjs`의 입력/조합/native 응답 조정을 분리합니다. 기존 layout/renderer/Worker는 재사용하고 집중 검사는 `tests/hwp5/canvas-edit.test.mjs`·`canvas-editor.test.mjs`에 둡니다.

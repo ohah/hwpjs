@@ -620,6 +620,7 @@ test {
     _ = @import("hwp5/edit/hyperlink_spans.zig");
     _ = @import("hwp5/edit/hyperlink_session_tests.zig");
     _ = @import("hwpx/text_preview.zig");
+    _ = @import("zip/replace_writer_tests.zig");
     _ = @import("hwp5/body/formula_range.zig");
     _ = @import("hwp5/body/formula_number.zig");
     _ = @import("hwp5/body/formula_format.zig");

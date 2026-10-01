@@ -13,11 +13,18 @@ pub const Entry = struct {
     crc32: u32,
     uncompressed_size: usize,
     compressed: []const u8,
+    /// Validated source extents; borrowed metadata is not an owned save model.
+    local_offset: usize,
+    local_end: usize,
+    central_offset: usize,
+    central_end: usize,
 };
 
 pub const Archive = struct {
     allocator: std.mem.Allocator,
     entries: []Entry,
+    central_start: usize,
+    end_record_offset: usize,
 
     pub fn deinit(self: *Archive) void {
         self.allocator.free(self.entries);
@@ -202,6 +209,10 @@ pub fn open(allocator: std.mem.Allocator, bytes: []const u8, options: Options) !
             .crc32 = crc,
             .compressed = compressed,
             .uncompressed_size = uncompressed_size,
+            .local_offset = local_offset,
+            .local_end = data_end,
+            .central_offset = cursor,
+            .central_end = cursor + 46 + total_len,
         };
         cursor += 46 + total_len;
     }
@@ -212,5 +223,5 @@ pub fn open(allocator: std.mem.Allocator, bytes: []const u8, options: Options) !
             if (local_ranges[i].start < local_ranges[i - 1].end) return error.OverlappingLocalEntries;
         }
     }
-    return .{ .allocator = allocator, .entries = entries };
+    return .{ .allocator = allocator, .entries = entries, .central_start = cd_start, .end_record_offset = eocd };
 }

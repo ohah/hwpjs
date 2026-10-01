@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[ZIP 선택 항목 교체 저장](zip-replacement-writer.md)은 `zig test src/root.zig -O ReleaseSafe --test-filter 'ZIP replacement writer'`로 집중 반례·할당 실패를 검사합니다. Debug·ReleaseFast도 같은 필터로 실행합니다. `python3 tools/zip-replacement-oracle.py`와 `python3 -O tools/zip-replacement-oracle.py`는 추적 비암호화 HWPX 44개의 생성 ZIP을 독립 decoder로 비교합니다. 전체 native test에도 집중 검사가 포함되며 HWPX 문서 편집·조판 증명은 아닙니다.
+
 [HWPX 공개 텍스트 이벤트](hwpx-text-api.md)는 `zig build hwpx-text-audit -Doptimize=ReleaseSafe --summary all`로 제품 WASM과 추적 픽스처/전송·읽기 전용 Canvas·Worker 반례를 검사합니다. Debug·ReleaseFast도 같은 단계로 실행하며 기본 audit에 포함됩니다. native 모든 할당 실패는 `zig test src/root.zig -O ReleaseSafe --test-filter 'HWPX public text transport'`와 기본 `zig build test`가 검사합니다.
 
 Root 문단 간 하이퍼링크의 공개 open/apply/save/reopen 할당 실패는 `zig test src/root.zig -O ReleaseSafe --test-filter 'public crossing hyperlink session'`로 검사하며 기본 `zig build test`에도 포함됩니다. 실제 교차 필드의 독립 Section·다른 스트림·재열기 및 손상 반례는 제품 빌드 후 `node --test tests/hwp5/control-editor.test.mjs`와 `hwp5-editor-audit`가 검사합니다. 책임과 현재 제한은 [필드 수정 속성](hwp5-field-attribute-edit.md)을 따릅니다.

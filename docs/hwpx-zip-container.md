@@ -6,9 +6,9 @@
 
 `Archive.decode`는 기존 `raw_deflate`를 재사용하고, 반환 전에 출력 길이와 중앙 디렉터리 CRC-32를 확인합니다. 반환 바이트는 호출자가 **아카이브의 할당자**로 해제하며 입력 ZIP 바이트는 아카이브 수명 동안 유효해야 합니다. 여러 엔트리의 *합계* 해제량은 아직 이 계층에서 관리하지 않으므로 문서 조립 단계의 별도 공통 예산이 필요합니다. 중앙 디렉터리 코멘트·extra와 ZIP의 모든 선택적 확장은 해석하지 않으며, 이 경계 통과를 전체 ZIP 무결성 보증으로 해석하지 않습니다.
 
-전체 엔트리의 실제 길이·CRC 검사는 [HWPX 모든 ZIP 엔트리 무결성](hwpx-payload-integrity.md)이 별도 계층에서 수행합니다. 이 경계의 `Archive.decode`만으로 아직 해제하지 않은 엔트리까지 검증됐다고 보지 않습니다.
+전체 엔트리의 실제 길이·CRC 검사는 [HWPX 모든 ZIP 엔트리 무결성](hwpx-payload-integrity.md)이 별도 계층에서 수행합니다. 이 경계의 `Archive.decode`만으로 아직 해제하지 않은 엔트리까지 검증됐다고 보지 않습니다. 선택 항목의 새 ZIP 출력은 [교체 저장 계약](zip-replacement-writer.md)이 소유하며, reader는 검증된 local/central 원문 범위만 제공합니다.
 
-`src/hwpx/package.zig`는 정확한 루트 `mimetype` 엔트리의 해제 결과·CRC·`application/hwp+zip` 바이트를 검사합니다. 처음에는 저장 방식만 허용했지만 [실파일 27개에서 DEFLATE mimetype을 재현](hwpx-package-relationships.md)하여 두 ZIP 지원 방법을 허용합니다. ZIP 식별 뒤의 패키지 루트·manifest·spine 관계는 [별도 계약](hwpx-package-relationships.md)이 소유합니다. `version.xml`, section XML 의미·편집·저장은 포함하지 않으며 제품 JS 공개 API도 아직 연결되지 않았습니다.
+`src/hwpx/package.zig`는 정확한 루트 `mimetype` 엔트리의 해제 결과·CRC·`application/hwp+zip` 바이트를 검사합니다. 처음에는 저장 방식만 허용했지만 [실파일 27개에서 DEFLATE mimetype을 재현](hwpx-package-relationships.md)하여 두 ZIP 지원 방법을 허용합니다. ZIP 식별 뒤의 패키지 루트·manifest·spine 관계는 [별도 계약](hwpx-package-relationships.md)이 소유합니다. `version.xml`, section XML 의미·편집은 이 ZIP 경계에 포함하지 않습니다. 현재 제품 JS의 읽기 전용 연결은 [공개 텍스트 이벤트 계약](hwpx-text-api.md)이 소유하며 HWPX 편집·저장 연결은 아직 미완료입니다.
 
 ZIP 레코드 구조의 기준은 [PKWARE APPNOTE](https://pkwaredownloads.blob.core.windows.net/pem/APPNOTE.txt) 4.3.7/4.3.9/4.3.12/4.3.16입니다. 여기의 HWPX `mimetype` 값과 내부 경로는 기존 실제 HWPX corpus에서 직접 대조합니다. 명세에 없는 HWPX 패키지 의미를 추정하지 않습니다.
 
