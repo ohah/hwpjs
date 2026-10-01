@@ -28,7 +28,7 @@ test("clipped text and incomplete row groups never advertise editable coordinate
     { text: "nested", textPresent: true, parentNodeIndex: 0, tokens: [] },
     { text: "control", textPresent: true, parentNodeIndex: null, tokens: [{ type: "control", code: 2 }] },
   ] }] };
-  assert.deepEqual(displayContent(result).paragraphs.map(p => p.editable), [true, false, false]);
+  assert.deepEqual(displayContent(result).paragraphs.map(p => p.editable), [true, true, false]);
   assert.equal(displayContent(result, { maxUnits: 2 }).paragraphs[0].editable, false);
   const layout = layoutContent({ paragraphs: [paragraph("abcdef")], limited: false }, 10, () => 10, 3);
   assert(layout.limited); assert(layout.rows.every(r => !r.editable));

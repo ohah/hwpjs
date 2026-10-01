@@ -1,13 +1,17 @@
 {
   "schema": 1,
   "verified": {
+    "docs/hwp5-nested-text-edit.md": {
+      "sha256": "51b0ba952f381da50a7fc9fe2ede185fc75a7dc37ea6f43aa8d95d6014e37764",
+      "evidence": "2026-10-01 nested list owner and source preservation policy checked against existing Groups and TableLists; Debug Safe Fast 34 editor tests and Safe full 2688 Zig pass; Safe native 75 text edits plus actual software nested splice and 153 formats independently checked; corpus 712 of 1481 edits, software 70 of 101, 45 saved editors reopen; public Chromium actual software title click input emoji delete replace and normal same-file reselection verified; original table layout and HWPX editing remain incomplete"
+    },
     "docs/fixture-editor-coverage.md": {
-      "sha256": "5d4736c43970f465a6b5ac72cd33e85bf3d288612d442dca0367567009f06e5f",
-      "evidence": "2026-10-01 Git inventory 48 HWP and 45 HWPX; 45 HWP opens, 1481 real splice attempts and 269 accepted saved text oracles using independent CFB.js Node zlib; all 45 saved editors reopen; software 0 of 101 confirmed; five corpus verifier tests catch ignored commands mutation and stream text loss; no formatting layout UI or HWPX public editing completion claim"
+      "sha256": "7666a1a7faf04cfc1bcb140c9527c2cb5903c6a79aea0be2fb9c367fb437b4fc",
+      "evidence": "2026-10-01 nested list owner and source preservation policy checked against existing Groups and TableLists; Debug Safe Fast 34 editor tests and Safe full 2688 Zig pass; Safe native 75 text edits plus actual software nested splice and 153 formats independently checked; corpus 712 of 1481 edits, software 70 of 101, 45 saved editors reopen; public Chromium actual software title click input emoji delete replace and normal same-file reselection verified; original table layout and HWPX editing remain incomplete"
     },
     "docs/canvas-direct-input.md": {
-      "sha256": "5a4b5492080da50c384f2ce4a206c4dba099da18b878442b68893f443a15c69b",
-      "evidence": "2026-10-01 direct Canvas hit test grapheme UTF16 selection native acknowledgement and temporary composition SSOT checked against source; Debug Safe Fast 21 API input tests and full Safe 2687 Zig plus 51 Node regressions pass; five actual fixtures use native WASM with mocked DOM; Chromium public URL pointer typing selection wrap errors composition reset and explicit Meta A empty reinput verified; real OS IME candidate clipboard permissions and HWPX layout remain unverified"
+      "sha256": "ebf9609986cc28842983e25be96eda490e6d20e1722953d20443712c2de0cead",
+      "evidence": "2026-10-01 nested list owner and source preservation policy checked against existing Groups and TableLists; Debug Safe Fast 34 editor tests and Safe full 2688 Zig pass; Safe native 75 text edits plus actual software nested splice and 153 formats independently checked; corpus 712 of 1481 edits, software 70 of 101, 45 saved editors reopen; public Chromium actual software title click input emoji delete replace and normal same-file reselection verified; original table layout and HWPX editing remain incomplete"
     },
     "docs/hwp5-editor-api.md": {
       "sha256": "61b62c5c1e9ca07e20dba858e731d0b67dd9598aa96c387bde0350850d3783fc",
@@ -18,12 +22,12 @@
       "evidence": "2026-10-01 direct Canvas hit test grapheme UTF16 selection native acknowledgement and temporary composition SSOT checked against source; Debug Safe Fast 21 API input tests and full Safe 2687 Zig plus 51 Node regressions pass; five actual fixtures use native WASM with mocked DOM; Chromium public URL pointer typing selection wrap errors composition reset and explicit Meta A empty reinput verified; real OS IME candidate clipboard permissions and HWPX layout remain unverified"
     },
     "docs/hwp5-character-format-edit.md": {
-      "sha256": "3625d2e7bee4a5d3c1e3516fff2dcb708d0d6a8c56df108cc2dec9acb89d4e2a",
-      "evidence": "2026-10-01 experimental editor API and native SSOT bridge checked against source; Debug Safe Fast five API UI tests, Safe full 2687 Zig tests, native text 75 and character format 152 actual edits with independent oracles and 30 Node regressions pass; Chromium public URL edit Unicode rejection reselection and narrow viewport checked; no Canvas direct input styled layout web download or HWPX editing"
+      "sha256": "ec9b258669b2933624bf0c422d7c1b83641b3366d555ab645f7848c4c256ffb9",
+      "evidence": "2026-10-01 nested list owner and source preservation policy checked against existing Groups and TableLists; Debug Safe Fast 34 editor tests and Safe full 2688 Zig pass; Safe native 75 text edits plus actual software nested splice and 153 formats independently checked; corpus 712 of 1481 edits, software 70 of 101, 45 saved editors reopen; public Chromium actual software title click input emoji delete replace and normal same-file reselection verified; original table layout and HWPX editing remain incomplete"
     },
     "docs/hwp5-plain-text-edit-experiment.md": {
-      "sha256": "16f91d9e32811b31a0dcd34ca04be2a3f49bdb6f71cd5aafccde36170bf7bc85",
-      "evidence": "2026-10-01 direct Canvas hit test grapheme UTF16 selection native acknowledgement and temporary composition SSOT checked against source; Debug Safe Fast 21 API input tests and full Safe 2687 Zig plus 51 Node regressions pass; five actual fixtures use native WASM with mocked DOM; Chromium public URL pointer typing selection wrap errors composition reset and explicit Meta A empty reinput verified; real OS IME candidate clipboard permissions and HWPX layout remain unverified"
+      "sha256": "7641789567bb015d50d132e9303bddc5935e4a68882cfd2602907f9757cb5965",
+      "evidence": "2026-10-01 nested list owner and source preservation policy checked against existing Groups and TableLists; Debug Safe Fast 34 editor tests and Safe full 2688 Zig pass; Safe native 75 text edits plus actual software nested splice and 153 formats independently checked; corpus 712 of 1481 edits, software 70 of 101, 45 saved editors reopen; public Chromium actual software title click input emoji delete replace and normal same-file reselection verified; original table layout and HWPX editing remain incomplete"
     },
     "docs/hwp5-style-preservation-experiment.md": {
       "sha256": "1619904fbf80ed84e720e279704e0423a5ac8eba96ae94b8dd1d4765a077d2cb",
@@ -674,8 +678,8 @@
       "evidence": "2026-10-01 direct Canvas hit test grapheme UTF16 selection native acknowledgement and temporary composition SSOT checked against source; Debug Safe Fast 21 API input tests and full Safe 2687 Zig plus 51 Node regressions pass; five actual fixtures use native WASM with mocked DOM; Chromium public URL pointer typing selection wrap errors composition reset and explicit Meta A empty reinput verified; real OS IME candidate clipboard permissions and HWPX layout remain unverified"
     },
     "docs/development-commands.md": {
-      "sha256": "d8fee0181d3568fae21c0eeafb68b28ad265744683ec76234b6db056ebff5dfc",
-      "evidence": "2026-10-01 prior Canvas command checks retained; new full fixture corpus command run against Safe WASM: 93 tracked fixtures, 1481 attempts, 269 edits and 45 saved session reopens independently checked; new five oracle counterexample tests included in Safe 26 editor audit tests; formatting layout browser and HWPX public editing are separate incomplete gates"
+      "sha256": "e81385cf13c105a7e75d23199b62d92de6852ca3592294f56591d8972b6905c5",
+      "evidence": "2026-10-01 nested list owner and source preservation policy checked against existing Groups and TableLists; Debug Safe Fast 34 editor tests and Safe full 2688 Zig pass; Safe native 75 text edits plus actual software nested splice and 153 formats independently checked; corpus 712 of 1481 edits, software 70 of 101, 45 saved editors reopen; public Chromium actual software title click input emoji delete replace and normal same-file reselection verified; original table layout and HWPX editing remain incomplete"
     },
     "docs/zig-test-stderr.md": {
       "sha256": "9133676bc38bac48fab5f9ba8a04ec972697d32e7a051a851d6b158c444c66b5",
@@ -1526,16 +1530,16 @@
       "evidence": "2026-09-30 Read-only ranges remain null; controlled Session owns materialized ranges; Node full Section unit-wise oracle Rust JSON and four allocation and command tests checked"
     },
     "docs/hwp5-modules.md": {
-      "sha256": "684c9ce15b42327077427a5f58d1c04cd95c501917a4f68226a6f3178c5f2dd7",
-      "evidence": "2026-10-01 prior module links retained; new fixture-editor-coverage topic checked against Git inventory and native source guards, full 93 fixture audit and saved editor reopens; 569 Markdown files and 2932 inline links checked; parser editor and Canvas completion gates remain explicitly incomplete"
+      "sha256": "ef2ad30a4ee30432cd5938fb1ecb46de355093d01593b1b74da1f19977a424c0",
+      "evidence": "2026-10-01 nested list owner and source preservation policy checked against existing Groups and TableLists; Debug Safe Fast 34 editor tests and Safe full 2688 Zig pass; Safe native 75 text edits plus actual software nested splice and 153 formats independently checked; corpus 712 of 1481 edits, software 70 of 101, 45 saved editors reopen; public Chromium actual software title click input emoji delete replace and normal same-file reselection verified; original table layout and HWPX editing remain incomplete"
     },
     "docs/migration.md": {
       "sha256": "ff208406c964f5e7f457852077a0510c63f662344b8967e551f42948bf34ad27",
       "evidence": "2026-09-27 move commit R100 count, current legacy and CI paths, cargo metadata and tests, Bun Vite startup, historical 1652 qualified"
     },
     "docs/project-structure.md": {
-      "sha256": "5beddaa2bc4618808517b73b27f663fcad0631b65a655a17c15d78c620fa925c",
-      "evidence": "2026-10-01 direct Canvas hit test grapheme UTF16 selection native acknowledgement and temporary composition SSOT checked against source; Debug Safe Fast 21 API input tests and full Safe 2687 Zig plus 51 Node regressions pass; five actual fixtures use native WASM with mocked DOM; Chromium public URL pointer typing selection wrap errors composition reset and explicit Meta A empty reinput verified; real OS IME candidate clipboard permissions and HWPX layout remain unverified"
+      "sha256": "79793b44e1d72b58a26affad93cba9a2f70012f990334ea64d35037741925f04",
+      "evidence": "2026-10-01 nested list owner and source preservation policy checked against existing Groups and TableLists; Debug Safe Fast 34 editor tests and Safe full 2688 Zig pass; Safe native 75 text edits plus actual software nested splice and 153 formats independently checked; corpus 712 of 1481 edits, software 70 of 101, 45 saved editors reopen; public Chromium actual software title click input emoji delete replace and normal same-file reselection verified; original table layout and HWPX editing remain incomplete"
     },
     "docs/hwpx-section-tree.md": {
       "sha256": "62280fe17d2880b8a4c1f0706378f911b272f9b7cf75f0b2b0e4830c36764467",

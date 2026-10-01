@@ -6,15 +6,15 @@
 
 ## 지원 범위와 API
 
-기존 실험용 opaque `Session`에 `apply(.{ .splice_text = ... })`와 `copyText`를 추가했습니다. splice에는 구역·문단 index, `start_unit`·`end_unit`, 삽입할 `utf8`가 들어갑니다. 위치는 현재 모델의 UTF-16 단위이며 `[start_unit, end_unit)`를 교체합니다. 두 위치가 같으면 삽입, 빈 UTF-8이면 삭제입니다. 마지막 PARA_BREAK(13)는 변경할 수 없습니다. `copyText`는 끝 표식을 포함한 UTF-16LE 바이트의 소유 복사본을 반환합니다. 호출자가 전달한 allocator로 해제합니다. 공개 JS/WASM 편집 API와 일반 편집기 지원은 아닙니다.
+기존 실험용 opaque `Session`에 `apply(.{ .splice_text = ... })`와 `copyText`를 추가했습니다. splice에는 구역·문단 index, `start_unit`·`end_unit`, 삽입할 `utf8`가 들어갑니다. 위치는 현재 모델의 UTF-16 단위이며 `[start_unit, end_unit)`를 교체합니다. 두 위치가 같으면 삽입, 빈 UTF-8이면 삭제입니다. 마지막 PARA_BREAK(13)는 변경할 수 없습니다. `copyText`는 끝 표식을 포함한 UTF-16LE 바이트의 소유 복사본을 반환합니다. 호출자가 전달한 allocator로 해제합니다. JS/WASM 연결은 위 별도 API 문서의 실험 범위이며 일반 편집기 지원은 아닙니다.
 
-최상위 문단의 일반 Unicode 텍스트와 마지막 PARA_BREAK만 허용합니다. 필드·표·개체·탭·줄바꿈·중첩 문단·문단 추가/삭제는 지원하지 않습니다. 삽입 UTF-8과 원본 UTF-16을 엄격하게 검사하고 서로게이트 쌍 사이의 편집·서식·범위 경계는 거부합니다. 문자 정규화나 BOM 제거는 하지 않습니다. 원본에 없는 문단 모양·리소스를 생성하지 않습니다.
+최상위 또는 [검증된 중첩 목록 문단](hwp5-nested-text-edit.md)의 일반 Unicode 텍스트와 마지막 PARA_BREAK만 허용합니다. 대상 텍스트 안의 필드·개체·탭·줄바꿈과 문단 추가/삭제는 지원하지 않습니다. 삽입 UTF-8과 원본 UTF-16을 엄격하게 검사하고 서로게이트 쌍 사이의 편집·서식·범위 경계는 거부합니다. 문자 정규화나 BOM 제거는 하지 않습니다. 원본에 없는 문단 모양·리소스를 생성하지 않습니다.
 
 ## 책임과 SSOT
 
 2026-10-01 [기존 글자 모양 적용](hwp5-character-format-edit.md) 연결 후 텍스트 바이트·scalar 경계 검증은 `plain_text_content.zig`, 서식 경계 검증·교체는 `character_runs.zig`를 단일 출처로 공유합니다. `plain_text.zig`는 splice와 범위 이동·원자적 반영만 담당합니다. 이후 검증 기록은 해당 글자 모양 문서에서 관리합니다.
 
-- `plain_text_source.zig`: 기존 framing·Tree·직접 자식 수집·Metadata를 재사용해 문단의 편집 가능성과 원본 개수·리소스를 검증합니다. 어느 Section이든 미해석 tag, 표·리스트·메모 구조, 구역/단 설정 이외의 컨트롤이 있으면 거부합니다. 알려진 generic CTRL_HEADER tag라도 필드 등의 불투명 참조는 안전하다고 취급하지 않습니다. 대상 문단의 미해석 헤더 꼬리, 변경추적 병합, 알려지지 않은 직접 자식도 거부합니다.
+- `plain_text_source.zig`: 기존 framing·Tree·직접 자식 수집·Metadata를 재사용해 문단의 편집 가능성과 원본 개수·리소스를 검증합니다. 구역 보존 정책과 중첩 목록 소유 관계는 [중첩 편집 계약](hwp5-nested-text-edit.md)의 전용 모듈에 위임합니다. 대상 문단의 미해석 헤더 꼬리, 변경추적 병합, 알려지지 않은 직접 자식도 거부합니다.
 - `plain_text.zig`: 텍스트·글자 모양·범위의 갱신값을 전부 준비한 뒤 소유 모델에 한 번에 반영합니다. 실패 시 기존 값이 유지됩니다. 원본 위치는 기존 문단 source binding으로만 식별합니다.
 - `src/model/document.zig`: 토큰·글자 모양과 선택적으로 materialize한 `range_tags`를 소유합니다. null은 읽기 전용 projection에서 미투영 상태이고, 빈 소유 slice는 명시적으로 투영한 빈 범위 목록입니다. 같은 필드의 mutable 원본 캐시를 두지 않습니다.
 - `text_section_writer.zig`: materialize한 문단을 모델에서 직렬화하고 나머지 원본 레코드는 그대로 유지합니다. `record_writer.zig`는 가변 길이 레코드의 framing, `paragraph_header.zig`는 글자 수·세 개 정보 수의 필드 위치를 소유합니다. 고정 길이 헤더 필드 수정은 원래 framing까지 보존합니다.
@@ -32,9 +32,11 @@
 
 ## 픽스쳐 및 적대적 검증
 
+아래는 중첩 연결 전의 초기 검증 기록입니다. 당시의 중첩 거부 표본을 현재 지원 경계로 읽지 않습니다. 이후 중첩 소유·실파일·E2E 검증은 [중첩 편집 계약](hwp5-nested-text-edit.md)이 소유합니다.
+
 실행 명령은 [개발·검증 명령](development-commands.md)이 소유합니다. `text.test.zig`는 반복 편집·되돌리기·조판 거부, 잘못된 명령의 원자성과 무변경 byte-exact 저장, 모든 open/apply/save 할당 실패와 편집 실패 후 값 유지·정리를 검사합니다.
 
-`text-oracle.mjs`는 CFB.js·Node zlib로 원본과 출력을 읽습니다. 글자 모양은 제품의 경계 이동 알고리즘 대신 코드 단위별 서식 배열을 구성한 독립 기대값과 비교합니다. Section 전체와 비선택 스트림 payload를 전수 비교하고 Rust `toJson`에서 선택 문단 밖의 JSON이 동일한지 확인합니다. 확장 record 크기의 증가·감소, 비압축 입력, 범위 중첩/빈 범위, 상위 비트·확장 짧은 헤더, 미지원 별도 스트림의 바이트 보존은 실제 픽스쳐에서 파생한 합성 사례로 구분합니다.
+원시 기대값은 현재 `text-record-oracle.mjs`가 CFB.js·Node zlib로 읽습니다. 글자 모양은 제품의 경계 이동 알고리즘 대신 코드 단위별 서식 배열을 구성한 독립 기대값과 비교합니다. Section 전체와 비선택 스트림 payload를 전수 비교하고 `text-oracle.mjs`는 Rust `toJson`에서 최상위 선택 문단 밖의 JSON이 동일한지 확인합니다. 확장 record 크기의 증가·감소, 비압축 입력, 범위 중첩/빈 범위, 상위 비트·확장 짧은 헤더, 미지원 별도 스트림의 바이트 보존은 실제 픽스쳐에서 파생한 합성 사례로 구분합니다.
 
 실제 `charshape.hwp`, `parashape.hwp`, `linespacing.hwp`, `facename.hwp`, `underline-styles.hwp` 5개에서 각 3문단을 골라 시작·중간·끝 삽입, 삭제, 내용 전체 삭제 75건을 대조합니다. 혼합 서식 6단위 문단은 모든 시작/끝 조합에 빈 텍스트 또는 한글·보조 평면 문자를 넣는 56건으로 위치 편향을 검사합니다. 각 선택 문단의 첫 무변경 저장은 전체 파일 바이트 동일성을 검사합니다. 표의 중첩 문단은 별도 실제 거부 표본입니다.
 

@@ -2,6 +2,8 @@
 
 [추적 픽스쳐 편집 전수 검사](fixture-editor-coverage.md)는 제품 WASM 빌드 후 `node tools/hwp5-edit-corpus-audit.mjs`로 실행합니다. 모든 추적 HWP 문단에 실제 삽입을 시도하고 저장 텍스트·비본문 스트림을 독립 CFB.js로 대조합니다. 정상 종료는 지원 거부가 없다는 뜻이 아닙니다. HWPX 공개 연결 미구현도 별도 집계합니다. 검사 도구의 반례는 `node --test tests/hwp5/edit-corpus.test.mjs` 및 `hwp5-editor-audit`에 포함합니다.
 
+[중첩 목록 문단 편집](hwp5-nested-text-edit.md)은 `node --test tests/hwp5/nested-editor.test.mjs` 및 `hwp5-editor-audit`에서 실제 software 제목/중간/끝 셀의 전체 레코드 대조와 소유 관계 반례를 검사합니다. `text-splice-audit`는 별도 native 중첩 삽입/서식을, 기본 `zig build test`는 중첩 소유 파싱의 할당 실패 원자성을 포함합니다. 실행 전 제품 WASM을 해당 모드로 빌드합니다.
+
 [Canvas 직접 입력](canvas-direct-input.md)의 순수 좌표/입력 차이 검사는 `node --test tests/hwp5/canvas-edit.test.mjs`, 모사 DOM와 제품 WASM 연결 검사는 빌드 후 `node --test tests/hwp5/canvas-editor.test.mjs`입니다. 기존 `hwp5-editor-audit`와 기본 audit에도 포함합니다. 실제 브라우저/OS 한글 입력기는 이 테스트로 검증됐다고 보지 않습니다.
 
 [실험용 HWP5 편집 JS/WASM API](hwp5-editor-api.md)는 `zig build hwp5-editor-audit -Doptimize=ReleaseSafe --summary all`로 제품 WASM·Node 경계/UI 상태 집중 검사를 실행합니다. `Debug`·`ReleaseFast`도 같은 단계로 검사할 수 있으며 기본 `zig build audit`에도 포함합니다. 기존 native 실파일/Rust 대조는 별도 `text-splice-audit`가 소유합니다. 웹에서는 Canvas의 일반 텍스트를 클릭하거나 접힌 고급 폼의 ‘편집 실험 켜기’를 누릅니다. 일반 편집·서식 렌더링·웹 다운로드 지원은 아닙니다.

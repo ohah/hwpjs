@@ -10,12 +10,12 @@ import { caretGeometry } from "../../web/preview/text-geometry.mjs";
 
 const wasm = readFileSync("zig-out/bin/hwpjs.wasm");
 function dispatch(node, type, values = {}) { const event = new Event(type, { cancelable: true }); Object.assign(event, values); node.dispatchEvent(event); return event; }
-async function harness(t, name = "charshape") {
+async function harness(t, name = "charshape", choose = p => p.editable && p.text.length > 0) {
   const bytes = readFileSync(`legacy/rust/crates/hwp-core/tests/fixtures/${name}.hwp`);
   const native = await createExperimentalHwp5Editor(wasm, bytes), reader = await createHwp5Reader(wasm);
   let content;
   try { content = displayContent(reader.readText(bytes)); } finally { reader.close(); }
-  const paragraph = content.paragraphs.find(p => p.editable && p.text.length > 0); assert(paragraph);
+  const paragraph = content.paragraphs.find(choose); assert(paragraph);
   const documentBefore = globalThis.document, doc = { activeElement: null }; globalThis.document = doc;
   class Node extends EventTarget {
     style = {}; dataset = {}; value = ""; selectionStart = 0; selectionEnd = 0; selectionDirection = "forward"; attributes = new Map();
@@ -77,6 +77,15 @@ test("composition commits once after final DOM value and never during intermedia
   await Promise.resolve(); assert.equal(h.requests.length, 1); h.ack();
   assert.equal(h.native.text(0, 1), "각" + before + "\r");
   assert.equal(h.canvas.dataset.composing, "false");
+});
+test("canvas software application title edits its actual nested table paragraph", async t => {
+  const h = await harness(t, "software", p => p.editable && p.text.includes("Software Wave"));
+  assert.equal(h.paragraph.paragraph, 2); assert.match(h.paragraph.label, /중첩/);
+  const before = h.input.value;
+  h.type("한😀" + before); h.ack();
+  assert.equal(h.input.value, "한😀" + before);
+  assert.equal(h.native.text(0, 2), "한😀" + before + "\r");
+  assert.equal(h.requests.length, 1); assert(!h.note.textContent.includes("실패"));
 });
 test("native rejected newline rolls draft back without another queued edit", async t => {
   const h = await harness(t), before = h.input.value;

@@ -96,10 +96,18 @@ export function auditCharacterFormat(probe, artifacts, fixture) {
     ["duplicate-runs", /AmbiguousCharacterRuns/],
     ["invalid-shape", /InvalidResourceReference/],
   ]) run(join(artifacts, `${name}-input.hwp`), 1, 0, 1, 0, error);
-  const nestedPath = "legacy/rust/crates/hwp-core/tests/fixtures/table.hwp";
-  const nested = records(inspect(readFileSync(nestedPath)).sections[0].bytes).filter(r => r.tag === 66).findIndex(r => r.level > 0);
-  assert(nested >= 0);
-  run(nestedPath, nested, 0, 1, 0, /UnsupportedNestedParagraph/);
+  const nestedPath = "legacy/rust/crates/hwp-core/tests/fixtures/software.hwp";
+  const nested = 2;
+  assert(paragraphRecords(inspect(readFileSync(nestedPath)).sections[0].bytes, nested).head.level > 0);
+  // Nested formatting uses the independent raw Section oracle. Rust's root
+  // paragraph JSON index is not the flat nested index used by this API.
+  const nestedOut = join(artifacts, "nested-character-format.hwp");
+  const nestedRun = spawnSync(probe, [nestedPath, nestedOut, "0", String(nested), "0", "1", "0", "char-shape", "allow-stale-layout"], { encoding: "utf8", timeout: 30000 });
+  assert.equal(nestedRun.status, 0, nestedRun.stderr);
+  const beforeNested = inspect(readFileSync(nestedPath)), afterNested = inspect(readFileSync(nestedOut));
+  assert.deepEqual(afterNested.sections[0].bytes, expected(beforeNested.sections[0].bytes, nested, 0, 1, 0));
+  for (const [path, bytes] of beforeNested.streams) if (path !== beforeNested.sections[0].path) assert.deepEqual(afterNested.streams.get(path), bytes);
+  edits++;
   run(splicePath, 1, 2, 3, 0, /SplitSurrogatePair/);
   const foreign = fixture(base, bytes => Buffer.concat([bytes, encodeRecord(73, 0, Buffer.alloc(40)), encodeRecord(67, 1, Buffer.from("WITNESS\r", "utf16le"), true)]), "format-foreign-root");
   const last = records(inspect(base).sections[0].bytes).filter(r => r.tag === 66).length - 1;

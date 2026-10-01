@@ -4,6 +4,36 @@ const edit = core.hwp5.experimental_style_preservation;
 const a = std.testing.allocator;
 const fixture = "legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwp";
 
+test "text splice nested table ownership allocation failures stay atomic" {
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/software.hwp", a, .limited(2_000_000));
+    defer a.free(bytes);
+    const Run = struct {
+        fn run(allocator: std.mem.Allocator, source: []const u8, format: bool) !void {
+            const session = try edit.Session.open(allocator, source);
+            defer session.close();
+            const before = try session.copyText(a, 0, 2);
+            defer a.free(before);
+            const command: edit.Command = if (format)
+                .{ .set_character_format = .{ .section = 0, .paragraph = 2, .start_unit = 0, .end_unit = 1, .char_shape_id = 0 } }
+            else
+                .{ .splice_text = .{ .section = 0, .paragraph = 2, .start_unit = 0, .end_unit = 0, .utf8 = "한😀" } };
+            session.apply(command) catch |err| {
+                const after = try session.copyText(a, 0, 2);
+                defer a.free(after);
+                try std.testing.expectEqualSlices(u8, before, after);
+                const saved = try session.save(a, .{});
+                defer a.free(saved.bytes);
+                try std.testing.expectEqualSlices(u8, source, saved.bytes);
+                return err;
+            };
+            const saved = try session.save(allocator, .{ .allow_stale_layout = true });
+            defer allocator.free(saved.bytes);
+        }
+    };
+    try std.testing.checkAllAllocationFailures(a, Run.run, .{ bytes, false });
+    try std.testing.checkAllAllocationFailures(a, Run.run, .{ bytes, true });
+}
+
 test "text splice character format mixed commands and atomic refusals" {
     const bytes = try input();
     defer a.free(bytes);

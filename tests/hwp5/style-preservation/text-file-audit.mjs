@@ -5,12 +5,12 @@ import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { deflateRawSync } from "node:zlib";
 import { createCfbReader } from "../../../js/cfb.mjs";
-import { inspect, records, paragraphRecords, encodeRecord, verify } from "./text-oracle.mjs";
+import { inspect, records, paragraphRecords, encodeRecord, verify, verifyRaw } from "./text-oracle.mjs";
 import { auditCharacterFormat } from "./character-format-audit.mjs";
 const probe = resolve(process.argv[2]);
 const artifacts = mkdtempSync(join(tmpdir(), "hwpjs-text-splice-"));
 const writer = await createCfbReader(readFileSync("zig-out/bin/hwpjs.wasm"));
-let edited = 0, refused = 0, oracleCounterexamples = 0, synthetic = 0;
+let edited = 0, refused = 0, oracleCounterexamples = 0, synthetic = 0, nestedEdits = 0;
 
 function run(path, paragraph, start, end, text, label, error, ranges = "reject", layout = "allow-stale-layout", section = 0) {
   const output = join(artifacts, `${label}.hwp`);
@@ -165,10 +165,11 @@ try {
   run(unicodePath, 1, 1, 1, "X", "surrogate-refused", /SplitSurrogatePair/);
   run(basePath, 1, 0, 0, "X", "section-refused", /InvalidSection/, "reject", "allow-stale-layout", 99);
   run(basePath, 99999, 0, 0, "X", "paragraph-refused", /InvalidParagraph/);
-  const nestedPath = "legacy/rust/crates/hwp-core/tests/fixtures/table.hwp";
-  const nested = records(inspect(readFileSync(nestedPath)).sections[0].bytes).filter(r => r.tag === 66).findIndex(r => r.level > 0);
-  assert(nested >= 0);
-  run(nestedPath, nested, 0, 0, "X", "nested-refused", /UnsupportedNestedParagraph/);
+  const nestedPath = "legacy/rust/crates/hwp-core/tests/fixtures/software.hwp";
+  const nested = 2; // actual application title in the first table cell
+  assert(paragraphRecords(inspect(readFileSync(nestedPath)).sections[0].bytes, nested).head.level > 0);
+  const nestedAfter = run(nestedPath, nested, 0, 0, "X", "nested-edited");
+  verifyRaw(readFileSync(nestedPath), nestedAfter, 0, nested, 0, 0, "X"); nestedEdits++;
 
   // Challenge the oracle with actual CFB fixtures, not only tiny expectation arrays.
   assert.throws(() => verify(base, base, 0, 1, 0, 0, "X"), /complete Section/); oracleCounterexamples++;
@@ -178,5 +179,5 @@ try {
   const damaged = fixture(good, b => replaceParagraph(b, 1, p => p.all.slice(p.at, p.end).map(r => { if (r.tag !== 68) return r.raw; const v = Buffer.from(r.payload); v.writeUInt32LE(v.readUInt32LE(4) + 1, 4); return encodeRecord(68, 1, v); })), "wrong-style");
   assert.throws(() => verify(base, damaged.bytes, 0, 1, 0, 0, "X"), /complete Section/); oracleCounterexamples++;
   auditCharacterFormat(probe, artifacts, fixture);
-  console.log(JSON.stringify({ real_files: 5, edited, synthetic, boundary_cases: boundaryCases, refused, oracle_counterexamples: oracleCounterexamples, independent_oracles: ["legacy CFB.js", "Node zlib and unit-wise styles", "Rust toJson"], artifacts }));
+  console.log(JSON.stringify({ real_files: 5, nested_real_files: 1, nested_edits: nestedEdits, edited, synthetic, boundary_cases: boundaryCases, refused, oracle_counterexamples: oracleCounterexamples, independent_oracles: ["legacy CFB.js", "Node zlib and unit-wise styles", "Rust toJson (root paragraphs only)"], artifacts }));
 } finally { writer.close(); }
