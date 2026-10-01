@@ -91,6 +91,19 @@ test("actual HWPX Worker edits native plain text and refuses unsupported control
   const captionEdited = await send({ kind: "splice", section: caption.section, paragraph: caption.paragraph, startUnit: 3, endUnit: 3, text: "검증😀" });
   assert.equal(captionEdited.error, undefined);
   assert.equal(captionEdited.content.paragraphs.find(p => p.paragraph === caption.paragraph).text, "표 \ufffc검증😀 위 캡션");
+  for (const [name, ordinal] of [["noori", 13], ["page", 1], ["table-bug", 1]]) {
+    const pageSettings = await send({ kind: "load", format: "hwpx", bytes: readFileSync(`legacy/rust/crates/hwp-core/tests/fixtures/${name}.hwpx`) });
+    assert.equal(pageSettings.error, undefined);
+    const target = pageSettings.content.paragraphs[ordinal - 1];
+    assert.equal(target.editable, true, name);
+    assert.equal(target.text.includes("\ufffc"), false, name);
+    const changed = await send({ kind: "splice", section: target.section, paragraph: target.paragraph, startUnit: 0, endUnit: 0, text: "검증😀" });
+    assert.equal(changed.error, undefined, name);
+    assert.equal(changed.content.paragraphs[ordinal - 1].text, "검증😀" + target.text, name);
+    const reverted = await send({ kind: "splice", section: target.section, paragraph: target.paragraph, startUnit: 0, endUnit: 4, text: "" });
+    assert.equal(reverted.error, undefined, name);
+    assert.equal(reverted.content.paragraphs[ordinal - 1].text, target.text, name);
+  }
   const hyperlink = await send({ kind: "load", format: "hwpx", bytes: readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/hyperlink.hwpx") });
   assert.equal(hyperlink.error, undefined);
   const labelParagraph = hyperlink.content.paragraphs.find(p => p.fieldLabels.length > 0);

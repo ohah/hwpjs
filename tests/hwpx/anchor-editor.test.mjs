@@ -4,6 +4,39 @@ import { readFileSync } from "node:fs";
 import { execFileSync, spawnSync } from "node:child_process";
 import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
 
+test("public HWPX page number settings preserve zero-width text offsets and all XML", async () => {
+  const editor = await createHwpxEditor(readFileSync("zig-out/bin/hwpjs.wasm"));
+  try {
+    for (const [name, paragraph] of [["noori", 13], ["page", 1], ["table-bug", 1]]) {
+      const input = readFileSync(`legacy/rust/crates/hwp-core/tests/fixtures/${name}.hwpx`);
+      editor.open(input);
+      const original = editor.anchorText(0, paragraph);
+      assert.equal(original.includes("\ufffc"), false, name);
+      editor.spliceAnchored(0, paragraph, 0, 0, "검증😀");
+      assert.equal(editor.anchorText(0, paragraph), "검증😀" + original, name);
+      const output = editor.save();
+      const oracle = `import io,json,sys,base64,zipfile,xml.etree.ElementTree as E
+d=json.loads(sys.stdin.readline()); a=zipfile.ZipFile(io.BytesIO(base64.b64decode(d['before']))); b=zipfile.ZipFile(io.BytesIO(base64.b64decode(d['after'])))
+if a.namelist()!=b.namelist() or a.comment!=b.comment: raise ValueError('ZIP inventory')
+p='{http://www.hancom.co.kr/hwpml/2011/paragraph}'
+for name in a.namelist():
+ if name!='Contents/section0.xml':
+  if a.read(name)!=b.read(name): raise ValueError(name)
+  continue
+ x=E.fromstring(a.read(name)); y=E.fromstring(b.read(name)); target=list(x.iter(p+'p'))[d['paragraph']-1]
+ t=next(t for run in target.findall(p+'run') for t in run.findall(p+'t')); t.text='검증😀'+(t.text or '')
+ def signature(e): return (e.tag,sorted(e.attrib.items()),e.text,e.tail,[signature(c) for c in e])
+ if signature(x)!=signature(y): raise ValueError('complete XML mismatch')`;
+      for (const flags of [[], ["-O"]]) execFileSync("python3", [...flags, "-c", oracle], { input: JSON.stringify({ before: input.toString("base64"), after: Buffer.from(output).toString("base64"), paragraph }) + "\n", timeout: 30000 });
+      editor.spliceAnchored(0, paragraph, 0, 4, "");
+      assert.deepEqual(Buffer.from(editor.save()), input);
+      editor.open(output);
+      assert.equal(editor.anchorText(0, paragraph), "검증😀" + original);
+      assert.deepEqual(editor.save(), output);
+    }
+  } finally { editor.close(); }
+});
+
 test("public HWPX automatic table numbers protect anchors and preserve complete XML", async () => {
   const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/table-caption.hwpx");
   const editor = await createHwpxEditor(readFileSync("zig-out/bin/hwpjs.wasm"));
@@ -22,7 +55,7 @@ test("public HWPX automatic table numbers protect anchors and preserve complete 
     }
     const output = editor.save();
     const oracle = `import io,json,sys,base64,zipfile,xml.etree.ElementTree as E
-d=json.load(sys.stdin); a=zipfile.ZipFile(io.BytesIO(base64.b64decode(d['before']))); b=zipfile.ZipFile(io.BytesIO(base64.b64decode(d['after'])))
+d=json.loads(sys.stdin.readline()); a=zipfile.ZipFile(io.BytesIO(base64.b64decode(d['before']))); b=zipfile.ZipFile(io.BytesIO(base64.b64decode(d['after'])))
 if a.namelist()!=b.namelist() or a.comment!=b.comment: raise ValueError('ZIP inventory')
 p='{http://www.hancom.co.kr/hwpml/2011/paragraph}'
 for name in a.namelist():
@@ -37,11 +70,11 @@ for name in a.namelist():
   texts[0].text='앞😀'+(texts[0].text or ''); texts[-1].text=(texts[-1].text or '')+'뒤😀'; changed+=1
  def signature(e): return (e.tag,sorted(e.attrib.items()),e.text,e.tail,[signature(c) for c in e])
  if changed!=8 or signature(x)!=signature(y): raise ValueError('complete XML mismatch')`;
-    for (const flags of [[], ["-O"]]) execFileSync("python3", [...flags, "-c", oracle], { input: JSON.stringify({ before: input.toString("base64"), after: Buffer.from(output).toString("base64") }) });
+    for (const flags of [[], ["-O"]]) execFileSync("python3", [...flags, "-c", oracle], { input: JSON.stringify({ before: input.toString("base64"), after: Buffer.from(output).toString("base64") }) + "\n", timeout: 30000 });
     // Verify that the independent checker rejects number, text and other-part corruption.
     for (const mutation of ["number", "text", "part"]) {
-      const corrupted = execFileSync("python3", ["-c", `import io,sys,zipfile,xml.etree.ElementTree as E
-source=zipfile.ZipFile(io.BytesIO(sys.stdin.buffer.read())); target=io.BytesIO(); p='{http://www.hancom.co.kr/hwpml/2011/paragraph}'
+      const corrupted = execFileSync("python3", ["-c", `import io,sys,base64,zipfile,xml.etree.ElementTree as E
+source=zipfile.ZipFile(io.BytesIO(base64.b64decode(sys.stdin.readline()))); target=io.BytesIO(); p='{http://www.hancom.co.kr/hwpml/2011/paragraph}'
 with zipfile.ZipFile(target,'w') as out:
  out.comment=source.comment
  for item in source.infolist():
@@ -53,9 +86,9 @@ with zipfile.ZipFile(target,'w') as out:
    data=E.tostring(root,encoding='utf-8')
   elif item.filename=='mimetype' and sys.argv[1]=='part': data+=b'wrong'
   out.writestr(item,data)
-sys.stdout.buffer.write(target.getvalue())`, mutation], { input: Buffer.from(output), timeout: 30000 });
+sys.stdout.buffer.write(target.getvalue())`, mutation], { input: Buffer.from(output).toString("base64") + "\n", timeout: 30000 });
       for (const flags of [[], ["-O"]]) {
-        const result = spawnSync("python3", [...flags, "-c", oracle], { input: JSON.stringify({ before: input.toString("base64"), after: corrupted.toString("base64") }), timeout: 30000 });
+        const result = spawnSync("python3", [...flags, "-c", oracle], { input: JSON.stringify({ before: input.toString("base64"), after: corrupted.toString("base64") }) + "\n", timeout: 30000 });
         assert.equal(result.error, undefined);
         assert.equal(result.status, 1, mutation);
         assert.match(result.stderr.toString(), /ValueError: (complete XML mismatch|mimetype)/);
@@ -101,7 +134,7 @@ test("public HWPX anchored note references edit both sides preserve all XML and 
     }
     const output = editor.save();
     const oracle = `import io,json,sys,base64,zipfile,xml.etree.ElementTree as E
-d=json.load(sys.stdin); a=zipfile.ZipFile(io.BytesIO(base64.b64decode(d['before']))); b=zipfile.ZipFile(io.BytesIO(base64.b64decode(d['after'])))
+d=json.loads(sys.stdin.readline()); a=zipfile.ZipFile(io.BytesIO(base64.b64decode(d['before']))); b=zipfile.ZipFile(io.BytesIO(base64.b64decode(d['after'])))
 if a.namelist()!=b.namelist() or a.comment!=b.comment: raise ValueError('ZIP inventory')
 for name in a.namelist():
  if name!='Contents/section0.xml' and a.read(name)!=b.read(name): raise ValueError(name)
@@ -111,7 +144,7 @@ for paragraph in x.findall(p+'p'):
  texts[0].text='앞😀'+(texts[0].text or ''); texts[-1].text=(texts[-1].text or '')+'뒤😀'
 def signature(e): return (e.tag,sorted(e.attrib.items()),e.text,e.tail,[signature(c) for c in e])
 if signature(x)!=signature(y): raise ValueError('complete XML mismatch')`;
-    for (const flags of [[], ["-O"]]) execFileSync("python3", [...flags, "-c", oracle], { input: JSON.stringify({ before: input.toString("base64"), after: Buffer.from(output).toString("base64") }) });
+    for (const flags of [[], ["-O"]]) execFileSync("python3", [...flags, "-c", oracle], { input: JSON.stringify({ before: input.toString("base64"), after: Buffer.from(output).toString("base64") }) + "\n", timeout: 30000 });
     for (const paragraph of [1, 4]) {
       editor.spliceAnchored(0, paragraph, 9, 3, "");
       editor.spliceAnchored(0, paragraph, 0, 3, "");

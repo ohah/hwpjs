@@ -59,19 +59,7 @@ fn validateMode(tree: *const tree_module.Tree, sites: *const sites_module.Sites,
                         run_child = content.next_sibling;
                         continue;
                     }
-                    var control_child = content.first_child;
-                    if (control_child == null) return error.UnsupportedParagraphControl;
-                    while (control_child) |control_index| {
-                        const control = tree.elements[control_index];
-                        if (!control.is(uri, "colPr")) return error.UnsupportedParagraphControl;
-                        var metadata_child = control.first_child;
-                        while (metadata_child) |metadata_index| {
-                            const metadata = tree.elements[metadata_index];
-                            if ((!metadata.is(uri, "colLine") and !metadata.is(uri, "colSz")) or metadata.first_child != null) return error.UnsupportedParagraphControl;
-                            metadata_child = metadata.next_sibling;
-                        }
-                        control_child = control.next_sibling;
-                    }
+                    if (!@import("retained_run_metadata.zig").supported(tree, run_index)) return error.UnsupportedParagraphControl;
                 } else if (!content.is(uri, "t") and !content.is(uri, "secPr")) return error.UnsupportedParagraphControl;
                 run_child = content.next_sibling;
             }

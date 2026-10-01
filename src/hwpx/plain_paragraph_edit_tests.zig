@@ -4,6 +4,34 @@ const sites_module = @import("text_sites.zig");
 const locations_module = @import("text_site_locations.zig");
 const edit = @import("plain_paragraph_edit.zig");
 
+test "HWPX plain paragraph page number metadata has zero width and survives allocation failure" {
+    const a = std.testing.allocator;
+    const source = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:p><p:run><p:t>A😀</p:t><p:ctrl><p:colPr/><p:pageNum pos='BOTTOM_CENTER' formatType='DIGIT' sideChar='-'/></p:ctrl><p:t>BC</p:t><p:ctrl><p:pageNum/></p:ctrl></p:run></p:p></s:sec>";
+    var tree = try tree_module.parse(a, source, .section, 0, 0, .{});
+    defer tree.deinit(a);
+    try std.testing.checkAllAllocationFailures(a, struct {
+        fn run(allocator: std.mem.Allocator, parsed: *const tree_module.Tree) !void {
+            var sites = try sites_module.collect(allocator, parsed, .{});
+            defer sites.deinit(allocator);
+            const locations = try locations_module.build(allocator, parsed, &sites, .{});
+            defer allocator.free(locations);
+            _ = edit.splice(allocator, parsed, &sites, locations, 1, 4, 1, "뒤😀", 10000) catch |err| {
+                try std.testing.expectEqualStrings("A😀", sites.items[0].text);
+                try std.testing.expectEqualStrings("BC", sites.items[1].text);
+                return err;
+            };
+            try std.testing.expectEqualStrings("B뒤😀", sites.items[1].text);
+            const saved = try @import("text_sites_save.zig").write(allocator, parsed, &sites, .{}, 10000);
+            defer allocator.free(saved);
+            try std.testing.expect(std.mem.indexOf(u8, saved, "<p:colPr/><p:pageNum pos='BOTTOM_CENTER' formatType='DIGIT' sideChar='-'/>") != null);
+            _ = try edit.splice(allocator, parsed, &sites, locations, 1, 4, 3, "C", 10000);
+            const restored = try @import("text_sites_save.zig").write(allocator, parsed, &sites, .{}, 10000);
+            defer allocator.free(restored);
+            try std.testing.expectEqualStrings(parsed.source, restored);
+        }
+    }.run, .{&tree});
+}
+
 test "HWPX plain paragraph tab site creation refuses UTF16 output mixing" {
     const a = std.testing.allocator;
     const ascii = "<?xml version='1.0' encoding='UTF-16'?><s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:p><p:run><p:t><p:tab/></p:t></p:run></p:p></s:sec>";
@@ -97,6 +125,15 @@ test "HWPX plain paragraph column metadata does not authorize mixed or nested co
         "<p:colPr><p:colSz><p:t>hidden</p:t></p:colSz></p:colPr>",
         "<p:colPr><p:unknown/></p:colPr>",
         "<colPr xmlns='urn:foreign'/>",
+        "hidden<p:colPr/>",
+        "<p:colPr>hidden</p:colPr>",
+        "<p:colPr><p:colSz>hidden</p:colSz></p:colPr>",
+        "<p:pageNum><p:t>hidden</p:t></p:pageNum>",
+        "<p:pageNum>hidden</p:pageNum>",
+        "<p:pageNum><!--hidden--></p:pageNum>",
+        "<p:pageNum/><?hidden data?>",
+        "<p:pageNum/><p:fieldBegin/>",
+        "<pageNum xmlns='urn:foreign'/>",
         "",
     }) |control| {
         const source = try std.mem.concat(a, u8, &.{ prefix, control, suffix });
