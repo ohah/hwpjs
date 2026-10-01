@@ -46,6 +46,22 @@ export async function createHwpxEditor(source) {
         if (!wasm.hwpx_edit_splice(section, paragraph, start, deleted, ptr, size)) throw memory.error();
       });
     },
+    anchorText(section, paragraph) {
+      ready(); uint(section); uint(paragraph);
+      if (typeof wasm.hwpx_edit_anchor_text !== "function") throw new Error("HwpxAnchorEditAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_anchor_text(section, paragraph)) throw memory.error();
+        return new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
+    spliceAnchored(section, paragraph, start, deleted, text) {
+      ready(); [section, paragraph, start, deleted].forEach(uint);
+      if (typeof wasm.hwpx_edit_splice_anchored !== "function") throw new Error("HwpxAnchorEditAbiUnavailable");
+      const bytes = encodedText(text);
+      memory.withBytes(bytes, (ptr, size) => {
+        if (!wasm.hwpx_edit_splice_anchored(section, paragraph, start, deleted, ptr, size)) throw memory.error();
+      });
+    },
     spliceFieldLabel(section, paragraph, beginElement, start, deleted, text) {
       ready();
       [section, paragraph, beginElement, start, deleted].forEach(uint);

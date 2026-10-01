@@ -3,14 +3,35 @@ import { createHwpxReader } from "../../js/hwpx.mjs";
 import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
 import { displayHwpxContent } from "./hwpx-content.mjs";
 import { displayContent } from "./content.mjs";
+import { clipText } from "./content.mjs";
 import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
 let module, bytes, preview, editor, format;
+function anchorView(section, paragraph) {
+  try { return editor.anchorText(section, paragraph); }
+  catch (error) {
+    if (["MissingTextSite", "UnsupportedParagraphControl", "UnsupportedInlineControl", "SourceBindingMismatch", "UnsupportedTextPositionProjection", "HwpxAnchorEditAbiUnavailable"].includes(error.message)) return null;
+    throw error;
+  }
+}
 function hwpxDisplay() {
   const content = displayHwpxContent(preview);
+  let units = 0;
   for (const paragraph of content.paragraphs) {
     paragraph.plainEditable = !paragraph.clipped && editor.canEdit(paragraph.section, paragraph.paragraph + 1);
     paragraph.fieldLabels = [];
+    paragraph.anchorEditable = false;
     if (!paragraph.clipped && !paragraph.plainEditable) {
+      const anchored = anchorView(paragraph.section, paragraph.paragraph + 1);
+      if (anchored !== null) {
+        paragraph.text = anchored;
+        paragraph.anchorEditable = true;
+      }
+    }
+    const clipped = clipText(paragraph.text, Math.max(0, 200000 - units));
+    if (clipped !== paragraph.text) { paragraph.clipped = true; content.limited = true; paragraph.text = clipped; }
+    units += paragraph.text.length;
+    if (paragraph.clipped) { paragraph.plainEditable = false; paragraph.anchorEditable = false; }
+    if (!paragraph.clipped && !paragraph.plainEditable && !paragraph.anchorEditable) {
       try {
         paragraph.fieldLabels = editor.fieldLabels(paragraph.section, paragraph.paragraph + 1);
       } catch (error) {
@@ -18,8 +39,8 @@ function hwpxDisplay() {
         paragraph.fieldReadOnlyReason = error.message;
       }
     }
-    paragraph.editable = paragraph.plainEditable || paragraph.fieldLabels.length > 0;
-    if (paragraph.editable) paragraph.label = paragraph.label.replace("읽기 전용", paragraph.plainEditable ? "일반 텍스트 편집" : "필드 라벨만 편집");
+    paragraph.editable = paragraph.plainEditable || paragraph.anchorEditable || paragraph.fieldLabels.length > 0;
+    if (paragraph.editable) paragraph.label = paragraph.label.replace("읽기 전용", paragraph.plainEditable ? "일반 텍스트 편집" : paragraph.anchorEditable ? "보호 개체 텍스트 편집" : "필드 라벨만 편집");
   }
   content.readOnly = !content.paragraphs.some(paragraph => paragraph.editable);
   return content;
@@ -70,6 +91,8 @@ self.onmessage = async event => {
         if (!Number.isInteger(message.startUnit) || !Number.isInteger(message.endUnit) || message.endUnit < message.startUnit) throw new Error("InvalidTextPosition");
         if (editor.canEdit(message.section, message.paragraph + 1)) {
           editor.splice(message.section, message.paragraph + 1, message.startUnit, message.endUnit - message.startUnit, message.text);
+        } else if (anchorView(message.section, message.paragraph + 1) !== null) {
+          editor.spliceAnchored(message.section, message.paragraph + 1, message.startUnit, message.endUnit - message.startUnit, message.text);
         } else {
           const targets = editor.fieldLabels(message.section, message.paragraph + 1);
           if (targets.length === 0) {

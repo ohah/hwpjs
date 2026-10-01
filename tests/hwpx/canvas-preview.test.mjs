@@ -4,9 +4,16 @@ import { readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { createHwpxReader } from "../../js/hwpx.mjs";
 import { displayHwpxContent } from "../../web/preview/hwpx-content.mjs";
+import { displayRunText } from "../../web/preview/layout.mjs";
 
 const event = (paragraph, kind, value = "", inlineKind = null) => ({ section: 0, paragraph, kind, value, inlineKind });
 const sample = { paragraphCount: 2, events: [event(1, "paragraph_start"), event(1, "content", "A😀"), event(2, "paragraph_start"), event(2, "content", "아이"), event(2, "inline_empty", "", "tab"), event(2, "paragraph_end"), event(1, "content", "B"), event(1, "paragraph_end")] };
+
+test("protected object positions have a visible Canvas spelling without changing source text", () => {
+  const source = "A\ufffc\ufffcB😀";
+  assert.equal(displayRunText(source), "A◇◇B😀");
+  assert.equal(displayRunText(source).length, source.length);
+});
 
 test("HWPX display retains nested ownership and is never advertised as editable", () => {
   const before = JSON.stringify(sample), result = displayHwpxContent(sample);
@@ -67,9 +74,14 @@ test("actual HWPX Worker edits native plain text and refuses unsupported control
   assert.equal(restored.content.paragraphs[1].text, loaded.content.paragraphs[1].text);
   const notes = await send({ kind: "load", format: "hwpx", bytes: readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/footnote-endnote.hwpx") });
   assert.equal(notes.error, undefined);
-  assert.equal(notes.content.paragraphs[0].editable, false);
-  const refused = await send({ kind: "splice", section: 0, paragraph: 0, startUnit: 0, endUnit: 0, text: "안됨" });
-  assert.equal(refused.error, "UnsupportedParagraphControl"); assert.equal(refused.applied, false);
+  assert.equal(notes.content.paragraphs[0].editable, true);
+  assert.equal(notes.content.paragraphs[0].anchorEditable, true);
+  assert.equal(notes.content.paragraphs[0].text, "각주참조\ufffc\ufffc");
+  const refused = await send({ kind: "splice", section: 0, paragraph: 0, startUnit: 4, endUnit: 5, text: "" });
+  assert.equal(refused.error, "ProtectedInlineControl"); assert.equal(refused.applied, false);
+  const noteEdited = await send({ kind: "splice", section: 0, paragraph: 0, startUnit: 0, endUnit: 0, text: "앞😀" });
+  assert.equal(noteEdited.error, undefined);
+  assert.equal(noteEdited.content.paragraphs[0].text, "앞😀각주참조\ufffc\ufffc");
   const hyperlink = await send({ kind: "load", format: "hwpx", bytes: readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/hyperlink.hwpx") });
   assert.equal(hyperlink.error, undefined);
   const labelParagraph = hyperlink.content.paragraphs.find(p => p.fieldLabels.length > 0);

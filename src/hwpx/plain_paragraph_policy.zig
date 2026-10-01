@@ -9,6 +9,14 @@ pub fn validate(tree: *const tree_module.Tree, sites: *const sites_module.Sites,
 }
 
 pub fn validateWithTabs(tree: *const tree_module.Tree, sites: *const sites_module.Sites, locations: []const scanner.Location, paragraph: usize, allow_tabs: bool) !void {
+    return validateMode(tree, sites, locations, paragraph, allow_tabs, false);
+}
+
+pub fn validateWithAnchors(tree: *const tree_module.Tree, sites: *const sites_module.Sites, locations: []const scanner.Location, paragraph: usize) !void {
+    return validateMode(tree, sites, locations, paragraph, true, true);
+}
+
+fn validateMode(tree: *const tree_module.Tree, sites: *const sites_module.Sites, locations: []const scanner.Location, paragraph: usize, allow_tabs: bool, allow_anchors: bool) !void {
     if (locations.len != sites.items.len or paragraph == 0) return error.InvalidTextSites;
     var owner: ?usize = null;
     for (sites.items, locations) |site, location| {
@@ -40,6 +48,10 @@ pub fn validateWithTabs(tree: *const tree_module.Tree, sites: *const sites_modul
             var run_child = element.first_child;
             while (run_child) |run_index| {
                 const content = tree.elements[run_index];
+                if (allow_anchors and @import("run_anchor.zig").kind(tree, run_index) != null) {
+                    run_child = content.next_sibling;
+                    continue;
+                }
                 // Section metadata has no text position; field/object/switch
                 // semantics are not projected by this plain editing path.
                 if (content.is(uri, "ctrl")) {

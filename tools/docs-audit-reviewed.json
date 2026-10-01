@@ -1,8 +1,12 @@
 {
   "schema": 1,
   "verified": {
+    "docs/hwpx-anchor-text-positions.md": {
+      "sha256": "53ab716cbecfff7609365c72609fc4bd8e5c4fca68cb7ce09854ad14034cbf01",
+      "evidence": "2026-10-01 native protected anchor position permission shared text spelling transactional splice API UTF8 and Worker clipping reviewed; Debug Safe Fast positions 4 and anchored transaction 3 each pass; Safe field 23 plain 10 formula transaction 2 pass; product HWPX 22 and HWP5 69 pass; actual note independent Python normal optimized whole XML ZIP tested; corpus 45 files 161 candidates 109 successes 52 controls refused and initial missing insertion 86 classified; external Chromium pointer input protected Backspace rollback subsequent input verified; invisible UFFFC reproduced fixed via shared measurement rendering visible diamond and screenshot confirmed; current full Safe native 2785 tests and 7 steps pass; boundary materialization original object rendering incomplete"
+    },
     "docs/hwpx-note-text-edit.md": {
-      "sha256": "82229a91860c9e6f3c94d28e97e8f8ae40967d1fb5f84e305c1397b90cb605ad",
+      "sha256": "14d83323d461bdf35514806513aef3f81a84ff38a53ccbfaad26d9778d3ec095",
       "evidence": "2026-10-01 note prefix source ownership and unindexed content rejection checked; Debug Safe Fast note edit 4 each pass; actual four bodies numbering source save reopen restore checked; product Safe 5 steps and HWPX audit 20 tests 7 steps pass; public note tests 2 pass with Python normal optimized complete XML other ZIP payload and three oracle mutations plus delete all reopen reinput; corpus 45 files 1379 paragraphs 1170 accepted 161 control 48 numeric refusals; external Chromium footnote and endnote pointer input delete all reinput screenshots verified; full current Safe native 2780 tests and 7 steps pass; note anchors numbering generation page layout OS IME incomplete"
     },
     "docs/hwpx-formula-parameters.md": {
@@ -738,7 +742,7 @@
       "evidence": "2026-10-01 direct Canvas hit test grapheme UTF16 selection native acknowledgement and temporary composition SSOT checked against source; Debug Safe Fast 21 API input tests and full Safe 2687 Zig plus 51 Node regressions pass; five actual fixtures use native WASM with mocked DOM; Chromium public URL pointer typing selection wrap errors composition reset and explicit Meta A empty reinput verified; real OS IME candidate clipboard permissions and HWPX layout remain unverified"
     },
     "docs/development-commands.md": {
-      "sha256": "54e6b5829f451c5d2c1f6340ef0ace819b579fa78deacf1ca28165d58ace7f2e",
+      "sha256": "d8465e9f24d912f788d624282a9c8d527ae66b85915b982877f5b2f4885de109",
       "evidence": "2026-10-01 current formula module ownership and command routing checked; shared grammar current Sites atomic numeric edits derived multi-field XML ZIP save and no-op preservation reviewed; Debug Safe Fast formula 14 each and native formula session 2 pass; product HWPX 18 and HWP5 editor 69 pass; corpus 45 files 1379 paragraphs classified; actual external Chromium numeric edit result update invalid rollback confirmed; full latest Safe native 2777 and 7 build steps pass; general syntax field dependencies and original layout incomplete"
     },
     "docs/zig-test-stderr.md": {
@@ -1598,7 +1602,7 @@
       "evidence": "2026-09-27 move commit R100 count, current legacy and CI paths, cargo metadata and tests, Bun Vite startup, historical 1652 qualified"
     },
     "docs/project-structure.md": {
-      "sha256": "351040e30aebfc252652258e8d95f5da684b72dd3f54c90efe7c5627517376fc",
+      "sha256": "cbc4df8521546751e8af896e9c15cea5609ff54d64360fc2930cc483d9e72a6f",
       "evidence": "2026-10-01 current formula module ownership and command routing checked; shared grammar current Sites atomic numeric edits derived multi-field XML ZIP save and no-op preservation reviewed; Debug Safe Fast formula 14 each and native formula session 2 pass; product HWPX 18 and HWP5 editor 69 pass; corpus 45 files 1379 paragraphs classified; actual external Chromium numeric edit result update invalid rollback confirmed; full latest Safe native 2777 and 7 build steps pass; general syntax field dependencies and original layout incomplete"
     },
     "docs/hwpx-section-tree.md": {

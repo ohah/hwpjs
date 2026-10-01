@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+[HWPX 개체 앵커 위치](hwpx-anchor-text-positions.md)는 `run_anchor.zig`가 구조적 후보 분류를, `anchor_text_positions.zig`가 기존 텍스트/탭 위치 조립을, `anchor_paragraph_edit.zig`가 opt-in 정책·명령·표시 문자열 조립을 소유합니다. 두 별도 native 테스트 파일과 `tests/hwpx/anchor-editor.test.mjs`가 검증을 분리합니다. 기존 세션·WASM·Worker·Canvas를 재사용하며 전수 시도는 `tools/hwpx-anchor-corpus-audit.mjs`가 담당합니다.
+
 [HWPX 주석 본문 편집](hwpx-note-text-edit.md)은 `retained_note_number.zig`가 번호 prefix의 원문 보존 적격성을, `note_edit_tests.zig`가 native 반례·실파일·할당 실패를 담당합니다. 기존 문단 정책·세션·저장기를 사용하며 `tests/hwpx/note-editor.test.mjs`가 공개 API와 독립 전체 XML/ZIP 비교를 분리합니다.
 
 [HWPX 계산 필드](hwpx-formula-parameters.md)는 `formula_parameters.zig`가 기존 parameter 보고서를 연결하고 `formula_expression.zig`가 HWP5 문법 경계를 공유합니다. 전체 지원 범위와 제한은 해당 주제 문서가 소유합니다.

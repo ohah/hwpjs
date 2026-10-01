@@ -12,7 +12,7 @@ pub fn spliceProjected(a: std.mem.Allocator, sites: *sites_module.Sites, positio
     var current: std.ArrayList(u8) = .empty;
     defer current.deinit(a);
     for (positions) |position| {
-        try current.appendSlice(a, if (position.kind == .tab) "\t" else sites.items[position.index].text);
+        try current.appendSlice(a, @import("paragraph_text_positions.zig").segmentText(sites, position));
     }
     const start_byte = try edit.bytePosition(current.items, start);
     const end_byte = try edit.bytePosition(current.items, end);
@@ -33,7 +33,7 @@ pub fn spliceProjected(a: std.mem.Allocator, sites: *sites_module.Sites, positio
     var inserted_once = false;
     var changed = false;
     for (positions) |position| {
-        if (position.kind == .tab) continue;
+        if (position.kind != .text) continue;
         const index = position.index;
         const cursor = position.start_unit;
         const stop = position.end_unit;

@@ -6,19 +6,28 @@ const scanner = @import("section_text.zig");
 const uri = @import("document_xml.zig").paragraph_uri;
 
 pub const Segment = struct {
-    kind: enum { text, tab },
+    kind: enum { text, tab, anchor },
     index: usize,
     source_start: usize,
     start_unit: usize = 0,
     end_unit: usize = 0,
 };
 
+/// Shared derived text spelling. This is never serialized into source XML.
+pub fn segmentText(sites: *const sites_module.Sites, segment: Segment) []const u8 {
+    return switch (segment.kind) {
+        .text => sites.items[segment.index].text,
+        .tab => "\t",
+        .anchor => "\xef\xbf\xbc",
+    };
+}
+
 /// Half-open text deletion cannot remove a preserved inline element.
 /// UTF-16 surrogate boundaries inside text are checked by the text splice layer.
 pub fn validateRange(segments: []const Segment, start: usize, end: usize) !void {
     if (segments.len == 0 or end < start or end > segments[segments.len - 1].end_unit) return error.InvalidTextPosition;
     for (segments) |segment| {
-        if (segment.kind == .tab and start < segment.end_unit and end > segment.start_unit) return error.ProtectedInlineControl;
+        if (segment.kind != .text and start < segment.end_unit and end > segment.start_unit) return error.ProtectedInlineControl;
     }
 }
 

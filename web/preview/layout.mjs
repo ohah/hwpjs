@@ -2,7 +2,7 @@
 export const FONT = "16px system-ui, sans-serif";
 export const LINE_HEIGHT = 28;
 // Prototype tab display only; original HWP tab stops are not layouted yet.
-export const displayRunText = text => text.replaceAll("\t", "    ");
+export const displayRunText = text => text.replaceAll("\t", "    ").replaceAll("\ufffc", "◇");
 export function layoutContent(content, width, measure, maxRows = 20000) {
   if (!Number.isFinite(width) || width <= 0 || !Number.isInteger(maxRows) || maxRows < 1) throw new RangeError("InvalidLayoutBounds");
   const rows = [];

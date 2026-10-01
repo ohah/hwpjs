@@ -44,6 +44,14 @@ pub const Session = struct {
     }
 
     pub fn splice(self: *Session, section_index: usize, paragraph: usize, start: u32, deleted: u32, inserted: []const u8) !bool {
+        return self.spliceMode(section_index, paragraph, start, deleted, inserted, false);
+    }
+
+    pub fn spliceAnchored(self: *Session, section_index: usize, paragraph: usize, start: u32, deleted: u32, inserted: []const u8) !bool {
+        return self.spliceMode(section_index, paragraph, start, deleted, inserted, true);
+    }
+
+    fn spliceMode(self: *Session, section_index: usize, paragraph: usize, start: u32, deleted: u32, inserted: []const u8, anchored: bool) !bool {
         if (section_index >= self.sections.len) return error.InvalidSectionIndex;
         const selected = &self.sections[section_index];
         if (paragraph < selected.first_paragraph or paragraph > selected.last_paragraph) return error.InvalidParagraphIndex;
@@ -59,8 +67,9 @@ pub const Session = struct {
             const trees = try self.allocator.alloc(tree_module.Tree, self.sections.len);
             defer self.allocator.free(trees);
             for (self.sections, trees) |section, *tree| tree.* = section.tree;
-            return @import("formula_splice.zig").splice(self.allocator, trees, section_index, &selected.sites, selected.locations, paragraph, start, deleted, inserted, self.options.max_text_bytes - other_bytes);
+            return @import("formula_splice.zig").spliceMode(self.allocator, trees, section_index, &selected.sites, selected.locations, paragraph, start, deleted, inserted, self.options.max_text_bytes - other_bytes, anchored);
         }
+        if (anchored) return @import("anchor_paragraph_edit.zig").splice(self.allocator, &selected.tree, &selected.sites, selected.locations, paragraph, start, deleted, inserted, self.options.max_text_bytes - other_bytes);
         return @import("plain_paragraph_edit.zig").spliceWithTabs(self.allocator, &selected.tree, &selected.sites, selected.locations, paragraph, start, deleted, inserted, self.options.max_text_bytes - other_bytes, true);
     }
 
@@ -73,6 +82,13 @@ pub const Session = struct {
             else => return err,
         };
         return true;
+    }
+
+    pub fn anchorText(self: *const Session, section_index: usize, paragraph: usize) ![]u8 {
+        if (section_index >= self.sections.len) return error.InvalidSectionIndex;
+        const section = &self.sections[section_index];
+        if (paragraph < section.first_paragraph or paragraph > section.last_paragraph) return error.InvalidParagraphIndex;
+        return @import("anchor_paragraph_edit.zig").text(self.allocator, &section.tree, &section.sites, section.locations, paragraph, self.options.max_text_bytes);
     }
 
     pub fn spliceFieldLabel(self: *Session, section_index: usize, paragraph: usize, begin_element: usize, start: u32, deleted: u32, inserted: []const u8) !bool {
