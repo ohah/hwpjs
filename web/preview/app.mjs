@@ -18,7 +18,7 @@ input.addEventListener("change", async () => {
   controls.reset();
   if (!selected) { status.textContent = "파일을 선택하세요."; return; }
   if (selected.size > 64 * 1024 * 1024) { status.textContent = "오류: 파일은 64 MiB 이하여야 합니다."; return; }
-  if (/\.hwpx$/i.test(selected.name)) { status.textContent = "오류: 이 화면은 HWP5만 지원합니다. HWPX는 미지원입니다."; return; }
+  const format = /\.hwpx$/i.test(selected.name) ? "hwpx" : "hwp5";
   status.textContent = `${selected.name} 읽는 중…`;
   try {
     const bytes = await selected.arrayBuffer();
@@ -40,12 +40,13 @@ input.addEventListener("change", async () => {
       try {
         const content = event.data.content, layout = renderer.show(content, { preserveScroll: event.data.kind !== "load" });
         accessible.value = clipText(content.paragraphs.map(p => `${p.label}\n${p.text}`).join("\n\n"), 50000);
-        status.textContent = `${selected.name} · HWP ${content.version} · ${content.totalParagraphs}문단 · 텍스트 미리보기${layout.limited ? " · 표시 한도에 도달해 일부만 표시" : ""}`;
-        if (event.data.kind === "load") controls.loaded();
+        const formatLabel = content.format === "hwpx" ? "HWPX · 읽기 전용" : `HWP ${content.version}`;
+        status.textContent = `${selected.name} · ${formatLabel} · ${content.totalParagraphs}문단 · 텍스트 미리보기${layout.limited ? " · 표시 한도에 도달해 일부만 표시" : ""}`;
+        if (event.data.kind === "load" && !content.readOnly) controls.loaded();
         direct.message(event.data);
       } catch (error) { fail(error.message); }
     };
-    job.postMessage({ kind: "load", bytes }, [bytes]);
+    job.postMessage({ kind: "load", format, bytes }, [bytes]);
   } catch (error) { if (epoch === generation) status.textContent = `오류: ${error.message}`; }
 });
 window.addEventListener("pagehide", event => { if (!event.persisted) { generation++; worker?.terminate(); direct.close(); renderer.close(); } });

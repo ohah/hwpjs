@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+[HWPX 공개 텍스트 이벤트/Canvas](hwpx-text-api.md)는 `src/hwpx/text_preview.zig`의 기존 스캐너 연결, `src/wasm/hwpx_text.zig`의 출력 수명, `js/hwpx.mjs`·`hwpx-text-wire.mjs`의 공개 경계를 분리합니다. `web/preview/hwpx-content.mjs`는 읽기 전용 표시만 소유하고 HWP5와 Worker/렌더러를 공유합니다. 제품 경계와 표시 반례는 `tests/hwpx/`에 둡니다.
+
 [Canvas 직접 입력](canvas-direct-input.md)은 `web/preview/text-geometry.mjs`의 hit-test/선택, `text-navigation.mjs`의 키 이동, `text-input.mjs`의 문자열 차이, `canvas-editor.mjs`의 입력/조합/native 응답 조정을 분리합니다. 기존 layout/renderer/Worker는 재사용하고 집중 검사는 `tests/hwp5/canvas-edit.test.mjs`·`canvas-editor.test.mjs`에 둡니다.
 
 [실험용 편집 JS/WASM](hwp5-editor-api.md)은 `src/wasm/hwp5_edit.zig`의 세션/버퍼 수명과 `js/hwp5-editor.mjs`의 JS 경계를 분리합니다. 기존 native 모델/명령/저장기를 재사용하며 `tests/hwp5/editor.test.mjs`가 제품 ABI와 독립 실파일 대조, `editor-controls.test.mjs`가 웹 폼 상태를 검사합니다. 웹 명령 폼은 `web/preview/editor-controls.mjs`, native 세션과 표시 스냅샷 갱신은 기존 Worker가 소유합니다.

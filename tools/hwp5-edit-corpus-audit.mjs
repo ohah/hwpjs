@@ -5,6 +5,7 @@ import { createRequire } from "node:module";
 import { runInNewContext } from "node:vm";
 import assert from "node:assert/strict";
 import { createHwp5Reader } from "../js/hwp5.mjs";
+import { createHwpxReader } from "../js/hwpx.mjs";
 import { createExperimentalHwp5Editor } from "../js/hwp5-editor.mjs";
 import { fixturePaths, sectionTexts, exerciseEditor, verifySaved } from "./hwp5-edit-corpus-lib.mjs";
 
@@ -20,10 +21,19 @@ function streams(bytes) {
 }
 const paths = fixturePaths(execFileSync("git", ["ls-files", "-z"]).toString().split("\0"));
 if (!paths.length) throw new Error("EmptyFixtureInventory");
-const reader = await createHwp5Reader(module), files = [];
+const reader = await createHwp5Reader(module), hwpxReader = await createHwpxReader(module), files = [];
 try {
   for (const path of paths) {
-    if (/\.hwpx$/i.test(path)) { files.push({ path, status: "hwpx_public_parser_editor_not_connected" }); continue; }
+    if (/\.hwpx$/i.test(path)) {
+      const result = { path }; files.push(result);
+      try {
+        const preview = hwpxReader.readTextEvents(readFileSync(path));
+        result.previewParagraphs = preview.paragraphCount;
+        result.previewEvents = preview.events.length;
+        result.status = "hwpx_public_editor_not_connected";
+      } catch (error) { result.status = "hwpx_preview_refused"; result.error = error.message; }
+      continue;
+    }
     const bytes = readFileSync(path), result = { path };
     files.push(result);
     try {
@@ -55,7 +65,7 @@ try {
       process.exitCode = 1;
     } finally { editor.close(); }
   }
-} finally { reader.close(); }
+} finally { reader.close(); hwpxReader.close(); }
 const counts = {};
 for (const file of files) counts[file.status] = (counts[file.status] ?? 0) + 1;
 const totals = { attempted: 0, edited: 0, failures: {} };

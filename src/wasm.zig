@@ -7,6 +7,7 @@ comptime {
     _ = @import("wasm/cfb_search.zig");
     _ = @import("wasm/cfb_writer.zig");
     _ = @import("wasm/hwp5_text.zig");
+    _ = @import("wasm/hwpx_text.zig");
     _ = @import("wasm/hwp5_edit.zig");
 }
 

@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[HWPX 공개 텍스트 이벤트](hwpx-text-api.md)는 `zig build hwpx-text-audit -Doptimize=ReleaseSafe --summary all`로 제품 WASM과 추적 픽스처/전송·읽기 전용 Canvas·Worker 반례를 검사합니다. Debug·ReleaseFast도 같은 단계로 실행하며 기본 audit에 포함됩니다. native 모든 할당 실패는 `zig test src/root.zig -O ReleaseSafe --test-filter 'HWPX public text transport'`와 기본 `zig build test`가 검사합니다.
+
 Root 문단 간 하이퍼링크의 공개 open/apply/save/reopen 할당 실패는 `zig test src/root.zig -O ReleaseSafe --test-filter 'public crossing hyperlink session'`로 검사하며 기본 `zig build test`에도 포함됩니다. 실제 교차 필드의 독립 Section·다른 스트림·재열기 및 손상 반례는 제품 빌드 후 `node --test tests/hwp5/control-editor.test.mjs`와 `hwp5-editor-audit`가 검사합니다. 책임과 현재 제한은 [필드 수정 속성](hwp5-field-attribute-edit.md)을 따릅니다.
 
 [계산식 command](hwp5-formula-command.md)의 envelope·실제 chart 13개 필드 검사는 `zig test src/root.zig -O ReleaseSafe --test-filter 'formula command'`로 실행합니다. 실제 셀에서의 SUM/AVG 계산·현재 모델 값 읽기·출력 준비의 할당 실패와 chart의 공개 숫자 편집/CFB 재열기도 포함합니다. 범위·숫자·출력 형식 및 공개 세션 할당 실패의 개별 반례까지 실행하려면 필터를 `'formula'`로 지정합니다. 기본 root 테스트에도 포함되지만 모든 수식 문법·조판·UI 지원의 완료 증명은 아닙니다.

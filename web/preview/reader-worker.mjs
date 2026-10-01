@@ -1,7 +1,9 @@
 import { createHwp5Reader } from "../../js/hwp5.mjs";
+import { createHwpxReader } from "../../js/hwpx.mjs";
+import { displayHwpxContent } from "./hwpx-content.mjs";
 import { displayContent } from "./content.mjs";
 import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
-let module, bytes, preview, editor;
+let module, bytes, preview, editor, format;
 self.onmessage = async event => {
   let reader;
   const message = event.data;
@@ -9,17 +11,28 @@ self.onmessage = async event => {
   let applied = false;
   try {
     if (message.kind === "load") {
+      editor?.close(); editor = undefined; preview = undefined;
+      format = message.format ?? "hwp5";
+      if (format !== "hwp5" && format !== "hwpx") throw new Error("UnknownDocumentFormat");
       const response = await fetch("../../zig-out/bin/hwpjs.wasm");
       if (!response.ok) throw new Error(`WASM HTTP ${response.status}: 먼저 Zig 빌드를 실행하세요.`);
       module = await WebAssembly.compile(await response.arrayBuffer());
-      reader = await createHwp5Reader(module);
       bytes = new Uint8Array(message.bytes);
+      if (format === "hwpx") {
+        reader = await createHwpxReader(module);
+        preview = reader.readTextEvents(bytes);
+        reply({ kind: "load", content: displayHwpxContent(preview) });
+        return;
+      }
+      reader = await createHwp5Reader(module);
       preview = reader.readText(bytes);
       reply({ kind: "load", content: displayContent(preview) });
     } else if (message.kind === "enable") {
+      if (format === "hwpx") throw new Error("UnsupportedHwpxEditing");
       editor ??= await createExperimentalHwp5Editor(module, bytes);
       reply({ kind: "enable", charShapeCount: editor.characterShapeCount() });
     } else if (message.kind === "splice" || message.kind === "format") {
+      if (format === "hwpx") throw new Error("UnsupportedHwpxEditing");
       if (!editor) throw new Error("EditorNotOpen");
       if (message.kind === "splice") editor.splice(message);
       else editor.setCharacterFormat(message);

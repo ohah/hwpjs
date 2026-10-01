@@ -1,5 +1,7 @@
 # HWPX section 텍스트 소유 스냅샷
 
+이 스냅샷의 선택 분기 이벤트를 WASM/JS에 노출하는 계약은 [공개 텍스트 이벤트 API](hwpx-text-api.md)가 소유합니다. 공개 전송과 편집 모델·Canvas 조립은 구분합니다.
+
 `Document.readSectionTextSnapshot(allocator, options)`는 기존 [section 텍스트 이벤트](hwpx-section-text.md)를 그대로 소비합니다. ZIP·XML 선택과 문자 참조 해독·조건부 분기 정책을 새로 구현하지 않습니다. 결과는 spine 순서의 문단·run·`hp:t` 시작/끝, 정규화된 UTF-8 내용 조각, 인라인 시작/끝/빈 요소의 순서와 위치를 소유합니다. 이벤트의 `raw_tag`는 호출 중 빌린 원문 태그를 복사하므로 원본 `Document`와 ZIP 버퍼 해제 뒤에도 살아 있습니다. `text_end`에는 원문 닫는 태그가 없으며 시작 태그의 namespace 선언 맥락도 따로 조립하지 않습니다.
 
 스냅샷은 `section_text.Report`를 함께 반환하지만 전체 XML 트리·표·도형·header·마스터페이지·BinData를 소유하지 않습니다. 기본 분기 정책은 두 switch 분기를 모두 관측하며, 명시적 `options.scan.text.branch_policy`로 선택 분기를 요청할 수 있습니다. `raw_tag`를 해석해 편집 모델이나 무손실 재저장으로 승격하지 않습니다. 표시용 공백/줄바꿈 합성, 필드 의미, 텍스트 외부 콘텐츠와 layout 적용도 하지 않습니다.
