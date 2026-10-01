@@ -1,6 +1,48 @@
 const std = @import("std");
 const editor = @import("editor_session.zig");
 
+test "HWPX editor session formula save derives current numeric edit and preserves noop ZIP" {
+    const a = std.testing.allocator;
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx", a, .limited(4_000_000));
+    defer a.free(bytes);
+    var session = try editor.open(a, bytes, .{});
+    defer session.deinit();
+    const unchanged = try session.save();
+    defer a.free(unchanged);
+    try std.testing.expectEqualSlices(u8, bytes, unchanged);
+    var paragraph: ?usize = null;
+    for (session.sections[0].sites.items, session.sections[0].locations) |site, location| {
+        if (std.mem.eql(u8, site.text, "11.2")) {
+            paragraph = location.paragraph_ordinal;
+            break;
+        }
+    }
+    try std.testing.expect(try session.splice(0, paragraph orelse return error.MissingNumericFixtureCell, 0, 4, "100"));
+    const saved = try session.save();
+    defer a.free(saved);
+    var reopened = try editor.open(a, saved, .{});
+    defer reopened.deinit();
+    const trees = [_]@import("xml_part_tree.zig").Tree{reopened.sections[0].tree};
+    var parameters = try @import("parameter_lists.zig").inspect(a, &trees, .{});
+    defer parameters.deinit();
+    var found = false;
+    for (parameters.roots) |root| {
+        const view = (try @import("formula_parameters.zig").read(&parameters, 0, root.parent_element_index)) orelse continue;
+        if (view.formula == null) continue;
+        try std.testing.expectEqualStrings("156.3", view.last_result.?);
+        found = true;
+        break;
+    }
+    try std.testing.expect(found);
+    try std.testing.expectError(error.InvalidFormulaNumber, session.splice(0, paragraph.?, 0, 3, "bad"));
+    const after_rejected = try session.save();
+    defer a.free(after_rejected);
+    try std.testing.expectEqualSlices(u8, saved, after_rejected);
+    const saved_again = try reopened.save();
+    defer a.free(saved_again);
+    try std.testing.expectEqualSlices(u8, saved, saved_again);
+}
+
 test "HWPX editor session field command allocation failures preserve text and dirty state" {
     const a = std.testing.allocator;
     const source = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:p><p:run><p:ctrl><p:fieldBegin id='1' type='CLICK_HERE' dirty='0'/></p:ctrl><p:t>A😀</p:t><p:ctrl><p:fieldEnd beginIDRef='1'/></p:ctrl></p:run></p:p></s:sec>";

@@ -85,6 +85,19 @@ test("actual HWPX Worker edits native plain text and refuses unsupported control
   const labelRestored = await send({ kind: "splice", section: current.section, paragraph: current.paragraph, startUnit: target.start, endUnit: target.start + 4, text: "" });
   assert.equal(labelRestored.error, undefined);
   assert.equal(labelRestored.content.paragraphs.find(p => p.paragraph === current.paragraph).text, labelParagraph.text);
+  const chart = await send({ kind: "load", format: "hwpx", bytes: readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx") });
+  assert.equal(chart.error, undefined);
+  const numeric = chart.content.paragraphs.find(p => p.text === "11.2");
+  const formula = chart.content.paragraphs.find(p => p.text === "67.5");
+  assert(numeric?.editable); assert(formula); assert.equal(formula.editable, false);
+  const calculated = await send({ kind: "splice", section: numeric.section, paragraph: numeric.paragraph, startUnit: 0, endUnit: 4, text: "100" });
+  assert.equal(calculated.error, undefined);
+  assert.equal(calculated.content.paragraphs.find(p => p.paragraph === formula.paragraph).text, "156.3");
+  const invalidNumber = await send({ kind: "splice", section: numeric.section, paragraph: numeric.paragraph, startUnit: 0, endUnit: 3, text: "bad" });
+  assert.equal(invalidNumber.error, "InvalidFormulaNumber"); assert.equal(invalidNumber.applied, false);
+  const numericRestored = await send({ kind: "splice", section: numeric.section, paragraph: numeric.paragraph, startUnit: 0, endUnit: 3, text: "11.2" });
+  assert.equal(numericRestored.error, undefined);
+  assert.equal(numericRestored.content.paragraphs.find(p => p.paragraph === formula.paragraph).text, "67.5");
   const corpus = execFileSync("git", ["ls-files", "-z"]).toString().split("\0").filter(path => path.includes("/fixtures/") && path.endsWith(".hwpx"));
   let readable = 0, encrypted = 0, fieldCount = 0;
   for (const path of corpus) {

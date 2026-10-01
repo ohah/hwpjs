@@ -1,5 +1,13 @@
 # 개발·검증 명령
 
+`node tools/hwpx-edit-corpus-audit.mjs`의 임의 한글 prefix 검사는 계산 입력 셀의 `InvalidFormulaNumber`를 구조적 미지원과 별도로 집계합니다. canEdit=true여도 모든 문자열이 유효한 숫자는 아닙니다. 거부 뒤 원본 ZIP 일치는 그대로 검사하며 임의 prefix 거부를 숫자 편집 미구현으로 해석하지 않습니다.
+
+계산 필드 구역의 편집 거래 실패 검사는 `zig test src/root.zig -O ReleaseSafe --test-filter 'HWPX formula splice'`, 실제 chart 세션 저장·거부 원자성은 `'HWPX editor session formula'` 필터로 실행합니다. Debug·ReleaseFast도 같은 필터를 사용합니다. 전체 corpus·제품 공개 API·브라우저는 별도 검증입니다.
+
+HWPX 실제 chart 계산 기대값은 `python3 tools/hwpx-formula-cell-oracle.py`와 `python3 -O tools/hwpx-formula-cell-oracle.py`로 독립 산출합니다. native HWPX formula 집중 검사가 해당 13개 값과 셀 수를 대조합니다. 이 oracle은 일반 편집/저장 검증의 대체가 아닙니다.
+
+[HWPX 계산 필드 편집과 저장](hwpx-formula-parameters.md)은 `zig test src/root.zig -O ReleaseSafe --test-filter 'HWPX formula'`로 실제 chart 13개 정의와 매개변수·공유 문법·현재 셀 재계산·XML/ZIP 저장 및 거래 할당 실패를 검사합니다. Debug·ReleaseFast에도 같은 필터를 사용합니다. 공개 API 검사는 제품 빌드 후 `node --test tests/hwpx/formula-editor.test.mjs`로 별도 실행하며 실제 브라우저·전체 수식 문법·조판 검증은 아닙니다.
+
 [HWPX 필드 라벨 편집](hwpx-field-text-edit.md)은 `zig test src/root.zig -O ReleaseSafe --test-filter 'HWPX field'`로 마커·범위·현재 위치·소유·라벨 거래·dirty 검사를, `'HWPX editor session field'` 필터로 native 조회/명령과 할당 실패를 검사합니다. Debug·ReleaseFast에서도 같은 필터를 사용합니다. 제품 빌드 후 `node --test tests/hwpx/editor.test.mjs tests/hwpx/canvas-preview.test.mjs`는 공개 API·독립 XML/ZIP 대조·7개 라벨 왕복·44개 Worker 로드를 포함합니다. 실제 브라우저·OS IME·전체 필드 종류/조판 검증은 별도입니다.
 
 [HWPX 탭 위치](hwpx-paragraph-text-positions.md)는 `zig test src/root.zig -O ReleaseSafe --test-filter 'HWPX paragraph positions'` 및 일반 문단 필터로 검사합니다. `python3 tools/hwpx-tab-edit-oracle.py --self-test`와 Python `-O`는 독립 탭 oracle 반례를, 제품 빌드 후 공개 HWPX editor 검사와 `hwpx-text-audit`는 실제 네 경계의 XML/ZIP 대조를 포함합니다. 전체 컨트롤 편집·조판 증명은 아닙니다.

@@ -472,6 +472,11 @@ test {
     _ = @import("hwpx/field_label_splice.zig");
     _ = @import("hwpx/field_dirty_tag.zig");
     _ = @import("hwpx/field_marker_ownership.zig");
+    _ = @import("hwpx/formula_parameters.zig");
+    _ = @import("hwpx/formula_expression.zig");
+    _ = @import("hwpx/formula_splice_tests.zig");
+    _ = @import("hwpx/formula_fixture_tests.zig");
+    _ = @import("hwpx/formula_cell_number.zig");
     _ = @import("xml/namespace_tests.zig");
     _ = @import("hwp5/container/xml_validation_tests.zig");
     _ = @import("binary/reader.zig");

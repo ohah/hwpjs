@@ -27,8 +27,14 @@ try {
       const eligible = editor.canEdit(paragraph.section, paragraph.paragraph);
       try { editor.splice(paragraph.section, paragraph.paragraph, 0, 0, "검증😀<&\r"); }
       catch (error) {
-        assert.equal(eligible, false, path);
-        assert(["MissingTextSite", "UnsupportedParagraphControl", "UnsupportedInlineControl"].includes(error.message), `${path}: ${error.message}`);
+        if (error.message === "InvalidFormulaNumber") {
+          // Editable numeric cells still reject this deliberately nonnumeric
+          // prefix. Structural eligibility is not permission for every value.
+          assert.equal(eligible, true, path);
+        } else {
+          assert.equal(eligible, false, path);
+          assert(["MissingTextSite", "UnsupportedParagraphControl", "UnsupportedInlineControl"].includes(error.message), `${path}: ${error.message}`);
+        }
         counts.refused[error.message] = (counts.refused[error.message] ?? 0) + 1;
         assert.deepEqual(Buffer.from(editor.save()), input, path);
         continue;

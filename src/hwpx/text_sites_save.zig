@@ -11,11 +11,18 @@ pub fn write(a: std.mem.Allocator, tree: *const tree_module.Tree, current: *cons
 }
 
 pub fn writeWithFieldDirty(a: std.mem.Allocator, tree: *const tree_module.Tree, current: *const sites_module.Sites, options: sites_module.Options, fields: []const FieldDirty, max_output_bytes: usize) ![]u8 {
+    return writeWithChanges(a, tree, current, options, fields, &.{}, max_output_bytes);
+}
+
+/// Extra changes must be prepared against this same immutable tree. They
+/// borrow their text until return; the common writer rejects overlaps.
+pub fn writeWithChanges(a: std.mem.Allocator, tree: *const tree_module.Tree, current: *const sites_module.Sites, options: sites_module.Options, fields: []const FieldDirty, extra: []const writer.Change, max_output_bytes: usize) ![]u8 {
     var original = try sites_module.collect(a, tree, options);
     defer original.deinit(a);
     if (original.items.len != current.items.len) return error.InvalidTextSites;
     var changes: std.ArrayList(writer.Change) = .empty;
     defer changes.deinit(a);
+    try changes.appendSlice(a, extra);
     var tags: std.ArrayList([]u8) = .empty;
     defer {
         for (tags.items) |tag| a.free(tag);

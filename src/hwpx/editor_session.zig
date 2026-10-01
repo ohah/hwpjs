@@ -55,6 +55,12 @@ pub const Session = struct {
                 other_bytes += site.text.len;
             }
         }
+        if (try @import("formula_section_save.zig").hasFormula(self.allocator, &selected.tree)) {
+            const trees = try self.allocator.alloc(tree_module.Tree, self.sections.len);
+            defer self.allocator.free(trees);
+            for (self.sections, trees) |section, *tree| tree.* = section.tree;
+            return @import("formula_splice.zig").splice(self.allocator, trees, section_index, &selected.sites, selected.locations, paragraph, start, deleted, inserted, self.options.max_text_bytes - other_bytes);
+        }
         return @import("plain_paragraph_edit.zig").spliceWithTabs(self.allocator, &selected.tree, &selected.sites, selected.locations, paragraph, start, deleted, inserted, self.options.max_text_bytes - other_bytes, true);
     }
 
@@ -79,14 +85,17 @@ pub const Session = struct {
     /// Caller owns the result with Session.allocator. Save is side-effect free.
     pub fn save(self: *const Session) ![]u8 {
         const a = self.allocator;
+        const trees = try a.alloc(tree_module.Tree, self.sections.len);
+        defer a.free(trees);
+        for (self.sections, trees) |section, *tree| tree.* = section.tree;
         var replacements: std.ArrayList(zip_writer.Replacement) = .empty;
         defer {
             for (replacements.items) |replacement| a.free(replacement.bytes);
             replacements.deinit(a);
         }
         var xml_bytes: usize = 0;
-        for (self.sections) |*section| {
-            const bytes = try @import("text_sites_save.zig").writeWithFieldDirty(a, &section.tree, &section.sites, siteOptions(self.options), section.field_dirty.items, self.options.max_xml_bytes -| xml_bytes);
+        for (self.sections, 0..) |*section, index| {
+            const bytes = try @import("formula_section_save.zig").write(a, trees, index, &section.sites, siteOptions(self.options), section.field_dirty.items, self.options.max_xml_bytes -| xml_bytes);
             errdefer a.free(bytes);
             try replacements.append(a, .{ .entry_index = section.entry_index, .bytes = bytes });
             xml_bytes += bytes.len;

@@ -1,5 +1,11 @@
 # 파일·폴더 구조
 
+[HWPX 계산 필드](hwpx-formula-parameters.md)는 `formula_parameters.zig`가 기존 parameter 보고서를 연결하고 `formula_expression.zig`가 HWP5 문법 경계를 공유합니다. 전체 지원 범위와 제한은 해당 주제 문서가 소유합니다.
+
+같은 주제의 `formula_cell_owner.zig`·`formula_cell_number.zig`·`formula_values.zig`는 셀 소유·현재 숫자·평가를 분리합니다. `formula_output.zig`·`formula_result_sites.zig`·`formula_parameter_changes.zig`·`formula_field_output.zig`는 표시·사이트·저장 결과·다중 원문 출력을 분리합니다. `formula_section_prepare.zig`·`formula_section_save.zig`·`formula_splice.zig`가 기존 세션에 조립하며, 거래 반례는 `formula_splice_tests.zig`, 공개 API/독립 ZIP·XML 대조는 `tests/hwpx/formula-editor.test.mjs`, 독립 숫자 산출은 `tools/hwpx-formula-cell-oracle.py`가 맡습니다.
+
+실제 계산 필드·표·ZIP 통합 회귀는 `formula_fixture_tests.zig`에 두고 매개변수 제품 모듈에 누적하지 않습니다.
+
 [HWPX 필드 라벨 편집](hwpx-field-text-edit.md)은 `field_text_ranges.zig`의 원문 바인딩, `field_marker_ownership.zig`의 선택 소유, `field_text_positions.zig`의 현재 위치, `field_label_session.zig`의 공유 정책·거래, `field_label_targets.zig`의 조회를 분리합니다. `field_label_splice.zig`는 필드 범위를 공통 `text_splice_transaction.zig`에 연결하며 `field_dirty_tag.zig`와 기존 텍스트 저장기가 수정 속성을 반영합니다. 공개 경계·Worker·Canvas는 기존 모듈을 재사용합니다.
 
 [HWPX 탭 위치 기반](hwpx-paragraph-text-positions.md)은 `paragraph_text_positions.zig`가 현재 텍스트와 원문 탭의 위치 조립·보호 경계를, `retained_tab.zig`가 공유 적격성을 소유합니다. 기존 원자적 명령과 공개 세션을 재사용하며 `tools/hwpx-tab-edit-oracle.py`는 독립 저장 비교·반례를 담당합니다.
