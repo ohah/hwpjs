@@ -29,6 +29,10 @@ pub fn validateWithTabs(tree: *const tree_module.Tree, sites: *const sites_modul
         } else owner = index;
     }
     const paragraph_index = owner orelse return error.MissingTextSite;
+    var first_text_start: usize = tree.source.len;
+    for (sites.items, locations) |site, location| {
+        if (location.paragraph_ordinal == paragraph) first_text_start = @min(first_text_start, site.start);
+    }
     var child = tree.elements[paragraph_index].first_child;
     while (child) |index| {
         const element = tree.elements[index];
@@ -39,6 +43,10 @@ pub fn validateWithTabs(tree: *const tree_module.Tree, sites: *const sites_modul
                 // Section metadata has no text position; field/object/switch
                 // semantics are not projected by this plain editing path.
                 if (content.is(uri, "ctrl")) {
+                    if (@import("retained_note_number.zig").supported(tree, run_index, paragraph_index, first_text_start)) {
+                        run_child = content.next_sibling;
+                        continue;
+                    }
                     var control_child = content.first_child;
                     if (control_child == null) return error.UnsupportedParagraphControl;
                     while (control_child) |control_index| {

@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+[HWPX 주석 본문 편집](hwpx-note-text-edit.md)은 `retained_note_number.zig`가 번호 prefix의 원문 보존 적격성을, `note_edit_tests.zig`가 native 반례·실파일·할당 실패를 담당합니다. 기존 문단 정책·세션·저장기를 사용하며 `tests/hwpx/note-editor.test.mjs`가 공개 API와 독립 전체 XML/ZIP 비교를 분리합니다.
+
 [HWPX 계산 필드](hwpx-formula-parameters.md)는 `formula_parameters.zig`가 기존 parameter 보고서를 연결하고 `formula_expression.zig`가 HWP5 문법 경계를 공유합니다. 전체 지원 범위와 제한은 해당 주제 문서가 소유합니다.
 
 같은 주제의 `formula_cell_owner.zig`·`formula_cell_number.zig`·`formula_values.zig`는 셀 소유·현재 숫자·평가를 분리합니다. `formula_output.zig`·`formula_result_sites.zig`·`formula_parameter_changes.zig`·`formula_field_output.zig`는 표시·사이트·저장 결과·다중 원문 출력을 분리합니다. `formula_section_prepare.zig`·`formula_section_save.zig`·`formula_splice.zig`가 기존 세션에 조립하며, 거래 반례는 `formula_splice_tests.zig`, 공개 API/독립 ZIP·XML 대조는 `tests/hwpx/formula-editor.test.mjs`, 독립 숫자 산출은 `tools/hwpx-formula-cell-oracle.py`가 맡습니다.
