@@ -1,9 +1,9 @@
 //! Structural source anchors only. Does not validate/render object payloads.
 const trees = @import("xml_part_tree.zig");
-const std = @import("std");
+const gaps = @import("element_whitespace_gaps.zig");
 const uri = @import("document_xml.zig").paragraph_uri;
 
-pub const Kind = enum { table, picture, equation, rectangle, line, container, footnote, endnote };
+pub const Kind = enum { table, picture, equation, rectangle, line, container, footnote, endnote, automatic_number };
 
 pub fn kind(tree: *const trees.Tree, index: usize) ?Kind {
     if (index >= tree.elements.len) return null;
@@ -22,10 +22,9 @@ pub fn kind(tree: *const trees.Tree, index: usize) ?Kind {
     const child_index = element.first_child orelse return null;
     const child = tree.elements[child_index];
     if (child.next_sibling != null) return null;
-    const inner_end = if (element.end_tag) |end| end.start else element.end;
-    if (std.mem.trim(u8, tree.source[element.start_tag.end..child.start_tag.start], " \t\r\n").len != 0 or
-        std.mem.trim(u8, tree.source[child.end..inner_end], " \t\r\n").len != 0) return null;
+    if (!gaps.empty(tree, index)) return null;
     if (child.is(uri, "footNote")) return .footnote;
     if (child.is(uri, "endNote")) return .endnote;
+    if (@import("retained_auto_number.zig").supported(tree, child_index)) return .automatic_number;
     return null;
 }

@@ -2,7 +2,7 @@
 
 ## 현재 계약
 
-`run_anchor.zig`는 직접 `p/run`의 표·그림·수식·사각형·선·묶음과 단일 각주/미주 자식 `ctrl`을 구조적 앵커 후보로 구분합니다. 정확한 namespace와 직접 소유를 확인하며 fieldBegin/fieldEnd·번호·단 설정을 임의 개체로 바꾸지 않습니다. 개체 내부 원값·참조 유효성·렌더링 검사는 기존 개체 모듈의 책임입니다. 이 분류는 편집 허용 판정이 아닙니다.
+`run_anchor.zig`는 직접 `p/run`의 표·그림·수식·사각형·선·묶음과 단일 각주/미주 또는 허용 모양 자동 번호 자식 `ctrl`을 구조적 앵커 후보로 구분합니다. 정확한 namespace와 직접 소유를 확인하며 fieldBegin/fieldEnd·pageNum/newNum·단 설정을 임의 개체로 바꾸지 않습니다. 개체 내부 원값·참조 유효성·렌더링 검사는 기존 개체 모듈의 책임입니다. 이 분류는 편집 허용 판정이 아닙니다.
 
 `anchor_text_positions.zig`는 기존 현재 텍스트·탭 projection에 원문 순서의 앵커를 합칩니다. 텍스트 길이는 기존 segment의 UTF-16 길이를 재사용하고 다시 계산하지 않습니다. 앵커는 한 보호 단위를 차지하며 index는 원문 Tree 요소 인덱스입니다. 중첩 문단 텍스트는 바깥 문단에 합치지 않고 직접 run 소유가 아닌 텍스트 사이트를 거부합니다. 반환 배열은 호출자가 해제합니다.
 
@@ -16,6 +16,10 @@ Worker는 일반 편집 불가 문단에서 native anchorText를 조회해 U+FFF
 
 ## 검증 기록
 
+자동 번호 추가의 최종 검증: 전체 ReleaseSafe native 2786/2786·빌드 7/7, 최신 HWPX 제품 23/23·빌드 7/7, HWP5 편집 회귀 69/69·빌드 7/7이 종료 코드 0으로 완료됐습니다. 아래 중간 기록의 '실행 중' 항목은 이 결과로 대체합니다. 문서 링크 3030개 대상 누락 0과 도구 반례 2/2, 포맷·diff 검사도 통과했습니다. 독립 XML/ZIP 비교와 세 손상 변이·실제 외부 브라우저 Canvas 입력은 아래 범위에 한정하며 전체 파서·RHWP 수준 UI·원본 쪽 조판 완료를 뜻하지 않습니다.
+
+자동 번호 보호 앵커: `retained_auto_number.zig`는 직접 `autoNum`의 형식 부재 또는 단일 leaf `autoNumFormat`을 원문 보존 대상으로 허용하고 속성 의미는 기존 번호 필드 파서에 둡니다. `element_whitespace_gaps.zig`가 주석 번호와 ctrl 앵커의 숨은 source gap 검사 규칙을 공유합니다. 기존 일반 주석 prefix는 format 필수·0단위 계약을 유지합니다. Debug·ReleaseSafe·ReleaseFast anchored 집중 검사 각각 4/4와 기존 ReleaseSafe 주석 편집 검사 4/4가 통과했습니다. 번호 삭제 거부·이모지 위치·후행 편집·번호 XML 보존과 숨은 문자/CDATA/주석/PI/문자 참조/중복 format/미지 자식 거부를 포함합니다. 실제 table-caption의 8개 캡션 앞뒤 삽입·번호 삭제 거부·재열기·복원과 독립 Python 일반/최적화 전체 XML 및 다른 ZIP payload 비교가 통과했고 최신 공개 API/Worker 집중 검사 7/7과 제품 빌드 5/5도 통과했습니다. 전수 anchored 조사는 45개 파일·암호화 1개·161후보 중 137개 성공, UnsupportedParagraphControl 24개로 종료했습니다. 외부 Chromium 포인터 선택·앞😀/뒤😀 입력·번호 위치 5 Delete 거부·입력 복원을 확인하고 `/private/tmp/hwpjs-number-anchor-e2e.png`를 직접 관찰했습니다. agent-browser 입력이며 OS IME·번호 생성·조판 증명은 아닙니다. 일괄 제품 검사 중 새 복원 oracle의 Python stdin 종료 대기가 관측되어 해당 테스트를 한 줄 입력 및 30초 제한으로 변경했습니다. 수정 후 제품 일괄·전체 native 회귀·문서 해시 검증은 실행 중이므로 아래 기존 실측에 합산하지 않습니다. pageNum·newNum의 표시/메타데이터 의미는 이 변경으로 지원하지 않습니다.
+
 Debug·ReleaseSafe·ReleaseFast 위치 집중 검사 각각 4/4에서 원문 순서·현재 텍스트 수정 뒤 앵커 위치 이동·이모지 단위·주석 내부 문단 제외·앵커 삭제 거부·뒤쪽 텍스트만 수정·실제 각주/미주 문단의 두 참조와 모든 projection 할당 실패를 확인했습니다. 개체 안 직접 hp:t가 바깥 문단 ordinal을 받는 반례는 SourceBindingMismatch로 거부합니다. 기존 ReleaseSafe 필드 회귀 23/23·일반 문단 회귀 10/10도 통과했습니다.
 
 anchored 거래 집중 검사는 Debug·ReleaseSafe·ReleaseFast 각각 3/3으로 모든 할당 실패 시 현재 텍스트·원문 보존과 wrapper 숨은 문자/필드 혼합/외부 namespace 거부를 확인했습니다. 기존 formula 거래 할당 실패 2/2도 통과했습니다. 제품 HWPX audit 21/21·빌드 7/7에서 실제 주석 두 참조 앞뒤 편집·삭제 거부·원본 ZIP 복원·재열기와 독립 Python 일반/최적화 전체 XML 및 나머지 ZIP payload 대조를 확인했습니다. Worker 실제 경로의 보호 표식·명령·거부 검사도 포함합니다.
@@ -25,3 +29,5 @@ anchored 거래 집중 검사는 Debug·ReleaseSafe·ReleaseFast 각각 3/3으�
 실제 외부 Chromium에서 주석 참조 문단을 포인터로 클릭해 `앵커😀` 입력, End/Backspace로 앵커 삭제 시 ProtectedInlineControl 거부와 원래 입력 복원, 거부 후 뒤쪽 `뒤😀` 입력을 확인했습니다. 첫 캡처의 U+FFFC가 현재 시스템 글꼴에서 보이지 않는 문제를 발견해 공통 displayRunText에서 `◇`로 표시하도록 수정했습니다. 렌더러와 hit-test 측정은 같은 함수를 사용하며 원문·native 보호 단위는 변경하지 않습니다. 새 캡처 `/private/tmp/hwpjs-hwpx-anchor-visible-e2e.png`에서 두 표식을 직접 확인했습니다. 공개 Canvas/HWPX 집중 회귀 11/11과 최신 제품 HWPX audit 22/22·빌드 7/7도 통과했습니다. agent-browser inserttext 검증이며 실제 OS IME 증명은 아닙니다.
 
 개체 앞뒤 삽입 사이트 없는 경계의 물질화, 개체 삽입/삭제·주석 생성·원본 표/쪽 조판과 RHWP UI 완성은 미완료입니다. 명령은 [개발·검증 명령](development-commands.md)이 소유합니다.
+
+자동 번호 추가 후 남은 anchored 거부 24개를 직접 조사했습니다. chart 13개는 계산 필드 결과로 일반 anchored 거래가 아니라 기존 수식 입력 편집·재계산 경로가 소유합니다. hyperlink 4개와 문단 교차 필드 3개는 anchored 거부이며 기존 제한적 필드 라벨 편집과 구분합니다. 나머지 4개는 header/footer 소유 문단 1개와 pageNum을 가진 noori/page/table-bug 각 1개입니다. 이 24개를 모두 파서 오류 또는 모든 종류의 편집 불가로 해석하지 않습니다. pageNum은 본문 자동 번호와 달리 쪽 번호 배치 설정이므로 별도 0단위 메타데이터 계약을 검토해야 합니다. 독립 비교기 반례는 번호값·텍스트·mimetype payload의 세 변이를 실제 ZIP에 넣어 Python 일반·최적화 모드 모두에서 거부되는지 확인했습니다.

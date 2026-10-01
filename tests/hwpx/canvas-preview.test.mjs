@@ -82,6 +82,15 @@ test("actual HWPX Worker edits native plain text and refuses unsupported control
   const noteEdited = await send({ kind: "splice", section: 0, paragraph: 0, startUnit: 0, endUnit: 0, text: "앞😀" });
   assert.equal(noteEdited.error, undefined);
   assert.equal(noteEdited.content.paragraphs[0].text, "앞😀각주참조\ufffc\ufffc");
+  const captions = await send({ kind: "load", format: "hwpx", bytes: readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/table-caption.hwpx") });
+  assert.equal(captions.error, undefined);
+  const caption = captions.content.paragraphs.find(p => p.text === "표 \ufffc 위 캡션");
+  assert(caption?.anchorEditable); assert.equal(caption.editable, true);
+  const numberDeletion = await send({ kind: "splice", section: caption.section, paragraph: caption.paragraph, startUnit: 2, endUnit: 3, text: "" });
+  assert.equal(numberDeletion.error, "ProtectedInlineControl"); assert.equal(numberDeletion.applied, false);
+  const captionEdited = await send({ kind: "splice", section: caption.section, paragraph: caption.paragraph, startUnit: 3, endUnit: 3, text: "검증😀" });
+  assert.equal(captionEdited.error, undefined);
+  assert.equal(captionEdited.content.paragraphs.find(p => p.paragraph === caption.paragraph).text, "표 \ufffc검증😀 위 캡션");
   const hyperlink = await send({ kind: "load", format: "hwpx", bytes: readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/hyperlink.hwpx") });
   assert.equal(hyperlink.error, undefined);
   const labelParagraph = hyperlink.content.paragraphs.find(p => p.fieldLabels.length > 0);
