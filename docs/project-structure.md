@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+[HWPX 텍스트 조각 편집](hwpx-text-site-edit.md)은 `text_sites.zig`의 원문 위치 연결, `text_site_edit.zig`의 현재 텍스트 splice, `text_sites_save.zig`의 원본 대조, `xml_source_writer.zig`의 부분 출력, `src/xml/text_writer.zig`의 CharData escaping을 분리합니다. 실제 파일/할당 실패는 `text_sites_tests.zig`, 독립 corpus는 기존 ZIP survey/oracle을 재사용합니다. 활성 문단·공개 세션 연결은 아직 미완료입니다.
+
 [ZIP 선택 항목 교체 저장](zip-replacement-writer.md)은 `src/zip/archive.zig`의 검증된 원문 범위를 재사용하며 `replace_writer.zig`가 새 ZIP 출력만 소유합니다. 집중 반례는 `replace_writer_tests.zig`, 독립 전수 비교는 `src/zip_replacement_survey.zig`와 `tools/zip-replacement-oracle.py`로 분리합니다. HWPX XML 편집 모델·공개 세션은 별도 후속 책임입니다.
 
 [HWPX 공개 텍스트 이벤트/Canvas](hwpx-text-api.md)는 `src/hwpx/text_preview.zig`의 기존 스캐너 연결, `src/wasm/hwpx_text.zig`의 출력 수명, `js/hwpx.mjs`·`hwpx-text-wire.mjs`의 공개 경계를 분리합니다. `web/preview/hwpx-content.mjs`는 읽기 전용 표시만 소유하고 HWP5와 Worker/렌더러를 공유합니다. 제품 경계와 표시 반례는 `tests/hwpx/`에 둡니다.

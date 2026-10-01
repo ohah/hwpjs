@@ -24,6 +24,14 @@ test "ZIP replacement oracle output" {
 }
 
 test "ZIP replacement corpus oracle output" {
+    try corpus(false);
+}
+
+test "HWPX text editing corpus oracle output" {
+    try corpus(true);
+}
+
+fn corpus(edit_text: bool) !void {
     const a = std.testing.allocator;
     const root = "legacy/rust/crates/hwp-core/tests/fixtures";
     const dir = try std.Io.Dir.cwd().openDir(std.testing.io, root, .{ .iterate = true });
@@ -43,7 +51,10 @@ test "ZIP replacement corpus oracle output" {
         const index = selected orelse return error.MissingSection;
         const xml = try archive.decode(archive.entries[index], 64 * 1024 * 1024);
         defer a.free(xml);
-        const replacement = try std.mem.concat(a, u8, &.{ xml, "<!--ZIP replacement 한😀-->" });
+        const replacement = if (edit_text) editedXml(a, xml) catch |err| {
+            std.debug.print("Text edit refused: {s}: {s}\n", .{ entry.name, @errorName(err) });
+            return err;
+        } else try std.mem.concat(a, u8, &.{ xml, "<!--ZIP replacement 한😀-->" });
         defer a.free(replacement);
         const output = try writer.write(a, input, &.{.{ .entry_index = index, .bytes = replacement }}, .{});
         defer a.free(output);
@@ -57,4 +68,14 @@ test "ZIP replacement corpus oracle output" {
         count += 1;
     }
     try std.testing.expectEqual(@as(usize, 44), count);
+}
+
+fn editedXml(a: std.mem.Allocator, xml: []const u8) ![]u8 {
+    var tree = try @import("hwpx/xml_part_tree.zig").parse(a, xml, .section, 0, 0, .{});
+    defer tree.deinit(a);
+    var sites = try @import("hwpx/text_sites.zig").collect(a, &tree, .{});
+    defer sites.deinit(a);
+    if (sites.items.len == 0) return error.MissingTextSite;
+    _ = try @import("hwpx/text_site_edit.zig").splice(a, &sites, 0, 0, 0, "검증😀<&\r", 64 * 1024 * 1024);
+    return @import("hwpx/text_sites_save.zig").write(a, &tree, &sites, .{}, 64 * 1024 * 1024);
 }
