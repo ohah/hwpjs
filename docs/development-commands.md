@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[실험용 HWP5 편집 JS/WASM API](hwp5-editor-api.md)는 `zig build hwp5-editor-audit -Doptimize=ReleaseSafe --summary all`로 제품 WASM·Node 경계/UI 상태 집중 검사를 실행합니다. `Debug`·`ReleaseFast`도 같은 단계로 검사할 수 있으며 기본 `zig build audit`에도 포함합니다. 기존 native 실파일/Rust 대조는 별도 `text-splice-audit`가 소유합니다. 웹에서는 아래 Canvas 화면의 ‘편집 실험 켜기’를 명시적으로 누릅니다. 일반 편집·서식 렌더링·웹 다운로드 지원은 아닙니다.
+
 [Canvas 텍스트 미리보기](canvas-text-preview.md)는 `zig build -Doptimize=ReleaseSafe` 후 `node tools/serve-preview.mjs`로 실행합니다. 주소는 `http://127.0.0.1:8080/web/preview/index.html`이며 포트 인수를 지정할 수 있습니다. `node --test tests/hwp5/canvas-preview.test.mjs`는 표시 projection/실험용 줄 흐름을 검사하고 정규 `zig build audit`의 미리보기 Node 검사에도 포함됩니다. 브라우저 통합 검증은 별도이며, 텍스트 전용 표시 성공을 문서 조판 성공으로 보지 않습니다.
 
 [기존 글자 모양 적용](hwp5-character-format-edit.md) 검증도 아래 `text-splice-audit` 단계에 포함됩니다. 같은 probe를 사용하며 서식 전용 독립 oracle 결과를 별도로 출력합니다. 기본 `zig build test`에도 혼합 명령·서식 할당 실패 집중 검사가 포함됩니다.

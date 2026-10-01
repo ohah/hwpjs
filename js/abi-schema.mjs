@@ -1,6 +1,13 @@
 // Authoritative ABI schema. tools/generate-abi.mjs derives the Zig declarations.
 // Breaking changes require a version bump and an independently pinned contract test.
 export const ABI_VERSION = 6;
+// Additive, optional experimental surface; old CFB/read-only consumers remain valid.
+export const EXPERIMENTAL_EDITOR_FUNCTIONS = Object.freeze([
+  "hwp5_edit_open", "hwp5_edit_close", "hwp5_edit_section_count",
+  "hwp5_edit_paragraph_count", "hwp5_edit_char_shape_count", "hwp5_edit_copy_text",
+  "hwp5_edit_splice", "hwp5_edit_format", "hwp5_edit_save", "hwp5_edit_output_ptr",
+  "hwp5_edit_output_len", "hwp5_edit_output_free", "hwp5_edit_reflow",
+]);
 export const DOCUMENT = Object.freeze({
   header_bytes: 8,
   node_bytes: 56,

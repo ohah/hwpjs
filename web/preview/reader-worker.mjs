@@ -1,13 +1,39 @@
 import { createHwp5Reader } from "../../js/hwp5.mjs";
 import { displayContent } from "./content.mjs";
+import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
+let module, bytes, preview, editor;
 self.onmessage = async event => {
   let reader;
+  const message = event.data;
+  let applied = false;
   try {
-    const response = await fetch("../../zig-out/bin/hwpjs.wasm");
-    if (!response.ok) throw new Error(`WASM HTTP ${response.status}: 먼저 Zig 빌드를 실행하세요.`);
-    reader = await createHwp5Reader(await response.arrayBuffer());
-    const result = reader.readText(new Uint8Array(event.data));
-    self.postMessage({ content: displayContent(result) });
-  } catch (error) { self.postMessage({ error: error.message || String(error) }); }
+    if (message.kind === "load") {
+      const response = await fetch("../../zig-out/bin/hwpjs.wasm");
+      if (!response.ok) throw new Error(`WASM HTTP ${response.status}: 먼저 Zig 빌드를 실행하세요.`);
+      module = await WebAssembly.compile(await response.arrayBuffer());
+      reader = await createHwp5Reader(module);
+      bytes = new Uint8Array(message.bytes);
+      preview = reader.readText(bytes);
+      self.postMessage({ kind: "load", content: displayContent(preview) });
+    } else if (message.kind === "enable") {
+      editor ??= await createExperimentalHwp5Editor(module, bytes);
+      self.postMessage({ kind: "enable", charShapeCount: editor.characterShapeCount() });
+    } else if (message.kind === "splice" || message.kind === "format") {
+      if (!editor) throw new Error("EditorNotOpen");
+      if (message.kind === "splice") editor.splice(message);
+      else editor.setCharacterFormat(message);
+      applied = true;
+      // Refresh only a derived display snapshot from authoritative native text.
+      // This snapshot is never used as an editor command's source or for saving.
+      const raw = editor.copyText(message.section, message.paragraph);
+      const text = new TextDecoder("utf-16le", { fatal: true, ignoreBOM: true }).decode(raw.subarray(0, -2));
+      const p = preview.sections[message.section].paragraphs[message.paragraph];
+      preview.sections[message.section].paragraphs[message.paragraph] = { ...p, text, declaredUnits: raw.length / 2, tokens: [
+        { type: "text", startUnit: 0, text, raw: raw.subarray(0, -2) },
+        { type: "control", startUnit: raw.length / 2 - 1, code: 13, raw: raw.subarray(-2) },
+      ] };
+      self.postMessage({ kind: message.kind, content: displayContent(preview) });
+    } else throw new Error("UnknownPreviewCommand");
+  } catch (error) { self.postMessage({ kind: message.kind, applied, error: error.message || String(error) }); }
   finally { reader?.close(); }
 };

@@ -13,4 +13,12 @@ input { display: block; margin-top: 12px; max-width: 100%; }
 canvas { position: sticky; top: 0; left: 0; display: block; }
 details { margin-top: 20px; }
 textarea { width: 100%; height: 200px; margin-top: 12px; }
+.edit-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+#editor-panel { margin: 18px 0; padding: 16px; background: #e0edf6; border-radius: 8px; }
+#editor-panel h2 { font-size: 18px; }
+#edit-fields { border: 0; padding: 0; }
+#edit-fields textarea { height: 80px; }
+#edit-fields input { width: 100%; }
+button { padding: 8px 12px; margin: 8px 0; cursor: pointer; }
+button:disabled { cursor: default; }
 @media (max-width: 600px) { main { margin: 0; padding: 16px; } h1 { font-size: 22px; } }

@@ -113,6 +113,10 @@ pub const Session = opaque {
         return self.stateConst().document.sections.len;
     }
 
+    pub fn characterShapeCount(self: *const Session) usize {
+        return self.stateConst().char_count;
+    }
+
     pub fn paragraphCount(self: *const Session, section: usize) !usize {
         const state = self.stateConst();
         if (section >= state.document.sections.len) return error.InvalidSection;

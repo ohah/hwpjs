@@ -7,6 +7,7 @@ comptime {
     _ = @import("wasm/cfb_search.zig");
     _ = @import("wasm/cfb_writer.zig");
     _ = @import("wasm/hwp5_text.zig");
+    _ = @import("wasm/hwp5_edit.zig");
 }
 
 export fn hwpjs_abi_version() u32 {

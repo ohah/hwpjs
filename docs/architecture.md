@@ -6,7 +6,9 @@
 
 ## 현재 계층과 연결
 
-[기존 글자 모양 적용](hwp5-character-format-edit.md)은 텍스트 splice와 같은 소유 모델·서식 경계 교체·내용 검증·Section writer를 재사용합니다. 서식 명령과 범위 보존 정책만 별도 모듈에 두며, 리소스 생성·조판·공개 JS 편집 API를 추가하지 않습니다.
+[실험용 HWP5 편집 API](hwp5-editor-api.md)는 native 소유 세션을 별도 optional WASM/JS 경계와 웹 명령 폼에 연결합니다. 폼은 Canvas 내부 편집 입력/IME 방식의 확정이나 구현이 아닙니다. 변경 값의 SSOT는 native 모델이며 Worker의 텍스트 표시 projection은 저장 입력으로 사용하지 않습니다.
+
+[기존 글자 모양 적용](hwp5-character-format-edit.md)은 텍스트 splice와 같은 소유 모델·서식 경계 교체·내용 검증·Section writer를 재사용합니다. 서식 명령과 범위 보존 정책만 별도 모듈에 두며 리소스 생성·조판은 추가하지 않습니다. JS 경계는 위 별도 API가 소유합니다.
 
 [HWP5 문단 텍스트 미리보기 API](hwp5-text-preview-api.md)는 기존 CFB strict reader·HWP5 FileHeader/DocInfo/Section·문단 토큰 계층을 연결한 읽기 전용 세로 단면입니다. HWP5 코어가 구역·문단·원시 토큰을 조립하고 WASM은 한 번의 결과 버퍼 수명만 소유하며 JS는 복사·UTF-16 디코딩만 맡습니다. 편집/저장 모델이나 렌더링 문서 모델은 이 API에 섞지 않습니다.
 
