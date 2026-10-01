@@ -12,6 +12,7 @@
 - [단순 문단 텍스트 삽입·삭제와 저장 실험](hwp5-plain-text-edit-experiment.md)
 - [중첩 목록 문단 텍스트 편집](hwp5-nested-text-edit.md)
 - [기존 빈 문단 텍스트 편집](hwp5-empty-text-edit.md)
+- [제어 포함 텍스트 편집 확장 작업](hwp5-control-text-edit.md)
 - [선택 범위에 기존 글자 모양 적용](hwp5-character-format-edit.md)
 
 - [문서 조립·컨테이너·별도 스트림](hwp5-document-contracts.md)

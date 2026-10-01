@@ -8,7 +8,7 @@
 
 기존 실험용 opaque `Session`에 `apply(.{ .splice_text = ... })`와 `copyText`를 추가했습니다. splice에는 구역·문단 index, `start_unit`·`end_unit`, 삽입할 `utf8`가 들어갑니다. 위치는 현재 모델의 UTF-16 단위이며 `[start_unit, end_unit)`를 교체합니다. 두 위치가 같으면 삽입, 빈 UTF-8이면 삭제입니다. 마지막 PARA_BREAK(13)는 변경할 수 없습니다. `copyText`는 끝 표식을 포함한 UTF-16LE 바이트의 소유 복사본을 반환합니다. 호출자가 전달한 allocator로 해제합니다. JS/WASM 연결은 위 별도 API 문서의 실험 범위이며 일반 편집기 지원은 아닙니다.
 
-최상위 또는 [검증된 중첩 목록 문단](hwp5-nested-text-edit.md)의 일반 Unicode 텍스트와 마지막 PARA_BREAK만 허용합니다. 대상 텍스트 안의 필드·개체·탭·줄바꿈과 문단 추가/삭제는 지원하지 않습니다. 삽입 UTF-8과 원본 UTF-16을 엄격하게 검사하고 서로게이트 쌍 사이의 편집·서식·범위 경계는 거부합니다. 문자 정규화나 BOM 제거는 하지 않습니다. 원본에 없는 문단 모양·리소스를 생성하지 않습니다.
+최상위 또는 [검증된 중첩 목록 문단](hwp5-nested-text-edit.md)의 일반 Unicode 텍스트와 마지막 PARA_BREAK를 편집합니다. [기존 탭 보존](hwp5-control-text-edit.md)의 제한적 splice도 연결했습니다. 필드·개체·줄바꿈과 문단 추가/삭제는 아직 지원하지 않습니다. 삽입 UTF-8과 원본 텍스트 토큰의 UTF-16을 엄격하게 검사하고 서로게이트 쌍 사이의 편집·서식·범위 경계는 거부합니다. 제어 부가 데이터는 Unicode로 해석하지 않습니다. 문자 정규화나 BOM 제거는 하지 않습니다. 원본에 없는 문단 모양·리소스를 생성하지 않습니다.
 
 ## 책임과 SSOT
 

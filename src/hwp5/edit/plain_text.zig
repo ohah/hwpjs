@@ -17,7 +17,6 @@ pub const Splice = struct {
 
 pub const textBytes = @import("plain_text_content.zig").textBytes;
 const boundary = @import("plain_text_content.zig").boundary;
-const validatePlain = @import("plain_text_content.zig").validatePlain;
 
 fn inserted(a: std.mem.Allocator, utf8: []const u8) ![]u8 {
     if (utf8.len > 4 * 1024 * 1024) return error.LimitExceeded;
@@ -50,10 +49,8 @@ pub fn apply(a: std.mem.Allocator, source: []const u8, version: Version, p: *mod
     const ranges = try @import("plain_text_source.zig").validate(a, source, version, p.*, char_count);
     const before = try @import("plain_text_content.zig").editableTextBytes(a, p.*);
     defer a.free(before);
-    try validatePlain(before);
-    if (edit.start_unit > edit.end_unit or edit.end_unit > before.len / 2 - 1) return error.InvalidTextPosition;
-    try boundary(before, edit.start_unit);
-    try boundary(before, edit.end_unit);
+    try @import("control_boundaries.zig").validateRetainedText(before);
+    try @import("control_boundaries.zig").validate(before, edit.start_unit, edit.end_unit);
     const add = try inserted(a, edit.utf8);
     defer a.free(add);
     const output_len = before.len - @as(usize, edit.end_unit - edit.start_unit) * 2 + add.len;

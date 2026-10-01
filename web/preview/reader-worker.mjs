@@ -27,12 +27,19 @@ self.onmessage = async event => {
       // Refresh only a derived display snapshot from authoritative native text.
       // This snapshot is never used as an editor command's source or for saving.
       const raw = editor.copyText(message.section, message.paragraph);
-      const text = new TextDecoder("utf-16le", { fatal: true, ignoreBOM: true }).decode(raw.subarray(0, -2));
       const p = preview.sections[message.section].paragraphs[message.paragraph];
-      preview.sections[message.section].paragraphs[message.paragraph] = raw.length === 0 ? p : { ...p, text, textPresent: true, declaredUnits: raw.length / 2, tokens: [
-        { type: "text", startUnit: 0, text, raw: raw.subarray(0, -2) },
-        { type: "control", startUnit: raw.length / 2 - 1, code: 13, raw: raw.subarray(-2) },
-      ] };
+      if (p.tokens.some(t => t.type === "control" && t.code !== 13)) {
+        // Never interpret retained control payload as ordinary Unicode or
+        // advertise it as directly editable. Reuse native token projection.
+        reader = await createHwp5Reader(module);
+        preview = reader.readText(editor.save({ allowStaleLayout: true }).bytes);
+      } else {
+        const text = new TextDecoder("utf-16le", { fatal: true, ignoreBOM: true }).decode(raw.subarray(0, -2));
+        preview.sections[message.section].paragraphs[message.paragraph] = raw.length === 0 ? p : { ...p, text, textPresent: true, declaredUnits: raw.length / 2, tokens: [
+          { type: "text", startUnit: 0, text, raw: raw.subarray(0, -2) },
+          { type: "control", startUnit: raw.length / 2 - 1, code: 13, raw: raw.subarray(-2) },
+        ] };
+      }
       reply({ kind: message.kind, content: displayContent(preview) });
     } else throw new Error("UnknownPreviewCommand");
   } catch (error) { reply({ kind: message.kind, applied, error: error.message || String(error) }); }

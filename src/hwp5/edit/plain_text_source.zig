@@ -15,7 +15,7 @@ pub fn validate(a: std.mem.Allocator, source: []const u8, version: Version, p: m
     const node = tree.nodes[p.source_node];
     const h = node.record.value.header;
     if (h.extra.len != 0 or (h.merge_tracking orelse 0) != 0) return error.UnsupportedParagraphExtension;
-    if (h.control_mask & ~@as(u32, 1 << 13) != 0) return error.UnsupportedTextControl;
+    if (h.control_mask & ~@import("control_boundaries.zig").retained_mask != 0) return error.UnsupportedTextControl;
     try validateSection(source);
     try @import("paragraph_owner.zig").validate(a, tree, p.source_node, version);
     var runs: ?body.Runs = null;

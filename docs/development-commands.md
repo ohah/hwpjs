@@ -1,5 +1,9 @@
 # 개발·검증 명령
 
+[제어 포함 편집 경계](hwp5-control-text-edit.md)는 `zig test src/root.zig --test-filter 'control splice boundaries'`와 같은 필터의 `-O ReleaseSafe`·`-O ReleaseFast`로 검사합니다. 기본 root 테스트에도 포함되며 이 경계 검사만으로 공개 편집·저장 검증을 대신하지 않습니다.
+
+기존 탭 보존 splice와 Worker 재투영은 제품 WASM 빌드 후 `node --test tests/hwp5/control-editor.test.mjs tests/hwp5/reader-worker.test.mjs`로 검사하며 `hwp5-editor-audit`에도 포함합니다. 실제 브라우저 직접 입력 검증은 아닙니다.
+
 [기존 빈 문단 편집](hwp5-empty-text-edit.md)은 제품 WASM 빌드 후 `node --test tests/hwp5/empty-editor.test.mjs`로 검사하며 `hwp5-editor-audit`에도 포함합니다. 표시 후보 반례는 `canvas-preview.test.mjs`, native 할당 실패 원자성은 기본 `zig build test`가 검사합니다.
 
 [추적 픽스쳐 편집 전수 검사](fixture-editor-coverage.md)는 제품 WASM 빌드 후 `node tools/hwp5-edit-corpus-audit.mjs`로 실행합니다. 모든 추적 HWP 문단에 실제 삽입을 시도하고 저장 텍스트·비본문 스트림을 독립 CFB.js로 대조합니다. 정상 종료는 지원 거부가 없다는 뜻이 아닙니다. HWPX 공개 연결 미구현도 별도 집계합니다. 검사 도구의 반례는 `node --test tests/hwp5/edit-corpus.test.mjs` 및 `hwp5-editor-audit`에 포함합니다.
