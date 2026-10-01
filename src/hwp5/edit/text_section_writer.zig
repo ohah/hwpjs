@@ -126,18 +126,26 @@ pub fn write(a: std.mem.Allocator, source: []const u8, section: model.Section, v
                     }
                     const attributes = if (p.field_attributes) |fields| @import("field_attributes.zig").find(fields, node_index) else null;
                     if (attributes) |value| {
-                        if (record.payload.len < 8) return error.SourceBindingMismatch;
-                        const bytes = try a.dupe(u8, record.raw);
-                        defer a.free(bytes);
-                        std.mem.writeInt(u32, bytes[record.raw.len - record.payload.len + 4 ..][0..4], value, .little);
-                        try out.appendSlice(a, bytes);
+                        try appendField(a, &out, record, value);
                     } else try out.appendSlice(a, record.raw);
                 },
                 else => return error.UnsupportedParagraphRecord,
             }
+        } else if (record.tag == @intFromEnum(body.Tag.control_header) and parent_paragraph != null) {
+            const fields = section.paragraphs[parent_paragraph.?].field_attributes;
+            const attributes = if (fields) |values| @import("field_attributes.zig").find(values, node_index) else null;
+            if (attributes) |value| try appendField(a, &out, record, value) else try out.appendSlice(a, record.raw);
         } else try out.appendSlice(a, record.raw);
         if (out.items.len > limit) return error.LimitExceeded;
     }
     if (paragraph_index != section.paragraphs.len) return error.SourceBindingMismatch;
     return out.toOwnedSlice(a);
+}
+
+fn appendField(a: std.mem.Allocator, out: *std.ArrayList(u8), record: anytype, attributes: u32) !void {
+    if (record.payload.len < 8) return error.SourceBindingMismatch;
+    const bytes = try a.dupe(u8, record.raw);
+    defer a.free(bytes);
+    std.mem.writeInt(u32, bytes[record.raw.len - record.payload.len + 4 ..][0..4], attributes, .little);
+    try out.appendSlice(a, bytes);
 }

@@ -152,6 +152,8 @@ pub const Session = opaque {
                 }
                 if (try @import("source_policy.zig").hasFormulas(state.decoded[edit.section])) {
                     try @import("formula_splice.zig").apply(state.allocator, state.decoded[edit.section], state.source.header.version(), &state.document.sections[edit.section], edit, state.char_count);
+                } else if (try @import("hyperlink_splice.zig").hasCrossParagraph(state.allocator, state.document.sections[edit.section])) {
+                    try @import("hyperlink_splice.zig").apply(state.allocator, state.decoded[edit.section], state.source.header.version(), &state.document.sections[edit.section], edit, state.char_count);
                 } else try @import("plain_text.zig").apply(state.allocator, state.decoded[edit.section], state.source.header.version(), &state.document.sections[edit.section].paragraphs[edit.paragraph], edit, state.char_count);
             },
             .set_character_format => |edit| {
@@ -207,7 +209,7 @@ pub const Session = opaque {
 
 fn sectionChanged(state: *const State, index: usize, section: model.Section) bool {
     for (section.paragraphs, state.style_offsets[index]) |p, offset| {
-        if (p.style_id != state.decoded[index][offset] or p.range_tags != null) return true;
+        if (p.style_id != state.decoded[index][offset] or p.range_tags != null or p.field_attributes != null) return true;
     }
     return false;
 }

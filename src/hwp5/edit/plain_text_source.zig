@@ -11,14 +11,19 @@ pub const Validation = struct { ranges: ?body.Ranges, preserved_direct_records: 
 
 /// Returned ranges borrow source, not the temporary Tree nodes.
 pub fn validate(a: std.mem.Allocator, source: []const u8, version: Version, p: model.Paragraph, char_count: usize) !Validation {
-    return validateWith(a, source, version, p, char_count, false);
+    return validateWith(a, source, version, p, char_count, false, false);
 }
 
 pub fn validateFormulaTransaction(a: std.mem.Allocator, source: []const u8, version: Version, p: model.Paragraph, char_count: usize) !Validation {
-    return validateWith(a, source, version, p, char_count, true);
+    return validateWith(a, source, version, p, char_count, true, false);
 }
 
-fn validateWith(a: std.mem.Allocator, source: []const u8, version: Version, p: model.Paragraph, char_count: usize, formulas: bool) !Validation {
+/// Only a section transaction with validated hyperlink spans may use this.
+pub fn validateHyperlinkTransaction(a: std.mem.Allocator, source: []const u8, version: Version, p: model.Paragraph, char_count: usize) !Validation {
+    return validateWith(a, source, version, p, char_count, false, true);
+}
+
+fn validateWith(a: std.mem.Allocator, source: []const u8, version: Version, p: model.Paragraph, char_count: usize, formulas: bool, cross_fields: bool) !Validation {
     var tree = try Tree.parseTextPreview(a, source, version, .{});
     defer tree.deinit(a);
     const node = tree.nodes[p.source_node];
@@ -69,7 +74,7 @@ fn validateWith(a: std.mem.Allocator, source: []const u8, version: Version, p: m
     if (parts.text_node) |text_node| {
         const text = tree.nodes[text_node].record.value.text;
         try text.validateCount(h);
-        if (formulas) try @import("../body/field_span.zig").validateEditable(text.raw) else try @import("hyperlink_source.zig").validate(text.raw);
+        if (formulas) try @import("../body/field_span.zig").validateEditable(text.raw) else if (!cross_fields) try @import("hyperlink_source.zig").validate(text.raw);
         if (!links_checked) {
             var tokens = text.tokens();
             while (try tokens.next()) |token| {

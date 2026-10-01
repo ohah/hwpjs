@@ -46,7 +46,7 @@ export function encodeRecord(tag, level, payload, extended = payload.length >= 4
   return Buffer.concat([h, payload]);
 }
 
-export function expectedSection(bytes, index, start, end, utf8) {
+export function expectedSection(bytes, index, start, end, utf8, { skipLocalFieldAttributes = false } = {}) {
   const owner = paragraphRecords(bytes, index), own = owner.direct.filter(r => r.level === owner.head.level + 1), originalText = own.find(r => r.tag === 67);
   const declared = owner.head.payload.readUInt32LE(0) & 0x7fffffff;
   assert(originalText || declared <= 1, "oracle cannot invent missing nonempty text");
@@ -56,7 +56,8 @@ export function expectedSection(bytes, index, start, end, utf8) {
   const fieldHeaders = own.filter(r => r.tag === 71 && r.payload.length >= 8 && r.payload.readUInt32LE(0) === 0x25686c6b);
   const modifiedFields = new Set(), opened = [];
   let fieldIndex = 0;
-  for (let unit = 0; unit < text.length / 2;) {
+  // Cross-paragraph tests supply a separate section-wide attribute oracle.
+  for (let unit = 0; !skipLocalFieldAttributes && unit < text.length / 2;) {
     const code = text.readUInt16LE(unit * 2);
     const width = code >= 1 && code <= 23 && code !== 10 && code !== 13 ? 8 : 1;
     if (code === 3) opened.push({ index: fieldIndex++, begin: unit + width });

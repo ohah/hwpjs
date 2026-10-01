@@ -16,7 +16,7 @@
   <p id="canvas-edit-status" role="status" aria-live="polite"></p>
   <details id="editor-panel" hidden>
     <summary>고급 편집 API 실험 폼</summary>
-    <p>일반 텍스트 문단과 일부 표 셀·글상자 문단, 기존 서식이 있는 빈 문단을 지원합니다. 제어 포함 문단은 아직 미지원입니다. 구역·문단 번호는 0부터, 선택 위치는 UTF-16 단위 [시작, 끝)입니다. 빈 선택은 삽입, 빈 교체 텍스트는 삭제입니다. 원본 파일은 변경하지 않습니다.</p>
+    <p>일반 텍스트와 일부 표 셀·글상자·빈 문단, 기존 탭·제어 표식·하이퍼링크를 보존하는 제한적 편집을 지원합니다. 계산식 숫자 라벨은 직접 수정할 수 없으며 허용 여부는 native 파서가 검사합니다. 구역·문단 번호는 0부터, 선택 위치는 UTF-16 단위 [시작, 끝)입니다. 빈 선택은 삽입, 빈 교체 텍스트는 삭제입니다. 원본 파일은 변경하지 않습니다.</p>
     <button id="enable-edit" type="button">편집 실험 켜기</button>
     <form id="edit-form"><fieldset id="edit-fields" disabled>
       <div class="edit-grid">

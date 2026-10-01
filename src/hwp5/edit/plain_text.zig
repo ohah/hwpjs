@@ -40,16 +40,20 @@ fn inserted(a: std.mem.Allocator, utf8: []const u8) ![]u8 {
 }
 
 pub fn apply(a: std.mem.Allocator, source: []const u8, version: Version, p: *model.Paragraph, edit: Splice, char_count: usize) !void {
-    return applyWith(a, source, version, p, edit, char_count, false);
+    return applyWith(a, source, version, p, edit, char_count, false, false);
 }
 
 pub fn applyFormulaTransaction(a: std.mem.Allocator, source: []const u8, version: Version, p: *model.Paragraph, edit: Splice, char_count: usize) !void {
-    return applyWith(a, source, version, p, edit, char_count, true);
+    return applyWith(a, source, version, p, edit, char_count, true, false);
 }
 
-fn applyWith(a: std.mem.Allocator, source: []const u8, version: Version, p: *model.Paragraph, edit: Splice, char_count: usize, formulas: bool) !void {
+pub fn applyHyperlinkTransaction(a: std.mem.Allocator, source: []const u8, version: Version, p: *model.Paragraph, edit: Splice, char_count: usize) !void {
+    return applyWith(a, source, version, p, edit, char_count, false, true);
+}
+
+fn applyWith(a: std.mem.Allocator, source: []const u8, version: Version, p: *model.Paragraph, edit: Splice, char_count: usize, formulas: bool, cross_fields: bool) !void {
     const validator = @import("plain_text_source.zig");
-    const validated = if (formulas) try validator.validateFormulaTransaction(a, source, version, p.*, char_count) else try validator.validate(a, source, version, p.*, char_count);
+    const validated = if (formulas) try validator.validateFormulaTransaction(a, source, version, p.*, char_count) else if (cross_fields) try validator.validateHyperlinkTransaction(a, source, version, p.*, char_count) else try validator.validate(a, source, version, p.*, char_count);
     const ranges = validated.ranges;
     const before = try @import("plain_text_content.zig").editableTextBytes(a, p.*);
     defer a.free(before);
@@ -76,7 +80,7 @@ fn applyWith(a: std.mem.Allocator, source: []const u8, version: Version, p: *mod
     errdefer a.free(owned_runs);
     const owned_ranges = try @import("text_ranges.zig").prepare(a, p.range_tags, ranges, before, edit.start_unit, edit.end_unit, units);
     errdefer a.free(owned_ranges);
-    const owned_fields = try @import("field_attributes.zig").prepare(a, source, version, p.*, before, edit.start_unit, edit.end_unit);
+    const owned_fields = if (cross_fields) (if (p.field_attributes) |fields| try a.dupe(model.FieldAttributes, fields) else null) else try @import("field_attributes.zig").prepare(a, source, version, p.*, before, edit.start_unit, edit.end_unit);
     errdefer if (owned_fields) |fields| a.free(fields);
     const value = try body.Text.parse(after);
     var tokens: std.ArrayList(model.Token) = .empty;
