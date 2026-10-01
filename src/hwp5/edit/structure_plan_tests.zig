@@ -5,6 +5,57 @@ const Tree = @import("../body/tree.zig").Tree;
 const Source = @import("../text_source.zig").Source;
 const a = std.testing.allocator;
 
+test "structural deletion plan derives absent originals without enabling old writer deletion" {
+    const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwp", a, .limited(4_000_000));
+    defer a.free(input);
+    var source = try Source.open(a, input);
+    defer source.deinit();
+    const raw = try source.decodeSection(a, 0);
+    defer a.free(raw);
+    var document = try @import("../model_projection.zig").fromDecodedSections(a, source.header.version(), &.{raw});
+    defer document.deinit(a);
+    const section = &document.sections[0];
+    const removed = section.paragraphs[2].source_node.?;
+    const replacement = try a.alloc(@import("../../model/document.zig").Paragraph, section.paragraphs.len - 1);
+    @memcpy(replacement[0..2], section.paragraphs[0..2]);
+    @memcpy(replacement[2..], section.paragraphs[3..]);
+    section.paragraphs[2].deinit(a);
+    a.free(section.paragraphs);
+    section.paragraphs = replacement;
+    var tree = try Tree.parseTextPreview(a, raw, source.header.version(), .{});
+    defer tree.deinit(a);
+    try std.testing.expectError(error.SourceBindingMismatch, plan.build(a, tree, section.*, source.header.version()));
+    var result = try plan.buildWithDeletions(a, tree, section.*, source.header.version(), true);
+    defer result.deinit(a);
+    try std.testing.expectEqualSlices(u32, &.{removed}, result.removals);
+    for (result.list_removals) |count| try std.testing.expectEqual(@as(u16, 0), count);
+    const saved = try @import("structure_section_writer.zig").writeWithDeletions(a, raw, section.*, source.header.version(), 1000, 4_000_000, true);
+    defer a.free(saved);
+    var reopened = try @import("../model_projection.zig").fromDecodedSections(a, source.header.version(), &.{saved});
+    defer reopened.deinit(a);
+    try std.testing.expectEqual(section.paragraphs.len, reopened.sections[0].paragraphs.len);
+    for (section.paragraphs, reopened.sections[0].paragraphs) |expected, actual| {
+        const first = try @import("plain_text_content.zig").editableTextBytes(a, expected);
+        defer a.free(first);
+        const second = try @import("plain_text_content.zig").editableTextBytes(a, actual);
+        defer a.free(second);
+        try std.testing.expectEqualSlices(u8, first, second);
+        try std.testing.expectEqual(expected.instance_id, actual.instance_id);
+    }
+    try std.testing.checkAllAllocationFailures(a, struct {
+        fn run(allocator: std.mem.Allocator, borrowed: Tree, current: @import("../../model/document.zig").Section, version: @import("../version.zig").Version) !void {
+            var checked = try plan.buildWithDeletions(allocator, borrowed, current, version, true);
+            defer checked.deinit(allocator);
+        }
+    }.run, .{ tree, section.*, source.header.version() });
+    try std.testing.checkAllAllocationFailures(a, struct {
+        fn run(allocator: std.mem.Allocator, bytes: []const u8, current: @import("../../model/document.zig").Section, version: @import("../version.zig").Version) !void {
+            const output = try @import("structure_section_writer.zig").writeWithDeletions(allocator, bytes, current, version, 1000, 4_000_000, true);
+            defer allocator.free(output);
+        }
+    }.run, .{ raw, section.*, source.header.version() });
+}
+
 test "structural plan resolves actual sibling table cells and rejects forged owners IDs and templates" {
     const cases = [_]struct { path: []const u8, paragraph: usize }{
         .{ .path = "legacy/rust/crates/hwp-core/tests/fixtures/software.hwp", .paragraph = 2 },

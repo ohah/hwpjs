@@ -57,6 +57,12 @@ export async function createExperimentalHwp5Editor(source, input) {
       if (typeof wasm.hwp5_edit_split !== "function") throw new Error("Hwp5StructureAbiUnavailable");
       success(wasm.hwp5_edit_split(...values));
     },
+    mergeParagraph({ section, paragraph }) {
+      check();
+      const values = [u32(section, "section"), u32(paragraph, "paragraph")];
+      if (typeof wasm.hwp5_edit_merge !== "function") throw new Error("Hwp5StructureAbiUnavailable");
+      success(wasm.hwp5_edit_merge(...values));
+    },
     setCharacterFormat({ section, paragraph, startUnit, endUnit, charShapeId }) {
       check(); success(wasm.hwp5_edit_format(u32(section, "section"), u32(paragraph, "paragraph"), u32(startUnit, "startUnit"), u32(endUnit, "endUnit"), u32(charShapeId, "charShapeId")));
     },

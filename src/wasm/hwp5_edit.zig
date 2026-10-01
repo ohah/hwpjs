@@ -127,6 +127,10 @@ export fn hwp5_edit_format(section: u32, paragraph: u32, start: u32, end: u32, i
     apply(.{ .set_character_format = .{ .section = section, .paragraph = paragraph, .start_unit = start, .end_unit = end, .char_shape_id = id } }) catch |err| return fail(err);
     return 1;
 }
+export fn hwp5_edit_merge(section: u32, paragraph: u32) u32 {
+    apply(.{ .merge_paragraph = .{ .section = section, .paragraph = paragraph } }) catch |err| return fail(err);
+    return 1;
+}
 export fn hwp5_edit_save(allow_stale_layout: u32) u32 {
     hwp5_edit_output_free();
     if (allow_stale_layout > 1) return fail(error.InvalidSavePolicy);

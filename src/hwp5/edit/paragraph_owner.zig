@@ -31,15 +31,19 @@ pub fn inspectGroups(a: std.mem.Allocator, tree: Tree, version: Version) !Groups
     return Groups.build(a, tree);
 }
 
-fn validateGroups(tree: Tree, groups: Groups, paragraph: usize, parent: usize, version: Version) !void {
-    var owner: ?usize = null;
+pub fn logicalOwner(tree: Tree, groups: Groups, paragraph: usize) !?usize {
+    if (paragraph >= tree.nodes.len or tree.nodes[paragraph].record.value != .header) return error.SourceBindingMismatch;
+    const parent = tree.nodes[paragraph].parent orelse return null;
     for (groups.items) |group| {
         if (group.parent_node == parent and paragraph >= group.begin and paragraph < group.end) {
-            owner = group.header_node;
-            break;
+            return group.header_node;
         }
     }
-    const list = owner orelse return error.OrphanListParagraph;
+    return error.OrphanListParagraph;
+}
+
+fn validateGroups(tree: Tree, groups: Groups, paragraph: usize, parent: usize, version: Version) !void {
+    const list = (try logicalOwner(tree, groups, paragraph)) orelse return error.OrphanListParagraph;
     const node = tree.nodes[parent];
     if (node.record.value == .control_header) {
         const id = node.record.value.control_header.id;

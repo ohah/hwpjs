@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+`node tools/hwp5-merge-corpus-audit.mjs`는 제품 WASM 빌드 후 추적 HWP의 모든 인접 문단 쌍에 병합을 시도합니다. 독립 전체 Section·비대상 스트림·저장 후 재열기 전체 raw text·native undo/redo와 거부 뒤 원본/redo 보존을 검사하며 미지원·보호 파일 거부를 별도 집계합니다. 상세 계약과 한계는 [문단 구조 편집](paragraph-structure-edit.md)이 소유합니다.
+
 `node tools/hwp5-split-corpus-audit.mjs`는 제품 WASM 빌드 후 모든 추적 HWP 문단에서 시작·중간·끝 분할을 시도하고 독립 전체 Section·비대상 스트림·native undo/redo와 거부 뒤 원본/redo 보존을 검사합니다. 보호 및 컨트롤 미지원 거부는 별도 집계하며 전체 선택 영역·조판 완료 증거는 아닙니다. 상세 계약은 [문단 구조 편집](paragraph-structure-edit.md)이 소유합니다.
 
 `node tools/hwp5-edit-corpus-audit.mjs --history`는 모든 추적 HWP5 문단 prefix 시도에 native undo/redo와 전체 저장값·reflow 복원을 추가합니다. 최종 문단 텍스트·비본문 스트림은 독립 CFB.js/Node로 검사합니다. 숫자 입력 및 보호 파일 거부는 별도 집계하며 전체 편집 위치·서식·조판 지원의 증명은 아닙니다. HWPX 편집은 별도 HWPX corpus 명령이 소유합니다.

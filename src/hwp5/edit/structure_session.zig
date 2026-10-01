@@ -24,7 +24,7 @@ pub fn split(a: std.mem.Allocator, decoded: []const []u8, document: *model.Docum
         try @import("plain_text.zig").apply(a, decoded[edit.section], version, &draft.paragraphs[edit.paragraph], .{ .section = edit.section, .paragraph = edit.paragraph, .start_unit = edit.at_unit, .end_unit = end, .utf8 = "" }, char_count);
     }
     try @import("paragraph_split.zig").apply(a, &draft, decoded[edit.section], version, edit.paragraph, edit.at_unit, new_id, char_count);
-    const verified = try @import("structure_section_writer.zig").write(a, decoded[edit.section], draft, version, char_count, output_limit);
+    const verified = try @import("structure_section_writer.zig").writeWithDeletions(a, decoded[edit.section], draft, version, char_count, output_limit, true);
     defer a.free(verified);
     std.mem.swap(model.Section, &document.sections[edit.section], &draft);
 }

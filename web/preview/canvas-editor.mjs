@@ -8,7 +8,7 @@ import { sourceTextChange } from "./text-offsets.mjs";
 export function createCanvasEditor({ canvas, viewport, input, renderer, controls, note }) {
   const events = new AbortController(), listen = (node, type, fn) => node.addEventListener(type, fn, { signal: events.signal });
   let target = null, committed = "", anchor = null, focus = null, pending = null, composing = false, drag = null;
-  let historyAvailable = false, historyPending = false, structureAvailable = false, splitTarget = null;
+  let historyAvailable = false, historyPending = false, structureAvailable = false, mergeAvailable = false, structureTarget = null;
   const report = text => { note.textContent = text; };
   const place = () => {
     const caret = caretGeometry(renderer.layout(), focus);
@@ -104,16 +104,31 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     const unit = snapUnit(committed, input.selectionStart);
     const end = snapUnit(committed, input.selectionEnd, true);
     const position = sourceTextChange({ startUnit: unit, endUnit: end, text: "" }, renderer.paragraph(target)?.sourceOffsets);
-    splitTarget = { section: target.section, paragraph: target.paragraph + 1 };
+    structureTarget = { kind: "split", section: target.section, paragraph: target.paragraph + 1 };
     historyPending = true; input.readOnly = true;
     if (!controls.request({ kind: "split", origin: "canvas", ...target, atUnit: position.startUnit, endUnit: position.endUnit })) {
-      splitTarget = null; historyPending = false; input.readOnly = !controls.ready(); return false;
+      structureTarget = null; historyPending = false; input.readOnly = !controls.ready(); return false;
     }
     input.setAttribute("aria-busy", "true"); return true;
+  };
+  const mergeBoundary = backward => {
+    if (!target || input.selectionStart !== input.selectionEnd || input.selectionStart !== (backward ? 0 : input.value.length)) return false;
+    if (!mergeAvailable) return false;
+    if (composing || pending || historyPending || input.value !== committed || !controls.ready() || controls.busy()) return true;
+    const left = { section: target.section, paragraph: target.paragraph - (backward ? 1 : 0) };
+    const paragraph = renderer.paragraph(left);
+    if (!paragraph || !renderer.paragraph({ ...left, paragraph: left.paragraph + 1 })) return true;
+    structureTarget = { kind: "merge", ...left, unit: paragraph.text.length };
+    historyPending = true; input.readOnly = true;
+    if (!controls.request({ kind: "merge", origin: "canvas", ...left })) {
+      structureTarget = null; historyPending = false; input.readOnly = !controls.ready();
+    } else input.setAttribute("aria-busy", "true");
+    return true;
   };
   listen(input, "beforeinput", event => {
     if (!target || !controls.ready() || historyPending) { event.preventDefault(); return; }
     if (["historyUndo", "historyRedo"].includes(event.inputType)) { event.preventDefault(); travel(event.inputType === "historyUndo" ? "undo" : "redo"); return; }
+    if (["deleteContentBackward", "deleteContentForward"].includes(event.inputType) && mergeBoundary(event.inputType === "deleteContentBackward")) { event.preventDefault(); return; }
     if (["insertLineBreak", "insertParagraph"].includes(event.inputType)) { event.preventDefault(); split(); }
   });
   listen(input, "input", () => { if (!target) return; preview(); if (!composing) pump(); });
@@ -130,6 +145,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     }
     if ((event.metaKey || event.ctrlKey) && ["z", "y"].includes(key.toLowerCase())) { event.preventDefault(); travel(key.toLowerCase() === "y" || event.shiftKey ? "redo" : "undo"); return; }
     if (key === "Enter") { event.preventDefault(); split(); return; }
+    if (!event.metaKey && !event.ctrlKey && !event.altKey && ["Backspace", "Delete"].includes(key) && mergeBoundary(key === "Backspace")) { event.preventDefault(); return; }
     if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(key) || event.altKey) return;
     event.preventDefault();
     const next = navigateText(renderer.layout(), input.value, anchor, focus, key, { extend: event.shiftKey, paragraphEdge: event.ctrlKey || event.metaKey });
@@ -146,27 +162,29 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     reset() {
       if (drag !== null && canvas.hasPointerCapture(drag)) canvas.releasePointerCapture(drag);
       composing = false; drag = null; target = null; pending = null; anchor = null; focus = null; committed = "";
-      historyAvailable = false; historyPending = false; structureAvailable = false; splitTarget = null;
+      historyAvailable = false; historyPending = false; structureAvailable = false; mergeAvailable = false; structureTarget = null;
       input.value = ""; input.disabled = true; input.setAttribute("aria-busy", "false"); canvas.style.cursor = "default"; report(""); renderer.preview(null); paint();
     },
     external(message) {
       if (message.origin !== "canvas" && !["enable", "save"].includes(message.kind)) {
-        const available = historyAvailable, structure = structureAvailable; this.reset(); historyAvailable = available; structureAvailable = structure;
+        const available = historyAvailable, structure = structureAvailable, merge = mergeAvailable; this.reset(); historyAvailable = available; structureAvailable = structure; mergeAvailable = merge;
       }
     },
     message(message) {
       if (message.kind === "save") { pump(); return; }
       if (message.applied && message.error) { this.reset(); return; }
-      if (message.kind === "enable") { if (!message.error) { historyAvailable = message.historyAvailable === true; structureAvailable = message.structureAvailable === true; } input.readOnly = !controls.ready(); report(message.error ? `편집 시작 실패: ${message.error}` : "클릭·드래그 선택 후 입력하세요. 변경 후 재조판이 필요합니다."); pump(); return; }
-      if (message.kind === "split" && message.origin === "canvas" && splitTarget) {
-        const next = splitTarget; splitTarget = null; historyPending = false;
+      if (message.kind === "enable") { if (!message.error) { historyAvailable = message.historyAvailable === true; structureAvailable = message.structureAvailable === true; mergeAvailable = message.mergeAvailable === true; } input.readOnly = !controls.ready(); report(message.error ? `편집 시작 실패: ${message.error}` : "클릭·드래그 선택 후 입력하세요. 변경 후 재조판이 필요합니다."); pump(); return; }
+      if (message.origin === "canvas" && structureTarget && message.kind === structureTarget.kind) {
+        const next = structureTarget; structureTarget = null; historyPending = false;
         input.readOnly = !controls.ready(); input.setAttribute("aria-busy", "false");
-        if (message.error) { report(`문단 분할 실패: ${message.error}`); return; }
+        const operation = message.kind === "merge" ? "병합" : "분할";
+        if (message.error) { report(`문단 ${operation} 실패: ${message.error}`); return; }
         const paragraph = renderer.paragraph(next);
-        if (!paragraph?.editable) { this.reset(); report("문단 분할은 적용됐지만 표시 한도로 직접 입력을 중단했습니다."); return; }
-        target = next; committed = paragraph.text; input.value = committed; renderer.preview(null);
-        setSelection({ ...target, unit: 0 }, { ...target, unit: 0 }); reveal();
-        report("문단 분할 적용 · 재조판 필요"); return;
+        if (!paragraph?.editable) { this.reset(); report(`문단 ${operation}은 적용됐지만 표시 한도로 직접 입력을 중단했습니다.`); return; }
+        target = { section: next.section, paragraph: next.paragraph }; committed = paragraph.text; input.value = committed; renderer.preview(null);
+        const unit = snapUnit(committed, Math.min(next.unit ?? 0, committed.length));
+        setSelection({ ...target, unit }, { ...target, unit }); reveal();
+        report(`문단 ${operation} 적용 · 재조판 필요`); return;
       }
       if (["undo", "redo"].includes(message.kind) && message.origin === "canvas" && historyPending) {
         historyPending = false; input.readOnly = !controls.ready(); input.setAttribute("aria-busy", "false");

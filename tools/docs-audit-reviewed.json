@@ -2,8 +2,8 @@
   "schema": 1,
   "verified": {
     "docs/paragraph-structure-edit.md": {
-      "sha256": "a21588abe20f09dad941114449d0675e8ad45f3eb1af7764e682d3be5ddf6d6a",
-      "evidence": "2026-10-02 split topology provenance Session checkpoint optional WASM JS Worker Canvas reviewed; Safe product HWP5 93 HWPX 29 tests 9 steps pass; focused native split 4 includes selection allocation failures growth rollback; independent split corpus 3538 attempts 2425 verified 1113 control refusals source redo preserved three protected opens; external Chromium split and selection downloads complete record stream oracle undo original redo edited bytes verified; full Safe native 2813 tests 7 steps exit zero pass runner label distinguished merge HWPX structure layout OS IME incomplete; generated paragraph prefix and two repeated split selection states independent whole Section and undo redo bytes public structure 5 pass"
+      "sha256": "f11e5980252a33eaee07cbb5b9d4045c52def76362264951b0af792709e2e3ea",
+      "evidence": "2026-10-02 current split and merge ownership Session writer optional API Worker Canvas contracts reviewed; Safe product HWP5 100 tests 7 steps and HWPX audit pass; native merge Debug Safe Fast 4 each; merge corpus 48 files 1434 attempts 566 independent Section streams reopen history verified refusals preserve source redo three protected opens; Chromium software Enter Backspace caret downloads independent merge oracle and redo bytes pass; repeated split merge 12 cycles and four oracle corruption counterexamples pass; Canvas mismatched kind acknowledgement and cross cell refusal subsequent typing pass; full Safe native still running not claimed complete; HWPX structure controls OS IME layout incomplete; final full Safe native 2820 tests 7 steps exit zero root 2811 separate9 runner stderr label distinguished; latest Safe product101 pass; explicit empty text oracle fix reproduced and corpus566 verified rerun pass; full objective remains incomplete"
     },
     "docs/hwp5-edit-history.md": {
       "sha256": "2869f9f5314731ea935b83021d9fc982047e8f4dc2aea09e2f4ff45bfc370dbf",
@@ -770,8 +770,8 @@
       "evidence": "2026-10-01 direct Canvas hit test grapheme UTF16 selection native acknowledgement and temporary composition SSOT checked against source; Debug Safe Fast 21 API input tests and full Safe 2687 Zig plus 51 Node regressions pass; five actual fixtures use native WASM with mocked DOM; Chromium public URL pointer typing selection wrap errors composition reset and explicit Meta A empty reinput verified; real OS IME candidate clipboard permissions and HWPX layout remain unverified"
     },
     "docs/development-commands.md": {
-      "sha256": "bcc0417f5c7fd05dd4f229d372dd75f17bcaa2a852cd3b5d82aad7f2487d085d",
-      "evidence": "2026-10-02 split topology provenance Session checkpoint optional WASM JS Worker Canvas reviewed; Safe product HWP5 93 HWPX 29 tests 9 steps pass; focused native split 4 includes selection allocation failures growth rollback; independent split corpus 3538 attempts 2425 verified 1113 control refusals source redo preserved three protected opens; external Chromium split and selection downloads complete record stream oracle undo original redo edited bytes verified; full Safe native 2813 tests 7 steps exit zero pass runner label distinguished merge HWPX structure layout OS IME incomplete"
+      "sha256": "786a9fff463963ebb513dab100034c9e45300ae00f09820a0d2d4f9713c79a73",
+      "evidence": "2026-10-02 current split and merge ownership Session writer optional API Worker Canvas contracts reviewed; Safe product HWP5 100 tests 7 steps and HWPX audit pass; native merge Debug Safe Fast 4 each; merge corpus 48 files 1434 attempts 566 independent Section streams reopen history verified refusals preserve source redo three protected opens; Chromium software Enter Backspace caret downloads independent merge oracle and redo bytes pass; repeated split merge 12 cycles and four oracle corruption counterexamples pass; Canvas mismatched kind acknowledgement and cross cell refusal subsequent typing pass; full Safe native still running not claimed complete; HWPX structure controls OS IME layout incomplete"
     },
     "docs/zig-test-stderr.md": {
       "sha256": "9133676bc38bac48fab5f9ba8a04ec972697d32e7a051a851d6b158c444c66b5",

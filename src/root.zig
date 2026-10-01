@@ -657,6 +657,9 @@ test {
     _ = @import("hwp5/edit/editor_history_fixture_tests.zig");
     _ = @import("hwp5/edit/instance_ids.zig");
     _ = @import("hwp5/edit/paragraph_split.zig");
+    _ = @import("hwp5/edit/paragraph_merge.zig");
+    _ = @import("hwp5/edit/paragraph_merge_scope.zig");
+    _ = @import("hwp5/edit/character_runs.zig");
     _ = @import("hwp5/edit/structure_plan_tests.zig");
     _ = @import("hwp5/edit/structure_session_tests.zig");
     _ = @import("hwp5/edit/formula_session_tests.zig");

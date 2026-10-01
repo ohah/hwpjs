@@ -59,8 +59,9 @@ async function harness(t, name = "charshape", choose = p => p.editable && !p.sou
       let response = { kind: message.kind, origin: message.origin };
       try {
         if (message.kind === "split") native.splitParagraph(message);
+        else if (message.kind === "merge") native.mergeParagraph(message);
         else native.splice(message);
-        if (message.kind === "split" || content.paragraphs.find(p => p.section === message.section && p.paragraph === message.paragraph)?.sourceOffsets) {
+        if (["split", "merge"].includes(message.kind) || content.paragraphs.find(p => p.section === message.section && p.paragraph === message.paragraph)?.sourceOffsets) {
           content = displayContent(reader.readText(native.save({ allowStaleLayout: true }).bytes));
         } else content = { ...content, paragraphs: content.paragraphs.map(p => {
           if (p.section !== message.section || p.paragraph !== message.paragraph) return p;
@@ -72,6 +73,62 @@ async function harness(t, name = "charshape", choose = p => p.editable && !p.sou
     },
   };
 }
+
+test("canvas boundary Backspace joins split paragraphs once and preserves join caret", async t => {
+  const h = await harness(t);
+  h.controller.message({ kind: "enable", structureAvailable: true, mergeAvailable: true });
+  const before = h.input.value, count = h.native.paragraphCount(h.paragraph.section);
+  h.input.setSelectionRange(1, 1);
+  dispatch(h.input, "keydown", { key: "Enter" }); h.ack();
+  assert.equal(dispatch(h.input, "keydown", { key: "Backspace" }).defaultPrevented, true);
+  assert.equal(h.requests.at(-1).kind, "merge");
+  const requests = h.requests.length;
+  h.controller.message({ kind: "split", origin: "canvas" });
+  assert.equal(h.controller.settled(), false, "unrelated structural acknowledgement must not release merge transaction");
+  assert.equal(h.input.readOnly, true);
+  dispatch(h.input, "beforeinput", { inputType: "deleteContentBackward" });
+  assert.equal(h.requests.length, requests);
+  h.ack();
+  assert.equal(h.native.paragraphCount(h.paragraph.section), count);
+  assert.equal(h.input.value, before);
+  assert.equal(h.input.selectionStart, 1);
+  assert.equal(h.canvas.dataset.caret, `${h.paragraph.section}:${h.paragraph.paragraph}:1`);
+  assert.equal(h.controller.settled(), true);
+});
+
+test("canvas boundary Delete joins from left through beforeinput and does not merge selected text", async t => {
+  const h = await harness(t);
+  h.controller.message({ kind: "enable", structureAvailable: true, mergeAvailable: true });
+  const before = h.input.value;
+  h.input.setSelectionRange(1, 1);
+  dispatch(h.input, "keydown", { key: "Enter" }); h.ack();
+  h.selectTarget();
+  h.input.setSelectionRange(0, 1);
+  assert.equal(dispatch(h.input, "beforeinput", { inputType: "deleteContentForward" }).defaultPrevented, false);
+  h.input.setSelectionRange(1, 1);
+  assert.equal(dispatch(h.input, "beforeinput", { inputType: "deleteContentForward" }).defaultPrevented, true);
+  h.ack();
+  assert.equal(h.input.value, before);
+  assert.equal(h.input.selectionStart, 1);
+});
+
+test("canvas cross-cell merge refusal preserves title caret and permits subsequent typing", async t => {
+  const h = await harness(t, "software", p => p.section === 0 && p.paragraph === 2);
+  h.controller.message({ kind: "enable", mergeAvailable: true });
+  const before = h.input.value, source = h.native.save().bytes;
+  h.input.setSelectionRange(before.length, before.length);
+  dispatch(h.input, "keydown", { key: "Delete" });
+  assert.equal(h.requests.at(-1).kind, "merge");
+  h.ack();
+  assert.equal(h.input.value, before);
+  assert.equal(h.input.selectionStart, before.length);
+  assert.equal(h.controller.settled(), true);
+  assert.equal(h.input.readOnly, false);
+  assert.match(h.note.textContent, /ParagraphOwnerMismatch/);
+  assert.deepEqual(h.native.save().bytes, source);
+  h.type(before + "후속"); h.ack();
+  assert.equal(h.native.text(0, 2), before + "후속\r");
+});
 
 test("canvas selection Enter replaces selected text in one native split request", async t => {
   const h = await harness(t);

@@ -9,6 +9,137 @@ fn expectSaved(session: *edit.Session, expected: []const u8) !void {
     try std.testing.expectEqualSlices(u8, expected, saved.bytes);
 }
 
+test "native paragraph merge saves original removal and restores history" {
+    const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwp", a, .limited(4_000_000));
+    defer a.free(input);
+    const session = try edit.Session.open(a, input);
+    defer session.close();
+    var history = try History.init(a, session, 8, 8_000_000);
+    defer history.deinit();
+    const first = try session.copyText(a, 0, 1);
+    defer a.free(first);
+    const second = try session.copyText(a, 0, 2);
+    defer a.free(second);
+    const count = try session.paragraphCount(0);
+    try std.testing.expect(try history.apply(session, .{ .merge_paragraph = .{ .section = 0, .paragraph = 1 } }));
+    try std.testing.expectEqual(count - 1, try session.paragraphCount(0));
+    const joined = try session.copyText(a, 0, 1);
+    defer a.free(joined);
+    try std.testing.expectEqualSlices(u8, first[0 .. first.len - 2], joined[0 .. first.len - 2]);
+    try std.testing.expectEqualSlices(u8, second, joined[first.len - 2 ..]);
+    const saved = try session.save(a, .{ .allow_stale_layout = true });
+    defer a.free(saved.bytes);
+    const reopened = try edit.Session.open(a, saved.bytes);
+    defer reopened.close();
+    const text = try reopened.copyText(a, 0, 1);
+    defer a.free(text);
+    try std.testing.expectEqualSlices(u8, joined, text);
+    try std.testing.expectEqual(count - 1, try reopened.paragraphCount(0));
+    try std.testing.expect(try history.undo(session));
+    try expectSaved(session, input);
+    try std.testing.expect(try history.redo(session));
+    try expectSaved(session, saved.bytes);
+    try std.testing.expect(try history.apply(session, .{ .split_paragraph = .{ .section = 0, .paragraph = 1, .at_unit = 1 } }));
+    try std.testing.expectEqual(count, try session.paragraphCount(0));
+    const split_saved = try session.save(a, .{ .allow_stale_layout = true });
+    defer a.free(split_saved.bytes);
+    const split_reopened = try edit.Session.open(a, split_saved.bytes);
+    defer split_reopened.close();
+    try std.testing.expectEqual(count, try split_reopened.paragraphCount(0));
+    try std.testing.expect(try history.undo(session));
+    try expectSaved(session, saved.bytes);
+}
+
+test "native paragraph merge nested original cells keeps generated templates and list counts" {
+    for ([_]struct { name: []const u8, paragraph: usize }{ .{ .name = "software", .paragraph = 2 }, .{ .name = "table", .paragraph = 1 } }) |case| {
+        const path = try std.fmt.allocPrint(a, "legacy/rust/crates/hwp-core/tests/fixtures/{s}.hwp", .{case.name});
+        defer a.free(path);
+        const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, path, a, .limited(4_000_000));
+        defer a.free(input);
+        const original = try edit.Session.open(a, input);
+        defer original.close();
+        if (std.mem.eql(u8, case.name, "software")) {
+            try std.testing.expectError(error.ParagraphOwnerMismatch, original.apply(.{ .merge_paragraph = .{ .section = 0, .paragraph = case.paragraph } }));
+            try expectSaved(original, input);
+        }
+        try original.apply(.{ .split_paragraph = .{ .section = 0, .paragraph = case.paragraph, .at_unit = 0 } });
+        const prepared = try original.save(a, .{ .allow_stale_layout = true });
+        defer a.free(prepared.bytes);
+        const session = try edit.Session.open(a, prepared.bytes);
+        defer session.close();
+        var history = try History.init(a, session, 8, 8_000_000);
+        defer history.deinit();
+        const count = try session.paragraphCount(0);
+        // The right original gains a generated continuation before being removed.
+        try std.testing.expect(try history.apply(session, .{ .split_paragraph = .{ .section = 0, .paragraph = case.paragraph + 1, .at_unit = 0 } }));
+        const split = try session.save(a, .{ .allow_stale_layout = true });
+        defer a.free(split.bytes);
+        try std.testing.expect(try history.apply(session, .{ .merge_paragraph = .{ .section = 0, .paragraph = case.paragraph } }));
+        try std.testing.expectEqual(count, try session.paragraphCount(0));
+        const merged = try session.save(a, .{ .allow_stale_layout = true });
+        defer a.free(merged.bytes);
+        const reopened = try edit.Session.open(a, merged.bytes);
+        defer reopened.close();
+        for (0..count) |p| {
+            const expected = try session.copyText(a, 0, p);
+            defer a.free(expected);
+            const actual = try reopened.copyText(a, 0, p);
+            defer a.free(actual);
+            try std.testing.expectEqualSlices(u8, expected, actual);
+        }
+        try std.testing.expect(try history.undo(session));
+        try expectSaved(session, split.bytes);
+        try std.testing.expect(try history.redo(session));
+        try expectSaved(session, merged.bytes);
+        try std.testing.expect(try history.undo(session));
+        try std.testing.expect(try history.undo(session));
+        try expectSaved(session, prepared.bytes);
+        try std.testing.expect(try history.apply(session, .{ .merge_paragraph = .{ .section = 0, .paragraph = case.paragraph } }));
+        try std.testing.expectEqual(count - 1, try session.paragraphCount(0));
+        const removed = try session.save(a, .{ .allow_stale_layout = true });
+        defer a.free(removed.bytes);
+        var source = try @import("../text_source.zig").Source.open(a, removed.bytes);
+        defer source.deinit();
+        const raw = try source.decodeSection(a, 0);
+        defer a.free(raw);
+        var tree = try @import("../body/tree.zig").Tree.parseTextPreview(a, raw, source.header.version(), .{});
+        defer tree.deinit(a);
+        var groups = try @import("paragraph_owner.zig").inspectGroups(a, tree, source.header.version());
+        defer groups.deinit(a);
+    }
+}
+
+test "native paragraph merge all allocation failures preserve document and redo" {
+    const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwp", a, .limited(4_000_000));
+    defer a.free(input);
+    try std.testing.checkAllAllocationFailures(a, struct {
+        fn run(allocator: std.mem.Allocator, bytes: []const u8) !void {
+            const session = try edit.Session.open(allocator, bytes);
+            defer session.close();
+            var history = try History.init(allocator, session, 4, 8_000_000);
+            defer history.deinit();
+            const command: edit.Command = .{ .merge_paragraph = .{ .section = 0, .paragraph = 1 } };
+            _ = history.apply(session, command) catch |err| {
+                try expectSaved(session, bytes);
+                try std.testing.expectEqual(@as(usize, 0), history.stack.undo.items.len);
+                try std.testing.expectEqual(@as(usize, 0), history.stack.redo.items.len);
+                return err;
+            };
+            const merged = try session.save(a, .{ .allow_stale_layout = true });
+            defer a.free(merged.bytes);
+            try std.testing.expect(try history.undo(session));
+            _ = history.apply(session, command) catch |err| {
+                try expectSaved(session, bytes);
+                try std.testing.expectEqual(@as(usize, 1), history.stack.redo.items.len);
+                try std.testing.expect(try history.redo(session));
+                try expectSaved(session, merged.bytes);
+                return err;
+            };
+            try expectSaved(session, merged.bytes);
+        }
+    }.run, .{input});
+}
+
 test "native structural split all allocation failures preserve model and redo" {
     const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwp", a, .limited(4_000_000));
     defer a.free(input);

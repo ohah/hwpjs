@@ -51,3 +51,52 @@ pub fn replace(a: std.mem.Allocator, rows: []const model.CharacterRun, start: u3
     if (out.items.len > 65535) return error.LimitExceeded;
     return out.toOwnedSlice(a);
 }
+
+/// Join two validated style maps, excluding the left paragraph terminator.
+/// Right styles (including its terminator/tail boundary) remain authoritative.
+pub fn join(a: std.mem.Allocator, left: []const model.CharacterRun, right: []const model.CharacterRun, left_units: u32) ![]model.CharacterRun {
+    if (left.len == 0 or right.len == 0) return error.UnsupportedMissingCharacterRuns;
+    if (left[0].start_unit != 0 or right[0].start_unit != 0) return error.AmbiguousCharacterRuns;
+    var out: std.ArrayList(model.CharacterRun) = .empty;
+    errdefer out.deinit(a);
+    for (left) |row| {
+        if (row.start_unit >= left_units) break;
+        try append(a, &out, row.start_unit, row.char_shape_id);
+    }
+    for (right) |row| {
+        const at = std.math.add(u32, left_units, row.start_unit) catch return error.LimitExceeded;
+        try append(a, &out, at, row.char_shape_id);
+    }
+    if (out.items.len > 65535) return error.LimitExceeded;
+    return out.toOwnedSlice(a);
+}
+
+test "character run join preserves right affinity empty left tail and allocation failures" {
+    const a = std.testing.allocator;
+    const left = [_]model.CharacterRun{
+        .{ .start_unit = 0, .char_shape_id = 1 },
+        .{ .start_unit = 2, .char_shape_id = 2 },
+        .{ .start_unit = 4, .char_shape_id = 9 },
+    };
+    const right = [_]model.CharacterRun{
+        .{ .start_unit = 0, .char_shape_id = 3 },
+        .{ .start_unit = 2, .char_shape_id = 4 },
+    };
+    const joined = try join(a, &left, &right, 4);
+    defer a.free(joined);
+    for (0..7) |unit| {
+        const expected = if (unit < 4) styleAt(&left, @intCast(unit)) else styleAt(&right, @intCast(unit - 4));
+        try std.testing.expectEqual(expected, styleAt(joined, @intCast(unit)));
+    }
+    const empty = try join(a, &left, &right, 0);
+    defer a.free(empty);
+    try std.testing.expectEqualSlices(model.CharacterRun, &right, empty);
+    try std.testing.expectError(error.LimitExceeded, join(a, &left, &right, std.math.maxInt(u32)));
+    try std.testing.expectError(error.UnsupportedMissingCharacterRuns, join(a, &.{}, &right, 0));
+    try std.testing.checkAllAllocationFailures(a, struct {
+        fn run(allocator: std.mem.Allocator, first: []const model.CharacterRun, second: []const model.CharacterRun) !void {
+            const output = try join(allocator, first, second, 4);
+            defer allocator.free(output);
+        }
+    }.run, .{ &left, &right });
+}

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { inspect, records, paragraphRecords, expectedSection, encodeRecord } from "./text-record-oracle.mjs";
 
 // Independent framing ancestry and sibling LIST_HEADER scope; never import product offsets.
-function scopes(all) {
+export function scopes(all) {
   const stack = [], parents = [], lists = new Map(), owners = [];
   for (let i = 0; i < all.length; i++) {
     while (stack.length && all[stack.at(-1)].level >= all[i].level) stack.pop();

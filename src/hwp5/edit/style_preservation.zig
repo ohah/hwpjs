@@ -21,6 +21,7 @@ pub const Command = union(enum) {
     splice_text: TextSplice,
     set_character_format: CharacterFormat,
     split_paragraph: @import("structure_session.zig").Split,
+    merge_paragraph: @import("merge_session.zig").Merge,
 };
 pub const SaveOptions = struct {
     /// Byte-preservation experiments only; does not certify Hancom layout.
@@ -171,6 +172,10 @@ pub const Session = opaque {
 
     pub fn apply(self: *Session, command: Command) !void {
         switch (command) {
+            .merge_paragraph => |merge| {
+                const state = self.getState();
+                try @import("merge_session.zig").apply(state.allocator, state.decoded, &state.document, state.source.header.version(), merge, state.char_count, max_stream);
+            },
             .split_paragraph => |edit| {
                 const state = self.getState();
                 try @import("structure_session.zig").split(state.allocator, state.decoded, &state.document, state.source.header.version(), edit, state.char_count, max_stream);
@@ -224,13 +229,13 @@ pub const Session = opaque {
         var replacements: std.ArrayList(cfb.stream_replace.Replacement) = .empty;
         for (state.document.sections, 0..) |section, index| {
             if (!sectionChanged(state, index, section)) continue;
-            var structural = false;
+            var structural = section.paragraphs.len != state.style_offsets[index].len;
             for (section.paragraphs) |p| if (p.source_node == null) {
                 structural = true;
                 break;
             };
             const decoded = if (structural)
-                try @import("structure_section_writer.zig").write(scratch, state.decoded[index], section, state.source.header.version(), state.char_count, max_stream)
+                try @import("structure_section_writer.zig").writeWithDeletions(scratch, state.decoded[index], section, state.source.header.version(), state.char_count, max_stream, true)
             else
                 try @import("text_section_writer.zig").write(scratch, state.decoded[index], section, state.source.header.version(), max_stream);
             const encoded = if (state.source.header.has(.compressed))

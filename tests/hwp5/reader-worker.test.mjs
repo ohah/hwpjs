@@ -14,6 +14,7 @@ test("actual HWP5 Worker history restores whole fixture projections and saved by
     const reply = replies.shift(); assert(reply); assert.equal(replies.length, 0); return reply;
   };
   const cases = [
+    ["charshape", { kind: "merge", paragraph: 1 }],
     ["charshape", { kind: "split", paragraph: 1, atUnit: 1 }],
     ["software", { kind: "split", paragraph: 2, atUnit: 1 }],
     ["table", { kind: "split", paragraph: 1, atUnit: 0 }],
@@ -50,7 +51,7 @@ test("actual HWP5 Worker history restores whole fixture projections and saved by
 test("older Worker WASM does not advertise unavailable structural editing", async t => {
   const previousSelf = globalThis.self, previousFetch = globalThis.fetch, replies = [];
   const older = Buffer.from(readFileSync("zig-out/bin/hwpjs.wasm"));
-  for (const name of ["hwp5_edit_split_range", "hwp5_edit_split"]) {
+  for (const name of ["hwp5_edit_split_range", "hwp5_edit_split", "hwp5_edit_merge"]) {
     const at = older.indexOf(Buffer.from(name)); assert(at >= 0); older[at] = 120;
   }
   globalThis.self = { postMessage(message) { replies.push(message); } };
@@ -61,8 +62,11 @@ test("older Worker WASM does not advertise unavailable structural editing", asyn
   assert.equal((await send({ kind: "load", bytes: readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwp") })).error, undefined);
   const enabled = await send({ kind: "enable" });
   assert.equal(enabled.error, undefined); assert.equal(enabled.structureAvailable, false);
+  assert.equal(enabled.mergeAvailable, false);
   const refused = await send({ kind: "split", section: 0, paragraph: 1, atUnit: 1 });
   assert.equal(refused.error, "Hwp5StructureAbiUnavailable"); assert.equal(refused.applied, false);
+  const mergeRefused = await send({ kind: "merge", section: 0, paragraph: 1 });
+  assert.equal(mergeRefused.error, "Hwp5StructureAbiUnavailable"); assert.equal(mergeRefused.applied, false);
   assert.equal((await send({ kind: "splice", section: 0, paragraph: 1, startUnit: 0, endUnit: 0, text: "기존" })).error, undefined);
 });
 
