@@ -14,8 +14,8 @@
 
 `src/hwpx_paragraph_edit_survey.zig`는 추적 fixture 디렉터리의 HWPX 45개를 조사하며 암호화 1개를 명시적으로 분류합니다. 비암호화 파일의 모든 section에서 selected 공개 스캐너 번호를 누적하고 각 문단에 prefix 삽입·XML 저장·재파싱·현재 텍스트 대조·prefix 삭제·원본 XML 바이트 복원을 시도합니다. 예측된 거부도 코드별 집계하며 임의 오류는 실패로 반환합니다. 이는 native XML 검사이며 저장 ZIP의 독립 비교나 브라우저 E2E를 대신하지 않습니다.
 
-빈 run 지원 전 기준: 1,379개 문단 중 778개 성공·601개 거부였습니다. 거부는 MissingTextSite 382개, UnsupportedParagraphControl 212개, UnsupportedInlineControl 7개입니다. 이후 빈 run 지원 결과는 새 조사 완료 후 별도로 기록합니다. 기준 수치를 현재 지원 완료율로 사용하지 않습니다.
+빈 run 지원 전 기준: 1,379개 문단 중 778개 성공·601개 거부였습니다. 거부는 MissingTextSite 382개, UnsupportedParagraphControl 212개, UnsupportedInlineControl 7개입니다. 빈 run 지원 후 같은 45개 파일(암호화 1개)의 1,379개 문단 조사에서 1,159개 성공·220개 거부로 완료됐습니다. 거부는 MissingTextSite 1개, UnsupportedParagraphControl 212개, UnsupportedInlineControl 7개입니다. 성공 문단은 XML 삽입·재파싱·원본 복원까지 확인했으며 모든 문단·컨트롤 편집 완료율로 해석하지 않습니다.
 
 명령은 [개발·검증 명령](development-commands.md), 경로는 [프로젝트 구조](project-structure.md)가 소유합니다. 공개 Canvas/WASM 문단 편집 세션은 아직 연결하지 않았습니다.
 
-전체 ReleaseSafe native 검사는 7/7 단계·2,734/2,734 테스트·종료 코드 0으로 완료됐습니다. 빈 run 지원 후 문단 전수 조사는 아직 실행 중이며 최종 집계로 세지 않습니다. 확인된 파일별 개선은 table-position 0→52개, table-bug 275→462개, borderfill 0→7개 성공입니다. 최신 원문/위치/출력 기반의 독립 ZIP/XML 비교는 일반·최적화 Python에서 44개/499개 항목이 통과했습니다. 제품 공개 읽기 전용 Canvas audit 7/7 통과를 편집 UI 검증으로 읽지 않습니다.
+전체 ReleaseSafe native 검사는 7/7 단계·2,734/2,734 테스트·종료 코드 0으로 완료됐습니다. 빈 run 지원 후 문단 전수 조사도 종료 코드 0으로 완료됐으며 220개 거부를 성공처럼 처리하지 않습니다. 확인된 파일별 개선은 table-position 0→52개, table-bug 275→462개, borderfill 0→7개 성공입니다. 최신 원문/위치/출력 기반의 독립 ZIP/XML 비교는 일반·최적화 Python에서 44개/499개 항목이 통과했습니다. 제품 공개 읽기 전용 Canvas audit 7/7 통과를 편집 UI 검증으로 읽지 않습니다.

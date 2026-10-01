@@ -2,7 +2,7 @@
   "schema": 1,
   "verified": {
     "docs/hwpx-plain-paragraph-edit.md": {
-      "sha256": "ddedf26becad61c6dd9249791e9f5bd38218536e7e3233505a01eca6cdebd74a",
+      "sha256": "093967e35d43cee21a1c9d6c79f79c5bd050cbc8d890aee98f19246838deb838",
       "evidence": "2026-10-01 selected source locations and cumulative scanner ordinal reuse, empty-run text creation, plain multi-site splice and separate eligibility policy reviewed; no-op style drift and unprojected field control acceptance reproduced then fixed; Debug Safe Fast sites 11 and paragraph 4 each, Safe native 2734 and public read-only audit 7 pass; independent normal optimized 44 files 499 entries pass; baseline survey 778 success 601 refused of 1379, updated full survey still running and provisional improvements marked; general controls public editing and layout incomplete"
     },
     "docs/hwpx-text-site-edit.md": {
