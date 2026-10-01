@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[Canvas 제어 위치 연결](canvas-control-offsets.md)은 제품 WASM 빌드 후 `node --test tests/hwp5/canvas-preview.test.mjs tests/hwp5/canvas-editor.test.mjs tests/hwp5/reader-worker.test.mjs`로 표시 경계·실제 native 위치·대기 입력·거부 복원을 검사합니다. 실제 브라우저 검증은 별도입니다.
+
 [제어 포함 편집 경계](hwp5-control-text-edit.md)는 `zig test src/root.zig --test-filter 'control splice boundaries'`와 같은 필터의 `-O ReleaseSafe`·`-O ReleaseFast`로 검사합니다. 기본 root 테스트에도 포함되며 이 경계 검사만으로 공개 편집·저장 검증을 대신하지 않습니다.
 
 기존 탭 보존 splice와 Worker 재투영은 제품 WASM 빌드 후 `node --test tests/hwp5/control-editor.test.mjs tests/hwp5/reader-worker.test.mjs`로 검사하며 `hwp5-editor-audit`에도 포함합니다. 실제 브라우저 직접 입력 검증은 아닙니다.

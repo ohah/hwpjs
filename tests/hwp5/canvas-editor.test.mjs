@@ -14,7 +14,7 @@ async function harness(t, name = "charshape", choose = p => p.editable && p.text
   const bytes = readFileSync(`legacy/rust/crates/hwp-core/tests/fixtures/${name}.hwp`);
   const native = await createExperimentalHwp5Editor(wasm, bytes), reader = await createHwp5Reader(wasm);
   let content;
-  try { content = displayContent(reader.readText(bytes)); } finally { reader.close(); }
+  content = displayContent(reader.readText(bytes));
   const paragraph = content.paragraphs.find(choose); assert(paragraph);
   const documentBefore = globalThis.document, doc = { activeElement: null }; globalThis.document = doc;
   class Node extends EventTarget {
@@ -35,7 +35,7 @@ async function harness(t, name = "charshape", choose = p => p.editable && p.text
   const requests = [], queue = [];
   const controls = { ready: () => true, busy: () => busy, request(message) { if (busy) return false; busy = true; requests.push(message); queue.push(message); return true; } };
   const controller = createCanvasEditor({ canvas, input, viewport, renderer, controls, note }); controller.reset();
-  t.after(() => { controller.close(); native.close(); if (documentBefore === undefined) delete globalThis.document; else globalThis.document = documentBefore; });
+  t.after(() => { controller.close(); native.close(); reader.close(); if (documentBefore === undefined) delete globalThis.document; else globalThis.document = documentBefore; });
   const caret = caretGeometry(layout, { ...paragraph, unit: 0 }); assert(caret);
   dispatch(canvas, "pointerdown", { button: 0, pointerId: 1, clientX: caret.x, clientY: caret.y });
   dispatch(canvas, "pointerup", { pointerId: 1 });
@@ -47,7 +47,9 @@ async function harness(t, name = "charshape", choose = p => p.editable && p.text
       let response = { kind: message.kind, origin: message.origin };
       try {
         native.splice(message);
-        content = { ...content, paragraphs: content.paragraphs.map(p => {
+        if (content.paragraphs.find(p => p.section === message.section && p.paragraph === message.paragraph)?.sourceOffsets) {
+          content = displayContent(reader.readText(native.save({ allowStaleLayout: true }).bytes));
+        } else content = { ...content, paragraphs: content.paragraphs.map(p => {
           if (p.section !== message.section || p.paragraph !== message.paragraph) return p;
           const text = native.text(p.section, p.paragraph).slice(0, -1);
           return { ...p, text: clipped ? text.slice(0, 2) : text, editable: !clipped };
@@ -68,6 +70,20 @@ test("canvas input uses native text on five real fixtures and queues fast typing
       assert.equal(h.input.value, "한😀x" + before);
     });
   }
+});
+test("canvas tab offsets map queued text edits to native source and reject control removal", async t => {
+  const h = await harness(t, "software", p => p.paragraph === 33 && p.editable);
+  const before = h.native.copyText(0, 33);
+  assert.equal(h.input.value, "\t- ");
+  h.type("\t한😀"); h.type("\t한😀끝");
+  assert.equal(h.requests[0].startUnit, 8); assert.equal(h.requests[0].endUnit, 10);
+  h.ack(); assert.equal(h.requests[1].startUnit, 11); h.ack();
+  assert.equal(h.input.value, "\t한😀끝");
+  assert.deepEqual(h.native.copyText(0, 33).subarray(0, 16), before.subarray(0, 16));
+  const committed = h.native.copyText(0, 33);
+  h.type("한😀끝"); h.ack();
+  assert(h.note.textContent.includes("UnsupportedControlDeletion"));
+  assert.equal(h.input.value, "\t한😀끝"); assert.deepEqual(h.native.copyText(0, 33), committed);
 });
 test("composition commits once after final DOM value and never during intermediate input", async t => {
   const h = await harness(t), before = h.input.value;

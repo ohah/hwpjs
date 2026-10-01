@@ -1,6 +1,8 @@
 // Test-only text flow, not HWP page layout. Never modify the source projection.
 export const FONT = "16px system-ui, sans-serif";
 export const LINE_HEIGHT = 28;
+// Prototype tab display only; original HWP tab stops are not layouted yet.
+export const displayRunText = text => text.replaceAll("\t", "    ");
 export function layoutContent(content, width, measure, maxRows = 20000) {
   if (!Number.isFinite(width) || width <= 0 || !Number.isInteger(maxRows) || maxRows < 1) throw new RangeError("InvalidLayoutBounds");
   const rows = [];
@@ -21,7 +23,7 @@ export function layoutContent(content, width, measure, maxRows = 20000) {
       let line = "", size = 0, startUnit = 0, boundaries = [{ unit: 0, x: 0 }];
       const row = () => ({ text: line, kind, section: p.section, paragraph: p.paragraph, editable: kind === "text" && p.editable, startUnit, endUnit: startUnit + line.length, boundaries });
       for (const { segment } of segments.segment(value)) {
-        const advance = measure(segment);
+        const advance = measure(displayRunText(segment));
         if (!Number.isFinite(advance) || advance < 0) throw new RangeError("InvalidTextMeasurement");
         if (line && size + advance > width) {
           if (!push(row())) break outer;

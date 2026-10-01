@@ -5,6 +5,7 @@
 - [읽기 전용 문단 텍스트 미리보기 API](hwp5-text-preview-api.md)
 - [Canvas 문단 텍스트 미리보기 화면](canvas-text-preview.md)
 - [Canvas 직접 입력·선택·조합 실험](canvas-direct-input.md)
+- [Canvas 제어 표시와 원문 위치 연결](canvas-control-offsets.md)
 - [실험용 HWP5 편집 JS/WASM API](hwp5-editor-api.md)
 - [추적 픽스쳐 편집 지원 전수 기준](fixture-editor-coverage.md)
 - [읽기 전용 문서 모델 첫 연결과 JSON 호환 경계](hwp5-model-projection.md)

@@ -1,4 +1,4 @@
-import { FONT, LINE_HEIGHT, layoutContent } from "./layout.mjs";
+import { FONT, LINE_HEIGHT, layoutContent, displayRunText } from "./layout.mjs";
 import { TEXT_LEFT, caretGeometry, selectionRects } from "./text-geometry.mjs";
 export function createRenderer(canvas, viewport, spacer, onLayout = () => {}) {
   const ctx = canvas.getContext("2d");
@@ -24,7 +24,7 @@ export function createRenderer(canvas, viewport, spacer, onLayout = () => {}) {
         // Draw with the same grapheme advances used for hit-testing.
         for (let b = 0; b < row.boundaries.length - 1; b++) {
           const start = row.boundaries[b], end = row.boundaries[b + 1];
-          ctx.fillText(row.text.slice(start.unit - row.startUnit, end.unit - row.startUnit), TEXT_LEFT + start.x, i * LINE_HEIGHT - viewport.scrollTop + 8);
+          ctx.fillText(displayRunText(row.text.slice(start.unit - row.startUnit, end.unit - row.startUnit)), TEXT_LEFT + start.x, i * LINE_HEIGHT - viewport.scrollTop + 8);
         }
       } else ctx.fillText(row.text, TEXT_LEFT, i * LINE_HEIGHT - viewport.scrollTop + 8);
     }

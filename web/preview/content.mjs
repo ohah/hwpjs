@@ -1,4 +1,5 @@
 // A bounded display projection, never a mutable document or save input.
+import { tabTextView } from "./text-offsets.mjs";
 export function clipText(text, maxUnits) {
   let end = Math.min(text.length, maxUnits);
   if (end < text.length && end > 0 && text.charCodeAt(end - 1) >= 0xd800 && text.charCodeAt(end - 1) <= 0xdbff) end--;
@@ -12,7 +13,8 @@ export function displayContent(result, { maxUnits = 200000, maxParagraphs = 2000
     for (const [index, p] of section.paragraphs.entries()) {
       if (paragraphs.length >= maxParagraphs || units >= maxUnits) { limited = true; continue; }
       const room = maxUnits - units;
-      let text = p.text;
+      const tabView = tabTextView(p), fullText = tabView?.text ?? p.text;
+      let text = fullText;
       if (text.length > room) {
         text = clipText(text, room); limited = true;
       }
@@ -21,8 +23,9 @@ export function displayContent(result, { maxUnits = 200000, maxParagraphs = 2000
       // This is a display candidate, not an independently reimplemented native
       // ownership policy. The native command validates logical list membership.
       const empty = !p.textPresent && p.declaredUnits <= 1;
-      const editable = (p.textPresent || empty) && text.length === p.text.length && p.tokens.every(t => t.type !== "control" || t.code === 13);
+      const editable = (p.textPresent || empty) && text.length === fullText.length && (tabView !== null || p.tokens.every(t => t.type !== "control" || t.code === 13));
       paragraphs.push({ section: section.index, paragraph: index, editable, label: `구역 ${section.index + 1} · 문단 ${index + 1}${p.parentNodeIndex !== null ? " · 중첩" : ""}${empty ? " · 빈 문단" : ""}${controls ? ` · 제어 표식 ${controls}개 (표시 의미 미적용)` : ""}`, text: p.textPresent || empty ? text : "[직접 텍스트 없음]" });
+      if (tabView && editable) paragraphs.at(-1).sourceOffsets = tabView.offsets;
     }
   }
   return { version: result.version.join("."), paragraphs, totalParagraphs, limited };

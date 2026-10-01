@@ -2,6 +2,7 @@ import { LINE_HEIGHT } from "./layout.mjs";
 import { hitText, caretGeometry, sameParagraph } from "./text-geometry.mjs";
 import { textChange, snapUnit } from "./text-input.mjs";
 import { navigateText } from "./text-navigation.mjs";
+import { sourceTextChange } from "./text-offsets.mjs";
 
 /** DOM draft and interaction only. Native acknowledgements own committed text. */
 export function createCanvasEditor({ canvas, viewport, input, renderer, controls, note }) {
@@ -45,7 +46,8 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     const change = textChange(committed, input.value);
     if (!change) return;
     pending = { start: change.startUnit, end: change.endUnit };
-    if (!controls.request({ kind: "splice", origin: "canvas", section: target.section, paragraph: target.paragraph, ...change })) pending = null;
+    const command = sourceTextChange(change, renderer.paragraph(target)?.sourceOffsets);
+    if (!controls.request({ kind: "splice", origin: "canvas", section: target.section, paragraph: target.paragraph, ...command })) pending = null;
     input.setAttribute("aria-busy", String(Boolean(pending)));
   };
   const reveal = () => {
