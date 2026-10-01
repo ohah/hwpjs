@@ -616,6 +616,7 @@ test {
     _ = @import("hwp5/body/master_page.zig");
     _ = @import("hwp5/body/formula_command.zig");
     _ = @import("hwp5/body/formula_command_tests.zig");
+    _ = @import("hwp5/body/field_span.zig");
     _ = @import("hwp5/body/formula_range.zig");
     _ = @import("hwp5/body/formula_number.zig");
     _ = @import("hwp5/body/formula_format.zig");

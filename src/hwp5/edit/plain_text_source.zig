@@ -69,7 +69,7 @@ fn validateWith(a: std.mem.Allocator, source: []const u8, version: Version, p: m
     if (parts.text_node) |text_node| {
         const text = tree.nodes[text_node].record.value.text;
         try text.validateCount(h);
-        try @import("hyperlink_source.zig").validate(text.raw);
+        if (formulas) try @import("../body/field_span.zig").validateEditable(text.raw) else try @import("hyperlink_source.zig").validate(text.raw);
         if (!links_checked) {
             var tokens = text.tokens();
             while (try tokens.next()) |token| {

@@ -9,6 +9,40 @@ import { inspect, paragraphRecords, encodeRecord, verifyRaw, expectedSection, re
 const wasm = readFileSync("zig-out/bin/hwpjs.wasm");
 const source = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/software.hwp");
 
+test("actual chart formula paragraphs permit outside text but protect derived labels atomically", async () => {
+  const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/chart.hwp");
+  for (const paragraph of [23, 29, 35, 64, 70, 76, 129, 130, 131, 132, 156, 162, 168]) {
+    const editor = await createExperimentalHwp5Editor(wasm, input);
+    try {
+      editor.splice({ section: 0, paragraph, startUnit: 0, endUnit: 0, text: "앞😀" });
+      const saved = editor.save({ allowStaleLayout: true });
+      verifyRaw(input, saved.bytes, 0, paragraph, 0, 0, "앞😀");
+      const raw = editor.copyText(0, paragraph), labelStart = 11;
+      const rawBuffer = Buffer.from(raw);
+      let labelEnd = labelStart;
+      while (rawBuffer.readUInt16LE(labelEnd * 2) !== 4) labelEnd++;
+      assert.throws(() => editor.splice({ section: 0, paragraph, startUnit: labelStart, endUnit: labelStart, text: "X" }), { message: "ReadOnlyFormulaResult" });
+      assert.throws(() => editor.splice({ section: 0, paragraph, startUnit: labelEnd, endUnit: labelEnd, text: "X" }), { message: "ReadOnlyFormulaResult" });
+      assert.throws(() => editor.splice({ section: 0, paragraph, startUnit: labelStart, endUnit: labelEnd, text: "" }), { message: "ReadOnlyFormulaResult" });
+      assert.throws(() => editor.splice({ section: 0, paragraph, startUnit: labelStart, endUnit: labelStart + 1, text: "X" }), { message: "ReadOnlyFormulaResult" });
+      assert.throws(() => editor.splice({ section: 0, paragraph, startUnit: 3, endUnit: 11, text: "" }), { message: "UnsupportedControlDeletion" });
+      assert.deepEqual(editor.copyText(0, paragraph), raw);
+      assert.deepEqual(editor.save({ allowStaleLayout: true }).bytes, saved.bytes);
+      editor.splice({ section: 0, paragraph, startUnit: labelStart, endUnit: labelStart, text: "" });
+      const unchanged = Buffer.from(raw).subarray(labelStart * 2, (labelStart + 1) * 2).toString("utf16le");
+      editor.splice({ section: 0, paragraph, startUnit: labelStart, endUnit: labelStart + 1, text: unchanged });
+      assert.deepEqual(editor.save({ allowStaleLayout: true }).bytes, saved.bytes);
+      const end = raw.length / 2 - 1;
+      editor.splice({ section: 0, paragraph, startUnit: end, endUnit: end, text: "뒤" });
+      const second = editor.save({ allowStaleLayout: true });
+      verifyRaw(saved.bytes, second.bytes, 0, paragraph, end, end, "뒤");
+      const reopened = await createExperimentalHwp5Editor(wasm, second.bytes);
+      try { assert.deepEqual(reopened.copyText(0, paragraph), editor.copyText(0, paragraph)); }
+      finally { reopened.close(); }
+    } finally { editor.close(); }
+  }
+});
+
 test("chart formula modified bit survives repeated edits, length changes and restoration", async () => {
   const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/chart.hwp");
   let editor = await createExperimentalHwp5Editor(wasm, input), current = "11.2";

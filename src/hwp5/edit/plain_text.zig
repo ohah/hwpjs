@@ -68,6 +68,7 @@ fn applyWith(a: std.mem.Allocator, source: []const u8, version: Version, p: *mod
     @memcpy(after[start..][0..add.len], add);
     @memcpy(after[start + add.len ..], before[end..]);
     if (std.mem.eql(u8, before, after)) return;
+    if (formulas) try @import("../body/field_span.zig").protectFormulaLabels(before, edit.start_unit, edit.end_unit);
     const units: u32 = @intCast(add.len / 2);
     const run_editor = @import("character_runs.zig");
     try run_editor.validate(p.character_runs, before, char_count);
