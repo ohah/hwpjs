@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+[HWPX 탭 위치 기반](hwpx-paragraph-text-positions.md)은 `paragraph_text_positions.zig`가 현재 텍스트와 원문 탭의 위치 조립·보호 경계를, `retained_tab.zig`가 공유 적격성을 소유합니다. 기존 원자적 명령과 공개 세션을 재사용하며 `tools/hwpx-tab-edit-oracle.py`는 독립 저장 비교·반례를 담당합니다.
+
 [HWPX 편집 세션](hwpx-editor-session.md)은 `editor_session.zig`가 원본·section 상태 소유와 명령·저장 조립을, `editor_session_tests.zig`가 실제 파일·실패 경로 검증을 담당합니다. `src/wasm/hwpx_edit.zig`와 `js/hwpx-editor.mjs`가 공개 수명·입력 경계를 분리하고 기존 Worker·Canvas가 native 편집 적격성에 따라 입력을 연결합니다. `tools/hwpx-edit-corpus-audit.mjs`가 공개 문단 전수 시도·거부 집계를 소유합니다.
 
 [HWPX 일반 문단 편집](hwpx-plain-paragraph-edit.md)은 `plain_paragraph_policy.zig`가 적격성, `plain_paragraph_edit.zig`가 다중 사이트 원자적 splice, `plain_paragraph_edit_tests.zig`가 반례를 소유합니다. `text_site_locations.zig`는 공통 section 스캐너로 위치를 연결하고 `src/hwpx_paragraph_edit_survey.zig`가 모든 section·문단의 시도와 거부를 집계합니다.

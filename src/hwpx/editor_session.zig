@@ -53,14 +53,14 @@ pub const Session = struct {
                 other_bytes += site.text.len;
             }
         }
-        return @import("plain_paragraph_edit.zig").splice(self.allocator, &selected.tree, &selected.sites, selected.locations, paragraph, start, deleted, inserted, self.options.max_text_bytes - other_bytes);
+        return @import("plain_paragraph_edit.zig").spliceWithTabs(self.allocator, &selected.tree, &selected.sites, selected.locations, paragraph, start, deleted, inserted, self.options.max_text_bytes - other_bytes, true);
     }
 
     pub fn canEdit(self: *const Session, section_index: usize, paragraph: usize) !bool {
         if (section_index >= self.sections.len) return error.InvalidSectionIndex;
         const section = &self.sections[section_index];
         if (paragraph < section.first_paragraph or paragraph > section.last_paragraph) return error.InvalidParagraphIndex;
-        @import("plain_paragraph_policy.zig").validate(&section.tree, &section.sites, section.locations, paragraph) catch |err| switch (err) {
+        @import("plain_paragraph_policy.zig").validateWithTabs(&section.tree, &section.sites, section.locations, paragraph, true) catch |err| switch (err) {
             error.MissingTextSite, error.UnsupportedParagraphControl, error.UnsupportedInlineControl => return false,
             else => return err,
         };
@@ -127,5 +127,5 @@ pub fn open(a: std.mem.Allocator, input: []const u8, options: Options) !Session 
 }
 
 fn siteOptions(options: Options) sites_module.Options {
-    return .{ .branch_policy = .{ .mode = .selected }, .max_text_bytes = options.max_text_bytes, .max_sites = options.max_sites };
+    return .{ .materialize_tab_boundaries = true, .branch_policy = .{ .mode = .selected }, .max_text_bytes = options.max_text_bytes, .max_sites = options.max_sites };
 }

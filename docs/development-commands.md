@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[HWPX 탭 위치](hwpx-paragraph-text-positions.md)는 `zig test src/root.zig -O ReleaseSafe --test-filter 'HWPX paragraph positions'` 및 일반 문단 필터로 검사합니다. `python3 tools/hwpx-tab-edit-oracle.py --self-test`와 Python `-O`는 독립 탭 oracle 반례를, 제품 빌드 후 공개 HWPX editor 검사와 `hwpx-text-audit`는 실제 네 경계의 XML/ZIP 대조를 포함합니다. 전체 컨트롤 편집·조판 증명은 아닙니다.
+
 [HWPX native 편집 세션](hwpx-editor-session.md)은 `zig test src/root.zig -O ReleaseSafe --test-filter 'HWPX editor session'`로 실제 파일의 소유·편집·저장·재열기·복원, 한도·암호화 거부, 전체 할당 실패를 검사합니다. 공개 API·브라우저 편집 검증은 별도입니다.
 
 HWPX 공개 세션은 제품 WASM 빌드 후 `node --test tests/hwpx/editor.test.mjs tests/hwpx/canvas-preview.test.mjs`로 검사하며 `hwpx-text-audit`에도 포함됩니다. `node tools/hwpx-edit-corpus-audit.mjs`는 모든 추적 fixture 문단에 공개 API 삽입·저장·재열기·원본 복원을 시도하고 미지원 거부를 별도로 집계합니다. 제품 자체 재열기 검사이며 독립 XML/ZIP oracle이나 실제 브라우저 E2E의 대체가 아닙니다.

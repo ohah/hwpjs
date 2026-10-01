@@ -5,27 +5,24 @@ const sites_module = @import("text_sites.zig");
 const tree_module = @import("xml_part_tree.zig");
 const scanner = @import("section_text.zig");
 const edit = @import("text_site_edit.zig");
-const scalars = @import("../xml/scalars.zig");
 
 pub fn splice(a: std.mem.Allocator, tree: *const tree_module.Tree, sites: *sites_module.Sites, locations: []const scanner.Location, paragraph: usize, start: u32, deleted: u32, inserted: []const u8, max_bytes: usize) !bool {
+    return spliceWithTabs(a, tree, sites, locations, paragraph, start, deleted, inserted, max_bytes, false);
+}
+
+pub fn spliceWithTabs(a: std.mem.Allocator, tree: *const tree_module.Tree, sites: *sites_module.Sites, locations: []const scanner.Location, paragraph: usize, start: u32, deleted: u32, inserted: []const u8, max_bytes: usize, allow_tabs: bool) !bool {
     if (locations.len != sites.items.len or paragraph == 0) return error.InvalidTextSites;
-    try @import("plain_paragraph_policy.zig").validate(tree, sites, locations, paragraph);
-    var total: usize = 0;
-    var found = false;
-    for (sites.items, locations) |site, location| {
-        if (location.paragraph_ordinal != paragraph) continue;
-        found = true;
-        total = std.math.add(usize, total, try unitCount(site.text)) catch return error.LimitExceeded;
-    }
-    if (!found) return error.MissingTextSite;
+    try @import("plain_paragraph_policy.zig").validateWithTabs(tree, sites, locations, paragraph, allow_tabs);
+    const positions = try @import("paragraph_text_positions.zig").build(a, tree, sites, locations, paragraph);
+    defer a.free(positions);
     const end = std.math.add(u32, start, deleted) catch return error.InvalidTextPosition;
-    if (end > total) return error.InvalidTextPosition;
+    try @import("paragraph_text_positions.zig").validateRange(positions, start, end);
     // Text equality is a semantic no-op across run boundaries too. Do not
     // redistribute unchanged text into the insertion run and lose styling.
     var current: std.ArrayList(u8) = .empty;
     defer current.deinit(a);
-    for (sites.items, locations) |site, location| {
-        if (location.paragraph_ordinal == paragraph) try current.appendSlice(a, site.text);
+    for (positions) |position| {
+        try current.appendSlice(a, if (position.kind == .tab) "\t" else sites.items[position.index].text);
     }
     const start_byte = try edit.bytePosition(current.items, start);
     const end_byte = try edit.bytePosition(current.items, end);
@@ -43,13 +40,13 @@ pub fn splice(a: std.mem.Allocator, tree: *const tree_module.Tree, sites: *sites
         owned += 1;
     }
     var draft: sites_module.Sites = .{ .items = items };
-    var cursor: usize = 0;
     var inserted_once = false;
     var changed = false;
-    for (sites.items, locations, 0..) |site, location, index| {
-        if (location.paragraph_ordinal != paragraph) continue;
-        const count = try unitCount(site.text);
-        const stop = cursor + count;
+    for (positions) |position| {
+        if (position.kind == .tab) continue;
+        const index = position.index;
+        const cursor = position.start_unit;
+        const stop = position.end_unit;
         const insert_here = !inserted_once and start >= cursor and start <= stop;
         const low = @max(@as(usize, start), cursor);
         const high = @min(@as(usize, end), stop);
@@ -59,7 +56,6 @@ pub fn splice(a: std.mem.Allocator, tree: *const tree_module.Tree, sites: *sites
             changed = (try edit.splice(a, &draft, index, local_start, local_delete, if (insert_here) inserted else "", max_bytes)) or changed;
             if (insert_here) inserted_once = true;
         }
-        cursor = stop;
     }
     if (!inserted_once) return error.InvalidTextPosition;
     var bytes: usize = 0;
@@ -75,14 +71,4 @@ pub fn splice(a: std.mem.Allocator, tree: *const tree_module.Tree, sites: *sites
     sites.deinit(a);
     sites.* = draft;
     return true;
-}
-
-fn unitCount(text: []const u8) !usize {
-    var offset: usize = 0;
-    var units: usize = 0;
-    while (try scalars.read(text, offset, .utf8)) |scalar| {
-        units += if (scalar.value > 0xffff) @as(usize, 2) else 1;
-        offset = scalar.end;
-    }
-    return units;
 }

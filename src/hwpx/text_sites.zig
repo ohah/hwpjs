@@ -19,6 +19,7 @@ pub const Sites = struct {
     }
 };
 pub const Options = struct {
+    materialize_tab_boundaries: bool = false,
     max_sites: usize = 1_000_000,
     max_text_bytes: usize = 64 * 1024 * 1024,
     branch_policy: @import("compatibility_selection.zig").Policy = .{},
@@ -112,12 +113,54 @@ pub fn collect(a: std.mem.Allocator, tree: *const tree_module.Tree, options: Opt
             .missing_text = true,
         });
     }
-    std.mem.sort(Site, builder.items.items, {}, struct {
-        fn less(_: void, lhs: Site, rhs: Site) bool {
-            return lhs.start < rhs.start;
+    if (options.materialize_tab_boundaries) {
+        std.mem.sort(Site, builder.items.items, {}, siteLess);
+        const original_count = builder.items.items.len;
+        for (tree.elements, 0..) |element, index| {
+            if (!frames[index].active or !isTextElement(tree, frames, index) or element.first_child == null) continue;
+            var child = element.first_child;
+            var only_tabs = true;
+            while (child) |child_index| {
+                const inline_element = tree.elements[child_index];
+                if (!@import("retained_tab.zig").supported(tree, child_index)) {
+                    only_tabs = false;
+                    break;
+                }
+                child = inline_element.next_sibling;
+            }
+            if (!only_tabs) continue;
+            if (element.name.local.encoding != .utf8) return error.UnsupportedEditEncoding;
+            var start = element.start_tag.end;
+            child = element.first_child;
+            while (true) {
+                const end = if (child) |child_index| tree.elements[child_index].start_tag.start else (element.end_tag orelse return error.InvalidSourceSpan).start;
+                var low: usize = 0;
+                var high = original_count;
+                while (low < high) {
+                    const middle = low + (high - low) / 2;
+                    if (builder.items.items[middle].start < start) low = middle + 1 else high = middle;
+                }
+                const present = low < original_count and builder.items.items[low].element_index == index and builder.items.items[low].start < end;
+                if (!present) {
+                    if (builder.items.items.len == options.max_sites) return error.LimitExceeded;
+                    const text = try a.dupe(u8, "");
+                    errdefer a.free(text);
+                    try builder.items.append(a, .{ .element_index = index, .start = start, .end = start, .text = text });
+                }
+                if (child) |child_index| {
+                    const inline_element = tree.elements[child_index];
+                    start = if (inline_element.end_tag) |tag| tag.end else inline_element.start_tag.end;
+                    child = inline_element.next_sibling;
+                } else break;
+            }
         }
-    }.less);
+    }
+    std.mem.sort(Site, builder.items.items, {}, siteLess);
     return .{ .items = try builder.items.toOwnedSlice(a) };
+}
+
+fn siteLess(_: void, lhs: Site, rhs: Site) bool {
+    return lhs.start < rhs.start;
 }
 
 fn isTextElement(tree: *const tree_module.Tree, frames: []const @import("xml_tree_selection.zig").Frame, index: usize) bool {
