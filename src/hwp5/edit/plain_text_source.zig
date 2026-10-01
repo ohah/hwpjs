@@ -11,13 +11,23 @@ pub const Validation = struct { ranges: ?body.Ranges, preserved_direct_records: 
 
 /// Returned ranges borrow source, not the temporary Tree nodes.
 pub fn validate(a: std.mem.Allocator, source: []const u8, version: Version, p: model.Paragraph, char_count: usize) !Validation {
+    return validateWith(a, source, version, p, char_count, false);
+}
+
+pub fn validateFormulaTransaction(a: std.mem.Allocator, source: []const u8, version: Version, p: model.Paragraph, char_count: usize) !Validation {
+    return validateWith(a, source, version, p, char_count, true);
+}
+
+fn validateWith(a: std.mem.Allocator, source: []const u8, version: Version, p: model.Paragraph, char_count: usize, formulas: bool) !Validation {
     var tree = try Tree.parseTextPreview(a, source, version, .{});
     defer tree.deinit(a);
     const node = tree.nodes[p.source_node];
     const h = node.record.value.header;
     if (h.extra.len != 0 or (h.merge_tracking orelse 0) != 0) return error.UnsupportedParagraphExtension;
     if (h.control_mask & ~@import("control_boundaries.zig").retained_mask != 0) return error.UnsupportedTextControl;
-    try validateSection(source);
+    if (formulas) {
+        _ = try @import("source_policy.zig").hasFormulas(source);
+    } else try validateSection(source);
     try @import("paragraph_owner.zig").validate(a, tree, p.source_node, version);
     var links_checked = false;
     var preserved_direct_records: usize = 0;

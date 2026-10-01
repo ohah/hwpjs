@@ -150,7 +150,9 @@ pub const Session = opaque {
                 for (state.decoded, 0..) |bytes, index| {
                     if (index != edit.section) try @import("plain_text_source.zig").validateSection(bytes);
                 }
-                try @import("plain_text.zig").apply(state.allocator, state.decoded[edit.section], state.source.header.version(), &state.document.sections[edit.section].paragraphs[edit.paragraph], edit, state.char_count);
+                if (try @import("source_policy.zig").hasFormulas(state.decoded[edit.section])) {
+                    try @import("formula_splice.zig").apply(state.allocator, state.decoded[edit.section], state.source.header.version(), &state.document.sections[edit.section], edit, state.char_count);
+                } else try @import("plain_text.zig").apply(state.allocator, state.decoded[edit.section], state.source.header.version(), &state.document.sections[edit.section].paragraphs[edit.paragraph], edit, state.char_count);
             },
             .set_character_format => |edit| {
                 if (edit.paragraph >= try self.paragraphCount(edit.section)) return error.InvalidParagraph;

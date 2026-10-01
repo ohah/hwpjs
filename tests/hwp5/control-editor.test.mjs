@@ -4,10 +4,69 @@ import { readFileSync } from "node:fs";
 import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
 import { createCfbReader } from "../../js/cfb.mjs";
 import { deflateRawSync } from "node:zlib";
-import { inspect, paragraphRecords, encodeRecord, verifyRaw } from "./style-preservation/text-record-oracle.mjs";
+import { inspect, paragraphRecords, encodeRecord, verifyRaw, expectedSection, records } from "./style-preservation/text-record-oracle.mjs";
 
 const wasm = readFileSync("zig-out/bin/hwpjs.wasm");
 const source = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/software.hwp");
+
+test("chart formula modified bit survives repeated edits, length changes and restoration", async () => {
+  const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/chart.hwp");
+  let editor = await createExperimentalHwp5Editor(wasm, input), current = "11.2";
+  try {
+    for (const [text, expected] of [["12.2", "68.5"], ["112.2", "168.5"], ["11.2", "67.5"]]) {
+      editor.splice({ section: 0, paragraph: 19, startUnit: 0, endUnit: current.length, text });
+      current = text;
+      const saved = editor.save({ allowStaleLayout: true });
+      const owner = paragraphRecords(inspect(saved.bytes).sections[0].bytes, 23);
+      const field = owner.direct.find(r => r.tag === 71 && r.payload.readUInt32LE(0) === 0x25666d75);
+      const len = field.payload.readUInt16LE(9);
+      assert(field.payload.subarray(11, 11 + len * 2).toString("utf16le").endsWith(",;;" + expected));
+      assert.equal(field.payload.readUInt32LE(4) & 0x8000, 0x8000);
+    }
+    const saved = editor.save({ allowStaleLayout: true });
+    editor.close(); editor = await createExperimentalHwp5Editor(wasm, saved.bytes);
+    editor.splice({ section: 0, paragraph: 19, startUnit: 0, endUnit: 4, text: "12.2" });
+    const owner = paragraphRecords(inspect(editor.save({ allowStaleLayout: true }).bytes).sections[0].bytes, 23);
+    assert(owner.direct.find(r => r.tag === 67 && r.level === owner.head.level + 1).payload.toString("utf16le").includes("68.5"));
+  } finally { editor.close(); }
+});
+
+test("actual chart cell splice recalculates formula and preserves independently expected records and streams", async () => {
+  const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/chart.hwp");
+  const original = inspect(input), section = original.sections[0];
+  const numbers = [19, 20, 21, 22].map(index => {
+    const owner = paragraphRecords(section.bytes, index);
+    return Number(owner.direct.find(r => r.tag === 67 && r.level === owner.head.level + 1).payload.toString("utf16le").slice(0, -1));
+  });
+  numbers[0] = 12.2;
+  const result = String(Number(numbers.reduce((sum, n) => sum + n, 0).toPrecision(6)));
+  assert.equal(result, "68.5");
+  let expected = expectedSection(section.bytes, 19, 1, 2, "2");
+  expected = expectedSection(expected, 23, 8, 12, result);
+  const selected = paragraphRecords(expected, 23).direct.find(r => r.tag === 71 && r.payload.readUInt32LE(0) === 0x25666d75);
+  expected = Buffer.concat(records(expected).map(r => {
+    if (r.start !== selected.start) return r.raw;
+    const length = r.payload.readUInt16LE(9), oldCommand = r.payload.subarray(11, 11 + length * 2).toString("utf16le");
+    const command = Buffer.from(oldCommand.slice(0, oldCommand.indexOf(",;;") + 3) + result, "utf16le");
+    const prefix = Buffer.from(r.payload.subarray(0, 11));
+    prefix.writeUInt32LE(prefix.readUInt32LE(4) | 0x8000, 4);
+    prefix.writeUInt16LE(command.length / 2, 9);
+    return encodeRecord(r.tag, r.level, Buffer.concat([prefix, command, r.payload.subarray(11 + length * 2)]));
+  }));
+  const e = await createExperimentalHwp5Editor(wasm, input);
+  try {
+    e.splice({ section: 0, paragraph: 19, startUnit: 1, endUnit: 2, text: "2" });
+    const beforeFailure = e.copyText(0, 19);
+    assert.throws(() => e.splice({ section: 0, paragraph: 19, startUnit: 1, endUnit: 2, text: "x" }), { message: "InvalidFormulaNumber" });
+    assert.deepEqual(e.copyText(0, 19), beforeFailure);
+    const saved = e.save({ allowStaleLayout: true }), actual = inspect(saved.bytes);
+    assert.deepEqual(actual.sections[0].bytes, expected);
+    assert.deepEqual([...actual.streams.keys()].sort(), [...original.streams.keys()].sort());
+    for (const [path, bytes] of original.streams) if (path !== section.path) assert.deepEqual(actual.streams.get(path), bytes, path);
+    const reopened = await createExperimentalHwp5Editor(wasm, saved.bytes);
+    try { assert.deepEqual(reopened.copyText(0, 23), e.copyText(0, 23)); } finally { reopened.close(); }
+  } finally { e.close(); }
+});
 
 test("actual software tab retains its payload through text splice, save and reopen", async () => {
   for (const [start, end, text] of [[0, 0, "한😀"], [8, 8, "뒤"], [8, 10, "교체😀"], [8, 10, ""]]) {

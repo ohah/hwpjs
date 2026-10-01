@@ -16,7 +16,6 @@ pub const Splice = struct {
 };
 
 pub const textBytes = @import("plain_text_content.zig").textBytes;
-const boundary = @import("plain_text_content.zig").boundary;
 
 fn inserted(a: std.mem.Allocator, utf8: []const u8) ![]u8 {
     if (utf8.len > 4 * 1024 * 1024) return error.LimitExceeded;
@@ -40,13 +39,17 @@ fn inserted(a: std.mem.Allocator, utf8: []const u8) ![]u8 {
     return out.toOwnedSlice(a);
 }
 
-/// Deleted positions collapse to the start; insertion is right-affine.
-fn position(pos: u32, start: u32, end: u32, added: u32) u32 {
-    return if (pos < start) pos else if (pos >= end) pos - (end - start) + added else start;
+pub fn apply(a: std.mem.Allocator, source: []const u8, version: Version, p: *model.Paragraph, edit: Splice, char_count: usize) !void {
+    return applyWith(a, source, version, p, edit, char_count, false);
 }
 
-pub fn apply(a: std.mem.Allocator, source: []const u8, version: Version, p: *model.Paragraph, edit: Splice, char_count: usize) !void {
-    const validated = try @import("plain_text_source.zig").validate(a, source, version, p.*, char_count);
+pub fn applyFormulaTransaction(a: std.mem.Allocator, source: []const u8, version: Version, p: *model.Paragraph, edit: Splice, char_count: usize) !void {
+    return applyWith(a, source, version, p, edit, char_count, true);
+}
+
+fn applyWith(a: std.mem.Allocator, source: []const u8, version: Version, p: *model.Paragraph, edit: Splice, char_count: usize, formulas: bool) !void {
+    const validator = @import("plain_text_source.zig");
+    const validated = if (formulas) try validator.validateFormulaTransaction(a, source, version, p.*, char_count) else try validator.validate(a, source, version, p.*, char_count);
     const ranges = validated.ranges;
     const before = try @import("plain_text_content.zig").editableTextBytes(a, p.*);
     defer a.free(before);
@@ -70,20 +73,7 @@ pub fn apply(a: std.mem.Allocator, source: []const u8, version: Version, p: *mod
     try run_editor.validate(p.character_runs, before, char_count);
     const owned_runs = try run_editor.replace(a, p.character_runs, edit.start_unit, edit.end_unit, units, null);
     errdefer a.free(owned_runs);
-    var mapped_ranges: std.ArrayList(model.TextRange) = .empty;
-    defer mapped_ranges.deinit(a);
-    const original_ranges = if (ranges) |r| r.count() else 0;
-    const range_count = if (p.range_tags) |r| r.len else original_ranges;
-    for (0..range_count) |i| {
-        const r: model.TextRange = if (p.range_tags) |rr| rr[i] else .{ .start_unit = ranges.?.get(i).?.start, .end_unit = ranges.?.get(i).?.end, .tag = ranges.?.get(i).?.tag };
-        try boundary(before, r.start_unit);
-        try boundary(before, r.end_unit);
-        const s = position(r.start_unit, edit.start_unit, edit.end_unit, units);
-        const e = position(r.end_unit, edit.start_unit, edit.end_unit, units);
-        if (s < e) try mapped_ranges.append(a, .{ .start_unit = s, .end_unit = e, .tag = r.tag });
-    }
-    if (mapped_ranges.items.len > 65535) return error.LimitExceeded;
-    const owned_ranges = try mapped_ranges.toOwnedSlice(a);
+    const owned_ranges = try @import("text_ranges.zig").prepare(a, p.range_tags, ranges, before, edit.start_unit, edit.end_unit, units);
     errdefer a.free(owned_ranges);
     const owned_fields = try @import("field_attributes.zig").prepare(a, source, version, p.*, before, edit.start_unit, edit.end_unit);
     errdefer if (owned_fields) |fields| a.free(fields);

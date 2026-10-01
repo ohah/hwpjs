@@ -1,6 +1,6 @@
 //! Explicit output policy for observed %g/%.2f, not arbitrary printf execution.
 const std = @import("std");
-pub const Grouping = enum { none, thousands };
+pub const Grouping = @import("../../model/document.zig").NumberGrouping;
 pub const Format = enum {
     general6,
     fixed2,

@@ -17,6 +17,15 @@ pub const Token = struct {
 pub const CharacterRun = struct { start_unit: u32, char_shape_id: u32 };
 pub const TextRange = struct { start_unit: u32, end_unit: u32, tag: u32 };
 pub const FieldAttributes = struct { source_node: u32, attributes: u32 };
+pub const NumberGrouping = enum { none, thousands };
+/// Numeric result is authoritative; command/display bytes are derived outputs.
+pub const FormulaResult = struct {
+    source_node: u32,
+    value: f64,
+    grouping: NumberGrouping,
+    /// Sticky edit history; restoring a numeric value does not undo this flag.
+    modified: bool = false,
+};
 
 pub const Paragraph = struct {
     source_node: u32,
@@ -31,6 +40,7 @@ pub const Paragraph = struct {
     range_tags: ?[]TextRange = null,
     /// Materialized field values, not raw command copies or a second save model.
     field_attributes: ?[]FieldAttributes = null,
+    formula_results: ?[]FormulaResult = null,
     /// Direct records not represented by this projection. Never treated as saved.
     deferred_direct_records: usize,
 
@@ -40,6 +50,7 @@ pub const Paragraph = struct {
         a.free(self.character_runs);
         if (self.range_tags) |ranges| a.free(ranges);
         if (self.field_attributes) |fields| a.free(fields);
+        if (self.formula_results) |results| a.free(results);
         self.* = undefined;
     }
 };

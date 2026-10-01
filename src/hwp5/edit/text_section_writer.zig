@@ -19,6 +19,34 @@ pub fn write(a: std.mem.Allocator, source: []const u8, section: model.Section, v
         if (p.source_node >= tree.nodes.len or tree.nodes[p.source_node].record.value != .header or paragraph_by_node[p.source_node] != null)
             return error.SourceBindingMismatch;
         paragraph_by_node[p.source_node] = index;
+        if (p.formula_results) |results| {
+            if (p.range_tags == null) return error.FormulaDisplayMismatch;
+            for (results, 0..) |result, i| {
+                if (p.field_attributes) |fields| {
+                    if (@import("field_attributes.zig").find(fields, result.source_node) != null) return error.UnsupportedFieldAttributeCombination;
+                }
+                if (result.source_node >= tree.nodes.len or tree.nodes[result.source_node].parent != p.source_node) return error.SourceBindingMismatch;
+                for (results[0..i]) |previous| if (previous.source_node == result.source_node) return error.SourceBindingMismatch;
+                const entry = tree.nodes[result.source_node].record.framing;
+                if (entry.tag != @intFromEnum(body.Tag.control_header)) return error.SourceBindingMismatch;
+                const header = try body.ControlHeader.parse(entry.payload);
+                if (header.id != @import("../body/control_rules.zig").id("%fmu")) return error.SourceBindingMismatch;
+                var ordinal: usize = 0;
+                var child: usize = @as(usize, p.source_node) + 1;
+                while (child < result.source_node) {
+                    const preceding = tree.nodes[child];
+                    if (preceding.parent == p.source_node and preceding.record.framing.tag == @intFromEnum(body.Tag.control_header)) {
+                        if ((try body.ControlHeader.parse(preceding.record.framing.payload)).id == header.id) ordinal += 1;
+                    }
+                    child = preceding.subtree_end;
+                }
+                const bytes = try plain.textBytes(a, p);
+                defer a.free(bytes);
+                var display = try @import("formula_display_writer.zig").prepare(a, bytes, try @import("../body/field_start.zig").Properties.parse(header.properties), result, ordinal);
+                defer display.deinit(a);
+                if (!std.mem.eql(u8, bytes, display.bytes)) return error.FormulaDisplayMismatch;
+            }
+        }
     }
     var out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(a);
@@ -86,6 +114,16 @@ pub fn write(a: std.mem.Allocator, source: []const u8, section: model.Section, v
                 },
                 @intFromEnum(body.Tag.line_segments) => {}, // Invalid cache, never guessed.
                 @intFromEnum(body.Tag.control_header) => {
+                    var formula: ?model.FormulaResult = null;
+                    if (p.formula_results) |results| for (results) |result| {
+                        if (result.source_node == node_index) formula = result;
+                    };
+                    if (formula) |result| {
+                        const bytes = try @import("formula_record_writer.zig").prepare(a, record, node_index, result, limit - @min(limit, out.items.len));
+                        defer a.free(bytes);
+                        try out.appendSlice(a, bytes);
+                        continue;
+                    }
                     const attributes = if (p.field_attributes) |fields| @import("field_attributes.zig").find(fields, node_index) else null;
                     if (attributes) |value| {
                         if (record.payload.len < 8) return error.SourceBindingMismatch;

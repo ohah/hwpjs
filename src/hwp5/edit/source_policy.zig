@@ -25,6 +25,16 @@ fn objectRecord(tag: u10) bool {
 }
 
 pub fn validate(source: []const u8) !void {
+    _ = try inspect(source, false);
+}
+
+/// Only the atomic recalculation caller may opt into observed formula fields.
+pub fn hasFormulas(source: []const u8) !bool {
+    return inspect(source, true);
+}
+
+fn inspect(source: []const u8, allow_formulas: bool) !bool {
+    var formulas = false;
     var it = framing.Iterator.init(source, .{});
     while (try it.next()) |entry| {
         const tag = std.enums.fromInt(body.Tag, entry.tag) orelse {
@@ -37,10 +47,13 @@ pub fn validate(source: []const u8) !void {
                 const code = controls.expectedCode(header.id) orelse return error.UnsupportedSectionControl;
                 // Cross-reference/custom fields can carry unresolved external
                 // text positions. A local hyperlink alone is not that policy.
-                if (code == 3 and header.id != controls.id("%hlk")) return error.UnsupportedSectionControl;
+                if (header.id == controls.id("%fmu") and allow_formulas) {
+                    formulas = true;
+                } else if (code == 3 and header.id != controls.id("%hlk")) return error.UnsupportedSectionControl;
             },
             .memo_list => return error.UnsupportedSectionStructure,
             else => {},
         }
     }
+    return formulas;
 }

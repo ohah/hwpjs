@@ -619,6 +619,8 @@ test {
     _ = @import("hwp5/body/formula_range.zig");
     _ = @import("hwp5/body/formula_number.zig");
     _ = @import("hwp5/body/formula_format.zig");
+    _ = @import("model/clone.zig");
+    _ = @import("hwp5/edit/formula_session_tests.zig");
     _ = @import("hwp5/bin_data_stream_tests.zig");
     _ = @import("hwp5/container/bin_data_replace_tests.zig");
     _ = @import("hwp5/container/ole_edit_session_tests.zig");

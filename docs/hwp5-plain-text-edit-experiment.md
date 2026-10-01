@@ -14,6 +14,8 @@
 
 2026-10-01 [기존 글자 모양 적용](hwp5-character-format-edit.md) 연결 후 텍스트 바이트·scalar 경계 검증은 `plain_text_content.zig`, 서식 경계 검증·교체는 `character_runs.zig`를 단일 출처로 공유합니다. `plain_text.zig`는 splice와 범위 이동·원자적 반영만 담당합니다. 이후 검증 기록은 해당 글자 모양 문서에서 관리합니다.
 
+후속 계산식 표시 준비는 같은 서식 이동을 공유하며 범위 이동도 `text_ranges.zig`로 분리했습니다. 일반 splice와 파생 수식 표시가 같은 명시적 half-open 매핑을 호출합니다. 계산식의 거래/표시 검증은 [별도 계약](hwp5-formula-command.md)이 소유하며 공개 계산식 편집 지원으로 해석하지 않습니다.
+
 - `plain_text_source.zig`: 기존 framing·Tree·직접 자식 수집·Metadata를 재사용해 문단의 편집 가능성과 원본 개수·리소스를 검증합니다. 구역 보존 정책과 중첩 목록 소유 관계는 [중첩 편집 계약](hwp5-nested-text-edit.md)의 전용 모듈에 위임합니다. 대상 문단의 미해석 헤더 꼬리, 변경추적 병합, 알려지지 않은 직접 자식도 거부합니다.
 - `plain_text.zig`: 텍스트·글자 모양·범위의 갱신값을 전부 준비한 뒤 소유 모델에 한 번에 반영합니다. 실패 시 기존 값이 유지됩니다. 원본 위치는 기존 문단 source binding으로만 식별합니다.
 - `src/model/document.zig`: 토큰·글자 모양과 선택적으로 materialize한 `range_tags`를 소유합니다. null은 읽기 전용 projection에서 미투영 상태이고, 빈 소유 slice는 명시적으로 투영한 빈 범위 목록입니다. 같은 필드의 mutable 원본 캐시를 두지 않습니다.

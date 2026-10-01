@@ -1,6 +1,8 @@
 # 개발·검증 명령
 
-[계산식 command](hwp5-formula-command.md)의 envelope·실제 chart 13개 필드 검사는 `zig test src/root.zig -O ReleaseSafe --test-filter 'formula command'`로 실행합니다. 실제 셀에서의 SUM/AVG 계산·현재 모델 값 읽기·출력 준비의 할당 실패도 포함합니다. 범위·숫자·출력 형식의 개별 반례까지 실행하려면 필터를 `'formula'`로 지정합니다. 기본 root 테스트에도 포함되지만 공개 편집·필드 갱신·저장 거래의 성공 검사는 아닙니다.
+[계산식 command](hwp5-formula-command.md)의 envelope·실제 chart 13개 필드 검사는 `zig test src/root.zig -O ReleaseSafe --test-filter 'formula command'`로 실행합니다. 실제 셀에서의 SUM/AVG 계산·현재 모델 값 읽기·출력 준비의 할당 실패와 chart의 공개 숫자 편집/CFB 재열기도 포함합니다. 범위·숫자·출력 형식 및 공개 세션 할당 실패의 개별 반례까지 실행하려면 필터를 `'formula'`로 지정합니다. 기본 root 테스트에도 포함되지만 모든 수식 문법·조판·UI 지원의 완료 증명은 아닙니다.
+
+공개 수식 거래의 모든 open/apply/save/reopen 할당 실패는 `zig test src/root.zig -O ReleaseSafe --test-filter 'public formula session'`로 검사하며 기본 `zig build test`에도 포함됩니다. 실제 chart 숫자 셀의 공개 JS/WASM 편집·독립 Section/스트림 대조·복원/재열기 및 Worker 의존 표시 갱신은 제품 빌드 후 `node --test tests/hwp5/control-editor.test.mjs tests/hwp5/reader-worker.test.mjs` 또는 `hwp5-editor-audit`로 검사합니다. 실제 브라우저 검증과 수식 문법 전체 지원은 별도입니다.
 
 [필드 수정 속성](hwp5-field-attribute-edit.md)의 실제 파일/독립 Section 대조는 제품 WASM 빌드 후 `node --test tests/hwp5/control-editor.test.mjs` 및 `hwp5-editor-audit`에 포함합니다. native 실패 경로는 `zig test -O ReleaseSafe --dep hwpjs -Mroot=tests/hwp5/style-preservation/text.test.zig -Mhwpjs=src/root.zig --test-filter 'retained anchor linkage'`와 기본 `zig build test`로 검사합니다.
 

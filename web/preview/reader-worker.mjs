@@ -28,7 +28,8 @@ self.onmessage = async event => {
       // This snapshot is never used as an editor command's source or for saving.
       const raw = editor.copyText(message.section, message.paragraph);
       const p = preview.sections[message.section].paragraphs[message.paragraph];
-      if (p.tokens.some(t => t.type === "control" && t.code !== 13)) {
+      const sectionHasFields = preview.sections[message.section].paragraphs.some(paragraph => paragraph.tokens.some(t => t.type === "control" && t.code === 3));
+      if (sectionHasFields || p.tokens.some(t => t.type === "control" && t.code !== 13)) {
         // Never interpret retained control payload as ordinary Unicode or
         // advertise it as directly editable. Reuse native token projection.
         reader = await createHwp5Reader(module);

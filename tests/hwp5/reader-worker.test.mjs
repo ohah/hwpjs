@@ -2,6 +2,29 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
+test("actual Worker refreshes dependent chart formula after a plain numeric cell edit", async t => {
+  const originalSelf = globalThis.self, originalFetch = globalThis.fetch, replies = [];
+  globalThis.self = { postMessage(message) { replies.push(message); } };
+  globalThis.fetch = async () => new Response(readFileSync("zig-out/bin/hwpjs.wasm"));
+  t.after(() => {
+    globalThis.fetch = originalFetch;
+    if (originalSelf === undefined) delete globalThis.self; else globalThis.self = originalSelf;
+  });
+  await import(`../../web/preview/reader-worker.mjs?formula-regression=${Date.now()}`);
+  const send = async message => {
+    await self.onmessage({ data: { origin: "formula", ...message } });
+    const reply = replies.shift(); assert(reply); assert.equal(replies.length, 0); return reply;
+  };
+  const get = (reply, index) => reply.content.paragraphs.find(p => p.section === 0 && p.paragraph === index);
+  const loaded = await send({ kind: "load", bytes: readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/chart.hwp") });
+  assert.equal(loaded.error, undefined); assert.equal(get(loaded, 23).text, "«67.5»");
+  assert.equal((await send({ kind: "enable" })).error, undefined);
+  const changed = await send({ kind: "splice", section: 0, paragraph: 19, startUnit: 1, endUnit: 2, text: "2" });
+  assert.equal(changed.error, undefined);
+  assert.equal(get(changed, 19).text, "12.2");
+  assert.equal(get(changed, 23).text, "«68.5»");
+});
+
 test("actual Worker preserves tab projection, repeated edits and refusal without payload decoding", async t => {
   const originalSelf = globalThis.self, originalFetch = globalThis.fetch;
   const replies = [];
