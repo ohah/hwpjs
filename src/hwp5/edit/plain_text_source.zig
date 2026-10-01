@@ -24,25 +24,31 @@ pub fn validateHyperlinkTransaction(a: std.mem.Allocator, source: []const u8, ve
 }
 
 fn validateWith(a: std.mem.Allocator, source: []const u8, version: Version, p: model.Paragraph, char_count: usize, formulas: bool, cross_fields: bool) !Validation {
+    const generated = p.source_node == null;
+    const source_node = if (generated) p.header_template orelse return error.MissingParagraphSource else try p.originalNode();
+    if (generated and (p.instance_id == 0 or p.field_attributes != null or p.formula_results != null)) return error.UnsupportedStructuralControl;
     var tree = try Tree.parseTextPreview(a, source, version, .{});
     defer tree.deinit(a);
-    const node = tree.nodes[p.source_node];
+    if (source_node >= tree.nodes.len or tree.nodes[source_node].record.value != .header) return error.SourceBindingMismatch;
+    const node = tree.nodes[source_node];
+    const parent: ?usize = if (p.parent_node) |value| @as(usize, value) else null;
+    if (node.parent != parent) return error.SourceBindingMismatch;
     const h = node.record.value.header;
     if (h.extra.len != 0 or (h.merge_tracking orelse 0) != 0) return error.UnsupportedParagraphExtension;
     if (h.control_mask & ~@import("control_boundaries.zig").retained_mask != 0) return error.UnsupportedTextControl;
     if (formulas) {
         _ = try @import("source_policy.zig").hasFormulas(source);
     } else try validateSection(source);
-    try @import("paragraph_owner.zig").validate(a, tree, p.source_node, version);
+    try @import("paragraph_owner.zig").validate(a, tree, source_node, version);
     var links_checked = false;
     var preserved_direct_records: usize = 0;
     var runs: ?body.Runs = null;
     var ranges: ?body.Ranges = null;
     var lines: ?body.Segments = null;
-    var child = @as(usize, p.source_node) + 1;
+    var child = @as(usize, source_node) + 1;
     while (child < node.subtree_end) {
         const entry = tree.nodes[child];
-        if (entry.parent != p.source_node) return error.UnsupportedParagraphRecord;
+        if (entry.parent != source_node) return error.UnsupportedParagraphRecord;
         if (entry.record.framing.tag == @intFromEnum(body.Tag.control_header)) {
             preserved_direct_records += 1;
             if (!links_checked) try @import("control_source.zig").validate(a, tree);
@@ -70,10 +76,11 @@ fn validateWith(a: std.mem.Allocator, source: []const u8, version: Version, p: m
         child = entry.subtree_end;
     }
     try (body.Metadata{ .runs = runs, .ranges = ranges, .lines = lines }).validate(h, char_count);
-    const parts = try children.collect(tree, p.source_node);
+    const parts = try children.collect(tree, source_node);
     if (parts.text_node) |text_node| {
         const text = tree.nodes[text_node].record.value.text;
         try text.validateCount(h);
+        if (generated) try @import("plain_text_content.zig").validatePlain(text.raw);
         if (formulas) try @import("../body/field_span.zig").validateEditable(text.raw) else if (!cross_fields) try @import("hyperlink_source.zig").validate(text.raw);
         if (!links_checked) {
             var tokens = text.tokens();
@@ -85,5 +92,13 @@ fn validateWith(a: std.mem.Allocator, source: []const u8, version: Version, p: m
             }
         }
     } else if (h.characterUnits() > 1) return error.UnsupportedMissingText;
+    if (generated) {
+        if (preserved_direct_records != 0) return error.UnsupportedStructuralControl;
+        if (ranges) |value| if (value.count() != 0) return error.UnsupportedRangeSemantics;
+        if (p.range_tags) |value| if (value.len != 0) return error.UnsupportedRangeSemantics;
+        const current = try @import("plain_text_content.zig").editableTextBytes(a, p);
+        defer a.free(current);
+        try @import("plain_text_content.zig").validatePlain(current);
+    }
     return .{ .ranges = ranges, .preserved_direct_records = preserved_direct_records };
 }

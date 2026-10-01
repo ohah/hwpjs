@@ -13,13 +13,14 @@ pub const CharacterFormat = @import("character_format.zig").Edit;
 const max_bytes = 64 * 1024 * 1024;
 const max_stream = 32 * 1024 * 1024;
 
-pub const ParagraphInfo = struct { source_node: u32, parent_node: ?u32, style_id: u8 };
+pub const ParagraphInfo = struct { source_node: ?u32, parent_node: ?u32, style_id: u8 };
 pub const Command = union(enum) {
     set_style: struct { section: usize, paragraph: usize, style_id: u8 },
     insert_text: struct { section: usize, paragraph: usize, utf8: []const u8 },
     delete_paragraph: struct { section: usize, paragraph: usize },
     splice_text: TextSplice,
     set_character_format: CharacterFormat,
+    split_paragraph: @import("structure_session.zig").Split,
 };
 pub const SaveOptions = struct {
     /// Byte-preservation experiments only; does not certify Hancom layout.
@@ -121,7 +122,7 @@ pub const Session = opaque {
                 if (record.tag != @intFromEnum(Tag.paragraph_header)) continue;
                 if (paragraph_index >= section.paragraphs.len) return error.SourceBindingMismatch;
                 const p = section.paragraphs[paragraph_index];
-                if (p.source_node != node) return error.SourceBindingMismatch;
+                if (try p.originalNode() != node) return error.SourceBindingMismatch;
                 if (p.style_id >= style_count) return error.InvalidStyleReference;
                 const parsed = try Header.parse(record.payload, source.header.version());
                 if (parsed.style_id != p.style_id) return error.SourceBindingMismatch;
@@ -170,6 +171,10 @@ pub const Session = opaque {
 
     pub fn apply(self: *Session, command: Command) !void {
         switch (command) {
+            .split_paragraph => |edit| {
+                const state = self.getState();
+                try @import("structure_session.zig").split(state.allocator, state.decoded, &state.document, state.source.header.version(), edit, state.char_count, max_stream);
+            },
             .set_style => |edit| {
                 if (edit.paragraph >= try self.paragraphCount(edit.section)) return error.InvalidParagraph;
                 const state = self.getState();
@@ -219,7 +224,15 @@ pub const Session = opaque {
         var replacements: std.ArrayList(cfb.stream_replace.Replacement) = .empty;
         for (state.document.sections, 0..) |section, index| {
             if (!sectionChanged(state, index, section)) continue;
-            const decoded = try @import("text_section_writer.zig").write(scratch, state.decoded[index], section, state.source.header.version(), max_stream);
+            var structural = false;
+            for (section.paragraphs) |p| if (p.source_node == null) {
+                structural = true;
+                break;
+            };
+            const decoded = if (structural)
+                try @import("structure_section_writer.zig").write(scratch, state.decoded[index], section, state.source.header.version(), state.char_count, max_stream)
+            else
+                try @import("text_section_writer.zig").write(scratch, state.decoded[index], section, state.source.header.version(), max_stream);
             const encoded = if (state.source.header.has(.compressed))
                 try @import("../../compression/raw_deflate.zig").encodeStored(scratch, decoded, max_stream)
             else
@@ -241,6 +254,7 @@ pub const Session = opaque {
 };
 
 fn sectionChanged(state: *const State, index: usize, section: model.Section) bool {
+    if (section.paragraphs.len != state.style_offsets[index].len) return true;
     for (section.paragraphs, state.style_offsets[index]) |p, offset| {
         if (p.style_id != state.decoded[index][offset] or p.range_tags != null or p.field_attributes != null) return true;
     }

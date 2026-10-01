@@ -125,6 +125,7 @@ fn projectParagraph(a: std.mem.Allocator, tree: Tree, node_index: usize) !model.
     };
     return .{
         .source_node = std.math.cast(u32, node_index) orelse return error.LimitExceeded,
+        .instance_id = header.instance_id,
         .parent_node = if (node.parent) |parent| std.math.cast(u32, parent) orelse return error.LimitExceeded else null,
         .declared_units = header.characterUnits(),
         .text_present = parts.text_node != null,

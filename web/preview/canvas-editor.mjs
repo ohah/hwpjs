@@ -8,7 +8,7 @@ import { sourceTextChange } from "./text-offsets.mjs";
 export function createCanvasEditor({ canvas, viewport, input, renderer, controls, note }) {
   const events = new AbortController(), listen = (node, type, fn) => node.addEventListener(type, fn, { signal: events.signal });
   let target = null, committed = "", anchor = null, focus = null, pending = null, composing = false, drag = null;
-  let historyAvailable = false, historyPending = false;
+  let historyAvailable = false, historyPending = false, structureAvailable = false, splitTarget = null;
   const report = text => { note.textContent = text; };
   const place = () => {
     const caret = caretGeometry(renderer.layout(), focus);
@@ -98,10 +98,23 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     input.setAttribute("aria-busy", "true");
     return true;
   };
+  const split = () => {
+    if (!structureAvailable) { report("이 문서 형식의 문단 분할은 아직 지원하지 않습니다."); return false; }
+    if (!target || composing || pending || historyPending || input.value !== committed || !controls.ready() || controls.busy()) { report("입력 반영이 끝난 뒤 문단을 분할하세요."); return false; }
+    const unit = snapUnit(committed, input.selectionStart);
+    const end = snapUnit(committed, input.selectionEnd, true);
+    const position = sourceTextChange({ startUnit: unit, endUnit: end, text: "" }, renderer.paragraph(target)?.sourceOffsets);
+    splitTarget = { section: target.section, paragraph: target.paragraph + 1 };
+    historyPending = true; input.readOnly = true;
+    if (!controls.request({ kind: "split", origin: "canvas", ...target, atUnit: position.startUnit, endUnit: position.endUnit })) {
+      splitTarget = null; historyPending = false; input.readOnly = !controls.ready(); return false;
+    }
+    input.setAttribute("aria-busy", "true"); return true;
+  };
   listen(input, "beforeinput", event => {
     if (!target || !controls.ready() || historyPending) { event.preventDefault(); return; }
     if (["historyUndo", "historyRedo"].includes(event.inputType)) { event.preventDefault(); travel(event.inputType === "historyUndo" ? "undo" : "redo"); return; }
-    if (["insertLineBreak", "insertParagraph"].includes(event.inputType)) { event.preventDefault(); report("문단 분할·병합은 아직 지원하지 않습니다."); }
+    if (["insertLineBreak", "insertParagraph"].includes(event.inputType)) { event.preventDefault(); split(); }
   });
   listen(input, "input", () => { if (!target) return; preview(); if (!composing) pump(); });
   listen(input, "compositionstart", () => { if (!target || !controls.ready()) return; composing = true; paint(); });
@@ -116,7 +129,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
       event.preventDefault(); setSelection({ ...target, unit: 0 }, { ...target, unit: input.value.length }); reveal(); return;
     }
     if ((event.metaKey || event.ctrlKey) && ["z", "y"].includes(key.toLowerCase())) { event.preventDefault(); travel(key.toLowerCase() === "y" || event.shiftKey ? "redo" : "undo"); return; }
-    if (key === "Enter") { event.preventDefault(); report("문단 분할·병합은 아직 지원하지 않습니다."); return; }
+    if (key === "Enter") { event.preventDefault(); split(); return; }
     if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(key) || event.altKey) return;
     event.preventDefault();
     const next = navigateText(renderer.layout(), input.value, anchor, focus, key, { extend: event.shiftKey, paragraphEdge: event.ctrlKey || event.metaKey });
@@ -133,18 +146,28 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     reset() {
       if (drag !== null && canvas.hasPointerCapture(drag)) canvas.releasePointerCapture(drag);
       composing = false; drag = null; target = null; pending = null; anchor = null; focus = null; committed = "";
-      historyAvailable = false; historyPending = false;
+      historyAvailable = false; historyPending = false; structureAvailable = false; splitTarget = null;
       input.value = ""; input.disabled = true; input.setAttribute("aria-busy", "false"); canvas.style.cursor = "default"; report(""); renderer.preview(null); paint();
     },
     external(message) {
       if (message.origin !== "canvas" && !["enable", "save"].includes(message.kind)) {
-        const available = historyAvailable; this.reset(); historyAvailable = available;
+        const available = historyAvailable, structure = structureAvailable; this.reset(); historyAvailable = available; structureAvailable = structure;
       }
     },
     message(message) {
       if (message.kind === "save") { pump(); return; }
       if (message.applied && message.error) { this.reset(); return; }
-      if (message.kind === "enable") { if (!message.error) historyAvailable = message.historyAvailable === true; input.readOnly = !controls.ready(); report(message.error ? `편집 시작 실패: ${message.error}` : "클릭·드래그 선택 후 입력하세요. 변경 후 재조판이 필요합니다."); pump(); return; }
+      if (message.kind === "enable") { if (!message.error) { historyAvailable = message.historyAvailable === true; structureAvailable = message.structureAvailable === true; } input.readOnly = !controls.ready(); report(message.error ? `편집 시작 실패: ${message.error}` : "클릭·드래그 선택 후 입력하세요. 변경 후 재조판이 필요합니다."); pump(); return; }
+      if (message.kind === "split" && message.origin === "canvas" && splitTarget) {
+        const next = splitTarget; splitTarget = null; historyPending = false;
+        input.readOnly = !controls.ready(); input.setAttribute("aria-busy", "false");
+        if (message.error) { report(`문단 분할 실패: ${message.error}`); return; }
+        const paragraph = renderer.paragraph(next);
+        if (!paragraph?.editable) { this.reset(); report("문단 분할은 적용됐지만 표시 한도로 직접 입력을 중단했습니다."); return; }
+        target = next; committed = paragraph.text; input.value = committed; renderer.preview(null);
+        setSelection({ ...target, unit: 0 }, { ...target, unit: 0 }); reveal();
+        report("문단 분할 적용 · 재조판 필요"); return;
+      }
       if (["undo", "redo"].includes(message.kind) && message.origin === "canvas" && historyPending) {
         historyPending = false; input.readOnly = !controls.ready(); input.setAttribute("aria-busy", "false");
         if (message.error) { report(`실행 취소/다시 실행 실패: ${message.error}`); return; }

@@ -14,6 +14,9 @@ test("actual HWP5 Worker history restores whole fixture projections and saved by
     const reply = replies.shift(); assert(reply); assert.equal(replies.length, 0); return reply;
   };
   const cases = [
+    ["charshape", { kind: "split", paragraph: 1, atUnit: 1 }],
+    ["software", { kind: "split", paragraph: 2, atUnit: 1 }],
+    ["table", { kind: "split", paragraph: 1, atUnit: 0 }],
     ["charshape", { kind: "splice", paragraph: 1, startUnit: 0, endUnit: 0, text: "이력😀" }],
     ["software", { kind: "splice", paragraph: 2, startUnit: 0, endUnit: 0, text: "공모😀" }],
     ["chart", { kind: "splice", paragraph: 19, startUnit: 1, endUnit: 2, text: "2" }],
@@ -42,6 +45,25 @@ test("actual HWP5 Worker history restores whole fixture projections and saved by
     assert.deepEqual((await send({ kind: "save", allowStaleLayout: true })).bytes, saved.bytes);
     assert.equal((await send({ kind: "redo" })).changed, false);
   }
+});
+
+test("older Worker WASM does not advertise unavailable structural editing", async t => {
+  const previousSelf = globalThis.self, previousFetch = globalThis.fetch, replies = [];
+  const older = Buffer.from(readFileSync("zig-out/bin/hwpjs.wasm"));
+  for (const name of ["hwp5_edit_split_range", "hwp5_edit_split"]) {
+    const at = older.indexOf(Buffer.from(name)); assert(at >= 0); older[at] = 120;
+  }
+  globalThis.self = { postMessage(message) { replies.push(message); } };
+  globalThis.fetch = async () => new Response(older);
+  t.after(() => { globalThis.fetch = previousFetch; if (previousSelf === undefined) delete globalThis.self; else globalThis.self = previousSelf; });
+  await import(`../../web/preview/reader-worker.mjs?old-structure=${Date.now()}`);
+  const send = async data => { await self.onmessage({ data }); return replies.shift(); };
+  assert.equal((await send({ kind: "load", bytes: readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwp") })).error, undefined);
+  const enabled = await send({ kind: "enable" });
+  assert.equal(enabled.error, undefined); assert.equal(enabled.structureAvailable, false);
+  const refused = await send({ kind: "split", section: 0, paragraph: 1, atUnit: 1 });
+  assert.equal(refused.error, "Hwp5StructureAbiUnavailable"); assert.equal(refused.applied, false);
+  assert.equal((await send({ kind: "splice", section: 0, paragraph: 1, startUnit: 0, endUnit: 0, text: "기존" })).error, undefined);
 });
 
 test("actual HWP5 Worker save refusal retains edits and native session for retry", async t => {

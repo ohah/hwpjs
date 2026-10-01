@@ -20,7 +20,8 @@ pub fn applyDraft(a: std.mem.Allocator, source: []const u8, version: @import("..
         const parent = node.parent orelse return error.SourceBindingMismatch;
         var paragraph: ?*model.Paragraph = null;
         for (section.paragraphs) |*p| {
-            if (p.source_node != parent) continue;
+            const paragraph_node = p.source_node orelse continue;
+            if (paragraph_node != parent) continue;
             if (paragraph != null) return error.SourceBindingMismatch;
             paragraph = p;
         }

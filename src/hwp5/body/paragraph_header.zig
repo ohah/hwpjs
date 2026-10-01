@@ -8,6 +8,9 @@ pub const Header = struct {
     pub const char_shape_count_offset = 12;
     pub const range_tag_count_offset = 14;
     pub const line_segment_count_offset = 16;
+    pub const instance_id_offset = 18;
+    pub const para_shape_id_offset = 8;
+    pub const break_flags_offset = 11;
 
     /// Replaces only fields owned by a controlled text writer. Preserves flags.
     pub fn writeTextCounts(bytes: []u8, units: u32, runs: u16, ranges: u16) void {

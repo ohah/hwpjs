@@ -45,12 +45,13 @@ const Context = struct {
             const owner = &draft.paragraphs[span.begin.paragraph];
             _ = try @import("plain_text_source.zig").validateHyperlinkTransaction(a, self.source, self.version, owner.*, self.char_count);
             if (owner.field_attributes == null) {
+                const source_node = try owner.originalNode();
                 var fields: std.ArrayList(model.FieldAttributes) = .empty;
                 errdefer fields.deinit(a);
-                var child = @as(usize, owner.source_node) + 1;
-                while (child < tree.nodes[owner.source_node].subtree_end) {
+                var child = @as(usize, source_node) + 1;
+                while (child < tree.nodes[source_node].subtree_end) {
                     const node = tree.nodes[child];
-                    if (node.parent != owner.source_node) return error.SourceBindingMismatch;
+                    if (node.parent != source_node) return error.SourceBindingMismatch;
                     if (node.record.framing.tag == @intFromEnum(body.Tag.control_header)) {
                         const header = try body.ControlHeader.parse(node.record.framing.payload);
                         if (header.id == @import("../body/control_rules.zig").id("%hlk")) {

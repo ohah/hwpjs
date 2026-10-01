@@ -83,6 +83,7 @@ pub fn build(b: *std.Build) void {
     hwp5_text_api.step.dependOn(b.getInstallStep());
     audit.dependOn(&hwp5_text_api.step);
     const editor_api_tests = b.addSystemCommand(&.{ "node", "--test", "tests/hwp5/editor.test.mjs", "tests/hwp5/editor-controls.test.mjs", "tests/hwp5/history-controls.test.mjs", "tests/hwp5/history-editor.test.mjs", "tests/hwp5/history-abi.test.mjs", "tests/hwp5/canvas-edit.test.mjs", "tests/hwp5/canvas-editor.test.mjs", "tests/hwp5/document-save.test.mjs", "tests/hwp5/edit-corpus.test.mjs", "tests/hwp5/nested-editor.test.mjs", "tests/hwp5/empty-editor.test.mjs", "tests/hwp5/control-editor.test.mjs", "tests/hwp5/reader-worker.test.mjs" });
+    editor_api_tests.addArg("tests/hwp5/structure-editor.test.mjs");
     editor_api_tests.step.dependOn(b.getInstallStep());
     editor_api_tests.has_side_effects = true;
     audit.dependOn(&editor_api_tests.step);

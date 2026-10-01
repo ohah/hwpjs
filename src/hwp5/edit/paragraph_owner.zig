@@ -10,6 +10,13 @@ const Version = @import("../version.zig").Version;
 
 pub fn validate(a: std.mem.Allocator, tree: Tree, paragraph: usize, version: Version) !void {
     const parent = tree.nodes[paragraph].parent orelse return;
+    var groups = try inspectGroups(a, tree, version);
+    defer groups.deinit(a);
+    return validateGroups(tree, groups, paragraph, parent, version);
+}
+
+/// Shared decoding/group contract for text eligibility and structure planning.
+pub fn inspectGroups(a: std.mem.Allocator, tree: Tree, version: Version) !Groups {
     // Decode only ownership records. Unrelated shapes remain immutable raw
     // payload, rather than forcing the complete semantic document parser.
     for (tree.nodes) |*node| {
@@ -21,8 +28,10 @@ pub fn validate(a: std.mem.Allocator, tree: Tree, paragraph: usize, version: Ver
             else => {},
         }
     }
-    var groups = try Groups.build(a, tree);
-    defer groups.deinit(a);
+    return Groups.build(a, tree);
+}
+
+fn validateGroups(tree: Tree, groups: Groups, paragraph: usize, parent: usize, version: Version) !void {
     var owner: ?usize = null;
     for (groups.items) |group| {
         if (group.parent_node == parent and paragraph >= group.begin and paragraph < group.end) {

@@ -63,7 +63,21 @@ pub fn rollback(checkpoint: *Checkpoint, a: std.mem.Allocator, owner: *const any
 fn bind(state: *const State, a: std.mem.Allocator, owner: *const anyopaque, current: *const model.Document) !void {
     if (state.owner != owner or state.allocator.ptr != a.ptr or state.allocator.vtable != a.vtable or state.document.format != current.format or state.document.coverage != current.coverage or state.document.sections.len != current.sections.len) return error.SourceBindingMismatch;
     for (state.document.sections, current.sections) |before, after| {
-        if (before.source_record_count != after.source_record_count or before.paragraphs.len != after.paragraphs.len) return error.SourceBindingMismatch;
+        if (before.source_record_count != after.source_record_count) return error.SourceBindingMismatch;
+        try validateProvenance(before);
+        try validateProvenance(after);
+    }
+}
+
+fn validateProvenance(section: model.Section) !void {
+    for (section.paragraphs) |p| {
+        if (p.parent_node) |parent| if (parent >= section.source_record_count) return error.SourceBindingMismatch;
+        if (p.source_node) |node| {
+            if (node >= section.source_record_count or p.header_template != null) return error.SourceBindingMismatch;
+        } else {
+            const template = p.header_template orelse return error.SourceBindingMismatch;
+            if (template >= section.source_record_count or p.instance_id == 0) return error.SourceBindingMismatch;
+        }
     }
 }
 

@@ -58,8 +58,9 @@ async function harness(t, name = "charshape", choose = p => p.editable && !p.sou
       const message = queue.shift(); assert(message);
       let response = { kind: message.kind, origin: message.origin };
       try {
-        native.splice(message);
-        if (content.paragraphs.find(p => p.section === message.section && p.paragraph === message.paragraph)?.sourceOffsets) {
+        if (message.kind === "split") native.splitParagraph(message);
+        else native.splice(message);
+        if (message.kind === "split" || content.paragraphs.find(p => p.section === message.section && p.paragraph === message.paragraph)?.sourceOffsets) {
           content = displayContent(reader.readText(native.save({ allowStaleLayout: true }).bytes));
         } else content = { ...content, paragraphs: content.paragraphs.map(p => {
           if (p.section !== message.section || p.paragraph !== message.paragraph) return p;
@@ -71,6 +72,49 @@ async function harness(t, name = "charshape", choose = p => p.editable && !p.sou
     },
   };
 }
+
+test("canvas selection Enter replaces selected text in one native split request", async t => {
+  const h = await harness(t);
+  h.controller.message({ kind: "enable", structureAvailable: true });
+  const before = h.input.value;
+  h.input.setSelectionRange(1, 3);
+  dispatch(h.input, "beforeinput", { inputType: "insertParagraph" });
+  assert.equal(h.requests.length, 1);
+  assert.equal(h.requests[0].atUnit, 1);
+  assert.equal(h.requests[0].endUnit, 3);
+  h.ack();
+  assert.equal(h.input.value, before.slice(3));
+  assert.equal(h.input.selectionStart, 0);
+});
+
+test("canvas Enter splits actual paragraph, blocks duplicate requests and follows native right paragraph", async t => {
+  const h = await harness(t);
+  h.controller.message({ kind: "enable", historyAvailable: true, structureAvailable: true });
+  h.input.setSelectionRange(1, 1);
+  const before = h.input.value, count = h.native.paragraphCount(h.paragraph.section);
+  assert.equal(dispatch(h.input, "keydown", { key: "Enter" }).defaultPrevented, true);
+  assert.equal(h.requests.at(-1).kind, "split");
+  assert.equal(h.requests.at(-1).atUnit, 1);
+  assert.equal(h.controller.settled(), false);
+  assert.equal(h.input.readOnly, true);
+  const requests = h.requests.length;
+  dispatch(h.input, "keydown", { key: "Enter" });
+  dispatch(h.input, "beforeinput", { inputType: "insertParagraph" });
+  assert.equal(h.requests.length, requests);
+  h.ack();
+  assert.equal(h.native.paragraphCount(h.paragraph.section), count + 1);
+  assert.equal(h.input.value, before.slice(1));
+  assert.equal(h.input.selectionStart, 0);
+  assert.equal(h.canvas.dataset.caret, `${h.paragraph.section}:${h.paragraph.paragraph + 1}:0`);
+  assert.equal(h.controller.settled(), true);
+  h.type("후속" + h.input.value); h.ack();
+  assert.ok(h.native.text(h.paragraph.section, h.paragraph.paragraph + 1).startsWith("후속"));
+  dispatch(h.input, "compositionstart");
+  const n = h.requests.length;
+  dispatch(h.input, "keydown", { key: "Enter", isComposing: true });
+  assert.equal(h.requests.length, n);
+  dispatch(h.input, "compositionend");
+});
 
 test("canvas history consumes acknowledged projection and blocks overlapping drafts and composition", async t => {
   const h = await harness(t), before = h.input.value;

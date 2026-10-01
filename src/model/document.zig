@@ -28,7 +28,13 @@ pub const FormulaResult = struct {
 };
 
 pub const Paragraph = struct {
-    source_node: u32,
+    /// Null for newly created paragraphs; never forge an original node index.
+    source_node: ?u32,
+    /// Header template provenance for generated paragraphs, not an original node.
+    header_template: ?u32 = null,
+    /// Serialized paragraph ID; distinct from immutable source record index.
+    /// Original duplicates/zero are preserved, never normalized on load.
+    instance_id: u32 = 0,
     parent_node: ?u32,
     declared_units: u32,
     text_present: bool,
@@ -43,6 +49,12 @@ pub const Paragraph = struct {
     formula_results: ?[]FormulaResult = null,
     /// Direct records not represented by this projection. Never treated as saved.
     deferred_direct_records: usize,
+
+    pub fn originalNode(self: Paragraph) !u32 {
+        const node = self.source_node orelse return error.MissingParagraphSource;
+        if (self.header_template != null) return error.SourceBindingMismatch;
+        return node;
+    }
 
     pub fn deinit(self: *Paragraph, a: std.mem.Allocator) void {
         for (self.tokens) |token| a.free(token.raw);

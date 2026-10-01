@@ -18,7 +18,7 @@ Session의 `createCheckpoint(max_checkpoint_bytes)`는 opaque Checkpoint를 반�
 
 크기는 State·section/paragraph 배열·token 배열/원시 바이트·character_runs·세 선택 배열의 실제 길이를 합산합니다. 정수 곱셈·덧셈·한도를 검사합니다. source 포인터·ZIP 사본·문서 전체 실행 메모리까지 포함한 총량 한도는 아닙니다.
 
-capture는 복사/State 할당이 모두 성공한 뒤 반환하고 실패 시 초안만 해제합니다. exchange는 세션 identity·할당자·format/coverage·section/paragraph 개수·원본 record 개수를 확인하고 현재 모델의 크기 한도를 검사한 뒤 추가 할당 없이 Document 값을 교환합니다. 직접 편집으로 크기가 한도를 넘으면 restore가 거부됩니다. History 명령의 성장 한도 rollback은 보존된 목적 상태의 한도를 검사한 뒤 추가 할당 없이 복구하며, 실패한 성장 초안은 폐기합니다.
+capture는 복사/State 할당이 모두 성공한 뒤 반환하고 실패 시 초안만 해제합니다. exchange는 세션 identity·할당자·format/coverage·section 개수·원본 record 개수를 확인하고 현재 모델의 크기 한도를 검사한 뒤 추가 할당 없이 Document 값을 교환합니다. 현재 문단 개수는 구조 편집으로 달라질 수 있습니다. 양쪽 모델의 원본 node/parent 범위와 생성 문단의 template 범위·양수 ID를 할당 없이 검증하며 원본 문단에는 생성 template를 허용하지 않습니다. 상세 topology·소유 관계는 [문단 구조 편집](paragraph-structure-edit.md)의 native 준비/저장 검증이 소유하고 opaque checkpoint는 별도 가변 모델을 공개하지 않습니다. 직접 편집으로 크기가 한도를 넘으면 restore가 거부됩니다. History 명령의 성장 한도 rollback은 보존된 목적 상태의 한도를 검사한 뒤 추가 할당 없이 복구하며, 실패한 성장 초안은 폐기합니다.
 
 ## native 이력 스택
 

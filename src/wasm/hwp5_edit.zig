@@ -115,6 +115,14 @@ export fn hwp5_edit_splice(section: u32, paragraph: u32, start: u32, end: u32, p
     apply(.{ .splice_text = .{ .section = section, .paragraph = paragraph, .start_unit = start, .end_unit = end, .utf8 = ptr[0..size], .range_policy = if (policy == 1) .half_open else .reject } }) catch |err| return fail(err);
     return 1;
 }
+export fn hwp5_edit_split(section: u32, paragraph: u32, at: u32) u32 {
+    apply(.{ .split_paragraph = .{ .section = section, .paragraph = paragraph, .at_unit = at } }) catch |err| return fail(err);
+    return 1;
+}
+export fn hwp5_edit_split_range(section: u32, paragraph: u32, start: u32, end: u32) u32 {
+    apply(.{ .split_paragraph = .{ .section = section, .paragraph = paragraph, .at_unit = start, .end_unit = end } }) catch |err| return fail(err);
+    return 1;
+}
 export fn hwp5_edit_format(section: u32, paragraph: u32, start: u32, end: u32, id: u32) u32 {
     apply(.{ .set_character_format = .{ .section = section, .paragraph = paragraph, .start_unit = start, .end_unit = end, .char_shape_id = id } }) catch |err| return fail(err);
     return 1;

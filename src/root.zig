@@ -655,6 +655,10 @@ test {
     _ = @import("hwp5/edit/editor_checkpoint_tests.zig");
     _ = @import("hwp5/edit/editor_history_tests.zig");
     _ = @import("hwp5/edit/editor_history_fixture_tests.zig");
+    _ = @import("hwp5/edit/instance_ids.zig");
+    _ = @import("hwp5/edit/paragraph_split.zig");
+    _ = @import("hwp5/edit/structure_plan_tests.zig");
+    _ = @import("hwp5/edit/structure_session_tests.zig");
     _ = @import("hwp5/edit/formula_session_tests.zig");
     _ = @import("hwp5/bin_data_stream_tests.zig");
     _ = @import("hwp5/container/bin_data_replace_tests.zig");

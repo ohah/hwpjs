@@ -31,6 +31,15 @@ test "model equality observes all metadata owned values null empty and floating 
                 try std.testing.expect(!equality.document(before, after));
                 @field(p, field.name) = !@field(p, field.name);
             },
+            .optional => |optional| switch (@typeInfo(optional.child)) {
+                .int => {
+                    const saved = @field(p, field.name);
+                    @field(p, field.name) = if (saved == null) 0 else null;
+                    try std.testing.expect(!equality.document(before, after));
+                    @field(p, field.name) = saved;
+                },
+                else => {},
+            },
             else => {},
         }
     }

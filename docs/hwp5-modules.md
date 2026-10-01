@@ -8,6 +8,7 @@
 - [Canvas 제어 표시와 원문 위치 연결](canvas-control-offsets.md)
 - [실험용 HWP5 편집 JS/WASM API](hwp5-editor-api.md)
 - [HWP5 native 체크포인트·편집 이력 기반](hwp5-edit-history.md)
+- [문단 분할·병합 구조 편집 기반](paragraph-structure-edit.md)
 - [추적 픽스쳐 편집 지원 전수 기준](fixture-editor-coverage.md)
 - [읽기 전용 문서 모델 첫 연결과 JSON 호환 경계](hwp5-model-projection.md)
 - [편집 모델과 원본 보존의 제한적 구현 실험](hwp5-style-preservation-experiment.md)

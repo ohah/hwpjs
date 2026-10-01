@@ -6,6 +6,8 @@
 
 ## 사용과 반환값
 
+선택적 `splitParagraph({ section, paragraph, atUnit, endUnit = atUnit })`의 문단 생성·선택 교체·원자성·native 이력 및 지원 제한은 [문단 구조 편집](paragraph-structure-edit.md)이 소유합니다. 새 구조 export가 없는 이전 제품은 기존 open/편집/저장을 계속 사용할 수 있으며 구조 명령만 `Hwp5StructureAbiUnavailable`로 거부합니다.
+
 ```js
 import { createExperimentalHwp5Editor } from '../js/hwp5-editor.mjs';
 

@@ -90,7 +90,8 @@ self.onmessage = async event => {
       }
       editor ??= await createExperimentalHwp5Editor(module, bytes);
       if (!historyEnabled) { editor.enableHistory(); historyEnabled = true; }
-      reply({ kind: "enable", charShapeCount: editor.characterShapeCount(), historyAvailable: true });
+      const structureAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwp5_edit_split" && entry.kind === "function");
+      reply({ kind: "enable", charShapeCount: editor.characterShapeCount(), historyAvailable: true, structureAvailable });
     } else if (message.kind === "undo" || message.kind === "redo") {
       if (!editor) throw new Error("EditorNotOpen");
       const changed = message.kind === "undo" ? editor.undo() : editor.redo();
@@ -106,6 +107,14 @@ self.onmessage = async event => {
         preview = reader.readText(editor.save({ allowStaleLayout: true }).bytes);
         reply({ kind: message.kind, changed, content: displayContent(preview) });
       }
+    } else if (message.kind === "split") {
+      if (!editor) throw new Error("EditorNotOpen");
+      if (format !== "hwp5") throw new Error("UnsupportedHwpxStructure");
+      editor.splitParagraph(message);
+      applied = true;
+      reader = await createHwp5Reader(module);
+      preview = reader.readText(editor.save({ allowStaleLayout: true }).bytes);
+      reply({ kind: "split", content: displayContent(preview) });
     } else if (message.kind === "splice" || message.kind === "format") {
       if (!editor) throw new Error("EditorNotOpen");
       if (format === "hwpx") {

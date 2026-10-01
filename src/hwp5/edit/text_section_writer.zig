@@ -16,26 +16,27 @@ pub fn write(a: std.mem.Allocator, source: []const u8, section: model.Section, v
     defer a.free(paragraph_by_node);
     @memset(paragraph_by_node, null);
     for (section.paragraphs, 0..) |p, index| {
-        if (p.source_node >= tree.nodes.len or tree.nodes[p.source_node].record.value != .header or paragraph_by_node[p.source_node] != null)
+        const source_node = try p.originalNode();
+        if (source_node >= tree.nodes.len or tree.nodes[source_node].record.value != .header or paragraph_by_node[source_node] != null)
             return error.SourceBindingMismatch;
-        paragraph_by_node[p.source_node] = index;
+        paragraph_by_node[source_node] = index;
         if (p.formula_results) |results| {
             if (p.range_tags == null) return error.FormulaDisplayMismatch;
             for (results, 0..) |result, i| {
                 if (p.field_attributes) |fields| {
                     if (@import("field_attributes.zig").find(fields, result.source_node) != null) return error.UnsupportedFieldAttributeCombination;
                 }
-                if (result.source_node >= tree.nodes.len or tree.nodes[result.source_node].parent != p.source_node) return error.SourceBindingMismatch;
+                if (result.source_node >= tree.nodes.len or tree.nodes[result.source_node].parent != source_node) return error.SourceBindingMismatch;
                 for (results[0..i]) |previous| if (previous.source_node == result.source_node) return error.SourceBindingMismatch;
                 const entry = tree.nodes[result.source_node].record.framing;
                 if (entry.tag != @intFromEnum(body.Tag.control_header)) return error.SourceBindingMismatch;
                 const header = try body.ControlHeader.parse(entry.payload);
                 if (header.id != @import("../body/control_rules.zig").id("%fmu")) return error.SourceBindingMismatch;
                 var ordinal: usize = 0;
-                var child: usize = @as(usize, p.source_node) + 1;
+                var child: usize = @as(usize, source_node) + 1;
                 while (child < result.source_node) {
                     const preceding = tree.nodes[child];
-                    if (preceding.parent == p.source_node and preceding.record.framing.tag == @intFromEnum(body.Tag.control_header)) {
+                    if (preceding.parent == source_node and preceding.record.framing.tag == @intFromEnum(body.Tag.control_header)) {
                         if ((try body.ControlHeader.parse(preceding.record.framing.payload)).id == header.id) ordinal += 1;
                     }
                     child = preceding.subtree_end;
@@ -60,11 +61,12 @@ pub fn write(a: std.mem.Allocator, source: []const u8, section: model.Section, v
         if (record.tag == @intFromEnum(body.Tag.paragraph_header)) {
             if (paragraph_index >= section.paragraphs.len) return error.SourceBindingMismatch;
             const p = section.paragraphs[paragraph_index];
-            if (p.source_node != node_index) return error.SourceBindingMismatch;
+            if (try p.originalNode() != node_index) return error.SourceBindingMismatch;
             paragraph_index += 1;
             const bytes = try a.dupe(u8, record.payload);
             defer a.free(bytes);
             bytes[body.Header.style_id_offset] = p.style_id;
+            std.mem.writeInt(u32, bytes[body.Header.instance_id_offset..][0..4], p.instance_id, .little);
             if (p.range_tags) |ranges| {
                 if (p.character_runs.len > 65535 or ranges.len > 65535) return error.LimitExceeded;
                 body.Header.writeTextCounts(bytes, p.declared_units, @intCast(p.character_runs.len), @intCast(ranges.len));
@@ -79,7 +81,7 @@ pub fn write(a: std.mem.Allocator, source: []const u8, section: model.Section, v
             }
             // Bind to immutable source presence, not a mutable duplicate flag.
             // New text precedes metadata, even when the paragraph had no text.
-            if (p.range_tags != null and (try children.collect(tree, p.source_node)).text_node == null) {
+            if (p.range_tags != null and (try children.collect(tree, try p.originalNode())).text_node == null) {
                 if (record.level == std.math.maxInt(u10)) return error.LimitExceeded;
                 const text = try plain.textBytes(a, p);
                 defer a.free(text);

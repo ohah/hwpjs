@@ -10,7 +10,8 @@ pub const Reader = struct {
         const node = try values.paragraphNode(tree, group);
         var found: ?model.Paragraph = null;
         for (self.section.paragraphs) |paragraph| {
-            if (paragraph.source_node != node) continue;
+            const source_node = paragraph.source_node orelse continue;
+            if (source_node != node) continue;
             if (found != null) return error.SourceBindingMismatch;
             found = paragraph;
         }

@@ -12,12 +12,14 @@ pub fn prepare(a: std.mem.Allocator, source: []const u8, version: Version, p: mo
         if (token.kind == .control and token.raw.len >= 2 and std.mem.readInt(u16, token.raw[0..2], .little) == 3) has_fields = true;
     }
     if (!has_fields) return null;
+    const source_node = try p.originalNode();
     var tree = try Tree.parseTextPreview(a, source, version, .{});
     defer tree.deinit(a);
     var fields: std.ArrayList(model.FieldAttributes) = .empty;
     errdefer fields.deinit(a);
-    var child: usize = @as(usize, p.source_node) + 1;
-    while (child < tree.nodes[p.source_node].subtree_end) {
+    if (source_node >= tree.nodes.len) return error.SourceBindingMismatch;
+    var child: usize = @as(usize, source_node) + 1;
+    while (child < tree.nodes[source_node].subtree_end) {
         const node = tree.nodes[child];
         if (node.record.framing.tag == @intFromEnum(body.Tag.control_header)) {
             const header = try body.ControlHeader.parse(node.record.framing.payload);
