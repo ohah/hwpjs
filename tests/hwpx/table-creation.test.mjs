@@ -12,6 +12,9 @@ test("public table creation and cell input save reopen undo redo exact bytes", a
   const bytes = source();
   try {
     editor.open(bytes); editor.enableHistory();
+    const resources = editor.tableCreationResources();
+    for (const [kind, id] of Object.entries(options.resources)) assert(resources[kind].includes(id));
+    assert.deepEqual(Buffer.from(editor.save()), bytes);
     const identity = editor.insertTable(0, 2, 0, options);
     assert.equal(typeof identity, "string");
     const [table] = editor.createdTables(0);
@@ -69,5 +72,25 @@ test("public table creation checkpoint budget refusal leaves no current table or
       assert.deepEqual(Buffer.from(editor.save()), bytes);
       assert.equal(editor.undo(), false); assert.equal(editor.redo(), false);
     }
+  } finally { editor.close(); }
+});
+
+test("table creation resource options include current cloned formats without changing history", async () => {
+  const editor = await createHwpxEditor(wasm());
+  try {
+    editor.open(source()); editor.enableHistory();
+    const original = editor.tableCreationResources();
+    assert.equal(editor.undo(), false);
+    editor.setParagraphAlignment({ section: 0, paragraph: 2, alignment: "CENTER" });
+    const paragraph = editor.paragraphShapeId(0, 2);
+    assert(!original.paragraph.includes(paragraph));
+    editor.setCharacterProperties({ section: 0, paragraph: 2, startUnit: 0, endUnit: 1, properties: { size: 1234 } });
+    const before = editor.save();
+    const current = editor.tableCreationResources();
+    assert(current.paragraph.includes(paragraph));
+    assert(current.character.some(id => !original.character.includes(id)));
+    assert.deepEqual(Buffer.from(editor.save()), Buffer.from(before));
+    assert.equal(editor.undo(), true);
+    assert.deepEqual(editor.tableCreationResources().character, original.character);
   } finally { editor.close(); }
 });

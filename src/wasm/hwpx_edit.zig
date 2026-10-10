@@ -28,6 +28,14 @@ export fn hwpx_edit_save_for_display() u32 {
     output = @import("../hwpx/editor_display_save.zig").save(session) catch |err| return fail(err);
     return 1;
 }
+export fn hwpx_edit_table_creation_resources() u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    var resources = @import("../hwpx/created_table_resource_options.zig").read(session) catch |err| return fail(err);
+    defer resources.deinit(a);
+    output = std.json.Stringify.valueAlloc(a, resources, .{}) catch |err| return fail(err);
+    return 1;
+}
 export fn hwpx_edit_close() void {
     hwpx_edit_output_free();
     if (history) |*value| value.deinit();

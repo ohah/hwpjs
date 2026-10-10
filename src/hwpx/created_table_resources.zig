@@ -2,20 +2,10 @@
 const std = @import("std");
 pub fn validate(session: *const @import("editor_session.zig").Session, resources: @import("../model/created_table.zig").Resources) !void {
     const a = session.allocator;
-    var document = try @import("package.zig").inspectDocument(a, session.source, .{});
-    defer document.deinit(a);
-    var report = try document.inspectHeaderResources(a, .{ .resources = .{ .max_xml_bytes = session.options.max_xml_bytes } });
-    defer report.deinit(a);
-    var paragraph = report.table(.para_shape).hasId(resources.paragraph);
-    var character = report.table(.char_shape).hasId(resources.character);
-    for (session.paragraph_resources.entries.items) |entry| if (entry.id == resources.paragraph) {
-        paragraph = true;
-    };
-    for (session.character_resources.entries.items) |entry| if (entry.id == resources.character) {
-        character = true;
-    };
-    if (!paragraph) return error.InvalidParagraphShapeReference;
-    if (!character) return error.InvalidCharacterShapeReference;
-    if (!report.table(.style).hasId(resources.style)) return error.InvalidStyleReference;
-    if (!report.table(.border_fill).hasId(resources.border_fill)) return error.InvalidBorderFillReference;
+    var options = try @import("created_table_resource_options.zig").read(session);
+    defer options.deinit(a);
+    if (std.mem.indexOfScalar(u32, options.paragraph, resources.paragraph) == null) return error.InvalidParagraphShapeReference;
+    if (std.mem.indexOfScalar(u32, options.character, resources.character) == null) return error.InvalidCharacterShapeReference;
+    if (std.mem.indexOfScalar(u32, options.style, resources.style) == null) return error.InvalidStyleReference;
+    if (std.mem.indexOfScalar(u32, options.border_fill, resources.border_fill) == null) return error.InvalidBorderFillReference;
 }
