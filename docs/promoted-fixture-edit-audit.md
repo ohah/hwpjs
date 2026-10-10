@@ -2,6 +2,8 @@
 
 ## 2026-10-11 고정67dc85ca 추적 HWPX 재감사
 
+같은 고정67dc85ca의 HWP5 전체 문단 감사도 exit0으로 완료했습니다. `/tmp/hwpjs-main-drawing-batch-hwp5-edit-20261011.json`은 추적101입력을 분류해 HWP5 전체 prefix 통과53파일·숫자 prefix 부분1파일·암호 일반 읽기 거부1, HWPX 별도45·암호 일반 읽기 거부1을 기록합니다. HWP5 2090시도 중2042입력·저장 텍스트/비대상 stream·재열기·이력 성공, chart 숫자 셀48개의 비숫자 prefix InvalidFormulaNumber 거부입니다. HWP5 숫자 전용 명령 전수의 최신 재실행은 별도이며 HWPX 숫자 결과를 HWP5에 소급하지 않습니다. 아래 HWP5 실행 중 표현은 이 종료 결과로 대체합니다.
+
 게시9dbe495d의 깨끗한 소스·ReleaseSafe 산출물 SHA256 `67dc85ca4dfadda3e3f2515951f5f9ca92189d5f81b058a61323036ba8d49dda`로46파일(암호1개 별도)의 모든1444문단을 일반 경로와 전용 경로로 분류했습니다. 두 감사 모두 exit0입니다. 일반 `/tmp/hwpjs-main-drawing-batch-edit-corpus-20261011.jsonl`은1231입력/저장 재열기/undo·redo·최종 원문 복원을 기록합니다. 거부는 UnsupportedParagraphControl146·InvalidFormulaNumber48·ProtectedFieldRange19이며 기존 redo 보존189회입니다.
 
 전용 `/tmp/hwpjs-main-drawing-batch-specialized-20261011.jsonl`은 일반/필드 외부 적격성 밖165문단 중152입력/저장 재열기/이력·독립 전체 XML/ZIP152대조(필드6)이며 계산 결과 직접 입력13개는 UnsupportedFieldLabelRange로 거부했습니다. 일반·전용의 성공 문단은 서로 겹치지 않지만 모든 명령의 전수 지원으로 합산하지 않습니다.
