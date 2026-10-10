@@ -1,4 +1,4 @@
-//! Document-wide paragraph identity check before committing a created table.
+//! Source-part collection for created-table paragraph and table instance IDs.
 const std = @import("std");
 pub fn validate(session: *const @import("editor_session.zig").Session, table: *const @import("../model/created_table.zig").Table) !void {
     const a = session.allocator;
@@ -28,6 +28,7 @@ pub fn validate(session: *const @import("editor_session.zig").Session, table: *c
         };
     }
     @memcpy(trees[session.sections.len..], extras);
+    try @import("created_table_object_ids.zig").validateSource(a, trees, table.instance_id);
     if (table.cells.len > session.options.max_sites) return error.LimitExceeded;
     const incoming = try a.alloc(u32, table.cells.len);
     defer a.free(incoming);

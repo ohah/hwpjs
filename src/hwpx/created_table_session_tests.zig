@@ -73,6 +73,13 @@ test "created table staged IDs reject split source and previous cell collisions 
     try std.testing.expectEqual(@as(usize, 0), session.sections[0].created_tables.entries.items.len);
     value.cells[0].paragraph_id = 1000000;
     try std.testing.expect(try staging.stage(&session, 0, 2, 0, &value));
+    var parts = [_]editor.Section{ session.sections[0], session.sections[0] };
+    parts[0].created_tables = .{};
+    var borrowed = session;
+    borrowed.sections = &parts;
+    try std.testing.expectError(error.InvalidCreatedTableIdentity, @import("created_table_object_ids.zig").validateCurrent(&borrowed, 1, 34));
+    try std.testing.expectError(error.InvalidCreatedTableIdentity, @import("created_table_object_ids.zig").validateCurrent(&borrowed, 2, 33));
+    try @import("created_table_object_ids.zig").validateCurrent(&borrowed, 2, 34);
     value.identity = 2;
     value.instance_id = 34;
     try std.testing.expectError(error.InvalidParagraphInstanceId, staging.stage(&session, 0, 2, 0, &value));

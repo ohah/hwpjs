@@ -4,7 +4,7 @@
 
 `validateAdditional`은 호출자가 제공한 신규 셀 문단 ID들을 동일한 원본/현재 생성 inventory에 대조합니다. 양의 u32·원본 충돌·기존 생성 충돌·이번 입력 중복과 전체 문단 예산을 검사합니다. `next`/`nextMany`의 수집기를 공유하고 예약이나 문서 변경을 수행하지 않습니다. 2026-10-11 ReleaseSafe 집중2/2(root 포함)·exit0은 원본 중복/동일값 어휘/유효 넓은 ID 보존, zero/세 종류 충돌/예산 거부, 모든 할당 실패와 후속 할당 결과 불변을 확인했습니다. 아직 Session 생성 거래가 이 검증기를 호출하지 않으므로 공개 삽입의 문서 전체 충돌 방지가 완료된 것은 아닙니다.
 
-후속 `created_table_paragraph_ids.validate`가 내부 staging 거래의 변경 전에 이 검증기를 호출합니다. 모든 section 원본 트리와 기존 공통 header/masterpage source-part 수집기를 사용하고, 모든 section의 현재 생성 문단과 생성 표 셀 ID를 합칩니다. 기존 ID 파서나 ZIP 탐색 정책을 복제하지 않습니다. 공개 표 생성·표 instance/object identity·서식 참조 검증은 별도 남은 단계입니다.
+후속 생성 거래 연결과 source-part 수집 모듈의 현재 이름·검증 범위는 [생성 표 문서 참조 검증](hwpx-created-table-validation.md)을 따릅니다. 기존 ID 파서나 ZIP 탐색 정책을 복제하지 않습니다.
 
 최종 별도 prefix `/tmp/hwpjs-paragraph-id-batch-20261011`의 ReleaseSafe build도 exit0입니다. 후보에는 기존 작업 트리 변경이 포함되므로 깨끗한 게시 소스 검증/기본 제품 승격으로 해석하지 않습니다.
 
