@@ -2,6 +2,8 @@
 
 ## 게시 HWPX 감사의 환경/오래된 기대값 분리
 
+각주/미주 검사에도 동일한 raw-byte pipe 입력이 남아 있어 정규 파일 입력 helper와30초 timeout으로 통일했습니다. 원본 번호/본문/비대상 ZIP 변조의 부정 대조는 status1/signalnull 및 정확한 complete XML mismatch/mimetype 오류를 요구합니다. 게시727c38df 산출물에서 실제4본문의 전체 XML/ZIP·삭제 후 재입력/번호 보존2/2·skip0·exit0(888ms)입니다. 같은 잠재 입력 위험을 제거한 작업이며 이 각주 경로 자체의 장시간 hang을 별도로 재현했다고 주장하지 않습니다. 실행 중인 b806902d 정규 gate에 이 수정이 포함됐다고 소급하지 않습니다.
+
 정규 실행의 Python 자식이4분 이상 CPU0으로 stdin read에서 대기함을 ps/lsof/sample로 확인했습니다(`/tmp/hwpjs-python-oracle-wait-20261011.txt`). 해당 검사 자식만 SIGTERM으로 종료했고 정규 gate는 실패 종료로 기록했습니다. 게시 formula-editor 검사의 동기 pipe 입력을 기존 oracle-process의 정규 파일 입력으로 연결하고 모든 Python 호출에30초 timeout을 붙였습니다. 명시적 pipe stdio는 제거하며 변조 반례는 status1/signalnull과 변조별 정확한 ValueError를 요구합니다. caf15480 추출본+최소 수정+727c38df WASM에서2/2·skip0·exit0(38771ms), 강화한 변조 검사 단독1/1·exit0입니다. 로컬 다른 테스트 확장/전체 정규 gate 통과와 구분합니다.
 
 후속 HWPX 숫자/수식 게시 의존성 검증은727c38df(게시 caf15480 소스 산출물)에서4파일5/5·skip0·exit0(53128ms)입니다.48숫자 입력·13수식 정의 전수·PRODUCT/반복 참조·실제 Worker·정확 표시 문자열을 함께 검사했습니다. 숫자 입력은 저장/재열기/이력/비숫자 거부 후 redo까지 확인합니다. 이 실행의 테스트/독립 정의 oracle/일관된 잘못된 cache·label 변조기는 로컬에만 있던5파일을 의존성 단위로 게시합니다. Python 일반/최적화 검사의 실패는 정확한 변조 원인과 종료코드로 확인하며 timeout/인프라 실패를 통과로 바꾸지 않습니다. 정규 gate의 전체 종료 결과나 모든 명령/함수 지원으로 확대하지 않습니다.

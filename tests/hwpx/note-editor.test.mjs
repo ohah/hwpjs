@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
-import { execFileSync } from "node:child_process";
+import { execFileSync } from "../../tools/oracle-process.mjs";
 import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
 import { createHwpxReader } from "../../js/hwpx.mjs";
 
 test("public HWPX four note bodies edit with independent complete XML and ZIP comparison", async () => {
-  const wasm = readFileSync("zig-out/bin/hwpjs.wasm");
+  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
   const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/footnote-endnote.hwpx");
   const editor = await createHwpxEditor(wasm), reader = await createHwpxReader(wasm);
   const inserted = "검증😀<&";
@@ -37,7 +37,7 @@ print('four bodies and all remaining XML unchanged')`;
     const saved = editor.save();
     for (const flags of [[], ["-O"]]) {
       assert.match(execFileSync("python3", [...flags, "-c", oracle], {
-        input: JSON.stringify({ before: input.toString("base64"), after: Buffer.from(saved).toString("base64"), inserted }),
+        input: JSON.stringify({ before: input.toString("base64"), after: Buffer.from(saved).toString("base64"), inserted }), timeout: 30000,
       }).toString(), /four bodies/);
     }
     const mutations = `import io,json,sys,base64,zipfile,copy,xml.etree.ElementTree as E
@@ -55,11 +55,11 @@ for kind in ('number','body','payload'):
    out.writestr(copy.copy(info),payload)
  variants.append(base64.b64encode(stream.getvalue()).decode())
 print(json.dumps(variants))`;
-    const variants = JSON.parse(execFileSync("python3", ["-c", mutations], { input: saved }).toString());
-    for (const after of variants) for (const flags of [[], ["-O"]]) {
+    const variants = JSON.parse(execFileSync("python3", ["-c", mutations], { input: saved, timeout: 30000 }).toString());
+    for (const [index, after] of variants.entries()) for (const flags of [[], ["-O"]]) {
       assert.throws(() => execFileSync("python3", [...flags, "-c", oracle], {
-        input: JSON.stringify({ before: input.toString("base64"), after, inserted }), stdio: ["pipe", "pipe", "pipe"],
-      }));
+        input: JSON.stringify({ before: input.toString("base64"), after, inserted }), timeout: 30000,
+      }), error => error.status === 1 && error.signal === null && String(error.stderr).includes(`ValueError: ${index === 2 ? "mimetype" : "complete XML mismatch"}`));
     }
     for (const paragraph of paragraphs) {
       const text = reader.readTextEvents(saved).events.filter(e => e.kind === "content" && e.paragraph === paragraph).map(e => e.value).join("");
@@ -77,7 +77,7 @@ print(json.dumps(variants))`;
 });
 
 test("public HWPX note body delete all reopen and reinput keeps numbering", async () => {
-  const wasm = readFileSync("zig-out/bin/hwpjs.wasm");
+  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
   const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/footnote-endnote.hwpx");
   const editor = await createHwpxEditor(wasm), reader = await createHwpxReader(wasm);
   try {
