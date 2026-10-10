@@ -1,5 +1,7 @@
 # 기본 WASM 픽스쳐 편집 재검증
 
+추적 픽스쳐 밖의 대형 참조 원본과 과거 거부의 현재 표본 대조는 [현재 참조 편집 표본](reference-current-probes.md)이 소유합니다. 아래 추적 파일 감사 결과에 자동 합산하지 않습니다.
+
 ## 게시된 b806902d 정규 HWPX 감사
 
 별도 Git 체크아웃 `/tmp/hwpjs-main-hwpx-fixed.g3fw1k`의 `b806902d8488945bb2bf306d97d6865db80f2243`에서 ReleaseSafe 빌드와 `zig build hwpx-text-audit -Doptimize=ReleaseSafe`가 exit0으로 종료됐습니다. 소스 작업 트리는 깨끗하고 추적 HWPX46경로가 포함됩니다. WASM SHA256은 `d8d2f0bcfa9440687474b0f5666d7eeb1a1680db70e5c73c245222ea43147084`이며 데모 b8e5409a/이전 추출본727c38df와 구분합니다. `/tmp/hwpjs-main-hwpx-fixed-gate-20261011.log`의 결과는34/34·fail0/skip0/cancel0·51193ms입니다.
