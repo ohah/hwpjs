@@ -1,5 +1,11 @@
 # 기본 WASM 픽스쳐 편집 재검증
 
+## 2026-10-11 구조 편집 수식 수정 후 기본 산출물
+
+기본 WASM SHA256 `b8e5409af336c039c78b19e94b93eba880a2bd19996813feb321105e3b550899`에서 `node tools/hwp5-edit-corpus-audit.mjs --history`가 exit0으로 종료됐습니다. 로그는 `/tmp/hwpjs-structural-formula-hwp5-edit-20261011.json`입니다. Git 추적101입력의 분류는 HWP5 전체 문단 prefix 통과53·부분1·암호 일반 읽기 거부1, HWPX 별도 편집 감사 대상45·암호 일반 읽기 거부1입니다. HWP5 2090시도 중2042편집/저장 재열기/이력 성공, 비숫자 입력의 InvalidFormulaNumber 거부48입니다. 전수 prefix 검사이며 모든 명령/숫자 대체/브라우저/조판 완료 검사가 아닙니다. 같은 기본 산출물의 HWPX 감사는 별도 실행 중이며 이전 실행의 집계를 최신 결과로 소급하지 않습니다.
+
+## 이전 산출물 기록
+
 2026-10-10 `node tools/hwp5-edit-corpus-audit.mjs --history`는 기본 WASM SHA256 `7e70bbc74b7665553cd4f7e1b6a90aeb81a2e14c6c705e332d0ddac495e645e8`으로 Git 추적101입력을 검사했고 exit0입니다. 로그는 `/tmp/hwpjs-promoted-hwp5-edit-20261010.json`입니다.
 
 HWP5는53파일의 모든 문단 prefix 입력·저장 텍스트/비대상 stream·재열기·이력이 검증됐습니다. chart.hwp1파일은 숫자 셀48문단에 비숫자 prefix를 공급한 `InvalidFormulaNumber` 거부로 부분 지원 상태입니다. 전체2090시도 중2042편집/이력 성공이고 거부48입니다. 이 거부를 파서 오류나 모든 숫자 입력 미지원으로 해석하지 않습니다. 숫자 값/정확 수식 결과는 별도 집중 검사의 범위입니다.
