@@ -1,5 +1,7 @@
 # 생성 표 Worker 표시 경계
 
+로컬 생성 셀 geometry와 글자 배치 책임은 [생성 표 셀 배치](hwpx-created-table-layout.md)를 따릅니다.
+
 Worker `insert-table`은0기반 paragraph를 native1기반으로 변환하고 기존 공개 생성 거래를 호출합니다. `created-cell-text`는 section/identity/row/column/text를 전용 생성 셀 거래로 전달합니다. history가 켜진 HWPX에서만 명령을 수락합니다. 생성 identity는 응답에 유지합니다.
 
 `editor_display_save.save`와 선택적 `saveForDisplay()`는 임시 section view에서 생성 registry만 제외해 기존 flat native 문단 주소를 유지하는 파생 표시 ZIP을 만듭니다. 원문과 registry·셀 텍스트를 변경하지 않으며 borrowed Session을 해제하지 않습니다. **다운로드 저장에 사용할 수 없습니다.** 일반 `save()`는 생성 표를 포함한 실제 저장입니다. 이전 WASM의 표시 저장은 기존 save로 fallback하며 생성 기능 availability는 네 관련 ABI가 모두 있을 때만 켭니다.
