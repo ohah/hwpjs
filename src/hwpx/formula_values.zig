@@ -24,7 +24,7 @@ fn explicitArithmeticCase(a: std.mem.Allocator) !void {
     const marker = for (tree.elements, 0..) |element, index| {
         if (element.is(@import("document_xml.zig").paragraph_uri, "fieldBegin")) break index;
     } else return error.TestExpectedEqual;
-    inline for (.{ "PRODUCT(A1,A1,A1)", "SUM(A1,A1,A1)", "AVG(A1,A1,A1)", "SUM(A1)" }, .{ @as(f64, 8), @as(f64, 6), @as(f64, 2), @as(f64, 2) }) |expression, expected| {
+    inline for (.{ "PRODUCT(A1,A1,A1)", "SUM(A1,A1,A1)", "AVG(A1,A1,A1)", "SUM(A1)", "MIN(A1,A1,A1)", "MAX(A1)" }, .{ @as(f64, 8), @as(f64, 6), @as(f64, 2), @as(f64, 2), @as(f64, 2), @as(f64, 2) }) |expression, expected| {
         const wire = try std.unicode.utf8ToUtf16LeAlloc(a, expression);
         defer a.free(wire);
         const range = try ranges.Range.parse(std.mem.sliceAsBytes(wire));
@@ -83,6 +83,9 @@ test "HWPX formula injected cell reader preserves lookup limits and propagates e
     var numeric = reader;
     numeric.value = -3;
     try std.testing.expectEqual(@as(f64, 9), (try evaluateWith(a, &tree, &sites, marker, product, .{}, numeric)).value);
+    var maximum = product;
+    maximum.function = .maximum;
+    try std.testing.expectEqual(@as(f64, -3), (try evaluateWith(a, &tree, &sites, marker, maximum, .{}, numeric)).value);
     numeric.value = 0;
     try std.testing.expectEqual(@as(f64, 0), (try evaluateWith(a, &tree, &sites, marker, product, .{}, numeric)).value);
     numeric.value = 1e308;
@@ -97,7 +100,8 @@ pub fn evaluateWith(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zi
     if (count > limits.cells) return error.LimitExceeded;
     if (@hasDecl(@TypeOf(reader), "charge")) try reader.charge(count, 0);
     var remaining = limits.inspections;
-    var sum: f64 = if (range.function == .product) 1 else 0;
+    const aggregate = @import("../model/range_aggregate.zig");
+    var sum = aggregate.initial(range.function);
     while (selection.next()) |coordinate| {
         const row = coordinate.row;
         const column = coordinate.column;
@@ -134,10 +138,9 @@ pub fn evaluateWith(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zi
         remaining -= projection_cost;
         if (@hasDecl(@TypeOf(reader), "charge")) try reader.charge(0, projection_cost);
         const value = try reader.read(a, tree, sites, selected);
-        if (range.function == .product) sum *= value else sum += value;
-        if (!std.math.isFinite(sum)) return error.FormulaNumericOverflow;
+        sum = try aggregate.step(range.function, sum, value);
     }
-    return .{ .value = if (range.function == .average) sum / @as(f64, @floatFromInt(count)) else sum, .cells = count, .inspections = limits.inspections - remaining };
+    return .{ .value = try aggregate.finish(range.function, sum, count), .cells = count, .inspections = limits.inspections - remaining };
 }
 
 test "HWPX formula values reject missing duplicate merged cells and survive allocation failures" {

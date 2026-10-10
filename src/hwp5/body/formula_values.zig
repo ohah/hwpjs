@@ -5,6 +5,7 @@ const Tree = @import("tree.zig").Tree;
 const Groups = @import("list_groups.zig").Groups;
 const body = @import("reader.zig");
 const ranges = @import("formula_range.zig");
+const aggregate = @import("../../model/range_aggregate.zig");
 const Owner = @import("formula_cell.zig").Owner;
 pub const Limits = struct { cells: usize = 100_000, inspections: usize = 1_000_000 };
 pub const Result = struct { value: f64, cells: usize };
@@ -28,12 +29,7 @@ pub fn evaluateWith(tree: Tree, groups: Groups, owner: Owner, range: ranges.Rang
     const count = selection.count;
     if (count > limits.cells) return error.LimitExceeded;
     var remaining = limits.inspections;
-    var sum: f64 = switch (range.function) {
-        .product => 1,
-        .minimum => std.math.inf(f64),
-        .maximum => -std.math.inf(f64),
-        else => 0,
-    };
+    var sum = aggregate.initial(range.function);
     while (selection.next()) |selected| {
         const row = selected.row;
         const column = selected.column;
@@ -52,16 +48,9 @@ pub fn evaluateWith(tree: Tree, groups: Groups, owner: Owner, range: ranges.Rang
         }
         const group = groups.items[found orelse return error.MissingFormulaCell];
         const value = try reader.read(tree, group);
-        if (!std.math.isFinite(value)) return error.FormulaNumericOverflow;
-        sum = switch (range.function) {
-            .product => sum * value,
-            .minimum => @min(sum, value),
-            .maximum => @max(sum, value),
-            else => sum + value,
-        };
-        if (!std.math.isFinite(sum)) return error.FormulaNumericOverflow;
+        sum = try aggregate.step(range.function, sum, value);
     }
-    return .{ .value = if (range.function == .average) sum / @as(f64, @floatFromInt(count)) else sum, .cells = count };
+    return .{ .value = try aggregate.finish(range.function, sum, count), .cells = count };
 }
 
 pub fn paragraphNode(tree: Tree, group: @import("list_groups.zig").Group) !usize {

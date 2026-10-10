@@ -1,7 +1,7 @@
 //! Numeric SUM/AVG/PRODUCT/MIN/MAX ranges and explicit cell references.
 //! Not a general formula evaluator.
 const std = @import("std");
-pub const Function = enum { sum, average, product, minimum, maximum };
+pub const Function = @import("../../model/range_aggregate.zig").Function;
 pub const Axis = union(enum) { current, absolute: u32 };
 pub const Address = struct { column: Axis, row: Axis };
 pub const Cell = struct { column: u32, row: u32 };
