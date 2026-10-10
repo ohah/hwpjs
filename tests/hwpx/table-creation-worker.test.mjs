@@ -102,5 +102,15 @@ test("Canvas insertion command uses current source caret and focuses its created
   h.input.value = "첫 셀😀"; h.input.setSelectionRange(h.input.value.length, h.input.value.length); dispatchCanvasEvent(h.input, "input");
   const edited = await h.flush(); assert.equal(edited.error, undefined);
   assert.equal(edited.content.createdTables[0].cells[0].text, "첫 셀😀");
+  const count = h.requests.length;
+  dispatchCanvasEvent(h.input, "keydown", { key: "Tab" });
+  assert.equal(h.requests.length, count);
+  assert.equal(h.input.value, "");
+  h.input.value = "둘째😀"; h.input.setSelectionRange(h.input.value.length, h.input.value.length); dispatchCanvasEvent(h.input, "input");
+  assert.equal(h.requests.at(-1).column, 1);
+  const next = await h.flush(); assert.equal(next.error, undefined);
+  assert.equal(next.content.createdTables[0].cells[1].text, "둘째😀");
+  dispatchCanvasEvent(h.input, "keydown", { key: "Tab", shiftKey: true });
+  assert.equal(h.input.value, "첫 셀😀");
   h.paint();
 });

@@ -651,7 +651,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
       toggleCharacterProperty({ b: "bold", i: "italic", u: "underline" }[key.toLowerCase()]);
       return;
     }
-    if (key === "Tab" && !event.metaKey && !event.ctrlKey && !event.altKey && renderer.paragraph(target)?.tableCell) {
+    if (key === "Tab" && !event.metaKey && !event.ctrlKey && !event.altKey && (target?.createdCell || renderer.paragraph(target)?.tableCell)) {
       if (pending || historyPending || input.value !== committed || !controls.ready() || controls.busy()) { event.preventDefault(); report("입력 반영이 끝난 뒤 셀을 이동하세요."); return; }
       const next = renderer.adjacentCell?.(target, event.shiftKey);
       if (!next) return;
