@@ -14,7 +14,7 @@ test("created table document flow shifts later rows clips and retains stable ide
   for (const row of flow.rows.filter(row => row.createdCell)) {
     assert.equal(row.pageClip.y + 6, row.y);
     assert.equal(createdCellParagraph(flow, row).text, "셀😀");
-    assert.equal(row.editable, false);
+    assert.equal(row.editable, true);
   }
   assert.deepEqual(base, before);
 });

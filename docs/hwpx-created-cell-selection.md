@@ -1,5 +1,7 @@
 # 생성 셀 선택 주소
 
+후속 직접 입력·draft·history 복원은 [생성 셀 Canvas 입력](hwpx-created-cell-input.md)을 따릅니다. 아래 읽기 전용 단계의 기록을 현재 입력 제한으로 해석하지 않습니다.
+
 공통 text geometry의 `sameParagraph`와 `paragraphTarget`은 source paragraph와 생성 셀의 서로 다른 주소를 구분합니다. 생성 셀 주소는 section·createdCell.identity/row/column이며 원본 paragraph 번호를 갖지 않습니다. `sameCreatedCell`이 비교 규칙을 소유합니다. hitText가 이 주소를 반환하고 caret/selection rect도 같은 비교기를 사용합니다.
 
 생성 rows/paragraph views는 이 단계에서 selectable=true, editable=false입니다. Canvas 선택 시 renderer의 생성 셀 text view를 읽지만 native 일반 편집·서식 범위 주소를 합성하지 않습니다. `editRange`/`selectedRange`는 생성 셀에서 source 문단 query/서식 명령을 반환하지 않습니다. 직접 입력 전송과 draft는 다음 단계로 남아 있습니다.

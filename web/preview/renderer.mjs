@@ -15,6 +15,7 @@ import { caretGeometry, selectionRects, selectionIntersectsText } from "./text-g
 import { createTextStyle, withDraftText } from "./text-style.mjs";
 import { layoutTableContent } from "./table-flow.mjs";
 import { attachCreatedTableFlow, createdCellParagraph } from "./created-table-flow.mjs";
+import { projectCreatedCellDraft } from "./created-cell-draft.mjs";
 import { adjacentCell } from "./table-navigation.mjs";
 import { characterTogglePatch, characterSelectionState, characterRangesState } from "./character-property-selection.mjs";
 import { characterSizeState, characterSizeRangesState } from "./character-size-selection.mjs";
@@ -278,7 +279,7 @@ export function createRenderer(canvas, viewportElement, spacer, onLayout = () =>
     paintedPictures = { behind: [], front: [] };
     picturePaintOrder = [];
     ctx.font = FONT;
-    display = draft ? { ...content, paragraphs: content.paragraphs.map(p => p.section === draft.section && p.paragraph === draft.paragraph ? withDraftText(p, draft.text) : p) } : content;
+    display = draft?.createdCell ? projectCreatedCellDraft(content, draft) : draft ? { ...content, paragraphs: content.paragraphs.map(p => p.section === draft.section && p.paragraph === draft.paragraph ? withDraftText(p, draft.text) : p) } : content;
     fontAt = createTextStyle(display, FONT);
     pictureDisplay = { ...display, pictures: projectDraftPictures(content, draft), lines: projectDraftAnchoredObjects(content, content.lines, draft), drawings: projectDraftDrawings(content, draft), rectangles: projectDraftDrawings({ ...content, drawings: content.rectangles }, draft), checkBoxes: projectDraftAnchoredObjects(content, content.checkBoxes, draft, "siteState") };
     pictures = inlinePictureIndex(pictureDisplay);

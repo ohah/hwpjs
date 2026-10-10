@@ -151,11 +151,12 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     preferredX = null;
     const font = change.text && typingFont && sameParagraph(typingFont, target) ? typingFont : null;
     const properties = change.text && typingProperties && sameParagraph(typingProperties, target) ? { ...typingProperties.properties } : null;
-    pending = { kind: font ? "splice-font-name" : properties ? "splice-character-properties" : "splice", start: change.startUnit, end: change.endUnit,
+    pending = { kind: target.createdCell ? "created-cell-text" : font ? "splice-font-name" : properties ? "splice-character-properties" : "splice", start: change.startUnit, end: change.endUnit,
       beforeSelection: draftSelection ?? { anchor: { ...target, unit: change.startUnit }, focus: { ...target, unit: change.endUnit } } };
     draftSelection = null;
     const command = sourceRange ?? sourceTextChange(change, renderer.paragraph(target)?.sourceOffsets);
-    if (!controls.request({ kind: pending.kind, origin: "canvas", section: target.section, paragraph: target.paragraph, ...command, ...(font ? { language: font.language, name: font.name } : {}), ...(properties ? { properties } : {}) })) pending = null;
+    const request = target.createdCell ? { kind: pending.kind, origin: "canvas", section: target.section, identity: target.createdCell.identity, row: target.createdCell.row, column: target.createdCell.column, text: input.value } : { kind: pending.kind, origin: "canvas", section: target.section, paragraph: target.paragraph, ...command, ...(font ? { language: font.language, name: font.name } : {}), ...(properties ? { properties } : {}) };
+    if (!controls.request(request)) pending = null;
     input.setAttribute("aria-busy", String(Boolean(pending)));
   };
   const reveal = () => {
@@ -238,6 +239,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     return true;
   };
   const split = () => {
+    if (target?.createdCell) { report("생성 셀의 여러 문단 편집은 아직 지원하지 않습니다."); return; }
     if (!textEditable() && !(splitQueryAvailable && editRange() && splitPermission.allowed(editRange()))) {
       if (splitQueryAvailable && editRange()) report(splitPermission.pending(editRange()) ? "문단 분할 범위를 확인 중입니다. 확인 후 Enter를 다시 누르세요." : "이 범위는 문단을 분할할 수 없습니다.");
       return false;
@@ -506,6 +508,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     input.setAttribute("aria-busy", "true"); return true;
   };
   const mergeBoundary = backward => {
+    if (target?.createdCell) return false;
     if (!textEditable()) return false;
     if (!target || input.selectionStart !== input.selectionEnd || input.selectionStart !== (backward ? 0 : input.value.length)) return false;
     if (!mergeAvailable) return false;
@@ -1032,7 +1035,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
         const restored = versioned && message.changed ? historySelections.selection(revision) : null;
         const restoredParagraph = restored && renderer.paragraph(restored.focus);
         const restoredRanges = restored && (sameParagraph(restored.anchor, restored.focus)
-          ? paragraphSelectionRanges([restoredParagraph], restored.anchor, restored.focus, () => "single", { sourcePositions: false, includeEmpty: true })
+          ? restored.focus.createdCell ? Boolean(restoredParagraph) : paragraphSelectionRanges([restoredParagraph], restored.anchor, restored.focus, () => "single", { sourcePositions: false, includeEmpty: true })
           : renderer.selectionRanges?.(restored.anchor, restored.focus));
         if (restored && selectableText(restoredParagraph) && restoredRanges && caretGeometry(renderer.layout(), restored.anchor) && caretGeometry(renderer.layout(), restored.focus)) {
           target = paragraphTarget(restored.focus);

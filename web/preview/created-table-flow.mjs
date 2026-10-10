@@ -25,9 +25,9 @@ export function attachCreatedTableFlow(content, base, measure, maxRows = 20000) 
     }
     for (const box of boxes) if (box.y >= cut) box.y += shift;
     for (const picture of flowPictures ?? []) if (picture.rectangle.y >= cut) picture.rectangle.y += shift;
-    rows.push(...flow.rows.map(row => ({ ...row, editable: false, selectable: true })));
+    rows.push(...flow.rows.map(row => ({ ...row, editable: true, selectable: true })));
     boxes.push(...flow.boxes);
-    paragraphs.push(...flow.paragraphs.map(paragraph => ({ ...paragraph, editable: false, selectable: true })));
+    paragraphs.push(...flow.paragraphs);
     height += shift;
   }
   rows.sort((a, b) => a.y - b.y || (a.x ?? 20) - (b.x ?? 20));
