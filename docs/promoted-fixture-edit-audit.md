@@ -1,5 +1,11 @@
 # 기본 WASM 픽스쳐 편집 재검증
 
+## 게시된 b806902d 정규 HWPX 감사
+
+별도 Git 체크아웃 `/tmp/hwpjs-main-hwpx-fixed.g3fw1k`의 `b806902d8488945bb2bf306d97d6865db80f2243`에서 ReleaseSafe 빌드와 `zig build hwpx-text-audit -Doptimize=ReleaseSafe`가 exit0으로 종료됐습니다. 소스 작업 트리는 깨끗하고 추적 HWPX46경로가 포함됩니다. WASM SHA256은 `d8d2f0bcfa9440687474b0f5666d7eeb1a1680db70e5c73c245222ea43147084`이며 데모 b8e5409a/이전 추출본727c38df와 구분합니다. `/tmp/hwpjs-main-hwpx-fixed-gate-20261011.log`의 결과는34/34·fail0/skip0/cancel0·51193ms입니다.
+
+이 정규 선택에는 게시된 숫자 입력/정확 문자열/수식 정의/Worker corpus가 포함되고 이전 Worker 기대값 및 formula oracle 입력 경로 수정이 적용됐습니다. 이후058e98b9 각주 입력 경로 보강은 포함되지 않습니다(별도2/2 근거). 정규 선택 목록 밖의 모든 검사·모든 객체 명령·실제 브라우저/IME·원본 한글 조판 완료로 확대하지 않습니다. 이 빌드 산출물로 외부 데모를 교체하지 않았습니다.
+
 ## 게시 HWPX 감사의 환경/오래된 기대값 분리
 
 각주/미주 검사에도 동일한 raw-byte pipe 입력이 남아 있어 정규 파일 입력 helper와30초 timeout으로 통일했습니다. 원본 번호/본문/비대상 ZIP 변조의 부정 대조는 status1/signalnull 및 정확한 complete XML mismatch/mimetype 오류를 요구합니다. 게시727c38df 산출물에서 실제4본문의 전체 XML/ZIP·삭제 후 재입력/번호 보존2/2·skip0·exit0(888ms)입니다. 같은 잠재 입력 위험을 제거한 작업이며 이 각주 경로 자체의 장시간 hang을 별도로 재현했다고 주장하지 않습니다. 실행 중인 b806902d 정규 gate에 이 수정이 포함됐다고 소급하지 않습니다.
