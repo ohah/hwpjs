@@ -1,5 +1,7 @@
 # 생성 표 renderer 연결
 
+후속 클릭·커서의 주소 경계는 [생성 셀 선택](hwpx-created-cell-selection.md)을 따릅니다.
+
 `attachCreatedTableFlow`는 기존 표/문단 흐름에 생성 표의 로컬 geometry를 합치는 실험용 block 표시 경로입니다. 원문과 기존 base layout을 변경하지 않고 뒤 행·box·clip·flow picture를 같은 높이만큼 옮깁니다. 표0위치는 host 글자 앞, 나머지 위치는 host 문단 뒤에 배치하는 현재 prototype이며 정확한 중간 UTF-16 위치의 inline 조판이 아닙니다. 실제 저장 위치는 native anchor가 계속 소유합니다.
 
 생성 표가 있으면 renderer는 아직 지원하지 않는 쪽 배치를 성공으로 표시하지 않고 `UnsupportedCreatedTablePagination`과 `created-table-block-prototype`을 보고합니다. 중첩/변환/pageArea host의 생성 표는 `UnsupportedCreatedTableHostLayout` 진단으로 남깁니다. 전체 fixture의 생성 표를 정확히 조판했다고 해석하지 않습니다.

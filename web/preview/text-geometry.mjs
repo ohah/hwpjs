@@ -2,11 +2,12 @@ import { rowAtPoint, rowLocalPoint, rowLeft, rowTop, rowHeight, rowTextHeight, r
 import { rowPageClipContains } from "./row-page-clip.mjs";
 import { affinePoint, affineBox, inverseAffine } from "./affine-point-geometry.mjs";
 import { tableBoundaryCaret } from "./table-boundary-geometry.mjs";
+import { sameCreatedCell } from "./created-cell-address.mjs";
 export { TEXT_TOP } from "./row-geometry.mjs";
 export { TEXT_LEFT } from "./row-geometry.mjs";
-export const sameParagraph = (a, b) => a && b && a.section === b.section && a.paragraph === b.paragraph;
+export const sameParagraph = (a, b) => a?.createdCell || b?.createdCell ? sameCreatedCell(a, b) : a && b && a.section === b.section && a.paragraph === b.paragraph;
 export const selectableText = row => Boolean(row?.editable || row?.selectable);
-export const paragraphTarget = point => ({ section: point.section, paragraph: point.paragraph, ...(point.pageArea ? { pageArea: point.pageArea, pageOrdinal: point.pageOrdinal } : {}) });
+export const paragraphTarget = point => ({ section: point.section, ...(point.createdCell ? { createdCell: { ...point.createdCell } } : { paragraph: point.paragraph }), ...(point.pageArea ? { pageArea: point.pageArea, pageOrdinal: point.pageOrdinal } : {}) });
 const sameInstance = (row, point) => !point?.pageArea || row.pageArea === point.pageArea && row.pageOrdinal === point.pageOrdinal;
 
 /** Shared selection/instance policy for glyph backgrounds. */
@@ -37,7 +38,7 @@ export function hitText(layout, x, y, target = null) {
   const local = rowLocalPoint(row, x, y);
   if (!local) return null;
   const boundary = row.boundaries.reduce((a, b) => Math.abs(b.x - (local[0] - rowLeft(row))) < Math.abs(a.x - (local[0] - rowLeft(row))) ? b : a);
-  return { section: row.section, paragraph: row.paragraph, unit: boundary.unit, affinity: row.startUnit !== row.endUnit && boundary.unit === row.endUnit ? "backward" : "forward", ...(row.pageArea ? { pageArea: row.pageArea, pageOrdinal: row.pageOrdinal } : {}) };
+  return { ...paragraphTarget(row), unit: boundary.unit, affinity: row.startUnit !== row.endUnit && boundary.unit === row.endUnit ? "backward" : "forward" };
 }
 
 export function caretGeometry(layout, point) {

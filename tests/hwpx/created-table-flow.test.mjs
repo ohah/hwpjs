@@ -24,6 +24,7 @@ test("unsupported nested host stays diagnosed and generated boxes never select a
   assert.equal(result.createdTableUnavailable[0].error, "UnsupportedCreatedTableHostLayout");
   const flow = attachCreatedTableFlow({ createdTables: [table(0)] }, base, measure);
   const box = flow.boxes[0];
-  assert.equal(rowAtPoint(flow, box.x + 2, box.y + 2), -1);
+  const index = rowAtPoint(flow, box.x + 2, box.y + 2);
+  assert.equal(flow.rows[index].createdCell.identity, box.createdCell.identity);
   assert.equal(attachCreatedTableFlow({ createdTables: [] }, base, measure), base);
 });

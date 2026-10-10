@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { workerCanvasHarness } from "../canvas/worker-harness.mjs";
+import { workerCanvasHarness, dispatchCanvasEvent } from "../canvas/worker-harness.mjs";
 const options = { rows: 2, columns: 2, width: 101, rowHeight: 17, resources: { paragraph: 1, character: 1, style: 0, border_fill: 1 } };
 test("actual Worker keeps source paragraph addresses and created cell identities through history", async t => {
   const h = await workerCanvasHarness(t, { paintFrames: true });
@@ -35,4 +35,19 @@ test("actual Worker keeps source paragraph addresses and created cell identities
   assert.equal(redone.content.createdTables[0].cells[0].text, "입력😀<&");
   assert.deepEqual((await h.send({ kind: "save" })).bytes, saved.bytes);
   t.diagnostic("Actual Worker/WASM and renderer with simulated Canvas; browser pixels and generated cell input remain unverified");
+});
+
+test("Canvas blank generated cell selection retains owner without issuing a source paragraph edit", async t => {
+  const h = await workerCanvasHarness(t, { paintFrames: true });
+  const bytes = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwpx");
+  await h.send({ kind: "load", format: "hwpx", bytes }); await h.send({ kind: "enable" });
+  const created = await h.send({ kind: "insert-table", section: 0, paragraph: 1, unit: 0, options: { ...options, rows: 1, width: 14400, rowHeight: 1000 } });
+  assert.equal(created.error, undefined);
+  const box = h.renderer.layout().boxes.find(box => box.createdCell?.column === 1);
+  dispatchCanvasEvent(h.canvas, "pointerdown", { pointerId: 1, button: 0, clientX: box.x + 2, clientY: box.y + 2 });
+  assert.equal(h.input.disabled, false);
+  assert.equal(h.input.readOnly, true);
+  assert.equal(h.input.value, "");
+  assert.equal(h.requests.length, 0);
+  h.paint();
 });

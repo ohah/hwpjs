@@ -49,6 +49,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
   const splitPermission = createSelectionEditPermission({ kind: "query-split-range" });
   const wholeTextEditable = () => Boolean(target) && !multipleParagraphs() && renderer.paragraph(target)?.editable === true;
   const editRange = () => {
+    if (target?.createdCell) return null;
     if (!target || !anchor || !focus || multipleParagraphs()) return null;
     const change = input.value !== committed ? textChange(committed, input.value) : null;
     const range = change ?? { startUnit: Math.min(anchor.unit, focus.unit), endUnit: Math.max(anchor.unit, focus.unit), text: "" };
@@ -692,6 +693,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
   });
   listen(input, "focus", paint); listen(input, "blur", paint);
   const selectedRange = () => {
+      if (target?.createdCell) return null;
       if (!target || multipleParagraphs() || composing || pending || historyPending || !controls.ready() || controls.busy() || input.value !== committed) return null;
       const startUnit = snapUnit(committed, input.selectionStart);
       const endUnit = snapUnit(committed, input.selectionEnd, true);
