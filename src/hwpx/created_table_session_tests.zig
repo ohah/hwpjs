@@ -18,7 +18,7 @@ fn command(value: *const model.Table) histories.Command {
     return .{ .kind = .created_table_stage, .section = 0, .paragraph = 2, .start = 0, .deleted = 0, .inserted = "", .created_table = value };
 }
 
-test "created table staged history owns text anchor and refuses silent save loss preserving redo" {
+test "created table staged history owns text anchor saves reopens and preserves redo" {
     const a = std.testing.allocator;
     const bytes = try input(a);
     defer a.free(bytes);
@@ -32,7 +32,18 @@ test "created table staged history owns text anchor and refuses silent save loss
     const anchor = session.sections[0].created_tables.entries.items[0].anchor;
     _ = try value.replaceText(a, 0, 0, "외부", 100);
     try std.testing.expectEqualStrings("셀😀", session.sections[0].created_tables.entries.items[0].table.cells[0].text);
-    try std.testing.expectError(error.UnsupportedCreatedTableSave, session.save());
+    const saved = try session.save();
+    defer a.free(saved);
+    var reopened = try editor.open(a, saved, .{});
+    defer reopened.deinit();
+    const cell_text = try reopened.anchorText(0, 3);
+    defer a.free(cell_text);
+    try std.testing.expectEqualStrings("셀😀", cell_text);
+    try std.testing.expect(try reopened.canEdit(0, 3));
+    try std.testing.expect(try reopened.splice(0, 3, 0, 0, "다시 "));
+    const changed_text = try reopened.anchorText(0, 3);
+    defer a.free(changed_text);
+    try std.testing.expectEqualStrings("다시 셀😀", changed_text);
     try std.testing.expectError(error.UnsupportedCreatedTableHostEdit, session.splice(0, 2, 0, 0, "앞"));
     try std.testing.expectError(error.UnsupportedCreatedTableHostEdit, session.spliceAnchored(0, 2, 0, 0, "앞"));
     try std.testing.expectError(error.UnsupportedCreatedTableHostEdit, session.splitParagraph(0, 2, 0, 0));
@@ -48,7 +59,9 @@ test "created table staged history owns text anchor and refuses silent save loss
     try std.testing.expect(try history.redo(&session));
     try std.testing.expectEqualDeep(anchor, session.sections[0].created_tables.entries.items[0].anchor);
     try std.testing.expectEqualStrings("셀😀", session.sections[0].created_tables.entries.items[0].table.cells[0].text);
-    try std.testing.expectError(error.UnsupportedCreatedTableSave, session.save());
+    const redone = try session.save();
+    defer a.free(redone);
+    try std.testing.expectEqualSlices(u8, saved, redone);
 }
 
 test "created table staged checkpoint includes memory and failed budget rolls back" {

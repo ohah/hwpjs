@@ -1,5 +1,7 @@
 # 신규 표의 내부 Session staging과 이력
 
+후속 [준비된 표 저장](hwpx-created-table-save.md)이 Session.save에 연결돼 이전 UnsupportedCreatedTableSave 거부는 제거됐습니다. 아래 거부 설명은 저장 연결 전 이력입니다. 본문 앵커 이동·public 삽입/프로젝션은 아직 미완료입니다.
+
 아래 공개 회귀 후보의 SHA256은 `9057f29dca43cfd2db703cbb2d0a638044ced8641f6efe594898178a4fcb4939`입니다. 결과를 기본67dc85ca 산출물에 소급하지 않습니다.
 
 Section의 `created_tables`가 Table/셀 텍스트와 host Anchor를 함께 소유합니다. `created_table_values`는 독립 clone·부분 실패 해제·현재 staged 표 사이의 표 identity/instance 및 셀 문단 ID 충돌·메모리 크기를 소유합니다. entries capacity·셀 배열·문자 버퍼가 체크포인트 예산에 포함됩니다. 원본 트리와 별도 직렬화 XML 캐시는 저장하지 않습니다.

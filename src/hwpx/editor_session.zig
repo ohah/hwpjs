@@ -321,7 +321,6 @@ pub const Session = struct {
 
     /// Caller owns the result with Session.allocator. Save is side-effect free.
     pub fn save(self: *const Session) ![]u8 {
-        for (self.sections) |section| if (section.created_tables.entries.items.len != 0) return error.UnsupportedCreatedTableSave;
         const a = self.allocator;
         const trees = try a.alloc(tree_module.Tree, self.sections.len);
         defer a.free(trees);
@@ -355,9 +354,13 @@ pub const Session = struct {
                 defer a.free(dimensions);
                 break :block try @import("picture_matrix_save.zig").write(a, &section.tree, dimensions, section.picture_matrices.items, self.options.max_xml_bytes -| xml_bytes);
             };
-            const bytes = if (section.checkbox_states.items.len == 0) matrices else block: {
+            const checked = if (section.checkbox_states.items.len == 0) matrices else block: {
                 defer a.free(matrices);
                 break :block try @import("form_checkbox_state_save.zig").write(a, &section.tree, matrices, section.checkbox_states.items, self.options.max_xml_bytes -| xml_bytes);
+            };
+            const bytes = if (section.created_tables.entries.items.len == 0) checked else block: {
+                defer a.free(checked);
+                break :block try @import("created_table_section_save.zig").write(self, index, checked, self.options.max_xml_bytes -| xml_bytes);
             };
             errdefer a.free(bytes);
             try replacements.append(a, .{ .entry_index = section.entry_index, .bytes = bytes });

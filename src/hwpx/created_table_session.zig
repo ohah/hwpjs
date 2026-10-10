@@ -1,4 +1,4 @@
-//! Internal staging transaction. Public insertion waits for save/projection.
+//! Internal staging transaction. Public insertion still waits for projection.
 const std = @import("std");
 const editor = @import("editor_session.zig");
 const model = @import("../model/created_table.zig");
@@ -14,5 +14,10 @@ pub fn stage(session: *editor.Session, section_index: usize, paragraph: usize, u
     try candidate.append(a, anchor, table, 100000);
     _ = try candidate.byteSize(session.options.max_xml_bytes);
     std.mem.swap(@import("created_table_values.zig").Values, &section.created_tables, &candidate);
+    var committed = false;
+    defer if (!committed) std.mem.swap(@import("created_table_values.zig").Values, &section.created_tables, &candidate);
+    const saved = try session.save();
+    a.free(saved);
+    committed = true;
     return true;
 }
