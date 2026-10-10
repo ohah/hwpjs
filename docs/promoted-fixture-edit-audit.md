@@ -6,6 +6,10 @@
 
 최신 b8e5409a 기본 산출물의 HWPX 전용 입력 감사도 exit0입니다. `/tmp/hwpjs-structural-formula-hwpx-specialized-20261011.jsonl`에서46파일·암호1·165시도 중152편집/저장 재열기/이력·독립 XML/ZIP152대조(필드6), 계산 결과 직접 입력 거부13을 확인했습니다. `formula-definition-corpus.test.mjs`와 `formula-worker.test.mjs`도3/3·skip0·exit0이며 실제 chart13/13수식 정의 변경의 독립 산술·전체 XML/ZIP·이력 및 Worker 갱신을 검사합니다. 이는48숫자 셀의 모든 위치 입력이나 모든 함수/브라우저 지원 완료가 아닙니다. 일반 HWPX 전수 감사는 별도 실행 중입니다.
 
+일반 HWPX 전수 감사도 같은 기본 WASM에서 exit0으로 종료됐습니다. `/tmp/hwpjs-structural-formula-hwpx-edit-20261011.jsonl`의 최종 집계는46파일·암호1·1444문단·1231입력/저장/이력 복원, 거부 UnsupportedParagraphControl146·InvalidFormulaNumber48·ProtectedFieldRange19, 거부 이후 redo 보존189회입니다. 위의 실행 중 표현은 먼저 완료한 HWP5/전용 입력 검사 당시 상태이며 이제 종료 결과로 대체합니다. 전용 경로152개는 일반 경로 밖의 성공이며 두 경로를 합쳐1383문단의 비숫자 입력을 확인했습니다. 남은48숫자 입력과13계산 결과 보호를 모든 편집 명령의 미지원으로 해석하지 않습니다.
+
+숫자 입력 전수2파일도 기본 b8e5409a에서2/2·skip0·exit0(33945ms)입니다. `numeric-input-corpus.test.mjs`는 독립 인벤토리의48숫자 셀을 각각0으로 변경해 저장/재열기/undo/redo·비숫자 거부 후 redo와13수식 산술을 일반/최적화 Python으로 검사합니다. `numeric-exact-corpus.test.mjs`는 같은48변경의13수식 결과를 허용 오차 없는 정확한 표시 문자열로 추가 대조하고, 수치 tolerance 검사에 통과하는 근접 변조를 정확 비교가 거부하는 부정 대조를 포함합니다. 단일 실제 chart의 전체 숫자 셀0치환이지 임의 수치·모든 위치/함수·브라우저 전수는 아닙니다.
+
 ## 이전 산출물 기록
 
 2026-10-10 `node tools/hwp5-edit-corpus-audit.mjs --history`는 기본 WASM SHA256 `7e70bbc74b7665553cd4f7e1b6a90aeb81a2e14c6c705e332d0ddac495e645e8`으로 Git 추적101입력을 검사했고 exit0입니다. 로그는 `/tmp/hwpjs-promoted-hwp5-edit-20261010.json`입니다.
