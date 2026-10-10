@@ -88,6 +88,10 @@ def check(request):
     else:
         require(math.isclose(float(display.replace(",", "")), expected, rel_tol=1e-10, abs_tol=0.005), "calculation")
     require(values["Command"] == formula + "??" + values["ResultFormat"] + ";;" + display, "command cache")
+    require(new_nodes[old_nodes.index(result_nodes[0])].text == display, "display result")
+    expected_values = {"Formula": formula, "LastResult": display, "Command": values["Command"]}
+    expected_changes = sum(node.text != expected_values[node.get("name")] for node in target.iter(p + "stringParam") if node.get("name") in expected_values)
+    expected_changes += result_nodes[0].text != display
     changed = 0
     for left, right in zip(old_nodes, new_nodes):
         require(left.tag == right.tag and left.tail == right.tail, "tree structure")
@@ -97,7 +101,7 @@ def check(request):
         if left.text != right.text:
             require((left in list(target.iter(p + "stringParam")) and left.get("name") in ("Command", "Formula", "LastResult")) or (left is result_nodes[0] and right.text == display), "foreign text")
             changed += 1
-    require(changed == 4, "expected four text changes")
+    require(changed == expected_changes, "expected selected definition/cache/display changes")
     return {"expected": expected, "display": display}
 
 
