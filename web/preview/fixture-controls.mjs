@@ -4,7 +4,7 @@ export function createFixtureControls({ select, button, open, fetchBytes = fetch
   for (const fixture of demoFixtures) {
     const option = select.ownerDocument.createElement("option");
     option.value = fixture.id;
-    option.textContent = fixture.name;
+    option.textContent = fixture.label ?? fixture.name;
     select.append(option);
   }
   const click = () => {
