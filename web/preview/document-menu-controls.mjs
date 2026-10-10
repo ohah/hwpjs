@@ -3,10 +3,11 @@ import { createMenuDisclosures } from "./document-menu-disclosures.mjs";
 import { createMenuPopupLayer } from "./document-menu-popup-layer.mjs";
 export function createDocumentMenuControls(entries) {
   let closed = false;
+  const disabled = target => target.disabled === true || target.matches?.(":disabled") === true;
   const refresh = () => {
     if (closed) return;
     for (const { button, target } of entries) {
-      button.disabled = target.disabled === true;
+      button.disabled = disabled(target);
       for (const attribute of ["aria-expanded", "aria-pressed"]) {
         const value = target.getAttribute?.(attribute);
         if (value === "true" || value === "false" || (attribute === "aria-pressed" && value === "mixed")) button.setAttribute?.(attribute, value);
@@ -16,7 +17,7 @@ export function createDocumentMenuControls(entries) {
   };
   const listeners = entries.map(({ button, target }) => {
     const click = () => {
-      if (closed || button.disabled || target.disabled === true) { refresh(); return; }
+      if (closed || button.disabled || disabled(target)) { refresh(); return; }
       target.click();
       const popup = button.closest?.("details");
       if (popup) popup.open = false;

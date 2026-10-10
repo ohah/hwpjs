@@ -1,5 +1,7 @@
 # 문서 메뉴 팝업 레이어
 
+서식 메뉴의 기존 문단 정렬 명령 연결·상태 권한·GUI 검증은 [문단 정렬 메뉴](paragraph-alignment-menu.md)를 따릅니다.
+
 기존 native details 메뉴에서 버튼을 펼치면 도구 내용 자체가 아래로 밀렸습니다. 2026-10-11 실제 1280×633 데모의 편집 메뉴 열기 전후에 편집 시작 버튼 top508→552px를 관측했습니다. command bar는45vh 한도로284.84375px였고 Canvas top562.84375px는 그대로여서 아래쪽 버튼이 도구 스크롤 경계에 걸렸습니다. 파서/편집 거래의 실패가 아닌 메뉴 배치 경계입니다.
 
 `document-menu-popup-layer.mjs`는 버튼 컨테이너를 native manual Popover의 최상위 레이어로 표시합니다. 메뉴 열림 SSOT는 계속 `details.open`이며 native popup은 표시 투영입니다. 메뉴 선택은 기존 `document-menu-controls`가 기존 명령에 위임합니다. 도구/Canvas 크기를 변경하거나 메뉴 전용 편집 모델을 만들지 않습니다.

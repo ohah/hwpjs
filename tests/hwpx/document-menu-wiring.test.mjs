@@ -16,6 +16,12 @@ const expected = new Map([
   ["menu-italic", 'document.querySelector("#canvas-italic-toggle")'],
   ["menu-underline", 'document.querySelector("#canvas-underline-toggle")'],
   ["menu-strike", 'document.querySelector("#canvas-strike-toggle")'],
+  ["menu-align-left", `document.querySelector('#paragraph-format-form [data-alignment="LEFT"]')`],
+  ["menu-align-center", `document.querySelector('#paragraph-format-form [data-alignment="CENTER"]')`],
+  ["menu-align-right", `document.querySelector('#paragraph-format-form [data-alignment="RIGHT"]')`],
+  ["menu-align-justify", `document.querySelector('#paragraph-format-form [data-alignment="JUSTIFY"]')`],
+  ["menu-align-distribute", `document.querySelector('#paragraph-format-form [data-alignment="DISTRIBUTE"]')`],
+  ["menu-align-space", `document.querySelector('#paragraph-format-form [data-alignment="DISTRIBUTE_SPACE"]')`],
 ]);
 function verifyWiring(html, app) {
   const block = app.match(/documentMenuControls = createDocumentMenuControls\(\[([\s\S]*?)\]\);/);

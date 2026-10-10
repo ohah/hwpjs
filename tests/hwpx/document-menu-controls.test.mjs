@@ -1,6 +1,19 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createDocumentMenuControls } from "../../web/preview/document-menu-controls.mjs";
+test("menu reflects inherited fieldset disablement and rechecks before dispatch", () => {
+  let inherited = true, requests = 0;
+  const button = Object.assign(new EventTarget(), { disabled: false });
+  const target = { disabled: false, matches: selector => selector === ":disabled" && inherited, click: () => requests++ };
+  const controls = createDocumentMenuControls([{ button, target }]);
+  assert.equal(button.disabled, true);
+  button.dispatchEvent(new Event("click")); assert.equal(requests, 0);
+  inherited = false; controls.refresh(); assert.equal(button.disabled, false);
+  inherited = true; button.dispatchEvent(new Event("click"));
+  assert.equal(requests, 0); assert.equal(button.disabled, true);
+  inherited = false; controls.refresh(); button.dispatchEvent(new Event("click")); assert.equal(requests, 1);
+  controls.close();
+});
 test("format menu reflects only explicit target pressed values and respects a late protection change", () => {
   const attributes = new Map();
   const button = Object.assign(new EventTarget(), { disabled: false,

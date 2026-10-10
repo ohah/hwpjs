@@ -265,5 +265,11 @@ documentMenuControls = createDocumentMenuControls([
   { button: document.querySelector("#menu-italic"), target: document.querySelector("#canvas-italic-toggle") },
   { button: document.querySelector("#menu-underline"), target: document.querySelector("#canvas-underline-toggle") },
   { button: document.querySelector("#menu-strike"), target: document.querySelector("#canvas-strike-toggle") },
+  { button: document.querySelector("#menu-align-left"), target: document.querySelector('#paragraph-format-form [data-alignment="LEFT"]') },
+  { button: document.querySelector("#menu-align-center"), target: document.querySelector('#paragraph-format-form [data-alignment="CENTER"]') },
+  { button: document.querySelector("#menu-align-right"), target: document.querySelector('#paragraph-format-form [data-alignment="RIGHT"]') },
+  { button: document.querySelector("#menu-align-justify"), target: document.querySelector('#paragraph-format-form [data-alignment="JUSTIFY"]') },
+  { button: document.querySelector("#menu-align-distribute"), target: document.querySelector('#paragraph-format-form [data-alignment="DISTRIBUTE"]') },
+  { button: document.querySelector("#menu-align-space"), target: document.querySelector('#paragraph-format-form [data-alignment="DISTRIBUTE_SPACE"]') },
 ]);
 window.addEventListener("pagehide", event => { if (!event.persisted) { checkBoxControls.close(); pictureResizeControls.close(); pictureSizeControls.close(); documentMenuControls.close(); } });
