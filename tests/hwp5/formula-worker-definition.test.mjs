@@ -32,6 +32,13 @@ test("HWP5 Worker formula panel handles current definitions history refusals and
   assert.equal(refused.error, "FormulaReferenceOutOfBounds"); assert.equal(refused.applied, false);
   assert.deepEqual(Buffer.from((await send({ kind: "save" })).bytes), input);
   assert.equal((await send({ kind: "redo" })).content.formulas[0].last_result, "16.875");
+  for (const [formula, display] of [["=MIN(B?:E?)", "11.2"], ["=MAX(B?,C?,B?)", "24.7"]]) {
+    const extrema = await send({ ...command, formula });
+    assert.equal(extrema.error, undefined); assert.equal(extrema.content.formulas[0].last_result, display);
+    assert.equal(extrema.content.formulas[0].formula, formula);
+    assert.equal((await send({ kind: "undo" })).content.formulas[0].last_result, "16.875");
+    assert.deepEqual((await send({ kind: "save", allowStaleLayout: true })).bytes, saved.bytes);
+  }
   const split = await send({ kind: "split", section: 0, paragraph: 1, atUnit: 1 });
   assert.equal(split.error, undefined);
   assert.equal(split.content.formulaDefinitionAvailable, true);

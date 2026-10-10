@@ -61,7 +61,7 @@ test("actual Worker formula edit refreshes current results and history", async t
   assert.equal(afterSplit.content.formulas[0].last_result, "67.5");
   assert.equal((await send({ kind: "undo" })).content.formulas[0].last_result, "16.875");
   const beforeProduct = Buffer.from((await send({ kind: "save" })).bytes);
-  for (const [formula, display] of [["=PRODUCT(B?:E?)", "68,991.2"], ["=PRODUCT(B?,C?,B?)", "3,098.37"]]) {
+  for (const [formula, display] of [["=PRODUCT(B?:E?)", "68,991.2"], ["=PRODUCT(B?,C?,B?)", "3,098.37"], ["=MIN(B?:E?)", "11.2"], ["=MAX(B?,C?,B?)", "24.7"]]) {
     const product = await send({ ...command, formula });
     assert.equal(product.error, undefined);
     assert.equal(product.content.formulas[0].last_result, display);
@@ -74,7 +74,7 @@ test("actual Worker formula edit refreshes current results and history", async t
     }
     assert.equal((await send({ kind: "undo" })).error, undefined);
     assert.deepEqual(Buffer.from((await send({ kind: "save" })).bytes), beforeProduct);
-    assert.equal((await send({ ...command, formula: "=MAX(B?:E?)" })).error, "UnsupportedFormulaExpression");
+    assert.equal((await send({ ...command, formula: "=UNKNOWN(B?:E?)" })).error, "UnsupportedFormulaExpression");
     assert.deepEqual(Buffer.from((await send({ kind: "save" })).bytes), beforeProduct);
     assert.equal((await send({ kind: "redo" })).content.formulas[0].last_result, display);
     assert.deepEqual(Buffer.from((await send({ kind: "save" })).bytes), saved);

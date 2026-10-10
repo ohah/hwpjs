@@ -1,5 +1,7 @@
 # 숫자 범위 집계 SSOT
 
+후속 양쪽 Worker 검사도 e27f03ce 후보에서3파일4/4·skip0·exit0(37531ms)입니다. HWP5 MIN11.2/MAX24.7 제출과 undo AVG16.875·이전 저장 바이트 복원, HWPX MIN/MAX의 독립 XML/ZIP/산술·undo/redo와 잘못된 UNKNOWN 식 거부 후 redo 보존을 확인했습니다. HWPX의 이전 MAX 미지원 기대는 새 의미 지원에 맞게 UNKNOWN으로 바꿨습니다. 실제 Worker 모듈 검사이며 브라우저 수식 폼 E2E·기본 데모 승격은 아직 후속입니다.
+
 `src/model/range_aggregate.zig`가 SUM/AVG/PRODUCT/MIN/MAX 함수 종류·초깃값·한 값 집계·최종 평균을 소유합니다. HWP5/HWPX 편집 계산기는 같은 모듈을 사용합니다. 참조 선택·표/셀 소유권·현재 입력·한도·결과 문자열/원문 저장은 포맷별 기존 계층에 유지합니다. 관측용 별도 compensated range evaluator의 SUM/AVG 계약을 이 모듈로 무조건 교체하지 않습니다.
 
 MIN/MAX는 각각 양/음 무한대 초깃값에서 시작하고 모든 실제 입력과 결과는 finite여야 합니다. 빈 집계는 EmptyFormulaRange, 비유한 입력/결과는 FormulaNumericOverflow입니다. SUM/AVG는 기존 순차 f64 합산을 유지하며 상쇄 잔여값·Decimal/한글 반올림 동치를 해결했다고 주장하지 않습니다.
