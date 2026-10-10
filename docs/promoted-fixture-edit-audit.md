@@ -1,5 +1,11 @@
 # 기본 WASM 픽스쳐 편집 재검증
 
+## 게시 HWPX 감사의 환경/오래된 기대값 분리
+
+caf15480 archive 추출본의 정규 hwpx-text-audit 첫 실행은 `.git` 없는 환경에서 git ls-files를 호출하는 inventory 검사들이 실패했습니다. 임시 추출본에 원래 tree의 추적 파일을 인덱싱했습니다(6228파일 내용 hash 일치, archive에 실제 내용이 없는 legacy/hwpers gitlink1개 제외). 원본 저장소/파일은 수정하지 않았습니다. 재실행은 전체 추적 비암호 열기/no-op ZIP을 통과했지만 Worker 검사의 과거 UnsupportedHwpxFormatting 기대가 현재 InvalidTextPosition과 달라 실패를 확인했습니다. 정규 실행은 다른 검사들을 계속 실행 중입니다.
+
+Worker 기대값과 필드 밖 입력 허용 검사를 현재 계약으로 갱신하고, 테스트의 산출물 선택도 HWPJS_TEST_WASM을 따르게 했습니다. 게시 소스의727c38df 산출물로 최신 Canvas preview 파일5/5·skip0·exit0(21315ms)을 확인했습니다. 필드 밖 실제 삽입 위치/텍스트와 undo 저장 바이트 복원을 검사하며 오류를 광범위하게 허용하지 않습니다. 이는 테스트 기대 갱신이지 제품 서식/필드 기능을 새로 구현한 것이 아니며 정규 전체 HWPX gate 통과로 보고하지 않습니다.
+
 ## 2026-10-11 구조 편집 수식 수정 후 기본 산출물
 
 기본 WASM SHA256 `b8e5409af336c039c78b19e94b93eba880a2bd19996813feb321105e3b550899`에서 `node tools/hwp5-edit-corpus-audit.mjs --history`가 exit0으로 종료됐습니다. 로그는 `/tmp/hwpjs-structural-formula-hwp5-edit-20261011.json`입니다. Git 추적101입력의 분류는 HWP5 전체 문단 prefix 통과53·부분1·암호 일반 읽기 거부1, HWPX 별도 편집 감사 대상45·암호 일반 읽기 거부1입니다. HWP5 2090시도 중2042편집/저장 재열기/이력 성공, 비숫자 입력의 InvalidFormulaNumber 거부48입니다. 전수 prefix 검사이며 모든 명령/숫자 대체/브라우저/조판 완료 검사가 아닙니다. 같은 기본 산출물의 HWPX 감사는 별도 실행 중이며 이전 실행의 집계를 최신 결과로 소급하지 않습니다.

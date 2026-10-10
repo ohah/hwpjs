@@ -37,7 +37,7 @@ test("HWPX display clips a contiguous prefix without split surrogate or later ch
 });
 
 test("every tracked readable HWPX has a bounded read-only Canvas projection", async () => {
-  const reader = await createHwpxReader(readFileSync("zig-out/bin/hwpjs.wasm"));
+  const reader = await createHwpxReader(readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"));
   try {
     const files = execFileSync("git", ["ls-files", "-z"]).toString().split("\0").filter(p => p.includes("/fixtures/") && p.endsWith(".hwpx") && !p.endsWith("/password-12345.hwpx"));
     assert(files.length);
@@ -54,7 +54,7 @@ test("every tracked readable HWPX has a bounded read-only Canvas projection", as
 test("actual HWPX Worker edits native plain text and refuses unsupported controls", async t => {
   const originalSelf = globalThis.self, originalFetch = globalThis.fetch, replies = [];
   globalThis.self = { postMessage(message) { replies.push(message); } };
-  globalThis.fetch = async () => new Response(readFileSync("zig-out/bin/hwpjs.wasm"));
+  globalThis.fetch = async () => new Response(readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"));
   t.after(() => { globalThis.fetch = originalFetch; if (originalSelf === undefined) delete globalThis.self; else globalThis.self = originalSelf; });
   await import(`../../web/preview/reader-worker.mjs?hwpx-regression=${Date.now()}`);
   const send = async message => { await self.onmessage({ data: message }); const reply = replies.shift(); assert(reply); assert.equal(replies.length, 0); return reply; };
@@ -78,12 +78,12 @@ test("actual HWPX Worker edits native plain text and refuses unsupported control
   assert.equal(undone.changed, true);
   assert.deepEqual(undone.content, loaded.content);
   assert.deepEqual(Buffer.from((await send({ kind: "save" })).bytes), readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwpx"));
-  assert.equal((await send({ kind: "format" })).error, "UnsupportedHwpxFormatting");
+  assert.equal((await send({ kind: "format" })).error, "InvalidTextPosition");
   const redone = await send({ kind: "redo" });
   assert.equal(redone.changed, true);
   assert.deepEqual(redone.content, edited.content);
   assert.deepEqual((await send({ kind: "save" })).bytes, saved.bytes);
-  const savedReader = await createHwpxReader(readFileSync("zig-out/bin/hwpjs.wasm"));
+  const savedReader = await createHwpxReader(readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"));
   try { assert(savedReader.readTextEvents(saved.bytes).events.some(e => e.kind === "content" && e.value.startsWith("검증😀"))); }
   finally { savedReader.close(); }
   const refusedSave = await send({ kind: "save", allowStaleLayout: null });
@@ -91,7 +91,7 @@ test("actual HWPX Worker edits native plain text and refuses unsupported control
   assert.equal(refusedSave.applied, false);
   assert.deepEqual((await send({ kind: "save" })).bytes, saved.bytes);
   const format = await send({ kind: "format" });
-  assert.equal(format.error, "UnsupportedHwpxFormatting"); assert.equal(format.applied, false);
+  assert.equal(format.error, "InvalidTextPosition"); assert.equal(format.applied, false);
   const restored = await send({ kind: "splice", section: 0, paragraph: 1, startUnit: 0, endUnit: 4, text: "" });
   assert.equal(restored.error, undefined);
   assert.equal(restored.content.paragraphs[1].text, loaded.content.paragraphs[1].text);
@@ -146,8 +146,14 @@ test("actual HWPX Worker edits native plain text and refuses unsupported control
   const labelRedo = await send({ kind: "redo" });
   assert.equal(labelRedo.changed, true);
   assert.deepEqual(labelRedo.content, labelEdited.content);
+  const labelSaved = (await send({ kind: "save" })).bytes;
   const outside = await send({ kind: "splice", section: current.section, paragraph: current.paragraph, startUnit: current.fieldLabels.at(-1).end + 1, endUnit: current.fieldLabels.at(-1).end + 1, text: "안됨" });
-  assert.equal(outside.error, "UnsupportedFieldLabelRange"); assert.equal(outside.applied, false);
+  assert.equal(outside.error, undefined);
+  const outsideCurrent = outside.content.paragraphs.find(p => p.paragraph === current.paragraph);
+  const outsideUnit = current.fieldLabels.at(-1).end + 1;
+  assert.equal(outsideCurrent.text, current.text.slice(0, outsideUnit) + "안됨" + current.text.slice(outsideUnit));
+  assert.equal((await send({ kind: "undo" })).changed, true);
+  assert.deepEqual((await send({ kind: "save" })).bytes, labelSaved);
   const labelRestored = await send({ kind: "splice", section: current.section, paragraph: current.paragraph, startUnit: target.start, endUnit: target.start + 4, text: "" });
   assert.equal(labelRestored.error, undefined);
   assert.equal(labelRestored.content.paragraphs.find(p => p.paragraph === current.paragraph).text, labelParagraph.text);
