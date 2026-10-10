@@ -4,6 +4,33 @@ const Tree = @import("xml_part_tree.zig").Tree;
 const values = @import("xml_values.zig");
 const uri = @import("document_xml.zig").paragraph_uri;
 
+/// Validate IDs supplied by a new object against immutable and current IDs.
+/// No reservation or mutation; the caller commits the owning object atomically.
+pub fn validateAdditional(a: std.mem.Allocator, trees: []const Tree, generated: []const u32, incoming: []const u32, max_paragraphs: usize) !void {
+    var inventory = try collect(a, trees, generated, max_paragraphs);
+    defer inventory.used.deinit(a);
+    if (incoming.len > max_paragraphs - inventory.count) return error.LimitExceeded;
+    for (incoming) |id| {
+        if (id == 0 or inventory.used.contains(id)) return error.InvalidParagraphInstanceId;
+        try inventory.used.put(a, id, {});
+    }
+}
+
+test "HWPX additional paragraph IDs reject source generated and incoming collisions" {
+    const a = std.testing.allocator;
+    var tree = try @import("xml_part_tree.zig").parse(a, "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:p id='+01'/><p:p id='1'/><p:p id='4294967296'/></s:sec>", .section, 0, 0, .{});
+    defer tree.deinit(a);
+    try validateAdditional(a, &.{tree}, &.{2}, &.{ 3, 4294967295 }, 6);
+    for ([_][]const u32{ &.{0}, &.{1}, &.{2}, &.{ 3, 3 } }) |ids| try std.testing.expectError(error.InvalidParagraphInstanceId, validateAdditional(a, &.{tree}, &.{2}, ids, 6));
+    try std.testing.expectError(error.LimitExceeded, validateAdditional(a, &.{tree}, &.{2}, &.{ 3, 4, 5 }, 6));
+    try std.testing.checkAllAllocationFailures(a, struct {
+        fn run(allocator: std.mem.Allocator, input: Tree) !void {
+            try validateAdditional(allocator, &.{input}, &.{2}, &.{ 3, 4294967295 }, 6);
+        }
+    }.run, .{tree});
+    try std.testing.expectEqual(@as(u32, 3), try next(a, &.{tree}, &.{2}, 6));
+}
+
 /// Scan every supplied immutable part, including inactive compatibility nodes.
 /// Caller must supply all source parts and every current generated ID.
 pub fn next(a: std.mem.Allocator, trees: []const Tree, generated: []const u32, max_paragraphs: usize) !u32 {
