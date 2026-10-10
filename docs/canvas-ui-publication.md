@@ -1,5 +1,7 @@
 # Canvas 편집 UI 게시 검증
 
+준비 지연/실패 화면과 외부 요청 관측의 한계는 [초기화 상태](preview-startup.md)가 소유합니다.
+
 후속 메뉴 hover/바깥 클릭과 상태 책임은 [메뉴 열림 상태](document-menu-disclosures.md)가 소유합니다.
 
 선택 가능한 문서 목록은 [전체 데모 픽스쳐](demo-fixture-inventory.md)의 명시적 inventory를 따릅니다.

@@ -8,12 +8,13 @@
   <header><h1>HWP Canvas 미리보기</h1><span>Canvas 직접 입력 실험</span></header>
   <p class="scope-note">텍스트 편집 미리보기 · 원본 페이지 조판은 아직 재현하지 않습니다.</p>
   <label for="file">HWP/HWPX 파일 선택 (최대 64 MiB)</label>
-  <input id="file" type="file" accept=".hwp,.hwpx">
+  <input id="file" type="file" accept=".hwp,.hwpx" disabled>
   <label for="demo-fixture">테스트 픽스쳐</label>
   <select id="demo-fixture"><option value="">예제 문서를 선택하세요</option></select>
-  <button id="demo-fixture-open" type="button">픽스쳐 열기</button>
+  <button id="demo-fixture-open" type="button" disabled>픽스쳐 열기</button>
   <p class="privacy">파일은 브라우저 안에서 처리하며 서버로 전송하지 않습니다.</p>
-  <p id="status" role="status" aria-live="polite">파일을 선택하세요.</p>
+  <p id="status" role="status" aria-live="polite">에디터를 불러오는 중입니다.</p>
+  <button id="retry-startup" type="button" hidden>에디터 다시 불러오기</button>
   <form id="password-form" hidden>
     <label for="document-password">문서 비밀번호</label>
     <input id="document-password" type="password" autocomplete="off" maxlength="4096" aria-describedby="password-status">
@@ -255,5 +256,5 @@
   <details><summary>접근성용 대체 텍스트 (최대 50,000 UTF-16 단위)</summary><textarea id="accessible" readonly aria-label="미리보기 대체 텍스트"></textarea></details>
 </main>
 <footer><small>본 제품은 한글과컴퓨터의 한글 문서 파일(.hwp) 공개 문서를 참고하여 개발하였습니다.</small></footer>
-<script type="module" src="./app.mjs"></script>
+<script type="module" src="./bootstrap.mjs"></script>
 </html>

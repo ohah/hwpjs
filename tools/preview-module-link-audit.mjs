@@ -6,6 +6,7 @@ import { SourceTextModule } from "node:vm";
 
 const root = resolve(process.argv[2] ?? fileURLToPath(new URL("../", import.meta.url)));
 const entries = process.argv.length > 3 ? process.argv.slice(3) : [
+  "web/preview/bootstrap.mjs",
   "web/preview/app.mjs", "web/preview/reader-worker.mjs",
   "js/hwp5-editor.mjs", "js/hwpx-editor.mjs",
 ];

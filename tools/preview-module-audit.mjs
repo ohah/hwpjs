@@ -20,6 +20,7 @@ function visit(path) {
     if (match[1].startsWith(".")) visit(resolve(dirname(file), match[1]));
   }
 }
+visit("web/preview/bootstrap.mjs");
 visit("web/preview/app.mjs");
 visit("web/preview/reader-worker.mjs");
 const entries = [...files];
