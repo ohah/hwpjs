@@ -2,6 +2,11 @@
 
 현재 모듈별 책임·소유권·미지원 경계는 주제 문서에서 관리합니다. 구현 변경 시 해당 문서를 갱신하고 AGENTS.md에 상세를 누적하지 않습니다.
 
+- [HWP5 수식 정의 명령 작성 기반](hwp5-formula-definition-command.md)
+- [HWP5 현재 수식 조회](hwp5-formula-snapshot.md)
+- [HWP5 수식 Worker·패널 연결](hwp5-formula-worker.md)
+- [포맷 독립 수식 문법·참조 선택·집계 SSOT](range-aggregate.md)
+- [대형 참조 문서의 현재 편집 표본](reference-current-probes.md)
 - [읽기 전용 문단 텍스트 미리보기 API](hwp5-text-preview-api.md)
 - [Canvas 문단 텍스트 미리보기 화면](canvas-text-preview.md)
 - [Canvas 직접 입력·선택·조합 실험](canvas-direct-input.md)
