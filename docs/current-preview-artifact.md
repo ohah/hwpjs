@@ -1,6 +1,12 @@
 # 현재 데모 WASM
 
-## 현재 반영: 2026-10-11 취소선 조회 색인
+## 현재 반영: 2026-10-11 사각형 일괄 조회
+
+기본 및 외부 `/zig-out/bin/hwpjs.wasm`은 게시6d4dac5a의 깨끗한 ReleaseSafe 산출물이며 SHA256 `9ff325bdc48514d346c5f928c6294e710a80a8a5f690831ccae10b2f0cc5646e`입니다. 정규312+34회귀·추적 HWPX 일괄/단일 조회 대조·실제 Chromium 그룹 도형 텍스트 입력/이력의 범위는 [사각형 일괄 조회](hwpx-rectangle-host-batch.md)를 따릅니다. 전체 편집·원본 조판 완료가 아닙니다.
+
+교체 전 c196 사본은 `/var/folders/51/mr5cjhg13v324f1vgg9m237c0000gn/T/hwpjs-rectangle-batch-backup-Rq7tBq/hwpjs.wasm`입니다. 정규 단일 링크·해시·compile 검사 후 exclusive 백업/stage 복사와 같은 폴더 rename으로 교체했습니다. 외부 HTTP200·해시 일치·compile 성공을 확인했고 서버/Tailscale 설정은 바꾸지 않았습니다. 브라우저 새로고침으로 Worker/WASM을 다시 로드해야 합니다.
+
+## 이전 반영: 2026-10-11 취소선 조회 색인
 
 기본 `zig-out/bin/hwpjs.wasm`은 게시f11091aa의 깨끗한 소스에서 만든 ReleaseSafe 산출물이며 SHA256은 `c196919b80f3675f76da7e3614e50a07fd30a5ea281c5d038fad01333e0c8a86`입니다. 정규 HWP5 312/312·HWPX 34/34와 기본 경로 취소선 공개 회귀6/6·fail/skip0을 확인했습니다. 세부 비교·검증 경계는 [취소선 조회 색인](hwpx-strike-snapshot-index.md)이 소유합니다.
 
