@@ -1,5 +1,9 @@
 # HWP5 수식 패널 연결
 
+## 구조 편집 후 Worker 회귀
+
+2026-10-11 b8e5409af336c039c78b19e94b93eba880a2bd19996813feb321105e3b550899 후보에서 실제 Worker의 chart 본문 분할 후 수식 capability·빈 오류 목록·이동한 문단24 선택·기존 CTRL_HEADER handle 유지와 이전 문단23의 오선택 거부를 확인했습니다. 이동한 결과 영역의 직접 입력은 계속 ReadOnlyFormulaResult이며 저장 바이트가 불변입니다. 후속 SUM 정의 변경은67.5로 계산되고, 두 단계 undo는 AVG 정의와 분할 전 저장 바이트/선택을 각각 복원합니다. 공개 정의/API와 Worker2파일5/5·skip0·exit0입니다. Node self/fetch 경계 대역이며 실제 브라우저 분할/포인터 E2E나 기본 WASM 승격의 증거는 아닙니다.
+
 ## 실제 Chromium 및 기본 반영
 
 2026-10-11 loopback8085의8bd5ab4e 후보에서 실제 픽스쳐 선택 chart.hwp·편집 enable·속성 패널 열기와13수식 목록을 확인했습니다. input에 `=AVG(B?:E?)`를 넣고 실제 submit 버튼으로 제출해 완료 안내와 목록의16.875를 확인했습니다. 실제 undo 버튼 후 SUM, redo 후16.875가 될 때까지 DOM 조건으로 기다렸습니다. 모델을 eval로 설치하지 않았으며 eval은 표시 값 읽기만 사용했습니다. 브라우저 오류는 없었고 agent-browser 스킬 절차대로 브라우저 close·소유 임시 서버exit130을 확인했습니다. 화면은 `/tmp/hwpjs-formula-panel-20261011.png`입니다. 기존 HWPX 전용 legend는 공통 `표 계산식`으로 수정했습니다.
