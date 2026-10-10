@@ -1,6 +1,12 @@
 # 현재 데모 WASM
 
-## 현재 반영: 2026-10-11 공통 문법·AVERAGE
+## 현재 반영: 2026-10-11 취소선 조회 색인
+
+기본 `zig-out/bin/hwpjs.wasm`은 게시f11091aa의 깨끗한 소스에서 만든 ReleaseSafe 산출물이며 SHA256은 `c196919b80f3675f76da7e3614e50a07fd30a5ea281c5d038fad01333e0c8a86`입니다. 정규 HWP5 312/312·HWPX 34/34와 기본 경로 취소선 공개 회귀6/6·fail/skip0을 확인했습니다. 세부 비교·검증 경계는 [취소선 조회 색인](hwpx-strike-snapshot-index.md)이 소유합니다.
+
+교체 전 fe97 사본은 `/var/folders/51/mr5cjhg13v324f1vgg9m237c0000gn/T/hwpjs-strike-index-backup-ajlfFk/hwpjs.wasm`입니다. 해시·단일 링크 정규 파일·compile 검사와 exclusive 백업/stage 복사·동일 폴더 rename을 거쳤습니다. 외부 HTTP200·동일 해시·compile 성공을 확인했고 서버/Tailscale 설정은 유지했습니다. 새 artifact의 실제 브라우저 취소선 편집 검증은 아직 별도이며 전체 편집/조판 완료가 아닙니다. 브라우저는 새로고침해 Worker/WASM을 다시 로드해야 합니다.
+
+## 이전 반영: 2026-10-11 공통 문법·AVERAGE
 
 기본 및 외부 `/zig-out/bin/hwpjs.wasm`의 현재 SHA256은 `fe97aa698bcc1cdfef9bc75f3fcafc4941a3c0069724bc700f0a62923c48fc20`입니다. 게시c1c98710의 깨끗한 체크아웃/ReleaseSafe 산출물이고 정규293+34회귀·양쪽 실제 Chromium AVERAGE 폼/이력 근거는 [공통 수식 계약](range-aggregate.md)을 따릅니다. 이전5d600685 백업은 `/var/folders/51/mr5cjhg13v324f1vgg9m237c0000gn/T/hwpjs-model-syntax-backup-uofcpe/hwpjs.wasm`입니다. 양쪽 해시·단일 링크 정규 파일·compile 검사 후 exclusive 백업/stage 복사와 같은 폴더 rename으로 교체했습니다. 외부HTTP200/동일 해시/compile 성공이며 서버/Tailscale 설정은 유지했습니다.
 
