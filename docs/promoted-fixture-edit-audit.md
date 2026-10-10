@@ -1,5 +1,22 @@
 # 기본 WASM 픽스쳐 편집 재검증
 
+## 2026-10-11 고정67dc85ca 추적 HWPX 재감사
+
+게시9dbe495d의 깨끗한 소스·ReleaseSafe 산출물 SHA256 `67dc85ca4dfadda3e3f2515951f5f9ca92189d5f81b058a61323036ba8d49dda`로46파일(암호1개 별도)의 모든1444문단을 일반 경로와 전용 경로로 분류했습니다. 두 감사 모두 exit0입니다. 일반 `/tmp/hwpjs-main-drawing-batch-edit-corpus-20261011.jsonl`은1231입력/저장 재열기/undo·redo·최종 원문 복원을 기록합니다. 거부는 UnsupportedParagraphControl146·InvalidFormulaNumber48·ProtectedFieldRange19이며 기존 redo 보존189회입니다.
+
+전용 `/tmp/hwpjs-main-drawing-batch-specialized-20261011.jsonl`은 일반/필드 외부 적격성 밖165문단 중152입력/저장 재열기/이력·독립 전체 XML/ZIP152대조(필드6)이며 계산 결과 직접 입력13개는 UnsupportedFieldLabelRange로 거부했습니다. 일반·전용의 성공 문단은 서로 겹치지 않지만 모든 명령의 전수 지원으로 합산하지 않습니다.
+
+같은 소스/산출물의 숫자 입력·정확 문자열·수식 정의·Worker4파일은 실제5테스트·5/5·fail/skip0·exit0(43945.408083ms)입니다. 로그 `/tmp/hwpjs-main-drawing-batch-numeric-20261011.log`입니다. 숫자48셀 각각0치환의 저장/재열기/이력·13결과의 독립 산술 및 허용 오차 없는 표시 문자열,13수식 정의의 MIN/MAX 변경·전체 XML/ZIP·Worker 갱신을 확인했습니다. 임의 수치·모든 위치/명령·실제 브라우저/IME·원본 조판 완료는 아닙니다.
+
+| 문단 구분 | 개수 | 이번 검증 |
+| --- | ---: | --- |
+| 일반/필드 외부 텍스트 | 1231 | 비숫자 prefix 저장·재열기·이력 |
+| 전용 앵커/필드 텍스트 | 152 | 전용 prefix와 독립 XML/ZIP·이력 |
+| 숫자 입력 | 48 | 숫자0 치환·독립 정확 결과·이력 |
+| 계산 결과 | 13 | 직접 입력 보호; 수식 정의 API는 별도 검증 |
+
+위 분류 합계1444는 문단 입력 경로 분류이며 모든 객체/서식/구조 편집 지원율이나 전체 파서 필드 지원율이 아닙니다. HWP5 전체 문단 감사는 같은 고정 산출물로 별도 실행 중이며 이전 해시 결과를 소급하지 않습니다.
+
 추적 픽스쳐 밖의 대형 참조 원본과 과거 거부의 현재 표본 대조는 [현재 참조 편집 표본](reference-current-probes.md)이 소유합니다. 아래 추적 파일 감사 결과에 자동 합산하지 않습니다.
 
 ## 게시된 b806902d 정규 HWPX 감사
