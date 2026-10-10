@@ -705,17 +705,17 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     controller.reset({ preserveHistory: true });
     historyAvailable = available; structureAvailable = structure; mergeAvailable = merge; splitQueryAvailable = splitQuery;
   };
-  const clipboardSelection = (allowEmpty = false) => {
+  const settledSelection = (allowEmpty = false) => {
     if (events.signal.aborted || !target || !anchor || !focus || composing || pending || historyPending || controls.busy() || input.value !== committed) return null;
     const text = multipleParagraphs() ? renderer.selectionText?.(anchor, focus) : committed.slice(snapUnit(committed, input.selectionStart), snapUnit(committed, input.selectionEnd, true));
     if (typeof text !== "string" || (!allowEmpty && !text)) return null;
     return { text, allowEmpty, anchor, focus, target, committed, revision: historyRevision, start: input.selectionStart, end: input.selectionEnd };
   };
-  const clipboardCurrent = saved => {
-    const current = clipboardSelection(saved.allowEmpty);
+  const selectionCurrent = saved => {
+    const current = settledSelection(saved.allowEmpty);
     return current !== null && current.anchor === saved.anchor && current.focus === saved.focus && current.target === saved.target && current.committed === saved.committed && current.revision === saved.revision && current.start === saved.start && current.end === saved.end && current.text === saved.text;
   };
-  const clipboardCutAvailable = () => {
+  const selectionTextEditAvailable = () => {
     if (!controls.ready()) return false;
     if (!multipleParagraphs()) return textEditable();
     if (renderer.paragraphReplacementAvailable?.() === false) return false;
@@ -739,21 +739,29 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     return true;
   };
   const transferSelection = ({ cut = false, clipboard = globalThis.navigator?.clipboard } = {}) => {
-    const saved = clipboardSelection();
-    if (!saved || (cut && !clipboardCutAvailable())) return Promise.resolve(false);
-    return transferSelectedText({ clipboard, text: saved.text, isCurrent: () => clipboardCurrent(saved), cut, remove: () => replaceSelectedText(""), report });
+    const saved = settledSelection();
+    if (!saved || (cut && !selectionTextEditAvailable())) return Promise.resolve(false);
+    return transferSelectedText({ clipboard, text: saved.text, isCurrent: () => selectionCurrent(saved), cut, remove: () => replaceSelectedText(""), report });
   };
+  const canDeleteSelection = () => settledSelection() !== null && selectionTextEditAvailable();
   return {
+    canDeleteSelection,
+    deleteSelection() {
+      if (!canDeleteSelection()) return false;
+      const accepted = replaceSelectedText("");
+      if (accepted) input.focus({ preventScroll: true });
+      return accepted;
+    },
     canPasteSelection() {
-      return typeof globalThis.navigator?.clipboard?.readText === "function" && clipboardSelection(true) !== null && clipboardCutAvailable();
+      return typeof globalThis.navigator?.clipboard?.readText === "function" && settledSelection(true) !== null && selectionTextEditAvailable();
     },
     pasteSelection({ clipboard = globalThis.navigator?.clipboard } = {}) {
-      const saved = clipboardSelection(true);
-      if (!saved || !clipboardCutAvailable()) return Promise.resolve(false);
-      return pasteClipboardText({ clipboard, isCurrent: () => clipboardCurrent(saved) && clipboardCutAvailable(), replace: replaceSelectedText, report, onDenied: () => input.focus({ preventScroll: true }) });
+      const saved = settledSelection(true);
+      if (!saved || !selectionTextEditAvailable()) return Promise.resolve(false);
+      return pasteClipboardText({ clipboard, isCurrent: () => selectionCurrent(saved) && selectionTextEditAvailable(), replace: replaceSelectedText, report, onDenied: () => input.focus({ preventScroll: true }) });
     },
     canTransferSelection(cut = false) {
-      return typeof globalThis.navigator?.clipboard?.writeText === "function" && clipboardSelection() !== null && (!cut || clipboardCutAvailable());
+      return typeof globalThis.navigator?.clipboard?.writeText === "function" && settledSelection() !== null && (!cut || selectionTextEditAvailable());
     },
     transferSelection,
     selectTextRange({ section, paragraph, startUnit, endUnit }) {

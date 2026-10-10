@@ -1,5 +1,42 @@
 import test from "node:test";
 
+test("Canvas selection delete command preserves independent records and one history transaction", async t => {
+  const h = await harness(t, "parashape", p => p.paragraph === 5);
+  h.native.enableHistory();
+  const original = Buffer.from(h.native.save().bytes), before = h.input.value;
+  assert.equal(h.controller.canDeleteSelection(), false);
+  assert.equal(h.controller.deleteSelection(), false);
+  assert(h.controller.selectTextRange({ ...h.paragraph, startUnit: 0, endUnit: 1 }));
+  assert.equal(h.controller.canDeleteSelection(), true);
+  h.input.blur();
+  assert.equal(h.controller.deleteSelection(), true);
+  assert.equal(document.activeElement, h.input);
+  assert.equal(h.controller.canDeleteSelection(), false);
+  assert.equal(h.controller.deleteSelection(), false);
+  assert.equal(h.requests.length, 1); h.ack();
+  assert.equal(h.input.value, before.slice(1));
+  const saved = Buffer.from(h.native.save({ allowStaleLayout: true }).bytes);
+  verifyRaw(original, saved, 0, 5, 0, 1, "");
+  assert.equal(h.native.undo(), true); assert.deepEqual(Buffer.from(h.native.save().bytes), original);
+  assert.equal(h.native.redo(), true); assert.deepEqual(Buffer.from(h.native.save({ allowStaleLayout: true }).bytes), saved);
+});
+
+test("Canvas selection delete refuses protected busy composing and closed selections", async t => {
+  for (const state of ["protected", "busy", "composing", "closed"]) await t.test(state, async t => {
+    const h = await harness(t, "parashape", p => p.paragraph === 5);
+    const original = Buffer.from(h.native.save().bytes);
+    assert(h.controller.selectTextRange({ ...h.paragraph, startUnit: 0, endUnit: 1 }));
+    if (state === "protected") h.renderer.paragraph(h.paragraph).editable = false;
+    if (state === "busy") h.setBusy(true);
+    if (state === "composing") dispatch(h.input, "compositionstart");
+    if (state === "closed") h.controller.close();
+    assert.equal(h.controller.canDeleteSelection(), false);
+    assert.equal(h.controller.deleteSelection(), false);
+    assert.equal(h.requests.length, 0);
+    assert.deepEqual(Buffer.from(h.native.save().bytes), original);
+  });
+});
+
 test("Canvas denied clipboard read restores input focus and preserves selection and source", async t => {
   const h = await harness(t, "parashape", p => p.paragraph === 5);
   const original = Buffer.from(h.native.save().bytes);
@@ -855,7 +892,7 @@ test("Canvas multi paragraph composition commits once or cancels without editing
   });
 });
 test("Canvas multi paragraph replacement deletion and paste acknowledge native text and caret", async t => {
-  for (const operation of ["replace", "delete", "paste", "multiline", "cut", "cut-key", "cut-denied", "cut-stale", "type", "refuse"]) await t.test(operation, async t => {
+  for (const operation of ["replace", "delete", "menu-delete", "paste", "multiline", "cut", "cut-key", "cut-denied", "cut-stale", "type", "refuse"]) await t.test(operation, async t => {
     const h = await harness(t, "parashape", p => p.paragraph === 5);
     h.viewport.getBoundingClientRect = () => ({ top: 0, left: 0, bottom: 10000 });
     const rows = [5, 6].map(paragraph => h.renderer.paragraph({ section: 0, paragraph }));
@@ -895,6 +932,7 @@ test("Canvas multi paragraph replacement deletion and paste acknowledge native t
       }
     }
     else if (operation === "delete") dispatch(h.input, "keydown", { key: "Backspace" });
+    else if (operation === "menu-delete") assert.equal(h.controller.deleteSelection(), true);
     else if (operation === "type") dispatch(h.input, "keydown", { key: "😀" });
     else if (operation === "cut") dispatch(h.input, "cut", { clipboardData: { setData: (type, text) => { assert.equal(type, "text/plain"); assert.equal(text, "단 6\n문단"); } } });
     else if (operation === "paste") dispatch(h.input, "paste", { clipboardData: { getData: () => "한😀" } });
@@ -919,7 +957,7 @@ test("Canvas multi paragraph replacement deletion and paste acknowledge native t
       assert.equal(h.native.undo(), true);
       assert.deepEqual(h.native.save({ allowStaleLayout: true }).bytes, original);
     } else {
-      const deletion = ["delete", "cut", "cut-key"].includes(operation);
+      const deletion = ["delete", "menu-delete", "cut", "cut-key"].includes(operation);
       assert.equal(h.input.value, deletion ? "문 7" : operation === "multiline" ? "둘 7" : operation === "type" ? "문😀 7" : "문한😀 7");
       assert.equal(h.canvas.dataset.caret, deletion ? "0:5:1" : operation === "multiline" ? "0:7:1" : operation === "type" ? "0:5:3" : "0:5:4");
       assert.equal(h.input.readOnly, false);
