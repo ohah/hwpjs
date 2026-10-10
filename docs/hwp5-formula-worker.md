@@ -2,6 +2,8 @@
 
 ## 제출 시 대상 재확인
 
+수식 컨트롤도 idempotent close를 추가해 submit/change 리스너를 해제하고 draft/목록/권한을 지웁니다. 종료 후 enable 메시지·Canvas 선택·form 이벤트로 재활성화되지 않습니다. 앱의 비보존 pagehide에서 close를 호출하며 bfcache 보존 pagehide는 기존 컨트롤과 같이 닫지 않습니다. 반복 close/뒤늦은 메시지/변경 리스너 해제/추가 요청0 반례와 기존 HWP5 Worker2파일4/4·skip0·exit0입니다. 페이지 종료 뒤 소유권 정리이며 편집 범위 확대나 실제 브라우저 bfcache 검증 완료를 뜻하지 않습니다.
+
 검증은 공통 폼/HWP5 Worker/HWPX Worker3파일5/5·skip0·exit0(27346ms), 후속 문서 load 중 재진입의 새 enable 요구까지 추가한 공통 폼3/3·exit0입니다. 조회 내용을 JS로 바꾸어 native 성공을 가장하지 않았습니다. 이벤트 대역과 실제 Worker 모듈 검사이며 브라우저 재진입 E2E 완료는 아닙니다.
 
 공통 수식 폼의 reportValidity 콜백 중 선택을 바꾸는 재진입 반례에서 대상7에 대상8의 AVG 초안을 제출하는 혼합을 재현했습니다. 제출 직전 capability·enabled·ready를 다시 검사하고 선택한 authoritative row가 동일한 경우에만 요청하도록 수정했습니다. 유효성 검사 중 pending 상태가 된 경우도 제출하지 않습니다. DOM 이벤트 대역의 반례이지 일반 사용자 브라우저에서 자연 발생을 확인한 보고는 아닙니다. HWP5/HWPX 공통 폼에 적용하며 native 원자성/identity 검증을 대체하지 않습니다.

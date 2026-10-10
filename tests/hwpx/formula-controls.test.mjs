@@ -112,4 +112,12 @@ test("formula submit revalidates target and readiness after validity callbacks",
   form.reportValidity = () => { controls.message({ kind: "load", content }); return true; };
   form.dispatchEvent(new Event("submit", { cancelable: true }));
   assert.equal(requests.length, 1, "a new document must enable its own session before submission");
+  controls.message({ kind: "enable", content });
+  controls.close(); controls.close();
+  controls.message({ kind: "enable", content }); controls.selectCanvas(rows[1]);
+  assert.equal(form.hidden, true); assert.equal(fields.disabled, true); assert.equal(input.value, "");
+  form.dispatchEvent(new Event("submit", { cancelable: true }));
+  input.value = "closed draft"; choices.dispatchEvent(new Event("change"));
+  assert.equal(input.value, "closed draft", "closed controls must release choice listeners");
+  assert.equal(requests.length, 1);
 });

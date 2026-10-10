@@ -1,11 +1,11 @@
 // The form edits a draft; native Worker responses own current definitions.
 export function createFormulaControls({ form, fields, choices, input, note, ready, request }) {
-  let rows = [], enabled = false, available = false;
+  let rows = [], enabled = false, available = false, closed = false;
   const selected = () => rows.find(row => `${row.section}:${row.beginElement}` === choices.value);
-  const update = () => { form.hidden = rows.length === 0; fields.disabled = !available || !enabled || !ready() || !selected(); };
+  const update = () => { form.hidden = closed || rows.length === 0; fields.disabled = closed || !available || !enabled || !ready() || !selected(); };
   const select = () => { input.value = selected()?.formula ?? ""; update(); };
   choices.addEventListener("change", select);
-  form.addEventListener("submit", event => {
+  const submit = event => {
     event.preventDefault();
     update();
     const row = selected();
@@ -15,16 +15,26 @@ export function createFormulaControls({ form, fields, choices, input, note, read
     if (new TextEncoder().encode(input.value).length > 4096) { note.textContent = "수식은 UTF-8 4096바이트 이하여야 합니다."; return; }
     note.textContent = request({ kind: "formula-definition", origin: "formula", section: row.section, beginElement: row.beginElement, formula: input.value }) ? "수식 반영 중…" : "입력 반영이 끝난 뒤 적용하세요.";
     update();
-  });
+  };
+  form.addEventListener("submit", submit);
   const reset = () => { rows = []; enabled = false; available = false; choices.replaceChildren(); input.value = ""; note.textContent = ""; update(); };
   return {
     reset, update,
+    close() {
+      if (closed) return;
+      closed = true;
+      choices.removeEventListener("change", select);
+      form.removeEventListener("submit", submit);
+      reset();
+    },
     selectCanvas(row) {
+      if (closed) return;
       if (!row || !rows.some(value => value.section === row.section && value.beginElement === row.beginElement)) return;
       const key = `${row.section}:${row.beginElement}`;
       if (choices.value !== key) { choices.value = key; select(); }
     },
     message(message) {
+      if (closed) return;
       if (message.kind === "load" || message.kind === "unlock") reset();
       if (message.kind === "enable" && !message.error) enabled = true;
       if (message.content) {
