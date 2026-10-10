@@ -17,6 +17,7 @@ test("public HWP5 definitions preserve PRODUCT and repeated reference arithmetic
     ["=SUM(B?,C?,B?)", b + c + b],
     ["=AVG(B?,C?,B?)", (b + c + b) / 3],
     ["=SUM(B?)", b],
+    ["=SUM(" + Array(32).fill("B?").join(",") + ")", Array(32).fill(b).reduce((total, n) => total + n, 0)],
   ]) {
     const editor = await createExperimentalHwp5Editor(readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"), input);
     try {
@@ -112,6 +113,13 @@ test("HWP5 definition public API matches complete independent section and untouc
     for (const [patch, message] of [
       [{ section: 99 }, "InvalidSection"], [{ sourceNode: 0 }, "InvalidFormulaField"],
       [{ formula: "=SUM(Z999:Z1000)" }, "FormulaReferenceOutOfBounds"], [{ formula: "AVG(B?:E?)" }, "UnsupportedFormulaExpression"],
+      [{ formula: "=SUM(??)" }, "UnsupportedFormulaCellDependency"],
+      [{ formula: "=SUM(B?,)" }, "InvalidFormulaReference"],
+      [{ formula: "=SUM(" + Array(33).fill("B?").join(",") + ")" }, "LimitExceeded"],
+      [{ formula: "=SUM(E?:B?)" }, "UnsupportedReversedFormulaRange"],
+      [{ formula: "=MIN(B?:E?)" }, "UnsupportedFormulaExpression"],
+      [{ formula: "=" + "X".repeat(4096) }, "LimitExceeded"],
+      [{ formula: "=" + "X".repeat(2100) }, "LimitExceeded"],
       [{ sourceNode: -1 }, "Invalid sourceNode"], [{ sourceNode: NaN }, "Invalid sourceNode"],
       [{ formula: "\ud800" }, "InvalidUnicodeEncoding"], [{ formula: null }, "Formula must be a string"],
     ]) {

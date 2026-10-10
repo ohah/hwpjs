@@ -2,6 +2,8 @@
 
 ## 구조 편집 뒤 필드 바인딩 수정 (2026-10-11)
 
+공개 실패 경계도 기본 b8e5409a에서 확인했습니다. 자기 참조 `SUM(??)`는 UnsupportedFormulaCellDependency, 꼬리 쉼표는 InvalidFormulaReference,33주소는 LimitExceeded, 역방향 범위는 UnsupportedReversedFormulaRange, 미지원 MIN은 UnsupportedFormulaExpression입니다.4096바이트 UTF8 입력 초과와 UTF8 한도 안이지만 UTF16 expression4096바이트 초과인2100문자도 LimitExceeded입니다. 각 거부 후 원문 저장이 동일하고 기존 redo가 살아 있습니다. 반대로32반복 주소는 독립 산술/저장/재열기/이력을 통과합니다. 정의/Worker2파일6/6·skip0·exit0이며 자기 참조의 거부이지 일반 계산식 의존 그래프/순환 평가 지원은 아닙니다.
+
 기본 b8e5409a의 공개 정의 API도 실제 chart의 PRODUCT 범위·PRODUCT 반복 주소·SUM/AVG 반복 주소·단일 SUM 주소5경로에서 검증했습니다. 원본 숫자 셀11.2/24.7/16.3/15.3을 독립 레코드에서 읽어 산술/일반 숫자 문자열을 만들고, 공개 snapshot·저장 CTRL_HEADER command·비대상 stream·정확 undo/redo·재열기와 대조했습니다. 정의/Worker2파일6/6·skip0·exit0입니다. 첫 검사는 저장 후에도 레코드118이라고 가정해 다른 payload를 읽었고 실패했습니다. 저장본의 첫 %fmu 제어를 독립 framing으로 찾도록 고쳤으며 세션 handle의 저장 후 재인덱싱 계약을 유지합니다. 제품 계산식 파서/평가기는 이미 PRODUCT와 반복 주소를 지원하므로 신규 함수 구현으로 계수하지 않습니다.
 
 후속 적대적 회귀에서는 실제 본문 문단1 병합(원본 문단 삭제) 후에도13개 필드 identity 유지·현재 문단 번호 이동·AVG 변경·저장 재열기·정확 undo/redo를 확인했습니다. 분할 뒤 잘못된 참조 거부, 병합 뒤 같은 정의의 no-op이 기존 redo를 보존합니다. 동일 b8e5409a 후보의 정의/구조2파일14/14·skip0·exit0입니다. 부정 대조로 이전 기본 WASM에서 신규 구조 검사2개를 실행하면 분할 조회는 `MissingParagraphSource`, 병합 후 정의 변경은 `SourceBindingMismatch`로 각각 실패합니다. 이는 새 검사가 수정 전 오류를 감지한다는 근거이며 이전 기본 제품의 통과로 계수하지 않습니다.
