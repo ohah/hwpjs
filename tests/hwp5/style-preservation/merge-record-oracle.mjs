@@ -2,9 +2,7 @@ import assert from "node:assert/strict";
 import { inspect, paragraphRecords, encodeRecord } from "./text-record-oracle.mjs";
 import { scopes } from "./structure-record-oracle.mjs";
 
-export function verifyMerge(input, output, section, paragraph) {
-  const before = inspect(input), after = inspect(output);
-  const source = before.sections[section].bytes;
+export function expectedMergeSection(source, paragraph) {
   const left = paragraphRecords(source, paragraph), right = paragraphRecords(source, paragraph + 1);
   const { parents, owners } = scopes(left.all);
   assert.equal(parents[left.at], parents[right.at]); assert.equal(owners[left.at], owners[right.at]);
@@ -52,7 +50,12 @@ export function verifyMerge(input, output, section, paragraph) {
       else chunks.push(r.raw);
     } else chunks.push(r.raw);
   }
-  assert.deepEqual(after.sections[section].bytes, Buffer.concat(chunks), "whole merged Section differs from independent expected records");
+  return Buffer.concat(chunks);
+}
+
+export function verifyMerge(input, output, section, paragraph) {
+  const before = inspect(input), after = inspect(output);
+  assert.deepEqual(after.sections[section].bytes, expectedMergeSection(before.sections[section].bytes, paragraph), "whole merged Section differs from independent expected records");
   assert.deepEqual([...after.streams.keys()].sort(), [...before.streams.keys()].sort());
   for (const [path, bytes] of before.streams)
     if (path !== before.sections[section].path) assert.deepEqual(after.streams.get(path), bytes, `unselected stream changed: ${path}`);

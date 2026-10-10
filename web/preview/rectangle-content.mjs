@@ -1,0 +1,19 @@
+/** Complete section rectangle inventory, including nontext and grouped members. */
+export function attachRectangleSources(editor, content) {
+  content.rectangles = [];
+  content.rectangleSourceErrors = [];
+  const paragraphs = new Set(content.paragraphs.map(p => `${p.section}:${p.paragraph}`));
+  for (const section of new Set(content.paragraphs.map(p => p.section))) {
+    let nodes;
+    try { nodes = editor.rectangleNodes(section); }
+    catch (error) { content.rectangleSourceErrors.push({ section, error: error.message }); continue; }
+    for (const node of nodes) {
+      try {
+        const value = editor.rectangleRenderingSource(section, node);
+        if (value.rectangle_node !== node || !paragraphs.has(`${section}:${value.owner.paragraph - 1}`)) throw new Error("RectangleDisplayBindingMismatch");
+        content.rectangles.push({ section, drawingNode: node, hostParagraph: value.owner.paragraph - 1, anchorUnit: value.owner.anchor_unit, anchorNode: value.owner.anchor_node, source: value.source });
+      } catch (error) { content.rectangleSourceErrors.push({ section, drawingNode: node, error: error.message }); }
+    }
+  }
+  return content;
+}

@@ -1,5 +1,7 @@
 # 통합 코어 게시 후보
 
+Canvas UI의 별도 게시 입력·빌드·집중 실행 결과는 [UI 게시 검증](canvas-ui-publication.md)이 소유합니다.
+
 ## 실제 저장·이력 회귀의 게시 의존성 확인
 
 후속 HWP5/HWPX 공개 편집·HWP5 구조 편집3파일은 최초21통과·2실패였습니다. 두 실패는 export에 Git index가 없어 `git ls-files`가 exit128을 반환한 검증 환경 문제였습니다. 후보 tree의 정확한 index를 별도 export에만 연결한 뒤23/23·skip0·exit0을 확인했습니다. 일곱 실제 필드 라벨, 추적된 비암호 HWPX의 열기/no-op ZIP 보존, 원자성·문단 분할/병합·재열기/이력 및 독립 XML/레코드를 검사합니다.

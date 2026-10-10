@@ -23,10 +23,12 @@ export function displayContent(result, { maxUnits = 200000, maxParagraphs = 2000
       // This is a display candidate, not an independently reimplemented native
       // ownership policy. The native command validates logical list membership.
       const empty = !p.textPresent && p.declaredUnits <= 1;
-      const editable = (p.textPresent || empty) && text.length === fullText.length && (retainedView !== null || p.tokens.every(t => t.type !== "control" || t.code === 13));
+      const editable = !result.readOnly && (p.textPresent || empty) && text.length === fullText.length && (retainedView !== null || p.tokens.every(t => t.type !== "control" || t.code === 13));
       paragraphs.push({ section: section.index, paragraph: index, editable, label: `구역 ${section.index + 1} · 문단 ${index + 1}${p.parentNodeIndex !== null ? " · 중첩" : ""}${empty ? " · 빈 문단" : ""}${controls ? ` · 제어 표식 ${controls}개 (표시 의미 미적용)` : ""}`, text: p.textPresent || empty ? text : "[직접 텍스트 없음]" });
+      if (text.length !== fullText.length) paragraphs.at(-1).clipped = true;
+      paragraphs.at(-1).selectionOwner = p.parentNodeIndex === null ? `section:${section.index}:body` : null;
       if (retainedView && editable) paragraphs.at(-1).sourceOffsets = retainedView.offsets;
     }
   }
-  return { version: result.version.join("."), paragraphs, totalParagraphs, limited };
+  return { format: "hwp5", version: result.version.join("."), paragraphs, totalParagraphs, limited, ...(result.readOnly ? { readOnly: true, primarySource: result.primarySource } : {}) };
 }

@@ -6,23 +6,239 @@
 <link rel="stylesheet" href="./preview.css">
 <main>
   <header><h1>HWP Canvas 미리보기</h1><span>Canvas 직접 입력 실험</span></header>
-  <p>문단 텍스트만 표시합니다. 원본 글꼴·표·이미지·줄 배치·페이지 조판은 재현하지 않습니다. 제한적 편집본 다운로드를 지원하며 변경 후 원본 조판 정보는 재계산하지 않습니다.</p>
+  <p class="scope-note">텍스트 편집 미리보기 · 원본 페이지 조판은 아직 재현하지 않습니다.</p>
   <label for="file">HWP/HWPX 파일 선택 (최대 64 MiB)</label>
   <input id="file" type="file" accept=".hwp,.hwpx">
+  <label for="demo-fixture">테스트 픽스쳐</label>
+  <select id="demo-fixture"><option value="">예제 문서를 선택하세요</option></select>
+  <button id="demo-fixture-open" type="button">픽스쳐 열기</button>
   <p class="privacy">파일은 브라우저 안에서 처리하며 서버로 전송하지 않습니다.</p>
   <p id="status" role="status" aria-live="polite">파일을 선택하세요.</p>
+  <form id="password-form" hidden>
+    <label for="document-password">문서 비밀번호</label>
+    <input id="document-password" type="password" autocomplete="off" maxlength="4096" aria-describedby="password-status">
+    <button id="password-submit" type="submit">문서 열기</button>
+    <button id="password-cancel" type="button">취소</button>
+    <p id="password-status" role="status" aria-live="polite"></p>
+  </form>
   <p id="limit" hidden role="status">표시 한도에 도달해 일부만 표시합니다.</p>
-  <p>편집 가능한 HWP5/HWPX 문단을 클릭해 입력하세요. ‘필드 라벨만 편집’ 문단은 하이퍼링크·누름틀의 라벨 범위 안에서만 수정할 수 있습니다. 드래그 선택·방향키·삭제·붙여넣기를 지원합니다. Ctrl/⌘+Z로 실행 취소, Ctrl/⌘+Shift+Z 또는 Ctrl/⌘+Y로 다시 실행할 수 있습니다. 문단 간 편집·Enter는 아직 지원하지 않습니다. 미지원 컨트롤은 계속 보호됩니다.</p>
+  <p id="picture-status" hidden role="status" aria-live="polite"></p>
+  <p id="group-status" hidden role="status" aria-live="polite"></p>
+  <p id="page-layout-status" hidden role="status" aria-live="polite"></p>
   <p id="canvas-edit-status" role="status" aria-live="polite"></p>
-  <button id="undo" type="button" disabled>실행 취소</button>
-  <button id="redo" type="button" disabled>다시 실행</button>
-  <button id="download" type="button" disabled>편집본 다운로드</button>
-  <label><input id="allow-stale-layout" type="checkbox" disabled>HWP5의 재조판되지 않은 원본 배치 정보 유지 저장 허용</label>
+  <div class="editor-surface">
+  <div class="editor-command-bar">
+  <nav class="document-menu" aria-label="문서 메뉴">
+    <details><summary>파일</summary>
+      <button id="menu-open" type="button">문서 열기</button>
+      <button id="menu-save" type="button" disabled>편집본 다운로드</button>
+    </details>
+    <details><summary>편집</summary>
+      <button id="menu-undo" type="button" disabled>실행 취소</button>
+      <button id="menu-redo" type="button" disabled>다시 실행</button>
+    </details>
+    <details><summary>보기</summary>
+      <button id="menu-properties" type="button" aria-controls="document-inspector" aria-expanded="false">문단·표·수식 속성</button>
+    </details>
+    <details><summary>서식</summary>
+      <button id="menu-bold" type="button" aria-pressed="false" disabled>굵게</button>
+      <button id="menu-italic" type="button" aria-pressed="false" disabled>기울임</button>
+      <button id="menu-underline" type="button" aria-pressed="false" disabled>밑줄</button>
+      <button id="menu-strike" type="button" aria-pressed="false" disabled>취소선</button>
+    </details>
+  </nav>
+  <div class="editor-toolbar toolbar-group view-toolbar">
+    <label for="view-scale">화면 배율</label>
+    <select id="view-scale" aria-label="문서 화면 배율" disabled></select>
+  </div>
+  <form id="document-window-form" class="editor-toolbar toolbar-group">
+    <label>시작 문단<input id="document-window-start" type="number" min="1" step="1" value="1" disabled></label>
+    <label>표시 문단 수<input id="document-window-count" type="number" min="1" step="1" value="100" disabled></label>
+    <button id="document-window-apply" type="submit" disabled>HWPX 구간 이동</button>
+    <button id="document-window-restore" type="button" disabled>기본 표시 복원</button>
+    <output id="document-window-status" aria-live="polite"></output>
+  </form>
+  <form id="find-form" class="editor-toolbar toolbar-group find-toolbar" role="search">
+    <label>텍스트 찾기<input id="find-input" type="search" maxlength="4096" aria-keyshortcuts="Control+f Meta+f" title="Canvas에서 Ctrl/Cmd+F로 찾기"></label>
+    <button type="submit">다음 찾기</button>
+    <label>바꿀 텍스트<input id="replace-input" type="text" maxlength="4096"></label>
+    <button id="replace-found" type="button">현재 결과 바꾸기</button>
+    <span id="find-status" role="status" aria-live="polite"></span>
+  </form>
+  <div class="editor-toolbar" role="group" aria-label="문서 편집 도구">
+    <div class="toolbar-group" role="group" aria-label="파일과 편집 세션">
+    <button id="enable-edit" type="button" disabled>Canvas 편집 시작</button>
+    <button id="download" type="button" aria-keyshortcuts="Control+s Meta+s" title="편집본 다운로드 (Ctrl/Cmd+S)" disabled>편집본 다운로드</button>
+    </div>
+    <div class="toolbar-group" role="group" aria-label="편집 이력">
+    <button id="undo" type="button" disabled>실행 취소</button>
+    <button id="redo" type="button" disabled>다시 실행</button>
+    <button id="inspector-toggle" type="button" aria-controls="document-inspector" aria-expanded="false">문단·표·수식 속성</button>
+    </div>
+    <div class="toolbar-group" role="group" aria-label="선택 글자 강조">
+    <button id="canvas-bold-toggle" type="button" aria-pressed="false" aria-keyshortcuts="Control+b Meta+b" title="굵게 전환 (Ctrl/Cmd+B)" disabled>굵게</button>
+    <button id="canvas-italic-toggle" type="button" aria-pressed="false" aria-keyshortcuts="Control+i Meta+i" title="기울임 전환 (Ctrl/Cmd+I)" disabled>기울임</button>
+    <button id="canvas-underline-toggle" type="button" aria-pressed="false" aria-keyshortcuts="Control+u Meta+u" title="밑줄 전환 (Ctrl/Cmd+U)" disabled>밑줄</button>
+    <button id="canvas-strike-toggle" type="button" aria-pressed="false" title="선택한 텍스트 취소선 전환" disabled>취소선</button>
+    <details><summary>글자 효과</summary>
+      <label>외곽선<select id="canvas-outline-kind" disabled><option value="solid">실선</option><option value="none">없음</option><option value="dot" disabled>점선</option><option value="thick" disabled>굵은 실선</option><option value="dash" disabled>파선</option><option value="dash-dot" disabled>일점쇄선</option><option value="dash-dot-dot" disabled>이점쇄선</option></select></label>
+      <button id="canvas-outline-apply" type="button" disabled>외곽선 적용</button>
+      <output id="canvas-outline-current">현재 외곽선 미확인</output>
+      <p id="canvas-outline-status" role="status" aria-live="polite"></p>
+      <button type="button" data-effect="emboss" aria-pressed="false" disabled>양각</button>
+      <button type="button" data-effect="engrave" aria-pressed="false" disabled>음각</button>
+      <button type="button" data-effect="superscript" aria-pressed="false" disabled>위 첨자</button>
+      <button type="button" data-effect="subscript" aria-pressed="false" disabled>아래 첨자</button>
+      <p id="canvas-effect-status" role="status" aria-live="polite"></p>
+    </details>
+    <div id="font-options" role="group" aria-label="글꼴과 색상">
+    <div class="toolbar-option-fields">
+    <label>글꼴 언어 <select id="canvas-font-language" disabled><option value="hangul">한글</option><option value="latin">라틴</option><option value="hanja">한자</option><option value="japanese">일본어</option><option value="other">기타</option><option value="symbol">기호</option><option value="user">사용자</option></select></label>
+    <label>글꼴 <select id="canvas-font" disabled></select></label>
+    <label>글꼴 목록 <select id="canvas-font-category" disabled><option value="document">문서 글꼴</option><option value="current">현재 선택 글꼴</option></select></label>
+    <button id="canvas-font-apply" type="button" disabled>글꼴 적용</button>
+    <label>글꼴 이름 <input id="canvas-font-name" type="text" disabled></label>
+    <button id="canvas-font-name-apply" type="button" disabled>이름으로 적용</button>
+    <button id="canvas-system-font-read" type="button" disabled>시스템 글꼴 읽기</button>
+    <label>시스템 글꼴 <select id="canvas-system-font" disabled></select></label>
+    <span id="canvas-system-font-status" role="status" aria-live="polite"></span>
+    <label>새 글자색 <input id="canvas-text-color" type="color" value="#000000" disabled></label>
+    <button id="canvas-text-color-apply" type="button" disabled>글자색 적용</button>
+    <label>형광펜 <input id="canvas-shade-color" type="color" value="#ffff00" disabled></label>
+    <button id="canvas-shade-apply" type="button" disabled>형광펜 적용</button>
+    <button id="canvas-shade-remove" type="button" disabled>형광펜 제거</button>
+    <output id="canvas-shade-current">현재 음영 미확인</output>
+    <label>새 밑줄 색 <input id="canvas-underline-color" type="color" value="#000000" disabled></label>
+    <button id="canvas-underline-color-apply" type="button" disabled>밑줄 색만 적용</button>
+    </div>
+    </div>
+    </div>
+    <div class="toolbar-group" role="group" aria-label="기존 글자 서식">
+    <details id="format-options" class="toolbar-options">
+    <summary>기존 서식 ID</summary>
+    <div class="toolbar-option-fields">
+    <label>문서의 기존 서식<select id="format-presets" disabled title="전체 기존 서식 ID를 선택합니다. 선택 후 적용 버튼을 누르세요."><option value="">편집 시작 후 선택</option></select></label>
+    <label>기존 글자 모양 ID<input form="edit-form" name="charShapeId" type="number" min="0" max="4294967295" step="1" value="0" required disabled></label>
+    <button id="canvas-format-button" type="button" disabled>선택에 글자 모양 ID 적용</button>
+    </div>
+    </details>
+    </div>
+  </div>
   <p id="download-status" role="status" aria-live="polite">편집 세션을 연 뒤 다운로드할 수 있습니다. 저장 파일은 한글에서 조판을 확인하세요.</p>
+  <label><input id="allow-stale-layout" type="checkbox" disabled>HWP5의 재조판되지 않은 원본 배치 정보 유지 저장 허용</label>
+  <div id="password-output-consent" hidden>
+    <p>비밀번호로 연 문서입니다. 현재 편집본 저장은 비밀번호 보호를 유지하지 않습니다.</p>
+    <label><input id="allow-unprotected-output" type="checkbox">비밀번호 보호가 해제된 편집본 다운로드에 동의합니다.</label>
+  </div>
+  <div class="style-toolbar" role="group" aria-label="글자 크기와 문단 서식">
+  <form id="character-property-form" hidden>
+    <fieldset id="character-property-fields" disabled>
+      <legend>선택 텍스트 글자 속성 · 빈 크기는 유지</legend>
+      <label>크기 (pt)<input id="character-property-size" type="number" min="0" max="4096" step="0.01" aria-describedby="character-property-size-current"><output id="character-property-size-current">현재 크기 미확인</output></label>
+      <button type="button" data-size-step="1" disabled>글자 크기 키우기</button>
+      <button type="button" data-size-step="-1" disabled>글자 크기 줄이기</button>
+      <label>굵게<select id="character-property-bold"><option value="keep">유지</option><option value="on">켜기</option><option value="off">끄기</option></select></label>
+      <label>기울임<select id="character-property-italic"><option value="keep">유지</option><option value="on">켜기</option><option value="off">끄기</option></select></label>
+      <button type="submit">글자 속성 적용</button>
+    </fieldset>
+    <p id="character-property-status" role="status" aria-live="polite"></p>
+    <p id="canvas-underline-color-status" role="status" aria-live="polite"></p>
+    <p id="canvas-font-status" role="status" aria-live="polite"></p>
+    <p id="canvas-font-name-status" role="status" aria-live="polite"></p>
+    <p id="canvas-text-color-status" role="status" aria-live="polite"></p>
+    <p id="canvas-shade-status" role="status" aria-live="polite"></p>
+  </form>
+  <form id="paragraph-format-form" hidden>
+    <fieldset id="paragraph-format-fields" disabled>
+      <legend>선택한 문단의 기존 문단 모양</legend>
+      <label>문서의 기존 문단 모양<select id="paragraph-shape-select"></select></label>
+      <label>문단 모양 ID<input id="paragraph-shape-id" type="number" min="0" max="65535" step="1" required></label>
+      <button type="submit">문단 모양 적용</button>
+      <button type="button" data-alignment="LEFT" disabled>왼쪽 정렬</button>
+      <button type="button" data-alignment="CENTER" disabled>가운데 정렬</button>
+      <button type="button" data-alignment="RIGHT" disabled>오른쪽 정렬</button>
+      <button type="button" data-alignment="JUSTIFY" disabled>양쪽 정렬</button>
+      <button type="button" data-alignment="DISTRIBUTE" disabled>배분 정렬</button>
+      <button type="button" data-alignment="DISTRIBUTE_SPACE" disabled>나눔 정렬</button>
+    </fieldset>
+    <p id="paragraph-format-status" role="status" aria-live="polite"></p>
+  </form>
+  <form id="paragraph-spacing-form" hidden>
+    <fieldset id="paragraph-spacing-fields" disabled>
+      <legend>선택 문단 줄 간격</legend>
+      <label>종류<select id="paragraph-spacing-type" required><option value="PERCENT">비율 (%)</option><option value="FIXED">고정 (HWPUNIT)</option><option value="BETWEEN_LINES">여백 (HWPUNIT)</option><option value="AT_LEAST">최소 (HWPUNIT)</option></select></label>
+      <label>값<input id="paragraph-spacing-value" type="number" min="-2147483648" max="2147483647" step="1" required></label>
+      <button type="submit">줄 간격 적용</button>
+      <button type="button" data-spacing-step="1">줄 간격 키우기 (+5%)</button>
+      <button type="button" data-spacing-step="-1">줄 간격 줄이기 (-5%)</button>
+    </fieldset>
+    <p id="paragraph-spacing-status" role="status" aria-live="polite"></p>
+  </form>
+  </div>
+  </div>
+  <div id="viewport" tabindex="0" aria-label="스크롤 가능한 문단 텍스트 미리보기">
+    <div id="canvas-stage">
+    <canvas id="canvas" tabindex="0" aria-label="문단 텍스트 Canvas">텍스트 결과는 아래 대체 텍스트에서 확인할 수 있습니다.</canvas>
+    <div id="spacer" aria-hidden="true"></div>
+    <textarea id="canvas-input" tabindex="-1" aria-label="Canvas 문단 입력" maxlength="4194304" spellcheck="false" autocapitalize="off" autocomplete="off" disabled></textarea>
+    </div>
+  </div>
+  <output id="visible-page-status" aria-label="현재 화면 쪽과 구역">물리 쪽 배치 없음</output>
+  <aside id="document-inspector" aria-label="문단·표·수식 속성" hidden>
+  <details id="format-details">
+    <summary>문단 여백·표 설정</summary>
+  <form id="paragraph-margin-form" hidden>
+    <fieldset id="paragraph-margin-fields" disabled>
+      <legend>선택한 문단 여백 · HWPUNIT (빈 값은 유지)</legend>
+      <label>왼쪽<input id="paragraph-margin-left" type="number" min="-2147483648" max="2147483647" step="1"></label>
+      <label>오른쪽<input id="paragraph-margin-right" type="number" min="-2147483648" max="2147483647" step="1"></label>
+      <label>들여쓰기<input id="paragraph-margin-indent" type="number" min="-2147483648" max="2147483647" step="1"></label>
+      <label>문단 위<input id="paragraph-margin-before" type="number" min="-2147483648" max="2147483647" step="1"></label>
+      <label>문단 아래<input id="paragraph-margin-after" type="number" min="-2147483648" max="2147483647" step="1"></label>
+      <button type="submit">문단 여백 적용</button>
+    </fieldset>
+    <p id="paragraph-margin-status" role="status" aria-live="polite"></p>
+  </form>
+  <form id="cell-size-form" hidden>
+    <fieldset id="cell-size-fields" disabled>
+      <legend>선택한 셀 크기 · HWPUNIT (7200 = 1인치)</legend>
+      <label>셀 너비<input id="cell-width" type="number" min="0" max="4294967295" step="1" required></label>
+      <label>셀 높이<input id="cell-height" type="number" min="0" max="4294967295" step="1" required></label>
+      <button type="submit">셀 크기 적용</button>
+    </fieldset>
+    <p id="cell-size-status" role="status" aria-live="polite"></p>
+  </form>
+  <form id="picture-size-form" hidden>
+    <fieldset id="picture-size-fields" disabled>
+      <legend>선택한 그림 크기 · HWPUNIT (7200 = 1인치)</legend>
+      <label>그림 너비<input id="picture-width" type="number" min="1" max="4294967295" step="1" required></label>
+      <label>그림 높이<input id="picture-height" type="number" min="1" max="4294967295" step="1" required></label>
+      <button type="submit">그림 크기 적용</button>
+    </fieldset>
+    <p id="picture-size-status" role="status" aria-live="polite"></p>
+  </form>
+  <form id="formula-form" hidden>
+    <fieldset id="formula-fields" disabled>
+      <legend>HWPX 표 계산식</legend>
+      <label>수식 선택<select id="formula-choice"></select></label>
+      <label>계산식<input id="formula-input" type="text" required placeholder="=SUM(A1:A2)"></label>
+      <button type="submit">수식 적용</button>
+    </fieldset>
+    <p id="formula-status" role="status" aria-live="polite"></p>
+  </form>
+  </details>
+  </aside>
+  </div>
+  <details id="editing-help">
+    <summary>입력 방법과 현재 지원 범위</summary>
+    <p>표 셀에서는 Tab/Shift+Tab으로 다음/이전 표시 셀로 이동할 수 있습니다. 입력 반영 중에는 이동을 기다려야 합니다. 마지막 셀에서 Tab은 화면의 다음 컨트롤로 이동하며 새 행을 만들지 않습니다. 표 격자는 실험적인 표시 배치이며 원본 한글 조판과 같지는 않습니다.</p>
+    <p>편집 가능한 HWP5/HWPX 문단을 클릭해 입력하세요. ‘필드 라벨만 편집’ 문단은 하이퍼링크·누름틀의 라벨 범위 안에서만 수정할 수 있습니다. 드래그 선택·방향키·삭제·붙여넣기와 허용된 문단의 Enter 분할을 지원합니다. Ctrl/⌘+Z로 실행 취소, Ctrl/⌘+Shift+Z 또는 Ctrl/⌘+Y로 다시 실행할 수 있습니다. 허용된 HWP5/HWPX 문단 경계의 Backspace/Delete 병합을 지원합니다. 같은 소유권 범위의 여러 문단 선택을 지원하며, 교체·병합 허용 여부는 문서 구조에 따라 검사합니다. 서로 다른 셀·본문 소유권과 미지원 컨트롤은 계속 보호됩니다.</p>
+    <p>서식 구간을 조회할 수 있는 HWPX 읽기 전용 문단도 선택·복사와 기존 서식 적용을 시도할 수 있습니다. 계산 결과의 직접 입력은 보호되며, 서식 적용 가능 여부는 native 편집기가 최종 검사합니다.</p>
+    <p>현재 텍스트·글자 서식과 지원되는 표·이미지·페이지 영역을 Canvas에 표시합니다. 미지원 개체와 표시 제한은 별도 진단하며, 원본 한글의 글꼴·줄·페이지 배치와 동일하다고 보장하지 않습니다. 제한적 편집본 다운로드를 지원하며 변경 후 원본 조판 정보는 재계산하지 않습니다.</p>
+  </details>
   <details id="editor-panel" hidden>
     <summary>고급 편집 API 실험 폼</summary>
     <p>일반 텍스트와 일부 표 셀·글상자·빈 문단, 기존 탭·제어 표식·하이퍼링크를 보존하는 제한적 편집을 지원합니다. 계산식 숫자 라벨은 직접 수정할 수 없으며 허용 여부는 native 파서가 검사합니다. 구역·문단 번호는 0부터, 선택 위치는 UTF-16 단위 [시작, 끝)입니다. 빈 선택은 삽입, 빈 교체 텍스트는 삭제입니다. 원본 파일은 변경하지 않습니다.</p>
-    <button id="enable-edit" type="button">편집 실험 켜기</button>
     <form id="edit-form"><fieldset id="edit-fields" disabled>
       <div class="edit-grid">
         <label>구역 (0부터)<input name="section" type="number" min="0" max="4294967295" step="1" value="0" required></label>
@@ -32,17 +248,12 @@
       </div>
       <label>교체 텍스트<textarea name="text" maxlength="4194304" aria-label="교체 텍스트"></textarea></label>
       <button type="submit">텍스트 교체 적용</button>
-      <label>기존 CharShape ID<input name="charShapeId" type="number" min="0" max="4294967295" step="1" value="0" required></label>
       <button id="format-button" type="button">글자 모양 ID 적용</button>
     </fieldset></form>
     <p id="edit-status" role="status" aria-live="polite"></p>
   </details>
-  <div id="viewport" tabindex="0" aria-label="스크롤 가능한 문단 텍스트 미리보기">
-    <canvas id="canvas" aria-label="문단 텍스트 Canvas">텍스트 결과는 아래 대체 텍스트에서 확인할 수 있습니다.</canvas>
-    <div id="spacer" aria-hidden="true"></div>
-    <textarea id="canvas-input" tabindex="-1" aria-label="Canvas 문단 입력" maxlength="4194304" spellcheck="false" autocapitalize="off" autocomplete="off" disabled></textarea>
-  </div>
   <details><summary>접근성용 대체 텍스트 (최대 50,000 UTF-16 단위)</summary><textarea id="accessible" readonly aria-label="미리보기 대체 텍스트"></textarea></details>
 </main>
+<footer><small>본 제품은 한글과컴퓨터의 한글 문서 파일(.hwp) 공개 문서를 참고하여 개발하였습니다.</small></footer>
 <script type="module" src="./app.mjs"></script>
 </html>

@@ -15,15 +15,13 @@ export function scopes(all) {
   return { parents, owners };
 }
 
-export function verifySplit(input, output, section, paragraph, atUnit, endUnit = atUnit) {
-  const before = inspect(input), after = inspect(output);
-  assert.deepEqual([...after.streams.keys()].sort(), [...before.streams.keys()].sort());
-  const source = endUnit === atUnit ? before.sections[section].bytes : expectedSection(before.sections[section].bytes, paragraph, atUnit, endUnit, "");
+export function expectedSplitSection(sections, section, paragraph, atUnit, endUnit = atUnit) {
+  const source = endUnit === atUnit ? sections[section].bytes : expectedSection(sections[section].bytes, paragraph, atUnit, endUnit, "");
   const original = paragraphRecords(source, paragraph);
   const text = original.direct.find(r => r.tag === 67)?.payload ?? Buffer.from("\r", "utf16le");
   const end = text.length / 2 - 1;
   assert(atUnit >= 0 && atUnit <= end);
-  const used = new Set(before.sections.flatMap(s => records(s.bytes).filter(r => r.tag === 66).map(r => r.payload.readUInt32LE(18))));
+  const used = new Set(sections.flatMap(s => records(s.bytes).filter(r => r.tag === 66).map(r => r.payload.readUInt32LE(18))));
   let id = 1;
   while (used.has(id)) id++;
   const { parents, owners } = scopes(original.all), owner = owners[original.at];
@@ -54,7 +52,13 @@ export function verifySplit(input, output, section, paragraph, atUnit, endUnit =
     return r.raw;
   });
   chunks.splice(left.end, 0, added);
-  assert.deepEqual(after.sections[section].bytes, Buffer.concat(chunks), "whole split Section differs from independent expected records");
+  return Buffer.concat(chunks);
+}
+
+export function verifySplit(input, output, section, paragraph, atUnit, endUnit = atUnit) {
+  const before = inspect(input), after = inspect(output);
+  assert.deepEqual([...after.streams.keys()].sort(), [...before.streams.keys()].sort());
+  assert.deepEqual(after.sections[section].bytes, expectedSplitSection(before.sections, section, paragraph, atUnit, endUnit), "whole split Section differs from independent expected records");
   for (const [path, bytes] of before.streams)
     if (path !== before.sections[section].path) assert.deepEqual(after.streams.get(path), bytes, `unselected stream changed: ${path}`);
 }

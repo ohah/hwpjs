@@ -2,11 +2,12 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
+const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
 
 test("actual HWP5 Worker history restores whole fixture projections and saved bytes", async t => {
   const originalSelf = globalThis.self, originalFetch = globalThis.fetch, replies = [];
   globalThis.self = { postMessage(message) { replies.push(message); } };
-  globalThis.fetch = async () => new Response(readFileSync("zig-out/bin/hwpjs.wasm"));
+  globalThis.fetch = async () => new Response(wasm);
   t.after(() => { globalThis.fetch = originalFetch; if (originalSelf === undefined) delete globalThis.self; else globalThis.self = originalSelf; });
   await import(`../../web/preview/reader-worker.mjs?history-regression=${Date.now()}`);
   const send = async message => {
@@ -21,6 +22,7 @@ test("actual HWP5 Worker history restores whole fixture projections and saved by
     ["charshape", { kind: "splice", paragraph: 1, startUnit: 0, endUnit: 0, text: "이력😀" }],
     ["software", { kind: "splice", paragraph: 2, startUnit: 0, endUnit: 0, text: "공모😀" }],
     ["chart", { kind: "splice", paragraph: 19, startUnit: 1, endUnit: 2, text: "2" }],
+    ["chart", { kind: "split", paragraph: 12, atUnit: 1 }],
     ["issue144-fields-crossing-lineseg-boundary", { kind: "splice", paragraph: 2, startUnit: 0, endUnit: 4, text: "필드😀" }],
     ["table", { kind: "splice", paragraph: 1, startUnit: 0, endUnit: 0, text: "빈셀😀" }],
     ["charshape", { kind: "format", paragraph: 1, startUnit: 0, endUnit: 1, charShapeId: 0 }],
@@ -30,18 +32,27 @@ test("actual HWP5 Worker history restores whole fixture projections and saved by
     const loaded = await send({ kind: "load", bytes: source }); assert.equal(loaded.error, undefined);
     assert.equal((await send({ kind: "undo" })).error, "EditorNotOpen");
     const enabled = await send({ kind: "enable" }); assert.equal(enabled.error, undefined); assert.equal(enabled.historyAvailable, true);
+    assert.equal(enabled.historyRevision, 0);
+    assert.deepEqual(enabled.historyRevisions, [0]);
     assert.equal((await send({ kind: "undo" })).changed, false);
     const edited = await send({ section: 0, ...command }); assert.equal(edited.error, undefined, name);
+    assert.equal(edited.historyRevision, 1);
+    assert.deepEqual(edited.historyRevisions, [1, 0]);
     const saved = await send({ kind: "save", allowStaleLayout: true }); assert.equal(saved.error, undefined);
     assert.notDeepEqual(Buffer.from(saved.bytes), source);
     const undone = await send({ kind: "undo" }); assert.equal(undone.error, undefined); assert.equal(undone.changed, true);
+    assert.equal(undone.historyRevision, 0);
+    assert.deepEqual(undone.historyRevisions, [0, 1]);
     assert.deepEqual(undone.content, loaded.content, `${name}: all projection metadata must restore`);
     const original = await send({ kind: "save" }); assert.equal(original.error, undefined); assert.equal(original.layoutRequiresReflow, false);
     assert.deepEqual(Buffer.from(original.bytes), source);
     assert.equal((await send({ kind: "enable" })).historyAvailable, true, "repeated enable must not reset redo");
     const refused = await send({ kind: "splice", section: 0, paragraph: 999999, startUnit: 0, endUnit: 0, text: "실패" });
     assert(refused.error); assert.equal(refused.applied, false);
+    assert.equal(refused.historyRevision, 0);
+    assert.deepEqual(refused.historyRevisions, [0, 1]);
     const redone = await send({ kind: "redo" }); assert.equal(redone.error, undefined); assert.equal(redone.changed, true);
+    assert.equal(redone.historyRevision, 1);
     assert.deepEqual(redone.content, edited.content, `${name}: dependent projections must redo`);
     assert.deepEqual((await send({ kind: "save", allowStaleLayout: true })).bytes, saved.bytes);
     assert.equal((await send({ kind: "redo" })).changed, false);
@@ -50,7 +61,7 @@ test("actual HWP5 Worker history restores whole fixture projections and saved by
 
 test("older Worker WASM does not advertise unavailable structural editing", async t => {
   const previousSelf = globalThis.self, previousFetch = globalThis.fetch, replies = [];
-  const older = Buffer.from(readFileSync("zig-out/bin/hwpjs.wasm"));
+  const older = Buffer.from(wasm);
   for (const name of ["hwp5_edit_split_range", "hwp5_edit_split", "hwp5_edit_merge"]) {
     const at = older.indexOf(Buffer.from(name)); assert(at >= 0); older[at] = 120;
   }
@@ -73,7 +84,7 @@ test("older Worker WASM does not advertise unavailable structural editing", asyn
 test("actual HWP5 Worker save refusal retains edits and native session for retry", async t => {
   const originalSelf = globalThis.self, originalFetch = globalThis.fetch, replies = [];
   globalThis.self = { postMessage(message) { replies.push(message); } };
-  globalThis.fetch = async () => new Response(readFileSync("zig-out/bin/hwpjs.wasm"));
+  globalThis.fetch = async () => new Response(wasm);
   t.after(() => { globalThis.fetch = originalFetch; if (originalSelf === undefined) delete globalThis.self; else globalThis.self = originalSelf; });
   await import(`../../web/preview/reader-worker.mjs?save-regression=${Date.now()}`);
   const send = async message => { await self.onmessage({ data: { origin: "save-test", ...message } }); const reply = replies.shift(); assert(reply); assert.equal(replies.length, 0); return reply; };
@@ -89,7 +100,7 @@ test("actual HWP5 Worker save refusal retains edits and native session for retry
   assert.equal((await send({ kind: "splice", section: 0, paragraph: 1, startUnit: 4, endUnit: 4, text: "다음" })).error, undefined);
   const saved = await send({ kind: "save", allowStaleLayout: true });
   assert.equal(saved.error, undefined); assert.equal(saved.layoutRequiresReflow, true); assert.equal(saved.format, "hwp5");
-  const reopened = await createExperimentalHwp5Editor(readFileSync("zig-out/bin/hwpjs.wasm"), saved.bytes);
+  const reopened = await createExperimentalHwp5Editor(wasm, saved.bytes);
   try { assert(reopened.text(0, 1).startsWith("검증😀다음")); } finally { reopened.close(); }
   assert.deepEqual((await send({ kind: "save", allowStaleLayout: true })).bytes, saved.bytes);
 });
@@ -97,7 +108,7 @@ test("actual HWP5 Worker save refusal retains edits and native session for retry
 test("actual Worker refreshes dependent chart formula after a plain numeric cell edit", async t => {
   const originalSelf = globalThis.self, originalFetch = globalThis.fetch, replies = [];
   globalThis.self = { postMessage(message) { replies.push(message); } };
-  globalThis.fetch = async () => new Response(readFileSync("zig-out/bin/hwpjs.wasm"));
+  globalThis.fetch = async () => new Response(wasm);
   t.after(() => {
     globalThis.fetch = originalFetch;
     if (originalSelf === undefined) delete globalThis.self; else globalThis.self = originalSelf;
@@ -121,7 +132,7 @@ test("actual Worker preserves tab projection, repeated edits and refusal without
   const originalSelf = globalThis.self, originalFetch = globalThis.fetch;
   const replies = [];
   globalThis.self = { postMessage(message) { replies.push(message); } };
-  globalThis.fetch = async () => new Response(readFileSync("zig-out/bin/hwpjs.wasm"));
+  globalThis.fetch = async () => new Response(wasm);
   t.after(() => {
     globalThis.fetch = originalFetch;
     if (originalSelf === undefined) delete globalThis.self; else globalThis.self = originalSelf;

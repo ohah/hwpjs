@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { runInNewContext } from "node:vm";
 import { inflateRawSync } from "node:zlib";
+import { decodeDistributionSection } from "../../../tools/hwp5-distribution-oracle.mjs";
 const context = { module: { exports: {} }, require: createRequire(import.meta.url), Buffer, process };
 runInNewContext(readFileSync("legacy/cfb.js", "utf8"), context);
 const cfb = context.module.exports;
@@ -22,13 +23,28 @@ export function records(bytes) {
   return result;
 }
 
+function readContainer(input) {
+  const parsed = cfb.parse(input), streams = new Map(), metadata = new Map();
+  parsed.FileIndex.forEach((e, i) => {
+    const path = parsed.FullPaths[i].slice(parsed.FullPaths[0].length);
+    if (e.type === 2) streams.set(path, Buffer.from(e.content ?? []));
+    if ([1, 2, 5].includes(e.type)) metadata.set(path, { name: e.name, type: e.type, clsid: e.clsid, state: e.state, createdMilliseconds: e.ct?.getTime() ?? null, modifiedMilliseconds: e.mt?.getTime() ?? null });
+  });
+  return { streams, metadata };
+}
+
+export function readStreams(input) {
+  return readContainer(input).streams;
+}
+
 export function inspect(input) {
-  const parsed = cfb.parse(input), streams = new Map();
-  parsed.FileIndex.forEach((e, i) => { if (e.type === 2) streams.set(parsed.FullPaths[i].slice(parsed.FullPaths[0].length), Buffer.from(e.content ?? [])); });
+  const { streams, metadata } = readContainer(input);
   const compressed = Boolean(streams.get("FileHeader").readUInt32LE(36) & 1);
+  const distribution = Boolean(streams.get("FileHeader").readUInt32LE(36) & 4);
   const decode = b => compressed ? inflateRawSync(b, { maxOutputLength: 32 * 1024 * 1024 }) : b;
-  const sections = [...streams].filter(([p]) => /^BodyText\/Section\d+$/.test(p)).sort((a, b) => Number(a[0].slice(16)) - Number(b[0].slice(16))).map(([path, b]) => ({ path, bytes: decode(b) }));
-  return { streams, compressed, sections, decode };
+  const pattern = distribution ? /^ViewText\/Section\d+$/ : /^BodyText\/Section\d+$/;
+  const sections = [...streams].filter(([p]) => pattern.test(p)).sort((a, b) => Number(a[0].slice(16)) - Number(b[0].slice(16))).map(([path, b]) => ({ path, bytes: distribution ? decodeDistributionSection(b, compressed) : decode(b) }));
+  return { streams, metadata, compressed, sections, decode };
 }
 
 export function paragraphRecords(bytes, index) {
@@ -46,14 +62,14 @@ export function encodeRecord(tag, level, payload, extended = payload.length >= 4
   return Buffer.concat([h, payload]);
 }
 
-export function expectedSection(bytes, index, start, end, utf8, { skipLocalFieldAttributes = false } = {}) {
+export function expectedSection(bytes, index, start, end, utf8, { skipLocalFieldAttributes = false, fieldIds = [0x25686c6b] } = {}) {
   const owner = paragraphRecords(bytes, index), own = owner.direct.filter(r => r.level === owner.head.level + 1), originalText = own.find(r => r.tag === 67);
   const declared = owner.head.payload.readUInt32LE(0) & 0x7fffffff;
   assert(originalText || declared <= 1, "oracle cannot invent missing nonempty text");
   const text = originalText?.payload.length ? originalText.payload : Buffer.from("\r", "utf16le");
   const add = Buffer.from(utf8, "utf16le"), output = Buffer.concat([text.subarray(0, start * 2), add, text.subarray(end * 2)]);
   if (output.equals(text)) return bytes;
-  const fieldHeaders = own.filter(r => r.tag === 71 && r.payload.length >= 8 && r.payload.readUInt32LE(0) === 0x25686c6b);
+  const fieldHeaders = own.filter(r => r.tag === 71 && r.payload.length >= 8 && fieldIds.includes(r.payload.readUInt32LE(0)));
   const modifiedFields = new Set(), opened = [];
   let fieldIndex = 0;
   // Cross-paragraph tests supply a separate section-wide attribute oracle.

@@ -6,11 +6,18 @@ export function downloadDocument(snapshot, originalName, browser = globalThis) {
   const base = String(originalName).split(/[\\/]/).pop().replace(/\.(hwp|hwpx)$/i, "").replace(/[\u0000-\u001f\u007f]/g, "") || "document";
   const link = browser.document.createElement("a");
   const url = browser.URL.createObjectURL(new browser.Blob([snapshot.bytes], { type: "application/octet-stream" }));
+  let failed = false, failure;
+  const remember = error => { if (!failed) { failed = true; failure = error; } };
   try {
     link.href = url; link.download = `${base}.edited.${extension}`;
     browser.document.body.append(link); link.click();
-  } finally {
-    link.remove();
+  } catch (error) { remember(error); }
+  try { link.remove(); } catch (error) { remember(error); }
+  try {
     browser.setTimeout(() => browser.URL.revokeObjectURL(url), 1000);
+  } catch (error) {
+    remember(error);
+    try { browser.URL.revokeObjectURL(url); } catch (error) { remember(error); }
   }
+  if (failed) throw failure;
 }

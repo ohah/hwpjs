@@ -1,4 +1,5 @@
 const segments = new Intl.Segmenter("ko", { granularity: "grapheme" });
+const words = new Intl.Segmenter("ko", { granularity: "word" });
 const splitScalar = (text, unit) => unit > 0 && unit < text.length && /[\uD800-\uDBFF]/u.test(text[unit - 1]) && /[\uDC00-\uDFFF]/u.test(text[unit]);
 
 /** Minimal UTF-16 replacement; do not cut a shared surrogate in half. */
@@ -14,6 +15,17 @@ export function textChange(before, after) {
 }
 export function graphemeUnits(text) {
   return [...segments.segment(text)].map(s => s.index).concat(text.length);
+}
+/** 공백과 구두점을 건너뛴 단어 시작점으로 이동한다. */
+export function wordBoundary(text, unit, forward) {
+  let previous = 0;
+  for (const part of words.segment(text)) {
+    if (!part.isWordLike) continue;
+    if (forward && part.index > unit) return part.index;
+    if (!forward && part.index >= unit) break;
+    previous = part.index;
+  }
+  return forward ? text.length : previous;
 }
 export function snapUnit(text, unit, forward = false) {
   const bounds = graphemeUnits(text);

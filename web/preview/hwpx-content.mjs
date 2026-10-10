@@ -1,9 +1,11 @@
 // Read-only presentation of native events. Never an edit model or save input.
 import { clipText } from "./content.mjs";
 const inlineText = { tab: "\t", fw_space: "\u3000", nb_space: "\u00a0", line_break: "↵", hypen: "\u00ad", unknown: "\ufffc" };
+export const HWPX_DISPLAY_BOUNDS = Object.freeze({ maxUnits: 200000, maxParagraphs: 20000 });
 
-export function displayHwpxContent(result, { maxUnits = 200000, maxParagraphs = 20000 } = {}) {
-  if (!Number.isInteger(maxUnits) || maxUnits < 0 || !Number.isInteger(maxParagraphs) || maxParagraphs < 0) throw new RangeError("InvalidDisplayBounds");
+export function displayHwpxContent(result, { maxUnits = HWPX_DISPLAY_BOUNDS.maxUnits, maxParagraphs = HWPX_DISPLAY_BOUNDS.maxParagraphs, paragraphOffset = 0 } = {}) {
+  if (!Number.isSafeInteger(maxUnits) || maxUnits < 0 || !Number.isSafeInteger(maxParagraphs) || maxParagraphs < 0 ||
+      !Number.isSafeInteger(paragraphOffset) || paragraphOffset < 0 || paragraphOffset > result.paragraphCount) throw new RangeError("InvalidDisplayBounds");
   const paragraphs = [], stack = [], seen = new Set();
   let units = 0, limited = false, textClipped = false;
   const append = (frame, text) => {
@@ -19,7 +21,8 @@ export function displayHwpxContent(result, { maxUnits = 200000, maxParagraphs = 
       if (seen.has(key)) throw new Error("InvalidHwpxParagraphEvents");
       seen.add(key);
       const value = { section: event.section, paragraph: event.paragraph - 1, editable: false, label: `구역 ${event.section + 1} · 문단 ${event.paragraph}${stack.length ? " · 중첩" : ""} · HWPX 읽기 전용`, text: "" };
-      const visible = paragraphs.length < maxParagraphs;
+      const visible = seen.size - 1 >= paragraphOffset && paragraphs.length < maxParagraphs;
+      value.selectionOwner = stack.length === 0 ? `section:${event.section}:body` : null;
       if (visible) paragraphs.push(value); else limited = true;
       stack.push({ section: event.section, paragraph: event.paragraph, value, visible });
       continue;
