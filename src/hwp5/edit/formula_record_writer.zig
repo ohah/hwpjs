@@ -10,7 +10,10 @@ pub fn prepare(a: std.mem.Allocator, original: record.Record, source_node: usize
     if (header.id != @import("../body/control_rules.zig").id("%fmu")) return error.SourceBindingMismatch;
     var properties = try @import("../body/field_start.zig").Properties.parse(header.properties);
     if (result.modified) properties.attributes |= @import("../body/field_start.zig").modified_mask;
-    const derived = try @import("formula_command_writer.zig").prepare(a, properties, result.value, result.grouping);
+    const derived = if (result.expression) |expression|
+        try @import("formula_definition_command.zig").prepare(a, properties, expression, result.value, result.grouping)
+    else
+        try @import("formula_command_writer.zig").prepare(a, properties, result.value, result.grouping);
     defer a.free(derived);
     if (std.mem.eql(u8, header.properties, derived)) {
         if (original.raw.len > limit) return error.LimitExceeded;

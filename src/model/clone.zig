@@ -21,7 +21,7 @@ pub fn paragraph(a: std.mem.Allocator, source: model.Paragraph) !model.Paragraph
     errdefer if (out.range_tags) |v| a.free(v);
     out.field_attributes = if (source.field_attributes) |v| try a.dupe(model.FieldAttributes, v) else null;
     errdefer if (out.field_attributes) |v| a.free(v);
-    out.formula_results = if (source.formula_results) |v| try a.dupe(model.FormulaResult, v) else null;
+    out.formula_results = if (source.formula_results) |v| try @import("formula_result_values.zig").clone(a, v) else null;
     return out;
 }
 

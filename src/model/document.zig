@@ -18,13 +18,15 @@ pub const CharacterRun = struct { start_unit: u32, char_shape_id: u32 };
 pub const TextRange = struct { start_unit: u32, end_unit: u32, tag: u32 };
 pub const FieldAttributes = struct { source_node: u32, attributes: u32 };
 pub const NumberGrouping = enum { none, thousands };
-/// Numeric result is authoritative; command/display bytes are derived outputs.
+/// Current definition and numeric result share one state; command/display are derived.
 pub const FormulaResult = struct {
     source_node: u32,
     value: f64,
     grouping: NumberGrouping,
     /// Sticky edit history; restoring a numeric value does not undo this flag.
     modified: bool = false,
+    /// Owned UTF16LE definition without '='; null retains the immutable source.
+    expression: ?[]u8 = null,
 };
 
 pub const Paragraph = struct {
@@ -62,7 +64,7 @@ pub const Paragraph = struct {
         a.free(self.character_runs);
         if (self.range_tags) |ranges| a.free(ranges);
         if (self.field_attributes) |fields| a.free(fields);
-        if (self.formula_results) |results| a.free(results);
+        if (self.formula_results) |results| @import("formula_result_values.zig").deinit(a, results);
         self.* = undefined;
     }
 };

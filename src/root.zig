@@ -1197,6 +1197,8 @@ test {
     _ = @import("hwpx/column_boundary_current_tests.zig");
     _ = @import("drawing_extra_source_test.zig");
     _ = @import("hwp5/edit/formula_definition_command_tests.zig");
+    _ = @import("model/formula_result_values_tests.zig");
+    _ = @import("hwp5/edit/formula_definition_fixture_tests.zig");
     _ = @import("presentation_retention_test.zig");
     _ = @import("site_union_regression_test.zig");
 }

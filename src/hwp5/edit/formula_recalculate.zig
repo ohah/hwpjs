@@ -39,12 +39,14 @@ fn applySelected(a: std.mem.Allocator, source: []const u8, version: @import("../
         try parts.metadata.validate(tree.nodes[parent].record.value.header, char_count);
         const properties = try @import("../body/field_start.zig").Properties.parse(header.properties);
         const view = try properties.formulaView();
+        const current = try @import("../../model/formula_result_values.zig").find(p.formula_results orelse &.{}, source_node);
+        const expression = if (current) |value| value.expression orelse view.expression else view.expression;
         const owner = try @import("../body/formula_cell.zig").locate(tree, groups, parent, .observed8);
         if (edited_node) |edited| {
-            if (!(try @import("formula_dependency_scope.zig").affected(tree, groups, owner, view.expression, edited))) continue;
+            if (!(try @import("formula_dependency_scope.zig").affected(tree, groups, owner, expression, edited))) continue;
         }
         const reader: @import("formula_value_reader.zig").Reader = .{ .allocator = a, .section = section.* };
-        const evaluated = try @import("../body/formula_values.zig").evaluateWith(tree, groups, owner, try view.range(), .observed8, remaining, reader);
+        const evaluated = try @import("../body/formula_values.zig").evaluateWith(tree, groups, owner, try @import("../body/formula_range.zig").Range.parse(expression), .observed8, remaining, reader);
         remaining.cells -= evaluated.cells;
         const cost = std.math.mul(usize, groups.items.len, evaluated.cells) catch return error.LimitExceeded;
         if (cost > remaining.inspections) return error.LimitExceeded;
@@ -56,7 +58,7 @@ fn applySelected(a: std.mem.Allocator, source: []const u8, version: @import("../
         const original = try @import("formula_command_writer.zig").prepare(a, properties, cached_number, grouping);
         defer a.free(original);
         if (!std.mem.eql(u8, original, header.properties)) return error.UnsupportedFormulaFormat;
-        const result: model.FormulaResult = .{ .source_node = @intCast(source_node), .value = evaluated.value, .grouping = grouping, .modified = true };
+        const result: model.FormulaResult = .{ .source_node = @intCast(source_node), .value = evaluated.value, .grouping = grouping, .modified = true, .expression = if (current) |value| value.expression else null };
         var ordinal: usize = 0;
         var child = parent + 1;
         while (child < source_node) {
@@ -78,17 +80,7 @@ fn applySelected(a: std.mem.Allocator, source: []const u8, version: @import("../
         }
         try @import("formula_display_apply.zig").applyDraft(a, p, properties, result, ordinal, parts.metadata.ranges, char_count);
         if (p.range_tags == null) p.range_tags = try @import("text_ranges.zig").prepare(a, null, parts.metadata.ranges, (try partsText(tree, parts)), 0, 0, 0);
-        const old = p.formula_results orelse &.{};
-        var index: ?usize = null;
-        for (old, 0..) |previous, i| if (previous.source_node == source_node) {
-            if (index != null) return error.SourceBindingMismatch;
-            index = i;
-        };
-        const results = try a.alloc(model.FormulaResult, old.len + @as(usize, if (index == null) 1 else 0));
-        @memcpy(results[0..old.len], old);
-        results[index orelse old.len] = result;
-        if (p.formula_results) |owned| a.free(owned);
-        p.formula_results = results;
+        p.formula_results = try @import("../../model/formula_result_values.zig").upsert(a, p.formula_results, result);
         processed += 1;
     }
     return processed;

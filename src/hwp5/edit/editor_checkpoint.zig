@@ -280,7 +280,10 @@ pub fn size(document: *const model.Document, limit: usize) !usize {
             try add(&total, paragraph.character_runs.len, @sizeOf(model.CharacterRun), limit);
             if (paragraph.range_tags) |values| try add(&total, values.len, @sizeOf(model.TextRange), limit);
             if (paragraph.field_attributes) |values| try add(&total, values.len, @sizeOf(model.FieldAttributes), limit);
-            if (paragraph.formula_results) |values| try add(&total, values.len, @sizeOf(model.FormulaResult), limit);
+            if (paragraph.formula_results) |values| {
+                try add(&total, values.len, @sizeOf(model.FormulaResult), limit);
+                for (values) |value| if (value.expression) |expression| try add(&total, expression.len, 1, limit);
+            }
         }
     }
     return total;
