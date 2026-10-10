@@ -75,6 +75,14 @@ test "field source merge plan preserves actual cross-paragraph links without mut
 
 test "field source merge plan allocation failures preserve cross-paragraph Unicode source" {
     const a = std.testing.allocator;
+    // This exhaustive loop repeatedly captures allocation/free traces.
+    // Keep safety/leak checks, but avoid macOS stack-unwinder memory growth.
+    // FailingAllocator still captures the induced-failure diagnostic itself.
+    var failure_backing: std.heap.DebugAllocator(.{
+        .stack_trace_frames = 0,
+        .safety = true,
+    }) = .init;
+    defer std.testing.expect(failure_backing.deinit() == .ok) catch @panic("failure-loop allocator leak");
     const body = "<p:p id='9'><p:run><p:t>A😀</p:t><p:ctrl><p:fieldBegin id='77' type='HYPERLINK'/></p:ctrl><p:t>B</p:t></p:run></p:p><p:p id='10'><p:run><p:t>C😀</p:t><p:ctrl><p:fieldEnd beginIDRef='77'/></p:ctrl></p:run></p:p>";
     const input = try @import("test_formula_fixture.zig").zipWithParagraphs(a, body);
     defer a.free(input);
@@ -85,7 +93,7 @@ test "field source merge plan allocation failures preserve cross-paragraph Unico
     var counters: @import("section_text.zig").Report = .{};
     var current = try @import("paragraph_structure_collect.zig").collect(a, &section.tree, &section.sites, section.locations, .{}, &counters);
     defer current.deinit(a);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try std.testing.checkAllAllocationFailures(failure_backing.allocator(), struct {
         fn run(allocator: std.mem.Allocator, inputs: []const Tree, values: *const model.Values) !void {
             var plan = try prepare(allocator, inputs, 0, values, 0, 1, 100);
             defer plan.deinit(allocator);
@@ -199,7 +207,7 @@ test "field source merge plan allocation failures preserve cross-paragraph Unico
         row.character_styles = try @import("character_style_paint.zig").fromProjection(a, projection, 1000);
         for (row.character_styles.?) |*span| span.char_shape_id = 9;
     }
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try std.testing.checkAllAllocationFailures(failure_backing.allocator(), struct {
         fn run(allocator: std.mem.Allocator, inputs: []const Tree, values: *const model.Values) !void {
             var result = try @import("field_source_merge_values.zig").prepare(allocator, inputs, 0, values, 0, 1, 100000);
             defer result.deinit(allocator);

@@ -16,6 +16,8 @@
 
 ## 전용 감사의 거부 후 이력 검증
 
+중단된 native 테스트의 후속 분리 재현·trace 설정 대조·수정 실측은 [필드 병합 할당 실패 감사](field-merge-failure-audit.md)가 소유합니다. 위 SIGKILL 미확정 기록과 최신 분리 테스트 통과는 다른 실행입니다.
+
 `tools/hwpx-specialized-input-audit.mjs`의 거부 경로는 저장 원문만 비교하던 검사를 보완했습니다. `hwpx-refusal-history.mjs`가 revision 불변·빈 undo·기존 redo 유무·redo 저장 바이트·다시 undo한 원문/revision을 검사합니다. 거부 종류 판정은 기존 감사가 계속 소유하며 이 helper는 지원 범위를 완화하지 않습니다. 성공한 직전 체크포인트는 복사해 보관합니다.
 
 `node --test tests/hwpx/refusal-history.test.mjs`는 빈/기존 redo 정상 경로와 revision·원문·undo·redo 유무·redo 체크포인트·복원 revision의6개 변조를 모두 확인했습니다(2/2, skip0). 기본 WASM SHA256 `fe97aa698bcc1cdfef9bc75f3fcafc4941a3c0069724bc700f0a62923c48fc20`의 실제 `chart.hwpx`17시도는4입력/독립 XML 검증과13계산 결과 필드 거부를 통과했고, `hyperlink.hwpx`4시도는4필드 입력/독립 XML 검증을 통과했습니다. 두 실행 모두 exit0이며 저장 재열기·undo/redo 검사를 유지합니다. chart의13거부는 결과 필드의 직접 prefix 거부이지 수식 정의 명령 미지원 판정이 아닙니다. 이미 실행 중인 대형 감사에는 이 소스 변경을 소급하지 않습니다.
