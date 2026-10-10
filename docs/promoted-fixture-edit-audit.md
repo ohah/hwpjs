@@ -6,6 +6,8 @@
 
 ## 이전 산출물 기록
 
+최신 b8e5409a 기본 산출물의 HWPX 전용 입력 감사도 exit0입니다. `/tmp/hwpjs-structural-formula-hwpx-specialized-20261011.jsonl`에서46파일·암호1·165시도 중152편집/저장 재열기/이력·독립 XML/ZIP152대조(필드6), 계산 결과 직접 입력 거부13을 확인했습니다. `formula-definition-corpus.test.mjs`와 `formula-worker.test.mjs`도3/3·skip0·exit0이며 실제 chart13/13수식 정의 변경의 독립 산술·전체 XML/ZIP·이력 및 Worker 갱신을 검사합니다. 이는48숫자 셀의 모든 위치 입력이나 모든 함수/브라우저 지원 완료가 아닙니다. 일반 HWPX 전수 감사는 별도 실행 중입니다.
+
 2026-10-10 `node tools/hwp5-edit-corpus-audit.mjs --history`는 기본 WASM SHA256 `7e70bbc74b7665553cd4f7e1b6a90aeb81a2e14c6c705e332d0ddac495e645e8`으로 Git 추적101입력을 검사했고 exit0입니다. 로그는 `/tmp/hwpjs-promoted-hwp5-edit-20261010.json`입니다.
 
 HWP5는53파일의 모든 문단 prefix 입력·저장 텍스트/비대상 stream·재열기·이력이 검증됐습니다. chart.hwp1파일은 숫자 셀48문단에 비숫자 prefix를 공급한 `InvalidFormulaNumber` 거부로 부분 지원 상태입니다. 전체2090시도 중2042편집/이력 성공이고 거부48입니다. 이 거부를 파서 오류나 모든 숫자 입력 미지원으로 해석하지 않습니다. 숫자 값/정확 수식 결과는 별도 집중 검사의 범위입니다.
