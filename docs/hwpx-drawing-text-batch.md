@@ -2,6 +2,12 @@
 
 ## 후보 검증
 
+기본 제품 교체 후 후보 환경 변수 없이 공개 배치3파일5/5·fail/skip0·exit0(167.031125ms)을 다시 확인했습니다. 아래 미반영 표현은 각 이전 검사 시점의 상태이며 현재 배포 상태는 위 제품 문서를 따릅니다.
+
+고정67dc85ca의 구간3파일 재실행은4/4·fail/skip0·exit0으로 완료했습니다. 대형 후반 구간 검사는150973.57475ms, 전체는151129.390958ms이며 로그 `/tmp/hwpjs-main-drawing-batch-window-retry-20261011.log`를 따릅니다. 원문 저장·후반8853 문단 입력·일반/-O 독립 전체 XML/ZIP·undo 원문/redo 변경 바이트를 포함합니다. 실제 Worker/WASM과 Renderer/controller지만 DOM/fonts/paint는 대역이며 GUI/원본 조판 완료가 아닙니다. 아래 실행 시작 시점의 대기 기록은 이 결과로 대체합니다. 기본 제품 반영/복구는 [현재 데모 산출물](current-preview-artifact.md)을 따릅니다.
+
+전체 Git 추적 HWPX46파일의 일반 문단 prefix/저장 재열기/이력 감사도 같은 깨끗한 소스와 고정67dc85ca 경로로 시작했습니다. 로그 `/tmp/hwpjs-main-drawing-batch-edit-corpus-20261011.jsonl`의 종료 집계는 아직 기다리고 있으며 파서/모든 명령/독립 XML/GUI 완료로 계수하지 않습니다. 이전 다른 해시의 감사와 합산하지 않습니다.
+
 추가 공개 경계 검사 `drawing-batch-wire.test.mjs`는 그룹 원본의 단일 조회로 유효 배열을 만들고 두 배치 decoder에 적용합니다. 모든 바이트 절단·잘못된 UTF-8·비배열·잘못된 행·중복/역순·음수/소수 노드·100001행·잘못된 버퍼 타입을 거부하며 빈 배열과 독립 반환값은 허용합니다. Uint8Array 입력 계약을 명시해 단일 decoder와 맞췄습니다. 고정 깨끗한67dc85ca WASM과 현재 JS 변경으로 배치 회귀3파일5/5·fail/skip0·exit0(170.660709ms)입니다. 이 결과는 최신 전체 source/GUI 검증이 아닙니다.
 
 게시9dbe495d의 깨끗한 archive `/tmp/hwpjs-main-drawing-batch.SehGHS`에서 ReleaseSafe build exit0을 확인했습니다. SHA256 `67dc85ca4dfadda3e3f2515951f5f9ca92189d5f81b058a61323036ba8d49dda`입니다. 새 배치 공개2파일4/4·fail/skip0·exit0(201.508792ms), 추적 HWPX45개·47구역·도형 텍스트26개의 일괄/단일 결과 및 원문 저장 바이트 일치·암호1파일 별도 거부를 다시 확인했습니다. 정규 HWP5 312/312·HWPX 34/34·fail/skip0·exit0이며 로그 `/tmp/hwpjs-main-drawing-batch-regular-20261011.log`에 각각3473.028333/47757.714ms가 기록돼 있습니다. 현재 기본 제품에는 아직 반영하지 않았습니다.

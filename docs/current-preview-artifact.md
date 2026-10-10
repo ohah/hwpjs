@@ -1,6 +1,12 @@
 # 현재 데모 WASM
 
-## 현재 반영: 2026-10-11 사각형 일괄 조회
+## 현재 반영: 2026-10-11 도형 텍스트 일괄 조회
+
+기본 및 외부 `/zig-out/bin/hwpjs.wasm`은 게시9dbe495d의 깨끗한 ReleaseSafe 산출물이며 SHA256 `67dc85ca4dfadda3e3f2515951f5f9ca92189d5f81b058a61323036ba8d49dda`입니다. 정규312+34회귀·도형 배치·추적 조회 대조와 대형 후반 구간 Worker/Renderer 입력·독립 XML/ZIP·저장/이력4/4의 근거는 [도형 텍스트 일괄 조회](hwpx-drawing-text-batch.md)를 따릅니다. 실제 브라우저 전수·OS IME·원본 조판 완료와 구분합니다.
+
+교체 전9ff325bd 백업은 `/var/folders/51/mr5cjhg13v324f1vgg9m237c0000gn/T/hwpjs-drawing-batch-backup-5BAGWP/hwpjs.wasm`입니다. 정규 단일 링크·해시·compile 검사와 exclusive 백업/stage 복사·동일 폴더 rename으로 반영했습니다. 외부 HTTP200·동일 해시·compile 성공이며 서버/Tailscale 설정은 유지했습니다. 브라우저 새로고침으로 Worker/WASM을 다시 로드해야 합니다. 최신 고정67dc85ca 전체 HWPX 문단 편집 감사는 별도 실행 중입니다.
+
+## 이전 반영: 2026-10-11 사각형 일괄 조회
 
 기본 및 외부 `/zig-out/bin/hwpjs.wasm`은 게시6d4dac5a의 깨끗한 ReleaseSafe 산출물이며 SHA256 `9ff325bdc48514d346c5f928c6294e710a80a8a5f690831ccae10b2f0cc5646e`입니다. 정규312+34회귀·추적 HWPX 일괄/단일 조회 대조·실제 Chromium 그룹 도형 텍스트 입력/이력의 범위는 [사각형 일괄 조회](hwpx-rectangle-host-batch.md)를 따릅니다. 전체 편집·원본 조판 완료가 아닙니다.
 
