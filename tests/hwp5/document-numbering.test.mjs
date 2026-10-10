@@ -25,6 +25,14 @@ test("document numbering preserves explicit document start and section restart w
   control.paragraphs[0].structuralAnchors = [{ kind: "header", control_node: 1, paragraph: 0, unit: 0 }];
   assert.equal(hwp5EffectivePageNumberSource(control).start_page, 7);
 });
+test("section flags cannot be ignored or borrowed from a master page profile for numbering", () => {
+  for (const flags of [1, 2, 4, 32, 1 << 16, 1 << 20, 1 << 21, 0x20000000]) {
+    const value = content();
+    value.sectionSources[0].flags = flags;
+    assert.throws(() => hwp5EffectivePageNumberSource(value), { message: "UnsupportedHwp5SectionNumbering" });
+    assert.equal(value.sectionSources[0].flags, flags);
+  }
+});
 test("document properties attachment clears stale values and reports optional ABI failure", () => {
   const value = { pageAreaSources: [{}], documentPropertySource: "stale" };
   attachHwp5DocumentProperties({ documentProperties: () => properties }, value);

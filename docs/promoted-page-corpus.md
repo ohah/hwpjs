@@ -10,6 +10,8 @@
 
 ## TABLE 미해석 비트의 재현
 
+최신 감사의 table-bug.hwp 번호 거부는 구역 flags536870912(0x20000000), extra17/전부0에서 발생합니다. 보관 명세 표130은 bit0..5/8..9/16..22만 설명하며 bit29의 의미는 확인되지 않습니다. 바탕쪽 writer/표시의 특정5.1.0.1 프로필 승인과 번호 의미 지원은 독립 계약입니다. 같은 파일에 미해석 bit25 표4개도 있으므로 번호 gate 하나를 제거해도 전체 배치 완료가 아닙니다. 번호 검사에 숨김/방향/번호 적용 비트 및 관측bit29를 원값 변경 없이 명시적으로 거부하는 반례를 추가했고5/5·skip0·exit0입니다. 제한을 임의로 풀지 않았으며 이 기록은 새로운 의미 지원 구현이 아닙니다.
+
 현재 기본 산출물에서 `table-flags-pair.test.mjs`와 `table-policy-root-cause.test.mjs`가6/6·skip0·exit0입니다. 게시 예정 helper6파일을 선택한 tree `e21d6a86d1a4d3c9da229ee3cab716db7644d71b`의 별도 export에서도 동일6/6을 확인했습니다. 로컬 미게시 helper에만 의존하는 결과로 남기지 않습니다.
 
 공식 명세의 표75/76은 low0..1 쪽 나눔·bit2 반복 제목을 설명합니다. RHWP의 `src/parser/control.rs::parse_table_record`는 low2/bit2 의미와 raw attr를 보존하고, HWPX serializer는 bit3의 noAdjust를 연결합니다. 조사한 이 TABLE 경로에서는 bit25의 의미를 확인하지 못했습니다. 다른 CHAR_SHAPE의 bit25/use_font_space를 TABLE에 적용하지 않습니다.
