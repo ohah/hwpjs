@@ -1,5 +1,7 @@
 # 신규 표의 현재 소유 값
 
+HWPX 신규 셀 문단 ID의 읽기 전용 일괄 계획은 [문단 ID 일괄 계획](hwpx-paragraph-id-batch.md)을 따릅니다. 표 ID·현재 object identity·Session 거래 확정과는 별도입니다.
+
 `src/model/created_table.zig`의 Table은 현재 identity, 직렬화 instance_id, 공통 치수 Plan, 서식 리소스 참조와 셀 문단 ID/UTF-8 텍스트를 소유합니다. 원본 node index·XML·레코드·렌더링 캐시는 없습니다. 셀 치수는 기존 공통 Plan에서 파생해 중복 저장하지 않습니다.
 
 생성자는 호출자가 넘긴 표 identity/instance와 셀 문단 ID를 받아 로컬0/중복/개수·치수/예산을 검사합니다. 현재 identity와 직렬화 ID는 서로 다른 필드이며 표 ID와 문단 ID를 같은 namespace로 합치지 않습니다. 문서 전체 기존/생성 ID 충돌 검사·할당과 서식 참조 존재/포맷별 필드 폭 검증은 아직 호출자 통합 단계의 책임입니다. 입력0 거부는 신규 생성 정책이며 기존 파일의0/중복을 정규화하는 규칙이 아닙니다.
