@@ -90,3 +90,26 @@ test("formula form gates editing preserves draft and refreshes authoritative rep
   form.dispatchEvent(new Event("submit", { cancelable: true }));
   assert.equal(requests.length, 1);
 });
+
+test("formula submit revalidates target and readiness after validity callbacks", () => {
+  const form = new EventTarget(), choices = new EventTarget(), fields = {}, input = {}, note = {}, requests = [];
+  choices.ownerDocument = { createElement: () => ({}) };
+  choices.replaceChildren = (...nodes) => { choices.value = nodes[0]?.value ?? ""; };
+  let ready = true;
+  const controls = createFormulaControls({ form, choices, fields, input, note, ready: () => ready, request: value => { requests.push(value); return true; } });
+  const rows = [{ section: 0, beginElement: 7, formula: "=SUM(A1:A2)" }, { section: 0, beginElement: 8, formula: "=AVG(B1:B2)" }];
+  const content = { formulaDefinitionAvailable: true, formulas: rows };
+  controls.message({ kind: "load", content }); controls.message({ kind: "enable", content });
+  form.reportValidity = () => { controls.selectCanvas(rows[1]); return true; };
+  form.dispatchEvent(new Event("submit", { cancelable: true }));
+  assert.deepEqual(requests, [], "new draft must not be sent to the old target");
+  form.reportValidity = () => { ready = false; return true; };
+  form.dispatchEvent(new Event("submit", { cancelable: true }));
+  assert.deepEqual(requests, [], "pending input must still gate a validated form");
+  ready = true; form.reportValidity = () => true;
+  form.dispatchEvent(new Event("submit", { cancelable: true }));
+  assert.equal(requests.length, 1); assert.equal(requests[0].beginElement, 8); assert.equal(requests[0].formula, rows[1].formula);
+  form.reportValidity = () => { controls.message({ kind: "load", content }); return true; };
+  form.dispatchEvent(new Event("submit", { cancelable: true }));
+  assert.equal(requests.length, 1, "a new document must enable its own session before submission");
+});
