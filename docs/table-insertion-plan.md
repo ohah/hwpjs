@@ -1,5 +1,7 @@
 # 신규 표 삽입의 모델·거래 경계
 
+공통 치수 계획 다음의 신규 표/셀 텍스트 소유·복제·실패 원자성은 [신규 표 현재 모델](created-table-model.md)을 따릅니다. 아직 Session/저장/이력에 연결된 표 삽입 지원은 아닙니다.
+
 RHWP의 로컬 `tableCommands`는 생성 dialog의 행/열을 native createTable/createTableEx에 전달하고 snapshot 거래가 성공하면 첫 셀 입력 위치를 복원합니다. 이 흐름을 목표로 하되 그 프런트엔드만 붙이는 것으로 삽입 지원을 주장하지 않습니다.
 
 현재 HWPX 구조 모델의 보호 위치는 immutable XML element_index를 사용하고 체크포인트는 현재 편집값만 소유합니다. 원본 XML 트리를 교체하거나 신규 표에 가짜 원본 node index를 주면 provenance·source_pointer·기존 참조/이력이 깨질 수 있습니다. 신규 객체에는 원본 위치와 구분되는 현재 소유 모델·안정된 identity·생성 셀 문단과 서식 참조가 필요합니다. 저장·조회·이력은 이 같은 현재 값을 사용해야 합니다.
