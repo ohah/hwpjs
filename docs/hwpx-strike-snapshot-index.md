@@ -8,6 +8,8 @@
 
 ## 원인과 책임
 
+2026-10-11 외부 HTTPS 데모의 기본 산출물로 실제 Chromium에서 `strikethrough.hwpx`를 업로드하고 Canvas 편집을 시작했습니다. 찾기로 `strikethrough` 텍스트를 선택한 뒤 취소선 버튼 상태 true→전환 false→실행 취소 true→다시 실행 false를 각각 조건 대기로 확인했습니다. 입력 텍스트는 그대로 `strikethrough`였습니다. 테스트 브라우저는 종료했습니다. 이 증거는 실제 DOM 명령과 Worker/WASM 이력 갱신이며 픽셀 취소선 모양·포인터 드래그·다운로드 재열기·대형 문서 GUI 전수 검사가 아닙니다.
+
 2026-10-11 게시88ea9d74의 별도 복사본 Worker에 읽기 전용 조회 시간 계측을 추가했습니다. 고정fe97 WASM의 행정업무 편람 load81602.11ms·enable78184.54ms·후반 구간36093.06ms에서 `characterStrikes`는 각각26628.90/26678.06/26778.04ms였습니다. 여러 도형 조회도 비용이 크므로 취소선만으로 전체 지연을 해결했다고 주장하지 않습니다. 제품 Worker/기본 WASM에는 계측 코드를 적용하지 않았습니다.
 
 원인은 `character_strike_snapshot.read`가 원본 리소스 ID마다 `character_strike_current.read`를 호출하고, 각 호출이 같은 헤더의 앞부분부터 글자 모양 전체 필드를 다시 읽는 경로였습니다. 수정은 요청마다 원본 ID의 상태 색인을 한 번 만들고 현재 sparse 편집값을 결합합니다. 색인은 해당 조회가 끝나면 해제하며 문서/이력 revision 사이에 캐시하지 않습니다.
