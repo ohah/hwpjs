@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { workerCanvasHarness } from "../canvas/worker-harness.mjs";
 const options = { rows: 2, columns: 2, width: 101, rowHeight: 17, resources: { paragraph: 1, character: 1, style: 0, border_fill: 1 } };
 test("actual Worker keeps source paragraph addresses and created cell identities through history", async t => {
-  const h = await workerCanvasHarness(t);
+  const h = await workerCanvasHarness(t, { paintFrames: true });
   const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwpx");
   assert.equal((await h.send({ kind: "load", format: "hwpx", bytes: input })).error, undefined);
   const enabled = await h.send({ kind: "enable" });
@@ -16,9 +16,14 @@ test("actual Worker keeps source paragraph addresses and created cell identities
   assert.equal(created.content.createdTables[0].hostParagraph, 1);
   assert.deepEqual(created.content.paragraphs.map(p => [p.section, p.paragraph, p.text]), before);
   assert(created.content.paragraphs.every(p => !p.editable && p.readOnlyReason === "UnsupportedCreatedTableHostEdit"));
+  assert.equal(h.renderer.layout().boxes.filter(box => box.createdCell).length, 4);
+  assert.equal(h.renderer.layout().pageLayoutMode, "created-table-block-prototype");
+  h.paint();
   const edited = await h.send({ kind: "created-cell-text", section: 0, identity: created.identity, row: 0, column: 0, text: "입력😀<&" });
   assert.equal(edited.error, undefined);
   assert.equal(edited.content.createdTables[0].cells[0].text, "입력😀<&");
+  assert(h.renderer.layout().rows.some(row => row.createdCell?.identity === created.identity));
+  h.paint();
   const saved = await h.send({ kind: "save" }); assert.equal(saved.error, undefined);
   assert.equal((await h.send({ kind: "undo" })).content.createdTables[0].cells[0].text, "");
   const undone = await h.send({ kind: "undo" }); assert.equal(undone.error, undefined);
@@ -29,5 +34,5 @@ test("actual Worker keeps source paragraph addresses and created cell identities
   const redone = await h.send({ kind: "redo" }); assert.equal(redone.error, undefined);
   assert.equal(redone.content.createdTables[0].cells[0].text, "입력😀<&");
   assert.deepEqual((await h.send({ kind: "save" })).bytes, saved.bytes);
-  t.diagnostic("Actual Worker/WASM; generated table Canvas paint and GUI input remain unverified");
+  t.diagnostic("Actual Worker/WASM and renderer with simulated Canvas; browser pixels and generated cell input remain unverified");
 });

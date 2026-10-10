@@ -1,5 +1,7 @@
 # 생성 표 로컬 셀 배치
 
+후속 renderer 연결과 현재 표시 제한은 [생성 표 문서 흐름](hwpx-created-table-flow.md)을 따릅니다.
+
 `layoutCreatedTable(table, measure, { x, y, maxRows })`는 native 생성 표 snapshot을 받아 로컬 셀 boxes/텍스트 rows/셀 paragraphs를 파생합니다. 실제 그리기·문서 쪽 위치·삽입 UI를 소유하지 않습니다. 기존 `tableGrid`의 track 배치·HWPUNIT→pixel 변환과 `layoutContent`의 grapheme/줄 측정을 재사용합니다. 별도 XML/문서 모델을 생성하지 않습니다.
 
 생성 셀의 표시 주소는 section과 createdCell.identity/row/column입니다. 원본 tableNode/listNode나 기존 flat paragraph 번호를 합성하지 않습니다. 글자 리소스 범위도 같은 characterRanges 계약으로 파생해 기존 측정 함수가 현재 리소스를 참조할 수 있습니다. 각 셀은 독립 소유 paragraph view를 가지며 원본 입력 snapshot을 변경하지 않습니다.

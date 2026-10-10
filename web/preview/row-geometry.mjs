@@ -1,6 +1,7 @@
 /** Shared CSS-pixel row geometry, with compatibility for numeric-only layouts. */
 import { affinePoint, inverseAffine } from "./affine-point-geometry.mjs";
 import { rowPageClipContains } from "./row-page-clip.mjs";
+import { sameCreatedCell } from "./created-cell-address.mjs";
 
 export const DEFAULT_ROW_HEIGHT = 28;
 export const DEFAULT_TEXT_HEIGHT = 20;
@@ -55,6 +56,7 @@ export function rowAtPoint(layout, x, y) {
   let closest = -1, distance = Infinity;
   for (const [index, row] of layout.rows.entries()) {
     if (!rowPageClipContains(row, x, y)) continue;
+    if ((cell.createdCell || row.createdCell) && !sameCreatedCell(row, cell)) continue;
     if (row.kind !== "text" || !(row.editable || row.selectable) || row.section !== cell.section || row.tableNode !== cell.tableNode || row.listNode !== cell.listNode) continue;
     const delta = Math.max(rowTop(row, index) - y, y - (rowTop(row, index) + rowHeight(row)), 0);
     if (delta < distance) { distance = delta; closest = index; }

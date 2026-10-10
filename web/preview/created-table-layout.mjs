@@ -13,11 +13,13 @@ export function layoutCreatedTable(table, measure, { x = 20, y = 0, maxRows = 20
   let count = 0;
   for (const [index, paragraph] of paragraphs.entries()) {
     if (count === maxRows) throw new Error("CreatedTableLayoutRowBudgetExceeded");
-    const flow = layoutContent({ paragraphs: [paragraph], limited: false }, Math.max(1, columnWidths[cells[index].column] - 12), (text, _p, unit, kind) => measure(text, paragraph, unit, kind), maxRows - count, { compactLines: true });
+    const flow = layoutContent({ paragraphs: [paragraph], limited: false }, Math.max(1, columnWidths[cells[index].column] - 12), (text, _p, unit, kind) => measure(text, paragraph, unit, kind), maxRows - count + 1, { compactLines: true });
     const textRows = flow.rows.filter(row => row.kind === "text");
     if (flow.limited || count + textRows.length > maxRows) throw new Error("CreatedTableLayoutRowBudgetExceeded");
     count += textRows.length;
-    flows.push({ ...flow, rows: textRows });
+    let height = 0;
+    for (const row of textRows) { row.y = height; height += row.height; }
+    flows.push({ ...flow, rows: textRows, height });
   }
   const grid = tableGrid({ ...table, cells }, { x, y, columnWidths, minColumn: 1, minRow: 1, contentSize: cell => ({ width: 0, height: flows[cell.row * table.columns + cell.column].height + 12 }) });
   const boxes = grid.cells.map(({ listNode: _unused, ...box }, index) => ({ ...box, section: table.section, createdCell: paragraphs[index].createdCell }));

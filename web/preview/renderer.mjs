@@ -14,6 +14,7 @@ import { rowAtY, rowLeft, rowHeight, rowTop, rowTextTop, TEXT_LEFT } from "./row
 import { caretGeometry, selectionRects, selectionIntersectsText } from "./text-geometry.mjs";
 import { createTextStyle, withDraftText } from "./text-style.mjs";
 import { layoutTableContent } from "./table-flow.mjs";
+import { attachCreatedTableFlow, createdCellParagraph } from "./created-table-flow.mjs";
 import { adjacentCell } from "./table-navigation.mjs";
 import { characterTogglePatch, characterSelectionState, characterRangesState } from "./character-property-selection.mjs";
 import { characterSizeState, characterSizeRangesState } from "./character-size-selection.mjs";
@@ -159,7 +160,7 @@ export function createRenderer(canvas, viewportElement, spacer, onLayout = () =>
       ctx.font = FONT;
       ctx.fillStyle = row.kind === "label" ? "#526d80" : "#172b3b";
       if (row.kind === "text") {
-        const paragraph = display.paragraphs.find(p => p.section === row.section && p.paragraph === row.paragraph);
+        const paragraph = createdCellParagraph(layout, row) ?? display.paragraphs.find(p => p.section === row.section && p.paragraph === row.paragraph);
         if (row.numberPrefix) {
           ctx.font = fontAt(paragraph, 0, "number-prefix");
           ctx.fillText(row.numberPrefix.text, rowLeft(row), rowTop(row, i) - viewport.scrollTop + rowTextTop(row) + (fontAt.script(paragraph, 0, "number-prefix")?.offset ?? 0));
@@ -293,9 +294,10 @@ export function createRenderer(canvas, viewportElement, spacer, onLayout = () =>
       const inkHeight = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
       return { width: metrics.width, height: Math.max(fontAt.textHeight(paragraph, unit, kind), Number.isFinite(inkHeight) ? inkHeight : 0) };
     };
-    const pageLayout = pictureDisplay.format === "hwp5" ? layoutHwp5PageContent(pictureDisplay, measure) : layoutPageContent(pictureDisplay, measure);
+    const pageLayout = pictureDisplay.createdTables?.length ? { state: "unavailable", error: "UnsupportedCreatedTablePagination" } : pictureDisplay.format === "hwp5" ? layoutHwp5PageContent(pictureDisplay, measure) : layoutPageContent(pictureDisplay, measure);
     const logicalWidth = Math.max(1, viewport.clientWidth / viewScale - 2 * TEXT_LEFT);
     layout = pageLayout.state === "paginated" ? pageLayout : { ...layoutTableContent(pictureDisplay, logicalWidth, measure), pageLayoutError: pageLayout.error };
+    layout = attachCreatedTableFlow(pictureDisplay, layout, measure);
     pictureLayers = previewPictureLayers(pictureDisplay, layout, logicalWidth);
     lineLayers = previewLineLayers(pictureDisplay, layout, logicalWidth);
     drawingOutlineLayers = previewDrawingOutlineLayers(pictureDisplay, layout);
@@ -375,7 +377,7 @@ export function createRenderer(canvas, viewportElement, spacer, onLayout = () =>
     layout: () => layout,
     findText: query => findText(content.paragraphs, query),
     adjacentCell: (point, backward) => adjacentCell(content, layout, point, backward),
-    paragraph: point => content.paragraphs.find(p => p.section === point.section && p.paragraph === point.paragraph),
+    paragraph: point => createdCellParagraph(layout, point) ?? content.paragraphs.find(p => p.section === point.section && p.paragraph === point.paragraph),
     selectionRanges: (anchor, focus) => paragraphSelectionRanges(content.paragraphs, anchor, focus),
     textColorRangesAvailable: () => content.characterTextColorRangesAvailable === true,
     characterFontAvailable: () => content.characterFontAvailable === true,
