@@ -28,8 +28,21 @@ def verify(data):
         paragraph = paragraphs[index]
         runs = paragraph.findall(P + 'run')
         texts = [child for run in runs for child in run if child.tag == P + 't']
-        if not texts or any(len(leaf) for leaf in texts) or any(child.tag != P + 't' for run in runs for child in run):
+        table_id = data.get('zero_width_table_id')
+        if table_id is not None and (type(table_id) is not str or not table_id.isascii() or not table_id.isdecimal() or not 0 < int(table_id) <= 0xffffffff):
+            raise ValueError('Invalid generated table identity')
+        tables = [child for run in runs for child in run if table_id is not None and child.tag == P + 'tbl' and child.get('id') == table_id]
+        if table_id is not None and len(tables) != 1:
+            raise ValueError('Missing or duplicate generated table')
+        if not texts or any(len(leaf) for leaf in texts) or any(child.tag != P + 't' and child not in tables for run in runs for child in run):
             raise ValueError('Oracle supports plain text leaves only')
+        cursor = 0
+        for run in runs:
+            for child in run:
+                if child in tables and start < cursor < end:
+                    raise ValueError('Splice crosses generated table')
+                if child.tag == P + 't':
+                    cursor += len((child.text or '').encode('utf-16-le')) // 2
         if any(child.tag not in (P + 'run', P + 'linesegarray') for child in paragraph):
             raise ValueError('Unsupported paragraph child')
         raw_texts = [(leaf.text or '').encode('utf-16-le') for leaf in texts]
