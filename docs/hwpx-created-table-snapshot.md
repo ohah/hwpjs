@@ -2,6 +2,8 @@
 
 생성 셀 텍스트 변경 API와 검증 범위는 [생성 셀 텍스트 편집](hwpx-created-cell-text.md)을 따릅니다.
 
+생성 거래의 문단 ID·서식 참조 검사는 [문서 참조 검증](hwpx-created-table-validation.md)을 따릅니다.
+
 `created_table_snapshot.read`는 해당 section의 현재 staged registry에서 host 참조를 해결하고 표 치수·셀 geometry·문단 ID·UTF-8 텍스트·서식 참조를 독립 소유 응답으로 복사합니다. 텍스트/identity와 셀/행 배열의 부분 할당 실패를 해제합니다. geometry는 공통 Plan에서 파생하며 캐시나 수정 가능한 두 번째 문서 모델을 만들지 않습니다. native 호출자는 `deinit`으로 응답을 해제합니다.
 
 WASM `hwpx_edit_created_tables(section)`와 선택적 JS `editor.createdTables(section)`은 생성 표만 반환합니다. 원본 표의 raw node 번호를 생성 객체 ID로 사용하지 않으며 기존 표 inventory는 기존 API가 소유합니다. 표 identity는 decimal string으로 출력해 u64 값이 JS Number에서 반올림되지 않습니다. instance_id·셀 paragraph_id·host_paragraph/anchor_unit은 서로 다른 용도입니다. host는 현재 native1기반 문단 순번이고 셀 row/column은0기반입니다. 이 응답만으로 기존 flat 문단 API에 신규 셀을 끼워 넣지 않습니다.

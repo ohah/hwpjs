@@ -18,6 +18,68 @@ fn command(value: *const model.Table) histories.Command {
     return .{ .kind = .created_table_stage, .section = 0, .paragraph = 2, .start = 0, .deleted = 0, .inserted = "", .created_table = value };
 }
 
+test "created table staged resources reject dangling references before mutation" {
+    const a = std.testing.allocator;
+    const bytes = try input(a);
+    defer a.free(bytes);
+    var session = try editor.open(a, bytes, .{});
+    defer session.deinit();
+    var value = try table(a);
+    defer value.deinit(a);
+    const original = value.resources;
+    inline for (.{ .{ "paragraph", error.InvalidParagraphShapeReference }, .{ "character", error.InvalidCharacterShapeReference }, .{ "style", error.InvalidStyleReference }, .{ "border_fill", error.InvalidBorderFillReference } }) |item| {
+        value.resources = original;
+        @field(value.resources, item[0]) = std.math.maxInt(u32);
+        try std.testing.expectError(item[1], staging.stage(&session, 0, 2, 0, &value));
+        try std.testing.expectEqual(@as(usize, 0), session.sections[0].created_tables.entries.items.len);
+    }
+    const saved = try session.save();
+    defer a.free(saved);
+    try std.testing.expectEqualSlices(u8, bytes, saved);
+    value.resources = original;
+    try std.testing.expect(try session.setParagraphAlignment(0, 2, .CENTER));
+    value.resources.paragraph = try session.paragraphShapeId(0, 2);
+    try std.testing.expect(try session.setCharacterProperties(0, 2, 0, 1, .{ .size = 1234 }));
+    try std.testing.expect(session.character_resources.entries.items.len > 0);
+    value.resources.character = session.character_resources.entries.items[session.character_resources.entries.items.len - 1].id;
+    try std.testing.expect(try staging.stage(&session, 0, 2, 0, &value));
+}
+
+test "created table staged IDs reject split source and previous cell collisions atomically" {
+    const a = std.testing.allocator;
+    const bytes = try input(a);
+    defer a.free(bytes);
+    var session = try editor.open(a, bytes, .{});
+    defer session.deinit();
+    var value = try table(a);
+    defer value.deinit(a);
+    for (session.sections[0].tree.elements, 0..) |element, index| {
+        if (!element.is(@import("document_xml.zig").paragraph_uri, "p")) continue;
+        const raw = (try session.sections[0].tree.attributeValue(a, index, "", "id")) orelse continue;
+        const id_text = try raw.toUtf8(a, 4096);
+        defer a.free(id_text);
+        const source_id = try @import("xml_values.zig").unsigned32(id_text);
+        value.cells[0].paragraph_id = source_id;
+        try std.testing.expectError(error.InvalidParagraphInstanceId, staging.stage(&session, 0, 2, 0, &value));
+        break;
+    }
+    value.cells[0].paragraph_id = 1000000;
+    try std.testing.expect(try session.splitParagraph(0, 2, 0, 0));
+    const generated = session.sections[0].structure_values.?.paragraphs[2].generated_id.?;
+    value.cells[0].paragraph_id = generated;
+    const before = try session.save();
+    defer a.free(before);
+    try std.testing.expectError(error.InvalidParagraphInstanceId, staging.stage(&session, 0, 2, 0, &value));
+    try std.testing.expectEqual(@as(usize, 0), session.sections[0].created_tables.entries.items.len);
+    value.cells[0].paragraph_id = 1000000;
+    try std.testing.expect(try staging.stage(&session, 0, 2, 0, &value));
+    value.identity = 2;
+    value.instance_id = 34;
+    try std.testing.expectError(error.InvalidParagraphInstanceId, staging.stage(&session, 0, 2, 0, &value));
+    try std.testing.expectEqual(@as(usize, 1), session.sections[0].created_tables.entries.items.len);
+    try std.testing.expectEqualSlices(u8, bytes, session.source);
+}
+
 test "created table staged history owns text anchor saves reopens and preserves redo" {
     const a = std.testing.allocator;
     const bytes = try input(a);
