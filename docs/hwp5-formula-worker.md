@@ -2,6 +2,8 @@
 
 ## 구조 편집 후 Worker 회귀
 
+후속 실제 Chromium 확인에서 b8e5409a 후보를 loopback8085로 열고 픽스쳐 picker의 chart.hwp·편집 시작·속성 패널13수식·AVG 폼 제출 후16.875 표시까지 성공했습니다. 속성 패널을 연 상태의 접근성 이름 기반 실행 취소 클릭은 다른 form에 가려졌고, 후속 다시 실행 클릭도 find-input에 가려졌습니다. 이 클릭 실패를 수식 rollback 실패나 undo/redo 통과로 해석하지 않습니다. 후보의 실제 브라우저 구조 편집/이력 E2E는 여전히 미검증이며 기본 WASM은 그대로입니다. loopback 임시 서버는 종료코드130으로 종료했습니다.
+
 2026-10-11 b8e5409af336c039c78b19e94b93eba880a2bd19996813feb321105e3b550899 후보에서 실제 Worker의 chart 본문 분할 후 수식 capability·빈 오류 목록·이동한 문단24 선택·기존 CTRL_HEADER handle 유지와 이전 문단23의 오선택 거부를 확인했습니다. 이동한 결과 영역의 직접 입력은 계속 ReadOnlyFormulaResult이며 저장 바이트가 불변입니다. 후속 SUM 정의 변경은67.5로 계산되고, 두 단계 undo는 AVG 정의와 분할 전 저장 바이트/선택을 각각 복원합니다. 공개 정의/API와 Worker2파일5/5·skip0·exit0입니다. Node self/fetch 경계 대역이며 실제 브라우저 분할/포인터 E2E나 기본 WASM 승격의 증거는 아닙니다.
 
 ## 실제 Chromium 및 기본 반영
