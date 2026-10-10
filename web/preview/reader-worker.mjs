@@ -218,7 +218,9 @@ function hwpxDisplay(projected) {
   const displayed = attachHwpxPageSettings(editor, attachHwpxConnectors(editor, attachHwpxLines(editor, attachHwpxPictures(editor, attachHwpxParagraphFormats(editor, tableContent, paragraphAvailable)))));
   displayed.lines.push(...displayed.connectors.flatMap(row => row.referenceLine ? [row.referenceLine] : []));
   if (content.window && content.paragraphs.some(row => row.clipped)) throw new Error("ParagraphWindowTextBudgetExceeded");
-  return attachCreatedTables(editor, displayed, ["hwpx_edit_created_tables", "hwpx_edit_insert_table", "hwpx_edit_set_created_cell_text", "hwpx_edit_save_for_display"].every(name => WebAssembly.Module.exports(module).some(entry => entry.name === name && entry.kind === "function")), HWPX_DISPLAY_BOUNDS.maxUnits);
+  const creationAvailable = ["hwpx_edit_created_tables", "hwpx_edit_insert_table", "hwpx_edit_set_created_cell_text", "hwpx_edit_save_for_display"].every(name => WebAssembly.Module.exports(module).some(entry => entry.name === name && entry.kind === "function"));
+  displayed.tableCreationResources = creationAvailable && WebAssembly.Module.exports(module).some(entry => entry.name === "hwpx_edit_table_creation_resources" && entry.kind === "function") ? editor.tableCreationResources() : null;
+  return attachCreatedTables(editor, displayed, creationAvailable, HWPX_DISPLAY_BOUNDS.maxUnits);
 }
 self.onmessage = async event => {
   let reader;

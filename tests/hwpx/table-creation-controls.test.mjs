@@ -1,0 +1,24 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { createTableCreationControls } from "../../web/preview/table-creation-controls.mjs";
+test("table creation controls use actual resource IDs and disable absent or stale selections", () => {
+  class Node extends EventTarget { value = ""; replaceChildren(...items) { this.items = items; } focus() { this.focused = true; } }
+  const form = new Node(), fields = new Node(), focusButton = new Node(), submit = new Node(), note = new Node();
+  let valid = true, selection = null;
+  form.reportValidity = () => valid;
+  const dimensions = Object.fromEntries(Object.entries({ rows: 2, columns: 2, width: 36000, rowHeight: 1800 }).map(([key, value]) => [key, Object.assign(new Node(), { value: String(value) })]));
+  const resources = Object.fromEntries(["paragraph", "character", "style", "border_fill"].map(key => [key, new Node()]));
+  const ids = { paragraph: [0, 9], character: [1, 7], style: [0], border_fill: [3] }, sent = [];
+  const controls = createTableCreationControls({ form, fields, focusButton, submit, note, dimensions, resources, selected: () => selection, inventory: () => ids, request: value => { sent.push(value); return true; }, createOption: () => ({}) });
+  assert.equal(fields.disabled, true);
+  selection = { section: 0, paragraph: 1, unit: 0 }; controls.update();
+  assert.equal(fields.disabled, false);
+  focusButton.dispatchEvent(new Event("click")); assert.equal(dimensions.rows.focused, true);
+  resources.paragraph.value = "9";
+  form.dispatchEvent(new Event("submit", { cancelable: true }));
+  assert.deepEqual(sent[0].resources, { paragraph: 9, character: 1, style: 0, border_fill: 3 });
+  assert.equal(sent[0].rowHeight, 1800);
+  valid = false; form.dispatchEvent(new Event("submit", { cancelable: true })); assert.equal(sent.length, 1);
+  selection = null; form.dispatchEvent(new Event("submit", { cancelable: true })); assert.equal(sent.length, 1);
+  controls.close(); selection = {}; controls.update(); assert.equal(fields.disabled, true);
+});

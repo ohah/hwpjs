@@ -376,6 +376,8 @@ export function createRenderer(canvas, viewportElement, spacer, onLayout = () =>
     show(value, { preserveScroll = false } = {}) { content = value; draft = null; resizeGuide = null; if (!preserveScroll) { selectedPicture = null; canvas.dataset.selectedPicture = ""; viewport.scrollTop = 0; viewport.scrollLeft = 0; } reflow(); return layout; },
     clear() { pictureResizeGuide = null; selectedPicture = null; canvas.dataset.selectedPicture = ""; pictureResources.clear(); content = { paragraphs: [], limited: false }; draft = null; resizeGuide = null; interaction = {}; stopBlink(); viewport.scrollTop = 0; viewport.scrollLeft = 0; reflow(); },
     layout: () => layout,
+    tableCreationAvailable: () => content.tableCreationAvailable === true && content.tableCreationResources !== null && content.tableCreationResources !== undefined,
+    tableCreationResources: () => content.tableCreationResources ? Object.fromEntries(Object.entries(content.tableCreationResources).map(([key, ids]) => [key, ids.slice()])) : null,
     findText: query => findText(content.paragraphs, query),
     adjacentCell: (point, backward) => adjacentCell(content, layout, point, backward),
     paragraph: point => createdCellParagraph(layout, point) ?? content.paragraphs.find(p => p.section === point.section && p.paragraph === point.paragraph),

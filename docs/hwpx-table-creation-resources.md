@@ -1,5 +1,7 @@
 # 표 생성 서식 선택 목록
 
+후속 Worker·폼/메뉴 연결은 [표 삽입 UI](hwpx-table-creation-ui.md)를 따릅니다. 아래 미연결 문장은 조회 API 단계의 기록입니다.
+
 `created_table_resource_options.read`는 기존 header 리소스 색인과 현재 생성 문단·글자 서식 intents를 합쳐 실제 사용 가능한 paragraph/character/style/border_fill ID 배열을 반환합니다. 배열은 오름차순·중복 없음이며0을 유효 ID로 보존합니다. 숫자를 배열 순번으로 해석하지 않습니다. style/border_fill에 추측한 기본 ID를 넣지 않습니다.
 
 목록의 소유권은 호출자에게 있고 `Options.deinit`으로 네 배열을 해제합니다. 부분 할당 실패도 완료된 배열을 해제합니다. 생성 거래의 `created_table_resources.validate` 역시 이 목록을 읽어 존재 여부를 검사하므로 UI 선택 가능 목록과 native 생성 허용 목록을 따로 관리하지 않습니다.

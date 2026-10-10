@@ -66,7 +66,24 @@
       <button id="menu-align-space" type="button" aria-pressed="false" disabled>나눔 정렬</button>
       </div>
     </details>
+    <details><summary>삽입</summary><div class="document-menu-popup" popover="manual"><button id="menu-insert-table" type="button" disabled>표 삽입 설정</button></div></details>
   </nav>
+  <form id="table-creation-form" class="editor-toolbar toolbar-group">
+    <button id="table-creation-focus" type="button" disabled>표 삽입 설정</button>
+    <fieldset id="table-creation-fields" disabled>
+      <legend>HWPX 표 생성 (실험용 배치)</legend>
+      <label>행<input id="table-creation-rows" type="number" min="1" max="100000" step="1" value="2" required></label>
+      <label>열<input id="table-creation-columns" type="number" min="1" max="100000" step="1" value="2" required></label>
+      <label>폭 (HWPUNIT)<input id="table-creation-width" type="number" min="1" max="4294967295" step="1" value="36000" required></label>
+      <label>행 높이 (HWPUNIT)<input id="table-creation-height" type="number" min="1" max="4294967295" step="1" value="1800" required></label>
+      <label>문단 서식<select id="table-creation-paragraph" required></select></label>
+      <label>글자 서식<select id="table-creation-character" required></select></label>
+      <label>스타일<select id="table-creation-style" required></select></label>
+      <label>테두리<select id="table-creation-border" required></select></label>
+      <button id="table-creation-submit" type="submit" disabled>현재 커서에 표 생성</button>
+    </fieldset>
+    <output id="table-creation-status" aria-live="polite"></output>
+  </form>
   <div class="editor-toolbar toolbar-group view-toolbar">
     <label for="view-scale">화면 배율</label>
     <select id="view-scale" aria-label="문서 화면 배율" disabled></select>

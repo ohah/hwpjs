@@ -13,6 +13,7 @@ import { updateGroupedLayoutStatus } from "./grouped-layout-status.mjs";
 import { updatePageLayoutStatus } from "./page-layout-status.mjs";
 import { createPageStatusControls } from "./page-status-controls.mjs";
 import { createDocumentMenuControls } from "./document-menu-controls.mjs";
+import { createTableCreationControls } from "./table-creation-controls.mjs";
 import { createViewScaleControls } from "./view-scale-controls.mjs";
 import { createDocumentWindowControls } from "./document-window-controls.mjs";
 import { createPictureRequests } from "./picture-requests.mjs";
@@ -46,7 +47,7 @@ let paragraphSpacingControls;
 const input = document.querySelector("#file"), status = document.querySelector("#status");
 const accessible = document.querySelector("#accessible");
 const inspector = createInspectorToggle({ button: document.querySelector("#inspector-toggle"), panel: document.querySelector("#document-inspector") });
-let pageStatusControls, documentMenuControls, viewScaleControls, documentWindowControls;
+let pageStatusControls, documentMenuControls, viewScaleControls, documentWindowControls, tableCreationControls;
 const renderer = createRenderer(document.querySelector("#canvas"), document.querySelector("#viewport"), document.querySelector("#spacer"), layout => {
   document.querySelector("#limit").hidden = !layout.limited;
   const note = document.querySelector("#picture-status"), coverage = layout.pictureCoverage;
@@ -78,12 +79,21 @@ function updateSave() {
   paragraphSpacingControls?.update();
   characterPropertyControls?.update();
   underlineColorControls?.update();
+  tableCreationControls?.update();
   documentMenuControls?.refresh();
   viewScaleControls?.refresh();
   documentWindowControls?.refresh();
 }
 const controls = createEditorControls(message => { direct.external(message); worker?.postMessage(message); updateSave(); }, { formatSelection: id => direct.formatSelection(id) });
 direct = createCanvasEditor({ canvas: document.querySelector("#canvas"), viewport: document.querySelector("#viewport"), input: document.querySelector("#canvas-input"), renderer, controls, note: document.querySelector("#canvas-edit-status"), queryEditRange: message => worker?.postMessage(message), querySplitRange: message => worker?.postMessage(message) });
+tableCreationControls = createTableCreationControls({
+  form: document.querySelector("#table-creation-form"), fields: document.querySelector("#table-creation-fields"), focusButton: document.querySelector("#table-creation-focus"), submit: document.querySelector("#table-creation-submit"), note: document.querySelector("#table-creation-status"),
+  dimensions: { rows: document.querySelector("#table-creation-rows"), columns: document.querySelector("#table-creation-columns"), width: document.querySelector("#table-creation-width"), rowHeight: document.querySelector("#table-creation-height") },
+  resources: { paragraph: document.querySelector("#table-creation-paragraph"), character: document.querySelector("#table-creation-character"), style: document.querySelector("#table-creation-style"), border_fill: document.querySelector("#table-creation-border") },
+  selected: () => direct.tableCreationSelection(), inventory: () => direct.tableCreationResources(), request: options => direct.insertTable(options),
+});
+for (const node of [document.querySelector("#canvas"), document.querySelector("#canvas-input")]) for (const type of ["pointerup", "keyup"]) node.addEventListener(type, () => { tableCreationControls.update(); documentMenuControls?.refresh(); });
+window.addEventListener("pagehide", event => { if (!event.persisted) tableCreationControls.close(); });
 formulaControls = createFormulaControls({ form: document.querySelector("#formula-form"), fields: document.querySelector("#formula-fields"), choices: document.querySelector("#formula-choice"), input: document.querySelector("#formula-input"), note: document.querySelector("#formula-status"), ready: () => Boolean(worker) && controls.ready() && !controls.busy() && direct.settled(), request: message => controls.request(message) });
 window.addEventListener("pagehide", event => { if (!event.persisted) formulaControls.close(); });
 const checkBoxControls = createCheckBoxCanvasControls({ canvas: document.querySelector("#canvas"), viewport: document.querySelector("#viewport"), renderer, note: document.querySelector("#canvas-edit-status"), ready: () => Boolean(worker) && controls.ready() && !controls.busy() && direct.settled(), request: message => controls.request(message) });
@@ -251,6 +261,7 @@ documentWindowControls = createDocumentWindowControls({
 });
 window.addEventListener("pagehide", event => { if (!event.persisted) documentWindowControls.close(); });
 documentMenuControls = createDocumentMenuControls([
+  { button: document.querySelector("#menu-insert-table"), target: document.querySelector("#table-creation-focus") },
   { button: document.querySelector("#menu-open"), target: input },
   { button: document.querySelector("#menu-save"), target: download },
   { button: document.querySelector("#menu-undo"), target: document.querySelector("#undo") },

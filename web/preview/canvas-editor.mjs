@@ -802,6 +802,23 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
       const paragraph = renderer.paragraph(target);
       return !paragraph?.clipped && Number.isInteger(paragraph?.paraShapeId) ? { ...target, paraShapeId: paragraph.paraShapeId, paragraphShape: paragraph.paragraphShape ? { ...paragraph.paragraphShape } : undefined } : null;
     },
+    tableCreationSelection() {
+      if (!target || target.createdCell || multipleParagraphs() || composing || pending || historyPending || input.value !== committed || !controls.ready() || controls.busy() || renderer.tableCreationAvailable?.() !== true || input.selectionStart !== input.selectionEnd) return null;
+      const paragraph = renderer.paragraph(target);
+      if (!paragraph || paragraph.clipped) return null;
+      const unit = snapUnit(committed, input.selectionStart);
+      const source = sourceTextChange({ startUnit: unit, endUnit: unit, text: "" }, paragraph.sourceOffsets);
+      return { section: target.section, paragraph: target.paragraph, unit: source.startUnit };
+    },
+    tableCreationResources() { return renderer.tableCreationResources?.() ?? null; },
+    insertTable(options) {
+      const selection = this.tableCreationSelection();
+      if (!selection) return false;
+      pending = { kind: "insert-table", start: input.selectionStart, end: input.selectionEnd, beforeSelection: { anchor: { ...anchor }, focus: { ...focus } } };
+      if (!controls.request({ kind: "insert-table", origin: "canvas", ...selection, options })) { pending = null; return false; }
+      input.setAttribute("aria-busy", "true");
+      return true;
+    },
     setParagraphFormat(paraShapeId) {
       const paragraph = this.selectedParagraphFormat();
       if (!paragraph) return false;
@@ -1094,6 +1111,15 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
         const restored = previous.beforeSelection;
         setSelection(restored?.anchor ?? { ...target, unit: snapUnit(committed, previous.start) }, restored?.focus ?? { ...target, unit: snapUnit(committed, previous.end, true) });
         report(`입력이 적용되지 않았습니다: ${message.error}`); return;
+      }
+      if (previous.kind === "insert-table") {
+        const next = { section: target.section, createdCell: { identity: message.identity, row: 0, column: 0 } };
+        const cell = renderer.paragraph(next);
+        if (!cell?.editable || !caretGeometry(renderer.layout(), { ...next, unit: 0 })) { this.reset(); report("표는 생성됐지만 현재 표시 위치에서는 셀 입력을 시작할 수 없습니다."); return; }
+        target = next; committed = cell.text; input.value = committed;
+        setSelection({ ...next, unit: 0 }, { ...next, unit: 0 });
+        input.focus({ preventScroll: true }); reveal(); report("표 생성 · 첫 셀에서 입력할 수 있습니다.");
+        return;
       }
       const paragraph = renderer.paragraph(target);
       if (!selectableText(paragraph)) { this.reset(); report("표시 한도에 도달해 직접 입력을 중단했습니다. 적용된 변경은 native 모델에 유지됩니다."); return; }

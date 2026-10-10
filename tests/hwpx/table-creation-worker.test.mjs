@@ -87,3 +87,20 @@ test("Canvas generated cell composition commits through native identity and roll
   assert.equal(redone.content.createdTables[0].cells[1].text, "조합😀<&");
   assert.deepEqual((await h.send({ kind: "save" })).bytes, saved.bytes);
 });
+
+test("Canvas insertion command uses current source caret and focuses its created first cell", async t => {
+  const h = await workerCanvasHarness(t, { paintFrames: true });
+  await h.send({ kind: "load", format: "hwpx", bytes: readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwpx") });
+  await h.send({ kind: "enable" });
+  assert.equal(h.controller.selectTextRange({ section: 0, paragraph: 1, startUnit: 0, endUnit: 0 }), true);
+  assert.deepEqual(h.controller.tableCreationSelection(), { section: 0, paragraph: 1, unit: 0 });
+  assert(h.controller.tableCreationResources().style.includes(0));
+  assert.equal(h.controller.insertTable({ ...options, width: 36000, rowHeight: 1800 }), true);
+  const created = await h.flush(); assert.equal(created.error, undefined);
+  assert.equal(h.input.value, ""); assert.equal(h.input.readOnly, false);
+  assert.equal(h.controller.tableCreationSelection(), null);
+  h.input.value = "첫 셀😀"; h.input.setSelectionRange(h.input.value.length, h.input.value.length); dispatchCanvasEvent(h.input, "input");
+  const edited = await h.flush(); assert.equal(edited.error, undefined);
+  assert.equal(edited.content.createdTables[0].cells[0].text, "첫 셀😀");
+  h.paint();
+});
