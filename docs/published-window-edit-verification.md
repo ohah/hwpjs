@@ -12,6 +12,8 @@ HWPJS_TEST_WASM=/absolute/fixed/hwpjs.wasm node --test tests/hwpx/large-edit-win
 
 `tests/canvas/worker-harness.mjs`는 실제 Worker/WASM/Renderer/controller를 연결하지만 DOM·측정/그리기 이벤트는 대역입니다. 실제 브라우저 후반 탐색·포커스/IME·글꼴·원본 조판 및 모든 임의 구간/객체 관계의 증거로 확대하지 않습니다. 기본 WASM·원본 파일·실행 중 관련 소스는 변경하지 않았습니다.
 
+게시88ea9d74 Git archive의 별도 `/tmp/hwpjs-published-window-tests.jLjX0F`에서 작은 실제 구간/Worker2파일도 다시 실행했습니다. 고정fe97 WASM으로3/3·fail/skip0·exit0,1641.042209ms입니다. 미커밋 JS/검사 helper 없이 게시된 의존성으로 실행한 증거이며, 대형 reference 원본은 Git archive에 포함되지 않아 이 clean 검사에서 재실행하지 않았습니다. 대형4/4 결과와 이3/3을 누적 완료 수로 합치지 않습니다.
+
 ## 독립 검사기와 지연 조사 경계
 
 `tools/hwpx-plain-splice-oracle.py --self-test`와 Python `-O`의 같은 실행은 정상 삽입과13변조 반례를 모두 확인했습니다. 전체 XML/비대상 ZIP payload/metadata·UTF-16 경계·원문 run 스타일·no-op 보존을 검사하며 제품 파서를 import하지 않습니다.
