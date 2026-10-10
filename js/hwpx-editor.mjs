@@ -1,4 +1,5 @@
 import { createMemory } from "./wasm-memory.mjs";
+import { decodeCreatedTables } from "./hwpx-created-tables.mjs";
 import { decodeFormSourceNodes, decodeFormSourceAttributes, decodeFormSites, decodeFormSourceLayout } from "./hwpx-form-source.mjs";
 import { decodeCharacterEffects } from "./character-effects.mjs";
 import { characterEffectArgs, characterEffectMode } from "./character-effect-args.mjs";
@@ -627,6 +628,14 @@ export async function createHwpxEditor(source) {
       try {
         if (!wasm.hwpx_edit_rectangle_rendering_sources(section)) throw memory.error();
         return decodeRectangleRenderingSources(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
+    createdTables(section) {
+      ready(); uint(section);
+      if (typeof wasm.hwpx_edit_created_tables !== "function") throw new Error("HwpxCreatedTablesAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_created_tables(section)) throw memory.error();
+        return decodeCreatedTables(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
       } finally { wasm.hwpx_edit_output_free(); }
     },
     containerSourceSnapshot(section, containerNode) {

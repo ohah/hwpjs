@@ -1,5 +1,7 @@
 # 준비된 신규 표의 HWPX 저장
 
+저장 전 생성 표/셀의 별도 현재 응답은 [신규 표 현재 조회](hwpx-created-table-snapshot.md)를 따릅니다. 기존 flat 문단/객체 projection에 합쳐진 UI 삽입은 아직 아닙니다.
+
 ## 저장 위치·빈 노드 경계 후속 검사
 
 2026-10-11 `created_table_save_edges_tests.zig`를 root에 등록해 집중 ReleaseSafe6/6·exit0(root+새5검사)을 확인했습니다. 실제 charshape에 Unicode prefix를 먼저 적용한 시작/중간/끝 삽입, 현재 생성 문단 host와 같은 점의 두 표 생성 순서, 실제 table.hwpx의 빈 셀/self-closing run에 중첩 표 삽입을 저장·재열기 host marker/셀 텍스트로 대조했습니다. 중첩 표 재열기의 cell bindings5개도 확인했습니다.

@@ -157,6 +157,15 @@ export fn hwpx_edit_rectangle_rendering_sources(section: u32) u32 {
     output = std.json.Stringify.valueAlloc(a, rows, .{}) catch |err| return fail(err);
     return 1;
 }
+export fn hwpx_edit_created_tables(section: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const snapshots = @import("../hwpx/created_table_snapshot.zig");
+    const rows = snapshots.read(a, session, section) catch |err| return fail(err);
+    defer snapshots.deinit(a, rows);
+    output = std.json.Stringify.valueAlloc(a, rows, .{}) catch |err| return fail(err);
+    return 1;
+}
 
 export fn hwpx_edit_rectangle_nodes(section: u32) u32 {
     hwpx_edit_output_free();
