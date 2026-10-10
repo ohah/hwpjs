@@ -2,6 +2,8 @@
 
 ## 포맷 독립 문법·참조 선택
 
+호환 계약의 별도 native 회귀는 기존 HWP5 진입점의 Function/Axis/Address/Cell/Rectangle/Range 타입, resolveAddress 함수와 Iterator가 모델 구현과 정확히 같은 identity인지 검사합니다. 단순 결과값 일치가 아니라 복제 타입/함수 생성을 감지하는 계약이며 native root 포함2/2·exit0·포맷 검사가 통과했습니다. 테스트는 `src/model/formula_compatibility_tests.zig`에 분리해 root에 등록했습니다.
+
 `src/model/formula_range.zig`가 UTF16 숫자 함수 문법/주소 해결, `formula_selection.zig`가 범위·반복 주소의 선택 순서/한도/교차 판정을 소유합니다. 기존 코드와 테스트를 이동했으며 HWP5 body의 두 경로는 같은 타입/함수를 재노출하는 호환 진입점만 남깁니다. HWPX expression/cell owner/evaluator는 모델 경로를 직접 사용하므로 HWP5 body 파서에 의존하지 않습니다. HWP5 레코드/CFB와 HWPX XML/ZIP, 원본/현재 셀 소유권은 각각 포맷 계층에 유지합니다. 별도 compensated 관측 문법의 정책은 합치지 않았습니다.
 
 ReleaseSafe 후보 `/tmp/hwpjs-model-formula-syntax-20261011/bin/hwpjs.wasm` SHA256 `c4f935939ae3b4b71b9693cc62585cc63780c3bcb4d21929ec031e4587c7ee2b` 빌드·포맷/diff 검사와 native 문법/선택/반복 주소·HWPX 산술 전체 할당 실패6/6·exit0입니다. 실제 양쪽13수식 정의·MIN/MAX/AVERAGE·HWP548숫자·독립 레코드/XML/ZIP·저장/재열기/이력3파일13/13·skip0·exit0(24519ms)도 통과했습니다. 기본 데모는 이 파일 이동 후보로 교체하지 않았으며 전체 최신 native/브라우저/대형 원본 전수와 구분합니다.
