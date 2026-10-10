@@ -18,6 +18,8 @@ test("public table creation and cell input save reopen undo redo exact bytes", a
     assert.equal(table.identity, identity);
     assert.deepEqual(table.cells.map(c => c.width), [51, 50, 51, 50]);
     editor.setCreatedCellText(0, identity, 0, 0, "입력😀<&\r");
+    assert.deepEqual(Buffer.from(editor.saveForDisplay()), bytes);
+    assert.equal(editor.createdTables(0)[0].cells[0].text, "입력😀<&\r");
     const saved = editor.save();
     reopened.open(saved);
     assert.equal(reopened.anchorText(0, 3), "입력😀<&\r");

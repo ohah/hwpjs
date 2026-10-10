@@ -631,6 +631,14 @@ export async function createHwpxEditor(source) {
         return decodeRectangleRenderingSources(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
       } finally { wasm.hwpx_edit_output_free(); }
     },
+    saveForDisplay() {
+      ready();
+      try {
+        const save = typeof wasm.hwpx_edit_save_for_display === "function" ? wasm.hwpx_edit_save_for_display : wasm.hwpx_edit_save;
+        if (!save()) throw memory.error();
+        return memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len());
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
     insertTable(section, paragraph, unit, options) {
       ready(); [section, paragraph, unit].forEach(uint);
       if (!options || typeof options !== "object" || Array.isArray(options)) throw new TypeError("InvalidTableCreationOptions");

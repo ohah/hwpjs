@@ -1,5 +1,7 @@
 # HWPX 표 생성 API
 
+후속 명령과 기존 편집 주소를 유지하는 파생 표시 경로는 [생성 표 Worker 표시](hwpx-created-table-worker.md)를 따릅니다.
+
 JS `editor.insertTable(section, paragraph, unit, { rows, columns, width, rowHeight, resources })`는 현재 native1기반 host 문단의 UTF-16 위치에 빈 표를 생성하고 양의 u64 decimal string identity를 반환합니다. section/row/column은0기반입니다. resources에는 paragraph/character/style/border_fill ID를 지정합니다. 크기는 HWPUNIT이며 width는 열수 이상, rows/columns/rowHeight는 양수이고 현재 최대100000셀입니다. 복잡한 병합/다중 문단 셀 생성은 이 입력에 없습니다.
 
 `created_table_prepare`는 host·geometry·서식 검증과 자동 ID 계획으로 독립 소유 payload만 만듭니다. 변경은 기존 staging/history 거래가 소유합니다. WASM `hwpx_edit_insert_table`은 identity JSON 응답도 변경 전에 할당해 응답 할당 실패가 성공한 변경으로 남지 않게 합니다. 이력이 켜지면 한 번 생성이 한 checkpoint입니다. 이력 없이도 동일 staging 검증을 사용합니다. 기존 WASM에서 JS는 `HwpxTableCreationAbiUnavailable`을 반환합니다.

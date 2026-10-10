@@ -251,6 +251,7 @@ test {
     _ = @import("hwpx/created_table_snapshot_tests.zig");
     _ = @import("hwpx/created_cell_text_tests.zig");
     _ = @import("hwpx/created_table_object_ids.zig");
+    _ = @import("hwpx/editor_display_save_tests.zig");
     _ = @import("hwpx/rectangle_display_host.zig");
     _ = @import("hwpx/drawing_paint_values.zig");
     _ = @import("hwpx/table_display_placements.zig");

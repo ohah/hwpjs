@@ -22,6 +22,12 @@ export fn hwpx_edit_output_ptr() usize {
 export fn hwpx_edit_output_len() usize {
     return if (output) |bytes| bytes.len else 0;
 }
+export fn hwpx_edit_save_for_display() u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    output = @import("../hwpx/editor_display_save.zig").save(session) catch |err| return fail(err);
+    return 1;
+}
 export fn hwpx_edit_close() void {
     hwpx_edit_output_free();
     if (history) |*value| value.deinit();

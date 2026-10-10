@@ -15,6 +15,7 @@ import { attachHwpxParagraphFormats } from "./hwpx-paragraph-formats.mjs";
 import { attachHwpxFormulas } from "./hwpx-formulas-content.mjs";
 import { attachHwp5Formulas } from "./hwp5-formulas-content.mjs";
 import { attachHwpxTables } from "./hwpx-table-content.mjs";
+import { attachCreatedTables } from "./created-table-content.mjs";
 import { attachDrawingTextBindings } from "./drawing-text-content.mjs";
 import { attachAutomaticNumbers, retainedAutomaticNumberPlainText } from "./automatic-number-content.mjs";
 import { attachNoteReferences } from "./note-reference-content.mjs";
@@ -217,7 +218,7 @@ function hwpxDisplay(projected) {
   const displayed = attachHwpxPageSettings(editor, attachHwpxConnectors(editor, attachHwpxLines(editor, attachHwpxPictures(editor, attachHwpxParagraphFormats(editor, tableContent, paragraphAvailable)))));
   displayed.lines.push(...displayed.connectors.flatMap(row => row.referenceLine ? [row.referenceLine] : []));
   if (content.window && content.paragraphs.some(row => row.clipped)) throw new Error("ParagraphWindowTextBudgetExceeded");
-  return displayed;
+  return attachCreatedTables(editor, displayed, ["hwpx_edit_created_tables", "hwpx_edit_insert_table", "hwpx_edit_set_created_cell_text", "hwpx_edit_save_for_display"].every(name => WebAssembly.Module.exports(module).some(entry => entry.name === name && entry.kind === "function")), HWPX_DISPLAY_BOUNDS.maxUnits);
 }
 self.onmessage = async event => {
   let reader;
@@ -231,6 +232,18 @@ self.onmessage = async event => {
   };
   let applied = false;
   try {
+    if (message.kind === "insert-table" || message.kind === "created-cell-text") {
+      if (!editor || !historyEnabled) throw new Error("EditorNotOpen");
+      if (format !== "hwpx") throw new Error("UnsupportedTableCreationFormat");
+      let identity = message.identity;
+      if (message.kind === "insert-table") identity = editor.insertTable(message.section, message.paragraph + 1, message.unit, message.options);
+      else editor.setCreatedCellText(message.section, identity, message.row, message.column, message.text);
+      applied = true;
+      reader = await createHwpxReader(module);
+      preview = reader.readTextEvents(editor.saveForDisplay());
+      reply({ kind: message.kind, identity, content: hwpxDisplay() });
+      return;
+    }
     if (message.kind === "set-edit-window") {
       if (!editor || !preview || !historyEnabled) throw new Error("EditorNotOpen");
       if (format !== "hwpx") throw new Error("UnsupportedDocumentWindowFormat");
@@ -346,7 +359,7 @@ self.onmessage = async event => {
       applied = true;
       if (format === "hwpx") {
         reader = await createHwpxReader(module);
-        preview = reader.readTextEvents(editor.save());
+        preview = reader.readTextEvents(editor.saveForDisplay());
       } else {
         reader = await createHwp5Reader(module);
         preview = reader.readText(editor.save({ allowStaleLayout: true }).bytes);
@@ -423,7 +436,7 @@ self.onmessage = async event => {
       applied = true;
       if (format === "hwpx") {
         reader = await createHwpxReader(module);
-        preview = reader.readTextEvents(editor.save());
+        preview = reader.readTextEvents(editor.saveForDisplay());
       } else {
         reader = await createHwp5Reader(module);
         preview = reader.readText(editor.save({ allowStaleLayout: true }).bytes);
@@ -550,7 +563,7 @@ self.onmessage = async event => {
         reply({ kind: "formula-definition", content: hwp5Display() });
       } else {
         reader = await createHwpxReader(module);
-        preview = reader.readTextEvents(editor.save());
+        preview = reader.readTextEvents(editor.saveForDisplay());
         reply({ kind: "formula-definition", content: hwpxDisplay() });
       }
     } else if (message.kind === "checkbox-state") {
@@ -627,7 +640,7 @@ self.onmessage = async event => {
       applied = changed;
       if (format === "hwpx") {
         reader = await createHwpxReader(module);
-        preview = reader.readTextEvents(editor.save());
+        preview = reader.readTextEvents(editor.saveForDisplay());
         reply({ kind: message.kind, changed, content: hwpxDisplay() });
       } else {
         // Restore every derived paragraph/control/formula from native state.
@@ -652,7 +665,7 @@ self.onmessage = async event => {
         } else editor.mergeParagraph(target);
         applied = true;
         reader = await createHwpxReader(module);
-        preview = reader.readTextEvents(editor.save());
+        preview = reader.readTextEvents(editor.saveForDisplay());
         const content = hwpxDisplay();
         const splitParagraph = message.kind === "split" ? content.paragraphs.find(row => row.section === message.section && row.paragraph === message.paragraph)?.nextMergeParagraph : undefined;
         reply({ kind: message.kind, content, ...(message.kind === "split" ? { splitTarget: Number.isInteger(splitParagraph) ? { section: message.section, paragraph: splitParagraph } : null } : {}) });
@@ -694,7 +707,7 @@ self.onmessage = async event => {
         }
         applied = true;
         reader = await createHwpxReader(module);
-        preview = reader.readTextEvents(editor.save());
+        preview = reader.readTextEvents(editor.saveForDisplay());
         reply({ kind: message.kind, content: hwpxDisplay() });
         return;
       }
