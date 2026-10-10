@@ -1,5 +1,7 @@
 # HWPX 표 삽입 UI 연결
 
+후속 깨끗한 게시 source/artifact와 실제 Chromium 검증은 [브라우저 검증](hwpx-table-creation-browser.md)을 따릅니다. 아래 브라우저 미검증 기록은 UI 연결 당시의 경계입니다.
+
 Worker의 현재 표시 응답은 조회 ABI가 있으면 실제 tableCreationResources 목록을 포함합니다. renderer는 이 조회 결과와 생성 capability를 전달하고 Canvas의 tableCreationSelection이 source 커서의 현재 UTF-16 위치를 반환합니다. 생성 셀·범위 선택·clipped/처리 중/조합 중 선택은 생성 host로 반환하지 않습니다.
 
 표 삽입 메뉴는 기존 문서 메뉴 위임기로 설정 폼을 포커스합니다. form은 행/열/폭/행 높이와 네 실제 서식 ID 선택을 소유합니다. 단위는 HWPUNIT입니다. 조회 목록의 첫 유효 ID가 초기 선택이며 host의 서식을 자동 상속한다고 주장하지 않습니다. 선택 목록이 없거나 셀 선택/세션 비활성/처리 중이면 비활성화합니다. submit은 Canvas의 기존 선택을 통해 생성 거래를 요청합니다. native가 host/서식/치수/예산을 다시 검증합니다.
