@@ -21,7 +21,7 @@ import { hitTableBoundary } from "./table-boundary-geometry.mjs";
 import { appendQueuedText } from "./queued-input.mjs";
 import { createSelectionEditPermission } from "./selection-edit-permission.mjs";
 import { pictureResizeTarget } from "./picture-resize-target.mjs";
-import { transferSelectedText } from "./clipboard-transfer.mjs";
+import { transferSelectedText, pasteClipboardText } from "./clipboard-transfer.mjs";
 
 /** DOM draft and interaction only. Native acknowledgements own committed text. */
 export function createCanvasEditor({ canvas, viewport, input, renderer, controls, note, queryEditRange = null, querySplitRange = null, platform = globalThis.navigator?.userAgentData?.platform ?? globalThis.navigator?.platform ?? "" }) {
@@ -705,14 +705,14 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     controller.reset({ preserveHistory: true });
     historyAvailable = available; structureAvailable = structure; mergeAvailable = merge; splitQueryAvailable = splitQuery;
   };
-  const clipboardSelection = () => {
+  const clipboardSelection = (allowEmpty = false) => {
     if (events.signal.aborted || !target || !anchor || !focus || composing || pending || historyPending || controls.busy() || input.value !== committed) return null;
     const text = multipleParagraphs() ? renderer.selectionText?.(anchor, focus) : committed.slice(snapUnit(committed, input.selectionStart), snapUnit(committed, input.selectionEnd, true));
-    if (typeof text !== "string" || !text) return null;
-    return { text, anchor, focus, target, committed, revision: historyRevision, start: input.selectionStart, end: input.selectionEnd };
+    if (typeof text !== "string" || (!allowEmpty && !text)) return null;
+    return { text, allowEmpty, anchor, focus, target, committed, revision: historyRevision, start: input.selectionStart, end: input.selectionEnd };
   };
   const clipboardCurrent = saved => {
-    const current = clipboardSelection();
+    const current = clipboardSelection(saved.allowEmpty);
     return current !== null && current.anchor === saved.anchor && current.focus === saved.focus && current.target === saved.target && current.committed === saved.committed && current.revision === saved.revision && current.start === saved.start && current.end === saved.end && current.text === saved.text;
   };
   const clipboardCutAvailable = () => {
@@ -744,6 +744,14 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     return transferSelectedText({ clipboard, text: saved.text, isCurrent: () => clipboardCurrent(saved), cut, remove: () => replaceSelectedText(""), report });
   };
   return {
+    canPasteSelection() {
+      return typeof globalThis.navigator?.clipboard?.readText === "function" && clipboardSelection(true) !== null && clipboardCutAvailable();
+    },
+    pasteSelection({ clipboard = globalThis.navigator?.clipboard } = {}) {
+      const saved = clipboardSelection(true);
+      if (!saved || !clipboardCutAvailable()) return Promise.resolve(false);
+      return pasteClipboardText({ clipboard, isCurrent: () => clipboardCurrent(saved) && clipboardCutAvailable(), replace: replaceSelectedText, report });
+    },
     canTransferSelection(cut = false) {
       return typeof globalThis.navigator?.clipboard?.writeText === "function" && clipboardSelection() !== null && (!cut || clipboardCutAvailable());
     },

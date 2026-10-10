@@ -9,6 +9,7 @@ const expected = new Map([
   ["menu-find", '{ click: () => findControls.focus() }'],
   ["menu-copy", '{ get disabled() { return direct?.canTransferSelection() !== true; }, click: () => direct.transferSelection() }'],
   ["menu-cut", '{ get disabled() { return direct?.canTransferSelection(true) !== true; }, click: () => direct.transferSelection({ cut: true }) }'],
+  ["menu-paste", '{ get disabled() { return direct?.canPasteSelection() !== true; }, click: () => direct.pasteSelection() }'],
   ["menu-properties", 'document.querySelector("#inspector-toggle")'],
   ["menu-bold", 'document.querySelector("#canvas-bold-toggle")'],
   ["menu-italic", 'document.querySelector("#canvas-italic-toggle")'],

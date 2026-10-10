@@ -1,6 +1,24 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { transferSelectedText } from "../../web/preview/clipboard-transfer.mjs";
+import { transferSelectedText, pasteClipboardText } from "../../web/preview/clipboard-transfer.mjs";
+
+test("clipboard paste requires fresh selection after reading and preserves multiline Unicode", async () => {
+  for (const stale of [false, true]) {
+    let complete, current = true;
+    const calls = [];
+    const pending = pasteClipboardText({ clipboard: { readText: () => new Promise(resolve => { complete = resolve; }) }, isCurrent: () => current, replace: text => { calls.push(text); return true; }, report() {} });
+    current = !stale; complete("한😀\r\n\n끝");
+    assert.equal(await pending, !stale);
+    assert.deepEqual(calls, stale ? [] : ["한😀\r\n\n끝"]);
+  }
+});
+
+test("clipboard paste rejects absent API permission empty invalid text and refused command", async () => {
+  for (const clipboard of [null, { readText: async () => { throw new Error("denied"); } }, ...["", "\ud800", null].map(text => ({ readText: async () => text }))]) {
+    assert.equal(await pasteClipboardText({ clipboard, isCurrent: () => true, replace() { throw new Error("must not edit"); }, report() {} }), false);
+  }
+  assert.equal(await pasteClipboardText({ clipboard: { readText: async () => "a" }, isCurrent: () => true, replace: () => false, report() {} }), false);
+});
 
 test("clipboard writes before deleting and refuses stale asynchronous completion", async () => {
   for (const cut of [false, true]) for (const stale of [false, true]) {

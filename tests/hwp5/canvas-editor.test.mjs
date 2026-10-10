@@ -1,5 +1,33 @@
 import test from "node:test";
 
+test("Canvas menu clipboard paste at caret uses native history and keeps Unicode", async t => {
+  const h = await harness(t, "parashape", p => p.paragraph === 5);
+  h.native.enableHistory();
+  const before = h.input.value, original = Buffer.from(h.native.save().bytes);
+  assert(h.controller.selectTextRange({ ...h.paragraph, startUnit: 0, endUnit: 0 }));
+  assert.equal(await h.controller.pasteSelection({ clipboard: { readText: async () => "한😀" } }), true);
+  assert.equal(h.requests.length, 1); h.ack();
+  assert.equal(h.input.value, "한😀" + before);
+  const saved = Buffer.from(h.native.save({ allowStaleLayout: true }).bytes);
+  assert.equal(h.native.undo(), true); assert.deepEqual(Buffer.from(h.native.save().bytes), original);
+  assert.equal(h.native.redo(), true); assert.deepEqual(Buffer.from(h.native.save({ allowStaleLayout: true }).bytes), saved);
+});
+
+test("Canvas delayed clipboard paste refuses changed selection close and busy state", async t => {
+  for (const invalidate of ["selection", "close", "busy"]) await t.test(invalidate, async t => {
+    const h = await harness(t, "parashape", p => p.paragraph === 5);
+    const original = Buffer.from(h.native.save().bytes);
+    assert(h.controller.selectTextRange({ ...h.paragraph, startUnit: 0, endUnit: 0 }));
+    let complete;
+    const promise = h.controller.pasteSelection({ clipboard: { readText: () => new Promise(resolve => { complete = resolve; }) } });
+    if (invalidate === "selection") assert(h.controller.selectTextRange({ ...h.paragraph, startUnit: 1, endUnit: 1 }));
+    if (invalidate === "close") h.controller.close();
+    if (invalidate === "busy") h.setBusy(true);
+    complete("한😀"); assert.equal(await promise, false);
+    assert.equal(h.requests.length, 0); assert.deepEqual(Buffer.from(h.native.save().bytes), original);
+  });
+});
+
 test("Canvas menu clipboard cut uses one native transaction with byte-exact history", async t => {
   const h = await harness(t, "parashape", p => p.paragraph === 5);
   h.native.enableHistory();
@@ -634,16 +662,21 @@ test("Canvas Ctrl arrows move by words and Shift extends without native edits", 
   assert.deepEqual(h.native.save().bytes, original);
 });
 test("Canvas single paragraph multiline paste preserves empty lines suffix and one undo", async t => {
-  for (const kind of ["paste", "beforeinput"]) await t.test(kind, async t => {
+  for (const kind of ["paste", "beforeinput", "menu"]) await t.test(kind, async t => {
   const h = await harness(t, "parashape", p => p.paragraph === 5);
   h.renderer.replacementRanges = (a, f) => paragraphSelectionRanges([h.paragraph], a, f, undefined, { includeEmpty: true });
   h.renderer.paragraphReplacementAvailable = () => true;
   h.native.enableHistory();
   const original = h.native.save().bytes;
   h.input.setSelectionRange(1, 3);
-  const event = kind === "paste" ? dispatch(h.input, "paste", { clipboardData: { getData: () => "첫😀\r\n\r\n둘" } }) :
-    dispatch(h.input, "beforeinput", { inputType: "insertFromPaste", data: "첫😀\r\n\r\n둘" });
-  assert.equal(event.defaultPrevented, true);
+  if (kind === "menu") {
+    dispatch(h.input, "select");
+    assert.equal(await h.controller.pasteSelection({ clipboard: { readText: async () => "첫😀\r\n\r\n둘" } }), true);
+  } else {
+    const event = kind === "paste" ? dispatch(h.input, "paste", { clipboardData: { getData: () => "첫😀\r\n\r\n둘" } }) :
+      dispatch(h.input, "beforeinput", { inputType: "insertFromPaste", data: "첫😀\r\n\r\n둘" });
+    assert.equal(event.defaultPrevented, true);
+  }
   assert.equal(h.requests.length, 1);
   assert.deepEqual(h.requests[0].ranges, [{ section: 0, paragraph: 5, startUnit: 1, endUnit: 3 }]);
   h.ack();

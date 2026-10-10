@@ -258,6 +258,7 @@ documentMenuControls = createDocumentMenuControls([
   { button: document.querySelector("#menu-find"), target: { click: () => findControls.focus() } },
   { button: document.querySelector("#menu-copy"), target: { get disabled() { return direct?.canTransferSelection() !== true; }, click: () => direct.transferSelection() } },
   { button: document.querySelector("#menu-cut"), target: { get disabled() { return direct?.canTransferSelection(true) !== true; }, click: () => direct.transferSelection({ cut: true }) } },
+  { button: document.querySelector("#menu-paste"), target: { get disabled() { return direct?.canPasteSelection() !== true; }, click: () => direct.pasteSelection() } },
   { button: document.querySelector("#menu-properties"), target: document.querySelector("#inspector-toggle") },
   { button: document.querySelector("#menu-bold"), target: document.querySelector("#canvas-bold-toggle") },
   { button: document.querySelector("#menu-italic"), target: document.querySelector("#canvas-italic-toggle") },
