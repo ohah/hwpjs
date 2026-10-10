@@ -5,6 +5,7 @@ import { inflateRawSync, inflateSync } from "node:zlib";
 import { createCfbReader } from "../js/cfb.mjs";
 import { createHwp5Reader } from "../js/hwp5.mjs";
 import { rawParagraphTexts } from "./hwp5-preview-record-oracle.mjs";
+import { decodeDistributionSection } from "./hwp5-distribution-oracle.mjs";
 
 const ignored = new Set([".git", ".zig-cache", "node_modules"]);
 function filesUnder(root) {
@@ -50,10 +51,12 @@ function compareText(cfb, bytes, preview) {
   if (!header) throw new Error("oracle missing FileHeader");
   let compared = 0;
   for (const section of preview.sections) {
-    const encoded = cfb.findExact(`/BodyText/Section${section.index}`)?.content;
+    const distribution = Boolean(header[36] & 4);
+    const encoded = cfb.findExact(`/${distribution ? "ViewText" : "BodyText"}/Section${section.index}`)?.content;
     if (!encoded) throw new Error("oracle missing Section");
     let raw = encoded;
-    if (header[36] & 1) {
+    if (distribution) raw = decodeDistributionSection(encoded, Boolean(header[36] & 1));
+    else if (header[36] & 1) {
       try { raw = inflateRawSync(encoded, { maxOutputLength: 32 * 1024 * 1024 }); }
       catch (err) {
         if (err.code !== "Z_DATA_ERROR") throw err;

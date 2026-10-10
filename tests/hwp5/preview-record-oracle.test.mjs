@@ -32,11 +32,10 @@ test("preview corpus audit classifies tracked fixtures and checks every accepted
   const result = JSON.parse(execFileSync(process.execPath, [script, fixtureRoot], { encoding: "utf8" }));
   assert.equal(result.paths, 48);
   assert.deepEqual(result.categories, {
-    UnsupportedDistribution: 2,
     UnsupportedEncryption: 1,
-    preview_ok: 45,
+    preview_ok: 47,
   });
-  assert.equal(result.oracle.matched, 45);
+  assert.equal(result.oracle.matched, 47);
   assert.ok(result.oracle.paragraphs > 0);
   assert.equal(result.oracle.unavailable, 0);
   assert.deepEqual(result.oracle.failures, []);

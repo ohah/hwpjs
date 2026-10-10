@@ -1,5 +1,7 @@
 # 게시 소스의 표 생성 브라우저 검증
 
+추가 native·교차 포맷 검증과 preview oracle 교정은 [게시 소스 게이트](hwpx-table-creation-release-gates.md)를 따릅니다. 아래 추가 native 실행 중 문장은 당시 기록입니다.
+
 2026-10-11 published5610e494를 `/tmp/hwpjs-table-ui-release.UVKq48`에 git archive로 추출하고 원본/현재 Git diff가 없는 상태에서 ReleaseSafe build를 수행했습니다. WASM SHA256은 `a87ee487658b6ad9086f865360c22f24d1b93a574c7706ed6271366392e40c18`입니다. dirty 후보6c59 결과를 이 산출물에 소급하지 않습니다.
 
 같은 archive의 공개 생성/Worker/form/geometry/HWPX history/HWP5 editor/history7파일23/23·fail/skip0·exit0(3101.174875ms)을 확인했습니다. 실제 Chromium은 loopback10005의 같은 source/artifact를 읽었습니다. charshape.hwpx를 업로드해 편집 시작→진하게 찾기→ArrowLeft로 범위 접기→삽입 메뉴/설정 폼→2×2 생성→첫 셀 새 표😀<& 입력→다운로드→undo/redo→다시 다운로드→다운로드 파일 재열기를 수행했습니다. 초기 설정은 실제 paragraph0/character0/style0/border1이고 UI는 첫 셀 포커스를 복원했습니다.

@@ -6,6 +6,7 @@ import { createCfbReader } from "../../js/cfb.mjs";
 import { createHwp5Reader } from "../../js/hwp5.mjs";
 import { decodeHwp5Text } from "../../js/hwp5-text-wire.mjs";
 import { rawParagraphTexts } from "../../tools/hwp5-preview-record-oracle.mjs";
+import { decodeDistributionSection } from "../../tools/hwp5-distribution-oracle.mjs";
 
 const wasm = readFileSync(new URL("../../zig-out/bin/hwpjs.wasm", import.meta.url));
 const fixture = name => readFileSync(new URL(`../../legacy/rust/crates/hwp-core/tests/fixtures/${name}`, import.meta.url));
@@ -221,8 +222,6 @@ test("HWP5 preview matches raw section text across all tracked HWP fixtures", as
   const folder = new URL("../../legacy/rust/crates/hwp-core/tests/fixtures/", import.meta.url);
   const names = readdirSync(folder).filter(name => name.endsWith(".hwp")).sort();
   const expectedRejections = new Map([
-    ["distribution.hwp", "UnsupportedDistribution"],
-    ["viewtext.hwp", "UnsupportedDistribution"],
     ["password-12345.hwp", "UnsupportedEncryption"],
   ]);
   let accepted = 0;
@@ -239,9 +238,14 @@ test("HWP5 preview matches raw section text across all tracked HWP fixtures", as
       versions.set(version, (versions.get(version) ?? 0) + 1);
       cfb.parse(bytes, { strict: true });
       const header = cfb.findExact("/FileHeader").content;
+      const distribution = Boolean(header[36] & 4);
+      if (distribution) {
+        assert.equal(result.readOnly, true, name);
+        assert.equal(result.primarySource, "distribution_viewtext", name);
+      }
       for (const section of result.sections) {
-        const encoded = cfb.findExact(`/BodyText/Section${section.index}`).content;
-        const raw = header[36] & 1 ? inflateRawSync(encoded) : encoded;
+        const encoded = cfb.findExact(`/${distribution ? "ViewText" : "BodyText"}/Section${section.index}`).content;
+        const raw = distribution ? decodeDistributionSection(encoded, Boolean(header[36] & 1)) : header[36] & 1 ? inflateRawSync(encoded) : encoded;
         const oracle = rawParagraphTexts(raw);
         assert.equal(section.paragraphs.length, oracle.length, name);
         for (const [i, paragraph] of section.paragraphs.entries()) {
@@ -252,8 +256,8 @@ test("HWP5 preview matches raw section text across all tracked HWP fixtures", as
       accepted++;
     }
     assert.equal(names.length, 48);
-    assert.equal(accepted, 45);
-    assert.deepEqual([...versions].sort(), [["5.0", 12], ["5.1", 33]]);
+    assert.equal(accepted, 47);
+    assert.deepEqual([...versions].sort(), [["5.0", 14], ["5.1", 33]]);
   } finally {
     cfb.close();
     hwp.close();
