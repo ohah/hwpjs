@@ -1,5 +1,7 @@
 # 문단 정렬 메뉴
 
+후속 신규 객체 생성의 모델·이력 경계는 [표 삽입 계획](table-insertion-plan.md)을 따릅니다. 기존 정렬 명령 연결과 신규 표 삽입 완료는 별도입니다.
+
 RHWP 로컬 `rhwp-studio/src/ui/toolbar.ts`의 `setupAlignButtons`는 정렬 버튼을 기존 dispatcher 명령에 연결합니다. 소스 책임 구성을 참고했으며 코드를 이식하거나 RHWP 전체 기능 동등성을 주장하지 않습니다.
 
 우리 서식 메뉴의 여섯 정렬 항목은 기존 `paragraph-format-form`의 data-alignment 버튼에 click을 위임합니다. enum/선택/native 요청/이력/저장은 기존 paragraph-format-controls와 공개 편집 API가 계속 소유합니다. 메뉴는 native 명령과 별도 서식 상태를 만들지 않고 disabled·aria-pressed를 기존 컨트롤에서 읽습니다.
