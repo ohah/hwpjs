@@ -1,5 +1,7 @@
 # 현재 데모 WASM
 
+고정 측정 페이지 배치의 전체 CFB 파일 범위·미지원 집계는 [페이지 감사](promoted-page-corpus.md)가 소유합니다.
+
 반영 후 전수 prefix 편집의 파일별 집계와 거부 경계는 [기본 픽스쳐 재검증](promoted-fixture-edit-audit.md)이 소유합니다.
 
 2026-10-10 기본 `zig-out/bin/hwpjs.wasm`과 외부 HTTPS `/zig-out/bin/hwpjs.wasm`은 SHA256 `7e70bbc74b7665553cd4f7e1b6a90aeb81a2e14c6c705e332d0ddac495e645e8`입니다. 외부 HTTP200·해시 일치·WebAssembly.compile 성공을 확인했습니다. 기존 브라우저는 새로고침해 Worker/WASM을 다시 로드해야 합니다.
