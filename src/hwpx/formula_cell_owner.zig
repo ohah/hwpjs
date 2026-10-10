@@ -6,7 +6,7 @@ const fields = @import("table_xml_fields.zig");
 pub const Owner = struct {
     table: usize,
     cell: usize,
-    origin: @import("../hwp5/body/formula_range.zig").Cell,
+    origin: @import("../model/formula_range.zig").Cell,
     columns: u32,
     rows: u32,
 };

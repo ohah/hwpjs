@@ -1,5 +1,11 @@
 # 숫자 범위 집계 SSOT
 
+## 포맷 독립 문법·참조 선택
+
+`src/model/formula_range.zig`가 UTF16 숫자 함수 문법/주소 해결, `formula_selection.zig`가 범위·반복 주소의 선택 순서/한도/교차 판정을 소유합니다. 기존 코드와 테스트를 이동했으며 HWP5 body의 두 경로는 같은 타입/함수를 재노출하는 호환 진입점만 남깁니다. HWPX expression/cell owner/evaluator는 모델 경로를 직접 사용하므로 HWP5 body 파서에 의존하지 않습니다. HWP5 레코드/CFB와 HWPX XML/ZIP, 원본/현재 셀 소유권은 각각 포맷 계층에 유지합니다. 별도 compensated 관측 문법의 정책은 합치지 않았습니다.
+
+ReleaseSafe 후보 `/tmp/hwpjs-model-formula-syntax-20261011/bin/hwpjs.wasm` SHA256 `c4f935939ae3b4b71b9693cc62585cc63780c3bcb4d21929ec031e4587c7ee2b` 빌드·포맷/diff 검사와 native 문법/선택/반복 주소·HWPX 산술 전체 할당 실패6/6·exit0입니다. 실제 양쪽13수식 정의·MIN/MAX/AVERAGE·HWP548숫자·독립 레코드/XML/ZIP·저장/재열기/이력3파일13/13·skip0·exit0(24519ms)도 통과했습니다. 기본 데모는 이 파일 이동 후보로 교체하지 않았으며 전체 최신 native/브라우저/대형 원본 전수와 구분합니다.
+
 ## AVERAGE 별칭
 
 게시5d58cef95ff1a7582d2a273633358acbce5acb2a의 깨끗한 Git 체크아웃 `/tmp/hwpjs-main-average.XqeZp7`에서도 ReleaseSafe 빌드와 양쪽 정규 감사가 exit0입니다. WASM SHA256 `e8bea3a5ee0c5b23d2e0c5f1b862599ac25302175cd14b780eca756c888623de`, 로그 `/tmp/hwpjs-main-average-regular-audits-20261011.log`의 HWP5293/293(5183ms)/HWPX34/34(62007ms), 각각fail0/skip0입니다. 이후 공유 문법 파일 위치 변경이나 전체 native/브라우저 전수 검증에 소급하지 않습니다. 기본 데모는 이 별칭 산출물로 교체하지 않았습니다.

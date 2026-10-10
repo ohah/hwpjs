@@ -2,7 +2,7 @@
 const std = @import("std");
 const parameters = @import("formula_parameters.zig");
 pub const Parsed = struct {
-    range: @import("../hwp5/body/formula_range.zig").Range,
+    range: @import("../model/formula_range.zig").Range,
     format: @import("../hwp5/body/formula_format.zig").Format,
 };
 
@@ -25,12 +25,12 @@ test "HWPX formula expression shares grammar without evaluating stale cached res
     try std.testing.checkAllAllocationFailures(a, struct {
         fn run(allocator: std.mem.Allocator, input: parameters.View) !void {
             const result = try parse(allocator, input);
-            try std.testing.expectEqual(@import("../hwp5/body/formula_range.zig").Function.sum, result.range.function);
+            try std.testing.expectEqual(@import("../model/formula_range.zig").Function.sum, result.range.function);
             try std.testing.expectEqual(@import("../hwp5/body/formula_format.zig").Format.general6, result.format);
         }
     }.run, .{view});
     const avg = try parse(a, .{ .command = "=AVG(?2:?4)??%.2f,;;266", .formula = "=AVG(?2:?4)" });
-    try std.testing.expectEqual(@import("../hwp5/body/formula_range.zig").Function.average, avg.range.function);
+    try std.testing.expectEqual(@import("../model/formula_range.zig").Function.average, avg.range.function);
 }
 
 test "HWPX formula expression rejects missing divergent and unsupported definitions" {

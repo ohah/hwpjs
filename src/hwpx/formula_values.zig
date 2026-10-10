@@ -2,7 +2,7 @@
 const std = @import("std");
 const fields = @import("table_xml_fields.zig");
 const owner_mod = @import("formula_cell_owner.zig");
-const ranges = @import("../hwp5/body/formula_range.zig");
+const ranges = @import("../model/formula_range.zig");
 pub const Limits = @import("../hwp5/body/formula_values.zig").Limits;
 pub const Result = struct { value: f64, cells: usize, inspections: usize };
 
@@ -95,7 +95,7 @@ test "HWPX formula injected cell reader preserves lookup limits and propagates e
 /// Cell interpretation is injected; lookup, shape and budget checks remain SSOT.
 pub fn evaluateWith(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tree, sites: *const @import("text_sites.zig").Sites, marker: usize, range: ranges.Range, limits: Limits, reader: anytype) !Result {
     const owner = try owner_mod.read(a, tree, marker);
-    var selection = try @import("../hwp5/body/formula_selection.zig").Iterator.init(range, owner.origin, owner.columns, owner.rows);
+    var selection = try @import("../model/formula_selection.zig").Iterator.init(range, owner.origin, owner.columns, owner.rows);
     const count = selection.count;
     if (count > limits.cells) return error.LimitExceeded;
     if (@hasDecl(@TypeOf(reader), "charge")) try reader.charge(count, 0);
