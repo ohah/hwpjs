@@ -44,8 +44,17 @@ test("HWP5 definition public API matches complete independent section and untouc
   const editor = await createExperimentalHwp5Editor(wasm, input);
   try {
     editor.enableHistory();
+    const originalRows = editor.formulaSources(0);
+    assert.equal(originalRows.length, 13);
+    assert.deepEqual(originalRows[0], { source_node: 118, paragraph: 23, formula: "=SUM(B?:E?)", last_result: "67.5", derived: false });
     const edit = { section: 0, sourceNode: 118, formula: "=AVG(B?:E?)" };
     editor.setFormulaDefinition(edit);
+    assert.deepEqual(editor.formulaSources(0)[0], { source_node: 118, paragraph: 23, formula: "=AVG(B?:E?)", last_result: "16.875", derived: true });
+    assert.equal(originalRows[0].formula, "=SUM(B?:E?)");
+    const queryCopy = editor.formulaSources(0);
+    queryCopy[0].formula = "=OTHER(A1)";
+    assert.equal(editor.formulaSources(0)[0].formula, "=AVG(B?:E?)");
+    assert.throws(() => editor.formulaSources(99), { message: "InvalidSection" });
     const saved = editor.save({ allowStaleLayout: true }).bytes, after = inspect(saved);
     assert.deepEqual(after.sections[0].bytes, expected);
     const mutant = Buffer.from(after.sections[0].bytes);

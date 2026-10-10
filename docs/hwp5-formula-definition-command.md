@@ -1,5 +1,7 @@
 # HWP5 수식 정의 명령 작성 기반
 
+현재 조회 API의 값·소유권과 원본 캐시 구분은 [수식 snapshot](hwp5-formula-snapshot.md)이 소유합니다. 아래 조회 미연결 기록은 당시 단계입니다.
+
 ## 선택적 공개 세션/WASM/JS 명령
 
 게시 파일8개만 선택한 tree `396940fdfc8f18c023d65b363af540faedaefce8`의 별도 export `/tmp/hwpjs-formula-api-publication.pgiG6V`에서도 ReleaseSafe 빌드 exit0, 정의 API/기존 이력2파일7/7·skip0·exit0을 확인했습니다. 이 export WASM SHA256은 `3bb5dd8275a329a3eee0dd9ad443344e938384015036972f3dcb620fc99d47d1`이며 아래 main 작업 트리 빌드의 a60c9f와 구분합니다. 미게시 helper나 전체 작업 트리 스냅샷을 원격 기능 증거로 대신하지 않습니다.

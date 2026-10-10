@@ -58,6 +58,7 @@ import { decodeHwp5TableLayoutSources } from "./hwp5-table-layout-sources.mjs";
 import { decodeHwp5CellLayoutSources } from "./hwp5-cell-layout-sources.mjs";
 import { decodeHwp5TableAnchors } from "./hwp5-table-anchors.mjs";
 import { decodeHwp5ParagraphFlow, decodeHwp5ColumnSources } from "./hwp5-flow-sources.mjs";
+import { decodeHwp5FormulaSources } from "./hwp5-formula-sources.mjs";
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder("utf-16le", { fatal: true, ignoreBOM: true });
@@ -379,6 +380,11 @@ export async function createExperimentalHwp5Editor(source, input, { distribution
       return decodeHwp5ColumnSources(output(() => wasm.hwp5_edit_column_sources(index)).bytes);
     },
     copyText,
+    formulaSources(section) {
+      check(); const index = u32(section, "section");
+      if (typeof wasm.hwp5_edit_formula_sources !== "function") throw new Error("Hwp5FormulaSourcesAbiUnavailable");
+      return decodeHwp5FormulaSources(output(() => wasm.hwp5_edit_formula_sources(index)).bytes);
+    },
     setFormulaDefinition({ section, sourceNode, formula }) {
       check();
       const positions = [u32(section, "section"), u32(sourceNode, "sourceNode")];

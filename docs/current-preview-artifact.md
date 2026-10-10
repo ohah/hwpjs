@@ -1,5 +1,7 @@
 # 현재 데모 WASM
 
+이전 `deb854e3c472a0a9ecd18763552a04ac16be41e63ab70cd0ca540811a01170cb` 후보의574공개 파일 실행은1916/1916·skip0·exit0으로 종료됐습니다. `/tmp/hwpjs-hyphen-full-public-20261010.log`에 종료코드0·signalnull과9797729ms가 기록돼 있습니다. 실행 중 JS 변경과 선택 이후 신규 검사가 있어 고정된 최신 source snapshot 전체 통과로 소급하지 않습니다. 현재 수식 API/기본 artifact의 전수 통과로 합산하지 않습니다.
+
 고정 측정 페이지 배치의 전체 CFB 파일 범위·미지원 집계는 [페이지 감사](promoted-page-corpus.md)가 소유합니다.
 
 반영 후 전수 prefix 편집의 파일별 집계와 거부 경계는 [기본 픽스쳐 재검증](promoted-fixture-edit-audit.md)이 소유합니다.

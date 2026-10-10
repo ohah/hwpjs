@@ -109,6 +109,14 @@ export fn hwp5_edit_set_formula_definition(section: u32, source_node: u32, ptr: 
     apply(.{ .set_formula_definition = .{ .section = section, .source_node = source_node, .formula = ptr[0..size] } }) catch |err| return fail(err);
     return 1;
 }
+export fn hwp5_edit_formula_sources(section: u32) u32 {
+    hwp5_edit_output_free();
+    const s = session() catch |err| return fail(err);
+    const rows = s.formulaSources(a, section) catch |err| return fail(err);
+    defer @import("../hwp5/edit/formula_snapshot.zig").deinit(a, rows);
+    output = std.json.Stringify.valueAlloc(a, rows, .{}) catch |err| return fail(err);
+    return 1;
+}
 export fn hwp5_edit_section_count() u32 {
     const s = session() catch |err| {
         _ = fail(err);
