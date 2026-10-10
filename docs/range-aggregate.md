@@ -2,6 +2,8 @@
 
 ## 게시 소스의 정규 감사 재현
 
+같은5d600685 게시 WASM을 loopback8085로 제공해 agent-browser 스킬로 실제 Chromium의 chart.hwp 픽스쳐 선택/편집 enable·MIN11.2 submit·undo SUM·redo MIN·MAX24.7 submit을 DOM 조건으로 확인했습니다. 후속 chart.hwpx 전환에서는 MIN 제출 뒤25초 조건 대기가 실패했고, 진단 DOM은 입력SUM/결과67.5/상태 빈 문자열/fieldset 활성 상태였습니다. HWPX enable 응답과 초안 입력 타이밍 또는 제출 경로를 다시 분리해야 하며 실제 HWPX MIN 성공으로 계수하지 않습니다. 브라우저 오류는 없었고 소유 브라우저 close·임시 서버exit130을 확인했습니다. 기본 데모는 유지했습니다.
+
 Git 체크아웃 `/tmp/hwpjs-main-extrema.xOQ1cV`의 `97cb3335781510d34110dc265e0b062324789cdb`에서 `zig build hwp5-editor-audit hwpx-text-audit -Doptimize=ReleaseSafe`가 exit0으로 끝났습니다. 게시 소스 ReleaseSafe WASM SHA256은 `5d6006852fc4f8997f4efcf076a858e624cd0ba4e9087943284fda18e7c01bea`입니다. `/tmp/hwpjs-main-extrema-regular-audits-20261011.log`에는 HWP5292/292(3391ms), HWPX34/34(41379ms), 각각fail0/skip0이 기록돼 있습니다. 기존 로컬 e27f03ce 후보와 구분합니다. 정규 선택 밖의 전체 native/참조 문서/브라우저·원본 조판이나 기본 데모 승격 근거로 확대하지 않습니다.
 
 전체 필드 범위 보강: 동일 e27f03ce 후보에서 실제 HWP5 chart13필드×MIN/MAX26거래를 독립 레코드 참조/산술/정확 command·label로 비교하고, 비대상 stream·undo/redo·재열기를 확인했습니다. 기존 숫자 corpus 포함2파일10/10·skip0·exit0입니다. HWPX는13필드×기존 반대 SUM/AVG 및MIN/MAX39거래를 Python 일반/최적화 전체 XML/ZIP·산술과 대조해2/2·skip0·exit0(21976ms)입니다. HWPX 첫 확장 검사 실패는 재열기 검사를 inner-loop 밖에 둔 테스트의 변수 범위 오류였으며 제품 저장 오류가 아니었습니다. 이 범위는 단일 chart의13필드이며 모든 원본/문법을 뜻하지 않습니다.
