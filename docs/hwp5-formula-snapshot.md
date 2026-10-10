@@ -1,5 +1,9 @@
 # HWP5 현재 수식 조회
 
+## 게시된 main의 독립 재현
+
+`caf15480813186a74ab0913e76e1dc0dd75840df`를 Git archive로 `/tmp/hwpjs-main-regression.nTseVX`에 추출해 미게시 로컬 파일 없이 ReleaseSafe 빌드(exit0)했습니다. 새 WASM `/tmp/hwpjs-main-regression.nTseVX/verified-out/bin/hwpjs.wasm` SHA256은 `727c38df5ef8d722e87abede19bc181a6b843641f64ac6a2cb59877bef9cd89c`입니다. 추출본 JS/테스트와 이 산출물로 정의/Worker/숫자 corpus/번호4파일14/14·skip0·exit0을 확인했습니다. 앞선 같은 추출본+데모 b8e5409a의14/14와 구분합니다. 이것은 게시 코어와 최근 회귀의 재현 근거이지 모든 정규 감사/전체 fixture 명령·레이아웃 완료 근거는 아닙니다. 외부 데모 artifact는 바꾸지 않았습니다.
+
 ## 구조 편집 뒤 필드 바인딩 수정 (2026-10-11)
 
 공개 실패 경계도 기본 b8e5409a에서 확인했습니다. 자기 참조 `SUM(??)`는 UnsupportedFormulaCellDependency, 꼬리 쉼표는 InvalidFormulaReference,33주소는 LimitExceeded, 역방향 범위는 UnsupportedReversedFormulaRange, 미지원 MIN은 UnsupportedFormulaExpression입니다.4096바이트 UTF8 입력 초과와 UTF8 한도 안이지만 UTF16 expression4096바이트 초과인2100문자도 LimitExceeded입니다. 각 거부 후 원문 저장이 동일하고 기존 redo가 살아 있습니다. 반대로32반복 주소는 독립 산술/저장/재열기/이력을 통과합니다. 정의/Worker2파일6/6·skip0·exit0이며 자기 참조의 거부이지 일반 계산식 의존 그래프/순환 평가 지원은 아닙니다.
