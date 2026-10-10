@@ -155,7 +155,12 @@ pub const Session = struct {
 
     fn spliceMode(self: *Session, section_index: usize, paragraph: usize, start: u32, deleted: u32, inserted: []const u8, anchored: bool) !bool {
         if (section_index >= self.sections.len) return error.InvalidSectionIndex;
-        try self.requireMutableHostPositions();
+        for (self.sections) |section| if (section.created_tables.entries.items.len != 0) return @import("created_table_host_splice.zig").apply(self, section_index, paragraph, start, deleted, inserted, anchored, spliceModeUntracked);
+        return self.spliceModeUntracked(section_index, paragraph, start, deleted, inserted, anchored);
+    }
+
+    fn spliceModeUntracked(self: *Session, section_index: usize, paragraph: usize, start: u32, deleted: u32, inserted: []const u8, anchored: bool) anyerror!bool {
+        if (section_index >= self.sections.len) return error.InvalidSectionIndex;
         const selected = &self.sections[section_index];
         if (paragraph < selected.first_paragraph or paragraph > selected.last_paragraph) return error.InvalidParagraphIndex;
         if (anchored and selected.structure_values == null) {
