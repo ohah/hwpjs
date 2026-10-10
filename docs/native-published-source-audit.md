@@ -1,5 +1,7 @@
 # 게시 소스 native 전수 감사
 
+같은 시점의 고정 제품 WASM으로 실행한975참조 경로 읽기와 거부 원인 분리는 [게시 산출물 참조 읽기](reference-published-source-read.md)가 소유합니다. native 단위 테스트와 corpus 읽기를 하나의 완료 수로 합치지 않습니다.
+
 ## 2026-10-11 실행 기반
 
 `2789f63dea5431331562aafa38e00708edc3a7b1`의 Git archive를 별도 `/tmp/hwpjs-main-native-fixed.q5arOO`에 추출했습니다. 로컬 미커밋 소스를 이 디렉터리에 복사하지 않았습니다. 추출이 끝나기 전에 시도한 첫 컴파일은 root.zig FileNotFound로 실패했고, 추출 종료코드0 확인 후 전체 test-no-exec 컴파일을 다시 시작했습니다. 이 초기 실패를 제품 컴파일 오류로 분류하지 않습니다.
