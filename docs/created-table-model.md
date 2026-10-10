@@ -1,5 +1,7 @@
 # 신규 표의 현재 소유 값
 
+HWPX 저장 fragment의 파생·예산·검증 경계는 [신규 표 XML 작성](hwpx-created-table-xml.md)을 따릅니다. 아직 원본 host/ZIP/Session에 삽입하는 거래는 아닙니다.
+
 HWPX 신규 셀 문단 ID의 읽기 전용 일괄 계획은 [문단 ID 일괄 계획](hwpx-paragraph-id-batch.md)을 따릅니다. 표 ID·현재 object identity·Session 거래 확정과는 별도입니다.
 
 `src/model/created_table.zig`의 Table은 현재 identity, 직렬화 instance_id, 공통 치수 Plan, 서식 리소스 참조와 셀 문단 ID/UTF-8 텍스트를 소유합니다. 원본 node index·XML·레코드·렌더링 캐시는 없습니다. 셀 치수는 기존 공통 Plan에서 파생해 중복 저장하지 않습니다.
