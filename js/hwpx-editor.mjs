@@ -30,6 +30,7 @@ import { decodeDrawingTextBindings } from "./hwpx-drawing-text-bindings.mjs";
 import { decodeDrawingTextSnapshot } from "./hwpx-drawing-text-snapshot.mjs";
 import { decodeContainerSource } from "./hwpx-container-source.mjs";
 import { decodeRectangleRenderingSource } from "./hwpx-rectangle-rendering-source.mjs";
+import { decodeRectangleRenderingSources } from "./hwpx-rectangle-rendering-sources.mjs";
 import { decodeFillBrushes } from "./hwpx-fill-brushes.mjs";
 import { decodePictureSites } from "./hwpx-picture-sites-wire.mjs";
 import { decodePictureOwner } from "./hwpx-picture-owner-wire.mjs";
@@ -609,6 +610,14 @@ export async function createHwpxEditor(source) {
       try {
         if (!wasm.hwpx_edit_rectangle_rendering_source(section, rectangleNode)) throw memory.error();
         return decodeRectangleRenderingSource(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
+    rectangleRenderingSources(section) {
+      ready(); uint(section);
+      if (typeof wasm.hwpx_edit_rectangle_rendering_sources !== "function") throw new Error("HwpxRectangleRenderingSourcesAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_rectangle_rendering_sources(section)) throw memory.error();
+        return decodeRectangleRenderingSources(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
       } finally { wasm.hwpx_edit_output_free(); }
     },
     containerSourceSnapshot(section, containerNode) {

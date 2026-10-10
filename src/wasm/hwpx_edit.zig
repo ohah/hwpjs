@@ -141,6 +141,15 @@ export fn hwpx_edit_rectangle_rendering_source(section: u32, node: u32) u32 {
     return 1;
 }
 
+export fn hwpx_edit_rectangle_rendering_sources(section: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const rows = @import("../hwpx/rectangle_rendering_sources.zig").read(a, session, section) catch |err| return fail(err);
+    defer a.free(rows);
+    output = std.json.Stringify.valueAlloc(a, rows, .{}) catch |err| return fail(err);
+    return 1;
+}
+
 export fn hwpx_edit_rectangle_nodes(section: u32) u32 {
     hwpx_edit_output_free();
     const session = if (active) |*value| value else return fail(error.EditorNotOpen);
