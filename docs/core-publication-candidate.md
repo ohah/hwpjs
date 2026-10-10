@@ -1,5 +1,7 @@
 # 통합 코어 게시 후보
 
+후속 HWP5 계산식 변경의 순수 작성 기반과 아직 미연결인 세션/API 범위는 [수식 정의 명령](hwp5-formula-definition-command.md)을 따릅니다.
+
 Canvas UI의 별도 게시 입력·빌드·집중 실행 결과는 [UI 게시 검증](canvas-ui-publication.md)이 소유합니다.
 
 ## 실제 저장·이력 회귀의 게시 의존성 확인
