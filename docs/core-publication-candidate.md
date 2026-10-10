@@ -9,3 +9,9 @@
 암호 관련5파일13/13·skip0·exit0도 같은 후보를 지정해 통과했습니다. 실제 HWP5 DES/AES·HWPX 복호화 payload 독립 대조, 잘못된 암호 재시도, 복호화 후 편집·저장/이력/재열기, 비밀 입력 정리와 평문 저장 동의를 검사했습니다. 암호 없이 일반 reader가 거부하는 상태와 명시적 암호 변환 API의 지원 범위를 구분합니다. 저장은 동의한 **평문 출력**이며 재암호화 저장 완료를 뜻하지 않습니다. 로컬의 `docs/hwp5-password-protection.md` 계약도 아직 통합 게시 대상에 남아 있습니다.
 
 `deb854e3` 후보의574공개 테스트 파일과 `f0829039` native3838검사는 별도 snapshot으로 실행 중입니다. 신규 후보의 전체 실행으로 소급하지 않습니다. 기본 데모 WASM 교체·현재 root의 추가 테스트 등록·UI/controller 통합 게시·전체 참조 편집/조판 완료는 아직 미완료입니다.
+
+## JS 어댑터 결합 확인
+
+후속으로 HWP5/HWPX reader/editor/password 및 CFB의7개 JS 진입점을 body 실행 없이 실제 ESM linker로 연결했습니다.111개 로컬 모듈의 static import/export가 연결됐고, 변경된98개만 위 별도 index에 선택했습니다. 코어+API tree는 `daa53d2eb1f54a2c9ab88d9e2f0b9af5e89ef0bf`입니다. 이것도 아직 main 통합 커밋이 아닙니다.
+
+이 tree의 JS 디렉터리를 별도 export에 반영하고 같은 `0942a2c1` WASM을 사용해 실제 HWP5 하이픈 문단·HWPX aligns 문단의 prefix 입력·저장·undo/redo와 HWPX 저장본 재열기를 확인했습니다. 실행은 exit0이며 HWP5 원본 입력도 불변입니다. 두 문서 smoke이지111모듈의 모든 API/오류 경로 검증이나 실제 Canvas 브라우저 검사가 아닙니다. 일괄 작업 트리 커밋은 하지 않았으며 나머지 사용자 변경도 유지합니다.
