@@ -2,6 +2,8 @@
 
 ## 후보 검증
 
+추가 공개 경계 검사 `drawing-batch-wire.test.mjs`는 그룹 원본의 단일 조회로 유효 배열을 만들고 두 배치 decoder에 적용합니다. 모든 바이트 절단·잘못된 UTF-8·비배열·잘못된 행·중복/역순·음수/소수 노드·100001행·잘못된 버퍼 타입을 거부하며 빈 배열과 독립 반환값은 허용합니다. Uint8Array 입력 계약을 명시해 단일 decoder와 맞췄습니다. 고정 깨끗한67dc85ca WASM과 현재 JS 변경으로 배치 회귀3파일5/5·fail/skip0·exit0(170.660709ms)입니다. 이 결과는 최신 전체 source/GUI 검증이 아닙니다.
+
 게시9dbe495d의 깨끗한 archive `/tmp/hwpjs-main-drawing-batch.SehGHS`에서 ReleaseSafe build exit0을 확인했습니다. SHA256 `67dc85ca4dfadda3e3f2515951f5f9ca92189d5f81b058a61323036ba8d49dda`입니다. 새 배치 공개2파일4/4·fail/skip0·exit0(201.508792ms), 추적 HWPX45개·47구역·도형 텍스트26개의 일괄/단일 결과 및 원문 저장 바이트 일치·암호1파일 별도 거부를 다시 확인했습니다. 정규 HWP5 312/312·HWPX 34/34·fail/skip0·exit0이며 로그 `/tmp/hwpjs-main-drawing-batch-regular-20261011.log`에 각각3473.028333/47757.714ms가 기록돼 있습니다. 현재 기본 제품에는 아직 반영하지 않았습니다.
 
 같은 깨끗한 소스의 구간3파일 최초 실행은3통과/1실패·exit1입니다. 대형 참조 파일이 archive에 없던 ENOENT이며 검증 완료로 계수하지 않습니다. 원본을 수정하지 않고 해당 픽스쳐만 exclusive 복사해 SHA256 `c6dd7e847a99f219681afc5a29c80a9665c04df9cda4d820a3350d739664fdf6` 일치를 확인한 뒤 같은3파일을 재실행했습니다. 로그 `/tmp/hwpjs-main-drawing-batch-window-retry-20261011.log`의 대형 Worker/Renderer 입력·독립 XML/ZIP·이력 gate는 아직 실행 중이며 전체 종료 통과로 계수하지 않습니다. Git source diff는 여전히 없습니다.
