@@ -48,6 +48,23 @@ function bounds(cell, match) {
 }
 
 // Fixture-scoped ownership inventory independent of the native model/policy.
+export function chartNumericTargets(bytes) {
+  const targets = new Set();
+  for (const table of chartTables(bytes)) {
+    const results = new Set(table.formulas.map(field => field.cell));
+    for (const { cell, match } of table.formulas) {
+      const { left, top, right, bottom } = bounds(cell, match);
+      for (let row = top; row <= bottom; row++) for (let col = left; col <= right; col++) {
+        const dependency = table.cells.get(`${col},${row}`);
+        assert(dependency && !results.has(dependency), "fixture numeric dependency must not be a derived result");
+        assert.equal(dependency.paragraphs.length, 1);
+        targets.add(dependency.paragraphs[0].index);
+      }
+    }
+  }
+  return [...targets].sort((a, b) => a - b);
+}
+
 export function chartStructureTargets(bytes) {
   const allowed = [], protectedParagraphs = [];
   for (const table of chartTables(bytes)) {

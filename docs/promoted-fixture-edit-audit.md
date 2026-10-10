@@ -10,6 +10,8 @@
 
 숫자 입력 전수2파일도 기본 b8e5409a에서2/2·skip0·exit0(33945ms)입니다. `numeric-input-corpus.test.mjs`는 독립 인벤토리의48숫자 셀을 각각0으로 변경해 저장/재열기/undo/redo·비숫자 거부 후 redo와13수식 산술을 일반/최적화 Python으로 검사합니다. `numeric-exact-corpus.test.mjs`는 같은48변경의13수식 결과를 허용 오차 없는 정확한 표시 문자열로 추가 대조하고, 수치 tolerance 검사에 통과하는 근접 변조를 정확 비교가 거부하는 부정 대조를 포함합니다. 단일 실제 chart의 전체 숫자 셀0치환이지 임의 수치·모든 위치/함수·브라우저 전수는 아닙니다.
 
+HWP5 최신 기본 경로의 numeric/control/Worker3파일23/23·skip0·exit0(12214ms)도 확인했습니다.48숫자 셀 각각0/-1/1234.5 변경 및500/1000000 기반 누적 변경에서13수식 command/표시 문자열을 독립 레코드 산술로 대조하고 저장/재열기/비대상 stream/undo/redo를 확인합니다.169개 비의존 셀 구조 위치와 계산 결과/의존 셀 구조 보호, 생성 문단·다문단·하이퍼링크·탭·앵커 회귀를 포함합니다. 테스트 선택 편향을 줄이기 위해 `chartNumericTargets`가 독립 레코드의 표/셀/수식 참조 범위에서 숫자 셀 목록을 만들고, 제품 InvalidFormulaNumber로 수집한48목록과 정확히 대조하도록 추가했습니다. 보강한 numeric 파일3/3·skip0·exit0입니다. arbitrary 수치/모든 위치·브라우저 전체 지원은 별도입니다.
+
 ## 이전 산출물 기록
 
 2026-10-10 `node tools/hwp5-edit-corpus-audit.mjs --history`는 기본 WASM SHA256 `7e70bbc74b7665553cd4f7e1b6a90aeb81a2e14c6c705e332d0ddac495e645e8`으로 Git 추적101입력을 검사했고 exit0입니다. 로그는 `/tmp/hwpjs-promoted-hwp5-edit-20261010.json`입니다.
