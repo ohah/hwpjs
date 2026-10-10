@@ -1,0 +1,44 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { fileURLToPath } from "node:url";
+import { readFile } from "node:fs/promises";
+import { respondDemoFixture } from "../../tools/demo-fixture-response.mjs";
+import { demoFixtures, fixtureUrl } from "../../web/preview/fixture-catalog.mjs";
+const root = fileURLToPath(new URL("../../", import.meta.url));
+function sink() {
+  return { writeHead(status, headers) { this.status = status; this.headers = headers; }, end(body) { this.body = body; this.ended = true; } };
+}
+test("every UI catalog URL is intercepted and serves its exact original bytes", async () => {
+  for (const fixture of demoFixtures) {
+    for (const method of ["GET", "HEAD"]) {
+      const response = sink();
+      assert.equal(await respondDemoFixture(root, decodeURIComponent(fixtureUrl(fixture.id)), method, response), true, fixture.id);
+      assert.equal(response.status, 200, fixture.id);
+      if (method === "GET") assert.deepEqual(response.body, await readFile(new URL(`../../${fixture.path}`, import.meta.url)), fixture.id);
+      else assert.equal(response.body, undefined);
+    }
+  }
+});
+test("fixture response serves exact original bytes and bodyless HEAD", async () => {
+  for (const method of ["GET", "HEAD"]) {
+    const response = sink();
+    assert.equal(await respondDemoFixture(root, "/demo-fixtures/table.hwpx", method, response), true);
+    assert.equal(response.status, 200);
+    assert.equal(response.headers["X-Content-Type-Options"], "nosniff");
+    assert.equal(response.headers["Cache-Control"], "no-store");
+    if (method === "GET") assert.deepEqual(response.body, await readFile(new URL("../../legacy/rust/crates/hwp-core/tests/fixtures/table.hwpx", import.meta.url)));
+    else assert.equal(response.body, undefined);
+  }
+});
+test("fixture response rejects traversal unknown names and changed realpaths without reads", async () => {
+  let reads = 0;
+  const io = { realpath: async () => "/tmp/other-document", readFile: async () => { reads++; throw new Error("MustNotRead"); } };
+  for (const path of ["/demo-fixtures/../AGENTS.md", "/demo-fixtures/%2e%2e", "/demo-fixtures/table.hwpx/extra", "/demo-fixtures/table.hwpx", "/demo-fixtures/", "/web/preview/demo-fixtures/../AGENTS.md", "/web/preview/demo-fixtures/%2e%2e", "/web/preview/demo-fixtures/table.hwpx/extra", "/web/preview/demo-fixtures/table.hwpx", "/web/preview/demo-fixtures/"]) {
+    const response = sink();
+    assert.equal(await respondDemoFixture(root, path, "GET", response, io), true);
+    assert.equal(response.status, 404);
+    assert.equal(response.ended, true);
+  }
+  assert.equal(reads, 0);
+  assert.equal(await respondDemoFixture(root, "/js/hwpx.mjs", "GET", sink(), io), false);
+});

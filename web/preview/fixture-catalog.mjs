@@ -1,5 +1,6 @@
 // Explicit public demo allowlist; never expose arbitrary repository files.
 const base = "legacy/rust/crates/hwp-core/tests/fixtures/";
+export const demoFixturePrefix = "/web/preview/demo-fixtures/";
 export const demoFixtures = Object.freeze([
   ...["aligns", "charshape", "table", "shapeline", "sample-5017"].flatMap(name =>
     ["hwp", "hwpx"].map(extension => Object.freeze({
@@ -9,5 +10,5 @@ export const demoFixtures = Object.freeze([
 ]);
 export function fixtureUrl(id) {
   if (!demoFixtures.some(item => item.id === id)) throw new Error("UnknownDemoFixture");
-  return `/web/preview/demo-fixtures/${encodeURIComponent(id)}`;
+  return `${demoFixturePrefix}${encodeURIComponent(id)}`;
 }
