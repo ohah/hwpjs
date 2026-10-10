@@ -18,6 +18,30 @@ fn command(value: *const model.Table) histories.Command {
     return .{ .kind = .created_table_stage, .section = 0, .paragraph = 2, .start = 0, .deleted = 0, .inserted = "", .created_table = value };
 }
 
+test "created table ID plans reserve only on committed table and share current inventory" {
+    const a = std.testing.allocator;
+    const bytes = try input(a);
+    defer a.free(bytes);
+    var session = try editor.open(a, bytes, .{});
+    defer session.deinit();
+    var ids = try @import("created_table_source_ids.zig").plan(&session, 4);
+    defer ids.deinit(a);
+    var repeated = try @import("created_table_source_ids.zig").plan(&session, 4);
+    defer repeated.deinit(a);
+    try std.testing.expectEqual(ids.identity, repeated.identity);
+    try std.testing.expectEqual(ids.instance_id, repeated.instance_id);
+    try std.testing.expectEqualSlices(u32, ids.paragraph_ids, repeated.paragraph_ids);
+    var value = try model.create(a, ids.identity, ids.instance_id, try @import("../model/table_creation_plan.zig").create(2, 2, 101, 17, 4), ids.paragraph_ids, .{ .paragraph = 1, .character = 1, .style = 0, .border_fill = 1 }, 4);
+    defer value.deinit(a);
+    try std.testing.expect(try staging.stage(&session, 0, 2, 0, &value));
+    var following = try @import("created_table_source_ids.zig").plan(&session, 4);
+    defer following.deinit(a);
+    try std.testing.expect(following.identity != ids.identity);
+    try std.testing.expect(following.instance_id != ids.instance_id);
+    for (following.paragraph_ids) |id| try std.testing.expect(std.mem.indexOfScalar(u32, ids.paragraph_ids, id) == null);
+    try std.testing.expectEqualSlices(u8, bytes, session.source);
+}
+
 test "created table staged resources reject dangling references before mutation" {
     const a = std.testing.allocator;
     const bytes = try input(a);

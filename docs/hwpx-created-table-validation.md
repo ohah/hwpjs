@@ -1,5 +1,7 @@
 # 생성 표의 문서 참조 검증
 
+자동 ID 후보의 소유권·예약 경계는 [생성 표 ID 계획](hwpx-created-table-id-plan.md)을 따릅니다.
+
 내부 `created_table_session.stage`는 anchor 확인 후 문단 ID와 서식 참조를 검증하고, 그 다음 후보 registry를 만듭니다. 원문과 현재 모델의 소유권은 변경하지 않습니다.
 
 `created_table_source_ids.validate`는 모든 section 원본과 공통 `paragraph_id_source_parts`가 읽은 header/masterpage 원본을 공통 ID 검사기에 전달합니다. 모든 section의 현재 생성 문단·생성 셀 ID를 포함합니다. 신규 셀의 원본/생성 충돌·중복·0·전체 예산을 거부합니다. 원본 중복/넓은 ID는 공통 기존 정책대로 보존합니다. 같은 원본 part 목록을 저장용 표 instance ID 검증에도 사용합니다.

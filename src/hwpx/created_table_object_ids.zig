@@ -20,15 +20,36 @@ pub fn validateSource(a: std.mem.Allocator, trees: []const Tree, instance: u32) 
     if (instance == 0) return error.InvalidCreatedTableIdentity;
     for (trees) |*tree| for (tree.elements, 0..) |element, index| {
         if (!ownsShapeId(element)) continue;
-        const raw = (try tree.attributeValue(a, index, "", "id")) orelse continue;
-        const text = try raw.toUtf8(a, 4096);
-        defer a.free(text);
-        _ = try @import("xml_values.zig").nonNegative(text);
-        const id = @import("xml_values.zig").unsigned32(text) catch |err| switch (err) {
-            error.InvalidUnsigned32 => continue,
-            else => return err,
-        };
+        const id = (try sourceId(a, tree, index)) orelse continue;
         if (id == instance) return error.InvalidCreatedTableIdentity;
+    };
+}
+
+/// Smallest unused positive ID. Planning only; no reservation or mutation.
+pub fn nextSource(a: std.mem.Allocator, trees: []const Tree, current: []const u32) !u32 {
+    var used: std.AutoHashMapUnmanaged(u32, void) = .empty;
+    defer used.deinit(a);
+    for (trees) |*tree| for (tree.elements, 0..) |element, index| {
+        if (!ownsShapeId(element)) continue;
+        if (try sourceId(a, tree, index)) |id| try used.put(a, id, {});
+    };
+    for (current) |id| {
+        if (id == 0 or used.contains(id)) return error.InvalidCreatedTableIdentity;
+        try used.put(a, id, {});
+    }
+    var candidate: u32 = 1;
+    while (used.contains(candidate)) candidate = std.math.add(u32, candidate, 1) catch return error.LimitExceeded;
+    return candidate;
+}
+
+fn sourceId(a: std.mem.Allocator, tree: *const Tree, index: usize) !?u32 {
+    const raw = (try tree.attributeValue(a, index, "", "id")) orelse return null;
+    const text = try raw.toUtf8(a, 4096);
+    defer a.free(text);
+    _ = try @import("xml_values.zig").nonNegative(text);
+    return @import("xml_values.zig").unsigned32(text) catch |err| switch (err) {
+        error.InvalidUnsigned32 => null,
+        else => return err,
     };
 }
 
@@ -48,9 +69,12 @@ test "created table source instance IDs preserve wide originals and reject equiv
     defer tree.deinit(a);
     try std.testing.expectError(error.InvalidCreatedTableIdentity, validateSource(a, &.{tree}, 33));
     try validateSource(a, &.{tree}, 34);
+    try std.testing.expectEqual(@as(u32, 3), try nextSource(a, &.{tree}, &.{ 1, 2 }));
+    try std.testing.expectError(error.InvalidCreatedTableIdentity, nextSource(a, &.{tree}, &.{33}));
     try std.testing.checkAllAllocationFailures(a, struct {
         fn run(allocator: std.mem.Allocator, source: Tree) !void {
             try validateSource(allocator, &.{source}, 34);
+            try std.testing.expectEqual(@as(u32, 3), try nextSource(allocator, &.{source}, &.{ 1, 2 }));
         }
     }.run, .{tree});
 }
