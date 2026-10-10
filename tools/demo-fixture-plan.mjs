@@ -12,7 +12,8 @@ export async function prepareFixturePlan(root, fixtures) {
     const source = resolve(base, fixture.path), target = resolve(destination, fixture.id);
     if (!source.startsWith(base + sep) || await realpath(source) !== source) throw new Error("UnsafeFixtureSource");
     try {
-      if ((await lstat(target)).isSymbolicLink()) throw new Error("UnsafeFixtureTarget");
+      const info = await lstat(target);
+      if (!info.isFile() || info.nlink !== 1) throw new Error("UnsafeFixtureTarget");
       if (await realpath(target) !== target) throw new Error("UnsafeFixtureTarget");
     } catch (error) {
       if (error.code !== "ENOENT") throw error;

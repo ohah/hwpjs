@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, writeFile, readFile, readdir, symlink, rm, realpath } from "node:fs/promises";
+import { mkdtemp, mkdir, writeFile, readFile, readdir, symlink, link, rm, realpath } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { prepareFixturePlan } from "../../tools/demo-fixture-plan.mjs";
@@ -25,5 +25,10 @@ test("fixture preflight rejects later missing inputs without touching existing p
   }
   await symlink(join(root, "does-not-exist"), join(destination, "two.hwpx"));
   await assert.rejects(prepareFixturePlan(root, [{ id: "two.hwpx", path: "source.hwp" }]), /UnsafeFixtureTarget/);
+  await mkdir(join(destination, "directory.hwpx"));
+  await assert.rejects(prepareFixturePlan(root, [{ id: "directory.hwpx", path: "source.hwp" }]), /UnsafeFixtureTarget/);
+  await link(join(root, "source.hwp"), join(destination, "linked.hwp"));
+  await assert.rejects(prepareFixturePlan(root, [{ id: "linked.hwp", path: "source.hwp" }]), /UnsafeFixtureTarget/);
+  assert.equal(await readFile(join(root, "source.hwp"), "utf8"), "original");
   assert.equal(await readFile(join(destination, "one.hwp"), "utf8"), "previous");
 });
