@@ -21,6 +21,7 @@ import { hitTableBoundary } from "./table-boundary-geometry.mjs";
 import { appendQueuedText } from "./queued-input.mjs";
 import { createSelectionEditPermission } from "./selection-edit-permission.mjs";
 import { pictureResizeTarget } from "./picture-resize-target.mjs";
+import { transferSelectedText } from "./clipboard-transfer.mjs";
 
 /** DOM draft and interaction only. Native acknowledgements own committed text. */
 export function createCanvasEditor({ canvas, viewport, input, renderer, controls, note, queryEditRange = null, querySplitRange = null, platform = globalThis.navigator?.userAgentData?.platform ?? globalThis.navigator?.platform ?? "" }) {
@@ -613,15 +614,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     }
     if (multipleParagraphs() && (event.metaKey || event.ctrlKey) && !event.altKey && ["c", "x"].includes(key.toLowerCase())) {
       event.preventDefault();
-      const text = renderer.selectionText?.(anchor, focus);
-      if (typeof text !== "string" || pending || historyPending || input.value !== committed) return;
-      if (!globalThis.navigator?.clipboard?.writeText) { report("이 환경에서는 시스템 클립보드를 사용할 수 없습니다."); return; }
-      const a = anchor, f = focus;
-      navigator.clipboard.writeText(text).then(() => {
-        if (anchor !== a || focus !== f) return;
-        if (key.toLowerCase() === "x") replaceSelection("");
-        else report("여러 문단 선택 복사 완료");
-      }, () => report("클립보드 쓰기가 거부되었습니다."));
+      transferSelection({ cut: key.toLowerCase() === "x" });
       return;
     }
     if (multipleParagraphs() && ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(key)) {
@@ -712,7 +705,49 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     controller.reset({ preserveHistory: true });
     historyAvailable = available; structureAvailable = structure; mergeAvailable = merge; splitQueryAvailable = splitQuery;
   };
+  const clipboardSelection = () => {
+    if (events.signal.aborted || !target || !anchor || !focus || composing || pending || historyPending || controls.busy() || input.value !== committed) return null;
+    const text = multipleParagraphs() ? renderer.selectionText?.(anchor, focus) : committed.slice(snapUnit(committed, input.selectionStart), snapUnit(committed, input.selectionEnd, true));
+    if (typeof text !== "string" || !text) return null;
+    return { text, anchor, focus, target, committed, revision: historyRevision, start: input.selectionStart, end: input.selectionEnd };
+  };
+  const clipboardCurrent = saved => {
+    const current = clipboardSelection();
+    return current !== null && current.anchor === saved.anchor && current.focus === saved.focus && current.target === saved.target && current.committed === saved.committed && current.revision === saved.revision && current.start === saved.start && current.end === saved.end && current.text === saved.text;
+  };
+  const clipboardCutAvailable = () => {
+    if (!controls.ready()) return false;
+    if (!multipleParagraphs()) return textEditable();
+    if (renderer.paragraphReplacementAvailable?.() === false) return false;
+    const ranges = renderer.replacementRanges?.(anchor, focus);
+    return Boolean(ranges?.length && ranges.every(range => renderer.paragraph(range)?.editable === true));
+  };
+  const replaceSelectedText = text => {
+    if (typeof text !== "string" || !text.isWellFormed()) return false;
+    if (/[\r\n]/.test(text) || multipleParagraphs()) return replaceSelection(text);
+    if (!target || composing || pending || historyPending || input.value !== committed || !controls.ready() || controls.busy() || !textEditable()) return false;
+    const start = snapUnit(committed, input.selectionStart), end = snapUnit(committed, input.selectionEnd, true);
+    const next = committed.slice(0, start) + text + committed.slice(end);
+    if (next === committed) return true;
+    const previous = { anchor: { ...anchor }, focus: { ...focus } };
+    draftSelection = previous;
+    input.value = next;
+    input.setSelectionRange(start + text.length, start + text.length);
+    pump({ startUnit: start, endUnit: end, text });
+    if (!pending) { input.value = committed; draftSelection = null; setSelection(previous.anchor, previous.focus); return false; }
+    preview();
+    return true;
+  };
+  const transferSelection = ({ cut = false, clipboard = globalThis.navigator?.clipboard } = {}) => {
+    const saved = clipboardSelection();
+    if (!saved || (cut && !clipboardCutAvailable())) return Promise.resolve(false);
+    return transferSelectedText({ clipboard, text: saved.text, isCurrent: () => clipboardCurrent(saved), cut, remove: () => replaceSelectedText(""), report });
+  };
   return {
+    canTransferSelection(cut = false) {
+      return typeof globalThis.navigator?.clipboard?.writeText === "function" && clipboardSelection() !== null && (!cut || clipboardCutAvailable());
+    },
+    transferSelection,
     selectTextRange({ section, paragraph, startUnit, endUnit }) {
       if (composing || pending || historyPending || drag !== null || input.value !== committed || controls.busy()) return false;
       const next = { section, paragraph }, row = renderer.paragraph(next);
@@ -725,22 +760,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
       return true;
     },
     replaceSelection,
-    replaceSelectedText(text) {
-      if (typeof text !== "string" || !text.isWellFormed()) return false;
-      if (/[\r\n]/.test(text) || multipleParagraphs()) return replaceSelection(text);
-      if (!target || composing || pending || historyPending || input.value !== committed || !controls.ready() || controls.busy() || !textEditable()) return false;
-      const start = snapUnit(committed, input.selectionStart), end = snapUnit(committed, input.selectionEnd, true);
-      const next = committed.slice(0, start) + text + committed.slice(end);
-      if (next === committed) return true;
-      const previous = { anchor: { ...anchor }, focus: { ...focus } };
-      draftSelection = previous;
-      input.value = next;
-      input.setSelectionRange(start + text.length, start + text.length);
-      pump({ startUnit: start, endUnit: end, text });
-      if (!pending) { input.value = committed; draftSelection = null; setSelection(previous.anchor, previous.focus); return false; }
-      preview();
-      return true;
-    },
+    replaceSelectedText,
     selectedRange,
     selectedCharacterPropertyState,
     selectedCharacterPropertyRanges,

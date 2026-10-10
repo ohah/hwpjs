@@ -1,5 +1,7 @@
 # 찾기·바꾸기 메뉴 연결
 
+같은 편집 메뉴의 복사·잘라내기 거래와 검증은 [Canvas 클립보드 메뉴](canvas-clipboard-menu.md)가 소유합니다.
+
 RHWP 참조의 `rhwp-studio/src/command/commands/edit.ts`는 찾기 명령으로 기존 FindDialog를 열거나 포커스를 복원합니다. 우리 `편집 → 찾기·바꾸기`도 검색 구현을 별도로 만들지 않고 `createFindControls().focus()`에 위임합니다. Canvas Ctrl/Cmd+F와 메뉴가 같은 포커스 함수를 사용합니다. 기존 초안을 보존하고 전체 입력을 선택하며, 메뉴 진입만으로 검색·선택·native 편집을 실행하지 않습니다. 종료된 컨트롤의 포커스 요청은 false이며 close는 멱등입니다.
 
 검색은 기존 현재 표시 문서 범위입니다. 전체 문서·표시되지 않은 구간 검색이나 RHWP 전체 명령 지원으로 확대하지 않습니다. 결과 선택/교체의 기존 capability·보호·조합/대기 입력 정책은 [Canvas 검색 계약](canvas-text-search.md)이 계속 소유합니다.

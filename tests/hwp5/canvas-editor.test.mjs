@@ -1,5 +1,40 @@
 import test from "node:test";
 
+test("Canvas menu clipboard cut uses one native transaction with byte-exact history", async t => {
+  const h = await harness(t, "parashape", p => p.paragraph === 5);
+  h.native.enableHistory();
+  const before = h.input.value;
+  const original = Buffer.from(h.native.save().bytes);
+  assert(h.controller.selectTextRange({ ...h.paragraph, startUnit: 0, endUnit: 1 }));
+  const copied = [];
+  const clipboard = { writeText: async text => { copied.push(text); } };
+  assert.equal(await h.controller.transferSelection({ clipboard }), true);
+  assert.deepEqual(copied, [before.slice(0, 1)]);
+  assert.equal(h.requests.length, 0);
+  assert.equal(await h.controller.transferSelection({ clipboard, cut: true }), true);
+  assert.equal(h.requests.length, 1); h.ack();
+  assert.equal(h.input.value, before.slice(1));
+  const saved = Buffer.from(h.native.save({ allowStaleLayout: true }).bytes);
+  assert.equal(h.native.undo(), true); assert.deepEqual(Buffer.from(h.native.save().bytes), original);
+  assert.equal(h.native.redo(), true); assert.deepEqual(Buffer.from(h.native.save({ allowStaleLayout: true }).bytes), saved);
+});
+
+test("Canvas delayed clipboard cut cannot delete a changed selection or closed editor", async t => {
+  for (const invalidate of ["selection", "close", "busy"]) await t.test(invalidate, async t => {
+    const h = await harness(t, "parashape", p => p.paragraph === 5);
+    const original = Buffer.from(h.native.save().bytes);
+    assert(h.controller.selectTextRange({ ...h.paragraph, startUnit: 0, endUnit: 1 }));
+    let complete;
+    const promise = h.controller.transferSelection({ cut: true, clipboard: { writeText: () => new Promise(resolve => { complete = resolve; }) } });
+    if (invalidate === "selection") assert(h.controller.selectTextRange({ ...h.paragraph, startUnit: 1, endUnit: 2 }));
+    if (invalidate === "close") h.controller.close();
+    if (invalidate === "busy") h.setBusy(true);
+    complete(); assert.equal(await promise, false);
+    assert.equal(h.requests.length, 0);
+    assert.deepEqual(Buffer.from(h.native.save().bytes), original);
+  });
+});
+
 test("Canvas uses renderer scale for pointer and IME and cancels drag when it changes", async t => {
   const h = await harness(t, "parashape", p => p.paragraph === 5);
   let scale = 2; h.renderer.viewScale = () => scale;

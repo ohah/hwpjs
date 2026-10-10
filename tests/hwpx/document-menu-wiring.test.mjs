@@ -7,6 +7,8 @@ const expected = new Map([
   ["menu-undo", 'document.querySelector("#undo")'],
   ["menu-redo", 'document.querySelector("#redo")'],
   ["menu-find", '{ click: () => findControls.focus() }'],
+  ["menu-copy", '{ get disabled() { return direct?.canTransferSelection() !== true; }, click: () => direct.transferSelection() }'],
+  ["menu-cut", '{ get disabled() { return direct?.canTransferSelection(true) !== true; }, click: () => direct.transferSelection({ cut: true }) }'],
   ["menu-properties", 'document.querySelector("#inspector-toggle")'],
   ["menu-bold", 'document.querySelector("#canvas-bold-toggle")'],
   ["menu-italic", 'document.querySelector("#canvas-italic-toggle")'],
@@ -16,7 +18,7 @@ const expected = new Map([
 function verifyWiring(html, app) {
   const block = app.match(/documentMenuControls = createDocumentMenuControls\(\[([\s\S]*?)\]\);/);
   assert(block, "missing menu authority");
-  const entries = [...block[1].matchAll(/\{ button: document\.querySelector\("#([^"]+)"\), target: ([^\n]+?) \},/g)];
+  const entries = [...block[1].matchAll(/\{ button: document\.querySelector\("#([^"]+)"\), target: ([^\n]+) \},/g)];
   assert.equal(entries.length, expected.size, "missing or extra menu binding");
   const seen = new Set();
   for (const [, id, target] of entries) {
