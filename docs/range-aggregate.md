@@ -2,6 +2,8 @@
 
 ## 게시 소스의 정규 감사 재현
 
+후속 HWPX 실제 Chromium 재검증은 새 세션에서 chart.hwpx를 단독 로드하고 enable 후13옵션/fieldset 활성 상태를 기다려 실행했습니다. DOM 입력값MIN 확인 → submit 완료 문구/11.2 결과 → 실제 undo SUM/redo MIN → MAX 반복 참조24.7까지 모두 조건 대기를 통과했습니다. 브라우저 오류는 없었고 agent-browser 스킬에 따라 소유 브라우저 close·loopback8085 서버exit130을 확인했습니다. 앞선 문서 전환 실패의 원인은 이 단독 성공만으로 확정하지 않습니다. 양쪽 단독 수식 폼 E2E는 확인됐지만 Canvas 포인터 선택·다운로드 재업로드·문서 전환 레이스/OS IME 전수는 여전히 별도입니다.
+
 같은5d600685 게시 WASM을 loopback8085로 제공해 agent-browser 스킬로 실제 Chromium의 chart.hwp 픽스쳐 선택/편집 enable·MIN11.2 submit·undo SUM·redo MIN·MAX24.7 submit을 DOM 조건으로 확인했습니다. 후속 chart.hwpx 전환에서는 MIN 제출 뒤25초 조건 대기가 실패했고, 진단 DOM은 입력SUM/결과67.5/상태 빈 문자열/fieldset 활성 상태였습니다. HWPX enable 응답과 초안 입력 타이밍 또는 제출 경로를 다시 분리해야 하며 실제 HWPX MIN 성공으로 계수하지 않습니다. 브라우저 오류는 없었고 소유 브라우저 close·임시 서버exit130을 확인했습니다. 기본 데모는 유지했습니다.
 
 Git 체크아웃 `/tmp/hwpjs-main-extrema.xOQ1cV`의 `97cb3335781510d34110dc265e0b062324789cdb`에서 `zig build hwp5-editor-audit hwpx-text-audit -Doptimize=ReleaseSafe`가 exit0으로 끝났습니다. 게시 소스 ReleaseSafe WASM SHA256은 `5d6006852fc4f8997f4efcf076a858e624cd0ba4e9087943284fda18e7c01bea`입니다. `/tmp/hwpjs-main-extrema-regular-audits-20261011.log`에는 HWP5292/292(3391ms), HWPX34/34(41379ms), 각각fail0/skip0이 기록돼 있습니다. 기존 로컬 e27f03ce 후보와 구분합니다. 정규 선택 밖의 전체 native/참조 문서/브라우저·원본 조판이나 기본 데모 승격 근거로 확대하지 않습니다.
