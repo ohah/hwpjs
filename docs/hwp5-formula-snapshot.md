@@ -1,5 +1,7 @@
 # HWP5 현재 수식 조회
 
+후속 Worker/패널 연결과 아직 미검증인 실제 GUI 범위는 [수식 패널 연결](hwp5-formula-worker.md)이 소유합니다. 아래 연결 미완료는 당시 단계 기록입니다.
+
 `editor.formulaSources(section)`은 선택적 `hwp5_edit_formula_sources` ABI로 소유 JSON snapshot을 읽습니다. 항목은 `{ source_node, paragraph, formula, last_result, derived }`입니다. paragraph는 현재0기반 문단이고 source_node는 현재 세션의 원본 CTRL_HEADER 번호입니다. formula는 `=`를 포함한 UTF8 문자열, last_result는 표시 문자열입니다.
 
 derived=false는 원본 command의 캐시를 그대로 관측한 값이며 새 계산 결과라고 추정하지 않습니다. 모델에 결과가 있으면 derived=true이고 현재 표현식/숫자 결과에서 format/grouping으로 표시 문자열을 파생합니다. 조회는 재계산·편집·이력 변경을 하지 않습니다. 원본/모델을 가리키는 borrowed slice는 API로 내보내지 않으며 getter·JSON 출력 정리가 소유 버퍼를 모두 해제합니다.

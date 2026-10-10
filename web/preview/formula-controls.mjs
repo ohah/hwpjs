@@ -1,8 +1,8 @@
 // The form edits a draft; native Worker responses own current definitions.
 export function createFormulaControls({ form, fields, choices, input, note, ready, request }) {
-  let rows = [], enabled = false;
+  let rows = [], enabled = false, available = false;
   const selected = () => rows.find(row => `${row.section}:${row.beginElement}` === choices.value);
-  const update = () => { form.hidden = rows.length === 0; fields.disabled = !enabled || !ready() || !selected(); };
+  const update = () => { form.hidden = rows.length === 0; fields.disabled = !available || !enabled || !ready() || !selected(); };
   const select = () => { input.value = selected()?.formula ?? ""; update(); };
   choices.addEventListener("change", select);
   form.addEventListener("submit", event => {
@@ -14,7 +14,7 @@ export function createFormulaControls({ form, fields, choices, input, note, read
     note.textContent = request({ kind: "formula-definition", origin: "formula", section: row.section, beginElement: row.beginElement, formula: input.value }) ? "수식 반영 중…" : "입력 반영이 끝난 뒤 적용하세요.";
     update();
   });
-  const reset = () => { rows = []; enabled = false; choices.replaceChildren(); input.value = ""; note.textContent = ""; update(); };
+  const reset = () => { rows = []; enabled = false; available = false; choices.replaceChildren(); input.value = ""; note.textContent = ""; update(); };
   return {
     reset, update,
     selectCanvas(row) {
@@ -26,6 +26,7 @@ export function createFormulaControls({ form, fields, choices, input, note, read
       if (message.kind === "load" || message.kind === "unlock") reset();
       if (message.kind === "enable" && !message.error) enabled = true;
       if (message.content) {
+        available = message.content.formulaDefinitionAvailable === true;
         const previous = choices.value;
         const previousFormula = selected()?.formula;
         const draft = input.value;

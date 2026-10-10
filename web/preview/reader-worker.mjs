@@ -13,6 +13,7 @@ import { attachHwp5Tables } from "./hwp5-table-content.mjs";
 import { attachHwp5ParagraphFormats } from "./hwp5-paragraph-formats.mjs";
 import { attachHwpxParagraphFormats } from "./hwpx-paragraph-formats.mjs";
 import { attachHwpxFormulas } from "./hwpx-formulas-content.mjs";
+import { attachHwp5Formulas } from "./hwp5-formulas-content.mjs";
 import { attachHwpxTables } from "./hwpx-table-content.mjs";
 import { attachDrawingTextBindings } from "./drawing-text-content.mjs";
 import { attachAutomaticNumbers, retainedAutomaticNumberPlainText } from "./automatic-number-content.mjs";
@@ -89,6 +90,7 @@ function hwp5Display() {
     if (pictures.state === "projected") prepared.pictures = pictures.pictures;
     else prepared.hwp5PictureGeometryError = pictures.error;
   }
+  attachHwp5Formulas(editor, prepared, ["hwp5_edit_formula_sources", "hwp5_edit_set_formula_definition"].every(name => WebAssembly.Module.exports(module).some(entry => entry.name === name && entry.kind === "function")));
   const roots = projectHwp5RootContent(prepared);
   if (roots.state === "projected") return roots.content;
   if (prepared.hwp5Drawings?.length && prepared.hwp5Drawings.every(row => row.source.kind_id === 0x24636f6e)) prepared.hwp5GroupPageModelError = roots.error;
@@ -110,6 +112,7 @@ function hwpxDisplay(projected) {
   }
   const content = projected ?? displayHwpxContent(preview);
   if (!content.window) attachHwpxFormulas(editor, content);
+  content.formulaDefinitionAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwpx_edit_set_formula_definition" && entry.kind === "function");
   content.paragraphAlignmentAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwpx_edit_set_paragraph_alignment" && entry.kind === "function");
   content.paragraphMarginsAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwpx_edit_set_paragraph_margins" && entry.kind === "function");
   content.paragraphSpacingAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwpx_edit_set_paragraph_spacing" && entry.kind === "function");
@@ -536,13 +539,20 @@ self.onmessage = async event => {
       applied = true;
       reply({ kind: "paragraph-format", content: format === "hwpx" ? hwpxDisplay() : hwp5Display() });
     } else if (message.kind === "formula-definition") {
-      if (format !== "hwpx") throw new Error("UnsupportedFormulaDefinitionEditing");
+      if (format !== "hwpx" && format !== "hwp5") throw new Error("UnsupportedFormulaDefinitionEditing");
       if (!editor || !historyEnabled) throw new Error("EditorNotOpen");
-      editor.setFormulaDefinition(message.section, message.beginElement, message.formula);
+      if (format === "hwp5") editor.setFormulaDefinition({ section: message.section, sourceNode: message.beginElement, formula: message.formula });
+      else editor.setFormulaDefinition(message.section, message.beginElement, message.formula);
       applied = true;
-      reader = await createHwpxReader(module);
-      preview = reader.readTextEvents(editor.save());
-      reply({ kind: "formula-definition", content: hwpxDisplay() });
+      if (format === "hwp5") {
+        reader = await createHwp5Reader(module);
+        preview = reader.readText(editor.save({ allowStaleLayout: true }).bytes);
+        reply({ kind: "formula-definition", content: hwp5Display() });
+      } else {
+        reader = await createHwpxReader(module);
+        preview = reader.readTextEvents(editor.save());
+        reply({ kind: "formula-definition", content: hwpxDisplay() });
+      }
     } else if (message.kind === "checkbox-state") {
       if (format !== "hwpx") throw new Error("UnsupportedCheckBoxStateEditing");
       if (!editor || !historyEnabled) throw new Error("EditorNotOpen");
