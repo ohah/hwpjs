@@ -1,6 +1,12 @@
 # 현재 데모 WASM
 
-## 현재 반영: 2026-10-11 수식 정의/조회
+## 현재 반영: 2026-10-11 구조 편집 뒤 수식 바인딩
+
+기본 및 외부 `/zig-out/bin/hwpjs.wasm`의 현재 SHA256은 `b8e5409af336c039c78b19e94b93eba880a2bd19996813feb321105e3b550899`입니다. 이전8bd5ab4e 백업은 `/var/folders/51/mr5cjhg13v324f1vgg9m237c0000gn/T/hwpjs-structure-formula-backup-7y4VuD/hwpjs.wasm`입니다. 원본/후보 해시·단일 링크 정규 파일·후보 compile 검사 후 exclusive 복사와 같은 폴더 rename으로 교체했습니다. 외부 HTTP200·동일 해시·compile 성공을 확인했고 서버/Tailscale 설정은 변경하지 않았습니다.
+
+교체 후 후보 환경 변수 없이 기본 경로의 공개 정의/Worker/구조/이력4파일20/20·skip0·exit0을 확인했습니다. 본문 분할과 병합 이후 수식 조회/정의 변경, 잘못된 참조 거부·no-op의 redo 보존, 이동한 Worker 선택/결과 입력 보호를 포함합니다. 반영 전 실제 Chromium 수식 폼 AVG 적용/undo/redo도 확인했으며 [브라우저 검증 경계](hwp5-formula-worker.md)를 따릅니다. 실제 Canvas 구조 편집 E2E와 전체 최신 corpus/native·원본 조판 완료를 뜻하지 않습니다. 브라우저 새로고침으로 Worker/WASM을 다시 로드해야 합니다.
+
+## 이전 반영: 2026-10-11 수식 정의/조회
 
 기본 및 외부 `/zig-out/bin/hwpjs.wasm`은 SHA256 `8bd5ab4eb684e9f7a71c820df1a17239035cfa6f927334b9ecacaf0361fca7ae`입니다. 원본7e70bbc7의 독립 백업은 `/tmp/hwpjs-formula-promotion-backup.RfqJJ9/hwpjs.wasm`입니다. 두 해시 guard·단일 링크 정규 파일 확인·exclusive 백업/stage 복사 및 같은 폴더 rename으로 교체했습니다. 외부 HTTP200·해시 일치·WebAssembly.compile 성공을 확인했습니다. 서버/Tailscale 설정은 바꾸지 않았습니다.
 
