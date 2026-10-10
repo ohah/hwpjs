@@ -1,4 +1,5 @@
 // Menu entries delegate to existing controls; they never own native commands.
+import { createMenuDisclosures } from "./document-menu-disclosures.mjs";
 export function createDocumentMenuControls(entries) {
   let closed = false;
   const refresh = () => {
@@ -24,6 +25,7 @@ export function createDocumentMenuControls(entries) {
     return { button, click };
   });
   const popups = [...new Set(entries.map(({ button }) => button.closest?.("details")).filter(Boolean))];
+  const disclosures = createMenuDisclosures(popups);
   const popupListeners = popups.filter(popup => typeof popup.addEventListener === "function").map(popup => {
     const keydown = event => {
       if (closed || event.defaultPrevented || event.isComposing || event.keyCode === 229 || event.key !== "Escape" || !popup.open) return;
@@ -39,6 +41,7 @@ export function createDocumentMenuControls(entries) {
   return { refresh, close() {
     if (closed) return;
     closed = true;
+    disclosures.close();
     for (const { button, click } of listeners) { button.removeEventListener("click", click); button.disabled = true; }
     for (const { popup, keydown } of popupListeners) {
       popup.removeEventListener("keydown", keydown);

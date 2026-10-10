@@ -1,5 +1,7 @@
 # Canvas 편집 UI 게시 검증
 
+후속 메뉴 hover/바깥 클릭과 상태 책임은 [메뉴 열림 상태](document-menu-disclosures.md)가 소유합니다.
+
 선택 가능한 문서 목록은 [전체 데모 픽스쳐](demo-fixture-inventory.md)의 명시적 inventory를 따릅니다.
 
 이 문서의 기본 미반영 기록은 당시 상태입니다. 후속 기본/외부 교체 상태와 복구 사본은 [현재 데모 WASM](current-preview-artifact.md)이 소유합니다.
