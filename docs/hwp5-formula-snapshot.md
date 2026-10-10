@@ -2,6 +2,8 @@
 
 ## 게시된 main의 독립 재현
 
+동일 caf15480 추출본에서 실제 `zig build hwp5-editor-audit -Doptimize=ReleaseSafe`도 exit0으로 종료됐습니다. `/tmp/hwpjs-main-editor-gate-20261011.log`의 정규 선택 결과는290/290·fail0/skip0/cancel0·3300ms입니다. 추출본 기본 zig-out WASM을 사용하며 공개 API/Canvas 이벤트 대역/실제 Worker·저장·구조/이력/숫자·번호 계약의 게시 감사 경로를 확인합니다. 이후 공통 수식 폼의 재진입/close 변경과 미등록 전체 테스트·native 전체·실제 브라우저 전체 지원까지 소급하지 않습니다.
+
 `caf15480813186a74ab0913e76e1dc0dd75840df`를 Git archive로 `/tmp/hwpjs-main-regression.nTseVX`에 추출해 미게시 로컬 파일 없이 ReleaseSafe 빌드(exit0)했습니다. 새 WASM `/tmp/hwpjs-main-regression.nTseVX/verified-out/bin/hwpjs.wasm` SHA256은 `727c38df5ef8d722e87abede19bc181a6b843641f64ac6a2cb59877bef9cd89c`입니다. 추출본 JS/테스트와 이 산출물로 정의/Worker/숫자 corpus/번호4파일14/14·skip0·exit0을 확인했습니다. 앞선 같은 추출본+데모 b8e5409a의14/14와 구분합니다. 이것은 게시 코어와 최근 회귀의 재현 근거이지 모든 정규 감사/전체 fixture 명령·레이아웃 완료 근거는 아닙니다. 외부 데모 artifact는 바꾸지 않았습니다.
 
 ## 구조 편집 뒤 필드 바인딩 수정 (2026-10-11)
