@@ -90,6 +90,12 @@ export fn hwpx_edit_set_checkbox_state(section: u32, node: u32, ptr: [*]const u8
     apply(.{ .kind = .check_box_state, .section = section, .paragraph = 0, .start = 0, .deleted = 0, .inserted = "", .form_node = node, .checkbox_state = state }) catch |err| return fail(err);
     return 1;
 }
+export fn hwpx_edit_set_created_cell_text(section: u32, low: u32, high: u32, row: u32, column: u32, ptr: [*]const u8, length: usize) u32 {
+    if (length > 64 * 1024 * 1024) return fail(error.LimitExceeded);
+    const identity = (@as(u64, high) << 32) | low;
+    apply(.{ .kind = .created_cell_text, .section = section, .paragraph = 0, .start = 0, .deleted = 0, .inserted = ptr[0..length], .created_table_identity = identity, .created_cell = .{ row, column } }) catch |err| return fail(err);
+    return 1;
+}
 export fn hwpx_edit_table_bindings(section: u32) u32 {
     hwpx_edit_output_free();
     const session = if (active) |*value| value else return fail(error.EditorNotOpen);
@@ -535,6 +541,9 @@ fn apply(command: histories.Command) !void {
     if (history) |*value| {
         _ = try value.apply(session, command);
     } else switch (command.kind) {
+        .created_cell_text => {
+            _ = try @import("../hwpx/created_cell_text_session.zig").set(session, command.section, command.created_table_identity, command.created_cell[0], command.created_cell[1], command.inserted);
+        },
         .created_table_stage => return error.UnsupportedCreatedTableCommand,
         .character_font_name => {
             const end = std.math.add(u32, command.start, command.deleted) catch return error.InvalidTextPosition;

@@ -1,3 +1,4 @@
+import { createdTableIdentity } from "./created-table-identity.mjs";
 export function decodeCreatedTables(bytes) {
   const fail = () => { throw new Error("InvalidCreatedTables"); };
   if (!(bytes instanceof Uint8Array)) return fail();
@@ -9,7 +10,8 @@ export function decodeCreatedTables(bytes) {
   const identities = new Set(), instances = new Set(), paragraphs = new Set();
   for (const row of rows) {
     if (!keys(row, ["identity", "instance_id", "host_paragraph", "anchor_unit", "rows", "columns", "width", "height", "resources", "cells"])) return fail();
-    if (typeof row.identity !== "string" || !/^[1-9][0-9]{0,19}$/.test(row.identity) || BigInt(row.identity) > 18446744073709551615n || identities.has(row.identity)) return fail();
+    try { createdTableIdentity(row.identity); } catch { return fail(); }
+    if (identities.has(row.identity)) return fail();
     identities.add(row.identity);
     if (![row.instance_id, row.host_paragraph, row.anchor_unit, row.rows, row.columns, row.width, row.height].every(uint) || !row.instance_id || !row.host_paragraph || !row.rows || !row.columns || row.width < row.columns || row.height < row.rows || row.height % row.rows || instances.has(row.instance_id)) return fail();
     instances.add(row.instance_id);

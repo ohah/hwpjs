@@ -1,5 +1,6 @@
 import { createMemory } from "./wasm-memory.mjs";
 import { decodeCreatedTables } from "./hwpx-created-tables.mjs";
+import { createdTableIdentity } from "./created-table-identity.mjs";
 import { decodeFormSourceNodes, decodeFormSourceAttributes, decodeFormSites, decodeFormSourceLayout } from "./hwpx-form-source.mjs";
 import { decodeCharacterEffects } from "./character-effects.mjs";
 import { characterEffectArgs, characterEffectMode } from "./character-effect-args.mjs";
@@ -637,6 +638,15 @@ export async function createHwpxEditor(source) {
         if (!wasm.hwpx_edit_created_tables(section)) throw memory.error();
         return decodeCreatedTables(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
       } finally { wasm.hwpx_edit_output_free(); }
+    },
+    setCreatedCellText(section, identity, row, column, text) {
+      ready(); [section, row, column].forEach(uint);
+      const id = createdTableIdentity(identity);
+      const bytes = encodedText(text);
+      if (typeof wasm.hwpx_edit_set_created_cell_text !== "function") throw new Error("HwpxCreatedCellTextAbiUnavailable");
+      memory.withBytes(bytes, (ptr, size) => {
+        if (!wasm.hwpx_edit_set_created_cell_text(section, Number(id & 0xffffffffn), Number(id >> 32n), row, column, ptr, size)) throw memory.error();
+      });
     },
     containerSourceSnapshot(section, containerNode) {
       ready(); uint(section); uint(containerNode);
