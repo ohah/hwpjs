@@ -4,6 +4,33 @@ import { readFileSync } from "node:fs";
 import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
 import { inspect, records, paragraphRecords, expectedSection, encodeRecord } from "./style-preservation/text-record-oracle.mjs";
 import { generalNumber } from "./style-preservation/general-number-oracle.mjs";
+import { verifyChartFormulas } from "./style-preservation/formula-record-oracle.mjs";
+
+test("all thirteen HWP5 formula fields save independent MIN MAX arithmetic and exact history", async () => {
+  const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/chart.hwp");
+  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
+  const probe = await createExperimentalHwp5Editor(wasm, input);
+  let rows;
+  try { rows = probe.formulaSources(0); } finally { probe.close(); }
+  assert.equal(rows.length, 13);
+  const before = inspect(input);
+  for (const row of rows) for (const operation of ["MIN", "MAX"]) {
+    const editor = await createExperimentalHwp5Editor(wasm, input);
+    try {
+      editor.enableHistory();
+      const formula = row.formula.replace(/^=(SUM|AVG)/, "=" + operation);
+      assert.notEqual(formula, row.formula);
+      editor.setFormulaDefinition({ section: 0, sourceNode: row.source_node, formula });
+      const saved = editor.save({ allowStaleLayout: true }).bytes, parsed = inspect(saved);
+      assert.equal(verifyChartFormulas(parsed.sections[0].bytes), 13);
+      for (const [path, bytes] of before.streams) if (path !== before.sections[0].path) assert.deepEqual(parsed.streams.get(path), bytes);
+      assert.equal(editor.undo(), true); assert.deepEqual(Buffer.from(editor.save().bytes), input);
+      assert.equal(editor.redo(), true); assert.deepEqual(editor.save({ allowStaleLayout: true }).bytes, saved);
+      const reopened = await createExperimentalHwp5Editor(wasm, saved);
+      try { assert.equal(reopened.formulaSources(0).find(value => value.paragraph === row.paragraph).formula, formula); } finally { reopened.close(); }
+    } finally { editor.close(); }
+  }
+});
 
 test("public HWP5 definitions preserve PRODUCT and repeated reference arithmetic through history and reopen", async () => {
   const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/chart.hwp");

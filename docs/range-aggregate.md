@@ -1,5 +1,7 @@
 # 숫자 범위 집계 SSOT
 
+전체 필드 범위 보강: 동일 e27f03ce 후보에서 실제 HWP5 chart13필드×MIN/MAX26거래를 독립 레코드 참조/산술/정확 command·label로 비교하고, 비대상 stream·undo/redo·재열기를 확인했습니다. 기존 숫자 corpus 포함2파일10/10·skip0·exit0입니다. HWPX는13필드×기존 반대 SUM/AVG 및MIN/MAX39거래를 Python 일반/최적화 전체 XML/ZIP·산술과 대조해2/2·skip0·exit0(21976ms)입니다. HWPX 첫 확장 검사 실패는 재열기 검사를 inner-loop 밖에 둔 테스트의 변수 범위 오류였으며 제품 저장 오류가 아니었습니다. 이 범위는 단일 chart의13필드이며 모든 원본/문법을 뜻하지 않습니다.
+
 후속 양쪽 Worker 검사도 e27f03ce 후보에서3파일4/4·skip0·exit0(37531ms)입니다. HWP5 MIN11.2/MAX24.7 제출과 undo AVG16.875·이전 저장 바이트 복원, HWPX MIN/MAX의 독립 XML/ZIP/산술·undo/redo와 잘못된 UNKNOWN 식 거부 후 redo 보존을 확인했습니다. HWPX의 이전 MAX 미지원 기대는 새 의미 지원에 맞게 UNKNOWN으로 바꿨습니다. 실제 Worker 모듈 검사이며 브라우저 수식 폼 E2E·기본 데모 승격은 아직 후속입니다.
 
 `src/model/range_aggregate.zig`가 SUM/AVG/PRODUCT/MIN/MAX 함수 종류·초깃값·한 값 집계·최종 평균을 소유합니다. HWP5/HWPX 편집 계산기는 같은 모듈을 사용합니다. 참조 선택·표/셀 소유권·현재 입력·한도·결과 문자열/원문 저장은 포맷별 기존 계층에 유지합니다. 관측용 별도 compensated range evaluator의 SUM/AVG 계약을 이 모듈로 무조건 교체하지 않습니다.

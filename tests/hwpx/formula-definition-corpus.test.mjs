@@ -49,22 +49,24 @@ test("all chart formula definitions edit with independent arithmetic XML and his
     const rows = editor.formulaSources(0);
     assert.equal(rows.length, 13);
     for (const [ordinal, row] of rows.entries()) {
-      editor.open(original); editor.enableHistory();
-      const formula = row.values.formula.replace(/^=SUM/, "=TEMP").replace(/^=AVG/, "=SUM").replace(/^=TEMP/, "=AVG");
-      editor.setFormulaDefinition(0, row.begin_element, formula);
-      const saved = Buffer.from(editor.save());
-      for (const flags of [[], ["-O"]]) {
-        const oracle = spawnSync("python3", [...flags, "tools/hwpx-formula-definition-oracle.py"], { input: JSON.stringify({ before: original.toString("base64"), after: saved.toString("base64"), ordinal, formula }), encoding: "utf8", timeout: 30000 });
-        assert.equal(oracle.status, 0, `${ordinal} ${flags.join(" ")}: ${oracle.error ?? oracle.stderr}`);
+      const opposite = row.values.formula.replace(/^=SUM/, "=TEMP").replace(/^=AVG/, "=SUM").replace(/^=TEMP/, "=AVG");
+      for (const formula of [opposite, row.values.formula.replace(/^=(SUM|AVG)/, "=MIN"), row.values.formula.replace(/^=(SUM|AVG)/, "=MAX")]) {
+        editor.open(original); editor.enableHistory();
+        editor.setFormulaDefinition(0, row.begin_element, formula);
+        const saved = Buffer.from(editor.save());
+        for (const flags of [[], ["-O"]]) {
+          const oracle = spawnSync("python3", [...flags, "tools/hwpx-formula-definition-oracle.py"], { input: JSON.stringify({ before: original.toString("base64"), after: saved.toString("base64"), ordinal, formula }), encoding: "utf8", timeout: 30000 });
+          assert.equal(oracle.status, 0, `${ordinal} ${flags.join(" ")}: ${oracle.error ?? oracle.stderr}`);
+        }
+        assert.equal(editor.undo(), true);
+        assert.deepEqual(Buffer.from(editor.save()), original);
+        assert.equal(editor.redo(), true);
+        assert.deepEqual(Buffer.from(editor.save()), saved);
+        editor.open(saved);
+        assert.equal(editor.formulaSources(0)[ordinal].values.formula, formula);
+        assert.deepEqual(Buffer.from(editor.save()), saved);
       }
-      assert.equal(editor.undo(), true);
-      assert.deepEqual(Buffer.from(editor.save()), original);
-      assert.equal(editor.redo(), true);
-      assert.deepEqual(Buffer.from(editor.save()), saved);
-      editor.open(saved);
-      assert.equal(editor.formulaSources(0)[ordinal].values.formula, formula);
-      assert.deepEqual(Buffer.from(editor.save()), saved);
     }
-    t.diagnostic(`13/13 actual formulas edited, independent numeric inputs and full XML/ZIP checked`);
+    t.diagnostic(`13/13 actual formulas edited with opposite aggregate MIN and MAX; independent numeric inputs and full XML/ZIP checked`);
   } finally { editor.close(); }
 });

@@ -33,7 +33,7 @@ function chartTables(bytes) {
       assert(cell && cell.paragraphs.includes(paragraph));
       const length = record.payload.readUInt16LE(9);
       const command = record.payload.subarray(11, 11 + length * 2).toString("utf16le");
-      const match = /^=(SUM|AVG)\(([A-Z?]+)([0-9?]+):([A-Z?]+)([0-9?]+)\)\?\?(%g|%\.2f),;;(.+)$/.exec(command);
+      const match = /^=(SUM|AVG|MIN|MAX)\(([A-Z?]+)([0-9?]+):([A-Z?]+)([0-9?]+)\)\?\?(%g|%\.2f),;;(.+)$/.exec(command);
       assert(match, command); table.formulas.push({ cell, match });
     }
   }
@@ -97,7 +97,7 @@ export function verifyChartFormulas(bytes) {
       assert.match(text, /^-?\d+(?:\.\d+)?$/); values.push(Number(text));
     }
     assert(values.length > 0);
-    const value = values.reduce((sum, v) => sum + v, 0) / (match[1] === "AVG" ? values.length : 1);
+    const value = match[1] === "MIN" ? Math.min(...values) : match[1] === "MAX" ? Math.max(...values) : values.reduce((sum, v) => sum + v, 0) / (match[1] === "AVG" ? values.length : 1);
     const rendered = match[6] === "%.2f" ? value.toFixed(2) : generalNumber(value);
     const cached = match[7].replaceAll(",", "");
     assert.equal(cached, rendered, "independent arithmetic differs from command");
