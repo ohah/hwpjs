@@ -1,5 +1,11 @@
 # 기본 WASM의 전체 HWP5 페이지 감사
 
+## 2026-10-11 최신 기본 산출물과 조회 실패 보호
+
+기본 b8e5409af336c039c78b19e94b93eba880a2bd19996813feb321105e3b550899에서 전체 CFB55파일 감사가 exit0으로 끝났습니다. `/tmp/hwpjs-structural-formula-page-audit-20261011.jsonl`의 결과는55열기·배포 enable2·43배치·0부분·12미지원·0읽기 실패·55원본 불변이며 미지원 사유는 이전과 같습니다. 고정8px 측정이지 한글 조판 동치가 아닙니다.
+
+번호 source의 성공 제어 목록이 비어 있으면 `pageControlSourceErrors`를 무시하던 조건을 합성 반례로 재현했습니다(예외 누락으로 신규 검사 실패). 이제 성공 제어 개수와 무관하게 조회 오류가 있으면 IncompleteHwp5PageNumberControls를 반환합니다. 오류 없는 빈 목록과 명시적 시작 번호·객체 앵커는 기존대로 유지합니다. 번호/구역 확장2파일6/6·skip0·exit0이며 이는 실파일12미지원 해결이나 번호 의미 확대가 아닙니다.
+
 ## TABLE 미해석 비트의 재현
 
 현재 기본 산출물에서 `table-flags-pair.test.mjs`와 `table-policy-root-cause.test.mjs`가6/6·skip0·exit0입니다. 게시 예정 helper6파일을 선택한 tree `e21d6a86d1a4d3c9da229ee3cab716db7644d71b`의 별도 export에서도 동일6/6을 확인했습니다. 로컬 미게시 helper에만 의존하는 결과로 남기지 않습니다.

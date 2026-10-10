@@ -23,7 +23,7 @@ export function hwp5EffectivePageNumberSource(content) {
   const start = section.page_start === 0 ? document.page_start : section.page_start;
   if (start < 1) throw new Error("MissingEffectivePageNumber");
   const controls = validateHwp5PageControlSources(content.pageControlSources ?? []);
-  if (controls.length && content.pageControlSourceErrors?.length) throw new Error("IncompleteHwp5PageNumberControls");
+  if (content.pageControlSourceErrors?.length) throw new Error("IncompleteHwp5PageNumberControls");
   for (const flow of content.currentParagraphFlows ?? []) {
     if (flow.host !== "body") continue;
     const paragraph = content.paragraphs.find(row => row.section === flow.section && row.paragraph === flow.paragraph);
