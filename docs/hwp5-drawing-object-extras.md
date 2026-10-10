@@ -26,3 +26,7 @@ RHWP revision `e8800c8def63449808a4092798442652ed460552`의 byte_writer.write_hw
 참조975경로 중 CFB513개를 실제 signature로 선택한 최종 관측은504완료·배포6제외·암호1제외·부분 관측2파일입니다. 전체3399개체 중3389개의 공통 꼬리를 관측했고1249개는2바이트0000, 비영 꼬리는 없었습니다. 미해석10개는20250130-hongbo_saved/honbo-save의각5개40바이트 control header입니다. 부분 관측을 성공으로 세지 않아 종료코드는1입니다. 기록은 `/tmp/hwpjs-object-extra-reference-final-survey-20261010.jsonl`이며 원본은 수정하지 않았습니다. 숫자는 이 inventory의 관측값이지 스펙 또는 보편적인 버전 cutoff가 아닙니다.
 
 40바이트 control의 필드 부재를 정상 optional로 읽는 변경을 시험했지만, 두 파일은 실제 editor에서 `RepairedSourceUnsupported`로 거부됐습니다. 이 자료만으로 정상 레이아웃을 새로 허용할 근거가 부족해 nullable 변경과 임시 테스트를 철회했습니다. 파서는 기존 최소길이/잘림 거부를 유지합니다. `/tmp/hwpjs-object-optional-20261010`은 철회된 실험 산출물로 제품 승격 대상이 아닙니다. 이것을 다른 후보의 통과 근거로 사용하지 않습니다.
+
+## 게시 의존성 검증
+
+별도 Git export 검사에서 조사기가 로컬 변경의 readStreams export에 기대어 remote-only helper와 연결되지 않는 것을 재현했습니다. 제품 parser가 아닌 도구 게시 누락입니다. `tools/cfb-stream-map.mjs`로 legacy CFB 스트림 관측 책임을 분리하고 source buffer를 복사하여 읽습니다. 조사기는 기존 helper의 게시된 inspect/records만 사용합니다. 실행 중인 전체 공개 회귀의 원문 oracle은 수정하지 않았습니다. 정상 module link와 실제 관측을 깨끗한 export에서 다시 확인하며, 기존 수정 전 검사 실패를 통과로 덮어쓰지 않습니다.

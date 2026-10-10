@@ -4,7 +4,8 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { pathToFileURL } from "node:url";
 import { resolve } from "node:path";
-import { inspect, readStreams, records } from "../tests/hwp5/style-preservation/text-record-oracle.mjs";
+import { inspect, records } from "../tests/hwp5/style-preservation/text-record-oracle.mjs";
+import { readLegacyCfbStreams } from "./cfb-stream-map.mjs";
 
 function signature(path) {
   const fd = openSync(path, "r"), bytes = Buffer.alloc(8);
@@ -27,7 +28,7 @@ export function commonObjectExtra(payload) {
 export function surveyDocument(input) {
   const hash = bytes => createHash("sha256").update(bytes).digest("hex");
   const inputSha256 = hash(input);
-  const header = readStreams(input).get("FileHeader");
+  const header = readLegacyCfbStreams(input).get("FileHeader");
   if (!header || header.length < 40 || header.subarray(0, 17).toString("ascii") !== "HWP Document File") throw new Error("NotHwp5Document");
   const version = [35, 34, 33, 32].map(offset => header[offset]);
   const flags = header.readUInt32LE(36);
