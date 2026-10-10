@@ -750,7 +750,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     pasteSelection({ clipboard = globalThis.navigator?.clipboard } = {}) {
       const saved = clipboardSelection(true);
       if (!saved || !clipboardCutAvailable()) return Promise.resolve(false);
-      return pasteClipboardText({ clipboard, isCurrent: () => clipboardCurrent(saved) && clipboardCutAvailable(), replace: replaceSelectedText, report });
+      return pasteClipboardText({ clipboard, isCurrent: () => clipboardCurrent(saved) && clipboardCutAvailable(), replace: replaceSelectedText, report, onDenied: () => input.focus({ preventScroll: true }) });
     },
     canTransferSelection(cut = false) {
       return typeof globalThis.navigator?.clipboard?.writeText === "function" && clipboardSelection() !== null && (!cut || clipboardCutAvailable());

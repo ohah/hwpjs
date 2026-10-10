@@ -1,5 +1,19 @@
 import test from "node:test";
 
+test("Canvas denied clipboard read restores input focus and preserves selection and source", async t => {
+  const h = await harness(t, "parashape", p => p.paragraph === 5);
+  const original = Buffer.from(h.native.save().bytes);
+  assert(h.controller.selectTextRange({ ...h.paragraph, startUnit: 1, endUnit: 2 }));
+  h.input.blur();
+  assert.notEqual(document.activeElement, h.input);
+  assert.equal(await h.controller.pasteSelection({ clipboard: { readText: async () => { throw new Error("denied"); } } }), false);
+  assert.equal(document.activeElement, h.input);
+  assert.equal(h.input.selectionStart, 1); assert.equal(h.input.selectionEnd, 2);
+  assert.match(h.note.textContent, /Ctrl\/Cmd\+V/);
+  assert.equal(h.requests.length, 0);
+  assert.deepEqual(Buffer.from(h.native.save().bytes), original);
+});
+
 test("Canvas menu clipboard paste at caret uses native history and keeps Unicode", async t => {
   const h = await harness(t, "parashape", p => p.paragraph === 5);
   h.native.enableHistory();

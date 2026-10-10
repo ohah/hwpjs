@@ -2,6 +2,16 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { transferSelectedText, pasteClipboardText } from "../../web/preview/clipboard-transfer.mjs";
 
+test("clipboard read denial offers keyboard fallback only for the still-current selection", async () => {
+  for (const stale of [false, true]) {
+    let reject, current = true, focused = 0, reported = 0;
+    const pending = pasteClipboardText({ clipboard: { readText: () => new Promise((_, fail) => { reject = fail; }) }, isCurrent: () => current, replace() { throw new Error("must not edit"); }, report() { reported++; }, onDenied() { focused++; } });
+    current = !stale; reject(new Error("denied"));
+    assert.equal(await pending, false);
+    assert.equal(focused, stale ? 0 : 1); assert.equal(reported, stale ? 0 : 1);
+  }
+});
+
 test("clipboard paste requires fresh selection after reading and preserves multiline Unicode", async () => {
   for (const stale of [false, true]) {
     let complete, current = true;

@@ -19,3 +19,13 @@ agent-browser 스킬로 외부 데모에서 parashape.hwp 업로드 → 편집 �
 menu 여러 줄 경로를 포함한 최종 `node --test tests/hwp5/canvas-editor.test.mjs` 전체 재실행은190/190·fail/skip0,2969.28975ms입니다. 이전189개 실행과 누적 합산하지 않습니다.
 
 실제 외부 데모의 parashape.hwpx에서 동일한 `문단 6` 선택으로 메뉴 붙여넣기를 클릭하자 browser read 권한 거부 안내와 원문 유지가 확인됐습니다. 자동화 eval 및 CLI clipboard write도 권한 거부였으므로 붙여넣기 성공으로 계수하지 않습니다. 이후 실제 메뉴 복사는 성공 상태를 표시했고, 잘라내기 빈 문단/undo 활성·메뉴 실행 취소로 원문 복원을 확인했습니다. 세션 `hwpjs-paste-menu`는 종료했습니다. HWPX 메뉴 복사/잘라내기 표본과 권한 거부 GUI 증거이며, 허용된 clipboard read 이후 메뉴 붙여넣기의 실제 GUI 성공·브라우저 저장본 독립 XML·HWPX 전수 clipboard는 아직 별도 게이트입니다.
+
+## 권한 거부 안내의 포커스 복원
+
+거부 안내만 표시하면 메뉴 버튼에 포커스가 남아 키보드 붙여넣기의 대상이 되지 않는 연결 누락을 수정했습니다. 현재 선택에 대한 read 거부일 때만 `onDenied`가 Canvas 입력 포커스를 복원합니다. 지연 중 선택이 바뀌거나 close/busy이면 안내와 포커스 복원을 모두 실행하지 않습니다. clipboard 권한이나 문서 바이트를 변경하지 않습니다.
+
+pure clipboard5/5·fail/skip0은 현재/지연된 거부의 콜백 실행 여부를 검사합니다. 실제 HWP5 native를 연결한 Canvas 테스트는 선택1:2·원문 바이트·요청0·포커스 복원을 검사합니다. 최종 Canvas 전체191/191·fail/skip0,2588.959833ms입니다.
+
+agent-browser의 별도 `hwpjs-clipboard-granted` 테스트 브라우저에서 데모 origin에만 CDP 권한 허용을 시도했으나, 성공 응답과 달리 실제 Permissions API의 clipboard-read는 계속 denied였습니다. 원래 프로필/다른 브라우저를 변경하지 않았고 이 세션은 종료했습니다. 서버 응답에는 Permissions-Policy가 없었지만, 이것만으로 권한 거부의 정확한 원인을 단정하지 않습니다.
+
+후속 `hwpjs-paste-fallback`에서 실제 parashape.hwpx의 문단6 메뉴 복사 후 문단5 선택·메뉴 붙여넣기 거부를 검사했습니다. activeElement=`canvas-input`, 텍스트=`문단 5`, 안내가 유지되어 수정한 포커스 경로를 확인했습니다. 자동화 Control+V·Meta+V 이후에도 텍스트가 그대로였으므로 fallback 붙여넣기 성공으로 계수하지 않습니다. 초기 disabled 파일 input에 대한 자동화 upload는 로드 이벤트가 처리되지 않아 시작을 기다린 뒤 다시 업로드했고, 도구 내부 스크롤로 가려진 편집 시작 버튼은 scrollintoview 뒤 클릭했습니다. 세션은 종료했습니다. 실제 브라우저 paste 성공 게이트는 계속 남습니다.
