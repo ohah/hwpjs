@@ -1,5 +1,11 @@
 export function createFindControls({ form, input, note, search, select, replaceButton = null, replacement = null, replace = null, shortcuts = null, scope = null }) {
   let previousQuery = null, previousMatch = null;
+  let closed = false;
+  const focus = () => {
+    if (closed) return false;
+    input.focus(); input.select();
+    return true;
+  };
   const submit = event => {
     event.preventDefault();
     const query = input.value;
@@ -26,8 +32,8 @@ export function createFindControls({ form, input, note, search, select, replaceB
   if (replaceButton && replacement && typeof replace === "function") replaceButton.addEventListener("click", replaceCurrent);
   const shortcut = event => {
     if (event.defaultPrevented || event.isComposing || event.keyCode === 229 || event.repeat || event.altKey || event.shiftKey || !(event.ctrlKey || event.metaKey) || event.key?.toLowerCase() !== "f" || !scope?.contains(event.target)) return;
-    event.preventDefault(); input.focus(); input.select();
+    event.preventDefault(); focus();
   };
   if (shortcuts && scope) shortcuts.addEventListener("keydown", shortcut);
-  return { reset() { previousQuery = null; previousMatch = null; note.textContent = ""; }, close() { form.removeEventListener("submit", submit); replaceButton?.removeEventListener("click", replaceCurrent); shortcuts?.removeEventListener("keydown", shortcut); } };
+  return { focus, reset() { previousQuery = null; previousMatch = null; note.textContent = ""; }, close() { if (closed) return; closed = true; form.removeEventListener("submit", submit); replaceButton?.removeEventListener("click", replaceCurrent); shortcuts?.removeEventListener("keydown", shortcut); } };
 }
