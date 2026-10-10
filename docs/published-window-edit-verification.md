@@ -1,5 +1,11 @@
 # 게시 WASM의 구간 편집 검증
 
+## 후속 도형 조회 조사
+
+2026-10-11 기본c196919b 산출물로 행정업무 편람 section11의 rect node74/100을 직접 조회했습니다. `rectangleRenderingSource`는43.56/39.95ms, `drawingTextSnapshot`은40.12/39.55ms였으며 두 노드 모두 현재 host paragraph8589·anchor0입니다. 사각형 소유 조회의 anchor_node는42입니다. 단일 실행/동시 부하 측정이며 전체 Worker 시간으로 확대하지 않습니다.
+
+현재 `reader-worker`는 drawing text snapshot을 먼저 부착하고 page settings 단계에서 같은 사각형의 rendering source를 다시 조회합니다. 양쪽 native 경로는 `rectangle_display_host.read`를 호출하며 이 함수는 매번 `display_current_paragraphs.read`로 구역의 현재 문단 목록을 구성합니다. 후속 일괄 조회에서 요청 내 문단 view 공유를 검토할 근거이며, 아직 구현·절감 실측은 없습니다. 텍스트 없는 사각형·그룹 소유·anchor_node와 오류 진단을 보존해야 하므로 텍스트 snapshot으로 사각형 조회를 단순 대체하지 않습니다. 장기 revision 캐시의 정합성을 검증한 결과도 아닙니다.
+
 2026-10-11 고정 WASM SHA256 `fe97aa698bcc1cdfef9bc75f3fcafc4941a3c0069724bc700f0a62923c48fc20`로 다음3파일을 실제 실행했습니다:
 
 ```sh
