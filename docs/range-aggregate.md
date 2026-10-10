@@ -2,6 +2,8 @@
 
 ## AVERAGE 별칭
 
+게시5d58cef95ff1a7582d2a273633358acbce5acb2a의 깨끗한 Git 체크아웃 `/tmp/hwpjs-main-average.XqeZp7`에서도 ReleaseSafe 빌드와 양쪽 정규 감사가 exit0입니다. WASM SHA256 `e8bea3a5ee0c5b23d2e0c5f1b862599ac25302175cd14b780eca756c888623de`, 로그 `/tmp/hwpjs-main-average-regular-audits-20261011.log`의 HWP5293/293(5183ms)/HWPX34/34(62007ms), 각각fail0/skip0입니다. 이후 공유 문법 파일 위치 변경이나 전체 native/브라우저 전수 검증에 소급하지 않습니다. 기본 데모는 이 별칭 산출물로 교체하지 않았습니다.
+
 동일5da4790c 후보의 양쪽 Worker·HWPX 정의 corpus3파일4/4·skip0·exit0(47000ms)와 추가 HWPX Worker 식 이름 응답 검사1/1·exit0(45623ms)도 통과했습니다. 저장본 원래 식이 AVG인 상태에서 AVERAGE가 같은 숫자를 반환하는 경우, 독립 정의 검사기는 원문과 기대값에서 실제 필요한 텍스트 변경 수를 계산합니다. 고정4변경을 요구하지 않되 결과 표시 문자열은 변경 유무와 무관하게 캐시와 일치해야 합니다. Worker 응답의 formula가 AVERAGE를 보존하고 undo/redo·거부 후 redo가 유지됨을 확인했습니다. 기본 데모는 여전히 별칭 이전5d600685이며 실제 브라우저 별칭 검증은 아직 별도입니다.
 
 공유 편집 문법의 대문자 AVERAGE를 AVG와 같은 평균 함수로 연결했습니다. 저장 식을 AVG로 정규화하지 않으며 표현식의 원래 이름도 편집 모델이 소유합니다. HWP5에서 AVG→AVERAGE는 숫자 결과16.875가 같아도 별도 정의 변경이며 undo/redo는 각 저장 바이트를 복원합니다. 후속 숫자12.2 입력 뒤에도 이름AVERAGE/결과17.125를 유지합니다. RHWP의 AVERAGE/AVG 별칭 처리와 비교했고 외부 코드를 복사하지 않았습니다. 별도 관측용 계산 문법의 소문자/공백 정책을 편집 문법에 자동 확장하지 않습니다.
