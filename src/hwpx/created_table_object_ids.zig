@@ -7,12 +7,19 @@ pub fn validateCurrent(session: *const @import("editor_session.zig").Session, id
         if (entry.table.identity == identity or entry.table.instance_id == instance) return error.InvalidCreatedTableIdentity;
     };
 }
-/// Check source table instances, including inactive and nested tables.
-/// Other object namespaces require their own explicit policy.
+/// Known shared AbstractShapeObjectType IDs, not distinct drawing instid.
+const shape_names = [_][]const u8{ "tbl", "pic", "rect", "line", "ellipse", "arc", "polygon", "curve", "connectLine", "container", "ole", "equation", "textart", "chart", "video" };
+fn ownsShapeId(element: @import("xml_part_tree.zig").Element) bool {
+    for (shape_names) |name| {
+        if (element.is(@import("document_xml.zig").paragraph_uri, name)) return true;
+    }
+    return false;
+}
+/// Check immutable shared shape IDs, including inactive and nested shapes.
 pub fn validateSource(a: std.mem.Allocator, trees: []const Tree, instance: u32) !void {
     if (instance == 0) return error.InvalidCreatedTableIdentity;
     for (trees) |*tree| for (tree.elements, 0..) |element, index| {
-        if (!element.is(@import("document_xml.zig").paragraph_uri, "tbl")) continue;
+        if (!ownsShapeId(element)) continue;
         const raw = (try tree.attributeValue(a, index, "", "id")) orelse continue;
         const text = try raw.toUtf8(a, 4096);
         defer a.free(text);
@@ -23,6 +30,16 @@ pub fn validateSource(a: std.mem.Allocator, trees: []const Tree, instance: u32) 
         };
         if (id == instance) return error.InvalidCreatedTableIdentity;
     };
+}
+
+test "created table shared shape IDs reject picture and rectangle but not drawing instid" {
+    const a = std.testing.allocator;
+    var tree = try @import("xml_part_tree.zig").parse(a, "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:pic id='7' instid='33'/><p:rect id='+08'/><p:p id='9'/></s:sec>", .section, 0, 0, .{});
+    defer tree.deinit(a);
+    try std.testing.expectError(error.InvalidCreatedTableIdentity, validateSource(a, &.{tree}, 7));
+    try std.testing.expectError(error.InvalidCreatedTableIdentity, validateSource(a, &.{tree}, 8));
+    try validateSource(a, &.{tree}, 9);
+    try validateSource(a, &.{tree}, 33);
 }
 
 test "created table source instance IDs preserve wide originals and reject equivalent numbers" {
