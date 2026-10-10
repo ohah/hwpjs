@@ -1,5 +1,7 @@
 # 신규 표 host의 현재 문단 참조
 
+텍스트 변경의 후속 순수 좌표 계획은 [anchor 이동 계획](hwpx-created-table-anchor-splice.md)을 따릅니다.
+
 후속 내부 소유·체크포인트·저장 거부 단계는 [신규 표 Session staging](hwpx-created-table-session.md)을 따릅니다. public 삽입/저장·host rebase 완료와는 구분합니다.
 
 2026-10-11 최종 root 집중 ReleaseSafe4/4·exit0(root 진입+새3테스트), fmt/diff·별도 prefix `/tmp/hwpjs-current-paragraph-reference-20261011` ReleaseSafe build exit0입니다. 아직 깨끗한 게시 전체 native gate가 아니며 기본 WASM은 교체하지 않았습니다.

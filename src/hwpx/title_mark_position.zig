@@ -34,13 +34,11 @@ pub fn side(a: std.mem.Allocator, input: []const Position, at: usize, end: usize
     return result.toOwnedSlice(a);
 }
 pub fn splice(a: std.mem.Allocator, input: []const Position, at: usize, deleted: usize, inserted: usize) ![]Position {
-    const end = std.math.add(usize, at, deleted) catch return error.LimitExceeded;
+    const change = try @import("../model/point_splice.zig").Change.init(at, deleted, inserted);
     const result = try a.dupe(Position, input);
     errdefer a.free(result);
     for (result) |*position| {
-        if (position.unit < at or (position.unit == at and position.affinity == .left)) continue;
-        const base = if (position.unit <= end) at else position.unit - deleted;
-        position.unit = std.math.add(usize, base, inserted) catch return error.LimitExceeded;
+        position.unit = try change.map(position.unit, if (position.affinity == .left) .left else .right);
     }
     return result;
 }
