@@ -2,6 +2,8 @@
 
 ## 포맷 독립 문법·참조 선택
 
+게시c1c98710 체크아웃 자체의 서버/UI/WASM으로 실제 Chromium chart.hwpx→chart.hwp 순서의 AVERAGE 폼 제출16.875·각 undo SUM/redo AVERAGE를 확인했습니다.13옵션과 enable 완료 후fieldset 활성 조건을 기다렸고, Worker/모델을 eval로 직접 수정하지 않았습니다. 오류는 없었으며 agent-browser 스킬대로 소유 브라우저 close·서버exit130을 확인했습니다. 앞선 빠른 전환 실패의 일반 원인이 해결됐다고 추정하거나 Canvas 포인터/다운로드/IME 전수 성공으로 확대하지 않습니다. 기본 반영/백업은 [현재 데모 산출물](current-preview-artifact.md)이 소유합니다.
+
 게시c1c987101ccb8d810e574074a07a1616caaacf28의 깨끗한 체크아웃 `/tmp/hwpjs-main-model-syntax.Ql7dDn`에서도 ReleaseSafe 빌드와 정규 HWP5293/293(3232ms)/HWPX34/34(46667ms)·fail0/skip0·exit0을 확인했습니다. WASM SHA256은 `fe97aa698bcc1cdfef9bc75f3fcafc4941a3c0069724bc700f0a62923c48fc20`, 로그는 `/tmp/hwpjs-main-model-syntax-regular-audits-20261011.log`입니다. 미게시 로컬 파일을 섞지 않은 파일 이동의 재현 근거이며 최신 전체 native/대형 참조/브라우저 전수 완료나 기본 데모 승격으로 확대하지 않습니다.
 
 호환 계약의 별도 native 회귀는 기존 HWP5 진입점의 Function/Axis/Address/Cell/Rectangle/Range 타입, resolveAddress 함수와 Iterator가 모델 구현과 정확히 같은 identity인지 검사합니다. 단순 결과값 일치가 아니라 복제 타입/함수 생성을 감지하는 계약이며 native root 포함2/2·exit0·포맷 검사가 통과했습니다. 테스트는 `src/model/formula_compatibility_tests.zig`에 분리해 root에 등록했습니다.

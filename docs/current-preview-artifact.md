@@ -1,6 +1,12 @@
 # 현재 데모 WASM
 
-## 현재 반영: 2026-10-11 공통 MIN/MAX 집계
+## 현재 반영: 2026-10-11 공통 문법·AVERAGE
+
+기본 및 외부 `/zig-out/bin/hwpjs.wasm`의 현재 SHA256은 `fe97aa698bcc1cdfef9bc75f3fcafc4941a3c0069724bc700f0a62923c48fc20`입니다. 게시c1c98710의 깨끗한 체크아웃/ReleaseSafe 산출물이고 정규293+34회귀·양쪽 실제 Chromium AVERAGE 폼/이력 근거는 [공통 수식 계약](range-aggregate.md)을 따릅니다. 이전5d600685 백업은 `/var/folders/51/mr5cjhg13v324f1vgg9m237c0000gn/T/hwpjs-model-syntax-backup-uofcpe/hwpjs.wasm`입니다. 양쪽 해시·단일 링크 정규 파일·compile 검사 후 exclusive 백업/stage 복사와 같은 폴더 rename으로 교체했습니다. 외부HTTP200/동일 해시/compile 성공이며 서버/Tailscale 설정은 유지했습니다.
+
+교체 후 후보 환경 변수 없는 기본 경로의 양쪽 정의 corpus2파일10/10·skip0·exit0(18974ms)을 확인했습니다. AVERAGE 이름 보존·MIN/MAX13필드·동일 숫자/다른 식·독립 산술/저장/이력/재열기를 포함하지만 전체 native/브라우저/원본 조판 완료는 아닙니다. 기존 브라우저는 새로고침으로 WASM/Worker를 다시 로드해야 합니다. 대형 참조 감사는 이전 고정5d600685 경로로 계속 실행 중이며 이번 기본 교체에 섞지 않습니다.
+
+## 이전 반영: 2026-10-11 공통 MIN/MAX 집계
 
 기본 및 외부 `/zig-out/bin/hwpjs.wasm`의 현재 SHA256은 `5d6006852fc4f8997f4efcf076a858e624cd0ba4e9087943284fda18e7c01bea`입니다. 게시97cb3335 소스의 별도 ReleaseSafe 산출물이며 정규 HWP5292/292·HWPX34/34와 양쪽 실제 Chromium MIN/MAX 폼 검증은 [공통 집계 계약](range-aggregate.md)이 소유합니다. 이전b8e5409a 백업은 `/var/folders/51/mr5cjhg13v324f1vgg9m237c0000gn/T/hwpjs-extrema-backup-t2FYZ1/hwpjs.wasm`입니다. 원본/후보 해시·정규 단일 링크·compile 검사, exclusive 백업/stage 복사와 같은 폴더 rename으로 교체했습니다. 외부 HTTP200·동일 해시·compile 성공이며 서버/Tailscale 설정은 변경하지 않았습니다.
 
