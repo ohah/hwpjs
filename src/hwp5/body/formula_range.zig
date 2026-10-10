@@ -1,7 +1,7 @@
-//! Observed SUM/AVG/PRODUCT ranges and explicit cell references.
+//! Numeric SUM/AVG/PRODUCT/MIN/MAX ranges and explicit cell references.
 //! Not a general formula evaluator.
 const std = @import("std");
-pub const Function = enum { sum, average, product };
+pub const Function = enum { sum, average, product, minimum, maximum };
 pub const Axis = union(enum) { current, absolute: u32 };
 pub const Address = struct { column: Axis, row: Axis };
 pub const Cell = struct { column: u32, row: u32 };
@@ -17,7 +17,7 @@ pub const Range = struct {
     pub fn parse(expression: []const u8) !Range {
         if (expression.len % 2 != 0) return error.UnexpectedEnd;
         var parser: Parser = .{ .bytes = expression };
-        const function: Function = if (parser.consume("SUM(")) .sum else if (parser.consume("AVG(")) .average else if (parser.consume("PRODUCT(")) .product else return error.UnsupportedFormulaExpression;
+        const function: Function = if (parser.consume("SUM(")) .sum else if (parser.consume("AVG(")) .average else if (parser.consume("PRODUCT(")) .product else if (parser.consume("MIN(")) .minimum else if (parser.consume("MAX(")) .maximum else return error.UnsupportedFormulaExpression;
         if (parser.consume("ABOVE)")) {
             if (parser.offset != expression.len) return error.UnsupportedFormulaExpression;
             return .{ .function = function, .first = .{ .column = .current, .row = .{ .absolute = 0 } }, .last = .{ .column = .current, .row = .current }, .above = true };
@@ -133,6 +133,18 @@ test "formula ABOVE excludes result cell and product keeps exact rectangular ref
     }
 }
 
+test "formula extrema preserve range explicit repetition and ABOVE bounds" {
+    const minimum = try Range.parse(&wire("MIN(A1:B2)"));
+    try std.testing.expectEqual(Function.minimum, minimum.function);
+    try std.testing.expectEqualDeep(Rectangle{ .first = .{ .column = 0, .row = 0 }, .last = .{ .column = 1, .row = 1 } }, try minimum.resolve(.{ .column = 2, .row = 2 }, 3, 3));
+    const maximum = try Range.parse(&wire("MAX(A1,A1,B2)"));
+    try std.testing.expectEqual(Function.maximum, maximum.function);
+    try std.testing.expectEqual(@as(usize, 3), maximum.address_count);
+    const above = try Range.parse(&wire("MAX(ABOVE)"));
+    try std.testing.expectError(error.EmptyFormulaRange, above.resolve(.{ .column = 0, .row = 0 }, 1, 1));
+    try std.testing.expectError(error.InvalidFormulaReference, Range.parse(&wire("MIN()")));
+}
+
 test "formula range resolves current axes and multi-letter columns without evaluation" {
     const horizontal = try Range.parse(&wire("SUM(B?:E?)"));
     const rect = try horizontal.resolve(.{ .column = 5, .row = 1 }, 6, 5);
@@ -153,7 +165,7 @@ test "formula range refuses unknown syntax zero addresses overflow and trailing 
     inline for (.{ "SUM(A0:B1)", "SUM(1:B1)", "SUM(A:B1)", "SUM(A42949672960:B1)", "SUM(ZZZZZZZZZZ1:A1)" }) |s| {
         try std.testing.expectError(error.InvalidFormulaReference, Range.parse(&wire(s)));
     }
-    inline for (.{ "MAX(A1:B2)", "SUM(A1)+1", "SUM(A1:B2)+1", "SUM(A1,B2:C3)" }) |s| {
+    inline for (.{ "UNKNOWN(A1:B2)", "SUM(A1)+1", "SUM(A1:B2)+1", "SUM(A1,B2:C3)" }) |s| {
         try std.testing.expectError(error.UnsupportedFormulaExpression, Range.parse(&wire(s)));
     }
     try std.testing.expectError(error.UnexpectedEnd, Range.parse(&.{'S'}));

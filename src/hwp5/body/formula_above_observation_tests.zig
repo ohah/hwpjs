@@ -24,6 +24,7 @@ test "original numeric ABOVE SUM AVG PRODUCT reproduce independent cached values
             .average => 2,
             .product => 14,
             .sum => 5,
+            .minimum, .maximum => return error.TestUnexpectedResult,
         };
         try std.testing.expectEqual(expected, result.value);
         try std.testing.expectEqual(@as(usize, if (range.address_count != 0) 3 else 2), result.cells);

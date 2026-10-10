@@ -1,5 +1,13 @@
 # HWP5 현재 수식 조회
 
+## MIN/MAX 숫자 셀 계산 확장
+
+HWP5 Range와 기존 숫자 셀 평가기에 MIN/MAX를 추가했습니다. 범위·반복 주소·단일 주소·ABOVE 선택과 셀/검사 예산·현재 모델 입력 검증은 기존 경로를 공유합니다. 최솟값/최댓값의 초기값은 각각 양/음의 무한대이며 각 실제 입력은 finite여야 합니다. 비어 있는 ABOVE·자기/결과 셀·비숫자 입력·역방향/범위 초과·미지원 문법을 임의로0이나 캐시로 대체하지 않습니다. RHWP의 MIN/MAX 처리 존재를 참조했지만 외부 코드를 복사하지 않았습니다. HWPX에는 이번 변경을 적용하지 않았습니다.
+
+ReleaseSafe 후보 `/tmp/hwpjs-minmax-20261011/bin/hwpjs.wasm` SHA256 `a925954a703c213801afa4b5c64dad6d3f2c8e982c62a13eab0ac83637b5e4e4` 빌드 exit0·포맷/diff 검사가 통과했습니다. 실제 chart MIN 범위/MAX 반복 참조의 독립 산술·저장 command/비대상 stream·정확 이력·재열기와 기존 공개/Worker/숫자/구조4파일28/28·skip0·exit0입니다. 후속 전체 음수 MAX=-11.2·MIN=-24.7·입력-100 변경 후MIN=-100·이력/재열기를 포함한 정의 파일6/6도 통과했습니다. native 범위4/4와 ABOVE 관측/구조 범위 전체 할당 실패4/4·exit0입니다. 첫 구조 회귀는 반례 함수 이름 변경으로 원문과 길이가 달라진 테스트 오류였으며 같은3글자 FOO로 바로잡았습니다.
+
+기본 데모는 아직 이 후보로 교체하지 않았습니다. MIN/MAX가 원래 들어 있는 원본 corpus나 모든 숫자/Unicode/함수·일반 의존 그래프·최신 전체 native/브라우저 조판 완료의 증거는 아닙니다. 아래 과거 MIN 미지원 기록은 이 확장 이전 상태입니다.
+
 ## 게시된 main의 독립 재현
 
 동일 caf15480 추출본에서 실제 `zig build hwp5-editor-audit -Doptimize=ReleaseSafe`도 exit0으로 종료됐습니다. `/tmp/hwpjs-main-editor-gate-20261011.log`의 정규 선택 결과는290/290·fail0/skip0/cancel0·3300ms입니다. 추출본 기본 zig-out WASM을 사용하며 공개 API/Canvas 이벤트 대역/실제 Worker·저장·구조/이력/숫자·번호 계약의 게시 감사 경로를 확인합니다. 이후 공통 수식 폼의 재진입/close 변경과 미등록 전체 테스트·native 전체·실제 브라우저 전체 지원까지 소급하지 않습니다.

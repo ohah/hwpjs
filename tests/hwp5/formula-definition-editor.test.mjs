@@ -17,6 +17,8 @@ test("public HWP5 definitions preserve PRODUCT and repeated reference arithmetic
     ["=SUM(B?,C?,B?)", b + c + b],
     ["=AVG(B?,C?,B?)", (b + c + b) / 3],
     ["=SUM(B?)", b],
+    ["=MIN(B?:E?)", Math.min(...values)],
+    ["=MAX(B?,C?,B?)", Math.max(b, c, b)],
     ["=SUM(" + Array(32).fill("B?").join(",") + ")", Array(32).fill(b).reduce((total, n) => total + n, 0)],
   ]) {
     const editor = await createExperimentalHwp5Editor(readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"), input);
@@ -70,6 +72,29 @@ function expectedDefinition(input) {
   return { before, expected };
 }
 
+test("HWP5 extrema use current negative inputs and recalculate after a later numeric edit", async () => {
+  const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/chart.hwp");
+  const editor = await createExperimentalHwp5Editor(readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"), input);
+  try {
+    editor.enableHistory();
+    for (const [paragraph, value] of [[19, "-11.2"], [20, "-24.7"], [21, "-16.3"], [22, "-15.3"]]) {
+      editor.splice({ section: 0, paragraph, startUnit: 0, endUnit: editor.text(0, paragraph).length - 1, text: value });
+    }
+    editor.setFormulaDefinition({ section: 0, sourceNode: 118, formula: "=MAX(B?:E?)" });
+    assert.equal(editor.formulaSources(0)[0].last_result, "-11.2");
+    editor.setFormulaDefinition({ section: 0, sourceNode: 118, formula: "=MIN(B?:E?)" });
+    assert.equal(editor.formulaSources(0)[0].last_result, "-24.7");
+    const before = editor.save({ allowStaleLayout: true }).bytes;
+    editor.splice({ section: 0, paragraph: 19, startUnit: 0, endUnit: 5, text: "-100" });
+    assert.equal(editor.formulaSources(0)[0].last_result, "-100");
+    const saved = editor.save({ allowStaleLayout: true }).bytes;
+    assert.equal(editor.undo(), true); assert.deepEqual(editor.save({ allowStaleLayout: true }).bytes, before);
+    assert.equal(editor.redo(), true); assert.deepEqual(editor.save({ allowStaleLayout: true }).bytes, saved);
+    const reopened = await createExperimentalHwp5Editor(readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"), saved);
+    try { assert.equal(reopened.formulaSources(0)[0].last_result, "-100"); } finally { reopened.close(); }
+  } finally { editor.close(); }
+});
+
 test("HWP5 definition public API matches complete independent section and untouched streams through history and reopen", async () => {
   const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
   const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/chart.hwp"), immutable = Buffer.from(input);
@@ -117,7 +142,7 @@ test("HWP5 definition public API matches complete independent section and untouc
       [{ formula: "=SUM(B?,)" }, "InvalidFormulaReference"],
       [{ formula: "=SUM(" + Array(33).fill("B?").join(",") + ")" }, "LimitExceeded"],
       [{ formula: "=SUM(E?:B?)" }, "UnsupportedReversedFormulaRange"],
-      [{ formula: "=MIN(B?:E?)" }, "UnsupportedFormulaExpression"],
+      [{ formula: "=UNKNOWN(B?:E?)" }, "UnsupportedFormulaExpression"],
       [{ formula: "=" + "X".repeat(4096) }, "LimitExceeded"],
       [{ formula: "=" + "X".repeat(2100) }, "LimitExceeded"],
       [{ sourceNode: -1 }, "Invalid sourceNode"], [{ sourceNode: NaN }, "Invalid sourceNode"],

@@ -1,4 +1,4 @@
-//! Scalar evaluation of observed SUM/AVG/PRODUCT over numeric source cells.
+//! Scalar evaluation of SUM/AVG/PRODUCT/MIN/MAX over numeric source cells.
 //! Does not use formula display caches as input or modify any document value.
 const std = @import("std");
 const Tree = @import("tree.zig").Tree;
@@ -28,7 +28,12 @@ pub fn evaluateWith(tree: Tree, groups: Groups, owner: Owner, range: ranges.Rang
     const count = selection.count;
     if (count > limits.cells) return error.LimitExceeded;
     var remaining = limits.inspections;
-    var sum: f64 = if (range.function == .product) 1 else 0;
+    var sum: f64 = switch (range.function) {
+        .product => 1,
+        .minimum => std.math.inf(f64),
+        .maximum => -std.math.inf(f64),
+        else => 0,
+    };
     while (selection.next()) |selected| {
         const row = selected.row;
         const column = selected.column;
@@ -47,7 +52,13 @@ pub fn evaluateWith(tree: Tree, groups: Groups, owner: Owner, range: ranges.Rang
         }
         const group = groups.items[found orelse return error.MissingFormulaCell];
         const value = try reader.read(tree, group);
-        if (range.function == .product) sum *= value else sum += value;
+        if (!std.math.isFinite(value)) return error.FormulaNumericOverflow;
+        sum = switch (range.function) {
+            .product => sum * value,
+            .minimum => @min(sum, value),
+            .maximum => @max(sum, value),
+            else => sum + value,
+        };
         if (!std.math.isFinite(sum)) return error.FormulaNumericOverflow;
     }
     return .{ .value = if (range.function == .average) sum / @as(f64, @floatFromInt(count)) else sum, .cells = count };

@@ -62,7 +62,7 @@ test "formula structure scope protects dependencies and validates generated prov
         .{ "SUM(B1:E1)", error.UnsupportedStructuralControl },
         .{ "SUM(E1:B1)", error.UnsupportedReversedFormulaRange },
         .{ "SUM(B9:E9)", error.FormulaReferenceOutOfBounds },
-        .{ "MAX(B1:E1)", error.UnsupportedFormulaExpression },
+        .{ "FOO(B1:E1)", error.UnsupportedFormulaExpression },
         .{ "SUM(B0:E0)", error.InvalidFormulaReference },
     }) |mutation| {
         const wire = try std.unicode.utf8ToUtf16LeAlloc(a, mutation[0]);
