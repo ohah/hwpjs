@@ -31,9 +31,13 @@ pub fn read(a: std.mem.Allocator, session: *const editor.Session, section_index:
     const section = &session.sections[section_index];
     var current = try @import("display_current_paragraphs.zig").read(a, section, session.options);
     defer current.deinit(a);
+    return readCurrent(a, section, current.paragraphs);
+}
+
+pub fn readCurrent(a: std.mem.Allocator, section: *const editor.Section, paragraphs: []const @import("paragraph_structure_values.zig").Paragraph) ![]Binding {
     var output: std.ArrayList(Binding) = .empty;
     defer output.deinit(a);
-    for (current.paragraphs, 0..) |paragraph, index| {
+    for (paragraphs, 0..) |paragraph, index| {
         const owner = try resolve(&section.tree, paragraph.template_element);
         if (paragraph.joined()) |joined| {
             try joined.validate();

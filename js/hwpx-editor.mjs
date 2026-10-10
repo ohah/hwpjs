@@ -28,6 +28,7 @@ import { decodeTableBindings } from "./table-bindings-wire.mjs";
 import { decodeTablePlacements } from "./table-placements-wire.mjs";
 import { decodeDrawingTextBindings } from "./hwpx-drawing-text-bindings.mjs";
 import { decodeDrawingTextSnapshot } from "./hwpx-drawing-text-snapshot.mjs";
+import { decodeDrawingTextSnapshots } from "./hwpx-drawing-text-snapshots.mjs";
 import { decodeContainerSource } from "./hwpx-container-source.mjs";
 import { decodeRectangleRenderingSource } from "./hwpx-rectangle-rendering-source.mjs";
 import { decodeRectangleRenderingSources } from "./hwpx-rectangle-rendering-sources.mjs";
@@ -584,6 +585,14 @@ export async function createHwpxEditor(source) {
       try {
         if (!wasm.hwpx_edit_drawing_text_snapshot(section, drawingNode)) throw memory.error();
         return decodeDrawingTextSnapshot(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
+    drawingTextSnapshots(section) {
+      ready(); uint(section);
+      if (typeof wasm.hwpx_edit_drawing_text_snapshots !== "function") throw new Error("HwpxDrawingTextSnapshotsAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_drawing_text_snapshots(section)) throw memory.error();
+        return decodeDrawingTextSnapshots(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
       } finally { wasm.hwpx_edit_output_free(); }
     },
     sectionFillBrushes(section) {

@@ -24,8 +24,12 @@ pub const Snapshot = struct {
 pub fn read(a: std.mem.Allocator, session: *const editor.Session, section_index: usize, node: usize) !Snapshot {
     if (section_index >= session.sections.len) return error.InvalidSectionIndex;
     const section = &session.sections[section_index];
-    const tree = &section.tree;
     const host = try @import("rectangle_display_host.zig").read(a, session, section_index, node);
+    return readWithHost(a, &section.tree, node, host);
+}
+
+/// The caller supplies a host resolved from this same request and section.
+pub fn readWithHost(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tree, node: usize, host: @import("rectangle_display_host.zig").Host) !Snapshot {
     const group = try @import("grouped_shape_context.zig").read(tree, node);
     const rendering_source = try @import("rectangle_rendering_source.zig").read(a, tree, node);
     return .{

@@ -239,6 +239,7 @@ test {
     _ = @import("hwpx/drawing_text_values.zig");
     _ = @import("hwpx/drawing_text_bindings.zig");
     _ = @import("hwpx/drawing_text_snapshot.zig");
+    _ = @import("hwpx/drawing_text_snapshots.zig");
     _ = @import("hwpx/rectangle_display_host.zig");
     _ = @import("hwpx/drawing_paint_values.zig");
     _ = @import("hwpx/table_display_placements.zig");

@@ -34,6 +34,10 @@ fn anchorNode(tree: *const @import("xml_part_tree.zig").Tree, node: usize) !usiz
     return if (group) |context| context.root_anchor else node;
 }
 
+pub fn readCurrent(a: std.mem.Allocator, section: *const editor.Section, paragraphs: []const @import("paragraph_structure_values.zig").Paragraph, node: usize) !Host {
+    return resolve(a, section, paragraphs, try anchorNode(&section.tree, node));
+}
+
 fn resolve(a: std.mem.Allocator, section: *const editor.Section, paragraphs: []const @import("paragraph_structure_values.zig").Paragraph, anchor: usize) !Host {
     const tree = &section.tree;
     const template = tree.elements[tree.elements[anchor].parent.?].parent.?;

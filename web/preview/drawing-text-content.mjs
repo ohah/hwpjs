@@ -10,6 +10,11 @@ export function attachDrawingTextBindings(editor, content) {
       const selectedDrawings = content.window ? new Set(allRows.filter(row => paragraphs.has(`${section}:${row.paragraph - 1}`)).map(row => row.drawingNode)) : null;
       const rows = selectedDrawings ? allRows.filter(row => selectedDrawings.has(row.drawingNode)) : allRows;
       if (rows.some(row => !paragraphs.has(`${section}:${row.paragraph - 1}`))) throw new Error("DrawingTextDisplayBindingMismatch");
+      let batch = null;
+      if (rows.length && typeof editor.drawingTextSnapshots === "function") {
+        try { batch = new Map(editor.drawingTextSnapshots(section).map(row => [row.drawing_node, row])); }
+        catch { /* Keep individual snapshot diagnostics for refused inventories. */ }
+      }
       for (const row of rows) {
         const paragraph = paragraphs.get(`${section}:${row.paragraph - 1}`);
         if (row.kind === "caption") paragraph.drawingCaption = { drawingNode: row.drawingNode, captionNode: row.textNode, listNode: row.listNode };
@@ -17,7 +22,7 @@ export function attachDrawingTextBindings(editor, content) {
       }
       for (const drawingNode of new Set(rows.map(row => row.drawingNode))) {
         try {
-          const source = editor.drawingTextSnapshot(section, drawingNode);
+          const source = batch?.get(drawingNode) ?? editor.drawingTextSnapshot(section, drawingNode);
           if (source.drawing_node !== drawingNode || !paragraphs.has(`${section}:${source.paragraph - 1}`)) throw new Error("DrawingTextDisplayBindingMismatch");
           content.drawings.push({ section, drawingNode, hostParagraph: source.paragraph - 1, anchorUnit: source.anchor_unit, source });
         } catch (error) { content.drawingTextSnapshotErrors.push({ section, drawingNode, error: error.message }); }

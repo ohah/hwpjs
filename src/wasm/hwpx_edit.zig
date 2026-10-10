@@ -121,6 +121,14 @@ export fn hwpx_edit_drawing_text_snapshot(section: u32, node: u32) u32 {
     output = std.json.Stringify.valueAlloc(a, value, .{}) catch |err| return fail(err);
     return 1;
 }
+export fn hwpx_edit_drawing_text_snapshots(section: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const rows = @import("../hwpx/drawing_text_snapshots.zig").read(a, session, section) catch |err| return fail(err);
+    defer a.free(rows);
+    output = std.json.Stringify.valueAlloc(a, rows, .{}) catch |err| return fail(err);
+    return 1;
+}
 export fn hwpx_edit_container_source_snapshot(section: u32, node: u32) u32 {
     hwpx_edit_output_free();
     const session = if (active) |*value| value else return fail(error.EditorNotOpen);
