@@ -9,6 +9,7 @@ import { createHwpxReader } from "../js/hwpx.mjs";
 import { execFileSync } from "./oracle-process.mjs";
 import { parseEditAuditOptions } from "./hwpx-edit-audit-options.mjs";
 import { createHash } from "node:crypto";
+import { verifyRefusalHistory } from "./hwpx-refusal-history.mjs";
 
 const options = parseEditAuditOptions(process.argv.slice(2), { requireWasm: true });
 const wasm = readFileSync(options.wasm);
@@ -25,6 +26,7 @@ try {
     catch (error) { if (error.message !== "EncryptedDocument") throw error; totals.encrypted++; continue; }
     editor.enableHistory({ maxEntries: 8, maxCheckpointBytes: 16 * 1024 * 1024 });
     const original = reader.readTextEvents(input);
+    let previousEdited = null;
     for (const p of hwpxParagraphCoordinates(original.events)) {
       if (editor.canEdit(p.section, p.paragraph) || editor.canEditOutsideField(p.section, p.paragraph, 0, 0)) continue;
       totals.attempts++;
@@ -35,10 +37,11 @@ try {
         anchorError = error.message;
         assert(["UnsupportedParagraphControl", "UnsupportedInlineControl", "MissingTextSite", "SourceBindingMismatch", "UnsupportedFieldLabel", "UnsupportedStructuralFieldEdit"].includes(error.message));
       }
+      const revision = editor.historyRevision();
       try { insertPrefix(editor, p.section, p.paragraph, "경로😀<&"); }
       catch (error) {
         assert(allowedRefusals.has(error.message), `${path}/${p.paragraph}: unexpected ${error.message}`);
-        assert.deepEqual(Buffer.from(editor.save()), input, "refusal changed source");
+        verifyRefusalHistory(editor, { original: input, previousEdited, revision, context: `${path}/${p.section}/${p.paragraph}` });
         totals.refused[error.message] = (totals.refused[error.message] ?? 0) + 1;
         if (totals.examples.length < 20) totals.examples.push({ path, section: p.section, paragraph: p.paragraph, error: error.message, anchorError });
         continue;
@@ -69,6 +72,7 @@ try {
       assert.deepEqual(editor.save(), saved);
       assert.equal(editor.undo(), true);
       assert.deepEqual(Buffer.from(editor.save()), input);
+      previousEdited = Buffer.from(saved);
       totals.verified++;
     }
   }

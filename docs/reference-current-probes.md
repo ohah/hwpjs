@@ -13,3 +13,9 @@
 같은5d600685 산출물의 대형 문서 일반 입력/이력 감사와 전용 입력 감사는 관측 시점에 PID48386·48485가 각각 약28분 실행 중이었고 CPU 사용도 확인했습니다. 두 JSONL은 시작 레코드만 있어 완료 집계는 아직 없습니다. 출력이 없다는 이유로 재시작하거나 완료로 계수하지 않습니다.
 
 별도 과거 native binary SHA256 `f082903941fbc1dd694d7f49936575476eb7472b8ac367719536d9c3b629548a`의3838테스트 실행은 세션 결과에서 `NativeRunnerClosed: code=null signal=SIGKILL`로 종료됨을 확인했습니다. 마지막 JSONL 성공 결과는3490번이며3491번 `field source merge plan allocation failures preserve cross-paragraph Unicode source`는 시작만 기록되었습니다. wrapper의 `completed:3491`은 마지막 테스트의 성공 증거가 아니므로 전체 통과로 해석하지 않습니다. SIGKILL 원인은 아직 확인되지 않았으며 제품 오류·메모리 부족·사용자 종료 중 어느 것으로도 단정하지 않습니다. 이 binary는 현재 기본 WASM의 최신 소스 검증도 아닙니다.
+
+## 전용 감사의 거부 후 이력 검증
+
+`tools/hwpx-specialized-input-audit.mjs`의 거부 경로는 저장 원문만 비교하던 검사를 보완했습니다. `hwpx-refusal-history.mjs`가 revision 불변·빈 undo·기존 redo 유무·redo 저장 바이트·다시 undo한 원문/revision을 검사합니다. 거부 종류 판정은 기존 감사가 계속 소유하며 이 helper는 지원 범위를 완화하지 않습니다. 성공한 직전 체크포인트는 복사해 보관합니다.
+
+`node --test tests/hwpx/refusal-history.test.mjs`는 빈/기존 redo 정상 경로와 revision·원문·undo·redo 유무·redo 체크포인트·복원 revision의6개 변조를 모두 확인했습니다(2/2, skip0). 기본 WASM SHA256 `fe97aa698bcc1cdfef9bc75f3fcafc4941a3c0069724bc700f0a62923c48fc20`의 실제 `chart.hwpx`17시도는4입력/독립 XML 검증과13계산 결과 필드 거부를 통과했고, `hyperlink.hwpx`4시도는4필드 입력/독립 XML 검증을 통과했습니다. 두 실행 모두 exit0이며 저장 재열기·undo/redo 검사를 유지합니다. chart의13거부는 결과 필드의 직접 prefix 거부이지 수식 정의 명령 미지원 판정이 아닙니다. 이미 실행 중인 대형 감사에는 이 소스 변경을 소급하지 않습니다.
