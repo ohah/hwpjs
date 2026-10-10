@@ -4,6 +4,69 @@ const sites_mod = @import("text_sites.zig");
 const locations_mod = @import("text_site_locations.zig");
 const edit = @import("anchor_paragraph_edit.zig");
 
+test "HWPX vector source anchors preserve raw geometry and protect deletion under OOM" {
+    const a = std.testing.allocator;
+    inline for (.{ "<p:ellipse id='9' unknown='opaque'><p:future/></p:ellipse>", "<p:polygon id='9' unknown='opaque'><p:future/></p:polygon>" }) |object| {
+        const source = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:p><p:run><p:t>A😀</p:t>" ++ object ++ "<p:t>B</p:t></p:run></p:p></s:sec>";
+        var tree = try trees.parse(a, source, .section, 0, 0, .{});
+        defer tree.deinit(a);
+        try std.testing.checkAllAllocationFailures(a, struct {
+            fn run(allocator: std.mem.Allocator, parsed: *const trees.Tree) !void {
+                var sites = try sites_mod.collect(allocator, parsed, .{});
+                defer sites.deinit(allocator);
+                const locations = try locations_mod.build(allocator, parsed, &sites, .{});
+                defer allocator.free(locations);
+                try std.testing.expectError(error.ProtectedInlineControl, edit.splice(std.testing.allocator, parsed, &sites, locations, 1, 3, 1, "", 10000));
+                _ = edit.splice(allocator, parsed, &sites, locations, 1, 4, 1, "뒤😀", 10000) catch |err| {
+                    try std.testing.expectEqualStrings("A😀", sites.items[0].text);
+                    try std.testing.expectEqualStrings("B", sites.items[1].text);
+                    return err;
+                };
+                const saved = try @import("text_sites_save.zig").write(allocator, parsed, &sites, .{}, 10000);
+                defer allocator.free(saved);
+                try std.testing.expect(std.mem.indexOf(u8, saved, object) != null);
+                try std.testing.expect(std.mem.indexOf(u8, saved, "<p:t>뒤😀</p:t>") != null);
+            }
+        }.run, .{&tree});
+    }
+}
+
+test "HWPX OLE source anchor preserves opaque payload and protected Unicode boundaries under OOM" {
+    const a = std.testing.allocator;
+    const object = "<p:ole id='7' href='https://invalid.example/object'><p:future payload='opaque'/></p:ole>";
+    const source = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:p><p:run><p:t>A😀</p:t>" ++ object ++ "<p:t>B</p:t></p:run></p:p></s:sec>";
+    var tree = try trees.parse(a, source, .section, 0, 0, .{});
+    defer tree.deinit(a);
+    try std.testing.checkAllAllocationFailures(a, struct {
+        fn run(allocator: std.mem.Allocator, parsed: *const trees.Tree) !void {
+            var sites = try sites_mod.collect(allocator, parsed, .{});
+            defer sites.deinit(allocator);
+            const locations = try locations_mod.build(allocator, parsed, &sites, .{});
+            defer allocator.free(locations);
+            try std.testing.expectError(error.ProtectedInlineControl, edit.splice(std.testing.allocator, parsed, &sites, locations, 1, 3, 1, "", 10000));
+            _ = edit.splice(allocator, parsed, &sites, locations, 1, 4, 1, "뒤😀", 10000) catch |err| {
+                try std.testing.expectEqualStrings("A😀", sites.items[0].text);
+                try std.testing.expectEqualStrings("B", sites.items[1].text);
+                return err;
+            };
+            const saved = try @import("text_sites_save.zig").write(allocator, parsed, &sites, .{}, 10000);
+            defer allocator.free(saved);
+            try std.testing.expect(std.mem.indexOf(u8, saved, object) != null);
+            try std.testing.expect(std.mem.indexOf(u8, saved, "<p:t>뒤😀</p:t>") != null);
+        }
+    }.run, .{&tree});
+}
+
+test "HWPX OLE anchor rejects wrong namespace and non-direct run placement" {
+    const a = std.testing.allocator;
+    inline for (.{ "<p:ctrl><p:ole/></p:ctrl>", "<p:t><p:ole/></p:t>", "<x:ole xmlns:x='urn:other'/>", "<p:ctrl><p:ellipse/></p:ctrl>", "<p:t><p:ellipse/></p:t>", "<x:ellipse xmlns:x='urn:other'/>", "<p:ctrl><p:polygon/></p:ctrl>", "<p:t><p:polygon/></p:t>", "<x:polygon xmlns:x='urn:other'/>" }) |content| {
+        const source = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:p><p:run>" ++ content ++ "</p:run></p:p></s:sec>";
+        var tree = try trees.parse(a, source, .section, 0, 0, .{});
+        defer tree.deinit(a);
+        for (tree.elements, 0..) |_, index| try std.testing.expect(@import("run_anchor.zig").kind(&tree, index) == null);
+    }
+}
+
 test "HWPX anchored paragraph automatic numbers preserve source and protect deletion" {
     const a = std.testing.allocator;
     for ([_][]const u8{

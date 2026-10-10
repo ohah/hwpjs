@@ -251,7 +251,7 @@ test "HWPX section tree spans remain raw UTF16 for both byte orders" {
 }
 
 test "HWPX section tree cleans up on every allocation failure" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator) !void {
             var parsed = try tree.parse(a, section, 0, 0, .{});
             defer parsed.deinit(a);

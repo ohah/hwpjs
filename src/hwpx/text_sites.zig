@@ -151,7 +151,7 @@ pub fn collect(a: std.mem.Allocator, tree: *const tree_module.Tree, options: Opt
             var only_tabs = true;
             while (child) |child_index| {
                 const inline_element = tree.elements[child_index];
-                if (!@import("retained_tab.zig").supported(tree, child_index)) {
+                if (!@import("retained_inline_unit.zig").supported(tree, child_index) and !@import("title_mark_axis.zig").retained(tree, child_index)) {
                     only_tabs = false;
                     break;
                 }

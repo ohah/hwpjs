@@ -6,8 +6,9 @@ pub const Merge = struct { section: usize, paragraph: usize };
 
 pub fn apply(a: std.mem.Allocator, decoded: []const []u8, document: *model.Document, version: Version, command: Merge, char_count: usize, output_limit: usize) !void {
     if (command.section >= document.sections.len or decoded.len != document.sections.len) return error.InvalidSection;
-    for (decoded) |bytes| try @import("source_policy.zig").validate(bytes);
+    for (decoded) |bytes| _ = try @import("source_policy.zig").hasFormulas(a, bytes, version);
     const raw = decoded[command.section];
+    const formulas = try @import("source_policy.zig").hasFormulas(a, raw, version);
     var tree = try @import("../body/tree.zig").Tree.parseTextPreview(a, raw, version, .{});
     defer tree.deinit(a);
     const current = document.sections[command.section];
@@ -17,7 +18,11 @@ pub fn apply(a: std.mem.Allocator, decoded: []const []u8, document: *model.Docum
     const left = current.paragraphs[command.paragraph];
     const right = current.paragraphs[command.paragraph + 1];
     for ([_]model.Paragraph{ left, right }) |p| {
-        const eligible = try @import("plain_text_source.zig").validate(a, raw, version, p, char_count);
+        if (formulas) try @import("formula_structure_scope.zig").validate(a, raw, version, p);
+        const eligible = if (formulas)
+            try @import("plain_text_source.zig").validateFormulaTransaction(a, raw, version, p, char_count)
+        else
+            try @import("plain_text_source.zig").validate(a, raw, version, p, char_count);
         if (eligible.preserved_direct_records != 0) return error.UnsupportedStructuralControl;
         if (eligible.ranges) |ranges| if (ranges.count() != 0) return error.UnsupportedRangeSemantics;
     }

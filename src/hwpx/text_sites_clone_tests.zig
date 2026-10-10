@@ -9,7 +9,7 @@ test "HWPX owned Sites clone preserves source bindings and allocation failure at
         .{ .element_index = 8, .start = 21, .end = 21, .text = &empty, .missing_text = true, .anchor_boundary = true },
     };
     const original: sites_mod.Sites = .{ .items = &items };
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator, source: *const sites_mod.Sites) !void {
             var copy = try source.clone(a);
             defer copy.deinit(a);

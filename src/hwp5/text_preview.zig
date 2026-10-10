@@ -11,10 +11,15 @@ const max_output = 64 * 1024 * 1024;
 /// token(kind,start UTF-16 unit,raw byte length,raw bytes). All integers little-endian u32.
 /// The caller owns the returned bytes. Unknown records remain in the source file, not here.
 pub fn encode(backing: std.mem.Allocator, input: []const u8) ![]u8 {
+    return (try encodeDetailed(backing, input)).bytes;
+}
+
+pub const Encoded = struct { bytes: []u8, distribution: bool };
+pub fn encodeDetailed(backing: std.mem.Allocator, input: []const u8) !Encoded {
     var arena = std.heap.ArenaAllocator.init(backing);
     defer arena.deinit();
     const a = arena.allocator();
-    var source = try Source.open(backing, input);
+    var source = try Source.openReadOnly(backing, input);
     defer source.deinit();
 
     var out: std.ArrayList(u8) = .empty;
@@ -60,7 +65,7 @@ pub fn encode(backing: std.mem.Allocator, input: []const u8) ![]u8 {
         }
         std.mem.writeInt(u32, out.items[count_pos..][0..4], count, .little);
     }
-    return backing.dupe(u8, out.items);
+    return .{ .bytes = try backing.dupe(u8, out.items), .distribution = source.header.has(.distribution) };
 }
 
 fn cast(value: usize) !u32 {

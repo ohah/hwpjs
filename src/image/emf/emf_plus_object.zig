@@ -480,7 +480,7 @@ fn assembleAllocationCheck(allocator: std.mem.Allocator) !void {
 }
 
 test "EMF+ object assembler survives every allocation failure" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, assembleAllocationCheck, .{});
+    try @import("../../testing/allocation_failures.zig").check(assembleAllocationCheck, .{});
 }
 
 test "EMF+ object assembler frees allocations on success and error paths" {

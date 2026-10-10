@@ -109,7 +109,7 @@ test "HWPX table geometry rejects malformed scalars and enforces grid budget" {
 }
 
 test "HWPX table geometry survives every allocation failure" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator) !void {
             const result = try inspectXml(a, "<p:tbl rowCnt='1' colCnt='1'><p:tr><p:tc><p:cellAddr rowAddr='0' colAddr='0'/><p:cellSpan rowSpan='1' colSpan='1'/></p:tc></p:tr></p:tbl>", .{});
             try std.testing.expectEqual(@as(usize, 0), result.uncovered_slots);

@@ -65,7 +65,7 @@ test "HWPX table child topology follows shared row and cell limits" {
 }
 
 test "HWPX table child topology releases all allocations under failure injection" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator) !void {
             const report = try inspectXml(a, "<p:tbl rowCnt='1' colCnt='1'><p:tr x:flag='1'><p:tc x:other='2'><p:subList/><p:cellAddr rowAddr='0' colAddr='0'/><p:cellSpan rowSpan='1' colSpan='1'/><p:cellSz width='1' height='1'/><p:cellMargin left='0' right='0' top='0' bottom='0'/></p:tc></p:tr></p:tbl>", .{});
             try std.testing.expectEqual(@as(usize, 1), report.table_child_topology.cell_first_known_sub_list);

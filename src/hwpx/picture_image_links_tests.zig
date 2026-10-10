@@ -85,7 +85,7 @@ test "HWPX picture image links distinguish raw master scope" {
 }
 
 test "HWPX picture image links release every allocation failure" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator) !void {
             var report = try inspect(a, .{});
             defer report.deinit(a);
@@ -95,7 +95,7 @@ test "HWPX picture image links release every allocation failure" {
 }
 
 test "HWPX picture image links release master tree allocation failures" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator) !void {
             const source = "<masterPage xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph' xmlns:c='http://www.hancom.co.kr/hwpml/2011/core'><p:pic><c:img binaryItemIDRef='img1'/></p:pic></masterPage>";
             var tree = try part_tree.parse(a, source, .master_page, 0, 9, .{});

@@ -95,7 +95,7 @@ test "HWPX track change tags ignore foreign and nested lookalikes and share a se
     try std.testing.expectError(error.LimitExceeded, subject.inspectSections(std.testing.allocator, &.{ first, second }, .{ .max_track_change_tags = 1 }));
     const exact = try subject.inspectSections(std.testing.allocator, &.{ first, second }, .{ .max_track_change_tags = 2 });
     try std.testing.expectEqual(@as(usize, 2), exact.track_change_tags.count());
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator, xml_source: []const u8) !void {
             const result = try inspectXml(a, xml_source, .{});
             try std.testing.expectEqual(@as(usize, 1), result.track_change_tags.count());
@@ -213,7 +213,7 @@ test "HWPX text node applies one budget and per-part ordinals across master page
 test "HWPX text node releases memory on allocation failures" {
     const bytes = try fixture.storedZip(std.testing.allocator, &sources);
     defer std.testing.allocator.free(bytes);
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator, data: []const u8) !void {
             var document = try package.inspectDocument(a, data, .{});
             defer document.deinit(a);

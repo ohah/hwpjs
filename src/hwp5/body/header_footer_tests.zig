@@ -29,6 +29,9 @@ test "header footer properties do not interpret extension as text area" {
     try t.expectEqual(0x80000003, p.attributes);
     try t.expectEqual(3, p.pageKind());
     try t.expectEqualSlices(u8, bytes[4..], p.extra);
+    try t.expectEqual(@as(?u32, 0x04030201), p.observedInstanceId());
+    try t.expectEqual(@as(?u32, null), (try hf.Properties.parse(bytes[0..4])).observedInstanceId());
+    for (5..8) |n| try t.expectEqual(@as(?u32, null), (try hf.Properties.parse(bytes[0..n])).observedInstanceId());
     for (0..4) |n| try t.expectError(error.UnexpectedEnd, hf.Properties.parse(bytes[0..n]));
 }
 test "header footer area retains unsigned dimensions all ref bits and odd tail" {

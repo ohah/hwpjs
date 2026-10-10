@@ -73,7 +73,7 @@ test "HWPX fill brush image links enforce exact site budget and ancestry" {
 }
 
 test "HWPX fill brush image links release every allocation failure" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator) !void {
             var report = try inspect(a, .{});
             defer report.deinit(a);

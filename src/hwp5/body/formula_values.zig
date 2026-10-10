@@ -1,4 +1,4 @@
-//! Scalar evaluation of observed SUM/AVG over plain source cells.
+//! Scalar evaluation of observed SUM/AVG/PRODUCT over numeric source cells.
 //! Does not use formula display caches as input or modify any document value.
 const std = @import("std");
 const Tree = @import("tree.zig").Tree;
@@ -24,32 +24,31 @@ pub fn evaluateWith(tree: Tree, groups: Groups, owner: Owner, range: ranges.Rang
     if (iterator.table_node != owner.table_node) return error.SourceBindingMismatch;
     const table = tree.nodes[owner.table_node].record.value.table;
     if (table.row_count != owner.rows or table.column_count != owner.columns) return error.SourceBindingMismatch;
-    const rectangle = try range.resolve(owner.origin, owner.columns, owner.rows);
-    const width = @as(usize, rectangle.last.column - rectangle.first.column) + 1;
-    const height = @as(usize, rectangle.last.row - rectangle.first.row) + 1;
-    const count = std.math.mul(usize, width, height) catch return error.LimitExceeded;
+    var selection = try @import("formula_selection.zig").Iterator.init(range, owner.origin, owner.columns, owner.rows);
+    const count = selection.count;
     if (count > limits.cells) return error.LimitExceeded;
     var remaining = limits.inspections;
-    var sum: f64 = 0;
-    for (rectangle.first.row..rectangle.last.row + 1) |row| {
-        for (rectangle.first.column..rectangle.last.column + 1) |column| {
-            var found: ?usize = null;
-            for (groups.items, 0..) |group, index| {
-                if (remaining == 0) return error.LimitExceeded;
-                remaining -= 1;
-                if (group.parent_node != owner.control_node or group.header_node < owner.table_node) continue;
-                const cell = try body.Cell.parse((try tree.nodes[group.header_node].record.value.list_header.view(layout)).extra);
-                const span: @import("table_grid.zig").Rectangle = .{ .column = cell.column, .row = cell.row, .column_span = cell.column_span, .row_span = cell.row_span };
-                try span.validate(table.row_count, table.column_count);
-                if (column < cell.column or row < cell.row or column - cell.column >= cell.column_span or row - cell.row >= cell.row_span) continue;
-                if (cell.column_span != 1 or cell.row_span != 1) return error.UnsupportedMergedFormulaCell;
-                if (found != null) return error.AmbiguousFormulaCell;
-                found = index;
-            }
-            const group = groups.items[found orelse return error.MissingFormulaCell];
-            sum += try reader.read(tree, group);
-            if (!std.math.isFinite(sum)) return error.FormulaNumericOverflow;
+    var sum: f64 = if (range.function == .product) 1 else 0;
+    while (selection.next()) |selected| {
+        const row = selected.row;
+        const column = selected.column;
+        var found: ?usize = null;
+        for (groups.items, 0..) |group, index| {
+            if (remaining == 0) return error.LimitExceeded;
+            remaining -= 1;
+            if (group.parent_node != owner.control_node or group.header_node < owner.table_node) continue;
+            const cell = try body.Cell.parse((try tree.nodes[group.header_node].record.value.list_header.view(layout)).extra);
+            const span: @import("table_grid.zig").Rectangle = .{ .column = cell.column, .row = cell.row, .column_span = cell.column_span, .row_span = cell.row_span };
+            try span.validate(table.row_count, table.column_count);
+            if (column < cell.column or row < cell.row or column - cell.column >= cell.column_span or row - cell.row >= cell.row_span) continue;
+            if (cell.column_span != 1 or cell.row_span != 1) return error.UnsupportedMergedFormulaCell;
+            if (found != null) return error.AmbiguousFormulaCell;
+            found = index;
         }
+        const group = groups.items[found orelse return error.MissingFormulaCell];
+        const value = try reader.read(tree, group);
+        if (range.function == .product) sum *= value else sum += value;
+        if (!std.math.isFinite(sum)) return error.FormulaNumericOverflow;
     }
     return .{ .value = if (range.function == .average) sum / @as(f64, @floatFromInt(count)) else sum, .cells = count };
 }
@@ -94,5 +93,5 @@ pub fn numberFromText(bytes: []const u8, declared_units: u32) !f64 {
         }
     }
     if (!ended) return error.UnsupportedFormulaCellText;
-    return @import("formula_number.zig").parse(value.raw[0 .. value.raw.len - 2]);
+    return @import("formula_cell_number.zig").parse(value.raw[0 .. value.raw.len - 2]);
 }

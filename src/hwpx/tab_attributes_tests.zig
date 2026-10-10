@@ -91,7 +91,7 @@ test "HWPX tab attributes classify every published named value without numeric m
 
 test "HWPX tab attributes release allocations after failures" {
     const source = prefix ++ "<p:p><p:run><p:t><p:tab width='123' leader='SOLID' type='DECIMAL' extra='x'/></p:t></p:run></p:p>" ++ suffix;
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator, bytes: []const u8) !void {
             const report = try inspectXml(a, bytes, .{});
             try std.testing.expectEqual(@as(usize, 1), report.tabs);

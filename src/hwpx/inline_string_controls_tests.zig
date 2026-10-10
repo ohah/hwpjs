@@ -110,7 +110,7 @@ test "HWPX inline string controls enforce count and byte budgets" {
 }
 
 test "HWPX inline string controls release allocation failures" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator) !void {
             var report = try inspect(a, prefix ++ "<p:indexmark><p:firstKey>A&amp;B</p:firstKey></p:indexmark><p:dutmal posType='BOTTOM'><p:mainText>M</p:mainText></p:dutmal>" ++ suffix, .{});
             report.deinit();

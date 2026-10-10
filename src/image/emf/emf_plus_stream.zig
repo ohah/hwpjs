@@ -1961,7 +1961,7 @@ fn trackedAllocationExercise(allocator: std.mem.Allocator) !void {
 }
 
 test "EMF+ Save Container End and Restore tracked stream survives every graphics stack allocation failure" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, trackedAllocationExercise, .{});
+    try @import("../../testing/allocation_failures.zig").check(trackedAllocationExercise, .{});
 }
 
 test "EMF+ stream resolves DrawBeziers Pen references and remains atomic" {

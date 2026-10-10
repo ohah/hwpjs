@@ -106,7 +106,7 @@ test "HWPX master text snapshot stores only selected switch branch" {
 }
 
 test "HWPX master text snapshot releases every allocation failure" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator) !void {
             var result = try read(a, master, .{});
             defer result.deinit();

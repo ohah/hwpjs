@@ -26,10 +26,11 @@ pub fn append(a: std.mem.Allocator, out: *std.ArrayList(u8), template: framing.R
     const header = try a.dupe(u8, template.payload);
     defer a.free(header);
     Header.writeTextCounts(header, units, @intCast(p.character_runs.len), 0);
+    try @import("line_break_mask.zig").write(header, p.tokens);
     std.mem.writeInt(u32, header[0..4], units | (if (last_in_owner) @as(u32, 0x80000000) else 0), .little);
     std.mem.writeInt(u16, header[Header.para_shape_id_offset..][0..2], p.para_shape_id, .little);
     header[Header.style_id_offset] = p.style_id;
-    header[Header.break_flags_offset] = 0; // New continuation does not duplicate section/page breaks.
+    header[Header.break_flags_offset] = @import("paragraph_breaks.zig").effective(true, parsed.break_flags);
     std.mem.writeInt(u32, header[Header.instance_id_offset..][0..4], p.instance_id, .little);
     const runs = try a.alloc(u8, p.character_runs.len * 8);
     defer a.free(runs);

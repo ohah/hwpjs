@@ -2,6 +2,10 @@
 
 ## 실제 저장·이력 회귀의 게시 의존성 확인
 
+후속 HWP5/HWPX 공개 편집·HWP5 구조 편집3파일은 최초21통과·2실패였습니다. 두 실패는 export에 Git index가 없어 `git ls-files`가 exit128을 반환한 검증 환경 문제였습니다. 후보 tree의 정확한 index를 별도 export에만 연결한 뒤23/23·skip0·exit0을 확인했습니다. 일곱 실제 필드 라벨, 추적된 비암호 HWPX의 열기/no-op ZIP 보존, 원자성·문단 분할/병합·재열기/이력 및 독립 XML/레코드를 검사합니다.
+
+통합 게시 대상987파일은 후보 tree와 원문 hash가 일치했고, 포맷 검사에서2개 Zig 파일의 형식 차이를 찾아 main 작업 트리와 export 양쪽을 같은 formatter로 정리했습니다. export ReleaseSafe 재빌드는 exit0입니다. 통합 source/API는 이 검증 범위로 게시하되, 전체 native/public gate와 UI 게시·기본 데모 artifact 승격은 별도로 남깁니다.
+
 `7527dec4706b890b2a35e7ccfcaddbac1e20b7e79994bf80e3ed831d3bd58d1a` 후보의 자체 JS로 HWP5 이력5/5·skip0·exit0을 확인했습니다. 독립 CFB/레코드 비교, 분기·거부·저장 실패 이후 redo, checkpoint 예산, 실제 수식/필드/서식 및 ABI 재열기를 검사합니다.
 
 추가하려던 하이픈·제목표시 테스트가 export에 없어 선택 단계에서 거부됐습니다. 테스트3파일을 포함한 뒤 HWPX 독립 Python 검사기도 누락된 것을 확인하고 함께 포함했습니다. 이 누락은 게시 입력의 의존성 문제이며 파서 실패가 아닙니다. 보강한 export에서 하이픈 경계·불투명 도형 꼬리·실제 HWPX 제목12문단의 저장/undo/redo/재열기3/3·skip0·exit0을 확인했습니다. HWPX는 전체 XML 비교와 잘못된 기대값의 명시적 거부를 Python 일반/`-O`로 함께 검사합니다. 이 보강 입력은 위 tree 자체와 구분하며, 전체 조판·모든 편집 명령의 완료 근거로 사용하지 않습니다.

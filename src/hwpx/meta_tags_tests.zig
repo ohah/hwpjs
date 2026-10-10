@@ -110,7 +110,7 @@ test "HWPX meta tags survive package and known inspection release" {
 }
 
 test "HWPX meta tags release all allocation failures" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator) !void {
             var report = try inspect(a, prefix ++ "<p:fieldBegin><p:metaTag>A&amp;<![CDATA[B]]></p:metaTag></p:fieldBegin>" ++ suffix, .{});
             report.deinit();

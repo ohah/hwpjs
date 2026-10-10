@@ -91,7 +91,7 @@ test "HWPX ParaListType tree reader agrees with streaming reader on the same tag
 }
 
 test "HWPX cell subLists release owned values under every allocation failure" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator) !void {
             const report = try inspectXml(a, "<p:tbl><p:tr><p:tc><p:subList id='A&amp;B' textDirection='VERTICAL' lineWrap='BREAK' vertAlign='TOP' textWidth='12' textHeight='34' hasTextRef='1' hasNumRef='0'><p:p/></p:subList></p:tc></p:tr></p:tbl>", .{});
             try std.testing.expectEqual(@as(u64, 34), report.cell_sub_lists.text_height_sum);

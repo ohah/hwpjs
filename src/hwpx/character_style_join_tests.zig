@@ -1,0 +1,60 @@
+const std = @import("std");
+test "HWPX character style joined merge preserves rebound namespaces and atomic follow-up input" {
+    const a = std.testing.allocator;
+    const source = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph' xmlns:x='urn:first'><p:p id='1'><p:run charPrIDRef='7' x:key='one'><p:t>A😀</p:t></p:run></p:p><q:p xmlns:q='http://www.hancom.co.kr/hwpml/2011/paragraph' xmlns:x='urn:second' id='2'><q:run charPrIDRef='9' x:key='two'><q:t>B</q:t></q:run></q:p></s:sec>";
+    var tree = try @import("xml_part_tree.zig").parse(a, source, .section, 0, 0, .{});
+    defer tree.deinit(a);
+    var sites = try @import("text_sites.zig").collect(a, &tree, .{});
+    defer sites.deinit(a);
+    const locations = try @import("text_site_locations.zig").build(a, &tree, &sites, .{});
+    defer a.free(locations);
+    var counters: @import("section_text.zig").Report = .{};
+    var values = try @import("paragraph_structure_collect.zig").collect(a, &tree, &sites, locations, .{}, &counters);
+    defer values.deinit(a);
+    const styles = try a.alloc(@import("character_style_paint.zig").Span, 1);
+    styles[0] = .{ .start_unit = 0, .end_unit = 3, .site_start_unit = 0, .site_index = 0, .run_element = 2, .char_shape_id = 9 };
+    values.paragraphs[0].character_styles = styles;
+    var merged = try @import("paragraph_structure_merge.zig").prepare(a, &tree, &values, 0, 10000);
+    defer merged.deinit(a);
+    try std.testing.expectEqual(@as(usize, 2), merged.paragraphs[0].character_styles.?.len);
+    try std.testing.expect(try @import("paragraph_structure_splice.zig").splice(a, &tree, &merged, 0, 3, 0, "C", 10000));
+    try std.testing.expectEqualStrings("A😀C", merged.paragraphs[0].sites.items[0].text);
+    try std.testing.expectError(error.SplitSurrogatePair, @import("paragraph_structure_splice.zig").splice(a, &tree, &merged, 0, 2, 0, "x", 10000));
+    const output = try @import("paragraph_structure_save.zig").write(a, &tree, &merged, .{}, &.{}, 10000);
+    defer a.free(output);
+    var reopened = try @import("xml_part_tree.zig").parse(a, output, .section, 0, 0, .{});
+    defer reopened.deinit(a);
+    var text = try @import("text_sites.zig").collect(a, &reopened, .{});
+    defer text.deinit(a);
+    try std.testing.expectEqualStrings("A😀C", text.items[0].text);
+    try std.testing.expectEqualStrings("B", text.items[1].text);
+    const second_run = reopened.elements[text.items[1].element_index].parent.?;
+    const attribute = (try reopened.attributeValue(a, second_run, "urn:second", "key")).?;
+    const decoded = try attribute.toUtf8(a, 100);
+    defer a.free(decoded);
+    try std.testing.expectEqualStrings("two", decoded);
+    var split = try @import("paragraph_structure_split.zig").prepare(a, &tree, &merged, 0, 3, 4, 3, 10000);
+    defer split.deinit(a);
+    try std.testing.expectEqualStrings("A😀", split.paragraphs[0].sites.items[0].text);
+    try std.testing.expectEqualStrings("B", split.paragraphs[1].sites.items[1].text);
+    try std.testing.expectEqual(@as(?u32, 9), split.paragraphs[1].character_styles.?[1].char_shape_id);
+    const split_xml = try @import("paragraph_structure_save.zig").write(a, &tree, &split, .{}, &.{}, 10000);
+    defer a.free(split_xml);
+    var rejoined = try @import("paragraph_structure_merge.zig").prepare(a, &tree, &split, 0, 10000);
+    defer rejoined.deinit(a);
+    try std.testing.expectEqualStrings("A😀", rejoined.paragraphs[0].sites.items[0].text);
+    try std.testing.expectEqualStrings("B", rejoined.paragraphs[0].sites.items[1].text);
+    try std.testing.checkAllAllocationFailures(a, struct {
+        fn run(allocator: std.mem.Allocator, t: *const @import("xml_part_tree.zig").Tree, v: *const @import("paragraph_structure_values.zig").Values) !void {
+            var candidate = try @import("paragraph_structure_merge.zig").prepare(allocator, t, v, 0, 10000);
+            defer candidate.deinit(allocator);
+            _ = try @import("paragraph_structure_splice.zig").splice(allocator, t, &candidate, 0, 3, 0, "C", 10000);
+            var split_candidate = try @import("paragraph_structure_split.zig").prepare(allocator, t, &candidate, 0, 3, 4, 3, 10000);
+            defer split_candidate.deinit(allocator);
+            const xml = try @import("paragraph_structure_save.zig").write(allocator, t, &split_candidate, .{}, &.{}, 10000);
+            defer allocator.free(xml);
+        }
+    }.run, .{ &tree, &values });
+    try std.testing.expectEqualStrings("A😀", values.paragraphs[0].sites.items[0].text);
+    try std.testing.expectEqualStrings(source, tree.source);
+}

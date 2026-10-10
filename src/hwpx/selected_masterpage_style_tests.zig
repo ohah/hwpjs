@@ -118,7 +118,7 @@ test "HWPX selected master style references keep foreign switches and direct sub
 test "HWPX selected master style references free allocations on every failure" {
     const bytes = try zipFor(std.testing.allocator, prefix ++ branch ++ suffix);
     defer std.testing.allocator.free(bytes);
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator, source: []const u8) !void {
             var document = try package.inspectDocument(a, source, .{});
             defer document.deinit(a);

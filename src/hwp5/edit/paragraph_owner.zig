@@ -45,14 +45,11 @@ pub fn logicalOwner(tree: Tree, groups: Groups, paragraph: usize) !?usize {
 fn validateGroups(tree: Tree, groups: Groups, paragraph: usize, parent: usize, version: Version) !void {
     const list = (try logicalOwner(tree, groups, paragraph)) orelse return error.OrphanListParagraph;
     const node = tree.nodes[parent];
+    if (node.record.value == .header) return @import("paragraph_owned_list.zig").validate(tree, groups, parent, list);
     if (node.record.value == .control_header) {
         const id = node.record.value.control_header.id;
         if (id == controls.section_id) {
-            const root = node.parent orelse return error.OrphanSectionDefinition;
-            if (tree.nodes[root].record.value != .header or tree.nodes[root].parent != null) return error.OrphanSectionDefinition;
-            _ = try body.section_def.Definition.parse(node.record.value.control_header.properties, version);
-            const view = try tree.nodes[list].record.value.list_header.view(.observed8);
-            _ = try @import("../body/master_page.zig").Area.parse(view.extra);
+            _ = try masterPageArea(tree, parent, list, version);
             return;
         }
         if (id == controls.table_id) {
@@ -81,4 +78,16 @@ fn validateGroups(tree: Tree, groups: Groups, paragraph: usize, parent: usize, v
         }
     }
     return error.UnsupportedNestedParagraph;
+}
+
+/// Shared original master-list owner/prefix contract for editing and queries.
+pub fn masterPageArea(tree: Tree, owner: usize, list: usize, version: Version) !@import("../body/master_page.zig").Area {
+    if (owner >= tree.nodes.len or list >= tree.nodes.len) return error.SourceBindingMismatch;
+    const node = tree.nodes[owner];
+    if (node.record.value != .control_header or node.record.value.control_header.id != controls.section_id or tree.nodes[list].parent != owner or tree.nodes[list].record.value != .list_header) return error.SourceBindingMismatch;
+    const root = node.parent orelse return error.OrphanSectionDefinition;
+    if (tree.nodes[root].record.value != .header or tree.nodes[root].parent != null) return error.OrphanSectionDefinition;
+    _ = try body.section_def.Definition.parse(node.record.value.control_header.properties, version);
+    const view = try tree.nodes[list].record.value.list_header.view(.observed8);
+    return @import("../body/master_page.zig").Area.parse(view.extra);
 }

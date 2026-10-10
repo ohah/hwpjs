@@ -82,7 +82,7 @@ test "HWPX section text snapshot preserves unsupported nested inline boundaries"
 }
 
 test "HWPX section text snapshot releases partial allocations" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator) !void {
             var snapshot = try read(a, section, .{});
             defer snapshot.deinit();

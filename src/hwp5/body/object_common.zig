@@ -12,6 +12,7 @@ pub const Properties = struct {
     flags: u32,
     offset_y: i32,
     offset_x: i32,
+    size_offset: usize,
     width: u32,
     height: u32,
     z_order: i32,
@@ -21,12 +22,18 @@ pub const Properties = struct {
     description_utf16: ?[]const u8,
     extra: []const u8,
 
+    /// Table 70: bit20 applies only to paragraph-relative vertical placement.
+    pub fn sizeProtected(self: Properties) bool {
+        return ((self.flags >> 3) & 3) == 2 and self.flags & (@as(u32, 1) << 20) != 0;
+    }
+
     pub fn parse(bytes: []const u8) !Properties {
         var r: Reader = .{ .bytes = bytes };
         var p: Properties = undefined;
         p.flags = try r.readInt(u32);
         p.offset_y = try r.readInt(i32);
         p.offset_x = try r.readInt(i32);
+        p.size_offset = r.offset;
         p.width = try r.readInt(u32);
         p.height = try r.readInt(u32);
         p.z_order = try r.readInt(i32);

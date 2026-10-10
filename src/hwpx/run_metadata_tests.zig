@@ -127,7 +127,7 @@ test "HWPX run metadata ignores unrelated master-page siblings and rejects scope
 
 test "HWPX run metadata releases allocations on failure" {
     const source = prefix ++ "<p:p><p:run charTcId='5' paraTcId='5'/></p:p>" ++ suffix;
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator, bytes: []const u8) !void {
             _ = try inspectXml(a, bytes, .{});
         }
@@ -138,7 +138,7 @@ test "HWPX run metadata releases allocations on failure" {
     try std.testing.expectEqual(@as(usize, 0), checked.total_requested_bytes);
     const bytes = try fixture.storedZip(std.testing.allocator, &sources);
     defer std.testing.allocator.free(bytes);
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator, data: []const u8) !void {
             var document = try package.inspectDocument(a, data, .{});
             defer document.deinit(a);

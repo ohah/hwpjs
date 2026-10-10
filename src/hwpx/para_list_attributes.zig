@@ -45,13 +45,22 @@ pub const Attributes = struct {
     }
 };
 
-fn knownEnum(field: Field, value: []const u8) bool {
-    const allowed: []const []const u8 = switch (field) {
+pub fn enumValues(field: Field) []const []const u8 {
+    return switch (field) {
         .text_direction => &.{ "HORIZONTAL", "VERTICAL", "VERTICALALL" },
         .line_wrap => &.{ "BREAK", "SQUEEZE", "KEEP" },
         .vert_align => &.{ "TOP", "CENTER", "BOTTOM" },
         else => unreachable,
     };
+}
+
+pub fn enumIndex(field: Field, value: []const u8) ?u32 {
+    for (enumValues(field), 0..) |candidate, index| if (std.mem.eql(u8, candidate, value)) return @intCast(index);
+    return null;
+}
+
+fn knownEnum(field: Field, value: []const u8) bool {
+    const allowed = enumValues(field);
     for (allowed) |candidate| if (std.mem.eql(u8, candidate, value)) return true;
     return false;
 }

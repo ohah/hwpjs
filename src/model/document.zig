@@ -67,24 +67,60 @@ pub const Paragraph = struct {
     }
 };
 
+pub const TableCellSize = struct { source_list_node: u32, width: u32, height: u32 };
+pub const PictureResizeMatrices = struct {
+    translation: [6]f64,
+    scale: [6]f64,
+    scale_index: u16,
+    display: ?[2]u32,
+};
+pub const PictureCurrentSize = struct {
+    source_picture_node: u32,
+    width: u32,
+    height: u32,
+    resize_matrices: ?PictureResizeMatrices = null,
+};
+
 pub const Section = struct {
     paragraphs: []Paragraph,
     /// All source records, including those outside represented paragraphs.
     source_record_count: usize,
+    table_cell_sizes: ?[]TableCellSize = null,
+    picture_current_sizes: ?[]PictureCurrentSize = null,
 
     pub fn deinit(self: *Section, a: std.mem.Allocator) void {
         for (self.paragraphs) |*paragraph| paragraph.deinit(a);
         a.free(self.paragraphs);
+        if (self.table_cell_sizes) |values| a.free(values);
+        if (self.picture_current_sizes) |values| a.free(values);
         self.* = undefined;
     }
 };
 
+pub const ParagraphMarginPatch = struct {
+    left: ?i32 = null,
+    right: ?i32 = null,
+    indent: ?i32 = null,
+    before: ?i32 = null,
+    after: ?i32 = null,
+};
+pub const ParagraphSpacing = struct { kind: u32, value: i32 };
+pub const CharacterUnderlineKind = enum(u2) { none, bottom, center, top };
+pub const CharacterPropertyPatch = struct { size: ?i32 = null, bold: ?bool = null, italic: ?bool = null, emboss: ?bool = null, engrave: ?bool = null, superscript: ?bool = null, subscript: ?bool = null, outline_kind: ?@import("character_outline_kind.zig").Kind = null, strike_enabled: ?bool = null, underline_kind: ?CharacterUnderlineKind = null, underline_color: ?u32 = null, text_color: ?u32 = null, shade: ?@import("shade_color.zig").Intent = null, font_ids: ?@import("character_fonts.zig").Values = null };
+pub const CharacterResourceIntent = struct { source_id: u32, properties: CharacterPropertyPatch };
+pub const ParagraphResourceIntent = struct { source_id: u16, alignment: u3, margins: ParagraphMarginPatch = .{}, spacing: ?ParagraphSpacing = null };
 pub const Document = struct {
     format: Format,
     coverage: Coverage = .paragraph_text_and_style_references,
     sections: []Section,
+    paragraph_resources: []ParagraphResourceIntent = &.{},
+    character_resources: []CharacterResourceIntent = &.{},
+    font_resources: @import("font_resource_values.zig").Values = .{},
 
     pub fn deinit(self: *Document, a: std.mem.Allocator) void {
+        a.free(self.paragraph_resources);
+        a.free(self.character_resources);
+        self.font_resources.deinit(a);
         for (self.sections) |*section| section.deinit(a);
         a.free(self.sections);
         self.* = undefined;

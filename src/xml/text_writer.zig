@@ -42,7 +42,7 @@ test "XML text writer preserves Unicode CR and escapes markup without entity inj
 }
 
 test "XML text writer releases output at every allocation failure" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator) !void {
             const output = try encode(a, "한😀<&>\r", 1000);
             defer a.free(output);

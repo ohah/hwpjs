@@ -76,5 +76,5 @@ fn allocationFailure(a: std.mem.Allocator) !void {
 }
 
 test "document bridge preserves ownership under every allocation failure" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, allocationFailure, .{});
+    try @import("../testing/allocation_failures.zig").check(allocationFailure, .{});
 }

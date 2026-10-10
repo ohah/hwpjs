@@ -36,7 +36,7 @@ test "HWPX Xstring applies exact decoded byte bounds and cleans allocation failu
     result.deinit(std.testing.allocator);
     try std.testing.expectError(error.LimitExceeded, xstring.decode(std.testing.allocator, "_xD83D__xDE00_", 3));
     try std.testing.expectError(error.InvalidUtf8, xstring.decode(std.testing.allocator, "\xff", 4));
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator, source: []const u8) !void {
             var decoded = try xstring.decode(a, source, 32);
             decoded.deinit(a);

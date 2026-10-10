@@ -591,7 +591,7 @@ test "object table validates record sizes and allocator failure" {
     var fba = std.heap.FixedBufferAllocator.init(&empty);
     const header = std.mem.zeroes(header_types.Header);
     try std.testing.expectError(error.OutOfMemory, validate(fba.allocator(), &.{}, header));
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, allocationCheck, .{});
+    try @import("../../testing/allocation_failures.zig").check(allocationCheck, .{});
 }
 
 test "color-space selection and both deletion records share object lifetime" {

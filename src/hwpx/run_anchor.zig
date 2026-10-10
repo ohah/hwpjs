@@ -3,7 +3,13 @@ const trees = @import("xml_part_tree.zig");
 const gaps = @import("element_whitespace_gaps.zig");
 const uri = @import("document_xml.zig").paragraph_uri;
 
-pub const Kind = enum { table, picture, equation, rectangle, line, container, footnote, endnote, automatic_number };
+pub const Kind = enum { table, picture, equation, rectangle, line, container, footnote, endnote, automatic_number, ole, ellipse, polygon, button, check_button, combo_box, radio_button, edit_box, connector_line, character_composition };
+pub fn isForm(value: Kind) bool {
+    return switch (value) {
+        .button, .check_button, .combo_box, .radio_button, .edit_box => true,
+        else => false,
+    };
+}
 
 pub fn kind(tree: *const trees.Tree, index: usize) ?Kind {
     if (index >= tree.elements.len) return null;
@@ -17,7 +23,17 @@ pub fn kind(tree: *const trees.Tree, index: usize) ?Kind {
     if (element.is(uri, "equation")) return .equation;
     if (element.is(uri, "rect")) return .rectangle;
     if (element.is(uri, "line")) return .line;
+    if (element.is(uri, "connectLine")) return .connector_line;
+    if (element.is(uri, "compose")) return .character_composition;
     if (element.is(uri, "container")) return .container;
+    if (element.is(uri, "ole")) return .ole;
+    if (element.is(uri, "ellipse")) return .ellipse;
+    if (element.is(uri, "polygon")) return .polygon;
+    if (element.is(uri, "btn")) return .button;
+    if (element.is(uri, "checkBtn")) return .check_button;
+    if (element.is(uri, "comboBox")) return .combo_box;
+    if (element.is(uri, "radioBtn")) return .radio_button;
+    if (element.is(uri, "edit")) return .edit_box;
     if (!element.is(uri, "ctrl")) return null;
     const child_index = element.first_child orelse return null;
     const child = tree.elements[child_index];
@@ -27,4 +43,31 @@ pub fn kind(tree: *const trees.Tree, index: usize) ?Kind {
     if (child.is(uri, "endNote")) return .endnote;
     if (@import("retained_auto_number.zig").supported(tree, child_index)) return .automatic_number;
     return null;
+}
+
+test "HWPX connector line anchor is distinct and requires exact direct run ownership" {
+    const std = @import("std");
+    const a = std.testing.allocator;
+    const source = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph' xmlns:x='urn:foreign'><p:p><p:run><p:connectLine/><p:line/><x:connectLine/></p:run><p:connectLine/></p:p></s:sec>";
+    var tree = try @import("xml_part_tree.zig").parse(a, source, .section, 0, 0, .{});
+    defer tree.deinit(a);
+    try std.testing.expectEqual(Kind.connector_line, kind(&tree, 3).?);
+    try std.testing.expectEqual(Kind.line, kind(&tree, 4).?);
+    try std.testing.expect(kind(&tree, 5) == null);
+    try std.testing.expect(kind(&tree, 6) == null);
+    try std.testing.expect(kind(&tree, tree.elements.len) == null);
+    try std.testing.expectEqualStrings(source, tree.source);
+}
+
+test "HWPX composition anchor keeps empty and nonempty payload distinct from plain text" {
+    const std = @import("std");
+    const a = std.testing.allocator;
+    const source = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph' xmlns:x='urn:foreign'><p:p><p:run><p:compose composeText='' charPrCnt='1'><p:charPr prIDRef='4294967295'/></p:compose><p:compose composeText='A😀'/><x:compose/></p:run><p:compose/></p:p></s:sec>";
+    var tree = try @import("xml_part_tree.zig").parse(a, source, .section, 0, 0, .{});
+    defer tree.deinit(a);
+    try std.testing.expectEqual(Kind.character_composition, kind(&tree, 3).?);
+    try std.testing.expectEqual(Kind.character_composition, kind(&tree, 5).?);
+    try std.testing.expect(kind(&tree, 6) == null);
+    try std.testing.expect(kind(&tree, 7) == null);
+    try std.testing.expectEqualStrings(source, tree.source);
 }

@@ -8,6 +8,8 @@ comptime {
     _ = @import("wasm/cfb_writer.zig");
     _ = @import("wasm/hwp5_text.zig");
     _ = @import("wasm/hwpx_text.zig");
+    _ = @import("wasm/hwpx_password.zig");
+    _ = @import("wasm/hwp5_password.zig");
     _ = @import("wasm/hwpx_edit.zig");
     _ = @import("wasm/hwp5_edit.zig");
 }

@@ -36,9 +36,13 @@ fn collapsedEquals(raw: []const u8, expected: []const u8) bool {
 }
 
 pub fn knownType(raw: []const u8) bool {
+    return typeIndex(raw) != null;
+}
+
+pub fn typeIndex(raw: []const u8) ?u32 {
     const trimmed = std.mem.trim(u8, raw, " \t\r\n");
-    for (line_types) |name| if (std.mem.eql(u8, trimmed, name)) return true;
-    return false;
+    for (line_types, 0..) |name, index| if (std.mem.eql(u8, trimmed, name)) return @intCast(index);
+    return null;
 }
 
 pub fn knownWidth(raw: []const u8) bool {

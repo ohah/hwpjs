@@ -3,6 +3,28 @@ const Tree = @import("tree.zig").Tree;
 const Version = @import("../version.zig").Version;
 const rules = @import("../docinfo/reference_rules.zig");
 pub const Report = struct { definitions: usize = 0, pages: usize = 0, borders: usize = 0, numbering_deferred: usize = 0, note_shapes: usize = 0, columns: usize = 0 };
+pub fn definitionOwner(tree: Tree) !usize {
+    var first: ?usize = null;
+    var owner: ?usize = null;
+    for (tree.nodes, 0..) |node, index| {
+        if (node.record.value == .header and node.parent == null and first == null) first = index;
+        if (node.record.value != .control_header or node.record.value.control_header.id != body.section_def.control_id) continue;
+        if (owner != null) return error.DuplicateSectionDefinition;
+        try validateDefinitionOwner(tree, index, first);
+        owner = index;
+    }
+    return owner orelse error.MissingSectionDefinition;
+}
+pub fn validateDefinitionOwner(tree: Tree, index: usize, first_paragraph: ?usize) !void {
+    const parent = tree.nodes[index].parent orelse return error.OrphanSectionDefinition;
+    if (tree.nodes[parent].record.value != .header or tree.nodes[parent].parent != null) return error.OrphanSectionDefinition;
+    if (parent != first_paragraph) return error.MisplacedSectionDefinition;
+}
+pub fn columnOwner(tree: Tree, index: usize) !usize {
+    const parent = tree.nodes[index].parent orelse return error.OrphanColumnDefinition;
+    if (tree.nodes[parent].record.value != .header) return error.OrphanColumnDefinition;
+    return parent;
+}
 pub fn inspect(tree: Tree, version: Version, numbering_count: usize, border_count: usize) !Report {
     var report: Report = .{};
     var section: ?usize = null;
@@ -11,16 +33,13 @@ pub fn inspect(tree: Tree, version: Version, numbering_count: usize, border_coun
         const v = node.record.value;
         if (v == .header and node.parent == null and first_paragraph == null) first_paragraph = index;
         if (v == .control_header and v.control_header.id == body.column_def.control_id) {
-            const parent = node.parent orelse return error.OrphanColumnDefinition;
-            if (tree.nodes[parent].record.value != .header) return error.OrphanColumnDefinition;
+            _ = try columnOwner(tree, index);
             _ = try body.column_def.Definition.parse(v.control_header.properties);
             report.columns += 1;
         }
         if (v != .control_header or v.control_header.id != body.section_def.control_id) continue;
         if (section != null) return error.DuplicateSectionDefinition;
-        const parent = node.parent orelse return error.OrphanSectionDefinition;
-        if (tree.nodes[parent].record.value != .header or tree.nodes[parent].parent != null) return error.OrphanSectionDefinition;
-        if (parent != first_paragraph) return error.MisplacedSectionDefinition;
+        try validateDefinitionOwner(tree, index, first_paragraph);
         const d = try body.section_def.Definition.parse(v.control_header.properties, version);
         if (d.numbering_id == 0) {
             report.numbering_deferred += 1;

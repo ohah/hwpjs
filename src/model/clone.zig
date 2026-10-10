@@ -36,7 +36,10 @@ pub fn section(a: std.mem.Allocator, source: model.Section) !model.Section {
         paragraphs[i] = try paragraph(a, p);
         initialized += 1;
     }
-    return .{ .paragraphs = paragraphs, .source_record_count = source.source_record_count };
+    const sizes = if (source.table_cell_sizes) |values| try a.dupe(model.TableCellSize, values) else null;
+    errdefer if (sizes) |values| a.free(values);
+    const pictures = if (source.picture_current_sizes) |values| try a.dupe(model.PictureCurrentSize, values) else null;
+    return .{ .paragraphs = paragraphs, .source_record_count = source.source_record_count, .table_cell_sizes = sizes, .picture_current_sizes = pictures };
 }
 
 fn verifyAllocationFailures(a: std.mem.Allocator) !void {
@@ -46,17 +49,25 @@ fn verifyAllocationFailures(a: std.mem.Allocator) !void {
     var fields = [_]model.FieldAttributes{.{ .source_node = 9, .attributes = 0x2800 }};
     var results = [_]model.FormulaResult{.{ .source_node = 10, .value = 67.5, .grouping = .none, .modified = true }};
     var empty: [0]model.TextRange = .{};
+    var sizes = [_]model.TableCellSize{.{ .source_list_node = 4, .width = 1234, .height = 5678 }};
+    var pictures = [_]model.PictureCurrentSize{.{ .source_picture_node = 5, .width = 10000, .height = 6000 }};
     var paragraphs = [_]model.Paragraph{
         .{ .source_node = 2, .parent_node = 1, .declared_units = 2, .text_present = true, .para_shape_id = 3, .style_id = 4, .tokens = &tokens, .character_runs = &runs, .range_tags = &empty, .field_attributes = &fields, .formula_results = &results, .deferred_direct_records = 5 },
         .{ .source_node = 3, .parent_node = null, .declared_units = 2, .text_present = true, .para_shape_id = 3, .style_id = 4, .tokens = &tokens, .character_runs = &runs, .deferred_direct_records = 0 },
     };
-    var draft = section(a, .{ .paragraphs = &paragraphs, .source_record_count = 12 }) catch |err| {
+    var draft = section(a, .{ .paragraphs = &paragraphs, .source_record_count = 12, .table_cell_sizes = &sizes, .picture_current_sizes = &pictures }) catch |err| {
         try std.testing.expectEqual(@as(u8, 65), raw[0]);
         try std.testing.expectEqual(@as(u32, 0x2800), fields[0].attributes);
         return err;
     };
     defer draft.deinit(a);
     try std.testing.expectEqual(@as(usize, 12), draft.source_record_count);
+    try std.testing.expectEqualDeep(sizes[0], draft.table_cell_sizes.?[0]);
+    try std.testing.expectEqualDeep(pictures[0], draft.picture_current_sizes.?[0]);
+    draft.picture_current_sizes.?[0].width = 999;
+    try std.testing.expectEqual(@as(u32, 10000), pictures[0].width);
+    draft.table_cell_sizes.?[0].width = 999;
+    try std.testing.expectEqual(@as(u32, 1234), sizes[0].width);
     try std.testing.expect(draft.paragraphs[0].range_tags != null);
     try std.testing.expect(draft.paragraphs[1].range_tags == null);
     try std.testing.expect(draft.paragraphs[1].field_attributes == null);
@@ -76,5 +87,5 @@ fn verifyAllocationFailures(a: std.mem.Allocator) !void {
 }
 
 test "model draft clone owns nested buffers and preserves optional state on every allocation failure" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, verifyAllocationFailures, .{});
+    try @import("../testing/allocation_failures.zig").check(verifyAllocationFailures, .{});
 }

@@ -102,5 +102,5 @@ fn allocationExercise(allocator: std.mem.Allocator) !void {
 }
 
 test "EMF+ Pie device polyline releases every allocation failure path" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, allocationExercise, .{});
+    try @import("../../testing/allocation_failures.zig").check(allocationExercise, .{});
 }

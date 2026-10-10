@@ -69,6 +69,8 @@ test "HWP5 native history all allocation failures preserve model and stack owner
             var history = try History.init(allocator, session, 2, 8_000_000);
             defer history.deinit();
             _ = history.apply(session, command) catch |err| {
+                try std.testing.expectEqual(@as(u32, 0), history.stack.revision);
+                try std.testing.expectEqual(@as(u32, 1), history.stack.next_revision);
                 try savedEqual(session, bytes);
                 try std.testing.expectEqual(@as(usize, 0), history.stack.undo.items.len);
                 try std.testing.expectEqual(@as(usize, 0), history.stack.redo.items.len);
@@ -77,18 +79,23 @@ test "HWP5 native history all allocation failures preserve model and stack owner
             const edited = try session.save(a, .{ .allow_stale_layout = true });
             defer a.free(edited.bytes);
             _ = history.undo(session) catch |err| {
+                try std.testing.expectEqual(@as(u32, 1), history.stack.revision);
+                try std.testing.expectEqual(@as(u32, 2), history.stack.next_revision);
                 try savedEqual(session, edited.bytes);
                 try std.testing.expectEqual(@as(usize, 1), history.stack.undo.items.len);
                 try std.testing.expectEqual(@as(usize, 0), history.stack.redo.items.len);
                 return err;
             };
             _ = history.redo(session) catch |err| {
+                try std.testing.expectEqual(@as(u32, 0), history.stack.revision);
+                try std.testing.expectEqual(@as(u32, 2), history.stack.next_revision);
                 try savedEqual(session, bytes);
                 try std.testing.expectEqual(@as(usize, 0), history.stack.undo.items.len);
                 try std.testing.expectEqual(@as(usize, 1), history.stack.redo.items.len);
                 return err;
             };
             try savedEqual(session, edited.bytes);
+            try std.testing.expectEqual(@as(u32, 1), history.stack.revision);
         }
     }.run, .{input});
 }

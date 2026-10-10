@@ -186,7 +186,7 @@ test "HWPX fill brush image payloads diagnose a PNG checksum fault inside a vali
 }
 
 test "HWPX fill brush image payloads clean all allocation failures" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator) !void {
             var report = try inspectSample(a, .{}, false);
             defer report.deinit(a);

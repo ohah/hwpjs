@@ -78,7 +78,7 @@ test "HWPX payload integrity uses the archive allocator and owns its report" {
 test "HWPX payload integrity releases every allocation failure" {
     const bytes = try fixture.storedZip(std.testing.allocator, &sources);
     defer std.testing.allocator.free(bytes);
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator, input: []const u8) !void {
             var doc = try package.inspectDocument(a, input, .{});
             defer doc.deinit(a);

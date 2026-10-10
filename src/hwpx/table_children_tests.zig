@@ -95,7 +95,7 @@ test "HWPX table children reject bad known scalars and enforce all limits" {
 }
 
 test "HWPX table children release allocations at every failure point" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator) !void {
             const report = try inspectXml(a, "<p:tbl rowCnt='1' colCnt='1'><p:inMargin left='1' right='2' top='3' bottom='4'/><p:cellzoneList><p:cellzone startRowAddr='0' startColAddr='0' endRowAddr='0' endColAddr='0' borderFillIDRef='7'/></p:cellzoneList><p:tr/></p:tbl>", .{}, &.{});
             try std.testing.expectEqual(@as(usize, 1), report.table_children.zones);

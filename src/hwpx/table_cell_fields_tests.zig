@@ -86,7 +86,7 @@ test "HWPX table cell fields validate surviving elements and lexical limits" {
 }
 
 test "HWPX table cell fields release all allocations under failure injection" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator) !void {
             const report = try inspectXml(a, "<p:tbl rowCnt='1' colCnt='1'><p:tr><p:tc name='A&amp;B' header='true' hasMargin='1' protect='false' editable='1' dirty='0' borderFillIDRef='7'><p:cellAddr rowAddr='0' colAddr='0'/><p:cellSpan rowSpan='1' colSpan='1'/><p:cellSz width='10' height='20'/><p:cellMargin left='-3' right='4294967295' top='0' bottom='1'/></p:tc></p:tr></p:tbl>", .{});
             try std.testing.expectEqual(@as(usize, 1), report.cell_fields.cells);

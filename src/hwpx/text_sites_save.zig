@@ -6,6 +6,14 @@ const sites_module = @import("text_sites.zig");
 const writer = @import("xml_source_writer.zig");
 pub const FieldDirty = struct { element_index: usize, dirty: bool };
 
+/// One shared source-binding and text-change contract for flat/nested saves.
+pub fn siteChange(tree: *const tree_module.Tree, before: sites_module.Site, after: sites_module.Site) !?writer.Change {
+    if (before.element_index != after.element_index or before.start != after.start or before.end != after.end or before.empty_element != after.empty_element or before.missing_text != after.missing_text or before.anchor_boundary != after.anchor_boundary) return error.InvalidTextSites;
+    if (before.element_index >= tree.elements.len or before.start > before.end or before.end > tree.source.len) return error.InvalidTextSites;
+    if (std.mem.eql(u8, before.text, after.text)) return null;
+    return .{ .start = before.start, .end = before.end, .text = after.text, .expand_empty_element = before.empty_element, .run_opening = if (before.missing_text) tree.elements[before.element_index].start_tag else null };
+}
+
 pub fn write(a: std.mem.Allocator, tree: *const tree_module.Tree, current: *const sites_module.Sites, options: sites_module.Options, max_output_bytes: usize) ![]u8 {
     return writeWithFieldDirty(a, tree, current, options, &.{}, max_output_bytes);
 }
@@ -42,10 +50,9 @@ pub fn writeWithChanges(a: std.mem.Allocator, tree: *const tree_module.Tree, cur
     }
     var total: usize = 0;
     for (original.items, current.items) |before, after| {
-        if (before.element_index != after.element_index or before.start != after.start or before.end != after.end or before.empty_element != after.empty_element or before.missing_text != after.missing_text or before.anchor_boundary != after.anchor_boundary) return error.InvalidTextSites;
         if (after.text.len > options.max_text_bytes -| total) return error.LimitExceeded;
         total += after.text.len;
-        if (!std.mem.eql(u8, before.text, after.text)) try changes.append(a, .{ .start = before.start, .end = before.end, .text = after.text, .expand_empty_element = before.empty_element, .run_opening = if (before.missing_text) tree.elements[before.element_index].start_tag else null });
+        if (try siteChange(tree, before, after)) |change| try changes.append(a, change);
     }
     std.mem.sort(writer.Change, changes.items, {}, struct {
         fn less(_: void, left: writer.Change, right: writer.Change) bool {

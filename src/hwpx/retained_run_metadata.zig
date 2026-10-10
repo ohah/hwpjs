@@ -11,8 +11,16 @@ pub fn supported(tree: *const trees.Tree, index: usize) bool {
     while (true) {
         const setting = tree.elements[child];
         if (!gaps.empty(tree, child)) return false;
-        if (setting.is(uri, "pageNum")) {
-            if (setting.first_child != null) return false;
+        if (setting.is(uri, "bookmark")) {
+            if (!@import("retained_bookmark.zig").settingSupported(tree, child) or !@import("retained_bookmark.zig").supported(tree, index)) return false;
+        } else if (setting.is(uri, "pageNum")) {
+            if (!@import("retained_page_number.zig").settingSupported(tree, child)) return false;
+        } else if (setting.is(uri, "pageHiding")) {
+            if (!@import("retained_page_hiding.zig").settingSupported(tree, child)) return false;
+        } else if (setting.is(uri, "newNum")) {
+            if (!@import("retained_number_restart.zig").settingSupported(tree, child)) return false;
+        } else if (setting.is(uri, "indexmark")) {
+            if (!@import("retained_index_mark.zig").supported(tree, child)) return false;
         } else if (setting.is(uri, "colPr")) {
             var nested = setting.first_child;
             while (nested) |nested_index| {

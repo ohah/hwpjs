@@ -193,7 +193,7 @@ test "HWPX chart cache reports unpaired Xstring surrogate without making up a va
 
 test "HWPX chart cache scanner releases index maps on every allocation failure" {
     const source = prefix ++ "<c:numCache><c:ptCount val=\"2\"/><c:pt idx=\"0\"><c:v>_xD83D_<![CDATA[_xDE00_]]></c:v></c:pt><c:pt idx=\"1\"><c:v>2</c:v></c:pt></c:numCache>" ++ suffix;
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator, bytes: []const u8) !void {
             _ = try inspect(a, bytes, .{});
         }
@@ -204,7 +204,7 @@ test "HWPX chart multilevel scanner releases maps across levels on every allocat
     const source = prefix ++ "<c:multiLvlStrCache><c:ptCount val=\"1\"/>" ++
         "<c:lvl><c:pt idx=\"0\"><c:v>_xD83D_<![CDATA[_xDE00_]]></c:v></c:pt></c:lvl>" ++
         "<c:lvl><c:pt idx=\"0\"><c:v>B</c:v></c:pt></c:lvl></c:multiLvlStrCache>" ++ suffix;
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator, bytes: []const u8) !void {
             const report = try inspect(a, bytes, .{});
             try std.testing.expectEqual(@as(usize, 2), report.points);

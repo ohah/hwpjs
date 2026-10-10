@@ -10,7 +10,7 @@ pub fn split(a: std.mem.Allocator, decoded: []const []u8, document: *model.Docum
     var sections: std.ArrayList([]const u8) = .empty;
     defer sections.deinit(a);
     for (decoded) |bytes| {
-        try @import("source_policy.zig").validate(bytes);
+        _ = try @import("source_policy.zig").hasFormulas(a, bytes, version);
         try sections.append(a, bytes);
     }
     var ids: std.ArrayList(u32) = .empty;
@@ -19,9 +19,11 @@ pub fn split(a: std.mem.Allocator, decoded: []const []u8, document: *model.Docum
     const new_id = try @import("instance_ids.zig").fromSections(a, sections.items, version, ids.items, 2_000_000);
     var draft = try @import("../../model/clone.zig").section(a, document.sections[edit.section]);
     defer draft.deinit(a);
+    const formulas = try @import("source_policy.zig").hasFormulas(a, decoded[edit.section], version);
     if (edit.end_unit) |end| {
         if (end < edit.at_unit) return error.InvalidTextPosition;
-        try @import("plain_text.zig").apply(a, decoded[edit.section], version, &draft.paragraphs[edit.paragraph], .{ .section = edit.section, .paragraph = edit.paragraph, .start_unit = edit.at_unit, .end_unit = end, .utf8 = "" }, char_count);
+        const splice = if (formulas) &@import("plain_text.zig").applyFormulaTransaction else &@import("plain_text.zig").apply;
+        try splice(a, decoded[edit.section], version, &draft.paragraphs[edit.paragraph], .{ .section = edit.section, .paragraph = edit.paragraph, .start_unit = edit.at_unit, .end_unit = end, .utf8 = "" }, char_count);
     }
     try @import("paragraph_split.zig").apply(a, &draft, decoded[edit.section], version, edit.paragraph, edit.at_unit, new_id, char_count);
     const verified = try @import("structure_section_writer.zig").writeWithDeletions(a, decoded[edit.section], draft, version, char_count, output_limit, true);

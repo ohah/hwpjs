@@ -1,6 +1,16 @@
 const std = @import("std");
 const editor = @import("editor_session.zig");
 
+test "HWPX editor session repeated open close releases actual fixture allocations" {
+    const a = std.testing.allocator;
+    const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwpx", a, .limited(4_000_000));
+    defer a.free(input);
+    for (0..40) |_| {
+        var session = try @import("editor_session.zig").open(a, input, .{});
+        session.deinit();
+    }
+}
+
 test "HWPX editor session formula save derives current numeric edit and preserves noop ZIP" {
     const a = std.testing.allocator;
     const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx", a, .limited(4_000_000));

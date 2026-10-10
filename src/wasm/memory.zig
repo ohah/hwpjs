@@ -1,4 +1,4 @@
-pub const allocator = @import("std").heap.wasm_allocator;
+pub const allocator = @import("allocator.zig").allocator;
 export fn cfb_alloc(size: usize) ?[*]u8 {
     const bytes = allocator.alloc(u8, @max(size, 1)) catch return null;
     return bytes.ptr;

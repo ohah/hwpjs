@@ -151,5 +151,5 @@ fn allocationExercise(allocator: std.mem.Allocator) !void {
 }
 
 test "EMF+ terminal-server graphics state survives every allocation failure" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, allocationExercise, .{});
+    try @import("../../testing/allocation_failures.zig").check(allocationExercise, .{});
 }

@@ -9,25 +9,10 @@ pub fn spliceProjected(a: std.mem.Allocator, sites: *sites_module.Sites, positio
     try @import("paragraph_text_positions.zig").validateRange(positions, start, end);
     // Text equality is a semantic no-op across run boundaries too. Do not
     // redistribute unchanged text into the insertion run and lose styling.
-    var current: std.ArrayList(u8) = .empty;
-    defer current.deinit(a);
-    for (positions) |position| {
-        try current.appendSlice(a, @import("paragraph_text_positions.zig").segmentText(sites, position));
-    }
-    const start_byte = try edit.bytePosition(current.items, start);
-    const end_byte = try edit.bytePosition(current.items, end);
-    if (std.mem.eql(u8, current.items[start_byte..end_byte], inserted)) return false;
+    if (try replacementIsNoOp(a, sites, positions, start, end, inserted)) return false;
     // Existing source text retains insertion affinity; derived empty anchor
     // boundaries are fallback sites only, never a new styling preference.
-    const target_site = insertion_site orelse blk: {
-        var fallback: ?usize = null;
-        for (positions) |position| {
-            if (position.kind != .text or start < position.start_unit or start > position.end_unit) continue;
-            if (!sites.items[position.index].anchor_boundary) break :blk @as(?usize, position.index);
-            if (fallback == null) fallback = position.index;
-        }
-        break :blk fallback;
-    };
+    const target_site = insertion_site orelse insertionSite(sites, positions, start);
     // Draft owns every current string; no original site is touched on failure.
     var draft = try sites.clone(a);
     errdefer draft.deinit(a);
@@ -61,4 +46,26 @@ pub fn spliceProjected(a: std.mem.Allocator, sites: *sites_module.Sites, positio
     sites.deinit(a);
     sites.* = draft;
     return true;
+}
+
+/// 텍스트 재분배 없이 같은 교체인지 확인하는 공통 읽기 전용 검사입니다.
+pub fn replacementIsNoOp(a: std.mem.Allocator, sites: *const sites_module.Sites, positions: []const @import("paragraph_text_positions.zig").Segment, start: u32, end: u32, inserted: []const u8) !bool {
+    try @import("paragraph_text_positions.zig").validateRange(positions, start, end);
+    var current: std.ArrayList(u8) = .empty;
+    defer current.deinit(a);
+    for (positions) |position| try current.appendSlice(a, @import("paragraph_text_positions.zig").segmentText(sites, position));
+    const start_byte = try edit.bytePosition(current.items, start);
+    const end_byte = try edit.bytePosition(current.items, end);
+    return std.mem.eql(u8, current.items[start_byte..end_byte], inserted);
+}
+
+/// Shared left-affinity choice for text and style transactions.
+pub fn insertionSite(sites: *const sites_module.Sites, positions: []const @import("paragraph_text_positions.zig").Segment, start: u32) ?usize {
+    var fallback: ?usize = null;
+    for (positions) |position| {
+        if (position.kind != .text or start < position.start_unit or start > position.end_unit) continue;
+        if (!sites.items[position.index].anchor_boundary) return position.index;
+        if (fallback == null) fallback = position.index;
+    }
+    return fallback;
 }

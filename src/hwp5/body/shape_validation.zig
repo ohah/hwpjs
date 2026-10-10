@@ -4,7 +4,17 @@ const rules = @import("control_rules.zig");
 const owned = @import("owned_record.zig");
 pub const Report = struct { components: usize = 0, top_level: usize = 0, grouped: usize = 0, matrix_pairs: usize = 0, mismatched_ids: usize = 0, unknown_attributes: usize = 0, nonfinite_values: usize = 0, extra_bytes: usize = 0 };
 fn gso(node: @import("tree.zig").Node) bool {
-    return node.record.value == .control_header and node.record.value.control_header.id == rules.drawing_id;
+    if (node.record.framing.tag != @intFromEnum(@import("reader.zig").Tag.control_header)) return false;
+    const header = @import("control_header.zig").Header.parse(node.record.framing.payload) catch return false;
+    return header.id == rules.drawing_id;
+}
+pub fn componentLayout(tree: Tree, index: usize) !component.Layout {
+    if (index >= tree.nodes.len or tree.nodes[index].record.framing.tag != component.tag) return error.InvalidShapeComponent;
+    const parent = tree.nodes[index].parent orelse return error.OrphanShapeComponent;
+    const owner = tree.nodes[parent];
+    if (gso(owner)) return .double_id;
+    if (owner.record.framing.tag != component.tag or try component.identity(owner.record.framing.payload) != rules.id("$con")) return error.OrphanShapeComponent;
+    return .single_id;
 }
 fn nonfinite(matrix: @import("rendering.zig").Matrix) usize {
     var count: usize = 0;
@@ -25,12 +35,7 @@ pub fn inspectDetailed(tree: Tree, options: ?styles.Options, bin_data_count: usi
             _ = (owned.find(tree, index, component.tag) catch return error.DuplicateShapeComponent) orelse return error.MissingShapeComponent;
         }
         if (node.record.framing.tag != component.tag) continue;
-        const parent = node.parent orelse return error.OrphanShapeComponent;
-        const owner = tree.nodes[parent];
-        const layout: component.Layout = if (gso(owner)) .double_id else blk: {
-            if (owner.record.framing.tag != component.tag or try component.identity(owner.record.framing.payload) != rules.id("$con")) return error.OrphanShapeComponent;
-            break :blk .single_id;
-        };
+        const layout = try componentLayout(tree, index);
         const p = try component.Component.parse(node.record.framing.payload, layout);
         try group_report.add(tree, index, p);
         try style_report.add(p, options, bin_data_count);

@@ -72,7 +72,7 @@ test "HWPX master table geometry rejects malformed selected table values" {
 }
 
 test "HWPX master table geometry survives allocation failure" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator) !void {
             const report = try inspect(a, page, .{});
             try std.testing.expectEqual(@as(usize, 2), report.geometry.tables);

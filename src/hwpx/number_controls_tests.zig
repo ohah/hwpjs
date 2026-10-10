@@ -117,7 +117,7 @@ test "HWPX number controls enforce count and byte budgets" {
 }
 
 test "HWPX number controls release all allocation failures" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator) !void {
             var report = try inspect(a, "<p:autoNum num='0' numType='PAGE'><p:autoNumFormat type='DIGIT' supscript='0'/></p:autoNum><p:pageNum pos='NONE' formatType='DIGIT' sideChar=''/>", .{});
             report.deinit();

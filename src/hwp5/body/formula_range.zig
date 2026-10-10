@@ -1,6 +1,7 @@
-//! Observed SUM/AVG rectangular references. Not a general formula evaluator.
+//! Observed SUM/AVG/PRODUCT ranges and explicit cell references.
+//! Not a general formula evaluator.
 const std = @import("std");
-pub const Function = enum { sum, average };
+pub const Function = enum { sum, average, product };
 pub const Axis = union(enum) { current, absolute: u32 };
 pub const Address = struct { column: Axis, row: Axis };
 pub const Cell = struct { column: u32, row: u32 };
@@ -9,12 +10,36 @@ pub const Range = struct {
     function: Function,
     first: Address,
     last: Address,
+    above: bool = false,
+    addresses: [32]Address = undefined,
+    address_count: usize = 0,
 
     pub fn parse(expression: []const u8) !Range {
         if (expression.len % 2 != 0) return error.UnexpectedEnd;
         var parser: Parser = .{ .bytes = expression };
-        const function: Function = if (parser.consume("SUM(")) .sum else if (parser.consume("AVG(")) .average else return error.UnsupportedFormulaExpression;
+        const function: Function = if (parser.consume("SUM(")) .sum else if (parser.consume("AVG(")) .average else if (parser.consume("PRODUCT(")) .product else return error.UnsupportedFormulaExpression;
+        if (parser.consume("ABOVE)")) {
+            if (parser.offset != expression.len) return error.UnsupportedFormulaExpression;
+            return .{ .function = function, .first = .{ .column = .current, .row = .{ .absolute = 0 } }, .last = .{ .column = .current, .row = .current }, .above = true };
+        }
         const first = try parser.address();
+        if (parser.consume(")")) {
+            if (parser.offset != expression.len) return error.UnsupportedFormulaExpression;
+            return .{ .function = function, .first = first, .last = first };
+        }
+        if (parser.consume(",")) {
+            var addresses: [32]Address = undefined;
+            addresses[0] = first;
+            var count: usize = 1;
+            while (true) {
+                if (count == addresses.len) return error.LimitExceeded;
+                addresses[count] = try parser.address();
+                count += 1;
+                if (!parser.consume(",")) break;
+            }
+            if (!parser.consume(")") or parser.offset != expression.len) return error.UnsupportedFormulaExpression;
+            return .{ .function = function, .first = first, .last = first, .addresses = addresses, .address_count = count };
+        }
         if (!parser.consume(":")) return error.UnsupportedFormulaExpression;
         const last = try parser.address();
         if (!parser.consume(")") or parser.offset != expression.len) return error.UnsupportedFormulaExpression;
@@ -23,6 +48,11 @@ pub const Range = struct {
 
     pub fn resolve(self: Range, origin: Cell, columns: u32, rows: u32) !Rectangle {
         if (origin.column >= columns or origin.row >= rows) return error.InvalidFormulaOrigin;
+        if (self.address_count != 0) return error.UnsupportedNonRectangularFormulaRange;
+        if (self.above) {
+            if (origin.row == 0) return error.EmptyFormulaRange;
+            return .{ .first = .{ .column = origin.column, .row = 0 }, .last = .{ .column = origin.column, .row = origin.row - 1 } };
+        }
         const first = resolveAddress(self.first, origin);
         const last = resolveAddress(self.last, origin);
         if (first.column >= columns or last.column >= columns or first.row >= rows or last.row >= rows) return error.FormulaReferenceOutOfBounds;
@@ -31,7 +61,7 @@ pub const Range = struct {
     }
 };
 
-fn resolveAddress(address: Address, origin: Cell) Cell {
+pub fn resolveAddress(address: Address, origin: Cell) Cell {
     return .{
         .column = switch (address.column) {
             .current => origin.column,
@@ -90,6 +120,19 @@ fn wire(comptime ascii: []const u8) [ascii.len * 2]u8 {
     return result;
 }
 
+test "formula ABOVE excludes result cell and product keeps exact rectangular references" {
+    const product = try Range.parse(&wire("PRODUCT(ABOVE)"));
+    try std.testing.expectEqual(Function.product, product.function);
+    try std.testing.expectEqualDeep(Rectangle{ .first = .{ .column = 1, .row = 0 }, .last = .{ .column = 1, .row = 1 } }, try product.resolve(.{ .column = 1, .row = 2 }, 4, 3));
+    try std.testing.expectError(error.EmptyFormulaRange, product.resolve(.{ .column = 0, .row = 0 }, 4, 3));
+    const rectangle = try Range.parse(&wire("PRODUCT(A1:B2)"));
+    try std.testing.expect(!rectangle.above);
+    try std.testing.expectError(error.UnsupportedFormulaExpression, Range.parse(&wire("PRODUCT(ABOVE)tail")));
+    inline for (.{ "PRODUCT(ABOVE:)", "PRODUCT(above)", "PRODUCT()" }) |text| {
+        try std.testing.expectError(error.InvalidFormulaReference, Range.parse(&wire(text)));
+    }
+}
+
 test "formula range resolves current axes and multi-letter columns without evaluation" {
     const horizontal = try Range.parse(&wire("SUM(B?:E?)"));
     const rect = try horizontal.resolve(.{ .column = 5, .row = 1 }, 6, 5);
@@ -110,7 +153,7 @@ test "formula range refuses unknown syntax zero addresses overflow and trailing 
     inline for (.{ "SUM(A0:B1)", "SUM(1:B1)", "SUM(A:B1)", "SUM(A42949672960:B1)", "SUM(ZZZZZZZZZZ1:A1)" }) |s| {
         try std.testing.expectError(error.InvalidFormulaReference, Range.parse(&wire(s)));
     }
-    inline for (.{ "MAX(A1:B2)", "SUM(A1)", "SUM(A1:B2)+1", "SUM(A1,B2)" }) |s| {
+    inline for (.{ "MAX(A1:B2)", "SUM(A1)+1", "SUM(A1:B2)+1", "SUM(A1,B2:C3)" }) |s| {
         try std.testing.expectError(error.UnsupportedFormulaExpression, Range.parse(&wire(s)));
     }
     try std.testing.expectError(error.UnexpectedEnd, Range.parse(&.{'S'}));

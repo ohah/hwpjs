@@ -1,0 +1,46 @@
+const std = @import("std");
+const editor = @import("editor_session.zig");
+
+test "column prepend actual public ZIP preserves suffix text identity and history" {
+    const a = std.testing.allocator;
+    const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/multicolumns-widths.hwpx", a, .limited(4_000_000));
+    defer a.free(input);
+    var session = try editor.open(a, input, .{});
+    defer session.deinit();
+    const left = try session.anchorText(0, 1);
+    defer a.free(left);
+    const right = try session.anchorText(0, 2);
+    defer a.free(right);
+    var history = try @import("editor_history.zig").History.init(&session, 8, 4_000_000);
+    defer history.deinit();
+    try std.testing.expect(try history.apply(&session, .{ .kind = .split, .paragraph = 2, .start = 0, .deleted = 0, .inserted = "" }));
+    const split_saved = try session.save();
+    defer a.free(split_saved);
+    const suffix_id = session.sections[0].structure_values.?.paragraphs[2].generated_id;
+    try std.testing.expect(suffix_id != null);
+    try std.testing.expect(try history.apply(&session, .{ .kind = .merge, .paragraph = 1, .start = 0, .deleted = 0, .inserted = "" }));
+    try std.testing.expectEqual(suffix_id, session.sections[0].structure_values.?.paragraphs[1].generated_id);
+    const saved = try session.save();
+    defer a.free(saved);
+    var reopened = try editor.open(a, saved, .{});
+    defer reopened.deinit();
+    const reopened_left = try reopened.anchorText(0, 1);
+    defer a.free(reopened_left);
+    const reopened_right = try reopened.anchorText(0, 2);
+    defer a.free(reopened_right);
+    try std.testing.expectEqualStrings(left, reopened_left);
+    try std.testing.expectEqualStrings(right, reopened_right);
+    try std.testing.expect(try history.undo(&session));
+    const restored_split = try session.save();
+    defer a.free(restored_split);
+    try std.testing.expectEqualSlices(u8, split_saved, restored_split);
+    try std.testing.expect(try history.undo(&session));
+    const restored_original = try session.save();
+    defer a.free(restored_original);
+    try std.testing.expectEqualSlices(u8, input, restored_original);
+    try std.testing.expect(try history.redo(&session));
+    try std.testing.expect(try history.redo(&session));
+    const restored_saved = try session.save();
+    defer a.free(restored_saved);
+    try std.testing.expectEqualSlices(u8, saved, restored_saved);
+}

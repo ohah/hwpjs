@@ -94,6 +94,15 @@ pub fn signed32(raw: []const u8) !i32 {
 
 /// XML float lexical form only. Numeric interpretation and rendering are
 /// separate; INF/-INF/NaN are valid XML Schema float spellings.
+pub fn float64(raw: []const u8) !f64 {
+    try floatLexical(raw);
+    const text = std.mem.trim(u8, raw, " \t\r\n");
+    if (std.mem.eql(u8, text, "INF")) return std.math.inf(f64);
+    if (std.mem.eql(u8, text, "-INF")) return -std.math.inf(f64);
+    if (std.mem.eql(u8, text, "NaN")) return std.math.nan(f64);
+    return std.fmt.parseFloat(f64, text);
+}
+
 pub fn floatLexical(raw: []const u8) !void {
     const value = std.mem.trim(u8, raw, " \t\r\n");
     if (std.mem.eql(u8, value, "INF") or std.mem.eql(u8, value, "-INF") or std.mem.eql(u8, value, "NaN")) return;

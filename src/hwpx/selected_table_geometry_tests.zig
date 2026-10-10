@@ -201,7 +201,7 @@ test "HWPX selected table geometry preserves whitespace-only requirement and laz
 test "HWPX selected table geometry releases allocations after every failure" {
     const bytes = try make(std.testing.allocator, section, master);
     defer std.testing.allocator.free(bytes);
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator, source: []const u8) !void {
             var document = try package.inspectDocument(a, source, .{});
             defer document.deinit(a);

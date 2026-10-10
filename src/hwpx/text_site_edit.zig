@@ -41,6 +41,16 @@ pub fn bytePosition(text: []const u8, wanted: u32) !usize {
     return error.InvalidTextPosition;
 }
 
+pub fn utf16Length(text: []const u8) !usize {
+    var units: usize = 0;
+    var offset: usize = 0;
+    while (try scalars.read(text, offset, .utf8)) |scalar| {
+        units = std.math.add(usize, units, if (scalar.value > 0xffff) 2 else 1) catch return error.LimitExceeded;
+        offset = scalar.end;
+    }
+    return units;
+}
+
 test "HWPX text site edit preserves scalar boundaries and failed edits are atomic" {
     const a = std.testing.allocator;
     const items = try a.alloc(sites_module.Site, 1);

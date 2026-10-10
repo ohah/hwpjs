@@ -6,6 +6,12 @@ pub const Options = struct {
     border: @import("shape_border.zig").Layout = .observed13,
     tail: style.TailLayout,
 };
+pub fn supports(id: u32) bool {
+    return switch (id) {
+        rules.id("$lin"), rules.id("$rec"), rules.id("$ell"), rules.id("$arc"), rules.id("$pol"), rules.id("$cur") => true,
+        else => false,
+    };
+}
 pub const Report = struct {
     supported: usize = 0,
     unsupported: usize = 0,
@@ -15,10 +21,7 @@ pub const Report = struct {
     extra_bytes: usize = 0,
     image_references: usize = 0,
     pub fn add(self: *Report, p: component.Component, options: ?Options, bin_data_count: usize) !void {
-        const supported = switch (p.id) {
-            rules.id("$lin"), rules.id("$rec"), rules.id("$ell"), rules.id("$arc"), rules.id("$pol"), rules.id("$cur") => true,
-            else => false,
-        };
+        const supported = supports(p.id);
         if (!supported) {
             self.unsupported += 1;
             return;

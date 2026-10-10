@@ -5,8 +5,8 @@ const attrs = @import("xml_attributes.zig");
 const document_xml = @import("document_xml.zig");
 const header_resources = @import("header_resources.zig");
 
-pub const Language = enum(u8) { hangul, latin, hanja, japanese, other, symbol, user };
-pub const languages = [_]Language{ .hangul, .latin, .hanja, .japanese, .other, .symbol, .user };
+pub const Language = @import("../model/character_fonts.zig").Language;
+pub const languages = @import("../model/character_fonts.zig").languages;
 pub const source_names = [_][]const u8{ "HANGUL", "LATIN", "HANJA", "JAPANESE", "OTHER", "SYMBOL", "USER" };
 pub const reference_names = [_][]const u8{ "hangul", "latin", "hanja", "japanese", "other", "symbol", "user" };
 

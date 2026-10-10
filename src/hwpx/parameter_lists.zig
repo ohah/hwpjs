@@ -192,6 +192,16 @@ const Scan = struct {
 /// Observes every 2011 hp:parameterset and fieldBegin's hp:parameters
 /// element. Parameter values remain strings; no application meaning is inferred.
 pub fn inspect(a: std.mem.Allocator, sections: []const tree_mod.Tree, options: Options) !Report {
+    return inspectAtOrdinal(a, sections, options, 0);
+}
+
+/// Inspects one selected section without changing its source ordinal.
+pub fn inspectSection(a: std.mem.Allocator, tree: *const tree_mod.Tree, options: Options) !Report {
+    const ordinal = tree.section_ordinal orelse return error.InvalidPartKind;
+    return inspectAtOrdinal(a, &.{tree.*}, options, ordinal);
+}
+
+fn inspectAtOrdinal(a: std.mem.Allocator, sections: []const tree_mod.Tree, options: Options, first_ordinal: usize) !Report {
     var arena = std.heap.ArenaAllocator.init(a);
     errdefer arena.deinit();
     const owned_a = arena.allocator();
@@ -202,7 +212,8 @@ pub fn inspect(a: std.mem.Allocator, sections: []const tree_mod.Tree, options: O
     var value_bytes: usize = 0;
     var unknown_children: usize = 0;
     var count_mismatches: usize = 0;
-    for (sections, 0..) |*tree, ordinal| {
+    for (sections, 0..) |*tree, section_offset| {
+        const ordinal = std.math.add(usize, first_ordinal, section_offset) catch return error.InvalidPartKind;
         if (tree.part_kind != .section or tree.section_ordinal != ordinal or tree.elements.len == 0) return error.InvalidPartKind;
         var indices: std.AutoHashMapUnmanaged(usize, usize) = .empty;
         defer indices.deinit(a);

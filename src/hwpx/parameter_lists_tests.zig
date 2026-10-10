@@ -7,6 +7,20 @@ const fixture = @import("test_package_fixture.zig");
 const prefix = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph' xmlns:x='urn:foreign'><p:p><p:run>";
 const suffix = "</p:run></p:p></s:sec>";
 
+test "HWPX parameter selected section preserves nonzero ordinals and strict sequence validation" {
+    const a = std.testing.allocator;
+    for ([_]usize{ 0, 1, 7, std.math.maxInt(usize) }) |ordinal| {
+        var tree = try section_tree.parse(a, prefix ++ "<p:fieldBegin><p:parameters cnt='1'><p:stringParam name='Formula'>=SUM(A1:A2)</p:stringParam></p:parameters></p:fieldBegin>" ++ suffix, ordinal, 0, .{});
+        defer tree.deinit(a);
+        var report = try parameter_lists.inspectSection(a, &tree, .{});
+        defer report.deinit();
+        try std.testing.expectEqual(ordinal, report.roots[0].section_ordinal);
+        try std.testing.expectEqualStrings("=SUM(A1:A2)", report.nodes[1].value.?);
+        try std.testing.expectEqual(ordinal, tree.section_ordinal.?);
+        if (ordinal != 0) try std.testing.expectError(error.InvalidPartKind, parameter_lists.inspect(a, &.{tree}, .{}));
+    }
+}
+
 fn inspect(a: std.mem.Allocator, source: []const u8, options: parameter_lists.Options) !parameter_lists.Report {
     var tree = try section_tree.parse(a, source, 0, 0, .{});
     defer tree.deinit(a);
@@ -145,7 +159,7 @@ test "HWPX parameter lists enforce node depth attribute value and owned byte lim
 }
 
 test "HWPX parameter lists release all allocation failures" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator) !void {
             var report = try inspect(a, prefix ++ "<p:pic><p:parameterset cnt='1'><p:stringParam name='a'>A&amp;B</p:stringParam></p:parameterset></p:pic><p:fieldBegin><p:parameters cnt='1'><p:integerParam name='i'>-01</p:integerParam></p:parameters></p:fieldBegin>" ++ suffix, .{});
             report.deinit();

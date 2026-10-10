@@ -73,7 +73,7 @@ test "HWPX table attributes reject malformed known values and enforce limits" {
 }
 
 test "HWPX table attributes release all allocations under failure injection" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator) !void {
             const report = try inspectXml(a, "<p:tbl pageBreak='C&#69;LL' repeatHeader='1' noAdjust='false' cellSpacing='12' borderFillIDRef='0'/>", .{}, &.{});
             try std.testing.expectEqual(@as(usize, 1), report.table_attributes.page_break.cell);

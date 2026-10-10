@@ -5,6 +5,7 @@ pub const Header = struct {
     /// Fixed PARA_HEADER field location, shared by parsing and narrow writers.
     pub const style_id_offset = 10;
     pub const character_count_offset = 0;
+    pub const control_mask_offset = 4;
     pub const char_shape_count_offset = 12;
     pub const range_tag_count_offset = 14;
     pub const line_segment_count_offset = 16;

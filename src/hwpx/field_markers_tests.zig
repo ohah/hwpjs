@@ -128,7 +128,7 @@ test "HWPX field markers decode UTF16 attributes and preserve raw XML bytes" {
 }
 
 test "HWPX field markers release allocation failures" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator) !void {
             var report = try inspect(a, "<p:fieldBegin id='1' name='A&amp;B'><p:parameters/></p:fieldBegin><p:fieldEnd beginIDRef='1'/>", .{});
             report.deinit();

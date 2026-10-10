@@ -46,7 +46,7 @@ pub fn splice(a: std.mem.Allocator, input: []const Position, at: usize, deleted:
 }
 
 test "mixed title position split affinity splice and allocation failures" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator) !void {
             const input = [_]Position{
                 .{ .element_index = 1, .unit = 0 },

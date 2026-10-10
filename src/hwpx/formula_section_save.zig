@@ -15,10 +15,17 @@ pub fn hasFormula(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig"
 }
 
 pub fn write(a: std.mem.Allocator, trees: []const @import("xml_part_tree.zig").Tree, section: usize, sites: *const @import("text_sites.zig").Sites, options: @import("text_sites.zig").Options, dirty: []const @import("text_sites_save.zig").FieldDirty, max_bytes: usize) ![]u8 {
+    return writeWithDefinitions(a, trees, section, sites, options, dirty, null, max_bytes);
+}
+
+pub fn writeWithDefinitions(a: std.mem.Allocator, trees: []const @import("xml_part_tree.zig").Tree, section: usize, sites: *const @import("text_sites.zig").Sites, options: @import("text_sites.zig").Options, dirty: []const @import("text_sites_save.zig").FieldDirty, definitions: ?*const @import("formula_definition_values.zig").Values, max_bytes: usize) ![]u8 {
     if (section >= trees.len) return error.InvalidSectionIndex;
     const tree = &trees[section];
-    if (!try hasFormula(a, tree)) return @import("text_sites_save.zig").writeWithFieldDirty(a, tree, sites, options, dirty, max_bytes);
-    const prepared = try @import("formula_section_prepare.zig").prepare(a, trees, section, sites, .{ .branch_policy = options.branch_policy });
+    if (!try hasFormula(a, tree)) {
+        if (definitions) |values| if (values.entries.items.len != 0) return error.InvalidFormulaDefinitionSelection;
+        return @import("text_sites_save.zig").writeWithFieldDirty(a, tree, sites, options, dirty, max_bytes);
+    }
+    const prepared = try @import("formula_section_prepare.zig").prepare(a, trees, section, sites, .{ .branch_policy = options.branch_policy, .definitions = definitions });
     defer {
         for (prepared) |*field| field.deinit(a);
         a.free(prepared);

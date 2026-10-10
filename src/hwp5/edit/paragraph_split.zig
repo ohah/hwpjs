@@ -18,10 +18,20 @@ pub const Draft = struct {
 /// Caller must reserve new_id against the entire current document.
 /// Control relocation and cross-paragraph range semantics require later adapters.
 pub fn prepare(a: std.mem.Allocator, source: []const u8, version: Version, p: model.Paragraph, at: u32, new_id: u32, char_count: usize) !Draft {
+    return prepareWithFormulas(a, source, version, p, at, new_id, char_count, false);
+}
+
+fn prepareWithFormulas(a: std.mem.Allocator, source: []const u8, version: Version, p: model.Paragraph, at: u32, new_id: u32, char_count: usize, formulas: bool) !Draft {
     const template = if (p.source_node == null) p.header_template orelse return error.MissingParagraphTemplate else try p.originalNode();
     if (new_id == 0 or new_id == p.instance_id) return error.InvalidParagraphInstanceId;
+    if (p.source_node != null) {
+        for (p.tokens) |token| {
+            if (token.kind == .control and token.raw.len == 16 and std.mem.readInt(u16, token.raw[0..2], .little) == 2 and std.mem.readInt(u32, token.raw[2..6], .little) == @import("../body/column_def.zig").control_id)
+                return @import("column_split_draft.zig").prepare(a, source, version, p, at, new_id, char_count);
+        }
+    }
     for (p.tokens) |token| {
-        if (token.kind == .control and (token.raw.len != 2 or std.mem.readInt(u16, token.raw[0..2], .little) != 13)) return error.UnsupportedStructuralControl;
+        if (token.kind == .control and (token.raw.len != 2 or (std.mem.readInt(u16, token.raw[0..2], .little) != 13 and std.mem.readInt(u16, token.raw[0..2], .little) != 10))) return error.UnsupportedStructuralControl;
     }
     if (p.field_attributes != null or p.formula_results != null) return error.UnsupportedStructuralControl;
     if (p.range_tags) |ranges| if (ranges.len != 0) return error.UnsupportedRangeSemantics;
@@ -35,8 +45,8 @@ pub fn prepare(a: std.mem.Allocator, source: []const u8, version: Version, p: mo
     errdefer left.deinit(a);
     var right = try clone.paragraph(a, p);
     errdefer right.deinit(a);
-    try plain.apply(a, source, version, &left, .{ .section = 0, .paragraph = 0, .start_unit = at, .end_unit = end, .utf8 = "" }, char_count);
-    try plain.apply(a, source, version, &right, .{ .section = 0, .paragraph = 0, .start_unit = 0, .end_unit = at, .utf8 = "" }, char_count);
+    try plain.applySplitProjection(a, source, version, &left, .{ .section = 0, .paragraph = 0, .start_unit = at, .end_unit = end, .utf8 = "" }, char_count, formulas);
+    try plain.applySplitProjection(a, source, version, &right, .{ .section = 0, .paragraph = 0, .start_unit = 0, .end_unit = at, .utf8 = "" }, char_count, formulas);
     if (right.tokens.len == 0) {
         const tokens = try a.alloc(model.Token, 1);
         errdefer a.free(tokens);
@@ -59,7 +69,9 @@ pub fn prepare(a: std.mem.Allocator, source: []const u8, version: Version, p: mo
 pub fn apply(a: std.mem.Allocator, section: *model.Section, source: []const u8, version: Version, paragraph: usize, at: u32, new_id: u32, char_count: usize) !void {
     if (paragraph >= section.paragraphs.len) return error.InvalidParagraphIndex;
     for (section.paragraphs) |p| if (p.instance_id == new_id) return error.InvalidParagraphInstanceId;
-    var draft = try prepare(a, source, version, section.paragraphs[paragraph], at, new_id, char_count);
+    const formulas = try @import("source_policy.zig").hasFormulas(a, source, version);
+    if (formulas) try @import("formula_structure_scope.zig").validate(a, source, version, section.paragraphs[paragraph]);
+    var draft = try prepareWithFormulas(a, source, version, section.paragraphs[paragraph], at, new_id, char_count, formulas);
     var transferred = false;
     defer if (!transferred) draft.deinit(a);
     const count = std.math.add(usize, section.paragraphs.len, 1) catch return error.LimitExceeded;

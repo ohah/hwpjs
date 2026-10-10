@@ -4,45 +4,42 @@ const history = @import("editor_history.zig");
 
 fn synthetic(a: std.mem.Allocator) !editor.Session {
     const xml = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:p><p:run><p:t>A</p:t><p:pic/><p:t>B</p:t></p:run></p:p></s:sec>";
-    var tree = try @import("xml_part_tree.zig").parse(a, xml, .section, 0, 0, .{});
-    errdefer tree.deinit(a);
-    var sites = try @import("text_sites.zig").collect(a, &tree, .{ .materialize_anchor_boundaries = true });
-    errdefer sites.deinit(a);
-    const locations = try @import("text_site_locations.zig").build(a, &tree, &sites, .{});
-    errdefer a.free(locations);
-    const sections = try a.alloc(editor.Section, 1);
-    errdefer a.free(sections);
-    const source = try a.dupe(u8, xml);
-    sections[0] = .{ .tree = tree, .sites = sites, .locations = locations, .entry_index = 0, .first_paragraph = 1, .last_paragraph = 1 };
-    return .{ .allocator = a, .source = source, .sections = sections, .options = .{} };
+    return @import("editor_history_test_fixture.zig").open(a, xml, 1);
 }
 
 test "HWPX native history every allocation failure retains current model and stack counts" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator) !void {
             var session = try synthetic(a);
             defer session.deinit();
             var h = try history.History.init(&session, 2, 10000);
             defer h.deinit();
             _ = h.apply(&session, .{ .kind = .anchored, .paragraph = 1, .start = 0, .deleted = 0, .inserted = "검증😀" }) catch |err| {
+                try std.testing.expectEqual(@as(u32, 0), h.stack.revision);
+                try std.testing.expectEqual(@as(u32, 1), h.stack.next_revision);
                 try std.testing.expectEqualStrings("A", session.sections[0].sites.items[0].text);
                 try std.testing.expectEqual(@as(usize, 0), h.stack.undo.items.len);
                 try std.testing.expectEqual(@as(usize, 0), h.stack.redo.items.len);
                 return err;
             };
             _ = h.undo(&session) catch |err| {
+                try std.testing.expectEqual(@as(u32, 1), h.stack.revision);
+                try std.testing.expectEqual(@as(u32, 2), h.stack.next_revision);
                 try std.testing.expectEqualStrings("검증😀A", session.sections[0].sites.items[0].text);
                 try std.testing.expectEqual(@as(usize, 1), h.stack.undo.items.len);
                 try std.testing.expectEqual(@as(usize, 0), h.stack.redo.items.len);
                 return err;
             };
             _ = h.redo(&session) catch |err| {
+                try std.testing.expectEqual(@as(u32, 0), h.stack.revision);
+                try std.testing.expectEqual(@as(u32, 2), h.stack.next_revision);
                 try std.testing.expectEqualStrings("A", session.sections[0].sites.items[0].text);
                 try std.testing.expectEqual(@as(usize, 0), h.stack.undo.items.len);
                 try std.testing.expectEqual(@as(usize, 1), h.stack.redo.items.len);
                 return err;
             };
             try std.testing.expectEqualStrings("검증😀A", session.sections[0].sites.items[0].text);
+            try std.testing.expectEqual(@as(u32, 1), h.stack.revision);
         }
     }.run, .{});
 }

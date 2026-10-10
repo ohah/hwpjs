@@ -79,6 +79,15 @@ fn kindOf(element: tree_mod.Element) ?Kind {
 
 /// Inspects exact selected-section number controls without calculating their rendered sequence.
 pub fn inspect(a: std.mem.Allocator, sections: []const tree_mod.Tree, options: Options) !Report {
+    return inspectMode(a, sections, options, false);
+}
+
+/// Selected section keeps its real ordinal; full-document ordering stays strict.
+pub fn inspectSection(a: std.mem.Allocator, tree: *const tree_mod.Tree, options: Options) !Report {
+    return inspectMode(a, &.{tree.*}, options, true);
+}
+
+fn inspectMode(a: std.mem.Allocator, sections: []const tree_mod.Tree, options: Options, selected: bool) !Report {
     var arena = std.heap.ArenaAllocator.init(a);
     errdefer arena.deinit();
     const owned_a = arena.allocator();
@@ -104,8 +113,9 @@ pub fn inspect(a: std.mem.Allocator, sections: []const tree_mod.Tree, options: O
         .unexpected_format = 0,
         .owned_bytes = 0,
     };
-    for (sections, 0..) |*tree, ordinal| {
-        if (tree.part_kind != .section or tree.section_ordinal != ordinal or tree.elements.len == 0) return error.InvalidPartKind;
+    for (sections, 0..) |*tree, index_ordinal| {
+        if (tree.part_kind != .section or tree.section_ordinal == null or (!selected and tree.section_ordinal != index_ordinal) or tree.elements.len == 0) return error.InvalidPartKind;
+        const ordinal = tree.section_ordinal.?;
         for (tree.elements, 0..) |element, index| {
             const kind = kindOf(element) orelse continue;
             const parent_index = element.parent orelse continue;

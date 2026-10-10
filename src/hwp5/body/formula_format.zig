@@ -13,43 +13,11 @@ pub const Format = enum {
 
     pub fn render(self: Format, a: std.mem.Allocator, value: f64, grouping: Grouping) ![]u8 {
         if (!std.math.isFinite(value)) return error.InvalidFormulaNumber;
-        var buffer: [512]u8 = undefined;
-        var scientific_buffer: [64]u8 = undefined;
-        var exponent: i32 = 0;
-        var scientific = false;
-        const rendered = switch (self) {
-            .fixed2 => try std.fmt.float.render(&buffer, value, .{ .mode = .decimal, .precision = 2 }),
-            .general6 => blk: {
-                const s = try std.fmt.float.render(&scientific_buffer, value, .{ .mode = .scientific, .precision = 5 });
-                const e = std.mem.indexOfScalar(u8, s, 'e') orelse return error.UnsupportedFormulaFormat;
-                exponent = try std.fmt.parseInt(i32, s[e + 1 ..], 10);
-                scientific = exponent < -4 or exponent >= 6;
-                if (scientific) break :blk s[0..e];
-                break :blk try std.fmt.float.render(&buffer, value, .{ .mode = .decimal, .precision = @intCast(5 - exponent) });
-            },
-        };
-        var end = rendered.len;
-        if (self == .general6 and std.mem.indexOfScalar(u8, rendered, '.') != null) {
-            while (end > 0 and rendered[end - 1] == '0') end -= 1;
-            if (end > 0 and rendered[end - 1] == '.') end -= 1;
-        }
-        const plain = rendered[0..end];
-        const signed: usize = if (plain.len > 0 and plain[0] == '-') 1 else 0;
-        const integer_end = std.mem.indexOfScalar(u8, plain, '.') orelse plain.len;
-        var out: std.ArrayList(u8) = .empty;
-        errdefer out.deinit(a);
-        for (plain, 0..) |c, i| {
-            if (grouping == .thousands and !scientific and i > signed and i < integer_end and (integer_end - i) % 3 == 0) try out.append(a, ',');
-            try out.append(a, c);
-        }
-        if (scientific) {
-            try out.appendSlice(a, if (exponent < 0) "e-" else "e+");
-            const magnitude: u32 = @intCast(if (exponent < 0) -exponent else exponent);
-            if (magnitude < 10) try out.append(a, '0');
-            var digits: [16]u8 = undefined;
-            try out.appendSlice(a, try std.fmt.bufPrint(&digits, "{d}", .{magnitude}));
-        }
-        return out.toOwnedSlice(a);
+        return @import("../../model/calculation_result_text.zig").render(a, value, .{
+            .kind = if (self == .fixed2) .fixed else .general,
+            .precision = if (self == .fixed2) 2 else 6,
+            .grouping = grouping == .thousands,
+        });
     }
 };
 

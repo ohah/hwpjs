@@ -57,7 +57,17 @@ pub fn parse(a: std.mem.Allocator, input: *Input, options: Options) !Tag {
         const attr_name = try cursor.name(options.max_name_bytes);
         // Same strict encoding, no character references in names: byte equality
         // is codepoint equality. Namespace-expanded equality is a later check.
-        if ((try seen.getOrPut(a, attr_name.raw)).found_existing) return error.DuplicateXmlAttribute;
+        if (attributes.items.len < 8) {
+            // Most document tags have few attributes. Reuse their owned array
+            // instead of allocating a second name set for every tag.
+            for (attributes.items) |previous| if (std.mem.eql(u8, previous.name.raw, attr_name.raw)) return error.DuplicateXmlAttribute;
+        } else {
+            if (attributes.items.len == 8) {
+                try seen.ensureTotalCapacity(a, 9);
+                for (attributes.items) |previous| _ = try seen.getOrPut(a, previous.name.raw);
+            }
+            if ((try seen.getOrPut(a, attr_name.raw)).found_existing) return error.DuplicateXmlAttribute;
+        }
         _ = try cursor.whitespace();
         try cursor.require('=');
         _ = try cursor.whitespace();

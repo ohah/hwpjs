@@ -59,7 +59,7 @@ test "HWPX switch shape ignores foreign and nested lookalikes" {
         "</p:run></p:p>" ++ suffix;
     const report = try inspectXml(std.testing.allocator, source, .{});
     try std.testing.expectEqualSlices(u64, &.{ 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0 }, &report.switches.counts());
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator, xml_source: []const u8) !void {
             const result = try inspectXml(a, xml_source, .{});
             try std.testing.expectEqual(@as(usize, 1), result.switches.switches);
@@ -185,7 +185,7 @@ test "HWPX run topology applies one XML byte budget across master-page parts" {
 test "HWPX run topology preserves errors and releases every allocation failure" {
     const bytes = try fixture.storedZip(std.testing.allocator, &sources);
     defer std.testing.allocator.free(bytes);
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator, data: []const u8) !void {
             var document = try package.inspectDocument(a, data, .{});
             defer document.deinit(a);

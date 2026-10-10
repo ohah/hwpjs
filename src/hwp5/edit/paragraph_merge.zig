@@ -28,16 +28,11 @@ pub fn prepare(a: std.mem.Allocator, left: model.Paragraph, right: model.Paragra
     @memcpy(text[first.len - 2 ..], second);
     const owned_runs = try runs.join(a, left.character_runs, right.character_runs, @intCast(first.len / 2 - 1));
     errdefer a.free(owned_runs);
-    const tokens = try a.alloc(model.Token, if (length > 2) 2 else 1);
-    errdefer a.free(tokens);
-    var initialized: usize = 0;
-    errdefer for (tokens[0..initialized]) |t| a.free(t.raw);
-    if (length > 2) {
-        tokens[0] = .{ .start_unit = 0, .kind = .text, .encoding = .utf16le, .raw = try a.dupe(u8, text[0 .. length - 2]) };
-        initialized = 1;
+    const tokens = try @import("token_ownership.zig").fromText(a, text);
+    errdefer {
+        for (tokens) |token| a.free(token.raw);
+        a.free(tokens);
     }
-    tokens[initialized] = .{ .start_unit = @intCast(length / 2 - 1), .kind = .control, .encoding = .utf16le, .raw = try a.dupe(u8, &.{ 13, 0 }) };
-    initialized += 1;
     const owned_ranges = try a.alloc(model.TextRange, 0);
     errdefer a.free(owned_ranges);
     var result = try @import("../../model/clone.zig").paragraph(a, left);

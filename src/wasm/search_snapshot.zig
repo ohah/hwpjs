@@ -47,5 +47,5 @@ fn allocationCase(a: std.mem.Allocator) !void {
 }
 
 test "snapshot lookup releases allocations on failure" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, allocationCase, .{});
+    try @import("../testing/allocation_failures.zig").check(allocationCase, .{});
 }

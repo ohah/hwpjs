@@ -63,7 +63,7 @@ test "HWPX master line segments reject malformed values and exact limits" {
 }
 
 test "HWPX master line segments release allocations under failure injection" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator) !void {
             const report = try inspect(a, sources[6].data, .{});
             try std.testing.expectEqual(@as(usize, 1), report.lines.segments);

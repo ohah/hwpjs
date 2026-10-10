@@ -110,7 +110,7 @@ test "MiniFAT content, aliases, limits, bad mini links and failed stream queries
 }
 
 test "allocation failures release all parser and lookup allocations" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, allocationCase, .{});
+    try @import("../testing/allocation_failures.zig").check(allocationCase, .{});
 }
 
 test "truncation, header validation, resource bounds and cyclic directory chain" {

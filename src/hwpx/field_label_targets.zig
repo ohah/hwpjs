@@ -9,22 +9,42 @@ pub fn list(self: anytype, section_index: usize, paragraph: usize, max_targets: 
     const a = self.allocator;
     var targets: std.ArrayList(Target) = .empty;
     defer targets.deinit(a);
-    const has_fields = has: {
-        for (section.tree.elements) |element| {
-            if (element.is(@import("document_xml.zig").paragraph_uri, "fieldBegin")) break :has true;
-        }
-        break :has false;
-    };
+    const has_fields = try @import("source_field_analysis.zig").hasFields(self, section_index);
     if (!has_fields) return targets.toOwnedSlice(a);
     const trees = try a.alloc(@import("xml_part_tree.zig").Tree, self.sections.len);
     defer a.free(trees);
     for (self.sections, trees) |input, *tree| tree.* = input.tree;
-    var report = try @import("field_markers.zig").inspect(a, trees, .{});
-    defer report.deinit();
-    const ranges = try @import("field_text_ranges.zig").build(a, trees, &report);
-    defer a.free(ranges);
+    var analysis = try @import("source_field_analysis.zig").lease(self);
+    defer analysis.deinit(a);
+    const report = analysis.source.report;
+    const ranges = analysis.source.fields;
     const frames = try @import("xml_tree_selection.zig").build(a, &section.tree, .{ .mode = .selected }, 4096);
     defer a.free(frames);
+    if (section.structure_values) |*current| {
+        var materialized = false;
+        for (current.paragraphs) |row| if (row.field_positions != null) {
+            materialized = true;
+        };
+        if (materialized) {
+            if (section.sites.items.len != 0) return error.DuplicateCurrentTextOwner;
+            const spans = try @import("field_current_spans.zig").build(a, trees, section_index, current, &report, 200_000);
+            defer a.free(spans);
+            for (spans) |span| {
+                if (span.paragraph_index != paragraph - section.first_paragraph) continue;
+                const field = chosen: {
+                    for (ranges) |range| if (range.section == section_index and report.markers[range.begin_marker].element_index == span.begin_element) break :chosen range;
+                    return error.InvalidFieldLinks;
+                };
+                @import("field_label_session.zig").validateLinked(&section.tree, field, &report, ranges, frames) catch |err| switch (err) {
+                    error.UnsupportedFieldLabel => continue,
+                    else => return err,
+                };
+                if (targets.items.len >= max_targets) return error.LimitExceeded;
+                try targets.append(a, .{ .begin_element = std.math.cast(u32, span.begin_element) orelse return error.LimitExceeded, .start = std.math.cast(u32, span.start) orelse return error.LimitExceeded, .end = std.math.cast(u32, span.end) orelse return error.LimitExceeded });
+            }
+            return targets.toOwnedSlice(a);
+        }
+    }
     for (section.tree.elements, 0..) |element, index| {
         if (!element.is(@import("document_xml.zig").paragraph_uri, "fieldBegin")) continue;
         const prepared = @import("field_label_session.zig").prepareLinked(self, section_index, paragraph, index, &report, ranges, frames) catch |err| switch (err) {

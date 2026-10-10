@@ -1,0 +1,37 @@
+pub const decryptBlock = @import("core.zig").decryptBlock;
+
+test "DES 256 independent OpenSSL generated blocks and key parity mutations" {
+    const std = @import("std");
+    const oracle = "6fd548d3d1ee1a3104f6c7865caedd587c9adbc7664d0c6ffe6a1444bc80b7926ba26ed4c54ac2a665394dd91ec64f255a7494149a2d3c18ec9d57e93be6152f9e2774a3b20bb4c9e09c7ac1d26a447a5499fe29c2fd02d6bf04515d72825c6963bcf5453df04aff2039008597370167e61514943a0265e6f4bd911a6a82a1c9ddb3e46b08e6d449d4c53fbec0ea83643c58db98eb62b5113650f357b7b7fc25fcce64b07007ead038d434b6d5b94b99b1a085d028cc9bccef7d3c7beea8f9077b87ac7209dcaf50a5ea76246aeeb0964297103c4ee371fc89ca417b1825348c806a6f2e0bbd42684a031097634e9dc67f7dc1cf15abe449d88fd754b0e46fb71e01f56788da9b74c3699a83121cc2b5f316af7cb2212a11c7c07889a38da2f0bb3c0007b9c91c1864ba164e2d678fa9bbc6c63f1cb844effda459c8cd198cf71b62f70a4d9ec4842ea2b5203d1e779bf7ddd37e26a8aca57a0c1c3c0b3bb321a122176e0d94145fcbf9638604a8631028f7693b756f0edc23c878593414720b4ed3e192e78e348b015e4b9f3192f59171ebc152c0e3baca62b0710efaee31e6bdd275be11429f97d30d3ba7db8c08828556944b077959f407516e3848d0b176b6fa0927ab34fff0c1a007330cc2c123a61671514a710e85dbf46516242fb602f244a129798db4bb669efb5da10173dc9af1a14cae33ac39459e372d5f0eb3a71d642c257112624541175ac92ecfaf6d5664804dbb439e18bfba73caf237e5bb21e1ce15f34f6fb9fd8cf2bc0c4c884b4af69ed9bb4009c102e2d8e945e4c6f178b8891d9f8c6b2d04f2e60e00aee48bdffe316edf94f7a773c4cd48b5a4128128a5c623aac3e071db406aff8ddb76ff116e80cce776f2bfe66f97666e7d68b0ec1ead61cc8e44dd15ac5cccba7d4919b5f0958e53089be712f2e0f0cc043c706f271813cc2b1ea6694cf85e6871c932f86306e90578c3656229b5ad984f9d4df6c5e446aaabea10748f7c5970ccfe4dd6fb76629cd4edbe2f0f54c8120ddc93c2facb69cd511b4c9d0ef780f3ebeaefb3463cead9e0cef01e66dbb50db1fe81785681785b312b9a84843fba4ba8bf6beb77973fa960b7568a08b91ef35dad0774813cc7ef8f4c3bd01da18e419936ddf615a11c2a11db42c99dc3966e2d3a16172e152640c85b106b45d303094b78e06e0477e993b9ab880d7c9de72bb3639c5acdeb2ec22d0a67a85c82ec597262e935069a4dade3c4bfcd8334cda380a8cc73d956bc75fcf3dec042c0418076f3189505a49524343a96cf358fc162441e069bcefd197488431644efa7600300e5084f2baceccaab3587c795c8ff9438ed27d035322ddaf99dc457a397335d49bf462de13fb6caefc9a4956f7de1bc81682acf99dd1c7b1d347360bf4c50a3e97577ddbb0e31a3c7de541a0a998d1e5b812c8b6753c5bb007a7a9aeb75d87edbf21c778dad30ad1faad9cbe01f1e434fe24cef3402700f3a007069c4a09f5be4801cb45d009d91240808dff70c620d0a16cf654ab709df8abf5e1966a75932697b2c3dc965ec4c76d18f104229201d4b45d4ff2cfab8122a02ccc152f711940af30b6a11f94ea94cd9d526db97dd14c7ecfb473d5bfa71b9d499645096d265f99e73ac324a2fc623d0f1e59389c42c3f84a725d1060a0388fc72987d7190d22b1e268aa6701a90c08996fe960d591e2acce1482c392d55f50bd68858d6f887ecd6db35dbae8f9094ac0d7d93f335dbb92138be30ee5e393e46210004063706528cfc46b8e2af9e65e195d2b8c7a7b1b69ffc0949bd5fbd20aa695254f20607f28abf139a8b87b73f09aecf92c309d526cb5fb5935286ea90e2ab801221bf5cae08b95992ce126f4bfcca9982611cddd0d5d2800bd862ea1cf53d4d7208d28cff5a5e243015190f84e9c3fed17a413282e0eef61186a48d92448e6f3f1a6eeb2cd0af227e60d3eeccd81306cdbc705d020cdc9aadf384e165d165bced1fea9b3bb75c7eeda35c99bcb08bd31e4bedc01b32b82506af04bd6d6a38133c75925e409d32a864a267cde49aaf7b2fd4eaebfe6292d7bc538d2b62e030ef1d1fde0a763093d0bb7d3ed7986ce6db4aff0018287a9592fb9a632ebdbc063ee12f6545bc3347ea46ed5c0f136a327c230023f2f9c2a4d61125d6174b4b3474b20543f6928d8dace162327947b6622acaeff89976084f94a68e325a34938281ee80b3884d05a6d45857a16e927f2c1f514d77fdcf0dc548483b4cb4aba4e7d56836d3ff7efb0ef573feb929dc588cb2f8f5e122626378b9039cab0870479941fd96f62726e79a9b23d256d72b96ade4e98b93fe73a697f5a6f499f72b62b4f69c7171ae5ed6a434fd46f471ea41cbbd2feece447a32cce6593ddeef5cbd77d9917ed1e84516b1ab295b63965b39c9d24d86ebf31c376fd6835effe342535c2334b3f58c55644c08ffd95490c5b9ff73e0708eba828bb0bb7e9f36155741f107d012cb8103ef5c61776f23e14d84213bb272d6f18c6fd358334a7405bc4edb5b8bda8c8bbd88940275829ea9a5d27fd44e03e583477973d788f536e3e4c61dba6b0a2cffd498e931bcdc8dd0f9424222c7fb1b015390a0ea8f31ba7daab4c10393ee554113bc5cf0ae0f54937be752eb0acdf73bd960401f35d590e631d7b6acbd955142a1d678ae4848d7f93c4342f7c33f473114292158b83eee33831fffe7aa69a1ea09d0ca75018c9badbd932af2582407a356129be38b3881ba1cd6b55084d441d0a3ef447e1ee4ee22aafe0786bc3701dffa3fed197e124d3647105df981a8bb31e6861287139f6ebf1273b94de6901932275b2e6a4d71fbcb701e665eb87e3ed110e286c301eaa2b2ea148d70eeb2efc3712a3c";
+    for (0..256) |index| {
+        var key: [8]u8 = undefined;
+        var plain: [8]u8 = undefined;
+        var cipher: [8]u8 = undefined;
+        for (0..8) |byte| {
+            key[byte] = @truncate(index * 17 + byte * 31);
+            plain[byte] = @truncate(index * 53 + byte * 7);
+        }
+        _ = try std.fmt.hexToBytes(&cipher, oracle[index * 16 ..][0..16]);
+        try std.testing.expectEqualSlices(u8, &plain, &decryptBlock(key, cipher));
+        for (&key) |*byte| byte.* ^= 1;
+        try std.testing.expectEqualSlices(u8, &plain, &decryptBlock(key, cipher));
+    }
+}
+
+test "DES legacy block decryption matches independent OpenSSL vectors" {
+    const std = @import("std");
+    const keys = [_][]const u8{ "133457799bbcdff1", "001f3e5d7c9bbad9", "11304f6e8daccbea", "2241607f9ebddcfb", "33527190afceed0c" };
+    const plains = [_][]const u8{ "0123456789abcdef", "00070e151c232a31", "353c434a51585f66", "6a71787f868d949b", "9fa6adb4bbc2c9d0" };
+    const ciphers = [_][]const u8{ "85e813540f0ab405", "6fd548d3d1ee1a31", "04f6c7865caedd58", "7c9adbc7664d0c6f", "fe6a1444bc80b792" };
+    for (keys, plains, ciphers) |key_hex, plain_hex, cipher_hex| {
+        var key: [8]u8 = undefined;
+        var plain: [8]u8 = undefined;
+        var cipher: [8]u8 = undefined;
+        _ = try std.fmt.hexToBytes(&key, key_hex);
+        _ = try std.fmt.hexToBytes(&plain, plain_hex);
+        _ = try std.fmt.hexToBytes(&cipher, cipher_hex);
+        try std.testing.expectEqualSlices(u8, &plain, &decryptBlock(key, cipher));
+        for (&key) |*byte| byte.* ^= 1;
+        try std.testing.expectEqualSlices(u8, &plain, &decryptBlock(key, cipher));
+    }
+}

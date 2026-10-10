@@ -118,7 +118,7 @@ test "HWPX limits, ZIP64 sentinel, exact EOCD and output corruption" {
 test "HWPX entry index allocation failure" {
     const example = try loadFixture(std.testing.allocator, "example");
     defer std.testing.allocator.free(example);
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator, bytes: []const u8) !void {
             var archive = try package.open(a, bytes, .{});
             archive.deinit();

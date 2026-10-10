@@ -67,3 +67,13 @@ pub fn optionalUnsigned(a: std.mem.Allocator, tree: *const tree_mod.Tree, index:
     const raw = (try tree.attributeValue(a, index, "", name)) orelse return null;
     return try unsigned(a, raw, max_bytes);
 }
+
+pub fn optionalUnsignedPair(a: std.mem.Allocator, tree: *const tree_mod.Tree, index: usize, names: [2][]const u8, max_bytes: usize) ![2]?u32 {
+    var raw: [2]?xml.attribute_value.Value = undefined;
+    try tree.unprefixedAttributeValues(a, index, &names, &raw);
+    var result: [2]?u32 = .{ null, null };
+    for (raw, 0..) |value, field| if (value) |present| {
+        result[field] = try unsigned(a, present, max_bytes);
+    };
+    return result;
+}

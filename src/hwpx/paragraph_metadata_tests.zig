@@ -64,7 +64,7 @@ test "HWPX paragraph metadata counts across sections and rejects a header tree" 
 
 test "HWPX paragraph metadata releases all allocations after failures" {
     const source = prefix ++ "<p:p id='0' pageBreak='true' columnBreak='0' merged='false'/>" ++ suffix;
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator, bytes: []const u8) !void {
             const report = try inspectXml(a, bytes, .{});
             try std.testing.expectEqual(@as(usize, 1), report.paragraphs);

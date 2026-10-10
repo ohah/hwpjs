@@ -56,7 +56,7 @@ test "XML content visitor enforces decoded UTF8 byte limits and frees allocation
     context.max_bytes = 3;
     context.index = 0;
     try std.testing.expectError(error.LimitExceeded, xml.document.visit(std.testing.allocator, source, .{}, .{ .context = &context, .on_tag = Context.onTag, .on_content = Context.onContent }));
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator, bytes: []const u8) !void {
             try visit(a, bytes, &.{"😀"});
         }

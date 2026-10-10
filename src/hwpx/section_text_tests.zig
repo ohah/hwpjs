@@ -258,7 +258,7 @@ test "HWPX section text reports missing direct children without inventing nodes"
 
 test "HWPX section text cleans up on every allocation failure" {
     const source = prefix ++ "<p:p><p:run><p:t>A&amp;<![CDATA[B]]><p:tab/>C</p:t></p:run></p:p>" ++ suffix;
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator, bytes: []const u8) !void {
             _ = try inspect(a, bytes, .{}, null);
         }
@@ -325,7 +325,7 @@ test "HWPX selected section text isolates inactive limits and validates capabili
     try std.testing.expectEqual(@as(usize, 1), report.text_elements);
     try std.testing.expectError(error.LimitExceeded, inspectSelected(std.testing.allocator, source, .{ .text = .{ .max_text_bytes = 1 } }, &.{"urn:feature"}, null));
     try std.testing.expectError(error.InvalidSupportedNamespace, inspectSelected(std.testing.allocator, source, .{}, &.{"urn:bad uri"}, null));
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator, bytes: []const u8) !void {
             _ = try inspectSelected(a, bytes, .{}, &.{"urn:feature"}, null);
         }

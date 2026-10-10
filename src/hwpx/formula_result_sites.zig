@@ -28,6 +28,8 @@ pub fn prepare(a: std.mem.Allocator, tree: *const tree_mod.Tree, sites: *const s
         output.deinit(a);
     }
     var paragraph: ?usize = null;
+    var display_offset: usize = 0;
+    var same_display = true;
     for (sites.items, 0..) |site, index| {
         if (site.element_index >= tree.elements.len) return error.InvalidTextSites;
         const element = tree.elements[site.element_index];
@@ -44,6 +46,9 @@ pub fn prepare(a: std.mem.Allocator, tree: *const tree_mod.Tree, sites: *const s
         const p = owner orelse return error.UnsupportedFormulaResultSite;
         if (paragraph != null and paragraph.? != p) return error.UnsupportedFormulaResultParagraphs;
         paragraph = p;
+        if (same_display) {
+            if (site.text.len > display.len - display_offset or !std.mem.eql(u8, site.text, display[display_offset..][0..site.text.len])) same_display = false else display_offset += site.text.len;
+        }
         const text = try a.dupe(u8, if (output.items.len == 0) display else "");
         output.append(a, .{ .site_index = index, .text = text }) catch |err| {
             a.free(text);
@@ -51,6 +56,15 @@ pub fn prepare(a: std.mem.Allocator, tree: *const tree_mod.Tree, sites: *const s
         };
     }
     if (output.items.len == 0) return error.MissingFormulaResultSite;
+    if (same_display and display_offset == display.len) {
+        // Parameter synchronization must not erase a matching label's style
+        // partition. Only an actual value change collapses result fragments.
+        for (output.items) |*item| {
+            const text = try a.dupe(u8, sites.items[item.site_index].text);
+            a.free(item.text);
+            item.text = text;
+        }
+    }
     return .{ .items = try output.toOwnedSlice(a) };
 }
 
@@ -80,6 +94,18 @@ test "HWPX formula result sites prepare all strings without changing current tex
         }
     }.run, .{ &tree, &sites, ranges[0] });
     var invalid = ranges[0];
+    var unchanged = try prepare(a, &tree, &sites, ranges[0], "oldtail");
+    defer unchanged.deinit(a);
+    try std.testing.expectEqualStrings("old", unchanged.items[0].text);
+    try std.testing.expectEqualStrings("tail", unchanged.items[1].text);
+    try std.testing.checkAllAllocationFailures(a, struct {
+        fn run(allocator: std.mem.Allocator, t: *tree_mod.Tree, s: *sites_mod.Sites, r: @import("field_text_ranges.zig").Range) !void {
+            var result = try prepare(allocator, t, s, r, "oldtail");
+            defer result.deinit(allocator);
+            try std.testing.expectEqualStrings("old", result.items[0].text);
+            try std.testing.expectEqualStrings("tail", result.items[1].text);
+        }
+    }.run, .{ &tree, &sites, ranges[0] });
     invalid.content_end = tree.source.len + 1;
     try std.testing.expectError(error.SourceBindingMismatch, prepare(a, &tree, &sites, invalid, "42"));
     try std.testing.expectError(error.InvalidUtf8, prepare(a, &tree, &sites, ranges[0], &.{0xff}));

@@ -108,7 +108,7 @@ test "HWPX equation enforces exact site, script, attribute, source, and content 
 }
 
 test "HWPX equation releases every allocation failure" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator) !void {
             var report = try inspect(a, prefix ++ "<p:p><p:run><p:equation font='f'><p:script><![CDATA[a < b]]>&amp;c</p:script></p:equation></p:run></p:p>" ++ suffix, .{});
             defer report.deinit();

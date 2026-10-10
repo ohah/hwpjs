@@ -6,12 +6,27 @@ const scanner = @import("section_text.zig");
 const uri = @import("document_xml.zig").paragraph_uri;
 
 pub const Segment = struct {
-    kind: enum { text, tab, anchor },
+    kind: enum { text, tab, anchor, nb_space, fw_space, line_break, hypen },
     index: usize,
     source_start: usize,
     start_unit: usize = 0,
     end_unit: usize = 0,
 };
+pub fn isInlineUnit(segment: Segment) bool {
+    return segment.kind == .tab or segment.kind == .nb_space or segment.kind == .fw_space or segment.kind == .line_break or segment.kind == .hypen;
+}
+pub fn validateInlineUnit(tree: *const tree_module.Tree, segment: Segment) !void {
+    const expected: @import("retained_inline_unit.zig").Kind = switch (segment.kind) {
+        .tab => .tab,
+        .nb_space => .nb_space,
+        .fw_space => .fw_space,
+        .line_break => .line_break,
+        .hypen => .hypen,
+        else => return error.UnsupportedInlineControl,
+    };
+    if (@import("retained_inline_unit.zig").kind(tree, segment.index) != expected) return error.SourceBindingMismatch;
+    if (segment.end_unit < segment.start_unit or segment.end_unit - segment.start_unit != 1) return error.InvalidTextSites;
+}
 
 /// Shared derived text spelling. This is never serialized into source XML.
 pub fn segmentText(sites: *const sites_module.Sites, segment: Segment) []const u8 {
@@ -19,6 +34,10 @@ pub fn segmentText(sites: *const sites_module.Sites, segment: Segment) []const u
         .text => sites.items[segment.index].text,
         .tab => "\t",
         .anchor => "\xef\xbf\xbc",
+        .nb_space => "\xc2\xa0",
+        .fw_space => "\xe2\x80\x87",
+        .line_break => "\n",
+        .hypen => "\xc2\xad",
     };
 }
 
@@ -31,10 +50,22 @@ pub fn validateRange(segments: []const Segment, start: usize, end: usize) !void 
     }
 }
 
+/// Shared point validation for source and materialized paragraph projections.
+pub fn validateBoundary(sites: *const sites_module.Sites, segments: []const Segment, boundary: usize) !void {
+    try validateRange(segments, boundary, boundary);
+    for (segments) |segment| {
+        if (segment.kind != .text or boundary < segment.start_unit or boundary > segment.end_unit) continue;
+        if (segment.index >= sites.items.len) return error.InvalidTextSites;
+        const unit = std.math.cast(u32, boundary - segment.start_unit) orelse return error.LimitExceeded;
+        _ = try @import("text_site_edit.zig").bytePosition(sites.items[segment.index].text, unit);
+    }
+}
+
 /// Caller owns the slice. Positions are rebuilt from current owned text.
 pub fn build(a: std.mem.Allocator, tree: *const tree_module.Tree, sites: *const sites_module.Sites, locations: []const scanner.Location, paragraph: usize) ![]Segment {
     if (locations.len != sites.items.len or paragraph == 0) return error.InvalidTextSites;
     var segments: std.ArrayList(Segment) = .empty;
+    var title_axis_validated = false;
     defer segments.deinit(a);
     const owners = try a.alloc(bool, tree.elements.len);
     defer a.free(owners);
@@ -49,6 +80,15 @@ pub fn build(a: std.mem.Allocator, tree: *const tree_module.Tree, sites: *const 
         try segments.append(a, .{ .kind = .text, .index = index, .source_start = site.start });
     }
     if (!found) return error.MissingTextSite;
+    const paragraph_owner = try @import("paragraph_site_owner.zig").resolve(tree, sites, locations, paragraph);
+    for (tree.elements, 0..) |element, index| {
+        const run = element.parent orelse continue;
+        if (tree.elements[run].parent != paragraph_owner or (!@import("retained_bookmark.zig").supported(tree, index) and !@import("retained_bookmark.zig").directSupported(tree, index))) continue;
+        var axis = try @import("title_mark_axis.zig").build(a, tree, sites, locations, paragraph);
+        defer axis.deinit(a);
+        title_axis_validated = true;
+        break;
+    }
     for (tree.elements, 0..) |text_element, text_index| {
         if (!owners[text_index]) continue;
         if (text_element.is(uri, "run")) continue;
@@ -56,29 +96,40 @@ pub fn build(a: std.mem.Allocator, tree: *const tree_module.Tree, sites: *const 
         var child = text_element.first_child;
         while (child) |index| {
             const element = tree.elements[index];
-            if (!@import("retained_tab.zig").supported(tree, index)) return error.UnsupportedInlineControl;
-            try segments.append(a, .{ .kind = .tab, .index = index, .source_start = element.start_tag.start });
+            if (@import("title_mark_axis.zig").retained(tree, index)) {
+                if (!title_axis_validated) {
+                    var axis = try @import("title_mark_axis.zig").build(a, tree, sites, locations, paragraph);
+                    defer axis.deinit(a);
+                    title_axis_validated = true;
+                }
+                child = element.next_sibling;
+                continue;
+            }
+            const inline_kind = @import("retained_inline_unit.zig").kind(tree, index) orelse return error.UnsupportedInlineControl;
+            try segments.append(a, .{ .kind = switch (inline_kind) {
+                .tab => .tab,
+                .nb_space => .nb_space,
+                .fw_space => .fw_space,
+                .line_break => .line_break,
+                .hypen => .hypen,
+            }, .index = index, .source_start = element.start_tag.start });
             child = element.next_sibling;
         }
     }
     std.mem.sort(Segment, segments.items, {}, struct {
         fn less(_: void, left: Segment, right: Segment) bool {
-            if (left.source_start == right.source_start) return left.kind == .text and right.kind == .tab;
+            if (left.source_start == right.source_start) return left.kind == .text and right.kind != .text;
             return left.source_start < right.source_start;
         }
     }.less);
     var units: usize = 0;
     for (segments.items) |*segment| {
         segment.start_unit = units;
-        if (segment.kind == .tab) {
+        if (segment.kind != .text) {
             units = std.math.add(usize, units, 1) catch return error.LimitExceeded;
         } else {
             const text = sites.items[segment.index].text;
-            var offset: usize = 0;
-            while (try @import("../xml/scalars.zig").read(text, offset, .utf8)) |scalar| {
-                units = std.math.add(usize, units, if (scalar.value > 0xffff) 2 else 1) catch return error.LimitExceeded;
-                offset = scalar.end;
-            }
+            units = std.math.add(usize, units, try @import("text_site_edit.zig").utf16Length(text)) catch return error.LimitExceeded;
         }
         segment.end_unit = units;
     }

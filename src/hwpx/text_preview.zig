@@ -93,7 +93,7 @@ test "HWPX public text transport releases every failed allocation" {
     const a = std.testing.allocator;
     const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwpx", a, .limited(2_000_000));
     defer a.free(input);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, bytes: []const u8) !void {
             const output = try encode(allocator, bytes);
             defer allocator.free(output);

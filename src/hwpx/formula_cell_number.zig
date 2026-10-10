@@ -5,6 +5,11 @@ const sites_mod = @import("text_sites.zig");
 const fields = @import("table_xml_fields.zig");
 
 pub fn read(a: std.mem.Allocator, tree: *const tree_mod.Tree, sites: *const sites_mod.Sites, cell: usize) !f64 {
+    return readSelected(a, tree, sites, cell, null);
+}
+
+pub fn readSelected(a: std.mem.Allocator, tree: *const tree_mod.Tree, sites: *const sites_mod.Sites, cell: usize, frames: ?[]const @import("xml_tree_selection.zig").Frame) !f64 {
+    if (frames) |selection| if (selection.len != tree.elements.len) return error.SourceBindingMismatch;
     if (cell >= tree.elements.len or !fields.childIs(tree, cell, "tc")) return error.InvalidFormulaCellOwner;
     var bytes: [128]u8 = undefined;
     var length: usize = 0;
@@ -13,6 +18,7 @@ pub fn read(a: std.mem.Allocator, tree: *const tree_mod.Tree, sites: *const site
     // string to reveal its boundary, and controls must not vanish in a number.
     var paragraphs: usize = 0;
     for (tree.elements, 0..) |element, index| {
+        if (frames) |selection| if (!selection[index].active) continue;
         if (index == cell) continue;
         var ancestor = element.parent;
         var nearest_cell: ?usize = null;
@@ -29,10 +35,12 @@ pub fn read(a: std.mem.Allocator, tree: *const tree_mod.Tree, sites: *const site
             paragraphs += 1;
             if (paragraphs > 1) return error.UnsupportedFormulaCellParagraphs;
         }
-        if (in_paragraph and !fields.childIs(tree, index, "run") and !fields.childIs(tree, index, "t") and !fields.childIs(tree, index, "linesegarray") and !fields.childIs(tree, index, "lineseg")) return error.UnsupportedFormulaCellContent;
+        const selected_wrapper = if (frames) |selection| selection[index].kind == .switch_element or selection[index].kind == .branch else false;
+        if (in_paragraph and !selected_wrapper and !fields.childIs(tree, index, "run") and !fields.childIs(tree, index, "t") and !fields.childIs(tree, index, "linesegarray") and !fields.childIs(tree, index, "lineseg")) return error.UnsupportedFormulaCellContent;
     }
     for (sites.items) |site| {
         if (site.element_index >= tree.elements.len) return error.InvalidTextSites;
+        if (frames) |selection| if (!selection[site.element_index].active) continue;
         var cursor: ?usize = site.element_index;
         var owner: ?usize = null;
         var p: ?usize = null;
@@ -90,4 +98,22 @@ test "HWPX formula current cell number reads edits and excludes nested table tex
             try std.testing.expectEqual(@as(f64, 42.5), try read(allocator, t, s, 3));
         }
     }.run, .{ &tree, &sites });
+}
+
+test "HWPX formula current cell number selects compatibility content" {
+    const a = std.testing.allocator;
+    for ([_][]const u8{ "<p:t>12.5</p:t>", "<p:t>12.5</p:t><p:ctrl/>" }, 0..) |active, index| {
+        const source = try std.mem.concat(a, u8, &.{ "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:tbl><p:tr><p:tc><p:subList><p:p><p:run><p:switch><p:case><p:t>not a number</p:t><p:ctrl/></p:case><p:default>", active, "</p:default></p:switch></p:run></p:p></p:subList></p:tc></p:tr></p:tbl></s:sec>" });
+        defer a.free(source);
+        var tree = try tree_mod.parse(a, source, .section, 0, 0, .{});
+        defer tree.deinit(a);
+        var sites = try sites_mod.collect(a, &tree, .{});
+        defer sites.deinit(a);
+        const frames = try @import("xml_tree_selection.zig").build(a, &tree, .{ .mode = .selected }, 4096);
+        defer a.free(frames);
+        if (index == 0) {
+            try std.testing.expectEqual(@as(f64, 12.5), try readSelected(a, &tree, &sites, 3, frames));
+            try std.testing.expectError(error.SourceBindingMismatch, readSelected(a, &tree, &sites, 3, frames[0 .. frames.len - 1]));
+        } else try std.testing.expectError(error.UnsupportedFormulaCellContent, readSelected(a, &tree, &sites, 3, frames));
+    }
 }

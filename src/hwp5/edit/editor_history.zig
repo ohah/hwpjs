@@ -21,12 +21,15 @@ pub const History = struct {
         if (self.owner != session) return error.SourceBindingMismatch;
     }
     pub fn apply(self: *History, session: *edit.Session, command: edit.Command) !bool {
+        return self.applyBatch(session, &.{command});
+    }
+    pub fn applyBatch(self: *History, session: *edit.Session, commands: []const edit.Command) !bool {
         try self.bind(session);
         const before = try session.createCheckpoint(self.max_checkpoint_bytes);
         var transferred = false;
         defer if (!transferred) before.deinit();
         try self.stack.prepare();
-        if (!try session.applyCheckpointed(before, self.max_checkpoint_bytes, command)) return false;
+        if (!try session.applyBatchCheckpointed(before, self.max_checkpoint_bytes, commands)) return false;
         self.stack.commit(before);
         transferred = true;
         return true;

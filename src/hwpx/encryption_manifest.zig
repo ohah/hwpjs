@@ -3,7 +3,7 @@ const xml = @import("../xml/root.zig");
 const zip = @import("../zip/archive.zig");
 const attrs = @import("xml_attributes.zig");
 
-const manifest_uri = "urn:oasis:names:tc:opendocument:xmlns:manifest:1.0";
+pub const manifest_uri = "urn:oasis:names:tc:opendocument:xmlns:manifest:1.0";
 
 pub const Options = struct {
     max_xml_bytes: usize = 1024 * 1024,
@@ -90,6 +90,10 @@ pub fn read(a: std.mem.Allocator, archive: zip.Archive, options: Options) !Repor
     };
     const bytes = try archive.decode(entry, options.max_xml_bytes);
     defer archive.allocator.free(bytes);
+    return readXml(a, bytes, options);
+}
+
+pub fn readXml(a: std.mem.Allocator, bytes: []const u8, options: Options) !Report {
     var context: Context = .{ .allocator = a, .options = options };
     defer context.deinit();
     _ = try xml.document.visit(a, bytes, .{

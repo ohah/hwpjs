@@ -113,7 +113,7 @@ test "HWPX chart formula text counts decoded bytes and enforces exact budgets" {
 
 test "HWPX chart formula visitor releases all allocations on failure" {
     const source = prefix ++ "<c:numRef><c:f>Sheet1!$A$1</c:f><c:numCache/></c:numRef>" ++ suffix;
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator, bytes: []const u8) !void {
             _ = try inspect(a, bytes, .{});
         }

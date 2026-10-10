@@ -7,6 +7,32 @@ const fixture = @import("test_package_fixture.zig");
 const prefix = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph' xmlns:x='urn:foreign'><p:p><p:run>";
 const suffix = "</p:run></p:p></s:sec>";
 
+test "HWPX column definitions actual unequal fixture has ordered absolute widths" {
+    const a = std.testing.allocator;
+    const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/multicolumns-widths.hwpx", a, .limited(4_000_000));
+    defer a.free(input);
+    var session = try @import("editor_session.zig").open(a, input, .{});
+    defer session.deinit();
+    var report = try columns.inspect(a, &.{session.sections[0].tree}, .{});
+    defer report.deinit();
+    try std.testing.expectEqual(@as(usize, 3), report.columns.len);
+    try std.testing.expectEqual(@as(usize, 2), report.unequal_columns);
+    try std.testing.expectEqual(@as(usize, 0), report.size_count_mismatches);
+    const expected = [_][2]u32{ .{ 15291, 1744 }, .{ 15733, 0 }, .{ 10336, 870 }, .{ 10336, 434 }, .{ 10792, 0 } };
+    var index: usize = 0;
+    for (report.children) |child| {
+        if (child.kind != .size) continue;
+        try std.testing.expect(index < expected.len);
+        try std.testing.expectEqual(@as(?u32, expected[index][0]), child.size.?.width);
+        try std.testing.expectEqual(@as(?u32, expected[index][1]), child.size.?.gap);
+        index += 1;
+    }
+    try std.testing.expectEqual(expected.len, index);
+    const saved = try session.save();
+    defer a.free(saved);
+    try std.testing.expectEqualSlices(u8, input, saved);
+}
+
 fn inspect(a: std.mem.Allocator, inner: []const u8, options: columns.Options) !columns.Report {
     const source = try std.mem.concat(a, u8, &.{ prefix, inner, suffix });
     defer a.free(source);
@@ -38,6 +64,13 @@ test "HWPX column definitions preserve unequal widths order and original values"
     try std.testing.expectEqual(@as(?u32, 4), report.children[1].size.?.gap);
     try std.testing.expectEqual(@as(?u32, 456), report.children[2].size.?.width);
     try std.testing.expect(std.mem.indexOf(u8, report.columns[0].raw_xml, "future='x'") != null);
+}
+
+test "HWPX column definitions keep widths above signed sixteen bit without saturation" {
+    var report = try inspect(std.testing.allocator, "<p:ctrl><p:colPr type='NEWSPAPER' colCount='2' sameSz='0'><p:colSz width='40000' gap='500'/><p:colSz width='4294967295' gap='0'/></p:colPr></p:ctrl>", .{});
+    defer report.deinit();
+    try std.testing.expectEqual(@as(?u32, 40000), report.children[0].size.?.width);
+    try std.testing.expectEqual(@as(?u32, 4294967295), report.children[1].size.?.width);
 }
 
 test "HWPX column definitions preserve unknown children and diagnostic mismatches" {
@@ -107,7 +140,7 @@ test "HWPX column definitions enforce byte and count budgets" {
 }
 
 test "HWPX column definitions release all allocation failures" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator) !void {
             var report = try inspect(a, "<p:colPr type='NEWSPAPER' colCount='2' sameSz='0'><p:colLine type='SOLID' width='0.12 mm'/><p:colSz width='1' gap='0'/><p:colSz width='2' gap='0'/></p:colPr>", .{});
             report.deinit();

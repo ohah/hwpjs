@@ -6,6 +6,7 @@ pub const Options = struct {
     only_changed: bool = true,
     branch_policy: @import("compatibility_selection.zig").Policy = .{ .mode = .selected },
     evaluation: @import("formula_values.zig").Limits = .{},
+    definitions: ?*const @import("formula_definition_values.zig").Values = null,
 };
 
 /// Caller owns all preparations and the slice. No source or Sites mutation.
@@ -22,7 +23,8 @@ pub fn prepare(a: std.mem.Allocator, trees: []const @import("xml_part_tree.zig")
     defer a.free(frames);
     var prepared: std.ArrayList(output.Prepared) = .empty;
     var inspected_fields: usize = 0;
-    var remaining = options.evaluation;
+    var applied_definitions: usize = 0;
+    var evaluation: @import("formula_dependency_evaluation.zig").Context = .{ .allocator = a, .tree = tree, .sites = sites, .ranges = ranges, .markers = &markers, .parameters = &parameters, .definitions = options.definitions, .remaining = options.evaluation, .frames = frames };
     errdefer {
         for (prepared.items) |*item| item.deinit(a);
         prepared.deinit(a);
@@ -38,14 +40,27 @@ pub fn prepare(a: std.mem.Allocator, trees: []const @import("xml_part_tree.zig")
         if (inspected_fields >= options.max_fields) return error.LimitExceeded;
         inspected_fields += 1;
         const view = (try @import("formula_parameters.zig").read(&parameters, section, begin.element_index)) orelse return error.MissingFormulaParameters;
-        const expression = try @import("formula_expression.zig").parse(a, view);
-        const value = try @import("formula_values.zig").evaluate(a, tree, sites, begin.element_index, expression.range, remaining);
-        remaining.cells -= value.cells;
-        remaining.inspections -= value.inspections;
-        const display = try @import("formula_output.zig").render(a, expression, view, value.value);
+        const replacement = if (options.definitions) |definitions| definitions.get(begin.element_index) else null;
+        var draft = if (replacement) |formula| try @import("formula_command_plan.zig").prepare(a, view, formula, 0) else null;
+        defer if (draft) |*plan| plan.deinit(a);
+        const expression = if (draft) |plan| plan.parsed else try @import("formula_expression.zig").parse(a, view);
+        const value = try evaluation.value(begin.element_index);
+        const display = try @import("formula_output.zig").render(a, expression, view, value);
         defer a.free(display);
         var field = try output.prepare(a, tree, sites, &parameters, range, begin.element_index, display);
-        if (options.only_changed and std.mem.eql(u8, view.command.?, field.parameters.command) and view.last_result != null and std.mem.eql(u8, view.last_result.?, display) and labelMatches(sites, field, display)) {
+        if (replacement) |formula| {
+            var plan = @import("formula_command_plan.zig").prepare(a, view, formula, value) catch |err| {
+                field.deinit(a);
+                return err;
+            };
+            defer plan.deinit(a);
+            output.attachDefinition(a, tree, &parameters, &field, plan) catch |err| {
+                field.deinit(a);
+                return err;
+            };
+            applied_definitions += 1;
+        }
+        if (replacement == null and options.only_changed and std.mem.eql(u8, view.command.?, field.parameters.command) and view.last_result != null and std.mem.eql(u8, view.last_result.?, display) and labelMatches(sites, field, display)) {
             field.deinit(a);
             continue;
         }
@@ -53,6 +68,9 @@ pub fn prepare(a: std.mem.Allocator, trees: []const @import("xml_part_tree.zig")
             field.deinit(a);
             return err;
         };
+    }
+    if (options.definitions) |definitions| {
+        if (applied_definitions != definitions.entries.items.len) return error.InvalidFormulaDefinitionSelection;
     }
     return prepared.toOwnedSlice(a);
 }

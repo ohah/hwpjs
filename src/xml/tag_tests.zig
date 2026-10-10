@@ -109,3 +109,50 @@ test "XML tag allocation failures and late duplicate release all metadata" {
     try t.checkAllAllocationFailures(t.allocator, allocationCase, .{false});
     try t.checkAllAllocationFailures(t.allocator, allocationCase, .{true});
 }
+
+test "XML tag duplicate set transition preserves order encoding limits and failure atomicity" {
+    const a = t.allocator;
+    for ([_]usize{ 0, 1, 7, 8, 9, 16 }) |count| {
+        var source: std.ArrayList(u8) = .empty;
+        defer source.deinit(a);
+        try source.appendSlice(a, "<r");
+        for (0..count) |index| {
+            const attribute = try std.fmt.allocPrint(a, " a{d}='{d}'", .{ index, index });
+            defer a.free(attribute);
+            try source.appendSlice(a, attribute);
+        }
+        const prefix = source.items.len;
+        for ([_]bool{ false, true }) |duplicate| {
+            if (duplicate and count == 0) continue;
+            source.shrinkRetainingCapacity(prefix);
+            try source.appendSlice(a, if (duplicate) " a0='duplicate'/>" else "/>");
+            inline for (.{ xml.input.Encoding.utf8, xml.input.Encoding.utf16le, xml.input.Encoding.utf16be }) |encoding| {
+                const bytes = try a.alloc(u8, source.items.len * (if (encoding == .utf8) @as(usize, 1) else 2));
+                defer a.free(bytes);
+                if (encoding == .utf8) @memcpy(bytes, source.items) else for (source.items, 0..) |byte, index| std.mem.writeInt(u16, bytes[index * 2 ..][0..2], byte, if (encoding == .utf16le) .little else .big);
+                var input = try xml.input.Input.init(bytes, encoding, .{});
+                const budget = input.remaining;
+                if (duplicate) {
+                    try t.expectError(error.DuplicateXmlAttribute, xml.tags.parse(a, &input, .{}));
+                    try t.expectEqual(@as(usize, 0), input.offset);
+                    try t.expectEqual(budget, input.remaining);
+                } else {
+                    var tag = try xml.tags.parse(a, &input, .{ .max_attributes = count });
+                    defer tag.deinit(a);
+                    try t.expectEqual(count, tag.attributes.len);
+                    for (tag.attributes, 0..) |attribute, index| {
+                        const expected = try std.fmt.allocPrint(a, "a{d}", .{index});
+                        defer a.free(expected);
+                        try t.expect(attribute.name.equals(expected, false));
+                    }
+                    if (count > 0) {
+                        input = try xml.input.Input.init(bytes, encoding, .{});
+                        try t.expectError(error.LimitExceeded, xml.tags.parse(a, &input, .{ .max_attributes = count - 1 }));
+                        try t.expectEqual(@as(usize, 0), input.offset);
+                        try t.expectEqual(budget, input.remaining);
+                    }
+                }
+            }
+        }
+    }
+}

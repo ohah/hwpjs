@@ -20,7 +20,7 @@ test "regular streams, deep trees, fallback search and multiple DIFAT allocation
     for ([_]bool{ false, true }) |extended| {
         const bytes = try fixture.make(std.testing.allocator, extended);
         defer std.testing.allocator.free(bytes);
-        try std.testing.checkAllAllocationFailures(std.testing.allocator, allocationCase, .{bytes});
+        try @import("../testing/allocation_failures.zig").check(allocationCase, .{bytes});
     }
 }
 

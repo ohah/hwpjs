@@ -1,0 +1,36 @@
+const std = @import("std");
+const edit = @import("style_preservation.zig");
+test "HWP5 paragraph spacing session preserves combined edits and exact history" {
+    const a = std.testing.allocator;
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/parashape.hwp", a, .limited(4_000_000));
+    defer a.free(bytes);
+    const session = try edit.Session.open(a, bytes);
+    defer session.close();
+    var history = try @import("editor_history.zig").History.init(a, session, 8, 4_000_000);
+    defer history.deinit();
+    const command: edit.Command = .{ .set_paragraph_spacing = .{ .section = 0, .paragraph = 5, .spacing = .{ .kind = 0, .value = 200 } } };
+    try std.testing.expect(try history.apply(session, command));
+    try std.testing.expect(!try history.apply(session, command));
+    try std.testing.expect(try history.apply(session, .{ .set_paragraph_margins = .{ .section = 0, .paragraph = 5, .margins = .{ .indent = -720 } } }));
+    try std.testing.expect(try history.apply(session, .{ .set_paragraph_alignment = .{ .section = 0, .paragraph = 5, .alignment = 3 } }));
+    const saved = try session.save(a, .{ .allow_stale_layout = true });
+    defer a.free(saved.bytes);
+    const reopened = try edit.Session.open(a, saved.bytes);
+    defer reopened.close();
+    const shapes = try reopened.paragraphShapes(a);
+    defer a.free(shapes);
+    const shape = shapes[try reopened.paragraphShapeId(0, 5)];
+    try std.testing.expectEqual(@as(u3, 3), shape.alignment);
+    try std.testing.expectEqual(@as(i32, -720), shape.indent);
+    try std.testing.expectEqual(@as(i32, 200), shape.modern_spacing.?.value);
+    try std.testing.expectEqual(@as(u32, 0), shape.modern_spacing.?.attributes & 31);
+    for (0..3) |_| try std.testing.expect(try history.undo(session));
+    const original = try session.save(a, .{});
+    defer a.free(original.bytes);
+    try std.testing.expectEqualSlices(u8, bytes, original.bytes);
+    try std.testing.expectError(error.InvalidParagraphSpacing, history.apply(session, .{ .set_paragraph_spacing = .{ .section = 0, .paragraph = 5, .spacing = .{ .kind = 4, .value = 0 } } }));
+    for (0..3) |_| try std.testing.expect(try history.redo(session));
+    const redone = try session.save(a, .{ .allow_stale_layout = true });
+    defer a.free(redone.bytes);
+    try std.testing.expectEqualSlices(u8, saved.bytes, redone.bytes);
+}

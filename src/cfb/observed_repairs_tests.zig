@@ -232,7 +232,7 @@ test "CFB observed repairs do not hide corruption in a live FAT slot" {
 }
 
 test "CFB observed repairs free all allocations on success and failure" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator) !void {
             const bytes = try fixture(a);
             defer a.free(bytes);
@@ -245,7 +245,7 @@ test "CFB observed repairs free all allocations on success and failure" {
 }
 
 test "CFB observed repairs release allocations in orphan FAT and MiniFAT paths" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator) !void {
             const base = try fixture(a);
             defer a.free(base);

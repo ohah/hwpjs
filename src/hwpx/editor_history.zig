@@ -5,13 +5,29 @@ const checkpoints = @import("editor_checkpoint.zig");
 const Stacks = @import("../model/history_stack.zig").Stack(checkpoints.Checkpoint, release);
 
 pub const Command = struct {
-    kind: enum { plain, anchored, field } = .plain,
+    kind: enum { plain, anchored, field, split, merge, format, character_properties, character_font_name, cell_size, paragraph_format, paragraph_alignment, paragraph_margins, paragraph_spacing, split_anchored, formula_definition, picture_dimensions, picture_resize, check_box_state } = .plain,
     section: usize = 0,
     paragraph: usize,
+    right_paragraph: ?usize = null,
     start: u32,
     deleted: u32,
     inserted: []const u8,
     begin_element: usize = 0,
+    char_shape_id: u32 = 0,
+    character_properties: @import("../model/document.zig").CharacterPropertyPatch = .{},
+    font_language: @import("font_faces.zig").Language = .hangul,
+    font_name: []const u8 = "",
+    paragraph_shape_id: u32 = 0,
+    paragraph_alignment: @import("paragraph_resource_clone.zig").Alignment = .LEFT,
+    paragraph_margins: @import("paragraph_margin_patch.zig").Patch = .{},
+    paragraph_spacing: @import("paragraph_spacing_patch.zig").Spacing = .{ .kind = 0, .value = 160 },
+    list_node: usize = 0,
+    cell_size: @import("table_cell_size_write.zig").Size = .{ .width = 0, .height = 0 },
+    picture_node: usize = 0,
+    picture_dimensions: @import("picture_dimension_write.zig").Update = .{},
+    picture_size: [2]u32 = .{ 0, 0 },
+    form_node: usize = 0,
+    checkbox_state: @import("form_checkbox_state_session.zig").State = .unchecked,
 };
 pub const History = struct {
     allocator: std.mem.Allocator,
@@ -32,26 +48,112 @@ pub const History = struct {
         if (self.source_pointer != session.source.ptr or self.allocator.ptr != session.allocator.ptr or self.allocator.vtable != session.allocator.vtable) return error.SourceBindingMismatch;
     }
     pub fn apply(self: *History, session: *editor.Session, command: Command) !bool {
+        return self.applyBatch(session, &.{command});
+    }
+    pub fn applyBatch(self: *History, session: *editor.Session, commands: []const Command) !bool {
         try self.bind(session);
         var before = try checkpoints.capture(session, self.max_checkpoint_bytes);
         var transferred = false;
         defer if (!transferred) before.deinit();
         try self.stack.prepare();
-        const changed = switch (command.kind) {
-            .plain => try session.splice(command.section, command.paragraph, command.start, command.deleted, command.inserted),
-            .anchored => try session.spliceAnchored(command.section, command.paragraph, command.start, command.deleted, command.inserted),
-            .field => try session.spliceFieldLabel(command.section, command.paragraph, command.begin_element, command.start, command.deleted, command.inserted),
-        };
+        var changed = false;
+        const property_batch = commands.len > 1 and for (commands) |command| {
+            if (command.kind != .character_properties) break false;
+        } else true;
+        for (commands) |command| {
+            const applied = (if (property_batch) applyDeferredProperty(session, command) else applyCommand(session, command)) catch |err| {
+                try before.rollback(session);
+                return err;
+            };
+            changed = applied or changed;
+        }
         if (!changed) return false;
+        if (property_batch) {
+            const saved = session.save() catch |err| {
+                try before.rollback(session);
+                return err;
+            };
+            session.allocator.free(saved);
+        }
         _ = checkpoints.size(session, self.max_checkpoint_bytes) catch |err| {
-            // A growth limit failure rolls back both text and dirty values.
-            before.max_bytes = std.math.maxInt(usize);
-            try before.exchange(session);
+            try before.rollback(session);
             return err;
         };
         self.stack.commit(before);
         transferred = true;
         return true;
+    }
+    fn applyDeferredProperty(session: *editor.Session, command: Command) !bool {
+        if (command.inserted.len != 0) return error.InvalidFormatCommand;
+        const end = std.math.add(u32, command.start, command.deleted) catch return error.InvalidTextPosition;
+        return @import("character_property_session.zig").applyDeferredSave(session, command.section, command.paragraph, command.start, end, command.character_properties);
+    }
+    fn applyCommand(session: *editor.Session, command: Command) !bool {
+        return switch (command.kind) {
+            .character_font_name => block: {
+                if (command.inserted.len != 0) return error.InvalidFormatCommand;
+                const end = std.math.add(u32, command.start, command.deleted) catch return error.InvalidTextPosition;
+                break :block try session.setCharacterFontName(command.section, command.paragraph, command.start, end, command.font_language, command.font_name);
+            },
+            .formula_definition => block: {
+                if (command.start != 0 or command.deleted != 0) return error.InvalidFormulaDefinitionCommand;
+                break :block try session.setFormulaDefinition(command.section, command.begin_element, command.inserted);
+            },
+            .character_properties => block: {
+                if (command.inserted.len != 0) return error.InvalidFormatCommand;
+                const end = std.math.add(u32, command.start, command.deleted) catch return error.InvalidTextPosition;
+                break :block try session.setCharacterProperties(command.section, command.paragraph, command.start, end, command.character_properties);
+            },
+            .paragraph_spacing => block: {
+                if (command.start != 0 or command.deleted != 0 or command.inserted.len != 0) return error.InvalidParagraphFormatCommand;
+                break :block try session.setParagraphSpacing(command.section, command.paragraph, command.paragraph_spacing);
+            },
+            .paragraph_margins => block: {
+                if (command.start != 0 or command.deleted != 0 or command.inserted.len != 0) return error.InvalidParagraphFormatCommand;
+                break :block try session.setParagraphMargins(command.section, command.paragraph, command.paragraph_margins);
+            },
+            .paragraph_alignment => block: {
+                if (command.start != 0 or command.deleted != 0 or command.inserted.len != 0) return error.InvalidParagraphFormatCommand;
+                break :block try session.setParagraphAlignment(command.section, command.paragraph, command.paragraph_alignment);
+            },
+            .paragraph_format => block: {
+                if (command.start != 0 or command.deleted != 0 or command.inserted.len != 0) return error.InvalidParagraphFormatCommand;
+                break :block try session.setParagraphFormat(command.section, command.paragraph, command.paragraph_shape_id);
+            },
+            .cell_size => block: {
+                if (command.start != 0 or command.deleted != 0 or command.inserted.len != 0) return error.InvalidCellSizeCommand;
+                break :block try session.setCellSizeForList(command.section, command.list_node, command.cell_size);
+            },
+            .picture_dimensions => block: {
+                if (command.start != 0 or command.deleted != 0 or command.inserted.len != 0) return error.InvalidPictureDimensionCommand;
+                break :block try session.setPictureDimensions(command.section, command.picture_node, command.picture_dimensions);
+            },
+            .check_box_state => block: {
+                if (command.start != 0 or command.deleted != 0 or command.inserted.len != 0) return error.InvalidFormStateCommand;
+                break :block try session.setCheckBoxState(command.section, command.form_node, command.checkbox_state);
+            },
+            .picture_resize => block: {
+                if (command.start != 0 or command.deleted != 0 or command.inserted.len != 0) return error.InvalidPictureResizeCommand;
+                break :block try session.resizePicture(command.section, command.picture_node, command.picture_size);
+            },
+            .format => block: {
+                if (command.inserted.len != 0) return error.InvalidFormatCommand;
+                const end = std.math.add(u32, command.start, command.deleted) catch return error.InvalidTextPosition;
+                break :block try session.setCharacterFormat(command.section, command.paragraph, command.start, end, command.char_shape_id);
+            },
+            .plain => try session.splice(command.section, command.paragraph, command.start, command.deleted, command.inserted),
+            .anchored => try session.spliceAnchored(command.section, command.paragraph, command.start, command.deleted, command.inserted),
+            .field => try session.spliceFieldLabel(command.section, command.paragraph, command.begin_element, command.start, command.deleted, command.inserted),
+            .split, .split_anchored => block: {
+                if (command.inserted.len != 0) return error.InvalidStructureCommand;
+                if (command.kind == .split_anchored) break :block try session.splitParagraphAnchored(command.section, command.paragraph, command.start, command.deleted);
+                break :block try session.splitParagraph(command.section, command.paragraph, command.start, command.deleted);
+            },
+            .merge => block: {
+                if (command.start != 0 or command.deleted != 0 or command.inserted.len != 0) return error.InvalidStructureCommand;
+                break :block if (command.right_paragraph) |right| try session.mergeParagraphPair(command.section, command.paragraph, right) else try session.mergeParagraph(command.section, command.paragraph);
+            },
+        };
     }
     pub fn undo(self: *History, session: *editor.Session) !bool {
         try self.bind(session);

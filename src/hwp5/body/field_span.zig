@@ -42,10 +42,7 @@ fn scan(bytes: []const u8, field_id: u32, ordinal: usize, editable: bool, edit: 
             depth -= 1;
             const opened = stack[depth];
             const id = std.mem.readInt(u32, c.data[0..4], .little);
-            // Actual chart formula ends use 0x08 instead of '%'. This observed
-            // variant is not an arbitrary high-byte wildcard for other fields.
-            const formula_variant = opened.id == controls.id("%fmu") and id == ((opened.id & 0x00ffffff) | 0x08000000);
-            if (id != opened.id and id != (opened.id & 0x00ffffff) and !formula_variant) return error.FieldMarkerMismatch;
+            if (!@import("field_end_identity.zig").matches(opened.id, id)) return error.FieldMarkerMismatch;
             if (opened.selected) found = .{ .start_unit = opened.start, .end_unit = @intCast(token.start_unit) };
             if (edit) |e| {
                 if (opened.id == controls.id("%fmu")) {

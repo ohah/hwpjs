@@ -1,7 +1,6 @@
 //! Controlled UTF-16 splices. Layout and opaque relocation are not implemented.
 const std = @import("std");
 const model = @import("../../model/document.zig");
-const body = @import("../body/reader.zig");
 const Version = @import("../version.zig").Version;
 const scalars = @import("../../text/scalars.zig");
 
@@ -40,25 +39,38 @@ fn inserted(a: std.mem.Allocator, utf8: []const u8) ![]u8 {
 }
 
 pub fn apply(a: std.mem.Allocator, source: []const u8, version: Version, p: *model.Paragraph, edit: Splice, char_count: usize) !void {
-    return applyWith(a, source, version, p, edit, char_count, false, false);
+    return applyWith(a, source, version, p, edit, char_count, false, false, false, false);
 }
 
 pub fn applyFormulaTransaction(a: std.mem.Allocator, source: []const u8, version: Version, p: *model.Paragraph, edit: Splice, char_count: usize) !void {
-    return applyWith(a, source, version, p, edit, char_count, true, false);
+    return applyWith(a, source, version, p, edit, char_count, true, false, false, false);
 }
 
 pub fn applyHyperlinkTransaction(a: std.mem.Allocator, source: []const u8, version: Version, p: *model.Paragraph, edit: Splice, char_count: usize) !void {
-    return applyWith(a, source, version, p, edit, char_count, false, true);
+    return applyWith(a, source, version, p, edit, char_count, false, true, false, false);
 }
 
-fn applyWith(a: std.mem.Allocator, source: []const u8, version: Version, p: *model.Paragraph, edit: Splice, char_count: usize, formulas: bool, cross_fields: bool) !void {
+/// Private draft only; field_splice owns binding, dependent attributes and commit.
+pub fn applyFieldTransaction(a: std.mem.Allocator, source: []const u8, version: Version, p: *model.Paragraph, edit: Splice, char_count: usize) !void {
+    return applyWith(a, source, version, p, edit, char_count, false, true, false, true);
+}
+
+/// Private-model projection used by the paired paragraph split transaction.
+pub fn applySplitProjection(a: std.mem.Allocator, source: []const u8, version: Version, p: *model.Paragraph, edit: Splice, char_count: usize, formulas: bool) !void {
+    if (edit.utf8.len != 0 or p.field_attributes != null or p.formula_results != null) return error.UnsupportedStructuralControl;
+    if (p.range_tags) |ranges| if (ranges.len != 0) return error.UnsupportedRangeSemantics;
+    return applyWith(a, source, version, p, edit, char_count, formulas, false, true, false);
+}
+
+fn applyWith(a: std.mem.Allocator, source: []const u8, version: Version, p: *model.Paragraph, edit: Splice, char_count: usize, formulas: bool, cross_fields: bool, partition: bool, field_mode: bool) !void {
     const validator = @import("plain_text_source.zig");
-    const validated = if (formulas) try validator.validateFormulaTransaction(a, source, version, p.*, char_count) else if (cross_fields) try validator.validateHyperlinkTransaction(a, source, version, p.*, char_count) else try validator.validate(a, source, version, p.*, char_count);
+    const validated = if (field_mode) try validator.validateFieldTransaction(a, source, version, p.*, char_count) else if (formulas) try validator.validateFormulaTransaction(a, source, version, p.*, char_count) else if (cross_fields) try validator.validateHyperlinkTransaction(a, source, version, p.*, char_count) else try validator.validate(a, source, version, p.*, char_count);
+    if (partition and validated.preserved_direct_records != 0) return error.UnsupportedStructuralControl;
     const ranges = validated.ranges;
     const before = try @import("plain_text_content.zig").editableTextBytes(a, p.*);
     defer a.free(before);
     try @import("control_boundaries.zig").validateRetainedText(before);
-    try @import("control_boundaries.zig").validate(before, edit.start_unit, edit.end_unit);
+    if (partition) try @import("control_boundaries.zig").validatePartition(before, edit.start_unit, edit.end_unit) else try @import("control_boundaries.zig").validate(before, edit.start_unit, edit.end_unit);
     const add = try inserted(a, edit.utf8);
     defer a.free(add);
     const output_len = before.len - @as(usize, edit.end_unit - edit.start_unit) * 2 + add.len;
@@ -82,19 +94,7 @@ fn applyWith(a: std.mem.Allocator, source: []const u8, version: Version, p: *mod
     errdefer a.free(owned_ranges);
     const owned_fields = if (cross_fields) (if (p.field_attributes) |fields| try a.dupe(model.FieldAttributes, fields) else null) else try @import("field_attributes.zig").prepare(a, source, version, p.*, before, edit.start_unit, edit.end_unit);
     errdefer if (owned_fields) |fields| a.free(fields);
-    const value = try body.Text.parse(after);
-    var tokens: std.ArrayList(model.Token) = .empty;
-    errdefer {
-        for (tokens.items) |t| a.free(t.raw);
-        tokens.deinit(a);
-    }
-    var it = value.tokens();
-    while (try it.next()) |token| {
-        const raw = try a.dupe(u8, token.raw);
-        errdefer a.free(raw);
-        try tokens.append(a, .{ .start_unit = @intCast(token.start_unit), .kind = if (token.value == .text) .text else .control, .encoding = .utf16le, .raw = raw });
-    }
-    const owned_tokens = try tokens.toOwnedSlice(a);
+    const owned_tokens = try @import("token_ownership.zig").fromText(a, after);
     for (p.tokens) |t| a.free(t.raw);
     a.free(p.tokens);
     a.free(p.character_runs);

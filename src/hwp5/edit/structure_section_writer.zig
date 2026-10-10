@@ -118,6 +118,28 @@ pub fn writeWithDeletions(a: std.mem.Allocator, source: []const u8, section: mod
         std.mem.writeInt(u16, bytes[0..2], count, .little);
         try patches.append(scratch, .{ .start = at, .end = at + 2, .bytes = bytes, .order = patches.items.len });
     }
+    if (section.table_cell_sizes) |sizes| {
+        const bindings = if (sizes.len != 0)
+            try @import("table_display_bindings.zig").read(scratch, source, version, section.paragraphs)
+        else
+            &.{};
+        for (sizes, 0..) |size, ordinal| {
+            for (sizes[0..ordinal]) |earlier| if (earlier.source_list_node == size.source_list_node) return error.SourceBindingMismatch;
+            var found = false;
+            for (bindings) |binding| if (binding.list_node == size.source_list_node) {
+                found = true;
+                break;
+            };
+            if (!found or size.source_list_node >= mapping.len) return error.SourceBindingMismatch;
+            const index = mapping[size.source_list_node] orelse return error.SourceBindingMismatch;
+            const record = rendered.nodes[index].record.framing;
+            const view = try (try @import("../body/list_header.zig").Header.parse(record.payload)).view(.observed8);
+            const offset = record.payload.len - view.extra.len + 8;
+            const payload = try @import("table_cell_size_payload.zig").write(scratch, record.payload, .observed8, .{ .width = size.width, .height = size.height }, limit);
+            const at = record.offset + record.raw.len - record.payload.len + offset;
+            try patches.append(scratch, .{ .start = at, .end = at + 8, .bytes = payload[offset .. offset + 8], .order = patches.items.len });
+        }
+    }
     std.mem.sort(Patch, patches.items, {}, struct {
         fn less(_: void, left: Patch, right: Patch) bool {
             return left.start < right.start or (left.start == right.start and left.order < right.order);

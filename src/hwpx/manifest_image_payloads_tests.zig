@@ -55,7 +55,7 @@ test "HWPX manifest image payloads include unreferenced candidates and retain fa
 }
 
 test "HWPX manifest image payloads release every allocation failure" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator) !void {
             var report = try inspectSample(a, .{});
             report.deinit(a);
@@ -156,7 +156,7 @@ test "HWPX manifest BMP pixels distinguish structure from RGBA validation" {
 }
 
 test "HWPX manifest BMP RGBA path releases every allocation failure" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator) !void {
             var report = try bmpSample(a, false, .{});
             report.deinit(a);
@@ -460,7 +460,7 @@ test "HWPX manifest Exif TIFF orientation is separately inspected without rotati
 }
 
 test "HWPX manifest JPEG RGB path releases every allocation failure" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator) !void {
             var report = try jpegSample(a, .{ .jpeg_pixels = .{} });
             report.deinit(a);

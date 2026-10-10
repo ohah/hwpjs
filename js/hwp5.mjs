@@ -18,7 +18,12 @@ export async function createHwp5Reader(source) {
       return memory.withBytes(bytes, (ptr, size) => {
         try {
           if (!wasm.hwp5_text_read(ptr, size)) throw memory.error();
-          return decodeHwp5Text(memory.copy(wasm.hwp5_text_ptr(), wasm.hwp5_text_len()));
+          const result = decodeHwp5Text(memory.copy(wasm.hwp5_text_ptr(), wasm.hwp5_text_len()));
+          if (typeof wasm.hwp5_text_distribution === "function" && wasm.hwp5_text_distribution() === 1) {
+            result.readOnly = true;
+            result.primarySource = "distribution_viewtext";
+          }
+          return result;
         } finally {
           wasm.hwp5_text_free();
         }

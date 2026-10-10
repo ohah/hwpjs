@@ -26,17 +26,8 @@ pub fn buildWithCounters(a: std.mem.Allocator, tree: *const tree_module.Tree, si
                 .run_start => |item| item,
                 else => return,
             };
-            const base = @intFromPtr(self.tree.source.ptr);
-            const pointer = @intFromPtr(start.tag.raw.ptr);
-            if (pointer < base or pointer - base > self.tree.source.len) return error.InvalidSourceSpan;
-            const at = pointer - base;
-            var low: usize = 0;
-            var high = self.tree.elements.len;
-            while (low < high) {
-                const mid = low + (high - low) / 2;
-                if (self.tree.elements[mid].start_tag.start < at) low = mid + 1 else high = mid;
-            }
-            if (low == self.tree.elements.len or self.tree.elements[low].start_tag.start != at or self.locations[low] != null) return error.SourceBindingMismatch;
+            const low = try self.tree.startTagIndex(start.tag.raw);
+            if (self.locations[low] != null) return error.SourceBindingMismatch;
             self.locations[low] = start.location;
         }
     };

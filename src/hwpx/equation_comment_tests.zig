@@ -69,7 +69,7 @@ test "HWPX equation comment decodes both UTF16 byte orders" {
 }
 
 test "HWPX equation comment frees every allocation failure" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator) !void {
             var report = try inspect(a, prefix ++ "<p:equation><p:shapeComment>A&amp;<![CDATA[B]]></p:shapeComment><p:script>x</p:script></p:equation>" ++ suffix, .{});
             report.deinit();

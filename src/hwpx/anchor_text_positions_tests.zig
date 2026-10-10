@@ -5,6 +5,86 @@ const locations_module = @import("text_site_locations.zig");
 const projection = @import("anchor_text_positions.zig");
 const positions = @import("paragraph_text_positions.zig");
 
+test "HWPX paragraph positions retain line break only text boundaries" {
+    const a = std.testing.allocator;
+    const source = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:p><p:run><p:t><p:lineBreak/></p:t></p:run></p:p></s:sec>";
+    var tree = try trees.parse(a, source, .section, 0, 0, .{});
+    defer tree.deinit(a);
+    var sites = try sites_module.collect(a, &tree, .{ .materialize_tab_boundaries = true });
+    defer sites.deinit(a);
+    const locations = try locations_module.build(a, &tree, &sites, .{});
+    defer a.free(locations);
+    const segments = try positions.build(a, &tree, &sites, locations, 1);
+    defer a.free(segments);
+    try std.testing.expectEqual(@as(usize, 3), segments.len);
+    try std.testing.expectEqual(.line_break, segments[1].kind);
+    try std.testing.expectEqualStrings("\n", positions.segmentText(&sites, segments[1]));
+    try std.testing.expectError(error.ProtectedInlineControl, positions.validateRange(segments, 0, 1));
+    try std.testing.checkAllAllocationFailures(a, struct {
+        fn run(allocator: std.mem.Allocator, parsed: *const trees.Tree, current: *const sites_module.Sites, bound: []const @import("section_text.zig").Location) !void {
+            const projected = try positions.build(allocator, parsed, current, bound, 1);
+            defer allocator.free(projected);
+            try std.testing.expectEqual(.line_break, projected[1].kind);
+        }
+    }.run, .{ &tree, &sites, locations });
+    try std.testing.expect(try @import("text_splice_transaction.zig").spliceProjected(a, &sites, segments, 0, 0, "앞😀", 10000, null));
+    try std.testing.expectEqualSlices(u8, source, tree.source);
+}
+
+test "HWPX line break retention rejects hidden text children and foreign namespace" {
+    const a = std.testing.allocator;
+    const prefix = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph' xmlns:x='urn:foreign'><p:p><p:run><p:t>";
+    const suffix = "</p:t></p:run></p:p></s:sec>";
+    inline for (.{ "<p:lineBreak>hidden</p:lineBreak>", "<p:lineBreak><p:tab/></p:lineBreak>", "<x:lineBreak/>" }) |fragment| {
+        var tree = try trees.parse(a, prefix ++ fragment ++ suffix, .section, 0, 0, .{});
+        defer tree.deinit(a);
+        var found = false;
+        for (tree.elements, 0..) |element, index| {
+            if (element.is("http://www.hancom.co.kr/hwpml/2011/paragraph", "lineBreak") or element.is("urn:foreign", "lineBreak")) {
+                found = true;
+                try std.testing.expect(!@import("retained_inline_unit.zig").supported(&tree, index));
+            }
+        }
+        try std.testing.expect(found);
+    }
+}
+
+test "HWPX anchor note prefix exposes insertion boundary before picture" {
+    const a = std.testing.allocator;
+    const source = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:p><p:run><p:ctrl><p:endNote><p:subList><p:p><p:run><p:ctrl><p:autoNum num='1' numType='ENDNOTE'><p:autoNumFormat/></p:autoNum></p:ctrl><p:t> </p:t><p:pic/><p:t/></p:run></p:p></p:subList></p:endNote></p:ctrl><p:t/></p:run></p:p></s:sec>";
+    var tree = try trees.parse(a, source, .section, 0, 0, .{});
+    defer tree.deinit(a);
+    var sites = try sites_module.collect(a, &tree, .{ .materialize_anchor_boundaries = true });
+    defer sites.deinit(a);
+    const locations = try locations_module.build(a, &tree, &sites, .{});
+    defer a.free(locations);
+    const segments = try projection.build(a, &tree, &sites, locations, 2);
+    defer a.free(segments);
+    try std.testing.expectEqual(.text, segments[0].kind);
+    try std.testing.expectEqual(@as(usize, 0), segments[0].start_unit);
+    try std.testing.expectEqual(.anchor, segments[1].kind);
+    try std.testing.expectEqual(@as(usize, 0), segments[1].start_unit);
+    try std.testing.expect(try @import("text_splice_transaction.zig").spliceProjected(a, &sites, segments, 0, 0, "검증", 10000, null));
+    try std.testing.expectEqualSlices(u8, source, tree.source);
+}
+
+test "HWPX anchor body automatic number remains protected one unit" {
+    const a = std.testing.allocator;
+    const source = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:p><p:run><p:ctrl><p:autoNum num='1' numType='ENDNOTE'><p:autoNumFormat/></p:autoNum></p:ctrl><p:t>A</p:t></p:run></p:p></s:sec>";
+    var tree = try trees.parse(a, source, .section, 0, 0, .{});
+    defer tree.deinit(a);
+    var sites = try sites_module.collect(a, &tree, .{});
+    defer sites.deinit(a);
+    const locations = try locations_module.build(a, &tree, &sites, .{});
+    defer a.free(locations);
+    const segments = try projection.build(a, &tree, &sites, locations, 1);
+    defer a.free(segments);
+    try std.testing.expectEqual(@as(usize, 2), segments.len);
+    try std.testing.expectEqual(.anchor, segments[0].kind);
+    try std.testing.expectEqual(@as(usize, 1), segments[0].end_unit);
+    try std.testing.expectError(error.ProtectedInlineControl, positions.validateRange(segments, 0, 1));
+}
+
 test "HWPX anchor positions reject text without direct run ownership and survive allocation failures" {
     const a = std.testing.allocator;
     const source = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:p><p:run><p:t>A</p:t><p:pic/><p:t>B</p:t></p:run></p:p></s:sec>";

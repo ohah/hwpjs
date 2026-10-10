@@ -181,7 +181,7 @@ test "HWPX master text selects declared switch capabilities without hiding malfo
 }
 
 test "HWPX master text releases allocations under failure injection" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator) !void {
             const report = try inspect(a, master, .{}, null);
             try std.testing.expectEqual(@as(usize, 3), report.text.text_elements);

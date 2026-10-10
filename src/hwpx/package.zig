@@ -1,4 +1,5 @@
 const std = @import("std");
+pub const form_attributes = @import("form_attribute_values.zig");
 const zip = @import("../zip/archive.zig");
 const container = @import("container_manifest.zig");
 const content_manifest = @import("content_manifest.zig");

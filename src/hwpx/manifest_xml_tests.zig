@@ -80,7 +80,7 @@ test "HWPX manifest XML uses ZIP owner allocator and releases the report" {
 test "HWPX manifest XML cleans all allocation failure points" {
     const bytes = try fixture.storedZip(std.testing.allocator, &sources);
     defer std.testing.allocator.free(bytes);
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator, input: []const u8) !void {
             var document = try package.inspectDocument(a, input, .{});
             defer document.deinit(a);

@@ -195,7 +195,7 @@ fn allocationExercise(allocator: std.mem.Allocator) !void {
 }
 
 test "EMF+ Save/Restore graphics state stack survives every allocation failure" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, allocationExercise, .{});
+    try @import("../../testing/allocation_failures.zig").check(allocationExercise, .{});
 }
 
 fn terminalServerClipAllocationExercise(allocator: std.mem.Allocator) !void {
@@ -210,7 +210,7 @@ fn terminalServerClipAllocationExercise(allocator: std.mem.Allocator) !void {
 }
 
 test "EMF+ graphics state stack owns terminal-server clip through every allocation failure" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, terminalServerClipAllocationExercise, .{});
+    try @import("../../testing/allocation_failures.zig").check(terminalServerClipAllocationExercise, .{});
 }
 
 test "EMF+ ordinary clip transitions discard stale terminal-server rectangles" {

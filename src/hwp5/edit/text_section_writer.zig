@@ -66,10 +66,12 @@ pub fn write(a: std.mem.Allocator, source: []const u8, section: model.Section, v
             const bytes = try a.dupe(u8, record.payload);
             defer a.free(bytes);
             bytes[body.Header.style_id_offset] = p.style_id;
+            std.mem.writeInt(u16, bytes[body.Header.para_shape_id_offset..][0..2], p.para_shape_id, .little);
             std.mem.writeInt(u32, bytes[body.Header.instance_id_offset..][0..4], p.instance_id, .little);
             if (p.range_tags) |ranges| {
                 if (p.character_runs.len > 65535 or ranges.len > 65535) return error.LimitExceeded;
                 body.Header.writeTextCounts(bytes, p.declared_units, @intCast(p.character_runs.len), @intCast(ranges.len));
+                try @import("line_break_mask.zig").write(bytes, p.tokens);
             }
             if (std.mem.eql(u8, bytes, record.payload)) {
                 try out.appendSlice(a, record.raw);
@@ -115,6 +117,12 @@ pub fn write(a: std.mem.Allocator, source: []const u8, section: model.Section, v
                     try writer.append(a, &out, record.tag, record.level, bytes, limit);
                 },
                 @intFromEnum(body.Tag.line_segments) => {}, // Invalid cache, never guessed.
+                @intFromEnum(body.Tag.list_header) => {
+                    var groups = try @import("paragraph_owner.zig").inspectGroups(a, tree, version);
+                    defer groups.deinit(a);
+                    try @import("paragraph_owned_list.zig").validate(tree, groups, try p.originalNode(), node_index);
+                    try out.appendSlice(a, record.raw);
+                },
                 @intFromEnum(body.Tag.control_header) => {
                     var formula: ?model.FormulaResult = null;
                     if (p.formula_results) |results| for (results) |result| {

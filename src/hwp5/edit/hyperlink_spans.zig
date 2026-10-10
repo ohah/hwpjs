@@ -4,44 +4,13 @@
 const std = @import("std");
 const model = @import("../../model/document.zig");
 const controls = @import("../body/control_rules.zig");
-const Text = @import("../body/text.zig").Text;
+const fields = @import("local_field_spans.zig");
 
-pub const Position = struct { paragraph: usize, unit: u32 };
-pub const Span = struct { begin: Position, end: Position, ordinal: usize };
+pub const Position = fields.Position;
+pub const Span = fields.Span;
 
 pub fn collect(a: std.mem.Allocator, section: model.Section) ![]Span {
-    const Open = struct { begin: Position, ordinal: usize };
-    var stack: [32]Open = undefined;
-    var depth: usize = 0;
-    var out: std.ArrayList(Span) = .empty;
-    errdefer out.deinit(a);
-    const id = controls.id("%hlk");
-    for (section.paragraphs, 0..) |p, pi| {
-        if (depth != 0 and (p.parent_node != null or section.paragraphs[stack[0].begin.paragraph].parent_node != null)) return error.UnsupportedCrossParagraphField;
-        var ordinal: usize = 0;
-        for (p.tokens) |token| {
-            if (token.kind != .control) continue;
-            var tokens = (try Text.parse(token.raw)).tokens();
-            const parsed = (try tokens.next()) orelse return error.SourceBindingMismatch;
-            if (parsed.value != .control or try tokens.next() != null) return error.SourceBindingMismatch;
-            const c = parsed.value.control;
-            if (c.code == 3) {
-                if (std.mem.readInt(u32, c.data[0..4], .little) != id) return error.UnsupportedSectionControl;
-                if (depth == stack.len) return error.LimitExceeded;
-                stack[depth] = .{ .begin = .{ .paragraph = pi, .unit = token.start_unit + @as(u32, @intCast(token.raw.len / 2)) }, .ordinal = ordinal };
-                ordinal += 1;
-                depth += 1;
-            } else if (c.code == 4) {
-                if (depth == 0) return error.UnsupportedCrossParagraphField;
-                const end_id = std.mem.readInt(u32, c.data[0..4], .little);
-                if (end_id != id and end_id != (id & 0x00ffffff)) return error.FieldMarkerMismatch;
-                depth -= 1;
-                try out.append(a, .{ .begin = stack[depth].begin, .end = .{ .paragraph = pi, .unit = token.start_unit }, .ordinal = stack[depth].ordinal });
-            }
-        }
-    }
-    if (depth != 0) return error.UnsupportedCrossParagraphField;
-    return out.toOwnedSlice(a);
+    return fields.collect(a, section, controls.id("%hlk"));
 }
 
 test "root hyperlink spans join paragraphs without inferring nested list ownership" {

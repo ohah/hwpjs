@@ -63,7 +63,7 @@ test "HWPX page geometry rejects invalid scalars and enforces bounds" {
 
 test "HWPX page geometry frees partial reports on allocation failure" {
     const source = prefix ++ "<p:secPr><p:pagePr width='123' height='456'><p:margin left='1' right='2'/></p:pagePr><p:pagePr landscape='WIDELY' gutterType='TOP_BOTTOM'/></p:secPr>" ++ suffix;
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator, bytes: []const u8) !void {
             var report = try read(a, bytes, .{});
             defer report.deinit(a);

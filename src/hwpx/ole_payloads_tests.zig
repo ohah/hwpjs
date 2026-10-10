@@ -178,7 +178,7 @@ test "HWPX OLE payloads never repair nonzero FAT tail marker" {
 }
 
 test "HWPX OLE payloads normalized path releases all allocation failures" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator) !void {
             var report = try normalizedSample(a, true, false, .{});
             report.deinit(a);
@@ -187,7 +187,7 @@ test "HWPX OLE payloads normalized path releases all allocation failures" {
 }
 
 test "HWPX OLE payloads release all allocation failure paths" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator) !void {
             var report = try sample(a, false, false, .{});
             report.deinit(a);

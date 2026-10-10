@@ -1,11 +1,10 @@
 const std = @import("std");
-const xml = @import("../xml/root.zig");
 const tree_mod = @import("xml_part_tree.zig");
 const table_xml = @import("table_xml_fields.zig");
 const header_resources = @import("header_resources.zig");
 const id_references = @import("id_references.zig");
 
-const attribute_names = [_][]const u8{ "pageBreak", "repeatHeader", "noAdjust", "cellSpacing", "borderFillIDRef" };
+const values = @import("table_pagination_values.zig");
 
 pub const PageBreakCounts = struct {
     absent: usize = 0,
@@ -32,31 +31,32 @@ pub const Report = struct {
 };
 
 pub fn inspectTable(a: std.mem.Allocator, tree: *const tree_mod.Tree, table: usize, max_bytes: usize, border_fills: ?*const header_resources.Table, report: *Report) !void {
-    var attributes: [attribute_names.len]?xml.attribute_value.Value = undefined;
-    try tree.unprefixedAttributeValues(a, table, &attribute_names, &attributes);
+    const source = try values.read(a, tree, table, max_bytes);
     report.tables += 1;
-    if (attributes[0]) |raw| {
-        const value = try raw.toUtf8(a, max_bytes);
-        defer a.free(value);
-        if (std.mem.eql(u8, value, "NONE")) {
-            report.page_break.none += 1;
-        } else if (std.mem.eql(u8, value, "TABLE")) {
-            report.page_break.table += 1;
-        } else if (std.mem.eql(u8, value, "CELL")) {
-            report.page_break.cell += 1;
-        } else report.page_break.unknown += 1;
+    if (source.page_break) |value| {
+        switch (value) {
+            .none => report.page_break.none += 1,
+            .table => report.page_break.table += 1,
+            .cell => report.page_break.cell += 1,
+            .unknown => report.page_break.unknown += 1,
+        }
     } else report.page_break.absent += 1;
-    _ = try table_xml.noteBoolean(a, attributes[1], max_bytes, &report.repeat_header);
-    _ = try table_xml.noteBoolean(a, attributes[2], max_bytes, &report.no_adjust);
-    if (attributes[3]) |raw| {
-        const value = try table_xml.unsigned(a, raw, max_bytes);
+    noteBoolean(source.repeat_header, &report.repeat_header);
+    noteBoolean(source.no_adjust, &report.no_adjust);
+    if (source.cell_spacing) |value| {
         report.cell_spacing_zero += @intFromBool(value == 0);
         report.cell_spacing_sum = std.math.add(u64, report.cell_spacing_sum, value) catch return error.LimitExceeded;
     } else report.cell_spacing_absent += 1;
-    const border_id: ?u32 = if (attributes[4]) |raw| try table_xml.unsigned(a, raw, max_bytes) else null;
+    const border_id = source.border_fill_id;
     if (border_id) |id| {
         report.border_fill_zero += @intFromBool(id == 0);
         report.border_fill_sum = std.math.add(u64, report.border_fill_sum, id) catch return error.LimitExceeded;
     } else report.border_fill_absent += 1;
     if (border_fills) |inventory| _ = id_references.noteValue(&report.border_fill_references, border_id, inventory, tree.item_index);
+}
+
+fn noteBoolean(value: ?bool, counts: *table_xml.BooleanCounts) void {
+    if (value) |present| {
+        if (present) counts.true_value += 1 else counts.false_value += 1;
+    } else counts.absent += 1;
 }

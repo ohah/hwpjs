@@ -81,7 +81,7 @@ test "HWPX equation caption rejects later invalid values and enforces shared lim
 }
 
 test "HWPX equation caption frees every failure including populated subList" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator) !void {
             var report = try inspect(a, prefix ++ "<p:equation><p:caption><p:subList id='1' textWidth='5' textDirection='HORIZONTAL'><p:p/><p:future/></p:subList></p:caption><p:script>x</p:script></p:equation>" ++ suffix, .{});
             defer report.deinit();

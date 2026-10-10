@@ -2,7 +2,16 @@
 //! callers must supply whole CharData/CDATA-container spans from the XML tree.
 const std = @import("std");
 const text_writer = @import("../xml/text_writer.zig");
-pub const Change = struct { start: usize, end: usize, text: []const u8, expand_empty_element: bool = false, run_opening: ?@import("xml_part_tree.zig").Span = null, start_tag: ?[]const u8 = null };
+pub const Change = struct {
+    start: usize,
+    end: usize,
+    text: []const u8,
+    expand_empty_element: bool = false,
+    run_opening: ?@import("xml_part_tree.zig").Span = null,
+    start_tag: ?[]const u8 = null,
+    /// Trusted serializer output, never user text. Caller owns XML semantics.
+    serialized_xml: ?[]const u8 = null,
+};
 
 /// UTF-8 XML source only. Sorted, nonoverlapping spans are replaced with XML
 /// CharData; everything outside those spans is copied byte-for-byte.
@@ -18,6 +27,12 @@ pub fn write(a: std.mem.Allocator, source: []const u8, changes: []const Change, 
     var cursor: usize = 0;
     for (changes) |change| {
         try append(a, &output, source[cursor..change.start], max_bytes);
+        if (change.serialized_xml) |replacement| {
+            if (change.expand_empty_element or change.run_opening != null or change.start_tag != null or change.text.len != 0) return error.InvalidSourceSpan;
+            try append(a, &output, replacement, max_bytes);
+            cursor = change.end;
+            continue;
+        }
         if (change.start_tag) |replacement| {
             if (change.expand_empty_element or change.run_opening != null or change.text.len != 0) return error.InvalidSourceSpan;
             const original = source[change.start..change.end];
@@ -80,6 +95,15 @@ pub fn write(a: std.mem.Allocator, source: []const u8, changes: []const Change, 
 fn append(a: std.mem.Allocator, output: *std.ArrayList(u8), bytes: []const u8, max_bytes: usize) !void {
     if (bytes.len > max_bytes -| output.items.len) return error.LimitExceeded;
     try output.appendSlice(a, bytes);
+}
+
+test "HWPX XML source writer bounds trusted structural replacements and rejects mixed modes" {
+    const a = std.testing.allocator;
+    const output = try write(a, "<s><p/></s>", &.{.{ .start = 3, .end = 7, .text = "", .serialized_xml = "<p>A&amp;B</p><p/>" }}, 100);
+    defer a.free(output);
+    try std.testing.expectEqualStrings("<s><p>A&amp;B</p><p/></s>", output);
+    try std.testing.expectError(error.InvalidSourceSpan, write(a, "<s><p/></s>", &.{.{ .start = 3, .end = 7, .text = "user", .serialized_xml = "<p/>" }}, 100));
+    try std.testing.expectError(error.LimitExceeded, write(a, "<s><p/></s>", &.{.{ .start = 3, .end = 7, .text = "", .serialized_xml = "<p>A&amp;B</p><p/>" }}, 10));
 }
 
 test "HWPX XML source writer preserves opaque markup outside text sites" {

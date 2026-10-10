@@ -14,6 +14,11 @@ pub const Properties = struct {
     pub fn pageKind(self: Properties) u2 {
         return @truncate(self.attributes);
     }
+    /// Exact observed four-byte identity suffix; other extents remain unselected.
+    pub fn observedInstanceId(self: Properties) ?u32 {
+        if (self.extra.len != 4) return null;
+        return @import("std").mem.readInt(u32, self.extra[0..4], .little);
+    }
 };
 /// Table 140 area fields in the owning LIST_HEADER extension, after its common view.
 pub const Area = struct {

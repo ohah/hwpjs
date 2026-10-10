@@ -95,7 +95,7 @@ test "HWPX table shape checks surviving values limits and lexical bounds" {
 }
 
 test "HWPX table shape releases all allocations under failure injection" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator) !void {
             const report = try inspectXml(a, "<p:tbl id='7' textWrap='THROUGH'><p:sz width='10' protect='true'/><p:pos vertOffset='-2'/><p:outMargin left='4294967295'/><p:caption side='TOP'><p:subList textDirection='HORIZONTAL'><p:p/></p:subList></p:caption></p:tbl>", .{});
             try std.testing.expectEqual(@as(usize, 1), report.table_shape.table_fields[3].extension_enum);

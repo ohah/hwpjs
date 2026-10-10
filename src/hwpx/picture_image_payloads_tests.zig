@@ -162,7 +162,7 @@ fn svgAllocationPaths(a: std.mem.Allocator) !void {
 
 test "HWPX picture image payloads release SVG XML allocations on every failure" {
     try svgAllocationPaths(std.testing.allocator);
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, svgAllocationPaths, .{});
+    try @import("../testing/allocation_failures.zig").check(svgAllocationPaths, .{});
 }
 
 test "HWPX picture image payloads inspect two SVG resources in actual document" {
@@ -402,7 +402,7 @@ test "HWPX picture image payloads enforce exact target and byte budgets" {
 }
 
 test "HWPX picture image payloads release every allocation failure" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator) !void {
             var valid = try inspectSample(a, .{}, false, false);
             defer valid.deinit(a);

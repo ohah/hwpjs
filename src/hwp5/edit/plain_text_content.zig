@@ -33,7 +33,7 @@ pub fn validatePlain(bytes: []const u8) !void {
         return error.UnsupportedParagraphTerminator;
     var offset: usize = 0;
     while (try scalars.read(bytes[0 .. bytes.len - 2], offset, .utf16le)) |c| {
-        if (c.value < 32) return error.UnsupportedTextControl;
+        if (c.value < 32 and c.value != 10) return error.UnsupportedTextControl;
         offset = c.end;
     }
 }

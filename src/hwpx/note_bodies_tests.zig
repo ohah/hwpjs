@@ -137,7 +137,7 @@ test "HWPX note bodies enforce exact count and byte budgets" {
 }
 
 test "HWPX note bodies free all allocations on success and invalid input" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator) !void {
             var report = try inspect(a, "<p:footNote flag='1' number='2'><p:subList textDirection='HORIZONTAL' textWidth='3'><p:p/></p:subList></p:footNote>", .{});
             report.deinit();

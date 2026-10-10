@@ -80,7 +80,7 @@ test "HWPX master paragraph children enforce one total budget across parts" {
 }
 
 test "HWPX master paragraph children release allocations under failure injection" {
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator) !void {
             const report = try inspect(a, sources[6].data, .{});
             try std.testing.expectEqual(@as(usize, 3), report.children.paragraphs);

@@ -20,8 +20,17 @@ pub const Command = union(enum) {
     delete_paragraph: struct { section: usize, paragraph: usize },
     splice_text: TextSplice,
     set_character_format: CharacterFormat,
+    set_character_properties: @import("character_property_apply.zig").Edit,
+    set_character_font_name: struct { section: usize, paragraph: usize, start_unit: u32, end_unit: u32, language: @import("../../model/character_fonts.zig").Language, name: []const u8 },
     split_paragraph: @import("structure_session.zig").Split,
     merge_paragraph: @import("merge_session.zig").Merge,
+    set_cell_size: @import("table_cell_size_values.zig").Edit,
+    set_picture_current_size: @import("picture_current_size_values.zig").Edit,
+    resize_picture: @import("picture_resize_values.zig").Edit,
+    set_paragraph_format: @import("paragraph_format.zig").Edit,
+    set_paragraph_alignment: struct { section: usize, paragraph: usize, alignment: u32 },
+    set_paragraph_margins: struct { section: usize, paragraph: usize, margins: model.ParagraphMarginPatch },
+    set_paragraph_spacing: struct { section: usize, paragraph: usize, spacing: model.ParagraphSpacing },
 };
 pub const SaveOptions = struct {
     /// Byte-preservation experiments only; does not certify Hancom layout.
@@ -40,6 +49,7 @@ const State = struct {
     style_offsets: [][]usize,
     style_count: usize,
     char_count: usize,
+    para_count: usize,
 
     fn deinit(self: *State) void {
         const a = self.allocator;
@@ -55,8 +65,16 @@ const State = struct {
 pub const Session = opaque {
     /// Checkpoint must represent the current model; history reserves first.
     pub fn applyCheckpointed(self: *Session, checkpoint: *Checkpoint, limit: usize, command: Command) !bool {
+        return self.applyBatchCheckpointed(checkpoint, limit, &.{command});
+    }
+
+    pub fn applyBatchCheckpointed(self: *Session, checkpoint: *Checkpoint, limit: usize, commands: []const Command) !bool {
         if (!try self.matchesCheckpoint(checkpoint)) return error.SourceBindingMismatch;
-        try self.apply(command);
+        for (commands) |command| self.apply(command) catch |err| {
+            const state = self.getState();
+            try @import("editor_checkpoint.zig").rollback(checkpoint, state.allocator, self, &state.document);
+            return err;
+        };
         if (try self.matchesCheckpoint(checkpoint)) return false;
         _ = self.checkpointSize(limit) catch |err| {
             const state = self.getState();
@@ -86,11 +104,24 @@ pub const Session = opaque {
     }
 
     pub fn open(a: std.mem.Allocator, input: []const u8) !*Session {
-        var source = try Source.open(a, input);
+        return openMode(a, input, false);
+    }
+
+    pub fn openDistribution(a: std.mem.Allocator, input: []const u8) !*Session {
+        return openMode(a, input, true);
+    }
+
+    fn openMode(a: std.mem.Allocator, input: []const u8, distribution: bool) !*Session {
+        var source = if (distribution) try Source.openReadOnly(a, input) else try Source.open(a, input);
         errdefer source.deinit();
+        if (distribution) {
+            if (!source.header.has(.distribution)) return error.NotDistributionDocument;
+            if (!source.header.has(.compressed)) return error.UnsupportedDistributionCompression;
+            if (source.header.has(.history) or source.header.has(.digital_signature) or source.header.has(.signature_preview)) return error.UnsupportedDistributionSaveFeatures;
+        }
         // Reader repairs are useful for preview, but not an implicit save policy.
         if (!std.mem.eql(u8, input, source.file.bytes)) return error.RepairedSourceUnsupported;
-        const info = try @import("../stream.zig").decode(a, &source.header, try source.file.readStream(a, "/DocInfo"), max_stream);
+        const info = try source.decodeDocInfo(a, max_stream);
         defer a.free(info);
         const resources = try @import("../docinfo/resources.zig").inspect(info, source.header.version(), .{});
         try resources.validateKnownCounts();
@@ -133,7 +164,7 @@ pub const Session = opaque {
             if (paragraph_index != section.paragraphs.len) return error.SourceBindingMismatch;
         }
         const owned = try a.create(State);
-        owned.* = .{ .allocator = a, .source = source, .decoded = decoded, .document = document, .style_offsets = offsets, .style_count = style_count, .char_count = resources.count(.char_shape) };
+        owned.* = .{ .allocator = a, .source = source, .decoded = decoded, .document = document, .style_offsets = offsets, .style_count = style_count, .char_count = resources.count(.char_shape), .para_count = resources.count(.para_shape) };
         return @ptrCast(owned);
     }
 
@@ -149,7 +180,280 @@ pub const Session = opaque {
     }
 
     pub fn characterShapeCount(self: *const Session) usize {
-        return self.stateConst().char_count;
+        return self.stateConst().char_count + self.stateConst().document.character_resources.len;
+    }
+    pub fn paragraphShapeCount(self: *const Session) usize {
+        return self.stateConst().para_count + self.stateConst().document.paragraph_resources.len;
+    }
+    pub fn ensureFont(self: *Session, language: @import("../../model/character_fonts.zig").Language, name: []const u8) !u32 {
+        const state = self.getState();
+        const a = state.allocator;
+        try @import("../../model/font_name.zig").validate(name, 4096);
+        const faces = try self.fontFaces(a);
+        defer {
+            for (faces) |*face| face.deinit(a);
+            a.free(faces);
+        }
+        var count: u32 = 0;
+        for (faces) |face| if (face.language == language) {
+            if (face.name) |existing| if (std.mem.eql(u8, existing, name)) return face.id;
+            count += 1;
+        };
+        if (count > std.math.maxInt(u16)) return error.InvalidFontId;
+        var pending = try state.document.font_resources.clone(a);
+        defer pending.deinit(a);
+        _ = try pending.add(a, language, count, name, 4096);
+        var candidate = state.document;
+        candidate.font_resources = pending;
+        const decoded = try state.source.decodeDocInfo(a, max_stream);
+        defer a.free(decoded);
+        const verified = try @import("resource_docinfo.zig").write(a, decoded, state.source.header.version(), &candidate, state.para_count, state.char_count, max_stream);
+        defer a.free(verified);
+        std.mem.swap(@import("../../model/font_resource_values.zig").Values, &state.document.font_resources, &pending);
+        return count;
+    }
+    pub fn paragraphShapeId(self: *const Session, section: usize, paragraph_index: usize) !u16 {
+        if (paragraph_index >= try self.paragraphCount(section)) return error.InvalidParagraph;
+        return self.stateConst().document.sections[section].paragraphs[paragraph_index].para_shape_id;
+    }
+    pub fn tableBindings(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("table_display_bindings.zig").Binding {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        const bindings = try @import("table_display_bindings.zig").read(a, state.decoded[section], state.source.header.version(), state.document.sections[section].paragraphs);
+        if (state.document.sections[section].table_cell_sizes) |sizes| {
+            for (bindings) |*binding| for (sizes) |size| {
+                if (binding.list_node == size.source_list_node) {
+                    binding.width = size.width;
+                    binding.height = size.height;
+                    break;
+                }
+            };
+        }
+        return bindings;
+    }
+    pub fn tablePlacements(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("table_display_placements.zig").Placement {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        return @import("table_display_placements.zig").read(a, state.decoded[section], state.source.header.version(), state.document.sections[section].paragraphs);
+    }
+    pub fn tableLayoutSources(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("table_layout_sources.zig").Source {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        return @import("table_layout_sources.zig").read(a, state.decoded[section], state.source.header.version());
+    }
+    pub fn captionSources(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("caption_sources.zig").Source {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        return @import("caption_sources.zig").read(a, state.decoded[section], state.source.header.version());
+    }
+    pub fn drawingSources(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("drawing_sources.zig").Source {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        if (state.document.sections[section].picture_current_sizes) |sizes| {
+            const current = try @import("picture_current_size_section.zig").writeAll(a, state.decoded[section], state.source.header.version(), sizes, max_stream);
+            defer a.free(current);
+            return @import("drawing_sources.zig").read(a, current, state.source.header.version());
+        }
+        return @import("drawing_sources.zig").read(a, state.decoded[section], state.source.header.version());
+    }
+    pub fn drawingObjectExtras(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("drawing_object_extras.zig").Source {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        return @import("drawing_object_extras.zig").read(a, state.decoded[section], state.source.header.version());
+    }
+    pub fn drawingComponentSources(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("drawing_component_sources.zig").Source {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        if (state.document.sections[section].picture_current_sizes) |sizes| {
+            const current = try @import("picture_current_size_section.zig").writeAll(a, state.decoded[section], state.source.header.version(), sizes, max_stream);
+            defer a.free(current);
+            return @import("drawing_component_sources.zig").read(a, current, state.source.header.version());
+        }
+        return @import("drawing_component_sources.zig").read(a, state.decoded[section], state.source.header.version());
+    }
+    pub fn drawingAnchors(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("drawing_anchor_positions.zig").Anchor {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        return @import("drawing_anchor_positions.zig").read(a, state.decoded[section], state.source.header.version(), state.document.sections[section].paragraphs);
+    }
+    pub fn drawingListSources(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("drawing_list_sources.zig").Source {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        return @import("drawing_list_sources.zig").read(a, state.decoded[section], state.source.header.version());
+    }
+    pub fn drawingMatrixSources(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("drawing_matrix_sources.zig").Source {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        const current = try self.currentDrawingSection(a, section);
+        defer if (current) |bytes| a.free(bytes);
+        return @import("drawing_matrix_sources.zig").read(a, current orelse state.decoded[section], state.source.header.version());
+    }
+    pub fn drawingLocalTransforms(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("drawing_local_transforms.zig").Transform {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        const current = try self.currentDrawingSection(a, section);
+        defer if (current) |bytes| a.free(bytes);
+        return @import("drawing_local_transforms.zig").read(a, current orelse state.decoded[section], state.source.header.version());
+    }
+    pub fn drawingRectangleCorners(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("drawing_rectangle_corners.zig").Corners {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        const current = try self.currentDrawingSection(a, section);
+        defer if (current) |bytes| a.free(bytes);
+        return @import("drawing_rectangle_corners.zig").read(a, current orelse state.decoded[section], state.source.header.version());
+    }
+    pub fn drawingLineEndpoints(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("drawing_line_endpoints.zig").Endpoints {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        const current = try self.currentDrawingSection(a, section);
+        defer if (current) |bytes| a.free(bytes);
+        return @import("drawing_line_endpoints.zig").read(a, current orelse state.decoded[section], state.source.header.version());
+    }
+    fn currentDrawingSection(self: *const Session, a: std.mem.Allocator, section: usize) !?[]u8 {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        const sizes = state.document.sections[section].picture_current_sizes orelse return null;
+        return try @import("picture_current_size_section.zig").writeAll(a, state.decoded[section], state.source.header.version(), sizes, max_stream);
+    }
+    /// Owned rows and gradient arrays; release with drawing_style_sources.deinit.
+    pub fn drawingStyleSources(self: *const Session, a: std.mem.Allocator, section: usize, options: @import("../body/drawing_style_validation.zig").Options) ![]@import("drawing_style_sources.zig").Source {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        return @import("drawing_style_sources.zig").read(a, state.decoded[section], state.source.header.version(), options);
+    }
+    pub fn fileVersion(self: *const Session) u32 {
+        return self.stateConst().source.header.version().raw;
+    }
+    pub fn pictureSources(self: *const Session, a: std.mem.Allocator, section: usize, prefix: @import("../body/shape_picture.zig").Prefix) ![]@import("picture_sources.zig").Source {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        return @import("picture_sources.zig").read(a, state.decoded[section], state.source.header.version(), prefix);
+    }
+    /// Decoded internal resource bytes; caller frees them. Never resolves external paths.
+    pub fn binaryResource(self: *const Session, a: std.mem.Allocator, ordinal: u16, limit: usize) ![]u8 {
+        return @import("binary_resource.zig").read(a, &self.stateConst().source, ordinal, limit);
+    }
+    pub fn pictureTailSources(self: *const Session, a: std.mem.Allocator, section: usize, additional: ?@import("../body/picture_additional.zig").Layout) ![]@import("picture_tail_sources.zig").Source {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        return @import("picture_tail_sources.zig").read(a, state.decoded[section], state.source.header.version(), additional);
+    }
+    pub fn cellLayoutSources(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("cell_layout_sources.zig").Source {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        return @import("cell_layout_sources.zig").read(a, state.decoded[section], state.source.header.version());
+    }
+    pub fn tableAnchors(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("table_anchor_positions.zig").Anchor {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        return @import("table_anchor_positions.zig").read(a, state.decoded[section], state.source.header.version(), state.document.sections[section].paragraphs);
+    }
+    pub fn structuralAnchors(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("structural_anchor_positions.zig").Anchor {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        return @import("structural_anchor_positions.zig").read(a, state.decoded[section], state.source.header.version(), state.document.sections[section].paragraphs);
+    }
+    pub fn noteShapeSources(self: *const Session, a: std.mem.Allocator, section: usize) ![2]@import("note_shape_sources.zig").Source {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        return @import("note_shape_sources.zig").read(a, state.decoded[section], state.source.header.version());
+    }
+    pub fn noteSources(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("note_sources.zig").Source {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        return @import("note_sources.zig").read(a, state.decoded[section], state.source.header.version(), state.document.sections[section].paragraphs);
+    }
+    pub fn automaticNumberSources(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("automatic_number_sources.zig").Source {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        return @import("automatic_number_sources.zig").read(a, state.decoded[section], state.source.header.version(), state.document.sections[section].paragraphs);
+    }
+    pub fn pageControlSources(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("page_control_sources.zig").Source {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        return @import("page_control_sources.zig").read(a, state.decoded[section], state.source.header.version(), state.document.sections[section].paragraphs);
+    }
+    pub fn documentProperties(self: *const Session, a: std.mem.Allocator) !@import("document_properties_snapshot.zig").Snapshot {
+        const state = self.stateConst();
+        const decoded = try state.source.decodeDocInfo(a, max_stream);
+        defer a.free(decoded);
+        return @import("document_properties_snapshot.zig").read(decoded, state.source.header.version());
+    }
+    pub fn masterPageSources(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("master_page_sources.zig").Source {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        return @import("master_page_sources.zig").read(a, state.decoded[section], state.source.header.version());
+    }
+    pub fn pageAreaSources(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("page_area_sources.zig").Source {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        return @import("page_area_sources.zig").read(a, state.decoded[section], state.source.header.version());
+    }
+    pub fn pageSettings(self: *const Session, a: std.mem.Allocator, section: usize) !@import("page_settings_snapshot.zig").Setting {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        return @import("page_settings_snapshot.zig").read(a, state.decoded[section], state.source.header.version());
+    }
+    pub fn sectionSettings(self: *const Session, a: std.mem.Allocator, section: usize) !@import("section_settings_snapshot.zig").Setting {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        return @import("section_settings_snapshot.zig").read(a, state.decoded[section], state.source.header.version());
+    }
+    pub fn paragraphFlow(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("paragraph_flow_snapshot.zig").Flow {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        return @import("paragraph_flow_snapshot.zig").read(a, state.decoded[section], state.source.header.version(), state.document.sections[section]);
+    }
+    /// Caller releases the owned declaration array with column_sources_snapshot.free.
+    pub fn columnSources(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("column_sources_snapshot.zig").Declaration {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        const columns = @import("column_sources_snapshot.zig");
+        const rows = try columns.read(a, state.decoded[section], state.source.header.version());
+        errdefer columns.free(a, rows);
+        const flows = try self.paragraphFlow(a, section);
+        defer a.free(flows);
+        try columns.bindCurrent(a, rows, flows);
+        for (rows) |*row| {
+            const p = state.document.sections[section].paragraphs[row.current_paragraph.?];
+            row.current_unit = try @import("column_anchor_position.zig").read(p);
+        }
+        return rows;
+    }
+    pub fn characterRanges(self: *const Session, a: std.mem.Allocator, section: usize, index: usize) ![]@import("character_display_ranges.zig").Range {
+        if (index >= try self.paragraphCount(section)) return error.InvalidParagraph;
+        const state = self.stateConst();
+        return @import("character_display_ranges.zig").read(a, state.document.sections[section].paragraphs[index], self.characterShapeCount());
+    }
+
+    /// Caller-owned scalar snapshot, never a second mutable resource model.
+    pub fn fontFaces(self: *const Session, a: std.mem.Allocator) ![]@import("../../model/font_face_value.zig").Value {
+        const state = self.stateConst();
+        const decoded = try state.source.decodeDocInfo(a, max_stream);
+        defer a.free(decoded);
+        const current = try @import("resource_docinfo.zig").write(a, decoded, state.source.header.version(), &state.document, state.para_count, state.char_count, max_stream);
+        defer a.free(current);
+        return @import("font_face_snapshot.zig").read(a, current, state.source.header.version(), 1_000_000, 4096);
+    }
+
+    /// Caller-owned scalar snapshot, never a second mutable resource model.
+    pub fn characterShapes(self: *const Session, a: std.mem.Allocator) ![]@import("character_display_shapes.zig").Shape {
+        const state = self.stateConst();
+        const decoded = try state.source.decodeDocInfo(a, max_stream);
+        defer a.free(decoded);
+        const current = try @import("resource_docinfo.zig").write(a, decoded, state.source.header.version(), &state.document, state.para_count, state.char_count, max_stream);
+        defer a.free(current);
+        return @import("character_display_shapes.zig").read(a, current, state.source.header.version(), self.characterShapeCount());
+    }
+
+    /// Caller owns the immutable resource snapshot.
+    pub fn paragraphShapes(self: *const Session, a: std.mem.Allocator) ![]@import("paragraph_display_shapes.zig").Shape {
+        const state = self.stateConst();
+        const decoded = try state.source.decodeDocInfo(a, max_stream);
+        defer a.free(decoded);
+        const current = try @import("resource_docinfo.zig").write(a, decoded, state.source.header.version(), &state.document, state.para_count, state.char_count, max_stream);
+        defer a.free(current);
+        return @import("paragraph_display_shapes.zig").read(a, current, state.source.header.version(), self.paragraphShapeCount());
     }
 
     pub fn paragraphCount(self: *const Session, section: usize) !usize {
@@ -164,6 +468,15 @@ pub const Session = opaque {
         return .{ .source_node = p.source_node, .parent_node = p.parent_node, .style_id = p.style_id };
     }
 
+    pub fn editableTextLength(self: *const Session, a: std.mem.Allocator, section: usize, index: usize) !u32 {
+        if (index >= try self.paragraphCount(section)) return error.InvalidParagraph;
+        const paragraph_value = self.stateConst().document.sections[section].paragraphs[index];
+        const bytes = try @import("plain_text_content.zig").editableTextBytes(a, paragraph_value);
+        defer a.free(bytes);
+        if (bytes.len < 2 or bytes.len % 2 != 0 or std.mem.readInt(u16, bytes[bytes.len - 2 ..][0..2], .little) != 13) return error.UnsupportedParagraphTerminator;
+        return std.math.cast(u32, bytes.len / 2 - 1) orelse error.LimitExceeded;
+    }
+
     /// Owned UTF-16LE token bytes, including the original paragraph terminator.
     pub fn copyText(self: *const Session, a: std.mem.Allocator, section: usize, index: usize) ![]u8 {
         if (index >= try self.paragraphCount(section)) return error.InvalidParagraph;
@@ -172,13 +485,71 @@ pub const Session = opaque {
 
     pub fn apply(self: *Session, command: Command) !void {
         switch (command) {
+            .set_character_font_name => |edit| {
+                if (edit.paragraph >= try self.paragraphCount(edit.section)) return error.InvalidParagraph;
+                try @import("../../model/font_name.zig").validate(edit.name, 4096);
+                if (edit.start_unit == edit.end_unit) return self.apply(.{ .set_character_properties = .{ .section = edit.section, .paragraph = edit.paragraph, .start_unit = edit.start_unit, .end_unit = edit.end_unit, .properties = .{} } });
+                const state = self.getState();
+                const checkpoint = try self.createCheckpoint(max_bytes);
+                defer checkpoint.deinit();
+                errdefer @import("editor_checkpoint.zig").rollback(checkpoint, state.allocator, self, &state.document) catch unreachable;
+                const id = try self.ensureFont(edit.language, edit.name);
+                var ids: @import("../../model/character_fonts.zig").Values = @splat(null);
+                ids[@intFromEnum(edit.language)] = id;
+                try self.apply(.{ .set_character_properties = .{ .section = edit.section, .paragraph = edit.paragraph, .start_unit = edit.start_unit, .end_unit = edit.end_unit, .properties = .{ .font_ids = ids } } });
+            },
+            .set_paragraph_spacing => |edit| {
+                if (edit.paragraph >= try self.paragraphCount(edit.section)) return error.InvalidParagraph;
+                const state = self.getState();
+                const a = state.allocator;
+                const decoded = try state.source.decodeDocInfo(a, max_stream);
+                defer a.free(decoded);
+                try @import("paragraph_alignment_apply.zig").applyWithProperties(a, &state.document, decoded, state.source.header.version(), state.para_count, edit.section, edit.paragraph, null, .{}, edit.spacing, max_stream);
+            },
+            .set_paragraph_margins => |edit| {
+                if (edit.paragraph >= try self.paragraphCount(edit.section)) return error.InvalidParagraph;
+                const state = self.getState();
+                const a = state.allocator;
+                const decoded = try state.source.decodeDocInfo(a, max_stream);
+                defer a.free(decoded);
+                try @import("paragraph_alignment_apply.zig").applyWithMargins(a, &state.document, decoded, state.source.header.version(), state.para_count, edit.section, edit.paragraph, null, edit.margins, max_stream);
+            },
+            .set_paragraph_alignment => |edit| {
+                if (edit.alignment > 5) return error.InvalidParagraphAlignment;
+                if (edit.paragraph >= try self.paragraphCount(edit.section)) return error.InvalidParagraph;
+                const state = self.getState();
+                const a = state.allocator;
+                const decoded = try state.source.decodeDocInfo(a, max_stream);
+                defer a.free(decoded);
+                try @import("paragraph_alignment_apply.zig").apply(a, &state.document, decoded, state.source.header.version(), state.para_count, edit.section, edit.paragraph, edit.alignment, max_stream);
+            },
+            .set_paragraph_format => |edit| {
+                if (edit.paragraph >= try self.paragraphCount(edit.section)) return error.InvalidParagraph;
+                const state = self.getState();
+                try @import("paragraph_format.zig").apply(&state.document.sections[edit.section].paragraphs[edit.paragraph], edit.para_shape_id, self.paragraphShapeCount());
+            },
+            .set_cell_size => |edit| {
+                const state = self.getState();
+                if (edit.section >= state.document.sections.len) return error.InvalidSection;
+                try @import("table_cell_size_values.zig").apply(state.allocator, state.decoded[edit.section], state.source.header.version(), &state.document.sections[edit.section], edit);
+            },
+            .set_picture_current_size => |edit| {
+                const state = self.getState();
+                if (edit.section >= state.document.sections.len) return error.InvalidSection;
+                try @import("picture_current_size_values.zig").apply(state.allocator, state.decoded[edit.section], state.source.header.version(), &state.document.sections[edit.section], edit);
+            },
+            .resize_picture => |edit| {
+                const state = self.getState();
+                if (edit.section >= state.document.sections.len) return error.InvalidSection;
+                try @import("picture_resize_values.zig").apply(state.allocator, state.decoded[edit.section], state.source.header.version(), &state.document.sections[edit.section], edit, max_stream);
+            },
             .merge_paragraph => |merge| {
                 const state = self.getState();
-                try @import("merge_session.zig").apply(state.allocator, state.decoded, &state.document, state.source.header.version(), merge, state.char_count, max_stream);
+                try @import("merge_session.zig").apply(state.allocator, state.decoded, &state.document, state.source.header.version(), merge, self.characterShapeCount(), max_stream);
             },
             .split_paragraph => |edit| {
                 const state = self.getState();
-                try @import("structure_session.zig").split(state.allocator, state.decoded, &state.document, state.source.header.version(), edit, state.char_count, max_stream);
+                try @import("structure_session.zig").split(state.allocator, state.decoded, &state.document, state.source.header.version(), edit, self.characterShapeCount(), max_stream);
             },
             .set_style => |edit| {
                 if (edit.paragraph >= try self.paragraphCount(edit.section)) return error.InvalidParagraph;
@@ -191,21 +562,33 @@ pub const Session = opaque {
                 const state = self.getState();
                 // Other sections can also contain opaque references into the target.
                 for (state.decoded, 0..) |bytes, index| {
-                    if (index != edit.section) try @import("plain_text_source.zig").validateSection(bytes);
+                    if (index != edit.section) try @import("plain_text_source.zig").validateSection(state.allocator, bytes, state.source.header.version());
                 }
-                if (try @import("source_policy.zig").hasFormulas(state.decoded[edit.section])) {
-                    try @import("formula_splice.zig").apply(state.allocator, state.decoded[edit.section], state.source.header.version(), &state.document.sections[edit.section], edit, state.char_count);
+                if (try @import("source_policy.zig").hasNamedFields(state.decoded[edit.section])) {
+                    try @import("field_splice.zig").apply(state.allocator, state.decoded[edit.section], state.source.header.version(), &state.document.sections[edit.section], edit, self.characterShapeCount());
+                } else if (try @import("source_policy.zig").hasFormulas(state.allocator, state.decoded[edit.section], state.source.header.version())) {
+                    try @import("formula_splice.zig").apply(state.allocator, state.decoded[edit.section], state.source.header.version(), &state.document.sections[edit.section], edit, self.characterShapeCount());
                 } else if (try @import("hyperlink_splice.zig").hasCrossParagraph(state.allocator, state.document.sections[edit.section])) {
-                    try @import("hyperlink_splice.zig").apply(state.allocator, state.decoded[edit.section], state.source.header.version(), &state.document.sections[edit.section], edit, state.char_count);
-                } else try @import("plain_text.zig").apply(state.allocator, state.decoded[edit.section], state.source.header.version(), &state.document.sections[edit.section].paragraphs[edit.paragraph], edit, state.char_count);
+                    try @import("hyperlink_splice.zig").apply(state.allocator, state.decoded[edit.section], state.source.header.version(), &state.document.sections[edit.section], edit, self.characterShapeCount());
+                } else try @import("plain_text.zig").apply(state.allocator, state.decoded[edit.section], state.source.header.version(), &state.document.sections[edit.section].paragraphs[edit.paragraph], edit, self.characterShapeCount());
+            },
+            .set_character_properties => |edit| {
+                const state = self.getState();
+                if (edit.section >= state.document.sections.len) return error.InvalidSection;
+                for (state.decoded, 0..) |bytes, index| {
+                    if (index != edit.section) try @import("plain_text_source.zig").validateSection(state.allocator, bytes, state.source.header.version());
+                }
+                const info = try state.source.decodeDocInfo(state.allocator, max_stream);
+                defer state.allocator.free(info);
+                try @import("character_property_apply.zig").apply(state.allocator, state.decoded[edit.section], info, state.source.header.version(), &state.document, edit, state.char_count, max_stream);
             },
             .set_character_format => |edit| {
                 if (edit.paragraph >= try self.paragraphCount(edit.section)) return error.InvalidParagraph;
                 const state = self.getState();
                 for (state.decoded, 0..) |bytes, index| {
-                    if (index != edit.section) try @import("plain_text_source.zig").validateSection(bytes);
+                    if (index != edit.section) try @import("plain_text_source.zig").validateSection(state.allocator, bytes, state.source.header.version());
                 }
-                try @import("character_format.zig").apply(state.allocator, state.decoded[edit.section], state.source.header.version(), &state.document.sections[edit.section].paragraphs[edit.paragraph], edit, state.char_count);
+                try @import("character_format.zig").apply(state.allocator, state.decoded[edit.section], state.source.header.version(), &state.document.sections[edit.section].paragraphs[edit.paragraph], edit, self.characterShapeCount());
             },
             // No promise to relocate unknown cross-references after structure edits.
             .insert_text, .delete_paragraph => return error.UnsupportedStructuralEdit,
@@ -214,7 +597,8 @@ pub const Session = opaque {
 
     pub fn save(self: *const Session, a: std.mem.Allocator, options: SaveOptions) !Saved {
         const state = self.stateConst();
-        var changed = false;
+        const resource_changed = state.document.paragraph_resources.len != 0 or state.document.character_resources.len != 0 or state.document.font_resources.entries.items.len != 0;
+        var changed = resource_changed;
         for (state.document.sections, 0..) |section, index| {
             changed = changed or sectionChanged(state, index, section);
         }
@@ -227,22 +611,39 @@ pub const Session = opaque {
         defer arena.deinit();
         const scratch = arena.allocator();
         var replacements: std.ArrayList(cfb.stream_replace.Replacement) = .empty;
+        if (resource_changed) {
+            const decoded = try state.source.decodeDocInfo(scratch, max_stream);
+            const current = try @import("resource_docinfo.zig").write(scratch, decoded, state.source.header.version(), &state.document, state.para_count, state.char_count, max_stream);
+            const encoded = if (state.source.header.has(.compressed)) try @import("../../compression/raw_deflate.zig").encodeStored(scratch, current, max_stream) else current;
+            try replacements.append(scratch, .{ .path = "/DocInfo", .content = encoded });
+        }
         for (state.document.sections, 0..) |section, index| {
             if (!sectionChanged(state, index, section)) continue;
             var structural = section.paragraphs.len != state.style_offsets[index].len;
+            if (section.table_cell_sizes) |sizes| if (sizes.len != 0) {
+                structural = true;
+            };
             for (section.paragraphs) |p| if (p.source_node == null) {
                 structural = true;
                 break;
             };
-            const decoded = if (structural)
-                try @import("structure_section_writer.zig").writeWithDeletions(scratch, state.decoded[index], section, state.source.header.version(), state.char_count, max_stream, true)
+            const picture_source = if (section.picture_current_sizes) |sizes|
+                try @import("picture_current_size_section.zig").writeAll(scratch, state.decoded[index], state.source.header.version(), sizes, max_stream)
             else
-                try @import("text_section_writer.zig").write(scratch, state.decoded[index], section, state.source.header.version(), max_stream);
-            const encoded = if (state.source.header.has(.compressed))
+                state.decoded[index];
+            const decoded = if (structural)
+                try @import("structure_section_writer.zig").writeWithDeletions(scratch, picture_source, section, state.source.header.version(), self.characterShapeCount(), max_stream, true)
+            else
+                try @import("text_section_writer.zig").write(scratch, picture_source, section, state.source.header.version(), max_stream);
+            const distribution = state.source.header.has(.distribution);
+            const path = try std.fmt.allocPrint(scratch, "/{s}/Section{d}", .{ if (distribution) "ViewText" else "BodyText", index });
+            const encoded = if (distribution)
+                try @import("../distribution/encode.zig").encodeCompressedLike(scratch, try state.source.file.readStream(scratch, path), decoded, .{ .max_plaintext_bytes = max_stream, .max_output_bytes = options.max_output_bytes })
+            else if (state.source.header.has(.compressed))
                 try @import("../../compression/raw_deflate.zig").encodeStored(scratch, decoded, max_stream)
             else
                 decoded;
-            try replacements.append(scratch, .{ .path = try std.fmt.allocPrint(scratch, "/BodyText/Section{d}", .{index}), .content = encoded });
+            try replacements.append(scratch, .{ .path = path, .content = encoded });
         }
         return .{
             .bytes = try cfb.stream_replace.rebuildManyExact(a, &state.source.file, replacements.items, .{ .max_output_bytes = options.max_output_bytes }),
@@ -259,9 +660,13 @@ pub const Session = opaque {
 };
 
 fn sectionChanged(state: *const State, index: usize, section: model.Section) bool {
+    if (section.picture_current_sizes) |sizes| if (sizes.len != 0) return true;
+    if (section.table_cell_sizes) |sizes| if (sizes.len != 0) return true;
     if (section.paragraphs.len != state.style_offsets[index].len) return true;
     for (section.paragraphs, state.style_offsets[index]) |p, offset| {
         if (p.style_id != state.decoded[index][offset] or p.range_tags != null or p.field_attributes != null) return true;
+        const shape_offset = offset - (Header.style_id_offset - Header.para_shape_id_offset);
+        if (p.para_shape_id != std.mem.readInt(u16, state.decoded[index][shape_offset..][0..2], .little)) return true;
     }
     return false;
 }

@@ -236,6 +236,36 @@ const Collector = struct {
 
 /// Reads every 2011 core fillBrush in selected header and section trees.
 /// Missing attributes and unfamiliar children remain distinct from defaults.
+pub fn inspectSections(a: std.mem.Allocator, sections: []const part_tree.Tree, options: Options) !Report {
+    var collector: Collector = .{ .a = a, .options = options };
+    errdefer collector.deinit();
+    for (sections) |*tree| {
+        if (tree.part_kind != .section or tree.section_ordinal == null) return error.InvalidPartKind;
+        try collector.scanTree(tree);
+    }
+    return collector.finish(sections.len, 0);
+}
+
+test "HWPX section fill source actual brush variants and allocation failures" {
+    const a = std.testing.allocator;
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/shaperect.hwpx", a, .limited(4_000_000));
+    defer a.free(bytes);
+    var session = try @import("editor_session.zig").open(a, bytes, .{});
+    defer session.deinit();
+    try std.testing.checkAllAllocationFailures(a, struct {
+        fn run(allocator: std.mem.Allocator, tree: *const part_tree.Tree) !void {
+            var report = try inspectSections(allocator, &.{tree.*}, .{});
+            defer report.deinit(allocator);
+            try std.testing.expectEqual(@as(usize, 3), report.brushes.len);
+            try std.testing.expectEqual(@as(usize, 2), report.count(.win_brush));
+            try std.testing.expectEqual(@as(usize, 1), report.count(.gradation));
+            try std.testing.expectEqual(@as(usize, 2), report.count(.color));
+            const json = try std.json.Stringify.valueAlloc(allocator, report, .{});
+            defer allocator.free(json);
+        }
+    }.run, .{&session.sections[0].tree});
+}
+
 pub fn inspect(a: std.mem.Allocator, header: *const part_tree.Tree, sections: []const part_tree.Tree, options: Options) !Report {
     if (header.part_kind != .header or header.section_ordinal != null) return error.InvalidPartKind;
     var collector: Collector = .{ .a = a, .options = options };

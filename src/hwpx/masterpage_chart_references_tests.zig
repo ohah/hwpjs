@@ -151,7 +151,7 @@ test "HWPX master chart links honor nested switches and first default" {
 test "HWPX master chart links release allocations after every failure" {
     const bytes = try zipFor(std.testing.allocator, prefix ++ "<p:chart chartIDRef='Chart/chart1.xml'/>" ++ suffix);
     defer std.testing.allocator.free(bytes);
-    try std.testing.checkAllAllocationFailures(std.testing.allocator, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator, source: []const u8) !void {
             var document = try package.inspectDocument(a, source, .{});
             defer document.deinit(a);

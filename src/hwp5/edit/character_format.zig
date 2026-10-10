@@ -1,4 +1,4 @@
-//! Existing CharShape application to a plain paragraph; no resource creation.
+//! Existing CharShape application around retained tokens; no resource creation.
 const std = @import("std");
 const model = @import("../../model/document.zig");
 const Version = @import("../version.zig").Version;
@@ -9,14 +9,12 @@ pub const Edit = struct { section: usize, paragraph: usize, start_unit: u32, end
 
 pub fn apply(a: std.mem.Allocator, source: []const u8, version: Version, p: *model.Paragraph, edit: Edit, count: usize) !void {
     if (edit.char_shape_id >= count) return error.InvalidResourceReference;
-    const validated = try @import("plain_text_source.zig").validate(a, source, version, p.*, count);
+    const validated = try @import("plain_text_source.zig").validateCharacterFormat(a, source, version, p.*, count);
     const original_ranges = validated.ranges;
     const text = try plain.editableTextBytes(a, p.*);
     defer a.free(text);
-    try plain.validatePlain(text);
-    if (edit.start_unit > edit.end_unit or edit.end_unit > text.len / 2 - 1) return error.InvalidTextPosition;
-    try plain.boundary(text, edit.start_unit);
-    try plain.boundary(text, edit.end_unit);
+    try @import("control_boundaries.zig").validateRetainedText(text);
+    try @import("control_boundaries.zig").validate(text, edit.start_unit, edit.end_unit);
     try runs.validate(p.character_runs, text, count);
     const range_count = if (p.range_tags) |r| r.len else if (original_ranges) |r| r.count() else 0;
     // Length does not change: preserve even zero-length ranges without affinity.

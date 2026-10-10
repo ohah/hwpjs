@@ -16,15 +16,24 @@ pub const Source = struct {
     section_count: u16,
 
     pub fn open(a: std.mem.Allocator, input: []const u8) !Source {
+        return openWithPolicy(a, input, .reject);
+    }
+
+    /// Read-only ViewText support never grants editor permission.
+    pub fn openReadOnly(a: std.mem.Allocator, input: []const u8) !Source {
+        return openWithPolicy(a, input, .observed_viewtext);
+    }
+
+    fn openWithPolicy(a: std.mem.Allocator, input: []const u8, policy: @import("feature_policy.zig").Distribution) !Source {
         var file = try openCfb(a, input);
         errdefer file.deinit();
         const header = try Header.parse(try file.readStream(a, "/FileHeader"));
-        try @import("feature_policy.zig").requireSupported(&header, .reject);
-        const info = try stream.decode(a, &header, try file.readStream(a, "/DocInfo"), max_stream);
+        try @import("feature_policy.zig").requireSupported(&header, policy);
+        const info = try stream.decodeWithPolicy(a, &header, try file.readStream(a, "/DocInfo"), max_stream, policy);
         defer a.free(info);
         const count = try sectionCount(info, header.version());
         if (count == 0 or count > max_sections) return error.InvalidSectionCount;
-        const body_index = try file.findExact("/BodyText") orelse return error.StreamNotFound;
+        const body_index = try file.findExact(if (header.has(.distribution)) "/ViewText" else "/BodyText") orelse return error.StreamNotFound;
         if (file.entries[body_index].kind != 1) return error.NotAStorage;
         var found: usize = 0;
         for (file.entries) |entry| {
@@ -43,13 +52,40 @@ pub const Source = struct {
     }
 
     /// Owned decoded bytes; caller frees them with `a`.
+    pub fn decodeDocInfo(self: *const Source, a: std.mem.Allocator, limit: usize) ![]u8 {
+        return stream.decodeWithPolicy(a, &self.header, try self.file.readStream(a, "/DocInfo"), limit, if (self.header.has(.distribution)) .observed_viewtext else .reject);
+    }
+
+    /// Owned decoded bytes; caller frees them with `a`.
     pub fn decodeSection(self: *const Source, a: std.mem.Allocator, index: usize) ![]u8 {
         if (index >= self.section_count) return error.SectionCountMismatch;
-        const path = try std.fmt.allocPrint(a, "/BodyText/Section{d}", .{index});
+        const path = try std.fmt.allocPrint(a, "/{s}/Section{d}", .{ if (self.header.has(.distribution)) "ViewText" else "BodyText", index });
         defer a.free(path);
+        if (self.header.has(.distribution)) return @import("container/view_stream.zig").decodeWithPolicy(a, &self.header, try self.file.readStream(a, path), max_stream, max_stream, .observed_viewtext);
         return stream.decode(a, &self.header, try self.file.readStream(a, path), max_stream);
     }
 };
+
+test "HWP5 read only distribution source does not grant editing permission" {
+    const a = std.testing.allocator;
+    for ([_][]const u8{ "distribution.hwp", "viewtext.hwp" }) |name| {
+        const path = try std.fmt.allocPrint(a, "legacy/rust/crates/hwp-core/tests/fixtures/{s}", .{name});
+        defer a.free(path);
+        const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, path, a, .limited(max_input));
+        defer a.free(bytes);
+        try std.testing.expectError(error.UnsupportedDistribution, Source.open(a, bytes));
+        var source = try Source.openReadOnly(a, bytes);
+        defer source.deinit();
+        try std.testing.expect(source.header.has(.distribution));
+        for (0..source.section_count) |index| {
+            const decoded = try source.decodeSection(a, index);
+            defer a.free(decoded);
+            var tree = try @import("body/tree.zig").Tree.parseTextPreview(a, decoded, source.header.version(), .{});
+            defer tree.deinit(a);
+            try std.testing.expect(tree.nodes.len > 0);
+        }
+    }
+}
 
 fn openCfb(a: std.mem.Allocator, input: []const u8) !Cfb {
     const limits: @import("../cfb/reader.zig").Options = .{ .strict = true, .max_input_bytes = max_input, .max_stream_bytes = max_stream, .max_total_stream_bytes = max_input };

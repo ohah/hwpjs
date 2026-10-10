@@ -25,28 +25,37 @@ pub fn prepare(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").T
     if (!std.mem.endsWith(u8, view.command.?, cached)) return error.SourceBindingMismatch;
     const command = try std.mem.concat(a, u8, &.{ view.command.?[0 .. view.command.?.len - cached.len], display });
     errdefer a.free(command);
-    var changes: [2]writer.Change = undefined;
-    var found = [_]bool{ false, false };
+    var changes = [_]writer.Change{
+        try parameterChange(tree, report, begin, "Command", command),
+        try parameterChange(tree, report, begin, "LastResult", display),
+    };
+    if (changes[0].start > changes[1].start) std.mem.swap(writer.Change, &changes[0], &changes[1]);
+    return .{ .command = command, .changes = changes };
+}
+
+/// The replacement text is borrowed until the XML writer consumes the change.
+pub fn parameterChange(tree: *const @import("xml_part_tree.zig").Tree, report: *const params.Report, begin: usize, parameter: []const u8, text: []const u8) !writer.Change {
+    const section = tree.section_ordinal orelse return error.SourceBindingMismatch;
+    var change: ?writer.Change = null;
     for (report.roots) |root| {
         if (root.section_ordinal != section or root.parent_element_index != begin) continue;
+        if (root.first_node > report.nodes.len or root.node_count > report.nodes.len - root.first_node) return error.InvalidFormulaParameters;
         if (root.element_index >= tree.elements.len or !std.mem.eql(u8, root.raw_xml, tree.sourceOf(root.element_index))) return error.SourceBindingMismatch;
         for (report.nodes[root.first_node..][0..root.node_count]) |node| {
             if (node.parent_node_index != root.first_node) continue;
             const name = node.name orelse continue;
-            const slot: usize = if (std.mem.eql(u8, name, "Command")) 0 else if (std.mem.eql(u8, name, "LastResult")) 1 else continue;
-            if (found[slot]) return error.DuplicateFormulaParameter;
+            if (!std.mem.eql(u8, name, parameter)) continue;
+            if (node.kind != .string or node.value == null or node.direct_children != 0 or node.unknown_children != 0) return error.InvalidFormulaParameterType;
+            if (change != null) return error.DuplicateFormulaParameter;
             if (node.element_index >= tree.elements.len or !std.mem.eql(u8, node.raw_xml, tree.sourceOf(node.element_index))) return error.SourceBindingMismatch;
             const element = tree.elements[node.element_index];
             const end = element.end_tag orelse return error.UnsupportedFormulaParameterContent;
             const start = element.start_tag.end;
             if (std.mem.indexOfScalar(u8, tree.source[start..end.start], '<') != null) return error.UnsupportedFormulaParameterContent;
-            changes[slot] = .{ .start = start, .end = end.start, .text = if (slot == 0) command else display };
-            found[slot] = true;
+            change = .{ .start = start, .end = end.start, .text = text };
         }
     }
-    if (!found[0] or !found[1]) return error.MissingFormulaResultParameter;
-    if (changes[0].start > changes[1].start) std.mem.swap(writer.Change, &changes[0], &changes[1]);
-    return .{ .command = command, .changes = changes };
+    return change orelse error.MissingFormulaResultParameter;
 }
 
 test "HWPX formula parameter changes preserve definitions and fail allocation without modifying source" {
@@ -72,7 +81,38 @@ test "HWPX formula parameter changes preserve definitions and fail allocation wi
     }.run, .{ &tree, &report, &sites, source });
     var prepared = try prepare(a, &tree, &report, 1, "42");
     defer prepared.deinit(a);
+    const formula_change = try parameterChange(&tree, &report, 1, "Formula", "=AVG(A1:A2)");
+    const formula_output = try @import("text_sites_save.zig").writeWithChanges(a, &tree, &sites, .{}, &.{}, &.{formula_change}, tree.source.len + 100);
+    defer a.free(formula_output);
+    try std.testing.expect(std.mem.indexOf(u8, formula_output, "name='Formula'>=AVG(A1:A2)") != null);
+    try std.testing.expect(std.mem.indexOf(u8, formula_output, "=SUM(A1:A2)??%g,;;old") != null);
+    try std.testing.expectError(error.MissingFormulaResultParameter, parameterChange(&tree, &report, 1, "Absent", "x"));
     const duplicate = [_]writer.Change{ prepared.changes[0], prepared.changes[0] };
     try std.testing.expectError(error.InvalidSourceSpan, @import("text_sites_save.zig").writeWithChanges(a, &tree, &sites, .{}, &.{}, &duplicate, tree.source.len + 100));
     try std.testing.expectError(error.InvalidFormulaResult, prepare(a, &tree, &report, 1, &.{0xff}));
+}
+
+test "HWPX formula parameter change rejects forged report spans" {
+    const a = std.testing.allocator;
+    var tree = try @import("xml_part_tree.zig").parse(a, @import("test_formula_fixture.zig").section, .section, 0, 0, .{});
+    defer tree.deinit(a);
+    var report = try params.inspect(a, &.{tree}, .{});
+    defer report.deinit();
+    const roots = @constCast(report.roots);
+    const root = roots[0];
+    defer roots[0] = root;
+    roots[0].first_node = report.nodes.len + 1;
+    try std.testing.expectError(error.InvalidFormulaParameters, parameterChange(&tree, &report, root.parent_element_index, "Formula", "=AVG(A1:A1)"));
+    roots[0] = root;
+    roots[0].node_count = std.math.maxInt(usize);
+    try std.testing.expectError(error.InvalidFormulaParameters, parameterChange(&tree, &report, root.parent_element_index, "Formula", "=AVG(A1:A1)"));
+    roots[0] = root;
+    const nodes = @constCast(report.nodes);
+    for (nodes) |*node| {
+        if (node.name == null or !std.mem.eql(u8, node.name.?, "Formula")) continue;
+        const original = node.*;
+        defer node.* = original;
+        node.kind = .integer;
+        try std.testing.expectError(error.InvalidFormulaParameterType, parameterChange(&tree, &report, root.parent_element_index, "Formula", "=AVG(A1:A1)"));
+    }
 }
