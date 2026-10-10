@@ -10,6 +10,8 @@ Worker의 사각형 부착 단계는 이 배열을 해당 호출 안에서만 �
 
 ## 검증 기록
 
+깨끗한6d4dac5a 산출물의 정규 gate는 종료코드0으로 완료했습니다. HWP5 312/312·HWPX 34/34·fail/skip0이며 각각4316.373791/47400.491459ms입니다. 아래 실행 시작 기록의 대기 상태는 이 종료 결과로 대체합니다. 제품 기본 WASM 승격은 아직 별도입니다.
+
 게시6d4dac5a의 깨끗한 archive `/tmp/hwpjs-main-rectangle-batch.MNVvFr`를 같은 커밋 Git index로 구성해 diff 없는 상태에서 ReleaseSafe build exit0을 확인했습니다. 산출물 SHA256은 `9ff325bdc48514d346c5f928c6294e710a80a8a5f690831ccae10b2f0cc5646e`입니다. 이 소스의 공개3파일 선택은 실제2테스트·2/2·fail/skip0·exit0(468.387375ms)입니다. 앞선 dirty 트리의7개와 합산하지 않습니다.
 
 같은 산출물로 Git 추적 HWPX46개 중45개·47구역·사각형30개를 일괄/단일 전체 결과 및 원문 저장 바이트로 대조해 일치했습니다. `password-12345.hwpx`의 EncryptedDocument1개는 성공으로 세지 않습니다. 최초 임시 검사 스크립트의 잘못된 sectionCount 호출 및 close 후 재사용은 검사 도구 오류·exit1이었으며 제품 거부나 통과로 계수하지 않았습니다. open 반환의 sectionCount와 파일별 새 editor로 수정한 재실행은 exit0입니다. 전체 필드 의미/편집/브라우저 완료가 아닌 조회·무변경 저장 범위입니다. 정규 두 gate는 별도 로그 `/tmp/hwpjs-main-rectangle-batch-regular-20261011.log`로 실행하며 아직 종료 결과를 확인하기 전입니다.
