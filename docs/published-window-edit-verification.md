@@ -16,6 +16,8 @@ HWPJS_TEST_WASM=/absolute/fixed/hwpjs.wasm node --test tests/hwpx/large-edit-win
 
 ## 독립 검사기와 지연 조사 경계
 
+후속 실제 Worker 계측과 요청 내 취소선 색인 최적화의 원인·후보·비교는 [취소선 snapshot 색인](hwpx-strike-snapshot-index.md)이 소유합니다. 아래 개별 getter 관측만으로 전체 지연 원인을 확정하지 않았습니다.
+
 `tools/hwpx-plain-splice-oracle.py --self-test`와 Python `-O`의 같은 실행은 정상 삽입과13변조 반례를 모두 확인했습니다. 전체 XML/비대상 ZIP payload/metadata·UTF-16 경계·원문 run 스타일·no-op 보존을 검사하며 제품 파서를 import하지 않습니다.
 
 지연 조사용 별도 읽기 전용 public API 측정에서 파일 open2376.37ms, section11의707문단 snapshot43.30ms, neighbors39.88ms, 문단8854(native1기반) 적격성0.337ms·텍스트0.977ms, table bindings697개46.44ms·placement1개44.65ms였습니다. 별도 실행의 character shapes937개481.76ms, 해당 문단 ranges1.418ms, drawing bindings2개40.16ms였습니다. history 활성화 후 단일 조회도 적격성0.376ms·텍스트1.496ms·ranges0.754ms였습니다. 동시 실행 부하가 있는 일회성 관측이며 순수 benchmark나 전체 Worker 지연의 원인 확정이 아닙니다. 실행 중 Node의 샘플 `/tmp/hwpjs-large-window-current-20261011.sample.txt`는 주로 이름을 해석할 수 없는 WASM frame이어서 특정 함수 병목으로 단정하지 않았습니다. 성능 개선은 단계별 전체 재투영 비용을 더 측정한 뒤 진행해야 합니다.

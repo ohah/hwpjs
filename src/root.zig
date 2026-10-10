@@ -964,6 +964,7 @@ test {
     _ = @import("hwpx/character_strike_values.zig");
     _ = @import("hwpx/character_strike_patch.zig");
     _ = @import("hwpx/character_strike_styles.zig");
+    _ = @import("hwpx/character_strike_snapshot.zig");
     _ = @import("hwpx/character_shape_owner.zig");
     _ = @import("hwpx/field_outside_range.zig");
     _ = @import("hwpx/field_outside_splice.zig");
