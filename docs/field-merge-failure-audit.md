@@ -1,5 +1,7 @@
 # 필드 병합 할당 실패 감사의 메모리 경계
 
+수정 후 게시 소스 전체 실행의 도구·반례·snapshot은 [게시 native 감사](native-published-source-audit.md)가 소유합니다.
+
 ## 2026-10-11 재현
 
 과거 native 전수 감사는3491번 `field source merge plan allocation failures preserve cross-paragraph Unicode source` 시작 후 SIGKILL로 종료됐습니다. 원본 실행의 OS 종료 원인은 확정하지 못했습니다. [이전 관측](reference-current-probes.md)을 전체 성공으로 읽지 않습니다.
