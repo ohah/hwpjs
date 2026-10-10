@@ -1,5 +1,13 @@
 # 현재 데모 WASM
 
+## 현재 반영: 2026-10-11 수식 정의/조회
+
+기본 및 외부 `/zig-out/bin/hwpjs.wasm`은 SHA256 `8bd5ab4eb684e9f7a71c820df1a17239035cfa6f927334b9ecacaf0361fca7ae`입니다. 원본7e70bbc7의 독립 백업은 `/tmp/hwpjs-formula-promotion-backup.RfqJJ9/hwpjs.wasm`입니다. 두 해시 guard·단일 링크 정규 파일 확인·exclusive 백업/stage 복사 및 같은 폴더 rename으로 교체했습니다. 외부 HTTP200·해시 일치·WebAssembly.compile 성공을 확인했습니다. 서버/Tailscale 설정은 바꾸지 않았습니다.
+
+반영 전 공개/Worker/Canvas188회귀와 실제 Chromium 수식 폼 제출/undo/redo를 확인했습니다. 교체 후 후보 환경 변수 없이 정의 API/Worker/wire3파일4/4·skip0·exit0을 추가 확인했습니다. 새로고침으로 Worker/WASM을 다시 로드해야 합니다. 상세 GUI 범위와 남은 포인터/파일/조판 검증은 [HWP5 수식 패널](hwp5-formula-worker.md)을 따릅니다. 최신 native 전수는 별도 이전 snapshot으로 계속 실행 중이며 전체 목표 완료로 해석하지 않습니다.
+
+## 이전 반영 기록
+
 이전 `deb854e3c472a0a9ecd18763552a04ac16be41e63ab70cd0ca540811a01170cb` 후보의574공개 파일 실행은1916/1916·skip0·exit0으로 종료됐습니다. `/tmp/hwpjs-hyphen-full-public-20261010.log`에 종료코드0·signalnull과9797729ms가 기록돼 있습니다. 실행 중 JS 변경과 선택 이후 신규 검사가 있어 고정된 최신 source snapshot 전체 통과로 소급하지 않습니다. 현재 수식 API/기본 artifact의 전수 통과로 합산하지 않습니다.
 
 고정 측정 페이지 배치의 전체 CFB 파일 범위·미지원 집계는 [페이지 감사](promoted-page-corpus.md)가 소유합니다.
