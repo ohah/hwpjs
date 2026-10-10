@@ -247,6 +247,7 @@ test {
     _ = @import("hwpx/current_paragraph_reference_tests.zig");
     _ = @import("hwpx/created_table_anchor.zig");
     _ = @import("hwpx/created_table_session_tests.zig");
+    _ = @import("hwpx/created_table_save_edges_tests.zig");
     _ = @import("hwpx/rectangle_display_host.zig");
     _ = @import("hwpx/drawing_paint_values.zig");
     _ = @import("hwpx/table_display_placements.zig");

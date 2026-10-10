@@ -1,5 +1,13 @@
 # 준비된 신규 표의 HWPX 저장
 
+## 저장 위치·빈 노드 경계 후속 검사
+
+2026-10-11 `created_table_save_edges_tests.zig`를 root에 등록해 집중 ReleaseSafe6/6·exit0(root+새5검사)을 확인했습니다. 실제 charshape에 Unicode prefix를 먼저 적용한 시작/중간/끝 삽입, 현재 생성 문단 host와 같은 점의 두 표 생성 순서, 실제 table.hwpx의 빈 셀/self-closing run에 중첩 표 삽입을 저장·재열기 host marker/셀 텍스트로 대조했습니다. 중첩 표 재열기의 cell bindings5개도 확인했습니다.
+
+원본을 수정하지 않은 메모리 파생본에서는 모든 host t를 빈 t로 만든 분기, 첫 t의 CDATA/주석/PI 분기, 미확인 id 속성 분기를 검사했습니다. CDATA/주석/PI의 나머지 텍스트와 markup을 보존했고, 복제하면 위험한 id는 UnsupportedCreatedTableHostAttributes로 거부해 registry0·원문 저장 byte-exact를 유지했습니다. 첫 파생 테스트는 첫 t만 바꾸고 문단 전체가 비었다고 잘못 기대해 실패했습니다. 여러 run/t가 있는 실제 문단을 기준으로 파생/기대값을 수정한 최종 결과만 통과로 계수합니다. fmt/diff·별도 prefix `/tmp/hwpjs-created-table-save-edges-20261011` ReleaseSafe build도 exit0입니다.
+
+위 증거는 native 재열기/현재 위치 검사이며 모든 양식/모든 위치·독립 oracle의 전수 확장·현재 Session 셀 projection·public UI·원본 조판 완료는 아닙니다. 아래 경계 전수 미검증 표현은 이 추가 범위까지만 갱신되며 독립 XML/ZIP 검사기의 기존 한2×2 사례는 별도로 유지합니다. 기본 WASM은 변경하지 않았습니다.
+
 최종 소스 재빌드 후 같은 prefix의 산출물은 SHA256 `0ef20bb069a33f62eee05452b18742c277a1d49bafde499aaff67f0f6c5fc4d6`입니다. 공개4파일을 다시 실행해16/16·fail/skip0·exit0(2862.516041ms)을 확인했습니다. 아래6e4b4c11은 이전 후보 실행 기록이며 두 결과를 합산하지 않습니다.
 
 공개 기존 편집/이력/도형 배치4파일도 후보 `/tmp/hwpjs-created-table-save-20261011/bin/hwpjs.wasm`, SHA256 `6e4b4c11ce05dbc147e3625639040918775f86b25b712033e13cb1259e046f8f`에서16/16·fail/skip0·exit0(2963.950625ms)을 확인했습니다. 신규 표의 public 삽입 검사로 합산하지 않습니다.
