@@ -1199,6 +1199,7 @@ test {
     _ = @import("hwp5/edit/formula_definition_command_tests.zig");
     _ = @import("model/formula_result_values_tests.zig");
     _ = @import("hwp5/edit/formula_definition_fixture_tests.zig");
+    _ = @import("hwp5/edit/formula_definition_session_tests.zig");
     _ = @import("presentation_retention_test.zig");
     _ = @import("site_union_regression_test.zig");
 }

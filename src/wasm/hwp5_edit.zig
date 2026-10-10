@@ -103,6 +103,12 @@ fn apply(command: edit.Command) !void {
         _ = try value.apply(s, command);
     } else try s.apply(command);
 }
+export fn hwp5_edit_set_formula_definition(section: u32, source_node: u32, ptr: [*]const u8, size: usize) u32 {
+    hwp5_edit_output_free();
+    if (size > @import("../hwp5/edit/formula_definition_command.zig").max_expression_bytes) return fail(error.LimitExceeded);
+    apply(.{ .set_formula_definition = .{ .section = section, .source_node = source_node, .formula = ptr[0..size] } }) catch |err| return fail(err);
+    return 1;
+}
 export fn hwp5_edit_section_count() u32 {
     const s = session() catch |err| {
         _ = fail(err);

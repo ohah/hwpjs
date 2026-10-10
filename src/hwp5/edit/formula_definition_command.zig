@@ -2,11 +2,12 @@
 const std = @import("std");
 const field = @import("../body/field_start.zig");
 const format = @import("../body/formula_format.zig");
+pub const max_expression_bytes = 4096;
 
 /// expression is counted UTF16LE without '='; value must be freshly evaluated
 /// by the caller against the transaction-owned current model.
 pub fn prepare(a: std.mem.Allocator, properties: field.Properties, expression: []const u8, value: f64, grouping: format.Grouping) ![]u8 {
-    if (expression.len > 4096) return error.LimitExceeded;
+    if (expression.len > max_expression_bytes) return error.LimitExceeded;
     _ = try @import("../body/formula_range.zig").Range.parse(expression);
     const previous = try properties.formulaView();
     const tail = properties.command[2 + previous.expression.len ..];

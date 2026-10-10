@@ -31,6 +31,7 @@ pub const Command = union(enum) {
     set_paragraph_alignment: struct { section: usize, paragraph: usize, alignment: u32 },
     set_paragraph_margins: struct { section: usize, paragraph: usize, margins: model.ParagraphMarginPatch },
     set_paragraph_spacing: struct { section: usize, paragraph: usize, spacing: model.ParagraphSpacing },
+    set_formula_definition: @import("formula_definition.zig").Edit,
 };
 pub const SaveOptions = struct {
     /// Byte-preservation experiments only; does not certify Hancom layout.
@@ -527,6 +528,14 @@ pub const Session = opaque {
                 if (edit.paragraph >= try self.paragraphCount(edit.section)) return error.InvalidParagraph;
                 const state = self.getState();
                 try @import("paragraph_format.zig").apply(&state.document.sections[edit.section].paragraphs[edit.paragraph], edit.para_shape_id, self.paragraphShapeCount());
+            },
+            .set_formula_definition => |edit| {
+                const state = self.getState();
+                if (edit.section >= state.document.sections.len) return error.InvalidSection;
+                for (state.decoded, 0..) |bytes, index| {
+                    if (index != edit.section) try @import("plain_text_source.zig").validateSection(state.allocator, bytes, state.source.header.version());
+                }
+                try @import("formula_definition.zig").apply(state.allocator, state.decoded[edit.section], state.source.header.version(), &state.document.sections[edit.section], edit, self.characterShapeCount(), max_stream);
             },
             .set_cell_size => |edit| {
                 const state = self.getState();

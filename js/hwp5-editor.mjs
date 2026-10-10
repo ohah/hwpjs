@@ -379,6 +379,17 @@ export async function createExperimentalHwp5Editor(source, input, { distribution
       return decodeHwp5ColumnSources(output(() => wasm.hwp5_edit_column_sources(index)).bytes);
     },
     copyText,
+    setFormulaDefinition({ section, sourceNode, formula }) {
+      check();
+      const positions = [u32(section, "section"), u32(sourceNode, "sourceNode")];
+      if (typeof wasm.hwp5_edit_set_formula_definition !== "function") throw new Error("Hwp5FormulaDefinitionAbiUnavailable");
+      if (typeof formula !== "string") throw new TypeError("Formula must be a string");
+      if (!formula.isWellFormed()) throw new Error("InvalidUnicodeEncoding");
+      if (formula.length > 4096) throw new RangeError("LimitExceeded");
+      const bytes = encoder.encode(formula);
+      if (bytes.length > 4096) throw new RangeError("LimitExceeded");
+      memory.withBytes(bytes, (ptr, size) => success(wasm.hwp5_edit_set_formula_definition(...positions, ptr, size)));
+    },
     text(section, paragraph) { check(); return decoder.decode(copyText(section, paragraph)); },
     splice({ section, paragraph, startUnit, endUnit, text, rangePolicy = "reject" }) {
       check();

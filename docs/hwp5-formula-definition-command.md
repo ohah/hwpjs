@@ -1,5 +1,19 @@
 # HWP5 수식 정의 명령 작성 기반
 
+## 선택적 공개 세션/WASM/JS 명령
+
+게시 파일8개만 선택한 tree `396940fdfc8f18c023d65b363af540faedaefce8`의 별도 export `/tmp/hwpjs-formula-api-publication.pgiG6V`에서도 ReleaseSafe 빌드 exit0, 정의 API/기존 이력2파일7/7·skip0·exit0을 확인했습니다. 이 export WASM SHA256은 `3bb5dd8275a329a3eee0dd9ad443344e938384015036972f3dcb620fc99d47d1`이며 아래 main 작업 트리 빌드의 a60c9f와 구분합니다. 미게시 helper나 전체 작업 트리 스냅샷을 원격 기능 증거로 대신하지 않습니다.
+
+`editor.setFormulaDefinition({ section, sourceNode, formula })`를 추가했습니다. 원본 chart.hwp의 예는 `{ section: 0, sourceNode: 118, formula: "=AVG(B?:E?)" }`입니다. sourceNode는 **현재 세션의 불변 CTRL_HEADER 레코드 번호**이며 저장본 재열기 후에도 같은 숫자라고 가정하면 안 됩니다. 별도 조회 API와 Canvas 수식 선택 연결은 후속입니다.
+
+명령은 선행 `=`가 있는 UTF8 문자열을 받고, UTF8 입력/UTF16 계산식 바이트의 상한은4096입니다. 현재 Range 문법의 지원 함수/주소·참조 범위·현재 숫자 입력을 검증합니다. 인식하지 못한 식이나 비숫자 의존 값을 실행하지 않습니다. field binding과 원본 정책 검증·private 모델 clone·전체 재계산·저장 구역 준비가 모두 성공한 뒤 모델을 교체합니다. no-op은 이력이나 redo를 변경하지 않습니다. 묶음 명령의 늦은 실패와 변경 후 checkpoint 예산 초과는 원래 모델로 rollback합니다.
+
+WASM의 `hwp5_edit_set_formula_definition(section, source_node, ptr, size)`는 선택적 export입니다. 입력은 정상 할당된 WASM 메모리 범위를 빌리며 model은 필요한 표현식을 소유 복사합니다. 결과 출력은 먼저 비웁니다. 이전 ABI에서 JS 명령은 `Hwp5FormulaDefinitionAbiUnavailable`을 반환하고 다른 편집/저장/redo를 유지합니다. 계산 결과 텍스트의 직접 수정 보호는 그대로입니다.
+
+2026-10-11 세션/이력 정상·no-op·잘못된 구역/대상/식/참조·예산·늦은 batch 실패 검사가 root 포함2/2·exit0입니다. 별도 **전체 할당 실패**의 open/apply/save/reopen 검사와 기존 redo가 있는 History 명령 검사도 각각 root 포함2/2·exit0입니다. 실패 지점을 샘플링하지 않았습니다. 로그는 `/tmp/hwpjs-formula-definition-allocation-20261011.log`, `/tmp/hwpjs-formula-definition-history-allocation-20261011.log`입니다.
+
+ReleaseSafe API 후보 `/tmp/hwpjs-formula-definition-api-20261011/bin/hwpjs.wasm` SHA256 `a60c9f7203ef6f542a7b25d39ddef2baacdaf02fb2da8f9a94bfbf62283928c0`에서 공개 회귀3파일7/7·skip0·exit0을 확인했습니다. 이후 강화한 정의 API2/2는 독립 CFB/완전 구역·metadata/비대상 stream, 잘못된 식의 일치 실패, 정확 오류/원문·redo 보존, no-op·저장 재열기 뒤 새 handle의 재편집, 정의 변경 후 숫자 입력의 AVG 유지/17.125 및 이력, export 제거 파생 ABI의 거부를 검사합니다. 기본 WASM은 교체하지 않았습니다. 아직 모든 원본/함수·생성 문단/복합 구조 이후·조회/Worker/Canvas·실제 브라우저의 완료 근거는 아닙니다. 아래 단계별 미연결 기록은 당시 상태입니다.
+
 ## 모델 소유권과 원본 구역 왕복 기반
 
 후속으로 `FormulaResult.expression`에 새 UTF16LE 표현식만 소유합니다. null은 원본 계산식을 사용한다는 뜻이며 command/display cache는 모델에 넣지 않습니다. `model/formula_result_values.zig`가 깊은 복사·해제·source identity 조회·교체를 소유합니다. upsert는 새 할당이 모두 성공한 뒤에만 기존 값을 소비하며, 기존 모델 표현식을 입력으로 빌려도 먼저 복사해 alias 수명 오류를 피합니다.
