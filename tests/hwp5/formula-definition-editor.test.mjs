@@ -43,6 +43,7 @@ test("public HWP5 definitions preserve PRODUCT and repeated reference arithmetic
     ["=PRODUCT(B?,C?,B?)", b * c * b],
     ["=SUM(B?,C?,B?)", b + c + b],
     ["=AVG(B?,C?,B?)", (b + c + b) / 3],
+    ["=AVERAGE(B?,C?,B?)", (b + c + b) / 3],
     ["=SUM(B?)", b],
     ["=MIN(B?:E?)", Math.min(...values)],
     ["=MAX(B?,C?,B?)", Math.max(b, c, b)],
@@ -119,6 +120,26 @@ test("HWP5 extrema use current negative inputs and recalculate after a later num
     assert.equal(editor.redo(), true); assert.deepEqual(editor.save({ allowStaleLayout: true }).bytes, saved);
     const reopened = await createExperimentalHwp5Editor(readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"), saved);
     try { assert.equal(reopened.formulaSources(0)[0].last_result, "-100"); } finally { reopened.close(); }
+  } finally { editor.close(); }
+});
+
+test("AVERAGE alias remains an owned lexical definition when AVG has the same numeric result", async () => {
+  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
+  const editor = await createExperimentalHwp5Editor(wasm, readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/chart.hwp"));
+  try {
+    editor.enableHistory();
+    editor.setFormulaDefinition({ section: 0, sourceNode: 118, formula: "=AVG(B?:E?)" });
+    const average = editor.save({ allowStaleLayout: true }).bytes;
+    editor.setFormulaDefinition({ section: 0, sourceNode: 118, formula: "=AVERAGE(B?:E?)" });
+    assert.equal(editor.formulaSources(0)[0].formula, "=AVERAGE(B?:E?)");
+    assert.equal(editor.formulaSources(0)[0].last_result, "16.875");
+    const alias = editor.save({ allowStaleLayout: true }).bytes;
+    assert.notDeepEqual(alias, average);
+    assert.equal(editor.undo(), true); assert.deepEqual(editor.save({ allowStaleLayout: true }).bytes, average);
+    assert.equal(editor.redo(), true); assert.deepEqual(editor.save({ allowStaleLayout: true }).bytes, alias);
+    editor.splice({ section: 0, paragraph: 19, startUnit: 0, endUnit: 4, text: "12.2" });
+    assert.equal(editor.formulaSources(0)[0].formula, "=AVERAGE(B?:E?)");
+    assert.equal(editor.formulaSources(0)[0].last_result, "17.125");
   } finally { editor.close(); }
 });
 

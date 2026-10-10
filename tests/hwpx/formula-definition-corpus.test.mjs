@@ -8,7 +8,7 @@ test("actual HWPX PRODUCT and explicit repeated references preserve XML and save
   const original = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx");
   const editor = await createHwpxEditor(readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"));
   try {
-    for (const formula of ["=PRODUCT(B?:E?)", "=PRODUCT(B?,C?,B?)", "=SUM(B?,C?,B?)", "=AVG(B?,C?,B?)", "=SUM(B?)", "=MIN(B?:E?)", "=MAX(B?,C?,B?)"]) {
+    for (const formula of ["=PRODUCT(B?:E?)", "=PRODUCT(B?,C?,B?)", "=SUM(B?,C?,B?)", "=AVG(B?,C?,B?)", "=AVERAGE(B?,C?,B?)", "=SUM(B?)", "=MIN(B?:E?)", "=MAX(B?,C?,B?)"]) {
       editor.open(original); editor.enableHistory();
       const row = editor.formulaSources(0)[0];
       editor.setFormulaDefinition(0, row.begin_element, formula);

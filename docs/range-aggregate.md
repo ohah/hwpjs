@@ -1,5 +1,11 @@
 # 숫자 범위 집계 SSOT
 
+## AVERAGE 별칭
+
+공유 편집 문법의 대문자 AVERAGE를 AVG와 같은 평균 함수로 연결했습니다. 저장 식을 AVG로 정규화하지 않으며 표현식의 원래 이름도 편집 모델이 소유합니다. HWP5에서 AVG→AVERAGE는 숫자 결과16.875가 같아도 별도 정의 변경이며 undo/redo는 각 저장 바이트를 복원합니다. 후속 숫자12.2 입력 뒤에도 이름AVERAGE/결과17.125를 유지합니다. RHWP의 AVERAGE/AVG 별칭 처리와 비교했고 외부 코드를 복사하지 않았습니다. 별도 관측용 계산 문법의 소문자/공백 정책을 편집 문법에 자동 확장하지 않습니다.
+
+ReleaseSafe 후보 `/tmp/hwpjs-average-alias-20261011/bin/hwpjs.wasm` SHA256 `5da4790c1a1bc8db358dd0f1b5a5d71f94fd35785335f6466f1c46f7b04e145b` 빌드·포맷/diff 검사와 native 함수/참조 범위2/2·exit0입니다. 양쪽 정의 corpus2파일10/10·skip0·exit0(18154ms)은 반복 주소AVERAGE의 독립 산술·command/XML/ZIP·재열기/이력, HWP5 동일 숫자/다른 식 이름·후속 재계산과 기존 MIN/MAX 전수를 포함합니다. 처음 native 비교는 사용하지 않는 undefined 주소 슬롯까지 비교해 실패했으며 함수/두 주소/사용 개수만 비교하도록 고쳤습니다. 기본 데모는 이 별칭 후보로 교체하지 않았고 전체 native/원본 AVERAGE corpus·실제 브라우저 검증은 별도입니다.
+
 ## 게시 소스의 정규 감사 재현
 
 후속 HWPX 실제 Chromium 재검증은 새 세션에서 chart.hwpx를 단독 로드하고 enable 후13옵션/fieldset 활성 상태를 기다려 실행했습니다. DOM 입력값MIN 확인 → submit 완료 문구/11.2 결과 → 실제 undo SUM/redo MIN → MAX 반복 참조24.7까지 모두 조건 대기를 통과했습니다. 브라우저 오류는 없었고 agent-browser 스킬에 따라 소유 브라우저 close·loopback8085 서버exit130을 확인했습니다. 앞선 문서 전환 실패의 원인은 이 단독 성공만으로 확정하지 않습니다. 양쪽 단독 수식 폼 E2E는 확인됐지만 Canvas 포인터 선택·다운로드 재업로드·문서 전환 레이스/OS IME 전수는 여전히 별도입니다.

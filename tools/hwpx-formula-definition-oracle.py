@@ -41,7 +41,7 @@ def check(request):
         coordinates = [(column, origin[1]) for column in range(1, 5)]
     elif "?2:?4" in formula:
         coordinates = [(origin[0], row) for row in range(1, 4)]
-    elif re.fullmatch(r"=(SUM|AVG|PRODUCT|MIN|MAX)\(([A-Z]+|\?)([1-9][0-9]*|\?)(,([A-Z]+|\?)([1-9][0-9]*|\?))*\)", formula):
+    elif re.fullmatch(r"=(SUM|AVG|AVERAGE|PRODUCT|MIN|MAX)\(([A-Z]+|\?)([1-9][0-9]*|\?)(,([A-Z]+|\?)([1-9][0-9]*|\?))*\)", formula):
         coordinates = []
         for token in formula[formula.index("(") + 1:-1].split(","):
             column_text, row_text = re.fullmatch(r"([A-Z]+|\?)([1-9][0-9]*|\?)", token).groups()
@@ -66,7 +66,7 @@ def check(request):
     require(set(numbers) == set(coordinates), "missing input cell")
     values = [numbers[coordinate] for coordinate in coordinates]
     expected = min(values) if formula.startswith("=MIN(") else max(values) if formula.startswith("=MAX(") else math.prod(values) if formula.startswith("=PRODUCT(") else sum(values)
-    if formula.startswith("=AVG("):
+    if formula.startswith(("=AVG(", "=AVERAGE(")):
         expected /= len(coordinates)
     old_nodes, new_nodes = list(old.iter()), list(new.iter())
     require(len(old_nodes) == len(new_nodes), "element count")

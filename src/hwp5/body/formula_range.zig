@@ -17,7 +17,7 @@ pub const Range = struct {
     pub fn parse(expression: []const u8) !Range {
         if (expression.len % 2 != 0) return error.UnexpectedEnd;
         var parser: Parser = .{ .bytes = expression };
-        const function: Function = if (parser.consume("SUM(")) .sum else if (parser.consume("AVG(")) .average else if (parser.consume("PRODUCT(")) .product else if (parser.consume("MIN(")) .minimum else if (parser.consume("MAX(")) .maximum else return error.UnsupportedFormulaExpression;
+        const function: Function = if (parser.consume("SUM(")) .sum else if (parser.consume("AVG(") or parser.consume("AVERAGE(")) .average else if (parser.consume("PRODUCT(")) .product else if (parser.consume("MIN(")) .minimum else if (parser.consume("MAX(")) .maximum else return error.UnsupportedFormulaExpression;
         if (parser.consume("ABOVE)")) {
             if (parser.offset != expression.len) return error.UnsupportedFormulaExpression;
             return .{ .function = function, .first = .{ .column = .current, .row = .{ .absolute = 0 } }, .last = .{ .column = .current, .row = .current }, .above = true };
@@ -153,6 +153,11 @@ test "formula range resolves current axes and multi-letter columns without evalu
     const v = try vertical.resolve(.{ .column = 2, .row = 4 }, 6, 5);
     try std.testing.expectEqualDeep(Rectangle{ .first = .{ .column = 2, .row = 1 }, .last = .{ .column = 2, .row = 3 } }, v);
     const avg = try Range.parse(&wire("AVG(Z1:AA2)"));
+    const alias = try Range.parse(&wire("AVERAGE(Z1:AA2)"));
+    try std.testing.expectEqual(avg.function, alias.function);
+    try std.testing.expectEqualDeep(avg.first, alias.first);
+    try std.testing.expectEqualDeep(avg.last, alias.last);
+    try std.testing.expectEqual(@as(usize, 0), alias.address_count);
     try std.testing.expectEqual(Function.average, avg.function);
     try std.testing.expectEqual(@as(u32, 26), avg.last.column.absolute);
     try std.testing.expectError(error.FormulaReferenceOutOfBounds, avg.resolve(.{ .column = 0, .row = 0 }, 26, 2));
