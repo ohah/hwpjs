@@ -6,6 +6,8 @@
 
 빌드 명령은 `zig test src/root.zig -O ReleaseSafe --test-no-exec -femit-bin=/tmp/hwpjs-main-native-fixed-20261011`입니다. Zig0.16.0을 사용하고 기본 제품 WASM을 교체하지 않습니다. 컴파일 종료와 binary hash/metadata/실제 실행 결과를 확인하기 전에는 전수 테스트 수나 통과를 확정하지 않습니다. 이전 SIGKILL과 그 마지막 테스트의 수정은 [필드 병합 실패 감사](field-merge-failure-audit.md)가 소유합니다.
 
+후속 컴파일은 exit0으로 종료됐습니다. binary SHA256 `56febbafcb55909709d94dc6a52a7fdb7f278a4cec83e0d55ef3b0650bfd8a7c`의 실제 metadata는3859테스트이며 batch-size100/seed0x485750 실행을 시작했습니다. 결과는 `/tmp/hwpjs-main-native-fixed-20261011.jsonl`에 기록합니다. `HWPJS_CHARACTER_FAILURE_START=0`/`HWPJS_CHARACTER_FAILURE_END=1`을 명시했으므로 해당 별도 글자 OOM 캠페인은 지점0만 포함하며 모든 글자 할당 실패 지점 검증이 아닙니다. 필드 병합의 앞서 수정한 두 checkAllAllocationFailures는 그대로 전수 실행 대상입니다. 시작 레코드/초기 성공 결과만으로 최종 전수 통과를 주장하지 않습니다. snapshot 이후 게시한 감사 도구 자체와 JS UI는 이 native binary의 코어 소스 변경으로 합산하지 않습니다.
+
 ## 검증 도구 게시와 반례
 
 `tools/zig-native-batch-audit.mjs`는 기본 Zig runner의 `--listen=-` 프로토콜로 각 index를 요청합니다. parser는 `tools/zig-test-protocol.mjs`가 소유합니다. 설치된 Zig0.16.0 `compiler/test_runner.zig`, `std/zig/Server.zig`의 metadata·status(u2)/fuzz/log(u30)/leak(u31) 정의와 대조했습니다. binary hash와 metadata 일치, 전체 index 순서/개수, 결과 index, 정상 프로세스 종료를 검사합니다. fail·skip·log·leak 및 중단은 성공이 아닙니다. 이 프로세스 분할 경로는 장시간 단일 프로세스 gate나 fuzz campaign을 대신하지 않습니다.
