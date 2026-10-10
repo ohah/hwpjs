@@ -1,5 +1,7 @@
 # 생성 표 ID 자동 계획
 
+후속 공개 생성 호출은 [표 생성 API](hwpx-table-creation-api.md)를 따릅니다.
+
 `created_table_source_ids.plan(session, cells)`는 현재 문서의 원본 part·생성 문단·생성 표를 읽어 object identity(u64), 저장 shape ID(u32), 셀 문단 ID(u32 배열)를 반환합니다. 호출자는 `Plan.deinit`으로 문단 ID 배열을 해제합니다.
 
 검증과 계획은 같은 임시 source-part 수집기를 사용합니다. section 트리는 빌리며 header/masterpage 추가 트리만 소유합니다. 원문/생성 ID 정책은 기존 공통 paragraph 검사기와 shape ID 검사기가 소유합니다. XML·ZIP 파서를 복제하지 않습니다. 최소 빈 양수 ID를 선택하고 숫자 오버플로는 거부합니다. 원본 shape 중복은 그대로 보존하며 현재 생성 shape ID의0·중복·원본 충돌은 거부합니다.

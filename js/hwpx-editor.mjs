@@ -631,6 +631,21 @@ export async function createHwpxEditor(source) {
         return decodeRectangleRenderingSources(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
       } finally { wasm.hwpx_edit_output_free(); }
     },
+    insertTable(section, paragraph, unit, options) {
+      ready(); [section, paragraph, unit].forEach(uint);
+      if (!options || typeof options !== "object" || Array.isArray(options)) throw new TypeError("InvalidTableCreationOptions");
+      const { rows, columns, width, rowHeight, resources } = options;
+      if (!resources || typeof resources !== "object" || Array.isArray(resources)) throw new TypeError("InvalidTableCreationResources");
+      const args = [rows, columns, width, rowHeight, resources.paragraph, resources.character, resources.style, resources.border_fill];
+      args.forEach(uint);
+      if (typeof wasm.hwpx_edit_insert_table !== "function") throw new Error("HwpxTableCreationAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_insert_table(section, paragraph, unit, ...args)) throw memory.error();
+        const identity = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len())));
+        createdTableIdentity(identity);
+        return identity;
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
     createdTables(section) {
       ready(); uint(section);
       if (typeof wasm.hwpx_edit_created_tables !== "function") throw new Error("HwpxCreatedTablesAbiUnavailable");

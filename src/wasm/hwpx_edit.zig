@@ -96,6 +96,21 @@ export fn hwpx_edit_set_created_cell_text(section: u32, low: u32, high: u32, row
     apply(.{ .kind = .created_cell_text, .section = section, .paragraph = 0, .start = 0, .deleted = 0, .inserted = ptr[0..length], .created_table_identity = identity, .created_cell = .{ row, column } }) catch |err| return fail(err);
     return 1;
 }
+export fn hwpx_edit_insert_table(section: u32, paragraph: u32, unit: u32, rows: u32, columns: u32, width: u32, row_height: u32, para: u32, character: u32, style: u32, border: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    var table = @import("../hwpx/created_table_prepare.zig").prepare(session, section, paragraph, unit, rows, columns, width, row_height, .{ .paragraph = para, .character = character, .style = style, .border_fill = border }) catch |err| return fail(err);
+    defer table.deinit(a);
+    const identity = std.fmt.allocPrint(a, "{d}", .{table.identity}) catch |err| return fail(err);
+    defer a.free(identity);
+    const result = std.json.Stringify.valueAlloc(a, identity, .{}) catch |err| return fail(err);
+    apply(.{ .kind = .created_table_stage, .section = section, .paragraph = paragraph, .start = unit, .deleted = 0, .inserted = "", .created_table = &table }) catch |err| {
+        a.free(result);
+        return fail(err);
+    };
+    output = result;
+    return 1;
+}
 export fn hwpx_edit_table_bindings(section: u32) u32 {
     hwpx_edit_output_free();
     const session = if (active) |*value| value else return fail(error.EditorNotOpen);
@@ -537,14 +552,15 @@ export fn hwpx_edit_redo() u32 {
 }
 fn apply(command: histories.Command) !void {
     const session = if (active) |*value| value else return error.EditorNotOpen;
-    if (command.kind == .created_table_stage) return error.UnsupportedCreatedTableCommand;
     if (history) |*value| {
         _ = try value.apply(session, command);
     } else switch (command.kind) {
         .created_cell_text => {
             _ = try @import("../hwpx/created_cell_text_session.zig").set(session, command.section, command.created_table_identity, command.created_cell[0], command.created_cell[1], command.inserted);
         },
-        .created_table_stage => return error.UnsupportedCreatedTableCommand,
+        .created_table_stage => {
+            _ = try @import("../hwpx/created_table_session.zig").stage(session, command.section, command.paragraph, command.start, command.created_table orelse return error.InvalidCreatedTableCommand);
+        },
         .character_font_name => {
             const end = std.math.add(u32, command.start, command.deleted) catch return error.InvalidTextPosition;
             _ = try session.setCharacterFontName(command.section, command.paragraph, command.start, end, command.font_language, command.font_name);
