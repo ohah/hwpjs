@@ -31,6 +31,7 @@ pub const Section = struct {
     picture_matrices: @import("picture_matrix_edit_values.zig").Values = .empty,
     checkbox_states: @import("form_checkbox_state_values.zig").Values = .empty,
     formula_definitions: @import("formula_definition_values.zig").Values = .{},
+    created_tables: @import("created_table_values.zig").Values = .{},
     pub fn sourceParagraph(self: *const Section, paragraph: usize) !usize {
         if (paragraph < self.first_paragraph or paragraph > self.last_paragraph) return error.InvalidParagraphIndex;
         if (self.structure_values != null) return error.UnsupportedStructuralFieldEdit;
@@ -58,6 +59,7 @@ pub const Section = struct {
         self.picture_matrices.deinit(a);
         self.checkbox_states.deinit(a);
         self.formula_definitions.deinit(a);
+        self.created_tables.deinit(a);
         a.free(self.locations);
         self.sites.deinit(a);
         self.tree.deinit(a);
@@ -99,22 +101,27 @@ pub const Session = struct {
     }
 
     pub fn splitParagraph(self: *Session, section_index: usize, paragraph: usize, start: u32, deleted: u32) !bool {
+        try self.requireMutableHostPositions();
         return @import("paragraph_split_session.zig").split(self, section_index, paragraph, start, deleted);
     }
 
     pub fn canSplitParagraph(self: *Session, section_index: usize, paragraph: usize, start: u32, deleted: u32) !bool {
+        self.requireMutableHostPositions() catch return false;
         return @import("paragraph_split_session.zig").canSplit(self, section_index, paragraph, start, deleted);
     }
 
     pub fn splitParagraphAnchored(self: *Session, section_index: usize, paragraph: usize, start: u32, deleted: u32) !bool {
+        try self.requireMutableHostPositions();
         return @import("paragraph_split_session.zig").splitAnchored(self, section_index, paragraph, start, deleted);
     }
 
     pub fn mergeParagraph(self: *Session, section_index: usize, paragraph: usize) !bool {
+        try self.requireMutableHostPositions();
         return @import("paragraph_merge_session.zig").merge(self, section_index, paragraph);
     }
 
     pub fn mergeParagraphPair(self: *Session, section_index: usize, paragraph: usize, right: usize) !bool {
+        try self.requireMutableHostPositions();
         return @import("paragraph_merge_session.zig").mergePair(self, section_index, paragraph, right);
     }
 
@@ -148,6 +155,7 @@ pub const Session = struct {
 
     fn spliceMode(self: *Session, section_index: usize, paragraph: usize, start: u32, deleted: u32, inserted: []const u8, anchored: bool) !bool {
         if (section_index >= self.sections.len) return error.InvalidSectionIndex;
+        try self.requireMutableHostPositions();
         const selected = &self.sections[section_index];
         if (paragraph < selected.first_paragraph or paragraph > selected.last_paragraph) return error.InvalidParagraphIndex;
         if (anchored and selected.structure_values == null) {
@@ -269,6 +277,7 @@ pub const Session = struct {
     }
 
     pub fn spliceFieldLabel(self: *Session, section_index: usize, paragraph: usize, begin_element: usize, start: u32, deleted: u32, inserted: []const u8) !bool {
+        try self.requireMutableHostPositions();
         return @import("field_label_session.zig").splice(self, section_index, paragraph, begin_element, start, deleted, inserted);
     }
     pub fn fieldLabels(self: *const Session, section_index: usize, paragraph: usize) ![]@import("field_label_targets.zig").Target {
@@ -291,6 +300,7 @@ pub const Session = struct {
         return @import("form_checkbox_state_session.zig").set(self, section, node, state);
     }
     pub fn setFormulaDefinition(self: *Session, section_index: usize, begin: usize, formula: []const u8) !bool {
+        try self.requireMutableHostPositions();
         return @import("formula_definition_edit.zig").set(self, section_index, begin, formula);
     }
     pub fn setPictureMatrix(self: *Session, section_index: usize, matrix_node: usize, values: [6]f64) !bool {
@@ -311,6 +321,7 @@ pub const Session = struct {
 
     /// Caller owns the result with Session.allocator. Save is side-effect free.
     pub fn save(self: *const Session) ![]u8 {
+        for (self.sections) |section| if (section.created_tables.entries.items.len != 0) return error.UnsupportedCreatedTableSave;
         const a = self.allocator;
         const trees = try a.alloc(tree_module.Tree, self.sections.len);
         defer a.free(trees);
@@ -353,6 +364,10 @@ pub const Session = struct {
             xml_bytes += bytes.len;
         }
         return zip_writer.write(a, self.source, replacements.items, .{ .max_output_bytes = self.options.max_output_bytes });
+    }
+    // Temporary staging gate, removed only when host edits rebase table points.
+    fn requireMutableHostPositions(self: *const Session) !void {
+        for (self.sections) |section| if (section.created_tables.entries.items.len != 0) return error.UnsupportedCreatedTableHostEdit;
     }
 };
 

@@ -1,5 +1,7 @@
 # 신규 표 host의 현재 문단 참조
 
+후속 내부 소유·체크포인트·저장 거부 단계는 [신규 표 Session staging](hwpx-created-table-session.md)을 따릅니다. public 삽입/저장·host rebase 완료와는 구분합니다.
+
 2026-10-11 최종 root 집중 ReleaseSafe4/4·exit0(root 진입+새3테스트), fmt/diff·별도 prefix `/tmp/hwpjs-current-paragraph-reference-20261011` ReleaseSafe build exit0입니다. 아직 깨끗한 게시 전체 native gate가 아니며 기본 WASM은 교체하지 않았습니다.
 
 `current_paragraph_reference`는 원본의 source_ordinal과 생성 문단의 generated_id를 서로 다른 tagged namespace로 구분합니다. 원본 XML `hp:p.id`나 재사용 가능한 template_element를 현재 문단 식별자로 쓰지 않습니다. 동일 source/template에서 나온 여러 문단도 현재 output identity로 찾고, 누락·중복·잘못된 조합을 추정하지 않고 거부합니다. joined provenance piece의 멤버를 현재 output 문단 자체로 오인하지 않습니다.

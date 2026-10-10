@@ -5,7 +5,7 @@ const checkpoints = @import("editor_checkpoint.zig");
 const Stacks = @import("../model/history_stack.zig").Stack(checkpoints.Checkpoint, release);
 
 pub const Command = struct {
-    kind: enum { plain, anchored, field, split, merge, format, character_properties, character_font_name, cell_size, paragraph_format, paragraph_alignment, paragraph_margins, paragraph_spacing, split_anchored, formula_definition, picture_dimensions, picture_resize, check_box_state } = .plain,
+    kind: enum { plain, anchored, field, split, merge, format, character_properties, character_font_name, cell_size, paragraph_format, paragraph_alignment, paragraph_margins, paragraph_spacing, split_anchored, formula_definition, picture_dimensions, picture_resize, check_box_state, created_table_stage } = .plain,
     section: usize = 0,
     paragraph: usize,
     right_paragraph: ?usize = null,
@@ -28,6 +28,7 @@ pub const Command = struct {
     picture_size: [2]u32 = .{ 0, 0 },
     form_node: usize = 0,
     checkbox_state: @import("form_checkbox_state_session.zig").State = .unchecked,
+    created_table: ?*const @import("../model/created_table.zig").Table = null,
 };
 pub const History = struct {
     allocator: std.mem.Allocator,
@@ -90,6 +91,10 @@ pub const History = struct {
     }
     fn applyCommand(session: *editor.Session, command: Command) !bool {
         return switch (command.kind) {
+            .created_table_stage => block: {
+                if (command.deleted != 0 or command.inserted.len != 0) return error.InvalidCreatedTableCommand;
+                break :block try @import("created_table_session.zig").stage(session, command.section, command.paragraph, command.start, command.created_table orelse return error.InvalidCreatedTableCommand);
+            },
             .character_font_name => block: {
                 if (command.inserted.len != 0) return error.InvalidFormatCommand;
                 const end = std.math.add(u32, command.start, command.deleted) catch return error.InvalidTextPosition;

@@ -522,9 +522,11 @@ export fn hwpx_edit_redo() u32 {
 }
 fn apply(command: histories.Command) !void {
     const session = if (active) |*value| value else return error.EditorNotOpen;
+    if (command.kind == .created_table_stage) return error.UnsupportedCreatedTableCommand;
     if (history) |*value| {
         _ = try value.apply(session, command);
     } else switch (command.kind) {
+        .created_table_stage => return error.UnsupportedCreatedTableCommand,
         .character_font_name => {
             const end = std.math.add(u32, command.start, command.deleted) catch return error.InvalidTextPosition;
             _ = try session.setCharacterFontName(command.section, command.paragraph, command.start, end, command.font_language, command.font_name);
