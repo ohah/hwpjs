@@ -38,7 +38,7 @@ const Context = struct {
             .expression = if (std.mem.eql(u8, self.expression, original.expression)) null else @constCast(self.expression),
         });
         _ = try @import("formula_recalculate.zig").applyDraft(a, self.source, self.version, draft, self.char_count, .{});
-        const candidate = try @import("text_section_writer.zig").write(a, self.source, draft.*, self.version, self.max_stream);
+        const candidate = try @import("structure_section_writer.zig").writeWithDeletions(a, self.source, draft.*, self.version, self.char_count, self.max_stream, true);
         defer a.free(candidate);
     }
 };

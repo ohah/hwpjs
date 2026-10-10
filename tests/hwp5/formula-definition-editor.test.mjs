@@ -118,3 +118,26 @@ test("missing optional definition export cannot mutate the document or discard r
     assert.equal(editor.redo(), true); assert.deepEqual(editor.save({ allowStaleLayout: true }).bytes, changed);
   } finally { editor.close(); }
 });
+
+test("generated body paragraph does not steal original formula headers and definition edits survive structural history", async () => {
+  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
+  const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/chart.hwp"), editor = await createExperimentalHwp5Editor(wasm, input);
+  try {
+    editor.enableHistory();
+    const before = editor.formulaSources(0);
+    editor.splitParagraph({ section: 0, paragraph: 1, atUnit: 1 });
+    const split = editor.save({ allowStaleLayout: true }).bytes, rows = editor.formulaSources(0);
+    assert.equal(rows.length, before.length);
+    assert.deepEqual(rows.map(row => row.source_node), before.map(row => row.source_node));
+    assert.deepEqual(rows.map(row => row.paragraph), before.map(row => row.paragraph + 1));
+    editor.setFormulaDefinition({ section: 0, sourceNode: rows[0].source_node, formula: "=AVG(B?:E?)" });
+    const edited = editor.save({ allowStaleLayout: true }).bytes;
+    assert.equal(editor.formulaSources(0)[0].last_result, "16.875");
+    assert.equal(editor.undo(), true); assert.deepEqual(editor.save({ allowStaleLayout: true }).bytes, split);
+    assert.equal(editor.undo(), true); assert.deepEqual(Buffer.from(editor.save().bytes), input);
+    assert.equal(editor.redo(), true); assert.equal(editor.redo(), true);
+    assert.deepEqual(editor.save({ allowStaleLayout: true }).bytes, edited);
+    const reopened = await createExperimentalHwp5Editor(wasm, edited);
+    try { assert.equal(reopened.formulaSources(0)[0].formula, "=AVG(B?:E?)"); } finally { reopened.close(); }
+  } finally { editor.close(); }
+});

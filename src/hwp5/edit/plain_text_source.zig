@@ -34,7 +34,7 @@ pub fn validateCharacterFormat(a: std.mem.Allocator, source: []const u8, version
     return validateWith(a, source, version, p, char_count, .character_format);
 }
 
-fn validateWith(a: std.mem.Allocator, source: []const u8, version: Version, p: model.Paragraph, char_count: usize, purpose: Purpose) !Validation {
+fn validateWith(a: std.mem.Allocator, source: []const u8, version: Version, p: model.Paragraph, char_count: usize, comptime purpose: Purpose) !Validation {
     const generated = p.source_node == null;
     const source_node = if (generated) p.header_template orelse return error.MissingParagraphSource else try p.originalNode();
     if (generated and (p.instance_id == 0 or p.field_attributes != null or p.formula_results != null)) return error.UnsupportedStructuralControl;

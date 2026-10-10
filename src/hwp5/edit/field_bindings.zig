@@ -21,6 +21,10 @@ pub fn collect(a: std.mem.Allocator, source: []const u8, version: @import("../ve
     @memset(counts, 0);
     for (found) |span| counts[span.begin.paragraph] += 1;
     for (section.paragraphs, counts) |paragraph, expected| {
+        if (paragraph.source_node == null) {
+            if (expected != 0) return error.SourceBindingMismatch;
+            continue;
+        }
         const owner = try paragraph.originalNode();
         var actual: usize = 0;
         var child: usize = @as(usize, owner) + 1;

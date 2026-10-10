@@ -34,7 +34,7 @@ fn boundWithKind(a: std.mem.Allocator, source: []const u8, version: @import("../
     const owners = try a.alloc(?usize, section.paragraphs.len);
     defer a.free(owners);
     for (section.paragraphs, 0..) |p, index| {
-        const node = try p.originalNode();
+        const node = try @import("field_paragraph_source.zig").resolve(a, source, version, p);
         if (node >= tree.nodes.len) return error.SourceBindingMismatch;
         const parent: ?usize = if (p.parent_node) |value| value else null;
         if (tree.nodes[node].parent != parent) return error.SourceBindingMismatch;

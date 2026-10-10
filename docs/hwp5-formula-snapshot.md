@@ -1,5 +1,13 @@
 # HWP5 현재 수식 조회
 
+## 구조 편집 뒤 필드 바인딩 수정 (2026-10-11)
+
+실제 `chart.hwp`의 본문 문단1을 UTF16 위치1에서 분할하면 기존 기본 WASM(8bd5ab4e)에서는 수식 조회와 정의 변경이 `MissingParagraphSource`로 실패했습니다. 생성 문단에 원본 노드를 요구하던 바인딩과, 정의 변경의 사전 저장 검증이 비구조 작성기를 호출하던 두 경로가 원인이었습니다.
+
+`field_paragraph_source.zig`는 기존 plain/template 검증을 재사용해 생성 문단의 목록 소유권만 연결합니다. 생성 문단에 원본 필드 header를 배정하지 않으며, 현재 필드 시작이 있으면 거부합니다. 원본 필드 identity는 계속 실제 원본 문단에만 속합니다. 정의 거래의 저장 검증은 기존 구조 작성기의 삭제 허용 경로를 재사용합니다. `plain_text_source.validateWith`의 purpose는 모든 호출에서 상수이므로 comptime으로 분리해 문자 서식 검증과 필드 바인딩 사이의 오류 집합 추론 순환을 제거했습니다. 런타임 재귀 복구를 추가한 것이 아닙니다.
+
+ReleaseSafe 후보 `/tmp/hwpjs-generated-field-binding-20261011/bin/hwpjs.wasm` SHA256 `b8e5409af336c039c78b19e94b93eba880a2bd19996813feb321105e3b550899` 빌드·포맷·diff 검사가 통과했습니다. native root 포함2/2는 전체 할당 실패와 누락 template·잘못된 부모·필드 header/template·위조 필드 token을 거부합니다. 공개7파일25/25·skip0·exit0은 실제 분할 이후13개 identity 유지/문단 이동, AVG16.875·저장 재열기·정확 undo/redo와 기존 구조/이력/누름틀/책갈피/배포문서 회귀를 검사합니다. 전체 최신 native/corpus, 생성된 숫자 셀 의미, 실제 브라우저 E2E 및 기본 데모 승격의 완료 근거는 아닙니다. 기본 데모는 이 후보로 교체하지 않았습니다.
+
 후속 Worker/패널 연결과 아직 미검증인 실제 GUI 범위는 [수식 패널 연결](hwp5-formula-worker.md)이 소유합니다. 아래 연결 미완료는 당시 단계 기록입니다.
 
 `editor.formulaSources(section)`은 선택적 `hwp5_edit_formula_sources` ABI로 소유 JSON snapshot을 읽습니다. 항목은 `{ source_node, paragraph, formula, last_result, derived }`입니다. paragraph는 현재0기반 문단이고 source_node는 현재 세션의 원본 CTRL_HEADER 번호입니다. formula는 `=`를 포함한 UTF8 문자열, last_result는 표시 문자열입니다.
