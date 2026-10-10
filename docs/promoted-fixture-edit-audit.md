@@ -4,9 +4,9 @@
 
 기본 WASM SHA256 `b8e5409af336c039c78b19e94b93eba880a2bd19996813feb321105e3b550899`에서 `node tools/hwp5-edit-corpus-audit.mjs --history`가 exit0으로 종료됐습니다. 로그는 `/tmp/hwpjs-structural-formula-hwp5-edit-20261011.json`입니다. Git 추적101입력의 분류는 HWP5 전체 문단 prefix 통과53·부분1·암호 일반 읽기 거부1, HWPX 별도 편집 감사 대상45·암호 일반 읽기 거부1입니다. HWP5 2090시도 중2042편집/저장 재열기/이력 성공, 비숫자 입력의 InvalidFormulaNumber 거부48입니다. 전수 prefix 검사이며 모든 명령/숫자 대체/브라우저/조판 완료 검사가 아닙니다. 같은 기본 산출물의 HWPX 감사는 별도 실행 중이며 이전 실행의 집계를 최신 결과로 소급하지 않습니다.
 
-## 이전 산출물 기록
-
 최신 b8e5409a 기본 산출물의 HWPX 전용 입력 감사도 exit0입니다. `/tmp/hwpjs-structural-formula-hwpx-specialized-20261011.jsonl`에서46파일·암호1·165시도 중152편집/저장 재열기/이력·독립 XML/ZIP152대조(필드6), 계산 결과 직접 입력 거부13을 확인했습니다. `formula-definition-corpus.test.mjs`와 `formula-worker.test.mjs`도3/3·skip0·exit0이며 실제 chart13/13수식 정의 변경의 독립 산술·전체 XML/ZIP·이력 및 Worker 갱신을 검사합니다. 이는48숫자 셀의 모든 위치 입력이나 모든 함수/브라우저 지원 완료가 아닙니다. 일반 HWPX 전수 감사는 별도 실행 중입니다.
+
+## 이전 산출물 기록
 
 2026-10-10 `node tools/hwp5-edit-corpus-audit.mjs --history`는 기본 WASM SHA256 `7e70bbc74b7665553cd4f7e1b6a90aeb81a2e14c6c705e332d0ddac495e645e8`으로 Git 추적101입력을 검사했고 exit0입니다. 로그는 `/tmp/hwpjs-promoted-hwp5-edit-20261010.json`입니다.
 
