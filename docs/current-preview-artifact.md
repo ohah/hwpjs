@@ -1,5 +1,7 @@
 # 현재 데모 WASM
 
+반영 후 전수 prefix 편집의 파일별 집계와 거부 경계는 [기본 픽스쳐 재검증](promoted-fixture-edit-audit.md)이 소유합니다.
+
 2026-10-10 기본 `zig-out/bin/hwpjs.wasm`과 외부 HTTPS `/zig-out/bin/hwpjs.wasm`은 SHA256 `7e70bbc74b7665553cd4f7e1b6a90aeb81a2e14c6c705e332d0ddac495e645e8`입니다. 외부 HTTP200·해시 일치·WebAssembly.compile 성공을 확인했습니다. 기존 브라우저는 새로고침해 Worker/WASM을 다시 로드해야 합니다.
 
 직전 `f38c60ad10344e982e95dbfc5662d03f161add1a02caffe84e64617a01efb760` 사본은 `/tmp/hwpjs-core-ui-promotion-backup.TsKDoQ/hwpjs.wasm`입니다. 원본/후보 해시 guard, 정규 단일 링크 파일 확인, exclusive 백업/stage 복사와 같은 폴더 rename으로 반영했습니다. 임시 백업을 삭제하면 해당 복구 사본도 사라집니다. 서버/Tailscale 설정은 교체 과정에서 변경하지 않았습니다.

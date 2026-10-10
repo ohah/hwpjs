@@ -4,14 +4,21 @@ import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { runInNewContext } from "node:vm";
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
+import { detectDocumentFormat } from "../js/document-format.mjs";
 import { createHwp5Reader } from "../js/hwp5.mjs";
 import { createHwpxReader } from "../js/hwpx.mjs";
 import { createExperimentalHwp5Editor } from "../js/hwp5-editor.mjs";
 import { fixturePaths, sectionTexts, exerciseEditor, verifySaved } from "./hwp5-edit-corpus-lib.mjs";
 
-const module = await WebAssembly.compile(readFileSync("zig-out/bin/hwpjs.wasm"));
-const history = process.argv.includes("--history");
-for (const argument of process.argv.slice(2)) if (argument !== "--history") throw new Error(`Unknown argument: ${argument}`);
+const args = process.argv.slice(2);
+const wasmArgs = args.filter(argument => argument.startsWith("--wasm="));
+const fixtureArgs = args.filter(argument => argument.startsWith("--fixture="));
+if (wasmArgs.length > 1 || fixtureArgs.length > 1 || args.filter(argument => argument === "--history").length > 1) throw new Error("DuplicateAuditArgument");
+for (const argument of args) if (argument !== "--history" && !(argument.startsWith("--wasm=") && argument.length > 7) && !(argument.startsWith("--fixture=") && argument.length > 10)) throw new Error(`Unknown argument: ${argument}`);
+const wasmBytes = readFileSync(wasmArgs[0]?.slice(7) ?? "zig-out/bin/hwpjs.wasm");
+const module = await WebAssembly.compile(wasmBytes);
+const history = args.includes("--history");
 const context = { module: { exports: {} }, require: createRequire(import.meta.url), Buffer, process };
 runInNewContext(readFileSync("legacy/cfb.js", "utf8"), context);
 function streams(bytes) {
@@ -21,29 +28,34 @@ function streams(bytes) {
   });
   return result;
 }
-const paths = fixturePaths(execFileSync("git", ["ls-files", "-z"]).toString().split("\0"));
+const paths = fixtureArgs.length ? [fixtureArgs[0].slice(10)] : fixturePaths(execFileSync("git", ["ls-files", "-z"]).toString().split("\0"), { allTracked: true });
 if (!paths.length) throw new Error("EmptyFixtureInventory");
 const reader = await createHwp5Reader(module), hwpxReader = await createHwpxReader(module), files = [];
 try {
   for (const path of paths) {
-    if (/\.hwpx$/i.test(path)) {
+    const bytes = readFileSync(path);
+    let format;
+    try { format = detectDocumentFormat(bytes); }
+    catch (error) { files.push({ path, status: "format_refused", error: error.message }); continue; }
+    if (format === "hwpx") {
       const result = { path }; files.push(result);
       try {
-        const preview = hwpxReader.readTextEvents(readFileSync(path));
+        const preview = hwpxReader.readTextEvents(bytes);
         result.previewParagraphs = preview.paragraphCount;
         result.previewEvents = preview.events.length;
         result.status = "hwpx_edit_audited_separately";
       } catch (error) { result.status = "hwpx_preview_refused"; result.error = error.message; }
       continue;
     }
-    const bytes = readFileSync(path), result = { path };
+    const result = { path };
     files.push(result);
     try {
       const preview = reader.readText(bytes);
       result.previewParagraphs = preview.sections.reduce((sum, section) => sum + section.paragraphs.length, 0);
     } catch (error) { result.status = "preview_refused"; result.error = error.message; continue; }
     let editor;
-    try { editor = await createExperimentalHwp5Editor(module, bytes); }
+    const options = { distribution: Boolean(streams(bytes).get("FileHeader")?.readUInt32LE(36) & 4) };
+    try { editor = await createExperimentalHwp5Editor(module, bytes, options); }
     catch (error) { result.status = "editor_open_refused"; result.error = error.message; continue; }
     try {
       const before = streams(bytes), expected = sectionTexts(before);
@@ -51,7 +63,7 @@ try {
       Object.assign(result, audit);
       verifySaved(before, streams(saved.bytes), expected);
       if (!audit.edited) assert.deepEqual(Buffer.from(saved.bytes), bytes, "fully refused document must save byte-exact source");
-      const reopened = await createExperimentalHwp5Editor(module, saved.bytes);
+      const reopened = await createExperimentalHwp5Editor(module, saved.bytes, options);
       try {
         assert.equal(reopened.sectionCount(), expected.size);
         for (const [section, texts] of expected) {
@@ -77,4 +89,4 @@ for (const file of files) {
   if (history) totals.historyVerified += file.historyVerified ?? 0;
   for (const [error, count] of Object.entries(file.failures ?? {})) totals.failures[error] = (totals.failures[error] ?? 0) + count;
 }
-console.log(JSON.stringify({ scope: "tracked fixtures, every HWP5 paragraph, real prefix splice and saved text oracle; not layout/format/UI proof", history, counts, totals, files }, null, 2));
+console.log(JSON.stringify({ scope: fixtureArgs.length ? "one explicit fixture; every opened HWP5 paragraph" : "all tracked HWP/HWPX including demos; every opened HWP5 paragraph", evidence: "real prefix splice and saved text oracle; not layout/format/UI proof", wasmSha256: createHash("sha256").update(wasmBytes).digest("hex"), history, counts, totals, files }, null, 2));
