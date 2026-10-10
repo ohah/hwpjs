@@ -10,6 +10,8 @@ HWP5는53파일의 모든 문단 prefix 입력·저장 텍스트/비대상 strea
 
 `node tools/hwpx-specialized-input-audit.mjs --wasm=/Users/yoonhb/Documents/workspace/hwpjs/zig-out/bin/hwpjs.wasm`도 exit0입니다. 로그 `/tmp/hwpjs-promoted-hwpx-specialized-20261010.jsonl`은46파일·암호1·일반 입력 경로 밖165시도 중152편집/저장 재열기/undo/redo와152독립 XML/ZIP 대조(필드6)를 기록합니다. Python 일반/`-O`로 검사했습니다. 나머지13은 chart 계산 결과의 직접 입력 거부입니다. 두 경로를 합친1383문단의 비숫자 prefix 검증을 전체 명령/조판 완료로 승격하지 않습니다. 남은48숫자 셀은 별도 숫자 값 입력 검사의 범위입니다.
 
-필드 독립 검사기의 self-test도 일반/`-O` 양쪽에서 exit0입니다. UTF16 삽입/치환/삭제·잘못된 위치/길이·원문 무변경·dirty/서식/텍스트/비대상 ZIP 변조 거부를 확인했습니다. 실패/시간 초과를 데이터 불일치로 가장해 성공 처리하지 않습니다. 현재 Worker의 전체 HWPX 경로 검사는 별도 프로세스로 실행 중이며 종료 전에 완료로 집계하지 않습니다.
+필드 독립 검사기의 self-test도 일반/`-O` 양쪽에서 exit0입니다. UTF16 삽입/치환/삭제·잘못된 위치/길이·원문 무변경·dirty/서식/텍스트/비대상 ZIP 변조 거부를 확인했습니다. 실패/시간 초과를 데이터 불일치로 가장해 성공 처리하지 않습니다.
+
+현재 기본 WASM의 `tests/hwpx/worker-fixtures.test.mjs`가235807ms에1/1·skip0·exit0으로 종료됐습니다. 모든46추적 HWPX를 실제 Worker 모듈로 열어 원본 입력 불변과1444문단의 경로를 검사했습니다. plain1278·anchor146·field7·보호된 계산 결과13·암호1이며, anchor146/field7의 각각 실제 입력·저장·undo/redo 원본 복원을 검사했습니다. plain1278의 모든 편집 명령을 이 테스트에서 수행한 것은 아닙니다. Node self/fetch 경계 대역이며 실제 브라우저/OS IME 완료가 아닙니다. 실행 중 추가한 메뉴 모듈 수정은 이 Worker 검사의 범위 밖입니다.
 
 감사 도구의 파일 선택·CLI와 prefix route 검사는4파일8/8·skip0·exit0입니다. Git의 NUL 경로 목록을 사용하고 demo 경로를 빠뜨리지 않으며, 실제 입력 위치를 다른 편집 가능한 위치로 옮기지 않습니다. 누락·중복 옵션을 실행 전 거부합니다. 구조적 거부와 field label 실패를 숨기지 않습니다.

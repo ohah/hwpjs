@@ -1,7 +1,7 @@
 // Native details.open is the sole authority; this module dispatches no commands.
 export function createMenuDisclosures(popups) {
   let closed = false;
-  const contains = node => popups.some(popup => popup.contains?.(node));
+  const contains = node => typeof node?.nodeType === "number" && popups.some(popup => popup.contains?.(node));
   const rows = popups.map(popup => {
     popup.setAttribute?.("name", "hwpjs-document-menu");
     const summary = popup.querySelector?.("summary");

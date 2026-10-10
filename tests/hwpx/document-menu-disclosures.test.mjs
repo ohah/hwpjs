@@ -5,9 +5,12 @@ import { createMenuDisclosures } from "../../web/preview/document-menu-disclosur
 test("menu hover transfers only an already open disclosure and outside pointers do not consume input", () => {
   const document = new EventTarget();
   const make = () => {
-    const summary = new EventTarget(), child = {};
-    const popup = { open: false, ownerDocument: document,
-      contains: node => node === popup || node === child || node === summary,
+    const summary = Object.assign(new EventTarget(), { nodeType: 1 }), child = { nodeType: 1 };
+    const popup = { nodeType: 1, open: false, ownerDocument: document,
+      contains: node => {
+        if (typeof node?.nodeType !== "number") throw new TypeError("ExpectedNode");
+        return node === popup || node === child || node === summary;
+      },
       querySelector: () => summary, setAttribute(key, value) { this[key] = value; } };
     return { popup, summary, child };
   };
@@ -22,7 +25,7 @@ test("menu hover transfers only an already open disclosure and outside pointers 
   assert.equal(a.popup.open, false); assert.equal(b.popup.open, true);
   const inside = Object.assign(new Event("pointerdown", { cancelable: true }), { composedPath: () => [b.child, document] });
   document.dispatchEvent(inside); assert.equal(b.popup.open, true); assert.equal(inside.defaultPrevented, false);
-  const outside = new Event("pointerdown", { cancelable: true });
+  const outside = Object.assign(new Event("pointerdown", { cancelable: true }), { composedPath: () => [document, { window: true }] });
   document.dispatchEvent(outside); assert.equal(b.popup.open, false); assert.equal(outside.defaultPrevented, false);
   a.popup.open = true; controls.close(); controls.close(); assert.equal(a.popup.open, false);
   a.popup.open = true; b.summary.dispatchEvent(new Event("pointerenter"));

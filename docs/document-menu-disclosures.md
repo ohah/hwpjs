@@ -1,5 +1,13 @@
 # 문서 메뉴 열림 상태
 
+## 실제 DOM 반례와 후속 수정
+
+외부 Chromium의 최초 실행에서 hover 전환은 확인됐으나 바깥 클릭 후 메뉴가 열려 있었습니다. composedPath의 Window도 contains에 전달하는 경로를 찾았고 실제 Chromium에서 `document.body.contains(window)`가 TypeError임을 직접 확인했습니다. DOM nodeType을 가진 입력만 contains에 전달하도록 수정했습니다. 대역 contains도 비노드에서 TypeError를 발생시키도록 강화해 Window가 포함된 경로를 검사합니다. 기존/신규6/6·skip0·exit0입니다.
+
+수정 후 로컬8080 실제 Chromium에서 hover 전환 `[false,true,false,false]`, 바깥 클릭 후 모두 닫힘·find-input 포커스 유지, Escape 후 모두 닫힘·해당 summary 포커스를 확인했습니다. DOM 열린 값을 eval로 읽었으며 모델/상태를 직접 설치하지 않았습니다. 오류 목록은 비어 있고 브라우저는 종료했습니다. agent-browser 스킬의 실제 포인터/키보드/준비 조건 흐름을 사용했습니다.
+
+외부 후속 실행은 카탈로그103옵션 준비 조건이25초 시간 초과했고 name/옵션이 초기 상태여서 성공으로 계수하지 않았습니다. 외부466모듈 HTTP/MIME/원문 해시 검사 자체는 모두 일치했습니다. 브라우저 앱 초기화 실패와 메뉴 동작 검증을 분리하며 HTTP2 등 특정 원인을 확정하지 않습니다.
+
 `document-menu-disclosures.mjs`는 메뉴 popup 상호작용만 소유합니다. `details.open`을 단일 상태로 사용하며 별도 열린 메뉴 캐시를 만들지 않습니다. 문서 메뉴에 공통 native `name`을 부여해 한 그룹으로 묶습니다. 열린 메뉴가 있을 때 다른 summary의 mouse/pen pointerenter는 이전 메뉴를 닫고 대상 메뉴를 엽니다. 닫힌 상태의 hover와 touch pointerenter는 메뉴를 열지 않습니다.
 
 ownerDocument의 바깥 pointerdown은 메뉴를 닫되 preventDefault하지 않아 Canvas/입력의 원래 포커스 동작을 유지합니다. target과 composedPath 양쪽의 내부 노드를 검사합니다. close는 listener를 제거하고 메뉴를 닫으며, 이후 이벤트는 새 상태를 변경하지 않습니다.
