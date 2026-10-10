@@ -2,6 +2,8 @@
 
 ## 게시 HWPX 감사의 환경/오래된 기대값 분리
 
+정규 실행의 Python 자식이4분 이상 CPU0으로 stdin read에서 대기함을 ps/lsof/sample로 확인했습니다(`/tmp/hwpjs-python-oracle-wait-20261011.txt`). 해당 검사 자식만 SIGTERM으로 종료했고 정규 gate는 실패 종료로 기록했습니다. 게시 formula-editor 검사의 동기 pipe 입력을 기존 oracle-process의 정규 파일 입력으로 연결하고 모든 Python 호출에30초 timeout을 붙였습니다. 명시적 pipe stdio는 제거하며 변조 반례는 status1/signalnull과 변조별 정확한 ValueError를 요구합니다. caf15480 추출본+최소 수정+727c38df WASM에서2/2·skip0·exit0(38771ms), 강화한 변조 검사 단독1/1·exit0입니다. 로컬 다른 테스트 확장/전체 정규 gate 통과와 구분합니다.
+
 후속 HWPX 숫자/수식 게시 의존성 검증은727c38df(게시 caf15480 소스 산출물)에서4파일5/5·skip0·exit0(53128ms)입니다.48숫자 입력·13수식 정의 전수·PRODUCT/반복 참조·실제 Worker·정확 표시 문자열을 함께 검사했습니다. 숫자 입력은 저장/재열기/이력/비숫자 거부 후 redo까지 확인합니다. 이 실행의 테스트/독립 정의 oracle/일관된 잘못된 cache·label 변조기는 로컬에만 있던5파일을 의존성 단위로 게시합니다. Python 일반/최적화 검사의 실패는 정확한 변조 원인과 종료코드로 확인하며 timeout/인프라 실패를 통과로 바꾸지 않습니다. 정규 gate의 전체 종료 결과나 모든 명령/함수 지원으로 확대하지 않습니다.
 
 caf15480 archive 추출본의 정규 hwpx-text-audit 첫 실행은 `.git` 없는 환경에서 git ls-files를 호출하는 inventory 검사들이 실패했습니다. 임시 추출본에 원래 tree의 추적 파일을 인덱싱했습니다(6228파일 내용 hash 일치, archive에 실제 내용이 없는 legacy/hwpers gitlink1개 제외). 원본 저장소/파일은 수정하지 않았습니다. 재실행은 전체 추적 비암호 열기/no-op ZIP을 통과했지만 Worker 검사의 과거 UnsupportedHwpxFormatting 기대가 현재 InvalidTextPosition과 달라 실패를 확인했습니다. 정규 실행은 다른 검사들을 계속 실행 중입니다.

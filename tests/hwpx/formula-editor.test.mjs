@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
-import { execFileSync } from "node:child_process";
+import { execFileSync } from "../../tools/oracle-process.mjs";
 import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
 import { createHwpxReader } from "../../js/hwpx.mjs";
 
@@ -38,7 +38,7 @@ owner=f
 while owner.tag!=p+'p': owner=parents[owner]
 if ''.join(t.text or '' for t in owner.iter(p+'t'))!='156.3': raise ValueError('display result')
 print('synchronized result and unchanged ZIP payloads')`;
-    const output = execFileSync("python3", ["-c", oracle], { input: JSON.stringify({ before: input.toString("base64"), after: Buffer.from(saved).toString("base64") }) }).toString();
+    const output = execFileSync("python3", ["-c", oracle], { input: JSON.stringify({ before: input.toString("base64"), after: Buffer.from(saved).toString("base64") }), timeout: 30000 }).toString();
     assert.match(output, /synchronized result/);
     const mutations = `import io,json,sys,base64,zipfile,copy,xml.etree.ElementTree as E
 data=sys.stdin.buffer.read(); z=zipfile.ZipFile(io.BytesIO(data)); p='{http://www.hancom.co.kr/hwpml/2011/paragraph}'
@@ -60,10 +60,15 @@ for kind in ('result','dirty','label','payload'):
    out.writestr(copy.copy(info),payload)
  variants.append(base64.b64encode(stream.getvalue()).decode())
 print(json.dumps(variants))`;
-    const variants = JSON.parse(execFileSync("python3", ["-c", mutations], { input: saved }).toString());
-    for (const after of variants) {
+    const variants = JSON.parse(execFileSync("python3", ["-c", mutations], { input: saved, timeout: 30000 }).toString());
+    for (const [index, after] of variants.entries()) {
       for (const flags of [[], ["-O"]]) {
-        assert.throws(() => execFileSync("python3", [...flags, "-c", oracle], { input: JSON.stringify({ before: input.toString("base64"), after }), stdio: ["pipe", "pipe", "pipe"] }));
+        assert.throws(() => execFileSync("python3", [...flags, "-c", oracle], { input: JSON.stringify({ before: input.toString("base64"), after }), timeout: 30000 }), error => {
+          assert.equal(error.status, 1);
+          assert.equal(error.signal, null);
+          assert.match(String(error.stderr), new RegExp(`ValueError: ${["stored result", "stored result", "display result", "mimetype"][index]}`));
+          return true;
+        });
       }
     }
     editor.open(saved);
@@ -113,7 +118,7 @@ print(count)`;
       const saved = editor.save();
       const updatedText = reader.readTextEvents(saved).events.filter(e => e.kind === "content" && e.section === paragraph.section && e.paragraph === paragraph.paragraph).map(e => e.value).join("");
       assert.equal(updatedText, "100");
-      assert.equal(execFileSync("python3", ["-c", comparison], { input: saved }).toString().trim(), "13");
+      assert.equal(execFileSync("python3", ["-c", comparison], { input: saved, timeout: 30000 }).toString().trim(), "13");
       editor.open(saved);
       assert.deepEqual(editor.save(), saved);
       numericInputs++;
