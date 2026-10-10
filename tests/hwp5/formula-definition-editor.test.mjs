@@ -3,6 +3,38 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
 import { inspect, records, paragraphRecords, expectedSection, encodeRecord } from "./style-preservation/text-record-oracle.mjs";
+import { generalNumber } from "./style-preservation/general-number-oracle.mjs";
+
+test("public HWP5 definitions preserve PRODUCT and repeated reference arithmetic through history and reopen", async () => {
+  const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/chart.hwp");
+  const original = inspect(input), section = original.sections[0].bytes;
+  const values = [19, 20, 21, 22].map(index => Number(paragraphRecords(section, index).direct.find(row => row.tag === 67).payload.toString("utf16le").replace(/\r$/, "")));
+  assert.deepEqual(values, [11.2, 24.7, 16.3, 15.3]);
+  const [b, c] = values;
+  for (const [formula, value] of [
+    ["=PRODUCT(B?:E?)", values.reduce((total, n) => total * n, 1)],
+    ["=PRODUCT(B?,C?,B?)", b * c * b],
+    ["=SUM(B?,C?,B?)", b + c + b],
+    ["=AVG(B?,C?,B?)", (b + c + b) / 3],
+    ["=SUM(B?)", b],
+  ]) {
+    const editor = await createExperimentalHwp5Editor(readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"), input);
+    try {
+      editor.enableHistory();
+      editor.setFormulaDefinition({ section: 0, sourceNode: 118, formula });
+      assert.equal(editor.formulaSources(0)[0].last_result, generalNumber(value));
+      const saved = editor.save({ allowStaleLayout: true }).bytes;
+      const parsed = inspect(saved), field = records(parsed.sections[0].bytes).find(row => row.tag === 71 && row.payload.readUInt32LE(0) === 0x25666d75);
+      const length = field.payload.readUInt16LE(9) * 2;
+      assert.equal(field.payload.subarray(11, 11 + length).toString("utf16le"), `${formula}??%g,;;${generalNumber(value)}`);
+      for (const [path, bytes] of original.streams) if (path !== original.sections[0].path) assert.deepEqual(parsed.streams.get(path), bytes);
+      assert.equal(editor.undo(), true); assert.deepEqual(Buffer.from(editor.save().bytes), input);
+      assert.equal(editor.redo(), true); assert.deepEqual(editor.save({ allowStaleLayout: true }).bytes, saved);
+      const reopened = await createExperimentalHwp5Editor(readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"), saved);
+      try { assert.equal(reopened.formulaSources(0)[0].formula, formula); assert.equal(reopened.formulaSources(0)[0].last_result, generalNumber(value)); } finally { reopened.close(); }
+    } finally { editor.close(); }
+  }
+});
 
 function expectedDefinition(input) {
   const before = inspect(input), section = before.sections[0].bytes;
