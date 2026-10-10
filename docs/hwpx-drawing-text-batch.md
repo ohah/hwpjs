@@ -2,6 +2,10 @@
 
 ## 후보 검증
 
+게시9dbe495d의 깨끗한 archive `/tmp/hwpjs-main-drawing-batch.SehGHS`에서 ReleaseSafe build exit0을 확인했습니다. SHA256 `67dc85ca4dfadda3e3f2515951f5f9ca92189d5f81b058a61323036ba8d49dda`입니다. 새 배치 공개2파일4/4·fail/skip0·exit0(201.508792ms), 추적 HWPX45개·47구역·도형 텍스트26개의 일괄/단일 결과 및 원문 저장 바이트 일치·암호1파일 별도 거부를 다시 확인했습니다. 정규 HWP5 312/312·HWPX 34/34·fail/skip0·exit0이며 로그 `/tmp/hwpjs-main-drawing-batch-regular-20261011.log`에 각각3473.028333/47757.714ms가 기록돼 있습니다. 현재 기본 제품에는 아직 반영하지 않았습니다.
+
+같은 깨끗한 소스의 구간3파일 최초 실행은3통과/1실패·exit1입니다. 대형 참조 파일이 archive에 없던 ENOENT이며 검증 완료로 계수하지 않습니다. 원본을 수정하지 않고 해당 픽스쳐만 exclusive 복사해 SHA256 `c6dd7e847a99f219681afc5a29c80a9665c04df9cda4d820a3350d739664fdf6` 일치를 확인한 뒤 같은3파일을 재실행했습니다. 로그 `/tmp/hwpjs-main-drawing-batch-window-retry-20261011.log`의 대형 Worker/Renderer 입력·독립 XML/ZIP·이력 gate는 아직 실행 중이며 전체 종료 통과로 계수하지 않습니다. Git source diff는 여전히 없습니다.
+
 최종 native root의 `drawing snapshot batch` 집중 ReleaseSafe 실행은2/2·exit0입니다. 단일 결과 대조를 기준 배열로 먼저 확정하고 배치 함수 자체의 모든 할당 실패를 검사해, 다른 단일 조회 함수의 실패점까지 중복 순회하지 않습니다. 검사 후 원문 저장 바이트 동일을 확인했습니다. 첫 공유 view 수정 이전의2/2 실행은 별도 이전 구현이며 최종 실행과 합산하지 않습니다. fmt/diff와 JS 구문 검사도 exit0입니다. 전체 native gate 완료는 아닙니다.
 
 2026-10-11 별도 ReleaseSafe build exit0의 후보는 `/tmp/hwpjs-drawing-text-batch-20261011/bin/hwpjs.wasm`, SHA256 `f12bbbcc08662f1c6fa5cd33249a6064ad3e27c99081d886039a76e4b4f6dda3`입니다. 새 도형 배치와 사각형 배치 공개2파일4/4·fail/skip0·exit0(177.863375ms)입니다. Git 추적 HWPX46개 중45개·47구역·도형 텍스트26개에서 일괄/단일 전체 결과 및 원문 저장 바이트가 같았고 암호1파일은 EncryptedDocument로 별도 기록했습니다.
