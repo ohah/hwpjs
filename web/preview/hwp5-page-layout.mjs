@@ -12,6 +12,7 @@ import { layoutMasterPageRows } from "./master-page-flow.mjs";
 /** Measured preview under observed default section settings; not Hancom pagination. */
 export function layoutHwp5PageContent(content, measure, maxRows = 20000, options = {}) {
   try {
+    if (content.pageControlSourceErrors?.length) return { state: "unavailable", error: "IncompleteHwp5PageNumberControls" };
     if (content.pageControlSources?.length && options.pageNumbers !== undefined) return { state: "unavailable", error: "UnsupportedHwp5ControlledPageOverride" };
     const masterProjection = projectHwp5MasterPages(content);
     content = masterProjection.content;

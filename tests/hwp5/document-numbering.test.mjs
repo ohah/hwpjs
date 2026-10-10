@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { hwp5EffectivePageNumberSource, attachHwp5DocumentProperties } from "../../web/preview/hwp5-document-numbering.mjs";
+import { layoutHwp5PageContent } from "../../web/preview/hwp5-page-layout.mjs";
 const properties = { source_record: 0, section_count: 1, page_start: 7, footnote_start: 1, endnote_start: 1, picture_start: 1, table_start: 1, equation_start: 1, caret_list: 0, caret_paragraph: 0, caret_character: 0, extra_bytes: 0, extra_nonzero: false };
 const content = () => ({ documentPropertySource: properties, sectionSources: [{ section: 0, flags: 0, page_start: 0 }], currentParagraphFlows: [{ host: "body", section: 0, paragraph: 0 }], paragraphs: [{ section: 0, paragraph: 0, text: "본문" }] });
 test("empty page control results cannot hide source query failures", () => {
@@ -8,6 +9,9 @@ test("empty page control results cannot hide source query failures", () => {
   value.pageControlSources = [];
   value.pageControlSourceErrors = [{ section: 0, error: "UnsupportedPageNumberControl" }];
   assert.throws(() => hwp5EffectivePageNumberSource(value), { message: "IncompleteHwp5PageNumberControls" });
+  for (const options of [{}, { pageNumbers: [7] }]) {
+    assert.deepEqual(layoutHwp5PageContent(value, () => 8, 20000, options), { state: "unavailable", error: "IncompleteHwp5PageNumberControls" });
+  }
   value.pageControlSourceErrors = [];
   assert.equal(hwp5EffectivePageNumberSource(value).start_page, 7);
 });

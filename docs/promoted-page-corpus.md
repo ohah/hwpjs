@@ -6,6 +6,8 @@
 
 번호 source의 성공 제어 목록이 비어 있으면 `pageControlSourceErrors`를 무시하던 조건을 합성 반례로 재현했습니다(예외 누락으로 신규 검사 실패). 이제 성공 제어 개수와 무관하게 조회 오류가 있으면 IncompleteHwp5PageNumberControls를 반환합니다. 오류 없는 빈 목록과 명시적 시작 번호·객체 앵커는 기존대로 유지합니다. 번호/구역 확장2파일6/6·skip0·exit0이며 이는 실파일12미지원 해결이나 번호 의미 확대가 아닙니다.
 
+호출 경로 검증에서는 페이지 배치 진입점이 header/footer와 성공한 제어 목록이 없으면 번호 함수를 호출하지 않는 별도 조건을 확인했습니다. `layoutHwp5PageContent`도 조회 오류를 먼저 거부하게 연결했고, 기본 옵션/수동 pageNumbers 양쪽에서 원인을 IncompleteHwp5PageNumberControls로 보존하는 반례를 추가했습니다. 수정 전에는 해당 합성 입력에서 MissingHwp5PageSources로 원인이 덮였으며 정상 배치 성공을 재현한 사례는 아닙니다. 번호/실제 제어 API/renderer3파일8/8·skip0·exit0, 수정 후55파일 페이지 감사도 exit0·43배치/12미지원/입력55불변입니다(`/tmp/hwpjs-page-control-entry-fix-20261011.jsonl`).
+
 ## TABLE 미해석 비트의 재현
 
 현재 기본 산출물에서 `table-flags-pair.test.mjs`와 `table-policy-root-cause.test.mjs`가6/6·skip0·exit0입니다. 게시 예정 helper6파일을 선택한 tree `e21d6a86d1a4d3c9da229ee3cab716db7644d71b`의 별도 export에서도 동일6/6을 확인했습니다. 로컬 미게시 helper에만 의존하는 결과로 남기지 않습니다.
