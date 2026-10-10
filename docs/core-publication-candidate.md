@@ -1,5 +1,11 @@
 # 통합 코어 게시 후보
 
+## 실제 저장·이력 회귀의 게시 의존성 확인
+
+`7527dec4706b890b2a35e7ccfcaddbac1e20b7e79994bf80e3ed831d3bd58d1a` 후보의 자체 JS로 HWP5 이력5/5·skip0·exit0을 확인했습니다. 독립 CFB/레코드 비교, 분기·거부·저장 실패 이후 redo, checkpoint 예산, 실제 수식/필드/서식 및 ABI 재열기를 검사합니다.
+
+추가하려던 하이픈·제목표시 테스트가 export에 없어 선택 단계에서 거부됐습니다. 테스트3파일을 포함한 뒤 HWPX 독립 Python 검사기도 누락된 것을 확인하고 함께 포함했습니다. 이 누락은 게시 입력의 의존성 문제이며 파서 실패가 아닙니다. 보강한 export에서 하이픈 경계·불투명 도형 꼬리·실제 HWPX 제목12문단의 저장/undo/redo/재열기3/3·skip0·exit0을 확인했습니다. HWPX는 전체 XML 비교와 잘못된 기대값의 명시적 거부를 Python 일반/`-O`로 함께 검사합니다. 이 보강 입력은 위 tree 자체와 구분하며, 전체 조판·모든 편집 명령의 완료 근거로 사용하지 않습니다.
+
 2026-10-10 WASM 진입점 `src/wasm.zig`에서 literal Zig import의 의존 파일1152개를 확인했고 미해결 import는 없었습니다. 현재 HEAD와 다른 의존 파일660개만 별도 Git index에 선택하여 tree `f0a8a4a8aab8dd6277376dad45c67cc70bc08075`를 만들었습니다. 무관한 레거시·워크스페이스 상태·문서 변경은 이 선택에 포함하지 않았습니다. 이 tree는 아직 main의 통합 코어 커밋이 아닙니다.
 
 별도 export `/tmp/hwpjs-current-core-publish.awQqex`에서 ReleaseSafe 빌드·root native 테스트 컴파일(`--test-no-exec`)이 exit0이고 선택한660파일의 포맷 검사가 통과했습니다. 테스트 컴파일은 실행 통과가 아닙니다. 결과 WASM SHA256은 `0942a2c1e40692d02c3500aa58f13399041049b314b92a5e02950755ae8acb63`입니다.
