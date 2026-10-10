@@ -134,10 +134,40 @@ test("generated body paragraph does not steal original formula headers and defin
     const edited = editor.save({ allowStaleLayout: true }).bytes;
     assert.equal(editor.formulaSources(0)[0].last_result, "16.875");
     assert.equal(editor.undo(), true); assert.deepEqual(editor.save({ allowStaleLayout: true }).bytes, split);
+    assert.throws(() => editor.setFormulaDefinition({ section: 0, sourceNode: rows[0].source_node, formula: "=AVG(Z?:Z?)" }), { message: "FormulaReferenceOutOfBounds" });
+    assert.deepEqual(editor.save({ allowStaleLayout: true }).bytes, split);
     assert.equal(editor.undo(), true); assert.deepEqual(Buffer.from(editor.save().bytes), input);
     assert.equal(editor.redo(), true); assert.equal(editor.redo(), true);
     assert.deepEqual(editor.save({ allowStaleLayout: true }).bytes, edited);
     const reopened = await createExperimentalHwp5Editor(wasm, edited);
     try { assert.equal(reopened.formulaSources(0)[0].formula, "=AVG(B?:E?)"); } finally { reopened.close(); }
+  } finally { editor.close(); }
+});
+
+test("deleted body paragraph keeps formula identity and atomic definition history", async () => {
+  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
+  const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/chart.hwp");
+  const editor = await createExperimentalHwp5Editor(wasm, input);
+  try {
+    editor.enableHistory();
+    const before = editor.formulaSources(0);
+    editor.mergeParagraph({ section: 0, paragraph: 1 });
+    const merged = editor.save({ allowStaleLayout: true }).bytes;
+    const rows = editor.formulaSources(0);
+    assert.deepEqual(rows.map(row => row.source_node), before.map(row => row.source_node));
+    assert.deepEqual(rows.map(row => row.paragraph), before.map(row => row.paragraph - 1));
+    editor.setFormulaDefinition({ section: 0, sourceNode: rows[0].source_node, formula: "=AVG(B?:E?)" });
+    const edited = editor.save({ allowStaleLayout: true }).bytes;
+    assert.equal(editor.formulaSources(0)[0].last_result, "16.875");
+    assert.equal(editor.undo(), true);
+    assert.deepEqual(editor.save({ allowStaleLayout: true }).bytes, merged);
+    editor.setFormulaDefinition({ section: 0, sourceNode: rows[0].source_node, formula: rows[0].formula });
+    assert.deepEqual(editor.save({ allowStaleLayout: true }).bytes, merged);
+    assert.equal(editor.redo(), true);
+    assert.deepEqual(editor.save({ allowStaleLayout: true }).bytes, edited);
+    const reopened = await createExperimentalHwp5Editor(wasm, edited);
+    try { assert.equal(reopened.formulaSources(0)[0].formula, "=AVG(B?:E?)"); } finally { reopened.close(); }
+    assert.equal(editor.undo(), true); assert.equal(editor.undo(), true);
+    assert.deepEqual(Buffer.from(editor.save().bytes), input);
   } finally { editor.close(); }
 });
