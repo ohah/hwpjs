@@ -16,3 +16,13 @@ native2/2·exit0: 실제 첫 도형 header/control/component를 두 형제로 �
 zig test src/drawing_extra_source_test.zig -O ReleaseSafe --test-filter 'drawing opaque'
 node --test tests/hwp5/drawing-object-extras-wire.test.mjs
 ```
+
+## 문자열 종결자 가설과 참조 전수 관측
+
+RHWP revision `e8800c8def63449808a4092798442652ed460552`의 byte_writer.write_hwp_string은 u16 개수와 UTF-16 내용만 쓰며 NUL을 추가하지 않습니다. control.serialize_common_obj_attr는 그 뒤 raw_extra를 별도로 복원합니다. 따라서 RHWP 코드는 관측된2바이트를 문자열 종결자로 해석한다는 근거가 아닙니다.
+
+독립 `tools/hwp5-object-extra-survey.mjs`는 `.hwp`/`.hwpx` 확장자 대신 CFB signature를 선택하고 HWP5 FileHeader를 확인합니다. signature/길이/잘림/원문 불변/부분 관측 유지 테스트4/4·exit0입니다. Git 추적101경로의55CFB는52관측·배포2제외·암호1제외였고,81개체에 꼬리가 없었습니다. 같은 버전의 모든 문서가 같은 꼬리를 갖는다는 가정은 사용하지 않습니다.
+
+참조975경로 중 CFB513개를 실제 signature로 선택한 최종 관측은504완료·배포6제외·암호1제외·부분 관측2파일입니다. 전체3399개체 중3389개의 공통 꼬리를 관측했고1249개는2바이트0000, 비영 꼬리는 없었습니다. 미해석10개는20250130-hongbo_saved/honbo-save의각5개40바이트 control header입니다. 부분 관측을 성공으로 세지 않아 종료코드는1입니다. 기록은 `/tmp/hwpjs-object-extra-reference-final-survey-20261010.jsonl`이며 원본은 수정하지 않았습니다. 숫자는 이 inventory의 관측값이지 스펙 또는 보편적인 버전 cutoff가 아닙니다.
+
+40바이트 control의 필드 부재를 정상 optional로 읽는 변경을 시험했지만, 두 파일은 실제 editor에서 `RepairedSourceUnsupported`로 거부됐습니다. 이 자료만으로 정상 레이아웃을 새로 허용할 근거가 부족해 nullable 변경과 임시 테스트를 철회했습니다. 파서는 기존 최소길이/잘림 거부를 유지합니다. `/tmp/hwpjs-object-optional-20261010`은 철회된 실험 산출물로 제품 승격 대상이 아닙니다. 이것을 다른 후보의 통과 근거로 사용하지 않습니다.
