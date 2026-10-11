@@ -4,6 +4,10 @@
 
 후속 현재 상태: 내부 flat Session.save와 checkpoint까지 연결했으며 아래 최초 writer-only 기록을 대체합니다. 공개 편집 명령/표시/재계산/UI는 여전히 연결 전입니다. 아래 회귀 결과는 각 단계 snapshot에만 적용합니다.
 
+복수 결과 후속 수정: 실제 copay 참조의 두 번째 결과만 변경하는 초기 native 검사는 실패했습니다. 기대 구역 XML682027바이트와 출력682029바이트가 달랐고 첫 차이62996은 무관한 첫 수식의 dirty0→1이었습니다. override가 있으면 원문 보존 경로를 건너뛰고 일반 준비 결과를 전부 직렬화하던 것이 원인입니다. 숫자/정의/dirty/text site 원문이 변경되지 않은 수동 편집에서는 공통 준비로 선택·의존성을 검증한 뒤 `preserve_parameters` 수동 필드만 공통 writer에 넘기도록 수정했습니다. 무관한 준비값을 비교에서 빼는 검사기 완화가 아니라 출력 대상 선택을 고친 것입니다. 다른 수식이 override에 의존하는 미지원 경로는 준비 단계에서 여전히 거부합니다.
+
+최종 집중 ReleaseSafe11/11·exit0(root1+실제10선언)에서 실제 copay의 나머지 원문 보존, chart13개 override의 단일 ZIP 저장·구역 기대 바이트/원문·수정본 checkpoint 복원, 마지막 요청의 범위 밖 주소/중복 주소 거부 뒤 정확한 수정본 재저장, 앞선 전체 할당 실패·선택·인코딩·예산 검사를 확인했습니다. 현재 실행의 참조 파일 skip은0이지만 copay가 없는 checkout에서는 해당 선언이 명시적으로 skip됩니다. fmt/diff check도 통과했습니다. 후속 작업 트리 ReleaseSafe 빌드를 별도로 실행 중이며 아직 결과/산출물 검증으로 계수하지 않습니다. runtime은 미커밋이고 공개 명령·표시·참조 수정 시 해제·구조/UI 및 최종 전체 gate는 여전히 필요합니다.
+
 `formula_result_override_save`는 요청 구역/FORMULA 노드와 공통 field linker의 실제 begin/end 범위를 확인하고, 선택 정책에서 비활성인 필드를 거부합니다. 기존 `formula_result_sites`의 UTF-8/4096바이트/단일 문단·지원 구조 검사를 재사용하며, 일시적인 borrowed Sites로 공통 `text_sites_save`를 호출합니다. 반환 XML만 소유하고 입력 Tree/Sites를 변경하지 않습니다. Command·Formula·LastResult·dirty 속성을 수정하지 않습니다. 이 정책은 수동 본문 결과와 계산 파라미터를 분리하는 내부 직렬화 단계이며, 원본 한글이 직접 편집을 기록하는 모든 상태/속성의 재현은 아직 입증하지 않았습니다. 변경된 다중 텍스트 조각의 배치는 기존 result-sites 정책을 따르므로 사용자 선택 범위와 세부 서식 편집을 대신하지 않습니다.
 
 최종 ReleaseSafe 집중 실행은 root import 선언을 포함5/5·exit0이며 실제 검증 선언4개입니다. 합성 원문의 결과 외 모든 바이트 보존과 전체 할당 실패, 구역/노드/UTF-8/XML 문자/길이·출력 예산 거부, 실제 chart13필드 각각의 정확한 대상 텍스트 바이트 교체 및 입력 보존, 비활성 run-switch 분기 거부를 검사했습니다. fmt check도 통과했습니다.
