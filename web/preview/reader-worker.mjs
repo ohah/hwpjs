@@ -117,6 +117,8 @@ function hwpxDisplay(projected) {
   const content = projected ?? displayHwpxContent(preview);
   if (!content.window) attachHwpxFormulas(editor, content);
   content.formulaDefinitionAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwpx_edit_set_formula_definition" && entry.kind === "function");
+  const formulaExports = new Set(WebAssembly.Module.exports(module).filter(entry => entry.kind === "function").map(entry => entry.name));
+  content.manualFormulaResultAvailable = typeof editor.setManualFormulaResult === "function" && ["hwpx_edit_set_manual_formula_result", "hwpx_edit_manual_formula_result_max_bytes"].every(name => formulaExports.has(name));
   content.paragraphAlignmentAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwpx_edit_set_paragraph_alignment" && entry.kind === "function");
   content.paragraphMarginsAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwpx_edit_set_paragraph_margins" && entry.kind === "function");
   content.paragraphSpacingAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwpx_edit_set_paragraph_spacing" && entry.kind === "function");
@@ -575,6 +577,15 @@ self.onmessage = async event => {
         preview = reader.readTextEvents(editor.saveForDisplay());
         reply({ kind: "formula-definition", content: hwpxDisplay() });
       }
+    } else if (message.kind === "manual-formula-result") {
+      if (format !== "hwpx") throw new Error("UnsupportedManualFormulaResultEditing");
+      if (!editor || !historyEnabled) throw new Error("EditorNotOpen");
+      if (typeof editor.setManualFormulaResult !== "function") throw new Error("HwpxManualFormulaResultAbiUnavailable");
+      editor.setManualFormulaResult(message.section, message.beginElement, message.display);
+      applied = true;
+      reader = await createHwpxReader(module);
+      preview = reader.readTextEvents(editor.saveForDisplay());
+      reply({ kind: "manual-formula-result", content: hwpxDisplay() });
     } else if (message.kind === "checkbox-state") {
       if (format !== "hwpx") throw new Error("UnsupportedCheckBoxStateEditing");
       if (!editor || !historyEnabled) throw new Error("EditorNotOpen");

@@ -1,5 +1,9 @@
 # 수식 결과 직접 수정 — 내부 저장 기반
 
+Worker 연결: `manual-formula-result` 명령은 HWPX·명시적 enable/history 세션에서만 공개 setter를 호출하고, 기존 `saveForDisplay`/reader 갱신으로 화면 데이터를 반환합니다. `manualFormulaResultAvailable`은 JS setter와 두 native ABI export가 모두 있을 때만 true이며 구형 JS/WASM에서 편집 가능으로 표시하지 않습니다. HWP5는 이 신규 명령의 미지원 오류를 반환하며 HWP5 지원 완료로 해석하지 않습니다. 거래 실패 전에 applied를 설정하지 않고, 성공 후 화면 갱신 실패는 기존 applied 오류 경계를 따릅니다.
+
+de4ead 후보의 실제 Worker 공개 테스트는 정의 변경→수동 표시→저장·전체 XML/ZIP 독립 oracle 양 모드/변조 반례·undo/잘못된 XML 문자 거부/redo를 검사합니다. 두 export를 각각 제거하는 반례는 capability false·ABIUnavailable·저장 바이트 불변을 확인했습니다. 별도로 기본 제품 WASM에서도 누락 ABI 반례2/2·exit0·skip0(3542.683792ms)이 통과했습니다. 이 Worker 경계는 선택적 연결이며 native runtime과 공개 회귀 파일의 최종 커밋/기본 WASM 승격 및 Canvas 입력 UI/브라우저 E2E는 아직 남습니다. 해당 UI를 사용 가능하다고 주장하지 않습니다.
+
 정의 변경→수동 표시 후속: 앞선3d0c 후보에서 AVG 정의를 저장 전 변경한 뒤 수동 표시를 지정하면 `ConflictingFormulaResultOverride`로 거부되는 실제 chart 공개 반례를 재현했습니다(1실패·exit1). `Prepared`가 계산 캐시와 표시 문자열을 같은 버퍼로 간주하던 제약을 해소했습니다. definition 결과 캐시는 별도 소유 버퍼로 유지하고 Formula/Command/LastResult를 공통 정의 계획으로 직렬화하면서 결과 본문은 수동 문자열로 저장합니다. 기존 strict attach API는 계산 표시 일치 검사를 유지하며, 명시적인 별도 attach API만 두 값의 차이를 허용합니다. 캐시/표시 소유 버퍼는 실패/해제 경로에서 함께 정리합니다. 정의 계산은 해당 root의 수동 표시만 우회하고 다른 수동 결과의 미지원 의존성 거부와 순환 검사는 유지합니다.
 
 ReleaseSafe 빌드는6/6·exit0(46초), 후보 `formula-definition-manual/bin/hwpjs.wasm` SHA256 `de4eadb840f590ecec60fad213c1394de369451eff4fc4957564db205f5767bc`입니다. 공개12/12·exit0·skip0(6052.653625ms)에서 새 반례가 통과했습니다. 독립 전체 XML/ZIP oracle의 양 Python 모드/변조 반례로 정의 변경만 저장한 파일과 비교해 결과 본문 외 차이가 없음을 확인했고 undo/redo 저장 바이트 및 재열기 AVG 정의/수동 표시를 확인했습니다. native 집중23/23·exit0와 새 pending-definition 전체 할당 실패 검사2/2·exit0(root1+실제1선언)은 서로 다른 선언 snapshot입니다. 이전 native의 충돌 거부 기대는 실제 새 저장/재열기의 정의·캐시2·수동 본문 보존 검사로 대체했습니다. fmt/diff check도 통과했습니다. 앞서 시작한 전체 native 실행은 이 변경 전 snapshot이므로 최신 변경의 최종 gate로 소급하지 않습니다. runtime과 공개 회귀 파일은 아직 미커밋이며 구조/rebase·수동 결과 의존성·Worker/UI 및 최신 전체 gate가 남습니다.
