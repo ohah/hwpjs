@@ -1,5 +1,7 @@
 # 수식 결과 직접 수정 — 내부 저장 기반
 
+최신 후보의 실제 브라우저 확인: agent-browser 전용 세션으로 loopback10012의 픽스처 선택에서 `chart.hwpx`를 열고 Canvas 편집 시작→속성 표시값 `브라우저😀<&` 적용→다운로드→undo67.5→redo수동값을 실행했습니다. 브라우저가 실제 받은 WASM SHA256은3d77c874와 일치합니다. 다운로드 클릭이 생성한 Blob의 바이트를 독립 저장 oracle에 전달해 일반 Python·`-O` 모두 전체 XML/비대상 ZIP 보존 및5변조 거부를 통과했습니다. 같은 Blob을 File 입력으로 다시 열어175문단·수식 선택/표시값의 수동 문자열 복원을 확인했고 page errors 출력은 비어 있었습니다. 전용 브라우저 세션은 close 성공으로 종료했습니다. 이는 한 실제 fixture/수동 결과 흐름의 브라우저 증거이며 전체 문단 입력·새 표 생성·조판 동일성·외부 데모 승격/전체 native gate가 아닙니다.
+
 2026-10-11 현재 후보 `full-gate-current/bin/hwpjs.wasm` SHA256 `3d77c87433cee8ee8256722756c23c06056b693a9ebb82af2388d6dc054e7252`로 공개 수동 결과 API/Worker/text-SUM 회귀19/19·exit0·skip0(17018.642667ms)을 확인했습니다. chart13결과, 정의/결과 조합, 재열기/입력 재계산/비대상 표시 보존, 두 ABI 누락·한도 거부 및 실제 긴 SUM 설명/잘못된 숫자 거부를 포함합니다. Worker 저장본을 다시 load해 수정 정의와 수동 표시가 함께 유지되고 무편집 save가 동일한지 보강한 후 Worker3/3·exit0·skip0(8865.033209ms)도 확인했습니다. 앞선19검사의 Worker에는 이 후속 재열기 검사를 소급하지 않습니다. 기본 데모·최신 전체 native·전체 참조 문단/구조/조판 검증은 아니며 runtime/공개 회귀는 전체 native gate 전 미커밋입니다.
 
 최신 후보의 추적 픽스쳐 입력 경로 감사: de4ead WASM으로46개 HWPX의 일반 prefix/history 감사를 끝냈습니다(exit0). 암호1개는 명시적으로 거부하고, 열린 문서1444문단 중 일반1231입력/undo 원문 복원·거부 뒤 redo189를 확인했습니다. 일반 거부는 UnsupportedParagraphControl146·InvalidFormulaNumber48·ProtectedFieldRange19입니다. 별도 특수 prefix 감사도 exit0으로 종료됐고165시도 중152입력/전체 XML 독립 검증(그중 필드6)이 통과했습니다. 남은13거부는 실제 chart FORMULA 결과 범위입니다. 두 감사 모두 입력 버퍼 및 디스크 파일 동일성 검사를 유지합니다.
