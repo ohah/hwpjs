@@ -42,7 +42,7 @@ def structure_inventory(path):
                 if key in cells:
                     raise ValueError("DuplicateOracleCell")
                 cells[key] = cell
-        protected_cells, result_cells = set(), set()
+        protected_cells, result_cells, strict_cells = set(), set(), set()
         for current, cell in cells.items():
             for field in cell.iter(NS + "fieldBegin"):
                 if field.get("type") != "FORMULA":
@@ -61,10 +61,12 @@ def structure_inventory(path):
                         if (column, row) not in cells:
                             raise ValueError("MissingOracleCell")
                         protected_cells.add((column, row))
+                        if match[1] == 'AVG':
+                            strict_cells.add((column, row))
         for address, cell in cells.items():
             paragraphs = cell.find(NS + "subList").findall(NS + "p")
             for paragraph in paragraphs:
-                target = dict(paragraph=ordinals[id(paragraph)], text="".join(node.text or "" for node in paragraph.iter(NS + "t")), result=address in result_cells)
+                target = dict(paragraph=ordinals[id(paragraph)], text="".join(node.text or "" for node in paragraph.iter(NS + "t")), result=address in result_cells, sumOnly=address in protected_cells and address not in result_cells and address not in strict_cells)
                 (protected if address in protected_cells else allowed).append(target)
     return dict(allowed=allowed, protected=protected)
 
