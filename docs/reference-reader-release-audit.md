@@ -1,5 +1,13 @@
 # 독립 수식 후보의 참조 읽기 감사
 
+## 최신 수동 결과 후보 재검증
+
+2026-10-11 de4ead 후보(`formula-definition-manual/bin/hwpjs.wasm`, SHA256 `de4eadb840f590ecec60fad213c1394de369451eff4fc4957564db205f5767bc`)로 같은 참조 reader 감사를 새로 실행해 exit0 종료를 확인했습니다. 총975경로·HWP3 제외26·요청 범위949 중 HWP5509/HWPX435, 합계944파일·690523문단의 텍스트 읽기와 입력 버퍼 불변이 확인됐습니다. 아래 fe7 실행의 수치를 재사용한 것이 아니라 최신 산출물의 별도 전수 결과이며 두 실행을 합산하지 않습니다.
+
+거부는 EncryptedDocument1·UnsupportedEncryption1·SectionCountMismatch3입니다. 아래 명시된5파일을 최신 후보로 다시 읽어 파일별 같은 오류임도 확인했습니다. 최신 후보의 비밀번호 reader/editor 회귀4/4·exit0·skip0(10814.014875ms)은 명시적인 fixture 비밀번호로 암호2문서의 메모리 복호화·제한적 입력·독립 저장 비교·undo/redo·재열기·원본 보존을 확인합니다. 일반 암호 거부를 통과로 바꾸거나 재암호화/UI 지원을 주장하지 않습니다. 일반 읽기944와 별도 복호화2를 동일한 호출 경로 성공으로 합산하지 않습니다.
+
+최신 전체 native gate는 여전히 실행 중입니다. 읽기944파일의 성공은 모든 필드 의미·편집·저장·원본 조판 완료가 아니며, 추적46파일의 별도 입력 경로 감사는 [수동 결과 편집 계약](hwpx-formula-result-override.md)의 산출물/검증 경계를 따릅니다.
+
 ## 산출물과 범위
 
 2026-10-11 [수식 셀 계약](hwpx-formula-cell-scalars.md)의 독립 후보fe7de345를 기존 [참조 파서 조사기](../tools/reference-parser-audit.mjs)에 연결했습니다. 결과 원문은 무시되는 `zig-out/verification/reference-reader-fe7.jsonl`에 남깁니다. 파일 경로·입력 SHA256·실제 서명 기반 형식·단계별 상태와 최종 집계를 함께 읽습니다. 조사기 exit0은 모든 문서 지원 성공을 의미하지 않습니다.
