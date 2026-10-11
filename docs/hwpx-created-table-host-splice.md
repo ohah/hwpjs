@@ -1,5 +1,13 @@
 # 생성 표와 일반 본문 splice 거래
 
+## Worker·Canvas 일반 본문 입력 연결
+
+표시 projection3항목과 Worker/Canvas5항목의 실행은8/8·exit0(3412.006917ms), diff 검사 exit0입니다.
+
+생성 표 표시 projection은 전체 native 구역의 pending registry를 조사합니다. 표시 창 밖 표도 전역 host 제한에 포함하고, visible 구역별 지원 모드를 한 번 조회합니다. 기존 plainEditable과 native 모드가 모두 true일 때만 입력을 유지하며 anchored·필드 라벨·anchored split·merge 이웃은 비활성화합니다. 구형 조회 ABI는 false로 보호됩니다. 문단의 기존 읽기 전용/잘림을 능력 조회만으로 허용하지 않습니다. 아래 UI 미연결 문장들은 이전 구현 기록이며 현재는 이 연결로 대체합니다.
+
+후보 `81bed2bdb7d3c0a78dcdef2be0dda3b05b17d87c5492e6b8725eb1abaccff5ca`의 실제 Worker/WASM·Canvas 대역에서 source caret 입력 앞😀<&, anchor2→7/identity 유지, Python 일반/-O 전체 section XML·비대상 ZIP 대조, undo 원문 바이트·표 crossing/XML NUL 거부 뒤 redo 정확 저장을 검사했습니다. 이는 실제 브라우저 pixels/IME·원본 조판 검사가 아닙니다. 기본 데모 WASM은 아직 구형이므로 해당 제품에서 host 제한은 유지됩니다.
+
 ## 생성 표 host 지원 모드 조회
 
 `created_table_host_splice.supportsMode`가 거래 실행과 선택적 `hwpx_edit_created_table_host_mode(section, anchored)`의 모드 판정을 함께 소유합니다. ABI는0/1/오류2이며 anchored는0/1만 받습니다. JS `createdTableHostMode(section, anchored = false)`는 Boolean만 받고 구형 ABI가 없으면 false를 반환합니다. 이 조회는 pending 표 거래의 모드 제한만 나타내며 문단/범위 편집 권한이나 split/merge 지원이 아닙니다. UI gate는 아직 연결하지 않았습니다.

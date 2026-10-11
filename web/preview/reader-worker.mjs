@@ -220,7 +220,7 @@ function hwpxDisplay(projected) {
   if (content.window && content.paragraphs.some(row => row.clipped)) throw new Error("ParagraphWindowTextBudgetExceeded");
   const creationAvailable = ["hwpx_edit_created_tables", "hwpx_edit_insert_table", "hwpx_edit_set_created_cell_text", "hwpx_edit_save_for_display"].every(name => WebAssembly.Module.exports(module).some(entry => entry.name === name && entry.kind === "function"));
   displayed.tableCreationResources = creationAvailable && WebAssembly.Module.exports(module).some(entry => entry.name === "hwpx_edit_table_creation_resources" && entry.kind === "function") ? editor.tableCreationResources() : null;
-  return attachCreatedTables(editor, displayed, creationAvailable, HWPX_DISPLAY_BOUNDS.maxUnits);
+  return attachCreatedTables(editor, displayed, creationAvailable, HWPX_DISPLAY_BOUNDS.maxUnits, preview.sectionCount);
 }
 self.onmessage = async event => {
   let reader;
