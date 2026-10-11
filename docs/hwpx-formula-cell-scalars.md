@@ -15,6 +15,14 @@
 
 ## 검증 경계
 
+### 무편집 저장과 내부 재계산
+
+[단계별 실제 파일 조사기](../tools/hwpx-formula-refusal-probe.mjs)는 후보 hash와 각 파일의 open/문단 조회/수식 조회/save 단계를 구분합니다. 현재37e932 후보는5파일 모두 조회되지만 copay의 무편집 save는 바이트가 달랐습니다. 독립 전체 XML 차이는 첫 필드1295981349의 dirty0→1과 소유 표시 문자열100→184.9 두 곳뿐이며 다른 ZIP payload는 같았습니다. 원본 Command/LastResult와 독립 합산은184.9인데 원본 본문만100이므로, 파서의 값 잘림이 아니라 무편집 저장에서의 재계산입니다. 조사기의 절대 후보 경로/누락/중복/잘못된 인수 거부 테스트1/1·exit0을 확인했습니다.
+
+첫 원문 보존 후보 `formula-source-preservation/bin/hwpjs.wasm`(verification 아래), SHA256 `fea8740006868508cf405cfa8d18d253fc4df55d7613aa91962281ed104d788f`는 실제5파일 조회/무편집 저장 원문 일치와 native4/4를 통과했지만 공개19개 중16통과/3실패·exit1이었습니다. 서식/구조 내부의 재구성 XML에서 재계산까지 생략해 StructuralFormulaOutputMismatch가 발생했습니다. 이 후보를 제품에 승격하지 않았습니다.
+
+후속 작업 트리 구현은 `writeWithDefinitionsMode`에 원문 보존 허용을 명시합니다. 최종 flat Session.save만 이를 허용하고 기존 내부 writer는 기본적으로 재계산합니다. 정의 변경·dirty·실제 text site 변경이 있으면 원문 일치 빠른 경로를 사용하지 않습니다. native4/4·exit0으로 untouched 원문 보존과 내부 derive 모드 재계산·실제 숫자 편집·전체 할당 실패를 함께 확인했습니다. 이 후속 후보의 공개 회귀/실제5파일 재검사는 아직 완료되지 않았습니다. 기존 전체 ReleaseSafe 실행은 이 저장 모드 변경 전 source snapshot이며 최종 수정의 전체 gate로 계수하지 않습니다.
+
 현재 소스의 ReleaseSafe 집중 native11/11·exit0, 공통 선택 모듈 직접8/8·exit0, 관련 Zig fmt check·Node 테스트 문법 검사·diff check exit0을 확인했습니다. 첫 문단 숫자/설명 문단 변경과 숫자→문구 거부, 전체 할당 실패, 제어 요소·소유자·site identity·길이 제한 및 독립 점유 mask 반례를 포함합니다.
 
 ReleaseSafe 빌드6/6 steps·exit0의 작업 트리 후보는 `zig-out/verification/formula-candidate/bin/hwpjs.wasm`, SHA256 `37e9324519993edaab2b18b14bc381fad1092b964e8123cd93cf481a306be67c`입니다. 기본 `zig-out/bin/hwpjs.wasm`의 SHA256 `6a25125e797c7f2501476ba5ddb3a1e45700be6707bf6b6a14daec0849f31faa`와 구분합니다. 후보는 다른 기존 로컬 변경도 포함한 작업 트리 빌드이지 게시된 깨끗한 checkout 산출물이 아닙니다.
