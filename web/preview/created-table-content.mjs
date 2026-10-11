@@ -22,17 +22,17 @@ export function attachCreatedTables(editor, content, available, maxUnits, sectio
   const modes = new Map();
   if (pending.size) for (const section of new Set(content.paragraphs.map(p => p.section))) {
     const query = typeof editor.createdTableHostMode === "function";
-    modes.set(section, { plain: query && editor.createdTableHostMode(section), anchored: query && editor.createdTableHostMode(section, true) });
+    modes.set(section, { plain: query && editor.createdTableHostMode(section), anchored: query && editor.createdTableHostMode(section, true), fields: typeof editor.createdTableFieldLabelMode === "function" && editor.createdTableFieldLabelMode(section) });
   }
   for (const paragraph of content.paragraphs) if (pending.size) {
     const mode = modes.get(paragraph.section);
     paragraph.plainEditable = !!paragraph.plainEditable && mode.plain === true;
     paragraph.anchorEditable = !!paragraph.anchorEditable && mode.anchored === true;
-    paragraph.editable = paragraph.plainEditable || paragraph.anchorEditable;
+    paragraph.fieldLabels = mode.fields === true ? paragraph.fieldLabels ?? [] : [];
+    paragraph.editable = paragraph.plainEditable || paragraph.anchorEditable || paragraph.fieldLabels.length > 0;
     paragraph.anchoredSplitAvailable = false;
     paragraph.nextMergeParagraph = null;
     paragraph.previousMergeParagraph = null;
-    paragraph.fieldLabels = [];
     if (!paragraph.editable) paragraph.readOnlyReason = "UnsupportedCreatedTableHostEdit";
   }
   content.readOnly = !content.paragraphs.some(paragraph => paragraph.editable);

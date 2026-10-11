@@ -1211,6 +1211,17 @@ export fn hwpx_edit_created_table_host_mode(section: u32, anchored: u32) u32 {
     });
 }
 
+export fn hwpx_edit_created_table_field_label_mode(section: u32) u32 {
+    const session = if (active) |*value| value else {
+        _ = fail(error.EditorNotOpen);
+        return 2;
+    };
+    return @intFromBool(@import("../hwpx/created_table_host_splice.zig").supportsFieldLabelMode(session, section) catch |err| {
+        _ = fail(err);
+        return 2;
+    });
+}
+
 export fn hwpx_edit_can_edit(section: u32, paragraph: u32) u32 {
     const session = if (active) |*value| value else {
         _ = fail(error.EditorNotOpen);

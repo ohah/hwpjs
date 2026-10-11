@@ -153,6 +153,13 @@ export async function createHwpxEditor(source) {
       if (result > 1) throw memory.error();
       return result === 1;
     },
+    createdTableFieldLabelMode(section) {
+      ready(); uint(section);
+      if (typeof wasm.hwpx_edit_created_table_field_label_mode !== "function") return false;
+      const result = wasm.hwpx_edit_created_table_field_label_mode(section);
+      if (result > 1) throw memory.error();
+      return result === 1;
+    },
     canEdit(section, paragraph) {
       ready(); uint(section); uint(paragraph);
       const result = wasm.hwpx_edit_can_edit(section, paragraph);

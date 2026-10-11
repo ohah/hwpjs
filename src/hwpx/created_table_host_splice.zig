@@ -15,6 +15,15 @@ pub fn supportsMode(session: *const editor.Session, section: usize, anchored: bo
 }
 
 pub fn apply(session: *editor.Session, section: usize, paragraph: usize, start: u32, deleted: u32, inserted: []const u8, anchored: bool, comptime operation: anytype) anyerror!bool {
+    return applyWithArguments(session, section, paragraph, start, deleted, inserted, anchored, operation, .{});
+}
+
+pub fn supportsFieldLabelMode(session: *const editor.Session, section: usize) !bool {
+    if (section >= session.sections.len) return error.InvalidSectionIndex;
+    return session.sections[section].structure_values == null and try supportsMode(session, section, false);
+}
+
+pub fn applyWithArguments(session: *editor.Session, section: usize, paragraph: usize, start: u32, deleted: u32, inserted: []const u8, anchored: bool, comptime operation: anytype, arguments: anytype) anyerror!bool {
     const a = session.allocator;
     if (!try supportsMode(session, section, anchored)) return error.UnsupportedCreatedTableHostEdit;
     const host = try @import("created_table_anchor.zig").capture(a, session, section, paragraph, start);
@@ -28,7 +37,7 @@ pub fn apply(session: *editor.Session, section: usize, paragraph: usize, start: 
     var before = try @import("editor_checkpoint.zig").capture(session, session.options.max_output_bytes);
     defer before.deinit();
     std.mem.swap(@import("created_table_values.zig").Values, &session.sections[section].created_tables, &candidate);
-    const changed = operation(session, section, paragraph, start, deleted, inserted, anchored) catch |err| {
+    const changed = @call(.auto, operation, .{ session, section, paragraph, start, deleted, inserted, anchored } ++ arguments) catch |err| {
         try before.rollback(session);
         return err;
     };

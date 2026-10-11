@@ -1,4 +1,68 @@
 const std = @import("std");
+test "created table field label allocation failure sweep restores complete saved state" {
+    const a = std.testing.allocator;
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/issue144-fields-crossing-lineseg-boundary.hwpx", a, .limited(4000000));
+    defer a.free(bytes);
+    try @import("../testing/allocation_failures.zig").check(struct {
+        fn run(allocator: std.mem.Allocator, input: []const u8) !void {
+            var session = try @import("editor_session.zig").open(allocator, input, .{});
+            defer session.deinit();
+            var table = try @import("created_table_prepare.zig").prepare(&session, 0, 3, 5, 1, 1, 100, 17, .{ .paragraph = 0, .character = 0, .style = 0, .border_fill = 1 });
+            defer table.deinit(allocator);
+            _ = try @import("created_table_session.zig").stage(&session, 0, 3, 5, &table);
+            const labels = try session.fieldLabels(0, 3);
+            defer allocator.free(labels);
+            const before = try session.save();
+            defer allocator.free(before);
+            _ = session.spliceFieldLabel(0, 3, labels[0].begin_element, 0, 0, "😀") catch |err| {
+                var view = session;
+                view.allocator = std.testing.allocator;
+                const after = try view.save();
+                defer std.testing.allocator.free(after);
+                try std.testing.expectEqualSlices(u8, before, after);
+                try std.testing.expectEqual(@as(u32, 5), session.sections[0].created_tables.entries.items[0].anchor.unit);
+                return err;
+            };
+            try std.testing.expectEqual(@as(u32, 7), session.sections[0].created_tables.entries.items[0].anchor.unit);
+            try std.testing.expectEqualSlices(u8, input, session.source);
+        }
+    }.run, .{bytes});
+}
+
+test "created table after crossing field label shifts atomically with label history" {
+    const a = std.testing.allocator;
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/issue144-fields-crossing-lineseg-boundary.hwpx", a, .limited(4000000));
+    defer a.free(bytes);
+    var session = try @import("editor_session.zig").open(a, bytes, .{});
+    defer session.deinit();
+    var table = try @import("created_table_prepare.zig").prepare(&session, 0, 3, 5, 1, 1, 100, 17, .{ .paragraph = 0, .character = 0, .style = 0, .border_fill = 1 });
+    defer table.deinit(a);
+    _ = try @import("created_table_session.zig").stage(&session, 0, 3, 5, &table);
+    const labels = try session.fieldLabels(0, 3);
+    defer a.free(labels);
+    const before = try session.save();
+    defer a.free(before);
+    var history = try @import("editor_history.zig").History.init(&session, 8, 4000000);
+    defer history.deinit();
+    const command: @import("editor_history.zig").Command = .{ .kind = .field, .section = 0, .paragraph = 3, .begin_element = labels[0].begin_element, .start = 0, .deleted = 0, .inserted = "😀" };
+    try std.testing.expect(try history.apply(&session, command));
+    try std.testing.expectEqual(@as(u32, 7), session.sections[0].created_tables.entries.items[0].anchor.unit);
+    const after = try session.save();
+    defer a.free(after);
+    try std.testing.expect(try history.undo(&session));
+    var invalid = command;
+    invalid.inserted = &.{0};
+    try std.testing.expectError(error.InvalidXmlCharacter, history.apply(&session, invalid));
+    const unchanged = try session.save();
+    defer a.free(unchanged);
+    try std.testing.expectEqualSlices(u8, before, unchanged);
+    try std.testing.expectEqual(@as(u32, 5), session.sections[0].created_tables.entries.items[0].anchor.unit);
+    try std.testing.expect(try history.redo(&session));
+    const redone = try session.save();
+    defer a.free(redone);
+    try std.testing.expectEqualSlices(u8, after, redone);
+}
+
 test "created table source field exterior insertion and prefix preserve linked labels" {
     const a = std.testing.allocator;
     const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/issue144-fields-crossing-lineseg-boundary.hwpx", a, .limited(4000000));
@@ -70,6 +134,7 @@ test "created table anchored mode retains structural paragraph protection" {
     defer session.deinit();
     _ = try session.splitParagraph(0, 2, 0, 0);
     try std.testing.expect(!try @import("created_table_host_splice.zig").supportsMode(&session, 0, true));
+    try std.testing.expect(!try @import("created_table_host_splice.zig").supportsFieldLabelMode(&session, 0));
     try std.testing.expect(try @import("created_table_host_splice.zig").supportsMode(&session, 0, false));
 }
 

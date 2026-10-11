@@ -282,8 +282,16 @@ pub const Session = struct {
     }
 
     pub fn spliceFieldLabel(self: *Session, section_index: usize, paragraph: usize, begin_element: usize, start: u32, deleted: u32, inserted: []const u8) !bool {
-        try self.requireMutableHostPositions();
+        const host = @import("created_table_host_splice.zig");
+        if (host.hasPending(self)) {
+            if (!try host.supportsFieldLabelMode(self, section_index)) return error.UnsupportedCreatedTableHostEdit;
+            return host.applyWithArguments(self, section_index, paragraph, start, deleted, inserted, false, spliceFieldLabelUntracked, .{begin_element});
+        }
         return @import("field_label_session.zig").splice(self, section_index, paragraph, begin_element, start, deleted, inserted);
+    }
+    fn spliceFieldLabelUntracked(self: *Session, section: usize, paragraph: usize, start: u32, deleted: u32, inserted: []const u8, anchored: bool, begin: usize) anyerror!bool {
+        if (anchored) return error.InvalidEditCommand;
+        return @import("field_label_session.zig").splice(self, section, paragraph, begin, start, deleted, inserted);
     }
     pub fn fieldLabels(self: *const Session, section_index: usize, paragraph: usize) ![]@import("field_label_targets.zig").Target {
         return @import("field_label_targets.zig").list(self, section_index, paragraph, 4096);

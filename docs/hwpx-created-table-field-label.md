@@ -1,0 +1,21 @@
+# 생성 표와 원본 필드 라벨 편집
+
+## 소유권·거래
+
+원본 source 필드 라벨 명령은 기존 field_label_session의 종류/소유권/범위 검증을 유지합니다. 생성 표가 있는 경우 created_table_host_splice의 공통 거래를 재사용합니다. 추가 begin-element 인자는 applyWithArguments로 전달하며 별도의 표 위치 이동·checkpoint 구현을 만들지 않습니다. 같은 문단의 생성 표 anchor를 UTF-16 변경으로 재배치하고 라벨 text/dirty·registry·저장본 수식 검증까지 성공해야 커밋합니다. 실패와 no-op은 전체 checkpoint를 복원합니다.
+
+supportsFieldLabelMode는 현재 원본 flat section만 허용합니다. 구조 편집된 field_positions/protected/joined section은 아직 거부하며, source 필드 라벨 종류/범위 권한은 기존 getter/setter가 계속 판정합니다. mode 조회만으로 모든 필드 종류를 편집 가능으로 간주하지 않습니다.
+
+## API·표시
+
+선택적 hwpx_edit_created_table_field_label_mode(section)는0/1/오류2입니다. JS createdTableFieldLabelMode(section)는 open/uint 검증을 수행하고 구형 ABI가 없으면 false를 반환합니다. Worker의 생성 표 projection은 mode가 true일 때만 기존 원본 fieldLabels를 유지하며 구조 split/merge 제한은 계속 유지합니다. generated cell identity와 source paragraph/begin-element 주소는 합치지 않습니다. native 값이 저장 SSOT이고 fieldLabels는 파생 권한 descriptor입니다.
+
+## 현재 검증
+
+후보 SHA256 de1f7fe2a902546b6c09c2b296d98f99f05917861346c3e2d753542c3fb70e78의 ReleaseSafe build/fmt/diff exit0, native 라벨 거래/기존 plain 회귀3/3·exit0입니다. 실제 issue144의 교차 필드 뒤에 표를 넣은 뒤 emoji 라벨 입력으로 anchor5→7, XML NUL 거부/저장 전체 바이트 복원과 undo/redo를 검사했습니다.
+
+공개 라벨/field exterior/plain3/3·exit0(434.47725ms), Worker/Canvas/projection13/13·exit0(11581.28ms)을 확인했습니다. 실제 두 필드 파일의7라벨 fragment도 각각 생성 표와 함께 Python 일반/-O로 전체 XML·dirty·비대상 ZIP/메타데이터/CRC, undo/redo·XML 오류 후 redo·재열기를 대조했습니다. native 주소와 저장 후 늘어난 문단 주소는 독립 inventory의 field ID/fragment 순서로 구분합니다.
+
+전체 open/prepare/stage/라벨 명령 할당 실패를 순회한 추가 검사는2/2(root 포함)·exit0으로 완료했습니다. source label 실패 뒤 비실패 allocator의 readonly borrowed view로 저장 전체 바이트·anchor5 복원을 검사하며 borrowed owner는 해제하지 않습니다. 성공 시 anchor7/원본 불변을 검사합니다. 공통 helper의 모든 실패 지점/누수 검사를 생략하지 않았습니다.
+
+후속 공개 검사2/2·exit0(1486.30475ms)은 실제7fragment와 no-op/잘못된 field element/필드 범위 초과/표 crossing/XML NUL 거부 뒤 정확한 바이트·anchor5와 redo를 함께 확인했습니다. 독립 검사기의 self-test도 Python 일반/-O 모두 exit0으로 UTF16 삽입/치환/삭제와 dirty/서식/주변 XML/ZIP 변조 거부를 재확인했습니다. 구조 편집된 문단의 mode 거부2/2·exit0도 확인했습니다. 실제 브라우저·구조 필드·표와 모든 필드 명령·원본 조판은 검증/구현이 남습니다. 기본 데모 WASM은 아직 이전 검증본입니다.
