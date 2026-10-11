@@ -15,3 +15,13 @@ zig test src/testing/allocation_failures_negative.zig -O ReleaseSafe --test-filt
 ```
 
 기본 도우미 회귀는 할당 두 개에 대해 정상 실행 한 번과 두 실패 지점 모두를 실행했는지 검사하고, OOM을 삼킨 콜백도 거부합니다. 실행 중인 이전 테스트 바이너리에 이 변경을 소급하지 않습니다.
+
+## 생성 셀 텍스트의 전체 gate 지연 조사
+
+2026-10-11 소유 ReleaseSafe 전체 테스트를 샘플링해 `created_cell_text_tests`의 실패 주입 callback→Session.save→DebugAllocator(스택10프레임)→captureStackTrace/DWARF 해석 경로를 확인했습니다. 당시 물리 footprint101.4GB였고 실행은 아직 종료 전이었습니다. 이 샘플은 제품 parser 누수의 증명이 아니며 전체 검증의 최대 RSS/종료 측정도 아닙니다. sample 도구의 DWARF 처리 경고도 제품 오류로 계수하지 않습니다.
+
+해당 한 실패 주입 호출을 이 공통 도우미로 연결했습니다. callback과 모든 실패 지점/누수 검사·저장/이력 기대값은 그대로 유지했습니다. 집중3/3·exit0(root import 포함)를 두 번 확인했고 후속 `/usr/bin/time -lp` 실행은4.09초·최대 RSS73121792바이트·peak footprint15991288바이트였습니다. 전체 검증 샘플과 집중 실행의 범위가 달라 전체 메모리가101GB에서70MiB로 감소했다고 주장하지 않습니다. 의도적 누수 부정 대조는 별도1실패·TestAllocatorLeak·exit1로 끝나 누수 검사가 여전히 실패함을 확인했습니다.
+
+최신 전체 native gate를 시작하기 전에 cwd/명령/부모·자식 PID를 확인한 이 목표의 오래된 소스 검증 프로세스만 종료했습니다. 취소를 통과/제품 실패로 계수하지 않고 다른 저장소나 사용자 프로세스는 종료하지 않았습니다. 최신 `zig build test -Doptimize=ReleaseSafe -j1 --summary all`은 실행 중이며 아직 최종 결과가 없습니다. 테스트 파일 변경은 그 최종 gate 전 미커밋입니다.
+
+같은 소스의 ReleaseSafe build6/6·exit0(42초), 별도 `full-gate-current/bin/hwpjs.wasm` SHA256 `3d77c87433cee8ee8256722756c23c06056b693a9ebb82af2388d6dc054e7252`를 확인했습니다. 기존 문단 지역 순회 후보3f096f와9개 non-custom section의 타입/길이/바이트 SHA256이 모두 같습니다. 전체 파일 해시 차이를 실행 코드 변경으로 단정하지 않으며, 이 비교로 전체 native/public gate를 대체하지 않습니다. 기본 WASM/데모는 교체하지 않았습니다.
