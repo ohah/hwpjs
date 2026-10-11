@@ -1,5 +1,17 @@
 # 생성 표와 일반 본문 splice 거래
 
+## 원본 개체 포함 본문 입력 확장
+
+후속 staging 전체 할당 실패·구조 모드 회귀7/7·exit0으로 완료했습니다. 구조 모드만 분리한 집중 검사도2/2·exit0입니다. 기존 선 ID를 변조하는 추가 독립 XML 반례까지 포함한 공개 drawing 검사1/1·exit0(1709.082458ms)이며 Python 일반/-O 모두 정확한 Outside table XML changed 거부를 확인했습니다. 아래 실행 중 문장은 최초 기록이며 이 후속 완료로 대체합니다.
+
+수식 다음 경계 조사: chart.hwpx의 일반 문단1과 숫자 입력 문단20은 각각 표 생성/save가 성공하지만 현 모드 조회는 false입니다. 결과 문단24의 표 생성은 UnsupportedParagraphControl로 거부됩니다. 이는 숫자 변경/독립 재계산·표 생성 이후 수식 의미 보존 완료의 근거가 아니며 해당 구역의 입력 제한은 아직 유지합니다.
+
+현재 지원 모드 판정은 원본 문단의 anchored 입력도 허용합니다. 구조 편집된 section(structure_values가 있는 경우)의 anchored 입력과 수식 구역은 계속 거부합니다. 이는 source anchor 위치를 재사용하는 확장이며 joined/protected 구조의 위치 재배치 지원을 의미하지 않습니다. Worker는 기존 plain/anchored 적격성과 각각의 native 조회가 모두 true인 경우만 입력을 유지하고 필드 라벨·구조 편집 제한은 유지합니다. 아래 과거 anchored 일괄 거부 기록은 당시 계약입니다.
+
+후보 `3224c9dc6195a24ae819e9cb40cee6d32a80f349522b0602f22803e6df9d801c`의 ReleaseSafe build와 native 집중4/4·exit0, 공개 drawing/plain 검사2/2·exit0(1174.176875ms), Worker/Canvas projection9/9·exit0(3623.647792ms)을 확인했습니다. 실제 두 선을 포함한 host에서 prefix 입력·생성 표 anchor 이동·개체 삭제 거부/저장 불변·redo, Python 일반/-O의 전체 비대상 XML/ZIP 보존과 잘못된 예상 prefix 거부를 검사했습니다. Canvas는 테스트 대역이며 이 후보의 실제 브라우저는 미검증입니다.
+
+확장 감사는44개 중42 passed·2 no_eligible_host·exit0입니다. 이전 plain 감사의 제한9문서도 원본 anchored 경로의 표 생성·prefix·anchor0→5·이력·재열기를 통과했습니다. 남은 chart 수식 구역과 issue144 필드 컨트롤은 지원으로 계수하지 않습니다. 문서당 한 host만 검사하며 나머지 문단/명령·전수 독립 XML·조판은 미검증입니다. 별도 staging 전체 할당 실패/구조 모드 회귀는 아직 실행 중이며 완료 결과로 계수하지 않았습니다. 기본 데모는 교체하지 않았습니다.
+
 ## 기존 개체 사이 표 삽입 좌표 수정
 
 실제 shapeline.hwpx는 anchorText가 기존 개체 표식2개를 반환하지만 이전 깨끗한 후보는 insertTable(unit0)만 성공하고 unit1은 InvalidTextPosition으로 거부했습니다. 생성 표 capture/resolve의 source paragraph 경계와 저장 site 선택이 plain 위치를 사용해 기존 개체 길이를 누락한 원인입니다. 두 곳은 기존 anchor_text_positions 계산기를 재사용하도록 수정했습니다. joined/protected 구조·수식·anchored 입력 지원은 이 변경으로 확정하지 않습니다.

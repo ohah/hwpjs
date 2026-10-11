@@ -4,7 +4,7 @@ const editor = @import("editor_session.zig");
 // Mode-level eligibility only; paragraph/range checks still belong to splice.
 pub fn supportsMode(session: *const editor.Session, section: usize, anchored: bool) !bool {
     if (section >= session.sections.len) return error.InvalidSectionIndex;
-    if (anchored) return false;
+    if (anchored and session.sections[section].structure_values != null) return false;
     return !try @import("formula_section_save.zig").hasFormula(session.allocator, &session.sections[section].tree);
 }
 

@@ -1,4 +1,42 @@
 const std = @import("std");
+test "created table anchored mode retains structural paragraph protection" {
+    const a = std.testing.allocator;
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwpx", a, .limited(4000000));
+    defer a.free(bytes);
+    var session = try @import("editor_session.zig").open(a, bytes, .{});
+    defer session.deinit();
+    _ = try session.splitParagraph(0, 2, 0, 0);
+    try std.testing.expect(!try @import("created_table_host_splice.zig").supportsMode(&session, 0, true));
+    try std.testing.expect(try @import("created_table_host_splice.zig").supportsMode(&session, 0, false));
+}
+
+test "created table anchored source input shifts table but refuses original object deletion" {
+    const a = std.testing.allocator;
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/shapeline.hwpx", a, .limited(4000000));
+    defer a.free(bytes);
+    var session = try @import("editor_session.zig").open(a, bytes, .{});
+    defer session.deinit();
+    var table = try @import("created_table_prepare.zig").prepare(&session, 0, 1, 1, 1, 1, 100, 17, .{ .paragraph = 0, .character = 0, .style = 0, .border_fill = 1 });
+    defer table.deinit(a);
+    _ = try @import("created_table_session.zig").stage(&session, 0, 1, 1, &table);
+    const before = try session.save();
+    defer a.free(before);
+    try std.testing.expectError(error.ProtectedInlineControl, session.spliceAnchored(0, 1, 0, 1, ""));
+    const refused = try session.save();
+    defer a.free(refused);
+    try std.testing.expectEqualSlices(u8, before, refused);
+    try std.testing.expect(try session.spliceAnchored(0, 1, 0, 0, "😀"));
+    try std.testing.expectEqual(@as(u32, 3), session.sections[0].created_tables.entries.items[0].anchor.unit);
+    const after = try session.save();
+    defer a.free(after);
+    var reopened = try @import("editor_session.zig").open(a, after, .{});
+    defer reopened.deinit();
+    const text = try reopened.anchorText(0, 1);
+    defer a.free(text);
+    try std.testing.expectEqualStrings("😀\xef\xbf\xbc\xef\xbf\xbc\xef\xbf\xbc", text);
+    try std.testing.expectEqualSlices(u8, bytes, session.source);
+}
+
 test "created table insertion honors every existing drawing anchor boundary" {
     const a = std.testing.allocator;
     const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/shapeline.hwpx", a, .limited(4000000));
@@ -79,7 +117,7 @@ test "created table plain host splice rebases Unicode and restores history after
     _ = try @import("created_table_session.zig").stage(&session, 0, 2, 2, &table);
     const host_splice = @import("created_table_host_splice.zig");
     try std.testing.expect(try host_splice.supportsMode(&session, 0, false));
-    try std.testing.expect(!try host_splice.supportsMode(&session, 0, true));
+    try std.testing.expect(try host_splice.supportsMode(&session, 0, true));
     try std.testing.expectError(error.InvalidSectionIndex, host_splice.supportsMode(&session, session.sections.len, false));
     const staged = try session.save();
     defer a.free(staged);

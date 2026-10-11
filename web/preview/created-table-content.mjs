@@ -20,12 +20,14 @@ export function attachCreatedTables(editor, content, available, maxUnits, sectio
   content.createdTables = rows;
   const modes = new Map();
   if (pending.size) for (const section of new Set(content.paragraphs.map(p => p.section))) {
-    modes.set(section, typeof editor.createdTableHostMode === "function" && editor.createdTableHostMode(section));
+    const query = typeof editor.createdTableHostMode === "function";
+    modes.set(section, { plain: query && editor.createdTableHostMode(section), anchored: query && editor.createdTableHostMode(section, true) });
   }
   for (const paragraph of content.paragraphs) if (pending.size) {
-    paragraph.plainEditable = !!paragraph.plainEditable && modes.get(paragraph.section) === true;
-    paragraph.editable = paragraph.plainEditable;
-    paragraph.anchorEditable = false;
+    const mode = modes.get(paragraph.section);
+    paragraph.plainEditable = !!paragraph.plainEditable && mode.plain === true;
+    paragraph.anchorEditable = !!paragraph.anchorEditable && mode.anchored === true;
+    paragraph.editable = paragraph.plainEditable || paragraph.anchorEditable;
     paragraph.anchoredSplitAvailable = false;
     paragraph.nextMergeParagraph = null;
     paragraph.previousMergeParagraph = null;

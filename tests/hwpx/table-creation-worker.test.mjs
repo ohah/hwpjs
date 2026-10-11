@@ -4,6 +4,35 @@ import { readFileSync } from "node:fs";
 import { workerCanvasHarness, dispatchCanvasEvent } from "../canvas/worker-harness.mjs";
 import { execFileSync } from "../../tools/oracle-process.mjs";
 const options = { rows: 2, columns: 2, width: 101, rowHeight: 17, resources: { paragraph: 1, character: 1, style: 0, border_fill: 1 } };
+test("Canvas anchored drawing host preserves original objects table position and redo after refusal", async t => {
+  const h = await workerCanvasHarness(t, { paintFrames: true });
+  const source = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/shapeline.hwpx");
+  await h.send({ kind: "load", format: "hwpx", bytes: source }); await h.send({ kind: "enable" });
+  const created = await h.send({ kind: "insert-table", section: 0, paragraph: 0, unit: 1, options: { ...options, rows: 1, columns: 1 } });
+  assert.equal(created.error, undefined);
+  const host = created.content.paragraphs.find(p => p.section === 0 && p.paragraph === 0);
+  assert.equal(host.anchorEditable, true); assert.equal(host.plainEditable, false);
+  const table = created.content.createdTables[0], before = (await h.send({ kind: "save" })).bytes;
+  assert.equal(h.controller.selectTextRange({ section: 0, paragraph: 0, startUnit: 0, endUnit: 0 }), true);
+  const prefix = "앞😀<&";
+  h.input.value = prefix + h.input.value; h.input.setSelectionRange(prefix.length, prefix.length);
+  dispatchCanvasEvent(h.input, "input");
+  const edited = await h.flush(); assert.equal(edited.error, undefined);
+  assert.equal(edited.content.createdTables[0].anchorUnit, 6);
+  const after = (await h.send({ kind: "save" })).bytes;
+  for (const flags of [[], ["-O"]]) execFileSync("python3", [...flags, "tools/hwpx-drawing-table-insertion-oracle.py"], {
+    input: JSON.stringify({ before: source.toString("base64"), after: Buffer.from(after).toString("base64"), unit: 1, prefix, table_id: table.instance_id }), timeout: 30000,
+  });
+  assert.equal(h.controller.history("undo"), true);
+  assert.equal((await h.flush()).error, undefined);
+  assert.deepEqual((await h.send({ kind: "save" })).bytes, before);
+  assert.equal((await h.send({ kind: "splice", section: 0, paragraph: 0, startUnit: 0, endUnit: 1, text: "" })).error, "ProtectedInlineControl");
+  assert.deepEqual((await h.send({ kind: "save" })).bytes, before);
+  assert.equal(h.controller.history("redo"), true);
+  assert.equal((await h.flush()).error, undefined);
+  assert.deepEqual((await h.send({ kind: "save" })).bytes, after);
+});
+
 test("Canvas source input with generated table rebases anchor and preserves full XML and history", async t => {
   const h = await workerCanvasHarness(t, { paintFrames: true });
   await h.send({ kind: "load", format: "hwpx", bytes: readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwpx") });
@@ -50,7 +79,7 @@ test("actual Worker keeps source paragraph addresses and created cell identities
   assert.equal(created.content.createdTables[0].hostParagraph, 1);
   assert.deepEqual(created.content.paragraphs.map(p => [p.section, p.paragraph, p.text]), before);
   assert(created.content.paragraphs.some(p => p.plainEditable && p.editable));
-  assert(created.content.paragraphs.every(p => !p.anchorEditable && p.fieldLabels.length === 0 && !p.anchoredSplitAvailable));
+  assert(created.content.paragraphs.every(p => p.fieldLabels.length === 0 && !p.anchoredSplitAvailable));
   assert.equal(h.renderer.layout().boxes.filter(box => box.createdCell).length, 4);
   assert.equal(h.renderer.layout().pageLayoutMode, "created-table-block-prototype");
   h.paint();

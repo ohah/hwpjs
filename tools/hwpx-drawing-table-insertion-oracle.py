@@ -59,6 +59,15 @@ def verify(data):
         for run in new[0]:
             if table in list(run):
                 run.remove(table)
+        prefix = data.get("prefix", "")
+        require(type(prefix) is str, "Invalid prefix")
+        if prefix:
+            for run in old[0]:
+                if original[0] in list(run):
+                    text = E.Element(P + "t")
+                    text.text = prefix
+                    run.insert(list(run).index(original[0]), text)
+                    break
         require(host_shape(old[0]) == host_shape(new[0]), "Outside table XML changed")
 
 

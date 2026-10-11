@@ -10,10 +10,10 @@ test("pending table outside window gates all source modes without granting parag
   const calls = [];
   const content = attachCreatedTables({
     createdTables: section => section === 1 ? [{ host_paragraph: 1, cells: [] }] : [],
-    createdTableHostMode: section => { calls.push(section); return section === 0; },
+    createdTableHostMode: (section, anchored = false) => { calls.push([section, anchored]); return section === 0 && !anchored; },
   }, { paragraphs }, true, 100, 3);
   assert.deepEqual(content.createdTables, []);
-  assert.deepEqual(calls, [0, 2]);
+  assert.deepEqual(calls, [[0, false], [0, true], [2, false], [2, true]]);
   assert.deepEqual(paragraphs.map(p => p.editable), [true, false, false]);
   assert(paragraphs.every(p => !p.anchorEditable && !p.anchoredSplitAvailable && p.fieldLabels.length === 0));
   assert.equal(content.readOnly, false);

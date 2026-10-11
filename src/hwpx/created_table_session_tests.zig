@@ -138,7 +138,7 @@ test "created table staged history owns text anchor saves reopens and preserves 
     defer a.free(changed_text);
     try std.testing.expectEqualStrings("다시 셀😀", changed_text);
     try std.testing.expect(!try session.splice(0, 2, 0, 0, ""));
-    try std.testing.expectError(error.UnsupportedCreatedTableHostEdit, session.spliceAnchored(0, 2, 0, 0, "앞"));
+    try std.testing.expect(!try session.spliceAnchored(0, 2, 0, 0, ""));
     try std.testing.expectError(error.UnsupportedCreatedTableHostEdit, session.splitParagraph(0, 2, 0, 0));
     try std.testing.expectError(error.UnsupportedCreatedTableHostEdit, session.mergeParagraph(0, 2));
     try std.testing.expect(!try session.canSplitParagraph(0, 2, 0, 0));
