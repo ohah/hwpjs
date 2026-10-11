@@ -1,5 +1,7 @@
 # 인코딩된 XML 텍스트의 ASCII 비교
 
+문단 좌표의 후속 순회 최적화는 [지역 순회 계약](hwpx-paragraph-position-traversal.md)이 소유합니다. 아래 비교 후보의 검증/성능 수치와 합산하지 않습니다.
+
 `src/xml/text.zig`의 borrowed View가 비교만 소유합니다. Unicode/XML 문자 허용, BOM, entity 해석, 줄바꿈 정규화와 source tree 소유권은 각 기존 계층의 책임입니다. 입력 바이트를 수정하거나 비교 결과를 영속 cache에 저장하지 않습니다.
 
 UTF-8에서는 길이가 같고 기대 바이트가 모두 ASCII일 때 byte 비교를 사용합니다. ASCII 대소문자 무시도 같은 정책입니다. 기대값의 비ASCII는 원래 계약대로 false이며, 단순 byte 동일성만으로 UTF-8 비ASCII/잘못된 입력을 통과시키지 않습니다. UTF-16LE/BE는 기존 공통 scalar 읽기를 그대로 사용합니다. 빈 값·NUL·DEL의 비교는 XML 문자 유효성 판정과 다르며 원래 비교 결과를 유지합니다.
