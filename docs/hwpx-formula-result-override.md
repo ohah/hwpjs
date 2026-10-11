@@ -1,5 +1,9 @@
 # 수식 결과 직접 수정 — 내부 저장 기반
 
+정의 거래 후속: source-seed 후보에서 재열기 뒤 원래 Formula를 다시 지정해도 첫 결과가 `수동`으로 남는 반례를 공개 테스트로 재현했습니다(1실패·exit1, 기대67.5). live override가 비어 있어 동일 정의를 no-op으로 판정하던 경로가 원인입니다. flat 정의 변경은 공통 source-result seed로 후보 표시 출처를 복원한 다음 대상만 automatic으로 전환하고, 검증된 proxy 저장이 성공한 뒤 정의/표시 후보를 함께 게시하도록 수정했습니다. 구조 경로는 기존 정책을 유지합니다. 새 seed를 조회나 파서 open에서 live 상태에 직접 쓰지 않습니다.
+
+이 수정의 ReleaseSafe 빌드는6/6·exit0(49초), 후보 `formula-definition-source-seed/bin/hwpjs.wasm` SHA256 `3d0c3165ce54c8b6696c6c0ee55093ff731e4b300afb99a84b27055d2b9c626c`입니다. 공개 수동 결과11/11·exit0·skip0(4778.977042ms)은 해당 재현의 통과·다른 수동 표시 보존·undo/redo 바이트 복원을 포함합니다. 재열기 후 수동 결과를 다시 지정하는 경로는 수정 전에도 독립 XML/ZIP oracle 양 Python 모드와 변조 반례를 통과해 불필요한 setter 변경을 하지 않았습니다. 집중 native33/33·exit0과 별도 seed3/3·exit0(root1+실제2선언)은 표시 복원 및 동일 정의 재계산의 전체 할당 실패/기존 상태 보존을 확인했습니다. 두 native 실행의 테스트 선언 snapshot은 다르므로 합계36개로 계수하지 않습니다. fmt/diff check도 통과했습니다. 최신 소스의 전체 `zig build test -j2 --summary all`은 시작했으나 아직 최종 결과가 없으며 runtime 커밋/제품 승격의 gate로 통과 처리하지 않습니다.
+
 최신 후보 검증: `formula-source-seed/bin/hwpjs.wasm` SHA256 `1f97b16ca0c341b1611e8e621546013c76ca6a119676fbf77cde008c954be2bb`로 공개 수동 결과 테스트를 다시 실행해 9/9·exit0·skip0을 확인했습니다. 종료된 이전 프로세스의 결과를 추정하지 않고 새 실행 결과를 사용했습니다. 재열기 후 첫 참조 입력만 수정하는 회귀를 강화한 최종 실행도 9/9·exit0·skip0(6705.359334ms)입니다. 두 번째 수동 표시 보존을 조회뿐 아니라 독립 전체 XML/ZIP oracle의 일반 Python 및 `-O` 실행과 각각 다섯 변조 반례로 확인했습니다. undo의 저장 바이트 복원, 잘못된 숫자 거부 후 redo 보존, 입력12→11.2 복원 후 첫 결과67.5 자동 계산 유지, 두 번째 수동 결과 보존 및 재저장/재열기 바이트 일치도 확인했습니다.
 
 이 후보에서는 원본 본문/cache 불일치의 source provenance를 flat splice 후보에 복원하고 실제 참조 입력 변경만 automatic으로 전환합니다. 모든 원본 표시를 수동 사용자 의도로 판정하지 않습니다. 앞선068b 후보의 관계없는 결과 덮임 실패는 이 집중 회귀에서 해결됐지만, setter/정의 변경 거래의 source 복원, 구조 편집·계산 의존성·Worker/UI 및 최신 소스 전체 native/build gate는 미완료입니다. runtime과 공개 테스트 파일은 아직 미커밋이며 기본 제품/데모 WASM도 교체하지 않았습니다. 아래 기록은 각 단계의 과거 상태입니다.
