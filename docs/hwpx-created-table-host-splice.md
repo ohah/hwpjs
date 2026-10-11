@@ -2,6 +2,8 @@
 
 ## 깨끗한 커밋 빌드·브라우저 확인
 
+후속 전 문단 eligibility 조회는 같은 산출물/44문서에서33 passed·11 no_eligible_host를 재확인했습니다. chart는 비중첩 plain47문단이 있어도 수식 구역 mode가 거부합니다. issue144의 비중첩3문단은 plain이 없고 anchorText도 UnsupportedParagraphControl로 거부합니다. 나머지9문서는 plain이0이며 anchoredReadable 문단은 각각 footnote-endnote2, matrix1, multicolumns-in-common-controls2, shapecontainer-2 1, shapeline1, shapepict-scaled2, shaperect1, table-caption7, textbox1입니다. anchoredReadable은 문자열 조회 성공일 뿐 삽입/저장 권한이 아닙니다. 진단의 anchorText 오류는 관측한 UnsupportedParagraphControl만 제한으로 계수하고 다른 오류는 failed/exit1로 전파합니다. 기존 개체가 있는 host의 anchor 좌표와 생성 표 저장의 좌표를 맞추는 구현·독립 보존 검증이 다음 경계입니다.
+
 같은 깨끗한 산출물의 `hwp5-editor-audit`312/312·exit0(3360.761375ms), `hwpx-text-audit`34/34·exit0(53499.585042ms)을 확인했습니다. 기존 경계/전수 읽기·no-op/선정 입력 회귀이며 모든 명령·조판 지원 완료를 뜻하지 않습니다.
 
 `node tools/hwpx-created-table-host-corpus-audit.mjs /absolute/hwpjs.wasm`은 Git 추적 `/fixtures/` HWPX(알려진 password-12345 제외)의 문서당 적격 plain source host 하나를 검사합니다. 빈 inventory를 거부하고 WASM/입력 hash를 확인하며 실패는 exit1로 기록합니다. 표 생성 후 prefix 입력·anchor0→5·undo/redo 정확 바이트·저장 재열기를 검사합니다. 44개 중33 passed·11 no_eligible_host·실행 exit0입니다. 나머지11은 chart, footnote-endnote, issue144-fields-crossing-lineseg-boundary, matrix, multicolumns-in-common-controls, shapecontainer-2, shapeline, shapepict-scaled, shaperect, table-caption, textbox입니다. 지원/통과로 합산하지 않습니다. 이 추가 감사는 모든 문단 위치·중간 anchor·독립 XML 대조나 브라우저 검사를 포함하지 않습니다.

@@ -21,12 +21,27 @@ try {
       editor.enableHistory();
       const resources = Object.fromEntries(Object.entries(editor.tableCreationResources()).map(([key, ids]) => [key, ids[0]]));
       let host;
-      for (let section = 0; section < sectionCount && !host; section++) {
-        if (!editor.createdTableHostMode(section)) continue;
+      const eligibility = { sections: sectionCount, blockedModes: 0, paragraphs: 0, nested: 0, plain: 0, plainBlockedByMode: 0, anchoredReadable: 0, anchorRefusals: {} };
+      for (let section = 0; section < sectionCount; section++) {
+        const mode = editor.createdTableHostMode(section);
+        if (!mode) eligibility.blockedModes++;
         for (const paragraph of editor.paragraphTextSnapshot(section)) {
-          if (!paragraph.nested && editor.canEdit(section, paragraph.paragraph)) { host = { section, paragraph: paragraph.paragraph }; break; }
+          eligibility.paragraphs++;
+          if (paragraph.nested) { eligibility.nested++; continue; }
+          if (editor.canEdit(section, paragraph.paragraph)) {
+            eligibility.plain++;
+            if (!mode) eligibility.plainBlockedByMode++;
+            else if (!host) host = { section, paragraph: paragraph.paragraph };
+          } else {
+            try { editor.anchorText(section, paragraph.paragraph); eligibility.anchoredReadable++; }
+            catch (error) {
+              if (error.message !== "UnsupportedParagraphControl") throw error;
+              eligibility.anchorRefusals[error.message] = (eligibility.anchorRefusals[error.message] ?? 0) + 1;
+            }
+          }
         }
       }
+      result.eligibility = eligibility;
       if (!host) result.status = "no_eligible_host";
       else {
         Object.assign(result, host);
