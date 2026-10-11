@@ -1,5 +1,15 @@
 # 표 생성 데모 산출물 승격
 
+## 현재 기본 — 본문·개체·필드 외부·수식 거래
+
+2026-10-11 깨끗한 코어4cf585b2와 게시된 검사기 의존성c92440b2의 ReleaseSafe 후보를 기본 `zig-out/bin/hwpjs.wasm`으로 반영했습니다. SHA256은 `fbe9fc14c3eaa373379e1512d83ba36ab4cbbdc2d21f560744fef5e61628d242`입니다. 기존a87ee487은 `/tmp/hwpjs-field-host-backup.6qVeSy/hwpjs.wasm`으로 백업·cmp 확인한 뒤 교체했습니다. 서버/Tailscale 설정이나 다른 세션은 변경하지 않았습니다.
+
+외부 WASM 다운로드 해시가 새 기본과 일치하고, 외부 reader-worker.mjs도 검증 소스와 같은 `18bbd041eecc42b7442e9f6fe0d5a298921bdd9c1b878f24316189d50595d79b`입니다. 반영 후 기본 경로의 host/field exterior/formula 공개 회귀3/3·exit0(2091.865084ms)을 확인했습니다. 깨끗한 후보의 native6/6·집중20/20·HWP5-editor312/312·HWPX-text34/34·문서당 한 host44/44와 실제 Chromium 생성/입력/다운로드/재열기 근거는 [host 거래](hwpx-created-table-host-splice.md)가 소유합니다. 외부 GUI 전수 확인이나 실제 IME·한글 조판 동치를 뜻하지 않습니다.
+
+새로고침 후 문서를 다시 열면 생성 표와 일반/원본 개체 포함 본문 및 필드 외부의 범위 입력을 함께 사용합니다. 수식 참조 셀에 표를 넣어 재계산할 수 없는 경우는 저장 전에 원자적으로 거부합니다. 구조 편집된 수식/anchored 경로·필드 라벨과 생성 표의 동시 변경·정확한 inline/쪽 배치·생성 셀 서식/구조·HWP5 표 생성·전체 parser/editor 목표는 남아 있습니다.
+
+## 이전 a87ee487 반영 이력
+
 검증한 게시5610e494 source의 ReleaseSafe WASM `a87ee487658b6ad9086f865360c22f24d1b93a574c7706ed6271366392e40c18`을2026-10-11 기본 `zig-out/bin/hwpjs.wasm`으로 반영했습니다. 게시92434584까지 src/js/web/build 차이가 없는 것도 확인했습니다. 후속 변경은 테스트/oracle/문서입니다.
 
 이전 기본 SHA256은67dc85ca4dfadda3e3f2515951f5f9ca92189d5f81b058a61323036ba8d49dda이며 `/tmp/hwpjs-table-ui-backup.QNwSlh/hwpjs.wasm`으로 복사하고 cmp로 확인한 후 교체했습니다. 기존 서버/다른 실험 서버를 종료하거나 재시작하지 않았습니다.
