@@ -1,5 +1,7 @@
 # HWPX 표 삽입 UI 연결
 
+버튼 가림의 후속 root cause: 실제 Chromium에서 설정 fieldset의 기본 세로 배치 높이417.59375px, submit top492.59375/bottom528.59375, 도구막대 bottom458.84375를 관측했고 버튼 중심 elementFromPoint는 canvas였습니다. `#table-creation-fields`만 wrapping flex 행으로 배치한 뒤 높이66px, submit264–300/도구막대 bottom457.84375와 정확한 버튼 hit를 확인했습니다. 설정 포커스 후 추가 scrollintoview 없이 실제 클릭/완료 응답이 성공했습니다.600px viewport에서 form538px·가로 overflow=false·wrap도 확인했습니다. stylesheet 회귀는 단일 행 배치/wrap 규칙과 제거/block/nowrap 변이를 검사하며 브라우저 geometry 검증을 대신하지 않습니다. 높은/긴 옵션/모든 화면 크기의 접근성까지 완료됐다고 주장하지 않습니다.
+
 후속 실제 브라우저에서 생성 후에도 설정 폼 안내가 `표 생성 중…`으로 남는 결함을 재현했습니다. 제어기가 Worker 응답을 받지 않은 것이 원인이었습니다. app은 동일한 응답을 별도 표 설정 제어기에 전달하고, 제어기는 생성 완료/미적용 오류/이미 적용된 뒤 표시 오류를 구분하며 새 load/unlock에서 안내를 초기화합니다. 무관한 응답은 안내를 유지하고 close 뒤에는 변경하지 않습니다. native 상태나 성공 여부를 UI 캐시로 복제하지 않습니다. 집중8/8·exit0과 최신 소스를 다시 연 실제 Chromium에서 완료 안내/첫 셀 포커스를 확인했습니다. 최종 제어기/메뉴/실제 Worker 묶음12/12·exit0·skip0(10785.203125ms)도 통과했습니다.
 
 후속 메뉴 회귀: 실제 app의 표 설정 위임이 추가됐지만 `document-menu-wiring`의 기대 목록에 빠져 최초 픽스처/파일/메뉴/생성 Worker 묶음은25통과·1실패·exit1(21연결/20기대)이었습니다. 새 메뉴를 기존 `table-creation-focus` 권한에 정확히 연결하는 기대값과 잘못된 submit 직접 연결/누락 반례를 추가했습니다. 집중8/8·exit0 후 같은 후보3d77c874의 전체 묶음26/26·exit0·skip0(10906.209959ms)을 확인했습니다. 픽스처404/크기/경로 거부·파일 입력·메뉴 권한/IME/late 변경·생성 셀 입력과 native identity/독립 XML/history 경로를 포함합니다. product 메뉴 코드는 변경하지 않았고 정규 표현식/기대 개수 검사를 완화하지 않았습니다. Worker/Canvas DOM 대역 검사이며 새로운 실제 브라우저 표 삽입이나 전체 native gate로 계수하지 않습니다.

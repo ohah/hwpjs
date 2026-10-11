@@ -76,6 +76,7 @@ button:disabled { cursor: default; }
 #character-property-fields { display: flex; flex-wrap: wrap; align-items: end; gap: 8px; }
 #character-property-fields label { display: flex; flex-direction: column; gap: 4px; }
 .toolbar-group select { max-width: min(300px, 100%); }
+#table-creation-fields { display: flex; flex-wrap: wrap; align-items: end; gap: 8px; border: 0; padding: 0; }
 .scope-note { font-size: 13px; color: #486171; }
 [data-alignment][aria-pressed="true"] { background: #d0e7f7; border-color: #326a91; box-shadow: inset 0 0 0 1px #326a91; }
 @media (max-width: 600px) { main { margin: 0; padding: 16px; } h1 { font-size: 22px; } }
