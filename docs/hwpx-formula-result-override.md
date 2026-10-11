@@ -6,6 +6,12 @@
 
 native 세션 거래 후속 상태: `Session.setManualFormulaResult(section, begin, display)`는 소유 후보 clone/set→일시적 Section view의 전체 save 검증→ownership swap 순서입니다. 저장이나 검증 실패는 원래 override를 변경하지 않습니다. native history의 새 `formula_result_override` 종류는 기존 enum 끝에 추가했고 필드 전체 치환용 start/deleted0만 허용합니다. 기존 checkpoint rollback/undo/redo를 재사용합니다. 구조/생성 표 host는 아직 미지원 오류로 거부하며 향후 지원 대상에서 제외하지 않습니다. WASM 내부 공통 명령 switch도 새 enum을 처리하도록 연결했지만 export/JS/Worker/UI 설정 경로는 아직 추가하지 않았습니다.
 
+선택적 WASM/JS 후속 연결: `hwpx_edit_set_manual_formula_result`와 native 공통 표시 한도 조회 export를 추가했습니다. JS `editor.setManualFormulaResult(section, beginElement, display)`는 기존 응답 모양을 바꾸지 않는 void 명령이며 오류를 throw합니다. setter/한도 export 중 하나라도 없으면 HwpxManualFormulaResultAbiUnavailable로 거부합니다. UTF-8 바이트 예산은 native 한도에서 읽고 잘못된 한도·u32 대상·문자열/UTF-16·과도한 입력을 거부합니다. Worker/UI는 아직 설정 명령을 연결하지 않았고 재계산/재열기 상태 정책도 남습니다.
+
+작업 트리 ReleaseSafe6/6·exit0(44초), `formula-manual-api/bin/hwpjs.wasm` SHA256 `b29db42a7b07cf13b06311d6868981da8d4e5c1b07516444bb409e4c6e0d8634` 후보에서 최종 공개6/6·exit0·skip0(1056.377166ms)을 확인했습니다. 실제 chart의 수동 결과/문단 표시·원본 source cache 보존·no-op revision·undo/redo·거부 후 redo/원문/revision 보존·저장 재열기 및 독립 reader 텍스트를 검사했습니다. 독립 수동 결과 저장 oracle은 선택된 FORMULA의 실제 begin/end 사이 단일 직접 텍스트만 기대 XML에 바꾸고 모든 파라미터/dirty/기타 본문·비대상 ZIP payload/metadata/순서/CRC를 대조합니다. 일반/-O에서 결과·cache·dirty·다른 본문·다른 header5변조를 각각 거부했고 인프라 오류는 음성 성공으로 인정하지 않습니다. mutation은 원래 문자열과 반드시 다른 값으로 생성합니다. 한쪽 ABI 누락2경우, 한도0/NaN/UTF-8 멀티바이트32예산3경우도 setter 미호출/원문 보존을 확인했습니다.
+
+최초 공개 실행은8×64MiB의 이력 예산이 기존 WASM128MiB 합산 상한을 넘어 enableHistory에서 LimitExceeded로 종료했습니다. 제품 상한을 풀지 않고 테스트를8×4MiB로 정정한 뒤 양성 편집을 실제 실행했습니다. 최초 실패를 파서 실패나 수동 결과 통과로 계수하지 않습니다. runtime/새 공개 테스트는 미커밋이며 기본 제품 WASM 승격·전체 gate·Worker/브라우저/원본 한글 동치 검사는 아닙니다.
+
 최종 집중15/15·exit0(root1+실제14선언)은 후보 세션 명령 전체 할당 실패의 최초/기존 override 원자성, 정식 native history 저장 바이트 undo/redo·no-op·예산 rollback·잘못된 문자/범위·두 번째 배치 요청의 늦은 실패 후 원문/redo 보존을 포함합니다. fmt/diff check도 통과했습니다. 새 작업 트리 ReleaseSafe 빌드를 별도로 시작했으며 아직 완료 gate로 계수하지 않습니다. 이 기록은 새 JS API/Worker/브라우저 지원이나 참조 입력 재계산/재열기 상태 판별 완료가 아닙니다.
 
 표시 연결 후속 상태: 기존 문단 텍스트 snapshot은 저장본의 현재 문자열을 이미 읽고 있었으며 수식 current/서식 snapshot/서식 거래의 현재 값 준비/필드 바깥 좌표 준비에도 같은 override 저장소를 전달했습니다. current 수식의 values는 유효 표시용 transient Command/LastResult이고 원본 source 조회/저장된 cache와 구분합니다. 수동 결과의 표시용 Command를 저장 파라미터에 다시 쓰지 않습니다. 공개 JSON 필드 집합은 변경하지 않았고 수동 결과 설정 공개 명령은 아직 없습니다.
