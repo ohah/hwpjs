@@ -18,7 +18,11 @@
 
 ### 복호화 뒤 제한적 편집
 
-[보호된 참조 편집 회귀](../tests/hwpx/reference-password-editor.test.mjs)는 메모리 사본에서만 HWPX의 적격 일반 문단1개와 HWP5의 빈 문단1개를 수정합니다. 편집 전 plaintext 저장 원문 일치, Unicode 입력·저장/재열기·undo 원문/redo 수정본 일치 및 암호화 원본/plaintext 입력의 독립 복사본 불변을 확인했습니다. HWP5는 재조판 필요 오류를 유지하고 명시적으로 원본 배치 유지 저장을 허용한 뒤 기존 독립 CFB/본문 레코드 oracle로 대상 변경과 비대상 보존을 검사합니다. HWPX는 현재 텍스트·ZIP 왕복/이력을 검사하며 이 경로의 독립 전체 XML oracle은 아직 별도입니다.
+[보호된 참조 편집 회귀](../tests/hwpx/reference-password-editor.test.mjs)는 메모리 사본에서만 HWPX의 적격 일반 문단1개와 HWP5의 빈 문단1개를 수정합니다. 편집 전 plaintext 저장 원문 일치, Unicode 입력·저장/재열기·undo 원문/redo 수정본 일치 및 암호화 원본/plaintext 입력의 독립 복사본 불변을 확인했습니다. HWP5는 재조판 필요 오류를 유지하고 명시적으로 원본 배치 유지 저장을 허용한 뒤 기존 독립 CFB/본문 레코드 oracle로 대상 변경과 비대상 보존을 검사합니다. HWPX의 독립 전체 XML/ZIP 검증은 아래 후속 검사 기록을 따릅니다.
+
+[복호화 HWPX 전체 저장 검사기](../tools/hwpx-protected-plain-edit-oracle.py)는 관측418문단 중 source 문단2의 직접 텍스트에 prefix만 추가한 완전 기대 XML을 만들고 모든 다른 요소/속성/텍스트/제어 요소와 비대상 ZIP payload·entry 메타데이터/순서/주석/CRC를 대조합니다. 최초 direct text에 자식이 없다고 가정해 Source direct text identity로 실패했습니다. 원문을 독립 검사해 fwSpace 자식 하나를 확인했고, 이를 기대 XML에서도 그대로 보존하도록 명시했습니다. 임의 자식 변경을 허용하거나 대상 문단 전체를 비교에서 빼지 않았습니다.
+
+일반/-O 모두 실제 수정본이 통과했고 텍스트·속성·fwSpace 제어 요소·비대상 header payload의4변조를 각각 거부했습니다. 전체 XML/비대상 payload 불일치만 음성 성공으로 인정합니다. 마지막4변조 변경의 HWPX 단독 후보1/1·exit0(851.41325ms), 기본1/1·exit0(820.336459ms)을 확인했습니다. 앞선3변조 단계의 전체 편집 테스트2/2도 각각 통과했지만 마지막4변조의 HWP5 실행으로 소급하지 않습니다. 원문 진단의 직접 spawnSync/stdin 호출은 ETIMEDOUT였고 기존 oracle-process IPC 경계를 사용한 재실행은 즉시 성공했습니다. 그 진단 timeout은 파서 실패나 성공으로 계수하지 않습니다.
 
 초기 HWP5 진단은 빈 원본 문단에 없는 PARA_TEXT를 실체화할 때 필요한 종결자CR을 기대하지 않아 저장본 재열기 문자열 비교가 실패했습니다. 기존 빈 문단 회귀의 계약을 확인하고 실제 native 편집값/재열기를 정확히 `검증😀`+CR로 검사했습니다. prefix만 비교하는 완화로 통과시킨 것이 아닙니다. 초기 암호화 원본 비교에 Buffer.slice의 공유 뷰를 사용한 부분도 독립 Buffer.from 복사로 바꾸고 plaintext 불변 검사까지 추가한 최종 소스로 재실행했습니다.
 

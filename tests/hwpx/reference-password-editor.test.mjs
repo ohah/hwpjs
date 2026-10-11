@@ -7,6 +7,7 @@ import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
 import { createHwpxReader } from "../../js/hwpx.mjs";
 import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
 import { verifyRaw } from "../hwp5/style-preservation/text-record-oracle.mjs";
+import { execFileSync } from "../../tools/oracle-process.mjs";
 
 const wasmBytes = () => readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
 const prefix = "검증😀";
@@ -25,9 +26,13 @@ test("explicitly decrypted reference HWPX supports one plain edit history and re
     reader = await createHwpxReader(wasm);
     const event = reader.readTextEvents(plain).events.find(item => item.kind === "content" && editor.canEdit(item.section, item.paragraph));
     assert(event);
+    assert.equal(event.section, 0); assert.equal(event.paragraph, 2);
     editor.enableHistory({ maxEntries: 2, maxCheckpointBytes: 64 * 1024 * 1024 });
     editor.splice(event.section, event.paragraph, 0, 0, prefix);
     const saved = editor.save();
+    for (const flags of [[], ["-O"]]) execFileSync("python3", [...flags, "tools/hwpx-protected-plain-edit-oracle.py"], {
+      input: JSON.stringify({ before: Buffer.from(plain).toString("base64"), after: Buffer.from(saved).toString("base64"), selfTest: true }), timeout: 30000,
+    });
     assert(reader.readTextEvents(saved).events.some(item => item.section === event.section && item.paragraph === event.paragraph && item.value === prefix + event.value));
     assert.equal(editor.undo(), true); assert(Buffer.from(editor.save()).equals(Buffer.from(plain)));
     assert.equal(editor.redo(), true); assert.deepEqual(editor.save(), saved);
