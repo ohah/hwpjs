@@ -1,5 +1,11 @@
 # 생성 표와 일반 본문 splice 거래
 
+## 기존 개체 사이 표 삽입 좌표 수정
+
+실제 shapeline.hwpx는 anchorText가 기존 개체 표식2개를 반환하지만 이전 깨끗한 후보는 insertTable(unit0)만 성공하고 unit1은 InvalidTextPosition으로 거부했습니다. 생성 표 capture/resolve의 source paragraph 경계와 저장 site 선택이 plain 위치를 사용해 기존 개체 길이를 누락한 원인입니다. 두 곳은 기존 anchor_text_positions 계산기를 재사용하도록 수정했습니다. joined/protected 구조·수식·anchored 입력 지원은 이 변경으로 확정하지 않습니다.
+
+ReleaseSafe native 집중3/3·exit0과 build/fmt/diff exit0을 확인했습니다. 공개 생성 표 drawing 경계와 plain host 회귀2/2·exit0(690.333667ms)입니다. 기존 두 선 앞/사이/뒤의 세 위치를 각각 저장·undo/redo·재열기하고, Python 일반/-O로 정확한 line/table 순서·기존 개체 전체 subtree/host 속성·구역 외 ZIP payload/메타데이터/CRC를 비교합니다. 잘못된 예상 삽입 위치는 정확한 ValueError: Wrong table anchor order로 거부되는 반례도 검사했습니다. native 표식 개수 통과만으로 순서를 주장하지 않습니다. 기본 데모는 교체하지 않았습니다.
+
 ## 깨끗한 커밋 빌드·브라우저 확인
 
 후속 전 문단 eligibility 조회는 같은 산출물/44문서에서33 passed·11 no_eligible_host를 재확인했습니다. chart는 비중첩 plain47문단이 있어도 수식 구역 mode가 거부합니다. issue144의 비중첩3문단은 plain이 없고 anchorText도 UnsupportedParagraphControl로 거부합니다. 나머지9문서는 plain이0이며 anchoredReadable 문단은 각각 footnote-endnote2, matrix1, multicolumns-in-common-controls2, shapecontainer-2 1, shapeline1, shapepict-scaled2, shaperect1, table-caption7, textbox1입니다. anchoredReadable은 문자열 조회 성공일 뿐 삽입/저장 권한이 아닙니다. 진단의 anchorText 오류는 관측한 UnsupportedParagraphControl만 제한으로 계수하고 다른 오류는 failed/exit1로 전파합니다. 기존 개체가 있는 host의 anchor 좌표와 생성 표 저장의 좌표를 맞추는 구현·독립 보존 검증이 다음 경계입니다.

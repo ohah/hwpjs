@@ -1,4 +1,25 @@
 const std = @import("std");
+test "created table insertion honors every existing drawing anchor boundary" {
+    const a = std.testing.allocator;
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/shapeline.hwpx", a, .limited(4000000));
+    defer a.free(bytes);
+    for (0..3) |unit| {
+        var session = try @import("editor_session.zig").open(a, bytes, .{});
+        defer session.deinit();
+        var table = try @import("created_table_prepare.zig").prepare(&session, 0, 1, @intCast(unit), 1, 1, 100, 17, .{ .paragraph = 0, .character = 0, .style = 0, .border_fill = 1 });
+        defer table.deinit(a);
+        _ = try @import("created_table_session.zig").stage(&session, 0, 1, @intCast(unit), &table);
+        const saved = try session.save();
+        defer a.free(saved);
+        var reopened = try @import("editor_session.zig").open(a, saved, .{});
+        defer reopened.deinit();
+        const text = try reopened.anchorText(0, 1);
+        defer a.free(text);
+        try std.testing.expectEqualStrings("\xef\xbf\xbc\xef\xbf\xbc\xef\xbf\xbc", text);
+        try std.testing.expectEqualSlices(u8, bytes, session.source);
+    }
+}
+
 test "created table host mode refuses formula sections without mutating source" {
     const a = std.testing.allocator;
     const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx", a, .limited(4000000));

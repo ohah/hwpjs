@@ -11,7 +11,7 @@ fn boundary(a: std.mem.Allocator, section: *const editor.Section, paragraph: *co
     else block: {
         const locations = try @import("paragraph_structure_locations.zig").build(a, &section.tree, paragraph);
         defer a.free(locations);
-        break :block try @import("paragraph_text_positions.zig").build(a, &section.tree, &paragraph.sites, locations, 1);
+        break :block try @import("anchor_text_positions.zig").build(a, &section.tree, &paragraph.sites, locations, 1);
     };
     defer a.free(positions);
     try @import("paragraph_text_positions.zig").validateBoundary(&paragraph.sites, positions, unit);
