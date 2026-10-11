@@ -34,6 +34,10 @@ issue1891_external_bindata_link의 추가 독립 XML 조회에서는 SUM(?3:?7)�
 
 ## SUM 비숫자 관측의 경계
 
+구조 입력 보완 후보 `/tmp/hwpjs-sum-text-structural-prototype/bin/hwpjs.wasm` SHA256은 `a61595a0c3d1510c8c7d0e315b0de54e8c8451551302465e2f59b355e66cd470`입니다. ReleaseSafe build5/5 steps·exit0, 관련 fmt check exit0을 확인했습니다. 참조 숫자 입력 수집/전환 검증을 formula_numeric_input_guard.validateFormulaTransition으로 모았으며 일반 formula_splice와 paragraph_structure_formula_splice가 이를 호출합니다. 구조 경로는 기존 paragraph_structure_projection으로 이전/초안 Sites를 만들고 검증한 뒤 기존 proxy save 검사를 수행하며, 마지막 ownership swap 전 오류는 현재 모델을 게시하지 않습니다.
+
+이 후보에서 이전 실패 테스트인 실제 chart parent formatting/숫자 입력의 양방향 조합이1/1·exit0으로 통과했습니다. 기존 독립 XML/서식·undo/redo·잘못된 숫자 입력 거부 검사를 그대로 유지했습니다. 실제 external BinData 파일은 source 문단2715의67.83을70으로 변경하고 첫 SUM127.76, bad 치환의 InvalidFormulaNumber 및 저장본 불변, undo 원문 전체 바이트/redo 수정본 전체 바이트, 저장본 재열기 후127.76을 확인했습니다. 이 검사는 공개 WASM API/이력 왕복이며 아직 이 수정본의 독립 전체 XML/ZIP oracle이나 실제 브라우저 조작은 아닙니다. 후속3파일 전체 회귀와 구조 거래 할당 실패는 실행 중입니다. 기본 제품/원 작업 트리에는 런타임 변경을 반영하지 않았습니다.
+
 후속 임시 후보 `/tmp/hwpjs-sum-text-prototype/bin/hwpjs.wasm` SHA256은 `4f067b3f6b1cce728debe08ee177e68c2f996e645433eeba1987d7ddb8ea09f1`이며 ReleaseSafe build5/5 steps·exit0을 확인했습니다. SourceReader/재귀 Reader에 scalar 조회를 추가해 SUM만 text/empty를 제외합니다. 숫자가 있는 병합 내부 좌표는 계속 거부하고, 텍스트를 제외하더라도 선택 사각형 겹침 및 projection 예산 검사는 먼저 수행합니다. AVG/PRODUCT/MIN/MAX의 숫자 전용 정책은 유지합니다.
 
 formula_section_prepare의 기존 재귀 평가기가 읽은 숫자 셀을 선택적으로 기록합니다. formula_splice는 이전 값 평가로 실제 입력 목록을 얻고 별도 guard를 적용한 뒤 draft를 평가/게시합니다. 결과 셀은 입력 목록에 추가하지 않으며 numeric 목록의 중복 제거는 계산 주소의 중복 집계 의미를 변경하지 않습니다. 이 연결은 임시 사본에만 있고 기본 제품은 바뀌지 않았습니다. 기존 구조 편집 거래 등 다른 게시 경로의 정책까지 완료했다고 해석하지 않습니다.
