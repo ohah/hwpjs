@@ -1,5 +1,7 @@
 # HWPX 표 삽입 UI 연결
 
+후속 메뉴 회귀: 실제 app의 표 설정 위임이 추가됐지만 `document-menu-wiring`의 기대 목록에 빠져 최초 픽스처/파일/메뉴/생성 Worker 묶음은25통과·1실패·exit1(21연결/20기대)이었습니다. 새 메뉴를 기존 `table-creation-focus` 권한에 정확히 연결하는 기대값과 잘못된 submit 직접 연결/누락 반례를 추가했습니다. 집중8/8·exit0 후 같은 후보3d77c874의 전체 묶음26/26·exit0·skip0(10906.209959ms)을 확인했습니다. 픽스처404/크기/경로 거부·파일 입력·메뉴 권한/IME/late 변경·생성 셀 입력과 native identity/독립 XML/history 경로를 포함합니다. product 메뉴 코드는 변경하지 않았고 정규 표현식/기대 개수 검사를 완화하지 않았습니다. Worker/Canvas DOM 대역 검사이며 새로운 실제 브라우저 표 삽입이나 전체 native gate로 계수하지 않습니다.
+
 후속 깨끗한 게시 source/artifact와 실제 Chromium 검증은 [브라우저 검증](hwpx-table-creation-browser.md)을 따릅니다. 아래 브라우저 미검증 기록은 UI 연결 당시의 경계입니다.
 
 Worker의 현재 표시 응답은 조회 ABI가 있으면 실제 tableCreationResources 목록을 포함합니다. renderer는 이 조회 결과와 생성 capability를 전달하고 Canvas의 tableCreationSelection이 source 커서의 현재 UTF-16 위치를 반환합니다. 생성 셀·범위 선택·clipped/처리 중/조합 중 선택은 생성 host로 반환하지 않습니다.

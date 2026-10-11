@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const expected = new Map([
+  ["menu-insert-table", 'document.querySelector("#table-creation-focus")'],
   ["menu-open", "input"], ["menu-save", "download"],
   ["menu-undo", 'document.querySelector("#undo")'],
   ["menu-redo", 'document.querySelector("#redo")'],
@@ -43,4 +44,6 @@ test("all document menu entries bind once to the existing control authority", ()
   assert.throws(() => verifyWiring(html, app.replace('target: download },', 'target: input },')), /wrong command authority/);
   assert.throws(() => verifyWiring(html.replace('id="menu-save"', 'id="menu-open"'), app), /duplicate DOM id/);
   assert.throws(() => verifyWiring(html, app.replace('"#menu-redo"', '"#menu-undo"')), /duplicate menu binding/);
+  assert.throws(() => verifyWiring(html, app.replace('target: document.querySelector("#table-creation-focus")', 'target: document.querySelector("#table-creation-submit")')), /wrong command authority/);
+  assert.throws(() => verifyWiring(html, app.replace(/^.*button: document.querySelector\("#menu-insert-table"\).*\n/m, '')), /missing or extra menu binding/);
 });
