@@ -1,5 +1,7 @@
 # 수식 결과 직접 수정 — 내부 저장 기반
 
+2026-10-11 현재 후보 `full-gate-current/bin/hwpjs.wasm` SHA256 `3d77c87433cee8ee8256722756c23c06056b693a9ebb82af2388d6dc054e7252`로 공개 수동 결과 API/Worker/text-SUM 회귀19/19·exit0·skip0(17018.642667ms)을 확인했습니다. chart13결과, 정의/결과 조합, 재열기/입력 재계산/비대상 표시 보존, 두 ABI 누락·한도 거부 및 실제 긴 SUM 설명/잘못된 숫자 거부를 포함합니다. Worker 저장본을 다시 load해 수정 정의와 수동 표시가 함께 유지되고 무편집 save가 동일한지 보강한 후 Worker3/3·exit0·skip0(8865.033209ms)도 확인했습니다. 앞선19검사의 Worker에는 이 후속 재열기 검사를 소급하지 않습니다. 기본 데모·최신 전체 native·전체 참조 문단/구조/조판 검증은 아니며 runtime/공개 회귀는 전체 native gate 전 미커밋입니다.
+
 최신 후보의 추적 픽스쳐 입력 경로 감사: de4ead WASM으로46개 HWPX의 일반 prefix/history 감사를 끝냈습니다(exit0). 암호1개는 명시적으로 거부하고, 열린 문서1444문단 중 일반1231입력/undo 원문 복원·거부 뒤 redo189를 확인했습니다. 일반 거부는 UnsupportedParagraphControl146·InvalidFormulaNumber48·ProtectedFieldRange19입니다. 별도 특수 prefix 감사도 exit0으로 종료됐고165시도 중152입력/전체 XML 독립 검증(그중 필드6)이 통과했습니다. 남은13거부는 실제 chart FORMULA 결과 범위입니다. 두 감사 모두 입력 버퍼 및 디스크 파일 동일성 검사를 유지합니다.
 
 새 공개 결과 회귀는 chart의13개 필드를 각각 원본에서 시작해 Unicode/기호 prefix 결과로 수정하고 전체 XML/ZIP oracle 양 Python 모드·각각5변조·undo/redo 원문/수정본 바이트·재열기 표시/저장 일치를 검사합니다. 집중1/1·exit0·skip0(7058.008875ms), 이어 공개 API/Worker 전체16/16·exit0·skip0(13055.4135ms)이 통과했습니다. 같은 de4ead로 기존48숫자 입력 전수 회귀를 다시 실행해1/1·exit0·skip0(36610.332667ms)을 확인했습니다. 독립 Decimal 평가로 각 숫자100 변경 후13수식의 LastResult/Command/본문을 대조하며 재열기 저장 바이트도 확인합니다. 숫자에 임의 문자열을 넣는 거부는 편집 경로 부재가 아닙니다.
