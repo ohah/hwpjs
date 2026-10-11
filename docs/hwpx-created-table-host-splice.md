@@ -2,6 +2,10 @@
 
 ## 깨끗한 커밋 빌드·브라우저 확인
 
+같은 깨끗한 산출물의 `hwp5-editor-audit`312/312·exit0(3360.761375ms), `hwpx-text-audit`34/34·exit0(53499.585042ms)을 확인했습니다. 기존 경계/전수 읽기·no-op/선정 입력 회귀이며 모든 명령·조판 지원 완료를 뜻하지 않습니다.
+
+`node tools/hwpx-created-table-host-corpus-audit.mjs /absolute/hwpjs.wasm`은 Git 추적 `/fixtures/` HWPX(알려진 password-12345 제외)의 문서당 적격 plain source host 하나를 검사합니다. 빈 inventory를 거부하고 WASM/입력 hash를 확인하며 실패는 exit1로 기록합니다. 표 생성 후 prefix 입력·anchor0→5·undo/redo 정확 바이트·저장 재열기를 검사합니다. 44개 중33 passed·11 no_eligible_host·실행 exit0입니다. 나머지11은 chart, footnote-endnote, issue144-fields-crossing-lineseg-boundary, matrix, multicolumns-in-common-controls, shapecontainer-2, shapeline, shapepict-scaled, shaperect, table-caption, textbox입니다. 지원/통과로 합산하지 않습니다. 이 추가 감사는 모든 문단 위치·중간 anchor·독립 XML 대조나 브라우저 검사를 포함하지 않습니다.
+
 `ae8479876af4fcdf49f7fe64b206058413a2120d` Git archive의 추적 파일/index diff가 없는 별도 디렉터리에서 ReleaseSafe build exit0을 확인했습니다. 산출물 SHA256은 `27920e973a01948226a1f9a768f93b612abb7457af490522bb9cd2a3b23d7e85`입니다. 이 산출물로 공개 host/projection/Worker/table creation 검사13/13·exit0(3245.553083ms)을 확인했습니다. 이전 dirty 후보와 별도로 계수합니다.
 
 같은 빌드의 실제 Chromium에서 charshape.hwpx 업로드·편집 시작·진하게 검색/ArrowLeft caret·기본2×2표 생성 뒤 원래 본문을 다시 찾아 브라우저😀<&를 입력했습니다. 입력값 기울임브라우저😀<&진하게, 명시적 undo 뒤 기울임진하게, redo 뒤 정확한 편집값을 각각 조건 대기로 확인했습니다. 오류 조회는 비어 있었고 소유 브라우저 세션은 종료했습니다. 기록과 screenshots/host-input.png·host-redo.png는 `/tmp/hwpjs-host-input-release.qsA5pO/qa/`에 있습니다. browser download/reopen·실제 IME·정확한 조판·전수 fixture 브라우저 검증은 아직 남았습니다. 기본 데모 WASM은 이 빌드로 교체하지 않았습니다.
