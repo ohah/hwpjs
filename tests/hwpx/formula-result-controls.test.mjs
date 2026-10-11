@@ -77,3 +77,17 @@ test("manual result capability is independent of definition capability and Enter
   enter(false);
   assert.equal(s.requests.length, 1);
 });
+
+test("definition submit rechecks its own capability after validation while manual editing stays available", () => {
+  const s = setup();
+  s.controls.message({ kind: "enable", content: s.content });
+  s.form.reportValidity = () => {
+    s.controls.message({ kind: "splice", content: { ...s.content, formulaDefinitionAvailable: false } });
+    return true;
+  };
+  s.form.dispatchEvent(new Event("submit", { cancelable: true }));
+  assert.equal(s.requests.length, 0);
+  assert.equal(s.fields.disabled, false);
+  s.result.apply.dispatchEvent(new Event("click"));
+  assert.equal(s.requests[0].kind, "manual-formula-result");
+});

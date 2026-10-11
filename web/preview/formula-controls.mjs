@@ -19,7 +19,7 @@ export function createFormulaControls({ form, fields, choices, input, note, read
     const row = selected();
     if (fields.disabled || !available || !row || !form.reportValidity()) return;
     update();
-    if (fields.disabled || selected() !== row) return;
+    if (fields.disabled || !available || selected() !== row) return;
     if (new TextEncoder().encode(input.value).length > 4096) { note.textContent = "수식은 UTF-8 4096바이트 이하여야 합니다."; return; }
     note.textContent = request({ kind: "formula-definition", origin: "formula", section: row.section, beginElement: row.beginElement, formula: input.value }) ? "수식 반영 중…" : "입력 반영이 끝난 뒤 적용하세요.";
     update();
