@@ -4,8 +4,8 @@ import { createTableCreationControls } from "../../web/preview/table-creation-co
 test("table creation controls use actual resource IDs and disable absent or stale selections", () => {
   class Node extends EventTarget { value = ""; replaceChildren(...items) { this.items = items; } focus() { this.focused = true; } }
   const form = new Node(), fields = new Node(), focusButton = new Node(), submit = new Node(), note = new Node();
-  let valid = true, selection = null;
-  form.reportValidity = () => valid;
+  let valid = true, selection = null, onValidity = null;
+  form.reportValidity = () => { onValidity?.(); return valid; };
   const dimensions = Object.fromEntries(Object.entries({ rows: 2, columns: 2, width: 36000, rowHeight: 1800 }).map(([key, value]) => [key, Object.assign(new Node(), { value: String(value) })]));
   const resources = Object.fromEntries(["paragraph", "character", "style", "border_fill"].map(key => [key, new Node()]));
   const ids = { paragraph: [0, 9], character: [1, 7], style: [0], border_fill: [3] }, sent = [];
@@ -31,6 +31,17 @@ test("table creation controls use actual resource IDs and disable absent or stal
   assert.equal(note.textContent, "");
   valid = false; form.dispatchEvent(new Event("submit", { cancelable: true })); assert.equal(sent.length, 1);
   selection = null; form.dispatchEvent(new Event("submit", { cancelable: true })); assert.equal(sent.length, 1);
+  valid = true; selection = { section: 0, paragraph: 1, unit: 0 };
+  onValidity = () => { selection = { section: 0, paragraph: 2, unit: 0 }; };
+  form.dispatchEvent(new Event("submit", { cancelable: true }));
+  assert.equal(sent.length, 1, "validation must not insert at a changed caret");
+  selection = { section: 0, paragraph: 1, unit: 0 };
+  onValidity = () => { selection.unit = 1; };
+  form.dispatchEvent(new Event("submit", { cancelable: true }));
+  assert.equal(sent.length, 1, "in-place caret mutation must not bypass the snapshot");
+  onValidity = () => { controls.close(); };
+  form.dispatchEvent(new Event("submit", { cancelable: true }));
+  assert.equal(sent.length, 1, "validation must not submit after close");
   controls.close(); selection = {}; controls.update(); assert.equal(fields.disabled, true);
   controls.message({ kind: "insert-table" }); assert.equal(note.textContent, "");
 });

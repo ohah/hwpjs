@@ -18,7 +18,13 @@ export function createTableCreationControls({ form, fields, focusButton, submit,
   const focus = () => { update(); if (!closed && !focusButton.disabled) { form.scrollIntoView?.({ block: "nearest" }); dimensions.rows.focus(); } };
   const insert = event => {
     event.preventDefault(); update();
-    if (closed || fields.disabled || !selected() || !form.reportValidity()) return;
+    const selectedHost = selected();
+    if (closed || fields.disabled || !selectedHost) return;
+    const host = { section: selectedHost.section, paragraph: selectedHost.paragraph, unit: selectedHost.unit };
+    if (!form.reportValidity()) return;
+    update();
+    const current = selected();
+    if (closed || fields.disabled || !current || current.section !== host.section || current.paragraph !== host.paragraph || current.unit !== host.unit) return;
     const options = Object.fromEntries(Object.entries(dimensions).map(([key, node]) => [key, Number(node.value)]));
     options.resources = Object.fromEntries(Object.entries(resources).map(([key, node]) => [key, Number(node.value)]));
     note.textContent = request(options) ? "표 생성 중…" : "현재 선택에서는 표를 생성할 수 없습니다.";
