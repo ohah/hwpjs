@@ -38,3 +38,5 @@ ReleaseSafe 빌드6/6 steps·exit0의 작업 트리 후보는 `zig-out/verificat
 공개 회귀는 `formula-editor`, `created-table-formula-host`, `table-creation-worker`, `text-sum-fixture-editor` 네 파일을 정확히 선택해 이 후보로18/18·exit0(50879.640875ms), skip0을 확인했습니다. 새 실제 reference 테스트는 해당 RHWP 파일이 없으면 명시적으로 skip하며 그 경우 실제 파일 검증으로 계수하지 않습니다. 실제 수정본의 전체 XML/ZIP/Decimal 재계산과 일반/-O 변조 거부, 입력 거부·이력·재열기를 검사합니다. Canvas 대역은 실제 브라우저 픽셀/IME 검증이 아닙니다.
 
 이전 `/tmp` 산출물과 프로세스 핸들이 없어져 종료 결과를 회수하지 못한 전체 Debug/ReleaseSafe 및136선언 실행은 완료/통과로 간주하지 않습니다. 현재 소스의 전체 ReleaseSafe 검사를 새로 시작했으며 아직 완료되지 않았습니다. 첫 문단 정책 후보의 copay/tac 실제 조회도 이전 핸들의 최종 결과가 없으므로 완료로 보고하지 않습니다.
+
+2026-10-11 14:48 KST 실행 관측: 독립 소스 사본의 전체 Debug 세션60077은 테스트 PID19412가 CPU100%·CPU 누적31분50초로 실행 중이었습니다. 1초 스택 표본은 `created_table_session_tests`의 `created table staged allocation failures retain empty current state and source` → `testing.checkAllAllocationFailures` → 표 생성/source ID·header XML 파싱을 보여 주었습니다. 표본의 physical footprint11.6GiB는 전체 테스트 프로세스 관측이며 생산 코드 메모리 누수나 특정 수식 테스트의 사용량으로 판정하지 않습니다. 별도 이전 snapshot의 전체 ReleaseSafe 세션19562도 PID13023의 CPU100%·누적70분02초로 실행 중임을 확인했습니다. 두 실행 모두 최종 종료코드/통과 집계는 아직 없고 중단·재시작하지 않았습니다. 이 관측은 진행 위치 확인이지 전체 검증 통과 증거가 아닙니다.
