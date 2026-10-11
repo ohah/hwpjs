@@ -12,6 +12,7 @@ HWP5의 선택적 내부 XML 검사와 HWPX 파서가 재사용하는 메모리 
 - `src/text/scalars.zig`: 명시된 UTF-8/UTF-16LE/UTF-16BE의 공통 Unicode scalar 해석과 원본 바이트 범위를 소유합니다. `src/xml/scalars.zig`는 기존 XML 오류 이름을 유지하는 어댑터입니다. 잘림, 잘못된 UTF-8, 고립/잘못된 서로게이트 쌍을 오류로 반환합니다. 대체 문자나 인코딩 fallback은 없습니다. 공통 계층 추출 검증은 [ICC Unicode 내용 검증](icc-localized-unicode.md)에 기록합니다.
 - `src/xml/input.zig`: 문자 허용 검사, literal CRLF/CR → LF 정규화, 전체 입력 바이트·반환 문자 수 한도를 소유합니다. 기본 한도는 각각 16 MiB/16,777,216문자입니다. U+0085와 U+2028은 그대로 반환합니다.
 - `src/xml/root.zig`: Zig 모듈 진입점입니다. 컨테이너·파일시스템·압축·외부 프로세스에 의존하지 않습니다.
+- `src/xml/text.zig`: borrowed 인코딩 텍스트와 ASCII 기대값 비교만 소유합니다. [비교 계약과 후보 검증](xml-ascii-comparison.md)을 따르며 XML 문자 허용이나 정규화 판정을 대신하지 않습니다.
 
 입력은 완전한 borrowed 바이트 슬라이스이며 할당이나 원본 쓰기를 하지 않습니다. 각 결과는 `value`, `start`, `end`를 갖고 범위는 원본 바이트 기준입니다. CRLF는 하나의 LF를 반환하되 두 원본 문자를 모두 포함한 범위를 소유합니다. 정규화 후 문자 한도가 1이면 CRLF는 통과합니다. 별도 바이트 한도가 입력 크기를 제한하므로 정규화가 원본 크기 제한을 우회하지 않습니다.
 
