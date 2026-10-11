@@ -2,6 +2,10 @@
 
 ## 수정 후보와 검증 경계
 
+실제 브라우저 후속: agent-browser의 전용 세션과 loopback10012에서 실제 `hyperlink.hwpx` 업로드→Canvas 편집 시작→찾기 선택→기존 서식 ID0 적용→Canvas 입력의 ArrowRight/End/Delete로 원본 필드 문단을 병합했습니다.9문단→8문단 및 undo9/redo8을 확인했습니다. 브라우저가 실제 받은 WASM SHA는7f310f37 후보 전체 SHA와 일치했습니다. 다운로드 버튼이 생성한 실제 Blob 두 개(서식 후 병합 전22827bytes/병합 후26308bytes)를 독립 field-style-merge oracle 일반 Python·`-O`로 비교해 glyph styles/전체 XML·비대상 ZIP 보존을 확인했습니다. 병합 후 Blob을 File 입력으로 다시 열어8문단을 확인하고 재저장 Blob의 전체 바이트 일치를 확인했습니다. 페이지 오류 출력은 비어 있었고 전용 브라우저 close 성공 및 명령/cwd를 확인한 소유 서버만 종료했습니다. 외부 데모는 변경하지 않았습니다.
+
+최초 편집 시작 클릭과 대기는 버튼이 command-bar의 스크롤 영역 밖에 있어 timeout/Canvas에 가려짐으로 실패했습니다. DOM 소유·좌표·hit target을 측정한 뒤 command-bar를 스크롤하니 hit가 enable-edit이고 정상 클릭됐습니다. 이 자동화 스크롤 문제를 제품 편집 실패나 통과로 계수하지 않습니다. 실제 브라우저 증거는 이후 정상 클릭/입력/다운로드에 한정하며 전체 UI/모든 픽스쳐/한글 조판 동일성을 증명하지 않습니다.
+
 검증 실행 후속: 수정 전 소스의 전체 native 실행은 후속 runtime을 증명하지 못하므로 명령/cwd/부모·자식 PID를 확인한 이전 실행만 종료했습니다(exit143, 명시 취소). 이전28694 자식이 없어진 뒤 같은 빌드의67606 자식이 실행 중이었으며, 이 상태를 최종 성공/실패로 추론하지 않았습니다. 최신 소스로 `zig build test -Doptimize=ReleaseSafe -j1 --summary all`을 다시 시작했고 stdout/stderr를 별도 임시 로그에 보존합니다. 후보7f310f37의 공개 테스트625개 파일 전체 실행도 로그를 보존하며 진행 중입니다. 두 새 실행의 최종 결과는 아직 없습니다. 참조 문서 감사와 다른 사용자 프로세스는 유지했습니다.
 
 최신7f310f37 후보로 `structure-editor.test.mjs`·`structure-worker.test.mjs`·`formula-numeric-split-editor.test.mjs` 전체를 실행한 결과68/68·exit0·skip0(373160.983125ms)입니다. 이전06d4의 구조66개 중6실패와 달리 두 병합 회귀·필드 바깥 입력·숫자 셀 분할 세 기대를 모두 검증했습니다. 숫자 경계157개(성공108·거부49), 비의존 셀169개, 실제 Worker의 서식·저장·undo/redo·재열기를 포함합니다. 이는 이 세 파일의 전체 결과이며625개 공개 테스트 파일·전체 native·전체 참조 문서/UI 완료를 의미하지 않습니다.
