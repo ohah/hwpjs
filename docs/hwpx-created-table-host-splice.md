@@ -1,5 +1,11 @@
 # 생성 표와 일반 본문 splice 거래
 
+## 분할 가능 여부 조회의 보호 규칙
+
+공개 `hwpx_edit_can_split`은 하위 분할 모듈을 직접 호출하지 않고 Session의 `canSplitParagraph`를 사용합니다. 생성 표가 있는 세션에서는 실행과 같은 전역 host 보호 규칙으로 false를 반환합니다. 이 제한은 생성 표 anchor의 구조 편집 재배치를 구현했다는 의미가 아닙니다.
+
+2026-10-11 기존 후보 `62ecc0cef2630f08a7a8cb16461367648b3cc5b24502ce95bd26176c0af54e5b`는 실제 charshape.hwpx에 표를 만든 뒤 이 조회에서 `InvalidTextPosition`으로 회귀 테스트가 실패했습니다. 수정 후보 `72bc1f01928347e5b7ce03652409acf5cb14d0f684ce9a83544d5318245be1bc`는 ReleaseSafe build·fmt/diff exit0 및 공개 검사1/1·exit0(372.885333ms)을 확인했습니다. 조회 false·실행 UnsupportedCreatedTableHostEdit·거부 후 저장 전체 바이트 불변, 이후 일반 본문 입력/이력과 독립 XML/ZIP 비교를 함께 검사했습니다. 같은 후보의 공개 host 검사와 기존 수식 분할 네 항목을 함께 실행한 결과5/5·exit0(135676.093958ms)입니다. 실제13수식 문단의 양쪽 경계 분할·독립 XML/ZIP·저장 재열기·이력과 변경된 계산 결과/부분 서식의 분할·재병합도 검사했습니다. host 할당 실패 순회는 아직 완료 결과로 계수하지 않습니다. 기본 데모 WASM은 그대로입니다.
+
 ## 공개 저장 독립 대조
 
 2026-10-11 별도 후보 `62ecc0cef2630f08a7a8cb16461367648b3cc5b24502ce95bd26176c0af54e5b`의 공개 API 검사1/1·exit0(390.416458ms)은 실제 생성 표가 있는 본문의 앞😀<& 입력, anchor2→7/identity 유지, undo·crossing 거부 후 redo와 정확한 저장 바이트를 확인했습니다. Python 일반/-O로 전체 section XML·비대상 ZIP payload/메타데이터/CRC를 대조했습니다.

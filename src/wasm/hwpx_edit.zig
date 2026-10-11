@@ -1210,7 +1210,7 @@ export fn hwpx_edit_can_split(section: u32, paragraph: u32, start: u32, deleted:
         _ = fail(error.EditorNotOpen);
         return 2;
     };
-    return @intFromBool(@import("../hwpx/paragraph_split_session.zig").canSplit(session, section, paragraph, start, deleted) catch |err| {
+    return @intFromBool(session.canSplitParagraph(section, paragraph, start, deleted) catch |err| {
         _ = fail(err);
         return 2;
     });
