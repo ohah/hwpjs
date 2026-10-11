@@ -4,6 +4,12 @@
 
 후속 현재 상태: 내부 flat Session.save와 checkpoint까지 연결했으며 아래 최초 writer-only 기록을 대체합니다. 공개 편집 명령/표시/재계산/UI는 여전히 연결 전입니다. 아래 회귀 결과는 각 단계 snapshot에만 적용합니다.
 
+표시 연결 후속 상태: 기존 문단 텍스트 snapshot은 저장본의 현재 문자열을 이미 읽고 있었으며 수식 current/서식 snapshot/서식 거래의 현재 값 준비/필드 바깥 좌표 준비에도 같은 override 저장소를 전달했습니다. current 수식의 values는 유효 표시용 transient Command/LastResult이고 원본 source 조회/저장된 cache와 구분합니다. 수동 결과의 표시용 Command를 저장 파라미터에 다시 쓰지 않습니다. 공개 JSON 필드 집합은 변경하지 않았고 수동 결과 설정 공개 명령은 아직 없습니다.
+
+실제 chart의 수동 Unicode/기호 결과에 대해 문단 텍스트·current 수식 및6UTF-16단위의 서식 끝 위치 일치, 다른12결과 불변, source LastResult67.5 보존 및 조회 후 저장 바이트 불변을 확인했습니다. 작은 fixture current snapshot의 전체 할당 실패도 live override를 보존했습니다. 최종 집중13/13·exit0(root1+실제12선언), fmt/diff check가 통과했습니다. 재열기에서 수동 상태를 재구성하는 정책·참조 수정 시 재계산·구조/공개 명령/브라우저/UI 및 최종 전체 gate는 남습니다.
+
+표시 연결 전 저장 snapshot의 작업 트리 ReleaseSafe 빌드는6/6·exit0(43초), WASM SHA256 `171fea9e8a086f555877383f3626b8e3c3deb66b84cd525e73d732181fec7687`입니다. 이 후보의 기존 공개 정의/정확 숫자/text SUM/대기 숫자 이력4파일7/7·exit0·skip0(34865.52175ms)을 확인했습니다. 공개 수동 결과 설정 검사가 아니며 이후 표시 연결 소스를 이 artifact에 소급하지 않습니다. 다른 기존 작업 트리 변경을 포함한 후보이고 기본 데모 WASM을 교체하지 않았습니다.
+
 복수 결과 후속 수정: 실제 copay 참조의 두 번째 결과만 변경하는 초기 native 검사는 실패했습니다. 기대 구역 XML682027바이트와 출력682029바이트가 달랐고 첫 차이62996은 무관한 첫 수식의 dirty0→1이었습니다. override가 있으면 원문 보존 경로를 건너뛰고 일반 준비 결과를 전부 직렬화하던 것이 원인입니다. 숫자/정의/dirty/text site 원문이 변경되지 않은 수동 편집에서는 공통 준비로 선택·의존성을 검증한 뒤 `preserve_parameters` 수동 필드만 공통 writer에 넘기도록 수정했습니다. 무관한 준비값을 비교에서 빼는 검사기 완화가 아니라 출력 대상 선택을 고친 것입니다. 다른 수식이 override에 의존하는 미지원 경로는 준비 단계에서 여전히 거부합니다.
 
 최종 집중 ReleaseSafe11/11·exit0(root1+실제10선언)에서 실제 copay의 나머지 원문 보존, chart13개 override의 단일 ZIP 저장·구역 기대 바이트/원문·수정본 checkpoint 복원, 마지막 요청의 범위 밖 주소/중복 주소 거부 뒤 정확한 수정본 재저장, 앞선 전체 할당 실패·선택·인코딩·예산 검사를 확인했습니다. 현재 실행의 참조 파일 skip은0이지만 copay가 없는 checkout에서는 해당 선언이 명시적으로 skip됩니다. fmt/diff check도 통과했습니다. 후속 작업 트리 ReleaseSafe 빌드를 별도로 실행 중이며 아직 결과/산출물 검증으로 계수하지 않습니다. runtime은 미커밋이고 공개 명령·표시·참조 수정 시 해제·구조/UI 및 최종 전체 gate는 여전히 필요합니다.
