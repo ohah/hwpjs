@@ -13,3 +13,7 @@
 후속 `formula_result_override_values`는 필드 begin별 소유 문자열의 set/get/clear/deep clone을 구현합니다. FORMULA 소유 노드·UTF-8·XML 문자·공통 result-sites의 표시 한도를 확인한 뒤 할당 완료 전에는 기존 값을 해제하지 않습니다. 같은 값은 no-op이고 빈 문자열 override와 항목 부재는 별개입니다. 원본 LastResult/본문을 비교해 자동으로 override를 지우지 않으며 세션 거래가 해제 시점을 결정해야 합니다. 개별 저장소 set은 활성 분기/범위 편집 권한을 부여하지 않습니다. 실제 직렬화 writer의 별도 검사가 필요합니다.
 
 최종 집중 ReleaseSafe7/7·exit0은 root import 선언1개와 실제 검증6개이며 앞선 writer4개 및 소유 저장소2개를 포함합니다. deep clone·교체/해제 전체 할당 실패, 실패 시 기존 값 보존, 자기 문자열 일부를 넘기는 alias 교체, 빈 값 및 잘못된 노드/인코딩/문자/길이 거부를 확인했습니다. fmt/diff check도 통과했습니다. 새 저장소와 공통 표시 한도 상수는 미커밋 runtime이며 세션·checkpoint·표시·재계산·UI에 아직 연결하지 않았습니다.
+
+후속 작업 트리에서는 Section의 소유 필드/해제와 checkpoint State의 deep clone·해제·교환 및 capacity/문자열 메모리 예산에 연결했습니다. 전용 checkpoint 테스트는 작은 실제 HWPX ZIP을 열어 내부 저장소를 직접 설정합니다. capture 전체 할당 실패·복사본 변경 시 원본 값 불변·정확한 예산 증가·limit-1 거부·양방향 exchange·예산 초과 exchange의 현재 값 보존·다른 source rollback 거부·원래 빈 상태 rollback을 확인했습니다. 새 상태는 아직 공개 명령/저장/표시/재계산에서 사용하지 않으며 UI 지원으로 계산하지 않습니다.
+
+최종 집중 ReleaseSafe9/9·exit0은 root import1·기존 수식 정의 checkpoint1·수동 결과7검증을 포함합니다. fmt/diff check도 통과했습니다. 이 최신 snapshot은 이미 실행 중인 이전 전체 native gate와 다르며 runtime 미커밋 상태입니다. 구조 편집/rebase 등 다른 소유 이전 경로, 새 상태의 최종 전체 gate와 공개 저장/이력은 아직 감사해야 합니다.
