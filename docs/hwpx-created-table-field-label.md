@@ -12,6 +12,10 @@ supportsFieldLabelMode는 현재 원본 flat section만 허용합니다. 구조 
 
 ## 현재 검증
 
+게시7d454b83d5e9e5be8accc83530a51cb2905c965c만 Git archive로 추출한 `/tmp/hwpjs-field-label-release.vK577D`에서 추적/index diff가 없는 상태로 ReleaseSafe build exit0을 확인했습니다. 깨끗한 WASM SHA256은6a25125e797c7f2501476ba5ddb3a1e45700be6707bf6b6a14daec0849f31faa입니다. native 라벨/구조 보호/plain4/4·exit0, 공개/Worker/Canvas/projection18/18·exit0(12754.236833ms), 기존 HWPX-text34/34·exit0(44730.097417ms), 문서당 한 host44/44·exit0입니다. HWP5 실행 요약이 출력 한도에 잘려 같은 산출물로 전체 HWP5-editor를 재실행했고312/312·exit0(3207.837292ms)을 직접 확인했습니다. 재실행 후 산출물 해시와 추적/index 불변도 재확인했습니다.
+
+이 후보의 실제 브라우저·다운로드/재열기와 기본 데모 승격은 아직 미완료입니다. 위 통과를 원본 조판이나 전체 parser/editor 완료로 확대하지 않습니다.
+
 후보 SHA256 de1f7fe2a902546b6c09c2b296d98f99f05917861346c3e2d753542c3fb70e78의 ReleaseSafe build/fmt/diff exit0, native 라벨 거래/기존 plain 회귀3/3·exit0입니다. 실제 issue144의 교차 필드 뒤에 표를 넣은 뒤 emoji 라벨 입력으로 anchor5→7, XML NUL 거부/저장 전체 바이트 복원과 undo/redo를 검사했습니다.
 
 공개 라벨/field exterior/plain3/3·exit0(434.47725ms), Worker/Canvas/projection13/13·exit0(11581.28ms)을 확인했습니다. 실제 두 필드 파일의7라벨 fragment도 각각 생성 표와 함께 Python 일반/-O로 전체 XML·dirty·비대상 ZIP/메타데이터/CRC, undo/redo·XML 오류 후 redo·재열기를 대조했습니다. native 주소와 저장 후 늘어난 문단 주소는 독립 inventory의 field ID/fragment 순서로 구분합니다.
