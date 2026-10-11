@@ -24,6 +24,21 @@ class ScopeTests(unittest.TestCase):
         self.assertEqual(report['unmatched'], [])
         self.assertEqual(report['link_issues'], [])
 
+    def test_numeric_ids_match_despite_leading_zeroes(self):
+        report = self.inspect('<p:fieldBegin id="0001"/><p:fieldEnd beginIDRef="1"/>')
+        self.assertEqual(report['unmatched'], [])
+        self.assertEqual(report['link_issues'], [])
+        report = self.inspect('<p:fieldBegin id="0001"/><p:fieldBegin id="1"/><p:fieldEnd beginIDRef="01"/>')
+        self.assertEqual(report['link_issues'], ['ambiguous_or_missing_begin'])
+
+    def test_numeric_lexical_boundaries_preserve_raw_ids(self):
+        for raw, expected in [(' +0001 ', 1), ('-000', 0), ('4294967295', 4294967295), ('0' * 5000, 0)]:
+            self.assertEqual(scope.numeric_id(raw), expected)
+        for raw in ['', '+', '-1', '4294967296', '1_0', '１', '\u00a01', '1.0', '--0']:
+            with self.assertRaises(ValueError):
+                scope.numeric_id(raw)
+        self.assertEqual(self.inspect('<p:fieldBegin id="0001"/>')['unmatched'][0]['id'], '0001')
+
     def test_ambiguous_forward_and_missing_ids_are_not_repaired(self):
         for body, issue in [
             ('<p:fieldBegin id="1"/><p:fieldBegin id="1"/><p:fieldEnd beginIDRef="1"/>', 'ambiguous_or_missing_begin'),

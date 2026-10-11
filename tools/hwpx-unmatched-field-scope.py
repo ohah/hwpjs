@@ -8,6 +8,21 @@ import xml.etree.ElementTree as ET
 PARA = '{http://www.hancom.co.kr/hwpml/2011/paragraph}'
 
 
+def numeric_id(raw):
+    if raw is None:
+        return None
+    value = raw.strip(' \t\r\n')
+    if not re.fullmatch(r'[+-]?[0-9]+', value):
+        raise ValueError('invalid field UINT32')
+    digits = value.lstrip('+-').lstrip('0') or '0'
+    if (value.startswith('-') and digits != '0') or len(digits) > 10:
+        raise ValueError('invalid field UINT32')
+    number = int(digits)
+    if number > 0xFFFFFFFF:
+        raise ValueError('invalid field UINT32')
+    return number
+
+
 def inspect_section(xml):
     root = ET.fromstring(xml)
     nodes = list(root.iter())
@@ -18,11 +33,11 @@ def inspect_section(xml):
     ends = list(root.iter(PARA + 'fieldEnd'))
     ids = {}
     for begin in begins:
-        ids.setdefault(begin.get('id'), []).append(begin)
+        ids.setdefault(numeric_id(begin.get('id')), []).append(begin)
     matched = set()
     issues = []
     for end in ends:
-        reference = end.get('beginIDRef')
+        reference = numeric_id(end.get('beginIDRef'))
         candidates = ids.get(reference, []) if reference is not None else []
         if len(candidates) != 1:
             issues.append('ambiguous_or_missing_begin')

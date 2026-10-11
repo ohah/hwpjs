@@ -18,6 +18,10 @@
 
 진단의6개 회귀는 가장 가까운 중첩 목록, 명시적 다문단 종료, 모호한/앞선/없는 참조, 잘못된 namespace, 구역 소유/중복 종료 및 실제 두 파일을 검사합니다. 일반 Python과 `-O` 각각6/6·exit0·skip0입니다. 이 도구는 non-LIFO/fieldid 의미 검증이나 완전한 ZIP/문서 검증기가 아니며 native linker를 대체하지 않습니다.
 
+후속 적대적 검증에서 진단 도구가 `0001`과 `1`을 문자열로 구별하는 반례를 재현했습니다(7검사 중1실패). 비교 키는 독립 UINT32 숫자값으로 수정하고 출력 원문 ID는 그대로 유지했습니다. 부호/ASCII 공백/음수0/UINT32 최대값/범위 초과/비ASCII 숫자/긴0 표기를 추가한 최종8검사는 일반 Python·`-O` 각각8/8·exit0·skip0입니다. 제품 linker는 이미 숫자값으로 비교하며 이번 수정은 진단 도구에만 적용됩니다.
+
+고정 버전 한컴 [시작 모델](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Para/fieldBegin.cpp)·[끝 모델](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Para/fieldEnd.cpp)을 다시 확인했습니다. 명시적 ID 속성은 확인되지만 목록 끝이 누락 필드의 의미적 종료를 대신한다는 규칙은 이 코드에서 확인하지 못했습니다. RHWP의 목록 단위 orphan 종료 연결 코드 역시 이 두 문서의 목록 밖 편집 무손실 증명은 아닙니다. 현재 보호 정책은 유지하며 더 강한 의미/왕복 증거를 확보해야 합니다.
+
 같은 후속 후보3d77c874의 Canvas controller→실제 Worker/WASM 회귀도 저장본 재열기와 호출자/디스크 원본 불변 검사를 추가한 뒤 2/2·exit0·skip0(54011.126375ms)였습니다. 파일별36120.663083/17753.357125ms는 입력·독립 XML/ZIP 양 Python 모드·undo/redo·재열기를 포함합니다. DOM과 Canvas는 테스트 대역이므로 실제 브라우저 E2E나 레이아웃 일치로 해석하지 않습니다. 이미 커밋된 권한 guard/수동 결과 UI의 기본 artifact 회귀7/7·exit0·skip0(551.17425ms)도 별도 통과했으며 후보 회귀와 합쳐 전체 편집 지원 수로 계산하지 않습니다.
 
 2026-10-11 후속 후보 `full-gate-current/bin/hwpjs.wasm` SHA256 `3d77c87433cee8ee8256722756c23c06056b693a9ebb82af2388d6dc054e7252`로 공개 바깥 편집 회귀를 다시 실행했습니다. `tests/hwpx/unmatched-field-exterior-editor.test.mjs`의 실제80168/86712 두 문서는 2/2·exit0·skip0(5426.40325ms)였습니다. 전체 XML·비대상 ZIP payload의 양 Python 모드 대조, 잘못된 기대 문자열의 거부, undo/redo·보호 거부 뒤 이력 유지·재열기·원본 메모리/디스크 불변을 포함합니다. 이 결과는 후보의 두 앞쪽 문단에 대한 검증이며 기본 제품/전체 문단 편집/실제 브라우저/전체 native gate 완료를 증명하지 않습니다. runtime과 회귀 파일의 커밋은 전체 native 검증 후 진행합니다.
