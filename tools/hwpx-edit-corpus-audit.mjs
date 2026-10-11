@@ -8,6 +8,7 @@ import { createHwpxReader } from "../js/hwpx.mjs";
 import { parseEditAuditOptions } from "./hwpx-edit-audit-options.mjs";
 import { execFileSync } from "./oracle-process.mjs";
 import { hwpxParagraphCoordinates } from "./hwpx-paragraph-coordinates.mjs";
+import { captureInputIdentity, verifyInputIdentity } from "./audit-input-identity.mjs";
 
 const options = parseEditAuditOptions(process.argv.slice(2), { allowHistory: true });
 const wasm = readFileSync(options.wasm ?? "zig-out/bin/hwpjs.wasm");
@@ -20,9 +21,11 @@ const counts = { files: paths.length, encrypted: 0, paragraphs: 0, accepted: 0, 
 try {
   for (const path of paths) {
     const input = readFileSync(path);
+    const inputIdentity = captureInputIdentity(input);
     try { editor.open(input); }
     catch (error) {
       if (error.message !== "EncryptedDocument") throw error;
+      verifyInputIdentity(input, inputIdentity, path);
       counts.encrypted++; continue;
     }
     if (history) editor.enableHistory();
@@ -94,7 +97,8 @@ try {
       assert.deepEqual(Buffer.from(editor.save()), input, path);
       counts.accepted++; accepted++;
     }
-    console.log(JSON.stringify({ path, paragraphs: paragraphs.length, accepted }));
+    verifyInputIdentity(input, inputIdentity, path);
+    console.log(JSON.stringify({ path, inputSha256: inputIdentity, paragraphs: paragraphs.length, accepted }));
   }
   if (options.fixture === undefined) assert.equal(counts.encrypted, paths.filter(path => path.endsWith("/password-12345.hwpx")).length);
   assert.equal(counts.paragraphs, counts.accepted + Object.values(counts.refused).reduce((sum, value) => sum + value, 0), "Paragraph classification mismatch");
