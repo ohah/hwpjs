@@ -12,6 +12,8 @@
 
 ## 실제 검증
 
+2026-10-11 후속 후보 `full-gate-current/bin/hwpjs.wasm` SHA256 `3d77c87433cee8ee8256722756c23c06056b693a9ebb82af2388d6dc054e7252`로 공개 바깥 편집 회귀를 다시 실행했습니다. `tests/hwpx/unmatched-field-exterior-editor.test.mjs`의 실제80168/86712 두 문서는 2/2·exit0·skip0(5426.40325ms)였습니다. 전체 XML·비대상 ZIP payload의 양 Python 모드 대조, 잘못된 기대 문자열의 거부, undo/redo·보호 거부 뒤 이력 유지·재열기·원본 메모리/디스크 불변을 포함합니다. 이 결과는 후보의 두 앞쪽 문단에 대한 검증이며 기본 제품/전체 문단 편집/실제 브라우저/전체 native gate 완료를 증명하지 않습니다. runtime과 회귀 파일의 커밋은 전체 native 검증 후 진행합니다.
+
 전체 gate 실행 경계: 원본 분석 소유 수정 전 소스로 시작한 ReleaseSafe 전체 native 실행은 소스가 바뀌어 최종 gate로 사용할 수 없으므로, 명령/cwd/부모·자식 PID를 확인한 소유 프로세스만 종료했습니다(exit143, 명시 취소). timeout이나 제품 실패/통과로 계수하지 않습니다. 최신 소스로 `zig build test -Doptimize=ReleaseSafe -j1 --summary all`을 새로 실행했고 최종 결과는 아직 없습니다. 다른 저장소/사용자 프로세스는 종료하지 않았습니다.
 
 원본 분석 소유 후속: 최초 private helper 이름 cached가 기존 테스트의 local constant를 가려 native/WASM 컴파일이 실패했습니다. cachedLease로 구분한 뒤 ReleaseSafe build6/6·exit0(57초), 후보 `unmatched-field-source-cache/bin/hwpjs.wasm` SHA256 `fd6fe25c63625c6661938aa7cb7893f9088d762e224aebc4fda4a92c88247879`를 확인했습니다. 최종 native13/13·exit0는 cold 분석의 전체 할당 실패, partial source를 소유하는 open의 전체 할당 실패/해제, fail_index0에서도 빌린 lease가 추가 할당을 하지 않음, strict 거부 유지 및 partial cache의 원본 binding 변경 거부를 포함합니다. 이후 추가 binding 반례는 test-only이며 runtime 변경이 아닙니다. fmt/diff check가 통과했습니다.
