@@ -2,6 +2,8 @@
 
 ## 최신 수동 결과 후보 재검증
 
+후속 바깥 텍스트 지원은 [끝 없는 필드의 편집 경계](hwpx-unmatched-field-exterior.md)가 현재 계약과 후보 검증을 소유합니다. 아래 전역 링크 실패 기록은 이전 상태이며, 후속 후보에서 앞쪽 문단2 입력이 확인됐습니다. 미해결 필드 전체 편집 완료로 해석하지 않습니다.
+
 끝 없는 필드의 원문 보존 gate: [실제 두 파일 회귀](../tests/hwpx/unmatched-field-source.test.mjs)는 독립 Python ZIP/XML로 끝 없는 begin id 목록을 확인한 뒤 텍스트 읽기·open/무편집 save·재열기 save와 입력 메모리/디스크 사본의 정확한 바이트 보존을 검사합니다. 기본 제품2/2·exit0·skip0(5068.500791ms), de4ead 후보2/2·exit0·skip0(4957.217875ms)이 통과했습니다. reference fixture가 없는 checkout에서는 각각 명시적으로 skip하며 이를 실제 파일 검증 통과로 계수하지 않습니다. 이 회귀는 끝 마커를 자동 생성하는 복구가 없음을 고정하고 향후 편집 권한 개선을 금지하지 않습니다. 해당 문서의 편집 지원 완료 검사가 아닙니다.
 
 제어 흐름 재확인에서 두 파일의 source 보존 저장은 이미 성공하며, 첫 일반 문단 조회 실패는 공개 paragraph2의 InvalidFieldLinks입니다. orphan 소유 문단의 독립 원문 순서는80168에서186, 86712에서386(2마커)/403/1789입니다. 이 숫자는 모든 XML 문단의 독립 source 순서이며 선택된/native 표시 좌표로 직접 사용하지 않습니다. source field analysis가 strict 범위 조립에 실패하면 cache를 만들지 않고, 해당 조회의 fresh lease에서 같은 전역 검사를 반복합니다. 읽기/open/원문 보존과 필드 의미/편집 권한을 구분해야 합니다.
