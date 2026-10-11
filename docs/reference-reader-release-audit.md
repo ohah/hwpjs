@@ -2,6 +2,12 @@
 
 ## 최신 수동 결과 후보 재검증
 
+끝 없는 필드의 원문 보존 gate: [실제 두 파일 회귀](../tests/hwpx/unmatched-field-source.test.mjs)는 독립 Python ZIP/XML로 끝 없는 begin id 목록을 확인한 뒤 텍스트 읽기·open/무편집 save·재열기 save와 입력 메모리/디스크 사본의 정확한 바이트 보존을 검사합니다. 기본 제품2/2·exit0·skip0(5068.500791ms), de4ead 후보2/2·exit0·skip0(4957.217875ms)이 통과했습니다. reference fixture가 없는 checkout에서는 각각 명시적으로 skip하며 이를 실제 파일 검증 통과로 계수하지 않습니다. 이 회귀는 끝 마커를 자동 생성하는 복구가 없음을 고정하고 향후 편집 권한 개선을 금지하지 않습니다. 해당 문서의 편집 지원 완료 검사가 아닙니다.
+
+제어 흐름 재확인에서 두 파일의 source 보존 저장은 이미 성공하며, 첫 일반 문단 조회 실패는 공개 paragraph2의 InvalidFieldLinks입니다. orphan 소유 문단의 독립 원문 순서는80168에서186, 86712에서386(2마커)/403/1789입니다. 이 숫자는 모든 XML 문단의 독립 source 순서이며 선택된/native 표시 좌표로 직접 사용하지 않습니다. source field analysis가 strict 범위 조립에 실패하면 cache를 만들지 않고, 해당 조회의 fresh lease에서 같은 전역 검사를 반복합니다. 읽기/open/원문 보존과 필드 의미/편집 권한을 구분해야 합니다.
+
+로컬 RHWP e8800c8def63449808a4092798442652ed460552의 `src/parser/hwpx/section.rs`는 문단의 field stack에서 종료 시 닫힌 범위를 만들고, 시작이 다른 문단에 있는 고아 종료의 속성/위치를 별도 저장합니다. 문단 조립 후 남은 stack에 대해 우리 전역 InvalidFieldLinks와 같은 오류를 반환하는 경로는 이 부분에 없습니다. 문단 목록의 후속 시작/끝 종류 결합도 별도입니다. 이는 관측한 parser 소스 설계 차이이며 RHWP의 두 실제 문서 편집/저장 무손실 실행이나 원본 한글의 끝 없는 필드 의미를 입증하지 않습니다. 이 근거만으로 문단 끝을 합성하거나 전역 strict 검사를 제거하지 않았습니다. 다음 구현은 소유된 미해결 마커와 확정된 링크를 구분하고 원문/저장/권한 정책을 함께 검증하는 단계입니다.
+
 확장자/편집 경계 후속: 참조 `.hwpx`439경로의 공통 서명 분류는 실제 HWPX433/HWP56입니다. HWP5 사본은 `hwpx/hwpx-01.hwpx`, `issue1891/76076_regulatory_analysis.hwpx`, `issue1891/80250_regulatory_analysis.hwpx`, `issue3637/press_release_split_cell_nested_table.hwpx`, `task1768/distribution_doc.hwpx`, `task2097/17809123_jawonbongsa.hwpx`입니다. 이는 이름 기준 inventory이며 전체 reader의 실제 HWPX436(435읽기+암호1)과 동일 목록이 아닙니다. 다른 확장자 안의 HWPX도 전체 reader에는 포함됩니다. 파일을 바꾸거나 변환하지 않았습니다.
 
 미커밋 참조 편집 wrapper는 공통 `referenceReaderScope`를 재사용해 이 HWP5 사본을 기존 HWP5 편집 감사로 연결하도록 수정했습니다. 최신 de4ead의 실제 HWP5 경로에서 hwpx-01의1582문단, issue1891의76076/80250 각각2727/413문단 모두 prefix·이력·비대상 stream/텍스트·저장 재열기를 통과했습니다. 혼합 issue1891 wrapper 실행은 HWP5 두 파일 성공/HWPX 두 파일 실패, exit1로 종료됐습니다. 수정 전439경로 장시간 실행은 기존 도구 snapshot이며 새 서명 분류의 통과 근거로 읽지 않습니다.
