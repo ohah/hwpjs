@@ -34,6 +34,10 @@ issue1891_external_bindata_link의 추가 독립 XML 조회에서는 SUM(?3:?7)�
 
 ## SUM 비숫자 관측의 경계
 
+구조 후보a61595로 기존 조회 실패5파일을 단계별 재검사했습니다. aift 구역2는6029문단/1수식, external BinData 구역0은2864문단/5수식 조회 및 저장 원문 일치였습니다(aift 전체 문서6343문단 관측과 구역2만의6029문단을 합치지 않습니다). 나머지는 열기는 성공하지만 nested_table_escape와 tac-img-02는 UnsupportedFormulaCellParagraphs, copay_cap은 InvalidFormulaReference로 paragraphTextSnapshot과 후속 save가 거부됩니다. 기본 제품6a2512는 aift/external의 UnsupportedMergedFormulaCell, nested의 UnsupportedFormulaCellParagraphs, copay의 InvalidFormulaReference, tac의 InvalidFormulaNumber를 동일 단계에서 재현했습니다. 초기 조사기의 open 단계에 save를 넣어 잘못 표시한 것은 수정 후 재실행했으며 열기 실패로 계수하지 않습니다.
+
+독립 원문 조사에서 copay의 첫 식이 SUM(BELOW)임을 확인했습니다. [공식 한글 계산식 도움말](https://help.hancom.com/hoffice130_assistant/ko-KR/Hwp/table/calculation/calculation.htm)은 BELOW를 현재 셀 아래쪽 범위로 설명합니다. 임시 공통 formula_range에 BELOW 구문과 owner 제외/마지막 행/0행/u32 끝/상충 방향/후행 구문 검사를 추가했습니다. 범위 모듈 직접 ReleaseSafe6/6·exit0을 확인했습니다. root의 최초 선택 필터 실행은 root 선언1개만 실행해 기능 증거로 제외했습니다. 직접 selection 모듈 실행과 새 BELOW 반복/교차 검사, 별도 WASM 빌드는 후속 검증이며 a61595의 관측 결과를 새 후보에 소급하지 않습니다. 수식 관련 native136선언 실행도 a61595 소스 기준으로 아직 진행 중입니다.
+
 구조 입력 보완 후보a61595의 후속 결과: 공개3파일17/17·exit0(55338.59625ms), 구조 거래/투영 거래/입력 guard 집중native5/5·exit0을 확인했습니다. [실제 설명 셀 SUM 저장 검사기](../tools/hwpx-text-sum-save-oracle.py)는 관측8×8표의 다섯 SUM을 가장 가까운 소유 표로 고르고 독립 셀 점유/Decimal 합산을 수행합니다. 원본에서 관측한 두 설명 문구만 제외하고 나머지 숫자를 재계산해 첫 결과127.76 및 나머지4결과 불변을 요구합니다. 기대 XML에는67.83→70 입력과 첫 필드 Command/LastResult/dirty/소유 결과 텍스트만 변경합니다. 전체 구역 XML 및 비대상 ZIP payload·entry 순서/주석/메타데이터/CRC가 일치해야 합니다.
 
 실제 수정본은 Python 일반/-O 모두 통과했습니다. 각 모드에서 결과·수식 Command·dirty·설명 문구·비대상 header payload의5개 변조를 거부했습니다. 실제 전체 XML/비대상 payload 불일치만 부정 대조 성공으로 인정하며 검사기 실행 실패는 성공으로 처리하지 않습니다. 최초 oracle의 전체 descendant 기반 표 선택은 중첩 표의 조상을 중복 후보로 잡아 Source table identity로 실패했고, 독립 부모 관계에서 가장 가까운 표를 선택하도록 수정 후 재실행했습니다. 기대 차이를 삭제하거나 XML 차이를 넓게 허용하지 않았습니다. 이 검사는 실제 한 파일/한 숫자 전환의 지원 근거이며 전체 fixture/모든 집계/브라우저 조판 완료 증거가 아닙니다.
