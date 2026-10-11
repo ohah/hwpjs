@@ -17,6 +17,8 @@
 
 ### 커밋 범위의 독립 소스 빌드
 
+독립 후보의 전체 참조 텍스트 읽기와 별도 명시 비밀번호 검증은 [참조 읽기 감사](reference-reader-release-audit.md)가 소유합니다. 수식 편집/필드 지원/원본 조판 완료 증거로 합치지 않습니다.
+
 HEAD의 Git archive에 이번 소유 변경15개 기존 파일과3개 신규 파일만 적용한 사본을 `zig-out/verification/formula-release.1eLR2A`에 구성했습니다. 다른 기존 로컬 변경은 가져오지 않았습니다. 해당 사본의 ReleaseSafe build5/5 steps·exit0, WASM SHA256 `fe7de3455ed8f88856c7fe59303fa114fe8e9b98e0eacd56a56983887b18be38`을 확인했습니다. 이 후보로 원 작업 트리의 실제 reference를 포함한 공개5파일20/20·exit0/skip0(46654.318125ms)을 확인했습니다. 테스트 실행 소스는 원 작업 트리이고 WASM만 독립 소스에서 나온 것이므로 게시 패키지 전체 검증과 구분합니다.
 
 최초 집중 native11개 실행은 저장 모듈의 새 stale-display 선언이 부모 import 필터에 의해 빠졌습니다. root 테스트 import에 해당 모듈을 명시적으로 추가해 다시 실행했고12/12·exit0으로 새 선언의 전체 할당 실패도 실제 실행된 것을 확인했습니다. 이 추가 import는 테스트 경로 수정이며 앞선 WASM 빌드와 native 소스 snapshot을 혼동하지 않습니다. 소유 사용자 staged46줄은 그대로 보존했습니다. 독립 빌드/집중 통과는 최종 전체 native gate나 기본 제품 승격을 대체하지 않습니다.
