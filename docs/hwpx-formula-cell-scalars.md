@@ -15,6 +15,12 @@
 
 ## 검증 경계
 
+### 커밋 범위의 독립 소스 빌드
+
+HEAD의 Git archive에 이번 소유 변경15개 기존 파일과3개 신규 파일만 적용한 사본을 `zig-out/verification/formula-release.1eLR2A`에 구성했습니다. 다른 기존 로컬 변경은 가져오지 않았습니다. 해당 사본의 ReleaseSafe build5/5 steps·exit0, WASM SHA256 `fe7de3455ed8f88856c7fe59303fa114fe8e9b98e0eacd56a56983887b18be38`을 확인했습니다. 이 후보로 원 작업 트리의 실제 reference를 포함한 공개5파일20/20·exit0/skip0(46654.318125ms)을 확인했습니다. 테스트 실행 소스는 원 작업 트리이고 WASM만 독립 소스에서 나온 것이므로 게시 패키지 전체 검증과 구분합니다.
+
+최초 집중 native11개 실행은 저장 모듈의 새 stale-display 선언이 부모 import 필터에 의해 빠졌습니다. root 테스트 import에 해당 모듈을 명시적으로 추가해 다시 실행했고12/12·exit0으로 새 선언의 전체 할당 실패도 실제 실행된 것을 확인했습니다. 이 추가 import는 테스트 경로 수정이며 앞선 WASM 빌드와 native 소스 snapshot을 혼동하지 않습니다. 소유 사용자 staged46줄은 그대로 보존했습니다. 독립 빌드/집중 통과는 최종 전체 native gate나 기본 제품 승격을 대체하지 않습니다.
+
 ### 무편집 저장과 내부 재계산
 
 [단계별 실제 파일 조사기](../tools/hwpx-formula-refusal-probe.mjs)는 후보 hash와 각 파일의 open/문단 조회/수식 조회/save 단계를 구분합니다. 현재37e932 후보는5파일 모두 조회되지만 copay의 무편집 save는 바이트가 달랐습니다. 독립 전체 XML 차이는 첫 필드1295981349의 dirty0→1과 소유 표시 문자열100→184.9 두 곳뿐이며 다른 ZIP payload는 같았습니다. 원본 Command/LastResult와 독립 합산은184.9인데 원본 본문만100이므로, 파서의 값 잘림이 아니라 무편집 저장에서의 재계산입니다. 조사기의 절대 후보 경로/누락/중복/잘못된 인수 거부 테스트1/1·exit0을 확인했습니다.
