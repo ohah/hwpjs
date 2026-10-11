@@ -4,6 +4,10 @@
 
 후속 현재 상태: 내부 flat Session.save와 checkpoint까지 연결했으며 아래 최초 writer-only 기록을 대체합니다. 공개 편집 명령/표시/재계산/UI는 여전히 연결 전입니다. 아래 회귀 결과는 각 단계 snapshot에만 적용합니다.
 
+재열기 소유 상태 복원의 선행 단계: 동일 저장소 Entry에 manual/source_display/automatic 출처를 구분했습니다. automatic은 계산 숫자를 저장하지 않는 명시적 재계산 의도이며 get은 null을 반환하지만 origin은 남습니다. 입력 무효화와 정의 고치기는 항목 삭제 대신 이 상태로 전환합니다. 공통 준비는 automatic을 실제 선택으로 검증하고 변경 없는 원본 표시보다 현재 계산을 우선하며, 저장의 원문 보존 선택도 해당 자동 필드를 포함합니다. 복제/checkpoint는 출처를 유지하고 명시적 빈 수동 값과 automatic을 혼동하지 않습니다. source_display는 원본 표시 보존을 위한 예약 출처이며 실제 재열기 후보 복원 수집기는 아직 연결하지 않았습니다.
+
+최종 집중21/21·exit0(root1+실제20선언)은 automatic 전환/deep clone/no-op/빈 수동 값 재설정의 전체 할당 실패, 원본 본문이 수동인 작은 ZIP에서도 명시적 자동 상태의 조회/저장 결과2 우선 및 입력 원문 보존, 기존 수식/표시/이력/계산 무효화를 포함합니다. fmt/diff check도 통과했습니다. 이 최신 소스의 WASM/public/전체 gate는 아직 없으며 앞선068b 후보의 재열기 후 관계없는 결과 덮임 실패를 해결됐다고 계수하지 않습니다. 다음 단계는 원본에서 보존된 표시값을 임시 후보로 복원하고 실제 변경 참조만 automatic으로 전환하는 거래 연결입니다. runtime은 미커밋입니다.
+
 재열기 표시 후속과 미해결 거래: aaf 후보에서 수동 결과 저장/재열기 후 본문은 `수동😀<&`, current/source cache는67.5인 불일치를 재현했습니다. dirty만 수동 전용 표식으로 추측하지 않습니다. 로컬 ParaList schema의 dirty는 xs:boolean/default false이고 [한컴 모델의 고정 commit fieldBegin](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Para/fieldBegin.cpp)도 boolean/default false의 읽기/쓰기만 보여 줍니다. 실제 편집기의 수동 결과 표시/재계산 프로토콜을 이 모델만으로 확정하지 않았으며 코드를 이식하지 않았습니다.
 
 `formula_source_display`는 read projection에서 공통 source binding/text 비교로 변경 없는 구역을 확인하고 실제 결과 본문을 읽습니다. 공통 준비의 계산/선택/구조 검증은 유지하며 source display 준비값은 파라미터 보존으로 표시합니다. writer의 자동 계산 정책을 이 read 옵션으로 대체하지 않습니다. current 수식·서식/좌표 조회는 같은 옵션을 사용하고 정의/text 변경이 있으면 기존 계산 경로를 따릅니다. 이 동작은 원본 표시값 보존이지 수동 사용자 편집이라는 영속 판정이 아닙니다. copay 원문의 표시100은 current 조회에도100이며 source cache/계산184.9와 구분합니다. 이전 derived current184.9 기록/기대값은 이전 계약입니다.
