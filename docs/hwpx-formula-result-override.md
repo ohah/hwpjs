@@ -4,6 +4,14 @@
 
 후속 현재 상태: 내부 flat Session.save와 checkpoint까지 연결했으며 아래 최초 writer-only 기록을 대체합니다. 공개 편집 명령/표시/재계산/UI는 여전히 연결 전입니다. 아래 회귀 결과는 각 단계 snapshot에만 적용합니다.
 
+재열기 표시 후속과 미해결 거래: aaf 후보에서 수동 결과 저장/재열기 후 본문은 `수동😀<&`, current/source cache는67.5인 불일치를 재현했습니다. dirty만 수동 전용 표식으로 추측하지 않습니다. 로컬 ParaList schema의 dirty는 xs:boolean/default false이고 [한컴 모델의 고정 commit fieldBegin](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Para/fieldBegin.cpp)도 boolean/default false의 읽기/쓰기만 보여 줍니다. 실제 편집기의 수동 결과 표시/재계산 프로토콜을 이 모델만으로 확정하지 않았으며 코드를 이식하지 않았습니다.
+
+`formula_source_display`는 read projection에서 공통 source binding/text 비교로 변경 없는 구역을 확인하고 실제 결과 본문을 읽습니다. 공통 준비의 계산/선택/구조 검증은 유지하며 source display 준비값은 파라미터 보존으로 표시합니다. writer의 자동 계산 정책을 이 read 옵션으로 대체하지 않습니다. current 수식·서식/좌표 조회는 같은 옵션을 사용하고 정의/text 변경이 있으면 기존 계산 경로를 따릅니다. 이 동작은 원본 표시값 보존이지 수동 사용자 편집이라는 영속 판정이 아닙니다. copay 원문의 표시100은 current 조회에도100이며 source cache/계산184.9와 구분합니다. 이전 derived current184.9 기록/기대값은 이전 계약입니다.
+
+최초 helper는 단일 오류 집합에 불필요한 else를 두어 native/WASM 컴파일 exit1로 실패했습니다. 공통 비교 함수의 실제 InvalidTextSites 오류만 명시한 수정 후 native19/19·exit0(root1+실제18선언), ReleaseSafe6/6·exit0(54초)을 확인했습니다. 후보 `formula-source-display/bin/hwpjs.wasm` SHA256 `068b392b6b4fd89dc126bffbdeb73583303c8c63836094f7895b49235bc7f11d`의 공개4파일14/14·exit0·skip0(43366.477ms)은 재열기 표시/6UTF-16 서식 폭·기존 정의/48정확 숫자/text SUM/독립 저장 반례를 포함합니다. source 비교의 전체 할당 실패·누락/잘못된 binding/text 변경 반례도 native 검사에 포함했습니다.
+
+그 뒤 두 수동 결과를 저장/재열기하고 첫 수식 입력11.2→12만 바꾸는 추가 반례는 첫 결과68.3과 달리 관계없는 두 번째 결과가 `다른 수동`에서73.9로 바뀌었습니다. 별도 공개 회귀1실패·exit1(743.116375ms)로 고정했으며, 앞선14통과를 최종 전체 수동 결과 지원으로 해석하지 않습니다. 새 회귀/ runtime은 미커밋입니다. 재열기에서는 overlay 소유 상태가 없어서 전체 준비가 다른 보존 결과까지 자동 계산하는 것이 남은 원인입니다. 원본에서 보존된 표시값의 소유/자동 계산 상태 복원 및 입력/정의 수정 시 해당 결과만 해제하는 거래가 다음 구현 gate입니다. 기본 제품/Worker/UI를 승격하지 않았습니다.
+
 참조 입력 재계산 후속: b29 API 후보에서 실제 chart의 수동 결과를 설정한 뒤 native 문단20의11.2→12를 입력해도 첫 current 결과가 수동으로 남는 누락을 재현했습니다. 후속 `formula_result_override_invalidation`은 일반/투영된 flat splice의 draft에서 활성 변경 셀을 수집하고 공통 dependency evaluator의 실제 입력 read observer로 해당 수식의 참조를 구합니다. 숫자/설명/빈 셀·재귀 평가의 실제 read를 관찰하며 별도 범위 파서나 영속 dependency cache를 만들지 않습니다. observer의 주소 dedup은 산술의 반복 참조를 제거하지 않습니다. observer/변경 셀 매칭과 복수 root 평가의 셀·검사 예산은 공유합니다. 관련 override만 후보에서 clear한 뒤 공통 준비 성공 후 Sites/override 소유권을 함께 교체합니다. no-op/실패는 기존 상태를 바꾸지 않습니다.
 
 정의 고치기도 후보 정의/override를 함께 검증·교체하며 해당 override만 제거합니다. 같은 원본 정의를 명시적으로 다시 설정해도 override가 있으면 재계산 거래로 처리합니다. 최초 정의 경로가 override를 알지 못한 채 정의만 게시해 후속 저장에 충돌할 수 있던 문제를 방지합니다. 수동 결과를 pending 새 정의에 다시 설정하는 역순·다른 수식의 수동 결과 의존·구조/rebase 등은 아직 지원/검증이 필요합니다.
