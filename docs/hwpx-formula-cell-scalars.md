@@ -6,6 +6,8 @@
 
 ## 책임과 정책
 
+수식 결과 직접 수정의 별도 소유/저장 계약은 [결과 override 기반](hwpx-formula-result-override.md)이 소유합니다. 현재 내부 직렬화 단계이며 수식 결과 필드의 공개 편집 허용을 뜻하지 않습니다.
+
 - `formula_cell_rectangle`는 셀 주소·span·표 경계·점유/겹침을 검사합니다. `formula_values`는 기존 선택 iterator와 집계·누적 작업 예산을 소유합니다. 반복 주소를 계산에서 제거하지 않습니다.
 - `formula_cell_number`는 현재 text site와 활성 XML 구조를 읽습니다. strict 읽기는 단일 문단 숫자만 허용합니다. SUM scalar 조회는 첫 활성 문단만 number/text/empty로 분류하며 문단 사이의 숫자를 이어 붙이거나 뒤 문단의 숫자를 끌어오지 않습니다. 뒤 문단을 포함한 활성 제어 요소는 여전히 검사합니다. 이 첫 문단 정책은 실제 파일 관측 기반이며 일반 한글 숫자 추출 명세 전체가 아닙니다.
 - SUM만 text/empty를 집계에서 제외합니다. AVG/PRODUCT/MIN/MAX는 기존 strict 숫자 정책을 유지합니다. 숫자 병합 셀은 원점에서만 읽으며 내부 좌표는 거부합니다. 설명 셀의 내부 좌표를 제외할 때도 겹침/예산 검사를 먼저 수행합니다.
