@@ -4,6 +4,10 @@
 
 후속 현재 상태: 내부 flat Session.save와 checkpoint까지 연결했으며 아래 최초 writer-only 기록을 대체합니다. 공개 편집 명령/표시/재계산/UI는 여전히 연결 전입니다. 아래 회귀 결과는 각 단계 snapshot에만 적용합니다.
 
+native 세션 거래 후속 상태: `Session.setManualFormulaResult(section, begin, display)`는 소유 후보 clone/set→일시적 Section view의 전체 save 검증→ownership swap 순서입니다. 저장이나 검증 실패는 원래 override를 변경하지 않습니다. native history의 새 `formula_result_override` 종류는 기존 enum 끝에 추가했고 필드 전체 치환용 start/deleted0만 허용합니다. 기존 checkpoint rollback/undo/redo를 재사용합니다. 구조/생성 표 host는 아직 미지원 오류로 거부하며 향후 지원 대상에서 제외하지 않습니다. WASM 내부 공통 명령 switch도 새 enum을 처리하도록 연결했지만 export/JS/Worker/UI 설정 경로는 아직 추가하지 않았습니다.
+
+최종 집중15/15·exit0(root1+실제14선언)은 후보 세션 명령 전체 할당 실패의 최초/기존 override 원자성, 정식 native history 저장 바이트 undo/redo·no-op·예산 rollback·잘못된 문자/범위·두 번째 배치 요청의 늦은 실패 후 원문/redo 보존을 포함합니다. fmt/diff check도 통과했습니다. 새 작업 트리 ReleaseSafe 빌드를 별도로 시작했으며 아직 완료 gate로 계수하지 않습니다. 이 기록은 새 JS API/Worker/브라우저 지원이나 참조 입력 재계산/재열기 상태 판별 완료가 아닙니다.
+
 표시 연결 후속 상태: 기존 문단 텍스트 snapshot은 저장본의 현재 문자열을 이미 읽고 있었으며 수식 current/서식 snapshot/서식 거래의 현재 값 준비/필드 바깥 좌표 준비에도 같은 override 저장소를 전달했습니다. current 수식의 values는 유효 표시용 transient Command/LastResult이고 원본 source 조회/저장된 cache와 구분합니다. 수동 결과의 표시용 Command를 저장 파라미터에 다시 쓰지 않습니다. 공개 JSON 필드 집합은 변경하지 않았고 수동 결과 설정 공개 명령은 아직 없습니다.
 
 실제 chart의 수동 Unicode/기호 결과에 대해 문단 텍스트·current 수식 및6UTF-16단위의 서식 끝 위치 일치, 다른12결과 불변, source LastResult67.5 보존 및 조회 후 저장 바이트 불변을 확인했습니다. 작은 fixture current snapshot의 전체 할당 실패도 live override를 보존했습니다. 최종 집중13/13·exit0(root1+실제12선언), fmt/diff check가 통과했습니다. 재열기에서 수동 상태를 재구성하는 정책·참조 수정 시 재계산·구조/공개 명령/브라우저/UI 및 최종 전체 gate는 남습니다.
