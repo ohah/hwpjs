@@ -181,7 +181,7 @@ function hwpxDisplay(projected) {
       paragraph.previousMergeParagraph = previousMerge.get(`${paragraph.section}:${paragraph.paragraph}`) ?? null;
     }
     paragraph.label = `구역 ${paragraph.section + 1} · 문단 ${paragraph.paragraph + 1}${current.nested ? " · 중첩" : ""} · HWPX 읽기 전용`;
-    paragraph.plainEditable = !paragraph.clipped && fieldLinkGuard.read(paragraph.section, () => editor.canEdit(paragraph.section, paragraph.paragraph + 1), false);
+    paragraph.plainEditable = !paragraph.clipped && fieldLinkGuard.read(paragraph.section, () => editor.canEdit(paragraph.section, paragraph.paragraph + 1), false, "plain");
     if (paragraph.plainEditable) {
       const anchored = editor.anchorText(paragraph.section, paragraph.paragraph + 1);
       paragraph.text = current.nested ? retainedAutomaticNumberPlainText(editor, paragraph.section, paragraph.paragraph + 1, current.text, anchored) : anchored;
@@ -189,7 +189,7 @@ function hwpxDisplay(projected) {
     paragraph.fieldLabels = [];
     paragraph.anchorEditable = false;
     if (!paragraph.clipped && !paragraph.plainEditable) {
-      const anchored = fieldLinkGuard.read(paragraph.section, () => anchorView(paragraph.section, paragraph.paragraph + 1), null);
+      const anchored = fieldLinkGuard.read(paragraph.section, () => anchorView(paragraph.section, paragraph.paragraph + 1), null, "anchor");
       if (anchored !== null) {
         paragraph.text = anchored;
         paragraph.anchorEditable = true;
@@ -202,14 +202,14 @@ function hwpxDisplay(projected) {
     paragraph.anchoredSplitAvailable = !paragraph.clipped && (paragraph.anchorEditable || paragraph.plainEditable && paragraph.text.includes("\t")) && WebAssembly.Module.exports(module).some(entry => entry.name === "hwpx_edit_split_anchored" && entry.kind === "function");
     if (!paragraph.clipped && !paragraph.plainEditable && !paragraph.anchorEditable) {
       try {
-        paragraph.fieldLabels = fieldLinkGuard.read(paragraph.section, () => editor.fieldLabels(paragraph.section, paragraph.paragraph + 1), []);
+        paragraph.fieldLabels = fieldLinkGuard.read(paragraph.section, () => editor.fieldLabels(paragraph.section, paragraph.paragraph + 1), [], "labels");
       } catch (error) {
         if (!["SourceBindingMismatch", "UnsupportedTextPositionProjection", "HwpxFieldEditAbiUnavailable", "UnsupportedStructuralFieldEdit"].includes(error.message)) throw error;
         paragraph.fieldReadOnlyReason = error.message;
       }
     }
-    if (fieldLinkGuard.reason(paragraph.section)) paragraph.fieldReadOnlyReason = fieldLinkGuard.reason(paragraph.section);
     paragraph.editable = paragraph.plainEditable || paragraph.anchorEditable || paragraph.fieldLabels.length > 0;
+    if (!paragraph.editable && fieldLinkGuard.reason(paragraph.section)) paragraph.fieldReadOnlyReason = fieldLinkGuard.reason(paragraph.section);
     if (paragraph.editable) paragraph.label = paragraph.label.replace("읽기 전용", paragraph.plainEditable ? "일반 텍스트 편집" : paragraph.anchorEditable ? "보호 개체 텍스트 편집" : "필드 라벨만 편집");
   }
   content.readOnly = !content.paragraphs.some(paragraph => paragraph.editable);

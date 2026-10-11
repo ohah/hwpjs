@@ -22,6 +22,21 @@ test("field link display guard caches only native link refusal per section and r
   }
 });
 
+test("field link refusal in label scope cannot revoke a proven plain query", () => {
+  const guard = createFieldLinkDisplayGuard();
+  assert.equal(guard.read(2, () => { throw new Error("InvalidFieldLinks"); }, [], "labels").length, 0);
+  let calls = 0;
+  assert.equal(guard.read(2, () => { calls++; return true; }, false, "plain"), true);
+  assert.equal(calls, 1);
+  assert.equal(guard.reason(2), "InvalidFieldLinks");
+  assert.equal(guard.read(2, () => { throw new Error("should remain cached"); }, null, "labels"), null);
+  assert.equal(guard.read(2, () => false, false, "plain"), false);
+  assert.equal(guard.read(2, () => true, false, "plain"), true, "a false permission is not a global refusal");
+  assert.equal(guard.read(2, () => "proven anchor", null, "anchor"), "proven anchor");
+  const oom = new Error("OutOfMemory");
+  assert.throws(() => guard.read(2, () => { throw oom; }, null, "styles"), error => error === oom);
+});
+
 function unclosedField() {
   return execFileSync("python3", ["-c", `
 import io,re,sys,zipfile
