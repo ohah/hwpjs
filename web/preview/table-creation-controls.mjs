@@ -26,5 +26,12 @@ export function createTableCreationControls({ form, fields, focusButton, submit,
   };
   focusButton.addEventListener("click", focus); form.addEventListener("submit", insert);
   update();
-  return { update, close() { if (closed) return; closed = true; focusButton.removeEventListener("click", focus); form.removeEventListener("submit", insert); fields.disabled = true; focusButton.disabled = true; submit.disabled = true; } };
+  return { update, message(reply) {
+    if (closed) return;
+    if (reply.kind === "load" || reply.kind === "unlock") note.textContent = "";
+    else if (reply.kind === "insert-table") note.textContent = reply.error
+      ? `${reply.applied ? "표 생성 후 표시 실패" : "표 생성 실패"}: ${reply.error}`
+      : "표 생성 완료 · 첫 셀 입력 가능 여부는 Canvas 상태를 확인하세요.";
+    update();
+  }, close() { if (closed) return; closed = true; focusButton.removeEventListener("click", focus); form.removeEventListener("submit", insert); fields.disabled = true; focusButton.disabled = true; submit.disabled = true; } };
 }

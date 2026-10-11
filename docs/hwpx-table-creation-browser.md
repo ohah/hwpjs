@@ -1,5 +1,9 @@
 # 게시 소스의 표 생성 브라우저 검증
 
+현재 작업 트리 후보3d77c874의 후속 Chromium 검증: charshape 픽스처 선택→편집 활성→진하게 찾기/ArrowLeft→표 설정→2×2 생성→첫 셀 `생성셀😀<&` 입력→다운로드→저장본 File 재열기(11문단)를 확인했습니다. 독립 ZIP/XML에서 비대상 payload/entry 순서/CRC/comment, 새 표1개/2행2열/4셀과 정확한 첫 셀 문자열, 생성 문단ID1/2/3/4의 상호 및 원본과의 비충돌을 확인했습니다. 전체 section 변환 의미나 원본 조판의 oracle는 아닙니다. 페이지 오류 출력은 비어 있었고 전용 브라우저는 close 성공으로 종료했습니다.
+
+첫 찾기는 enable 응답 전에 실행돼 처리 중 안내였고, 준비 조건을 기다린 후 성공했습니다. 첫 생성 클릭은 버튼이 Canvas에 가려져 실패했으며 scrollintoview 후 실제 클릭이 성공했습니다. 생성 성공 뒤 설정 안내가 계속 처리 중인 결함은 별도로 수정했고 페이지를 새로 열어 생성 완료 안내와 첫 셀 포커스를 재확인했습니다. 버튼 가림/설정 폼 화면 배치 문제는 이 상태 안내 수정으로 해결됐다고 주장하지 않습니다. 이 후보/현재 UI 검증을 아래 깨끗한 archive의 결과에 소급하지 않습니다.
+
 추가 native·교차 포맷 검증과 preview oracle 교정은 [게시 소스 게이트](hwpx-table-creation-release-gates.md)를 따릅니다. 아래 추가 native 실행 중 문장은 당시 기록입니다.
 
 2026-10-11 published5610e494를 `/tmp/hwpjs-table-ui-release.UVKq48`에 git archive로 추출하고 원본/현재 Git diff가 없는 상태에서 ReleaseSafe build를 수행했습니다. WASM SHA256은 `a87ee487658b6ad9086f865360c22f24d1b93a574c7706ed6271366392e40c18`입니다. dirty 후보6c59 결과를 이 산출물에 소급하지 않습니다.

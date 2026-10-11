@@ -206,6 +206,7 @@ async function openSelectedFile(selected) {
       underlineColorControls.message(event.data);
       queueMicrotask(updateSave);
       passwordControls.message(event.data);
+      tableCreationControls.message(event.data);
       if (event.data.kind !== "load" && event.data.kind !== "unlock") controls.message(event.data);
       if (event.data.kind === "save") {
         if (event.data.error) downloadStatus.textContent = `저장 실패: ${event.data.error}`;
