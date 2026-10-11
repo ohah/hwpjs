@@ -4,6 +4,27 @@ import { readFileSync } from "node:fs";
 import { workerCanvasHarness, dispatchCanvasEvent } from "../canvas/worker-harness.mjs";
 import { execFileSync } from "../../tools/oracle-process.mjs";
 const options = { rows: 2, columns: 2, width: 101, rowHeight: 17, resources: { paragraph: 1, character: 1, style: 0, border_fill: 1 } };
+test("Canvas numeric formula input with generated body table preserves independent XML and history", async t => {
+  const h = await workerCanvasHarness(t, { paintFrames: true });
+  await h.send({ kind: "load", format: "hwpx", bytes: readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx") });
+  await h.send({ kind: "enable" });
+  const created = await h.send({ kind: "insert-table", section: 0, paragraph: 0, unit: 0, options: { ...options, rows: 1, columns: 1 } });
+  assert.equal(created.error, undefined);
+  const before = (await h.send({ kind: "save" })).bytes;
+  assert.equal(h.controller.selectTextRange({ section: 0, paragraph: 19, startUnit: 0, endUnit: 4 }), true);
+  assert.equal(h.input.value, "11.2");
+  h.input.value = "100"; h.input.setSelectionRange(3, 3); dispatchCanvasEvent(h.input, "input");
+  const edited = await h.flush(); assert.equal(edited.error, undefined);
+  const after = (await h.send({ kind: "save" })).bytes;
+  for (const flags of [[], ["-O"]]) execFileSync("python3", [...flags, "tools/hwpx-structure-formula-oracle.py"], {
+    input: JSON.stringify({ before: Buffer.from(before).toString("base64"), after: Buffer.from(after).toString("base64"), value: "100" }), timeout: 30000,
+  });
+  assert.equal(h.controller.history("undo"), true); assert.equal((await h.flush()).error, undefined);
+  assert.deepEqual((await h.send({ kind: "save" })).bytes, before);
+  assert.equal(h.controller.history("redo"), true); assert.equal((await h.flush()).error, undefined);
+  assert.deepEqual((await h.send({ kind: "save" })).bytes, after);
+});
+
 test("Canvas anchored drawing host preserves original objects table position and redo after refusal", async t => {
   const h = await workerCanvasHarness(t, { paintFrames: true });
   const source = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/shapeline.hwpx");

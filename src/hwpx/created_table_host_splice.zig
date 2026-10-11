@@ -5,7 +5,8 @@ const editor = @import("editor_session.zig");
 pub fn supportsMode(session: *const editor.Session, section: usize, anchored: bool) !bool {
     if (section >= session.sections.len) return error.InvalidSectionIndex;
     if (anchored and session.sections[section].structure_values != null) return false;
-    return !try @import("formula_section_save.zig").hasFormula(session.allocator, &session.sections[section].tree);
+    if (session.sections[section].structure_values != null and try @import("formula_section_save.zig").hasFormula(session.allocator, &session.sections[section].tree)) return false;
+    return true;
 }
 
 pub fn apply(session: *editor.Session, section: usize, paragraph: usize, start: u32, deleted: u32, inserted: []const u8, anchored: bool, comptime operation: anytype) anyerror!bool {
@@ -34,6 +35,10 @@ pub fn apply(session: *editor.Session, section: usize, paragraph: usize, start: 
         try before.rollback(session);
         return err;
     };
-    a.free(saved);
+    defer a.free(saved);
+    @import("created_table_saved_formulas.zig").validate(session, saved) catch |err| {
+        try before.rollback(session);
+        return err;
+    };
     return true;
 }

@@ -20,7 +20,8 @@ pub fn stage(session: *editor.Session, section_index: usize, paragraph: usize, u
     var committed = false;
     defer if (!committed) std.mem.swap(@import("created_table_values.zig").Values, &section.created_tables, &candidate);
     const saved = try session.save();
-    a.free(saved);
+    defer a.free(saved);
+    try @import("created_table_saved_formulas.zig").validate(session, saved);
     committed = true;
     return true;
 }

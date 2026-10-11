@@ -1,4 +1,41 @@
 const std = @import("std");
+test "created table flat formula inputs recalculate reopen and roll back invalid number" {
+    const a = std.testing.allocator;
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx", a, .limited(4000000));
+    defer a.free(bytes);
+    for ([_]usize{ 1, 20 }) |host| {
+        var session = try @import("editor_session.zig").open(a, bytes, .{});
+        defer session.deinit();
+        var table = try @import("created_table_prepare.zig").prepare(&session, 0, host, 0, 1, 1, 100, 17, .{ .paragraph = 0, .character = 0, .style = 0, .border_fill = 1 });
+        defer table.deinit(a);
+        if (host == 20) {
+            try std.testing.expectError(error.UnsupportedFormulaCellContent, @import("created_table_session.zig").stage(&session, 0, host, 0, &table));
+            try std.testing.expectEqual(@as(usize, 0), session.sections[0].created_tables.entries.items.len);
+            const unchanged = try session.save();
+            defer a.free(unchanged);
+            try std.testing.expectEqualSlices(u8, bytes, unchanged);
+            continue;
+        }
+        _ = try @import("created_table_session.zig").stage(&session, 0, host, 0, &table);
+        try std.testing.expect(try session.splice(0, 20, 0, 4, "100"));
+        var current = try @import("formula_current_snapshot.zig").read(a, &session, 0);
+        defer current.deinit(a);
+        try std.testing.expectEqualStrings("156.3", current.rows[0].values.last_result.?);
+        const saved = try session.save();
+        defer a.free(saved);
+        try std.testing.expectError(error.InvalidFormulaNumber, session.splice(0, 20, 0, 3, "bad"));
+        const refused = try session.save();
+        defer a.free(refused);
+        try std.testing.expectEqualSlices(u8, saved, refused);
+        var reopened = try @import("editor_session.zig").open(a, saved, .{});
+        defer reopened.deinit();
+        var result = try @import("formula_current_snapshot.zig").read(a, &reopened, 0);
+        defer result.deinit(a);
+        try std.testing.expectEqualStrings("156.3", result.rows[0].values.last_result.?);
+        try std.testing.expectEqualSlices(u8, bytes, session.source);
+    }
+}
+
 test "created table anchored mode retains structural paragraph protection" {
     const a = std.testing.allocator;
     const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwpx", a, .limited(4000000));
@@ -58,7 +95,7 @@ test "created table insertion honors every existing drawing anchor boundary" {
     }
 }
 
-test "created table host mode refuses formula sections without mutating source" {
+test "created table host mode allows flat formula sections without mutating source" {
     const a = std.testing.allocator;
     const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx", a, .limited(4000000));
     defer a.free(bytes);
@@ -66,7 +103,7 @@ test "created table host mode refuses formula sections without mutating source" 
     defer session.deinit();
     const before = try session.save();
     defer a.free(before);
-    try std.testing.expect(!try @import("created_table_host_splice.zig").supportsMode(&session, 0, false));
+    try std.testing.expect(try @import("created_table_host_splice.zig").supportsMode(&session, 0, false));
     const after = try session.save();
     defer a.free(after);
     try std.testing.expectEqualSlices(u8, before, after);

@@ -1,5 +1,15 @@
 # 생성 표와 일반 본문 splice 거래
 
+## 수식 구역의 저장본 의미 검증
+
+실측 실패: chart.hwpx 숫자 입력 셀20 안에 생성 표를 저장한 뒤 재열기의 formula_current_snapshot이 UnsupportedFormulaCellContent로 실패했습니다. 숫자 참조 셀은 중첩 표를 지원하지 않는데 기존 stage가 원본 tree의 계산만 검사해 직렬화 후 바뀐 의미를 놓친 원인입니다. 이를 정상 계산으로 간주하거나 숫자 읽기를 임의로 완화하지 않습니다.
+
+`created_table_saved_formulas.validate`는 수식이 있는 문서의 저장본을 별도 세션으로 열고 모든 수식 구역의 current snapshot을 검증합니다. stage와 host splice가 같은 검증기를 커밋 전에 호출합니다. 실패 시 기존 후보 registry 교환/전체 checkpoint rollback으로 저장 바이트와 이력을 복원합니다. 원본 flat 수식 구역 입력은 허용하지만 structure_values가 있는 수식 구역은 계속 제한합니다. 숫자 참조 셀 안의 표 생성은 명시적 오류로 원자적으로 거부합니다. 이는 지원 확장이 아니라 재계산 불가능한 결과의 저장을 막는 경계입니다.
+
+후보 `0e26a0f0101c2dd8c9addc3778d05b546cac69278d760890d7e4dbf909f50c63`: ReleaseSafe build/fmt/diff exit0, native 수식 거래3/3·exit0, 새 검증기의 모든 할당 실패/원본 불변2/2·exit0, 공개 수식/drawing/plain3/3·exit0(1666.41925ms), Worker/Canvas10/10·exit0(9930.628708ms)입니다. 공개/Canvas 숫자11.2→100 재계산156.3, Python 일반/-O의 독립 Decimal·전체 XML/비대상 ZIP, 잘못된 숫자/참조 셀 표 삽입 거부 후 redo·정확 저장/재열기를 검사했습니다. 할당 실패 검사는 최초엔 루트1개만 실행되어 제외했고, root에 모듈을 연결한 후 실제 해당 테스트 실행을 확인했습니다.
+
+같은 후보의 문서당 한 host 감사44개 중43 passed·1 no_eligible_host(issue144)·exit0입니다. 전체 문단/명령·중첩 표 계산 규칙·실제 브라우저/원본 조판은 완료 주장이 아닙니다. 기본 데모 WASM은 교체하지 않았습니다.
+
 ## 원본 개체 포함 본문 입력 확장
 
 후속 staging 전체 할당 실패·구조 모드 회귀7/7·exit0으로 완료했습니다. 구조 모드만 분리한 집중 검사도2/2·exit0입니다. 기존 선 ID를 변조하는 추가 독립 XML 반례까지 포함한 공개 drawing 검사1/1·exit0(1709.082458ms)이며 Python 일반/-O 모두 정확한 Outside table XML changed 거부를 확인했습니다. 아래 실행 중 문장은 최초 기록이며 이 후속 완료로 대체합니다.
