@@ -18,6 +18,8 @@ def require(value, message):
 
 
 def verify(data):
+    description_edit = data.get('mode') == 'description'
+    require(data.get('mode') in (None, 'description'), 'Unknown edit mode')
     part = 'Contents/section0.xml'
     parse = lambda value: E.fromstring(value, parser=E.XMLParser(target=E.TreeBuilder(insert_comments=True, insert_pis=True)))
     with zipfile.ZipFile(io.BytesIO(base64.b64decode(data['before']))) as before, zipfile.ZipFile(io.BytesIO(base64.b64decode(data['after']))) as after:
@@ -60,7 +62,8 @@ def verify(data):
 
         numeric = texts(selected(2, 2))
         require(len(numeric) == 1 and numeric[0].text == '67.83', 'Source numeric identity')
-        numeric[0].text = '70'
+        if not description_edit:
+            numeric[0].text = '70'
         for column, field in zip(range(2, 7), fields):
             total = Decimal(0)
             for row in range(2, 7):
@@ -72,7 +75,7 @@ def verify(data):
             params = {node.get('name'): node for node in field.find(P + 'parameters')}
             result = format(total, 'f').rstrip('0').rstrip('.') if '.' in format(total, 'f') else format(total, 'f')
             require(params['ResultFormat'].text == '%g,', 'Source result format')
-            if column != 2:
+            if column != 2 or description_edit:
                 require(Decimal(params['LastResult'].text) == total, 'Unchanged independent SUM')
                 continue
             require(total == Decimal('127.76'), 'Independent edited SUM')
@@ -85,6 +88,16 @@ def verify(data):
             owned = [node for node in nodes[nodes.index(field) + 1:nodes.index(ends[0])] if node.tag == P + 't']
             require(len(owned) == 1 and owned[0].text == '125.59', 'Source result text')
             owned[0].text = result
+        if description_edit:
+            paragraphs = list(expected.iter(P + 'p'))
+            ordinal = data['paragraph']
+            require(type(ordinal) is int and 1 <= ordinal <= len(paragraphs), 'Description paragraph identity')
+            nodes = paragraphs[ordinal - 1].findall(P + 'run/' + P + 't')
+            require(len(nodes) == 1 and nodes[0].text == '공용면적에 포함' and len(nodes[0]) == 0, 'Source description identity')
+            permitted = {node for column in range(2, 7) for row in (4, 5) for node in texts(selected(column, row))}
+            require(nodes[0] in permitted, 'Description SUM ownership')
+            require(data['text'] == '긴 설명' * 100, 'Description replacement identity')
+            nodes[0].text = data['text']
         difference = runpy.run_path(str(Path(__file__).with_name('hwpx-structure-formula-oracle.py')))['difference']
         found = difference(expected, actual)
         require(found is None, 'Complete XML differs: ' + str(found))
@@ -102,13 +115,14 @@ if __name__ == '__main__':
                     payload = source.read(entry.filename)
                     if entry.filename == 'Contents/section0.xml' and kind != 'other_payload':
                         root = E.fromstring(payload, parser=E.XMLParser(target=E.TreeBuilder(insert_comments=True, insert_pis=True)))
-                        field = next(node for node in root.iter(P + 'fieldBegin') if node.get('type') == 'FORMULA' and node.find(P + 'parameters/' + P + "stringParam[@name='LastResult']").text == '127.76')
+                        display = '125.59' if data.get('mode') == 'description' else '127.76'
+                        field = next(node for node in root.iter(P + 'fieldBegin') if node.get('type') == 'FORMULA' and node.find(P + 'parameters/' + P + "stringParam[@name='LastResult']").text == display)
                         if kind == 'dirty':
-                            field.set('dirty', '0')
+                            field.set('dirty', '0' if field.get('dirty') == '1' else '1')
                         elif kind == 'command':
                             field.find(P + 'parameters/' + P + "stringParam[@name='Command']").text = '=SUM(?3:?6)??%g,;;127.76'
                         else:
-                            wanted = '127.76' if kind == 'result' else '공용면적에 포함'
+                            wanted = display if kind == 'result' else data['text'] if data.get('mode') == 'description' else '공용면적에 포함'
                             node = next(node for node in root.iter(P + 't') if node.text == wanted)
                             node.text = '128.76' if kind == 'result' else '변경된 설명'
                         payload = E.tostring(root)
