@@ -34,6 +34,14 @@ issue1891_external_bindata_link의 추가 독립 XML 조회에서는 SUM(?3:?7)�
 
 ## SUM 비숫자 관측의 경계
 
+후속 임시 후보 `/tmp/hwpjs-sum-text-prototype/bin/hwpjs.wasm` SHA256은 `4f067b3f6b1cce728debe08ee177e68c2f996e645433eeba1987d7ddb8ea09f1`이며 ReleaseSafe build5/5 steps·exit0을 확인했습니다. SourceReader/재귀 Reader에 scalar 조회를 추가해 SUM만 text/empty를 제외합니다. 숫자가 있는 병합 내부 좌표는 계속 거부하고, 텍스트를 제외하더라도 선택 사각형 겹침 및 projection 예산 검사는 먼저 수행합니다. AVG/PRODUCT/MIN/MAX의 숫자 전용 정책은 유지합니다.
+
+formula_section_prepare의 기존 재귀 평가기가 읽은 숫자 셀을 선택적으로 기록합니다. formula_splice는 이전 값 평가로 실제 입력 목록을 얻고 별도 guard를 적용한 뒤 draft를 평가/게시합니다. 결과 셀은 입력 목록에 추가하지 않으며 numeric 목록의 중복 제거는 계산 주소의 중복 집계 의미를 변경하지 않습니다. 이 연결은 임시 사본에만 있고 기본 제품은 바뀌지 않았습니다. 기존 구조 편집 거래 등 다른 게시 경로의 정책까지 완료했다고 해석하지 않습니다.
+
+연결 후 의존성/주입 reader/기존 산술/입력 수집 native10/10·exit0, 후속 SUM 문자 제외/AVG·PRODUCT 거부/입력 guard/투영 거래 할당 실패 native5/5·exit0을 확인했습니다. 실제 `issue1891_external_bindata_link.hwpx`의 open→paragraphTextSnapshot(0)2864문단→formulaCurrent(0)5필드 조회가 성공했습니다. 값은125.59/111.28/138.03/119.1/116.63이며 조회 후 save 전체 바이트는 원본과 일치했습니다. 이 파일의 실제 입력/이력/수정 저장 전체 XML/재열기/브라우저 검증은 아직 하지 않았습니다.
+
+기존 공개 편집3파일 회귀는17개 중16통과/1실패·exit1(49430.570667ms)이었습니다. 실제48입력 독립 재계산은 통과했지만 chart parent formatting 후 잘못된 숫자 입력이 InvalidFormulaNumber로 거부되지 않았습니다(formula-editor.test.mjs:140). 단독 재현도1실패·exit1로 확인했습니다. flat formula_splice에만 연결한 guard가 서식 후 구조화된 입력 경로에는 적용되지 않은 후보이며, 제품 승격을 하지 않습니다. 검사기의 기대 오류를 완화하지 않고 구조 편집 경로에도 동일 검증을 연결해야 합니다.
+
 임시 formula_numeric_input_guard는 호출자가 제공한 입력 셀 목록에서만 기존 숫자→새 값의 strict 숫자 검증을 수행합니다. 숫자 파서·선택 분기·예산 기본값은 기존 모듈을 재사용하고 draft를 게시하지 않습니다. 전체 셀에 적용하는 최초 연결은 참조하지 않는 숫자 셀의 문구 입력도 제한할 수 있어 제거했습니다. 입력 목록이 빈 경우 같은 문구 변경을 거부하지 않는 반례를 함께 검사했습니다. 실제 수식 참조에서 이 목록을 수집하는 연결은 아직 없으며, 이 guard를 통과하는 것이 구조/권한/수식 검증을 대체하지 않습니다.
 
 해당 최종 guard의 ReleaseSafe 집중2/2·exit0, fmt check exit0을 확인했습니다. 지정 입력의 숫자→문구 거부·유효 숫자 허용·비대상 허용·사이트 identity 불일치 거부·전체 할당 실패와 이전 Sites 불변을 검사했습니다. 중간 빌드의 Zig 초기화 표현식 문법 오류는 수정 후 재실행했으며 통과로 계수하지 않았습니다. 최초 broad 연결의 별도 편집 회귀 실행은 최종 guard 연결/제품 검증으로 해석하지 않습니다. SUM 비숫자 정책은 아직 연결하지 않았습니다.
