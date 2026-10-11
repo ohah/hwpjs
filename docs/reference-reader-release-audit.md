@@ -2,6 +2,12 @@
 
 ## 최신 수동 결과 후보 재검증
 
+확장자/편집 경계 후속: 참조 `.hwpx`439경로의 공통 서명 분류는 실제 HWPX433/HWP56입니다. HWP5 사본은 `hwpx/hwpx-01.hwpx`, `issue1891/76076_regulatory_analysis.hwpx`, `issue1891/80250_regulatory_analysis.hwpx`, `issue3637/press_release_split_cell_nested_table.hwpx`, `task1768/distribution_doc.hwpx`, `task2097/17809123_jawonbongsa.hwpx`입니다. 이는 이름 기준 inventory이며 전체 reader의 실제 HWPX436(435읽기+암호1)과 동일 목록이 아닙니다. 다른 확장자 안의 HWPX도 전체 reader에는 포함됩니다. 파일을 바꾸거나 변환하지 않았습니다.
+
+미커밋 참조 편집 wrapper는 공통 `referenceReaderScope`를 재사용해 이 HWP5 사본을 기존 HWP5 편집 감사로 연결하도록 수정했습니다. 최신 de4ead의 실제 HWP5 경로에서 hwpx-01의1582문단, issue1891의76076/80250 각각2727/413문단 모두 prefix·이력·비대상 stream/텍스트·저장 재열기를 통과했습니다. 혼합 issue1891 wrapper 실행은 HWP5 두 파일 성공/HWPX 두 파일 실패, exit1로 종료됐습니다. 수정 전439경로 장시간 실행은 기존 도구 snapshot이며 새 서명 분류의 통과 근거로 읽지 않습니다.
+
+새 편집 실패는 실제 HWPX `issue1891/80168_regulatory_analysis.hwpx`, `issue1891/86712_regulatory_analysis.hwpx`의 canEdit에서 InvalidFieldLinks입니다. 독립 ZIP/XML 원문 검사 결과 첫 파일은 begin297/end296에 끝 없는 CLICK_HERE id1575661054 하나, 두 번째는 begin179/end175에 id1505851682/1505851683/1505851685/1505851896 네 개였습니다. 중복 begin id나 시작 없는 end는 없습니다. 공통 field_text_ranges.build가 report.unmatched_begins를 구역 전체 오류로 처리하는 현 계약 때문에 문단별 일반 편집 가능 조회도 실패합니다. 텍스트 reader 성공을 편집 성공으로 해석하지 않습니다. 원문 끝 위치 추정/마커 추가/strict 검사 제거는 하지 않았으며, 끝 없는 필드의 보존 및 안전한 편집 범위 정책을 별도 구현/검증해야 합니다.
+
 2026-10-11 de4ead 후보(`formula-definition-manual/bin/hwpjs.wasm`, SHA256 `de4eadb840f590ecec60fad213c1394de369451eff4fc4957564db205f5767bc`)로 같은 참조 reader 감사를 새로 실행해 exit0 종료를 확인했습니다. 총975경로·HWP3 제외26·요청 범위949 중 HWP5509/HWPX435, 합계944파일·690523문단의 텍스트 읽기와 입력 버퍼 불변이 확인됐습니다. 아래 fe7 실행의 수치를 재사용한 것이 아니라 최신 산출물의 별도 전수 결과이며 두 실행을 합산하지 않습니다.
 
 거부는 EncryptedDocument1·UnsupportedEncryption1·SectionCountMismatch3입니다. 아래 명시된5파일을 최신 후보로 다시 읽어 파일별 같은 오류임도 확인했습니다. 최신 후보의 비밀번호 reader/editor 회귀4/4·exit0·skip0(10814.014875ms)은 명시적인 fixture 비밀번호로 암호2문서의 메모리 복호화·제한적 입력·독립 저장 비교·undo/redo·재열기·원본 보존을 확인합니다. 일반 암호 거부를 통과로 바꾸거나 재암호화/UI 지원을 주장하지 않습니다. 일반 읽기944와 별도 복호화2를 동일한 호출 경로 성공으로 합산하지 않습니다.
