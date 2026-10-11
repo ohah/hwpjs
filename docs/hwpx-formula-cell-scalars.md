@@ -17,6 +17,8 @@
 
 ### 긴 설명 scalar의 후속 작업 트리 수정
 
+같은a4f8 작업 트리 후보로 formula-editor·created-table-formula-host·table-creation-worker·text-sum-fixture-editor·formula-queued-history-worker·created-table-field-exterior의 정확한6파일을 함께 실행해25/25·exit0·skip0(53209.67175ms)을 확인했습니다. 실제48숫자 입력 재계산·긴 설명 전체 XML/ZIP·stale-display 원문 보존·생성 표와 수식/필드/서식 양쪽 순서·대기 숫자 입력 이력·Worker 현재 주소 보존을 포함합니다. 실제 브라우저 픽셀/IME 및 실패한 정의 precision 회귀를 포함한 전체 제품 검사로 확대하지 않습니다. 기존 미해결 정의 회귀는 이 통과 집계로 상쇄하지 않습니다.
+
 후속 독립 검사기 보강은 같은 SUM 원본 표/셀 점유/5수식 식별자를 재사용합니다. 설명 편집 모드는 대상 문단의 단일 직접 텍스트가 원본 설명이며 실제 SUM의 설명 행에 속함을 검사한 후 정확히 긴 설명100회 반복만 기대 XML에 반영합니다. 모든 수식 캐시/dirty/본문은 원문 그대로 비교하고, 전체 XML 및 비대상 ZIP payload/메타데이터/순서/CRC를 검사합니다. 일반/-O 모두5변조(결과·Command·dirty·대상 설명·비대상 header)를 거부한 최종 long-text 공개1/1·exit0·skip0(7523.11475ms)을 확인했습니다. 기존 숫자 수정 모드도 독립fe7 후보로1/1·exit0·skip0(8126.168041ms)을 재검증했습니다. 앞선 독립 XML/ZIP 미검증 기록을 이 후속 특정 테스트에 한해 보완하며 전체 runtime gate/브라우저 완료로 확대하지 않습니다.
 
 후속 작업 트리 ReleaseSafe 빌드6/6·exit0(44초)로 별도 long-text 후보를 생성했습니다. SHA256은 `a4f8cf4dfe65c2a2341ad4f60a9d81f309f52ee4067f99fd6a8e75cb719b2ad5`입니다. 실제 외부 Bindata 문서의 설명 셀을 긴 설명100회 반복으로 수정한 공개 테스트1/1·exit0·skip0(5901.216834ms)을 확인했습니다. 수식5결과/입력 버퍼 불변·undo 원문/redo 수정본·저장 재열기를 확인했습니다. 독립 전체 XML/ZIP 및 최종 전체 native 검사는 아직 없습니다. runtime/새 테스트는 미커밋이며 다른 기존 작업 트리 변경도 포함한 빌드로 독립fe7 사본과 구분합니다.
