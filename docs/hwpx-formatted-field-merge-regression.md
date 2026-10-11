@@ -2,6 +2,8 @@
 
 ## 수정 후보와 검증 경계
 
+최신7f310f37 후보로 `structure-editor.test.mjs`·`structure-worker.test.mjs`·`formula-numeric-split-editor.test.mjs` 전체를 실행한 결과68/68·exit0·skip0(373160.983125ms)입니다. 이전06d4의 구조66개 중6실패와 달리 두 병합 회귀·필드 바깥 입력·숫자 셀 분할 세 기대를 모두 검증했습니다. 숫자 경계157개(성공108·거부49), 비의존 셀169개, 실제 Worker의 서식·저장·undo/redo·재열기를 포함합니다. 이는 이 세 파일의 전체 결과이며625개 공개 테스트 파일·전체 native·전체 참조 문서/UI 완료를 의미하지 않습니다.
+
 ### 필드 바깥 입력의 오래된 거부 기대 확인
 
 [숫자 셀 분할의 독립 검증](hwpx-numeric-cell-split-verification.md)이 남은 숫자 분할 세 실패의 후속 증거와 기대 변경을 소유합니다. 아래 이전 후보의 실패 기록을 새 검증으로 소급하지 않습니다.
