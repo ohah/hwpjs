@@ -1,5 +1,7 @@
 # 수식 결과 직접 수정 — 내부 저장 기반
 
+후속 입력 경계 회귀: 새06d4dbc1 후보의 공개 API 저장/이력 검사에14거부 입력을 포함했습니다. XML NUL/세로탭/FFFE, 단독 high/low·high+일반문자·high+high·뒤집힌 surrogate, null/undefined/숫자/object/boxed string과 byte 한도 초과를 각각 거부하며 undo 원문·history revision·거부 후 redo 수정본을 보존합니다. 제품의 공통 encodedText/네이티브 XML 검사는 변경하지 않았습니다. 전체 XML/비대상 ZIP·양 Python 모드/5변조를 포함한 집중1/1·exit0·skip0(786.703459ms)을 확인했습니다. 새 회귀는 현재 전체 실행 시작 이후 보강됐으므로 이전 실행에 추가 사례를 소급하지 않습니다. 테스트 파일은 runtime의 최신 전체 gate 전 미커밋입니다.
+
 교차 포맷의 후속 실패·수정은 [HWP5 명시적 일반 숫자 표시](hwp5-explicit-general-result-format.md)가 소유합니다. HWPX의 암묵적 그룹 표시 정책을 HWP5 명시적 `%g`에 전달하지 않으며 이전 후보의 전체 검증 실패를 최신 후보 통과로 소급하지 않습니다.
 
 최신 후보의 실제 브라우저 확인: agent-browser 전용 세션으로 loopback10012의 픽스처 선택에서 `chart.hwpx`를 열고 Canvas 편집 시작→속성 표시값 `브라우저😀<&` 적용→다운로드→undo67.5→redo수동값을 실행했습니다. 브라우저가 실제 받은 WASM SHA256은3d77c874와 일치합니다. 다운로드 클릭이 생성한 Blob의 바이트를 독립 저장 oracle에 전달해 일반 Python·`-O` 모두 전체 XML/비대상 ZIP 보존 및5변조 거부를 통과했습니다. 같은 Blob을 File 입력으로 다시 열어175문단·수식 선택/표시값의 수동 문자열 복원을 확인했고 page errors 출력은 비어 있었습니다. 전용 브라우저 세션은 close 성공으로 종료했습니다. 이는 한 실제 fixture/수동 결과 흐름의 브라우저 증거이며 전체 문단 입력·새 표 생성·조판 동일성·외부 데모 승격/전체 native gate가 아닙니다.
