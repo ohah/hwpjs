@@ -1,5 +1,11 @@
 # 생성 표와 일반 본문 splice 거래
 
+## 생성 표 host 지원 모드 조회
+
+`created_table_host_splice.supportsMode`가 거래 실행과 선택적 `hwpx_edit_created_table_host_mode(section, anchored)`의 모드 판정을 함께 소유합니다. ABI는0/1/오류2이며 anchored는0/1만 받습니다. JS `createdTableHostMode(section, anchored = false)`는 Boolean만 받고 구형 ABI가 없으면 false를 반환합니다. 이 조회는 pending 표 거래의 모드 제한만 나타내며 문단/범위 편집 권한이나 split/merge 지원이 아닙니다. UI gate는 아직 연결하지 않았습니다.
+
+ReleaseSafe native 집중3/3·exit0은 일반 모드/anchored/잘못된 구역과 실제 chart.hwpx 수식 구역의 거부·저장 불변을 확인했습니다. 후보 `81bed2bdb7d3c0a78dcdef2be0dda3b05b17d87c5492e6b8725eb1abaccff5ca`는 ReleaseSafe build·공개 host 검사1/1·exit0(302.298083ms)을 확인했습니다. 공개 조회의 true/false·잘못된 Boolean·구역 오류와 기존 거래/분할 보호·XML/ZIP 대조를 포함합니다. 아래 이전 후보 기록의 당시 미완료 host 할당 순회는 현재 후속 완료 기록으로 대체합니다. 기본 데모는 교체하지 않았습니다.
+
 ## 분할 가능 여부 조회의 보호 규칙
 
 공개 `hwpx_edit_can_split`은 하위 분할 모듈을 직접 호출하지 않고 Session의 `canSplitParagraph`를 사용합니다. 생성 표가 있는 세션에서는 실행과 같은 전역 host 보호 규칙으로 false를 반환합니다. 이 제한은 생성 표 anchor의 구조 편집 재배치를 구현했다는 의미가 아닙니다.
@@ -12,7 +18,9 @@
 
 기존 plain-splice oracle의 명시적 zero_width_table_id 옵션만 현재 생성 표의 virtual 위치를 허용합니다. 기본은 계속 plain-only이고, 지정하지 않은 표·잘못된 ID·표를 가로지르는 범위는 거부합니다. 표 subtree는 변경 예상에 포함하지 않아 전체 XML 비교로 보존을 확인합니다. 네 명시적 반례는 정확한 ValueError와 정상 프로세스 종료code1을 확인하며 실행 실패를 거부 성공으로 세지 않습니다. 기존13개 plain oracle 반례도 통과했습니다.
 
-open/prepare/staging부터 host 거래까지 모든 할당 실패를 순회하는 추가 native 테스트는 아직 실행 중입니다. host 실패 후 비실패 할당자의 readonly view로 저장을 검사해 본문/anchor 복원도 검증하도록 추가했습니다. 이 view의 공유 owner는 해제하지 않습니다. 완료 결과로 계수하거나 Worker gate를 해제하지 않았습니다.
+open/prepare/staging부터 host 거래까지 모든 할당 실패를 순회하는 추가 native 테스트를 실행했습니다. host 실패 후 비실패 할당자의 readonly view로 저장을 검사해 본문/anchor 복원도 검증합니다. 이 view의 공유 owner는 해제하지 않습니다. Worker gate는 아직 해제하지 않았습니다.
+
+후속 재실행은 ReleaseSafe 2/2(root 포함)·exit0으로 완료했습니다. 위 open/prepare/staging/save/host splice의 전체 실패 지점을 생략 없이 순회하고, host 실패 후 전체 저장 바이트·anchor2 복원 및 성공 시 anchor4/원본 불변을 검사했습니다. 이 결과는 복수 구역/다양한 객체와 Worker/브라우저 본문 입력 검증을 대신하지 않습니다.
 
 추가 검사의 첫 실행은 SIGKILL로 종료했으며 assertion 통과나 메모리 누수 부재의 근거로 계수하지 않습니다. 원인은 확인되지 않았습니다. 재실행은 공통 `testing/allocation_failures.zig` helper로 할당별 stack trace 비용만 제거하고 모든 실패 지점과 종료 시 leak 검사를 유지합니다. helper 자체의 전체 실패 지점 순회·무시된 OOM 검출 테스트는 ReleaseSafe 1/1·exit0을 확인했습니다. 이는 실제 문서 거래의 전체 순회 완료와 별도 결과입니다.
 
@@ -22,4 +30,4 @@ Session의 원래 plain splice 구현은 private callback으로 유지합니다.
 
 2026-10-11 ReleaseSafe 집중3/3(root 포함)·exit0, fmt/diff·ReleaseSafe build exit0입니다. 실제 charshape.hwpx 기반 생성 표의 emoji 입력으로 anchor2→4, 저장 재열기의 정확한 host 전체 텍스트/표 marker 위치, undo·crossing/XML NUL/no-op/늦은 출력 예산 실패 뒤 staged 저장 바이트 불변과 redo 정확 저장, 원본 불변을 확인했습니다. 기존 staging/history 회귀도 포함합니다. 후보 prefix는 `/tmp/hwpjs-created-table-host-splice-20261011`이며 기존 작업 트리 변경을 포함합니다.
 
-전체 host 거래 할당 실패·독립 XML/복수 구역/다양한 실제 객체·public JS/Worker/브라우저 body 입력과 수식/구조 위치 재배치는 아직 검증/구현이 남아 있습니다. 기본 데모 WASM은 교체하지 않았습니다.
+복수 구역/다양한 실제 객체·Worker/브라우저 body 입력과 수식/구조 위치 재배치는 아직 검증/구현이 남아 있습니다. 기본 데모 WASM은 교체하지 않았습니다.

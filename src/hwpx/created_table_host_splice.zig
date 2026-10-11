@@ -1,10 +1,16 @@
 //! Atomic plain-text and generated-anchor transaction; structural edits stay gated.
 const std = @import("std");
 const editor = @import("editor_session.zig");
+// Mode-level eligibility only; paragraph/range checks still belong to splice.
+pub fn supportsMode(session: *const editor.Session, section: usize, anchored: bool) !bool {
+    if (section >= session.sections.len) return error.InvalidSectionIndex;
+    if (anchored) return false;
+    return !try @import("formula_section_save.zig").hasFormula(session.allocator, &session.sections[section].tree);
+}
+
 pub fn apply(session: *editor.Session, section: usize, paragraph: usize, start: u32, deleted: u32, inserted: []const u8, anchored: bool, comptime operation: anytype) anyerror!bool {
     const a = session.allocator;
-    if (section >= session.sections.len) return error.InvalidSectionIndex;
-    if (anchored or try @import("formula_section_save.zig").hasFormula(a, &session.sections[section].tree)) return error.UnsupportedCreatedTableHostEdit;
+    if (!try supportsMode(session, section, anchored)) return error.UnsupportedCreatedTableHostEdit;
     const host = try @import("created_table_anchor.zig").capture(a, session, section, paragraph, start);
     const inserted_units = std.math.cast(u32, try @import("text_site_edit.zig").utf16Length(inserted)) orelse return error.LimitExceeded;
     var candidate = try session.sections[section].created_tables.clone(a);

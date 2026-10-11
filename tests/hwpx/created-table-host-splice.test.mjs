@@ -11,6 +11,10 @@ test("public generated table host prefix keeps complete XML ZIP and native redo 
     editor.open(readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwpx")); editor.enableHistory();
     const identity = editor.insertTable(0, 2, 2, { rows: 1, columns: 1, width: 100, rowHeight: 17, resources: { paragraph: 1, character: 1, style: 0, border_fill: 1 } });
     const table = editor.createdTables(0)[0], before = editor.save();
+    assert.equal(editor.createdTableHostMode(0), true);
+    assert.equal(editor.createdTableHostMode(0, true), false);
+    assert.throws(() => editor.createdTableHostMode(0, 1), /InvalidCreatedTableHostMode/);
+    assert.throws(() => editor.createdTableHostMode(0xffffffff), /InvalidSectionIndex/);
     assert.equal(editor.canSplitParagraph({ section: 0, paragraph: 2, atUnit: 0 }), false);
     assert.throws(() => editor.splitParagraph({ section: 0, paragraph: 2, atUnit: 0 }), /UnsupportedCreatedTableHostEdit/);
     assert.deepEqual(Buffer.from(editor.save()), Buffer.from(before));

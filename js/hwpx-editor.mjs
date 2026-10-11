@@ -145,6 +145,14 @@ export async function createHwpxEditor(source) {
       if (result > 1) throw memory.error();
       return result === 1;
     },
+    createdTableHostMode(section, anchored = false) {
+      ready(); uint(section);
+      if (typeof anchored !== "boolean") throw new TypeError("InvalidCreatedTableHostMode");
+      if (typeof wasm.hwpx_edit_created_table_host_mode !== "function") return false;
+      const result = wasm.hwpx_edit_created_table_host_mode(section, Number(anchored));
+      if (result > 1) throw memory.error();
+      return result === 1;
+    },
     canEdit(section, paragraph) {
       ready(); uint(section); uint(paragraph);
       const result = wasm.hwpx_edit_can_edit(section, paragraph);

@@ -1195,6 +1195,22 @@ export fn hwpx_edit_set_formula_definition(section: u32, begin_element: u32, ptr
     apply(.{ .kind = .formula_definition, .section = section, .paragraph = 0, .begin_element = begin_element, .start = 0, .deleted = 0, .inserted = ptr[0..size] }) catch |err| return fail(err);
     return 1;
 }
+// Pending-table mode query only; not paragraph/range edit authorization.
+export fn hwpx_edit_created_table_host_mode(section: u32, anchored: u32) u32 {
+    if (anchored > 1) {
+        _ = fail(error.InvalidEditCommand);
+        return 2;
+    }
+    const session = if (active) |*value| value else {
+        _ = fail(error.EditorNotOpen);
+        return 2;
+    };
+    return @intFromBool(@import("../hwpx/created_table_host_splice.zig").supportsMode(session, section, anchored == 1) catch |err| {
+        _ = fail(err);
+        return 2;
+    });
+}
+
 export fn hwpx_edit_can_edit(section: u32, paragraph: u32) u32 {
     const session = if (active) |*value| value else {
         _ = fail(error.EditorNotOpen);
