@@ -10,6 +10,7 @@ import { execFileSync } from "./oracle-process.mjs";
 import { parseEditAuditOptions } from "./hwpx-edit-audit-options.mjs";
 import { createHash } from "node:crypto";
 import { verifyRefusalHistory } from "./hwpx-refusal-history.mjs";
+import { captureInputIdentity, verifyInputIdentity } from "./audit-input-identity.mjs";
 
 const options = parseEditAuditOptions(process.argv.slice(2), { requireWasm: true });
 const wasm = readFileSync(options.wasm);
@@ -22,8 +23,14 @@ try {
   for (const path of options.fixture !== undefined ? [options.fixture] : trackedHwpxFiles()) {
     totals.files++;
     const input = readFileSync(path);
+    const inputIdentity = captureInputIdentity(input);
     try { editor.open(input); }
-    catch (error) { if (error.message !== "EncryptedDocument") throw error; totals.encrypted++; continue; }
+    catch (error) {
+      if (error.message !== "EncryptedDocument") throw error;
+      verifyInputIdentity(input, inputIdentity, path);
+      totals.encrypted++;
+      continue;
+    }
     editor.enableHistory({ maxEntries: 8, maxCheckpointBytes: 16 * 1024 * 1024 });
     const original = reader.readTextEvents(input);
     let previousEdited = null;
@@ -75,6 +82,7 @@ try {
       previousEdited = Buffer.from(saved);
       totals.verified++;
     }
+    verifyInputIdentity(input, inputIdentity, path);
   }
   console.log(JSON.stringify(totals, null, 2));
 } finally { editor.close(); reader.close(); }
