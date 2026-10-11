@@ -2,6 +2,12 @@
 
 ## 수정 후보와 검증 경계
 
+### 필드 바깥 입력의 오래된 거부 기대 확인
+
+같은7f310f37 후보에서 Worker의 필드 바깥 입력은 정상 지원 동작임을 실측했습니다. 서식으로 세 조각이 된 hyperlink 라벨 뒤의 plain text(독립 XML에서 네 번째 `hp:t`)에 Unicode/기호를 삽입하고 `hwpx-field-outside-oracle.py` 일반 Python·`-O`로 전체 XML/비대상 ZIP을 대조했습니다. 잘못된 기대 문자열의 거부·undo/redo·재열기 저장 바이트도 확인했습니다. 기존 라벨 입력의 redo 검사는 유지하며, 실패 입력은 필드 끝을 가로지르는 범위로 바꿔 `UnsupportedFieldLabelRange`·applied=false·원문/redo 보존을 검증합니다. 거부 검사를 단순 제거한 것이 아닙니다.
+
+이 후속 테스트까지 포함한 같은 관련11개는11/11·exit0·skip0(9768.026458ms)입니다. 앞선11개 중1실패와 구별합니다. 숫자 셀 분할의 기존 거부 기대3개는 아직 확인 대상이며 전체 구조66개·전체 공개 suite의 통과로 확대하지 않습니다. 테스트 파일과 runtime은 최신 전체 gate 전 미커밋입니다.
+
 작업 트리의 후속 수정은 서로 다른 원본 template·원본 ordinal·생성 ID/조각 부재를 확인한 문단 쌍을 source 필드 경로로 전달합니다. `field_original_positions`가 원본 위치 투영과 이미 설치된 위치를 대조하고, 필드 계획이 마커 귀속을 검증한 뒤에만 텍스트/서식 전용 borrowed adapter를 사용합니다. 일반 Joined 변환기의 필드 거부 계약은 유지합니다. 서식 있는 source 후보는 기존 소유 행 작성기의 서식 분할을 재사용합니다. 같은 원본의 generated 분할 그룹은 기존 current/joined 경로를 유지합니다.
 
 ReleaseSafe build6/6·exit0(52초), 후보 `formatted-original-field-merge/bin/hwpjs.wasm` SHA256 `7f310f37d2900794df5aeb2ec2b8df4c95e61f8b49b6e477a6209fadd2e74d26`입니다. 실패했던 API/실제 Worker 두 사례는 기대값 변경 없이2/2·exit0·skip0(4928.489709ms)로 통과했습니다. 독립 XML/ZIP 및 서식·이력·재열기 검사를 유지합니다. 확대 실행은11개 중10통과·1실패·skip0·exit1(7949.609042ms)이며 남은 실패는 별도의 필드 바깥 입력 거부 기대입니다. 해당 성공 명령의 무손실 검증 전에는 기대를 변경하지 않습니다.
