@@ -12,6 +12,8 @@ supportsFieldLabelMode는 현재 원본 flat section만 허용합니다. 구조 
 
 ## 현재 검증
 
+후속 실제 Chromium에서 깨끗한6a25125e 후보로 issue144를 열고3문단 로딩/편집 활성화를 기다린 뒤 gmaile의 unit5에 기본2×2표를 생성했습니다. 라벨 시작에 라벨😀<&를 입력하고 실제 다운로드 후7문단 로딩 완료를 기다려 다시 열었습니다. 정확한 textarea 값 라벨😀<&gmaile와 오류 조회 공백을 확인했고 소유 브라우저를 종료했습니다. 실제 다운로드본은 동일 표 생성 baseline과 Python 일반/-O의 전체 필드 XML·dirty·비대상 ZIP/메타데이터/CRC로 추가 대조했으며 native 재열기에서도 start0/end10을 확인했습니다. 파일과 screenshots/field-edited.png·field-reopened.png는 `/tmp/hwpjs-field-label-release.vK577D/qa/`에 있습니다. 실제 OS IME·전수 GUI·구조 필드·원본 조판을 검증한 것은 아닙니다. 기본 데모 승격은 아직 실행하지 않았습니다.
+
 게시7d454b83d5e9e5be8accc83530a51cb2905c965c만 Git archive로 추출한 `/tmp/hwpjs-field-label-release.vK577D`에서 추적/index diff가 없는 상태로 ReleaseSafe build exit0을 확인했습니다. 깨끗한 WASM SHA256은6a25125e797c7f2501476ba5ddb3a1e45700be6707bf6b6a14daec0849f31faa입니다. native 라벨/구조 보호/plain4/4·exit0, 공개/Worker/Canvas/projection18/18·exit0(12754.236833ms), 기존 HWPX-text34/34·exit0(44730.097417ms), 문서당 한 host44/44·exit0입니다. HWP5 실행 요약이 출력 한도에 잘려 같은 산출물로 전체 HWP5-editor를 재실행했고312/312·exit0(3207.837292ms)을 직접 확인했습니다. 재실행 후 산출물 해시와 추적/index 불변도 재확인했습니다.
 
 이 후보의 실제 브라우저·다운로드/재열기와 기본 데모 승격은 아직 미완료입니다. 위 통과를 원본 조판이나 전체 parser/editor 완료로 확대하지 않습니다.
