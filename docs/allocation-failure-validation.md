@@ -2,6 +2,8 @@
 
 `src/testing/allocation_failures.zig`는 별도 safety-enabled DebugAllocator를 소유하고 종료 시 누수를 검사합니다. std의 `checkAllAllocationFailures`를 그대로 호출해 정상 실행에 필요한 모든 할당 실패 지점·OOM 삼킴·비결정적 할당을 검사합니다. 실패 지점 수를 샘플링하거나 줄이지 않습니다.
 
+대형 실파일의 일반 실행에는 `src/testing/checked_allocator.zig`의 run을 사용합니다. 이 모듈이 safety-enabled 무추적 Debug 타입을 단일 소유하며 실패 주입 도우미도 같은 타입을 재사용합니다. run은 callback 성공/오류 뒤 allocator를 해제하고 누수가 있으면 TestAllocatorLeak, 없으면 원래 callback 오류를 전달합니다. 일반 실행을 실패 주입 전수 실행으로 잘못 표시하지 않습니다.
+
 매 정상 할당의 스택 기록만 0프레임으로 설정합니다. 누수는 여전히 실패하지만 누수의 최초 할당 스택은 이 경로에서 제공하지 않습니다. 원인 위치가 필요하면 기존 스택 추적 allocator로 별도 재현합니다. 이 설정은 테스트 도우미에만 있으며 제품 allocator·WASM·파서 정책은 변경하지 않습니다.
 
 ```sh
@@ -17,6 +19,8 @@ zig test src/testing/allocation_failures_negative.zig -O ReleaseSafe --test-filt
 기본 도우미 회귀는 할당 두 개에 대해 정상 실행 한 번과 두 실패 지점 모두를 실행했는지 검사하고, OOM을 삼킨 콜백도 거부합니다. 실행 중인 이전 테스트 바이너리에 이 변경을 소급하지 않습니다.
 
 ## 생성 셀 텍스트의 전체 gate 지연 조사
+
+후속 전체 실행은 생성 셀을 지나 대형 실제 문서의 line_display_snapshot 검사로 진행됐습니다. 이 일반 실행에서도 DebugAllocator10프레임→DWARF 스택 해석 비용을 샘플링했습니다. 선 도형 검사만 공통 checked allocator 실행기로 분리했고 원래18선/17장식 거부와 끝점/문단 기대값은 변경하지 않았습니다. 집중3/3·exit0 실행의 시간은28.74초, 최대 RSS629571584바이트·peak footprint523617576바이트입니다. 이후 생성 셀/전수 실패 주입 helper/일반 checked allocator를 함께 선택한5/5·exit0도 확인했습니다. 일반 helper의 callback 오류 보존과 scoped buffer 해제를 검사하며 의도적 누수 부정 대조는 변경 후에도 TestAllocatorLeak·exit1로 실패했습니다. 이전 전체 바이너리는 이 후속 테스트 변경을 포함하지 않으므로 새 helper의 전체 gate로 읽지 않습니다. 제품 parser·WASM allocator는 변경하지 않았습니다.
 
 2026-10-11 소유 ReleaseSafe 전체 테스트를 샘플링해 `created_cell_text_tests`의 실패 주입 callback→Session.save→DebugAllocator(스택10프레임)→captureStackTrace/DWARF 해석 경로를 확인했습니다. 당시 물리 footprint101.4GB였고 실행은 아직 종료 전이었습니다. 이 샘플은 제품 parser 누수의 증명이 아니며 전체 검증의 최대 RSS/종료 측정도 아닙니다. sample 도구의 DWARF 처리 경고도 제품 오류로 계수하지 않습니다.
 
