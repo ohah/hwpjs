@@ -2,6 +2,8 @@
 
 현재 작업 트리의 단계적 지원 계약입니다. 전체 미해결 필드 편집 완료가 아니며 runtime은 최종 전체 검증 전입니다. 원본 사례·이전 실패는 [참조 읽기 감사](reference-reader-release-audit.md)를 따릅니다.
 
+2026-10-11 최신 후보 `hwp5-explicit-general6/bin/hwpjs.wasm` SHA256 `06d4dbc1dab40d687a7a95e705b6b080bfecd742da353dc2d14f256893282260`에서 공개 바깥 편집 두 사례·실제 Worker 두 사례·수동 수식 Worker 세 사례를 함께 재검사했습니다. 7/7·exit0·skip0(73391.338792ms)이며 수동 수식 경계는 [해당 계약](hwpx-formula-result-override.md)이 소유합니다. 실제80168/86712의 앞쪽 문단 입력은 전체 XML/비대상 ZIP의 독립 Python 양 모드 대조, undo/redo·저장본 재열기·입력 메모리/디스크 불변을 확인했습니다. Worker 흐름 시간은 각각53918.674416/19313.6315ms이며 단일 입력 지연이 아닙니다. Canvas/DOM은 테스트 대역이므로 실제 브라우저나 조판 증거로 사용하지 않습니다. 최신 전체 native 검증·참조 편집 감사는 별도로 실행 중이고 runtime 커밋/기본 WASM 승격 및 미해결 시작 뒤 지원은 아직 남습니다.
+
 ## 단일 소유와 실패 경계
 
 공통 marker linker의 Report가 시작/끝 연결 및 미해결 진단을 소유합니다. `field_text_ranges.build`의 strict 계약은 유지합니다. 새 `buildKnown`은 확정된 reciprocal link만 조립하고 끝 없는 begin을 원문 Report에 남깁니다. 중복 begin·해결 못한 end·non-LIFO·fieldid 불일치는 계속 거부하며, 실제 미해결 begin 수와 Report 집계가 다르면 거부합니다. 끝 마커를 합성하거나 미해결 필드의 의미적 끝을 추정하지 않습니다.

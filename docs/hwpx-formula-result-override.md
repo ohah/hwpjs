@@ -1,5 +1,7 @@
 # 수식 결과 직접 수정 — 내부 저장 기반
 
+2026-10-11 최신06d4dbc1 후보에서 실제 Worker 세 사례를 다시 확인했습니다. 두 수동 결과 ABI를 각각 제거한 경우 편집하지 않으며, 정상 경로는 정의 변경·수동 표시·독립 XML/ZIP 검사·이력·저장본 재열기를 유지했습니다. 같은 실행의 바깥 텍스트 네 사례를 포함한 최종 결과는7/7·exit0·skip0(73391.338792ms)이고 후보 전체 SHA·명령 범위는 [미해결 필드 바깥 편집 검증](hwpx-unmatched-field-exterior.md)이 소유합니다. 이 집중 통과는 전체 native/픽스쳐/UI 완료 또는 기본 제품 승격을 대신하지 않습니다.
+
 후속 입력 경계 회귀: 새06d4dbc1 후보의 공개 API 저장/이력 검사에14거부 입력을 포함했습니다. XML NUL/세로탭/FFFE, 단독 high/low·high+일반문자·high+high·뒤집힌 surrogate, null/undefined/숫자/object/boxed string과 byte 한도 초과를 각각 거부하며 undo 원문·history revision·거부 후 redo 수정본을 보존합니다. 제품의 공통 encodedText/네이티브 XML 검사는 변경하지 않았습니다. 전체 XML/비대상 ZIP·양 Python 모드/5변조를 포함한 집중1/1·exit0·skip0(786.703459ms)을 확인했습니다. 새 회귀는 현재 전체 실행 시작 이후 보강됐으므로 이전 실행에 추가 사례를 소급하지 않습니다. 테스트 파일은 runtime의 최신 전체 gate 전 미커밋입니다.
 
 교차 포맷의 후속 실패·수정은 [HWP5 명시적 일반 숫자 표시](hwp5-explicit-general-result-format.md)가 소유합니다. HWPX의 암묵적 그룹 표시 정책을 HWP5 명시적 `%g`에 전달하지 않으며 이전 후보의 전체 검증 실패를 최신 후보 통과로 소급하지 않습니다.
