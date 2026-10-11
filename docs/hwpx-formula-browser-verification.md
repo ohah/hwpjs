@@ -8,6 +8,10 @@ agent-browser의 실제 파일 선택으로 external BinData 파일을 열었습
 
 ## 증거와 미검증
 
+후속 [연속 입력 Worker 회귀](../tests/hwpx/formula-queued-history-worker.test.mjs)는 추적 chart 파일에서11.2 선택→7 입력 요청→첫 응답 전0 추가→70을 실제 Worker/WASM으로 검사합니다. 첫 응답이 대기 입력을 지우지 않아야 하고, 미응답 입력/이력 이동 중 추가 undo 요청은 거부합니다. 두 native checkpoint를 undo해7과11.2를 복원하고 원문 전체 ZIP 바이트 일치, redo 두 단계 저장본 일치 및 중간 bad 입력의 원자적 거부/redo 보존을 확인했습니다. 독립 전체 XML/Decimal 검사도 일반/-O에서 적용했습니다.
+
+후보1e026c의 해당 회귀1/1·exit0(7355.124ms), 기본6a2512의 같은 회귀1/1·exit0(7206.561583ms)을 확인했습니다. DOM/Canvas는 대역이며 실제 브라우저나 external BinData 파일의 undo 실패 원인을 재현한 검사는 아닙니다. native/Worker의 연속 숫자 입력 이력이 이 표본에서 안정적이라는 분리 증거로만 사용합니다. Blob 다운로드는 기존 코드에서1초 뒤 URL 해제를 예약하므로 즉시 revoke를 원인으로 단정하지 않습니다. 브라우저 상태 메시지와 실제 다운로드 이벤트의 추가 대조가 필요합니다.
+
 생성된 보고서·화면·영상은 `zig-out/verification/browser-formula/` 아래에 있으며 Git에 포함하지 않습니다. `recalculated-result.png`는127.76의 실제 Canvas 화면, `numeric-edit.webm`은 재업로드부터 입력까지의 과정입니다. 녹화 시작 후 업로드 상태가 초기화되어 처음 `numeric-edit.png`는 빈 상태이므로 성공 증거에서 제외했습니다. 같은 세션에서 다시 업로드하고 편집 준비 완료 후 검색을 반복했습니다.
 
 실행 취소2회 후 검색에서67.83을 찾지 못했고 다운로드 도구도2회 Download was canceled를 반환했습니다. 다운로드된 파일이 없어 native 이력 복원과 화면/검색 갱신 또는 도구 동작을 분리 검증하지 못했습니다. 브라우저 undo/다운로드는 통과로 계수하지 않으며 아직 제품 원인으로 단정하지 않습니다. doctor는7pass/0fail, 페이지 오류는 없었습니다. 이 두 경계는 후속 재현·분석 대상입니다.
