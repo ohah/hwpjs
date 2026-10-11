@@ -1,5 +1,7 @@
 # 생성 표와 원본 필드 라벨 편집
 
+검증한 깨끗한 후보의 기본/외부 WASM 반영은 완료했습니다. 현재 산출물·백업·외부 해시·반영 후 결과는 [승격 기록](hwpx-table-creation-promotion.md)이 소유하며 아래 각 검증 당시 미반영 문장은 과거 상태입니다.
+
 ## 소유권·거래
 
 원본 source 필드 라벨 명령은 기존 field_label_session의 종류/소유권/범위 검증을 유지합니다. 생성 표가 있는 경우 created_table_host_splice의 공통 거래를 재사용합니다. 추가 begin-element 인자는 applyWithArguments로 전달하며 별도의 표 위치 이동·checkpoint 구현을 만들지 않습니다. 같은 문단의 생성 표 anchor를 UTF-16 변경으로 재배치하고 라벨 text/dirty·registry·저장본 수식 검증까지 성공해야 커밋합니다. 실패와 no-op은 전체 checkpoint를 복원합니다.

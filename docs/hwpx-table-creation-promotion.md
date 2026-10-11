@@ -1,6 +1,14 @@
 # 표 생성 데모 산출물 승격
 
-## 현재 기본 — 본문·개체·필드 외부·수식 거래
+## 현재 기본 — 원본 필드 라벨 동시 편집
+
+2026-10-11 게시7d454b83의 깨끗한 ReleaseSafe 후보6a25125e797c7f2501476ba5ddb3a1e45700be6707bf6b6a14daec0849f31faa를 기본/외부 WASM으로 반영했습니다. 직전fbe9fc14는 `/tmp/hwpjs-field-label-backup.9q2rHe/hwpjs.wasm`으로 백업·cmp 확인 후 교체했습니다. 서버/Tailscale 설정과 다른 세션은 변경하지 않았습니다.
+
+외부 WASM 다운로드 해시가 새 기본과 일치하고, created-table-content.mjs도 검증 소스와 동일한7cd6ba95d3c92b941aa38811221001a156723ceb45c43890f6136152c6b4a73b입니다. 반영 후 기본 공개 field-label/field-exterior/plain4/4·exit0(1473.286ms)을 확인했습니다. 깨끗한 후보 native4/4·집중18/18·HWP5-editor312/312·HWPX-text34/34·문서당 한 host44/44, 실제 Chromium 라벨 입력/다운로드/재열기와 실제 다운로드의 독립 전체 XML/ZIP 대조는 [라벨 거래](hwpx-created-table-field-label.md)가 소유합니다.
+
+새로고침 후 문서를 다시 열면 생성 표와 원본 flat 필드 라벨을 함께 편집합니다. 구조 편집된 필드/수식·생성 셀 서식/구조·정확한 inline/쪽 배치·실제 IME·HWP5 표 생성·전체 parser/editor 목표는 남아 있습니다. 외부 해시 확인을 전수 외부 GUI 검증으로 해석하지 않습니다.
+
+## 이전 fbe9fc14 — 본문·개체·필드 외부·수식 거래
 
 2026-10-11 깨끗한 코어4cf585b2와 게시된 검사기 의존성c92440b2의 ReleaseSafe 후보를 기본 `zig-out/bin/hwpjs.wasm`으로 반영했습니다. SHA256은 `fbe9fc14c3eaa373379e1512d83ba36ab4cbbdc2d21f560744fef5e61628d242`입니다. 기존a87ee487은 `/tmp/hwpjs-field-host-backup.6qVeSy/hwpjs.wasm`으로 백업·cmp 확인한 뒤 교체했습니다. 서버/Tailscale 설정이나 다른 세션은 변경하지 않았습니다.
 
