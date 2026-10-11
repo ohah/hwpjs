@@ -12,6 +12,8 @@ zig test src/text_preview_allocation_test.zig -O ReleaseSafe --test-filter 'allo
 
 아래는 의도적인 누수 부정 대조입니다. `TestAllocatorLeak`을 출력하고 종료코드 1이어야 합니다. 정상 root suite에 등록하지 않습니다.
 
+부정 대조는 전수 실패 주입, 일반 callback 성공, 일반 callback 오류의 세 경로를 각각 검사합니다. 콜백 자체가 오류를 반환해도 누수가 있으면 `TestAllocatorLeak`이 우선해야 합니다. 후속 실행에서 세 검사 모두 정확히 `TestAllocatorLeak`으로 실패했고 최종 exit1이었습니다. 이는 기대된 부정 대조 결과이며 정상 suite의 실패나 통과 수에 합산하지 않습니다.
+
 ```sh
 zig test src/testing/allocation_failures_negative.zig -O ReleaseSafe --test-filter 'negative deliberate leak'
 ```

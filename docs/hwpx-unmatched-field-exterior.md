@@ -12,6 +12,8 @@
 
 ## 실제 검증
 
+같은 후속 후보3d77c874의 Canvas controller→실제 Worker/WASM 회귀도 저장본 재열기와 호출자/디스크 원본 불변 검사를 추가한 뒤 2/2·exit0·skip0(54011.126375ms)였습니다. 파일별36120.663083/17753.357125ms는 입력·독립 XML/ZIP 양 Python 모드·undo/redo·재열기를 포함합니다. DOM과 Canvas는 테스트 대역이므로 실제 브라우저 E2E나 레이아웃 일치로 해석하지 않습니다. 이미 커밋된 권한 guard/수동 결과 UI의 기본 artifact 회귀7/7·exit0·skip0(551.17425ms)도 별도 통과했으며 후보 회귀와 합쳐 전체 편집 지원 수로 계산하지 않습니다.
+
 2026-10-11 후속 후보 `full-gate-current/bin/hwpjs.wasm` SHA256 `3d77c87433cee8ee8256722756c23c06056b693a9ebb82af2388d6dc054e7252`로 공개 바깥 편집 회귀를 다시 실행했습니다. `tests/hwpx/unmatched-field-exterior-editor.test.mjs`의 실제80168/86712 두 문서는 2/2·exit0·skip0(5426.40325ms)였습니다. 전체 XML·비대상 ZIP payload의 양 Python 모드 대조, 잘못된 기대 문자열의 거부, undo/redo·보호 거부 뒤 이력 유지·재열기·원본 메모리/디스크 불변을 포함합니다. 이 결과는 후보의 두 앞쪽 문단에 대한 검증이며 기본 제품/전체 문단 편집/실제 브라우저/전체 native gate 완료를 증명하지 않습니다. runtime과 회귀 파일의 커밋은 전체 native 검증 후 진행합니다.
 
 전체 gate 실행 경계: 원본 분석 소유 수정 전 소스로 시작한 ReleaseSafe 전체 native 실행은 소스가 바뀌어 최종 gate로 사용할 수 없으므로, 명령/cwd/부모·자식 PID를 확인한 소유 프로세스만 종료했습니다(exit143, 명시 취소). timeout이나 제품 실패/통과로 계수하지 않습니다. 최신 소스로 `zig build test -Doptimize=ReleaseSafe -j1 --summary all`을 새로 실행했고 최종 결과는 아직 없습니다. 다른 저장소/사용자 프로세스는 종료하지 않았습니다.
