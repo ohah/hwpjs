@@ -13,3 +13,5 @@ reader의 텍스트 읽기·editor.open 성공과 editor의 현재 수식 표시
 다음 구현은 원점 참조와 병합 내부 좌표 참조를 분리하고, 원점 수치 입력의 계산·변경/저장·undo/redo·독립 전체 XML·실파일 재열기를 검사해야 합니다. 중첩/겹치는 셀 및 할당/inspection 예산 반례도 유지해야 합니다. 아직 이 거부를 수정하거나 실제 한글과 모든 병합 수식 의미가 동일하다고 검증한 것은 아닙니다.
 
 같은 참조 editor getter 조사에서 issue1891_external_bindata_link.hwpx의 UnsupportedMergedFormulaCell, issue3637/regulatory_impact_nested_table_escape.hwpx의 UnsupportedFormulaCellParagraphs, issue6298/copay_cap_tac_table_leading.hwpx의 InvalidFormulaReference, tac-img-02.hwpx의 InvalidFormulaNumber도 관측했습니다. 이4파일 역시 editor.open 성공 후 paragraphTextSnapshot(0)에서 거부됨을 단계별로 재현했습니다. reader 성공 HWPX435개의 editor.open은 전부 성공했고 위5개는 표시 snapshot을 완료하지 못했습니다. 지원 라벨529fragment/48파일과 별도의 InvalidFieldLinks 문단 조회6297회도 관측했습니다. 조회 거부 횟수를 파일 수로 집계하거나 무시하지 않습니다. 이 getter inventory는 편집·독립 XML·GUI 검사가 아닙니다. 각 거부 파일은 원문·연산 종류·관측 저장 결과를 따로 확인해야 합니다.
+
+6297회 필드 링크 거부의 실제3원본·종료 표식 부재·별도 Worker 읽기 전용 표시 경계는 [필드 링크 거부](hwpx-field-link-refusals.md)가 소유합니다. 그 UI 경계 수정은 위5개 수식 표시 계산 오류의 해결이나 편집 허용을 의미하지 않습니다.
