@@ -34,6 +34,12 @@ issue1891_external_bindata_link의 추가 독립 XML 조회에서는 SUM(?3:?7)�
 
 ## SUM 비숫자 관측의 경계
 
+BELOW 후보 `/tmp/hwpjs-sum-below-prototype/bin/hwpjs.wasm` SHA256은 `66b1425c889f29fd928d385650ece8aecb359e0b8070e30d0a61b16833e77afc`입니다. ReleaseSafe build5/5 steps·exit0, 직접 selection8/8·exit0을 확인했습니다. 실제 copay 조회는 InvalidFormulaReference 다음 단계 UnsupportedFormulaCellParagraphs로 진행했으며 지원 완료가 아닙니다. 나머지4파일은 이전 후보와 같은 조회 결과였습니다.
+
+copay의 전체5개 BELOW 식을 독립 XML/Decimal로 조사했습니다. 첫 문단 숫자만 합산한 결과184.9/1749831/23860/1749831/23860이 각 원본 cache와 일치했습니다. 두 큰 표의 입력 셀은 첫 문단 금액, 두 번째 문단 비율을 가진 형태입니다. nested의 ABOVE 입력에는 비용/현재가치의 두 문단 설명 셀이 있습니다. 첫 수식 표만 조사한 초기 inventory는 이를 누락했으므로 모든 수식의 가장 가까운 표로 확대했습니다. 이는 실제 관측이며 모든 한글 셀 숫자 해석 규칙의 공식 증명은 아닙니다.
+
+후속 임시 scalar 분류는 전체 셀의 활성 구조/제어 요소를 검사하되 첫 문단 텍스트만 읽습니다. strict 숫자 읽기는 여전히 두 번째 문단이 있으면 UnsupportedFormulaCellParagraphs입니다. 첫 문단12/두 번째34를1234로 합치지 않고12로 분류하며, 첫 문단이 비어 있으면 뒤의 숫자를 끌어오지 않습니다. 뒤 문단 control은 계속 거부합니다. 숫자 입력 guard도 같은 scalar 분류로 이전/초안 숫자 전환을 검사하도록 보완했습니다. 집중 native9/9·exit0을 확인했으나 이 변경의 실제 파일 재검사/전체 공개 회귀는 아직 하지 않았으며 별도 WASM 빌드가 진행 중입니다. 앞선136선언 실행은 이 정책 이전 소스 snapshot입니다.
+
 구조 후보a61595로 기존 조회 실패5파일을 단계별 재검사했습니다. aift 구역2는6029문단/1수식, external BinData 구역0은2864문단/5수식 조회 및 저장 원문 일치였습니다(aift 전체 문서6343문단 관측과 구역2만의6029문단을 합치지 않습니다). 나머지는 열기는 성공하지만 nested_table_escape와 tac-img-02는 UnsupportedFormulaCellParagraphs, copay_cap은 InvalidFormulaReference로 paragraphTextSnapshot과 후속 save가 거부됩니다. 기본 제품6a2512는 aift/external의 UnsupportedMergedFormulaCell, nested의 UnsupportedFormulaCellParagraphs, copay의 InvalidFormulaReference, tac의 InvalidFormulaNumber를 동일 단계에서 재현했습니다. 초기 조사기의 open 단계에 save를 넣어 잘못 표시한 것은 수정 후 재실행했으며 열기 실패로 계수하지 않습니다.
 
 독립 원문 조사에서 copay의 첫 식이 SUM(BELOW)임을 확인했습니다. [공식 한글 계산식 도움말](https://help.hancom.com/hoffice130_assistant/ko-KR/Hwp/table/calculation/calculation.htm)은 BELOW를 현재 셀 아래쪽 범위로 설명합니다. 임시 공통 formula_range에 BELOW 구문과 owner 제외/마지막 행/0행/u32 끝/상충 방향/후행 구문 검사를 추가했습니다. 범위 모듈 직접 ReleaseSafe6/6·exit0을 확인했습니다. root의 최초 선택 필터 실행은 root 선언1개만 실행해 기능 증거로 제외했습니다. 직접 selection 모듈 실행과 새 BELOW 반복/교차 검사, 별도 WASM 빌드는 후속 검증이며 a61595의 관측 결과를 새 후보에 소급하지 않습니다. 수식 관련 native136선언 실행도 a61595 소스 기준으로 아직 진행 중입니다.
