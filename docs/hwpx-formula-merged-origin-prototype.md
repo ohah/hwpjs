@@ -1,0 +1,45 @@
+# 병합 원점 수식 임시 구현
+
+## 상태와 책임
+
+이 구현은 원 작업 트리나 기본 데모에 반영하지 않았습니다. `/tmp/hwpjs-field-style-clean.2ptRk4`의 소스에만 수식 변경을 적용하고 `/tmp/hwpjs-merged-origin-prototype/bin/hwpjs.wasm`으로 빌드했습니다. SHA256은 `37591586a8ae271db053bf83daea27af1b53028bacc81640e788c6beab9c8825`입니다. 앞서 같은 임시 소스에서 만든 field style75d658fe와 다른 후보이며 두 검증을 합치지 않습니다.
+
+임시 formula_cell_rectangle.zig는 주소/크기/표 경계 검사와 포함/겹침을 소유합니다. formula_values의 선택/집계/reader 주입/예산과 숫자 해석은 기존 계층에 둡니다. 병합 셀 원점은 읽되 선택한 병합 사각형 전체와 다른 셀의 겹침을 추가로 검사하고 그 재방문도 inspection/reader charge에 포함합니다. 원점 이외 내부 좌표는 여전히 UnsupportedMergedFormulaCell입니다. 반복된 명시 주소는 기존 반복 집계 의미를 유지하며 무조건 unique로 합치지 않습니다.
+
+## 관측 숫자 서식
+
+참조 reader 성공 HWPX435개의 독립 ZIP/XML에서 수식 서식35건 모두 %g,였고 dirty1이 아닌 일관된 Command/LastResult 중 큰 값3건은 aift의1,000,000과 copay_cap_tac_table_leading의1,749,831 두 건입니다. 후자는7자리 정수를 그대로 보존하므로 기본6유효숫자 가정으로1,749,830이나 지수 표기를 만드는 것은 이 원문과 다릅니다. 원점만 허용한 최초 임시 구현에서 aift 조회는 성공했으나 표시가1e+06으로 나와 지원 완료로 계산하지 않았습니다.
+
+최초 임시 shared calculation_result_text는 grouping true/precision null의 general을 shortest decimal로 렌더링했지만, 이후48입력 독립 Decimal 회귀에서 부동소수점 꼬리값 노출로17개 중1개가 실패했습니다. 검사기를 완화하지 않고 임시 정책을15유효숫자와 큰 grouped 값의 decimal 전개로 보완했습니다. 이15자리 정책은 현재 관측/회귀 후보이지 모든 원본이나 공식 한글 규칙의 완전 증명은 아닙니다. 기존 명시 정밀도·fixed·ungrouped 동작은 유지합니다. 기존 HWP5 formula_format adapter도 원본 %g에 정밀도가 명시되지 않은 grouping 호출을 null precision으로 전달합니다. general6 enum 이름의 ungrouped 기존 동작은 유지하며, 모든 HWP5 원본의 서식 동치를 검증한 것은 아닙니다. 최소/최대 f64·정밀도/반올림·음수·7자리 grouped 정수 및 명시 %.6g,의 구분을 집중 검사했습니다.
+
+## 검증 범위
+
+임시 root에서 수식 반복/겹침·독립 occupied mask 사각형(빈 span/최대 u32 포함)·서식/계획/기존 format을 선택한 native7/7·exit0을 확인했습니다. 실제 aift 전체 snapshot6343문단도 조회됐습니다. 값 자체는 독립820000+180000=1000000 관측과 비교했고, 입력 source 문단4392의820,000을900,000으로 바꿔1,080,000의 Current/Command/LastResult·저장/재열기를 확인했습니다. undo는 원문 전체 바이트, redo는 수정 저장본 전체 바이트와 일치했습니다. 병합 내부 좌표·전체 수식 함수/범위·실제 browser/한글 조판은 아직 검증하지 않았습니다.
+
+tools/hwpx-merged-origin-save-oracle.py는 실제 병합 원점 입력과 source formula identity를 고정하고 기존 독립 Decimal cell oracle로900000+180000=1080000을 계산합니다. source 전체 XML에서 input/result/Command/LastResult/dirty만 기대 변경으로 적용해 완전 비교하고, 다른 ZIP payload·entry metadata·CRC/순서/주석은 보존을 요구합니다. 처음 줄 배치 정보를 제거하는 것으로 예상해 실패했고 차이를 추적했습니다. 같은 길이의 숫자 치환에서 실제 저장은 그 정보를 유지하므로 예상 제거를 없애 줄 배치 정보까지 원문 일치를 요구했습니다. 임의 XML 차이를 허용하는 정규화로 통과시킨 것이 아닙니다.
+
+실제 수정본을 Python 일반/-O로 대조해 모두 exit0을 확인했습니다. 각 모드에서 입력901,000·결과1,081,000·dirty0·비대상 header 변경의4개 저장본 변조를 각각 거부했습니다. 부정 대조는 실제 XML/비대상 payload 불일치만 인정하며 인프라 실패를 통과로 처리하지 않습니다. 이 oracle은 aift의 관측된 한 입력/한 SUM 경로이지 범용 병합 수식/모든 식 지원 증거가 아닙니다.
+
+후속 숫자 정책 후보 SHA256은 `8055a584c2cf817b6ecd79bed68318c2768d92c7b1ab00ed9e9873549c7eb6c5`입니다. ReleaseSafe build exit0, 서식/계획 native4/4·exit0, formula-editor/created-table-formula-host/table-creation-worker3파일17/17·exit0(45381.239625ms)을 확인했습니다. 기존 실제48입력 문단의 독립 Decimal 재계산도 통과했습니다.3759와8055 결과는 별도 snapshot이며 기존 전체 native 실행은 여전히8055를 검증하는 실행이 아닙니다.
+
+issue1891_external_bindata_link의 추가 독립 XML 조회에서는 SUM(?3:?7)의 원점 column2/row7 입력 중 row4/row5가 병합된 설명 문구(공용면적 포함/환자 공간 제외)임을 확인했습니다. 나머지67.83+33.72+24.04=125.59는 저장 cache와 일치합니다. 다른 열은 같은 설명 셀의 내부 좌표를 참조하므로 단순한 merged-origin 허용만으로 해결하지 않습니다. 숫자 아닌 셀/빈 셀/새로 잘못 입력된 숫자/AVG의 분모 정책을 구분해야 하며, 해당 파일을 지원 완료로 집계하거나 모든 비숫자를0으로 치환하지 않습니다.
+
+이력 설정을4entries×128MiB로 요청한 최초 시도는 history ABI의 총128MiB 한도를 넘겨 LimitExceeded였습니다. open 오류로 해석하지 않고 stage를 분리해2entries×64MiB의 허용 설정으로 재실행했습니다. 제한을 제거하지 않았습니다. issue1891_external_bindata_link는 최초 원점 임시 후보에서 다음 단계 InvalidFormulaNumber가 드러났으며 이 역시 해결된 파일로 집계하지 않습니다.
+
+## 별도 기존 테스트 오류
+
+기존 formula_command_plan 테스트는 지원된 MAX를 UnsupportedFormulaExpression으로 기대했습니다. 수정 전 원 작업 트리에서도 동일 실패와 성공 반환 Plan 미해제로 발생한 테스트 누수3개를 재현했습니다. MAX 성공/command/최대 함수/명시 deinit과 미지원 MEDIAN 거부로 test-only 기대를 정정했고 원 작업 트리 native3/3·exit0으로 확인했습니다. 이 작은 테스트 실패의 누수를 전체 검사 프로세스의 큰 메모리 사용량 원인으로 연결하지 않습니다. 기존 전체 Debug/ReleaseSafe 실행은 이 수정 전 test snapshot이며 아직 실행 중입니다.
+
+동일 MAX 미지원 가정이 formula_expression의 정의 거부 테스트에도 남아 있었습니다. 원 작업 트리의 단독 실행2선언 중1실패로 먼저 재현한 뒤 MAX parse 성공과 실제 미지원 MEDIAN 거부로 정정했습니다. 수정 후 expression/command-plan/explicit arithmetic 집중 native5/5·exit0을 확인했습니다. 누락·식 불일치·미지원 서식의 기존 반례를 제거하지 않았습니다.
+
+## SUM 비숫자 관측의 경계
+
+임시 source의 formula_cell_number는 기존 구조/선택 분기/현재 text site 수집을 한 경로로 유지하면서 number/text/empty 분류 진입점을 별도로 추가했습니다. 기존 strict 숫자 읽기는 그대로 InvalidFormulaNumber를 반환합니다. 분류는 해당 숫자 문법 오류만 text로 구분하며 구조 오류·할당 실패·선택 범위 오류는 삼키지 않습니다. 실제 SUM 집계나 편집 허용 정책에 아직 연결하지 않았고 제품 WASM에도 반영하지 않았습니다.
+
+2026-10-11 후속 ReleaseSafe 집중 검사5/5·exit0과 fmt check exit0을 확인했습니다. 숫자·한글 문구·빈 값·공백·잘못된 숫자 문구 및 분류 전체 할당 실패를 검사했습니다. 제어 요소·빈 두 번째 문단은 strict 읽기와 분류 모두 거부하고, 선택된 default만 읽으며 활성 control 및 잘린 selection 배열도 두 진입점 모두 거부합니다. 이는 셀 분류 기초 검증이지 설명 문구가 있는 실제 파일의 SUM/AVG/PRODUCT 지원 완료 증거가 아닙니다.
+
+추가 반례 후 집중 검사6/6·exit0, fmt check exit0을 확인했습니다. 129바이트 텍스트는 text로 완화하지 않고 LimitExceeded, 범위 밖/비셀 소유자는 InvalidFormulaCellOwner, 범위 밖 text site는 InvalidTextSites로 거부하며 원문 트리는 변하지 않습니다. 기존 formula_splice.prepareAndCommit은 formula_section_prepare 재계산의 실패로 숫자 입력을 검증합니다. 따라서 SUM의 비숫자 무시를 그 평가기에 바로 적용하면 기존 숫자→잘못된 문구 입력의 거부까지 사라질 수 있습니다. 집계 정책과 변경 셀의 숫자 입력 검증을 분리하기 전에는 제품 경로를 완화하지 않습니다.
+
+공식 [한글 시트 함수 도움말](https://help.hancom.com/hoffice/multi/ko_kr/hwp/table/calculation/calculation(function).htm)을 다시 확인했습니다. SUM은 지정 범위의 합, AVG는 평균, PRODUCT는 곱으로 설명되지만 확인한 페이지에는 문자/빈 셀/병합 내부 좌표 처리의 상세 규칙이 없었습니다. 한셀 규칙을 한글에 그대로 적용하지 않습니다.
+
+현재 RHWP tokenizer/parser/evaluator 원문을 직접 경로로 연결한 `/tmp/hwpjs-rhwp-sum-observation.P32MYG/probe.rs`를 rustc로 컴파일·실행했습니다(둘 다 exit0). 범위 ?3:?7에67.83/33.72/None/None/24.04를 주입하면 SUM125.59, AVG41.86333333333334, PRODUCT54984.95150399999였습니다. evaluator SHA256은 `c95076654acb9f350f95d470693a77f4d07b98e9fcfab46e628b495322b4228c`입니다. SUM의 값은 실제 외부 BinData 참조 파일의 저장 결과와 일치하지만 이 검사는 RHWP의 실제 파일 열기/편집/저장이나 한글 원본 프로그램 실행이 아닙니다. None은 검사기가 주입한 값이고 문자열/빈 셀/잘못 입력된 숫자의 분류를 검증한 것이 아닙니다. 이 정책을 그대로 이식하거나 AVG/PRODUCT의 한글 동치를 선언하지 않습니다.
