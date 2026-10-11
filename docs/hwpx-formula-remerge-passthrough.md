@@ -16,6 +16,7 @@
 
 - 줄 배치 복원을 막은 중간 후보 `65a686c20ee8808d78cf38e12b66a24caeba29584f992e649bbfb18bc5f39dd8`: ReleaseSafe 빌드 6/6, 실패했던 재병합 테스트 1/1 통과. 테스트는 독립 Python 및 `-O` ZIP/XML 비교, 문자별 서식, undo/redo, 재분할, 숫자 재계산, 정의 변경, 재열기를 포함합니다.
 - 문단별 소유권으로 범위를 한정한 현재 후보 `77a805aacf1cb3e1fed530ac946154916ce8b6eac6b71d801bc7dcf663e87584`: 포맷 검사 및 ReleaseSafe 빌드 6/6 통과. 계산식 분할, 구조 편집, Worker, 숫자 셀 분할의 결합 회귀는 **72/72 통과, 실패·skip 0, exit 0**으로 종료했습니다(382840.899083ms). 네 테스트 파일은 `formula-split-editor.test.mjs`, `structure-editor.test.mjs`, `structure-worker.test.mjs`, `formula-numeric-split-editor.test.mjs`입니다. 표 비의존 셀 169개 경계, 숫자 셀 157개 경계의 허용 108·보호 거부 49, 계산식 13개 문단의 양쪽 경계 및 독립 XML/ZIP·이력·재열기 비교를 포함합니다.
-- 이전 전체 native 실행은 수정 전 소스 기준으로 정확한 소유 프로세스 확인 후 종료했으며 exit 143입니다. 통과·실패 결과로 집계하지 않습니다. 수정 후 전체 native와 공개 테스트를 새로 시작했으며 최종 결과는 아직 없습니다.
+- 현재 후보의 전체 공개 테스트는 `HWPJS_TEST_WASM=zig-out/verification/formula-remerge-owned/bin/hwpjs.wasm node --test --test-concurrency=2 tests/hwp5/*.test.mjs tests/hwpx/*.test.mjs`로 **2,064/2,064 통과, 실패·취소·skip·todo 0, exit 0**으로 종료했습니다(8143264.669417ms). 이전 전체 실행의 계산식 재병합 실패를 포함한 동일 공개 테스트 범위의 결과이며 전체 참조 문서·브라우저 조판 완료를 뜻하지 않습니다.
+- 이전 전체 native 실행은 수정 전 소스 기준으로 정확한 소유 프로세스 확인 후 종료했으며 exit 143입니다. 통과·실패 결과로 집계하지 않습니다. 수정 후 전체 native 실행은 아직 진행 중이며 최종 결과는 없습니다.
 
 이 기록은 전체 픽스쳐 편집·파서·UI 또는 원본 한글 조판의 완료를 의미하지 않습니다. 기본 WASM·외부 데모도 이 후보로 교체하지 않았습니다.
