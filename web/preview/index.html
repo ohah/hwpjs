@@ -259,7 +259,12 @@
       <legend>표 계산식</legend>
       <label>수식 선택<select id="formula-choice"></select></label>
       <label>계산식<input id="formula-input" type="text" required placeholder="=SUM(A1:A2)"></label>
-      <button type="submit">수식 적용</button>
+      <button id="formula-apply" type="submit">수식 적용</button>
+      <fieldset id="formula-result-fields" hidden disabled>
+        <legend>계산 결과 직접 수정</legend>
+        <label>표시값<input id="formula-result-input" type="text"></label>
+        <button id="formula-result-apply" type="button">결과 적용</button>
+      </fieldset>
     </fieldset>
     <p id="formula-status" role="status" aria-live="polite"></p>
   </form>

@@ -1,15 +1,23 @@
 // The form edits a draft; native Worker responses own current definitions.
-export function createFormulaControls({ form, fields, choices, input, note, ready, request }) {
+import { createFormulaResultControls } from "./formula-result-controls.mjs";
+export function createFormulaControls({ form, fields, choices, input, note, ready, request, result, definitionApply }) {
+  const resultControls = result ? createFormulaResultControls({ ...result, note, ready, request }) : null;
   let rows = [], enabled = false, available = false, closed = false;
   const selected = () => rows.find(row => `${row.section}:${row.beginElement}` === choices.value);
-  const update = () => { form.hidden = closed || rows.length === 0; fields.disabled = closed || !available || !enabled || !ready() || !selected(); };
-  const select = () => { input.value = selected()?.formula ?? ""; update(); };
+  const update = () => {
+    form.hidden = closed || rows.length === 0;
+    fields.disabled = closed || (!available && !resultControls?.available()) || !enabled || !ready() || !selected();
+    input.disabled = !available;
+    if (definitionApply) definitionApply.disabled = !available;
+    resultControls?.update();
+  };
+  const select = (refreshResult = true) => { input.value = selected()?.formula ?? ""; if (refreshResult) resultControls?.select(selected()); update(); };
   choices.addEventListener("change", select);
   const submit = event => {
     event.preventDefault();
     update();
     const row = selected();
-    if (fields.disabled || !row || !form.reportValidity()) return;
+    if (fields.disabled || !available || !row || !form.reportValidity()) return;
     update();
     if (fields.disabled || selected() !== row) return;
     if (new TextEncoder().encode(input.value).length > 4096) { note.textContent = "수식은 UTF-8 4096바이트 이하여야 합니다."; return; }
@@ -17,12 +25,13 @@ export function createFormulaControls({ form, fields, choices, input, note, read
     update();
   };
   form.addEventListener("submit", submit);
-  const reset = () => { rows = []; enabled = false; available = false; choices.replaceChildren(); input.value = ""; note.textContent = ""; update(); };
+  const reset = () => { rows = []; enabled = false; available = false; choices.replaceChildren(); input.value = ""; note.textContent = ""; resultControls?.reset(); update(); };
   return {
     reset, update,
     close() {
       if (closed) return;
       closed = true;
+      resultControls?.close();
       choices.removeEventListener("change", select);
       form.removeEventListener("submit", submit);
       reset();
@@ -50,12 +59,13 @@ export function createFormulaControls({ form, fields, choices, input, note, read
           return option;
         }));
         if (rows.some(row => `${row.section}:${row.beginElement}` === previous)) choices.value = previous;
-        select();
+        select(false);
         const authoritative = ["load", "unlock", "enable", "undo", "redo"].includes(message.kind)
           || (message.kind === "formula-definition" && !message.error);
         if (!authoritative && choices.value === previous && selected()?.formula === previousFormula) input.value = draft;
       }
       if (message.kind === "formula-definition") note.textContent = message.error ? `수식 변경 실패: ${message.error}` : "수식 적용 완료";
+      resultControls?.message(message, selected());
       update();
     },
   };

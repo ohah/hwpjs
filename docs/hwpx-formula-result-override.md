@@ -1,5 +1,9 @@
 # 수식 결과 직접 수정 — 내부 저장 기반
 
+결과 속성 UI 후속: 기존 수식 선택과 Canvas 선택 연동을 유지하면서 결과 초안/클릭/Enter/IME 처리를 별도 `formula-result-controls`로 분리했습니다. native 응답과 이력이 확정값을 소유하며 UI는 별도 결과 캐시를 만들지 않습니다. 결과 capability와 정의 capability는 독립적으로 검사하고 비활성 세션·입력 처리 중·대상 부재·close에서 요청하지 않습니다. 빈 결과도 허용하며 인코딩/XML 문자/표시 크기 제한은 native 공개 setter의 검사를 따릅니다. 결과 입력의 Enter는 정의 form submit을 막고, IME 조합 중에는 결과 요청을 보내지 않습니다. 오류/무관한 갱신에서 동일 필드의 초안을 유지하되 실제 결과 변화·대상 변경·undo/redo/성공 응답에는 현재 모델 값을 표시합니다.
+
+기존 정의 UI3개와 새 결과 UI3개, 합계6/6·exit0·skip0(최종44.896042ms)을 확인했습니다. agent-browser로 후보 de4ead를 제공하는 loopback10011에서 chart.hwpx 업로드→편집 enable→속성 패널의 결과 입력 `수동😀<&` 적용을 실행했고 선택 목록/입력/완료 상태를 확인했습니다. 실제 undo 후67.5, redo 후수동 문자열도 조건 대기로 확인했고 페이지 오류 출력은 없었습니다. 사용한 전용 브라우저 세션은 close 성공을 확인했습니다. 최초 잘못된 enable 선택자와 닫힌 속성 패널에 대한 대기는 timeout으로 실패했으며 제품 오류나 통과로 계수하지 않습니다. 패널 토글/세부 항목 열기/실제 입력으로 재검사한 결과만 사용합니다. 이 검증은 속성 패널 편집이며 Canvas 본문에서 계산 필드의 보호 범위를 직접 타이핑하는 지원으로 승격하지 않습니다. 기본 WASM/외부 데모를 교체하지 않았고 최신 전체 native gate와 구조 편집·모든 픽스쳐/UI 범위는 여전히 남습니다.
+
 Worker 연결: `manual-formula-result` 명령은 HWPX·명시적 enable/history 세션에서만 공개 setter를 호출하고, 기존 `saveForDisplay`/reader 갱신으로 화면 데이터를 반환합니다. `manualFormulaResultAvailable`은 JS setter와 두 native ABI export가 모두 있을 때만 true이며 구형 JS/WASM에서 편집 가능으로 표시하지 않습니다. HWP5는 이 신규 명령의 미지원 오류를 반환하며 HWP5 지원 완료로 해석하지 않습니다. 거래 실패 전에 applied를 설정하지 않고, 성공 후 화면 갱신 실패는 기존 applied 오류 경계를 따릅니다.
 
 de4ead 후보의 실제 Worker 공개 테스트는 정의 변경→수동 표시→저장·전체 XML/ZIP 독립 oracle 양 모드/변조 반례·undo/잘못된 XML 문자 거부/redo를 검사합니다. 두 export를 각각 제거하는 반례는 capability false·ABIUnavailable·저장 바이트 불변을 확인했습니다. 별도로 기본 제품 WASM에서도 누락 ABI 반례2/2·exit0·skip0(3542.683792ms)이 통과했습니다. 이 Worker 경계는 선택적 연결이며 native runtime과 공개 회귀 파일의 최종 커밋/기본 WASM 승격 및 Canvas 입력 UI/브라우저 E2E는 아직 남습니다. 해당 UI를 사용 가능하다고 주장하지 않습니다.
