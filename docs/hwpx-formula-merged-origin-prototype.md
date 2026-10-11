@@ -2,6 +2,8 @@
 
 ## 상태와 책임
 
+후속 수정은 현재 작업 트리에 옮겼으며 최신 정책/책임/진행 중인 검증은 [셀 분류와 입력 검증 계약](hwpx-formula-cell-scalars.md)이 소유합니다. 아래의 임시 경로/hash/미반영 표기는 각 당시 snapshot의 이력입니다. 현재 소스 반영과 기본 데모/깨끗한 checkout 승격은 구분합니다.
+
 이 구현은 원 작업 트리나 기본 데모에 반영하지 않았습니다. `/tmp/hwpjs-field-style-clean.2ptRk4`의 소스에만 수식 변경을 적용하고 `/tmp/hwpjs-merged-origin-prototype/bin/hwpjs.wasm`으로 빌드했습니다. SHA256은 `37591586a8ae271db053bf83daea27af1b53028bacc81640e788c6beab9c8825`입니다. 앞서 같은 임시 소스에서 만든 field style75d658fe와 다른 후보이며 두 검증을 합치지 않습니다.
 
 임시 formula_cell_rectangle.zig는 주소/크기/표 경계 검사와 포함/겹침을 소유합니다. formula_values의 선택/집계/reader 주입/예산과 숫자 해석은 기존 계층에 둡니다. 병합 셀 원점은 읽되 선택한 병합 사각형 전체와 다른 셀의 겹침을 추가로 검사하고 그 재방문도 inspection/reader charge에 포함합니다. 원점 이외 내부 좌표는 여전히 UnsupportedMergedFormulaCell입니다. 반복된 명시 주소는 기존 반복 집계 의미를 유지하며 무조건 unique로 합치지 않습니다.
