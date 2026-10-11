@@ -1,5 +1,6 @@
 """Independent full XML/ZIP expectation for a single manual formula result."""
 import base64
+from decimal import Decimal
 import io
 import json
 from pathlib import Path
@@ -44,9 +45,44 @@ def verify(data):
             require(b'<!DOCTYPE' not in raw and b'<!ENTITY' not in raw, 'Unsupported declaration')
             return E.fromstring(raw, parser=E.XMLParser(target=E.TreeBuilder(insert_comments=True, insert_pis=True)))
         expected, actual = parse(before.read(part)), parse(after.read(part))
-        _, text = selected(expected, data['ordinal'])
-        require(isinstance(data['display'], str), 'Manual display type')
-        text.text = data['display']
+        field, text = selected(expected, data['ordinal'])
+        mode = data.get('mode')
+        require(mode in (None, 'recalculate'), 'Unknown edit mode')
+        if mode == 'recalculate':
+            require(data['ordinal'] == 0 and text.text == '수동', 'Observed manual result identity')
+            parents = {child: parent for parent in expected.iter() for child in parent}
+            cell = parents[field]
+            while cell.tag != P + 'tc':
+                cell = parents[cell]
+            addr = cell.find(P + 'cellAddr')
+            require(addr.get('colAddr') == '5' and addr.get('rowAddr') == '1', 'Observed formula cell address')
+            table = parents[cell]
+            while table.tag != P + 'tbl':
+                table = parents[table]
+            inputs = []
+            for column in range(1, 5):
+                cells = [entry for row in table.findall(P + 'tr') for entry in row.findall(P + 'tc') if entry.find(P + 'cellAddr').get('colAddr') == str(column) and entry.find(P + 'cellAddr').get('rowAddr') == '1']
+                require(len(cells) == 1, 'Independent input cell identity')
+                span = cells[0].find(P + 'cellSpan')
+                require(span.get('colSpan') == '1' and span.get('rowSpan') == '1', 'Observed unmerged input')
+                texts = cells[0].findall(P + 'subList/' + P + 'p/' + P + 'run/' + P + 't')
+                require(len(texts) == 1 and len(texts[0]) == 0, 'Observed numeric input structure')
+                inputs.append(texts[0])
+            require(inputs[0].text == '11.2', 'Source numeric identity')
+            require(sum(Decimal(node.text) for node in inputs) == Decimal('67.5'), 'Independent source SUM')
+            inputs[0].text = '12'
+            total = sum(Decimal(node.text) for node in inputs)
+            require(total == Decimal('68.3'), 'Independent edited SUM')
+            params = {node.get('name'): node for node in field.find(P + 'parameters')}
+            require(params['Formula'].text == '=SUM(B?:E?)' and params['ResultFormat'].text == '%g,', 'Observed formula definition')
+            require(params['LastResult'].text == '67.5', 'Source cache identity')
+            params['LastResult'].text = str(total)
+            params['Command'].text = '=SUM(B?:E?)??%g,;;' + str(total)
+            text.text = str(total)
+            field.set('dirty', '1')
+        else:
+            require(isinstance(data['display'], str), 'Manual display type')
+            text.text = data['display']
         difference = runpy.run_path(str(Path(__file__).with_name('hwpx-structure-formula-oracle.py')))['difference']
         found = difference(expected, actual)
         require(found is None, 'Complete XML differs: ' + str(found))
@@ -65,7 +101,7 @@ if __name__ == '__main__':
                         root = E.fromstring(payload, parser=E.XMLParser(target=E.TreeBuilder(insert_comments=True, insert_pis=True)))
                         field, text = selected(root, data['ordinal'])
                         if kind == 'result':
-                            text.text = data['display'] + '!'
+                            text.text = (text.text or '') + '!'
                         elif kind == 'cache':
                             cache = field.find(P + 'parameters/' + P + "stringParam[@name='LastResult']")
                             cache.text = (cache.text or '') + '!'

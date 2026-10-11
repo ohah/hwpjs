@@ -4,6 +4,12 @@
 
 후속 현재 상태: 내부 flat Session.save와 checkpoint까지 연결했으며 아래 최초 writer-only 기록을 대체합니다. 공개 편집 명령/표시/재계산/UI는 여전히 연결 전입니다. 아래 회귀 결과는 각 단계 snapshot에만 적용합니다.
 
+참조 입력 재계산 후속: b29 API 후보에서 실제 chart의 수동 결과를 설정한 뒤 native 문단20의11.2→12를 입력해도 첫 current 결과가 수동으로 남는 누락을 재현했습니다. 후속 `formula_result_override_invalidation`은 일반/투영된 flat splice의 draft에서 활성 변경 셀을 수집하고 공통 dependency evaluator의 실제 입력 read observer로 해당 수식의 참조를 구합니다. 숫자/설명/빈 셀·재귀 평가의 실제 read를 관찰하며 별도 범위 파서나 영속 dependency cache를 만들지 않습니다. observer의 주소 dedup은 산술의 반복 참조를 제거하지 않습니다. observer/변경 셀 매칭과 복수 root 평가의 셀·검사 예산은 공유합니다. 관련 override만 후보에서 clear한 뒤 공통 준비 성공 후 Sites/override 소유권을 함께 교체합니다. no-op/실패는 기존 상태를 바꾸지 않습니다.
+
+정의 고치기도 후보 정의/override를 함께 검증·교체하며 해당 override만 제거합니다. 같은 원본 정의를 명시적으로 다시 설정해도 override가 있으면 재계산 거래로 처리합니다. 최초 정의 경로가 override를 알지 못한 채 정의만 게시해 후속 저장에 충돌할 수 있던 문제를 방지합니다. 수동 결과를 pending 새 정의에 다시 설정하는 역순·다른 수식의 수동 결과 의존·구조/rebase 등은 아직 지원/검증이 필요합니다.
+
+최종 native19/19·exit0(root1+기존 정의OOM1+수동 결과17선언)은 입력→override 해제의 전체 할당 실패 원자성, 실제 관련 첫 결과68.3/관계없는 두 번째 수동 값 유지·저장 이력/거부 후 redo 보존, AVG 및 동일 SUM 재설정의 명시적 재계산/이력을 포함합니다. 후속 작업 트리 ReleaseSafe6/6·exit0(43초), 후보 `formula-manual-recalculate/bin/hwpjs.wasm` SHA256 `aafc4b5797629f391ca8887d145d69a17b1df13b0e0951376687a06d458134ed`에서 실제 누락 재현이68.3으로 해결됐습니다. 최종 공개7/7·exit0·skip0(1820.923375ms)은 원래 API6회귀와 새 관련 입력 재계산을 포함합니다. 새 독립 oracle 모드는 관측 첫 수식의 셀 주소/단일 숫자4입력·원래SUM67.5를 확인하고 Decimal로11.2→12 이후68.3을 계산합니다. 기대 XML에는 해당 입력/첫 필드cache/dirty/본문만 바꾸고 다른 수동 결과까지 그대로 대조합니다. 일반/-O5변조 거부와 저장/undo/redo/잘못된 숫자 거부 후 수동 값 보존을 확인했습니다. runtime/새 공개 테스트는 여전히 미커밋이며 전체 gate·재열기 수동 상태 판별·Worker/UI 완료로 확대하지 않습니다.
+
 native 세션 거래 후속 상태: `Session.setManualFormulaResult(section, begin, display)`는 소유 후보 clone/set→일시적 Section view의 전체 save 검증→ownership swap 순서입니다. 저장이나 검증 실패는 원래 override를 변경하지 않습니다. native history의 새 `formula_result_override` 종류는 기존 enum 끝에 추가했고 필드 전체 치환용 start/deleted0만 허용합니다. 기존 checkpoint rollback/undo/redo를 재사용합니다. 구조/생성 표 host는 아직 미지원 오류로 거부하며 향후 지원 대상에서 제외하지 않습니다. WASM 내부 공통 명령 switch도 새 enum을 처리하도록 연결했지만 export/JS/Worker/UI 설정 경로는 아직 추가하지 않았습니다.
 
 선택적 WASM/JS 후속 연결: `hwpx_edit_set_manual_formula_result`와 native 공통 표시 한도 조회 export를 추가했습니다. JS `editor.setManualFormulaResult(section, beginElement, display)`는 기존 응답 모양을 바꾸지 않는 void 명령이며 오류를 throw합니다. setter/한도 export 중 하나라도 없으면 HwpxManualFormulaResultAbiUnavailable로 거부합니다. UTF-8 바이트 예산은 native 한도에서 읽고 잘못된 한도·u32 대상·문자열/UTF-16·과도한 입력을 거부합니다. Worker/UI는 아직 설정 명령을 연결하지 않았고 재계산/재열기 상태 정책도 남습니다.
