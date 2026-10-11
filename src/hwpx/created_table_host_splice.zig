@@ -1,6 +1,11 @@
 //! Atomic plain-text and generated-anchor transaction; structural edits stay gated.
 const std = @import("std");
 const editor = @import("editor_session.zig");
+pub fn hasPending(session: *const editor.Session) bool {
+    for (session.sections) |section| if (section.created_tables.entries.items.len != 0) return true;
+    return false;
+}
+
 // Mode-level eligibility only; paragraph/range checks still belong to splice.
 pub fn supportsMode(session: *const editor.Session, section: usize, anchored: bool) !bool {
     if (section >= session.sections.len) return error.InvalidSectionIndex;

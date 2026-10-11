@@ -97,7 +97,9 @@ pub fn write(session: *const editor.Session, section_index: usize, current_xml: 
     for (section.created_tables.entries.items, 0..) |entry, entry_index| {
         const point = try @import("created_table_anchor.zig").resolve(a, session, entry.anchor);
         const local = point.paragraph - section.first_paragraph + 1;
-        try @import("plain_paragraph_policy.zig").validateWithAnchors(&tree, &sites, locations, local);
+        if (try @import("created_table_field_exterior.zig").allowed(session, section_index, point.paragraph, point.unit)) {
+            try @import("plain_paragraph_policy.zig").validateForCharacterFormat(&tree, &sites, locations, local);
+        } else try @import("plain_paragraph_policy.zig").validateWithAnchors(&tree, &sites, locations, local);
         const positions = try @import("anchor_text_positions.zig").build(a, &tree, &sites, locations, local);
         defer a.free(positions);
         try @import("paragraph_text_positions.zig").validateBoundary(&sites, positions, point.unit);

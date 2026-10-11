@@ -18,6 +18,7 @@ export function attachCreatedTables(editor, content, available, maxUnits, sectio
     }
   }
   content.createdTables = rows;
+  content.createdTableHostPending = pending.size !== 0;
   const modes = new Map();
   if (pending.size) for (const section of new Set(content.paragraphs.map(p => p.section))) {
     const query = typeof editor.createdTableHostMode === "function";

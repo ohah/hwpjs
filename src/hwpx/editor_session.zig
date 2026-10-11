@@ -155,7 +155,7 @@ pub const Session = struct {
 
     fn spliceMode(self: *Session, section_index: usize, paragraph: usize, start: u32, deleted: u32, inserted: []const u8, anchored: bool) !bool {
         if (section_index >= self.sections.len) return error.InvalidSectionIndex;
-        for (self.sections) |section| if (section.created_tables.entries.items.len != 0) return @import("created_table_host_splice.zig").apply(self, section_index, paragraph, start, deleted, inserted, anchored, spliceModeUntracked);
+        if (@import("created_table_host_splice.zig").hasPending(self)) return @import("created_table_host_splice.zig").apply(self, section_index, paragraph, start, deleted, inserted, anchored, spliceModeUntracked);
         return self.spliceModeUntracked(section_index, paragraph, start, deleted, inserted, anchored);
     }
 
@@ -375,7 +375,7 @@ pub const Session = struct {
     }
     // Temporary staging gate, removed only when host edits rebase table points.
     fn requireMutableHostPositions(self: *const Session) !void {
-        for (self.sections) |section| if (section.created_tables.entries.items.len != 0) return error.UnsupportedCreatedTableHostEdit;
+        if (@import("created_table_host_splice.zig").hasPending(self)) return error.UnsupportedCreatedTableHostEdit;
     }
 };
 

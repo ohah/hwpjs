@@ -4,6 +4,51 @@ import { readFileSync } from "node:fs";
 import { workerCanvasHarness, dispatchCanvasEvent } from "../canvas/worker-harness.mjs";
 import { execFileSync } from "../../tools/oracle-process.mjs";
 const options = { rows: 2, columns: 2, width: 101, rowHeight: 17, resources: { paragraph: 1, character: 1, style: 0, border_fill: 1 } };
+test("Worker missing host mode ABI never grants exterior range editing with a pending table", async t => {
+  const instantiate = WebAssembly.instantiate;
+  t.mock.method(WebAssembly, "instantiate", async (...args) => {
+    const instance = await instantiate(...args), exports = { ...instance.exports };
+    delete exports.hwpx_edit_created_table_host_mode;
+    return { exports };
+  });
+  const h = await workerCanvasHarness(t);
+  await h.send({ kind: "load", format: "hwpx", bytes: readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/hyperlink.hwpx") });
+  const enabled = await h.send({ kind: "enable" });
+  assert.equal(enabled.error, undefined);
+  const host = enabled.content.paragraphs.find(p => p.paragraph === 0);
+  const unit = host.fieldLabels.at(-1).end + 1;
+  const query = { kind: "query-edit-range", section: 0, paragraph: 0, startUnit: unit, endUnit: unit };
+  assert.equal((await h.send({ ...query, requestId: 1 })).allowed, true);
+  assert.equal((await h.send({ kind: "insert-table", section: 0, paragraph: 1, unit: 0, options })).error, undefined);
+  const before = (await h.send({ kind: "save" })).bytes;
+  assert.equal((await h.send({ ...query, requestId: 2 })).allowed, false);
+  assert.deepEqual((await h.send({ kind: "save" })).bytes, before);
+});
+
+test("Canvas crossing field exterior uses range permission with generated table without unlocking label", async t => {
+  const h = await workerCanvasHarness(t, { paintFrames: true, rangeQueries: true });
+  await h.send({ kind: "load", format: "hwpx", bytes: readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/issue144-fields-crossing-lineseg-boundary.hwpx") });
+  await h.send({ kind: "enable" });
+  const created = await h.send({ kind: "insert-table", section: 0, paragraph: 1, unit: 0, options: { ...options, rows: 1, columns: 1 } });
+  assert.equal(created.error, undefined);
+  const host = created.content.paragraphs.find(p => p.paragraph === 1);
+  assert.equal(host.editable, false);
+  const before = (await h.send({ kind: "save" })).bytes;
+  assert.equal(h.controller.selectTextRange({ section: 0, paragraph: 1, startUnit: 0, endUnit: 0 }), true);
+  await h.flushQueries(); assert.equal(h.input.readOnly, false);
+  h.input.value = "앞😀<&" + h.input.value; h.input.setSelectionRange(5, 5); dispatchCanvasEvent(h.input, "input");
+  const edited = await h.flush(); assert.equal(edited.error, undefined);
+  assert.equal(edited.content.createdTables[0].anchorUnit, 5);
+  await h.flushQueries();
+  const after = (await h.send({ kind: "save" })).bytes;
+  for (const flags of [[], ["-O"]]) execFileSync("python3", [...flags, "tools/hwpx-field-outside-oracle.py"], {
+    input: JSON.stringify({ before: Buffer.from(before).toString("base64"), after: Buffer.from(after).toString("base64"), part: "Contents/section0.xml", paragraph: 2, prefix: "앞😀<&" }), timeout: 30000,
+  });
+  assert.equal(h.controller.selectTextRange({ section: 0, paragraph: 1, startUnit: 12, endUnit: 12 }), true);
+  await h.flushQueries(); assert.equal(h.input.readOnly, true);
+  assert.deepEqual((await h.send({ kind: "save" })).bytes, after);
+});
+
 test("Canvas numeric formula input with generated body table preserves independent XML and history", async t => {
   const h = await workerCanvasHarness(t, { paintFrames: true });
   await h.send({ kind: "load", format: "hwpx", bytes: readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx") });

@@ -40,7 +40,9 @@ let historyEnabled = false;
 let protectionRemoved = false;
 let hwp5StyleOpenError = null;
 let hwpxWindow = null;
+let hwpxCreatedTablesPending = false;
 function outsideFieldRange(section, paragraph, start, end) {
+  if (hwpxCreatedTablesPending && !editor.createdTableHostMode(section)) return false;
   return WebAssembly.Module.exports(module).some(entry => entry.name === "hwpx_edit_can_edit_outside_field" && entry.kind === "function") && editor.canEditOutsideField(section, paragraph, start, end);
 }
 function hwp5Display() {
@@ -220,7 +222,9 @@ function hwpxDisplay(projected) {
   if (content.window && content.paragraphs.some(row => row.clipped)) throw new Error("ParagraphWindowTextBudgetExceeded");
   const creationAvailable = ["hwpx_edit_created_tables", "hwpx_edit_insert_table", "hwpx_edit_set_created_cell_text", "hwpx_edit_save_for_display"].every(name => WebAssembly.Module.exports(module).some(entry => entry.name === name && entry.kind === "function"));
   displayed.tableCreationResources = creationAvailable && WebAssembly.Module.exports(module).some(entry => entry.name === "hwpx_edit_table_creation_resources" && entry.kind === "function") ? editor.tableCreationResources() : null;
-  return attachCreatedTables(editor, displayed, creationAvailable, HWPX_DISPLAY_BOUNDS.maxUnits, preview.sectionCount);
+  const result = attachCreatedTables(editor, displayed, creationAvailable, HWPX_DISPLAY_BOUNDS.maxUnits, preview.sectionCount);
+  hwpxCreatedTablesPending = result.createdTableHostPending;
+  return result;
 }
 self.onmessage = async event => {
   let reader;

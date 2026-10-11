@@ -1,5 +1,15 @@
 # 생성 표와 일반 본문 splice 거래
 
+## 필드 외부 삽입·범위 조회 연결
+
+`created_table_field_exterior.allowed`는 기존 source field exterior plan의 한 점 권한을 재사용합니다. 해당 범위일 때만 저장 writer가 기존 character-format의 field marker 보존 정책을 사용하고, 필드 내부/경계 보호는 기존 range 정책이 소유합니다. 문단 전체/필드 라벨 편집 허용으로 확대하지 않습니다. source field와 구조 편집된 field는 별도 경로이며 후자는 이번 확장에 포함하지 않습니다.
+
+`created_table_host_splice.hasPending`가 Session 입력·구조 gate와 native field exterior 조회의 공통 판정입니다. native 범위 조회는 pending 표가 있으면 host 지원 모드도 확인합니다. Worker의 pending 상태는 전체 구역 registry projection에서 파생하며 구형 host-mode ABI가 없으면 외부 범위 조회도 false로 보호합니다. Canvas는 기존 query-edit-range를 재사용하고, 테스트 harness만 선택적으로 그 실제 Worker 응답 경로를 연결합니다.
+
+native issue144 집중2/2·exit0에서 필드 밖 표 삽입·emoji prefix·라벨 시작/끝 이동·내부 삽입 거부·원본 불변을 확인했습니다. 최종 후보 `ccb1597ee5e9025da73642d294b75a69e4209f6a8f15f5ba01ac664c7e90442f`의 ReleaseSafe build/fmt/diff exit0, 공개/Worker/Canvas/projection15/15·exit0(10772.387833ms)입니다. Python 일반/-O 전체 XML·비대상 ZIP, redo/재열기의 연결 필드 범위, Canvas 외부 입력 권한/필드 내부 readOnly 유지와 선택적 host-mode export 제거 반례를 포함합니다.
+
+동일 후보의 tracked unencrypted `/fixtures/` HWPX44개는 각각 한 적격 plain/anchored/field-exterior host의 표 생성·prefix·저장·undo/redo·재열기를44/44·exit0으로 통과했습니다. 기본 inventory의 password-12345는 제외되어 있으며 암호화 지원으로 계수하지 않습니다. 모든 문단/anchor 위치·필드 내용 명령·원본 조판·전수 독립 XML·실제 브라우저 검사는 남았습니다. 기본 데모 WASM은 아직 교체하지 않았습니다.
+
 ## 수식 구역의 저장본 의미 검증
 
 실측 실패: chart.hwpx 숫자 입력 셀20 안에 생성 표를 저장한 뒤 재열기의 formula_current_snapshot이 UnsupportedFormulaCellContent로 실패했습니다. 숫자 참조 셀은 중첩 표를 지원하지 않는데 기존 stage가 원본 tree의 계산만 검사해 직렬화 후 바뀐 의미를 놓친 원인입니다. 이를 정상 계산으로 간주하거나 숫자 읽기를 임의로 완화하지 않습니다.

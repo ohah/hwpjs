@@ -8,7 +8,7 @@ export function dispatchCanvasEvent(node, type, values = {}) {
 }
 
 // Shared HWP5/HWPX modules and Worker/WASM with simulated DOM; not browser E2E.
-export async function workerCanvasHarness(t, { paintFrames = false, bitmapSize = null } = {}) {
+export async function workerCanvasHarness(t, { paintFrames = false, bitmapSize = null, rangeQueries = false } = {}) {
   const keys = ["self", "fetch", "document", "window", "ResizeObserver", "requestAnimationFrame", "cancelAnimationFrame", "createImageBitmap"];
   const globals = new Map(keys.map(key => [key, { present: Object.hasOwn(globalThis, key), value: globalThis[key] }]));
   const replies = [], queue = [], requests = [], document = { activeElement: null };
@@ -83,10 +83,18 @@ export async function workerCanvasHarness(t, { paintFrames = false, bitmapSize =
   await import(`../../web/preview/reader-worker.mjs?canvas-worker=${++sequence}`);
   const spacer = { style: {} };
   renderer = createRenderer(canvas, viewport, spacer);
-  controller = createCanvasEditor({ canvas, viewport, input, renderer, controls, note: { textContent: "" }, platform: "" });
+  controller = createCanvasEditor({ canvas, viewport, input, renderer, controls, note: { textContent: "" }, platform: "", queryEditRange: rangeQueries ? message => controls.request(message) : null });
   controller.reset();
   return { canvas, input, viewport, spacer, renderer, controller, requests, send, request: message => controls.request(message),
     paint() { let count = 0; while (frames.length) { assert(++count <= 100, "UnexpectedAnimationLoop"); frames.shift()(); } },
     async flush() { assert.equal(queue.length, 1); return send(queue.shift()); },
+    async flushQueries() {
+      let count = 0;
+      while (queue[0]?.kind === "query-edit-range") {
+        assert(++count <= 100, "UnexpectedPermissionQueryLoop");
+        const reply = await send(queue.shift());
+        assert.equal(reply.error, undefined);
+      }
+    },
   };
 }

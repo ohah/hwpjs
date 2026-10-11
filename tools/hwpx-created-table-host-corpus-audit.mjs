@@ -11,7 +11,7 @@ const digest = bytes => createHash("sha256").update(bytes).digest("hex");
 const wasmSha256 = digest(wasm);
 const paths = execFileSync("git", ["ls-files", "-z"]).toString().split("\0").filter(path => path.includes("/fixtures/") && path.endsWith(".hwpx") && !path.endsWith("/password-12345.hwpx"));
 if (!paths.length) throw new Error("EmptyFixtureInventory");
-console.log(JSON.stringify({ kind: "start", files: paths.length, wasmSha256, scope: "one eligible plain or anchored source host per fixture; table stage and prefix history; not independent XML or browser" }));
+console.log(JSON.stringify({ kind: "start", files: paths.length, wasmSha256, scope: "one eligible plain, anchored or field-exterior source host per fixture; table stage and prefix history; not independent XML or browser" }));
 const editor = await createHwpxEditor(wasm), counts = {};
 try {
   for (const path of paths) {
@@ -20,7 +20,7 @@ try {
       const { sectionCount } = editor.open(input);
       editor.enableHistory();
       const resources = Object.fromEntries(Object.entries(editor.tableCreationResources()).map(([key, ids]) => [key, ids[0]]));
-      let host, anchoredHost;
+      let host, anchoredHost, exteriorHost;
       const eligibility = { sections: sectionCount, blockedModes: 0, paragraphs: 0, nested: 0, plain: 0, plainBlockedByMode: 0, anchoredReadable: 0, anchorRefusals: {} };
       for (let section = 0; section < sectionCount; section++) {
         const mode = editor.createdTableHostMode(section);
@@ -34,6 +34,7 @@ try {
             if (!mode) eligibility.plainBlockedByMode++;
             else if (!host) host = { section, paragraph: paragraph.paragraph, mode: "plain" };
           } else {
+            if (mode && !exteriorHost && editor.canEditOutsideField(section, paragraph.paragraph, 0, 0)) exteriorHost = { section, paragraph: paragraph.paragraph, mode: "field_exterior" };
             try {
               editor.anchorText(section, paragraph.paragraph); eligibility.anchoredReadable++;
               if (anchoredMode && !anchoredHost) anchoredHost = { section, paragraph: paragraph.paragraph, mode: "anchored" };
@@ -45,7 +46,7 @@ try {
           }
         }
       }
-      host ??= anchoredHost;
+      host ??= anchoredHost ?? exteriorHost;
       result.eligibility = eligibility;
       if (!host) result.status = "no_eligible_host";
       else {

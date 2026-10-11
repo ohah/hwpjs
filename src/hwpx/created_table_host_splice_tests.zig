@@ -1,4 +1,30 @@
 const std = @import("std");
+test "created table source field exterior insertion and prefix preserve linked labels" {
+    const a = std.testing.allocator;
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/issue144-fields-crossing-lineseg-boundary.hwpx", a, .limited(4000000));
+    defer a.free(bytes);
+    var session = try @import("editor_session.zig").open(a, bytes, .{});
+    defer session.deinit();
+    var table = try @import("created_table_prepare.zig").prepare(&session, 0, 2, 0, 1, 1, 100, 17, .{ .paragraph = 0, .character = 0, .style = 0, .border_fill = 1 });
+    defer table.deinit(a);
+    try std.testing.expectError(error.ProtectedFieldRange, @import("created_table_session.zig").stage(&session, 0, 2, 7, &table));
+    try std.testing.expectEqual(@as(usize, 0), session.sections[0].created_tables.entries.items.len);
+    _ = try @import("created_table_session.zig").stage(&session, 0, 2, 0, &table);
+    const labels = try session.fieldLabels(0, 2);
+    defer a.free(labels);
+    try std.testing.expect(try session.splice(0, 2, 0, 0, "😀"));
+    try std.testing.expectEqual(@as(u32, 2), session.sections[0].created_tables.entries.items[0].anchor.unit);
+    const after_labels = try session.fieldLabels(0, 2);
+    defer a.free(after_labels);
+    try std.testing.expectEqual(labels[0].start + 2, after_labels[0].start);
+    try std.testing.expectEqual(labels[0].end + 2, after_labels[0].end);
+    const saved = try session.save();
+    defer a.free(saved);
+    var reopened = try @import("editor_session.zig").open(a, saved, .{});
+    defer reopened.deinit();
+    try std.testing.expectEqualSlices(u8, bytes, session.source);
+}
+
 test "created table flat formula inputs recalculate reopen and roll back invalid number" {
     const a = std.testing.allocator;
     const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx", a, .limited(4000000));

@@ -4,6 +4,8 @@ pub fn canEdit(self: *const @import("editor_session.zig").Session, section_index
     if (section_index >= self.sections.len) return error.InvalidSectionIndex;
     const section = &self.sections[section_index];
     if (paragraph < section.first_paragraph or paragraph > section.last_paragraph) return error.InvalidParagraphIndex;
+    const host = @import("created_table_host_splice.zig");
+    if (host.hasPending(self) and !try host.supportsMode(self, section_index, false)) return false;
     if (section.structure_values == null) {
         const plan = (@import("field_source_outside_plan.zig").prepare(self, section_index, paragraph, start, end) catch |err| switch (err) {
             error.ProtectedFieldRange, error.UnsupportedInlineControl, error.UnsupportedParagraphControl => return false,
