@@ -1,5 +1,11 @@
 # 생성 표와 일반 본문 splice 거래
 
+## 깨끗한 커밋 빌드·브라우저 확인
+
+`ae8479876af4fcdf49f7fe64b206058413a2120d` Git archive의 추적 파일/index diff가 없는 별도 디렉터리에서 ReleaseSafe build exit0을 확인했습니다. 산출물 SHA256은 `27920e973a01948226a1f9a768f93b612abb7457af490522bb9cd2a3b23d7e85`입니다. 이 산출물로 공개 host/projection/Worker/table creation 검사13/13·exit0(3245.553083ms)을 확인했습니다. 이전 dirty 후보와 별도로 계수합니다.
+
+같은 빌드의 실제 Chromium에서 charshape.hwpx 업로드·편집 시작·진하게 검색/ArrowLeft caret·기본2×2표 생성 뒤 원래 본문을 다시 찾아 브라우저😀<&를 입력했습니다. 입력값 기울임브라우저😀<&진하게, 명시적 undo 뒤 기울임진하게, redo 뒤 정확한 편집값을 각각 조건 대기로 확인했습니다. 오류 조회는 비어 있었고 소유 브라우저 세션은 종료했습니다. 기록과 screenshots/host-input.png·host-redo.png는 `/tmp/hwpjs-host-input-release.qsA5pO/qa/`에 있습니다. browser download/reopen·실제 IME·정확한 조판·전수 fixture 브라우저 검증은 아직 남았습니다. 기본 데모 WASM은 이 빌드로 교체하지 않았습니다.
+
 ## Worker·Canvas 일반 본문 입력 연결
 
 표시 projection3항목과 Worker/Canvas5항목의 실행은8/8·exit0(3412.006917ms), diff 검사 exit0입니다.
