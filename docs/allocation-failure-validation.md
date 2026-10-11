@@ -22,6 +22,8 @@ zig test src/testing/allocation_failures_negative.zig -O ReleaseSafe --test-filt
 
 ## 생성 셀 텍스트의 전체 gate 지연 조사
 
+후속 최신 전체 실행의 table_display_placements 실제 중첩 소유권 검사에서는 상황이 달랐습니다. 이 검사는 이미0프레임 DebugAllocator로 std의 전수 실패 주입을 실행합니다. 샘플의 주요 경로는 read→display_current_paragraphs→paragraph_structure_collect→section_text.scanSource→XML visit이며 실패 할당자의 실제 backing도0프레임이었습니다. 여기의 지연을 앞선 DWARF 스택 추적 비용으로 일반화하지 않습니다. 전체 XML 순회가 실패 지점마다 반복되는 검사 비용이며, 이 샘플만으로 제품 무한 루프/누수나 전체 검사 완료를 주장하지 않습니다. 실패 지점을 줄이거나 불필요하게 할당자 설정을 교체하지 않았고 동일 실행을 유지했습니다.
+
 후속 전체 실행은 생성 셀을 지나 대형 실제 문서의 line_display_snapshot 검사로 진행됐습니다. 이 일반 실행에서도 DebugAllocator10프레임→DWARF 스택 해석 비용을 샘플링했습니다. 선 도형 검사만 공통 checked allocator 실행기로 분리했고 원래18선/17장식 거부와 끝점/문단 기대값은 변경하지 않았습니다. 집중3/3·exit0 실행의 시간은28.74초, 최대 RSS629571584바이트·peak footprint523617576바이트입니다. 이후 생성 셀/전수 실패 주입 helper/일반 checked allocator를 함께 선택한5/5·exit0도 확인했습니다. 일반 helper의 callback 오류 보존과 scoped buffer 해제를 검사하며 의도적 누수 부정 대조는 변경 후에도 TestAllocatorLeak·exit1로 실패했습니다. 이전 전체 바이너리는 이 후속 테스트 변경을 포함하지 않으므로 새 helper의 전체 gate로 읽지 않습니다. 제품 parser·WASM allocator는 변경하지 않았습니다.
 
 2026-10-11 소유 ReleaseSafe 전체 테스트를 샘플링해 `created_cell_text_tests`의 실패 주입 callback→Session.save→DebugAllocator(스택10프레임)→captureStackTrace/DWARF 해석 경로를 확인했습니다. 당시 물리 footprint101.4GB였고 실행은 아직 종료 전이었습니다. 이 샘플은 제품 parser 누수의 증명이 아니며 전체 검증의 최대 RSS/종료 측정도 아닙니다. sample 도구의 DWARF 처리 경고도 제품 오류로 계수하지 않습니다.
