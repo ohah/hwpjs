@@ -1,5 +1,11 @@
 # 생성 표와 일반 본문 splice 거래
 
+## 배포 후보의 깨끗한 체크아웃 검증
+
+코어 `4cf585b2fcb51ef8445bd5e2f98424be1b3b29cb` archive의 ReleaseSafe WASM은 `fbe9fc14c3eaa373379e1512d83ba36ab4cbbdc2d21f560744fef5e61628d242`입니다. 최초 집중 검사16 passed/4 failed는 Git에 없던 field-outside/structure-formula 검사기 누락에 의한 실행 오류이며 통과로 처리하지 않았습니다. 해당 두 검사기만 `c92440b2`로 게시하고 archive/index를 그 커밋에 맞춘 뒤 추적 diff가 없는 상태에서 동일 산출물로 재검증했습니다. 런타임 소스/산출물은 교체하지 않았습니다.
+
+후속 집중20/20·exit0(15908.904166ms), native6/6·exit0, HWP5-editor312/312·exit0(3288.0015ms), HWPX-text34/34·exit0(54362.776709ms), 문서당 한 host 추가 감사44/44·exit0입니다. 이 후보의 브라우저 다운로드/재열기와 기본 데모 승격은 아직 미완료입니다. 로컬 검증 서버는 `/tmp/hwpjs-field-host-release.EeC25U`의10007이며 사용자 기본 서버를 대체하지 않았습니다.
+
 ## 필드 외부 삽입·범위 조회 연결
 
 `created_table_field_exterior.allowed`는 기존 source field exterior plan의 한 점 권한을 재사용합니다. 해당 범위일 때만 저장 writer가 기존 character-format의 field marker 보존 정책을 사용하고, 필드 내부/경계 보호는 기존 range 정책이 소유합니다. 문단 전체/필드 라벨 편집 허용으로 확대하지 않습니다. source field와 구조 편집된 field는 별도 경로이며 후자는 이번 확장에 포함하지 않습니다.
