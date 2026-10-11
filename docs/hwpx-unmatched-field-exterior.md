@@ -6,11 +6,19 @@
 
 공통 marker linker의 Report가 시작/끝 연결 및 미해결 진단을 소유합니다. `field_text_ranges.build`의 strict 계약은 유지합니다. 새 `buildKnown`은 확정된 reciprocal link만 조립하고 끝 없는 begin을 원문 Report에 남깁니다. 중복 begin·해결 못한 end·non-LIFO·fieldid 불일치는 계속 거부하며, 실제 미해결 begin 수와 Report 집계가 다르면 거부합니다. 끝 마커를 합성하거나 미해결 필드의 의미적 끝을 추정하지 않습니다.
 
-`source_field_analysis.leaseForExterior`는 strict cache가 있으면 기존 lease의 source binding 검사를 재사용합니다. 없는 경우에만 일시적인 known-only 분석을 만들고 해제합니다. 이를 live cache에 게시하지 않으며 일반 필드 API의 strict lease를 대체하지 않습니다. 해당 query가 캐시나 텍스트 모델을 수정하지 않습니다.
+`source_field_analysis.buildForEditor`는 원본 마커·미해결 진단·확정된 링크를 한 번 소유합니다. Session open의 원본 분석에만 사용하고 현재 편집값이나 추정한 끝 위치를 저장하지 않습니다. 두 lease는 같은 source binding 검사기를 사용합니다. 일반 strict lease는 미해결 begin이 남으면 계속 InvalidFieldLinks를 반환하며, `leaseForExterior`는 원본 분석을 빌려 미해결 시작을 별도로 보호합니다. 캐시가 없는 경로는 일시적인 known-only 분석을 만들고 해제합니다. query가 cache나 텍스트 모델을 수정하지 않습니다. 아래 최초 단계의 임시 분석만 쓰던 기록은 이 후속 계약 전의 이력입니다.
 
 원문 마커 뒤 텍스트는 필드 바깥임을 아직 증명하지 못하므로 `field_source_outside_positions`에서 ProtectedFieldRange로 보호합니다. 이는 끝을 정한 synthetic range가 아니라 미해결 시작의 불확실성 검사입니다. 확정된 앞쪽 문단의 일반 입력/저장은 허용하고 기존 linked field 보호와 공통 좌표/문자 경계 검사를 유지합니다. 미해결 마커 뒤의 안전한 범위를 더 세분화하는 정책·필드 본문 수정·구조 편집·서식/label/UI 진단은 여전히 구현 대상입니다. 이 임시 보호 범위를 최종 목표로 고정하지 않습니다.
 
 ## 실제 검증
+
+전체 gate 실행 경계: 원본 분석 소유 수정 전 소스로 시작한 ReleaseSafe 전체 native 실행은 소스가 바뀌어 최종 gate로 사용할 수 없으므로, 명령/cwd/부모·자식 PID를 확인한 소유 프로세스만 종료했습니다(exit143, 명시 취소). timeout이나 제품 실패/통과로 계수하지 않습니다. 최신 소스로 `zig build test -Doptimize=ReleaseSafe -j1 --summary all`을 새로 실행했고 최종 결과는 아직 없습니다. 다른 저장소/사용자 프로세스는 종료하지 않았습니다.
+
+원본 분석 소유 후속: 최초 private helper 이름 cached가 기존 테스트의 local constant를 가려 native/WASM 컴파일이 실패했습니다. cachedLease로 구분한 뒤 ReleaseSafe build6/6·exit0(57초), 후보 `unmatched-field-source-cache/bin/hwpjs.wasm` SHA256 `fd6fe25c63625c6661938aa7cb7893f9088d762e224aebc4fda4a92c88247879`를 확인했습니다. 최종 native13/13·exit0는 cold 분석의 전체 할당 실패, partial source를 소유하는 open의 전체 할당 실패/해제, fail_index0에서도 빌린 lease가 추가 할당을 하지 않음, strict 거부 유지 및 partial cache의 원본 binding 변경 거부를 포함합니다. 이후 추가 binding 반례는 test-only이며 runtime 변경이 아닙니다. fmt/diff check가 통과했습니다.
+
+같은 후보의 공개 원문/바깥 편집/Worker·guard9/9·exit0·skip0(108512.901084ms)을 확인했습니다. 이전 실제 Worker 전체 흐름295769/132247ms에 대해 이번 묶음의 흐름은74013/34244ms였습니다. 파일별 source/cache와 실행 묶음이 다르고 시스템 부하를 고정한 벤치마크는 아니므로 관측 시간을 성능 보장으로 해석하지 않습니다.
+
+실제 Canvas controller→Worker→WASM 회귀에 저장본의 전체 XML/비대상 payload oracle 양 Python 모드를 추가한 최종2/2·exit0·skip0(117030.930958ms)도 통과했습니다. 파일별 흐름84306.387166/32507.964209ms는 load/enable/입력/저장/독립 검사/undo/redo를 포함합니다. 이전 단계의 Worker 저장은 독립 XML 미검증이었으므로 아래 과거 기록을 이 강화된 검사로 소급하지 않습니다. 실제 브라우저·모든 미해결 필드/구조 편집·대형 문서 즉각 반응성 및 최신 전체 native gate는 남습니다. runtime 및 해당 공개 회귀 파일은 미커밋입니다.
 
 Worker 조회의 실패 캐시 후속: 기존 request-local guard가 구역 전체에서 InvalidFieldLinks를 한 번 기억하면 native의 일반 텍스트 허용까지 호출하지 않았습니다. 실제80168의 문단6은 native에서 허용되지만 Worker plainEditable=false인 반례를 재현했습니다(1실패·exit1, 7988.010417ms). 라벨 실패 뒤 다른 조회를 성공시켜야 하는 제어기 반례도 실패했습니다. 실패 캐시는 구역과 조회 종류(plain/anchor/labels)로 분리했고, 원문 링크 진단은 유지하되 편집 가능 문단에 fieldReadOnlyReason을 붙이지 않습니다. false 권한 값 자체는 구역 실패로 캐시하지 않고 OOM 등 다른 오류도 계속 전파합니다.
 
