@@ -1,5 +1,11 @@
 # 수식 결과 직접 수정 — 내부 저장 기반
 
+최신 후보의 추적 픽스쳐 입력 경로 감사: de4ead WASM으로46개 HWPX의 일반 prefix/history 감사를 끝냈습니다(exit0). 암호1개는 명시적으로 거부하고, 열린 문서1444문단 중 일반1231입력/undo 원문 복원·거부 뒤 redo189를 확인했습니다. 일반 거부는 UnsupportedParagraphControl146·InvalidFormulaNumber48·ProtectedFieldRange19입니다. 별도 특수 prefix 감사도 exit0으로 종료됐고165시도 중152입력/전체 XML 독립 검증(그중 필드6)이 통과했습니다. 남은13거부는 실제 chart FORMULA 결과 범위입니다. 두 감사 모두 입력 버퍼 및 디스크 파일 동일성 검사를 유지합니다.
+
+새 공개 결과 회귀는 chart의13개 필드를 각각 원본에서 시작해 Unicode/기호 prefix 결과로 수정하고 전체 XML/ZIP oracle 양 Python 모드·각각5변조·undo/redo 원문/수정본 바이트·재열기 표시/저장 일치를 검사합니다. 집중1/1·exit0·skip0(7058.008875ms), 이어 공개 API/Worker 전체16/16·exit0·skip0(13055.4135ms)이 통과했습니다. 같은 de4ead로 기존48숫자 입력 전수 회귀를 다시 실행해1/1·exit0·skip0(36610.332667ms)을 확인했습니다. 독립 Decimal 평가로 각 숫자100 변경 후13수식의 LastResult/Command/본문을 대조하며 재열기 저장 바이트도 확인합니다. 숫자에 임의 문자열을 넣는 거부는 편집 경로 부재가 아닙니다.
+
+따라서 이46파일 inventory에서 암호 문서를 제외한1444문단은 일반1231·특수152·숫자48·명시적 결과13의 입력 경로가 확인됐습니다. 동일 후보의 새 실측만 사용했으며 과거 후보 수치를 합산하지 않습니다. 숫자는 유효 숫자 대체, 결과는 전용 setter이며 모두 동일한 일반 prefix 명령 성공이라는 뜻은 아닙니다. 일반 경로 감사는 제품 reader/history 대조이고 독립 전수 XML 검사는 특수/결과 경로에만 적용했습니다. 435개 참조 HWPX나 HWP5, 모든 편집 명령·구조/rebase·레이아웃/브라우저 완료로 확대하지 않습니다. runtime 및 공개 API/Worker 회귀 파일은 최종 전체 native gate 전 미커밋이고 기본 데모도 승격하지 않았습니다.
+
 UI 적대적 검증 후속: 결과 capability와 정의 capability를 분리한 뒤, `reportValidity` 콜백에서 정의 capability만 false로 변경하는 반례를 추가했습니다. 수동 편집 때문에 부모 fieldset은 여전히 활성이고 대상 identity도 같아 기존 두 번째 검사에서 정의 명령이 전송되는 실패를 재현했습니다(결과 UI4개 중1실패·exit1, 전송0 기대/실제1). 유효성 검사 후 전송 직전에도 정의 capability를 다시 확인하도록 수정했습니다. 같은 상태에서 수동 결과 요청은 계속 허용합니다. 기존 정의3개/결과4개 합계7/7·exit0·skip0(36.142667ms)과 diff check를 확인했습니다. 이는 동기 재진입 실패 경로의 제어기 검사이며 새로운 브라우저/전체 픽스쳐 검증을 실행한 것으로 계수하지 않습니다.
 
 결과 속성 UI 후속: 기존 수식 선택과 Canvas 선택 연동을 유지하면서 결과 초안/클릭/Enter/IME 처리를 별도 `formula-result-controls`로 분리했습니다. native 응답과 이력이 확정값을 소유하며 UI는 별도 결과 캐시를 만들지 않습니다. 결과 capability와 정의 capability는 독립적으로 검사하고 비활성 세션·입력 처리 중·대상 부재·close에서 요청하지 않습니다. 빈 결과도 허용하며 인코딩/XML 문자/표시 크기 제한은 native 공개 setter의 검사를 따릅니다. 결과 입력의 Enter는 정의 form submit을 막고, IME 조합 중에는 결과 요청을 보내지 않습니다. 오류/무관한 갱신에서 동일 필드의 초안을 유지하되 실제 결과 변화·대상 변경·undo/redo/성공 응답에는 현재 모델 값을 표시합니다.
