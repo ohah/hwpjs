@@ -34,6 +34,10 @@ issue1891_external_bindata_link의 추가 독립 XML 조회에서는 SUM(?3:?7)�
 
 ## SUM 비숫자 관측의 경계
 
+구조 입력 보완 후보a61595의 후속 결과: 공개3파일17/17·exit0(55338.59625ms), 구조 거래/투영 거래/입력 guard 집중native5/5·exit0을 확인했습니다. [실제 설명 셀 SUM 저장 검사기](../tools/hwpx-text-sum-save-oracle.py)는 관측8×8표의 다섯 SUM을 가장 가까운 소유 표로 고르고 독립 셀 점유/Decimal 합산을 수행합니다. 원본에서 관측한 두 설명 문구만 제외하고 나머지 숫자를 재계산해 첫 결과127.76 및 나머지4결과 불변을 요구합니다. 기대 XML에는67.83→70 입력과 첫 필드 Command/LastResult/dirty/소유 결과 텍스트만 변경합니다. 전체 구역 XML 및 비대상 ZIP payload·entry 순서/주석/메타데이터/CRC가 일치해야 합니다.
+
+실제 수정본은 Python 일반/-O 모두 통과했습니다. 각 모드에서 결과·수식 Command·dirty·설명 문구·비대상 header payload의5개 변조를 거부했습니다. 실제 전체 XML/비대상 payload 불일치만 부정 대조 성공으로 인정하며 검사기 실행 실패는 성공으로 처리하지 않습니다. 최초 oracle의 전체 descendant 기반 표 선택은 중첩 표의 조상을 중복 후보로 잡아 Source table identity로 실패했고, 독립 부모 관계에서 가장 가까운 표를 선택하도록 수정 후 재실행했습니다. 기대 차이를 삭제하거나 XML 차이를 넓게 허용하지 않았습니다. 이 검사는 실제 한 파일/한 숫자 전환의 지원 근거이며 전체 fixture/모든 집계/브라우저 조판 완료 증거가 아닙니다.
+
 구조 입력 보완 후보 `/tmp/hwpjs-sum-text-structural-prototype/bin/hwpjs.wasm` SHA256은 `a61595a0c3d1510c8c7d0e315b0de54e8c8451551302465e2f59b355e66cd470`입니다. ReleaseSafe build5/5 steps·exit0, 관련 fmt check exit0을 확인했습니다. 참조 숫자 입력 수집/전환 검증을 formula_numeric_input_guard.validateFormulaTransition으로 모았으며 일반 formula_splice와 paragraph_structure_formula_splice가 이를 호출합니다. 구조 경로는 기존 paragraph_structure_projection으로 이전/초안 Sites를 만들고 검증한 뒤 기존 proxy save 검사를 수행하며, 마지막 ownership swap 전 오류는 현재 모델을 게시하지 않습니다.
 
 이 후보에서 이전 실패 테스트인 실제 chart parent formatting/숫자 입력의 양방향 조합이1/1·exit0으로 통과했습니다. 기존 독립 XML/서식·undo/redo·잘못된 숫자 입력 거부 검사를 그대로 유지했습니다. 실제 external BinData 파일은 source 문단2715의67.83을70으로 변경하고 첫 SUM127.76, bad 치환의 InvalidFormulaNumber 및 저장본 불변, undo 원문 전체 바이트/redo 수정본 전체 바이트, 저장본 재열기 후127.76을 확인했습니다. 이 검사는 공개 WASM API/이력 왕복이며 아직 이 수정본의 독립 전체 XML/ZIP oracle이나 실제 브라우저 조작은 아닙니다. 후속3파일 전체 회귀와 구조 거래 할당 실패는 실행 중입니다. 기본 제품/원 작업 트리에는 런타임 변경을 반영하지 않았습니다.
