@@ -35,6 +35,12 @@ test("Canvas metadata-only host input preserves page numbering header and footer
   assert.equal(resized.content.paragraphs.find(p => p.section === 0 && p.paragraph === 0).text, text);
   const resizedSaved = Buffer.from((await h.send({ kind: "save" })).bytes);
   assert.notDeepEqual(resizedSaved, saved);
+  const propertyRequest = { before: saved.toString("base64"), after: resizedSaved.toString("base64"), mode: "anchor-properties", section: 0, localParagraph: 0, startUnit: 0, endUnit: text.length, properties: { size: 1200 } };
+  for (const flags of [[], ["-O"]]) {
+    const verify = request => JSON.parse(execFileSync("python3", [...flags, "tools/hwpx-character-property-oracle.py"], { input: JSON.stringify(request), encoding: "utf8", timeout: 30000 }));
+    assert.equal(verify(propertyRequest).verified, true);
+    assert.throws(() => verify({ ...propertyRequest, after: propertyRequest.before }), /mismatch|differs/);
+  }
   const reopened = await createHwpxEditor(readFileSync(process.env.HWPJS_TEST_WASM));
   try {
     reopened.open(resizedSaved);
