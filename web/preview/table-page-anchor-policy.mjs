@@ -14,9 +14,9 @@ export function tablePageAnchorError(source) {
   if (source.text_flow !== 0) return "UnsupportedTableTextFlow";
   if (source.flow_with_text !== true) return "UnsupportedTableFlowWithText";
   if (source.allow_overlap !== false) return "UnsupportedTableOverlap";
-  if (source.vertical_relative !== 2) return "UnsupportedTableVerticalReference";
+  if (![1, 2].includes(source.vertical_relative)) return "UnsupportedTableVerticalReference";
   if (![0, 1, 2, 3].includes(source.horizontal_relative)) return "UnsupportedTableHorizontalReference";
-  if (source.vertical_alignment !== 0) return "UnsupportedTableVerticalAlignment";
+  if (source.vertical_relative === 2 ? source.vertical_alignment !== 0 : ![0, 1, 2].includes(source.vertical_alignment)) return "UnsupportedTableVerticalAlignment";
   if (![0, 1, 2].includes(source.horizontal_alignment)) return "UnsupportedTableHorizontalAlignment";
   return null;
 }

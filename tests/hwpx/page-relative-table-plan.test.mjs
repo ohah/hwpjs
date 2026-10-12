@@ -5,6 +5,7 @@ import { workerCanvasHarness } from "../canvas/worker-harness.mjs";
 import { measureTableCells } from "../../web/preview/table-cell-measurement.mjs";
 import { planMultipleTablePages } from "../../web/preview/multiple-table-page-plan.mjs";
 import { prepareTablePageBands } from "../../web/preview/table-page-bands.mjs";
+import { layoutTableBodyContent } from "../../web/preview/table-body-content-layout.mjs";
 
 test("actual page-bottom table reserves a fixed whole-table page fragment", async t => {
   assert(process.env.HWPJS_TEST_WASM, "explicit field display candidate required");
@@ -29,6 +30,17 @@ test("actual page-bottom table reserves a fixed whole-table page fragment", asyn
   const page = fragment.referenceBoxes.page;
   assert(Math.abs(fragment.y + fragment.height - (page.y + page.height)) < 1e-8);
   assert(fragment.y >= page.y);
+  assert.deepEqual(table, before);
+  const ids = new Set([table.hostParagraph, ...table.cells.flatMap(cell => cell.paragraphs)]);
+  const slice = { ...loaded.content, tables: [table], pictures: [], paragraphs: loaded.content.paragraphs.filter(p => p.section === table.section && ids.has(p.paragraph)), paragraphFlows: loaded.content.paragraphFlows.filter(flow => flow.section === table.section && ids.has(flow.paragraph)) };
+  const result = layoutTableBodyContent(slice, text => ({ width: text.length * 8, height: 12 }), 20000);
+  if (result.state !== "paginated") t.diagnostic(JSON.stringify({ error: result.error, declaredWidth: table.sourceGeometry.geometry.width / 75, measuredWidth: measured.grid.width, reference: fragment.referenceBoxes.page }));
+  assert.equal(result.state, "paginated", result.error);
+  assert.equal(result.boxes.length, table.cells.length);
+  assert.equal(result.tableAnchors[0].tableNode, table.tableNode);
+  const beyondPaper = structuredClone(slice);
+  beyondPaper.tables[0].sourceGeometry.geometry.horizontal_offset = 1000000;
+  assert.equal(layoutTableBodyContent(beyondPaper, text => ({ width: text.length * 8, height: 12 }), 20000).error, "TablePageWidthOverflow");
   assert.deepEqual(table, before);
   t.diagnostic("One actual table's measured page fragment; not full document layout or original Hangul equivalence");
 });

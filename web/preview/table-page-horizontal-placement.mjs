@@ -33,7 +33,7 @@ export function placeTablePagesHorizontally(table, layout, outerInsets, paragrap
     const outerOnlyOverflow = relative === 2 && table.sourceGeometry.horizontal_alignment === 0 && geometry.horizontal_offset === 0
       && hwpUnitPixels(geometry.width) <= reference.column.width + 1e-8 && measuredWidth <= reference.column.width + 1e-8
       && measuredWidth + margins.left + margins.right > reference.column.width;
-    boundaries.set(key, outerOnlyOverflow ? reference.paper ?? reference.column : reference.column);
+    boundaries.set(key, table.sourceGeometry.vertical_relative === 1 || outerOnlyOverflow ? reference.paper ?? reference.column : reference.column);
   }
   const boxes = layout.boxes.map(box => box.tableNode === table.tableNode ? { ...box, x: box.x + shifts.get(box.pageOrdinal), ...(boundaries.get(box.pageOrdinal) !== box.referenceBoxes.column ? { horizontalOverflowBoundary: "paper" } : {}) } : box);
   if (boxes.filter(box => box.tableNode === table.tableNode).some(box => {
@@ -44,7 +44,8 @@ export function placeTablePagesHorizontally(table, layout, outerInsets, paragrap
         || paper.width <= 0 || box.x < boundary.x || box.x + box.width > boundary.x + boundary.width + 1e-8
         || box.x - margins.left < paper.x || box.x + box.width + margins.right > paper.x + paper.width + 1e-8;
     }
-    return !Number.isFinite(box.x) || !Number.isFinite(box.x + box.width + margins.right) || box.x - margins.left < box.referenceBoxes.column.x || box.x + box.width + margins.right > boundary.x + boundary.width;
+    const leftBoundary = table.sourceGeometry.vertical_relative === 1 ? boundary : box.referenceBoxes.column;
+    return !Number.isFinite(box.x) || !Number.isFinite(box.x + box.width + margins.right) || box.x - margins.left < leftBoundary.x || box.x + box.width + margins.right > boundary.x + boundary.width;
   })) return unavailable("TablePageWidthOverflow");
   const rows = layout.rows.map(row => row.tableNode === table.tableNode ? { ...row, x: row.x + shifts.get(row.pageOrdinal) } : row);
   const flowPictures = layout.flowPictures?.map(picture => picture.cell?.tableNode === table.tableNode && picture.section === table.section

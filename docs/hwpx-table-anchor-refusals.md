@@ -18,4 +18,12 @@
 
 제품 `tablePageAnchorSupported`와 전체 본문 entry 조립은 아직 기존 거부 정책을 유지합니다. 다음 작업은 whole PAGE 예약을 본문에 연결하고, BEHIND_TEXT·겹침·본문/그림 조합까지 검사하는 것입니다.
 
+## PAGE 본문 경로 연결
+
+PAGE 기준 TOP/CENTER/BOTTOM을 본문 정책에 연결하고 row-bands 대신 whole 예약을 선택합니다. 고정 PAGE 표의 가로 경계는 종이 기준으로 검사하며 본문 폭보다 큰 원문 표를 축소하지 않습니다. 기존 PARA 기준 표의 가로 검사는 유지합니다. 실제 표381은665.213333px 폭이고 본문 폭은661.44px입니다. CENTER+원문 offset은 왼쪽 본문 경계도 조금 넘지만 종이 안에 있어 고정 배치가 가능합니다. 종이 밖 offset은 여전히 TablePageWidthOverflow입니다.
+
+실제 표381과 그 직접 셀 문단만 선택한 테스트 조각에서 전체 table-body 경로의 paginated/모든 셀 box/앵커 연결을 확인했습니다. 이 조각은 포함된 중첩 표 내용 전체를 배치한 결과가 아니며 전체 원본 성공으로 계수하지 않습니다. 원본 전체는 다음 표391(parent381)의 UnsupportedNestedTablePagePolicy로 거부됩니다. 해당 노드와 정책 이유는 renderer layout/dataset에 남습니다. 뒤쪽 표1068도 parent381이며 별도로 BEHIND_TEXT가 미지원입니다.
+
+단독 실제 계획/제품 table-body 단면·종이 밖 거부·예약/타입 정책·원본 거부 진단5/5 종료코드0입니다. 기본 WASM 승격·전체 중첩/겹침 조립과 원본 한글 조판 검증은 아직 남습니다.
+
 후보 `field-label-display-owned-api`(SHA256 39c827edcce665efcce4b40c9a70d47d0d1f74a1ac63013972d2b10a49692a1f)에서 `table-page-anchor-reference`, `table-page-anchor-policy`, `field-label-display` 테스트5/5 종료코드0입니다. 잘못된 타입/범위/인라인 및 부동 모드 조합의 기존 boolean 판정 동치·거부 이유·실제 표 소유권·renderer 진단을 검사했습니다. 실제 브라우저/원본 조판 완료 검사가 아닙니다.

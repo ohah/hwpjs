@@ -20,22 +20,22 @@ with zipfile.ZipFile(io.BytesIO(base64.b64decode(json.load(sys.stdin)['bytes']))
   const before = structuredClone(loaded.content);
   const refused = loaded.content.tables.filter(row => tablePageAnchorError(row.sourceGeometry));
   assert.deepEqual(refused.map(row => ({ node: row.tableNode, host: row.hostParagraph, reason: tablePageAnchorError(row.sourceGeometry) })), [
-    { node: 381, host: 29, reason: "UnsupportedTableVerticalReference" },
     { node: 1068, host: 30, reason: "UnsupportedTableTextWrap" },
   ]);
-  const pageBottom = refused[0];
+  const pageBottom = loaded.content.tables.find(row => row.tableNode === 381);
   const xml = independent.find(row => row.width === pageBottom.sourceGeometry.geometry.width);
   assert.equal(xml.vertical, "PAGE"); assert.equal(xml.align, "BOTTOM");
   assert.equal(pageBottom.sourceGeometry.vertical_relative, 1);
   assert.equal(pageBottom.sourceGeometry.vertical_alignment, 2);
-  const behind = independent.find(row => row.width === refused[1].sourceGeometry.geometry.width);
+  assert.equal(tablePageAnchorError(pageBottom.sourceGeometry), null);
+  const behind = independent.find(row => row.width === refused[0].sourceGeometry.geometry.width);
   assert.equal(behind.wrap, "BEHIND_TEXT");
   assert.equal(behind.align, "BOTTOM");
   const layout = layoutTableBodyContent(loaded.content, text => text.length * 8, 20000);
-  assert.equal(layout.error, "UnsupportedTablePageAnchor");
-  assert.equal(layout.tableNode, 381);
-  assert.equal(layout.anchorReason, "UnsupportedTableVerticalReference");
-  assert.equal(h.renderer.layout().pageLayoutTableNode, 381);
-  assert.equal(h.canvas.dataset.pageLayoutAnchorReason, "UnsupportedTableVerticalReference");
+  assert.equal(layout.error, "UnsupportedTablePagePolicy");
+  assert.equal(layout.tableNode, 391);
+  assert.equal(layout.policyReason, "UnsupportedNestedTablePagePolicy");
+  assert.equal(h.renderer.layout().pageLayoutTableNode, 391);
+  assert.equal(h.canvas.dataset.pageLayoutPolicyReason, "UnsupportedNestedTablePagePolicy");
   assert.deepEqual(loaded.content, before);
 });

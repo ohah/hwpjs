@@ -45,7 +45,7 @@ export function layoutTableBodyContent(content, measure, maxRows) {
     if (!table || !Array.isArray(table.cells) || !source) return unavailable("UnsupportedPageObjects");
     const inline = geometry?.treat_as_character === true;
     const allowedBreak = table.pagination?.page_break === "cell" || table.pagination?.page_break === "none";
-    if (table.parentTableNode !== null || !allowedBreak || table.pagination?.cell_spacing !== 0 || table.cells.some(cell => cell.sourceMargin?.header !== false)) return unavailable("UnsupportedTablePagePolicy");
+    if (table.parentTableNode !== null || !allowedBreak || table.pagination?.cell_spacing !== 0 || table.cells.some(cell => cell.sourceMargin?.header !== false)) return { ...unavailable("UnsupportedTablePagePolicy"), tableNode: table.tableNode, policyReason: table.parentTableNode !== null ? "UnsupportedNestedTablePagePolicy" : "UnsupportedTableBandPolicy" };
     const host = content.paragraphs.find(p => p.section === table.section && p.paragraph === table.hostParagraph);
     const anchorReason = tablePageAnchorError(source);
     if (anchorReason) return { ...unavailable("UnsupportedTablePageAnchor"), tableNode: table.tableNode, anchorReason };
@@ -74,7 +74,7 @@ export function layoutTableBodyContent(content, measure, maxRows) {
     const siblings = hosts.get(table.hostParagraph) ?? [];
     if (siblings.length && entries[siblings.at(-1)].table.tableNode >= table.tableNode) return unavailable("AmbiguousTablePageHost");
     siblings.push(entries.length); hosts.set(table.hostParagraph, siblings); tableIds.add(table.tableNode);
-    entries.push({ table, measured, origin, padding: "source", rowHeights: measured.grid.rows, splitMode: table.pagination.page_break === "none" || captionReservation || inline || geometry.vertical_offset !== 0 ? "whole" : "row-bands", outerInsets, captionReservation, inline, host, inlineFlow });
+    entries.push({ table, measured, origin, padding: "source", rowHeights: measured.grid.rows, splitMode: table.pagination.page_break === "none" || captionReservation || inline || geometry.vertical_offset !== 0 || source.vertical_relative === 1 ? "whole" : "row-bands", outerInsets, captionReservation, inline, host, inlineFlow });
   }
   for (const siblings of hosts.values()) {
     const group = siblings.map(index => entries[index]);
