@@ -20,6 +20,10 @@
 
 ## PAGE 본문 경로 연결
 
+재귀 측정→투영→paint 연결: 뒤쪽/앞쪽 부동 자식(textWrap2/3, 명시적 affect_line_spacing=false, 캡션 없음)은 현재 부모 문단의 소유 앵커를 확인하고 floatingTables descriptor를 생성합니다. 앵커는 UTF-16 한 글자로 보존하되 글자 폭0으로 측정하고 renderer의 개체 앵커 생략 경로로 중복 표식을 그리지 않습니다. 페이지 투영 결과의 tablePaintLayer는 뒤쪽→본문→앞쪽 paint와 동일 순위의 공간 hit 검사에 사용합니다. geometry 배열을 paint 순서로 재정렬하지 않습니다.
+
+합성 데이터의 producer부터 table-body/페이지 투영/실제 renderer 대역까지 child text·cell 단일 생성/앵커 폭0·뒤쪽/앞쪽 태그·paint 순서·겹치는 뒤쪽보다 본문 text hit 우선·입력 불변, 실제 원본 거부 진단과 HWP5 중첩/그림·덧말 회귀10/10 종료코드0입니다. 실제 table-bug 폭 넘침 거부도 유지합니다. 부동 자식의 캡션/줄 높이 영향·인라인과 혼합 앵커·여러 단계 부동 계층·TOP_AND_BOTTOM 감싸기와 실제 브라우저/원본 조판은 남습니다. 특히 덧말 원본의 child391(textWrap1)은 계속 UnsupportedNestedTableAnchor이며 전체 원본 지원 완료가 아닙니다.
+
 부동 셀 조합은 `projectNestedFloatingCellContent`가 현재 문단 범위 확인→기준 사각형→소유자 위치→측정 셀 페이지 투영을 한 경로로 연결합니다. 부모 table/list·host·현재 U+FFFC 앵커·중복 노드/앵커와 누적 행 예산을 검사합니다. 기존 projectTablePageFragments는 명시적 flow.floatingTables가 있을 때만 이 조합을 호출합니다. 부모/자식 cell box·자식 텍스트 단일 추가·오류 뒤 부분 성공 미반환·행 예산 거부·입력 불변을 위치/문단/투영 테스트3/3 종료코드0으로 확인했습니다. 실제 재귀 측정기가 이 descriptor를 생산하는 경로와 renderer의 뒤쪽/앞쪽 paint 순서는 아직 연결하지 않았으므로 실제 부동 중첩 표 지원 완료가 아닙니다.
 
 현재 문단 기준 단면: `nestedParagraphReference`는 현재 측정 행의 section/paragraph와 완전한 UTF-16 텍스트 범위를 pageParagraphCoverage로 확인하고, 행의 명시적 width/textHeight와 공통 textTop으로 기준 사각형을 만듭니다. 부모 셀/flow 전체 높이와 원문 줄 캐시는 사용하지 않습니다. 분할 페이지/단·transform/clip·비유한 높이/누락·중복/Unicode 절단은 거부합니다. 현재 행 높이16과 flow높이351을 구분해 부동 BOTTOM 위치 계산에 전달하는 검사 및 위치/셀 투영3/3 종료코드0입니다. 원본 한글의 PARA 기준 정의나 실제 글꼴 shaping 동치 증명이 아니며, 재귀 조판의 부동 자식 생산·paint 연결은 계속 남습니다.

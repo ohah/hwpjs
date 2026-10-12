@@ -1,6 +1,7 @@
 import { FONT, displayRunText } from "./layout.mjs";
 import { dutmalAt, dutmalPaintPlan, paintDutmal } from "./dutmal-paint.mjs";
 import { dutmalAnchorAtPoint } from "./dutmal-anchor-geometry.mjs";
+import { tableTextPaintOrder } from "./table-text-paint-order.mjs";
 import { hitPictureLayers } from "./picture-hit-test.mjs";
 import { paintPictureSelection } from "./picture-selection-paint.mjs";
 import { canvasViewportMetrics } from "./canvas-viewport-metrics.mjs";
@@ -219,7 +220,7 @@ export function createRenderer(canvas, viewportElement, spacer, onLayout = () =>
       } else ctx.fillText(row.text, rowLeft(row), rowTop(row, i) - viewport.scrollTop + rowTextTop(row));
       });
     };
-    for (let i = first; i < layout.rows.length; i++) {
+    for (const i of tableTextPaintOrder(layout.rows, first)) {
       const row = layout.rows[i];
       if (groupTextKeys.has(`${row.section}:${row.drawingNode}`)) continue;
       paintTextRow(row, i);

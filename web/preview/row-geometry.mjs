@@ -2,6 +2,7 @@
 import { affinePoint, inverseAffine } from "./affine-point-geometry.mjs";
 import { rowPageClipContains } from "./row-page-clip.mjs";
 import { sameCreatedCell } from "./created-cell-address.mjs";
+import { topTablePaintRowIndex } from "./table-text-paint-order.mjs";
 
 export const DEFAULT_ROW_HEIGHT = 28;
 export const DEFAULT_TEXT_HEIGHT = 20;
@@ -36,7 +37,7 @@ export function rowAtPoint(layout, x, y) {
       point[1] >= rowTop(row, index) && point[1] < rowTop(row, index) + rowHeight(row);
   };
   // 글자가 있는 영역을 먼저 찾고 빈 줄 끝 영역은 마지막에 선택합니다.
-  const ink = layout.rows.findLastIndex((row, index) => {
+  const ink = topTablePaintRowIndex(layout.rows, (row, index) => {
     if (!contains(row, index)) return false;
     const point = rowLocalPoint(row, x, y), boundaries = row.boundaries;
     if (!Array.isArray(boundaries) || !boundaries.length) return false;
@@ -47,8 +48,8 @@ export function rowAtPoint(layout, x, y) {
       && point[1] < rowTop(row, index) + rowTextTop(row) + rowTextHeight(row);
   });
   if (ink >= 0) return ink;
-  // Page text is painted in array order; the last overlapping row is on top.
-  const direct = layout.rows.findLastIndex(contains);
+  // Equal layers retain array order; floating layers match the paint order.
+  const direct = topTablePaintRowIndex(layout.rows, contains);
   if (direct >= 0) return direct;
   const cell = layout.boxes?.filter(box => rowPageClipContains(box, x, y) && x >= box.x && x < box.x + box.width && y >= box.y && y < box.y + box.height)
     .reduce((best, box) => !best || (box.depth ?? 0) > (best.depth ?? 0) ? box : best, null);
