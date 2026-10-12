@@ -35,3 +35,7 @@ native3/3 exit0 재검사에서 실제 splice 준비의 모든 실패 할당 지
 다운로드 edited/redone SHA256은 모두 `327ca02201c2f6136934886f4896fb9c6da2dfc95a93f5082cfdca2725865b2d`, undone은 원본과 같은 `7e9bb96a5c1c62b09ec7446afa01b16f38bef22a5c8354af2b7fd46b31821ca4`입니다. edited 파일의 독립 전체 XML/비대상 ZIP normal/-O도 통과했습니다. 산출물과 meta-browser-after.png는 zig-out/verification/section-metadata-source-affinity 아래에 있습니다. 소유 브라우저와 임시 서버는 확인 후 종료했습니다.
 
 화면은 UnsupportedPageFlow의 논리 fallback이며 실제 조판 완료가 아닙니다. 입력은 원본 charPrIDRef34의 height100, 즉1pt를 그대로 상속하여 매우 작게 표시됩니다. 성공한 입력/저장과 화면 가독성을 구분하고, 원본 서식을 임의로16px로 덮어쓰지 않았습니다. 해당 빈 문단의 사용자 지정 글자 크기·서식 UI를 후속 확인해야 합니다.
+
+## 입력 후 명시적 크기 변경 검증
+
+동일 후보의 Canvas Worker 회귀를 확장해 입력 문자열 전체에 기존 character-properties 명령으로 size1200(12pt)을 적용했습니다. 저장 파일을 독립 세션으로 다시 열어 모든 해당 characterRanges의 참조 shape.height가1200인지 확인했으며, 크기 변경 undo는 입력 직후 파일, redo는 크기 변경 파일과 바이트 단위로 같았습니다. 회귀1/1 exit0입니다. 원본1pt를 자동 교정하지 않으며 사용자 명령에 따른 변경만 검증합니다. 실제 브라우저 도구 모음 클릭·빈 문단에 입력하기 전 서식 지정·서식 변경 시 전체 XML 비대상 보존은 별도 검증이 남습니다.

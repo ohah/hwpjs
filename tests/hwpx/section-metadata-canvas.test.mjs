@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { workerCanvasHarness, dispatchCanvasEvent } from "../canvas/worker-harness.mjs";
 import { execFileSync } from "../../tools/oracle-process.mjs";
+import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
 
 test("Canvas metadata-only host input preserves page numbering header and footer settings", async t => {
   assert(process.env.HWPJS_TEST_WASM, "explicit source affinity candidate required");
@@ -29,4 +30,23 @@ test("Canvas metadata-only host input preserves page numbering header and footer
   assert.deepEqual(Buffer.from((await h.send({ kind: "save" })).bytes), input);
   assert.equal((await h.send({ kind: "redo" })).error, undefined);
   assert.deepEqual(Buffer.from((await h.send({ kind: "save" })).bytes), saved);
+  const resized = await h.send({ kind: "character-properties", origin: "canvas", section: 0, paragraph: 0, startUnit: 0, endUnit: text.length, properties: { size: 1200 } });
+  assert.equal(resized.error, undefined);
+  assert.equal(resized.content.paragraphs.find(p => p.section === 0 && p.paragraph === 0).text, text);
+  const resizedSaved = Buffer.from((await h.send({ kind: "save" })).bytes);
+  assert.notDeepEqual(resizedSaved, saved);
+  const reopened = await createHwpxEditor(readFileSync(process.env.HWPJS_TEST_WASM));
+  try {
+    reopened.open(resizedSaved);
+    const shapes = new Map(reopened.characterShapes().map(shape => [shape.id, shape]));
+    const ranges = reopened.characterRanges(0, 1);
+    assert(ranges.length > 0);
+    assert.equal(ranges[0].start, 0);
+    assert.equal(ranges.at(-1).end, text.length);
+    for (const range of ranges) assert.equal(shapes.get(range.charShapeId).height, 1200);
+  } finally { reopened.close(); }
+  assert.equal((await h.send({ kind: "undo" })).error, undefined);
+  assert.deepEqual(Buffer.from((await h.send({ kind: "save" })).bytes), saved);
+  assert.equal((await h.send({ kind: "redo" })).error, undefined);
+  assert.deepEqual(Buffer.from((await h.send({ kind: "save" })).bytes), resizedSaved);
 });
