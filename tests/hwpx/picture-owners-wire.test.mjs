@@ -12,3 +12,15 @@ test("picture owner batch validates identities exclusive results and UTF-8 bound
   }
   assert.throws(() => decodePictureOwners(new Uint8Array([0xff])), /InvalidPictureOwners/);
 });
+test("picture owner response rejects every truncation and unsafe numeric field", () => {
+  const valid = wire([row]);
+  for (let length = 0; length < valid.length; length++) assert.throws(() => decodePictureOwners(valid.subarray(0, length)), /InvalidPictureOwners/, `length ${length}`);
+  for (const value of [-1, 0.5, 0x100000000, Number.MAX_SAFE_INTEGER, "1", true, null]) {
+    assert.throws(() => decodePictureOwners(wire([{ ...row, picture_node: value }])), /InvalidPictureOwners/);
+    for (const field of ["paragraph", "anchor_node", "anchor_unit"]) {
+      assert.throws(() => decodePictureOwners(wire([{ ...row, owner: { ...row.owner, [field]: value } }])), /InvalidPictureOwners/);
+    }
+  }
+  assert.deepEqual(decodePictureOwners(wire([])), []);
+  assert.equal(decodePictureOwners(wire([{ ...row, picture_node: 0xffffffff, owner: { paragraph: 0xffffffff, anchor_node: 0xffffffff, anchor_unit: 0xffffffff } }]))[0].owner.anchorUnit, 0xffffffff);
+});

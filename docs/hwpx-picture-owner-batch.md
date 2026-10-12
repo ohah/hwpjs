@@ -29,3 +29,7 @@ UI 부착은 구역별 한 번 조회하며 그림별 오류를 유지합니다.
 같은10048379 후보의 `picture-owners-history.test.mjs`는1/1 exit0입니다. 실제 shapepict-scaled에서 split으로 소유 문단이+1, 앞😀 입력으로 앵커 위치가+3, merge로 소유 문단이 원래 번호로 돌아옴을 확인했습니다. 각 상태에서 batch/단일 조회·이력 revision·save 불변을 대조하고, 독립 객체 XML/ZIP normal/-O·undo/redo·재열기/재저장도 검사했습니다. 재열기 뒤 원본 노드 번호는 동일하다고 가정하지 않고 문단 소유 관계를 확인합니다.
 
 로컬 native는 빈 요청에서 구역/한도 검증 후0길이 결과를 즉시 반환하도록 수정했습니다. 첫 할당부터 실패하는 allocator에서도 빈 요청이 성공해 불필요한 문단 모델 할당이 없음을 확인했습니다. 보고서의 node/owner/failure를 직접 확인하는 검사도 추가했고 native2/2 및 후속 실패 allocator 집중1/1 exit0입니다. 이 변경은 앞선10048379 WASM 빌드 이후의 source 수정이며 제품/전체 gate에 소급 반영하지 않습니다. 새 이력 회귀를 기본 목록에 등록한 누락 방지 검사와 전체 fmt도 통과했습니다.
+
+추가 native 집중1/1 exit0에서 보고서의 node 열거·임시 view·결과 배열·JSON valueAlloc까지 실패 할당 sweep을 확장했습니다. OOM은 성공 행이나 부분 JSON으로 바꾸지 않으며 caller 임시 메모리 해제와 원문 저장 불변을 확인했습니다. 이는 native report/직렬화 경로의 검사이지 WASM heap 강제 실패나 모든 문서의 OOM 검증은 아닙니다.
+
+JS wire와 UI 부착 회귀4/4 exit0에서 정상 packet의 모든 절단 길이, 네 수치 필드의 음수·소수·u32 초과·안전 정수 초과·문자열/Boolean/null, 빈 배열과 u32 최댓값 경계를 검사했습니다. malformed packet·오류 응답을 단일 조회 성공으로 덮어쓰지 않는 기존 부정 대조도 유지했습니다.
