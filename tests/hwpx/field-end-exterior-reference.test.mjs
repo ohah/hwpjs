@@ -4,13 +4,13 @@ import { readFileSync } from "node:fs";
 import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
 import { execFileSync } from "../../tools/oracle-process.mjs";
 
-test("actual matched field ends retain markers and allow following empty text input", async () => {
+test("actual field exterior input preserves end markers and a field-owned table", async () => {
   assert(process.env.HWPJS_TEST_WASM, "requires explicit candidate WASM");
   const path = "reference/rhwp/samples/issue3637/regulatory_impact_nested_table_escape.hwpx";
   const input = readFileSync(path);
   const editor = await createHwpxEditor(readFileSync(process.env.HWPJS_TEST_WASM));
   try {
-    for (const paragraph of [423, 518]) {
+    for (const paragraph of [423, 435, 518]) {
       editor.open(input);
       editor.enableHistory({ maxEntries: 8, maxCheckpointBytes: 16 * 1024 * 1024 });
       assert.equal(editor.canEditOutsideField(0, paragraph, 0, 0), true);
