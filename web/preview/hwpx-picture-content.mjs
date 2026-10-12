@@ -8,12 +8,26 @@ export function attachHwpxPictures(editor, content) {
     let sites;
     try { sites = editor.pictureSites(section); }
     catch (error) { content.pictureErrors.push({ section, error: error.message }); continue; }
+    let owners = null, ownerBatchError = null;
+    if (typeof editor.pictureOwners === "function" && sites.some(site => site.state === "located" || site.state === "unsupported_anchor")) {
+      try { owners = new Map(editor.pictureOwners(section).map(row => [row.pictureNode, row])); }
+      catch (error) { if (error.message !== "HwpxPictureOwnersAbiUnavailable") ownerBatchError = error.message; }
+    }
     for (const site of sites) {
       const picture = { ...site, section, paragraph: site.paragraph === null ? null : site.paragraph - 1, owner: null, ownerError: null, geometry: null, geometryError: null, sizeProtected: null, sizeProtectionError: null, position: null, positionError: null, flow: null, flowError: null, crop: null, cropError: null, transform: null, transformError: null, renderingCorners: null, renderingCornersError: null };
       if (site.state === "located" || site.state === "unsupported_anchor") {
         try {
-          if (typeof editor.pictureOwner !== "function") throw new Error("HwpxPictureOwnerAbiUnavailable");
-          const owner = editor.pictureOwner(section, site.pictureNode);
+          if (ownerBatchError) throw new Error(ownerBatchError);
+          let owner;
+          if (owners) {
+            const row = owners.get(site.pictureNode);
+            if (!row) throw new Error("MissingPictureOwnerBatchRow");
+            if (row.error !== null) throw new Error(row.error);
+            owner = row.owner;
+          } else {
+            if (typeof editor.pictureOwner !== "function") throw new Error("HwpxPictureOwnerAbiUnavailable");
+            owner = editor.pictureOwner(section, site.pictureNode);
+          }
           picture.owner = { ...owner, paragraph: owner.paragraph - 1 };
         } catch (error) { picture.ownerError = error.message; }
       }

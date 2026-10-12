@@ -1,4 +1,5 @@
 import { createMemory } from "./wasm-memory.mjs";
+import { decodePictureOwners } from "./hwpx-picture-owners.mjs";
 import { decodeCreatedTables } from "./hwpx-created-tables.mjs";
 import { createdTableIdentity } from "./created-table-identity.mjs";
 import { decodeFormSourceNodes, decodeFormSourceAttributes, decodeFormSites, decodeFormSourceLayout } from "./hwpx-form-source.mjs";
@@ -743,6 +744,14 @@ export async function createHwpxEditor(source) {
       try {
         if (!wasm.hwpx_edit_picture_owner(section, pictureNode)) throw memory.error();
         return decodePictureOwner(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
+    pictureOwners(section) {
+      ready(); uint(section);
+      if (typeof wasm.hwpx_edit_picture_owners !== "function") throw new Error("HwpxPictureOwnersAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_picture_owners(section)) throw memory.error();
+        return decodePictureOwners(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
       } finally { wasm.hwpx_edit_output_free(); }
     },
     lineNodes(section) {
