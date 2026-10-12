@@ -2,6 +2,10 @@
 
 ## 현재 상태
 
+새 역할 후보 SHA256 `50cabdb019974d12a6545d44281cf51cbabb86df5d987e185b41a11b3ccc2c24`의 `--all-points --require-source-roles --normalize-observed-chart-ole` 재검사는 exit0으로 완료했습니다. `/tmp/hwpjs-chart-role-all-points-probe.log`의92문서/93연결·2296시도 모두 편집/독립 normal/-O XML·ZIP·OLE/비대상 보존·undo/redo·재열기를 통과했고 refused/failures/missingPointKinds는0입니다.2296개 역할 조회도 원본 XML과 독립 대조했으며 값 변경과 저장본 재열기 전후 역할 배열이 동일했습니다. 이전 첫186개 편집 및 이전 정책 후보의2296개 전수와 별도 실행으로 유지합니다. 명시적 CFB 정규화 정책·cache/literal 값 범위이며 기본 strict·시리즈 구조·모든 차트 필드·원본 렌더링 완료는 아닙니다.
+
+이전 전체 native gate PID52319의 후속1초 stack sample(`/tmp/hwpjs-native-52319-followup.sample.txt`)은 chart callback에서 `editor_history_batch_tests`의 underline batch 전수 할당 실패로 진행했음을 확인했습니다. checked allocator의 trace0은 유지되며 전체 종료 결과는 아직 없습니다. raw OS physical footprint146.6G는 RSS/누수의 확정 근거가 아니며 프로세스를 중단/재시작하지 않았습니다. 새 역할 후보 전체 native/public 검증은 이 이전 바이너리와 구분합니다.
+
 역할 후보 `50cabdb0…`의 실제 Chromium `hwpjs-chart-roles`에서 계열명·범주·값 라벨 표시와 폼 입력/적용·다운로드·undo/redo 버튼을 검사했습니다. 수정 Blob304732바이트 SHA256 `3e231d4a44238b7212a01eb0312ca4775252fb1a9198e215a77dcb99e6e9abce`는 독립 XML/ZIP/OLE normal/-O와 잘못된 목표값 부정 대조를 통과했습니다. undo Blob49911바이트는 원문 byte-exact(SHA256 `0e49c61f369b4519b0dd22b90f9192394eb095e9b1ec459423e20ace89542305`)이고 redo는 수정본과 같은 SHA 및 독립 검사를 통과했습니다. 새 실행의 browser errors는 비어 있었고 소유 브라우저와 서버 PID65197을 종료했습니다. OS 다운로드 파일 확보·물리 Canvas 선택·다른 문서 역할 UI 검증으로 확대하지 않습니다.
 
 초기 browser 자동화의 화면 밖 클릭은 CLI 성공 응답에도 trusted click/Worker 요청이 없었고, 저장 검증은 MissingSaveBlob 또는 실제 첫 변경값/기대값 불일치로 실패했습니다. DOM option.disabled는 false인데 snapshot에 disabled로 표시되는 관측도 있었습니다. 버튼 scrollintoview 뒤 trusted click/Worker 요청을 확인했으며 후속 키보드 실행 중 about:blank 이동 원인은 확정하지 않았습니다. 이 초기 실행은 통과로 계수하지 않았고 다시 원본을 열어 한 번의 입력/적용 및 위 독립 저장/이력 검증을 완료했습니다.
