@@ -12,4 +12,4 @@
 
 실제 Worker export 호출 계측 회귀는1/1 exit0입니다. 원본 footnote-endnote에서 load/enable/splice/undo/redo 각각 sites 조회가 정확히 한 번씩 증가하고, undo 저장 원문·redo 저장 수정본이 일치했습니다. mock 결과로 native 호출을 생략하지 않고 원래 export를 실행했습니다.
 
-대형 형광펜 원본의 수정 후 Canvas 재실측은 별도로 실행 중입니다. 속도 개선 비율이나 전체 대기시간 해소를 아직 확정하지 않습니다. picture_owner 반복 조회와 기타 경로는 별도 병목으로 남습니다. 최신 전체 gate는 Worker 변경 전 snapshot을 포함하므로 이 수정의 전체 통과로 소급하지 않습니다.
+대형 형광펜 원본의 수정 후 Canvas 재실측은1/1 exit0,143.6초였습니다. 동일 df16a06 후보·같은 문서·같은 테스트의 입력/독립 XML/저장/undo/redo를 유지한 실행이며 앞선304.3초보다 단축됐습니다. 한 번씩의 실측이고 여러 전체 검증이 동시에 실행 중이므로 반복 벤치마크나 모든 파일의 속도 개선 비율로 일반화하지 않습니다. picture_owner 반복 조회와 기타 경로는 별도 병목으로 남고 편집 UI 응답성 완료는 아닙니다. 최신 전체 gate는 Worker 변경 전 snapshot을 포함하므로 이 수정의 전체 통과로 소급하지 않습니다.
