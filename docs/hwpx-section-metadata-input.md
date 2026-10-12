@@ -24,4 +24,14 @@ source affinity 후보 SHA256 `a6b30bb986825a08e720035019b5a66e9d6bbf0f735df6122
 
 native3/3 exit0 재검사에서 실제 splice 준비의 모든 실패 할당 지점을 순회하고, 실패 후 텍스트 사이트·structure_values 부재·저장 원문 byte-exact를 확인했습니다. 성공도 source 상태를 유지합니다. 이는 합성 입력 트랜잭션의 할당 실패 검사이며 전체 open/저장·WASM 강제 OOM까지 포함하지 않습니다.
 
-동일 a6b30bb9 후보로 실제 검사 범위를 issue3460/svg_picture_repro, issue5780/flow_image_page_background, issue6179/right_tab_footer_logo의 첫 문단까지 확장해4/4 exit0입니다. 총13개 위치의 입력·구역/머리말/꼬리말/쪽 숨김 원문·독립 전체 XML/비대상 ZIP normal/-O·잘못된 기대값 거부·undo/redo·재열기/재저장·파일 불변을 확인했습니다. 앞선 쪽번호2개는 별도 검사 결과이고13개에 중복 합산하지 않습니다. 추가 서식/구조/브라우저·최신 전체 gate는 여전히 남습니다.
+동일 a6b30bb9 후보로 실제 검사 범위를 issue3460/svg_picture_repro, issue5780/flow_image_page_background, issue6179/right_tab_footer_logo의 첫 문단까지 확장해4/4 exit0입니다. 총13개 위치의 입력·구역/머리말/꼬리말/쪽 숨김 원문·독립 전체 XML/비대상 ZIP normal/-O·잘못된 기대값 거부·undo/redo·재열기/재저장·파일 불변을 확인했습니다. 앞선 쪽번호2개는 별도 검사 결과이고13개에 중복 합산하지 않습니다. 추가 서식/구조·최신 전체 gate는 여전히 남습니다.
+
+## Canvas Worker와 실제 브라우저
+
+같은 후보의 section-metadata-canvas 회귀1/1 exit0에서 right_tab_footer_logo의 첫 빈 문단을 컨트롤러로 선택하고 beforeinput/input 이벤트를 실제 Worker/WASM까지 전달했습니다. 변경 문자열·독립 XML normal/-O·save·undo 원문/redo 수정본을 확인했습니다. DOM과 좌표 측정은 하네스이므로 실제 브라우저와 구분합니다.
+
+실제 Chromium에서도 loopback8147에 동일 후보를 주입하여 파일 선택·편집 시작·Canvas 물리 클릭·키보드 입력·다운로드·undo/redo·각 다운로드를 확인했습니다. 최초 좌표는 가운데 정렬된 빈 행의 입력 영역 밖이라 선택되지 않았습니다. Worker 응답과 같은 레이아웃 함수를 관측해 유효한 행을 찾은 뒤 클릭했고, 이 과정에서 내용이나 편집 모델을 주입하지 않았습니다. 첫 문단0:0:0 선택 뒤 브라우저😀<& 입력과 splice 성공 응답을 확인했습니다.
+
+다운로드 edited/redone SHA256은 모두 `327ca02201c2f6136934886f4896fb9c6da2dfc95a93f5082cfdca2725865b2d`, undone은 원본과 같은 `7e9bb96a5c1c62b09ec7446afa01b16f38bef22a5c8354af2b7fd46b31821ca4`입니다. edited 파일의 독립 전체 XML/비대상 ZIP normal/-O도 통과했습니다. 산출물과 meta-browser-after.png는 zig-out/verification/section-metadata-source-affinity 아래에 있습니다. 소유 브라우저와 임시 서버는 확인 후 종료했습니다.
+
+화면은 UnsupportedPageFlow의 논리 fallback이며 실제 조판 완료가 아닙니다. 입력은 원본 charPrIDRef34의 height100, 즉1pt를 그대로 상속하여 매우 작게 표시됩니다. 성공한 입력/저장과 화면 가독성을 구분하고, 원본 서식을 임의로16px로 덮어쓰지 않았습니다. 해당 빈 문단의 사용자 지정 글자 크기·서식 UI를 후속 확인해야 합니다.
