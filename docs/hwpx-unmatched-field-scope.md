@@ -16,6 +16,14 @@ Envelope 자체는 구조 범위 계산일 뿐이며 끝 마커를 만들거나 
 
 ## 후속 검증
 
+### 정상 종료 마커 뒤의 빈 텍스트 입력
+
+2026-10-13 실제 `issue3637/regulatory_impact_nested_table_escape.hwpx`의423/518번 문단은 정상 연결된 fieldEnd 뒤에 별도 run의 빈 `hp:t`가 있습니다. 필드 내용이 해당 사이트에 투영되지 않아 기존 exterior 준비가 null을 반환하고, 이후 일반 문단 정책이 종료 마커를 거부했습니다.435번은 앞쪽 공백 뒤에 필드 시작과 표가 있어 별도의 객체 보존 경로 검토가 필요합니다.
+
+같은 종료 마커 구조의 합성 테스트는 수정 전1/1 실패했습니다. 로컬 수정은 투영 필드가 없고 정확한 현재 문단이 필드 마커를 소유할 때 **splice 범위 준비만** 유지합니다. whole_plain/whole_anchored 및 formula_split에는 이 예외를 적용하지 않습니다. 누락 시작의 소유 범위 보호는 예외보다 먼저 수행합니다.
+
+`zig test src/field_scope_regression_test.zig -O ReleaseSafe --test-filter 'field exterior' --test-filter 'unmatched root field'`는12/12 exit0입니다. 새 빈 사이트 입력·Unicode/XML 문자·저장/재열기와 필드 내부 입력 거부, 기존 인라인 삭제/필드 경계 보호·할당 실패·이력 회귀를 포함합니다. 이는 합성 및 기존 회귀 결과이며423/518 실제 편집, 새 WASM/Worker/Canvas, 최신 전체 gate 완료의 근거는 아닙니다. 코드 커밋과 제품 반영은 아직 보류합니다.
+
 ### 잔여35개 분류와 보존형 인라인 입력
 
 정상 중첩 누름틀 두 쌍의 별도 소유 관계·dirty 준비·로컬 명시적 입력 연결과 남은 UI 조건은 [중첩 필드 라벨](hwpx-nested-field-labels.md)이 소유합니다. 제품과 구조 모델의 기존 중첩 거부는 유지합니다.
