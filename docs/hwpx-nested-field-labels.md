@@ -20,6 +20,8 @@ dirtyOwners는 선택 필드와 모든 조상의 element ID를 사전 할당합�
 
 ## 입력 연결 후 검증
 
+중첩 라벨의 Canvas 입력 대상 선택을 위한 후속 readonly API/Worker 연결과 검증은 [범위 대상 조회](hwpx-field-range-target.md)가 소유합니다. 코어의 입력 보호와 marker/dirty 계약은 이 문서를 계속 따릅니다.
+
 `zig test src/nested_field_regression_test.zig -O ReleaseSafe --test-filter 'nested source label edits' --test-filter 'nested field scope' --test-filter 'nested field source ownership'`는3/3 exit0입니다. 합성 문단의 getter 두 대상·바깥 명령의 내부 덮어쓰기/경계 입력 거부·동일 문자열 교체 no-op/dirty 불변·내부 입력의 두 dirty 갱신·모든 트랜잭션 할당 실패의 텍스트/메타데이터 원자성·저장/재열기·undo 원문/redo 수정본을 검사했습니다. 정규 root에 Session 검사도 등록했지만 이전 전체 바이너리에 자동 포함됐다고 주장하지 않습니다.
 
 앞선 nested-field-labels 후보 SHA256 `fddbbcbdfd5391d7c9c6d2faebc9e2fba1f74cd98a86a43f32a8c8deaf98a0e6`는 실제 두 내부 필드와86712 외부 독점 prefix 세 입력이 통과했습니다. 추가 scope 보호 이후 nested-field-scope 후보 SHA256 `570ac93c15f40fed726db2fe82ecf538f38b10286a23f9dab244ca43d2c2e7c5`는 ReleaseSafe build6/6 exit0입니다. `HWPJS_TEST_WASM=/absolute/nested-field-scope/bin/hwpjs.wasm node --test tests/hwpx/nested-field-reference.test.mjs tests/hwpx/metadata-only-run-reference.test.mjs tests/hwpx/field-exterior-inline-reference.test.mjs`는3/3 exit0으로 세 중첩 입력과 앞선 여섯 문단의 독립 저장/이력 회귀를 확인했습니다.
