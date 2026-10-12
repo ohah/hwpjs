@@ -10,6 +10,7 @@ test("runless reference paragraph Worker input saves and preserves undo redo", a
   const h = await workerCanvasHarness(t);
   const loaded = await h.send({ kind: "load", format: "hwpx", bytes: input });
   assert.equal(loaded.error, undefined);
+  assert.deepEqual(loaded.content.paragraphs.find(p => p.section === 0 && p.paragraph === 27).characterRanges, [{ start: 0, end: 0, charShapeId: 2 }]);
   assert.equal((await h.send({ kind: "enable" })).error, undefined);
   assert.equal(h.controller.selectTextRange({ section: 0, paragraph: 27, startUnit: 0, endUnit: 0 }), true);
   const text = "본문😀<&";
@@ -19,6 +20,9 @@ test("runless reference paragraph Worker input saves and preserves undo redo", a
   const changed = await h.flush();
   assert.equal(changed.error, undefined);
   assert.equal(changed.content.paragraphs.find(p => p.section === 0 && p.paragraph === 27).text, "본문😀<&");
+  const row = changed.content.paragraphs.find(p => p.section === 0 && p.paragraph === 27);
+  assert.equal(row.characterRangesError, undefined);
+  assert.deepEqual(row.characterRanges, [{ start: 0, end: text.length, charShapeId: 2 }]);
   const saved = Buffer.from((await h.send({ kind: "save" })).bytes);
   const request = { before: input.toString("base64"), after: saved.toString("base64"), section: 0, localParagraph: 27, text };
   for (const flags of [[], ["-O"]]) {
@@ -44,6 +48,7 @@ test("runless Worker transaction preserves a prior paragraph edit and separate h
   const prefix = "이전😀<&";
   const prior = await h.send({ kind: "splice", origin: "canvas", section: 0, paragraph: other.paragraph, startUnit: 0, endUnit: 0, text: prefix });
   assert.equal(prior.error, undefined);
+  assert.deepEqual(prior.content.paragraphs.find(p => p.section === 0 && p.paragraph === 27).characterRanges, [{ start: 0, end: 0, charShapeId: 2 }]);
   assert.equal(prior.content.paragraphs.find(p => p.section === 0 && p.paragraph === other.paragraph).text, prefix + other.text);
   const priorSaved = Buffer.from((await h.send({ kind: "save" })).bytes);
   const text = "새 문단😀<&";

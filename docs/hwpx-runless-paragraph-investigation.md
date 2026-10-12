@@ -75,3 +75,11 @@ ReleaseSafe 집중7/7 exit0 후 실제 세션 필터1/1 exit0 재검사에서363
 ReleaseSafe 후보 빌드6/6 exit0, SHA256 `1969c4120eceda1c3b9757fb8350796a34c8c4ce40ca32157c436981977a5dab`입니다. 공개 Canvas Worker2사례·빈 버퍼·기존 metadata Canvas 합계4/4 exit0, native 집중7/7 exit0, 전체 build.zig/src fmt 검사 exit0입니다. 두 번째 Worker 사례는 선행 본문 보존·독립 전체 XML normal/-O·각 history 항목의 undo/redo byte-exact와 실패한 입력 뒤 redo 유지까지 확인합니다. 일반 브라우저/임의 서식·구조 지원으로 확대 해석하지 않습니다.
 
 이 후보를 명시한 새 전체 `zig build test -Doptimize=ReleaseSafe -j1 --summary all`을 시작했고 로그는 zig-out/verification/runless-prior-edit/full-gate/build-test.log입니다. 기록 시점은 실행 중이며, 이전 후보의 장시간 전체 실행 결과와 섞지 않습니다. native 수정은 이 전체 gate 완료 전 로컬에 남고 문서/회귀 테스트만 별도 게시합니다.
+
+## 새 run의 서식 조회
+
+1969c412 후보의 Worker에서 새 본문 characterRanges가 SourceBindingMismatch로 실패했습니다. 원문에 run 노드가 없는 현재 Sites를 기존 원문 run 조회기에 전달한 것이 원인입니다. character_style_snapshot은 검증된 synthesized run의 글자 모양 ID와 Sites의 현재 UTF-16 길이로 detached 범위를 만들도록 수정했습니다. 입력 전과 선행 편집 뒤의 빈 문단은 헤더 스타일에서 길이0 범위를 조회하며, 캐시나 새 텍스트 소유자는 만들지 않습니다.
+
+입력 전 조회는 기존 수식 projection의 원문 사이트 검사에 먼저 걸려 MissingTextSite가 재현됐습니다. 검증된 runless 경로를 먼저 처리하고 나머지 문단은 기존 수식 조회를 유지하도록 순서를 조정했습니다. 실제 native 세션 회귀1/1 exit0에서 입력 전 id2/길이0·입력 후 id2/길이6·조회 전체 실패 할당·본문/저장/체크포인트 불변을 확인했습니다.
+
+최종 ReleaseSafe 후보 빌드6/6 exit0, SHA256 `87679e9ad3026ee66347c520f457e3fa4b1506dd20096ac5079063d47e81c535`입니다. runless Worker2사례·기존 regulatory formula Worker·metadata Canvas 합계4/4 exit0이며, 별도 runless2/2도 통과했습니다. 첫 빈 상태·선행 편집 뒤 빈 상태·입력 상태의 정확한 글자 모양 범위를 검증합니다. 전체 fmt도 exit0입니다. 실제 서식 변경 거래·브라우저 도구 모음·현재 후보의 최신 전체 gate는 미완료이며, 앞서 시작한1969c412 전체 gate를 이 새 후보의 완료 증거로 사용하지 않습니다. native 코드는 계속 로컬입니다.
