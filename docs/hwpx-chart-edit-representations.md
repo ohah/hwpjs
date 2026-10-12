@@ -2,6 +2,44 @@
 
 ## 현재 상태
 
+같은 `6c30661a…` 후보의 숫자289포인트·파일별이력·최신 Canvas/Worker/UI 재실행은35/35 exit0(55,551.795083ms)입니다. 문자열 경계 검사10/10 exit0은 필수 export2개 누락, native 한도0/-1/NaN/Infinity/비정수/u32초과/UTF8바이트초과, 짝 없는 surrogate·비문자열, 잘못된 구역/wrapper/point·크기 초과를 거부하고 저장/revision/기존 redo 유지 여부를 확인합니다. 이 숫자/문자열 전수 결과는 동일 artifact의 개별 포인트 편집으로만 집계합니다.
+
+문자열297포인트 전수 실행은1/1 exit0,45,089.100917ms입니다. 고정28파일에서 모든 문자열 point의 개별 저장/독립 두 사본 normal/-O·ZIP/OLE 메타데이터와 비대상 데이터·undo/redo·재열기 검사를 확인했습니다. 한 포인트씩 독립 변경한 결과이며 여러 포인트 일괄 편집·시리즈 증감·원본 렌더링·모든 문서 문자열 편집의 완료 증거는 아닙니다.
+
+참조 차트 경로 inventory는 테스트 helper `chart-fixture-paths.mjs`로 공유하되 독립 Python XML/ZIP 검사는 별도 구현을 유지합니다. 고정28파일의 문자열297포인트 전수 공개 검사를 추가해 각 포인트를 특수문자 또는 빈 문자열로 수정·독립 normal/-O·비대상 point 보존·undo/redo·재열기 어휘로 검사합니다. `6c30661a…` 후보에서 문자열 전수와 숫자289포인트/최신 UI·Worker·Canvas 재실행은 진행 중입니다. 실제 multilevel 원본이 corpus에 있는지는 이 문자열 총수만으로 주장하지 않습니다.
+
+문자열 공개 후보 `6c30661a…`에서 문자열 API·일반 Worker 명령·폼 회귀6/6 exit0입니다. `chart-point`는 동일 native setter/이력 경로를 사용하며 capability가 있는 후보의 UI는 숫자/문자열/multilevel point를 표시합니다. 값 입력은 textarea이고 수정하지 않은 native 원문과 화면 정규화 문자열을 구분하여 CR/LF가 자동 재저장되지 않게 합니다. 명시적 입력 이벤트 또는 바뀐 초안만 새 값으로 제출합니다. 기존 숫자 전용 후보는 숫자 명령을 유지합니다. 실제 Worker 문자열 두 사본 normal/-O·숫자 편집 이후 제목 변경 undo/redo·수정 없는 textarea CR 보존 회귀가 포함됩니다. 모든 문자열 포인트/실제 브라우저 문자열 입력/시리즈 구조/렌더링 완료는 아직 검증하지 않았습니다.
+
+실제 첫 차트 string Session/History 제목 검사1/1 exit0은 한글/emoji/XML문자/리터럴 escape/NUL/CR/LF/탭 변경·빈 no-op history·저장 재열기·비대상 값·InvalidUtf8 원자 거부·undo/redo ZIP 동치·원본 입력 불변을 확인합니다. 공개 `hwpx_edit_set_chart_point`·`hwpx_edit_chart_point_max_bytes`/JS `setChartPoint`는 native의 단일 max_value_bytes를 조회합니다. 기존 숫자 전용 API는 유지합니다. 공개 후보 SHA256 `6c30661a76ae925ca6886ae13d81fccf8a0e7c5578bed41b5137db11c0b257a7` 빌드6/6 exit0이며 문자열 독립 저장·Worker/Canvas 기존 숫자 회귀는 실행 중입니다. 독립 저장 검사기는 cache 종류를 XML 부모로 판정하고 문자열 expected XML만 독립 ST_Xstring encode를 적용하며 target 빈 문자열은 XML의 empty text(None)와 동등하게 구성합니다. 문자열 Worker/UI는 아직 연결하지 않았습니다.
+
+공통 `chart_point_session`은 같은 clone→전체 save 검증→swap transaction으로 문자열/숫자 현재값을 변경합니다. 기존 `chart_numeric_point_session`은 숫자 전용 facade이며 일반 `Session.setChartPoint`와 History 마지막 enum `chart_point`를 추가했습니다. 공통 resource save가 일반 point writer를 사용해 문자열도 ZIP XML/OLE 사본을 함께 준비합니다. 기존 숫자 Session 및 문자열 XML 실패 경로2/2 exit0입니다. 실제 제목 특수문자·재열기·이력 회귀는 실행 중이며 문자열 공개 WASM/JS/Worker/UI는 아직 연결하지 않았습니다.
+
+공통 `chart_point_write.zig`로 기존 XML candidate 알고리즘을 옮겼습니다. 숫자 facade는 `writeNumeric`/`validateNumeric`를 재사용하면서 기존 숫자 전용 kind 거부를 유지합니다. 공통 writer의 문자열 cache/literal/multilevel 값 변경은 UTF8/한도를 검사하고 ST_Xstring content encoder를 거친 임시 어휘를 공통 XML writer에 넘긴 뒤 전체 포인트를 다시 대조합니다. 임시 인코딩 버퍼는 candidate 생성 동안만 소유합니다. 기존 숫자 집중1/1 exit0이며 문자열/숫자 혼합·모든 실패 지점 검사는 진행 중입니다. 문자열 Session·ZIP/OLE publish·이력·WASM/UI는 아직 연결하지 않았습니다.
+
+최신 `chart-empty-sites` 후보 SHA256 `b44a98d265abee12a3be4e9bd419b39932961446c2a9693d4e3b8b7d9c4d5d58`의 차트 숫자 전수/위치/Canvas/Worker/UI와 기존 수식·수동 결과·체크박스 Worker 선택 실행은39/39 exit0,fail/cancel/skip/todo0,56,382.238167ms입니다. 포인트289 전수도 포함합니다. 문자열 point는 조회만 가능하며 현재 ST_Xstring 모듈에는 저장용 encoder가 없어 숫자 setter로 문자열을 수정하지 않습니다.
+
+차트 없는 구역의 조기 반환 및 올바른 음성 상태 재실행은 native2/2 exit0이며 새 ReleaseSafe `chart-empty-sites` 빌드6/6도 exit0입니다. 이 후보로 차트 전수·Canvas·Worker와 기존 수식/체크박스 Worker 회귀를 함께 실행 중입니다.
+
+최초 no-chart 음성 회귀는 first_paragraph만0으로 만들고 기존 source_first_paragraph를 남겨 둬 unrelated projection이 정상 반환했습니다. 실패 원인은 검사의 상태 구성 실수이며 예상 밖 성공 view를 정리하지 않아 검사 자체 누수도 보고됐습니다. 두 출처 상태를 함께 설정하고 예상 밖 성공도 deinit하도록 교정했습니다. 재실행 결과는 아직 진행 중이며 실패를 제품 조회 오류로 계수하지 않습니다.
+
+후속 검토에서 차트가 없는 구역도 현재 문단 projection을 생성하던 경로를 교정해 빈 대상 즉시 반환으로 바꿨습니다. 별도 no-chart 회귀는 unrelated display를 의도적으로 실패시키는 음성 상태에서도 차트 사이트0개를 반환하는지 확인합니다. 현재 native 검증 중이며 이전 sites 후보 결과를 이 소스 변경에 소급하지 않습니다. 최신 선택 포인트 유지와 Canvas 확대 클릭 회귀는4/4 exit0입니다.
+
+차트 hit 적대적 단위 검사는 원본 U+FFFC 불일치·capability 없음·위치 진단·비유한 좌표·특이행렬·회전·페이지 클립을 검사합니다. renderer/Worker 클릭 검사는0.5/1/2배율에서도 같은 native wrapper 조회를 확인해 관련4/4 exit0입니다. 별도 검토에서 재조회 때 숫자 선택이 첫 포인트로 돌아가던 문제를 수정했습니다. 같은 물리 차트의 선택 ordinal만 UI 상태로 보존하며 현재값은 새 응답에서 다시 읽습니다. 포인트2 선택→모델 응답 값 갱신 후 선택2 유지 회귀를 추가했으며 최신 재실행은 진행 중입니다.
+
+실제 renderer/controller/Worker/WASM을 공유하는 `chart-current-canvas.test.mjs`는 Unicode prefix와 시작 분할 뒤 현재 표시 문단1/anchorUnit6의 hit를 확인하고 캡처 포인터 선택→조회→숫자 변경→독립 ZIP/OLE normal/-O→undo baseline·redo 변경본까지1/1 exit0입니다. DOM·폰트 메트릭은 대역이며 브라우저 E2E나 원본 차트 렌더링 증거는 아닙니다. 공통 변환 hit로 변경된 체크박스 renderer/Worker 회귀도 포함한 실행3/3 exit0은 체크박스9 view scale을 포함합니다.
+
+확대 Session/History 할당 실패 실행은35,646회(성공 포함),1/1 exit0,real1119.22초,maxRSS1,498,349,568바이트입니다. 기존 숫자 owner에서 두 번째 값 변경 실패 시 첫 값 유지와 연속 undo/redo 저장 동치를 확인했습니다. 이는 공통 Context/위치 helper 분리 전에 컴파일된 검사 결과이며 최신 소스 전체 할당 실패 gate를 대체하지 않습니다.
+
+sites 후보 SHA256 `0ab21eac3163c7bb74bac172878b8699ec362102586fa6e0efe6f1932c82086c` 빌드6/6 exit0, 위치 응답을 포함한 공개31/31 exit0(56,675.665625ms)이며 숫자289포인트도 다시 확인했습니다. 이후 UI에서 `chartAnchorAtPoint`는 native 현재 위치의 U+FFFC가 실제 문단 텍스트와 일치할 때 공통 selectionRects로 hit 영역을 계산합니다. 차트/체크박스의 변환·클립 hit 공식은 `transformed-box-hit.mjs`로 공유합니다. Canvas capture pointer가 적격 차트를 선택하면 데이터 폼이 대상을 조회하고 속성 패널을 엽니다. 변경은 숫자 setter에만 전달합니다. 좌표·폼·기존 체크박스 회귀4/4 exit0이며 실제 renderer/Worker 클릭과 브라우저 클릭 검증은 아직 남았습니다.
+
+차트 위치 집중 검사1/1 exit0은 원본 문단1/위치0에서 `본문😀<&` 입력 후 시작 분할 시 문단2/위치6을 확인하고 모든 위치 조회 할당 실패를 순회했습니다. 공통 helper로 변경된 기존 폼 current sites 회귀도1/1 exit0입니다. 위치 ABI는 `hwpx_edit_chart_sites`, JS는 `chartSites(section)`이고 Worker targets는 표시 문단의 0-based 인덱스로 변환합니다. 최신 sites 후보 빌드와 공개 위치 응답 검증은 아직 진행 중이며 Canvas 포인터 선택은 구현 전입니다.
+
+공통 원본 Context 변경 후 ReleaseSafe 후보 `chart-source-context` SHA256 `ab0d72b3be5afb4eb0ca35b8a2d35c2fe093bf90c317aaca6f5d464913f519bd` 빌드6/6 exit0, 공개 editor/Worker/UI31/31 exit0(59,470.860125ms)입니다. 숫자289포인트 전수도 포함하며 native Session 현재값과 공통 Context 할당 실패 집중 검사는 각각1/1 exit0입니다.
+
+현재 앵커 소유 문단 선택은 `protected_display_host.currentAnchorOrdinal`로 분리하여 기존 폼과 새 `chart_display_sites`가 공유합니다. chart 사이트는 source wrapper 식별자와 현재 문단/UTF-16 anchorUnit 또는 위치 실패 진단을 반환합니다. Canvas 클릭/ABI 연결은 아직 없으며 prefix/분할·할당 실패와 기존 폼 회귀를 진행 중입니다. 이 변경은 위 `ab0d72b3…` 빌드 이후 소스이므로 후보의 공개 통과 결과에 포함하지 않습니다.
+
+조회와 숫자 setter의 원본 패키지/사본 대상 해석·XML decode/소유 트리 생성은 `chart_source_context.zig`로 공유합니다. Context가 소유 pair/tree를 반환하고 package/decoded 임시 버퍼는 반환 전에 정리합니다. 현재값 조회는 pair 소유권만 Snapshot에 넘기며 setter는 Context 전체를 해제합니다. 이 책임 분리 변경의 native 집중 회귀·독립 할당 실패·ReleaseSafe 새 후보 검증은 진행 중이며 이전 후보 결과를 변경된 소스에 소급하지 않습니다.
+
 로컬 후보 구현은 차트 소유 포인트·숫자 편집·ZIP/OLE 동시 저장·Session checkpoint/history·WASM/JS·Worker·속성 폼까지 연결돼 있습니다. 기본 제품 WASM 승격과 runtime 코드 커밋은 아직 하지 않았습니다. 최신 후보와 실측은 아래 검증 기록을 따릅니다. 28개 참조 차트 숫자 포인트289개 각각의 편집·저장·재열기·undo/redo와 독립 두 사본 검사가 통과했지만, 이는 모든 문서/차트 구조 편집·Canvas 클릭·렌더링 완료가 아닙니다.
 
 남은 항목은 값이 채워진 owner의 확대 할당 실패 결과, 최신 소스 전체 native/public 검증, 문자열·시리즈 구조 편집, 사본 직렬화가 다르거나 리소스가 공유된 문서 처리, 실제 브라우저 저장 파일 독립 대조, Canvas 선택·차트 렌더링입니다. 아래 초기 단계의 “후속/미연결” 표현은 해당 단계 실행 당시의 기록이며 현재 상태를 덮어쓰지 않습니다.

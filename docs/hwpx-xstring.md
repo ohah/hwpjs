@@ -1,5 +1,15 @@
 # HWPX 차트 값의 ST_Xstring 해석
 
+## 본문 저장 인코딩
+
+추가한 모든 Unicode scalar 왕복을 포함한 native9/9도 exit0입니다. `xstring-encode-oracle.py --zig=/absolute/zig`는 별도 Python 인코딩 규칙과 단일-pass 디코딩으로 Zig 출력15사례·전체 Unicode scalar1,112,064개를 비교하고 변조15조건을 거부합니다. 초기 실행은 Zig test prefix가 첫 JSON marker 앞에 붙어 inventory14개로 잘못 추출해 실패했습니다. marker를 찾되 고정15개 inventory 검사를 유지하도록 수정했고 일반/-O 재실행 각각 exit0을 확인했습니다. 이 독립 검사는 native 생성 어휘를 검사하며 한컴 실제 프로그램/차트 저장·UI 호환성 검증이 아닙니다.
+
+`xstring.encodeContent`는 유효 UTF-8 model 값을 OOXML element-content 어휘로 바꿉니다. 기존 `escapeAt` 판정·출력 예산 함수를 재사용하여 리터럴 `_xHHHH_`의 첫 밑줄을 `_x005F_`로 보호하고 CR·XML1.0 금지 BMP 문자만 네 자리 escape로 씁니다. LF/탭과 일반 Unicode scalar는 그대로 두며 XML `<>&` escaping은 이 함수가 아니라 공통 XML writer의 책임입니다. attribute encoder가 아니며 서러게이트 UTF-8 입력은 거부합니다. 근거는 [Microsoft ST_Xstring 구현 참고](https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oi29500/d34ae755-c53f-4a44-a363-c6dd3ee018a4)이며 Office 설명을 한컴 실파일 호환성 완료로 확대하지 않습니다.
+
+격리 `src/xstring_regression_test.zig` ReleaseSafe 초기8/8 exit0은 기존 디코더·리터럴 밑줄/제어문자/CR/LF/탭/한글/emoji·전수 할당 실패·잘못된 UTF8/정확한 한도 거부를 확인했습니다. 모든 Unicode scalar 왕복 검사는 추가 실행 중입니다. 아직 독립 encoder oracle·차트 문자열 setter/두 사본 저장·WASM/UI는 연결하지 않았습니다.
+
+## 읽기 해석
+
 [차트 텍스트 관측](hwpx-chart-text.md)의 `c:pt/c:v`는 XML 문자 참조 해제와 줄바꿈 정규화가 끝난 UTF-8 본문을 leaf 단위로 모은 뒤 `src/hwpx/xstring.zig`에 전달합니다. [OOXML ST_Xstring 구현 참고](https://learn.microsoft.com/en-us/openspecs/office_standards/ms-oi29500/d34ae755-c53f-4a44-a363-c6dd3ee018a4)의 `_xHHHH_`(16진수 네 자리) 이스케이프를 한 번만 왼쪽에서 오른쪽으로 해석합니다. `_x005F_x0008_`는 리터럴 `_x0008_`이며 재귀적으로 U+0008로 바꾸지 않습니다. 연속한 UTF-16 상·하위 서로게이트 이스케이프는 하나의 Unicode scalar로 합칩니다. 짝이 없는 서로게이트는 임의 대체 문자로 만들지 않고 `unsupported_xstring_surrogates` 진단으로 노출하며 해당 값의 해독 바이트 수는 합산하지 않습니다.
 
 해석 대상은 차트 캐시·리터럴의 직접 `pt/v`입니다. [차트 수식 참조](hwpx-chart-formula.md)의 `c:f`는 일반 문자열이므로 같은 패턴이 있어도 해독하지 않습니다. XML 이벤트가 이스케이프 중간에서 갈라져도 leaf 전체에 대해 한 번 처리합니다. 모양이 맞지 않는 `_x` 조각은 일반 텍스트로 둡니다. 이 계층은 숫자 변환, 수식 평가, Unicode 정규화, 원문 보존, 문서 모델 편집·저장을 하지 않습니다.

@@ -2,6 +2,10 @@
 
 ## 재현과 원인
 
+checked allocator로 감싼 실제 tabdef 집중 실행은2/2 exit0(root import 포함),real35.30초,maxRSS1,414,987,776바이트입니다. 열/탭 분할 draft12·소유 분할 경계98·Session source 병합7(열/탭1)을 그대로 검증했습니다. 안전성·누수 점검은 기존 공통 helper를 사용하고 실패 인덱스/범위를 줄이지 않았습니다. 기존 전체 gate가 terminal 상태가 아니므로 이를 전체 native 통과나 동일 조건의 성능 배수 측정으로 해석하지 않습니다.
+
+진행 중 native gate의 PID29655를 2026-10-12 19:19:49 KST에1초 sampling했습니다(`/tmp/hwpjs-native-29655.sample.txt`). 실행 중 테스트는 `paragraph_joined_positions`의 실제 tabdef 모든 병합/분할 경계이며 source split/save와 기본 DebugAllocator stack_trace_frames10의 할당/해제 stack unwind가 관측됐습니다. sample의 physical footprint301.3G는 원시 보고 값이며 RSS·누수·KILL 원인 확정으로 해석하지 않습니다. 기존 gate는 종료/재시작하지 않았습니다. 같은 테스트의 경계/반복·입력/저장 대조는 바꾸지 않고 공통 checked allocator callback으로만 감쌌으며 집중 실측은 실행 중입니다.
+
 2026-10-12 공개 테스트 전체 실행은 WASM `7f310f37d2900794df5aeb2ec2b8df4c95e61f8b49b6e477a6209fadd2e74d26`에서 2,064개 중 2,063개 통과, 1개 실패로 종료했습니다. 실패는 `tests/hwpx/formula-split-editor.test.mjs`의 첫 테스트입니다.
 
 실제 `chart.hwpx`의 숫자 셀을 `100`으로 바꾼 뒤 계산식 문단을 시작 또는 끝 경계에서 분할·재병합하면, 서식 없는 경우 `UnsupportedStructuralFieldEdit`가 발생했습니다. 같은 경계에 부분 서식이 있는 경우에는 병합됐습니다.
