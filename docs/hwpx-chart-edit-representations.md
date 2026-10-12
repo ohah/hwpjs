@@ -2,6 +2,32 @@
 
 ## 현재 상태
 
+정책 ABI 누락·JS options 타입/boolean·native flag2/u32최대·입력 크기 초과·빈 새 open 실패를 기존 편집 세션에서 검사했습니다. 기존 저장 bytes/revision/undo/redo가 유지됐고 UI 단위와 합계7/7 exit0입니다. `chart-ole-policy-boundary.test.mjs`는 실패한 open이 기존 Session/history를 닫지 않음을 실제 WASM export로 확인합니다. 정책 추가 이후 전체 native/public은 이전 시작 snapshot과 구분해 추가 최종 검증이 필요하며 런타임 코드·기본 제품 WASM은 아직 커밋/승격하지 않았습니다.
+
+실제 browser `hwpjs-chart-policy`/`4911d895…` 후보의 InvalidFat 원본에서 기본 정책은 Worker InvalidFat과 저장 원문 byte-exact를 확인했습니다. 호환 checkbox 선택/재열기 후 제목 keyboard 입력·DOM 적용/저장 Blob302,345바이트 SHA256 `bc99c18b41e1ad32a8f84e92c470a51dc83ad292e017a13eb8ae6a530e232a92`는 normal/-O 독립 XML/ZIP/OLE와 부정 대조를 통과했습니다. undo Blob42,433바이트 SHA `780f98753e6c73d744455e9f7bdfa509b909bafbedca00ba94ff7ccbfa813b80`는 원문 byte-exact이고 redo는 최초 수정본 SHA와 같았습니다. browser errors는 비어 있었고 브라우저/서버 PID7905를 종료했습니다.
+
+이 browser 검증 중 같은 파일 재선택은 file input change가 발생하지 않아 새 옵션이 적용되지 않았습니다. `chart-ole-policy-controls`가 옵션 change 시 file 선택값만 비워 다음 재선택을 가능하게 하며 현재 세션은 변경하지 않습니다. 단위5/5 exit0과 실제 checkbox uncheck의 빈 file.value/기존 활성 정책 true/다음 열기 안내를 확인했습니다. 초기 Blob oracle는 예제의 ole1 경로를 고정해 실제 image1.OLE 변경을 비대상 mismatch로 오분류했습니다. 독립 ZIP 차이는 chart1.xml/image1.OLE뿐임을 확인하고 OPF/switch 참조로 목표 경로를 도출해 다시 통과했습니다. 실패 기대값을 완화하지 않았습니다. 물리 Canvas 클릭·모든 문서·OS 다운로드 완료와는 구분합니다.
+
+Worker load가 boolean `allowObservedChartOleDeviations`를 받아 native open과 암호 해제 후 open에 전달합니다. 잘못된 타입·HWP5에 대한 true는 이전 editor를 닫기 전에 거부합니다. 표시 응답의 `chartOleObservedRepairsAllowed`는 현재 열린 세션의 정책이며 입력 폼이 이 값을 표시합니다. 데모 체크박스는 기본 해제이고 다음 파일 열기에만 적용됩니다. 체크박스 상태 변경을 현재 세션의 정책 변경으로 혼동하지 않습니다. 실제 InvalidFat/InvalidRoot Worker 및 공개 정책4/4 exit0은 strict 거부·명시적 변경/독립 저장·잘못된 load 후 편집본 보존·undo/redo·정책 유지까지 확인했습니다. 실제 브라우저 옵션 선택/암호 해제 시 정책 연결·최신 전체 gate는 아직 완료되지 않았습니다.
+
+동일 정책 후보의 전체 참조 chart probe `/tmp/hwpjs-chart-reference-policy-probe.GsxDHa`는92파일/93pair·첫 숫자/문자열186시도 모두186독립 저장/이력/재열기 확인·refused/failures/missingPointKinds0·exit0입니다. 명시적 copy-normalization 정책을 사용한 결과이며 기본 strict 성공으로 바꾸지 않습니다. 모든 point·모든 편집 명령·모든 문서·원본 렌더링 완료로 확대하지 않습니다.
+
+명시적 편집 정책을 native `Options.allow_observed_chart_ole_deviations=false`와 공개 `hwpx_edit_open_with_chart_ole_policy`/JS `open(data,{allowObservedChartOleDeviations:true})`로 연결했습니다. 기본 open은 계속 strict입니다. 옵션만 켜는 무편집 저장은 원본 ZIP이고 실제 차트값 변경 후보에만 기존 정규화·완전 strict 재검사를 적용합니다. InvalidFat/InvalidRoot 실제2파일의 native 정책1/1과 공개2/2 exit0은 strict 거부/저장 불변·옵션 no-op·숫자/문자열 독립 두 사본·정규화 허용 없는 oracle의 root metadata 차이 거부·undo 원문/redo 수정본/strict 재열기·잘못된 옵션 거부를 확인했습니다. 후보 `4911d8955d3fdeef0cebdef74c266d1156cebbceeae1bc0e9fa0f6e0745871cf` 빌드6/6 exit0입니다. 이 옵션은 아직 Worker/데모 UI에 연결하지 않았고 전체92문서/93pair 정책 재검증은 실행 중입니다.
+
+동일 독립 검사 Python -O 재실행도 exit0이며34후보·68부정 대조가 모두 확인됐습니다. 검사에 assert 문을 쓰지 않아 최적화 모드에서도 진단/데이터/메타데이터 검증을 생략하지 않습니다. 기존93pair native 조사와34개 독립 후보 검사는 서로 다른 범위로 유지합니다.
+
+`chart-observed-ole-edit-oracle.py` 일반 모드 exit0은 실패했던34개 OLE 변경 후보를 독립 olefile로 재검사했습니다. 원본 헤더/실제 FAT·MiniFAT raw 바이트로 root 생성 시각/EOF 밖0슬롯/용량 밖0슬롯과 native 진단을 비교하고 추가 정규화 카운터가 모두0임을 확인했습니다. 출력의 storage/stream inventory·version·이름/종류/CLSID/state/시각과 모든 비대상 stream bytes를 비교합니다. 허용된 메타데이터 차이는 명시적 root 생성 시각0뿐이며 target XML은 독립 전체 XML 목표값과 같습니다. 잘못된 목표값·원본 시각 진단68조건도 거부됐습니다. Python -O 재실행은 진행 중이며 이것은 OLE 후보 검증이지 기본 Session/ZIP publish가 아닙니다.
+
+현재93pair native OLE candidate 전용 조사1/1 exit0은 원본 strict 오류를 그대로 유지한 채 명시적 allow_observed_deviations 후보를 재생성하고 모든 출력의 strict 재열기·target XML 동치·no-op 원본 byte-exact·원본 OLE 버퍼 불변을 확인했습니다. 34개 모두 root 생성 시각이 비영이고,14개는 EOF 밖 FAT0슬롯·2개는 mini-stream 용량 밖 MiniFAT0슬롯이 있습니다. 기존 복사본 정규화로 수정 후보는93개 모두 strict 통과했습니다. 이는 기본 Session 자동 복구/편집 성공이 아니며 복사본의 독립 stream/metadata 대조와 명시적 편집 정책 연결은 남았습니다. 새 진단 진입점은 `src/chart_observed_ole_edit_survey_test.zig`이며 `/tmp/hwpjs-chart-reference-census.n45Z7q` 주소 census가 선행해야 합니다.
+
+교정한 전체 참조 chart probe `/tmp/hwpjs-chart-reference-edit-probe.k71ILX`는92파일/93pair에서152개 첫 숫자/문자열 시도 중118개를 저장·독립 normal/-O·메타데이터/비대상 payload·undo/redo·재열기로 확인했습니다. 나머지34pair는 최초 숫자 edit 단계에서 `InvalidFat`14개·`InvalidRoot`20개로 거부돼 후속 문자열은 시도하지 않았습니다. verification_failed0·missingPointKinds0이지만 exit1이므로 전체 성공으로 계수하지 않습니다. native 조회는 byte-aligned 원문 pair를 모두 해석했고 CFB strict 저장 경계에서 거부됐습니다. 실제 FAT/root 편차 위치/명세 대비 원인과 허용된 복사본 정규화 적격성은 추가 native 재현이 필요합니다. 전용28개 folder 결과를 전체92파일로 확대할 수 없다는 실측입니다.
+
+범위를 전용 chart 폴더 밖으로 확대한 read-only census는 참조975후보 경로에서 ZIP 서명436개·차트 문서92개·사본쌍93개를 확인했고93쌍 모두 raw XML byte-aligned입니다. 차트 없음343개와 암호화 원본1개의 XML 조회 거부를 분리합니다. 이것은 native 편집 결과가 아닙니다. 초기 native probe는 OPF header를 section으로 계산하고 editor.close를 파일 루프 안에서 호출한 조사 도구 오류로93거부를 잘못 집계했습니다. 이를 제품 거부/성공 근거에서 제외하고 주소 계산과 수명을 교정해 다시 실행 중입니다. 독립 census의 section 범위는 현재 canonical Contents/section*.xml spine 항목이며 arbitrary OPF part 이름의 지원 증거는 아닙니다.
+
+실제 Chromium `hwpjs-chart-blob`의 최신 문자열 후보에서 키보드 입력·DOM 적용 뒤 다운로드에 전달되는 실제 Blob을 `browser-chart-blob-proof.mjs`로 읽어 독립 검사기에 전달했습니다. 수정본304,732바이트 SHA256 `3e231d4a44238b7212a01eb0312ca4775252fb1a9198e215a77dcb99e6e9abce`는 두 사본·ZIP/OLE 메타데이터/비대상 payload normal/-O와 잘못된 예상값 거부를 통과했습니다. DOM undo 후 저장 Blob49,911바이트는 원본과 byte-identical(SHA256 `0e49c61f369b4519b0dd22b90f9192394eb095e9b1ec459423e20ace89542305`)입니다. DOM redo 후 저장 Blob SHA가 최초 수정본과 같고 독립 검사도 다시 통과했습니다. browser errors는 비어 있었고 소유 브라우저·서버 PID60508을 종료했습니다. 자동화 metadata의 origin 필드가 origin URL이 아니라 전체 page URL을 반환해 초기 helper가 실패했으며 정확한 허용 page URL 검사로 수정했습니다. 실제 저장 bytes 증거이지만 물리 Canvas 클릭/버튼 클릭·OS 파일 다운로드 성공·모든 문서나 원본 차트 렌더링 완료로 확대하지 않습니다.
+
+실제 Chromium `hwpjs-chart-string`에서 `6c30661a…` 후보로 문서를 열고 DOM enable/속성 패널 toggle/focus/select 후 키보드로 `브라우저😀<&_x0008_` 제목을 입력했습니다. DOM form submit 뒤 native 현재값 재조회와 입력 유지까지 확인했습니다. 다운로드는 처음 구형 selector를 사용해 실패했고 menu-save 자동화도 결과 파일을 확보하지 못했습니다. DOM download click의 UI 상태는 요청 완료였지만 `/tmp/hwpjs-chart-string-browser.hwpx`가 없으므로 브라우저 저장본 독립 검증이나 물리 버튼 성공으로 계수하지 않습니다. 브라우저와 서버 PID35010을 종료했습니다.
+
 같은 `6c30661a…` 후보의 숫자289포인트·파일별이력·최신 Canvas/Worker/UI 재실행은35/35 exit0(55,551.795083ms)입니다. 문자열 경계 검사10/10 exit0은 필수 export2개 누락, native 한도0/-1/NaN/Infinity/비정수/u32초과/UTF8바이트초과, 짝 없는 surrogate·비문자열, 잘못된 구역/wrapper/point·크기 초과를 거부하고 저장/revision/기존 redo 유지 여부를 확인합니다. 이 숫자/문자열 전수 결과는 동일 artifact의 개별 포인트 편집으로만 집계합니다.
 
 문자열297포인트 전수 실행은1/1 exit0,45,089.100917ms입니다. 고정28파일에서 모든 문자열 point의 개별 저장/독립 두 사본 normal/-O·ZIP/OLE 메타데이터와 비대상 데이터·undo/redo·재열기 검사를 확인했습니다. 한 포인트씩 독립 변경한 결과이며 여러 포인트 일괄 편집·시리즈 증감·원본 렌더링·모든 문서 문자열 편집의 완료 증거는 아닙니다.
