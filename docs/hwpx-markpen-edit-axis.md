@@ -12,6 +12,16 @@
 
 ## 구현·검증할 계약
 
+### 로컬 source 입력 수정과 실제 검증
+
+`retained_markpen_marker.zig`는 정확한2011 namespace의 비어 있는 leaf 시작/끝만0단위 보존 마커로 분류합니다. 외부 namespace·내부 자식·내부 문자 payload는 제외합니다. 속성을 임의 수정하거나 marker 균형/강조 효과를 평가하지 않습니다. `text_sites.collect`는 마커 leaf만 있고 기존 문자 사이트가 없는 t에 원문 시작 태그 바로 뒤의0길이 사이트를 만들며 새 run/t를 만들지 않습니다. 원문 prefix는 첫 마커 앞에 삽입하고 마커·원래 charPrIDRef를 보존합니다. 일반 문단 정책과 위치 투영은 같은 helper를 공유하고 알려지지 않은 인라인을 일괄 허용하지 않습니다.
+
+`zig test src/markpen_regression_test.zig -O ReleaseSafe --test-filter 'markpen source empty' --test-filter 'retained markpen leaf'`는2/2 exit0입니다. 합성 빈 텍스트 입력·마커/색상 원문·저장/재열기·undo 원문/redo 수정본과 부적합 leaf 거부를 확인했습니다. 정규 root에도 새 Session 회귀를 등록했습니다.
+
+`markpen-source-input` 후보 SHA256 `df16a06ca5c5ced870fddcb9c82f4de94eeffda48fe1883c5e715a9435d5d9b8`는 ReleaseSafe build6/6 exit0입니다. `markpen-source-reference.test.mjs`와 표시 축 검사를 함께 실행하여2/2 exit0입니다. 실제9개 문단 각각의 Unicode/XML 문자 prefix·독립 전체 XML/비대상 ZIP normal/-O·잘못된 기대값 거부·undo/redo·재열기/재저장·원본 파일 불변을 확인했습니다. 임의 원문 서식이나 마커를 별도로 보정하지 않았습니다.
+
+두 Node 회귀를 기본 HWPX 목록에 등록하고 누락 방지 검사도 갱신하여1/1 통과했습니다. 전체 build.zig/src fmt 검사도 exit0입니다. 현재657파일/native 전체 실행은 새 source 구현 이전에 시작한 것이므로 형광펜 수정 완료 gate가 아닙니다. source 코드·기본 등록의 커밋/제품 승격, 실패 할당 전수 검사·서식 편집/강조 렌더링·Worker/Canvas 실제 입력은 아직 남습니다. 테스트/기록만 원격에 반영합니다.
+
 마커가 있는 빈 텍스트의 원본 삽입 위치와 서식 상속, 보존 마커의0단위 위치, 실제 강조 범위의 시작/끝 소유 관계를 따로 정의해야 합니다. metadata-only run fallback으로 새 run/t를 만들어 덮어쓰거나 미지원 인라인을 전부 허용하지 않습니다. 마커 속성과 원문 구조는 [인라인 주석 검사](hwpx-inline-annotations.md)의 공통 규칙을 재사용합니다.
 
-로컬 2011 ParaList schema의 t는 mixed이며 markpenBegin의 선택적color와 markpenEnd를 직접 자식으로 정의합니다. 이것만으로 불균형 마커의 한글 표시 의미나 입력 affinity를 확정하지 않습니다. 현재 문서는 원인 재현과 표시 좌표만 검증했고, source 입력·실제 강조 렌더링·저장/undo/redo·브라우저 입력은 아직 구현/검증 완료가 아닙니다.
+로컬 2011 ParaList schema의 t는 mixed이며 markpenBegin의 선택적color와 markpenEnd를 직접 자식으로 정의합니다. 이것만으로 불균형 마커의 한글 표시 의미나 입력 affinity를 확정하지 않습니다. 위 검증은 보존형 prefix 입력에 한하며 실제 강조 렌더링·브라우저 입력과 한글 프로그램의 affinity 동등성은 아직 완료하지 않았습니다.
