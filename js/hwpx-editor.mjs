@@ -1,5 +1,6 @@
 import { createMemory } from "./wasm-memory.mjs";
 import { decodePictureOwners } from "./hwpx-picture-owners.mjs";
+import { decodeInlineStringSources } from "./hwpx-inline-string-sources.mjs";
 import { decodeCreatedTables } from "./hwpx-created-tables.mjs";
 import { createdTableIdentity } from "./created-table-identity.mjs";
 import { decodeFormSourceNodes, decodeFormSourceAttributes, decodeFormSites, decodeFormSourceLayout } from "./hwpx-form-source.mjs";
@@ -1042,6 +1043,14 @@ export async function createHwpxEditor(source) {
       try {
         if (!wasm.hwpx_edit_form_source_nodes(section)) throw memory.error();
         return decodeFormSourceNodes(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
+    inlineStringSources() {
+      ready();
+      if (typeof wasm.hwpx_edit_inline_string_sources !== "function") throw new Error("HwpxInlineStringSourcesAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_inline_string_sources()) throw memory.error();
+        return decodeInlineStringSources(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
       } finally { wasm.hwpx_edit_output_free(); }
     },
     formSites(section) {
