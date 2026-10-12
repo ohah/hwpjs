@@ -2,6 +2,8 @@
 
 ## 현재 상태
 
+표 형태 값 목록의 책임·페이지/선택 계약·검증 경계는 [차트 값 목록 UI](hwpx-chart-table-ui.md)가 소유합니다. 순수 표 모듈·테스트는 별도 공개하고 chart-controls/HTML 연결과 제품 승격은 후속 gate로 구분합니다.
+
 새 역할 후보 SHA256 `50cabdb019974d12a6545d44281cf51cbabb86df5d987e185b41a11b3ccc2c24`의 `--all-points --require-source-roles --normalize-observed-chart-ole` 재검사는 exit0으로 완료했습니다. `/tmp/hwpjs-chart-role-all-points-probe.log`의92문서/93연결·2296시도 모두 편집/독립 normal/-O XML·ZIP·OLE/비대상 보존·undo/redo·재열기를 통과했고 refused/failures/missingPointKinds는0입니다.2296개 역할 조회도 원본 XML과 독립 대조했으며 값 변경과 저장본 재열기 전후 역할 배열이 동일했습니다. 이전 첫186개 편집 및 이전 정책 후보의2296개 전수와 별도 실행으로 유지합니다. 명시적 CFB 정규화 정책·cache/literal 값 범위이며 기본 strict·시리즈 구조·모든 차트 필드·원본 렌더링 완료는 아닙니다.
 
 이전 전체 native gate PID52319의 후속1초 stack sample(`/tmp/hwpjs-native-52319-followup.sample.txt`)은 chart callback에서 `editor_history_batch_tests`의 underline batch 전수 할당 실패로 진행했음을 확인했습니다. checked allocator의 trace0은 유지되며 전체 종료 결과는 아직 없습니다. raw OS physical footprint146.6G는 RSS/누수의 확정 근거가 아니며 프로세스를 중단/재시작하지 않았습니다. 새 역할 후보 전체 native/public 검증은 이 이전 바이너리와 구분합니다.
