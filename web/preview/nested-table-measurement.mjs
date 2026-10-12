@@ -27,7 +27,7 @@ export function measureNestedTable(content, root, measure, { maxRows = 20000, ma
     const source = sourceTableColumns(table);
     if (source.state !== "resolved") return { ...source, section: table.section, tableNode: table.tableNode };
     return measureTableCells(table, content.paragraphs, measure, { origin: { x: 0, y: 0 }, padding: "source", maxRows: budget, compactLines: true,
-      columnWidths: source.columns.map(hwpUnitPixels),
+      columnWidths: source.columns.map(hwpUnitPixels), minimumRowHeight: 0,
       paragraphFlows: content.paragraphFlows, pictures: content.pictures ?? [],
       measureCellFlow(input) {
         if (!input.paragraphs.some(p => hosts.has(`${table.section}:${table.tableNode}:${input.cell.listNode}:${p.paragraph}`))) return null;

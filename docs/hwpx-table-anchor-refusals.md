@@ -20,6 +20,8 @@
 
 ## PAGE 본문 경로 연결
 
+원문 행 높이와 UI 하한 분리: 실제 child391의 폭4/높이12 주입 측정은 기존28px 최소 행 높이 때문에392.613333px가 되어 원문 사각형 높이311.866667px를 초과했습니다. minimumRowHeight를 명시적으로0으로 선택하는 원문 기반 중첩 측정에서는310.266667px이며 원문 크기 안에 들어옵니다. tableGrid의 일반 기본28px는 유지하고 measureTableCells가 초기/최종 grid에 같은 최소값을 전달합니다. 음수/비유한 최소값은 거부하며 행 높이와 측정 내용은 축소하지 않습니다. 원문 크기·최소값0/기본·측정 크기 성장·입력 불변, 실제 높이 비교와 중첩/그림/페이지 회귀11/11 종료코드0입니다. 숫자 metric 주입이며 실제 글꼴/브라우저/원본 줄바꿈 일치 검증이 아닙니다. TOP_AND_BOTTOM 셀 흐름 연결은 다음 작업으로 남습니다.
+
 재귀 측정→투영→paint 연결: 뒤쪽/앞쪽 부동 자식(textWrap2/3, 명시적 affect_line_spacing=false, 캡션 없음)은 현재 부모 문단의 소유 앵커를 확인하고 floatingTables descriptor를 생성합니다. 앵커는 UTF-16 한 글자로 보존하되 글자 폭0으로 측정하고 renderer의 개체 앵커 생략 경로로 중복 표식을 그리지 않습니다. 페이지 투영 결과의 tablePaintLayer는 뒤쪽→본문→앞쪽 paint와 동일 순위의 공간 hit 검사에 사용합니다. geometry 배열을 paint 순서로 재정렬하지 않습니다.
 
 합성 데이터의 producer부터 table-body/페이지 투영/실제 renderer 대역까지 child text·cell 단일 생성/앵커 폭0·뒤쪽/앞쪽 태그·paint 순서·겹치는 뒤쪽보다 본문 text hit 우선·입력 불변, 실제 원본 거부 진단과 HWP5 중첩/그림·덧말 회귀10/10 종료코드0입니다. 실제 table-bug 폭 넘침 거부도 유지합니다. 부동 자식의 캡션/줄 높이 영향·인라인과 혼합 앵커·여러 단계 부동 계층·TOP_AND_BOTTOM 감싸기와 실제 브라우저/원본 조판은 남습니다. 특히 덧말 원본의 child391(textWrap1)은 계속 UnsupportedNestedTableAnchor이며 전체 원본 지원 완료가 아닙니다.

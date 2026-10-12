@@ -4,7 +4,7 @@ import { hwpUnitPixels as hwpUnitsToPixels } from "./hwp-units.mjs";
 
 export function tableGrid(table, { x = 20, y = 0, minColumn = 40, minRow = 28, contentSize = () => ({ width: 0, height: 0 }), columnWidths } = {}) {
   const positive = value => Number.isFinite(value) && value > 0;
-  if (![x, y].every(Number.isFinite) || !positive(minColumn) || !positive(minRow) ||
+  if (![x, y].every(Number.isFinite) || !positive(minColumn) || !Number.isFinite(minRow) || minRow < 0 ||
       !Number.isInteger(table.rows) || !Number.isInteger(table.columns) ||
       table.rows < 1 || table.columns < 1 || table.rows > 10000 || table.columns > 10000 ||
       table.cells.length > 100000) throw new RangeError("InvalidTableGrid");
