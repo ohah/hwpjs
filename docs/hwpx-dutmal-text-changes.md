@@ -48,6 +48,8 @@ ReleaseSafe 집중2/2 exit0에서 실제 세션 명령의 입력·no-op·잘못�
 
 ## 후보 WASM의 JS 편집 검증
 
+Worker 조회 실패 응답의 요청 식별자 누락을 실제 재현했습니다. 잘못된 textKind에서 `requestId:17`이 undefined로 반환돼 강화한 테스트가 먼저 실패했습니다. `dutmalQueryIdentity`로 덧말/원문 조회 오류의 식별자를 보존한 뒤 잘못된 종류·존재하지 않는 노드·미지원 포맷 원문 조회와 redo 유지가 통과했습니다. 기존 체크박스 Worker 및 덧말 JS 포함4/4 종료코드0입니다. Canvas UI의 응답 대기를 실제 브라우저에서 재현한 결과는 아니며 Worker 계약 결함 수정입니다.
+
 Worker의 `inline-string-sources`는 원문 노드 검색만, `dutmal-text-query`는 `section/node/textKind`의 현재값 조회만 수행합니다. `dutmal-text`는 활성 편집 이력 세션을 요구하고 `value`를 변경한 뒤 현재값과 갱신 display를 반환합니다. 문자열 명령 로직은 `web/preview/dutmal-edit-command.mjs`로 분리했습니다. 현재 원문 응답은 편집 후에도 source-only이며 표시 위치/편집 허용을 뜻하지 않습니다.
 
 같은 후보로 `dutmal-text-worker`, 기존 `checkbox-state-worker`, default gate 등록 검사 3/3 종료코드0입니다. 실제 덧말 픽스쳐에서 Worker 노드 검색·두 값 수정·독립 전체 XML/ZIP·undo/redo·조회 종류 오류와 입력 실패 뒤 redo 유지·재열기를 확인했습니다. DOM은 대역이며 Canvas 덧말 조판/선택/입력 UI와 실제 브라우저 E2E는 아직 남습니다.

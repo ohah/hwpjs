@@ -35,7 +35,16 @@ test("dutmal Worker edits preserve independent leaf history and actual ZIP", asy
   });
   assert.equal((await h.send({ kind: "undo" })).error, undefined);
   assert.deepEqual(Buffer.from((await h.send({ kind: "save" })).bytes), mainSaved);
-  assert.equal((await query("main_text")).error, "InvalidDutmalTextKind");
+  const refused = await query("main_text");
+  assert.equal(refused.error, "InvalidDutmalTextKind");
+  assert.equal(refused.requestId, 17);
+  assert.equal(refused.section, 0);
+  assert.equal(refused.node, node);
+  assert.equal(refused.textKind, "main_text");
+  const badNode = await h.send({ kind: "dutmal-text-query", requestId: 18, section: 0, node: 0xffffffff, textKind: "mainText" });
+  assert.equal(typeof badNode.error, "string");
+  assert.equal(badNode.requestId, 18);
+  assert.equal(badNode.node, 0xffffffff);
   assert.deepEqual((await h.send({ kind: "inline-string-sources" })).sources, source.sources);
   assert.equal((await h.send({ ...sub, value: "bad\0" })).error, "InvalidXmlCharacter");
   assert.equal((await h.send({ kind: "redo" })).error, undefined);
@@ -44,5 +53,9 @@ test("dutmal Worker edits preserve independent leaf history and actual ZIP", asy
   assert.equal((await h.send({ kind: "load", format: "hwpx", bytes: saved })).error, undefined);
   assert.equal((await h.send({ kind: "enable" })).error, undefined);
   assert.equal((await query("mainText")).dutmal.value, command.value);
+  await h.send({ kind: "load", format: "test-close", bytes: [] });
+  const unavailable = await h.send({ kind: "inline-string-sources", requestId: 19 });
+  assert.equal(unavailable.error, "UnsupportedInlineStringSources");
+  assert.equal(unavailable.requestId, 19);
   t.diagnostic("Real Worker/WASM and ZIP oracle; DOM is simulated, Ruby painting not verified");
 });

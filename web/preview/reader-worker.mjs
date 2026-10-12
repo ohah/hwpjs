@@ -2,7 +2,7 @@ import { createHwp5Reader } from "../../js/hwp5.mjs";
 import { createHwpxReader } from "../../js/hwpx.mjs";
 import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
 import { attachCheckBoxes } from "./checkbox-content.mjs";
-import { readDutmalText, writeDutmalText } from "./dutmal-edit-command.mjs";
+import { readDutmalText, writeDutmalText, dutmalQueryIdentity } from "./dutmal-edit-command.mjs";
 import { createHwpxPasswordDecoder } from "../../js/hwpx-password.mjs";
 import { createHwp5PasswordDecoder } from "../../js/hwp5-password.mjs";
 import { requirePasswordRemovalConsent } from "./password-policy.mjs";
@@ -776,7 +776,7 @@ self.onmessage = async event => {
     delete message.password;
     const passwordRequired = message.kind === "load" && ((format === "hwpx" && error.message === "EncryptedDocument") || (format === "hwp5" && error.message === "UnsupportedEncryption"));
     const queryIdentity = ["query-edit-range", "query-split-range"].includes(message.kind) ? { requestId: message.requestId, section: message.section, paragraph: message.paragraph, startUnit: message.startUnit, endUnit: message.endUnit } : {};
-    reply({ kind: message.kind, applied, error: error.message || String(error), ...queryIdentity, ...(passwordRequired ? { passwordRequired: true } : {}) });
+    reply({ kind: message.kind, applied, error: error.message || String(error), ...queryIdentity, ...dutmalQueryIdentity(message), ...(passwordRequired ? { passwordRequired: true } : {}) });
   }
   finally { reader?.close(); }
 };
