@@ -24,6 +24,8 @@ Envelope 자체는 구조 범위 계산일 뿐이며 끝 마커를 만들거나 
 
 `zig test src/field_scope_regression_test.zig -O ReleaseSafe --test-filter 'field exterior' --test-filter 'unmatched root field'`는12/12 exit0입니다. 새 빈 사이트 입력·Unicode/XML 문자·저장/재열기와 필드 내부 입력 거부, 기존 인라인 삭제/필드 경계 보호·할당 실패·이력 회귀를 포함합니다. 이는 합성 및 기존 회귀 결과이며423/518 실제 편집, 새 WASM/Worker/Canvas, 최신 전체 gate 완료의 근거는 아닙니다. 코드 커밋과 제품 반영은 아직 보류합니다.
 
+후속 `matched-field-end-input` 후보 SHA256 `dc5d66e8904309589dd22d77a4c2f497209fb01a0ac0e2b84476296d426961ab`는 ReleaseSafe build6/6 exit0입니다. `tests/hwpx/field-end-exterior-reference.test.mjs`는 이전802b9 후보에서 false 입력 권한으로 실패하고 새 후보에서1/1 통과했습니다. 실제423/518 각각의 Unicode/XML 문자 입력·독립 전체 XML/비대상 ZIP normal/-O·잘못된 기대값 거부·undo 원문/redo 수정본·재열기/재저장·입력 파일 불변을 확인했습니다. 최초32MiB 이력 설정은 ABI 한도 초과 LimitExceeded로 실패했으며16MiB로 교정한 실행만 제품 재현 근거입니다.435번 표/필드 혼합과 FORMULA 결과 세 문단, Worker/Canvas 및 최신 전체 gate는 이 결과로 완료 처리하지 않습니다.
+
 ### 잔여35개 분류와 보존형 인라인 입력
 
 정상 중첩 누름틀 두 쌍의 별도 소유 관계·dirty 준비·로컬 명시적 입력 연결과 남은 UI 조건은 [중첩 필드 라벨](hwpx-nested-field-labels.md)이 소유합니다. 제품과 구조 모델의 기존 중첩 거부는 유지합니다.
