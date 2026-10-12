@@ -12,6 +12,8 @@
 
 ## 전체 참조 HWPX 후속 조사
 
+누락 필드의 구조 범위 계산 실험·반례·현재 미연결 경계는 [끝 마커 없는 필드의 소유 범위](hwpx-unmatched-field-scope.md)가 소유합니다.
+
 `/tmp/hwpjs-reference-prefix-route-current.log`의 별도 읽기 전용 root 조사에서 실제975개 HWP/HWPX 후보를 서명으로 구분했습니다. 역할 후보 SHA256 `50cabdb019974d12a6545d44281cf51cbabb86df5d987e185b41a11b3ccc2c24`의 실제 HWPX436개 중 암호 기본 열기 거부1개·조회435문서/214461문단입니다. HWP5513개는 이 HWPX 단계의 조회 대상이 아니며 실제 HWP326개는 사용자 요청 범위 밖입니다. 이름에 hwp3가 있는 실제 HWPX 변환본은 포함합니다. 기존 단일 fixture 도구의 route helper·좌표/서명·입력 identity를 재사용한 별도 Node orchestration이며 단일 fixture CLI의 root 옵션으로 실행한 것은 아닙니다.
 
 경로 선택은 plain188756·anchored15489·field473,거부9743개입니다.71문서에서 UnsupportedFieldLabelRange4032·MissingTextSite11·InvalidFieldLinks5700이 나왔으며, 후자는 issue1891의80168_regulatory_analysis/86712_regulatory_analysis 원본에 집중됩니다. 성공한 조회 문서마다 저장 원문 byte-exact·입력 파일/메모리·WASM 불변을 확인했습니다. 경로 거부를 성공으로 분류하지 않으며 모든 문단의 실제 입력·저장/이력 또는 전체 파서 의미 검증은 아닙니다.
