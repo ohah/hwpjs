@@ -16,6 +16,10 @@
 
 경로 선택은 plain188756·anchored15489·field473,거부9743개입니다.71문서에서 UnsupportedFieldLabelRange4032·MissingTextSite11·InvalidFieldLinks5700이 나왔으며, 후자는 issue1891의80168_regulatory_analysis/86712_regulatory_analysis 원본에 집중됩니다. 성공한 조회 문서마다 저장 원문 byte-exact·입력 파일/메모리·WASM 불변을 확인했습니다. 경로 거부를 성공으로 분류하지 않으며 모든 문단의 실제 입력·저장/이력 또는 전체 파서 의미 검증은 아닙니다.
 
+두 issue1891 원본의 독립 XML/현재 native marker 진단은 각각593/354마커·unmatched begin1/4이며 duplicate/unresolved/non-LIFO/fieldid mismatch는 모두0입니다. `buildKnown`은 정상296/175사본 범위를 반환하고 strict build만 InvalidFieldLinks로 거부합니다. 누락된 CLICK_HERE는 모두 표 셀 subList 안에 있으며80168의186~188번,86712의386~398/403~405/1789~1796번 소유 목록입니다. 현재 `source_field_outside_positions`는 unmatched 시작 이후 같은 section의 모든 source segment를 보호하고 `source_field_analysis.lease`는 unmatched가 하나라도 있으면 strict 조회를 거부합니다. 소유 목록 밖까지 보호하는 정책의 필요성과 안전한 개선 범위는 후속 검증 대상이며 문서 마커를 자동 보정하거나 보호를 제거하지 않았습니다.
+
+`src/field_link_reference_probe.zig`의 standalone native 진단은1/1 exit0이고 각 원본의 저장 byte-exact 불변도 확인했습니다. 첫 진단은 buildKnown도 실패할 것으로 잘못 기대해 성공 반환 배열을 해제하지 못했고 검사 자체의 누수를 냈습니다. 성공 배열을 소유/해제하고 known 성공/strict 실패를 별도로 검사해 교정했으며, 이 초기 실패는 제품 누수나 문서 파손 증거로 계수하지 않습니다. 진단 파일은 정규 root gate와 분리돼 있고 런타임 정책 수정/커밋은 아직 없습니다.
+
 처음 재사용하려던 차트 census에는 전체436 ZIP 경로가 아니라 차트/암호93경로만 있어 시작 전 inventory assertion으로 거부됐습니다. 이를 제품 거부나 참조 root 성공으로 계수하지 않았고 전체 경로 직접 순회/서명 선택으로 다시 조사했습니다. 거부 원문의 직접 자식/field type 분류는 진단용이며 보호된 필드·빈 문단·필드 연결 실패를 같은 미구현으로 묶지 않습니다.
 
 143E433F503322BD33의39/40/41번 원문은 FORMULA editable0이며 prefix query=false·fieldLabels빈 배열·anchorText UnsupportedParagraphControl을 확인했습니다. 세 위치 모두 시작 분할 query=true이므로 prefix 거부를 문단의 모든 구조 편집 불가로 바꾸지 않습니다. reader 결과 문자열 길이를 editor suffix 위치로 사용한 첫 조사는 InvalidTextPosition으로 실패했으며 현재 표시/편집 좌표 동치가 확인된 검사가 아닙니다. 이 세 위치의 실제 구조 편집과 나머지 거부의 root cause는 후속입니다.
