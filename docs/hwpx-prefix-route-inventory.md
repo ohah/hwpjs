@@ -28,6 +28,8 @@
 
 ## 단일 대형 fixture 조사
 
+역할 후보 `50cabdb0…`의 실제 행정업무 편람 specialized 전수(`/tmp/hwpjs-large-specialized-role-current.log`)가 exit0으로 종료했습니다.522시도 모두522편집/독립 XML/이력·재열기 확인,그중 필드7개,refused빈 객체입니다. 아래 실행 중 기록은 당시 상태이며 일반9887경로의 실제 전수 입력·후속 필드 정책 후보나 모든 명령 완료로 합산하지 않습니다.
+
 후보 SHA256 `50cabdb019974d12a6545d44281cf51cbabb86df5d987e185b41a11b3ccc2c24`, `reference/rhwp/samples/2025 행정업무운영 편람(최종).hwpx` SHA256 `c6dd7e847a99f219681afc5a29c80a9665c04df9cda4d820a3350d739664fdf6`에서 exit0입니다. `/tmp/hwpjs-large-prefix-route-inventory.log`의10409문단은 plain9887·anchored515·field7이고 refused 배열은 비어 있습니다. 저장본/입력 파일/산출물 불변 검사도 통과했습니다.
 
 같은 후보의 이전20거부 위치 집중 편집 검사는1/1 exit0(234063.131667ms)이며 실제 입력·독립 전체 XML normal/-O·잘못된 기대값 거부·저장/재열기·undo/redo를 확인했습니다.20개 실제 편집 성공과10409개 읽기 전용 경로 선택은 별도 범위입니다. 현재 전용 prefix 전수 편집 감사(`/tmp/hwpjs-large-specialized-role-current.log`)는 실행 중이며 파일 전체 성공으로 합산하지 않습니다.

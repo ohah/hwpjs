@@ -16,6 +16,12 @@ Envelope 자체는 구조 범위 계산일 뿐이며 끝 마커를 만들거나 
 
 ## 후속 검증
 
+잔여 거부의 실제 닫힌 CLICK_HERE220/435번도 unrelated orphan 때문에 InvalidFieldLinks로 조회가 막히는 것을 확인했습니다. 로컬 후속 구현은 source_field_analysis.leaseForLabels를 getter/입력이 공유하고 source 상태의 목록 소유 누락만 허용합니다. 루트 누락·구조 모델은 strict를 유지하며 validateLinked가 후보 내용과 누락 Envelope의 겹침을 거부합니다. 목록 조회는 모든 begin 대신 검증된 known ranges를 순회해 orphan을 편집 대상으로 만들지 않습니다. 닫힌 다른 목록의 라벨 조회/입력/저장/이력·같은 누락 목록 안의 닫힌 라벨 거부·루트/기존 malformed 거부 집중3/3 exit0입니다.
+
+외부 입력 정책의 앞선 의존 회귀492/492는 exit0으로 완료했지만 새 라벨 정책 이전 snapshot입니다. 새 후보 field-scope-labels SHA256 `86e0d0a98722c850a8a3d71140c62fb1cb9aa1038d6a51dab07b7604e0a18a99`는 ReleaseSafe build6/6 exit0이고 후속 전체 의존 회귀는 실행 중입니다. query-only 결과는80168 plain3740/anchored184/field231·거부9,86712 plain1935/anchored84/field56·거부26입니다. MissingTextSite각1·나머지 UnsupportedFieldLabelRange이며 InvalidFieldLinks는0입니다. 두 도구는 여전히 exit1이고35개를 성공으로 세지 않습니다.
+
+실제 라벨 저장 독립 검사는 첫 assay의 native snake_case/JS camelCase 혼동으로 InvalidInteger가 났고, 교정한 assay는 setter 실행 후 기존 엄격 oracle가 원본 비대상 orphan에서 Ambiguous field end로 중단됐습니다. 이 실패를 XML 저장 성공이나 native 파손으로 재분류하지 않았습니다. 엄격 oracle는 변경하지 않았으며 대상의 유일한 연결·비대상 누락 마커의 원문 유지·전체 XML/ZIP을 검증할 후속 검사가 필요합니다.
+
 연결 전 합성 Session은 before=true/inside=false/continuation=false/sibling=false/after=false로 실패를 재현했습니다. 연결 후 sibling/after만true가 됐고 나머지 보호는 그대로입니다. 두 Session 집중 검사 각각1/1 exit0은 형제 셀/바깥 본문 입력·저장·두 번 undo 원문/redo 수정본 복원·목록 안 거부 후 저장 불변 및 루트 누락의 후속 목록/본문 보호를 확인했습니다. 정규 root에도 새 Session 검사를 등록했지만 이전 실행 중 전체 gate의 바이너리에는 이 정책 변경이 포함되지 않습니다. 별도492개 의존 회귀는 실행 중이며 아직 최종 결과가 없습니다.
 
 새 field-scope-exterior 후보 SHA256 `30ec69f9d2c7b85af43106f92e5c4fc1edd54a29715ed4c6a9717656e229a154`는 ReleaseSafe build6/6 exit0입니다. 실제 두 원본 query-only 재검사에서80168은 plain3740/anchored184·거부240,86712는 plain1935/anchored84·거부82입니다. 기존 거부3982+1719=5701에서322로 줄었지만 두 도구는 여전히 exit1이며 전체 성공으로 바꾸지 않습니다. strict 필드 조회/편집과 빈 사이트의 잔여 원인은 추가 작업입니다.
