@@ -18,6 +18,7 @@ import { attachHwpxTables } from "./hwpx-table-content.mjs";
 import { attachCreatedTables } from "./created-table-content.mjs";
 import { attachDrawingTextBindings } from "./drawing-text-content.mjs";
 import { attachAutomaticNumbers, retainedAutomaticNumberPlainText } from "./automatic-number-content.mjs";
+import { createAutomaticNumberDisplaySnapshot } from "./automatic-number-display-snapshot.mjs";
 import { attachNoteReferences } from "./note-reference-content.mjs";
 import { attachHwpxPictures } from "./hwpx-picture-content.mjs";
 import { attachHwpxLines } from "./hwpx-line-content.mjs";
@@ -155,6 +156,7 @@ function hwpxDisplay(projected) {
   let units = 0;
   const fieldLinkGuard = createFieldLinkDisplayGuard();
   const currentText = new Map();
+  const automaticNumberSnapshot = createAutomaticNumberDisplaySnapshot(editor);
   const nextMerge = new Map(), previousMerge = new Map();
   const neighborAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwpx_edit_paragraph_neighbors" && entry.kind === "function");
   for (const section of new Set(content.paragraphs.map(p => p.section))) {
@@ -184,7 +186,7 @@ function hwpxDisplay(projected) {
     paragraph.plainEditable = !paragraph.clipped && fieldLinkGuard.read(paragraph.section, () => editor.canEdit(paragraph.section, paragraph.paragraph + 1), false, "plain");
     if (paragraph.plainEditable) {
       const anchored = editor.anchorText(paragraph.section, paragraph.paragraph + 1);
-      paragraph.text = current.nested ? retainedAutomaticNumberPlainText(editor, paragraph.section, paragraph.paragraph + 1, current.text, anchored) : anchored;
+      paragraph.text = current.nested ? retainedAutomaticNumberPlainText(editor, paragraph.section, paragraph.paragraph + 1, current.text, anchored, automaticNumberSnapshot) : anchored;
     }
     paragraph.fieldLabels = [];
     paragraph.anchorEditable = false;
@@ -213,7 +215,7 @@ function hwpxDisplay(projected) {
     if (paragraph.editable) paragraph.label = paragraph.label.replace("읽기 전용", paragraph.plainEditable ? "일반 텍스트 편집" : paragraph.anchorEditable ? "보호 개체 텍스트 편집" : "필드 라벨만 편집");
   }
   content.readOnly = !content.paragraphs.some(paragraph => paragraph.editable);
-  attachAutomaticNumbers(editor, content);
+  attachAutomaticNumbers(editor, content, automaticNumberSnapshot);
   attachNoteReferences(editor, content);
   attachDrawingTextBindings(editor, content);
   attachCheckBoxes(editor, content, ["hwpx_edit_form_sites", "hwpx_edit_form_source_attributes", "hwpx_edit_checkbox_state", "hwpx_edit_set_checkbox_state"].every(name => WebAssembly.Module.exports(module).some(entry => entry.name === name && entry.kind === "function")));

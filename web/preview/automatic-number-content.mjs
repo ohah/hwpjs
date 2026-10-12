@@ -1,12 +1,13 @@
+import { createAutomaticNumberDisplaySnapshot } from "./automatic-number-display-snapshot.mjs";
 function retainedNoteSource(source, site) {
   return source && source.anchor_node === site.anchor_node && site.anchor_unit === 0 && ["FOOTNOTE", "ENDNOTE"].includes(source.values?.raw?.[1]);
 }
 
 /** Only native-owned note numbers can be outside the plain editable coordinate space. */
-export function retainedAutomaticNumberPlainText(editor, section, paragraph, plain, anchored) {
+export function retainedAutomaticNumberPlainText(editor, section, paragraph, plain, anchored, snapshot = createAutomaticNumberDisplaySnapshot(editor)) {
   if (!anchored.startsWith("\ufffc")) return anchored;
-  const sources = new Map(editor.automaticNumberSources(section).map(row => [row.number_node, row]));
-  for (const site of editor.automaticNumberSites(section)) {
+  const { sources, sites } = snapshot(section);
+  for (const site of sites) {
     if (site.paragraph === paragraph && retainedNoteSource(sources.get(site.number_node), site)) {
       if (plain !== anchored && anchored !== "\ufffc" + plain) throw new Error("RetainedNoteTextProjectionMismatch");
       return anchored.slice(1);
@@ -16,7 +17,7 @@ export function retainedAutomaticNumberPlainText(editor, section, paragraph, pla
 }
 
 // Derived metadata; plain retained prefixes never change editable offsets.
-export function attachAutomaticNumbers(editor, content) {
+export function attachAutomaticNumbers(editor, content, snapshot = createAutomaticNumberDisplaySnapshot(editor)) {
   content.automaticNumberErrors = [];
   for (const paragraph of content.paragraphs) {
     paragraph.automaticNumbers = [];
@@ -26,8 +27,8 @@ export function attachAutomaticNumbers(editor, content) {
   const sections = [...new Set(content.paragraphs.map(p => p.section))];
   for (const section of sections) {
     try {
-      const sources = new Map(editor.automaticNumberSources(section).map(row => [row.number_node, row]));
-      for (const site of editor.automaticNumberSites(section)) {
+      const { sources, sites } = snapshot(section);
+      for (const site of sites) {
         if (site.paragraph === null) continue;
         const paragraph = paragraphs.get(`${section}:${site.paragraph - 1}`);
         if (!paragraph || paragraph.clipped) continue;

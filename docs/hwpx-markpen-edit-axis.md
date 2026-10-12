@@ -24,6 +24,8 @@
 
 후속 native2/2 exit0에서는 합성 Session의 splice 준비/문자 할당을 checkAllAllocationFailures로 순회했습니다. 실패 후 텍스트 사이트가 원래 문자열과 같고 구조 모델이 생성되지 않았으며, 정상 검사 allocator로 save한 결과가 원문 byte-exact임을 확인했습니다. source 마커 사이트 수집 자체의 open 실패 sweep과 서식 편집/강조 렌더링은 이 검사 범위에 포함하지 않습니다. Canvas Worker 하네스의 실제27번 입력 검사는 별도로 실행 중이며 최종 결과 전에는 통과로 계산하지 않습니다.
 
+후속 Canvas Worker 하네스1/1 exit0에서 실제27번의 빈 표시/편집 권한·입력 이벤트·변경 텍스트·독립 전체 XML normal/-O·save·undo 원문·redo 수정본을 확인했습니다. 이 실행은304.3초가 걸렸으며 실제 브라우저 E2E가 아닙니다. 발견된 반복 조회와 개선·재실측은 [자동 번호 화면 snapshot](hwpx-automatic-number-display-snapshot.md)이 소유합니다.
+
 마커가 있는 빈 텍스트의 원본 삽입 위치와 서식 상속, 보존 마커의0단위 위치, 실제 강조 범위의 시작/끝 소유 관계를 따로 정의해야 합니다. metadata-only run fallback으로 새 run/t를 만들어 덮어쓰거나 미지원 인라인을 전부 허용하지 않습니다. 마커 속성과 원문 구조는 [인라인 주석 검사](hwpx-inline-annotations.md)의 공통 규칙을 재사용합니다.
 
 로컬 2011 ParaList schema의 t는 mixed이며 markpenBegin의 선택적color와 markpenEnd를 직접 자식으로 정의합니다. 이것만으로 불균형 마커의 한글 표시 의미나 입력 affinity를 확정하지 않습니다. 위 검증은 보존형 prefix 입력에 한하며 실제 강조 렌더링·브라우저 입력과 한글 프로그램의 affinity 동등성은 아직 완료하지 않았습니다.
