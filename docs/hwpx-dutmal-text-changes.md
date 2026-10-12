@@ -23,3 +23,9 @@ dutmal_text_values는 control/kind 키마다 변경 문자열 한 개만 소유�
 Section의 해제·editor_checkpoint의 capture/해제/교환/예산에 연결했습니다. 이 시점에는 공통 ZIP 저장이 연결되지 않았으므로 pending override가 있으면 UnsupportedDutmalTextSave로 명시적 거부해 변경값을 조용히 누락하지 않습니다. 임시 안전 경계이며 최종 편집 지원으로 계수하지 않습니다.
 
 ReleaseSafe 집중7/7 exit0, 전체 fmt exit0입니다. 본문/주석 독립 소유·clone 격리·원본 복원·no-op·Unicode/예산 거부·clone/set 전체 실패 할당·실패 후 기존 문자열 불변을 검사했습니다. 실제36389301 세션에서는 기존 체크포인트로 변경 문자열 복원/다시 교환·캡처 예산 거부·pending 저장 거부·원문 source 불변을 확인했고, override를 되돌린 상태의 save는 원본 ZIP과 byte-exact였습니다. 공개 setter/History·필드 dirty·geometry 캐시·저장 작성기·WASM/Worker/UI와 실제 거래 전체 OOM은 남습니다.
+
+## 변경된 본문 XML과의 조합 작성기
+
+dutmal_text_save는 기존 xml_identity_binding으로 원본과 본문 편집 후 XML의 덧말/컨테이너/표 소유권을 연결합니다. 원문 덧말 payload가 그대로 보존돼 있는지도 비교한 뒤 main/sub Change를 같은 현재 XML에 모아 적용합니다. 중복 slot intent·소유권 불일치·다른 경로가 이미 바꾼 덧말은 거부합니다. 바뀐 덧말의 직접 소유 문단 linesegarray만 제거하며 두 slot이 같은 캐시를 두 번 지우지 않도록 합니다.
+
+ReleaseSafe 집중1/1 exit0, 전체 fmt exit0에서 앞선 본문 Unicode 입력과 두 문자열 변경 조합·정확한 전체 XML·소유 문단 캐시 제거/다른 문단 캐시 보존·중복/기존 payload 변경 거부·작성기 전체 실패 할당을 검사했습니다. 이 작성기는 아직 Session.save에 연결하지 않았습니다. 필드 dirty와 보호 문맥을 검증한 뒤 연결해야 하므로 pending 저장 거부는 유지합니다. 구조 재배치/동일 payload의 모호한 소유권·실제 ZIP 독립 비교·공개 API/이력/UI는 계속 미완료이며 native 변경은 로컬 상태입니다.
