@@ -8,8 +8,12 @@
 
 ## 구현·검증 경계
 
+후속 controller 통합 검사는 기존 Worker/Canvas 회귀와 함께10/10 exit0(1510.022917ms)입니다.130개 값의 두 번째 페이지에서65번 선택→폼 값/초점 이동→편집 요청 없음→적용 시 정확한65번 generic setter 요청→canonical 원값 불변→응답 재조회 중 표 제거→최신 값/같은 선택/페이지 복원·분리된 이전 row 거부·busy/close를 확인했습니다. DOM은 테스트 대역이며 새 표의 실제 브라우저 선택/저장 증거는 아닙니다.
+
+이 통합 테스트는 아직 untracked인 chart-controls 연결에 의존합니다. 따라서 기존 표 단위 파일의 통합 import/검사 변경도 로컬에 보류하고, 독립 표 모듈의 커밋 완료를 전체 데모 연결의 커밋 완료로 바꾸지 않습니다. 테스트만 먼저 공개해 fresh checkout에서 import가 누락되는 경로를 만들지 않습니다.
+
 로컬 chart-controls/index.html에서 표를 기존 폼과 연결했습니다. UI 모듈·표 테스트의 독립 공개와 이 연결의 제품 반영은 구분합니다. 표는 계열 행렬을 추측하지 않으며 직접 다중 셀 편집·계열 추가/삭제·차트 렌더링을 구현한 것은 아닙니다.
 
 `node --test tests/hwpx/chart-point-table.test.mjs tests/hwpx/chart-controls.test.mjs tests/hwpx/chart-current-canvas.test.mjs tests/hwpx/chart-current-worker.test.mjs`에 역할 후보 WASM SHA256 `50cabdb019974d12a6545d44281cf51cbabb86df5d987e185b41a11b3ccc2c24`를 명시한 실행은9/9 exit0(1443.050042ms)입니다. 표 검사는130값의 모든 페이지/마지막2개·미지원 값·분리된 row·빈/음수/분수/지수/범위 밖/불안전 ordinal·busy·현재 응답 교체·값 불변·close 반례를 포함합니다. 기존 실제 Worker/WASM 및 Canvas 대역 회귀는 통과했으나 그 검사는 새 표의 실제 브라우저 선택을 수행하지 않습니다.
 
-JS 문법·diff 공백·정적491모듈 연결도 통과했습니다. 새 표의 controller 통합 검사·실제 브라우저 선택/저장·제품 승격은 후속이며 기존 폼의 browser 검증을 새 표 선택 증거로 확대하지 않습니다.
+JS 문법·diff 공백·정적491모듈 연결도 통과했습니다. 현재 후속은 새 표의 실제 브라우저 선택/저장·연결 코드 커밋·제품 승격이며 기존 폼의 browser 검증을 새 표 선택 증거로 확대하지 않습니다.
