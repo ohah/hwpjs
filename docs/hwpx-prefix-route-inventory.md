@@ -6,6 +6,8 @@
 
 조사 후 저장본/원본 파일의 byte-exact 불변과 지정 WASM의 SHA256 불변을 확인합니다. 결과에는 입력/산출물 hash·경로별 수·모든 거부 위치를 포함합니다. 읽기/소유 경계·원본 조판·객체 payload 편집을 검증하는 명령은 아닙니다.
 
+입력 파일과 WASM의 메모리/파일 불변 판정은 기존 `audit-input-identity`를 재사용합니다. 비교 대상 버퍼 자체가 변조된 경우도 최초 hash와 대조하며 별도의 해시/파일 판정 규칙을 유지하지 않습니다.
+
 ## 현재 실측
 
 후보 SHA256 `50cabdb019974d12a6545d44281cf51cbabb86df5d987e185b41a11b3ccc2c24`, `reference/rhwp/samples/2025 행정업무운영 편람(최종).hwpx` SHA256 `c6dd7e847a99f219681afc5a29c80a9665c04df9cda4d820a3350d739664fdf6`에서 exit0입니다. `/tmp/hwpjs-large-prefix-route-inventory.log`의10409문단은 plain9887·anchored515·field7이고 refused 배열은 비어 있습니다. 저장본/입력 파일/산출물 불변 검사도 통과했습니다.
@@ -13,3 +15,5 @@
 같은 후보의 이전20거부 위치 집중 편집 검사는1/1 exit0(234063.131667ms)이며 실제 입력·독립 전체 XML normal/-O·잘못된 기대값 거부·저장/재열기·undo/redo를 확인했습니다.20개 실제 편집 성공과10409개 읽기 전용 경로 선택은 별도 범위입니다. 현재 전용 prefix 전수 편집 감사(`/tmp/hwpjs-large-specialized-role-current.log`)는 실행 중이며 파일 전체 성공으로 합산하지 않습니다.
 
 `node --test tests/hwpx/prefix-route-query.test.mjs tests/hwpx/prefix-edit-probe.test.mjs`는6/6 exit0입니다. 일반/필드 외부/앵커/유일 필드 선택, 실제 mutator 호출 금지, ABI 부재 fallback, 애매한 후보 거부와 예기치 않은 오류 전파를 검사했습니다.
+
+`prefix-route-inventory.test.mjs`·`audit-input-identity.test.mjs`를 더한 실행은9/9 exit0입니다. CLI의 누락/빈 인수·중복 scope·허용하지 않은 history 옵션을 파일 읽기 전에 거부하고, 실제 linespacing26문단 전수 plain/빈 refused와 정확한 입력/산출물 hash·파일 불변을 확인했습니다. 공통 identity 검사는 메모리 변조·파일 변조·누락 파일을 각각 거부했습니다.
