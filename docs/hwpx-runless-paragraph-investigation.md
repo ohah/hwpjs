@@ -43,3 +43,11 @@ node tools/reference-hwpx-prefix-query-audit.mjs --wasm=zig-out/verification/sec
 Paragraph에 선택적 synthesized_run_character_id를 추가하고 기존 clone이 이를 보존합니다. 본문은 기존 Sites의 한 항목만 소유하며, 별도 XML/텍스트 캐시는 두지 않습니다. runless_paragraph_current.prepare는 원본에 run이 없음을 공통 생성기로 검증하고 후보만 생성합니다. write는 가상 사이트의 문단 귀속·오프셋·표식을 검증해 공통 생성기를 호출합니다. 구조 분할/병합·서식/필드/객체 귀속이 섞인 후보는 아직 이 경로로 처리하지 않고 거부합니다.
 
 ReleaseSafe 집중5/5 exit0, 후속 현재값 필터1/1 exit0에서 원본 불변·clone의 글자 모양과 텍스트 독립 소유·공통 UTF-16 splice·서로게이트 거부·기존 byteSize 예산·prepare/clone/write 전체 실패 할당을 검사했습니다. fmt도 통과했습니다. 공개 세션·공통 save/표시·이력 교환 연결은 아직 없으므로 canEdit을 켜지 않았습니다. native 변경은 전체 gate 전의 로컬 상태입니다.
+
+## 공통 구역/ZIP 저장 및 체크포인트 교환
+
+paragraph_structure_save의 원문 귀속 검증에 좁은 synthesized run 분기를 연결했습니다. 기존 원문 사이트가0개이고 문단/source ordinal·가상 사이트와 run 없는 원문이 검증된 경우에만 허용합니다. 공통 구역 writer는 새 문단 XML로 해당 문단만 교체하고 다른 원문 사이트 검증은 유지합니다.
+
+공통 저장 회귀1/1 exit0은 전체 구역의 정확한 기대 문자열, 다른 본문/주석 보존, 사이트 귀속 위조 거부, 저장 전체 실패 할당을 검사했습니다. 별도 실제36386761 원본 세션 회귀1/1 exit0은 기존 collect에서 만든 현재값 후보를 내부 설치한 뒤 ZIP save→재열기28번 본문 확인·checkpoint exchange로 원문 ZIP 복원/수정본 byte-exact 복원·session.source 불변을 확인했습니다. fmt도 통과했습니다.
+
+이는 내부 후보 설치와 체크포인트 계약 검사입니다. 공개 splice/canEdit·Worker 표시·서식/구조 거래·공개 History/UI 지원은 아직 연결하지 않았고, 실제 ZIP 결과의 독립 전체 XML oracle은 남습니다. native 변경은 계속 로컬 전체 gate 대기 상태입니다.
