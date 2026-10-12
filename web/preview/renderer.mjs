@@ -306,7 +306,7 @@ export function createRenderer(canvas, viewportElement, spacer, onLayout = () =>
     };
     const pageLayout = pictureDisplay.createdTables?.length ? { state: "unavailable", error: "UnsupportedCreatedTablePagination" } : pictureDisplay.format === "hwp5" ? layoutHwp5PageContent(pictureDisplay, measure) : layoutPageContent(pictureDisplay, measure);
     const logicalWidth = Math.max(1, viewport.clientWidth / viewScale - 2 * TEXT_LEFT);
-    layout = pageLayout.state === "paginated" ? pageLayout : { ...layoutTableContent(pictureDisplay, logicalWidth, measure), pageLayoutError: pageLayout.error };
+    layout = pageLayout.state === "paginated" ? pageLayout : { ...layoutTableContent(pictureDisplay, logicalWidth, measure), pageLayoutError: pageLayout.error, pageLayoutTableNode: pageLayout.tableNode, pageLayoutAnchorReason: pageLayout.anchorReason };
     layout = attachCreatedTableFlow(pictureDisplay, layout, measure);
     pictureLayers = previewPictureLayers(pictureDisplay, layout, logicalWidth);
     lineLayers = previewLineLayers(pictureDisplay, layout, logicalWidth);
@@ -323,6 +323,8 @@ export function createRenderer(canvas, viewportElement, spacer, onLayout = () =>
     canvas.dataset.horizontalExtentError = horizontalExtent === null ? "InvalidPageScrollExtent" : "";
     canvas.dataset.rows = String(layout.rows.length);
     canvas.dataset.pageLayoutError = layout.pageLayoutError ?? "";
+    canvas.dataset.pageLayoutTableNode = layout.pageLayoutTableNode === undefined ? "" : String(layout.pageLayoutTableNode);
+    canvas.dataset.pageLayoutAnchorReason = layout.pageLayoutAnchorReason ?? "";
     canvas.dataset.pageLayoutMode = layout.pageLayoutMode ?? "logical-fallback";
     canvas.dataset.limited = String(layout.limited);
     if (scrollOrigin) { viewport.scrollTop = scrollOrigin.top; viewport.scrollLeft = scrollOrigin.left; }

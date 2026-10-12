@@ -9,7 +9,7 @@ import { projectTablePageCaption } from "./table-caption-page-projection.mjs";
 import { placeInlineTablePages } from "./inline-table-page-placement.mjs";
 import { paragraphSpacePixels } from "./paragraph-geometry.mjs";
 import { measureInlineTableParagraph } from "./inline-table-paragraph-measurement.mjs";
-import { tablePageAnchorSupported } from "./table-page-anchor-policy.mjs";
+import { tablePageAnchorError } from "./table-page-anchor-policy.mjs";
 import { inlinePictureIndex } from "./picture-inline.mjs";
 import { pictureTextMeasure } from "./picture-text-measurement.mjs";
 import { picturePaintPlan } from "./picture-paint-plan.mjs";
@@ -47,7 +47,8 @@ export function layoutTableBodyContent(content, measure, maxRows) {
     const allowedBreak = table.pagination?.page_break === "cell" || table.pagination?.page_break === "none";
     if (table.parentTableNode !== null || !allowedBreak || table.pagination?.cell_spacing !== 0 || table.cells.some(cell => cell.sourceMargin?.header !== false)) return unavailable("UnsupportedTablePagePolicy");
     const host = content.paragraphs.find(p => p.section === table.section && p.paragraph === table.hostParagraph);
-    if (!tablePageAnchorSupported(source)) return unavailable("UnsupportedTablePageAnchor");
+    const anchorReason = tablePageAnchorError(source);
+    if (anchorReason) return { ...unavailable("UnsupportedTablePageAnchor"), tableNode: table.tableNode, anchorReason };
     const mixedInline = inline && host?.text !== "\ufffc";
     if (inline && (typeof host?.text !== "string" || !host.text.includes("\ufffc"))) return unavailable("UnsupportedInlineTableHost");
     if (inline && Object.hasOwn(table, "anchorUnit") && (!Number.isSafeInteger(table.anchorUnit) || table.anchorUnit < 0 || host.text[table.anchorUnit] !== "\ufffc")) return unavailable("InvalidInlineTableAnchorPosition");

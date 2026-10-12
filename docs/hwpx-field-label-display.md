@@ -8,6 +8,8 @@ Worker의 `field-label-display-content.mjs`는 선택적 ABI가 있고 라벨이
 
 ## 실제 원인과 검증
 
+후속 표 배치 정책의 원문 대조와 오류 문맥은 [표 앵커 거부 진단](hwpx-table-anchor-refusals.md)이 소유합니다.
+
 36389301 덧말 파일의 인라인 표 node247은 native 문단17/앵커0이고 CLICK_HERE 라벨 범위0..1입니다. 원문 XML에도 직접 표가 있지만 일반 문자열 스냅샷은 빈 문자열이어서 표 페이지 경로가 `UnsupportedInlineTableHost`로 거부됐습니다. native 표시 조회를 연결한 뒤 호스트는 U+FFFC가 되며 다음 제한은 `UnsupportedTablePageAnchor`입니다. 임의 보호 문자 삽입이나 표 삭제로 우회하지 않았습니다.
 
 최초 공통 표시 후보에서는 issue144 구조 분할 후 원문 준비 경로가 현재 필드 위치를 거부해 라벨이 사라지는 회귀가 발생했습니다. 현재 소유 위치 계산기를 연결한 뒤 기존 분할/입력/undo/redo 회귀를 다시 통과했습니다.
