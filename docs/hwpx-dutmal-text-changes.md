@@ -48,6 +48,8 @@ ReleaseSafe 집중2/2 exit0에서 실제 세션 명령의 입력·no-op·잘못�
 
 ## 후보 WASM의 JS 편집 검증
 
+`dutmal-edit-state.mjs`는 native 현재값 baseline과 일시 draft를 분리합니다. 요청별 serial로 오래된 조회/수정 응답을 거부하고 조회 전·실패 후 미확정 baseline·중복 제출을 막습니다. no-op 제출은 쓰기 요청을 만들지 않으며 undo/redo 뒤에는 현재값을 다시 조회합니다. reset/close는 지연 응답을 무효화합니다. Worker 수정 응답에도 requestId를 보존했습니다. 상태 반례2개와 실제 Worker 회귀1개가 통과했으며 이 상태 모듈은 아직 화면 속성 폼에 연결하지 않았습니다.
+
 Worker 조회 실패 응답의 요청 식별자 누락을 실제 재현했습니다. 잘못된 textKind에서 `requestId:17`이 undefined로 반환돼 강화한 테스트가 먼저 실패했습니다. `dutmalQueryIdentity`로 덧말/원문 조회 오류의 식별자를 보존한 뒤 잘못된 종류·존재하지 않는 노드·미지원 포맷 원문 조회와 redo 유지가 통과했습니다. 기존 체크박스 Worker 및 덧말 JS 포함4/4 종료코드0입니다. Canvas UI의 응답 대기를 실제 브라우저에서 재현한 결과는 아니며 Worker 계약 결함 수정입니다.
 
 Worker의 `inline-string-sources`는 원문 노드 검색만, `dutmal-text-query`는 `section/node/textKind`의 현재값 조회만 수행합니다. `dutmal-text`는 활성 편집 이력 세션을 요구하고 `value`를 변경한 뒤 현재값과 갱신 display를 반환합니다. 문자열 명령 로직은 `web/preview/dutmal-edit-command.mjs`로 분리했습니다. 현재 원문 응답은 편집 후에도 source-only이며 표시 위치/편집 허용을 뜻하지 않습니다.

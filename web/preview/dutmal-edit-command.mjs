@@ -1,7 +1,7 @@
 // Source identities remain separate from current editable leaf values.
 export function dutmalQueryIdentity(message) {
   if (message.kind === "inline-string-sources") return { requestId: message.requestId };
-  if (message.kind !== "dutmal-text-query") return {};
+  if (!["dutmal-text-query", "dutmal-text"].includes(message.kind)) return {};
   return { requestId: message.requestId, section: message.section, node: message.node, textKind: message.textKind };
 }
 

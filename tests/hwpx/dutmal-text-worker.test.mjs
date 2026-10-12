@@ -14,7 +14,7 @@ test("dutmal Worker edits preserve independent leaf history and actual ZIP", asy
   assert.equal(source.requestId, 12);
   assert.equal(source.sources.sourceOnly, true);
   const node = source.sources.controls.find(row => row.kind === "dutmal").element_index;
-  const command = { kind: "dutmal-text", section: 0, node, textKind: "mainText", value: "본문😀<&" };
+  const command = { kind: "dutmal-text", requestId: 20, section: 0, node, textKind: "mainText", value: "본문😀<&" };
   assert.equal((await h.send(command)).error, "EditorNotOpen");
   assert.equal((await h.send({ kind: "enable" })).error, undefined);
   const query = textKind => h.send({ kind: "dutmal-text-query", requestId: 17, section: 0, node, textKind });
@@ -24,6 +24,7 @@ test("dutmal Worker edits preserve independent leaf history and actual ZIP", asy
   assert.equal(original.dutmal.value, "팀단위 훈련");
   const changed = await h.send(command);
   assert.equal(changed.error, undefined);
+  assert.equal(changed.requestId, 20);
   assert.equal(changed.dutmal.value, command.value);
   assert.equal((await query("subText")).dutmal.value, "전술훈련 30% + 현지훈련 20%");
   const mainSaved = Buffer.from((await h.send({ kind: "save" })).bytes);

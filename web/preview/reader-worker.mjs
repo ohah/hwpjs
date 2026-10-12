@@ -604,7 +604,7 @@ self.onmessage = async event => {
       applied = true;
       reader = await createHwpxReader(module);
       preview = reader.readTextEvents(editor.saveForDisplay());
-      reply({ kind: message.kind, dutmal, content: hwpxDisplay() });
+      reply({ kind: message.kind, requestId: message.requestId, dutmal, content: hwpxDisplay() });
     } else if (message.kind === "checkbox-state") {
       if (format !== "hwpx") throw new Error("UnsupportedCheckBoxStateEditing");
       if (!editor || !historyEnabled) throw new Error("EditorNotOpen");
