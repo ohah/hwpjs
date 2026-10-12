@@ -2,11 +2,23 @@
 
 ## 원인과 소유 계약
 
+후속 전체 공개 검사에서 metadata-only 사이트를 기존 본문이 있는 문단에도 만들던 회귀를 확인했습니다. fallback은 현재 paragraphOnly로 문단 전체가 메타데이터 run/linesegarray뿐인지 확인하고, 원래 hp:t(빈/탭 전용 포함) 또는 기존 빈 run이 있으면 생성하지 않습니다. 원래 텍스트/앵커의 삽입 run·서식을 바꾸지 않습니다. 이미 가진 covered 배열에 정확한 paragraph 소유자를 표시하며 nearest owner는 paragraph_site_owner.optionalAncestor를 공유합니다. 소유자 부재는 null이고 잘못된 인덱스/순환은 오류로 남습니다.
+
 issue1891의80168/86712 규제분석 원본5번 문단은 run 안에 ctrl/pageNum만 있고 hp:t가 없습니다. 기존 text_sites.collect는 자식 없는 run에만 빈 텍스트 사이트를 만들므로 두 문단의 일반 입력과 split 조회는 MissingTextSite로 거부됐습니다. 쪽번호를 텍스트로 해석하거나 표시 번호를 합성하는 문제가 아닙니다.
 
 로컬 수정의 retained_run_metadata.runOnly는 정확한 paragraph namespace run의 직접 자식이 기존 supported 메타데이터 컨트롤뿐인지 판정합니다. 원문 사이의 비공백 내용·필드·그림·알 수 없는 컨트롤·기존 t를 제외합니다. text_sites.collect는 이 판정으로 run 시작 태그 직후의 빈 missing_text 사이트를 소유합니다. 입력·저장은 기존 공통 문자 트랜잭션과 XML writer를 사용하고 기존 메타데이터를 그대로 복사합니다. 메타데이터 종류 판정을 collector에 복제하지 않습니다.
 
 ## 검증과 현재 경계
+
+### 전체 검사에서 발견한 회귀와 수정
+
+이전 e64bdcfa 후보의 공개 전체 실행에서 anchor-editor의 page number XML mismatch와 character-effect-metadata의 세 파일 UnsupportedInlineControl이 나왔습니다. 후자는 multicolumns-in-common-controls/multicolumns/table-bug입니다. 같은 후보에서 page number 집중 검사1/1 실패를 실제 재현했습니다. 기존 텍스트 앞에 새 빈 메타데이터 사이트가 끼어 원래 입력 run을 바꾸고, 서식 fragment가 불필요한 missing run을 만나던 것이 원인입니다. 독립 oracle를 완화하거나 테스트 기대 XML을 변경하지 않았습니다.
+
+paragraph fallback 후보 SHA256 `afb292567422cdaaa945217d546fe1e057bbbb3c3133196d99a8ecf845f83723`는 ReleaseSafe build6/6 exit0입니다. anchor-editor·character-effect-metadata·실제 두 쪽번호 원본 집중5/5 exit0으로 완료했고, 메타데이터 효과는46파일 분류/실제26파일208트랜잭션·독립 XML·undo/redo에서 실패0입니다. 원래 hp:t·기존 빈 run·탭만 있는 hp:t의 삽입 소유자를 유지하며 필드/그림 host에는 fallback을 만들지 않는 반례도 추가했습니다.
+
+새 empty metadata 문단의 부분 서식 저장도 별도 UnsupportedInlineControl을 재현했습니다. 첫 합성 fixture는 refList가 없어 MissingReferenceList를 냈으므로 검사 입력을 올바른 charProperties header로 교정한 뒤의 UnsupportedInlineControl만 제품 원인 근거로 사용했습니다. character_style_missing_run은 검증된 메타데이터 전용 문단의 run만 허용하며 첫 fragment에만 메타데이터를 유지합니다. 모든 실패 할당 정리·뒤 fragment의 컨트롤 제거·원문/현재 문자열 불변 및 부분 서식 후 컨트롤1개/재열기·재저장을 검사했습니다. 실제 issue1891의 서식 동반 입력은 별도 global unmatched InvalidFieldLinks가 남아 이 clean fixture 결과로 지원 완료를 주장하지 않습니다.
+
+style fallback 후보 SHA256 `f49c5316a2f1e3bfcb28fdc24aa0e3f7bcbaa78a05d1a1831609c515a0782955`도 ReleaseSafe build6/6 exit0입니다. 기존 실패 두 검사·실제 쪽번호·중첩 회귀 집중6/6 exit0이며 focused-public.log에 기록했습니다. 현재 metadata 필터 native20/20은 새7개 검증과13개 기존 의존 검사입니다. 메타데이터 Session 검사는 metadata_run_session_tests로 분리하고 원래 scope 진입점과 정규 root에서 읽어 책임을 분리했습니다. 앞선 전체 실행의 실패는 그대로 남겨두며 최신 전체 native/public 완료로 바꾸지 않습니다.
 
 ### 실제 브라우저 입력
 

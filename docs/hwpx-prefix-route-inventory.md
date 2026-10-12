@@ -10,6 +10,10 @@
 
 ## 현재 실측
 
+e64bdcfa 후보의 후속 root query 조사가 최종 summary까지 완료됐고 exit1입니다. 현재 .hwpx 이름439경로 중 signature HWPX433·HWP5형6개이며 이6개는 HWPX 단계에서 별도로 표시했습니다. HWPX는 기본 암호 거부1개·조회432문서/213765문단, plain193313/anchored15709/field778·거부3965개/67문서입니다. 오류는 UnsupportedFieldLabelRange3955·MissingTextSite9·InvalidFieldLinks1이며 verification_failed는0입니다. 실제 HWPX로 변환된 hwp3 이름 표본은 포함합니다. 경로 거부와 암호 거부를 성공으로 세지 않으며 모든 문서의 실제 입력/이력·독립 XML/조판 검증이 아닙니다. 이 조사는 메타데이터 fallback 회귀 수정 전 후보입니다.
+
+InvalidFieldLinks1은 issue5729/stacked_tac_band_om_top의32번입니다. 독립 원문 XML에는 CLICK_HERE 시작1854889790 하나와 종료0개가 있고 duplicate/unresolved end는 없습니다. 종료 없는 root 시작의 기존 strict 보호이며 이번 관측만으로 끝을 임의로 합성하지 않습니다. 현재 signature/경로 집합은 아래 이전975개 조사와 달라 차이를 코드 수정 효과만으로 계산하지 않습니다.
+
 최신 nested-field-range-boundaries 후보 SHA256 `e64bdcfa3223fbbc2a07febb11bbf452a86c00a521cf5b247151e8a1d76a8711`로 두 issue1891 원본의 전체 문단 query를 재실행했습니다.80168은 plain3745/anchored184/field232·거부3(186~188번),86712는 plain1936/anchored84/field57·거부24(386~398/403~405/1789~1796번)입니다. 남은27개는 모두 unmatched 누름틀의 소유 목록이며 오류는 UnsupportedFieldLabelRange입니다. MissingTextSite와 정상 중첩/줄바꿈 사례의 거부는 없어졌습니다. 두 CLI 모두 exit1이며 성공으로 바꾸지 않습니다. 로그는 후보 폴더의 routes-80168.log/routes-86712.log입니다. 저장/입력/WASM 불변도 확인했지만 모든 선택 경로의 실제 편집 완료는 아닙니다.
 
 prefix edit probe와 read-only route proxy도 [입력 범위의 대상 조회](hwpx-field-range-target.md)를 공유합니다. 새 native query가 있는 경우 그 유일한 소유자만 사용하고 null/예기치 않은 오류에서 기존 목록의 첫 필드로 fallback하지 않습니다. 이전 API의 유일 후보 정책은 유지합니다. 원래 요청0위치를 이동하지 않고, 잘못된/위치가 다른 반환 대상도 거부합니다. 관련 기존/새 route·CLI·identity 집중11/11 exit0이며 실제 mutator 호출 금지·source 오류/OOM 전파·모호한 구형 후보 거부를 포함합니다.
