@@ -1,0 +1,48 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { workerCanvasHarness } from "../canvas/worker-harness.mjs";
+import { execFileSync } from "../../tools/oracle-process.mjs";
+
+test("dutmal Worker edits preserve independent leaf history and actual ZIP", async t => {
+  assert(process.env.HWPJS_TEST_WASM, "explicit dutmal candidate required");
+  const input = readFileSync("reference/rhwp/samples/hwpx/opengov/36389301_결재문서본문_직장훈련계획_덧말.hwpx");
+  const h = await workerCanvasHarness(t);
+  assert.equal((await h.send({ kind: "load", format: "hwpx", bytes: input })).error, undefined);
+  const source = await h.send({ kind: "inline-string-sources", requestId: 12 });
+  assert.equal(source.error, undefined);
+  assert.equal(source.requestId, 12);
+  assert.equal(source.sources.sourceOnly, true);
+  const node = source.sources.controls.find(row => row.kind === "dutmal").element_index;
+  const command = { kind: "dutmal-text", section: 0, node, textKind: "mainText", value: "본문😀<&" };
+  assert.equal((await h.send(command)).error, "EditorNotOpen");
+  assert.equal((await h.send({ kind: "enable" })).error, undefined);
+  const query = textKind => h.send({ kind: "dutmal-text-query", requestId: 17, section: 0, node, textKind });
+  const original = await query("mainText");
+  assert.equal(original.error, undefined);
+  assert.equal(original.requestId, 17);
+  assert.equal(original.dutmal.value, "팀단위 훈련");
+  const changed = await h.send(command);
+  assert.equal(changed.error, undefined);
+  assert.equal(changed.dutmal.value, command.value);
+  assert.equal((await query("subText")).dutmal.value, "전술훈련 30% + 현지훈련 20%");
+  const mainSaved = Buffer.from((await h.send({ kind: "save" })).bytes);
+  const sub = { ...command, textKind: "subText", value: "주석😀<&" };
+  assert.equal((await h.send(sub)).error, undefined);
+  const saved = Buffer.from((await h.send({ kind: "save" })).bytes);
+  for (const flags of [[], ["-O"]]) execFileSync("python3", [...flags, "tools/hwpx-dutmal-text-oracle.py"], {
+    input: JSON.stringify({ before: input.toString("base64"), after: saved.toString("base64"), mainText: command.value, subText: sub.value }), timeout: 30000,
+  });
+  assert.equal((await h.send({ kind: "undo" })).error, undefined);
+  assert.deepEqual(Buffer.from((await h.send({ kind: "save" })).bytes), mainSaved);
+  assert.equal((await query("main_text")).error, "InvalidDutmalTextKind");
+  assert.deepEqual((await h.send({ kind: "inline-string-sources" })).sources, source.sources);
+  assert.equal((await h.send({ ...sub, value: "bad\0" })).error, "InvalidXmlCharacter");
+  assert.equal((await h.send({ kind: "redo" })).error, undefined);
+  assert.equal((await query("subText")).dutmal.value, sub.value);
+  assert.deepEqual(Buffer.from((await h.send({ kind: "save" })).bytes), saved);
+  assert.equal((await h.send({ kind: "load", format: "hwpx", bytes: saved })).error, undefined);
+  assert.equal((await h.send({ kind: "enable" })).error, undefined);
+  assert.equal((await query("mainText")).dutmal.value, command.value);
+  t.diagnostic("Real Worker/WASM and ZIP oracle; DOM is simulated, Ruby painting not verified");
+});

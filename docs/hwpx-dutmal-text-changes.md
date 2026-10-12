@@ -48,6 +48,10 @@ ReleaseSafe 집중2/2 exit0에서 실제 세션 명령의 입력·no-op·잘못�
 
 ## 후보 WASM의 JS 편집 검증
 
+Worker의 `inline-string-sources`는 원문 노드 검색만, `dutmal-text-query`는 `section/node/textKind`의 현재값 조회만 수행합니다. `dutmal-text`는 활성 편집 이력 세션을 요구하고 `value`를 변경한 뒤 현재값과 갱신 display를 반환합니다. 문자열 명령 로직은 `web/preview/dutmal-edit-command.mjs`로 분리했습니다. 현재 원문 응답은 편집 후에도 source-only이며 표시 위치/편집 허용을 뜻하지 않습니다.
+
+같은 후보로 `dutmal-text-worker`, 기존 `checkbox-state-worker`, default gate 등록 검사 3/3 종료코드0입니다. 실제 덧말 픽스쳐에서 Worker 노드 검색·두 값 수정·독립 전체 XML/ZIP·undo/redo·조회 종류 오류와 입력 실패 뒤 redo 유지·재열기를 확인했습니다. DOM은 대역이며 Canvas 덧말 조판/선택/입력 UI와 실제 브라우저 E2E는 아직 남습니다.
+
 독립 `hwpx-dutmal-text-oracle.py`는 실제 ZIP의 비대상 payload와 전체 구역 XML을 비교합니다. 두 leaf 값과 직접 소유 문단의 linesegarray 제거만 기대하며, main/sub 각각의 잘못된 기대값이 실제 XML 불일치로 거부되는지 일반 Python 및 `-O`에서 검증했습니다. 선택적 JS `dutmalText`/`setDutmalText`는 `mainText`/`subText`만 받고 ABI 부재를 명시적으로 거부합니다. JS 클라이언트와 검증 파일의 게시가 native ABI 또는 기본 WASM의 게시를 의미하지 않습니다.
 
 2026-10-13 `zig-out/verification/dutmal-text-api/bin/hwpjs.wasm`를 명시한 `dutmal-text-editor`, `inline-string-source-wire`, `inline-string-source-reference` 테스트는 5/5, 종료코드0입니다. 실제36389301에서 mainText/subText 별도 변경·Unicode/XML 특수 문자·저장 재열기·각 명령 undo/redo·no-op/잘못된 문자/종류 거부 뒤 redo 유지·원문 ZIP 복원과 source-only 응답 불변을 검사했습니다.

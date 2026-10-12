@@ -2,6 +2,7 @@ import { createHwp5Reader } from "../../js/hwp5.mjs";
 import { createHwpxReader } from "../../js/hwpx.mjs";
 import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
 import { attachCheckBoxes } from "./checkbox-content.mjs";
+import { readDutmalText, writeDutmalText } from "./dutmal-edit-command.mjs";
 import { createHwpxPasswordDecoder } from "../../js/hwpx-password.mjs";
 import { createHwp5PasswordDecoder } from "../../js/hwp5-password.mjs";
 import { requirePasswordRemovalConsent } from "./password-policy.mjs";
@@ -588,6 +589,22 @@ self.onmessage = async event => {
       reader = await createHwpxReader(module);
       preview = reader.readTextEvents(editor.saveForDisplay());
       reply({ kind: "manual-formula-result", content: hwpxDisplay() });
+    } else if (message.kind === "inline-string-sources") {
+      if (format !== "hwpx") throw new Error("UnsupportedInlineStringSources");
+      if (!editor) throw new Error("EditorNotOpen");
+      reply({ kind: message.kind, requestId: message.requestId, sources: editor.inlineStringSources() });
+    } else if (message.kind === "dutmal-text-query") {
+      if (format !== "hwpx") throw new Error("UnsupportedDutmalTextEditing");
+      if (!editor) throw new Error("EditorNotOpen");
+      reply({ kind: message.kind, requestId: message.requestId, dutmal: readDutmalText(editor, message) });
+    } else if (message.kind === "dutmal-text") {
+      if (format !== "hwpx") throw new Error("UnsupportedDutmalTextEditing");
+      if (!editor || !historyEnabled) throw new Error("EditorNotOpen");
+      const dutmal = writeDutmalText(editor, message);
+      applied = true;
+      reader = await createHwpxReader(module);
+      preview = reader.readTextEvents(editor.saveForDisplay());
+      reply({ kind: message.kind, dutmal, content: hwpxDisplay() });
     } else if (message.kind === "checkbox-state") {
       if (format !== "hwpx") throw new Error("UnsupportedCheckBoxStateEditing");
       if (!editor || !historyEnabled) throw new Error("EditorNotOpen");
