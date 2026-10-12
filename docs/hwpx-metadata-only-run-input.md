@@ -16,4 +16,6 @@ issue1891의80168/86712 규제분석 원본5번 문단은 run 안에 ctrl/pageNu
 
 metadata-text-sites 후보 SHA256 `d3bbada08ceca03791f2b870ffef315b6206933f02de1b50f6676b1d05b78210`는 ReleaseSafe build6/6 exit0입니다. `HWPJS_TEST_WASM=/absolute/metadata-text-sites/bin/hwpjs.wasm node --test tests/hwpx/metadata-only-run-reference.test.mjs tests/hwpx/field-exterior-inline-reference.test.mjs`는2/2 exit0입니다. 실제 두 쪽번호 문단과 앞선 네 하이퍼링크 문단의 저장·재열기·undo 원문/redo 수정본 및 normal/-O 독립 전체 XML/비대상 ZIP·잘못된 기대값 거부·원본 파일 불변을 확인했습니다. 독립 검사기는 원문의 유일한 ctrl/pageNum 앞에 t 하나를 추가한 기대 트리와 전체 출력 트리를 비교합니다.
 
-코어 수정과 회귀 파일은 아직 로컬입니다. 제품 WASM 승격·최신 전체 native/public 검증·모든 메타데이터 종류의 실제 파일·문단 구조 split/merge·Worker/Canvas는 별도 검증이 필요합니다. 진행 중인 field-inline-exterior 의존 회귀는 이 수정 이전 바이너리이므로 이 정책의 전체 검사로 사용하지 않습니다. 관련 잔여 필드 범위와 입력 거부 분류는 [끝 마커 없는 필드 범위](hwpx-unmatched-field-scope.md)가 소유합니다.
+`HWPJS_TEST_WASM=/absolute/metadata-text-sites/bin/hwpjs.wasm node --test --test-concurrency=1 tests/hwpx/metadata-only-run-canvas.test.mjs`는2/2 exit0(실패/skip0)입니다. 실제 두 원본의0-based4번 문단이 빈 문자열과 plainEditable=true로 Canvas projection에 존재하고, 컨트롤러 선택·beforeinput/input→Worker/WASM→현재 문자열·저장·undo 원문/redo 수정본을 확인했습니다. DOM/Canvas는 대역이며 실제 브라우저 입력이나 원본 조판 검증이 아닙니다. 로그는 `zig-out/verification/metadata-text-sites/canvas-metadata.log`입니다.
+
+코어 수정과 회귀 파일은 아직 로컬입니다. 제품 WASM 승격·최신 전체 native/public 검증·모든 메타데이터 종류의 실제 파일·문단 구조 split/merge·실제 브라우저는 별도 검증이 필요합니다. 이전 field-inline-exterior 의존 회귀는 이 수정 이전 바이너리이며 최종 로그도 없어 이 정책의 전체 검사로 사용하지 않습니다. 관련 잔여 필드 범위와 입력 거부 분류는 [끝 마커 없는 필드 범위](hwpx-unmatched-field-scope.md)가 소유합니다.
