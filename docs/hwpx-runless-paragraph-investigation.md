@@ -51,3 +51,11 @@ paragraph_structure_save의 원문 귀속 검증에 좁은 synthesized run 분�
 공통 저장 회귀1/1 exit0은 전체 구역의 정확한 기대 문자열, 다른 본문/주석 보존, 사이트 귀속 위조 거부, 저장 전체 실패 할당을 검사했습니다. 별도 실제36386761 원본 세션 회귀1/1 exit0은 기존 collect에서 만든 현재값 후보를 내부 설치한 뒤 ZIP save→재열기28번 본문 확인·checkpoint exchange로 원문 ZIP 복원/수정본 byte-exact 복원·session.source 불변을 확인했습니다. fmt도 통과했습니다.
 
 이는 내부 후보 설치와 체크포인트 계약 검사입니다. 공개 splice/canEdit·Worker 표시·서식/구조 거래·공개 History/UI 지원은 아직 연결하지 않았고, 실제 ZIP 결과의 독립 전체 XML oracle은 남습니다. native 변경은 계속 로컬 전체 gate 대기 상태입니다.
+
+## Native 공개 입력 거래 연결
+
+runless_paragraph_session은 기존 display_current_paragraphs/collect·헤더 스타일 조회·현재값 clone·공통 구역 writer를 재사용해 후보를 먼저 검증한 뒤 교환합니다. Session.canEdit/splice/anchorText에 연결했고, 첫 입력·후속 입력의 텍스트는 같은 Sites만 소유합니다. 불변 source는 교체하지 않습니다. 전체 구역/문서 텍스트 예산을 검사하며 초기 빈 입력은 no-op입니다. 필드 envelope 우회를 막기 위해 원문 fieldBegin/fieldEnd가 있는 구역의 새 run 생성은 현재 거부하며, 생성 표가 대기 중인 경로도 기존 거래 정책을 유지합니다. 이 제한은 완성 지원 범위가 아니라 남은 연결 작업입니다.
+
+ReleaseSafe 집중7/7 exit0 후 실제 세션 필터1/1 exit0 재검사에서36386761의28번 문단 canEdit·초기 빈 본문 조회·잘못된 시작 위치 거부·첫 입력·후속 추가 입력·서로게이트 분할 거부·동일 치환 no-op·본문 조회·ZIP save/재열기·checkpoint 원문/수정본 복원을 확인했습니다. fmt도 통과했습니다. 공개 History 객체 및 WASM/Worker/Canvas, 서식·문단 구조, 공개 거래 전체 실패 할당과 독립 실제 ZIP oracle은 별도 검증이 남습니다.
+
+후보 ReleaseSafe 빌드는 zig-out/verification/runless-paragraph-input 경로에서 시작했으며, 이 기록 시점에는 완료 결과가 없습니다. native 구현은 전체 검증 전 로컬 변경으로 남고, 기존 제품 WASM을 승격하지 않았습니다.
