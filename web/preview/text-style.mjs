@@ -9,8 +9,9 @@ import { automaticNumberSource, storedAutomaticNumberText } from "./automatic-nu
 import { characterOutlineStyle } from "./character-outline-style.mjs";
 export function withDraftText(paragraph, text) {
   const numbers = paragraph.automaticNumbers;
+  const dutmal = paragraph.dutmal ? projectDraftAnchoredObjects({ paragraphs: [paragraph] }, paragraph.dutmal.map(row => ({ ...row, section: paragraph.section, paragraph: paragraph.paragraph, anchorUnit: row.unit, state: "located" })), { section: paragraph.section, paragraph: paragraph.paragraph, text }).map(({ anchorUnit, state, section, paragraph: ordinal, ...row }) => ({ ...row, unit: anchorUnit })) : undefined;
   const automaticNumbers = numbers ? projectDraftAnchoredObjects({ paragraphs: [paragraph] }, numbers.map(number => ({ ...number, section: paragraph.section, paragraph: paragraph.paragraph, anchorUnit: number.unit, state: "located" })), { section: paragraph.section, paragraph: paragraph.paragraph, text }).map(({ anchorUnit, state, section, paragraph: ordinal, ...number }) => ({ ...number, unit: anchorUnit })) : undefined;
-  return { ...paragraph, text, characterRanges: text === paragraph.text ? paragraph.characterRanges : null, ...(numbers ? { automaticNumbers } : {}) };
+  return { ...paragraph, text, characterRanges: text === paragraph.text ? paragraph.characterRanges : null, ...(numbers ? { automaticNumbers } : {}), ...(dutmal ? { dutmal } : {}) };
 }
 
 export function createTextStyle(content, baseFont) {

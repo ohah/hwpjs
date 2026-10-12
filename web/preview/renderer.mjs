@@ -1,4 +1,5 @@
 import { FONT, displayRunText } from "./layout.mjs";
+import { dutmalAt, dutmalPaintPlan, paintDutmal } from "./dutmal-paint.mjs";
 import { hitPictureLayers } from "./picture-hit-test.mjs";
 import { paintPictureSelection } from "./picture-selection-paint.mjs";
 import { canvasViewportMetrics } from "./canvas-viewport-metrics.mjs";
@@ -175,6 +176,8 @@ export function createRenderer(canvas, viewportElement, spacer, onLayout = () =>
           const text = displayRunText(row.text.slice(start.unit - row.startUnit, end.unit - row.startUnit), paragraph, start.unit, "text", row.pageNumber);
           const x = rowLeft(row) + start.x, y = rowTop(row, i) - viewport.scrollTop + rowTextTop(row);
           const glyphY = y + (fontAt.script(paragraph, start.unit)?.offset ?? 0);
+          const dutmal = dutmalAt(paragraph, start.unit);
+          if (dutmal && paintDutmal(ctx, dutmalPaintPlan(dutmal, ctx.font, fontAt.textHeight(paragraph, start.unit), (value, font) => { ctx.save(); try { ctx.font = font; return ctx.measureText(value).width; } finally { ctx.restore(); } }), x, y)) continue;
           const picture = pictures.get(picturePositionKey(row.section, row.paragraph, start.unit));
           if (picture) {
             const bitmap = pictureResources.get(picture.picture.section, picture.picture.pictureNode)?.bitmap;
@@ -287,6 +290,11 @@ export function createRenderer(canvas, viewportElement, spacer, onLayout = () =>
     for (const item of pictures.values()) if (item) pictureResources.load(item.picture.section, item.picture.pictureNode).catch(() => {});
     const measure = (text, paragraph, unit, kind) => {
       ctx.font = fontAt(paragraph, unit, kind);
+      const dutmal = kind === "text" ? dutmalAt(paragraph, unit) : null;
+      if (dutmal) {
+        const plan = dutmalPaintPlan(dutmal, ctx.font, fontAt.textHeight(paragraph, unit, kind), (value, font) => { ctx.save(); try { ctx.font = font; return ctx.measureText(value).width; } finally { ctx.restore(); } });
+        if (plan) return { width: plan.width, height: plan.height };
+      }
       const picture = kind === "text" ? pictures.get(picturePositionKey(paragraph.section, paragraph.paragraph, unit)) : null;
       if (picture) return { width: picture.width, height: picture.height };
       const checkBox = kind === "text" ? inlineCheckBoxes.get(checkBoxPositionKey(paragraph.section, paragraph.paragraph, unit)) : null;

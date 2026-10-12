@@ -48,6 +48,10 @@ ReleaseSafe 집중2/2 exit0에서 실제 세션 명령의 입력·no-op·잘못�
 
 ## 후보 WASM의 JS 편집 검증
 
+Canvas 미리보기의 `dutmal-paint.mjs`는 현재 문자열 두 개를 각각 그리고 동일 폭/높이 계획을 measure와 paint에서 공유합니다. TOP/BOTTOM·LEFT/CENTER/RIGHT·명시적 비율을 처리하며 szRatio0은 미확정 원문 의미와 별개인 임시50% 미리보기 정책으로 표시합니다. 원문 값/저장과 보호 앵커의 UTF-16 한 글자 길이를 바꾸지 않습니다. draft 위치는 공통 anchored-object projection을 재사용합니다. 원본 스타일 참조/옵션/글꼴 shaping·원본 한글 Ruby 조판은 아직 지원 완료가 아닙니다.
+
+실제 Worker/후보5fb9192e와 renderer 대역에서 본문/주석 별도 paint·작은 주석/위쪽 배치·한 글자 경계/폭, 순수 TOP/BOTTOM·정렬/미지원 값·draft 위치/원문 불변을 검증했습니다. 최초 실제 검사에서는 글꼴이 pt 단위라 px 전용 계획이 거부돼 실패했고 px/pt 처리 후 통과했습니다. 덧말 paint/renderer Worker/편집 Worker3/3 종료코드0이며 실제 브라우저 픽셀 검증은 아닙니다.
+
 Worker 표시 데이터 연결 시 현재 일반 텍스트 스냅샷에 보호 앵커가 빠져 `DutmalBindingMismatch`로 실제 실패했습니다. 덧말 전용 `dutmalDisplayText(section,node)`는 기존 앵커 투영을 먼저 사용하고, 전체 편집이 거부된 필드 문단은 기존 fieldLabels 정책·source_field_paragraph_positions로 표시용 문자열만 얻습니다. 일반 스냅샷과 편집 권한은 바꾸지 않습니다. `dutmal-content.mjs`는 이 문자열과 현재 위치·값을 연결하고 sourceAttributes는 별도 복사합니다. 불일치/조회 실패/표시 예산 초과는 명시적 오류이며 편집 허용을 추가하지 않습니다.
 
 후보 `zig-out/verification/dutmal-display-api/bin/hwpjs.wasm`(SHA256 5fb9192ef1e35bbf9a8078139cd4495f8974a391ed30bb5e7a4895b492429074)의 ReleaseSafe 빌드6/6과 덧말 Worker/sites/content·기존 checkbox Worker 테스트5/5 종료코드0입니다. native 코드는 로컬 상태이며 Canvas 덧말 조판·클릭 선택과 기본 WASM 승격은 아직 남습니다.

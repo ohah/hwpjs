@@ -1,0 +1,34 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { workerCanvasHarness } from "../canvas/worker-harness.mjs";
+import { rowTop } from "../../web/preview/row-geometry.mjs";
+
+test("actual dutmal Worker data paints two runs with one logical anchor", async t => {
+  assert(process.env.HWPJS_TEST_WASM, "explicit dutmal display candidate required");
+  const h = await workerCanvasHarness(t, { paintFrames: true });
+  const calls = [];
+  const ctx = h.canvas.getContext("2d");
+  ctx.fillText = (text, x, y) => calls.push({ text, x, y, font: ctx.font });
+  const input = readFileSync("reference/rhwp/samples/hwpx/opengov/36389301_결재문서본문_직장훈련계획_덧말.hwpx");
+  const loaded = await h.send({ kind: "load", format: "hwpx", bytes: input });
+  assert.equal(loaded.error, undefined);
+  assert.deepEqual(loaded.content.dutmalErrors, []);
+  const layout = h.renderer.layout();
+  const index = layout.rows.findIndex(row => row.kind === "text" && row.section === 0 && row.paragraph === 25 && row.startUnit <= 43 && row.endUnit > 43);
+  assert(index >= 0, "dutmal row must exist");
+  const row = layout.rows[index];
+  const boundary = row.boundaries.findIndex(point => point.unit === 43);
+  assert(boundary >= 0);
+  assert.equal(row.boundaries[boundary + 1].unit, 44);
+  assert(row.boundaries[boundary + 1].x > row.boundaries[boundary].x);
+  h.viewport.scrollTop = rowTop(row, index);
+  h.viewport.dispatchEvent(new Event("scroll")); h.paint();
+  const main = calls.find(call => call.text === "팀단위 훈련");
+  const sub = calls.find(call => call.text === "전술훈련 30% + 현지훈련 20%");
+  assert(main, JSON.stringify({ calls: calls.slice(-12), row, paragraph: loaded.content.paragraphs.find(p => p.paragraph === 25) })); assert(sub);
+  assert(sub.y < main.y);
+  const pixels = font => Number(/([\d.]+)(?:px|pt)/.exec(font)[1]);
+  assert(pixels(sub.font) < pixels(main.font));
+  t.diagnostic("Real Worker/WASM and renderer; Canvas context/metrics simulated, not Hangul shaping or browser pixels");
+});
