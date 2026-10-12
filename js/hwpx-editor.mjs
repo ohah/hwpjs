@@ -2,6 +2,7 @@ import { createMemory } from "./wasm-memory.mjs";
 import { decodePictureOwners } from "./hwpx-picture-owners.mjs";
 import { decodeInlineStringSources } from "./hwpx-inline-string-sources.mjs";
 import { dutmalKind } from "./hwpx-dutmal-kind.mjs";
+import { decodeDutmalSites } from "./hwpx-dutmal-sites.mjs";
 import { decodeCreatedTables } from "./hwpx-created-tables.mjs";
 import { createdTableIdentity } from "./created-table-identity.mjs";
 import { decodeFormSourceNodes, decodeFormSourceAttributes, decodeFormSites, decodeFormSourceLayout } from "./hwpx-form-source.mjs";
@@ -1061,6 +1062,14 @@ export async function createHwpxEditor(source) {
       try {
         if (!wasm.hwpx_edit_dutmal_text(section, node, selected)) throw memory.error();
         return new TextDecoder("utf-8", { fatal: true }).decode(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
+    dutmalSites(section) {
+      ready(); uint(section);
+      if (typeof wasm.hwpx_edit_dutmal_sites !== "function") throw new Error("HwpxDutmalSitesAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_dutmal_sites(section)) throw memory.error();
+        return decodeDutmalSites(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
       } finally { wasm.hwpx_edit_output_free(); }
     },
     setDutmalText(section, node, kind, value) {

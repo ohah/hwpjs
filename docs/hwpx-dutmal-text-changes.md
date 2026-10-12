@@ -48,6 +48,10 @@ ReleaseSafe 집중2/2 exit0에서 실제 세션 명령의 입력·no-op·잘못�
 
 ## 후보 WASM의 JS 편집 검증
 
+선택적 `hwpx_edit_dutmal_sites(section)`와 JS `dutmalSites(section)`는 현재 `{node,paragraph,anchor_unit}` 목록을 반환합니다. paragraph는 기존 native API와 같은1-based이며 anchor_unit는 보호 앵커의 UTF-16 위치입니다. JSON 디코더는 중복 노드/범위 밖 값/타입 변환/잘못된 UTF-8을 거부합니다. ABI가 없으면 `HwpxDutmalSitesAbiUnavailable`이며 빈 목록으로 대체하지 않습니다.
+
+ReleaseSafe 후보 `zig-out/verification/dutmal-sites-api/bin/hwpjs.wasm`(SHA256 d2067cbf86f8aeae2ebf7d7a0de32ca6e6a3fb0e0c3311be55c43e217caf396e)의 빌드6/6 성공과 `dutmal-sites`, `dutmal-text-editor`, `dutmal-text-worker` 테스트6/6 종료코드0입니다. 실제 필드 prefix 입력 후 위치43→46·문자열 수정 후 위치 유지·독립 XML/ZIP·두 단계 undo/redo·잘못된 구역 조회 뒤 redo 유지·저장 재열기를 확인했습니다. native ABI는 전체 gate 전 로컬, JS 클라이언트는 선택적 API이며 기본 WASM·Canvas 조판/선택 지원을 뜻하지 않습니다.
+
 `dutmal_display_sites.zig`는 현재 문단 순서를 `display_current_paragraphs`에서 빌리고 위치/소유권은 공통 `protected_display_host`로 계산합니다. 활성 XML 분기만 선택하며 UTF-16 위치를 main/sub 문자열 길이로 합성하지 않습니다. 실제36389301에서 문단26/위치43, 앞의 `앞😀` 필드 입력 후 동일 노드/문단과 위치46, mainText 값 변경 후 동일 위치를 확인했습니다. 활성 분기 제외가 포함된 최신 소스의 `zig test src/root.zig -O ReleaseSafe --test-filter 'dutmal display sites'`는2/2 종료코드0이고 변경 파일 fmt가 통과했습니다. 비활성 분기 전용 반례/구조 재배치/전체 OOM·WASM/Canvas 연결은 아직 남으며 native 코드는 로컬 상태입니다.
 
 native `dutmal transaction allocation failures preserve prior values and ZIP`는 dirty0 CLICK_HERE 안의 두 leaf를 가진 합성 ZIP에서 먼저 mainText를 변경한 뒤 subText setter의 전체 할당 실패 지점을 순회합니다. 오류마다 기존 main/sub 값과 이전 저장 ZIP을 byte-exact 비교했고 성공 경로 후 subText 원값 복원도 확인했습니다. `zig test src/root.zig -O ReleaseSafe --test-filter 'dutmal transaction allocation failures'`는 대상 모듈 명시 등록 뒤2/2 종료코드0, 변경 파일 fmt도 통과했습니다. 최초 실행은 상위 root.test_0만1/1 실행돼 대상 근거로 제외했습니다.
