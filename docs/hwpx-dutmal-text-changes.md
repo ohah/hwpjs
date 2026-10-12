@@ -48,6 +48,8 @@ ReleaseSafe 집중2/2 exit0에서 실제 세션 명령의 입력·no-op·잘못�
 
 ## 후보 WASM의 JS 편집 검증
 
+필드 호스트의 좌표와 표시 문자열을 맞추는 공통 API·소유 모델·실제 표/분할 회귀는 [필드 라벨 표시](hwpx-field-label-display.md)가 소유합니다. 덧말 표시 fallback도 이 모듈을 재사용합니다.
+
 2026-10-13 실제 headless Chromium에서 후보5fb9192e·현재 Worker/Canvas로36389301을 열었습니다. 스크린샷을 직접 확인해 본문/작은 위쪽 주석이 별도로 표시되는 것을 확인했고, paint 위치를 기준으로 native mouse down/up 클릭해 속성 패널 열림과 mainText 원값 조회를 검증했습니다. 클릭 후 변경한 값은 subText 전환/보존과 mainText 재조회로 확인했습니다. 화면에는 `UnsupportedInlineTableHost` 페이지 배치 제한이 남으므로 원본 페이지 조판 증거가 아닙니다.
 
 별도 실제 브라우저 세션에서 속성 폼 수정→다운로드 버튼이 생성한 Blob(115697바이트)을 메모리에서 다시 열어 mainText `다운로드😀`와 보존된 subText를 확인했습니다. 파일이 디스크에 저장됐다는 증명이나 독립 XML 비교는 아니며 다운로드 경로의 payload 재열기 검증입니다. 최초 다운로드 계측은 평가 변수 중복 선언으로 실패했고 제외했습니다. 이후 IIFE 범위와 `instanceof Blob` 조건으로 새 세션에서 재검증했습니다. 사용한 두 브라우저와 loopback18474 테스트 서버는 종료했습니다.

@@ -3,6 +3,7 @@ import { createHwpxReader } from "../../js/hwpx.mjs";
 import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
 import { attachCheckBoxes } from "./checkbox-content.mjs";
 import { attachDutmal } from "./dutmal-content.mjs";
+import { projectFieldLabelDisplay } from "./field-label-display-content.mjs";
 import { readDutmalText, writeDutmalText, dutmalQueryIdentity } from "./dutmal-edit-command.mjs";
 import { createHwpxPasswordDecoder } from "../../js/hwpx-password.mjs";
 import { createHwp5PasswordDecoder } from "../../js/hwp5-password.mjs";
@@ -212,6 +213,7 @@ function hwpxDisplay(projected) {
         paragraph.fieldReadOnlyReason = error.message;
       }
     }
+    if (paragraph.fieldLabels.length && WebAssembly.Module.exports(module).some(entry => entry.name === "hwpx_edit_field_label_display_text" && entry.kind === "function")) units += projectFieldLabelDisplay(editor, paragraph, HWPX_DISPLAY_BOUNDS.maxUnits - units + paragraph.text.length);
     paragraph.editable = paragraph.plainEditable || paragraph.anchorEditable || paragraph.fieldLabels.length > 0;
     if (!paragraph.editable && fieldLinkGuard.reason(paragraph.section)) paragraph.fieldReadOnlyReason = fieldLinkGuard.reason(paragraph.section);
     if (paragraph.editable) paragraph.label = paragraph.label.replace("읽기 전용", paragraph.plainEditable ? "일반 텍스트 편집" : paragraph.anchorEditable ? "보호 개체 텍스트 편집" : "필드 라벨만 편집");

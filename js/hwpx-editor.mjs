@@ -1080,6 +1080,14 @@ export async function createHwpxEditor(source) {
         return new TextDecoder("utf-8", { fatal: true }).decode(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
       } finally { wasm.hwpx_edit_output_free(); }
     },
+    fieldLabelDisplayText(section, paragraph) {
+      ready(); [section, paragraph].forEach(uint);
+      if (typeof wasm.hwpx_edit_field_label_display_text !== "function") throw new Error("HwpxFieldLabelDisplayTextAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_field_label_display_text(section, paragraph)) throw memory.error();
+        return new TextDecoder("utf-8", { fatal: true }).decode(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
     setDutmalText(section, node, kind, value) {
       ready(); [section, node].forEach(uint);
       const selected = dutmalKind(kind);
