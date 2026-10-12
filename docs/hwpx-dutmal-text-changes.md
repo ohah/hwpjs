@@ -39,3 +39,9 @@ dutmal_field_dirty는 기존 source_field_analysis·필드 범위·field_source_
 ReleaseSafe 집중3/3 exit0, 전체 fmt exit0입니다. 실제36389301의 mainText 변경은 ZIP save→재열기 문자열 확인·checkpoint 원문/수정본 byte-exact 복원까지 통과했습니다. 합성 dirty0 CLICK_HERE는 dirty1 저장/재열기, DATE는 UnsupportedDutmalFieldEdit, 미해결 CLICK_HERE는 ProtectedFieldRange로 거부했고 원문 source/기존 dirty 목록은 유지됐습니다. 최초 합성 반례가 기본 수식 픽스쳐의 id1과 충돌해 InvalidFieldLinks로 실패했으며 독립 구역 픽스쳐로 교정한 뒤 재검증했습니다. 링크 가드를 완화하지 않았습니다.
 
 공개 setter·실제 ZIP 독립 oracle·필드 dirty 전체 실패 할당·구조와 다른 객체 편집 조합·WASM/Worker/UI는 아직 남습니다. native 수정은 전체 gate 완료 전 로컬 상태입니다.
+
+## Native 세션 명령
+
+Session.dutmalText/setDutmalText를 dutmal_text_session으로 분리해 연결했습니다. 활성 분기·구역/노드·leaf 검증 뒤 현재값 후보를 만들고 전체 Session.save 성공을 확인한 다음 문자열 소유자를 교환합니다. 후보는 기존 객체 값들을 빌릴 뿐 해제하지 않으며, 저장/검증 실패 시 기존 값을 게시하거나 바꾸지 않습니다. 본문 Sites와 덧말 override 문자열을 합산해 문서 텍스트 예산도 검사합니다.
+
+ReleaseSafe 집중2/2 exit0에서 실제 세션 명령의 입력·no-op·잘못된 XML 문자 거부·현재값 조회·ZIP 재열기·체크포인트 원문/수정본 복원과 dirty0 텍스트 필드 갱신을 확인했습니다. DATE/미해결 필드의 명령 실패 뒤 override가0개이고 save가 원본과 byte-exact인지 재검증했습니다. 전체 fmt도 통과했습니다. 구조 제한은 유지하며, 공개 History 명령·실제 거래 전체 OOM·독립 실제 ZIP oracle·WASM/JS/Worker/UI 연결은 남습니다. native 코드는 전체 gate 전 로컬 상태입니다.
