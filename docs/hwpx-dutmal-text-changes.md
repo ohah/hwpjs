@@ -48,6 +48,10 @@ ReleaseSafe 집중2/2 exit0에서 실제 세션 명령의 입력·no-op·잘못�
 
 ## 후보 WASM의 JS 편집 검증
 
+Worker 표시 데이터 연결 시 현재 일반 텍스트 스냅샷에 보호 앵커가 빠져 `DutmalBindingMismatch`로 실제 실패했습니다. 덧말 전용 `dutmalDisplayText(section,node)`는 기존 앵커 투영을 먼저 사용하고, 전체 편집이 거부된 필드 문단은 기존 fieldLabels 정책·source_field_paragraph_positions로 표시용 문자열만 얻습니다. 일반 스냅샷과 편집 권한은 바꾸지 않습니다. `dutmal-content.mjs`는 이 문자열과 현재 위치·값을 연결하고 sourceAttributes는 별도 복사합니다. 불일치/조회 실패/표시 예산 초과는 명시적 오류이며 편집 허용을 추가하지 않습니다.
+
+후보 `zig-out/verification/dutmal-display-api/bin/hwpjs.wasm`(SHA256 5fb9192ef1e35bbf9a8078139cd4495f8974a391ed30bb5e7a4895b492429074)의 ReleaseSafe 빌드6/6과 덧말 Worker/sites/content·기존 checkbox Worker 테스트5/5 종료코드0입니다. native 코드는 로컬 상태이며 Canvas 덧말 조판·클릭 선택과 기본 WASM 승격은 아직 남습니다.
+
 선택적 `hwpx_edit_dutmal_sites(section)`와 JS `dutmalSites(section)`는 현재 `{node,paragraph,anchor_unit}` 목록을 반환합니다. paragraph는 기존 native API와 같은1-based이며 anchor_unit는 보호 앵커의 UTF-16 위치입니다. JSON 디코더는 중복 노드/범위 밖 값/타입 변환/잘못된 UTF-8을 거부합니다. ABI가 없으면 `HwpxDutmalSitesAbiUnavailable`이며 빈 목록으로 대체하지 않습니다.
 
 ReleaseSafe 후보 `zig-out/verification/dutmal-sites-api/bin/hwpjs.wasm`(SHA256 d2067cbf86f8aeae2ebf7d7a0de32ca6e6a3fb0e0c3311be55c43e217caf396e)의 빌드6/6 성공과 `dutmal-sites`, `dutmal-text-editor`, `dutmal-text-worker` 테스트6/6 종료코드0입니다. 실제 필드 prefix 입력 후 위치43→46·문자열 수정 후 위치 유지·독립 XML/ZIP·두 단계 undo/redo·잘못된 구역 조회 뒤 redo 유지·저장 재열기를 확인했습니다. native ABI는 전체 gate 전 로컬, JS 클라이언트는 선택적 API이며 기본 WASM·Canvas 조판/선택 지원을 뜻하지 않습니다.

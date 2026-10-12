@@ -2,6 +2,7 @@ import { createHwp5Reader } from "../../js/hwp5.mjs";
 import { createHwpxReader } from "../../js/hwpx.mjs";
 import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
 import { attachCheckBoxes } from "./checkbox-content.mjs";
+import { attachDutmal } from "./dutmal-content.mjs";
 import { readDutmalText, writeDutmalText, dutmalQueryIdentity } from "./dutmal-edit-command.mjs";
 import { createHwpxPasswordDecoder } from "../../js/hwpx-password.mjs";
 import { createHwp5PasswordDecoder } from "../../js/hwp5-password.mjs";
@@ -217,6 +218,7 @@ function hwpxDisplay(projected) {
   }
   content.readOnly = !content.paragraphs.some(paragraph => paragraph.editable);
   attachAutomaticNumbers(editor, content, automaticNumberSnapshot);
+  attachDutmal(editor, content, ["hwpx_edit_inline_string_sources", "hwpx_edit_dutmal_sites", "hwpx_edit_dutmal_text", "hwpx_edit_dutmal_display_text"].every(name => WebAssembly.Module.exports(module).some(entry => entry.name === name && entry.kind === "function")));
   attachNoteReferences(editor, content);
   attachDrawingTextBindings(editor, content);
   attachCheckBoxes(editor, content, ["hwpx_edit_form_sites", "hwpx_edit_form_source_attributes", "hwpx_edit_checkbox_state", "hwpx_edit_set_checkbox_state"].every(name => WebAssembly.Module.exports(module).some(entry => entry.name === name && entry.kind === "function")));

@@ -8,7 +8,13 @@ test("dutmal Worker edits preserve independent leaf history and actual ZIP", asy
   assert(process.env.HWPJS_TEST_WASM, "explicit dutmal candidate required");
   const input = readFileSync("reference/rhwp/samples/hwpx/opengov/36389301_결재문서본문_직장훈련계획_덧말.hwpx");
   const h = await workerCanvasHarness(t);
-  assert.equal((await h.send({ kind: "load", format: "hwpx", bytes: input })).error, undefined);
+  const loaded = await h.send({ kind: "load", format: "hwpx", bytes: input });
+  assert.equal(loaded.error, undefined);
+  assert.equal(loaded.content.dutmalAvailable, true);
+  assert.deepEqual(loaded.content.dutmalErrors, []);
+  const displayed = loaded.content.paragraphs.find(row => row.section === 0 && row.paragraph === 25);
+  assert.equal(displayed.dutmal[0].unit, 43);
+  assert.equal(displayed.dutmal[0].mainText, "팀단위 훈련");
   const source = await h.send({ kind: "inline-string-sources", requestId: 12 });
   assert.equal(source.error, undefined);
   assert.equal(source.requestId, 12);
@@ -26,6 +32,7 @@ test("dutmal Worker edits preserve independent leaf history and actual ZIP", asy
   assert.equal(changed.error, undefined);
   assert.equal(changed.requestId, 20);
   assert.equal(changed.dutmal.value, command.value);
+  assert.equal(changed.content.paragraphs.find(row => row.section === 0 && row.paragraph === 25).dutmal[0].mainText, command.value);
   assert.equal((await query("subText")).dutmal.value, "전술훈련 30% + 현지훈련 20%");
   const mainSaved = Buffer.from((await h.send({ kind: "save" })).bytes);
   const sub = { ...command, textKind: "subText", value: "주석😀<&" };
