@@ -19,3 +19,9 @@
 source affinity 후보 SHA256 `a6b30bb986825a08e720035019b5a66e9d6bbf0f735df612255ee3fa5922372f`는 ReleaseSafe6/6입니다. 실제10문단 회귀와 기존 쪽번호2문단 회귀2/2 exit0에서 전체 XML/비대상 ZIP payload normal/-O·잘못된 기대값 거부·저장/undo/redo/재열기·파일 불변을 확인했습니다. oracle의 metadata_run 모드는 알려진 metadata roots만 받고 기존 빈 run/텍스트/앵커를 이 경로로 보정하지 않습니다.
 
 기본 검증 목록 등록·누락 방지1/1·전체 source fmt도 통과했습니다. 이 결과는 입력한12개 위치의 실제 편집이며, 문서 전체의 임의 선택/서식/구조 편집이나 한글 조판 완료가 아닙니다. 새 native source 경로의 추가 실패 할당·Worker/브라우저·최신 전체 gate와 core 커밋/제품 승격은 남습니다.
+
+## 후속 실패 경로와 추가 원본
+
+native3/3 exit0 재검사에서 실제 splice 준비의 모든 실패 할당 지점을 순회하고, 실패 후 텍스트 사이트·structure_values 부재·저장 원문 byte-exact를 확인했습니다. 성공도 source 상태를 유지합니다. 이는 합성 입력 트랜잭션의 할당 실패 검사이며 전체 open/저장·WASM 강제 OOM까지 포함하지 않습니다.
+
+동일 a6b30bb9 후보로 실제 검사 범위를 issue3460/svg_picture_repro, issue5780/flow_image_page_background, issue6179/right_tab_footer_logo의 첫 문단까지 확장해4/4 exit0입니다. 총13개 위치의 입력·구역/머리말/꼬리말/쪽 숨김 원문·독립 전체 XML/비대상 ZIP normal/-O·잘못된 기대값 거부·undo/redo·재열기/재저장·파일 불변을 확인했습니다. 앞선 쪽번호2개는 별도 검사 결과이고13개에 중복 합산하지 않습니다. 추가 서식/구조/브라우저·최신 전체 gate는 여전히 남습니다.
