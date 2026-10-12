@@ -1,5 +1,6 @@
 import { FONT, displayRunText } from "./layout.mjs";
 import { dutmalAt, dutmalPaintPlan, paintDutmal } from "./dutmal-paint.mjs";
+import { dutmalAnchorAtPoint } from "./dutmal-anchor-geometry.mjs";
 import { hitPictureLayers } from "./picture-hit-test.mjs";
 import { paintPictureSelection } from "./picture-selection-paint.mjs";
 import { canvasViewportMetrics } from "./canvas-viewport-metrics.mjs";
@@ -383,6 +384,7 @@ export function createRenderer(canvas, viewportElement, spacer, onLayout = () =>
     cellResizeGuide(value) { resizeGuide = value; schedule(); },
     show(value, { preserveScroll = false } = {}) { content = value; draft = null; resizeGuide = null; if (!preserveScroll) { selectedPicture = null; canvas.dataset.selectedPicture = ""; viewport.scrollTop = 0; viewport.scrollLeft = 0; } reflow(); return layout; },
     clear() { pictureResizeGuide = null; selectedPicture = null; canvas.dataset.selectedPicture = ""; pictureResources.clear(); content = { paragraphs: [], limited: false }; draft = null; resizeGuide = null; interaction = {}; stopBlink(); viewport.scrollTop = 0; viewport.scrollLeft = 0; reflow(); },
+    dutmalAtLogicalPoint: (x, y) => dutmalAnchorAtPoint(display, layout, x, y),
     layout: () => layout,
     tableCreationAvailable: () => content.tableCreationAvailable === true && content.tableCreationResources !== null && content.tableCreationResources !== undefined,
     tableCreationResources: () => content.tableCreationResources ? Object.fromEntries(Object.entries(content.tableCreationResources).map(([key, ids]) => [key, ids.slice()])) : null,

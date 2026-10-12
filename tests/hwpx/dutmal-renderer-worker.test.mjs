@@ -1,8 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { workerCanvasHarness } from "../canvas/worker-harness.mjs";
-import { rowTop } from "../../web/preview/row-geometry.mjs";
+import { workerCanvasHarness, dispatchCanvasEvent } from "../canvas/worker-harness.mjs";
+import { rowTop, rowLeft, rowTextTop } from "../../web/preview/row-geometry.mjs";
+import { createDutmalCanvasControls } from "../../web/preview/dutmal-canvas-controls.mjs";
 
 test("actual dutmal Worker data paints two runs with one logical anchor", async t => {
   assert(process.env.HWPJS_TEST_WASM, "explicit dutmal display candidate required");
@@ -30,5 +31,21 @@ test("actual dutmal Worker data paints two runs with one logical anchor", async 
   assert(sub.y < main.y);
   const pixels = font => Number(/([\d.]+)(?:px|pt)/.exec(font)[1]);
   assert(pixels(sub.font) < pixels(main.font));
+  const x = rowLeft(row) + (row.boundaries[boundary].x + row.boundaries[boundary + 1].x) / 2;
+  const y = rowTop(row, index) + rowTextTop(row) + 1;
+  const identity = { section: 0, node: loaded.content.paragraphs.find(p => p.paragraph === 25).dutmal[0].node };
+  assert.deepEqual(h.renderer.dutmalAtLogicalPoint(x, y), identity);
+  assert.equal(h.renderer.dutmalAtLogicalPoint(x - 10000, y), null);
+  const selections = [];
+  const selection = createDutmalCanvasControls({ canvas: h.canvas, viewport: h.viewport, renderer: h.renderer, ready: () => true, select: value => { selections.push(value); return true; } });
+  try {
+    assert.equal(dispatchCanvasEvent(h.canvas, "pointerdown", { button: 0, clientX: x, clientY: y - h.viewport.scrollTop }).defaultPrevented, true);
+    assert.deepEqual(selections, [identity]);
+    dispatchCanvasEvent(h.canvas, "pointerdown", { button: 0, clientX: x, clientY: y - h.viewport.scrollTop, shiftKey: true });
+    assert.equal(selections.length, 1);
+    selection.close();
+    dispatchCanvasEvent(h.canvas, "pointerdown", { button: 0, clientX: x, clientY: y - h.viewport.scrollTop });
+    assert.equal(selections.length, 1);
+  } finally { selection.close(); }
   t.diagnostic("Real Worker/WASM and renderer; Canvas context/metrics simulated, not Hangul shaping or browser pixels");
 });

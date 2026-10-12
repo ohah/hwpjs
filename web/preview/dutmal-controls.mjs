@@ -20,6 +20,12 @@ export function createDutmalControls({ form, fields, targets, textKind, input, n
   reset();
   return {
     reset,
+    select(identity) {
+      if (closed || !enabled || !ready()) return false;
+      const index = rows.findIndex(row => row.section === identity.section && row.node === identity.node);
+      if (index < 0) return false;
+      targets.value = String(index); textKind.value = "mainText"; pick(); return true;
+    },
     message(message) {
       if (closed) return;
       if (message.kind === "enable") {

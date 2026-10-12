@@ -24,6 +24,7 @@ test("dutmal form queries native values, retains drafts, and disables closed con
   const query = requests.at(-1);
   control.message({ kind: query.kind, requestId: query.requestId, dutmal: { section: 0, node: 7, textKind: "mainText", value: "현재" } });
   assert.equal(input.value, "현재"); assert.equal(fields.disabled, false);
+  assert.equal(control.select({ section: 0, node: 999 }), false);
   // Submission reads the DOM value even if an autofill omitted input events.
   input.value = "수정😀";
   form.dispatchEvent(new Event("submit", { cancelable: true }));
@@ -41,6 +42,11 @@ test("dutmal form queries native values, retains drafts, and disables closed con
   assert.equal(requests.length, count, "must not write previous main leaf after sub selection");
   textKind.dispatchEvent(new Event("change"));
   assert.equal(requests.at(-1).textKind, "subText");
+  assert.equal(control.select({ section: 0, node: 7 }), true);
+  assert.equal(requests.at(-1).textKind, "mainText");
+  ready = false;
+  assert.equal(control.select({ section: 0, node: 7 }), false);
+  ready = true;
   control.reset();
   assert.equal(form.hidden, true);
   control.close(); control.close();

@@ -48,6 +48,10 @@ ReleaseSafe 집중2/2 exit0에서 실제 세션 명령의 입력·no-op·잘못�
 
 ## 후보 WASM의 JS 편집 검증
 
+Canvas 덧말 클릭은 `dutmal-anchor-geometry.mjs`가 기존 selectionRects·변환 box hit를 재사용하고 `dutmal-canvas-controls.mjs`가 공통 pointer 좌표 변환을 사용합니다. 원문 노드에서 위치를 추측하지 않습니다. 정확한 한 글자 앵커/유일 소유권을 확인한 뒤 현재 속성 폼 목록에 있는 section/node만 선택·조회하고 패널을 엽니다. modifier·다른 버튼·준비되지 않은 세션·닫힌 컨트롤은 이벤트를 소비하지 않습니다.
+
+후보5fb9192e의 실제 Worker/renderer 대역에서 앵커 box 중앙 hit·영역 밖 거부·스크롤 좌표 클릭·Shift 선택 보존·close 후 무응답과 속성 폼 선택 반례를 검사했습니다. 폼/paint/renderer Worker3/3 종료코드0입니다. 최초 harness 검사에서 반환값이 boolean이 아니라 Event인 점을 확인해 defaultPrevented를 검사하도록 교정했고 제품 동작은 완화하지 않았습니다. 실제 브라우저 클릭·변환/zoom 전용 반례와 기본 WASM 게시/원본 조판은 아직 남습니다.
+
 Canvas 미리보기의 `dutmal-paint.mjs`는 현재 문자열 두 개를 각각 그리고 동일 폭/높이 계획을 measure와 paint에서 공유합니다. TOP/BOTTOM·LEFT/CENTER/RIGHT·명시적 비율을 처리하며 szRatio0은 미확정 원문 의미와 별개인 임시50% 미리보기 정책으로 표시합니다. 원문 값/저장과 보호 앵커의 UTF-16 한 글자 길이를 바꾸지 않습니다. draft 위치는 공통 anchored-object projection을 재사용합니다. 원본 스타일 참조/옵션/글꼴 shaping·원본 한글 Ruby 조판은 아직 지원 완료가 아닙니다.
 
 실제 Worker/후보5fb9192e와 renderer 대역에서 본문/주석 별도 paint·작은 주석/위쪽 배치·한 글자 경계/폭, 순수 TOP/BOTTOM·정렬/미지원 값·draft 위치/원문 불변을 검증했습니다. 최초 실제 검사에서는 글꼴이 pt 단위라 px 전용 계획이 거부돼 실패했고 px/pt 처리 후 통과했습니다. 덧말 paint/renderer Worker/편집 Worker3/3 종료코드0이며 실제 브라우저 픽셀 검증은 아닙니다.

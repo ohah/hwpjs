@@ -3,6 +3,7 @@ import { detectDocumentFormat } from "../../js/document-format.mjs";
 import { createInspectorToggle } from "./inspector-toggle.mjs";
 import { createFindControls } from "./find-controls.mjs";
 import { createDutmalControls } from "./dutmal-controls.mjs";
+import { createDutmalCanvasControls } from "./dutmal-canvas-controls.mjs";
 import { createCharacterFontControls } from "./character-font-controls.mjs";
 import { createCharacterFontNameControls } from "./character-font-name-controls.mjs";
 import { createSystemFontControls } from "./system-font-controls.mjs";
@@ -99,6 +100,8 @@ formulaControls = createFormulaControls({ form: document.querySelector("#formula
 window.addEventListener("pagehide", event => { if (!event.persisted) formulaControls.close(); });
 const dutmalControls = createDutmalControls({ form: document.querySelector("#dutmal-form"), fields: document.querySelector("#dutmal-fields"), targets: document.querySelector("#dutmal-target"), textKind: document.querySelector("#dutmal-kind"), input: document.querySelector("#dutmal-value"), note: document.querySelector("#dutmal-status"), ready: () => Boolean(worker) && controls.ready() && !controls.busy() && direct.settled(), request: message => controls.request(message) });
 window.addEventListener("pagehide", event => { if (!event.persisted) dutmalControls.close(); });
+const dutmalCanvasControls = createDutmalCanvasControls({ canvas: document.querySelector("#canvas"), viewport: document.querySelector("#viewport"), renderer, ready: () => controls.ready() && !controls.busy() && direct.settled(), select: row => { if (!dutmalControls.select(row)) return false; inspector.show(true); return true; } });
+window.addEventListener("pagehide", event => { if (!event.persisted) dutmalCanvasControls.close(); });
 const checkBoxControls = createCheckBoxCanvasControls({ canvas: document.querySelector("#canvas"), viewport: document.querySelector("#viewport"), renderer, note: document.querySelector("#canvas-edit-status"), ready: () => Boolean(worker) && controls.ready() && !controls.busy() && direct.settled(), request: message => controls.request(message) });
 const colorControls = [
   createCharacterOutlineControls({ kind: document.querySelector("#canvas-outline-kind"), apply: document.querySelector("#canvas-outline-apply"), current: document.querySelector("#canvas-outline-current"), note: document.querySelector("#canvas-outline-status"), selected: () => direct.selectedOutlineRanges(), selectedState: () => direct.selectedCharacterOutlineKind(), canRequestKind: kind => direct.characterOutlineKindAvailable(kind), request: kind => direct.setCharacterOutline(kind) }),
