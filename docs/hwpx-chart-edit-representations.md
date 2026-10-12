@@ -2,6 +2,8 @@
 
 ## 현재 상태
 
+UI 적대적 검토에서 지원되는 point가 없는 차트도 fieldset이 활성화되는 문제를 테스트 실패로 재현했습니다. 숫자 전용 ABI에서 문자열만 있는 차트와 빈 point 목록이 해당합니다. `chart-controls`의 선택 판정을 단일 helper로 통합해 빈/음수/분수/비유한/범위 밖 ordinal을 거부하고, 지원되는 현재 point가 있을 때만 입력·제출을 활성화합니다. 빈 적격 목록은 지원 값이 없다는 안내를 표시합니다. 수정 뒤 단위6/6 및 같은 `4911d895…` 후보의 실제 Worker/WASM·Canvas/정규화 정책 회귀 포함10/10 exit0(3857.809959ms), JS 문법·diff 공백 검사·정적489모듈 연결을 통과했습니다. 단위/Canvas에는 DOM 대역이 있으며 이 수정의 실제 브라우저 확인·전체 gate·런타임 커밋은 아직 없습니다.
+
 최신 명시적 정규화 후보 SHA256 `4911d8955d3fdeef0cebdef74c266d1156cebbceeae1bc0e9fa0f6e0745871cf`의 전체 참조 cache/literal 감사는 종료코드0으로 완료했습니다. 독립 XML census의92문서/93연결·2296포인트 inventory와 native 종류별 개수를 먼저 비교했고,2296번 개별 변경 모두 독립 normal/-O XML/ZIP/OLE·비대상 보존·undo/redo·재열기를 통과했습니다. refused/failures/missingPointKinds는 모두0입니다. 숫자 cache1050/literal31·문자열 cache1208/literal7이며 multilevelCache 실파일 양성은 없습니다. 로그는 `/tmp/hwpjs-chart-all-point-probe.dYRidt`입니다. 기본 strict 정책이나 직접 tx/v·rich-text·시리즈 구조·차트 렌더링 완료로 확대하지 않습니다.
 
 현재 작업 트리의 UI 모듈은 `node --experimental-vm-modules tools/preview-module-link-audit.mjs`에서489개 정적 연결을 통과했습니다. 별도 소유 loopback 서버에서 `node tools/preview-module-audit.mjs http://127.0.0.1:10015`도489개 모두 HTTP200·JavaScript MIME·로컬 소스 SHA 일치를 확인했고 서버를 종료했습니다. 이는 새 차트 UI 모듈의 import/export와 개발 서버 제공 경로 증거이며 실제 브라우저 초기화·제품 배포·전체 문서 편집 증거는 아닙니다.
