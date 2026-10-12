@@ -8,6 +8,8 @@
 
 ## 구현·검증 경계
 
+문서 재열기 실패 후 이전 차트 대상/초안이 남는 문제를 통합 테스트 실패로 재현했습니다. chart-controls의 load/unlock 응답은 이전 targets·points·초안·capability/정책 안내를 즉시 초기화하며 기존 request serial 폐기로 늦은 이전 조회를 거부합니다. 새 세션에서 이전65번 선택이 아닌 첫0번 값으로 시작하는 것도 검사했습니다. 이 수정과 최신 표/폼·실제 Worker/Canvas·CFB 정책/암호 retry 회귀는 같은 `50cabdb0…` 후보에서14/14 exit0(2322.771917ms)이고 정적491모듈·JS 문법·diff 공백도 통과했습니다. 새 실패 경로의 실제 브라우저 확인과 전체 제품 반영은 별도이며 DOM 테스트를 그 증거로 확대하지 않습니다.
+
 후속 controller 통합 검사는 기존 Worker/Canvas 회귀와 함께10/10 exit0(1510.022917ms)입니다.130개 값의 두 번째 페이지에서65번 선택→폼 값/초점 이동→편집 요청 없음→적용 시 정확한65번 generic setter 요청→canonical 원값 불변→응답 재조회 중 표 제거→최신 값/같은 선택/페이지 복원·분리된 이전 row 거부·busy/close를 확인했습니다. DOM은 테스트 대역이며 새 표의 실제 브라우저 선택/저장 증거는 아닙니다.
 
 통합 테스트의 의존성 범위를 다시 확인했습니다. 순수 chart-controls는 이미 공개한 chart-point-label/table만 import하고 native/Worker/app 모듈을 import하지 않습니다. 따라서 controller와 표 통합 테스트를 같은 커밋에 포함해 fresh checkout의 누락 import를 방지합니다. 데모 app/HTML 연결과 native ABI·기본 WASM 승격은 이 순수 UI 모듈 커밋에 포함하지 않습니다. 앞선 로컬 보류와 실제 데모 연결 완료는 구분합니다.

@@ -52,7 +52,12 @@ export function createChartControls({ form, fields, targets, points, input, note
     },
     message(message) {
       if (closed) return;
-      if (["load", "unlock"].includes(message.kind)) { enabled = false; chart = null; targetIdentity = null; pointOrdinal = null; serial++; }
+      if (["load", "unlock"].includes(message.kind)) {
+        enabled = false; chart = null; targetIdentity = null; pointOrdinal = null; serial++;
+        rows = []; targets.replaceChildren(); points.replaceChildren();
+        input.value = ""; inputBaseline = ""; dirty = false;
+        stringAvailable = false; observedRepairsAllowed = false; note.textContent = "";
+      }
       if (message.kind === "enable" && !message.error) enabled = true;
       if (message.content) {
         stringAvailable = message.content.chartStringEditAvailable === true;
