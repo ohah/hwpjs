@@ -1,0 +1,31 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { measureTableCells } from "../../web/preview/table-cell-measurement.mjs";
+import { positionNestedFloatingTable } from "../../web/preview/nested-floating-table-position.mjs";
+import { projectNestedFloatingTable } from "../../web/preview/nested-floating-table-projection.mjs";
+
+test("floating nested cells retain text and source size at the explicit page position", () => {
+  const table = { section: 0, tableNode: 2, parentTableNode: 1, parentListNode: 11, hostParagraph: 3, rows: 1, columns: 1,
+    sourceGeometry: { geometry: { treat_as_character: false, width: 1500, height: 7500, width_relative: 4, height_relative: 2, horizontal_offset: 0, vertical_offset: 0 }, in_margin: [0, 0, 0, 0], text_wrap: 2, vertical_relative: 2, horizontal_relative: 3, vertical_alignment: 2, horizontal_alignment: 0 },
+    cells: [{ listNode: 12, row: 0, column: 0, rowSpan: 1, columnSpan: 1, width: 1500, height: 6000, paragraphs: [4], sourceMargin: { has_margin: false } }] };
+  const paragraphs = [{ section: 0, paragraph: 4, text: "X😀", tableCell: { tableNode: 2, listNode: 12 } }];
+  const measured = measureTableCells(table, paragraphs, text => ({ width: text.length * 4, height: 12 }), { origin: { x: 0, y: 0 }, padding: "source", columnWidths: [20] });
+  assert.equal(measured.state, "measured");
+  const paper = { x: 0, y: 0, width: 600, height: 800 };
+  const parent = { section: 0, tableNode: 1, listNode: 11, x: 50, y: 100, width: 200, height: 300 };
+  const paragraph = { section: 0, paragraph: 3, x: 50, y: 200, width: 200, height: 16 };
+  const position = positionNestedFloatingTable(table, parent, paragraph, { paper });
+  const original = structuredClone(table);
+  const page = { pageOrdinal: 0, referenceBoxes: { paper } };
+  const output = projectNestedFloatingTable(table, measured, position, page);
+  assert.equal(output.state, "placed", output.error);
+  assert.equal(output.boxes.length, 1); assert.equal(output.boxes[0].x, 50); assert.equal(output.boxes[0].y, 116);
+  assert.equal(output.rows.filter(row => row.kind === "text").map(row => row.text).join(""), "X😀");
+  assert.equal(output.paintLayer, "behind");
+  assert.deepEqual(output.rectangle, position.rectangle);
+  assert.equal(projectNestedFloatingTable(table, measured, { ...position, rectangle: { ...position.rectangle, height: 1 } }, page).error, "NestedFloatingTableMeasuredOverflow");
+  assert.equal(projectNestedFloatingTable(table, measured, { ...position, owner: { ...position.owner, parentListNode: 99 } }, page).error, "InvalidNestedFloatingTableOwner");
+  assert.equal(projectNestedFloatingTable(table, measured, position, { ...page, columnOrdinal: -1 }).error, "InvalidNestedFloatingTableProjection");
+  assert.equal(projectNestedFloatingTable(table, measured, position, { ...page, referenceBoxes: { paper: { ...paper, x: Number.MAX_VALUE, width: Number.MAX_VALUE } } }).error, "NestedFloatingTablePaperOverflow");
+  assert.deepEqual(table, original);
+});

@@ -20,6 +20,8 @@
 
 ## PAGE 본문 경로 연결
 
+부동 중첩 셀 투영 단면: `projectNestedFloatingTable`은 명시적으로 계산한 현재 위치/소유자와 페이지 정보를 받고 기존 whole band·source padding·projectTablePageFragments를 재사용합니다. 측정한 grid가 원문 위치 사각형을 넘으면 NestedFloatingTableMeasuredOverflow로 거부하며 축소/잘림으로 바꾸지 않습니다. 뒤쪽/앞쪽 layer와 원문 사각형을 보존합니다. 소유자 변조·잘못된 column ordinal·좌표 덧셈 오버플로 반례, 셀 box/Unicode 텍스트·입력 불변 테스트가 통과했습니다. 최초 작은 표 측정에는 일반 grid 최소 폭이 적용돼 넘침이 발생했고, 명시적 원문 열 폭20px을 주입한 측정으로 테스트 계약을 교정했습니다. 위치/셀 투영2/2 종료코드0이며 아직 재귀 조판/레이어 paint 호출에 연결하지 않았습니다.
+
 부동 중첩 기준 조사: 실제 덧말 파일 host30의 원문 줄 높이는1200HU(16px)인데 부모 셀 높이는26353HU(351.373333px)입니다. child1068은 PARA/BOTTOM/BEHIND_TEXT이므로 부모 셀을 문단 사각형으로 대체하면 전혀 다른 위치가 됩니다. 원문 줄 값은 편집 후 최신 조판으로 간주하지 않습니다.
 
 `positionNestedFloatingTable`은 현재 소유 문단 사각형과 종이/필요한 기준 상자를 명시적으로 받아 기존 placeFloatingTable 계산을 재사용합니다. section·부모 table/list·host paragraph 식별자를 검사하고 뒤쪽 layer를 구분하며, 셀 밖이지만 종이 안인 배치는 clamp하지 않고 별도 상태로 보고합니다. 종이 밖·잘못된 소유권/타입·부재/비유한 기준 반례와 입력 불변 테스트1/1 종료코드0입니다. 이 위치 단면은 아직 재귀 셀 측정/paint에 연결되지 않았으며 현재 문단 높이를 정확히 제공하는 조판 경로와 중첩 그림/겹침을 구현해야 합니다.
