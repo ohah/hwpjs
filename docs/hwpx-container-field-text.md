@@ -12,6 +12,24 @@
 
 ## 실측
 
+### 세 원본의 필드 영역 실제 전수 입력
+
+`hwpx-container-field-edit-audit.mjs`는 explicit wasm/fixture를 요구하고 모든 reader 문단을 순회합니다. field route만 실제 입력하며 다른 plain/anchored route는 별도로 집계합니다. 매 명령은 원본 상태에서 시작하고 독립 전체 XML/ZIP·현재 reader 문자열·재열기/재저장·undo 원본/redo 수정본/다시 undo 원본을 확인합니다. 입력·WASM·독립 검사기 hash도 고정하며 검사기 파일이 실행 중 바뀌면 성공으로 처리하지 않습니다.
+
+첫 실행은 sewoon281시도270검증/11실패, masked383시도306검증/77실패, 소방443시도401검증/42실패로 세 CLI 모두 exit1입니다. 합계1107시도977검증/130실패이며 실패는 oracle 단계였습니다.96개 빈 run·7개 탭/공백/줄바꿈·26개 checkBtn이 기존 좁은 검사기에서 미지원이었고, 그림 앞 XML mismatch1개는 원문의 앞선 빈 run을 검사기가 놓친 경우였습니다. 실제 원문/출력에서 앞선 run의 서식에 입력하고 pic 원문을 보존한 것을 확인했으며 native 코드나 저장본을 고쳐 검사에 맞추지 않았습니다. 첫 실패 로그 edit-*.log는 보존했습니다.
+
+검사기는 기존 빈 run(주석/PI/공백 보존)의 원래0위치를 객체 run보다 우선하고, 알려진1-unit inline과 form anchor를 변경하지 않은 채 prefix를 기대 트리에 추가합니다. normal/-O self-test는7개 정상 유형과12개 반례이며, 잘못된 객체 run에 입력·inline 폭/삭제·체크 상태 변경도 거부합니다. 전체 XML/ZIP compare를 축소하지 않았습니다. 검사기 SHA256 `b9549c35c0d7fd5e7dabf94894049f7c4a588939fd9e7b7a0697b269f4021e8a`로 고정한 두 번째 실행은 다음과 같습니다.
+
+| 문서 | 전체 문단 | 실제 field 입력·독립 XML·이력 검증 | 이번 미편집 경로 | 실패/종료 |
+| --- | ---: | ---: | --- | --- |
+| sewoon | 332 | 281/281 | plain48/anchored3 | 0/exit0 |
+| masked | 423 | 383/383 | plain33/anchored7 | 0/exit0 |
+| 소방훈련 계획 | 563 | 443/443 | plain114/anchored6 | 0/exit0 |
+
+세 원본에서1107개의 field-owned prefix를 모두 실제 편집·저장·독립 검증했습니다. 각 파일의 잘못된 기대값 normal/-O 거부도2개씩 확인했고 원본 파일/메모리와 WASM hash 불변을 확인했습니다. 산출물은 동일 container-field-routing `802b9e8d…`이며 로그는 해당 후보 폴더의 edit-sewoon-v2.log/edit-masked-v2.log/edit-firefighter-v2.log입니다. 이는 세 문서의 필드 영역 prefix 전수이지 미편집 경로·모든 명령·전체 참조·실제 브라우저/레이아웃 완료가 아닙니다.
+
+CLI 누락/중복/빈 scope·미지원 history 옵션을 파일 읽기 전에 거부하고 검사기의 normal/-O positive/negative 실행을 확인한 boundary 테스트2/2도 exit0입니다.
+
 container-field-text 후보 SHA256 `3b33a1294302d43684db69ad1603b5bf28d0f5345dfcfe7e62eaa526fc4ef2ef`는 ReleaseSafe build6/6 exit0입니다. 세 원본 전수 query는 소방563문단=plain114/anchored6/field443, masked423=plain33/anchored7/field383, sewoon332=plain48/anchored3/field281이며 모두 refused0/exit0입니다. 기존443+383+281=1107거부가 이 세 파일의 조회에서 없어졌습니다. 모두 실제 입력했다는 의미는 아닙니다. 로그는 후보 폴더의 routes-firefighter/masked/sewoon.log입니다.
 
 source query preflight와 route 순서를 포함한 container-field-routing SHA256 `802b9e8daf0f399f9c9b11bb7eec66bb23a8b91dc455631045a044e0237e367e`도 ReleaseSafe build6/6 exit0입니다. 실제 sewoon52번·masked41번·소방 section2의전역121/122번(로컬1/2)의 prefix 도구 입력·normal/-O 독립 전체 XML/ZIP/metadata·잘못된 기대값 거부·원문/수정본 undo/redo·재열기/재저장·원본 파일 불변이 통과했습니다. 중첩/쪽번호 기존 회귀를 포함한3/3 exit0입니다. 첫 assay는 허용 한도보다 큰32MiB history budget을 전달해 LimitExceeded를 냈고16MiB로 교정한 실행만 성공 근거입니다.

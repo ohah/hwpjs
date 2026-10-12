@@ -52,6 +52,9 @@ def verify(data):
             paragraph = paragraphs[data['paragraph'] - 1]
             candidates = []
             for run in paragraph.findall(P + 'run'):
+                if low < elements.index(run) < high and all(not isinstance(c.tag, str) for c in run) and not (run.text or '').strip(' \t\r\n'):
+                    candidates.append((run, 0, run))
+                    continue
                 for index, child in enumerate(run):
                     if not low < elements.index(child) < high:
                         continue
@@ -62,11 +65,16 @@ def verify(data):
                     candidates.append((run, index, child))
             require(candidates, 'missing owned prefix content')
             run, index, child = candidates[0]
-            if child.tag == P + 't':
-                require(not len(child), 'inline prefix needs its own oracle')
+            if child is run:
+                text = E.Element(P + 't')
+                text.text = data['text']
+                text.tail, run.text = run.text, None
+                run.insert(0, text)
+            elif child.tag == P + 't':
+                require(all(c.tag in {P + k for k in ('tab', 'nbSpace', 'fwSpace', 'lineBreak', 'hypen')} and not len(c) and c.text is None for c in child), 'unknown inline prefix')
                 child.text = data['text'] + (child.text or '')
             else:
-                require(child.tag in {P + k for k in ('tbl', 'pic', 'equation', 'container', 'ole', 'rect', 'line', 'ellipse', 'arc', 'polygon', 'curve', 'connectLine', 'ctrl')}, 'unknown object')
+                require(child.tag in {P + k for k in ('tbl', 'pic', 'equation', 'container', 'ole', 'rect', 'line', 'ellipse', 'arc', 'polygon', 'curve', 'connectLine', 'ctrl', 'btn', 'checkBtn', 'comboBox', 'radioBtn', 'edit', 'compose')}, 'unknown object')
                 if child.tag == P + 'ctrl':
                     require(len(child) == 1 and child[0].tag in {P + k for k in ('footNote', 'endNote', 'autoNum')}, 'unknown control anchor')
                 text = E.Element(P + 't')
@@ -88,6 +96,18 @@ def self_test():
     saved = source.replace("type='CLICK_HERE'/>", "type='CLICK_HERE' dirty='1'/>").replace("<p:tbl rowCnt='1'>", "<p:t>X</p:t><p:tbl rowCnt='1'>")
     payload = {'before': pack(source), 'after': pack(saved), 'section': 0, 'paragraph': 1, 'beginId': '1', 'text': 'X'}
     verify(payload)
+    variants = [
+        ("<p:run charPrIDRef='7'/><p:run><p:pic/><p:t/></p:run>", "<p:run charPrIDRef='7'><p:t>X</p:t></p:run><p:run><p:pic/><p:t/></p:run>"),
+        ("<p:run><!--keep--></p:run>", "<p:run><p:t>X</p:t><!--keep--></p:run>"),
+        ("<p:run>\n<!--keep--></p:run>", "<p:run><p:t>X</p:t>\n<!--keep--></p:run>"),
+        ("<p:run><p:t><p:tab width='1'/><p:tab width='2'/></p:t></p:run>", "<p:run><p:t>X<p:tab width='1'/><p:tab width='2'/></p:t></p:run>"),
+        ("<p:run><p:t><p:lineBreak/><p:fwSpace/></p:t></p:run>", "<p:run><p:t>X<p:lineBreak/><p:fwSpace/></p:t></p:run>"),
+        ("<p:run><p:checkBtn value='CHECKED'/><p:t/></p:run>", "<p:run><p:t>X</p:t><p:checkBtn value='CHECKED'/><p:t/></p:run>"),
+    ]
+    shell = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:p><p:run><p:ctrl><p:fieldBegin id='1' type='CLICK_HERE'/></p:ctrl></p:run>"
+    ending = "<p:run><p:ctrl><p:fieldEnd beginIDRef='1'/></p:ctrl></p:run></p:p></s:sec>"
+    for old, new in variants:
+        verify({**payload, 'before': pack(shell + old + ending), 'after': pack(shell.replace("type='CLICK_HERE'/>", "type='CLICK_HERE' dirty='1'/>") + new + ending)})
     cases = [
         {**payload, 'text': 'wrong'},
         {**payload, 'beginId': '2'},
@@ -104,7 +124,29 @@ def self_test():
         except ValueError:
             continue
         raise ValueError('negative control accepted')
-    print(json.dumps({'positive': 1, 'negative': len(cases)}))
+    for variant, mutate in [
+        (variants[3], lambda xml: xml.replace("width='1'", "width='9'")),
+        (variants[4], lambda xml: xml.replace('<p:lineBreak/>', '')),
+        (variants[5], lambda xml: xml.replace("value='CHECKED'", "value='UNCHECKED'")),
+    ]:
+        old, new = variant
+        negative = {**payload, 'before': pack(shell + old + ending), 'after': pack(mutate(shell.replace("type='CLICK_HERE'/>", "type='CLICK_HERE' dirty='1'/>") + new + ending))}
+        try:
+            verify(negative)
+        except ValueError:
+            cases.append(negative)
+        else:
+            raise ValueError('inline or form mutation accepted')
+    empty_source = shell + variants[0][0] + ending
+    wrong_affinity = shell.replace("type='CLICK_HERE'/>", "type='CLICK_HERE' dirty='1'/>") + variants[0][0].replace('<p:pic/>', '<p:t>X</p:t><p:pic/>') + ending
+    cases.append({**payload, 'before': pack(empty_source), 'after': pack(wrong_affinity)})
+    try:
+        verify(cases[-1])
+    except ValueError:
+        pass
+    else:
+        raise ValueError('empty-run affinity negative accepted')
+    print(json.dumps({'positive': 1 + len(variants), 'negative': len(cases)}))
 
 
 if __name__ == '__main__':
