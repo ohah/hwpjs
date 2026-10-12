@@ -47,6 +47,18 @@ def verify(data):
             if len(text) != 1 or text[0].tag != namespace + 'lineBreak' or len(text[0]) or text[0].text is not None or text.text:
                 raise ValueError('ambiguous leading line break')
             text[0].tail = data['text'] + (text[0].tail or '')
+        elif data.get('mode') == 'after_run_markpen':
+            runs = paragraph.findall(namespace + 'run')
+            if not runs or len(runs[0]) < 2:
+                raise ValueError('missing marker and anchor')
+            marker, anchor = runs[0][0], runs[0][1]
+            if marker.tag != namespace + 'markpenBegin' or len(marker) or marker.text:
+                raise ValueError('invalid leading markpen')
+            if anchor.tag not in tuple(namespace + name for name in ('tbl', 'pic', 'container')):
+                raise ValueError('uncovered marked anchor')
+            text = ET.Element(namespace + 't')
+            text.text = data['text']
+            runs[0].insert(1, text)
         elif data.get('mode', 'direct_text') == 'anchored':
             candidates = [(run, index, node) for run in paragraph.findall(namespace + 'run')
                           for index, node in enumerate(run)

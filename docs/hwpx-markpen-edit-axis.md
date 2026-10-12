@@ -10,6 +10,18 @@
 
 `node --test tests/hwpx/markpen-display-axis.test.mjs`는1/1 exit0입니다. known 마커 쌍의 표시0단위, 앞뒤 Unicode 텍스트 보존, unknown 인라인의 U+FFFC 유지와1단위 표시 예산에서 emoji를 반으로 자르지 않는 것을 검사합니다. 새 파일은 현재 진행 중인657파일 실행 시작 뒤에 추가했으므로 그 전체 실행 범위에 소급 포함하지 않습니다. 기본 목록 등록은 형광펜 source 편집 회귀와 함께 후속 작업입니다.
 
+## run 직접 마커의 후속 입력
+
+잔여32/119/192번은 markpenBegin이 run 직접 자식이고 표 뒤의 t에 markpenEnd가 있습니다.1949번은 같은 시작 마커 뒤의 HYPERLINK(type editable0, 원본 dirty1)입니다. 2011 XSD의 t 직접 자식 정의와 구분하는 **관측 run 확장**이며 전체 문서를 XSD 유효하다고 판정하지 않습니다.
+
+로컬 plain_paragraph_policy는 run 직접 마커도 같은 leaf retention helper로 검사하고0단위 metadata로 보존합니다. 알려지지 않은 run 자식이나 비어 있지 않은 마커는 허용하지 않습니다. 기존 anchor boundary Iterator가 표/그림 앞 원문 위치를 선택하므로 입력은 시작 마커 뒤·객체 앞에 들어가며, 문단 전체 plain 편집/객체 삭제 권한을 새로 주지 않습니다.
+
+합성 회귀는 수정 전 UnsupportedParagraphControl을 재현했습니다. 수정 후 native3/3 exit0에서 run 마커·그림 보존형 입력과 객체 삭제 거부, 기존 빈 t/leaf 거부를 확인했습니다. 새 테스트의 삭제 위치를 UTF-16 길이5로 교정한 실행을 사용하며 최초 거부는 splice의 문단 정책에서 발생한 것입니다.
+
+`run-markpen-source-input` 후보 SHA256 `a729e7344b6e51bfb9f88f8c1087af0bb3ff087e50c4c68e883f4394eb2b2d82`는 ReleaseSafe6/6입니다. 실제 four-site 회귀와 기본 목록 검사2/2 exit0에서32/119/192/1949 입력·독립 전체 XML/비대상 ZIP payload normal/-O·잘못된 기대값 거부·undo/redo·재열기/재저장·파일 불변을 확인했습니다. 객체 입력 oracle의 새 after_run_markpen 모드는 첫 빈 마커와 다음 tbl/pic/container를 검증하고, 마커 앞 삽입을 기대하는 기존 anchored 모드는 실제32번 결과를 거부하는 부정 대조로 유지했습니다. 이전 일반 oracle 경로를 느슨하게 바꾸지 않았습니다.
+
+같은 후보의 원본 전체4819문단 조회는 plain4390/anchored428/field1·거부0으로 exit0입니다. 이는 경로 조회이며 실제 입력은 이번4곳과 앞선 빈 t9곳의 개별 증거로 구분합니다. 전체439파일 새 후보 재검사·마커 서식 변경/강조 렌더링·실제 브라우저·최신 전체 native/public gate는 남습니다. core 코드와 제품 승격도 아직 보류합니다.
+
 ## 구현·검증할 계약
 
 ### 로컬 source 입력 수정과 실제 검증
