@@ -67,3 +67,11 @@ ReleaseSafe 집중7/7 exit0 후 실제 세션 필터1/1 exit0 재검사에서363
 빈 버퍼·기존 signed-high pointer/secret wipe·runless Canvas Worker·기존 metadata Canvas 회귀4/4 exit0입니다. runless 회귀는 컨트롤러 선택과 beforeinput/input 이벤트를 실제 Worker/WASM으로 전달하고 본문·save·undo 원문/redo 수정본을 확인합니다. DOM은 하네스이므로 실제 Chromium/IME/포인터 검증은 아닙니다.
 
 독립 Python hwpx-runless-input-oracle는 원본 헤더의 styleIDRef→charPrIDRef에서 기대 run을 만들고 대상 section 전체 XML·나머지 ZIP payload·inventory/comment를 비교합니다. normal/-O와 잘못된 본문을 넣는 부정 대조까지 추가한 회귀1/1 exit0이며, 실제 참조 ID2도 확인했습니다. ZIP 압축 바이트/모든 엔트리 metadata 동일성 검사는 아닙니다. 두 회귀를 기본 build 목록에도 로컬 등록했습니다. 제품 WASM 승격·최신 전체 native/public gate·전체 픽스쳐/브라우저 완료는 남습니다.
+
+## 선행 편집 순서 반례와 수정
+
+5c774216 후보에서 다른 문단을 먼저 입력한 뒤28번 빈 문단을 입력하면 MissingTextSite로 실패했습니다. 선행 입력이 structure_values를 설치한 뒤, runless eligibility가 synthesized_run_character_id가 없는 모든 현재 문단을 거부한 것이 원인입니다. 새 후보에서는 현재 모델의 원본 run 없는 빈 문단도 소유권/소스/스타일 검증을 거쳐 후보 생성하도록 수정했습니다. 이미 생성된 run의 검증 및 필드 envelope 거부는 유지합니다.
+
+ReleaseSafe 후보 빌드6/6 exit0, SHA256 `1969c4120eceda1c3b9757fb8350796a34c8c4ce40ca32157c436981977a5dab`입니다. 공개 Canvas Worker2사례·빈 버퍼·기존 metadata Canvas 합계4/4 exit0, native 집중7/7 exit0, 전체 build.zig/src fmt 검사 exit0입니다. 두 번째 Worker 사례는 선행 본문 보존·독립 전체 XML normal/-O·각 history 항목의 undo/redo byte-exact와 실패한 입력 뒤 redo 유지까지 확인합니다. 일반 브라우저/임의 서식·구조 지원으로 확대 해석하지 않습니다.
+
+이 후보를 명시한 새 전체 `zig build test -Doptimize=ReleaseSafe -j1 --summary all`을 시작했고 로그는 zig-out/verification/runless-prior-edit/full-gate/build-test.log입니다. 기록 시점은 실행 중이며, 이전 후보의 장시간 전체 실행 결과와 섞지 않습니다. native 수정은 이 전체 gate 완료 전 로컬에 남고 문서/회귀 테스트만 별도 게시합니다.
