@@ -48,6 +48,10 @@ ReleaseSafe 집중2/2 exit0에서 실제 세션 명령의 입력·no-op·잘못�
 
 ## 후보 WASM의 JS 편집 검증
 
+native `dutmal transaction allocation failures preserve prior values and ZIP`는 dirty0 CLICK_HERE 안의 두 leaf를 가진 합성 ZIP에서 먼저 mainText를 변경한 뒤 subText setter의 전체 할당 실패 지점을 순회합니다. 오류마다 기존 main/sub 값과 이전 저장 ZIP을 byte-exact 비교했고 성공 경로 후 subText 원값 복원도 확인했습니다. `zig test src/root.zig -O ReleaseSafe --test-filter 'dutmal transaction allocation failures'`는 대상 모듈 명시 등록 뒤2/2 종료코드0, 변경 파일 fmt도 통과했습니다. 최초 실행은 상위 root.test_0만1/1 실행돼 대상 근거로 제외했습니다.
+
+이전 전체 gate의 실제 프로세스50117 샘플은 `HWPX underline batch allocation failures preserve original and prior redo` 내부 할당 실패 검사에서 실행 중임을 확인했습니다. 이는 이전 소스 실행이며 현재 native 전체 green이나 무한 루프 부재 증명이 아닙니다. 새 setter 테스트와 native 등록은 전체 gate 완료 전 로컬 상태입니다.
+
 폼 busy 경로 반례에서 새 subText 선택을 조회 불가라는 이유로 무시해 이전 mainText baseline이 남는 결함을 재현했습니다. 강화된 폼 검사가 먼저 실패했고, 선택은 항상 새 native-query 상태로 전환하되 요청 거부 시 baseline을 비우도록 수정했습니다. 준비 상태 복원 뒤 제출해도 이전 leaf 쓰기가 발생하지 않으며 사용자가 다시 선택/조회해야 합니다. enable 실패/ABI 부재도 기존 목록·draft를 reset합니다. 폼/상태/실제 Worker 회귀4/4 종료코드0입니다.
 
 독립 `python3 tools/hwpx-dutmal-inventory.py reference/rhwp/samples`는 .hwp/.hwpx 경로 중 실제 ZIP436개를 순회해 paragraph namespace 덧말1개(36389301)만 관측했습니다. HWP5-password-123456.hwpx 구역 XML 파싱 오류1개를 별도 보고해 종료코드1이며 이를 정상 조회/편집 성공으로 계산하지 않습니다. ZIP/XML census는 전체 HWPX 명세 지원을 검사하지 않습니다.
