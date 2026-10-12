@@ -658,7 +658,8 @@ self.onmessage = async event => {
         const cellSizeAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwpx_edit_set_cell_size" && entry.kind === "function");
         const pictureDimensionsAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwpx_edit_set_picture_dimensions" && entry.kind === "function");
         const pictureResizeAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwpx_edit_resize_picture" && entry.kind === "function");
-        reply({ kind: "enable", charShapeCount: charShapeIds.length, charShapeIds, characterShapes, characterShapesError, historyAvailable: true, structureAvailable, splitQueryAvailable, mergeAvailable, cellSizeAvailable, pictureDimensionsAvailable, pictureResizeAvailable, content: hwpxDisplay() });
+        const dutmalTextAvailable = ["hwpx_edit_inline_string_sources", "hwpx_edit_dutmal_text", "hwpx_edit_set_dutmal_text", "hwpx_edit_dutmal_text_max_bytes"].every(name => WebAssembly.Module.exports(module).some(entry => entry.name === name && entry.kind === "function"));
+        reply({ kind: "enable", dutmalTextAvailable, charShapeCount: charShapeIds.length, charShapeIds, characterShapes, characterShapesError, historyAvailable: true, structureAvailable, splitQueryAvailable, mergeAvailable, cellSizeAvailable, pictureDimensionsAvailable, pictureResizeAvailable, content: hwpxDisplay() });
         return;
       }
       if (message.distribution !== undefined && typeof message.distribution !== "boolean") throw new Error("InvalidDistributionPolicy");

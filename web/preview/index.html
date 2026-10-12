@@ -254,6 +254,16 @@
     </fieldset>
     <p id="picture-size-status" role="status" aria-live="polite"></p>
   </form>
+  <form id="dutmal-form" hidden>
+    <label>덧말<select id="dutmal-target"></select></label>
+    <label>문자열<select id="dutmal-kind"><option value="mainText">본문</option><option value="subText">덧말</option></select></label>
+    <fieldset id="dutmal-fields" disabled>
+      <legend>덧말 문자열</legend>
+      <label>값<textarea id="dutmal-value" rows="2"></textarea></label>
+      <button type="submit">덧말 적용</button>
+    </fieldset>
+    <p id="dutmal-status" role="status" aria-live="polite"></p>
+  </form>
   <form id="formula-form" hidden>
     <fieldset id="formula-fields" disabled>
       <legend>표 계산식</legend>
