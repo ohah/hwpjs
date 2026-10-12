@@ -2,6 +2,10 @@
 
 ## 현재 상태
 
+역할 후보 `50cabdb0…`의 실제 Chromium `hwpjs-chart-roles`에서 계열명·범주·값 라벨 표시와 폼 입력/적용·다운로드·undo/redo 버튼을 검사했습니다. 수정 Blob304732바이트 SHA256 `3e231d4a44238b7212a01eb0312ca4775252fb1a9198e215a77dcb99e6e9abce`는 독립 XML/ZIP/OLE normal/-O와 잘못된 목표값 부정 대조를 통과했습니다. undo Blob49911바이트는 원문 byte-exact(SHA256 `0e49c61f369b4519b0dd22b90f9192394eb095e9b1ec459423e20ace89542305`)이고 redo는 수정본과 같은 SHA 및 독립 검사를 통과했습니다. 새 실행의 browser errors는 비어 있었고 소유 브라우저와 서버 PID65197을 종료했습니다. OS 다운로드 파일 확보·물리 Canvas 선택·다른 문서 역할 UI 검증으로 확대하지 않습니다.
+
+초기 browser 자동화의 화면 밖 클릭은 CLI 성공 응답에도 trusted click/Worker 요청이 없었고, 저장 검증은 MissingSaveBlob 또는 실제 첫 변경값/기대값 불일치로 실패했습니다. DOM option.disabled는 false인데 snapshot에 disabled로 표시되는 관측도 있었습니다. 버튼 scrollintoview 뒤 trusted click/Worker 요청을 확인했으며 후속 키보드 실행 중 about:blank 이동 원인은 확정하지 않았습니다. 이 초기 실행은 통과로 계수하지 않았고 다시 원본을 열어 한 번의 입력/적용 및 위 독립 저장/이력 검증을 완료했습니다.
+
 명시적 정규화 경로의 `chart normalized Session History` 전수 할당 실패 검사는37,926회 호출(성공 포함)·1/1 exit0으로 완료했습니다. 실제 InvalidFat 원본의 open·최초/두 번째 소유 값 변경·저장·undo/redo와 실패 시 원문/소유 상태 보존을 순회합니다. real1305.33초·maxRSS1,393,672,192바이트이며 fail 지점 축소 없이 실행했습니다. 이 독립 바이너리는 역할 Snapshot 추가 전에 컴파일됐으므로 새 역할 조회의 전수 할당 실패1/1 및 최신 전체 gate와는 별도 근거입니다.
 
 역할 조회를 포함한 `50cabdb0…` 후보의 전체 참조 재검사(`/tmp/hwpjs-chart-role-reference-probe.log`)는 exit0입니다. `--require-source-roles`로 응답 누락을 실패 처리하고92파일/93연결의2296포인트 역할을 독립 XML normal/-O로 모두 대조했습니다. 각 연결의 첫 숫자/문자열186개 편집은 저장·독립 사본/비대상 보존·undo/redo·재열기를 통과했으며 변경/재열기 전후 역할 배열도 동일했습니다. refused/failures/missingPointKinds는0입니다. **역할 조회2296개와 편집186개는 서로 다른 범위**이며 이전 `4911d895…`의2296개 전수 편집을 이 후보의 전수 편집 결과로 소급하지 않습니다.
