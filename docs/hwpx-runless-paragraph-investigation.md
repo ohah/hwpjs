@@ -31,3 +31,9 @@ node tools/reference-hwpx-prefix-query-audit.mjs --wasm=zig-out/verification/sec
 후속 로컬 `runless_paragraph_xml.zig`는 검증된 run 없는 문단에만 새 run/t를 직렬화합니다. 호출자가 확정한 글자 모양 ID를 받고 문단 원문 접두어를 사용하며, 본문 이스케이프와 소스 조립은 기존 공통 XML writer를 재사용합니다. 자기 닫힌 문단과 기존 linesegarray가 있는 문단을 처리하고 오래된 linesegarray는 제거합니다. run/외래 자식/비공백 불투명 gap이 있는 문단은 이 경로로 덮어쓰지 않습니다.
 
 같은 진입점에 두 필터 'paragraph style character', 'runless paragraph XML'을 전달한 ReleaseSafe 집중 검사3/3 exit0입니다. 합성2형태의 정확한 XML, 한도 거부, 생성기의 전체 실패 할당과 실제36386761의28번 문단 생성·전체 section 재파싱을 확인했습니다. 실제 원본 세션은 수정하지 않아 save가 원본과 바이트 단위로 같았습니다. fmt도 통과했습니다. 이는 생성기 검증이고 공개 편집 세션의 입력·저장·history가 아닙니다. 다음은 명시적 스타일 조회와 생성기를 원자적 세션 거래에 연결하는 작업입니다. native 코드는 아직 로컬이며 전체 gate 전에는 커밋하지 않습니다.
+
+## 명시적 스타일과 생성기 연결
+
+생성기의 writeWithStyle은 대상 문단의 unprefixed styleIDRef를 기존 정수 파서로 해석하고, 선택된 header tree/글자 모양 ID inventory를 통해 글자 모양을 확정합니다. 실제 픽스쳐 검사는 이제 숫자2를 호출자가 주입하지 않고 원본 style0의 참조에서 얻습니다. 기본 namespace의 새 run/t, sparse style7→character19, 없는 스타일/속성·외래 속성 거부 및 결합 경로의 전체 실패 할당을 추가한 집중 검사는4/4 exit0, fmt 통과입니다.
+
+세션 전체를 save→open으로 바꾸는 방식은 사용하지 않습니다. editor_checkpoint는 불변 원문 트리/ZIP을 세션에 유지하고 현재 편집값만 교환하므로, 재열기로 원문을 교체하면 기존 undo/redo 스냅샷의 소스 귀속과 충돌합니다. 후속 연결은 기존 현재값 모델의 소유권·clone·예산·조회·save를 함께 확장해야 하며, 위 생성기 검사는 이 세션 거래나 UI 지원을 입증하지 않습니다.
