@@ -9,7 +9,8 @@ export function createDutmalControls({ form, fields, targets, textKind, input, n
   } });
   const pick = () => {
     const row = rows[Number(targets.value)];
-    if (!closed && enabled && row && ready()) state.select({ ...row, textKind: textKind.value });
+    if (!closed && enabled && row) state.select({ ...row, textKind: textKind.value });
+    else if (!closed) state.reset();
   };
   const submit = event => { event.preventDefault(); if (!closed && enabled && ready()) { state.edit(input.value); state.submit(); } };
   const edit = () => state.edit(input.value);
@@ -23,6 +24,7 @@ export function createDutmalControls({ form, fields, targets, textKind, input, n
       if (closed) return;
       if (message.kind === "enable") {
         enabled = !message.error && message.dutmalTextAvailable === true;
+        if (!enabled) { reset(); return; }
         if (enabled) { const requestId = ++serial; queueMicrotask(() => { if (!closed && enabled && requestId === serial && ready()) request({ kind: "inline-string-sources", requestId }); }); }
       }
       if (message.kind === "inline-string-sources" && message.requestId === serial) {

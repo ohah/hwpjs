@@ -11,7 +11,8 @@ test("dutmal form queries native values, retains drafts, and disables closed con
   const fields = {}, targets = new Node(), textKind = new Node(), input = new Node(), note = {};
   textKind.value = "mainText";
   const requests = [];
-  const control = createDutmalControls({ form, fields, targets, textKind, input, note, ready: () => true, request: message => { requests.push(message); return true; } });
+  let ready = true;
+  const control = createDutmalControls({ form, fields, targets, textKind, input, note, ready: () => ready, request: message => { requests.push(message); return true; } });
   assert.equal(form.hidden, true);
   control.message({ kind: "enable", dutmalTextAvailable: false }); await Promise.resolve(); assert.equal(requests.length, 0);
   control.message({ kind: "enable", dutmalTextAvailable: true }); await Promise.resolve();
@@ -30,7 +31,15 @@ test("dutmal form queries native values, retains drafts, and disables closed con
   assert.equal(write.value, "수정😀"); assert.equal(fields.disabled, true);
   control.message({ kind: write.kind, requestId: write.requestId, error: "ProtectedFieldRange" });
   assert.equal(input.value, "수정😀"); assert.equal(fields.disabled, false);
+  const count = requests.length;
+  ready = false;
   textKind.value = "subText"; textKind.dispatchEvent(new Event("change"));
+  assert.equal(fields.disabled, true, "busy selection invalidates previous leaf baseline");
+  ready = true;
+  input.value = "wrong leaf";
+  form.dispatchEvent(new Event("submit", { cancelable: true }));
+  assert.equal(requests.length, count, "must not write previous main leaf after sub selection");
+  textKind.dispatchEvent(new Event("change"));
   assert.equal(requests.at(-1).textKind, "subText");
   control.reset();
   assert.equal(form.hidden, true);

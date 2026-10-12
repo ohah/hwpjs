@@ -48,6 +48,8 @@ ReleaseSafe 집중2/2 exit0에서 실제 세션 명령의 입력·no-op·잘못�
 
 ## 후보 WASM의 JS 편집 검증
 
+폼 busy 경로 반례에서 새 subText 선택을 조회 불가라는 이유로 무시해 이전 mainText baseline이 남는 결함을 재현했습니다. 강화된 폼 검사가 먼저 실패했고, 선택은 항상 새 native-query 상태로 전환하되 요청 거부 시 baseline을 비우도록 수정했습니다. 준비 상태 복원 뒤 제출해도 이전 leaf 쓰기가 발생하지 않으며 사용자가 다시 선택/조회해야 합니다. enable 실패/ABI 부재도 기존 목록·draft를 reset합니다. 폼/상태/실제 Worker 회귀4/4 종료코드0입니다.
+
 독립 `python3 tools/hwpx-dutmal-inventory.py reference/rhwp/samples`는 .hwp/.hwpx 경로 중 실제 ZIP436개를 순회해 paragraph namespace 덧말1개(36389301)만 관측했습니다. HWP5-password-123456.hwpx 구역 XML 파싱 오류1개를 별도 보고해 종료코드1이며 이를 정상 조회/편집 성공으로 계산하지 않습니다. ZIP/XML census는 전체 HWPX 명세 지원을 검사하지 않습니다.
 
 실파일 덧말 표본이 하나뿐이므로 같은 ZIP의 mainText만 self-closing 빈 leaf 또는 Unicode/특수문자 CDATA로 바꾼 메모리 파생본을 추가했습니다. explicit 후보0367ee46의 JS 테스트3/3 종료코드0에서 정상화된 원값 설정의 ZIP byte-exact/no-history·새 값 저장/재열기·독립 전체 XML/ZIP(일반 Python/-O)·undo 원본복원·no-op 뒤 redo 유지를 검사했습니다. 파생본은 추가 실파일 지원 건수로 합산하지 않습니다.
