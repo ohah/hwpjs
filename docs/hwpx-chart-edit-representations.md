@@ -2,6 +2,10 @@
 
 ## 현재 상태
 
+차트 값 조회 Snapshot에 `bindings`를 추가했습니다. 배열은 각 point ordinal과 같은 순서로 source `series_node`·`plot_node`·`role_node`·role을 소유하며 기존 `chart_point_roles`가 단일 판정 출처입니다. 현재 편집값은 owner clone에서 읽고 역할은 그 값의 원본 source binding을 검증한 트리에서 읽으므로 UI에 XML 해석/가변 값 캐시를 복제하지 않습니다. UI의 별도 `chart-point-label`은 계열명·범주·값·X/Y·거품 크기·미분류를 표시하며 역할 부재/알 수 없는 role/ordinal 불일치는 기존 캐시 라벨로 되돌립니다. source series node는 진단 주소이며 사용자용 계열 순번으로 추측하지 않습니다.
+
+후보 `chart-role-bindings` SHA256 `50cabdb019974d12a6545d44281cf51cbabb86df5d987e185b41a11b3ccc2c24`는 ReleaseSafe 빌드6/6 exit0입니다. native 현재값/소유 역할 회귀와 변경 owner의 조회 전수 할당 실패는 각각1/1 exit0이며 실패 뒤 저장 bytes·원본 불변도 확인했습니다. 공개 역할·UI·Worker·Canvas10/10 exit0(14038.934833ms)은28실파일586포인트 역할을 독립 ElementTree oracle normal/-O로 비교하고, 잘못된 point ordinal을 각 모드에서 정확한 ChartRoleMismatch/exit1로 거부합니다. 값 변경·undo/redo에서 역할 유지와 조회/undo 원문 저장도 검사했습니다. 최초 공개 실행은 검사기가 numeric_cache만 선택해 numeric_literal 전용 표본에서 InvalidInteger로 실패했으며, 두 숫자 종류를 명시적으로 선택하고 inventory assertion을 유지한 재실행이 이 결과입니다. JS 문법·Zig fmt·diff 공백·정적490모듈 연결을 통과했습니다. 이 변경은 진행 중인 이전 전체 gate snapshot에 포함되지 않으며 제품 승격·런타임 커밋·실제 브라우저 역할 UI 확인은 아직 없습니다.
+
 UI 적대적 검토에서 지원되는 point가 없는 차트도 fieldset이 활성화되는 문제를 테스트 실패로 재현했습니다. 숫자 전용 ABI에서 문자열만 있는 차트와 빈 point 목록이 해당합니다. `chart-controls`의 선택 판정을 단일 helper로 통합해 빈/음수/분수/비유한/범위 밖 ordinal을 거부하고, 지원되는 현재 point가 있을 때만 입력·제출을 활성화합니다. 빈 적격 목록은 지원 값이 없다는 안내를 표시합니다. 수정 뒤 단위6/6 및 같은 `4911d895…` 후보의 실제 Worker/WASM·Canvas/정규화 정책 회귀 포함10/10 exit0(3857.809959ms), JS 문법·diff 공백 검사·정적489모듈 연결을 통과했습니다. 단위/Canvas에는 DOM 대역이 있으며 이 수정의 실제 브라우저 확인·전체 gate·런타임 커밋은 아직 없습니다.
 
 최신 명시적 정규화 후보 SHA256 `4911d8955d3fdeef0cebdef74c266d1156cebbceeae1bc0e9fa0f6e0745871cf`의 전체 참조 cache/literal 감사는 종료코드0으로 완료했습니다. 독립 XML census의92문서/93연결·2296포인트 inventory와 native 종류별 개수를 먼저 비교했고,2296번 개별 변경 모두 독립 normal/-O XML/ZIP/OLE·비대상 보존·undo/redo·재열기를 통과했습니다. refused/failures/missingPointKinds는 모두0입니다. 숫자 cache1050/literal31·문자열 cache1208/literal7이며 multilevelCache 실파일 양성은 없습니다. 로그는 `/tmp/hwpjs-chart-all-point-probe.dYRidt`입니다. 기본 strict 정책이나 직접 tx/v·rich-text·시리즈 구조·차트 렌더링 완료로 확대하지 않습니다.
