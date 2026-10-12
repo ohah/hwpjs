@@ -1,6 +1,7 @@
 import { createMemory } from "./wasm-memory.mjs";
 import { decodePictureOwners } from "./hwpx-picture-owners.mjs";
 import { decodeInlineStringSources } from "./hwpx-inline-string-sources.mjs";
+import { dutmalKind } from "./hwpx-dutmal-kind.mjs";
 import { decodeCreatedTables } from "./hwpx-created-tables.mjs";
 import { createdTableIdentity } from "./created-table-identity.mjs";
 import { decodeFormSourceNodes, decodeFormSourceAttributes, decodeFormSites, decodeFormSourceLayout } from "./hwpx-form-source.mjs";
@@ -1052,6 +1053,27 @@ export async function createHwpxEditor(source) {
         if (!wasm.hwpx_edit_inline_string_sources()) throw memory.error();
         return decodeInlineStringSources(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
       } finally { wasm.hwpx_edit_output_free(); }
+    },
+    dutmalText(section, node, kind) {
+      ready(); [section, node].forEach(uint);
+      const selected = dutmalKind(kind);
+      if (typeof wasm.hwpx_edit_dutmal_text !== "function") throw new Error("HwpxDutmalTextAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_dutmal_text(section, node, selected)) throw memory.error();
+        return new TextDecoder("utf-8", { fatal: true }).decode(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
+    setDutmalText(section, node, kind, value) {
+      ready(); [section, node].forEach(uint);
+      const selected = dutmalKind(kind);
+      if (typeof wasm.hwpx_edit_set_dutmal_text !== "function" || typeof wasm.hwpx_edit_dutmal_text_max_bytes !== "function") throw new Error("HwpxDutmalTextAbiUnavailable");
+      const maxBytes = wasm.hwpx_edit_dutmal_text_max_bytes();
+      if (!Number.isInteger(maxBytes) || maxBytes <= 0 || maxBytes > 0xffffffff) throw new Error("InvalidDutmalTextLimit");
+      const bytes = encodedText(value);
+      if (bytes.length > maxBytes) throw new Error("LimitExceeded");
+      memory.withBytes(bytes, (ptr, size) => {
+        if (!wasm.hwpx_edit_set_dutmal_text(section, node, selected, ptr, size)) throw memory.error();
+      });
     },
     formSites(section) {
       ready(); uint(section);

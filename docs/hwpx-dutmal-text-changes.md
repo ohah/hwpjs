@@ -48,6 +48,8 @@ ReleaseSafe 집중2/2 exit0에서 실제 세션 명령의 입력·no-op·잘못�
 
 ## 후보 WASM의 JS 편집 검증
 
+독립 `hwpx-dutmal-text-oracle.py`는 실제 ZIP의 비대상 payload와 전체 구역 XML을 비교합니다. 두 leaf 값과 직접 소유 문단의 linesegarray 제거만 기대하며, main/sub 각각의 잘못된 기대값이 실제 XML 불일치로 거부되는지 일반 Python 및 `-O`에서 검증했습니다. 선택적 JS `dutmalText`/`setDutmalText`는 `mainText`/`subText`만 받고 ABI 부재를 명시적으로 거부합니다. JS 클라이언트와 검증 파일의 게시가 native ABI 또는 기본 WASM의 게시를 의미하지 않습니다.
+
 2026-10-13 `zig-out/verification/dutmal-text-api/bin/hwpjs.wasm`를 명시한 `dutmal-text-editor`, `inline-string-source-wire`, `inline-string-source-reference` 테스트는 5/5, 종료코드0입니다. 실제36389301에서 mainText/subText 별도 변경·Unicode/XML 특수 문자·저장 재열기·각 명령 undo/redo·no-op/잘못된 문자/종류 거부 뒤 redo 유지·원문 ZIP 복원과 source-only 응답 불변을 검사했습니다.
 
 이는 후보와 로컬 JS/native 변경의 집중 검증이며 기본 제품 WASM 승격이나 native 코드 게시 완료가 아닙니다. 독립 ZIP/XML oracle, 전체 Zig gate, Worker/Canvas UI와 원본 조판 검증은 남습니다. 명령은 `HWPJS_TEST_WASM=$PWD/zig-out/verification/dutmal-text-api/bin/hwpjs.wasm node --test tests/hwpx/dutmal-text-editor.test.mjs tests/hwpx/inline-string-source-wire.test.mjs tests/hwpx/inline-string-source-reference.test.mjs`입니다.
