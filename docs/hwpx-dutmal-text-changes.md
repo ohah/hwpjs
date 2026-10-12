@@ -48,6 +48,8 @@ ReleaseSafe 집중2/2 exit0에서 실제 세션 명령의 입력·no-op·잘못�
 
 ## 후보 WASM의 JS 편집 검증
 
+실제 headless Chromium과 후보0367ee46에서36389301 업로드→편집 시작→속성 패널의 덧말 선택/조회·수정·본문/덧말 재조회·undo 원값 복원·redo 수정값 복원을 확인했습니다. 자동화로 채운 textarea 값이 input 이벤트 기반 draft에 반영되지 않아 쓰기 요청이 없는 사례가 있어, submit에서 DOM 값을 다시 읽도록 보강하고 이벤트 없는 채움 반례를 폼 테스트에 추가했습니다. 재검증에서는 덧말 수정값이 재조회됐고 반대쪽 본문은 원값 그대로였습니다. 브라우저 reload 후 복원된 스크롤에서 상단 버튼이 Canvas에 가려진 자동화 실패는 구분했고 위치 정정 후 재실행했습니다. 제가 연 브라우저와 loopback18473 서버는 종료했습니다. 이 결과는 해당 후보의 속성 폼 동작이며 다운로드 전체 XML 비교/Canvas Ruby 조판/전체 픽스쳐 UI 완료는 아닙니다.
+
 속성 패널의 덧말 대상/본문·덧말 선택/값 적용 폼을 `dutmal-controls.mjs`로 연결했습니다. enable 응답의 필수4개 ABI 존재 여부로만 기능을 활성화하며, 원문 목록 이후 native 현재값을 조회합니다. 응답 처리는 전역 busy 해제가 끝난 microtask에서 수행하고 문서 generation을 다시 확인합니다. 문서 교체/reset/pagehide는 상태와 리스너를 정리합니다. 폼 대역과 상태·실제 Worker 회귀4/4 및 JS 구문 검사가 통과했습니다. 기본 WASM 승격과 실제 브라우저 E2E·Canvas 덧말 조판/클릭 선택은 남습니다.
 
 `dutmal-edit-state.mjs`는 native 현재값 baseline과 일시 draft를 분리합니다. 요청별 serial로 오래된 조회/수정 응답을 거부하고 조회 전·실패 후 미확정 baseline·중복 제출을 막습니다. no-op 제출은 쓰기 요청을 만들지 않으며 undo/redo 뒤에는 현재값을 다시 조회합니다. reset/close는 지연 응답을 무효화합니다. Worker 수정 응답에도 requestId를 보존했습니다. 상태 반례2개와 실제 Worker 회귀1개가 통과했으며 이 상태 모듈은 아직 화면 속성 폼에 연결하지 않았습니다.

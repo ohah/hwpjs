@@ -11,7 +11,7 @@ export function createDutmalControls({ form, fields, targets, textKind, input, n
     const row = rows[Number(targets.value)];
     if (!closed && enabled && row && ready()) state.select({ ...row, textKind: textKind.value });
   };
-  const submit = event => { event.preventDefault(); if (!closed && enabled && ready()) state.submit(); };
+  const submit = event => { event.preventDefault(); if (!closed && enabled && ready()) { state.edit(input.value); state.submit(); } };
   const edit = () => state.edit(input.value);
   targets.addEventListener("change", pick); textKind.addEventListener("change", pick);
   input.addEventListener("input", edit); form.addEventListener("submit", submit);

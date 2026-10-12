@@ -23,7 +23,8 @@ test("dutmal form queries native values, retains drafts, and disables closed con
   const query = requests.at(-1);
   control.message({ kind: query.kind, requestId: query.requestId, dutmal: { section: 0, node: 7, textKind: "mainText", value: "현재" } });
   assert.equal(input.value, "현재"); assert.equal(fields.disabled, false);
-  input.value = "수정😀"; input.dispatchEvent(new Event("input"));
+  // Submission reads the DOM value even if an autofill omitted input events.
+  input.value = "수정😀";
   form.dispatchEvent(new Event("submit", { cancelable: true }));
   const write = requests.at(-1);
   assert.equal(write.value, "수정😀"); assert.equal(fields.disabled, true);
