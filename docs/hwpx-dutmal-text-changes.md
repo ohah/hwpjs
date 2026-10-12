@@ -48,6 +48,8 @@ ReleaseSafe 집중2/2 exit0에서 실제 세션 명령의 입력·no-op·잘못�
 
 ## 후보 WASM의 JS 편집 검증
 
+`dutmal_display_sites.zig`는 현재 문단 순서를 `display_current_paragraphs`에서 빌리고 위치/소유권은 공통 `protected_display_host`로 계산합니다. 활성 XML 분기만 선택하며 UTF-16 위치를 main/sub 문자열 길이로 합성하지 않습니다. 실제36389301에서 문단26/위치43, 앞의 `앞😀` 필드 입력 후 동일 노드/문단과 위치46, mainText 값 변경 후 동일 위치를 확인했습니다. 활성 분기 제외가 포함된 최신 소스의 `zig test src/root.zig -O ReleaseSafe --test-filter 'dutmal display sites'`는2/2 종료코드0이고 변경 파일 fmt가 통과했습니다. 비활성 분기 전용 반례/구조 재배치/전체 OOM·WASM/Canvas 연결은 아직 남으며 native 코드는 로컬 상태입니다.
+
 native `dutmal transaction allocation failures preserve prior values and ZIP`는 dirty0 CLICK_HERE 안의 두 leaf를 가진 합성 ZIP에서 먼저 mainText를 변경한 뒤 subText setter의 전체 할당 실패 지점을 순회합니다. 오류마다 기존 main/sub 값과 이전 저장 ZIP을 byte-exact 비교했고 성공 경로 후 subText 원값 복원도 확인했습니다. `zig test src/root.zig -O ReleaseSafe --test-filter 'dutmal transaction allocation failures'`는 대상 모듈 명시 등록 뒤2/2 종료코드0, 변경 파일 fmt도 통과했습니다. 최초 실행은 상위 root.test_0만1/1 실행돼 대상 근거로 제외했습니다.
 
 이전 전체 gate의 실제 프로세스50117 샘플은 `HWPX underline batch allocation failures preserve original and prior redo` 내부 할당 실패 검사에서 실행 중임을 확인했습니다. 이는 이전 소스 실행이며 현재 native 전체 green이나 무한 루프 부재 증명이 아닙니다. 새 setter 테스트와 native 등록은 전체 gate 완료 전 로컬 상태입니다.
