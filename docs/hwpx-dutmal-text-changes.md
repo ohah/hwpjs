@@ -48,6 +48,10 @@ ReleaseSafe 집중2/2 exit0에서 실제 세션 명령의 입력·no-op·잘못�
 
 ## 후보 WASM의 JS 편집 검증
 
+독립 `python3 tools/hwpx-dutmal-inventory.py reference/rhwp/samples`는 .hwp/.hwpx 경로 중 실제 ZIP436개를 순회해 paragraph namespace 덧말1개(36389301)만 관측했습니다. HWP5-password-123456.hwpx 구역 XML 파싱 오류1개를 별도 보고해 종료코드1이며 이를 정상 조회/편집 성공으로 계산하지 않습니다. ZIP/XML census는 전체 HWPX 명세 지원을 검사하지 않습니다.
+
+실파일 덧말 표본이 하나뿐이므로 같은 ZIP의 mainText만 self-closing 빈 leaf 또는 Unicode/특수문자 CDATA로 바꾼 메모리 파생본을 추가했습니다. explicit 후보0367ee46의 JS 테스트3/3 종료코드0에서 정상화된 원값 설정의 ZIP byte-exact/no-history·새 값 저장/재열기·독립 전체 XML/ZIP(일반 Python/-O)·undo 원본복원·no-op 뒤 redo 유지를 검사했습니다. 파생본은 추가 실파일 지원 건수로 합산하지 않습니다.
+
 실제 headless Chromium과 후보0367ee46에서36389301 업로드→편집 시작→속성 패널의 덧말 선택/조회·수정·본문/덧말 재조회·undo 원값 복원·redo 수정값 복원을 확인했습니다. 자동화로 채운 textarea 값이 input 이벤트 기반 draft에 반영되지 않아 쓰기 요청이 없는 사례가 있어, submit에서 DOM 값을 다시 읽도록 보강하고 이벤트 없는 채움 반례를 폼 테스트에 추가했습니다. 재검증에서는 덧말 수정값이 재조회됐고 반대쪽 본문은 원값 그대로였습니다. 브라우저 reload 후 복원된 스크롤에서 상단 버튼이 Canvas에 가려진 자동화 실패는 구분했고 위치 정정 후 재실행했습니다. 제가 연 브라우저와 loopback18473 서버는 종료했습니다. 이 결과는 해당 후보의 속성 폼 동작이며 다운로드 전체 XML 비교/Canvas Ruby 조판/전체 픽스쳐 UI 완료는 아닙니다.
 
 속성 패널의 덧말 대상/본문·덧말 선택/값 적용 폼을 `dutmal-controls.mjs`로 연결했습니다. enable 응답의 필수4개 ABI 존재 여부로만 기능을 활성화하며, 원문 목록 이후 native 현재값을 조회합니다. 응답 처리는 전역 busy 해제가 끝난 microtask에서 수행하고 문서 generation을 다시 확인합니다. 문서 교체/reset/pagehide는 상태와 리스너를 정리합니다. 폼 대역과 상태·실제 Worker 회귀4/4 및 JS 구문 검사가 통과했습니다. 기본 WASM 승격과 실제 브라우저 E2E·Canvas 덧말 조판/클릭 선택은 남습니다.
