@@ -2,6 +2,24 @@
 
 ## 현재 상태
 
+최신 명시적 정규화 후보 SHA256 `4911d8955d3fdeef0cebdef74c266d1156cebbceeae1bc0e9fa0f6e0745871cf`의 전체 참조 cache/literal 감사는 종료코드0으로 완료했습니다. 독립 XML census의92문서/93연결·2296포인트 inventory와 native 종류별 개수를 먼저 비교했고,2296번 개별 변경 모두 독립 normal/-O XML/ZIP/OLE·비대상 보존·undo/redo·재열기를 통과했습니다. refused/failures/missingPointKinds는 모두0입니다. 숫자 cache1050/literal31·문자열 cache1208/literal7이며 multilevelCache 실파일 양성은 없습니다. 로그는 `/tmp/hwpjs-chart-all-point-probe.dYRidt`입니다. 기본 strict 정책이나 직접 tx/v·rich-text·시리즈 구조·차트 렌더링 완료로 확대하지 않습니다.
+
+현재 작업 트리의 UI 모듈은 `node --experimental-vm-modules tools/preview-module-link-audit.mjs`에서489개 정적 연결을 통과했습니다. 별도 소유 loopback 서버에서 `node tools/preview-module-audit.mjs http://127.0.0.1:10015`도489개 모두 HTTP200·JavaScript MIME·로컬 소스 SHA 일치를 확인했고 서버를 종료했습니다. 이는 새 차트 UI 모듈의 import/export와 개발 서버 제공 경로 증거이며 실제 브라우저 초기화·제품 배포·전체 문서 편집 증거는 아닙니다.
+
+연결 검사기 자체의 `node --test tests/hwpx/module-link-audit.test.mjs`는1/1 exit0입니다. 순환 import의 연결과 module body 미실행을 확인하고 잘못된 export·누락 파일·외부 import·root 밖 경로를 각각 실패로 확인했습니다. HTTP 검사기의 변조 반례나 실제 브라우저 검증을 이 결과로 대체하지 않습니다.
+
+전체 native/public 및 명시적 정규화 경로의 전수 할당 실패 검사는 아직 최종 결과를 확보하지 못했습니다. 런타임 코드 커밋과 기본 제품 WASM 승격은 보류 상태입니다. 아래 실행 기록의 당시 “진행 중/미연결” 표현은 현재 완료 집계를 덮어쓰지 않습니다.
+
+## 실행 시점별 기록
+
+진행 중 native gate PID52319의1초 stack sample(`/tmp/hwpjs-native-52319-current.sample.txt`)은 현재 chart Session/History 전수 할당 실패 callback의 applyBatch→chart setter→save/ZIP/해제 경로를 관측했습니다. checked allocator는 stack_trace_frames0이며 이전 tabdef의 stack trace10 비용과 다른 상태입니다. sample physical footprint128.4G는 원시 OS 보고 수치이고 현재 RSS/누수나 중단 근거로 단정하지 않습니다. gate를 재시작하거나 실패 지점을 줄이지 않았습니다.
+
+별도 암호 문서 Worker 정책 회귀2/2 exit0은 false/true 양쪽에서 잘못된 암호 retry/암호 값 정리·unlock 후 정책 유지·본문 입력·보호 해제 저장 동의 유지·undo/redo와 바이트 복원·일반 파일 새 load의 정책/보호 상태 초기화·암호 원본 바이트 불변을 확인했습니다. 해당 암호 fixture에는 정규화 차트 저장 양성 사례가 없으므로 이 결과를 암호 차트 편집 증거로 확대하지 않습니다.
+
+호환 정책의 전체 allocation-failure gate를 별도 `chart normalized Session History` 검사로 추가했습니다. 실제 InvalidFat 원본의 Session.open·최초/두 번째 변경·정규화/저장·undo/redo 실패 지점을 순회하며 실패 시 현재 owner/값과 입력 불변을 확인합니다. strict 검사는 같은 공통 callback에 false 정책으로 남겼고 범위를 줄이지 않았습니다. 확대 실행은 아직 진행 중이며 이전 strict35,646회 성공을 이 새 호환 경로의 통과로 계산하지 않습니다.
+
+`--all-points` 감사는 각 원본 chart XML의 독립 pointCounts를 native 전체 종류별 inventory와 먼저 비교하고 모든 point를 개별 수정합니다. 새 `/tmp/hwpjs-chart-all-point-census.DGAr3o`의92문서/93참조 쌍에는 숫자 cache1050/literal31·문자열 cache1208/literal7,합계2296포인트가 있습니다. multilevelCache 실파일 양성은 이번 inventory에 없습니다. `4911d895…` 명시적 정규화 후보에서 `/tmp/hwpjs-chart-all-point-probe.dYRidt` 실행이 진행 중이며 최종 통과/거부 집계는 아직 없습니다. cache/literal 모든 위치 감사이지 직접 tx/v·rich-text 등 모든 차트 필드 편집으로 확대하지 않습니다.
+
 정책 ABI 누락·JS options 타입/boolean·native flag2/u32최대·입력 크기 초과·빈 새 open 실패를 기존 편집 세션에서 검사했습니다. 기존 저장 bytes/revision/undo/redo가 유지됐고 UI 단위와 합계7/7 exit0입니다. `chart-ole-policy-boundary.test.mjs`는 실패한 open이 기존 Session/history를 닫지 않음을 실제 WASM export로 확인합니다. 정책 추가 이후 전체 native/public은 이전 시작 snapshot과 구분해 추가 최종 검증이 필요하며 런타임 코드·기본 제품 WASM은 아직 커밋/승격하지 않았습니다.
 
 실제 browser `hwpjs-chart-policy`/`4911d895…` 후보의 InvalidFat 원본에서 기본 정책은 Worker InvalidFat과 저장 원문 byte-exact를 확인했습니다. 호환 checkbox 선택/재열기 후 제목 keyboard 입력·DOM 적용/저장 Blob302,345바이트 SHA256 `bc99c18b41e1ad32a8f84e92c470a51dc83ad292e017a13eb8ae6a530e232a92`는 normal/-O 독립 XML/ZIP/OLE와 부정 대조를 통과했습니다. undo Blob42,433바이트 SHA `780f98753e6c73d744455e9f7bdfa509b909bafbedca00ba94ff7ccbfa813b80`는 원문 byte-exact이고 redo는 최초 수정본 SHA와 같았습니다. browser errors는 비어 있었고 브라우저/서버 PID7905를 종료했습니다.
