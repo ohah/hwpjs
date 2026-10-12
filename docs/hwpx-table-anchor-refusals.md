@@ -20,6 +20,10 @@
 
 ## PAGE 본문 경로 연결
 
+부동 중첩 기준 조사: 실제 덧말 파일 host30의 원문 줄 높이는1200HU(16px)인데 부모 셀 높이는26353HU(351.373333px)입니다. child1068은 PARA/BOTTOM/BEHIND_TEXT이므로 부모 셀을 문단 사각형으로 대체하면 전혀 다른 위치가 됩니다. 원문 줄 값은 편집 후 최신 조판으로 간주하지 않습니다.
+
+`positionNestedFloatingTable`은 현재 소유 문단 사각형과 종이/필요한 기준 상자를 명시적으로 받아 기존 placeFloatingTable 계산을 재사용합니다. section·부모 table/list·host paragraph 식별자를 검사하고 뒤쪽 layer를 구분하며, 셀 밖이지만 종이 안인 배치는 clamp하지 않고 별도 상태로 보고합니다. 종이 밖·잘못된 소유권/타입·부재/비유한 기준 반례와 입력 불변 테스트1/1 종료코드0입니다. 이 위치 단면은 아직 재귀 셀 측정/paint에 연결되지 않았으며 현재 문단 높이를 정확히 제공하는 조판 경로와 중첩 그림/겹침을 구현해야 합니다.
+
 후속 중첩 연결: 기존 validateNestedTableOwnership과 measureNestedTable을 본문 경로에서 재사용합니다. 소유권을 먼저 검증한 뒤 루트 표만 본문 entry로 조립하고 자식은 부모 셀의 재귀 측정/페이지 projection에 포함합니다. 자식 표의 wrap 값으로 루트 페이지 경로를 선택하지 않습니다.
 
 합성 인라인 중첩 표의 두 cell box·자식 Unicode 텍스트/소유권·단일 배치·입력 불변, 잘못된 parentListNode의 측정 전 거부가 통과했습니다. 실제 table-bug의 인라인 자식5개는 원문 폭을 유지해 root2282의 InlineObjectLineWidthOverflow/가용 폭/개체 폭을 보고합니다. 덧말 파일은 child391(parent381)의 UnsupportedNestedTableAnchor입니다. 두 파일을 성공으로 분류하지 않습니다. 중첩 부동/겹침·과대 자식 폭의 정확한 표시 정책과 실제 브라우저/원본 조판은 남습니다.
