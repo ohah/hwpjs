@@ -1,5 +1,6 @@
 import { tableCellInsets } from "./table-insets.mjs";
 import { projectNestedTableCellContent } from "./nested-table-cell-projection.mjs";
+import { projectNestedFloatingCellContent } from "./nested-floating-cell-content.mjs";
 /** Project already measured cell rows into an explicit table page plan. */
 export function projectTablePageFragments(table, grid, cellFlows, plan, { origin, padding, maxRows = 20000 } = {}) {
   const unavailable = error => ({ state: "unavailable", error });
@@ -21,6 +22,11 @@ export function projectTablePageFragments(table, grid, cellFlows, plan, { origin
         section: table.section, tableNode: table.tableNode, pageOrdinal: fragment.pageOrdinal, referenceBoxes: fragment.referenceBoxes };
       if (![box.x, box.y, box.width, box.height, box.x + box.width, box.y + box.height].every(Number.isFinite) || box.width <= insets.left + insets.right || box.height < insets.top + insets.bottom) return unavailable("InvalidTablePageProjection");
       boxes.push(box);
+      if (flow.floatingTables !== undefined) {
+        const floating = projectNestedFloatingCellContent(box, flow, flow.floatingTables, { pageOrdinal: fragment.pageOrdinal, columnOrdinal: fragment.columnOrdinal, referenceBoxes: fragment.referenceBoxes }, { insets, maxRows: maxRows - rows.length });
+        if (floating.state !== "placed") return floating;
+        rows.push(...floating.rows); boxes.push(...floating.boxes);
+      }
       for (const picture of flow.flowPictures ?? []) {
         if (!picture || picture.cell?.tableNode !== table.tableNode || picture.cell?.listNode !== cell.listNode || picture.section !== table.section || !picture.rectangle) return unavailable("InvalidTablePagePicture");
         const rectangle = { ...picture.rectangle, x: box.x + insets.left + picture.rectangle.x, y: box.y + insets.top + picture.rectangle.y };

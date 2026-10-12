@@ -20,6 +20,8 @@
 
 ## PAGE 본문 경로 연결
 
+부동 셀 조합은 `projectNestedFloatingCellContent`가 현재 문단 범위 확인→기준 사각형→소유자 위치→측정 셀 페이지 투영을 한 경로로 연결합니다. 부모 table/list·host·현재 U+FFFC 앵커·중복 노드/앵커와 누적 행 예산을 검사합니다. 기존 projectTablePageFragments는 명시적 flow.floatingTables가 있을 때만 이 조합을 호출합니다. 부모/자식 cell box·자식 텍스트 단일 추가·오류 뒤 부분 성공 미반환·행 예산 거부·입력 불변을 위치/문단/투영 테스트3/3 종료코드0으로 확인했습니다. 실제 재귀 측정기가 이 descriptor를 생산하는 경로와 renderer의 뒤쪽/앞쪽 paint 순서는 아직 연결하지 않았으므로 실제 부동 중첩 표 지원 완료가 아닙니다.
+
 현재 문단 기준 단면: `nestedParagraphReference`는 현재 측정 행의 section/paragraph와 완전한 UTF-16 텍스트 범위를 pageParagraphCoverage로 확인하고, 행의 명시적 width/textHeight와 공통 textTop으로 기준 사각형을 만듭니다. 부모 셀/flow 전체 높이와 원문 줄 캐시는 사용하지 않습니다. 분할 페이지/단·transform/clip·비유한 높이/누락·중복/Unicode 절단은 거부합니다. 현재 행 높이16과 flow높이351을 구분해 부동 BOTTOM 위치 계산에 전달하는 검사 및 위치/셀 투영3/3 종료코드0입니다. 원본 한글의 PARA 기준 정의나 실제 글꼴 shaping 동치 증명이 아니며, 재귀 조판의 부동 자식 생산·paint 연결은 계속 남습니다.
 
 부동 중첩 셀 투영 단면: `projectNestedFloatingTable`은 명시적으로 계산한 현재 위치/소유자와 페이지 정보를 받고 기존 whole band·source padding·projectTablePageFragments를 재사용합니다. 측정한 grid가 원문 위치 사각형을 넘으면 NestedFloatingTableMeasuredOverflow로 거부하며 축소/잘림으로 바꾸지 않습니다. 뒤쪽/앞쪽 layer와 원문 사각형을 보존합니다. 소유자 변조·잘못된 column ordinal·좌표 덧셈 오버플로 반례, 셀 box/Unicode 텍스트·입력 불변 테스트가 통과했습니다. 최초 작은 표 측정에는 일반 grid 최소 폭이 적용돼 넘침이 발생했고, 명시적 원문 열 폭20px을 주입한 측정으로 테스트 계약을 교정했습니다. 위치/셀 투영2/2 종료코드0이며 아직 재귀 조판/레이어 paint 호출에 연결하지 않았습니다.

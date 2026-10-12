@@ -3,9 +3,11 @@ import assert from "node:assert/strict";
 import { measureTableCells } from "../../web/preview/table-cell-measurement.mjs";
 import { positionNestedFloatingTable } from "../../web/preview/nested-floating-table-position.mjs";
 import { projectNestedFloatingTable } from "../../web/preview/nested-floating-table-projection.mjs";
+import { projectNestedFloatingCellContent } from "../../web/preview/nested-floating-cell-content.mjs";
+import { projectTablePageFragments } from "../../web/preview/table-page-fragments.mjs";
 
 test("floating nested cells retain text and source size at the explicit page position", () => {
-  const table = { section: 0, tableNode: 2, parentTableNode: 1, parentListNode: 11, hostParagraph: 3, rows: 1, columns: 1,
+  const table = { section: 0, tableNode: 2, parentTableNode: 1, parentListNode: 11, hostParagraph: 3, anchorUnit: 0, rows: 1, columns: 1,
     sourceGeometry: { geometry: { treat_as_character: false, width: 1500, height: 7500, width_relative: 4, height_relative: 2, horizontal_offset: 0, vertical_offset: 0 }, in_margin: [0, 0, 0, 0], text_wrap: 2, vertical_relative: 2, horizontal_relative: 3, vertical_alignment: 2, horizontal_alignment: 0 },
     cells: [{ listNode: 12, row: 0, column: 0, rowSpan: 1, columnSpan: 1, width: 1500, height: 6000, paragraphs: [4], sourceMargin: { has_margin: false } }] };
   const paragraphs = [{ section: 0, paragraph: 4, text: "X😀", tableCell: { tableNode: 2, listNode: 12 } }];
@@ -27,5 +29,26 @@ test("floating nested cells retain text and source size at the explicit page pos
   assert.equal(projectNestedFloatingTable(table, measured, { ...position, owner: { ...position.owner, parentListNode: 99 } }, page).error, "InvalidNestedFloatingTableOwner");
   assert.equal(projectNestedFloatingTable(table, measured, position, { ...page, columnOrdinal: -1 }).error, "InvalidNestedFloatingTableProjection");
   assert.equal(projectNestedFloatingTable(table, measured, position, { ...page, referenceBoxes: { paper: { ...paper, x: Number.MAX_VALUE, width: Number.MAX_VALUE } } }).error, "NestedFloatingTablePaperOverflow");
+  assert.deepEqual(table, original);
+  const currentParagraph = { ...paragraph, text: "\ufffc", tableCell: { tableNode: 1, listNode: 11 } };
+  const parentFlow = { rows: [{ kind: "text", section: 0, paragraph: 3, startUnit: 0, endUnit: 1, text: "\ufffc", x: 0, y: 100, textTop: 0, width: 200, textHeight: 16 }] };
+  const entry = { table, paragraph: currentParagraph, measured };
+  const options = { insets: { left: 0, right: 0, top: 0, bottom: 0 }, maxRows: 20000 };
+  const composed = projectNestedFloatingCellContent(parent, parentFlow, [entry], page, options);
+  assert.equal(composed.state, "placed", composed.error);
+  assert.equal(composed.boxes[0].y, 116);
+  assert.equal(composed.rows[0].tablePaintLayer, "behind");
+  assert.equal(projectNestedFloatingCellContent(parent, parentFlow, [entry, entry], page, options).error, "InvalidNestedFloatingTableOwner");
+  assert.equal(projectNestedFloatingCellContent(parent, parentFlow, [entry, { ...entry, table: { ...table, tableNode: 99 } }], page, options).error, "InvalidNestedFloatingTableOwner");
+  assert.equal(projectNestedFloatingCellContent(parent, parentFlow, [{ ...entry, paragraph: { ...currentParagraph, text: "X" } }], page, options).error, "InvalidNestedFloatingTableOwner");
+  const outerTable = { section: 0, tableNode: 1, cells: [{ listNode: 11, row: 0, rowSpan: 1 }] };
+  const outerGrid = { cells: [{ listNode: 11, x: 0, y: 0, width: 200, height: 300 }] };
+  const outerFlow = { ...parentFlow, rows: parentFlow.rows.map(row => ({ ...row, height: 16 })), floatingTables: [entry] };
+  const plan = { state: "planned", fragments: [{ cells: [0], startRow: 0, endRow: 1, offset: 0, x: 50, y: 100, pageOrdinal: 0, referenceBoxes: { paper } }] };
+  const projectedParent = projectTablePageFragments(outerTable, outerGrid, new Map([[11, outerFlow]]), plan, { origin: { x: 0, y: 0 }, padding: 0 });
+  assert.equal(projectedParent.state, "placed", projectedParent.error);
+  assert.deepEqual(projectedParent.boxes.map(box => box.tableNode), [1, 2]);
+  assert.equal(projectedParent.rows.filter(row => row.tableNode === 2).map(row => row.text).join(""), "X😀");
+  assert.equal(projectTablePageFragments(outerTable, outerGrid, new Map([[11, outerFlow]]), plan, { origin: { x: 0, y: 0 }, padding: 0, maxRows: 1 }).error, "TablePageProjectionLimit");
   assert.deepEqual(table, original);
 });
