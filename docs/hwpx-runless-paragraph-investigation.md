@@ -37,3 +37,9 @@ node tools/reference-hwpx-prefix-query-audit.mjs --wasm=zig-out/verification/sec
 생성기의 writeWithStyle은 대상 문단의 unprefixed styleIDRef를 기존 정수 파서로 해석하고, 선택된 header tree/글자 모양 ID inventory를 통해 글자 모양을 확정합니다. 실제 픽스쳐 검사는 이제 숫자2를 호출자가 주입하지 않고 원본 style0의 참조에서 얻습니다. 기본 namespace의 새 run/t, sparse style7→character19, 없는 스타일/속성·외래 속성 거부 및 결합 경로의 전체 실패 할당을 추가한 집중 검사는4/4 exit0, fmt 통과입니다.
 
 세션 전체를 save→open으로 바꾸는 방식은 사용하지 않습니다. editor_checkpoint는 불변 원문 트리/ZIP을 세션에 유지하고 현재 편집값만 교환하므로, 재열기로 원문을 교체하면 기존 undo/redo 스냅샷의 소스 귀속과 충돌합니다. 후속 연결은 기존 현재값 모델의 소유권·clone·예산·조회·save를 함께 확장해야 하며, 위 생성기 검사는 이 세션 거래나 UI 지원을 입증하지 않습니다.
+
+## 현재값 후보 모델
+
+Paragraph에 선택적 synthesized_run_character_id를 추가하고 기존 clone이 이를 보존합니다. 본문은 기존 Sites의 한 항목만 소유하며, 별도 XML/텍스트 캐시는 두지 않습니다. runless_paragraph_current.prepare는 원본에 run이 없음을 공통 생성기로 검증하고 후보만 생성합니다. write는 가상 사이트의 문단 귀속·오프셋·표식을 검증해 공통 생성기를 호출합니다. 구조 분할/병합·서식/필드/객체 귀속이 섞인 후보는 아직 이 경로로 처리하지 않고 거부합니다.
+
+ReleaseSafe 집중5/5 exit0, 후속 현재값 필터1/1 exit0에서 원본 불변·clone의 글자 모양과 텍스트 독립 소유·공통 UTF-16 splice·서로게이트 거부·기존 byteSize 예산·prepare/clone/write 전체 실패 할당을 검사했습니다. fmt도 통과했습니다. 공개 세션·공통 save/표시·이력 교환 연결은 아직 없으므로 canEdit을 켜지 않았습니다. native 변경은 전체 gate 전의 로컬 상태입니다.
