@@ -7,6 +7,7 @@ export function queryPrefixRoute(editor, section, paragraph) {
     canEditOutsideField: typeof editor.canEditOutsideField === "function" ? (...args) => editor.canEditOutsideField(...args) : undefined,
     anchorText: (...args) => editor.anchorText(...args),
     fieldLabels: (...args) => editor.fieldLabels(...args),
+    fieldRangeTarget: typeof editor.fieldRangeTarget === "function" ? (...args) => editor.fieldRangeTarget(...args) : undefined,
     splice: () => "plain",
     spliceAnchored: () => "anchored",
     spliceFieldLabel: () => "field",

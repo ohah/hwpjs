@@ -13,6 +13,11 @@ export function insertPrefix(editor, section, paragraph, text) {
     if (!["UnsupportedParagraphControl", "UnsupportedInlineControl", "MissingTextSite", "SourceBindingMismatch", "UnsupportedFieldLabel", "UnsupportedStructuralFieldEdit"].includes(error.message)) throw error;
   }
   if (anchored) return editor.spliceAnchored(section, paragraph, 0, 0, text);
+  if (typeof editor.fieldRangeTarget === "function") {
+    const target = editor.fieldRangeTarget(section, paragraph, 0, 0);
+    if (!target || !Number.isInteger(target.beginElement) || target.beginElement < 0 || target.beginElement > 0xffffffff || target.start !== 0 || !Number.isInteger(target.end) || target.end < 0 || target.end > 0xffffffff) throw new Error("UnsupportedFieldLabelRange");
+    return editor.spliceFieldLabel(section, paragraph, target.beginElement, 0, 0, text);
+  }
   const targets = editor.fieldLabels(section, paragraph);
   const matches = targets.filter(target => target.start <= 0 && target.end >= 0);
   if (matches.length !== 1) throw new Error("UnsupportedFieldLabelRange");

@@ -10,6 +10,12 @@
 
 ## 현재 실측
 
+최신 nested-field-range-boundaries 후보 SHA256 `e64bdcfa3223fbbc2a07febb11bbf452a86c00a521cf5b247151e8a1d76a8711`로 두 issue1891 원본의 전체 문단 query를 재실행했습니다.80168은 plain3745/anchored184/field232·거부3(186~188번),86712는 plain1936/anchored84/field57·거부24(386~398/403~405/1789~1796번)입니다. 남은27개는 모두 unmatched 누름틀의 소유 목록이며 오류는 UnsupportedFieldLabelRange입니다. MissingTextSite와 정상 중첩/줄바꿈 사례의 거부는 없어졌습니다. 두 CLI 모두 exit1이며 성공으로 바꾸지 않습니다. 로그는 후보 폴더의 routes-80168.log/routes-86712.log입니다. 저장/입력/WASM 불변도 확인했지만 모든 선택 경로의 실제 편집 완료는 아닙니다.
+
+prefix edit probe와 read-only route proxy도 [입력 범위의 대상 조회](hwpx-field-range-target.md)를 공유합니다. 새 native query가 있는 경우 그 유일한 소유자만 사용하고 null/예기치 않은 오류에서 기존 목록의 첫 필드로 fallback하지 않습니다. 이전 API의 유일 후보 정책은 유지합니다. 원래 요청0위치를 이동하지 않고, 잘못된/위치가 다른 반환 대상도 거부합니다. 관련 기존/새 route·CLI·identity 집중11/11 exit0이며 실제 mutator 호출 금지·source 오류/OOM 전파·모호한 구형 후보 거부를 포함합니다.
+
+최신 후보의 참조 root 후속 query 조사도 시작했습니다. 현재 이름이 .hwpx인439경로를 수집한 뒤 실제 signature를 확인하며 HWP3 원본은 제외하고 HWPX 변환본은 포함합니다. 이전975개 전체 HWP/HWPX 후보 조사와 입력 목록·산출물 시점이 다릅니다. 로그는 후보 폴더의 reference-prefix-full.log이고 최종 summary 전에는 전수 완료나 최종 거부 수를 주장하지 않습니다. 별도 공개 전체 HWP5/HWPX 테스트도 HWPJS_TEST_WASM을 이 후보로 고정해 실행 중이며 public-full.log에 보관합니다. metadata-text-sites native 전체 실행은 중첩/API 변경 이전 바이너리입니다.
+
 ## 전체 참조 HWPX 후속 조사
 
 누락 필드의 구조 범위 계산 실험·반례·현재 미연결 경계는 [끝 마커 없는 필드의 소유 범위](hwpx-unmatched-field-scope.md)가 소유합니다.
