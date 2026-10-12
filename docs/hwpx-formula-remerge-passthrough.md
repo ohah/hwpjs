@@ -28,12 +28,14 @@
 
 두 대상에 공통 전수 할당 검사기를 연결한 집중 실행에서 체크포인트 테스트의 `Invalid free`를 재현했습니다. 문서는 `std.testing.allocator`로 열고 세션 할당자만 다른 할당자로 바꾸어, 편집 시 기존 사이트 버퍼를 잘못된 할당자로 해제한 테스트 소유권 오류입니다. 문서 열기·조회·편집·정리를 같은 실패 주입 할당자로 수행하도록 수정했습니다. 문서 열기 실패 지점도 검사에 포함하며 제품 코드는 변경하지 않았습니다. 수정 후 두 대상과 root의 집중 실행은 3/3 통과, exit 0, real 372.67초, 최대 RSS 1,190,674,432바이트입니다. 전체 native gate는 여전히 미통과이며 다시 검증해야 합니다.
 
-후속 포맷 검사와 ReleaseSafe 제품 빌드는 6/6 단계 통과로 종료했습니다. 이 빌드가 갱신한 로컬 `zig-out/bin/hwpjs.wasm`의 SHA256은 `7b41bb97ffbb2bf77e21a40dd3e88968383a641734c759c956f854408d12ced3`입니다. 이전 `77a805` 공개 테스트 결과를 새 산출물의 결과로 전용하지 않습니다. 최신 소스의 전체 native 재검증은 `/tmp/hwpjs-native-owned-allocators.nzqfqM`에 기록하며 아직 진행 중입니다.
+후속 포맷 검사와 ReleaseSafe 제품 빌드는 6/6 단계 통과로 종료했습니다. 이 빌드가 갱신한 로컬 `zig-out/bin/hwpjs.wasm`의 SHA256은 `7b41bb97ffbb2bf77e21a40dd3e88968383a641734c759c956f854408d12ced3`입니다. 이전 `77a805` 공개 테스트 결과를 새 산출물의 결과로 전용하지 않습니다. 최신 소스의 전체 native 재검증(`/tmp/hwpjs-native-owned-allocators.nzqfqM`)은 exit 1로 종료했습니다. 3,953/3,956 통과, skip 1, signal KILL 2건입니다. 대상은 `column_page_area_group_xml_tests`의 혼합 선언 XML 왕복 검사와 `column_boundary_groups_merge_tests`의 두 단 경계 그룹 병합 할당 실패 검사입니다. 종료 원인은 미확정이며, 이 결과는 전체 native gate 통과가 아닙니다.
 
 새 산출물의 전체 공개 테스트는 `/tmp/hwpjs-public-owned-allocators.AcbnLg`에서 exit 0으로 종료했습니다. `HWPJS_TEST_WASM=zig-out/bin/hwpjs.wasm node --test --test-concurrency=2 tests/hwp5/*.test.mjs tests/hwpx/*.test.mjs`의 결과는 2,064/2,064 통과, 실패·취소·skip·todo 0, 8421391.457583ms입니다. 종료 후에도 위 SHA256이 동일함을 확인했습니다. 실제 Worker의 HWPX 앵커·필드 후보 입력/이력과 WASM revalidation 회귀도 포함하지만 전체 native gate·전체 참조 문서의 임의 편집·실제 브라우저·원본 조판 완료를 뜻하지 않습니다.
 
 새 `7b41bb97` 산출물의 `reference-diagonal-splice.test.mjs` 별도 실행은 3/3 통과, 실패·취소·skip·todo 0, exit 0(44148.842ms)입니다. 독립 oracle의 다중 run 부정 대조와 실제 `charshape.hwpx`의 7조건, `대각선샘플3.hwpx`의 101개 문단에 Unicode를 넣은 파생본의 중간 치환·삭제·끝 삽입 303거래를 검사했습니다. Python normal/-O 전체 XML/ZIP 비교·undo/redo·잘못된 서로게이트 경계 거부 뒤 redo 보존을 포함합니다. 파생본은 추가 원본 픽스쳐가 아니며 참조 전수 prefix 검증을 모든 편집 범위의 성공으로 확대하지 않습니다.
 
 공통 검사기의 부정 대조도 별도로 재실행했습니다. `zig test src/testing/allocation_failures_negative.zig -O ReleaseSafe`는 의도적 누수 3조건에서 각각 정확한 `TestAllocatorLeak`으로 실패하고 정상 버퍼 정리·오류 전파 및 전수 실패 지점/OOM 누락 검사는 2조건 통과하여 exit 1입니다. 성공 반환 뒤 누수와 callback 오류에 가려진 누수를 모두 탐지하는 증거이며, 이 의도된 실패를 전체 native gate의 실패나 통과로 합산하지 않습니다.
+
+두 새 KILL 대상의 세 전수 실패 검사 호출을 공통 검사기로 연결했습니다. 실패 지점 수를 제한하거나 기존 XML·원본 불변 검사를 삭제하지 않았습니다. 집중 실행 `zig test src/root.zig -O ReleaseSafe --test-filter 'mixed declaration group XML preserves both inventories' --test-filter 'column two groups merge candidate is atomic'`은 root를 포함해 3/3 통과, exit 0입니다. `/usr/bin/time -l`의 real은 77.68초, maximum resident set size는 1,317,732,352바이트입니다. 전체 실행의 KILL 원인이나 메모리 감소율을 확정하는 비교는 아닙니다. 후속 전체 검증 `zig build test -Doptimize=ReleaseSafe -j1 --summary all`은 `/tmp/hwpjs-native-group-sweeps.F4NZdw`에 기록하며 실행 중입니다.
 
 이 기록은 전체 픽스쳐 편집·파서·UI 또는 원본 한글 조판의 완료를 의미하지 않습니다. 로컬 기본 WASM은 위 빌드로 갱신했지만 외부 데모 배포와 새 산출물의 실제 브라우저 검증은 아직 수행하지 않았습니다.
