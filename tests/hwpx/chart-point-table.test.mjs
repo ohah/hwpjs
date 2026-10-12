@@ -1,15 +1,59 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createChartPointTable } from "../../web/preview/chart-point-table.mjs";
+import { createChartControls } from "../../web/preview/chart-controls.mjs";
 
 class Element extends EventTarget {
-  constructor(tag = "div") { super(); this.tag = tag; this.children = []; this.dataset = {}; this.style = {}; this.ownerDocument = { createElement: name => new Element(name) }; }
+  constructor(tag = "div") { super(); this.tag = tag; this.children = []; this.dataset = {}; this.style = {}; this.value = ""; this.ownerDocument = { createElement: name => new Element(name) }; }
   append(...children) { for (const child of children) { child.parent = this; this.children.push(child); } }
-  replaceChildren(...children) { for (const child of this.children) child.parent = null; this.children = []; this.append(...children); }
+  replaceChildren(...children) { for (const child of this.children) child.parent = null; this.children = []; this.append(...children); this.value = children[0]?.value ?? ""; }
+  focus() { this.focused = true; }
   contains(child) { for (let node = child; node; node = node.parent) if (node === this) return true; return false; }
   closest() { return this.tag === "button" ? this : this.parent?.closest(); }
 }
 const click = (body, target) => { const event = new Event("click"); Object.defineProperty(event, "target", { value: target }); body.dispatchEvent(event); };
+
+test("chart table selection shares canonical form submission and clears stale rows on refresh", async () => {
+  const form = new Element(), fields = new Element(), targets = new Element(), points = new Element(), input = new Element(), note = new Element();
+  const body = new Element(), previous = new Element(), next = new Element(), pageNote = new Element();
+  const nodes = { "[data-chart-point-body]": body, "[data-chart-point-previous]": previous, "[data-chart-point-next]": next, "[data-chart-point-page]": pageNote };
+  form.querySelector = selector => nodes[selector] ?? null;
+  const requests = [];
+  let ready = true;
+  const controls = createChartControls({ form, fields, targets, points, input, note, ready: () => ready, request: message => { requests.push(message); return true; } });
+  const content = { chartEditAvailable: true, chartStringEditAvailable: true, chartTargets: [{ section: 0, wrapper: 9 }] };
+  controls.message({ kind: "enable", content });
+  await Promise.resolve();
+  const chart = { values: { points: Array.from({ length: 130 }, (_, index) => ({ index, kind: "numeric_cache", value: String(index) })) } };
+  controls.message({ ...requests.shift(), chart });
+  next.dispatchEvent(new Event("click"));
+  const old = body.children[1].children[0].children[0];
+  click(body, old);
+  assert.equal(points.value, "65");
+  assert.equal(input.value, "65");
+  assert.equal(input.focused, true);
+  assert.equal(requests.length, 0, "table selection never submits an edit");
+  input.value = "7.70"; input.dispatchEvent(new Event("input"));
+  form.dispatchEvent(new Event("submit", { cancelable: true }));
+  assert.deepEqual(requests.shift(), { kind: "chart-point", section: 0, wrapper: 9, point: 65, value: "7.70" });
+  assert.equal(chart.values.points[65].value, "65", "draft must not mutate canonical values");
+  controls.message({ kind: "chart-point", content });
+  await Promise.resolve();
+  assert.equal(body.children.length, 0, "old values are unavailable while querying");
+  const current = { values: { points: chart.values.points.map((point, i) => i === 65 ? { ...point, value: "7.70" } : point) } };
+  controls.message({ ...requests.shift(), chart: current });
+  assert.equal(input.value, "7.70");
+  assert.equal(body.children[1].children[1].textContent, "7.70");
+  assert.match(pageNote.textContent, /2\/3쪽/);
+  click(body, old); assert.equal(requests.length, 0);
+  ready = false; controls.message({ kind: "save" });
+  assert.equal(fields.disabled, true);
+  assert.ok(body.children.every(row => row.children[0].children[0].disabled));
+  controls.close(); controls.close();
+  assert.equal(body.children.length, 0);
+  assert.equal(form.hidden, true);
+  click(body, old); assert.equal(requests.length, 0);
+});
 
 test("chart table paginates all canonical values and selection never writes a draft", () => {
   const body = new Element(), previous = new Element(), next = new Element(), note = new Element();
