@@ -47,6 +47,24 @@ def verify(data):
             if len(text) != 1 or text[0].tag != namespace + 'lineBreak' or len(text[0]) or text[0].text is not None or text.text:
                 raise ValueError('ambiguous leading line break')
             text[0].tail = data['text'] + (text[0].tail or '')
+        elif data.get('mode') == 'metadata_run':
+            runs = paragraph.findall(namespace + 'run')
+            if not runs:
+                raise ValueError('missing metadata run')
+            settings = tuple(namespace + name for name in ('colPr', 'bookmark', 'pageNum', 'pageHiding', 'newNum', 'header', 'footer'))
+            for run in runs:
+                if not len(run):
+                    raise ValueError('existing empty run affinity')
+                for node in run:
+                    if node.tag == namespace + 'secPr':
+                        continue
+                    if node.tag != namespace + 'ctrl' or not len(node) or any(child.tag not in settings for child in node):
+                        raise ValueError('uncovered metadata content')
+            text = ET.Element(namespace + 't')
+            text.text = data['text']
+            text.tail = runs[0].text
+            runs[0].text = None
+            runs[0].insert(0, text)
         elif data.get('mode') == 'after_run_markpen':
             runs = paragraph.findall(namespace + 'run')
             if not runs or len(runs[0]) < 2:
