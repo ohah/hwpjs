@@ -2,6 +2,10 @@
 
 ## 현재 상태
 
+역할 조회를 포함한 `50cabdb0…` 후보의 전체 참조 재검사(`/tmp/hwpjs-chart-role-reference-probe.log`)는 exit0입니다. `--require-source-roles`로 응답 누락을 실패 처리하고92파일/93연결의2296포인트 역할을 독립 XML normal/-O로 모두 대조했습니다. 각 연결의 첫 숫자/문자열186개 편집은 저장·독립 사본/비대상 보존·undo/redo·재열기를 통과했으며 변경/재열기 전후 역할 배열도 동일했습니다. refused/failures/missingPointKinds는0입니다. **역할 조회2296개와 편집186개는 서로 다른 범위**이며 이전 `4911d895…`의2296개 전수 편집을 이 후보의 전수 편집 결과로 소급하지 않습니다.
+
+순수 UI 표시 모듈 `web/preview/chart-point-label.mjs`와 자체 단위 테스트만 별도 runtime 커밋 `b0032edf`로 main에 푸시했습니다. JS 문법·정상 역할7종·누락/미지/프로토타입 이름/잘못된 ordinal·미분류 값 반례1/1 exit0을 확인했습니다. 이 모듈은 DOM·WASM·네이티브 import가 없고 이전 역할 없는 응답에도 캐시 라벨을 제공하므로 자체 검증/커밋 경계를 분리했습니다. 조회 ABI와 UI 연결·기본 제품 WASM 승격은 여전히 전체 gate 후속입니다.
+
 차트 값 조회 Snapshot에 `bindings`를 추가했습니다. 배열은 각 point ordinal과 같은 순서로 source `series_node`·`plot_node`·`role_node`·role을 소유하며 기존 `chart_point_roles`가 단일 판정 출처입니다. 현재 편집값은 owner clone에서 읽고 역할은 그 값의 원본 source binding을 검증한 트리에서 읽으므로 UI에 XML 해석/가변 값 캐시를 복제하지 않습니다. UI의 별도 `chart-point-label`은 계열명·범주·값·X/Y·거품 크기·미분류를 표시하며 역할 부재/알 수 없는 role/ordinal 불일치는 기존 캐시 라벨로 되돌립니다. source series node는 진단 주소이며 사용자용 계열 순번으로 추측하지 않습니다.
 
 후보 `chart-role-bindings` SHA256 `50cabdb019974d12a6545d44281cf51cbabb86df5d987e185b41a11b3ccc2c24`는 ReleaseSafe 빌드6/6 exit0입니다. native 현재값/소유 역할 회귀와 변경 owner의 조회 전수 할당 실패는 각각1/1 exit0이며 실패 뒤 저장 bytes·원본 불변도 확인했습니다. 공개 역할·UI·Worker·Canvas10/10 exit0(14038.934833ms)은28실파일586포인트 역할을 독립 ElementTree oracle normal/-O로 비교하고, 잘못된 point ordinal을 각 모드에서 정확한 ChartRoleMismatch/exit1로 거부합니다. 값 변경·undo/redo에서 역할 유지와 조회/undo 원문 저장도 검사했습니다. 최초 공개 실행은 검사기가 numeric_cache만 선택해 numeric_literal 전용 표본에서 InvalidInteger로 실패했으며, 두 숫자 종류를 명시적으로 선택하고 inventory assertion을 유지한 재실행이 이 결과입니다. JS 문법·Zig fmt·diff 공백·정적490모듈 연결을 통과했습니다. 이 변경은 진행 중인 이전 전체 gate snapshot에 포함되지 않으며 제품 승격·런타임 커밋·실제 브라우저 역할 UI 확인은 아직 없습니다.
