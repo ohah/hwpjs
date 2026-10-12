@@ -16,6 +16,10 @@ Envelope 자체는 구조 범위 계산일 뿐이며 끝 마커를 만들거나 
 
 ## 후속 검증
 
+라벨 정책 의존 회귀(`/tmp/hwpjs-field-scope-label-native-regression.log`)는493/493 exit0으로 완료했습니다. 최신 scoped 독립 검사기로 실제220/435번도 normal/-O 전체 XML/ZIP·잘못된 기대값 거부·undo 원문 byte-exact·redo 수정본·재열기/재저장·원본 파일 불변을 확인했습니다(`/tmp/hwpjs-field-scope-label-actual-edits.log`). 이전 strict oracle 실패는 그대로 이력이며 이 결과는 두 라벨 실제 편집만 검증합니다. 최신 전체 source gate·모든 새 경로의 실제 편집·Worker/Canvas는 별도입니다.
+
+`hwpx-scoped-field-edit-oracle.py`는 기존 엄격 oracle 파일을 수정하지 않고 원래 전체 XML/ZIP compare를 재사용합니다. 선택 단계만 명시적 대상의 유일한 forward end와 목록 소유의 비대상 orphan을 구분하며, 원본/예상/저장 전체 XML은 제거/보정하지 않습니다. 겹침·루트 orphan·누락/중복 대상·비대상 end 참조/fieldid 불일치와 실제 원문 변경을 거부합니다. normal/-O self-test는 정상 대상·기존 strict 실패 유지 및8개 변조/보호 반례를 확인했고 Git HEAD의 엄격 oracle 의존성으로도 동일 self-test가 통과했습니다. 기존 파일의 선행 작업 변경은 커밋에 섞지 않습니다.
+
 잔여 거부의 실제 닫힌 CLICK_HERE220/435번도 unrelated orphan 때문에 InvalidFieldLinks로 조회가 막히는 것을 확인했습니다. 로컬 후속 구현은 source_field_analysis.leaseForLabels를 getter/입력이 공유하고 source 상태의 목록 소유 누락만 허용합니다. 루트 누락·구조 모델은 strict를 유지하며 validateLinked가 후보 내용과 누락 Envelope의 겹침을 거부합니다. 목록 조회는 모든 begin 대신 검증된 known ranges를 순회해 orphan을 편집 대상으로 만들지 않습니다. 닫힌 다른 목록의 라벨 조회/입력/저장/이력·같은 누락 목록 안의 닫힌 라벨 거부·루트/기존 malformed 거부 집중3/3 exit0입니다.
 
 외부 입력 정책의 앞선 의존 회귀492/492는 exit0으로 완료했지만 새 라벨 정책 이전 snapshot입니다. 새 후보 field-scope-labels SHA256 `86e0d0a98722c850a8a3d71140c62fb1cb9aa1038d6a51dab07b7604e0a18a99`는 ReleaseSafe build6/6 exit0이고 후속 전체 의존 회귀는 실행 중입니다. query-only 결과는80168 plain3740/anchored184/field231·거부9,86712 plain1935/anchored84/field56·거부26입니다. MissingTextSite각1·나머지 UnsupportedFieldLabelRange이며 InvalidFieldLinks는0입니다. 두 도구는 여전히 exit1이고35개를 성공으로 세지 않습니다.
