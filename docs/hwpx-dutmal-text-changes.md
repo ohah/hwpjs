@@ -45,3 +45,9 @@ ReleaseSafe 집중3/3 exit0, 전체 fmt exit0입니다. 실제36389301의 mainTe
 Session.dutmalText/setDutmalText를 dutmal_text_session으로 분리해 연결했습니다. 활성 분기·구역/노드·leaf 검증 뒤 현재값 후보를 만들고 전체 Session.save 성공을 확인한 다음 문자열 소유자를 교환합니다. 후보는 기존 객체 값들을 빌릴 뿐 해제하지 않으며, 저장/검증 실패 시 기존 값을 게시하거나 바꾸지 않습니다. 본문 Sites와 덧말 override 문자열을 합산해 문서 텍스트 예산도 검사합니다.
 
 ReleaseSafe 집중2/2 exit0에서 실제 세션 명령의 입력·no-op·잘못된 XML 문자 거부·현재값 조회·ZIP 재열기·체크포인트 원문/수정본 복원과 dirty0 텍스트 필드 갱신을 확인했습니다. DATE/미해결 필드의 명령 실패 뒤 override가0개이고 save가 원본과 byte-exact인지 재검증했습니다. 전체 fmt도 통과했습니다. 구조 제한은 유지하며, 공개 History 명령·실제 거래 전체 OOM·독립 실제 ZIP oracle·WASM/JS/Worker/UI 연결은 남습니다. native 코드는 전체 gate 전 로컬 상태입니다.
+
+## 후보 WASM의 JS 편집 검증
+
+2026-10-13 `zig-out/verification/dutmal-text-api/bin/hwpjs.wasm`를 명시한 `dutmal-text-editor`, `inline-string-source-wire`, `inline-string-source-reference` 테스트는 5/5, 종료코드0입니다. 실제36389301에서 mainText/subText 별도 변경·Unicode/XML 특수 문자·저장 재열기·각 명령 undo/redo·no-op/잘못된 문자/종류 거부 뒤 redo 유지·원문 ZIP 복원과 source-only 응답 불변을 검사했습니다.
+
+이는 후보와 로컬 JS/native 변경의 집중 검증이며 기본 제품 WASM 승격이나 native 코드 게시 완료가 아닙니다. 독립 ZIP/XML oracle, 전체 Zig gate, Worker/Canvas UI와 원본 조판 검증은 남습니다. 명령은 `HWPJS_TEST_WASM=$PWD/zig-out/verification/dutmal-text-api/bin/hwpjs.wasm node --test tests/hwpx/dutmal-text-editor.test.mjs tests/hwpx/inline-string-source-wire.test.mjs tests/hwpx/inline-string-source-reference.test.mjs`입니다.
