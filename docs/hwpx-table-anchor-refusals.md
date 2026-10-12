@@ -20,6 +20,10 @@
 
 ## PAGE 본문 경로 연결
 
+후속 중첩 연결: 기존 validateNestedTableOwnership과 measureNestedTable을 본문 경로에서 재사용합니다. 소유권을 먼저 검증한 뒤 루트 표만 본문 entry로 조립하고 자식은 부모 셀의 재귀 측정/페이지 projection에 포함합니다. 자식 표의 wrap 값으로 루트 페이지 경로를 선택하지 않습니다.
+
+합성 인라인 중첩 표의 두 cell box·자식 Unicode 텍스트/소유권·단일 배치·입력 불변, 잘못된 parentListNode의 측정 전 거부가 통과했습니다. 실제 table-bug의 인라인 자식5개는 원문 폭을 유지해 root2282의 InlineObjectLineWidthOverflow/가용 폭/개체 폭을 보고합니다. 덧말 파일은 child391(parent381)의 UnsupportedNestedTableAnchor입니다. 두 파일을 성공으로 분류하지 않습니다. 중첩 부동/겹침·과대 자식 폭의 정확한 표시 정책과 실제 브라우저/원본 조판은 남습니다.
+
 PAGE 기준 TOP/CENTER/BOTTOM을 본문 정책에 연결하고 row-bands 대신 whole 예약을 선택합니다. 고정 PAGE 표의 가로 경계는 종이 기준으로 검사하며 본문 폭보다 큰 원문 표를 축소하지 않습니다. 기존 PARA 기준 표의 가로 검사는 유지합니다. 실제 표381은665.213333px 폭이고 본문 폭은661.44px입니다. CENTER+원문 offset은 왼쪽 본문 경계도 조금 넘지만 종이 안에 있어 고정 배치가 가능합니다. 종이 밖 offset은 여전히 TablePageWidthOverflow입니다.
 
 실제 표381과 그 직접 셀 문단만 선택한 테스트 조각에서 전체 table-body 경로의 paginated/모든 셀 box/앵커 연결을 확인했습니다. 이 조각은 포함된 중첩 표 내용 전체를 배치한 결과가 아니며 전체 원본 성공으로 계수하지 않습니다. 원본 전체는 다음 표391(parent381)의 UnsupportedNestedTablePagePolicy로 거부됩니다. 해당 노드와 정책 이유는 renderer layout/dataset에 남습니다. 뒤쪽 표1068도 parent381이며 별도로 BEHIND_TEXT가 미지원입니다.

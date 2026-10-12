@@ -37,7 +37,7 @@ export function measureNestedTable(content, root, measure, { maxRows = 20000, ma
           const children = hosts.get(`${table.section}:${table.tableNode}:${input.cell.listNode}:${paragraph.paragraph}`) ?? [];
           const entries = [], measured = new Map();
           for (const child of children) {
-            if (child.sourceGeometry?.geometry?.treat_as_character !== true || child.sourceCaption) return unavailable("UnsupportedNestedTableAnchor");
+            if (child.sourceGeometry?.geometry?.treat_as_character !== true || child.sourceCaption) return { ...unavailable("UnsupportedNestedTableAnchor"), tableNode: child.tableNode, parentTableNode: table.tableNode };
             const raw = child.sourceGeometry.out_margin;
             if (!Array.isArray(raw) || raw.length !== 4 || !raw.every(v => Number.isSafeInteger(v) && v >= 0 && v <= 0xffffffff)) return unavailable("MissingTableOuterInsets");
             const remaining = input.maxRows - rows.length;

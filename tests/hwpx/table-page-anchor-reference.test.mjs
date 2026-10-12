@@ -32,10 +32,10 @@ with zipfile.ZipFile(io.BytesIO(base64.b64decode(json.load(sys.stdin)['bytes']))
   assert.equal(behind.wrap, "BEHIND_TEXT");
   assert.equal(behind.align, "BOTTOM");
   const layout = layoutTableBodyContent(loaded.content, text => text.length * 8, 20000);
-  assert.equal(layout.error, "UnsupportedTablePagePolicy");
+  assert.equal(layout.error, "UnsupportedNestedTableAnchor");
   assert.equal(layout.tableNode, 391);
-  assert.equal(layout.policyReason, "UnsupportedNestedTablePagePolicy");
+  assert.equal(layout.parentTableNode, 381);
   assert.equal(h.renderer.layout().pageLayoutTableNode, 391);
-  assert.equal(h.canvas.dataset.pageLayoutPolicyReason, "UnsupportedNestedTablePagePolicy");
+  assert.equal(h.renderer.layout().pageLayoutError, "UnsupportedNestedTableAnchor");
   assert.deepEqual(loaded.content, before);
 });

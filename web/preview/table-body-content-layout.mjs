@@ -18,13 +18,20 @@ import { paginatePictureRows } from "./picture-page-flow.mjs";
 import { columnReferenceBoxes } from "./column-reference-boxes.mjs";
 import { measureBlockTableHost } from "./block-table-host-flow.mjs";
 import { layoutFloatingTableBody } from "./floating-table-body-layout.mjs";
+import { validateNestedTableOwnership } from "./nested-table-ownership.mjs";
+import { measureNestedTable } from "./nested-table-measurement.mjs";
 
 // Source-ordered block tables; inline, captions and nested flow are separate.
 export function layoutTableBodyContent(content, measure, maxRows) {
   const unavailable = error => ({ state: "unavailable", error });
+  const nested = content.tables?.some(table => table.parentTableNode != null);
+  if (nested) {
+    try { validateNestedTableOwnership(content); }
+    catch { return unavailable("InvalidNestedTableFlow"); }
+  }
   if (content.structuralAnchorErrors?.length || content.tableAnchorErrors?.length || content.tableGeometryErrors?.length || content.cellLayoutSourceErrors?.length) return unavailable("IncompleteTableSources");
   if (content.tableCaptionErrors?.length || content.tableCaptionBindingErrors?.length || content.hwp5CaptionErrors?.length || content.hwp5CaptionGeometryErrors?.length) return unavailable("UnsupportedTableCaption");
-  if (content.tables?.some(table => [0, 4].includes(table.sourceGeometry?.text_wrap) && table.sourceGeometry.geometry?.treat_as_character === false)) return layoutFloatingTableBody(content, measure, maxRows);
+  if (content.tables?.some(table => table.parentTableNode == null && [0, 4].includes(table.sourceGeometry?.text_wrap) && table.sourceGeometry.geometry?.treat_as_character === false)) return layoutFloatingTableBody(content, measure, maxRows);
   if (!content.tables?.length || content.pageSettings?.length !== 1 || content.limited || content.lines?.length || content.paragraphs.some(p => p.clipped)) return unavailable("UnsupportedPageObjects");
   const pictures = content.pictures ?? [];
   const inline = pictures.filter(p => p.geometry?.treatAsCharacter === true);
@@ -41,6 +48,7 @@ export function layoutTableBodyContent(content, measure, maxRows) {
   const reference = pageReferenceBoxes(content.pageSettings[0], { x: 20, y: 20 });
   if (reference.state !== "placed") return unavailable(reference.state);
   for (const table of content.tables) {
+    if (table.parentTableNode != null) continue;
     const source = table?.sourceGeometry, geometry = source?.geometry;
     if (!table || !Array.isArray(table.cells) || !source) return unavailable("UnsupportedPageObjects");
     const inline = geometry?.treat_as_character === true;
@@ -58,7 +66,9 @@ export function layoutTableBodyContent(content, measure, maxRows) {
     if (!Array.isArray(raw) || raw.length !== 4 || !raw.every(value => Number.isSafeInteger(value) && value >= 0 && value <= 0xffffffff)) return unavailable("MissingTableOuterInsets");
     const [left, right, top, bottom] = raw.map(hwpUnitPixels);
     if (remaining < 1) return unavailable("TableCellMeasurementLimit");
-    const origin = { x: 0, y: 0 }, measured = measureTableCells(table, content.paragraphs, measure, { origin, padding: "source", maxRows: remaining,
+    const origin = { x: 0, y: 0 };
+    const hasChildren = content.tables.some(child => child.section === table.section && child.parentTableNode === table.tableNode);
+    const measured = hasChildren ? measureNestedTable(content, table, measure, { maxRows: remaining }) : measureTableCells(table, content.paragraphs, measure, { origin, padding: "source", maxRows: remaining,
       pictures, paragraphFlows: content.paragraphFlows, pictureReferences: { paper: reference.boxes.paper, page: reference.boxes.page, column: reference.boxes.page } });
     if (measured.state !== "measured") return measured;
     remaining -= measured.rowCount;
