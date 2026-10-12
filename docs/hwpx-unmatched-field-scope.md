@@ -16,6 +16,16 @@ Envelope 자체는 구조 범위 계산일 뿐이며 끝 마커를 만들거나 
 
 ## 후속 검증
 
+### 잔여35개 분류와 보존형 인라인 입력
+
+field-scope-labels 후보의 잔여35개를 원문과 다시 대조했습니다.27개는 끝 마커가 없는 누름틀의 소유 목록 안으로 계속 보호합니다. 두 문서의5번은 pageNum만 있고 텍스트 사이트가 없어 MissingTextSite입니다.80168의3807번과86712의1261번은 닫힌 중첩 누름틀이며 현재 중첩 라벨 정책에서 거부합니다. 나머지80168의324/330/331/2395번은 순차 하이퍼링크이며 라벨 조회는 각각7/4/4/3개로 성공합니다. 첫 라벨 시작은4/23/23/36으로 모두0보다 큽니다. 따라서 이 네 건은 중첩이나0위치 라벨 선택의 모호함이 아닙니다.
+
+원인은 field_source_outside_positions가 문단 전체의 모든 비텍스트 segment를 거부하여, 입력 범위와 무관한 lineBreak 때문에 바깥 입력까지 막은 것입니다. 로컬 수정은 공통 paragraph_text_positions.validateInlineUnit을 사용해 보존형 인라인만 허용합니다. 기존 공통 validateRange는 인라인 삭제를 계속 거부하고 field_outside_range는 필드 경계·내용 침범을 계속 거부합니다. anchor는 이 경로에서 허용하지 않습니다.
+
+새 합성 회귀는 수정 전 query에서1/1 실패를 재현하고 수정 후1/1 통과했습니다. 줄바꿈을 보존한 입력·줄바꿈 삭제 거부·필드 경계 입력 거부·거부 후 저장 불변·재열기/재저장을 검사합니다. 첫 공개 테스트 실행은 endUnit 인수에0을 전달한 검사 코드 오류로 InvalidTextPosition이 났고, 올바른 동일 start/end 경계로 교정한 재실행만 성공 근거입니다.
+
+field-inline-exterior 후보 SHA256 `1836851a3cc4516eb1f2020d06f0c4be5a79a5e648bd14c8cfa270e7d7b1e7ed`는 ReleaseSafe build6/6 exit0입니다. `HWPJS_TEST_WASM=/absolute/field-inline-exterior/bin/hwpjs.wasm node --test tests/hwpx/field-exterior-inline-reference.test.mjs`는1/1 exit0으로 실제 네 문단 각각의 prefix 입력·normal/-O 독립 전체 XML/비대상 ZIP·잘못된 기대값 거부·라벨 경계 보호·undo 원문 byte-exact/redo 수정본·재열기/재저장·원본 파일 불변을 확인했습니다. 네 건 실제 편집이며 두 문서 전수 재감사나 전체 최신 native/public·Worker/Canvas 검증으로 해석하지 않습니다. 코어 수정과 회귀 파일은 아직 로컬이며 제품 승격도 하지 않았습니다.
+
 라벨 정책 의존 회귀(`/tmp/hwpjs-field-scope-label-native-regression.log`)는493/493 exit0으로 완료했습니다. 최신 scoped 독립 검사기로 실제220/435번도 normal/-O 전체 XML/ZIP·잘못된 기대값 거부·undo 원문 byte-exact·redo 수정본·재열기/재저장·원본 파일 불변을 확인했습니다(`/tmp/hwpjs-field-scope-label-actual-edits.log`). 이전 strict oracle 실패는 그대로 이력이며 이 결과는 두 라벨 실제 편집만 검증합니다. 최신 전체 source gate·모든 새 경로의 실제 편집·Worker/Canvas는 별도입니다.
 
 `hwpx-scoped-field-edit-oracle.py`는 기존 엄격 oracle 파일을 수정하지 않고 원래 전체 XML/ZIP compare를 재사용합니다. 선택 단계만 명시적 대상의 유일한 forward end와 목록 소유의 비대상 orphan을 구분하며, 원본/예상/저장 전체 XML은 제거/보정하지 않습니다. 겹침·루트 orphan·누락/중복 대상·비대상 end 참조/fieldid 불일치와 실제 원문 변경을 거부합니다. normal/-O self-test는 정상 대상·기존 strict 실패 유지 및8개 변조/보호 반례를 확인했고 Git HEAD의 엄격 oracle 의존성으로도 동일 self-test가 통과했습니다. 기존 파일의 선행 작업 변경은 커밋에 섞지 않습니다.
