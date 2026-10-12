@@ -48,6 +48,10 @@ ReleaseSafe 집중2/2 exit0에서 실제 세션 명령의 입력·no-op·잘못�
 
 ## 후보 WASM의 JS 편집 검증
 
+2026-10-13 실제 headless Chromium에서 후보5fb9192e·현재 Worker/Canvas로36389301을 열었습니다. 스크린샷을 직접 확인해 본문/작은 위쪽 주석이 별도로 표시되는 것을 확인했고, paint 위치를 기준으로 native mouse down/up 클릭해 속성 패널 열림과 mainText 원값 조회를 검증했습니다. 클릭 후 변경한 값은 subText 전환/보존과 mainText 재조회로 확인했습니다. 화면에는 `UnsupportedInlineTableHost` 페이지 배치 제한이 남으므로 원본 페이지 조판 증거가 아닙니다.
+
+별도 실제 브라우저 세션에서 속성 폼 수정→다운로드 버튼이 생성한 Blob(115697바이트)을 메모리에서 다시 열어 mainText `다운로드😀`와 보존된 subText를 확인했습니다. 파일이 디스크에 저장됐다는 증명이나 독립 XML 비교는 아니며 다운로드 경로의 payload 재열기 검증입니다. 최초 다운로드 계측은 평가 변수 중복 선언으로 실패했고 제외했습니다. 이후 IIFE 범위와 `instanceof Blob` 조건으로 새 세션에서 재검증했습니다. 사용한 두 브라우저와 loopback18474 테스트 서버는 종료했습니다.
+
 Canvas 덧말 클릭은 `dutmal-anchor-geometry.mjs`가 기존 selectionRects·변환 box hit를 재사용하고 `dutmal-canvas-controls.mjs`가 공통 pointer 좌표 변환을 사용합니다. 원문 노드에서 위치를 추측하지 않습니다. 정확한 한 글자 앵커/유일 소유권을 확인한 뒤 현재 속성 폼 목록에 있는 section/node만 선택·조회하고 패널을 엽니다. modifier·다른 버튼·준비되지 않은 세션·닫힌 컨트롤은 이벤트를 소비하지 않습니다.
 
 후보5fb9192e의 실제 Worker/renderer 대역에서 앵커 box 중앙 hit·영역 밖 거부·스크롤 좌표 클릭·Shift 선택 보존·close 후 무응답과 속성 폼 선택 반례를 검사했습니다. 폼/paint/renderer Worker3/3 종료코드0입니다. 최초 harness 검사에서 반환값이 boolean이 아니라 Event인 점을 확인해 defaultPrevented를 검사하도록 교정했고 제품 동작은 완화하지 않았습니다. 실제 브라우저 클릭·변환/zoom 전용 반례와 기본 WASM 게시/원본 조판은 아직 남습니다.
