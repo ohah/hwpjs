@@ -83,3 +83,13 @@ ReleaseSafe 후보 빌드6/6 exit0, SHA256 `1969c4120eceda1c3b9757fb8350796a34c8
 입력 전 조회는 기존 수식 projection의 원문 사이트 검사에 먼저 걸려 MissingTextSite가 재현됐습니다. 검증된 runless 경로를 먼저 처리하고 나머지 문단은 기존 수식 조회를 유지하도록 순서를 조정했습니다. 실제 native 세션 회귀1/1 exit0에서 입력 전 id2/길이0·입력 후 id2/길이6·조회 전체 실패 할당·본문/저장/체크포인트 불변을 확인했습니다.
 
 최종 ReleaseSafe 후보 빌드6/6 exit0, SHA256 `87679e9ad3026ee66347c520f457e3fa4b1506dd20096ac5079063d47e81c535`입니다. runless Worker2사례·기존 regulatory formula Worker·metadata Canvas 합계4/4 exit0이며, 별도 runless2/2도 통과했습니다. 첫 빈 상태·선행 편집 뒤 빈 상태·입력 상태의 정확한 글자 모양 범위를 검증합니다. 전체 fmt도 exit0입니다. 실제 서식 변경 거래·브라우저 도구 모음·현재 후보의 최신 전체 gate는 미완료이며, 앞서 시작한1969c412 전체 gate를 이 새 후보의 완료 증거로 사용하지 않습니다. native 코드는 계속 로컬입니다.
+
+## 서식 변경과 이후 입력
+
+87679e9a 후보의 실제12pt 변경 명령은 SourceBindingMismatch로 실패했습니다. character_style_session이 새 run의 가상 사이트를 원문 run 위치 파서에 전달한 것이 원인입니다. 새 run의 기본 Span을 만든 뒤 기존 character_style_paint와 리소스/거래/이력 경로를 재사용하도록 연결했습니다. 서식 구간이 생긴 후에는 character_styles만 현재 서식을 소유하고 synthesized_run_character_id는 기본값/출처로 남습니다. 본문은 여전히 Sites 하나만 소유합니다.
+
+runless serializer는 각 서식 구간의 본문 슬라이스를 기존 XML 이스케이프로 직렬화하며, 이후 입력은 공통 character_style_splice.splicePositions로 서식과 본문을 함께 재배치합니다. 새 전용 서식 변경기나 별도 텍스트/서식 캐시는 추가하지 않았습니다.
+
+ReleaseSafe 후보 빌드6/6 exit0, SHA256 `54f3a37b86b2da8996fc1ee4a835415097378c1371a347f0462634d0a312ceff`입니다. native 집중8/8 exit0에서 실제 부분12pt 변경·추가 입력·저장 재열기 후 동일 구간 조회·체크포인트 복원을 확인했습니다. 세 run으로 분할하는 합성 사례는 Unicode 경계 거부·prepare/clone/paint/write의 전체 실패 할당·원본 불변을 검사했습니다. Worker2사례와 기존 metadata Canvas 합계3/3 exit0은 실제 전체12pt 변경의 표시 shape.height·독립 XML/ZIP normal/-O 및 미변경 결과 거부·서식 undo/redo byte-exact까지 포함합니다. 전체 fmt도 exit0입니다. 실제 브라우저 도구 모음·공개 거래 전체 OOM·다른 글자 속성/문단 구조·현재 후보 전체 gate는 남습니다.
+
+같은 후보로 opengov21파일2614문단 prefix 조회를 재실행했습니다. plain1643·anchored123·field846·거부2, 파일 읽기 실패0이며 종료코드1입니다.36386761의28번 거부는 해소됐고 남은 거부는36388711의1번과36389301의26번입니다. 조회 적격성 조사이지2614문단의 실제 편집/저장 완료 증거는 아닙니다. native 수정은 계속 로컬 전체 검증 대기 상태입니다.

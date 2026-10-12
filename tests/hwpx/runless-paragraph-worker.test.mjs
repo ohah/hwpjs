@@ -34,6 +34,23 @@ test("runless reference paragraph Worker input saves and preserves undo redo", a
   assert.deepEqual(Buffer.from((await h.send({ kind: "save" })).bytes), input);
   assert.equal((await h.send({ kind: "redo" })).error, undefined);
   assert.deepEqual(Buffer.from((await h.send({ kind: "save" })).bytes), saved);
+  const resized = await h.send({ kind: "character-properties", origin: "canvas", section: 0, paragraph: 27, startUnit: 0, endUnit: text.length, properties: { size: 1200 } });
+  assert.equal(resized.error, undefined);
+  const resizedRow = resized.content.paragraphs.find(p => p.section === 0 && p.paragraph === 27);
+  assert.equal(resizedRow.characterRangesError, undefined);
+  assert.equal(resizedRow.characterRanges.length, 1);
+  assert.equal(resized.content.characterShapes.find(shape => shape.id === resizedRow.characterRanges[0].charShapeId).height, 1200);
+  const resizedSaved = Buffer.from((await h.send({ kind: "save" })).bytes);
+  const propertiesRequest = { before: saved.toString("base64"), after: resizedSaved.toString("base64"), section: 0, localParagraph: 27, startUnit: 0, endUnit: text.length, properties: { size: 1200 } };
+  for (const flags of [[], ["-O"]]) {
+    const verify = value => JSON.parse(execFileSync("python3", [...flags, "tools/hwpx-character-property-oracle.py"], { input: JSON.stringify(value), encoding: "utf8", timeout: 30000 }));
+    assert.equal(verify(propertiesRequest).verified, true);
+    assert.throws(() => verify({ ...propertiesRequest, after: propertiesRequest.before }), error => error.status === 1 && /mismatch|differs/.test(String(error.stderr)));
+  }
+  assert.equal((await h.send({ kind: "undo" })).error, undefined);
+  assert.deepEqual(Buffer.from((await h.send({ kind: "save" })).bytes), saved);
+  assert.equal((await h.send({ kind: "redo" })).error, undefined);
+  assert.deepEqual(Buffer.from((await h.send({ kind: "save" })).bytes), resizedSaved);
 });
 
 test("runless Worker transaction preserves a prior paragraph edit and separate history entries", async t => {
