@@ -15,7 +15,7 @@ export function prepareTablePageBands(table, rowHeights, splitMode, outerInsets 
   const selected = splitMode === "whole" ? [{ startRow: 0, endRow: table.rows, offset: 0, height: bands.reduce((sum, band) => sum + band.height, 0), cells: table.cells.map((_, index) => index) }] : bands;
   const rows = selected.map((band, bandOrdinal) => ({ kind: "gap", section: table.section, paragraph: table.hostParagraph,
     height: band.height + (bandOrdinal === 0 ? margins.top : 0) + (bandOrdinal === selected.length - 1 ? margins.bottom : 0), bandOrdinal }));
-  if (table.sourceGeometry?.geometry?.treat_as_character === false && table.sourceGeometry.geometry.vertical_offset !== 0) {
+  if (table.sourceGeometry?.geometry?.treat_as_character === false && (table.sourceGeometry.geometry.vertical_offset !== 0 || table.sourceGeometry.vertical_relative === 1)) {
     if (splitMode !== "whole") return { state: "unavailable", error: "UnsupportedSplitTableVerticalFlow" };
     rows[0].tableVerticalSource = table.sourceGeometry;
   }

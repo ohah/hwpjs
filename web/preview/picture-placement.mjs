@@ -2,7 +2,7 @@ import { hwpUnitPixels } from "./hwp-units.mjs";
 import { signedInt32 } from "./signed-int32.mjs";
 
 const validBox = box => box && [box.x, box.y, box.width, box.height, box.x + box.width, box.y + box.height].every(Number.isFinite) && box.width >= 0 && box.height >= 0;
-function aligned(origin, extent, size, offset, alignment) {
+export function alignedReferenceCoordinate(origin, extent, size, offset, alignment) {
   if (alignment === 0) return origin + offset;
   if (alignment === 1) return origin + (extent - size) / 2 + offset;
   if (alignment === 2) return origin + extent - size - offset;
@@ -28,8 +28,8 @@ export function placeFloatingPicture(picture, boxes, { edgePolicy } = {}) {
   const dx = signedInt32(geometry.horizontalOffset), dy = signedInt32(geometry.verticalOffset);
   if (dx === null || dy === null) return { state: "missing_offset" };
   const width = hwpUnitPixels(geometry.width), height = hwpUnitPixels(geometry.height);
-  const x = aligned(hbox.x, hbox.width, width, hwpUnitPixels(dx), ha);
-  const y = aligned(vbox.y, vbox.height, height, hwpUnitPixels(dy), va);
+  const x = alignedReferenceCoordinate(hbox.x, hbox.width, width, hwpUnitPixels(dx), ha);
+  const y = alignedReferenceCoordinate(vbox.y, vbox.height, height, hwpUnitPixels(dy), va);
   if (![x, y, width, height, x + width, y + height].every(Number.isFinite)) return { state: "invalid_bounds" };
   return { state: "placed", rectangle: { x, y, width, height } };
 }
