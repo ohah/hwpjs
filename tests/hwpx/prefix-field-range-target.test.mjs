@@ -25,7 +25,7 @@ test("prefix mutation and read-only route share native ownership instead of firs
   assert.deepEqual(calls, [[0, 5, 8, 0, 0, "앞😀<&"]]);
 });
 
-test("prefix never falls back after native refusal or malformed or shifted targets", () => {
+test("prefix never uses legacy labels after native null or error and rejects malformed targets", () => {
   const e = editor();
   let edits = 0;
   e.spliceFieldLabel = () => edits++;
@@ -40,4 +40,18 @@ test("prefix never falls back after native refusal or malformed or shifted targe
     assert.throws(() => queryPrefixRoute(e, 0, 5), error => error.message === message);
   }
   assert.equal(edits, 0);
+});
+
+test("native field ownership precedes generic anchor display while null permits anchor route", () => {
+  const e = editor(), calls = [];
+  e.anchorText = () => "anchor display is not field permission";
+  e.spliceFieldLabel = (...args) => calls.push(["field", ...args]);
+  e.spliceAnchored = (...args) => calls.push(["anchored", ...args]);
+  assert.equal(queryPrefixRoute(e, 0, 5), "field");
+  insertPrefix(e, 0, 5, "x");
+  assert.deepEqual(calls, [["field", 0, 5, 8, 0, 0, "x"]]);
+  e.fieldRangeTarget = () => null;
+  assert.equal(queryPrefixRoute(e, 0, 5), "anchored");
+  insertPrefix(e, 0, 5, "y");
+  assert.deepEqual(calls[1], ["anchored", 0, 5, 0, 0, "y"]);
 });

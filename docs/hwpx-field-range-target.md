@@ -2,6 +2,8 @@
 
 ## 계약
 
+다른 문단의 객체 때문에 전체 라벨이 거부되던 닫힌 container 필드의 후속 source 경로·객체 보존·입력 route 순서는 [container 필드 텍스트](hwpx-container-field-text.md)가 소유합니다. native 범위 query가 현재 문단과 겹치지 않는 known field를 배제한 뒤 null을 반환해 정상 외부 앵커 경로를 보존하는 것도 같은 주제입니다.
+
 새 로컬 `fieldRangeTarget(section, paragraph, start, end)`는 문서 전역1-based 문단과 UTF-16 시작/끝을 받으며 유일한 입력 대상 `{beginElement,start,end}` 또는 null을 반환합니다. 범위 역전·정수 부적합·닫힌 editor를 거부합니다. 조회는 텍스트·dirty·이력을 변경하지 않습니다. 성공은 특정 문자열의 내용/용량·서식 명령까지 허용한다는 뜻은 아닙니다.
 
 코어 field_label_range_target은 현재 라벨 목록의 후보를 setter가 공유하는 validatePreparedRange로 검사합니다. 자손 내용/경계 보호·필드 소유 텍스트 범위·보존형 인라인·UTF-16 surrogate 경계를 재사용합니다. 후보가 둘 이상이면 UnsupportedFieldLabelRange입니다. 표시 길이가 짧거나 배열에서 먼저 나온다는 이유로 선택하지 않습니다. 실제80168처럼 부모/자식의 표시 범위가 완전히 같은 경우 부모 명령은 자손 보호에 걸리고 내부 필드가 유일한 소유자로 남습니다. 외부 독점 텍스트까지 포함한 범위는 내부 대상으로 바꿔치기하지 않습니다.
