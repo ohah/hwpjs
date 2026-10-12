@@ -8,6 +8,8 @@
 
 ## 재현과 검증
 
+이 문서에서 남긴 계산식 세 결과의 공개 정의 편집 검증은 [규제분석 계산식](hwpx-regulatory-formula-edit.md)이 소유합니다.
+
 실제 `reference/rhwp/samples/issue3637/regulatory_impact_nested_table_escape.hwpx`의435번 문단은 두 공백 뒤에 CLICK_HERE 시작과 표가 있고, 필드 끝은 후속 문단에 있습니다. 이전 `matched-field-end-input` 후보는 outside=false이며 실제 splice가 UnsupportedParagraphControl로 거부됐습니다. 같은 구조의 합성 회귀도 수정 전1/1 실패했습니다.
 
 수정 후 `zig test src/field_container_regression_test.zig -O ReleaseSafe --test-filter 'before a field-owned table' --test-filter 'field exterior'`는10/10 exit0입니다. 표 앞 입력·필드 소유 객체 삭제 거부·저장/재열기와 셀 내용/표 유지, 기존 필드 외부 이력·할당 실패 회귀를 검사합니다.
