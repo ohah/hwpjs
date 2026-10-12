@@ -1,5 +1,7 @@
 # HWPX 차트 데이터 캐시 구조
 
+현재 진단 보고서와 소유 값 모델·ZIP/OLE 동시 편집의 경계는 [차트 편집 이중 표현](hwpx-chart-edit-representations.md)이 소유합니다. 캐시 구조 진단 성공을 데이터 편집·렌더링 지원으로 해석하지 않습니다.
+
 `Document.inspectChartReferences`가 [차트 ZIP 경로·XML 경계](hwpx-chart-references.md)를 확인할 때, 같은 XML 순회에서 OOXML chart namespace의 `c:numCache`·`c:strCache`·`c:multiLvlStrCache`와 `c:numLit`·`c:strLit`를 별도 `chart_cache.zig` 계층으로 검사합니다. namespace URI는 `chart_namespace.zig` 한 곳에서 공유하며 ZIP 경로·문서 section 검사 규칙은 데이터 계층에 복제하지 않습니다. [Microsoft의 숫자 캐시 설명](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.drawing.charts.numberingcache?view=openxml-3.0.1)은 `numCache`를 마지막 차트 데이터 캐시로, [포인트 개수](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.drawing.charts.pointcount?view=openxml-3.0.1)는 값 수로 설명합니다. [문자열 포인트의 `idx`](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.drawing.charts.stringpoint?view=openxml-3.0.1)는 0부터 시작하는 unsigned 인덱스입니다.
 
 캐시마다 직접 자식 `ptCount.val`과 `pt.idx`의 `u32` 원값을 읽고 직접 `pt/v` 요소의 존재를 확인합니다. [XML Schema의 `whiteSpace=collapse`](https://www.w3.org/TR/xmlschema-2/#rf-whiteSpace)에 따라 숫자 앞뒤의 XML 공백은 허용하되 내부 공백과 손상·초과 숫자는 오류로 반환합니다. `ptCount` 부재·중복, 선언 개수와 실제 포인트 수 차이, 중복·범위 밖 인덱스, `v` 요소 부재·중복 및 [leaf text인 `v`](https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.drawing.charts.numericvalue?view=openxml-3.0.1)의 중첩 자식은 각각 보고서 진단으로 남깁니다. 희소한 포인트를 임의로 채우거나 개수 불일치를 자동 보정하지 않습니다. `first_cache_issue_path`는 처음 진단이 생긴 ZIP 경로를 소유하며 `ChartReferenceReport.deinit`으로 해제합니다. 중복 `chartIDRef`가 같은 차트를 가리키면 캐시도 한 번만 검사합니다.
