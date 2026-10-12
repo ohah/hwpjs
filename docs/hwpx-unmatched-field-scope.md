@@ -18,7 +18,7 @@ Envelope 자체는 구조 범위 계산일 뿐이며 끝 마커를 만들거나 
 
 ### 잔여35개 분류와 보존형 인라인 입력
 
-정상 중첩 누름틀 두 쌍의 별도 소유 관계·dirty 준비·남은 연결 조건은 [중첩 필드 라벨](hwpx-nested-field-labels.md)이 소유합니다. 현재 getter/setter의 중첩 거부는 아직 해제하지 않았습니다.
+정상 중첩 누름틀 두 쌍의 별도 소유 관계·dirty 준비·로컬 명시적 입력 연결과 남은 UI 조건은 [중첩 필드 라벨](hwpx-nested-field-labels.md)이 소유합니다. 제품과 구조 모델의 기존 중첩 거부는 유지합니다.
 
 쪽번호 전용 두 문단의 후속 수정과 검증은 [메타데이터 전용 run 입력](hwpx-metadata-only-run-input.md)이 소유합니다. 아래35개 분류는 field-scope-labels 후보의 당시 관측이며 후속 수정의 전수 재감사 결과가 아닙니다.
 
