@@ -8,6 +8,16 @@ issue1891의80168/86712 규제분석 원본5번 문단은 run 안에 ctrl/pageNu
 
 ## 검증과 현재 경계
 
+### 실제 브라우저 입력
+
+agent-browser의 격리 세션에서 loopback10014 서버가 위 metadata-text-sites 후보를 제공하도록 했습니다.80168 원본을 실제 file input으로 업로드하고 편집 시작→시작 문단5/개수1 구간 이동→Canvas 빈 문단 영역 클릭→브라우저 `keyboard inserttext`로 `본문😀<&`를 입력했습니다. 실제 Worker 응답의0-based4번 text 변경과 undo 활성화를 확인했습니다. 앞선 클릭들은 빈 문단의 줄 영역 밖이어서 커서가 생기지 않았고 입력 성공으로 세지 않았습니다. 현재 Worker content를 관측한 뒤 공통 배치기로 빈 줄의 위치를 확인하고 실제 마우스 클릭으로 커서를 놓았습니다. 모델/편집 API를 직접 호출하거나 DOM input 이벤트를 합성하지 않았습니다.
+
+다운로드 버튼이 만든 redo Blob은2,805,904바이트, SHA256 `158ca31d949e4cb3ac9e1a746998be94e99e276b25937aa354b0c46988ade883`입니다. normal/-O 독립 전체 XML/비대상 ZIP·잘못된 기대값 거부가 통과했습니다. undo Blob은179,730바이트, SHA256 `1e00b54e1139515258260a657217e0b3baa0b1b652a2cd28dd4b9bc48aa262fe`로 원본 파일 SHA와 일치했습니다. 브라우저 오류 목록은 비어 있었고 소유 브라우저/서버를 종료했습니다. 캡처는 같은 후보 폴더의 browser-empty/window/typed/redone.png입니다. 한 문서의 실제 클릭·입력·저장 Blob이며 OS 다운로드 파일이나 모든 문서의 브라우저 완료가 아닙니다.
+
+첫 Blob 검사 assay는 Node 기본 동기 입력 파이프로 Python을 호출해 최적화 실행의 음성 대조에서 EOF 대기했습니다. 정확히 소유한 Python 자식만 종료했고 SIGTERM을 통과로 인정하지 않았습니다. 기존 oracle-process 파일 기반 stdin으로 재실행한 결과만 성공 근거입니다.
+
+독립 검사기는 `tools/hwpx-metadata-only-run-oracle.py`로 분리해 공개 API 회귀와 브라우저 Blob 검사가 재사용합니다. 현재 범위는 두 실제 원본의section0/5번이며 임의 메타데이터 문단의 범용 oracle가 아닙니다. normal/-O self-test는 정상1개와 잘못된 입력문자·비대상 payload 변경·쪽번호 속성 변경·컨트롤 제거·추가 t·중복 ZIP 항목의6개 반례를 검사합니다. 원문/기대 트리/출력 전체 비교를 줄이거나 원문을 보정하지 않습니다.
+
 후속 `'metadata only text collection'` 집중 검사는1/1 exit0입니다. max_sites=0의 LimitExceeded, collect와 변경 없는 writer의 모든 할당 실패 정리·원문 불변, 성공 시 빈 missing_text 사이트1개와 byte-exact 저장을 확인했습니다. 이 테스트는 앞서 기록한 후보의 코어와 같은 정책이며 전체 source gate와 합산하지 않습니다.
 
 이전 장시간 실행의 핸들과 임시 로그가 사라져 최종 결과를 입증할 수 없었습니다. 해당 실행을 성공으로 세지 않고 현재 코어에서 정규 `zig build test -Doptimize=ReleaseSafe -j1 --summary all`을 재시작했습니다. 로그는 `zig-out/verification/metadata-text-sites/native-full.log`에 보관합니다. 이 실행 시작 뒤 위 할당 회귀가 추가됐으므로 그 집중 결과를 별도 기록하며 전체 검사에 자동 포함됐다고 가정하지 않습니다. 코어 정책은 실행 중 추가 변경하지 않았습니다.
