@@ -2,6 +2,8 @@
 
 ## 현재 상태
 
+명시적 정규화 경로의 `chart normalized Session History` 전수 할당 실패 검사는37,926회 호출(성공 포함)·1/1 exit0으로 완료했습니다. 실제 InvalidFat 원본의 open·최초/두 번째 소유 값 변경·저장·undo/redo와 실패 시 원문/소유 상태 보존을 순회합니다. real1305.33초·maxRSS1,393,672,192바이트이며 fail 지점 축소 없이 실행했습니다. 이 독립 바이너리는 역할 Snapshot 추가 전에 컴파일됐으므로 새 역할 조회의 전수 할당 실패1/1 및 최신 전체 gate와는 별도 근거입니다.
+
 역할 조회를 포함한 `50cabdb0…` 후보의 전체 참조 재검사(`/tmp/hwpjs-chart-role-reference-probe.log`)는 exit0입니다. `--require-source-roles`로 응답 누락을 실패 처리하고92파일/93연결의2296포인트 역할을 독립 XML normal/-O로 모두 대조했습니다. 각 연결의 첫 숫자/문자열186개 편집은 저장·독립 사본/비대상 보존·undo/redo·재열기를 통과했으며 변경/재열기 전후 역할 배열도 동일했습니다. refused/failures/missingPointKinds는0입니다. **역할 조회2296개와 편집186개는 서로 다른 범위**이며 이전 `4911d895…`의2296개 전수 편집을 이 후보의 전수 편집 결과로 소급하지 않습니다.
 
 순수 UI 표시 모듈 `web/preview/chart-point-label.mjs`와 자체 단위 테스트만 별도 runtime 커밋 `b0032edf`로 main에 푸시했습니다. JS 문법·정상 역할7종·누락/미지/프로토타입 이름/잘못된 ordinal·미분류 값 반례1/1 exit0을 확인했습니다. 이 모듈은 DOM·WASM·네이티브 import가 없고 이전 역할 없는 응답에도 캐시 라벨을 제공하므로 자체 검증/커밋 경계를 분리했습니다. 조회 ABI와 UI 연결·기본 제품 WASM 승격은 여전히 전체 gate 후속입니다.
