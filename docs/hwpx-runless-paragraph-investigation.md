@@ -59,3 +59,11 @@ runless_paragraph_session은 기존 display_current_paragraphs/collect·헤더 �
 ReleaseSafe 집중7/7 exit0 후 실제 세션 필터1/1 exit0 재검사에서36386761의28번 문단 canEdit·초기 빈 본문 조회·잘못된 시작 위치 거부·첫 입력·후속 추가 입력·서로게이트 분할 거부·동일 치환 no-op·본문 조회·ZIP save/재열기·checkpoint 원문/수정본 복원을 확인했습니다. fmt도 통과했습니다. 공개 History 객체 및 WASM/Worker/Canvas, 서식·문단 구조, 공개 거래 전체 실패 할당과 독립 실제 ZIP oracle은 별도 검증이 남습니다.
 
 후보 ReleaseSafe 빌드는 zig-out/verification/runless-paragraph-input 경로에서 시작했으며, 이 기록 시점에는 완료 결과가 없습니다. native 구현은 전체 검증 전 로컬 변경으로 남고, 기존 제품 WASM을 승격하지 않았습니다.
+
+## WASM·Canvas 컨트롤러·Worker 검증
+
+후보 빌드6/6 exit0, SHA256 `5c774216d5b7865cc01ad302b774fd8a739834dcc48dba559f8d5b98fa545170`입니다. 첫 Worker 검사에서는 빈 anchorText의 길이0 버퍼를 복사할 때 Invalid typed array length가 재현됐습니다. 빈 WASM 할당의 sentinel 포인터를 길이0 Uint8Array 생성에 사용한 공통 JS 경계 문제였으며, createMemory.copy는 길이가 정확히0이면 역참조 없이 빈 사본을 반환하도록 수정했습니다. 실제 길이가 있는 범위 밖 포인터·음수 길이는 계속 거부합니다.
+
+빈 버퍼·기존 signed-high pointer/secret wipe·runless Canvas Worker·기존 metadata Canvas 회귀4/4 exit0입니다. runless 회귀는 컨트롤러 선택과 beforeinput/input 이벤트를 실제 Worker/WASM으로 전달하고 본문·save·undo 원문/redo 수정본을 확인합니다. DOM은 하네스이므로 실제 Chromium/IME/포인터 검증은 아닙니다.
+
+독립 Python hwpx-runless-input-oracle는 원본 헤더의 styleIDRef→charPrIDRef에서 기대 run을 만들고 대상 section 전체 XML·나머지 ZIP payload·inventory/comment를 비교합니다. normal/-O와 잘못된 본문을 넣는 부정 대조까지 추가한 회귀1/1 exit0이며, 실제 참조 ID2도 확인했습니다. ZIP 압축 바이트/모든 엔트리 metadata 동일성 검사는 아닙니다. 두 회귀를 기본 build 목록에도 로컬 등록했습니다. 제품 WASM 승격·최신 전체 native/public gate·전체 픽스쳐/브라우저 완료는 남습니다.

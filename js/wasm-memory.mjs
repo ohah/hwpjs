@@ -2,7 +2,7 @@
 export function createMemory(wasm) {
   const decoder = new TextDecoder();
   const copy = (ptr, length) =>
-    new Uint8Array(wasm.memory.buffer, ptr >>> 0, length).slice();
+    length === 0 ? new Uint8Array(0) : new Uint8Array(wasm.memory.buffer, ptr >>> 0, length).slice();
   const withBytes = (bytes, fn, secret = false) => {
     const ptr = wasm.cfb_alloc(bytes.length) >>> 0;
     if (!ptr) throw new Error("OutOfMemory");
