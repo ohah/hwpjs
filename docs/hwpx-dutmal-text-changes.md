@@ -29,3 +29,13 @@ ReleaseSafe 집중7/7 exit0, 전체 fmt exit0입니다. 본문/주석 독립 소
 dutmal_text_save는 기존 xml_identity_binding으로 원본과 본문 편집 후 XML의 덧말/컨테이너/표 소유권을 연결합니다. 원문 덧말 payload가 그대로 보존돼 있는지도 비교한 뒤 main/sub Change를 같은 현재 XML에 모아 적용합니다. 중복 slot intent·소유권 불일치·다른 경로가 이미 바꾼 덧말은 거부합니다. 바뀐 덧말의 직접 소유 문단 linesegarray만 제거하며 두 slot이 같은 캐시를 두 번 지우지 않도록 합니다.
 
 ReleaseSafe 집중1/1 exit0, 전체 fmt exit0에서 앞선 본문 Unicode 입력과 두 문자열 변경 조합·정확한 전체 XML·소유 문단 캐시 제거/다른 문단 캐시 보존·중복/기존 payload 변경 거부·작성기 전체 실패 할당을 검사했습니다. 이 작성기는 아직 Session.save에 연결하지 않았습니다. 필드 dirty와 보호 문맥을 검증한 뒤 연결해야 하므로 pending 저장 거부는 유지합니다. 구조 재배치/동일 payload의 모호한 소유권·실제 ZIP 독립 비교·공개 API/이력/UI는 계속 미완료이며 native 변경은 로컬 상태입니다.
+
+## ZIP 저장과 필드 보호 연결
+
+Session.save에 덧말 작성기를 연결하고 모든 pending 저장을 거부하던 임시 경계를 제거했습니다. 구조 모델이 설치된 상태는 아직 UnsupportedDutmalStructuralSave로 거부합니다. 원문 소유권의 구조 재배치/모호성을 검증하기 전에는 순서 기반 연결만으로 게시하지 않습니다.
+
+dutmal_field_dirty는 기존 source_field_analysis·필드 범위·field_source_scope·종류 정책을 재사용해 덧말 leaf를 감싸는 알려진 텍스트 필드의 dirty를 파생합니다. 기존 dirty 요청과 중복 없이 합치고 계산/미지 필드, 부분 겹침과 미해결 begin의 소유 범위는 거부합니다. source와 세션 field_dirty 목록을 직접 바꾸지 않으며 base XML 작성기에 이 일시적 요청을 전달합니다.
+
+ReleaseSafe 집중3/3 exit0, 전체 fmt exit0입니다. 실제36389301의 mainText 변경은 ZIP save→재열기 문자열 확인·checkpoint 원문/수정본 byte-exact 복원까지 통과했습니다. 합성 dirty0 CLICK_HERE는 dirty1 저장/재열기, DATE는 UnsupportedDutmalFieldEdit, 미해결 CLICK_HERE는 ProtectedFieldRange로 거부했고 원문 source/기존 dirty 목록은 유지됐습니다. 최초 합성 반례가 기본 수식 픽스쳐의 id1과 충돌해 InvalidFieldLinks로 실패했으며 독립 구역 픽스쳐로 교정한 뒤 재검증했습니다. 링크 가드를 완화하지 않았습니다.
+
+공개 setter·실제 ZIP 독립 oracle·필드 dirty 전체 실패 할당·구조와 다른 객체 편집 조합·WASM/Worker/UI는 아직 남습니다. native 수정은 전체 gate 완료 전 로컬 상태입니다.
