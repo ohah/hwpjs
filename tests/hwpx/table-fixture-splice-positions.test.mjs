@@ -3,10 +3,15 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
 import { execFileSync } from "../../tools/oracle-process.mjs";
+import { createHash } from "node:crypto";
+
+assert([undefined, "1"].includes(process.env.HWPJS_FULL_SPLICE_AUDIT), "InvalidFullSpliceAuditMode");
+const full = process.env.HWPJS_FULL_SPLICE_AUDIT === "1";
 
 const inventory = `import base64,io,json,sys,zipfile,xml.etree.ElementTree as E
 n='{http://www.hancom.co.kr/hwpml/2011/paragraph}'
-with zipfile.ZipFile(io.BytesIO(base64.b64decode(json.load(sys.stdin)['bytes']))) as z:r=E.fromstring(z.read('Contents/section0.xml'))
+d=json.load(sys.stdin)
+with zipfile.ZipFile(io.BytesIO(base64.b64decode(d['bytes']))) as z:r=E.fromstring(z.read('Contents/section0.xml'))
 parents={c:p for p in r.iter() for c in p};groups={}
 for index,p in enumerate(r.iter(n+'p')):
  runs=p.findall(n+'run');leaves=[c for run in runs for c in run]
@@ -21,21 +26,27 @@ for index,p in enumerate(r.iter(n+'p')):
  groups.setdefault(kind,[]).append({'index':index,'text':text,'kind':kind})
 selected=[]
 for kind,rows in groups.items():
- for index in sorted(set([0,len(rows)//2,len(rows)-1])):selected.append(rows[index])
+ for index in (range(len(rows)) if d['full'] else sorted(set([0,len(rows)//2,len(rows)-1]))):selected.append(rows[index])
 print(json.dumps({'counts':{k:len(v) for k,v in groups.items()},'selected':selected},ensure_ascii=False))`;
 
 for (const path of ["legacy/rust/crates/hwp-core/tests/fixtures/table-bug.hwpx", "reference/rhwp/samples/issue5712/3184241_medical_exam_equipment.hwpx"]) {
   test(`${path}: source-selected beginning middle end replacement and deletion retain complete XML`, async t => {
     assert(process.env.HWPJS_TEST_WASM, "explicit candidate required");
     const input = readFileSync(path), wasm = readFileSync(process.env.HWPJS_TEST_WASM);
+    const originalInput = Buffer.from(input);
+    const sha256 = bytes => createHash("sha256").update(bytes).digest("hex");
     const source = JSON.parse(execFileSync("python3", ["-c", inventory], {
-      input: JSON.stringify({ bytes: input.toString("base64") }), encoding: "utf8", timeout: 30000,
+      input: JSON.stringify({ bytes: input.toString("base64"), full }), encoding: "utf8", timeout: 30000,
     }));
+    if (full) assert.equal(source.selected.length, Object.values(source.counts).reduce((sum, value) => sum + value, 0));
+    const scope = full ? "all nonempty source plain-leaf paragraphs; not protected/empty/control paragraphs or every character position" : "first middle last source plain paragraph per present body cell drawing";
+    console.log(JSON.stringify({ kind: "splice-audit-start", path, scope, selected: source.selected.length, counts: source.counts,
+      inputSha256: sha256(input), wasmSha256: sha256(wasm) }));
     assert(source.counts.cell > 0);
     if (path.endsWith("table-bug.hwpx")) assert(source.counts.body > 0 && source.counts.drawing > 0);
     else assert.equal(source.counts.body ?? 0, 0, "medical document's plain text is inside tables");
     const editor = await createHwpxEditor(wasm), reopened = await createHwpxEditor(wasm);
-    let checks = 0;
+    let checks = 0, completed = 0;
     try {
       editor.open(input); editor.enableHistory();
       for (const sample of source.selected) {
@@ -61,8 +72,13 @@ for (const path of ["legacy/rust/crates/hwp-core/tests/fixtures/table-bug.hwpx",
           assert.equal(editor.undo(), true); assert.deepEqual(Buffer.from(editor.save()), input);
           checks++;
         }
+        completed++;
+        assert.deepEqual(input, originalInput);
+        if (full && (completed % 25 === 0 || completed === source.selected.length)) console.log(JSON.stringify({ kind: "splice-audit-progress", path, completed, selected: source.selected.length, edits: checks }));
       }
-      t.diagnostic(JSON.stringify({ scope: "first middle last source plain paragraph per present body cell drawing; beginning middle end insertion and grapheme replacement, last-grapheme deletion", counts: source.counts, samples: source.selected.length, edits: checks, xmlOracleModes: 2 }));
+      assert.deepEqual(readFileSync(path), originalInput);
+      assert.equal(sha256(readFileSync(process.env.HWPJS_TEST_WASM)), sha256(wasm));
+      t.diagnostic(JSON.stringify({ scope, positions: "beginning middle end insertion and grapheme replacement, last-grapheme deletion", counts: source.counts, samples: source.selected.length, edits: checks, xmlOracleModes: 2 }));
     } finally { editor.close(); reopened.close(); }
   });
 }
