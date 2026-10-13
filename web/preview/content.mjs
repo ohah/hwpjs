@@ -11,7 +11,9 @@ export function displayContent(result, { maxUnits = 200000, maxParagraphs = 2000
   for (const section of result.sections) {
     totalParagraphs += section.paragraphs.length;
     for (const [index, p] of section.paragraphs.entries()) {
-      if (paragraphs.length >= maxParagraphs || units >= maxUnits) { limited = true; continue; }
+      // Text budget must not erase paragraph identity needed by nested owners.
+      // Retain bounded, noneditable clipped rows after text is exhausted.
+      if (paragraphs.length >= maxParagraphs) { limited = true; continue; }
       const room = maxUnits - units;
       const retainedView = retainedTextView(p), fullText = retainedView?.text ?? p.text;
       let text = fullText;
