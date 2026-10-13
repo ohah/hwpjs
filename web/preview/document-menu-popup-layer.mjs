@@ -37,7 +37,7 @@ export function createMenuPopupLayer(details, view = globalThis.window) {
   };
   view?.addEventListener("resize", resize);
   view?.addEventListener("scroll", scroll, true);
-  return { close() {
+  return { refresh() { if (!closed) for (const row of rows) row.sync(); }, close() {
     if (closed) return;
     closed = true;
     view?.removeEventListener("resize", resize);

@@ -1,6 +1,7 @@
 // Menu entries delegate to existing controls; they never own native commands.
 import { createMenuDisclosures } from "./document-menu-disclosures.mjs";
 import { createMenuPopupLayer } from "./document-menu-popup-layer.mjs";
+import { navigateDocumentMenu } from "./document-menu-keyboard.mjs";
 export function createDocumentMenuControls(entries) {
   let closed = false;
   const ids = entries.map(({ button }, index) => typeof button.id === "string" && button.id ? button.id : `menu-entry-${index}`);
@@ -43,6 +44,10 @@ export function createDocumentMenuControls(entries) {
   const popupLayer = createMenuPopupLayer(popups);
   const popupListeners = popups.filter(popup => typeof popup.addEventListener === "function").map(popup => {
     const keydown = event => {
+      if (closed) return;
+      refresh();
+      const buttons = entries.filter(({ button, target }) => button.closest?.("details") === popup && !button.disabled && !disabled(target)).map(({ button }) => button);
+      if (navigateDocumentMenu(event, popup, buttons, () => { popup.open = true; popupLayer.refresh(); })) return;
       if (closed || event.defaultPrevented || event.isComposing || event.keyCode === 229 || event.key !== "Escape" || !popup.open) return;
       event.preventDefault();
       popup.open = false;

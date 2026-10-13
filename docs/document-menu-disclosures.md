@@ -1,5 +1,13 @@
 # 문서 메뉴 열림 상태
 
+## 키보드 포커스 탐색 (2026-10-13)
+
+`document-menu-keyboard.mjs`는 방향키 위/아래·Home·End의 포커스 이동만 소유합니다. summary에서 방향키는 첫/마지막 활성 항목으로 열고, 열린 popup의 항목에서는 순환 또는 양끝으로 이동합니다. 비활성 버튼과 native 대상의 최신 eligibility는 기존 controller가 먼저 refresh해 제외합니다. 키보드 탐색은 클릭/편집 명령을 실행하지 않습니다. 이미 소비한 이벤트·조합 입력·229·Alt/Ctrl/Meta 및 외부 입력에는 개입하지 않습니다.
+
+열림 상태는 계속 `details.open` 하나입니다. controller는 기존 popup layer를 동기 refresh한 뒤 포커스를 옮겨 native toggle 이전의 숨은 popover에 focus하는 것을 피합니다. listener/정리 수명은 기존 controller에 유지하며 close 이후 이벤트는 포커스를 바꾸지 않습니다. Escape 동작은 기존 경로를 유지합니다.
+
+메뉴 keyboard/controls/command-registry/disclosures/popup-layer 다섯 파일17/17, 실패/skip0을 확인했습니다. 방향키 순환·Home/End·동적 disabled·소비/조합/수정키·외부 타겟·빈 목록·close 반례를 포함합니다. DOM 대역 검증이며 실제 브라우저/접근성 트리·전체 RHWP UI 동치의 근거는 아닙니다. 실행 중 전체 문서 감사가 읽는 코어/도구는 이 UI 변경으로 바꾸지 않았습니다.
+
 ## 실제 DOM 반례와 후속 수정
 
 외부 Chromium의 최초 실행에서 hover 전환은 확인됐으나 바깥 클릭 후 메뉴가 열려 있었습니다. composedPath의 Window도 contains에 전달하는 경로를 찾았고 실제 Chromium에서 `document.body.contains(window)`가 TypeError임을 직접 확인했습니다. DOM nodeType을 가진 입력만 contains에 전달하도록 수정했습니다. 대역 contains도 비노드에서 TypeError를 발생시키도록 강화해 Window가 포함된 경로를 검사합니다. 기존/신규6/6·skip0·exit0입니다.
