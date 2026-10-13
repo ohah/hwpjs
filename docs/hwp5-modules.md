@@ -2,6 +2,8 @@
 
 현재 모듈별 책임·소유권·미지원 경계는 주제 문서에서 관리합니다. 구현 변경 시 해당 문서를 갱신하고 AGENTS.md에 상세를 누적하지 않습니다.
 
+- [HWPX 전용 편집 감사 출력 검증](specialized-audit-output.md)
+
 - [찾기·바꾸기 메뉴와 공통 포커스 명령](find-menu-command.md)
 
 - [HWP5 수식 정의 명령 작성 기반](hwp5-formula-definition-command.md)
