@@ -195,7 +195,7 @@ async function openSelectedFile(selected) {
     openedFormat = format;
     const job = new Worker(new URL("./reader-worker.mjs", import.meta.url), { type: "module" });
     worker = job;
-    const fail = message => { if (epoch !== generation) return; pictureRequests.reset(); direct.reset(); controls.reset(); formulaControls.reset(); cellSizeControls.reset(); cellResizeControls.reset(); paragraphFormatControls.reset(); paragraphMarginControls.reset(); paragraphSpacingControls.reset(); characterPropertyControls.reset(); underlineColorControls.reset(); renderer.clear(); accessible.value = ""; status.textContent = `오류: ${message}`; job.terminate(); worker = null; generation++; updateSave(); };
+    const fail = message => { if (epoch !== generation) return; renderer.clear(); pictureRequests.reset(); direct.reset(); controls.reset(); formulaControls.reset(); cellSizeControls.reset(); cellResizeControls.reset(); paragraphFormatControls.reset(); paragraphMarginControls.reset(); paragraphSpacingControls.reset(); characterPropertyControls.reset(); underlineColorControls.reset(); accessible.value = ""; status.textContent = `오류: ${message}`; job.terminate(); worker = null; generation++; updateSave(); };
     job.onerror = guardGeneration(() => generation, epoch, event => { fail(event.message || "읽기 worker 오류"); });
     job.onmessage = guardGeneration(() => generation, epoch, event => {
       // Window queries are not full editable document responses.
