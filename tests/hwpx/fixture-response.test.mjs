@@ -19,6 +19,23 @@ test("every UI catalog URL is intercepted and serves its exact original bytes", 
     }
   }
 });
+
+test("nested table and dutmal reference examples are explicit catalog entries", async () => {
+  for (const [id, path] of [
+    ["medical-exam-equipment.hwpx", "reference/rhwp/samples/issue5712/3184241_medical_exam_equipment.hwpx"],
+    ["training-dutmal.hwpx", "reference/rhwp/samples/hwpx/opengov/36389301_결재문서본문_직장훈련계획_덧말.hwpx"],
+  ]) {
+    const matches = demoFixtures.filter(fixture => fixture.id === id);
+    assert.equal(matches.length, 1);
+    assert.equal(matches[0].path, path);
+    assert.equal(Object.isFrozen(matches[0]), true);
+    const response = sink();
+    await respondDemoFixture(root, fixtureUrl(id), "GET", response);
+    assert.equal(response.status, 200);
+    assert.deepEqual(response.body, await readFile(new URL(`../../${path}`, import.meta.url)));
+    assert.throws(() => fixtureUrl(path), /UnknownDemoFixture/);
+  }
+});
 test("fixture response serves exact original bytes and bodyless HEAD", async () => {
   for (const method of ["GET", "HEAD"]) {
     const response = sink();
