@@ -10,6 +10,10 @@
 
 ## 단계별 구현 이력
 
+2026-10-13 저장 후 재조판 회귀: `dutmal-table-reflow.test.mjs`는 실제 덧말 파일을 Worker/WASM으로 열고 본문 덧말 값을 Unicode로 변경한 뒤 현재 배치·저장·undo·redo·재열기 배치를 검사합니다. 모든 표 셀의 단일 투영, 원문 표 배치값과 부모/셀 소유 관계, 조판 입력 불변 및 undo 원래 배치 복원이 통과했습니다. 저장 시 오래된 줄 캐시가 제거되어 후속 XML 노드 번호가 이동하므로 재열기 전후 번호 동일성을 요구하지 않습니다. 현재 세션의 번호로 각 배치의 소유권을 검사하고 세션 간에는 표/셀 역할을 비교합니다. 기존 Worker 전체 ZIP 독립 oracle과 실제 표 배치 검사까지 정확한 선택3/3 종료코드0입니다. 주입 metric·Canvas 대역이며 실제 글꼴/원본 조판 증거로 합산하지 않습니다.
+
+브라우저 진단 후속: 새 세션의 업로드 직후 snapshot은 응답했으나 이후 해당 탭의 직접 CDP Runtime/Debugger/Page 명령도 응답하지 않았습니다. Browser.getVersion과 새 탭의 Runtime.evaluate는 응답했고, 별도 진단 탭은 load와 업로드 직후 Runtime 응답까지 확인했습니다. 이 증거만으로 parser/renderer의 무한 루프나 자동화 daemon 단독 결함을 확정하지 않습니다. 실제 UI 편집 후 재조판 검증은 여전히 미확인입니다. 소유 진단 탭·Chrome·daemon·서버를 종료했습니다.
+
 `tablePageAnchorError`는 기존 `tablePageAnchorSupported`의 동일 조건을 검사해 첫 거부 이유를 반환합니다. boolean API는 이 결과를 재사용합니다. 원문 배치값·원래 지원 범위를 수정하지 않으며 한 이유가 나머지 조건도 지원된다는 뜻은 아닙니다.
 
 표 본문 조판의 `UnsupportedTablePageAnchor` 결과에는 `tableNode`와 `anchorReason`을 추가합니다. 논리 미리보기 fallback에서도 renderer의 `pageLayoutTableNode/pageLayoutAnchorReason`와 Canvas dataset에 같은 진단을 보존합니다. 물리 배치 성공으로 표시하지 않습니다.
