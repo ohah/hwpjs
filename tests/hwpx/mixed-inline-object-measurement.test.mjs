@@ -5,6 +5,7 @@ import { readFileSync } from "node:fs";
 import { workerCanvasHarness } from "../canvas/worker-harness.mjs";
 import { layoutTableBodyContent } from "../../web/preview/table-body-content-layout.mjs";
 import { execFileSync } from "../../tools/oracle-process.mjs";
+import { measureNestedTable } from "../../web/preview/nested-table-measurement.mjs";
 
 test("explicit overlay anchors keep UTF16 units without inline width or height", () => {
   const paragraph = { section: 0, paragraph: 0, text: "😀\ufffcA\ufffcB" };
@@ -27,7 +28,7 @@ test("explicit overlay anchors keep UTF16 units without inline width or height",
   assert.equal(measureInlineObjectParagraph(paragraph, [entry], 200, measure).error, "AmbiguousInlineObjectAnchors");
 });
 
-test("actual mixed nested host reaches original inline width refusal without dropping overlay", async t => {
+test("actual mixed nested host preserves oversized width in visible page placement", async t => {
   assert(process.env.HWPJS_TEST_WASM, "explicit field display candidate required");
   const h = await workerCanvasHarness(t);
   const input = readFileSync("reference/rhwp/samples/issue5712/3184241_medical_exam_equipment.hwpx");
@@ -52,7 +53,8 @@ print(json.dumps({'cellWidth':int(cell.find(n+'cellSz').get('width')),'cellHasMa
   const nested = loaded.content.tables.filter(table => table.parentTableNode !== null);
   assert.deepEqual(nested.map(table => [table.tableNode, table.hostParagraph, table.anchorUnit, table.sourceGeometry.geometry.treat_as_character]),
     [[418, 38, 0, false], [1064, 38, 1, true]]);
-  const result = layoutTableBodyContent(loaded.content, text => ({ width: text.length * 4, height: 12 }), 20000);
+  const measure = text => ({ width: text.length * 4, height: 12 });
+  const result = measureNestedTable(loaded.content, loaded.content.tables[0], measure);
   assert.equal(result.error, "InlineObjectLineWidthOverflow");
   assert.equal(result.paragraph, 38);
   assert.equal(result.objects.length, 1);
@@ -61,5 +63,17 @@ print(json.dumps({'cellWidth':int(cell.find(n+'cellSz').get('width')),'cellHasMa
   assert(Math.abs(result.objects[0].width - (independent.childWidth + independent.childLeft + independent.childRight) / 75) < 1e-8);
   assert(result.objects[0].width > result.availableWidth);
   assert.equal(result.rows, undefined, "no partially successful layout for a refused document");
+  const visible = layoutTableBodyContent(loaded.content, measure, 20000);
+  assert.equal(visible.state, "paginated", visible.error);
+  assert.equal(visible.boxes.length, loaded.content.tables.reduce((sum, table) => sum + table.cells.length, 0));
+  assert.equal(new Set(visible.boxes.map(box => `${box.tableNode}:${box.listNode}`)).size, visible.boxes.length);
+  const childBoxes = visible.boxes.filter(box => box.tableNode === 1064);
+  assert(Math.abs(Math.max(...childBoxes.map(box => box.x + box.width)) - Math.min(...childBoxes.map(box => box.x)) - independent.childWidth / 75) < 1e-8);
+  assert(childBoxes.every(box => box.pageClip === undefined), "visible overflow must not acquire a cell clip");
+  for (const box of visible.boxes.filter(box => box.depth > 0)) {
+    const paper = box.referenceBoxes.paper;
+    assert(box.x >= paper.x - 1e-8 && box.y >= paper.y - 1e-8);
+    assert(box.x + box.width <= paper.x + paper.width + 1e-8 && box.y + box.height <= paper.y + paper.height + 1e-8);
+  }
   assert.deepEqual(loaded.content, before);
 });

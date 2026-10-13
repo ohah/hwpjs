@@ -12,7 +12,7 @@ import { reserveNestedFloatingFlow } from "./nested-floating-flow-reservation.mj
 export function measureNestedTable(content, root, measure, { maxRows = 20000, maxDepth = 64, overflow = "reject" } = {}) {
   const unavailable = error => ({ state: "unavailable", error });
   if (typeof measure !== "function" || !Number.isSafeInteger(maxRows) || maxRows < 1
-    || !Number.isSafeInteger(maxDepth) || maxDepth < 1 || !["reject", "clip"].includes(overflow)) return unavailable("InvalidNestedTableMeasurement");
+    || !Number.isSafeInteger(maxDepth) || maxDepth < 1 || !["reject", "clip", "visible"].includes(overflow)) return unavailable("InvalidNestedTableMeasurement");
   let index;
   try { index = validateNestedTableOwnership(content); }
   catch { return unavailable("InvalidNestedTableFlow"); }
@@ -66,7 +66,7 @@ export function measureNestedTable(content, root, measure, { maxRows = 20000, ma
           const currentMeasure = (text, owner, unit, kind) => floatingUnits.has(unit) && kind === "text"
             ? { ...textMeasurement(measure("", owner, unit, kind)), width: 0 } : measure(text, owner, unit, kind);
           const flow = entries.length
-            ? measureInlineObjectParagraph(paragraph, entries, input.width, measure, { maxRows: input.maxRows - rows.length, allowLineOverflow: overflow === "clip", compactLines: true, zeroWidthUnits: [...floatingUnits] })
+            ? measureInlineObjectParagraph(paragraph, entries, input.width, measure, { maxRows: input.maxRows - rows.length, allowLineOverflow: overflow !== "reject", compactLines: true, zeroWidthUnits: [...floatingUnits] })
             : layoutContent({ paragraphs: [paragraph], limited: false }, input.width, currentMeasure, input.maxRows - rows.length, { documentBody: true, compactLines: true });
           if (flow.state === "unavailable") return { ...flow, section: table.section, tableNode: table.tableNode,
             listNode: input.cell.listNode, paragraph: paragraph.paragraph, availableWidth: input.width,
@@ -87,7 +87,7 @@ export function measureNestedTable(content, root, measure, { maxRows = 20000, ma
           }
           height = reservation.bottom;
         }
-        return { rows, boxes, height, width: input.width, limited: false, spatialRows: true, clipOverflow: overflow === "clip", ...(floatingTables.length ? { floatingTables } : {}) };
+        return { rows, boxes, height, width: input.width, limited: false, spatialRows: true, clipOverflow: overflow === "clip", ...(overflow === "visible" ? { visibleHorizontalOverflow: true } : {}), ...(floatingTables.length ? { floatingTables } : {}) };
       } });
   };
   return measureTable(root, maxRows, 0);

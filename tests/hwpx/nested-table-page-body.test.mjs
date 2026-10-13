@@ -5,6 +5,7 @@ import { readFileSync } from "node:fs";
 import { workerCanvasHarness } from "../canvas/worker-harness.mjs";
 import { tableTextPaintOrder, topTablePaintRowIndex } from "../../web/preview/table-text-paint-order.mjs";
 import { rowAtPoint } from "../../web/preview/row-geometry.mjs";
+import { measureNestedTable } from "../../web/preview/nested-table-measurement.mjs";
 
 function fixture() {
   const table = (node, host, list, member, parent, parentList, width) => ({ section: 0, tableNode: node, hostParagraph: host, anchorUnit: parent === null ? 0 : 1, parentTableNode: parent, parentListNode: parentList, rows: 1, columns: 1, sourceCaption: null,
@@ -32,6 +33,30 @@ test("nested inline child is measured inside its parent and projected exactly on
   let calls = 0;
   assert.equal(layoutTableBodyContent(invalid, () => { calls++; return 4; }, 20000).error, "InvalidNestedTableFlow");
   assert.equal(calls, 0);
+});
+
+test("oversized child stays visible and follows root placement within paper", () => {
+  const content = fixture();
+  content.tables[1].sourceGeometry.geometry.width = 18000;
+  content.tables[1].cells[0].width = 18000;
+  const measure = text => ({ width: text.length * 4, height: 12 });
+  const result = layoutTableBodyContent(content, measure, 20000);
+  assert.equal(result.state, "paginated", result.error);
+  const child = result.boxes.find(box => box.tableNode === 2);
+  const parent = result.boxes.find(box => box.tableNode === 1);
+  assert.equal(child.width, 240);
+  assert(child.x + child.width > parent.x + parent.width);
+  assert.equal(child.pageClip, undefined);
+  const shifted = structuredClone(content);
+  shifted.tables[0].sourceGeometry.geometry.horizontal_offset = 750;
+  const moved = layoutTableBodyContent(shifted, measure, 20000);
+  assert.equal(moved.state, "paginated", moved.error);
+  assert.equal(moved.boxes.find(box => box.tableNode === 1).x - parent.x, 10);
+  assert.equal(moved.boxes.find(box => box.tableNode === 2).x - child.x, 10);
+  const outside = structuredClone(content);
+  outside.tables[1].sourceGeometry.geometry.width = 90000;
+  outside.tables[1].cells[0].width = 90000;
+  assert.equal(layoutTableBodyContent(outside, measure, 20000).error, "NestedTablePaperOverflow");
 });
 
 test("behind floating child is produced and projected without consuming a text-width unit", () => {
@@ -131,10 +156,13 @@ test("actual nested inline fixture reports child width overflow instead of omitt
   assert.equal(loaded.error, undefined);
   const before = structuredClone(loaded.content);
   assert.equal(loaded.content.tables.filter(row => row.parentTableNode != null).length, 5);
-  const result = layoutTableBodyContent(loaded.content, text => ({ width: text.length * 4, height: 10 }), 20000);
+  const measure = text => ({ width: text.length * 4, height: 10 });
+  const root = loaded.content.tables.find(table => table.tableNode === 2282);
+  const result = measureNestedTable(loaded.content, root, measure);
   assert.equal(result.error, "InlineObjectLineWidthOverflow");
   assert.equal(result.tableNode, 2282);
   assert(Number.isFinite(result.availableWidth));
   assert(result.objects.some(object => object.width > result.availableWidth));
+  assert.equal(layoutTableBodyContent(loaded.content, measure, 20000).error, "UnsupportedPageFlow");
   assert.deepEqual(loaded.content, before);
 });

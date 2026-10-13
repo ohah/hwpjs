@@ -22,8 +22,9 @@ export function placeInlineTablePages(table, paragraph, layout, outerInsets) {
     if (!paper || ![paper.x, paper.width, paper.x + paper.width, start, end].every(Number.isFinite) || paper.width <= 0 || start < paper.x || end > paper.x + paper.width + 1e-8) return unavailable("InlineTablePageWidthOverflow");
   }
   const shift = column.x + line.x + margins.left - left;
-  const projected = layout.boxes.map(box => box.tableNode === table.tableNode && box.section === table.section ? { ...box, x: box.x + shift } : box);
-  const rows = layout.rows.map(row => row.tableNode === table.tableNode && row.section === table.section ? { ...row, x: row.x + shift } : row);
+  const ownsPosition = item => item.section === table.section && (item.tableNode === table.tableNode || item.positionOwnerTableNode === table.tableNode);
+  const projected = layout.boxes.map(box => ownsPosition(box) ? { ...box, x: box.x + shift } : box);
+  const rows = layout.rows.map(row => ownsPosition(row) ? { ...row, x: row.x + shift } : row);
   const flowPictures = layout.flowPictures?.map(picture => picture.cell?.tableNode === table.tableNode && picture.section === table.section
     ? { ...picture, rectangle: { ...picture.rectangle, x: picture.rectangle.x + shift } } : picture);
   if (flowPictures?.some(picture => !picture.rectangle || !Number.isFinite(picture.rectangle.x) || !Number.isFinite(picture.rectangle.x + picture.rectangle.width))) return unavailable("InlineTablePageWidthOverflow");

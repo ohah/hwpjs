@@ -20,6 +20,7 @@ import { measureBlockTableHost } from "./block-table-host-flow.mjs";
 import { layoutFloatingTableBody } from "./floating-table-body-layout.mjs";
 import { validateNestedTableOwnership } from "./nested-table-ownership.mjs";
 import { measureNestedTable } from "./nested-table-measurement.mjs";
+import { nestedTablePaperBounds } from "./nested-table-paper-bounds.mjs";
 
 // Source-ordered block tables; inline, captions and nested flow are separate.
 export function layoutTableBodyContent(content, measure, maxRows) {
@@ -68,7 +69,7 @@ export function layoutTableBodyContent(content, measure, maxRows) {
     if (remaining < 1) return unavailable("TableCellMeasurementLimit");
     const origin = { x: 0, y: 0 };
     const hasChildren = content.tables.some(child => child.section === table.section && child.parentTableNode === table.tableNode);
-    const measured = hasChildren ? measureNestedTable(content, table, measure, { maxRows: remaining }) : measureTableCells(table, content.paragraphs, measure, { origin, padding: "source", maxRows: remaining,
+    const measured = hasChildren ? measureNestedTable(content, table, measure, { maxRows: remaining, overflow: "visible" }) : measureTableCells(table, content.paragraphs, measure, { origin, padding: "source", maxRows: remaining,
       pictures, paragraphFlows: content.paragraphFlows, pictureReferences: { paper: reference.boxes.paper, page: reference.boxes.page, column: reference.boxes.page } });
     if (measured.state !== "measured") return measured;
     remaining -= measured.rowCount;
@@ -144,6 +145,8 @@ export function layoutTableBodyContent(content, measure, maxRows) {
     if (result.state !== "placed") return result;
   }
   const placements = [...(result.flowPictures ?? []), ...(result.pictureReservations ?? [])];
+  const nestedBounds = nestedTablePaperBounds(result.boxes);
+  if (nestedBounds.state !== "contained") return nestedBounds;
   const flowPictures = placements.length ? placements.map(item => {
     const source = pictures.find(p => p.section === item.section && p.pictureNode === item.pictureNode);
     return { ...item, paragraph: source?.paragraph, anchorUnit: source?.anchorUnit };

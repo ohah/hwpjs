@@ -12,6 +12,8 @@ export function projectNestedTableCellContent(flow, parent, insets, fragment, ma
   const width = parent.width - insets.left - insets.right;
   const height = parent.height - insets.top - insets.bottom;
   if (flow.clipOverflow !== undefined && typeof flow.clipOverflow !== "boolean") return unavailable("InvalidNestedCellProjection");
+  if (flow.visibleHorizontalOverflow !== undefined && typeof flow.visibleHorizontalOverflow !== "boolean"
+    || flow.visibleHorizontalOverflow && flow.clipOverflow) return unavailable("InvalidNestedCellProjection");
   if (!Number.isSafeInteger(parent.depth ?? 0) || (parent.depth ?? 0) < 0) return unavailable("InvalidNestedCellProjection");
   if (![width, height].every(value => Number.isFinite(value) && value > 0)) return unavailable("InvalidNestedCellProjection");
   const owners = new Map(), boxes = [];
@@ -22,9 +24,9 @@ export function projectNestedTableCellContent(flow, parent, insets, fragment, ma
       || !Number.isSafeInteger((parent.depth ?? 0) + (box.depth ?? 0) + 1)
       || ![box.x, box.y, box.width, box.height, box.x + box.width, box.y + box.height].every(Number.isFinite)
       || box.x < 0 || box.y < 0 || box.width <= 0 || box.height <= 0
-      || !flow.clipOverflow && box.x + box.width > width + 1e-8 || box.y + box.height > height + 1e-8) return unavailable("InvalidNestedCellProjection");
+      || !flow.clipOverflow && !flow.visibleHorizontalOverflow && box.x + box.width > width + 1e-8 || box.y + box.height > height + 1e-8) return unavailable("InvalidNestedCellProjection");
     owners.set(key, box);
-    boxes.push({ ...box, depth: (parent.depth ?? 0) + (box.depth ?? 0) + 1, x: parent.x + insets.left + box.x, y: parent.y + insets.top + box.y,
+    boxes.push({ ...box, positionOwnerTableNode: parent.tableNode, depth: (parent.depth ?? 0) + (box.depth ?? 0) + 1, x: parent.x + insets.left + box.x, y: parent.y + insets.top + box.y,
       pageOrdinal: fragment.pageOrdinal, referenceBoxes: fragment.referenceBoxes });
   }
   const clip = { x: parent.x + insets.left, y: parent.y + insets.top, width, height };
@@ -49,7 +51,7 @@ export function projectNestedTableCellContent(flow, parent, insets, fragment, ma
     if (!Number.isFinite(rowWidth) || rowWidth < 0 || !Number.isFinite(x + rowWidth)
       || x < owner.x || row.y < owner.y || x + rowWidth > owner.x + owner.width + 1e-8
       || row.y + row.height > owner.y + owner.height + 1e-8) return unavailable("NestedCellRowOverflow");
-    const projected = { ...row, tableNode, listNode, x: parent.x + insets.left + (row.x ?? 0), y: parent.y + insets.top + row.y,
+    const projected = { ...row, tableNode, listNode, positionOwnerTableNode: parent.tableNode, x: parent.x + insets.left + (row.x ?? 0), y: parent.y + insets.top + row.y,
       pageOrdinal: fragment.pageOrdinal, columnOrdinal: fragment.columnOrdinal, referenceBoxes: fragment.referenceBoxes };
     if (flow.clipOverflow === true || row.pageClip !== undefined) {
       projected.pageClip = projectClip(row.pageClip);
