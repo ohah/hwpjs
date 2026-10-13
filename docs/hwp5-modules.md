@@ -10,6 +10,7 @@
 - [포맷 독립 수식 문법·참조 선택·집계 SSOT](range-aggregate.md)
 - [대형 참조 문서의 현재 편집 표본](reference-current-probes.md)
 - [읽기 전용 문단 텍스트 미리보기 API](hwp5-text-preview-api.md)
+- [읽기 전용 표시의 원본 좌표 보존](hwp5-readonly-display-offsets.md)
 - [Canvas 문단 텍스트 미리보기 화면](canvas-text-preview.md)
 - [HWP5 구간 표시 투영과 남은 소유권 연결](hwp5-display-window-projection.md)
 - [Canvas 직접 입력·선택·조합 실험](canvas-direct-input.md)

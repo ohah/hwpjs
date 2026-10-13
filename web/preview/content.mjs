@@ -37,7 +37,8 @@ export function displayContent(result, { maxUnits = 200000, maxParagraphs = 2000
       paragraphs.push({ section: section.index, paragraph: index, editable, label: `구역 ${section.index + 1} · 문단 ${index + 1}${p.parentNodeIndex !== null ? " · 중첩" : ""}${empty ? " · 빈 문단" : ""}${controls ? ` · 제어 표식 ${controls}개 (표시 의미 미적용)` : ""}`, text: p.textPresent || empty ? text : "[직접 텍스트 없음]" });
       if (text.length !== fullText.length) paragraphs.at(-1).clipped = true;
       paragraphs.at(-1).selectionOwner = p.parentNodeIndex === null ? `section:${section.index}:body` : null;
-      if (retainedView && editable) paragraphs.at(-1).sourceOffsets = retainedView.offsets;
+      // Coordinate projection is display data, independent of edit permission.
+      if (retainedView && text.length === fullText.length) paragraphs.at(-1).sourceOffsets = retainedView.offsets;
     }
   }
   return { format: "hwp5", version: result.version.join("."), paragraphs, totalParagraphs, limited, ...(result.readOnly ? { readOnly: true, primarySource: result.primarySource } : {}) };
