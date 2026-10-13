@@ -45,3 +45,11 @@
 실제 `footnote-endnote.hwp`의 첫 각주 문단 선택은 host 및 두 각주를 포함하는 ordinal 0/1/2를, 미주는 3/4/5를 보존했습니다. 실제 `table-caption.hwp`에서도 캡션·표 관계를 합성한 구간과 context 비편집 상태·원문 저장 불변을 확인했습니다. 잘못된 표 control/목록·중복·누락·unclaimed flow 반례와 표 회귀는 후보/기본 artifact 각각 6/6·skip 0·종료코드 0입니다. 공통 identity/투영 리팩터링 후 대형 표 원본 회귀도 기본 artifact로 재실행 중입니다. Worker/UI·표시/저장 E2E 완료를 뜻하지 않습니다.
 
 최종 리팩터링의 실제 대형 표·주석·캡션·표 반례 재실행도 기본 artifact 7/7·skip 0·종료코드 0으로 완료됐습니다. 위의 실행 중 상태를 갱신합니다. 범위 dependency의 그림·필드와 현재값/이력·실제 UI 연결은 여전히 남습니다.
+
+## 도형 본문·캡션 의존성
+
+`hwp5-drawing-window-dependencies.mjs`는 기존 drawing source validator와 공통 ordinal 계산을 재사용합니다. 본문 component의 부모 사슬을 root anchor까지 확인하고, 캡션의 control 소유자와 current paragraph flow의 정확한 parent/list를 대조합니다. 호스트와 본문은 서로 필요한 문단으로 보존하며 누락·미해결 flow·잘못된 root와 빈 선언을 구분합니다. 표·주석과의 합성은 기존 공통 window projection에 연결했습니다.
+
+후보 e1609e28에서 실제 `textbox`, `shaperect`, `shapecontainer-2`의 본문 선택·readonly context·원문 저장 바이트 불변과 기존 각주/표 캡션 회귀, 합성 캡션 반례를 단일 동시성으로 실행해 7/7·skip 0·종료코드 0을 확인했습니다. 이 결과는 필드 의존성, 구조 편집 후 갱신, Worker/UI 이동과 실제 화면 조판을 증명하지 않습니다. 일반 HWP5 UI window route는 아직 활성화하지 않았습니다.
+
+이전 native 전체 gate의 프로세스와 임시 로그는 현재 환경에서 남아 있지 않습니다. 실행 중이라는 과거 기록을 완료로 계산하지 않으며, 새 전체 gate의 결과가 필요합니다.

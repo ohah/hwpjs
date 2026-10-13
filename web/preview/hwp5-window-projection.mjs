@@ -18,7 +18,7 @@ export function projectHwp5DependencyWindow(editor, projection, { offset, count,
   return { ...content, window: { requestedOffset: offset, requestedCount: count, paragraphOffset: offset, paragraphCount: count, contextCount: plan.ordinals.length - count } };
 }
 
-// Includes tables/captions/notes; drawing/field closure and Worker remain pending.
+// Includes tables/captions/notes/drawings; field closure and Worker remain pending.
 export function projectHwp5OwnedWindow(editor, projection, options) {
   return projectHwp5DependencyWindow(editor, projection, options, hwp5OwnedWindowDependencies);
 }
