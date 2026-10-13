@@ -35,3 +35,13 @@
 현재 어댑터는 표 소유권만 연결했습니다. 그림·주석·필드와 caption 전체의 의존성, 현재값 갱신·Worker/UI 이동·실제 브라우저/저장 E2E는 아직 남아 있으며 일반 HWP5 window route에 연결하지 않았습니다.
 
 기본 cbaaf27f artifact의 최종 재실행은 8/8·skip 0·종료코드 0으로 완료됐습니다. 순수 표/의존성 반례도 5/5이며 위 실행 중 상태를 갱신합니다. 최신 native 전체 gate는 별도 실행 중입니다.
+
+## 주석·캡션 의존성과 공통 투영
+
+`hwp5-window-identities.mjs`로 전체 문서 ordinal/source identity 계산을 공유합니다. `hwp5-list-window-dependencies.mjs`는 native current paragraph flow와 note/caption source를 대조해 본문·호스트를 함께 보존합니다. 캡션은 native table layout의 정확한 control/table record 연결도 검사합니다. 소스 선언상 빈 목록은 문단을 만들어 채우지 않고, 선언된 본문 누락·잘못된/중복 목록·미해결 flow는 거부합니다.
+
+`hwp5-owned-window-dependencies.mjs`는 표와 목록 관계를 새 Map으로 합성합니다. 공통 `hwp5-window-projection.mjs`가 요청 선검사·예산·표시·readonly context 구분을 단독 소유하며 기존 표 전용 함수를 이 계층에 위임했습니다. 이 합성은 아직 그림·필드 family를 포함하지 않습니다.
+
+실제 `footnote-endnote.hwp`의 첫 각주 문단 선택은 host 및 두 각주를 포함하는 ordinal 0/1/2를, 미주는 3/4/5를 보존했습니다. 실제 `table-caption.hwp`에서도 캡션·표 관계를 합성한 구간과 context 비편집 상태·원문 저장 불변을 확인했습니다. 잘못된 표 control/목록·중복·누락·unclaimed flow 반례와 표 회귀는 후보/기본 artifact 각각 6/6·skip 0·종료코드 0입니다. 공통 identity/투영 리팩터링 후 대형 표 원본 회귀도 기본 artifact로 재실행 중입니다. Worker/UI·표시/저장 E2E 완료를 뜻하지 않습니다.
+
+최종 리팩터링의 실제 대형 표·주석·캡션·표 반례 재실행도 기본 artifact 7/7·skip 0·종료코드 0으로 완료됐습니다. 위의 실행 중 상태를 갱신합니다. 범위 dependency의 그림·필드와 현재값/이력·실제 UI 연결은 여전히 남습니다.

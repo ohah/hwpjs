@@ -1,24 +1,14 @@
+import { hwp5WindowIdentities } from "./hwp5-window-identities.mjs";
 // Native table ownership discovery only; other object adapters remain separate.
 export function hwp5TableWindowDependencies(editor, projection) {
-  const ordinals = new Map(), sections = new Set(), dependencies = new Map();
-  for (const section of projection.sections) {
-    if (section.index !== sections.size) throw new Error("WindowDependencyBindingMismatch");
-    sections.add(section.index);
-    for (let paragraph = 0; paragraph < section.paragraphs.length; paragraph++) ordinals.set(`${section.index}:${paragraph}`, ordinals.size);
-  }
-  const resolve = (section, paragraph) => {
-    if (!Number.isSafeInteger(paragraph) || paragraph < 0) throw new Error("WindowDependencyBindingMismatch");
-    const ordinal = ordinals.get(`${section}:${paragraph}`);
-    if (ordinal === undefined) throw new Error("WindowDependencyBindingMismatch");
-    return ordinal;
-  };
+  const { ordinals, resolve } = hwp5WindowIdentities(projection), dependencies = new Map();
   const link = (child, parent) => {
     if (child === parent) return;
     if (!dependencies.has(child)) dependencies.set(child, []);
     const values = dependencies.get(child);
     if (!values.includes(parent)) values.push(parent);
   };
-  for (const section of sections) {
+  for (const { index: section } of projection.sections) {
     const placements = new Map(), owners = new Map(), represented = new Set();
     for (const row of editor.tablePlacements(section)) {
       if (placements.has(row.tableNode)) throw new Error("WindowDependencyBindingMismatch");
