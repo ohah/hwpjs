@@ -6,10 +6,6 @@
 
 ## 현재 후보 실측
 
-2026-10-13 후보 `field-label-display-owned-api` SHA256 `39c827edcce665efcce4b40c9a70d47d0d1f74a1ac63013972d2b10a49692a1f`의 참조 전체 읽기를 재실행했습니다. `/tmp/hwpjs-reference-parser.RtiKQL`의 시작·975개 개별 결과·최종 summary와 종료코드0을 확인했습니다. HWP3 제외26·범위 내949개 중 HWP5 509/HWPX435의690523문단 텍스트 projection·입력 버퍼 불변이 통과했습니다. 개별 path 중복 부재·개별 문단 수 합계와 summary 일치·현재 artifact hash 일치도 별도로 검사했습니다. 기본 제품 WASM은 승격하지 않았으며 모든 필드·편집·저장·Canvas 완료 결과가 아닙니다.
-
-남은5거부는 기본 무비밀번호 정책의 `HWP5-password-123456.hwpx`(EncryptedDocument), `hwp3-sample16-hwp5-2024-password-123456.hwp`(실제 서명 HWP5, UnsupportedEncryption)와 issue5715/5802/5828의3원본(SectionCountMismatch)입니다. 파일명 hwp3로 범위를 제외하지 않았습니다. 성공944개·거부5개를 구분하며 암호 지정 복호화나 누락 구역 자동 복구를 수행한 집계로 바꾸지 않습니다. 같은 후보의 두 실제 중첩 문서 편집 검사와 추적 Worker 회귀는 [편집 감사](hwpx-table-fixture-edit-audit.md)의 별도 범위입니다.
-
 2026-10-12 조건부 개체 주변 편집 후보 SHA256 `e4a1faf91f41e82604c04f492d282c8a84ae4e91ca491e30bd2a737bb6124400`의 참조 전체 읽기는 `/tmp/hwpjs-reference-read-e4a1.9kW6CV`에서 exit0으로 종료했습니다. inventory975·HWP3 제외26·범위 내949, HWP5 509/HWPX435의 텍스트 읽기와 입력 불변·690523문단을 확인했습니다. 기본 무비밀번호 정책에서 `EncryptedDocument`1·`UnsupportedEncryption`1, 축소 원본의 `SectionCountMismatch`3은 그대로 거부했습니다. 기존 기본 제품이나 다른 후보의 읽기 성공을 가져온 결과가 아니며 전체 필드·편집·저장·브라우저/조판 완료는 아닙니다. 후보의 편집 검증은 [조건부 개체 주변 입력](hwpx-switch-anchor-edit.md)이 소유합니다.
 
 2026-10-12 로컬 기본 WASM SHA256 `7b41bb97ffbb2bf77e21a40dd3e88968383a641734c759c956f854408d12ced3`으로 참조 root 전체 읽기를 다시 실행했습니다. `/tmp/hwpjs-reference-read-7b41.socNf5`의 최종 summary와 exit 0을 확인했습니다. 975경로 중 HWP3 26개 제외·범위 내 949개이며 HWP5 509개/HWPX 435개에서 690,523문단의 텍스트 읽기와 입력 버퍼 불변을 검증했습니다. 기본 무비밀번호 읽기의 암호 거부 2개와 issue5715/5802/5828의 `SectionCountMismatch` 3개는 유지됩니다. 아래 이전 후보 결과를 최신 산출물에 소급한 것이 아니며, 비밀번호 지정 읽기·모든 필드·편집·저장·실제 브라우저·원본 조판 완료의 증거가 아닙니다.
