@@ -23,3 +23,15 @@
 표 어댑터, 구간 밖 문단의 clipped context 표시, 그림·주석·필드 dependency, Worker/UI 이동 및 현재값 갱신은 계속 남아 있습니다. 기본 표시나 HWPX의 기존 구간 정책을 이 계획으로 자동 대체하지 않았습니다.
 
 같은 세 검사를 기본 cbaaf27f artifact에서도 재실행해 3/3·skip 0·종료코드 0을 확인했습니다. source/native 전체 gate 통과로 소급하지 않습니다.
+
+## 표 구간 어댑터 구현
+
+`hwp5-table-window-dependencies.mjs`는 native 표 연결과 배치를 ordinal dependency로 옮깁니다. 셀 문단의 host, 중첩 부모의 소유 table/list 연결을 검증하고 host를 선택하면 표의 대표 셀 식별자를 함께 보존합니다. 중복 소유권·없는 host/parent·부모 list 불일치·표 소유권 순환은 거부하며 텍스트 전체나 표 셀 전체를 강제로 확장하지 않습니다.
+
+공통 `displayContent`의 선택적 `paragraphOrdinals`는 정렬된 원본 식별자를 한 번 순회로 표시하며 offset과 혼용하거나 중복/역순/범위 밖 값을 받지 않습니다. 의존 문단 수가 예산을 넘으면 일부를 조용히 삭제하지 않고 거부합니다. `hwp5-table-window-projection.mjs`는 선택 구간과 readonly·비선택 context를 구분하고, 필요한 실제 텍스트가 clipped되면 명시적으로 거부합니다. native 텍스트·저장 모델을 복제하지 않습니다.
+
+실제 대형 원본에 어댑터 및 sparse 표시를 적용해 선택 100개·readonly context·독립 검증된 표 연결과 기존 strict nested ownership 검사·원문 저장 불변을 확인했습니다. 후보의 관련 7/7·skip 0·종료코드 0, 공통 표시/Canvas 회귀 17/17입니다. 후속 source schema guard와 clipping/잘못된 요청 선검사 반례를 추가하여 기본 artifact로 다시 실행 중입니다.
+
+현재 어댑터는 표 소유권만 연결했습니다. 그림·주석·필드와 caption 전체의 의존성, 현재값 갱신·Worker/UI 이동·실제 브라우저/저장 E2E는 아직 남아 있으며 일반 HWP5 window route에 연결하지 않았습니다.
+
+기본 cbaaf27f artifact의 최종 재실행은 8/8·skip 0·종료코드 0으로 완료됐습니다. 순수 표/의존성 반례도 5/5이며 위 실행 중 상태를 갱신합니다. 최신 native 전체 gate는 별도 실행 중입니다.

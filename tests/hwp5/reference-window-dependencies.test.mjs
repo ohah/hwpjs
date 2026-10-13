@@ -6,6 +6,11 @@ import { createHwp5Reader } from "../../js/hwp5.mjs";
 import { inspect } from "./style-preservation/text-record-oracle.mjs";
 import { tableBindings, tablePlacements } from "./style-preservation/table-binding-oracle.mjs";
 import { planParagraphDependencies } from "../../web/preview/paragraph-dependency-plan.mjs";
+import { hwp5TableWindowDependencies } from "../../web/preview/hwp5-table-window-dependencies.mjs";
+import { projectHwp5TableWindow } from "../../web/preview/hwp5-table-window-projection.mjs";
+import { attachTables } from "../../web/preview/table-content.mjs";
+import { attachTablePlacements } from "../../web/preview/table-placements-content.mjs";
+import { validateNestedTableOwnership } from "../../web/preview/nested-table-ownership.mjs";
 
 test("actual huge reference retains independently verified table host outside selected window", async () => {
   const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
@@ -32,6 +37,18 @@ test("actual huge reference retains independently verified table host outside se
     const plan = planParagraphDependencies({ total: ordinals.size, offset: 50000, count: 100, dependencies, maxParagraphs: 20000 });
     assert.equal(plan.ordinals.length, 101);
     assert.deepEqual(plan.ordinals.filter(value => value < 50000 || value >= 50100), [35871]);
+    const adapted = hwp5TableWindowDependencies(editor, preview);
+    assert.equal(adapted.total, ordinals.size);
+    for (const [child, required] of dependencies) for (const host of required) assert(adapted.dependencies.get(child)?.includes(host));
+    const closed = planParagraphDependencies({ ...adapted, offset: 50000, count: 100, maxParagraphs: 20000 });
+    assert(closed.ordinals.includes(35871));
+    assert(closed.ordinals.length >= 101 && closed.ordinals.length < 200);
+    const content = projectHwp5TableWindow(editor, preview, { offset: 50000, count: 100 });
+    assert.equal(content.paragraphs.filter(row => !row.windowContext).length, 100);
+    assert(content.paragraphs.filter(row => row.windowContext).every(row => row.editable === false && row.selectable === false));
+    assert.equal(content.window.contextCount, closed.ordinals.length - 100);
+    attachTables(editor, preview, content); attachTablePlacements(editor, preview.sections, content);
+    validateNestedTableOwnership(content);
     assert.deepEqual(Buffer.from(editor.save().bytes), input);
   } finally { editor.close(); reader.close(); }
 });

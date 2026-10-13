@@ -5,14 +5,20 @@ export function clipText(text, maxUnits) {
   if (end < text.length && end > 0 && text.charCodeAt(end - 1) >= 0xd800 && text.charCodeAt(end - 1) <= 0xdbff) end--;
   return text.slice(0, end);
 }
-export function displayContent(result, { maxUnits = 200000, maxParagraphs = 20000, paragraphOffset = 0 } = {}) {
+export function displayContent(result, { maxUnits = 200000, maxParagraphs = 20000, paragraphOffset = 0, paragraphOrdinals = null } = {}) {
   if (![maxUnits, maxParagraphs, paragraphOffset].every(value => Number.isSafeInteger(value) && value >= 0)) throw new RangeError("InvalidDisplayBounds");
+  const total = result.sections.reduce((sum, section) => sum + section.paragraphs.length, 0);
+  if (paragraphOrdinals !== null && (paragraphOffset !== 0 || !Array.isArray(paragraphOrdinals)
+    || paragraphOrdinals.some((value, index) => !Number.isSafeInteger(value) || value < 0 || value >= total || index > 0 && value <= paragraphOrdinals[index - 1]))) throw new RangeError("InvalidDisplayBounds");
+  if (paragraphOrdinals !== null && paragraphOrdinals.length > maxParagraphs) throw new RangeError("ParagraphWindowBudgetExceeded");
+  const selected = paragraphOrdinals === null ? null : new Set(paragraphOrdinals);
   const paragraphs = [];
-  let units = 0, totalParagraphs = 0, ordinal = 0, limited = paragraphOffset > 0;
+  let units = 0, totalParagraphs = 0, ordinal = 0, limited = paragraphOffset > 0 || selected !== null && selected.size < total;
   for (const section of result.sections) {
     totalParagraphs += section.paragraphs.length;
     for (const [index, p] of section.paragraphs.entries()) {
-      if (ordinal++ < paragraphOffset) continue;
+      const current = ordinal++;
+      if (selected !== null ? !selected.has(current) : current < paragraphOffset) continue;
       // Text budget must not erase paragraph identity needed by nested owners.
       // Retain bounded, noneditable clipped rows after text is exhausted.
       if (paragraphs.length >= maxParagraphs) { limited = true; continue; }

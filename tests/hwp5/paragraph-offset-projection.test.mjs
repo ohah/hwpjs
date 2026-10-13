@@ -38,3 +38,15 @@ test("offset projection preserves text budget and rejects ambiguous bounds", () 
   assert.deepEqual(selected.paragraphs.map(p => [p.paragraph, p.text, p.editable]), [[1, "", false], [2, "l", false]]);
   for (const key of ["paragraphOffset", "maxUnits", "maxParagraphs"]) for (const value of [-1, 1.5, NaN, Infinity, null, "1", Number.MAX_SAFE_INTEGER + 1]) assert.throws(() => displayContent(source, { [key]: value }), /InvalidDisplayBounds/);
 });
+
+test("sparse display preserves original indices and rejects lossy dependency selection", () => {
+  const source = { version: [5, 0, 0, 0], sections: [{ index: 0, paragraphs: [paragraph("owner"), paragraph("gap"), paragraph("selected😀")] }] };
+  const ordinals = Object.freeze([0, 2]);
+  const content = displayContent(source, { paragraphOrdinals: ordinals, maxParagraphs: 2 });
+  assert.deepEqual(content.paragraphs.map(p => [p.paragraph, p.text]), [[0, "owner"], [2, "selected😀"]]);
+  assert.equal(content.totalParagraphs, 3); assert.equal(content.limited, true);
+  assert.throws(() => displayContent(source, { paragraphOrdinals: ordinals, maxParagraphs: 1 }), /ParagraphWindowBudgetExceeded/);
+  for (const paragraphOrdinals of [[2, 0], [0, 0], [3], [-1], [1.5], [null], {}]) assert.throws(() => displayContent(source, { paragraphOrdinals }), /InvalidDisplayBounds/);
+  assert.throws(() => displayContent(source, { paragraphOrdinals: [0], paragraphOffset: 1 }), /InvalidDisplayBounds/);
+  assert.deepEqual(displayContent(source, { paragraphOrdinals: [] }).paragraphs, []);
+});
