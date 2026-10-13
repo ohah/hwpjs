@@ -1,5 +1,15 @@
 # 실제 표 배치 거부의 진단
 
+## 현재 상태와 검증 경계
+
+현재 구현은 PAGE 기준 전체 표 예약, 부모 셀 안의 인라인 중첩 표, 조건부 TOP_AND_BOTTOM 부동 자식 및 뒤쪽/앞쪽 자식의 측정·투영·paint/hit 연결을 포함합니다. 아래 단계별 기록의 `아직 미지원`, `다음 작업`은 해당 단계 당시 상태이며 최신 지원 판정으로 사용하지 않습니다. 현재 제한은 일반 글자가 섞인 부동 감싸기, 인라인/부동 혼합 앵커, 다단계 부동 계층, 캡션·줄 높이 영향 및 원본 조판 동치입니다. 실제 table-bug의 폭 넘침도 계속 거부합니다.
+
+2026-10-13 후보39c827ed에서 정확한 파일 선택으로 `table-page-anchor-reference`와 `nested-floating-flow-reservation` 2/2를 재실행해 통과했습니다. 실제 덧말 문서의 측정 기반 배치 증거이며 전체 픽스쳐 지원 완료가 아닙니다.
+
+같은 후보를 loopback 서버로 제공해 Chromium에서 실제 덧말 파일을 업로드했습니다. 업로드 명령은 성공했으나 이후 준비 상태 조회·Canvas dataset 조회·세션 종료 명령이 반환되지 않았습니다. 자동화 daemon은 살아 있었고 샘플은 대기 상태였으므로 제품의 무한 루프나 화면 성공으로 판정하지 않습니다. 소유 Chrome/daemon/server의 정확한 PID를 확인해 종료했습니다. 실제 글꼴 화면·편집 후 재조판·다운로드 검증은 미확인으로 남습니다. 기본 제품 WASM은 승격하지 않았습니다.
+
+## 단계별 구현 이력
+
 `tablePageAnchorError`는 기존 `tablePageAnchorSupported`의 동일 조건을 검사해 첫 거부 이유를 반환합니다. boolean API는 이 결과를 재사용합니다. 원문 배치값·원래 지원 범위를 수정하지 않으며 한 이유가 나머지 조건도 지원된다는 뜻은 아닙니다.
 
 표 본문 조판의 `UnsupportedTablePageAnchor` 결과에는 `tableNode`와 `anchorReason`을 추가합니다. 논리 미리보기 fallback에서도 renderer의 `pageLayoutTableNode/pageLayoutAnchorReason`와 Canvas dataset에 같은 진단을 보존합니다. 물리 배치 성공으로 표시하지 않습니다.
