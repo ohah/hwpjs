@@ -27,3 +27,9 @@ password.test·password-worker·password-corpus의 정확한3파일은6/6·skip0
 실제 Canvas pointer로0:0:4를 선택해 keyboard inserttext `GUI😀`를 적용했습니다. native 본문 표시가 `암호GUI😀로 보호되는 파일`로 바뀌었고 동의 전 다운로드는 계속 비활성이었습니다. 보호 해제 동의만 켜고 저장하면 LayoutReflowRequired로 거부되며 다운로드 Blob이 생성되지 않았습니다. 재조판되지 않은 원본 배치 유지 동의도 켠 뒤 실제 포인터로 다운로드를 요청해 보호 없음 경고와 저장 요청 완료를 확인했습니다. URL.createObjectURL에 전달된9216바이트 Blob을 같은 브라우저의 새 HWP5 reader로 비밀번호 없이 읽어 수정 본문을 확인했습니다. 실제 디스크 다운로드 파일이나 재암호화 저장 검사는 아닙니다.
 
 중첩 command-bar 스크롤 때문에 locator의 자동 스크롤 이후 체크박스가 Canvas에 가리거나 다운로드 버튼이 scope-note에 가리는 관측이 있었습니다. 브라우저 기본 scrollIntoView(nearest)로 내부 스크롤을 이동한 뒤 elementFromPoint가 실제 download임을 확인하고 raw pointer로 눌렀습니다. 강제 DOM click/동의값 대입으로 보호 gate를 우회하지 않았으며 이 기록을 CSS/모든 스크롤 UI 수정 완료로 해석하지 않습니다. screenshot-1791854219905.png의 원본 텍스트·이미지 Canvas를 시각 확인했습니다. 소유 브라우저를 close하고 서버PID22657을 확인해 종료했습니다. 앞선 실제 브라우저 비밀번호 UI 미검증 경계는 이 legacy DES 한 사례에 한해서 해소됐고 AES/HWPX UI 전수·재암호화·원본 조판 동치는 남습니다.
+
+## 최종 complete-sites 후보의 HWP5 회귀
+
+SHA-256 `66944afc4768dd9080accd8efbdc6eb45e1c32efbf18b185080d30bc78810413`으로 동일 전수 prefix/이력 감사를 재실행한 session34900은 종료코드0입니다. `/tmp/hwpjs-complete-sites-hwp5-edit.jsonl`은 단일 JSON 보고서이며101개 추적 경로의 중복 부재·개별 attempted/edited/historyVerified 합계·현재 artifact hash를 별도 assertion으로 확인했습니다. HWP5는55경로 중53전체 문단 성공·1차트 숫자 부분 거부·1암호 미지정 거부, 전체2090시도/2042입력·정확 이력·독립 CFB.js/zlib 텍스트/비대상 스트림·저장 재열기입니다. HWPX45읽기/별도 감사와 암호1은 합산하지 않습니다.
+
+같은 후보의 chart numeric 검사1/1·skip0·종료코드0입니다. 실제175문단에서 분류한48개 숫자 위치 모두 정상 숫자7 치환·독립 저장값/비대상 스트림·재열기·undo/redo가 통과했습니다. 따라서48개 비숫자 거부는 숫자 편집 미지원이 아닙니다. 전체 수식 산술/모든 문자 위치/조판·브라우저·현재 native source 전체 gate/제품 승격 완료로 해석하지 않습니다.
