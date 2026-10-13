@@ -43,3 +43,7 @@ RHWP 참조 revision `e8800c8def63449808a4092798442652ed460552`의 `src/model/pa
 `tests/hwp5/bounded-paragraph-identity.test.mjs`와 기존 Canvas preview는 13/13·skip 0·종료코드 0입니다. `tests/hwp5/manual-table-ownership.test.mjs`는 동일 후보의 실제 Worker load에서 10,514개 식별자 보존·텍스트 200,000 이하·전체 중첩 소유권 검사와 문제 8개 host의 정확한 parent/list 연결·clipped/비편집 상태를 확인해 1/1·skip 0·종료코드 0입니다. 실제 Chromium의 수정 후 전체 렌더링/옵션 검증은 다음 gate이며 아직 게시하지 않았습니다.
 
 수정 후 실제 Chromium session `hwpjs-range-final`에서 편람의 `HWP 5.1.1.0 · 10514문단 · 표시 한도` 상태를 확인했습니다. 편집 준비 후 동의 옵션이 활성화됐고 실제 폼에서 1번 구역 104번 문단 `[4,7)`을 `브라우저😀`로 치환하여 명령 완료 및 접근성 텍스트 반영을 관측했습니다. 동의를 끈 동일 요청은 `UnsupportedRangeSemantics`로 거부됐으며 HWPX parashape로 바꾸자 동의가 꺼짐·비활성화됐습니다. 고급 폼 summary가 sticky Canvas에 가려 마우스 클릭은 실패했으므로 키보드 focus/Enter로 폼을 열고 제출했습니다. 이 별도 겹침 문제·Canvas 직접 입력과 실제 다운로드 바이트 검증은 아직 남습니다. 소유 브라우저와 테스트 서버는 종료했습니다.
+
+고급 폼 겹침은 별도 CSS 수정 `4ff367e7`으로 게시했습니다. 닫힌 도움말 summary는 고정 작업 영역보다 앞에서 클릭 가능하게 하고, 하단 details가 펼쳐지면 작업 영역을 일반 흐름으로 전환합니다. 실제 마우스로 편람의 폼을 열고 `마우스검증😀` 치환·접근성 반영을 확인했습니다. 최종 펼침 흐름은 실제 parashape HWP5에서 `workspace: relative`·좌표 겹침 false이며 CSS 계약/기존 controls 10/10 통과했습니다. 정책 체크박스가 화면 아래 도움말에 가려진 때는 페이지 위로 스크롤한 뒤 체크했습니다. 실제 Canvas 입력·다운로드·좁은 화면 전수 검증은 별도이고, 브라우저/서버는 종료했습니다.
+
+동의 UI와 공통 명령 위임은 `1a7a2609`로 게시했습니다. 별도 index에서 app의 documentFormat 전달과 HTML의 체크박스 한 줄만 추출하여 기존 차트 변경을 포함하지 않았으며 사용자 stage도 보존했습니다. 명령 경계 회귀는 실제 editor controls의 Canvas origin splice·처리 중 재요청 거부·실패 후 복구·다음 HWPX 문서의 초기화를 추가해 관련 11/11 통과했습니다. 이는 Canvas 키 입력 E2E나 native 수정 게시를 뜻하지 않습니다. 글꼴/글자 속성 동시 입력은 다른 명령이므로 이 옵션으로 완화하지 않습니다.
