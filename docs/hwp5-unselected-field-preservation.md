@@ -29,3 +29,17 @@ RHWP 참조 revision `e8800c8def63449808a4092798442652ed460552`의 `src/model/pa
 후속 `actual overlapping ranges` 회귀는 실제 1번 구역 104번 문단의 중첩 범위 `[0,71]`·`[3,9]`를 사용해 시작/끝/내부 삽입과 내부/전체/범위 교차 삭제·치환 10조합을 검사했습니다. 독립 전체 구역 및 비대상 스트림 oracle, 잘못된 기대 문자열을 거부하는 부정 대조, 명시적 `SplitSurrogatePair` 거부, 실패 후 redo 보존, 저장 재열기가 1/1·skip 0·종료코드 0입니다. 앞선 prefix 전수 결과와 별도이며 구조 분할/병합·한컴 의미는 미검증입니다.
 
 `tests/hwp5/manual-range-worker.test.mjs`는 같은 실제 문단에서 기본 정책 거부와 명시적 half-open 치환을 Worker 경계로 실행하고 독립 저장 비교·undo 원본 복원·잘못된 정책 거부 뒤 redo 보존을 검사했습니다. 1/1·skip 0·종료코드 0입니다. mock self/fetch 기반 실제 Worker handler 검사이며 실제 Chromium/Canvas·OS 입력 검증이 아닙니다. UI 정책 선택은 아직 연결하지 않았습니다.
+
+후속 UI 작업으로 HWP5 전용 범위 이동 실험 동의 체크박스를 추가했습니다. 기본 꺼짐이며 새 파일에서 초기화하고 편집 준비 전/처리 중/표시 실패/HWPX에서는 비활성화합니다. `range-policy-controls.mjs`는 동의와 현재 문서 상태만 소유하며 기존 editor controls가 일반 splice 요청에만 명시적 정책을 추가합니다. 이미 지정된 정책·저장·서식·구조 명령은 덮어쓰지 않습니다. native 좌표 계산을 복제하지 않습니다. 정책 및 기존 editor controls 10/10·skip 0·종료코드 0, app/editor syntax와 diff whitespace 검사를 통과했습니다. 아직 실제 브라우저 검증·게시 전이며, Canvas의 대상 권한/보호 위치 때문에 범위 문단 직접 입력이 가능하다는 주장은 하지 않습니다. 위의 UI 미연결 상태는 이 부분 연결로 갱신하되 전체 Canvas 지원은 남습니다.
+
+실제 Chromium session `hwpjs-range-consent`·별도 loopback 18483·동일 후보로 편람을 업로드했습니다. 초기 준비 대기와 동의 활성화 대기가 각각 25초 시간 초과했고, 살아 있는 페이지의 status는 `읽는 중`·editor panel hidden·accessible 길이 0을 유지했습니다. network에서 Worker 스크립트 요청을 관측했으며 서버 직접 요청은 HTTP 200·약 1.5ms였습니다. 일부 서식 선택 목록이 생성된 관측만으로 load handler 완료나 옵션 검증 성공을 주장하지 않습니다. 읽기/표시 경계 정체의 원인은 아직 확정하지 않았습니다. 테스트 소유 브라우저와 서버는 종료하며 이 실행을 UI 통과로 계수하지 않습니다.
+
+추가 실제 브라우저 관측에서 Worker가 `load`·10,514문단 응답을 먼저 반환하고 `InvalidNestedTableFlow`가 발생하는 것을 확인했습니다. 오류 정리의 `direct.reset()`이 renderer의 실패한 원래 content를 다시 조판하면서 같은 예외를 던져 상태 갱신까지 중단했습니다. 오류 처리에서 `renderer.clear()`를 먼저 실행하도록 바꾸자 동일 업로드는 즉시 `오류: InvalidNestedTableFlow`를 표시했습니다. 파서 대기나 무한 루프가 아니라 표시 오류와 오류 정리 재진입의 조합입니다.
+
+동일 브라우저의 별도 실제 Worker 응답 그래프를 검사하니 12번 구역의 중첩 표 8개에서 host 문단의 tableCell 소유 연결이 충족되지 않았습니다. tableNode는 449/596/981/1410/1633/1832/2087/3193, hostParagraph는 100/132/220/323/377/426/482/731입니다. 원문 파서 소유권·표시 배열 제한/투영 중 어느 계층에서 연결이 빠지는지는 다음 조사 대상입니다. 검사기를 무조건 통과시키거나 표를 버리지 않았으며, 전체 편람 표시·동의 UI 검증은 여전히 미완료입니다.
+
+원인은 `displayContent`의 텍스트 예산 200,000 UTF16 소진 후 문단 전체를 제외하는 분기였습니다. table bindings/placements는 원문 전체를 유지하므로 뒤 구역의 중첩 host만 사라졌습니다. 텍스트 한도는 유지하면서 최대 20,000문단 내에서 빈 clipped·비편집 문단 식별자를 보존하도록 바꿨습니다. native 문서나 저장 입력을 변경하지 않고 표를 제거하거나 소유권 검사를 완화하지 않았습니다. 문단 개수 한도 초과의 소유권 투영 문제는 별도이며 이 수정으로 전체 큰 문서 지원을 주장하지 않습니다.
+
+`tests/hwp5/bounded-paragraph-identity.test.mjs`와 기존 Canvas preview는 13/13·skip 0·종료코드 0입니다. `tests/hwp5/manual-table-ownership.test.mjs`는 동일 후보의 실제 Worker load에서 10,514개 식별자 보존·텍스트 200,000 이하·전체 중첩 소유권 검사와 문제 8개 host의 정확한 parent/list 연결·clipped/비편집 상태를 확인해 1/1·skip 0·종료코드 0입니다. 실제 Chromium의 수정 후 전체 렌더링/옵션 검증은 다음 gate이며 아직 게시하지 않았습니다.
+
+수정 후 실제 Chromium session `hwpjs-range-final`에서 편람의 `HWP 5.1.1.0 · 10514문단 · 표시 한도` 상태를 확인했습니다. 편집 준비 후 동의 옵션이 활성화됐고 실제 폼에서 1번 구역 104번 문단 `[4,7)`을 `브라우저😀`로 치환하여 명령 완료 및 접근성 텍스트 반영을 관측했습니다. 동의를 끈 동일 요청은 `UnsupportedRangeSemantics`로 거부됐으며 HWPX parashape로 바꾸자 동의가 꺼짐·비활성화됐습니다. 고급 폼 summary가 sticky Canvas에 가려 마우스 클릭은 실패했으므로 키보드 focus/Enter로 폼을 열고 제출했습니다. 이 별도 겹침 문제·Canvas 직접 입력과 실제 다운로드 바이트 검증은 아직 남습니다. 소유 브라우저와 테스트 서버는 종료했습니다.
