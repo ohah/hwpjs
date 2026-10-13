@@ -57,3 +57,9 @@ RHWP 참조 revision `e8800c8def63449808a4092798442652ed460552`의 `src/model/pa
 새 후보 `zig-out/verification/unselected-fields-format/bin/hwpjs.wasm` SHA-256 `e1609e28fdc650a04fcd66fa067ad805d1c72181a8292a01070ed6c35444ee86`의 ReleaseSafe 빌드는 6/6·종료코드 0입니다. 실제 편람의 다른 구역 글자 모양 적용 회귀는 이전 후보에서 `UnsupportedSectionControl`로 재현했고 새 후보에서 독립 비대상 stream·수정 문단 char run ID·undo/redo·재열기를 통과했습니다. 실제 본문/글자 모양·범위 Worker·중첩 소유권 공개 회귀 합계 4/4·skip 0, focused native root 포함 3/3·종료코드 0입니다. 최신 소스의 전체 native gate를 `/tmp/hwpjs-unselected-format-native-full.log`에 별도 시작했으며 이전 source 실행과 구분합니다. native 수정은 아직 미게시입니다.
 
 같은 최종 후보로 편람의 비대상 누름틀을 보존하는 본문·글자 모양·글자 속성 세 회귀를 확대했습니다. 글자 모양은 독립 전체 구역 기대값까지 대조하고, 속성은 DocInfo와 모든 구역·비대상 스트림을 독립 레코드 oracle로 검사했습니다. 잘못된 글자 크기 기대값은 거부되는 부정 대조이며 실제 크기/굵게/기울임·재열기 텍스트·undo/redo·잘못된 요청 후 redo 보존도 검사했습니다. 3/3·skip 0·종료코드 0입니다. 기존 4/4와 중복되는 두 사례를 더해 독립 7개로 계수하지 않습니다. 최신 전체 native 실행은 계속 살아 있으며 완료 판정은 하지 않습니다.
+
+최종 e1609e28 후보의 전체 참조 읽기 `/tmp/hwpjs-unselected-format-reference-read.jsonl`은 종료코드 0입니다. 975경로 중 HWP3 26개 제외, 범위 내 949개 중 HWP5 509/HWPX 435개 읽기 및 입력 불변 검증, 총 690,523문단입니다. 암호 거부 2개와 기존 `SectionCountMismatch` 3개는 성공으로 계수하지 않습니다. 파일별 counts·문단 합계·고유 975경로·후보 파일 hash를 별도로 대조했습니다. 이는 전체 필드·편집·조판 완료 gate가 아니며 전체 편집 감사는 다른 후보로 계속 실행 중입니다.
+
+`tests/hwp5/unselected-cross-reference-gate.test.mjs`는 실제 7구역 roadmap 원본의 0번 구역 상호참조 2개를 독립 관측하고, 참조가 없는 1/5/6번 구역 입력·글자 모양·속성 요청 9개가 비대상 구역 보호 때문에 거부되는지 확인했습니다. 각 거부 후 원문 저장과 빈 undo/redo를 검사했습니다. 기존 상호참조 gate와 합계 2/2·skip 0·종료코드 0입니다. 보존 허용이 미지원 상호참조 해결까지 확대되지 않았다는 반례이며, 이 문서 전체 편집 지원은 여전히 미완료입니다.
+
+오류 정리 순서 수정은 `ee6270bd`로 별도 게시했습니다. 실제 app callback 추출 실행에서 failed content 제거·상태 보고·worker 종료·generation 갱신, 늦은 실패 무시를 확인했고 순서 반전 변이에서는 같은 오류가 보고를 가리는 것을 재현했습니다. startup 회귀와 합계 4/4이며 파서 native 게시와는 구분합니다.
