@@ -51,3 +51,7 @@ RHWP 참조 revision `e8800c8def63449808a4092798442652ed460552`의 `src/model/pa
 후속 실제 Chromium `hwpjs-canvas-range`에서 원본 편람을 열고 범위 동의 후 검색 `‘전자서명’(1999. 8. 7.)`의 유일 결과를 선택했습니다. Canvas input은 `[3,22)`를 선택했고 실제 `keyboard inserttext`로 `캔버스😀`를 입력하여 native 완료·현재 텍스트를 확인했습니다. 조판 경고 동의 후 브라우저 download 명령으로 `/tmp/hwpjs-canvas-range-edited.hwp`를 저장했습니다. 독립 CFB.js/레코드 `verifyRaw`로 수정 구역 전체·비대상 스트림을 대조하고 후보 editor로 새 파일을 재열어 정확 텍스트와 끝 CR 보존을 확인했습니다. 첫 재열기 기대값은 CR을 빠뜨려 실패했으며 원문 CR을 포함한 정확 기대값으로 교정 후 통과했습니다.
 
 최초 다운로드 동의/버튼 클릭은 스크롤된 command bar에서 가려져 실패했습니다. 페이지 위로 스크롤해 동의 상태를 확인하고 download 버튼을 명시적 scrollintoview한 뒤 실제 다운로드가 성공했습니다. 이 경로의 스크롤 접근성 개선과 OS IME·Canvas 삭제/다문단·서식 동시 입력·전체 문서 전수 UI는 여전히 남습니다. 소유 브라우저와 서버를 종료했습니다. 이 검증은 지정 후보를 사용했으며 native 코드 게시나 기본 제품 WASM 승격은 별도입니다.
+
+후속 소스 재검토에서 비대상 구역 검사 연결 실수를 찾았습니다. 기존 후보는 수식 정의에 새 검사를 넣고 글자 모양에는 넣지 않았습니다. 수식 정의 검사를 기존 정책으로 되돌리고 글자 모양 경로에 새 검사를 적용했습니다. 최종 적용 경로는 본문 splice·글자 속성·글자 모양입니다. 수식 정의까지 지원을 확대하지 않습니다.
+
+새 후보 `zig-out/verification/unselected-fields-format/bin/hwpjs.wasm` SHA-256 `e1609e28fdc650a04fcd66fa067ad805d1c72181a8292a01070ed6c35444ee86`의 ReleaseSafe 빌드는 6/6·종료코드 0입니다. 실제 편람의 다른 구역 글자 모양 적용 회귀는 이전 후보에서 `UnsupportedSectionControl`로 재현했고 새 후보에서 독립 비대상 stream·수정 문단 char run ID·undo/redo·재열기를 통과했습니다. 실제 본문/글자 모양·범위 Worker·중첩 소유권 공개 회귀 합계 4/4·skip 0, focused native root 포함 3/3·종료코드 0입니다. 최신 소스의 전체 native gate를 `/tmp/hwpjs-unselected-format-native-full.log`에 별도 시작했으며 이전 source 실행과 구분합니다. native 수정은 아직 미게시입니다.
