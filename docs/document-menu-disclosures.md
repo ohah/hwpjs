@@ -1,5 +1,11 @@
 # 문서 메뉴 열림 상태
 
+## RHWP 소스 비교 경계 (2026-10-13)
+
+현재 참조 `reference/rhwp/rhwp-studio/src/ui/menu-bar.ts`를 직접 비교했습니다. RHWP는 제목 mousedown 토글·열린 메뉴 사이 mouseenter 전환·바깥 mousedown/Escape 닫기·CommandDispatcher 실행·열릴 때 eligibility 갱신을 구현합니다. HWPJS는 기존 controller 명령 위임·현재 eligibility 갱신과 `details.open` 상태, 별도 disclosure/popup 계층으로 대응합니다. 포맷별 편집 의미는 메뉴가 아니라 기존 Worker/native 경계가 소유합니다.
+
+RHWP에는 열린 메뉴의 단일 문자 shortcutLabel 명령 실행과 하위 메뉴의 활성 항목 유무 판정도 있습니다. 현재 HWPJS의 방향키/Home/End 포커스 탐색이 이 기능들의 구현 증거는 아닙니다. 전체 RHWP 메뉴 항목·서브메뉴·도구 모음 동치와 실제 브라우저 키보드 검증은 미완료이며, 이미 있는 동작과 남은 기능을 분리합니다. 참조 구현 자체에도 방향키 탐색을 이 파일에서 확인한 것은 아니므로 양쪽 구조가 동일하다고 주장하지 않습니다.
+
 ## 키보드 포커스 탐색 (2026-10-13)
 
 `document-menu-keyboard.mjs`는 방향키 위/아래·Home·End의 포커스 이동만 소유합니다. summary에서 방향키는 첫/마지막 활성 항목으로 열고, 열린 popup의 항목에서는 순환 또는 양끝으로 이동합니다. 비활성 버튼과 native 대상의 최신 eligibility는 기존 controller가 먼저 refresh해 제외합니다. 키보드 탐색은 클릭/편집 명령을 실행하지 않습니다. 이미 소비한 이벤트·조합 입력·229·Alt/Ctrl/Meta 및 외부 입력에는 개입하지 않습니다.
@@ -7,6 +13,8 @@
 열림 상태는 계속 `details.open` 하나입니다. controller는 기존 popup layer를 동기 refresh한 뒤 포커스를 옮겨 native toggle 이전의 숨은 popover에 focus하는 것을 피합니다. listener/정리 수명은 기존 controller에 유지하며 close 이후 이벤트는 포커스를 바꾸지 않습니다. Escape 동작은 기존 경로를 유지합니다.
 
 메뉴 keyboard/controls/command-registry/disclosures/popup-layer 다섯 파일17/17, 실패/skip0을 확인했습니다. 방향키 순환·Home/End·동적 disabled·소비/조합/수정키·외부 타겟·빈 목록·close 반례를 포함합니다. DOM 대역 검증이며 실제 브라우저/접근성 트리·전체 RHWP UI 동치의 근거는 아닙니다. 실행 중 전체 문서 감사가 읽는 코어/도구는 이 UI 변경으로 바꾸지 않았습니다.
+
+후속 반례는 버튼 내부 요소의 이벤트 target을 인식하고 `preventDefault → popup refresh → focus` 순서를 직접 검사하며 Enter가 포커스 경로에서 명령을 실행하지 않는지 확인합니다. 실제 다섯 테스트 경로를 wrapper로 실행한 결과18/18·0fail/skip·종료코드0입니다. 처음 잘못 지정한 `document-command-registry.test.mjs` 경로는 MissingTestFile로 실행 전 거부됐으며 그 시도를 통과로 세지 않습니다. 실제 경로는 `document-menu-command-registry.test.mjs`입니다. 이 역시 DOM 대역이고 브라우저 검증을 대신하지 않습니다.
 
 ## 실제 DOM 반례와 후속 수정
 

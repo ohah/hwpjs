@@ -37,3 +37,24 @@ test("menu controller skips disabled targets and cannot focus after disposal", (
   controls.close(); targets[0].disabled = false;
   assert.equal(key().defaultPrevented, false); assert.deepEqual(focused, [0]);
 });
+
+test("menu navigation refreshes popup before focus and recognizes nested button content", () => {
+  const summary = {}, nested = {}, calls = [];
+  const popup = { open: false, querySelector: () => summary };
+  const buttons = [0, 1].map(index => ({
+    contains: target => index === 0 && target === nested,
+    focus() {
+      assert.equal(popup.open, true);
+      assert.equal(calls.at(-1), "refresh");
+      calls.push(`focus:${index}`);
+    },
+  }));
+  const event = { key: "ArrowDown", target: nested, preventDefault() { calls.push("prevent"); } };
+  const refresh = () => { popup.open = true; calls.push("refresh"); };
+  assert.equal(navigateDocumentMenu(event, popup, buttons, refresh), true);
+  assert.deepEqual(calls, ["prevent", "refresh", "focus:1"]);
+  calls.length = 0;
+  event.key = "Enter";
+  assert.equal(navigateDocumentMenu(event, popup, buttons, refresh), false);
+  assert.deepEqual(calls, []);
+});
