@@ -71,6 +71,38 @@ test("table paint order keeps geometry intact and groups behind body front", () 
   assert.throws(() => tableTextPaintOrder([{ tablePaintLayer: "unknown" }]), /InvalidTablePaintLayer/);
 });
 
+test("inline and behind or front nested siblings share current paragraph anchors", () => {
+  for (const wrap of [2, 3]) {
+    const content = fixture();
+    const overlay = structuredClone(content.tables[1]);
+    Object.assign(overlay, { tableNode: 3, anchorUnit: 3 });
+    overlay.cells[0].listNode = 13; overlay.cells[0].paragraphs = [3];
+    overlay.sourceGeometry.geometry.treat_as_character = false;
+    overlay.sourceGeometry.text_wrap = wrap;
+    overlay.sourceGeometry.affect_line_spacing = false;
+    content.tables.push(overlay);
+    content.paragraphs[1].text = "A\ufffcB\ufffcC";
+    content.paragraphs.push({ section: 0, paragraph: 3, text: "overlay😀", tableCell: { tableNode: 3, listNode: 13 } });
+    content.paragraphFlows.push({ ...content.paragraphFlows[2], paragraph: 3 });
+    const before = structuredClone(content);
+    const result = layoutTableBodyContent(content, text => ({ width: text.length * 4, height: 12 }), 20000);
+    assert.equal(result.state, "paginated", result.error);
+    assert.deepEqual(result.boxes.map(box => box.tableNode).sort(), [1, 2, 3]);
+    const host = result.rows.find(row => row.kind === "text" && row.paragraph === 1);
+    assert.equal(host.text, "A\ufffcB\ufffcC");
+    assert.equal(host.boundaries.find(b => b.unit === 3).x, host.boundaries.find(b => b.unit === 4).x);
+    assert(host.boundaries.find(b => b.unit === 2).x > host.boundaries.find(b => b.unit === 1).x);
+    const overlayRows = result.rows.filter(row => row.tableNode === 3);
+    assert.equal(overlayRows.map(row => row.text).join(""), "overlay😀");
+    assert(overlayRows.every(row => row.tablePaintLayer === (wrap === 2 ? "behind" : "front")));
+    assert.deepEqual(content, before);
+    const reverse = structuredClone(content); reverse.tables.reverse();
+    const reversed = layoutTableBodyContent(reverse, text => ({ width: text.length * 4, height: 12 }), 20000);
+    assert.equal(reversed.state, "paginated", reversed.error);
+    assert.deepEqual(reversed.boxes.map(box => [box.tableNode, box.x, box.y]).sort(), result.boxes.map(box => [box.tableNode, box.x, box.y]).sort());
+  }
+});
+
 test("renderer paints floating child text behind its host without painting its placeholder", async t => {
   const h = await workerCanvasHarness(t, { paintFrames: true });
   const content = fixture();

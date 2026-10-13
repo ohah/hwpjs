@@ -63,11 +63,10 @@ export function measureNestedTable(content, root, measure, { maxRows = 20000, ma
             entries.push({ objectNode: child.tableNode, unit: child.anchorUnit, width: childFlow.grid.width + left + right, height: childFlow.grid.height + top + bottom });
           }
           if (rows.length >= input.maxRows) return unavailable("TableCellMeasurementLimit");
-          if (floatingUnits.size && entries.length) return unavailable("UnsupportedMixedNestedTableAnchors");
           const currentMeasure = (text, owner, unit, kind) => floatingUnits.has(unit) && kind === "text"
             ? { ...textMeasurement(measure("", owner, unit, kind)), width: 0 } : measure(text, owner, unit, kind);
           const flow = entries.length
-            ? measureInlineObjectParagraph(paragraph, entries, input.width, measure, { maxRows: input.maxRows - rows.length, allowLineOverflow: overflow === "clip", compactLines: true })
+            ? measureInlineObjectParagraph(paragraph, entries, input.width, measure, { maxRows: input.maxRows - rows.length, allowLineOverflow: overflow === "clip", compactLines: true, zeroWidthUnits: [...floatingUnits] })
             : layoutContent({ paragraphs: [paragraph], limited: false }, input.width, currentMeasure, input.maxRows - rows.length, { documentBody: true, compactLines: true });
           if (flow.state === "unavailable") return { ...flow, section: table.section, tableNode: table.tableNode,
             listNode: input.cell.listNode, paragraph: paragraph.paragraph, availableWidth: input.width,
