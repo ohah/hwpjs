@@ -6,13 +6,17 @@ export function pictureLayoutCoverage(content, inlineIndex, layers, resourceAt =
   const source = new Set((content.pictures ?? []).map(picture => `${picture.section}:${picture.pictureNode}`));
   const eligible = [...source].filter(key => keys.has(key)).length;
   let decoded = 0, failed = 0, loading = 0;
+  const failures = [];
   const uniquePictures = new Map((content.pictures ?? []).map(picture => [`${picture.section}:${picture.pictureNode}`, picture]));
   for (const [key, picture] of uniquePictures) {
     if (!keys.has(key)) continue;
     const resource = resourceAt(picture.section, picture.pictureNode);
     if (resource?.bitmap) decoded++;
-    else if (resource?.error) failed++;
+    else if (resource?.error) {
+      failed++;
+      failures.push({ section: picture.section, pictureNode: picture.pictureNode, error: String(resource.error).slice(0, 160) });
+    }
     else loading++;
   }
-  return { total: source.size, eligible, pending: source.size - eligible, decoded, failed, loading };
+  return { total: source.size, eligible, pending: source.size - eligible, decoded, failed, loading, ...(failures.length ? { failures } : {}) };
 }

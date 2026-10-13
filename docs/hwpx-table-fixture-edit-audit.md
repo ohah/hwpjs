@@ -2,6 +2,8 @@
 
 ## 검증 범위
 
+덧말 파일의 그림 실패1개는 [그림 자원 진단](hwpx-picture-resource-diagnostics.md)에서 원문과 대조했습니다. 이미지 연결 부재이며 실제 코덱 실패와 구분합니다.
+
 같은 후보의 참조 HWP5/HWPX 전체 읽기는 [읽기 감사](field-display-candidate-read-audit.md)의 별도 검증 축입니다.
 
 2026-10-13 현재 후보 `field-label-display-owned-api`의 SHA256은 `39c827edcce665efcce4b40c9a70d47d0d1f74a1ac63013972d2b10a49692a1f`입니다. 기본 제품 WASM은 승격하지 않았으며 로컬 native 후보 결과를 원격 native 구현 완료로 소급하지 않습니다.
