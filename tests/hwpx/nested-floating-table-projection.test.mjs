@@ -51,4 +51,10 @@ test("floating nested cells retain text and source size at the explicit page pos
   assert.equal(projectedParent.rows.filter(row => row.tableNode === 2).map(row => row.text).join(""), "X😀");
   assert.equal(projectTablePageFragments(outerTable, outerGrid, new Map([[11, outerFlow]]), plan, { origin: { x: 0, y: 0 }, padding: 0, maxRows: 1 }).error, "TablePageProjectionLimit");
   assert.deepEqual(table, original);
+  const pictured = { ...measured, flows: new Map([...measured.flows].map(([key, value]) => [key, { ...value, flowPictures: [{ section: 0, pictureNode: 7, cell: { tableNode: 2, listNode: 12 }, rectangle: { x: 0, y: 0, width: 2, height: 2 } }] }])) };
+  const pictureContent = projectNestedFloatingCellContent(parent, parentFlow, [{ ...entry, measured: pictured }], page, options);
+  assert.equal(pictureContent.state, "placed");
+  assert.equal(pictureContent.flowPictures.length, 1);
+  assert.equal(pictureContent.flowPictures[0].positionOwnerTableNode, 1);
+  assert.equal(pictureContent.flowPictures[0].rectangle.x, 50);
 });

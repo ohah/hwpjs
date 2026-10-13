@@ -56,7 +56,7 @@ export function layoutContent(content, width, measure, maxRows = 20000, { docume
       const initialHeight = compactLines && kind === "text" ? textMeasurement(measure("", p, firstUnit, kind)).height : DEFAULT_TEXT_HEIGHT;
       let line = "", size = numberPrefix?.width ?? 0, textHeight = Math.max(initialHeight, numberPrefix?.height ?? 0), startUnit = firstUnit, boundaries = [{ unit: firstUnit, x: size }];
       const geometry = () => kind === "text" ? paragraphLineGeometry(p.paragraphShape, width, size, startUnit === 0) : { x: 0, width };
-      const row = () => ({ text: line, kind, section: p.section, paragraph: p.paragraph, editable: kind === "text" && p.editable, selectable: kind === "text" && !p.clipped && (p.editable || p.selectable), startUnit, endUnit: startUnit + line.length, boundaries, textHeight, paragraphShape: p.paragraphShape, paragraphX: geometry().x, width: geometry().width, ...(numberPrefix ? { numberPrefix } : {}) });
+      const row = () => ({ text: line, kind, section: p.section, paragraph: p.paragraph, editable: kind === "text" && p.editable, selectable: kind === "text" && !p.clipped && (p.editable || p.selectable), startUnit, endUnit: startUnit + line.length, boundaries, textHeight, paragraphShape: p.paragraphShape, paragraphX: geometry().x, paragraphReferenceX: kind === "text" ? paragraphLineGeometry({ ...p.paragraphShape, alignment: 0 }, width, size, startUnit === 0).x : 0, width: geometry().width, ...(numberPrefix ? { numberPrefix } : {}) });
       for (const { segment } of segments.segment(value)) {
         if (kind === "text" && isHardLineBreak(segment)) {
           // Keep source units and selection boundaries, but no painted glyph.

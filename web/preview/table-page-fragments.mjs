@@ -26,6 +26,7 @@ export function projectTablePageFragments(table, grid, cellFlows, plan, { origin
         const floating = projectNestedFloatingCellContent(box, flow, flow.floatingTables, { pageOrdinal: fragment.pageOrdinal, columnOrdinal: fragment.columnOrdinal, referenceBoxes: fragment.referenceBoxes }, { insets, maxRows: maxRows - rows.length });
         if (floating.state !== "placed") return floating;
         rows.push(...floating.rows); boxes.push(...floating.boxes);
+        flowPictures.push(...(floating.flowPictures ?? []));
       }
       for (const picture of flow.flowPictures ?? []) {
         if (!picture || picture.cell?.tableNode !== table.tableNode || picture.cell?.listNode !== cell.listNode || picture.section !== table.section || !picture.rectangle) return unavailable("InvalidTablePagePicture");

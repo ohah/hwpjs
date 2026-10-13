@@ -6,6 +6,7 @@ import { layoutInlineTablePageContent } from "./inline-table-page-content.mjs";
 import { hwpUnitPixels } from "./hwp-units.mjs";
 import { sourceTableColumns } from "./table-source-columns.mjs";
 import { textMeasurement } from "./text-measurement.mjs";
+import { reserveNestedFloatingFlow } from "./nested-floating-flow-reservation.mjs";
 
 // 자식 표 크기를 선행 측정하고 현재 UTF-16 앵커에 부모 셀 흐름을 결합합니다.
 export function measureNestedTable(content, root, measure, { maxRows = 20000, maxDepth = 64, overflow = "reject" } = {}) {
@@ -38,9 +39,10 @@ export function measureNestedTable(content, root, measure, { maxRows = 20000, ma
           const children = hosts.get(`${table.section}:${table.tableNode}:${input.cell.listNode}:${paragraph.paragraph}`) ?? [];
           const entries = [], measured = new Map();
           const floatingUnits = new Set();
+          const paragraphFloats = [];
           for (const child of children) {
             const floating = child.sourceGeometry?.geometry?.treat_as_character === false;
-            if (child.sourceCaption || (floating ? ![2, 3].includes(child.sourceGeometry.text_wrap) || child.sourceGeometry.affect_line_spacing !== false : child.sourceGeometry?.geometry?.treat_as_character !== true)) return { ...unavailable("UnsupportedNestedTableAnchor"), tableNode: child.tableNode, parentTableNode: table.tableNode };
+            if (child.sourceCaption || (floating ? ![1, 2, 3].includes(child.sourceGeometry.text_wrap) || child.sourceGeometry.affect_line_spacing !== false : child.sourceGeometry?.geometry?.treat_as_character !== true)) return { ...unavailable("UnsupportedNestedTableAnchor"), tableNode: child.tableNode, parentTableNode: table.tableNode };
             const raw = child.sourceGeometry.out_margin;
             if (!Array.isArray(raw) || raw.length !== 4 || !raw.every(v => Number.isSafeInteger(v) && v >= 0 && v <= 0xffffffff)) return unavailable("MissingTableOuterInsets");
             const remaining = input.maxRows - rows.length;
@@ -51,7 +53,8 @@ export function measureNestedTable(content, root, measure, { maxRows = 20000, ma
             if (floating) {
               if (!Number.isInteger(child.anchorUnit) || child.anchorUnit < 0 || paragraph.text[child.anchorUnit] !== "\ufffc" || floatingUnits.has(child.anchorUnit)) return unavailable("InvalidNestedFloatingTableOwner");
               floatingUnits.add(child.anchorUnit);
-              floatingTables.push({ table: child, paragraph, measured: childFlow });
+              const descriptor = { table: child, paragraph, measured: childFlow };
+              floatingTables.push(descriptor); paragraphFloats.push(descriptor);
               continue;
             }
             const [left, right, top, bottom] = raw.map(hwpUnitPixels);
@@ -70,6 +73,8 @@ export function measureNestedTable(content, root, measure, { maxRows = 20000, ma
             listNode: input.cell.listNode, paragraph: paragraph.paragraph, availableWidth: input.width,
             objects: entries.map(entry => ({ objectNode: entry.objectNode, unit: entry.unit, width: entry.width, height: entry.height })) };
           if (flow.limited) return unavailable("TableCellMeasurementLimit");
+          const reservation = paragraphFloats.length ? reserveNestedFloatingFlow(paragraph, flow, paragraphFloats, { x: 0, y: height }) : { state: "reserved", bottom: height + flow.height };
+          if (reservation.state !== "reserved") return reservation;
           rows.push(...flow.rows.map(row => ({ ...row, y: height + row.y,
             ...(entries.length || floatingUnits.size ? { inlineTables: [...entries.map(entry => ({ tableNode: entry.objectNode, unit: entry.unit })), ...children.filter(child => floatingUnits.has(child.anchorUnit)).map(child => ({ tableNode: child.tableNode, unit: child.anchorUnit }))] } : {}) })));
           for (const anchor of flow.anchors ?? []) {
@@ -81,7 +86,7 @@ export function measureNestedTable(content, root, measure, { maxRows = 20000, ma
             if (projected.state !== "placed") return projected;
             rows.push(...projected.rows); boxes.push(...projected.boxes);
           }
-          height += flow.height;
+          height = reservation.bottom;
         }
         return { rows, boxes, height, width: input.width, limited: false, spatialRows: true, clipOverflow: overflow === "clip", ...(floatingTables.length ? { floatingTables } : {}) };
       } });

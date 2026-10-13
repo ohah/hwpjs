@@ -14,7 +14,7 @@ export function positionNestedFloatingTable(table, parent, paragraph, references
   const placement = placeFloatingTable(table, { ...references, paragraph });
   if (placement.state !== "placed") return { ...unavailable("UnsupportedNestedFloatingTablePosition"), placementState: placement.state };
   const rectangle = placement.rectangle, paper = references.paper;
-  if (rectangle.x < paper.x || rectangle.y < paper.y || rectangle.x + rectangle.width > paper.x + paper.width || rectangle.y + rectangle.height > paper.y + paper.height) return unavailable("NestedFloatingTablePaperOverflow");
+  if (rectangle.x < paper.x || rectangle.y < paper.y || rectangle.x + rectangle.width > paper.x + paper.width || rectangle.y + rectangle.height > paper.y + paper.height) return { ...unavailable("NestedFloatingTablePaperOverflow"), tableNode: table.tableNode, parentTableNode: parent.tableNode, rectangle, paper: { ...paper }, paragraphBounds: { ...paragraph } };
   return { state: "positioned", rectangle, paintLayer: source.text_wrap === 2 ? "behind" : "front", textWrap: source.text_wrap,
     outsideParentCell: rectangle.x < parent.x || rectangle.y < parent.y || rectangle.x + rectangle.width > parent.x + parent.width || rectangle.y + rectangle.height > parent.y + parent.height,
     owner: { section: table.section, tableNode: table.tableNode, parentTableNode: parent.tableNode, parentListNode: parent.listNode, paragraph: paragraph.paragraph } };

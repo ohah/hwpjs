@@ -20,6 +20,14 @@
 
 ## PAGE 본문 경로 연결
 
+TOP_AND_BOTTOM 연결: 일반 글자가 없는 보호 앵커 호스트의 PARA/TOP·flow_with_text·비겹침 표는 현재 측정 문단 기준과 원문 높이/offset으로 셀 흐름 아래 경계를 예약합니다. 뒤쪽/앞쪽 표는 공간을 추가하지 않습니다. 일반 글자가 섞인 감싸기·다른 기준/정렬은 아직 명시적으로 미지원입니다.
+
+실제 파일에서 빈 중앙 정렬 문단의 paragraphX(글자 시작점)를 전체 문단 영역의 시작으로 오해해 child391이 종이 밖으로 밀리는 결함을 재현했습니다. layout은 기존 paragraphLineGeometry로 정렬 전 paragraphReferenceX를 별도로 만들고 부동 기준이 이를 사용합니다. 부모 표의 가로 이동도 positionOwnerTableNode로 자식 셀/행/그림에 전달합니다. 부동 셀 조합에서 flowPictures가 누락될 수 있는 경로도 보존하도록 보강했습니다.
+
+후보39c827ed의 실제 덧말 파일 전체를 폭4/높이12로 측정한 결과 paginated,93행·84개 셀 box입니다. 모든 표 셀을 중복 없이 배치하고 모든 현재95문단의 UTF-16 범위를 검사했습니다. 소비된 루트 표 앵커만 검증용 interval로 보완했으며 render/model에 행을 삽입하지 않았습니다. 잘못된 text 변조는 거부되고 원문 표시 데이터는 불변입니다. Canvas 대역 renderer도 pageLayoutError 없이 배치됩니다. 숫자 폭8/기본 높이20은 child391의 실제 측정 내용이 원문 사각형을 넘으므로 NestedFloatingTableMeasuredOverflow로 거부하며 이를 축소하지 않습니다.
+
+예약·정렬 기준·그림 보존·부모/자식 이동·실제 문서 전체 범위와 중첩/덧말 집중10/10, 정확한 파일 선택 wrapper로 grid/row-bands/HWP5 중첩9/9 종료코드0입니다. 실제 브라우저/다운로드/저장 편집 후 재조판·원본 한글 페이지 동치는 별도 검증이 남습니다. 기본 WASM도 승격하지 않았습니다.
+
 원문 행 높이와 UI 하한 분리: 실제 child391의 폭4/높이12 주입 측정은 기존28px 최소 행 높이 때문에392.613333px가 되어 원문 사각형 높이311.866667px를 초과했습니다. minimumRowHeight를 명시적으로0으로 선택하는 원문 기반 중첩 측정에서는310.266667px이며 원문 크기 안에 들어옵니다. tableGrid의 일반 기본28px는 유지하고 measureTableCells가 초기/최종 grid에 같은 최소값을 전달합니다. 음수/비유한 최소값은 거부하며 행 높이와 측정 내용은 축소하지 않습니다. 원문 크기·최소값0/기본·측정 크기 성장·입력 불변, 실제 높이 비교와 중첩/그림/페이지 회귀11/11 종료코드0입니다. 숫자 metric 주입이며 실제 글꼴/브라우저/원본 줄바꿈 일치 검증이 아닙니다. TOP_AND_BOTTOM 셀 흐름 연결은 다음 작업으로 남습니다.
 
 재귀 측정→투영→paint 연결: 뒤쪽/앞쪽 부동 자식(textWrap2/3, 명시적 affect_line_spacing=false, 캡션 없음)은 현재 부모 문단의 소유 앵커를 확인하고 floatingTables descriptor를 생성합니다. 앵커는 UTF-16 한 글자로 보존하되 글자 폭0으로 측정하고 renderer의 개체 앵커 생략 경로로 중복 표식을 그리지 않습니다. 페이지 투영 결과의 tablePaintLayer는 뒤쪽→본문→앞쪽 paint와 동일 순위의 공간 hit 검사에 사용합니다. geometry 배열을 paint 순서로 재정렬하지 않습니다.

@@ -35,7 +35,8 @@ export function placeTablePagesHorizontally(table, layout, outerInsets, paragrap
       && measuredWidth + margins.left + margins.right > reference.column.width;
     boundaries.set(key, table.sourceGeometry.vertical_relative === 1 || outerOnlyOverflow ? reference.paper ?? reference.column : reference.column);
   }
-  const boxes = layout.boxes.map(box => box.tableNode === table.tableNode ? { ...box, x: box.x + shifts.get(box.pageOrdinal), ...(boundaries.get(box.pageOrdinal) !== box.referenceBoxes.column ? { horizontalOverflowBoundary: "paper" } : {}) } : box);
+  const ownsPosition = item => item.tableNode === table.tableNode || item.positionOwnerTableNode === table.tableNode;
+  const boxes = layout.boxes.map(box => ownsPosition(box) ? { ...box, x: box.x + shifts.get(box.pageOrdinal), ...(box.tableNode === table.tableNode && boundaries.get(box.pageOrdinal) !== box.referenceBoxes.column ? { horizontalOverflowBoundary: "paper" } : {}) } : box);
   if (boxes.filter(box => box.tableNode === table.tableNode).some(box => {
     const boundary = boundaries.get(box.pageOrdinal);
     if (relative === 3) {
@@ -47,8 +48,8 @@ export function placeTablePagesHorizontally(table, layout, outerInsets, paragrap
     const leftBoundary = table.sourceGeometry.vertical_relative === 1 ? boundary : box.referenceBoxes.column;
     return !Number.isFinite(box.x) || !Number.isFinite(box.x + box.width + margins.right) || box.x - margins.left < leftBoundary.x || box.x + box.width + margins.right > boundary.x + boundary.width;
   })) return unavailable("TablePageWidthOverflow");
-  const rows = layout.rows.map(row => row.tableNode === table.tableNode ? { ...row, x: row.x + shifts.get(row.pageOrdinal) } : row);
-  const flowPictures = layout.flowPictures?.map(picture => picture.cell?.tableNode === table.tableNode && picture.section === table.section
+  const rows = layout.rows.map(row => ownsPosition(row) ? { ...row, x: row.x + shifts.get(row.pageOrdinal) } : row);
+  const flowPictures = layout.flowPictures?.map(picture => (picture.cell?.tableNode === table.tableNode || picture.positionOwnerTableNode === table.tableNode) && picture.section === table.section
     ? { ...picture, rectangle: { ...picture.rectangle, x: picture.rectangle.x + shifts.get(picture.pageOrdinal) } } : picture);
   if (flowPictures?.some(picture => !picture.rectangle || !Number.isFinite(picture.rectangle.x) || !Number.isFinite(picture.rectangle.x + picture.rectangle.width))) return unavailable("UnsupportedTablePageAnchor");
   if (rows.some(row => !Number.isFinite(row.x) || (row.width !== undefined && !Number.isFinite(row.x + row.width)))) return unavailable("UnsupportedTablePageAnchor");
