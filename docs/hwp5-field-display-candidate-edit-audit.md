@@ -19,3 +19,11 @@ HWP5는55경로 중53파일의 모든 문단 prefix 입력이 통과했습니다
 password.test·password-worker·password-corpus의 정확한3파일은6/6·skip0·종료코드0(8.866초)으로 종료했습니다. 실제 legacy DES의 password-12345.hwp와 AES 참조 문서를 비밀번호 지정 API로 복호화하고 독립 payload/메타데이터·잘못된 비밀번호/재시도·편집·이력·저장 재열기·보호 해제 저장 동의를 확인했습니다. 따라서 기본 무비밀번호 감사의 UnsupportedEncryption/EncryptedDocument 거부를 암호 문서 전체 편집 미지원으로 해석하지 않습니다. 해당 거부는 기본 reader 정책의 별도 축으로 유지합니다.
 
 이 후보의 비밀번호 지정 지원을 기본 WASM이나 원격 native 소스 전체 완료에 소급하지 않습니다. 보호 해제 출력 동의는 계속 필요하며 원본 암호 방식으로 재암호화해 저장하는 지원/실제 브라우저 비밀번호 UI/모든 암호 scheme 완료를 뜻하지 않습니다.
+
+## 실제 legacy DES 비밀번호 UI와 보호 해제 저장
+
+2026-10-13 후보39c827ed·loopback18479·agent-browser 세션 hwpjs-password-gui에서 데모의 password-12345.hwp를 열었습니다. 잘못된 비밀번호는 WrongPasswordOrCorruptPayload로 거부됐고 input은 비어 있으며 submit이 다시 활성화됐습니다. 공개 픽스쳐의 알려진 비밀번호로 재시도해 HWP5.0.1.7·2문단이 열렸고 input은 다시 지워졌습니다. 보호 해제 동의는 기본false, 다운로드는 비활성이었습니다.
+
+실제 Canvas pointer로0:0:4를 선택해 keyboard inserttext `GUI😀`를 적용했습니다. native 본문 표시가 `암호GUI😀로 보호되는 파일`로 바뀌었고 동의 전 다운로드는 계속 비활성이었습니다. 보호 해제 동의만 켜고 저장하면 LayoutReflowRequired로 거부되며 다운로드 Blob이 생성되지 않았습니다. 재조판되지 않은 원본 배치 유지 동의도 켠 뒤 실제 포인터로 다운로드를 요청해 보호 없음 경고와 저장 요청 완료를 확인했습니다. URL.createObjectURL에 전달된9216바이트 Blob을 같은 브라우저의 새 HWP5 reader로 비밀번호 없이 읽어 수정 본문을 확인했습니다. 실제 디스크 다운로드 파일이나 재암호화 저장 검사는 아닙니다.
+
+중첩 command-bar 스크롤 때문에 locator의 자동 스크롤 이후 체크박스가 Canvas에 가리거나 다운로드 버튼이 scope-note에 가리는 관측이 있었습니다. 브라우저 기본 scrollIntoView(nearest)로 내부 스크롤을 이동한 뒤 elementFromPoint가 실제 download임을 확인하고 raw pointer로 눌렀습니다. 강제 DOM click/동의값 대입으로 보호 gate를 우회하지 않았으며 이 기록을 CSS/모든 스크롤 UI 수정 완료로 해석하지 않습니다. screenshot-1791854219905.png의 원본 텍스트·이미지 Canvas를 시각 확인했습니다. 소유 브라우저를 close하고 서버PID22657을 확인해 종료했습니다. 앞선 실제 브라우저 비밀번호 UI 미검증 경계는 이 legacy DES 한 사례에 한해서 해소됐고 AES/HWPX UI 전수·재암호화·원본 조판 동치는 남습니다.
