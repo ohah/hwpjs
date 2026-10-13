@@ -55,3 +55,5 @@ RHWP 참조 revision `e8800c8def63449808a4092798442652ed460552`의 `src/model/pa
 후속 소스 재검토에서 비대상 구역 검사 연결 실수를 찾았습니다. 기존 후보는 수식 정의에 새 검사를 넣고 글자 모양에는 넣지 않았습니다. 수식 정의 검사를 기존 정책으로 되돌리고 글자 모양 경로에 새 검사를 적용했습니다. 최종 적용 경로는 본문 splice·글자 속성·글자 모양입니다. 수식 정의까지 지원을 확대하지 않습니다.
 
 새 후보 `zig-out/verification/unselected-fields-format/bin/hwpjs.wasm` SHA-256 `e1609e28fdc650a04fcd66fa067ad805d1c72181a8292a01070ed6c35444ee86`의 ReleaseSafe 빌드는 6/6·종료코드 0입니다. 실제 편람의 다른 구역 글자 모양 적용 회귀는 이전 후보에서 `UnsupportedSectionControl`로 재현했고 새 후보에서 독립 비대상 stream·수정 문단 char run ID·undo/redo·재열기를 통과했습니다. 실제 본문/글자 모양·범위 Worker·중첩 소유권 공개 회귀 합계 4/4·skip 0, focused native root 포함 3/3·종료코드 0입니다. 최신 소스의 전체 native gate를 `/tmp/hwpjs-unselected-format-native-full.log`에 별도 시작했으며 이전 source 실행과 구분합니다. native 수정은 아직 미게시입니다.
+
+같은 최종 후보로 편람의 비대상 누름틀을 보존하는 본문·글자 모양·글자 속성 세 회귀를 확대했습니다. 글자 모양은 독립 전체 구역 기대값까지 대조하고, 속성은 DocInfo와 모든 구역·비대상 스트림을 독립 레코드 oracle로 검사했습니다. 잘못된 글자 크기 기대값은 거부되는 부정 대조이며 실제 크기/굵게/기울임·재열기 텍스트·undo/redo·잘못된 요청 후 redo 보존도 검사했습니다. 3/3·skip 0·종료코드 0입니다. 기존 4/4와 중복되는 두 사례를 더해 독립 7개로 계수하지 않습니다. 최신 전체 native 실행은 계속 살아 있으며 완료 판정은 하지 않습니다.
