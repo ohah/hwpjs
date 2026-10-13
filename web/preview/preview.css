@@ -30,6 +30,10 @@ button { padding: 8px 12px; margin: 8px 0; cursor: pointer; }
 button:disabled { cursor: default; }
 .editor-toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; padding: 8px 12px; background: #e0edf6; border: 1px solid #bbcbd6; border-radius: 8px; }
 .editor-surface { position: sticky; top: 0; z-index: 2; height: calc(100dvh - 16px); display: grid; grid-template-rows: auto minmax(0, 1fr) auto; background: #edf2f6; }
+/* Scrolled help/API panels must remain clickable above the pinned workspace. */
+.editor-surface ~ details { position: relative; z-index: 3; background: #edf2f6; }
+/* Expanded panels participate in page flow instead of overlaying the toolbar. */
+main:has(> details[open]) > .editor-surface { position: relative; }
 #visible-page-status { grid-row: 3; grid-column: 1 / -1; padding: 6px 12px; border-top: 1px solid #bbcbd6; background: #e0edf6; }
 .editor-surface > #viewport { height: 100%; }
 .editor-command-bar { background: #edf2f6; max-height: 45vh; overflow: auto; }
