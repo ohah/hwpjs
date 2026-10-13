@@ -25,3 +25,7 @@
 RHWP 참조 revision `e8800c8def63449808a4092798442652ed460552`의 `src/model/paragraph.rs` 삽입 경로는 삽입 UTF16 위치 이상인 range start/end를 각각 이동합니다. 삭제는 뒤 경계를 감소시키고 삭제 내부 경계를 시작점으로 모읍니다. 우리 명시적 half-open의 삽입/삭제 좌표 이동과 같은 방향이지만, RHWP의 해당 삭제 루프에는 축소된 빈 범위를 제거하는 코드가 없고 우리의 `text_ranges.prepare`는 빈 범위를 제거합니다. 이 차이를 무시하고 두 구현이나 한컴 동작이 완전히 동일하다고 주장하지 않습니다. Worker의 HWP5 splice는 전달된 정책을 기존 editor로 위임하지만 HWPX 경로는 reject 외 값을 거부합니다.
 
 178개 전수 회귀는 73.58초 후 종료코드 0·1/1·skip 0으로 완료됐습니다. 위의 실행 중 상태를 갱신합니다. 범위 prefix 좌표/원문 보존 및 이력 검증이며 삭제·범위 내부 치환·구조 분할/병합이나 한컴 동일성 검사는 아닙니다. 이 문서는 아직 공개하지 않은 native 수정 후보의 실측 기록이며 소스·테스트·기본 WASM 배포 완료를 뜻하지 않습니다.
+
+후속 `actual overlapping ranges` 회귀는 실제 1번 구역 104번 문단의 중첩 범위 `[0,71]`·`[3,9]`를 사용해 시작/끝/내부 삽입과 내부/전체/범위 교차 삭제·치환 10조합을 검사했습니다. 독립 전체 구역 및 비대상 스트림 oracle, 잘못된 기대 문자열을 거부하는 부정 대조, 명시적 `SplitSurrogatePair` 거부, 실패 후 redo 보존, 저장 재열기가 1/1·skip 0·종료코드 0입니다. 앞선 prefix 전수 결과와 별도이며 구조 분할/병합·한컴 의미는 미검증입니다.
+
+`tests/hwp5/manual-range-worker.test.mjs`는 같은 실제 문단에서 기본 정책 거부와 명시적 half-open 치환을 Worker 경계로 실행하고 독립 저장 비교·undo 원본 복원·잘못된 정책 거부 뒤 redo 보존을 검사했습니다. 1/1·skip 0·종료코드 0입니다. mock self/fetch 기반 실제 Worker handler 검사이며 실제 Chromium/Canvas·OS 입력 검증이 아닙니다. UI 정책 선택은 아직 연결하지 않았습니다.
