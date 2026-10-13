@@ -37,3 +37,28 @@ test("duplicate command ids are rejected before listeners or actions are install
   assert.equal(a.handlers.size, 0); assert.equal(b.handlers.size, 0);
   assert.equal(a.target.calls + b.target.calls, 0);
 });
+
+test("registry publishes changed metadata once and permits reentrant reads without a command", () => {
+  const save = entry("menu-save", "저장"), menu = createDocumentMenuControls([save]);
+  const states = [];
+  const unsubscribe = menu.subscribe(() => states.push(menu.commands()));
+  menu.refresh(); assert.equal(states.length, 0);
+  save.target.disabled = true; menu.refresh();
+  assert.equal(states.length, 1); assert.equal(states[0][0].enabled, false);
+  menu.refresh(); assert.equal(states.length, 1);
+  save.target.disabled = false; menu.refresh(); assert.equal(states.length, 2);
+  save.button.textContent = "다른 이름으로 저장"; menu.refresh(); assert.equal(states.length, 3);
+  assert.equal(save.target.calls, 0);
+  unsubscribe(); unsubscribe(); save.target.disabled = true; menu.refresh(); assert.equal(states.length, 3);
+  assert.throws(() => menu.subscribe(null), /InvalidDocumentMenuSubscription/);
+  menu.close(); const late = menu.subscribe(() => assert.fail("closed registry notification")); late(); menu.refresh();
+});
+
+test("closing the registry during notification prevents later disposed listeners", () => {
+  const save = entry("menu-save", "저장"), menu = createDocumentMenuControls([save]);
+  menu.subscribe(() => menu.close());
+  menu.subscribe(() => assert.fail("listener invoked after registry close"));
+  save.target.disabled = true; menu.refresh();
+  assert.equal(save.target.calls, 0);
+  assert.equal(menu.execute("menu-save"), false);
+});

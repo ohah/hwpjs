@@ -6,6 +6,11 @@ export function createDocumentMenuControls(entries) {
   const ids = entries.map(({ button }, index) => typeof button.id === "string" && button.id ? button.id : `menu-entry-${index}`);
   if (new Set(ids).size !== ids.length) throw new Error("AmbiguousDocumentMenuCommand");
   const disabled = target => target.disabled === true || target.matches?.(":disabled") === true;
+  const subscribers = new Set();
+  let published = [];
+  const snapshot = () => entries.map(({ button, target }, index) => ({ id: ids[index],
+    label: button.textContent?.trim() || ids[index], enabled: !closed && !disabled(target),
+  }));
   const refresh = () => {
     if (closed) return;
     for (const { button, target } of entries) {
@@ -16,6 +21,10 @@ export function createDocumentMenuControls(entries) {
         else button.removeAttribute?.(attribute);
       }
     }
+    const current = snapshot();
+    const changed = current.length !== published.length || current.some((command, index) => command.id !== published[index].id || command.label !== published[index].label || command.enabled !== published[index].enabled);
+    published = current;
+    if (changed) for (const listener of [...subscribers]) if (!closed && subscribers.has(listener)) listener();
   };
   const listeners = entries.map(({ button, target }) => {
     const click = () => {
@@ -47,10 +56,13 @@ export function createDocumentMenuControls(entries) {
   return { refresh,
     commands() {
       refresh();
-      return entries.map(({ button, target }, index) => ({ id: ids[index],
-        label: button.textContent?.trim() || ids[index],
-        enabled: !closed && !disabled(target),
-      }));
+      return snapshot();
+    },
+    subscribe(listener) {
+      if (typeof listener !== "function") throw new Error("InvalidDocumentMenuSubscription");
+      if (closed) return () => {};
+      subscribers.add(listener);
+      return () => subscribers.delete(listener);
     },
     execute(id) {
       const index = ids.indexOf(id);
@@ -61,6 +73,7 @@ export function createDocumentMenuControls(entries) {
     close() {
     if (closed) return;
     closed = true;
+    subscribers.clear();
     popupLayer.close();
     disclosures.close();
     for (const { button, click } of listeners) { button.removeEventListener("click", click); button.disabled = true; }

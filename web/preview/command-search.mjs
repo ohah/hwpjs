@@ -19,6 +19,7 @@ export function createCommandSearch({ registry, document, keyboard = document.de
   const finish = () => { if (!dialog.open) return; dialog.close(); previous?.focus?.(); previous = null; };
   const render = () => {
     if (closed) return;
+    const focused = list.contains(document.activeElement) ? document.activeElement.dataset.commandId : null;
     const terms = input.value.trim().toLocaleLowerCase().split(/\s+/u).filter(Boolean);
     const commands = registry.commands().filter(c => terms.every(term => `${c.label} ${c.id}`.toLocaleLowerCase().includes(term)));
     list.replaceChildren();
@@ -28,6 +29,10 @@ export function createCommandSearch({ registry, document, keyboard = document.de
       list.append(item);
     }
     note.textContent = commands.length ? `${commands.length}개 명령` : "일치하는 명령이 없습니다.";
+    if (focused) {
+      const replacement = [...list.children].find(item => item.dataset.commandId === focused && !item.disabled);
+      (replacement ?? input).focus();
+    }
   };
   const open = () => {
     if (closed || dialog.open) return;
@@ -66,8 +71,9 @@ export function createCommandSearch({ registry, document, keyboard = document.de
     if (e.defaultPrevented || e.isComposing || e.keyCode === 229 || e.repeat || e.altKey || !(e.ctrlKey || e.metaKey) || !e.shiftKey || e.key.toLowerCase() !== "p") return;
     e.preventDefault(); open();
   }, { signal: events.signal });
+  const unsubscribe = typeof registry.subscribe === "function" ? registry.subscribe(() => { if (!closed && dialog.open) render(); }) : () => {};
   return { open, close() {
-    if (closed) return; closed = true; events.abort();
+    if (closed) return; closed = true; events.abort(); unsubscribe();
     if (dialog.open) dialog.close(); previous = null;
     button.remove(); dialog.remove(); style.remove();
   } };

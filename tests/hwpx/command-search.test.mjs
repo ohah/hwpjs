@@ -21,12 +21,12 @@ function harness() {
   document.head = new Node("head"); document.body = new Node("body");
   const host = new Node("nav"), editor = new Node("textarea"); document.body.append(host, editor); editor.focus();
   const state = [{ id: "menu-save", label: "저장", enabled: false }, { id: "menu-undo", label: "실행 취소", enabled: true }];
-  const calls = [], registry = { commands: () => state.map(c => ({ ...c })), execute(id) { if (!state.find(c => c.id === id)?.enabled) return false; calls.push(id); return true; } };
+  const calls = [], subscribers = new Set(), registry = { commands: () => state.map(c => ({ ...c })), subscribe(listener) { subscribers.add(listener); return () => subscribers.delete(listener); }, execute(id) { if (!state.find(c => c.id === id)?.enabled) return false; calls.push(id); return true; } };
   const control = createCommandSearch({ registry, document, host });
   const dialog = document.body.children.find(n => n.id === "command-search");
   const input = dialog.children.find(n => n.id === "command-search-query"), list = dialog.children.find(n => n.id === "command-search-results");
   const send = (target, values, type = "keydown") => { const event = new Event(type, { cancelable: true }); Object.assign(event, values); target.dispatchEvent(event); return event; };
-  return { document, host, editor, control, dialog, input, list, state, calls, send };
+  return { document, host, editor, control, dialog, input, list, state, calls, send, subscribers };
 }
 
 test("search opens with shortcut, filters current DOM value on Enter and delegates once", () => {
@@ -63,4 +63,19 @@ test("arrow navigation skips disabled commands and returns to search", () => {
   h.send(h.input, { key: "ArrowDown" }); assert.equal(h.document.activeElement, h.list.children[1]);
   h.send(h.list, { key: "ArrowUp" }); assert.equal(h.document.activeElement, h.input);
   h.control.close();
+});
+
+test("open search reflects async registry state and preserves logical focus without executing", () => {
+  const h = harness(); h.control.open();
+  h.send(h.input, { key: "ArrowDown" });
+  h.state[0].enabled = true;
+  for (const listener of h.subscribers) listener();
+  assert.equal(h.list.children[0].disabled, false);
+  assert.equal(h.document.activeElement, h.list.children[1]);
+  h.state[1].enabled = false;
+  for (const listener of h.subscribers) listener();
+  assert.equal(h.list.children[1].disabled, true);
+  assert.equal(h.document.activeElement, h.input);
+  assert.deepEqual(h.calls, []);
+  h.control.close(); assert.equal(h.subscribers.size, 0);
 });

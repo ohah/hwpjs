@@ -15,3 +15,9 @@ rhwp 참조 커밋 `e8800c8def63449808a4092798442652ed460552`의 `rhwp-studio/sr
 UI 대역의 shortcut/Enter/IME/Escape·뒤늦은 비활성·검색 결과 없음·방향키·반복 close·기존 registry/menu 회귀11/11·skip0·종료코드0입니다. 실제 Chromium 세션 hwpjs-command-search/loopback18480/후보39c827ed에서는 문서가 없어도 검색이 열리고 다운로드/undo 등의 사용 불가 상태가 표시됐습니다. table-bug가 로딩된 후 Canvas 제목0:2:6에 `검색😀`을 입력하고 명령 검색의 실행 취소/다시 실행을 Enter로 수행했습니다. Worker 기록은 splice/undo/redo 각1회이며 원문과 변경문 복원·canvas-input 포커스 복귀를 확인했습니다. 로딩 중 너무 이른 enable/입력 시도는 성공 증거에서 제외했습니다.
 
 native dialog 화면 screenshot-1791855280820.png를 시각 확인했습니다. 소유 브라우저를 close하고 서버PID1070을 확인해 종료했습니다. 이번 검증은 같은 후보·한 문서의 명령 검색/이력 사례이며 모든 palette 명령·clipboard 권한·IME/모바일·원본 조판 전수 완료는 아닙니다. 이전 검색창 미구현 기록은 이 연결로 대체합니다.
+
+## 비동기 상태 갱신
+
+검색창이 열린 뒤 편집 준비 상태가 바뀌어도 목록이 초기 disabled 값을 유지하는 반례를 먼저 재현했습니다. registry의 기존 refresh가 metadata 변화만 구독자에게 알리고 검색 UI는 이 알림을 소비합니다. 같은 상태의 반복 refresh·재진입 commands 조회는 알림을 중복 발생시키지 않습니다. native 명령/허용 조건은 복제하지 않으며, 알림 자체는 명령을 실행하지 않습니다. 검색어는 유지하고 선택한 명령이 계속 활성일 때 논리 포커스를 복원하며 비활성화되면 검색 입력으로 돌아갑니다. UI close의 구독 해제와 registry close 도중 다른 구독자 호출 방지도 검사합니다.
+
+최종 syntax 검사 및 menu/registry/search 회귀14/14·skip0·종료코드0입니다. 실제 Chromium hwpjs-search-live/loopback18482/66944afc 후보에서 table-bug를 열고 enable 직후 Ctrl+Shift+P로 검색을 열었습니다. 최초 처리 중 snapshot은 menu-save disabled=true였고, 같은 열린 dialog/빈 검색어/검색 입력 포커스를 유지하며 비동기 준비 완료 뒤 활성으로 갱신됐습니다. 관측 상태열은 true/false/true/false로 중간 준비 단계도 반영했습니다. 검색 결과를 클릭하거나 새 문서 명령을 제출한 검증은 아닙니다. screenshot-1791859791226.png를 시각 확인했고 오류 목록은 비어 있었습니다. 소유 browser close 및 서버PID2190의 command 확인/TERM/종료 확인을 마쳤습니다. 뒤에 추가한 구독 close 경합 반례는 unit 근거이며 browser에서 별도 경합을 발생시키지는 않았습니다.
