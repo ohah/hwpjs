@@ -1,4 +1,5 @@
 import { createRenderer } from "./renderer.mjs";
+import { createCommandSearch } from "./command-search.mjs";
 import { detectDocumentFormat } from "../../js/document-format.mjs";
 import { createInspectorToggle } from "./inspector-toggle.mjs";
 import { createFindControls } from "./find-controls.mjs";
@@ -293,3 +294,5 @@ documentMenuControls = createDocumentMenuControls([
   { button: document.querySelector("#menu-align-space"), target: document.querySelector('#paragraph-format-form [data-alignment="DISTRIBUTE_SPACE"]') },
 ]);
 window.addEventListener("pagehide", event => { if (!event.persisted) { checkBoxControls.close(); pictureResizeControls.close(); pictureSizeControls.close(); documentMenuControls.close(); } });
+const commandSearch = createCommandSearch({ registry: documentMenuControls, document, keyboard: window, host: document.querySelector(".document-menu") });
+window.addEventListener("pagehide", event => { if (!event.persisted) commandSearch.close(); });

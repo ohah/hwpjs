@@ -1,0 +1,6 @@
+#command-search { width: min(560px, calc(100vw - 48px)); max-height: 80dvh; overflow: auto; border: 1px solid #bbcbd6; border-radius: 8px; background: #f7fafc; color: #182b3a; }
+#command-search::backdrop { background: rgb(20 35 50 / 40%); }
+#command-search-query { display: block; box-sizing: border-box; width: 100%; padding: 8px; }
+#command-search-results { display: grid; gap: 4px; margin-top: 12px; }
+#command-search-results button { margin: 0; text-align: left; }
+#command-search-status { font-size: 13px; }
