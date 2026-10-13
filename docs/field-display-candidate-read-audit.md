@@ -1,5 +1,7 @@
 # 필드 표시 후보의 참조 전체 읽기 검사
 
+같은 후보의 추적 HWP5 prefix·숫자 입력은 [HWP5 편집 감사](hwp5-field-display-candidate-edit-audit.md)의 별도 검증 축입니다.
+
 2026-10-13 후보 `field-label-display-owned-api` SHA256 `39c827edcce665efcce4b40c9a70d47d0d1f74a1ac63013972d2b10a49692a1f`로 `tools/reference-parser-audit.mjs --wasm=<후보> --root=reference/rhwp/samples`를 실행했습니다. `/tmp/hwpjs-reference-parser.RtiKQL`의 시작·975개 개별 결과·최종 summary와 종료코드0을 확인했습니다.
 
 실제 서명으로 HWP3 26개를 제외했습니다. 범위 내949개 중 HWP5 509/HWPX435의690523문단 텍스트 projection·입력 버퍼 불변이 통과했습니다. 개별 path 중복 부재·개별 문단 수 합계와 summary 일치·현재 artifact hash 일치도 별도로 검사했습니다. 기본 제품 WASM은 승격하지 않았으며 모든 필드·편집·저장·Canvas 완료 결과가 아닙니다.
