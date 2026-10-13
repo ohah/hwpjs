@@ -3,6 +3,8 @@ import { createMenuDisclosures } from "./document-menu-disclosures.mjs";
 import { createMenuPopupLayer } from "./document-menu-popup-layer.mjs";
 export function createDocumentMenuControls(entries) {
   let closed = false;
+  const ids = entries.map(({ button }, index) => typeof button.id === "string" && button.id ? button.id : `menu-entry-${index}`);
+  if (new Set(ids).size !== ids.length) throw new Error("AmbiguousDocumentMenuCommand");
   const disabled = target => target.disabled === true || target.matches?.(":disabled") === true;
   const refresh = () => {
     if (closed) return;
@@ -17,11 +19,12 @@ export function createDocumentMenuControls(entries) {
   };
   const listeners = entries.map(({ button, target }) => {
     const click = () => {
-      if (closed || button.disabled || disabled(target)) { refresh(); return; }
+      if (closed || button.disabled || disabled(target)) { refresh(); return false; }
       target.click();
       const popup = button.closest?.("details");
       if (popup) popup.open = false;
       refresh();
+      return true;
     };
     button.addEventListener("click", click);
     return { button, click };
@@ -41,7 +44,21 @@ export function createDocumentMenuControls(entries) {
     return { popup, keydown };
   });
   refresh();
-  return { refresh, close() {
+  return { refresh,
+    commands() {
+      refresh();
+      return entries.map(({ button, target }, index) => ({ id: ids[index],
+        label: button.textContent?.trim() || ids[index],
+        enabled: !closed && !disabled(target),
+      }));
+    },
+    execute(id) {
+      const index = ids.indexOf(id);
+      if (closed || index < 0) return false;
+      refresh();
+      return listeners[index].click();
+    },
+    close() {
     if (closed) return;
     closed = true;
     popupLayer.close();

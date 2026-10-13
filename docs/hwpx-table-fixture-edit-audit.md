@@ -2,6 +2,8 @@
 
 ## 검증 범위
 
+rhwp 형태의 명령 검색 UI 연결은 [공통 메뉴 명령 경계](document-command-registry.md)를 따르며 기존 편집·저장·보호 컨트롤을 재사용합니다.
+
 덧말 파일의 그림 실패1개는 [그림 자원 진단](hwpx-picture-resource-diagnostics.md)에서 원문과 대조했습니다. 이미지 연결 부재이며 실제 코덱 실패와 구분합니다.
 
 같은 후보의 참조 HWP5/HWPX 전체 읽기는 [읽기 감사](field-display-candidate-read-audit.md)의 별도 검증 축입니다.
