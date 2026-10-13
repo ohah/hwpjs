@@ -35,6 +35,10 @@ table-bug의 원문 표본 모수는 body42·cell232·drawing1문단이며 선�
 
 ## 일반 문단 전체 위치 검사 모드
 
+### 같은 후보의 추적 Worker 회귀
+
+`HWPJS_TEST_WASM=<후보39c827ed> node tools/run-selected-node-tests.mjs tests/hwpx/worker-fixtures.test.mjs`는2026-10-13에1/1·skip0·종료코드0(171.742초)으로 종료했습니다. 추적46경로를 검사하며 일반 문단1278·앵커146·필드7·보호 계산 결과13개, 표시 문단1444개를 확인합니다. 별도 암호1파일은 passwordRequired 거부로 분리합니다. 앵커146개·필드7개 전부에 실제 Worker 명령을 보내 표시 갱신·저장·undo 원본 ZIP 바이트 복원·redo 저장 바이트 복원을 확인했습니다. 일반1278문단은 이 Worker 검사에서 모든 명령을 보낸 대상이 아닙니다. 전체 독립 XML·브라우저 E2E·암호 해제 완료 또는 기본 WASM 승격으로 해석하지 않습니다. 아래 위치별 전체 실행은 이 종료와 별개이며 아직 최종 결과가 없습니다.
+
 `HWPJS_FULL_SPLICE_AUDIT=1 HWPJS_TEST_WASM=<후보> node tools/run-selected-node-tests.mjs tests/hwpx/table-fixture-splice-positions.test.mjs`는 같은 독립 inventory의 모든 비어 있지 않은 plain-leaf 문단을 선택합니다. 기본 모드는 여전히 범주별 첫·중간·마지막 표본입니다. 환경값은 미설정 또는 정확한 `1`만 허용하며 `0`/`true`/`yes`/빈 문자열은 artifact·fixture 읽기 전에 거부합니다.
 
 시작 로그는 실제 scope·선택 문단 수·입력/후보 SHA256을 출력합니다. 전체 모드는25문단마다 성공한 문단/편집 수를 출력하며 이것은 최종 통과가 아닙니다. 선택 개수가 독립 inventory의 범주별 합계와 같은지 검사하고 매 문단 입력 버퍼 불변·종료 시 원본 파일/후보 hash 불변을 검사합니다. 범위는 모든 plain 문단의 시작/중간/끝 삽입·grapheme 치환·마지막 grapheme 삭제이며, 모든 문자 위치/보호 제어/빈 문단/객체 명령을 포함하지 않습니다.
