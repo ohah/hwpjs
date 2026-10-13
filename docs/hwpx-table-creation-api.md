@@ -1,5 +1,7 @@
 # HWPX 표 생성 API
 
+2026-10-13 공개 요청 반례를 NaN/Infinity/소수/문자열/Boolean/u32 초과 치수·리소스·각 좌표까지 넓혔습니다. 잘못된 좌표는 공통 정수 경계의 `RangeError: InvalidInteger`로 거부하며, 매 거부 후 원본 ZIP 저장 byte-exact·생성 표 목록 비어 있음을 확인합니다. 처음 오류 종류를 TypeError로 기대한 실행은3pass/1fail이며 제품 결함으로 계수하지 않습니다. 올바른 계약을 확인한 뒤 공개/실제 Worker 두 파일을 후보 SHA256 `77b60b8237f20d78873a743315565776b36f9efa92bae0acc8197450fc0d25fa`에서14/14·0fail/skip·종료코드0으로 재검증했습니다(핸들55062). Worker/Canvas 대역과 독립 XML/history를 포함하지만 실제 브라우저/기본 제품 승격/전체 문서의 객체 생성 완료는 아닙니다.
+
 UI가 추측한 기본 ID를 사용하지 않도록 [서식 선택 목록](hwpx-table-creation-resources.md)을 제공합니다.
 
 후속 명령과 기존 편집 주소를 유지하는 파생 표시 경로는 [생성 표 Worker 표시](hwpx-created-table-worker.md)를 따릅니다.

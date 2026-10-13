@@ -48,10 +48,20 @@ test("public table creation without history rejects malformed requests atomicall
   const bytes = source();
   try {
     editor.open(bytes);
-    for (const patch of [{ rows: 0 }, { columns: 0 }, { width: 1 }, { rowHeight: 0 }, { rows: 0xffffffff }, { rows: -1 }, { resources: null }]) {
+    for (const patch of [{ rows: 0 }, { columns: 0 }, { width: 1 }, { rowHeight: 0 }, { rows: 0xffffffff }, { rows: -1 }, { resources: null },
+      { rows: NaN }, { columns: Infinity }, { width: 101.5 }, { rowHeight: "17" }, { rows: true },
+      { rows: 0x100000000 }, { resources: [] },
+      ...[NaN, Infinity, -1, 1.5, "1", true, 0x100000000].map(character => ({ resources: { ...options.resources, character } }))]) {
       assert.throws(() => editor.insertTable(0, 2, 0, { ...options, ...patch }));
       assert.deepEqual(Buffer.from(editor.save()), bytes);
       assert.deepEqual(editor.createdTables(0), []);
+    }
+    for (const invalid of [NaN, Infinity, -1, 1.5, "0", true, 0x100000000]) {
+      for (const coordinates of [[invalid, 2, 0], [0, invalid, 0], [0, 2, invalid]]) {
+        assert.throws(() => editor.insertTable(...coordinates, options), error => error instanceof RangeError && error.message === "InvalidInteger");
+        assert.deepEqual(Buffer.from(editor.save()), bytes);
+        assert.deepEqual(editor.createdTables(0), []);
+      }
     }
     assert.throws(() => editor.insertTable(99, 2, 0, options), /InvalidSectionIndex/);
     assert.throws(() => editor.insertTable(0, 2, 0xffffffff, options));
