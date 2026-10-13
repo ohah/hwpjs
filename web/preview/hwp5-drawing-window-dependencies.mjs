@@ -13,6 +13,14 @@ export function hwp5DrawingWindowDependencies(editor, projection) {
   for (const section of projection.sections) {
     const flows = editor.paragraphFlow(section.index), claimed = new Set();
     if (flows.length !== section.paragraphs.length || flows.some((row, index) => row.paragraph !== index)) throw new Error("WindowDependencyBindingMismatch");
+    const drawingMembers = new Map();
+    for (const row of flows) {
+      if (row.host !== "drawing") continue;
+      if (![row.parent_node, row.list_node].every(value => Number.isInteger(value) && value >= 0 && value <= 0xffffffff)) throw new Error("WindowDependencyBindingMismatch");
+      const key = `${row.parent_node}:${row.list_node}`;
+      if (!drawingMembers.has(key)) drawingMembers.set(key, []);
+      drawingMembers.get(key).push(row);
+    }
     const lists = validateHwp5DrawingListSources(editor.drawingListSources(section.index));
     const anchors = new Map(validateHwp5DrawingAnchors(editor.drawingAnchors(section.index)).map(row => [row.control_node, row]));
     const components = lists.some(row => row.kind === "body")
@@ -36,7 +44,7 @@ export function hwp5DrawingWindowDependencies(editor, projection) {
       const anchor = anchors.get(source.control_node);
       if (!anchor || source.kind === "body" && root(source.owner_node) !== source.control_node) throw new Error("WindowDependencyBindingMismatch");
       const host = resolve(section.index, anchor.paragraph);
-      const members = flows.filter(row => row.host === "drawing" && row.parent_node === source.owner_node && row.list_node === source.list_node);
+      const members = drawingMembers.get(`${source.owner_node}:${source.list_node}`) ?? [];
       if (!members.length && source.paragraph_count !== 0) throw new Error("MissingWindowDrawingBody");
       for (const row of members) {
         if (claimed.has(row.paragraph)) throw new Error("WindowDependencyBindingMismatch");

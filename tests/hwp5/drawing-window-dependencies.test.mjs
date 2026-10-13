@@ -59,6 +59,8 @@ test("drawing window rejects missing roots, foreign lists and incomplete flow", 
     rows => { rows.flows.pop(); },
     rows => { rows.anchors[0].paragraph = 2; },
     rows => { rows.flows[1].paragraph = 0; },
+    rows => { rows.flows[1].parent_node = "10"; },
+    rows => { rows.flows[1].list_node = "12"; },
   ]) {
     const { projection, rows, editor } = fixture(); mutate(rows);
     assert.throws(() => hwp5DrawingWindowDependencies(editor, projection), /WindowDependencyBindingMismatch|MissingWindowDrawingBody/);

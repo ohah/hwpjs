@@ -53,3 +53,7 @@
 후보 e1609e28에서 실제 `textbox`, `shaperect`, `shapecontainer-2`의 본문 선택·readonly context·원문 저장 바이트 불변과 기존 각주/표 캡션 회귀, 합성 캡션 반례를 단일 동시성으로 실행해 7/7·skip 0·종료코드 0을 확인했습니다. 이 결과는 필드 의존성, 구조 편집 후 갱신, Worker/UI 이동과 실제 화면 조판을 증명하지 않습니다. 일반 HWP5 UI window route는 아직 활성화하지 않았습니다.
 
 이전 native 전체 gate의 프로세스와 임시 로그는 현재 환경에서 남아 있지 않습니다. 실행 중이라는 과거 기록을 완료로 계산하지 않으며, 새 전체 gate의 결과가 필요합니다.
+
+도형 flow는 숫자형 parent/list 쌍으로 한 번 색인합니다. 목록마다 전체 문단을 다시 검색하지 않으며 문자열 식별자의 암묵적 변환은 거부합니다. 같은 실제 파일 및 문자열 ID 반례를 포함한 기본 artifact 회귀 7/7·skip 0을 확인했습니다. 속도 개선 수치는 별도 측정하지 않았습니다.
+
+필드 연결의 후속 진입점은 native `local_field_spans.collectMixedBound`와 `field_bindings.collect`입니다. 논리적 목록별 독립 마커 스택·원본 header 일치를 이미 검증하지만 현재 HWP5 JS editor/편집 WASM에는 범위 조회가 없습니다. 조회 API는 이 native 계산기를 재사용하고 현재 모델 좌표를 반환해야 하며, JS에서 마커 파서를 복제하거나 원본 좌표를 편집 후에도 고정하지 않습니다.
