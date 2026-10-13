@@ -8,7 +8,8 @@ test("table creation controls use actual resource IDs and disable absent or stal
   form.reportValidity = () => { onValidity?.(); return valid; };
   const dimensions = Object.fromEntries(Object.entries({ rows: 2, columns: 2, width: 36000, rowHeight: 1800 }).map(([key, value]) => [key, Object.assign(new Node(), { value: String(value) })]));
   const resources = Object.fromEntries(["paragraph", "character", "style", "border_fill"].map(key => [key, new Node()]));
-  const ids = { paragraph: [0, 9], character: [1, 7], style: [0], border_fill: [3] }, sent = [];
+  let ids = { paragraph: [0, 9], character: [1, 7], style: [0], border_fill: [3] };
+  const sent = [];
   const controls = createTableCreationControls({ form, fields, focusButton, submit, note, dimensions, resources, selected: () => selection, inventory: () => ids, request: value => { sent.push(value); return true; }, createOption: () => ({}) });
   assert.equal(fields.disabled, true);
   selection = { section: 0, paragraph: 1, unit: 0 }; controls.update();
@@ -39,6 +40,18 @@ test("table creation controls use actual resource IDs and disable absent or stal
   onValidity = () => { selection.unit = 1; };
   form.dispatchEvent(new Event("submit", { cancelable: true }));
   assert.equal(sent.length, 1, "in-place caret mutation must not bypass the snapshot");
+  selection = { section: 0, paragraph: 1, unit: 0 };
+  const originalIds = ids;
+  onValidity = () => { ids = null; };
+  form.dispatchEvent(new Event("submit", { cancelable: true }));
+  assert.equal(sent.length, 1, "resource loss during validation must not submit");
+  assert.equal(fields.disabled, true);
+  assert.equal(submit.disabled, true);
+  ids = originalIds; controls.update();
+  assert.equal(fields.disabled, false);
+  note.textContent = "old document status";
+  controls.message({ kind: "unlock" });
+  assert.equal(note.textContent, "");
   onValidity = () => { controls.close(); };
   form.dispatchEvent(new Event("submit", { cancelable: true }));
   assert.equal(sent.length, 1, "validation must not submit after close");

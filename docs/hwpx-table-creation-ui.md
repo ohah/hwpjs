@@ -1,5 +1,7 @@
 # HWPX 표 삽입 UI 연결
 
+2026-10-13 후속 경계 검사에서는 `reportValidity` callback 중 현재 리소스 목록이 null로 사라져도 같은 커서라는 이유로 생성 요청을 전송하지 않는지 확인했습니다. fields/submit 비활성화·리소스 복구 후 활성화·unlock 응답의 이전 안내 초기화를 기존 테스트에 추가했습니다. 표 제어기/실제 메뉴 wiring/메뉴 controller 세 파일8/8·0fail/skip·종료코드0입니다. 제품 구현 변경 없이 기존 재검증 경로의 반례를 넓혔으며, DOM 대역 결과를 실제 브라우저나 전체 객체 생성 지원으로 계수하지 않습니다.
+
 유효성 검사 재진입의 적대적 검증: reportValidity callback이 source 커서를 다른 문단으로 바꾸면 기존 제어기가 새 위치에 생성 요청을 전송했습니다(요청1기대/실제2, 집중1실패). submit은 검증 전 구역/문단/UTF-16 unit을 값으로 복사하고 검증 후 현재 선택·권한·close 상태를 다시 확인합니다. 다른 문단으로의 교체, 같은 객체의 unit 변경, callback 중 close 모두 요청하지 않습니다. native의 현재 선택/예산 검증은 그대로 유지하고 이 검사는 브라우저에서 동시 입력을 직접 재현한 결과가 아니라 동기 callback 재진입 반례입니다. UI 제어기·메뉴·배치의 넓힌 회귀42/42·exit0·skip0(144.258542ms)이 통과했습니다.
 
 버튼 가림의 후속 root cause: 실제 Chromium에서 설정 fieldset의 기본 세로 배치 높이417.59375px, submit top492.59375/bottom528.59375, 도구막대 bottom458.84375를 관측했고 버튼 중심 elementFromPoint는 canvas였습니다. `#table-creation-fields`만 wrapping flex 행으로 배치한 뒤 높이66px, submit264–300/도구막대 bottom457.84375와 정확한 버튼 hit를 확인했습니다. 설정 포커스 후 추가 scrollintoview 없이 실제 클릭/완료 응답이 성공했습니다.600px viewport에서 form538px·가로 overflow=false·wrap도 확인했습니다. stylesheet 회귀는 단일 행 배치/wrap 규칙과 제거/block/nowrap 변이를 검사하며 브라우저 geometry 검증을 대신하지 않습니다. 높은/긴 옵션/모든 화면 크기의 접근성까지 완료됐다고 주장하지 않습니다.
