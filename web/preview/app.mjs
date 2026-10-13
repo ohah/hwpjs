@@ -87,7 +87,7 @@ function updateSave() {
   viewScaleControls?.refresh();
   documentWindowControls?.refresh();
 }
-const controls = createEditorControls(message => { direct.external(message); worker?.postMessage(message); updateSave(); }, { formatSelection: id => direct.formatSelection(id) });
+const controls = createEditorControls(message => { direct.external(message); worker?.postMessage(message); updateSave(); }, { formatSelection: id => direct.formatSelection(id), documentFormat: () => openedFormat });
 direct = createCanvasEditor({ canvas: document.querySelector("#canvas"), viewport: document.querySelector("#viewport"), input: document.querySelector("#canvas-input"), renderer, controls, note: document.querySelector("#canvas-edit-status"), queryEditRange: message => worker?.postMessage(message), querySplitRange: message => worker?.postMessage(message) });
 tableCreationControls = createTableCreationControls({
   form: document.querySelector("#table-creation-form"), fields: document.querySelector("#table-creation-fields"), focusButton: document.querySelector("#table-creation-focus"), submit: document.querySelector("#table-creation-submit"), note: document.querySelector("#table-creation-status"),
