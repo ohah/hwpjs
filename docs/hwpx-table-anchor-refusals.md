@@ -2,13 +2,19 @@
 
 ## 현재 상태와 검증 경계
 
-현재 구현은 PAGE 기준 전체 표 예약, 부모 셀 안의 인라인 중첩 표, 조건부 TOP_AND_BOTTOM 부동 자식 및 뒤쪽/앞쪽 자식의 측정·투영·paint/hit 연결을 포함합니다. 인라인 자식과 뒤쪽/앞쪽 자식이 같은 문단을 공유하는 조합도 지원합니다. 중첩 본문은 원문 폭을 보존하는 visible 경로를 사용하며 셀 밖 가로 배치는 허용하되 최종 종이 경계를 검증합니다. 아래 단계별 기록의 `아직 미지원`, `다음 작업`은 해당 단계 당시 상태이며 최신 지원 판정으로 사용하지 않습니다. 현재 제한은 일반 글자가 섞인 부동 감싸기, 다단계 부동 계층, 캡션·줄 높이 영향 및 원본 조판 동치입니다. 실제 table-bug는 폭 측정 이후 별도 UnsupportedPageFlow가 남습니다.
+현재 구현은 PAGE 기준 전체 표 예약, 부모 셀 안의 인라인 중첩 표, 조건부 TOP_AND_BOTTOM 부동 자식 및 뒤쪽/앞쪽 자식의 측정·투영·paint/hit 연결을 포함합니다. 인라인 자식과 뒤쪽/앞쪽 자식이 같은 문단을 공유하는 조합도 지원합니다. 중첩 본문과 혼합 표·도형 경로는 원문 폭을 보존하는 visible 경로를 사용하며 셀 밖 가로 배치는 허용하되 최종 종이 경계를 검증합니다. 아래 단계별 기록의 `아직 미지원`, `다음 작업`은 해당 단계 당시 상태이며 최신 지원 판정으로 사용하지 않습니다. 현재 제한은 일반 글자가 섞인 부동 감싸기, 다단계 부동 계층, 캡션·줄 높이 영향 및 원본 조판 동치입니다. 실제 table-bug는 제품 혼합 진입점에서 측정 기반 배치·제목 편집/저장/재열기가 통과합니다. 표 전용 하위 진입점의 UnsupportedPageFlow는 전체 제품의 지원 판정이 아닙니다.
 
 2026-10-13 후보39c827ed에서 정확한 파일 선택으로 `table-page-anchor-reference`와 `nested-floating-flow-reservation` 2/2를 재실행해 통과했습니다. 실제 덧말 문서의 측정 기반 배치 증거이며 전체 픽스쳐 지원 완료가 아닙니다.
 
 같은 후보를 loopback 서버로 제공해 Chromium에서 실제 덧말 파일을 업로드했습니다. 업로드 명령은 성공했으나 이후 준비 상태 조회·Canvas dataset 조회·세션 종료 명령이 반환되지 않았습니다. 자동화 daemon은 살아 있었고 샘플은 대기 상태였으므로 제품의 무한 루프나 화면 성공으로 판정하지 않습니다. 소유 Chrome/daemon/server의 정확한 PID를 확인해 종료했습니다. 실제 글꼴 화면·편집 후 재조판·다운로드 검증은 미확인으로 남습니다. 기본 제품 WASM은 승격하지 않았습니다.
 
 ## 단계별 구현 이력
+
+table-bug 제품 경로 재검증: 표 전용 `layoutTableBodyContent`의 본문 필터는 도형 내부 문단115를 일반 본문으로 취급해 host=drawing/top_level=false에서 UnsupportedPageFlow를 반환했습니다. 제품 `layoutPageContent`는 인라인 도형1148과 표가 함께 있으면 `layoutMixedInlineBody`를 선택하고 도형 소유 문단을 별도로 처리합니다. 이 분기에서 실제 파일 전체는 주입 metric 폭4/높이12로539행·289셀·도형1개이며 pageParagraphCoverage가 전체 현재 문단을 검증합니다. 앞선 하위 경로 거부를 전체 파일 미지원으로 해석한 기록을 정정합니다.
+
+추가 회귀는 mixed-inline-table-policy·drawing-text-layout·table-bug-product-reflow의 정확한 선택13/13 종료코드0입니다. 기존 실제 중첩 표의 셀 페이지 절단/전체 문단 범위, 명시적 셀 단 선언, 소유 순환 거부와 실제 도형 다단·마지막 줄 ink/캐럿 회귀도 유지했습니다.
+
+혼합 경로의 중첩 측정도 clip에서 visible로 바꾸고 공통 nestedTablePaperBounds를 최종 페이지 좌표에 적용했습니다. 실제 table-bug의 셀 clip은0개이고 모든 셀은 단일 배치됩니다. 제목에 Unicode prefix를 입력한 뒤 저장·undo 원본 ZIP 바이트 복원·redo·재열기 재조판이 통과했고, 도형 내부 `주제`와 전체 문단 범위를 유지합니다. 도형 행의 잘못된 텍스트 변조는 coverage가 거부합니다. 실제 제품 진입점·혼합 앵커·중첩 원문 폭/경계·기존 renderer 대역 회귀10/10 종료코드0입니다. Worker/WASM과 주입 metric의 증거이며 실제 브라우저·한글 원본 조판 동치 또는 기본 WASM 승격은 아닙니다.
 
 원문 폭 visible 배치: `measureNestedTable`은 reject/clip 외에 명시적 visible 모드를 제공합니다. 기본 저수준 reject 계약은 유지하고 본문 연결만 visible을 선택합니다. 셀 projection은 가로 셀 경계를 완화하지만 높이·음수 좌표·소유권·행 예산 검사는 유지하며 pageClip을 새로 붙이지 않습니다. 중첩 box/row의 positionOwnerTableNode가 부모 표 가로 이동을 함께 전달합니다. 최종 본문 위치 조정 후 `nestedTablePaperBounds`가 각 중첩 셀의 실제 페이지 paper와 유한 좌표·종이 네 경계를 검사합니다. 종이 밖은 NestedTablePaperOverflow로 거부합니다.
 

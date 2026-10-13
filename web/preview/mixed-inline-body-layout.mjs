@@ -22,6 +22,7 @@ import { resolveTablePadding } from "./table-source-insets.mjs";
 import { measureInlineDrawingContent } from "./inline-drawing-measurement.mjs";
 import { projectCellPageCuts } from "./table-cell-page-projection.mjs";
 import { drawingFillPlan } from "./drawing-fill-plan.mjs";
+import { nestedTablePaperBounds } from "./nested-table-paper-bounds.mjs";
 
 // 혼합 인라인 문서의 조립만 소유합니다. 측정·다단·셀·도형 배치는 공통 모듈에 위임합니다.
 export function layoutMixedInlineBody(content, measure, maxRows = 20000) {
@@ -52,7 +53,7 @@ export function layoutMixedInlineBody(content, measure, maxRows = 20000) {
     if (!Array.isArray(raw) || raw.length !== 4 || !raw.every(value => Number.isSafeInteger(value) && value >= 0 && value <= 0xffffffff)) return unavailable("MissingTableOuterInsets");
     if (remaining < 1) return unavailable("MixedInlineLayoutLimit");
     const measured = hasNested
-      ? measureNestedTable(content, table, measure, { maxRows: remaining, overflow: "clip" })
+      ? measureNestedTable(content, table, measure, { maxRows: remaining, overflow: "visible" })
       : measureTableCells(table, content.paragraphs, measure, { origin: { x: 0, y: 0 }, padding: "source", maxRows: remaining, paragraphFlows: content.paragraphFlows });
     if (measured.state !== "measured") return measured;
     remaining -= measured.rowCount;
@@ -172,5 +173,7 @@ export function layoutMixedInlineBody(content, measure, maxRows = 20000) {
   }
   const coverage = pageParagraphCoverage(content.paragraphs, resultRows);
   if (coverage.state !== "complete") return coverage;
+  const nestedBounds = nestedTablePaperBounds(boxes);
+  if (nestedBounds.state !== "contained") return nestedBounds;
   return { ...page, rows: resultRows.toSorted((a, b) => a.pageOrdinal - b.pageOrdinal || a.y - b.y || a.x - b.x), boxes, placedDrawings, spatialRows: true, pageLayoutMode: "measured-mixed-inline-body" };
 }
