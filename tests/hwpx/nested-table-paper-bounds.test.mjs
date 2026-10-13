@@ -16,3 +16,15 @@ test("final nested bounds allow cell overflow but never paper overflow or absent
     assert.equal(nestedTablePaperBounds([{ ...box, ...patch }]).error, "InvalidNestedTablePaperBounds");
   assert.deepEqual(box, before);
 });
+
+test("invalid depth cannot bypass a final paper bound check", () => {
+  const box = { tableNode: 2, listNode: 12, depth: 1, x: 10000, y: 0, width: 10, height: 10,
+    referenceBoxes: { paper: { x: 0, y: 0, width: 200, height: 200 } } };
+  assert.equal(nestedTablePaperBounds([box]).error, "NestedTablePaperOverflow");
+  for (const depth of [-1, NaN, Infinity, "0", "1", null, false, 1.5, Number.MAX_SAFE_INTEGER + 1])
+    assert.equal(nestedTablePaperBounds([{ ...box, depth }]).error, "InvalidNestedTablePaperBounds");
+  for (const entry of [null, undefined, [], "box", 1])
+    assert.equal(nestedTablePaperBounds([entry]).error, "InvalidNestedTablePaperBounds");
+  assert.equal(nestedTablePaperBounds([{ depth: 0 }]).state, "contained", "root bounds remain the root placement owner's responsibility");
+  assert.equal(nestedTablePaperBounds([{}]).state, "contained", "absent depth is existing root metadata");
+});

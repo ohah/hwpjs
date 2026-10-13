@@ -12,6 +12,8 @@
 
 ## 단계별 구현 이력
 
+최종 종이 경계의 depth 반례: 종이 밖 box의 depth를-1/NaN/문자열0/null로 바꾸면 기존 `depth > 0` 조건을 건너뛰어 contained가 반환되는 것을 실제 재현했습니다. depth가 명시되면0 이상의 안전한 정수만 허용하고 null/배열/비객체 box도 거부합니다. 정상 루트의 부재/0 depth는 기존 루트 배치 소유자의 검사를 유지합니다. 이는 잘못된 중간 메타데이터의 경계 검증 누락이며 정상 native 파일에서 그 값이 발생한다고 주장하지 않습니다. 9가지 잘못된 depth·5가지 잘못된 box·기존 종이 네 경계와 실제 의료장비/중첩 표·table-bug 편집 재조판 회귀12/12 종료코드0입니다.
+
 table-bug 제품 경로 재검증: 표 전용 `layoutTableBodyContent`의 본문 필터는 도형 내부 문단115를 일반 본문으로 취급해 host=drawing/top_level=false에서 UnsupportedPageFlow를 반환했습니다. 제품 `layoutPageContent`는 인라인 도형1148과 표가 함께 있으면 `layoutMixedInlineBody`를 선택하고 도형 소유 문단을 별도로 처리합니다. 이 분기에서 실제 파일 전체는 주입 metric 폭4/높이12로539행·289셀·도형1개이며 pageParagraphCoverage가 전체 현재 문단을 검증합니다. 앞선 하위 경로 거부를 전체 파일 미지원으로 해석한 기록을 정정합니다.
 
 추가 회귀는 mixed-inline-table-policy·drawing-text-layout·table-bug-product-reflow의 정확한 선택13/13 종료코드0입니다. 기존 실제 중첩 표의 셀 페이지 절단/전체 문단 범위, 명시적 셀 단 선언, 소유 순환 거부와 실제 도형 다단·마지막 줄 ink/캐럿 회귀도 유지했습니다.

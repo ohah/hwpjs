@@ -3,7 +3,10 @@
 export function nestedTablePaperBounds(boxes) {
   if (!Array.isArray(boxes)) return { state: "unavailable", error: "InvalidNestedTablePaperBounds" };
   for (const box of boxes) {
-    if (!(box?.depth > 0)) continue;
+    if (!box || typeof box !== "object" || Array.isArray(box)
+      || box.depth !== undefined && (!Number.isSafeInteger(box.depth) || box.depth < 0))
+      return { state: "unavailable", error: "InvalidNestedTablePaperBounds", tableNode: box?.tableNode };
+    if ((box.depth ?? 0) === 0) continue;
     const paper = box.referenceBoxes?.paper;
     if (!paper || ![box.x, box.y, box.width, box.height, paper.x, paper.y, paper.width, paper.height,
       box.x + box.width, box.y + box.height, paper.x + paper.width, paper.y + paper.height].every(Number.isFinite)
