@@ -35,3 +35,12 @@ test("specialized output rejects missing summaries unknown rows and truncated JS
     assert.throws(() => parseSpecializedAuditOutput(output));
   }
 });
+
+test("specialized refusal identity includes the file without hiding repeated sites", () => {
+  const start = { kind: "start" };
+  const first = { kind: "refusal", path: "first.hwpx", section: 0, paragraph: 24, localParagraph: 24, error: "ProtectedFieldRange" };
+  const second = { ...first, path: "second.hwpx" };
+  const output = rows => [start, ...rows, { refused: { ProtectedFieldRange: rows.length } }].map(JSON.stringify).join("\n");
+  assert.deepEqual(parseSpecializedAuditOutput(output([first, second])).refusals, [first, second]);
+  assert.throws(() => parseSpecializedAuditOutput(output([first, second, first])), /DuplicateSpecializedAuditRefusal/);
+});

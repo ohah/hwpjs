@@ -14,7 +14,7 @@ export function parseSpecializedAuditOutput(output) {
       !Number.isSafeInteger(row.section) || row.section < 0 ||
       !Number.isSafeInteger(row.paragraph) || row.paragraph < 1 ||
       !Number.isSafeInteger(row.localParagraph) || row.localParagraph < 1) throw new Error("InvalidSpecializedAuditRefusal");
-    const site = `${row.section}:${row.paragraph}`;
+    const site = JSON.stringify([row.path, row.section, row.paragraph]);
     if (sites.has(site)) throw new Error("DuplicateSpecializedAuditRefusal");
     sites.add(site);
     refusals.push(row);
