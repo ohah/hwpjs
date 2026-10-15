@@ -305,7 +305,7 @@ export function createRenderer(canvas, viewportElement, spacer, onLayout = () =>
       const inkHeight = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
       return { width: metrics.width, height: Math.max(fontAt.textHeight(paragraph, unit, kind), Number.isFinite(inkHeight) ? inkHeight : 0) };
     };
-    const pageLayout = pictureDisplay.createdTables?.length ? { state: "unavailable", error: "UnsupportedCreatedTablePagination" } : pictureDisplay.format === "hwp5" ? layoutHwp5PageContent(pictureDisplay, measure) : layoutPageContent(pictureDisplay, measure);
+    const pageLayout = pictureDisplay.format === "hwp5" ? layoutHwp5PageContent(pictureDisplay, measure) : layoutPageContent(pictureDisplay, measure);
     const logicalWidth = Math.max(1, viewport.clientWidth / viewScale - 2 * TEXT_LEFT);
     layout = pageLayout.state === "paginated" ? pageLayout : { ...layoutTableContent(pictureDisplay, logicalWidth, measure), pageLayoutError: pageLayout.error, pageLayoutTableNode: pageLayout.tableNode, pageLayoutAnchorReason: pageLayout.anchorReason, pageLayoutPolicyReason: pageLayout.policyReason };
     layout = attachCreatedTableFlow(pictureDisplay, layout, measure);

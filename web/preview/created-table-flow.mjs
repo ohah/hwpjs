@@ -4,7 +4,7 @@ import { sameCreatedCell } from "./created-cell-address.mjs";
 
 // Experimental block flow, not source-equivalent inline pagination.
 export function attachCreatedTableFlow(content, base, measure, maxRows = 20000) {
-  if (!content.createdTables?.length) return base;
+  if (!content.createdTables?.length || base.createdTablesPaginated === true) return base;
   const rows = base.rows.map(row => ({ ...row }));
   const boxes = (base.boxes ?? []).map(box => ({ ...box }));
   const paragraphs = [], unavailable = [];

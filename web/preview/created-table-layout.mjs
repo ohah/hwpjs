@@ -13,7 +13,7 @@ export function layoutCreatedTable(table, measure, { x = 20, y = 0, maxRows = 20
   let count = 0;
   for (const [index, paragraph] of paragraphs.entries()) {
     if (count === maxRows) throw new Error("CreatedTableLayoutRowBudgetExceeded");
-    const flow = layoutContent({ paragraphs: [paragraph], limited: false }, Math.max(1, columnWidths[cells[index].column] - 12), (text, _p, unit, kind) => measure(text, paragraph, unit, kind), maxRows - count + 1, { compactLines: true });
+    const flow = layoutContent({ paragraphs: [paragraph], limited: false }, Math.max(1, columnWidths[cells[index].column] - 12), (text, _p, unit, kind) => measure(text, paragraph, unit, kind), maxRows - count, { compactLines: true, documentBody: true });
     const textRows = flow.rows.filter(row => row.kind === "text");
     if (flow.limited || count + textRows.length > maxRows) throw new Error("CreatedTableLayoutRowBudgetExceeded");
     count += textRows.length;

@@ -21,6 +21,7 @@ test("created table local flow uses shared units and explicit identity cell owne
   assert.deepEqual(table, before);
 });
 test("created table local flow refuses row truncation", () => {
+  assert.equal(layoutCreatedTable(table, measure, { maxRows: 2 }).rows.length, 2);
   assert.throws(() => layoutCreatedTable(table, measure, { maxRows: 1 }), /CreatedTableLayoutRowBudgetExceeded/);
   assert.throws(() => layoutCreatedTable({ ...table, identity: 1 }, measure), /InvalidCreatedTableLayout/);
 });

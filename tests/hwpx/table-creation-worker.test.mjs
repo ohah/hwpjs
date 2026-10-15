@@ -176,7 +176,10 @@ test("actual Worker keeps source paragraph addresses and created cell identities
   assert(created.content.paragraphs.some(p => p.plainEditable && p.editable));
   assert(created.content.paragraphs.every(p => p.fieldLabels.length === 0 && !p.anchoredSplitAvailable));
   assert.equal(h.renderer.layout().boxes.filter(box => box.createdCell).length, 4);
-  assert.equal(h.renderer.layout().pageLayoutMode, "created-table-block-prototype");
+  assert.equal(h.renderer.layout().pageLayoutMode, "measured-created-inline");
+  assert.equal(h.renderer.layout().createdTablesPaginated, true);
+  assert(h.renderer.layout().pages.length > 0);
+  assert(h.renderer.layout().boxes.filter(box => box.createdCell).every(box => Number.isInteger(box.pageOrdinal) && box.referenceBoxes?.page));
   h.paint();
   const edited = await h.send({ kind: "created-cell-text", section: 0, identity: created.identity, row: 0, column: 0, text: "입력😀<&" });
   assert.equal(edited.error, undefined);
