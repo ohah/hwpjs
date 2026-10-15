@@ -2,7 +2,7 @@ import { structuralAnchorUnits } from "./structural-anchor-units.mjs";
 import { storedAutomaticNumberText } from "./automatic-number-text.mjs";
 
 // Classify source-owned display controls, not generated table placeholders.
-export function projectCreatedHostTextAnchors(source, projection, sourceTextAnchorUnits = []) {
+export function projectCreatedHostTextAnchors(source, projection, sourceTextAnchorUnits = [], sourceObjectUnits = []) {
   const fail = () => { throw new Error("UnsupportedCreatedTableHostControls"); };
   const first = source.textStartUnit ?? 0, last = first + source.text.length;
   const visible = row => row && Number.isSafeInteger(row.unit) && row.unit >= first && row.unit < last;
@@ -12,6 +12,9 @@ export function projectCreatedHostTextAnchors(source, projection, sourceTextAnch
   if (!Array.isArray(sourceTextAnchorUnits) || new Set(sourceTextAnchorUnits).size !== sourceTextAnchorUnits.length
     || sourceTextAnchorUnits.some(unit => !Number.isSafeInteger(unit) || unit < first || unit >= last || source.text[unit - first] !== "\ufffc")) return fail();
   const knownText = new Set(sourceTextAnchorUnits);
+  if (!Array.isArray(sourceObjectUnits) || new Set(sourceObjectUnits).size !== sourceObjectUnits.length
+    || sourceObjectUnits.some(unit => !Number.isSafeInteger(unit) || unit < first || unit >= last || source.text[unit - first] !== "\ufffc" || knownText.has(unit))) return fail();
+  const knownObjects = new Set(sourceObjectUnits);
   for (const row of (source.automaticNumbers ?? []).filter(visible)) {
     if (numbers.has(row.unit) || source.text[row.unit - first] !== "\ufffc") return fail();
     numbers.set(row.unit, row);
@@ -28,6 +31,10 @@ export function projectCreatedHostTextAnchors(source, projection, sourceTextAnch
   const textAnchorUnits = [], zeroWidthUnits = [];
   for (let index = 0; index < source.text.length; index++) if (source.text[index] === "\ufffc") {
     const unit = first + index;
+    if (knownObjects.has(unit)) {
+      if (hidden.has(unit) || numbers.has(unit)) return fail();
+      continue;
+    }
     if (hidden.has(unit)) {
       if (numbers.has(unit) || knownText.has(unit)) return fail();
       zeroWidthUnits.push(projection.viewUnitForSource(unit, "after"));

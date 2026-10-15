@@ -31,6 +31,7 @@ export function rowAtPoint(layout, x, y) {
     return index >= 0 && rowPageClipContains(layout.rows[index], x, y) ? index : -1;
   }
   const contains = (row, index) => {
+    if (row.sourceObjectAnchor === true) return false;
     if (!rowPageClipContains(row, x, y)) return false;
     const point = rowLocalPoint(row, x, y);
     return point && row.kind === "text" && point[0] >= rowLeft(row) && point[0] < rowLeft(row) + row.width &&
