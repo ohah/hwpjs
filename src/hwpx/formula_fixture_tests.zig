@@ -3,7 +3,10 @@ const parameters = @import("parameter_lists.zig");
 const read = @import("formula_parameters.zig").read;
 
 test "HWPX formula parameters project all thirteen actual chart formulas without cached evaluation" {
-    const a = std.testing.allocator;
+    try @import("../testing/checked_allocator.zig").run(verifyActualFormulaParameters, .{});
+}
+
+fn verifyActualFormulaParameters(a: std.mem.Allocator) !void {
     const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx", a, .limited(4_000_000));
     defer a.free(bytes);
     var document = try @import("package.zig").inspectDocument(a, bytes, .{});

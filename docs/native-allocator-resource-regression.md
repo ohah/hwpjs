@@ -70,6 +70,22 @@ ReleaseFast에서도 같은 양성2/2·exit0과 의도적 누수 FAIL(TestAlloca
 
 게시할 변경만 분리한 소스의 fmt와 ReleaseSafe 제품 빌드5/5단계도 통과했습니다. 기본 배포 WASM을 교체하지 않았고 브라우저·디바이스도 실행하지 않았습니다. 이 검사 수리와 HWP5 생성 표 Session/CFB/API 기능 게시를 구분합니다.
 
+## 실파일 주석 모양 진단의 추가 자원 중단
+
+게시 범위를 main 기반 세 파일(이 문서와 document_known_tests/formula_fixture_tests)로 분리한 격리 사본은 ReleaseSafe 집중5/5·exit0 및 제품 빌드5/5단계·exit0을 확인했습니다. 주석 모양 실제 참조2파일을 명시적으로 복사했고 미게시 AVG·생성 표 기능을 섞지 않았습니다. 전체 native gate가 여전히 미완료라는 경계는 유지합니다.
+
+생성 표 flat formula 집중 수정본 `3586e0a1ed7c9824bfd1a9df37237ac224ccc30264ccfa78caec69a0218119d5`는 ReleaseSafe2/2·fail/skip/log/leak0·exit0·관측 peak7176528바이트입니다. 기록은 같은 디렉터리 `audit-flat-formula-checked.jsonl`입니다. 해당 미게시 기능과 함께 실행한 집중 결과이며 기본 제품이나 전체 native 통과를 뜻하지 않습니다.
+
+geometry 수정 후 전체 바이너리 `178da078d4c5d65de951b3294bacd05bb3752110a364c66142194f1e349e89b9`(4114개, AVG 변경 전 snapshot)의 `audit-known-geometry-checked.jsonl`은 index876 `created table flat formula inputs recalculate reopen and roll back invalid number`에서 관측 peak1096172696바이트로1024MiB 한도를 넘어 exit1로 끝났습니다. 기존766번은 통과했으나 전체 완료는 아닙니다. 해당 테스트 바깥 범위만 checked_allocator.run으로 바꾸고 원래 두 호스트·원자성·재계산·재열기 단언을 유지한 집중 바이너리를 컴파일 중이며 자원 재측정은 아직 완료하지 않았습니다.
+
+주석 모양 수정 후 전체 실행은 index766 `HWPX known inspections include table geometry diagnostics and limits`에서 관측 peak1159021768바이트·exit1로 다시 중단됐습니다. 기존759번은 통과했지만 전체4114개 통과는 아닙니다. 표 geometry 검사와 같은 모듈의 all-phases 전체 할당 실패 검사는 바깥 checked_allocator.run과 공통 allocation_failures.check로 통일했습니다. 원래 전체 실패 지점과 모든 단언을 유지하며, 후자의 수정 전 peak는 별도 측정하지 않았으므로 감소율이나 재현 실패를 주장하지 않습니다. 집중 자원 재측정은 `known-geometry-allocation-checked.jsonl`과 별도 stderr 로그에 기록했습니다. ReleaseSafe3/3·exit0·fail/skip/log/leak0·peak6996304바이트이며 바이너리 hash는 `ee26cc1911aa8695cd26b5b23dedd059ed58951e34733ccfaedf79d3ab7fa905`입니다.
+
+수정 후 전체 로컬 바이너리 `6b5d41d3c0de28669127d88922d6659591cb994040f94523b47fe2d2fdbf980b`는4114개 inventory로 재컴파일했습니다. 동일 디렉터리 `audit-note-shapes-checked.jsonl`/`stderr-note-shapes-checked.log`에1024MiB 관측 한도·batch-size1의 새 전체 실행을 기록합니다. 최종 complete 전에는 전체 통과로 계수하지 않으며 이전 중단 실행의 pass 수와 합산하지 않습니다.
+
+2026-10-15 로컬 전체 실행 `audit-page-geometry-checked.jsonl`은 index759 `HWPX section note shapes preserve observed width placement and color anomalies`에서 관측 물리 메모리1088947352바이트가1073741824바이트 한도를 넘어 exit1로 중단됐습니다. 기록 디렉터리는 `/tmp/hwpjs-native-current-20261015.QKXKKy`입니다. 이것은 문서 파싱 오류나 전체 통과 결과가 아닙니다.
+
+해당 테스트의 두 실제 원본과 unknown enum·비정규 색상 기대값은 그대로 유지하고 바깥 할당 범위만 공통 checked_allocator.run으로 변경했습니다. ReleaseSafe에서 동일 이름 집중 필터 실행은 root 포함2/2·exit0으로 통과했습니다. 수정 바이너리 `fb9a7ca4dea42b3dace2715f354009a969115f94fe0dd8e5710765669766cb1d`의 별도 자원 감사도2/2·fail/skip/log/leak0·exit0이며 관측 peak11665744바이트입니다. 표준 runner 분리 프로세스의 동일 집중 범위이고 전체 native 재실행은 아직 완료하지 않았으며, 제품 파서·기본 WASM은 변경하지 않았습니다.
+
 ## 구조 수식 snapshot의 전체 실패 주입
 
 다음 분리 바이너리 `2cbf582d6dfc82b203169fe9ced088f63ba0511d22d4401291b22cc3f86da527`는 앞선 수리를 포함하고3921개 inventory를 유지합니다. 1024MiB 관측 한도에서598개 pass·fail/skip/log/leak0 뒤 index598 구조 수식 snapshot 검사에서 중단됐습니다. peak1133167816바이트·exit1·guardStoppedtrue입니다. 이전4096MiB 실행보다 작은 한도이므로 이 이른 중단을 새로운 제품 오류로 해석하지 않습니다. 기록은 `/tmp/hwpjs-hwp5-wire-publication.Tdb3Dc`입니다.
