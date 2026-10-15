@@ -18,6 +18,11 @@ export function createChartControls({ form, fields, targets, points, input, note
   const update = () => { form.hidden = closed || !rows.length; fields.disabled = closed || !enabled || !ready() || !selectedPoint(); table?.refresh(); };
   const pick = () => { input.value = selectedPoint()?.point.value ?? ""; inputBaseline = input.value; dirty = false; table?.reveal(selectedPoint()?.index); update(); };
   const edit = () => { dirty = true; };
+  const discard = event => {
+    if (closed || !enabled || !ready() || event.key !== "Escape" || event.defaultPrevented || event.isComposing || event.keyCode === 229 || event.repeat || event.ctrlKey || event.metaKey || event.altKey || event.shiftKey || !selectedPoint()) return;
+    if (!dirty && input.value === inputBaseline) return;
+    event.preventDefault(); event.stopPropagation(); pick(); note.textContent = "미적용 차트 입력을 취소했습니다.";
+  };
   const query = () => {
     const row = selected(), identity = row ? `${row.section}:${row.wrapper}` : null;
     if (identity !== targetIdentity) pointOrdinal = null;
@@ -40,6 +45,7 @@ export function createChartControls({ form, fields, targets, points, input, note
   };
   targets.addEventListener("change", query); points.addEventListener("change", pick); form.addEventListener("submit", submit);
   input.addEventListener("input", edit);
+  input.addEventListener("keydown", discard);
   const body = form.querySelector?.("[data-chart-point-body]");
   if (body) table = createChartPointTable({ body, previous: form.querySelector("[data-chart-point-previous]"), next: form.querySelector("[data-chart-point-next]"), note: form.querySelector("[data-chart-point-page]"),
     getChart: () => chart, getSelected: () => selectedPoint()?.index ?? null, accepts, ready: () => !closed && enabled && ready(), select: ordinal => { points.value = String(ordinal); pick(); input.focus(); } });
@@ -83,6 +89,6 @@ export function createChartControls({ form, fields, targets, points, input, note
       update();
       queueMicrotask(update);
     },
-    close() { closed = true; serial++; table?.close(); targets.removeEventListener("change", query); points.removeEventListener("change", pick); input.removeEventListener("input", edit); form.removeEventListener("submit", submit); update(); },
+    close() { closed = true; serial++; table?.close(); targets.removeEventListener("change", query); points.removeEventListener("change", pick); input.removeEventListener("input", edit); input.removeEventListener("keydown", discard); form.removeEventListener("submit", submit); update(); },
   };
 }

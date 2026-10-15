@@ -15,6 +15,38 @@ class Element extends EventTarget {
 }
 const click = (body, target) => { const event = new Event("click"); Object.defineProperty(event, "target", { value: target }); body.dispatchEvent(event); };
 
+test("chart Escape discards only uncommitted drafts and preserves raw native spelling", async t => {
+  const form = new Element(), fields = new Element(), targets = new Element(), points = new Element(), input = new Element(), note = new Element();
+  let visible = "", ready = true;
+  Object.defineProperty(input, "value", { get: () => visible, set: value => { visible = String(value).replace(/\r\n?/g, "\n"); } });
+  const requests = [], controls = createChartControls({ form, fields, targets, points, input, note, ready: () => ready, request: message => { requests.push(message); return true; } });
+  t.after(() => controls.close());
+  controls.message({ kind: "enable", content: { chartEditAvailable: true, chartStringEditAvailable: true, chartTargets: [{ section: 0, wrapper: 9 }] } });
+  await Promise.resolve();
+  const chart = { values: { points: [{ index: 0, kind: "string_cache", value: "원래\r\n다음" }] } };
+  controls.message({ ...requests.shift(), chart }); await Promise.resolve();
+  const key = (values = {}, prevented = false) => {
+    const event = new Event("keydown", { cancelable: true }); Object.assign(event, { key: "Escape", ...values });
+    let stopped = 0; const stop = event.stopPropagation.bind(event); event.stopPropagation = () => { stopped++; stop(); };
+    if (prevented) event.preventDefault(); input.dispatchEvent(event); return { event, stopped };
+  };
+  assert.equal(input.value, "원래\n다음"); assert.equal(key().event.defaultPrevented, false);
+  input.value = "임시값"; input.dispatchEvent(new Event("input"));
+  for (const values of [{ isComposing: true }, { keyCode: 229 }, { ctrlKey: true }, { metaKey: true }, { altKey: true }, { shiftKey: true }, { repeat: true }, { key: "Enter" }]) {
+    const result = key(values); assert.equal(result.event.defaultPrevented, false); assert.equal(result.stopped, 0); assert.equal(input.value, "임시값");
+  }
+  assert.equal(key({}, true).stopped, 0); assert.equal(input.value, "임시값");
+  ready = false; assert.equal(key().event.defaultPrevented, false); assert.equal(input.value, "임시값");
+  ready = true; const discarded = key(); assert.equal(discarded.event.defaultPrevented, true); assert.equal(discarded.stopped, 1);
+  assert.equal(input.value, "원래\n다음"); assert.equal(requests.length, 0); assert.equal(chart.values.points[0].value, "원래\r\n다음");
+  assert.equal(note.textContent, "미적용 차트 입력을 취소했습니다.");
+  assert.equal(key().event.defaultPrevented, false, "an unchanged Escape belongs to the surrounding UI");
+  form.dispatchEvent(new Event("submit", { cancelable: true }));
+  assert.equal(requests.shift().value, "원래\r\n다음", "discard must restore untouched native CR spelling rather than commit textarea normalization");
+  input.value = "닫힌 뒤"; input.dispatchEvent(new Event("input")); controls.close();
+  assert.equal(key().event.defaultPrevented, false); assert.equal(input.value, "닫힌 뒤"); assert.equal(requests.length, 0);
+});
+
 test("chart current marker reads only canonical ordinal selection across pages and refused picks", () => {
   const body = new Element(), previous = new Element(), next = new Element(), note = new Element();
   const chart = { values: { points: Array.from({ length: 130 }, () => ({ index: 0, kind: "numeric_cache", value: "original" })) } };
