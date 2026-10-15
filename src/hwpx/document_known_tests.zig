@@ -19,7 +19,10 @@ const encrypted_sources = synthetic_sources ++ [_]fixture.Source{.{ .name = "MET
 const orphan_sources = synthetic_sources ++ [_]fixture.Source{.{ .name = "Unlisted/data.bin", .data = "hidden" }};
 
 test "HWPX known inspections retain packaged OLE behind external declaration" {
-    const a = std.testing.allocator;
+    try @import("../testing/checked_allocator.zig").run(verifyPackagedExternalOle, .{});
+}
+
+fn verifyPackagedExternalOle(a: std.mem.Allocator) !void {
     const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "reference/rhwp/samples/SO-SUEOP.hwpx", a, .limited(1_000_000));
     defer a.free(bytes);
     var document = try package.inspectDocument(a, bytes, .{});

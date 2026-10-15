@@ -1,5 +1,13 @@
 # 큰 문서 테스트의 할당자 진단 비용
 
+## 외부 선언 뒤 패키지 OLE 종합 검사
+
+main bab04989 의존성만 사용한 별도 소스/실제 입력에서도 집중2/2·exit0과 ReleaseSafe 제품 빌드5/5·exit0을 확인했습니다(실행98965). 잘못된 cwd로 먼저 실행한 로컬 집중29312의2/2와 합산하지 않았으며 main 분리 검증 근거는98965입니다. 게시에는 이 테스트5줄 변경과 기록만 포함합니다. 현재 로컬 전체 컴파일26184는 별도 진행 중이고 전체 gate 완료를 뜻하지 않습니다.
+
+전체1502의index750 자원 중단을 같은 `SO-SUEOP.hwpx`(SHA256 `ebbd6f5c86d6eda195bb9c4ba1fc35b329432dcc5ef1dc0fffbfb4542fce74b8`) 집중 baseline에서도 재현했습니다. 같은1024MiB한도에서peak1326368016바이트·exit1입니다. 해당 테스트의 바깥 allocator만 checked_allocator.run으로 바꾸고 OLE candidate/external/packaged copy 각1·inspection failure0·resolved external1·대상0예산 거부·XML요소1예산 거부·계측 allocator 요청 bytes0 단언을 유지했습니다. 내부의 별도 memory-limit DebugAllocator도 그대로이며 제품 known inspection은 수정하지 않았습니다.
+
+집중 수정본 SHA256 `2998a6301fffed13db53e912cae6d76a78d8cf3db73b08f03a9abc457692393b`는 root 포함2/2·fail/skip/log/leak0·exit0, 관측peak9503056바이트입니다. 기록은 `/tmp/hwpjs-native-current-20261015.QKXKKy/known-ole-{baseline,checked}.jsonl`입니다. fmt/diff check를 확인했고 이 결과는 로컬 source 집중 검사이며 기본 제품 변경·전체 native 완료·main 분리 검증 완료가 아닙니다.
+
 ## 실제 쪽 번호 상속과 전체 실패 주입
 
 후속 게시 분리 검증은 main57a0d46b 의존성에 테스트 수리만 적용했습니다. 미게시 다구역/restart 제품 diff98줄은 제외하고 실제headerfooter 입력으로 집중2/2·exit0, ReleaseSafe 제품 빌드5/5·exit0, fmt를 확인했습니다. 게시 diff는 해당 테스트7줄과 이 기록뿐이며 현재 로컬 전체 native 검증의 대체 완료가 아닙니다.
