@@ -16,6 +16,8 @@ formula 후보의 load/enable은14595.73/11509.27ms,marker 후보는15958.17/119
 
 ## 게시와 정규 gate 경계
 
+할당 실패 주입에서 테스트 allocator backing을 비교한 후속 실측·검사 범위/누수 부정 대조는 [실패 전수 메모리 조사](native-allocation-sweep-memory.md)가 소유합니다. 이 단일 경로 결과를 전체 gate 통과로 바꾸지 않습니다.
+
 이번 최적화 부분만8be37e9b Git archive의 별도 `/tmp/hwpjs-owned-paragraph-main.9KiZ23`에 적용했습니다. 기존 로컬 result_overrides/source_display_options와 optionalAncestor 변경을 포함하지 않았습니다. 이 깨끗한 소스의 정규 zig build test -Doptimize=ReleaseSafe -j1(handle58080)은 native 실행 중 물리 footprint20373322488bytes/peak20373355256bytes를 실측해 자원 기준 초과로 중단했습니다. 최초 native PID27591 종료 뒤에도 build가 다른 native 실행PID33197을 시작했으므로,같은 소유 build18503/18646과 해당 자식만 종료했고 최종exit143입니다. 전체 테스트 count/pass 또는 allocator leak 원인을 추정하지 않습니다. native 변경/기본 WASM은 아직 게시하지 않았습니다.
 
 이전0c976911 native binary의4052개 guardian 전수는3359개 완료 뒤 index3359에서 current/peak 물리 footprint8656230856bytes가8GiB 한도를 넘어 자동 종료됐습니다. handle77580·exit1·incomplete이며 assertion 실패나 전체 pass로 기록하지 않습니다. 이번 새 iterator/후속 form 후보의 전수 완료 증거로 소급하지 않습니다.
