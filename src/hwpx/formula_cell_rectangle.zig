@@ -25,10 +25,15 @@ pub fn read(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tree
     var duplicate: usize = 0;
     const address = fields.uniqueChild(tree, cell, "cellAddr", &missing, &duplicate) orelse return error.InvalidFormulaCellAddress;
     const span = fields.uniqueChild(tree, cell, "cellSpan", &missing, &duplicate) orelse return error.InvalidFormulaCellSpan;
-    const c = try fields.optionalUnsigned(a, tree, address, "colAddr", 4096) orelse return error.InvalidFormulaCellAddress;
-    const r = try fields.optionalUnsigned(a, tree, address, "rowAddr", 4096) orelse return error.InvalidFormulaCellAddress;
-    const cs = try fields.optionalUnsigned(a, tree, span, "colSpan", 4096) orelse return error.InvalidFormulaCellSpan;
-    const rs = try fields.optionalUnsigned(a, tree, span, "rowSpan", 4096) orelse return error.InvalidFormulaCellSpan;
+    var raw: [2]?@import("../xml/attribute_value.zig").Value = undefined;
+    try tree.unprefixedAttributeValues(a, address, &.{ "colAddr", "rowAddr" }, &raw);
+    // Convert in the original order: a missing first field must win over a
+    // malformed second field. The returned values borrow the source tree.
+    const c = try fields.unsigned(a, raw[0] orelse return error.InvalidFormulaCellAddress, 4096);
+    const r = try fields.unsigned(a, raw[1] orelse return error.InvalidFormulaCellAddress, 4096);
+    try tree.unprefixedAttributeValues(a, span, &.{ "colSpan", "rowSpan" }, &raw);
+    const cs = try fields.unsigned(a, raw[0] orelse return error.InvalidFormulaCellSpan, 4096);
+    const rs = try fields.unsigned(a, raw[1] orelse return error.InvalidFormulaCellSpan, 4096);
     if (cs == 0 or rs == 0 or c >= columns or r >= rows or cs > columns - c or rs > rows - r) return error.InvalidFormulaCellSpan;
     return .{ .column = c, .row = r, .columns = cs, .rows = rs };
 }

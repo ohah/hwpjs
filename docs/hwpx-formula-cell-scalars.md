@@ -18,6 +18,8 @@
 
 ## 검증 경계
 
+셀 좌표의 중복 XML 조회 감소와 값/오류/할당·실파일 대조는 [묶음 조회 검증](hwpx-formula-cell-rectangle-batching.md)이 소유합니다.
+
 실제 Canvas 키 입력·브라우저 undo/redo·다운로드와 종료 확인은 [AVG Canvas 검증](hwpx-avg-canvas-verification.md)이 소유합니다. Node Worker 회귀와 실제 브라우저 증거를 구분합니다.
 
 ### main 기반 scalar 게시 후보

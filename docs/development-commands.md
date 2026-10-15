@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+`node tools/hwpx-query-parity-audit.mjs --before-wasm=/absolute/before.wasm --after-wasm=/absolute/candidate.wasm --root=reference/rhwp/samples --max-rss-mib=512 --max-duration-ms=15000`는 문서별 제한된 자식 프로세스로 전체 구역 조회·저장 응답을 비교합니다. 같은 오류는 지원이 아니며 원본과 다른 무변경 저장·저장 오류·미완료는 exit1입니다. [조회 감사 계약](hwpx-query-parity-audit.md)의 관측 한도와 판정을 따릅니다.
+
 `zig test src/testing_checked_allocator_probe.zig -O ReleaseSafe --test-filter 'probe positive' --test-filter 'checked allocator retains'`는 범위 테스트 할당자의 안전한 양성 대조입니다. `deliberate leak`/`deliberate assertion` 필터는 실제 native 실패·exit1이 예상되는 별도 음성 대조이며 정규 root에 import하지 않습니다. [자원 재현과 진단 손실](native-allocator-resource-regression.md)을 먼저 읽습니다.
 
 `zig test src/root.zig -O ReleaseSafe --test-filter 'HWPX formula expression' --test-filter 'HWPX formula command plan'`는 공유 문법의 MAX 양성·MEDIAN 음성·성공 Plan 해제 및 기존 전체 할당 실패를 검사합니다. [잘못된 기대값의 원인과 범위](formula-max-test-regression.md)를 따릅니다.

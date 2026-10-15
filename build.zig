@@ -105,6 +105,8 @@ pub fn build(b: *std.Build) void {
     hwpx_text_tests.addArg("tests/hwpx/formula-worker.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/formula-average-split-policy.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/formula-average-split-worker.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/query-parity-arguments.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/guarded-query-worker.test.mjs");
     hwpx_text_tests.step.dependOn(b.getInstallStep());
     hwpx_text_tests.has_side_effects = true;
     audit.dependOn(&hwpx_text_tests.step);

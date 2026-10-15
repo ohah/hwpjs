@@ -171,6 +171,7 @@ test {
     _ = @import("hwpx/formula_structural_snapshot.zig");
     _ = @import("hwpx/formula_values.zig");
     _ = @import("hwpx/formula_cell_rectangle.zig");
+    _ = @import("hwpx/formula_cell_rectangle_batch_tests.zig");
     _ = @import("hwpx/formula_numeric_input_guard.zig");
     _ = @import("hwpx/formula_dependency_cell.zig");
     _ = @import("hwpx/formula_dependency_evaluation.zig");
