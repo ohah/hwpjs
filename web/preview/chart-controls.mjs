@@ -42,7 +42,7 @@ export function createChartControls({ form, fields, targets, points, input, note
   input.addEventListener("input", edit);
   const body = form.querySelector?.("[data-chart-point-body]");
   if (body) table = createChartPointTable({ body, previous: form.querySelector("[data-chart-point-previous]"), next: form.querySelector("[data-chart-point-next]"), note: form.querySelector("[data-chart-point-page]"),
-    getChart: () => chart, accepts, ready: () => !closed && enabled && ready(), select: ordinal => { points.value = String(ordinal); pick(); input.focus(); } });
+    getChart: () => chart, getSelected: () => selectedPoint()?.index ?? null, accepts, ready: () => !closed && enabled && ready(), select: ordinal => { points.value = String(ordinal); pick(); input.focus(); } });
   return {
     select(row) {
       if (closed || !enabled || !ready()) return false;

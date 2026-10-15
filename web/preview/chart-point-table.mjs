@@ -2,10 +2,11 @@ import { chartPointLabel } from "./chart-point-label.mjs";
 
 const pageSize = 64;
 // Only pagination is owned here. Values are read from the current native query.
-export function createChartPointTable({ body, previous, next, note, getChart, accepts, ready, select }) {
+export function createChartPointTable({ body, previous, next, note, getChart, getSelected = () => null, accepts, ready, select }) {
   let page = 0, closed = false;
   const render = () => {
     const chart = closed ? null : getChart(), values = chart?.values.points ?? [];
+    const selected = closed ? null : getSelected();
     const pages = Math.ceil(values.length / pageSize);
     page = Math.max(0, Math.min(page, pages - 1));
     const rows = values.slice(page * pageSize, (page + 1) * pageSize).map((point, offset) => {
@@ -16,6 +17,9 @@ export function createChartPointTable({ body, previous, next, note, getChart, ac
       button.type = "button";
       button.dataset.chartPoint = String(ordinal);
       button.textContent = chartPointLabel(chart, point, ordinal);
+      const current = ordinal === selected;
+      button.setAttribute("aria-current", String(current));
+      button.style.fontWeight = current ? "700" : "";
       button.disabled = closed || !ready() || !accepts(point.kind);
       label.append(button);
       const value = body.ownerDocument.createElement("td");

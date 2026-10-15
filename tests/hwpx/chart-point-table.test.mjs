@@ -8,10 +8,34 @@ class Element extends EventTarget {
   append(...children) { for (const child of children) { child.parent = this; this.children.push(child); } }
   replaceChildren(...children) { for (const child of this.children) child.parent = null; this.children = []; this.append(...children); this.value = children[0]?.value ?? ""; }
   focus() { this.focused = true; }
+  setAttribute(name, value) { (this.attributes ??= new Map()).set(name, String(value)); }
+  getAttribute(name) { return this.attributes?.get(name) ?? null; }
   contains(child) { for (let node = child; node; node = node.parent) if (node === this) return true; return false; }
   closest() { return this.tag === "button" ? this : this.parent?.closest(); }
 }
 const click = (body, target) => { const event = new Event("click"); Object.defineProperty(event, "target", { value: target }); body.dispatchEvent(event); };
+
+test("chart current marker reads only canonical ordinal selection across pages and refused picks", () => {
+  const body = new Element(), previous = new Element(), next = new Element(), note = new Element();
+  const chart = { values: { points: Array.from({ length: 130 }, () => ({ index: 0, kind: "numeric_cache", value: "original" })) } };
+  const baseline = structuredClone(chart);
+  let selected = 65, reads = 0;
+  const picks = [];
+  const table = createChartPointTable({ body, previous, next, note, getChart: () => chart, getSelected: () => { reads++; return selected; }, accepts: () => true, ready: () => true, select: ordinal => { picks.push(ordinal); return false; } });
+  const current = () => body.children.flatMap(row => row.children[0].children[0].getAttribute("aria-current") === "true" ? [row.children[0].children[0].dataset.chartPoint] : []);
+  table.reveal(65);
+  assert.deepEqual(current(), ["65"]);
+  assert.equal(body.children[1].children[0].children[0].style.fontWeight, "700");
+  assert.equal(body.children[0].children[0].children[0].style.fontWeight, "");
+  click(body, body.children[0].children[0].children[0]);
+  table.refresh(); assert.deepEqual(picks, [64]); assert.deepEqual(current(), ["65"], "a refused pick must not create table-owned selection");
+  selected = 66; table.refresh(); assert.deepEqual(current(), ["66"]);
+  for (selected of [null, undefined, -1, 0.5, NaN, Infinity, "66", 130]) { table.refresh(); assert.deepEqual(current(), []); }
+  selected = 0; table.reveal(0); assert.deepEqual(current(), ["0"]);
+  assert.deepEqual(chart, baseline, "selection display must not mutate native values");
+  table.close(); const afterClose = reads; table.refresh(); assert.equal(reads, afterClose);
+  assert.equal(body.children.length, 0);
+});
 
 test("chart table selection shares canonical form submission and clears stale rows on refresh", async () => {
   const form = new Element(), fields = new Element(), targets = new Element(), points = new Element(), input = new Element(), note = new Element();
@@ -26,12 +50,15 @@ test("chart table selection shares canonical form submission and clears stale ro
   await Promise.resolve();
   const chart = { values: { points: Array.from({ length: 130 }, (_, index) => ({ index, kind: "numeric_cache", value: String(index) })) } };
   controls.message({ ...requests.shift(), chart });
+  assert.equal(body.children[0].children[0].children[0].getAttribute("aria-current"), "true");
   next.dispatchEvent(new Event("click"));
   const old = body.children[1].children[0].children[0];
   click(body, old);
   assert.equal(points.value, "65");
   assert.equal(input.value, "65");
   assert.equal(input.focused, true);
+  assert.equal(body.children[1].children[0].children[0].getAttribute("aria-current"), "true");
+  assert.equal(body.children[0].children[0].children[0].getAttribute("aria-current"), "false");
   assert.equal(requests.length, 0, "table selection never submits an edit");
   input.value = "7.70"; input.dispatchEvent(new Event("input"));
   form.dispatchEvent(new Event("submit", { cancelable: true }));
@@ -44,6 +71,7 @@ test("chart table selection shares canonical form submission and clears stale ro
   controls.message({ ...requests.shift(), chart: current });
   assert.equal(input.value, "7.70");
   assert.equal(body.children[1].children[1].textContent, "7.70");
+  assert.equal(body.children[1].children[0].children[0].getAttribute("aria-current"), "true");
   assert.match(pageNote.textContent, /2\/3쪽/);
   click(body, old); assert.equal(requests.length, 0);
   ready = false; controls.message({ kind: "save" });
@@ -64,6 +92,7 @@ test("chart table selection shares canonical form submission and clears stale ro
   controls.message({ ...unlockedQuery, chart: current });
   assert.equal(points.value, "0", "a fresh session must not retain the old selected point");
   assert.equal(input.value, "0");
+  assert.equal(body.children[0].children[0].children[0].getAttribute("aria-current"), "true");
   controls.message({ kind: "unlock", error: "WrongPassword" });
   assert.equal(form.hidden, true);
   assert.equal(input.value, "");
