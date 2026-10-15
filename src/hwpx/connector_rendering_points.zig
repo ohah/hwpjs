@@ -62,7 +62,10 @@ test "connector rendering points share affine order and refuse lossy integer con
     try std.testing.expectError(error.NonFinitePictureMatrix, apply(a, &value, .{ 1e308, 0, 0, 0, 1, 0 }));
 }
 test "connector rendering points actual four connectors preserve source and allocation failures" {
-    const a = std.testing.allocator;
+    try @import("../testing/checked_allocator.zig").run(verifyActualConnectorRendering, .{});
+}
+
+fn verifyActualConnectorRendering(a: std.mem.Allocator) !void {
     const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "reference/rhwp/samples/2025 행정업무운영 편람(최종).hwpx", a, .limited(64 * 1024 * 1024));
     defer a.free(input);
     var document = try @import("package.zig").inspectDocument(a, input, .{});

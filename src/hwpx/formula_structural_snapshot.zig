@@ -25,7 +25,10 @@ pub fn read(a: std.mem.Allocator, session: *const editor.Session, section: usize
 }
 
 test "HWPX structural formula snapshot allocation failure preserves source identity and edits" {
-    const a = std.testing.allocator;
+    try @import("../testing/checked_allocator.zig").run(verifyStructuralSnapshot, .{});
+}
+
+fn verifyStructuralSnapshot(a: std.mem.Allocator) !void {
     const bytes = try @import("test_formula_fixture.zig").zipWithParagraphs(a, "<p:p id='9'><p:run><p:t>AB</p:t></p:run></p:p>");
     defer a.free(bytes);
     var session = try editor.open(a, bytes, .{});
@@ -38,8 +41,10 @@ test "HWPX structural formula snapshot allocation failure preserves source ident
     try std.testing.expect(try session.setFormulaDefinition(0, node, "=AVG(A1:A1)"));
     const before = try session.save();
     defer a.free(before);
-    try std.testing.checkAllAllocationFailures(a, struct {
-        fn run(allocator: std.mem.Allocator, live: *const editor.Session, begin: usize) !void {
+    var calls: usize = 0;
+    try @import("../testing/allocation_failures.zig").check(struct {
+        fn run(allocator: std.mem.Allocator, live: *const editor.Session, begin: usize, attempts: *usize) !void {
+            attempts.* += 1;
             defer {
                 std.testing.expectEqualStrings("=AVG(A1:A1)", live.sections[0].formula_definitions.get(begin).?) catch @panic("definition mutation");
                 std.testing.expectEqual(@as(usize, 4), live.sections[0].structure_values.?.paragraphs.len) catch @panic("topology mutation");
@@ -51,7 +56,9 @@ test "HWPX structural formula snapshot allocation failure preserves source ident
             try std.testing.expectEqualStrings("=AVG(A1:A1)", snapshot.rows[0].values.formula.?);
             try std.testing.expectEqualStrings("2", snapshot.rows[0].values.last_result.?);
         }
-    }.run, .{ &session, node });
+    }.run, .{ &session, node, &calls });
+    try std.testing.expect(calls > 1);
+    std.debug.print("HWPX structural formula snapshot allocation calls: {d}\n", .{calls});
     const after = try session.save();
     defer a.free(after);
     try std.testing.expectEqualSlices(u8, before, after);

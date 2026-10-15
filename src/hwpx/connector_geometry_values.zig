@@ -149,7 +149,10 @@ test "connector lexical geometry rejects malformed numbers duplicates and wrong 
 }
 
 test "connector lexical geometry reads actual large reference connector points without source mutation" {
-    const a = std.testing.allocator;
+    try @import("../testing/checked_allocator.zig").run(verifyActualConnectorGeometry, .{});
+}
+
+fn verifyActualConnectorGeometry(a: std.mem.Allocator) !void {
     const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "reference/rhwp/samples/2025 행정업무운영 편람(최종).hwpx", a, .limited(64 * 1024 * 1024));
     defer a.free(input);
     var document = try @import("package.zig").inspectDocument(a, input, .{});

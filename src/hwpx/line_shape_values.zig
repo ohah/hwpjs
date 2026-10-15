@@ -98,7 +98,10 @@ test "lineShape source preserves wide width fractional alpha absent defaults and
     try std.testing.expectEqualStrings(source, tree.source);
 }
 test "lineShape source actual arrows distinguish seventeen arrows four spears and plain stroke" {
-    const a = std.testing.allocator;
+    try @import("../testing/checked_allocator.zig").run(verifyActualArrows, .{});
+}
+
+fn verifyActualArrows(a: std.mem.Allocator) !void {
     const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "reference/rhwp/samples/2025 행정업무운영 편람(최종).hwpx", a, .limited(64 * 1024 * 1024));
     defer a.free(input);
     var document = try @import("package.zig").inspectDocument(a, input, .{});
