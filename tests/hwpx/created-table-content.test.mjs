@@ -36,3 +36,14 @@ test("created table projection refuses text truncation and does not query unavai
   assert.deepEqual(content.createdTables, []);
   assert.equal(content.tableCreationAvailable, false);
 });
+
+test("created cell soft line capability is explicit and does not mutate native snapshots", () => {
+  for (const capability of [undefined, false, true, 1]) {
+    const cell = Object.freeze({ text: "a" });
+    const table = Object.freeze({ host_paragraph: 1, anchor_unit: 0, cells: Object.freeze([cell]) });
+    const editor = { createdTables: () => [table], ...(capability === undefined ? {} : { supportsCreatedCellSoftLineBreaks: () => capability }) };
+    const content = attachCreatedTables(editor, { paragraphs: [{ section: 0, paragraph: 0 }] }, true, 100);
+    assert.equal(content.createdTables[0].cells[0].softLineBreakAvailable, capability === true ? true : undefined);
+    assert.equal(cell.softLineBreakAvailable, undefined);
+  }
+});

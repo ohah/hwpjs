@@ -650,6 +650,9 @@ export async function createHwpxEditor(source) {
         return decodeRectangleRenderingSources(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
       } finally { wasm.hwpx_edit_output_free(); }
     },
+    supportsCreatedCellSoftLineBreaks() {
+      return typeof wasm.hwpx_edit_created_cell_soft_line_breaks === "function" && wasm.hwpx_edit_created_cell_soft_line_breaks() === 1;
+    },
     tableCreationResources() {
       ready();
       if (typeof wasm.hwpx_edit_table_creation_resources !== "function") throw new Error("HwpxTableCreationResourcesAbiUnavailable");

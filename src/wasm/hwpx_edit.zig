@@ -8,6 +8,11 @@ var active: ?editor.Session = null;
 var history: ?histories.History = null;
 var output: ?[]u8 = null;
 
+// Optional capability: generated LF is serialized as hp:lineBreak.
+export fn hwpx_edit_created_cell_soft_line_breaks() u32 {
+    return 1;
+}
+
 fn fail(err: anyerror) u32 {
     _ = errors.fail(err);
     return 0;

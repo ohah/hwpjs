@@ -8,7 +8,7 @@ export function layoutCreatedTable(table, measure, { x = 20, y = 0, maxRows = 20
   const cells = table.cells.map(cell => ({ ...cell, rowSpan: 1, columnSpan: 1 }));
   const columnWidths = cells.slice(0, table.columns).map(cell => hwpUnitsToPixels(cell.width));
   tableGrid({ ...table, cells }, { x, y, columnWidths, minColumn: 1, minRow: 1 });
-  const paragraphs = cells.map(cell => ({ section: table.section, createdCell: { identity: table.identity, row: cell.row, column: cell.column }, text: cell.text, editable: true, selectable: true, label: "", characterRanges: [{ start: 0, end: cell.text.length, charShapeId: table.resources.character }] }));
+  const paragraphs = cells.map(cell => ({ section: table.section, createdCell: { identity: table.identity, row: cell.row, column: cell.column }, ...(cell.softLineBreakAvailable === true ? { softLineBreakAvailable: true } : {}), text: cell.text, editable: true, selectable: true, label: "", characterRanges: [{ start: 0, end: cell.text.length, charShapeId: table.resources.character }] }));
   const flows = [];
   let count = 0;
   for (const [index, paragraph] of paragraphs.entries()) {

@@ -95,6 +95,7 @@ pub fn build(b: *std.Build) void {
     editor_api_step.dependOn(&editor_api_tests.step);
     const hwpx_text_tests = b.addSystemCommand(&.{ "node", "--test", "tests/hwpx/text-reader.test.mjs", "tests/hwpx/canvas-preview.test.mjs", "tests/hwpx/editor.test.mjs", "tests/hwpx/formula-editor.test.mjs", "tests/hwpx/note-editor.test.mjs", "tests/hwpx/anchor-editor.test.mjs", "tests/hwpx/header-footer-editor.test.mjs", "tests/hwpx/object-boundary-editor.test.mjs", "tests/hwpx/history-editor.test.mjs" });
     hwpx_text_tests.addArg("tests/hwpx/created-cell-xml.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/created-cell-softline-canvas.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/numeric-input-corpus.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/numeric-exact-corpus.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/formula-definition-corpus.test.mjs");

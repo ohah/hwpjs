@@ -316,6 +316,18 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
   };
   const replaceSelection = text => {
     if (!target || !anchor || !focus || typeof text !== "string" || !text.isWellFormed() || composing || pending || historyPending || input.value !== committed || !controls.ready() || controls.busy()) return false;
+    if (target.createdCell) {
+      const normalized = normalizeParagraphReplacement(text);
+      if (!textEditable() || inputIntents.size || (normalized.includes("\n") && renderer.paragraph(target)?.softLineBreakAvailable !== true)) return false;
+      sync();
+      const start = snapUnit(committed, input.selectionStart), end = snapUnit(committed, input.selectionEnd, true);
+      draftSelection = { anchor: { ...anchor }, focus: { ...focus } };
+      input.value = committed.slice(0, start) + normalized + committed.slice(end);
+      input.setSelectionRange(start + normalized.length, start + normalized.length);
+      preview();
+      pump({ startUnit: start, endUnit: end, text: normalized });
+      return Boolean(pending);
+    }
     if (renderer.paragraphReplacementAvailable?.() === false) { report("현재 WASM은 문단 교체를 지원하지 않습니다."); return false; }
     const ranges = renderer.replacementRanges?.(anchor, focus);
     if (!ranges?.length || ranges.some(range => renderer.paragraph(range)?.editable !== true)) return false;
@@ -582,6 +594,9 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
       else if (["deleteContentBackward", "deleteContentForward", "deleteByCut"].includes(event.inputType)) replaceSelection("");
       return;
     }
+    if (event.inputType === "insertLineBreak" && target.createdCell && renderer.paragraph(target)?.softLineBreakAvailable === true) {
+      event.preventDefault(); replaceSelection("\n"); return;
+    }
     if (event.inputType === "insertFromPaste" && typeof event.data === "string" && /[\r\n]/.test(event.data)) {
       event.preventDefault(); sync(); replaceSelection(event.data); return;
     }
@@ -722,7 +737,12 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
       event.preventDefault(); setSelection({ ...target, unit: 0 }, { ...target, unit: input.value.length }); reveal(); return;
     }
     if ((event.metaKey || event.ctrlKey) && ["z", "y"].includes(key.toLowerCase())) { event.preventDefault(); travel(key.toLowerCase() === "y" || event.shiftKey ? "redo" : "undo"); return; }
-    if (key === "Enter") { event.preventDefault(); if (multipleParagraphs()) replaceSelection("\n"); else split(); return; }
+    if (key === "Enter") {
+      event.preventDefault();
+      if (multipleParagraphs() || (event.shiftKey && target?.createdCell && renderer.paragraph(target)?.softLineBreakAvailable === true)) replaceSelection("\n");
+      else split();
+      return;
+    }
     if (!event.metaKey && !event.ctrlKey && !event.altKey && ["Backspace", "Delete"].includes(key) && mergeBoundary(key === "Backspace")) { event.preventDefault(); return; }
     if (!navigation) return;
     event.preventDefault();

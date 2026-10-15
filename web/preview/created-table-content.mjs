@@ -4,6 +4,7 @@ export function attachCreatedTables(editor, content, available, maxUnits, sectio
   const rows = [];
   const pending = new Set();
   let units = 0;
+  const softLineBreakAvailable = available && editor.supportsCreatedCellSoftLineBreaks?.() === true;
   const sections = sectionCount === undefined ? new Set(content.paragraphs.map(p => p.section)) : Array.from({ length: sectionCount }, (_, index) => index);
   if (available) for (const section of sections) {
     for (const table of editor.createdTables(section)) {
@@ -14,7 +15,7 @@ export function attachCreatedTables(editor, content, available, maxUnits, sectio
         units += cell.text.length;
         if (units > maxUnits) throw new Error("CreatedTableDisplayTextBudgetExceeded");
       }
-      rows.push({ ...table, section, hostParagraph, anchorUnit: table.anchor_unit });
+      rows.push({ ...table, cells: table.cells.map(cell => ({ ...cell, ...(softLineBreakAvailable ? { softLineBreakAvailable: true } : {}) })), section, hostParagraph, anchorUnit: table.anchor_unit });
     }
   }
   content.createdTables = rows;
