@@ -1,5 +1,13 @@
 # HWP5 페이지 코퍼스 현재 검증
 
+## 2026-10-16 차트 후보의 페이지 조회와 거부 원인
+
+차트 통합 후보 WASM SHA256 `f6decd1df1fbf38a2926e2b25d69633c323ec7761753a78826dab6cc73cafc78`와 현재 작업 트리의 Worker/페이지 모듈을 조합해 `--distribution` 감사를 재실행했습니다. 추적101경로 중 CFB55조회·배포 허용2·43배치/부분0/12미지원·실패0·입력 불변55·exit0입니다. 로그는 `/tmp/hwpjs-chart-main-merged.IfTq0V/current-worktree-page-audit.jsonl`이며 stderr는0바이트입니다. 미지원 분포는 기존10/1/1과 같지만 이 조합을 공개 main만의 검증이나 기본 제품 반영으로 해석하지 않습니다.
+
+`table-bug.hwp`의 첫 오류 `UnsupportedMixedInlineTable`은 표453의 `MissingTableGeometry`·`MissingTablePagination`입니다. `attachHwp5TableGeometry`는 원본 표 속성 검증 실패 시 두 값을 설치하지 않으며, 같은 감사의 tableGeometryErrors에는 unknown TABLE bit25가 기록됩니다. 따라서 혼합 인라인 배치 알고리즘의 독립 결함으로 확정하지 않고 원본 표 속성 거부의 후속 진단으로 분류합니다. `software.hwp`도 구역의 비영17바이트 확장 외에 같은 bit25 표 오류가 있어 구역 제한만 풀어 페이지 지원 완료로 셀 수 없습니다.
+
+로컬 명세 표76은 TABLE bit0-2만 정의합니다. RHWP `src/parser/control.rs`의 `parse_table_record`는 하위 비트를 page_break/repeat_header로 해석하고 전체 attr은 raw_table_record_attr로 보존하지만, 이것만으로 bit25 의미나 무시해도 되는 조판 동치를 증명하지 않습니다. 미지 비트·확장을 삭제하거나 배치 제한을 완화하지 않았습니다. 고정8px 측정·조회 성공과 실제 한글 조판/전수 편집 완료는 구분합니다.
+
 ## 2026-10-15 실측
 
 `tools/hwp5-page-layout-corpus-audit.mjs`를 최신 검증 산출물 `zig-out/verification/current-fixture-editor-20261015/bin/hwpjs.wasm`로 실행했습니다. SHA-256은072def35c7e1ea5bc93682c996e9d9d69c4b12a63284b59272c10a5148925fe5입니다. Git 추적 문서101경로에서 실제 CFB 시그니처55경로를 선택했으며 ZIP/HWP3는 이 검사 범위가 아닙니다.
