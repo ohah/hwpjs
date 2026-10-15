@@ -18,4 +18,6 @@
 
 ## 게시 경계
 
+같은 분리 소스에 두 character style 테스트의 scoped allocator 수정을 반영하고 정규 `zig build test -Doptimize=ReleaseSafe -j1 --summary all`을 다시 실행했습니다(handle97668). 컴파일 후 native 실행까지 진행했으나 소유 build/process tree의 합산 RSS가8237MiB로8GiB 관측 기준을 넘어 중단됐습니다. wrapper의 최종 exit1·build SIGTERM이며 전체 테스트 수/통과는 확인되지 않았습니다. 이번 기준은 합산 RSS이고 이전 guardian의 단일 프로세스 physical footprint와 다른 지표입니다. 소유 PID40067/40074/66462만 종료했으며, 두 테스트 backing 수정만으로 정규 gate의 메모리 문제가 해결됐다고 주장하지 않습니다.
+
 이 test harness 수정과 비교 probe는 아직 로컬입니다. 전체 정규 native/build gate와 문단 소유 순회 최적화의 게시 조건은 [소유 노드 순회](hwpx-paragraph-owned-node-scan.md),이전 전수 중단은 해당 문서의 고정 산출물 기록과 구분합니다. 단일 테스트55MB 결과로 정규 전수 gate를 대체하지 않습니다.
