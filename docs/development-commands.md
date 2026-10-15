@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+`zig test src/form_source_fixture_test.zig -O ReleaseSafe --test-filter 'observed form source'`는 관측 양식 원문 연결·버전/꼬리/ID 거부·전체 할당 실패를 검사합니다. `HWPJS_TEST_WASM=/absolute/candidate/hwpjs.wasm node --test tests/hwp5/form-source-retention.test.mjs tests/hwp5/form-source-worker.test.mjs tests/hwp5/form-token-boundaries.test.mjs`는 실제7파일1,446문단의 독립 Section/CFB/이력·Worker 대역 입력과1,712토큰 거부입니다. 명시적 후보가 필요하며 [계약·실측·미지원 경계](hwp5-form-source-retention.md)를 따릅니다.
+
 `zig test src/hwpx_created_table_formula_validation_tests.zig -O ReleaseSafe --test-filter 'created table flat formula inputs' --test-filter 'created table saved formula validation'`는 기존 생성 표·수식 저장 의미/OOM 검사를 선택합니다. `HWPJS_TEST_WASM=/absolute/candidate/hwpjs.wasm node --test tests/hwpx/created-table-formula-host.test.mjs tests/hwpx/manual-formula-dependency-preservation.test.mjs`는 의미 검증과 표시 보존의 정합성을 함께 검사합니다. [회귀 원인과 경계](hwpx-preserved-formula-dependencies.md)를 따릅니다.
 
 `zig test src/hwpx_formula_preserved_dependency_tests.zig -O ReleaseSafe --test-filter 'HWPX preserved dependency'`는 표시 전용 의존 수식 저장·전체 할당 실패·실제 정의 변경 거부·숫자 입력 재계산을 검사합니다. `HWPJS_TEST_WASM=/absolute/candidate/hwpjs.wasm node --test tests/hwpx/manual-formula-dependency-preservation.test.mjs`는 실제 issue5543의 독립 XML/ZIP·이력 반례입니다. [보존 경계와 실측](hwpx-preserved-formula-dependencies.md)을 따르며 전체 native/브라우저 완료와 구분합니다.

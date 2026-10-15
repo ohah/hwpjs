@@ -79,7 +79,7 @@ fn validateWith(a: std.mem.Allocator, source: []const u8, version: Version, p: m
         }
         if (entry.record.framing.tag == @intFromEnum(body.Tag.control_header)) {
             preserved_direct_records += 1;
-            if (!links_checked) try @import("control_source.zig").validate(a, tree);
+            if (!links_checked) try @import("control_source.zig").validateWithSource(a, tree, source, version);
             links_checked = true;
             child = entry.subtree_end;
             continue;
@@ -120,7 +120,7 @@ fn validateWith(a: std.mem.Allocator, source: []const u8, version: Version, p: m
             var tokens = text.tokens();
             while (try tokens.next()) |token| {
                 if (token.value == .control and token.value.control.kind == .extended) {
-                    try @import("control_source.zig").validate(a, tree);
+                    try @import("control_source.zig").validateWithSource(a, tree, source, version);
                     break;
                 }
             }

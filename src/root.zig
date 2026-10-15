@@ -12,6 +12,7 @@ pub const text = @import("text/root.zig");
 pub const model = @import("model/document.zig");
 
 test {
+    _ = @import("form_source_fixture_test.zig");
     _ = @import("wasm/character_outline_args.zig");
     _ = @import("hwpx/character_outline_display.zig");
     _ = @import("hwpx/character_outline_patch.zig");

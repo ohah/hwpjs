@@ -53,6 +53,8 @@ pub fn validateFieldTransaction(a: std.mem.Allocator, source: []const u8, versio
 
 fn inspect(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version, allow_formulas: bool, allow_named_fields: bool) !bool {
     var formulas = false;
+    var forms: ?@import("form_source_retention.zig").Report = null;
+    defer if (forms) |*value| value.deinit(a);
     var tree: ?@import("../body/tree.zig").Tree = null;
     defer if (tree) |*value| value.deinit(a);
     var it = framing.Iterator.init(source, .{});
@@ -76,6 +78,11 @@ fn inspect(a: std.mem.Allocator, source: []const u8, version: @import("../versio
         switch (tag) {
             .control_header => {
                 const header = try body.ControlHeader.parse(entry.payload);
+                if (header.id == controls.form_id) {
+                    if (forms == null) forms = try @import("form_source_retention.zig").collect(a, source, version);
+                    if (!forms.?.allows(entry.offset, entry.payload)) return error.SourceBindingMismatch;
+                    continue;
+                }
                 const code = controls.expectedCode(header.id) orelse return error.UnsupportedSectionControl;
                 // Cross-reference/custom fields can carry unresolved external
                 // text positions. A local hyperlink alone is not that policy.
