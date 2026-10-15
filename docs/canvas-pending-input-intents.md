@@ -38,7 +38,15 @@ HWP5/HWPX 각각 조합 중 최초 응답 도착/미도착과 조합 완료/취�
 
 HWP5/HWPX 각각 실제 거부 뒤 늦은 조합 요청0회·원문 저장 불변·새 조합 정상 적용을 검사했습니다. HWP5→HWPX와 반대 방향의 load/reset 이후 **새 문단까지 선택한 상태**에서도 이전 조합 이벤트가 새 문서를 변경하지 않고 다음 일반 입력이 정상 적용됩니다. 같은7파일 재실행은43/43·skip0·exit0(10665.341375ms)이며 실제 브라우저 이벤트 계열 인증은 아닙니다.
 
-## 게시 단위 검증
+## 실제 브라우저의 Worker/저장 경계
+
+2026-10-15 분리 게시 디렉터리의 실제 Chrome에서 parashape.hwpx를 파일 선택으로 열고 편집 시작·찾기로 Worker 문단5를 선택했습니다. 실제 keyboard inserttext로 `문단 6`을 `가가`로 바꾼 뒤, 한 JS 이벤트 묶음에서 일반 삽입0→1과 조합 삽입0을 실행했습니다. 묶음 종료 전 native 요청은 첫 입력1건뿐이며 실제 Worker 응답 뒤 기록된 요청은0→1→0의3건,최종 textarea는 `가가가가가`입니다. 조합 이벤트는 브라우저 CompositionEvent/InputEvent로 생성했으므로 OS 한국어 입력기를 직접 조작한 검증은 아닙니다.
+
+실제 다운로드 버튼의 `final.hwpx`에 독립 plain-splice XML/ZIP oracle을 원본 대비 문단5의0..4 교체로 적용했습니다. 일반/-O 모두 전체 XML·비대상 ZIP payload/메타데이터 검사가 통과하고 잘못된4글자 기대는 Whole XML mismatch로 거부했습니다. UI undo 버튼4회는 각 응답을 기다려 원문 `문단 6`을 복원하고 다운로드 `undo.hwpx`가 원본과 byte-exact입니다. redo4회 다운로드 `redo.hwpx`는 final과 byte-exact입니다. final을 다시 파일 선택으로 열고 편집 시작·찾기에서 같은 문단의5글자를 확인했습니다. `/tmp/hwpjs-pending-input-ui.ZyL30q/reopened.png`를 직접 열어 선택한 Canvas 문자열을 확인했으며 브라우저 errors 출력은 비어 있었습니다.
+
+서버는 cb5d1b87 후보를 명시적으로 제공했고 controller는 c4fbcf96의 현재 파일과 cmp로 일치했습니다. final SHA-256은 `c50370ca063c43e64974c0a0fadb09a1f459f60e5585f77d1099bd67c2bf7019`입니다. 원격 기본 WASM·전체 페이지 조판·HWP5 브라우저·OS IME 완료로 소급하지 않습니다. HWPJS 전용 세션 hwpjs-fixture-qa-35c54947528a는 close 후 active=false/pid=null/runtime=null이며 임시19148 서버PID30950은 종료코드143으로 끝났습니다. 다른 프로젝트 세션은 종료하지 않았습니다.
+
+## 게시 검증 이력
 
 f5045308 기준 Git archive에 Canvas controller·이 Worker 회귀 파일만 적용한 첫 분리 실행은 기존 import의 `transformed-box-hit.mjs` 파일 누락으로 실패했습니다. 이 의존 파일과 checkbox 변환/clip 회귀는844ac307로 별도 커밋했습니다. 게시 대상 controller·Worker 회귀와 해당 의존 파일을 적용한 분리 디렉터리에서, run-selected-node-tests의 실제5파일 목록을 확인한 검사는39/39·skip0·exit0(9952.720167ms)입니다. 후보 WASM은 같은 cb5d1b87 외부 절대 경로를 사용했고 나머지 JS는 archive의 커밋본입니다. 현재 작업 트리의7파일43/43 결과와 게시 단위5파일39/39를 합산하지 않습니다.
 
