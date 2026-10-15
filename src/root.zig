@@ -12,6 +12,7 @@ pub const text = @import("text/root.zig");
 pub const model = @import("model/document.zig");
 
 test {
+    _ = @import("hwpx/picture_owner_batch_tests.zig");
     _ = @import("hwpx/field_nested_ownership.zig");
     _ = @import("hwpx/field_nested_session_tests.zig");
     _ = @import("hwpx/field_label_scope_tests.zig");

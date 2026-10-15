@@ -1,5 +1,17 @@
 # 그림 소유 위치의 임시 일괄 조회
 
+## main f8ff0b26 기반 분리 검증 (2026-10-16)
+
+최종 정규40파일은 같은9e8197bb 후보·Node 동시성2로106/106·실패/취소/skip0·187254.975833ms·exit0입니다. 아래 진행 중 표기는 이전 시점이며 이번 정규 실행은 종료했습니다. 기존98검사에 그림 관련8검사를 추가한 결과로, 집중8개를 별도 합산하지 않습니다. 코드 게시와 기본 WASM 교체는 구분합니다.
+
+새 후보 `/tmp/hwpjs-picture-batch-publication.TiVmVF/zig-out/bin/hwpjs.wasm`의 SHA-256은 `9e8197bbd41998aed69501c6f558137314859d49f4ec2419d44b5a1c252243fc`입니다. main의 기존 단일 그림 소유 조회를 `readCurrent`로 공유하고, 요청별 임시 현재 문단 view 하나로 batch 결과를 만듭니다. 영구 캐시나 별도 좌표 계산을 만들지 않습니다. 그림별 정책 오류는 행에 남기며 OOM은 전체 오류입니다. 새 optional export는 기존 JS decoder/UI 부착 경로를 연결하고 JSON 출력 예산도 확인합니다. source 수리 eebf201f는 테스트 한 줄/기록만 바꿔 이 후보의 제품 의존성과 구분합니다.
+
+native root 포함3/3·fail/skip/log/leak0·exit0입니다. 전체 실패 주입·빈 요청의 첫 할당 실패 대조·범위 밖/정상/중복 요청·report/JSON 할당 실패를 검사했습니다. 감시 interval 안에서 footprint sample이 수집되지 않았으므로 보고된 peak0을 실제0바이트 사용으로 해석하지 않습니다.
+
+공개 집중 네 파일8/8·실패/취소/skip0·21452.275125ms·exit0입니다. 실제3문서의 모든 scalar/batch 결과·원문 저장/이력 불변, split/Unicode 접두/merge 뒤 현재 문단·앵커 위치, undo/redo·재열기·객체 subtree/비대상 ZIP payload(normal/-O), 그림 속성 변조 음성 대조를 확인했습니다. 최초 실행7/8은 독립 검사기 파일을 분리 폴더에 포함하지 않아 ENOENT로 실패한 harness 오류이며 해당 검사기를 함께 포함한 뒤 재검사했습니다.
+
+별도 기본 데모 산출물 `cbaaf27f858229fedd01b9996ce152bd31aa6d6f346481b7887bcc510ef68346`과 같은3문서 그림94개의 batch 응답/원문 저장 bytes가 같음을 확인했습니다. 전체949개 문서·모든 편집/레이아웃 또는 실제 브라우저 증거가 아닙니다. export 차이는14개에서13개로 줄었지만 기본 WASM은 교체하지 않았고 정규40파일 검증은 아직 진행 중입니다. 아래 과거 확장 후보의 실측은 이 새 후보로 소급하지 않습니다.
+
 ## 병목과 계약
 
 [자동 번호 화면 snapshot 조사](hwpx-automatic-number-display-snapshot.md)의 실제 load에서 picture_owner82회/21,424ms를 관측했습니다. 기존 `picture_owner.read`는 매 그림마다 display_current_paragraphs를 생성·해제합니다. 이는 전체 화면 시간이 아닌 호출 추적의 부분 비용입니다.

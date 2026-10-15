@@ -108,6 +108,10 @@ pub fn build(b: *std.Build) void {
     hwpx_text_tests.addArg("tests/hwpx/field-query-publication.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/nested-field-reference.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/nested-field-canvas.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/picture-owners-reference.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/picture-owners-history.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/picture-owners-wire.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/picture-owner-batch-content.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/created-cell-softline-canvas.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/created-source-table-host.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/created-source-scene-worker.test.mjs");

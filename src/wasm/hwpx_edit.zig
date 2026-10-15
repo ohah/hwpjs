@@ -238,6 +238,18 @@ export fn hwpx_edit_picture_sites(section: u32) u32 {
     output = @import("hwpx_picture_sites_wire.zig").encode(a, rows) catch |err| return fail(err);
     return 1;
 }
+export fn hwpx_edit_picture_owners(section: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const rows = @import("../hwpx/picture_owner_batch_report.zig").read(a, session, section) catch |err| return fail(err);
+    defer a.free(rows);
+    output = std.json.Stringify.valueAlloc(a, rows, .{}) catch |err| return fail(err);
+    if (output.?.len > session.options.max_output_bytes) {
+        hwpx_edit_output_free();
+        return fail(error.LimitExceeded);
+    }
+    return 1;
+}
 export fn hwpx_edit_line_nodes(section: u32) u32 {
     hwpx_edit_output_free();
     const session = if (active) |*value| value else return fail(error.EditorNotOpen);

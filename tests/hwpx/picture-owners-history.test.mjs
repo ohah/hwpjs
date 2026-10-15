@@ -34,9 +34,27 @@ test("picture batches follow structural edits and history without caching origin
     const merged = check();
     assert.equal(merged[0].owner.paragraph, original[0].owner.paragraph);
     const mergedSaved = Buffer.from(editor.save());
-    for (const flags of [[], ["-O"]]) execFileSync("python3", [...flags, "tools/hwpx-anchor-object-oracle.py"], {
-      input: JSON.stringify({ before: input.toString("base64"), after: mergedSaved.toString("base64") }), timeout: 30000,
-    });
+    const corrupted = execFileSync("python3", ["-c", `
+import base64,io,sys,zipfile,xml.etree.ElementTree as E
+data=base64.b64decode(sys.stdin.read()); output=io.BytesIO(); changed=False
+with zipfile.ZipFile(io.BytesIO(data)) as before, zipfile.ZipFile(output,'w') as after:
+ for item in before.infolist():
+  payload=before.read(item.filename)
+  if item.filename.startswith('Contents/section') and item.filename.endswith('.xml'):
+   root=E.fromstring(payload); picture=next(root.iter('{http://www.hancom.co.kr/hwpml/2011/paragraph}pic'),None)
+   if picture is not None and not changed:
+    picture.set('oracleTamper','1'); payload=E.tostring(root,encoding='utf-8'); changed=True
+  after.writestr(item,payload)
+if not changed: raise ValueError('No picture to corrupt')
+print(base64.b64encode(output.getvalue()).decode())
+`], { input: mergedSaved.toString("base64"), timeout: 30000 }).toString().trim();
+    for (const flags of [[], ["-O"]]) {
+      const verify = after => execFileSync("python3", [...flags, "tools/hwpx-anchor-object-oracle.py"], {
+        input: JSON.stringify({ before: input.toString("base64"), after }), timeout: 30000,
+      });
+      verify(mergedSaved.toString("base64"));
+      assert.throws(() => verify(corrupted), error => error.status === 1 && /Changed object subtree or document order/.test(String(error.stderr)));
+    }
     assert.equal(editor.undo(), true); assert.deepEqual(check(), inserted);
     assert.deepEqual(Buffer.from(editor.save()), splitSaved);
     assert.equal(editor.redo(), true); assert.deepEqual(check(), merged);
