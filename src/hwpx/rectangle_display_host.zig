@@ -52,7 +52,10 @@ fn resolve(a: std.mem.Allocator, section: *const editor.Section, paragraphs: []c
 }
 
 test "HWPX rectangle host batch shares current view without stale anchors" {
-    const a = std.testing.allocator;
+    try @import("../testing/checked_allocator.zig").run(verifyRectangleHostBatch, .{});
+}
+
+fn verifyRectangleHostBatch(a: std.mem.Allocator) !void {
     const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/shapecontainer-2.hwpx", a, .limited(4_000_000));
     defer a.free(input);
     var session = try editor.open(a, input, .{});
@@ -66,7 +69,7 @@ test "HWPX rectangle host batch shares current view without stale anchors" {
         }
     };
     try Check.run(a, &session);
-    try std.testing.checkAllAllocationFailures(a, Check.run, .{&session});
+    try @import("../testing/allocation_failures.zig").check(Check.run, .{&session});
     _ = try session.spliceAnchored(0, 1, 0, 0, "앞😀");
     try Check.run(a, &session);
     const hosts = try readMany(a, &session, 0, &nodes);

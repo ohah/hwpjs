@@ -72,6 +72,12 @@ ReleaseFast에서도 같은 양성2/2·exit0과 의도적 누수 FAIL(TestAlloca
 
 ## 실파일 주석 모양 진단의 추가 자원 중단
 
+사각형 host 테스트 수정만 반영한 main 격리 사본의 ReleaseSafe 제품 빌드도5/5단계·exit0입니다. 뒤에 조사 중인 셀 속성 batching 제품 변경은 이 사본·게시 범위에 포함하지 않았습니다.
+
+AVG 포함 전체 바이너리 `0a069815661bcb4209cd006077b9f19964f13d90593c2f114fc41a345f799315`(4115개)의 `audit-average-current.jsonl`은 index885 `HWPX rectangle host batch shares current view without stale anchors`에서 관측 peak1123058864바이트·exit1로 중단됐습니다. 기존876번은 통과했으나 전체 완료는 아닙니다. 해당 테스트의 바깥 소유 범위와 전체 실패 주입만 공통 checked allocator로 변경하고 제품 readMany·중복/순서·splice 후 anchor 이동·잘못된 대상/구역·빈 배열 단언을 유지했습니다.
+
+집중 수정본 `7a3d1678e3ae7ff220dd0eb193484c092ccf8d2a6ed578eb3dd819ce9216dbcc`는 ReleaseSafe2/2·fail/skip/log/leak0·exit0·관측 peak6488400바이트입니다. 로그는 같은 디렉터리 `audit-rectangle-host-checked.jsonl`입니다. 게시 main 기준 격리 사본에서도 제품 셀 조회 최적화를 섞지 않은 집중2/2·exit0을 확인했습니다. 별도 진행 중인 수식41개 검증과 전체 native gate의 완료를 뜻하지 않습니다.
+
 게시 범위를 main 기반 세 파일(이 문서와 document_known_tests/formula_fixture_tests)로 분리한 격리 사본은 ReleaseSafe 집중5/5·exit0 및 제품 빌드5/5단계·exit0을 확인했습니다. 주석 모양 실제 참조2파일을 명시적으로 복사했고 미게시 AVG·생성 표 기능을 섞지 않았습니다. 전체 native gate가 여전히 미완료라는 경계는 유지합니다.
 
 생성 표 flat formula 집중 수정본 `3586e0a1ed7c9824bfd1a9df37237ac224ccc30264ccfa78caec69a0218119d5`는 ReleaseSafe2/2·fail/skip/log/leak0·exit0·관측 peak7176528바이트입니다. 기록은 같은 디렉터리 `audit-flat-formula-checked.jsonl`입니다. 해당 미게시 기능과 함께 실행한 집중 결과이며 기본 제품이나 전체 native 통과를 뜻하지 않습니다.
