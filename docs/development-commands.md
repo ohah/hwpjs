@@ -1,5 +1,8 @@
 # 개발·검증 명령
 
+후보 EMF/CFB와 검증용 bridge를 명시적으로 짝지어 검사할 때는 `HWPJS_TEST_WASM=/absolute/candidate/hwpjs.wasm HWPJS_TEST_HWP5_PROBE=/absolute/probe/hwp5-probe.wasm node --test tests/hwp5/emf-corpus.test.mjs tests/hwp5/emf-corpus-artifacts.test.mjs`를 사용합니다. `zig build emf-corpus-audit -Doptimize=ReleaseSafe`는 설치된 제품/probe 경로를 두 환경변수에 지정하고 경로 부정 대조도 함께 실행합니다. probe는 제품 ABI가 아닌 test-only bridge이며 [EMF 검증 기록](emf-framing.md)을 따릅니다.
+
+
 `zig test src/root.zig -O ReleaseSafe --test-filter 'dutmal' --test-filter 'inline string source report' --test-filter 'XML content source span'`는 덧말 leaf/현재값/저장/필드/구조 가드·전체 실패 주입의 집중 진입점입니다. `HWPJS_TEST_WASM=/absolute/candidate/hwpjs.wasm node --test --test-concurrency=2 tests/hwpx/dutmal-text-editor.test.mjs tests/hwpx/dutmal-text-worker.test.mjs tests/hwpx/dutmal-sites.test.mjs tests/hwpx/inline-string-source-wire.test.mjs tests/hwpx/inline-string-source-reference.test.mjs tests/hwpx/dutmal-edge-publication.test.mjs`는 실제 API/Worker·독립 XML/ZIP·BOM/이력 검사입니다. Canvas paint/선택의 대역 검사는 `tests/hwpx/dutmal-renderer-worker.test.mjs`이며 정규 hwpx-text-audit에도 등록합니다. [후보·미지원 경계](hwpx-dutmal-text-changes.md)를 따릅니다.
 
 `zig test src/root.zig -O ReleaseSafe --test-filter 'picture owner batch'`는 그림 단일/일괄 조회 동치·빈 요청·행별 실패·전체 할당 실패/JSON 해제를 검사합니다. `HWPJS_TEST_WASM=/absolute/candidate/hwpjs.wasm node --test --test-concurrency=2 tests/hwpx/picture-owners-reference.test.mjs tests/hwpx/picture-owners-history.test.mjs tests/hwpx/picture-owners-wire.test.mjs tests/hwpx/picture-owner-batch-content.test.mjs`는 실제 그림·현재 소유 위치/이력·독립 객체 XML/ZIP·변조 거부·wire/fallback 검사이며 정규 hwpx-text-audit에도 등록합니다. [후보·실측 경계](hwpx-picture-owner-batch.md)를 따릅니다.

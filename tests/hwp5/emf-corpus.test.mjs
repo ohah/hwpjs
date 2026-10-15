@@ -29,7 +29,7 @@ function emf() {
 }
 
 async function probes() {
-  const module=await WebAssembly.compile(readFileSync('zig-out/bin/hwp5-probe.wasm'));
+  const module=await WebAssembly.compile(readFileSync(process.env.HWPJS_TEST_HWP5_PROBE ?? 'zig-out/bin/hwp5-probe.wasm'));
   const {exports:w}=await WebAssembly.instantiate(module,{});
   return {call(bytes,limit=64*1024*1024){const p=w.alloc(bytes.length);assert.ok(p);try{new Uint8Array(w.memory.buffer,p,bytes.length).set(bytes);if(!w.probe(337,p,bytes.length,limit))throw Error(Buffer.from(w.memory.buffer,w.error_ptr(),w.error_len()).toString());return Buffer.from(new Uint8Array(w.memory.buffer,w.result_ptr(),w.result_len()));}finally{w.free(p,bytes.length);w.close();}}};
 }
@@ -54,7 +54,7 @@ test('EMF signature and report framing reject near misses',()=>{
 });
 
 test('real HWP CFB and compressed BinData carry EMF into the Zig validator',async()=>{
-  const cfb=await createCfbReader(readFileSync('zig-out/bin/hwpjs.wasm')),probe=await probes();
+  const cfb=await createCfbReader(readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm")),probe=await probes();
   try {
     const source=readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/sample-5017-pics.hwp');
     const original=observeHwpEmf(cfb,source,b=>probe.call(b));
@@ -74,7 +74,7 @@ test('real HWP CFB and compressed BinData carry EMF into the Zig validator',asyn
 });
 
 test('declared EMF without its exact signature survives the real HWP path as rejection evidence',async()=>{
-  const cfb=await createCfbReader(readFileSync('zig-out/bin/hwpjs.wasm'));
+  const cfb=await createCfbReader(readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"));
   try {
     const source=readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/sample-5017-pics.hwp');
     cfb.parse(source,{strict:true});const original=Buffer.from(cfb.findExact('/BinData/BIN0001.jpg').content);cfb.close();

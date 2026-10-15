@@ -1,5 +1,17 @@
 # EMF header·record framing·EOF
 
+## 2026-10-16 EMF 후보 경로의 실제 선택 검증
+
+정규 `emf-corpus-audit` ReleaseSafe 빌드도 별도 prefix에서 exit0으로 종료됐고5/5·210.007959ms를 확인했습니다. 설치 제품 SHA256은 `4ccfc526aa68c13c15302eb0e436f3312ddce53a213a7405d7fdbb3b3a3ea271`, probe는 `f8e4eb1df99a31b57d9a9a590ef3b26684300ed1266082429f8209445df84782`입니다. 이 main 빌드와 위 차트 후보의 직접 실행은 다른 artifact입니다. 재귀 조사584파일은 observed482/cfb_rejected73/non_cfb29·decoded475/보안 미지원7·BinData2167·실제 EMF 후보/검증0을 기록했습니다. 합성 EMF 검사와 실제 EMF 원본 부재를 구분합니다. 기본 제품 WASM은 교체하지 않았습니다.
+
+
+공개 HWP5 회귀의 EMF 실패는 probe 부재(ENOENT)였습니다. 제품 WASM도 고정 기본 경로여서 선택한 후보를 검증하지 않던 문제를 고쳤습니다. 제품과 test-only probe 경로를 각각 명시할 수 있고 정규 emf-corpus-audit도 자신이 설치한 두 artifact를 전달합니다. 실행 명령은 [개발·검증 명령](development-commands.md)이 소유합니다.
+
+main `88335369` 기반 ReleaseSafe probe SHA256 `60509c5b4d82399e43118133f1b40b40ede644ca24c307f952d58bb216315a77`와 제품 후보 `f74879e6…`의 집중 묶음은5/5·fail/skip/cancel0·299.296166ms·exit0입니다. 실제 HWP의 CFB·압축 BinData에 합성 EMF를 넣어13레코드의 고정 기대값을 검사하고, 잘못된 서명 거부를 유지합니다. 원본 corpus가 실제 EMF를 포함했다거나 렌더링·모든 EMF 의미 검증 완료를 뜻하지 않습니다.
+
+두 경로를 무시하는 테스트 변형에서는 경로 부정 대조2개가 모두 실패했습니다. 제품 선택만 복원하고 probe 선택은 제거한 변형은 제품 대조1개 통과/probe 대조1개 실패로 구분됐습니다. 모든 변형을 제거한 정상 코드가 위5/5입니다. 자식 Node runner가 부모 NODE_TEST_CONTEXT를 상속해 최초 부정 대조가 두 건 실패한 harness 문제도 수정했고, 이제 자식 환경에서 그 값만 제거합니다. 제품 코드·EMF 단언·입력은 변경하지 않았습니다. 전체 native/새 HWP5 전체 회귀는 별도입니다.
+
+
 ## 명세와 책임
 
 Microsoft [EMR_HEADER Record Types](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/de081cd7-351f-4cc2-830b-d03fb55e89ab)와 [Header Object](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf/e4a35c41-e8e3-43f9-bc07-a18e99bb866d)에 따라 EMF는 Type 1의 header record로 시작한다. 최소 크기는 Type/Size 8바이트와 Header object 80바이트를 합친 88바이트다. `header.zig`는 signature `0x464D4520`, Reserved 0, 전체 stream Bytes 일치를 검사하고 기본 Header object 필드를 보존한다. Version `0x00010000`은 MAY이므로 강제하지 않는다.

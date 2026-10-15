@@ -262,7 +262,9 @@ pub fn build(b: *std.Build) void {
     b.step("hwp5-audit", "Verify HWP5 foundation in WASM against independent byte oracles").dependOn(&hwp_check.step);
     audit.dependOn(&hwp_check.step);
 
-    const emf_corpus_tests = b.addSystemCommand(&.{ "node", "--test", "tests/hwp5/emf-corpus.test.mjs" });
+    const emf_corpus_tests = b.addSystemCommand(&.{ "node", "--test", "tests/hwp5/emf-corpus.test.mjs", "tests/hwp5/emf-corpus-artifacts.test.mjs" });
+    emf_corpus_tests.setEnvironmentVariable("HWPJS_TEST_WASM", b.getInstallPath(.bin, "hwpjs.wasm"));
+    emf_corpus_tests.setEnvironmentVariable("HWPJS_TEST_HWP5_PROBE", b.getInstallPath(.bin, "hwp5-probe.wasm"));
     emf_corpus_tests.step.dependOn(b.getInstallStep());
     emf_corpus_tests.step.dependOn(&install_hwp_probe.step);
     const emf_corpus_survey = b.addSystemCommand(&.{ "node", "tests/hwp5/emf-corpus-survey.mjs" });
