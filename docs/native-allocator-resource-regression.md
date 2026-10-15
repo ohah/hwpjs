@@ -1,5 +1,13 @@
 # 큰 문서 테스트의 할당자 진단 비용
 
+## 체크포인트 전체 실패 주입
+
+main143b6b2f 전체 바이너리 `ffae8b9436cb8bba4e53e7fda7289f2c09cd7c5a4cb75438e4f400a9ed667efa`의 3,957개 실행은 2,446개 완료 후 index2446 `HWPX checkpoint capture allocation failures preserve current model`에서 OS 관측 peak1,154,319,536바이트로 1024MiB 기준을 넘겨 종료됐습니다. 최종 incomplete·guardStopped=true·exit1이며 guardian/batch/native PID16552/16563/71055 부재를 확인했습니다. 느린 index889는 이후 정상 진행했으므로 해당 검사를 무한 루프나 자원 실패로 분류하지 않습니다.
+
+main2d56f5ac 의존성의 분리 소스에서 해당 테스트의 실패 주입 호출 한 줄만 공통 `allocation_failures.check`로 연결했습니다. fixture 읽기와 session 열기·capture·exchange·save·원문 바이트 동치, 전체 실패 인덱스 및 누수 검사는 유지했습니다. 제품 체크포인트 코드는 변경하지 않았고 1024MiB 기준도 그대로입니다.
+
+수정 집중 바이너리 `f1071bc1c17050cf256d3c5b3aac99a131bf0dfdb3632b67f32cde365df8bc90`는 root 포함2/2·fail/skip/log/leak0·exit0·관측 peak8,569,168바이트입니다. 컴파일 완료 전에 시작해 ENOEXEC로 끝난 최초 harness 시도는 검증으로 계수하지 않습니다. 집중 성공을 전체 native 완료로 대체하거나 이전 완료 수와 합산하지 않습니다. 테스트 할당자 진단 비용의 대조이며 제품 메모리 개선 주장이 아닙니다.
+
 ## 보호 문단 fixture 모듈의 선택 전수 대조
 
 main98d0dba0 전체 바이너리 `aa6e396a49a52678dbf8e87d200679431754b7d45e07d827f4587c6f533af344`의8개 보호 문단 테스트를 표준 protocol로 각각 선택해 독립 프로세스에서 측정했습니다. seed0x485750·1024MiB 관측 기준은 유지하고 테스트 결과 뒤에도 프로세스를 닫기 전에 OS peak를 읽었습니다. 결과는5성공·3자원 초과·exit1이며, 단일 테스트/모듈 선택 검사를 전체3,957개 완료로 세지 않습니다.

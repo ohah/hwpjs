@@ -74,7 +74,7 @@ test "HWPX checkpoint capture allocation failures preserve current model" {
     const a = std.testing.allocator;
     const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwpx", a, .limited(4_000_000));
     defer a.free(bytes);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, input: []const u8) !void {
             var session = try editor.open(allocator, input, .{});
             defer session.deinit();
