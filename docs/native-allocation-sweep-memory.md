@@ -1,5 +1,7 @@
 # 할당 실패 전수 검사의 메모리 보존 조사
 
+실패 주입 이외의 실제 헤더 반복 검사에서 발견한 누적 footprint와 scoped allocator 비교는 [실제 헤더 검사 메모리](native-header-test-memory.md)를 따릅니다. 서로 다른 검사/바이너리의 결과를 합산하지 않습니다.
+
 ## 중단 지점과 변경
 
 이전 native guardian의 index3359는 HWPX character style public command validates real IDs and preserves redo on refusal입니다. 실제 ID·잘못된 ID/위치·undo/redo 저장 검증 뒤 editor.open/setCharacterFormat의 전체 실패 주입을 std.testing.allocator로 수행했습니다. Zig0.16.0의 이 allocator는 매 할당10스택 프레임과 resize 스택을 기록합니다. never_unmap/retain_metadata가 true라고 추정하지 않습니다. 실제 확인한 기본값은 둘 다 false입니다.
