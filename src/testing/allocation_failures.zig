@@ -2,7 +2,7 @@
 const std = @import("std");
 
 pub fn check(comptime callback: anytype, args: anytype) !void {
-    var debug: std.heap.DebugAllocator(.{ .stack_trace_frames = 0, .safety = true }) = .{};
+    var debug: @import("checked_allocator.zig").Debug = .{};
     const result = std.testing.checkAllAllocationFailures(debug.allocator(), callback, args);
     const leak_status = debug.deinit();
     if (leak_status != .ok) return error.TestAllocatorLeak;

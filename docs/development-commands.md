@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+`zig test src/testing_checked_allocator_probe.zig -O ReleaseSafe --test-filter 'probe positive' --test-filter 'checked allocator retains'`는 범위 테스트 할당자의 안전한 양성 대조입니다. `deliberate leak`/`deliberate assertion` 필터는 실제 native 실패·exit1이 예상되는 별도 음성 대조이며 정규 root에 import하지 않습니다. [자원 재현과 진단 손실](native-allocator-resource-regression.md)을 먼저 읽습니다.
+
 `zig test src/root.zig -O ReleaseSafe --test-filter 'HWPX formula expression' --test-filter 'HWPX formula command plan'`는 공유 문법의 MAX 양성·MEDIAN 음성·성공 Plan 해제 및 기존 전체 할당 실패를 검사합니다. [잘못된 기대값의 원인과 범위](formula-max-test-regression.md)를 따릅니다.
 
 `HWPJS_TEST_WASM=/absolute/candidate/hwpjs.wasm node --test tests/hwpx/created-source-scene-worker.test.mjs tests/hwpx/source-table-control-coverage.test.mjs`는 추적 noori의 원본 표5개/그림4개와 별도 본문 생성 표의 조립·독립 XML/ZIP·이력 및 원본 제어 coverage 반례를 검사합니다. 두 파일은 기본 hwpx-text-audit에도 포함하며 [소유권과 범위](generated-source-table-pages.md)를 따릅니다.

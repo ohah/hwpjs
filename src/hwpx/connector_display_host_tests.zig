@@ -9,7 +9,9 @@ fn probe(a: std.mem.Allocator, session: *const editor.Session, node: usize, ordi
     try std.testing.expectEqual(unit, try host.anchorUnit(a, &section.tree, &view.paragraphs[ordinal - section.first_paragraph], node));
 }
 test "connector display host actual four connectors follow Unicode input undo and redo" {
-    const a = std.testing.allocator;
+    try @import("../testing/checked_allocator.zig").run(run, .{});
+}
+fn run(a: std.mem.Allocator) !void {
     const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "reference/rhwp/samples/2025 행정업무운영 편람(최종).hwpx", a, .limited(64 * 1024 * 1024));
     defer a.free(input);
     var session = try editor.open(a, input, .{});
