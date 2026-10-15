@@ -2,6 +2,7 @@ import { layoutContent } from "./layout.mjs";
 import { textMeasurement } from "./text-measurement.mjs";
 import { paragraphLineAdvance } from "./paragraph-geometry.mjs";
 import { DEFAULT_ROW_HEIGHT, TEXT_TOP } from "./row-geometry.mjs";
+import { inlineObjectIdentity } from "./inline-object-identity.mjs";
 
 // 현재 UTF-16 위치와 주입된 인라인 개체 크기를 측정합니다.
 export function measureInlineObjectParagraph(paragraph, entries, width, measure, { maxRows = 20000, allowLineOverflow = false, compactLines = false, zeroWidthUnits = [] } = {}) {
@@ -21,10 +22,11 @@ export function measureInlineObjectParagraph(paragraph, entries, width, measure,
   const inlineUnits = [...unitSet];
   const explicit = entries.some(entry => entry && Object.hasOwn(entry, "unit"));
   for (const [index, entry] of entries.entries()) {
-    if (!entry || !Number.isSafeInteger(entry.objectNode) || entry.objectNode < 0 || ids.has(entry.objectNode) || ![entry.width, entry.height].every(value => Number.isFinite(value) && value > 0)) return unavailable("InvalidInlineObjectMeasurement");
+    const identity = inlineObjectIdentity(entry);
+    if (identity === null || ids.has(identity) || ![entry.width, entry.height].every(value => Number.isFinite(value) && value > 0)) return unavailable("InvalidInlineObjectMeasurement");
     const unit = explicit ? entry.unit : inlineUnits[index];
     if (!Number.isSafeInteger(unit) || !unitSet.has(unit) || byUnit.has(unit)) return unavailable("InvalidInlineObjectAnchorPosition");
-    ids.add(entry.objectNode); byUnit.set(unit, entry);
+    ids.add(identity); byUnit.set(unit, entry);
   }
   const currentMeasure = (text, current, unit, kind) => kind === "text" && text !== "" && overlays.has(unit)
     ? { ...textMeasurement(measure("", current, unit, kind)), width: 0 } : measure(text, current, unit, kind);
@@ -52,7 +54,7 @@ export function measureInlineObjectParagraph(paragraph, entries, width, measure,
     const rowIndex = rows.findIndex(row => row.kind === "text" && row.startUnit <= unit && row.endUnit > unit);
     const row = rows[rowIndex], boundary = row?.boundaries.find(boundary => boundary.unit === unit);
     if (!row || !boundary || (!allowLineOverflow && entry.width > row.width + 1e-8)) return unavailable("InlineObjectLineWidthOverflow");
-    anchors.push({ objectNode: entry.objectNode, unit, rowIndex, x: row.paragraphX + boundary.x, y: row.y, width: entry.width, height: entry.height });
+    anchors.push({ ...(Object.hasOwn(entry, "createdTableIdentity") ? { createdTableIdentity: entry.createdTableIdentity } : { objectNode: entry.objectNode }), unit, rowIndex, x: row.paragraphX + boundary.x, y: row.y, width: entry.width, height: entry.height });
   }
   return { state: "measured", ...flow, rows, height: y, anchors };
 }
