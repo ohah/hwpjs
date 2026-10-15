@@ -19,6 +19,7 @@ import { createHistorySelectionStore } from "./history-selection.mjs";
 import { hitDrawingBoundary } from "./drawing-boundary-hit.mjs";
 import { hitTableBoundary } from "./table-boundary-geometry.mjs";
 import { appendQueuedText } from "./queued-input.mjs";
+import { createInputIntentQueue } from "./input-intent-queue.mjs";
 import { createSelectionEditPermission } from "./selection-edit-permission.mjs";
 import { pictureResizeTarget } from "./picture-resize-target.mjs";
 import { transferSelectedText, pasteClipboardText } from "./clipboard-transfer.mjs";
@@ -40,6 +41,15 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
   let typingProperties = null;
   let multiComposition = null;
   let draftSelection = null;
+  const inputIntents = createInputIntentQueue();
+  let queuedInputCapture = null;
+  let compositionInputCapture = null;
+  let compositionInvalidated = false;
+  const clearInputIntents = () => {
+    if (composing) compositionInvalidated = true;
+    inputIntents.clear(); queuedInputCapture = compositionInputCapture = null;
+  };
+  const textPending = () => ["splice", "splice-font-name", "splice-character-properties", "created-cell-text"].includes(pending?.kind);
   const historySelections = createHistorySelectionStore();
   let historyRevision = null;
   let historyAvailable = false, historyPending = false, structureAvailable = false, mergeAvailable = false, structureTarget = null;
@@ -47,11 +57,22 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
   const multipleParagraphs = () => Boolean(anchor && focus && !sameParagraph(anchor, focus));
   const rangePermission = createSelectionEditPermission();
   const splitPermission = createSelectionEditPermission({ kind: "query-split-range" });
+  const intentChange = intent => ({ startUnit: intent.startUnit, endUnit: intent.endUnit, text: intent.text });
+  const draftTextChange = () => {
+    if (!pending && !composing && inputIntents.size) {
+      try { return intentChange(inputIntents.peek(committed)); } catch { return null; }
+    }
+    return textChange(committed, input.value, draftSelection && {
+      startUnit: Math.min(draftSelection.anchor.unit, draftSelection.focus.unit),
+      endUnit: Math.max(draftSelection.anchor.unit, draftSelection.focus.unit),
+      inputType: draftSelection.inputType,
+    });
+  };
   const wholeTextEditable = () => Boolean(target) && !multipleParagraphs() && renderer.paragraph(target)?.editable === true;
   const editRange = () => {
     if (target?.createdCell) return null;
     if (!target || !anchor || !focus || multipleParagraphs()) return null;
-    const change = input.value !== committed ? textChange(committed, input.value) : null;
+    const change = input.value !== committed ? draftTextChange() : null;
     const range = change ?? { startUnit: Math.min(anchor.unit, focus.unit), endUnit: Math.max(anchor.unit, focus.unit), text: "" };
     const source = sourceTextChange(range, renderer.paragraph(target)?.sourceOffsets);
     return { section: target.section, paragraph: target.paragraph, startUnit: source.startUnit, endUnit: source.endUnit };
@@ -112,7 +133,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
   const paint = () => {
     let composition;
     if (multiComposition) composition = compositionProjection()?.composition;
-    const change = composing && !multiComposition && textChange(committed, input.value);
+    const change = composing && !multiComposition && draftTextChange();
     if (change) composition = { anchor: { ...target, unit: change.startUnit }, focus: { ...target, unit: change.startUnit + change.text.length } };
     renderer.select({ anchor, focus, active: document.activeElement === input || drag !== null, composition });
     canvas.dataset.caret = focus ? `${focus.section}:${focus.paragraph}:${focus.unit}` : "";
@@ -146,17 +167,21 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     const sourceRange = requestedChange && sourceTextChange(requestedChange, renderer.paragraph(target)?.sourceOffsets);
     const permitted = requestedChange ? wholeTextEditable() || rangePermission.allowed({ ...target, startUnit: sourceRange.startUnit, endUnit: sourceRange.endUnit }) : textEditable();
     if (!permitted) return;
-    const change = requestedChange ?? textChange(committed, input.value);
+    let queued = null, change;
+    try { queued = !requestedChange && inputIntents.size ? inputIntents.peek(committed) : null; change = requestedChange ?? (queued ? intentChange(queued) : draftTextChange()); }
+    catch { clearInputIntents(); input.value = committed; renderer.preview(null); sync(); report("대기 입력의 기준 문서를 확인할 수 없어 적용하지 않았습니다."); return; }
     if (!change) { draftSelection = null; return; }
     preferredX = null;
     const font = change.text && typingFont && sameParagraph(typingFont, target) ? typingFont : null;
     const properties = change.text && typingProperties && sameParagraph(typingProperties, target) ? { ...typingProperties.properties } : null;
     pending = { kind: target.createdCell ? "created-cell-text" : font ? "splice-font-name" : properties ? "splice-character-properties" : "splice", start: change.startUnit, end: change.endUnit,
-      beforeSelection: draftSelection ?? { anchor: { ...target, unit: change.startUnit }, focus: { ...target, unit: change.endUnit } } };
+      afterText: committed.slice(0, change.startUnit) + change.text + committed.slice(change.endUnit),
+      beforeSelection: queued?.beforeSelection ?? draftSelection ?? { anchor: { ...target, unit: change.startUnit }, focus: { ...target, unit: change.endUnit } } };
     draftSelection = null;
     const command = sourceRange ?? sourceTextChange(change, renderer.paragraph(target)?.sourceOffsets);
-    const request = target.createdCell ? { kind: pending.kind, origin: "canvas", section: target.section, identity: target.createdCell.identity, row: target.createdCell.row, column: target.createdCell.column, text: input.value } : { kind: pending.kind, origin: "canvas", section: target.section, paragraph: target.paragraph, ...command, ...(font ? { language: font.language, name: font.name } : {}), ...(properties ? { properties } : {}) };
+    const request = target.createdCell ? { kind: pending.kind, origin: "canvas", section: target.section, identity: target.createdCell.identity, row: target.createdCell.row, column: target.createdCell.column, text: pending.afterText } : { kind: pending.kind, origin: "canvas", section: target.section, paragraph: target.paragraph, ...command, ...(font ? { language: font.language, name: font.name } : {}), ...(properties ? { properties } : {}) };
     if (!controls.request(request)) pending = null;
+    else if (queued) inputIntents.consume(committed);
     input.setAttribute("aria-busy", String(Boolean(pending)));
   };
   const reveal = () => {
@@ -231,7 +256,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
   const travel = kind => {
     if (!["undo", "redo"].includes(kind)) return false;
     if (!historyAvailable) { report("이 문서 형식은 실행 취소/다시 실행을 아직 지원하지 않습니다."); return false; }
-    if (composing || pending || historyPending || (target && input.value !== committed) || !controls.ready() || controls.busy()) { report("입력 반영이 끝난 뒤 실행 취소/다시 실행하세요."); return false; }
+    if (composing || pending || inputIntents.size || historyPending || (target && input.value !== committed) || !controls.ready() || controls.busy()) { report("입력 반영이 끝난 뒤 실행 취소/다시 실행하세요."); return false; }
     historyPending = true; input.readOnly = true;
     if (historyRevision !== null && anchor && focus) historySelections.remember(historyRevision, { anchor, focus });
     if (!controls.request({ kind, origin: "canvas" })) { historyPending = false; updateReadOnly(); return false; }
@@ -529,6 +554,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     return true;
   };
   listen(input, "beforeinput", event => {
+    if (compositionInvalidated) { event.preventDefault(); return; }
     if (structureTarget?.kind === "split" && historyPending) {
       event.preventDefault();
       if (!event.isComposing && !composing && ["insertText", "insertReplacementText"].includes(event.inputType)) queueSplitTyping(event.data);
@@ -557,13 +583,19 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     }
     if (["insertLineBreak", "insertParagraph"].includes(event.inputType)) { event.preventDefault(); split(); return; }
     if (!textEditable()) { event.preventDefault(); return; }
+    if (textPending() && !composing) {
+      if (!inputIntents.hasCapacity) { event.preventDefault(); report("대기 입력 한도에 도달했습니다. 반영 후 이어서 입력하세요."); return; }
+      sync();
+      queuedInputCapture = { before: input.value, selection: { startUnit: input.selectionStart, endUnit: input.selectionEnd, inputType: event.inputType }, beforeSelection: { anchor: { ...anchor }, focus: { ...focus } } };
+    }
     if (!pending && !composing && input.value === committed) {
-      sync(); draftSelection = { anchor: { ...anchor }, focus: { ...focus } };
+      sync(); draftSelection = { anchor: { ...anchor }, focus: { ...focus }, inputType: event.inputType };
     }
     if (["deleteContentBackward", "deleteContentForward"].includes(event.inputType) && mergeBoundary(event.inputType === "deleteContentBackward")) { event.preventDefault(); return; }
     if (["insertLineBreak", "insertParagraph"].includes(event.inputType)) { event.preventDefault(); split(); }
   });
   listen(input, "input", () => {
+    if (compositionInvalidated) { input.value = committed; renderer.preview(null); sync(); return; }
     if (!target) return;
     if (multiComposition && composing) {
       const projected = compositionProjection();
@@ -575,10 +607,17 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
       if (typeof queryEditRange === "function" && renderer.paragraph(target)?.selectable && !multipleParagraphs()) { updateReadOnly(); return; }
       input.value = committed; sync(); return;
     }
+    if (textPending() && !composing) {
+      const capture = queuedInputCapture ?? { before: inputIntents.projected ?? pending.afterText, selection: null, beforeSelection: null };
+      queuedInputCapture = null;
+      try { inputIntents.append(capture.before, input.value, capture.selection, capture.beforeSelection); }
+      catch (error) { input.value = capture.before; renderer.preview({ ...target, text: input.value }); sync(); report(`대기 입력을 추가하지 못했습니다: ${error.message}`); return; }
+    }
     preview(); if (!composing) pump();
   });
   listen(input, "compositionstart", () => {
     if (!target || !controls.ready()) return;
+    compositionInvalidated = false;
     if (historyPending) { input.readOnly = true; report("문단 변경 반영 뒤 조합 입력을 시작하세요."); return; }
     if (multipleParagraphs()) {
       if (!multiCompositionAvailable() || pending || historyPending || controls.busy() || input.value !== committed) return;
@@ -586,12 +625,21 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
       input.value = ""; input.setSelectionRange(0, 0); composing = true; paint(); return;
     }
     if (!textEditable()) return;
+    if (textPending() || inputIntents.size) {
+      sync();
+      compositionInputCapture = { before: input.value, selection: { startUnit: input.selectionStart, endUnit: input.selectionEnd }, beforeSelection: { anchor: { ...anchor }, focus: { ...focus } } };
+      queuedInputCapture = null;
+    }
     if (!pending && input.value === committed) {
       sync(); draftSelection = { anchor: { ...anchor }, focus: { ...focus } };
     }
     composing = true; paint();
   });
   listen(input, "compositionend", event => {
+    if (compositionInvalidated) {
+      compositionInvalidated = false; composing = false; multiComposition = null;
+      input.value = committed; renderer.preview(null); sync(); paint(); return;
+    }
     if (!composing) return;
     if (multiComposition) {
       const selected = multiComposition;
@@ -601,7 +649,13 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
       if (text) replaceSelection(text);
       return;
     }
-    composing = false; preview(); queueMicrotask(pump);
+    composing = false;
+    if (compositionInputCapture) {
+      const capture = compositionInputCapture; compositionInputCapture = null;
+      try { inputIntents.append(capture.before, input.value, capture.selection, capture.beforeSelection); }
+      catch (error) { input.value = capture.before; renderer.preview({ ...target, text: input.value }); sync(); report(`조합 입력을 추가하지 못했습니다: ${error.message}`); return; }
+    }
+    preview(); queueMicrotask(pump);
   });
   listen(input, "keydown", event => {
     if (!target || composing || event.isComposing || event.keyCode === 229) return;
@@ -957,8 +1011,8 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
       input.setAttribute("aria-busy", "true");
       return true;
     },
-    settled: () => !composing && !pending && !historyPending && (!target || input.value === committed),
-    canHistory: () => historyAvailable && !composing && !pending && !historyPending && (!target || input.value === committed) && controls.ready() && !controls.busy(),
+    settled: () => !composing && !pending && !inputIntents.size && !historyPending && (!target || input.value === committed),
+    canHistory: () => historyAvailable && !composing && !pending && !inputIntents.size && !historyPending && (!target || input.value === committed) && controls.ready() && !controls.busy(),
     history: travel,
     reset({ preserveHistory = false } = {}) {
       if (events.signal.aborted) return;
@@ -969,6 +1023,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
       typingFont = null;
       typingProperties = null;
       draftSelection = null;
+      clearInputIntents();
       if (drag !== null && canvas.hasPointerCapture(drag)) canvas.releasePointerCapture(drag);
       composing = false; multiComposition = null; drag = null; target = null; pending = null; anchor = null; focus = null; committed = ""; preferredX = null;
       historyAvailable = false; historyPending = false; structureAvailable = false; mergeAvailable = false; structureTarget = null;
@@ -998,7 +1053,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
       }
       if (message.kind === "query-edit-range") {
         if (!rangePermission.accept(message) && !rangePermission.reject(message)) return;
-        if ((!message.allowed || message.error) && input.value !== committed) { input.value = committed; sync(); report("이 범위는 편집할 수 없습니다."); }
+        if ((!message.allowed || message.error) && (input.value !== committed || inputIntents.size)) { clearInputIntents(); input.value = committed; sync(); report("이 범위는 편집할 수 없습니다."); }
         if (message.error) report(`입력 범위를 확인하지 못했습니다: ${message.error}`);
         updateReadOnly();
         if (message.allowed && !message.error && input.value !== committed) { preview(); pump(); }
@@ -1101,6 +1156,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
         return;
       }
       if (message.error) {
+        clearInputIntents();
         if (previous.kind === "splice-font-name") typingFont = null;
         if (["splice-font-name", "splice-character-properties"].includes(previous.kind)) typingProperties = null;
         if (["format", "character-properties", "character-outline", "character-effect", "character-strike", "character-underline", "character-underline-color", "character-text-color", "character-shade", "character-font", "character-font-name"].includes(previous.kind) && input.value !== committed) {
@@ -1124,6 +1180,10 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
       const paragraph = renderer.paragraph(target);
       if (!selectableText(paragraph)) { this.reset(); report("표시 한도에 도달해 직접 입력을 중단했습니다. 적용된 변경은 native 모델에 유지됩니다."); return; }
       committed = paragraph.text;
+      if (inputIntents.size) {
+        try { inputIntents.peek(committed); }
+        catch { clearInputIntents(); input.value = committed; renderer.preview(null); sync(); report("대기 입력의 기준 문서를 확인할 수 없어 적용하지 않았습니다."); return; }
+      }
       report("변경 적용 · 재조판 필요"); preview(); pump();
       } finally {
         if (versioned && !message.error) {
