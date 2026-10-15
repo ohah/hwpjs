@@ -1,6 +1,10 @@
 # Canvas 클립보드 메뉴
 
-RHWP `rhwp-studio/src/command/commands/edit.ts`의 copy/cut 메뉴는 입력 핸들러에 위임합니다. 우리 편집 메뉴도 Canvas controller의 `transferSelection`에 위임하며 네이티브 저장 모델을 만들지 않습니다. `clipboard-transfer.mjs`는 시스템 클립보드 I/O와 비동기 완료만 소유합니다. 여러 문단의 Ctrl/Cmd+C·X도 같은 함수를 사용합니다. 단일 문단의 기본 브라우저 clipboard 이벤트와 기존 붙여넣기 경로는 그대로입니다. 초기 복사·잘라내기 작업에는 붙여넣기 메뉴가 없었고 후속 구현은 아래 계약을 따릅니다. 객체/서식 clipboard·전역 전체 선택은 아직 포함하지 않습니다.
+RHWP `rhwp-studio/src/command/commands/edit.ts`의 copy/cut 메뉴는 입력 핸들러에 위임합니다. 우리 편집 메뉴도 Canvas controller의 `transferSelection`에 위임하며 네이티브 저장 모델을 만들지 않습니다. `clipboard-transfer.mjs`는 시스템 클립보드 I/O와 비동기 완료만 소유합니다. 여러 문단의 Ctrl/Cmd+C·X는 별도의 브라우저 clipboard 이벤트에서 clipboardData에 확정 선택을 쓰고, 잘라내기는 기존 replaceSelection 거래를 사용합니다. 시스템 clipboard helper를 호출하는 메뉴 경로와 같은 I/O 함수라고 해석하지 않습니다. 단일 문단의 기본 브라우저 clipboard 이벤트와 기존 붙여넣기 경로는 그대로입니다. 초기 복사·잘라내기 작업에는 붙여넣기 메뉴가 없었고 후속 구현은 아래 계약을 따릅니다. 객체/서식 clipboard·전역 전체 선택은 아직 포함하지 않습니다.
+
+## 2026-10-15 현재 작업 트리 회귀
+
+고정 후보 SHA256 `26f6e9f820fc6d1d24bf4659921d0b080140849db00d1e48f1fdff7c7d2d47b5`로 clipboard-transfer/canvas-editor/document-menu-wiring 세 파일을 정확한 선택 wrapper에서 실행했습니다. 최종204/204·fail/skip/cancel0·exit0(3754.656583ms,실행74330)입니다. 실제 HWP5 native의 단일/다중 문단 cut/paste·독립 저장/이력과 선택 변경·close·busy·조합·pending 거부를 포함합니다. 메뉴 wiring은 정적 검사이고 DOM/이벤트는 harness 대역입니다. 현재 작업 트리 증거이며 게시 JS snapshot·실제 브라우저/OS clipboard·모든 HWPX clipboard 지원의 증거로 확대하지 않습니다. 기본 WASM을 교체하거나 새 브라우저/디바이스를 실행하지 않았습니다.
 
 복사는 현재 확정된 선택 텍스트만 쓰고, 잘라내기는 쓰기 성공 뒤 현재 선택·target·확정 텍스트·revision·DOM 선택 좌표·조합/pending/history/busy/종료 상태를 다시 확인합니다. 지연 중 바뀐 대상에 삭제하지 않습니다. 보호·편집 capability는 기존 Canvas 교체 명령이 마지막으로 검증하며 단일/여러 문단은 각각 기존 splice/문단 교체 거래를 재사용합니다. 시스템 clipboard API가 없거나 권한이 거부되면 원문을 삭제하지 않습니다. clipboard에는 쓰였지만 선택이 바뀌면 삭제는 하지 않는다는 경계를 유지합니다.
 
