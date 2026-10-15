@@ -140,6 +140,15 @@ test("platform navigation separates macOS Option words and Cmd line edges", () =
   assert.equal(navigationIntent({ key: "ArrowRight", altKey: true, ctrlKey: true }, "MacIntel"), null);
   assert.equal(navigationIntent({ key: "ArrowRight", getModifierState: () => true }, "Win32"), null);
 });
+test("macOS Control navigation stays available to the host", () => {
+  for (const platform of ["MacIntel", "macOS"]) {
+    for (const key of ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"]) {
+      for (const shiftKey of [false, true]) {
+        assert.equal(navigationIntent({ key, ctrlKey: true, shiftKey }, platform), null, `${platform}/${key}/${shiftKey}`);
+      }
+    }
+  }
+});
 test("word navigation skips punctuation without cutting Unicode and retains selection", () => {
   const text = "한글  😀 e\u0301 끝";
   const layout = layoutContent({ paragraphs: [paragraph(text)], limited: false }, 500, () => 10);
