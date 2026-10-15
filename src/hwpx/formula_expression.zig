@@ -38,6 +38,8 @@ test "HWPX formula expression rejects missing divergent and unsupported definiti
     try std.testing.expectError(error.MissingFormulaCommand, parse(a, .{ .formula = "=SUM(A1:A2)" }));
     try std.testing.expectError(error.MissingFormulaExpression, parse(a, .{ .command = "=SUM(A1:A2)??%g,;;1" }));
     try std.testing.expectError(error.FormulaExpressionMismatch, parse(a, .{ .command = "=SUM(A1:A2)??%g,;;1", .formula = "=SUM(B1:B2)" }));
-    try std.testing.expectError(error.UnsupportedFormulaExpression, parse(a, .{ .command = "=MAX(A1:A2)??%g,;;1", .formula = "=MAX(A1:A2)" }));
+    const maximum = try parse(a, .{ .command = "=MAX(A1:A2)??%g,;;1", .formula = "=MAX(A1:A2)" });
+    try std.testing.expectEqual(.maximum, maximum.range.function);
+    try std.testing.expectError(error.UnsupportedFormulaExpression, parse(a, .{ .command = "=MEDIAN(A1:A2)??%g,;;1", .formula = "=MEDIAN(A1:A2)" }));
     try std.testing.expectError(error.UnsupportedFormulaFormat, parse(a, .{ .command = "=SUM(A1:A2)??%s,;;1", .formula = "=SUM(A1:A2)" }));
 }

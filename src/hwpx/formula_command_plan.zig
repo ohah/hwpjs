@@ -41,13 +41,18 @@ fn allocationCase(a: std.mem.Allocator) !void {
 }
 
 test "HWPX formula command plan shares grammar format and allocation cleanup" {
+    const a = std.testing.allocator;
     try allocationCase(std.testing.allocator);
     try @import("../testing/allocation_failures.zig").check(allocationCase, .{});
     const source: params.View = .{ .command = "=SUM(A1:A2)??%g,;;1", .formula = "=SUM(A1:A2)", .result_format = "%g," };
     var product = try prepare(std.testing.allocator, source, "=PRODUCT(A1:A2)", 14);
     defer product.deinit(std.testing.allocator);
     try std.testing.expectEqualStrings("=PRODUCT(A1:A2)??%g,;;14", product.command);
-    try std.testing.expectError(error.UnsupportedFormulaExpression, prepare(std.testing.allocator, source, "=MAX(A1:A2)", 1));
+    var maximum = try prepare(a, source, "=MAX(A1:A2)", 1);
+    defer maximum.deinit(a);
+    try std.testing.expectEqualStrings("=MAX(A1:A2)??%g,;;1", maximum.command);
+    try std.testing.expectEqual(.maximum, maximum.parsed.range.function);
+    try std.testing.expectError(error.UnsupportedFormulaExpression, prepare(a, source, "=MEDIAN(A1:A2)", 1));
     try std.testing.expectError(error.InvalidFormulaReplacement, prepare(std.testing.allocator, source, &.{0xff}, 1));
     try std.testing.expectError(error.InvalidFormulaResult, prepare(std.testing.allocator, source, "=SUM(A1:A2)", std.math.inf(f64)));
 }

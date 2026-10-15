@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+`zig test src/root.zig -O ReleaseSafe --test-filter 'HWPX formula expression' --test-filter 'HWPX formula command plan'`는 공유 문법의 MAX 양성·MEDIAN 음성·성공 Plan 해제 및 기존 전체 할당 실패를 검사합니다. [잘못된 기대값의 원인과 범위](formula-max-test-regression.md)를 따릅니다.
+
 `HWPJS_TEST_WASM=/absolute/candidate/hwpjs.wasm node --test tests/hwpx/created-source-scene-worker.test.mjs tests/hwpx/source-table-control-coverage.test.mjs`는 추적 noori의 원본 표5개/그림4개와 별도 본문 생성 표의 조립·독립 XML/ZIP·이력 및 원본 제어 coverage 반례를 검사합니다. 두 파일은 기본 hwpx-text-audit에도 포함하며 [소유권과 범위](generated-source-table-pages.md)를 따릅니다.
 
 `HWPJS_TEST_WASM=/absolute/candidate/hwpjs.wasm node --test tests/hwpx/created-source-table-host.test.mjs tests/hwpx/created-source-table-worker.test.mjs`는 원본 인라인 표와 생성 표의 동일 호스트/identity 격리·원본 XML/ZIP·입력/저장/이력을 검사합니다. Worker 검사는 `reference/rhwp/samples/task1763/cell_trailing_ls_expand.hwpx`가 실제로 있어야 하며 누락을 skip하지 않습니다. 이 참조 검사는 기본 hwpx-text-audit와 별도이고 순수 host 반례만 기본 목록에 등록합니다. 지원/미지원 경계는 [원본·생성 표 페이지](generated-source-table-pages.md)를 따릅니다.
