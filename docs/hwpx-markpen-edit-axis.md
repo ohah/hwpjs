@@ -1,5 +1,17 @@
 # 형광펜 마커와 빈 편집 위치
 
+## 2026-10-16 공개 소스의 markpen 입력 복원
+
+차트 후보 `f6decd1d…`의180파일 감사에서 빈 markpen 문단의 Canvas/원본 입력 검사가 실패했습니다. 같은 공개 reference 검사는 기본 WASM `cbaaf27f…`에서9위치 모두 통과했습니다(1/1·39279.157375ms·exit0). 공개 소스에는 마커만 있는 t의0길이 사이트 생성과 마커 leaf의 보존형 권한 판정이 빠져 있었습니다.
+
+main `734aabee` 기반 별도 소스 `/tmp/hwpjs-markpen-fix.vbJ9mO`에서 retained_markpen_marker helper를 사이트 수집·문단 정책·문자 위치 계산이 공유하도록 복원했습니다. 정확한 namespace의 비어 있는 leaf만 포함하고 외부 namespace/내부 자식/문자 payload를 거부합니다. 기존 빈 run/metadata fallback 정책이나 순회 최적화는 포함하지 않았습니다. run 직접 마커는 관측 보존 확장으로만 취급하며 객체 삭제·미지 제어 허용으로 확대하지 않습니다.
+
+ReleaseSafe 빌드5/5·exit0, WASM SHA256 `488d7e6c496d224c9f7910579847b2befe0ef640021b8d740993d5d2e5c6cc05`입니다. 공개 표시 축/실제 Worker·Canvas/원본9위치/run 직접4위치 네 파일4/4·117651.21875ms·fail/skip/cancel0·exit0입니다(`markpen-public.log`). 독립 XML/비대상 ZIP normal/-O·잘못된 내용/잘못된 marker 삽입 affinity 거부·undo/redo·재열기와 입력 불변을 포함합니다. Canvas 검사는 실제 Worker의 테스트 대역이며 새 브라우저 E2E는 아닙니다.
+
+native 마커 분류/일반·객체 보존 입력 및 splice 실패 주입은 root 포함4/4·status/logs/leaks0·guard exit0, 바이너리 `ac3da51a50ad9ae1838b201e7f56de6e0c8b5baa0bfb5a87ab7ceec820e3934a`입니다. 새 빈 사이트를 만드는 open/무편집 save의 전체 할당 실패 정리도 공통 checked allocator로 별도 root 포함2/2·guard exit0, 바이너리 `89950d2c904290a4a70e397516d21d17e67452b843f9e9346797c8fabc8ec6d2`로 통과했습니다. 두 묶음을6개의 고유 선언으로 합산하지 않습니다. 각 표준 runner를 별도 프로세스/1GiB 감시로 실행했고, 빠른 실행의 physical 표본0은 실제 메모리0이 아닙니다. native-markpen/native-markpen-open.jsonl·stderr는 위 격리 폴더에 있습니다.
+
+최종 테스트/목록 반영 뒤 재빌드도5/5 cached·exit0이며 WASM 전체 hash가 동일했습니다. 기본 WASM은 교체하지 않았고 전체180파일·원본 한글 강조 렌더링/affinity·물리 IME·전체 native 완료는 별도입니다. 아래 source 수정/커밋 보류·빈 t 수집 제외 설명은 이전 조사 단계의 이력입니다.
+
 ## 현재 원문·표시·편집의 차이
 
 `정책연구용역사업 중간진도보고서(살아있는 간장 기증자의 의학적 선별기준 연구).hwpx` 원본의0구역27/29/31/114/168/169/170/172/190번은 markpenBegin/markpenEnd만 있는 텍스트입니다. `field-exterior-table-input` 후보 SHA256 `1775eeeeeb6fa26a5ee5ea67e18f75898d704c78ba6cf88a66db82e81fcb0a73`의 실제 reader 이벤트에는 각 문단의 known markpen_begin/markpen_end가 노출되고, `displayHwpxContent`의 문자열은 모두 빈 문자열입니다. 같은 후보의 실제 splice는9개 모두 MissingTextSite로 거부됐고 마지막 save는 원문 byte-exact였습니다.

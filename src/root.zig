@@ -719,6 +719,7 @@ test {
     _ = @import("hwpx/bookmark_field_session_tests.zig");
     _ = @import("hwpx/field_source_scope_session_tests.zig");
     _ = @import("hwpx/field_container_text_tests.zig");
+    _ = @import("hwpx/markpen_text_session_tests.zig");
     _ = @import("hwpx/formula_field_split_guard.zig");
     _ = @import("hwpx/formula_field_partition_tests.zig");
     _ = @import("hwpx/formula_field_split_fixture_tests.zig");

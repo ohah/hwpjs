@@ -89,7 +89,8 @@ pub fn collect(a: std.mem.Allocator, tree: *const tree_module.Tree, options: Opt
     }
     try tree.visitContent(a, .{ .context = &builder, .on_content = Builder.onContent });
     for (tree.elements, 0..) |element, index| {
-        if (!frames[index].active or !isTextElement(tree, frames, index) or element.first_child != null) continue;
+        if (!frames[index].active or !isTextElement(tree, frames, index)) continue;
+        if (element.first_child != null and !@import("retained_markpen_marker.zig").onlyChildren(tree, index)) continue;
         if (covered[index]) continue;
         if (element.name.local.encoding != .utf8) return error.UnsupportedEditEncoding;
         if (builder.items.items.len == options.max_sites) return error.LimitExceeded;

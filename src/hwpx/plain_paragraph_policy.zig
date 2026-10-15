@@ -43,6 +43,10 @@ fn validateMode(tree: *const tree_module.Tree, sites: *const sites_module.Sites,
             var run_child = element.first_child;
             while (run_child) |run_index| {
                 const content = tree.elements[run_index];
+                if (@import("retained_markpen_marker.zig").supported(tree, run_index)) {
+                    run_child = content.next_sibling;
+                    continue;
+                }
                 const bookmark = @import("retained_bookmark.zig").supported(tree, run_index) or @import("retained_bookmark.zig").directSupported(tree, run_index);
                 if (bookmark) has_bookmark = true;
                 const retained_field = allow_fields and @import("retained_field_marker.zig").supported(tree, run_index);
@@ -83,6 +87,10 @@ fn validateMode(tree: *const tree_module.Tree, sites: *const sites_module.Sites,
         var inline_child = tree.elements[site.element_index].first_child;
         while (inline_child) |inline_index| {
             const inline_element = tree.elements[inline_index];
+            if (@import("retained_markpen_marker.zig").supported(tree, inline_index)) {
+                inline_child = inline_element.next_sibling;
+                continue;
+            }
             if (@import("title_mark_axis.zig").retained(tree, inline_index)) {
                 has_title_marker = true;
                 inline_child = inline_element.next_sibling;

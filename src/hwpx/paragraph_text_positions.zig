@@ -106,6 +106,10 @@ fn buildMode(a: std.mem.Allocator, tree: *const tree_module.Tree, sites: *const 
         var child = text_element.first_child;
         while (child) |index| {
             const element = tree.elements[index];
+            if (@import("retained_markpen_marker.zig").supported(tree, index)) {
+                child = element.next_sibling;
+                continue;
+            }
             if (@import("title_mark_axis.zig").retained(tree, index)) {
                 if (!title_axis_validated) {
                     var axis = try @import("title_mark_axis.zig").build(a, tree, sites, locations, paragraph);
