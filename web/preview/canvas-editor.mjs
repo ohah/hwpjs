@@ -50,6 +50,10 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     inputIntents.clear(); queuedInputCapture = compositionInputCapture = null;
   };
   const textPending = () => ["splice", "splice-font-name", "splice-character-properties", "created-cell-text"].includes(pending?.kind);
+  // Buffer only a draft descended from an active text edit. Native submission
+  // still uses textEditable(), including a fresh selection-scoped permission.
+  const pendingDraftEditable = () => Boolean(target) && controls.ready() && !historyPending && !multipleParagraphs() &&
+    (textPending() || inputIntents.size > 0) && Boolean(renderer.paragraph(target)?.selectable || renderer.paragraph(target)?.editable);
   const historySelections = createHistorySelectionStore();
   let historyRevision = null;
   let historyAvailable = false, historyPending = false, structureAvailable = false, mergeAvailable = false, structureTarget = null;
@@ -84,14 +88,14 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     return Boolean(ranges?.length && ranges.every(range => renderer.paragraph(range)?.editable === true));
   };
   const updateReadOnly = () => {
-    input.readOnly = !controls.ready() || (!textEditable() && !multiCompositionAvailable());
-    if (typeof queryEditRange === "function" && controls.ready() && !pending && !historyPending && target && !wholeTextEditable() && renderer.paragraph(target)?.selectable && editRange()) {
+    input.readOnly = compositionInvalidated || !controls.ready() || (!textEditable() && !multiCompositionAvailable() && !pendingDraftEditable());
+    if (typeof queryEditRange === "function" && controls.ready() && !controls.busy() && !pending && !historyPending && target && !wholeTextEditable() && renderer.paragraph(target)?.selectable && editRange()) {
       const request = rangePermission.request(editRange());
-      if (request) queryEditRange(request);
+      if (request && queryEditRange(request) === false) rangePermission.invalidate();
     }
-    if (typeof querySplitRange === "function" && splitQueryAvailable && controls.ready() && structureAvailable && !pending && !historyPending && target && !wholeTextEditable() && renderer.paragraph(target)?.selectable && editRange() && input.value === committed) {
+    if (typeof querySplitRange === "function" && splitQueryAvailable && controls.ready() && !controls.busy() && structureAvailable && !pending && !historyPending && target && !wholeTextEditable() && renderer.paragraph(target)?.selectable && editRange() && input.value === committed) {
       const request = splitPermission.request(editRange());
-      if (request) querySplitRange(request);
+      if (request && querySplitRange(request) === false) splitPermission.invalidate();
     }
   };
   const report = text => { note.textContent = text; };
@@ -582,8 +586,8 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
       event.preventDefault(); sync(); replaceSelection(event.data); return;
     }
     if (["insertLineBreak", "insertParagraph"].includes(event.inputType)) { event.preventDefault(); split(); return; }
-    if (!textEditable()) { event.preventDefault(); return; }
-    if (textPending() && !composing) {
+    if (!textEditable() && !pendingDraftEditable()) { event.preventDefault(); return; }
+    if (pendingDraftEditable() && !composing) {
       if (!inputIntents.hasCapacity) { event.preventDefault(); report("대기 입력 한도에 도달했습니다. 반영 후 이어서 입력하세요."); return; }
       sync();
       queuedInputCapture = { before: input.value, selection: { startUnit: input.selectionStart, endUnit: input.selectionEnd, inputType: event.inputType }, beforeSelection: { anchor: { ...anchor }, focus: { ...focus } } };
@@ -603,12 +607,12 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
       renderer.preview(projected.draft);
       paint(); return;
     }
-    if (!textEditable()) {
+    if (!textEditable() && !pendingDraftEditable()) {
       if (typeof queryEditRange === "function" && renderer.paragraph(target)?.selectable && !multipleParagraphs()) { updateReadOnly(); return; }
       input.value = committed; sync(); return;
     }
-    if (textPending() && !composing) {
-      const capture = queuedInputCapture ?? { before: inputIntents.projected ?? pending.afterText, selection: null, beforeSelection: null };
+    if (pendingDraftEditable() && !composing) {
+      const capture = queuedInputCapture ?? { before: inputIntents.projected ?? pending?.afterText, selection: null, beforeSelection: null };
       queuedInputCapture = null;
       try { inputIntents.append(capture.before, input.value, capture.selection, capture.beforeSelection); }
       catch (error) { input.value = capture.before; renderer.preview({ ...target, text: input.value }); sync(); report(`대기 입력을 추가하지 못했습니다: ${error.message}`); return; }
@@ -624,7 +628,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
       multiComposition = { anchor: { ...anchor }, focus: { ...focus } };
       input.value = ""; input.setSelectionRange(0, 0); composing = true; paint(); return;
     }
-    if (!textEditable()) return;
+    if (!textEditable() && !pendingDraftEditable()) return;
     if (textPending() || inputIntents.size) {
       sync();
       compositionInputCapture = { before: input.value, selection: { startUnit: input.selectionStart, endUnit: input.selectionEnd }, beforeSelection: { anchor: { ...anchor }, focus: { ...focus } } };

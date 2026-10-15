@@ -8,6 +8,8 @@ base/projected 문자열과 각 치환·선택 메타데이터를 보관하며 �
 
 ## Canvas 연결
 
+native 범위 조회가 진행 중인 초안의 수집/제출 분리와 미전송 조회 정리는 [대기 초안과 범위 권한](canvas-pending-range-permission.md)이 소유합니다.
+
 현재는 일반 splice·타이핑 글꼴/속성 splice·생성 셀 text 요청의 pending 중 beforeinput/input을 기록합니다. 새 native 응답으로 source 좌표가 갱신된 다음 원래 순서대로 요청합니다. 생성 셀의 전체 값 setter에도 최종 DOM 초안이 아닌 해당 항목의 afterText만 전달합니다. 권한은 기존 native/query 경계를 유지하며 대기 의도가 남으면 settled/history를 허용하지 않습니다.
 
 첫 요청이 거부되면 그 결과에 종속된 의도는 다른 기준 문서에 재생하지 않습니다. reset/close/새 load도 큐와 임시 선택을 정리합니다. 기준 텍스트 불일치는 명시적으로 알리고 임의 위치로 재기준화하지 않습니다. 한도 초과는 입력 방지 또는 DOM 값 복원과 상태 메시지로 알리며 기존에 수집한 의도를 덮어쓰지 않습니다.
