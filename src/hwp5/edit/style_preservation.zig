@@ -576,7 +576,7 @@ pub const Session = opaque {
                 const state = self.getState();
                 // Other sections can also contain opaque references into the target.
                 for (state.decoded, 0..) |bytes, index| {
-                    if (index != edit.section) try @import("plain_text_source.zig").validateSection(state.allocator, bytes, state.source.header.version());
+                    if (index != edit.section) try @import("source_policy.zig").validateUnselectedSection(state.allocator, bytes, state.source.header.version());
                 }
                 if (try @import("source_policy.zig").hasNamedFields(state.decoded[edit.section])) {
                     try @import("field_splice.zig").apply(state.allocator, state.decoded[edit.section], state.source.header.version(), &state.document.sections[edit.section], edit, self.characterShapeCount());
@@ -590,7 +590,7 @@ pub const Session = opaque {
                 const state = self.getState();
                 if (edit.section >= state.document.sections.len) return error.InvalidSection;
                 for (state.decoded, 0..) |bytes, index| {
-                    if (index != edit.section) try @import("plain_text_source.zig").validateSection(state.allocator, bytes, state.source.header.version());
+                    if (index != edit.section) try @import("source_policy.zig").validateUnselectedSection(state.allocator, bytes, state.source.header.version());
                 }
                 const info = try state.source.decodeDocInfo(state.allocator, max_stream);
                 defer state.allocator.free(info);
@@ -600,7 +600,7 @@ pub const Session = opaque {
                 if (edit.paragraph >= try self.paragraphCount(edit.section)) return error.InvalidParagraph;
                 const state = self.getState();
                 for (state.decoded, 0..) |bytes, index| {
-                    if (index != edit.section) try @import("plain_text_source.zig").validateSection(state.allocator, bytes, state.source.header.version());
+                    if (index != edit.section) try @import("source_policy.zig").validateUnselectedSection(state.allocator, bytes, state.source.header.version());
                 }
                 try @import("character_format.zig").apply(state.allocator, state.decoded[edit.section], state.source.header.version(), &state.document.sections[edit.section].paragraphs[edit.paragraph], edit, self.characterShapeCount());
             },

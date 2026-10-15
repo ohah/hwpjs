@@ -1,5 +1,20 @@
 # 수정하지 않는 구역의 필드 보존
 
+## main2d56f5ac 기반 분리 재검증 (2026-10-16)
+
+같은 최신 후보로 실제178범위 문단의 명시적 half-open prefix와 중첩 범위의 시작/끝/내부 삽입·삭제·치환·서로게이트 거부·실패 후 redo·독립 전체 Section/비대상 stream·재열기를 별도 재검증했습니다. `manual-range-prefix.test.mjs`는2/2·fail/cancel/skip0·exit0(79450.5835ms)입니다. 기본 정책 거부를 유지하고 명시적 정책의 좌표/저장 계약만 검증했으며 한컴 affinity 일치나 모든 명령 완료로 확대하지 않습니다. 아래10,336개 기본 prefix 성공과178개 명시 정책 검사는 같은 기본 정책의 무거부10,514성공으로 합산하지 않습니다.
+
+최신 분리 후보 `/tmp/hwpjs-unselected-fields-publication.s5BeqD/zig-out/bin/hwpjs.wasm`의 SHA-256은 `314fd38faf2025b906406d79cc37682b0d9857b96e7449bd463d054eaba970f5`입니다. main 코드에서 비대상 구역 검증 함수와 본문 splice·글자 속성·글자 모양의 세 호출만 변경했습니다. 수식 정의 경로와 선택 구역의 필드 입력 정책은 변경하지 않았습니다. 게시 여부는 Git 이력으로 확인하며 아래의 과거 후보 기록과 산출물을 혼용하지 않습니다.
+
+실제 편람은 이전 후보에서 14개 구역 중 클릭 필드가 있는 2번 구역만 첫 문단 입력이 가능했고 나머지13개 구역은 거부됐습니다. 새 후보의 `unselected-field-sections.test.mjs`는 14개 구역 각각의 첫 문단에서 prefix 입력·글자 모양·크기/굵게/기울임을 실행하고, 독립 전체 Section/DocInfo·비대상 stream·CFB 메타데이터·재열기·각 단계 undo/redo와 원본 복원을 검사해1/1·exit0(18584.243958ms)입니다. 수정 전 WASM은 동일 검사에서 `UnsupportedSectionControl`로 실패합니다. 빠졌던 독립 글자 모양 oracle 모듈 때문에 처음 실행하지 못한 harness 오류는 성공/제품 실패로 계수하지 않습니다.
+
+별도 실제 편람 전수 prefix 감사는10,514문단 중10,336입력/이력·독립 텍스트/비대상 stream·저장 재열기 검증,178개 `UnsupportedRangeSemantics` 거부·exit0입니다. 종료0은 전체 편집 지원을 뜻하지 않습니다. 각 구역 첫 위치의 전체 레코드 검사와 전수 prefix 텍스트 검사는 서로 다른 범위입니다.
+
+새 native `hwp5_unselected_field_tests.zig`는 실제 누름틀49개 표본의 연결·원본 불변·전체 할당 실패와 헤더만 다른 지원 필드 종류로 바꾼 `FieldMarkerMismatch` 반례, 수식/미지 필드·제어 거부를 검사합니다. 최신 집중 바이너리 `61c496feabe19fd6efe436558bea7dbb225d815af2ba1be656b505a583fc60df`는2/2·fail/skip/log/leak0·exit0·관측 peak4,096,336바이트입니다. 최초 std.testing allocator 실행은1,445,889,416바이트로 같은1024MiB 한도를 넘어 중단됐습니다. 공통 checked allocator/전체 실패 주입으로 연결한 뒤 실패 인덱스·단언·누수 검사는 유지했으며 이 대조를 제품 메모리 성능 개선으로 해석하지 않습니다.
+
+실제7구역 roadmap의 비대상 숫자 상호참조 보호 회귀도1/1·exit0이며 세 구역×세 명령9요청을 계속 거부하고 원본/빈 undo·redo를 유지합니다. 미지원 상호참조까지 허용한 것이 아닙니다. 정규 HWP5/CFB32파일 회귀는386/386·fail/cancel/skip0·exit0(501605.328291ms), source SHA-256 `12fa85c51845102fdd2753bc3db9a748143e1140a6643e606bf91fa34540fa75`와 WASM hash의 전후 불변을 확인했습니다. 전체 로그는 분리 폴더의 `unselected-fields-registered-32.log`입니다. 이후 상호참조 보호 파일을 후보로 옮겨 별도로1/1 재검증하고 정규 목록에 추가했습니다. 32파일 묶음과 별도1파일의 검증이지 단일33파일 명령의 실행 완료는 아닙니다. 전체 native·모든 명령·실제 브라우저/IME/조판 및 기본 WASM 승격도 별도입니다.
+
+
 ## 원인과 정책
 
 실제 `2025 행정업무운영 편람(최종).hwp`는 14구역이며 2번 구역에 누름틀이 있습니다. 일반 본문 입력 거래가 수정하지 않는 구역에도 일반 구역 검사를 적용하면서, 다른 구역의 정상 입력을 `UnsupportedSectionControl`로 거부했습니다. 이전 metadata 후보에서 실제 0번 구역 입력으로 재현했습니다.

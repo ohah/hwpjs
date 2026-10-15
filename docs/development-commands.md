@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+`zig test src/hwp5_unselected_field_tests.zig -O ReleaseSafe --test-filter 'unselected field policy'`는 비대상 구역의 실제 필드 연결·전체 실패 주입·종류 불일치/미지 제어 거부를 검사합니다. `HWPJS_TEST_WASM=/absolute/candidate/hwpjs.wasm node --test tests/hwp5/unselected-field-sections.test.mjs tests/hwp5/unselected-cross-reference-gate.test.mjs`는 14구역 입력/서식/속성·독립 저장/이력과 비대상 상호참조 보호입니다. [후보와 검증 경계](hwp5-unselected-field-preservation.md)를 따릅니다.
+
 `zig test src/hwp5_object_metadata_tests.zig -O ReleaseSafe --test-filter 'object control metadata' --test-filter 'actual object metadata'`는 객체 CTRL_DATA 소유권/스키마/실패 주입을 선택합니다. `HWPJS_TEST_WASM=/absolute/candidate/hwpjs.wasm node --test tests/hwp5/object-metadata-numeric-retention.test.mjs tests/hwp5/numeric-formula-corpus.test.mjs`는 실제 숫자 의존 셀·독립 산술·원문 메타데이터·거부 후 redo를 검사합니다. [분리 후보와 미완료 경계](hwp5-object-metadata-retention.md)를 따릅니다.
 
 `zig test src/root.zig -O ReleaseSafe --test-no-exec --test-filter 'HWPX empty protected merge' --test-filter 'HWPX styled protected' --test-filter 'HWPX protected merge actual' --test-filter 'HWPX protected splice actual' --test-filter 'HWPX anchored split history' --test-filter 'HWPX protected structure actual line' -femit-bin=/absolute/protected-tests`는 보호 문단 모듈8선언과root를 선택합니다. 이어 `node tools/zig-native-footprint-audit.mjs --binary=/absolute/protected-tests --batch-size=1 --max-physical-mib=1024`로 감시하며, 전체 바이너리에서의 개별 선택/비교 경계는 [할당자 자원 기록](native-allocator-resource-regression.md)을 따릅니다.

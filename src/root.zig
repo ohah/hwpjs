@@ -12,6 +12,7 @@ pub const text = @import("text/root.zig");
 pub const model = @import("model/document.zig");
 
 test {
+    _ = @import("hwp5_unselected_field_tests.zig");
     _ = @import("form_source_fixture_test.zig");
     _ = @import("hwp5/edit/control_data_object_metadata.zig");
     _ = @import("wasm/character_outline_args.zig");

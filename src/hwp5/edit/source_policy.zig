@@ -41,6 +41,12 @@ pub fn validate(a: std.mem.Allocator, source: []const u8, version: @import("../v
     _ = try inspect(a, source, version, false, false);
 }
 
+/// Unchanged sections retain only validated local named-field topology.
+pub fn validateUnselectedSection(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version) !void {
+    _ = try inspect(a, source, version, false, true);
+    if (try hasNamedFields(source)) try @import("field_source_bindings.zig").validate(a, source, version);
+}
+
 /// Formula-aware text/format callers and isolated body structure retain known fields.
 pub fn hasFormulas(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version) !bool {
     return inspect(a, source, version, true, false);
