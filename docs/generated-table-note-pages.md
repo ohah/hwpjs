@@ -1,6 +1,14 @@
 # 생성 표의 각주·미주 페이지 배치
 
-현재 실제 HWPX footnote-endnote 픽스쳐의 각주·미주 안 생성 표를 측정 페이지에 연결했습니다. 원본 한글 조판 동치나 모든 노트/객체 조합의 완료를 뜻하지 않습니다. HWP5의 새 노트 표 조합은 별도 실측이 남아 있습니다.
+현재 실제 HWPX footnote-endnote 픽스쳐의 각주·미주 안 생성 표를 측정 페이지에 연결했습니다. HWP5 첫 각주의 생성 표도 후보 WASM에서 측정 페이지 모드를 확인했습니다. 원본 한글 조판 동치나 모든 노트/객체 조합의 완료를 뜻하지 않습니다.
+
+## 호스트 안에 남아 있는 번호 제어
+
+`created-host-text-anchors.mjs`는 원본 U+FFFC만 분류합니다. 기존 `storedAutomaticNumberText`로 해석 가능한 번호는 글자로 측정하고, 기존 structural anchor와 소유 문단이 일치하는 page control은 폭 없는 원본 위치로 유지합니다. 생성 표 placeholder와 번호/숨김 제어를 같은 ID나 객체로 합치지 않습니다. 삽입 위치가 같으면 원본 제어 메타데이터를 생성 placeholder 뒤로 이동시켜 표를 번호나 숨김 앵커로 오인하지 않게 합니다. 창 오프셋도 기존 projection으로 변환합니다.
+
+공통 inline 측정의 `textAnchorUnits`는 원본 글자 제어 위치만 지정합니다. 중복·비정수·일반 글자 위치·숨김 위치와 겹침·표 위치와 겹침은 거부합니다. 중복 번호, 알 수 없는 표시 형식, 페이지에 따라 달라지는 HWP5 번호, 출처 없는 개체는 여전히 `UnsupportedCreatedTableHostControls`입니다. native 원문·번호 값·편집 좌표는 바꾸지 않습니다.
+
+softline02 후보의 실제 HWP5 anchor-display와 HWPX note-prefix-worker, 새 text-anchor 분류/공통 측정, 기존 자동 번호·host·mixed inline 회귀의 정확한8파일23/23·실패/skip/cancel0·exit0을 확인했습니다. 실제 HWP5 첫 각주의 native8/표시1과 host 입력/undo/redo, `measured-note-created-inline` 모드를 검사했습니다. 같은 위치/번호 뒤/emoji 앞의 생성 표, 원문/입력 불변, 잘못된 제어 거부 반례도 포함합니다. HWP5 native 확장 연결은 아직 로컬 후보이며 이번 공통 JS 변경 게시와 별개입니다. 실제 새 브라우저·디바이스는 실행하지 않았습니다.
 
 ## 소유권과 예약
 

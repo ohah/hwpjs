@@ -2,6 +2,8 @@ import { projectCreatedTableHost } from "./created-table-host-projection.mjs";
 import { measureInlineTableParagraph } from "./inline-table-paragraph-measurement.mjs";
 import { pageParagraphCoverage } from "./page-paragraph-coverage.mjs";
 import { storedAutomaticNumberText } from "./automatic-number-text.mjs";
+import { projectCreatedHostTextAnchors } from "./created-host-text-anchors.mjs";
+import { displayRunText } from "./text-measurement.mjs";
 
 // Measured dimensions are derived from native cell values by the caller.
 export function measureCreatedTableHost(source, entries, width, measure, { maxRows = 20000 } = {}) {
@@ -13,17 +15,22 @@ export function measureCreatedTableHost(source, entries, width, measure, { maxRo
     if (error.message === "InvalidCreatedTableHostProjection") return unavailable(error.message);
     throw error;
   }
-  // Existing source objects need their own geometry; never guess zero-size boxes.
-  if (source.text.includes("\ufffc")) return unavailable("UnsupportedCreatedTableHostControls");
+  let retained;
+  try { retained = projectCreatedHostTextAnchors(source, projection); }
+  catch (error) { if (error.message === "UnsupportedCreatedTableHostControls") return unavailable(error.message); throw error; }
   if (source.automaticNumberPrefixes?.length && (source.automaticNumberPrefixes.length !== 1 || storedAutomaticNumberText(source.automaticNumberPrefixes[0].source) === null)) return unavailable("UnsupportedCreatedTableHostNumberPrefix");
   const byIdentity = new Map(entries.map(entry => [entry.table.identity, entry]));
   const objects = projection.anchors.map(anchor => ({ createdTableIdentity: anchor.createdTableIdentity, unit: anchor.unit,
     width: byIdentity.get(anchor.createdTableIdentity).width, height: byIdentity.get(anchor.createdTableIdentity).height }));
   const first = source.textStartUnit ?? 0;
   const virtual = { ...source, text: projection.text, textStartUnit: 0, characterRanges: [],
+    automaticNumbers: retained.automaticNumbers, structuralAnchors: retained.structuralAnchors, pageControls: retained.pageControls,
     ...(first ? { automaticNumberPrefixes: [] } : {}) };
   const measured = measureInlineTableParagraph(virtual, objects, width,
-    (text, _paragraph, unit, kind) => measure(text, source, projection.sourceUnitForView(unit), kind), { maxRows });
+    (text, _paragraph, unit, kind) => {
+      const original = projection.sourceUnitForView(unit);
+      return measure(displayRunText(text, source, original, kind), source, original, kind);
+    }, { maxRows, textAnchorUnits: retained.textAnchorUnits, zeroWidthUnits: retained.zeroWidthUnits });
   if (measured.state !== "measured") return measured;
   if (measured.rows.some(row => row.numberPrefix && row.boundaries.at(-1).x > row.width + 1e-8)) return unavailable("InlineTableLineWidthOverflow");
   const numberPrefixes = measured.rows.flatMap((row, lineOrdinal) => row.numberPrefix ? [{ section: source.section, paragraph: source.paragraph, lineOrdinal,

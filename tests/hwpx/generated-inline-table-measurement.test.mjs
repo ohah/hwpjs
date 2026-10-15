@@ -6,6 +6,22 @@ const paragraph = { section: 0, paragraph: 1, text: "전😀\ufffc중\ufffc후",
 const measure = text => ({ width: [...text].length * 8, height: 16 });
 const entries = [{ tableNode: 9, unit: 3, width: 30, height: 32 }, { createdTableIdentity: "9", unit: 5, width: 40, height: 48 }];
 
+test("text anchors cannot alias generated objects or hidden controls", () => {
+  const host = { section: 0, paragraph: 1, text: "\ufffc\ufffcX" };
+  const objects = [{ createdTableIdentity: "1", unit: 1, width: 30, height: 32 }];
+  const valid = measureInlineTableParagraph(host, objects, 500, measure, { textAnchorUnits: [0] });
+  assert.equal(valid.state, "measured", valid.error);
+  assert.equal(valid.anchors.length, 1);
+  assert.equal(valid.anchors[0].unit, 1);
+  assert.equal(valid.rows.map(row => row.text).join(""), host.text);
+  for (const units of [null, [0, 0], [-1], [2], [0.5], ["0"]]) {
+    assert.equal(measureInlineTableParagraph(host, objects, 500, measure, { textAnchorUnits: units }).error, "InvalidInlineTableAnchorPosition");
+  }
+  assert.equal(measureInlineTableParagraph(host, objects, 500, measure, { textAnchorUnits: [0], zeroWidthUnits: [0] }).error, "InvalidInlineTableAnchorPosition");
+  assert.equal(measureInlineTableParagraph(host, objects, 500, measure, { textAnchorUnits: [1] }).error, "InvalidInlineTableAnchorPosition");
+  assert.equal(measureInlineTableParagraph(host, objects, 500, measure).error, "AmbiguousInlineTableAnchors");
+});
+
 test("source and generated inline tables share text measurement without aliasing node IDs", () => {
   const before = structuredClone({ paragraph, entries });
   const result = measureInlineTableParagraph(paragraph, entries, 500, measure);

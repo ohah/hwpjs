@@ -5,7 +5,7 @@ import { DEFAULT_ROW_HEIGHT, TEXT_TOP } from "./row-geometry.mjs";
 import { inlineObjectIdentity } from "./inline-object-identity.mjs";
 
 // 현재 UTF-16 위치와 주입된 인라인 개체 크기를 측정합니다.
-export function measureInlineObjectParagraph(paragraph, entries, width, measure, { maxRows = 20000, allowLineOverflow = false, compactLines = false, zeroWidthUnits = [] } = {}) {
+export function measureInlineObjectParagraph(paragraph, entries, width, measure, { maxRows = 20000, allowLineOverflow = false, compactLines = false, zeroWidthUnits = [], textAnchorUnits = [] } = {}) {
   const unavailable = error => ({ state: "unavailable", error });
   if (!paragraph || typeof paragraph.text !== "string" || !Array.isArray(entries) || !entries.length || typeof measure !== "function" || !Number.isFinite(width) || width <= 0 || !Number.isSafeInteger(maxRows) || maxRows < 1) return unavailable("InvalidInlineObjectMeasurement");
   const units = [];
@@ -14,11 +14,14 @@ export function measureInlineObjectParagraph(paragraph, entries, width, measure,
   if (!Array.isArray(zeroWidthUnits) || !zeroWidthUnits.every(unit => Number.isSafeInteger(unit) && objectUnits.has(unit))
     || new Set(zeroWidthUnits).size !== zeroWidthUnits.length) return unavailable("InvalidInlineObjectAnchorPosition");
   const overlays = new Set(zeroWidthUnits);
-  if (units.length !== entries.length + overlays.size) return unavailable("AmbiguousInlineObjectAnchors");
+  if (!Array.isArray(textAnchorUnits) || !textAnchorUnits.every(unit => Number.isSafeInteger(unit) && objectUnits.has(unit) && !overlays.has(unit))
+    || new Set(textAnchorUnits).size !== textAnchorUnits.length) return unavailable("InvalidInlineObjectAnchorPosition");
+  const textAnchors = new Set(textAnchorUnits);
+  if (units.length !== entries.length + overlays.size + textAnchors.size) return unavailable("AmbiguousInlineObjectAnchors");
   for (const part of new Intl.Segmenter("ko", { granularity: "grapheme" }).segment(paragraph.text)) {
     if (part.segment.includes("\ufffc") && part.segment.length !== 1) return unavailable("UnsupportedInlineObjectGrapheme");
   }
-  const byUnit = new Map(), ids = new Set(), unitSet = new Set(units.filter(unit => !overlays.has(unit)));
+  const byUnit = new Map(), ids = new Set(), unitSet = new Set(units.filter(unit => !overlays.has(unit) && !textAnchors.has(unit)));
   const inlineUnits = [...unitSet];
   const explicit = entries.some(entry => entry && Object.hasOwn(entry, "unit"));
   for (const [index, entry] of entries.entries()) {
