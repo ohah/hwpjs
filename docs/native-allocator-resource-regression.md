@@ -1,5 +1,14 @@
 # 큰 문서 테스트의 할당자 진단 비용
 
+## 수식 fixture 반복 검증의 진단 비용 (2026-10-16)
+
+main af73f543와 테스트 세 파일의 수정만 포함한 분리 소스에서 ReleaseSafe 집중 바이너리 `1e4dd46e323ed0ac9bf095b9d92607e915e09f96a89c7650780476da01e95d6b`는 root 포함4/4·fail/skip/logErrors/leaks0·exit0입니다. 동일1024MiB 감시의 관측 peak15,122,816바이트이며 경로는 `/tmp/hwpjs-native-diagnostics-publication.k0dzRy/native-main-diagnostics.jsonl`입니다. 차트 제품 후보와 분리한 main 검증이며 전체 native 완료나 제품 메모리 개선은 아닙니다.
+
+수정 대상은 HWPX 원본 수식 분할26사례, 현재 수식 조합 저장, HWP5 실제 차트 수식 명령 테스트입니다. 공통 checked allocator의 안전·누수 검사를 유지하고 per-allocation stack trace 수집을 제외했습니다. fixture·검증 단언·실패 주입 인덱스·제품 코드는 변경하지 않았습니다. HWP5 성공 후 복원은 기존 고정 `std.testing.allocator` 대신 실제 소유 allocator를 명시적으로 전달합니다. 첫 대조의 `Invalid free`는 이 테스트의 고정 allocator 의존성이 드러난 실패이며 통과로 계산하지 않습니다.
+
+발견 경위는 별도 HWPX 차트 제품 후보의 넓은 필터 검사입니다. 첫 HWPX 분할 테스트에서 peak1,218,036,984바이트, 다음 조합 저장에서1,245,725,968바이트, HWP5 명령에서1,102,529,688바이트로 각각1GiB 관측 한도를 초과했습니다. 이들은 단계별 서로 다른 바이너리의 incomplete 결과이며 합산해 전체 통과를 주장하지 않습니다. 수정 개별 대조와 위 main4/4는 별도 증거입니다. 전체 native와 차트 제품 후보 검증은 후속으로 남습니다.
+
+
 ## open/edit/save/reopen 전체 실패 주입 (2026-10-16)
 
 e0841a4b 소스의 전체3,959개 바이너리 `64fa1aad233484f45c88f31cb3d29091f85105909cc1017399379c3f7ca94b8e`는2,462개 완료 후 index2462 `HWPX editor session releases partial allocations through open edit save reopen`에서 peak1,101,513,856바이트로1024MiB 관측 기준을 넘어 incomplete·exit1입니다. 앞선 underline의45,011 실패 지점 순회는 종료 후 후속 테스트로 진행했습니다. guardian/batch/native PID74154/74156/74160/43503 부재를 확인했습니다.

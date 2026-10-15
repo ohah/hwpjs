@@ -10,7 +10,9 @@ fn expectAscii(actual: []const u8, expected: []const u8) !void {
 }
 
 test "formula command actual chart fields preserve expression format cache and common envelope" {
-    const a = std.testing.allocator;
+    var verification_allocator: @import("../../testing/checked_allocator.zig").Debug = .{};
+    defer std.testing.expect(verification_allocator.deinit() == .ok) catch @panic("formula command test allocator leak");
+    const a = verification_allocator.allocator();
     const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/chart.hwp", a, .limited(2_000_000));
     defer a.free(bytes);
     var source = try Source.open(a, bytes);
@@ -197,6 +199,7 @@ test "formula command actual chart fields preserve expression format cache and c
                 source_bytes: []const u8,
                 version: @import("../version.zig").Version,
                 reject: bool,
+                restore_allocator: std.mem.Allocator,
 
                 fn prepare(allocator: std.mem.Allocator, draft: *@import("../../model/document.zig").Section, self: @This()) !void {
                     draft.paragraphs[19].tokens[0].raw[2] = '2';
@@ -252,11 +255,11 @@ test "formula command actual chart fields preserve expression format cache and c
                     try std.testing.expectApproxEqAbs(@as(f64, 68.5), target.paragraphs[23].formula_results.?[0].value, 0.000001);
                     allocator.free(target.paragraphs[23].formula_results.?);
                     target.paragraphs[23].formula_results = null;
-                    try @import("../edit/formula_display_apply.zig").applyDraft(std.testing.allocator, &target.paragraphs[23], self.properties, .{ .source_node = self.field_node, .value = 67.5, .grouping = .none }, 0, null, 100_000);
+                    try @import("../edit/formula_display_apply.zig").applyDraft(self.restore_allocator, &target.paragraphs[23], self.properties, .{ .source_node = self.field_node, .value = 67.5, .grouping = .none }, 0, null, 100_000);
                     target.paragraphs[19].tokens[0].raw[2] = '1';
                 }
             };
-            const transaction: Transaction = .{ .tree = tree, .groups = groups, .owner = owner, .range = range, .properties = properties, .field_node = @intCast(node), .source_bytes = section, .version = source.header.version(), .reject = true };
+            const transaction: Transaction = .{ .tree = tree, .groups = groups, .owner = owner, .range = range, .properties = properties, .field_node = @intCast(node), .source_bytes = section, .version = source.header.version(), .reject = true, .restore_allocator = a };
             const original_tokens = document.sections[0].paragraphs[19].tokens.ptr;
             try std.testing.expectError(error.RejectedFormulaTransaction, @import("../../model/transaction.zig").apply(a, &document.sections[0], transaction, Transaction.prepare));
             try std.testing.expect(original_tokens == document.sections[0].paragraphs[19].tokens.ptr);

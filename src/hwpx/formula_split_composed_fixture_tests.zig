@@ -1,7 +1,9 @@
 const std = @import("std");
 
 test "actual chart current formula split composed save keeps live AVG and original model" {
-    const a = std.testing.allocator;
+    var checked: @import("../testing/checked_allocator.zig").Debug = .{};
+    defer std.testing.expect(checked.deinit() == .ok) catch @panic("composed formula split test allocator leak");
+    const a = checked.allocator();
     const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx", a, .limited(4000000));
     defer a.free(input);
     var session = try @import("editor_session.zig").open(a, input, .{});

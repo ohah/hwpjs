@@ -3,7 +3,9 @@ const Tree = @import("xml_part_tree.zig").Tree;
 const uri = @import("document_xml.zig").paragraph_uri;
 
 test "actual chart whole formula split candidates retain all field bytes and cell owners" {
-    const a = std.testing.allocator;
+    var checked: @import("../testing/checked_allocator.zig").Debug = .{};
+    defer std.testing.expect(checked.deinit() == .ok) catch @panic("formula split test allocator leak");
+    const a = checked.allocator();
     const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx", a, .limited(4000000));
     defer a.free(input);
     var session = try @import("editor_session.zig").open(a, input, .{});
