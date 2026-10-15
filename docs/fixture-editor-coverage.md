@@ -1,5 +1,14 @@
 # 추적 픽스쳐 편집 지원 전수 기준
 
+## 2026-10-16 main 통합 차트 후보의 공개 회귀
+
+main `18dbe1f4`와 선별 차트 변경을 합친 별도 소스의 ReleaseSafe WASM `f6decd1df1fbf38a2926e2b25d69633c323ec7761753a78826dab6cc73cafc78`로 HWP5 최상위101파일을 concurrency1로 실행했습니다. `hwp5-top-level-101.log`는566/566·fail/skip/cancel0·610299.962583ms·정상 exit0으로 종료됐습니다. 고정 기본 경로를 읽는 테스트도 격리 경로의 같은 제품 산출물을 사용하며 EMF test-only probe는 별도 명시했습니다. 이전100파일563개 중3실패 결과는 이 재실행으로 소급 통과 처리하지 않습니다.
+
+같은 차트 코드의 HWPX 정규62파일은194/194·fail/skip/cancel0·525891.015166ms·exit0입니다. 그 실행의 WASM `f74879e6…`와 위 `f6decd1d…`는 code/data/exports 등 섹션 hash가 같고 디버그 문자열/줄 정보 두 custom section만 다릅니다. 두 실행을 하나의 통합 테스트 수로 합산하지 않습니다. HWP5 새 로그는 `/tmp/hwpjs-chart-main-merged.IfTq0V/`, HWPX 로그 `registered-hwpx-62-latest.log`는 `/tmp/hwpjs-chart-publication.gSOozh/`에 있습니다.
+
+이후 main의 다단계 라벨 표시 변경은 별도 순수/브라우저 검증이며 [차트 값 목록](hwpx-chart-table-ui.md)이 근거를 소유합니다. 미공개 작업 트리 전체·참조 모든 객체/필드·물리 IME·원본 조판·기본 WASM 승격 및 실행 중인 native186선언의 전체 완료를 이 공개 회귀 결과로 주장하지 않습니다.
+
+
 전체 픽스쳐의 파싱·편집과 rhwp 형태의 Canvas 편집 UI가 목표입니다. 단순 문단 일부에서 입력이 성공했다고 전체 목표가 달성된 것으로 보지 않습니다. HWPX도 목표에서 제외하지 않습니다.
 
 ## 최신 전수 실측
