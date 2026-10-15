@@ -2,6 +2,7 @@ import { pageReferenceBoxes } from "./page-reference-boxes.mjs";
 import { paginateBodyRows } from "./page-row-flow.mjs";
 import { pageParagraphCoverage } from "./page-paragraph-coverage.mjs";
 import { measureCreatedBodyFlow, projectCreatedBodyFlow } from "./created-body-flow-measurement.mjs";
+import { layoutCreatedTableSourceScene } from "./created-table-source-scene-layout.mjs";
 
 // Inline whole-object path. Oversized objects retain explicit fallback, not loss.
 export function layoutCreatedTableInlinePages(content, measure, maxRows = 20000) {
@@ -9,6 +10,7 @@ export function layoutCreatedTableInlinePages(content, measure, maxRows = 20000)
   if (!["hwp5", "hwpx"].includes(content.format) || content.window || content.limited || content.pageSettings?.length !== 1
       || !content.createdTables?.length || !Number.isSafeInteger(maxRows) || maxRows < 1) return unavailable("UnsupportedCreatedTablePageScope");
   if (content.hwp5PageNumberSource?.page_controls?.length || content.hwp5PageNumberSource?.section_starts?.length) return unavailable("UnsupportedCreatedTablePageControls");
+  if (content.tables?.length && content.createdTables.every(table => !content.tables.some(source => source.section === table.section && source.hostParagraph === table.hostParagraph))) return layoutCreatedTableSourceScene(content, measure, maxRows);
   const bodyIds = new Set(content.paragraphs.filter(p => !p.tableCell && !p.tableCaption).map(p => `${p.section}:${p.paragraph}`));
   const bodyFlows = content.paragraphFlows?.filter(flow => bodyIds.has(`${flow.section}:${flow.paragraph}`));
   if (["pictures", "drawings", "rectangles", "lines", "checkBoxes", "charts", "noteBodies"].some(key => content[key]?.length)

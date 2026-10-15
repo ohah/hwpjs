@@ -23,8 +23,9 @@ import { measureNestedTable } from "./nested-table-measurement.mjs";
 import { nestedTablePaperBounds } from "./nested-table-paper-bounds.mjs";
 
 // Source-ordered block tables; inline, captions and nested flow are separate.
-export function layoutTableBodyContent(content, measure, maxRows) {
+export function layoutTableBodyContent(content, measure, maxRows, { measureBodyParagraph } = {}) {
   const unavailable = error => ({ state: "unavailable", error });
+  if (measureBodyParagraph !== undefined && typeof measureBodyParagraph !== "function") return unavailable("InvalidTableBodyMeasurement");
   const nested = content.tables?.some(table => table.parentTableNode != null);
   if (nested) {
     try { validateNestedTableOwnership(content); }
@@ -126,9 +127,14 @@ export function layoutTableBodyContent(content, measure, maxRows) {
       else sequence.push(...siblings.map(tableIndex => ({ tableIndex })));
     } else {
       if (remaining < 1) return unavailable("TablePagePlanLimit");
-      const measured = layoutContent({ paragraphs: [paragraph], limited: false }, reference.boxes.page.width, measure, remaining, { documentBody: true });
+      const supplied = measureBodyParagraph?.({ paragraph, width: reference.boxes.page.width, measure, maxRows: remaining });
+      const measured = supplied ?? layoutContent({ paragraphs: [paragraph], limited: false }, reference.boxes.page.width, measure, remaining, { documentBody: true });
+      if (measured.state === "unavailable") return measured;
+      if (!Array.isArray(measured.rows)) return unavailable("InvalidTableBodyMeasurement");
       if (measured.limited) return unavailable("TablePagePlanLimit");
-      remaining -= measured.rows.length; sequence.push(...measured.rows);
+      const count = measured.rowCount ?? measured.rows.length;
+      if (!Number.isSafeInteger(count) || count < measured.rows.length || count > remaining) return unavailable("TablePagePlanLimit");
+      remaining -= count; sequence.push(...measured.rows);
     }
   }
   if (seen.size !== hosts.size) return unavailable("UnsupportedTablePageHost");

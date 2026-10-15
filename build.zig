@@ -97,6 +97,8 @@ pub fn build(b: *std.Build) void {
     hwpx_text_tests.addArg("tests/hwpx/created-cell-xml.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/created-cell-softline-canvas.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/created-source-table-host.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/created-source-scene-worker.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/source-table-control-coverage.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/numeric-input-corpus.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/numeric-exact-corpus.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/formula-definition-corpus.test.mjs");

@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+`HWPJS_TEST_WASM=/absolute/candidate/hwpjs.wasm node --test tests/hwpx/created-source-scene-worker.test.mjs tests/hwpx/source-table-control-coverage.test.mjs`는 추적 noori의 원본 표5개/그림4개와 별도 본문 생성 표의 조립·독립 XML/ZIP·이력 및 원본 제어 coverage 반례를 검사합니다. 두 파일은 기본 hwpx-text-audit에도 포함하며 [소유권과 범위](generated-source-table-pages.md)를 따릅니다.
+
 `HWPJS_TEST_WASM=/absolute/candidate/hwpjs.wasm node --test tests/hwpx/created-source-table-host.test.mjs tests/hwpx/created-source-table-worker.test.mjs`는 원본 인라인 표와 생성 표의 동일 호스트/identity 격리·원본 XML/ZIP·입력/저장/이력을 검사합니다. Worker 검사는 `reference/rhwp/samples/task1763/cell_trailing_ls_expand.hwpx`가 실제로 있어야 하며 누락을 skip하지 않습니다. 이 참조 검사는 기본 hwpx-text-audit와 별도이고 순수 host 반례만 기본 목록에 등록합니다. 지원/미지원 경계는 [원본·생성 표 페이지](generated-source-table-pages.md)를 따릅니다.
 
 `node tools/hwp5-merge-corpus-audit.mjs`는 제품 WASM 빌드 후 추적 HWP의 모든 인접 문단 쌍에 병합을 시도합니다. 독립 전체 Section·비대상 스트림·저장 후 재열기 전체 raw text·native undo/redo와 거부 뒤 원본/redo 보존을 검사하며 미지원·보호 파일 거부를 별도 집계합니다. 상세 계약과 한계는 [문단 구조 편집](paragraph-structure-edit.md)이 소유합니다.
