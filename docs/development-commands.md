@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+`zig test src/hwp5_object_metadata_tests.zig -O ReleaseSafe --test-filter 'object control metadata' --test-filter 'actual object metadata'`는 객체 CTRL_DATA 소유권/스키마/실패 주입을 선택합니다. `HWPJS_TEST_WASM=/absolute/candidate/hwpjs.wasm node --test tests/hwp5/object-metadata-numeric-retention.test.mjs tests/hwp5/numeric-formula-corpus.test.mjs`는 실제 숫자 의존 셀·독립 산술·원문 메타데이터·거부 후 redo를 검사합니다. [분리 후보와 미완료 경계](hwp5-object-metadata-retention.md)를 따릅니다.
+
 `zig test src/root.zig -O ReleaseSafe --test-no-exec --test-filter 'HWPX empty protected merge' --test-filter 'HWPX styled protected' --test-filter 'HWPX protected merge actual' --test-filter 'HWPX protected splice actual' --test-filter 'HWPX anchored split history' --test-filter 'HWPX protected structure actual line' -femit-bin=/absolute/protected-tests`는 보호 문단 모듈8선언과root를 선택합니다. 이어 `node tools/zig-native-footprint-audit.mjs --binary=/absolute/protected-tests --batch-size=1 --max-physical-mib=1024`로 감시하며, 전체 바이너리에서의 개별 선택/비교 경계는 [할당자 자원 기록](native-allocator-resource-regression.md)을 따릅니다.
 
 `zig test src/root.zig -O ReleaseSafe --test-filter 'HWPX empty protected merge allocation' --test-no-exec -femit-bin=/absolute/empty-merge-tests` 후 `node tools/zig-native-footprint-audit.mjs --binary=/absolute/empty-merge-tests --batch-size=1 --max-physical-mib=1024`로 보호 병합 전체 실패 주입의 자원 대조를 실행합니다. [중단·수정·검증 경계](native-allocator-resource-regression.md)를 따르며 전체 native 완료나 제품 메모리 개선으로 해석하지 않습니다.

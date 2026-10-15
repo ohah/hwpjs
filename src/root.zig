@@ -13,6 +13,7 @@ pub const model = @import("model/document.zig");
 
 test {
     _ = @import("form_source_fixture_test.zig");
+    _ = @import("hwp5/edit/control_data_object_metadata.zig");
     _ = @import("wasm/character_outline_args.zig");
     _ = @import("hwpx/character_outline_display.zig");
     _ = @import("hwpx/character_outline_patch.zig");

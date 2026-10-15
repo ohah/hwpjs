@@ -2,7 +2,7 @@
 const std = @import("std");
 const Tree = @import("../body/tree.zig").Tree;
 const names = @import("control_data_names.zig");
-pub const Kind = enum { bookmark_name, shape_name, click_field_name, bookmark_field_name, presentation };
+pub const Kind = enum { bookmark_name, shape_name, click_field_name, bookmark_field_name, presentation, shape_metadata, table_metadata };
 
 pub fn validateNode(a: std.mem.Allocator, tree: Tree, index: usize, bin_data_count: usize) !Kind {
     return inspectNode(a, tree, index, bin_data_count);
@@ -25,13 +25,23 @@ fn inspectNode(a: std.mem.Allocator, tree: Tree, index: usize, bin_data_count: ?
         section = header.id == @import("../body/control_rules.zig").id("secd");
     }
     // Determine the owner before allocating ParameterSet nodes.
-    const owner: ?names.Owner = if (section) null else try names.ownerForTree(tree, index);
+    const metadata = @import("control_data_object_metadata.zig");
+    const object_owner = if (section) null else try metadata.owner(tree, index);
+    const owner: ?names.Owner = if (section or object_owner != null) null else try names.ownerForTree(tree, index);
     var doc = try @import("../parameters/parser.zig").Document.parse(a, tree.nodes[index].record.framing.payload, .{ .header_layout = .observed6, .null_layout = .observed_empty });
     defer doc.deinit(a);
     if (section) {
         try @import("control_data_presentation.zig").validate(doc);
         if (bin_data_count) |count| _ = try @import("../parameters/references.zig").validateInContext(doc, count, .section_control);
         return .presentation;
+    }
+    if (object_owner) |kind| {
+        if (kind == .table or metadata.isShapeMetadata(doc)) {
+            try metadata.validate(doc, kind);
+            return if (kind == .table) .table_metadata else .shape_metadata;
+        }
+        _ = try names.name(doc, .shape);
+        return .shape_name;
     }
     _ = try names.name(doc, owner.?);
     return switch (owner.?) {

@@ -82,7 +82,8 @@ export function chartStructureTargets(bytes) {
   return { allowed, protectedParagraphs };
 }
 
-export function verifyChartFormulas(bytes) {
+export function verifyChartFormulas(bytes, expectedCount = 13) {
+  assert(Number.isSafeInteger(expectedCount) && expectedCount > 0);
   const tables = chartTables(bytes);
   let count = 0;
   for (const table of tables) for (const { cell, match } of table.formulas) {
@@ -105,5 +106,5 @@ export function verifyChartFormulas(bytes) {
     assert.equal(cell.paragraphs[0].text.subarray(16, -18).toString("utf16le").replaceAll(",", ""), rendered, "independent arithmetic differs from label");
     count++;
   }
-  assert.equal(count, 13); return count;
+  assert.equal(count, expectedCount); return count;
 }

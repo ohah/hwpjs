@@ -2,6 +2,8 @@
 
 [모듈 인덱스](hwp5-modules.md) · [과거 공통 기록](hwp5-foundation.md)
 
+관측된 도형·표 CTRL_DATA의 직접 소유권과 편집 시 원문 보존은 [객체 메타데이터 보존](hwp5-object-metadata-retention.md)이 소유합니다. 이름 전용 스키마와 일반 ParameterSet 파서 계약은 이 문서에 남깁니다.
+
 이 문서는 해당 주제의 현재 책임·소유권·미지원 경계를 소유합니다. 계약과 새 검증 결과는 해당 주제에서 관리하고, 내용이 커지면 별도 문서로 분리하여 연결합니다.
 
 - `parameters/field_name.zig`는 관측 0x021b Set의 직접 0x4000 문자열 규칙을 소유하며 셀과 책갈피가 공유합니다. `body/bookmark.zig`는 bokm의 직접 CTRL_DATA 소유 관계와 이름 진단을 담당합니다. sources.inspectBodyDetailed는 기존 ParameterSet 파싱 결과를 재사용하고 section은 parameters/bookmarks 보고서를 함께 연결합니다. 이름 부재·빈 문자열·미지 Set·미지원 타입을 구분하며 이름 중복의 문서 전역 의미나 탐색 위치는 별도입니다.
