@@ -1,5 +1,7 @@
 # 수식 결과 입력의 참조 감사
 
+아래 ca351 후보의7거부는 [표시 전용 저장 후속 수정](hwpx-preserved-formula-dependencies.md)에서 원인을 좁혀 해결했습니다. 과거8파일48수식 집계는 그대로 보존하며 새 후보의 실행 범위를 별도로 읽습니다.
+
 ## 실행과 책임
 
 `node tools/hwpx-manual-result-input-audit.mjs --wasm=/absolute/candidate/hwpjs.wasm --fixture=/absolute/document.hwpx`로 한 문서의 모든 원본 수식을 검사합니다. `--fixture`가 없으면 기존 추적 HWPX 목록을 사용합니다. 임의 root 전체 검사가 아니며 문서를 수정해 디스크에 쓰지 않습니다.

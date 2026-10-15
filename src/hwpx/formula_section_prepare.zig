@@ -87,13 +87,15 @@ pub fn prepare(a: std.mem.Allocator, trees: []const @import("xml_part_tree.zig")
         var draft = if (replacement) |formula| try @import("formula_command_plan.zig").prepare(a, view, formula, 0) else null;
         defer if (draft) |*plan| plan.deinit(a);
         const expression = if (draft) |plan| plan.parsed else try @import("formula_expression.zig").parse(a, view);
-        const value = try evaluation.value(begin.element_index);
-        const display = if (preserve_source_display and !automatic) try @import("formula_source_display.zig").read(a, tree, sites, range) else try @import("formula_output.zig").render(a, expression, view, value);
+        // Source-only display saves must not evaluate an unchanged dependent formula.
+        // Automatic resets and definition/input changes still use the evaluator.
+        const value: ?f64 = if (preserve_source_display and !automatic) null else try evaluation.value(begin.element_index);
+        const display = if (value) |number| try @import("formula_output.zig").render(a, expression, view, number) else try @import("formula_source_display.zig").read(a, tree, sites, range);
         defer a.free(display);
         var field = try output.prepare(a, tree, sites, &parameters, range, begin.element_index, display);
         field.preserve_parameters = preserve_source_display and !automatic;
         if (replacement) |formula| {
-            var plan = @import("formula_command_plan.zig").prepare(a, view, formula, value) catch |err| {
+            var plan = @import("formula_command_plan.zig").prepare(a, view, formula, value.?) catch |err| {
                 field.deinit(a);
                 return err;
             };

@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+`zig test src/hwpx_formula_preserved_dependency_tests.zig -O ReleaseSafe --test-filter 'HWPX preserved dependency'`는 표시 전용 의존 수식 저장·전체 할당 실패·실제 정의 변경 거부·숫자 입력 재계산을 검사합니다. `HWPJS_TEST_WASM=/absolute/candidate/hwpjs.wasm node --test tests/hwpx/manual-formula-dependency-preservation.test.mjs`는 실제 issue5543의 독립 XML/ZIP·이력 반례입니다. [보존 경계와 실측](hwpx-preserved-formula-dependencies.md)을 따르며 전체 native/브라우저 완료와 구분합니다.
+
 `node tools/hwpx-manual-result-input-audit.mjs --wasm=/absolute/candidate/hwpjs.wasm --fixture=/absolute/document.hwpx`는 원본 수식별 native 결과 입력·독립 XML/ZIP·재열기/이력을 검사합니다. `--fixture` 생략은 추적 HWPX 목록이며 참조 root 전체가 아닙니다. `node --test tests/hwpx/manual-result-oracle-section.test.mjs`는 구역 선택/변조/CLI 반례입니다. 성공·실패와 dependency 제한은 [참조 수식 결과 감사](hwpx-manual-result-reference-audit.md)를 따릅니다.
 
 `zig test src/hwpx_manual_formula_result_tests.zig -O ReleaseSafe --test-filter 'HWPX manual formula result' --test-filter 'HWPX source formula display' --test-filter 'HWPX source result seed'`는 결과 소유/표시 provenance·원자성/OOM 집중 진입점입니다. [분리 검증 기록](hwpx-manual-result-publication.md)의 전체 native와 구분합니다.

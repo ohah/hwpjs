@@ -39,15 +39,16 @@ pub fn writeWithOverridesMode(a: std.mem.Allocator, trees: []const @import("xml_
         }
         a.free(plain);
     }
-    const prepared = try @import("formula_section_prepare.zig").prepare(a, trees, section, sites, .{ .branch_policy = options.branch_policy, .definitions = definitions, .result_overrides = overrides });
+    const prepared = try @import("formula_section_prepare.zig").prepare(a, trees, section, sites, .{ .branch_policy = options.branch_policy, .definitions = definitions, .result_overrides = overrides, .source_display_options = if (preserve_unrelated) options else null });
     defer {
         for (prepared) |*field| field.deinit(a);
         a.free(prepared);
     }
     if (preserve_unrelated) {
-        // Preparation still validates every dependency before publication.
-        // Borrow only explicit manual results; leave unrelated source displays
-        // and their cached/dirty state untouched, even when already stale.
+        // Explicit automatic resets still validate dependencies. Untouched
+        // source displays are preserved without interpreting manual text as a number.
+        // Borrow the preserved preparations; unrelated source displays and
+        // their cached/dirty state stay untouched, even when already stale.
         var selected: std.ArrayList(@import("formula_field_output.zig").Prepared) = .empty;
         defer selected.deinit(a);
         for (prepared) |field| if (field.preserve_parameters or overrides.?.origin(field.begin) == .automatic) try selected.append(a, field);

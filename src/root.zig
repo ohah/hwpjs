@@ -176,6 +176,7 @@ test {
     _ = @import("hwpx_formula_result_splice_tests.zig");
     _ = @import("hwpx_formula_result_target_tests.zig");
     _ = @import("hwpx_formula_exterior_override_tests.zig");
+    _ = @import("hwpx_formula_preserved_dependency_tests.zig");
     _ = @import("hwpx/formula_cell_rectangle.zig");
     _ = @import("hwpx/formula_cell_rectangle_batch_tests.zig");
     _ = @import("hwpx/formula_numeric_input_guard.zig");
