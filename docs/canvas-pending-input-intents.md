@@ -40,6 +40,16 @@ HWP5/HWPX 각각 실제 거부 뒤 늦은 조합 요청0회·원문 저장 불�
 
 ## 실제 브라우저의 Worker/저장 경계
 
+## 넓은 제어 토큰 주변의 대기 입력
+
+control-offset-input-queue.test.mjs는 software.hwp 문단33의 원본 탭16바이트를 독립 레코드에서 확인합니다. 화면 좌표1의 emoji 삽입·앞머리0 삽입·이동한 탭 뒤2 삽입을 응답 전에 수행하면 실제 native 요청은 원본 좌표8→0→9입니다. sourceOffsets 응답에서 기대 좌표를 가져오지 않습니다. 전체 구역·탭 원문16바이트·CFB 메타데이터/비대상 stream,각 undo 선택/텍스트·redo 저장 byte-exact·재열기를 확인하고 잘못된 텍스트 기대도 구분했습니다.
+
+form-01.hwp(5.0.3.0,5양식)와 form-002.hwp(5.1.0.1,180양식)의 첫 양식 앵커에도 독립 원본 token/link 위치에서 화면 경계를 계산해 같은 세 단계 입력을 수행했습니다. 두 원본 전체 구역·185양식 헤더/개체 raw record와 비대상 stream 불변·3회undo/redo·재열기가 일치합니다. 이는 두 앵커 주변 입력이며185개 양식 값 편집을 수행했다는 뜻이 아닙니다.
+
+cb5d1b87 후보의 이 검사와 기존 input-selection Worker/reader-worker의 실제3파일 선택은16/16·skip0·exit0(11171.80725ms)입니다. 버전/양식 개수/raw record 검사를 강화한 해당 파일 재실행은2/2·skip0·exit0(1619.795625ms),분리 게시 JS와 공유 읽기 전용 참조 픽스쳐 경로의 같은 파일도2/2·skip0·exit0(1593.709875ms)입니다. DOM/Canvas는 대역이며 브라우저/원본 조판 완료 검사가 아닙니다. build.zig의 정규 등록 추가는 아직 로컬 변경이며 이 focused 게시 결과를 전체 build gate로 치환하지 않습니다.
+
+## 브라우저 검증 상세
+
 2026-10-15 분리 게시 디렉터리의 실제 Chrome에서 parashape.hwpx를 파일 선택으로 열고 편집 시작·찾기로 Worker 문단5를 선택했습니다. 실제 keyboard inserttext로 `문단 6`을 `가가`로 바꾼 뒤, 한 JS 이벤트 묶음에서 일반 삽입0→1과 조합 삽입0을 실행했습니다. 묶음 종료 전 native 요청은 첫 입력1건뿐이며 실제 Worker 응답 뒤 기록된 요청은0→1→0의3건,최종 textarea는 `가가가가가`입니다. 조합 이벤트는 브라우저 CompositionEvent/InputEvent로 생성했으므로 OS 한국어 입력기를 직접 조작한 검증은 아닙니다.
 
 실제 다운로드 버튼의 `final.hwpx`에 독립 plain-splice XML/ZIP oracle을 원본 대비 문단5의0..4 교체로 적용했습니다. 일반/-O 모두 전체 XML·비대상 ZIP payload/메타데이터 검사가 통과하고 잘못된4글자 기대는 Whole XML mismatch로 거부했습니다. UI undo 버튼4회는 각 응답을 기다려 원문 `문단 6`을 복원하고 다운로드 `undo.hwpx`가 원본과 byte-exact입니다. redo4회 다운로드 `redo.hwpx`는 final과 byte-exact입니다. final을 다시 파일 선택으로 열고 편집 시작·찾기에서 같은 문단의5글자를 확인했습니다. `/tmp/hwpjs-pending-input-ui.ZyL30q/reopened.png`를 직접 열어 선택한 Canvas 문자열을 확인했으며 브라우저 errors 출력은 비어 있었습니다.
