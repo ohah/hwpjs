@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+`node tools/hwpx-manual-result-input-audit.mjs --wasm=/absolute/candidate/hwpjs.wasm --fixture=/absolute/document.hwpx`는 원본 수식별 native 결과 입력·독립 XML/ZIP·재열기/이력을 검사합니다. `--fixture` 생략은 추적 HWPX 목록이며 참조 root 전체가 아닙니다. `node --test tests/hwpx/manual-result-oracle-section.test.mjs`는 구역 선택/변조/CLI 반례입니다. 성공·실패와 dependency 제한은 [참조 수식 결과 감사](hwpx-manual-result-reference-audit.md)를 따릅니다.
+
 `zig test src/hwpx_manual_formula_result_tests.zig -O ReleaseSafe --test-filter 'HWPX manual formula result' --test-filter 'HWPX source formula display' --test-filter 'HWPX source result seed'`는 결과 소유/표시 provenance·원자성/OOM 집중 진입점입니다. [분리 검증 기록](hwpx-manual-result-publication.md)의 전체 native와 구분합니다.
 
 `zig test src/hwpx_formula_result_splice_tests.zig -O ReleaseSafe --test-filter 'HWPX partial manual result splice'`, `zig test src/hwpx_formula_result_target_tests.zig -O ReleaseSafe --test-filter 'HWPX formula result target'`, `zig test src/hwpx_formula_exterior_override_tests.zig -O ReleaseSafe --test-filter 'HWPX exterior'`는 각각 [부분 치환](hwpx-formula-result-splice.md)·[현재 좌표/표시](hwpx-formula-result-targets.md)·[바깥 텍스트 보존](hwpx-formula-exterior-display-preservation.md)의 집중 native/OOM/fixture 검증입니다. root에도 등록하며 집중 결과를 전체 gate로 합산하지 않습니다.

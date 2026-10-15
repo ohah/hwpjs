@@ -30,7 +30,9 @@ def selected(root, ordinal):
     return field, texts[0]
 
 def verify(data):
-    part = 'Contents/section0.xml'
+    section = data.get('section', 0)
+    require(type(section) is int and section >= 0, 'Section index')
+    part = 'Contents/section' + str(section) + '.xml'
     with zipfile.ZipFile(io.BytesIO(base64.b64decode(data['before'], validate=True))) as before, zipfile.ZipFile(io.BytesIO(base64.b64decode(data['after'], validate=True))) as after:
         require(len(before.namelist()) == len(set(before.namelist())), 'Duplicate source ZIP entry')
         require(before.namelist() == after.namelist() and before.comment == after.comment, 'ZIP inventory')
@@ -91,13 +93,14 @@ if __name__ == '__main__':
     data = json.load(sys.stdin)
     verify(data)
     if data.get('selfTest'):
+        part = 'Contents/section' + str(data.get('section', 0)) + '.xml'
         for kind in ('result', 'cache', 'dirty', 'other_text', 'other_payload'):
             buffer = io.BytesIO()
             with zipfile.ZipFile(io.BytesIO(base64.b64decode(data['after'], validate=True))) as source, zipfile.ZipFile(buffer, 'w') as saved:
                 saved.comment = source.comment
                 for entry in source.infolist():
                     payload = source.read(entry.filename)
-                    if entry.filename == 'Contents/section0.xml' and kind != 'other_payload':
+                    if entry.filename == part and kind != 'other_payload':
                         root = E.fromstring(payload, parser=E.XMLParser(target=E.TreeBuilder(insert_comments=True, insert_pis=True)))
                         field, text = selected(root, data['ordinal'])
                         if kind == 'result':

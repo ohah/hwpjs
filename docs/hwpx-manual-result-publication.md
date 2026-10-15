@@ -1,5 +1,7 @@
 # 수동 계산 결과의 main 분리 검증
 
+추가 실제 참조 입력의 성공·실패와 독립 구역 검증은 [참조 수식 결과 감사](hwpx-manual-result-reference-audit.md)가 소유합니다. 이 조사에서 발견한 dependency 거부7곳은 기존 집중 검사의 통과로 상쇄하지 않습니다.
+
 ## 현재 상태와 범위
 
 main `a2fb33f7` 기준의 `/tmp/hwpjs-manual-result-publication.ervxKq/tree`에 결과 소유 모델·직렬화·재계산 무효화·원본 표시 provenance·세션·체크포인트·이력과 수식별 서식 조회 연결을 분리했습니다. 이후 main975b68db의 검사기 CSS 변경과도 대조했습니다. 차트/덧말/새 문단 등 다른 작업 트리 변경은 가져오지 않았습니다. 선택적 전체/부분 setter·현재 범위/표시 export와 JS facade, 기존 Worker/Canvas 경로를 연결하고 공개/native 집중 검사를 등록했습니다. 이 문서는 해당 분리 범위의 검증 기록이며 게시 상태는 Git 이력이 소유합니다. 전체 native·기본 WASM 승격·전체 참조 편집/조판 완료와 구분합니다.
