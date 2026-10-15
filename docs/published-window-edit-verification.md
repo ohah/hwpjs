@@ -1,5 +1,27 @@
 # 게시 WASM의 구간 편집 검증
 
+## 2026-10-15 긴 문서 후보 검증
+
+cb5d1b87 후보(SHA256 `cb5d1b87a04768990c19481ad007c20517ee80e02ed44978989b7dd966617349`)의 실제 ZIP/HWPX `reference/rhwp/samples/hwp3-sample10-hwpx.hwpx`는26939문단입니다. 파일명은 변환 이력이며 HWP3 signature를 검사한 것이 아닙니다. 기본 표시가 limited=true인 상태에서 마지막26939번째 문단을 set-edit-window로 열어 Canvas 입력·현재 구간 검색·저장·독립 전체 XML/ZIP(Python 일반/-O)·undo 원문 byte-exact·redo 저장본 byte-exact·재열기 후 같은 구간/문자열을 확인했습니다. 최초 현재 작업 트리 검사1/1·skip0·exit0은148798.756208ms입니다(handle49307). 문서 전체 검색은 현재 미구현이며 이 구간 검색 통과로 대체하지 않습니다.
+
+분리 게시 JS(현재 controller와 cmp 일치)에 같은 테스트를 적용한 단계 계측 실행도1/1·skip0·exit0입니다(handle27167,148251.537417ms). 잘못된 prefix 기대는 일반/-O 모두 complete XML mismatch로 거부하고 원본 파일 byte-exact 불변도 확인했습니다. 원본 reference 경로는 읽기 전용 공유 링크이며 기본 WASM을 교체하지 않았습니다. Node26.7.0의 동시 부하가 있는 단일 실행으로,현재 작업 트리 Node24 실행과 성능 개선율을 비교하지 않습니다.
+
+| 단계 | Worker/renderer 포함 시간(ms) |
+| --- | ---: |
+| load | 24713.55 |
+| enable | 20123.04 |
+| 마지막 구간 이동 | 9782.26 |
+| 입력 반영 | 11419.07 |
+| 편집본 저장 | 551.99 |
+| 저장본 reopen | 23073.30 |
+| reenable | 20060.78 |
+
+위 단계 합은 oracle·별도 저장 대조·undo/redo 등 전체 검사 시간을 모두 포함하지 않습니다. 순수 native getter benchmark가 아니며,구간 이동/입력의 초 단위 비용은 아직 남아 있습니다.
+
+실행 중 프로세스만 지정한270.33ms CPU 프로파일에서 attachHwpxStyles→characterRanges→hwpx_edit_character_ranges→character_style_formula_snapshot.read 및 mem.eql/xml.text.View.equals 경로를 확인했습니다. 해당 read는 요청 문단의 FORMULA 존재 여부를 확인하려고 구역 전체 elements를 순회하고 가까운 문단 조상을 찾습니다. 샘플은 반복된 전체 구역 순회의 비용을 줄일 조사 근거이며 전체 지연을 이 함수 하나로 단정하거나 최적화를 이미 적용했다고 기록하지 않습니다. 이전 macOS sample의 해석 불가 WASM frame도 별도 근거입니다. 테스트 프로세스는 정상 종료했고 일시적으로 연 inspector9229 listener도 남지 않았습니다. 새 브라우저/디바이스는 실행하지 않았습니다.
+
+DOM/측정은 기존 harness 대역입니다. 실제 브라우저·글꼴·원본 페이지 동치·모든 문단 전수 편집·문서 전체 검색 완료의 증거로 확대하지 않습니다.
+
 ## 후속 도형 조회 조사
 
 요청 내 native 일괄 소유 조회의 책임과 연결 전 제한은 [사각형 소유 위치 일괄 조회](hwpx-rectangle-host-batch.md)를 따릅니다.
