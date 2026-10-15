@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+`zig test src/root.zig -O ReleaseSafe --test-filter 'field host query' --test-filter 'field queries retain' --test-filter 'field owned and uncached' --test-filter 'HWPX field label splice'`는 필드 query/setter의 현재 위치·보호 경계·실패 주입을 검사합니다. `HWPJS_TEST_WASM=/absolute/candidate/hwpjs.wasm node --test tests/hwpx/field-query-publication.test.mjs`는 실제 표 호스트·원본/분할 hyperlink·선두 BOM·독립 XML/이력 검사이며 정규 hwpx-text-audit에도 등록합니다. [후보·지원 경계](hwpx-field-range-target.md)를 따릅니다.
+
 `zig test src/text_range_disjoint_probe.zig -O ReleaseSafe --test-filter 'disjoint range'`는441좌표 조합·현재/원본 우선순위·빈 마커·전체 할당 실패를 검사합니다. Debug/ReleaseFast도 같은 선언을 선택합니다. `HWPJS_TEST_WASM=/absolute/candidate/hwpjs.wasm node --test tests/hwp5/reference-range-prefix.test.mjs tests/hwp5/onsaemiro-range-prefix.test.mjs tests/hwp5/disjoint-range-marker.test.mjs tests/hwp5/disjoint-range-suffix.test.mjs`는 실제 prefix/suffix·독립 저장·파생 빈 마커 반례입니다. [후보/정책/브라우저 경계](hwp5-plain-text-edit-experiment.md)를 따릅니다.
 
 `zig test src/hwp5_unselected_field_tests.zig -O ReleaseSafe --test-filter 'unselected field policy'`는 비대상 구역의 실제 필드 연결·전체 실패 주입·종류 불일치/미지 제어 거부를 검사합니다. `HWPJS_TEST_WASM=/absolute/candidate/hwpjs.wasm node --test tests/hwp5/unselected-field-sections.test.mjs tests/hwp5/unselected-cross-reference-gate.test.mjs`는 14구역 입력/서식/속성·독립 저장/이력과 비대상 상호참조 보호입니다. [후보와 검증 경계](hwp5-unselected-field-preservation.md)를 따릅니다.

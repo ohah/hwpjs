@@ -4,10 +4,18 @@ const tree_module = @import("xml_part_tree.zig");
 pub const Prepared = struct {
     field: @import("field_text_ranges.zig").Range,
     segments: []@import("paragraph_text_positions.zig").Segment,
+    sites: *const @import("text_sites.zig").Sites,
     pub fn deinit(self: Prepared, a: std.mem.Allocator) void {
         a.free(self.segments);
     }
 };
+
+pub fn validatePreparedRange(prepared: Prepared, section: usize, start: u32, end: u32) !usize {
+    const target = try @import("field_text_positions.zig").validateEdit(prepared.field, section, prepared.segments, start, end);
+    try @import("paragraph_text_positions.zig").validateBoundary(prepared.sites, prepared.segments, start);
+    try @import("paragraph_text_positions.zig").validateBoundary(prepared.sites, prepared.segments, end);
+    return target;
+}
 
 /// Shared validation and current positions for queries and mutations.
 pub fn prepare(self: anytype, section_index: usize, paragraph: usize, begin_element: usize) !Prepared {
@@ -41,7 +49,12 @@ pub fn prepareLinked(self: anytype, section_index: usize, paragraph: usize, begi
         }
         return error.InvalidFieldElement;
     };
-    try validateLinked(&selected.tree, field, report, ranges, frames);
+    const local: ?LocalParagraph = if (selected.structure_values == null) .{
+        .sites = &selected.sites,
+        .locations = selected.locations,
+        .paragraph = try selected.sourceParagraph(paragraph),
+    } else null;
+    try validateLinkedAtParagraph(&selected.tree, field, report, ranges, frames, local);
     const segments = if (selected.structure_values) |*values| block: {
         if (selected.sites.items.len != 0) return error.DuplicateCurrentTextOwner;
         const index = paragraph - selected.first_paragraph;
@@ -51,23 +64,41 @@ pub fn prepareLinked(self: anytype, section_index: usize, paragraph: usize, begi
         const locations = try @import("paragraph_structure_locations.zig").build(a, &selected.tree, owned);
         defer a.free(locations);
         break :block try @import("paragraph_text_positions.zig").build(a, &selected.tree, &owned.sites, locations, 1);
-    } else try @import("paragraph_text_positions.zig").build(a, &selected.tree, &selected.sites, selected.locations, try selected.sourceParagraph(paragraph));
-    return .{ .field = field, .segments = segments };
+    } else try @import("anchor_text_positions.zig").build(a, &selected.tree, &selected.sites, selected.locations, local.?.paragraph);
+    const sites = if (selected.structure_values) |*values| &values.paragraphs[paragraph - selected.first_paragraph].sites else &selected.sites;
+    return .{ .field = field, .segments = segments, .sites = sites };
 }
 
 /// 조회와 입력이 공유하는 필드 종류/원문 내용/선택 소유자 정책입니다.
 pub fn validateLinked(tree: *const tree_module.Tree, field: @import("field_text_ranges.zig").Range, report: *const @import("field_markers.zig").Report, ranges: []const @import("field_text_ranges.zig").Range, frames: []const @import("xml_tree_selection.zig").Frame) !void {
+    return validateLinkedAtParagraph(tree, field, report, ranges, frames, null);
+}
+
+const LocalParagraph = struct {
+    sites: *const @import("text_sites.zig").Sites,
+    locations: []const @import("section_text.zig").Location,
+    paragraph: usize,
+};
+
+fn validateLinkedAtParagraph(tree: *const tree_module.Tree, field: @import("field_text_ranges.zig").Range, report: *const @import("field_markers.zig").Report, ranges: []const @import("field_text_ranges.zig").Range, frames: []const @import("xml_tree_selection.zig").Frame, local: ?LocalParagraph) !void {
     const begin = report.markers[field.begin_marker];
     for (ranges) |other| {
         if (other.section != field.section or other.begin_marker == field.begin_marker) continue;
         if (other.content_start < field.content_end and field.content_start < other.content_end) return error.UnsupportedNestedFieldLabel;
     }
     const uri = @import("document_xml.zig").paragraph_uri;
-    for (tree.elements, 0..) |element, index| {
-        if (element.start_tag.start < field.content_start or element.start_tag.start >= field.content_end) continue;
-        if (element.is(uri, "p") or element.is(uri, "run") or element.is(uri, "t") or element.is(uri, "ctrl") or element.is(uri, "linesegarray") or element.is(uri, "lineseg")) continue;
-        if (@import("retained_inline_unit.zig").supported(tree, index)) continue;
-        return error.UnsupportedFieldLabelContent;
+    if (local) |owner| {
+        @import("plain_paragraph_policy.zig").validateForFieldText(tree, owner.sites, owner.locations, owner.paragraph) catch |err| switch (err) {
+            error.UnsupportedParagraphControl => return error.UnsupportedFieldLabelContent,
+            else => return err,
+        };
+    } else {
+        for (tree.elements, 0..) |element, index| {
+            if (element.start_tag.start < field.content_start or element.start_tag.start >= field.content_end) continue;
+            if (element.is(uri, "p") or element.is(uri, "run") or element.is(uri, "t") or element.is(uri, "ctrl") or element.is(uri, "linesegarray") or element.is(uri, "lineseg")) continue;
+            if (@import("retained_inline_unit.zig").supported(tree, index)) continue;
+            return error.UnsupportedFieldLabelContent;
+        }
     }
     const kind = begin.begin.?.type_raw orelse return error.UnsupportedFieldLabel;
     if (!@import("field_text_kind.zig").supported(kind)) return error.UnsupportedFieldLabel;
@@ -120,7 +151,7 @@ pub fn splice(self: anytype, section_index: usize, paragraph: usize, begin_eleme
     const styled = if (selected.structure_values) |*values| &values.paragraphs[paragraph - selected.first_paragraph] else null;
     const changed = if (styled != null and styled.?.character_styles != null) block: {
         const end = std.math.add(u32, start, deleted) catch return error.InvalidTextPosition;
-        const target = try @import("field_text_positions.zig").validateEdit(field, section_index, segments, start, end);
+        const target = try validatePreparedRange(prepared, section_index, start, end);
         break :block try @import("character_style_splice.zig").splicePositionsAtSite(a, styled.?, segments, start, deleted, inserted, self.options.max_text_bytes - other_bytes, target);
     } else try @import("field_label_splice.zig").splice(a, sites, segments, field, section_index, start, deleted, inserted, self.options.max_text_bytes - other_bytes);
     if (changed) {

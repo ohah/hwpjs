@@ -1290,6 +1290,18 @@ export fn hwpx_edit_field_labels(section: u32, paragraph: u32) u32 {
     defer a.free(targets);
     return publishFieldTargets(targets);
 }
+export fn hwpx_edit_field_range_target(section: u32, paragraph: u32, start: u32, end: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const target = @import("../hwpx/field_label_range_target.zig").select(session, section, paragraph, start, end) catch |err| return fail(err);
+    return if (target) |value| publishFieldTargets(&.{value}) else publishFieldTargets(&.{});
+}
+export fn hwpx_edit_field_label_display_text(section: u32, paragraph: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    output = @import("../hwpx/field_label_display_text.zig").read(session, section, paragraph) catch |err| return fail(err);
+    return 1;
+}
 fn publishFieldTargets(targets: []const @import("../hwpx/field_label_targets.zig").Target) u32 {
     const bytes = a.alloc(u8, 4 + targets.len * 12) catch |err| return fail(err);
     std.mem.writeInt(u32, bytes[0..4], @intCast(targets.len), .little);

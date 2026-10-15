@@ -12,6 +12,7 @@ pub const text = @import("text/root.zig");
 pub const model = @import("model/document.zig");
 
 test {
+    _ = @import("hwpx_field_host_query_tests.zig");
     _ = @import("text_range_disjoint_probe.zig");
     _ = @import("hwp5_unselected_field_tests.zig");
     _ = @import("form_source_fixture_test.zig");

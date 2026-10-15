@@ -1,5 +1,7 @@
 # 필드 라벨 좌표의 표시 문자열
 
+현재 게시 소스의 표 호스트 원인·후보 검증 경계는 [필드 범위 조회](hwpx-field-range-target.md)의 최신 기록이 소유합니다. 아래 과거 확장 후보의 중첩/덧말 지원을 현재 main 구현으로 소급하지 않습니다.
+
 `fieldLabelDisplayText(section, paragraph)`는 기존1-based 문단 번호로 현재 보호 앵커·텍스트를 함께 조회합니다. 선택적 WASM export는 `hwpx_edit_field_label_display_text`이며 부재 시 JS는 `HwpxFieldLabelDisplayTextAbiUnavailable`을 반환합니다. 편집 허용 범위를 추가하거나 일반 텍스트 스냅샷을 변경하지 않습니다.
 
 native `field_label_display_text.zig`는 먼저 기존 fieldLabels 정책을 확인합니다. 원문 모델은 기존 필드 명령 준비 결과의 segments/sites를, 현재 소유 모델은 기존 field_owned_positions 또는 보호 위치 투영을 재사용합니다. 문자열 합성과 예산 검사는 한 helper가 소유합니다. 덧말 표시 조회도 이 공통 경로를 사용합니다.

@@ -111,6 +111,14 @@ export async function createHwpxEditor(source) {
       return Array.from({ length: bytes.length / 4 }, (_, index) => view.getUint32(index * 4, true));
     } finally { wasm.hwpx_edit_output_free(); }
   }
+  function fieldLabels(section, paragraph) {
+    ready(); uint(section); uint(paragraph);
+    if (typeof wasm.hwpx_edit_field_labels !== "function") throw new Error("HwpxFieldEditAbiUnavailable");
+    try {
+      if (!wasm.hwpx_edit_field_labels(section, paragraph)) throw memory.error();
+      return decodeFieldTargets(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+    } finally { wasm.hwpx_edit_output_free(); }
+  }
   return {
     paragraphShapeIds() { return paragraphIds("paragraph_shape_ids"); },
     paragraphNeighbors(section) {
@@ -1106,14 +1114,6 @@ export async function createHwpxEditor(source) {
         return new TextDecoder("utf-8", { fatal: true }).decode(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
       } finally { wasm.hwpx_edit_output_free(); }
     },
-    fieldLabelDisplayText(section, paragraph) {
-      ready(); [section, paragraph].forEach(uint);
-      if (typeof wasm.hwpx_edit_field_label_display_text !== "function") throw new Error("HwpxFieldLabelDisplayTextAbiUnavailable");
-      try {
-        if (!wasm.hwpx_edit_field_label_display_text(section, paragraph)) throw memory.error();
-        return new TextDecoder("utf-8", { fatal: true }).decode(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
-      } finally { wasm.hwpx_edit_output_free(); }
-    },
     setDutmalText(section, node, kind, value) {
       ready(); [section, node].forEach(uint);
       const selected = dutmalKind(kind);
@@ -1167,12 +1167,28 @@ export async function createHwpxEditor(source) {
         if (!wasm.hwpx_edit_set_checkbox_state(section, formNode, ptr, size)) throw memory.error();
       });
     },
-    fieldLabels(section, paragraph) {
-      ready(); uint(section); uint(paragraph);
-      if (typeof wasm.hwpx_edit_field_labels !== "function") throw new Error("HwpxFieldEditAbiUnavailable");
+    fieldLabels,
+    fieldRangeTarget(section, paragraph, start, end) {
+      ready(); [section, paragraph, start, end].forEach(uint);
+      if (end < start) throw new Error("InvalidTextPosition");
+      if (typeof wasm.hwpx_edit_field_range_target !== "function") {
+        const targets = fieldLabels(section, paragraph).filter(t => start >= t.start && end <= t.end);
+        if (targets.length > 1) throw new Error("UnsupportedFieldLabelRange");
+        return targets[0] ?? null;
+      }
       try {
-        if (!wasm.hwpx_edit_field_labels(section, paragraph)) throw memory.error();
-        return decodeFieldTargets(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+        if (!wasm.hwpx_edit_field_range_target(section, paragraph, start, end)) throw memory.error();
+        const targets = decodeFieldTargets(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+        if (targets.length > 1) throw new Error("InvalidFieldTargets");
+        return targets[0] ?? null;
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
+    fieldLabelDisplayText(section, paragraph) {
+      ready(); [section, paragraph].forEach(uint);
+      if (typeof wasm.hwpx_edit_field_label_display_text !== "function") throw new Error("HwpxFieldLabelDisplayTextAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_field_label_display_text(section, paragraph)) throw memory.error();
+        return new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
       } finally { wasm.hwpx_edit_output_free(); }
     },
     manualFormulaResultTargets(section, paragraph) {
