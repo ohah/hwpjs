@@ -4,5 +4,6 @@ export function chartPointLabel(chart, point, ordinal) {
   const binding = chart.bindings?.[ordinal];
   const role = binding?.point === ordinal && Object.hasOwn(roles, binding.role) ? roles[binding.role] : null;
   const series = role && Number.isInteger(binding.series_node) && binding.series_node >= 0 ? ` · 계열 노드 ${binding.series_node}` : "";
-  return `${role ?? `캐시 ${point.cache_node ?? "?"}`}${series} · 포인트 ${point.index} · ${point.kind}`;
+  const level = point.kind === "multilevel_cache" && Number.isInteger(point.level_node) && point.level_node >= 0 && point.level_node <= 0xffffffff ? ` · 단계 노드 ${point.level_node}` : "";
+  return `${role ?? `캐시 ${point.cache_node ?? "?"}`}${series}${level} · 포인트 ${point.index} · ${point.kind}`;
 }

@@ -1,5 +1,12 @@
 # HWPX 차트 값 목록 UI
 
+## 2026-10-16 다단계 범주의 표시 구분
+
+동일 계열·동일 idx가 다른 단계에 있을 때 두 라벨이 완전히 같아지는 반례를 재현했습니다. `chart-point-label`은 multilevel_cache의 유효한 native u32 level_node만 “단계 노드”로 덧붙입니다. 순서/단계명/계열을 추정하거나 XML을 재해석하지 않으며, 부재·음수·분수·비유한·문자열·u32 초과는 표시하지 않습니다. 다른 point 종류는 추가 값을 무시합니다. 값 모델·point ordinal·선택·setter·이력은 변경하지 않았습니다.
+
+main 기반 격리 라벨/표 테스트는4/4·49.048625ms·fail/skip/cancel0·exit0입니다. 실제 작업 트리의 추가 controls 반례6개를 포함한 묶음도10/10·40.2545ms·exit0이나 아직 미공개 controls 테스트까지 이번 라벨 커밋에 포함하지 않습니다. 실제 브라우저·다단계 원본 조판 검증은 별도이며 앞선194개 회귀 이후의 표시 변경으로 구분합니다.
+
+
 `web/preview/chart-point-table.mjs`는 현재 네이티브 chart 조회 응답의 값을 표로 표시하고, 선택한 point ordinal을 기존 차트 편집 폼에 전달합니다. 자체 수정본·값 캐시·XML 해석이나 native 명령을 소유하지 않습니다. 계열/역할 라벨은 기존 `chart-point-label`이 소유합니다.
 
 값 목록은64개씩 페이지로 나눕니다. 원본 point ordinal과 값을 유지하고 미지원 종류도 읽기 전용으로 표시합니다. 선택은 현재 readiness와 point 종류를 다시 검사하고, 분리된 이전 row·잘못된 ordinal·닫힌 controller는 거부합니다. point 선택만으로 native 값을 변경하지 않습니다. 실제 변경은 기존 폼의 적용 버튼과 setter/history/save 경로를 사용합니다.
