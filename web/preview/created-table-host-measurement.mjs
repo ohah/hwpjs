@@ -6,7 +6,7 @@ import { projectCreatedHostTextAnchors } from "./created-host-text-anchors.mjs";
 import { displayRunText } from "./text-measurement.mjs";
 
 // Measured dimensions are derived from native cell values by the caller.
-export function measureCreatedTableHost(source, entries, width, measure, { maxRows = 20000 } = {}) {
+export function measureCreatedTableHost(source, entries, width, measure, { maxRows = 20000, sourceTextAnchorUnits = [] } = {}) {
   const unavailable = error => ({ state: "unavailable", error });
   if (!Array.isArray(entries) || !entries.length || !Number.isSafeInteger(maxRows) || maxRows < 1 || typeof measure !== "function") return unavailable("InvalidCreatedTableHostMeasurement");
   let projection;
@@ -16,7 +16,7 @@ export function measureCreatedTableHost(source, entries, width, measure, { maxRo
     throw error;
   }
   let retained;
-  try { retained = projectCreatedHostTextAnchors(source, projection); }
+  try { retained = projectCreatedHostTextAnchors(source, projection, sourceTextAnchorUnits); }
   catch (error) { if (error.message === "UnsupportedCreatedTableHostControls") return unavailable(error.message); throw error; }
   if (source.automaticNumberPrefixes?.length && (source.automaticNumberPrefixes.length !== 1 || storedAutomaticNumberText(source.automaticNumberPrefixes[0].source) === null)) return unavailable("UnsupportedCreatedTableHostNumberPrefix");
   const byIdentity = new Map(entries.map(entry => [entry.table.identity, entry]));

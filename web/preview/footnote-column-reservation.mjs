@@ -8,8 +8,10 @@ export function createFootnoteColumnReservation(notes, policy, separatorHeight) 
       || !Number.isSafeInteger(note.anchorUnit) || note.anchorUnit < 0)) return unavailable("InvalidFootnoteReservation");
   const notesFor = (rows, pageOrdinal, columnOrdinal, candidate) => notes.filter(note =>
     rows.some(row => row.pageOrdinal === pageOrdinal && row.columnOrdinal === columnOrdinal && references(row, note)) || candidate && references(candidate, note));
-  const references = (row, note) => row?.kind === "text" && row.section === note.section && row.paragraph === note.hostParagraph
+  const referencesText = (row, note) => row?.kind === "text" && row.section === note.section && row.paragraph === note.hostParagraph
     && Number.isSafeInteger(row.startUnit) && Number.isSafeInteger(row.endUnit) && row.startUnit <= note.anchorUnit && note.anchorUnit < row.endUnit;
+  const references = (row, note) => referencesText(row, note) || row?.createdHost !== undefined
+    && Array.isArray(row.referenceRows) && row.referenceRows.some(source => referencesText(source, note));
   const columnBottom = (candidate, { column, pageOrdinal, columnOrdinal, placedRows }) => {
     const selected = notesFor(placedRows, pageOrdinal, columnOrdinal, candidate);
     if (!selected.length) return column.y + column.height;

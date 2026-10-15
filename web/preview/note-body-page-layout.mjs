@@ -7,6 +7,8 @@ import { layoutContent } from "./layout.mjs";
 import { paginateBodyRows } from "./page-row-flow.mjs";
 import { pageReferenceBoxes } from "./page-reference-boxes.mjs";
 import { pageParagraphCoverage } from "./page-paragraph-coverage.mjs";
+import { measureCreatedBodyFlow, projectCreatedBodyFlow } from "./created-body-flow-measurement.mjs";
+import { createdTableIdentity } from "../../js/created-table-identity.mjs";
 
 // 본문·각주·미주의 조립만 소유합니다. 원본 정책과 측정·예약은 공통 모듈을 사용합니다.
 export function layoutNoteBodyPages(content, measure, maxRows = 20000) {
@@ -18,7 +20,19 @@ export function layoutNoteBodyPages(content, measure, maxRows = 20000) {
   const flows = content.paragraphFlows ?? [];
   if (flows.some(flow => flow.section !== setting.section_ordinal || !["body", "footnote", "endnote"].includes(flow.host)
     || flow.column_declaration?.count > 1)) return unavailable("UnsupportedNotePageFlow");
-  const measured = measureNoteBodies(content, reference.boxes.page.width, measure, maxRows);
+  const bodyIds = new Set(flows.filter(flow => flow.host === "body").map(flow => flow.paragraph));
+  if (content.createdTables !== undefined && !Array.isArray(content.createdTables)) return unavailable("InvalidCreatedTableNoteOwner");
+  const identities = new Set();
+  for (const table of content.createdTables ?? []) {
+    try { createdTableIdentity(table?.identity); } catch { return unavailable("InvalidCreatedTableNoteOwner"); }
+    if (identities.has(table.identity)) return unavailable("AmbiguousCreatedTableNoteOwner");
+    identities.add(table.identity);
+  }
+  const bodyTables = (content.createdTables ?? []).filter(table => table.section === setting.section_ordinal && bodyIds.has(table.hostParagraph));
+  if (bodyTables.length && (content.window || ["rectangles", "checkBoxes", "charts"].some(key => content[key]?.length))) return unavailable("UnsupportedCreatedTablePageObjects");
+  if (bodyTables.length && (content.hwp5PageNumberSource?.page_controls?.length || content.hwp5PageNumberSource?.section_starts?.length)) return unavailable("UnsupportedCreatedTablePageControls");
+  const bodyIdentities = new Set(bodyTables.map(table => table.identity));
+  const measured = measureNoteBodies({ ...content, createdTables: (content.createdTables ?? []).filter(table => !bodyIdentities.has(table.identity)) }, reference.boxes.page.width, measure, maxRows);
   if (measured.state !== "measured") return measured;
   const footnotes = measured.notes.filter(note => note.kind === "footnote"), endnotes = measured.notes.filter(note => note.kind === "endnote");
   const policies = new Map(), separators = new Map();
@@ -40,11 +54,13 @@ export function layoutNoteBodyPages(content, measure, maxRows = 20000) {
     const overhead = note.kind === "footnote" ? policy.aboveLine + separator.height + policy.belowLine : 0;
     if (note.height + overhead > reference.boxes.page.height) return unavailable("CreatedNotePageHeightOverflow");
   }
-  const bodyIds = new Set(flows.filter(flow => flow.host === "body").map(flow => flow.paragraph));
   const body = content.paragraphs.filter(paragraph => bodyIds.has(paragraph.paragraph));
   const bodyBudget = maxRows - measured.rowCount;
   if (bodyBudget < 1) return unavailable("NotePageLayoutLimit");
-  const bodyFlow = layoutContent({ paragraphs: body, limited: false }, reference.boxes.page.width, measure, bodyBudget, { documentBody: true });
+  const bodyFlow = bodyTables.length ? measureCreatedBodyFlow({ ...content, paragraphs: body, createdTables: bodyTables,
+    boundNoteReferences: content.format === "hwp5" ? measured.notes : [] }, reference.boxes.page.width, measure, bodyBudget)
+    : layoutContent({ paragraphs: body, limited: false }, reference.boxes.page.width, measure, bodyBudget, { documentBody: true });
+  if (bodyFlow.state === "unavailable") return bodyFlow;
   if (bodyFlow.limited) return unavailable("NotePageLayoutLimit");
   const rows = [...bodyFlow.rows], pageFlows = flows.filter(flow => flow.host === "body");
   if (endnotes.length) {
@@ -68,14 +84,17 @@ export function layoutNoteBodyPages(content, measure, maxRows = 20000) {
   if (rows.length + footnotes.reduce((sum, note) => sum + note.rows.length, 0) > maxRows) return unavailable("NotePageLayoutLimit");
   const reservation = footnotes.length ? createFootnoteColumnReservation(footnotes, policies.get("footnote"), separators.get("footnote").height) : null;
   if (reservation && reservation.state !== "ready") return reservation;
-  if (reservation && content.createdTables?.length) for (const row of rows.filter(row => row.kind === "text")) {
+  if (reservation && content.createdTables?.length) for (const row of rows.filter(row => row.kind === "text" || row.createdHost !== undefined)) {
     const bottom = reservation.columnBottom(row, { column: reference.boxes.page, pageOrdinal: 0, columnOrdinal: 0, placedRows: [] });
     if (!Number.isFinite(bottom)) return unavailable("InvalidCreatedNotePageReservation");
     if (row.height > bottom - reference.boxes.page.y) return unavailable("CreatedNotePageHeightOverflow");
   }
   const page = paginateBodyRows(rows, setting, pageFlows, { maxRows, columnBottom: reservation?.columnBottom });
   if (page.state !== "paginated" || page.limited) return page;
-  const resultRows = page.rows.filter(row => row.createdNoteNode === undefined), noteSeparators = [], boxes = [], hostNumberPrefixes = [];
+  const projectedBody = bodyTables.length ? projectCreatedBodyFlow(bodyFlow, page.rows, maxRows) : null;
+  if (projectedBody && projectedBody.state !== "projected") return projectedBody;
+  const resultRows = (projectedBody?.rows ?? page.rows).filter(row => row.createdNoteNode === undefined), noteSeparators = [],
+    boxes = [...(projectedBody?.boxes ?? [])], hostNumberPrefixes = [...(projectedBody?.hostNumberPrefixes ?? [])];
   const placement = (item, physical, x, y) => ({ ...item, x: item.x + x, y: item.y + y, pageOrdinal: physical.ordinal, columnOrdinal: 0,
     referenceBoxes: { paper: physical.paper, page: physical.page, column: physical.page },
     ...(item.pageClip ? { pageClip: { ...item.pageClip, x: item.pageClip.x + x, y: item.pageClip.y + y } } : {}) });
@@ -104,6 +123,6 @@ export function layoutNoteBodyPages(content, measure, maxRows = 20000) {
   const coverage = pageParagraphCoverage(content.paragraphs, resultRows.filter(row => !row.createdCell && (row.kind !== "text" || row.startUnit < row.endUnit || texts.get(`${row.section}:${row.paragraph}`) === "")));
   if (coverage.state !== "complete") return coverage;
   return { ...page, rows: resultRows.toSorted((a, b) => a.pageOrdinal - b.pageOrdinal || a.y - b.y || a.x - b.x), noteSeparators, boxes, hostNumberPrefixes,
-    ...(content.createdTables?.length ? { createdTablesPaginated: true, createdCellParagraphs: measured.notes.flatMap(note => note.createdCellParagraphs) } : {}),
+    ...(content.createdTables?.length ? { createdTablesPaginated: true, createdCellParagraphs: [...(projectedBody?.createdCellParagraphs ?? []), ...measured.notes.flatMap(note => note.createdCellParagraphs)] } : {}),
     spatialRows: true, pageLayoutMode: content.createdTables?.length ? "measured-note-created-inline" : "measured-note-body" };
 }

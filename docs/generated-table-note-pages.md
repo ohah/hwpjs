@@ -16,7 +16,19 @@ softline02 후보의 실제 HWP5 anchor-display와 HWPX note-prefix-worker, 새 
 
 각주 표 높이는 기존 footnote reservation에 포함하며 노트 영역 확정 때 셀 box·clip·번호를 한 번만 이동합니다. 생성 표가 있는 미주는 현재 whole-note 슬롯 하나를 페이지 커서에 예약한 뒤 원문/셀/번호를 함께 투영합니다. 큰 객체를 셀 안에서 나누거나 큰 노트를 여러 페이지에 분할한 것은 아닙니다. 페이지보다 큰 노트 표는 `CreatedNotePageHeightOverflow`로 빠르게 거부하고 native 값과 블록 fallback을 유지합니다.
 
-생성 표가 노트 밖의 본문에도 함께 있거나, 노트 내부의 강제 쪽/단 나눔·다단·미지원 생성 옵션은 아직 거부합니다. source note owner/identity 부재·비정규 u64·중복 identity도 명시적 오류입니다. 원문 coverage에서 생성 셀을 별도 namespace로 제외하고 노트 원문 전체를 검증합니다. 출력 행 예산은 번호 레이어까지 포함합니다.
+노트 내부의 강제 쪽/단 나눔·다단·미지원 생성 옵션은 아직 거부합니다. source note owner/identity 부재·비정규 u64·중복 identity도 명시적 오류입니다. 원문 coverage에서 생성 셀을 별도 namespace로 제외하고 노트 원문 전체를 검증합니다. 출력 행 예산은 번호 레이어까지 포함합니다.
+
+## 본문 표와 노트 표의 동시 배치
+
+`created-body-flow-measurement.mjs`가 일반 본문과 노트 문서의 생성 표 측정·물리 페이지 투영을 함께 소유합니다. 기존 인라인 경로에서 분리한 같은 구현이며, 본문 행마다 한 높이만 예약하고 원문 행/셀/번호 레이어를 확정 위치로 투영합니다. 문단 전체를 한 객체로 묶거나 source 편집 좌표를 바꾸지 않습니다.
+
+`note-body-page-layout.mjs`는 본문 표와 노트 표를 소유 문단으로 분리하고 전역 identity 중복을 먼저 검사합니다. 노트 측정기는 계속 노트 표만 받습니다. 본문 표가 있는 행의 원문 참조 조각은 `referenceRows`에 보존하며 `footnote-column-reservation.mjs`는 그 조각의 실제 section/paragraph/unit 범위로 각주 높이를 예약합니다. 생성 셀의 문자열/가짜 source 번호를 각주 참조로 해석하지 않습니다. 예약 후보는 이전 페이지에 캐시하지 않습니다.
+
+HWP5 본문의 native 각주 참조는 기존 binding이 검증한 위치만 `sourceTextAnchorUnits`로 전달합니다. 번호 값을 합성하거나 HWPX XML 보고서를 만들지 않고 기존 원문 U+FFFC 표시/폭을 유지합니다. 이것은 한글 원본 번호 glyph의 완전한 표시 구현을 뜻하지 않습니다. 해당 위치와 숨김 제어가 겹치거나 위치가 잘못되면 거부합니다. 기존 그림/차트 혼합·쪽 번호 제어 등 미지원 조합을 이 경로에서 우회하지 않습니다.
+
+실제 footnote-endnote의 HWP5/HWPX 각각에서 본문1·각주2·미주2의 생성 표5개, Canvas controller 생성/입력, 모서리 hit/원문 coverage/쪽 범위·본문과 각주 영역 비겹침,10회 undo 원본 바이트·10회 redo 저장 바이트, 저장본 재열기의5셀 문자열을 검사합니다. DOM/Canvas는 대역이고 새 브라우저·디바이스는 실행하지 않았습니다. 순수 예약 반례는 페이지/단/section/소유 문단이 다른 참조를 예약하지 않는 것과 같은 행의 참조2개 합산·입력 불변을 확인합니다. 본문/노트 사이 중복 identity와 작은 행 예산도 거부합니다.
+
+게시 코드만 분리한 HEAD 의존성+기본 WASM에서 혼합 worker/예약/원문 제어/기존 인라인 페이지/기존 노트 worker/노트 영역6파일16/16·실패/skip/cancel0·exit0입니다. 최초 분리 환경의 parashape fixture 누락은 추출 목록을 고친 뒤 같은6파일을 다시 실행했으며, 누락 실행은 통과로 계수하지 않습니다. 후보 softline02의 HWP5/HWPX 혼합 worker2파일도 재열기까지2/2·exit0입니다. 같은 새 HWPX 혼합 테스트를 수정 전 소스에서 실행하면 첫 본문 표가 UnsupportedCreatedTableNoteOwner/블록 fallback으로 실패하여 부정 대조가 됩니다. 독립 CFB/XML 저장 보존은 앞선 네 노트 검사를 따르며 새 혼합 표 검사는 같은 엔진 저장/재열기/이력 증거와 구분합니다.
 
 ## 검증
 
