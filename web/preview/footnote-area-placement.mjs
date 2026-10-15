@@ -12,20 +12,32 @@ export function placeFootnoteArea(notes, policy, column, occupiedBottom, separat
   if (!Number.isFinite(height)) return unavailable("InvalidFootnoteArea");
   const top = policy.beneathText ? occupiedBottom : column.y + column.height - height;
   if (top < occupiedBottom || top + height > column.y + column.height) return unavailable("FootnoteAreaOverflow");
-  const rows = [], owners = new Set();
+  const rows = [], boxes = [], numberPrefixes = [], owners = new Set();
   let cursor = top + policy.aboveLine + separatorHeight + policy.belowLine;
   for (const note of notes) {
     if (owners.has(note.noteNode)) return unavailable("AmbiguousFootnoteArea");
     owners.add(note.noteNode);
     for (const row of note.rows) {
-      if (rows.length >= maxRows) return unavailable("FootnoteAreaLimit");
+      if (rows.length + numberPrefixes.length >= maxRows) return unavailable("FootnoteAreaLimit");
       if (!row || ![row.y, row.height, row.x ?? 0].every(Number.isFinite) || row.y < 0 || row.height <= 0 || row.y + row.height > note.height) return unavailable("InvalidFootnoteArea");
-      const projected = { ...row, x: column.x + (row.x ?? 0), y: cursor + row.y };
+      const projected = { ...row, x: column.x + (row.x ?? 0), y: cursor + row.y,
+        ...(row.pageClip ? { pageClip: { ...row.pageClip, x: column.x + row.pageClip.x, y: cursor + row.pageClip.y } } : {}) };
       if (![projected.x, projected.y, projected.y + row.height].every(Number.isFinite)) return unavailable("InvalidFootnoteArea");
       rows.push(projected);
     }
+    for (const [key, output] of [["boxes", boxes], ["numberPrefixes", numberPrefixes]]) {
+      if (note[key] !== undefined && !Array.isArray(note[key])) return unavailable("InvalidFootnoteArea");
+      for (const item of note[key] ?? []) {
+        if (key === "boxes" && boxes.length >= maxRows) return unavailable("FootnoteAreaLimit");
+        if (rows.length + numberPrefixes.length >= maxRows && key === "numberPrefixes") return unavailable("FootnoteAreaLimit");
+        if (!item || ![item.x, item.y, item.height, item.x + (item.width ?? 0), item.y + item.height].every(Number.isFinite)
+            || item.y < 0 || item.height <= 0 || item.y + item.height > note.height
+            || key === "boxes" && (!Number.isFinite(item.width) || item.width <= 0 || item.x < 0 || item.x + item.width > column.width + 1e-8)) return unavailable("InvalidFootnoteArea");
+        output.push({ ...item, x: column.x + item.x, y: cursor + item.y });
+      }
+    }
     cursor += note.height + policy.betweenNotes;
   }
-  return { state: "placed", rows, area: { x: column.x, y: top, width: column.width, height },
+  return { state: "placed", rows, boxes, numberPrefixes, area: { x: column.x, y: top, width: column.width, height },
     separatorY: top + policy.aboveLine, bodyBottom: top, spatialRows: true };
 }

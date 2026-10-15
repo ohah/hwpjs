@@ -17,7 +17,11 @@ import { layoutCreatedTableInlinePages } from "./created-table-inline-page-layou
 export function layoutPageContent(content, measure, maxRows = 20000, { pageNumbers } = {}) {
   const unavailable = error => ({ state: "unavailable", error });
   if (content.pageSettingsError || content.paragraphFlowErrors?.length || !content.pageSettings?.length) return unavailable("AmbiguousPageSettings");
-  if (content.createdTables?.length) return pageNumbers === undefined ? layoutCreatedTableInlinePages(content, measure, maxRows) : unavailable("UnsupportedCreatedTablePageNumbers");
+  if (content.createdTables?.length) {
+    if (pageNumbers !== undefined) return unavailable("UnsupportedCreatedTablePageNumbers");
+    return content.paragraphFlows?.some(flow => ["footnote", "endnote"].includes(flow.host))
+      ? layoutNoteBodyPages(content, measure, maxRows) : layoutCreatedTableInlinePages(content, measure, maxRows);
+  }
   if (content.hwp5PageNumberSource?.page_controls?.length) {
     if (pageNumbers !== undefined) return unavailable("UnsupportedHwp5ControlledPageOverride");
     return layoutHwp5ControlledPages(content, measure, maxRows, layoutPageContent);

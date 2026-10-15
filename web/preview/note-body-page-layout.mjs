@@ -35,6 +35,11 @@ export function layoutNoteBodyPages(content, measure, maxRows = 20000) {
     if (separator.state !== "selected") return separator;
     policies.set(kind, policy); separators.set(kind, separator);
   }
+  for (const note of measured.notes.filter(note => note.boxes.length)) {
+    const policy = policies.get(note.kind), separator = separators.get(note.kind);
+    const overhead = note.kind === "footnote" ? policy.aboveLine + separator.height + policy.belowLine : 0;
+    if (note.height + overhead > reference.boxes.page.height) return unavailable("CreatedNotePageHeightOverflow");
+  }
   const bodyIds = new Set(flows.filter(flow => flow.host === "body").map(flow => flow.paragraph));
   const body = content.paragraphs.filter(paragraph => bodyIds.has(paragraph.paragraph));
   const bodyBudget = maxRows - measured.rowCount;
@@ -47,11 +52,13 @@ export function layoutNoteBodyPages(content, measure, maxRows = 20000) {
     for (const [index, note] of endnotes.entries()) {
       const height = index === 0 ? policy.aboveLine + separator.height + policy.belowLine : policy.betweenNotes;
       let firstTextHeight = 0;
-      for (const row of note.rows) { firstTextHeight += row.height; if (row.kind === "text") break; }
+      if (note.boxes.length) firstTextHeight = note.height;
+      else for (const row of note.rows) { firstTextHeight += row.height; if (row.kind === "text") break; }
       if (height > 0) rows.push({ kind: "gap", text: "", section: note.section, paragraph: note.paragraphs[0], height,
         keepNextHeight: firstTextHeight,
         ...(index === 0 ? { noteSeparator: { ...separator, offset: policy.aboveLine } } : {}) });
-      rows.push(...note.rows);
+      if (note.boxes.length) rows.push({ kind: "gap", section: note.section, paragraph: note.paragraphs[0], height: note.height, createdNoteNode: note.noteNode });
+      else rows.push(...note.rows);
       for (const paragraph of note.paragraphs) {
         const source = flows.find(flow => flow.section === note.section && flow.paragraph === paragraph);
         pageFlows.push({ ...source, host: "body", top_level: true });
@@ -61,9 +68,24 @@ export function layoutNoteBodyPages(content, measure, maxRows = 20000) {
   if (rows.length + footnotes.reduce((sum, note) => sum + note.rows.length, 0) > maxRows) return unavailable("NotePageLayoutLimit");
   const reservation = footnotes.length ? createFootnoteColumnReservation(footnotes, policies.get("footnote"), separators.get("footnote").height) : null;
   if (reservation && reservation.state !== "ready") return reservation;
+  if (reservation && content.createdTables?.length) for (const row of rows.filter(row => row.kind === "text")) {
+    const bottom = reservation.columnBottom(row, { column: reference.boxes.page, pageOrdinal: 0, columnOrdinal: 0, placedRows: [] });
+    if (!Number.isFinite(bottom)) return unavailable("InvalidCreatedNotePageReservation");
+    if (row.height > bottom - reference.boxes.page.y) return unavailable("CreatedNotePageHeightOverflow");
+  }
   const page = paginateBodyRows(rows, setting, pageFlows, { maxRows, columnBottom: reservation?.columnBottom });
   if (page.state !== "paginated" || page.limited) return page;
-  const resultRows = [...page.rows], noteSeparators = [];
+  const resultRows = page.rows.filter(row => row.createdNoteNode === undefined), noteSeparators = [], boxes = [], hostNumberPrefixes = [];
+  const placement = (item, physical, x, y) => ({ ...item, x: item.x + x, y: item.y + y, pageOrdinal: physical.ordinal, columnOrdinal: 0,
+    referenceBoxes: { paper: physical.paper, page: physical.page, column: physical.page },
+    ...(item.pageClip ? { pageClip: { ...item.pageClip, x: item.pageClip.x + x, y: item.pageClip.y + y } } : {}) });
+  for (const slot of page.rows.filter(row => row.createdNoteNode !== undefined)) {
+    const note = endnotes.find(note => note.noteNode === slot.createdNoteNode), physical = page.pages[slot.pageOrdinal];
+    if (!note || !physical) return unavailable("MissingCreatedNotePageOwner");
+    resultRows.push(...note.rows.map(row => placement(row, physical, slot.x, slot.y)));
+    boxes.push(...note.boxes.map(box => placement(box, physical, slot.x, slot.y)));
+    hostNumberPrefixes.push(...note.numberPrefixes.map(prefix => ({ ...placement(prefix, physical, slot.x, slot.y), pageClip: physical.page })));
+  }
   for (const row of page.rows) if (row.noteSeparator?.height > 0) noteSeparators.push({ x: row.x, y: row.y + row.noteSeparator.offset, width: row.noteSeparator.width, height: row.noteSeparator.height, color: row.noteSeparator.color, pageOrdinal: row.pageOrdinal });
   if (reservation) for (const physical of page.pages) {
     const selected = reservation.notesFor(page.rows, physical.ordinal, 0);
@@ -72,10 +94,16 @@ export function layoutNoteBodyPages(content, measure, maxRows = 20000) {
     const placed = placeFootnoteArea(selected, policies.get("footnote"), physical.page, occupied, separators.get("footnote").height, maxRows - resultRows.length);
     if (placed.state !== "placed") return placed;
     resultRows.push(...placed.rows.map(row => ({ ...row, pageOrdinal: physical.ordinal, columnOrdinal: 0, referenceBoxes: { paper: physical.paper, page: physical.page, column: physical.page } })));
+    boxes.push(...placed.boxes.map(box => ({ ...box, pageOrdinal: physical.ordinal, columnOrdinal: 0, referenceBoxes: { paper: physical.paper, page: physical.page, column: physical.page } })));
+    hostNumberPrefixes.push(...placed.numberPrefixes.map(prefix => ({ ...prefix, pageOrdinal: physical.ordinal, columnOrdinal: 0, pageClip: physical.page, referenceBoxes: { paper: physical.paper, page: physical.page, column: physical.page } })));
     const separator = separators.get("footnote");
     if (separator.height > 0) noteSeparators.push({ x: physical.page.x, y: placed.separatorY, width: separator.width, height: separator.height, color: separator.color, pageOrdinal: physical.ordinal });
   }
-  const coverage = pageParagraphCoverage(content.paragraphs, resultRows);
+  if (resultRows.length + hostNumberPrefixes.length > maxRows) return unavailable("NotePageLayoutLimit");
+  const texts = new Map(content.paragraphs.map(p => [`${p.section}:${p.paragraph}`, p.text]));
+  const coverage = pageParagraphCoverage(content.paragraphs, resultRows.filter(row => !row.createdCell && (row.kind !== "text" || row.startUnit < row.endUnit || texts.get(`${row.section}:${row.paragraph}`) === "")));
   if (coverage.state !== "complete") return coverage;
-  return { ...page, rows: resultRows.toSorted((a, b) => a.pageOrdinal - b.pageOrdinal || a.y - b.y || a.x - b.x), noteSeparators, spatialRows: true, pageLayoutMode: "measured-note-body" };
+  return { ...page, rows: resultRows.toSorted((a, b) => a.pageOrdinal - b.pageOrdinal || a.y - b.y || a.x - b.x), noteSeparators, boxes, hostNumberPrefixes,
+    ...(content.createdTables?.length ? { createdTablesPaginated: true, createdCellParagraphs: measured.notes.flatMap(note => note.createdCellParagraphs) } : {}),
+    spatialRows: true, pageLayoutMode: content.createdTables?.length ? "measured-note-created-inline" : "measured-note-body" };
 }
