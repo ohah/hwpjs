@@ -116,6 +116,7 @@ pub fn build(b: *std.Build) void {
     hwpx_text_tests.addArg("tests/hwpx/manual-formula-result-text-worker.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/manual-formula-result-exterior.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/manual-formula-dependency-preservation.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/created-table-formula-host.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/manual-result-oracle-section.test.mjs");
     hwpx_text_tests.step.dependOn(b.getInstallStep());
     hwpx_text_tests.has_side_effects = true;

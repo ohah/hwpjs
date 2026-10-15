@@ -29,6 +29,15 @@ pub fn read(a: std.mem.Allocator, session: *const @import("editor_session.zig").
 
 /// Flat transient sessions must not enter structural serialization again.
 pub fn readFlat(a: std.mem.Allocator, session: *const @import("editor_session.zig").Session, section_index: usize) !Snapshot {
+    return readFlatMode(a, session, section_index, true);
+}
+
+/// Serialization validation must evaluate inputs, not merely preserve source displays.
+pub fn readFlatEvaluated(a: std.mem.Allocator, session: *const @import("editor_session.zig").Session, section_index: usize) !Snapshot {
+    return readFlatMode(a, session, section_index, false);
+}
+
+fn readFlatMode(a: std.mem.Allocator, session: *const @import("editor_session.zig").Session, section_index: usize, preserve_source_display: bool) !Snapshot {
     if (section_index >= session.sections.len) return error.InvalidSectionIndex;
     const section = &session.sections[section_index];
     if (section.structure_values != null) return error.InvalidFlatFormulaSnapshot;
@@ -37,7 +46,7 @@ pub fn readFlat(a: std.mem.Allocator, session: *const @import("editor_session.zi
     const trees = try a.alloc(@import("xml_part_tree.zig").Tree, session.sections.len);
     defer a.free(trees);
     for (session.sections, trees) |value, *tree| tree.* = value.tree;
-    const prepared = try @import("formula_section_prepare.zig").prepare(a, trees, section_index, &section.sites, .{ .only_changed = false, .branch_policy = @import("editor_session.zig").siteOptions(session.options).branch_policy, .definitions = &section.formula_definitions, .result_overrides = &section.formula_result_overrides, .source_display_options = @import("editor_session.zig").siteOptions(session.options) });
+    const prepared = try @import("formula_section_prepare.zig").prepare(a, trees, section_index, &section.sites, .{ .only_changed = false, .branch_policy = @import("editor_session.zig").siteOptions(session.options).branch_policy, .definitions = &section.formula_definitions, .result_overrides = &section.formula_result_overrides, .source_display_options = if (preserve_source_display) @import("editor_session.zig").siteOptions(session.options) else null });
     errdefer {
         for (prepared) |*field| field.deinit(a);
         a.free(prepared);

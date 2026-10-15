@@ -12,7 +12,7 @@ pub fn validate(session: *const @import("editor_session.zig").Session, saved: []
     defer reopened.deinit();
     for (reopened.sections, 0..) |section, index| {
         if (!try @import("formula_section_save.zig").hasFormula(session.allocator, &section.tree)) continue;
-        var result = try @import("formula_current_snapshot.zig").read(session.allocator, &reopened, index);
+        var result = try @import("formula_current_snapshot.zig").readFlatEvaluated(session.allocator, &reopened, index);
         defer result.deinit(session.allocator);
     }
 }
