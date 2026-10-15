@@ -4,11 +4,18 @@
 
 `hwp5/ole/stream_replace.zig`의 `replaceManyExact`는 이미 압축 해제된 HWP OLE BinData 한 개에서 내부 CFB stream 여러 개를 원자적으로 교체합니다. 기존 strict OLE container open과 공통 [CFB 원자적 다중 교체](cfb-atomic-stream-replacement.md)를 재사용하며 CFB 파싱·경로 비교·compact node mapping·섹터 직렬화를 다시 구현하지 않습니다. 모든 대상을 검증한 뒤 내부 CFB writer를 한 번만 호출합니다. `replaceExact`는 원소 한 개인 batch 호출입니다.
 
+현재 재생성 구현의 단일 출처는 `src/ole/stream_replace.zig`이며 HWP5 진입점은 같은 Options/함수를 re-export합니다. HWPX가 HWP5 선택 규칙에 의존하지 않고 같은 OLE envelope/CFB writer를 사용하도록 책임을 공통 계층으로 옮겼습니다. `rebuildOpened`는 caller가 소유한 strict-open File로 새 envelope 결과만 만들며, 관측 편차의 복사본 정규화 정책을 자동 활성화하거나 문서 변경을 publish하지 않습니다. caller의 명시적 정규화 결과·원본 오류 기록은 별도 정책 계층이 계속 소유합니다.
+
 입력의 `raw_cfb` 또는 `observed_size_prefix` 배치를 caller가 명시하며 출력도 같은 배치를 유지합니다. CFB major version 3/4, 다른 storage/stream의 내용과 디렉터리 메타데이터를 보존합니다. 물리 섹터 배치와 트리 색상 같은 canonical writer의 정규화 범위는 [CFB API](cfb-reader.md)와 동일합니다.
 
 빈 명령은 `EmptyReplacementSet`, 경로가 없으면 `StreamNotFound`, storage를 선택하면 `NotAStream`, 같은 물리 stream의 경로 별칭 중복은 `DuplicateStreamReplacement`입니다. reader/writer 자원 한도와 별도 최종 envelope 한도를 모두 적용합니다. 최종 한도에서 envelope 4바이트를 제외한 값을 writer 한도와 교차 적용하므로, 한도 초과 결과를 먼저 할당하지 않습니다. 실패 시 입력을 바꾸지 않으며 결과를 반환하지 않습니다. 새 결과는 caller 소유입니다.
 
 ## 검증
+
+main `3cc891ad`의 native 소스와 공통화 두 파일만 합친 집중 바이너리 `6953f0bb1d954628a4fff879ca8061e3636765171f3d7fdf6dc288785ef64302`는 root 포함7/7·fail/skip/logErrors/leaks0·exit0입니다. 별도 차트 후보에서 같은 어댑터를 검증한 `4beac879c6980219454019b0f2557a4c7836ac3c32c7b75c1c65d0d81679ba70`도7/7 통과했습니다. 두 실행 모두1024MiB 감시를 유지했고 빠른 실행의 peak 표본0을 실제 메모리0으로 해석하지 않습니다. 기존 전체 실패 주입·v3/v4·raw/prefix·배치/오류 단언은 바꾸지 않았습니다.
+
+후속 ReleaseSafe 제품 빌드는5/5 단계·exit0이며 차트 후보 WASM은 변경 전후 SHA256 `f6decd1df1fbf38a2926e2b25d69633c323ec7761753a78826dab6cc73cafc78`로 byte-exact입니다. 공통 모듈과 HWP5 호환 진입점의 SSOT 정리이며 실행 중인186선언 전체 검증·새 기능 편집·기본 제품 승격 완료로 계산하지 않습니다.
+
 
 v3/v4와 raw/size-prefix 네 조합에서 4,097바이트 replacement로 MiniFAT 경계를 넘겨 재생성한 뒤 strict CFB로 다시 엽니다. 대소문자가 다른 정확 경로 조회, 교체·형제 stream의 bytes, 부모 storage의 state·생성·수정 시각, 원래 major version과 size prefix를 확인합니다. CFB 규칙상 stream에는 시각 메타데이터를 부여하지 않습니다. 네 조합의 모든 할당 실패 지점도 검사합니다.
 
