@@ -28,3 +28,22 @@ test("unsupported nested host stays diagnosed and generated boxes never select a
   assert.equal(flow.rows[index].createdCell.identity, box.createdCell.identity);
   assert.equal(attachCreatedTableFlow({ createdTables: [] }, base, measure), base);
 });
+
+test("generated tables after one host keep anchor order and stable equal-anchor ownership", () => {
+  const tables = [
+    { ...table(0), identity: "9", anchorUnit: 3 },
+    { ...table(0), identity: "2", anchorUnit: 1 },
+    { ...table(0), identity: "7", anchorUnit: 3 },
+  ];
+  const before = structuredClone({ base, tables });
+  const result = attachCreatedTableFlow({ createdTables: tables }, base, measure);
+  const ordered = [...result.boxes].sort((a, b) => a.y - b.y);
+  assert.deepEqual(ordered.map(box => box.createdCell.identity), ["2", "9", "7"]);
+  for (let i = 1; i < ordered.length; i++) assert(ordered[i].y >= ordered[i - 1].y + ordered[i - 1].height);
+  for (const box of ordered) {
+    const row = result.rows[rowAtPoint(result, box.x + 2, box.y + 2)];
+    assert.equal(row.createdCell.identity, box.createdCell.identity);
+    assert.equal(row.pageClip.y, box.y);
+  }
+  assert.deepEqual({ base, tables }, before);
+});

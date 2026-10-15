@@ -8,15 +8,19 @@ export function attachCreatedTableFlow(content, base, measure, maxRows = 20000) 
   const rows = base.rows.map(row => ({ ...row }));
   const boxes = (base.boxes ?? []).map(box => ({ ...box }));
   const paragraphs = [], unavailable = [];
+  const trailingBoxes = new Map();
   const flowPictures = base.flowPictures?.map(picture => ({ ...picture, rectangle: { ...picture.rectangle } }));
   let height = base.height;
-  for (const table of content.createdTables) {
+  const tables = [...content.createdTables].sort((a, b) => a.section - b.section || a.hostParagraph - b.hostParagraph || a.anchorUnit - b.anchorUnit);
+  for (const table of tables) {
     const host = rows.filter(row => !row.createdCell && row.kind === "text" && row.section === table.section && row.paragraph === table.hostParagraph);
     if (!host.length || host.some(row => row.tableNode !== undefined || row.transform !== undefined || row.pageArea)) {
       unavailable.push({ section: table.section, identity: table.identity, error: "UnsupportedCreatedTableHostLayout" });
       continue;
     }
-    const cut = table.anchorUnit === 0 ? Math.min(...host.map(row => row.y)) : Math.max(...host.map(row => row.y + rowHeight(row)));
+    const key = `${table.section}:${table.hostParagraph}`;
+    const tail = trailingBoxes.get(key);
+    const cut = table.anchorUnit === 0 ? Math.min(...host.map(row => row.y)) : Math.max(...host.map(row => row.y + rowHeight(row)), tail ? tail.y + tail.height + 12 : -Infinity);
     const flow = layoutCreatedTable(table, measure, { x: host[0].x ?? 20, y: cut, maxRows: maxRows - rows.length });
     const shift = flow.height + 12;
     for (const row of rows) if (row.y >= cut) {
@@ -27,6 +31,7 @@ export function attachCreatedTableFlow(content, base, measure, maxRows = 20000) 
     for (const picture of flowPictures ?? []) if (picture.rectangle.y >= cut) picture.rectangle.y += shift;
     rows.push(...flow.rows.map(row => ({ ...row, editable: true, selectable: true })));
     boxes.push(...flow.boxes);
+    if (table.anchorUnit !== 0) trailingBoxes.set(key, flow.boxes.reduce((last, box) => !last || box.y + box.height > last.y + last.height ? box : last, null));
     paragraphs.push(...flow.paragraphs);
     height += shift;
   }
