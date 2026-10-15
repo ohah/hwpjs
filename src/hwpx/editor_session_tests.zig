@@ -171,7 +171,7 @@ test "HWPX editor session releases partial allocations through open edit save re
     const a = std.testing.allocator;
     const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwpx", a, .limited(2_000_000));
     defer a.free(input);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, source: []const u8) !void {
             var session = try editor.open(allocator, source, .{});
             defer session.deinit();

@@ -1,5 +1,13 @@
 # 큰 문서 테스트의 할당자 진단 비용
 
+## open/edit/save/reopen 전체 실패 주입 (2026-10-16)
+
+e0841a4b 소스의 전체3,959개 바이너리 `64fa1aad233484f45c88f31cb3d29091f85105909cc1017399379c3f7ca94b8e`는2,462개 완료 후 index2462 `HWPX editor session releases partial allocations through open edit save reopen`에서 peak1,101,513,856바이트로1024MiB 관측 기준을 넘어 incomplete·exit1입니다. 앞선 underline의45,011 실패 지점 순회는 종료 후 후속 테스트로 진행했습니다. guardian/batch/native PID74154/74156/74160/43503 부재를 확인했습니다.
+
+mainf8ff0b26 의존성의 집중 baseline `83b7be93551a7ca5d249cf37d944b7e83307a063835dac7d44a87f3af75f60be`도 같은한도에서 peak1,111,082,112바이트로 중단·exit1을 재현했습니다. 해당 실패 주입 호출 한 줄만 `allocation_failures.check`로 연결하고 fixture/Unicode 입력/open/save/reopen/모든 문자열 동치 단언과 전체 실패 인덱스를 유지했습니다. 제품 코드와1024MiB 기준은 변경하지 않았습니다.
+
+수정 집중 바이너리 `7645900a71484ad458a68a105a82500cf4b30132f0ba116975f8875ee49dd73e`는 root 포함2/2·fail/skip/log/leak0·exit0·관측 peak14,795,112바이트입니다. std allocator의 per-allocation 진단 비용 대조이며 제품 메모리 개선이나 전체 native 완료가 아닙니다. 실제 분리 경로는 `/tmp/hwpjs-nested-source-publication.fviyjz/open-edit-main-{baseline,checked}`입니다.
+
 ## 체크포인트 전체 실패 주입
 
 main143b6b2f 전체 바이너리 `ffae8b9436cb8bba4e53e7fda7289f2c09cd7c5a4cb75438e4f400a9ed667efa`의 3,957개 실행은 2,446개 완료 후 index2446 `HWPX checkpoint capture allocation failures preserve current model`에서 OS 관측 peak1,154,319,536바이트로 1024MiB 기준을 넘겨 종료됐습니다. 최종 incomplete·guardStopped=true·exit1이며 guardian/batch/native PID16552/16563/71055 부재를 확인했습니다. 느린 index889는 이후 정상 진행했으므로 해당 검사를 무한 루프나 자원 실패로 분류하지 않습니다.
