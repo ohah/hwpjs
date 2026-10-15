@@ -1,5 +1,7 @@
 # 참조 문서의 전체 reader 응답 회귀 비교
 
+편집 감사의 디스크 부족 중단과 별도 후보의 해당 지점 재검증은 [독립 검사 입력의 디스크 부족](reference-oracle-disk-failure.md)을 따릅니다. reader 응답 일치와 편집 전수 완료는 별도 판정입니다.
+
 ## 책임과 판정
 
 `tools/reference-reader-parity-audit.mjs`는 실제 signature로 HWP5/HWPX reader를 선택하고 두 지정 WASM의 전체 reader JSON 해시를 비교합니다. 경로별 입력 hash와 시작/종료 WASM hash의 불변도 확인합니다. 결과 판정은 `reference-reader-parity-result.mjs`가 소유하며 서로 다른 응답/거부,손상된 판정 입력,양쪽의 같은 미예상 실패도 오류입니다. 암호 미제공/미지원 암호/구역 수 불일치의 같은 거부는 matched_refusal로 따로 집계하고 지원 성공으로 바꾸지 않습니다. 실행 명령의 소유자는 [개발·검증 명령](development-commands.md)입니다.
