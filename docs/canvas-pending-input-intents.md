@@ -48,6 +48,8 @@ HWP5/HWPX 각각 실제 거부 뒤 늦은 조합 요청0회·원문 저장 불�
 
 ## 게시 검증 이력
 
+cb5d1b87 후보의975경로 전체 reader 응답 회귀는 [별도 reader 대조 기록](reference-reader-parity.md)이 소유합니다. Canvas/편집 검사의 성공 수에 합산하지 않습니다.
+
 HWP5 parashape.hwp에도 같은 분리 JS/cb5d1b87 후보로 실제 파일 선택·편집 시작·문단5 찾기·keyboard inserttext의 `가가` 교체와 대기 일반0→1/자동 조합0을 수행했습니다. Worker 요청 위치0→1→0,4회undo/redo의 각 응답·다운로드 원본/최종 byte-exact,final 재열기에서5글자와 동일 문단을 확인했습니다. 기본 저장은 LayoutReflowRequired로 거부했고 `allow-stale-layout`을 실제 체크한 뒤 저장했습니다. 동의를 우회하거나 재조판 완료로 계수하지 않습니다.
 
 다운로드 `/tmp/hwpjs-hwp5-pending-ui.R5sBoQ/final.hwp`는 기존 독립 CFB.js/Node expectedSection으로 원본 문단5의0..4 교체 및0→1→0 삽입을 순서대로 재구성한 **전체 구역 바이트**와 같았습니다. CFB 메타데이터·stream 목록·비대상8stream 불변과 잘못된4글자 기대의 거부도 확인했습니다. final SHA-256은 `f9c5cc41dda3dad8551d3bc1034778d13c2748ba9c81d9b6bc0ca66459ac15e8`입니다. 같은 디렉터리 reopened.png를 직접 열어 Canvas 선택 문자열을 확인했고 브라우저 errors 출력은 비어 있었습니다. 조합은 자동 CompositionEvent/InputEvent이며 OS 입력기/한글 원본 조판/전체 HWP5 전수 완료가 아닙니다. 전용 브라우저는 active=false/pid=null/runtime=null,임시 서버PID48231은 종료코드143,19148 listener 없음으로 정리했습니다.
