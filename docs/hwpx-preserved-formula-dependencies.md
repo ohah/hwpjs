@@ -44,3 +44,5 @@ main8df85255의 추적 `src/`2,518파일과 분리 소스를 byte-exact 대조�
 `src/hwpx_created_table_formula_validation_tests.zig`는 기존 두 검사를 선택하는 전용 진입점입니다. ReleaseSafe2/2·exit0은 실제 chart의 수식 셀 삽입 거부·비대상 호스트 삽입·숫자 변경 후156.3·잘못된 숫자 거부/저장 재열기와 검증기의 전체 할당 실패를 유지합니다. 수정 후보 `a4e94bccac00b897c4d60cd137ffa7d519763c997796ee93e0fc63edfa551757`는 ReleaseSafe 제품5/5·exit0, 공개 표/수식 회귀와 표시 전용 의존 결과 회귀2/2·exit0(1874.762625ms)입니다. 기존 표/수식 공개 테스트가 정규 목록에 빠져 있었으므로 HWPX 목록에 추가했습니다. 전체 등록33파일과 이전3,955개 native 실행의 최종 결과는 아직 완료되지 않았으며 이전90개 통과를 이 수정본의 전체 통과로 소급하지 않습니다.
 
 후속 등록33파일의 소스 동결 재실행은91/91·fail/cancel/skip0·exit0(273134.430666ms)입니다. 전후 source SHA-256 `782678288ac8ea5fe7bfac111d6a43e0f16803487d791f4b98f68e105d124308`이 동일하며 같은a4e94 WASM을 사용했습니다. `manual-created-table-validation-registered-33-frozen.log`에 실행 경계를 보관합니다. 자원 사용을 줄이려고 Node 동시성1을 명시했으므로 이전 동시성2 실행과 시간 비교를 하지 않습니다. 이전 전체 native4a611은 알려진index874 실패1건을 포함한 채 계속 실행 중이며 새 수리본의 전체 native 완료를 뜻하지 않습니다.
+
+해당4a611 전수 실행은 이후2,424개 완료 뒤 보호 병합 실패 주입의1024MiB 관측 기준 초과로 종료됐습니다(incomplete·exit1). 중단 근거와 전체 실패 주입을 유지한 테스트 할당자 수정은 [자원 검증 기록](native-allocator-resource-regression.md)이 소유합니다. 실행 중이라는 위 기록은 이 종료 결과로 대체하며, 최신 main 전체 native 통과로 소급하지 않습니다.

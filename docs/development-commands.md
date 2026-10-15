@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+`zig test src/root.zig -O ReleaseSafe --test-filter 'HWPX empty protected merge allocation' --test-no-exec -femit-bin=/absolute/empty-merge-tests` 후 `node tools/zig-native-footprint-audit.mjs --binary=/absolute/empty-merge-tests --batch-size=1 --max-physical-mib=1024`로 보호 병합 전체 실패 주입의 자원 대조를 실행합니다. [중단·수정·검증 경계](native-allocator-resource-regression.md)를 따르며 전체 native 완료나 제품 메모리 개선으로 해석하지 않습니다.
+
 `zig test src/form_source_fixture_test.zig -O ReleaseSafe --test-filter 'observed form source'`는 관측 양식 원문 연결·버전/꼬리/ID 거부·전체 할당 실패를 검사합니다. `HWPJS_TEST_WASM=/absolute/candidate/hwpjs.wasm node --test tests/hwp5/form-source-retention.test.mjs tests/hwp5/form-source-worker.test.mjs tests/hwp5/form-token-boundaries.test.mjs`는 실제7파일1,446문단의 독립 Section/CFB/이력·Worker 대역 입력과1,712토큰 거부입니다. 명시적 후보가 필요하며 [계약·실측·미지원 경계](hwp5-form-source-retention.md)를 따릅니다.
 
 `zig test src/hwpx_created_table_formula_validation_tests.zig -O ReleaseSafe --test-filter 'created table flat formula inputs' --test-filter 'created table saved formula validation'`는 기존 생성 표·수식 저장 의미/OOM 검사를 선택합니다. `HWPJS_TEST_WASM=/absolute/candidate/hwpjs.wasm node --test tests/hwpx/created-table-formula-host.test.mjs tests/hwpx/manual-formula-dependency-preservation.test.mjs`는 의미 검증과 표시 보존의 정합성을 함께 검사합니다. [회귀 원인과 경계](hwpx-preserved-formula-dependencies.md)를 따릅니다.

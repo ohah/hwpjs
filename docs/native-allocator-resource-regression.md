@@ -1,5 +1,13 @@
 # 큰 문서 테스트의 할당자 진단 비용
 
+## 빈 보호 문단 병합의 전체 실패 주입
+
+main8df 기반 전체 바이너리 `4a611cf68060e1020465c5d22a8a2605aea4d97be7b4e90b2cca3661bea01205`는3,955개 중2,424개 완료 후 index2424 `HWPX empty protected merge allocation failures preserve insertion style and original`에서 물리 peak1,150,551,264바이트로1024MiB 관측 기준을 넘었습니다. 최종incomplete·guardStopped=true·exit1이며 종료된 native PID83874와 guardian/batch PID25510/25521의 부재를 확인했습니다. 완료 구간에는 별도로 수정한 생성 표 의미 검증의 단언 실패index874가1건 있었으므로 이 실행을 전체 통과로 읽지 않습니다. 해당 의미 회귀의 수정/공개91검사는 [수식 표시·의미 검증 경계](hwpx-preserved-formula-dependencies.md)가 소유합니다.
+
+중단 테스트의 바깥 fixture/session 범위를 `checked_allocator.run`으로 분리하고 실패 주입은 공통 `allocation_failures.check`에 연결했습니다. 안전 검사와 누수 확인, 전체 실패 인덱스, 빈 삽입 스타일의 start/end1·char_shape_id0, 저장 XML의 charPrIDRef0 및 저장 전후 원문 바이트 동치 단언은 유지했습니다. 제품 merge/serialization 코드는 바꾸지 않았습니다.
+
+수정 후 집중 바이너리 `1f3d3bd168b255d1b860430d39fe4ce2f090a11131e10739d87b2e5c5ca2d756`를 같은batch1/1024MiB 감시로 실행해 root 선언 포함2/2pass·fail/skip/log/leak0·exit0·guardStopped=false·peak4,555,088바이트를 확인했습니다. 이는 테스트 진단/소유 범위 차이의 대조이며 제품 메모리 사용량 개선이나 단일 장기 프로세스 gate 통과가 아닙니다. 한도를 높이거나 실패 지점/단언을 제외하지 않았고, 최신 main 전체 root 재실행은 별도로 필요합니다.
+
 표 생성의 빈 상태/원문/전체 실패 지점을 유지한 후속 검사는 [생성 표 fixture 할당자 검증](native-created-table-staged-resource.md)이 소유합니다.
 
 도형 텍스트 배치의 전체 실패 주입을 유지한 후속 자원 대조는 [배치 스냅샷 자원 검증](native-drawing-snapshot-resource.md)이 소유합니다.

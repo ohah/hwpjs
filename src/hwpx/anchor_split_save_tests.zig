@@ -3,7 +3,10 @@ const editor = @import("editor_session.zig");
 const model = @import("paragraph_structure_values.zig");
 
 test "HWPX empty protected merge allocation failures preserve insertion style and original" {
-    const a = std.testing.allocator;
+    try @import("../testing/checked_allocator.zig").run(emptyProtectedMergeAllocationFailures, .{});
+}
+
+fn emptyProtectedMergeAllocationFailures(a: std.mem.Allocator) !void {
     const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/shapeline.hwpx", a, .limited(4_000_000));
     defer a.free(input);
     var session = try editor.open(a, input, .{});
@@ -15,7 +18,7 @@ test "HWPX empty protected merge allocation failures preserve insertion style an
     const section = &session.sections[0];
     const before = try session.save();
     defer a.free(before);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tree, original: *const model.Values) !void {
             var candidate = try @import("paragraph_structure_merge.zig").prepare(allocator, tree, original, 0, 4_000_000);
             defer candidate.deinit(allocator);
