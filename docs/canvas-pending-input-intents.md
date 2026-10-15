@@ -48,6 +48,10 @@ HWP5/HWPX 각각 실제 거부 뒤 늦은 조합 요청0회·원문 저장 불�
 
 ## 게시 검증 이력
 
+HWP5 parashape.hwp에도 같은 분리 JS/cb5d1b87 후보로 실제 파일 선택·편집 시작·문단5 찾기·keyboard inserttext의 `가가` 교체와 대기 일반0→1/자동 조합0을 수행했습니다. Worker 요청 위치0→1→0,4회undo/redo의 각 응답·다운로드 원본/최종 byte-exact,final 재열기에서5글자와 동일 문단을 확인했습니다. 기본 저장은 LayoutReflowRequired로 거부했고 `allow-stale-layout`을 실제 체크한 뒤 저장했습니다. 동의를 우회하거나 재조판 완료로 계수하지 않습니다.
+
+다운로드 `/tmp/hwpjs-hwp5-pending-ui.R5sBoQ/final.hwp`는 기존 독립 CFB.js/Node expectedSection으로 원본 문단5의0..4 교체 및0→1→0 삽입을 순서대로 재구성한 **전체 구역 바이트**와 같았습니다. CFB 메타데이터·stream 목록·비대상8stream 불변과 잘못된4글자 기대의 거부도 확인했습니다. final SHA-256은 `f9c5cc41dda3dad8551d3bc1034778d13c2748ba9c81d9b6bc0ca66459ac15e8`입니다. 같은 디렉터리 reopened.png를 직접 열어 Canvas 선택 문자열을 확인했고 브라우저 errors 출력은 비어 있었습니다. 조합은 자동 CompositionEvent/InputEvent이며 OS 입력기/한글 원본 조판/전체 HWP5 전수 완료가 아닙니다. 전용 브라우저는 active=false/pid=null/runtime=null,임시 서버PID48231은 종료코드143,19148 listener 없음으로 정리했습니다.
+
 f5045308 기준 Git archive에 Canvas controller·이 Worker 회귀 파일만 적용한 첫 분리 실행은 기존 import의 `transformed-box-hit.mjs` 파일 누락으로 실패했습니다. 이 의존 파일과 checkbox 변환/clip 회귀는844ac307로 별도 커밋했습니다. 게시 대상 controller·Worker 회귀와 해당 의존 파일을 적용한 분리 디렉터리에서, run-selected-node-tests의 실제5파일 목록을 확인한 검사는39/39·skip0·exit0(9952.720167ms)입니다. 후보 WASM은 같은 cb5d1b87 외부 절대 경로를 사용했고 나머지 JS는 archive의 커밋본입니다. 현재 작업 트리의7파일43/43 결과와 게시 단위5파일39/39를 합산하지 않습니다.
 
 초기 분리 명령은7경로를 직접 Node에 전달했지만 archive에 없는3파일이 실제 실행 목록에서 빠졌으므로7파일 통과로 해석하지 않습니다. 그 뒤 존재를 검사하는 공통 선택 wrapper로5파일을 명시해 검증했습니다. 게시 변경은 Canvas 의도 큐 연결·조합/거부 처리와 회귀 검사이며 native form 지원·다른 로컬 renderer 변경·기본 WASM 승격을 포함하지 않습니다.
