@@ -24,6 +24,7 @@ import { characterTogglePatch, characterSelectionState, characterRangesState } f
 import { characterSizeState, characterSizeRangesState } from "./character-size-selection.mjs";
 import { paragraphSelectionRanges, paragraphSelectionText } from "./paragraph-selection.mjs";
 import { paintUnderline } from "./underline-paint.mjs";
+import { paintNumberPrefix } from "./number-prefix-paint.mjs";
 import { createPictureResources } from "./picture-resources.mjs";
 import { inlinePictureIndex, picturePositionKey, paintInlinePicture } from "./picture-inline.mjs";
 import { projectDraftPictures } from "./picture-draft.mjs";
@@ -165,10 +166,7 @@ export function createRenderer(canvas, viewportElement, spacer, onLayout = () =>
       ctx.fillStyle = row.kind === "label" ? "#526d80" : "#172b3b";
       if (row.kind === "text") {
         const paragraph = createdCellParagraph(layout, row) ?? display.paragraphs.find(p => p.section === row.section && p.paragraph === row.paragraph);
-        if (row.numberPrefix) {
-          ctx.font = fontAt(paragraph, 0, "number-prefix");
-          ctx.fillText(row.numberPrefix.text, rowLeft(row), rowTop(row, i) - viewport.scrollTop + rowTextTop(row) + (fontAt.script(paragraph, 0, "number-prefix")?.offset ?? 0));
-        }
+        paintNumberPrefix(ctx, row, i, paragraph, fontAt, viewport.scrollTop);
         // Draw with the same grapheme advances used for hit-testing.
         for (let b = 0; b < row.boundaries.length - 1; b++) {
           const start = row.boundaries[b], end = row.boundaries[b + 1];
@@ -224,6 +222,12 @@ export function createRenderer(canvas, viewportElement, spacer, onLayout = () =>
       const row = layout.rows[i];
       if (groupTextKeys.has(`${row.section}:${row.drawingNode}`)) continue;
       paintTextRow(row, i);
+    }
+    for (const prefix of layout.hostNumberPrefixes ?? []) {
+      if (prefix.y >= viewport.scrollTop + height || prefix.y + prefix.height <= viewport.scrollTop) continue;
+      const paragraph = display.paragraphs.find(p => p.section === prefix.section && p.paragraph === prefix.paragraph);
+      ctx.fillStyle = "#172b3b";
+      paintRowTransform(ctx, prefix, viewport.scrollTop, () => paintNumberPrefix(ctx, prefix, 0, paragraph, fontAt, viewport.scrollTop));
     }
     paintPictures(pictureLayers.front.filter(item => !groupCommands.some(c => c.item === item)));
     paintRectangles(rectangleLayers.front.filter(item => !groupCommands.some(c => c.item === item)));

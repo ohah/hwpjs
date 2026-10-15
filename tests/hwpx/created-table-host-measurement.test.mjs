@@ -6,6 +6,29 @@ import { caretGeometry, hitText } from "../../web/preview/text-geometry.mjs";
 const source = { section: 0, paragraph: 1, text: "A😀BC", editable: true, characterRanges: [{ start: 0, end: 1, charShapeId: 2 }, { start: 1, end: 5, charShapeId: 7 }] };
 const entry = (identity, anchorUnit) => ({ table: { section: 0, hostParagraph: 1, identity, anchorUnit }, width: 32, height: 40 });
 const entries = [entry("1", 1), entry("2", 4)];
+const prefix = { source: { values: { type_known: true, num: 7 }, format: { type_known: true, supscript: false, raw: ["DIGIT", "", "", "."] } } };
+
+test("numbered generated host retains one prefix outside source text fragments", () => {
+  const numbered = { ...source, automaticNumberPrefixes: [prefix] };
+  const result = measureCreatedTableHost(numbered, entries, 500, (text, owner, unit, kind) => {
+    assert.equal(owner, numbered);
+    if (kind === "number-prefix") assert.equal(unit, 0);
+    return { width: [...text].length * 8, height: 16 };
+  });
+  assert.equal(result.state, "measured", result.error);
+  assert.equal(result.numberPrefixes.length, 1);
+  assert.equal(result.numberPrefixes[0].numberPrefix.text, "7.");
+  assert(result.rows.every(row => row.numberPrefix === undefined));
+  assert.equal(result.rows.map(row => row.text).join(""), source.text);
+  assert.equal(result.rows[0].x - result.numberPrefixes[0].x, 16);
+  assert.equal(result.rows[0].startUnit, 0);
+  const onlyTable = measureCreatedTableHost({ ...numbered, text: "" }, [entry("1", 0)], 500, text => ({ width: [...text].length * 8, height: 16 }));
+  assert.equal(onlyTable.state, "measured", onlyTable.error);
+  assert.equal(onlyTable.numberPrefixes.length, 1);
+  assert.equal(onlyTable.rows.length, 1);
+  assert.equal(onlyTable.rows[0].startUnit, 0);
+  assert.equal(measureCreatedTableHost({ ...numbered, text: "" }, [entry("1", 0)], 40, text => ({ width: [...text].length * 8, height: 16 })).error, "InlineTableLineWidthOverflow");
+});
 
 test("generated host measurement uses original style units and restores source-only caret rows", () => {
   const calls = [], before = structuredClone({ source, entries });

@@ -43,10 +43,11 @@ export function layoutCreatedTableInlinePages(content, measure, maxRows = 20000)
     if (entries) {
       const measured = measureCreatedTableHost(paragraph, entries, width, measure, { maxRows: remaining });
       if (measured.state !== "measured") return measured;
-      const rowsByLine = measured.lines.map(() => []), anchorsByLine = measured.lines.map(() => []);
+      const rowsByLine = measured.lines.map(() => []), anchorsByLine = measured.lines.map(() => []), prefixesByLine = measured.lines.map(() => []);
       for (const row of measured.rows) rowsByLine[row.lineOrdinal].push(row);
       for (const anchor of measured.anchors) anchorsByLine[anchor.lineOrdinal].push(anchor);
-      measuredHosts.set(key, { ...measured, rowsByLine, anchorsByLine }); remaining -= measured.rows.length;
+      for (const prefix of measured.numberPrefixes) prefixesByLine[prefix.lineOrdinal].push(prefix);
+      measuredHosts.set(key, { ...measured, rowsByLine, anchorsByLine, prefixesByLine }); remaining -= measured.rows.length + measured.numberPrefixes.length;
       sequence.push(...measured.lines.map(line => ({ kind: "gap", section: paragraph.section, paragraph: paragraph.paragraph,
         height: line.height, createdHost: key, hostLineOrdinal: line.lineOrdinal })));
     } else {
@@ -59,12 +60,13 @@ export function layoutCreatedTableInlinePages(content, measure, maxRows = 20000)
   const paginated = paginateBodyRows(sequence, setting, content.paragraphFlows, { maxRows });
   if (paginated.state !== "paginated") return paginated;
   if (paginated.limited) return unavailable("CreatedTablePageProjectionLimit");
-  const rows = [], boxes = [], emitted = new Set();
+  const rows = [], boxes = [], hostNumberPrefixes = [], emitted = new Set();
   for (const placed of paginated.rows) {
     if (placed.createdHost === undefined) { rows.push(placed); continue; }
     const host = measuredHosts.get(placed.createdHost), line = host.lines[placed.hostLineOrdinal];
     const placement = { pageOrdinal: placed.pageOrdinal, columnOrdinal: placed.columnOrdinal, referenceBoxes: placed.referenceBoxes };
     const dy = placed.y - line.y;
+    for (const prefix of host.prefixesByLine[line.lineOrdinal]) hostNumberPrefixes.push({ ...prefix, x: prefix.x + placed.x - 20, y: prefix.y + dy, ...placement, pageClip: placed.referenceBoxes.column });
     for (const row of host.rowsByLine[line.lineOrdinal]) rows.push({ ...row, x: (row.x ?? 20) + placed.x - 20, y: row.y + dy, ...placement, pageClip: placed.referenceBoxes.column });
     for (const anchor of host.anchorsByLine[line.lineOrdinal]) {
       if (emitted.has(anchor.createdTableIdentity)) return unavailable("DuplicateCreatedTablePageCell");
@@ -75,7 +77,7 @@ export function layoutCreatedTableInlinePages(content, measure, maxRows = 20000)
         pageClip: { ...row.pageClip, x: row.pageClip.x + dx, y: row.pageClip.y + ay } })));
     }
   }
-  if (emitted.size !== cells.size || rows.length > maxRows) return unavailable("CreatedTablePageProjectionLimit");
+  if (emitted.size !== cells.size || rows.length + hostNumberPrefixes.length > maxRows) return unavailable("CreatedTablePageProjectionLimit");
   if (rows.some(row => ![row.x, row.y, row.height, row.x + (row.width ?? 0), row.y + row.height].every(Number.isFinite))) return unavailable("InvalidCreatedTablePageProjection");
   const sourceTexts = new Map(content.paragraphs.map(paragraph => [`${paragraph.section}:${paragraph.paragraph}`, paragraph.text]));
   const sourceRows = rows.filter(row => !row.createdCell && (row.kind !== "text" || row.startUnit < row.endUnit || sourceTexts.get(`${row.section}:${row.paragraph}`) === ""));
@@ -83,5 +85,5 @@ export function layoutCreatedTableInlinePages(content, measure, maxRows = 20000)
   if (coverage.state !== "complete") return coverage;
   return { ...paginated, rows: rows.sort((a, b) => a.y - b.y || a.x - b.x), boxes,
     pages: paginated.pages.map(page => ({ ...page, section: setting.section_ordinal })), spatialRows: true,
-    createdTablesPaginated: true, createdCellParagraphs: [...cells.values()].flatMap(flow => flow.paragraphs), pageLayoutMode: "measured-created-inline" };
+    createdTablesPaginated: true, hostNumberPrefixes, createdCellParagraphs: [...cells.values()].flatMap(flow => flow.paragraphs), pageLayoutMode: "measured-created-inline" };
 }

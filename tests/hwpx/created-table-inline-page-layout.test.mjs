@@ -32,6 +32,22 @@ test("generated inline tables share one host line reservation and preserve sourc
   assert.deepEqual(input, before);
 });
 
+test("number prefix is projected once with page clipping without becoming selectable text", () => {
+  const input = content();
+  input.paragraphs[1].automaticNumberPrefixes = [{ source: { values: { type_known: true, num: 7 }, format: { type_known: true, supscript: false, raw: ["DIGIT", "", "", "."] } } }];
+  const before = structuredClone(input);
+  const result = layoutCreatedTableInlinePages(input, measure);
+  assert.equal(result.state, "paginated", result.error);
+  assert.equal(result.hostNumberPrefixes.length, 1);
+  const prefix = result.hostNumberPrefixes[0];
+  assert.equal(prefix.numberPrefix.text, "7.");
+  assert.equal(prefix.pageOrdinal, 0);
+  assert.deepEqual(prefix.pageClip, prefix.referenceBoxes.column);
+  assert(result.rows.filter(row => row.paragraph === 1).every(row => row.numberPrefix === undefined));
+  assert.equal(pageParagraphCoverage(input.paragraphs, result.rows.filter(row => !row.createdCell)).state, "complete");
+  assert.deepEqual(input, before);
+});
+
 test("generated inline pagination retains paragraph spacing and refuses unsupported combinations", () => {
   const input = content();
   input.paragraphs[1].paragraphShape = { before: 600, after: 600 };
