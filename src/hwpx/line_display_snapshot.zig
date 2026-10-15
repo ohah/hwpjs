@@ -31,7 +31,10 @@ pub fn readGeometry(a: std.mem.Allocator, session: *const editor.Session, sectio
 }
 
 test "line geometry snapshot reads all decorated lines without changing paint policy" {
-    const a = std.testing.allocator;
+    try @import("../testing/checked_allocator.zig").run(actualDecoratedLines, .{});
+}
+
+fn actualDecoratedLines(a: std.mem.Allocator) !void {
     const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "reference/rhwp/samples/2025 행정업무운영 편람(최종).hwpx", a, .limited(64 * 1024 * 1024));
     defer a.free(input);
     var session = try editor.open(a, input, .{});
