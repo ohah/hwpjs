@@ -52,7 +52,7 @@ test("the independent hyperlink scope oracle rejects forged header and end ident
   assert.throws(() => independentFieldSpans(forgedEnd), /independent field end mismatch/);
 });
 
-for (const composition of [false, true]) test(`queued exterior ${composition ? "composition" : "input"} with an unavailable optional label ABI waits for native permission`, async t => {
+for (const composition of [false, true]) test(`queued exterior ${composition ? "composition" : "input"} without the optional created-table mode ABI waits for native range permission`, async t => {
   assert(process.env.HWPJS_TEST_WASM, "explicit candidate required");
   const instantiate = WebAssembly.instantiate;
   t.mock.method(WebAssembly, "instantiate", async (...args) => {
@@ -73,10 +73,10 @@ for (const composition of [false, true]) test(`queued exterior ${composition ? "
   await h.flushQueries(); assert.equal(h.input.readOnly, false);
   const start = h.requests.length;
   let draft = original.text;
-  const type = caret => {
-    h.input.setSelectionRange(caret, caret);
+  const type = (caret, end = caret) => {
+    h.input.setSelectionRange(caret, end);
     assert.equal(dispatchCanvasEvent(h.input, "beforeinput", { inputType: "insertText", data: "가" }).defaultPrevented, false, `draft insertion at ${caret}`);
-    draft = draft.slice(0, caret) + "가" + draft.slice(caret); h.input.value = draft;
+    draft = draft.slice(0, caret) + "가" + draft.slice(end); h.input.value = draft;
     h.input.setSelectionRange(caret + 1, caret + 1); dispatchCanvasEvent(h.input, "input");
   };
   type(0); type(1);
@@ -109,19 +109,56 @@ for (const composition of [false, true]) test(`queued exterior ${composition ? "
   const refusalStart = h.requests.length;
   type(0);
   if (composition) {
-    h.input.setSelectionRange(12, 12); dispatchCanvasEvent(h.input, "compositionstart");
+    h.input.setSelectionRange(6, 12); dispatchCanvasEvent(h.input, "compositionstart");
     dispatchCanvasEvent(h.input, "beforeinput", { inputType: "insertCompositionText", data: "가", isComposing: true });
-    h.input.value = draft.slice(0, 12) + "가" + draft.slice(12); h.input.setSelectionRange(13, 13); dispatchCanvasEvent(h.input, "input", { isComposing: true });
-  } else type(12); // The latter location is inside the unavailable field label.
+    h.input.value = draft.slice(0, 6) + "가" + draft.slice(12); h.input.setSelectionRange(7, 7); dispatchCanvasEvent(h.input, "input", { isComposing: true });
+  } else type(6, 12); // This selection crosses the exterior/field boundary.
   assert.equal((await h.flush()).error, undefined); await h.flushQueries();
   if (composition) { dispatchCanvasEvent(h.input, "compositionend", { data: "가" }); await Promise.resolve(); }
   assert.equal(h.requests.slice(refusalStart).filter(row => row.kind === "splice").length, 1);
-  assert(h.requests.slice(refusalStart).some(row => row.kind === "query-edit-range" && row.startUnit === 12));
+  assert(h.requests.slice(refusalStart).some(row => row.kind === "query-edit-range" && row.startUnit === 6 && row.endUnit === 12));
   assert.equal(h.input.value, "가" + original.text);
   const refused = await h.send({ kind: "save" }); assert.equal(refused.error, undefined);
   execFileSync("python3", ["tools/hwpx-field-outside-oracle.py"], {
     input: JSON.stringify({ before: input.toString("base64"), after: Buffer.from(refused.bytes).toString("base64"), part: "Contents/section0.xml", paragraph: 2, prefix: "가" }), timeout: 30000,
   });
+});
+
+test("native field range permits a label edit without the optional created-table mode ABI", async t => {
+  assert(process.env.HWPJS_TEST_WASM, "explicit candidate required");
+  const instantiate = WebAssembly.instantiate;
+  t.mock.method(WebAssembly, "instantiate", async (...args) => {
+    const instance = await instantiate(...args), exports = { ...instance.exports };
+    delete exports.hwpx_edit_created_table_field_label_mode;
+    return { exports };
+  });
+  const h = await workerCanvasHarness(t, { rangeQueries: true });
+  const source = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/issue144-fields-crossing-lineseg-boundary.hwpx");
+  assert.equal((await h.send({ kind: "load", format: "hwpx", bytes: source })).error, undefined);
+  assert.equal((await h.send({ kind: "enable" })).error, undefined);
+  const created = await h.send({ kind: "insert-table", section: 0, paragraph: 1, unit: 0, options: { rows: 1, columns: 1, width: 36000, rowHeight: 6000, resources: { paragraph: 1, character: 1, style: 0, border_fill: 1 } } });
+  assert.equal(created.error, undefined);
+  const input = Buffer.from((await h.send({ kind: "save" })).bytes);
+  const original = created.content.paragraphs.find(row => row.section === 0 && row.paragraph === 1);
+  assert.equal(h.controller.selectTextRange({ section: 0, paragraph: 1, startUnit: 12, endUnit: 12 }), true);
+  await h.flushQueries(); assert.equal(h.input.readOnly, false);
+  const start = h.requests.length;
+  assert.equal(dispatchCanvasEvent(h.input, "beforeinput", { inputType: "insertText", data: "가" }).defaultPrevented, false);
+  h.input.value = original.text.slice(0, 12) + "가" + original.text.slice(12);
+  h.input.setSelectionRange(13, 13); dispatchCanvasEvent(h.input, "input");
+  assert.equal((await h.flush()).error, undefined); await h.flushQueries();
+  assert.deepEqual(h.requests.slice(start).filter(row => row.kind === "splice").map(row => row.startUnit), [12]);
+  const saved = await h.send({ kind: "save" }); assert.equal(saved.error, undefined);
+  const payload = { before: input.toString("base64"), after: Buffer.from(saved.bytes).toString("base64"), text: "가", paragraph: 2, atUnit: 5 };
+  for (const flags of [[], ["-O"]]) {
+    const verify = data => execFileSync("python3", [...flags, "tools/hwpx-field-edit-oracle.py"], { input: JSON.stringify(data), timeout: 30000 });
+    verify(payload);
+    assert.throws(() => verify({ ...payload, atUnit: 4 }), error => error.status === 1 && String(error.stderr).includes("Unexpected XML change"));
+  }
+  assert.equal(h.controller.history("undo"), true); assert.equal((await h.flush()).error, undefined); await h.flushQueries();
+  assert.deepEqual(Buffer.from((await h.send({ kind: "save" })).bytes), input);
+  assert.equal(h.controller.history("redo"), true); assert.equal((await h.flush()).error, undefined); await h.flushQueries();
+  assert.deepEqual(Buffer.from((await h.send({ kind: "save" })).bytes), Buffer.from(saved.bytes));
 });
 
 for (const format of ["hwp5", "hwpx"]) test(`queued ${format} hyperlink content preserves field ownership and rejects a protected range`, async t => {
