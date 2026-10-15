@@ -717,6 +717,8 @@ test {
     _ = @import("hwpx/structural_formula_exterior_tests.zig");
     _ = @import("hwpx/field_text_kind.zig");
     _ = @import("hwpx/bookmark_field_session_tests.zig");
+    _ = @import("hwpx/field_source_scope_session_tests.zig");
+    _ = @import("hwpx/field_container_text_tests.zig");
     _ = @import("hwpx/formula_field_split_guard.zig");
     _ = @import("hwpx/formula_field_partition_tests.zig");
     _ = @import("hwpx/formula_field_split_fixture_tests.zig");

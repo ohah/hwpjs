@@ -1,5 +1,17 @@
 # 필드 바깥 텍스트와 보존 객체의 범위 편집
 
+## 2026-10-16 공개 소스의 외부 범위 입력 복원
+
+차트 조립 후보 `f6decd1d…`는 실제 issue3637의423/435/518번 문단에서 canEditOutsideField=false였고, 같은 공개 테스트가 기본 `cbaaf27f…`에서는 통과했습니다. BOOKMARK만 복원한 `34f99386…`도 이 회귀는 남았습니다. 원인은 범위 splice에 문자 서식용 문단 전체 정책을 적용하고, 닫힌 필드 끝 뒤의 빈 site는 투영된 span0개라는 이유로 유효한 계획을 버리던 경로입니다.
+
+main `98780247` 기반 격리 소스 `/tmp/hwpjs-field-exterior-fix.rFzWEW`에서 source_field_paragraph_positions를 공통 필드 전용 위치 경계로 연결했습니다. known pair 진단 Lease를 재사용하되 unresolved 시작이 포함된 구조 목록/루트 범위를 별도로 보호합니다. 닫힌 end marker가 직접 속한 문단의 범위 splice만 span0개 계획을 유지하고, 객체/인라인 단위 삭제는 기존 validateRange가 거부합니다. source 수식 좌표 변환에도 같은 투영을 쓰며 whole 편집 허용으로 확대하지 않습니다. 필드 없는 외부 표의 range-target 조회는 먼저 로컬 known pair 교차가 없는지 검사해 무관한 뒤쪽 root orphan 때문에 InvalidFieldLinks가 나는 반례도 고쳤습니다.
+
+ReleaseSafe5/5·exit0, WASM SHA256 `1ba88fcfc4a501d43a4fc27ed4425b54e109ff4b77f7c6ee1c37905f288a19ed`입니다. BOOKMARK/field-end/inline 세 공개 검사3/3·12989.266666ms·exit0은 실제 두 문서의 외부7위치와 BOOKMARK의 독립 normal/-O XML/ZIP·잘못된 기대값 거부·이력/재열기를 포함합니다. 기본 산출물은 바꾸지 않았습니다.
+
+native8선언 바이너리 `91eaa9fc6df0039c07a8c059c7cf366535057ab6986cf6cdbe37df00df0e7392`는 미해결 셀/루트 보호·닫힌 field label·표 앞 입력/객체 삭제 금지·뒤쪽 orphan range 조회·container label 전체 실패 주입을8/8·status/logs/leaks0·guard exit0으로 통과했습니다. 기존 source 위치 전체 실패 주입/수식 경계 변환은 별도 바이너리 `92c820b896906436860863efac7839c09c9cfa494f498f746d74f1d056728e91`의 root 포함3/3·guard exit0입니다. 각 선언 별도 표준 runner/1GiB 감시이며 빠른 실행의 physical 표본0은 실제 메모리0을 의미하지 않습니다. 로그는 위 격리 소스의 native-field-exterior-eight/native-source-field-positions.jsonl·stderr입니다.
+
+필터 없는 첫 명령은 전이 import까지501선언을 선택해 범위가 달랐습니다. 7번째 range 조회의 InvalidFieldLinks를 재현했지만86번째 부근에서 중단했으며 전체 통과로 계수하지 않습니다. RSS7189120KiB를 관측한 전용 native PID89055만TERM하고 parent88859 종료를 확인한 뒤 위8선언·분할 감시로 재검사했습니다. 이는 의도 밖 테스트 실행/할당자 자원 관측이지 제품 메모리 사용량이나 누수 원인 확정이 아닙니다. 전체180파일의 차트 후보 감사와 생성 표 저장 전후 필드 좌표 불일치·markpen 회귀는 별도 미완료 항목입니다.
+
 ## 계약
 
 `field_source_outside_positions.zig`의 source `.splice` 경로는 `source_field_paragraph_positions.build`를 재사용합니다. 이 공통 계층은 로컬 문단 정책과 객체의 원문 소유 위치·한 단위 앵커 폭을 검사합니다. 필드 투영과 외부 범위 검사는 객체 단위를 포함한 동일 좌표를 사용하고, `paragraph_text_positions.validateRange`는 객체 삭제를 거부합니다. 필드 내용·경계 침범은 기존 `field_outside_range`가 거부합니다.

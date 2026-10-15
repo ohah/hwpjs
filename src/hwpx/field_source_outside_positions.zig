@@ -16,14 +16,25 @@ pub fn prepareAction(self: *const @import("editor_session.zig").Session, section
     const a = self.allocator;
     const segments = if (action == .whole_anchored)
         try @import("anchor_paragraph_edit.zig").segments(a, &section.tree, &section.sites, section.locations, source_paragraph)
+    else if (action == .splice)
+        @import("source_field_paragraph_positions.zig").build(self, section_index, paragraph) catch |err| switch (err) {
+            error.UnsupportedFieldLabelContent => return error.UnsupportedParagraphControl,
+            else => return err,
+        }
     else block: {
         try @import("plain_paragraph_policy.zig").validateForCharacterFormat(&section.tree, &section.sites, section.locations, source_paragraph);
         break :block try @import("paragraph_text_positions.zig").build(a, &section.tree, &section.sites, section.locations, source_paragraph);
     };
     errdefer a.free(segments);
-    var analysis = try @import("source_field_analysis.zig").lease(self);
+    var analysis = try @import("source_field_analysis.zig").leaseForExterior(self);
     defer analysis.deinit(a);
     const report = &analysis.source.report;
+    for (report.markers) |marker| {
+        if (marker.section_ordinal != section_index or marker.kind != .begin or marker.matched_marker_index != null) continue;
+        if (marker.element_index >= section.tree.elements.len) return error.SourceBindingMismatch;
+        const envelope = try @import("field_source_scope.zig").forBegin(&section.tree, marker.element_index);
+        for (segments) |segment| if (envelope.contains(segment.source_start)) return error.ProtectedFieldRange;
+    }
     const fields = analysis.source.fields;
     const Span = @import("field_current_spans.zig").Span;
     const spans = try a.alloc(Span, fields.len);
@@ -35,12 +46,19 @@ pub fn prepareAction(self: *const @import("editor_session.zig").Session, section
         count += 1;
     };
     if (count == 0) {
-        a.free(segments);
-        return null;
+        const owner = try @import("paragraph_site_owner.zig").resolve(&section.tree, &section.sites, section.locations, source_paragraph);
+        if (action != .splice or !try @import("paragraph_site_owner.zig").ownsFieldMarker(&section.tree, owner)) {
+            a.free(segments);
+            return null;
+        }
     }
     // A field can begin in an earlier paragraph, outside the local topology.
     if (action == .whole_plain or action == .whole_anchored) return error.ProtectedFieldRange;
-    for (segments) |segment| if (segment.kind != .text) return error.UnsupportedInlineControl;
+    for (segments) |segment| {
+        if (segment.kind == .text) continue;
+        if (action == .splice and segment.kind == .anchor) continue;
+        try @import("paragraph_text_positions.zig").validateInlineUnit(&section.tree, segment);
+    }
     if (action == .formula_split) try @import("field_outside_range.zig").validateWholeFieldSplit(spans[0..count], 0, start, end - start) else try @import("field_outside_range.zig").validate(spans[0..count], 0, start, end - start);
     const text = @import("paragraph_text_positions.zig");
     try text.validateRange(segments, start, end);

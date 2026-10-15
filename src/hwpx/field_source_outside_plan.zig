@@ -46,7 +46,10 @@ fn prepareAction(session: *const @import("editor_session.zig").Session, section_
     proxy.sections[section_index].sites.items = descriptors;
     const current = (try @import("field_source_outside_positions.zig").prepareAction(&proxy, section_index, paragraph, start, end, action)) orelse return null;
     defer a.free(current);
-    const original = try positions.build(a, &section.tree, &section.sites, section.locations, try section.sourceParagraph(paragraph));
+    const original = if (action == .splice)
+        try @import("source_field_paragraph_positions.zig").build(session, section_index, paragraph)
+    else
+        try positions.build(a, &section.tree, &section.sites, section.locations, try section.sourceParagraph(paragraph));
     errdefer a.free(original);
     const boundaries = if (action == .formula_split) try @import("formula_split_boundaries.zig").map(a, trees, section_index, current, original, start, end) else @import("formula_split_boundaries.zig").Boundaries{};
     return .{ .segments = original, .start = boundaries.start orelse try mapBoundary(current, original, start), .end = boundaries.end orelse try mapBoundary(current, original, end) };

@@ -8,6 +8,25 @@ pub fn select(session: anytype, section_index: usize, paragraph: usize, start: u
     if (paragraph < part.first_paragraph or paragraph > part.last_paragraph) return error.InvalidParagraphIndex;
     if (end < start) return error.InvalidTextPosition;
     const a = session.allocator;
+    if (part.structure_values == null) {
+        var source = try @import("source_field_analysis.zig").leaseForExterior(session);
+        defer source.deinit(a);
+        var in_section = false;
+        for (source.source.fields) |field| if (field.section == section_index) {
+            in_section = true;
+        };
+        if (!in_section) return null;
+        const segments = @import("source_field_paragraph_positions.zig").build(session, section_index, paragraph) catch |err| switch (err) {
+            error.UnsupportedFieldLabelContent, error.UnsupportedInlineControl, error.MissingTextSite, error.UnsupportedTextPositionProjection => return null,
+            else => return err,
+        };
+        defer a.free(segments);
+        var intersects = false;
+        for (source.source.fields) |field| if (@import("field_text_positions.zig").project(field, section_index, segments) != null) {
+            intersects = true;
+        };
+        if (!intersects) return null;
+    }
     const labels = try session.fieldLabels(section_index, paragraph);
     defer a.free(labels);
     var result: ?Target = null;

@@ -101,6 +101,9 @@ pub fn leaseForDiagnostics(session: anytype) !Lease {
     return .{ .source = try buildMode(session.allocator, session.sections, true), .owned = true };
 }
 
+/// Raw known pairs only; exterior callers must protect unresolved source scopes.
+pub const leaseForExterior = leaseForDiagnostics;
+
 test "source field analysis owned build survives every allocation failure and borrowed queries match fresh analysis" {
     const a = std.testing.allocator;
     const input = try @import("test_formula_fixture.zig").zipWithParagraphs(a, "<p:p><p:run><p:ctrl><p:fieldBegin id='8' type='CLICK_HERE'/></p:ctrl><p:t>body</p:t><p:ctrl><p:fieldEnd beginIDRef='8'/></p:ctrl></p:run></p:p>");
