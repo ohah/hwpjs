@@ -108,11 +108,14 @@ pub const Prepared = struct {
     parameters: @import("formula_parameter_changes.zig").Prepared,
     formula: ?[]u8 = null,
     formula_change: ?@import("xml_source_writer.zig").Change = null,
+    definition_result: ?[]u8 = null,
+    preserve_parameters: bool = false,
     pub fn deinit(self: *Prepared, a: std.mem.Allocator) void {
         self.parameters.deinit(a);
         self.result.deinit(a);
         a.free(self.display);
         if (self.formula) |formula| a.free(formula);
+        if (self.definition_result) |result| a.free(result);
         self.* = undefined;
     }
 };
@@ -120,19 +123,28 @@ pub const Prepared = struct {
 /// Attach an evaluated definition while preserving Prepared's owned buffers.
 pub fn attachDefinition(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tree, report: *const @import("parameter_lists.zig").Report, field: *Prepared, plan: @import("formula_command_plan.zig").Plan) !void {
     if (field.formula != null or !std.mem.eql(u8, field.display, plan.display)) return error.InvalidFormulaDefinitionOutput;
+    return attachDefinitionPreservingDisplay(a, tree, report, field, plan);
+}
+
+/// Own the calculated cache independently of a manually edited result body.
+pub fn attachDefinitionPreservingDisplay(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tree, report: *const @import("parameter_lists.zig").Report, field: *Prepared, plan: @import("formula_command_plan.zig").Plan) !void {
+    if (field.formula != null or field.definition_result != null) return error.InvalidFormulaDefinitionOutput;
     const command = try a.dupe(u8, plan.command);
     errdefer a.free(command);
     const formula = try a.dupe(u8, plan.formula);
     errdefer a.free(formula);
+    const result = try a.dupe(u8, plan.display);
+    errdefer a.free(result);
     const changes = @import("formula_parameter_changes.zig");
     const command_change = try changes.parameterChange(tree, report, field.begin, "Command", command);
-    const result_change = try changes.parameterChange(tree, report, field.begin, "LastResult", field.display);
+    const result_change = try changes.parameterChange(tree, report, field.begin, "LastResult", result);
     const formula_change = try changes.parameterChange(tree, report, field.begin, "Formula", formula);
     a.free(field.parameters.command);
     field.parameters.command = command;
     field.parameters.changes = .{ command_change, result_change };
     field.formula = formula;
     field.formula_change = formula_change;
+    field.definition_result = result;
 }
 
 pub fn prepare(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tree, sites: *const @import("text_sites.zig").Sites, parameters: *const @import("parameter_lists.zig").Report, range: @import("field_text_ranges.zig").Range, begin: usize, display: []const u8) !Prepared {
@@ -194,6 +206,10 @@ pub fn writeManyWithChanges(a: std.mem.Allocator, tree: *const @import("xml_part
             if (replacement.site_index >= items.len) return error.InvalidTextSites;
             if ((try seen.getOrPut(a, replacement.site_index)).found_existing) return error.AmbiguousFormulaResultSite;
             items[replacement.site_index].text = replacement.text;
+        }
+        if (field.preserve_parameters) {
+            if (field.formula_change != null or field.formula != null) return error.ConflictingFormulaResultOverride;
+            continue;
         }
         try changes.appendSlice(a, &field.parameters.changes);
         if (field.formula_change) |change| try changes.append(a, change);

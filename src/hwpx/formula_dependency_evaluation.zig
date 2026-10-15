@@ -5,6 +5,11 @@ const Sites = @import("text_sites.zig").Sites;
 const scalar = @import("formula_values.zig");
 
 pub fn evaluate(a: std.mem.Allocator, trees: []const Tree, section: usize, sites: *const Sites, begin: usize, definitions: ?*const @import("formula_definition_values.zig").Values, limits: scalar.Limits) !f64 {
+    var remaining = limits;
+    return evaluateWithInputCells(a, trees, section, sites, begin, definitions, &remaining, null);
+}
+
+pub fn evaluateWithInputCells(a: std.mem.Allocator, trees: []const Tree, section: usize, sites: *const Sites, begin: usize, definitions: ?*const @import("formula_definition_values.zig").Values, limits: *scalar.Limits, inputs: ?*std.ArrayList(usize)) !f64 {
     if (section >= trees.len or trees[section].section_ordinal != section) return error.InvalidSectionIndex;
     var markers = try @import("field_markers.zig").inspect(a, trees, .{});
     defer markers.deinit();
@@ -14,8 +19,11 @@ pub fn evaluate(a: std.mem.Allocator, trees: []const Tree, section: usize, sites
     defer parameters.deinit();
     const frames = try @import("xml_tree_selection.zig").build(a, &trees[section], .{ .mode = .selected }, 4096);
     defer a.free(frames);
-    var context: Context = .{ .allocator = a, .tree = &trees[section], .sites = sites, .ranges = ranges, .markers = &markers, .parameters = &parameters, .definitions = definitions, .remaining = limits, .frames = frames };
-    return context.value(begin);
+    var context: Context = .{ .allocator = a, .tree = &trees[section], .sites = sites, .ranges = ranges, .markers = &markers, .parameters = &parameters, .definitions = definitions, .remaining = limits.*, .frames = frames };
+    context.input_cells = inputs;
+    const value = try context.value(begin);
+    limits.* = context.remaining;
+    return value;
 }
 
 /// All reports, tree, Sites and definitions are borrowed for this evaluation.
@@ -33,10 +41,21 @@ pub const Context = struct {
     stack: [64]usize = undefined,
     depth: usize = 0,
     numeric_inputs: ?*std.ArrayList(usize) = null,
+    result_overrides: ?*const @import("formula_result_override_values.zig").Values = null,
+    input_cells: ?*std.ArrayList(usize) = null,
+    definition_root: ?usize = null,
+
+    pub fn valueForDefinition(self: *Context, begin: usize) anyerror!f64 {
+        const previous = self.definition_root;
+        self.definition_root = begin;
+        defer self.definition_root = previous;
+        return self.value(begin);
+    }
 
     pub fn value(self: *Context, begin: usize) anyerror!f64 {
         if (begin >= self.frames.len) return error.InvalidFormulaFieldNode;
         if (!self.frames[begin].active) return error.InvalidFormulaDefinitionSelection;
+        if (self.definition_root != begin) if (self.result_overrides) |values| if (values.get(begin) != null) return error.UnsupportedFormulaResultDependency;
         for (self.stack[0..self.depth]) |ancestor| if (ancestor == begin) return error.FormulaDependencyCycle;
         if (self.depth >= self.stack.len) return error.LimitExceeded;
         if (!try @import("formula_source_query.zig").isFormula(self.allocator, self.tree, begin)) return error.InvalidFormulaFieldNode;
@@ -55,7 +74,15 @@ pub const Context = struct {
 
 const Reader = struct {
     context: *Context,
+    fn recordInput(self: Reader, cell: usize) !void {
+        if (self.context.input_cells) |inputs| {
+            if (inputs.items.len > self.context.remaining.inspections) return error.LimitExceeded;
+            self.context.remaining.inspections -= inputs.items.len;
+            if (std.mem.indexOfScalar(usize, inputs.items, cell) == null) try inputs.append(self.context.allocator, cell);
+        }
+    }
     pub fn readScalar(self: Reader, a: std.mem.Allocator, tree: *const Tree, sites: *const Sites, cell: usize) anyerror!@import("formula_cell_number.zig").Scalar {
+        try self.recordInput(cell);
         const begin = try @import("formula_dependency_cell.zig").markerSelected(tree, sites, cell, self.context.ranges, self.context.markers, self.context.frames);
         if (begin) |node| return .{ .number = try self.context.value(node) };
         const classified = try @import("formula_cell_number.zig").classifySelected(a, tree, sites, cell, self.context.frames);
@@ -71,6 +98,7 @@ const Reader = struct {
         budget.inspections -= inspections;
     }
     pub fn read(self: Reader, a: std.mem.Allocator, tree: *const Tree, sites: *const Sites, cell: usize) anyerror!f64 {
+        try self.recordInput(cell);
         const begin = try @import("formula_dependency_cell.zig").markerSelected(tree, sites, cell, self.context.ranges, self.context.markers, self.context.frames);
         if (begin) |node| return self.context.value(node);
         const number = try @import("formula_cell_number.zig").readSelected(a, tree, sites, cell, self.context.frames);

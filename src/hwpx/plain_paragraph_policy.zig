@@ -19,6 +19,9 @@ pub fn validateWithAnchors(tree: *const tree_module.Tree, sites: *const sites_mo
 pub fn validateForCharacterFormat(tree: *const tree_module.Tree, sites: *const sites_module.Sites, locations: []const scanner.Location, paragraph: usize) !void {
     return validateMode(tree, sites, locations, paragraph, true, false, true);
 }
+pub fn validateForFieldText(tree: *const tree_module.Tree, sites: *const sites_module.Sites, locations: []const scanner.Location, paragraph: usize) !void {
+    return validateMode(tree, sites, locations, paragraph, true, true, true);
+}
 
 fn validateMode(tree: *const tree_module.Tree, sites: *const sites_module.Sites, locations: []const scanner.Location, paragraph: usize, allow_tabs: bool, allow_anchors: bool, allow_fields: bool) !void {
     const paragraph_index = try @import("paragraph_site_owner.zig").resolve(tree, sites, locations, paragraph);

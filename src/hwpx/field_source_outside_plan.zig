@@ -28,7 +28,7 @@ fn prepareAction(session: *const @import("editor_session.zig").Session, section_
     const trees = try a.alloc(@import("xml_part_tree.zig").Tree, session.sections.len);
     defer a.free(trees);
     for (session.sections, trees) |part, *tree| tree.* = part.tree;
-    const prepared = try @import("formula_section_prepare.zig").prepare(a, trees, section_index, &section.sites, .{ .only_changed = false, .branch_policy = @import("editor_session.zig").siteOptions(session.options).branch_policy, .definitions = &section.formula_definitions });
+    const prepared = try @import("formula_section_prepare.zig").prepare(a, trees, section_index, &section.sites, .{ .only_changed = false, .branch_policy = @import("editor_session.zig").siteOptions(session.options).branch_policy, .definitions = &section.formula_definitions, .result_overrides = &section.formula_result_overrides, .source_display_options = @import("editor_session.zig").siteOptions(session.options) });
     defer {
         for (prepared) |*field| field.deinit(a);
         a.free(prepared);

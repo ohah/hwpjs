@@ -1,4 +1,5 @@
 import { createMemory } from "./wasm-memory.mjs";
+import { decodeFieldTargets } from "./hwpx-field-target-wire.mjs";
 import { decodePictureOwners } from "./hwpx-picture-owners.mjs";
 import { decodeInlineStringSources } from "./hwpx-inline-string-sources.mjs";
 import { dutmalKind } from "./hwpx-dutmal-kind.mjs";
@@ -88,6 +89,14 @@ export async function createHwpxEditor(source) {
     if (typeof text !== "string" || !text.isWellFormed()) throw new TypeError("InvalidText");
     const bytes = new TextEncoder().encode(text);
     if (bytes.length > 4 * 1024 * 1024) throw new RangeError("LimitExceeded");
+    return bytes;
+  }
+  function manualFormulaResultBytes(text, action, unavailable) {
+    if (typeof wasm[action] !== "function" || typeof wasm.hwpx_edit_manual_formula_result_max_bytes !== "function") throw new Error(unavailable);
+    const maxBytes = wasm.hwpx_edit_manual_formula_result_max_bytes();
+    if (!Number.isInteger(maxBytes) || maxBytes <= 0 || maxBytes > 0xffffffff) throw new Error("InvalidManualFormulaResultLimit");
+    const bytes = encodedText(text);
+    if (bytes.length > maxBytes) throw new Error("LimitExceeded");
     return bytes;
   }
   function paragraphIds(suffix, args = []) {
@@ -1042,6 +1051,20 @@ export async function createHwpxEditor(source) {
         if (!wasm.hwpx_edit_set_formula_definition(section, beginElement, ptr, size)) throw memory.error();
       });
     },
+    setManualFormulaResult(section, beginElement, display) {
+      ready(); [section, beginElement].forEach(uint);
+      const bytes = manualFormulaResultBytes(display, "hwpx_edit_set_manual_formula_result", "HwpxManualFormulaResultAbiUnavailable");
+      memory.withBytes(bytes, (ptr, size) => {
+        if (!wasm.hwpx_edit_set_manual_formula_result(section, beginElement, ptr, size)) throw memory.error();
+      });
+    },
+    spliceManualFormulaResult(section, beginElement, start, deleted, text) {
+      ready(); [section, beginElement, start, deleted].forEach(uint);
+      const bytes = manualFormulaResultBytes(text, "hwpx_edit_splice_manual_formula_result", "HwpxManualFormulaResultSpliceAbiUnavailable");
+      memory.withBytes(bytes, (ptr, size) => {
+        if (!wasm.hwpx_edit_splice_manual_formula_result(section, beginElement, start, deleted, ptr, size)) throw memory.error();
+      });
+    },
     formSourceNodes(section) {
       ready(); uint(section);
       if (typeof wasm.hwpx_edit_form_source_nodes !== "function") throw new Error("HwpxFormSourceAbiUnavailable");
@@ -1149,17 +1172,34 @@ export async function createHwpxEditor(source) {
       if (typeof wasm.hwpx_edit_field_labels !== "function") throw new Error("HwpxFieldEditAbiUnavailable");
       try {
         if (!wasm.hwpx_edit_field_labels(section, paragraph)) throw memory.error();
-        const bytes = memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len());
-        if (bytes.length < 4) throw new Error("InvalidFieldTargets");
-        const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-        const count = view.getUint32(0, true);
-        if (count > 4096 || bytes.length !== 4 + count * 12) throw new Error("InvalidFieldTargets");
-        return Array.from({ length: count }, (_, index) => {
-          const offset = 4 + index * 12;
-          const target = { beginElement: view.getUint32(offset, true), start: view.getUint32(offset + 4, true), end: view.getUint32(offset + 8, true) };
-          if (target.end < target.start) throw new Error("InvalidFieldTargets");
-          return target;
-        });
+        return decodeFieldTargets(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
+    manualFormulaResultTargets(section, paragraph) {
+      ready(); [section, paragraph].forEach(uint);
+      if (typeof wasm.hwpx_edit_manual_formula_result_targets !== "function") throw new Error("HwpxManualFormulaResultTargetAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_manual_formula_result_targets(section, paragraph)) throw memory.error();
+        return decodeFieldTargets(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
+    manualFormulaResultDisplayText(section, paragraph) {
+      ready(); [section, paragraph].forEach(uint);
+      if (typeof wasm.hwpx_edit_manual_formula_result_display_text !== "function") throw new Error("HwpxManualFormulaResultTargetAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_manual_formula_result_display_text(section, paragraph)) throw memory.error();
+        return new TextDecoder("utf-8", { fatal: true }).decode(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
+    manualFormulaResultRangeTarget(section, paragraph, start, end) {
+      ready(); [section, paragraph, start, end].forEach(uint);
+      if (end < start) throw new Error("InvalidTextPosition");
+      if (typeof wasm.hwpx_edit_manual_formula_result_range_target !== "function") throw new Error("HwpxManualFormulaResultTargetAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_manual_formula_result_range_target(section, paragraph, start, end)) throw memory.error();
+        const targets = decodeFieldTargets(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+        if (targets.length > 1) throw new Error("InvalidFieldTargets");
+        return targets[0] ?? null;
       } finally { wasm.hwpx_edit_output_free(); }
     },
     save() {

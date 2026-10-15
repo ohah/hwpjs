@@ -38,7 +38,7 @@ test "created cell text command saves reopens and retains redo on refusal and no
     defer a.free(redone);
     try std.testing.expectEqualSlices(u8, saved, redone);
     try std.testing.expectEqualSlices(u8, bytes, session.source);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, source: *const editor.Session) !void {
             const sections = try allocator.dupe(editor.Section, source.sections);
             defer allocator.free(sections);

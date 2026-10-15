@@ -3,6 +3,7 @@
 const std = @import("std");
 const sites_mod = @import("text_sites.zig");
 const tree_mod = @import("xml_part_tree.zig");
+pub const max_display_bytes = 4096;
 pub const Replacement = struct { site_index: usize, text: []u8 };
 pub const Prepared = struct {
     items: []Replacement,
@@ -16,7 +17,7 @@ pub const Prepared = struct {
 pub fn prepare(a: std.mem.Allocator, tree: *const tree_mod.Tree, sites: *const sites_mod.Sites, range: @import("field_text_ranges.zig").Range, display: []const u8) !Prepared {
     if (tree.section_ordinal != range.section or range.content_start > range.content_end or range.content_end > tree.source.len) return error.SourceBindingMismatch;
     if (!std.unicode.utf8ValidateSlice(display)) return error.InvalidUtf8;
-    if (display.len > 4096) return error.LimitExceeded;
+    if (display.len > max_display_bytes) return error.LimitExceeded;
     const uri = @import("document_xml.zig").paragraph_uri;
     for (tree.elements) |element| {
         if (element.start_tag.start < range.content_start or element.start_tag.start >= range.content_end) continue;

@@ -93,23 +93,32 @@ pub fn set(session: *@import("editor_session.zig").Session, section_index: usize
     if (section_index >= session.sections.len) return error.InvalidSectionIndex;
     const section = &session.sections[section_index];
     const a = session.allocator;
+    const trees = try a.alloc(@import("xml_part_tree.zig").Tree, session.sections.len);
+    defer a.free(trees);
+    for (session.sections, trees) |value, *tree| tree.* = value.tree;
     var candidate = try section.formula_definitions.clone(a);
     defer candidate.deinit(a);
-    if (!try candidate.set(a, &section.tree, begin, formula)) return false;
-    if (section.structure_values != null) {
+    const definition_changed = try candidate.set(a, &section.tree, begin, formula);
+    var override_candidate = if (section.structure_values == null)
+        try @import("formula_source_result_seed.zig").prepare(a, trees, section_index, &section.sites, &section.formula_definitions, &section.formula_result_overrides, @import("editor_session.zig").siteOptions(session.options))
+    else
+        try section.formula_result_overrides.clone(a);
+    defer override_candidate.deinit(a);
+    const override_removed = if (override_candidate.origin(begin) != null) try override_candidate.recalculate(a, &section.tree, begin) else false;
+    if (!definition_changed and !override_removed) return false;
+    if (section.structure_values != null or override_candidate.entries.items.len != 0) {
         const sections = try a.dupe(@import("editor_session.zig").Section, session.sections);
         defer a.free(sections);
         sections[section_index].formula_definitions = candidate;
+        sections[section_index].formula_result_overrides = override_candidate;
         var proxy = session.*;
         proxy.sections = sections;
         const verified = try proxy.save();
         defer a.free(verified);
         std.mem.swap(@import("formula_definition_values.zig").Values, &candidate, &section.formula_definitions);
+        std.mem.swap(@import("formula_result_override_values.zig").Values, &override_candidate, &section.formula_result_overrides);
         return true;
     }
-    const trees = try a.alloc(@import("xml_part_tree.zig").Tree, session.sections.len);
-    defer a.free(trees);
-    for (session.sections, trees) |value, *tree| tree.* = value.tree;
     const prepared = try @import("formula_section_prepare.zig").prepare(a, trees, section_index, &section.sites, .{ .branch_policy = @import("editor_session.zig").siteOptions(session.options).branch_policy, .definitions = &candidate });
     defer {
         for (prepared) |*field| field.deinit(a);

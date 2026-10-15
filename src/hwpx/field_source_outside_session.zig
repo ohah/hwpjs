@@ -8,7 +8,7 @@ pub fn splice(self: *@import("editor_session.zig").Session, section: usize, para
         const trees = try self.allocator.alloc(@import("xml_part_tree.zig").Tree, self.sections.len);
         defer self.allocator.free(trees);
         for (self.sections, trees) |part, *tree| tree.* = part.tree;
-        return try @import("formula_splice.zig").spliceProjected(self.allocator, trees, section, &self.sections[section].sites, plan.segments, plan.start, plan.end - plan.start, inserted, limit, &self.sections[section].formula_definitions);
+        return try @import("formula_splice.zig").spliceProjectedWithOverrides(self.allocator, trees, section, &self.sections[section].sites, plan.segments, plan.start, plan.end - plan.start, inserted, limit, &self.sections[section].formula_definitions, &self.sections[section].formula_result_overrides, @import("editor_session.zig").siteOptions(self.options));
     }
     return try @import("text_splice_transaction.zig").spliceProjected(self.allocator, &self.sections[section].sites, plan.segments, plan.start, plan.end - plan.start, inserted, limit, null);
 }

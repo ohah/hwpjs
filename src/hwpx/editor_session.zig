@@ -31,6 +31,7 @@ pub const Section = struct {
     picture_matrices: @import("picture_matrix_edit_values.zig").Values = .empty,
     checkbox_states: @import("form_checkbox_state_values.zig").Values = .empty,
     formula_definitions: @import("formula_definition_values.zig").Values = .{},
+    formula_result_overrides: @import("formula_result_override_values.zig").Values = .{},
     created_tables: @import("created_table_values.zig").Values = .{},
     pub fn sourceParagraph(self: *const Section, paragraph: usize) !usize {
         if (paragraph < self.first_paragraph or paragraph > self.last_paragraph) return error.InvalidParagraphIndex;
@@ -59,6 +60,7 @@ pub const Section = struct {
         self.picture_matrices.deinit(a);
         self.checkbox_states.deinit(a);
         self.formula_definitions.deinit(a);
+        self.formula_result_overrides.deinit(a);
         self.created_tables.deinit(a);
         a.free(self.locations);
         self.sites.deinit(a);
@@ -192,7 +194,7 @@ pub const Session = struct {
             const trees = try self.allocator.alloc(tree_module.Tree, self.sections.len);
             defer self.allocator.free(trees);
             for (self.sections, trees) |section, *tree| tree.* = section.tree;
-            return @import("formula_splice.zig").spliceWithDefinitions(self.allocator, trees, section_index, &selected.sites, selected.locations, try selected.sourceParagraph(paragraph), start, deleted, inserted, self.options.max_text_bytes - other_bytes, anchored, &selected.formula_definitions);
+            return @import("formula_splice.zig").spliceWithOverrides(self.allocator, trees, section_index, &selected.sites, selected.locations, try selected.sourceParagraph(paragraph), start, deleted, inserted, self.options.max_text_bytes - other_bytes, anchored, &selected.formula_definitions, &selected.formula_result_overrides, siteOptions(self.options));
         }
         const source_paragraph = try selected.sourceParagraph(paragraph);
         // 필드 외부의 검증된 범위를 일반 문단/쪽 선언 정책이 먼저 거부하지 않도록 합니다.
@@ -332,6 +334,13 @@ pub const Session = struct {
         return error.InvalidCellDisplayOwner;
     }
 
+    pub fn setManualFormulaResult(self: *Session, section_index: usize, begin: usize, display: []const u8) !bool {
+        return @import("formula_result_override_edit.zig").set(self, section_index, begin, display);
+    }
+    pub fn spliceManualFormulaResult(self: *Session, section_index: usize, begin: usize, start: u32, deleted: u32, inserted: []const u8) !bool {
+        return @import("formula_result_override_splice.zig").splice(self, section_index, begin, start, deleted, inserted);
+    }
+
     /// Caller owns the result with Session.allocator. Save is side-effect free.
     pub fn save(self: *const Session) ![]u8 {
         const a = self.allocator;
@@ -352,9 +361,10 @@ pub const Session = struct {
         }
         for (self.sections, 0..) |*section, index| {
             const base = if (section.structure_values) |*values| block: {
+                if (section.formula_result_overrides.entries.items.len != 0) return error.UnsupportedStructuralFormulaResultOverride;
                 if (section.sites.items.len != 0) return error.DuplicateCurrentTextOwner;
                 break :block try @import("paragraph_structure_save.zig").writeWithDefinitions(a, trees, index, values, siteOptions(self.options), section.field_dirty.items, &section.formula_definitions, self.options.max_xml_bytes -| xml_bytes);
-            } else try @import("formula_section_save.zig").writeWithDefinitionsMode(a, trees, index, &section.sites, siteOptions(self.options), section.field_dirty.items, &section.formula_definitions, self.options.max_xml_bytes -| xml_bytes, true);
+            } else try @import("formula_section_save.zig").writeWithOverridesMode(a, trees, index, &section.sites, siteOptions(self.options), section.field_dirty.items, &section.formula_definitions, &section.formula_result_overrides, self.options.max_xml_bytes -| xml_bytes, true);
             const sized = if (section.cell_sizes.items.len == 0) base else block: {
                 defer a.free(base);
                 break :block try @import("table_cell_size_save.zig").write(a, &section.tree, base, section.cell_sizes.items, self.options.max_xml_bytes -| xml_bytes);

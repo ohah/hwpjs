@@ -1,5 +1,11 @@
 # 개발·검증 명령
 
+`zig test src/hwpx_manual_formula_result_tests.zig -O ReleaseSafe --test-filter 'HWPX manual formula result' --test-filter 'HWPX source formula display' --test-filter 'HWPX source result seed'`는 결과 소유/표시 provenance·원자성/OOM 집중 진입점입니다. [분리 검증 기록](hwpx-manual-result-publication.md)의 전체 native와 구분합니다.
+
+`zig test src/hwpx_formula_result_splice_tests.zig -O ReleaseSafe --test-filter 'HWPX partial manual result splice'`, `zig test src/hwpx_formula_result_target_tests.zig -O ReleaseSafe --test-filter 'HWPX formula result target'`, `zig test src/hwpx_formula_exterior_override_tests.zig -O ReleaseSafe --test-filter 'HWPX exterior'`는 각각 [부분 치환](hwpx-formula-result-splice.md)·[현재 좌표/표시](hwpx-formula-result-targets.md)·[바깥 텍스트 보존](hwpx-formula-exterior-display-preservation.md)의 집중 native/OOM/fixture 검증입니다. root에도 등록하며 집중 결과를 전체 gate로 합산하지 않습니다.
+
+`HWPJS_TEST_WASM=/absolute/candidate/hwpjs.wasm node --test tests/hwpx/manual-formula-result-editor.test.mjs tests/hwpx/manual-formula-result-splice.test.mjs tests/hwpx/manual-formula-result-targets.test.mjs tests/hwpx/manual-formula-result-worker.test.mjs tests/hwpx/manual-formula-result-text-worker.test.mjs tests/hwpx/manual-formula-result-edge.test.mjs tests/hwpx/manual-formula-result-exterior.test.mjs`는 선택적 수동 결과 ABI를 갖춘 명시적 후보의 API/Worker/독립 XML/ZIP/이력 검사입니다. 이 파일들은 `zig build hwpx-text-audit -Doptimize=ReleaseSafe`의 정규 목록에도 포함합니다. 실제 브라우저·물리 IME·조판 검증 범위는 [Canvas 결과 입력](canvas-formula-result-input.md)을 따릅니다.
+
 `zig test src/hwpx_formula_preservation_test.zig -O ReleaseSafe --test-filter 'untouched formula preservation'`는 최종 flat 원문 보존·내부 derive·실제 숫자 입력 후 재계산을 전체 할당 실패 지점에서 검사하는 별도 native 진입점입니다. 정규 root 전체 검사와 합산하지 않으며 [copay 저장 계약](hwpx-copay-below-investigation.md)을 따릅니다.
 
 `HWPJS_TEST_WASM=/absolute/candidate/hwpjs.wasm node --test tests/hwpx/copay-below-editor.test.mjs tests/hwpx/empty-formula-reference.test.mjs`는 실제 RHWP 참조4파일의 BELOW 입력/독립 XML·Decimal·이력과 수식 없는 구역의 반복 빈 목록·원문 저장 보존을 검사합니다. 참조 누락은 실패이며 기본 등록 묶음·전체 참조 편집·브라우저 검증과 구분합니다. [빈 수식 조회](hwpx-empty-formula-query.md)의 후보/실측 경계를 따릅니다.

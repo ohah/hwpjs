@@ -4,6 +4,7 @@ import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
 import { attachCheckBoxes } from "./checkbox-content.mjs";
 import { attachDutmal } from "./dutmal-content.mjs";
 import { projectFieldLabelDisplay } from "./field-label-display-content.mjs";
+import { formulaResultTextAvailable, projectFormulaResultText, spliceFormulaResultText, formulaResultTextRangeAllowed } from "./formula-result-text-command.mjs";
 import { readDutmalText, writeDutmalText, dutmalQueryIdentity } from "./dutmal-edit-command.mjs";
 import { createHwpxPasswordDecoder } from "../../js/hwpx-password.mjs";
 import { createHwp5PasswordDecoder } from "../../js/hwp5-password.mjs";
@@ -123,6 +124,9 @@ function hwpxDisplay(projected) {
   content.formulaDefinitionAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwpx_edit_set_formula_definition" && entry.kind === "function");
   const formulaExports = new Set(WebAssembly.Module.exports(module).filter(entry => entry.kind === "function").map(entry => entry.name));
   content.manualFormulaResultAvailable = typeof editor.setManualFormulaResult === "function" && ["hwpx_edit_set_manual_formula_result", "hwpx_edit_manual_formula_result_max_bytes"].every(name => formulaExports.has(name));
+  content.manualFormulaResultTextAvailable = formulaResultTextAvailable(editor, module);
+  const formulaResultContext = content.manualFormulaResultTextAvailable && content.window ? attachHwpxFormulas(editor, { paragraphs: content.paragraphs }) : content;
+  const formulaResultSections = new Set((formulaResultContext.formulas ?? []).map(row => row.section));
   content.paragraphAlignmentAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwpx_edit_set_paragraph_alignment" && entry.kind === "function");
   content.paragraphMarginsAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwpx_edit_set_paragraph_margins" && entry.kind === "function");
   content.paragraphSpacingAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwpx_edit_set_paragraph_spacing" && entry.kind === "function");
@@ -192,6 +196,7 @@ function hwpxDisplay(projected) {
       paragraph.text = current.nested ? retainedAutomaticNumberPlainText(editor, paragraph.section, paragraph.paragraph + 1, current.text, anchored, automaticNumberSnapshot) : anchored;
     }
     paragraph.fieldLabels = [];
+    paragraph.manualFormulaResults = [];
     paragraph.anchorEditable = false;
     if (!paragraph.clipped && !paragraph.plainEditable) {
       const anchored = fieldLinkGuard.read(paragraph.section, () => anchorView(paragraph.section, paragraph.paragraph + 1), null, "anchor");
@@ -214,9 +219,13 @@ function hwpxDisplay(projected) {
       }
     }
     if (paragraph.fieldLabels.length && WebAssembly.Module.exports(module).some(entry => entry.name === "hwpx_edit_field_label_display_text" && entry.kind === "function")) units += projectFieldLabelDisplay(editor, paragraph, HWPX_DISPLAY_BOUNDS.maxUnits - units + paragraph.text.length);
-    paragraph.editable = paragraph.plainEditable || paragraph.anchorEditable || paragraph.fieldLabels.length > 0;
+    units += fieldLinkGuard.read(paragraph.section, () => projectFormulaResultText(editor, paragraph, content.manualFormulaResultTextAvailable && formulaResultSections.has(paragraph.section), HWPX_DISPLAY_BOUNDS.maxUnits - units + paragraph.text.length), 0, "formula-results");
+    if (paragraph.clipped) content.limited = true;
+    const wholeFormulaResult = paragraph.manualFormulaResults.length === 1 && paragraph.manualFormulaResults[0].start === 0 && paragraph.manualFormulaResults[0].end === paragraph.text.length;
+    paragraph.editable = paragraph.plainEditable || paragraph.anchorEditable || paragraph.fieldLabels.length > 0 || wholeFormulaResult;
     if (!paragraph.editable && fieldLinkGuard.reason(paragraph.section)) paragraph.fieldReadOnlyReason = fieldLinkGuard.reason(paragraph.section);
-    if (paragraph.editable) paragraph.label = paragraph.label.replace("읽기 전용", paragraph.plainEditable ? "일반 텍스트 편집" : paragraph.anchorEditable ? "보호 개체 텍스트 편집" : "필드 라벨만 편집");
+    if (paragraph.editable) paragraph.label = paragraph.label.replace("읽기 전용", paragraph.plainEditable ? "일반 텍스트 편집" : paragraph.anchorEditable ? "보호 개체 텍스트 편집" : paragraph.manualFormulaResults.length ? "계산 결과 편집" : "필드 라벨만 편집");
+    else if (paragraph.manualFormulaResults.length) paragraph.label = paragraph.label.replace("읽기 전용", "계산 결과 범위만 편집");
   }
   content.readOnly = !content.paragraphs.some(paragraph => paragraph.editable);
   attachAutomaticNumbers(editor, content, automaticNumberSnapshot);
@@ -285,7 +294,7 @@ self.onmessage = async event => {
       return;
     }
     if (message.kind === "query-edit-range") {
-      reply(selectionEditQuery(message, { active: Boolean(editor) && historyEnabled, format, canEdit: outsideFieldRange }));
+      reply(selectionEditQuery(message, { active: Boolean(editor) && historyEnabled, format, canEdit: (section, paragraph, start, end) => outsideFieldRange(section, paragraph, start, end) || formulaResultTextRangeAllowed(editor, module, section, paragraph, start, end) }));
       return;
     }
     if (message.kind === "query-split-range") {
@@ -736,6 +745,8 @@ self.onmessage = async event => {
           editor.splice(message.section, message.paragraph + 1, message.startUnit, message.endUnit - message.startUnit, message.text);
         } else if (outsideFieldRange(message.section, message.paragraph + 1, message.startUnit, message.endUnit)) {
           editor.splice(message.section, message.paragraph + 1, message.startUnit, message.endUnit - message.startUnit, message.text);
+        } else if (spliceFormulaResultText(editor, module, message)) {
+          // The native result transaction already applied this range.
         } else if (anchorView(message.section, message.paragraph + 1) !== null) {
           editor.spliceAnchored(message.section, message.paragraph + 1, message.startUnit, message.endUnit - message.startUnit, message.text);
         } else {

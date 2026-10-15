@@ -5,7 +5,7 @@ const checkpoints = @import("editor_checkpoint.zig");
 const Stacks = @import("../model/history_stack.zig").Stack(checkpoints.Checkpoint, release);
 
 pub const Command = struct {
-    kind: enum { plain, anchored, field, split, merge, format, character_properties, character_font_name, cell_size, paragraph_format, paragraph_alignment, paragraph_margins, paragraph_spacing, split_anchored, formula_definition, picture_dimensions, picture_resize, check_box_state, created_table_stage, created_cell_text } = .plain,
+    kind: enum { plain, anchored, field, split, merge, format, character_properties, character_font_name, cell_size, paragraph_format, paragraph_alignment, paragraph_margins, paragraph_spacing, split_anchored, formula_definition, picture_dimensions, picture_resize, check_box_state, created_table_stage, created_cell_text, formula_result_override, formula_result_splice } = .plain,
     section: usize = 0,
     paragraph: usize,
     right_paragraph: ?usize = null,
@@ -110,6 +110,11 @@ pub const History = struct {
                 if (command.start != 0 or command.deleted != 0) return error.InvalidFormulaDefinitionCommand;
                 break :block try session.setFormulaDefinition(command.section, command.begin_element, command.inserted);
             },
+            .formula_result_override => block: {
+                if (command.start != 0 or command.deleted != 0) return error.InvalidFormulaResultCommand;
+                break :block try session.setManualFormulaResult(command.section, command.begin_element, command.inserted);
+            },
+            .formula_result_splice => try session.spliceManualFormulaResult(command.section, command.begin_element, command.start, command.deleted, command.inserted),
             .character_properties => block: {
                 if (command.inserted.len != 0) return error.InvalidFormatCommand;
                 const end = std.math.add(u32, command.start, command.deleted) catch return error.InvalidTextPosition;

@@ -587,6 +587,13 @@ fn apply(command: histories.Command) !void {
         .formula_definition => {
             _ = try session.setFormulaDefinition(command.section, command.begin_element, command.inserted);
         },
+        .formula_result_override => {
+            if (command.start != 0 or command.deleted != 0) return error.InvalidFormulaResultCommand;
+            _ = try session.setManualFormulaResult(command.section, command.begin_element, command.inserted);
+        },
+        .formula_result_splice => {
+            _ = try session.spliceManualFormulaResult(command.section, command.begin_element, command.start, command.deleted, command.inserted);
+        },
         .character_properties => {
             if (command.inserted.len != 0) return error.InvalidFormatCommand;
             const end = std.math.add(u32, command.start, command.deleted) catch return error.InvalidTextPosition;
@@ -1200,6 +1207,19 @@ export fn hwpx_edit_set_formula_definition(section: u32, begin_element: u32, ptr
     apply(.{ .kind = .formula_definition, .section = section, .paragraph = 0, .begin_element = begin_element, .start = 0, .deleted = 0, .inserted = ptr[0..size] }) catch |err| return fail(err);
     return 1;
 }
+export fn hwpx_edit_manual_formula_result_max_bytes() u32 {
+    return @import("../hwpx/formula_result_sites.zig").max_display_bytes;
+}
+export fn hwpx_edit_set_manual_formula_result(section: u32, begin_element: u32, ptr: [*]const u8, size: usize) u32 {
+    if (size > @import("../hwpx/formula_result_sites.zig").max_display_bytes) return fail(error.LimitExceeded);
+    apply(.{ .kind = .formula_result_override, .section = section, .paragraph = 0, .begin_element = begin_element, .start = 0, .deleted = 0, .inserted = ptr[0..size] }) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_splice_manual_formula_result(section: u32, begin_element: u32, start: u32, deleted: u32, ptr: [*]const u8, size: usize) u32 {
+    if (size > @import("../hwpx/formula_result_sites.zig").max_display_bytes) return fail(error.LimitExceeded);
+    apply(.{ .kind = .formula_result_splice, .section = section, .paragraph = 0, .begin_element = begin_element, .start = start, .deleted = deleted, .inserted = ptr[0..size] }) catch |err| return fail(err);
+    return 1;
+}
 // Pending-table mode query only; not paragraph/range edit authorization.
 export fn hwpx_edit_created_table_host_mode(section: u32, anchored: u32) u32 {
     if (anchored > 1) {
@@ -1268,6 +1288,9 @@ export fn hwpx_edit_field_labels(section: u32, paragraph: u32) u32 {
     const session = if (active) |*value| value else return fail(error.EditorNotOpen);
     const targets = session.fieldLabels(section, paragraph) catch |err| return fail(err);
     defer a.free(targets);
+    return publishFieldTargets(targets);
+}
+fn publishFieldTargets(targets: []const @import("../hwpx/field_label_targets.zig").Target) u32 {
     const bytes = a.alloc(u8, 4 + targets.len * 12) catch |err| return fail(err);
     std.mem.writeInt(u32, bytes[0..4], @intCast(targets.len), .little);
     for (targets, 0..) |target, index| {
@@ -1277,5 +1300,24 @@ export fn hwpx_edit_field_labels(section: u32, paragraph: u32) u32 {
         std.mem.writeInt(u32, bytes[offset + 8 ..][0..4], target.end, .little);
     }
     output = bytes;
+    return 1;
+}
+export fn hwpx_edit_manual_formula_result_targets(section: u32, paragraph: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const targets = @import("../hwpx/formula_result_targets.zig").list(session, section, paragraph) catch |err| return fail(err);
+    defer a.free(targets);
+    return publishFieldTargets(targets);
+}
+export fn hwpx_edit_manual_formula_result_range_target(section: u32, paragraph: u32, start: u32, end: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const target = @import("../hwpx/formula_result_targets.zig").select(session, section, paragraph, start, end) catch |err| return fail(err);
+    return if (target) |value| publishFieldTargets(&.{value}) else publishFieldTargets(&.{});
+}
+export fn hwpx_edit_manual_formula_result_display_text(section: u32, paragraph: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    output = @import("../hwpx/formula_result_projection.zig").readText(session, section, paragraph) catch |err| return fail(err);
     return 1;
 }

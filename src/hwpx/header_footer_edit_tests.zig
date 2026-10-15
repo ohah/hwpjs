@@ -50,7 +50,10 @@ test "HWPX header footer owner split preserves edited nested bodies" {
 }
 
 test "HWPX header footer public split allocation failures preserve prior edits" {
-    const a = std.testing.allocator;
+    try @import("../testing/checked_allocator.zig").run(publicSplitAllocationFailures, .{});
+}
+
+fn publicSplitAllocationFailures(a: std.mem.Allocator) !void {
     const editor = @import("editor_session.zig");
     const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/headerfooter.hwpx", a, .limited(4000000));
     defer a.free(input);

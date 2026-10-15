@@ -108,6 +108,13 @@ pub fn build(b: *std.Build) void {
     hwpx_text_tests.addArg("tests/hwpx/formula-average-split-worker.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/query-parity-arguments.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/guarded-query-worker.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/manual-formula-result-editor.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/manual-formula-result-worker.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/manual-formula-result-edge.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/manual-formula-result-splice.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/manual-formula-result-targets.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/manual-formula-result-text-worker.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/manual-formula-result-exterior.test.mjs");
     hwpx_text_tests.step.dependOn(b.getInstallStep());
     hwpx_text_tests.has_side_effects = true;
     audit.dependOn(&hwpx_text_tests.step);

@@ -161,7 +161,16 @@ test("actual HWPX Worker edits native plain text and refuses unsupported control
   assert.equal(chart.error, undefined);
   const numeric = chart.content.paragraphs.find(p => p.text === "11.2");
   const formula = chart.content.paragraphs.find(p => p.text === "67.5");
-  assert(numeric?.editable); assert(formula); assert.equal(formula.editable, false);
+  assert(numeric?.editable); assert(formula);
+  const formulaExports = new Set(WebAssembly.Module.exports(await WebAssembly.compile(readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"))).filter(entry => entry.kind === "function").map(entry => entry.name));
+  const manualResultText = ["hwpx_edit_splice_manual_formula_result", "hwpx_edit_manual_formula_result_max_bytes", "hwpx_edit_manual_formula_result_targets", "hwpx_edit_manual_formula_result_range_target", "hwpx_edit_manual_formula_result_display_text"].every(name => formulaExports.has(name));
+  assert.equal(chart.content.manualFormulaResultTextAvailable, manualResultText);
+  assert.equal(formula.editable, manualResultText);
+  if (manualResultText) {
+    assert.equal(formula.manualFormulaResults.length, 1);
+    assert.equal(formula.manualFormulaResults[0].start, 0);
+    assert.equal(formula.manualFormulaResults[0].end, formula.text.length);
+  } else assert.deepEqual(formula.manualFormulaResults, []);
   assert.equal((await send({ kind: "enable" })).historyAvailable, true);
   const calculated = await send({ kind: "splice", section: numeric.section, paragraph: numeric.paragraph, startUnit: 0, endUnit: 4, text: "100" });
   assert.equal(calculated.error, undefined);

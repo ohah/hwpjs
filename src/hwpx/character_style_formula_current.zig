@@ -15,7 +15,7 @@ pub fn prepare(session: *const editor.Session, section_index: usize, values: *Va
     const trees = try a.alloc(Tree, session.sections.len);
     defer a.free(trees);
     for (session.sections, trees) |value, *tree| tree.* = value.tree;
-    const prepared = try @import("formula_section_prepare.zig").prepare(a, trees, section_index, &projected, .{ .branch_policy = editor.siteOptions(session.options).branch_policy, .definitions = &section.formula_definitions });
+    const prepared = try @import("formula_section_prepare.zig").prepare(a, trees, section_index, &projected, .{ .branch_policy = editor.siteOptions(session.options).branch_policy, .definitions = &section.formula_definitions, .result_overrides = &section.formula_result_overrides, .source_display_options = editor.siteOptions(session.options) });
     defer {
         for (prepared) |*field| field.deinit(a);
         a.free(prepared);

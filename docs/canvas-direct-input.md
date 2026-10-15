@@ -1,5 +1,7 @@
 # Canvas 직접 텍스트 입력 실험
 
+[수식 결과 텍스트 경로](canvas-formula-result-input.md)는 native 현재 좌표/문단 projection과 Worker 선택·부분 입력 연결, 실제 브라우저·독립 저장 검증 및 남은 범위를 소유합니다.
+
 HWP5 텍스트 화면의 단순 문단과 [지원하는 중첩 목록 문단](hwp5-nested-text-edit.md)에 마우스를 올리면 I-beam, 클릭하면 caret, 드래그하면 선택 영역을 Canvas에 그립니다. 첫 클릭이 실험용 편집 세션을 엽니다. 별도 숫자 입력 폼은 접힌 고급 API 실험으로 남깁니다. 최종 적격성·범위·저장 정책은 [native 편집 API](hwp5-editor-api.md)가 판정합니다.
 
 ## 책임과 SSOT

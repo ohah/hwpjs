@@ -1,4 +1,14 @@
 const std = @import("std");
+
+fn verifyFailedSplice(a: std.mem.Allocator, session: *const @import("editor_session.zig").Session, before: []const u8, unit: u32) !void {
+    // Verification must not reuse the injected failing allocator or deinit owners.
+    var view = session.*;
+    view.allocator = a;
+    const after = try view.save();
+    defer a.free(after);
+    try std.testing.expectEqualSlices(u8, before, after);
+    try std.testing.expectEqual(unit, session.sections[0].created_tables.entries.items[0].anchor.unit);
+}
 test "created table field label allocation failure sweep restores complete saved state" {
     const a = std.testing.allocator;
     const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/issue144-fields-crossing-lineseg-boundary.hwpx", a, .limited(4000000));
@@ -15,12 +25,7 @@ test "created table field label allocation failure sweep restores complete saved
             const before = try session.save();
             defer allocator.free(before);
             _ = session.spliceFieldLabel(0, 3, labels[0].begin_element, 0, 0, "😀") catch |err| {
-                var view = session;
-                view.allocator = std.testing.allocator;
-                const after = try view.save();
-                defer std.testing.allocator.free(after);
-                try std.testing.expectEqualSlices(u8, before, after);
-                try std.testing.expectEqual(@as(u32, 5), session.sections[0].created_tables.entries.items[0].anchor.unit);
+                try @import("../testing/checked_allocator.zig").run(verifyFailedSplice, .{ &session, before, @as(u32, 5) });
                 return err;
             };
             try std.testing.expectEqual(@as(u32, 7), session.sections[0].created_tables.entries.items[0].anchor.unit);
@@ -90,7 +95,10 @@ test "created table source field exterior insertion and prefix preserve linked l
 }
 
 test "created table flat formula inputs recalculate reopen and roll back invalid number" {
-    const a = std.testing.allocator;
+    try @import("../testing/checked_allocator.zig").run(verifyFlatFormulaInputs, .{});
+}
+
+fn verifyFlatFormulaInputs(a: std.mem.Allocator) !void {
     const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx", a, .limited(4000000));
     defer a.free(bytes);
     for ([_]usize{ 1, 20 }) |host| {
@@ -215,14 +223,7 @@ test "created table plain host allocation failure sweep restores complete saved 
             const before = try session.save();
             defer allocator.free(before);
             _ = session.splice(0, 2, 0, 0, "😀") catch |err| {
-                // Read-only verifier uses the non-failing backing allocator;
-                // never deinit this borrowed view or its shared owners.
-                var view = session;
-                view.allocator = std.testing.allocator;
-                const after = try view.save();
-                defer std.testing.allocator.free(after);
-                try std.testing.expectEqualSlices(u8, before, after);
-                try std.testing.expectEqual(@as(u32, 2), session.sections[0].created_tables.entries.items[0].anchor.unit);
+                try @import("../testing/checked_allocator.zig").run(verifyFailedSplice, .{ &session, before, @as(u32, 2) });
                 return err;
             };
             try std.testing.expectEqual(@as(u32, 4), session.sections[0].created_tables.entries.items[0].anchor.unit);

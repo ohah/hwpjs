@@ -11,10 +11,14 @@ test("copay BELOW queries preserve source while numeric edits recalculate across
   try {
     editor.open(input); editor.enableHistory();
     assert.equal(editor.paragraphTextSnapshot(0)[88].text, "30.1");
-    assert.deepEqual(editor.formulaCurrent(0).map(field => field.values.last_result), ["184.9", "1,749,831", "23,860", "1,749,831", "23,860"]);
+    const source = editor.formulaSources(0)[0];
+    assert.equal(source.values.last_result, "184.9");
+    assert.deepEqual(editor.formulaCurrent(0).map(field => field.values.last_result), ["100", "1,749,831", "23,860", "1,749,831", "23,860"]);
+    assert.deepEqual(editor.formulaSources(0)[0], source);
     assert(Buffer.from(editor.save()).equals(input));
     editor.splice(0, 89, 0, 4, "40.1");
     assert.equal(editor.formulaCurrent(0)[0].values.last_result, "194.9");
+    assert.deepEqual(editor.formulaSources(0)[0], source);
     const saved = Buffer.from(editor.save());
     assert(!saved.equals(input));
     const request = { before: input.toString("base64"), after: saved.toString("base64") };
@@ -27,6 +31,8 @@ test("copay BELOW queries preserve source while numeric edits recalculate across
       assert.throws(() => verify({ ...request, after: wrong }), error => error.status === 1 && String(error.stderr).includes("complete XML mismatch"));
     }
     assert.equal(editor.undo(), true); assert(Buffer.from(editor.save()).equals(input));
+    assert.equal(editor.formulaCurrent(0)[0].values.last_result, "100");
+    assert.deepEqual(editor.formulaSources(0)[0], source);
     assert.equal(editor.redo(), true); assert(Buffer.from(editor.save()).equals(saved));
     editor.open(saved);
     assert.equal(editor.formulaCurrent(0)[0].values.last_result, "194.9");

@@ -37,7 +37,7 @@ pub fn readFlat(a: std.mem.Allocator, session: *const @import("editor_session.zi
     const trees = try a.alloc(@import("xml_part_tree.zig").Tree, session.sections.len);
     defer a.free(trees);
     for (session.sections, trees) |value, *tree| tree.* = value.tree;
-    const prepared = try @import("formula_section_prepare.zig").prepare(a, trees, section_index, &section.sites, .{ .only_changed = false, .branch_policy = @import("editor_session.zig").siteOptions(session.options).branch_policy, .definitions = &section.formula_definitions });
+    const prepared = try @import("formula_section_prepare.zig").prepare(a, trees, section_index, &section.sites, .{ .only_changed = false, .branch_policy = @import("editor_session.zig").siteOptions(session.options).branch_policy, .definitions = &section.formula_definitions, .result_overrides = &section.formula_result_overrides, .source_display_options = @import("editor_session.zig").siteOptions(session.options) });
     errdefer {
         for (prepared) |*field| field.deinit(a);
         a.free(prepared);
