@@ -17,3 +17,11 @@ character_color_patch와 character_font_patch의 해당 테스트 본문을 allo
 수정 후 filtered 바이너리 SHA256 `9af69d1cd780efe3c181893a1f3df49a2eafb5a655e56d844daff0f8f396b768`는 root import와 두 검사3/3·fail/skip/logErrors/leaks0·exit0입니다. 별도 같은 두 검사 요청 후 footprint를 읽은 실행도 둘 다 status/logs/leaks0·exit0이며, 첫 검사 후 current1212704/peak2539832bytes, 두 번째 후 current1212704/peak2654520bytes입니다. 두 검사의 테스트 allocator 스택 기록이 큰 메모리 사용에 기여한 근거이며 전체 제품 메모리 상한/누수 없음/정규 gate 완료로 확대하지 않습니다.
 
 포맷·해당 diff 검사도 통과했습니다. native 수정은 로컬이고 정규 전체 검증/ReleaseSafe 제품 빌드를 아직 통과하지 않았습니다. 전체 지원 목표와 기본 WASM 승격은 그대로 미완료입니다. 이번 실행의 모든 native 자식은 종료됐으며 브라우저/디바이스를 시작하지 않았습니다.
+
+## 후속 정규 검증과 폐기한 설정 실험
+
+두 헤더 테스트 수정 후 같은 분리 소스의 정규 `zig build test -Doptimize=ReleaseSafe -j1 --summary all` 실행34852는 컴파일 후 native 실행까지 진행했으나 합산 RSS8263MiB로8GiB 기준을 넘어 중단됐습니다. build SIGTERM·wrapper exit1이며 전체 통과 수는 확인되지 않았습니다. PID10273/10286/27844의 종료를 확인했습니다.
+
+실행 중1초 sample `/tmp/hwpjs-clean-native-current-20261015.sample.txt`는 table_geometry_values의 실제 표 배치 할당 실패 검사→testing.FailingAllocator→DebugAllocator(stack_trace_frames10)→debug.captureCurrentStackTrace→DWARF SelfUnwinder 경로를 보여줍니다. 표 배치 제품 누수나 전체 메모리 원인을 이 sample 하나로 확정하지 않습니다.
+
+별도 test root의 std_options.allow_stack_tracing=false로 진단만 제한하는 실험은 설정 적용을 확인하는 양성 대조가 TestUnexpectedResult로 실패했습니다. Zig0.16.0 기본 compiler/test_runner.zig가 자체 std_options를 소유하므로 사용자 테스트 모듈의 선언만으로는 해당 설정이 적용되지 않았습니다. 같은 실험의 누수/단언 음성 대조는 예상 exit1이었지만 설정 자체가 미적용이므로 새 정책의 안전성 증명으로 세지 않습니다. 실험 진입점/음성 대조 파일은 모두 제거했고 build/SDK/제품 설정을 변경하지 않았습니다. 실패한 실험을 자원 문제 해결이나 새 정규 gate 통과로 기록하지 않습니다.
