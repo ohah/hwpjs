@@ -69,8 +69,8 @@ pub fn prepareLinked(self: anytype, section_index: usize, paragraph: usize, begi
         if (owned.generated_id != null or owned.pieces != null) return error.UnsupportedFieldLabel;
         const locations = try @import("paragraph_structure_locations.zig").build(a, &selected.tree, owned);
         defer a.free(locations);
-        break :block try @import("paragraph_text_positions.zig").build(a, &selected.tree, &owned.sites, locations, 1);
-    } else try @import("anchor_text_positions.zig").build(a, &selected.tree, &selected.sites, selected.locations, local.?.paragraph);
+        break :block try @import("paragraph_text_positions.zig").buildForFieldText(a, &selected.tree, &owned.sites, locations, 1);
+    } else try @import("anchor_text_positions.zig").buildForFieldText(a, &selected.tree, &selected.sites, selected.locations, local.?.paragraph);
     errdefer a.free(segments);
     const dirty_elements = try @import("field_nested_ownership.zig").dirtyOwners(a, field, ranges, report, 4096);
     errdefer a.free(dirty_elements);

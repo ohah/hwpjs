@@ -45,7 +45,8 @@ fn validateMode(tree: *const tree_module.Tree, sites: *const sites_module.Sites,
                 const content = tree.elements[run_index];
                 const bookmark = @import("retained_bookmark.zig").supported(tree, run_index) or @import("retained_bookmark.zig").directSupported(tree, run_index);
                 if (bookmark) has_bookmark = true;
-                if (!content.is(uri, "t") and !bookmark and !content.is(uri, "secPr") and !@import("retained_run_metadata.zig").supported(tree, run_index) and !(allow_anchors and @import("run_anchor.zig").kind(tree, run_index) != null)) has_bookmark_unsupported = true;
+                const retained_field = allow_fields and @import("retained_field_marker.zig").supported(tree, run_index);
+                if (!content.is(uri, "t") and !bookmark and !retained_field and !content.is(uri, "secPr") and !@import("retained_run_metadata.zig").supported(tree, run_index) and !(allow_anchors and @import("run_anchor.zig").kind(tree, run_index) != null)) has_bookmark_unsupported = true;
                 if (!content.is(uri, "t") and !@import("retained_page_number.zig").supported(tree, run_index) and !@import("retained_number_restart.zig").supported(tree, run_index) and !@import("retained_bookmark.zig").supported(tree, run_index) and !@import("retained_run_metadata.zig").supported(tree, run_index) and !(allow_anchors and @import("run_anchor.zig").kind(tree, run_index) != null)) has_other_run_content = true;
                 if (allow_anchors and @import("run_anchor.zig").kind(tree, run_index) != null) {
                     has_anchor = true;

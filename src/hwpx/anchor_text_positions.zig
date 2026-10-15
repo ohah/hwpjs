@@ -10,7 +10,16 @@ const uri = @import("document_xml.zig").paragraph_uri;
 /// Same indices as text/tab segments; anchor.index is a source element index.
 /// Caller owns output. This projection alone does not authorize editing.
 pub fn build(a: std.mem.Allocator, tree: *const trees.Tree, sites: *const sites_module.Sites, locations: []const scanner.Location, paragraph: usize) ![]positions.Segment {
-    const base = try positions.build(a, tree, sites, locations, paragraph);
+    return buildMode(a, tree, sites, locations, paragraph, false);
+}
+
+/// Caller has validated field text policy and marker ownership.
+pub fn buildForFieldText(a: std.mem.Allocator, tree: *const trees.Tree, sites: *const sites_module.Sites, locations: []const scanner.Location, paragraph: usize) ![]positions.Segment {
+    return buildMode(a, tree, sites, locations, paragraph, true);
+}
+
+fn buildMode(a: std.mem.Allocator, tree: *const trees.Tree, sites: *const sites_module.Sites, locations: []const scanner.Location, paragraph: usize, field_text: bool) ![]positions.Segment {
+    const base = if (field_text) try positions.buildForFieldText(a, tree, sites, locations, paragraph) else try positions.build(a, tree, sites, locations, paragraph);
     defer a.free(base);
     var owner: ?usize = null;
     for (sites.items, locations) |site, location| {

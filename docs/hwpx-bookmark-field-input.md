@@ -1,5 +1,15 @@
 # HWPX 책갈피 필드 내용 입력
 
+## 2026-10-16 공개 소스의 BOOKMARK 지원 복원
+
+차트 조립 후보 `f6decd1d…`의 공개 추적 테스트180파일 검사에서 BOOKMARK 라벨0개/기대1개 실패를 재현했습니다. 같은 JS/픽스쳐의 기본 WASM `cbaaf27f…`는 해당 검사를 통과하므로 기존 제품 대비 회귀입니다. 후보의 원본 소스에서 BOOKMARK 종류와 필드 전용 책갈피 위치 경로가 빠져 있었습니다.
+
+공개 main `4a85bca4`에 필요한 변경만 합친 독립 소스 `/var/folders/51/mr5cjhg13v324f1vgg9m237c0000gn/T/hwpjs-bookmark-main-4ScM9H`에서 필드 종류/허용 마커/공통 위치 계산의 필드 모드와 호출부를 복원했습니다. 차트 코어·미게시 markpen/위치 순회 최적화·다른 필드 재설계는 포함하지 않았습니다. 일반 문단 전체 편집 보호와 DATE 거부를 유지합니다.
+
+ReleaseSafe 빌드5/5·exit0, WASM SHA256 `ee9aacb29df1a658cdb08722676ff6319b8897bb7264e58b3e11efd9704a5aa8`입니다. native BOOKMARK 거래/정확한 종류 판정은 root 포함3/3·exit0, 실제 공개 reference 검사는1/1·792.317ms·exit0입니다. 독립 normal/-O 전체 XML/비대상 ZIP·잘못된 기대값 거부·undo/redo·재열기와 BOOKMARK→DATE 파생 거부를 포함합니다. 차트 통합 수정 후보 `34f99386…`도 별도로 native3/3·공개1/1을 통과했지만 이 두 소스를 같은 빌드로 계수하지 않습니다.
+
+기본 WASM은 교체하지 않았습니다. 보호된 필드 종료 뒤 외부 입력의 다른 회귀와 전체180파일 검사는 별도이며, 이 수정으로 전체 필드/픽스쳐·실제 브라우저·전체 native/전체 할당 실패가 완료됐다고 주장하지 않습니다. 아래 이전 후보의 로컬 대기 기록은 당시 이력입니다.
+
 ## 원인과 계약
 
 opengov/36388711의 첫 문단은 HYPERLINK가 아니라 BOOKMARK fieldBegin/fieldEnd와 뒤쪽 일반 bookmark 선언이 함께 있는 문단입니다. 초기 후보는 BOOKMARK를 텍스트 필드 종류에서 제외했고, 일반 책갈피가 있는 위치 계산을 제목표시 원문 축으로 검증하면서 필드 ctrl을 거부했습니다.

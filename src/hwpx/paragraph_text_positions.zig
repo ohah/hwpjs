@@ -63,6 +63,15 @@ pub fn validateBoundary(sites: *const sites_module.Sites, segments: []const Segm
 
 /// Caller owns the slice. Positions are rebuilt from current owned text.
 pub fn build(a: std.mem.Allocator, tree: *const tree_module.Tree, sites: *const sites_module.Sites, locations: []const scanner.Location, paragraph: usize) ![]Segment {
+    return buildMode(a, tree, sites, locations, paragraph, false);
+}
+
+/// Field policy and ownership must be validated before using zero-width bookmarks.
+pub fn buildForFieldText(a: std.mem.Allocator, tree: *const tree_module.Tree, sites: *const sites_module.Sites, locations: []const scanner.Location, paragraph: usize) ![]Segment {
+    return buildMode(a, tree, sites, locations, paragraph, true);
+}
+
+fn buildMode(a: std.mem.Allocator, tree: *const tree_module.Tree, sites: *const sites_module.Sites, locations: []const scanner.Location, paragraph: usize, field_text: bool) ![]Segment {
     if (locations.len != sites.items.len or paragraph == 0) return error.InvalidTextSites;
     var segments: std.ArrayList(Segment) = .empty;
     var title_axis_validated = false;
@@ -84,6 +93,7 @@ pub fn build(a: std.mem.Allocator, tree: *const tree_module.Tree, sites: *const 
     for (tree.elements, 0..) |element, index| {
         const run = element.parent orelse continue;
         if (tree.elements[run].parent != paragraph_owner or (!@import("retained_bookmark.zig").supported(tree, index) and !@import("retained_bookmark.zig").directSupported(tree, index))) continue;
+        if (field_text) continue;
         var axis = try @import("title_mark_axis.zig").build(a, tree, sites, locations, paragraph);
         defer axis.deinit(a);
         title_axis_validated = true;
