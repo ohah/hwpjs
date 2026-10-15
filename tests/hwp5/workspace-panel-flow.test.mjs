@@ -9,3 +9,10 @@ test("expanded help panels release pinned workspace without changing viewport sc
   assert.match(css, /main:has\(> details\[open\]\)\s*>\s*\.editor-surface\s*\{\s*position:\s*relative;/);
   assert.match(css, /#viewport\s*\{[^}]*overflow:\s*auto;/);
 });
+
+test("visible document inspector releases pinned workspace so following panels cannot cover its controls", () => {
+  const css = readFileSync("web/preview/preview.css", "utf8");
+  assert.match(css, /\.editor-surface:has\(> #document-inspector:not\(\[hidden\]\)\)\s*\{[^}]*position:\s*relative;/);
+  assert.match(css, /\.editor-surface\s*\{[^}]*position:\s*sticky;/);
+  assert.match(css, /#viewport\s*\{[^}]*overflow:\s*auto;/);
+});

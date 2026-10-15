@@ -44,7 +44,7 @@ main:has(> details[open]) > .editor-surface { position: relative; }
 .document-menu-popup { padding: 8px; border: 1px solid #bbcbd6; border-radius: 8px; background: #f7fafc; box-shadow: 0 6px 18px #253b5126; }
 .document-menu-popup:popover-open { display: grid; position: fixed; inset: auto; margin: 0; min-width: min(200px, calc(100vw - 16px)); max-width: calc(100vw - 16px); overflow: auto; }
 .editor-surface > #viewport { grid-row: 2; grid-column: 1; }
-.editor-surface:has(> #document-inspector:not([hidden])) { grid-template-columns: minmax(0, 1fr) minmax(240px, 320px); gap: 0 12px; }
+.editor-surface:has(> #document-inspector:not([hidden])) { position: relative; grid-template-columns: minmax(0, 1fr) minmax(240px, 320px); gap: 0 12px; }
 #document-inspector { grid-row: 2; grid-column: 2; min-height: 0; overflow: auto; padding: 12px; border: 1px solid #bbcbd6; border-radius: 8px; background: #f7fafc; }
 #document-inspector details { margin: 0; }
 #document-inspector form { margin: 12px 0; }
