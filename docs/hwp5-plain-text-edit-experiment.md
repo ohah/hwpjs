@@ -1,5 +1,32 @@
 # HWP5 단순 문단 텍스트 편집 실험
 
+## mainacacc886 기반 비접촉 범위 후보 (2026-10-16)
+
+정규 root에 새 probe를 직접 등록한 집중 바이너리 `388a01fe7720911399c5604e2d428c2c7afc9a391ad81da137a3a505aff77f47`도 root 포함4/4·fail/skip/log/leak0·exit0입니다. standalone3선언/모드별 결과와 합산하지 않으며 게시 상태는 Git 이력으로 확인합니다.
+
+정규 HWP5/CFB37파일은401/401·fail/cancel/skip0·exit0(528689.797458ms)입니다. source SHA-256 `8cfeb62de4d69154f490ae66755fdb16973305a1df9a2cb30b5dccd169b14a14`와 후보 WASM 해시의 전후 불변을 확인했으며 전체 로그는 분리 폴더의 `disjoint-ranges-registered-37.log`입니다. 집중14결과와 합산하지 않습니다. 전체 native·모든 필드/편집 명령·물리 IME·한컴 조판 완료나 기본 WASM 승격은 별도입니다.
+
+후속 실제 브라우저에서 이전 포인터 관측의 원인을 구분했습니다. `.editor-command-bar`는 `overflow-y:auto`, clientHeight285/scrollHeight929의 별도 스크롤 영역입니다. 같은1280×633 viewport에서 버튼을 scrollintoview하면 toolbar scrollTop164, 버튼 y298..334는 toolbar y174..458.84375 안에 있고 중심 hit target도 `enable-edit`였습니다. `exam_social.hwp`에서도 같은 viewport를 유지한 채 해당 영역을 스크롤해 편집 시작과 저장 동의 checkbox를 실제 마우스로 조작했습니다(scrollTop451). 따라서 아래 최초 관측은 도구 모음 스크롤포트 밖의 버튼 좌표였으며, Canvas 레이아웃 결함으로 확정하지 않습니다. CSS를 임의로 바꾸지 않았고 이 후속 전용 브라우저/서버도 종료했습니다.
+
+실제 Chromium의 전용 `hwpjs-disjoint-20261016` 세션에서 후보 HTTP WASM hash를 위 후보와 대조하고 원본 `exam_social.hwp`를 열었습니다. 검색 두 번째 결과의 실제 Canvas textarea에서 ArrowLeft 후 `keyboard inserttext`로 `캔버스😀`를 입력했습니다. 범위 동의는 꺼진 채이며 source section0/paragraph30/UTF16위치9의 입력입니다. 브라우저 다운로드 `browser-disjoint-edited.hwp`는 독립 전체 Section/비대상 stream/CFB metadata와 새 editor 재열기를 통과했고, range는 `[15,16]`에서 `[20,21]`로 이동했습니다. 저장 SHA-256은 `791ea8d322e2576122f6d15f9df8460d694c244e97f0555433b1e89b9a9a632f`입니다.
+
+실제 undo 뒤 End 경계에서 `오류` 입력은 `UnsupportedRangeSemantics`로 거부됐습니다. 거부 뒤 다운로드는 원본 전체 bytes와 같고, 실제 redo 뒤 다운로드는 최초 편집본 전체 bytes와 같았습니다. uncaught page error는 없었습니다. 실제 브라우저 이벤트/Worker/WASM/다운로드 한 경로의 검증이며 물리 OS IME·모든 선택/명령·한컴 조판 검증은 아닙니다. 소유 브라우저와 loopback9028 서버를 종료하고 세션/포트 목록에서 부재를 확인했습니다. 다른 세션/디바이스는 종료하지 않았습니다.
+
+최초 브라우저 검증은 초기1280×633 viewport, scrollY217에서 편집 시작 버튼 y409의 중심이 sticky Canvas(y406.84375)에 덮인 상태를 관측했습니다. 저장 동의 checkbox도 같은 상태여서 편집 준비는 키보드 focus/Enter로, 저장 동의/다운로드는1440×1100으로 조정한 뒤 실제 클릭으로 진행했습니다. 당시 도구 모음 자체의 스크롤을 별도로 조정하지 않았으며 위 후속 관측으로 원인을 구분했습니다. 전체 UI/모든 viewport 검증으로 확대하지 않습니다.
+
+같은 native3선언의 Debug/ReleaseFast 직접 실행도 각각3/3·exit0입니다. 모드별 반복 실행을 독립9개 검사로 합산하지 않습니다. 전체 실패 주입은 공통 명시적 checked allocator를 유지합니다.
+
+분리 폴더 `/tmp/hwpjs-disjoint-ranges-publication.KuvSjs`는 main에 원문 범위 매핑과 plain_text 연결 두 파일만 적용합니다. 후보 WASM SHA-256은 `774c0bcd3061399a3ca69ef23f8f3d331313bbc99626d56675eeb71dc40564a0`이며 기본 데모는 교체하지 않았습니다. 아래의 과거 후보/검증 기록과 산출물을 혼용하지 않습니다.
+
+명세 표63은 시작/끝/태그와 중첩 가능성을 정의하지만 경계 삽입 affinity는 확정하지 않습니다. 기본 정책은 모든 현재 범위마다 `edit.end < range.start` 또는 `edit.start > range.end`인 경우만 허용하고 접촉·교차·둘러싸기는 거부합니다. 기존 위치 매핑을 공유하며 빈 마커·태그 원값·범위 순서를 보존합니다. 현재 소유 범위 배열은 빈 배열도 원본보다 우선합니다. 명시적 half-open은 기존 계약을 유지합니다. 구조 분할에 같은 허용을 확장하지 않으며 원본 범위가 있으면 계속 거부합니다.
+
+native probe는 6개 좌표의 유효 범위/거래441조합·전체 할당 실패·빈 마커·후반 거부 정리·현재/원본 우선순위·길이 한도·서로게이트 분할을 검사합니다. ReleaseSafe 선택 바이너리 `c73c72b0a98dc4bb7b446d3c5287c504487b6581d1f9db55bfdca1327c0a1a34`는3/3·fail/skip/log/leak0·exit0입니다. 테스트 개수를 좌표 조합 수와 혼동하지 않습니다.
+
+공개 회귀4파일14테스트는14/14·fail/cancel/skip0·exit0(32407.881542ms)입니다. 실제8파일256범위 문단은 독립 원본 inventory의 고정 개수와 대조하며37곳은 기본 prefix 허용,219곳은 기본 거부 후 명시적 정책을 검사합니다. 반복 입력은 현재 좌표와 범위 우선순위, 저장 전체 Section/비대상 stream·변조 기대값 거부·재열기·undo/redo·입력 파일 불변을 확인합니다. 7파일은 명시적 CFB 정규화 저장본이 기준이며 온새미로104곳은 정규화 없이 원본 저장 동치도 단언합니다.
+
+별도의5파일144개 엄격한 suffix 위치는 삽입·삭제·전체 독립 Section·비대상 stream·거부 기대값·재열기·단계별 이력을 검사합니다. prefix와 suffix 위치를 고유 문단 수로 합산하지 않습니다. 파생 빈 마커1표본은 기본 입력 후 마커 보존, 현재 경계 접촉 거부와 redo 유지, 구조 분할 거부를 검사합니다. 이 파생 표본을 실제 원본 지원 개수에 더하지 않습니다. 수정 전 후보314fd38f는 같은 빈 마커 공개 검사에서 `UnsupportedRangeSemantics`로 실패해 새 입력 경로의 차이를 확인했습니다. 정규 API와 단일 브라우저 경로는 위 후속 결과를 따르며 전체 native·모든 Worker/브라우저 명령·물리 IME·한컴 조판 검증은 아직 완료되지 않았습니다.
+
+
 이 문서는 native 명령·보존·저장 계약을 소유합니다. 아래 초기 구현 기록의 공개 API 부재는 당시 범위이며, 현재 제한적 JS/WASM 연결은 별도 [실험용 편집 API](hwp5-editor-api.md), 웹 입력은 [Canvas 직접 입력](canvas-direct-input.md)을 따릅니다. 일반 편집기·재조판 구현은 여전히 아닙니다.
 
 [모듈 인덱스](hwp5-modules.md) · [이전 스타일 참조 실험](hwp5-style-preservation-experiment.md)

@@ -62,7 +62,7 @@ export function encodeRecord(tag, level, payload, extended = payload.length >= 4
   return Buffer.concat([h, payload]);
 }
 
-export function expectedSection(bytes, index, start, end, utf8, { skipLocalFieldAttributes = false, fieldIds = [0x25686c6b] } = {}) {
+export function expectedSection(bytes, index, start, end, utf8, { skipLocalFieldAttributes = false, fieldIds = [0x25686c6b], preserveEmptyRanges = false } = {}) {
   const owner = paragraphRecords(bytes, index), own = owner.direct.filter(r => r.level === owner.head.level + 1), originalText = own.find(r => r.tag === 67);
   const declared = owner.head.payload.readUInt32LE(0) & 0x7fffffff;
   assert(originalText || declared <= 1, "oracle cannot invent missing nonempty text");
@@ -96,7 +96,7 @@ export function expectedSection(bytes, index, start, end, utf8, { skipLocalField
     const map = point => point < start ? point : point >= end ? point + add.length / 2 - (end - start) : start;
     for (let i = 0; i < rangeRecord.payload.length; i += 12) {
       const s = map(rangeRecord.payload.readUInt32LE(i)), e = map(rangeRecord.payload.readUInt32LE(i + 4)), tag = rangeRecord.payload.readUInt32LE(i + 8);
-      if (s < e) rangeValues.push({ s, e, tag });
+      if (s < e || preserveEmptyRanges && s === e) rangeValues.push({ s, e, tag });
     }
   }
   const rangePayload = Buffer.alloc(rangeValues.length * 12);
@@ -119,9 +119,9 @@ export function expectedSection(bytes, index, start, end, utf8, { skipLocalField
   return Buffer.concat([...owner.all.slice(0, owner.at).map(r => r.raw), ...changed, ...owner.all.slice(owner.end).map(r => r.raw)]);
 }
 
-export function verifyRaw(beforeBytes, afterBytes, section, paragraph, start, end, utf8) {
+export function verifyRaw(beforeBytes, afterBytes, section, paragraph, start, end, utf8, options) {
   const before = inspect(beforeBytes), after = inspect(afterBytes), target = before.sections[section];
   assert.deepEqual([...after.streams.keys()].sort(), [...before.streams.keys()].sort());
-  assert.deepEqual(after.sections[section].bytes, expectedSection(target.bytes, paragraph, start, end, utf8), "complete Section must match independent splice, styles, ranges and cache removal");
+  assert.deepEqual(after.sections[section].bytes, expectedSection(target.bytes, paragraph, start, end, utf8, options), "complete Section must match independent splice, styles, ranges and cache removal");
   for (const [path, bytes] of before.streams) if (path !== target.path) assert.deepEqual(after.streams.get(path), bytes, `unselected stream ${path}`);
 }

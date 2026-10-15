@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+`zig test src/text_range_disjoint_probe.zig -O ReleaseSafe --test-filter 'disjoint range'`는441좌표 조합·현재/원본 우선순위·빈 마커·전체 할당 실패를 검사합니다. Debug/ReleaseFast도 같은 선언을 선택합니다. `HWPJS_TEST_WASM=/absolute/candidate/hwpjs.wasm node --test tests/hwp5/reference-range-prefix.test.mjs tests/hwp5/onsaemiro-range-prefix.test.mjs tests/hwp5/disjoint-range-marker.test.mjs tests/hwp5/disjoint-range-suffix.test.mjs`는 실제 prefix/suffix·독립 저장·파생 빈 마커 반례입니다. [후보/정책/브라우저 경계](hwp5-plain-text-edit-experiment.md)를 따릅니다.
+
 `zig test src/hwp5_unselected_field_tests.zig -O ReleaseSafe --test-filter 'unselected field policy'`는 비대상 구역의 실제 필드 연결·전체 실패 주입·종류 불일치/미지 제어 거부를 검사합니다. `HWPJS_TEST_WASM=/absolute/candidate/hwpjs.wasm node --test tests/hwp5/unselected-field-sections.test.mjs tests/hwp5/unselected-cross-reference-gate.test.mjs`는 14구역 입력/서식/속성·독립 저장/이력과 비대상 상호참조 보호입니다. [후보와 검증 경계](hwp5-unselected-field-preservation.md)를 따릅니다.
 
 `zig test src/hwp5_object_metadata_tests.zig -O ReleaseSafe --test-filter 'object control metadata' --test-filter 'actual object metadata'`는 객체 CTRL_DATA 소유권/스키마/실패 주입을 선택합니다. `HWPJS_TEST_WASM=/absolute/candidate/hwpjs.wasm node --test tests/hwp5/object-metadata-numeric-retention.test.mjs tests/hwp5/numeric-formula-corpus.test.mjs`는 실제 숫자 의존 셀·독립 산술·원문 메타데이터·거부 후 redo를 검사합니다. [분리 후보와 미완료 경계](hwp5-object-metadata-retention.md)를 따릅니다.

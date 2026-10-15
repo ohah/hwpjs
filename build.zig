@@ -95,6 +95,10 @@ pub fn build(b: *std.Build) void {
     editor_api_tests.addArg("tests/hwp5/object-metadata-numeric-retention.test.mjs");
     editor_api_tests.addArg("tests/hwp5/unselected-field-sections.test.mjs");
     editor_api_tests.addArg("tests/hwp5/unselected-cross-reference-gate.test.mjs");
+    editor_api_tests.addArg("tests/hwp5/reference-range-prefix.test.mjs");
+    editor_api_tests.addArg("tests/hwp5/onsaemiro-range-prefix.test.mjs");
+    editor_api_tests.addArg("tests/hwp5/disjoint-range-marker.test.mjs");
+    editor_api_tests.addArg("tests/hwp5/disjoint-range-suffix.test.mjs");
     editor_api_tests.has_side_effects = true;
     audit.dependOn(&editor_api_tests.step);
     const editor_api_step = b.step("hwp5-editor-audit", "Test experimental JS WASM HWP5 editor boundary");

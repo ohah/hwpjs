@@ -67,6 +67,7 @@ fn applyWith(a: std.mem.Allocator, source: []const u8, version: Version, p: *mod
     const validated = if (field_mode) try validator.validateFieldTransaction(a, source, version, p.*, char_count) else if (formulas) try validator.validateFormulaTransaction(a, source, version, p.*, char_count) else if (cross_fields) try validator.validateHyperlinkTransaction(a, source, version, p.*, char_count) else try validator.validate(a, source, version, p.*, char_count);
     if (partition and validated.preserved_direct_records != 0) return error.UnsupportedStructuralControl;
     const ranges = validated.ranges;
+    if (partition) if (ranges) |value| if (value.count() != 0) return error.UnsupportedRangeSemantics;
     const before = try @import("plain_text_content.zig").editableTextBytes(a, p.*);
     defer a.free(before);
     try @import("control_boundaries.zig").validateRetainedText(before);
@@ -75,7 +76,13 @@ fn applyWith(a: std.mem.Allocator, source: []const u8, version: Version, p: *mod
     defer a.free(add);
     const output_len = before.len - @as(usize, edit.end_unit - edit.start_unit) * 2 + add.len;
     if (output_len > 8 * 1024 * 1024) return error.LimitExceeded;
-    if (ranges != null and ranges.?.count() != 0 and edit.range_policy == .reject) return error.UnsupportedRangeSemantics;
+    const units: u32 = @intCast(add.len / 2);
+    const range_editor = @import("text_ranges.zig");
+    const owned_ranges = if (edit.range_policy == .reject)
+        try range_editor.prepareDisjoint(a, p.range_tags, ranges, before, edit.start_unit, edit.end_unit, units)
+    else
+        try range_editor.prepare(a, p.range_tags, ranges, before, edit.start_unit, edit.end_unit, units);
+    errdefer a.free(owned_ranges);
     const after = try a.alloc(u8, output_len);
     defer a.free(after);
     const start = @as(usize, edit.start_unit) * 2;
@@ -83,15 +90,15 @@ fn applyWith(a: std.mem.Allocator, source: []const u8, version: Version, p: *mod
     @memcpy(after[0..start], before[0..start]);
     @memcpy(after[start..][0..add.len], add);
     @memcpy(after[start + add.len ..], before[end..]);
-    if (std.mem.eql(u8, before, after)) return;
+    if (std.mem.eql(u8, before, after)) {
+        a.free(owned_ranges);
+        return;
+    }
     if (formulas) try @import("../body/field_span.zig").protectFormulaLabels(before, edit.start_unit, edit.end_unit);
-    const units: u32 = @intCast(add.len / 2);
     const run_editor = @import("character_runs.zig");
     try run_editor.validate(p.character_runs, before, char_count);
     const owned_runs = try run_editor.replace(a, p.character_runs, edit.start_unit, edit.end_unit, units, null);
     errdefer a.free(owned_runs);
-    const owned_ranges = try @import("text_ranges.zig").prepare(a, p.range_tags, ranges, before, edit.start_unit, edit.end_unit, units);
-    errdefer a.free(owned_ranges);
     const owned_fields = if (cross_fields) (if (p.field_attributes) |fields| try a.dupe(model.FieldAttributes, fields) else null) else try @import("field_attributes.zig").prepare(a, source, version, p.*, before, edit.start_unit, edit.end_unit);
     errdefer if (owned_fields) |fields| a.free(fields);
     const owned_tokens = try @import("token_ownership.zig").fromText(a, after);
