@@ -1,5 +1,21 @@
 # 큰 문서 테스트의 할당자 진단 비용
 
+## 보호 문단 fixture 모듈의 선택 전수 대조
+
+main98d0dba0 전체 바이너리 `aa6e396a49a52678dbf8e87d200679431754b7d45e07d827f4587c6f533af344`의8개 보호 문단 테스트를 표준 protocol로 각각 선택해 독립 프로세스에서 측정했습니다. seed0x485750·1024MiB 관측 기준은 유지하고 테스트 결과 뒤에도 프로세스를 닫기 전에 OS peak를 읽었습니다. 결과는5성공·3자원 초과·exit1이며, 단일 테스트/모듈 선택 검사를 전체3,957개 완료로 세지 않습니다.
+
+| 선언의 핵심 이름 | 이전 전체 바이너리 관측 peak(bytes) | 수정 전체 바이너리 관측 peak(bytes) |
+| --- | ---: | ---: |
+| styled protected merge (index2427) | 1,077,544,112 | 5,783,912 |
+| styled protected split (index2428) | 1,212,368,120 | 7,192,912 |
+| protected merge (index2430) | 1,165,952,176 | 6,521,192 |
+
+세 테스트만 scoped checked allocator·공통 전체 실패 주입으로 연결했습니다. 나머지5개는 수정하지 않았습니다. Unicode/서식 범위·이동한 스타일 유닛 수·양쪽 문단/원문 저장 동치·실패 원자성 등 기존 단언과 전체 할당 실패 검사는 그대로입니다. 제품 구현은 변경하지 않았습니다. styled merge를 먼저 별도로 선택한 재현에서도 peak1,216,398,560바이트로 같은 기준을 넘었으며, 중단 시점 차이를 정상 완료의 절대 메모리 비용으로 해석하지 않습니다.
+
+수정 모듈 집중 바이너리 `624ab6438c15c53c0b3bf97a14fa80c23d43377a7138cae1f2af9a4801577624`는 root 포함9/9·fail/skip/log/leak0·exit0·관측 peak303,727,168바이트입니다. 이어 전체3,957개를 담은 수정 바이너리 `ffae8b9436cb8bba4e53e7fda7289f2c09cd7c5a4cb75438e4f400a9ed667efa`에서 같은8개를 다시 선택해8/8·실패/오류 로그/누수0·exit0을 확인했습니다. 이때 가장 큰 peak443,695,776바이트는 수정하지 않은 protected splice입니다. 위 표의 전후 수치는 모두 전체 바이너리에서 선택한 같은 테스트별 값입니다.
+
+전후 전체 이름 배열/순서는 byte-exact 동치이며3,957개·names SHA-256 `e710a22d7cd15c1f77de2e7a7d7c4b08d2910d3d093c51a5df81ee6e3cbb5f5b`로 같습니다. 기존98d0 전수 실행은 후속3건의 자원 실패를 같은 바이너리에서 별도로 확인하고 수정 모듈을 검증한 뒤 명시적으로 종료했습니다(889완료·ExternalSIGTERM·incomplete·exit1). 관측 timeout 때문에 재시작한 것이 아니며 당시 진행 중인index889의 제품 오류나 자원 초과로 기록하지 않습니다. 종료 guardian/batch/native PID86429/86440/8598의 부재도 확인했습니다. 새 전체 검증은index0부터 다시 실행하며 이전 완료 개수/선택8개의 결과를 합산하지 않습니다.
+
 ## 빈 보호 문단 병합의 전체 실패 주입
 
 main8df 기반 전체 바이너리 `4a611cf68060e1020465c5d22a8a2605aea4d97be7b4e90b2cca3661bea01205`는3,955개 중2,424개 완료 후 index2424 `HWPX empty protected merge allocation failures preserve insertion style and original`에서 물리 peak1,150,551,264바이트로1024MiB 관측 기준을 넘었습니다. 최종incomplete·guardStopped=true·exit1이며 종료된 native PID83874와 guardian/batch PID25510/25521의 부재를 확인했습니다. 완료 구간에는 별도로 수정한 생성 표 의미 검증의 단언 실패index874가1건 있었으므로 이 실행을 전체 통과로 읽지 않습니다. 해당 의미 회귀의 수정/공개91검사는 [수식 표시·의미 검증 경계](hwpx-preserved-formula-dependencies.md)가 소유합니다.

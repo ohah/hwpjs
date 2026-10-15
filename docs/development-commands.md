@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+`zig test src/root.zig -O ReleaseSafe --test-no-exec --test-filter 'HWPX empty protected merge' --test-filter 'HWPX styled protected' --test-filter 'HWPX protected merge actual' --test-filter 'HWPX protected splice actual' --test-filter 'HWPX anchored split history' --test-filter 'HWPX protected structure actual line' -femit-bin=/absolute/protected-tests`는 보호 문단 모듈8선언과root를 선택합니다. 이어 `node tools/zig-native-footprint-audit.mjs --binary=/absolute/protected-tests --batch-size=1 --max-physical-mib=1024`로 감시하며, 전체 바이너리에서의 개별 선택/비교 경계는 [할당자 자원 기록](native-allocator-resource-regression.md)을 따릅니다.
+
 `zig test src/root.zig -O ReleaseSafe --test-filter 'HWPX empty protected merge allocation' --test-no-exec -femit-bin=/absolute/empty-merge-tests` 후 `node tools/zig-native-footprint-audit.mjs --binary=/absolute/empty-merge-tests --batch-size=1 --max-physical-mib=1024`로 보호 병합 전체 실패 주입의 자원 대조를 실행합니다. [중단·수정·검증 경계](native-allocator-resource-regression.md)를 따르며 전체 native 완료나 제품 메모리 개선으로 해석하지 않습니다.
 
 `zig test src/form_source_fixture_test.zig -O ReleaseSafe --test-filter 'observed form source'`는 관측 양식 원문 연결·버전/꼬리/ID 거부·전체 할당 실패를 검사합니다. `HWPJS_TEST_WASM=/absolute/candidate/hwpjs.wasm node --test tests/hwp5/form-source-retention.test.mjs tests/hwp5/form-source-worker.test.mjs tests/hwp5/form-token-boundaries.test.mjs`는 실제7파일1,446문단의 독립 Section/CFB/이력·Worker 대역 입력과1,712토큰 거부입니다. 명시적 후보가 필요하며 [계약·실측·미지원 경계](hwp5-form-source-retention.md)를 따릅니다.

@@ -38,7 +38,10 @@ fn emptyProtectedMergeAllocationFailures(a: std.mem.Allocator) !void {
 }
 
 test "HWPX styled protected merge actual fixture allocation failures preserve moved text styles" {
-    const a = std.testing.allocator;
+    try @import("../testing/checked_allocator.zig").run(styledProtectedMergeAllocationFailures, .{});
+}
+
+fn styledProtectedMergeAllocationFailures(a: std.mem.Allocator) !void {
     const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/shapeline.hwpx", a, .limited(4_000_000));
     defer a.free(input);
     var session = try editor.open(a, input, .{});
@@ -49,7 +52,7 @@ test "HWPX styled protected merge actual fixture allocation failures preserve mo
     const section = &session.sections[0];
     const before = try session.save();
     defer a.free(before);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tree, original: *const model.Values) !void {
             var candidate = try @import("paragraph_structure_merge.zig").prepare(allocator, tree, original, 0, 4_000_000);
             defer candidate.deinit(allocator);
@@ -74,7 +77,10 @@ test "HWPX styled protected merge actual fixture allocation failures preserve mo
 }
 
 test "HWPX styled protected split actual fixture allocation failures preserve authority" {
-    const a = std.testing.allocator;
+    try @import("../testing/checked_allocator.zig").run(styledProtectedSplitAllocationFailures, .{});
+}
+
+fn styledProtectedSplitAllocationFailures(a: std.mem.Allocator) !void {
     const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/shapeline.hwpx", a, .limited(4_000_000));
     defer a.free(input);
     var session = try editor.open(a, input, .{});
@@ -85,7 +91,7 @@ test "HWPX styled protected split actual fixture allocation failures preserve au
     const section = &session.sections[0];
     const before = try session.save();
     defer a.free(before);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tree, original: *const model.Values) !void {
             var candidate = try @import("paragraph_structure_split.zig").prepareAnchored(allocator, tree, original, 1, 3, 3, 555, 4_000_000);
             defer candidate.deinit(allocator);
@@ -135,7 +141,10 @@ test "HWPX styled protected splice actual fixture allocation failures keep all t
 }
 
 test "HWPX protected merge actual fixture allocation failures retain both source paragraphs" {
-    const a = std.testing.allocator;
+    try @import("../testing/checked_allocator.zig").run(protectedMergeAllocationFailures, .{});
+}
+
+fn protectedMergeAllocationFailures(a: std.mem.Allocator) !void {
     const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/shapeline.hwpx", a, .limited(4_000_000));
     defer a.free(input);
     var session = try editor.open(a, input, .{});
@@ -146,7 +155,7 @@ test "HWPX protected merge actual fixture allocation failures retain both source
     const current = &section.structure_values.?;
     const before = try session.save();
     defer a.free(before);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tree, original: *const model.Values) !void {
             var candidate = try @import("paragraph_structure_merge.zig").prepare(allocator, tree, original, 0, 4_000_000);
             defer candidate.deinit(allocator);
