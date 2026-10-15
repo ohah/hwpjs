@@ -1,5 +1,13 @@
 # 큰 문서 테스트의 할당자 진단 비용
 
+## 실제 쪽 기하 종합 검사
+
+main7c3705e5 의존성과 같은 테스트 수리만 사용한 분리 소스에서도 집중17361은2/2·exit0, ReleaseSafe 제품 빌드5/5·exit0과fmt를 확인했습니다. 게시에는테스트5줄과기록만포함합니다. 로컬전체컴파일50536은별도진행중이며전체분할감사95505의코드/입력도바꾸지않았습니다. 기본WASM/편집기능게시나전체gate통과를뜻하지않습니다.
+
+전체62384의index762 중단 뒤 같은 noori/page 입력의 집중 baseline도1024MiB관측 기준에서peak1245922552바이트·exit1로중단됐습니다. 테스트 바깥 소유 범위만 checked_allocator.run으로 바꾸고 두 원본의방향/크기/좌우·상하·머리말/꼬리말 여백 전체 구조체 동치와 max_pages0예산 거부 단언을 유지했습니다. 제품 inspectKnown/page geometry parser는 변경하지 않았습니다.
+
+수정본 SHA256 `3317965ee34bd99bcf5fd591378469cea3b31391431e12556efe64ec17164d72`는root포함2/2·fail/skip/log/leak0·exit0, 같은한도에서peak5980496바이트입니다. 기록은 `/tmp/hwpjs-native-current-20261015.QKXKKy/page-geometry-{baseline,checked}.jsonl`입니다. fmt/diff check도 통과했으며 main분리검증/게시와전체4114재검증은 별도로 남아 있습니다.
+
 ## 실제 presentation 브러시/필드 검사
 
 main67038c46 의존성과 동일 테스트 수리만 사용한 별도 소스/실제 입력에서 집중39961은2/2·exit0, ReleaseSafe 제품 빌드는5/5·exit0입니다. fmt도 통과했습니다. 게시에는 테스트5줄 변경과 기록만 포함하며 현재 전체 native 컴파일22025는 별도 진행 중입니다. 기존 제품/편집 확장이나 기본 WASM은 게시 범위가 아닙니다.

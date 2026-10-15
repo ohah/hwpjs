@@ -289,7 +289,10 @@ test "HWPX known inspections resolve real memo shape resource" {
 }
 
 test "HWPX known inspections expose page geometry and independent file values" {
-    const a = std.testing.allocator;
+    try @import("../testing/checked_allocator.zig").run(verifyActualPageGeometry, .{});
+}
+
+fn verifyActualPageGeometry(a: std.mem.Allocator) !void {
     for ([_][]const u8{ "noori", "page" }, [_]u32{ 5669, 8504 }, [_]u32{ 4251, 4252 }, [_]u32{ 2834, 5668 }, [_]u32{ 2834, 4252 }) |name, expected_left, expected_header, expected_top, expected_bottom| {
         const bytes = try load(a, name);
         defer a.free(bytes);
