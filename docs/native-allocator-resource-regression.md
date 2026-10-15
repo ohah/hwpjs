@@ -1,5 +1,13 @@
 # 큰 문서 테스트의 할당자 진단 비용
 
+## 실제 쪽 번호 상속과 전체 실패 주입
+
+후속 게시 분리 검증은 main57a0d46b 의존성에 테스트 수리만 적용했습니다. 미게시 다구역/restart 제품 diff98줄은 제외하고 실제headerfooter 입력으로 집중2/2·exit0, ReleaseSafe 제품 빌드5/5·exit0, fmt를 확인했습니다. 게시 diff는 해당 테스트7줄과 이 기록뿐이며 현재 로컬 전체 native 검증의 대체 완료가 아닙니다.
+
+전체 실행58902의 index645 중단 뒤 같은 로컬 소스에서 실제 headerfooter.hwpx 집중 baseline을 먼저 컴파일했습니다. 같은1024MiB 관측 한도에서peak1255195920바이트·자원중단/exit1을 재현했습니다. 테스트의 바깥 Session/read/save 소유 범위만 checked_allocator.run으로 감싸고 내부 주입을 allocation_failures.check에 연결했습니다. 기존 상속값·미지원 다음 구역·모든 할당 실패 인덱스·원본과 저장 bytes 일치 단언은 유지합니다. 이 파일에 있던 미게시 다구역/restart 제품 변경은 이번에 수정하지 않았습니다.
+
+수정본 SHA256 `56b001001a0dd2b187a160926633b33b5feb51663e353c88c30df9892446a7b9`는 root 포함2/2·fail/skip/log/leak0·exit0, 같은한도에서peak4964688바이트입니다. 기록은 `/tmp/hwpjs-native-current-20261015.QKXKKy/page-number-{baseline,checked}.jsonl`이며 fmt도 통과했습니다. 현재 로컬 구현에 대한 집중 대조이고 제품 성능비·전체4114통과·게시 완료는 아닙니다. 기존 제품 변경과 분리해 게시할 때는 main 의존성에서 다시 확인해야 합니다.
+
 같은 분리 소스의 ReleaseSafe 제품 빌드는5/5단계·exit0이고 네 Zig 파일의 fmt/diff check도 통과했습니다. 제품 기본 WASM이나 미게시 Session/ABI/Canvas 변경은 이 게시 단위에 포함하지 않습니다.
 
 게시 전 확인된 테스트 수리4파일만 main 의존성과 함께 별도 소스 복사본에 준비했습니다. 실제 대형 참조 입력도 같은 경로로 복사해 누락 skip 없이 root/수식 snapshot/화살표/연결선 좌표/렌더링 집중5/5·exit0을 확인했습니다. 이 분리 소스의 수식 callback은626회입니다. 전체 로컬4114목록 실행58902는645완료·실패/log/leak0 뒤 실제 쪽 번호 상속 검사에서peak1098417280바이트로1024MiB 관측 기준을 넘겨incomplete·exit1입니다. 이 전체 실행의 연결선 검사는 통과했지만 전체 gate는 미완료이며 집중5/5로 대체하지 않습니다.

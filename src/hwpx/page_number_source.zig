@@ -46,7 +46,10 @@ pub fn read(a: std.mem.Allocator, source: []const u8, trees: []const Tree, secti
 }
 
 test "HWPX page number source actual header and section inheritance" {
-    const a = std.testing.allocator;
+    try @import("../testing/checked_allocator.zig").run(verifyActualPageNumberInheritance, .{});
+}
+
+fn verifyActualPageNumberInheritance(a: std.mem.Allocator) !void {
     const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/headerfooter.hwpx", a, .limited(4_000_000));
     defer a.free(input);
     var session = try @import("editor_session.zig").open(a, input, .{});
@@ -58,7 +61,7 @@ test "HWPX page number source actual header and section inheritance" {
     try std.testing.expectEqual(@as(?bool, false), result.hide_first_header);
     try std.testing.expectEqual(@as(?bool, false), result.hide_first_footer);
     try std.testing.expect(!(try read(a, input, &trees, 1)).supported);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, bytes: []const u8, sections: []const Tree) !void {
             const values = try read(allocator, bytes, sections, 0);
             try std.testing.expect(values.supported);
