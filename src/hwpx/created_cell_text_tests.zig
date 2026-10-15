@@ -15,14 +15,14 @@ test "created cell text command saves reopens and retains redo on refusal and no
     _ = try @import("created_table_session.zig").stage(&session, 0, 2, 0, &table);
     var history = try history_mod.History.init(&session, 4, 4000000);
     defer history.deinit();
-    try std.testing.expect(try history.apply(&session, command("입력😀<&\r")));
+    try std.testing.expect(try history.apply(&session, command("입력😀<&\r\n\n끝")));
     const saved = try session.save();
     defer a.free(saved);
     var reopened = try editor.open(a, saved, .{});
     defer reopened.deinit();
     const text = try reopened.anchorText(0, 3);
     defer a.free(text);
-    try std.testing.expectEqualStrings("입력😀<&\r", text);
+    try std.testing.expectEqualStrings("입력😀<&\r\n\n끝", text);
     try std.testing.expect(try history.undo(&session));
     try std.testing.expect(!try history.apply(&session, command("")));
     try std.testing.expectError(error.InvalidXmlCharacter, history.apply(&session, command(&.{0})));

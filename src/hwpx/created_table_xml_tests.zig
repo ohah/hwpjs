@@ -6,11 +6,55 @@ fn make(a: std.mem.Allocator) !model.Table {
     return model.create(a, 1, 33, try @import("../model/table_creation_plan.zig").create(2, 2, 101, 17, 4), &.{ 3, 5, 7, 9 }, .{ .paragraph = 2, .character = 1, .style = 0, .border_fill = 3 }, 4);
 }
 
+test "generated cell text XML rejects every short output budget and malformed scalar around LF" {
+    const a = std.testing.allocator;
+    const encode = @import("created_cell_text_xml.zig").encode;
+    const input = "\n한😀&<>\r\n<hp:lineBreak/>\n";
+    const expected = "<hp:lineBreak/>한😀&amp;&lt;&gt;&#13;<hp:lineBreak/>&lt;hp:lineBreak/&gt;<hp:lineBreak/>";
+    for (0..expected.len) |limit| try std.testing.expectError(error.LimitExceeded, encode(a, input, limit));
+    const exact = try encode(a, input, expected.len);
+    defer a.free(exact);
+    try std.testing.expectEqualStrings(expected, exact);
+    const empty = try encode(a, "", 0);
+    defer a.free(empty);
+    try std.testing.expectEqual(@as(usize, 0), empty.len);
+    for ([_][]const u8{ "\n\x80", "A\n\xed\xa0\x80", "\xf4\x90\x80\x80\n" }) |invalid| {
+        try std.testing.expectError(error.InvalidXmlEncoding, encode(a, invalid, 100));
+    }
+    try std.testing.expectError(error.UnexpectedEnd, encode(a, "\n\xf0\x9f", 100));
+    try std.testing.expectError(error.InvalidXmlCharacter, encode(a, "\n\xef\xbf\xbe", 100));
+}
+
+test "created table XML emits semantic soft line break rather than literal LF" {
+    const a = std.testing.allocator;
+    var table = try make(a);
+    defer table.deinit(a);
+    _ = try table.replaceText(a, 0, 0, "첫😀\n\n끝<&", 100);
+    const xml = try writer.write(a, &table, 10000);
+    defer a.free(xml);
+    try std.testing.expect(std.mem.indexOf(u8, xml, "첫😀<hp:lineBreak/><hp:lineBreak/>끝&lt;&amp;") != null);
+    try std.testing.expect(std.mem.indexOfScalar(u8, xml, '\n') == null);
+    const encode = @import("created_cell_text_xml.zig").encode;
+    const expected = "<hp:lineBreak/>A&amp;<hp:lineBreak/>";
+    const exact = try encode(a, "\nA&\n", expected.len);
+    defer a.free(exact);
+    try std.testing.expectEqualStrings(expected, exact);
+    try std.testing.expectError(error.LimitExceeded, encode(a, "\nA&\n", expected.len - 1));
+    try std.testing.expectError(error.InvalidXmlCharacter, encode(a, "\n\x00", 100));
+    try std.testing.checkAllAllocationFailures(a, struct {
+        fn run(allocator: std.mem.Allocator) !void {
+            const value = try @import("created_cell_text_xml.zig").encode(allocator, "\nA&\n", 100);
+            defer allocator.free(value);
+            try std.testing.expectEqualStrings("<hp:lineBreak/>A&amp;<hp:lineBreak/>", value);
+        }
+    }.run, .{});
+}
+
 test "created table XML reparses exact grid IDs sizes Unicode and rejects invalid text" {
     const a = std.testing.allocator;
     var table = try make(a);
     defer table.deinit(a);
-    const text = "한😀<&amp;>]]>\r\n\t";
+    const text = "한😀<&amp;>]]>\r\t";
     _ = try table.replaceText(a, 0, 0, text, 100);
     const xml = try writer.write(a, &table, 10000);
     defer a.free(xml);
@@ -63,7 +107,7 @@ test "created table XML releases every allocation failure and rejects duplicate 
     const a = std.testing.allocator;
     var table = try make(a);
     defer table.deinit(a);
-    _ = try table.replaceText(a, 1, 1, "끝😀<&", 100);
+    _ = try table.replaceText(a, 1, 1, "끝😀<&\n\n", 100);
     const expected = try writer.write(a, &table, 10000);
     defer a.free(expected);
     try std.testing.checkAllAllocationFailures(a, struct {
@@ -73,7 +117,7 @@ test "created table XML releases every allocation failure and rejects duplicate 
             try std.testing.expectEqualSlices(u8, baseline, xml);
         }
     }.run, .{ &table, expected });
-    try std.testing.expectEqualStrings("끝😀<&", table.cells[3].text);
+    try std.testing.expectEqualStrings("끝😀<&\n\n", table.cells[3].text);
     table.cells[3].paragraph_id = table.cells[0].paragraph_id;
     try std.testing.expectError(error.InvalidTableParagraphIds, writer.write(a, &table, 10000));
 }
