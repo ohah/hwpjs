@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createTableCreationControls } from "../../web/preview/table-creation-controls.mjs";
 test("table creation controls use actual resource IDs and disable absent or stale selections", () => {
-  class Node extends EventTarget { value = ""; replaceChildren(...items) { this.items = items; } focus() { this.focused = true; } }
+  class Node extends EventTarget { value = ""; attributes = {}; setAttribute(key, value) { this.attributes[key] = value; } replaceChildren(...items) { this.items = items; } focus() { this.focused = true; } }
   const form = new Node(), fields = new Node(), focusButton = new Node(), submit = new Node(), note = new Node();
   let valid = true, selection = null, onValidity = null;
   form.reportValidity = () => { onValidity?.(); return valid; };
@@ -12,9 +12,21 @@ test("table creation controls use actual resource IDs and disable absent or stal
   const sent = [];
   const controls = createTableCreationControls({ form, fields, focusButton, submit, note, dimensions, resources, selected: () => selection, inventory: () => ids, request: value => { sent.push(value); return true; }, createOption: () => ({}) });
   assert.equal(fields.disabled, true);
+  assert.equal(fields.hidden, true);
+  assert.equal(focusButton.attributes["aria-expanded"], "false");
   selection = { section: 0, paragraph: 1, unit: 0 }; controls.update();
   assert.equal(fields.disabled, false);
   focusButton.dispatchEvent(new Event("click")); assert.equal(dimensions.rows.focused, true);
+  assert.equal(fields.hidden, false);
+  assert.equal(focusButton.attributes["aria-expanded"], "true");
+  const escape = new Event("keydown", { cancelable: true }); Object.defineProperty(escape, "key", { value: "Escape" });
+  form.dispatchEvent(escape);
+  assert.equal(escape.defaultPrevented, true);
+  assert.equal(fields.hidden, true);
+  assert.equal(focusButton.attributes["aria-expanded"], "false");
+  assert.equal(focusButton.focused, true);
+  focusButton.dispatchEvent(new Event("click"));
+  assert.equal(fields.hidden, false);
   resources.paragraph.value = "9";
   form.dispatchEvent(new Event("submit", { cancelable: true }));
   assert.deepEqual(sent[0].resources, { paragraph: 9, character: 1, style: 0, border_fill: 3 });
@@ -24,12 +36,16 @@ test("table creation controls use actual resource IDs and disable absent or stal
   assert.equal(note.textContent, "표 생성 중…");
   controls.message({ kind: "insert-table" });
   assert.match(note.textContent, /표 생성 완료/);
+  assert.equal(fields.hidden, true);
+  focusButton.dispatchEvent(new Event("click"));
   controls.message({ kind: "insert-table", error: "InvalidHost" });
+  assert.equal(fields.hidden, false);
   assert.equal(note.textContent, "표 생성 실패: InvalidHost");
   controls.message({ kind: "insert-table", error: "DisplayFailed", applied: true });
   assert.equal(note.textContent, "표 생성 후 표시 실패: DisplayFailed");
   controls.message({ kind: "load" });
   assert.equal(note.textContent, "");
+  assert.equal(fields.hidden, true);
   valid = false; form.dispatchEvent(new Event("submit", { cancelable: true })); assert.equal(sent.length, 1);
   selection = null; form.dispatchEvent(new Event("submit", { cancelable: true })); assert.equal(sent.length, 1);
   valid = true; selection = { section: 0, paragraph: 1, unit: 0 };
@@ -56,5 +72,10 @@ test("table creation controls use actual resource IDs and disable absent or stal
   form.dispatchEvent(new Event("submit", { cancelable: true }));
   assert.equal(sent.length, 1, "validation must not submit after close");
   controls.close(); selection = {}; controls.update(); assert.equal(fields.disabled, true);
+  focusButton.dispatchEvent(new Event("click"));
+  assert.equal(fields.hidden, true);
+  const afterCloseEscape = new Event("keydown", { cancelable: true }); Object.defineProperty(afterCloseEscape, "key", { value: "Escape" });
+  form.dispatchEvent(afterCloseEscape);
+  assert.equal(afterCloseEscape.defaultPrevented, false);
   controls.message({ kind: "insert-table" }); assert.equal(note.textContent, "");
 });
