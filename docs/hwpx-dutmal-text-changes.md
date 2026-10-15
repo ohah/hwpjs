@@ -1,5 +1,19 @@
 # 덧말 문자열의 원문 변경 계획
 
+## main fc675a31 기반 분리 통합 (2026-10-16)
+
+현재 후보 `/tmp/hwpjs-dutmal-publication.KnfFXO/zig-out/bin/hwpjs.wasm`의 SHA-256은 `84cd4f7401dfd94dcb086a9791003ec3c2e20243b8d07c29a39c24e346a1cb15`입니다. 아래 과거 차트/문단 확장 후보 전체를 가져오지 않고 덧말 leaf 변경·현재값·조합 저장·필드 dirty·현재 위치·readonly 원문 보고·checkpoint/history와6개 optional export를 연결했습니다. CharData/CDATA 범위 검증은 본문 text_sites와 공통 helper를 공유합니다. 진단 전용 lease는 불변 원문/known links만 대여하며 편집 권한은 덧말 필드 정책이 별도 검증합니다.
+
+같은 구역에서 pending 덧말과 문단 구조 모델의 조합은 아직 미지원입니다. 모든 split/merge 진입점은 commit 전에 `UnsupportedDutmalStructuralSave`로 거부하고 canSplit은false입니다. 반대 순서의 setter도 후보 저장 검증에서 거부해 기존 구조 저장을 유지합니다. 다른 구역의 구조 편집을 이 가드로 일괄 금지하지 않습니다. 이 안전 경계는 구조/전체 편집 완료가 아닙니다.
+
+native 집중 바이너리 `cae44fbfa80f8b13dbee1f5ea5ba093fd7175cc1f2dfe7d6d269b838106a4c1b`는 root 포함15/15·fail/skip/log/leak0·exit0, 같은1024MiB 감시에서 관측 peak282,100,264바이트입니다. 실제/합성 main/sub 독립 소유·빈 요소/CDATA·주석/PI·미지/미해결 필드 보호·본문 조합 저장/줄 캐시·clone/checkpoint/Session 전체 할당 실패·구조 양방향 거부를 검사했습니다.
+
+API/Worker 집중6파일10/10·4599.751875ms·exit0, 정규48파일118/118·실패/취소/skip0·191960.663833ms·exit0입니다. 현재 위치 이동·실제 leaf 저장/재열기·독립 전체 XML/비대상 ZIP·normal/-O 반례·이력과 Canvas 대역의 두 문자열 paint/선택을 포함합니다. 집중10개를 정규118에 중복 합산하지 않습니다. 두 UTF-8 getter의 선두 U+FEFF는 데이터로 보존하도록 하고 BOM/잘못된 문자열/거부 후 redo 반례를 추가했습니다. 최초 두 build는 enum tag 자료형 누락과 이력 없는 WASM apply 분기 누락으로 실패했으며 모두 연결한 최종 후보로 재검사했습니다.
+
+별도 기본 데모 `cbaaf27f858229fedd01b9996ce152bd31aa6d6f346481b7887bcc510ef68346`과 실제 원본의 source 보고/위치/본문 표시/main·sub 값 및 변경 후 저장 bytes/undo/redo가 같습니다. 선두 BOM 데이터 보존은 기존 getter의 제거 동작을 고친 의도된 차이입니다. export 누락은13개에서 차트6개·차트 OLE 정책1개로 줄었지만, 이름 일치가 전체 동등성/기본 WASM 승격을 뜻하지 않습니다.
+
+독립 Python ZIP/XML 관찰은 참조 폴더의 ZIP 후보436개에서 덧말 원본1문서/1개(2011 paragraph namespace, section0 main/sub 각1개)를 찾았습니다. 유일한 해당 원본은 이 검증의36389301 문서입니다. 비밀번호 픽스처 `HWP5-password-123456.hwpx` 한 개는 XML ParseError였고 native open도 `EncryptedDocument`로 분리 확인했습니다. ZIP 수를 HWPX 지원 개수로 바꾸거나 암호 문서의 덧말 부재/편집 완료로 세지 않습니다. 실제 브라우저/물리 IME·원본 조판·전체 native/모든 참조 문서 편집은 별도입니다.
+
 ## 책임과 SSOT
 
 dutmal_text_changes는 run 직접 dutmal의 mainText/subText 중 명시적으로 선택한 leaf에 대한 원문 Change 배열만 준비합니다. 중복·누락·외래 namespace·중첩 자식이 있는 대상은 거부합니다. 반환 배열의 새 텍스트는 호출자 버퍼를 빌리므로 XML 작성이 끝날 때까지 수명을 유지해야 합니다.

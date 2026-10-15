@@ -5,7 +5,7 @@ const checkpoints = @import("editor_checkpoint.zig");
 const Stacks = @import("../model/history_stack.zig").Stack(checkpoints.Checkpoint, release);
 
 pub const Command = struct {
-    kind: enum { plain, anchored, field, split, merge, format, character_properties, character_font_name, cell_size, paragraph_format, paragraph_alignment, paragraph_margins, paragraph_spacing, split_anchored, formula_definition, picture_dimensions, picture_resize, check_box_state, created_table_stage, created_cell_text, formula_result_override, formula_result_splice } = .plain,
+    kind: enum { plain, anchored, field, split, merge, format, character_properties, character_font_name, cell_size, paragraph_format, paragraph_alignment, paragraph_margins, paragraph_spacing, split_anchored, formula_definition, picture_dimensions, picture_resize, check_box_state, created_table_stage, created_cell_text, formula_result_override, formula_result_splice, dutmal_text } = .plain,
     section: usize = 0,
     paragraph: usize,
     right_paragraph: ?usize = null,
@@ -31,6 +31,8 @@ pub const Command = struct {
     created_table: ?*const @import("../model/created_table.zig").Table = null,
     created_table_identity: u64 = 0,
     created_cell: [2]u32 = .{ 0, 0 },
+    dutmal_node: usize = 0,
+    dutmal_kind: @import("dutmal_text_session.zig").Kind = .main_text,
 };
 pub const History = struct {
     allocator: std.mem.Allocator,
@@ -151,6 +153,10 @@ pub const History = struct {
             .picture_resize => block: {
                 if (command.start != 0 or command.deleted != 0 or command.inserted.len != 0) return error.InvalidPictureResizeCommand;
                 break :block try session.resizePicture(command.section, command.picture_node, command.picture_size);
+            },
+            .dutmal_text => block: {
+                if (command.start != 0 or command.deleted != 0) return error.InvalidDutmalTextCommand;
+                break :block try session.setDutmalText(command.section, command.dutmal_node, command.dutmal_kind, command.inserted);
             },
             .format => block: {
                 if (command.inserted.len != 0) return error.InvalidFormatCommand;

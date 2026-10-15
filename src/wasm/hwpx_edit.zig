@@ -71,6 +71,59 @@ export fn hwpx_edit_form_source_nodes(section: u32) u32 {
     output = std.json.Stringify.valueAlloc(a, .{ .sourceOnly = true, .nodes = nodes }, .{}) catch |err| return fail(err);
     return 1;
 }
+export fn hwpx_edit_inline_string_sources() u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    var report = @import("../hwpx/inline_string_source_report.zig").read(a, session) catch |err| return fail(err);
+    defer report.deinit();
+    output = std.json.Stringify.valueAlloc(a, .{ .sourceOnly = true, .controls = report.controls, .texts = report.texts }, .{}) catch |err| return fail(err);
+    if (output.?.len > session.options.max_output_bytes) {
+        hwpx_edit_output_free();
+        return fail(error.LimitExceeded);
+    }
+    return 1;
+}
+fn dutmalKind(value: u32) !@import("../hwpx/dutmal_text_session.zig").Kind {
+    return switch (value) {
+        0 => .main_text,
+        1 => .sub_text,
+        else => error.InvalidDutmalTextKind,
+    };
+}
+export fn hwpx_edit_dutmal_sites(section: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const sites = @import("../hwpx/dutmal_display_sites.zig").read(a, session, section) catch |err| return fail(err);
+    defer a.free(sites);
+    output = std.json.Stringify.valueAlloc(a, sites, .{}) catch |err| return fail(err);
+    if (output.?.len > session.options.max_output_bytes) {
+        hwpx_edit_output_free();
+        return fail(error.LimitExceeded);
+    }
+    return 1;
+}
+export fn hwpx_edit_dutmal_display_text(section: u32, node: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    output = @import("../hwpx/dutmal_display_sites.zig").text(session, section, node) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_dutmal_text_max_bytes() u32 {
+    return @intCast((editor.Options{}).max_text_bytes);
+}
+export fn hwpx_edit_dutmal_text(section: u32, node: u32, kind: u32) u32 {
+    hwpx_edit_output_free();
+    const selected = dutmalKind(kind) catch |err| return fail(err);
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    output = session.dutmalText(section, node, selected) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_set_dutmal_text(section: u32, node: u32, kind: u32, ptr: [*]const u8, size: usize) u32 {
+    const selected = dutmalKind(kind) catch |err| return fail(err);
+    if (size > hwpx_edit_dutmal_text_max_bytes()) return fail(error.LimitExceeded);
+    apply(.{ .kind = .dutmal_text, .section = section, .paragraph = 0, .start = 0, .deleted = 0, .inserted = ptr[0..size], .dutmal_node = node, .dutmal_kind = selected }) catch |err| return fail(err);
+    return 1;
+}
 export fn hwpx_edit_form_sites(section: u32) u32 {
     hwpx_edit_output_free();
     const session = if (active) |*value| value else return fail(error.EditorNotOpen);
@@ -586,6 +639,7 @@ fn apply(command: histories.Command) !void {
     if (history) |*value| {
         _ = try value.apply(session, command);
     } else switch (command.kind) {
+        .dutmal_text => _ = try session.setDutmalText(command.section, command.dutmal_node, command.dutmal_kind, command.inserted),
         .created_cell_text => {
             _ = try @import("../hwpx/created_cell_text_session.zig").set(session, command.section, command.created_table_identity, command.created_cell[0], command.created_cell[1], command.inserted);
         },

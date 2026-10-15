@@ -74,21 +74,10 @@ pub fn collect(a: std.mem.Allocator, tree: *const tree_module.Tree, options: Opt
             if (!isTextElement(self.tree, self.frames, event.parent_index)) return;
             if (event.value.encoding != .utf8) return error.UnsupportedEditEncoding;
             if (self.items.items.len == self.options.max_sites) return error.LimitExceeded;
-            const base = @intFromPtr(self.tree.source.ptr);
-            const ptr = @intFromPtr(event.value.raw.ptr);
-            if (ptr < base or ptr - base > self.tree.source.len) return error.InvalidSourceSpan;
-            var start = ptr - base;
-            if (event.value.raw.len > self.tree.source.len - start) return error.InvalidSourceSpan;
-            var end = start + event.value.raw.len;
-            if (event.value.kind == .cdata) {
-                if (start < 9 or self.tree.source.len - end < 3) return error.InvalidSourceSpan;
-                if (!std.mem.eql(u8, self.tree.source[start - 9 .. start], "<![CDATA[") or !std.mem.eql(u8, self.tree.source[end..][0..3], "]]>")) return error.InvalidSourceSpan;
-                start -= 9;
-                end += 3;
-            }
+            const span = try @import("xml_content_source_span.zig").read(self.tree, event.value);
             const text = try event.value.toUtf8(self.a, self.options.max_text_bytes -| self.text_bytes);
             errdefer self.a.free(text);
-            try self.items.append(self.a, .{ .element_index = event.parent_index, .start = start, .end = end, .text = text });
+            try self.items.append(self.a, .{ .element_index = event.parent_index, .start = span.start, .end = span.end, .text = text });
             self.covered[event.parent_index] = true;
             self.text_bytes += text.len;
         }

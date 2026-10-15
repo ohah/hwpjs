@@ -1095,7 +1095,7 @@ export async function createHwpxEditor(source) {
       if (typeof wasm.hwpx_edit_dutmal_text !== "function") throw new Error("HwpxDutmalTextAbiUnavailable");
       try {
         if (!wasm.hwpx_edit_dutmal_text(section, node, selected)) throw memory.error();
-        return new TextDecoder("utf-8", { fatal: true }).decode(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+        return new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
       } finally { wasm.hwpx_edit_output_free(); }
     },
     dutmalSites(section) {
@@ -1111,7 +1111,7 @@ export async function createHwpxEditor(source) {
       if (typeof wasm.hwpx_edit_dutmal_display_text !== "function") throw new Error("HwpxDutmalDisplayTextAbiUnavailable");
       try {
         if (!wasm.hwpx_edit_dutmal_display_text(section, node)) throw memory.error();
-        return new TextDecoder("utf-8", { fatal: true }).decode(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+        return new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
       } finally { wasm.hwpx_edit_output_free(); }
     },
     setDutmalText(section, node, kind, value) {

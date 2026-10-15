@@ -12,6 +12,14 @@ pub const text = @import("text/root.zig");
 pub const model = @import("model/document.zig");
 
 test {
+    _ = @import("hwpx/dutmal_structure_guard_tests.zig");
+    _ = @import("hwpx/dutmal_text_changes.zig");
+    _ = @import("hwpx/dutmal_text_values.zig");
+    _ = @import("hwpx/dutmal_text_save.zig");
+    _ = @import("hwpx/dutmal_text_session.zig");
+    _ = @import("hwpx/dutmal_field_dirty.zig");
+    _ = @import("hwpx/dutmal_display_sites.zig");
+    _ = @import("hwpx/inline_string_source_report.zig");
     _ = @import("hwpx/picture_owner_batch_tests.zig");
     _ = @import("hwpx/field_nested_ownership.zig");
     _ = @import("hwpx/field_nested_session_tests.zig");

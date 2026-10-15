@@ -85,7 +85,7 @@ pub fn hasFields(session: anytype, section: usize) !bool {
 pub fn leaseForLabels(session: anytype, section: usize) !Lease {
     if (section >= session.sections.len) return error.InvalidSectionIndex;
     if (session.sections[section].structure_values != null) return lease(session);
-    var view: Lease = if (try cachedLease(session)) |cached| cached else .{ .source = try buildMode(session.allocator, session.sections, true), .owned = true };
+    var view = try leaseForDiagnostics(session);
     errdefer view.deinit(session.allocator);
     for (view.source.report.markers) |marker| {
         if (marker.section_ordinal != section or marker.kind != .begin or marker.matched_marker_index != null) continue;
@@ -93,6 +93,12 @@ pub fn leaseForLabels(session: anytype, section: usize) !Lease {
         if (envelope.owner == null) return error.InvalidFieldLinks;
     }
     return view;
+}
+
+/// Borrow raw diagnostics and known pairs, not current editing permission.
+pub fn leaseForDiagnostics(session: anytype) !Lease {
+    if (try cachedLease(session)) |cached| return cached;
+    return .{ .source = try buildMode(session.allocator, session.sections, true), .owned = true };
 }
 
 test "source field analysis owned build survives every allocation failure and borrowed queries match fresh analysis" {

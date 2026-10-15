@@ -3,6 +3,15 @@ const std = @import("std");
 const Tree = @import("xml_part_tree.zig").Tree;
 const Paragraph = @import("paragraph_structure_values.zig").Paragraph;
 
+pub fn currentAnchorOrdinal(paragraphs: []const Paragraph, first: usize, template: usize, anchor: usize) !usize {
+    const hosts = @import("paragraph_display_host.zig");
+    for (paragraphs) |paragraph| {
+        if (!try hosts.matchesTemplate(&paragraph, template)) continue;
+        if (paragraph.protected_positions != null) return currentOrdinal(paragraphs, first, template, anchor);
+    }
+    return hosts.currentOrdinal(paragraphs, first, template);
+}
+
 pub fn currentOrdinal(paragraphs: []const Paragraph, first: usize, template: usize, anchor: usize) !usize {
     var found: ?usize = null;
     for (paragraphs, 0..) |paragraph, index| {

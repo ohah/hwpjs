@@ -30,6 +30,7 @@ pub const Section = struct {
     picture_dimensions: @import("picture_dimension_edit_values.zig").Values = .empty,
     picture_matrices: @import("picture_matrix_edit_values.zig").Values = .empty,
     checkbox_states: @import("form_checkbox_state_values.zig").Values = .empty,
+    dutmal_texts: @import("dutmal_text_values.zig").Values = .{},
     formula_definitions: @import("formula_definition_values.zig").Values = .{},
     formula_result_overrides: @import("formula_result_override_values.zig").Values = .{},
     created_tables: @import("created_table_values.zig").Values = .{},
@@ -59,6 +60,7 @@ pub const Section = struct {
         self.picture_dimensions.deinit(a);
         self.picture_matrices.deinit(a);
         self.checkbox_states.deinit(a);
+        self.dutmal_texts.deinit(a);
         self.formula_definitions.deinit(a);
         self.formula_result_overrides.deinit(a);
         self.created_tables.deinit(a);
@@ -103,27 +105,27 @@ pub const Session = struct {
     }
 
     pub fn splitParagraph(self: *Session, section_index: usize, paragraph: usize, start: u32, deleted: u32) !bool {
-        try self.requireMutableHostPositions();
+        try self.requireMutableParagraphStructure(section_index);
         return @import("paragraph_split_session.zig").split(self, section_index, paragraph, start, deleted);
     }
 
     pub fn canSplitParagraph(self: *Session, section_index: usize, paragraph: usize, start: u32, deleted: u32) !bool {
-        self.requireMutableHostPositions() catch return false;
+        self.requireMutableParagraphStructure(section_index) catch return false;
         return @import("paragraph_split_session.zig").canSplit(self, section_index, paragraph, start, deleted);
     }
 
     pub fn splitParagraphAnchored(self: *Session, section_index: usize, paragraph: usize, start: u32, deleted: u32) !bool {
-        try self.requireMutableHostPositions();
+        try self.requireMutableParagraphStructure(section_index);
         return @import("paragraph_split_session.zig").splitAnchored(self, section_index, paragraph, start, deleted);
     }
 
     pub fn mergeParagraph(self: *Session, section_index: usize, paragraph: usize) !bool {
-        try self.requireMutableHostPositions();
+        try self.requireMutableParagraphStructure(section_index);
         return @import("paragraph_merge_session.zig").merge(self, section_index, paragraph);
     }
 
     pub fn mergeParagraphPair(self: *Session, section_index: usize, paragraph: usize, right: usize) !bool {
-        try self.requireMutableHostPositions();
+        try self.requireMutableParagraphStructure(section_index);
         return @import("paragraph_merge_session.zig").mergePair(self, section_index, paragraph, right);
     }
 
@@ -314,6 +316,12 @@ pub const Session = struct {
     pub fn setCheckBoxState(self: *Session, section: usize, node: usize, state: @import("form_checkbox_state_session.zig").State) !bool {
         return @import("form_checkbox_state_session.zig").set(self, section, node, state);
     }
+    pub fn dutmalText(self: *const Session, section: usize, node: usize, kind: @import("dutmal_text_session.zig").Kind) ![]u8 {
+        return @import("dutmal_text_session.zig").read(self, section, node, kind);
+    }
+    pub fn setDutmalText(self: *Session, section: usize, node: usize, kind: @import("dutmal_text_session.zig").Kind, text: []const u8) !bool {
+        return @import("dutmal_text_session.zig").set(self, section, node, kind, text);
+    }
     pub fn setFormulaDefinition(self: *Session, section_index: usize, begin: usize, formula: []const u8) !bool {
         try self.requireMutableHostPositions();
         return @import("formula_definition_edit.zig").set(self, section_index, begin, formula);
@@ -343,6 +351,7 @@ pub const Session = struct {
 
     /// Caller owns the result with Session.allocator. Save is side-effect free.
     pub fn save(self: *const Session) ![]u8 {
+        for (self.sections) |section| if (section.dutmal_texts.entries.items.len != 0 and section.structure_values != null) return error.UnsupportedDutmalStructuralSave;
         const a = self.allocator;
         const trees = try a.alloc(tree_module.Tree, self.sections.len);
         defer a.free(trees);
@@ -360,11 +369,14 @@ pub const Session = struct {
             xml_bytes += header.bytes.len;
         }
         for (self.sections, 0..) |*section, index| {
+            const dutmal_dirty = if (section.dutmal_texts.entries.items.len != 0) try @import("dutmal_field_dirty.zig").read(self, index) else null;
+            defer if (dutmal_dirty) |items| a.free(items);
+            const dirty = dutmal_dirty orelse section.field_dirty.items;
             const base = if (section.structure_values) |*values| block: {
                 if (section.formula_result_overrides.entries.items.len != 0) return error.UnsupportedStructuralFormulaResultOverride;
                 if (section.sites.items.len != 0) return error.DuplicateCurrentTextOwner;
                 break :block try @import("paragraph_structure_save.zig").writeWithDefinitions(a, trees, index, values, siteOptions(self.options), section.field_dirty.items, &section.formula_definitions, self.options.max_xml_bytes -| xml_bytes);
-            } else try @import("formula_section_save.zig").writeWithOverridesMode(a, trees, index, &section.sites, siteOptions(self.options), section.field_dirty.items, &section.formula_definitions, &section.formula_result_overrides, self.options.max_xml_bytes -| xml_bytes, true);
+            } else try @import("formula_section_save.zig").writeWithOverridesMode(a, trees, index, &section.sites, siteOptions(self.options), dirty, &section.formula_definitions, &section.formula_result_overrides, self.options.max_xml_bytes -| xml_bytes, true);
             const sized = if (section.cell_sizes.items.len == 0) base else block: {
                 defer a.free(base);
                 break :block try @import("table_cell_size_save.zig").write(a, &section.tree, base, section.cell_sizes.items, self.options.max_xml_bytes -| xml_bytes);
@@ -381,9 +393,13 @@ pub const Session = struct {
                 defer a.free(matrices);
                 break :block try @import("form_checkbox_state_save.zig").write(a, &section.tree, matrices, section.checkbox_states.items, self.options.max_xml_bytes -| xml_bytes);
             };
-            const bytes = if (section.created_tables.entries.items.len == 0) checked else block: {
+            const dutmal = if (section.dutmal_texts.entries.items.len == 0) checked else block: {
                 defer a.free(checked);
-                break :block try @import("created_table_section_save.zig").write(self, index, checked, self.options.max_xml_bytes -| xml_bytes);
+                break :block try @import("dutmal_text_save.zig").write(a, &section.tree, checked, section.dutmal_texts.entries.items, self.options.max_xml_bytes -| xml_bytes);
+            };
+            const bytes = if (section.created_tables.entries.items.len == 0) dutmal else block: {
+                defer a.free(dutmal);
+                break :block try @import("created_table_section_save.zig").write(self, index, dutmal, self.options.max_xml_bytes -| xml_bytes);
             };
             errdefer a.free(bytes);
             try replacements.append(a, .{ .entry_index = section.entry_index, .bytes = bytes });
@@ -394,6 +410,11 @@ pub const Session = struct {
     // Temporary staging gate, removed only when host edits rebase table points.
     fn requireMutableHostPositions(self: *const Session) !void {
         if (@import("created_table_host_splice.zig").hasPending(self)) return error.UnsupportedCreatedTableHostEdit;
+    }
+    fn requireMutableParagraphStructure(self: *const Session, section: usize) !void {
+        try self.requireMutableHostPositions();
+        if (section >= self.sections.len) return error.InvalidSectionIndex;
+        if (self.sections[section].dutmal_texts.entries.items.len != 0) return error.UnsupportedDutmalStructuralSave;
     }
 };
 
