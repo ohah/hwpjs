@@ -40,7 +40,7 @@ test "HWPX drawing snapshot batch allocation failures preserve source" {
     defer a.free(expected);
     try std.testing.expectEqual(@as(usize, 2), expected.len);
     for (expected) |row| try std.testing.expectEqualDeep(try snapshots.read(a, &session, 0, row.drawing_node), row);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, state: *const editor.Session, baseline: []const snapshots.Snapshot) !void {
             const rows = try read(allocator, state, 0);
             defer allocator.free(rows);

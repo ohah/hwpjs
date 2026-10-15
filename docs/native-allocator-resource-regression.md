@@ -1,5 +1,7 @@
 # 큰 문서 테스트의 할당자 진단 비용
 
+도형 텍스트 배치의 전체 실패 주입을 유지한 후속 자원 대조는 [배치 스냅샷 자원 검증](native-drawing-snapshot-resource.md)이 소유합니다.
+
 실제 장식 선18개 스냅샷의 후속 전체 감사 중단과 범위 allocator 대조는 [선 스냅샷 자원 검증](native-line-snapshot-resource.md)이 소유합니다.
 
 ## 실제 쪽 기하 종합 검사
