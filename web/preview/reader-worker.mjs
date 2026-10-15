@@ -294,7 +294,7 @@ self.onmessage = async event => {
       return;
     }
     if (message.kind === "query-edit-range") {
-      reply(selectionEditQuery(message, { active: Boolean(editor) && historyEnabled, format, canEdit: (section, paragraph, start, end) => outsideFieldRange(section, paragraph, start, end) || formulaResultTextRangeAllowed(editor, module, section, paragraph, start, end) }));
+      reply(selectionEditQuery(message, { active: Boolean(editor) && historyEnabled, format, canEdit: (section, paragraph, start, end) => editor.fieldRangeTarget(section, paragraph, start, end) !== null || outsideFieldRange(section, paragraph, start, end) || formulaResultTextRangeAllowed(editor, module, section, paragraph, start, end) }));
       return;
     }
     if (message.kind === "query-split-range") {
@@ -373,13 +373,11 @@ self.onmessage = async event => {
       const paragraph = message.paragraph + (format === "hwpx" ? 1 : 0);
       let textMode = "plain", beginElement = 0;
       if (format === "hwpx" && !editor.canEdit(message.section, paragraph)) {
-        if (outsideFieldRange(message.section, paragraph, message.startUnit, message.endUnit)) textMode = "plain";
+        const target = editor.fieldRangeTarget(message.section, paragraph, message.startUnit, message.endUnit);
+        if (target !== null) { textMode = "field"; beginElement = target.beginElement; }
+        else if (outsideFieldRange(message.section, paragraph, message.startUnit, message.endUnit)) textMode = "plain";
         else if (anchorView(message.section, paragraph) !== null) textMode = "anchored";
-        else {
-          const matches = editor.fieldLabels(message.section, paragraph).filter(target => message.startUnit >= target.start && message.endUnit <= target.end);
-          if (matches.length !== 1) throw new Error("UnsupportedFieldLabelRange");
-          textMode = "field"; beginElement = matches[0].beginElement;
-        }
+        else throw new Error("UnsupportedFieldLabelRange");
       }
       if (message.kind === "splice-font-name") editor.spliceWithFontName({ ...message, paragraph, textMode, beginElement });
       else editor.spliceWithCharacterProperties({ ...message, paragraph, textMode, beginElement });
@@ -743,22 +741,15 @@ self.onmessage = async event => {
           editor.setCharacterFormat({ ...message, paragraph: message.paragraph + 1 });
         } else if (editor.canEdit(message.section, message.paragraph + 1)) {
           editor.splice(message.section, message.paragraph + 1, message.startUnit, message.endUnit - message.startUnit, message.text);
-        } else if (outsideFieldRange(message.section, message.paragraph + 1, message.startUnit, message.endUnit)) {
-          editor.splice(message.section, message.paragraph + 1, message.startUnit, message.endUnit - message.startUnit, message.text);
-        } else if (spliceFormulaResultText(editor, module, message)) {
-          // The native result transaction already applied this range.
-        } else if (anchorView(message.section, message.paragraph + 1) !== null) {
-          editor.spliceAnchored(message.section, message.paragraph + 1, message.startUnit, message.endUnit - message.startUnit, message.text);
         } else {
-          const targets = editor.fieldLabels(message.section, message.paragraph + 1);
-          if (targets.length === 0) {
-            // Preserve the native refusal classification for ordinary paths.
-            editor.splice(message.section, message.paragraph + 1, message.startUnit, message.endUnit - message.startUnit, message.text);
-          } else {
-            const matches = targets.filter(target => message.startUnit >= target.start && message.endUnit <= target.end);
-            if (matches.length !== 1) throw new Error("UnsupportedFieldLabelRange");
-            editor.spliceFieldLabel(message.section, message.paragraph + 1, matches[0].beginElement, message.startUnit, message.endUnit - message.startUnit, message.text);
-          }
+          const paragraph = message.paragraph + 1;
+          const target = editor.fieldRangeTarget(message.section, paragraph, message.startUnit, message.endUnit);
+          if (target !== null) editor.spliceFieldLabel(message.section, paragraph, target.beginElement, message.startUnit, message.endUnit - message.startUnit, message.text);
+          else if (outsideFieldRange(message.section, paragraph, message.startUnit, message.endUnit)) editor.splice(message.section, paragraph, message.startUnit, message.endUnit - message.startUnit, message.text);
+          else if (spliceFormulaResultText(editor, module, message)) { /* Native result transaction applied. */ }
+          else if (anchorView(message.section, paragraph) !== null) editor.spliceAnchored(message.section, paragraph, message.startUnit, message.endUnit - message.startUnit, message.text);
+          else if (editor.fieldLabels(message.section, paragraph).length !== 0) throw new Error("UnsupportedFieldLabelRange");
+          else editor.splice(message.section, paragraph, message.startUnit, message.endUnit - message.startUnit, message.text);
         }
         applied = true;
         reader = await createHwpxReader(module);

@@ -14,7 +14,7 @@ pub fn list(self: anytype, section_index: usize, paragraph: usize, max_targets: 
     const trees = try a.alloc(@import("xml_part_tree.zig").Tree, self.sections.len);
     defer a.free(trees);
     for (self.sections, trees) |input, *tree| tree.* = input.tree;
-    var analysis = try @import("source_field_analysis.zig").lease(self);
+    var analysis = try @import("source_field_analysis.zig").leaseForLabels(self, section_index);
     defer analysis.deinit(a);
     const report = analysis.source.report;
     const ranges = analysis.source.fields;
@@ -45,8 +45,22 @@ pub fn list(self: anytype, section_index: usize, paragraph: usize, max_targets: 
             return targets.toOwnedSlice(a);
         }
     }
-    for (section.tree.elements, 0..) |element, index| {
-        if (!element.is(@import("document_xml.zig").paragraph_uri, "fieldBegin")) continue;
+    // Source byte bounds exclude unrelated fields before costly paragraph
+    // preparation. Owned structural rows use their current spans above.
+    const source_owner: ?usize = if (section.structure_values == null)
+        @import("paragraph_site_owner.zig").resolve(&section.tree, &section.sites, section.locations, try section.sourceParagraph(paragraph)) catch |err| switch (err) {
+            error.MissingTextSite => return targets.toOwnedSlice(a),
+            else => return err,
+        }
+    else
+        null;
+    for (ranges) |range| {
+        if (range.section != section_index) continue;
+        if (source_owner) |owner| {
+            const node = section.tree.elements[owner];
+            if (range.content_end <= node.start_tag.start or range.content_start >= node.end) continue;
+        }
+        const index = report.markers[range.begin_marker].element_index;
         const prepared = @import("field_label_session.zig").prepareLinked(self, section_index, paragraph, index, &report, ranges, frames) catch |err| switch (err) {
             error.UnsupportedFieldLabel, error.UnsupportedNestedFieldLabel, error.UnsupportedFieldLabelContent, error.UnsupportedFieldOwnership, error.MissingTextSite, error.UnsupportedInlineControl => continue,
             else => return err,

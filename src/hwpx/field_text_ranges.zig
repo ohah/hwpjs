@@ -14,9 +14,20 @@ pub const Range = struct {
 /// Caller owns the range array; source offsets refer to unchanged input trees.
 /// This is not permission to edit every field type or evaluate its result.
 pub fn build(a: std.mem.Allocator, trees: []const tree_module.Tree, report: *const fields.Report) ![]Range {
+    return buildMode(a, trees, report, false);
+}
+
+/// Known links only; callers must separately protect unresolved source starts.
+/// Never manufactures an end marker or grants field editing permission.
+pub fn buildKnown(a: std.mem.Allocator, trees: []const tree_module.Tree, report: *const fields.Report) ![]Range {
+    return buildMode(a, trees, report, true);
+}
+
+fn buildMode(a: std.mem.Allocator, trees: []const tree_module.Tree, report: *const fields.Report, allow_unmatched: bool) ![]Range {
     if (report.sections != trees.len) return error.InvalidFieldLinks;
-    if (report.duplicate_begin_ids != 0 or report.unmatched_begins != 0 or report.unresolved_ends != 0 or report.non_lifo_closures != 0 or report.fieldid_mismatches != 0) return error.InvalidFieldLinks;
+    if (report.duplicate_begin_ids != 0 or (!allow_unmatched and report.unmatched_begins != 0) or report.unresolved_ends != 0 or report.non_lifo_closures != 0 or report.fieldid_mismatches != 0) return error.InvalidFieldLinks;
     var ranges: std.ArrayList(Range) = .empty;
+    var unmatched: usize = 0;
     defer ranges.deinit(a);
     for (report.markers, 0..) |begin, index| {
         if (begin.kind == .end) {
@@ -24,7 +35,12 @@ pub fn build(a: std.mem.Allocator, trees: []const tree_module.Tree, report: *con
             if (begin_index >= index or report.markers[begin_index].kind != .begin or report.markers[begin_index].matched_marker_index != index) return error.InvalidFieldLinks;
             continue;
         }
-        const end_index = begin.matched_marker_index orelse return error.InvalidFieldLinks;
+        const end_index = begin.matched_marker_index orelse {
+            if (!allow_unmatched) return error.InvalidFieldLinks;
+            if (begin.section_ordinal >= trees.len or begin.element_index >= trees[begin.section_ordinal].elements.len) return error.SourceBindingMismatch;
+            unmatched += 1;
+            continue;
+        };
         if (end_index >= report.markers.len or end_index <= index) return error.InvalidFieldLinks;
         const end = report.markers[end_index];
         if (end.kind != .end or end.matched_marker_index != index or begin.section_ordinal != end.section_ordinal or begin.section_ordinal >= trees.len) return error.InvalidFieldLinks;
@@ -38,6 +54,7 @@ pub fn build(a: std.mem.Allocator, trees: []const tree_module.Tree, report: *con
         if (end_offset < start_offset or end_offset > tree.source.len) return error.SourceBindingMismatch;
         try ranges.append(a, .{ .section = begin.section_ordinal, .begin_marker = index, .end_marker = end_index, .content_start = start_offset, .content_end = end_offset });
     }
+    if (unmatched != report.unmatched_begins) return error.InvalidFieldLinks;
     return ranges.toOwnedSlice(a);
 }
 
@@ -61,6 +78,34 @@ test "HWPX field text ranges reuse explicit links across paragraphs and fail all
     }.run, .{ &trees, &report });
     report.unmatched_begins = 1;
     try std.testing.expectError(error.InvalidFieldLinks, build(a, &trees, &report));
+}
+
+test "HWPX field text ranges known pairs retain unresolved diagnostics under OOM" {
+    const a = std.testing.allocator;
+    const source = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:p><p:run><p:ctrl><p:fieldBegin id='1' type='CLICK_HERE'/></p:ctrl><p:t>first</p:t><p:ctrl><p:fieldEnd beginIDRef='1'/></p:ctrl><p:ctrl><p:fieldBegin id='2' type='CLICK_HERE'/></p:ctrl><p:t>unknown</p:t><p:ctrl><p:fieldBegin id='3' type='CLICK_HERE'/></p:ctrl><p:t>last</p:t><p:ctrl><p:fieldEnd beginIDRef='3'/></p:ctrl></p:run></p:p></s:sec>";
+    var tree = try tree_module.parse(a, source, .section, 0, 0, .{});
+    defer tree.deinit(a);
+    const trees = [_]tree_module.Tree{tree};
+    var report = try fields.inspect(a, &trees, .{});
+    defer report.deinit();
+    try std.testing.expectEqual(@as(usize, 1), report.unmatched_begins);
+    try std.testing.expectError(error.InvalidFieldLinks, build(a, &trees, &report));
+    try @import("../testing/allocation_failures.zig").check(struct {
+        fn run(allocator: std.mem.Allocator, inputs: []const tree_module.Tree, linked: *const fields.Report) !void {
+            const known = try buildKnown(allocator, inputs, linked);
+            defer allocator.free(known);
+            try std.testing.expectEqual(@as(usize, 2), known.len);
+            try std.testing.expectEqual(@as(usize, 0), known[0].begin_marker);
+            try std.testing.expectEqual(@as(usize, 3), known[1].begin_marker);
+            try std.testing.expectEqual(@as(usize, 1), linked.unmatched_begins);
+            try std.testing.expect(linked.markers[2].matched_marker_index == null);
+        }
+    }.run, .{ &trees, &report });
+    report.unmatched_begins = 0;
+    try std.testing.expectError(error.InvalidFieldLinks, buildKnown(a, &trees, &report));
+    report.unmatched_begins = 1;
+    report.duplicate_begin_ids = 1;
+    try std.testing.expectError(error.InvalidFieldLinks, buildKnown(a, &trees, &report));
 }
 
 test "HWPX field text ranges bind actual hyperlink fixture" {

@@ -14,7 +14,7 @@ pub fn select(session: anytype, section_index: usize, paragraph: usize, start: u
     for (labels) |label| {
         if (start < label.start or end > label.end) continue;
         validate(session, section_index, paragraph, label, start, end) catch |err| switch (err) {
-            error.ProtectedInlineControl, error.MissingFieldTextSite, error.UnsupportedStructuralFieldEdit, error.UnsupportedInlineControl => continue,
+            error.ProtectedFieldRange, error.ProtectedInlineControl, error.MissingFieldTextSite, error.UnsupportedStructuralFieldEdit, error.UnsupportedInlineControl => continue,
             else => return err,
         };
         if (result != null) return error.UnsupportedFieldLabelRange;

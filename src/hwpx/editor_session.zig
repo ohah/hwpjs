@@ -436,7 +436,7 @@ pub fn open(a: std.mem.Allocator, input: []const u8, options: Options) !Session 
     }
     // Malformed field semantics remain query errors, not a new open failure.
     // Allocation failure must still propagate without retaining partial state.
-    var source_fields = @import("source_field_analysis.zig").build(a, sections.items) catch |err| switch (err) {
+    var source_fields = @import("source_field_analysis.zig").buildForEditor(a, sections.items) catch |err| switch (err) {
         error.OutOfMemory => return err,
         else => null,
     };

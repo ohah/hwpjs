@@ -17,12 +17,21 @@ pub const Source = struct {
     }
 };
 pub fn build(a: std.mem.Allocator, sections: anytype) !Source {
+    return buildMode(a, sections, false);
+}
+
+/// Immutable raw diagnostics and known pairs; not strict editing permission.
+pub fn buildForEditor(a: std.mem.Allocator, sections: anytype) !Source {
+    return buildMode(a, sections, true);
+}
+
+fn buildMode(a: std.mem.Allocator, sections: anytype, known_only: bool) !Source {
     const inputs = try a.alloc(trees.Tree, sections.len);
     defer a.free(inputs);
     for (sections, inputs) |section, *input| input.* = section.tree;
     var report = try markers.inspect(a, inputs, .{});
     errdefer report.deinit();
-    const fields = try ranges.build(a, inputs, &report);
+    const fields = if (known_only) try ranges.buildKnown(a, inputs, &report) else try ranges.build(a, inputs, &report);
     errdefer a.free(fields);
     const bindings = try a.alloc(Binding, sections.len);
     for (inputs, bindings) |tree, *binding| binding.* = .{ .source_ptr = @intFromPtr(tree.source.ptr), .source_len = tree.source.len, .elements_ptr = @intFromPtr(tree.elements.ptr), .elements_len = tree.elements.len };
@@ -39,7 +48,7 @@ pub const Lease = struct {
         self.* = undefined;
     }
 };
-pub fn lease(session: anytype) !Lease {
+fn cachedLease(session: anytype) !?Lease {
     if (session.source_fields) |source| {
         if (session.sections.len != source.bindings.len) return error.SourceBindingMismatch;
         for (session.sections, source.bindings, 0..) |section, binding, index| {
@@ -48,12 +57,20 @@ pub fn lease(session: anytype) !Lease {
         }
         return .{ .source = source, .owned = false };
     }
+    return null;
+}
+pub fn lease(session: anytype) !Lease {
+    if (try cachedLease(session)) |view| {
+        const report = view.source.report;
+        if (report.unmatched_begins != 0 or report.duplicate_begin_ids != 0 or report.unresolved_ends != 0 or report.non_lifo_closures != 0 or report.fieldid_mismatches != 0) return error.InvalidFieldLinks;
+        return view;
+    }
     return .{ .source = try build(session.allocator, session.sections), .owned = true };
 }
 pub fn hasFields(session: anytype, section: usize) !bool {
     if (section >= session.sections.len) return error.InvalidSectionIndex;
-    if (session.source_fields != null) {
-        var analysis = try lease(session);
+    if (try cachedLease(session)) |cached| {
+        var analysis = cached;
         defer analysis.deinit(session.allocator);
         return analysis.source.bindings[section].has_fields;
     }
@@ -61,6 +78,21 @@ pub fn hasFields(session: anytype, section: usize) !bool {
         if (element.is(@import("document_xml.zig").paragraph_uri, "fieldBegin")) return true;
     }
     return false;
+}
+
+/// A label may use a validated pair outside unresolved list-local envelopes.
+/// No cache is rewritten and structural operations retain the strict lease.
+pub fn leaseForLabels(session: anytype, section: usize) !Lease {
+    if (section >= session.sections.len) return error.InvalidSectionIndex;
+    if (session.sections[section].structure_values != null) return lease(session);
+    var view: Lease = if (try cachedLease(session)) |cached| cached else .{ .source = try buildMode(session.allocator, session.sections, true), .owned = true };
+    errdefer view.deinit(session.allocator);
+    for (view.source.report.markers) |marker| {
+        if (marker.section_ordinal != section or marker.kind != .begin or marker.matched_marker_index != null) continue;
+        const envelope = try @import("field_source_scope.zig").forBegin(&session.sections[section].tree, marker.element_index);
+        if (envelope.owner == null) return error.InvalidFieldLinks;
+    }
+    return view;
 }
 
 test "source field analysis owned build survives every allocation failure and borrowed queries match fresh analysis" {
@@ -119,7 +151,8 @@ test "source field analysis open owns failure cleanup and preserves malformed li
     defer a.free(invalid);
     var session = try editor.open(a, invalid, .{});
     defer session.deinit();
-    try std.testing.expect(session.source_fields == null);
+    try std.testing.expect(session.source_fields != null);
+    try std.testing.expectEqual(@as(usize, 1), session.source_fields.?.report.unmatched_begins);
     try std.testing.expectError(error.InvalidFieldLinks, session.fieldLabels(0, 1));
     try std.testing.expectError(error.InvalidFieldLinks, lease(&session));
     try std.testing.expectEqualSlices(u8, invalid, session.source);

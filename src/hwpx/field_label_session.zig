@@ -5,12 +5,18 @@ pub const Prepared = struct {
     field: @import("field_text_ranges.zig").Range,
     segments: []@import("paragraph_text_positions.zig").Segment,
     sites: *const @import("text_sites.zig").Sites,
+    dirty_elements: []usize,
+    protected_spans: []@import("field_current_spans.zig").Span,
     pub fn deinit(self: Prepared, a: std.mem.Allocator) void {
         a.free(self.segments);
+        a.free(self.dirty_elements);
+        a.free(self.protected_spans);
     }
 };
 
 pub fn validatePreparedRange(prepared: Prepared, section: usize, start: u32, end: u32) !usize {
+    if (end < start) return error.InvalidTextPosition;
+    try @import("field_outside_range.zig").validate(prepared.protected_spans, 0, start, end - start);
     const target = try @import("field_text_positions.zig").validateEdit(prepared.field, section, prepared.segments, start, end);
     try @import("paragraph_text_positions.zig").validateBoundary(prepared.sites, prepared.segments, start);
     try @import("paragraph_text_positions.zig").validateBoundary(prepared.sites, prepared.segments, end);
@@ -23,7 +29,7 @@ pub fn prepare(self: anytype, section_index: usize, paragraph: usize, begin_elem
     const selected = &self.sections[section_index];
     if (paragraph < selected.first_paragraph or paragraph > selected.last_paragraph) return error.InvalidParagraphIndex;
     const a = self.allocator;
-    var analysis = try @import("source_field_analysis.zig").lease(self);
+    var analysis = try @import("source_field_analysis.zig").leaseForLabels(self, section_index);
     defer analysis.deinit(a);
     const report = analysis.source.report;
     const ranges = analysis.source.fields;
@@ -65,8 +71,12 @@ pub fn prepareLinked(self: anytype, section_index: usize, paragraph: usize, begi
         defer a.free(locations);
         break :block try @import("paragraph_text_positions.zig").build(a, &selected.tree, &owned.sites, locations, 1);
     } else try @import("anchor_text_positions.zig").build(a, &selected.tree, &selected.sites, selected.locations, local.?.paragraph);
+    errdefer a.free(segments);
+    const dirty_elements = try @import("field_nested_ownership.zig").dirtyOwners(a, field, ranges, report, 4096);
+    errdefer a.free(dirty_elements);
+    const protected_spans = try @import("field_nested_ownership.zig").descendantSpans(a, field, ranges, segments, report);
     const sites = if (selected.structure_values) |*values| &values.paragraphs[paragraph - selected.first_paragraph].sites else &selected.sites;
-    return .{ .field = field, .segments = segments, .sites = sites };
+    return .{ .field = field, .segments = segments, .sites = sites, .dirty_elements = dirty_elements, .protected_spans = protected_spans };
 }
 
 /// 조회와 입력이 공유하는 필드 종류/원문 내용/선택 소유자 정책입니다.
@@ -82,9 +92,26 @@ const LocalParagraph = struct {
 
 fn validateLinkedAtParagraph(tree: *const tree_module.Tree, field: @import("field_text_ranges.zig").Range, report: *const @import("field_markers.zig").Report, ranges: []const @import("field_text_ranges.zig").Range, frames: []const @import("xml_tree_selection.zig").Frame, local: ?LocalParagraph) !void {
     const begin = report.markers[field.begin_marker];
+    if (local) |paragraph| {
+        const owner = try @import("paragraph_site_owner.zig").resolve(tree, paragraph.sites, paragraph.locations, paragraph.paragraph);
+        for (report.markers) |marker| {
+            if (marker.section_ordinal != field.section or marker.kind != .begin or marker.matched_marker_index != null) continue;
+            const envelope = try @import("field_source_scope.zig").forBegin(tree, marker.element_index);
+            const start = tree.elements[owner].start_tag.start;
+            const end = tree.elements[owner].end;
+            if (envelope.contains(start) or (start < envelope.start and envelope.start < end)) return error.UnsupportedFieldLabel;
+        }
+    }
     for (ranges) |other| {
         if (other.section != field.section or other.begin_marker == field.begin_marker) continue;
-        if (other.content_start < field.content_end and field.content_start < other.content_end) return error.UnsupportedNestedFieldLabel;
+        const relationship = try @import("field_nested_ownership.zig").relation(field, other);
+        if (relationship == .disjoint) continue;
+        if (local == null) return error.UnsupportedNestedFieldLabel;
+        if (relationship == .ancestor or relationship == .descendant) {
+            const marker = report.markers[other.begin_marker];
+            if (!@import("field_text_kind.zig").supported(marker.begin.?.type_raw orelse "")) return error.UnsupportedNestedFieldLabel;
+            try @import("field_nested_ownership.zig").validateNestedScope(tree, field, other, report);
+        }
     }
     const uri = @import("document_xml.zig").paragraph_uri;
     if (local) |owner| {
@@ -122,6 +149,7 @@ pub fn splice(self: anytype, section_index: usize, paragraph: usize, begin_eleme
     const field = prepared.field;
     const segments = prepared.segments;
     const a = self.allocator;
+    _ = try validatePreparedRange(prepared, section_index, start, std.math.add(u32, start, deleted) catch return error.InvalidTextPosition);
     const selected = &self.sections[section_index];
     var other_bytes: usize = 0;
     for (self.sections, 0..) |section, index| {
@@ -141,13 +169,9 @@ pub fn splice(self: anytype, section_index: usize, paragraph: usize, begin_eleme
         }
         break :block &owned.sites;
     } else &selected.sites;
-    var dirty_index: ?usize = null;
-    for (selected.field_dirty.items, 0..) |value, index| {
-        if (value.element_index == begin_element) dirty_index = index;
-    }
     // Prepare metadata capacity before committing strings: no fallible
     // operation may follow a successful splice.
-    if (dirty_index == null) try selected.field_dirty.ensureUnusedCapacity(a, 1);
+    try selected.field_dirty.ensureUnusedCapacity(a, prepared.dirty_elements.len);
     const styled = if (selected.structure_values) |*values| &values.paragraphs[paragraph - selected.first_paragraph] else null;
     const changed = if (styled != null and styled.?.character_styles != null) block: {
         const end = std.math.add(u32, start, deleted) catch return error.InvalidTextPosition;
@@ -155,7 +179,16 @@ pub fn splice(self: anytype, section_index: usize, paragraph: usize, begin_eleme
         break :block try @import("character_style_splice.zig").splicePositionsAtSite(a, styled.?, segments, start, deleted, inserted, self.options.max_text_bytes - other_bytes, target);
     } else try @import("field_label_splice.zig").splice(a, sites, segments, field, section_index, start, deleted, inserted, self.options.max_text_bytes - other_bytes);
     if (changed) {
-        if (dirty_index) |index| selected.field_dirty.items[index].dirty = true else selected.field_dirty.appendAssumeCapacity(.{ .element_index = begin_element, .dirty = true });
+        for (prepared.dirty_elements) |element_index| {
+            var existing = false;
+            for (selected.field_dirty.items) |*value| {
+                if (value.element_index != element_index) continue;
+                value.dirty = true;
+                existing = true;
+                break;
+            }
+            if (!existing) selected.field_dirty.appendAssumeCapacity(.{ .element_index = element_index, .dirty = true });
+        }
     }
     return changed;
 }
