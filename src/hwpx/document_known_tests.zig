@@ -243,7 +243,10 @@ test "HWPX section note shapes preserve observed width placement and color anoma
 }
 
 test "HWPX section presentation exposes real direct brush and all observed fields" {
-    const a = std.testing.allocator;
+    try @import("../testing/checked_allocator.zig").run(verifyActualPresentation, .{});
+}
+
+fn verifyActualPresentation(a: std.mem.Allocator) !void {
     const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "reference/rhwp/samples/hwp3-sample-hwpx.hwpx", a, .limited(1_000_000));
     defer a.free(bytes);
     var document = try package.inspectDocument(a, bytes, .{});

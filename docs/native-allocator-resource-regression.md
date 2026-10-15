@@ -1,5 +1,13 @@
 # 큰 문서 테스트의 할당자 진단 비용
 
+## 실제 presentation 브러시/필드 검사
+
+main67038c46 의존성과 동일 테스트 수리만 사용한 별도 소스/실제 입력에서 집중39961은2/2·exit0, ReleaseSafe 제품 빌드는5/5·exit0입니다. fmt도 통과했습니다. 게시에는 테스트5줄 변경과 기록만 포함하며 현재 전체 native 컴파일22025는 별도 진행 중입니다. 기존 제품/편집 확장이나 기본 WASM은 게시 범위가 아닙니다.
+
+전체64392의index760 중단을 실제 `hwp3-sample-hwpx.hwpx` 집중 baseline으로 재현했습니다. 이름과 달리 HWPX 변환본이며 HWP3 구현 범위를 넓힌 것이 아닙니다. 같은1024MiB관측 한도에서peak1157121248바이트·exit1입니다. 테스트 바깥 allocator만 checked_allocator.run으로 바꾸고 presentation/브러시 각1·여섯 원값·실제 fillBrush 소유 연결·두 예산 거부·별도 DebugAllocator 요청bytes0 단언을 유지했습니다. 제품 parser와 내부 계측 allocator 설정은 변경하지 않았습니다.
+
+수정본 SHA256 `b61fd2962c6a532b30e9fee731790a8efea059cb343b647010d6a0698b720e24`는 root 포함2/2·fail/skip/log/leak0·exit0, 같은한도에서peak5931344바이트입니다. 기록은 `/tmp/hwpjs-native-current-20261015.QKXKKy/presentation-{baseline,checked}.jsonl`입니다. fmt/diff check를 확인했으며 현재 로컬 source 집중 검증이고 전체4114완료나 main 분리 검증/게시 완료는 아닙니다.
+
 ## 외부 선언 뒤 패키지 OLE 종합 검사
 
 main bab04989 의존성만 사용한 별도 소스/실제 입력에서도 집중2/2·exit0과 ReleaseSafe 제품 빌드5/5·exit0을 확인했습니다(실행98965). 잘못된 cwd로 먼저 실행한 로컬 집중29312의2/2와 합산하지 않았으며 main 분리 검증 근거는98965입니다. 게시에는 이 테스트5줄 변경과 기록만 포함합니다. 현재 로컬 전체 컴파일26184는 별도 진행 중이고 전체 gate 완료를 뜻하지 않습니다.
