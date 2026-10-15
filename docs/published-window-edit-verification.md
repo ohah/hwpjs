@@ -2,6 +2,8 @@
 
 ## 2026-10-15 긴 문서 후보 검증
 
+반복 전체 순회의 로컬 최적화·동일 원본 재측정·아직 미완료인 정규 native gate는 [문단 소유 노드 순회](hwpx-paragraph-owned-node-scan.md)가 소유합니다. 아래는 최적화 전 고정 후보의 검증입니다.
+
 cb5d1b87 후보(SHA256 `cb5d1b87a04768990c19481ad007c20517ee80e02ed44978989b7dd966617349`)의 실제 ZIP/HWPX `reference/rhwp/samples/hwp3-sample10-hwpx.hwpx`는26939문단입니다. 파일명은 변환 이력이며 HWP3 signature를 검사한 것이 아닙니다. 기본 표시가 limited=true인 상태에서 마지막26939번째 문단을 set-edit-window로 열어 Canvas 입력·현재 구간 검색·저장·독립 전체 XML/ZIP(Python 일반/-O)·undo 원문 byte-exact·redo 저장본 byte-exact·재열기 후 같은 구간/문자열을 확인했습니다. 최초 현재 작업 트리 검사1/1·skip0·exit0은148798.756208ms입니다(handle49307). 문서 전체 검색은 현재 미구현이며 이 구간 검색 통과로 대체하지 않습니다.
 
 분리 게시 JS(현재 controller와 cmp 일치)에 같은 테스트를 적용한 단계 계측 실행도1/1·skip0·exit0입니다(handle27167,148251.537417ms). 잘못된 prefix 기대는 일반/-O 모두 complete XML mismatch로 거부하고 원본 파일 byte-exact 불변도 확인했습니다. 원본 reference 경로는 읽기 전용 공유 링크이며 기본 WASM을 교체하지 않았습니다. Node26.7.0의 동시 부하가 있는 단일 실행으로,현재 작업 트리 Node24 실행과 성능 개선율을 비교하지 않습니다.
