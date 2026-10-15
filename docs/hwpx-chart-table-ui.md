@@ -1,5 +1,14 @@
 # HWPX 차트 값 목록 UI
 
+## 2026-10-16 실제 Chromium의 다단계 선택·편집·이력
+
+미공개 차트 통합 후보와 main `161f8816`의 라벨 변경, WASM `f6decd1d…`를 별도 서버에서 실행했습니다. 실제 파일 선택으로 파생 HWPX를 열어 단계 노드48/57의 같은 포인트0이 다르게 표시됨을 확인하고, 두 번째 단계의 표 버튼 선택→원값 W→`브라우저 단계😀<&_x0008_` 입력/적용을 수행했습니다. 화면의 툴바 download/undo/redo 버튼으로 만든 Blob3개를 관측했으며 실제 OS 다운로드 위치 검증과는 구분합니다.
+
+산출물은 `/tmp/hwpjs-chart-label-browser.mSkune/evidence/`의 edited/undo/redo.hwpx와 스크린샷·verification.json입니다. 편집/redo는303970바이트·SHA256 `22f55467d72ed2688c169447aacd77ed53f508d52568995b68c43a6726213a02`, undo는45360바이트·`1f27f19e55e3fb8b00de8c1881e476b51af78cef1e57a1f5f38f0fb143c6cadf`로 파생 입력과 byte-exact입니다. 독립 Python normal/-O XML/ZIP/OLE·비대상/형제 스트림 검증4회와 첫 단계 leaf로 바꾼 잘못된 기대값의 거부4회를 확인했습니다. 새 native 세션의 redo 재열기/무편집 저장도 byte-exact이며 브라우저 errors는 빈 목록입니다.
+
+동일 이름의 메뉴/툴바 버튼을 자동화가 혼동한 첫 시도는 undo 조건25초 timeout이었고 다운로드 Blob은 없었습니다. 관측한 실제 toolbar ID로 대상을 고쳐 위 성공을 확인했으며 제품 상태를 직접 설치하거나 데이터를 주입하지 않았습니다. agent-browser 전용 세션 close와 자체9037 서버 종료·세션/PID/listener 부재를 확인했고 다른 프로젝트 세션은 유지했습니다. 합성 파생 cache의 표 선택/저장 증거이며 Canvas 차트 픽셀 선택·실제 다단계 원본·차트 재렌더링·물리 IME·RHWP 전체 UI 동치나 기본 WASM 승격의 증거는 아닙니다.
+
+
 ## 2026-10-16 다단계 범주의 표시 구분
 
 동일 계열·동일 idx가 다른 단계에 있을 때 두 라벨이 완전히 같아지는 반례를 재현했습니다. `chart-point-label`은 multilevel_cache의 유효한 native u32 level_node만 “단계 노드”로 덧붙입니다. 순서/단계명/계열을 추정하거나 XML을 재해석하지 않으며, 부재·음수·분수·비유한·문자열·u32 초과는 표시하지 않습니다. 다른 point 종류는 추가 값을 무시합니다. 값 모델·point ordinal·선택·setter·이력은 변경하지 않았습니다.
