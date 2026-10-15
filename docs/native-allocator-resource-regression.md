@@ -1,5 +1,7 @@
 # 큰 문서 테스트의 할당자 진단 비용
 
+표 생성의 빈 상태/원문/전체 실패 지점을 유지한 후속 검사는 [생성 표 fixture 할당자 검증](native-created-table-staged-resource.md)이 소유합니다.
+
 도형 텍스트 배치의 전체 실패 주입을 유지한 후속 자원 대조는 [배치 스냅샷 자원 검증](native-drawing-snapshot-resource.md)이 소유합니다.
 
 실제 장식 선18개 스냅샷의 후속 전체 감사 중단과 범위 allocator 대조는 [선 스냅샷 자원 검증](native-line-snapshot-resource.md)이 소유합니다.

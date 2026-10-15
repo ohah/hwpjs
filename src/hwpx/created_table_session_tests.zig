@@ -193,7 +193,10 @@ test "created table staged checkpoint includes memory and failed budget rolls ba
 }
 
 test "created table staged allocation failures retain empty current state and source" {
-    const a = std.testing.allocator;
+    try @import("../testing/checked_allocator.zig").run(stagedAllocationFailures, .{});
+}
+
+fn stagedAllocationFailures(a: std.mem.Allocator) !void {
     const bytes = try input(a);
     defer a.free(bytes);
     var session = try editor.open(a, bytes, .{});
