@@ -18,6 +18,8 @@
 
 ## 검증 경계
 
+실제 Canvas 키 입력·브라우저 undo/redo·다운로드와 종료 확인은 [AVG Canvas 검증](hwpx-avg-canvas-verification.md)이 소유합니다. Node Worker 회귀와 실제 브라우저 증거를 구분합니다.
+
 ### main 기반 scalar 게시 후보
 
 root 등록·테스트명 보강 뒤 최종 재빌드 `0980ffc8988bb4af2a3d3790976dbd63cb9c3e8b7b293ef4228b0cfdb0c64482`의 등록20파일 전체 실행은49/49·fail/skip0·exit0·stderr0바이트입니다(124609.762333ms). `build.zig`의 정확한 파일 목록을 추출해 동시성2로 실행하고 고정 경로와 환경변수 양쪽 모두 이 후보를 읽게 했습니다. Git 메타데이터가 필요한 읽기 전용 inventory에는 원본 Git 디렉터리와 격리 work tree를 명시했습니다. 초기 메타데이터 없는 실행의5실패나 artifact 동일성 검사에서 중단한 실행을 통과로 바꾸지 않습니다. 최종 로그는 `/tmp/hwpjs-note-geometry-publication.Wkoeip/scalar-public-suite-final.log`입니다. strict PRODUCT 유지·SUM/AVG 설명 제외·분모/빈 값 및 예산/비정상 숫자 집중3/3·exit0도 확인했습니다. 기본 배포 WASM은 교체하지 않았고 전체 native 및 실제 브라우저 gate는 미완료입니다.
