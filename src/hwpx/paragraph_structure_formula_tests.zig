@@ -29,7 +29,9 @@ test "HWPX structural formula splice allocation failures preserve the complete m
 }
 
 test "HWPX structural formula save preserves actual chart calculations outside cells" {
-    const a = std.testing.allocator;
+    var verification_allocator: @import("../testing/checked_allocator.zig").Debug = .{};
+    defer std.testing.expect(verification_allocator.deinit() == .ok) catch @panic("structural formula fixture allocator leak");
+    const a = verification_allocator.allocator();
     const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx", a, .limited(4_000_000));
     defer a.free(input);
     var session = try @import("editor_session.zig").open(a, input, .{});

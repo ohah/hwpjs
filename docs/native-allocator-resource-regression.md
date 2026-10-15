@@ -1,5 +1,12 @@
 # 큰 문서 테스트의 할당자 진단 비용
 
+## 구조 수식 fixture 저장 검증의 진단 비용 (2026-10-16)
+
+main `7d017b9e` 기반 격리 소스에서 `HWPX structural formula save preserves actual chart calculations outside cells`를 같은1024MiB 감시로 재현했습니다. baseline `f5da856d1208baaeec8673bbccbd951509d5f9c69200a1fedc4db3e0b5809890`는 peak1077888152바이트로 incomplete·exit1이며 종료 native PID55808 부재를 확인했습니다. 경로는 `/tmp/hwpjs-structural-diagnostics.h3CPQM/baseline.jsonl`입니다.
+
+해당 테스트의 allocator만 공통 `checked_allocator.Debug`로 바꾸고 defer에서 누수 없음(.ok)을 단언했습니다. fixture·구조 분할/입력/계산 보존·원문 bytes/재열기 단언·제품 코드는 유지했습니다. 수정 바이너리 `7b31140ae4738ffabbdc2d16a0b071f56122c2b3661120d6a6c00502198c4f90`는 root 포함2/2·fail/skip/logErrors/leaks0·exit0·관측 peak8143184바이트입니다(`checked.jsonl`). 할당별 스택 기록 비용의 대조이며 제품 메모리 개선·전체 native 통과가 아닙니다. 별도 공유 차트 후보의186선언 검사는 이 main 대조와 다른 바이너리입니다.
+
+
 ## 이전 전체 실행의 이동 필드 실패 주입 종료 (2026-10-16)
 
 eebf201f 소스의 전체3978개 바이너리 `b46f04ffd2249e5eda812ef8a9e15e5488120a7d41f97385de7cf5ad9b8deac7`는2507개 완료 뒤 index2507 `mixed formula moved field allocation failures preserve owned markers definition and original ZIP`에서 관측 peak1106412672바이트로1024MiB 한도를 초과해 incomplete·exit1입니다. 앞선 underline45011실패 지점과 open/edit/save/reopen은 후속 테스트로 진행했으므로 그 지점을 무한 루프나 미완료로 남기지 않습니다. guardian/batch/native PID92468/92474/25726 부재를 확인했습니다. 최신 차트 공유 후보와 다른 바이너리이며 완료 수를 합산하지 않습니다.
