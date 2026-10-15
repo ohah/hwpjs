@@ -2,9 +2,22 @@ const segments = new Intl.Segmenter("ko", { granularity: "grapheme" });
 const words = new Intl.Segmenter("ko", { granularity: "word" });
 const splitScalar = (text, unit) => unit > 0 && unit < text.length && /[\uD800-\uDBFF]/u.test(text[unit - 1]) && /[\uDC00-\uDFFF]/u.test(text[unit]);
 
-/** Minimal UTF-16 replacement; do not cut a shared surrogate in half. */
-export function textChange(before, after) {
+/** Prefer a verified pre-input selection; otherwise use a minimal scalar-safe replacement. */
+export function textChange(before, after, selection = null) {
   if (before === after) return null;
+  let first = selection?.startUnit, last = selection?.endUnit;
+  if (Number.isInteger(first) && Number.isInteger(last) && first >= 0 && first <= last && last <= before.length) {
+    if (first === last && after.length < before.length) {
+      const removed = before.length - after.length;
+      if (selection.inputType === "deleteContentBackward") first -= removed;
+      else if (selection.inputType === "deleteContentForward") last += removed;
+    }
+    const inserted = after.length - (before.length - (last - first)), end = first + inserted;
+    if (first >= 0 && last <= before.length && inserted >= 0 && !splitScalar(before, first) && !splitScalar(before, last) && !splitScalar(after, first) && !splitScalar(after, end)
+      && before.slice(0, first) === after.slice(0, first) && before.slice(last) === after.slice(end)) {
+      return { startUnit: first, endUnit: last, text: after.slice(first, end) };
+    }
+  }
   let start = 0;
   while (start < before.length && start < after.length && before[start] === after[start]) start++;
   while (splitScalar(before, start) || splitScalar(after, start)) start--;
