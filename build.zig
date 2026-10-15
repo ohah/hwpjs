@@ -101,6 +101,7 @@ pub fn build(b: *std.Build) void {
     hwpx_text_tests.addArg("tests/hwpx/source-table-control-coverage.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/numeric-input-corpus.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/numeric-exact-corpus.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/grouped-integer-editor.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/formula-definition-corpus.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/formula-worker.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/formula-average-split-policy.test.mjs");

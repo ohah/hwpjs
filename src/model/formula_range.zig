@@ -11,6 +11,7 @@ pub const Range = struct {
     first: Address,
     last: Address,
     above: bool = false,
+    below: bool = false,
     addresses: [32]Address = undefined,
     address_count: usize = 0,
 
@@ -21,6 +22,10 @@ pub const Range = struct {
         if (parser.consume("ABOVE)")) {
             if (parser.offset != expression.len) return error.UnsupportedFormulaExpression;
             return .{ .function = function, .first = .{ .column = .current, .row = .{ .absolute = 0 } }, .last = .{ .column = .current, .row = .current }, .above = true };
+        }
+        if (parser.consume("BELOW)")) {
+            if (parser.offset != expression.len) return error.UnsupportedFormulaExpression;
+            return .{ .function = function, .first = .{ .column = .current, .row = .current }, .last = .{ .column = .current, .row = .current }, .below = true };
         }
         const first = try parser.address();
         if (parser.consume(")")) {
@@ -49,6 +54,11 @@ pub const Range = struct {
     pub fn resolve(self: Range, origin: Cell, columns: u32, rows: u32) !Rectangle {
         if (origin.column >= columns or origin.row >= rows) return error.InvalidFormulaOrigin;
         if (self.address_count != 0) return error.UnsupportedNonRectangularFormulaRange;
+        if (self.above and self.below) return error.InvalidFormulaReference;
+        if (self.below) {
+            if (origin.row == rows - 1) return error.EmptyFormulaRange;
+            return .{ .first = .{ .column = origin.column, .row = origin.row + 1 }, .last = .{ .column = origin.column, .row = rows - 1 } };
+        }
         if (self.above) {
             if (origin.row == 0) return error.EmptyFormulaRange;
             return .{ .first = .{ .column = origin.column, .row = 0 }, .last = .{ .column = origin.column, .row = origin.row - 1 } };
@@ -118,6 +128,23 @@ fn wire(comptime ascii: []const u8) [ascii.len * 2]u8 {
     var result: [ascii.len * 2]u8 = @splat(0);
     for (ascii, 0..) |c, i| result[i * 2] = c;
     return result;
+}
+
+test "formula BELOW excludes its owner and preserves boundary overflow checks" {
+    const below = try Range.parse(&wire("SUM(BELOW)"));
+    try std.testing.expectEqualDeep(Rectangle{ .first = .{ .column = 1, .row = 1 }, .last = .{ .column = 1, .row = 3 } }, try below.resolve(.{ .column = 1, .row = 0 }, 2, 4));
+    try std.testing.expectError(error.EmptyFormulaRange, below.resolve(.{ .column = 0, .row = 0 }, 1, 1));
+    try std.testing.expectError(error.InvalidFormulaOrigin, below.resolve(.{ .column = 0, .row = 0 }, 1, 0));
+    const last = std.math.maxInt(u32) - 1;
+    const large = try below.resolve(.{ .column = 0, .row = last - 1 }, 1, std.math.maxInt(u32));
+    try std.testing.expectEqual(last, large.first.row);
+    try std.testing.expectEqual(last, large.last.row);
+    try std.testing.expectError(error.EmptyFormulaRange, below.resolve(.{ .column = 0, .row = last }, 1, std.math.maxInt(u32)));
+    try std.testing.expectError(error.UnsupportedFormulaExpression, Range.parse(&wire("SUM(BELOW)tail")));
+    try std.testing.expectError(error.InvalidFormulaReference, Range.parse(&wire("SUM(below)")));
+    var contradictory = below;
+    contradictory.above = true;
+    try std.testing.expectError(error.InvalidFormulaReference, contradictory.resolve(.{ .column = 0, .row = 1 }, 1, 3));
 }
 
 test "formula ABOVE excludes result cell and product keeps exact rectangular references" {

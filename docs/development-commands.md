@@ -1,5 +1,9 @@
 # 개발·검증 명령
 
+`zig test src/hwpx_formula_preservation_test.zig -O ReleaseSafe --test-filter 'untouched formula preservation'`는 최종 flat 원문 보존·내부 derive·실제 숫자 입력 후 재계산을 전체 할당 실패 지점에서 검사하는 별도 native 진입점입니다. 정규 root 전체 검사와 합산하지 않으며 [copay 저장 계약](hwpx-copay-below-investigation.md)을 따릅니다.
+
+`HWPJS_TEST_WASM=/absolute/candidate/hwpjs.wasm node --test tests/hwpx/copay-below-editor.test.mjs tests/hwpx/empty-formula-reference.test.mjs`는 실제 RHWP 참조4파일의 BELOW 입력/독립 XML·Decimal·이력과 수식 없는 구역의 반복 빈 목록·원문 저장 보존을 검사합니다. 참조 누락은 실패이며 기본 등록 묶음·전체 참조 편집·브라우저 검증과 구분합니다. [빈 수식 조회](hwpx-empty-formula-query.md)의 후보/실측 경계를 따릅니다.
+
 `node tools/hwpx-query-parity-audit.mjs --before-wasm=/absolute/before.wasm --after-wasm=/absolute/candidate.wasm --root=reference/rhwp/samples --max-rss-mib=512 --max-duration-ms=15000`는 문서별 제한된 자식 프로세스로 전체 구역 조회·저장 응답을 비교합니다. 같은 오류는 지원이 아니며 원본과 다른 무변경 저장·저장 오류·미완료는 exit1입니다. [조회 감사 계약](hwpx-query-parity-audit.md)의 관측 한도와 판정을 따릅니다.
 
 `zig test src/testing_checked_allocator_probe.zig -O ReleaseSafe --test-filter 'probe positive' --test-filter 'checked allocator retains'`는 범위 테스트 할당자의 안전한 양성 대조입니다. `deliberate leak`/`deliberate assertion` 필터는 실제 native 실패·exit1이 예상되는 별도 음성 대조이며 정규 root에 import하지 않습니다. [자원 재현과 진단 손실](native-allocator-resource-regression.md)을 먼저 읽습니다.

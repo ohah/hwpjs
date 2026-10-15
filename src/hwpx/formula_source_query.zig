@@ -28,6 +28,15 @@ pub fn isFormula(a: std.mem.Allocator, tree: *const Tree, begin: usize) !bool {
     return std.mem.eql(u8, kind, "FORMULA");
 }
 
+/// Presence only; does not validate links, evaluate results, or grant editing.
+pub fn hasFormula(a: std.mem.Allocator, tree: *const Tree) !bool {
+    for (tree.elements, 0..) |element, index| {
+        if (!element.is(@import("document_xml.zig").paragraph_uri, "fieldBegin")) continue;
+        if (try isFormula(a, tree, index)) return true;
+    }
+    return false;
+}
+
 fn allocationCase(a: std.mem.Allocator) !void {
     var tree = try @import("section_tree.zig").parse(a, "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:fieldBegin type='FORMULA'><p:parameters><p:stringParam name='Formula'>=SUM(A1:A2)</p:stringParam></p:parameters></p:fieldBegin></s:sec>", 7, 0, .{});
     defer tree.deinit(a);

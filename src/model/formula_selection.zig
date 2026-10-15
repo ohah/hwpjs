@@ -47,6 +47,15 @@ fn wire(comptime text: []const u8) [text.len * 2]u8 {
     for (text, 0..) |c, index| bytes[index * 2] = c;
     return bytes;
 }
+test "formula BELOW selection visits each lower row without its owner" {
+    var iterator = try Iterator.init(try ranges.Range.parse(&wire("SUM(BELOW)")), .{ .column = 1, .row = 0 }, 2, 4);
+    try std.testing.expectEqual(@as(usize, 3), iterator.count);
+    for (1..4) |row| try std.testing.expectEqualDeep(ranges.Cell{ .column = 1, .row = @intCast(row) }, iterator.next().?);
+    try std.testing.expect(iterator.next() == null);
+    try std.testing.expect(iterator.next() == null);
+    try std.testing.expect(!iterator.intersects(.{ .first = .{ .column = 1, .row = 0 }, .last = .{ .column = 1, .row = 0 } }));
+    try std.testing.expect(iterator.intersects(.{ .first = .{ .column = 1, .row = 3 }, .last = .{ .column = 1, .row = 3 } }));
+}
 test "formula explicit selection preserves order duplicates bounds and capacity" {
     var single = try Iterator.init(try ranges.Range.parse(&wire("SUM(A1)")), .{ .column = 0, .row = 0 }, 1, 1);
     try std.testing.expectEqual(@as(usize, 1), single.count);

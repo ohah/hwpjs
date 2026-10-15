@@ -354,7 +354,7 @@ pub const Session = struct {
             const base = if (section.structure_values) |*values| block: {
                 if (section.sites.items.len != 0) return error.DuplicateCurrentTextOwner;
                 break :block try @import("paragraph_structure_save.zig").writeWithDefinitions(a, trees, index, values, siteOptions(self.options), section.field_dirty.items, &section.formula_definitions, self.options.max_xml_bytes -| xml_bytes);
-            } else try @import("formula_section_save.zig").writeWithDefinitions(a, trees, index, &section.sites, siteOptions(self.options), section.field_dirty.items, &section.formula_definitions, self.options.max_xml_bytes -| xml_bytes);
+            } else try @import("formula_section_save.zig").writeWithDefinitionsMode(a, trees, index, &section.sites, siteOptions(self.options), section.field_dirty.items, &section.formula_definitions, self.options.max_xml_bytes -| xml_bytes, true);
             const sized = if (section.cell_sizes.items.len == 0) base else block: {
                 defer a.free(base);
                 break :block try @import("table_cell_size_save.zig").write(a, &section.tree, base, section.cell_sizes.items, self.options.max_xml_bytes -| xml_bytes);

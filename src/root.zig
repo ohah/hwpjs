@@ -170,6 +170,8 @@ test {
     _ = @import("hwpx/formula_definition_rebind.zig");
     _ = @import("hwpx/formula_structural_snapshot.zig");
     _ = @import("hwpx/formula_values.zig");
+    _ = @import("hwpx/formula_output.zig");
+    _ = @import("hwpx/formula_empty_query_tests.zig");
     _ = @import("hwpx/formula_cell_rectangle.zig");
     _ = @import("hwpx/formula_cell_rectangle_batch_tests.zig");
     _ = @import("hwpx/formula_numeric_input_guard.zig");

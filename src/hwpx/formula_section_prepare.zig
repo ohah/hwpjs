@@ -14,6 +14,10 @@ pub const Options = struct {
 pub fn prepare(a: std.mem.Allocator, trees: []const @import("xml_part_tree.zig").Tree, section: usize, sites: *const @import("text_sites.zig").Sites, options: Options) ![]output.Prepared {
     if (section >= trees.len or trees[section].section_ordinal != section) return error.InvalidSectionIndex;
     const tree = &trees[section];
+    if (!try @import("formula_source_query.zig").hasFormula(a, tree)) {
+        if (options.definitions) |values| if (values.entries.items.len != 0) return error.InvalidFormulaDefinitionSelection;
+        return a.alloc(output.Prepared, 0);
+    }
     var markers = try @import("field_markers.zig").inspect(a, trees, .{});
     defer markers.deinit();
     const ranges = try @import("field_text_ranges.zig").build(a, trees, &markers);
