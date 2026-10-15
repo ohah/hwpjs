@@ -22,4 +22,10 @@ field-input-queue.test.mjs의 실제 Worker/WASM·DOM 대역은 미허가 native
 
 ## 실행 결과
 
+후속 회귀는 권한 query가 pending인 상태에서 조합 시작·중간 `ㄱ`·권한 응답·최종 `가` 종료를 교차시킵니다. 중간 native splice0회,최종0→1→0,보호 위치12의 조합이 거부된 뒤 늦은 compositionend가 native 편집을 재제출하지 않는 것을 확인했습니다. 일반 입력과 조합 입력 profile을 따로 실행하며 ABI 부재 대역을 정상 기본 산출물과 혼동하지 않습니다.
+
+실제 Worker가 계산한 옛 query reply를 harness.flush(false)로 DOM에 전달하지 않고 보관했습니다. 새 load와 표 생성 뒤 같은 문단/좌표의 새 요청이 pending인 상태에서 옛 allowed=true 응답을 직접 전달해도 readOnly=true/초기 beforeinput 방지가 유지됐고 native 저장은 새 baseline과 byte-exact였습니다. 증가한 requestId의 새 응답 뒤에만 입력이 허용됐습니다. flush의 기본 publish=true 동작은 유지하며 별도 문서 모델이나 제품 이벤트 분기를 추가하지 않았습니다.
+
+이 두 후속 경로를 포함한 같은8파일은62/62·skip0·exit0(12609.071666ms),동일한 controller(cmp 일치)의 분리 게시3파일은21/21·skip0·exit0(9797.17275ms)입니다. 이 추가 검증에서 새 제품 코드 변경은 없었으며, 실제 브라우저/OS IME/모든 문서 동치의 증거로 확대하지 않습니다.
+
 cb5d1b87 WASM 후보와 현재 JS의 실제8파일 선택은60/60·skip0·exit0(12249.091667ms)입니다. field-input-queue/control-offset-input-queue/text-input-selection-worker/table-creation-worker/selection-edit-permission/canvas-edit/input-intent-queue/text-input-selection을 실행했습니다. 분리 게시 JS에 controller의 이번 차이·새 field 입력 회귀·공유 독립 oracle·permission pure 회귀만 추가한 실제3파일 선택은19/19·skip0·exit0(9937.214459ms)입니다. 이전4파일 시도의 미게시 fieldSpans API 실패를 통과로 바꾸거나 두 실행 개수를 합산하지 않습니다. 기본 WASM·native 본체 변경은 게시 단위에 포함하지 않습니다.

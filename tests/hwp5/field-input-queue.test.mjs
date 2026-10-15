@@ -6,6 +6,40 @@ import { workerCanvasHarness, dispatchCanvasEvent } from "../canvas/worker-harne
 import { inspect, expectedSection, paragraphRecords, records } from "./style-preservation/text-record-oracle.mjs";
 import { independentFieldSpans } from "./field-span-oracle.mjs";
 
+test("an old document permission reply cannot authorize the same coordinates in a replacement document", async t => {
+  assert(process.env.HWPJS_TEST_WASM, "explicit candidate required");
+  const instantiate = WebAssembly.instantiate;
+  t.mock.method(WebAssembly, "instantiate", async (...args) => {
+    const instance = await instantiate(...args), exports = { ...instance.exports }; delete exports.hwpx_edit_created_table_field_label_mode;
+    return { exports };
+  });
+  const h = await workerCanvasHarness(t, { rangeQueries: true });
+  const bytes = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/issue144-fields-crossing-lineseg-boundary.hwpx");
+  const load = async () => {
+    assert.equal((await h.send({ kind: "load", format: "hwpx", bytes })).error, undefined);
+    assert.equal((await h.send({ kind: "enable" })).error, undefined);
+    const created = await h.send({ kind: "insert-table", section: 0, paragraph: 1, unit: 0, options: { rows: 1, columns: 1, width: 36000, rowHeight: 6000, resources: { paragraph: 1, character: 1, style: 0, border_fill: 1 } } });
+    assert.equal(created.error, undefined); assert.equal(created.content.paragraphs.find(row => row.paragraph === 1).editable, false);
+  };
+  await load();
+  assert.equal(h.controller.selectTextRange({ section: 0, paragraph: 1, startUnit: 0, endUnit: 0 }), true);
+  const old = await h.flush(false); assert.equal(old.kind, "query-edit-range"); assert.equal(old.allowed, true);
+  await load();
+  const baseline = (await h.send({ kind: "save" })).bytes;
+  assert.equal(h.controller.selectTextRange({ section: 0, paragraph: 1, startUnit: 0, endUnit: 0 }), true);
+  assert.equal(h.input.readOnly, true);
+  const freshRequest = h.requests.at(-1); assert.equal(freshRequest.kind, "query-edit-range"); assert(freshRequest.requestId > old.requestId);
+  h.controller.message(old);
+  assert.equal(h.input.readOnly, true, "stale allowed=true must not unlock the replacement document");
+  assert.equal(dispatchCanvasEvent(h.input, "beforeinput", { inputType: "insertText", data: "bad" }).defaultPrevented, true);
+  const current = await h.flush(); assert.equal(current.allowed, true); assert.equal(h.input.readOnly, false);
+  assert.deepEqual((await h.send({ kind: "save" })).bytes, baseline);
+  const text = h.input.value;
+  dispatchCanvasEvent(h.input, "beforeinput", { inputType: "insertText", data: "x" });
+  h.input.value = "x" + text; h.input.setSelectionRange(1, 1); dispatchCanvasEvent(h.input, "input");
+  assert.equal((await h.flush()).error, undefined); await h.flushQueries(); assert.equal(h.input.value, "x" + text);
+});
+
 test("the independent hyperlink scope oracle rejects forged header and end identities", () => {
   const section = inspect(readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/hyperlink.hwp")).sections[0].bytes;
   const fields = independentFieldSpans(section), all = records(section);
@@ -18,7 +52,7 @@ test("the independent hyperlink scope oracle rejects forged header and end ident
   assert.throws(() => independentFieldSpans(forgedEnd), /independent field end mismatch/);
 });
 
-test("queued exterior input with an unavailable optional label ABI remains a draft while native permission is pending", async t => {
+for (const composition of [false, true]) test(`queued exterior ${composition ? "composition" : "input"} with an unavailable optional label ABI waits for native permission`, async t => {
   assert(process.env.HWPJS_TEST_WASM, "explicit candidate required");
   const instantiate = WebAssembly.instantiate;
   t.mock.method(WebAssembly, "instantiate", async (...args) => {
@@ -49,7 +83,15 @@ test("queued exterior input with an unavailable optional label ABI remains a dra
   assert.equal((await h.flush()).error, undefined);
   assert.equal(h.requests.at(-1).kind, "query-edit-range");
   assert.equal(h.input.readOnly, false, "native permission latency must not disable the already active draft");
-  type(0);
+  if (composition) {
+    h.input.setSelectionRange(0, 0); dispatchCanvasEvent(h.input, "compositionstart");
+    dispatchCanvasEvent(h.input, "beforeinput", { inputType: "insertCompositionText", data: "ㄱ", isComposing: true });
+    h.input.value = "ㄱ" + draft; h.input.setSelectionRange(1, 1); dispatchCanvasEvent(h.input, "input", { isComposing: true });
+    await h.flushQueries();
+    assert.equal(h.requests.slice(start).filter(row => row.kind === "splice").length, 1, "range permission must not commit intermediate composition");
+    draft = "가" + draft; h.input.value = draft; h.input.setSelectionRange(1, 1);
+    dispatchCanvasEvent(h.input, "input", { isComposing: true }); dispatchCanvasEvent(h.input, "compositionend", { data: "가" }); await Promise.resolve();
+  } else type(0);
   assert.equal(h.requests.slice(start).filter(row => row.kind === "splice").length, 1, "unverified draft must not submit a native splice");
   await h.flushQueries(); assert.equal((await h.flush()).error, undefined);
   await h.flushQueries(); assert.equal((await h.flush()).error, undefined);
@@ -65,8 +107,14 @@ test("queued exterior input with an unavailable optional label ABI remains a dra
   await h.flushQueries(); draft = original.text;
   assert.equal(h.input.readOnly, false, "restored selection must not retain an unsent permission request");
   const refusalStart = h.requests.length;
-  type(0); type(12); // The latter location is inside the unavailable field label.
+  type(0);
+  if (composition) {
+    h.input.setSelectionRange(12, 12); dispatchCanvasEvent(h.input, "compositionstart");
+    dispatchCanvasEvent(h.input, "beforeinput", { inputType: "insertCompositionText", data: "가", isComposing: true });
+    h.input.value = draft.slice(0, 12) + "가" + draft.slice(12); h.input.setSelectionRange(13, 13); dispatchCanvasEvent(h.input, "input", { isComposing: true });
+  } else type(12); // The latter location is inside the unavailable field label.
   assert.equal((await h.flush()).error, undefined); await h.flushQueries();
+  if (composition) { dispatchCanvasEvent(h.input, "compositionend", { data: "가" }); await Promise.resolve(); }
   assert.equal(h.requests.slice(refusalStart).filter(row => row.kind === "splice").length, 1);
   assert(h.requests.slice(refusalStart).some(row => row.kind === "query-edit-range" && row.startUnit === 12));
   assert.equal(h.input.value, "가" + original.text);

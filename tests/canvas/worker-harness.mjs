@@ -87,7 +87,7 @@ export async function workerCanvasHarness(t, { paintFrames = false, bitmapSize =
   controller.reset();
   return { canvas, input, viewport, spacer, renderer, controller, requests, send, request: message => controls.request(message),
     paint() { let count = 0; while (frames.length) { assert(++count <= 100, "UnexpectedAnimationLoop"); frames.shift()(); } },
-    async flush() { assert.equal(queue.length, 1); return send(queue.shift()); },
+    async flush(publish = true) { assert.equal(queue.length, 1); return send(queue.shift(), publish); },
     async flushQueries() {
       let count = 0;
       while (queue[0]?.kind === "query-edit-range") {
