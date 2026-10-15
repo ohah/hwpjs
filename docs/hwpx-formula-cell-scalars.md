@@ -2,7 +2,7 @@
 
 ## 현재 범위
 
-작업 트리 구현이며 기본 데모 WASM의 지원 범위를 변경하지 않았습니다. 임시 후보와 과거 실측은 [조사 기록](hwpx-formula-merged-origin-prototype.md)이 소유합니다. HWP5/HWPX 전체 편집 또는 원본 한글 계산 규칙과의 완전 동치가 입증된 상태는 아닙니다.
+현재 코어 계약이며 기본 데모 WASM 반영은 별도입니다. 임시 후보와 과거 실측은 [조사 기록](hwpx-formula-merged-origin-prototype.md)이 소유합니다. HWP5/HWPX 전체 편집 또는 원본 한글 계산 규칙과의 완전 동치가 입증된 상태는 아닙니다.
 
 ## 책임과 정책
 
@@ -10,13 +10,21 @@
 
 - `formula_cell_rectangle`는 셀 주소·span·표 경계·점유/겹침을 검사합니다. `formula_values`는 기존 선택 iterator와 집계·누적 작업 예산을 소유합니다. 반복 주소를 계산에서 제거하지 않습니다.
 - `formula_cell_number`는 현재 text site와 활성 XML 구조를 읽습니다. strict 읽기는 단일 문단 숫자만 허용합니다. SUM scalar 조회는 첫 활성 문단만 number/text/empty로 분류하며 문단 사이의 숫자를 이어 붙이거나 뒤 문단의 숫자를 끌어오지 않습니다. 뒤 문단을 포함한 활성 제어 요소는 여전히 검사합니다. 이 첫 문단 정책은 실제 파일 관측 기반이며 일반 한글 숫자 추출 명세 전체가 아닙니다.
-- SUM만 text/empty를 집계에서 제외합니다. AVG/PRODUCT/MIN/MAX는 기존 strict 숫자 정책을 유지합니다. 숫자 병합 셀은 원점에서만 읽으며 내부 좌표는 거부합니다. 설명 셀의 내부 좌표를 제외할 때도 겹침/예산 검사를 먼저 수행합니다.
+- SUM/AVG는 같은 첫 문단 scalar 조회로 text/empty를 집계에서 제외합니다. AVG는 숫자 값 개수로 나누며 전부 빈 선택은0입니다. PRODUCT/MIN/MAX와 strict 숫자 API는 기존 정책을 유지합니다. AVG의 병합 내부 좌표 제한은 유지하고, SUM도 숫자 병합 셀은 원점에서만 읽습니다. 설명 셀의 내부 좌표를 제외할 때도 겹침/예산 검사를 먼저 수행합니다.
 - `formula_dependency_evaluation`은 실제로 읽은 숫자 입력 셀을 선택적으로 기록합니다. 이 목록은 해당 평가 거래의 임시 데이터이며 문서 모델이나 저장 캐시가 아닙니다. 목록 중복 제거는 반복 주소의 산술 의미를 바꾸지 않습니다.
 - `formula_numeric_input_guard.validateFormulaTransition`은 이전 값 평가로 참조 숫자 입력을 수집하고 변경된 해당 셀의 첫 문단이 여전히 number인지 확인합니다. 구조·권한·수식 준비 검사를 대체하거나 편집 권한을 부여하지 않습니다. 설명 문단 변경과 참조하지 않는 숫자 셀은 이 검증만으로 제한하지 않습니다.
 - 일반 `formula_splice`와 구조화된 `paragraph_structure_formula_splice`는 같은 전환 검증을 호출합니다. 구조 경로는 기존 일시적 source-binding projection을 사용하고 저장 사전 검증 후에만 소유 값을 교체합니다. 생성/변경 수식 및 다른 구조 명령의 모든 게시 경로에 대한 감사는 별도입니다.
 - 현재 후속 출력 정책은 implicit grouped general의 정수값만 소수0자리 십진수로 보존하고 소수값은 기존6유효자리 규칙을 유지합니다. 명시적 precision/fixed/비grouped 경로는 그대로입니다. 이는 아래 원본 관측과 기존 회귀를 함께 만족하는 제한적 정책이며 원본 한글의 모든 반올림/정밀도에 대한 증명은 아닙니다. 이전15자리 후보의 설명/결과는 이력입니다.
 
 ## 검증 경계
+
+### main 기반 scalar 게시 후보
+
+root 등록·테스트명 보강 뒤 최종 재빌드 `0980ffc8988bb4af2a3d3790976dbd63cb9c3e8b7b293ef4228b0cfdb0c64482`의 등록20파일 전체 실행은49/49·fail/skip0·exit0·stderr0바이트입니다(124609.762333ms). `build.zig`의 정확한 파일 목록을 추출해 동시성2로 실행하고 고정 경로와 환경변수 양쪽 모두 이 후보를 읽게 했습니다. Git 메타데이터가 필요한 읽기 전용 inventory에는 원본 Git 디렉터리와 격리 work tree를 명시했습니다. 초기 메타데이터 없는 실행의5실패나 artifact 동일성 검사에서 중단한 실행을 통과로 바꾸지 않습니다. 최종 로그는 `/tmp/hwpjs-note-geometry-publication.Wkoeip/scalar-public-suite-final.log`입니다. strict PRODUCT 유지·SUM/AVG 설명 제외·분모/빈 값 및 예산/비정상 숫자 집중3/3·exit0도 확인했습니다. 기본 배포 WASM은 교체하지 않았고 전체 native 및 실제 브라우저 gate는 미완료입니다.
+
+후속 AVG 포함 코어는 RHWP의 첫 문단·숫자 값 개수 분모 정책을 참조합니다. 실제 한글 프로그램과 완전 동치를 주장하지 않습니다. result override·생성 표·추가 Session/API 없이 main에 셀 분류/집계/숫자 입력 보호만 적용한 격리 사본의 ReleaseSafe 제품 빌드는5/5단계·exit0입니다. 후보 WASM hash는 `d05b84ec55ef3ad5ab2f25bbcb1a0739802f89d706e897b83ceaaf88e2abe124`이며 기본 WASM은 바꾸지 않았습니다.
+
+격리 후보의 공개5파일7/7·exit0은 실제36개 AVG 입력 분할·전부 빈 첫 문단의0·독립 Decimal/전체 XML·48숫자 입력·13수식 정의·Worker 분할/저장/이력/재로드를 포함합니다. native scalar 집중6/6·exit0과 guard/셀 겹침/OOM 집중5/5·exit0도 별도로 확인했습니다. 최초 guard 필터는 직접 root import가 없어 root1개만 실행됐으며 이를 통과 근거로 세지 않습니다. 명시적 root 등록 뒤 실제 guard3개·겹침1개가 실행됐습니다. root를 중복 합산하지 않습니다. 전체 native·전체 참조 파일·실제 Canvas 키보드/조판 검증은 아직 별도이며 아래 과거 큰 작업 트리 후보의 증거와 합산하지 않습니다.
 
 ### 긴 설명 scalar의 후속 작업 트리 수정
 

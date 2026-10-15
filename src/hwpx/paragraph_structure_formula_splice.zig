@@ -11,6 +11,14 @@ pub fn splice(session: *editor.Session, section_index: usize, paragraph: usize, 
     defer draft.deinit(a);
     const changed = try @import("paragraph_structure_splice.zig").spliceMode(a, &section.tree, &draft, paragraph, start, deleted, inserted, limit, anchored);
     if (!changed) return false;
+    var before_sites = try @import("paragraph_structure_projection.zig").collect(a, &section.tree, current, editor.siteOptions(session.options));
+    defer before_sites.deinit(a);
+    var after_sites = try @import("paragraph_structure_projection.zig").collect(a, &section.tree, &draft, editor.siteOptions(session.options));
+    defer after_sites.deinit(a);
+    const trees = try a.alloc(@import("xml_part_tree.zig").Tree, session.sections.len);
+    defer a.free(trees);
+    for (session.sections, trees) |value, *tree| tree.* = value.tree;
+    try @import("formula_numeric_input_guard.zig").validateFormulaTransition(a, trees, section_index, &before_sites, &after_sites, &section.formula_definitions);
     const sections = try a.dupe(editor.Section, session.sections);
     defer a.free(sections);
     sections[section_index].structure_values = draft;

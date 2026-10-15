@@ -11,6 +11,9 @@ pub fn evaluate(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").
 }
 
 const SourceReader = struct {
+    pub fn readScalar(_: SourceReader, a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tree, sites: *const @import("text_sites.zig").Sites, cell: usize) !@import("formula_cell_number.zig").Scalar {
+        return @import("formula_cell_number.zig").classifySelected(a, tree, sites, cell, null);
+    }
     fn read(_: SourceReader, a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tree, sites: *const @import("text_sites.zig").Sites, cell: usize) !f64 {
         return @import("formula_cell_number.zig").read(a, tree, sites, cell);
     }
@@ -38,6 +41,28 @@ fn explicitArithmeticCase(a: std.mem.Allocator) !void {
 test "HWPX formula explicit arithmetic multiplies rather than sums and preserves repeated cells under OOM" {
     try explicitArithmeticCase(std.testing.allocator);
     try @import("../testing/allocation_failures.zig").check(explicitArithmeticCase, .{});
+}
+
+test "HWPX SUM and AVG skip classified text while PRODUCT remains strict" {
+    const a = std.testing.allocator;
+    var tree = try @import("xml_part_tree.zig").parse(a, @import("test_formula_fixture.zig").section, .section, 0, 0, .{});
+    defer tree.deinit(a);
+    var sites = try @import("text_sites.zig").collect(a, &tree, .{});
+    defer sites.deinit(a);
+    const marker = for (tree.elements, 0..) |element, index| {
+        if (element.is(@import("document_xml.zig").paragraph_uri, "fieldBegin")) break index;
+    } else return error.TestExpectedEqual;
+    const text = try a.dupe(u8, "공용면적에 포함");
+    a.free(sites.items[0].text);
+    sites.items[0].text = text;
+    var range: ranges.Range = .{ .function = .sum, .first = .{ .column = .{ .absolute = 0 }, .row = .{ .absolute = 0 } }, .last = .{ .column = .{ .absolute = 0 }, .row = .{ .absolute = 0 } } };
+    const result = try evaluate(a, &tree, &sites, marker, range, .{});
+    try std.testing.expectEqual(@as(f64, 0), result.value);
+    try std.testing.expectEqual(@as(usize, 1), result.cells);
+    range.function = .average;
+    try std.testing.expectEqual(@as(f64, 0), (try evaluate(a, &tree, &sites, marker, range, .{})).value);
+    range.function = .product;
+    try std.testing.expectError(error.InvalidFormulaNumber, evaluate(a, &tree, &sites, marker, range, .{}));
 }
 
 test "HWPX formula injected cell reader preserves lookup limits and propagates errors" {
@@ -102,10 +127,12 @@ pub fn evaluateWith(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zi
     var remaining = limits.inspections;
     const aggregate = @import("../model/range_aggregate.zig");
     var sum = aggregate.initial(range.function);
+    var numeric_count: usize = 0;
     while (selection.next()) |coordinate| {
         const row = coordinate.row;
         const column = coordinate.column;
         var found: ?usize = null;
+        var selected_rectangle: ?@import("formula_cell_rectangle.zig").Rectangle = null;
         var row_cursor = tree.elements[owner.table].first_child;
         while (row_cursor) |row_element| : (row_cursor = tree.elements[row_element].next_sibling) {
             if (!fields.childIs(tree, row_element, "tr")) continue;
@@ -115,35 +142,104 @@ pub fn evaluateWith(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zi
                 remaining -= 1;
                 if (@hasDecl(@TypeOf(reader), "charge")) try reader.charge(0, 1);
                 if (!fields.childIs(tree, cell, "tc")) continue;
-                var missing: usize = 0;
-                var duplicate: usize = 0;
-                const addr = fields.uniqueChild(tree, cell, "cellAddr", &missing, &duplicate) orelse return error.InvalidFormulaCellAddress;
-                const span = fields.uniqueChild(tree, cell, "cellSpan", &missing, &duplicate) orelse return error.InvalidFormulaCellSpan;
-                const c = try fields.optionalUnsigned(a, tree, addr, "colAddr", 4096) orelse return error.InvalidFormulaCellAddress;
-                const r = try fields.optionalUnsigned(a, tree, addr, "rowAddr", 4096) orelse return error.InvalidFormulaCellAddress;
-                const cs = try fields.optionalUnsigned(a, tree, span, "colSpan", 4096) orelse return error.InvalidFormulaCellSpan;
-                const rs = try fields.optionalUnsigned(a, tree, span, "rowSpan", 4096) orelse return error.InvalidFormulaCellSpan;
-                if (cs == 0 or rs == 0 or c >= owner.columns or r >= owner.rows or cs > owner.columns - c or rs > owner.rows - r) return error.InvalidFormulaCellSpan;
-                if (column < c or row < r or column - c >= cs or row - r >= rs) continue;
-                if (cs != 1 or rs != 1) return error.UnsupportedMergedFormulaCell;
+                const rectangle = try @import("formula_cell_rectangle.zig").read(a, tree, cell, owner.columns, owner.rows);
+                if (!rectangle.contains(column, row)) continue;
+                if (rectangle.merged() and (column != rectangle.column or row != rectangle.row) and (range.function != .sum or !@hasDecl(@TypeOf(reader), "readScalar"))) return error.UnsupportedMergedFormulaCell;
                 if (found != null) return error.AmbiguousFormulaCell;
                 found = cell;
+                selected_rectangle = rectangle;
             }
         }
         const selected = found orelse return error.MissingFormulaCell;
+        if (selected_rectangle.?.merged()) {
+            var other_row = tree.elements[owner.table].first_child;
+            while (other_row) |tr| : (other_row = tree.elements[tr].next_sibling) {
+                if (!fields.childIs(tree, tr, "tr")) continue;
+                var other_cell = tree.elements[tr].first_child;
+                while (other_cell) |cell| : (other_cell = tree.elements[cell].next_sibling) {
+                    if (remaining == 0) return error.LimitExceeded;
+                    remaining -= 1;
+                    if (@hasDecl(@TypeOf(reader), "charge")) try reader.charge(0, 1);
+                    if (cell == selected or !fields.childIs(tree, cell, "tc")) continue;
+                    const rectangle = try @import("formula_cell_rectangle.zig").read(a, tree, cell, owner.columns, owner.rows);
+                    if (selected_rectangle.?.overlaps(rectangle)) return error.AmbiguousFormulaCell;
+                }
+            }
+        }
         // Numeric projection visits both the XML structure and current
         // sites; charge those full traversals before entering them.
         const projection_cost = std.math.add(usize, tree.elements.len, sites.items.len) catch return error.LimitExceeded;
         if (projection_cost > remaining) return error.LimitExceeded;
         remaining -= projection_cost;
         if (@hasDecl(@TypeOf(reader), "charge")) try reader.charge(0, projection_cost);
-        const value = try reader.read(a, tree, sites, selected);
+        const value = if ((range.function == .sum or range.function == .average) and @hasDecl(@TypeOf(reader), "readScalar")) scalar: {
+            const classified = try reader.readScalar(a, tree, sites, selected);
+            switch (classified) {
+                .text, .empty => continue,
+                .number => |number| {
+                    const rectangle = selected_rectangle.?;
+                    if (column != rectangle.column or row != rectangle.row) return error.UnsupportedMergedFormulaCell;
+                    break :scalar number;
+                },
+            }
+        } else try reader.read(a, tree, sites, selected);
         sum = try aggregate.step(range.function, sum, value);
+        numeric_count += 1;
     }
-    return .{ .value = try aggregate.finish(range.function, sum, count), .cells = count, .inspections = limits.inspections - remaining };
+    const result = if (range.function == .average and numeric_count == 0) @as(f64, 0) else try aggregate.finish(range.function, sum, if (range.function == .average) numeric_count else count);
+    return .{ .value = result, .cells = count, .inspections = limits.inspections - remaining };
 }
 
-test "HWPX formula values reject missing duplicate merged cells and survive allocation failures" {
+test "HWPX average scalar counts numeric inputs rather than selected cells" {
+    const a = std.testing.allocator;
+    var tree = try @import("xml_part_tree.zig").parse(a, @import("test_formula_fixture.zig").section, .section, 0, 0, .{});
+    defer tree.deinit(a);
+    var sites = try @import("text_sites.zig").collect(a, &tree, .{});
+    defer sites.deinit(a);
+    const marker = for (tree.elements, 0..) |element, index| {
+        if (element.is(@import("document_xml.zig").paragraph_uri, "fieldBegin")) break index;
+    } else return error.MissingFormulaFieldNode;
+    var range: ranges.Range = .{ .function = .average, .first = .{ .column = .{ .absolute = 0 }, .row = .{ .absolute = 0 } }, .last = .{ .column = .{ .absolute = 0 }, .row = .{ .absolute = 0 } } };
+    range.address_count = 3;
+    @memset(range.addresses[0..3], range.first);
+    const Reader = struct {
+        count: *usize,
+        empty: bool,
+        value: f64 = 12,
+        fail: bool = false,
+        pub fn readScalar(self: @This(), _: std.mem.Allocator, _: *const @import("xml_part_tree.zig").Tree, _: *const @import("text_sites.zig").Sites, _: usize) !@import("formula_cell_number.zig").Scalar {
+            self.count.* += 1;
+            if (self.fail) return error.TestScalarReaderFailure;
+            if (self.empty or self.count.* == 2) return .empty;
+            if (self.count.* == 3) return .text;
+            return .{ .number = self.value };
+        }
+        pub fn read(_: @This(), _: std.mem.Allocator, _: *const @import("xml_part_tree.zig").Tree, _: *const @import("text_sites.zig").Sites, _: usize) !f64 {
+            return error.UnexpectedStrictRead;
+        }
+    };
+    for ([_]bool{ false, true }) |empty| {
+        var calls: usize = 0;
+        const result = try evaluateWith(a, &tree, &sites, marker, range, .{}, Reader{ .count = &calls, .empty = empty });
+        try std.testing.expectEqual(@as(usize, 3), calls);
+        try std.testing.expectEqual(@as(usize, 3), result.cells);
+        try std.testing.expectEqual(if (empty) @as(f64, 0) else @as(f64, 12), result.value);
+    }
+    var calls: usize = 0;
+    const reader = Reader{ .count = &calls, .empty = true };
+    try std.testing.expectError(error.LimitExceeded, evaluateWith(a, &tree, &sites, marker, range, .{ .cells = 0 }, reader));
+    try std.testing.expectError(error.LimitExceeded, evaluateWith(a, &tree, &sites, marker, range, .{ .inspections = 0 }, reader));
+    try std.testing.expectEqual(@as(usize, 0), calls);
+    try std.testing.expectError(error.TestScalarReaderFailure, evaluateWith(a, &tree, &sites, marker, range, .{}, Reader{ .count = &calls, .empty = false, .fail = true }));
+    try std.testing.expectEqual(@as(usize, 1), calls);
+    for ([_]f64{ std.math.nan(f64), std.math.inf(f64), -std.math.inf(f64) }) |value| {
+        calls = 0;
+        try std.testing.expectError(error.FormulaNumericOverflow, evaluateWith(a, &tree, &sites, marker, range, .{}, Reader{ .count = &calls, .empty = false, .value = value }));
+        try std.testing.expectEqual(@as(usize, 1), calls);
+    }
+}
+
+test "HWPX formula values reject missing duplicate overlapping cells and survive allocation failures" {
     const a = std.testing.allocator;
     const input_cells = [_][]const u8{
         "<p:tc><p:cellAddr colAddr='0' rowAddr='0'/><p:cellSpan colSpan='1' rowSpan='1'/><p:subList><p:p><p:run><p:t>12.5</p:t></p:run></p:p></p:subList></p:tc>",
@@ -176,7 +272,7 @@ test "HWPX formula values reject missing duplicate merged cells and survive allo
             }.run, .{ &tree, &sites, marker, range }),
             1 => try std.testing.expectError(error.MissingFormulaCell, evaluate(a, &tree, &sites, marker, range, .{})),
             2 => try std.testing.expectError(error.AmbiguousFormulaCell, evaluate(a, &tree, &sites, marker, range, .{})),
-            3 => try std.testing.expectError(error.UnsupportedMergedFormulaCell, evaluate(a, &tree, &sites, marker, range, .{})),
+            3 => try std.testing.expectError(error.AmbiguousFormulaCell, evaluate(a, &tree, &sites, marker, range, .{})),
             else => unreachable,
         }
     }

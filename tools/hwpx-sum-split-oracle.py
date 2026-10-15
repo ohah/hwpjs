@@ -64,14 +64,13 @@ def calculations(root):
                 values = []
                 for y in range(first[1], last[1] + 1):
                     for x in range(first[0], last[0] + 1):
-                        value = scalar(cells[x, y], match[1] == 'SUM')
+                        value = scalar(cells[x, y], True)
                         if value is not None:
                             values.append(value)
                 value = sum(values, decimal.Decimal(0))
                 if match[1] == 'AVG':
-                    if not values:
-                        raise ValueError('empty average')
-                    value /= len(values)
+                    if values:
+                        value /= len(values)
                 result[identifier] = value
     return result
 
@@ -92,13 +91,15 @@ def verify(data):
                 continue
             params = {node.get('name'): node for node in field.find(P + 'parameters')}
             format_spec = params['ResultFormat'].text
-            if format_spec not in ('%g', '%g,'):
+            if format_spec not in ('%g', '%g,', '%.2f', '%.2f,'):
                 raise ValueError('unsupported changed result format')
             rendered = format(current[identifier].normalize(), '.6g')
             if format_spec == '%g,':
                 value = current[identifier]
                 rounded = value.normalize() if value == value.to_integral_value() else decimal.Decimal(rendered)
                 rendered = format(rounded, ',f')
+            elif format_spec in ('%.2f', '%.2f,'):
+                rendered = format(current[identifier], ',.2f' if format_spec.endswith(',') else '.2f')
             field.set('dirty', '1')
             params['LastResult'].text = rendered
             params['Command'].text = params['Command'].text.rsplit(',;;', 1)[0] + ',;;' + rendered
@@ -112,7 +113,7 @@ def verify(data):
             for node in texts[1:]:
                 node.text = None
 
-    split(data, expected_transform=refresh)
+    return split(data, expected_transform=refresh)
 
 
 if __name__ == '__main__':

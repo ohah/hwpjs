@@ -32,6 +32,7 @@ pub const Context = struct {
     frames: []const @import("xml_tree_selection.zig").Frame,
     stack: [64]usize = undefined,
     depth: usize = 0,
+    numeric_inputs: ?*std.ArrayList(usize) = null,
 
     pub fn value(self: *Context, begin: usize) anyerror!f64 {
         if (begin >= self.frames.len) return error.InvalidFormulaFieldNode;
@@ -54,6 +55,15 @@ pub const Context = struct {
 
 const Reader = struct {
     context: *Context,
+    pub fn readScalar(self: Reader, a: std.mem.Allocator, tree: *const Tree, sites: *const Sites, cell: usize) anyerror!@import("formula_cell_number.zig").Scalar {
+        const begin = try @import("formula_dependency_cell.zig").markerSelected(tree, sites, cell, self.context.ranges, self.context.markers, self.context.frames);
+        if (begin) |node| return .{ .number = try self.context.value(node) };
+        const classified = try @import("formula_cell_number.zig").classifySelected(a, tree, sites, cell, self.context.frames);
+        if (classified == .number) if (self.context.numeric_inputs) |inputs| {
+            if (std.mem.indexOfScalar(usize, inputs.items, cell) == null) try inputs.append(a, cell);
+        };
+        return classified;
+    }
     pub fn charge(self: Reader, cells: usize, inspections: usize) !void {
         const budget = &self.context.remaining;
         if (cells > budget.cells or inspections > budget.inspections) return error.LimitExceeded;
@@ -63,7 +73,11 @@ const Reader = struct {
     pub fn read(self: Reader, a: std.mem.Allocator, tree: *const Tree, sites: *const Sites, cell: usize) anyerror!f64 {
         const begin = try @import("formula_dependency_cell.zig").markerSelected(tree, sites, cell, self.context.ranges, self.context.markers, self.context.frames);
         if (begin) |node| return self.context.value(node);
-        return @import("formula_cell_number.zig").readSelected(a, tree, sites, cell, self.context.frames);
+        const number = try @import("formula_cell_number.zig").readSelected(a, tree, sites, cell, self.context.frames);
+        if (self.context.numeric_inputs) |inputs| {
+            if (std.mem.indexOfScalar(usize, inputs.items, cell) == null) try inputs.append(a, cell);
+        }
+        return number;
     }
 };
 

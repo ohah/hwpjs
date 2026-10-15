@@ -9,10 +9,42 @@ pub fn read(a: std.mem.Allocator, tree: *const tree_mod.Tree, sites: *const site
 }
 
 pub fn readSelected(a: std.mem.Allocator, tree: *const tree_mod.Tree, sites: *const sites_mod.Sites, cell: usize, frames: ?[]const @import("xml_tree_selection.zig").Frame) !f64 {
+    const text = try readTextSelected(a, tree, sites, cell, frames, false);
+    defer a.free(text);
+    const wire = try std.unicode.utf8ToUtf16LeAlloc(a, text);
+    defer a.free(wire);
+    return @import("../hwp5/body/formula_number.zig").parse(std.mem.sliceAsBytes(wire));
+}
+
+pub const Scalar = union(enum) { number: f64, text, empty };
+
+/// Classification is not permission to replace a numeric input with text.
+/// Aggregation and edit validation choose their own policies explicitly.
+pub fn classifySelected(a: std.mem.Allocator, tree: *const tree_mod.Tree, sites: *const sites_mod.Sites, cell: usize, frames: ?[]const @import("xml_tree_selection.zig").Frame) !Scalar {
+    const text = try readTextSelected(a, tree, sites, cell, frames, true);
+    defer a.free(text);
+    if (std.mem.trim(u8, text, " \t\r\n").len == 0) return .empty;
+    if (!std.unicode.utf8ValidateSlice(text)) return error.InvalidUtf8;
+    // Descriptive text is not subject to the numeric parser's 128-unit cap.
+    // Numeric-looking oversized inputs still reach that parser and fail closed.
+    for (text) |byte| {
+        if (!std.ascii.isDigit(byte) and byte != '+' and byte != '-' and byte != '.' and byte != ',') return .text;
+    }
+    const wire = try std.unicode.utf8ToUtf16LeAlloc(a, text);
+    defer a.free(wire);
+    const value = @import("../hwp5/body/formula_number.zig").parse(std.mem.sliceAsBytes(wire)) catch |err| switch (err) {
+        error.InvalidFormulaNumber => return .text,
+        else => return err,
+    };
+    return .{ .number = value };
+}
+
+fn readTextSelected(a: std.mem.Allocator, tree: *const tree_mod.Tree, sites: *const sites_mod.Sites, cell: usize, frames: ?[]const @import("xml_tree_selection.zig").Frame, first_paragraph: bool) ![]u8 {
     if (frames) |selection| if (selection.len != tree.elements.len) return error.SourceBindingMismatch;
     if (cell >= tree.elements.len or !fields.childIs(tree, cell, "tc")) return error.InvalidFormulaCellOwner;
-    var bytes: [128]u8 = undefined;
-    var length: usize = 0;
+    var bytes: std.ArrayList(u8) = .empty;
+    defer bytes.deinit(a);
+    const max_bytes = if (first_paragraph) (sites_mod.Options{}).max_text_bytes else 128;
     var paragraph: ?usize = null;
     // Inspect structure as well as sites: an empty second paragraph has no
     // string to reveal its boundary, and controls must not vanish in a number.
@@ -33,7 +65,8 @@ pub fn readSelected(a: std.mem.Allocator, tree: *const tree_mod.Tree, sites: *co
         if (nearest_cell != cell) continue;
         if (fields.childIs(tree, index, "p")) {
             paragraphs += 1;
-            if (paragraphs > 1) return error.UnsupportedFormulaCellParagraphs;
+            if (paragraph == null) paragraph = index;
+            if (paragraphs > 1 and !first_paragraph) return error.UnsupportedFormulaCellParagraphs;
         }
         const selected_wrapper = if (frames) |selection| selection[index].kind == .switch_element or selection[index].kind == .branch else false;
         if (in_paragraph and !selected_wrapper and !fields.childIs(tree, index, "run") and !fields.childIs(tree, index, "t") and !fields.childIs(tree, index, "linesegarray") and !fields.childIs(tree, index, "lineseg")) return error.UnsupportedFormulaCellContent;
@@ -53,15 +86,40 @@ pub fn readSelected(a: std.mem.Allocator, tree: *const tree_mod.Tree, sites: *co
         }
         if (owner != cell) continue;
         const current_p = p orelse return error.InvalidFormulaCellText;
-        if (paragraph != null and paragraph.? != current_p) return error.UnsupportedFormulaCellParagraphs;
+        if (paragraph != null and paragraph.? != current_p) {
+            if (first_paragraph) continue;
+            return error.UnsupportedFormulaCellParagraphs;
+        }
         paragraph = current_p;
-        if (site.text.len > bytes.len - length) return error.LimitExceeded;
-        @memcpy(bytes[length..][0..site.text.len], site.text);
-        length += site.text.len;
+        if (site.text.len > max_bytes - bytes.items.len) return error.LimitExceeded;
+        try bytes.appendSlice(a, site.text);
     }
-    const wire = try std.unicode.utf8ToUtf16LeAlloc(a, bytes[0..length]);
-    defer a.free(wire);
-    return @import("../hwp5/body/formula_number.zig").parse(std.mem.sliceAsBytes(wire));
+    return bytes.toOwnedSlice(a);
+}
+
+test "HWPX formula scalar classification never relaxes strict numeric reads" {
+    const a = std.testing.allocator;
+    const texts = [_][]const u8{ "12.5", "공용면적에 포함", "", "  ", "12oops" };
+    for (texts, 0..) |text, case| {
+        const source = try std.mem.concat(a, u8, &.{ "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:tbl><p:tr><p:tc><p:subList><p:p><p:run><p:t>", text, "</p:t></p:run></p:p></p:subList></p:tc></p:tr></p:tbl></s:sec>" });
+        defer a.free(source);
+        var tree = try tree_mod.parse(a, source, .section, 0, 0, .{});
+        defer tree.deinit(a);
+        var sites = try sites_mod.collect(a, &tree, .{});
+        defer sites.deinit(a);
+        const expected: Scalar = switch (case) {
+            0 => .{ .number = 12.5 },
+            2, 3 => .empty,
+            else => .text,
+        };
+        try std.testing.expectEqualDeep(expected, try classifySelected(a, &tree, &sites, 3, null));
+        if (case == 0) try std.testing.expectEqual(@as(f64, 12.5), try read(a, &tree, &sites, 3)) else try std.testing.expectError(error.InvalidFormulaNumber, read(a, &tree, &sites, 3));
+        try @import("../testing/allocation_failures.zig").check(struct {
+            fn run(allocator: std.mem.Allocator, t: *const tree_mod.Tree, s: *const sites_mod.Sites, expected_value: Scalar) !void {
+                try std.testing.expectEqualDeep(expected_value, try classifySelected(allocator, t, s, 3, null));
+            }
+        }.run, .{ &tree, &sites, expected });
+    }
 }
 
 test "HWPX formula current cell number rejects hidden boundaries and controls" {
@@ -79,6 +137,71 @@ test "HWPX formula current cell number rejects hidden boundaries and controls" {
         var sites = try sites_mod.collect(a, &tree, .{});
         defer sites.deinit(a);
         try std.testing.expectError(if (index == 2) error.UnsupportedFormulaCellParagraphs else error.UnsupportedFormulaCellContent, read(a, &tree, &sites, 3));
+        if (index == 2) try std.testing.expectEqualDeep(Scalar{ .number = 12 }, try classifySelected(a, &tree, &sites, 3, null)) else try std.testing.expectError(error.UnsupportedFormulaCellContent, classifySelected(a, &tree, &sites, 3, null));
+    }
+}
+
+test "HWPX formula scalar classification preserves text bounds and owner validation" {
+    const a = std.testing.allocator;
+    const source = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:tbl><p:tr><p:tc><p:subList><p:p><p:run><p:t>1</p:t></p:run></p:p></p:subList></p:tc></p:tr></p:tbl></s:sec>";
+    var tree = try tree_mod.parse(a, source, .section, 0, 0, .{});
+    defer tree.deinit(a);
+    var sites = try sites_mod.collect(a, &tree, .{});
+    defer sites.deinit(a);
+    try std.testing.expectError(error.InvalidFormulaCellOwner, classifySelected(a, &tree, &sites, tree.elements.len, null));
+    try std.testing.expectError(error.InvalidFormulaCellOwner, classifySelected(a, &tree, &sites, 0, null));
+    const replacement = try a.alloc(u8, 129);
+    @memset(replacement, 'x');
+    a.free(sites.items[0].text);
+    sites.items[0].text = replacement;
+    try std.testing.expectEqualDeep(Scalar.text, try classifySelected(a, &tree, &sites, 3, null));
+    try std.testing.expectError(error.LimitExceeded, read(a, &tree, &sites, 3));
+    @memset(replacement, '1');
+    try std.testing.expectError(error.LimitExceeded, classifySelected(a, &tree, &sites, 3, null));
+    a.free(sites.items[0].text);
+    sites.items[0].text = try a.alloc(u8, 600);
+    for (0..200) |i| @memcpy(sites.items[0].text[i * 3 ..][0..3], "가");
+    try std.testing.expectEqualDeep(Scalar.text, try classifySelected(a, &tree, &sites, 3, null));
+    try @import("../testing/allocation_failures.zig").check(struct {
+        fn run(allocator: std.mem.Allocator, t: *const tree_mod.Tree, s: *const sites_mod.Sites) !void {
+            try std.testing.expectEqualDeep(Scalar.text, try classifySelected(allocator, t, s, 3, null));
+        }
+    }.run, .{ &tree, &sites });
+    @memset(sites.items[0].text, ' ');
+    try std.testing.expectEqualDeep(Scalar.empty, try classifySelected(a, &tree, &sites, 3, null));
+    sites.items[0].text[0] = 0xff;
+    try std.testing.expectError(error.InvalidUtf8, classifySelected(a, &tree, &sites, 3, null));
+    sites.items[0].element_index = tree.elements.len;
+    try std.testing.expectError(error.InvalidTextSites, classifySelected(a, &tree, &sites, 3, null));
+    try std.testing.expectError(error.InvalidTextSites, read(a, &tree, &sites, 3));
+    try std.testing.expectEqualStrings(source, tree.source);
+}
+
+test "HWPX SUM scalar uses first paragraph without joining numbers or hiding later controls" {
+    const a = std.testing.allocator;
+    const cases = [_][]const u8{
+        "<p:p><p:run><p:t>12</p:t></p:run></p:p><p:p><p:run><p:t>(30.0)</p:t></p:run></p:p>",
+        "<p:p><p:run><p:t>12</p:t></p:run></p:p><p:p><p:run><p:t>34</p:t></p:run></p:p>",
+        "<p:p/><p:p><p:run><p:t>12</p:t></p:run></p:p>",
+        "<p:p><p:run><p:t>비용</p:t></p:run></p:p><p:p><p:run><p:t>설명</p:t></p:run></p:p>",
+        "<p:p><p:run><p:t>12</p:t></p:run></p:p><p:p><p:run><p:ctrl/></p:run></p:p>",
+    };
+    for (cases, 0..) |content, index| {
+        const xml = try std.mem.concat(a, u8, &.{ "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:tbl><p:tr><p:tc><p:subList>", content, "</p:subList></p:tc></p:tr></p:tbl></s:sec>" });
+        defer a.free(xml);
+        var tree = try tree_mod.parse(a, xml, .section, 0, 0, .{});
+        defer tree.deinit(a);
+        var sites = try sites_mod.collect(a, &tree, .{});
+        defer sites.deinit(a);
+        try std.testing.expectError(error.UnsupportedFormulaCellParagraphs, read(a, &tree, &sites, 3));
+        if (index == 4) try std.testing.expectError(error.UnsupportedFormulaCellContent, classifySelected(a, &tree, &sites, 3, null)) else {
+            const expected: Scalar = switch (index) {
+                0, 1 => .{ .number = 12 },
+                2 => .empty,
+                else => .text,
+            };
+            try std.testing.expectEqualDeep(expected, try classifySelected(a, &tree, &sites, 3, null));
+        }
     }
 }
 
@@ -113,7 +236,12 @@ test "HWPX formula current cell number selects compatibility content" {
         defer a.free(frames);
         if (index == 0) {
             try std.testing.expectEqual(@as(f64, 12.5), try readSelected(a, &tree, &sites, 3, frames));
+            try std.testing.expectEqualDeep(Scalar{ .number = 12.5 }, try classifySelected(a, &tree, &sites, 3, frames));
             try std.testing.expectError(error.SourceBindingMismatch, readSelected(a, &tree, &sites, 3, frames[0 .. frames.len - 1]));
-        } else try std.testing.expectError(error.UnsupportedFormulaCellContent, readSelected(a, &tree, &sites, 3, frames));
+            try std.testing.expectError(error.SourceBindingMismatch, classifySelected(a, &tree, &sites, 3, frames[0 .. frames.len - 1]));
+        } else {
+            try std.testing.expectError(error.UnsupportedFormulaCellContent, readSelected(a, &tree, &sites, 3, frames));
+            try std.testing.expectError(error.UnsupportedFormulaCellContent, classifySelected(a, &tree, &sites, 3, frames));
+        }
     }
 }

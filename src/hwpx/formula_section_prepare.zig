@@ -7,6 +7,7 @@ pub const Options = struct {
     branch_policy: @import("compatibility_selection.zig").Policy = .{ .mode = .selected },
     evaluation: @import("formula_values.zig").Limits = .{},
     definitions: ?*const @import("formula_definition_values.zig").Values = null,
+    numeric_inputs: ?*std.ArrayList(usize) = null,
 };
 
 /// Caller owns all preparations and the slice. No source or Sites mutation.
@@ -24,7 +25,7 @@ pub fn prepare(a: std.mem.Allocator, trees: []const @import("xml_part_tree.zig")
     var prepared: std.ArrayList(output.Prepared) = .empty;
     var inspected_fields: usize = 0;
     var applied_definitions: usize = 0;
-    var evaluation: @import("formula_dependency_evaluation.zig").Context = .{ .allocator = a, .tree = tree, .sites = sites, .ranges = ranges, .markers = &markers, .parameters = &parameters, .definitions = options.definitions, .remaining = options.evaluation, .frames = frames };
+    var evaluation: @import("formula_dependency_evaluation.zig").Context = .{ .allocator = a, .tree = tree, .sites = sites, .ranges = ranges, .markers = &markers, .parameters = &parameters, .definitions = options.definitions, .remaining = options.evaluation, .frames = frames, .numeric_inputs = options.numeric_inputs };
     errdefer {
         for (prepared.items) |*item| item.deinit(a);
         prepared.deinit(a);

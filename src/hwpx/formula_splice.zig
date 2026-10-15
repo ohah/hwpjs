@@ -37,6 +37,7 @@ pub fn spliceProjected(a: std.mem.Allocator, trees: []const @import("xml_part_tr
 }
 
 fn prepareAndCommit(a: std.mem.Allocator, trees: []const @import("xml_part_tree.zig").Tree, section: usize, current: *sites_mod.Sites, draft: *sites_mod.Sites, definitions: ?*const @import("formula_definition_values.zig").Values) !bool {
+    try @import("formula_numeric_input_guard.zig").validateFormulaTransition(a, trees, section, current, draft, definitions);
     const prepared = try @import("formula_section_prepare.zig").prepare(a, trees, section, draft, .{ .definitions = definitions });
     defer {
         for (prepared) |*field| field.deinit(a);
