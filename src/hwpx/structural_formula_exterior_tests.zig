@@ -52,7 +52,7 @@ test "mixed formula moved field allocation failures preserve owned markers defin
     try std.testing.expect(try session.setFormulaDefinition(0, begin, "=AVG(A1:A1)"));
     const baseline = try session.save();
     defer a.free(baseline);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, original: *const editor.Session, definition: usize) !void {
             var proxy = original.*;
             proxy.allocator = allocator;
@@ -76,7 +76,7 @@ test "mixed formula moved field allocation failures preserve owned markers defin
             try std.testing.expectEqualStrings("=AVG(A1:A1)", proxy.sections[0].formula_definitions.get(definition).?);
         }
     }.run, .{ &session, begin });
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, original: *const editor.Session) !void {
             var proxy = original.*;
             proxy.allocator = allocator;

@@ -1,5 +1,12 @@
 # 큰 문서 테스트의 할당자 진단 비용
 
+## 이전 전체 실행의 이동 필드 실패 주입 종료 (2026-10-16)
+
+eebf201f 소스의 전체3978개 바이너리 `b46f04ffd2249e5eda812ef8a9e15e5488120a7d41f97385de7cf5ad9b8deac7`는2507개 완료 뒤 index2507 `mixed formula moved field allocation failures preserve owned markers definition and original ZIP`에서 관측 peak1106412672바이트로1024MiB 한도를 초과해 incomplete·exit1입니다. 앞선 underline45011실패 지점과 open/edit/save/reopen은 후속 테스트로 진행했으므로 그 지점을 무한 루프나 미완료로 남기지 않습니다. guardian/batch/native PID92468/92474/25726 부재를 확인했습니다. 최신 차트 공유 후보와 다른 바이너리이며 완료 수를 합산하지 않습니다.
+
+main15159cc5와 같은 native 소스의 집중 baseline `805c7b8e6cc5d78d0c265cfb3286a843b068a9e1ccdd4f9682d1ef664e035575`도 같은1024MiB 감시에서 peak1162888368바이트로 중단·exit1을 재현했습니다. 해당 테스트의 두 실패 주입 호출만 공통 `allocation_failures.check`로 연결했습니다. fixture·필드/서식/원본 ZIP 단언·전체 실패 인덱스·제품 코드는 변경하지 않았습니다. 수정 집중 바이너리 `bb4eb039ace3e431fb516dc831de6e51c38af64f1a622c6bea65be675682f6b6`는 root 포함2/2·fail/skip/logErrors/leaks0·exit0·관측 peak16646480바이트입니다. 분리 경로는 `/tmp/hwpjs-native-diagnostics-publication.k0dzRy/native-mixed-field-{baseline,checked}`입니다. 제품 메모리 개선·현재 공유 후보·전체 native 통과와 구분합니다.
+
+
 ## 수식 fixture 반복 검증의 진단 비용 (2026-10-16)
 
 main af73f543와 테스트 세 파일의 수정만 포함한 분리 소스에서 ReleaseSafe 집중 바이너리 `1e4dd46e323ed0ac9bf095b9d92607e915e09f96a89c7650780476da01e95d6b`는 root 포함4/4·fail/skip/logErrors/leaks0·exit0입니다. 동일1024MiB 감시의 관측 peak15,122,816바이트이며 경로는 `/tmp/hwpjs-native-diagnostics-publication.k0dzRy/native-main-diagnostics.jsonl`입니다. 차트 제품 후보와 분리한 main 검증이며 전체 native 완료나 제품 메모리 개선은 아닙니다.
