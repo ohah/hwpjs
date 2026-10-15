@@ -24,12 +24,13 @@ export function createChartControls({ form, fields, targets, points, input, note
     event.preventDefault(); event.stopPropagation(); pick(); note.textContent = "미적용 차트 입력을 취소했습니다.";
   };
   const query = () => {
+    const requestId = ++serial;
     const row = selected(), identity = row ? `${row.section}:${row.wrapper}` : null;
     if (identity !== targetIdentity) pointOrdinal = null;
     else if (chart) pointOrdinal = selectedPoint()?.index ?? null;
     targetIdentity = identity;
     chart = null; points.replaceChildren(); input.value = ""; update();
-    if (!closed && enabled && row && ready()) request({ kind: "chart-points", ...row, requestId: ++serial });
+    if (!closed && enabled && row && ready()) request({ kind: "chart-points", ...row, requestId });
   };
   const submit = event => {
     event.preventDefault(); update();

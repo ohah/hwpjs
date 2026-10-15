@@ -15,6 +15,28 @@ class Element extends EventTarget {
 }
 const click = (body, target) => { const event = new Event("click"); Object.defineProperty(event, "target", { value: target }); body.dispatchEvent(event); };
 
+test("chart target transitions invalidate pending queries even while busy", async t => {
+  const form = new Element(), fields = new Element(), targets = new Element(), points = new Element(), input = new Element(), note = new Element();
+  let ready = true;
+  const requests = [], controls = createChartControls({ form, fields, targets, points, input, note, ready: () => ready, request: message => { requests.push(message); return true; } });
+  t.after(() => controls.close());
+  controls.message({ kind: "enable", content: { chartEditAvailable: true, chartTargets: [{ section: 0, wrapper: 9 }, { section: 0, wrapper: 10 }] } });
+  await Promise.resolve();
+  const stale = requests.shift();
+  ready = false;
+  for (const target of ["1", "0"]) { targets.value = target; targets.dispatchEvent(new Event("change")); }
+  assert.equal(requests.length, 0, "busy transitions must not send new queries");
+  controls.message({ ...stale, chart: { values: { points: [{ kind: "numeric_cache", index: 0, value: "stale" }] } } });
+  assert.equal(input.value, "", "returning to the same target must not revive its obsolete response");
+  assert.equal(points.children.length, 0);
+  ready = true; targets.dispatchEvent(new Event("change"));
+  const fresh = requests.shift(); assert.ok(fresh.requestId > stale.requestId);
+  controls.message({ ...fresh, chart: { values: { points: [{ kind: "numeric_cache", index: 0, value: "current" }] } } });
+  assert.equal(input.value, "current"); assert.equal(fields.disabled, false);
+  form.dispatchEvent(new Event("submit", { cancelable: true }));
+  assert.equal(requests.shift().value, "current");
+});
+
 test("chart Escape discards only uncommitted drafts and preserves raw native spelling", async t => {
   const form = new Element(), fields = new Element(), targets = new Element(), points = new Element(), input = new Element(), note = new Element();
   let visible = "", ready = true;
