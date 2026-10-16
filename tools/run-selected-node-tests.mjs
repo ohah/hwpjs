@@ -18,10 +18,18 @@ export function selectedTestFiles(paths) {
   });
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
+function isDirectInvocation() {
+  try { return Boolean(process.argv[1]) && import.meta.url === pathToFileURL(realpathSync(resolve(process.argv[1]))).href; }
+  catch { return false; }
+}
+
+if (isDirectInvocation()) {
   const files = selectedTestFiles(process.argv.slice(2));
   console.log(JSON.stringify({ kind: "test-selection", files, scope: "exact test files; not a dependency/source snapshot" }));
-  const child = spawn(process.execPath, ["--test", "--test-reporter=spec", "--test-concurrency=2", ...files], { stdio: "inherit" });
+  const childEnv = { ...process.env };
+  // This is a fresh runner, not a worker belonging to an enclosing node:test run.
+  delete childEnv.NODE_TEST_CONTEXT;
+  const child = spawn(process.execPath, ["--test", "--test-reporter=spec", "--test-concurrency=2", ...files], { stdio: "inherit", env: childEnv });
   child.on("error", error => { console.error(error); process.exitCode = 1; });
   child.on("close", (code, signal) => {
     console.log(JSON.stringify({ kind: "test-complete", code, signal, files: files.length }));
