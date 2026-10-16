@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+[기본 코어 RSS 감시](native-core-rss-monitor.md)는 process-tree-rss의 소유 범위·관측 오류와 실제 한도 초과의 분리를 소유합니다.
+
 [포맷별 동의와 세션 안내](editor-format-consent-visibility.md)는 공통 포맷 상태 투영과 저장 권한 판단을 구분합니다.
 
 문서 구간 도구의 접힘·항상 보이는 범위 안내는 [구간 도구 접기](editor-window-tool-disclosure.md)가 소유합니다.
