@@ -7,6 +7,28 @@ import { readFileSync } from "node:fs";
 import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
 import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
 import { failureMessage } from "../../web/preview/failure-message.mjs";
+import { updateDownloadSessionStatus } from "../../web/preview/download-session-status.mjs";
+
+test("successful enable replaces initial download guidance without claiming unsettled input is save-ready", () => {
+  const node = { textContent: "편집 세션을 연 뒤 다운로드할 수 있습니다." };
+  for (const format of ["hwp5", "hwpx"]) {
+    const message = { kind: "enable", content: { format } }, before = structuredClone(message);
+    assert.equal(updateDownloadSessionStatus(node, message), true);
+    assert.match(node.textContent, /편집 세션이 열렸습니다/); assert.match(node.textContent, /입력 처리가 끝나면/);
+    assert.match(node.textContent, /조판과의 동일성은 확인되지/); assert.deepEqual(message, before);
+  }
+  for (const message of [{ kind: "load", content: {} }, { kind: "enable", error: "NativeRefused", applied: true, content: {} },
+    { kind: "enable" }, { kind: "save", content: {} }, { kind: "splice", content: {} }, null]) {
+    node.textContent = "저장 실패: PreserveThisFailure";
+    assert.equal(updateDownloadSessionStatus(node, message), false); assert.equal(node.textContent, "저장 실패: PreserveThisFailure");
+  }
+});
+
+test("enable download guidance retains distribution password and normalization warnings", () => {
+  const node = {};
+  updateDownloadSessionStatus(node, { kind: "enable", content: { primarySource: "distribution_viewtext", passwordProtectionRemoved: true, normalizationInfo: { normalized: true } } });
+  for (const warning of ["배포 플래그", "비밀번호 보호는 유지되지", "실행 취소 기준도 보정본"]) assert(node.textContent.includes(warning));
+});
 
 test("failure text handles null and throwing message access without blocking the following acknowledgement", () => {
   for (const value of [null, undefined, false, 0, {}, { message: null }, { message: "" }, { get message() { throw new Error("MessageAccessFailure"); } }]) {

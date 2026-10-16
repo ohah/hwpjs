@@ -3,6 +3,8 @@ import { createCommandSearch } from "./command-search.mjs";
 import { detectDocumentFormat } from "../../js/document-format.mjs";
 import { createInspectorToggle } from "./inspector-toggle.mjs";
 import { createFindControls } from "./find-controls.mjs";
+import { updateHwp5Consent } from "./hwp5-consent-visibility.mjs";
+import { updateDownloadSessionStatus } from "./download-session-status.mjs";
 import { createDutmalControls } from "./dutmal-controls.mjs";
 import { createDutmalCanvasControls } from "./dutmal-canvas-controls.mjs";
 import { createCharacterFontControls } from "./character-font-controls.mjs";
@@ -72,7 +74,7 @@ const download = document.querySelector("#download"), staleLayout = document.que
 function updateSave() {
   const enabled = Boolean(worker) && controls.ready() && !controls.busy() && direct.settled();
   download.disabled = !enabled || passwordControls?.allowed() === false;
-  staleLayout.disabled = !enabled || openedFormat === "hwpx";
+  updateHwp5Consent(staleLayout, openedFormat, enabled);
   historyControls?.update();
   cellSizeControls?.update();
   pictureSizeControls?.update();
@@ -248,6 +250,7 @@ async function openSelectedFile(selected) {
         if (initial && (!content.readOnly || content.distributionEditingAvailable)) controls.loaded({ distribution: content.distributionEditingAvailable === true });
         if (event.data.kind === "load" && content.primarySource === "distribution_viewtext") downloadStatus.textContent = content.distributionEditingAvailable ? "배포용 문서입니다. 편집 시작 버튼으로 제한적 편집을 선택할 수 있으며 저장 시 배포 플래그와 재조판 경고를 유지합니다." : "배포용 문서는 이 WASM에서 읽기 전용입니다.";
         direct.message(event.data);
+        updateDownloadSessionStatus(downloadStatus, event.data);
         cellSizeControls.message(event.data);
         pictureSizeControls.message(event.data);
         pictureResizeControls.message(event.data);

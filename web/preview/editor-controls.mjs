@@ -38,7 +38,7 @@ export function createEditorControls(send, { formatSelection = () => false, docu
     ready: () => loaded && ready && !broken,
     busy: () => busy,
     reset() { panel.hidden = true; loaded = false; ready = false; busy = false; broken = false; formatAvailable = false; formatIds = null; distribution = false; note.textContent = ""; if (presets) presets.replaceChildren(); state(); rangePolicy.reset(); },
-    loaded({ distribution: selected = false } = {}) { distribution = selected; loaded = true; panel.hidden = false; state(); },
+    loaded({ distribution: selected = false } = {}) { distribution = selected; loaded = true; panel.hidden = false; state(); rangePolicy.refresh(); },
     message(message) {
       if (!loaded) return;
       busy = false;

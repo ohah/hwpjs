@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+[포맷별 동의와 세션 안내](editor-format-consent-visibility.md)는 공통 포맷 상태 투영과 저장 권한 판단을 구분합니다.
+
 문서 구간 도구의 접힘·항상 보이는 범위 안내는 [구간 도구 접기](editor-window-tool-disclosure.md)가 소유합니다.
 
 글꼴 이름/시스템 글꼴 보조 입력의 접힘 구조는 기존 HTML details가 소유합니다. 별도 편집 상태를 만들지 않으며 [글꼴 보조 도구 계약](editor-font-tool-disclosure.md)을 따릅니다.
