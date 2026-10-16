@@ -4,6 +4,22 @@ import { findText } from "../../web/preview/text-search.mjs";
 import { createFindControls } from "../../web/preview/find-controls.mjs";
 const row = (text, extra = {}) => ({ section: 0, paragraph: 0, text, selectable: true, ...extra });
 
+test("find focus opens the containing disclosure before focus without retaining a second open state", () => {
+  const form = new EventTarget(), disclosure = { open: false };
+  form.closest = selector => { assert.equal(selector, "details"); return disclosure; };
+  let calls = 0;
+  const input = { focus() { assert.equal(disclosure.open, true); calls++; }, select() {} };
+  const control = createFindControls({ form, input, note: {}, search() { throw new Error("UnexpectedSearch"); }, select() { throw new Error("UnexpectedEdit"); } });
+  control.focus();
+  disclosure.open = false;
+  control.focus();
+  assert.equal(calls, 2);
+  disclosure.open = false;
+  control.close();
+  assert.equal(control.focus(), false);
+  assert.equal(disclosure.open, false);
+});
+
 test("find menu focus shares shortcut authority without searching or editing and closes safely", () => {
   const form = new EventTarget();
   let focused = 0, selected = 0;

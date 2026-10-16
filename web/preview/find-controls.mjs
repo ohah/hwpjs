@@ -3,6 +3,8 @@ export function createFindControls({ form, input, note, search, select, replaceB
   let closed = false;
   const focus = () => {
     if (closed) return false;
+    const disclosure = form.closest?.("details");
+    if (disclosure) disclosure.open = true;
     input.focus(); input.select();
     return true;
   };

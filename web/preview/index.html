@@ -95,6 +95,8 @@
     <button id="document-window-restore" type="button" disabled>기본 표시 복원</button>
     <output id="document-window-status" aria-live="polite"></output>
   </form>
+  <details id="find-options" class="toolbar-options">
+  <summary>찾기·바꾸기</summary>
   <form id="find-form" class="editor-toolbar toolbar-group find-toolbar" role="search">
     <label>텍스트 찾기<input id="find-input" type="search" maxlength="4096" aria-keyshortcuts="Control+f Meta+f" title="Canvas에서 Ctrl/Cmd+F로 찾기"></label>
     <button type="submit">다음 찾기</button>
@@ -102,6 +104,7 @@
     <button id="replace-found" type="button">현재 결과 바꾸기</button>
     <span id="find-status" role="status" aria-live="polite"></span>
   </form>
+  </details>
   <div class="editor-toolbar" role="group" aria-label="문서 편집 도구">
     <div class="toolbar-group" role="group" aria-label="파일과 편집 세션">
     <button id="enable-edit" type="button" disabled>Canvas 편집 시작</button>
