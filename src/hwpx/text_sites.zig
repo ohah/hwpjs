@@ -104,8 +104,19 @@ pub fn collect(a: std.mem.Allocator, tree: *const tree_module.Tree, options: Opt
             .empty_element = element.end_tag == null,
         });
     }
-    for (tree.elements, 0..) |element, index| {
-        if (!frames[index].active or frames[index].kind != .run or element.first_child != null or covered[index]) continue;
+    // Existing text and empty runs keep insertion affinity over metadata.
+    for (tree.elements, 0..) |_, index| {
+        if (!frames[index].active or !isTextElement(tree, frames, index)) continue;
+        if (try @import("paragraph_site_owner.zig").optionalAncestor(tree, index)) |owner| covered[owner] = true;
+    }
+    for ([_]bool{ false, true }) |metadata_only| for (tree.elements, 0..) |element, index| {
+        if (!frames[index].active or frames[index].kind != .run or covered[index]) continue;
+        const paragraph_owner = try @import("paragraph_site_owner.zig").optionalAncestor(tree, index);
+        if (metadata_only) {
+            if (element.first_child == null or !@import("retained_run_metadata.zig").paragraphOnly(tree, index)) continue;
+            const owner = paragraph_owner orelse continue;
+            if (covered[owner]) continue;
+        } else if (element.first_child != null) continue;
         if (element.name.local.encoding != .utf8) return error.UnsupportedEditEncoding;
         if (builder.items.items.len == options.max_sites) return error.LimitExceeded;
         const empty = try a.dupe(u8, "");
@@ -118,7 +129,8 @@ pub fn collect(a: std.mem.Allocator, tree: *const tree_module.Tree, options: Opt
             .empty_element = element.end_tag == null,
             .missing_text = true,
         });
-    }
+        if (paragraph_owner) |owner| covered[owner] = true;
+    };
     if (options.materialize_anchor_boundaries) {
         for (tree.elements, 0..) |element, index| {
             if (!frames[index].active or frames[index].kind != .run or covered[index]) continue;

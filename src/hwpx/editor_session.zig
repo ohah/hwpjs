@@ -201,6 +201,9 @@ pub const Session = struct {
         const source_paragraph = try selected.sourceParagraph(paragraph);
         // 필드 외부의 검증된 범위를 일반 문단/쪽 선언 정책이 먼저 거부하지 않도록 합니다.
         if (!anchored) if (try @import("field_source_outside_session.zig").splice(self, section_index, paragraph, start, deleted, inserted, self.options.max_text_bytes - other_bytes)) |changed| return changed;
+        if (!anchored and try @import("metadata_source_splice.zig").eligible(selected, source_paragraph)) {
+            return @import("plain_paragraph_edit.zig").spliceWithTabs(self.allocator, &selected.tree, &selected.sites, selected.locations, source_paragraph, start, deleted, inserted, self.options.max_text_bytes - other_bytes, true);
+        }
         if (try @import("page_area_source_session.zig").splice(self, section_index, paragraph, start, deleted, inserted, self.options.max_text_bytes - other_bytes, anchored)) |changed| return changed;
         if (try @import("column_boundary_session.zig").splice(self, section_index, paragraph, start, deleted, inserted, self.options.max_text_bytes - other_bytes, anchored)) |changed| return changed;
         if (anchored) return @import("anchor_paragraph_edit.zig").splice(self.allocator, &selected.tree, &selected.sites, selected.locations, source_paragraph, start, deleted, inserted, self.options.max_text_bytes - other_bytes);

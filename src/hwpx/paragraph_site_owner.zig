@@ -30,6 +30,11 @@ test "field marker ownership excludes nested fields and foreign namespace marker
 }
 
 pub fn ancestor(tree: *const tree_module.Tree, element: usize) !usize {
+    return (try optionalAncestor(tree, element)) orelse error.SourceBindingMismatch;
+}
+
+/// No paragraph owner is distinct from malformed indices or ancestor cycles.
+pub fn optionalAncestor(tree: *const tree_module.Tree, element: usize) !?usize {
     if (element >= tree.elements.len) return error.InvalidTextSites;
     var parent = tree.elements[element].parent;
     var depth: usize = 0;
@@ -39,7 +44,7 @@ pub fn ancestor(tree: *const tree_module.Tree, element: usize) !usize {
         if (tree.elements[index].is(uri, "p")) return index;
         parent = tree.elements[index].parent;
     }
-    return error.SourceBindingMismatch;
+    return null;
 }
 
 pub fn resolve(tree: *const tree_module.Tree, sites: *const sites_module.Sites, locations: []const scanner.Location, paragraph: usize) !usize {

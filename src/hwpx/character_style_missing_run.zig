@@ -16,7 +16,8 @@ fn writePolicy(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").T
     if (!site.missing_text) return error.SourceBindingMismatch;
     if (site.element_index != span.run_element or !run.is(@import("document_xml.zig").paragraph_uri, "run")) return error.SourceBindingMismatch;
     const derived = if (run.parent) |owner| @import("continuation_empty_run.zig").valid(tree, owner, site) else false;
-    if (run.first_child != null and !derived) return error.UnsupportedInlineControl;
+    const metadata_only = @import("retained_run_metadata.zig").paragraphOnly(tree, span.run_element);
+    if (run.first_child != null and !derived and !metadata_only) return error.UnsupportedInlineControl;
     if (!derived and (site.empty_element != (run.end_tag == null) or site.start != (if (site.empty_element) run.start_tag.start else run.start_tag.end) or site.end != run.start_tag.end)) return error.SourceBindingMismatch;
     if (span.start_unit < span.site_start_unit or span.end_unit < span.start_unit) return error.InvalidTextPosition;
     const start = try @import("text_site_edit.zig").bytePosition(site.text, std.math.cast(u32, span.start_unit - span.site_start_unit) orelse return error.LimitExceeded);
@@ -49,7 +50,7 @@ fn writePolicy(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").T
     }
     const ending = run.end_tag orelse return error.SourceBindingMismatch;
     const suffix = adjusted.len - opening.len - (run.end - ending.start);
-    if (derived and start == end) {
+    if ((derived or metadata_only) and start == end) {
         if (keep_metadata) return a.dupe(u8, adjusted);
         return writer.write(a, adjusted, &.{.{ .start = opening.len, .end = opening.len + suffix, .text = "", .serialized_xml = "" }}, limit);
     }

@@ -1,5 +1,21 @@
 # 구역 설정만 있는 문단의 원문 입력
 
+## main 기반 분리 재검증 — 2026-10-16
+
+`e1148914` 기반 격리 소스 `/tmp/hwpjs-metadata-fix.zyoNkb`에서 metadata collector/서식 지원만 복원한 첫 후보는 native9개 중1개 실패(누수4건), 공개 검사5개 모두 실패했습니다. 입력 위치 허용만으로 충분하지 않았으며 실제 XML 순서 변경과 UnsupportedPageAreaOwnership을 재현했습니다. `metadata_source_splice.eligible`을 적용해 page-area/column 구조 변환 전에 기존 plain 거래를 사용하는 후보는 ReleaseSafe build5/5입니다. WASM SHA256은 `09b72613f3312488c14cd5bf0bd7d0bcc295edc4b672e23a2bda8cbbc8e63d50`이며 기본 설치 산출물은 교체하지 않았습니다.
+
+집중 native는 root 포함9/9·실패/로그/누수0·자원 감시 exit0입니다(`native-metadata-routed.jsonl`, 바이너리 SHA256 `70c23d6a97220afa1003bf204197dcbbcb4a0b8f2808ab260ca1d75ad140b5c8`). 이 짧은 실행의 메모리 peak0은 샘플 부재이며 메모리 사용0을 뜻하지 않습니다. 실제4파일13위치의 normal/-O 전체 XML/비대상 ZIP·오류 기대값 거부·undo/redo·재열기 검사는4/4 통과했습니다. 함께 실행한 Canvas 검사는 입력·저장 이후 서식 oracle 파일이 격리 트리에 없어 실패했으므로 최초 공개 묶음은4/5·exit1 그대로 기록합니다(`metadata-routed-public.log`). 미추적 `tools/hwpx-character-property-oracle.py` 의존성을 명시적으로 연결한 Canvas 재실행은 별도 결과로 판정하며, 전체 native/public·기본 WASM 승격·브라우저 조판 완료 근거로 사용하지 않습니다.
+
+Canvas 재실행은1/1·skip0·exit0(15.942초)이며 stderr0입니다(`metadata-routed-canvas.log`). 같은 WASM으로 실제 Worker 입력·원문 XML 보존·이력·입력 후12pt 변경·독립 서식 XML 양성/음성 대조·저장 재열기까지 확인했습니다. DOM/Canvas는 대역이므로 실제 브라우저 검증으로 세지 않습니다. 검증 의존성의 Git 추적/등록을 포함한 게시 준비는 남아 있습니다.
+
+### 구조 저장 회귀를 포함한 최종 후보
+
+메타데이터 fallback의 문맥 의존성을 처리하는 `run_current_xml` 순서 수정과 실제 텍스트 누락 거부2개·진짜 fallback 투영1개 반례를 함께 적용했습니다. 원본 사이트 대응 검사 이후에만 사이트0개의 run을 보존하며, 새 collector가 단독 wrapper에 만든 가상 사이트를 원본으로 오인하지 않습니다. 최종 WASM `204c62fe7477f8c91f024781a5dcb4b8cc77bda3da1c783d7d3091a7d2804b9f`는 ReleaseSafe build5/5·fmt 통과입니다. 실제13위치/Canvas/기존 pageNum·autoNum·note 앵커 공개 검사8/8·skip0·exit0(38.509초), stderr0입니다(`metadata-final-public.log`).
+
+최종 metadata 필터 native11/11·실패/로그/누수0·감시 exit0(`native-metadata-final.jsonl`, 바이너리 `c95d77da9210fffd1acf13f5a576848853f358a7edea0fc02844f08f0556c685`)와 run writer·실제 다단 병합/소유권 native11/11·동일 오류0·감시 exit0(`native-metadata-normalization.jsonl`, 바이너리 `67b82f65a601f6a504a4af64d70ed0c23e1120e99a962821cedf191d5be57e86`)을 확인했습니다. 필터 간 중복 선언이 있으므로22개 고유 사례로 합산하지 않습니다. 후자의 관측 physical peak는528,188,160바이트이며 전자는 짧아 peak 미관측입니다. 같은 격리 트리의 전체 `zig build test -Doptimize=ReleaseSafe -j1 --summary all`은 별도 `native-full-build.log`/stderr/result.json으로 실행하며 자식 트리 RSS 합계3GiB 초과 시 종료합니다. 최종 결과 전 전체 통과·커밋/푸시·제품 승격은 주장하지 않습니다. 게시용 private index는 무관한 작업을 제외한12파일로 분리했고 원래 사용자 staged patch SHA256은 `f032dec15504dcb1791e4e1d8b822bcf0ccc7199e96961f70acf73f43a533d1a` 그대로입니다.
+
+전체 build 실행은 자식 RSS 합계3,592,528KiB에서 감시가 SIGTERM으로 중단했습니다(`native-full-build.result.json`: code=null, guardStopped=true). root test 출력 파일이0바이트인 상태였고 전체 테스트 실행 완료 증거가 없습니다. 컴파일러를 포함한 프로세스 트리의 RSS 합계이므로 제품 실행 메모리·native 누수·특정 테스트 오류로 해석하지 않습니다. 전체 gate는 **미완료**이며 집중 검증 통과와 구분합니다. 해당12파일의 소스/검증 의존성 복원만 게시 대상으로 유지하고 제품 WASM 교체는 하지 않습니다.
+
 ## 원문과 경계
 
 `reference/rhwp/samples/hwpx/issue2019_floating_form_74312.hwpx`의1/21/46/147/185/300/348/500/591/877번에는 secPr·colPr·책갈피만 있고 직접 hp:t가 없습니다. 기존 retained_run_metadata.runOnly가 secPr를 제외하여 빈 문단 fallback을 만들지 못했습니다.

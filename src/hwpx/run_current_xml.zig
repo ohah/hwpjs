@@ -75,6 +75,10 @@ fn writeModePolicy(a: std.mem.Allocator, tree: *const Tree, paragraph: *const Pa
     const source_limit = std.math.add(usize, wrapper.len, limit) catch return error.LimitExceeded;
     var normalized = try @import("xml_part_tree.zig").parse(a, wrapper, .section, 0, 0, .{ .max_xml_bytes = source_limit });
     defer normalized.deinit(a);
+    // Original paragraph ownership was checked above. Isolating a metadata
+    // run removes its text-bearing siblings and can create a fallback site
+    // that does not exist in the source paragraph. Do not project that site.
+    if (found == 0) return writeOutput(a, &normalized, continuation, limit);
     var normalized_sites = try sites_mod.collect(a, &normalized, options);
     defer normalized_sites.deinit(a);
     var direct_count: usize = 0;
@@ -82,10 +86,6 @@ fn writeModePolicy(a: std.mem.Allocator, tree: *const Tree, paragraph: *const Pa
         if (try @import("paragraph_site_owner.zig").ancestor(&normalized, site.element_index) == 1) direct_count += 1;
     }
     if (direct_count != found) return error.SourceBindingMismatch;
-    // A plain paragraph may contain a section/control metadata-only run.
-    // It owns no editable site, but still needs namespace closure and the
-    // same continuation metadata removal as a run carrying current text.
-    if (found == 0) return writeOutput(a, &normalized, continuation, limit);
     const rows = try a.dupe(sites_mod.Site, normalized_sites.items);
     defer a.free(rows);
     var next: usize = 0;
@@ -105,6 +105,43 @@ fn writeModePolicy(a: std.mem.Allocator, tree: *const Tree, paragraph: *const Pa
     // when a missing/empty text element is materialized within it.
     if (rendered.elements.len < 3 or !rendered.elements[2].is(@import("document_xml.zig").paragraph_uri, "run")) return error.SourceBindingMismatch;
     return writeOutput(a, &rendered, continuation, limit);
+}
+
+test "current run XML rejects omitted source text before metadata fallback bypass" {
+    const a = std.testing.allocator;
+    var tree = try @import("xml_part_tree.zig").parse(a, "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:p><p:run><p:t>must retain</p:t></p:run></p:p></s:sec>", .section, 0, 0, .{});
+    defer tree.deinit(a);
+    const paragraph: Paragraph = .{ .template_element = 1, .source_ordinal = 1, .sites = .{ .items = &.{} } };
+    try std.testing.expectError(error.MissingTextSite, write(a, &tree, &paragraph, 2, .{}, 10000));
+}
+
+test "current run XML rejects missing run text even with a valid sibling site" {
+    const a = std.testing.allocator;
+    var tree = try @import("xml_part_tree.zig").parse(a, "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:p><p:run><p:t>must retain</p:t></p:run><p:run><p:t>sibling</p:t></p:run></p:p></s:sec>", .section, 0, 0, .{});
+    defer tree.deinit(a);
+    var sites = try sites_mod.collect(a, &tree, .{});
+    defer sites.deinit(a);
+    try std.testing.expectEqual(@as(usize, 2), sites.items.len);
+    const paragraph: Paragraph = .{ .template_element = 1, .source_ordinal = 1, .sites = .{ .items = sites.items[1..] } };
+    try std.testing.expectError(error.SourceBindingMismatch, write(a, &tree, &paragraph, 2, .{}, 10000));
+}
+
+test "current run XML projects genuine metadata fallback text without dropping settings" {
+    const a = std.testing.allocator;
+    const source = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:p><p:run charPrIDRef='7'><p:secPr/></p:run></p:p></s:sec>";
+    var tree = try @import("xml_part_tree.zig").parse(a, source, .section, 0, 0, .{});
+    defer tree.deinit(a);
+    var sites = try sites_mod.collect(a, &tree, .{});
+    defer sites.deinit(a);
+    try std.testing.expectEqual(@as(usize, 1), sites.items.len);
+    try std.testing.expect(sites.items[0].missing_text);
+    _ = try @import("text_site_edit.zig").splice(a, &sites, 0, 0, 0, "입력😀<&", 1000);
+    const paragraph: Paragraph = .{ .template_element = 1, .source_ordinal = 1, .sites = sites };
+    const output = try write(a, &tree, &paragraph, 2, .{}, 10000);
+    defer a.free(output);
+    try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, output, "secPr"));
+    try std.testing.expect(std.mem.indexOf(u8, output, "입력😀&lt;&amp;") != null);
+    try std.testing.expectEqualSlices(u8, source, tree.source);
 }
 
 test "current run XML retains nested header footer sites and geometry" {

@@ -3,6 +3,39 @@ const trees = @import("xml_part_tree.zig");
 const gaps = @import("element_whitespace_gaps.zig");
 const uri = @import("document_xml.zig").paragraph_uri;
 
+/// Metadata-only runs may own text only in a metadata-only paragraph.
+pub fn runOnly(tree: *const trees.Tree, index: usize) bool {
+    if (index >= tree.elements.len) return false;
+    const run = tree.elements[index];
+    if (!run.is(uri, "run") or !gaps.empty(tree, index)) return false;
+    var child = run.first_child orelse return false;
+    while (true) {
+        if (!supported(tree, child) and !sectionSettingSupported(tree, child)) return false;
+        child = tree.elements[child].next_sibling orelse return true;
+    }
+}
+
+fn sectionSettingSupported(tree: *const trees.Tree, index: usize) bool {
+    if (index >= tree.elements.len) return false;
+    const setting = tree.elements[index];
+    if (!setting.is(uri, "secPr") or !gaps.empty(tree, index)) return false;
+    const parent = setting.parent orelse return false;
+    return parent < tree.elements.len and tree.elements[parent].is(uri, "run");
+}
+
+pub fn paragraphOnly(tree: *const trees.Tree, run_index: usize) bool {
+    if (!runOnly(tree, run_index)) return false;
+    const parent = tree.elements[run_index].parent orelse return false;
+    if (parent >= tree.elements.len or !tree.elements[parent].is(uri, "p")) return false;
+    var child = tree.elements[parent].first_child;
+    while (child) |index| {
+        const element = tree.elements[index];
+        if (!element.is(uri, "linesegarray") and !runOnly(tree, index)) return false;
+        child = element.next_sibling;
+    }
+    return true;
+}
+
 pub fn supported(tree: *const trees.Tree, index: usize) bool {
     if (index >= tree.elements.len) return false;
     const control = tree.elements[index];
