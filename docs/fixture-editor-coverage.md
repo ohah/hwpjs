@@ -1,5 +1,15 @@
 # 추적 픽스쳐 편집 지원 전수 기준
 
+## 2026-10-16 추적 HWPX 최상위180파일의 실패 결과
+
+고정 tree `53d35d9e3c98fdbbfd8d5034ae28cf7bf5588bb3`/차트 후보 WASM `f6decd1df1fbf38a2926e2b25d69633c323ec7761753a78826dab6cc73cafc78`의 최상위 추적 HWPX180파일을 concurrency1로 실행한 결과429개 중403pass/26fail·skip/cancel0·1999992.20975ms·정상 종료 코드1입니다. 로그는 `/tmp/hwpjs-chart-main-merged.IfTq0V/hwpx-top-level-180.log`·stderr이며 parent61067/runner61081/장기 Worker4193 종료를 확인했습니다. 별도의 이전 정규62파일194개 통과를 최상위 추적180파일 전체 통과로 읽지 않습니다.
+
+실패에는 격리 archive의 Git 정보 부재에 따른 픽스쳐 inventory 실패, 비추적 파일을 정상 입력으로 삼은 선택 검사, 후보에서 빠진 BOOKMARK/필드 외부/markpen 지원, 빈 run 스타일/metadata-only 문단 입력, 생성 표 재열기 좌표 기대와 선택적 필드 권한 사례가 포함됩니다. 원인 범주를 동일한 버그로 합치거나 이미 수정한 집중 검사를 이 실패 실행의 소급 통과로 바꾸지 않습니다. 빈 run·metadata-only 및 남은 권한 사례의 현재 상태는 추가 비교가 필요합니다.
+
+BOOKMARK·필드 외부·markpen 복원과 생성 표 좌표의 독립 재검증은 각 주제 기록이 근거를 소유합니다. 그 뒤 main `17d60c18`을 기준으로 차트 변경을3-way 재조립한 tree `9e86b67a15b8a485b5352cd0763b327faedc99f2`는 네 native 진입점과 양쪽 HWPX 등록 목록을 유지하며 ReleaseSafe5/5·exit0입니다. 새 WASM `b227631abc849c8c993c71032eaab533c3e7a352cbfa20143a955f4f6831a51f`는 기본311exports 누락0/전체316이나 아직 새 전체 런타임 검증 결과는 아닙니다. 별도 소스는 `/tmp/hwpjs-chart-current-main.miSoxa`이며 기본 WASM/외부 데모는 교체하지 않았습니다.
+
+선택 검사 자체의 정상 입력은 비추적 cell-resize에서 실제 추적 editor 테스트로 바꿨습니다. 단일/두 포맷 경로·빈 목록·중복 realpath·잘못된 확장자·명시적 누락 파일의 CLI 사전 실패를 검사합니다. 파일 누락을 허용하거나 범위를 축소하지 않습니다. 작업 트리2/2·58.619125ms·최소 추적 archive2/2·69.222042ms·exit0입니다. 이 도구 검사는 제품의 누락된 편집 지원을 해결한 결과가 아닙니다.
+
 ## 2026-10-16 main 통합 차트 후보의 공개 회귀
 
 main `18dbe1f4`와 선별 차트 변경을 합친 별도 소스의 ReleaseSafe WASM `f6decd1df1fbf38a2926e2b25d69633c323ec7761753a78826dab6cc73cafc78`로 HWP5 최상위101파일을 concurrency1로 실행했습니다. `hwp5-top-level-101.log`는566/566·fail/skip/cancel0·610299.962583ms·정상 exit0으로 종료됐습니다. 고정 기본 경로를 읽는 테스트도 격리 경로의 같은 제품 산출물을 사용하며 EMF test-only probe는 별도 명시했습니다. 이전100파일563개 중3실패 결과는 이 재실행으로 소급 통과 처리하지 않습니다.
