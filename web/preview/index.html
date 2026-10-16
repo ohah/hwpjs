@@ -134,11 +134,16 @@
     <label>글꼴 <select id="canvas-font" disabled></select></label>
     <label>글꼴 목록 <select id="canvas-font-category" disabled><option value="document">문서 글꼴</option><option value="current">현재 선택 글꼴</option></select></label>
     <button id="canvas-font-apply" type="button" disabled>글꼴 적용</button>
+    <details id="font-source-options" class="toolbar-options">
+    <summary>글꼴 이름·시스템 글꼴</summary>
+    <div class="toolbar-option-fields">
     <label>글꼴 이름 <input id="canvas-font-name" type="text" disabled></label>
     <button id="canvas-font-name-apply" type="button" disabled>이름으로 적용</button>
     <button id="canvas-system-font-read" type="button" disabled>시스템 글꼴 읽기</button>
     <label>시스템 글꼴 <select id="canvas-system-font" disabled></select></label>
     <span id="canvas-system-font-status" role="status" aria-live="polite"></span>
+    </div>
+    </details>
     <label>새 글자색 <input id="canvas-text-color" type="color" value="#000000" disabled></label>
     <button id="canvas-text-color-apply" type="button" disabled>글자색 적용</button>
     <label>형광펜 <input id="canvas-shade-color" type="color" value="#ffff00" disabled></label>

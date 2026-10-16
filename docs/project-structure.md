@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+글꼴 이름/시스템 글꼴 보조 입력의 접힘 구조는 기존 HTML details가 소유합니다. 별도 편집 상태를 만들지 않으며 [글꼴 보조 도구 계약](editor-font-tool-disclosure.md)을 따릅니다.
+
 [HWPX native 편집 이력](hwpx-edit-history.md)은 `editor_checkpoint.zig`가 소유 값 복원, `editor_history.zig`가 스택·분기·한도, 각 `_tests.zig`가 native 반례를 맡습니다. [Worker 이력](hwpx-worker-history.md)은 기존 reader-worker, [Canvas 이력](canvas-edit-history.md)은 canvas-editor와 버튼 전용 history-controls를 연결하며 JS에 별도 편집 이력을 만들지 않습니다.
 
 웹 편집본 저장·다운로드의 책임과 검증 범위는 [Canvas 편집본 다운로드](canvas-document-download.md)가 소유합니다. native snapshot·브라우저 Blob·Worker generation guard를 별도 모듈에 두고 화면 초안을 저장 모델로 사용하지 않습니다.
