@@ -185,8 +185,13 @@
       <label>크기 (pt)<input id="character-property-size" type="number" min="0" max="4096" step="0.01" aria-describedby="character-property-size-current"><output id="character-property-size-current">현재 크기 미확인</output></label>
       <button type="button" data-size-step="1" disabled>글자 크기 키우기</button>
       <button type="button" data-size-step="-1" disabled>글자 크기 줄이기</button>
+      <details id="character-property-options" class="toolbar-options">
+      <summary id="character-property-draft">강조 일괄값 · 굵게 유지 · 기울임 유지</summary>
+      <div class="toolbar-option-fields">
       <label>굵게<select id="character-property-bold"><option value="keep">유지</option><option value="on">켜기</option><option value="off">끄기</option></select></label>
       <label>기울임<select id="character-property-italic"><option value="keep">유지</option><option value="on">켜기</option><option value="off">끄기</option></select></label>
+      </div>
+      </details>
       <button type="submit">글자 속성 적용</button>
     </fieldset>
     <p id="character-property-status" role="status" aria-live="polite"></p>

@@ -1,6 +1,7 @@
 import { characterPropertyArgs } from "../../js/character-property-args.mjs";
 import { isSourceCharacterSize } from "./character-size-selection.mjs";
 import { steppedCharacterSize } from "./character-size-step.mjs";
+import { characterPropertyDraftLabel } from "./character-property-draft-label.mjs";
 export function createCharacterPropertyControls({ form, fields, size, bold, italic, note, selected, request, boldToggle, italicToggle, underlineToggle, strikeToggle, selectedState = () => null, selectedSize = () => null, selectedRanges = () => null, toggle = () => false, canType = () => false }) {
   let enabled = false;
   let typingAvailable = false;
@@ -10,7 +11,12 @@ export function createCharacterPropertyControls({ form, fields, size, bold, ital
   const accepted = range => Array.isArray(range) ? rangesAvailable && range.length > 0 && range.every(part => Number.isInteger(part?.startUnit) && Number.isInteger(part?.endUnit) && part.startUnit >= 0 && part.startUnit < part.endUnit) : Boolean(range) && (range.startUnit !== range.endUnit || (typingAvailable && canType()));
   const buttons = [["bold", boldToggle], ["italic", italicToggle], ["underline", underlineToggle], ["strike", strikeToggle]].filter(([, button]) => button);
   const sizeButtons = [[1, form.querySelector?.('[data-size-step="1"]')], [-1, form.querySelector?.('[data-size-step="-1"]')]].filter(([, button]) => typeof button?.addEventListener === "function");
+  const draftLabel = form.querySelector?.("#character-property-draft");
+  const updateDraftLabel = () => { if (draftLabel) draftLabel.textContent = characterPropertyDraftLabel(bold.value, italic.value); };
+  const draftInputs = [bold, italic].filter(input => typeof input?.addEventListener === "function");
+  for (const input of draftInputs) input.addEventListener("change", updateDraftLabel);
   const update = () => {
+    updateDraftLabel();
     form.hidden = !enabled;
     const range = selection();
     fields.disabled = pending || !accepted(range);
@@ -89,6 +95,6 @@ export function createCharacterPropertyControls({ form, fields, size, bold, ital
       if (["character-strike", "character-strike-ranges"].includes(message.kind)) note.textContent = message.error ? `취소선 변경 실패: ${message.error}` : "취소선 적용 · 지원 선 모양 표시 · 원본 조판 재계산 필요";
       update();
     },
-    close() { form.removeEventListener("submit", submit); for (const [button, click] of [...clicks, ...sizeClicks]) button.removeEventListener("click", click); },
+    close() { form.removeEventListener("submit", submit); for (const input of draftInputs) input.removeEventListener("change", updateDraftLabel); for (const [button, click] of [...clicks, ...sizeClicks]) button.removeEventListener("click", click); },
   };
 }

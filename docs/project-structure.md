@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+[강조 일괄값 펼침](editor-character-property-disclosure.md)은 빠른 버튼과 고급 on/off 초안 표시의 책임을 구분합니다.
+
 [기본 코어 RSS 감시](native-core-rss-monitor.md)는 process-tree-rss의 소유 범위·관측 오류와 실제 한도 초과의 분리를 소유합니다.
 
 [포맷별 동의와 세션 안내](editor-format-consent-visibility.md)는 공통 포맷 상태 투영과 저장 권한 판단을 구분합니다.
