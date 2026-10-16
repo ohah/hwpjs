@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+문서 구간 도구의 접힘·항상 보이는 범위 안내는 [구간 도구 접기](editor-window-tool-disclosure.md)가 소유합니다.
+
 글꼴 이름/시스템 글꼴 보조 입력의 접힘 구조는 기존 HTML details가 소유합니다. 별도 편집 상태를 만들지 않으며 [글꼴 보조 도구 계약](editor-font-tool-disclosure.md)을 따릅니다.
 
 [HWPX native 편집 이력](hwpx-edit-history.md)은 `editor_checkpoint.zig`가 소유 값 복원, `editor_history.zig`가 스택·분기·한도, 각 `_tests.zig`가 native 반례를 맡습니다. [Worker 이력](hwpx-worker-history.md)은 기존 reader-worker, [Canvas 이력](canvas-edit-history.md)은 canvas-editor와 버튼 전용 history-controls를 연결하며 JS에 별도 편집 이력을 만들지 않습니다.

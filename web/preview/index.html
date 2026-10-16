@@ -88,13 +88,15 @@
     <label for="view-scale">화면 배율</label>
     <select id="view-scale" aria-label="문서 화면 배율" disabled></select>
   </div>
+  <details id="document-window-options" class="toolbar-options">
+  <summary>문서 구간 · <output id="document-window-status" aria-live="polite"></output></summary>
   <form id="document-window-form" class="editor-toolbar toolbar-group">
     <label>시작 문단<input id="document-window-start" type="number" min="1" step="1" value="1" disabled></label>
     <label>표시 문단 수<input id="document-window-count" type="number" min="1" step="1" value="100" disabled></label>
     <button id="document-window-apply" type="submit" disabled>HWPX 구간 이동</button>
     <button id="document-window-restore" type="button" disabled>기본 표시 복원</button>
-    <output id="document-window-status" aria-live="polite"></output>
   </form>
+  </details>
   <details id="find-options" class="toolbar-options">
   <summary>찾기·바꾸기</summary>
   <form id="find-form" class="editor-toolbar toolbar-group find-toolbar" role="search">
