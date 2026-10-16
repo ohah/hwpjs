@@ -1,6 +1,7 @@
 import { createHwp5Reader } from "../../js/hwp5.mjs";
 import { createHwpxReader } from "../../js/hwpx.mjs";
 import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
+import { hwpxFieldRangeTarget } from "./hwpx-field-range-target.mjs";
 import { attachCheckBoxes } from "./checkbox-content.mjs";
 import { attachDutmal } from "./dutmal-content.mjs";
 import { projectFieldLabelDisplay } from "./field-label-display-content.mjs";
@@ -294,7 +295,7 @@ self.onmessage = async event => {
       return;
     }
     if (message.kind === "query-edit-range") {
-      reply(selectionEditQuery(message, { active: Boolean(editor) && historyEnabled, format, canEdit: (section, paragraph, start, end) => editor.fieldRangeTarget(section, paragraph, start, end) !== null || outsideFieldRange(section, paragraph, start, end) || formulaResultTextRangeAllowed(editor, module, section, paragraph, start, end) }));
+      reply(selectionEditQuery(message, { active: Boolean(editor) && historyEnabled, format, canEdit: (section, paragraph, start, end) => hwpxFieldRangeTarget(editor, hwpxCreatedTablesPending, section, paragraph, start, end) !== null || outsideFieldRange(section, paragraph, start, end) || formulaResultTextRangeAllowed(editor, module, section, paragraph, start, end) }));
       return;
     }
     if (message.kind === "query-split-range") {
@@ -373,7 +374,7 @@ self.onmessage = async event => {
       const paragraph = message.paragraph + (format === "hwpx" ? 1 : 0);
       let textMode = "plain", beginElement = 0;
       if (format === "hwpx" && !editor.canEdit(message.section, paragraph)) {
-        const target = editor.fieldRangeTarget(message.section, paragraph, message.startUnit, message.endUnit);
+        const target = hwpxFieldRangeTarget(editor, hwpxCreatedTablesPending, message.section, paragraph, message.startUnit, message.endUnit);
         if (target !== null) { textMode = "field"; beginElement = target.beginElement; }
         else if (outsideFieldRange(message.section, paragraph, message.startUnit, message.endUnit)) textMode = "plain";
         else if (anchorView(message.section, paragraph) !== null) textMode = "anchored";
@@ -743,7 +744,7 @@ self.onmessage = async event => {
           editor.splice(message.section, message.paragraph + 1, message.startUnit, message.endUnit - message.startUnit, message.text);
         } else {
           const paragraph = message.paragraph + 1;
-          const target = editor.fieldRangeTarget(message.section, paragraph, message.startUnit, message.endUnit);
+          const target = hwpxFieldRangeTarget(editor, hwpxCreatedTablesPending, message.section, paragraph, message.startUnit, message.endUnit);
           if (target !== null) editor.spliceFieldLabel(message.section, paragraph, target.beginElement, message.startUnit, message.endUnit - message.startUnit, message.text);
           else if (outsideFieldRange(message.section, paragraph, message.startUnit, message.endUnit)) editor.splice(message.section, paragraph, message.startUnit, message.endUnit - message.startUnit, message.text);
           else if (spliceFormulaResultText(editor, module, message)) { /* Native result transaction applied. */ }

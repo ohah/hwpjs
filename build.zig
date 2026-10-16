@@ -154,6 +154,8 @@ pub fn build(b: *std.Build) void {
     hwpx_text_tests.addArg("tests/hwpx/section-metadata-input-reference.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/section-metadata-canvas.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/runless-paragraph-worker.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/table-creation-worker.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/field-range-capability.test.mjs");
     hwpx_text_tests.step.dependOn(b.getInstallStep());
     hwpx_text_tests.has_side_effects = true;
     audit.dependOn(&hwpx_text_tests.step);

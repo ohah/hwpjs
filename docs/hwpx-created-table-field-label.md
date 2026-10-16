@@ -1,5 +1,13 @@
 # 생성 표와 원본 필드 라벨 편집
 
+## 2026-10-16 누락된 라벨 ABI의 범위 권한 우회
+
+180파일 감사의 `table-creation-worker` 실패를 main 복원 후보 `9d935e8b…`와 기본 `cbaaf27f…`에서 모두 재현했습니다. `created_table_field_label_mode` export를 제거하면 표시 라벨은 잠기지만 Worker의 범위 조회·일반/서식 입력은 `fieldRangeTarget`을 직접 호출해 이 제한을 우회했습니다. native 파서/필드 좌표 문제가 아니라 Worker 권한 연결 문제입니다.
+
+`web/preview/hwpx-field-range-target.mjs`가 pending 표의 라벨 capability를 확인한 뒤 기존 native 범위 조회를 호출하며 Worker의 세 경로가 공유합니다. 필드 위치를 JS에서 다시 계산하거나 문단 전체 권한을 부여하지 않습니다. 원본 XML의 직접 텍스트를 Python 일반/-O로 독립 계수하면 필드 시작은7이고 prefix5유닛 입력 후12입니다. 계약상 시작 경계도 명시적 라벨 affinity가 필요하므로 ABI 부재 시11은 허용,12와13은 거부해야 합니다. 최초 조사에서12를 일반 exterior로 해석한 판단은 틀렸으며 원래 테스트의 잠금 기대를 완화하지 않습니다.
+
+검사는 라벨 ABI 없는 실제 입력 거부 후 저장 바이트·이력 revision 보존까지 포함합니다. `table-creation-worker` 전체와 새 공통 판정 반례는 후보11/11·exit0(11.922초), 기본11/11·exit0(10.967초), skip0·stderr0입니다(`/tmp/hwpjs-runless-fix.70e4a3/table-label-final-{candidate,default}.log`). 정상 ABI 라벨·누락된 host ABI·생성 표/셀·수식/도형·이력 회귀를 포함하고 두 묶음을22개 고유 사례로 합산하지 않습니다. 두 테스트 파일을 정규 hwpx-text-audit에 등록합니다. JS syntax 검사도 통과했습니다. native/WASM 변경이나 기본 제품 교체는 없으며 전체 공개 묶음·실제 브라우저 조판은 이번 결과와 별개입니다.
+
 ## 2026-10-16 생성 표의 저장 전후 필드 좌표 검증
 
 180파일 감사의 created-table-field-exterior 실패는 재열기 뒤 start13과 저장 전 start12의 단순 동일성 기대에서 발생했습니다. 기본 `cbaaf27f…`와 조립 후보 모두 재현됐지만, 후속 조사에서 문서 내용 손실로 확정하지 않았습니다. 생성 표가 pending registry에 있을 때 필드 명령은 기존 본문 좌표를 사용하고, 저장본을 다시 열면 표가 원본 객체1단위로 투영됩니다. 이 실제 사례는 start/end12/40→13/41, beginElement53→71이며 재열기 후 descriptor를 다시 조회해야 합니다.

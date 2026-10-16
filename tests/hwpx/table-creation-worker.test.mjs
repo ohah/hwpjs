@@ -56,7 +56,26 @@ test("Canvas field exterior with missing label ABI uses range permission without
     return { exports };
   });
   const h = await workerCanvasHarness(t, { paintFrames: true, rangeQueries: true });
-  await h.send({ kind: "load", format: "hwpx", bytes: readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/issue144-fields-crossing-lineseg-boundary.hwpx") });
+  const source = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/issue144-fields-crossing-lineseg-boundary.hwpx");
+  // Read the original XML independently. Both the field boundary affinity
+  // and its interior require the missing explicit label capability.
+  const inventoryScript = String.raw`import io,json,sys,zipfile,xml.etree.ElementTree as E
+p="{http://www.hancom.co.kr/hwpml/2011/paragraph}"
+root=E.fromstring(zipfile.ZipFile(io.BytesIO(sys.stdin.buffer.read())).read("Contents/section0.xml"))
+paragraph=list(root.iter(p+"p"))[1]
+offset=0
+for node in paragraph.iter():
+    if node.tag==p+"fieldBegin":
+        print(json.dumps({"start":offset,"id":node.get("id")}))
+        break
+    if node.tag==p+"t":
+        if len(node): raise ValueError("Expected plain source text")
+        offset+=len((node.text or "").encode("utf-16-le"))//2
+else: raise ValueError("Missing source field")`;
+  const inventories = [[], ["-O"]].map(flags => JSON.parse(execFileSync("python3", [...flags, "-c", inventoryScript], { input: source, encoding: "utf8", timeout: 30000 })));
+  assert.deepEqual(inventories[0], { start: 7, id: "1528818376" });
+  assert.deepEqual(inventories[1], inventories[0]);
+  await h.send({ kind: "load", format: "hwpx", bytes: source });
   await h.send({ kind: "enable" });
   const created = await h.send({ kind: "insert-table", section: 0, paragraph: 1, unit: 0, options: { ...options, rows: 1, columns: 1 } });
   assert.equal(created.error, undefined);
@@ -73,8 +92,17 @@ test("Canvas field exterior with missing label ABI uses range permission without
   for (const flags of [[], ["-O"]]) execFileSync("python3", [...flags, "tools/hwpx-field-outside-oracle.py"], {
     input: JSON.stringify({ before: Buffer.from(before).toString("base64"), after: Buffer.from(after).toString("base64"), part: "Contents/section0.xml", paragraph: 2, prefix: "앞😀<&" }), timeout: 30000,
   });
-  assert.equal(h.controller.selectTextRange({ section: 0, paragraph: 1, startUnit: 12, endUnit: 12 }), true);
+  const fieldStart = inventories[0].start + "앞😀<&".length;
+  assert.equal(fieldStart, 12);
+  assert.equal(h.controller.selectTextRange({ section: 0, paragraph: 1, startUnit: fieldStart - 1, endUnit: fieldStart - 1 }), true);
+  await h.flushQueries(); assert.equal(h.input.readOnly, false);
+  assert.equal(h.controller.selectTextRange({ section: 0, paragraph: 1, startUnit: fieldStart, endUnit: fieldStart }), true);
   await h.flushQueries(); assert.equal(h.input.readOnly, true);
+  assert.equal(h.controller.selectTextRange({ section: 0, paragraph: 1, startUnit: fieldStart + 1, endUnit: fieldStart + 1 }), true);
+  await h.flushQueries(); assert.equal(h.input.readOnly, true);
+  const refused = await h.send({ kind: "splice", origin: "canvas", section: 0, paragraph: 1, startUnit: fieldStart + 1, endUnit: fieldStart + 1, text: "금지" });
+  assert.equal(typeof refused.error, "string");
+  assert.equal(refused.historyRevision, edited.historyRevision);
   assert.deepEqual((await h.send({ kind: "save" })).bytes, after);
 });
 
