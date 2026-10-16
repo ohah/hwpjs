@@ -1,6 +1,7 @@
 export function createTableCreationControls({ form, fields, focusButton, submit, dimensions, resources, note, selected, inventory, request, createOption = () => document.createElement("option") }) {
   let closed = false, signature = null;
-  const showFields = open => { fields.hidden = !open; focusButton.setAttribute?.("aria-expanded", String(open)); };
+  const updateVisibility = () => { form.hidden = Boolean(focusButton.disabled && fields.hidden && !note.textContent); };
+  const showFields = open => { fields.hidden = !open; focusButton.setAttribute?.("aria-expanded", String(open)); updateVisibility(); };
   showFields(false);
   const update = () => {
     if (closed) return;
@@ -16,6 +17,7 @@ export function createTableCreationControls({ form, fields, focusButton, submit,
       }
       signature = next;
     }
+    updateVisibility();
   };
   const focus = () => { update(); if (!closed && !focusButton.disabled) { showFields(true); form.scrollIntoView?.({ block: "nearest" }); dimensions.rows.focus(); } };
   const keydown = event => {
@@ -46,5 +48,5 @@ export function createTableCreationControls({ form, fields, focusButton, submit,
       : "표 생성 완료 · 첫 셀 입력 가능 여부는 Canvas 상태를 확인하세요.";
     if (reply.kind === "insert-table" && !reply.error) showFields(false);
     update();
-  }, close() { if (closed) return; closed = true; focusButton.removeEventListener("click", focus); form.removeEventListener("submit", insert); form.removeEventListener("keydown", keydown); showFields(false); fields.disabled = true; focusButton.disabled = true; submit.disabled = true; } };
+  }, close() { if (closed) return; closed = true; focusButton.removeEventListener("click", focus); form.removeEventListener("submit", insert); form.removeEventListener("keydown", keydown); showFields(false); fields.disabled = true; focusButton.disabled = true; submit.disabled = true; updateVisibility(); } };
 }
