@@ -167,6 +167,7 @@ pub const Session = struct {
         if (section_index >= self.sections.len) return error.InvalidSectionIndex;
         const selected = &self.sections[section_index];
         if (paragraph < selected.first_paragraph or paragraph > selected.last_paragraph) return error.InvalidParagraphIndex;
+        if (!anchored) if (try @import("runless_paragraph_session.zig").splice(self, section_index, paragraph, start, deleted, inserted)) |changed| return changed;
         if (anchored and selected.structure_values == null) {
             const field_positions = try @import("field_source_outside_positions.zig").prepareAction(self, section_index, paragraph, 0, 0, .whole_anchored);
             if (field_positions) |positions| self.allocator.free(positions);
@@ -214,6 +215,7 @@ pub const Session = struct {
         if (section_index >= self.sections.len) return error.InvalidSectionIndex;
         const section = &self.sections[section_index];
         if (paragraph < section.first_paragraph or paragraph > section.last_paragraph) return error.InvalidParagraphIndex;
+        if (try @import("runless_paragraph_session.zig").eligible(self, section_index, paragraph)) return true;
         if (section.structure_values) |*values| {
             if (section.sites.items.len != 0) return error.DuplicateCurrentTextOwner;
             const index = paragraph - section.first_paragraph;
@@ -259,9 +261,15 @@ pub const Session = struct {
         if (section_index >= self.sections.len) return error.InvalidSectionIndex;
         const section = &self.sections[section_index];
         if (paragraph < section.first_paragraph or paragraph > section.last_paragraph) return error.InvalidParagraphIndex;
+        if (section.structure_values == null and try @import("runless_paragraph_session.zig").eligible(self, section_index, paragraph)) return self.allocator.dupe(u8, "");
         if (section.structure_values) |*values| {
             if (section.sites.items.len != 0) return error.DuplicateCurrentTextOwner;
             const owned = &values.paragraphs[paragraph - section.first_paragraph];
+            if (owned.sites.items.len == 0 and try @import("runless_paragraph_session.zig").eligible(self, section_index, paragraph)) return self.allocator.dupe(u8, "");
+            if (owned.synthesized_run_character_id != null) {
+                try @import("runless_paragraph_current.zig").validate(&section.tree, owned);
+                return self.allocator.dupe(u8, owned.sites.items[0].text);
+            }
             if (owned.field_positions) |positions| if (positions.len == 0) return @import("fieldless_current_edit.zig").text(self, section_index, paragraph - section.first_paragraph);
             if (owned.joined()) |view| {
                 const positions = if (owned.protected_positions != null) try @import("paragraph_protected_positions.zig").build(self.allocator, &section.tree, owned) else try @import("paragraph_joined_positions.zig").build(self.allocator, &section.tree, &view);

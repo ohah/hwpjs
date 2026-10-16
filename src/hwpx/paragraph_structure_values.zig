@@ -12,6 +12,9 @@ pub const Paragraph = struct {
     generated_id: ?u32 = null,
     /// Explicit current override; null retains the immutable template reference.
     paragraph_shape_id: ?u32 = null,
+    /// New-run fallback style. When materialized, character_styles owns current
+    /// formatting; this ID remains provenance. Sites is the sole text owner.
+    synthesized_run_character_id: ?u32 = null,
     sites: Sites,
     /// Authoritative current style partition when materialized; never text/XML.
     character_styles: ?[]@import("character_style_paint.zig").Span = null,
@@ -59,7 +62,7 @@ pub const Paragraph = struct {
         errdefer if (columns) |items| a.free(items);
         const areas = if (self.page_area_positions) |items| try a.dupe(@import("page_area_position.zig").Position, items) else null;
         errdefer if (areas) |items| a.free(items);
-        return .{ .template_element = self.template_element, .source_ordinal = self.source_ordinal, .generated_id = self.generated_id, .paragraph_shape_id = self.paragraph_shape_id, .sites = try self.sites.clone(a), .pieces = pieces, .character_styles = styles, .protected_positions = protected, .field_positions = field_positions, .title_positions = titles, .column_boundaries = columns, .page_area_positions = areas, .column_structure_changed = self.column_structure_changed };
+        return .{ .template_element = self.template_element, .source_ordinal = self.source_ordinal, .generated_id = self.generated_id, .paragraph_shape_id = self.paragraph_shape_id, .synthesized_run_character_id = self.synthesized_run_character_id, .sites = try self.sites.clone(a), .pieces = pieces, .character_styles = styles, .protected_positions = protected, .field_positions = field_positions, .title_positions = titles, .column_boundaries = columns, .page_area_positions = areas, .column_structure_changed = self.column_structure_changed };
     }
 };
 

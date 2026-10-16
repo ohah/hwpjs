@@ -36,7 +36,10 @@ fn prepare(session: *editor.Session, section_index: usize, paragraph_index: usiz
     defer if (!transferred) values.deinit(a);
     if (try @import("formula_section_save.zig").hasFormula(a, &section.tree)) try @import("character_style_formula_current.zig").prepare(session, section_index, &values, paragraph_index);
     const paragraph = &values.paragraphs[paragraph_index - section.first_paragraph];
-    const positions = if (paragraph.field_positions != null)
+    const synthesized = paragraph.synthesized_run_character_id != null;
+    const positions = if (synthesized)
+        try a.alloc(@import("paragraph_text_positions.zig").Segment, 0)
+    else if (paragraph.field_positions != null)
         try @import("field_owned_positions.zig").build(a, &section.tree, paragraph)
     else if (paragraph.protected_positions != null)
         try @import("paragraph_protected_positions.zig").build(a, &section.tree, paragraph)
@@ -60,7 +63,9 @@ fn prepare(session: *editor.Session, section_index: usize, paragraph_index: usiz
     for (positions) |position| if (@import("paragraph_text_positions.zig").isInlineUnit(position)) {
         has_tabs = true;
     };
-    const original = if (has_anchors) block: {
+    const original = if (synthesized)
+        try @import("runless_paragraph_current.zig").baseStyles(a, &section.tree, paragraph)
+    else if (has_anchors) block: {
         const typed = try @import("character_style_anchor_projection.zig").build(a, &section.tree, &paragraph.sites, positions, session.options.max_sites);
         defer a.free(typed);
         break :block try @import("character_style_anchor_adapter.zig").fromTyped(a, &section.tree, &paragraph.sites, typed);

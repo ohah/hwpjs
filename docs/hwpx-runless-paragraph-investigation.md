@@ -1,6 +1,22 @@
 # Run 없는 문단의 입력 경로 조사
 
+## main 복원 기준 재현 — 2026-10-16
+
+메타데이터 전용 입력 복원 커밋 `4c06d617`의 WASM 후보 `204c62fe7477f8c91f024781a5dcb4b8cc77bda3da1c783d7d3091a7d2804b9f`로 추적된 `runless-paragraph-worker.test.mjs`를 실행했습니다.2개 모두 입력 전 글자 모양 조회에서 실패했습니다(actual=null, expected=[{start:0,end:0,charShapeId:2}]). 선행 문단 편집 뒤의 같은 조회도 동일하게 실패합니다. 로그는 `/tmp/hwpjs-metadata-fix.zyoNkb/runless-before.log`, exit1·skip0이며 아래 로컬 후보의 과거 성공을 현재 main 지원으로 보지 않습니다. 복원 대상은 원본 스타일 참조→현재 Sites/서식→저장/이력 경로이며 차트·필드 passthrough 등 무관한 미게시 변경은 함께 가져오지 않습니다.
+
 ## 현재 실측
+
+### 4c06d617 기반 분리 복원 후보
+
+동일 후보의 기존 formula Worker와 AVG split Worker 회귀도2/2·skip0·exit0(54.183초), stderr0입니다(`runless-formula-regression.log`). 최종 ReleaseSafe 재빌드는5/5 cached이며 WASM SHA256은 아래와 같습니다. 새 runless Worker를 정규 hwpx-text-audit 목록에 등록합니다. 전체 규제분석 장시간 Worker·전체 공개 묶음·실제 브라우저는 이번 실행에 포함하지 않았습니다.
+
+`/tmp/hwpjs-runless-fix.70e4a3`는 main `4c06d617`의 archive에서 시작해 명시적 스타일 해결·새 run 직렬화·Sites 현재값·세션 거래·서식 조회/변경·저장 연결만 복원했습니다. 차트 자원, 필드 원문 passthrough, 다른 문단 구조 정책 변경은 포함하지 않습니다. ReleaseSafe build5/5·fmt 통과, WASM SHA256 `9d935e8bd2714492b3501a433e9d8b62d413431f5d584e30e9386d7fbc411ef5`입니다. 기본 제품 WASM은 그대로 유지했습니다.
+
+native 필터는 root 포함9/9·실패/로그/누수0·자원 감시 exit0입니다(`native-runless.jsonl`, 바이너리 `813de3e0efb57858437de6364ca84a4da439d048222d1e1a39a408fec687a361`, 관측 physical peak569,180,928바이트). sparse 스타일 ID/누락/중복/foreign 참조·정확한 namespace·실제28번 문단·부분 서식·재입력·재열기·체크포인트 및 각 준비/직렬화/query의 전체 할당 실패를 검사했습니다. 전체 세션 입력 거래의 실패 원자성은 별도 새 회귀로 검사하며 이9개에 포함됐다고 보지 않습니다.
+
+앞서 main 후보에서 실패한 Worker2개와 메타데이터 Canvas1개는 같은 후보로3/3·skip0·exit0(21.684초), stderr0입니다(`runless-public.log`). 입력 전/선행 편집 뒤 스타일2·본문 입력·12pt 변경·독립 XML/ZIP normal/-O·잘못된 기대값 거부·선행 문단 보존·분리 이력/거부 후 redo를 확인했습니다. DOM/Canvas 대역이며 실제 브라우저·모든 runless 문서·전체 gate 완료 근거는 아닙니다.
+
+별도 새 `runless_paragraph_transaction_tests`의 root 포함2/2·실패/로그/누수0·감시 exit0을 확인했습니다(`native-runless-transaction.jsonl`, 바이너리 `2b00cfba4d26277f2a1974a1d1e946e93b5d66490f54779651ecead9c93c3ad3`, 관측 physical peak146,325,960바이트). 첫 입력의 모든 실패 할당에서 구조 모델 미설치·원본 저장 byte-exact를 확인하고, 성공 시 구조 모델의 Sites1개만 본문을 소유하는지 검사합니다. 원본 세션·불변 source도 유지됩니다. 전체 코어 검사는 앞선 metadata 후보의 컴파일 자원 중단 이후 미완료 상태이며 이 집중 결과로 대체하지 않습니다.
 
 2026-10-13 후보 SHA256 `a6b30bb986825a08e720035019b5a66e9d6bbf0f735df612255ee3fa5922372f`로 다음 읽기 전용 조사를 실행했습니다.
 

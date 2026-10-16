@@ -23,12 +23,22 @@ pub fn read(session: *const editor.Session, section_index: usize, paragraph_inde
     const section = &session.sections[section_index];
     if (paragraph_index < section.first_paragraph or paragraph_index > section.last_paragraph) return error.InvalidParagraphIndex;
     if (section.structure_values != null and section.sites.items.len != 0) return error.DuplicateCurrentTextOwner;
-    if (try @import("character_style_formula_snapshot.zig").read(session, section_index, paragraph_index)) |ranges| return ranges;
     const a = session.allocator;
     const values = if (section.structure_values) |*current| current else return readOriginal(session, section, paragraph_index);
     const ordinal = paragraph_index - section.first_paragraph;
     if (ordinal >= values.paragraphs.len) return error.InvalidParagraphIndex;
     const paragraph = &values.paragraphs[ordinal];
+    if (paragraph.synthesized_run_character_id) |id| {
+        try @import("runless_paragraph_current.zig").validate(&section.tree, paragraph);
+        if (paragraph.character_styles) |styles| return copyStyles(a, styles);
+        const units = try @import("text_site_edit.zig").utf16Length(paragraph.sites.items[0].text);
+        return a.dupe(Span, &.{.{ .start_unit = 0, .end_unit = units, .char_shape_id = id }});
+    }
+    if (paragraph.sites.items.len == 0 and try @import("runless_paragraph_session.zig").eligible(session, section_index, paragraph_index)) {
+        const id = try @import("runless_paragraph_session.zig").characterShapeId(session, section_index, paragraph_index);
+        return a.dupe(Span, &.{.{ .start_unit = 0, .end_unit = 0, .char_shape_id = id }});
+    }
+    if (try @import("character_style_formula_snapshot.zig").read(session, section_index, paragraph_index)) |ranges| return ranges;
     if (paragraph.character_styles) |styles| return copyStyles(a, styles);
     const positions = if (paragraph.field_positions != null)
         try @import("field_owned_positions.zig").build(a, &section.tree, paragraph)
@@ -52,7 +62,11 @@ fn readOriginal(session: *const editor.Session, section: *const editor.Section, 
     for (section.locations) |location| if (location.paragraph_ordinal == paragraph) {
         count += 1;
     };
-    if (count == 0) return error.MissingTextSite;
+    if (count == 0) {
+        const id = try @import("runless_paragraph_session.zig").characterShapeId(session, section.tree.section_ordinal orelse return error.InvalidSectionIndex, paragraph);
+        return a.dupe(Span, &.{.{ .start_unit = 0, .end_unit = 0, .char_shape_id = id }});
+    }
+    if (try @import("character_style_formula_snapshot.zig").read(session, section.tree.section_ordinal orelse return error.InvalidSectionIndex, paragraph)) |ranges| return ranges;
     // Only descriptors are copied. Strings remain borrowed from Session until
     // the detached numeric projection has been built.
     const rows = try a.alloc(@import("text_sites.zig").Site, count);

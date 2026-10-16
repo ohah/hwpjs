@@ -721,6 +721,10 @@ test {
     _ = @import("hwpx/field_container_text_tests.zig");
     _ = @import("hwpx/markpen_text_session_tests.zig");
     _ = @import("hwpx/metadata_run_session_tests.zig");
+    _ = @import("hwpx/paragraph_style_character.zig");
+    _ = @import("hwpx/runless_paragraph_xml.zig");
+    _ = @import("hwpx/runless_paragraph_current.zig");
+    _ = @import("hwpx/runless_paragraph_transaction_tests.zig");
     _ = @import("hwpx/formula_field_split_guard.zig");
     _ = @import("hwpx/formula_field_partition_tests.zig");
     _ = @import("hwpx/formula_field_split_fixture_tests.zig");

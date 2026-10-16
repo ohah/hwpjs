@@ -179,6 +179,14 @@ fn writeInternal(a: std.mem.Allocator, tree: *const Tree, input: *const model.Va
         if (paragraph.source_ordinal == null or paragraph.generated_id != null or paragraph.template_element >= tree.elements.len) return error.SourceBindingMismatch;
         if (previous_original) |before| if (paragraph.template_element <= before) return error.SourceBindingMismatch;
         previous_original = paragraph.template_element;
+        if (paragraph.synthesized_run_character_id != null) {
+            const node = tree.elements[paragraph.template_element];
+            const replacement = try @import("runless_paragraph_current.zig").write(a, tree, paragraph, limit);
+            errdefer a.free(replacement);
+            try changes.append(a, .{ .start = node.start_tag.start, .end = node.end, .text = "", .serialized_xml = replacement });
+            i += 1;
+            continue;
+        }
         var end = i + 1;
         while (end < current.paragraphs.len and current.paragraphs[end].source_ordinal == null) : (end += 1) {
             const generated = &current.paragraphs[end];
@@ -369,6 +377,10 @@ fn appendJoinedRemovals(a: std.mem.Allocator, tree: *const Tree, view: *const @i
 
 fn validateOriginal(tree: *const Tree, expected: *const model.Paragraph, paragraph: *const model.Paragraph) !void {
     if (paragraph.template_element != expected.template_element) return error.SourceBindingMismatch;
+    if (paragraph.synthesized_run_character_id != null) {
+        if (expected.sites.items.len != 0 or paragraph.source_ordinal != expected.source_ordinal) return error.SourceBindingMismatch;
+        return @import("runless_paragraph_current.zig").validate(tree, paragraph);
+    }
     var extra: usize = 0;
     for (paragraph.sites.items, 0..) |site, index| {
         var found = false;
