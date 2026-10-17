@@ -61,8 +61,7 @@ test "HWPX named font batch uses one resource one history entry and atomic rejec
     try std.testing.expectEqualSlices(u8, saved, redone);
 }
 
-fn namedFontFailureSweep(with_history: bool) !void {
-    const a = std.testing.allocator;
+fn namedFontFailureSweep(a: std.mem.Allocator, with_history: bool) !void {
     const header = "<h:head xmlns:h='http://www.hancom.co.kr/hwpml/2011/head' secCnt='2'><h:refList><h:fontfaces itemCnt='1'><h:fontface lang='HANGUL' fontCnt='1'><h:font id='0' face='Original'/></h:fontface></h:fontfaces><h:charProperties itemCnt='1'><h:charPr id='0' height='1000'><h:fontRef hangul='0'/></h:charPr></h:charProperties></h:refList></h:head>";
     const section = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:p><p:run charPrIDRef='0'><p:t>AB</p:t></p:run></p:p></s:sec>";
     const input = try @import("test_package_fixture.zig").syntheticStructureZip(a, header, section);
@@ -108,11 +107,11 @@ fn namedFontFailureSweep(with_history: bool) !void {
 }
 
 test "HWPX named font allocation failures leave original ZIP and no resources" {
-    try namedFontFailureSweep(false);
+    try @import("../testing/checked_allocator.zig").run(namedFontFailureSweep, .{false});
 }
 
 test "HWPX named font history allocation failures leave original ZIP and no entries" {
-    try namedFontFailureSweep(true);
+    try @import("../testing/checked_allocator.zig").run(namedFontFailureSweep, .{true});
 }
 
 test "HWPX named font history budget rejection rolls back resources and text" {

@@ -186,7 +186,10 @@ test "HWPX title mark splices preserve leading middle trailing markers and surro
 }
 
 test "HWPX title mark mixed numbering settings preserve four hidden source records" {
-    const a = std.testing.allocator;
+    try @import("../testing/checked_allocator.zig").run(mixedNumberingCase, .{});
+}
+
+fn mixedNumberingCase(a: std.mem.Allocator) !void {
     const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "reference/rhwp/samples/task1771/nested_group_vectors.hwpx", a, .limited(4_000_000));
     defer a.free(bytes);
     var document = try @import("package.zig").inspectDocument(a, bytes, .{});

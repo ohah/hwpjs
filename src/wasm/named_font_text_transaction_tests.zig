@@ -58,7 +58,10 @@ test "named font text HWP5 allocation failures preserve empty document and prior
 }
 
 test "named font text allocation failures preserve original ZIP and prior redo" {
-    const a = std.testing.allocator;
+    try @import("../testing/checked_allocator.zig").run(verifyHwpxNamedFontText, .{});
+}
+
+fn verifyHwpxNamedFontText(a: std.mem.Allocator) !void {
     const header = "<h:head xmlns:h='http://www.hancom.co.kr/hwpml/2011/head' secCnt='2'><h:refList><h:fontfaces itemCnt='1'><h:fontface lang='HANGUL' fontCnt='1'><h:font id='0' face='Old'/></h:fontface></h:fontfaces><h:charProperties itemCnt='1'><h:charPr id='0' height='1000'><h:fontRef hangul='0'/></h:charPr></h:charProperties></h:refList></h:head>";
     const section = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:p><p:run charPrIDRef='0'><p:t/></p:run></p:p></s:sec>";
     const input = try @import("../hwpx/test_package_fixture.zig").syntheticStructureZip(a, header, section);

@@ -1,5 +1,12 @@
 # 큰 문서 테스트의 할당자 진단 비용
 
+## 표제·글꼴 테스트의 분리 재검증 (2026-10-18)
+
+main77916c7b 기반 분리 소스에서 표제 혼합 번호·실제 글꼴 추가·이전 redo를 가진 글꼴 텍스트·글꼴 생성의 두 전체 실패 주입 테스트에 공통 checked allocator를 적용했습니다. 제품 코드·fixture·검증 단언·실패 지점 순회는 유지하며 할당별 스택 기록만 제외합니다. 글꼴 생성 두 테스트의 기존 로컬 수정은 덮어쓰지 않고 같은 수정으로 검증했습니다.
+
+ReleaseSafe 집중 바이너리 SHA256 `4dcd3c995cca12240535ba40d8f6553edf9186152488075cb476325c2f76736b`는 root 포함6/6·fail/skip/log/leak0·exit0, 1024MiB 관측 한도에서 peak10,322,232바이트입니다. Debug도6/6·exit0이며 실제 글꼴44파일·308언어그룹, 텍스트2042·글꼴 생성2066/2072 실패 지점을 검사했습니다. 기록은 `/tmp/hwpjs-title-axis-resource.SY2eZO/resource-all-fixed-1g.jsonl`과 `resource-debug.log`입니다. 원본 전체 바이너리의 같은 표제·글꼴 추가 테스트는 별도4096MiB 진단에서 각각 peak1,252,066,576·2,592,524,520바이트로 통과했습니다. 이 수치는 테스트 진단 비용이며 제품 메모리 개선이나 전체 native 완료를 뜻하지 않습니다.
+
+
 ## 구조 수식 fixture 저장 검증의 진단 비용 (2026-10-16)
 
 main `7d017b9e` 기반 격리 소스에서 `HWPX structural formula save preserves actual chart calculations outside cells`를 같은1024MiB 감시로 재현했습니다. baseline `f5da856d1208baaeec8673bbccbd951509d5f9c69200a1fedc4db3e0b5809890`는 peak1077888152바이트로 incomplete·exit1이며 종료 native PID55808 부재를 확인했습니다. 경로는 `/tmp/hwpjs-structural-diagnostics.h3CPQM/baseline.jsonl`입니다.

@@ -1,7 +1,10 @@
 const std = @import("std");
 
 test "HWPX new font append preserves actual fixture names and IDs" {
-    const a = std.testing.allocator;
+    try @import("../testing/checked_allocator.zig").run(verifyFixtureFontAppend, .{});
+}
+
+fn verifyFixtureFontAppend(a: std.mem.Allocator) !void {
     const dir = try std.Io.Dir.cwd().openDir(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures", .{ .iterate = true });
     defer dir.close(std.testing.io);
     var walker = try dir.walk(a);
