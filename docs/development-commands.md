@@ -1,5 +1,9 @@
 # 개발·검증 명령
 
+[저장 구역 사본 API·Worker](hwp5-available-section-copy.md)는 `HWPJS_TEST_WASM=/absolute/copy-api-candidate.wasm HWPJS_BASELINE_WASM=/absolute/legacy.wasm node --test tests/hwp5/available-section-copy-api.test.mjs tests/hwp5/available-section-copy-worker.test.mjs tests/hwp5/normalization-abi.test.mjs tests/hwp5/normalized-open.test.mjs tests/hwp5/available-sections-worker.test.mjs`로 검사합니다. 새 native 사본 API 후보가 필요하며 기본 배포·실제 브라우저 검증과 구분합니다.
+
+[저장 구역 편집 사본 후보](hwp5-available-section-copy.md)의 CLI는 후보 소스에서 `zig build-exe src/hwp5_available_section_copy_probe.zig -O ReleaseSafe -femit-bin=/absolute/copy-probe`로 빌드합니다. `HWPJS_SECTION_COPY_CLI=/absolute/copy-probe HWPJS_TEST_WASM=/absolute/candidate.wasm node --test tests/hwp5/available-section-copy-oracle.test.mjs tests/hwp5/section-count-fixtures.test.mjs`로 독립 CFB·DEFLATE·원본 불변을 확인합니다. CLI/reference 부재의 skip은 통과가 아니며 전체 native·웹 편집 검증과 구분합니다.
+
 [저장 구역 읽기 전용](hwp5-available-sections-preview.md)은 `HWPJS_TEST_WASM=/absolute/candidate.wasm HWPJS_BASELINE_WASM=/absolute/legacy.wasm node --test tests/hwp5/available-sections.test.mjs tests/hwp5/available-sections-worker.test.mjs tests/hwp5/available-sections-controls.test.mjs tests/hwp5/section-count-reference.test.mjs`로 실제 파일·기본 거부·선택 UI·구형 ABI를 검사합니다. 새 native 구현을 가진 후보가 필요하며 구형 baseline 부재는 명시적 skip입니다. native 집중 명령은 해당 후보 소스에서만 유효하며 전체 지원/기본 배포 완료 검사는 아닙니다.
 
 [Native 범위 재개](native-test-range-audit.md)는 `node tools/zig-native-batch-audit.mjs --binary=/absolute/tests --batch-size=1 --start-index=2532 --expected-sha256=<original-lowercase-sha256>`처럼 실행합니다. 선택적인 `--end-index`는 배타적 끝이며 부분 성공은 전체 gate가 아닙니다. `node --test tests/hwp5/native-test-range.test.mjs`로 인자·inventory 경계를 검사합니다.
