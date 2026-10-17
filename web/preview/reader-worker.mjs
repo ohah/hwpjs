@@ -65,7 +65,7 @@ function hwp5Display() {
   const content = displayContent(editor && historyEnabled && preview.primarySource === "distribution_viewtext" ? { ...preview, readOnly: false } : preview);
   const normalizationExport = preview.primarySource === "distribution_viewtext" ? "hwp5_edit_open_normalized_distribution" : "hwp5_edit_open_normalized";
   content.normalizationEditingAvailable = normalizationMetadataAvailable() && hwp5StyleOpenError === "RepairedSourceUnsupported" && WebAssembly.Module.exports(module).some(entry => entry.name === normalizationExport && entry.kind === "function");
-  if (editor && normalizationMetadataAvailable()) content.normalizationInfo = editor.normalizationInfo();
+  if (editor?.supportsNormalizationInfo()) content.normalizationInfo = editor.normalizationInfo();
   if (preview.primarySource === "distribution_viewtext") content.primarySource = preview.primarySource;
   content.distributionEditingAvailable = preview.primarySource === "distribution_viewtext" && WebAssembly.Module.exports(module).some(entry => entry.name === "hwp5_edit_open_distribution" && entry.kind === "function") && (hwp5StyleOpenError !== "RepairedSourceUnsupported" || content.normalizationEditingAvailable);
   content.paragraphAlignmentAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwp5_edit_set_paragraph_alignment" && entry.kind === "function");

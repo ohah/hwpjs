@@ -98,6 +98,7 @@ export async function createExperimentalHwp5Editor(source, input, { distribution
   memory.withBytes(bytes, (ptr, size) => success(open(ptr, size)));
   const copyText = (section, paragraph) => { check(); return output(() => wasm.hwp5_edit_copy_text(u32(section, "section"), u32(paragraph, "paragraph"))).bytes; };
   return {
+    supportsNormalizationInfo() { check(); return typeof wasm[availableSectionCopy ? "hwp5_edit_available_section_copy_info" : "hwp5_edit_normalization_info"] === "function"; },
     normalizationInfo() {
       check();
       if (availableSectionCopy) {

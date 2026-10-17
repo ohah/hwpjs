@@ -6,6 +6,17 @@ import { withoutNormalizationExport } from "./normalization-export-fixture.mjs";
 
 assert(process.env.HWPJS_TEST_WASM, "Explicit copy API candidate required");
 const wasm = readFileSync(process.env.HWPJS_TEST_WASM);
+test("copy warning metadata does not depend on the optional legacy CFB metadata getter", async t => {
+  const path = `reference/rhwp/samples/${sectionCountFixtures[0][0]}`;
+  if (!existsSync(path)) { t.skip("Reference fixture unavailable"); return; }
+  const send = await worker(t, withoutNormalizationExport(wasm, "hwp5_edit_normalization_info"));
+  const loaded = await send({ kind: "load", bytes: readFileSync(path), availableSectionCopy: true });
+  assert.equal(loaded.error, undefined);
+  assert.equal(loaded.content.normalizationInfo?.historyBaseline, "available-sections-copy");
+  const ordinary = await send({ kind: "load", bytes: readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwp") });
+  assert.equal(ordinary.error, undefined);
+  assert.equal(ordinary.content.normalizationInfo, undefined);
+});
 let identity = 0;
 async function worker(t, binary = wasm) {
   const previousSelf = globalThis.self, previousFetch = globalThis.fetch, replies = [];

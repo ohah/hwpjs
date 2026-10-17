@@ -32,6 +32,7 @@ import { downloadDocument } from "./document-download.mjs";
 import { failureMessage } from "./failure-message.mjs";
 import { loadFailureMessage } from "./load-failure-guidance.mjs";
 import { createAvailableSectionsControls } from "./available-sections-controls.mjs";
+import { createAvailableSectionCopyControls, availableSectionCopySummary } from "./available-section-copy-controls.mjs";
 import { guardGeneration } from "./worker-generation.mjs";
 import { createHistoryControls } from "./history-controls.mjs";
 import { createSaveControls } from "./save-controls.mjs";
@@ -57,6 +58,8 @@ let paragraphSpacingControls;
 const input = document.querySelector("#file"), status = document.querySelector("#status");
 const availableSectionsControls = createAvailableSectionsControls({ button: document.querySelector("#available-sections-open"), note: document.querySelector("#available-sections-status"), reopen: selected => openSelectedFile(selected, { availableSectionsOnly: true }) });
 window.addEventListener("pagehide", event => { if (!event.persisted) availableSectionsControls.close(); });
+const availableSectionCopyControls = createAvailableSectionCopyControls({ button: document.querySelector("#available-section-copy-open"), note: document.querySelector("#available-section-copy-status"), confirm: message => window.confirm(message), reopen: selected => openSelectedFile(selected, { availableSectionCopy: true }) });
+window.addEventListener("pagehide", event => { if (!event.persisted) availableSectionCopyControls.close(); });
 const chartOlePolicyControls = createChartOlePolicyControls({ checkbox: document.querySelector("#chart-ole-compat"), file: input, note: document.querySelector("#chart-ole-policy-status") });
 window.addEventListener("pagehide", event => { if (!event.persisted) chartOlePolicyControls.close(); });
 const accessible = document.querySelector("#accessible");
@@ -176,9 +179,10 @@ passwordControls = createPasswordControls({
 onCancel: () => { generation++; pictureRequests.reset(); worker?.terminate(); worker = null; input.value = ""; controls.reset(); direct.reset(); formulaControls.reset(); cellSizeControls.reset(); cellResizeControls.reset(); paragraphFormatControls.reset(); paragraphMarginControls.reset(); paragraphSpacingControls.reset(); characterPropertyControls.reset(); underlineColorControls.reset(); renderer.clear(); accessible.value = ""; status.textContent = "비밀번호 입력을 취소했습니다."; updateSave(); },
 });
 for (const event of ["input", "compositionstart", "compositionend"]) document.querySelector("#canvas-input").addEventListener(event, updateSave);
-async function openSelectedFile(selected, { availableSectionsOnly = false } = {}) {
+async function openSelectedFile(selected, { availableSectionsOnly = false, availableSectionCopy = false } = {}) {
   const epoch = ++generation;
   availableSectionsControls.reset();
+  availableSectionCopyControls.reset();
   findControls.reset();
   dutmalControls.reset();
   pictureRequests.reset();
@@ -254,6 +258,7 @@ async function openSelectedFile(selected, { availableSectionsOnly = false } = {}
         else if (event.data.kind === "load") fail(loadFailureMessage(event.data.error));
         else if (event.data.applied) { renderer.clear(); accessible.value = ""; }
         if (event.data.kind === "load") availableSectionsControls.offer(selected, event.data);
+        if (event.data.kind === "load") availableSectionCopyControls.offer(selected, event.data);
         return;
       }
       if (!event.data.content) { direct.message(event.data); cellSizeControls.message(event.data); pictureSizeControls.message(event.data); pictureResizeControls.message(event.data); paragraphFormatControls.update(); return; }
@@ -265,9 +270,11 @@ async function openSelectedFile(selected, { availableSectionsOnly = false } = {}
         status.textContent = `${selected.name} · ${formatLabel}${content.passwordProtectionRemoved ? " · 비밀번호로 열림 (저장은 보호 해제)" : ""} · ${content.totalParagraphs}문단 · 텍스트 미리보기${layout.limited ? " · 표시 한도에 도달해 일부만 표시" : ""}`;
         if (initial) passwordControls.loaded(content);
         if (initial) availableSectionsControls.loaded(content);
+        availableSectionCopyControls.loaded(content);
         if (content.availableSectionsOnly) downloadStatus.textContent = "저장된 구역의 읽기 전용 미리보기입니다. 편집·다운로드를 허용하지 않습니다. 원본 파일은 변경하지 않았습니다.";
         if (initial && (!content.readOnly || content.distributionEditingAvailable || content.normalizationEditingAvailable)) controls.loaded({ distribution: content.distributionEditingAvailable === true, normalization: content.normalizationEditingAvailable === true });
-        if (content.normalizationInfo?.normalized) status.textContent += " · CFB 보정본 편집 (저장·실행 취소 기준: 보정본)";
+        if (availableSectionCopySummary(content)) status.textContent += " · 저장된 구역의 편집 사본";
+        else if (content.normalizationInfo?.normalized) status.textContent += " · CFB 보정본 편집 (저장·실행 취소 기준: 보정본)";
         if (event.data.kind === "load" && content.primarySource === "distribution_viewtext") downloadStatus.textContent = content.distributionEditingAvailable ? "배포용 문서입니다. 편집 시작 버튼으로 제한적 편집을 선택할 수 있으며 저장 시 배포 플래그와 재조판 경고를 유지합니다." : "배포용 문서는 이 WASM에서 읽기 전용입니다.";
         direct.message(event.data);
         updateDownloadSessionStatus(downloadStatus, event.data);
@@ -277,7 +284,7 @@ async function openSelectedFile(selected, { availableSectionsOnly = false } = {}
         paragraphFormatControls.update();
       } catch (error) { fail(failureMessage(error)); }
     });
-    job.postMessage({ kind: "load", format, bytes, ...(availableSectionsOnly ? { availableSectionsOnly: true } : {}), allowObservedChartOleDeviations: format === "hwpx" && document.querySelector("#chart-ole-compat").checked }, [bytes]);
+    job.postMessage({ kind: "load", format, bytes, ...(availableSectionsOnly ? { availableSectionsOnly: true } : {}), ...(availableSectionCopy ? { availableSectionCopy: true } : {}), allowObservedChartOleDeviations: format === "hwpx" && document.querySelector("#chart-ole-compat").checked }, [bytes]);
   } catch (error) { if (epoch === generation) status.textContent = `오류: ${failureMessage(error)}`; }
 }
 bindFileInput(input, () => openSelectedFile(input.files[0]));
