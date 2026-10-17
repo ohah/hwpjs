@@ -3,8 +3,15 @@ const std = @import("std");
 const Tree = @import("xml_part_tree.zig").Tree;
 const faces = @import("font_faces.zig");
 pub const Value = @import("../model/font_face_value.zig").Value;
+pub const Identity = struct { language: faces.Language, id: u32 };
 
 pub fn read(a: std.mem.Allocator, tree: *const Tree, node: usize, limit: usize) !Value {
+    const key = try identity(a, tree, node, limit);
+    const name = if (try tree.attributeValue(a, node, "", "face")) |raw| try raw.toUtf8(a, limit) else null;
+    return .{ .language = key.language, .id = key.id, .name = name };
+}
+
+pub fn identity(a: std.mem.Allocator, tree: *const Tree, node: usize, limit: usize) !Identity {
     if (tree.part_kind != .header) return error.InvalidPartKind;
     if (node >= tree.elements.len) return error.InvalidElementIndex;
     const uri = @import("document_xml.zig").head_uri;
@@ -24,8 +31,7 @@ pub fn read(a: std.mem.Allocator, tree: *const Tree, node: usize, limit: usize) 
     const id_text = try id_raw.toUtf8(a, limit);
     defer a.free(id_text);
     const id = try @import("xml_values.zig").unsigned32(id_text);
-    const name = if (try tree.attributeValue(a, node, "", "face")) |raw| try raw.toUtf8(a, limit) else null;
-    return .{ .language = language, .id = id, .name = name };
+    return .{ .language = language, .id = id };
 }
 
 test "font face values preserve decoded names absent empty and language identity" {

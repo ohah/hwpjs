@@ -21,11 +21,15 @@ export function createCharacterFontDisplay(content) {
     if (fontId == null) return null;
     const name = names.get(`${FONT_LANGUAGES[language]}:${fontId}`);
     if (typeof name !== "string" || name.length === 0) return null;
-    const sub = metadata.get(`${FONT_LANGUAGES[language]}:${fontId}`)?.substitute;
+    const resource = metadata.get(`${FONT_LANGUAGES[language]}:${fontId}`);
+    const sub = resource?.substitute;
     const candidates = [name];
     // Only explicit TTF substitutes are CSS candidates. HFT/unknown kinds and
     // default names remain metadata; the browser still owns actual matching.
-    if (sub?.kind === 1 && typeof sub.name === "string" && sub.name.length && sub.name !== name) candidates.push(sub.name);
+    const substitute = resource?.format === "hwpx"
+      ? sub?.type === "TTF" && ["0", "false"].includes(sub.isEmbedded) ? sub.face : null
+      : sub?.kind === 1 ? sub.name : null;
+    if (typeof substitute === "string" && substitute.length && substitute !== name) candidates.push(substitute);
     return candidates.map(name => `"${name.replace(/["\\\x00-\x1f\x7f]/g, character => `\\${character.codePointAt(0).toString(16)} `)}"`).join(", ");
   };
 }

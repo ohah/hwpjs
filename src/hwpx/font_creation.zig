@@ -4,12 +4,19 @@ const editor = @import("editor_session.zig");
 const Value = @import("../model/font_face_value.zig").Value;
 
 pub fn list(session: *const editor.Session) ![]Value {
+    return listRows(session, false);
+}
+pub fn metadata(session: *const editor.Session) ![]@import("font_face_metadata.zig").Value {
+    return listRows(session, true);
+}
+fn listRows(session: *const editor.Session, comptime include_metadata: bool) ![]if (include_metadata) @import("font_face_metadata.zig").Value else Value {
     const a = session.allocator;
     const header = try @import("header_resource_save.zig").replacementWithFonts(a, session.source, &session.paragraph_resources, &session.character_resources, &session.font_resources, session.options.max_xml_bytes);
     defer a.free(header.bytes);
     var tree = try @import("header_tree.zig").parse(a, header.bytes, 0, .{ .max_xml_bytes = session.options.max_xml_bytes });
     defer tree.deinit(a);
-    return @import("font_face_snapshot.zig").collect(a, &tree, 1_000_000, 4096);
+    const snapshot = @import("font_face_snapshot.zig");
+    return if (include_metadata) snapshot.collectMetadata(a, &tree, 1_000_000, 4096) else snapshot.collect(a, &tree, 1_000_000, 4096);
 }
 
 pub fn ensure(session: *editor.Session, language: @import("font_faces.zig").Language, name: []const u8) !u32 {

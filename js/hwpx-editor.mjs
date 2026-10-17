@@ -28,6 +28,7 @@ import { decodeCharacterStrikes } from "./character-strikes.mjs";
 import { decodeCharacterStrikeStyles } from "./character-strike-styles.mjs";
 import { decodeCharacterTextColors } from "./character-text-colors.mjs";
 import { decodeFontFaces } from "./font-faces.mjs";
+import { decodeHwpxFontFaceMetadata } from "./hwpx-font-face-metadata.mjs";
 import { decodeCharacterFontReferences } from "./character-font-references.mjs";
 import { decodeCharacterUnderlineStyles } from "./character-underline-styles.mjs";
 import { decodeHwpxParagraphShapes } from "./hwpx-paragraph-shapes.mjs";
@@ -527,6 +528,14 @@ export async function createHwpxEditor(source) {
       try {
         if (!wasm.hwpx_edit_font_faces()) throw memory.error();
         return decodeFontFaces(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
+    fontFaceMetadata() {
+      ready();
+      if (typeof wasm.hwpx_edit_font_face_metadata !== "function") throw new Error("HwpxFontFaceMetadataAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_font_face_metadata()) throw memory.error();
+        return decodeHwpxFontFaceMetadata(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
       } finally { wasm.hwpx_edit_output_free(); }
     },
     characterTextColors() {

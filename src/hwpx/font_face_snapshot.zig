@@ -3,15 +3,22 @@ const std = @import("std");
 const values = @import("font_face_values.zig");
 pub const deinit = @import("../model/font_face_value.zig").deinit;
 pub fn collect(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tree, max_fonts: usize, attribute_limit: usize) ![]values.Value {
+    return collectRows(values.Value, a, tree, max_fonts, attribute_limit);
+}
+pub fn collectMetadata(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tree, max_fonts: usize, attribute_limit: usize) ![]@import("font_face_metadata.zig").Value {
+    return collectRows(@import("font_face_metadata.zig").Value, a, tree, max_fonts, attribute_limit);
+}
+fn collectRows(comptime Row: type, a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tree, max_fonts: usize, attribute_limit: usize) ![]Row {
     if (tree.part_kind != .header) return error.InvalidPartKind;
-    var rows: std.ArrayList(values.Value) = .empty;
+    var rows: std.ArrayList(Row) = .empty;
     errdefer {
         for (rows.items) |*row| row.deinit(a);
         rows.deinit(a);
     }
     for (tree.elements, 0..) |element, node| {
         if (!element.is(@import("document_xml.zig").head_uri, "font")) continue;
-        var row = values.read(a, tree, node, attribute_limit) catch |err| {
+        const reader = if (Row == values.Value) values else @import("font_face_metadata.zig");
+        var row = reader.read(a, tree, node, attribute_limit) catch |err| {
             if (err == error.InvalidFontResourceElement) continue;
             return err;
         };
@@ -24,8 +31,8 @@ pub fn collect(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").T
             return err;
         };
     }
-    std.mem.sort(values.Value, rows.items, {}, struct {
-        fn less(_: void, left: values.Value, right: values.Value) bool {
+    std.mem.sort(Row, rows.items, {}, struct {
+        fn less(_: void, left: Row, right: Row) bool {
             if (left.language != right.language) return @intFromEnum(left.language) < @intFromEnum(right.language);
             return left.id < right.id;
         }

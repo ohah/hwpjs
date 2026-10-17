@@ -8,13 +8,13 @@
 
 `font_face_snapshot.zig`의 공통 순회가 기존 이름 조회와 새 메타데이터 조회의 언어별 ID 분할을 소유합니다. 원시 FaceName 파서를 다시 구현하지 않습니다. 각각의 스냅샷은 호출자 소유 문자열을 가지며 부분 할당 실패에도 정리합니다. Session은 원본+현재 글꼴 편집값으로 만든 DocInfo를 같은 경로로 읽으므로 추가 글꼴과 undo/redo도 현재 상태를 반영합니다. 조회로 원본이나 편집 모델을 변경하지 않습니다.
 
-JS의 두 decoder는 `font-face-identity.mjs`의 언어 목록·언어별 ID 정렬/중복 검사를 공유합니다. JSON 필드와 presence 검사는 각 wire decoder가 소유합니다.
+JS decoder는 `font-face-identity.mjs`의 언어 목록·언어별 ID 검사와 `font-metadata-wire.mjs`의 packet/문자열 검사를 공유합니다. 형식별 JSON 필드와 presence 검사는 각 wire decoder가 소유합니다.
 
 ## Worker와 표시 정책
 
 `character-font-content.mjs`는 선택적 조회를 수행하고 결과/오류를 별도로 전달합니다. 조회 실패가 글꼴 이름·서식 편집 지원으로 전파되지 않습니다. `character-font-display.mjs`는 같은 language/id의 기본 이름 다음에 명시된 TTF 대체 종류1의 유효한 이름만 CSS 후보로 추가합니다. 중복·빈 값·손상 이름은 추가하지 않으며 미지 종류와 HFT는 자동 적용하지 않습니다. 두 이름 모두 기존 CSS escaping을 적용합니다.
 
-defaultName과10개 유형 정보는 전달만 하며 임의의 대체 우선순위를 만들지 않습니다. CSS 후보 목록은 글꼴 설치·글리프 존재·한글과 같은 font matching을 보증하지 않습니다. 현재 실제 글꼴/글리프 선택은 브라우저가 소유하며 해당 결과를 확정한 별도 상태 API는 없습니다. HWPX에는 이번 메타데이터 API를 추가하지 않았고 기존 표시 정책을 유지합니다. 글꼴 폭·baseline·전체 페이지 동치는 후속 검증입니다.
+defaultName과10개 유형 정보는 전달만 하며 임의의 대체 우선순위를 만들지 않습니다. CSS 후보 목록은 글꼴 설치·글리프 존재·한글과 같은 font matching을 보증하지 않습니다. 현재 실제 글꼴/글리프 선택은 브라우저가 소유하며 해당 결과를 확정한 별도 상태 API는 없습니다. HWPX의 별도 형식은 [HWPX 메타데이터](hwpx-font-face-metadata.md)가 소유합니다. 글꼴 폭·baseline·전체 페이지 동치는 후속 검증입니다.
 
 ## 실제 검증
 

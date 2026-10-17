@@ -1137,6 +1137,14 @@ export fn hwpx_edit_font_faces() u32 {
     output = std.json.Stringify.valueAlloc(a, rows, .{}) catch |err| return fail(err);
     return 1;
 }
+export fn hwpx_edit_font_face_metadata() u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const rows = @import("../hwpx/font_creation.zig").metadata(session) catch |err| return fail(err);
+    defer @import("../hwpx/font_face_metadata.zig").deinit(a, rows);
+    output = std.json.Stringify.valueAlloc(a, .{ .version = @as(u32, 1), .fonts = rows }, .{}) catch |err| return fail(err);
+    return 1;
+}
 export fn hwpx_edit_character_text_colors() u32 {
     hwpx_edit_output_free();
     const session = if (active) |*value| value else return fail(error.EditorNotOpen);

@@ -69,6 +69,7 @@ test {
     _ = @import("hwpx/character_font_references.zig");
     _ = @import("hwpx/font_face_values.zig");
     _ = @import("hwpx/font_face_snapshot.zig");
+    _ = @import("hwpx/font_face_metadata.zig");
     _ = @import("hwpx/character_font_patch.zig");
     _ = @import("model/character_fonts.zig");
     _ = @import("hwp5/edit/font_face_snapshot.zig");

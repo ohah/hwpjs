@@ -1,6 +1,6 @@
 # HWP5 모듈 계약 인덱스
 
-- [글꼴 메타데이터 전달](hwp5-font-face-metadata.md)
+- [글꼴 메타데이터 전달](hwp5-font-face-metadata.md) · [HWPX 계약](hwpx-font-face-metadata.md)
 
 - [글꼴 높이와 기존 기준 자료](hwp5-font-layout-reference.md)
 
