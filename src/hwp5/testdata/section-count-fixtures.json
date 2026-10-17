@@ -1,0 +1,5 @@
+[
+  { "path": "issue5715/float_chart_ghost_ladder_gap.hwp", "version": "5.0.0.6", "declared": 2, "available": 1, "sha256": "fe6570871a907d8cff07f9a672286c26ff15a42c665c315ee634a44e39ac8282", "paragraphs": 118 },
+  { "path": "issue5802/hf_cross_section_inherit.hwp", "version": "5.0.2.4", "declared": 11, "available": 2, "sha256": "86552a79085d24cca1e44d6477fd6b4a2460a8fe48d69d0c81fc87245bcdf9f9", "paragraphs": 23 },
+  { "path": "issue5828/landscape_rowbreak_bleed.hwp", "version": "5.0.3.0", "declared": 4, "available": 1, "sha256": "6743c007d075f25e8bd223cb4a95caeeb220bb5b0b21c9c2b478146c226858e3", "paragraphs": 2614 }
+]
