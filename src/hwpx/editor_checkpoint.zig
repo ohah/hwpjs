@@ -196,11 +196,13 @@ pub const Checkpoint = struct {
     paragraph_resources: Resources.Values,
     character_resources: Characters.Values,
     font_resources: @import("../model/font_resource_values.zig").Values,
+    chart_resources: @import("chart_resource_values.zig").Values = .{},
 
     pub fn deinit(self: *Checkpoint) void {
         self.paragraph_resources.deinit(self.allocator);
         self.character_resources.deinit(self.allocator);
         self.font_resources.deinit(self.allocator);
+        self.chart_resources.deinit(self.allocator);
         for (self.states) |*state| state.deinit(self.allocator);
         self.allocator.free(self.states);
         self.* = undefined;
@@ -226,6 +228,7 @@ pub const Checkpoint = struct {
     }
 
     fn swap(self: *Checkpoint, session: *editor.Session) void {
+        std.mem.swap(@import("chart_resource_values.zig").Values, &self.chart_resources, &session.chart_resources);
         std.mem.swap(Resources.Values, &self.paragraph_resources, &session.paragraph_resources);
         std.mem.swap(Characters.Values, &self.character_resources, &session.character_resources);
         std.mem.swap(@import("../model/font_resource_values.zig").Values, &self.font_resources, &session.font_resources);
@@ -277,6 +280,8 @@ pub fn capture(session: *const editor.Session, max_bytes: usize) !Checkpoint {
     errdefer character_resources.deinit(a);
     var font_resources = try session.font_resources.clone(a);
     errdefer font_resources.deinit(a);
+    var chart_resources = try session.chart_resources.clone(a);
+    errdefer chart_resources.deinit(a);
     const states = try a.alloc(State, session.sections.len);
     var initialized: usize = 0;
     errdefer {
@@ -314,11 +319,12 @@ pub fn capture(session: *const editor.Session, max_bytes: usize) !Checkpoint {
         state.* = .{ .sites = sites, .structure_values = structure_values, .first_paragraph = section.first_paragraph, .last_paragraph = section.last_paragraph, .dirty = .{ .items = dirty, .capacity = dirty.len }, .cell_sizes = .{ .items = cell_sizes, .capacity = cell_sizes.len }, .picture_dimensions = .{ .items = picture_dimensions, .capacity = picture_dimensions.len }, .picture_matrices = .{ .items = picture_matrices, .capacity = picture_matrices.len }, .checkbox_states = .{ .items = checkbox_states, .capacity = checkbox_states.len }, .dutmal_texts = dutmal_texts, .formula_definitions = formula_definitions, .formula_result_overrides = formula_result_overrides, .created_tables = created_tables };
         initialized += 1;
     }
-    return .{ .allocator = a, .source_pointer = session.source.ptr, .source_len = session.source.len, .states = states, .max_bytes = max_bytes, .paragraph_resources = paragraph_resources, .character_resources = character_resources, .font_resources = font_resources };
+    return .{ .allocator = a, .source_pointer = session.source.ptr, .source_len = session.source.len, .states = states, .max_bytes = max_bytes, .paragraph_resources = paragraph_resources, .character_resources = character_resources, .font_resources = font_resources, .chart_resources = chart_resources };
 }
 
 pub fn size(session: *const editor.Session, limit: usize) !usize {
     var total: usize = 0;
+    try add(&total, try session.chart_resources.byteSize(limit), limit);
     try add(&total, try multiply(session.paragraph_resources.entries.capacity, @sizeOf(Resources.Entry)), limit);
     try add(&total, try multiply(session.character_resources.entries.capacity, @sizeOf(Characters.Entry)), limit);
     try add(&total, try multiply(session.font_resources.entries.capacity, @sizeOf(@import("../model/font_face_value.zig").Value)), limit);

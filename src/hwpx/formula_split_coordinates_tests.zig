@@ -49,7 +49,7 @@ test "formula split current endpoints use complete multi-site result and stay re
     try std.testing.expectEqual(@as(usize, 0), candidate.paragraphs[1].field_positions.?.len);
     try std.testing.expectEqual(@as(usize, 2), candidate.paragraphs[2].field_positions.?.len);
     try std.testing.expectError(error.UnsupportedStructuralFieldEdit, @import("paragraph_structure_save.zig").writeWithFieldGroups(a, &trees, 0, &candidate, .{}, &.{}, 10000));
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, borrowed: []const @import("xml_part_tree.zig").Tree, original: *const @import("paragraph_structure_values.zig").Values, definitions: *const @import("formula_definition_values.zig").Values, expected: []const u8) !void {
             const xml_out = try @import("paragraph_structure_save.zig").writeWholeFormulaWithDefinitions(allocator, borrowed, 0, original, .{}, &.{}, definitions, 10000);
             defer allocator.free(xml_out);
@@ -59,7 +59,7 @@ test "formula split current endpoints use complete multi-site result and stay re
     try std.testing.expectError(error.ProtectedFieldRange, plans.prepareFormulaSplit(&session, 0, 2, 1, 1));
     try std.testing.expectError(error.ProtectedFieldRange, plans.prepareFormulaSplit(&session, 0, 2, 0, 3));
     try std.testing.expectError(error.ProtectedFieldRange, plans.prepare(&session, 0, 2, 0, 0));
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, original: *const @import("editor_session.zig").Session) !void {
             var proxy = original.*;
             proxy.allocator = allocator;

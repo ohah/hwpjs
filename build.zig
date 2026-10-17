@@ -169,6 +169,16 @@ pub fn build(b: *std.Build) void {
     hwpx_text_tests.addArg("tests/hwpx/runless-paragraph-worker.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/table-creation-worker.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/field-range-capability.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/chart-current-editor.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/chart-string-editor.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/chart-string-api-boundary.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/chart-ole-policy-boundary.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/chart-baseline-parity.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/chart-series-text-editor.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/chart-series-text-wire.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/chart-series-text-boundary.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/chart-shared-representation.test.mjs");
+    hwpx_text_tests.addArg("tests/wasm/export-parity.test.mjs");
     hwpx_text_tests.step.dependOn(b.getInstallStep());
     hwpx_text_tests.has_side_effects = true;
     audit.dependOn(&hwpx_text_tests.step);

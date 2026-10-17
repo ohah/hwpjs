@@ -86,6 +86,18 @@ fn entryIndex(archive: zip.Archive, name: []const u8) ?usize {
     return null;
 }
 
+/// Shared exact packaged-copy selection; external declarations remain external.
+pub fn packagedEntry(archive: zip.Archive, item: manifest.Item) !?usize {
+    if (!isCandidate(item)) return null;
+    if (item.embedded == false) {
+        if (!isInternalPath(item.href)) return null;
+        return entryIndex(archive, item.href);
+    }
+    const index = item.entry_index orelse return error.InvalidManifestEntryIndex;
+    if (index >= archive.entries.len or !std.mem.eql(u8, archive.entries[index].name, item.href)) return error.InvalidManifestEntryIndex;
+    return index;
+}
+
 fn layoutOf(bytes: []const u8) ?ole.envelope.Layout {
     if (std.mem.startsWith(u8, bytes, &magic)) return .raw_cfb;
     if (bytes.len >= 12 and std.mem.eql(u8, bytes[4..12], &magic)) return .observed_size_prefix;
@@ -116,19 +128,10 @@ pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, items: manifest.Manif
         report.candidates += 1;
         const external = item.embedded == false;
         report.declared_external += @intFromBool(external);
-        const selected_index: usize = if (external) blk: {
-            if (!isInternalPath(item.href)) {
-                report.without_packaged_copy += 1;
-                continue;
-            }
-            break :blk entryIndex(archive, item.href) orelse {
-                report.without_packaged_copy += 1;
-                continue;
-            };
-        } else if (item.entry_index) |index| blk: {
-            if (index >= archive.entries.len or !std.mem.eql(u8, archive.entries[index].name, item.href)) return error.InvalidManifestEntryIndex;
-            break :blk index;
-        } else return error.InvalidManifestEntryIndex;
+        const selected_index = try packagedEntry(archive, item) orelse {
+            report.without_packaged_copy += 1;
+            continue;
+        };
         if (targets.items.len == options.max_targets) return error.LimitExceeded;
         const entry = archive.entries[selected_index];
         if (entry.uncompressed_size > options.max_entry_bytes or entry.uncompressed_size > options.max_total_encoded_bytes -| report.encoded_bytes) return error.LimitExceeded;

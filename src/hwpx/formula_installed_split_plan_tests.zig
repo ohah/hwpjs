@@ -2,7 +2,10 @@ const std = @import("std");
 const editor = @import("editor_session.zig");
 
 test "installed formula split query allocation failures never publish or hide OOM" {
-    const a = std.testing.allocator;
+    try @import("../testing/checked_allocator.zig").run(verifyInstalledFormulaSplitQuery, .{});
+}
+
+fn verifyInstalledFormulaSplitQuery(a: std.mem.Allocator) !void {
     const input = try @import("test_formula_fixture.zig").zipWithParagraphs(a, "");
     defer a.free(input);
     var session = try editor.open(a, input, .{});
@@ -40,7 +43,10 @@ test "installed formula split query allocation failures never publish or hide OO
 }
 
 test "installed formula public resplit allocation failures preserve complete transaction" {
-    const a = std.testing.allocator;
+    try @import("../testing/checked_allocator.zig").run(verifyInstalledFormulaPublicResplit, .{});
+}
+
+fn verifyInstalledFormulaPublicResplit(a: std.mem.Allocator) !void {
     const input = try @import("test_formula_fixture.zig").zipWithParagraphs(a, "");
     defer a.free(input);
     var session = try editor.open(a, input, .{});
@@ -90,7 +96,10 @@ test "installed formula public resplit allocation failures preserve complete tra
 }
 
 test "installed formula split plan allocation failures preserve current authority and saved ZIP" {
-    const a = std.testing.allocator;
+    try @import("../testing/checked_allocator.zig").run(verifyInstalledFormulaSplitPlan, .{});
+}
+
+fn verifyInstalledFormulaSplitPlan(a: std.mem.Allocator) !void {
     const input = try @import("test_formula_fixture.zig").zipWithParagraphs(a, "");
     defer a.free(input);
     var session = try editor.open(a, input, .{});

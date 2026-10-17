@@ -8,6 +8,7 @@ const scanner = @import("section_text.zig");
 const zip_writer = @import("../zip/replace_writer.zig");
 
 pub const Options = struct {
+    allow_observed_chart_ole_deviations: bool = false,
     max_input_bytes: usize = 64 * 1024 * 1024,
     max_output_bytes: usize = 128 * 1024 * 1024,
     max_xml_bytes: usize = 128 * 1024 * 1024,
@@ -78,12 +79,14 @@ pub const Session = struct {
     paragraph_resources: @import("paragraph_resource_values.zig").Values = .{},
     character_resources: @import("character_resource_values.zig").Values = .{},
     font_resources: @import("../model/font_resource_values.zig").Values = .{},
+    chart_resources: @import("chart_resource_values.zig").Values = .{},
 
     pub fn deinit(self: *Session) void {
         if (self.source_fields) |*fields| fields.deinit(self.allocator);
         self.paragraph_resources.deinit(self.allocator);
         self.character_resources.deinit(self.allocator);
         self.font_resources.deinit(self.allocator);
+        self.chart_resources.deinit(self.allocator);
         for (self.sections) |*section| section.deinit(self.allocator);
         self.allocator.free(self.sections);
         self.allocator.free(self.source);
@@ -361,6 +364,16 @@ pub const Session = struct {
     }
 
     /// Caller owns the result with Session.allocator. Save is side-effect free.
+    pub fn setChartNumericPoint(self: *Session, section_index: usize, wrapper: usize, point: usize, value: []const u8) !bool {
+        return @import("chart_numeric_point_session.zig").set(self, section_index, wrapper, point, value);
+    }
+    pub fn setChartSeriesText(self: *Session, section: usize, wrapper: usize, ordinal: usize, value: []const u8) !bool {
+        return @import("chart_series_text_session.zig").set(self, section, wrapper, ordinal, value);
+    }
+    pub fn setChartPoint(self: *Session, section_index: usize, wrapper: usize, point: usize, value: []const u8) !bool {
+        return @import("chart_point_session.zig").set(self, section_index, wrapper, point, value);
+    }
+
     pub fn save(self: *const Session) ![]u8 {
         for (self.sections) |section| if (section.dutmal_texts.entries.items.len != 0 and section.structure_values != null) return error.UnsupportedDutmalStructuralSave;
         const a = self.allocator;
@@ -416,6 +429,7 @@ pub const Session = struct {
             try replacements.append(a, .{ .entry_index = section.entry_index, .bytes = bytes });
             xml_bytes += bytes.len;
         }
+        try @import("chart_resource_save.zig").append(a, self.source, &self.chart_resources, &replacements, self.options.max_output_bytes, self.options.allow_observed_chart_ole_deviations);
         return zip_writer.write(a, self.source, replacements.items, .{ .max_output_bytes = self.options.max_output_bytes });
     }
     // Temporary staging gate, removed only when host edits rebase table points.

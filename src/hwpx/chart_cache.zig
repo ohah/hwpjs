@@ -3,6 +3,13 @@ const xml = @import("../xml/root.zig");
 const attrs = @import("xml_attributes.zig");
 const chart_namespace = @import("chart_namespace.zig");
 const xstring = @import("xstring.zig");
+const kinds = @import("chart_cache_kind.zig");
+
+pub fn unsigned(raw: []const u8, err: anyerror) !u32 {
+    const normalized = std.mem.trim(u8, raw, " \t\r\n");
+    if (normalized.len == 0) return err;
+    return std.fmt.parseInt(u32, normalized, 10) catch return err;
+}
 
 pub const Options = struct {
     max_data_containers: usize = 100_000,
@@ -111,9 +118,7 @@ pub const Scanner = struct {
     fn numericAttribute(self: *Scanner, tag: xml.tags.Tag, scope: *const xml.namespaces.State, name: []const u8, err: anyerror) !u32 {
         const raw = (try attrs.attribute(self.allocator, tag, scope, name, self.options.max_attribute_bytes)) orelse return err;
         defer self.allocator.free(raw);
-        const normalized = std.mem.trim(u8, raw, " \t\r\n");
-        if (normalized.len == 0) return err;
-        return std.fmt.parseInt(u32, normalized, 10) catch return err;
+        return unsigned(raw, err);
     }
 
     fn finishPoint(self: *Scanner) void {
@@ -170,16 +175,17 @@ pub const Scanner = struct {
         if (self.value_depth) |value_depth| {
             if (depth > value_depth) self.report.nested_value_element += 1;
         }
-        const multilevel_cache = try attrs.element(tag, scope, chart_namespace.uri, "multiLvlStrCache");
-        const numeric_cache = try attrs.element(tag, scope, chart_namespace.uri, "numCache");
-        const string_cache = try attrs.element(tag, scope, chart_namespace.uri, "strCache");
-        const numeric_literal = try attrs.element(tag, scope, chart_namespace.uri, "numLit");
-        const string_literal = try attrs.element(tag, scope, chart_namespace.uri, "strLit");
-        if (numeric_cache or string_cache or numeric_literal or string_literal or multilevel_cache) {
+        if (kinds.classify(try scope.expandElement(tag.name))) |kind| {
             if (self.current != null) return error.NestedChartCache;
             if (self.report.containers() == self.options.max_data_containers) return error.LimitExceeded;
-            if (numeric_cache) self.report.numeric_caches += 1 else if (string_cache) self.report.string_caches += 1 else if (numeric_literal) self.report.numeric_literals += 1 else if (string_literal) self.report.string_literals += 1 else self.report.multilevel_string_caches += 1;
-            self.current = .{ .depth = depth, .multilevel = multilevel_cache };
+            switch (kind) {
+                .numeric_cache => self.report.numeric_caches += 1,
+                .string_cache => self.report.string_caches += 1,
+                .numeric_literal => self.report.numeric_literals += 1,
+                .string_literal => self.report.string_literals += 1,
+                .multilevel_cache => self.report.multilevel_string_caches += 1,
+            }
+            self.current = .{ .depth = depth, .multilevel = kind == .multilevel_cache };
             if (tag.kind == .empty) try self.finishCache();
             return;
         }

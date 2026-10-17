@@ -3,7 +3,7 @@ const trees = @import("xml_part_tree.zig");
 const gaps = @import("element_whitespace_gaps.zig");
 const uri = @import("document_xml.zig").paragraph_uri;
 
-pub const Kind = enum(u8) { table, picture, equation, rectangle, line, container, footnote, endnote, automatic_number, ole, ellipse, polygon, button, check_button, combo_box, radio_button, edit_box, connector_line, character_composition, dutmal = 20 };
+pub const Kind = enum(u8) { table, picture, equation, rectangle, line, container, footnote, endnote, automatic_number, ole, ellipse, polygon, button, check_button, combo_box, radio_button, edit_box, connector_line, character_composition, conditional_object, dutmal = 20 };
 pub fn isForm(value: Kind) bool {
     return switch (value) {
         .button, .check_button, .combo_box, .radio_button, .edit_box => true,
@@ -35,6 +35,7 @@ pub fn kind(tree: *const trees.Tree, index: usize) ?Kind {
     if (element.is(uri, "comboBox")) return .combo_box;
     if (element.is(uri, "radioBtn")) return .radio_button;
     if (element.is(uri, "edit")) return .edit_box;
+    if (@import("run_switch_anchor.zig").supported(tree, index)) return .conditional_object;
     if (!element.is(uri, "ctrl")) return null;
     const child_index = element.first_child orelse return null;
     const child = tree.elements[child_index];

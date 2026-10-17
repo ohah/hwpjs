@@ -51,13 +51,40 @@ test "HWPX composed formula save derives current cells and cleans every allocati
             try std.testing.expect(std.mem.indexOf(u8, output, ",;;100</p:stringParam>") != null);
             try std.testing.expect(std.mem.indexOf(u8, output, "dirty=\"1\"") != null);
         }
+        fn rejectTextProduct(allocator: std.mem.Allocator, views: []const Tree, input: []const u8) !void {
+            if (write(allocator, views, 0, input, .{}, 10000)) |unexpected| {
+                allocator.free(unexpected);
+                return error.ExpectedFormulaNumberRejection;
+            } else |err| {
+                if (err == error.OutOfMemory) return err;
+                try std.testing.expectEqual(error.InvalidFormulaNumber, err);
+            }
+        }
     };
     try Probe.run(a, &trees, composed);
     try std.testing.checkAllAllocationFailures(a, Probe.run, .{ &trees, composed });
     try std.testing.expectEqualSlices(u8, source, tree.source);
     const invalid = try std.mem.concat(a, u8, &.{ source[0..offset], "<p:t>bad</p:t>", source[offset + target.len ..] });
     defer a.free(invalid);
-    try std.testing.expectError(error.InvalidFormulaNumber, write(a, &trees, 0, invalid, .{}, 10000));
+    // SUM/AVG share scalar classification; PRODUCT keeps strict numeric reads.
+    const text_sum = try write(a, &trees, 0, invalid, .{}, 10000);
+    defer a.free(text_sum);
+    try std.testing.expect(std.mem.indexOf(u8, text_sum, "<p:t>bad</p:t>") != null);
+    try std.testing.expect(std.mem.indexOf(u8, text_sum, "name='LastResult'>0") != null);
+    try std.testing.expect(std.mem.indexOf(u8, text_sum, ",;;0</p:stringParam>") != null);
+    const average_input = try std.mem.replaceOwned(u8, a, invalid, "SUM(", "AVG(");
+    defer a.free(average_input);
+    const average_output = try write(a, &trees, 0, average_input, .{}, 10000);
+    defer a.free(average_output);
+    try std.testing.expect(std.mem.indexOf(u8, average_output, "<p:t>bad</p:t>") != null);
+    try std.testing.expect(std.mem.indexOf(u8, average_output, "name='LastResult'>0") != null);
+    try std.testing.expect(std.mem.indexOf(u8, average_output, "=AVG(A1:A1)??%g,;;0") != null);
+    // Negative control: an unexpected owned success is freed before rejection.
+    try std.testing.expectError(error.ExpectedFormulaNumberRejection, Probe.rejectTextProduct(a, &trees, average_input));
+    const strict_input = try std.mem.replaceOwned(u8, a, invalid, "SUM(", "PRODUCT(");
+    defer a.free(strict_input);
+    try Probe.rejectTextProduct(a, &trees, strict_input);
+    try @import("../testing/allocation_failures.zig").check(Probe.rejectTextProduct, .{ &trees, strict_input });
     try std.testing.expectError(error.InvalidSectionIndex, write(a, &trees, 1, composed, .{}, 10000));
     try std.testing.expectError(error.LimitExceeded, write(a, &trees, 0, composed, .{}, 1));
 }

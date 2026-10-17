@@ -28,6 +28,18 @@ pub const File = struct {
         return @import("name_order.zig").find(self.entries, path);
     }
 
+    /// Entry.path includes the root display name; findExact takes a root-relative address.
+    pub fn rootRelativePath(self: *const File, index: usize) ![]const u8 {
+        if (index >= self.entries.len or self.entries[index].kind == 0 or self.entries.len == 0) return error.InvalidDirectoryReference;
+        if (index == 0) return "/";
+        const prefix = self.entries[0].path;
+        const path = self.entries[index].path;
+        // Storage paths already end in '/'; retain that separator for findExact.
+        if (prefix.len == 0 or prefix[prefix.len - 1] != '/') return error.InvalidDirectoryReference;
+        if (!std.mem.startsWith(u8, path, prefix) or path.len <= prefix.len) return error.InvalidDirectoryReference;
+        return path[prefix.len - 1 ..];
+    }
+
     /// Maps an active directory entry index to the compact index returned by
     /// toNodes. Does not accept padding/unused entries.
     pub fn nodeIndex(self: *const File, entry_index: usize) !usize {

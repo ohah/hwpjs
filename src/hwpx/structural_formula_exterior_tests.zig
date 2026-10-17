@@ -132,7 +132,7 @@ test "structural formula exterior transaction allocation failures preserve compl
     const baseline = try session.save();
     defer a.free(baseline);
     try std.testing.expect(try @import("field_outside_query.zig").canEdit(&session, 0, 3, 0, 0));
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, original: *const editor.Session, definition: usize) !void {
             var proxy = original.*;
             proxy.allocator = allocator;

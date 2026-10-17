@@ -6,7 +6,7 @@ const content = @import("xml_part_content.zig");
 const namespace_profile = @import("namespace_profile.zig");
 const masterpage_parts = @import("masterpage_parts.zig");
 
-pub const PartKind = enum { header, section, master_page };
+pub const PartKind = enum { header, section, master_page, chart };
 
 pub const Span = struct {
     start: usize,
@@ -161,18 +161,22 @@ const Builder = struct {
                 .header => try attrs.element(tag, scope, document_xml.head_uri, "head"),
                 .section => try attrs.element(tag, scope, document_xml.section_uri, "sec"),
                 .master_page => try masterpage_parts.isRootTag(tag, scope),
+                .chart => try attrs.element(tag, scope, @import("chart_namespace.zig").uri, "chartSpace"),
             };
             if (!valid) {
+                if (self.part_kind == .chart) return error.InvalidChartRoot;
                 const local: []const u8, const suffix: []const u8 = switch (self.part_kind) {
                     .header => .{ "head", "head" },
                     .section => .{ "sec", "section" },
                     .master_page => .{ "masterPage", "master-page" },
+                    .chart => unreachable,
                 };
                 if (namespace_profile.isVersionedRoot(try scope.expandElement(tag.name), local, suffix)) return error.UnsupportedHwpxNamespaceProfile;
                 return switch (self.part_kind) {
                     .header => error.InvalidHeaderRoot,
                     .section => error.InvalidSectionRoot,
                     .master_page => error.InvalidMasterPageRoot,
+                    .chart => unreachable,
                 };
             }
         }
@@ -200,7 +204,7 @@ const Builder = struct {
 /// The returned tree owns a copy of bytes, independent of the ZIP archive and
 /// the caller's buffer. XML syntax and namespace checks use the common SSOT.
 pub fn parse(a: std.mem.Allocator, bytes: []const u8, part_kind: PartKind, part_ordinal: ?usize, item_index: usize, options: Options) !Tree {
-    if ((part_kind == .header) != (part_ordinal == null)) return error.InvalidPartOrdinal;
+    if ((part_kind == .header or part_kind == .chart) != (part_ordinal == null)) return error.InvalidPartOrdinal;
     if (bytes.len > options.max_xml_bytes) return error.LimitExceeded;
     const source = try a.dupe(u8, bytes);
     errdefer a.free(source);

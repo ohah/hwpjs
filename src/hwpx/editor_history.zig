@@ -5,8 +5,11 @@ const checkpoints = @import("editor_checkpoint.zig");
 const Stacks = @import("../model/history_stack.zig").Stack(checkpoints.Checkpoint, release);
 
 pub const Command = struct {
-    kind: enum { plain, anchored, field, split, merge, format, character_properties, character_font_name, cell_size, paragraph_format, paragraph_alignment, paragraph_margins, paragraph_spacing, split_anchored, formula_definition, picture_dimensions, picture_resize, check_box_state, created_table_stage, created_cell_text, formula_result_override, formula_result_splice, dutmal_text } = .plain,
+    kind: enum { plain, anchored, field, split, merge, format, character_properties, character_font_name, cell_size, paragraph_format, paragraph_alignment, paragraph_margins, paragraph_spacing, split_anchored, formula_definition, picture_dimensions, picture_resize, check_box_state, created_table_stage, created_cell_text, formula_result_override, formula_result_splice, dutmal_text, chart_numeric_point, chart_point, chart_series_text } = .plain,
     section: usize = 0,
+    chart_node: usize = 0,
+    chart_point: usize = 0,
+    chart_text: usize = 0,
     paragraph: usize,
     right_paragraph: ?usize = null,
     start: u32,
@@ -164,6 +167,14 @@ pub const History = struct {
                 break :block try session.setCharacterFormat(command.section, command.paragraph, command.start, end, command.char_shape_id);
             },
             .plain => try session.splice(command.section, command.paragraph, command.start, command.deleted, command.inserted),
+            .chart_series_text => block: {
+                if (command.start != 0 or command.deleted != 0) return error.InvalidChartSeriesTextCommand;
+                break :block try session.setChartSeriesText(command.section, command.chart_node, command.chart_text, command.inserted);
+            },
+            .chart_numeric_point, .chart_point => block: {
+                if (command.start != 0 or command.deleted != 0) return error.InvalidChartPointCommand;
+                break :block if (command.kind == .chart_point) try session.setChartPoint(command.section, command.chart_node, command.chart_point, command.inserted) else try session.setChartNumericPoint(command.section, command.chart_node, command.chart_point, command.inserted);
+            },
             .anchored => try session.spliceAnchored(command.section, command.paragraph, command.start, command.deleted, command.inserted),
             .field => try session.spliceFieldLabel(command.section, command.paragraph, command.begin_element, command.start, command.deleted, command.inserted),
             .split, .split_anchored => block: {

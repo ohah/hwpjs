@@ -44,7 +44,10 @@ test "HWPX text color patch preserves unrelated XML and all allocation failures"
 }
 
 test "HWPX text color patch preserves actual header outside the selected value" {
-    const a = std.testing.allocator;
+    try @import("../testing/checked_allocator.zig").run(checkActualHeader, .{});
+}
+
+fn checkActualHeader(a: std.mem.Allocator) !void {
     const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwpx", a, .limited(4_000_000));
     defer a.free(bytes);
     var package = try @import("package.zig").inspectDocument(a, bytes, .{});

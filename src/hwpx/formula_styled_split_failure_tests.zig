@@ -3,7 +3,10 @@ const editor = @import("editor_session.zig");
 const styled_header = "<h:head xmlns:h='http://www.hancom.co.kr/hwpml/2011/head' secCnt='1'><h:refList><h:charProperties itemCnt='2'><h:charPr id='0'/><h:charPr id='1'/></h:charProperties></h:refList></h:head>";
 
 test "styled formula public remerge allocation failures preserve split transaction" {
-    const a = std.testing.allocator;
+    try @import("../testing/checked_allocator.zig").run(verifyStyledFormulaPublicRemerge, .{});
+}
+
+fn verifyStyledFormulaPublicRemerge(a: std.mem.Allocator) !void {
     const fixture = @import("test_formula_fixture.zig");
     const input = try fixture.zipWithSectionHeader(a, fixture.section, styled_header);
     defer a.free(input);
@@ -51,7 +54,10 @@ test "styled formula public remerge allocation failures preserve split transacti
 }
 
 test "styled formula public split allocation failures preserve styles uninstalled markers and ZIP" {
-    const a = std.testing.allocator;
+    try @import("../testing/checked_allocator.zig").run(verifyStyledFormulaPublicSplit, .{});
+}
+
+fn verifyStyledFormulaPublicSplit(a: std.mem.Allocator) !void {
     const fixture = @import("test_formula_fixture.zig");
     const input = try fixture.zipWithSectionHeader(a, fixture.section, styled_header);
     defer a.free(input);

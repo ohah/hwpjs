@@ -758,6 +758,17 @@ test {
     _ = @import("hwp5/edit/table_number_format_tests.zig");
     _ = @import("hwp5/edit/cross_reference_format_retention.zig");
     _ = @import("hwp5/edit/text_source_policy_tests.zig");
+    _ = @import("hwpx/chart_point_values_tests.zig");
+    _ = @import("hwpx/chart_series_text_tests.zig");
+    _ = @import("hwpx/chart_series_session_tests.zig");
+    _ = @import("hwpx/chart_series_failure_tests.zig");
+    _ = @import("hwpx/chart_resource_values_tests.zig");
+    _ = @import("hwpx/xstring_encode_tests.zig");
+    _ = @import("hwpx/chart_session_tests.zig");
+    _ = @import("hwpx/chart_ole_policy_tests.zig");
+    _ = @import("cfb/root_relative_path_tests.zig");
+    _ = @import("hwpx/chart_string_session_tests.zig");
+    _ = @import("hwpx/chart_string_point_write_tests.zig");
     _ = @import("hwp5/docinfo/shape_tests.zig");
     _ = @import("hwp5/docinfo/reference_tests.zig");
     _ = @import("hwp5/body/tests.zig");

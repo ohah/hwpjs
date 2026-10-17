@@ -27,6 +27,63 @@ export fn hwpx_edit_output_ptr() usize {
 export fn hwpx_edit_output_len() usize {
     return if (output) |bytes| bytes.len else 0;
 }
+export fn hwpx_edit_chart_points(section: u32, wrapper: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    var snapshot = @import("../hwpx/chart_current_snapshot.zig").read(a, session, section, wrapper) catch |err| return fail(err);
+    defer snapshot.deinit(a);
+    output = std.json.Stringify.valueAlloc(a, snapshot, .{}) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_chart_series_text(section: u32, wrapper: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    var values = @import("../hwpx/chart_series_text_session.zig").read(a, session, section, wrapper) catch |err| return fail(err);
+    defer values.deinit(a);
+    output = std.json.Stringify.valueAlloc(a, .{ .kind = "direct_series", .values = values.items }, .{}) catch |err| return fail(err);
+    if (output.?.len > session.options.max_output_bytes) {
+        hwpx_edit_output_free();
+        return fail(error.LimitExceeded);
+    }
+    return 1;
+}
+export fn hwpx_edit_chart_series_text_max_bytes() u32 {
+    return @import("../hwpx/chart_series_text_values.zig").default_max_value_bytes;
+}
+export fn hwpx_edit_set_chart_series_text(section: u32, wrapper: u32, ordinal: u32, ptr: [*]const u8, size: usize) u32 {
+    if (size > hwpx_edit_chart_series_text_max_bytes()) return fail(error.LimitExceeded);
+    apply(.{ .kind = .chart_series_text, .section = section, .paragraph = 0, .start = 0, .deleted = 0, .chart_node = wrapper, .chart_text = ordinal, .inserted = ptr[0..size] }) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_chart_nodes(section: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const nodes = @import("../hwpx/chart_current_snapshot.zig").nodes(a, session, section) catch |err| return fail(err);
+    defer a.free(nodes);
+    output = std.json.Stringify.valueAlloc(a, nodes, .{}) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_chart_sites(section: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const sites = @import("../hwpx/chart_display_sites.zig").read(a, session, section) catch |err| return fail(err);
+    defer a.free(sites);
+    output = std.json.Stringify.valueAlloc(a, sites, .{}) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_chart_point_max_bytes() u32 {
+    return @import("../hwpx/chart_point_write.zig").max_value_bytes;
+}
+export fn hwpx_edit_set_chart_numeric_point(section: u32, wrapper: u32, point: u32, ptr: [*]const u8, size: usize) u32 {
+    if (size > hwpx_edit_chart_point_max_bytes()) return fail(error.LimitExceeded);
+    apply(.{ .kind = .chart_numeric_point, .section = section, .paragraph = 0, .start = 0, .deleted = 0, .chart_node = wrapper, .chart_point = point, .inserted = ptr[0..size] }) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_set_chart_point(section: u32, wrapper: u32, point: u32, ptr: [*]const u8, size: usize) u32 {
+    if (size > hwpx_edit_chart_point_max_bytes()) return fail(error.LimitExceeded);
+    apply(.{ .kind = .chart_point, .section = section, .paragraph = 0, .start = 0, .deleted = 0, .chart_node = wrapper, .chart_point = point, .inserted = ptr[0..size] }) catch |err| return fail(err);
+    return 1;
+}
 export fn hwpx_edit_save_for_display() u32 {
     hwpx_edit_output_free();
     const session = if (active) |*value| value else return fail(error.EditorNotOpen);
@@ -49,8 +106,15 @@ export fn hwpx_edit_close() void {
     active = null;
 }
 export fn hwpx_edit_open(ptr: [*]const u8, size: usize) u32 {
+    return openWithChartPolicy(ptr, size, false);
+}
+export fn hwpx_edit_open_with_chart_ole_policy(ptr: [*]const u8, size: usize, allow_observed_deviations: u32) u32 {
+    if (allow_observed_deviations > 1) return fail(error.InvalidChartOlePolicy);
+    return openWithChartPolicy(ptr, size, allow_observed_deviations == 1);
+}
+fn openWithChartPolicy(ptr: [*]const u8, size: usize, allow_observed_deviations: bool) u32 {
     if (size > 64 * 1024 * 1024) return fail(error.LimitExceeded);
-    const next = editor.open(a, ptr[0..size], .{}) catch |err| return fail(err);
+    const next = editor.open(a, ptr[0..size], .{ .allow_observed_chart_ole_deviations = allow_observed_deviations }) catch |err| return fail(err);
     hwpx_edit_close();
     active = next;
     return 1;
@@ -639,6 +703,14 @@ fn apply(command: histories.Command) !void {
     if (history) |*value| {
         _ = try value.apply(session, command);
     } else switch (command.kind) {
+        .chart_numeric_point, .chart_point => {
+            if (command.start != 0 or command.deleted != 0) return error.InvalidChartPointCommand;
+            _ = if (command.kind == .chart_point) try session.setChartPoint(command.section, command.chart_node, command.chart_point, command.inserted) else try session.setChartNumericPoint(command.section, command.chart_node, command.chart_point, command.inserted);
+        },
+        .chart_series_text => {
+            if (command.start != 0 or command.deleted != 0) return error.InvalidChartSeriesTextCommand;
+            _ = try session.setChartSeriesText(command.section, command.chart_node, command.chart_text, command.inserted);
+        },
         .dutmal_text => _ = try session.setDutmalText(command.section, command.dutmal_node, command.dutmal_kind, command.inserted),
         .created_cell_text => {
             _ = try @import("../hwpx/created_cell_text_session.zig").set(session, command.section, command.created_table_identity, command.created_cell[0], command.created_cell[1], command.inserted);

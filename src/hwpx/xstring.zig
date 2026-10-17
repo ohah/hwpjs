@@ -35,6 +35,32 @@ fn append(a: std.mem.Allocator, out: *std.ArrayList(u8), bytes: []const u8, max_
     try out.appendSlice(a, bytes);
 }
 
+/// Encode element content, not attributes or already XML-escaped text.
+pub fn encodeContent(a: std.mem.Allocator, source: []const u8, max_bytes: usize) ![]u8 {
+    if (!std.unicode.utf8ValidateSlice(source)) return error.InvalidUtf8;
+    var out: std.ArrayList(u8) = .empty;
+    defer out.deinit(a);
+    var at: usize = 0;
+    while (at < source.len) {
+        if (escapeAt(source, at) != null) {
+            try append(a, &out, "_x005F_", max_bytes);
+            at += 1;
+            continue;
+        }
+        const length = try std.unicode.utf8ByteSequenceLength(source[at]);
+        const scalar = try std.unicode.utf8Decode(source[at..][0..length]);
+        if (scalar == 0xd or !@import("../xml/characters.zig").valid(scalar)) {
+            var encoded = "_x0000_".*;
+            const hex = "0123456789ABCDEF";
+            const unit: u16 = @intCast(scalar);
+            for (0..4) |digit| encoded[2 + digit] = hex[(unit >> @as(u4, @intCast((3 - digit) * 4))) & 15];
+            try append(a, &out, &encoded, max_bytes);
+        } else try append(a, &out, source[at..][0..length], max_bytes);
+        at += length;
+    }
+    return out.toOwnedSlice(a);
+}
+
 /// Decodes a fully XML-normalized UTF-8 ST_Xstring. Escapes are recognized in
 /// one left-to-right pass, so _x005F_x0008_ becomes literal "_x0008_".
 /// Unpaired UTF-16 surrogate escapes are reported without inventing UTF-8.
