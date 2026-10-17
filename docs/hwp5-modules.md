@@ -1,5 +1,7 @@
 # HWP5 모듈 계약 인덱스
 
+- [빈 이미지 글머리표 배치 호환](hwp5-bullet-compatibility.md)
+
 - [글꼴 메타데이터 전달](hwp5-font-face-metadata.md) · [HWPX 계약](hwpx-font-face-metadata.md)
 
 - [공통 글꼴 높이 정책](font-layout-metrics.md) · [HWP5 기준 자료](hwp5-font-layout-reference.md)
