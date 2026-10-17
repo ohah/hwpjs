@@ -47,8 +47,11 @@ export function measureInlineObjectParagraph(paragraph, entries, width, measure,
         if (!byUnit.has(unit)) glyphHeight = Math.max(glyphHeight, textMeasurement(currentMeasure(part.segment, paragraph, unit, "text")).height);
       }
       const minimum = compactLines ? glyphHeight : Math.max(DEFAULT_ROW_HEIGHT, glyphHeight + TEXT_TOP);
-      const pitch = compactLines && row === flow.rows.at(-1) ? glyphHeight : paragraphLineAdvance(paragraph.paragraphShape, glyphHeight, minimum);
-      current = { ...current, textHeight: glyphHeight, height: Math.max(row.textHeight, pitch) };
+      const terminal = compactLines && row === flow.rows.at(-1);
+      const pitch = paragraph.paragraphShape?.spacingFormat === "hwpx"
+        ? Math.max(row.textHeight, terminal ? glyphHeight : paragraphLineAdvance(paragraph.paragraphShape, glyphHeight, minimum))
+        : terminal ? row.textHeight : paragraphLineAdvance(paragraph.paragraphShape, row.textHeight, Math.max(row.textHeight, minimum), { spacingBasisHeight: glyphHeight });
+      current = { ...current, textHeight: glyphHeight, height: pitch };
     }
     y += current.height; return current;
   });

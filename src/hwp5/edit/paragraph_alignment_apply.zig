@@ -28,7 +28,7 @@ pub fn applyWithProperties(a: std.mem.Allocator, document: *model.Document, deco
         unchanged = unchanged and @field(current_shape, field.name) == value;
     };
     if (requested_spacing) |value| {
-        const current_spacing: model.ParagraphSpacing = if (current_shape.modern_spacing) |modern| .{ .kind = modern.attributes & 31, .value = modern.value } else .{ .kind = current_shape.legacy_spacing_kind, .value = current_shape.legacy_spacing };
+        const current_spacing = @import("paragraph_spacing_values.zig").effective(current_shape);
         if (current_shape.modern_spacing == null and value.kind == 3) return error.UnsupportedParagraphSpacing;
         unchanged = unchanged and std.meta.eql(current_spacing, value);
     }

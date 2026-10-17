@@ -13,6 +13,11 @@ pub fn write(a: std.mem.Allocator, input: []const u8, version: Version, spacing:
     if (shape.modern_spacing) |modern| {
         std.mem.writeInt(u32, output[46..50], (modern.attributes & ~@as(u32, 31)) | spacing.kind, .little);
         std.mem.writeInt(i32, output[50..54], spacing.value, .little);
+        // Percentage readers may select the legacy pair even with a modern tail.
+        if (spacing.kind == 0) {
+            std.mem.writeInt(u32, output[0..4], shape.attributes & ~@as(u32, 3), .little);
+            std.mem.writeInt(i32, output[24..28], spacing.value, .little);
+        }
     } else {
         std.mem.writeInt(u32, output[0..4], (shape.attributes & ~@as(u32, 3)) | spacing.kind, .little);
         std.mem.writeInt(i32, output[24..28], spacing.value, .little);
@@ -45,4 +50,19 @@ test "HWP5 paragraph spacing payload selects present version fields and preserve
             defer allocator.free(output);
         }
     }.run, .{&minimal});
+}
+
+test "HWP5 paragraph spacing percentage synchronizes both source fields only" {
+    const a = std.testing.allocator;
+    var input: [58]u8 = @splat(0xa5);
+    for ([_]i32{ 0, 100, 160, 500 }) |value| {
+        const output = try write(a, &input, .{ .raw = 0x05010000 }, .{ .kind = 0, .value = value }, 100);
+        defer a.free(output);
+        var expected = input;
+        std.mem.writeInt(u32, expected[0..4], 0xa5a5a5a4, .little);
+        std.mem.writeInt(i32, expected[24..28], value, .little);
+        std.mem.writeInt(u32, expected[46..50], 0xa5a5a5a0, .little);
+        std.mem.writeInt(i32, expected[50..54], value, .little);
+        try std.testing.expectEqualSlices(u8, &expected, output);
+    }
 }

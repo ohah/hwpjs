@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[행간 집중검사](hwp5-line-spacing.md)는 `zig test src/root.zig -O ReleaseSafe --test-filter 'HWP5 paragraph spacing' --test-filter 'HWP5 effective paragraph spacing'`이며 Debug도 같은 필터입니다. 빌드는 `zig build -Doptimize=ReleaseSafe`입니다. JS 검사는 `HWPJS_TEST_WASM=/absolute/candidate/hwpjs.wasm node --test tests/hwp5/line-spacing-compat.test.mjs tests/hwp5/line-spacing-worker.test.mjs`입니다. 전체 root/브라우저 검증과 구분합니다.
+
 `node tools/run-selected-node-tests.mjs tests/hwp5/native-guard-error.test.mjs`는 [RSS 감시](native-core-rss-monitor.md)의 관측 오류·자손 소유 범위·실제 테스트 프로세스 격리를 검사하며 전체 native 실행을 대신하지 않습니다.
 
 후보 EMF/CFB와 검증용 bridge를 명시적으로 짝지어 검사할 때는 `HWPJS_TEST_WASM=/absolute/candidate/hwpjs.wasm HWPJS_TEST_HWP5_PROBE=/absolute/probe/hwp5-probe.wasm node --test tests/hwp5/emf-corpus.test.mjs tests/hwp5/emf-corpus-artifacts.test.mjs`를 사용합니다. `zig build emf-corpus-audit -Doptimize=ReleaseSafe`는 설치된 제품/probe 경로를 두 환경변수에 지정하고 경로 부정 대조도 함께 실행합니다. probe는 제품 ABI가 아닌 test-only bridge이며 [EMF 검증 기록](emf-framing.md)을 따릅니다.

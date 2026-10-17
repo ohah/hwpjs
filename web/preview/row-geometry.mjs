@@ -12,6 +12,8 @@ export const rowTop = (row, index) => row.y ?? index * DEFAULT_ROW_HEIGHT;
 export const rowHeight = row => row.height ?? DEFAULT_ROW_HEIGHT;
 export const rowTextHeight = row => row.textHeight ?? DEFAULT_TEXT_HEIGHT;
 export const rowTextTop = row => row.textTop ?? TEXT_TOP;
+// Ink/input extent is independent of the distance to the following line.
+export const rowVisualHeight = row => row.kind === "text" ? Math.max(rowHeight(row), rowTextTop(row) + rowTextHeight(row)) : rowHeight(row);
 export const rowLeft = row => (row.x ?? TEXT_LEFT) + (row.paragraphX ?? 0);
 
 // 변환 행은 조판 좌표를 유지하고 화면 입력만 같은 행렬의 역으로 돌립니다.
@@ -35,7 +37,7 @@ export function rowAtPoint(layout, x, y) {
     if (!rowPageClipContains(row, x, y)) return false;
     const point = rowLocalPoint(row, x, y);
     return point && row.kind === "text" && point[0] >= rowLeft(row) && point[0] < rowLeft(row) + row.width &&
-      point[1] >= rowTop(row, index) && point[1] < rowTop(row, index) + rowHeight(row);
+      point[1] >= rowTop(row, index) && point[1] < rowTop(row, index) + rowVisualHeight(row);
   };
   // 글자가 있는 영역을 먼저 찾고 빈 줄 끝 영역은 마지막에 선택합니다.
   const ink = topTablePaintRowIndex(layout.rows, (row, index) => {
@@ -75,5 +77,5 @@ export function rowAtY(layout, y) {
     else high = middle;
   }
   const index = low - 1;
-  return index >= 0 && y < rowTop(layout.rows[index], index) + rowHeight(layout.rows[index]) ? index : -1;
+  return index >= 0 && y < rowTop(layout.rows[index], index) + rowVisualHeight(layout.rows[index]) ? index : -1;
 }

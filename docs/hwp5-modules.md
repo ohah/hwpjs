@@ -1,5 +1,7 @@
 # HWP5 모듈 계약 인덱스
 
+- [행간과 Canvas 이동량](hwp5-line-spacing.md)
+
 현재 모듈별 책임·소유권·미지원 경계는 주제 문서에서 관리합니다. 구현 변경 시 해당 문서를 갱신하고 AGENTS.md에 상세를 누적하지 않습니다.
 
 - [HWP5 양식 포함 구역의 텍스트 보존](hwp5-form-source-retention.md)

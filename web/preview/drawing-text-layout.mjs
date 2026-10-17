@@ -3,6 +3,7 @@ import { hwpUnitPixels } from "./hwp-units.mjs";
 import { nextTextRow } from "./next-text-row.mjs";
 import { paragraphSpacePixels, paragraphLineAdvance } from "./paragraph-geometry.mjs";
 import { isHardLineBreak } from "./hard-line-break.mjs";
+import { rowVisualHeight } from "./row-geometry.mjs";
 
 // Fixed drawing text area; overflow is explicit, never a shortened success.
 export function layoutDrawingText(drawing, paragraphs, declaration, rectangle, measure, { maxRows = 20000, compactLines = false, overflow = "reject" } = {}) {
@@ -39,7 +40,7 @@ export function layoutDrawingText(drawing, paragraphs, declaration, rectangle, m
       let row = nextTextRow(paragraph, unit, columns.boxes[columnIndex].width, measure, { minimumTextHeight: 0 });
       const compact = value => compactLines ? { ...value, textTop: 0, height: paragraphIndex === paragraphs.length - 1 && value.endUnit === paragraph.text.length && (!terminalBreak || terminalRow) ? value.textHeight : paragraphLineAdvance(paragraph.paragraphShape, value.textHeight, value.textHeight) } : value;
       row = compact(row);
-      const occupiedHeight = value => compactLines ? value.textHeight : value.height;
+      const occupiedHeight = value => compactLines ? value.textHeight : rowVisualHeight(value);
       if (occupiedHeight(row) > body.height && overflow === "reject") return unavailable("DrawingTextOverflow");
       while (cursor[columnIndex] + occupiedHeight(row) > body.height && !extendLast()) {
         if (++columnIndex === columns.boxes.length) return unavailable("DrawingTextOverflow");
@@ -47,7 +48,7 @@ export function layoutDrawingText(drawing, paragraphs, declaration, rectangle, m
         row = compact(row);
         if (occupiedHeight(row) > body.height && overflow === "reject") return unavailable("DrawingTextOverflow");
       }
-      if (!Number.isFinite(row.height) || row.height <= 0 || (unit < paragraph.text.length && row.endUnit <= unit)) return unavailable("InvalidDrawingTextLayout");
+      if (!Number.isFinite(row.height) || row.height < 0 || (unit < paragraph.text.length && row.endUnit <= unit)) return unavailable("InvalidDrawingTextLayout");
       rows.push({ ...row, x: columns.boxes[columnIndex].x, y: body.y + cursor[columnIndex], columnOrdinal: columnIndex, drawingNode: drawing.drawingNode, listNode: text.list_node });
       used[columnIndex] = Math.max(used[columnIndex], cursor[columnIndex] + occupiedHeight(row));
       cursor[columnIndex] += row.height; unit = row.endUnit;

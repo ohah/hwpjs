@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+[행간 계약](hwp5-line-spacing.md)의 산술은 `web/preview/hwp5-line-spacing.mjs`, 표시/폼 선택은 `paragraph-spacing-source.mjs`, px 경계는 `paragraph-geometry.mjs`, 입력 영역은 `row-geometry.mjs`가 소유합니다. native 값 선택과 patch는 `paragraph_spacing_values.zig`와 기존 writer로 분리합니다.
+
 [강조 일괄값 펼침](editor-character-property-disclosure.md)은 빠른 버튼과 고급 on/off 초안 표시의 책임을 구분합니다.
 
 [기본 코어 RSS 감시](native-core-rss-monitor.md)는 process-tree-rss의 소유 범위·관측 오류와 실제 한도 초과의 분리를 소유합니다.

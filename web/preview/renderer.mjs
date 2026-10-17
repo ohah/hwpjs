@@ -13,7 +13,7 @@ import { characterOutlineRangesState, characterOutlineRangesKind } from "./chara
 import { paintCharacterRelief } from "./character-relief-style.mjs";
 import { paintCharacterOutline } from "./character-outline-paint.mjs";
 import { selectedFontIds } from "./character-font-selection.mjs";
-import { rowAtY, rowLeft, rowHeight, rowTop, rowTextTop, TEXT_LEFT } from "./row-geometry.mjs";
+import { rowAtY, rowLeft, rowHeight, rowVisualHeight, rowTop, rowTextTop, TEXT_LEFT } from "./row-geometry.mjs";
 import { caretGeometry, selectionRects, selectionIntersectsText } from "./text-geometry.mjs";
 import { createTextStyle, withDraftText } from "./text-style.mjs";
 import { layoutTableContent } from "./table-flow.mjs";
@@ -160,7 +160,7 @@ export function createRenderer(canvas, viewportElement, spacer, onLayout = () =>
     const paintTextRow = (row, i) => {
       if (row.kind === "gap") return;
       if (row.transform === undefined && rowTop(row, i) >= viewport.scrollTop + height) return;
-      if (row.transform === undefined && rowTop(row, i) + rowHeight(row) <= viewport.scrollTop) return;
+      if (row.transform === undefined && rowTop(row, i) + rowVisualHeight(row) <= viewport.scrollTop) return;
       paintRowTransform(ctx, row, viewport.scrollTop, () => {
       ctx.font = FONT;
       ctx.fillStyle = row.kind === "label" ? "#526d80" : "#172b3b";
