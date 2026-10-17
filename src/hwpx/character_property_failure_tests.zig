@@ -14,7 +14,7 @@ test "HWPX character property transaction allocation failure shard on mixed runs
     const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwpx", a, .limited(4_000_000));
     defer a.free(input);
     for (start..end) |index| {
-        if (try verifyFailure(input, index, .{ .bold = true })) {
+        if ((try verifyFailure(input, index, .{ .bold = true })).succeeded) {
             std.debug.print("HWPX failure shard {d}..{d}: failures {d}, success at {d}\n", .{ start, end, index - start, index });
             return;
         }
@@ -40,14 +40,20 @@ test "HWPX font transaction preserves mixed resource state at sampled allocation
     const a = std.testing.allocator;
     const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwpx", a, .limited(4_000_000));
     defer a.free(input);
-    for ([_]usize{ 0, 1, 10, 100, 1000, 5000, 20000, 50000 }) |index| {
-        const succeeded = try verifyFailure(input, index, .{ .font_ids = .{ 0, null, null, null, null, null, null } });
-        std.debug.print("HWPX font allocation sample {d}: {s}\n", .{ index, if (succeeded) "success" else "rollback" });
-        try std.testing.expect(!succeeded);
+    const patch: @import("../model/document.zig").CharacterPropertyPatch = .{ .font_ids = .{ 0, null, null, null, null, null, null } };
+    const baseline = try verifyFailure(input, null, patch);
+    try std.testing.expect(baseline.succeeded and baseline.allocations > 0);
+    std.debug.print("HWPX font transaction measured allocations: {d}\n", .{baseline.allocations});
+    for ([_]usize{ 0, 1, 10, 100, 1000, 5000, 20000, 50000, baseline.allocations - 1, baseline.allocations }) |index| {
+        const observed = try verifyFailure(input, index, patch);
+        std.debug.print("HWPX font allocation sample {d}: {s}\n", .{ index, if (observed.succeeded) "success" else "rollback" });
+        try std.testing.expectEqual(index >= baseline.allocations, observed.succeeded);
+        if (observed.succeeded) try std.testing.expectEqual(baseline.allocations, observed.allocations);
     }
 }
 
-fn verifyFailure(input: []const u8, index: usize, patch: @import("../model/document.zig").CharacterPropertyPatch) !bool {
+const Verification = struct { succeeded: bool, allocations: usize };
+fn verifyFailure(input: []const u8, index: ?usize, patch: @import("../model/document.zig").CharacterPropertyPatch) !Verification {
     // Release every debug bucket at each failure point without disabling leaks.
     var debug: std.heap.DebugAllocator(.{ .stack_trace_frames = 4 }) = .init;
     defer std.debug.assert(debug.deinit() == .ok);
@@ -63,15 +69,19 @@ fn verifyFailure(input: []const u8, index: usize, patch: @import("../model/docum
     defer failing.allocator().free(baseline_spans);
     const baseline_entries = try a.dupe(@import("character_resource_values.zig").Entry, session.character_resources.entries.items);
     defer a.free(baseline_entries);
-    failing.fail_index = failing.alloc_index + index;
+    const initial = failing.alloc_index;
+    failing.fail_index = if (index) |point| try std.math.add(usize, initial, point) else std.math.maxInt(usize);
     const result = session.setCharacterProperties(0, 2, 0, 2, patch);
+    const allocations = failing.alloc_index - initial;
     failing.fail_index = std.math.maxInt(usize);
     if (result) |changed| {
+        try std.testing.expect(!failing.has_induced_failure);
         try std.testing.expect(changed);
         try std.testing.expectEqual(baseline_entries.len + 2, session.character_resources.entries.items.len);
-        return true;
+        return .{ .succeeded = true, .allocations = allocations };
     } else |err| {
         try std.testing.expectEqual(error.OutOfMemory, err);
+        try std.testing.expect(failing.has_induced_failure);
         try std.testing.expectEqualDeep(baseline_entries, session.character_resources.entries.items);
         const spans = try @import("character_style_snapshot.zig").read(&session, 0, 2);
         defer failing.allocator().free(spans);
@@ -80,5 +90,5 @@ fn verifyFailure(input: []const u8, index: usize, patch: @import("../model/docum
         defer failing.allocator().free(saved);
         try std.testing.expectEqualSlices(u8, baseline, saved);
     }
-    return false;
+    return .{ .succeeded = false, .allocations = allocations };
 }
