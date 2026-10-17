@@ -1,5 +1,7 @@
 # HWP5 모듈 계약 인덱스
 
+- [표 번호 상호참조의 원본 대상 연결](hwp5-table-number-targets.md)
+
 - [명시적 CFB 보정본 편집 열기](hwp5-normalized-open.md)
 
 - [저장 거부 후 동의 위치 안내](save-failure-guidance.md)

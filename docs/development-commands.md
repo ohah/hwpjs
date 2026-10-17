@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+`zig test src/root.zig -O ReleaseSafe --test-filter 'table number '`는 [표 번호 원본 대상](hwp5-table-number-targets.md)의 ID·캡션·코드18 연결, 전체 부분 할당 실패, 실제137개 선언과 캐시 숫자 변조 반례를 검사합니다. Debug도 같은 필터입니다. `node --test tests/hwp5/table-number-source-oracle.test.mjs`는 독립 CFB/레코드 oracle을 실행합니다. reference 없는 원본 검사는 skip을 표시하며 편집 허용 검사와 구분합니다.
+
 `HWPJS_TEST_WASM=/absolute/candidate/bin/hwpjs.wasm node --test tests/hwp5/normalized-open.test.mjs tests/hwp5/normalized-distribution.test.mjs tests/hwp5/normalization-abi.test.mjs`는 [보정본 열기 API](hwp5-normalized-open.md)의 실제 파일·이력·ABI 부재·정밀도 검사를 실행합니다. `zig test src/root.zig -O ReleaseSafe --test-filter 'normalized open preserves strict baseline'`는 전체 할당 실패와 strict 기준을 검사하며 Debug도 같은 필터를 사용합니다. reference 없는 실파일 skip은 통과와 구분합니다.
 
 `node --test tests/hwp5/document-save.test.mjs tests/hwp5/document-menu-save.test.mjs`는 [저장 실패 안내](save-failure-guidance.md)의 포커스·전체 라벨 스크롤·직접 동의 유지와 기존 저장 경계를 검사합니다. 실제 WASM 검사는 `HWPJS_TEST_WASM`으로 후보를 명시합니다.

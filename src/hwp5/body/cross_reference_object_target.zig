@@ -2,6 +2,20 @@
 const std = @import("std");
 pub const Site = struct { section: usize, record_offset: usize, control_id: u32, instance_id: u32 };
 
+/// Owned scalar sites from an immutable tree; retain duplicates for resolution.
+pub fn collect(a: std.mem.Allocator, tree: @import("tree.zig").Tree, section: usize) ![]Site {
+    var out: std.ArrayList(Site) = .empty;
+    errdefer out.deinit(a);
+    for (tree.nodes) |node| {
+        if (node.record.value != .control_header) continue;
+        const header = node.record.value.control_header;
+        if (!@import("object_common.zig").supports(header.id)) continue;
+        const properties = try @import("object_common.zig").Properties.parse(header.properties);
+        try out.append(a, .{ .section = section, .record_offset = node.record.framing.offset, .control_id = header.id, .instance_id = properties.instance_id });
+    }
+    return out.toOwnedSlice(a);
+}
+
 /// Caller supplies objects parsed by object_common, across the whole document.
 /// No bookmark ID, automatic number, ordinal or nearest object fallback.
 pub fn resolve(instance_id: u32, objects: []const Site) !?Site {
