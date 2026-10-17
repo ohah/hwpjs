@@ -5,7 +5,7 @@ import { deflateRawSync } from "node:zlib";
 import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
 import { createCfbReader } from "../../js/cfb.mjs";
 import { inspect, records, paragraphRecords, encodeRecord, verifyRaw } from "./style-preservation/text-record-oracle.mjs";
-const wasm = readFileSync("zig-out/bin/hwpjs.wasm");
+const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
 const source = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/software.hwp");
 
 test("nested software cell splices preserve the complete independent Section and every other stream", async () => {

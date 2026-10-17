@@ -8,7 +8,7 @@ import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
 import { createHwp5Reader } from "../../js/hwp5.mjs";
 import { rawParagraphTexts } from "../../tools/hwp5-preview-record-oracle.mjs";
 import { createMemory } from "../../js/wasm-memory.mjs";
-const wasm = readFileSync("zig-out/bin/hwpjs.wasm");
+const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
 const fixture = name => readFileSync(`legacy/rust/crates/hwp-core/tests/fixtures/${name}.hwp`);
 const context = { module: { exports: {} }, require: createRequire(import.meta.url), Buffer, process };
 runInNewContext(readFileSync("legacy/cfb.js", "utf8"), context);

@@ -8,7 +8,7 @@ pub fn validateCharacterFormat(a: std.mem.Allocator, source: []const u8, version
     return validateWith(a, source, version, true);
 }
 
-fn validateWith(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version, retain_table_numbers: bool) !void {
+fn validateWith(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version, retain_object_numbers: bool) !void {
     var projection = try @import("../model_projection.zig").fromDecodedSections(a, version, &.{source});
     defer projection.deinit(a);
     const bindings = try @import("field_bindings.zig").collect(a, source, version, projection.sections[0]);
@@ -21,7 +21,7 @@ fn validateWith(a: std.mem.Allocator, source: []const u8, version: @import("../v
         for (bindings) |binding| {
             if (binding.span.field_id != @import("../body/control_rules.zig").id("%xrf")) continue;
             const view = try @import("../body/cross_reference_command.zig").View.parse(binding.properties.command);
-            if (retain_table_numbers and try @import("cross_reference_format_retention.zig").tableNumber(view)) continue;
+            if (retain_object_numbers and try @import("cross_reference_format_retention.zig").objectNumber(view)) continue;
             _ = try @import("../body/cross_reference_name_result.zig").evaluate(view, sites);
         }
     }

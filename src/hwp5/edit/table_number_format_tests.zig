@@ -138,6 +138,18 @@ test "table number character format source validation cleans every partial alloc
         while (unit < properties.command.len) : (unit += 2) {
             if (std.mem.readInt(u16, properties.command[unit..][0..2], .little) != ';') continue;
             separators += 1;
+            if (separators == 1) {
+                // Same-size orphan derivatives retain picture/equation number
+                // labels without pretending to resolve or recompute a target.
+                try std.testing.expectEqual(@as(u16, '0'), std.mem.readInt(u16, properties.command[unit + 2 ..][0..2], .little));
+                for ([_]u16{ '1', '2' }) |kind| {
+                    std.mem.writeInt(u16, small.items[offset + unit + 2 ..][0..2], kind, .little);
+                    try @import("../../testing/allocation_failures.zig").check(retainedFieldTextAllocationCase, .{ @as([]const u8, small.items), source.header.version() });
+                    try @import("../../testing/allocation_failures.zig").check(@import("source_policy.zig").validateUnselectedTextSection, .{ @as([]const u8, small.items), source.header.version() });
+                    try std.testing.expectError(error.UnsupportedSectionControl, @import("source_policy.zig").validateFieldTransaction(a, small.items, source.header.version()));
+                }
+                std.mem.writeInt(u16, small.items[offset + unit + 2 ..][0..2], '0', .little);
+            }
             if (separators != 2) continue;
             try std.testing.expectEqual(@as(u16, '1'), std.mem.readInt(u16, properties.command[unit + 2 ..][0..2], .little));
             std.mem.writeInt(u16, small.items[offset + unit + 2 ..][0..2], '0', .little);

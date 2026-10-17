@@ -38,7 +38,7 @@ const Context = struct {
         if (names) {
             const sites = try @import("cross_reference_bookmark_sites.zig").collect(a, self.source, self.version, self.edit.section);
             defer a.free(sites);
-            _ = try @import("cross_reference_name_apply.zig").applyDraftRetainingTableNumbers(a, self.source, self.version, draft, sites, self.char_count);
+            _ = try @import("cross_reference_name_apply.zig").applyDraftRetainingObjectNumbers(a, self.source, self.version, draft, sites, self.char_count);
         }
         const verified = try @import("field_bindings.zig").collect(a, self.source, self.version, draft.*);
         a.free(verified);

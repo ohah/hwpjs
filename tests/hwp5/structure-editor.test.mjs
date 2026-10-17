@@ -9,7 +9,7 @@ import { inspect, paragraphRecords, encodeRecord } from "./style-preservation/te
 import { createCfbReader } from "../../js/cfb.mjs";
 import { deflateRawSync } from "node:zlib";
 
-const wasm = readFileSync("zig-out/bin/hwpjs.wasm");
+const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
 const fixture = name => readFileSync(`legacy/rust/crates/hwp-core/tests/fixtures/${name}.hwp`);
 
 test("merge handles an explicit zero-length right PARA_TEXT as a terminated empty paragraph", async () => {

@@ -9,29 +9,31 @@ import { createHash } from "node:crypto";
 import { once } from "node:events";
 import { clickBrowserTarget } from "./browser/click-target.mjs";
 import { closeOwnedBrowser } from "./browser/session-close.mjs";
+import { hwp5BrowserReferenceCase } from "./browser/hwp5-reference-cases.mjs";
 import { createExperimentalHwp5Editor } from "../js/hwp5-editor.mjs";
 import { inspect, verifyRaw } from "../tests/hwp5/style-preservation/text-record-oracle.mjs";
 
 const options = {};
 for (const argument of process.argv.slice(2)) {
-  const match = /^--(root|port|paragraph|occurrence)=(.+)$/.exec(argument);
+  const match = /^--(root|port|paragraph|occurrence|case)=(.+)$/.exec(argument);
   if (!match || options[match[1]] !== undefined) throw Error("InvalidBrowserAuditArgument");
   options[match[1]] = match[2];
 }
 const root = resolve(options.root ?? dirname(dirname(fileURLToPath(import.meta.url))));
 const port = Number(options.port ?? 58851);
 if (!Number.isSafeInteger(port) || port < 1 || port > 65535) throw Error("InvalidBrowserAuditPort");
-const marker = "브라우저검증😀", section = 2, paragraph = Number(options.paragraph ?? 1), occurrence = Number(options.occurrence ?? 3);
+const selectedCase = hwp5BrowserReferenceCase(options.case);
+const marker = "브라우저검증😀", section = selectedCase.section, paragraph = Number(options.paragraph ?? selectedCase.paragraph), occurrence = Number(options.occurrence ?? selectedCase.occurrence);
 if (!Number.isSafeInteger(paragraph) || paragraph < 0 || !Number.isSafeInteger(occurrence) || occurrence < 1 || occurrence > 100) throw Error("InvalidBrowserAuditSelection");
 assert(process.env.HWPJS_TEST_WASM, "Explicit browser candidate required");
 const wasmPath = resolve(process.env.HWPJS_TEST_WASM), wasm = readFileSync(wasmPath);
-const fixture = resolve(root, "reference/rhwp/samples/hwpspec.hwp"), input = readFileSync(fixture);
+const fixture = resolve(root, "reference/rhwp/samples", selectedCase.fixture), input = readFileSync(fixture);
 const output = mkdtempSync(join(tmpdir(), "hwpjs-reference-browser-"));
 const digest = bytes => createHash("sha256").update(bytes).digest("hex");
-const baselineEditor = await createExperimentalHwp5Editor(wasm, input, { distribution: true, normalizeObservedCfb: true });
+const baselineEditor = await createExperimentalHwp5Editor(wasm, input, { distribution: selectedCase.distribution, normalizeObservedCfb: selectedCase.normalize });
 let baseline, original;
 try {
-  assert.equal(baselineEditor.normalizationInfo().normalized, true);
+  assert.equal(baselineEditor.normalizationInfo().normalized, selectedCase.normalize);
   baseline = baselineEditor.save().bytes;
   original = baselineEditor.text(section, paragraph);
 } finally { baselineEditor.close(); }
@@ -48,7 +50,7 @@ const evaluate = expression => {
   if (!result || !Object.hasOwn(result, "result")) throw Error("InvalidBrowserEvalResponse");
   return result.result;
 };
-const driver = { command, evaluate, afterClick(selector) { if (selector === "#enable-edit") command("dialog", "accept"); } };
+const driver = { command, evaluate, afterClick(selector) { if (selector === "#enable-edit" && selectedCase.normalize) command("dialog", "accept"); } };
 const click = selector => clickBrowserTarget(driver, selector);
 const wait = expression => command("wait", "--fn", expression);
 const snapshot = label => {
@@ -115,7 +117,7 @@ try {
   verifyRaw(baseline, saved, section, paragraph, 0, 0, marker, { fieldIds: [0x25787266] });
   assert.throws(() => verifyRaw(baseline, saved, section, paragraph, 0, 0, marker.replace("검증", "검진"), { fieldIds: [0x25787266] }), assert.AssertionError);
   assert.deepEqual(inspect(saved).metadata, inspect(baseline).metadata);
-  const reopened = await createExperimentalHwp5Editor(wasm, saved, { distribution: true });
+  const reopened = await createExperimentalHwp5Editor(wasm, saved, { distribution: selectedCase.distribution });
   try { assert.equal(reopened.text(section, paragraph), marker + original); } finally { reopened.close(); }
   phase("independent-download-verified");
   command("upload", "#file", downloaded);
@@ -123,7 +125,7 @@ try {
   snapshot("reuploaded");
   assert.equal(digest(readFileSync(fixture)), digest(input));
   roundtripVerified = true;
-  console.log(JSON.stringify({ kind: "browser-roundtrip", verified: true, wasmSha256: digest(wasm), inputSha256: digest(input), savedSha256: digest(saved), section, paragraph, output, scope: "one reference, trusted targeted clicks, real input/history/download/reupload and independent full Section/streams/metadata" }));
+  console.log(JSON.stringify({ kind: "browser-roundtrip", verified: true, fixture: selectedCase.fixture, wasmSha256: digest(wasm), inputSha256: digest(input), savedSha256: digest(saved), section, paragraph, output, scope: "one reference, trusted targeted clicks, real input/history/download/reupload and independent full Section/streams/metadata" }));
 } finally {
   try {
     if (ownedBrowser) { await closeOwnedBrowser(command); browserClosed = true; }

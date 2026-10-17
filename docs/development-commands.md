@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[로컬 개체 번호 보존](hwp5-object-number-retention.md)은 `HWPJS_TEST_WASM=/absolute/candidate.wasm node --test --test-concurrency=1 tests/hwp5/object-number-text.test.mjs tests/hwp5/object-number-canvas.test.mjs tests/hwp5/unselected-cross-reference-gate.test.mjs`로 실제7구역/반례/Canvas를 검사합니다. 실제 Chromium은 `HWPJS_TEST_WASM=/absolute/candidate.wasm node tools/hwp5-reference-browser-audit.mjs --root=/absolute/verified-source --case=roadmap --port=58851`입니다. `zig build hwp5-editor-audit -Doptimize=ReleaseSafe`는 참조 회귀/guard를 포함한 등록 묶음을 직렬 실행하고 설치 산출물을 명시하며, 집중 통과가 전체 gate 완료를 뜻하지는 않습니다.
+
 [표 참조 실제 브라우저 검증](hwp5-selected-table-number-text.md)은 `HWPJS_TEST_WASM=/absolute/candidate.wasm node tools/hwp5-reference-browser-audit.mjs --root=/absolute/verified-source --port=58851`입니다. 전용 agent-browser 세션·독립 저장 oracle·원본 hwpspec.hwp를 사용하며 한 원본의 실제 입력/이력/저장/재업로드와 종료를 검사합니다. `node --test tests/hwp5/browser-click-target.test.mjs tests/hwp5/browser-session-close.test.mjs`는 클릭/종료 guard의 음성 대조이며 실제 브라우저 검사의 대체가 아닙니다.
 
 위 명령에 `--paragraph=12 --occurrence=1`을 추가하면 검정 본문 위치를 실제 브라우저에서 검사합니다. `node --test tests/hwp5/reference-browser-arguments.test.mjs`는 잘못된 CLI가 브라우저 실행 전에 거부되는지 검사합니다.

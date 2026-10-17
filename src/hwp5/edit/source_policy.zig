@@ -48,7 +48,7 @@ pub fn validateUnselectedSection(a: std.mem.Allocator, source: []const u8, versi
 }
 
 /// Only for an isolated text splice in another section. This section's model
-/// is unchanged by that transaction, so retain local table-number fields with
+/// is unchanged by that transaction, so retain local object-number fields with
 /// the existing position-preserving checks. Never grant target/structure edits.
 pub fn validateUnselectedTextSection(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version) !void {
     try validateUnselectedCharacterFormat(a, source, version);
@@ -64,14 +64,14 @@ pub fn validateFieldTransaction(a: std.mem.Allocator, source: []const u8, versio
     _ = try inspect(a, source, version, true, true, false);
 }
 
-/// Text-only field transactions retain local table-number labels. The caller
+/// Text-only field transactions retain local object-number labels. The caller
 /// must separately protect derived result spans and retain object declarations.
 pub fn validateFieldTextTransaction(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version) !void {
     _ = try inspect(a, source, version, true, true, true);
 }
 
 /// Character formatting cannot change text, object IDs or numbering declarations.
-/// Keep local table-number results byte-for-byte, including pre-existing orphans.
+/// Keep local object-number results byte-for-byte, including pre-existing orphans.
 pub fn validateCharacterFormat(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version) !void {
     _ = try inspect(a, source, version, true, true, true);
     if (try hasNamedFields(source)) try @import("field_source_bindings.zig").validateCharacterFormat(a, source, version);
@@ -83,7 +83,7 @@ pub fn validateUnselectedCharacterFormat(a: std.mem.Allocator, source: []const u
     if (try hasNamedFields(source)) try @import("field_source_bindings.zig").validateCharacterFormat(a, source, version);
 }
 
-fn inspect(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version, allow_formulas: bool, allow_named_fields: bool, retain_table_numbers: bool) !bool {
+fn inspect(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version, allow_formulas: bool, allow_named_fields: bool, retain_object_numbers: bool) !bool {
     var formulas = false;
     var forms: ?@import("form_source_retention.zig").Report = null;
     defer if (forms) |*value| value.deinit(a);
@@ -125,7 +125,7 @@ fn inspect(a: std.mem.Allocator, source: []const u8, version: @import("../versio
                 } else if (header.id == controls.id("%xrf") and allow_named_fields) {
                     const properties = try @import("../body/field_start.zig").Properties.parse(header.properties);
                     const view = try @import("../body/cross_reference_command.zig").View.parse(properties.command);
-                    if (!(try @import("../body/cross_reference_name_result.zig").supports(view)) and !(retain_table_numbers and try @import("cross_reference_format_retention.zig").tableNumber(view))) return error.UnsupportedSectionControl;
+                    if (!(try @import("../body/cross_reference_name_result.zig").supports(view)) and !(retain_object_numbers and try @import("cross_reference_format_retention.zig").objectNumber(view))) return error.UnsupportedSectionControl;
                 } else if (code == 3 and header.id != controls.id("%hlk")) return error.UnsupportedSectionControl;
             },
             .memo_list => return error.UnsupportedSectionStructure,

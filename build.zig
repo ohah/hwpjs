@@ -82,7 +82,7 @@ pub fn build(b: *std.Build) void {
     const hwp5_text_api = b.addSystemCommand(&.{ "node", "--test", "tests/hwp5/text-preview.test.mjs", "tests/hwp5/preview-record-oracle.test.mjs", "tests/hwp5/canvas-preview.test.mjs" });
     hwp5_text_api.step.dependOn(b.getInstallStep());
     audit.dependOn(&hwp5_text_api.step);
-    const editor_api_tests = b.addSystemCommand(&.{ "node", "--test", "tests/hwp5/editor.test.mjs", "tests/hwp5/editor-controls.test.mjs", "tests/hwp5/history-controls.test.mjs", "tests/hwp5/history-editor.test.mjs", "tests/hwp5/history-abi.test.mjs", "tests/hwp5/canvas-edit.test.mjs", "tests/hwp5/canvas-editor.test.mjs", "tests/hwp5/document-save.test.mjs", "tests/hwp5/edit-corpus.test.mjs", "tests/hwp5/nested-editor.test.mjs", "tests/hwp5/empty-editor.test.mjs", "tests/hwp5/control-editor.test.mjs", "tests/hwp5/reader-worker.test.mjs" });
+    const editor_api_tests = b.addSystemCommand(&.{ "node", "--test", "--test-concurrency=1", "tests/hwp5/editor.test.mjs", "tests/hwp5/editor-controls.test.mjs", "tests/hwp5/history-controls.test.mjs", "tests/hwp5/history-editor.test.mjs", "tests/hwp5/history-abi.test.mjs", "tests/hwp5/canvas-edit.test.mjs", "tests/hwp5/canvas-editor.test.mjs", "tests/hwp5/document-save.test.mjs", "tests/hwp5/edit-corpus.test.mjs", "tests/hwp5/nested-editor.test.mjs", "tests/hwp5/empty-editor.test.mjs", "tests/hwp5/control-editor.test.mjs", "tests/hwp5/reader-worker.test.mjs" });
     editor_api_tests.addArg("tests/hwp5/structure-editor.test.mjs");
     editor_api_tests.addArg("tests/hwp5/character-property-disclosure.test.mjs");
     editor_api_tests.addArg("tests/hwp5/numeric-formula-corpus.test.mjs");
@@ -97,6 +97,15 @@ pub fn build(b: *std.Build) void {
     editor_api_tests.addArg("tests/hwp5/table-number-source-oracle.test.mjs");
     editor_api_tests.addArg("tests/hwp5/table-number-character-format.test.mjs");
     editor_api_tests.addArg("tests/hwp5/table-number-format-canvas.test.mjs");
+    editor_api_tests.addArg("tests/hwp5/selected-table-number-text.test.mjs");
+    editor_api_tests.addArg("tests/hwp5/selected-table-number-canvas.test.mjs");
+    editor_api_tests.addArg("tests/hwp5/unselected-table-number-text.test.mjs");
+    editor_api_tests.addArg("tests/hwp5/object-number-text.test.mjs");
+    editor_api_tests.addArg("tests/hwp5/object-number-canvas.test.mjs");
+    editor_api_tests.addArg("tests/hwp5/browser-click-target.test.mjs");
+    editor_api_tests.addArg("tests/hwp5/browser-session-close.test.mjs");
+    editor_api_tests.addArg("tests/hwp5/reference-browser-arguments.test.mjs");
+    editor_api_tests.setEnvironmentVariable("HWPJS_TEST_WASM", b.getInstallPath(.bin, "hwpjs.wasm"));
     editor_api_tests.addArg("tests/hwp5/text-source-policy-content.test.mjs");
     editor_api_tests.addArg("tests/hwp5/text-source-policy-api.test.mjs");
     editor_api_tests.addArg("tests/hwp5/normalization-consent.test.mjs");

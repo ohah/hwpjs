@@ -6,7 +6,7 @@ import { createCfbReader } from "../../js/cfb.mjs";
 import { deflateRawSync } from "node:zlib";
 import { inspect, paragraphRecords, encodeRecord, verifyRaw, expectedSection, records } from "./style-preservation/text-record-oracle.mjs";
 
-const wasm = readFileSync("zig-out/bin/hwpjs.wasm");
+const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
 const source = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/software.hwp");
 
 test("cross-paragraph hyperlink text updates its start owner while preserving all independent records", async () => {

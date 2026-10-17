@@ -1,0 +1,34 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { workerCanvasHarness, dispatchCanvasEvent } from "../canvas/worker-harness.mjs";
+import { inspect, verifyRaw } from "./style-preservation/text-record-oracle.mjs";
+import { independentFieldSpans } from "./field-span-oracle.mjs";
+
+assert(process.env.HWPJS_TEST_WASM, "Explicit object-number candidate required");
+test("Canvas input in an actual picture-reference document preserves all source and protects result redo", async t => {
+  const input = readFileSync("reference/rhwp/samples/issue5941/1490000-201600081_roadmap_research.hwp"), h = await workerCanvasHarness(t);
+  assert.equal((await h.send({ kind: "load", format: "hwp5", bytes: input })).error, undefined);
+  const enabled = await h.send({ kind: "enable" }); assert.equal(enabled.error, undefined);
+  const baseline = (await h.send({ kind: "save" })).bytes, before = inspect(baseline);
+  const row = enabled.content.paragraphs.find(row => row.section === 0 && row.paragraph === 0);
+  assert(row?.editable && !row.clipped);
+  assert.equal(h.controller.selectTextRange({ section: 0, paragraph: 0, startUnit: 0, endUnit: 0 }), true);
+  assert.equal(h.input.readOnly, false);
+  const original = h.input.value, text = "그림참조😀";
+  assert.equal(dispatchCanvasEvent(h.input, "beforeinput", { inputType: "insertText", data: text }).defaultPrevented, false);
+  h.input.value = text + original; h.input.setSelectionRange(text.length, text.length);
+  dispatchCanvasEvent(h.input, "input");
+  assert.equal((await h.flush()).error, undefined);
+  const saved = (await h.send({ kind: "save", allowStaleLayout: true })).bytes;
+  verifyRaw(baseline, saved, 0, 0, 0, 0, text, { fieldIds: [0x25787266] });
+  assert.equal(h.controller.history("undo"), true); assert.equal((await h.flush()).error, undefined);
+  assert.deepEqual((await h.send({ kind: "save" })).bytes, baseline);
+  const field = independentFieldSpans(before.sections[0].bytes).find(row => row.field_id === 0x25787266);
+  assert(field);
+  const rejected = await h.send({ kind: "splice", section: 0, paragraph: field.begin.paragraph, startUnit: field.begin.unit, endUnit: field.begin.unit, text: "거부" });
+  assert.equal(rejected.error, "ReadOnlyCrossReferenceResult");
+  assert.deepEqual((await h.send({ kind: "save" })).bytes, baseline);
+  assert.equal(h.controller.history("redo"), true); assert.equal((await h.flush()).error, undefined);
+  assert.deepEqual((await h.send({ kind: "save", allowStaleLayout: true })).bytes, saved);
+});

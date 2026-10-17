@@ -6,7 +6,7 @@
 
 `source_policy.validateFieldTextTransaction`은 레코드/참조 종류만 검사합니다. 공개 적격성 조회는 별도 필드 연결 검사를 수행하고, 실제 `field_splice`는 모델 거래 안에서 바인딩·제어 경계·기존 `field_result_protection`을 적용합니다. 필드 연결에서 문단 검증으로 다시 진입할 수 있으므로 source policy에서 연결 검사를 재귀 호출하지 않습니다.
 
-`cross_reference_name_apply.applyDraftRetainingTableNumbers`는 공통 의미 판정으로 로컬 표 번호만 건너뛰고 기존 책갈피 이름 결과는 원래 경로로 처리합니다. 기존 일반 결과 적용 API와 수식 정의·문단 분할/병합의 허가는 변경하지 않습니다. 외부 문서·페이지·대상 텍스트·상대 위치는 계속 거부합니다. 파생 결과 영역은 삽입 시작/끝 경계와 결과 삭제를 포함해 `ReadOnlyCrossReferenceResult`로 보호합니다.
+현재 `cross_reference_name_apply.applyDraftRetainingObjectNumbers`는 [로컬 개체 번호 보존](hwp5-object-number-retention.md)의 공통 판정을 사용하며, 기존 책갈피 이름 결과는 원래 경로로 처리합니다. 아래 표 번호 실측은 그 하위 범위입니다. 기존 일반 결과 적용 API와 수식 정의·문단 분할/병합의 허가는 변경하지 않습니다. 외부 문서·페이지·대상 텍스트·상대 위치는 계속 거부합니다. 파생 결과 영역은 삽입 시작/끝 경계와 결과 삭제를 포함해 `ReadOnlyCrossReferenceResult`로 보호합니다.
 
 ## 분리 후보 검증
 

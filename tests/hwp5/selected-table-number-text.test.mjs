@@ -49,8 +49,8 @@ for (const [name, section] of [["hwpspec.hwp", 2], ["hwpspec.hwp", 3], ["hwp-3.0
   } finally { editor.close(); }
 });
 
-test("table-number retention does not grant other actual cross-reference kinds", async () => {
-  for (const path of ["pic-in-head-01.hwp", "issue5941/1490000-201600081_roadmap_research.hwp"]) {
+test("object-number retention does not grant actual page-reference kinds", async () => {
+  for (const path of ["pic-in-head-01.hwp"]) {
     const input = readFileSync(`reference/rhwp/samples/${path}`);
     const editor = await createExperimentalHwp5Editor(wasm, input);
     try {
