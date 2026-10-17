@@ -1,6 +1,14 @@
 //! Validate immutable mixed field topology before position-preserving formatting.
 const std = @import("std");
 pub fn validate(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version) !void {
+    return validateWith(a, source, version, false);
+}
+
+pub fn validateCharacterFormat(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version) !void {
+    return validateWith(a, source, version, true);
+}
+
+fn validateWith(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version, retain_table_numbers: bool) !void {
     var projection = try @import("../model_projection.zig").fromDecodedSections(a, version, &.{source});
     defer projection.deinit(a);
     const bindings = try @import("field_bindings.zig").collect(a, source, version, projection.sections[0]);
@@ -12,7 +20,9 @@ pub fn validate(a: std.mem.Allocator, source: []const u8, version: @import("../v
         defer a.free(sites);
         for (bindings) |binding| {
             if (binding.span.field_id != @import("../body/control_rules.zig").id("%xrf")) continue;
-            _ = try @import("../body/cross_reference_name_result.zig").evaluate(try @import("../body/cross_reference_command.zig").View.parse(binding.properties.command), sites);
+            const view = try @import("../body/cross_reference_command.zig").View.parse(binding.properties.command);
+            if (retain_table_numbers and try @import("cross_reference_format_retention.zig").tableNumber(view)) continue;
+            _ = try @import("../body/cross_reference_name_result.zig").evaluate(view, sites);
         }
     }
 }

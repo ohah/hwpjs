@@ -51,8 +51,7 @@ fn validateWith(a: std.mem.Allocator, source: []const u8, version: Version, p: m
         .formula_transaction => _ = try @import("source_policy.zig").hasFormulas(a, source, version),
         .character_format => {
             if (try @import("source_policy.zig").hasNamedFields(source)) {
-                try @import("source_policy.zig").validateFieldTransaction(a, source, version);
-                try @import("field_source_bindings.zig").validate(a, source, version);
+                try @import("source_policy.zig").validateCharacterFormat(a, source, version);
             } else _ = try @import("source_policy.zig").hasFormulas(a, source, version);
         },
         .splice, .hyperlink_transaction => try validateSection(a, source, version),

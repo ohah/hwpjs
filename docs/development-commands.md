@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[표 번호 참조의 글자 서식 보존](hwp5-table-number-format-retention.md)은 native 부분 할당 실패·실제 원본과 별도 후보 WASM의 공개 API/독립 저장 대조 명령을 소유합니다. 텍스트 편집·번호 갱신 허가와 구분합니다.
+
 [XML 속성 동일 뷰](xml-normalized-attribute-view.md)의 명령은 해당 문서에서 관리합니다. 디코더와 값·오류·길이 경계를 대조하고 실제 중첩 표 조회 할당량을 측정합니다.
 
 `zig test src/root.zig -O ReleaseSafe --test-filter 'table number '`는 [표 번호 원본 대상](hwp5-table-number-targets.md)의 ID·캡션·코드18 연결, 전체 부분 할당 실패, 실제137개 선언과 캐시 숫자 변조 반례를 검사합니다. Debug도 같은 필터입니다. `node --test tests/hwp5/table-number-source-oracle.test.mjs`는 독립 CFB/레코드 oracle을 실행합니다. reference 없는 원본 검사는 skip을 표시하며 편집 허용 검사와 구분합니다.

@@ -1,5 +1,7 @@
 # HWP5 모듈 계약 인덱스
 
+- [표 번호 참조 문서의 글자 서식 보존](hwp5-table-number-format-retention.md)
+
 - [표 번호 상호참조의 원본 대상 연결](hwp5-table-number-targets.md)
 
 - [명시적 CFB 보정본 편집 열기](hwp5-normalized-open.md)
