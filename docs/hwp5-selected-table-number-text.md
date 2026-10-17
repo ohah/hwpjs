@@ -18,7 +18,7 @@ API·수식 정의·기존 Canvas와 새 두 구역 Canvas를 합친 묶음은24
 
 ## 실제 브라우저의 남은 확인
 
-최종 주석까지 반영한 게시 산출물은 `publication-regressions.log`의 단일 명령27/27·fail/cancel/skip0·exit0으로 재검증했습니다. 이름/종류 기준 export331개도 추가/제거 없이 동일합니다. 새 산출물의 reference 전수 읽기 대조와 물리 fixture/baseline을 갖춘 HWPX 전체 실행은 별도로 진행하며, 시작만으로 완료로 기록하지 않습니다.
+최종 주석까지 반영한 게시 산출물은 `publication-regressions.log`의 단일 명령27/27·fail/cancel/skip0·exit0으로 재검증했습니다. 이름/종류 기준 export331개도 추가/제거 없이 동일합니다. `publication-reader-parity.jsonl`의 reference975개는 전체 읽기 JSON944동일·기존 거부5동일·HWP3범위제외26입니다. 입력 hash도 함께 대조했으며 같은 거부는 지원 성공이 아닙니다. 물리 fixture/baseline을 갖춘 HWPX 전체 실행은 별도로 진행 중이고, 시작만으로 완료로 기록하지 않습니다.
 
 통합24개 실행 이후 새 Canvas 검사를 각 구역의0/1번 문단으로 확장해4/4·fail/skip0을 별도로 확인했습니다(`selected-canvas-four-paragraphs.log`). 실제 브라우저에서 선택한2/1 문단도 포함하지만, DOM 대역4개를 실제 Chromium 이력 갱신의 대체 증거로 사용하지 않습니다.
 
