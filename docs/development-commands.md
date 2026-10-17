@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[Native 범위 재개](native-test-range-audit.md)는 `node tools/zig-native-batch-audit.mjs --binary=/absolute/tests --batch-size=1 --start-index=2532 --expected-sha256=<original-lowercase-sha256>`처럼 실행합니다. 선택적인 `--end-index`는 배타적 끝이며 부분 성공은 전체 gate가 아닙니다. `node --test tests/hwp5/native-test-range.test.mjs`로 인자·inventory 경계를 검사합니다.
+
 [차트 혼합 현재값](hwpx-chart-mixed-current-values.md)은 `HWPJS_TEST_WASM=/absolute/candidate.wasm node --test tests/hwpx/chart-mixed-current-values.test.mjs`로 검사합니다. 계열 이름 API가 있는 후보와 RHWP issue6037 원본·기존 Python oracle이 필요하며 전체 native/브라우저 검사는 아닙니다.
 
 [구역 불일치 열기 안내](hwp5-section-count-refusals.md)는 `HWPJS_TEST_WASM=/absolute/candidate.wasm node --test tests/hwp5/load-failure-guidance.test.mjs tests/hwp5/document-save.test.mjs tests/hwp5/document-failure-order.test.mjs tests/hwpx/preview-startup.test.mjs`로 검사합니다. 안내만 추가하며 파서 거부·저장·런타임 오류 정책을 변경하지 않습니다.

@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+[Native 범위 재개](native-test-range-audit.md)는 순수 인자/coverage 판정을 `native-test-range.mjs`에 분리하고 표준 runner 프로토콜·실제 실행·완료 범위를 구분합니다.
+
 [차트 혼합 현재값 검증](hwpx-chart-mixed-current-values.md)은 같은 native 리소스의 종류별 값 보존·이력과 기존 독립 XML/ZIP/OLE oracle의 역할을 구분합니다.
 
 [Worker fixture 재열기](hwpx-worker-fixture-roundtrip.md)는 추적 inventory·기존 재열기 projection·계산 결과 독립 oracle의 역할과 검증 범위를 구분합니다.

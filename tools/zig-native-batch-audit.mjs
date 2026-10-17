@@ -3,13 +3,13 @@ import { spawn } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { request, metadata, result, frameParser } from "./zig-test-protocol.mjs";
+import { nativeAuditOptions, nativeTestRange } from "./native-test-range.mjs";
 
-const args = process.argv.slice(2);
-if (args.length < 1 || args.length > 2 || !args[0].startsWith("--binary=") || !args[0].slice(9)) throw new Error("ExpectedNativeTestBinary");
-const binary = args[0].slice(9), size = args[1] === undefined ? 100 : /^--batch-size=[1-9][0-9]*$/.test(args[1]) ? Number(args[1].slice(13)) : NaN;
-if (!Number.isSafeInteger(size) || size > 1000) throw new Error("InvalidNativeBatchSize");
+const options = nativeAuditOptions(process.argv.slice(2));
+const { binary, size } = options;
 const hash = () => createHash("sha256").update(readFileSync(binary)).digest("hex");
 const digest = hash(), outcomes = [], counts = { pass: 0, fail: 0, skip: 0, fuzzDeclarations: 0 };
+if (options.expectedSha256 !== undefined) assert.equal(digest, options.expectedSha256, "NativeBinarySha256Mismatch");
 
 function server() {
   const child = spawn(binary, ["--listen=-", "--seed=0x485750"], { stdio: ["pipe", "pipe", "pipe"] });
@@ -44,8 +44,9 @@ function server() {
 }
 
 let names = null;
+let range = null;
 try {
-  let start = 0;
+  let start = options.start;
   do {
     assert.equal(hash(), digest, "NativeBinaryChanged");
     const runner = server();
@@ -60,9 +61,10 @@ try {
       const actual = metadata(inventory.body);
       if (names === null) {
         names = actual;
-        console.log(JSON.stringify({ kind: "inventory", binarySha256: digest, tests: names.length, batchSize: size, seed: "0x485750" }));
+        range = nativeTestRange(options, names.length);
+        console.log(JSON.stringify({ kind: "inventory", binarySha256: digest, tests: names.length, batchSize: size, seed: "0x485750", range }));
       } else assert.deepEqual(actual, names, "NativeTestInventoryChanged");
-      const end = Math.min(names.length, start + size);
+      const end = Math.min(range.end, start + size);
       console.log(JSON.stringify({ kind: "batch", pid: runner.child.pid, start, end }));
       for (let index = start; index < end; index++) {
         console.log(JSON.stringify({ kind: "test-start", index, name: names[index] }));
@@ -73,7 +75,7 @@ try {
         assert.equal(message.tag, 4);
         const outcome = result(message.body);
         assert.equal(outcome.index, index, "UnexpectedNativeTestIndex");
-        assert.equal(outcomes.length, index, "NativeTestCoverageGap");
+        assert.equal(outcomes.length, index - range.start, "NativeTestCoverageGap");
         outcomes.push(outcome);
         counts[["pass", "fail", "skip"][outcome.status]]++;
         if (outcome.fuzz) counts.fuzzDeclarations++;
@@ -83,14 +85,14 @@ try {
       normal = true;
       start = end;
     } finally { await runner.stop(normal); }
-  } while (start < names.length);
-  assert.equal(outcomes.length, names.length, "IncompleteNativeTestCoverage");
+  } while (start < range.end);
+  assert.equal(outcomes.length, range.end - range.start, "IncompleteNativeTestCoverage");
   assert.equal(hash(), digest, "NativeBinaryChanged");
   const logErrors = outcomes.reduce((sum, outcome) => sum + outcome.logs, 0), leaks = outcomes.reduce((sum, outcome) => sum + outcome.leaks, 0);
   const success = !counts.fail && !counts.skip && !logErrors && !leaks;
   if (!success) process.exitCode = 1;
-  console.log(JSON.stringify({ kind: "complete", success, binarySha256: digest, tests: names.length, completed: outcomes.length, ...counts, logErrors, leaks, scope: "all compiled unit tests in isolated standard-runner processes; not a long-lived single-process gate or fuzz campaign" }));
+  console.log(JSON.stringify({ kind: range.fullInventoryCovered ? "complete" : "range-complete", success, binarySha256: digest, tests: names.length, completed: outcomes.length, range, ...counts, logErrors, leaks, scope: "selected compiled unit tests in isolated standard-runner processes; not a long-lived single-process gate or fuzz campaign" }));
 } catch (error) {
-  console.error(JSON.stringify({ kind: "incomplete", completed: outcomes.length, tests: names?.length ?? null, error: error.message }));
+  console.error(JSON.stringify({ kind: "incomplete", completed: outcomes.length, tests: names?.length ?? null, range, error: error.message }));
   process.exitCode = 1;
 }
