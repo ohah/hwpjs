@@ -12,6 +12,9 @@ pub const text = @import("text/root.zig");
 pub const model = @import("model/document.zig");
 
 test {
+    _ = @import("hwp5/docinfo/section_count_tests.zig");
+    _ = @import("hwp5/edit/available_section_copy_tests.zig");
+    _ = @import("hwp5/available_sections_tests.zig");
     _ = @import("hwpx/dutmal_structure_guard_tests.zig");
     _ = @import("hwpx/dutmal_text_changes.zig");
     _ = @import("hwpx/dutmal_text_values.zig");

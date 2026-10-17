@@ -30,7 +30,7 @@ Worker는 이 모드에서 editor를 만들지 않고 모든 load 이외 명령�
 
 분리 main 기반 서버와 위 후보 WASM을 사용한 실제 Chromium에서도 세 원본을 각각 오류→버튼 선택→118/23/2,614문단 Canvas 표시로 확인했다. 선언/저장 개수와 원본 불변 경고를 표시하고 편집 시작·다운로드·Canvas textarea는 비활성이다. 이후 정상 charshape.hwp의 7문단을 열어 경고 초기화·편집 시작·다운로드 가능 상태를 확인했다. 두 화면 캡처를 직접 검토했으며 수집한 브라우저 오류는 없었다. 브라우저 active=false/PID 없음과 임시 서버 listener 없음/exit130도 확인했다. OS IME·원본 페이지 조판·누락 내용 복원을 증명하지 않는다.
 
-main 통합 범위는 선택적인 JS API·Worker·UI와 검사다. 새 native 구현은 별도 후보이며 전체 native gate·기본 WASM·외부 데모 승격은 아직 미완료다. 기본 배포 화면에서 버튼을 사용할 수 있다고 주장하지 않는다. 실행 명령은 [개발·검증 명령](development-commands.md)이 소유한다. native 집중 명령은 후보 소스에서만 유효하며 main의 필터 일치 없는 root 검사만으로 구현 완료를 주장하지 않는다.
+검증한 native 구현·선택적 JS API·Worker·UI와 검사를 main 소스에 통합한다. 전체 native gate·기본 WASM·외부 데모 artifact 승격은 아직 미완료다. 기존 기본 WASM을 사용하는 배포 화면에서 버튼을 사용할 수 있다고 주장하지 않는다. 실행 명령은 [개발·검증 명령](development-commands.md)이 소유한다. 과거 후보의 집중 검사 수치를 현재 main 전체 검사 완료로 대체하지 않는다.
 
 기본 reader의 참조 975경로 전수 대조는 기존 main native 계열과 전체 JSON 응답 944개 동일·같은 거부 5개·범위 밖 HWP3 26개로 exit0 종료했다. 명시적 API를 기본 동작으로 바꾸지 않았다는 증거이며 같은 거부를 지원 성공으로 세지 않는다.
 

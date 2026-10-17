@@ -14,13 +14,23 @@ pub fn encode(backing: std.mem.Allocator, input: []const u8) ![]u8 {
     return (try encodeDetailed(backing, input)).bytes;
 }
 
-pub const Encoded = struct { bytes: []u8, distribution: bool };
+pub const Encoded = struct { bytes: []u8, distribution: bool, declared_sections: u16 };
 pub fn encodeDetailed(backing: std.mem.Allocator, input: []const u8) !Encoded {
+    var source = try Source.openReadOnly(backing, input);
+    defer source.deinit();
+    return encodeSource(backing, &source);
+}
+
+pub fn encodeAvailableDetailed(backing: std.mem.Allocator, input: []const u8) !Encoded {
+    var source = try Source.openAvailableReadOnly(backing, input);
+    defer source.deinit();
+    return encodeSource(backing, &source);
+}
+
+fn encodeSource(backing: std.mem.Allocator, source: *const Source) !Encoded {
     var arena = std.heap.ArenaAllocator.init(backing);
     defer arena.deinit();
     const a = arena.allocator();
-    var source = try Source.openReadOnly(backing, input);
-    defer source.deinit();
 
     var out: std.ArrayList(u8) = .empty;
     try append(a, &out, "H5T1");
@@ -65,7 +75,7 @@ pub fn encodeDetailed(backing: std.mem.Allocator, input: []const u8) !Encoded {
         }
         std.mem.writeInt(u32, out.items[count_pos..][0..4], count, .little);
     }
-    return .{ .bytes = try backing.dupe(u8, out.items), .distribution = source.header.has(.distribution) };
+    return .{ .bytes = try backing.dupe(u8, out.items), .distribution = source.header.has(.distribution), .declared_sections = source.declared_section_count };
 }
 
 fn cast(value: usize) !u32 {

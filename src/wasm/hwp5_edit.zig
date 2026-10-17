@@ -10,6 +10,7 @@ var history: ?History = null;
 var output: ?[]u8 = null;
 var reflow: bool = false;
 var normalization: ?@import("../cfb/observed_repairs.zig").Deviations = null;
+var available_section_copy: ?@import("../hwp5/edit/available_section_copy.zig").Report = null;
 
 fn fail(err: anyerror) u32 {
     _ = errors.fail(err);
@@ -44,6 +45,22 @@ export fn hwp5_edit_close() void {
     if (active) |s| s.close();
     active = null;
     normalization = null;
+    available_section_copy = null;
+}
+export fn hwp5_edit_open_available_section_copy(ptr: [*]const u8, size: usize) u32 {
+    if (size > 64 * 1024 * 1024) return fail(error.LimitExceeded);
+    const next = @import("../hwp5/edit/available_section_copy.zig").open(a, ptr[0..size]) catch |err| return fail(err);
+    // Commit only after the entire candidate session has opened successfully.
+    hwp5_edit_close();
+    active = next.session;
+    available_section_copy = next.report;
+    return 1;
+}
+export fn hwp5_edit_available_section_copy_info() u32 {
+    hwp5_edit_output_free();
+    _ = session() catch |err| return fail(err);
+    output = std.json.Stringify.valueAlloc(a, available_section_copy, .{}) catch |err| return fail(err);
+    return 1;
 }
 export fn hwp5_edit_open_normalized(ptr: [*]const u8, size: usize) u32 {
     return openNormalizedMode(ptr, size, false);
@@ -63,6 +80,8 @@ fn openNormalizedMode(ptr: [*]const u8, size: usize, distribution: bool) u32 {
 export fn hwp5_edit_normalization_info() u32 {
     hwp5_edit_output_free();
     _ = session() catch |err| return fail(err);
+    // Legacy metadata must never mislabel this baseline as the original input.
+    if (available_section_copy != null) return fail(error.AvailableSectionCopyBaseline);
     output = std.json.Stringify.valueAlloc(a, normalization, .{ .emit_nonportable_numbers_as_strings = true }) catch |err| return fail(err);
     return 1;
 }

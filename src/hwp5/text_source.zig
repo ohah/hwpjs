@@ -3,7 +3,6 @@ const std = @import("std");
 const Cfb = @import("../cfb/reader.zig").File;
 const observed_repairs = @import("../cfb/observed_repairs.zig");
 const Header = @import("file_header.zig").Header;
-const docinfo = @import("docinfo/reader.zig");
 const stream = @import("stream.zig");
 
 const max_input = 64 * 1024 * 1024;
@@ -15,36 +14,45 @@ pub const Source = struct {
     file: Cfb,
     header: Header,
     section_count: u16,
+    declared_section_count: u16,
 
     pub fn open(a: std.mem.Allocator, input: []const u8) !Source {
-        return openWithPolicy(a, input, .reject);
+        return openWithPolicy(a, input, .reject, false);
     }
 
     /// Read-only ViewText support never grants editor permission.
     pub fn openReadOnly(a: std.mem.Allocator, input: []const u8) !Source {
-        return openWithPolicy(a, input, .observed_viewtext);
+        return openWithPolicy(a, input, .observed_viewtext, false);
     }
 
-    fn openWithPolicy(a: std.mem.Allocator, input: []const u8, policy: @import("feature_policy.zig").Distribution) !Source {
+    /// Explicit preview only: do not repair metadata or permit editor opening.
+    pub fn openAvailableReadOnly(a: std.mem.Allocator, input: []const u8) !Source {
+        return openWithPolicy(a, input, .observed_viewtext, true);
+    }
+
+    fn openWithPolicy(a: std.mem.Allocator, input: []const u8, policy: @import("feature_policy.zig").Distribution, available_only: bool) !Source {
         var file = try openCfb(a, input);
         errdefer file.deinit();
         const header = try Header.parse(try file.readStream(a, "/FileHeader"));
         try @import("feature_policy.zig").requireSupported(&header, policy);
         const info = try stream.decodeWithPolicy(a, &header, try file.readStream(a, "/DocInfo"), max_stream, policy);
         defer a.free(info);
-        const count = try sectionCount(info, header.version());
+        const count = (try @import("docinfo/section_count.zig").locate(info, header.version())).value;
         if (count == 0 or count > max_sections) return error.InvalidSectionCount;
         const body_index = try file.findExact(if (header.has(.distribution)) "/ViewText" else "/BodyText") orelse return error.StreamNotFound;
         if (file.entries[body_index].kind != 1) return error.NotAStorage;
         var found: usize = 0;
+        var highest: usize = 0;
         for (file.entries) |entry| {
             if (entry.parent != body_index or entry.kind != 2) continue;
             const index = (try @import("container/numbered_stream.zig").index(u16, "Section", entry.name)) orelse return error.UnexpectedBodyStream;
-            if (index >= count) return error.SectionCountMismatch;
+            if (!available_only and index >= count) return error.SectionCountMismatch;
+            if (index >= max_sections) return error.InvalidSectionCount;
+            highest = @max(highest, @as(usize, index) + 1);
             found += 1;
         }
-        if (found != count) return error.SectionCountMismatch;
-        return .{ .file = file, .header = header, .section_count = count };
+        if (found == 0 or highest != found or (!available_only and found != count)) return error.SectionCountMismatch;
+        return .{ .file = file, .header = header, .section_count = if (available_only) @intCast(found) else count, .declared_section_count = count };
     }
 
     pub fn deinit(self: *Source) void {
@@ -100,19 +108,4 @@ fn openCfb(a: std.mem.Allocator, input: []const u8) !Cfb {
         },
         else => return strict_err,
     };
-}
-
-fn sectionCount(bytes: []const u8, version: @import("version.zig").Version) !u16 {
-    try version.requireSupported();
-    var it = @import("record.zig").Iterator.init(bytes, .{});
-    var count: ?u16 = null;
-    while (try it.next()) |record| {
-        if (record.tag != @intFromEnum(docinfo.Tag.document_properties)) continue;
-        if (count != null) return error.DuplicateDocumentProperties;
-        if (record.level != 0) return error.InvalidDocInfoLevel;
-        const len = record.payload.len;
-        if (len != docinfo.Properties.base_len and len < docinfo.Properties.full_len) return error.InvalidDocumentPropertiesLength;
-        count = std.mem.readInt(u16, record.payload[0..2], .little);
-    }
-    return count orelse error.MissingDocumentProperties;
 }
