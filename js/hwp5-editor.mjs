@@ -100,6 +100,12 @@ export async function createExperimentalHwp5Editor(source, input, { distribution
       if (typeof wasm.hwp5_edit_normalization_info !== "function") throw new Error("Hwp5NormalizationAbiUnavailable");
       return decodeHwp5NormalizationInfo(output(() => wasm.hwp5_edit_normalization_info()).bytes);
     },
+    supportsTextSourcePolicy() { check(); return typeof wasm.hwp5_edit_validate_text_source_policy === "function"; },
+    validateTextSourcePolicy(section) {
+      check(); u32(section, "section");
+      if (typeof wasm.hwp5_edit_validate_text_source_policy !== "function") throw new Error("Hwp5TextSourcePolicyAbiUnavailable");
+      success(wasm.hwp5_edit_validate_text_source_policy(section));
+    },
     ...createHistoryApi({ wasm, memory, check, uint: u32, prefix: "hwp5_edit", unavailable: "Hwp5HistoryAbiUnavailable" }),
     sectionCount() { check(); return count(wasm.hwp5_edit_section_count()); },
     paragraphCount(section) { check(); return count(wasm.hwp5_edit_paragraph_count(u32(section, "section"))); },

@@ -4,29 +4,25 @@ import { readFileSync, existsSync } from "node:fs";
 import { workerCanvasHarness, dispatchCanvasEvent } from "../canvas/worker-harness.mjs";
 import { verifyCharacterProperties } from "./style-preservation/character-property-oracle.mjs";
 
-test("table number references allow Canvas character formatting while actual Worker rejects text input", async t => {
+test("native source policy blocks Canvas text input while keeping Worker character formatting available", async t => {
   const path = "reference/rhwp/samples/hwpspec.hwp";
   if (!existsSync(path)) { t.skip("RHWP reference fixture is unavailable"); return; }
   const input = readFileSync(path), h = await workerCanvasHarness(t);
   assert.equal((await h.send({ kind: "load", format: "hwp5", bytes: input })).error, undefined);
   const enabled = await h.send({ kind: "enable", distribution: true, normalizeObservedCfb: true });
   assert.equal(enabled.error, undefined);
-  const row = enabled.content.paragraphs.find(row => row.editable && row.text.length > 0 && !row.clipped && row.characterRanges?.length && row.text.charCodeAt(0) >= 32 && row.text.charCodeAt(0) < 0xd800);
-  assert(row, "fixture must expose an optimistic paragraph-local text permission");
+  assert.equal(enabled.content.textSourcePolicyAvailable, true);
+  const row = enabled.content.paragraphs.find(row => row.selectable && !row.editable && row.text.length > 0 && !row.clipped && row.characterRanges?.length && row.text.charCodeAt(0) >= 32 && row.text.charCodeAt(0) < 0xd800);
+  assert(row, "fixture must expose selectable but text-protected content");
+  assert.equal(row.textSourcePolicyError, "UnsupportedSectionControl");
   const baseline = Buffer.from((await h.send({ kind: "save" })).bytes);
   const range = { section: row.section, paragraph: row.paragraph, startUnit: 0, endUnit: 1 };
   assert.equal(h.controller.selectTextRange(range), true);
-  // Known UI gap: the reader's paragraph-local flag does not represent the
-  // transaction's cross-section policy. Native remains authoritative.
-  assert.equal(h.input.readOnly, false);
+  assert.equal(h.input.readOnly, true);
   const text = h.input.value;
   const blocked = dispatchCanvasEvent(h.input, "beforeinput", { inputType: "insertText", data: "거부" });
-  assert.equal(blocked.defaultPrevented, false);
-  h.input.value = "거부" + text;
-  h.input.setSelectionRange(2, 2);
-  dispatchCanvasEvent(h.input, "input");
-  assert.equal(h.requests.at(-1).kind, "splice");
-  assert.equal((await h.flush()).error, "UnsupportedSectionControl");
+  assert.equal(blocked.defaultPrevented, true);
+  assert.equal(h.requests.length, 0);
   assert.equal(h.input.value, text);
   assert.deepEqual(Buffer.from((await h.send({ kind: "save" })).bytes), baseline);
   assert.equal(h.controller.selectTextRange(range), true);
@@ -39,7 +35,7 @@ test("table number references allow Canvas character formatting while actual Wor
   assert.equal(changed.error, undefined);
   const current = changed.content.paragraphs.find(row => row.section === range.section && row.paragraph === range.paragraph);
   assert.equal(current.text, text);
-  assert.equal(current.editable, true, "known paragraph-local UI permission gap remains visible");
+  assert.equal(current.editable, false);
   const saved = await h.send({ kind: "save", allowStaleLayout: true });
   assert.equal(saved.error, undefined);
   assert.equal(verifyCharacterProperties(input, Buffer.from(saved.bytes), request), true);

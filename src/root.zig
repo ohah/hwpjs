@@ -757,6 +757,7 @@ test {
     _ = @import("hwpx/table_xml_fields.zig");
     _ = @import("hwp5/edit/table_number_format_tests.zig");
     _ = @import("hwp5/edit/cross_reference_format_retention.zig");
+    _ = @import("hwp5/edit/text_source_policy_tests.zig");
     _ = @import("hwp5/docinfo/shape_tests.zig");
     _ = @import("hwp5/docinfo/reference_tests.zig");
     _ = @import("hwp5/body/tests.zig");

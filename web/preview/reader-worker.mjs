@@ -14,6 +14,7 @@ import { displayHwpxContent, HWPX_DISPLAY_BOUNDS } from "./hwpx-content.mjs";
 import { projectHwpxWindow } from "./hwpx-window-projection.mjs";
 import { attachHwpxStyles } from "./hwpx-style-content.mjs";
 import { attachHwp5Styles } from "./hwp5-style-content.mjs";
+import { attachHwp5TextSourcePolicy } from "./hwp5-text-source-policy.mjs";
 import { attachHwp5Tables } from "./hwp5-table-content.mjs";
 import { attachHwp5ParagraphFormats } from "./hwp5-paragraph-formats.mjs";
 import { attachHwpxParagraphFormats } from "./hwpx-paragraph-formats.mjs";
@@ -97,6 +98,7 @@ function hwp5Display() {
   content.characterTextColorRangesAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwp5_edit_set_character_text_color_ranges" && entry.kind === "function");
   content.characterShadeRangesAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwp5_edit_set_character_shade_ranges" && entry.kind === "function");
   if (protectionRemoved) content.passwordProtectionRemoved = true;
+  attachHwp5TextSourcePolicy(editor, content);
   const paragraphFormatAvailable = ["hwp5_edit_para_shape_count", "hwp5_edit_para_shape_id", "hwp5_edit_set_paragraph_format"].every(name => WebAssembly.Module.exports(module).some(entry => entry.name === name && entry.kind === "function"));
   const prepared = attachHwp5PictureTails(editor, attachHwp5Pictures(editor, attachHwp5PageSources(editor, attachHwp5ParagraphFormats(editor, attachHwp5Tables(editor, preview, attachHwp5Styles(editor, preview, content, hwp5StyleOpenError)), paragraphFormatAvailable))));
   prepared.hwp5GroupGeometry = projectHwp5GroupGeometry(prepared);

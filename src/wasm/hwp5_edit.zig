@@ -18,6 +18,11 @@ fn fail(err: anyerror) u32 {
 fn session() !*Session {
     return active orelse error.EditorNotOpen;
 }
+export fn hwp5_edit_validate_text_source_policy(section_index: u32) u32 {
+    const s = session() catch |err| return fail(err);
+    s.validateTextSourcePolicy(section_index) catch |err| return fail(err);
+    return 1;
+}
 export fn hwp5_edit_output_free() void {
     if (output) |bytes| a.free(bytes);
     output = null;

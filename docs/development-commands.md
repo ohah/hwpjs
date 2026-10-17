@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[HWP5 원본 입력 적격성](hwp5-text-source-eligibility.md)은 구역 간 native 정책의 조회·부분 할당 실패·optional ABI·Canvas 읽기 전용/서식 분리 검증 명령을 소유합니다.
+
 [표 번호 참조의 글자 서식 보존](hwp5-table-number-format-retention.md)은 native 부분 할당 실패·실제 원본과 별도 후보 WASM의 공개 API/독립 저장 대조 명령을 소유합니다. 텍스트 편집·번호 갱신 허가와 구분합니다.
 
 [XML 속성 동일 뷰](xml-normalized-attribute-view.md)의 명령은 해당 문서에서 관리합니다. 디코더와 값·오류·길이 경계를 대조하고 실제 중첩 표 조회 할당량을 측정합니다.

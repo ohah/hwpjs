@@ -483,6 +483,11 @@ pub const Session = opaque {
         return .{ .source_node = p.source_node, .parent_node = p.parent_node, .style_id = p.style_id };
     }
 
+    pub fn validateTextSourcePolicy(self: *const Session, section: usize) !void {
+        const state = self.stateConst();
+        try @import("text_source_policy.zig").validate(state.allocator, state.decoded, state.source.header.version(), section);
+    }
+
     pub fn editableTextLength(self: *const Session, a: std.mem.Allocator, section: usize, index: usize) !u32 {
         if (index >= try self.paragraphCount(section)) return error.InvalidParagraph;
         const paragraph_value = self.stateConst().document.sections[section].paragraphs[index];

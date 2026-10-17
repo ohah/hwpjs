@@ -14,7 +14,7 @@
 
 `table-number-format-canvas.test.mjs`는 실제 Worker/WASM과 Canvas controller/renderer를 연결한 DOM 대역 검사입니다. 분리한 main 소스/같은 후보에서1/1·skip0으로 `hwpspec.hwp`의 선택에 글자 서식을 적용하고 독립 전체 CFB/레코드 oracle·undo/redo를 통과했습니다. 실제 Chromium/OS IME 검사는 아닙니다.
 
-이 연결 검사에서 현재 UI 허가의 불일치도 재현했습니다. reader의 문단 로컬 `editable=true`가 다른 구역의 미지원 참조를 반영하지 않아 입력 UI는 허용하지만 실제 splice는 UnsupportedSectionControl로 거부됩니다. 거부 후 텍스트·저장본이 원상태이고 뒤이은 서식 거래가 성공함을 검사합니다. 이 동작은 문서 손상을 막는 native 경계의 증거이지 정확한 UI 허가 판정의 완료가 아닙니다. 문서/구역 단위의 native 입력 적격성을 UI에 전달하는 후속 수정이 필요합니다. 서식 전용 허가와 일반 입력 허가를 다시 합치지 않습니다.
+이 연결 검사에서 reader의 문단 로컬 `editable=true`가 다른 구역의 미지원 참조를 반영하지 않는 UI 허가 불일치를 재현했습니다. 후속 [원본 입력 적격성](hwp5-text-source-eligibility.md) 변경은 새 ABI에서 해당 입력을 UI부터 거부하고 서식 선택을 유지합니다. 구형 ABI의 미확인 동작과 새 후보의 검증 범위는 해당 문서가 소유합니다. 서식 전용 허가와 일반 입력 허가를 다시 합치지 않습니다.
 
 ## Native와 공개 API 결과
 
