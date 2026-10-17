@@ -1,6 +1,6 @@
 /** Read-only font values. Missing display support never grants editing support. */
 export function attachCharacterFonts(editor, content) {
-  for (const key of ["fontFaces", "characterFontReferences"]) {
+  for (const key of ["fontFaces", "fontFaceMetadata", "characterFontReferences"]) {
     content[key] = null;
     content[`${key}Error`] = null;
     if (typeof editor?.[key] !== "function") continue;

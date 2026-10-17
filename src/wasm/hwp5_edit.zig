@@ -280,6 +280,17 @@ export fn hwp5_edit_font_faces() u32 {
     output = std.json.Stringify.valueAlloc(a, rows, .{}) catch |err| return fail(err);
     return 1;
 }
+export fn hwp5_edit_font_face_metadata() u32 {
+    hwp5_edit_output_free();
+    const s = session() catch |err| return fail(err);
+    const rows = s.fontFaceMetadata(a) catch |err| return fail(err);
+    defer {
+        for (rows) |*row| row.deinit(a);
+        a.free(rows);
+    }
+    output = std.json.Stringify.valueAlloc(a, .{ .version = @as(u32, 1), .fonts = rows }, .{}) catch |err| return fail(err);
+    return 1;
+}
 export fn hwp5_edit_character_strike_styles() u32 {
     hwp5_edit_output_free();
     const s = session() catch |err| return fail(err);

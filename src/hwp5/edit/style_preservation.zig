@@ -434,12 +434,21 @@ pub const Session = opaque {
 
     /// Caller-owned scalar snapshot, never a second mutable resource model.
     pub fn fontFaces(self: *const Session, a: std.mem.Allocator) ![]@import("../../model/font_face_value.zig").Value {
+        return self.fontSnapshot(a, false);
+    }
+
+    pub fn fontFaceMetadata(self: *const Session, a: std.mem.Allocator) ![]@import("font_face_snapshot.zig").Metadata {
+        return self.fontSnapshot(a, true);
+    }
+
+    fn fontSnapshot(self: *const Session, a: std.mem.Allocator, comptime metadata: bool) ![]if (metadata) @import("font_face_snapshot.zig").Metadata else @import("../../model/font_face_value.zig").Value {
         const state = self.stateConst();
         const decoded = try state.source.decodeDocInfo(a, max_stream);
         defer a.free(decoded);
         const current = try @import("resource_docinfo.zig").write(a, decoded, state.source.header.version(), &state.document, state.para_count, state.char_count, max_stream);
         defer a.free(current);
-        return @import("font_face_snapshot.zig").read(a, current, state.source.header.version(), 1_000_000, 4096);
+        const snapshot = @import("font_face_snapshot.zig");
+        return if (metadata) snapshot.readMetadata(a, current, state.source.header.version(), 1_000_000, 4096) else snapshot.read(a, current, state.source.header.version(), 1_000_000, 4096);
     }
 
     /// Caller-owned scalar snapshot, never a second mutable resource model.

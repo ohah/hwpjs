@@ -12,6 +12,7 @@ export function displayFontLanguage(character) {
 export function createCharacterFontDisplay(content) {
   const names = new Map((content.fontFaces ?? []).map(row => [`${row.language}:${row.id}`, row.name]));
   const references = new Map((content.characterFontReferences ?? []).map(row => [row.id, row.fontIds]));
+  const metadata = new Map((content.fontFaceMetadata ?? []).map(row => [`${row.language}:${row.id}`, row]));
   return (id, text, unit) => {
     if (typeof text !== "string" || !Number.isInteger(unit) || unit < 0 || unit >= text.length) return null;
     const character = String.fromCodePoint(text.codePointAt(unit));
@@ -20,7 +21,11 @@ export function createCharacterFontDisplay(content) {
     if (fontId == null) return null;
     const name = names.get(`${FONT_LANGUAGES[language]}:${fontId}`);
     if (typeof name !== "string" || name.length === 0) return null;
-    const escaped = name.replace(/["\\\x00-\x1f\x7f]/g, character => `\\${character.codePointAt(0).toString(16)} `);
-    return `"${escaped}"`;
+    const sub = metadata.get(`${FONT_LANGUAGES[language]}:${fontId}`)?.substitute;
+    const candidates = [name];
+    // Only explicit TTF substitutes are CSS candidates. HFT/unknown kinds and
+    // default names remain metadata; the browser still owns actual matching.
+    if (sub?.kind === 1 && typeof sub.name === "string" && sub.name.length && sub.name !== name) candidates.push(sub.name);
+    return candidates.map(name => `"${name.replace(/["\\\x00-\x1f\x7f]/g, character => `\\${character.codePointAt(0).toString(16)} `)}"`).join(", ");
   };
 }

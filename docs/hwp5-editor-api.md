@@ -1,5 +1,7 @@
 # 실험용 HWP5 편집 JS/WASM API
 
+선택적 `fontFaceMetadata()`의 버전·소유권·기존 `fontFaces()` 호환과 표시 후보 정책은 [글꼴 메타데이터 전달](hwp5-font-face-metadata.md)이 소유합니다.
+
 기존 native [텍스트 편집](hwp5-plain-text-edit-experiment.md)·[글자 모양 적용](hwp5-character-format-edit.md)을 제한적으로 JS에 연결합니다. 일반 문서 편집기·기존 Rust JSON 호환 API·HWPX 편집 API가 아닙니다. 원본 적격성·범위·리소스 참조·저장 정책은 위 native 계약이 단일 출처입니다.
 
 선택적 `enableHistory()`·`undo()`·`redo()`의 한도·반환값·수명·WASM 오류 계약과 검증 기록은 [HWP5 편집 이력](hwp5-edit-history.md)이 소유합니다. 이력 활성화 뒤 기존 텍스트/글자 모양 명령도 같은 native 이력에 포함됩니다.

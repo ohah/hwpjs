@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+[글꼴 메타데이터](hwp5-font-face-metadata.md)는 기존 native font snapshot의 공통 순회, 별도 선택 ABI/JS decoder, Worker attachment와 표시 후보 선택으로 분리합니다. 원시 파싱과 브라우저 글꼴 선택을 섞지 않습니다.
+
 [행간 계약](hwp5-line-spacing.md)의 산술은 `web/preview/hwp5-line-spacing.mjs`, 표시/폼 선택은 `paragraph-spacing-source.mjs`, px 경계는 `paragraph-geometry.mjs`, 입력 영역은 `row-geometry.mjs`가 소유합니다. native 값 선택과 patch는 `paragraph_spacing_values.zig`와 기존 writer로 분리합니다.
 
 [강조 일괄값 펼침](editor-character-property-disclosure.md)은 빠른 버튼과 고급 on/off 초안 표시의 책임을 구분합니다.

@@ -43,6 +43,7 @@ import { decodeCharacterStrikeStyles } from "./character-strike-styles.mjs";
 import { decodeCharacterTextColors } from "./character-text-colors.mjs";
 import { decodeCharacterFontReferences } from "./character-font-references.mjs";
 import { decodeFontFaces } from "./font-faces.mjs";
+import { decodeFontFaceMetadata } from "./font-face-metadata.mjs";
 import { decodeCharacterUnderlineStyles } from "./character-underline-styles.mjs";
 import { createMemory } from "./wasm-memory.mjs";
 import { inputBytes } from "./input.mjs";
@@ -142,6 +143,11 @@ export async function createExperimentalHwp5Editor(source, input, { distribution
       check();
       if (typeof wasm.hwp5_edit_font_faces !== "function") throw new Error("Hwp5FontFacesAbiUnavailable");
       return decodeFontFaces(output(() => wasm.hwp5_edit_font_faces()).bytes);
+    },
+    fontFaceMetadata() {
+      check();
+      if (typeof wasm.hwp5_edit_font_face_metadata !== "function") throw new Error("Hwp5FontFaceMetadataAbiUnavailable");
+      return decodeFontFaceMetadata(output(() => wasm.hwp5_edit_font_face_metadata()).bytes);
     },
     characterFontReferences() {
       check();
