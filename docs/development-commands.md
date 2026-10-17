@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+`node --test tests/hwp5/document-save.test.mjs tests/hwp5/document-menu-save.test.mjs`는 [저장 실패 안내](save-failure-guidance.md)의 포커스·전체 라벨 스크롤·직접 동의 유지와 기존 저장 경계를 검사합니다. 실제 WASM 검사는 `HWPJS_TEST_WASM`으로 후보를 명시합니다.
+
 `zig test src/root.zig -O ReleaseSafe --test-filter 'actual compact empty bullet' --test-filter 'bullet compact' --test-filter 'bullet image is nine'`는 [빈 이미지 글머리표](hwp5-bullet-compatibility.md)의 실제 24바이트 레코드와 기존 이미지 절단·16비트 ID·꼬리 보존을 함께 검사합니다. Debug도 같은 필터를 사용하며 fixture skip을 실제 통과로 세지 않습니다.
 
 `node --test tests/hwp5/character-spacing-arithmetic.test.mjs tests/hwp5/line-spacing-compat.test.mjs`는 [자간 정수 산술](character-spacing-arithmetic.md)의 signed delta·overflow·공통 함수 동일성과 기존 행간 회귀를 검사합니다. 아직 자간 표시 연결을 검증하는 명령은 아닙니다.

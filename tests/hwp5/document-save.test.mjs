@@ -1,4 +1,5 @@
 import test from "node:test";
+import "./save-failure-guidance.test.mjs";
 import assert from "node:assert/strict";
 import { saveDocument } from "../../web/preview/document-save.mjs";
 import { downloadDocument } from "../../web/preview/document-download.mjs";

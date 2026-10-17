@@ -1,5 +1,7 @@
 # HWP5 모듈 계약 인덱스
 
+- [저장 거부 후 동의 위치 안내](save-failure-guidance.md)
+
 - [빈 이미지 글머리표 배치 호환](hwp5-bullet-compatibility.md)
 
 - [글꼴 메타데이터 전달](hwp5-font-face-metadata.md) · [HWPX 계약](hwpx-font-face-metadata.md)

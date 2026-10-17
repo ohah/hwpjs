@@ -4,6 +4,7 @@ import { detectDocumentFormat } from "../../js/document-format.mjs";
 import { createInspectorToggle } from "./inspector-toggle.mjs";
 import { createFindControls } from "./find-controls.mjs";
 import { updateHwp5Consent } from "./hwp5-consent-visibility.mjs";
+import { presentSaveFailure } from "./save-failure-guidance.mjs";
 import { updateDownloadSessionStatus } from "./download-session-status.mjs";
 import { createDutmalControls } from "./dutmal-controls.mjs";
 import { createDutmalCanvasControls } from "./dutmal-canvas-controls.mjs";
@@ -220,7 +221,9 @@ async function openSelectedFile(selected) {
       tableCreationControls.message(event.data);
       if (event.data.kind !== "load" && event.data.kind !== "unlock") controls.message(event.data);
       if (event.data.kind === "save") {
-        if (event.data.error) downloadStatus.textContent = `저장 실패: ${event.data.error}`;
+        if (event.data.error) queueMicrotask(() => {
+          if (epoch === generation) presentSaveFailure(downloadStatus, event.data, { format: openedFormat, consent: staleLayout });
+        });
         else {
           try { downloadDocument(event.data, selected.name); downloadStatus.textContent = `편집본 다운로드 요청 완료${event.data.passwordProtectionRemoved ? " · 비밀번호 보호 없음" : ""} · 원본 조판 정보는 재계산되지 않았습니다.`; }
           catch (error) { downloadStatus.textContent = `다운로드 실패: ${failureMessage(error)}`; }
