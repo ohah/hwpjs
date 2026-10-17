@@ -14,18 +14,19 @@ import { inspect, verifyRaw } from "../tests/hwp5/style-preservation/text-record
 
 const options = {};
 for (const argument of process.argv.slice(2)) {
-  const match = /^--(root|port)=(.+)$/.exec(argument);
+  const match = /^--(root|port|paragraph|occurrence)=(.+)$/.exec(argument);
   if (!match || options[match[1]] !== undefined) throw Error("InvalidBrowserAuditArgument");
   options[match[1]] = match[2];
 }
 const root = resolve(options.root ?? dirname(dirname(fileURLToPath(import.meta.url))));
 const port = Number(options.port ?? 58851);
 if (!Number.isSafeInteger(port) || port < 1 || port > 65535) throw Error("InvalidBrowserAuditPort");
+const marker = "브라우저검증😀", section = 2, paragraph = Number(options.paragraph ?? 1), occurrence = Number(options.occurrence ?? 3);
+if (!Number.isSafeInteger(paragraph) || paragraph < 0 || !Number.isSafeInteger(occurrence) || occurrence < 1 || occurrence > 100) throw Error("InvalidBrowserAuditSelection");
 assert(process.env.HWPJS_TEST_WASM, "Explicit browser candidate required");
 const wasmPath = resolve(process.env.HWPJS_TEST_WASM), wasm = readFileSync(wasmPath);
 const fixture = resolve(root, "reference/rhwp/samples/hwpspec.hwp"), input = readFileSync(fixture);
 const output = mkdtempSync(join(tmpdir(), "hwpjs-reference-browser-"));
-const marker = "브라우저검증😀", section = 2, paragraph = 1;
 const digest = bytes => createHash("sha256").update(bytes).digest("hex");
 const baselineEditor = await createExperimentalHwp5Editor(wasm, input, { distribution: true, normalizeObservedCfb: true });
 let baseline, original;
@@ -50,7 +51,10 @@ const evaluate = expression => {
 const driver = { command, evaluate, afterClick(selector) { if (selector === "#enable-edit") command("dialog", "accept"); } };
 const click = selector => clickBrowserTarget(driver, selector);
 const wait = expression => command("wait", "--fn", expression);
-const snapshot = label => command("screenshot", join(output, label + ".png"));
+const snapshot = label => {
+  if (evaluate('!document.querySelector("#canvas-input").disabled && document.querySelector("#canvas-input").getBoundingClientRect().width > 0')) command("scrollintoview", "#canvas-input");
+  command("screenshot", join(output, label + ".png"));
+};
 const phase = name => console.log(JSON.stringify({ kind: "browser-phase", name, session, output }));
 let server, ownedBrowser = false, browserClosed = false, roundtripVerified = false;
 try {
@@ -72,7 +76,7 @@ try {
       if (!watched.has(this)) {
         watched.add(this);
         this.addEventListener("message", event => {
-          const row = event.data, owner = row.content?.paragraphs.find(p => p.section === 2 && p.paragraph === 1);
+          const row = event.data, owner = row.content?.paragraphs.find(p => p.section === ${section} && p.paragraph === ${paragraph});
           window.__hwpAudit.push({ direction: "reply", kind: row.kind, origin: row.origin, error: row.error, changed: row.changed, revision: row.historyRevision, text: owner?.text });
         });
       }
@@ -87,7 +91,7 @@ try {
   wait('window.__hwpAudit.some(r => r.direction === "reply" && r.kind === "enable" && r.revision === 0)');
   click("details:has(#find-input) > summary");
   command("fill", "#find-input", displayOriginal);
-  for (let index = 0; index < 3; index++) click('#find-form button[type="submit"]');
+  for (let index = 0; index < occurrence; index++) click('#find-form button[type="submit"]');
   assert.equal(evaluate('document.querySelector("#canvas-input").value'), displayOriginal);
   command("press", "Home"); command("keyboard", "inserttext", marker);
   wait('window.__hwpAudit.some(r => r.direction === "reply" && r.kind === "splice" && r.revision === 1)');

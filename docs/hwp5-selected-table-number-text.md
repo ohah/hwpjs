@@ -32,11 +32,15 @@ API·수식 정의·기존 Canvas와 새 두 구역 Canvas를 합친 묶음은24
 
 게시 전 main 의존성에 새 도구/검사만 포함한 분리 tree `7b18ecb9e4a02559d954c39d673d5999b1241ba2`에서도 guard7/7과 실제 Chromium 전체 경로·종료를 재검증했습니다. `browser-clean-main-audit.log`는 최종 success=true·exit0이며 같은 저장 SHA256을 확인했습니다. 위치는 `/tmp/hwpjs-browser-publication.AuUO6d`, 실제 화면/저장본은 임시 출력 `hwpjs-reference-browser-2DufFF`입니다. 잘못된 같은 길이 삽입 문자열을 기대한 독립 oracle 반례도 실패해야만 통과합니다. 이 분리 실행은 작업 트리의 미게시 JS/Canvas 변경에 의존하지 않습니다.
 
+최초2/1 제목은 원문 DocInfo의 CharShape61 글자색이 `0x00ffffff`입니다. 논리 미리보기의 흰 Canvas 위에서 글자가 잘 보이지 않는 것도 관측했습니다. 저장 색을 임의로 바꾸지 않으며 원문 배경/배치 동치는 여전히 별도입니다. 가시적인 글리프 검증을 위해 검정 글자색 CharShape40의2/12 본문에도 `--paragraph=12 --occurrence=1`로 같은 실제 입력·이력·다운로드·독립 원문 대조·재업로드를 수행했습니다. 저장 SHA256은 `5d934c5e2da051a917d0aa5693901fe283f2ed1daaf05d7bdcc28704e76e783a`입니다. `readable-body-browser.log`·후속 `readable-visible-browser.log`와 edited/undone/reuploaded 스크린샷을 보존하며, 본문 위치의 한글/이모지 표시도 직접 확인했습니다. 이 도구는 스크린샷 직전에 활성 입력 위치로 스크롤해 화면 밖 선택을 가시 검증으로 오인하지 않습니다.
+
 스크린샷 `selected-browser-section2.png`, `selected-browser-edited.png`와 같은 후보 폴더에 진단을 보존했습니다. 브라우저 세션 `hwpjs-selected-table-number-35c54947528a`는 close 후 active=false/pid=null, 소유 서버58851도 종료했습니다. 기본 제품 WASM과 외부 데모는 교체하지 않았습니다.
 
 ## 재현 명령
 
 `HWPJS_TEST_WASM=/absolute/candidate.wasm node tools/hwp5-reference-browser-audit.mjs --root=/absolute/verified-source --port=58851`로 위 실제 Chromium 경로를 재현합니다. agent-browser CLI/Chrome·테스트용 Python oracle·해당 root의 원본 hwpspec.hwp가 필요합니다. 최초에 비활성인 전용 세션만 획득하며, 소유한 세션과 서버를 finally에서 종료합니다. 기본 WASM/외부 데모를 바꾸지 않습니다. `node --test tests/hwp5/browser-click-target.test.mjs tests/hwp5/browser-session-close.test.mjs`는 CLI/Chrome 없이 검증 guard의 반례를 검사합니다.
+
+가시적인 본문 위치는 위 명령에 `--paragraph=12 --occurrence=1`을 추가합니다. `tests/hwp5/reference-browser-arguments.test.mjs`는 잘못된 옵션·위치·중복 인자가 후보 파일 접근/브라우저 실행 전에 거부되는지 검사합니다. 세 guard 파일을 함께 실행한 결과는8/8·fail/skip0입니다.
 
 `HWPJS_TEST_WASM=/absolute/candidate.wasm node --test --test-concurrency=1 tests/hwp5/selected-table-number-text.test.mjs tests/hwp5/selected-table-number-canvas.test.mjs tests/hwp5/unselected-table-number-text.test.mjs tests/hwp5/unselected-cross-reference-gate.test.mjs tests/hwp5/table-number-character-format.test.mjs tests/hwp5/normalized-distribution.test.mjs tests/hwp5/table-number-format-canvas.test.mjs tests/hwp5/formula-definition-editor.test.mjs`
 
