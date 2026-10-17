@@ -77,3 +77,11 @@
 가장 오래된 5.0.0.6 파일의 첫 표시 문자열은 보호 표식 바로 뒤에 U+20DE 결합문자가 있다. 표시 위치 1은 grapheme 내부여서 caret 선택이 거부된다. 처음 이를 유효 경계로 가정한 검사가 실패했으며, 실제 결합문자와 거부를 확인한 뒤 위치 2/원문 9부터 입력하도록 검사를 고쳤다. native API의 코드 단위 경계와 Canvas의 grapheme 경계를 혼동하지 않는다. 다른 파일의 첫 경계는 실제 16바이트 제어 원문에서 독립적으로 확인한 8/16/24유닛이다.
 
 새 Canvas/Worker/WASM 검사는 4/4·skip 0이며 관련 전체 회귀는 45/45·실패·skip 0이다. simulated DOM이므로 실제 브라우저와 구분한다. 별도 실제 Chromium에서는 hf_cross_section_inherit.hwp의 첫 루트 문단을 마우스로 선택해 입력창 활성화, Home/Delete의 제어 삭제 거부, 제어 뒤 한글·이모지 입력과 undo/redo를 확인했다. 전후 화면을 직접 검토했고 수집한 브라우저 오류는 없었다. 브라우저 active=false/pid=null, 임시 서버 listener 없음/exit143도 확인했다. 모든 문단·모든 제어의 UI 완료나 원본 조판 동치는 여전히 아니다.
+
+## main 소스 통합 후 재빌드
+
+차트 코어 `d692aa1a`와 구역 읽기/사본 native `5ba7e16d`를 main에 통합했다. 앞서 검증한 결합 tree와 통합 main의 `src/`·`build.zig`는 동일함을 대조했다. 사용자 작업 트리 대신 커밋 `5ba7e16d`만 새 디렉터리에 추출해 ReleaseSafe 제품 빌드를 다시 실행했고 5/5 통과했다. 새 artifact SHA256은 `f66c988cf17295645c154f45e15668fe9582c64ce3f4732cfb08be28d9be3a14`다. 기존 기본 WASM의 export 311개 이름/종류를 전부 유지하며 총 331개다.
+
+새 main artifact에서 사본 API/Worker/Canvas·보정·읽기 전용·숫자 계산·암호 fixture·기존 ABI·fixture 제공 집중 묶음 58/58·실패·skip 0을 확인했다. fixture 제공 검사는 경로 이탈을 거부하므로 격리 환경의 legacy/reference 심볼릭 링크에서는 404가 발생했다. 이 설정 오류를 제품 파서 오류로 집계하지 않고 원본을 변경하지 않는 실제 fixture 복사본에서 정상 제공·경로 이탈 거부를 재검사했다.
+
+같은 main native 기준선 `c8c6e8ab17e1e2426e01c1ec70293912c04a86dfcba1aa572df5a420479ff9c5`와 새 artifact의 975경로 읽기 비교는 전체 JSON 944개 동일·같은 거부 5개·HWP3 제외 26개로 종료 0이다. 이 비교와 export 호환성은 기본 artifact 교체나 전체 native/HWPX 회귀 완료의 증거가 아니며, 기본 WASM·외부 데모는 아직 교체하지 않았다.
