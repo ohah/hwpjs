@@ -69,10 +69,12 @@ test {
     _ = @import("hwpx/character_font_references.zig");
     _ = @import("hwpx/font_face_values.zig");
     _ = @import("hwpx/font_face_snapshot.zig");
+    _ = @import("hwpx/character_font_metrics.zig");
     _ = @import("hwpx/font_face_metadata.zig");
     _ = @import("hwpx/character_font_patch.zig");
     _ = @import("model/character_fonts.zig");
     _ = @import("hwp5/edit/font_face_snapshot.zig");
+    _ = @import("hwp5/edit/character_font_metrics.zig");
     _ = @import("hwpx/character_emphasis_patch.zig");
     _ = @import("hwpx/character_resource_clone.zig");
     _ = @import("hwpx/character_resource_values.zig");

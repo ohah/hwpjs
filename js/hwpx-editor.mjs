@@ -1,3 +1,4 @@
+import { decodeCharacterFontMetrics } from "./character-font-metrics.mjs";
 import { createMemory } from "./wasm-memory.mjs";
 import { decodeFieldTargets } from "./hwpx-field-target-wire.mjs";
 import { decodePictureOwners } from "./hwpx-picture-owners.mjs";
@@ -536,6 +537,14 @@ export async function createHwpxEditor(source) {
       try {
         if (!wasm.hwpx_edit_font_face_metadata()) throw memory.error();
         return decodeHwpxFontFaceMetadata(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
+    characterFontMetrics() {
+      ready();
+      if (typeof wasm.hwpx_edit_character_font_metrics !== "function") throw new Error("HwpxCharacterFontMetricsAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_character_font_metrics()) throw memory.error();
+        return decodeCharacterFontMetrics(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()), "hwpx");
       } finally { wasm.hwpx_edit_output_free(); }
     },
     characterTextColors() {

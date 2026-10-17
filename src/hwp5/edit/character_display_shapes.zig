@@ -1,7 +1,7 @@
 //! Read-only display projection; original DocInfo remains authoritative.
 const std = @import("std");
 const info = @import("../docinfo/reader.zig");
-pub const Shape = struct { id: u32, height: i32, bold: bool, italic: bool, effects: @import("../../model/character_effect_flags.zig").Flags = .{}, outline_kind_raw: u3 = 0, strike_kind_raw: u3 = 0, strike_style_raw: u4 = 0, strike_color_raw: ?u32 = null, underline_kind_raw: u2 = 0, underline_style_raw: u4 = 0, underline_color_raw: u32 = 0, text_color_raw: u32 = 0, shade_color_raw: u32 = 0xffffffff, font_ids: [7]u16 = @splat(0) };
+pub const Shape = struct { id: u32, height: i32, bold: bool, italic: bool, effects: @import("../../model/character_effect_flags.zig").Flags = .{}, outline_kind_raw: u3 = 0, strike_kind_raw: u3 = 0, strike_style_raw: u4 = 0, strike_color_raw: ?u32 = null, underline_kind_raw: u2 = 0, underline_style_raw: u4 = 0, underline_color_raw: u32 = 0, text_color_raw: u32 = 0, shade_color_raw: u32 = 0xffffffff, font_ids: [7]u16 = @splat(0), font_metrics: @import("character_font_metrics.zig").Values = .{} };
 
 pub fn read(a: std.mem.Allocator, bytes: []const u8, version: @import("../version.zig").Version, expected_count: usize) ![]Shape {
     if (expected_count > 100_000) return error.LimitExceeded;
@@ -15,6 +15,7 @@ pub fn read(a: std.mem.Allocator, bytes: []const u8, version: @import("../versio
         const shape = record.value.char_shape;
         output[count] = .{ .id = @intCast(count), .height = shape.size, .bold = shape.attributes & 2 != 0, .italic = shape.attributes & 1 != 0, .underline_kind_raw = shape.underlineKindRaw(), .underline_style_raw = shape.underlineStyleRaw(), .underline_color_raw = shape.underline_color, .text_color_raw = shape.text_color };
         output[count].font_ids = shape.font_ids;
+        output[count].font_metrics = @import("character_font_metrics.zig").Values.fromRaw(shape);
         output[count].outline_kind_raw = shape.outlineKindRaw();
         output[count].effects = .{ .emboss = shape.embossed(), .engrave = shape.engraved(), .superscript = shape.superscript(), .subscript = shape.subscript() };
         output[count].shade_color_raw = shape.shade_color;

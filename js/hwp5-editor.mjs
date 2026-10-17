@@ -1,3 +1,4 @@
+import { decodeCharacterFontMetrics } from "./character-font-metrics.mjs";
 import { validateAbi } from "./abi.mjs";
 import { decodeCharacterEffects } from "./character-effects.mjs";
 import { characterEffectArgs, characterEffectMode } from "./character-effect-args.mjs";
@@ -153,6 +154,11 @@ export async function createExperimentalHwp5Editor(source, input, { distribution
       check();
       if (typeof wasm.hwp5_edit_character_font_references !== "function") throw new Error("Hwp5CharacterFontReferencesAbiUnavailable");
       return decodeCharacterFontReferences(output(() => wasm.hwp5_edit_character_font_references()).bytes);
+    },
+    characterFontMetrics() {
+      check();
+      if (typeof wasm.hwp5_edit_character_font_metrics !== "function") throw new Error("Hwp5CharacterFontMetricsAbiUnavailable");
+      return decodeCharacterFontMetrics(output(() => wasm.hwp5_edit_character_font_metrics()).bytes, "hwp5");
     },
     characterTextColors() {
       check();

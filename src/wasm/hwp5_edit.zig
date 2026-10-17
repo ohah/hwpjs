@@ -203,6 +203,14 @@ export fn hwp5_edit_character_shapes() u32 {
     output = @import("character_shapes_wire.zig").encode(a, shapes) catch |err| return fail(err);
     return 1;
 }
+export fn hwp5_edit_character_font_metrics() u32 {
+    hwp5_edit_output_free();
+    const s = session() catch |err| return fail(err);
+    const shapes = s.characterShapes(a) catch |err| return fail(err);
+    defer a.free(shapes);
+    output = @import("../hwp5/edit/character_font_metrics.zig").encode(a, shapes) catch |err| return fail(err);
+    return 1;
+}
 export fn hwp5_edit_character_text_colors() u32 {
     hwp5_edit_output_free();
     const s = session() catch |err| return fail(err);
