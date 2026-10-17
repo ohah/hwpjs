@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+[XML 속성 동일 뷰](xml-normalized-attribute-view.md)는 공통 XML 정규화 조건과 HWPX 숫자 판정을 분리하며, 빌린 문자열을 별도 편집 캐시로 보관하지 않습니다.
+
 [언어별 조판 원값](character-font-metrics.md)은 HWP5 기존 parser의 scalar projection과 HWPX 현재 헤더 조회를 분리하고, 별도 선택 ABI/JS decoder/Worker attachment로 전달합니다. 기존 HCS1·Canvas 조판 정책을 함께 변경하지 않습니다.
 
 [HWPX 메타데이터](hwpx-font-face-metadata.md)는 XML 값 소유·현재 헤더 투영·선택 ABI·형식별 decoder로 분리합니다. 공통 packet 검사는 `js/font-metadata-wire.mjs`가 소유하며 HWP5 필드를 HWPX에 합성하지 않습니다.

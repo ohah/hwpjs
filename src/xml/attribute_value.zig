@@ -20,6 +20,17 @@ pub const Value = struct {
     text: @import("text.zig").View,
     stats: Stats,
     reference_options: references.Options,
+    /// A normalized UTF-8 view only when normalization is the identity.
+    /// Borrows the original source; references and literal XML whitespace
+    /// requiring substitution must still use the normal decoder.
+    pub fn borrowedNormalizedUtf8(self: Value) ?[]const u8 {
+        if (self.text.encoding != .utf8) return null;
+        for (self.text.raw) |byte| switch (byte) {
+            '&', '\t', '\r', '\n' => return null,
+            else => {},
+        };
+        return self.text.raw;
+    }
     pub fn iterator(self: Value) !Iterator {
         const input = try Input.init(self.text.raw, self.text.encoding, .{ .max_bytes = self.text.raw.len, .max_characters = self.text.raw.len });
         return .{ .cursor = .{ .input = input, .start = 0, .max_bytes = self.text.raw.len }, .options = self.reference_options };
