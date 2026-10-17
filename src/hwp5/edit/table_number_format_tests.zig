@@ -67,7 +67,8 @@ fn verify(path: []const u8, distribution: bool) !void {
             try std.testing.expectEqualSlices(u8, record.raw, actual.raw);
         }
         try std.testing.expect((try nextRetained(&right)) == null);
-        // Text editing/derived-result materialization is deliberately not enabled.
+        // Generic field transactions still require supported materialization;
+        // only the text-splice entry may retain protected table-number labels.
         if (try @import("source_policy.zig").hasNamedFields(before)) try std.testing.expectError(error.UnsupportedSectionControl, @import("source_policy.zig").validateFieldTransaction(a, before, original.header.version()));
     }
 }
@@ -113,12 +114,14 @@ test "table number character format source validation cleans every partial alloc
         break;
     }
     try std.testing.expect(small.items.len > 0);
-    // Explicit derivative with an orphan target: formatting retains the label,
-    // whereas text editing and result materialization must remain unavailable.
+    // An orphan target is retained for formatting and protected text splices.
+    // Generic field transactions do not gain result materialization permission.
     try @import("../../testing/allocation_failures.zig").check(@import("source_policy.zig").validateCharacterFormat, .{ @as([]const u8, small.items), source.header.version() });
     // An untouched section may retain this exact local table-number label.
     // This permission does not extend to editing the field-bearing section.
     try @import("../../testing/allocation_failures.zig").check(@import("source_policy.zig").validateUnselectedTextSection, .{ @as([]const u8, small.items), source.header.version() });
+    try @import("../../testing/allocation_failures.zig").check(@import("source_policy.zig").validateFieldTextTransaction, .{ @as([]const u8, small.items), source.header.version() });
+    try @import("../../testing/allocation_failures.zig").check(retainedFieldTextAllocationCase, .{ @as([]const u8, small.items), source.header.version() });
     try std.testing.expectError(error.UnsupportedSectionControl, @import("source_policy.zig").validateUnselectedSection(a, small.items, source.header.version()));
     try std.testing.expectError(error.UnsupportedSectionControl, @import("source_policy.zig").validateFieldTransaction(a, small.items, source.header.version()));
     // Same-length command mutation: page references must not inherit the new
@@ -140,8 +143,30 @@ test "table number character format source validation cleans every partial alloc
             std.mem.writeInt(u16, small.items[offset + unit + 2 ..][0..2], '0', .little);
             try std.testing.expectError(error.UnsupportedSectionControl, @import("source_policy.zig").validateCharacterFormat(a, small.items, source.header.version()));
             try std.testing.expectError(error.UnsupportedSectionControl, @import("source_policy.zig").validateUnselectedTextSection(a, small.items, source.header.version()));
+            try std.testing.expectError(error.UnsupportedSectionControl, @import("source_policy.zig").validateFieldTextTransaction(a, small.items, source.header.version()));
             return;
         }
     }
     return error.MissingReferenceMutation;
+}
+
+fn retainedFieldTextAllocationCase(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version) !void {
+    var doc = try @import("../model_projection.zig").fromDecodedSections(a, version, &.{source});
+    defer doc.deinit(a);
+    const plain = @import("plain_text.zig");
+    const before = try plain.textBytes(a, doc.sections[0].paragraphs[0]);
+    defer a.free(before);
+    try @import("field_splice.zig").apply(a, source, version, &doc.sections[0], .{ .section = 0, .paragraph = 0, .start_unit = 0, .end_unit = 0, .utf8 = "Z" }, 65536);
+    const after = try plain.textBytes(a, doc.sections[0].paragraphs[0]);
+    defer a.free(after);
+    try std.testing.expectEqual(@as(usize, before.len + 2), after.len);
+    try std.testing.expectEqualSlices(u8, &.{ 'Z', 0 }, after[0..2]);
+    try std.testing.expectEqualSlices(u8, before, after[2..]);
+    const saved = try @import("text_section_writer.zig").write(a, source, doc.sections[0], version, 1024 * 1024);
+    defer a.free(saved);
+    var reopened = try @import("../model_projection.zig").fromDecodedSections(a, version, &.{saved});
+    defer reopened.deinit(a);
+    const restored = try plain.textBytes(a, reopened.sections[0].paragraphs[0]);
+    defer a.free(restored);
+    try std.testing.expectEqualSlices(u8, after, restored);
 }

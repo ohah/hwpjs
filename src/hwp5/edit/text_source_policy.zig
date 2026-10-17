@@ -8,7 +8,7 @@ pub fn validate(a: std.mem.Allocator, decoded: []const []const u8, version: @imp
     }
     const source = decoded[section];
     if (try policy.hasNamedFields(source)) {
-        try policy.validateFieldTransaction(a, source, version);
-        try @import("field_source_bindings.zig").validate(a, source, version);
+        try policy.validateFieldTextTransaction(a, source, version);
+        try @import("field_source_bindings.zig").validateCharacterFormat(a, source, version);
     } else _ = try policy.hasFormulas(a, source, version);
 }

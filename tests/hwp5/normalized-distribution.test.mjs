@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
 import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
 import { inspect, verifyRaw } from "./style-preservation/text-record-oracle.mjs";
+import { independentFieldSpans } from "./field-span-oracle.mjs";
 
 const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
 
@@ -20,7 +21,9 @@ test("explicit normalized distribution opens the actual repaired five-section fi
     const baseline = editor.save().bytes;
     assert.deepEqual(inspect(baseline).streams, inspect(input).streams);
     editor.enableHistory();
-    assert.throws(() => editor.splice({ section: 2, paragraph: 0, startUnit: 0, endUnit: 0, text: "보호😀" }), /UnsupportedSectionControl/);
+    const protectedSpan = independentFieldSpans(inspect(baseline).sections[2].bytes).find(row => row.field_id === 0x25787266);
+    assert(protectedSpan);
+    assert.throws(() => editor.splice({ section: 2, paragraph: protectedSpan.begin.paragraph, startUnit: protectedSpan.begin.unit, endUnit: protectedSpan.begin.unit, text: "보호😀" }), /ReadOnlyCrossReferenceResult/);
     assert.deepEqual(editor.save().bytes, baseline);
     assert.equal(editor.undo(), false);
     editor.splice({ section: 0, paragraph: 1, startUnit: 0, endUnit: 0, text: "배포😀" });

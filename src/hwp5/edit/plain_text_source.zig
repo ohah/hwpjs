@@ -55,7 +55,7 @@ fn validateWith(a: std.mem.Allocator, source: []const u8, version: Version, p: m
             } else _ = try @import("source_policy.zig").hasFormulas(a, source, version);
         },
         .splice, .hyperlink_transaction => try validateSection(a, source, version),
-        .field_transaction => try @import("source_policy.zig").validateFieldTransaction(a, source, version),
+        .field_transaction => try @import("source_policy.zig").validateFieldTextTransaction(a, source, version),
     }
     try @import("paragraph_owner.zig").validate(a, tree, source_node, version);
     var links_checked = false;

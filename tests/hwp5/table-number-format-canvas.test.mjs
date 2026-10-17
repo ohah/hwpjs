@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
 import { workerCanvasHarness, dispatchCanvasEvent } from "../canvas/worker-harness.mjs";
 import { verifyCharacterProperties } from "./style-preservation/character-property-oracle.mjs";
-import { verifyRaw } from "./style-preservation/text-record-oracle.mjs";
+import { inspect, verifyRaw } from "./style-preservation/text-record-oracle.mjs";
+import { independentFieldSpans } from "./field-span-oracle.mjs";
 
 test("Canvas text and formatting preserve unselected table-number fields while protected-section rejection keeps redo", async t => {
   const path = "reference/rhwp/samples/hwpspec.hwp";
@@ -43,8 +44,10 @@ test("Canvas text and formatting preserve unselected table-number fields while p
   assert.equal(h.controller.selectedCharacterPropertyState("bold"), oldBold, "undo restores selected display state, not only saved bytes");
   assert.equal(h.input.readOnly, false);
   assert.deepEqual(Buffer.from((await h.send({ kind: "save" })).bytes), baseline);
-  const rejected = await h.send({ kind: "splice", section: 2, paragraph: 0, startUnit: 0, endUnit: 0, text: "거부" });
-  assert.equal(rejected.error, "UnsupportedSectionControl");
+  const protectedSpan = independentFieldSpans(inspect(baseline).sections[2].bytes).find(row => row.field_id === 0x25787266);
+  assert(protectedSpan);
+  const rejected = await h.send({ kind: "splice", section: 2, paragraph: protectedSpan.begin.paragraph, startUnit: protectedSpan.begin.unit, endUnit: protectedSpan.begin.unit, text: "거부" });
+  assert.equal(rejected.error, "ReadOnlyCrossReferenceResult");
   assert.deepEqual(Buffer.from((await h.send({ kind: "save" })).bytes), baseline);
   assert.equal(h.controller.history("redo"), true);
   assert.equal((await h.flush()).error, undefined);

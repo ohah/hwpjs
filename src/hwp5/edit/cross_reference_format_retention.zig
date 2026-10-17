@@ -1,4 +1,5 @@
-//! Permission only for text-position-preserving character formatting.
+//! Semantic predicate for retaining local table-number labels.
+//! Callers must preserve declarations and protect derived text result spans.
 //! Retention does not resolve a target or certify the stored result as current.
 const command = @import("../body/cross_reference_command.zig");
 pub fn tableNumber(view: command.View) !bool {

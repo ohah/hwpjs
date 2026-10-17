@@ -5,6 +5,7 @@ import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
 import { inspect, records, paragraphRecords, verifyRaw } from "./style-preservation/text-record-oracle.mjs";
 import { verifyCharacterProperties } from "./style-preservation/character-property-oracle.mjs";
 import { tableNumberSourceOracle } from "./table-number-source-oracle.mjs";
+import { independentFieldSpans } from "./field-span-oracle.mjs";
 
 function declarations(bytes) {
   const source = tableNumberSourceOracle(bytes);
@@ -47,7 +48,9 @@ for (const name of ["hwpspec.hwp", "hwp-3.0-HWPML.hwp"]) {
       finally { reopened.close(); }
       assert.equal(editor.undo(), true);
       assert.deepEqual(Buffer.from(editor.save().bytes), baseline);
-      assert.throws(() => editor.splice({ section: 2, paragraph: 0, startUnit: 0, endUnit: 0, text: "보호" }), /UnsupportedSectionControl/);
+      const protectedSpan = independentFieldSpans(inspect(baseline).sections[2].bytes).find(row => row.field_id === 0x25787266);
+      assert(protectedSpan);
+      assert.throws(() => editor.splice({ section: 2, paragraph: protectedSpan.begin.paragraph, startUnit: protectedSpan.begin.unit, endUnit: protectedSpan.begin.unit, text: "보호" }), /ReadOnlyCrossReferenceResult/);
       assert.equal(editor.redo(), true);
       assert.deepEqual(Buffer.from(editor.save({ allowStaleLayout: true }).bytes), saved);
       const originalText = editor.text(0, paragraph);

@@ -15,8 +15,7 @@ test("actual spec text splice preserves all unselected table-number fields and p
   if (!existsSync(path)) { t.skip("Reference fixture unavailable"); return; }
   const input = readFileSync(path), editor = await createExperimentalHwp5Editor(wasm, input, options);
   try {
-    for (const section of [0, 1, 4, 5]) editor.validateTextSourcePolicy(section);
-    for (const section of [2, 3]) assert.throws(() => editor.validateTextSourcePolicy(section), /UnsupportedSectionControl/);
+    for (let section = 0; section < editor.sectionCount(); section++) editor.validateTextSourcePolicy(section);
     const baseline = editor.save().bytes;
     editor.enableHistory({ maxEntries: 4, maxCheckpointBytes: 32 * 1024 * 1024 });
     // A previous permitted edit in an unselected section must not disappear.

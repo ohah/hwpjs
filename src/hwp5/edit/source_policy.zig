@@ -64,6 +64,12 @@ pub fn validateFieldTransaction(a: std.mem.Allocator, source: []const u8, versio
     _ = try inspect(a, source, version, true, true, false);
 }
 
+/// Text-only field transactions retain local table-number labels. The caller
+/// must separately protect derived result spans and retain object declarations.
+pub fn validateFieldTextTransaction(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version) !void {
+    _ = try inspect(a, source, version, true, true, true);
+}
+
 /// Character formatting cannot change text, object IDs or numbering declarations.
 /// Keep local table-number results byte-for-byte, including pre-existing orphans.
 pub fn validateCharacterFormat(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version) !void {

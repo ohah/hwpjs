@@ -21,6 +21,16 @@ pub fn apply(a: std.mem.Allocator, source: []const u8, version: Version, section
 }
 /// Only for an enclosing section transaction that discards its whole draft on failure.
 pub fn applyDraft(a: std.mem.Allocator, source: []const u8, version: Version, section: *model.Section, sites: []const Site, char_count: usize) !Report {
+    return applyDraftWithRetention(a, source, version, section, sites, char_count, false);
+}
+
+/// Text splices preserve these derived labels and protect their spans instead
+/// of interpreting a numeric target as a named bookmark.
+pub fn applyDraftRetainingTableNumbers(a: std.mem.Allocator, source: []const u8, version: Version, section: *model.Section, sites: []const Site, char_count: usize) !Report {
+    return applyDraftWithRetention(a, source, version, section, sites, char_count, true);
+}
+
+fn applyDraftWithRetention(a: std.mem.Allocator, source: []const u8, version: Version, section: *model.Section, sites: []const Site, char_count: usize, retain_table_numbers: bool) !Report {
     const bindings = try @import("field_bindings.zig").collect(a, source, version, section.*);
     defer a.free(bindings);
     var tree = try @import("../body/tree.zig").Tree.parse(a, source, version, .{});
@@ -29,6 +39,7 @@ pub fn applyDraft(a: std.mem.Allocator, source: []const u8, version: Version, se
     for (bindings) |binding| {
         if (binding.span.field_id != @import("../body/control_rules.zig").id("%xrf")) continue;
         const view = try @import("../body/cross_reference_command.zig").View.parse(binding.properties.command);
+        if (retain_table_numbers and try @import("cross_reference_format_retention.zig").tableNumber(view)) continue;
         const label = try @import("../body/cross_reference_name_result.zig").evaluate(view, sites);
         const current = try @import("field_bindings.zig").collect(a, source, version, section.*);
         defer a.free(current);
