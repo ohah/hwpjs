@@ -1,5 +1,7 @@
 # HWP5 모듈 계약 인덱스
 
+- [글꼴 높이와 기존 기준 자료](hwp5-font-layout-reference.md)
+
 - [행간과 Canvas 이동량](hwp5-line-spacing.md)
 
 현재 모듈별 책임·소유권·미지원 경계는 주제 문서에서 관리합니다. 구현 변경 시 해당 문서를 갱신하고 AGENTS.md에 상세를 누적하지 않습니다.

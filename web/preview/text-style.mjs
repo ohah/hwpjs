@@ -60,7 +60,7 @@ export function createTextStyle(content, baseFont) {
   resolve.outline = (paragraph, unit, kind = "text") => resolve.outlineStyle(paragraph, unit, kind)?.kind ?? null;
   resolve.fontHeight = (paragraph, unit, kind = "text") => {
     const size = points(shapeAt(paragraph, unit, kind));
-    return size === null ? 20 : paragraph?.drawingText || paragraph?.tableCell ? size * (96 / 72) : Math.max(20, size * (96 / 72) * 1.25);
+    return size === null ? 20 : content.format === "hwp5" || paragraph?.drawingText || paragraph?.tableCell ? size * (96 / 72) : Math.max(20, size * (96 / 72) * 1.25);
   };
   resolve.textHeight = (paragraph, unit, kind = "text") => resolve.fontHeight(paragraph, unit, kind) + (kind === "text" && resolve.underline(paragraph, unit)?.kind === "bottom" ? 9 : 0);
   resolve.color = (paragraph, unit, kind = "text") => {
