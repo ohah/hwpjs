@@ -7,6 +7,8 @@ import { updateHwp5Consent } from "./hwp5-consent-visibility.mjs";
 import { presentSaveFailure } from "./save-failure-guidance.mjs";
 import { updateDownloadSessionStatus } from "./download-session-status.mjs";
 import { createDutmalControls } from "./dutmal-controls.mjs";
+import { createChartControls } from "./chart-controls.mjs";
+import { createChartOlePolicyControls } from "./chart-ole-policy-controls.mjs";
 import { createDutmalCanvasControls } from "./dutmal-canvas-controls.mjs";
 import { createCharacterFontControls } from "./character-font-controls.mjs";
 import { createCharacterFontNameControls } from "./character-font-name-controls.mjs";
@@ -51,6 +53,8 @@ let underlineColorControls;
 let characterPropertyControls;
 let paragraphSpacingControls;
 const input = document.querySelector("#file"), status = document.querySelector("#status");
+const chartOlePolicyControls = createChartOlePolicyControls({ checkbox: document.querySelector("#chart-ole-compat"), file: input, note: document.querySelector("#chart-ole-policy-status") });
+window.addEventListener("pagehide", event => { if (!event.persisted) chartOlePolicyControls.close(); });
 const accessible = document.querySelector("#accessible");
 const inspector = createInspectorToggle({ button: document.querySelector("#inspector-toggle"), panel: document.querySelector("#document-inspector") });
 let pageStatusControls, documentMenuControls, viewScaleControls, documentWindowControls, tableCreationControls;
@@ -104,6 +108,8 @@ formulaControls = createFormulaControls({ form: document.querySelector("#formula
 window.addEventListener("pagehide", event => { if (!event.persisted) formulaControls.close(); });
 const dutmalControls = createDutmalControls({ form: document.querySelector("#dutmal-form"), fields: document.querySelector("#dutmal-fields"), targets: document.querySelector("#dutmal-target"), textKind: document.querySelector("#dutmal-kind"), input: document.querySelector("#dutmal-value"), note: document.querySelector("#dutmal-status"), ready: () => Boolean(worker) && controls.ready() && !controls.busy() && direct.settled(), request: message => controls.request(message) });
 window.addEventListener("pagehide", event => { if (!event.persisted) dutmalControls.close(); });
+const chartControls = createChartControls({ form: document.querySelector("#chart-form"), fields: document.querySelector("#chart-fields"), targets: document.querySelector("#chart-target"), points: document.querySelector("#chart-point"), kinds: document.querySelector("#chart-value-kind"), input: document.querySelector("#chart-value"), note: document.querySelector("#chart-status"), ready: () => Boolean(worker) && controls.ready() && !controls.busy() && direct.settled(), request: message => controls.request(message) });
+window.addEventListener("pagehide", event => { if (!event.persisted) chartControls.close(); });
 const dutmalCanvasControls = createDutmalCanvasControls({ canvas: document.querySelector("#canvas"), viewport: document.querySelector("#viewport"), renderer, ready: () => controls.ready() && !controls.busy() && direct.settled(), select: row => { if (!dutmalControls.select(row)) return false; inspector.show(true); return true; } });
 window.addEventListener("pagehide", event => { if (!event.persisted) dutmalCanvasControls.close(); });
 const checkBoxControls = createCheckBoxCanvasControls({ canvas: document.querySelector("#canvas"), viewport: document.querySelector("#viewport"), renderer, note: document.querySelector("#canvas-edit-status"), ready: () => Boolean(worker) && controls.ready() && !controls.busy() && direct.settled(), request: message => controls.request(message) });
@@ -173,6 +179,7 @@ async function openSelectedFile(selected) {
   pictureRequests.reset();
   worker?.terminate(); worker = null; openedFormat = null;
   documentWindowControls?.reset();
+  chartControls.message({ kind: "load" });
   direct.reset();
   renderer.clear(); accessible.value = "";
   controls.reset();
@@ -210,6 +217,7 @@ async function openSelectedFile(selected) {
       cellResizeControls.message(event.data);
       formulaControls.message(event.data);
       queueMicrotask(() => { if (epoch === generation) dutmalControls.message(event.data); });
+      queueMicrotask(() => { if (epoch === generation) chartControls.message(event.data); });
       checkBoxControls.message(event.data);
       paragraphFormatControls.message(event.data);
       paragraphMarginControls.message(event.data);
@@ -261,7 +269,7 @@ async function openSelectedFile(selected) {
         paragraphFormatControls.update();
       } catch (error) { fail(failureMessage(error)); }
     });
-    job.postMessage({ kind: "load", format, bytes }, [bytes]);
+    job.postMessage({ kind: "load", format, bytes, allowObservedChartOleDeviations: format === "hwpx" && document.querySelector("#chart-ole-compat").checked }, [bytes]);
   } catch (error) { if (epoch === generation) status.textContent = `오류: ${failureMessage(error)}`; }
 }
 bindFileInput(input, () => openSelectedFile(input.files[0]));

@@ -4,6 +4,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>hwpjs · Canvas 텍스트 미리보기</title>
 <link rel="stylesheet" href="./preview.css">
+<link rel="stylesheet" href="./chart-point-grid.css">
 <main>
   <header><h1>HWP Canvas 미리보기</h1><span>Canvas 직접 입력 실험</span></header>
   <p class="scope-note">텍스트 편집 미리보기 · 원본 페이지 조판은 아직 재현하지 않습니다.</p>
@@ -13,6 +14,8 @@
   <select id="demo-fixture"><option value="">예제 문서를 선택하세요</option></select>
   <button id="demo-fixture-open" type="button" disabled>픽스쳐 열기</button>
   <p class="privacy">파일은 브라우저 안에서 처리하며 서버로 전송하지 않습니다.</p>
+  <label><input id="chart-ole-compat" type="checkbox">HWPX 차트 OLE 호환 저장 허용 (파일을 열기 전 선택)</label>
+  <p id="chart-ole-policy-status" role="status" aria-live="polite"></p>
   <p id="status" role="status" aria-live="polite">에디터를 불러오는 중입니다.</p>
   <button id="retry-startup" type="button" hidden>에디터 다시 불러오기</button>
   <form id="password-form" hidden>
@@ -269,6 +272,25 @@
       <button type="submit">그림 크기 적용</button>
     </fieldset>
     <p id="picture-size-status" role="status" aria-live="polite"></p>
+  </form>
+  <form id="chart-form" hidden>
+    <label>차트<select id="chart-target"></select></label>
+    <label>편집 대상<select id="chart-value-kind"><option value="points">데이터 값</option><option value="series">시리즈 이름</option></select></label>
+    <fieldset id="chart-fields" disabled>
+      <legend>차트 현재값 편집</legend>
+      <label>항목<select id="chart-point"></select></label>
+      <label>값<textarea id="chart-value" rows="2"></textarea></label>
+      <button type="submit">차트 값 적용</button>
+    </fieldset>
+    <div data-chart-point-list>
+      <div class="chart-point-grid-scroll" tabindex="0" role="region" aria-label="차트 계열별 표 가로 스크롤">
+        <table class="chart-point-grid" aria-label="차트 계열별 데이터"><thead data-chart-grid-head></thead><tbody data-chart-grid-body></tbody></table>
+      </div>
+      <div><button type="button" data-chart-grid-previous-rows>이전 포인트 행</button><button type="button" data-chart-grid-next-rows>다음 포인트 행</button><button type="button" data-chart-grid-previous-columns>이전 계열 열</button><button type="button" data-chart-grid-next-columns>다음 계열 열</button><span data-chart-grid-page role="status" aria-live="polite"></span></div>
+      <table aria-label="차트 데이터 값"><thead><tr><th scope="col">데이터 항목</th><th scope="col">현재값</th></tr></thead><tbody data-chart-point-body></tbody></table>
+      <div><button type="button" data-chart-point-previous>이전 값 목록</button><button type="button" data-chart-point-next>다음 값 목록</button><span data-chart-point-page role="status" aria-live="polite"></span></div>
+    </div>
+    <p id="chart-status" role="status" aria-live="polite"></p>
   </form>
   <form id="dutmal-form" hidden>
     <label>덧말<select id="dutmal-target"></select></label>

@@ -1,0 +1,9 @@
+.chart-point-grid-scroll { max-width: 100%; overflow-x: auto; }
+#chart-form #chart-value { height: auto; min-height: 3rem; resize: vertical; }
+.chart-point-grid { width: max-content; min-width: 100%; border-collapse: collapse; font-size: 12px; }
+.chart-point-grid th, .chart-point-grid td { min-width: 9rem; max-width: 12rem; padding: 6px; border: 1px solid #bbcbd6; text-align: left; vertical-align: top; overflow-wrap: anywhere; word-break: normal; }
+.chart-point-grid thead th { font-weight: 600; background: #e8f0f5; }
+.chart-point-grid tr > :first-child { position: sticky; left: 0; min-width: 4rem; background: #f7fafc; }
+.chart-point-grid button { min-width: 5rem; max-width: 12rem; margin: 2px 0; padding: 6px; text-align: left; }
+.chart-point-grid button[aria-current="true"] { outline: 2px solid #235a85; outline-offset: -2px; }
+.chart-point-grid button[data-chart-draft="true"] { background: #fff0c2; }

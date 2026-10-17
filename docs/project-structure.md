@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+[차트 현재값 UI](hwpx-chart-ui-main-integration.md)는 optional JS adapter·Worker·폼과 ordinal 보존 목록/표의 책임을 분리합니다. native 후보·기본 WASM·실제 그림 표시의 범위를 구분합니다.
+
 [XML 속성 동일 뷰](xml-normalized-attribute-view.md)는 공통 XML 정규화 조건과 HWPX 숫자 판정을 분리하며, 빌린 문자열을 별도 편집 캐시로 보관하지 않습니다.
 
 [언어별 조판 원값](character-font-metrics.md)은 HWP5 기존 parser의 scalar projection과 HWPX 현재 헤더 조회를 분리하고, 별도 선택 ABI/JS decoder/Worker attachment로 전달합니다. 기존 HCS1·Canvas 조판 정책을 함께 변경하지 않습니다.

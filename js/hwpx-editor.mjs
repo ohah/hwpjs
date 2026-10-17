@@ -1,5 +1,6 @@
 import { decodeCharacterFontMetrics } from "./character-font-metrics.mjs";
 import { createMemory } from "./wasm-memory.mjs";
+import { decodeChartSeriesText } from "./hwpx-chart-series-text.mjs";
 import { decodeFieldTargets } from "./hwpx-field-target-wire.mjs";
 import { decodePictureOwners } from "./hwpx-picture-owners.mjs";
 import { decodeInlineStringSources } from "./hwpx-inline-string-sources.mjs";
@@ -91,6 +92,16 @@ export async function createHwpxEditor(source) {
     if (typeof text !== "string" || !text.isWellFormed()) throw new TypeError("InvalidText");
     const bytes = new TextEncoder().encode(text);
     if (bytes.length > 4 * 1024 * 1024) throw new RangeError("LimitExceeded");
+    return bytes;
+  }
+  function chartPointBytes(text, legacyNumeric = false) {
+    const nativeLimit = typeof wasm.hwpx_edit_chart_point_max_bytes === "function";
+    if (!nativeLimit && !legacyNumeric) throw new Error("HwpxChartEditAbiUnavailable");
+    // Frozen legacy numeric-only ABI; current artifacts always own this limit.
+    const maxBytes = nativeLimit ? wasm.hwpx_edit_chart_point_max_bytes() : 1024 * 1024;
+    if (!Number.isInteger(maxBytes) || maxBytes <= 0 || maxBytes > 0xffffffff) throw new Error("InvalidChartPointLimit");
+    const bytes = encodedText(text);
+    if (bytes.length > maxBytes) throw new Error("LimitExceeded");
     return bytes;
   }
   function manualFormulaResultBytes(text, action, unavailable) {
@@ -197,14 +208,78 @@ export async function createHwpxEditor(source) {
       if (result > 1) throw memory.error();
       return result === 1;
     },
-    open(data) {
+    open(data, options = {}) {
       ready();
+      if (!options || typeof options !== "object" || Array.isArray(options)) throw new TypeError("InvalidEditorOptions");
+      const allow = options.allowObservedChartOleDeviations === undefined ? false : options.allowObservedChartOleDeviations;
+      if (typeof allow !== "boolean") throw new TypeError("InvalidChartOlePolicy");
+      if (allow && typeof wasm.hwpx_edit_open_with_chart_ole_policy !== "function") throw new Error("HwpxChartOlePolicyAbiUnavailable");
       const bytes = inputBytes(data);
       if (bytes.length > 64 * 1024 * 1024) throw new RangeError("LimitExceeded");
       memory.withBytes(bytes, (ptr, size) => {
-        if (!wasm.hwpx_edit_open(ptr, size)) throw memory.error();
+        const result = allow ? wasm.hwpx_edit_open_with_chart_ole_policy(ptr, size, 1) : wasm.hwpx_edit_open(ptr, size);
+        if (!result) throw memory.error();
       });
       return { sectionCount: wasm.hwpx_edit_section_count() };
+    },
+    chartPoints(section, wrapper) {
+      ready(); [section, wrapper].forEach(uint);
+      if (typeof wasm.hwpx_edit_chart_points !== "function") throw new Error("HwpxChartEditAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_chart_points(section, wrapper)) throw memory.error();
+        return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len())));
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
+    chartNodes(section) {
+      ready(); uint(section);
+      if (typeof wasm.hwpx_edit_chart_nodes !== "function") throw new Error("HwpxChartEditAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_chart_nodes(section)) throw memory.error();
+        return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len())));
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
+    chartSites(section) {
+      ready(); uint(section);
+      if (typeof wasm.hwpx_edit_chart_sites !== "function") throw new Error("HwpxChartEditAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_chart_sites(section)) throw memory.error();
+        return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len())));
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
+    chartSeriesText(section, wrapper) {
+      ready(); [section, wrapper].forEach(uint);
+      if (typeof wasm.hwpx_edit_chart_series_text !== "function") throw new Error("HwpxChartSeriesTextAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_chart_series_text(section, wrapper)) throw memory.error();
+        return decodeChartSeriesText(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
+    setChartSeriesText(section, wrapper, ordinal, text) {
+      ready(); [section, wrapper, ordinal].forEach(uint);
+      if (typeof wasm.hwpx_edit_set_chart_series_text !== "function" || typeof wasm.hwpx_edit_chart_series_text_max_bytes !== "function") throw new Error("HwpxChartSeriesTextAbiUnavailable");
+      const maxBytes = wasm.hwpx_edit_chart_series_text_max_bytes();
+      if (!Number.isInteger(maxBytes) || maxBytes <= 0 || maxBytes > 0xffffffff) throw new Error("InvalidChartSeriesTextLimit");
+      const bytes = encodedText(text);
+      if (bytes.length > maxBytes) throw new Error("LimitExceeded");
+      memory.withBytes(bytes, (ptr, size) => {
+        if (!wasm.hwpx_edit_set_chart_series_text(section, wrapper, ordinal, ptr, size)) throw memory.error();
+      });
+    },
+    setChartNumericPoint(section, wrapper, point, value) {
+      ready(); [section, wrapper, point].forEach(uint);
+      if (typeof wasm.hwpx_edit_set_chart_numeric_point !== "function") throw new Error("HwpxChartEditAbiUnavailable");
+      const bytes = chartPointBytes(value, true);
+      memory.withBytes(bytes, (ptr, size) => {
+        if (!wasm.hwpx_edit_set_chart_numeric_point(section, wrapper, point, ptr, size)) throw memory.error();
+      });
+    },
+    setChartPoint(section, wrapper, point, value) {
+      ready(); [section, wrapper, point].forEach(uint);
+      if (typeof wasm.hwpx_edit_set_chart_point !== "function" || typeof wasm.hwpx_edit_chart_point_max_bytes !== "function") throw new Error("HwpxChartEditAbiUnavailable");
+      const bytes = chartPointBytes(value);
+      memory.withBytes(bytes, (ptr, size) => {
+        if (!wasm.hwpx_edit_set_chart_point(section, wrapper, point, ptr, size)) throw memory.error();
+      });
     },
     splice(section, paragraph, start, deleted, text) {
       ready();

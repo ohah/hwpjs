@@ -1,0 +1,37 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { workerCanvasHarness } from "../canvas/worker-harness.mjs";
+import { execFileSync } from "../../tools/oracle-process.mjs";
+
+for (const [path, expected] of [["issue5447/3차원묶은세로막대형-행추가.hwpx", "InvalidFat"], ["issue5652/3차원묶은세로막대형-행추가.hwpx", "InvalidRoot"]]) test(`Worker chart policy is explicit, persists through history and rejects bad load options: ${path}`, async t => {
+  const h = await workerCanvasHarness(t);
+  const input = readFileSync("reference/rhwp/samples/" + path);
+  const ok = async message => { const reply = await h.send(message); assert.equal(reply.error, undefined); return reply; };
+  const strict = await ok({ kind: "load", format: "hwpx", bytes: input });
+  assert.equal(strict.content.chartOleObservedRepairsAllowed, false);
+  const target = strict.content.chartTargets[0];
+  await ok({ kind: "enable" });
+  const original = (await ok({ kind: "chart-points", section: target.section, wrapper: target.wrapper })).chart;
+  const point = original.values.points.findIndex(row => row.kind === "numeric_cache");
+  const command = { kind: "chart-point", section: target.section, wrapper: target.wrapper, point, value: "314.159" };
+  assert.equal((await h.send(command)).error, expected);
+  assert.deepEqual(Buffer.from((await ok({ kind: "save" })).bytes), input);
+  const compatible = await ok({ kind: "load", format: "hwpx", bytes: input, allowObservedChartOleDeviations: true });
+  assert.equal(compatible.content.chartOleObservedRepairsAllowed, true);
+  assert.deepEqual(Buffer.from((await ok({ kind: "save" })).bytes), input);
+  await ok({ kind: "enable" }); await ok(command);
+  const saved = Buffer.from((await ok({ kind: "save" })).bytes);
+  for (const flags of [[], ["-O"]]) execFileSync("python3", [...flags, "tools/hwpx-chart-session-oracle.py"], { input: JSON.stringify({ before: input.toString("base64"), after: saved.toString("base64"), chart: original.pair.chart_path, ole: original.pair.ole_path, value_node: original.values.points[point].value_node, value: "314.159", allow_root_creation_zero: true }), timeout: 30000 });
+  const invalid = await h.send({ kind: "load", format: "hwpx", bytes: input, allowObservedChartOleDeviations: "true" }, false);
+  assert.equal(invalid.error, "InvalidChartOlePolicy");
+  assert.deepEqual(Buffer.from((await ok({ kind: "save" })).bytes), saved);
+  const wrongFormat = await h.send({ kind: "load", format: "hwp5", bytes: input, allowObservedChartOleDeviations: true }, false);
+  assert.equal(wrongFormat.error, "UnsupportedChartOlePolicyFormat");
+  assert.deepEqual(Buffer.from((await ok({ kind: "save" })).bytes), saved);
+  const undone = await ok({ kind: "undo" });
+  assert.equal(undone.content.chartOleObservedRepairsAllowed, true);
+  assert.deepEqual(Buffer.from((await ok({ kind: "save" })).bytes), input);
+  await ok({ kind: "redo" });
+  assert.deepEqual(Buffer.from((await ok({ kind: "save" })).bytes), saved);
+});

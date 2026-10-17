@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[차트 UI·Worker 연결](hwpx-chart-ui-main-integration.md)은 `HWPJS_TEST_WASM=/absolute/candidate.wasm node --test --test-concurrency=1 tests/hwpx/chart-query-readiness.test.mjs tests/hwpx/chart-series-text-controls.test.mjs tests/hwpx/chart-series-text-worker.test.mjs tests/hwpx/chart-current-worker.test.mjs tests/hwpx/chart-controls.test.mjs tests/hwpx/chart-ole-policy-worker.test.mjs tests/hwpx/chart-ole-policy-password-worker.test.mjs tests/hwpx/chart-point-table.test.mjs tests/hwpx/chart-point-grid.test.mjs`로 검사합니다. reference와 해당 native 기능을 갖춘 후보가 필요합니다. 기존 기본 WASM 비교는 계열 이름 Worker 사례를 제외하며 실제 Chromium·전체 native 검사와 구분합니다.
+
 [HWP5 원본 입력 적격성](hwp5-text-source-eligibility.md)은 구역 간 native 정책의 조회·부분 할당 실패·optional ABI·Canvas 읽기 전용/서식 분리 검증 명령을 소유합니다.
 
 [표 번호 참조의 글자 서식 보존](hwp5-table-number-format-retention.md)은 native 부분 할당 실패·실제 원본과 별도 후보 WASM의 공개 API/독립 저장 대조 명령을 소유합니다. 텍스트 편집·번호 갱신 허가와 구분합니다.

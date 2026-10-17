@@ -1,6 +1,7 @@
 import { createHwp5Reader } from "../../js/hwp5.mjs";
 import { createHwpxReader } from "../../js/hwpx.mjs";
 import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
+import { attachHwpxCharts } from "./hwpx-chart-content.mjs";
 import { hwpxFieldRangeTarget } from "./hwpx-field-range-target.mjs";
 import { attachCheckBoxes } from "./checkbox-content.mjs";
 import { attachDutmal } from "./dutmal-content.mjs";
@@ -45,6 +46,7 @@ import { encodeCharacterRanges } from "../../js/character-range-batch.mjs";
 import { createFieldLinkDisplayGuard } from "./field-link-display-guard.mjs";
 let module, bytes, preview, editor, format;
 let historyEnabled = false;
+let hwpxChartOlePolicy = false;
 let protectionRemoved = false;
 let hwp5StyleOpenError = null;
 let hwpxWindow = null;
@@ -132,6 +134,7 @@ function hwpxDisplay(projected) {
   if (!content.window) attachHwpxFormulas(editor, content);
   content.formulaDefinitionAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwpx_edit_set_formula_definition" && entry.kind === "function");
   const formulaExports = new Set(WebAssembly.Module.exports(module).filter(entry => entry.kind === "function").map(entry => entry.name));
+  attachHwpxCharts(editor, content, formulaExports, hwpxChartOlePolicy);
   content.manualFormulaResultAvailable = typeof editor.setManualFormulaResult === "function" && ["hwpx_edit_set_manual_formula_result", "hwpx_edit_manual_formula_result_max_bytes"].every(name => formulaExports.has(name));
   content.manualFormulaResultTextAvailable = formulaResultTextAvailable(editor, module);
   const formulaResultContext = content.manualFormulaResultTextAvailable && content.window ? attachHwpxFormulas(editor, { paragraphs: content.paragraphs }) : content;
@@ -313,6 +316,9 @@ self.onmessage = async event => {
     // Opening a native session for display metadata does not activate editing.
     if (format === "hwp5" && !historyEnabled && ["save", "undo", "redo", "split", "merge", "splice", "format"].includes(message.kind)) throw new Error("EditorNotOpen");
     if (message.kind === "load") {
+      const requestedPolicy = message.allowObservedChartOleDeviations === undefined ? false : message.allowObservedChartOleDeviations;
+      if (typeof requestedPolicy !== "boolean") throw new Error("InvalidChartOlePolicy");
+      if (requestedPolicy && message.format !== "hwpx") throw new Error("UnsupportedChartOlePolicyFormat");
       editor?.close(); editor = undefined; preview = undefined;
       if (protectionRemoved) bytes?.fill(0);
       protectionRemoved = false;
@@ -321,6 +327,7 @@ self.onmessage = async event => {
       hwp5StyleOpenError = null;
       hwpxWindow = null;
       format = message.format ?? "hwp5";
+      hwpxChartOlePolicy = format === "hwpx" && requestedPolicy;
       if (format !== "hwp5" && format !== "hwpx") throw new Error("UnknownDocumentFormat");
       const response = await fetch("../../zig-out/bin/hwpjs.wasm", { cache: "no-cache" });
       if (!response.ok) throw new Error(`WASM HTTP ${response.status}: 먼저 Zig 빌드를 실행하세요.`);
@@ -330,7 +337,7 @@ self.onmessage = async event => {
         reader = await createHwpxReader(module);
         preview = reader.readTextEvents(bytes);
         const next = await createHwpxEditor(module);
-        try { next.open(bytes); } catch (error) { next.close(); throw error; }
+        try { next.open(bytes, { allowObservedChartOleDeviations: hwpxChartOlePolicy }); } catch (error) { next.close(); throw error; }
         editor = next;
         reply({ kind: "load", content: hwpxDisplay() });
         return;
@@ -366,7 +373,7 @@ self.onmessage = async event => {
         const current = format === "hwpx" ? reader.readTextEvents(plaintext) : reader.readText(plaintext);
         if (format === "hwpx") {
           next = await createHwpxEditor(module);
-          next.open(plaintext);
+          next.open(plaintext, { allowObservedChartOleDeviations: hwpxChartOlePolicy });
         } else next = await createExperimentalHwp5Editor(module, plaintext);
         editor?.close(); editor = next; next = undefined;
         bytes = plaintext; preview = current; protectionRemoved = true;
@@ -607,6 +614,22 @@ self.onmessage = async event => {
         preview = reader.readTextEvents(editor.saveForDisplay());
         reply({ kind: "formula-definition", content: hwpxDisplay() });
       }
+    } else if (message.kind === "chart-points" || message.kind === "chart-series-text") {
+      if (format !== "hwpx") throw new Error("UnsupportedChartEditing");
+      if (!editor || !historyEnabled) throw new Error("EditorNotOpen");
+      const chart = message.kind === "chart-series-text" ? editor.chartSeriesText(message.section, message.wrapper) : editor.chartPoints(message.section, message.wrapper);
+      reply({ kind: message.kind, requestId: message.requestId, section: message.section, wrapper: message.wrapper, chart });
+    } else if (["chart-numeric-point", "chart-point", "chart-series-text-set"].includes(message.kind)) {
+      if (format !== "hwpx") throw new Error("UnsupportedChartEditing");
+      if (!editor || !historyEnabled) throw new Error("EditorNotOpen");
+      if (message.kind === "chart-series-text-set") editor.setChartSeriesText(message.section, message.wrapper, message.ordinal, message.value);
+      else if (message.kind === "chart-point") editor.setChartPoint(message.section, message.wrapper, message.point, message.value);
+      else editor.setChartNumericPoint(message.section, message.wrapper, message.point, message.value);
+      applied = true;
+      reader = await createHwpxReader(module);
+      preview = reader.readTextEvents(editor.saveForDisplay());
+      const chart = message.kind === "chart-series-text-set" ? editor.chartSeriesText(message.section, message.wrapper) : editor.chartPoints(message.section, message.wrapper);
+      reply({ kind: message.kind, content: hwpxDisplay(), chart });
     } else if (message.kind === "manual-formula-result") {
       if (format !== "hwpx") throw new Error("UnsupportedManualFormulaResultEditing");
       if (!editor || !historyEnabled) throw new Error("EditorNotOpen");
@@ -801,7 +824,7 @@ self.onmessage = async event => {
   } catch (error) {
     delete message.password;
     const passwordRequired = message.kind === "load" && ((format === "hwpx" && error.message === "EncryptedDocument") || (format === "hwp5" && error.message === "UnsupportedEncryption"));
-    const queryIdentity = ["query-edit-range", "query-split-range"].includes(message.kind) ? { requestId: message.requestId, section: message.section, paragraph: message.paragraph, startUnit: message.startUnit, endUnit: message.endUnit } : {};
+    const queryIdentity = ["chart-points", "chart-series-text"].includes(message.kind) ? { requestId: message.requestId, section: message.section, wrapper: message.wrapper } : ["query-edit-range", "query-split-range"].includes(message.kind) ? { requestId: message.requestId, section: message.section, paragraph: message.paragraph, startUnit: message.startUnit, endUnit: message.endUnit } : {};
     reply({ kind: message.kind, applied, error: error.message || String(error), ...queryIdentity, ...dutmalQueryIdentity(message), ...(passwordRequired ? { passwordRequired: true } : {}) });
   }
   finally { reader?.close(); }
