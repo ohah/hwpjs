@@ -14,7 +14,11 @@ HWP5의 한 구역에서 일반 텍스트를 splice할 때, 수정하지 않는 
 
 실제 참조 문단을 축소한 native 검사는 새 비대상 정책의 전체 부분 할당 실패, 기존 일반 비대상/선택 필드 거래의 거부, 페이지 참조 변이 거부를 검사합니다. ReleaseSafe2/2와 기존 입력 정책을 포함한 Debug3/3이 통과했습니다. Canvas/Worker DOM 대역 검사는 직접 beforeinput/input·글자 서식·저장 원문·undo/redo 및 보호 구역 거부 후 redo를 검사해1/1 통과했습니다. 실제 브라우저/OS IME·전체 native·전체 픽스쳐 편집·한글 조판 동치 검증은 아닙니다. 기본 WASM/데모 승격도 별도입니다.
 
-## 재현
+## 읽기 회귀 전수 대조 (2026-10-18)
+
+공개 main 후보 `f66c988cf17295645c154f45e15668fe9582c64ce3f4732cfb08be28d9be3a14`와 위 후보의 RHWP reference975개를 대조해 전체 읽기 JSON944동일·기존 거부5동일·HWP3범위제외26을 확인했습니다. 기록은 `/tmp/hwpjs-unselected-table-number.ARKFY5/unselected-reader-parity.jsonl`의 summary입니다. 이름·종류 기준 WASM export331개도 추가/제거 없이 동일합니다. 기존 거부는 지원 성공이 아니며 이 결과를 편집/브라우저/조판 전수 완료로 해석하지 않습니다.
+
+## 재현 명령
 
 `HWPJS_TEST_WASM=/absolute/candidate.wasm node --test --test-concurrency=1 tests/hwp5/unselected-table-number-text.test.mjs tests/hwp5/unselected-cross-reference-gate.test.mjs tests/hwp5/table-number-character-format.test.mjs tests/hwp5/normalized-distribution.test.mjs tests/hwp5/table-number-format-canvas.test.mjs`
 
