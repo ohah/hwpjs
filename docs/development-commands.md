@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[표 참조 실제 브라우저 검증](hwp5-selected-table-number-text.md)은 `HWPJS_TEST_WASM=/absolute/candidate.wasm node tools/hwp5-reference-browser-audit.mjs --root=/absolute/verified-source --port=58851`입니다. 전용 agent-browser 세션·독립 저장 oracle·원본 hwpspec.hwp를 사용하며 한 원본의 실제 입력/이력/저장/재업로드와 종료를 검사합니다. `node --test tests/hwp5/browser-click-target.test.mjs tests/hwp5/browser-session-close.test.mjs`는 클릭/종료 guard의 음성 대조이며 실제 브라우저 검사의 대체가 아닙니다.
+
 [사본 Canvas 원문 보존](hwp5-available-section-copy.md)은 `HWPJS_TEST_WASM=/absolute/copy-api-candidate.wasm node --test tests/hwp5/available-section-copy-canvas.test.mjs`로 3원본·4저장 구역의 제어 경계·대기 입력·독립 전체 Section·이력을 검사합니다. [추적 암호 fixture 경로](fixture-editor-coverage.md)는 `HWPJS_TEST_WASM=/absolute/candidate.wasm node --test tests/hwp5/fixture-password-edit-paths.test.mjs`로 실행합니다. 후자는 정상 암호의 명시적 보호 해제 사본이며 재암호화 저장/브라우저 검사가 아닙니다.
 
 
