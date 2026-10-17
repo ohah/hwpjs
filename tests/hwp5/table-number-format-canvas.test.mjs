@@ -16,7 +16,8 @@ test("native source policy blocks Canvas text input while keeping Worker charact
   assert(row, "fixture must expose selectable but text-protected content");
   assert.equal(row.textSourcePolicyError, "UnsupportedSectionControl");
   const baseline = Buffer.from((await h.send({ kind: "save" })).bytes);
-  const range = { section: row.section, paragraph: row.paragraph, startUnit: 0, endUnit: 1 };
+  assert.equal(row.text, "(Hwp Document File Formats)");
+  const range = { section: row.section, paragraph: row.paragraph, startUnit: 1, endUnit: 13 };
   assert.equal(h.controller.selectTextRange(range), true);
   assert.equal(h.input.readOnly, true);
   const text = h.input.value;
@@ -29,10 +30,13 @@ test("native source policy blocks Canvas text input while keeping Worker charact
   const oldBold = h.controller.selectedCharacterPropertyState("bold");
   assert.equal(typeof oldBold, "boolean");
   assert.equal(h.controller.setCharacterProperties({ bold: !oldBold }), true);
+  assert.equal(h.controller.settled(), false);
+  assert.equal(h.controller.selectedCharacterPropertyState("bold"), null, "pending display state must not be used as completion evidence");
   const request = h.requests.at(-1);
   assert.equal(request.kind, "character-properties");
   const changed = await h.flush();
   assert.equal(changed.error, undefined);
+  assert.equal(h.controller.settled(), true);
   const current = changed.content.paragraphs.find(row => row.section === range.section && row.paragraph === range.paragraph);
   assert.equal(current.text, text);
   assert.equal(current.editable, false);
@@ -41,9 +45,13 @@ test("native source policy blocks Canvas text input while keeping Worker charact
   assert.equal(verifyCharacterProperties(input, Buffer.from(saved.bytes), request), true);
   assert.equal(h.controller.history("undo"), true);
   assert.equal((await h.flush()).error, undefined);
+  assert.equal(h.controller.selectedCharacterPropertyState("bold"), oldBold, "undo restores selected display state, not only saved bytes");
+  assert.equal(h.input.readOnly, true);
   assert.deepEqual(Buffer.from((await h.send({ kind: "save" })).bytes), baseline);
   assert.equal(h.controller.history("redo"), true);
   assert.equal((await h.flush()).error, undefined);
+  assert.equal(h.controller.selectedCharacterPropertyState("bold"), !oldBold, "redo restores selected display state");
+  assert.equal(h.input.readOnly, true);
   assert.deepEqual(Buffer.from((await h.send({ kind: "save", allowStaleLayout: true })).bytes), Buffer.from(saved.bytes));
   assert.deepEqual(readFileSync(path), input);
 });

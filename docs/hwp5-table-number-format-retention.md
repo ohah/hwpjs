@@ -12,7 +12,7 @@
 
 ## Canvas 연결과 남은 허가 문제
 
-`table-number-format-canvas.test.mjs`는 실제 Worker/WASM과 Canvas controller/renderer를 연결한 DOM 대역 검사입니다. 분리한 main 소스/같은 후보에서1/1·skip0으로 `hwpspec.hwp`의 선택에 글자 서식을 적용하고 독립 전체 CFB/레코드 oracle·undo/redo를 통과했습니다. 실제 Chromium/OS IME 검사는 아닙니다.
+`table-number-format-canvas.test.mjs`는 실제 Worker/WASM과 Canvas controller/renderer를 연결한 DOM 대역 검사입니다. 분리한 main 소스/같은 후보에서1/1·skip0으로 `hwpspec.hwp`의 선택에 글자 서식을 적용하고 독립 전체 CFB/레코드 oracle·undo/redo를 통과했습니다. 이 테스트 자체는 실제 Chromium/OS IME 검사가 아니며, 후속 Chromium 다운로드/재업로드 실측은 [원본 입력 적격성](hwp5-text-source-eligibility.md)의 검증 절이 소유합니다.
 
 이 연결 검사에서 reader의 문단 로컬 `editable=true`가 다른 구역의 미지원 참조를 반영하지 않는 UI 허가 불일치를 재현했습니다. 후속 [원본 입력 적격성](hwp5-text-source-eligibility.md) 변경은 새 ABI에서 해당 입력을 UI부터 거부하고 서식 선택을 유지합니다. 구형 ABI의 미확인 동작과 새 후보의 검증 범위는 해당 문서가 소유합니다. 서식 전용 허가와 일반 입력 허가를 다시 합치지 않습니다.
 

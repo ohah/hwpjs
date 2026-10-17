@@ -16,9 +16,11 @@ optional export `hwp5_edit_validate_text_source_policy(section)`는 성공1, 실
 
 ## 검증
 
-브라우저의 버튼 aria 상태 변경은 native 응답/저장 완료를 대신하지 않습니다. 이 브라우저 실행은 서식 거래 정착·다운로드·이력까지 완료했다고 판정하지 않았으며, 실제 Chromium의 해당 후속 경로는 추가 검증 대상으로 남깁니다.
+앞선 브라우저 이력 확인의 시간 초과는 완료 신호를 너무 이르게 판단한 검사 오류였습니다. 대기 중에는 selectedCharacterPropertyState가 null이며 비활성 버튼의 aria-pressed가 false가 될 수 있습니다. 버튼 재활성화 뒤 값과 거래 완료 상태를 확인하는 조건으로 재검증했습니다. 연결 테스트도 pending 중 null/미정착, 응답 뒤 정착, undo/redo 뒤 선택 굵게 값과 읽기 전용 상태 복원을 검사합니다. aria 값만으로 완료를 판정하지 않습니다.
 
-분리한 동일 소스·후보의 Chromium에서도 hwpspec을 파일 선택→명시적 보정본 동의→편집 시작→찾기 결과 선택으로 열었습니다. `(Hwp Document File Formats)`의 선택에서 textarea readOnly=true·disabled=false, 굵게 버튼 활성화를 확인했습니다. Chromium 키보드 입력 시도 후 텍스트는 그대로였고 굵게 버튼을 눌러 aria-pressed true→false와 같은 텍스트/읽기 전용 상태를 확인했습니다. 브라우저 undo 뒤 선택 굵게 상태 확인은 시간 초과였으므로 undo/redo E2E 통과로 세지 않습니다. 저장·이력 정확성은 아래 독립 API/Worker 검사 범위입니다. 사용한 브라우저와 임시 서버는 종료 확인하며 물리 OS IME·모든 버튼·조판 동치를 주장하지 않습니다.
+같은 분리 소스·후보의 새 Chromium 세션에서 hwpspec을 파일 선택→명시적 보정본 동의→편집 시작→찾기로 열고 `(Hwp Document File Formats)`의 Hwp Document 부분(구역0/문단6/원본 UTF-16 범위1..13)을 선택했습니다. readOnly=true·disabled=false를 유지한 채 굵게 true→false, undo→true, redo→false를 각 버튼 재활성화 후 확인했습니다. 이전 실행의 키보드 입력 시도에서도 읽기 전용 텍스트는 바뀌지 않았습니다. 이는 물리 OS IME 검사는 아닙니다.
+
+이번 Chromium 실행에서는 변경 전 보정본·undo 후·redo 후 파일을 실제 다운로드했습니다. 보정본과 undo 파일은 바이트 단위로 동일했고, 보정본의 전체 스트림은 원본의 스트림과 동일했습니다. redo 후 첫 저장은 LayoutReflowRequired로 거부됐고 동의가 선택되지 않은 것을 확인한 다음 직접 체크해 저장했습니다. 실제 다운로드 파일을 독립 verifyCharacterProperties로 검사해 DocInfo 전체·모든 decoded 구역·비대상 스트림을 예상 변경과 대조했습니다. 반대 굵게 값을 요구한 반례는 실패했습니다. 다운로드한 편집본을 브라우저에 재업로드·다시 편집 시작·같은 찾기 결과 선택 후 굵게 false/같은 텍스트/readOnly=true가 유지됐습니다. 수집된 브라우저 오류는 없었고 사용한 세션·서버는 종료 확인했습니다. 원본 CFB 메타데이터까지 보존하는 저장이나 전체 객체·페이지 조판 동치를 주장하지 않습니다. 해당 문서는 표시 한도와 UnsupportedHwp5RectangleRoot에 따른 페이지 배치 제한이 여전히 있습니다.
 
 분리한 main 기준 native ReleaseSafe/Debug 각각2/2와 ReleaseSafe WASM 빌드가 통과했습니다. 실제 tracked field 문서의 모든 부분 할당 실패·원본 불변, 잘못된 구역, 선택/다른 구역의 미지 컨트롤 거부를 검사합니다. 후보 SHA256은 `c8c6e8ab17e1e2426e01c1ec70293912c04a86dfcba1aa572df5a420479ff9c5`입니다.
 
