@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+`HWPJS_TEST_WASM=/absolute/candidate/bin/hwpjs.wasm node --test tests/hwp5/relative-font-size-reference.test.mjs`는 [상대 글자 크기](relative-font-size.md)를 실제 양 형식 API·기존 CSS와 대조합니다. 원값 조회를 지원하는 후보가 필요하며 글리프 크기와 명목 줄 높이를 구분합니다.
+
 `HWPJS_TEST_WASM=/absolute/candidate/bin/hwpjs.wasm HWPJS_METRICS_BASELINE_WASM=/absolute/baseline/bin/hwpjs.wasm node --test tests/hwp5/character-font-metrics.test.mjs`는 [언어별 조판 원값](character-font-metrics.md)의 양 형식 실제 API·Worker·이력과 구형 ABI를 검사합니다. `node --expose-gc tools/character-font-metrics-audit.mjs --format=hwp5 --wasm=/absolute/candidate/bin/hwpjs.wasm --inventory=/absolute/font-inventory.json`는 이전 font inventory의 verified 집합만 재검사합니다. HWPX는 format=hwpx로 실행하며 제외된 경로·coverageComplete를 함께 보고합니다. inventory 없는 전체 파일 성공으로 해석하지 않습니다.
 
 `node --test tests/hwpx/font-height-reference.test.mjs tests/hwp5/font-height-reference.test.mjs tests/hwp5/line-spacing-compat.test.mjs tests/hwp5/pdf-font-reference.test.mjs`는 [공통 글꼴 높이 정책](font-layout-metrics.md)의 실제 XML/HTML·CFB·혼합 크기·행간·PDF 선언 크기를 검사합니다. PDF 조건부 skip과 실제 실행 통과를 구분합니다.

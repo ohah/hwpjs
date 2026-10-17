@@ -1,5 +1,7 @@
 # 언어별 글꼴 조판 원값
 
+후속 표시 소비자 중 [상대 글자 크기](relative-font-size.md)는 별도 계약을 따릅니다. 아래 원값 전달 검증과 장평·자간·위치·전체 조판 적용 완료를 구분합니다.
+
 ## API
 
 HWP5/HWPX editor의 선택적 `characterFontMetrics()`는 `[{id,values:{ratio,spacing,relativeSize,offset}}]`를 반환합니다. 언어 순서는 기존 글꼴 참조와 같은 hangul/latin/hanja/japanese/other/symbol/user입니다. 각각 장평·자간·상대 크기·글자 위치의 % 원값이며 CSS px가 아닙니다. 기존 `characterShapes()`의 HCS1와 id/height/bold/italic 응답은 변경하지 않습니다.
