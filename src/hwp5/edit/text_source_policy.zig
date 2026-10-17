@@ -4,7 +4,7 @@ pub fn validate(a: std.mem.Allocator, decoded: []const []const u8, version: @imp
     if (section >= decoded.len) return error.InvalidSection;
     const policy = @import("source_policy.zig");
     for (decoded, 0..) |bytes, index| {
-        if (index != section) try policy.validateUnselectedSection(a, bytes, version);
+        if (index != section) try policy.validateUnselectedTextSection(a, bytes, version);
     }
     const source = decoded[section];
     if (try policy.hasNamedFields(source)) {

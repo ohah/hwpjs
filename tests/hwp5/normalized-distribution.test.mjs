@@ -20,9 +20,16 @@ test("explicit normalized distribution opens the actual repaired five-section fi
     const baseline = editor.save().bytes;
     assert.deepEqual(inspect(baseline).streams, inspect(input).streams);
     editor.enableHistory();
-    assert.throws(() => editor.splice({ section: 0, paragraph: 1, startUnit: 0, endUnit: 0, text: "배포😀" }), /UnsupportedSectionControl/);
+    assert.throws(() => editor.splice({ section: 2, paragraph: 0, startUnit: 0, endUnit: 0, text: "보호😀" }), /UnsupportedSectionControl/);
     assert.deepEqual(editor.save().bytes, baseline);
     assert.equal(editor.undo(), false);
+    editor.splice({ section: 0, paragraph: 1, startUnit: 0, endUnit: 0, text: "배포😀" });
+    const edited = editor.save({ allowStaleLayout: true }).bytes;
+    verifyRaw(baseline, edited, 0, 1, 0, 0, "배포😀");
+    assert.equal(editor.undo(), true);
+    assert.deepEqual(editor.save().bytes, baseline);
+    assert.equal(editor.redo(), true);
+    assert.deepEqual(editor.save({ allowStaleLayout: true }).bytes, edited);
     const reopened = await createExperimentalHwp5Editor(wasm, baseline, { distribution: true });
     try { assert.equal(reopened.normalizationInfo().normalized, false); }
     finally { reopened.close(); }

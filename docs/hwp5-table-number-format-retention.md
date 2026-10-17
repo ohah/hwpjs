@@ -8,9 +8,11 @@
 
 `source_policy.validateCharacterFormat`과 `validateUnselectedCharacterFormat`은 선택 구역/그대로 보존할 다른 구역을 구분합니다. 기존 `field_source_bindings`의 원본 필드 토폴로지 검사를 재사용하며 표 번호만 결과 평가를 생략합니다. 책갈피 이름은 기존 대상 검증을 유지합니다. 다른 구역의 수식·미지 컨트롤 제한도 유지합니다. `plain_text_source`의 character_format 목적과 Session의 두 글자 서식 명령만 이 정책을 사용합니다.
 
-일반 splice·필드 입력·구조 변경·상호참조 결과 계산에는 허가를 전달하지 않습니다. 글자 속성은 새 리소스와 run 참조로 기록하지만 텍스트를 바꾸지 않습니다. 저장의 stale-layout 동의는 계속 필요하며, 페이지 배치와 원본 한글의 조판 동치는 주장하지 않습니다. 필드 표시의 글자 모양을 바꾸는 것과 표시 문자열을 직접 수정하는 것은 다릅니다. 기존 불완전한 번호 참조를 복구하거나 편집 후 번호를 새로 계산하는 기능은 아직 남아 있습니다.
+선택 구역의 필드 입력·구조 변경·상호참조 결과 계산에는 허가를 전달하지 않습니다. 일반 splice의 수정하지 않는 다른 구역 보존은 [별도 입력 계약](hwp5-unselected-table-number-text.md)을 따릅니다. 글자 속성은 새 리소스와 run 참조로 기록하지만 텍스트를 바꾸지 않습니다. 저장의 stale-layout 동의는 계속 필요하며, 페이지 배치와 원본 한글의 조판 동치는 주장하지 않습니다. 필드 표시의 글자 모양을 바꾸는 것과 표시 문자열을 직접 수정하는 것은 다릅니다. 기존 불완전한 번호 참조를 복구하거나 편집 후 번호를 새로 계산하는 기능은 아직 남아 있습니다.
 
 ## Canvas 연결과 남은 허가 문제
+
+아래는 최초 서식 허가 당시 기록입니다. 현재 다른 구역의 로컬 표 번호 참조 때문에 문서 전체를 텍스트 읽기 전용으로 만들지는 않으며, 갱신한 Canvas 검증과 입력 계약은 [비대상 표 번호 보존](hwp5-unselected-table-number-text.md)을 따릅니다.
 
 `table-number-format-canvas.test.mjs`는 실제 Worker/WASM과 Canvas controller/renderer를 연결한 DOM 대역 검사입니다. 분리한 main 소스/같은 후보에서1/1·skip0으로 `hwpspec.hwp`의 선택에 글자 서식을 적용하고 독립 전체 CFB/레코드 oracle·undo/redo를 통과했습니다. 이 테스트 자체는 실제 Chromium/OS IME 검사가 아니며, 후속 Chromium 다운로드/재업로드 실측은 [원본 입력 적격성](hwp5-text-source-eligibility.md)의 검증 절이 소유합니다.
 

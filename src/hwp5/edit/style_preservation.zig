@@ -588,9 +588,10 @@ pub const Session = opaque {
             .splice_text => |edit| {
                 if (edit.paragraph >= try self.paragraphCount(edit.section)) return error.InvalidParagraph;
                 const state = self.getState();
-                // Other sections can also contain opaque references into the target.
+                // This command only changes target text, retaining object IDs
+                // and numbering declarations. Other section models stay intact.
                 for (state.decoded, 0..) |bytes, index| {
-                    if (index != edit.section) try @import("source_policy.zig").validateUnselectedSection(state.allocator, bytes, state.source.header.version());
+                    if (index != edit.section) try @import("source_policy.zig").validateUnselectedTextSection(state.allocator, bytes, state.source.header.version());
                 }
                 if (try @import("source_policy.zig").hasNamedFields(state.decoded[edit.section])) {
                     try @import("field_splice.zig").apply(state.allocator, state.decoded[edit.section], state.source.header.version(), &state.document.sections[edit.section], edit, self.characterShapeCount());

@@ -47,6 +47,13 @@ pub fn validateUnselectedSection(a: std.mem.Allocator, source: []const u8, versi
     if (try hasNamedFields(source)) try @import("field_source_bindings.zig").validate(a, source, version);
 }
 
+/// Only for an isolated text splice in another section. This section's model
+/// is unchanged by that transaction, so retain local table-number fields with
+/// the existing position-preserving checks. Never grant target/structure edits.
+pub fn validateUnselectedTextSection(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version) !void {
+    try validateUnselectedCharacterFormat(a, source, version);
+}
+
 /// Formula-aware text/format callers and isolated body structure retain known fields.
 pub fn hasFormulas(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version) !bool {
     return inspect(a, source, version, true, false, false);

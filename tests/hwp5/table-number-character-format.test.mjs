@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
 import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
-import { inspect, records, paragraphRecords } from "./style-preservation/text-record-oracle.mjs";
+import { inspect, records, paragraphRecords, verifyRaw } from "./style-preservation/text-record-oracle.mjs";
 import { verifyCharacterProperties } from "./style-preservation/character-property-oracle.mjs";
 import { tableNumberSourceOracle } from "./table-number-source-oracle.mjs";
 
@@ -15,7 +15,7 @@ function declarations(bytes) {
 }
 
 for (const name of ["hwpspec.hwp", "hwp-3.0-HWPML.hwp"]) {
-  test(`${name}: character formatting retains table references and keeps text editing protected`, async t => {
+  test(`${name}: formatting and isolated text retain table references and protected-section redo`, async t => {
     const path = `reference/rhwp/samples/${name}`;
     if (!existsSync(path)) { t.skip("RHWP reference fixture is unavailable"); return; }
     const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
@@ -47,9 +47,19 @@ for (const name of ["hwpspec.hwp", "hwp-3.0-HWPML.hwp"]) {
       finally { reopened.close(); }
       assert.equal(editor.undo(), true);
       assert.deepEqual(Buffer.from(editor.save().bytes), baseline);
-      assert.throws(() => editor.splice({ section: 0, paragraph, startUnit: 0, endUnit: 0, text: "보호" }), /UnsupportedSectionControl/);
+      assert.throws(() => editor.splice({ section: 2, paragraph: 0, startUnit: 0, endUnit: 0, text: "보호" }), /UnsupportedSectionControl/);
       assert.equal(editor.redo(), true);
       assert.deepEqual(Buffer.from(editor.save({ allowStaleLayout: true }).bytes), saved);
+      const originalText = editor.text(0, paragraph);
+      editor.splice({ section: 0, paragraph, startUnit: 0, endUnit: 0, text: "보존😀" });
+      const textSaved = editor.save({ allowStaleLayout: true }).bytes;
+      verifyRaw(saved, textSaved, 0, paragraph, 0, 0, "보존😀");
+      assert.equal(editor.text(0, paragraph), "보존😀" + originalText);
+      assert.deepEqual(declarations(textSaved), declarations(input));
+      assert.equal(editor.undo(), true);
+      assert.deepEqual(Buffer.from(editor.save({ allowStaleLayout: true }).bytes), saved);
+      assert.equal(editor.redo(), true);
+      assert.deepEqual(editor.save({ allowStaleLayout: true }).bytes, textSaved);
     } finally { editor.close(); }
     assert.deepEqual(readFileSync(path), input);
   });

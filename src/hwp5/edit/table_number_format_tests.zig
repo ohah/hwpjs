@@ -116,6 +116,10 @@ test "table number character format source validation cleans every partial alloc
     // Explicit derivative with an orphan target: formatting retains the label,
     // whereas text editing and result materialization must remain unavailable.
     try @import("../../testing/allocation_failures.zig").check(@import("source_policy.zig").validateCharacterFormat, .{ @as([]const u8, small.items), source.header.version() });
+    // An untouched section may retain this exact local table-number label.
+    // This permission does not extend to editing the field-bearing section.
+    try @import("../../testing/allocation_failures.zig").check(@import("source_policy.zig").validateUnselectedTextSection, .{ @as([]const u8, small.items), source.header.version() });
+    try std.testing.expectError(error.UnsupportedSectionControl, @import("source_policy.zig").validateUnselectedSection(a, small.items, source.header.version()));
     try std.testing.expectError(error.UnsupportedSectionControl, @import("source_policy.zig").validateFieldTransaction(a, small.items, source.header.version()));
     // Same-length command mutation: page references must not inherit the new
     // character-only table-number permission merely because topology is valid.
@@ -135,6 +139,7 @@ test "table number character format source validation cleans every partial alloc
             try std.testing.expectEqual(@as(u16, '1'), std.mem.readInt(u16, properties.command[unit + 2 ..][0..2], .little));
             std.mem.writeInt(u16, small.items[offset + unit + 2 ..][0..2], '0', .little);
             try std.testing.expectError(error.UnsupportedSectionControl, @import("source_policy.zig").validateCharacterFormat(a, small.items, source.header.version()));
+            try std.testing.expectError(error.UnsupportedSectionControl, @import("source_policy.zig").validateUnselectedTextSection(a, small.items, source.header.version()));
             return;
         }
     }
