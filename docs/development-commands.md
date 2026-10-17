@@ -1,5 +1,8 @@
 # 개발·검증 명령
 
+[사본 Canvas 원문 보존](hwp5-available-section-copy.md)은 `HWPJS_TEST_WASM=/absolute/copy-api-candidate.wasm node --test tests/hwp5/available-section-copy-canvas.test.mjs`로 3원본·4저장 구역의 제어 경계·대기 입력·독립 전체 Section·이력을 검사합니다. [추적 암호 fixture 경로](fixture-editor-coverage.md)는 `HWPJS_TEST_WASM=/absolute/candidate.wasm node --test tests/hwp5/fixture-password-edit-paths.test.mjs`로 실행합니다. 후자는 정상 암호의 명시적 보호 해제 사본이며 재암호화 저장/브라우저 검사가 아닙니다.
+
+
 [사본 선택 UI·경고](hwp5-available-section-copy.md)는 `node --test tests/hwp5/available-section-copy-controls.test.mjs tests/hwp5/available-sections-controls.test.mjs`로 동의·취소·파일 수명·지연 실패·잘못된 경고를 검사합니다. native/Worker 묶음에는 `HWPJS_TEST_WASM=/absolute/copy-api-candidate.wasm HWPJS_BASELINE_WASM=/absolute/legacy.wasm`을 명시합니다. 실제 브라우저·전체 조판과 별도입니다.
 
 [저장 구역 사본 API·Worker](hwp5-available-section-copy.md)는 `HWPJS_TEST_WASM=/absolute/copy-api-candidate.wasm HWPJS_BASELINE_WASM=/absolute/legacy.wasm node --test tests/hwp5/available-section-copy-api.test.mjs tests/hwp5/available-section-copy-worker.test.mjs tests/hwp5/normalization-abi.test.mjs tests/hwp5/normalized-open.test.mjs tests/hwp5/available-sections-worker.test.mjs`로 검사합니다. 새 native 사본 API 후보가 필요하며 기본 배포·실제 브라우저 검증과 구분합니다.
