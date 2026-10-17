@@ -1,4 +1,4 @@
-import { createRelativeFontSize } from "./character-font-metric-display.mjs";
+import { createCharacterFontMetricDisplay } from "./character-font-metric-display.mjs";
 /** Native size/emphasis with system fonts; not original font or page shaping. */
 import { underlineStyle } from "./underline-style.mjs";
 import { strikeStyle } from "./strike-style.mjs";
@@ -18,7 +18,7 @@ export function withDraftText(paragraph, text) {
 
 export function createTextStyle(content, baseFont) {
   const documentFont = createCharacterFontDisplay(content);
-  const relativeSize = createRelativeFontSize(content);
+  const metrics = createCharacterFontMetricDisplay(content);
   const shapes = new Map((content.characterShapes ?? []).map(shape => [shape.id, shape]));
   const colors = new Map((content.characterTextColors ?? []).map(row => [row.id, row.color]));
   const shades = new Map((content.characterShades ?? []).map(row => [row.id, row]));
@@ -46,7 +46,7 @@ export function createTextStyle(content, baseFont) {
   const points = shape => Number.isInteger(shape?.height) && shape.height > 0 ? shape.height / 100 : null;
   const baseResolve = (paragraph, unit, kind = "text") => {
     const shape = shapeAt(paragraph, unit, kind), nominal = points(shape);
-    const size = nominal === null || kind !== "text" ? nominal : relativeSize(shape?.id, paragraph?.text, unit, nominal);
+    const size = nominal === null || kind !== "text" ? nominal : metrics.relativeSize(shape?.id, paragraph?.text, unit, nominal);
     let font = size === null ? baseFont : baseFont.replace(/\d+(?:\.\d+)?px/, `${size}pt`);
     const family = kind === "text" || kind === "number-prefix" ? documentFont(shape?.id, paragraph?.text, unit) : null;
     if (family) font = font.replace(/(\d+(?:\.\d+)?(?:px|pt)\s+)/, (_, prefix) => `${prefix}${family}, `);
@@ -58,6 +58,7 @@ export function createTextStyle(content, baseFont) {
     return kind !== "text" || paragraph?.text?.[unit] === "\ufffc" ? null : characterScriptStyle(effects.get(shapeAt(paragraph, unit, kind)?.id), baseResolve(paragraph, unit, kind));
   };
   const resolve = (paragraph, unit, kind = "text") => script(paragraph, unit, kind)?.font ?? baseResolve(paragraph, unit, kind);
+  resolve.horizontalScale = (paragraph, unit, kind = "text") => kind !== "text" ? 1 : metrics.horizontalScale(shapeAt(paragraph, unit, kind)?.id, paragraph?.text, unit);
   resolve.script = script;
   resolve.relief = (paragraph, unit, kind = "text") => kind !== "text" || paragraph?.text?.[unit] === "\ufffc" ? null : characterReliefStyle(effects.get(shapeAt(paragraph, unit, kind)?.id), resolve(paragraph, unit, kind));
   resolve.outlineStyle = (paragraph, unit, kind = "text") => kind !== "text" || paragraph?.text?.[unit] === "\ufffc" ? null : characterOutlineStyle(outlines.get(shapeAt(paragraph, unit, kind)?.id), resolve(paragraph, unit, kind));

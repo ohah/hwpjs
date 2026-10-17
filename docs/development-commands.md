@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+`HWPJS_TEST_WASM=/absolute/candidate/bin/hwpjs.wasm node --test tests/hwp5/horizontal-font-scale.test.mjs tests/hwp5/relative-font-size-reference.test.mjs`는 [장평](horizontal-font-scale.md)과 상대 크기의 실제 리소스·통제 측정·caret/선택·Canvas transform 수명을 검사합니다. 실제 한글 글꼴 폭·전체 shaping 검사를 대신하지 않습니다.
+
 `HWPJS_TEST_WASM=/absolute/candidate/bin/hwpjs.wasm node --test tests/hwp5/relative-font-size-reference.test.mjs`는 [상대 글자 크기](relative-font-size.md)를 실제 양 형식 API·기존 CSS와 대조합니다. 원값 조회를 지원하는 후보가 필요하며 글리프 크기와 명목 줄 높이를 구분합니다.
 
 `HWPJS_TEST_WASM=/absolute/candidate/bin/hwpjs.wasm HWPJS_METRICS_BASELINE_WASM=/absolute/baseline/bin/hwpjs.wasm node --test tests/hwp5/character-font-metrics.test.mjs`는 [언어별 조판 원값](character-font-metrics.md)의 양 형식 실제 API·Worker·이력과 구형 ABI를 검사합니다. `node --expose-gc tools/character-font-metrics-audit.mjs --format=hwp5 --wasm=/absolute/candidate/bin/hwpjs.wasm --inventory=/absolute/font-inventory.json`는 이전 font inventory의 verified 집합만 재검사합니다. HWPX는 format=hwpx로 실행하며 제외된 경로·coverageComplete를 함께 보고합니다. inventory 없는 전체 파일 성공으로 해석하지 않습니다.

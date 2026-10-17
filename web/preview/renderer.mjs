@@ -16,6 +16,7 @@ import { selectedFontIds } from "./character-font-selection.mjs";
 import { rowAtY, rowLeft, rowHeight, rowVisualHeight, rowTop, rowTextTop, TEXT_LEFT } from "./row-geometry.mjs";
 import { caretGeometry, selectionRects, selectionIntersectsText } from "./text-geometry.mjs";
 import { createTextStyle, withDraftText } from "./text-style.mjs";
+import { horizontalGlyphWidth, paintHorizontalGlyph } from "./glyph-horizontal-scale.mjs";
 import { layoutTableContent } from "./table-flow.mjs";
 import { attachCreatedTableFlow, createdCellParagraph } from "./created-table-flow.mjs";
 import { projectCreatedCellDraft } from "./created-cell-draft.mjs";
@@ -207,8 +208,10 @@ export function createRenderer(canvas, viewportElement, spacer, onLayout = () =>
               ctx.restore();
             }
             const relief = fontAt.relief(paragraph, start.unit);
-            if (relief) paintCharacterRelief(ctx, relief, text, x, glyphY);
-            else if (!paintCharacterOutline(ctx, fontAt.outlineStyle(paragraph, start.unit), text, x, glyphY)) ctx.fillText(text, x, glyphY);
+            paintHorizontalGlyph(ctx, fontAt.horizontalScale(paragraph, start.unit), x, glyphY, (paintX, paintY) => {
+              if (relief) paintCharacterRelief(ctx, relief, text, paintX, paintY);
+              else if (!paintCharacterOutline(ctx, fontAt.outlineStyle(paragraph, start.unit), text, paintX, paintY)) ctx.fillText(text, paintX, paintY);
+            });
           }
           const underline = fontAt.underline(paragraph, start.unit);
           if (underline) paintUnderline(ctx, underline, x, end.x - start.x, glyphY, ctx.measureText(text), fontAt.fontHeight(paragraph, start.unit), rowLeft(row));
@@ -307,7 +310,7 @@ export function createRenderer(canvas, viewportElement, spacer, onLayout = () =>
       if (checkBox) return { width: checkBox.width, height: checkBox.affectLineSpacing ? checkBox.height : fontAt.textHeight(paragraph, unit, kind) };
       const metrics = ctx.measureText(text);
       const inkHeight = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
-      return { width: metrics.width, height: Math.max(fontAt.textHeight(paragraph, unit, kind), Number.isFinite(inkHeight) ? inkHeight : 0) };
+      return { width: horizontalGlyphWidth(metrics.width, fontAt.horizontalScale(paragraph, unit, kind)), height: Math.max(fontAt.textHeight(paragraph, unit, kind), Number.isFinite(inkHeight) ? inkHeight : 0) };
     };
     const pageLayout = pictureDisplay.format === "hwp5" ? layoutHwp5PageContent(pictureDisplay, measure) : layoutPageContent(pictureDisplay, measure);
     const logicalWidth = Math.max(1, viewport.clientWidth / viewScale - 2 * TEXT_LEFT);

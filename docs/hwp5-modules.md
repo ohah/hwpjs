@@ -5,6 +5,7 @@
 - [공통 글꼴 높이 정책](font-layout-metrics.md) · [HWP5 기준 자료](hwp5-font-layout-reference.md)
 - [언어별 장평·자간·상대 크기·위치 원값](character-font-metrics.md)
 - [상대 글자 크기 표시](relative-font-size.md)
+- [장평 표시·측정·caret 연결](horizontal-font-scale.md)
 
 - [행간과 Canvas 이동량](hwp5-line-spacing.md)
 
