@@ -1,5 +1,7 @@
 # HWP5 모듈 계약 인덱스
 
+- [구역 개수 불일치의 원본·버전 대조](hwp5-section-count-refusals.md)
+
 - [원본 입력 적격성의 UI 전달](hwp5-text-source-eligibility.md)
 
 - [표 번호 참조 문서의 글자 서식 보존](hwp5-table-number-format-retention.md)

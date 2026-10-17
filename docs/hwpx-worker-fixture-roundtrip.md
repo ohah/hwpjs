@@ -1,0 +1,19 @@
+# 추적 HWPX Worker 편집·재열기 검사
+
+## 계약
+
+`tests/hwpx/worker-fixtures.test.mjs`는 Git 추적 HWPX 경로를 단일 inventory에서 가져온다. 파일 이름의 HWP/HWPX 문자열을 기능 판정으로 사용하지 않는다. 원본 load의 plain/anchor/field/계산 결과 권한을 분리하며 native의 수동 결과 API 5개가 없는 기존 WASM에서는 계산 결과 13곳을 보호 대상으로 확인한다. 기능이 없는 경우를 계산 결과 편집 통과로 세지 않는다.
+
+필드·앵커 편집은 기존 Worker 명령을 호출하고 save→undo/save→redo/save→undo/save를 비교한다. 편집본을 새로운 세션으로 다시 열어 모든 문단 텍스트와 객체 종류별 개수를 대조하고 변경 없는 재저장도 byte-exact인지 확인한다. 재열기 projection은 기존 `worker-reopen-projection.mjs`를 재사용한다. 직렬화 뒤 바뀔 수 있는 source node ID를 텍스트 동일성으로 오인하지 않는다.
+
+## 2026-10-18 실측
+
+- 기존 테스트는 계산 결과 전용 문단의 편집 허용을 빠뜨려 `editable` 일치 검사에서 실패했다. main 전후 Worker/adapter를 같은 WASM으로 비교해 추적 46파일의 문단 정책이 동일함을 먼저 확인했다. 제품의 권한 판정을 완화해서 해결하지 않았다.
+- 추적 46경로 중 암호화 1개는 비밀번호 요구를 확인했다. 나머지 문단 합계 1,444개에서 plain 1,278개·anchor 146개·field 7개와 계산 결과 전용 13개를 분리했다. plain 1,278개를 이번 검사에서 전부 편집했다는 뜻은 아니다.
+- main 계열 WASM SHA256 `c8c6e8ab17e1e2426e01c1ec70293912c04a86dfcba1aa572df5a420479ff9c5`의 전체 선언 1/1·실패/skip 0(579,116.71ms). 앵커 146곳·필드 7곳을 각각 편집·이력·편집본 재열기/재저장으로 검증했다.
+- 같은 실행에서 수동 결과 API가 있는 계산 결과 13곳도 모두 실제 Worker splice로 변경했다. 독립 XML inventory로 소유자를 확인하고 Python 일반/-O의 전체 XML/ZIP oracle 26회 및 내부 5종 변조 반례 합계 130회를 확인했다. 결과 캐시·dirty·비대상 텍스트·비대상 part의 변경을 허용하지 않는다.
+- 기존 기본 WASM SHA256 `cbaaf27f858229fedd01b9996ce152bd31aa6d6f346481b7887bcc510ef68346`도 전체 선언 1/1·실패/skip 0(330,959.38ms). 앵커 146곳·필드 7곳의 같은 재열기 검사와 계산 결과 13곳의 보호 분기를 확인했다. 이 artifact에서는 계산 결과 편집을 실행하지 않았다.
+
+위 1/1은 한 선언 안의 내부 사례들을 합산한 수치가 아니다. 재열기 projection은 텍스트/객체 수를 검증하며 앵커·필드의 전체 XML 의미 보존이나 실제 브라우저·IME·원본 조판 동일성을 대신하지 않는다. 독립 XML/ZIP 대조는 위 계산 결과 변경에만 해당한다. 전체 RHWP 참조 975경로의 reader 검사는 [구역 수 원본 검증](hwp5-section-count-refusals.md)과 별도다.
+
+명령은 [개발·검증 명령](development-commands.md)의 Worker fixture 재열기 항목이 소유한다. 원본 fixture를 수정하지 않으며 기존보다 사례 수가 줄면 고정 집계 검사가 실패한다.

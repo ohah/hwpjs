@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+[Worker fixture 재열기](hwpx-worker-fixture-roundtrip.md)는 추적 inventory·기존 재열기 projection·계산 결과 독립 oracle의 역할과 검증 범위를 구분합니다.
+
 [차트 현재값 UI](hwpx-chart-ui-main-integration.md)는 optional JS adapter·Worker·폼과 ordinal 보존 목록/표의 책임을 분리합니다. native 후보·기본 WASM·실제 그림 표시의 범위를 구분합니다.
 
 [XML 속성 동일 뷰](xml-normalized-attribute-view.md)는 공통 XML 정규화 조건과 HWPX 숫자 판정을 분리하며, 빌린 문자열을 별도 편집 캐시로 보관하지 않습니다.
