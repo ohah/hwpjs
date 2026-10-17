@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+`node --test tests/hwp5/character-spacing-arithmetic.test.mjs tests/hwp5/line-spacing-compat.test.mjs`는 [자간 정수 산술](character-spacing-arithmetic.md)의 signed delta·overflow·공통 함수 동일성과 기존 행간 회귀를 검사합니다. 아직 자간 표시 연결을 검증하는 명령은 아닙니다.
+
 `HWPJS_TEST_WASM=/absolute/candidate/bin/hwpjs.wasm node --test tests/hwp5/horizontal-font-scale.test.mjs tests/hwp5/relative-font-size-reference.test.mjs`는 [장평](horizontal-font-scale.md)과 상대 크기의 실제 리소스·통제 측정·caret/선택·Canvas transform 수명을 검사합니다. 실제 한글 글꼴 폭·전체 shaping 검사를 대신하지 않습니다.
 
 `HWPJS_TEST_WASM=/absolute/candidate/bin/hwpjs.wasm node --test tests/hwp5/relative-font-size-reference.test.mjs`는 [상대 글자 크기](relative-font-size.md)를 실제 양 형식 API·기존 CSS와 대조합니다. 원값 조회를 지원하는 후보가 필요하며 글리프 크기와 명목 줄 높이를 구분합니다.

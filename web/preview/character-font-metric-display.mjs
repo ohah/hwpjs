@@ -1,6 +1,7 @@
 /** Glyph size policy; nominal row metrics remain independent. */
 import { displayFontLanguage } from "./character-font-display.mjs";
 import { usesDocumentFontMetrics } from "./font-layout-policy.mjs";
+import { roundedMulDiv } from "./integer-mul-div.mjs";
 export function createCharacterFontMetricDisplay(content) {
   const values = new Map((content.characterFontMetrics ?? []).map(row => [row.id, row.values]));
   const value = (field, id, text, unit) => {
@@ -8,9 +9,10 @@ export function createCharacterFontMetricDisplay(content) {
     return values.get(id)?.[field]?.[displayFontLanguage(String.fromCodePoint(text.codePointAt(unit)))];
   };
   return {
-    relativeSize(id, text, unit, points) {
+    relativeHeight(id, text, unit, height) {
       const relative = value("relativeSize", id, text, unit);
-      return Number.isInteger(relative) && relative >= 10 && relative <= 250 ? points * relative / 100 : points;
+      if (!Number.isInteger(relative) || relative < 10 || relative > 250 || relative === 100) return height;
+      return roundedMulDiv(height, relative, 100) ?? height;
     },
     horizontalScale(id, text, unit) {
       const ratio = value("ratio", id, text, unit);
@@ -18,4 +20,10 @@ export function createCharacterFontMetricDisplay(content) {
     },
   };
 }
-export const createRelativeFontSize = content => createCharacterFontMetricDisplay(content).relativeSize;
+export function createRelativeFontSize(content) {
+  const metrics = createCharacterFontMetricDisplay(content);
+  return (id, text, unit, points) => {
+    const height = Math.round(points * 100), adjusted = metrics.relativeHeight(id, text, unit, height);
+    return adjusted === height ? points : adjusted / 100;
+  };
+}

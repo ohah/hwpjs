@@ -47,6 +47,16 @@ test("relative size reuses existing display language policy and rejects invalid 
 });
 
 const expandedReference = "reference/rhwp/samples/task3307/issue3307_outline_number.hwpx";
+test("relative font size rounds in source units before CSS conversion", () => {
+  for (const [height, relative, expected] of [[1001, 90, 901], [1005, 90, 905], [1005, 10, 101], [1000, 128, 1280], [1000, 250, 2500]]) {
+    for (const format of ["hwp5", "hwpx"]) {
+      const paragraph = { text: "한", characterRanges: [{ start: 0, end: 1, charShapeId: 0 }] };
+      const style = createTextStyle({ format, characterShapes: [{ id: 0, height }], characterFontMetrics: [{ id: 0, values: { relativeSize: Array(7).fill(relative) } }] }, "16px sans-serif");
+      assert.equal(style(paragraph, 0), `${expected / 100}pt sans-serif`);
+      assert.ok(Math.abs(style.fontHeight(paragraph, 0) - height / 75) < 1e-10);
+    }
+  }
+});
 test("actual 101 percent reference retains independently stored nominal text height", { skip: !existsSync(expandedReference) && "RHWP reference is not installed" }, async () => {
   const source = JSON.parse(execFileSync("python3", ["tests/hwpx/font-height-reference-oracle.py", expandedReference], { encoding: "utf8" }));
   const metrics = JSON.parse(execFileSync("python3", ["tests/hwpx/character-font-metrics-oracle.py", expandedReference], { encoding: "utf8" }));

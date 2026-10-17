@@ -125,7 +125,12 @@ test("round 5 drawing: zero advance cannot hide ink overflow or bypass row limit
 });
 
 test("round 5 negative controls reject naive multiplication, doubled units and minimum clamps", async () => {
-  const source = readFileSync(new URL("../../web/preview/hwp5-line-spacing.mjs", import.meta.url), "utf8");
+  const sourceUrl = new URL("../../web/preview/hwp5-line-spacing.mjs", import.meta.url);
+  const source = readFileSync(sourceUrl, "utf8");
+  const dependency = '"./integer-mul-div.mjs"';
+  assert.ok(source.includes(dependency));
+  // A data URL has no hierarchical base; keep the real shared dependency.
+  const linked = source.replaceAll(dependency, JSON.stringify(new URL("./integer-mul-div.mjs", sourceUrl).href));
   const mutants = [
     ["Math.trunc(basisHeight / 4)", "basisHeight / 4", [0, 160, 1003], { extra: 600, advance: 1603 }],
     ["Math.trunc(value / 2)", "value", [1, 4000, 1000], { extra: 1000, advance: 2000 }],
@@ -133,7 +138,7 @@ test("round 5 negative controls reject naive multiplication, doubled units and m
   ];
   for (const [from, to, args, expected] of mutants) {
     assert.ok(source.includes(from));
-    const candidate = await import(`data:text/javascript;base64,${Buffer.from(source.replace(from, to)).toString("base64")}`);
+    const candidate = await import(`data:text/javascript;base64,${Buffer.from(linked.replace(from, to)).toString("base64")}`);
     assert.notDeepEqual(candidate.hwp5LineSpacing(...args), expected);
     assert.deepEqual(hwp5LineSpacing(...args), expected);
   }
