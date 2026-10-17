@@ -1,5 +1,11 @@
 # 큰 문서 테스트의 할당자 진단 비용
 
+## 문단 분할·탭 병합 테스트의 진단 비용 (2026-10-18)
+
+동결 전체4077개 바이너리 `abf0d4f78c74f8441dd8031b9f5dc00c4b5da86d3af7cd6b26593ad96b0e25a9`의 index3212·3248·3250이 각각4096MiB 관측 한도를 초과했습니다. 제품 오류/전체 통과로 분류하지 않습니다. 각 테스트의 바깥 allocator만 공통 checked allocator로 연결했고, 역변환한 테스트 본문이 main과 바이트 단위로 동일함을 확인했습니다. 실제 fixture·분할/병합·원문·XML/UTF16 경계·실패 주입·누수 단언은 유지합니다. 탭 두 테스트의 기존 로컬 수정도 덮어쓰지 않고 같은 수정으로 검증했습니다.
+
+main 의존성의 분리 ReleaseSafe 집중 바이너리 SHA256 `e0c0a7d8720a41c32fd0d41304cd3a7ad408e55b85e47476b6094dcdbfd8b738`는 root 포함4/4·fail/skip/log/leak0·exit0, 1024MiB 관측 한도에서 peak9,765,200바이트입니다. Debug도4/4·exit0이며 실제 tabdef의12 split draft·98 owned boundary·7 Session merge(단/탭 경계1포함)를 유지합니다. 기록은 `/tmp/hwpjs-title-axis-resource.SY2eZO/paragraph-resource-all-ready-1g.jsonl`과 `paragraph-resource-debug.log`입니다. 컴파일 중인0바이트 산출물을 먼저 실행한 harness 실패는 테스트 성공/제품 실패로 합산하지 않습니다. 제품 parser 메모리 개선이나 전체 native 완료의 증거는 아닙니다.
+
 ## 표제·글꼴 테스트의 분리 재검증 (2026-10-18)
 
 main77916c7b 기반 분리 소스에서 표제 혼합 번호·실제 글꼴 추가·이전 redo를 가진 글꼴 텍스트·글꼴 생성의 두 전체 실패 주입 테스트에 공통 checked allocator를 적용했습니다. 제품 코드·fixture·검증 단언·실패 지점 순회는 유지하며 할당별 스택 기록만 제외합니다. 글꼴 생성 두 테스트의 기존 로컬 수정은 덮어쓰지 않고 같은 수정으로 검증했습니다.

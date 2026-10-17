@@ -2,9 +2,12 @@ const std = @import("std");
 const tree_mod = @import("xml_part_tree.zig");
 const text_split = @import("paragraph_split_text.zig");
 const xml_split = @import("paragraph_split_xml.zig");
-const a = std.testing.allocator;
 
 test "HWPX split XML real root and nested paragraphs reparse with text and owner preserved" {
+    try @import("../testing/checked_allocator.zig").run(verifyActualParagraphSplits, .{});
+}
+
+fn verifyActualParagraphSplits(a: std.mem.Allocator) !void {
     var exercised: usize = 0;
     for ([_][]const u8{ "charshape", "table", "table-bug" }) |name| {
         const path = try std.fmt.allocPrint(a, "legacy/rust/crates/hwp-core/tests/fixtures/{s}.hwpx", .{name});

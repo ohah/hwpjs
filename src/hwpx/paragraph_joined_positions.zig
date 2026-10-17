@@ -4,7 +4,10 @@ const Joined = @import("paragraph_joined_values.zig").Joined;
 const positions = @import("paragraph_text_positions.zig");
 
 test "HWPX joined tabs actual tabdef section preserves every tab after merge and input" {
-    const a = std.testing.allocator;
+    try @import("../testing/checked_allocator.zig").run(actualTabdefSplitBoundaries, .{});
+}
+
+fn actualTabdefSplitBoundaries(a: std.mem.Allocator) !void {
     const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/tabdef.hwpx", a, .limited(4_000_000));
     defer a.free(input);
     var session = try @import("editor_session.zig").open(a, input, .{});
@@ -580,7 +583,9 @@ test "HWPX joined anchor projection retains identity Unicode and allocation safe
 }
 
 test "HWPX joined tab positions retain XML identity and protected UTF16 boundaries" {
-    const a = std.testing.allocator;
+    try @import("../testing/checked_allocator.zig").run(joinedTabPositionsRegression, .{});
+}
+fn joinedTabPositionsRegression(a: std.mem.Allocator) !void {
     const source = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:p><p:run><p:t>A</p:t></p:run></p:p><p:p><p:run><p:t>😀<p:tab width='100'/>B</p:t></p:run></p:p></s:sec>";
     var tree = try @import("xml_part_tree.zig").parse(a, source, .section, 0, 0, .{});
     defer tree.deinit(a);
