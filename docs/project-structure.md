@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+[저장 구역 읽기 전용 UI](hwp5-available-sections-preview.md)는 native 후보의 개수 보고서와 JS 경계 검사·Worker 읽기 전용 모드·버튼 수명을 분리합니다. native 후보와 기본 배포의 지원 여부를 구분합니다.
+
 [Native 범위 재개](native-test-range-audit.md)는 순수 인자/coverage 판정을 `native-test-range.mjs`에 분리하고 표준 runner 프로토콜·실제 실행·완료 범위를 구분합니다.
 
 [차트 혼합 현재값 검증](hwpx-chart-mixed-current-values.md)은 같은 native 리소스의 종류별 값 보존·이력과 기존 독립 XML/ZIP/OLE oracle의 역할을 구분합니다.

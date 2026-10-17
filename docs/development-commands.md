@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[저장 구역 읽기 전용](hwp5-available-sections-preview.md)은 `HWPJS_TEST_WASM=/absolute/candidate.wasm HWPJS_BASELINE_WASM=/absolute/legacy.wasm node --test tests/hwp5/available-sections.test.mjs tests/hwp5/available-sections-worker.test.mjs tests/hwp5/available-sections-controls.test.mjs tests/hwp5/section-count-reference.test.mjs`로 실제 파일·기본 거부·선택 UI·구형 ABI를 검사합니다. 새 native 구현을 가진 후보가 필요하며 구형 baseline 부재는 명시적 skip입니다. native 집중 명령은 해당 후보 소스에서만 유효하며 전체 지원/기본 배포 완료 검사는 아닙니다.
+
 [Native 범위 재개](native-test-range-audit.md)는 `node tools/zig-native-batch-audit.mjs --binary=/absolute/tests --batch-size=1 --start-index=2532 --expected-sha256=<original-lowercase-sha256>`처럼 실행합니다. 선택적인 `--end-index`는 배타적 끝이며 부분 성공은 전체 gate가 아닙니다. `node --test tests/hwp5/native-test-range.test.mjs`로 인자·inventory 경계를 검사합니다.
 
 [차트 혼합 현재값](hwpx-chart-mixed-current-values.md)은 `HWPJS_TEST_WASM=/absolute/candidate.wasm node --test tests/hwpx/chart-mixed-current-values.test.mjs`로 검사합니다. 계열 이름 API가 있는 후보와 RHWP issue6037 원본·기존 Python oracle이 필요하며 전체 native/브라우저 검사는 아닙니다.

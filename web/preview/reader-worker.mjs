@@ -1,4 +1,5 @@
 import { createHwp5Reader } from "../../js/hwp5.mjs";
+import { availableSectionsCapability, availableSectionsRequest, availableSectionsContent } from "./hwp5-available-preview.mjs";
 import { createHwpxReader } from "../../js/hwpx.mjs";
 import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
 import { attachHwpxCharts } from "./hwpx-chart-content.mjs";
@@ -271,6 +272,7 @@ self.onmessage = async event => {
   };
   let applied = false;
   try {
+    if (format === "hwp5" && preview?.sectionInventory && message.kind !== "load") throw new Error("AvailableSectionsReadOnly");
     if (message.kind === "insert-table" || message.kind === "created-cell-text") {
       if (!editor || !historyEnabled) throw new Error("EditorNotOpen");
       if (format !== "hwpx") throw new Error("UnsupportedTableCreationFormat");
@@ -316,6 +318,7 @@ self.onmessage = async event => {
     // Opening a native session for display metadata does not activate editing.
     if (format === "hwp5" && !historyEnabled && ["save", "undo", "redo", "split", "merge", "splice", "format"].includes(message.kind)) throw new Error("EditorNotOpen");
     if (message.kind === "load") {
+      const availableSectionsOnly = availableSectionsRequest(message);
       const requestedPolicy = message.allowObservedChartOleDeviations === undefined ? false : message.allowObservedChartOleDeviations;
       if (typeof requestedPolicy !== "boolean") throw new Error("InvalidChartOlePolicy");
       if (requestedPolicy && message.format !== "hwpx") throw new Error("UnsupportedChartOlePolicyFormat");
@@ -343,7 +346,11 @@ self.onmessage = async event => {
         return;
       }
       reader = await createHwp5Reader(module);
-      preview = reader.readText(bytes);
+      preview = availableSectionsOnly ? reader.readAvailableText(bytes) : reader.readText(bytes);
+      if (availableSectionsOnly) {
+        reply({ kind: "load", content: availableSectionsContent(preview) });
+        return;
+      }
       if (!preview.readOnly) {
         try { editor = await createExperimentalHwp5Editor(module, bytes); }
         catch (error) { hwp5StyleOpenError = error.message; }
@@ -823,9 +830,10 @@ self.onmessage = async event => {
     } else throw new Error("UnknownPreviewCommand");
   } catch (error) {
     delete message.password;
+    const availableSectionsPreviewAvailable = message.kind === "load" && message.availableSectionsOnly !== true && format === "hwp5" && error.message === "SectionCountMismatch" && availableSectionsCapability(module);
     const passwordRequired = message.kind === "load" && ((format === "hwpx" && error.message === "EncryptedDocument") || (format === "hwp5" && error.message === "UnsupportedEncryption"));
     const queryIdentity = ["chart-points", "chart-series-text"].includes(message.kind) ? { requestId: message.requestId, section: message.section, wrapper: message.wrapper } : ["query-edit-range", "query-split-range"].includes(message.kind) ? { requestId: message.requestId, section: message.section, paragraph: message.paragraph, startUnit: message.startUnit, endUnit: message.endUnit } : {};
-    reply({ kind: message.kind, applied, error: error.message || String(error), ...queryIdentity, ...dutmalQueryIdentity(message), ...(passwordRequired ? { passwordRequired: true } : {}) });
+    reply({ kind: message.kind, applied, ...(availableSectionsPreviewAvailable ? { availableSectionsPreviewAvailable: true } : {}), error: error.message || String(error), ...queryIdentity, ...dutmalQueryIdentity(message), ...(passwordRequired ? { passwordRequired: true } : {}) });
   }
   finally { reader?.close(); }
 };

@@ -1,5 +1,7 @@
 # HWP5 모듈 계약 인덱스
 
+- [명시적 저장 구역 읽기 전용 선택](hwp5-available-sections-preview.md)
+
 - [구역 개수 불일치의 원본·버전 대조](hwp5-section-count-refusals.md)
 
 - [원본 입력 적격성의 UI 전달](hwp5-text-source-eligibility.md)
