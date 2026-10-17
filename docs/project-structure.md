@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+[차트 혼합 현재값 검증](hwpx-chart-mixed-current-values.md)은 같은 native 리소스의 종류별 값 보존·이력과 기존 독립 XML/ZIP/OLE oracle의 역할을 구분합니다.
+
 [Worker fixture 재열기](hwpx-worker-fixture-roundtrip.md)는 추적 inventory·기존 재열기 projection·계산 결과 독립 oracle의 역할과 검증 범위를 구분합니다.
 
 [차트 현재값 UI](hwpx-chart-ui-main-integration.md)는 optional JS adapter·Worker·폼과 ordinal 보존 목록/표의 책임을 분리합니다. native 후보·기본 WASM·실제 그림 표시의 범위를 구분합니다.

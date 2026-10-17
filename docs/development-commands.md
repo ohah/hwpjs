@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[차트 혼합 현재값](hwpx-chart-mixed-current-values.md)은 `HWPJS_TEST_WASM=/absolute/candidate.wasm node --test tests/hwpx/chart-mixed-current-values.test.mjs`로 검사합니다. 계열 이름 API가 있는 후보와 RHWP issue6037 원본·기존 Python oracle이 필요하며 전체 native/브라우저 검사는 아닙니다.
+
 [구역 불일치 열기 안내](hwp5-section-count-refusals.md)는 `HWPJS_TEST_WASM=/absolute/candidate.wasm node --test tests/hwp5/load-failure-guidance.test.mjs tests/hwp5/document-save.test.mjs tests/hwp5/document-failure-order.test.mjs tests/hwpx/preview-startup.test.mjs`로 검사합니다. 안내만 추가하며 파서 거부·저장·런타임 오류 정책을 변경하지 않습니다.
 
 [Worker fixture 재열기](hwpx-worker-fixture-roundtrip.md)는 `HWPJS_TEST_WASM=/absolute/candidate.wasm node --test tests/hwpx/worker-fixtures.test.mjs`입니다. Git 추적 HWPX inventory·실제 fixture·계산 결과가 있는 후보의 경우 테스트용 Python oracle을 사용합니다. 기존 기본 WASM도 같은 명령으로 비교하며 계산 결과 편집과 보호 분기를 구분합니다.
