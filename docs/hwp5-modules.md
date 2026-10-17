@@ -1,5 +1,7 @@
 # HWP5 모듈 계약 인덱스
 
+- [명시적 CFB 보정본 편집 열기](hwp5-normalized-open.md)
+
 - [저장 거부 후 동의 위치 안내](save-failure-guidance.md)
 
 - [빈 이미지 글머리표 배치 호환](hwp5-bullet-compatibility.md)

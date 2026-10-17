@@ -90,7 +90,7 @@ function updateSave() {
   viewScaleControls?.refresh();
   documentWindowControls?.refresh();
 }
-const controls = createEditorControls(message => { direct.external(message); worker?.postMessage(message); updateSave(); }, { formatSelection: id => direct.formatSelection(id), documentFormat: () => openedFormat });
+const controls = createEditorControls(message => { direct.external(message); worker?.postMessage(message); updateSave(); }, { formatSelection: id => direct.formatSelection(id), documentFormat: () => openedFormat, confirmNormalization: warning => window.confirm(warning) });
 direct = createCanvasEditor({ canvas: document.querySelector("#canvas"), viewport: document.querySelector("#viewport"), input: document.querySelector("#canvas-input"), renderer, controls, note: document.querySelector("#canvas-edit-status"), queryEditRange: message => worker?.postMessage(message), querySplitRange: message => worker?.postMessage(message) });
 tableCreationControls = createTableCreationControls({
   form: document.querySelector("#table-creation-form"), fields: document.querySelector("#table-creation-fields"), focusButton: document.querySelector("#table-creation-focus"), submit: document.querySelector("#table-creation-submit"), note: document.querySelector("#table-creation-status"),
@@ -250,7 +250,8 @@ async function openSelectedFile(selected) {
         const formatLabel = content.format === "hwpx" ? `HWPX · ${content.readOnly ? "읽기 전용" : "제한적 텍스트 편집 실험"}` : `HWP ${content.version}${content.readOnly ? " · 배포용 읽기 전용" : ""}`;
         status.textContent = `${selected.name} · ${formatLabel}${content.passwordProtectionRemoved ? " · 비밀번호로 열림 (저장은 보호 해제)" : ""} · ${content.totalParagraphs}문단 · 텍스트 미리보기${layout.limited ? " · 표시 한도에 도달해 일부만 표시" : ""}`;
         if (initial) passwordControls.loaded(content);
-        if (initial && (!content.readOnly || content.distributionEditingAvailable)) controls.loaded({ distribution: content.distributionEditingAvailable === true });
+        if (initial && (!content.readOnly || content.distributionEditingAvailable || content.normalizationEditingAvailable)) controls.loaded({ distribution: content.distributionEditingAvailable === true, normalization: content.normalizationEditingAvailable === true });
+        if (content.normalizationInfo?.normalized) status.textContent += " · CFB 보정본 편집 (저장·실행 취소 기준: 보정본)";
         if (event.data.kind === "load" && content.primarySource === "distribution_viewtext") downloadStatus.textContent = content.distributionEditingAvailable ? "배포용 문서입니다. 편집 시작 버튼으로 제한적 편집을 선택할 수 있으며 저장 시 배포 플래그와 재조판 경고를 유지합니다." : "배포용 문서는 이 WASM에서 읽기 전용입니다.";
         direct.message(event.data);
         updateDownloadSessionStatus(downloadStatus, event.data);

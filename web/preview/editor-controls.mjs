@@ -1,7 +1,8 @@
 // Command entry only. The native editor in the Worker owns editable values.
 import { formatOptions } from "./format-options.mjs";
 import { createRangePolicyControls } from "./range-policy-controls.mjs";
-export function createEditorControls(send, { formatSelection = () => false, documentFormat = () => null } = {}) {
+import { prepareNormalizationEnable } from "./normalization-consent.mjs";
+export function createEditorControls(send, { formatSelection = () => false, documentFormat = () => null, confirmNormalization = () => false } = {}) {
   const panel = document.querySelector("#editor-panel"), enable = document.querySelector("#enable-edit");
   const fields = document.querySelector("#edit-fields"), note = document.querySelector("#edit-status");
   const form = document.querySelector("#edit-form");
@@ -11,6 +12,7 @@ export function createEditorControls(send, { formatSelection = () => false, docu
   let loaded = false, ready = false, busy = false, broken = false, formatAvailable = false;
   let formatIds = null;
   let distribution = false;
+  let normalizationAvailable = false;
   const rangePolicy = createRangePolicyControls({ node: document.querySelector("#range-policy-consent"), format: documentFormat, ready: () => loaded && ready && !busy && !broken });
   const validFormat = id => {
     if (formatIds === null || formatIds.has(id)) return true;
@@ -23,7 +25,13 @@ export function createEditorControls(send, { formatSelection = () => false, docu
     form.elements.charShapeId.value = presets.value;
   });
   form.elements.charShapeId.addEventListener?.("input", () => { if (presets) presets.value = form.elements.charShapeId.value; });
-  const run = message => { if (!loaded || busy || broken || (message.kind === "enable" ? ready : !ready) || (message.kind === "format" && (!formatAvailable || !validFormat(message.charShapeId)))) return false; message = rangePolicy.prepare(message); busy = true; state(); rangePolicy.refresh(); note.textContent = "처리 중…"; send(message.kind === "enable" && distribution ? { ...message, distribution: true } : message); return true; };
+  const run = message => {
+    if (!loaded || busy || broken || (message.kind === "enable" ? ready : !ready) || (message.kind === "format" && (!formatAvailable || !validFormat(message.charShapeId)))) return false;
+    if (message.kind === "enable" && distribution) message = { ...message, distribution: true };
+    message = prepareNormalizationEnable(message, normalizationAvailable, confirmNormalization);
+    if (message === null) { note.textContent = "보정본 편집을 취소했습니다. 원본은 변경하지 않았습니다."; return false; }
+    message = rangePolicy.prepare(message); busy = true; state(); rangePolicy.refresh(); note.textContent = "처리 중…"; send(message); return true;
+  };
   enable.addEventListener("click", () => run({ kind: "enable" }));
   const values = () => Object.fromEntries(["section", "paragraph", "startUnit", "endUnit"].map(key => [key, Number(form.elements[key].value)]));
   form.addEventListener("submit", event => { event.preventDefault(); if (busy || !ready || !form.reportValidity()) return; run({ kind: "splice", ...values(), text: form.elements.text.value }); });
@@ -37,8 +45,8 @@ export function createEditorControls(send, { formatSelection = () => false, docu
     request: run,
     ready: () => loaded && ready && !broken,
     busy: () => busy,
-    reset() { panel.hidden = true; loaded = false; ready = false; busy = false; broken = false; formatAvailable = false; formatIds = null; distribution = false; note.textContent = ""; if (presets) presets.replaceChildren(); state(); rangePolicy.reset(); },
-    loaded({ distribution: selected = false } = {}) { distribution = selected; loaded = true; panel.hidden = false; state(); rangePolicy.refresh(); },
+    reset() { panel.hidden = true; loaded = false; ready = false; busy = false; broken = false; formatAvailable = false; formatIds = null; distribution = false; normalizationAvailable = false; note.textContent = ""; if (presets) presets.replaceChildren(); state(); rangePolicy.reset(); },
+    loaded({ distribution: selected = false, normalization = false } = {}) { distribution = selected; normalizationAvailable = normalization === true; loaded = true; panel.hidden = false; state(); rangePolicy.refresh(); },
     message(message) {
       if (!loaded) return;
       busy = false;

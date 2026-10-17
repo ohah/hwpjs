@@ -751,6 +751,7 @@ test {
     _ = @import("hwp5/docinfo/resource_tests.zig");
     _ = @import("hwp5/docinfo/formatting_tests.zig");
     _ = @import("hwp5/docinfo/bullet_fixture_tests.zig");
+    _ = @import("hwp5/edit/normalized_open_tests.zig");
     _ = @import("hwp5/docinfo/shape_tests.zig");
     _ = @import("hwp5/docinfo/reference_tests.zig");
     _ = @import("hwp5/body/tests.zig");

@@ -9,6 +9,7 @@ var active: ?*Session = null;
 var history: ?History = null;
 var output: ?[]u8 = null;
 var reflow: bool = false;
+var normalization: ?@import("../cfb/observed_repairs.zig").Deviations = null;
 
 fn fail(err: anyerror) u32 {
     _ = errors.fail(err);
@@ -37,6 +38,28 @@ export fn hwp5_edit_close() void {
     history = null;
     if (active) |s| s.close();
     active = null;
+    normalization = null;
+}
+export fn hwp5_edit_open_normalized(ptr: [*]const u8, size: usize) u32 {
+    return openNormalizedMode(ptr, size, false);
+}
+export fn hwp5_edit_open_normalized_distribution(ptr: [*]const u8, size: usize) u32 {
+    return openNormalizedMode(ptr, size, true);
+}
+fn openNormalizedMode(ptr: [*]const u8, size: usize, distribution: bool) u32 {
+    if (size > 64 * 1024 * 1024) return fail(error.LimitExceeded);
+    const normalized = @import("../hwp5/edit/normalized_open.zig");
+    const next = (if (distribution) normalized.openDistribution(a, ptr[0..size]) else normalized.open(a, ptr[0..size])) catch |err| return fail(err);
+    hwp5_edit_close();
+    active = next.session;
+    normalization = next.deviations;
+    return 1;
+}
+export fn hwp5_edit_normalization_info() u32 {
+    hwp5_edit_output_free();
+    _ = session() catch |err| return fail(err);
+    output = std.json.Stringify.valueAlloc(a, normalization, .{ .emit_nonportable_numbers_as_strings = true }) catch |err| return fail(err);
+    return 1;
 }
 export fn hwp5_edit_open(ptr: [*]const u8, size: usize) u32 {
     return openMode(ptr, size, false);

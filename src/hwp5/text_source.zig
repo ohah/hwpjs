@@ -9,6 +9,7 @@ const stream = @import("stream.zig");
 const max_input = 64 * 1024 * 1024;
 const max_stream = 32 * 1024 * 1024;
 const max_sections = 1024;
+pub const cfb_limits: @import("../cfb/reader.zig").Options = .{ .strict = true, .max_input_bytes = max_input, .max_stream_bytes = max_stream, .max_total_stream_bytes = max_input };
 
 pub const Source = struct {
     file: Cfb,
@@ -88,7 +89,7 @@ test "HWP5 read only distribution source does not grant editing permission" {
 }
 
 fn openCfb(a: std.mem.Allocator, input: []const u8) !Cfb {
-    const limits: @import("../cfb/reader.zig").Options = .{ .strict = true, .max_input_bytes = max_input, .max_stream_bytes = max_stream, .max_total_stream_bytes = max_input };
+    const limits = cfb_limits;
     return Cfb.open(a, input, limits) catch |strict_err| switch (strict_err) {
         error.InvalidRoot, error.InvalidFat, error.InvalidUnusedEntry, error.UnclaimedMiniSector => {
             const repaired = observed_repairs.open(a, input, limits) catch |repair_err| switch (repair_err) {

@@ -48,6 +48,9 @@ let protectionRemoved = false;
 let hwp5StyleOpenError = null;
 let hwpxWindow = null;
 let hwpxCreatedTablesPending = false;
+function normalizationMetadataAvailable() {
+  return WebAssembly.Module.exports(module).some(entry => entry.name === "hwp5_edit_normalization_info" && entry.kind === "function");
+}
 function outsideFieldRange(section, paragraph, start, end) {
   if (hwpxCreatedTablesPending && !editor.createdTableHostMode(section)) return false;
   return WebAssembly.Module.exports(module).some(entry => entry.name === "hwpx_edit_can_edit_outside_field" && entry.kind === "function") && editor.canEditOutsideField(section, paragraph, start, end);
@@ -55,8 +58,11 @@ function outsideFieldRange(section, paragraph, start, end) {
 function hwp5Display() {
   // Only an explicitly opened native editor can lift the display-only gate.
   const content = displayContent(editor && historyEnabled && preview.primarySource === "distribution_viewtext" ? { ...preview, readOnly: false } : preview);
+  const normalizationExport = preview.primarySource === "distribution_viewtext" ? "hwp5_edit_open_normalized_distribution" : "hwp5_edit_open_normalized";
+  content.normalizationEditingAvailable = normalizationMetadataAvailable() && hwp5StyleOpenError === "RepairedSourceUnsupported" && WebAssembly.Module.exports(module).some(entry => entry.name === normalizationExport && entry.kind === "function");
+  if (editor && normalizationMetadataAvailable()) content.normalizationInfo = editor.normalizationInfo();
   if (preview.primarySource === "distribution_viewtext") content.primarySource = preview.primarySource;
-  content.distributionEditingAvailable = preview.primarySource === "distribution_viewtext" && WebAssembly.Module.exports(module).some(entry => entry.name === "hwp5_edit_open_distribution" && entry.kind === "function");
+  content.distributionEditingAvailable = preview.primarySource === "distribution_viewtext" && WebAssembly.Module.exports(module).some(entry => entry.name === "hwp5_edit_open_distribution" && entry.kind === "function") && (hwp5StyleOpenError !== "RepairedSourceUnsupported" || content.normalizationEditingAvailable);
   content.paragraphAlignmentAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwp5_edit_set_paragraph_alignment" && entry.kind === "function");
   content.paragraphMarginsAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwp5_edit_set_paragraph_margins" && entry.kind === "function");
   content.paragraphSpacingAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwp5_edit_set_paragraph_spacing" && entry.kind === "function");
@@ -332,6 +338,13 @@ self.onmessage = async event => {
       if (!preview.readOnly) {
         try { editor = await createExperimentalHwp5Editor(module, bytes); }
         catch (error) { hwp5StyleOpenError = error.message; }
+      }
+      if (!editor && preview.primarySource === "distribution_viewtext" && WebAssembly.Module.exports(module).some(entry => entry.name === "hwp5_edit_open_distribution" && entry.kind === "function")) {
+        // Probe capability without retaining a session or lifting read-only.
+        try {
+          const probe = await createExperimentalHwp5Editor(module, bytes, { distribution: true });
+          probe.close();
+        } catch (error) { hwp5StyleOpenError = error.message; }
       }
       reply({ kind: "load", content: hwp5Display() });
     } else if (message.kind === "picture-bytes") {
@@ -649,6 +662,7 @@ self.onmessage = async event => {
       reply({ kind: "cell-size", content: format === "hwpx" ? hwpxDisplay() : hwp5Display() });
     } else if (message.kind === "enable") {
       if (format === "hwpx") {
+        if (message.normalizeObservedCfb !== undefined) throw new Error("UnsupportedNormalizationFormat");
         if (!editor) {
           const next = await createHwpxEditor(module);
           try { next.open(bytes); } catch (error) { next.close(); throw error; }
@@ -675,7 +689,9 @@ self.onmessage = async event => {
         return;
       }
       if (message.distribution !== undefined && typeof message.distribution !== "boolean") throw new Error("InvalidDistributionPolicy");
-      editor ??= await createExperimentalHwp5Editor(module, bytes, { distribution: message.distribution ?? false });
+      if (message.normalizeObservedCfb !== undefined && typeof message.normalizeObservedCfb !== "boolean") throw new Error("InvalidNormalizationPolicy");
+      if (message.normalizeObservedCfb === true && !normalizationMetadataAvailable()) throw new Error("Hwp5NormalizationAbiUnavailable");
+      editor ??= await createExperimentalHwp5Editor(module, bytes, { distribution: message.distribution ?? false, normalizeObservedCfb: message.normalizeObservedCfb ?? false });
       if (!historyEnabled) { editor.enableHistory(); historyEnabled = true; }
       const structureAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwp5_edit_split" && entry.kind === "function");
       const mergeAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwp5_edit_merge" && entry.kind === "function");
