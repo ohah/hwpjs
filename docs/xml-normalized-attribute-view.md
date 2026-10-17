@@ -8,7 +8,9 @@ HWPX `table_xml_fields`의 unsigned/margin/boolean은 이 뷰에서 기존 `xml_
 
 같은 분리 소스와 후보로 Chromium에서 `table-bug.hwpx`를 파일 선택해490문단·측정17페이지를 열었습니다. 편집 시작 후 Canvas를 실제 클릭하고 빈 두 번째 문단에 `검증😀`를 키보드 입력했으며 caret `0:1:4`, 접근성 텍스트와 Canvas 화면의 동일 입력, undo/redo 뒤 복원을 확인했습니다. 다운로드 버튼 활성화까지 확인했지만 이 실행에서 다운로드/재업로드는 하지 않았습니다. 수집된 브라우저 오류는 없었고 사용한 agent-browser 세션·임시 서버는 종료 확인했습니다. 자동화된 Chromium 키보드 입력이며 물리 OS IME·전체 객체/페이지 조판 동치 검증이 아닙니다.
 
-ReleaseSafe WASM 빌드와 실제 후보(`27c74da9a944b41c5596dbf743c7dc7332333b7ea78d1ada95c1a9d93b9cb379`)의 JS/Worker 회귀4/4도 skip 없이 통과했습니다. table-bug의 본문·셀·도형7문단48편집, 의료 장비 문서의 셀3문단21편집에서 시작/중간/끝 삽입·교체·끝 삭제, 독립 전체 XML/ZIP oracle 두 모드, 저장 재열기·undo/redo, 잘못된 기대 텍스트 거부를 확인했습니다. 행 최소 높이의 UI/Worker 검사도 포함하며 실제 브라우저 검사는 아닙니다. 전체 plain-leaf 문단 검사는 별도 실행 중으로 이 표본 통과와 구분합니다.
+ReleaseSafe WASM 빌드와 실제 후보(`27c74da9a944b41c5596dbf743c7dc7332333b7ea78d1ada95c1a9d93b9cb379`)의 JS/Worker 회귀4/4도 skip 없이 통과했습니다. table-bug의 본문·셀·도형7문단48편집, 의료 장비 문서의 셀3문단21편집에서 시작/중간/끝 삽입·교체·끝 삭제, 독립 전체 XML/ZIP oracle 두 모드, 저장 재열기·undo/redo, 잘못된 기대 텍스트 거부를 확인했습니다. 행 최소 높이의 UI/Worker 검사도 포함하며 실제 브라우저 검사는 아닙니다.
+
+같은 후보의 `HWPJS_FULL_SPLICE_AUDIT=1` 확대 검사는 exit0·2/2·skip0으로 종료됐습니다. table-bug의 비어 있지 않은 일반 텍스트 문단275개(본문42/셀232/도형1)에서1,876편집, 의료 장비 문서의 해당 셀 문단40개에서265편집으로 총315문단/2,141편집입니다. 각 문단의 시작/중간/끝 삽입·grapheme 교체·끝 삭제, 독립 전체 XML/비대상 ZIP의 일반/-O 대조, 저장 재열기·undo/redo·원본 파일 불변을 검사했습니다. 앞 표본과 중복이 있으므로 합산하지 않습니다. 보호/빈/컨트롤 포함 문단이나 모든 문자 위치, 전체 픽스쳐 corpus의 전수 통과가 아닙니다. 재현은 같은 후보를 `HWPJS_TEST_WASM`으로 지정하고 `HWPJS_FULL_SPLICE_AUDIT=1 node --test --test-concurrency=1 tests/hwpx/table-fixture-splice-positions.test.mjs`입니다.
 
 이번 변경만 분리한 main 기준 ReleaseSafe 5/5, Debug 4/4가 통과했습니다. 13개 입력을 UTF-8/UTF-16LE/UTF-16BE로 각각 파싱하고 0..11바이트 제한에서 기존 디코더의 값·오류와 대조했습니다. 부호·음수0·32비트 경계·범위 초과·빈 값·불리언·숫자 참조·참조 공백·CRLF/탭을 포함합니다. 일반 숫자 뷰는 fail_index=0 할당자로도 성공하고 할당 횟수0입니다. 실제 셀의 부재/0/엔티티/이름공간·중복 거부와 전체 할당 실패 검사도 통과했습니다.
 

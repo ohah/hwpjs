@@ -96,6 +96,7 @@ pub fn build(b: *std.Build) void {
     editor_api_tests.addArg("tests/hwp5/normalization-worker-abi.test.mjs");
     editor_api_tests.addArg("tests/hwp5/table-number-source-oracle.test.mjs");
     editor_api_tests.addArg("tests/hwp5/table-number-character-format.test.mjs");
+    editor_api_tests.addArg("tests/hwp5/table-number-format-canvas.test.mjs");
     editor_api_tests.addArg("tests/hwp5/normalization-consent.test.mjs");
     editor_api_tests.addArg("tests/hwp5/normalized-worker.test.mjs");
     editor_api_tests.addArg("tests/hwp5/normalized-distribution-worker.test.mjs");
