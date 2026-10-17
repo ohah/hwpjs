@@ -17,4 +17,10 @@
 
 위 1/1은 한 선언 안의 내부 사례들을 합산한 수치가 아니다. 재열기 projection은 텍스트/객체 수를 검증하며 앵커·필드의 전체 XML 의미 보존이나 실제 브라우저·IME·원본 조판 동일성을 대신하지 않는다. 독립 XML/ZIP 대조는 위 계산 결과 변경에만 해당한다. 전체 RHWP 참조 975경로의 reader 검사는 [구역 수 원본 검증](hwp5-section-count-refusals.md)과 별도다.
 
+## 전체 HWPX 정규 묶음 재검증
+
+`/tmp/hwpjs-published-native.sFSefO/hwpx-physical-baselines-full.log`는191개 테스트 파일을 `node --test --test-concurrency=1 tests/hwpx/*.test.mjs`로 실행하여466/466·fail/cancel/skip0·exit0으로 종료했습니다(2,839,091.52ms). 실제 fixture 디렉터리를 물리 복사한 전용 스냅샷에서 실행해 fixture 응답의 realpath 보호를 유지했습니다. 사용자 스테이징의 추가 테스트 파일은 이191개에 포함하지 않았습니다.
+
+검사 artifact는 이전 게시 후보 SHA256 `59235b1263465c623ec2c9ef338edee9b5b2ca705103f97b324f0a14eefbc7c4`이며 두 baseline 환경변수에는 SHA256 `cbaaf27f858229fedd01b9996ce152bd31aa6d6f346481b7887bcc510ef68346`를 명시했습니다. 신규 개체 번호 후보360abdbb의 전체 HWPX 통과로 재분류하지 않습니다. 이 실행의 Worker fixture 선언도 앵커146곳·필드7곳의 편집/이력/저장본 재열기·byte-exact 재저장을 통과했습니다(576,282.58ms). 전체 native·브라우저·IME·원본 조판 완료는 별도입니다.
+
 명령은 [개발·검증 명령](development-commands.md)의 Worker fixture 재열기 항목이 소유한다. 원본 fixture를 수정하지 않으며 기존보다 사례 수가 줄면 고정 집계 검사가 실패한다.
