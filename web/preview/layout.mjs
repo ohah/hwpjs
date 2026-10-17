@@ -6,6 +6,7 @@ import { displayRunText, textMeasurement, measureDisplayRun } from "./text-measu
 import { measureAutomaticNumberPrefix } from "./automatic-number-prefix.mjs";
 import { isHardLineBreak } from "./hard-line-break.mjs";
 import { alignTextRow } from "./line-alignment.mjs";
+import { usesDocumentFontMetrics } from "./font-layout-policy.mjs";
 export { displayRunText } from "./text-measurement.mjs";
 export const FONT = "16px system-ui, sans-serif";
 export const LINE_HEIGHT = DEFAULT_ROW_HEIGHT;
@@ -53,9 +54,9 @@ export function layoutContent(content, width, measure, maxRows = 20000, { docume
       if (before > 0 && !push({ text: "", kind: "gap", height: before, section: p.section, paragraph: p.paragraph })) break outer;
       const firstUnit = kind === "text" ? sourceStart : 0;
       let numberPrefix = kind === "text" ? measureAutomaticNumberPrefix(p, firstUnit, measure) : null;
-      // HWP5 body height comes from each run, not the first run or a UI floor.
+      // Document body height comes from each run, not the first run or a UI floor.
       // Empty/hard-break rows are measured explicitly below.
-      const initialHeight = kind === "text" && documentBody && content.format === "hwp5" ? 0
+      const initialHeight = kind === "text" && documentBody && usesDocumentFontMetrics(content.format) ? 0
         : compactLines && kind === "text" ? textMeasurement(measure("", p, firstUnit, kind)).height : DEFAULT_TEXT_HEIGHT;
       let line = "", size = numberPrefix?.width ?? 0, textHeight = Math.max(initialHeight, numberPrefix?.height ?? 0), startUnit = firstUnit, boundaries = [{ unit: firstUnit, x: size }];
       const geometry = () => kind === "text" ? paragraphLineGeometry(p.paragraphShape, width, size, startUnit === 0) : { x: 0, width };

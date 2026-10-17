@@ -80,7 +80,7 @@ test("HWP5 measured document rows do not impose the prototype 20px text floor", 
   assert.equal(result.rows.length, 1);
   assert.equal(result.rows[0].textHeight, 1000 / 75);
   assert.equal(result.rows[0].height, 1600 / 75);
-  assert.equal(layoutContent({ ...content, format: "hwpx" }, 100, measure, 20, { documentBody: true }).rows[0].textHeight, 20);
+  assert.equal(layoutContent({ ...content, format: "hwpx" }, 100, measure, 20, { documentBody: true }).rows[0].textHeight, 1000 / 75);
   assert.equal(layoutContent(content, 100, () => 10, 20, { documentBody: true }).rows[0].textHeight, 20);
 });
 
@@ -113,7 +113,7 @@ test("nominal height is format-scoped and missing font sizes retain the explicit
     const style = createTextStyle({ format: "hwp5", characterShapes: [{ id: 0, height }] }, "16px sans-serif");
     assert.equal(style.fontHeight(paragraph, 0), 20);
   }
-  for (const format of [undefined, "hwpx"]) {
+  for (const format of [undefined, "unknown"]) {
     const style = createTextStyle({ format, characterShapes: [{ id: 0, height: 1000 }] }, "16px sans-serif");
     assert.equal(style.fontHeight(paragraph, 0), 20);
   }

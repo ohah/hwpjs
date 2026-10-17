@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+`node --test tests/hwpx/font-height-reference.test.mjs tests/hwp5/font-height-reference.test.mjs tests/hwp5/line-spacing-compat.test.mjs tests/hwp5/pdf-font-reference.test.mjs`는 [공통 글꼴 높이 정책](font-layout-metrics.md)의 실제 XML/HTML·CFB·혼합 크기·행간·PDF 선언 크기를 검사합니다. PDF 조건부 skip과 실제 실행 통과를 구분합니다.
+
 `HWPJS_TEST_WASM=/absolute/candidate/bin/hwpjs.wasm node --test tests/hwpx/font-face-metadata.test.mjs tests/hwpx/font-face-metadata-editor.test.mjs`는 [HWPX 메타데이터](hwpx-font-face-metadata.md)의 decoder·표시·실제 API·Worker·이력을 검사합니다. `node tools/hwpx-font-metadata-audit.mjs --wasm=/absolute/candidate/bin/hwpjs.wasm --root=reference/rhwp/samples --baseline-wasm=/absolute/baseline/bin/hwpjs.wasm`로 독립 ZIP/XML 전수를 실행하며 coverageComplete와 states를 함께 확인합니다.
 
 `zig test src/root.zig -O ReleaseSafe --test-filter 'HWP5 font metadata' --test-filter 'HWP5 font name display' --test-filter 'HWP5 font face snapshot'`는 [글꼴 메타데이터](hwp5-font-face-metadata.md)의 소유권·할당 실패·부재/손상·직렬화 검사를 수행하며 Debug도 같은 필터를 사용합니다. 새 후보로 `HWPJS_TEST_WASM=/absolute/candidate/bin/hwpjs.wasm node --test tests/hwp5/font-face-metadata.test.mjs tests/hwp5/font-face-metadata-editor.test.mjs`를 실행해 실제 ABI·Worker·저장/이력·기존 응답 호환을 검사합니다. 전체 native·브라우저 조판 검사를 대신하지 않습니다.
