@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+`node --test tests/hwp5/pdf-font-reference.test.mjs tests/hwp5/font-height-reference.test.mjs`는 [PDF 글꼴 기준 대조](hwp5-font-layout-reference.md)의 선언 크기를 검사합니다. PDF 검사는 RHWP reference와 외부 분석 명령 `pdftohtml`이 없으면 명시적으로 skip합니다. skip과 실제 실행 통과를 구분하며 Canvas 시각 검사가 아닙니다.
+
 `node --test tests/hwp5/font-height-reference.test.mjs tests/hwp5/line-spacing-compat.test.mjs`는 [기존 글꼴·행간 기준](hwp5-font-layout-reference.md)의 실제46줄과 HWP 호환 레코드 inventory·작은 글꼴/빈 줄 경계를 검사합니다. 브라우저·전체 조판 검사가 아닙니다.
 
 [행간 집중검사](hwp5-line-spacing.md)는 `zig test src/root.zig -O ReleaseSafe --test-filter 'HWP5 paragraph spacing' --test-filter 'HWP5 effective paragraph spacing'`이며 Debug도 같은 필터입니다. 빌드는 `zig build -Doptimize=ReleaseSafe`입니다. JS 검사는 `HWPJS_TEST_WASM=/absolute/candidate/hwpjs.wasm node --test tests/hwp5/line-spacing-compat.test.mjs tests/hwp5/line-spacing-worker.test.mjs`입니다. 전체 root/브라우저 검증과 구분합니다.

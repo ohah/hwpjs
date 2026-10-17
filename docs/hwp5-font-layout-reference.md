@@ -21,3 +21,21 @@
 작업 트리의 관련5파일 집중검사32/32가 통과했습니다. 기존 미커밋 변경을 제외한 커밋 후보 스냅샷에서도 새7검사·기존 행간8검사·실제 Worker1검사가 합계16/16 통과했습니다. Worker는 앞서 빌드된 SHA256 `e006ec7ea337a5afd640e5447b147e0e95aac2b2209e0e604e040fdabc9ef5c4` 후보를 명시적으로 사용했으며 이번 JS 변경으로 WASM을 재빌드한 것은 아닙니다. 겹친 검사를 합쳐48개라고 집계하지 않습니다.
 
 별도 확대 검사에서 HWPX 도형 높이 기대값, HWP5 page geometry 기대값 및 기본 WASM의 `Hwp5FieldSpansAbiUnavailable` 실패를 관측했습니다. 이번 두 제품 파일을 수정 전 HEAD로 대체한 실행에서도 각각 동일하게 재현됐습니다. 이를 이번 변경의 통과로 상쇄하거나 전체 suite 성공으로 보고하지 않습니다. 실제 브라우저·글꼴 파일 일치·전체 호환 옵션·픽셀/페이지 동치는 미완료입니다.
+
+## RHWP·PDF 비교 확대
+
+2026-10-17 로컬 RHWP reference HEAD `e8800c8def63449808a4092798442652ed460552`의 `.hwp`536경로·`.hwpx`439경로를 조사했습니다. 확장자와 실제 형식을 분리했습니다. `.hwpx`6개는 CFB이고 `.hwp`3개는 ZIP이었습니다. 아래 수치는 파일 경로 수이며 같은 내용의 중복 파일을 제거한 고유 문서 수가 아닙니다.
+
+- CFB/HWP 후보513개: 독립 DocInfo·글꼴 조사 성공510개, 암호 플래그1개, 글꼴 유형 정보 길이 경계 오류2개입니다. 오류2개는 `20250130-hongbo_saved.hwp`·`honbo-save.hwp`이며 제품 파서 전체의 오류 집계가 아닙니다.
+- 성공510개 중486개는 대상0/다섯 DWORD 모두0이며24개는 호환 레코드가 없습니다. 비영 비트는 관측하지 못했습니다. 실패2개의 부분 결과는 성공 집계에서 제외했습니다.
+- 성공510개 중178개에 명시적 대체 글꼴,509개에 기본 글꼴 문자열이 있습니다. `-윤고딕130 → 한컴바탕` 등의 실제 값이 있습니다. native `face_name.zig`는 이 정보를 읽지만 `font_face_snapshot.zig`와 공개 `fontFaces`는 language/id/name만 전달합니다. 원문 파싱 실패와 표시 모델의 정보 미전달을 구분합니다. 기본 글꼴 문자열을 무조건 최우선 대체 글꼴로 해석하지 않습니다.
+- ZIP 후보436개: header XML 조사 성공435개, header XML 해석 불가1개(`HWP5-password-123456.hwpx`)입니다. 이름만으로 그1개의 암호화 방식을 확정하지 않습니다. 성공435개는 대상 `HWP201X`434개/`MS_WORD`1개입니다. `MS_WORD`는 `hwpx/issue2019_floating_form_74312.hwpx`이며 `layoutCompatibility` 자체가 없습니다. 대상과 옵션 부재를 독립 축으로 보존해야 합니다.
+- HWPX19개에 char/paragraph/section/object/field 자식이 있지만 모두 빈 요소입니다. 이를19개의 활성 호환 옵션 사례로 집계하지 않습니다. 나머지 HWP V3 서명26개는 범위 밖으로 분리했습니다.
+
+PDF38개도 메타데이터·글꼴 목록을 조사했습니다. 같은 basename의 HWP/HWPX가 있는 후보는16개지만, 이름 일치만으로 같은 저장 시점·원본 출력을 확정하지 않습니다. Creator에는 한글2018/2020/2022/2024·Viewer·HeadlessChrome 등이 섞여 있어 전체 PDF를 한글2018의 단일 oracle로 취급하지 않습니다.
+
+`pdf-font-reference.test.mjs`는 `text-align-2.hwp/.pdf`의 대응 제목16pt·본문15pt를 독립 DocInfo와 PDF `fontspec`에 대조하고 제품의 명목 높이 변환을 검사합니다. PDF 메타데이터는 한글2022 출력이며 Poppler의 출력 좌표는 zoom1로 고정합니다. 수정된 코드에서 통과했고 `text-style.mjs`만 `c6dffb2b` 버전으로 대체한 음성 대조에서는 실패했습니다. 글꼴 높이 기준7검사와 함께8/8·skip0 통과했습니다. reference 또는 `pdftohtml`이 없으면 해당 PDF 검사는 명시적으로 skip하며, 이를 통과로 계산하지 않습니다.
+
+PDF 텍스트 순서도 화면 동치와 다릅니다. `text-align-2`의 PrvText/PDF를 영숫자만 남겨 비교하면 둘 다343자지만 표 안의 `어휘표현`·`구술발화` 순서가 달라 전체 문자열은 일치하지 않습니다. 이를 문서 손상이나 글자 누락으로 판정하지 않았습니다. `synam-001`은35페이지 PDF에 정규화된 PrvText가 포함됐지만 미리보기 일부의 일치일 뿐 전체 본문·조판 동치가 아닙니다.
+
+상세 임시 조사 결과는 `/tmp/hwpjs-reference-compare.VTHxFT/`의 스크립트와 JSON으로 남겼습니다. HWP JSON SHA256은 `41028c955cc56f40258156fc2c9eaeebb9112f908ae4d07ac983cc23840a90c5`, HWPX는 `ec7dc782554ee920b2674e482438cfff0e36f0a6f6fa1bf03a65118c87ed1c93`입니다. 전체 조판 엔진 실행·Canvas 화면·글꼴 폭·baseline 비교는 이번 조사 범위가 아닙니다.
