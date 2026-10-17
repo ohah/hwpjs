@@ -30,6 +30,7 @@ import { createEditorControls } from "./editor-controls.mjs";
 import { createCanvasEditor } from "./canvas-editor.mjs";
 import { downloadDocument } from "./document-download.mjs";
 import { failureMessage } from "./failure-message.mjs";
+import { loadFailureMessage } from "./load-failure-guidance.mjs";
 import { guardGeneration } from "./worker-generation.mjs";
 import { createHistoryControls } from "./history-controls.mjs";
 import { createSaveControls } from "./save-controls.mjs";
@@ -246,7 +247,7 @@ async function openSelectedFile(selected) {
         pictureResizeControls.message(event.data);
         paragraphFormatControls.update();
         if (event.data.kind === "load" && event.data.passwordRequired) { status.textContent = `${selected.name} · 문서 비밀번호가 필요합니다.`; passwordControls.required(); }
-        else if (event.data.kind === "load") fail(event.data.error);
+        else if (event.data.kind === "load") fail(loadFailureMessage(event.data.error));
         else if (event.data.applied) { renderer.clear(); accessible.value = ""; }
         return;
       }
