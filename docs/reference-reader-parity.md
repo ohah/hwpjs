@@ -1,5 +1,7 @@
 # 참조 문서의 전체 reader 응답 회귀 비교
 
+이 감사의 출력 실패와 완료 판정은 [감사 JSONL 출력 무결성](audit-output-integrity.md)을 따릅니다.
+
 편집 감사의 디스크 부족 중단과 별도 후보의 해당 지점 재검증은 [독립 검사 입력의 디스크 부족](reference-oracle-disk-failure.md)을 따릅니다. reader 응답 일치와 편집 전수 완료는 별도 판정입니다.
 
 ## 책임과 판정

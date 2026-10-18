@@ -7,6 +7,7 @@ import { referenceReaderScope } from "./reference-reader-scope.mjs";
 import { createHwp5Reader } from "../js/hwp5.mjs";
 import { createHwpxReader } from "../js/hwpx.mjs";
 import { readerParityResult } from "./reference-reader-parity-result.mjs";
+import { writeAuditRow } from "./audit-jsonl-output.mjs";
 
 const options = {};
 for (const argument of process.argv.slice(2)) {
@@ -25,8 +26,8 @@ const readers = await Promise.all(artifacts.map(async bytes => {
   return { hwp5: await createHwp5Reader(module), hwpx: await createHwpxReader(module) };
 }));
 const counts = {};
-console.log(JSON.stringify({ kind: "start", root, files: paths.length, artifacts: hashes }));
 try {
+  writeAuditRow({ kind: "start", root, files: paths.length, artifacts: hashes });
   for (const path of paths) {
     const input = readFileSync(path), inputSha256 = digest(input), selected = referenceReaderScope(input);
     let status = "excluded_format", responseSha256 = null, error = null;
@@ -41,8 +42,8 @@ try {
       ({ status, responseSha256, error } = readerParityResult(responses[0], responses[1], path));
     }
     counts[status] = (counts[status] ?? 0) + 1;
-    console.log(JSON.stringify({ kind: "file", path, format: selected.format, inputSha256, status, responseSha256, error }));
+    writeAuditRow({ kind: "file", path, format: selected.format, inputSha256, status, responseSha256, error });
   }
   assert.deepEqual([options["before-wasm"], options["after-wasm"]].map(path => digest(readFileSync(path))), hashes, "ParityArtifactChanged");
-  console.log(JSON.stringify({ kind: "summary", root, files: paths.length, artifacts: hashes, counts, scope: "full reader JSON and input parity; matching refusals are not support; no editing or browser proof" }));
+  writeAuditRow({ kind: "summary", root, files: paths.length, artifacts: hashes, counts, scope: "full reader JSON and input parity; matching refusals are not support; no editing or browser proof" });
 } finally { for (const reader of readers) { reader.hwp5.close(); reader.hwpx.close(); } }
