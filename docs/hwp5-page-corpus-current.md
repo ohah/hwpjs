@@ -1,5 +1,11 @@
 # HWP5 페이지 코퍼스 현재 검증
 
+## 2026-10-18 누름틀 보존 후보와 동결 baseline 대조
+
+후보6ddc76ab71dc09a77acf0b57b7ec78b2cc137850189e136fb361edd5d71d0437과 baseline703fc80b76b96c4644733b27e27f908437d9e70f8b9e2549d245246cf181ca8b을 동일한 분리 JS/Worker/페이지 코드·추적101경로·--distribution으로 각각 실행했습니다. 두 실행 모두 exit0이며 CFB55·조회55·명시적 배포허용2·배치43/부분0/미지원12·조회실패0·입력불변55입니다. 산출물 identity인 첫 inventory 행을 제외한 모든 파일별 결과와 summary를 deepEqual로 대조해 같았습니다. 근거는 /tmp/hwpjs-click-retention.Vm3dFy/protection-page-corpus.jsonl·protection-page-baseline.jsonl이고 두 stderr는 비어 있습니다.
+
+같은 코드 경로의 미지원은 IncompleteTableSources10·UnsupportedHwp5SectionExtension1·UnsupportedHwp5SectionNumbering1입니다. 과거 다른 Worker/페이지 snapshot의 UnsupportedMixedInlineTable 같은 첫 거부 이름과 직접 비교해 parser 회귀로 단정하지 않습니다. noori 중복 경로를 독립 표본으로 확대하지 않으며 TABLE의 미확정 비트를 지우거나 다른 레코드의 의미로 바꾸지 않았습니다. 고정8px/grapheme 측정이므로 페이지 수/원본 글꼴/한글 조판 동치나 임의 편집의 증거는 아닙니다. 참조 원본 issue1921의 별도 브라우저 미리보기 제한은 이 추적55개 집계에 포함되지 않습니다.
+
 ## 2026-10-16 차트 후보의 페이지 조회와 거부 원인
 
 차트 통합 후보 WASM SHA256 `f6decd1df1fbf38a2926e2b25d69633c323ec7761753a78826dab6cc73cafc78`와 현재 작업 트리의 Worker/페이지 모듈을 조합해 `--distribution` 감사를 재실행했습니다. 추적101경로 중 CFB55조회·배포 허용2·43배치/부분0/12미지원·실패0·입력 불변55·exit0입니다. 로그는 `/tmp/hwpjs-chart-main-merged.IfTq0V/current-worktree-page-audit.jsonl`이며 stderr는0바이트입니다. 미지원 분포는 기존10/1/1과 같지만 이 조합을 공개 main만의 검증이나 기본 제품 반영으로 해석하지 않습니다.
