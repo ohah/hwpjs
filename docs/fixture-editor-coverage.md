@@ -2,6 +2,8 @@
 
 ## 누름틀 보존 후보의 추적 입력·이력 재검증 — 2026-10-18
 
+같은6dd 후보의 추적 HWPX Worker 재검증은 protection-hwpx-worker-fixtures-retry.log의1/1·fail/cancel/skip0·565574.499ms·exit0으로 끝났습니다.46경로 중 암호 기본 거부1개를 구분하고 앵커146·필드7의 실제 입력·저장·undo/redo·각 편집본 Worker 재로드/전체 문단·개체 수 대조·무변경 재저장 바이트 일치를 확인했습니다. 수식 결과13개는 일반 입력 보호 상태이며 이153개 편집 위치에 합산하지 않습니다. 첫 protection-hwpx-worker-fixtures.log는 빈 로그·handle21454 exit1로 종료해 성공으로 세지 않으며 원인을 확정하지 않았습니다. 재실행은 종료 확인 후 새 TAP/stdout/stderr 기록으로 수행했습니다. 실제 Chromium/독립 전체 XML/원본 조판/임의 위치의 전수 증거는 아닙니다.
+
 187e8c44 소스 계열 후보 6ddc76ab71dc09a77acf0b57b7ec78b2cc137850189e136fb361edd5d71d0437에 Git 추적101경로를 제공하고 hwp5-edit-corpus-audit를 일반/--history로 각각 실행했습니다. 두 실행 모두 exit0이며 HWP5 전 문단 성공53파일·chart 부분 지원1·암호 기본 읽기 거부1, HWPX 별도 감사45·암호 기본 읽기 거부1입니다. 열린 HWP5 2,090문단 중2,042문단의 실제 접두사 입력·저장 텍스트 전체/비대상 스트림·재열기가 확인됐고, 이력 실행에서는 성공2,042개 모두 undo/redo의 저장값·조판 상태 복원이 확인됐습니다. 거부48개는 모두 chart.hwp의 InvalidFormulaNumber입니다. 근거는 /tmp/hwpjs-click-retention.Vm3dFy/protection-tracked-prefix.json·protection-tracked-history.json이며 두 stderr는 비어 있습니다.
 
 같은 후보의 numeric-formula-corpus·fixture-password-edit-paths는5/5·실패/취소/건너뜀0·exit0입니다(protection-formula-password-paths.log). 숫자 의존48칸의 두 규모 입력/13개 수식 재계산과 암호 HWP5/HWPX 각각 명시적 변환 뒤 실제 편집·독립 저장 대조·재열기·이력을 확인합니다. 임의 비숫자 허용이나 재암호화 저장 지원은 아닙니다. 이 감사의 HWPX45개는 읽기/별도 분류일 뿐 편집 성공으로 합산하지 않습니다. HWPX Worker 전수·정규 HWP5 editor gate·이전 native 전수는 별도 실행 중이며 이 결과를 전체 필드/위치/원본 조판/실제 브라우저 전수 완료로 해석하지 않습니다.

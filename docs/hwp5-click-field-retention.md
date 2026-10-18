@@ -58,6 +58,8 @@ UI는 기존 엄격 조회를 우선하고 동일 오류일 때만 새 native �
 
 같은 보강 후보의 API/Worker 경계17파일43/43(실패/취소/건너뜀0, protection-counter-node.log)이 통과했습니다. 별도 retained-click-roundtrip.test.mjs는 같은 실제 원본에서 삽입→교체→삭제 각각 독립 Section/비대상 스트림 oracle, surrogate 중간 삽입 거부, 보호 거부 뒤 pending redo, 저장 재열기 뒤 재편집·보호 배열/필드 의미 보존을 확인했습니다(1/1, protection-repeat-roundtrip.log). 정규 editor gate에도 등록합니다. 이미 실행 중인 전체 gate에는 이 추가1개가 포함되지 않으므로 집중1개를 전체 결과에 합산하지 않습니다.
 
+위 최초 정규 gate(protection-counter-editor-full.log)는 개별 테스트 실패/최종 Node·Build summary를 남기지 않은 채 실행 handle8613이exit1로 종료했습니다. 완료 통과로 합산하지 않으며 실패 원인은 아직 확정하지 않았습니다. 종료를 확인한 뒤 추가 roundtrip1개도 등록한 같은 제품으로 정규 gate를 재실행했습니다(handle25652). run-editor-gate.mjs가 child 종료 code/signal·30초별 남은 공간을 protection-editor-supervised.jsonl에, stdout/stderr를 각각 protection-editor-supervised.stdout/.stderr에 별도 수집합니다. 새로운 실행은 아직 통과 근거가 아니며 정상/실패 최종 기록으로 갱신해야 합니다.
+
 같은 보강 후보로 실제 Chromium 입력·undo/redo·독립 다운로드 oracle·문단52 보호 입력 거부를 다시 통과했습니다(retained-counter-browser.log, retained-ui-R2TPai). trusted UTF-16 입력 범위0..0과 브라우저/서버 종료를 확인했습니다. 이 검증도 원본 조판이나 OS IME 전체 동치를 뜻하지 않습니다.
 
 ## 남은 연결과 완료 조건
