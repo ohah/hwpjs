@@ -55,7 +55,7 @@ test "column group extension repeats without restoring hidden prefix runs" {
         }
     };
     try Probe.run(a, tree, &first, prefix);
-    try std.testing.checkAllAllocationFailures(a, Probe.run, .{ tree, &first, prefix });
+    try @import("../testing/allocation_failures.zig").check(Probe.run, .{ tree, &first, prefix });
 }
 
 fn text(a: std.mem.Allocator, paragraphs: []const @import("paragraph_structure_values.zig").Paragraph) ![]u8 {
@@ -215,8 +215,8 @@ test "column group extension preparation preserves input through every allocatio
         for (paragraph.character_styles.?) |*span| span.char_shape_id = if (ordinal == 0) 5 else if (ordinal == 1) 7 else 9;
     }
     try Probe.run(a, &tree, &styled);
-    try std.testing.checkAllAllocationFailures(a, Probe.run, .{ &tree, &split });
-    try std.testing.checkAllAllocationFailures(a, Probe.run, .{ &tree, &styled });
+    try @import("../testing/allocation_failures.zig").check(Probe.run, .{ &tree, &split });
+    try @import("../testing/allocation_failures.zig").check(Probe.run, .{ &tree, &styled });
     for (styled.paragraphs, 0..) |paragraph, ordinal| for (paragraph.character_styles.?) |span| {
         try std.testing.expectEqual(@as(?u32, if (ordinal == 0) 5 else if (ordinal == 1) 7 else 9), span.char_shape_id);
     };

@@ -13,3 +13,5 @@
 ReleaseSafe acc5c36bf9a3b20c30f26c10c098c6d9631dcc2c2865a3f89ced1e80d77e117a의 `field-safe-guard.jsonl/.stderr`는 root 포함2/2·fail/skip/log/leak0·exit0·guardStopped=false·peak9,503,056바이트입니다. Debug a24a6c84e472d9c644a4216f431cb759a04ed7372da21710d9326a20000b62dc의 `field-debug-guard.jsonl/.stderr`도2/2·동일 오류0·exit0·guardStopped=false·peak4,424,016바이트입니다. 두 stderr는 비어 있습니다. 각 `field-*-build.log`의 빌드도 exit0입니다.
 
 재현 필터는 `zig test src/root.zig -O ReleaseSafe --test-filter 'HWPX field structure split candidate owns both marker sides'`이며 Debug도 같습니다. 이 결과는 해당 split 후보의 두 실패 sweep과 기존 단언을 검증한 것이지 최신 전체 native gate·모든 필드 명령·전체 원본 조판/브라우저 편집 완료가 아닙니다.
+
+구형 후속3689..3713의25개 완료와3714 중단, 현재 소스의 해당 집중 대조는 [다단 그룹 확장 진단](native-column-group-extension-diagnostics.md)이 소유합니다.
