@@ -1,5 +1,11 @@
 # HWPX prefix 입력의 원본 run 소속 검증
 
+## 전용 감사의 WASM 무결성
+
+`hwpx-specialized-input-audit.mjs`는 시작에 읽은 WASM을 기존 `audit-input-identity.mjs`로 고정하고 각 파일 시작과 최종 성공 집계 직전에 메모리/파일 바이트를 재확인합니다. 원본 입력 무결성과 별개이며 변경된 산출물 경로에 성공 집계를 붙이지 않습니다. `manual-result-corpus-audit.test.mjs`의 기존 사본 교체 음성 대조를 매개화해 수동 결과/전용 감사 모두 실제 자식 프로세스의 start 이후 WASM 사본을 교체하고 exit1·성공 집계 부재를 확인합니다. 제품 WASM이나 원본 fixture는 수정하지 않습니다.
+
+main a19c3bf7에 이 검사/회귀만 추가한 tree `45079ca24d0d7d97d9d358a5799d308d17177a26`의 `/tmp/hwpjs-specialized-artifact-clean.cP2UTC`에서 게시 afb7 후보·Node24.20.0으로 기존 identity 검사와 교체 대조 3/3·fail/cancel/skip0·exit0입니다. 같은 사본의 정상 대조 `issue1893_clickhere_field_roundtrip.hwpx` 전체 전용 감사도 9시도/9검증/독립 XML9(필드6)·거부0·exit0입니다. 이 보강은 감사의 증거 결합이며 새 제품 편집 기능이나 실행 중인 고정44파일 감사 결과의 소급 변경이 아닙니다.
+
 ## 실제 실패와 원인
 
 참조 `hwpx_sample2.hwpx`의 구역0·문단1은 section/column metadata run 뒤에 charPrIDRef67인 빈 run, pageNum/newNum metadata run, charPrIDRef32의 표 run이 있습니다. 원래 표시 문자열은 객체 표식 하나입니다. 후보 `f4e0f396a3fea6e6354b364ff176e31d72ed00ec643fa566c4abbd8bc2f58d77`의 위치0 prefix는 기존 빈 run을 채우고 해당 charPrIDRef67을 유지했습니다. 이전 anchor oracle은 자식이 없는 run을 순회에서 누락하여 표 run에 텍스트를 넣은 기대 XML을 만들었고 `complete XML mismatch`로 실패했습니다.

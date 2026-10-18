@@ -15,6 +15,7 @@ import { selectFieldPrefixOracle } from "./hwpx-field-prefix-oracle.mjs";
 
 const options = parseEditAuditOptions(process.argv.slice(2), { requireWasm: true });
 const wasm = readFileSync(options.wasm);
+const wasmIdentity = captureInputIdentity(wasm);
 console.log(JSON.stringify({ kind: "start", scope: options.fixture !== undefined ? "one explicit fixture; specialized prefix routes" : "all tracked fixtures; specialized prefix routes", wasmSha256: createHash("sha256").update(wasm).digest("hex") }));
 const editor = await createHwpxEditor(wasm), reader = await createHwpxReader(wasm);
 const totals = { files: 0, encrypted: 0, attempts: 0, verified: 0, xmlVerified: 0, xmlFieldVerified: 0, refused: {}, examples: [] };
@@ -22,6 +23,7 @@ const allowedRefusals = new Set(["UnsupportedFieldLabelRange", "UnsupportedField
 const text = (projection, section, paragraph) => projection.events.filter(e => e.kind === "content" && e.section === section && e.paragraph === paragraph).map(e => e.value).join("");
 try {
   for (const path of options.fixture !== undefined ? [options.fixture] : trackedHwpxFiles()) {
+    verifyInputIdentity(wasm, wasmIdentity, options.wasm);
     totals.files++;
     const input = readFileSync(path);
     const inputIdentity = captureInputIdentity(input);
@@ -87,5 +89,6 @@ try {
     }
     verifyInputIdentity(input, inputIdentity, path);
   }
+  verifyInputIdentity(wasm, wasmIdentity, options.wasm);
   console.log(JSON.stringify(totals, null, 2));
 } finally { editor.close(); reader.close(); }

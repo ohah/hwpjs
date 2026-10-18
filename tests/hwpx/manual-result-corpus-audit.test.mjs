@@ -14,11 +14,14 @@ test("manual result audit rejects missing duplicate or partial scope before read
   }
 });
 
-test("manual result audit rejects replacing its WASM file after the module was loaded", async () => {
+for (const [tool, expectedError] of [
+  ["tools/hwpx-manual-result-input-audit.mjs", /AuditArtifactChanged/],
+  ["tools/hwpx-specialized-input-audit.mjs", /AuditFileInputChanged/],
+]) test(`${tool} rejects replacing its WASM file during execution`, async () => {
   assert(process.env.HWPJS_TEST_WASM, "Explicit candidate required");
   const directory = mkdtempSync(join(tmpdir(), "hwpjs-manual-artifact-")), candidate = join(directory, "candidate.wasm");
   copyFileSync(process.env.HWPJS_TEST_WASM, candidate);
-  const child = spawn(process.execPath, ["tools/hwpx-manual-result-input-audit.mjs", `--wasm=${candidate}`, "--fixture=legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx"], { stdio: ["ignore", "pipe", "pipe"] });
+  const child = spawn(process.execPath, [tool, `--wasm=${candidate}`, "--fixture=legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx"], { stdio: ["ignore", "pipe", "pipe"] });
   let stdout = "", stderr = "", replaced = false;
   const done = new Promise((resolve, reject) => { child.once("error", reject); child.once("close", (code, signal) => resolve({ code, signal })); });
   const timer = setTimeout(() => child.kill("SIGTERM"), 30000);
@@ -33,8 +36,9 @@ test("manual result audit rejects replacing its WASM file after the module was l
   try {
     const result = await done;
     assert.equal(result.signal, null); assert.equal(result.code, 1, stderr);
-    assert.equal(replaced, true); assert.match(stderr, /AuditArtifactChanged/);
+    assert.equal(replaced, true); assert.match(stderr, expectedError);
     assert(!stdout.includes('"kind":"summary"'), "changed artifact must not produce a successful summary");
+    assert(!stdout.includes('"verified":'), "changed artifact must not produce successful totals");
   } finally {
     clearTimeout(timer);
     if (child.pid && child.exitCode === null && child.signalCode === null) { child.kill("SIGTERM"); await done.catch(() => {}); }
