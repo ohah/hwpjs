@@ -6,7 +6,7 @@ const id = @import("control_rules.zig").id;
 pub const references = @import("ole_references.zig");
 pub const Detailed = struct { ole: Report, references: references.Report };
 pub const Report = struct { objects: usize = 0, pending_references: usize = 0, monikers: usize = 0, reserved_aspects: usize = 0, reserved_baselines: usize = 0, reserved_kinds: usize = 0, extra_bytes: usize = 0 };
-/// Only the first SHAPE_COMPONENT identity, not its unimplemented geometry schema.
+/// Only OLE ownership here; shape_validation validates shared component geometry.
 fn isOwner(node: @import("tree.zig").Node) !bool {
     if (node.record.framing.tag != component.tag) return false;
     return try component.identity(node.record.framing.payload) == id("$ole");
