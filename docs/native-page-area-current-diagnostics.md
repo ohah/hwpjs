@@ -34,7 +34,15 @@ ec174d05 게시 src와 diff --quiet 일치하는 수정 소스에서 전체 nati
 
 1653c72e 게시 src의 별도 사본은 `/tmp/hwpjs-native-current-source.JaEvXR`이며 git diff --quiet로 src 일치를 확인했습니다. 첫 전체 native 컴파일은 exit1이었지만 `native-full-build.log`와 출력 파일이0바이트라 원인은 확정하지 못했습니다. 디스크 여유가 낮았다는 관측만으로 ENOSPC를 확정하거나 제품 실패로 분류하지 않습니다. 이 파일을 유효한 테스트 바이너리로 실행하지 않았습니다.
 
-실패 기록을 보존하고 별도 `native-full-safe-retry` 출력과 `native-full-build-retry.log`로 재시도 중입니다. pipefail과 tee를 사용해 오류를 파일뿐 아니라 명령 출력에도 남깁니다. 컴파일 성공·새 inventory·검증 결과는 아직 확인 전이며 이전26723ae6 결과를 새 소스의 통과로 옮기지 않습니다.
+실패 기록을 보존한 별도 `native-full-safe-retry` 재컴파일은 exit0으로 종료했습니다(`native-full-build-retry.log`, pipefail/tee). SHA256은16c8a0e58aa18c00b79cc532b537e7cbccf7a125243f655d4cc512317286abbd이고 inventory는4,109개입니다. 이전26723ae6 결과를 새 소스의 통과로 옮기지 않습니다.
+
+이 바이너리의3350..4109 guardian은3350..3369의20개를 fail/log/leak0으로 완료했습니다. 보강된 redo 실패 검사3351과 원본 혼합 병합3356도 status0입니다. 다음3370 `mixed declaration group XML preserves both inventories through split and reparse`에서 peak4,360,375,728바이트가4,294,967,296바이트를 넘어 종료됐습니다(`native-tail-guard.jsonl/.stderr`,exit1·guardStopped=true). child35717 종료를 확인했습니다. 현재 실행 중이 아니며 전체4,109개 통과도 아닙니다.
+
+## 혼합 선언 그룹 XML의 실패 주입 진단
+
+후속3370 대상의 작업 트리에 이미 있던 `checkAllAllocationFailures(a, ...)`→공통 `allocation_failures.check(...)` 한 줄을 위 분리 소스에 반영했습니다. callback·입력·단언·실패 인덱스와 제품 writer를 바꾸지 않았고, 메모리 한도도 유지했습니다. 검증한 파일과 작업 트리가 cmp 일치하며 기존 변경을 채택한 것입니다.
+
+ReleaseSafe 집중 바이너리4414aabe09670b43c5603628164ceaf9b4584206fbb70abaec2c7112c16c36d2는2/2·fail/skip/log/leak0·exit0·guardStopped=false·관측 peak88,637,848바이트입니다(`group-safe-build.log`, `group-safe-guard.jsonl/.stderr`). Debug6a2399ba4c923ed0428c1da8ecaa9b180f11225e235c0c642c46b8c6d44bb684도2/2·동일 오류0·exit0·guardStopped=false·peak58,294,656바이트입니다(`group-debug-build.log`, `group-debug-guard.jsonl/.stderr`). 각 root1개+assertion1개이며 서로 또는 이전20개와 합산하지 않습니다. 테스트 진단 할당 경계의 수정이지 제품 편집 메모리 최적화나 전체 native gate 통과가 아닙니다. 위16c8a0e5 바이너리는 수정 전이므로 이후 전체 검사는 새 바이너리가 필요합니다.
 
 5837cd37 전수의 다음3338 page area ordered pieces preserve alternating source run styles and single declarations에서 물리 peak4,298,231,168바이트가 기준4,294,967,296바이트를 넘어 guardian이 종료했습니다. 기존 guardian/batch/child 종료를 확인했습니다. source의 std.testing.checkAllAllocationFailures(std.testing.allocator, ...) 다섯 호출은 검증/쪽 영역 XML/문단 XML/두 병합 경계를 검사합니다. 제품 함수·callback·입력·단언·전체 실패 지점은 바꾸지 않고 기존 testing/allocation_failures.check로 모두 전환했습니다. 작업 트리에 이미 있던 정확히5줄 전환을 분리 소스에서 검증 후 채택했으며 새 작성으로 주장하지 않습니다.
 

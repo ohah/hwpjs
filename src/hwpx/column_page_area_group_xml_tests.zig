@@ -247,7 +247,7 @@ test "mixed declaration group XML preserves both inventories through split and r
         defer a.free(edited);
         try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, edited, "머리😀"));
         try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, edited, "꼬리&lt;&amp;"));
-        if (cut == 1) try std.testing.checkAllAllocationFailures(a, struct {
+        if (cut == 1) try @import("../testing/allocation_failures.zig").check(struct {
             fn run(allocator: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tree, rows: []const @import("paragraph_structure_values.zig").Paragraph, expected: []const u8) !void {
                 const actual = try @import("page_area_group_xml.zig").writeWithColumnPageAreas(allocator, tree, rows, .{}, 4000000);
                 defer allocator.free(actual);
