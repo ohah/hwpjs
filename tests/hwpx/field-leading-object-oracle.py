@@ -20,6 +20,14 @@ def archive(xml, other=b"keep"):
 
 
 class LeadingFieldObject(unittest.TestCase):
+    def test_generic_oracle_still_requires_explicit_bookmark_fragment_validation(self):
+        xml = ("<r xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'>"
+               "<p:p><p:run><p:fieldBegin id='7' type='BOOKMARK'/><p:t>A</p:t>"
+               "<p:fieldEnd beginIDRef='7'/></p:run></p:p></r>").encode()
+        saved = xml.replace(b"type='BOOKMARK'", b"type='BOOKMARK' dirty='1'").replace(b">A<", b">XA<")
+        with self.assertRaisesRegex(ValueError, "Unknown or ambiguous chosen field fragment"):
+            compare(archive(xml), archive(saved), "X", "7", 1)
+
     def test_nested_field_marks_ancestor_across_paragraphs_and_rejects_lost_dirty(self):
         xml = ("<r xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'>"
                "<p:p><p:run><p:fieldBegin id='1' type='CLICK_HERE'/><p:t>A</p:t></p:run></p:p>"

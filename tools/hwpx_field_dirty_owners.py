@@ -21,6 +21,9 @@ def mark_dirty_owners(tree, selected):
         if left < start < right < end or start < left < end < right:
             raise ValueError("Crossing field dirty owners")
         if left <= start and right >= end:
-            if node.get("type") not in ("CLICK_HERE", "HYPERLINK"):
+            # The caller's explicit fragment oracle validates the selected
+            # field kind (including observed BOOKMARK metadata). Only inferred
+            # ancestor permissions belong to this shared helper.
+            if node is not selected and node.get("type") not in ("CLICK_HERE", "HYPERLINK"):
                 raise ValueError("Unsupported field dirty owner")
             node.set("dirty", "1")

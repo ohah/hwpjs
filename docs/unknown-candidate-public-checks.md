@@ -42,6 +42,14 @@
 
 ## 전체 등록 gate 상태
 
+### 제목 전용 oracle 교차 회귀
+
+6bc8c4fa 이후 기존 `title-field-prefix.test.mjs`를 현재 helper와 교차 실행하자 정상 제목 검사가 Unsupported field dirty owner로 실패했습니다. 공통 dirty helper가 선택된 BOOKMARK까지 CLICK_HERE/HYPERLINK로 제한한 도구 회귀입니다. 전용 title oracle은 이미 BOOKMARK·제목 metadata·한 필드/텍스트를 검증하므로, 선택 필드 종류의 권한은 그 전용 fragment 선택기에 남기고 공통 helper는 추론한 상위 필드 종류만 제한하도록 수정했습니다. 일반 field oracle의 BOOKMARK 선택 허용을 넓히지 않았으며, 전용 선택기 없는 BOOKMARK가 계속 거부되는 합성 회귀도 추가했습니다.
+
+`/tmp/hwpjs-title-field-crosscheck.PEUEXF`의 `crosscheck-final.log/.stderr`는 명시적 eaaa0d20 후보·동결 JS·깨끗한6bc8c4fa oracle·수정 helper로6/6·fail/cancel/skip0·exit0·stderr0(8686.423917ms)입니다. 제목 양성/metadata 음성, 기존/여러 문단 중첩, 표 경계, 일반 BOOKMARK 거부를 결합했습니다. scoped oracle self-test도 normal/-O에서 통과했습니다. 같은 디렉터리의 먼저 실행한 `crosscheck.log`와 `crosscheck-complete.log`는 사본에 title-field-mutate.py/중첩 oracle 파일이 빠져 exit1이었으며 성공으로 세지 않습니다. 누락된 기존 도구를 연결한 최종 실행과 구분합니다.
+
+`36388711_사회보장제도 신설 협의요청서(청년오피스)_260624.hwpx`의 specialized 전체 감사는 여전히 inventory0개로 중단됩니다. 현재 선택 필드가 BOOKMARK(beginElement32/id1115723309)이고 일반 inventory가 그 종류를 제외하기 때문입니다. 기존 bookmark-field-reference 전용 테스트와 이 감사의 미연결을 구분하며, 전체 파일 감사 통과로 주장하지 않습니다.
+
 같은 중첩 필드 수정 사본의 `leading-corpus.log/.stderr`에서 앞선 task1789 원본도90시도/검증90/독립 XML90(필드86)/거부0·exit0으로 재확인했습니다. 두 원본의 특수 입력 결과이며 일반 입력·전체 참조 corpus·실제 브라우저 검증을 대신하지 않습니다.
 
 옛 실패 목록의 `issue6451/underline_run_fragments.hwpx`도 같은 사본·후보의 `underline-corpus.log/.stderr`에서110시도/검증110/독립 XML110(필드95)/거부0·exit0입니다. 파일별120초 상한 내 정상 종료이며 시간 초과나 미검사 문단을 통과로 계수하지 않았습니다.
