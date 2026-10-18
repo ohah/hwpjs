@@ -39,6 +39,16 @@ main:has(> details[open]) > .editor-surface { position: relative; }
 .editor-command-bar { background: #edf2f6; max-height: 45vh; overflow: auto; }
 .editor-command-bar { grid-column: 1 / -1; }
 .document-menu { display: flex; flex-wrap: wrap; gap: 12px; padding: 6px 12px; }
+.document-ribbon-tabs { position: sticky; top: 0; z-index: 1; display: flex; gap: 4px; padding: 4px 12px; border-bottom: 1px solid #bbcbd6; background: #f7fafc; }
+.document-ribbon-tabs button { margin: 0; min-width: 64px; border: 1px solid transparent; border-radius: 6px 6px 0 0; background: transparent; }
+.document-ribbon-tabs button[aria-selected="true"] { color: #174f79; background: #d8e8f5; border-color: #bbcbd6; font-weight: 600; }
+.document-ribbon-tabs button:focus-visible { outline: 2px solid #326a91; outline-offset: -2px; }
+.document-ribbon-panel { scroll-margin-top: 44px; padding: 8px 12px; border-bottom: 1px solid #bbcbd6; background: #f7fafc; }
+.document-ribbon-panel > .toolbar-group { padding: 8px 0; }
+.document-ribbon-panel > .toolbar-group + .toolbar-group { border-left: 0; border-top: 1px solid #bbcbd6; padding-left: 0; }
+.document-ribbon-panel .style-toolbar { padding: 0; border: 0; background: transparent; }
+.document-ribbon-empty-hint { color: #486171; font-size: 13px; }
+.document-ribbon-panel:has(> form:not([hidden])) > .document-ribbon-empty-hint { display: none; }
 .document-menu summary { cursor: pointer; }
 .document-menu button { margin: 4px; }
 .document-menu button[data-menu-key] { display: flex; align-items: center; gap: 16px; }

@@ -11,6 +11,7 @@ import { clickBrowserTarget } from "./browser/click-target.mjs";
 import { moveBrowserInputToStart } from "./browser/input-origin.mjs";
 import { closeOwnedBrowser } from "./browser/session-close.mjs";
 import { hwp5BrowserReferenceCase } from "./browser/hwp5-reference-cases.mjs";
+import { openBrowserRibbonPage } from "./browser/ribbon-page.mjs";
 import { createExperimentalHwp5Editor } from "../js/hwp5-editor.mjs";
 import { inspect, verifyRaw } from "../tests/hwp5/style-preservation/text-record-oracle.mjs";
 
@@ -62,6 +63,7 @@ const snapshot = label => {
 };
 const phase = name => console.log(JSON.stringify({ kind: "browser-phase", name, session, output }));
 const selectWindow = expectedText => {
+  openBrowserRibbonPage(driver, "view");
   if (!evaluate('document.querySelector("#document-window-options").open')) click("#document-window-options > summary");
   command("fill", "#document-window-start", String(selectedCase.window.offset + 1));
   command("fill", "#document-window-count", String(selectedCase.window.count));

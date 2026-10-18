@@ -9,7 +9,7 @@
 | 실제 문서 편집 | 추적 HWP5 전 문단 prefix·숫자 의존 입력·이력·재열기, HWPX 전용 입력/Worker 감사 | prefix와 제한된 명령 통과는 임의 위치·모든 서식/개체/구역 명령 완료가 아님 |
 | 복잡한 원문 보존 | [unknownObj](hwpx-unknown-object-anchors.md), [필드 결과](reference-field-results-current.md) | 미닫힘 필드 거부와 미해석 개체의 의미/편집/표시가 남음 |
 | Worker/Canvas·실제 UI | [메뉴/개체 Chromium](hwpx-unknown-object-browser.md), [제목](hwpx-title-field-browser-roundtrip.md), [메모](hwpx-memo-browser-roundtrip.md), [HWP5 로드맵](hwp5-roadmap-browser-roundtrip.md) | 선택한 사례의 실측이며 모든 fixture/메뉴/개체 조작·OS IME·클립보드 전수는 아님 |
-| RHWP형 UI·원본 조판 | 기존 메뉴/툴바/속성 패널과 Canvas 입력 | 리본/전체 명령 경험·원래 한글의 글꼴/줄/표/쪽 배치 동치를 전수 입증하지 못함 |
+| RHWP형 UI·원본 조판 | 기존 메뉴/툴바/속성 패널, [홈·삽입·보기 탭](document-ribbon.md)과 Canvas 입력 | 전체 리본 명령 경험·원래 한글의 글꼴/줄/표/쪽 배치 동치를 전수 입증하지 못함 |
 | 저장·재열기 | 주제별 독립 XML/CFB·비대상 payload·history 검사 | 모든 ZIP/CFB metadata·opaque 의미·복잡한 결합 편집의 전수 무손실 보장은 아님 |
 | 최신 소스 gate·제품 반영 | [native 구간](native-prefix-coverage-current.md), [후보 공개 회귀](unknown-candidate-public-checks.md)와 각 집중 진단 | 구형 고정 바이너리/집중 결과를 최신 전체 gate로 합산하지 않음. 기본 WASM/실제 외부 응답의 승격은 별도 |
 

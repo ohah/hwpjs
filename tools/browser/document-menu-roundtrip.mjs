@@ -13,6 +13,7 @@ import {moveBrowserInputToStart} from "./input-origin.mjs";
 import {closeOwnedBrowser} from "./session-close.mjs";
 import {writeAuditRow} from "../audit-jsonl-output.mjs";
 import {documentMenuBrowserCases} from "./document-menu-cases.mjs";
+import {openBrowserRibbonPage,exerciseBrowserRibbonPages} from "./ribbon-page.mjs";
 
 export async function runDocumentMenuBrowserAudit(caseName) {
   assert(Object.hasOwn(documentMenuBrowserCases,caseName),"UnknownDocumentMenuBrowserCase");
@@ -23,7 +24,7 @@ export async function runDocumentMenuBrowserAudit(caseName) {
   const wasmPath = resolve(process.env.HWPJS_TEST_WASM), wasm = readFileSync(wasmPath);
   const fixture = resolve(config.fixturePath), input = readFileSync(fixture);
   const hash = bytes => createHash("sha256").update(bytes).digest("hex");
-  const sourcePaths = ["web/preview/index.html","web/preview/preview.css","web/preview/app.mjs","web/preview/document-menu-controls.mjs","web/preview/document-menu-mnemonic.mjs","tools/document-menu-browser-audit.mjs","tools/unknown-object-browser-audit.mjs","tools/browser/document-menu-roundtrip.mjs","tools/browser/document-menu-cases.mjs","tools/hwpx-anchor-prefix-oracle.py",...(oraclePath==="tools/hwpx-anchor-prefix-oracle.py"?[]:[oraclePath])];
+  const sourcePaths = ["web/preview/index.html","web/preview/preview.css","web/preview/app.mjs","web/preview/document-menu-controls.mjs","web/preview/document-menu-mnemonic.mjs","web/preview/document-ribbon-controls.mjs","web/preview/document-ribbon-pages.mjs","tools/browser/ribbon-page.mjs","tools/document-menu-browser-audit.mjs","tools/unknown-object-browser-audit.mjs","tools/browser/document-menu-roundtrip.mjs","tools/browser/document-menu-cases.mjs","tools/hwpx-anchor-prefix-oracle.py",...(oraclePath==="tools/hwpx-anchor-prefix-oracle.py"?[]:[oraclePath])];
   const sourceHashes = () => Object.fromEntries(sourcePaths.map(path=>[path,hash(readFileSync(resolve(path)))]));
   const sourceSha256 = sourceHashes();
   const session = cli("agent-browser", ["session","id","--scope","worktree","--prefix",config.sessionPrefix], {cwd:root,encoding:"utf8",timeout:10000}).trim();
@@ -79,6 +80,7 @@ export async function runDocumentMenuBrowserAudit(caseName) {
       document.addEventListener('keydown',event=>window.__menuKeys.push({key:event.key,trusted:event.isTrusted,consumed:event.defaultPrevented}));
       for(const type of ['beforeinput','input'])document.querySelector('#canvas-input').addEventListener(type,event=>window.__menuInput.push({type,trusted:event.isTrusted,inputType:event.inputType}));
     })()`);
+    if(exerciseBrowserRibbonPages(driver))progress("ribbon-keyboard-and-permissions");
     menuKey("menu-properties","p");assert.equal(evaluate('document.querySelector("#inspector-toggle").getAttribute("aria-expanded")'),"true");
     assert.equal(evaluate(`document.querySelector(${JSON.stringify(popup("menu-properties"))}).open`),false);
     command("press","p");assert.equal(evaluate('document.querySelector("#inspector-toggle").getAttribute("aria-expanded")'),"true","ClosedMenuMustNotDispatch");
@@ -89,6 +91,7 @@ export async function runDocumentMenuBrowserAudit(caseName) {
     assert.equal(evaluate('window.__menuAudit.length'),0);command("press","Escape");progress("view-and-disabled-commands");
     command("upload","#file",fixture);wait(`${replies("load")}.length===1`);
     click("#enable-edit");wait(`${replies("enable")}.some(r=>r.revision===0)`);
+    openBrowserRibbonPage(driver,"view");
     click("#document-window-options > summary");command("fill","#document-window-start",String(paragraph));command("fill","#document-window-count","1");click("#document-window-apply");
     wait(`${replies("set-edit-window")}.length===1`);
     click("details:has(#find-input) > summary");command("fill","#find-input",original);click('#find-form button[type="submit"]');
@@ -133,6 +136,7 @@ export async function runDocumentMenuBrowserAudit(caseName) {
     click("#enable-edit");wait(`${replies("enable")}.some(r=>r.revision===0)`);
     command("fill","#find-input",marker);click('#find-form button[type="submit"]');
     wait('document.querySelector("#canvas-input").value==='+JSON.stringify(marker+original));
+    openBrowserRibbonPage(driver,"view");
     const keys=evaluate("window.__menuKeys");
     for(const key of ["p","u","r","s"])assert(keys.some(row=>row.key===key&&row.trusted&&row.consumed),`MissingTrustedMnemonic:${key}`);
     command("scrollintoview","#canvas-input");command("screenshot",join(output,"reopened.png"));

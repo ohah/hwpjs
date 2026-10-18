@@ -21,6 +21,7 @@ import { updateGroupedLayoutStatus } from "./grouped-layout-status.mjs";
 import { updatePageLayoutStatus } from "./page-layout-status.mjs";
 import { createPageStatusControls } from "./page-status-controls.mjs";
 import { createDocumentMenuControls } from "./document-menu-controls.mjs";
+import { createDocumentRibbon } from "./document-ribbon-controls.mjs";
 import { createTableCreationControls } from "./table-creation-controls.mjs";
 import { createViewScaleControls } from "./view-scale-controls.mjs";
 import { createDocumentWindowControls } from "./document-window-controls.mjs";
@@ -325,5 +326,7 @@ documentMenuControls = createDocumentMenuControls([
   { button: document.querySelector("#menu-align-space"), target: document.querySelector('#paragraph-format-form [data-alignment="DISTRIBUTE_SPACE"]') },
 ]);
 window.addEventListener("pagehide", event => { if (!event.persisted) { checkBoxControls.close(); pictureResizeControls.close(); pictureSizeControls.close(); documentMenuControls.close(); } });
+const documentRibbon = createDocumentRibbon(document.querySelector(".editor-command-bar"));
+window.addEventListener("pagehide", event => { if (!event.persisted) documentRibbon.close(); });
 const commandSearch = createCommandSearch({ registry: documentMenuControls, document, keyboard: window, host: document.querySelector(".document-menu") });
 window.addEventListener("pagehide", event => { if (!event.persisted) commandSearch.close(); });
