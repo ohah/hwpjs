@@ -11,3 +11,11 @@
 `native-full-guard.jsonl/.stderr`에서4,114개 inventory의0..4114 전체 범위를 batch1·seed0x485750·4,096MiB guardian으로 시작했습니다. HWPJS_CHARACTER_FAILURE_START=0/HWPJS_CHARACTER_FAILURE_END=1을 명시했습니다. 해당 문자 속성 실패 shard는0번 한 지점이며 전체56,136개 실패 지점 전수와 같지 않습니다. 나머지 개별 테스트의 범위를 이 환경변수로 줄이지 않습니다.
 
 실행은 아직 진행 중이며 전체 완료/성공으로 세지 않습니다. 관측 타임아웃만으로 재시작하지 않고 실제 PID/CPU와 로그를 확인합니다. [구형 고정 바이너리](native-prefix-coverage-current.md)의 구간 완료, 다른 소스의 집중 Safe/Debug 통과, 이 실행의 부분 완료를 하나의 성공 수로 합산하지 않습니다. 전체 native 결과도 브라우저·원본 조판·모든 편집 명령 완료를 대신하지 않습니다.
+
+## 공개 WASM 후보와 소스 대응
+
+38dfb334의 추적 src2,635개 Git blob을 공개 API 감사에 사용한 `/tmp/hwpjs-unknown-anchor-probe.1MV5w4/src`와 별도로 전수 대조했습니다. 보관 소스에도 정확히2,635개 파일이 있으며 누락/추가0, 정확한 blob 일치2,627, 차이8개입니다. 후보 보관본과 위 native 사본의 build.zig도 바이트 차이가 없습니다. 현재 main의 후속 build 변경까지 같은 파일이라고 확대하지 않습니다.
+
+차이 중 여섯 파일은 formula_session_tests/formula_structure_transaction_tests/column_boundary_checkpoint_tests/column_boundary_group_extend_tests/paragraph_id_source_parts_tests/paragraph_structure_formula_tests입니다. root.zig의14행에서 시작하는 test 블록에서만 이 여섯 모듈을 import합니다. 나머지 column_boundary_joined_collect.zig와 field_structure_split.zig의 차이도 test 선언 안의 할당 실패 checker 교체뿐입니다.8개 전체 diff를 확인했으며 제품 함수의 변경을 발견하지 못했습니다. 테스트용 관측 할당자/observer·검사 범위의 차이는 유지하며 서로 다른 native 바이너리의 결과를 합산하지 않습니다.
+
+재확인한 공개 후보 SHA256은eaaa0d2007a2e02fce27335e6218379284108e756e285d4859cad28167d0fe5f이고, 설치된 기본 WASM은cbaaf27f858229fedd01b9996ce152bd31aa6d6f346481b7887bcc510ef68346입니다. 이 근거는 보관된 소스와 검증 범위의 대응이지 현재 HEAD로 재빌드한 WASM의 바이트 동일성/전체 native 성공/기본 승격 증거가 아닙니다. 제품 기본을 교체하지 않았습니다.
