@@ -6,8 +6,8 @@ const Coverage = @import("sequential_coverage.zig").State;
 const Decoder = @import("sequential_frame.zig").Decoder;
 
 const frame = [_]u8{ 8, 0, 1, 0, 1, 3, 9, 17, 0, 4, 17, 0, 7, 17, 0 };
-const q = [_]u8{0} ++ [_]u8{1} ** 64;
-const h = [_]u8{ 0, 1 } ++ [_]u8{0} ** 15 ++ .{ 1, 16, 1 } ++ [_]u8{0} ** 15 ++ .{0};
+const q = [_]u8{0} ++ @as([64]u8, @splat(1));
+const h = [_]u8{ 0, 1 } ++ @as([15]u8, @splat(0)) ++ .{ 1, 16, 1 } ++ @as([15]u8, @splat(0)) ++ .{0};
 fn segment(out: *std.ArrayList(u8), code: u8, payload: []const u8) !void {
     var prefix = [_]u8{ 255, code, 0, 0 };
     std.mem.writeInt(u16, prefix[2..4], @intCast(payload.len + 2), .big);
@@ -127,10 +127,10 @@ test "JPEG frame blocks retain the active quantization view after destination re
     defer bytes.deinit(t.allocator);
     try start(&bytes, &frame);
     try one(&bytes, 9, 0x5f);
-    const second_q = [_]u8{0} ++ [_]u8{3} ** 64;
+    const second_q = [_]u8{0} ++ @as([64]u8, @splat(3));
     try segment(&bytes, 0xdb, &second_q);
     try one(&bytes, 4, 0x5f);
-    const third_q = [_]u8{0} ++ [_]u8{5} ** 64;
+    const third_q = [_]u8{0} ++ @as([64]u8, @splat(5));
     try segment(&bytes, 0xdb, &third_q);
     try one(&bytes, 7, 0x5f);
     try bytes.appendSlice(t.allocator, &.{ 255, 217 });
@@ -154,8 +154,8 @@ test "JPEG frame quantization snapshots select component destinations not scan p
     selected[8] = 2;
     selected[14] = 3;
     try start(&bytes, &selected);
-    const q2 = [_]u8{2} ++ [_]u8{7} ** 64;
-    const q3 = [_]u8{3} ++ [_]u8{11} ** 64;
+    const q2 = [_]u8{2} ++ @as([64]u8, @splat(7));
+    const q3 = [_]u8{3} ++ @as([64]u8, @splat(11));
     try segment(&bytes, 0xdb, &q2);
     try segment(&bytes, 0xdb, &q3);
     for ([_]u8{ 7, 9, 4 }) |id| try one(&bytes, id, 0x5f);

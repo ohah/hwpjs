@@ -43,7 +43,7 @@ test "PNG embedded profile envelope method domain all truncations and trailing r
     try t.expectError(error.MissingPngProfileCompressionMethod, profile.decodeEnvelope(t.allocator, "K\x00", .{}));
 }
 test "PNG embedded profile envelope name rules and empty decode is not ICC validity" {
-    for ([_][]const u8{ "", " Leading", "Trailing ", "Two  spaces", "\x7f", "\xa0", &([_]u8{'A'} ** 80) }) |name| {
+    for ([_][]const u8{ "", " Leading", "Trailing ", "Two  spaces", "\x7f", "\xa0", &(@as([80]u8, @splat('A'))) }) |name| {
         const bytes = try payload(t.allocator, name, "");
         defer t.allocator.free(bytes);
         if (profile.decodeEnvelope(t.allocator, bytes, .{})) |value| {
@@ -52,7 +52,7 @@ test "PNG embedded profile envelope name rules and empty decode is not ICC valid
             return error.ExpectedFailure;
         } else |_| {}
     }
-    const empty = try payload(t.allocator, &([_]u8{0xff} ** 79), "");
+    const empty = try payload(t.allocator, &(@as([79]u8, @splat(0xff))), "");
     defer t.allocator.free(empty);
     var v = try profile.decodeEnvelope(t.allocator, empty, .{ .max_profile_bytes = 0 });
     defer v.deinit(t.allocator);

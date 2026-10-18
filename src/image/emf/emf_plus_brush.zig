@@ -55,35 +55,35 @@ fn putU32(bytes: []u8, offset: usize, value: u32) void {
 }
 
 test "EMF+ Brush dispatches all five official brush types" {
-    var solid = [_]u8{0} ** 12;
+    var solid = @as([12]u8, @splat(0));
     putU32(&solid, 0, 0xdbc01001);
     putU32(&solid, 8, 0xff010203);
     try std.testing.expectEqual(@as(u32, 0xff010203), (try parse(&solid, .{})).data.solid_color.color.raw());
 
-    var hatch = [_]u8{0} ** 20;
+    var hatch = @as([20]u8, @splat(0));
     putU32(&hatch, 0, 0xdbc01001);
     putU32(&hatch, 4, 1);
     putU32(&hatch, 8, 0x34);
     try std.testing.expectEqual(brush_values.HatchStyle.solid_diamond, (try parse(&hatch, .{})).data.hatch_fill.style);
 
-    var texture_bytes = [_]u8{0} ** 16;
+    var texture_bytes = @as([16]u8, @splat(0));
     putU32(&texture_bytes, 0, 0xdbc01001);
     putU32(&texture_bytes, 4, 2);
     try std.testing.expect((try parse(&texture_bytes, .{})).data.texture_fill.image_object == null);
 
-    var path_bytes = [_]u8{0} ** 36;
+    var path_bytes = @as([36]u8, @splat(0));
     putU32(&path_bytes, 0, 0xdbc01001);
     putU32(&path_bytes, 4, 3);
     try std.testing.expectEqual(@as(u32, 0), (try parse(&path_bytes, .{})).data.path_gradient.boundary.points.count);
 
-    var linear_bytes = [_]u8{0} ** 48;
+    var linear_bytes = @as([48]u8, @splat(0));
     putU32(&linear_bytes, 0, 0xdbc01001);
     putU32(&linear_bytes, 4, 4);
     try std.testing.expectEqual(wrap_mode_values.WrapMode.tile, (try parse(&linear_bytes, .{})).data.linear_gradient.wrap_mode);
 }
 
 test "EMF+ Brush rejects every envelope truncation type limit and wrong completed object" {
-    var bytes = [_]u8{0} ** 12;
+    var bytes = @as([12]u8, @splat(0));
     putU32(&bytes, 0, 0xdbc01001);
     for (0..8) |cut| try expectError(bytes[0..cut], .{});
     putU32(&bytes, 4, 5);

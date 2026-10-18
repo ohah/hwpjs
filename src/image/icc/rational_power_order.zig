@@ -13,7 +13,7 @@ pub fn Of(comptime bits: u16) type {
         1024 => i1024,
         else => @compileError("power order width must be 128, 256, 512 or 1024"),
     };
-    const U = std.meta.Int(.unsigned, bits);
+    const U = @Int(.unsigned, bits);
     const equality = @import("rational_power_equality.zig").Of(bits);
     return struct {
         pub fn compare(comptime precision: u16, base_n: I, base_d: U, g: i32, target_n: I, target_d: U) !?std.math.Order {

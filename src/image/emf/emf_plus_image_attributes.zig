@@ -47,7 +47,7 @@ fn putI32(bytes: []u8, offset: usize, value: i32) void {
 }
 
 test "EMF+ ImageAttributes preserves every field including ignored reserved values" {
-    var bytes = [_]u8{0} ** wire_size;
+    var bytes = @as([wire_size]u8, @splat(0));
     putU32(&bytes, 0, 0xdbc01abc);
     putU32(&bytes, 4, 0xdead_beef);
     putU32(&bytes, 8, 3);
@@ -66,21 +66,21 @@ test "EMF+ ImageAttributes preserves every field including ignored reserved valu
 }
 
 test "EMF+ ImageAttributes accepts every WrapMode and ObjectClamp combination" {
-    var bytes = [_]u8{0} ** wire_size;
+    var bytes = @as([wire_size]u8, @splat(0));
     putU32(&bytes, 0, 0xdbc01001);
     inline for (0..5) |raw_wrap| {
         inline for (0..2) |raw_clamp| {
             putU32(&bytes, 8, raw_wrap);
             putI32(&bytes, 16, raw_clamp);
             const value = try parse(&bytes);
-            try std.testing.expectEqual(@as(u32, raw_wrap), @intFromEnum(value.wrap_mode));
-            try std.testing.expectEqual(@as(i32, raw_clamp), @intFromEnum(value.object_clamp));
+            try std.testing.expectEqual(@as(u32, raw_wrap), @backingInt(value.wrap_mode));
+            try std.testing.expectEqual(@as(i32, raw_clamp), @backingInt(value.object_clamp));
         }
     }
 }
 
 test "EMF+ ImageAttributes preserves ClampColor independently of WrapMode" {
-    var bytes = [_]u8{0} ** wire_size;
+    var bytes = @as([wire_size]u8, @splat(0));
     putU32(&bytes, 0, 0xdbc01001);
     putU32(&bytes, 8, 0);
     putU32(&bytes, 12, 0xa1b2_c3d4);
@@ -90,11 +90,11 @@ test "EMF+ ImageAttributes preserves ClampColor independently of WrapMode" {
 }
 
 test "EMF+ ImageAttributes rejects every truncation trailing data domains and wrong object type" {
-    var bytes = [_]u8{0} ** wire_size;
+    var bytes = @as([wire_size]u8, @splat(0));
     putU32(&bytes, 0, 0xdbc01001);
     for (0..wire_size) |cut|
         try std.testing.expectError(error.UnexpectedEnd, parse(bytes[0..cut]));
-    var trailing = [_]u8{0} ** (wire_size + 1);
+    var trailing = @as([(wire_size + 1)]u8, @splat(0));
     @memcpy(trailing[0..wire_size], &bytes);
     try std.testing.expectError(error.InvalidEmfPlusImageAttributesSize, parse(&trailing));
     var invalid = bytes;

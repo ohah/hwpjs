@@ -215,8 +215,8 @@ test "HWPX manifest JPEG zero-based component IDs require opt-in and remain visi
     const a = std.testing.allocator;
     const jfif = [_]u8{ 255, 224, 0, 16 } ++ "JFIF\x00".* ++ .{ 1, 2, 0, 0, 1, 0, 1, 0, 0 };
     const adobe = [_]u8{ 255, 238, 0, 14 } ++ "Adobe".* ++ .{ 0, 100, 0, 0, 0, 0, 1 };
-    const q = [_]u8{ 255, 219, 0, 67, 0 } ++ [_]u8{8} ** 64;
-    const h = [_]u8{ 255, 196, 0, 38, 0, 1 } ++ [_]u8{0} ** 15 ++ .{ 1, 16, 1 } ++ [_]u8{0} ** 15 ++ .{0};
+    const q = [_]u8{ 255, 219, 0, 67, 0 } ++ @as([64]u8, @splat(8));
+    const h = [_]u8{ 255, 196, 0, 38, 0, 1 } ++ @as([15]u8, @splat(0)) ++ .{ 1, 16, 1 } ++ @as([15]u8, @splat(0)) ++ .{0};
     const frame = [_]u8{ 255, 192, 0, 17, 8, 0, 1, 0, 1, 3, 0, 17, 0, 1, 17, 0, 2, 17, 0 };
     const scan = [_]u8{ 255, 218, 0, 12, 3, 0, 0, 1, 0, 2, 0, 0, 63, 0, 0x49, 0x7f, 255, 217 };
     const raw = [_]u8{ 255, 216 } ++ jfif ++ adobe ++ q ++ h ++ frame ++ scan;
@@ -351,8 +351,8 @@ test "HWPX manifest Exif Adobe four-component JPEG pixels require explicit colou
     const a = std.testing.allocator;
     const exif = [_]u8{ 255, 225, 0, 8 } ++ "Exif\x00\x00".*;
     const adobe = [_]u8{ 255, 238, 0, 14 } ++ "Adobe".* ++ .{ 0, 100, 0, 0, 0, 0, 2 };
-    const q = [_]u8{ 255, 219, 0, 67, 0 } ++ [_]u8{8} ** 64;
-    const h = [_]u8{ 255, 196, 0, 38, 0, 1 } ++ [_]u8{0} ** 15 ++ .{ 1, 16, 1 } ++ [_]u8{0} ** 15 ++ .{0};
+    const q = [_]u8{ 255, 219, 0, 67, 0 } ++ @as([64]u8, @splat(8));
+    const h = [_]u8{ 255, 196, 0, 38, 0, 1 } ++ @as([15]u8, @splat(0)) ++ .{ 1, 16, 1 } ++ @as([15]u8, @splat(0)) ++ .{0};
     const frame = [_]u8{ 255, 192, 0, 20, 8, 0, 1, 0, 1, 4, 1, 17, 0, 2, 17, 0, 3, 17, 0, 4, 17, 0 };
     const scan = [_]u8{ 255, 218, 0, 14, 4, 1, 0, 2, 0, 3, 0, 4, 0, 0, 63, 0, 0x49, 0x2f, 255, 217 };
     const raw = [_]u8{ 255, 216 } ++ exif ++ adobe ++ q ++ h ++ frame ++ scan;

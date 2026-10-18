@@ -78,7 +78,7 @@ fn putF32(bytes: []u8, offset: usize, value: f32) void {
 }
 
 test "EMF+ DrawString parses literal color optional format odd string and padding" {
-    var data = [_]u8{0} ** 32;
+    var data = @as([32]u8, @splat(0));
     putU32(&data, 0, 0x44332211);
     putU32(&data, 4, 0xffff_ffff);
     putU32(&data, 8, 1);
@@ -100,7 +100,7 @@ test "EMF+ DrawString parses literal color optional format odd string and paddin
 }
 
 test "EMF+ DrawString parses Brush StringFormat and surrogate pair references" {
-    var data = [_]u8{0} ** 32;
+    var data = @as([32]u8, @splat(0));
     putU32(&data, 0, 7);
     putU32(&data, 4, 63);
     putU32(&data, 8, 2);
@@ -115,7 +115,7 @@ test "EMF+ DrawString parses Brush StringFormat and surrogate pair references" {
 }
 
 test "EMF+ DrawString preserves NUL and BOM code units without terminator semantics" {
-    var data = [_]u8{0} ** 32;
+    var data = @as([32]u8, @splat(0));
     putU32(&data, 4, 64);
     putU32(&data, 8, 2);
     data[28..32].* = .{ 0, 0, 0xff, 0xfe };
@@ -128,7 +128,7 @@ test "EMF+ DrawString preserves NUL and BOM code units without terminator semant
 }
 
 test "EMF+ DrawString rejects type domains every size boundary and independent axes" {
-    var data = [_]u8{0} ** 32;
+    var data = @as([32]u8, @splat(0));
     putU32(&data, 8, 2);
     data[28..32].* = .{ 'A', 0, 'B', 0 };
     _ = try parse(makeRecord(&data, 0x8000), .{});

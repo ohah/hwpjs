@@ -44,7 +44,7 @@ fn validateIndex(index: u32, vertex_count: u32) !void {
 }
 
 test "gradient mesh distinguishes rectangle padding from triangle third index" {
-    var bytes = [_]u8{0} ** triangle_size;
+    var bytes = @as([triangle_size]u8, @splat(0));
     std.mem.writeInt(u32, bytes[0..4], 1, .little);
     std.mem.writeInt(u32, bytes[4..8], 2, .little);
     bytes[8..12].* = .{ 9, 8, 7, 6 };
@@ -59,19 +59,19 @@ test "gradient mesh distinguishes rectangle padding from triangle third index" {
 }
 
 test "gradient mesh validates exact size and every referenced vertex" {
-    var bytes = [_]u8{0} ** triangle_size;
+    var bytes = @as([triangle_size]u8, @splat(0));
     try std.testing.expectError(error.InvalidEmfGradientMeshSize, parse(bytes[0..11], &.{}, .triangle, 1));
     try std.testing.expectError(error.InvalidEmfGradientMeshSize, parse(bytes[0..rectangle_size], &.{}, .rectangle_horizontal, 1));
     try std.testing.expectError(error.InvalidEmfGradientMeshSize, parse(&bytes, &.{}, .rectangle_horizontal, 1));
     try std.testing.expectError(error.InvalidEmfGradientMeshSize, parse(&bytes, bytes[0..4], .triangle, 1));
     inline for (0..3) |index| {
-        bytes = [_]u8{0} ** triangle_size;
+        bytes = @as([triangle_size]u8, @splat(0));
         std.mem.writeInt(u32, bytes[index * 4 ..][0..4], 1, .little);
         try std.testing.expectError(error.EmfGradientVertexIndexOutOfBounds, parse(&bytes, &.{}, .triangle, 1));
     }
     std.mem.writeInt(u32, bytes[0..4], 1, .little);
     try std.testing.expectError(error.EmfGradientVertexIndexOutOfBounds, parse(bytes[0..rectangle_size], bytes[8..12], .rectangle_horizontal, 1));
-    bytes = [_]u8{0} ** triangle_size;
+    bytes = @as([triangle_size]u8, @splat(0));
     std.mem.writeInt(u32, bytes[4..8], 1, .little);
     try std.testing.expectError(error.EmfGradientVertexIndexOutOfBounds, parse(bytes[0..rectangle_size], bytes[8..12], .rectangle_vertical, 1));
 }

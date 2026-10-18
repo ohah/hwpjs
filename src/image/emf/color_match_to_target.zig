@@ -46,7 +46,7 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 const test_fixed_size = 24;
 
 test "COLORMATCHTOTARGETW parses empty and populated borrowed payloads" {
-    var empty = [_]u8{0} ** test_fixed_size;
+    var empty = @as([test_fixed_size]u8, @splat(0));
     std.mem.writeInt(u32, empty[8..12], 2, .little);
     const disabled = (try parse(fixture(.colormatchtotargetw, &empty))) orelse return error.TestExpectedEqual;
     try std.testing.expectEqual(values.Action.disable, disabled.action);
@@ -55,7 +55,7 @@ test "COLORMATCHTOTARGETW parses empty and populated borrowed payloads" {
     try std.testing.expectEqual(@as(usize, 0), disabled.profile_data.len);
     try std.testing.expectEqual(@as(usize, 0), disabled.trailing_data.len);
 
-    var bytes = [_]u8{0} ** 40;
+    var bytes = @as([40]u8, @splat(0));
     std.mem.writeInt(u32, bytes[8..12], 1, .little);
     std.mem.writeInt(u32, bytes[12..16], 1, .little);
     std.mem.writeInt(u32, bytes[16..20], 8, .little);
@@ -74,7 +74,7 @@ test "COLORMATCHTOTARGETW parses empty and populated borrowed payloads" {
 }
 
 test "COLORMATCHTOTARGETW validates payload extents values UTF16 and identity" {
-    var bytes = [_]u8{0} ** 32;
+    var bytes = @as([32]u8, @splat(0));
     std.mem.writeInt(u32, bytes[8..12], 3, .little);
     std.mem.writeInt(u32, bytes[16..20], 4, .little);
     std.mem.writeInt(u32, bytes[20..24], 4, .little);

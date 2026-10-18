@@ -17,7 +17,7 @@ pub fn write(a: std.mem.Allocator, payload: []const u8, size: [2]u32, limit: usi
 
 test "HWP5 object size payload preserves descriptor tails flags and signed offsets under failures" {
     const a = std.testing.allocator;
-    var raw = [_]u8{0} ** 51;
+    var raw = @as([51]u8, @splat(0));
     std.mem.writeInt(u32, raw[0..4], @import("../body/control_rules.zig").drawing_id, .little);
     // counted UTF-16 description: two units, followed by opaque tail.
     std.mem.writeInt(u16, raw[44..46], 2, .little);

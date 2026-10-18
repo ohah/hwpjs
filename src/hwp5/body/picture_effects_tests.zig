@@ -46,7 +46,7 @@ test "every named fixed effect field has an independent positional expectation" 
     try t.expectEqual(1, r.offset);
 }
 test "picture effects compose all blocks atomically and leave additional properties" {
-    var b = [_]u8{0} ** 142;
+    var b = @as([142]u8, @splat(0));
     std.mem.writeInt(u32, b[1..5], 15, .little);
     // flags4 + shadow(44+12) + neon(8+12) + soft4 + reflection56 = 140.
     std.mem.writeInt(i32, b[5..9], -123, .little);

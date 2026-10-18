@@ -42,7 +42,7 @@ pub const child_names = [_][]const u8{
 };
 
 comptime {
-    if (field_names.len != std.meta.fields(Field).len or child_names.len != std.meta.fields(Child).len) @compileError("section definition field/child list mismatch");
+    if (field_names.len != @import("../reflection.zig").fields(Field).len or child_names.len != @import("../reflection.zig").fields(Child).len) @compileError("section definition field/child list mismatch");
 }
 
 pub const Options = struct {
@@ -62,11 +62,11 @@ pub const Definition = struct {
     unknown_enums: usize = 0,
 
     pub fn get(self: *const Definition, field: Field) ?[]const u8 {
-        return self.raw[@intFromEnum(field)];
+        return self.raw[@backingInt(field)];
     }
 
     pub fn childCount(self: *const Definition, child: Child) usize {
-        return self.child_counts[@intFromEnum(child)];
+        return self.child_counts[@backingInt(child)];
     }
 
     pub fn deinit(self: *Definition, a: std.mem.Allocator) void {
@@ -134,7 +134,7 @@ fn readAttributes(a: std.mem.Allocator, tree: *const part_tree.Tree, index: usiz
         if (raw[field_index]) |value| {
             const normalized = try value.toUtf8(a, max_bytes);
             definition.raw[field_index] = normalized;
-            try validate(definition, @enumFromInt(field_index), normalized);
+            try validate(definition, @fromBackingInt(@intCast(field_index)), normalized);
         }
     }
 }

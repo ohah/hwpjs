@@ -2,10 +2,10 @@ const std = @import("std");
 const t = std.testing;
 const d = @import("decode.zig");
 fn fixture(bad_checksum: bool) [308]u8 {
-    var bytes = [_]u8{0} ** 308;
+    var bytes = @as([308]u8, @splat(0));
     std.mem.writeInt(u32, bytes[0..4], 0x1000001c, .little);
     std.mem.writeInt(u32, bytes[4..8], 1, .little);
-    var plain = [_]u8{0} ** 48;
+    var plain = @as([48]u8, @splat(0));
     @memcpy(plain[0..6], &[_]u8{ 1, 1, 0, 254, 255, 'A' });
     std.mem.writeInt(u32, plain[16..20], if (bad_checksum) 0 else std.hash.Crc32.hash("A"), .little);
     std.mem.writeInt(u32, plain[32..36], 1, .little);
@@ -41,7 +41,7 @@ test "distribution policy ViewText requires valid envelope and never falls back"
     try t.expectError(error.InvalidChecksum, view.decodeWithPolicy(t.allocator, &h, &bad, 1, 48, .observed_viewtext));
     try t.expectError(error.LimitExceeded, view.decodeWithPolicy(t.allocator, &h, &good, 1, 47, .observed_viewtext));
     try t.expectError(error.LimitExceeded, view.decodeWithPolicy(t.allocator, &h, &good, 0, 48, .observed_viewtext));
-    var ordinary = [_]u8{0} ** 5;
+    var ordinary = @as([5]u8, @splat(0));
     f.put(&ordinary, 0, u32, 999 | (1 << 20));
     try t.expectError(error.InvalidDistributionRecord, view.decodeWithPolicy(t.allocator, &h, &ordinary, 100, 100, .observed_viewtext));
     try t.expectEqualSlices(u8, &raw_header, &h.raw);
@@ -67,7 +67,7 @@ test "distribution rejects short envelope and incomplete blocks without padding 
     try t.expectError(error.InvalidDistributionRecord, d.decode(t.allocator, &good, .{}));
 }
 test "distribution trailer validates every padding position and both checksum fields" {
-    var plain = [_]u8{0} ** 48;
+    var plain = @as([48]u8, @splat(0));
     std.mem.writeInt(u32, plain[16..20], std.hash.Crc32.hash("A"), .little);
     std.mem.writeInt(u32, plain[32..36], 1, .little);
     const trailer = @import("trailer.zig");

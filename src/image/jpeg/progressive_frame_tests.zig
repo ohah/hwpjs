@@ -5,10 +5,10 @@ const Frame = @import("frame.zig");
 const storage = @import("coefficient_storage.zig");
 const mono = [_]u8{ 8, 0, 1, 0, 1, 1, 9, 17, 0 };
 const pair = [_]u8{ 8, 0, 1, 0, 1, 2, 9, 17, 0, 4, 17, 0 };
-const q = [_]u8{0} ++ [_]u8{1} ** 64;
-const dc = [_]u8{ 0, 1 } ++ [_]u8{0} ** 15 ++ .{1};
+const q = [_]u8{0} ++ @as([64]u8, @splat(1));
+const dc = [_]u8{ 0, 1 } ++ @as([15]u8, @splat(0)) ++ .{1};
 // 00 new coefficient; 01 EOB; 10 two/three-block EOB.
-const ac = [_]u8{ 16, 0, 3 } ++ [_]u8{0} ** 14 ++ .{ 1, 0, 16 };
+const ac = [_]u8{ 16, 0, 3 } ++ @as([14]u8, @splat(0)) ++ .{ 1, 0, 16 };
 
 fn marker(out: *std.ArrayList(u8), code: u8, payload: []const u8) !void {
     var prefix = [_]u8{ 255, code, 0, 0 };
@@ -111,7 +111,7 @@ test "JPEG progressive frame rejects changed then restored Q and duplicate zero 
         try start(&bytes, &mono);
         try scan(&bytes, &.{ 1, 9, 0, 0, 0, 1 }, &.{0x7f});
         if (changed) {
-            const other = [_]u8{0} ++ [_]u8{2} ** 64;
+            const other = [_]u8{0} ++ @as([64]u8, @splat(2));
             try marker(&bytes, 219, &other);
             try marker(&bytes, 219, &q);
             try scan(&bytes, &.{ 1, 9, 0, 0, 0, 16 }, &.{0x7f});
@@ -234,11 +234,15 @@ test "JPEG progressive frame preserves wide Q byte order and distinct entropy de
     var bytes: std.ArrayList(u8) = .empty;
     defer bytes.deinit(t.allocator);
     try start(&bytes, &.{ 12, 0, 1, 0, 1, 2, 9, 17, 3, 4, 17, 2 });
-    const wide = [_]u8{0x13} ++ [_]u8{ 0x12, 0x34 } ** 64;
-    const narrow = [_]u8{2} ++ [_]u8{5} ** 64;
-    const h2 = [_]u8{ 2, 1 } ++ [_]u8{0} ** 15 ++ .{1};
-    const h3 = [_]u8{ 3, 1 } ++ [_]u8{0} ** 15 ++ .{2};
-    const h1 = [_]u8{ 17, 1 } ++ [_]u8{0} ** 15 ++ .{0};
+    const wide = [_]u8{0x13} ++ comptime blk: {
+        var table: [128]u8 = undefined;
+        for (0..64) |i| @memcpy(table[i * 2 ..][0..2], &[_]u8{ 0x12, 0x34 });
+        break :blk table;
+    };
+    const narrow = [_]u8{2} ++ @as([64]u8, @splat(5));
+    const h2 = [_]u8{ 2, 1 } ++ @as([15]u8, @splat(0)) ++ .{1};
+    const h3 = [_]u8{ 3, 1 } ++ @as([15]u8, @splat(0)) ++ .{2};
+    const h1 = [_]u8{ 17, 1 } ++ @as([15]u8, @splat(0)) ++ .{0};
     try marker(&bytes, 219, &wide);
     try marker(&bytes, 219, &narrow);
     try marker(&bytes, 196, &h2);

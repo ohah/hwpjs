@@ -57,7 +57,7 @@ test "HWP5 drawing current size payload preserves explicit layout matrices and o
     const a = std.testing.allocator;
     for ([_]component.Layout{ .single_id, .double_id }) |layout| {
         const minimum: usize = if (layout == .single_id) 96 else 100;
-        var bytes = [_]u8{0} ** 107;
+        var bytes = @as([107]u8, @splat(0));
         bytes[minimum] = 0xa5;
         const input = bytes[0 .. minimum + 1];
         const parsed = try component.Component.parse(input, layout);

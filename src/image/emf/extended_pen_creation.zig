@@ -35,7 +35,7 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 }
 
 fn minimumRecord() [minimum_size]u8 {
-    var bytes = [_]u8{0} ** minimum_size;
+    var bytes = @as([minimum_size]u8, @splat(0));
     std.mem.writeInt(u32, bytes[8..12], 1, .little);
     std.mem.writeInt(u32, bytes[32..36], 1, .little);
     return bytes;
@@ -65,7 +65,7 @@ test "extended pen parses minimum and detached packed DIB layouts" {
     try std.testing.expectEqual(@as(usize, 8), with_styles_and_extra.pen.style_entries.len);
     try std.testing.expect(with_styles_and_extra.dib == null);
 
-    var bytes = [_]u8{0} ** 68;
+    var bytes = @as([68]u8, @splat(0));
     @memcpy(bytes[0..minimum_size], &minimum);
     std.mem.writeInt(u32, bytes[12..16], 56, .little);
     std.mem.writeInt(u32, bytes[16..20], 8, .little);

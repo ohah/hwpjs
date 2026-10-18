@@ -51,7 +51,7 @@ test "extended fractions use full cross products and interval inclusion" {
 test "extended fraction lossy conversion avoids infinity and preserves tiny ratios" {
     inline for (.{ 256, 512, 1024 }) |bits| {
         const G = @import("fraction.zig").Normalized(bits);
-        const largest = std.math.maxInt(std.meta.Int(.unsigned, bits));
+        const largest = std.math.maxInt(@Int(.unsigned, bits));
         try t.expectEqual(@as(f64, 1), try (G{ .numerator = largest, .denominator = largest }).toFloat());
         try t.expect((try (G{ .numerator = 1, .denominator = largest }).toFloat()) > 0);
     }

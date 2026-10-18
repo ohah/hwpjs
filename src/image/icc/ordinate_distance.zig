@@ -2,8 +2,8 @@ const std = @import("std");
 const F = @import("fraction.zig");
 pub const Target = F.Normalized(128);
 pub const WideTarget = F.Normalized(512);
-fn difference(comptime bits: u16, target: F.Normalized(bits), value: F.WideFraction) std.meta.Int(.unsigned, bits + 256) {
-    const U = std.meta.Int(.unsigned, bits + 256);
+fn difference(comptime bits: u16, target: F.Normalized(bits), value: F.WideFraction) @Int(.unsigned, bits + 256) {
+    const U = @Int(.unsigned, bits + 256);
     const left = @as(U, value.numerator) * target.denominator;
     const right = @as(U, target.numerator) * value.denominator;
     return @max(left, right) - @min(left, right);
@@ -16,7 +16,7 @@ pub fn compareWide(target: WideTarget, a: F.WideFraction, b: F.WideFraction) !st
     return compareFor(512, target, a, b);
 }
 fn compareFor(comptime bits: u16, target: F.Normalized(bits), a: F.WideFraction, b: F.WideFraction) !std.math.Order {
-    const U = std.meta.Int(.unsigned, bits + 512);
+    const U = @Int(.unsigned, bits + 512);
     try target.validate();
     try a.validate();
     try b.validate();

@@ -45,13 +45,13 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 }
 
 fn restoreFixture(saved_dc: i32) [12]u8 {
-    var bytes = [_]u8{0} ** 12;
+    var bytes = @as([12]u8, @splat(0));
     std.mem.writeInt(i32, bytes[8..12], saved_dc, .little);
     return bytes;
 }
 
 test "save and restore records preserve their distinct wire forms" {
-    const save_bytes = [_]u8{0} ** 8;
+    const save_bytes = @as([8]u8, @splat(0));
     try std.testing.expectEqual(Action.save, (try parse(fixture(.savedc, &save_bytes))).?);
     for ([_]i32{ -1, -2, std.math.minInt(i32) }) |saved_dc| {
         const action = (try parse(fixture(.restoredc, &restoreFixture(saved_dc)))).?;
@@ -60,14 +60,14 @@ test "save and restore records preserve their distinct wire forms" {
 }
 
 test "save and restore require their prefixes and accept trailing data" {
-    const save_long = [_]u8{0} ** 12;
+    const save_long = @as([12]u8, @splat(0));
     try std.testing.expect((try parse(fixture(.savedc, &save_long))) != null);
-    const restore_short = [_]u8{0} ** 8;
+    const restore_short = @as([8]u8, @splat(0));
     try std.testing.expectError(error.InvalidEmfRestoreDcRecordSize, parse(fixture(.restoredc, &restore_short)));
     var declared_twelve = fixture(.restoredc, &restore_short);
     declared_twelve.size = 12;
     try std.testing.expectError(error.InvalidEmfRestoreDcRecordSize, parse(declared_twelve));
-    var restore_long = [_]u8{0} ** 16;
+    var restore_long = @as([16]u8, @splat(0));
     std.mem.writeInt(i32, restore_long[8..12], -1, .little);
     try std.testing.expect((try parse(fixture(.restoredc, &restore_long))) != null);
 }
@@ -80,7 +80,7 @@ test "restore index must be negative" {
 }
 
 test "DC stack restores relative states and discards newer saves" {
-    const save_bytes = [_]u8{0} ** 8;
+    const save_bytes = @as([8]u8, @splat(0));
     var state: State = .{};
     _ = try state.consume(fixture(.savedc, &save_bytes));
     _ = try state.consume(fixture(.savedc, &save_bytes));
@@ -96,7 +96,7 @@ test "DC stack restores relative states and discards newer saves" {
 }
 
 test "DC stack does not claim unrelated records" {
-    const bytes = [_]u8{0} ** 8;
+    const bytes = @as([8]u8, @splat(0));
     var state: State = .{};
     try std.testing.expect((try state.consume(fixture(.realizepalette, &bytes))) == null);
     try std.testing.expectEqual(@as(usize, 0), state.depth);

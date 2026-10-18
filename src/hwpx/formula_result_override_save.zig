@@ -68,7 +68,7 @@ test "HWPX manual formula result serialization rejects invalid owners and displa
     try std.testing.expectError(error.InvalidFormulaFieldNode, write(a, &.{tree}, 0, &sites, tree.elements.len, "9", .{}, 8192));
     try std.testing.expectError(error.InvalidUtf8, write(a, &.{tree}, 0, &sites, begin, &.{0xff}, .{}, 8192));
     try std.testing.expectError(error.InvalidXmlCharacter, write(a, &.{tree}, 0, &sites, begin, &.{0}, .{}, 8192));
-    try std.testing.expectError(error.LimitExceeded, write(a, &.{tree}, 0, &sites, begin, &([_]u8{'x'} ** 4097), .{}, 8192));
+    try std.testing.expectError(error.LimitExceeded, write(a, &.{tree}, 0, &sites, begin, &(@as([4097]u8, @splat('x'))), .{}, 8192));
     try std.testing.expectError(error.LimitExceeded, write(a, &.{tree}, 0, &sites, begin, "9", .{}, 0));
     try std.testing.expectEqualStrings(source, tree.source);
     try std.testing.expectEqualStrings("2", sites.items[1].text);

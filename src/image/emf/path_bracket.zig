@@ -52,9 +52,9 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 
 test "all six path bracket records require the header and accept trailing data" {
     const std = @import("std");
-    const exact = [_]u8{0} ** 8;
-    const oversized = [_]u8{0} ** 12;
-    const truncated = [_]u8{0} ** 4;
+    const exact = @as([8]u8, @splat(0));
+    const oversized = @as([12]u8, @splat(0));
+    const truncated = @as([4]u8, @splat(0));
     for ([_]records.RecordType{
         .beginpath,
         .endpath,
@@ -72,13 +72,13 @@ test "all six path bracket records require the header and accept trailing data" 
 
 test "non-path record is not claimed" {
     const std = @import("std");
-    const bytes = [_]u8{0} ** 8;
+    const bytes = @as([8]u8, @splat(0));
     try std.testing.expect((try parse(fixture(.savedc, &bytes))) == null);
 }
 
 test "path construction cannot nest and must close with end or abort" {
     const std = @import("std");
-    const bytes = [_]u8{0} ** 8;
+    const bytes = @as([8]u8, @splat(0));
     var state: State = .{};
     _ = try state.consume(fixture(.beginpath, &bytes));
     try std.testing.expect(state.construction_open);

@@ -35,7 +35,7 @@ fn makeRecord(data: []const u8, flags: u16) record.Record {
 }
 
 test "EMF+ DrawPath parses Path and Pen IDs while preserving ignored flags" {
-    var data = [_]u8{0} ** 4;
+    var data = @as([4]u8, @splat(0));
     std.mem.writeInt(u32, &data, 63, .little);
     const value = try parse(makeRecord(&data, 0xff00));
     try std.testing.expectEqual(@as(u16, 0xff00), value.flags);
@@ -49,7 +49,7 @@ test "EMF+ DrawPath parses Path and Pen IDs while preserving ignored flags" {
 }
 
 test "EMF+ DrawPath rejects type IDs and every independent size mismatch" {
-    var data = [_]u8{0} ** 5;
+    var data = @as([5]u8, @splat(0));
     _ = try parse(makeRecord(data[0..4], 0));
     for (0..data.len + 1) |cut| {
         if (cut != 4)

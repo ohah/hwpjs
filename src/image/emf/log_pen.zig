@@ -24,7 +24,7 @@ pub fn parse(bytes: []const u8) !LogPen {
 }
 
 test "LogPen preserves signed width ignored y and ColorRef order" {
-    var bytes = [_]u8{0} ** size;
+    var bytes = @as([size]u8, @splat(0));
     std.mem.writeInt(u32, bytes[0..4], 0x00012107, .little);
     std.mem.writeInt(i32, bytes[4..8], -4, .little);
     std.mem.writeInt(i32, bytes[8..12], 99, .little);
@@ -36,7 +36,7 @@ test "LogPen preserves signed width ignored y and ColorRef order" {
 }
 
 test "LogPen requires exact size cosmetic width one and specified ColorRef" {
-    var bytes = [_]u8{0} ** (size + 1);
+    var bytes = @as([(size + 1)]u8, @splat(0));
     std.mem.writeInt(i32, bytes[4..8], 1, .little);
     for (0..size) |cut| try std.testing.expectError(error.InvalidEmfLogPenSize, parse(bytes[0..cut]));
     try std.testing.expectError(error.InvalidEmfLogPenSize, parse(&bytes));

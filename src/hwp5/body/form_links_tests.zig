@@ -17,21 +17,21 @@ fn collect(a: std.mem.Allocator, bytes: []const u8) !linked.Report {
 fn exercise(a: std.mem.Allocator, late: bool) !void {
     var bytes: std.ArrayList(u8) = .empty;
     defer bytes.deinit(a);
-    var ctrl = [_]u8{0} ** 44;
+    var ctrl = @as([44]u8, @splat(0));
     std.mem.writeInt(u32, ctrl[0..4], rules.form_id, .little);
-    var object = [_]u8{0} ** 30;
+    var object = @as([30]u8, @splat(0));
     @memcpy(object[0..4], "tbp+");
     @memcpy(object[4..8], "tbp+");
     object[8] = 8;
     object[12] = 8;
     for ("A:int:1 ", 0..) |c, i| object[14 + i * 2] = c;
     for (0..12) |i| {
-        var token = [_]u8{0xff} ** 16;
+        var token = @as([16]u8, @splat(0xff));
         const code: u16 = if (late and i == 11) 12 else 11;
         std.mem.writeInt(u16, token[0..2], code, .little);
         std.mem.writeInt(u32, token[2..6], rules.form_id, .little);
         std.mem.writeInt(u16, token[14..16], code, .little);
-        try frame(a, &bytes, 66, 0, &([_]u8{0} ** 24));
+        try frame(a, &bytes, 66, 0, &(@as([24]u8, @splat(0))));
         try frame(a, &bytes, 67, 1, &token);
         try frame(a, &bytes, 71, 1, &ctrl);
         try frame(a, &bytes, 91, 2, &object);

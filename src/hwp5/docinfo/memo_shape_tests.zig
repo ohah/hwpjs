@@ -3,7 +3,7 @@ const t = std.testing;
 const memo = @import("memo_shape.zig");
 test "memo DocInfo dispatch is atomic for every short payload and wrong level" {
     const d = @import("reader.zig");
-    var b = [_]u8{0} ** 26;
+    var b = @as([26]u8, @splat(0));
     for (0..22) |n| {
         std.mem.writeInt(u32, b[0..4], 92 | (1 << 10) | (@as(u32, @intCast(n)) << 20), .little);
         var it = try d.Iterator.init(b[0 .. n + 4], .{ .raw = 0x05000107 }, .{});
@@ -24,7 +24,7 @@ test "memo DocInfo dispatch is atomic for every short payload and wrong level" {
 }
 test "memo mapping count distinguishes absent zero negative and mismatch across versions" {
     const resources = @import("resources.zig");
-    var b = [_]u8{0} ** 94;
+    var b = @as([94]u8, @splat(0));
     std.mem.writeInt(u32, b[0..4], 17 | (64 << 20), .little);
     std.mem.writeInt(u32, b[68..72], 92 | (1 << 10) | (22 << 20), .little);
     for ([_]u32{ 0x05000107, 0x05000201, 0x05010001 }) |version| {
@@ -46,7 +46,7 @@ test "memo mapping count distinguishes absent zero negative and mismatch across 
     }
 }
 test "memo shape preserves distinct fields high bits unknown DWORD and extra" {
-    var b = [_]u8{0} ** 25;
+    var b = @as([25]u8, @splat(0));
     std.mem.writeInt(u32, b[0..4], 0xffffffff, .little);
     b[4] = 255;
     b[5] = 128;
@@ -66,7 +66,7 @@ test "memo shape preserves distinct fields high bits unknown DWORD and extra" {
     for (22..26) |end| try t.expectEqual(end - 22, (try memo.Shape.parse(b[0..end])).extra.len);
 }
 test "shared six-byte border read fails atomically from a nonzero cursor" {
-    const b = [_]u8{255} ** 7;
+    const b = @as([7]u8, @splat(255));
     for (1..7) |end| {
         var r: @import("../../binary/reader.zig").Reader = .{ .bytes = b[0..end], .offset = 1 };
         try t.expectError(error.UnexpectedEnd, @import("border_line.zig").Border.read(&r));

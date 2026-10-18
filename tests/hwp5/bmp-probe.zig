@@ -5,17 +5,17 @@ fn fields(a: std.mem.Allocator, out: *std.ArrayList(u8), values: []const u32) !v
     for (values) |value| try int(a, out, u32, value);
 }
 fn header(a: std.mem.Allocator, out: *std.ArrayList(u8), h: core.image.bmp_header.Header) !void {
-    try fields(a, out, &.{ @intFromEnum(h.kind), h.width, h.height, @intFromBool(h.top_down), h.bit_count, @intFromEnum(h.compression), @intFromBool(h.info != null) });
-    if (h.info) |v| try fields(a, out, &.{ v.image_bytes, @bitCast(v.x_resolution), @bitCast(v.y_resolution), v.colours_used, v.important_colours }) else try fields(a, out, &([_]u32{0} ** 5));
+    try fields(a, out, &.{ @backingInt(h.kind), h.width, h.height, @intFromBool(h.top_down), h.bit_count, @backingInt(h.compression), @intFromBool(h.info != null) });
+    if (h.info) |v| try fields(a, out, &.{ v.image_bytes, @bitCast(v.x_resolution), @bitCast(v.y_resolution), v.colours_used, v.important_colours }) else try fields(a, out, &(@as([5]u32, @splat(0))));
     try int(a, out, u32, @intFromBool(h.colour != null));
     if (h.colour) |v| {
         try fields(a, out, &v.masks);
         try int(a, out, u32, v.space);
         for (v.endpoints) |value| try int(a, out, i32, value);
         try fields(a, out, &v.gamma);
-    } else try fields(a, out, &([_]u32{0} ** 17));
+    } else try fields(a, out, &(@as([17]u32, @splat(0))));
     try int(a, out, u32, @intFromBool(h.profile != null));
-    if (h.profile) |v| try fields(a, out, &.{ v.intent, v.offset, v.size }) else try fields(a, out, &([_]u32{0} ** 3));
+    if (h.profile) |v| try fields(a, out, &.{ v.intent, v.offset, v.size }) else try fields(a, out, &(@as([3]u32, @splat(0))));
 }
 fn options(r: *core.Reader) !core.image.bmp_structure.Options {
     const pixels = try r.readInt(u64);
@@ -46,7 +46,7 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize, mode: u32) ![]
             const view = try core.image.bmp_structure.inspect(bytes[r.offset..], selected);
             try header(a, &out, view.header);
             try fields(a, &out, &.{ view.file.size, view.file.pixels_offset, @intCast(view.stride), @intCast(view.pixels.len), @intCast(view.palette.count()), view.palette.entry_bytes, @intFromBool(view.channels != null) });
-            try fields(a, &out, &(if (view.channels) |c| c.values else [_]u32{0} ** 4));
+            try fields(a, &out, &(if (view.channels) |c| c.values else @as([4]u32, @splat(0))));
             try fields(a, &out, &.{ @intCast(view.gap.len), @intCast(view.after_pixels.len), @intCast(view.trailing.len), @intFromBool(view.metadata_deferred) });
             for ([_][]const u8{ view.palette.bytes, view.pixels, view.gap, view.after_pixels, view.trailing }) |part| {
                 if (out.items.len > limit or part.len > limit - out.items.len) return error.LimitExceeded;

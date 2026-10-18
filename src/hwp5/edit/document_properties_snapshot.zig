@@ -34,7 +34,7 @@ pub fn read(raw: []const u8, version: @import("../version.zig").Version) !Snapsh
 }
 
 test "HWP5 document properties snapshot preserves zero and rejects malformed source ownership" {
-    var raw = [_]u8{0} ** 30;
+    var raw = @as([30]u8, @splat(0));
     std.mem.writeInt(u32, raw[0..4], 16 | (26 << 20), .little);
     const version: @import("../version.zig").Version = .{ .raw = 0x05000107 };
     const row = try read(&raw, version);

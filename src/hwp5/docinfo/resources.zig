@@ -4,9 +4,9 @@ const Options = @import("../record.zig").Options;
 pub const Language = enum(u3) { korean, english, hanja, japanese, other, symbol, user };
 /// Same contiguous order as ID_MAPPINGS slots 8..14.
 pub const Kind = enum { border_fill, char_shape, tab_def, numbering, bullet, para_shape, style };
-const kind_count = @typeInfo(Kind).@"enum".fields.len;
+const kind_count = @typeInfo(Kind).@"enum".field_names.len;
 pub fn mappingField(kind: Kind) d.MappingField {
-    return @enumFromInt(@intFromEnum(d.MappingField.border_fill) + @intFromEnum(kind));
+    return @fromBackingInt(@intCast(@backingInt(d.MappingField.border_fill) + @backingInt(kind)));
 }
 
 pub const Report = struct {
@@ -19,7 +19,7 @@ pub const Report = struct {
     counts: [kind_count]usize = @splat(0),
 
     pub fn count(self: Report, kind: Kind) usize {
-        return self.counts[@intFromEnum(kind)];
+        return self.counts[@backingInt(kind)];
     }
     /// Extends the legacy BinData/font check without changing validate().
     /// Optional resource counts are checked only when their mapping slots are present.
@@ -29,8 +29,8 @@ pub const Report = struct {
         try self.validateOptionalCount(.memo_shape, self.memo_shape_count);
         try self.validateOptionalCount(.track_change_author, self.track_change_author_count);
         try self.validateOptionalCount(.track_change, self.track_change_count);
-        inline for (@typeInfo(Kind).@"enum".fields) |field| {
-            const kind: Kind = @enumFromInt(field.value);
+        inline for (@import("../../reflection.zig").fields(Kind)) |field| {
+            const kind: Kind = @fromBackingInt(@intCast(field.value));
             const n = self.mappings.get(mappingField(kind)).?;
             if (n < 0) return error.NegativeMappingCount;
             if (@as(u64, @intCast(n)) != self.count(kind)) return error.ResourceCountMismatch;
@@ -42,7 +42,7 @@ pub const Report = struct {
         if (bins < 0) return error.NegativeMappingCount;
         var fonts: u64 = 0;
         for (0..7) |i| {
-            const n = self.fontCount(@enumFromInt(i));
+            const n = self.fontCount(@fromBackingInt(@intCast(i)));
             if (n < 0) return error.NegativeMappingCount;
             fonts += @intCast(n);
         }
@@ -56,7 +56,7 @@ pub const Report = struct {
         }
     }
     pub fn fontCount(self: Report, language: Language) i32 {
-        return self.mappings.get(@enumFromInt(@as(usize, @intFromEnum(d.MappingField.font_korean)) + @intFromEnum(language))).?;
+        return self.mappings.get(@fromBackingInt(@intCast(@as(usize, @backingInt(d.MappingField.font_korean)) + @backingInt(language)))).?;
     }
     /// A 0-based language-local font ID -> 0-based FACE_NAME record ordinal.
     /// Requires validated totals; this is not a CFB stream ID or a glyph lookup.
@@ -64,7 +64,7 @@ pub const Report = struct {
         try self.validate();
         if (id >= @as(usize, @intCast(self.fontCount(language)))) return null;
         var offset: usize = 0;
-        for (0..@intFromEnum(language)) |i| offset += @intCast(self.fontCount(@enumFromInt(i)));
+        for (0..@backingInt(language)) |i| offset += @intCast(self.fontCount(@fromBackingInt(@intCast(i))));
         return offset + id;
     }
 };
@@ -135,10 +135,10 @@ fn scan(bytes: []const u8, version: Version, options: Options, selector: ?*Selec
         .face_name => fonts += 1,
         .memo_shape => memos += 1,
         else => {
-            if (r.framing.tag == @intFromEnum(d.Tag.track_change_author)) authors += 1;
-            if (r.framing.tag == @intFromEnum(d.Tag.track_change)) changes += 1;
-            inline for (@typeInfo(Kind).@"enum".fields) |field| {
-                if (r.framing.tag == @intFromEnum(@field(d.Tag, field.name))) counts[field.value] += 1;
+            if (r.framing.tag == @backingInt(d.Tag.track_change_author)) authors += 1;
+            if (r.framing.tag == @backingInt(d.Tag.track_change)) changes += 1;
+            inline for (@import("../../reflection.zig").fields(Kind)) |field| {
+                if (r.framing.tag == @backingInt(@field(d.Tag, field.name))) counts[field.value] += 1;
             }
         },
     };

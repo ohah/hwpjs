@@ -2,7 +2,7 @@ const std = @import("std");
 const t = std.testing;
 const validation = @import("curve_validation.zig");
 fn check(a: std.mem.Allocator, layout: @import("shape_curve.zig").Layout, scenario: u8) !void {
-    var b = [_]u8{0} ** 66;
+    var b = @as([66]u8, @splat(0));
     const width: usize = if (layout == .specified_i16_axes) 2 else 4;
     const size = width + 16 + 1 + 4;
     std.mem.writeInt(u32, b[0..4], 76 | (4 << 20), .little);

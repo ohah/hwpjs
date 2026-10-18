@@ -14,7 +14,7 @@ test "DocInfo properties use 26 bytes and retain extension bytes" {
 }
 
 test "ID mappings distinguish version expectations presence zero and signed values" {
-    var bytes = [_]u8{0} ** 80;
+    var bytes = @as([80]u8, @splat(0));
     std.mem.writeInt(i32, bytes[0..4], -1, .little);
     for (0..60) |n| try std.testing.expectError(error.UnexpectedEnd, d.IdMappings.parse(bytes[0..n], .{ .raw = 0x05000107 }));
     for ([_]u32{ 0x05000200, 0x05000201, 0x05000301, 0x05000302, 0x05010001 }, [_]usize{ 15, 16, 16, 18, 18 }) |version, expected| {
@@ -34,7 +34,7 @@ test "ID mappings distinguish version expectations presence zero and signed valu
 }
 
 test "DocInfo semantic errors are atomic and unknown records survive" {
-    const good = [_]u8{ 16, 0, 160, 1 } ++ [_]u8{0} ** 26;
+    const good = [_]u8{ 16, 0, 160, 1 } ++ @as([26]u8, @splat(0));
     var bad = good;
     bad[1] = 4; // level 1
     var it = try d.Iterator.init(&bad, .{ .raw = 0x05000107 }, .{});

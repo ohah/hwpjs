@@ -65,7 +65,7 @@ test "poly rules classify exactly fourteen width variants and share count gramma
 }
 
 test "poly count sum uses u64 and exact little-endian array extent" {
-    var bytes = [_]u8{0} ** 8;
+    var bytes = @as([8]u8, @splat(0));
     std.mem.writeInt(u32, bytes[0..4], std.math.maxInt(u32), .little);
     std.mem.writeInt(u32, bytes[4..8], std.math.maxInt(u32), .little);
     const info = Info{ .shape = .poly_polyline, .coordinate = .long };

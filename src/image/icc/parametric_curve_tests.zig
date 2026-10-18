@@ -5,18 +5,18 @@ test "parametric curves preserve signed ordered parameters and absence" {
     const counts = [_]usize{ 1, 3, 4, 5, 7 };
     const values = [_]i32{ 0, -1, 65536, std.math.minInt(i32), std.math.maxInt(i32), -65536, 7 };
     for (counts, 0..) |count, kind| {
-        var bytes = [_]u8{0} ** 40;
+        var bytes = @as([40]u8, @splat(0));
         bytes[0..4].* = "para".*;
         bytes[9] = @intCast(kind);
         for (values[0..count], 0..) |value, i| std.mem.writeInt(i32, bytes[12 + i * 4 ..][0..4], value, .big);
         const result = try para.parse(bytes[0 .. 12 + count * 4]);
         @memset(&bytes, 255);
-        try t.expectEqual(kind, @intFromEnum(result.function));
-        for (0..7) |i| try t.expectEqual(if (i < count) @as(?i32, values[i]) else null, result.get(@enumFromInt(i)));
+        try t.expectEqual(kind, @backingInt(result.function));
+        for (0..7) |i| try t.expectEqual(if (i < count) @as(?i32, values[i]) else null, result.get(@fromBackingInt(@intCast(i))));
     }
 }
 test "parametric function u16 domain sizes and reserved fields" {
-    var bytes = [_]u8{0} ** 41;
+    var bytes = @as([41]u8, @splat(0));
     bytes[0..4].* = "para".*;
     const counts = [_]usize{ 1, 3, 4, 5, 7 };
     for (0..65536) |kind| {

@@ -27,14 +27,14 @@ const names = [_][]const u8{
 };
 
 comptime {
-    if (names.len != @typeInfo(ModelKind).@"enum".fields.len) @compileError("text model name list and kind enum differ");
+    if (names.len != @typeInfo(ModelKind).@"enum".field_names.len) @compileError("text model name list and kind enum differ");
 }
 
 pub fn modelKind(tag: xml.tags.Tag, scope: *const xml.namespaces.State) !?ModelKind {
     const name = try scope.expandElement(tag.name);
     if (!std.mem.eql(u8, name.uri, document_xml.paragraph_uri)) return null;
     for (names, 0..) |candidate, i| {
-        if (name.local.equals(candidate, false)) return @enumFromInt(i);
+        if (name.local.equals(candidate, false)) return @fromBackingInt(@intCast(i));
     }
     return null;
 }

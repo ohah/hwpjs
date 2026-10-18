@@ -39,9 +39,9 @@ test "AES256 CBC NIST four blocks and invalid buffers" {
         if (length % 16 != 0) try std.testing.expectError(error.InvalidCiphertextLength, decrypt(key[0..32].*, iv[0..16].*, ciphertext[0..length], output[0..length]));
     }
     try std.testing.expectError(error.InvalidOutputLength, decrypt(key[0..32].*, iv[0..16].*, &ciphertext, output[0..32]));
-    try std.testing.expectEqualSlices(u8, &([_]u8{0xaa} ** 64), &output);
+    try std.testing.expectEqualSlices(u8, &(@as([64]u8, @splat(0xaa))), &output);
     try std.testing.expectError(error.OverlappingBuffers, decrypt(key[0..32].*, iv[0..16].*, &output, &output));
     try std.testing.expectError(error.OverlappingBuffers, decrypt(key[0..32].*, iv[0..16].*, output[0..32], output[16..48]));
     try std.testing.expectError(error.OverlappingBuffers, decrypt(key[0..32].*, iv[0..16].*, output[16..48], output[0..32]));
-    try std.testing.expectEqualSlices(u8, &([_]u8{0xaa} ** 64), &output);
+    try std.testing.expectEqualSlices(u8, &(@as([64]u8, @splat(0xaa))), &output);
 }

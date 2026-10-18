@@ -3,7 +3,7 @@ const t = std.testing;
 const curve = @import("shape_curve.zig");
 test "curve requires every segment and preserves signed points, unknown types and opaque tail" {
     for ([_]curve.Layout{ .specified_i16_axes, .observed_i32_points }) |layout| {
-        var b = [_]u8{0} ** 34;
+        var b = @as([34]u8, @splat(0));
         const start: usize = if (layout == .specified_i16_axes) 2 else 4;
         b[0] = 3;
         const xy = [_]i32{ std.math.minInt(i32), 19, -73, std.math.maxInt(i32), 0, -1 };
@@ -31,7 +31,7 @@ test "curve requires every segment and preserves signed points, unknown types an
 }
 test "empty and single-point curves have no segments; counted reads fail atomically" {
     for ([_]curve.Layout{ .specified_i16_axes, .observed_i32_points }) |layout| {
-        var b = [_]u8{0} ** 12;
+        var b = @as([12]u8, @splat(0));
         const width: usize = if (layout == .specified_i16_axes) 2 else 4;
         try t.expectEqual(0, (try curve.Curve.parse(b[0..width], layout)).segments.len);
         b[0] = 1;

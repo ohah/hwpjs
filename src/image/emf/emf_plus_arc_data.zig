@@ -22,7 +22,7 @@ pub fn read(reader: *binary.Reader, compressed: bool) !ArcData {
 
 test "EMF+ ArcData reads angles before the selected rectangle wire form" {
     const std = @import("std");
-    var bytes = [_]u8{0} ** 24;
+    var bytes = @as([24]u8, @splat(0));
     std.mem.writeInt(u32, bytes[0..4], @bitCast(@as(f32, -0.0)), .little);
     std.mem.writeInt(u32, bytes[4..8], @bitCast(std.math.nan(f32)), .little);
     for ([_]i16{ -32768, -1, 0, 32767 }, 0..) |value, index|

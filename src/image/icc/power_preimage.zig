@@ -13,7 +13,7 @@ pub fn solve(comptime precision: u16, curve: Curve, n: u128, d: u128) !Result {
 pub fn solveWide(comptime precision: u16, curve: Curve, n: u512, d: u512) !Wide.Result {
     return solveFor(512, precision, curve, n, d);
 }
-fn solveFor(comptime bits: u16, comptime precision: u16, curve: Curve, n: @import("std").meta.Int(.unsigned, bits), d: @import("std").meta.Int(.unsigned, bits)) !types.Of(bits).Result {
+fn solveFor(comptime bits: u16, comptime precision: u16, curve: Curve, n: @Int(.unsigned, bits), d: @Int(.unsigned, bits)) !types.Of(bits).Result {
     const inspect = if (bits == 128) locations.inspect else locations.inspectWide;
     const located = try inspect(precision, curve, n, d);
     if (located == .inactive) return .inactive;

@@ -20,7 +20,7 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 }
 
 test "EOF requires matching declared and physical size with SizeLast at the end" {
-    var bytes = [_]u8{0} ** 20;
+    var bytes = @as([20]u8, @splat(0));
     std.mem.writeInt(u32, bytes[12..16], 16, .little);
     std.mem.writeInt(u32, bytes[16..20], 20, .little);
     const value = try parse(fixture(.eof, &bytes));
@@ -42,7 +42,7 @@ test "EOF requires matching declared and physical size with SizeLast at the end"
 }
 
 test "EOF permits palette buffer bytes only before the final SizeLast" {
-    var bytes = [_]u8{0} ** 24;
+    var bytes = @as([24]u8, @splat(0));
     std.mem.writeInt(u32, bytes[12..16], 0xffffffff, .little);
     bytes[16..20].* = .{ 1, 2, 3, 4 };
     std.mem.writeInt(u32, bytes[20..24], 24, .little);

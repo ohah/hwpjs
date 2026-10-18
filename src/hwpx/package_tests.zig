@@ -254,7 +254,7 @@ test "HWPX unsigned descriptor CRC equal to signature is not reclassified" {
 }
 
 test "empty ZIP has no invalid slice but is not HWPX" {
-    const bytes = [_]u8{ 'P', 'K', 5, 6 } ++ [_]u8{0} ** 18;
+    const bytes = [_]u8{ 'P', 'K', 5, 6 } ++ @as([18]u8, @splat(0));
     var archive = try zip.open(std.testing.allocator, &bytes, .{});
     try std.testing.expectEqual(@as(usize, 0), archive.entries.len);
     archive.deinit();

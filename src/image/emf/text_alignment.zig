@@ -43,7 +43,7 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 }
 
 fn bytesFor(raw: u32) [12]u8 {
-    var bytes = [_]u8{0} ** 12;
+    var bytes = @as([12]u8, @splat(0));
     std.mem.writeInt(u32, bytes[8..12], raw, .little);
     return bytes;
 }
@@ -52,7 +52,7 @@ test "text alignment accepts every defined component combination" {
     const lows = [_]LowAxis{ .default, .end, .center };
     const highs = [_]HighAxis{ .default, .edge, .baseline };
     for (lows) |low| for (highs) |high| for ([_]bool{ false, true }) |update| for ([_]bool{ false, true }) |rtl| {
-        const raw = @intFromEnum(low) | @intFromEnum(high) |
+        const raw = @backingInt(low) | @backingInt(high) |
             @as(u32, @intFromBool(update)) | (@as(u32, @intFromBool(rtl)) << 8);
         const alignment = (try parse(fixture(.settextalign, &bytesFor(raw)))).?;
         try std.testing.expectEqual(raw, alignment.raw);
@@ -70,12 +70,12 @@ test "text alignment rejects undefined bits and mutually exclusive values" {
 }
 
 test "text alignment requires its prefix accepts trailing data and does not claim unrelated records" {
-    var short = [_]u8{0} ** 8;
+    var short = @as([8]u8, @splat(0));
     try std.testing.expectError(error.InvalidEmfTextAlignmentRecordSize, parse(fixture(.settextalign, &short)));
     var declared_twelve = fixture(.settextalign, &short);
     declared_twelve.size = 12;
     try std.testing.expectError(error.InvalidEmfTextAlignmentRecordSize, parse(declared_twelve));
-    var long = [_]u8{0} ** 16;
+    var long = @as([16]u8, @splat(0));
     try std.testing.expectEqual(@as(u32, 0), (try parse(fixture(.settextalign, &long))).?.raw);
     var declared_twelve_long = fixture(.settextalign, &long);
     declared_twelve_long.size = 12;

@@ -22,7 +22,7 @@ fn putI32(bytes: []u8, offset: usize, value: i32) void {
 
 test "EMF+ sized Path delegates the exact declared slice atomically" {
     const std = @import("std");
-    var bytes = [_]u8{0} ** 17;
+    var bytes = @as([17]u8, @splat(0));
     putI32(&bytes, 0, 12);
     putU32(&bytes, 4, 0xdbc01001);
     var reader: binary.Reader = .{ .bytes = &bytes };

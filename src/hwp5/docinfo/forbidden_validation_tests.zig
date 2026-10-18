@@ -11,7 +11,7 @@ test "forbidden policy keeps opaque separate and observed failures atomic" {
     try t.expectError(error.InvalidForbiddenCharLevel, r.observe(94, 2, &.{}, .observed_lists));
     try t.expectError(error.UnexpectedEnd, r.observe(94, 0, &.{}, .observed_lists));
     try t.expectEqualDeep(before, r);
-    var bytes = [_]u8{0} ** 19;
+    var bytes = @as([19]u8, @splat(0));
     bytes[8] = 1;
     bytes[16] = 32;
     bytes[18] = 255;

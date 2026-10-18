@@ -6,7 +6,7 @@ pub fn paragraph(left: model.Paragraph, right: model.Paragraph) bool {
 }
 
 pub fn document(left: model.Document, right: model.Document) bool {
-    inline for (std.meta.fields(model.Document)) |field| {
+    inline for (@import("../reflection.zig").fields(model.Document)) |field| {
         if (comptime std.mem.eql(u8, field.name, "font_resources")) {
             if (!equal([]@import("font_face_value.zig").Value, left.font_resources.entries.items, right.font_resources.entries.items)) return false;
         } else if (!equal(field.type, @field(left, field.name), @field(right, field.name))) return false;
@@ -18,7 +18,7 @@ fn equal(comptime T: type, left: T, right: T) bool {
     if (T == @import("shade_color.zig").Intent) return std.meta.eql(left, right);
     return switch (@typeInfo(T)) {
         .@"struct" => result: {
-            inline for (std.meta.fields(T)) |field| {
+            inline for (@import("../reflection.zig").fields(T)) |field| {
                 if (!equal(field.type, @field(left, field.name), @field(right, field.name))) break :result false;
             }
             break :result true;
@@ -35,7 +35,7 @@ fn equal(comptime T: type, left: T, right: T) bool {
             for (left, right) |value, other| if (!equal(info.child, value, other)) break :result false;
             break :result true;
         },
-        .float => @as(std.meta.Int(.unsigned, @bitSizeOf(T)), @bitCast(left)) == @as(std.meta.Int(.unsigned, @bitSizeOf(T)), @bitCast(right)),
+        .float => @as(@Int(.unsigned, @bitSizeOf(T)), @bitCast(left)) == @as(@Int(.unsigned, @bitSizeOf(T)), @bitCast(right)),
         .int, .bool, .@"enum" => left == right,
         else => @compileError("Unreviewed model field type in value equality"),
     };

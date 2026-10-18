@@ -13,9 +13,9 @@ const column_names = [_][]const u8{ "id", "type", "layout", "colCount", "sameSz"
 const line_names = [_][]const u8{ "type", "width", "color" };
 const size_names = [_][]const u8{ "width", "gap" };
 comptime {
-    if (column_names.len != @typeInfo(ColumnField).@"enum".fields.len or
-        line_names.len != @typeInfo(LineField).@"enum".fields.len or
-        size_names.len != @typeInfo(SizeField).@"enum".fields.len) @compileError("column field/name mismatch");
+    if (column_names.len != @typeInfo(ColumnField).@"enum".field_names.len or
+        line_names.len != @typeInfo(LineField).@"enum".field_names.len or
+        size_names.len != @typeInfo(SizeField).@"enum".field_names.len) @compileError("column field/name mismatch");
 }
 
 // Hancom OWPML enumdef.h g_ColDefTypeList and g_ColDefLayoutList.
@@ -67,7 +67,7 @@ pub const Column = struct {
     same_gap: ?u32 = null,
 
     pub fn get(self: Column, field: ColumnField) ?[]const u8 {
-        return self.raw[@intFromEnum(field)];
+        return self.raw[@backingInt(field)];
     }
 };
 
@@ -79,7 +79,7 @@ pub const Line = struct {
     color_canonical: ?bool = null,
 
     pub fn get(self: Line, field: LineField) ?[]const u8 {
-        return self.raw[@intFromEnum(field)];
+        return self.raw[@backingInt(field)];
     }
 };
 
@@ -90,7 +90,7 @@ pub const Size = struct {
     gap: ?u32 = null,
 
     pub fn get(self: Size, field: SizeField) ?[]const u8 {
-        return self.raw[@intFromEnum(field)];
+        return self.raw[@backingInt(field)];
     }
 };
 

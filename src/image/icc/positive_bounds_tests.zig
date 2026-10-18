@@ -12,7 +12,7 @@ fn expectWideInterval(comptime bits: u16, interval: anytype, exact_n: u4096, exa
     }
 }
 
-fn expectWideFractionEnclosure(comptime bits: u16, comptime width: u16, n: std.meta.Int(.unsigned, width), d: std.meta.Int(.unsigned, width)) !void {
+fn expectWideFractionEnclosure(comptime bits: u16, comptime width: u16, n: @Int(.unsigned, width), d: @Int(.unsigned, width)) !void {
     const B = @import("positive_bounds.zig").Arithmetic(bits);
     const interval = if (width == 512) try B.fractionWide(n, d) else try B.fractionExtended(n, d);
     try expectWideInterval(bits, interval, n, d);
@@ -21,7 +21,7 @@ fn expectWideFractionEnclosure(comptime bits: u16, comptime width: u16, n: std.m
 
 test "u512 and u1024 fraction bounds enclose extreme ratios at every precision" {
     inline for (.{ 512, 1024 }) |width| {
-        const U = std.meta.Int(.unsigned, width);
+        const U = @Int(.unsigned, width);
         const max = std.math.maxInt(U);
         const midpoint: U = @as(U, 1) << (width - 1);
         inline for (.{ 128, 256, 512, 1024 }) |bits| {

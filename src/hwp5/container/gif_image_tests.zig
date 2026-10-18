@@ -70,7 +70,7 @@ test "HWP GIF hints, unsupported versions and malformed input never fall back" {
     }
 }
 test "HWP GIF overflow is checked for every scalar and does not commit" {
-    inline for (std.meta.fields(gif.Report)) |field| {
+    inline for (@import("../../reflection.zig").fields(gif.Report)) |field| {
         var left: gif.Report = .{};
         var right: gif.Report = .{};
         @field(left, field.name) = std.math.maxInt(usize);

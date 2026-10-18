@@ -4,7 +4,7 @@ const header = @import("header.zig");
 const ids = @import("header_identifiers.zig");
 const sig = @import("signatures.zig");
 fn fixture(major: u8) !header.Header {
-    var b = [_]u8{0} ** 128;
+    var b = @as([128]u8, @splat(0));
     b[8] = major;
     b[12..16].* = "mntr".*;
     b[16..20].* = "RGB ".*;
@@ -54,7 +54,7 @@ test "ICC color signatures independent enumerated positives and byte mutations" 
 test "ICC class and platform exact-byte rejection and all class PCS rules" {
     const classes = [_][4]u8{ "scnr".*, "mntr".*, "prtr".*, "link".*, "spac".*, "abst".*, "nmcl".* };
     for (classes, 0..) |name, index| {
-        try t.expectEqual(index, @as(usize, @intFromEnum(try sig.profileClass(name))));
+        try t.expectEqual(index, @as(usize, @backingInt(try sig.profileClass(name))));
         var h = try fixture(4);
         h.profile_class = name;
         for ([_][4]u8{ "XYZ ".*, "Lab ".*, "RGB ".*, "GRAY".*, "FCLR".* }) |pcs| {

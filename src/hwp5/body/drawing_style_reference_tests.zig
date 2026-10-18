@@ -3,7 +3,7 @@ const t = std.testing;
 const Component = @import("shape_component.zig").Component;
 const validation = @import("drawing_style_validation.zig");
 test "style image references enforce shared one-based bounds in both tail layouts" {
-    var raw = [_]u8{0} ** 144;
+    var raw = @as([144]u8, @splat(0));
     std.mem.writeInt(u32, raw[113..117], 2, .little);
     var p = try Component.parse(&raw, .double_id);
     p.id = 0x24726563;

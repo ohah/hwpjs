@@ -108,7 +108,7 @@ pub fn parse(bytes: []const u8) !Descriptor {
 }
 
 test "PixelFormatDescriptor parses every field and preserves ignored values" {
-    var bytes = [_]u8{0} ** byte_size;
+    var bytes = @as([byte_size]u8, @splat(0));
     std.mem.writeInt(u16, bytes[0..2], byte_size, .little);
     std.mem.writeInt(u16, bytes[2..4], 1, .little);
     std.mem.writeInt(u32, bytes[4..8], 0xe000802c, .little);
@@ -154,7 +154,7 @@ test "PixelFormatDescriptor parses every field and preserves ignored values" {
 }
 
 test "PixelFormatDescriptor rejects structural and enumerated drift" {
-    var bytes = [_]u8{0} ** byte_size;
+    var bytes = @as([byte_size]u8, @splat(0));
     std.mem.writeInt(u16, bytes[0..2], byte_size, .little);
     std.mem.writeInt(u16, bytes[2..4], 1, .little);
 

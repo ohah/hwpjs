@@ -5,7 +5,7 @@ const commands = rle.commands;
 const raster = rle.raster;
 const f = @import("rle_fixture.zig");
 const Palette = @import("palette.zig").Palette;
-const full_palette = Palette{ .bytes = &([_]u8{0} ** 1024), .entry_bytes = 4 };
+const full_palette = Palette{ .bytes = &(@as([1024]u8, @splat(0))), .entry_bytes = 4 };
 const options: raster.Options = .{ .commands = .{ .padding = .require_zero }, .completion = .preserve_unwritten };
 
 test "BMP RLE encoded and absolute runs cover every legal count" {
@@ -19,7 +19,7 @@ test "BMP RLE encoded and absolute runs cover every legal count" {
             try t.expectEqual(@as(?commands.Command, null), try it.next());
         }
         for (3..256) |count| {
-            var raw = [_]u8{0} ** 258;
+            var raw = @as([258]u8, @splat(0));
             raw[1] = @intCast(count);
             const size = if (format == .rle8) count else (count + 1) / 2;
             for (0..size) |i| raw[2 + i] = @truncate(i * 19 + 7);

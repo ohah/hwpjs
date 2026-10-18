@@ -26,7 +26,7 @@ pub fn select(comptime precision: u16, curve: Curve, n: u128, d: u128) !Result {
 pub fn selectWide(comptime precision: u16, curve: Curve, n: u512, d: u512) !Wide.Result {
     return selectFor(512, precision, curve, n, d);
 }
-fn selectFor(comptime bits: u16, comptime precision: u16, curve: Curve, n: @import("std").meta.Int(.unsigned, bits), d: @import("std").meta.Int(.unsigned, bits)) !Types(bits).Result {
+fn selectFor(comptime bits: u16, comptime precision: u16, curve: Curve, n: @Int(.unsigned, bits), d: @Int(.unsigned, bits)) !Types(bits).Result {
     const solve = if (bits == 128) @import("parametric_preimage_bounds.zig").solve else @import("parametric_preimage_bounds.zig").solveWide;
     try (@import("fraction.zig").Normalized(bits){ .numerator = n, .denominator = d }).validate();
     if (!try @import("parametric_inverse_gate.zig").validate(precision, curve)) return .undecided;

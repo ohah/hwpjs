@@ -26,14 +26,14 @@ test "video wire fields preserve IDs raw UTF16 and explicitly bounded extra" {
     const empty = try v.Video.parse(web[0..6], .specified_remainder);
     try t.expectEqual(0, empty.data.web.tag_utf16.len);
     try t.expectEqual(0, empty.data.web.thumbnail_id);
-    var unknown = [_]u8{255} ** 4;
+    var unknown = @as([4]u8, @splat(255));
     for ([_]i32{ -1, 2, std.math.minInt(i32), std.math.maxInt(i32) }) |kind| {
         std.mem.writeInt(i32, &unknown, kind, .little);
         try t.expectError(error.UnsupportedVideoType, v.Video.parse(&unknown, .specified_remainder));
     }
 }
 test "explicit UTF16 unit count bounds preserve nonzero cursor" {
-    const b = [_]u8{255} ** 7;
+    const b = @as([7]u8, @splat(255));
     var r: @import("../../binary/reader.zig").Reader = .{ .bytes = &b, .offset = 1 };
     for ([_]usize{ 4, std.math.maxInt(usize) }) |count| {
         try t.expectError(error.UnexpectedEnd, @import("../utf16_string.zig").readUnits(&r, count));

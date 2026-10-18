@@ -31,7 +31,7 @@ fn allocationFailures(allocator: std.mem.Allocator) !void {
     const nodes = [_]writer.Node{
         .{ .name = "Root Entry", .kind = 5 },
         .{ .name = "Mini", .parent = 0, .content = "abc" },
-        .{ .name = "Regular", .parent = 0, .content = &([_]u8{7} ** 4097) },
+        .{ .name = "Regular", .parent = 0, .content = &(@as([4097]u8, @splat(7))) },
     };
     const bytes = try writer.write(allocator, &nodes, .{});
     defer allocator.free(bytes);
@@ -44,7 +44,9 @@ fn allocationFailures(allocator: std.mem.Allocator) !void {
     try std.testing.expectEqualSlices(u8, bytes, rebuilt);
 }
 test "writer and strict reader clean up every allocation failure" {
-    try std.testing.checkAllAllocationFailures(a, allocationFailures, .{});
+    // The 0.17 default SafeAllocator can grow arenas in place differently
+    // between replays. Keep the full sweep on our safety/leak-checked backing.
+    try @import("../testing/allocation_failures.zig").check(allocationFailures, .{});
 }
 
 test "CFB simple uppercase ordering does not perform full Unicode expansions" {

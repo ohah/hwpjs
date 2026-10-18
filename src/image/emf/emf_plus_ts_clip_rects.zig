@@ -124,7 +124,7 @@ test "EMF+ SetTSClip coordinate decoders cover every signed wire value" {
 test "EMF+ SetTSClip validates coordinate markers sizes and iterator atomicity" {
     try std.testing.expect((try parse(&.{}, 0, false)).iterator().remaining == 0);
     try std.testing.expectError(error.InvalidEmfPlusSetTSClipRectsSize, parse(&.{ 0x80, 0x80, 0x80 }, 1, true));
-    try std.testing.expectError(error.InvalidEmfPlusSetTSClipRectsSize, parse(&([_]u8{0} ** 7), 1, false));
+    try std.testing.expectError(error.InvalidEmfPlusSetTSClipRectsSize, parse(&(@as([7]u8, @splat(0))), 1, false));
     try std.testing.expectError(error.InvalidEmfPlusSetTSClipCoordinate, parse(&.{ 0, 0x80, 0x80, 0x80 }, 1, true));
     try std.testing.expectError(error.InvalidEmfPlusSetTSClipCoordinate, parse(&.{ 0x80, 0, 0, 0, 0, 0, 0, 0 }, 1, false));
 
@@ -135,7 +135,7 @@ test "EMF+ SetTSClip validates coordinate markers sizes and iterator atomicity" 
     try std.testing.expectEqual(@as(usize, 0), iterator.reader.offset);
     try std.testing.expectEqual(@as(u16, 1), iterator.remaining);
 
-    const wide_bytes = [_]u8{0} ** 8;
+    const wide_bytes = @as([8]u8, @splat(0));
     var wide_iterator = (try parse(&wide_bytes, 1, false)).iterator();
     wide_iterator.reader.bytes = wide_bytes[0..7];
     try std.testing.expectError(error.UnexpectedEnd, wide_iterator.next());

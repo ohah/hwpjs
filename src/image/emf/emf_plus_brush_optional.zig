@@ -65,7 +65,7 @@ pub fn validatePathFlags(flags: u32) !void {
 
 test "EMF+ linear optional fields follow transform vertical horizontal wire order" {
     const std = @import("std");
-    var bytes = [_]u8{0} ** 64;
+    var bytes = @as([64]u8, @splat(0));
     for (0..6) |index| std.mem.writeInt(u32, bytes[index * 4 ..][0..4], @bitCast(@as(f32, @floatFromInt(index + 1))), .little);
     std.mem.writeInt(u32, bytes[24..28], 2, .little);
     std.mem.writeInt(u32, bytes[32..36], @bitCast(@as(f32, 1)), .little);
@@ -83,7 +83,7 @@ test "EMF+ linear optional fields follow transform vertical horizontal wire orde
 
 test "EMF+ path optional fields follow transform blend focus wire order" {
     const std = @import("std");
-    var bytes = [_]u8{0} ** 48;
+    var bytes = @as([48]u8, @splat(0));
     for (0..6) |index| std.mem.writeInt(u32, bytes[index * 4 ..][0..4], @bitCast(@as(f32, @floatFromInt(index + 1))), .little);
     std.mem.writeInt(u32, bytes[24..28], 1, .little);
     std.mem.writeInt(u32, bytes[28..32], @bitCast(@as(f32, 0.5)), .little);

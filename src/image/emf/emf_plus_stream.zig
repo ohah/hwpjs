@@ -75,7 +75,7 @@ pub const Report = struct {
     private_data_bytes: usize = 0,
     objects: object_record.Report = .{},
     serializable_objects: usize = 0,
-    image_effects: [image_effect_guid.effect_count]usize = .{0} ** image_effect_guid.effect_count,
+    image_effects: [image_effect_guid.effect_count]usize = @splat(0),
     clear_records: usize = 0,
     fill_rects_records: usize = 0,
     fill_polygon_records: usize = 0,
@@ -201,7 +201,7 @@ pub const State = struct {
             if (value.kind == .serializable_object) {
                 const parsed = try serializable_object.parse(value);
                 pending.report.serializable_objects = std.math.add(usize, pending.report.serializable_objects, 1) catch return error.LimitExceeded;
-                const effect_index: usize = @intFromEnum(parsed.kind);
+                const effect_index: usize = @backingInt(parsed.kind);
                 pending.report.image_effects[effect_index] = std.math.add(usize, pending.report.image_effects[effect_index], 1) catch return error.LimitExceeded;
             }
             if (value.kind == .clear) {
@@ -729,10 +729,10 @@ fn writeTerminalServerGraphics(bytes: []u8, alternate: bool, with_palette: bool)
 }
 
 test "EMF+ stream spans comments while every record remains locally complete" {
-    var first = [_]u8{0} ** 40;
+    var first = @as([40]u8, @splat(0));
     writeHeader(first[0..28]);
     writeEmptyRecord(first[28..40], 0x4004);
-    var last = [_]u8{0} ** 12;
+    var last = @as([12]u8, @splat(0));
     writeEmptyRecord(&last, 0x4002);
 
     var state: State = .{};
@@ -756,11 +756,11 @@ test "EMF+ stream spans comments while every record remains locally complete" {
 }
 
 test "EMF+ stream enforces initial and terminal records atomically" {
-    var header = [_]u8{0} ** 28;
+    var header = @as([28]u8, @splat(0));
     writeHeader(&header);
-    var eof = [_]u8{0} ** 12;
+    var eof = @as([12]u8, @splat(0));
     writeEmptyRecord(&eof, 0x4002);
-    var comment = [_]u8{0} ** 12;
+    var comment = @as([12]u8, @splat(0));
     writeEmptyRecord(&comment, 0x4003);
 
     var state: State = .{};
@@ -781,7 +781,7 @@ test "EMF+ stream enforces initial and terminal records atomically" {
 }
 
 test "EMF+ EOF must be the final record in its comment" {
-    var bytes = [_]u8{0} ** 52;
+    var bytes = @as([52]u8, @splat(0));
     writeHeader(bytes[0..28]);
     writeEmptyRecord(bytes[28..40], 0x4002);
     writeEmptyRecord(bytes[40..52], 0x4003);
@@ -791,31 +791,31 @@ test "EMF+ EOF must be the final record in its comment" {
 }
 
 test "EMF+ fixed control records ignore flags but require exact empty payloads" {
-    var header = [_]u8{0} ** 28;
+    var header = @as([28]u8, @splat(0));
     writeHeader(&header);
     var state: State = .{};
     try std.testing.expect(try state.consume(testComment(&header), 2));
 
-    var get_dc = [_]u8{0} ** 12;
+    var get_dc = @as([12]u8, @splat(0));
     writeEmptyRecord(&get_dc, 0x4004);
     std.mem.writeInt(u16, get_dc[2..4], 0xffff, .little);
     try std.testing.expect(try state.consume(testComment(&get_dc), 3));
 
-    var bad_get_dc = [_]u8{0} ** 16;
+    var bad_get_dc = @as([16]u8, @splat(0));
     writeEmptyRecord(bad_get_dc[0..12], 0x4004);
     std.mem.writeInt(u32, bad_get_dc[4..8], 16, .little);
     std.mem.writeInt(u32, bad_get_dc[8..12], 4, .little);
     try std.testing.expectError(error.InvalidEmfPlusGetDcSize, state.consume(testComment(&bad_get_dc), 4));
     try std.testing.expectEqual(@as(usize, 2), state.report.records);
 
-    var eof = [_]u8{0} ** 12;
+    var eof = @as([12]u8, @splat(0));
     writeEmptyRecord(&eof, 0x4002);
     std.mem.writeInt(u16, eof[2..4], 0xffff, .little);
     try std.testing.expect(try state.consume(testComment(&eof), 4));
 
     var second: State = .{};
     try std.testing.expect(try second.consume(testComment(&header), 2));
-    var bad_eof = [_]u8{0} ** 16;
+    var bad_eof = @as([16]u8, @splat(0));
     writeEmptyRecord(bad_eof[0..12], 0x4002);
     std.mem.writeInt(u32, bad_eof[4..8], 16, .little);
     std.mem.writeInt(u32, bad_eof[8..12], 4, .little);
@@ -824,11 +824,11 @@ test "EMF+ fixed control records ignore flags but require exact empty payloads" 
 }
 
 test "EMF+ GetDC activates classic EMF observation until the next EMF+ record" {
-    var header = [_]u8{0} ** 28;
+    var header = @as([28]u8, @splat(0));
     writeHeader(&header);
-    var get_dc = [_]u8{0} ** 12;
+    var get_dc = @as([12]u8, @splat(0));
     writeEmptyRecord(&get_dc, 0x4004);
-    var eof = [_]u8{0} ** 12;
+    var eof = @as([12]u8, @splat(0));
     writeEmptyRecord(&eof, 0x4002);
 
     var state: State = .{};
@@ -844,7 +844,7 @@ test "EMF+ GetDC activates classic EMF observation until the next EMF+ record" {
     try std.testing.expect(!(try state.observeEmfRecord()));
     try state.finish();
 
-    var same_comment = [_]u8{0} ** 52;
+    var same_comment = @as([52]u8, @splat(0));
     writeHeader(same_comment[0..28]);
     writeEmptyRecord(same_comment[28..40], 0x4004);
     writeEmptyRecord(same_comment[40..52], 0x4003);
@@ -868,14 +868,14 @@ test "EMF+ GetDC activates classic EMF observation until the next EMF+ record" {
 }
 
 test "EMF+ stream counts private comments without interpreting their data" {
-    var bytes = [_]u8{0} ** 48;
+    var bytes = @as([48]u8, @splat(0));
     writeHeader(bytes[0..28]);
     std.mem.writeInt(u16, bytes[28..30], 0x4003, .little);
     std.mem.writeInt(u16, bytes[30..32], 0xffff, .little);
     std.mem.writeInt(u32, bytes[32..36], 20, .little);
     std.mem.writeInt(u32, bytes[36..40], 8, .little);
     bytes[40..48].* = .{ 0, 1, 2, 3, 0xfc, 0xfd, 0xfe, 0xff };
-    var eof = [_]u8{0} ** 12;
+    var eof = @as([12]u8, @splat(0));
     writeEmptyRecord(&eof, 0x4002);
 
     var state: State = .{};
@@ -886,10 +886,10 @@ test "EMF+ stream counts private comments without interpreting their data" {
 }
 
 test "EMF+ stream rejects all reserved multi-format record types atomically" {
-    var header = [_]u8{0} ** 28;
+    var header = @as([28]u8, @splat(0));
     writeHeader(&header);
     for ([_]u16{ 0x4005, 0x4006, 0x4007 }) |kind| {
-        var reserved = [_]u8{0} ** 12;
+        var reserved = @as([12]u8, @splat(0));
         writeEmptyRecord(&reserved, kind);
         var state: State = .{};
         try std.testing.expect(try state.consume(testComment(&header), 2));
@@ -901,7 +901,7 @@ test "EMF+ stream rejects all reserved multi-format record types atomically" {
 }
 
 test "EMF+ private comment aggregate overflow leaves the entire state unchanged" {
-    var bytes = [_]u8{0} ** 44;
+    var bytes = @as([44]u8, @splat(0));
     writeHeader(bytes[0..28]);
     std.mem.writeInt(u16, bytes[28..30], 0x4003, .little);
     std.mem.writeInt(u32, bytes[32..36], 16, .little);
@@ -924,7 +924,7 @@ test "EMF+ private comment aggregate overflow leaves the entire state unchanged"
 }
 
 test "EMF+ multipart object crosses comments and ignores intervening non-object records" {
-    var first = [_]u8{0} ** 48;
+    var first = @as([48]u8, @splat(0));
     writeHeader(first[0..28]);
     std.mem.writeInt(u16, first[28..30], 0x4008, .little);
     std.mem.writeInt(u16, first[30..32], 0x8507, .little);
@@ -933,7 +933,7 @@ test "EMF+ multipart object crosses comments and ignores intervening non-object 
     std.mem.writeInt(u32, first[40..44], 8, .little);
     first[44..48].* = .{ 1, 2, 3, 4 };
 
-    var second = [_]u8{0} ** 44;
+    var second = @as([44]u8, @splat(0));
     writeEmptyRecord(second[0..12], 0x4004);
     std.mem.writeInt(u16, second[12..14], 0x4008, .little);
     std.mem.writeInt(u16, second[14..16], 0x0507, .little);
@@ -955,7 +955,7 @@ test "EMF+ multipart object crosses comments and ignores intervening non-object 
 }
 
 test "EMF+ EOF cannot complete a pending multipart object" {
-    var bytes = [_]u8{0} ** 60;
+    var bytes = @as([60]u8, @splat(0));
     writeHeader(bytes[0..28]);
     std.mem.writeInt(u16, bytes[28..30], 0x4008, .little);
     std.mem.writeInt(u16, bytes[30..32], 0x8100, .little);
@@ -973,7 +973,7 @@ test "EMF+ EOF cannot complete a pending multipart object" {
 }
 
 test "EMF+ stream validates and counts serializable image effects" {
-    var bytes = [_]u8{0} ** 80;
+    var bytes = @as([80]u8, @splat(0));
     writeHeader(bytes[0..28]);
     std.mem.writeInt(u16, bytes[28..30], 0x4038, .little);
     std.mem.writeInt(u16, bytes[30..32], 0xffff, .little);
@@ -989,13 +989,13 @@ test "EMF+ stream validates and counts serializable image effects" {
     try std.testing.expect(try state.consume(testComment(&bytes), 2));
     try state.finish();
     try std.testing.expectEqual(@as(usize, 1), state.report.serializable_objects);
-    try std.testing.expectEqual(@as(usize, 1), state.report.image_effects[@intFromEnum(image_effect_guid.Kind.tint)]);
+    try std.testing.expectEqual(@as(usize, 1), state.report.image_effects[@backingInt(image_effect_guid.Kind.tint)]);
     for (state.report.image_effects, 0..) |count, i|
-        if (i != @intFromEnum(image_effect_guid.Kind.tint)) try std.testing.expectEqual(@as(usize, 0), count);
+        if (i != @backingInt(image_effect_guid.Kind.tint)) try std.testing.expectEqual(@as(usize, 0), count);
 }
 
 test "EMF+ serializable aggregate overflow leaves the whole comment unchanged" {
-    var bytes = [_]u8{0} ** 68;
+    var bytes = @as([68]u8, @splat(0));
     writeHeader(bytes[0..28]);
     std.mem.writeInt(u16, bytes[28..30], 0x4038, .little);
     std.mem.writeInt(u32, bytes[32..36], 40, .little);
@@ -1010,14 +1010,14 @@ test "EMF+ serializable aggregate overflow leaves the whole comment unchanged" {
     try std.testing.expectEqualDeep(before_count, count_overflow);
 
     var effect_overflow: State = .{};
-    effect_overflow.report.image_effects[@intFromEnum(image_effect_guid.Kind.tint)] = std.math.maxInt(usize);
+    effect_overflow.report.image_effects[@backingInt(image_effect_guid.Kind.tint)] = std.math.maxInt(usize);
     const before_effect = effect_overflow;
     try std.testing.expectError(error.LimitExceeded, effect_overflow.consume(testComment(&bytes), 2));
     try std.testing.expectEqualDeep(before_effect, effect_overflow);
 }
 
 test "EMF+ stream validates and counts Clear records atomically" {
-    var bytes = [_]u8{0} ** 56;
+    var bytes = @as([56]u8, @splat(0));
     writeHeader(bytes[0..28]);
     std.mem.writeInt(u16, bytes[28..30], 0x4009, .little);
     std.mem.writeInt(u16, bytes[30..32], 0xffff, .little);
@@ -1047,7 +1047,7 @@ test "EMF+ stream validates and counts Clear records atomically" {
 }
 
 test "EMF+ stream resolves DrawArc Pen references and remains atomic" {
-    var bytes = [_]u8{0} ** 88;
+    var bytes = @as([88]u8, @splat(0));
     writeHeader(bytes[0..28]);
     writeEmptyRecord(bytes[28..40], 0x4008);
     std.mem.writeInt(u16, bytes[30..32], 0x0205, .little);
@@ -1091,7 +1091,7 @@ test "EMF+ stream resolves DrawArc Pen references and remains atomic" {
 }
 
 test "EMF+ stream resolves DrawPie Pen references and remains atomic" {
-    var bytes = [_]u8{0} ** 88;
+    var bytes = @as([88]u8, @splat(0));
     writeHeader(bytes[0..28]);
     writeEmptyRecord(bytes[28..40], 0x4008);
     std.mem.writeInt(u16, bytes[30..32], 0x0205, .little);
@@ -1135,7 +1135,7 @@ test "EMF+ stream resolves DrawPie Pen references and remains atomic" {
 }
 
 test "EMF+ stream resolves DrawRects Pen references and remains atomic" {
-    var bytes = [_]u8{0} ** 76;
+    var bytes = @as([76]u8, @splat(0));
     writeHeader(bytes[0..28]);
     writeEmptyRecord(bytes[28..40], 0x4008);
     std.mem.writeInt(u16, bytes[30..32], 0x0205, .little);
@@ -1171,7 +1171,7 @@ test "EMF+ stream resolves DrawRects Pen references and remains atomic" {
 }
 
 test "EMF+ stream resolves DrawString Font Brush and optional StringFormat references atomically" {
-    var bytes = [_]u8{0} ** 120;
+    var bytes = @as([120]u8, @splat(0));
     writeHeader(bytes[0..28]);
     writeEmptyRecord(bytes[28..40], 0x4008);
     std.mem.writeInt(u16, bytes[30..32], 0x0605, .little);
@@ -1249,7 +1249,7 @@ test "EMF+ stream resolves DrawString Font Brush and optional StringFormat refer
 }
 
 test "EMF+ tracked property state preserves all fields snapshots containers and rollback" {
-    var header = [_]u8{0} ** 28;
+    var header = @as([28]u8, @splat(0));
     writeHeader(&header);
     var state: State = .{};
     var stack = graphics_state_stack.Stack.init(std.testing.allocator);
@@ -1257,7 +1257,7 @@ test "EMF+ tracked property state preserves all fields snapshots containers and 
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&header), 2));
     try std.testing.expectEqualDeep(property_state.State{}, state.report.properties.?);
 
-    var initial = [_]u8{0} ** 104;
+    var initial = @as([104]u8, @splat(0));
     writePropertyRecords(&initial, false);
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&initial), 3));
     const expected: property_state.State = .{
@@ -1273,32 +1273,32 @@ test "EMF+ tracked property state preserves all fields snapshots containers and 
     try std.testing.expectEqualDeep(expected, stack.current.properties);
     try std.testing.expectEqualDeep(expected, state.report.properties.?);
 
-    var save = [_]u8{0} ** 16;
+    var save = @as([16]u8, @splat(0));
     writeStackIndexRecord(&save, 0x4025, 0, 30);
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&save), 4));
-    var alternate = [_]u8{0} ** 104;
+    var alternate = @as([104]u8, @splat(0));
     writePropertyRecords(&alternate, true);
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&alternate), 5));
     try std.testing.expectEqual(@as(i32, 3), stack.current.properties.rendering_origin.?.x);
     try std.testing.expectEqual(@as(u12, 1000), stack.current.properties.text_contrast.?);
     try std.testing.expectEqual(@import("emf_plus_compositing_quality.zig").CompositingQuality.high_speed, stack.current.properties.compositing_quality.?.defined);
 
-    var restore = [_]u8{0} ** 16;
+    var restore = @as([16]u8, @splat(0));
     writeStackIndexRecord(&restore, 0x4026, 0, 30);
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&restore), 6));
     try std.testing.expectEqualDeep(expected, stack.current.properties);
 
-    var begin = [_]u8{0} ** 16;
+    var begin = @as([16]u8, @splat(0));
     writeStackIndexRecord(&begin, 0x4028, 0, 31);
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&begin), 7));
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&alternate), 8));
-    var end = [_]u8{0} ** 16;
+    var end = @as([16]u8, @splat(0));
     writeStackIndexRecord(&end, 0x4029, 0, 31);
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&end), 9));
     try std.testing.expectEqualDeep(expected, stack.current.properties);
     try std.testing.expectEqualDeep(expected, state.report.properties.?);
 
-    var malformed = [_]u8{0} ** 23;
+    var malformed = @as([23]u8, @splat(0));
     @memcpy(malformed[0..20], alternate[0..20]);
     malformed[20] = 0xaa;
     malformed[21] = 0xbb;
@@ -1311,7 +1311,7 @@ test "EMF+ tracked property state preserves all fields snapshots containers and 
 }
 
 test "EMF+ stream validates and counts SetRenderingOrigin records atomically" {
-    var bytes = [_]u8{0} ** 60;
+    var bytes = @as([60]u8, @splat(0));
     writeHeader(bytes[0..28]);
     std.mem.writeInt(u16, bytes[28..30], 0x401d, .little);
     std.mem.writeInt(u16, bytes[30..32], 0xffff, .little);
@@ -1341,7 +1341,7 @@ test "EMF+ stream validates and counts SetRenderingOrigin records atomically" {
 }
 
 test "EMF+ stream validates and counts SetAntiAliasMode records atomically" {
-    var bytes = [_]u8{0} ** 52;
+    var bytes = @as([52]u8, @splat(0));
     writeHeader(bytes[0..28]);
     writeEmptyRecord(bytes[28..40], 0x401e);
     std.mem.writeInt(u16, bytes[30..32], 0xff0b, .little);
@@ -1366,7 +1366,7 @@ test "EMF+ stream validates and counts SetAntiAliasMode records atomically" {
 }
 
 test "EMF+ stream validates and counts SetTextRenderingHint records atomically" {
-    var bytes = [_]u8{0} ** 52;
+    var bytes = @as([52]u8, @splat(0));
     writeHeader(bytes[0..28]);
     writeEmptyRecord(bytes[28..40], 0x401f);
     std.mem.writeInt(u16, bytes[30..32], 0xff05, .little);
@@ -1391,7 +1391,7 @@ test "EMF+ stream validates and counts SetTextRenderingHint records atomically" 
 }
 
 test "EMF+ stream validates and counts SetTextContrast records atomically" {
-    var bytes = [_]u8{0} ** 52;
+    var bytes = @as([52]u8, @splat(0));
     writeHeader(bytes[0..28]);
     writeEmptyRecord(bytes[28..40], 0x4020);
     std.mem.writeInt(u16, bytes[30..32], 0xf3e8, .little);
@@ -1416,7 +1416,7 @@ test "EMF+ stream validates and counts SetTextContrast records atomically" {
 }
 
 test "EMF+ stream validates and counts SetInterpolationMode records atomically" {
-    var bytes = [_]u8{0} ** 52;
+    var bytes = @as([52]u8, @splat(0));
     writeHeader(bytes[0..28]);
     writeEmptyRecord(bytes[28..40], 0x4021);
     std.mem.writeInt(u16, bytes[30..32], 0xff07, .little);
@@ -1441,7 +1441,7 @@ test "EMF+ stream validates and counts SetInterpolationMode records atomically" 
 }
 
 test "EMF+ stream validates and counts SetPixelOffsetMode records atomically" {
-    var bytes = [_]u8{0} ** 52;
+    var bytes = @as([52]u8, @splat(0));
     writeHeader(bytes[0..28]);
     writeEmptyRecord(bytes[28..40], 0x4022);
     std.mem.writeInt(u16, bytes[30..32], 0xff03, .little);
@@ -1466,7 +1466,7 @@ test "EMF+ stream validates and counts SetPixelOffsetMode records atomically" {
 }
 
 test "EMF+ stream validates and counts SetCompositingMode records atomically" {
-    var bytes = [_]u8{0} ** 52;
+    var bytes = @as([52]u8, @splat(0));
     writeHeader(bytes[0..28]);
     writeEmptyRecord(bytes[28..40], 0x4023);
     std.mem.writeInt(u16, bytes[30..32], 0xff01, .little);
@@ -1491,7 +1491,7 @@ test "EMF+ stream validates and counts SetCompositingMode records atomically" {
 }
 
 test "EMF+ stream validates and counts SetCompositingQuality records atomically" {
-    var bytes = [_]u8{0} ** 52;
+    var bytes = @as([52]u8, @splat(0));
     writeHeader(bytes[0..28]);
     writeEmptyRecord(bytes[28..40], 0x4024);
     std.mem.writeInt(u16, bytes[30..32], 0xff02, .little);
@@ -1511,7 +1511,7 @@ test "EMF+ stream validates and counts SetCompositingQuality records atomically"
     try std.testing.expectEqual(@as(usize, 1), fallback_state.report.set_compositing_quality_records);
     try std.testing.expectEqual(@as(usize, 1), fallback_state.report.set_compositing_quality_windows_fallback_records);
 
-    var malformed = [_]u8{0} ** 44;
+    var malformed = @as([44]u8, @splat(0));
     writeHeader(malformed[0..28]);
     writeEmptyRecord(malformed[28..40], 0x4024);
     std.mem.writeInt(u32, malformed[32..36], 16, .little);
@@ -1534,7 +1534,7 @@ test "EMF+ stream validates and counts SetCompositingQuality records atomically"
 }
 
 test "EMF+ stream validates and counts Save records atomically" {
-    var bytes = [_]u8{0} ** 56;
+    var bytes = @as([56]u8, @splat(0));
     writeHeader(bytes[0..28]);
     std.mem.writeInt(u16, bytes[28..30], 0x4025, .little);
     std.mem.writeInt(u16, bytes[30..32], 0xffff, .little);
@@ -1563,7 +1563,7 @@ test "EMF+ stream validates and counts Save records atomically" {
 }
 
 test "EMF+ Save/Restore tracked stream restores a target and all newer saves" {
-    var bytes = [_]u8{0} ** 88;
+    var bytes = @as([88]u8, @splat(0));
     writeHeader(bytes[0..28]);
     writeStackIndexRecord(bytes[28..44], 0x4025, 0xffff, 10);
     writeStackIndexRecord(bytes[44..60], 0x4025, 0xabcd, 20);
@@ -1591,7 +1591,7 @@ test "EMF+ Save/Restore tracked stream restores a target and all newer saves" {
 }
 
 test "EMF+ BeginContainer is parsed counted and removed by an older Restore" {
-    var closed = [_]u8{0} ** 120;
+    var closed = @as([120]u8, @splat(0));
     writeHeader(closed[0..28]);
     writeStackIndexRecord(closed[28..44], 0x4025, 0, 10);
     writeBeginContainer(closed[44..92], 2, 20);
@@ -1620,7 +1620,7 @@ test "EMF+ BeginContainer is parsed counted and removed by an older Restore" {
     try std.testing.expectEqual(@as(usize, 0), discouraged_state.report.begin_container_transform_records);
     try std.testing.expectEqual(@as(usize, 1), discouraged_state.report.begin_container_unknown_transform_records);
 
-    var unclosed = [_]u8{0} ** 88;
+    var unclosed = @as([88]u8, @splat(0));
     writeHeader(unclosed[0..28]);
     writeBeginContainer(unclosed[28..76], 2, 20);
     writeEmptyRecord(unclosed[76..88], 0x4002);
@@ -1690,7 +1690,7 @@ test "EMF+ BeginContainer is parsed counted and removed by an older Restore" {
 }
 
 test "EMF+ BeginContainer carries header DPI across comments and marks discouraged transforms unknown" {
-    var header = [_]u8{0} ** 28;
+    var header = @as([28]u8, @splat(0));
     writeHeader(&header);
     std.mem.writeInt(u32, header[20..24], 144, .little);
     std.mem.writeInt(u32, header[24..28], 72, .little);
@@ -1699,7 +1699,7 @@ test "EMF+ BeginContainer carries header DPI across comments and marks discourag
     defer stack.deinit();
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&header), 2));
 
-    var initial = [_]u8{0} ** 36;
+    var initial = @as([36]u8, @splat(0));
     std.mem.writeInt(u16, initial[0..2], 0x402a, .little);
     std.mem.writeInt(u32, initial[4..8], 36, .little);
     std.mem.writeInt(u32, initial[8..12], 24, .little);
@@ -1707,7 +1707,7 @@ test "EMF+ BeginContainer carries header DPI across comments and marks discourag
         std.mem.writeInt(u32, initial[12 + index * 4 ..][0..4], @bitCast(item), .little);
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&initial), 3));
 
-    var begin = [_]u8{0} ** 48;
+    var begin = @as([48]u8, @splat(0));
     writeBeginContainer(&begin, 3, 1);
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&begin), 4));
     try std.testing.expectEqualDeep(transform_matrix.TransformMatrix{
@@ -1720,14 +1720,14 @@ test "EMF+ BeginContainer carries header DPI across comments and marks discourag
     }, stack.current.world_transform.?);
     try std.testing.expectEqual(@as(usize, 1), state.report.begin_container_transform_records);
 
-    var discouraged = [_]u8{0} ** 48;
+    var discouraged = @as([48]u8, @splat(0));
     writeBeginContainer(&discouraged, 1, 2);
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&discouraged), 5));
     try std.testing.expect(stack.current.world_transform == null);
     try std.testing.expect(state.report.world_transform == null);
     try std.testing.expectEqual(@as(usize, 1), state.report.begin_container_unknown_transform_records);
 
-    var set = [_]u8{0} ** 36;
+    var set = @as([36]u8, @splat(0));
     std.mem.writeInt(u16, set[0..2], 0x402a, .little);
     std.mem.writeInt(u32, set[4..8], 36, .little);
     std.mem.writeInt(u32, set[8..12], 24, .little);
@@ -1743,7 +1743,7 @@ test "EMF+ BeginContainer carries header DPI across comments and marks discourag
         .dy = 7,
     }, stack.current.world_transform.?);
 
-    var end_inner = [_]u8{0} ** 16;
+    var end_inner = @as([16]u8, @splat(0));
     writeStackIndexRecord(&end_inner, 0x4029, 0, 2);
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&end_inner), 7));
     try std.testing.expectEqualDeep(transform_matrix.TransformMatrix{
@@ -1755,7 +1755,7 @@ test "EMF+ BeginContainer carries header DPI across comments and marks discourag
         .dy = 16,
     }, stack.current.world_transform.?);
 
-    var end_outer = [_]u8{0} ** 16;
+    var end_outer = @as([16]u8, @splat(0));
     writeStackIndexRecord(&end_outer, 0x4029, 0, 1);
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&end_outer), 8));
     try std.testing.expectEqualDeep(transform_matrix.TransformMatrix.translation(10, 20), stack.current.world_transform.?);
@@ -1763,7 +1763,7 @@ test "EMF+ BeginContainer carries header DPI across comments and marks discourag
 }
 
 test "EMF+ BeginContainerNoParams is parsed counted and shares the Container stack" {
-    var bytes = [_]u8{0} ** 72;
+    var bytes = @as([72]u8, @splat(0));
     writeHeader(bytes[0..28]);
     writeStackIndexRecord(bytes[28..44], 0x4025, 0, 10);
     writeStackIndexRecord(bytes[44..60], 0x4028, 0xffff, 0x01020304);
@@ -1780,7 +1780,7 @@ test "EMF+ BeginContainerNoParams is parsed counted and shares the Container sta
     try std.testing.expectEqual(@as(u32, 0x01020304), unclosed_stack.entries.items[1].stack_index);
     try std.testing.expectError(error.UnclosedEmfPlusGraphicsStateStack, unclosed_state.finishTracked(unclosed_stack));
 
-    var closed = [_]u8{0} ** 88;
+    var closed = @as([88]u8, @splat(0));
     @memcpy(closed[0..60], bytes[0..60]);
     writeStackIndexRecord(closed[60..76], 0x4026, 0, 10);
     writeEmptyRecord(closed[76..88], 0x4002);
@@ -1813,28 +1813,28 @@ test "EMF+ BeginContainerNoParams is parsed counted and shares the Container sta
 }
 
 test "EMF+ Save/Restore tracked stream rolls back stack and report on missing and late failures" {
-    var header = [_]u8{0} ** 28;
+    var header = @as([28]u8, @splat(0));
     writeHeader(&header);
     var state: State = .{};
     var stack = graphics_state_stack.Stack.init(std.testing.allocator);
     defer stack.deinit();
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&header), 2));
 
-    var missing = [_]u8{0} ** 16;
+    var missing = @as([16]u8, @splat(0));
     writeStackIndexRecord(&missing, 0x4026, 0xffff, 7);
     const before_missing = state;
     try std.testing.expectError(error.MissingEmfPlusSavedGraphicsState, state.consumeTracked(&stack, testComment(&missing), 3));
     try std.testing.expectEqualDeep(before_missing, state);
     try std.testing.expectEqual(@as(usize, 0), stack.entries.items.len);
 
-    var malformed_restore = [_]u8{0} ** 12;
+    var malformed_restore = @as([12]u8, @splat(0));
     writeEmptyRecord(&malformed_restore, 0x4026);
     const before_malformed = state;
     try std.testing.expectError(error.InvalidEmfPlusRestoreSize, state.consumeTracked(&stack, testComment(&malformed_restore), 3));
     try std.testing.expectEqualDeep(before_malformed, state);
     try std.testing.expectEqual(@as(usize, 0), stack.entries.items.len);
 
-    var late = [_]u8{0} ** 17;
+    var late = @as([17]u8, @splat(0));
     writeStackIndexRecord(late[0..16], 0x4025, 0, 7);
     late[16] = 0xff;
     const before_late = state;
@@ -1842,7 +1842,7 @@ test "EMF+ Save/Restore tracked stream rolls back stack and report on missing an
     try std.testing.expectEqualDeep(before_late, state);
     try std.testing.expectEqual(@as(usize, 0), stack.entries.items.len);
 
-    var save = [_]u8{0} ** 28;
+    var save = @as([28]u8, @splat(0));
     writeStackIndexRecord(save[0..16], 0x4025, 0, 9);
     writeEmptyRecord(save[16..28], 0x4002);
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&save), 3));
@@ -1850,7 +1850,7 @@ test "EMF+ Save/Restore tracked stream rolls back stack and report on missing an
 }
 
 test "EMF+ EndContainer closes its target and every newer mixed state" {
-    var bytes = [_]u8{0} ** 104;
+    var bytes = @as([104]u8, @splat(0));
     writeHeader(bytes[0..28]);
     writeStackIndexRecord(bytes[28..44], 0x4028, 0, 1);
     writeStackIndexRecord(bytes[44..60], 0x4025, 0, 2);
@@ -1867,7 +1867,7 @@ test "EMF+ EndContainer closes its target and every newer mixed state" {
     try std.testing.expectEqual(@as(usize, 3), state.report.graphics_state_max_depth);
     try std.testing.expectEqual(@as(usize, 0), stack.entries.items.len);
 
-    var nested = [_]u8{0} ** 136;
+    var nested = @as([136]u8, @splat(0));
     writeHeader(nested[0..28]);
     writeBeginContainer(nested[28..76], 2, 4);
     writeStackIndexRecord(nested[76..92], 0x4028, 0, 5);
@@ -1884,14 +1884,14 @@ test "EMF+ EndContainer closes its target and every newer mixed state" {
     try std.testing.expectEqual(@as(usize, 2), nested_state.report.end_container_records);
     try std.testing.expectEqual(@as(usize, 2), nested_state.report.graphics_state_max_depth);
 
-    var open = [_]u8{0} ** 44;
+    var open = @as([44]u8, @splat(0));
     writeHeader(open[0..28]);
     writeStackIndexRecord(open[28..44], 0x4028, 0, 9);
     var rollback_state: State = .{};
     var rollback_stack = graphics_state_stack.Stack.init(std.testing.allocator);
     defer rollback_stack.deinit();
     try std.testing.expect(try rollback_state.consumeTracked(&rollback_stack, testComment(&open), 2));
-    var late = [_]u8{0} ** 17;
+    var late = @as([17]u8, @splat(0));
     writeStackIndexRecord(late[0..16], 0x4029, 0, 9);
     late[16] = 0xff;
     const rollback_before = rollback_state;
@@ -1901,7 +1901,7 @@ test "EMF+ EndContainer closes its target and every newer mixed state" {
     try std.testing.expectEqual(graphics_state_stack.EntryKind.container, rollback_stack.entries.items[0].kind);
     try std.testing.expectEqual(@as(u32, 9), rollback_stack.entries.items[0].stack_index);
 
-    var missing = [_]u8{0} ** 44;
+    var missing = @as([44]u8, @splat(0));
     writeHeader(missing[0..28]);
     writeStackIndexRecord(missing[28..44], 0x4029, 0, 1);
     var missing_state: State = .{};
@@ -1911,7 +1911,7 @@ test "EMF+ EndContainer closes its target and every newer mixed state" {
     try std.testing.expectEqualDeep(State{}, missing_state);
     try std.testing.expectEqual(@as(usize, 0), missing_stack.entries.items.len);
 
-    var wrong_kind = [_]u8{0} ** 60;
+    var wrong_kind = @as([60]u8, @splat(0));
     writeHeader(wrong_kind[0..28]);
     writeStackIndexRecord(wrong_kind[28..44], 0x4025, 0, 1);
     writeStackIndexRecord(wrong_kind[44..60], 0x4029, 0, 1);
@@ -1943,11 +1943,11 @@ test "EMF+ EndContainer closes its target and every newer mixed state" {
 }
 
 fn trackedAllocationExercise(allocator: std.mem.Allocator) !void {
-    var first = [_]u8{0} ** 60;
+    var first = @as([60]u8, @splat(0));
     writeHeader(first[0..28]);
     writeStackIndexRecord(first[28..44], 0x4025, 0, 1);
     writeStackIndexRecord(first[44..60], 0x4028, 0, 2);
-    var last = [_]u8{0} ** 44;
+    var last = @as([44]u8, @splat(0));
     writeStackIndexRecord(last[0..16], 0x4029, 0, 2);
     writeStackIndexRecord(last[16..32], 0x4026, 0, 1);
     writeEmptyRecord(last[32..44], 0x4002);
@@ -1965,7 +1965,7 @@ test "EMF+ Save Container End and Restore tracked stream survives every graphics
 }
 
 test "EMF+ stream resolves DrawBeziers Pen references and remains atomic" {
-    var bytes = [_]u8{0} ** 100;
+    var bytes = @as([100]u8, @splat(0));
     writeHeader(bytes[0..28]);
     writeEmptyRecord(bytes[28..40], 0x4008);
     std.mem.writeInt(u16, bytes[30..32], 0x0205, .little);
@@ -2004,7 +2004,7 @@ test "EMF+ stream resolves DrawBeziers Pen references and remains atomic" {
 }
 
 test "EMF+ stream resolves DrawClosedCurve Pen references and remains atomic" {
-    var bytes = [_]u8{0} ** 84;
+    var bytes = @as([84]u8, @splat(0));
     writeHeader(bytes[0..28]);
     writeEmptyRecord(bytes[28..40], 0x4008);
     std.mem.writeInt(u16, bytes[30..32], 0x0205, .little);
@@ -2044,7 +2044,7 @@ test "EMF+ stream resolves DrawClosedCurve Pen references and remains atomic" {
 }
 
 test "EMF+ stream resolves DrawCurve Pen references and remains atomic" {
-    var bytes = [_]u8{0} ** 88;
+    var bytes = @as([88]u8, @splat(0));
     writeHeader(bytes[0..28]);
     writeEmptyRecord(bytes[28..40], 0x4008);
     std.mem.writeInt(u16, bytes[30..32], 0x0205, .little);
@@ -2086,7 +2086,7 @@ test "EMF+ stream resolves DrawCurve Pen references and remains atomic" {
 }
 
 test "EMF+ stream resolves DrawDriverString Font and conditional Brush references atomically" {
-    var bytes = [_]u8{0} ** 92;
+    var bytes = @as([92]u8, @splat(0));
     writeHeader(bytes[0..28]);
     writeEmptyRecord(bytes[28..40], 0x4008);
     std.mem.writeInt(u16, bytes[30..32], 0x0605, .little);
@@ -2147,7 +2147,7 @@ test "EMF+ stream resolves DrawDriverString Font and conditional Brush reference
 }
 
 test "EMF+ stream resolves DrawEllipse Pen references and remains atomic" {
-    var bytes = [_]u8{0} ** 72;
+    var bytes = @as([72]u8, @splat(0));
     writeHeader(bytes[0..28]);
     writeEmptyRecord(bytes[28..40], 0x4008);
     std.mem.writeInt(u16, bytes[30..32], 0x0205, .little);
@@ -2182,7 +2182,7 @@ test "EMF+ stream resolves DrawEllipse Pen references and remains atomic" {
 }
 
 test "EMF+ stream resolves DrawImage and optional ImageAttributes references atomically" {
-    var bytes = [_]u8{0} ** 108;
+    var bytes = @as([108]u8, @splat(0));
     writeHeader(bytes[0..28]);
     writeEmptyRecord(bytes[28..40], 0x4008);
     std.mem.writeInt(u16, bytes[30..32], 0x0505, .little);
@@ -2241,7 +2241,7 @@ test "EMF+ stream resolves DrawImage and optional ImageAttributes references ato
 }
 
 test "EMF+ stream resolves DrawImagePoints image attributes and preceding effect atomically" {
-    var bytes = [_]u8{0} ** 152;
+    var bytes = @as([152]u8, @splat(0));
     writeHeader(bytes[0..28]);
     writeEmptyRecord(bytes[28..40], 0x4008);
     std.mem.writeInt(u16, bytes[30..32], 0x0505, .little);
@@ -2273,7 +2273,7 @@ test "EMF+ stream resolves DrawImagePoints image attributes and preceding effect
     try split_state.finish();
     try std.testing.expectEqual(@as(usize, 1), split_state.report.draw_image_points_records);
 
-    var missing_effect = [_]u8{0} ** 112;
+    var missing_effect = @as([112]u8, @splat(0));
     @memcpy(missing_effect[0..52], bytes[0..52]);
     @memcpy(missing_effect[52..100], bytes[92..140]);
     @memcpy(missing_effect[100..112], bytes[140..152]);
@@ -2321,7 +2321,7 @@ test "EMF+ stream resolves DrawImagePoints image attributes and preceding effect
 }
 
 test "EMF+ stream resolves DrawLines Pen references and remains atomic" {
-    var bytes = [_]u8{0} ** 76;
+    var bytes = @as([76]u8, @splat(0));
     writeHeader(bytes[0..28]);
     writeEmptyRecord(bytes[28..40], 0x4008);
     std.mem.writeInt(u16, bytes[30..32], 0x0205, .little);
@@ -2357,7 +2357,7 @@ test "EMF+ stream resolves DrawLines Pen references and remains atomic" {
 }
 
 test "EMF+ stream resolves DrawPath Path and Pen references atomically" {
-    var bytes = [_]u8{0} ** 80;
+    var bytes = @as([80]u8, @splat(0));
     writeHeader(bytes[0..28]);
     writeEmptyRecord(bytes[28..40], 0x4008);
     std.mem.writeInt(u16, bytes[30..32], 0x0305, .little);
@@ -2407,7 +2407,7 @@ test "EMF+ stream resolves DrawPath Path and Pen references atomically" {
 }
 
 test "EMF+ stream validates SetTSClip and rolls report back atomically" {
-    var bytes = [_]u8{0} ** 56;
+    var bytes = @as([56]u8, @splat(0));
     writeHeader(bytes[0..28]);
     std.mem.writeInt(u16, bytes[28..30], 0x403a, .little);
     std.mem.writeInt(u16, bytes[30..32], 0x8001, .little);
@@ -2435,14 +2435,14 @@ test "EMF+ stream validates SetTSClip and rolls report back atomically" {
 }
 
 test "EMF+ tracked SetTSClip owns rectangles snapshots containers clears and rolls back" {
-    var header = [_]u8{0} ** 28;
+    var header = @as([28]u8, @splat(0));
     writeHeader(&header);
     var state: State = .{};
     var stack = graphics_state_stack.Stack.init(std.testing.allocator);
     defer stack.deinit();
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&header), 2));
 
-    var first = [_]u8{0} ** 16;
+    var first = @as([16]u8, @splat(0));
     std.mem.writeInt(u16, first[0..2], 0x403a, .little);
     std.mem.writeInt(u16, first[2..4], 0x8001, .little);
     std.mem.writeInt(u32, first[4..8], 16, .little);
@@ -2454,7 +2454,7 @@ test "EMF+ tracked SetTSClip owns rectangles snapshots containers clears and rol
     try std.testing.expect(stack.current.terminal_server_clip != null);
     try std.testing.expectEqual(@import("emf_plus_ts_clip_rects.zig").Rect{ .left = 1, .top = 2, .right = 3, .bottom = 6 }, stack.current.terminal_server_clip.?.rectangles[0]);
 
-    var save = [_]u8{0} ** 16;
+    var save = @as([16]u8, @splat(0));
     writeStackIndexRecord(&save, 0x4025, 0, 70);
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&save), 4));
     var second = first;
@@ -2462,23 +2462,23 @@ test "EMF+ tracked SetTSClip owns rectangles snapshots containers clears and rol
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&second), 5));
     try std.testing.expect(stack.current.terminal_server_clip != null);
     try std.testing.expectEqual(@as(i32, 5), stack.current.terminal_server_clip.?.rectangles[0].left);
-    var restore = [_]u8{0} ** 16;
+    var restore = @as([16]u8, @splat(0));
     writeStackIndexRecord(&restore, 0x4026, 0, 70);
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&restore), 6));
     try std.testing.expect(stack.current.terminal_server_clip != null);
     try std.testing.expectEqual(@as(i32, 1), stack.current.terminal_server_clip.?.rectangles[0].left);
 
-    var begin = [_]u8{0} ** 16;
+    var begin = @as([16]u8, @splat(0));
     writeStackIndexRecord(&begin, 0x4028, 0, 71);
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&begin), 7));
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&second), 8));
-    var end = [_]u8{0} ** 16;
+    var end = @as([16]u8, @splat(0));
     writeStackIndexRecord(&end, 0x4029, 0, 71);
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&end), 9));
     try std.testing.expect(stack.current.terminal_server_clip != null);
     try std.testing.expectEqual(@as(i32, 1), stack.current.terminal_server_clip.?.rectangles[0].left);
 
-    var malformed = [_]u8{0} ** 19;
+    var malformed = @as([19]u8, @splat(0));
     @memcpy(malformed[0..16], second[0..16]);
     malformed[16..19].* = .{ 0xaa, 0xbb, 0xcc };
     const report_before = state.report;
@@ -2487,7 +2487,7 @@ test "EMF+ tracked SetTSClip owns rectangles snapshots containers clears and rol
     try std.testing.expect(stack.current.terminal_server_clip != null);
     try std.testing.expectEqual(@as(i32, 1), stack.current.terminal_server_clip.?.rectangles[0].left);
 
-    var empty = [_]u8{0} ** 12;
+    var empty = @as([12]u8, @splat(0));
     writeEmptyRecord(&empty, 0x403a);
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&empty), 11));
     try std.testing.expectEqual(clip_state.State.empty, stack.current.clip);
@@ -2495,7 +2495,7 @@ test "EMF+ tracked SetTSClip owns rectangles snapshots containers clears and rol
     try std.testing.expectEqual(@as(usize, 0), stack.current.terminal_server_clip.?.rectangles.len);
     try std.testing.expectEqual(@as(?u16, 0), state.report.terminal_server_clip_rectangles);
 
-    var reset = [_]u8{0} ** 12;
+    var reset = @as([12]u8, @splat(0));
     writeEmptyRecord(&reset, 0x4031);
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&reset), 12));
     try std.testing.expect(stack.current.terminal_server_clip == null);
@@ -2504,7 +2504,7 @@ test "EMF+ tracked SetTSClip owns rectangles snapshots containers clears and rol
 }
 
 test "EMF+ stream validates SetTSGraphics and rolls report back atomically" {
-    var bytes = [_]u8{0} ** 88;
+    var bytes = @as([88]u8, @splat(0));
     writeHeader(bytes[0..28]);
     std.mem.writeInt(u16, bytes[28..30], 0x4039, .little);
     std.mem.writeInt(u32, bytes[32..36], 48, .little);
@@ -2531,14 +2531,14 @@ test "EMF+ stream validates SetTSGraphics and rolls report back atomically" {
 }
 
 test "EMF+ tracked SetTSGraphics owns palette snapshots containers and rolls back" {
-    var header = [_]u8{0} ** 28;
+    var header = @as([28]u8, @splat(0));
     writeHeader(&header);
     var state: State = .{};
     var stack = graphics_state_stack.Stack.init(std.testing.allocator);
     defer stack.deinit();
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&header), 2));
 
-    var initial = [_]u8{0} ** 64;
+    var initial = @as([64]u8, @splat(0));
     writeTerminalServerGraphics(&initial, false, true);
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&initial), 3));
     try std.testing.expect(stack.current.terminal_server_graphics != null);
@@ -2552,15 +2552,15 @@ test "EMF+ tracked SetTSGraphics owns palette snapshots containers and rolls bac
     initial[56] = 0xff;
     try std.testing.expectEqual(@as(u8, 0x11), stack.current.terminal_server_graphics.?.palette.?.entry_bytes[0]);
 
-    var save = [_]u8{0} ** 16;
+    var save = @as([16]u8, @splat(0));
     writeStackIndexRecord(&save, 0x4025, 0, 80);
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&save), 4));
-    var alternate = [_]u8{0} ** 48;
+    var alternate = @as([48]u8, @splat(0));
     writeTerminalServerGraphics(&alternate, true, false);
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&alternate), 5));
     try std.testing.expectEqual(@as(i16, 3), stack.current.terminal_server_graphics.?.summary.render_origin_x);
     try std.testing.expect(stack.current.terminal_server_graphics.?.palette == null);
-    var restore = [_]u8{0} ** 16;
+    var restore = @as([16]u8, @splat(0));
     writeStackIndexRecord(&restore, 0x4026, 0, 80);
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&restore), 6));
     try std.testing.expect(stack.current.terminal_server_graphics != null);
@@ -2568,18 +2568,18 @@ test "EMF+ tracked SetTSGraphics owns palette snapshots containers and rolls bac
     try std.testing.expect(stack.current.terminal_server_graphics.?.palette != null);
     try std.testing.expectEqual(@as(u8, 0x11), stack.current.terminal_server_graphics.?.palette.?.entry_bytes[0]);
 
-    var begin = [_]u8{0} ** 16;
+    var begin = @as([16]u8, @splat(0));
     writeStackIndexRecord(&begin, 0x4028, 0, 81);
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&begin), 7));
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&alternate), 8));
-    var end = [_]u8{0} ** 16;
+    var end = @as([16]u8, @splat(0));
     writeStackIndexRecord(&end, 0x4029, 0, 81);
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&end), 9));
     try std.testing.expect(stack.current.terminal_server_graphics != null);
     try std.testing.expectEqualDeep(expected, stack.current.terminal_server_graphics.?.summary);
     try std.testing.expect(stack.current.terminal_server_graphics.?.palette != null);
 
-    var malformed = [_]u8{0} ** 51;
+    var malformed = @as([51]u8, @splat(0));
     @memcpy(malformed[0..48], &alternate);
     malformed[48..51].* = .{ 0xaa, 0xbb, 0xcc };
     const report_before = state.report;
@@ -2591,7 +2591,7 @@ test "EMF+ tracked SetTSGraphics owns palette snapshots containers and rolls bac
 }
 
 test "EMF+ stream validates MultiplyWorldTransform and rolls report back atomically" {
-    var bytes = [_]u8{0} ** 76;
+    var bytes = @as([76]u8, @splat(0));
     writeHeader(bytes[0..28]);
     std.mem.writeInt(u16, bytes[28..30], 0x402c, .little);
     std.mem.writeInt(u16, bytes[30..32], 0x2000, .little);
@@ -2604,7 +2604,7 @@ test "EMF+ stream validates MultiplyWorldTransform and rolls report back atomica
     try state.finish();
     try std.testing.expectEqual(@as(usize, 1), state.report.multiply_world_transform_records);
 
-    var malformed = [_]u8{0} ** 72;
+    var malformed = @as([72]u8, @splat(0));
     @memcpy(malformed[0..28], bytes[0..28]);
     std.mem.writeInt(u16, malformed[28..30], 0x402c, .little);
     std.mem.writeInt(u32, malformed[32..36], 32, .little);
@@ -2622,7 +2622,7 @@ test "EMF+ stream validates MultiplyWorldTransform and rolls report back atomica
 }
 
 test "EMF+ stream validates SetWorldTransform and rolls report back atomically" {
-    var bytes = [_]u8{0} ** 76;
+    var bytes = @as([76]u8, @splat(0));
     writeHeader(bytes[0..28]);
     std.mem.writeInt(u16, bytes[28..30], 0x402a, .little);
     std.mem.writeInt(u16, bytes[30..32], 0xffff, .little);
@@ -2635,7 +2635,7 @@ test "EMF+ stream validates SetWorldTransform and rolls report back atomically" 
     try state.finish();
     try std.testing.expectEqual(@as(usize, 1), state.report.set_world_transform_records);
 
-    var malformed = [_]u8{0} ** 72;
+    var malformed = @as([72]u8, @splat(0));
     @memcpy(malformed[0..28], bytes[0..28]);
     std.mem.writeInt(u16, malformed[28..30], 0x402a, .little);
     std.mem.writeInt(u32, malformed[32..36], 32, .little);
@@ -2653,7 +2653,7 @@ test "EMF+ stream validates SetWorldTransform and rolls report back atomically" 
 }
 
 test "EMF+ stream validates ResetWorldTransform and rolls report back atomically" {
-    var bytes = [_]u8{0} ** 52;
+    var bytes = @as([52]u8, @splat(0));
     writeHeader(bytes[0..28]);
     writeEmptyRecord(bytes[28..40], 0x402b);
     std.mem.writeInt(u16, bytes[30..32], 0xffff, .little);
@@ -2664,7 +2664,7 @@ test "EMF+ stream validates ResetWorldTransform and rolls report back atomically
     try state.finish();
     try std.testing.expectEqual(@as(usize, 1), state.report.reset_world_transform_records);
 
-    var malformed = [_]u8{0} ** 56;
+    var malformed = @as([56]u8, @splat(0));
     @memcpy(malformed[0..28], bytes[0..28]);
     std.mem.writeInt(u16, malformed[28..30], 0x402b, .little);
     std.mem.writeInt(u32, malformed[32..36], 16, .little);
@@ -2682,7 +2682,7 @@ test "EMF+ stream validates ResetWorldTransform and rolls report back atomically
 }
 
 test "EMF+ stream validates TranslateWorldTransform and rolls report back atomically" {
-    var bytes = [_]u8{0} ** 60;
+    var bytes = @as([60]u8, @splat(0));
     writeHeader(bytes[0..28]);
     std.mem.writeInt(u16, bytes[28..30], 0x402d, .little);
     std.mem.writeInt(u16, bytes[30..32], 0x2000, .little);
@@ -2697,7 +2697,7 @@ test "EMF+ stream validates TranslateWorldTransform and rolls report back atomic
     try state.finish();
     try std.testing.expectEqual(@as(usize, 1), state.report.translate_world_transform_records);
 
-    var malformed = [_]u8{0} ** 56;
+    var malformed = @as([56]u8, @splat(0));
     @memcpy(malformed[0..28], bytes[0..28]);
     std.mem.writeInt(u16, malformed[28..30], 0x402d, .little);
     std.mem.writeInt(u32, malformed[32..36], 16, .little);
@@ -2715,7 +2715,7 @@ test "EMF+ stream validates TranslateWorldTransform and rolls report back atomic
 }
 
 test "EMF+ stream validates ScaleWorldTransform and rolls report back atomically" {
-    var bytes = [_]u8{0} ** 60;
+    var bytes = @as([60]u8, @splat(0));
     writeHeader(bytes[0..28]);
     std.mem.writeInt(u16, bytes[28..30], 0x402e, .little);
     std.mem.writeInt(u16, bytes[30..32], 0x2000, .little);
@@ -2730,7 +2730,7 @@ test "EMF+ stream validates ScaleWorldTransform and rolls report back atomically
     try state.finish();
     try std.testing.expectEqual(@as(usize, 1), state.report.scale_world_transform_records);
 
-    var malformed = [_]u8{0} ** 56;
+    var malformed = @as([56]u8, @splat(0));
     @memcpy(malformed[0..28], bytes[0..28]);
     std.mem.writeInt(u16, malformed[28..30], 0x402e, .little);
     std.mem.writeInt(u32, malformed[32..36], 16, .little);
@@ -2748,7 +2748,7 @@ test "EMF+ stream validates ScaleWorldTransform and rolls report back atomically
 }
 
 test "EMF+ stream validates RotateWorldTransform and rolls report back atomically" {
-    var bytes = [_]u8{0} ** 56;
+    var bytes = @as([56]u8, @splat(0));
     writeHeader(bytes[0..28]);
     std.mem.writeInt(u16, bytes[28..30], 0x402f, .little);
     std.mem.writeInt(u16, bytes[30..32], 0x2000, .little);
@@ -2762,7 +2762,7 @@ test "EMF+ stream validates RotateWorldTransform and rolls report back atomicall
     try state.finish();
     try std.testing.expectEqual(@as(usize, 1), state.report.rotate_world_transform_records);
 
-    var malformed = [_]u8{0} ** 60;
+    var malformed = @as([60]u8, @splat(0));
     @memcpy(malformed[0..28], bytes[0..28]);
     std.mem.writeInt(u16, malformed[28..30], 0x402f, .little);
     std.mem.writeInt(u32, malformed[32..36], 20, .little);
@@ -2780,7 +2780,7 @@ test "EMF+ stream validates RotateWorldTransform and rolls report back atomicall
 }
 
 test "EMF+ tracked stream applies world transforms and Restore recovers the saved snapshot" {
-    var bytes = [_]u8{0} ** 128;
+    var bytes = @as([128]u8, @splat(0));
     writeHeader(bytes[0..28]);
 
     std.mem.writeInt(u16, bytes[28..30], 0x402a, .little);
@@ -2825,14 +2825,14 @@ test "EMF+ tracked stream applies world transforms and Restore recovers the save
 }
 
 test "EMF+ tracked stream rolls world transform back when a later record is malformed" {
-    var header = [_]u8{0} ** 28;
+    var header = @as([28]u8, @splat(0));
     writeHeader(&header);
     var state: State = .{};
     var stack = graphics_state_stack.Stack.init(std.testing.allocator);
     defer stack.deinit();
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&header), 2));
 
-    var bytes = [_]u8{0} ** 39;
+    var bytes = @as([39]u8, @splat(0));
     std.mem.writeInt(u16, bytes[0..2], 0x402a, .little);
     std.mem.writeInt(u32, bytes[4..8], 36, .little);
     std.mem.writeInt(u32, bytes[8..12], 24, .little);
@@ -2850,14 +2850,14 @@ test "EMF+ tracked stream rolls world transform back when a later record is malf
 }
 
 test "EMF+ tracked stream connects multiply scale rotate and reset to the current world transform" {
-    var header = [_]u8{0} ** 28;
+    var header = @as([28]u8, @splat(0));
     writeHeader(&header);
     var state: State = .{};
     var stack = graphics_state_stack.Stack.init(std.testing.allocator);
     defer stack.deinit();
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&header), 2));
 
-    var multiply = [_]u8{0} ** 36;
+    var multiply = @as([36]u8, @splat(0));
     std.mem.writeInt(u16, multiply[0..2], 0x402c, .little);
     std.mem.writeInt(u32, multiply[4..8], 36, .little);
     std.mem.writeInt(u32, multiply[8..12], 24, .little);
@@ -2873,7 +2873,7 @@ test "EMF+ tracked stream connects multiply scale rotate and reset to the curren
         .dy = 7,
     }, stack.current.world_transform.?);
 
-    var scale = [_]u8{0} ** 20;
+    var scale = @as([20]u8, @splat(0));
     std.mem.writeInt(u16, scale[0..2], 0x402e, .little);
     std.mem.writeInt(u16, scale[2..4], 0x2000, .little);
     std.mem.writeInt(u32, scale[4..8], 20, .little);
@@ -2890,7 +2890,7 @@ test "EMF+ tracked stream connects multiply scale rotate and reset to the curren
         .dy = 35,
     }, stack.current.world_transform.?);
 
-    var rotate = [_]u8{0} ** 16;
+    var rotate = @as([16]u8, @splat(0));
     std.mem.writeInt(u16, rotate[0..2], 0x402f, .little);
     std.mem.writeInt(u16, rotate[2..4], 0x2000, .little);
     std.mem.writeInt(u32, rotate[4..8], 16, .little);
@@ -2904,13 +2904,13 @@ test "EMF+ tracked stream connects multiply scale rotate and reset to the curren
     try std.testing.expectApproxEqAbs(@as(f32, -35), stack.current.world_transform.?.dx, 0.00001);
     try std.testing.expectApproxEqAbs(@as(f32, 20), stack.current.world_transform.?.dy, 0.00001);
 
-    var reset = [_]u8{0} ** 12;
+    var reset = @as([12]u8, @splat(0));
     writeEmptyRecord(&reset, 0x402b);
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&reset), 6));
     try std.testing.expectEqualDeep(transform_matrix.TransformMatrix.identity, stack.current.world_transform.?);
     try std.testing.expectEqualDeep(transform_matrix.TransformMatrix.identity, state.report.world_transform.?);
 
-    var translate = [_]u8{0} ** 20;
+    var translate = @as([20]u8, @splat(0));
     std.mem.writeInt(u16, translate[0..2], 0x402d, .little);
     std.mem.writeInt(u16, translate[2..4], 0x2000, .little);
     std.mem.writeInt(u32, translate[4..8], 20, .little);
@@ -2923,7 +2923,7 @@ test "EMF+ tracked stream connects multiply scale rotate and reset to the curren
 }
 
 test "EMF+ stream validates SetPageTransform warnings and rolls report back atomically" {
-    var bytes = [_]u8{0} ** 56;
+    var bytes = @as([56]u8, @splat(0));
     writeHeader(bytes[0..28]);
     std.mem.writeInt(u16, bytes[28..30], 0x4030, .little);
     std.mem.writeInt(u16, bytes[30..32], 2, .little);
@@ -2965,7 +2965,7 @@ test "EMF+ stream validates SetPageTransform warnings and rolls report back atom
 }
 
 test "EMF+ tracked SetPageTransform resolves DPI snapshots Restore and rollback" {
-    var header = [_]u8{0} ** 28;
+    var header = @as([28]u8, @splat(0));
     writeHeader(&header);
     std.mem.writeInt(u32, header[20..24], 96, .little);
     std.mem.writeInt(u32, header[24..28], 120, .little);
@@ -2974,7 +2974,7 @@ test "EMF+ tracked SetPageTransform resolves DPI snapshots Restore and rollback"
     defer stack.deinit();
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&header), 2));
 
-    var inch = [_]u8{0} ** 16;
+    var inch = @as([16]u8, @splat(0));
     writeSetPageTransform(&inch, 4, 2);
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&inch), 3));
     try std.testing.expectEqualDeep(page_transform.PageTransform{
@@ -2984,17 +2984,17 @@ test "EMF+ tracked SetPageTransform resolves DPI snapshots Restore and rollback"
     }, stack.current.page_transform);
     try std.testing.expectEqualDeep(stack.current.page_transform, state.report.page_transform.?);
 
-    var save = [_]u8{0} ** 16;
+    var save = @as([16]u8, @splat(0));
     writeStackIndexRecord(&save, 0x4025, 0, 9);
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&save), 4));
 
-    var point = [_]u8{0} ** 16;
+    var point = @as([16]u8, @splat(0));
     writeSetPageTransform(&point, 3, 0.5);
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&point), 5));
     try std.testing.expectApproxEqAbs(@as(f32, 2.0 / 3.0), stack.current.page_transform.device_scale.?.x, 0.000001);
     try std.testing.expectApproxEqAbs(@as(f32, 5.0 / 6.0), stack.current.page_transform.device_scale.?.y, 0.000001);
 
-    var restore = [_]u8{0} ** 16;
+    var restore = @as([16]u8, @splat(0));
     writeStackIndexRecord(&restore, 0x4026, 0, 9);
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&restore), 6));
     try std.testing.expectEqualDeep(page_transform.PageTransform{
@@ -3003,7 +3003,7 @@ test "EMF+ tracked SetPageTransform resolves DPI snapshots Restore and rollback"
         .device_scale = .{ .x = 192, .y = 240 },
     }, stack.current.page_transform);
 
-    var malformed = [_]u8{0} ** 19;
+    var malformed = @as([19]u8, @splat(0));
     writeSetPageTransform(malformed[0..16], 2, 7);
     malformed[16] = 0xaa;
     malformed[17] = 0xbb;
@@ -3014,7 +3014,7 @@ test "EMF+ tracked SetPageTransform resolves DPI snapshots Restore and rollback"
     try std.testing.expectEqualDeep(before_state, state);
     try std.testing.expectEqualDeep(before_page, stack.current.page_transform);
 
-    var display = [_]u8{0} ** 16;
+    var display = @as([16]u8, @splat(0));
     writeSetPageTransform(&display, 1, 3);
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&display), 8));
     try std.testing.expectEqual(@import("emf_plus_unit_type.zig").UnitType.display, stack.current.page_transform.page_unit);
@@ -3022,14 +3022,14 @@ test "EMF+ tracked SetPageTransform resolves DPI snapshots Restore and rollback"
     try std.testing.expect(stack.current.page_transform.device_scale == null);
     try std.testing.expectEqualDeep(stack.current.page_transform, state.report.page_transform.?);
 
-    var begin = [_]u8{0} ** 16;
+    var begin = @as([16]u8, @splat(0));
     writeStackIndexRecord(&begin, 0x4028, 0, 10);
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&begin), 9));
-    var pixel = [_]u8{0} ** 16;
+    var pixel = @as([16]u8, @splat(0));
     writeSetPageTransform(&pixel, 2, 7);
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&pixel), 10));
     try std.testing.expectEqual(@as(f32, 7), stack.current.page_transform.device_scale.?.x);
-    var end = [_]u8{0} ** 16;
+    var end = @as([16]u8, @splat(0));
     writeStackIndexRecord(&end, 0x4029, 0, 10);
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&end), 11));
     try std.testing.expectEqual(@import("emf_plus_unit_type.zig").UnitType.display, stack.current.page_transform.page_unit);
@@ -3039,7 +3039,7 @@ test "EMF+ tracked SetPageTransform resolves DPI snapshots Restore and rollback"
 }
 
 test "EMF+ stream validates ResetClip and rolls report back atomically" {
-    var bytes = [_]u8{0} ** 52;
+    var bytes = @as([52]u8, @splat(0));
     writeHeader(bytes[0..28]);
     writeEmptyRecord(bytes[28..40], 0x4031);
     std.mem.writeInt(u16, bytes[30..32], 0xffff, .little);
@@ -3050,7 +3050,7 @@ test "EMF+ stream validates ResetClip and rolls report back atomically" {
     try state.finish();
     try std.testing.expectEqual(@as(usize, 1), state.report.reset_clip_records);
 
-    var malformed = [_]u8{0} ** 56;
+    var malformed = @as([56]u8, @splat(0));
     @memcpy(malformed[0..28], bytes[0..28]);
     std.mem.writeInt(u16, malformed[28..30], 0x4031, .little);
     std.mem.writeInt(u32, malformed[32..36], 16, .little);
@@ -3068,7 +3068,7 @@ test "EMF+ stream validates ResetClip and rolls report back atomically" {
 }
 
 test "EMF+ tracked clip state preserves abstract commands snapshots containers and rollback" {
-    var header = [_]u8{0} ** 28;
+    var header = @as([28]u8, @splat(0));
     writeHeader(&header);
     var state: State = .{};
     var stack = graphics_state_stack.Stack.init(std.testing.allocator);
@@ -3076,45 +3076,45 @@ test "EMF+ tracked clip state preserves abstract commands snapshots containers a
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&header), 2));
     try std.testing.expectEqual(clip_state.State.infinite, state.report.clip.?);
 
-    var replace = [_]u8{0} ** 28;
+    var replace = @as([28]u8, @splat(0));
     writeSetClipRect(&replace, 0x0000, .{ 1, 2, 3, 4 });
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&replace), 3));
     const original = clip_state.State.complex;
     try std.testing.expectEqual(original, stack.current.clip);
     try std.testing.expectEqual(original, state.report.clip.?);
 
-    var save = [_]u8{0} ** 16;
+    var save = @as([16]u8, @splat(0));
     writeStackIndexRecord(&save, 0x4025, 0, 20);
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&save), 4));
-    var offset = [_]u8{0} ** 20;
+    var offset = @as([20]u8, @splat(0));
     writeOffsetClip(&offset, 5, -7);
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&offset), 5));
     try std.testing.expectEqual(clip_state.State.complex, stack.current.clip);
 
-    var intersect = [_]u8{0} ** 28;
+    var intersect = @as([28]u8, @splat(0));
     writeSetClipRect(&intersect, 0x0100, .{ 0, 0, 2, 2 });
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&intersect), 6));
     try std.testing.expectEqual(clip_state.State.complex, stack.current.clip);
 
-    var restore = [_]u8{0} ** 16;
+    var restore = @as([16]u8, @splat(0));
     writeStackIndexRecord(&restore, 0x4026, 0, 20);
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&restore), 7));
     try std.testing.expectEqual(original, stack.current.clip);
 
-    var begin = [_]u8{0} ** 16;
+    var begin = @as([16]u8, @splat(0));
     writeStackIndexRecord(&begin, 0x4028, 0, 21);
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&begin), 8));
-    var reset = [_]u8{0} ** 12;
+    var reset = @as([12]u8, @splat(0));
     writeEmptyRecord(&reset, 0x4031);
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&reset), 9));
     try std.testing.expectEqual(clip_state.State.infinite, stack.current.clip);
-    var end = [_]u8{0} ** 16;
+    var end = @as([16]u8, @splat(0));
     writeStackIndexRecord(&end, 0x4029, 0, 21);
     try std.testing.expect(try state.consumeTracked(&stack, testComment(&end), 10));
     try std.testing.expectEqual(original, stack.current.clip);
     try std.testing.expectEqual(original, state.report.clip.?);
 
-    var malformed = [_]u8{0} ** 23;
+    var malformed = @as([23]u8, @splat(0));
     writeOffsetClip(malformed[0..20], 100, 200);
     malformed[20] = 0xaa;
     malformed[21] = 0xbb;
@@ -3127,7 +3127,7 @@ test "EMF+ tracked clip state preserves abstract commands snapshots containers a
 }
 
 test "EMF+ stream validates SetClipRect and rolls report back atomically" {
-    var bytes = [_]u8{0} ** 68;
+    var bytes = @as([68]u8, @splat(0));
     writeHeader(bytes[0..28]);
     std.mem.writeInt(u16, bytes[28..30], 0x4032, .little);
     std.mem.writeInt(u16, bytes[30..32], 0xf5ff, .little);
@@ -3144,7 +3144,7 @@ test "EMF+ stream validates SetClipRect and rolls report back atomically" {
     try state.finish();
     try std.testing.expectEqual(@as(usize, 1), state.report.set_clip_rect_records);
 
-    var malformed = [_]u8{0} ** 64;
+    var malformed = @as([64]u8, @splat(0));
     @memcpy(malformed[0..28], bytes[0..28]);
     std.mem.writeInt(u16, malformed[28..30], 0x4032, .little);
     std.mem.writeInt(u32, malformed[32..36], 24, .little);
@@ -3162,7 +3162,7 @@ test "EMF+ stream validates SetClipRect and rolls report back atomically" {
 }
 
 test "EMF+ stream resolves SetClipPath Path references atomically" {
-    var bytes = [_]u8{0} ** 64;
+    var bytes = @as([64]u8, @splat(0));
     writeHeader(bytes[0..28]);
     writeEmptyRecord(bytes[28..40], 0x4008);
     std.mem.writeInt(u16, bytes[30..32], 0x0305, .little);
@@ -3204,7 +3204,7 @@ test "EMF+ stream resolves SetClipPath Path references atomically" {
 }
 
 test "EMF+ stream resolves SetClipRegion Region references atomically" {
-    var bytes = [_]u8{0} ** 64;
+    var bytes = @as([64]u8, @splat(0));
     writeHeader(bytes[0..28]);
     writeEmptyRecord(bytes[28..40], 0x4008);
     std.mem.writeInt(u16, bytes[30..32], 0x0405, .little);
@@ -3246,7 +3246,7 @@ test "EMF+ stream resolves SetClipRegion Region references atomically" {
 }
 
 test "EMF+ stream validates OffsetClip and rolls report back atomically" {
-    var bytes = [_]u8{0} ** 60;
+    var bytes = @as([60]u8, @splat(0));
     writeHeader(bytes[0..28]);
     std.mem.writeInt(u16, bytes[28..30], 0x4035, .little);
     std.mem.writeInt(u16, bytes[30..32], 0xffff, .little);
@@ -3261,7 +3261,7 @@ test "EMF+ stream validates OffsetClip and rolls report back atomically" {
     try state.finish();
     try std.testing.expectEqual(@as(usize, 1), state.report.offset_clip_records);
 
-    var malformed = [_]u8{0} ** 56;
+    var malformed = @as([56]u8, @splat(0));
     @memcpy(malformed[0..28], bytes[0..28]);
     std.mem.writeInt(u16, malformed[28..30], 0x4035, .little);
     std.mem.writeInt(u32, malformed[32..36], 16, .little);
@@ -3279,7 +3279,7 @@ test "EMF+ stream validates OffsetClip and rolls report back atomically" {
 }
 
 test "EMF+ stream observes undocumented StrokeFillPath atomically" {
-    var bytes = [_]u8{0} ** 56;
+    var bytes = @as([56]u8, @splat(0));
     writeHeader(bytes[0..28]);
     std.mem.writeInt(u16, bytes[28..30], 0x4037, .little);
     std.mem.writeInt(u16, bytes[30..32], 0xa55a, .little);
@@ -3301,7 +3301,7 @@ test "EMF+ stream observes undocumented StrokeFillPath atomically" {
 }
 
 test "EMF+ stream resolves FillRects conditional Brush references atomically" {
-    var bytes = [_]u8{0} ** 80;
+    var bytes = @as([80]u8, @splat(0));
     writeHeader(bytes[0..28]);
     writeEmptyRecord(bytes[28..40], 0x4008);
     std.mem.writeInt(u16, bytes[30..32], 0x0107, .little);
@@ -3348,7 +3348,7 @@ test "EMF+ stream resolves FillRects conditional Brush references atomically" {
 }
 
 test "EMF+ stream resolves FillPolygon conditional Brush references atomically" {
-    var bytes = [_]u8{0} ** 80;
+    var bytes = @as([80]u8, @splat(0));
     writeHeader(bytes[0..28]);
     writeEmptyRecord(bytes[28..40], 0x4008);
     std.mem.writeInt(u16, bytes[30..32], 0x0107, .little);
@@ -3395,7 +3395,7 @@ test "EMF+ stream resolves FillPolygon conditional Brush references atomically" 
 }
 
 test "EMF+ stream resolves FillEllipse conditional Brush references atomically" {
-    var bytes = [_]u8{0} ** 76;
+    var bytes = @as([76]u8, @splat(0));
     writeHeader(bytes[0..28]);
     writeEmptyRecord(bytes[28..40], 0x4008);
     std.mem.writeInt(u16, bytes[30..32], 0x0107, .little);
@@ -3441,7 +3441,7 @@ test "EMF+ stream resolves FillEllipse conditional Brush references atomically" 
 }
 
 test "EMF+ stream resolves FillPie conditional Brush references atomically" {
-    var bytes = [_]u8{0} ** 84;
+    var bytes = @as([84]u8, @splat(0));
     writeHeader(bytes[0..28]);
     writeEmptyRecord(bytes[28..40], 0x4008);
     std.mem.writeInt(u16, bytes[30..32], 0x0107, .little);
@@ -3489,7 +3489,7 @@ test "EMF+ stream resolves FillPie conditional Brush references atomically" {
 }
 
 test "EMF+ stream resolves FillRegion Region and conditional Brush references atomically" {
-    var bytes = [_]u8{0} ** 80;
+    var bytes = @as([80]u8, @splat(0));
     writeHeader(bytes[0..28]);
     writeEmptyRecord(bytes[28..40], 0x4008);
     std.mem.writeInt(u16, bytes[30..32], 0x0405, .little);
@@ -3548,7 +3548,7 @@ test "EMF+ stream resolves FillRegion Region and conditional Brush references at
 }
 
 test "EMF+ stream resolves FillPath Path and conditional Brush references atomically" {
-    var bytes = [_]u8{0} ** 80;
+    var bytes = @as([80]u8, @splat(0));
     writeHeader(bytes[0..28]);
     writeEmptyRecord(bytes[28..40], 0x4008);
     std.mem.writeInt(u16, bytes[30..32], 0x0305, .little);
@@ -3607,7 +3607,7 @@ test "EMF+ stream resolves FillPath Path and conditional Brush references atomic
 }
 
 test "EMF+ stream resolves FillClosedCurve conditional Brush references atomically" {
-    var bytes = [_]u8{0} ** 84;
+    var bytes = @as([84]u8, @splat(0));
     writeHeader(bytes[0..28]);
     writeEmptyRecord(bytes[28..40], 0x4008);
     std.mem.writeInt(u16, bytes[30..32], 0x0107, .little);

@@ -30,7 +30,7 @@ test "tab count bounds, unknown values and reserved bytes" {
     try t.expectError(error.UnexpectedEnd, d.TabDef.parse(&.{ 0, 0, 0, 0, 255, 255, 255, 255 }));
 }
 test "numbering optional groups, version boundaries and partial groups" {
-    var bytes = [_]u8{0} ** 184; // 7*(12+2)+2 + 28 + 3*(12+2)+12 + 2 extra
+    var bytes = @as([184]u8, @splat(0)); // 7*(12+2)+2 + 28 + 3*(12+2)+12 + 2 extra
     bytes[98] = 7;
     bytes[100] = 9;
     bytes[128] = 0x81;

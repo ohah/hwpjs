@@ -2,7 +2,7 @@ const std = @import("std");
 const t = std.testing;
 const P = @import("ruby.zig").Properties;
 test "ruby keeps two raw strings and five full-width values" {
-    var raw = [_]u8{0} ** 31;
+    var raw = @as([31]u8, @splat(0));
     std.mem.writeInt(u16, raw[0..2], 1, .little);
     @memcpy(raw[2..4], &[_]u8{ 0, 0xd8 });
     std.mem.writeInt(u16, raw[4..6], 2, .little);
@@ -15,10 +15,10 @@ test "ruby keeps two raw strings and five full-width values" {
     inline for (.{ "position", "size_ratio", "option", "style_number", "alignment" }, 0..) |f, i| try t.expectEqual(0xfffffffb + i, @field(p, f));
     try t.expectEqualSlices(u8, &.{9}, p.extra);
     for (0..30) |n| try t.expectError(error.UnexpectedEnd, P.parse(raw[0..n]));
-    try t.expectError(error.UnexpectedEnd, P.parse(&([_]u8{0} ** 18)));
+    try t.expectError(error.UnexpectedEnd, P.parse(&(@as([18]u8, @splat(0)))));
 }
 fn allocationCase(a: std.mem.Allocator, bad: bool) !void {
-    var raw = [_]u8{0} ** 32;
+    var raw = @as([32]u8, @splat(0));
     std.mem.writeInt(u32, raw[0..4], 71 | ((if (bad) @as(u32, 27) else 28) << 20), .little);
     std.mem.writeInt(u32, raw[4..8], @import("control_rules.zig").id("tdut"), .little);
     var tree = try @import("tree.zig").Tree.parse(a, raw[0..if (bad) 31 else 32], .{ .raw = 0x05010001 }, .{});

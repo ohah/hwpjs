@@ -6,14 +6,14 @@ pub fn parse(c: @import("control.zig").Control) !Kind {
     if (c.code != 8 or c.kind != .inline_control or c.data.len != 12 or c.closing_code != 8) return error.InvalidTitleMark;
     const id = std.mem.readInt(u32, c.data[0..4], .little);
     const kind: Kind = if (id == controls.id("Mtit")) .mtit else if (id == controls.id("Mign")) .mign else return error.UnsupportedTitleMark;
-    const zero = [_]u8{0} ** 8;
+    const zero = @as([8]u8, @splat(0));
     const spaces = [_]u8{ ' ', 0, ' ', 0, ' ', 0, ' ', 0 };
     if (!std.mem.eql(u8, c.data[4..], &zero) and !(kind == .mtit and std.mem.eql(u8, c.data[4..], &spaces))) return error.UnsupportedTitleMarkData;
     return kind;
 }
 
 test "title mark retains exact observed IDs and refuses unknown payload fields" {
-    var data = [_]u8{0} ** 12;
+    var data = @as([12]u8, @splat(0));
     var c = @import("control.zig").Control{ .code = 8, .kind = .inline_control, .data = &data, .closing_code = 8 };
     inline for (.{ .{ "Mtit", Kind.mtit }, .{ "Mign", Kind.mign } }) |case| {
         std.mem.writeInt(u32, data[0..4], controls.id(case[0]), .little);

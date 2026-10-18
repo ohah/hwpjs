@@ -26,7 +26,7 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 
 test "miter limit preserves unsigned and FLOAT interpretations without normalization" {
     for ([_]u32{ 0, 1, 0x3fc00000, 0x7f800000, 0x7fc01234, std.math.maxInt(u32) }) |raw| {
-        var bytes = [_]u8{0} ** 12;
+        var bytes = @as([12]u8, @splat(0));
         std.mem.writeInt(u32, bytes[8..12], raw, .little);
         const limit = (try parse(fixture(.setmiterlimit, &bytes))).?;
         try std.testing.expectEqual(raw, limit.raw);
@@ -36,12 +36,12 @@ test "miter limit preserves unsigned and FLOAT interpretations without normaliza
 }
 
 test "miter limit requires its prefix accepts trailing data and does not claim unrelated records" {
-    var short = [_]u8{0} ** 8;
+    var short = @as([8]u8, @splat(0));
     try std.testing.expectError(error.InvalidEmfMiterLimitRecordSize, parse(fixture(.setmiterlimit, &short)));
     var declared_twelve = fixture(.setmiterlimit, &short);
     declared_twelve.size = 12;
     try std.testing.expectError(error.InvalidEmfMiterLimitRecordSize, parse(declared_twelve));
-    var long = [_]u8{0} ** 16;
+    var long = @as([16]u8, @splat(0));
     try std.testing.expectEqual(@as(u32, 0), (try parse(fixture(.setmiterlimit, &long))).?.raw);
     var declared_twelve_long = fixture(.setmiterlimit, &long);
     declared_twelve_long.size = 12;

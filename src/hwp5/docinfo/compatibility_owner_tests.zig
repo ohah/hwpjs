@@ -8,7 +8,7 @@ fn inspect(bytes: []const u8) !void {
     while (try it.next()) |r| try state.observe(r);
 }
 test "layout owner is a root group not merely an earlier compatible record" {
-    var bytes = [_]u8{0} ** 36;
+    var bytes = @as([36]u8, @splat(0));
     std.mem.writeInt(u32, bytes[0..4], 30 | (4 << 20), .little);
     // Unknown nested record does not change the enclosing root.
     std.mem.writeInt(u32, bytes[8..12], 999 | (2 << 10), .little);

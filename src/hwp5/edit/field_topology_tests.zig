@@ -15,7 +15,7 @@ test "field topology diagnostics keep source binding and nesting limits strict" 
 }
 
 fn synthetic() [184]u8 {
-    var bytes = [_]u8{0} ** 184;
+    var bytes = @as([184]u8, @splat(0));
     for (0..4) |paragraph| {
         const at = paragraph * 46;
         std.mem.writeInt(u32, bytes[at..][0..4], 66 | (22 << 20), .little);

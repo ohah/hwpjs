@@ -46,7 +46,7 @@ test "OLE selected reference check consumes the parsed ID in both layouts" {
     inline for (.{ ole.Layout.spec24, ole.Layout.observed26 }) |layout| {
         const width = if (layout == .spec24) 24 else 26;
         const id_offset = if (layout == .spec24) 10 else 12;
-        var bytes = [_]u8{0} ** (12 + width);
+        var bytes = @as([(12 + width)]u8, @splat(0));
         std.mem.writeInt(u32, bytes[0..4], 76 | (4 << 20), .little);
         std.mem.writeInt(u32, bytes[4..8], @import("control_rules.zig").id("$ole"), .little);
         std.mem.writeInt(u32, bytes[8..12], 84 | (1 << 10) | (width << 20), .little);

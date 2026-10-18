@@ -10,7 +10,7 @@ pub const names = [_][]const u8{ "parameterset", "booleanParam", "integerParam",
 pub const Owner = enum { picture, container, equation, other };
 
 comptime {
-    if (names.len != @typeInfo(Kind).@"enum".fields.len) @compileError("parameter node names mismatch");
+    if (names.len != @typeInfo(Kind).@"enum".field_names.len) @compileError("parameter node names mismatch");
 }
 
 pub const Options = struct {
@@ -86,7 +86,7 @@ const Budget = struct {
 
 fn kindOf(element: tree_mod.Element) ?Kind {
     for (names, 0..) |name, index| {
-        if (element.is(document_xml.paragraph_uri, name)) return @enumFromInt(index);
+        if (element.is(document_xml.paragraph_uri, name)) return @fromBackingInt(@intCast(index));
     }
     return null;
 }

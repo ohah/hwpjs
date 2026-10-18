@@ -3,7 +3,7 @@ const t = std.testing;
 const ellipse = @import("shape_ellipse.zig");
 test "ellipse preserves seven signed points even when arc flag is clear" {
     try t.expectEqual(80, ellipse.tag);
-    var raw = [_]u8{0} ** 63;
+    var raw = @as([63]u8, @splat(0));
     raw[60..].* = .{ 9, 128, 255 };
     const values = [_]i32{ -2147483648, 2147483647, -1, 0, 123, -456, 789, -1024, 2048, -4096, 8192, -16384, 32768, -65536 };
     for (values, 0..) |value, i| std.mem.writeInt(i32, raw[4 + i * 4 ..][0..4], value, .little);
@@ -19,7 +19,7 @@ test "ellipse preserves seven signed points even when arc flag is clear" {
     try t.expectEqual(0, (try ellipse.Ellipse.parse(raw[0..60])).extra.len);
 }
 test "ellipse attribute views isolate all 32 bits and retain reserved values" {
-    var raw = [_]u8{0} ** 60;
+    var raw = @as([60]u8, @splat(0));
     for (0..32) |bit| {
         const value = @as(u32, 1) << @intCast(bit);
         std.mem.writeInt(u32, raw[0..4], value, .little);

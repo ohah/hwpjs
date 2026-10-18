@@ -12,23 +12,23 @@ pub fn balanced(a: std.mem.Allocator) ![]u8 {
 fn build(a: std.mem.Allocator, closed: bool) ![]u8 {
     var out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(a);
-    var header = [_]u8{0} ** 22;
+    var header = @as([22]u8, @splat(0));
     f.put(&header, 0, u32, 10);
     f.put(&header, 4, u32, 1 << 16);
     f.put(&header, 12, u16, 1);
     try f.frame(a, &out, 66, 0, &header);
-    var text = [_]u8{0} ** 36;
+    var text = @as([36]u8, @splat(0));
     f.put(&text, 0, u16, 16);
     f.put(&text, 2, u32, @import("../body/control_rules.zig").id("head"));
     f.put(&text, 14, u16, 16);
     f.put(&text, 16, u16, 'A');
     f.put(&text, 18, u16, 13);
     try f.frame(a, &out, 67, 1, text[0..20]);
-    try f.frame(a, &out, 68, 1, &([_]u8{0} ** 8));
-    var owner = [_]u8{0} ** 8;
+    try f.frame(a, &out, 68, 1, &(@as([8]u8, @splat(0))));
+    var owner = @as([8]u8, @splat(0));
     f.put(&owner, 0, u32, @import("../body/control_rules.zig").id("head"));
     try f.frame(a, &out, 71, 1, &owner);
-    var list = [_]u8{0} ** 18;
+    var list = @as([18]u8, @splat(0));
     f.put(&list, 0, u16, 1);
     try f.frame(a, &out, 72, 2, &list);
     f.put(&header, 4, u32, 1 << 3);
@@ -45,8 +45,8 @@ fn build(a: std.mem.Allocator, closed: bool) ![]u8 {
         f.put(&text, 34, u16, 13);
     }
     try f.frame(a, &out, 67, 3, text[0..if (closed) @as(usize, 36) else 20]);
-    try f.frame(a, &out, 68, 3, &([_]u8{0} ** 8));
-    var field = [_]u8{0} ** 15;
+    try f.frame(a, &out, 68, 3, &(@as([8]u8, @splat(0))));
+    var field = @as([15]u8, @splat(0));
     f.put(&field, 0, u32, @import("../body/control_rules.zig").id("%clk"));
     f.put(&field, 11, u32, 1);
     try f.frame(a, &out, 71, 3, &field);

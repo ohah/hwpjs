@@ -23,7 +23,7 @@ pub const Collector = struct {
         const count = v.count();
         const increment: Stats = .{ .chunks = 1, .name_bytes = v.name.len, .entries = count, .entries8 = if (v.depth == 8) count else 0, .entries16 = if (v.depth == 16) count else 0, .zero_frequencies = v.zero_frequencies, .empty_palettes = @intFromBool(count == 0), .payload_bytes = chunk.payload.len };
         var next = self.stats;
-        inline for (std.meta.fields(Stats)) |f| @field(next, f.name) = std.math.add(usize, @field(next, f.name), @field(increment, f.name)) catch return error.LimitExceeded;
+        inline for (@import("../../reflection.zig").fields(Stats)) |f| @field(next, f.name) = std.math.add(usize, @field(next, f.name), @field(increment, f.name)) catch return error.LimitExceeded;
         try self.names.putNoClobber(a, v.name, {});
         self.stats = next;
     }

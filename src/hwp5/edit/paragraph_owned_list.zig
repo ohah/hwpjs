@@ -21,9 +21,9 @@ test "paragraph owned list requires explicit root sibling count and rejects forg
     const a = std.testing.allocator;
     var bytes: std.ArrayList(u8) = .empty;
     defer bytes.deinit(a);
-    var head = [_]u8{0} ** 24;
+    var head = @as([24]u8, @splat(0));
     std.mem.writeInt(u32, head[0..4], 1, .little);
-    var list = [_]u8{0} ** 8;
+    var list = @as([8]u8, @splat(0));
     list[0] = 1;
     try @import("../record_writer.zig").append(a, &bytes, 66, 0, &head, 1024);
     try @import("../record_writer.zig").append(a, &bytes, 72, 1, &list, 1024);

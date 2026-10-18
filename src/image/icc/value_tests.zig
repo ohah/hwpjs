@@ -5,7 +5,7 @@ const date = @import("date_time.zig");
 const light = @import("pcs_illuminant.zig");
 const values = @import("header_v4_values.zig");
 fn fixture() !header.Header {
-    var b = [_]u8{0} ** 128;
+    var b = @as([128]u8, @splat(0));
     b[8] = 4;
     b[36..40].* = "acsp".*;
     var h = try header.parse(&b);
@@ -72,7 +72,7 @@ test "ICC v4 header attributes intent reserved tail and flag ownership" {
     h.version.major = 2;
     try t.expectError(error.IccEditionMismatch, values.inspect(h));
     h = original;
-    h.tail = .{ .v2 = [_]u8{0} ** 44 };
+    h.tail = .{ .v2 = @as([44]u8, @splat(0)) };
     try t.expectError(error.IccEditionMismatch, values.inspect(h));
     h = original;
     h.creation_date[5] = 60;

@@ -8,14 +8,14 @@ const a = std.testing.allocator;
 test "paragraph instance ID is a model value distinct from source provenance and survives clone" {
     var input: std.ArrayList(u8) = .empty;
     defer input.deinit(a);
-    var header = [_]u8{0} ** 26;
+    var header = @as([26]u8, @splat(0));
     std.mem.writeInt(u32, header[0..4], 1, .little);
     std.mem.writeInt(u16, header[12..14], 1, .little);
     std.mem.writeInt(u32, header[18..22], 0xffffffff, .little);
     header[24] = 0xab;
     try records.append(a, &input, 66, 0, &header, 4096);
     try records.append(a, &input, 67, 1, &.{ 13, 0 }, 4096);
-    try records.append(a, &input, 68, 1, &([_]u8{0} ** 8), 4096);
+    try records.append(a, &input, 68, 1, &(@as([8]u8, @splat(0))), 4096);
     const version = @import("../version.zig").Version{ .raw = 0x05000302 };
     var document = try projection.fromDecodedSections(a, version, &.{input.items});
     defer document.deinit(a);
@@ -48,10 +48,10 @@ test "paragraph instance ID is a model value distinct from source provenance and
 test "section writer resumes parent metadata after a nested control paragraph" {
     var input: std.ArrayList(u8) = .empty;
     defer input.deinit(a);
-    var header = [_]u8{0} ** 24;
+    var header = @as([24]u8, @splat(0));
     std.mem.writeInt(u32, header[0..4], 1, .little);
     std.mem.writeInt(u16, header[12..14], 1, .little);
-    var run = [_]u8{0} ** 8;
+    var run = @as([8]u8, @splat(0));
     try records.append(a, &input, 66, 0, &header, 4096);
     try records.append(a, &input, 71, 1, &.{ ' ', 'o', 's', 'g' }, 4096);
     try records.append(a, &input, 66, 2, &header, 4096);

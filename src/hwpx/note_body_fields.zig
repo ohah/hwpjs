@@ -9,7 +9,7 @@ const values = @import("xml_values.zig");
 pub const Field = enum(u8) { id, flag, number, user_char, prefix_char, suffix_char, inst_id };
 pub const names = [_][]const u8{ "id", "flag", "number", "userChar", "prefixChar", "suffixChar", "instId" };
 comptime {
-    if (names.len != @typeInfo(Field).@"enum".fields.len) @compileError("note body field/name mismatch");
+    if (names.len != @typeInfo(Field).@"enum".field_names.len) @compileError("note body field/name mismatch");
 }
 
 pub const Attributes = struct {
@@ -22,7 +22,7 @@ pub const Attributes = struct {
     suffix_char: ?u16 = null,
     inst_id: ?u32 = null,
     pub fn get(self: Attributes, field: Field) ?[]const u8 {
-        return self.raw[@intFromEnum(field)];
+        return self.raw[@backingInt(field)];
     }
 };
 

@@ -18,7 +18,7 @@ test "model equality observes all metadata owned values null empty and floating 
     const after: model.Document = .{ .format = .hwp5, .sections = &copies };
     try std.testing.expect(equality.document(before, after));
     const p = &copies[0].paragraphs[0];
-    inline for (std.meta.fields(model.Paragraph)) |field| {
+    inline for (@import("../reflection.zig").fields(model.Paragraph)) |field| {
         switch (@typeInfo(field.type)) {
             .int => {
                 const saved = @field(p, field.name);

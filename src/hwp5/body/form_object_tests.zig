@@ -2,7 +2,7 @@ const std = @import("std");
 const t = std.testing;
 const form = @import("form_object.zig");
 test "observed form envelope preserves identifiers, unknown length and borrowed UTF16" {
-    var bytes = [_]u8{0} ** 21;
+    var bytes = @as([21]u8, @splat(0));
     @memcpy(bytes[0..4], "tbp+");
     @memcpy(bytes[4..8], "????");
     std.mem.writeInt(u32, bytes[8..12], 0xffffffff, .little);
@@ -21,7 +21,7 @@ test "observed form envelope preserves identifiers, unknown length and borrowed 
 }
 test "observed form type selection never turns an unknown ID into a button" {
     inline for (.{ .{ "tbp+", form.Kind.push_button }, .{ "tbc+", form.Kind.check_box }, .{ "boc+", form.Kind.combo_box }, .{ "tbr+", form.Kind.radio_button }, .{ "tde+", form.Kind.edit }, .{ "+pbt", form.Kind.unknown }, .{ "TBP+", form.Kind.unknown } }) |pair| {
-        var bytes = [_]u8{0} ** 14;
+        var bytes = @as([14]u8, @splat(0));
         @memcpy(bytes[0..4], pair[0]);
         const v = try form.View.parseObserved(&bytes);
         try t.expectEqual(pair[1], v.kind());

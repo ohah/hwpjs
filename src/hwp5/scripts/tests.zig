@@ -21,7 +21,7 @@ test "script counted fields preserve odd alignment, null and lone surrogate with
     for (0..26) |n| try t.expectError(error.UnexpectedEnd, Source.parse(raw[0..n]));
 }
 test "all four script lengths reject overflow and every non-minus-one flag bit" {
-    var raw = [_]u8{0} ** 20;
+    var raw = @as([20]u8, @splat(0));
     @memset(raw[16..], 255);
     const good = raw;
     for (0..4) |i| {

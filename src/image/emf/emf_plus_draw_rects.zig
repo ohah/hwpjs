@@ -55,7 +55,7 @@ fn makeRecord(data: []const u8, flags: u16) record.Record {
 }
 
 test "EMF+ DrawRects parses compressed rectangles Pen ID and ignored flags" {
-    var data = [_]u8{0} ** 20;
+    var data = @as([20]u8, @splat(0));
     std.mem.writeInt(u32, data[0..4], 2, .little);
     for ([_]i16{ -32768, -1, 0, 32767, 1, 2, 3, 4 }, 0..) |value, index|
         std.mem.writeInt(i16, data[4 + index * 2 ..][0..2], value, .little);
@@ -77,7 +77,7 @@ test "EMF+ DrawRects parses compressed rectangles Pen ID and ignored flags" {
 }
 
 test "EMF+ DrawRects preserves floating rectangle bits" {
-    var data = [_]u8{0} ** 20;
+    var data = @as([20]u8, @splat(0));
     std.mem.writeInt(u32, data[0..4], 1, .little);
     for ([_]f32{ -0.0, std.math.nan(f32), std.math.inf(f32), -4.5 }, 0..) |value, index|
         std.mem.writeInt(u32, data[4 + index * 4 ..][0..4], @bitCast(value), .little);
@@ -92,7 +92,7 @@ test "EMF+ DrawRects preserves floating rectangle bits" {
 }
 
 test "EMF+ DrawRects rejects type count ObjectID size axes truncation and limit" {
-    var data = [_]u8{0} ** 36;
+    var data = @as([36]u8, @splat(0));
     std.mem.writeInt(u32, data[0..4], 2, .little);
     _ = try parse(makeRecord(data[0..20], 0x4000), .{});
     _ = try parse(makeRecord(&data, 0), .{});
@@ -102,7 +102,7 @@ test "EMF+ DrawRects rejects type count ObjectID size axes truncation and limit"
         if (cut != 36)
             try std.testing.expectError(error.InvalidEmfPlusDrawRectsSize, parse(makeRecord(data[0..cut], 0), .{}));
     }
-    var zero_count = [_]u8{0} ** 4;
+    var zero_count = @as([4]u8, @splat(0));
     try std.testing.expectError(error.InvalidEmfPlusDrawRectsCount, parse(makeRecord(&zero_count, 0x4000), .{}));
     try std.testing.expectError(error.InvalidEmfPlusObjectId, parse(makeRecord(data[0..20], 0x4040), .{}));
     try std.testing.expectError(error.LimitExceeded, parse(makeRecord(data[0..20], 0x4000), .{ .max_rectangles = 1 }));

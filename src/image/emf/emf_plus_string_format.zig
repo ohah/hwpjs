@@ -89,7 +89,7 @@ fn putF32(bytes: []u8, offset: usize, value: f32) void {
 }
 
 fn validBytes() [76]u8 {
-    var bytes = [_]u8{0} ** 76;
+    var bytes = @as([76]u8, @splat(0));
     putU32(&bytes, 0, 0xdbc01002);
     putU32(&bytes, 4, 0x8000_0001);
     putU32(&bytes, 8, 0xdead_0411);
@@ -148,7 +148,7 @@ test "EMF+ StringFormat accepts the exact fixed header with empty optional array
 
 test "EMF+ StringFormat character range view uses an eight-byte stride" {
     const base = validBytes();
-    var bytes = [_]u8{0} ** 84;
+    var bytes = @as([84]u8, @splat(0));
     @memcpy(bytes[0..76], &base);
     putI32(&bytes, 56, 2);
     putI32(&bytes, 76, 17);

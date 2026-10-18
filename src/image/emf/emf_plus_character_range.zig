@@ -20,7 +20,7 @@ pub const Ranges = struct {
 };
 
 test "EMF+ CharacterRange preserves signed endpoints in a bounded view" {
-    var bytes = [_]u8{0} ** 16;
+    var bytes = @as([16]u8, @splat(0));
     std.mem.writeInt(i32, bytes[0..4], -2, .little);
     std.mem.writeInt(i32, bytes[4..8], 5, .little);
     std.mem.writeInt(i32, bytes[8..12], 7, .little);

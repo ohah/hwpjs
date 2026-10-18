@@ -39,7 +39,7 @@ test "all five single PointS poly records use shared kinds and signed XY" {
         .{ .kind = .polybezierto16, .count = 3 },
         .{ .kind = .polylineto16, .count = 4 },
     };
-    var bytes = [_]u8{0} ** 44;
+    var bytes = @as([44]u8, @splat(0));
     for (cases) |case| {
         std.mem.writeInt(u32, bytes[24..28], case.count, .little);
         std.mem.writeInt(i16, bytes[28..30], std.math.minInt(i16), .little);
@@ -55,12 +55,12 @@ test "all five single PointS poly records use shared kinds and signed XY" {
 }
 
 test "PointS single records reject truncations and invalid counts but ignore trailing data" {
-    var bytes = [_]u8{0} ** 44;
+    var bytes = @as([44]u8, @splat(0));
     std.mem.writeInt(u32, bytes[24..28], 4, .little);
     for (0..single_header_size) |cut|
         try std.testing.expectError(error.InvalidEmfPoly16RecordSize, parse(fixture(.polybezier16, bytes[0..cut])));
     try std.testing.expectError(error.InvalidEmfPoly16RecordSize, parse(fixture(.polybezier16, bytes[0..43])));
-    var excess = [_]u8{0} ** 48;
+    var excess = @as([48]u8, @splat(0));
     std.mem.writeInt(u32, excess[24..28], 4, .little);
     try std.testing.expectEqual(@as(usize, 4), (try parse(fixture(.polybezier16, &excess))).?.single.points.count());
     var wrong = fixture(.polybezier16, &bytes);
@@ -75,7 +75,7 @@ test "PointS single records reject truncations and invalid counts but ignore tra
 }
 
 test "PointS non-Bezier poly records retain degenerate arrays" {
-    var bytes = [_]u8{0} ** 32;
+    var bytes = @as([32]u8, @splat(0));
     for ([_]struct { kind: records.RecordType, count: u32 }{
         .{ .kind = .polygon16, .count = 0 },
         .{ .kind = .polyline16, .count = 1 },
@@ -88,7 +88,7 @@ test "PointS non-Bezier poly records retain degenerate arrays" {
 }
 
 test "PointS multi-poly validates exact arrays total ranges and indexes" {
-    var bytes = [_]u8{0} ** 60;
+    var bytes = @as([60]u8, @splat(0));
     std.mem.writeInt(u32, bytes[24..28], 2, .little);
     std.mem.writeInt(u32, bytes[28..32], 5, .little);
     std.mem.writeInt(u32, bytes[32..36], 2, .little);
@@ -113,7 +113,7 @@ test "PointS multi-poly validates exact arrays total ranges and indexes" {
 }
 
 test "PointS multi-poly rejects impossible u32 extents before slicing and permits empty arrays" {
-    var bytes = [_]u8{0} ** multiple_header_size;
+    var bytes = @as([multiple_header_size]u8, @splat(0));
     const empty = (try parse(fixture(.polypolygon16, &bytes))).?.multiple;
     try std.testing.expectEqual(@as(usize, 0), empty.points.count());
     std.mem.writeInt(u32, bytes[24..28], std.math.maxInt(u32), .little);
@@ -122,7 +122,7 @@ test "PointS multi-poly rejects impossible u32 extents before slicing and permit
 }
 
 test "16-bit POLYPOLYLINE retains zero and one point groups without a stated minimum" {
-    var bytes = [_]u8{0} ** 40;
+    var bytes = @as([40]u8, @splat(0));
     std.mem.writeInt(u32, bytes[24..28], 1, .little);
     for ([_]u32{ 0, 1 }) |count| {
         std.mem.writeInt(u32, bytes[28..32], count, .little);

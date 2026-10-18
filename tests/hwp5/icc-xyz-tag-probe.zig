@@ -5,7 +5,7 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     if (bytes.len > limit) return error.LimitExceeded;
     if (bytes.len < 8) return error.InvalidProbeInput;
     // Obtain the class using the public header inspector, not a duplicate table.
-    var header_bytes = [_]u8{0} ** 128;
+    var header_bytes = @as([128]u8, @splat(0));
     header_bytes[8] = 4;
     header_bytes[12..16].* = bytes[0..4].*;
     header_bytes[16..20].* = "RGB ".*;
@@ -18,7 +18,7 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     @memset(out, 0);
     if (value) |v| {
         const report = try icc.xyz_tag_values.inspectV4(identifiers.profile_class, v);
-        const fields = [_]u32{ 1, @intFromEnum(v.kind), @intFromBool(report.context_deferred), @intFromBool(report.luminance_unused_nonzero) };
+        const fields = [_]u32{ 1, @backingInt(v.kind), @intFromBool(report.context_deferred), @intFromBool(report.luminance_unused_nonzero) };
         // Status, kind, and signed XYZ components; report flags share one word.
         std.mem.writeInt(u32, out[0..4], fields[0], .little);
         std.mem.writeInt(u32, out[4..8], fields[1], .little);

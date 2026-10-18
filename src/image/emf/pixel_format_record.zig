@@ -25,7 +25,7 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 }
 
 test "PIXELFORMAT reuses the complete descriptor and preserves trailing extension" {
-    var bytes = [_]u8{0} ** 52;
+    var bytes = @as([52]u8, @splat(0));
     std.mem.writeInt(u16, bytes[8..10], 40, .little);
     std.mem.writeInt(u16, bytes[10..12], 1, .little);
     bytes[16] = 1;
@@ -49,7 +49,7 @@ test "PIXELFORMAT reuses the complete descriptor and preserves trailing extensio
 }
 
 test "PIXELFORMAT validates every prefix cut declaration descriptor and identity" {
-    var bytes = [_]u8{0} ** 48;
+    var bytes = @as([48]u8, @splat(0));
     std.mem.writeInt(u16, bytes[8..10], 40, .little);
     std.mem.writeInt(u16, bytes[10..12], 1, .little);
     for (0..48) |cut|

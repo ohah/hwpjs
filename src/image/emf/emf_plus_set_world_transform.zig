@@ -31,7 +31,7 @@ fn makeRecord(flags: u16, data: []const u8) record.Record {
 }
 
 test "EMF+ SetWorldTransform preserves matrix bits order and ignored Flags" {
-    var data = [_]u8{0} ** 24;
+    var data = @as([24]u8, @splat(0));
     const bits = [_]u32{ 0x80000000, 0x3fc00000, 0xc0100000, 0x7f800000, 0x7fc00001, 0x41100000 };
     for (bits, 0..) |item, index|
         std.mem.writeInt(u32, data[index * 4 ..][0..4], item, .little);
@@ -48,7 +48,7 @@ test "EMF+ SetWorldTransform preserves matrix bits order and ignored Flags" {
 }
 
 test "EMF+ SetWorldTransform rejects type every size axis and all truncations" {
-    const data = [_]u8{0} ** 24;
+    const data = @as([24]u8, @splat(0));
     for (0..24) |cut| {
         var truncated = makeRecord(0, data[0..cut]);
         truncated.size = @intCast(record.header_size + cut);

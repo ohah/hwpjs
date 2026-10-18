@@ -39,7 +39,7 @@ test "history date layout selection preserves default acceptance and reports dup
     const short = prefix ++ [_]u8{ 0x21, 0, 0, 0, 0 } ++ end;
     try t.expectEqual(@as(usize, 1), (try item.Item.parse(&short, .{ .start_layout = .spec_flag_first })).report.date_records_deferred);
     try t.expectError(error.UnexpectedEnd, item.Item.parse(&short, .{ .start_layout = .spec_flag_first, .date_layout = .observed_systemtime16 }));
-    const invalid = [_]u8{ 0x21, 16, 0, 0, 0 } ++ ([_]u8{255} ** 16);
+    const invalid = [_]u8{ 0x21, 16, 0, 0, 0 } ++ (@as([16]u8, @splat(255)));
     const raw = prefix ++ invalid ++ invalid ++ end;
     const parsed = try item.Item.parse(&raw, .{ .start_layout = .spec_flag_first, .date_layout = .observed_systemtime16 });
     try t.expectEqual(@as(usize, 0), parsed.report.date_records_deferred);

@@ -33,7 +33,7 @@ fn makeRecord(data: []const u8, flags: u16) record.Record {
 }
 
 test "EMF+ SetRenderingOrigin parses signed coordinate extremes and preserves ignored flags" {
-    var data = [_]u8{0} ** 8;
+    var data = @as([8]u8, @splat(0));
     std.mem.writeInt(i32, data[0..4], std.math.minInt(i32), .little);
     std.mem.writeInt(i32, data[4..8], std.math.maxInt(i32), .little);
     const parsed = try parse(makeRecord(&data, 0xffff));
@@ -43,7 +43,7 @@ test "EMF+ SetRenderingOrigin parses signed coordinate extremes and preserves ig
 }
 
 test "EMF+ SetRenderingOrigin rejects every size axis and wrong record type" {
-    var data = [_]u8{0} ** 9;
+    var data = @as([9]u8, @splat(0));
     for (0..data.len + 1) |cut| {
         if (cut != 8)
             try std.testing.expectError(error.InvalidEmfPlusSetRenderingOriginSize, parse(makeRecord(data[0..cut], 0)));

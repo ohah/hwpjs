@@ -45,7 +45,7 @@ pub const Iterator = struct {
 };
 
 test "EMF+ iterator preserves fields and advances atomically" {
-    var bytes = [_]u8{0} ** 32;
+    var bytes = @as([32]u8, @splat(0));
     std.mem.writeInt(u16, bytes[0..2], 0x4003, .little);
     std.mem.writeInt(u16, bytes[2..4], 0xa55a, .little);
     std.mem.writeInt(u32, bytes[4..8], 16, .little);
@@ -66,7 +66,7 @@ test "EMF+ iterator preserves fields and advances atomically" {
 }
 
 test "EMF+ iterator rejects all malformed framing without advancing" {
-    var bytes = [_]u8{0} ** 16;
+    var bytes = @as([16]u8, @splat(0));
     std.mem.writeInt(u16, bytes[0..2], 0x4003, .little);
     std.mem.writeInt(u32, bytes[4..8], 16, .little);
     std.mem.writeInt(u32, bytes[8..12], 4, .little);

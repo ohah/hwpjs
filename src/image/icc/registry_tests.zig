@@ -28,7 +28,7 @@ test "ICC registry membership distinguishes zero missing and quarantined snapsho
     try t.expectEqual(.unresolved_snapshot, lookup.device(0, 0x41444132));
     try t.expectEqual(.unresolved_snapshot, lookup.device(0xffffffff, 0x41444132));
     try t.expectEqual(.unspecified, lookup.device(0xffffffff, 0));
-    var bytes = [_]u8{0} ** 128;
+    var bytes = @as([128]u8, @splat(0));
     bytes[8] = 4;
     bytes[36..40].* = "acsp".*;
     var h = try header.parse(&bytes);

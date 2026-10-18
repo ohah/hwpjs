@@ -32,7 +32,7 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 }
 
 fn singleFixture(count: u32) [60]u8 {
-    var bytes = [_]u8{0} ** 60;
+    var bytes = @as([60]u8, @splat(0));
     std.mem.writeInt(u32, bytes[24..28], count, .little);
     return bytes;
 }
@@ -56,7 +56,7 @@ test "single 32-bit poly records enforce kind-specific point sequences" {
         try std.testing.expectEqual(@as(i32, -20), (try value.points.get(0)).x);
         try std.testing.expectEqual(@as(usize, case.count), value.points.count());
     }
-    const unrelated = [_]u8{0} ** 8;
+    const unrelated = @as([8]u8, @splat(0));
     try std.testing.expect((try parse(fixture(.savedc, &unrelated))) == null);
 }
 
@@ -70,7 +70,7 @@ test "single poly records reject grammar truncation and declaration drift but ig
     }
     std.mem.writeInt(u32, bytes[24..28], 4, .little);
     try std.testing.expectError(error.InvalidEmfPolyRecordSize, parse(fixture(.polybezier, bytes[0..59])));
-    var excess = [_]u8{0} ** 68;
+    var excess = @as([68]u8, @splat(0));
     std.mem.writeInt(u32, excess[24..28], 4, .little);
     try std.testing.expectEqual(@as(usize, 4), (try parse(fixture(.polybezier, &excess))).?.single.points.count());
     var wrong = fixture(.polybezier, &bytes);
@@ -88,7 +88,7 @@ test "single poly records reject grammar truncation and declaration drift but ig
 }
 
 test "non-Bezier poly records preserve degenerate point arrays without inventing wire constraints" {
-    var bytes = [_]u8{0} ** 36;
+    var bytes = @as([36]u8, @splat(0));
     for ([_]struct { kind: records.RecordType, count: u32 }{
         .{ .kind = .polygon, .count = 0 },
         .{ .kind = .polyline, .count = 1 },
@@ -98,14 +98,14 @@ test "non-Bezier poly records preserve degenerate point arrays without inventing
         const length = single_header_size + case.count * point_l_array.width;
         try std.testing.expectEqual(@as(usize, case.count), (try parse(fixture(case.kind, bytes[0..length]))).?.single.points.count());
     }
-    var empty_multiple = [_]u8{0} ** multiple_header_size;
+    var empty_multiple = @as([multiple_header_size]u8, @splat(0));
     const value = (try parse(fixture(.polypolygon, &empty_multiple))).?.multiple;
     try std.testing.expectEqual(@as(u32, 0), value.shape_count);
     try std.testing.expectEqual(@as(usize, 0), value.points.count());
 }
 
 test "multi-poly records validate per-shape counts total and borrowed ranges" {
-    var bytes = [_]u8{0} ** 80;
+    var bytes = @as([80]u8, @splat(0));
     std.mem.writeInt(u32, bytes[24..28], 2, .little);
     std.mem.writeInt(u32, bytes[28..32], 5, .little);
     std.mem.writeInt(u32, bytes[32..36], 2, .little);
@@ -133,14 +133,14 @@ test "multi-poly records validate per-shape counts total and borrowed ranges" {
 }
 
 test "multi-poly checked extents reject impossible counts before slicing" {
-    var bytes = [_]u8{0} ** multiple_header_size;
+    var bytes = @as([multiple_header_size]u8, @splat(0));
     std.mem.writeInt(u32, bytes[24..28], std.math.maxInt(u32), .little);
     std.mem.writeInt(u32, bytes[28..32], std.math.maxInt(u32), .little);
     try std.testing.expectError(error.InvalidEmfPolyRecordSize, parse(fixture(.polypolyline, &bytes)));
 }
 
 test "32-bit POLYPOLYLINE rejects sublines with fewer than two points" {
-    var bytes = [_]u8{0} ** 52;
+    var bytes = @as([52]u8, @splat(0));
     std.mem.writeInt(u32, bytes[24..28], 1, .little);
     for ([_]u32{ 0, 1, 2 }) |count| {
         std.mem.writeInt(u32, bytes[28..32], count, .little);

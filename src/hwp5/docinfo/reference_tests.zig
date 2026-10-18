@@ -17,30 +17,30 @@ fn frame(out: *std.ArrayList(u8), tag: u10, b: []const u8) !void {
 fn fixture() ![]u8 {
     var out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(t.allocator);
-    var map = [_]u8{0} ** 60;
+    var map = @as([60]u8, @splat(0));
     for (0..15) |i| put(&map, i * 4, i32, 1);
     try frame(&out, 17, &map);
     try frame(&out, 18, &.{ 2, 0, 255, 255 }); // storage ID != 1-based BinData item index
     for (0..7) |_| try frame(&out, 19, &.{ 0, 0, 0 });
-    var border = [_]u8{0} ** 46;
+    var border = @as([46]u8, @splat(0));
     put(&border, 32, u32, 2);
     border[36] = 5;
     put(&border, 40, u16, 1);
     try frame(&out, 20, &border);
-    try frame(&out, 21, &([_]u8{0} ** 68));
-    try frame(&out, 22, &([_]u8{0} ** 8));
-    var numbering = [_]u8{0} ** 100;
+    try frame(&out, 21, &(@as([68]u8, @splat(0))));
+    try frame(&out, 22, &(@as([8]u8, @splat(0))));
+    var numbering = @as([100]u8, @splat(0));
     for (0..7) |i| put(&numbering, i * 14 + 8, u32, 0xffffffff);
     try frame(&out, 23, &numbering);
-    var bullet = [_]u8{0} ** 25;
+    var bullet = @as([25]u8, @splat(0));
     put(&bullet, 8, u32, 0xffffffff);
     put(&bullet, 21, u16, 65535);
     try frame(&out, 24, &bullet);
-    var para = [_]u8{0} ** 42;
+    var para = @as([42]u8, @splat(0));
     put(&para, 32, u16, 1);
     put(&para, 30, u16, 65535);
     try frame(&out, 25, &para); // inactive head ID
-    try frame(&out, 26, &([_]u8{0} ** 12));
+    try frame(&out, 26, &(@as([12]u8, @splat(0))));
     return out.toOwnedSlice(t.allocator);
 }
 fn payload(bytes: []u8, tag: u10) ![]u8 {
@@ -67,7 +67,7 @@ test "all known resource counts, signed counts, zero allocation and order indepe
     defer t.allocator.free(b);
     const c = try resources.inspect(b, version, .{});
     try c.validateKnownCounts();
-    inline for (@typeInfo(resources.Kind).@"enum".fields) |f| try t.expectEqual(1, c.count(@enumFromInt(f.value)));
+    inline for (@import("../../reflection.zig").fields(resources.Kind)) |f| try t.expectEqual(1, c.count(@fromBackingInt(@intCast(f.value))));
     for (8..15) |i| {
         put(b, 4 + i * 4, i32, 2);
         try t.expectError(error.ResourceCountMismatch, refs.inspect(b, version, .{}));

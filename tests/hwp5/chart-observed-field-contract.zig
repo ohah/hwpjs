@@ -3,10 +3,10 @@ const core = @import("hwpjs");
 const h = core.hwp5;
 
 fn fields(comptime T: type, comptime expected: []const []const u8) void {
-    const actual = @typeInfo(T).@"struct".fields;
+    const actual = @typeInfo(T).@"struct".field_names;
     if (actual.len != expected.len) @compileError("observed chart field contract count changed");
     inline for (actual, expected) |field, name| {
-        if (!std.mem.eql(u8, field.name, name)) @compileError("observed chart field contract order changed");
+        if (!std.mem.eql(u8, field, name)) @compileError("observed chart field contract order changed");
     }
 }
 

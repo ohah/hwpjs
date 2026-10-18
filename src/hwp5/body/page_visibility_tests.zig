@@ -13,12 +13,12 @@ test "hide widths are explicit, not short-record fallback" {
     for (0..2) |n| try t.expectError(error.UnexpectedEnd, p.Hide.parse(b[0..n], .spec16));
 }
 test "visibility masks and parity preserve every unknown bit" {
-    var b = [_]u8{0} ** 4;
+    var b = @as([4]u8, @splat(0));
     for (0..32) |bit| {
         const flags = @as(u32, 1) << @intCast(bit);
         std.mem.writeInt(u32, &b, flags, .little);
         const hide = try p.Hide.parse(&b, .observed32);
-        inline for (std.meta.fields(p.Target)) |field| try t.expectEqual(flags & field.value != 0, hide.hides(@enumFromInt(field.value)));
+        inline for (@import("../../reflection.zig").fields(p.Target)) |field| try t.expectEqual(flags & field.value != 0, hide.hides(@fromBackingInt(@intCast(field.value))));
         try t.expectEqual(flags & ~@as(u32, 63), hide.unknownBits());
         try t.expectEqual(flags & 3, (try p.Parity.parse(&b)).kind());
     }

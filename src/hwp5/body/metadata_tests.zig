@@ -3,7 +3,7 @@ const t = std.testing;
 const b = @import("reader.zig");
 test "metadata malformed dispatch is atomic for every row type" {
     for ([_]u32{ 68, 69, 70 }) |tag| {
-        var bytes = [_]u8{0} ** 5;
+        var bytes = @as([5]u8, @splat(0));
         std.mem.writeInt(u32, bytes[0..4], tag | (1 << 20), .little);
         var it = try b.Iterator.init(&bytes, .{ .raw = 0x05000307 }, .{});
         for (0..2) |_| {
@@ -26,11 +26,11 @@ test "metadata distinct signed fields and nonfirst run order" {
     try t.expectEqual(-7, line.x);
     try t.expectEqual(-8, line.width);
     try t.expectEqual(0xfffffff7, line.flags);
-    var raw = [_]u8{0} ** 22;
+    var raw = @as([22]u8, @splat(0));
     raw[0] = 10;
     raw[12] = 3;
     const h = try b.Header.parse(&raw, .{ .raw = 0x05000107 });
-    var runs = [_]u8{0} ** 24;
+    var runs = @as([24]u8, @splat(0));
     runs[8] = 5;
     runs[16] = 4;
     const m: b.Metadata = .{ .runs = try b.Runs.parse(&runs) };
@@ -42,7 +42,7 @@ test "metadata distinct signed fields and nonfirst run order" {
 }
 test "metadata arrays reject partial rows, bounded get and signed wire fields" {
     inline for (.{ b.Runs, b.Segments, b.Ranges }, .{ 8, 36, 12 }) |T, width| {
-        const bytes = [_]u8{255} ** (width * 2);
+        const bytes = @as([(width * 2)]u8, @splat(255));
         for (0..bytes.len) |n| {
             if (n % width == 0) continue;
             try t.expectError(error.InvalidRecordArraySize, T.parse(bytes[0..n]));
@@ -51,25 +51,25 @@ test "metadata arrays reject partial rows, bounded get and signed wire fields" {
         try t.expectEqual(2, rows.count());
         try t.expect(rows.get(2) == null and rows.get(std.math.maxInt(usize)) == null);
     }
-    const line = (try b.Segments.parse(&([_]u8{255} ** 36))).get(0).?;
+    const line = (try b.Segments.parse(&(@as([36]u8, @splat(255))))).get(0).?;
     try t.expectEqual(-1, line.y);
     try t.expectEqual(-1, line.spacing);
     try t.expectEqual(-1, line.width);
     try t.expectEqual(0xffffffff, line.flags);
-    const range = (try b.Ranges.parse(&([_]u8{255} ** 12))).get(0).?;
+    const range = (try b.Ranges.parse(&(@as([12]u8, @splat(255))))).get(0).?;
     try t.expectEqual(255, range.kind());
     try t.expectEqual(0xffffff, range.data());
 }
 test "metadata count references positions and overlapping ranges" {
-    var raw = [_]u8{0} ** 22;
+    var raw = @as([22]u8, @splat(0));
     raw[0] = 10;
     raw[12] = 1;
     raw[14] = 2;
     raw[16] = 1;
     const h = try b.Header.parse(&raw, .{ .raw = 0x05000107 });
-    var runs = [_]u8{0} ** 8;
-    var lines = [_]u8{0} ** 36;
-    var ranges = [_]u8{0} ** 24;
+    var runs = @as([8]u8, @splat(0));
+    var lines = @as([36]u8, @splat(0));
+    var ranges = @as([24]u8, @splat(0));
     ranges[4] = 8;
     ranges[12] = 2;
     ranges[16] = 10;

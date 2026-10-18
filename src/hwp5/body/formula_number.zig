@@ -54,5 +54,5 @@ test "formula numbers parse signed grouped decimals and reject malformed cells" 
         try std.testing.expectError(error.InvalidFormulaNumber, parse(&wire(s)));
     }
     try std.testing.expectError(error.UnexpectedEnd, parse(&.{'1'}));
-    try std.testing.expectError(error.LimitExceeded, parse(&([_]u8{0} ** 258)));
+    try std.testing.expectError(error.LimitExceeded, parse(&(@as([258]u8, @splat(0)))));
 }

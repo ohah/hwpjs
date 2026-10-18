@@ -143,7 +143,7 @@ pub fn build(b: *std.Build) void {
     editor_api_tests.addArg("tests/hwp5/audit-jsonl-output.test.mjs");
     editor_api_tests.addArg("tests/hwp5/audit-reader-output-cli.test.mjs");
     editor_api_tests.addArg("tests/hwp5/reference-browser-arguments.test.mjs");
-    editor_api_tests.setEnvironmentVariable("HWPJS_TEST_WASM", b.getInstallPath(.bin, "hwpjs.wasm"));
+    installedArtifactEnvironment(editor_api_tests, "HWPJS_TEST_WASM", "hwpjs.wasm");
     editor_api_tests.addArg("tests/hwp5/text-source-policy-content.test.mjs");
     editor_api_tests.addArg("tests/hwp5/text-source-policy-api.test.mjs");
     editor_api_tests.addArg("tests/hwp5/text-source-protection.test.mjs");
@@ -168,13 +168,13 @@ pub fn build(b: *std.Build) void {
     const editor_api_step = b.step("hwp5-editor-audit", "Test experimental JS WASM HWP5 editor boundary");
     editor_api_step.dependOn(&editor_api_tests.step);
     const ownership_parity = b.addSystemCommand(&.{ "node", "--test", "--test-concurrency=1", "tests/hwp5/ownership-index-query-parity.test.mjs" });
-    ownership_parity.setEnvironmentVariable("HWPJS_TEST_WASM", b.getInstallPath(.bin, "hwpjs.wasm"));
+    installedArtifactEnvironment(ownership_parity, "HWPJS_TEST_WASM", "hwpjs.wasm");
     ownership_parity.step.dependOn(b.getInstallStep());
     ownership_parity.has_side_effects = true;
     const ownership_parity_step = b.step("hwp5-ownership-query-parity", "Compare HWP5 ownership queries against an explicit baseline WASM");
     ownership_parity_step.dependOn(&ownership_parity.step);
     const formula_query_parity = b.addSystemCommand(&.{ "node", "--test", "--test-concurrency=1", "tests/hwpx/formula-result-worker-parity.test.mjs" });
-    formula_query_parity.setEnvironmentVariable("HWPJS_TEST_WASM", b.getInstallPath(.bin, "hwpjs.wasm"));
+    installedArtifactEnvironment(formula_query_parity, "HWPJS_TEST_WASM", "hwpjs.wasm");
     formula_query_parity.step.dependOn(b.getInstallStep());
     formula_query_parity.has_side_effects = true;
     const formula_query_parity_step = b.step("hwpx-formula-query-parity", "Compare HWPX display queries against an explicit baseline WASM");
@@ -390,8 +390,8 @@ pub fn build(b: *std.Build) void {
     audit.dependOn(&hwp_check.step);
 
     const emf_corpus_tests = b.addSystemCommand(&.{ "node", "--test", "tests/hwp5/emf-corpus.test.mjs", "tests/hwp5/emf-corpus-artifacts.test.mjs" });
-    emf_corpus_tests.setEnvironmentVariable("HWPJS_TEST_WASM", b.getInstallPath(.bin, "hwpjs.wasm"));
-    emf_corpus_tests.setEnvironmentVariable("HWPJS_TEST_HWP5_PROBE", b.getInstallPath(.bin, "hwp5-probe.wasm"));
+    installedArtifactEnvironment(emf_corpus_tests, "HWPJS_TEST_WASM", "hwpjs.wasm");
+    installedArtifactEnvironment(emf_corpus_tests, "HWPJS_TEST_HWP5_PROBE", "hwp5-probe.wasm");
     emf_corpus_tests.step.dependOn(b.getInstallStep());
     emf_corpus_tests.step.dependOn(&install_hwp_probe.step);
     const emf_corpus_survey = b.addSystemCommand(&.{ "node", "tests/hwp5/emf-corpus-survey.mjs" });
@@ -401,4 +401,18 @@ pub fn build(b: *std.Build) void {
     emf_corpus_audit.dependOn(&emf_corpus_tests.step);
     emf_corpus_audit.dependOn(&emf_corpus_survey.step);
     audit.dependOn(emf_corpus_audit);
+}
+
+// Installation paths are resolved by the 0.17 executor, after configuration.
+// Pass the lazy path as an argument rather than guessing --prefix/--bin-dir.
+fn installedArtifactEnvironment(run: *std.Build.Step.Run, key: []const u8, basename: []const u8) void {
+    const b = run.step.owner;
+    const path = b.graph.path(.install_bin, basename);
+    path.addStepDependencies(&run.step);
+    run.argv.insertSlice(b.allocator, 0, &.{
+        .{ .bytes = "node" },
+        .{ .lazy_path = .{ .prefix = "", .suffix = "", .lazy_path = b.path("tools/run-with-artifact-env.mjs"), .make_absolute = true } },
+        .{ .bytes = key },
+        .{ .lazy_path = .{ .prefix = "", .suffix = "", .lazy_path = path, .make_absolute = true } },
+    }) catch @panic("OOM");
 }

@@ -71,7 +71,7 @@ fn putF32(bytes: []u8, offset: usize, value: f32) void {
 
 test "EMF+ default custom cap parses fixed fields and both sized Paths in wire order" {
     const std = @import("std");
-    var bytes = [_]u8{0} ** 80;
+    var bytes = @as([80]u8, @splat(0));
     putU32(&bytes, 0, 3);
     putU32(&bytes, 4, 0x14);
     putF32(&bytes, 8, 1.5);
@@ -100,7 +100,7 @@ test "EMF+ default custom cap parses fixed fields and both sized Paths in wire o
 
 test "EMF+ default custom cap assigns each path flag to only its declared field" {
     const std = @import("std");
-    var bytes = [_]u8{0} ** 64;
+    var bytes = @as([64]u8, @splat(0));
     putU32(&bytes, 0, 1);
     putI32(&bytes, 48, 12);
     putU32(&bytes, 52, 0xdbc01001);
@@ -116,7 +116,7 @@ test "EMF+ default custom cap assigns each path flag to only its declared field"
 
 test "EMF+ default custom cap rejects truncation flags enum hot spots path limits and trailing data" {
     const std = @import("std");
-    var bytes = [_]u8{0} ** fixed_size;
+    var bytes = @as([fixed_size]u8, @splat(0));
     for (0..fixed_size) |cut| try expectError(bytes[0..cut], .{});
     _ = try parse(&bytes, .{});
     var invalid = bytes;
@@ -128,12 +128,12 @@ test "EMF+ default custom cap rejects truncation flags enum hot spots path limit
     putU32(&invalid, 4, 0);
     putF32(&invalid, 32, 1);
     try std.testing.expectError(error.InvalidEmfPlusCustomLineCapHotSpot, parse(&invalid, .{}));
-    var nested = [_]u8{0} ** 64;
+    var nested = @as([64]u8, @splat(0));
     putU32(&nested, 0, 1);
     putI32(&nested, 48, 12);
     putU32(&nested, 52, 0xdbc01001);
     try std.testing.expectError(error.LimitExceeded, parse(&nested, .{ .max_path_bytes = 11 }));
-    var trailing = [_]u8{0} ** (fixed_size + 1);
+    var trailing = @as([(fixed_size + 1)]u8, @splat(0));
     try std.testing.expectError(error.InvalidEmfPlusCustomLineCapTrailingData, parse(&trailing, .{}));
 }
 

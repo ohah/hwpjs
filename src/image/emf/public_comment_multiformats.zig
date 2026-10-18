@@ -70,13 +70,13 @@ pub fn parse(body: []const u8) !MultiFormats {
 }
 
 test "MULTIFORMATS parses ordered exact contiguous format data without allocation" {
-    var body = [_]u8{0} ** 59;
+    var body = @as([59]u8, @splat(0));
     std.mem.writeInt(i32, body[0..4], -1, .little);
     std.mem.writeInt(u32, body[16..20], 2, .little);
-    std.mem.writeInt(u32, body[20..24], @intFromEnum(emr_format.Signature.enhanced_metafile), .little);
+    std.mem.writeInt(u32, body[20..24], @backingInt(emr_format.Signature.enhanced_metafile), .little);
     std.mem.writeInt(u32, body[28..32], 5, .little);
     std.mem.writeInt(u32, body[32..36], 60, .little);
-    std.mem.writeInt(u32, body[36..40], @intFromEnum(emr_format.Signature.encapsulated_postscript), .little);
+    std.mem.writeInt(u32, body[36..40], @backingInt(emr_format.Signature.encapsulated_postscript), .little);
     std.mem.writeInt(u32, body[40..44], 1, .little);
     std.mem.writeInt(u32, body[44..48], 4, .little);
     std.mem.writeInt(u32, body[48..52], 63, .little);
@@ -84,7 +84,7 @@ test "MULTIFORMATS parses ordered exact contiguous format data without allocatio
     try std.testing.expectError(error.UnalignedEmrFormatData, parse(&body));
     // Contiguous data cannot begin at an unaligned offset after three bytes;
     // make the first image four bytes and the whole payload one byte longer.
-    var aligned = [_]u8{0} ** 60;
+    var aligned = @as([60]u8, @splat(0));
     aligned[0..52].* = body[0..52].*;
     std.mem.writeInt(u32, aligned[28..32], 4, .little);
     std.mem.writeInt(u32, aligned[48..52], 64, .little);
@@ -104,7 +104,7 @@ test "MULTIFORMATS parses ordered exact contiguous format data without allocatio
 }
 
 test "MULTIFORMATS preserves a structurally valid vendor format" {
-    var body = [_]u8{0} ** 40;
+    var body = @as([40]u8, @splat(0));
     std.mem.writeInt(u32, body[16..20], 1, .little);
     std.mem.writeInt(u32, body[20..24], 0x50444620, .little);
     std.mem.writeInt(u32, body[24..28], 0, .little);
@@ -121,18 +121,18 @@ test "MULTIFORMATS preserves a structurally valid vendor format" {
 }
 
 test "MULTIFORMATS rejects every fixed-prefix truncation count overflow gaps overlap and trailing data" {
-    var minimal = [_]u8{0} ** 20;
+    var minimal = @as([20]u8, @splat(0));
     for (0..20) |cut| try std.testing.expectError(error.TruncatedEmfPublicMultiFormats, parse(minimal[0..cut]));
     _ = try parse(&minimal);
-    var one = [_]u8{0} ** 36;
+    var one = @as([36]u8, @splat(0));
     std.mem.writeInt(u32, one[16..20], 1, .little);
     for (20..36) |cut| try std.testing.expectError(error.TruncatedEmrFormatArray, parse(one[0..cut]));
     std.mem.writeInt(u32, minimal[16..20], std.math.maxInt(u32), .little);
     try std.testing.expectError(error.TruncatedEmrFormatArray, parse(&minimal));
 
-    var body = [_]u8{0} ** 40;
+    var body = @as([40]u8, @splat(0));
     std.mem.writeInt(u32, body[16..20], 1, .little);
-    std.mem.writeInt(u32, body[20..24], @intFromEnum(emr_format.Signature.enhanced_metafile), .little);
+    std.mem.writeInt(u32, body[20..24], @backingInt(emr_format.Signature.enhanced_metafile), .little);
     std.mem.writeInt(u32, body[32..36], 40, .little);
     try std.testing.expectError(error.InvalidEmrFormatDataOffset, parse(&body));
     std.mem.writeInt(u32, body[32..36], 44, .little); // correct: body 36 + identifier pair 8

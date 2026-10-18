@@ -11,7 +11,7 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     const report = try core.hwp5.section_validation.inspect(tree, version, numbering, borders);
     var out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(a);
-    inline for (std.meta.fields(@TypeOf(report))) |f| try int(a, &out, u32, @intCast(@field(report, f.name)));
+    inline for (@typeInfo(@TypeOf(report)).@"struct".field_names) |f| try int(a, &out, u32, @intCast(@field(report, f)));
     return out.toOwnedSlice(a);
 }
 pub fn definition(a: std.mem.Allocator, out: *std.ArrayList(u8), bytes: []const u8, version: core.hwp5.Version) !void {

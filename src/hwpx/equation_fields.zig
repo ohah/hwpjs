@@ -8,7 +8,7 @@ const shape = @import("shape_xml_fields.zig");
 pub const Field = enum { version, base_line, text_color, base_unit, line_mode, font };
 pub const names = [_][]const u8{ "version", "baseLine", "textColor", "baseUnit", "lineMode", "font" };
 comptime {
-    if (names.len != @typeInfo(Field).@"enum".fields.len) @compileError("equation field/name mismatch");
+    if (names.len != @typeInfo(Field).@"enum".field_names.len) @compileError("equation field/name mismatch");
 }
 
 pub const Budget = struct {
@@ -33,7 +33,7 @@ pub const Fields = struct {
     other_attributes: usize = 0,
 
     pub fn get(self: *const Fields, field: Field) ?[]const u8 {
-        return self.raw[@intFromEnum(field)];
+        return self.raw[@backingInt(field)];
     }
 };
 
@@ -55,7 +55,7 @@ pub fn read(temp_a: std.mem.Allocator, owned_a: std.mem.Allocator, tree: *const 
             const decoded = try value.toUtf8(temp_a, max_attribute_bytes);
             defer temp_a.free(decoded);
             result.raw[slot] = try budget.copy(owned_a, decoded);
-            switch (@as(Field, @enumFromInt(slot))) {
+            switch (@as(Field, @fromBackingInt(@intCast(slot)))) {
                 .base_line, .base_unit => _ = try values.unsigned32(decoded),
                 .text_color => result.non_six_hex_colors += @intFromBool(!values.sixHexColor(decoded)),
                 .line_mode => result.unknown_line_modes += @intFromBool(!std.mem.eql(u8, decoded, "LINE") and !std.mem.eql(u8, decoded, "CHAR")),

@@ -20,7 +20,7 @@ test "TRC dispatch distinguishes exact samples from approximate analytic output"
     try t.expectError(error.IccFractionLimitExceeded, forward.evaluate(samples, .{ .numerator = 1, .denominator = std.math.maxInt(u64) }));
 }
 test "TRC parsing and evaluation preserve semantic deferral" {
-    const data = "curv" ++ "\x00" ** 8;
+    const data = "curv" ++ @as([8]u8, @splat(0));
     for ([_][4]u8{ "rTRC".*, "gTRC".*, "bTRC".*, "kTRC".* }) |name| {
         const parsed = (try trc.parse(name, data, .v4_2022)).?;
         _ = try forward.evaluate(parsed.curve, .{ .numerator = 1, .denominator = 3 });

@@ -57,7 +57,7 @@ const descriptors = [_]Descriptor{
 };
 
 comptime {
-    if (descriptors.len != @typeInfo(Field).@"enum".fields.len) @compileError("section direct setting field/descriptor mismatch");
+    if (descriptors.len != @typeInfo(Field).@"enum".field_names.len) @compileError("section direct setting field/descriptor mismatch");
 }
 
 pub const Options = struct {
@@ -78,7 +78,7 @@ pub const Item = struct {
     direct_children: usize = 0,
 
     pub fn get(self: *const Item, field: Field) ?[]const u8 {
-        return self.raw[@intFromEnum(field)];
+        return self.raw[@backingInt(field)];
     }
 
     pub fn deinit(self: *Item, a: std.mem.Allocator) void {
@@ -90,14 +90,14 @@ pub const Item = struct {
 pub const Report = struct {
     sections: usize,
     items: []Item,
-    counts: [@typeInfo(Kind).@"enum".fields.len]usize,
+    counts: [@typeInfo(Kind).@"enum".field_names.len]usize,
     other_attributes: usize,
     extension_attributes: usize,
     unknown_enums: usize,
     direct_children: usize,
 
     pub fn count(self: *const Report, kind: Kind) usize {
-        return self.counts[@intFromEnum(kind)];
+        return self.counts[@backingInt(kind)];
     }
 
     pub fn deinit(self: *Report, a: std.mem.Allocator) void {
@@ -170,7 +170,7 @@ pub fn inspect(a: std.mem.Allocator, sections: []const part_tree.Tree, options: 
         for (items.items) |*item| item.deinit(a);
         items.deinit(a);
     }
-    var counts: [@typeInfo(Kind).@"enum".fields.len]usize = @splat(0);
+    var counts: [@typeInfo(Kind).@"enum".field_names.len]usize = @splat(0);
     var other_attributes: usize = 0;
     var extension_attributes: usize = 0;
     var unknown_enums: usize = 0;
@@ -195,7 +195,7 @@ pub fn inspect(a: std.mem.Allocator, sections: []const part_tree.Tree, options: 
             extension_attributes += item.extension_attributes;
             unknown_enums += item.unknown_enums;
             try items.append(a, item);
-            counts[@intFromEnum(kind)] += 1;
+            counts[@backingInt(kind)] += 1;
         }
     }
     return .{

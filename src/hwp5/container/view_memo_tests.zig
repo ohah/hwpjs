@@ -12,24 +12,24 @@ fn section(a: std.mem.Allocator, id: u32, field: bool) ![]u8 {
     errdefer out.deinit(a);
     try out.appendSlice(a, base);
     if (field) {
-        var para = [_]u8{0} ** 24;
+        var para = @as([24]u8, @splat(0));
         f.put(&para, 0, u32, 8);
         try f.frame(a, &out, 66, 0, &para);
-        var token = [_]u8{0} ** 16;
+        var token = @as([16]u8, @splat(0));
         f.put(&token, 0, u16, 3);
         f.put(&token, 2, u32, @import("../body/control_rules.zig").id("%%me"));
         f.put(&token, 14, u16, 3);
         try f.frame(a, &out, 67, 1, &token);
-        var ctrl = [_]u8{0} ** 19;
+        var ctrl = @as([19]u8, @splat(0));
         @memcpy(ctrl[0..4], token[2..6]);
         f.put(&ctrl, 11, u32, 99); // Field instance ID is not the memo target.
         f.put(&ctrl, 15, u32, id);
         try f.frame(a, &out, 71, 1, &ctrl);
     } else {
-        var para = [_]u8{0} ** 24;
+        var para = @as([24]u8, @splat(0));
         f.put(&para, 0, u32, 8);
         try f.frame(a, &out, 66, 0, &para);
-        var token = [_]u8{0} ** 16;
+        var token = @as([16]u8, @splat(0));
         f.put(&token, 0, u16, 4);
         f.put(&token, 2, u32, 0x00256d65);
         f.put(&token, 10, u32, id);
@@ -38,7 +38,7 @@ fn section(a: std.mem.Allocator, id: u32, field: bool) ![]u8 {
         var marker: [4]u8 = undefined;
         f.put(&marker, 0, u32, id);
         try f.frame(a, &out, 93, 1, &marker);
-        try f.frame(a, &out, 72, 1, &([_]u8{0} ** 16));
+        try f.frame(a, &out, 72, 1, &(@as([16]u8, @splat(0))));
     }
     return out.toOwnedSlice(a);
 }

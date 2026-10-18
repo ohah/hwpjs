@@ -18,7 +18,7 @@ fn section(a: std.mem.Allocator, id: u16) ![]u8 {
             f.put(p, 0, u32, 16);
             try f.frame(a, &out, record.tag, record.level, p);
         } else if (record.tag == 67) {
-            var p = [_]u8{0} ** 32;
+            var p = @as([32]u8, @splat(0));
             @memcpy(p[0..16], record.payload);
             f.put(&p, 16, u16, 11);
             f.put(&p, 18, u32, rules.drawing_id);
@@ -26,14 +26,14 @@ fn section(a: std.mem.Allocator, id: u16) ![]u8 {
             try f.frame(a, &out, record.tag, record.level, &p);
         } else try f.frame(a, &out, record.tag, record.level, record.payload);
     }
-    var control = [_]u8{0} ** 44;
+    var control = @as([44]u8, @splat(0));
     f.put(&control, 0, u32, rules.drawing_id);
     try f.frame(a, &out, 71, 1, &control);
-    var component = [_]u8{0} ** 100;
+    var component = @as([100]u8, @splat(0));
     f.put(&component, 0, u32, rules.id("$ole"));
     f.put(&component, 4, u32, rules.id("$ole"));
     try f.frame(a, &out, 76, 2, &component);
-    var payload = [_]u8{0} ** 26;
+    var payload = @as([26]u8, @splat(0));
     f.put(&payload, 0, u32, 1);
     f.put(&payload, 12, u16, id);
     try f.frame(a, &out, 84, 3, &payload);

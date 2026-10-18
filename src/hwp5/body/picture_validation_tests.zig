@@ -2,7 +2,7 @@ const std = @import("std");
 const t = std.testing;
 const validation = @import("picture_validation.zig");
 fn check(a: std.mem.Allocator, selected: bool, scenario: u8) !void {
-    var b = [_]u8{0} ** 206;
+    var b = @as([206]u8, @splat(0));
     std.mem.writeInt(u32, b[0..4], 76 | (4 << 20), .little);
     std.mem.writeInt(u32, b[4..8], 0x24706963, .little);
     std.mem.writeInt(u32, b[8..12], 85 | (1 << 10) | (95 << 20), .little);
@@ -39,7 +39,7 @@ test "picture ownership and selected tail failures clean up all allocations" {
     for ([_]bool{ false, true }) |selected| for (0..6) |scenario| try t.checkAllAllocationFailures(t.allocator, check, .{ selected, @as(u8, @intCast(scenario)) });
 }
 fn referenceCheck(a: std.mem.Allocator, count: usize, id: u16) !void {
-    var b = [_]u8{0} ** 85;
+    var b = @as([85]u8, @splat(0));
     std.mem.writeInt(u32, b[0..4], 76 | (4 << 20), .little);
     std.mem.writeInt(u32, b[4..8], 0x24706963, .little);
     std.mem.writeInt(u32, b[8..12], 85 | (1 << 10) | (73 << 20), .little);

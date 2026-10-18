@@ -62,7 +62,7 @@ test "EMF+ absolute and mixed-width relative points preserve wire values" {
 
 test "EMF+ point readers are atomic at every truncation" {
     const std = @import("std");
-    const fixed = [_]u8{0} ** 4;
+    const fixed = @as([4]u8, @splat(0));
     for (0..4) |cut| {
         var reader: binary.Reader = .{ .bytes = fixed[0..cut] };
         try std.testing.expectError(error.UnexpectedEnd, readPoint(&reader));

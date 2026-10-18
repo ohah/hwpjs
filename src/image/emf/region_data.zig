@@ -52,7 +52,7 @@ pub fn parse(bytes: []const u8) !RegionData {
 }
 
 fn fixture(rectangle_count: u32) [64]u8 {
-    var bytes = [_]u8{0} ** 64;
+    var bytes = @as([64]u8, @splat(0));
     std.mem.writeInt(u32, bytes[0..4], header_size, .little);
     std.mem.writeInt(u32, bytes[4..8], rectangle_type, .little);
     std.mem.writeInt(u32, bytes[8..12], rectangle_count, .little);

@@ -43,7 +43,7 @@ pub fn collect(a: std.mem.Allocator, tree: *const Tree, parent: usize, max_attri
     result.node = fields.uniqueChild(tree, parent, "lineShape", &missing, &duplicate);
     if (duplicate != 0) return error.DuplicateLineStroke;
     const node = result.node orelse return result;
-    inline for (std.meta.fields(Attributes)) |field| {
+    inline for (@import("../reflection.zig").fields(Attributes)) |field| {
         if (try tree.attributeValue(result.arena.allocator(), node, "", field.name)) |raw|
             @field(result.attributes, field.name) = try raw.toUtf8(result.arena.allocator(), max_attribute_bytes);
     }

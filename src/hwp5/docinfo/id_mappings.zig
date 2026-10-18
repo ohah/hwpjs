@@ -21,8 +21,8 @@ pub const Field = enum(u8) {
     track_change = 16,
     track_change_author = 17,
 };
-const base_count = @intFromEnum(Field.style) + 1;
-const known_count = @typeInfo(Field).@"enum".fields.len;
+const base_count = @backingInt(Field.style) + 1;
+const known_count = @typeInfo(Field).@"enum".field_names.len;
 
 /// Signed wire values; not allocation sizes. Actual presence is separate from
 /// the version's expected field count (older real files can contain memo_shape).
@@ -41,11 +41,11 @@ pub const IdMappings = struct {
     }
     pub fn expectedCount(self: IdMappings) usize {
         if (self.version.raw >= 0x05000302) return known_count;
-        if (self.version.raw >= 0x05000201) return @intFromEnum(Field.memo_shape) + 1;
+        if (self.version.raw >= 0x05000201) return @backingInt(Field.memo_shape) + 1;
         return base_count;
     }
     pub fn get(self: IdMappings, field: Field) ?i32 {
-        const index: usize = @intFromEnum(field);
+        const index: usize = @backingInt(field);
         if (index >= self.count()) return null;
         var r: Reader = .{ .bytes = self.raw, .offset = index * 4 };
         return r.readInt(i32) catch unreachable;

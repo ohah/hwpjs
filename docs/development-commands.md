@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+Zig 버전은 `.mise.toml`의 0.17.0입니다. mise 환경에서는 `mise exec -- zig`로 실행합니다. 0.16/0.17 표준 native runner의 wire·검증 범위와 업그레이드 근거는 [Zig 0.17 이관](zig-0.17-upgrade.md)을 따릅니다. 아래 기존 `ReleaseSafe`/`Debug`/`ReleaseFast` 명령은 0.17에서도 허용되는 최적화 모드 별칭입니다.
+
 HWPX 일반 prefix 감사는 `node tools/hwpx-edit-corpus-audit.mjs --wasm=/absolute/candidate.wasm --fixture=/absolute/document.hwpx --history --paragraphs=196:197`로 한 문단만 검사할 수 있습니다. 문서 전체의1기반 문단 번호이며 끝은 제외합니다. 범위는 명시적 WASM·단일 fixture와 함께만 허용하고, 범위를 생략하면 기존 전체 inventory를 유지합니다. 부분 결과는 전체 문서 통과가 아닙니다. 경계·분모·실측은 [후보 공개 감사의 범위 실행](unknown-candidate-public-checks.md)을 따릅니다.
 
 [원본 소속 조회 인덱스](hwp5-source-ownership-index.md)의 대조는 `HWPJS_BASELINE_WASM=/absolute/frozen-baseline.wasm zig build hwp5-ownership-query-parity -Doptimize=ReleaseSafe`입니다. 설치 경로와 다른 동결 baseline이 필요하며 후보는 현재 빌드의 설치 산출물을 명시합니다. 추적48fixture·참조3원본의 전체 표/문단 흐름/단 조회 배열·독립 셀 소속·원본 불변을 검사합니다. 기본 암호/배포 거부3개는 지원 성공이 아닙니다. 관련 문단/단 편집 회귀는 정규 `hwp5-editor-audit`에 등록하며 이 대조가 전체 native·브라우저·기본 WASM 승격을 대신하지 않습니다.

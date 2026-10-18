@@ -99,10 +99,10 @@ pub fn parse(bytes: []const u8, size_layout: SizeLayout) !Header {
 }
 
 test "standard META_HEADER parses without a placeable prefix" {
-    var bytes = [_]u8{0} ** 24;
-    std.mem.writeInt(u16, bytes[0..2], @intFromEnum(MetafileType.memory), .little);
+    var bytes = @as([24]u8, @splat(0));
+    std.mem.writeInt(u16, bytes[0..2], @backingInt(MetafileType.memory), .little);
     std.mem.writeInt(u16, bytes[2..4], 9, .little);
-    std.mem.writeInt(u16, bytes[4..6], @intFromEnum(Version.version_300), .little);
+    std.mem.writeInt(u16, bytes[4..6], @backingInt(Version.version_300), .little);
     std.mem.writeInt(u32, bytes[6..10], 12, .little);
     std.mem.writeInt(u16, bytes[10..12], 0, .little);
     std.mem.writeInt(u32, bytes[12..16], 3, .little);

@@ -42,7 +42,7 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 }
 
 fn monochromeRecord() [60]u8 {
-    var bytes = [_]u8{0} ** 60;
+    var bytes = @as([60]u8, @splat(0));
     std.mem.writeInt(u32, bytes[8..12], 1, .little);
     std.mem.writeInt(u32, bytes[16..20], 32, .little);
     std.mem.writeInt(u32, bytes[20..24], 18, .little);
@@ -79,7 +79,7 @@ test "bitmap brush rejects missing malformed non-mono and wrong record boundarie
     wrong_declared.size -= 4;
     try std.testing.expectError(error.InvalidEmfBitmapBrushRecordSize, parse(wrong_declared));
 
-    var missing = [_]u8{0} ** fixed_size;
+    var missing = @as([fixed_size]u8, @splat(0));
     try std.testing.expectError(error.MissingEmfBitmapBrushDib, parse(fixture(.createmonobrush, &missing)));
     std.mem.writeInt(u32, bytes[12..16], 3, .little);
     try std.testing.expectError(error.UnsupportedEmfDibColors, parse(fixture(.createdibpatternbrushpt, &bytes)));

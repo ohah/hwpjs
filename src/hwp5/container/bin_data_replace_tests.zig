@@ -9,7 +9,7 @@ const Compression = @import("../docinfo/bin_data.zig").Compression;
 const fixture = @import("../document/test_fixture.zig");
 
 fn item(compression: Compression, id: u16) BinData {
-    return .{ .attributes = @as(u16, @intFromEnum(compression)) << 4, .data = .{ .storage = id }, .extra = &.{} };
+    return .{ .attributes = @as(u16, @backingInt(compression)) << 4, .data = .{ .storage = id }, .extra = &.{} };
 }
 
 fn make(a: std.mem.Allocator, version: u16, default_compressed: bool) ![]u8 {
@@ -33,7 +33,7 @@ fn makeBoundIds(a: std.mem.Allocator, compressed: bool, declared_bins: i32, decl
     fixture.put(&header, 36, u32, @intFromBool(compressed));
     var doc: std.ArrayList(u8) = .empty;
     defer doc.deinit(a);
-    var mappings = [_]u8{0} ** 60;
+    var mappings = @as([60]u8, @splat(0));
     fixture.put(&mappings, 0, i32, declared_bins);
     fixture.put(&mappings, 32, i32, declared_borders);
     try fixture.frame(a, &doc, 17, 0, &mappings);
@@ -128,8 +128,8 @@ test "outer HWP BinData replacement uses explicit embedding and storage extensio
     }, .{});
     defer t.allocator.free(input);
     const extension: []const u8 = &.{ 'O', 0, 'L', 0, 'E', 0 };
-    const storage: BinData = .{ .attributes = @as(u16, @intFromEnum(Compression.uncompressed)) << 4 | 2, .data = .{ .storage = 1 }, .extra = &.{ 3, 0, 'O', 0, 'L', 0, 'E', 0 } };
-    const embedding: BinData = .{ .attributes = @as(u16, @intFromEnum(Compression.uncompressed)) << 4 | 1, .data = .{ .embedding = .{ .id = 1, .extension_utf16 = extension } }, .extra = &.{} };
+    const storage: BinData = .{ .attributes = @as(u16, @backingInt(Compression.uncompressed)) << 4 | 2, .data = .{ .storage = 1 }, .extra = &.{ 3, 0, 'O', 0, 'L', 0, 'E', 0 } };
+    const embedding: BinData = .{ .attributes = @as(u16, @backingInt(Compression.uncompressed)) << 4 | 1, .data = .{ .embedding = .{ .id = 1, .extension_utf16 = extension } }, .extra = &.{} };
     for ([_]struct { value: BinData, layout: @import("../docinfo/bin_data.zig").StorageLayout }{ .{ .value = storage, .layout = .observed_optional_extension }, .{ .value = embedding, .layout = .specified } }) |case| {
         const saved = try replace.replaceDecoded(t.allocator, input, case.value, case.layout, "new", .{ .max_output_bytes = 16 * 1024 });
         defer t.allocator.free(saved);

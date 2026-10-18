@@ -4,7 +4,7 @@ const Reader = @import("../../binary/reader.zig").Reader;
 const additional = @import("picture_additional.zig");
 const tail = @import("picture_tail.zig");
 test "additional dimensions and alpha keep unsigned sizes and absent versus zero" {
-    var b = [_]u8{0} ** 11;
+    var b = @as([11]u8, @splat(0));
     std.mem.writeInt(u32, b[1..5], 0xffffffff, .little);
     std.mem.writeInt(u32, b[5..9], 0x80000000, .little);
     for ([_]additional.Layout{ .dimensions8, .with_alpha9 }, [_]usize{ 8, 9 }) |layout, size| {
@@ -29,7 +29,7 @@ test "additional dimensions and alpha keep unsigned sizes and absent versus zero
     try t.expectEqual(std.math.maxInt(usize), r.offset);
 }
 test "picture tail consumes effects before dimensions and is atomic across both" {
-    var b = [_]u8{0} ** 19;
+    var b = @as([19]u8, @splat(0));
     b[1] = 4; // soft edge, then width/height/alpha
     std.mem.writeInt(u32, b[5..9], 0x7fc12345, .little);
     std.mem.writeInt(u32, b[9..13], 1234, .little);

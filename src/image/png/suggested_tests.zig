@@ -44,7 +44,7 @@ test "PNG suggested palette depth framing borrowing empty and unbounded count" {
     try t.expectEqual(@as(usize, 1024), v.zero_frequencies);
 }
 test "PNG suggested palette full u16 samples and frequency order boundaries" {
-    var raw = [_]u8{ 'K', 0, 16 } ++ [_]u8{0} ** 10;
+    var raw = [_]u8{ 'K', 0, 16 } ++ @as([10]u8, @splat(0));
     for (0..65536) |n| {
         const v: u16 = @intCast(n);
         for (0..5) |i| std.mem.writeInt(u16, raw[3 + i * 2 ..][0..2], v, .big);
@@ -72,7 +72,7 @@ test "PNG suggested palette collector case sensitive names order atomicity and o
     try t.expectEqualDeep(before, c.stats);
     var full: Collector = .{ .stats = .{ .entries = std.math.maxInt(usize) } };
     defer full.deinit(t.allocator);
-    try t.expectError(error.LimitExceeded, full.consume(t.allocator, chunk("K\x00\x08" ++ "\x00" ** 6)));
+    try t.expectError(error.LimitExceeded, full.consume(t.allocator, chunk("K\x00\x08" ++ @as([6]u8, @splat(0)))));
     try t.expectEqual(@as(usize, 0), full.names.count());
 }
 fn allocations(a: std.mem.Allocator, good: []const u8, bad: []const u8) !void {

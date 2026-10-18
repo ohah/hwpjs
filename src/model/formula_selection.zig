@@ -70,9 +70,9 @@ test "formula explicit selection preserves order duplicates bounds and capacity"
     try std.testing.expect(it.next() == null);
     try std.testing.expectError(error.FormulaReferenceOutOfBounds, Iterator.init(range, .{ .column = 0, .row = 0 }, 2, 3));
     try std.testing.expectError(error.UnsupportedNonRectangularFormulaRange, range.resolve(.{ .column = 0, .row = 0 }, 4, 3));
-    const many = "SUM(" ++ "A1," ** 32 ++ "A1)";
+    const many = "SUM(" ++ "A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1," ++ "A1)";
     try std.testing.expectError(error.LimitExceeded, ranges.Range.parse(&wire(many)));
-    const maximum = try ranges.Range.parse(&wire("SUM(" ++ "A1," ** 31 ++ "A1)"));
+    const maximum = try ranges.Range.parse(&wire("SUM(" ++ "A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1,A1," ++ "A1)"));
     try std.testing.expectEqual(@as(usize, 32), (try Iterator.init(maximum, .{ .column = 0, .row = 0 }, 1, 1)).count);
     try std.testing.expect(it.intersects(.{ .first = .{ .column = 2, .row = 0 }, .last = .{ .column = 2, .row = 0 } }));
     try std.testing.expect(!it.intersects(.{ .first = .{ .column = 1, .row = 0 }, .last = .{ .column = 1, .row = 2 } }));

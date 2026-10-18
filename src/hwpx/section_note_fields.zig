@@ -45,7 +45,7 @@ pub const descriptors = [_]Descriptor{
     .{ .name = "beneathText", .child_kind = .placement, .value_kind = .boolean },
 };
 comptime {
-    if (descriptors.len != @typeInfo(Field).@"enum".fields.len) @compileError("note field/descriptor mismatch");
+    if (descriptors.len != @typeInfo(Field).@"enum".field_names.len) @compileError("note field/descriptor mismatch");
 }
 
 pub const Diagnostics = struct { unknown_enums: usize = 0, noncanonical_colors: usize = 0 };
@@ -61,7 +61,7 @@ pub fn canonicalColor(raw: []const u8) bool {
 }
 
 pub fn validate(kind: ChildKind, note_kind: NoteKind, field: Field, raw: []const u8, diagnostics: *Diagnostics) !void {
-    const descriptor = descriptors[@intFromEnum(field)];
+    const descriptor = descriptors[@backingInt(field)];
     if (descriptor.child_kind != kind) return error.InvalidNoteField;
     switch (descriptor.value_kind) {
         .text => {},

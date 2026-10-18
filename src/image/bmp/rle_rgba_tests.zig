@@ -34,7 +34,7 @@ test "BMP RLE RGBA fill selection and raster completion are independent" {
         options.rle.?.unwritten = .palette_zero;
         var image = try pixels.decode(t.allocator, raw, options);
         defer image.deinit(t.allocator);
-        try t.expectEqualSlices(u8, &([_]u8{ 17, 11, 7, 255 } ** 4), image.rgba);
+        try t.expectEqualSlices(u8, &.{ 17, 11, 7, 255, 17, 11, 7, 255, 17, 11, 7, 255, 17, 11, 7, 255 }, image.rgba);
         try t.expectEqual(@as(usize, 3), image.rle.?.unwritten_pixels);
         options.rle.?.unwritten = .reject;
         try t.expectError(error.UnwrittenBmpRlePixels, pixels.decode(t.allocator, raw, options));
@@ -47,7 +47,7 @@ test "BMP RLE RGBA fill selection and raster completion are independent" {
             options.rle.?.unwritten = policy;
             var complete = try pixels.decode(t.allocator, full, options);
             defer complete.deinit(t.allocator);
-            try t.expectEqualSlices(u8, &([_]u8{ 17, 11, 7, 255 } ** 4), complete.rgba);
+            try t.expectEqualSlices(u8, &.{ 17, 11, 7, 255, 17, 11, 7, 255, 17, 11, 7, 255, 17, 11, 7, 255 }, complete.rgba);
             try t.expectEqual(@as(usize, 0), complete.rle.?.unwritten_pixels);
         }
     }

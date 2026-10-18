@@ -46,7 +46,7 @@ test "EMF+ SetTSClip extracts C and NumRects and preserves decoded rectangles" {
     var iterator = parsed.rects.iterator();
     try std.testing.expectEqual(clip_rects.Rect{ .left = 1, .top = 2, .right = 3, .bottom = 6 }, (try iterator.next()).?);
 
-    const wide = [_]u8{0} ** 8;
+    const wide = @as([8]u8, @splat(0));
     const wide_parsed = try parse(makeRecord(1, &wide));
     try std.testing.expect(!wide_parsed.compressed);
     try std.testing.expectEqual(@as(u16, 1), wide_parsed.num_rects);

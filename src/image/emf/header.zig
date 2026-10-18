@@ -50,7 +50,7 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 }
 
 test "Header requires matching declared physical and stream sizes" {
-    var bytes = [_]u8{0} ** 88;
+    var bytes = @as([88]u8, @splat(0));
     std.mem.writeInt(u32, bytes[40..44], 0x464d4520, .little);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     const value = try parse(fixture(.header, &bytes), bytes.len);

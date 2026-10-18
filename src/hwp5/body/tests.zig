@@ -7,7 +7,7 @@ fn put(b: []u8, offset: usize, comptime T: type, v: T) void {
     std.mem.writeInt(T, b[offset..][0..@sizeOf(T)], v, .little);
 }
 test "paragraph header fields, high bit, optional merge and opaque tail" {
-    var b = [_]u8{0} ** 25;
+    var b = @as([25]u8, @splat(0));
     put(&b, 0, u32, 0x8000000c);
     put(&b, 4, u32, 0xffffffff);
     put(&b, 8, u16, 0x1234);
@@ -46,7 +46,7 @@ test "paragraph header fields, high bit, optional merge and opaque tail" {
 test "all control codes use table widths, ignore embedded data and preserve tokens" {
     const widths = [_]usize{ 1, 8, 8, 8, 8, 8, 8, 8, 8, 8, 1, 8, 8, 1, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 1, 1, 1, 1, 1, 1, 1, 1 };
     for (widths, 0..) |width, code| {
-        var b = [_]u8{0xff} ** 16;
+        var b = @as([16]u8, @splat(0xff));
         put(&b, 0, u16, @intCast(code));
         if (width == 8) put(&b, 14, u16, @intCast(code));
         const text = try body.Text.parse(b[0 .. width * 2]);
@@ -79,7 +79,7 @@ test "all control codes use table widths, ignore embedded data and preserve toke
     try t.expect(control.kind(32) == null and control.kind(65535) == null);
 }
 test "UTF16 runs keep surrogates BOM and original positions around an inline tab" {
-    var b = [_]u8{0} ** 28;
+    var b = @as([28]u8, @splat(0));
     for ([_]u16{ 0xfeff, 0xd83d, 0xde00, 0xd800, 9, 0, 13, 0, 0, 0, 0, 9, 0x41, 13 }, 0..) |unit, i| put(&b, i * 2, u16, unit);
     const text = try body.Text.parse(&b);
     try t.expectEqual(14, text.unitCount());
@@ -95,7 +95,7 @@ test "UTF16 runs keep surrogates BOM and original positions around an inline tab
     const end = (try it.next()).?;
     try t.expectEqual(13, end.start_unit);
     try t.expectEqual(13, end.value.control.code);
-    var hb = [_]u8{0} ** 22;
+    var hb = @as([22]u8, @splat(0));
     put(&hb, 0, u32, 0x8000000e);
     const h = try body.Header.parse(&hb, modern);
     try text.validateCount(h);
@@ -106,7 +106,7 @@ test "UTF16 runs keep surrogates BOM and original positions around an inline tab
     try t.expect((try empty.next()) == null);
 }
 test "body dispatch is atomic for malformed known payload, unknown stays raw" {
-    var bytes = [_]u8{0} ** 6;
+    var bytes = @as([6]u8, @splat(0));
     put(&bytes, 0, u32, 67 | (7 << 10) | (2 << 20));
     put(&bytes, 4, u16, 9);
     var it = try body.Iterator.init(&bytes, modern, .{});

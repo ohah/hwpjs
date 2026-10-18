@@ -79,7 +79,7 @@ test "video selected layouts reject truncation unknown kinds and impossible leng
         }
     }
     for ([_]i32{ -1, 2, std.math.minInt(i32), std.math.maxInt(i32) }) |kind| {
-        var bytes = [_]u8{0} ** 8;
+        var bytes = @as([8]u8, @splat(0));
         fixture.put(&bytes, 0, u32, 98 | (4 << 20));
         fixture.put(&bytes, 4, i32, kind);
         var tree = try Tree.parse(t.allocator, &bytes, .{ .raw = 0x05000107 }, .{});

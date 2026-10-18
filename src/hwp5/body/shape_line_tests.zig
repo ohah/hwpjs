@@ -3,7 +3,7 @@ const t = std.testing;
 const Line = @import("shape_line.zig").Line;
 test "line preserves signed endpoints and full UINT16 attributes without coercion" {
     try t.expectEqual(78, @import("shape_line.zig").tag);
-    var raw = [_]u8{0} ** 21;
+    var raw = @as([21]u8, @splat(0));
     std.mem.writeInt(i32, raw[0..4], -2147483648, .little);
     std.mem.writeInt(i32, raw[4..8], 2147483647, .little);
     std.mem.writeInt(i32, raw[8..12], -1, .little);

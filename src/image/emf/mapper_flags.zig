@@ -19,25 +19,25 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 }
 
 test "mapper flags parse both defined values" {
-    var bytes = [_]u8{0} ** 12;
+    var bytes = @as([12]u8, @splat(0));
     try std.testing.expectEqual(Flags.unrestricted, (try parse(fixture(.setmapperflags, &bytes))).?);
     bytes[8] = 1;
     try std.testing.expectEqual(Flags.match_device_aspect_ratio, (try parse(fixture(.setmapperflags, &bytes))).?);
 }
 
 test "mapper flags reject undefined values require their prefix and accept trailing data" {
-    var bytes = [_]u8{0} ** 12;
+    var bytes = @as([12]u8, @splat(0));
     bytes[8] = 2;
     try std.testing.expectError(error.InvalidEmfMapperFlags, parse(fixture(.setmapperflags, &bytes)));
     bytes[8..12].* = .{ 0xff, 0xff, 0xff, 0xff };
     try std.testing.expectError(error.InvalidEmfMapperFlags, parse(fixture(.setmapperflags, &bytes)));
 
-    var short = [_]u8{0} ** 8;
+    var short = @as([8]u8, @splat(0));
     try std.testing.expectError(error.InvalidEmfMapperFlagsRecordSize, parse(fixture(.setmapperflags, &short)));
     var declared_twelve = fixture(.setmapperflags, &short);
     declared_twelve.size = 12;
     try std.testing.expectError(error.InvalidEmfMapperFlagsRecordSize, parse(declared_twelve));
-    var long = [_]u8{0} ** 16;
+    var long = @as([16]u8, @splat(0));
     try std.testing.expectEqual(Flags.unrestricted, (try parse(fixture(.setmapperflags, &long))).?);
     try std.testing.expect((try parse(fixture(.savedc, short[0..8]))) == null);
 }

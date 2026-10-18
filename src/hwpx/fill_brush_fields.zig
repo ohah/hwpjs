@@ -47,7 +47,7 @@ pub const descriptors = [_]Descriptor{
     .{ .node = .image, .name = "alpha", .value_kind = .float },
 };
 comptime {
-    if (descriptors.len != @typeInfo(Field).@"enum".fields.len) @compileError("fill brush field/descriptor mismatch");
+    if (descriptors.len != @typeInfo(Field).@"enum".field_names.len) @compileError("fill brush field/descriptor mismatch");
 }
 
 const hatch_styles = [_][]const u8{ "HORIZONTAL", "VERTICAL", "BACK_SLASH", "SLASH", "CROSS", "CROSS_DIAGONAL" };
@@ -67,7 +67,7 @@ fn known(raw: []const u8, names: []const []const u8) bool {
 }
 
 pub fn validate(node: NodeKind, field: Field, raw: []const u8, diagnostics: *Diagnostics) !void {
-    const descriptor = descriptors[@intFromEnum(field)];
+    const descriptor = descriptors[@backingInt(field)];
     if (descriptor.node != node) return error.InvalidBrushField;
     switch (descriptor.value_kind) {
         .color => diagnostics.non_six_hex_colors += @intFromBool(!values.sixHexColor(raw)),

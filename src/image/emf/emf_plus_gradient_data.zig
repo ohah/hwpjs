@@ -97,13 +97,13 @@ fn putFloat(bytes: []u8, offset: usize, value: f32) void {
 }
 
 test "EMF+ blend colors allow every count and borrow exact arrays" {
-    var empty = [_]u8{0} ** 4;
+    var empty = @as([4]u8, @splat(0));
     var empty_reader: binary.Reader = .{ .bytes = &empty };
     const zero = try readBlendColors(&empty_reader);
     try std.testing.expectEqual(@as(u32, 0), zero.position_count);
     try std.testing.expectEqual(@as(usize, 4), empty_reader.offset);
 
-    var bytes = [_]u8{0} ** 20;
+    var bytes = @as([20]u8, @splat(0));
     std.mem.writeInt(u32, bytes[0..4], 2, .little);
     putFloat(&bytes, 4, 0.75);
     putFloat(&bytes, 8, 0.25);
@@ -131,7 +131,7 @@ test "EMF+ blend colors allow every count and borrow exact arrays" {
 }
 
 test "EMF+ blend factors enforce MUST rules but not advisory ordering" {
-    var bytes = [_]u8{0} ** 28;
+    var bytes = @as([28]u8, @splat(0));
     std.mem.writeInt(u32, bytes[0..4], 3, .little);
     putFloat(&bytes, 4, 0.0);
     putFloat(&bytes, 8, 0.75);
@@ -156,7 +156,7 @@ test "EMF+ blend factors enforce MUST rules but not advisory ordering" {
 }
 
 test "EMF+ gradient arrays reject truncation non-unit and non-finite values atomically" {
-    var bytes = [_]u8{0} ** 20;
+    var bytes = @as([20]u8, @splat(0));
     std.mem.writeInt(u32, bytes[0..4], 2, .little);
     putFloat(&bytes, 4, 0.0);
     putFloat(&bytes, 8, 1.0);
@@ -178,7 +178,7 @@ test "EMF+ gradient arrays reject truncation non-unit and non-finite values atom
     try std.testing.expectError(error.InvalidEmfPlusBlendFactorCount, readBlendFactors(&reader));
     try std.testing.expectEqual(@as(usize, 0), reader.offset);
 
-    var huge = [_]u8{0} ** 4;
+    var huge = @as([4]u8, @splat(0));
     std.mem.writeInt(u32, &huge, std.math.maxInt(u32), .little);
     var huge_reader: binary.Reader = .{ .bytes = &huge };
     try std.testing.expectError(error.UnexpectedEnd, readBlendColors(&huge_reader));
@@ -186,7 +186,7 @@ test "EMF+ gradient arrays reject truncation non-unit and non-finite values atom
 }
 
 test "EMF+ focus scale enforces count and exclusive finite range" {
-    var bytes = [_]u8{0} ** 12;
+    var bytes = @as([12]u8, @splat(0));
     std.mem.writeInt(u32, bytes[0..4], 2, .little);
     putFloat(&bytes, 4, 0.25);
     putFloat(&bytes, 8, 0.75);

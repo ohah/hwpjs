@@ -18,7 +18,7 @@ test "drawing metadata preserves full widths and restores a nonzero cursor on tr
     }
 }
 test "drawing suffix absence and zero differ and no layout is inferred from length" {
-    var raw = [_]u8{0} ** 45;
+    var raw = @as([45]u8, @splat(0));
     raw[43] = 7;
     raw[44] = 9;
     const old = try Style.parse(&raw, .observed13);

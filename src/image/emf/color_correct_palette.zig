@@ -30,7 +30,7 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 }
 
 test "COLORCORRECTPALETTE preserves all fields and record extensions" {
-    var bytes = [_]u8{0} ** 28;
+    var bytes = @as([28]u8, @splat(0));
     std.mem.writeInt(u32, bytes[8..12], 0x11223344, .little);
     std.mem.writeInt(u32, bytes[12..16], 0x55667788, .little);
     std.mem.writeInt(u32, bytes[16..20], std.math.maxInt(u32), .little);
@@ -45,7 +45,7 @@ test "COLORCORRECTPALETTE preserves all fields and record extensions" {
 }
 
 test "COLORCORRECTPALETTE rejects truncated and mismatched records and dispatches exactly" {
-    const bytes = [_]u8{0} ** minimum_size;
+    const bytes = @as([minimum_size]u8, @splat(0));
     for (0..minimum_size) |cut|
         try std.testing.expectError(error.InvalidEmfColorCorrectPaletteRecordSize, parse(fixture(.colorcorrectpalette, bytes[0..cut])));
 

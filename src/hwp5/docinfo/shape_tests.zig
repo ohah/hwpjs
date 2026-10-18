@@ -7,7 +7,7 @@ fn put(bytes: []u8, offset: usize, comptime T: type, value: T) void {
     std.mem.writeInt(T, bytes[offset..][0..@sizeOf(T)], value, .little);
 }
 test "char shape language arrays, signed values and versioned absence" {
-    var b = [_]u8{0} ** 75;
+    var b = @as([75]u8, @splat(0));
     for (0..7) |i| {
         put(&b, i * 2, u16, @intCast(i + 100));
         b[14 + i] = @intCast(90 + i);
@@ -54,7 +54,7 @@ test "char shape language arrays, signed values and versioned absence" {
     try t.expect(middle.strike_color == null);
 }
 test "para shape single indent, separate old/new spacing, level and tails" {
-    var b = [_]u8{0} ** 59;
+    var b = @as([59]u8, @splat(0));
     put(&b, 12, i32, -720);
     put(&b, 16, i32, 11);
     put(&b, 20, i32, 22);
@@ -95,7 +95,7 @@ test "para shape single indent, separate old/new spacing, level and tails" {
     try t.expect(newer.modern_spacing != null and newer.level == null);
 }
 test "border fill interleaving, all brushes, gradient counts and extension bounds" {
-    var b = [_]u8{0} ** 105;
+    var b = @as([105]u8, @splat(0));
     for (0..5) |i| {
         b[2 + i * 6] = @intCast(i + 1);
         b[3 + i * 6] = @intCast(i + 8);

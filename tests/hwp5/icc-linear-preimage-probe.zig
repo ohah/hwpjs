@@ -8,7 +8,7 @@ pub fn runWide(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
 }
 fn runFor(comptime bits: u16, a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     const width = bits / 8;
-    const U = std.meta.Int(.unsigned, bits);
+    const U = @Int(.unsigned, bits);
     const solve = if (bits == 128) icc.linear_preimage.solve else icc.linear_preimage.solveWide;
     if (bytes.len > limit) return error.LimitExceeded;
     if (bytes.len != 44 + 2 * width) return error.InvalidProbeInput;

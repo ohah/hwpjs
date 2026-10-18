@@ -52,7 +52,7 @@ fn writeEnvelope(bytes: []u8, object_guid: [16]u8, buffer_size: u32) void {
 }
 
 test "EMF+ serializable object dispatches a known GUID and ignores flags" {
-    var bytes = [_]u8{0} ** 28;
+    var bytes = @as([28]u8, @splat(0));
     writeEnvelope(&bytes, guid.brightness_contrast, 8);
     std.mem.writeInt(u32, bytes[20..24], 255, .little);
     std.mem.writeInt(u32, bytes[24..28], @bitCast(@as(i32, -100)), .little);
@@ -64,7 +64,7 @@ test "EMF+ serializable object dispatches a known GUID and ignores flags" {
 }
 
 test "EMF+ serializable object rejects every envelope mismatch" {
-    var bytes = [_]u8{0} ** 28;
+    var bytes = @as([28]u8, @splat(0));
     writeEnvelope(&bytes, guid.tint, 8);
     try std.testing.expectError(error.InvalidEmfPlusSerializableObjectSize, parse(makeRecord(bytes[0..19], 0)));
     std.mem.writeInt(u32, bytes[16..20], 4, .little);
@@ -106,7 +106,7 @@ test "EMF+ serializable object dispatch covers all eleven official effects" {
         .{ .kind = .sharpen, .object_guid = guid.sharpen, .size = 8 },
         .{ .kind = .tint, .object_guid = guid.tint, .size = 8 },
     };
-    var bytes = [_]u8{0} ** (20 + 1024);
+    var bytes = @as([(20 + 1024)]u8, @splat(0));
     for (cases) |case| {
         @memset(&bytes, 0);
         writeEnvelope(&bytes, case.object_guid, @intCast(case.size));

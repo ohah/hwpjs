@@ -18,7 +18,7 @@ fn framing(bytes: []const u8) records.Summary {
 
 const create = [_]u8{ 3, 0, 0, 0, 0xfa, 2 };
 fn reference(function: u16, index: u16) [8]u8 {
-    var bytes = [_]u8{0} ** 8;
+    var bytes = @as([8]u8, @splat(0));
     std.mem.writeInt(u32, bytes[0..4], 4, .little);
     std.mem.writeInt(u16, bytes[4..6], function, .little);
     std.mem.writeInt(u16, bytes[6..8], index, .little);

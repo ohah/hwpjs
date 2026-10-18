@@ -75,7 +75,7 @@ test "HWPX password entry independent two PRF ciphertexts failures and OOM" {
         try std.testing.expectError(error.WrongPasswordOrCorruptPayload, decrypt(std.testing.allocator, ciphertext[0..15], "123456", metadata, 5, .{}));
     }
     // Node-generated SHA256 vector whose wrong SHA1 stream exceeds the bound.
-    var alternate_salt = [_]u8{0} ** 16;
+    var alternate_salt = @as([16]u8, @splat(0));
     alternate_salt[0] = 0x70;
     var alternate = metadata;
     alternate.salt = &alternate_salt;

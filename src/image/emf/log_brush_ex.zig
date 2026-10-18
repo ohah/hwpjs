@@ -24,7 +24,7 @@ pub fn parse(bytes: []const u8) !LogBrushEx {
 }
 
 test "LogBrushEx interprets only fields used by each style" {
-    var bytes = [_]u8{0} ** size;
+    var bytes = @as([size]u8, @splat(0));
     bytes[4..8].* = .{ 1, 2, 3, 0 };
     std.mem.writeInt(u32, bytes[8..12], std.math.maxInt(u32), .little);
     const solid = try parse(&bytes);
@@ -45,7 +45,7 @@ test "LogBrushEx interprets only fields used by each style" {
 }
 
 test "LogBrushEx rejects size style used ColorRef and hatch violations" {
-    var bytes = [_]u8{0} ** (size + 1);
+    var bytes = @as([(size + 1)]u8, @splat(0));
     for (0..size) |cut| try std.testing.expectError(error.InvalidEmfLogBrushExSize, parse(bytes[0..cut]));
     try std.testing.expectError(error.InvalidEmfLogBrushExSize, parse(&bytes));
     std.mem.writeInt(u32, bytes[0..4], 3, .little);

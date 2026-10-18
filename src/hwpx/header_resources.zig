@@ -17,7 +17,7 @@ const descriptors = [_]Descriptor{
     .{ .group = "memoProperties", .item = "memoPr" },
 };
 comptime {
-    if (descriptors.len != @typeInfo(Kind).@"enum".fields.len) @compileError("header resource kind/descriptor mismatch");
+    if (descriptors.len != @typeInfo(Kind).@"enum".field_names.len) @compileError("header resource kind/descriptor mismatch");
 }
 
 pub const Options = struct {
@@ -55,7 +55,7 @@ pub const Report = struct {
     tables: [descriptors.len]Table,
 
     pub fn table(self: *const Report, kind: Kind) *const Table {
-        return &self.tables[@intFromEnum(kind)];
+        return &self.tables[@backingInt(kind)];
     }
 
     pub fn deinit(self: *Report, a: std.mem.Allocator) void {
@@ -105,14 +105,14 @@ const Context = struct {
                 const raw_count = try attrs.attribute(self.allocator, tag, scope, "itemCnt", self.options.max_attribute_bytes);
                 defer if (raw_count) |value| self.allocator.free(value);
                 if (raw_count) |value| table.declared_count = std.fmt.parseInt(u32, value, 10) catch return error.InvalidResourceCount;
-                self.current_group = if (tag.kind == .empty) null else @enumFromInt(index);
+                self.current_group = if (tag.kind == .empty) null else @fromBackingInt(@intCast(index));
                 return;
             }
             return;
         }
         if (depth != 4) return;
         const kind = self.current_group orelse return;
-        const index = @intFromEnum(kind);
+        const index = @backingInt(kind);
         if (!try attrs.element(tag, scope, document_xml.head_uri, descriptors[index].item)) return;
         const raw_id = (try attrs.attribute(self.allocator, tag, scope, "id", self.options.max_attribute_bytes)) orelse return error.MissingResourceId;
         defer self.allocator.free(raw_id);

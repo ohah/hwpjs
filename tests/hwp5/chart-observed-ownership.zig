@@ -368,11 +368,11 @@ test "actual edited Contents survives compressed outer HWP BinData replacement" 
     const stored_inner = try core.raw_deflate.encodeStored(t.allocator, inner, inner.len + 16);
     defer t.allocator.free(stored_inner);
 
-    var header = [_]u8{0} ** 256;
+    var header = @as([256]u8, @splat(0));
     @memcpy(header[0..17], "HWP Document File");
     std.mem.writeInt(u32, header[32..36], 0x05000107, .little);
     std.mem.writeInt(u32, header[36..40], 1, .little);
-    var doc_info = [_]u8{0} ** 96;
+    var doc_info = @as([96]u8, @splat(0));
     std.mem.writeInt(u32, doc_info[0..4], 17 | (60 << 20), .little);
     std.mem.writeInt(i32, doc_info[4..8], 2, .little);
     std.mem.writeInt(u32, doc_info[64..68], 18 | (1 << 10) | (12 << 20), .little);

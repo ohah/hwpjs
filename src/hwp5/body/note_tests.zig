@@ -2,7 +2,7 @@ const std = @import("std");
 const t = std.testing;
 const Shape = @import("note_shape.zig").Shape;
 test "note layout uses signed 32-bit separator length and distinct margin offsets" {
-    var bytes = [_]u8{0} ** 31;
+    var bytes = @as([31]u8, @splat(0));
     std.mem.writeInt(i32, bytes[12..16], 14692344, .little);
     std.mem.writeInt(i16, bytes[16..18], 850, .little);
     std.mem.writeInt(i16, bytes[18..20], 567, .little);
@@ -27,7 +27,7 @@ test "note layout uses signed 32-bit separator length and distinct margin offset
     for (0..26) |n| try t.expectError(error.UnexpectedEnd, Shape.parseLayout(bytes[0..n], .spec26));
 }
 test "note fields preserve negative values, raw UTF16 and unknown flags" {
-    const bytes = [_]u8{255} ** 28;
+    const bytes = @as([28]u8, @splat(255));
     const s = try Shape.parse(&bytes);
     try t.expectEqual(-1, s.separator_length);
     try t.expectEqual(-1, s.above);

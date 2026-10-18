@@ -3,7 +3,7 @@ const t = std.testing;
 const pcx = @import("structure.zig");
 
 fn header(version: u8, bits: u8, width: u16, height: u16, planes: u8, bytes_per_line: u16) [128]u8 {
-    var bytes = [_]u8{0} ** 128;
+    var bytes = @as([128]u8, @splat(0));
     bytes[0] = 0x0a;
     bytes[1] = version;
     bytes[2] = 1;
@@ -16,7 +16,7 @@ fn header(version: u8, bits: u8, width: u16, height: u16, planes: u8, bytes_per_
 }
 
 test "PCX structure counts RLE within scan lines across planes" {
-    var bytes = [_]u8{0} ** 132;
+    var bytes = @as([132]u8, @splat(0));
     const h = header(5, 1, 8, 2, 2, 2);
     @memcpy(bytes[0..128], &h);
     @memcpy(bytes[128..], &[_]u8{ 0xc4, 0xff, 0xc4, 0 });
@@ -34,7 +34,7 @@ test "PCX structure counts RLE within scan lines across planes" {
 }
 
 test "PCX structure checks header geometry and rejects RLE defects" {
-    var bytes = [_]u8{0} ** 130;
+    var bytes = @as([130]u8, @splat(0));
     const h = header(5, 8, 2, 1, 1, 2);
     @memcpy(bytes[0..128], &h);
     @memcpy(bytes[128..], &[_]u8{ 1, 2 });
@@ -74,7 +74,7 @@ test "PCX structure checks header geometry and rejects RLE defects" {
 }
 
 test "PCX structure distinguishes optional VGA palette from unexplained trailing bytes" {
-    var bytes = [_]u8{0} ** (128 + 2 + 769);
+    var bytes = @as([(128 + 2 + 769)]u8, @splat(0));
     const h = header(5, 8, 2, 1, 1, 2);
     @memcpy(bytes[0..128], &h);
     @memcpy(bytes[128..130], &[_]u8{ 1, 2 });
@@ -86,7 +86,7 @@ test "PCX structure distinguishes optional VGA palette from unexplained trailing
     bytes[3] = 1;
     try t.expectError(error.InvalidPcxTrailer, pcx.inspect(&bytes, .{}));
 
-    var truncated = [_]u8{0} ** (128 + 1 + 769);
+    var truncated = @as([(128 + 1 + 769)]u8, @splat(0));
     const wide = header(5, 8, 1, 1, 1, 770);
     @memcpy(truncated[0..128], &wide);
     truncated[128] = 1;
@@ -96,7 +96,7 @@ test "PCX structure distinguishes optional VGA palette from unexplained trailing
 
 test "PCX structure accepts nonzero origins and documented versions" {
     for ([_]u8{ 0, 2, 3, 4, 5 }) |version| {
-        var bytes = [_]u8{0} ** 130;
+        var bytes = @as([130]u8, @splat(0));
         const h = header(version, 1, 8, 1, 1, 2);
         @memcpy(bytes[0..128], &h);
         std.mem.writeInt(u16, bytes[4..6], 100, .little);

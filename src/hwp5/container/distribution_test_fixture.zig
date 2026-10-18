@@ -41,7 +41,7 @@ pub fn makeWithHistory(a: std.mem.Allocator, missing: bool, late: bool, history:
     defer a.free(body);
     const view = try envelope(a, body);
     defer a.free(view);
-    const version = try envelope(a, &([_]u8{0} ** 8));
+    const version = try envelope(a, &(@as([8]u8, @splat(0))));
     defer a.free(version);
     var nodes: std.ArrayList(writer.Node) = .empty;
     defer nodes.deinit(a);

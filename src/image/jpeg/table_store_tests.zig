@@ -3,9 +3,9 @@ const t = std.testing;
 const Store = @import("table_store.zig").Store;
 const frame_parser = @import("frame.zig");
 const scan_tables = @import("scan_tables.zig");
-const quantization = .{0} ++ [_]u8{1} ** 64;
-const dc = .{ 0, 1 } ++ [_]u8{0} ** 15 ++ .{0};
-const ac = .{ 16, 1 } ++ [_]u8{0} ** 15 ++ .{0};
+const quantization = .{0} ++ @as([64]u8, @splat(1));
+const dc = .{ 0, 1 } ++ @as([15]u8, @splat(0)) ++ .{0};
+const ac = .{ 16, 1 } ++ @as([15]u8, @splat(0)) ++ .{0};
 const frame_bytes = [_]u8{ 8, 0, 1, 0, 1, 1, 9, 0x11, 0 };
 const sequential = [_]u8{ 1, 9, 0, 0, 63, 0 };
 
@@ -31,7 +31,7 @@ test "JPEG table store replaces exact destinations and preserves borrowed views"
         try t.expect(store.quantization[id].?.raw.ptr == qs[id * 65 + 1 ..].ptr);
         for (0..2) |class| try t.expectEqual(class * 4 + id, store.huffman[class][id].?.symbols[0]);
     }
-    const replaced = quantization ++ (.{0} ++ [_]u8{7} ** 64);
+    const replaced = quantization ++ (.{0} ++ @as([64]u8, @splat(7)));
     try store.installQuantization(&replaced, .{});
     try t.expectEqual(@as(u16, 7), store.quantization[0].?.value(63).?);
     try t.expectEqual(@as(u16, 4), store.quantization[3].?.value(63).?);
@@ -43,7 +43,7 @@ test "JPEG table store malformed second definitions and limits roll back whole s
     try store.installHuffman(&dc, .{});
     const original_q = store.quantization[0].?.raw.ptr;
     const original_h = store.huffman[0][0].?.symbols.ptr;
-    const qs = (.{0} ++ [_]u8{2} ** 64) ++ quantization;
+    const qs = (.{0} ++ @as([64]u8, @splat(2))) ++ quantization;
     const hs = dc ++ dc;
     for (1..65) |n| {
         try t.expectError(error.UnexpectedEnd, store.installQuantization(qs[0 .. 65 + n], .{}));
@@ -74,7 +74,7 @@ test "JPEG resolved sequential scan requires both tables but not unused destinat
     try t.expect(resolved.components[0].dc != null and resolved.components[0].ac != null);
     try t.expect(resolved.symbol_semantics_deferred);
     // Merely defining an unused empty table is distinct from selecting it.
-    try store.installHuffman(&([_]u8{0} ** 17), .{});
+    try store.installHuffman(&(@as([17]u8, @splat(0))), .{});
     try t.expectError(error.EmptyJpegHuffmanTable, scan_tables.resolve(&store, frame, &sequential));
 }
 
@@ -118,7 +118,7 @@ test "JPEG scan subset resolves nonnumeric frame IDs and distinct table destinat
     const frame = try frame_parser.parse(0xc1, &bytes, .{});
     const payload = [_]u8{ 2, 4, 0x10, 7, 0x32, 0, 63, 0 };
     var store: Store = .{};
-    const qs = quantization ++ (.{3} ++ [_]u8{8} ** 64);
+    const qs = quantization ++ (.{3} ++ @as([64]u8, @splat(8)));
     const hs = (.{1} ++ dc[1..].*) ++ ac ++ (.{3} ++ dc[1..].*) ++ (.{18} ++ ac[1..].*);
     try store.installQuantization(&qs, .{});
     try store.installHuffman(&hs, .{});

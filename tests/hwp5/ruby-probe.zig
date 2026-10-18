@@ -9,7 +9,7 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     const report = try core.hwp5.ruby_validation.inspect(tree);
     var out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(a);
-    inline for (std.meta.fields(@TypeOf(report))) |f| try int(a, &out, u32, @intCast(@field(report, f.name)));
+    inline for (@typeInfo(@TypeOf(report)).@"struct".field_names) |f| try int(a, &out, u32, @intCast(@field(report, f)));
     for (tree.nodes) |node| {
         if (node.record.value != .control_header) continue;
         const h = node.record.value.control_header;

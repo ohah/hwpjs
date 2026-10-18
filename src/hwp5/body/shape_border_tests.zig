@@ -21,7 +21,7 @@ test "line attributes isolate every raw bit without enum normalization" {
 test "border widths are explicit and failed reads leave cursor untouched" {
     inline for (.{ border.Layout.spec11, border.Layout.observed13 }) |layout| {
         const width = if (layout == .spec11) 11 else 13;
-        var raw = [_]u8{255} ** (width + 1);
+        var raw = @as([(width + 1)]u8, @splat(255));
         if (layout == .spec11) std.mem.writeInt(i16, raw[4..6], -32768, .little) else std.mem.writeInt(i32, raw[4..8], -2147483648, .little);
         const p = try border.Border.parse(&raw, layout);
         try t.expectEqual(if (layout == .spec11) @as(i32, -32768) else -2147483648, p.value.width);

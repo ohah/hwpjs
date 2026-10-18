@@ -2,7 +2,7 @@ const std = @import("std");
 const t = std.testing;
 const g = @import("group_info.zig");
 test "group child IDs preserve order duplicates unknown values and optional instance" {
-    var b = [_]u8{0} ** 22;
+    var b = @as([22]u8, @splat(0));
     std.mem.writeInt(u16, b[0..2], 3, .little);
     for ([_]u32{ 0x24726563, 0xffffffff, 0x24726563 }, 0..) |id, i| std.mem.writeInt(u32, b[2 + i * 4 ..][0..4], id, .little);
     std.mem.writeInt(u32, b[14..18], 0x80000001, .little);

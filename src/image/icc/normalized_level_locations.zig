@@ -14,7 +14,7 @@ pub fn inspect(comptime precision: u16, curve: Curve, n: u128, d: u128) !Result 
 pub fn inspectWide(comptime precision: u16, curve: Curve, n: u512, d: u512) !Wide.Result {
     return inspectFor(512, precision, curve, n, d);
 }
-fn inspectFor(comptime bits: u16, comptime precision: u16, curve: Curve, n: @import("std").meta.Int(.unsigned, bits), d: @import("std").meta.Int(.unsigned, bits)) !(if (bits == 128) Result else Wide.Result) {
+fn inspectFor(comptime bits: u16, comptime precision: u16, curve: Curve, n: @Int(.unsigned, bits), d: @Int(.unsigned, bits)) !(if (bits == 128) Result else Wide.Result) {
     try (@import("fraction.zig").Normalized(bits){ .numerator = n, .denominator = d }).validate();
     const power = (try segments.assemble(curve)).power orelse return .inactive;
     const collector = if (bits == 128) set else Wide;

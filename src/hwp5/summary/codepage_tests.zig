@@ -3,7 +3,7 @@ const t = std.testing;
 const p = @import("parser.zig");
 const put = @import("../document/test_fixture.zig").put;
 fn fixture(duplicate: bool) [124]u8 {
-    var b = [_]u8{0} ** 124;
+    var b = @as([124]u8, @splat(0));
     put(&b, 0, u16, 0xfffe);
     put(&b, 24, u32, 1);
     @memcpy(b[28..44], &@import("header.zig").hwp_fmt);
@@ -112,7 +112,7 @@ test "HWP summary missing-codepage dictionary marker is observed but not accepte
     const marker = [_]u8{ 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0 };
     try t.expect(d.isObservedHwpPlaceholder(&marker));
     try t.expectError(error.InvalidDictionaryId, d.inspect(t.allocator, &marker, 1200));
-    var b = [_]u8{0} ** 77;
+    var b = @as([77]u8, @splat(0));
     put(&b, 0, u16, 0xfffe);
     put(&b, 24, u32, 1);
     @memcpy(b[28..44], &@import("header.zig").hwp_fmt);

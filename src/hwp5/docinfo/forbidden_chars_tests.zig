@@ -2,7 +2,7 @@ const std = @import("std");
 const t = std.testing;
 const Lists = @import("forbidden_chars.zig").Lists;
 test "observed forbidden lists count header precedes borrowed UTF16 lists and opaque extra" {
-    var bytes = [_]u8{0} ** 39;
+    var bytes = @as([39]u8, @splat(0));
     for (0..4) |i| std.mem.writeInt(u32, bytes[i * 4 ..][0..4], @intCast(i + 1), .little);
     for (bytes[16..], 0..) |*byte, i| byte.* = @intCast(i);
     const p = try Lists.parseObserved(&bytes);
@@ -23,7 +23,7 @@ test "observed forbidden lists count header precedes borrowed UTF16 lists and op
     }
 }
 test "observed forbidden lists preserve empty NUL surrogate and odd trailing bytes" {
-    var b = [_]u8{0} ** 23;
+    var b = @as([23]u8, @splat(0));
     std.mem.writeInt(u32, b[8..12], 3, .little);
     std.mem.writeInt(u16, b[16..18], 0xd800, .little);
     std.mem.writeInt(u16, b[20..22], 0xdc00, .little);
@@ -32,6 +32,6 @@ test "observed forbidden lists preserve empty NUL surrogate and odd trailing byt
     try t.expectEqualSlices(u8, b[16..22], p.lists[2]);
     for ([_]usize{ 0, 1, 3 }) |i| try t.expectEqual(0, p.lists[i].len);
     try t.expectEqualSlices(u8, &.{0xff}, p.extra);
-    const empty = try Lists.parseObserved(&([_]u8{0} ** 16));
+    const empty = try Lists.parseObserved(&(@as([16]u8, @splat(0))));
     for (empty.lists) |list| try t.expectEqual(0, list.len);
 }

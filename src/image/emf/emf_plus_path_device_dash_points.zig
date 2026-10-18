@@ -73,7 +73,7 @@ test "EMF+ Path device dash flag points retain original control roles and figure
 }
 
 test "EMF+ Path device dash flag iterator preserves error state after unmatched points" {
-    const point_bytes = [_]u8{0} ** (5 * 4);
+    const point_bytes = @as([(5 * 4)]u8, @splat(0));
     const types = [_]u8{ 0x10, 0x01, 0x03, 0x01, 0x00 };
     var iterator = fromCommands(commandIterator(&point_bytes, &types, 5));
     const first = (try iterator.next()).?;

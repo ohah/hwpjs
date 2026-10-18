@@ -58,7 +58,7 @@ test "EMF+ Bezier segments resolve connected PointR groups without duplicating e
 }
 
 test "EMF+ Bezier segments preserve absolute integer and floating point representations" {
-    var integers = [_]u8{0} ** 16;
+    var integers = @as([16]u8, @splat(0));
     const coordinates = [_]i16{ -32_768, 32_767, -3, 4, -5, 6, -7, 8 };
     for (coordinates, 0..) |value, index| std.mem.writeInt(i16, integers[index * 2 ..][0..2], value, .little);
     var integer_iterator = try segments(try point_data.parse(&integers, 4, false, true, .{}));
@@ -68,7 +68,7 @@ test "EMF+ Bezier segments preserve absolute integer and floating point represen
     try expectInteger(.{ .x = -32_768, .y = 32_767 }, integer.start);
     try expectInteger(.{ .x = -7, .y = 8 }, integer.end);
 
-    var floats = [_]u8{0} ** 32;
+    var floats = @as([32]u8, @splat(0));
     const bits = [_]u32{ 0x80000000, 0x7fc00001, 1, 2, 3, 4, 0x7f800000, 0xff800000 };
     for (bits, 0..) |value, index| std.mem.writeInt(u32, floats[index * 4 ..][0..4], value, .little);
     var floating_iterator = try segments(try point_data.parse(&floats, 4, false, false, .{}));
@@ -82,7 +82,7 @@ test "EMF+ Bezier segments preserve absolute integer and floating point represen
 }
 
 test "EMF+ Bezier segments separate wire count acceptance from complete topology" {
-    const bytes = [_]u8{0} ** 24;
+    const bytes = @as([24]u8, @splat(0));
     for ([_]u32{ 0, 1, 2, 3, 5, 6 }) |count| {
         const source = try point_data.parse(bytes[0 .. count * 4], count, false, true, .{});
         try std.testing.expectError(error.InvalidEmfPlusBezierTopology, segments(source));

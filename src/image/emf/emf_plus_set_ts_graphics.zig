@@ -114,7 +114,7 @@ fn makeRecord(flags: u16, data: []const u8) record.Record {
 }
 
 fn fixedData() [36]u8 {
-    var data = [_]u8{0} ** 36;
+    var data = @as([36]u8, @splat(0));
     data[0..4].* = .{ 5, 5, 1, 5 };
     std.mem.writeInt(i16, data[4..6], std.math.minInt(i16), .little);
     std.mem.writeInt(i16, data[6..8], std.math.maxInt(i16), .little);
@@ -147,7 +147,7 @@ test "EMF+ SetTSGraphics parses every fixed field and preserves reserved flags" 
 
 test "EMF+ SetTSGraphics parses optional palette and validates VGA claim" {
     const fixed = fixedData();
-    var bytes = [_]u8{0} ** 52;
+    var bytes = @as([52]u8, @splat(0));
     @memcpy(bytes[0..36], &fixed);
     std.mem.writeInt(u32, bytes[36..40], 0, .little);
     std.mem.writeInt(u32, bytes[40..44], 2, .little);
@@ -173,7 +173,7 @@ test "EMF+ SetTSGraphics rejects flags sizes limits and trailing palette data" {
     const data = fixedData();
     for (0..36) |cut|
         try std.testing.expectError(error.InvalidEmfPlusSetTSGraphicsSize, parse(makeRecord(0, data[0..cut]), .{}));
-    var short_palette = [_]u8{0} ** 43;
+    var short_palette = @as([43]u8, @splat(0));
     @memcpy(short_palette[0..36], &data);
     for (36..44) |cut|
         try std.testing.expectError(error.InvalidEmfPlusSetTSGraphicsSize, parse(makeRecord(1, short_palette[0..cut]), .{}));
@@ -192,11 +192,11 @@ test "EMF+ SetTSGraphics rejects flags sizes limits and trailing palette data" {
     wrong_slice.data = data[0..35];
     try std.testing.expectError(error.InvalidEmfPlusSetTSGraphicsSize, parse(wrong_slice, .{}));
 
-    var palette = [_]u8{0} ** 44;
+    var palette = @as([44]u8, @splat(0));
     @memcpy(palette[0..36], &data);
     palette[40] = 1;
     try std.testing.expectError(error.LimitExceeded, parse(makeRecord(1, &palette), .{ .max_palette_entries = 0 }));
-    var trailing = [_]u8{0} ** 48;
+    var trailing = @as([48]u8, @splat(0));
     @memcpy(trailing[0..44], &palette);
     trailing[40] = 0;
     try std.testing.expectError(error.InvalidEmfPlusSetTSGraphicsSize, parse(makeRecord(1, &trailing), .{}));

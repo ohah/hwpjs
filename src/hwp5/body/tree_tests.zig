@@ -32,7 +32,7 @@ test "tree sibling and root closures, unknown bytes and malformed cleanup" {
 }
 
 test "text preview tree decodes only paragraph records with unchanged framing" {
-    var bytes = [_]u8{0} ** 31;
+    var bytes = @as([31]u8, @splat(0));
     std.mem.writeInt(u32, bytes[0..4], 66 | (22 << 20), .little);
     std.mem.writeInt(u32, bytes[26..30], 77 | (1 << 10) | (1 << 20), .little);
     bytes[30] = 0xa5;

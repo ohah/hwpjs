@@ -16,7 +16,7 @@ pub fn parse(bytes: []const u8) !UniversalFontId {
 
 test "UniversalFontId preserves checksum classes and index" {
     for ([_]u32{ 0, 1, 2, 3, std.math.maxInt(u32) }) |checksum| {
-        var bytes = [_]u8{0} ** byte_size;
+        var bytes = @as([byte_size]u8, @splat(0));
         std.mem.writeInt(u32, bytes[0..4], checksum, .little);
         std.mem.writeInt(u32, bytes[4..8], 0x89abcdef, .little);
         const value = try parse(&bytes);
@@ -26,7 +26,7 @@ test "UniversalFontId preserves checksum classes and index" {
 }
 
 test "UniversalFontId requires exactly eight bytes" {
-    const bytes = [_]u8{0} ** (byte_size + 1);
+    const bytes = @as([(byte_size + 1)]u8, @splat(0));
     try std.testing.expectError(error.InvalidEmfUniversalFontIdSize, parse(bytes[0 .. byte_size - 1]));
     try std.testing.expectError(error.InvalidEmfUniversalFontIdSize, parse(&bytes));
 }

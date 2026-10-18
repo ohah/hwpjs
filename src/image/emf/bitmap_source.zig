@@ -37,7 +37,7 @@ pub fn parseWithOptions(bytes: []const u8, fixed_end: usize, fields: Fields, usa
 }
 
 test "bitmap source permits both documented undefined spaces" {
-    var bytes = [_]u8{0} ** 132;
+    var bytes = @as([132]u8, @splat(0));
     std.mem.writeInt(u32, bytes[104..108], 12, .little);
     std.mem.writeInt(u16, bytes[108..110], 2, .little);
     std.mem.writeInt(u16, bytes[110..112], 2, .little);
@@ -50,14 +50,14 @@ test "bitmap source permits both documented undefined spaces" {
 }
 
 test "bitmap source rejects partial overlap overflow and missing alignment" {
-    const bytes = [_]u8{0} ** 132;
+    const bytes = @as([132]u8, @splat(0));
     try std.testing.expect((try parse(&bytes, 100, .{ .bmi_offset = 0, .bmi_size = 0, .bits_offset = 0, .bits_size = 0 }, .rgb_colors)) == null);
     try std.testing.expectError(error.IncompleteEmfBitmapSource, parse(&bytes, 100, .{ .bmi_offset = 104, .bmi_size = 18, .bits_offset = 0, .bits_size = 0 }, .rgb_colors));
     try std.testing.expectError(error.IncompleteEmfBitmapSource, parse(&bytes, 100, .{ .bmi_offset = 104, .bmi_size = 18, .bits_offset = 124, .bits_size = 0 }, .rgb_colors));
     try std.testing.expectError(error.InvalidEmfBitmapSourceExtent, parse(&bytes, 100, .{ .bmi_offset = 96, .bmi_size = 18, .bits_offset = 124, .bits_size = 8 }, .rgb_colors));
     try std.testing.expectError(error.InvalidEmfBitmapSourceExtent, parse(&bytes, 100, .{ .bmi_offset = 104, .bmi_size = 24, .bits_offset = 124, .bits_size = 8 }, .rgb_colors));
     try std.testing.expectError(error.InvalidEmfBitmapSourceExtent, parse(&bytes, 100, .{ .bmi_offset = 0xfffffff0, .bmi_size = 0x40, .bits_offset = 0xfffffff8, .bits_size = 8 }, .rgb_colors));
-    var unaligned = [_]u8{0} ** 151;
+    var unaligned = @as([151]u8, @splat(0));
     std.mem.writeInt(u32, unaligned[104..108], 40, .little);
     std.mem.writeInt(i32, unaligned[108..112], 2, .little);
     std.mem.writeInt(i32, unaligned[112..116], 2, .little);

@@ -11,21 +11,21 @@ const Wrapper = struct {
         try writer.write(@tagName(self.value.kind));
         try writer.objectField("strings");
         try writer.beginObject();
-        inline for (std.meta.fields(attributes.StringField), 0..) |field, index| {
+        inline for (@import("../reflection.zig").fields(attributes.StringField), 0..) |field, index| {
             try writer.objectField(field.name);
             try writer.write(self.value.strings[index]);
         }
         try writer.endObject();
         try writer.objectField("booleans");
         try writer.beginObject();
-        inline for (std.meta.fields(attributes.BooleanField), 0..) |field, index| {
+        inline for (@import("../reflection.zig").fields(attributes.BooleanField), 0..) |field, index| {
             try writer.objectField(field.name);
             try writer.write(self.value.booleans[index]);
         }
         try writer.endObject();
         try writer.objectField("integers");
         try writer.beginObject();
-        inline for (std.meta.fields(attributes.IntegerField), 0..) |field, index| {
+        inline for (@import("../reflection.zig").fields(attributes.IntegerField), 0..) |field, index| {
             try writer.objectField(field.name);
             try writer.write(self.value.integers[index]);
         }
@@ -43,10 +43,10 @@ pub fn encode(a: std.mem.Allocator, value: attributes.Values) ![]u8 {
 fn allocationCase(a: std.mem.Allocator) !void {
     var value: attributes.Values = .{ .kind = .check_button };
     defer value.deinit(a);
-    value.strings[@intFromEnum(attributes.StringField.caption)] = try a.dupe(u8, "한글<&😀");
-    value.strings[@intFromEnum(attributes.StringField.name)] = try a.dupe(u8, "");
-    value.booleans[@intFromEnum(attributes.BooleanField.enabled)] = false;
-    value.integers[@intFromEnum(attributes.IntegerField.tabOrder)] = 0;
+    value.strings[@backingInt(attributes.StringField.caption)] = try a.dupe(u8, "한글<&😀");
+    value.strings[@backingInt(attributes.StringField.name)] = try a.dupe(u8, "");
+    value.booleans[@backingInt(attributes.BooleanField.enabled)] = false;
+    value.integers[@backingInt(attributes.IntegerField.tabOrder)] = 0;
     const bytes = try encode(a, value);
     defer a.free(bytes);
     var parsed = try std.json.parseFromSlice(std.json.Value, a, bytes, .{});

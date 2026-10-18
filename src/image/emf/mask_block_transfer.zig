@@ -73,14 +73,14 @@ fn writeCoreHeader(bytes: []u8, at: usize, bit_count: u16) void {
 }
 
 fn validRecord() [176]u8 {
-    var bytes = [_]u8{0} ** 176;
+    var bytes = @as([176]u8, @splat(0));
     std.mem.writeInt(u32, bytes[40..44], 0xccf00000, .little);
-    std.mem.writeInt(u32, bytes[80..84], @intFromEnum(dib_colors.Usage.palette_indices), .little);
+    std.mem.writeInt(u32, bytes[80..84], @backingInt(dib_colors.Usage.palette_indices), .little);
     std.mem.writeInt(u32, bytes[84..88], 132, .little);
     std.mem.writeInt(u32, bytes[88..92], 12, .little);
     std.mem.writeInt(u32, bytes[92..96], 144, .little);
     std.mem.writeInt(u32, bytes[96..100], 8, .little);
-    std.mem.writeInt(u32, bytes[108..112], @intFromEnum(dib_colors.Usage.palette_indices), .little);
+    std.mem.writeInt(u32, bytes[108..112], @backingInt(dib_colors.Usage.palette_indices), .little);
     std.mem.writeInt(u32, bytes[112..116], 156, .little);
     std.mem.writeInt(u32, bytes[116..120], 12, .little);
     std.mem.writeInt(u32, bytes[120..124], 168, .little);

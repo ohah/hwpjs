@@ -28,7 +28,7 @@ test "memo identity is directional with bounded command marker and code" {
     for (0..21) |n| try t.expectError(error.UnexpectedEnd, identity.resolve(id("%%me"), id("%unk"), 3, raw[0..n]));
 }
 fn allocationCase(a: std.mem.Allocator) !void {
-    var bytes = [_]u8{0} ** 78;
+    var bytes = @as([78]u8, @splat(0));
     std.mem.writeInt(u32, bytes[0..4], 66 | (24 << 20), .little);
     std.mem.writeInt(u32, bytes[28..32], 67 | (1 << 10) | (16 << 20), .little);
     std.mem.writeInt(u16, bytes[32..34], 3, .little);

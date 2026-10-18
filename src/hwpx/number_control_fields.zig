@@ -13,7 +13,7 @@ const auto_names = [_][]const u8{ "num", "numType" };
 const page_names = [_][]const u8{ "pos", "formatType", "sideChar" };
 const format_names = [_][]const u8{ "type", "userChar", "prefixChar", "suffixChar", "supscript" };
 comptime {
-    if (auto_names.len != @typeInfo(AutoField).@"enum".fields.len or page_names.len != @typeInfo(PageField).@"enum".fields.len or format_names.len != @typeInfo(FormatField).@"enum".fields.len) @compileError("number control fields mismatch");
+    if (auto_names.len != @typeInfo(AutoField).@"enum".field_names.len or page_names.len != @typeInfo(PageField).@"enum".field_names.len or format_names.len != @typeInfo(FormatField).@"enum".field_names.len) @compileError("number control fields mismatch");
 }
 
 fn Raw(comptime n: usize) type {
@@ -49,7 +49,7 @@ pub const Auto = struct {
     num: ?i32 = null,
     type_known: ?bool = null,
     pub fn get(self: Auto, field: AutoField) ?[]const u8 {
-        return self.raw[@intFromEnum(field)];
+        return self.raw[@backingInt(field)];
     }
 };
 pub const Page = struct {
@@ -58,7 +58,7 @@ pub const Page = struct {
     pos_known: ?bool = null,
     format_known: ?bool = null,
     pub fn get(self: Page, field: PageField) ?[]const u8 {
-        return self.raw[@intFromEnum(field)];
+        return self.raw[@backingInt(field)];
     }
 };
 pub const Format = struct {
@@ -67,7 +67,7 @@ pub const Format = struct {
     type_known: ?bool = null,
     supscript: ?bool = null,
     pub fn get(self: Format, field: FormatField) ?[]const u8 {
-        return self.raw[@intFromEnum(field)];
+        return self.raw[@backingInt(field)];
     }
 };
 

@@ -3,7 +3,7 @@ const icc = @import("hwpjs").image.icc;
 pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     const h = try icc.extent.inspect(bytes, limit);
     const status = try icc.profile_id.inspect(bytes, limit);
-    const digest = if (h.version.major == 4) try icc.profile_id.calculate(bytes, limit) else [_]u8{0} ** 16;
+    const digest = if (h.version.major == 4) try icc.profile_id.calculate(bytes, limit) else @as([16]u8, @splat(0));
     const out = try a.alloc(u8, 148);
     std.mem.writeInt(u32, out[0..4], h.profile_size, .little);
     out[4..8].* = h.preferred_cmm;

@@ -3,7 +3,7 @@ const t = std.testing;
 const body = @import("reader.zig");
 const Table = body.Table;
 test "table version boundary, mandatory zone count, borrowed rows and tails" {
-    var b = [_]u8{0} ** 39;
+    var b = @as([39]u8, @splat(0));
     std.mem.writeInt(u16, b[4..6], 2, .little);
     std.mem.writeInt(u16, b[6..8], 3, .little);
     std.mem.writeInt(u16, b[18..20], 1, .little);
@@ -42,7 +42,7 @@ test "table zone coordinate layouts remain explicit and asymmetric" {
     try t.expectEqual(3, spec.end_column);
 }
 test "cell and caption fields preserve signed margins and distinct offsets" {
-    var b = [_]u8{255} ** 39;
+    var b = @as([39]u8, @splat(255));
     std.mem.writeInt(u16, b[0..2], 1, .little);
     std.mem.writeInt(u16, b[2..4], 2, .little);
     std.mem.writeInt(u16, b[4..6], 3, .little);
@@ -69,11 +69,11 @@ test "cell and caption fields preserve signed margins and distinct offsets" {
     try t.expectEqual(0xffff8000, caption.max_text_width);
     try t.expectEqualSlices(u8, b[14..], caption.extra);
     for (0..14) |n| try t.expectError(error.UnexpectedEnd, body.Caption.parse(b[0..n]));
-    const negative = [_]u8{255} ** 14;
+    const negative = @as([14]u8, @splat(255));
     try t.expectEqual(-1, (try body.Caption.parse(&negative)).gap);
 }
 test "cell decoding uses caller chosen list layout without auto fallback" {
-    var b = [_]u8{0} ** 34;
+    var b = @as([34]u8, @splat(0));
     std.mem.writeInt(u16, b[6..8], 9, .little);
     std.mem.writeInt(u16, b[8..10], 11, .little);
     std.mem.writeInt(u16, b[10..12], 13, .little);
@@ -88,7 +88,7 @@ test "cell decoding uses caller chosen list layout without auto fallback" {
     try t.expectEqual(0, observed.extra.len);
 }
 fn validationCase(a: std.mem.Allocator) !void {
-    var b = [_]u8{0} ** 102;
+    var b = @as([102]u8, @splat(0));
     const offsets = [_]usize{ 0, 28, 36, 64 };
     const words = [_]u32{ 66 | (24 << 20), 71 | (1 << 10) | (4 << 20), 77 | (2 << 10) | (24 << 20), 72 | (2 << 10) | (34 << 20) };
     for (offsets, words) |p, w| std.mem.writeInt(u32, b[p..][0..4], w, .little);

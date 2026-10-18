@@ -3,12 +3,12 @@ const t = std.testing;
 const tag = @import("xyz_tag.zig");
 const values = @import("xyz_tag_values.zig");
 test "known XYZ tags require exactly one XYZ triple and unknown tags stay unhandled" {
-    var data = [_]u8{0} ** 32;
+    var data = @as([32]u8, @splat(0));
     data[0..4].* = "XYZ ".*;
     const names = [_][4]u8{ "rXYZ".*, "gXYZ".*, "bXYZ".*, "lumi".*, "wtpt".* };
     for (names, 0..) |name, i| {
         const parsed = (try tag.parse(name, data[0..20])).?;
-        try t.expectEqual(@as(tag.Kind, @enumFromInt(i)), parsed.kind);
+        try t.expectEqual(@as(tag.Kind, @fromBackingInt(@intCast(i))), parsed.kind);
         for ([_]usize{ 8, 32 }) |size| try t.expectError(error.InvalidIccXyzTagCount, tag.parse(name, data[0..size]));
         for (0..20) |size| {
             if (size == 8) continue;

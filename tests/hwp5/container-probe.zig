@@ -147,11 +147,11 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, limit: usize, specified:
     try int(a, &out, u32, @intCast(scripts.trailing_bytes));
     try int(a, &out, u32, @intFromBool(report.summary_information != null));
     const summary = report.summary_information orelse core.hwp5.summary_information.Stats{};
-    inline for (std.meta.fields(@TypeOf(summary))) |f| try int(a, &out, u32, @intCast(@field(summary, f.name)));
+    inline for (@typeInfo(@TypeOf(summary)).@"struct".field_names) |f| try int(a, &out, u32, @intCast(@field(summary, f)));
     try int(a, &out, u32, @intFromBool(report.preview_text != null));
     const preview = report.preview_text orelse core.hwp5.preview_text.Stats{};
-    inline for (std.meta.fields(@TypeOf(preview))) |f| try int(a, &out, u32, @intCast(@field(preview, f.name)));
-    inline for (std.meta.fields(@TypeOf(report.binary_data))) |f| try int(a, &out, u32, @intCast(@field(report.binary_data, f.name)));
+    inline for (@typeInfo(@TypeOf(preview)).@"struct".field_names) |f| try int(a, &out, u32, @intCast(@field(preview, f)));
+    inline for (@typeInfo(@TypeOf(report.binary_data)).@"struct".field_names) |f| try int(a, &out, u32, @intCast(@field(report.binary_data, f)));
     try int(a, &out, u32, @intCast(report.total_decoded_bytes));
     try int(a, &out, u32, @intCast(report.uninspected_streams));
     if (selection.history_report) try @import("history-container-probe.zig").serialize(a, &out, report.history);
@@ -163,6 +163,6 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, limit: usize, specified:
     if (selection.bmp_rle_report) try @import("container-bmp-rle-probe.zig").serialize(a, &out, report.images, selection.images != null and selection.images.?.bmp != null and selection.images.?.bmp.?.rle != null);
     if (selection.bmp_profile_report) try @import("container-bmp-profile-probe.zig").serialize(a, &out, report.images, selection.images != null and selection.images.?.bmp_profile != null);
     if (selection.preview_image_report) try @import("preview-image-probe.zig").serialize(a, &out, report.preview_image, selection.preview_image);
-    if (selection.primary_source_report) try int(a, &out, u32, @intFromEnum(report.primary_source));
+    if (selection.primary_source_report) try int(a, &out, u32, @backingInt(report.primary_source));
     return out.toOwnedSlice(a);
 }

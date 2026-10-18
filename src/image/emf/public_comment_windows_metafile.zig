@@ -36,20 +36,20 @@ pub fn parse(body: []const u8) !WindowsMetafile {
 }
 
 fn standardFixture(bytes: []u8, outer_version: wmf_header.Version) void {
-    std.mem.writeInt(u16, bytes[0..2], @intFromEnum(outer_version), .little);
+    std.mem.writeInt(u16, bytes[0..2], @backingInt(outer_version), .little);
     std.mem.writeInt(u32, bytes[4..8], 0x89abcdef, .little);
     std.mem.writeInt(u32, bytes[12..16], @intCast(bytes.len - 16), .little);
     const wmf = bytes[16..];
-    std.mem.writeInt(u16, wmf[0..2], @intFromEnum(wmf_header.MetafileType.memory), .little);
+    std.mem.writeInt(u16, wmf[0..2], @backingInt(wmf_header.MetafileType.memory), .little);
     std.mem.writeInt(u16, wmf[2..4], 9, .little);
-    std.mem.writeInt(u16, wmf[4..6], @intFromEnum(wmf_header.Version.version_300), .little);
+    std.mem.writeInt(u16, wmf[4..6], @backingInt(wmf_header.Version.version_300), .little);
     std.mem.writeInt(u32, wmf[6..10], @intCast(wmf.len / 2), .little);
     std.mem.writeInt(u32, wmf[12..16], 3, .little);
     std.mem.writeInt(u32, wmf[18..22], 3, .little);
 }
 
 test "WINDOWS_METAFILE preserves envelope fields and validates standard WMF framing" {
-    var bytes = [_]u8{0} ** 40;
+    var bytes = @as([40]u8, @splat(0));
     standardFixture(&bytes, .version_100);
     const value = try parse(&bytes);
     try std.testing.expectEqual(wmf_header.Version.version_100, value.version);
@@ -61,7 +61,7 @@ test "WINDOWS_METAFILE preserves envelope fields and validates standard WMF fram
 }
 
 test "WINDOWS_METAFILE rejects all prefix cuts reserved flags size and malformed WMF" {
-    var bytes = [_]u8{0} ** 40;
+    var bytes = @as([40]u8, @splat(0));
     standardFixture(&bytes, .version_300);
     for (0..16) |cut| try std.testing.expectError(error.TruncatedEmfPublicWindowsMetafile, parse(bytes[0..cut]));
     for (16..40) |cut| try std.testing.expectError(error.InvalidEmfPublicWmfSize, parse(bytes[0..cut]));

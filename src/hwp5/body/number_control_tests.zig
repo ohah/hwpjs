@@ -5,7 +5,7 @@ test "number prefix read is atomic and automatic bit views are position specific
     var r: @import("../../binary/reader.zig").Reader = .{ .bytes = &.{ 1, 2, 3, 4, 5 } };
     try t.expectError(error.UnexpectedEnd, n.Header.read(&r));
     try t.expectEqual(0, r.offset);
-    var raw = [_]u8{0} ** 12;
+    var raw = @as([12]u8, @splat(0));
     for (0..32) |bit| {
         const flags = @as(u32, 1) << @intCast(bit);
         std.mem.writeInt(u32, raw[0..4], flags, .little);

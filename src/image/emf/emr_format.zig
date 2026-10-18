@@ -44,27 +44,27 @@ pub fn parse(descriptor: []const u8, public_body: []const u8, expected_body_offs
 }
 
 test "EmrFormat preserves signatures versions extents and exact borrowed data" {
-    var body = [_]u8{0xa5} ** 28;
-    var descriptor = [_]u8{0} ** size;
-    std.mem.writeInt(u32, descriptor[0..4], @intFromEnum(Signature.enhanced_metafile), .little);
+    var body = @as([28]u8, @splat(0xa5));
+    var descriptor = @as([size]u8, @splat(0));
+    std.mem.writeInt(u32, descriptor[0..4], @backingInt(Signature.enhanced_metafile), .little);
     std.mem.writeInt(u32, descriptor[4..8], 0xffffffff, .little);
     std.mem.writeInt(u32, descriptor[8..12], 4, .little);
     std.mem.writeInt(u32, descriptor[12..16], 32, .little);
     const value = try parse(&descriptor, &body, 24);
-    try std.testing.expectEqual(@as(u32, @intFromEnum(Signature.enhanced_metafile)), value.signature_raw);
+    try std.testing.expectEqual(@as(u32, @backingInt(Signature.enhanced_metafile)), value.signature_raw);
     try std.testing.expectEqual(Signature.enhanced_metafile, value.signature.?);
     try std.testing.expectEqual(@as(u32, 0xffffffff), value.version);
     try std.testing.expectEqualSlices(u8, body[24..28], value.data);
 }
 
 test "EmrFormat preserves extension signatures and rejects invalid EPS versions offsets and extents" {
-    var descriptor = [_]u8{0} ** size;
-    var body = [_]u8{0} ** 24;
+    var descriptor = @as([size]u8, @splat(0));
+    var body = @as([24]u8, @splat(0));
     std.mem.writeInt(u32, descriptor[12..16], 32, .little);
     const extension = try parse(&descriptor, &body, 24);
     try std.testing.expectEqual(@as(?Signature, null), extension.signature);
     try std.testing.expectEqual(@as(u32, 0), extension.signature_raw);
-    std.mem.writeInt(u32, descriptor[0..4], @intFromEnum(Signature.encapsulated_postscript), .little);
+    std.mem.writeInt(u32, descriptor[0..4], @backingInt(Signature.encapsulated_postscript), .little);
     try std.testing.expectError(error.UnsupportedEmrEpsVersion, parse(&descriptor, &body, 24));
     std.mem.writeInt(u32, descriptor[4..8], 1, .little);
     std.mem.writeInt(u32, descriptor[12..16], 31, .little);

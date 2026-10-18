@@ -11,7 +11,7 @@ pub fn resolveWide(comptime precision: u16, curve: @import("parametric_curve.zig
 }
 fn resolveFor(comptime bits: u16, comptime precision: u16, curve: @import("parametric_curve.zig").Curve, choice: @import("parametric_nearest_types.zig").Of(bits).Choice) !?@import("parametric_preimage_bounds_types.zig").Of(bits).Coordinate {
     const R = @import("parametric_nearest_types.zig").Of(bits).Rational;
-    const U = std.meta.Int(.unsigned, bits);
+    const U = @Int(.unsigned, bits);
     const select = if (bits == 128) attained.select else attained.selectWide;
     const value: R = switch (choice) {
         .rational => |r| r,

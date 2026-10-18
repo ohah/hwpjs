@@ -65,7 +65,7 @@ test "cell field reads direct typed item, retains empty name and rejects duplica
     try t.expectEqual(0, e.field_name_utf16.?.len);
 }
 fn lateFailure(a: std.mem.Allocator) !void {
-    var b = [_]u8{0} ** 80;
+    var b = @as([80]u8, @splat(0));
     b[0] = 1;
     b[2] = 1;
     b[6] = 3;
@@ -97,7 +97,7 @@ test "parameter and cell-field late failures free every reallocation" {
     try t.checkAllAllocationFailures(t.allocator, fieldFailure, .{});
 }
 test "parameter recursion ceiling is bounded even when caller raises the default" {
-    var b = [_]u8{0} ** 646;
+    var b = @as([646]u8, @splat(0));
     for (0..64) |i| {
         const start = i * 10;
         b[start] = 1;

@@ -139,17 +139,17 @@ test "HWPX section text uses exact independent text and inline limits" {
 test "HWPX section text distinguishes every observed inline kind without inventing spaces" {
     const source = prefix ++ "<p:p><p:run><p:t><p:tab width=\"100\" leader=\"NONE\" type=\"LEFT\"/><p:fwSpace/><p:nbSpace/><p:lineBreak/><p:titleMark ignore=\"0\"/><p:markpenBegin color=\"#FFFFFF\"/><p:markpenEnd/><p:hypen/></p:t></p:run></p:p>" ++ suffix;
     const Capture = struct {
-        counts: [@typeInfo(package.SectionTextInlineKind).@"enum".fields.len]usize = @splat(0),
+        counts: [@typeInfo(package.SectionTextInlineKind).@"enum".field_names.len]usize = @splat(0),
         fn onEvent(raw: *anyopaque, event: package.SectionTextEvent) anyerror!void {
             const self: *@This() = @ptrCast(@alignCast(raw));
-            if (event == .inline_empty) self.counts[@intFromEnum(event.inline_empty.kind)] += 1;
+            if (event == .inline_empty) self.counts[@backingInt(event.inline_empty.kind)] += 1;
         }
     };
     var capture: Capture = .{};
     const report = try inspect(std.testing.allocator, source, .{}, .{ .context = &capture, .on_event = Capture.onEvent });
     inline for (.{ .tab, .fw_space, .nb_space, .line_break, .title_mark, .markpen_begin, .markpen_end, .hypen }) |kind| {
         try std.testing.expectEqual(@as(usize, 1), report.inlineCount(kind));
-        try std.testing.expectEqual(@as(usize, 1), capture.counts[@intFromEnum(@as(package.SectionTextInlineKind, kind))]);
+        try std.testing.expectEqual(@as(usize, 1), capture.counts[@backingInt(@as(package.SectionTextInlineKind, kind))]);
     }
     try std.testing.expectEqual(@as(usize, 0), report.text_bytes);
     try std.testing.expectEqual(@as(usize, 1), report.empty_text_elements);

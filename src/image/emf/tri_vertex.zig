@@ -23,7 +23,7 @@ pub fn parse(bytes: []const u8) !TriVertex {
 }
 
 test "TriVertex preserves signed position and all 16-bit color fields" {
-    var bytes = [_]u8{0} ** byte_size;
+    var bytes = @as([byte_size]u8, @splat(0));
     std.mem.writeInt(i32, bytes[0..4], std.math.minInt(i32), .little);
     std.mem.writeInt(i32, bytes[4..8], std.math.maxInt(i32), .little);
     for ([_]u16{ 0x1122, 0x3344, 0x5566, 0x7788 }, 0..) |value, index|
@@ -38,7 +38,7 @@ test "TriVertex preserves signed position and all 16-bit color fields" {
 }
 
 test "TriVertex requires exactly 16 bytes" {
-    const bytes = [_]u8{0} ** (byte_size + 1);
+    const bytes = @as([(byte_size + 1)]u8, @splat(0));
     try std.testing.expectError(error.InvalidEmfTriVertexSize, parse(bytes[0 .. byte_size - 1]));
     try std.testing.expectError(error.InvalidEmfTriVertexSize, parse(&bytes));
 }

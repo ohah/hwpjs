@@ -22,10 +22,10 @@ pub const Report = struct {
     header_and_sections: usize,
     master_pages: usize,
     sites: []Site,
-    counts: [@typeInfo(binary_links.TargetState).@"enum".fields.len]usize,
+    counts: [@typeInfo(binary_links.TargetState).@"enum".field_names.len]usize,
 
     pub fn count(self: *const Report, state: binary_links.TargetState) usize {
-        return self.counts[@intFromEnum(state)];
+        return self.counts[@backingInt(state)];
     }
 
     pub fn deinit(self: *Report, a: std.mem.Allocator) void {
@@ -42,7 +42,7 @@ pub fn inspect(a: std.mem.Allocator, items: manifest.Manifest, brushes: *const f
     defer index.deinit(a);
     var sites: std.ArrayList(Site) = .empty;
     errdefer sites.deinit(a);
-    var counts: [@typeInfo(binary_links.TargetState).@"enum".fields.len]usize = @splat(0);
+    var counts: [@typeInfo(binary_links.TargetState).@"enum".field_names.len]usize = @splat(0);
     for (brushes.nodes, 0..) |node, node_index| {
         if (node.kind != .image) continue;
         if (sites.items.len == options.max_sites) return error.LimitExceeded;
@@ -60,7 +60,7 @@ pub fn inspect(a: std.mem.Allocator, items: manifest.Manifest, brushes: *const f
             .element_index = node.element_index,
             .target = target,
         });
-        counts[@intFromEnum(target.state)] += 1;
+        counts[@backingInt(target.state)] += 1;
     }
     return .{
         .header_and_sections = brushes.header_and_sections,

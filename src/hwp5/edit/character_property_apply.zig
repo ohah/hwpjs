@@ -9,8 +9,8 @@ pub fn apply(a: std.mem.Allocator, source: []const u8, original_info: []const u8
         const fonts = try @import("../docinfo/resources.zig").inspect(original_info, version, .{});
         try fonts.validate();
         for (ids, 0..) |id, language| if (id) |value| {
-            var count: u32 = @intCast(fonts.fontCount(@enumFromInt(language)));
-            for (document.font_resources.entries.items) |font| if (@intFromEnum(font.language) == language) {
+            var count: u32 = @intCast(fonts.fontCount(@fromBackingInt(@intCast(language))));
+            for (document.font_resources.entries.items) |font| if (@backingInt(font.language) == language) {
                 if (font.id != count or count > std.math.maxInt(u16)) return error.InvalidFontId;
                 count += 1;
             };
@@ -28,7 +28,7 @@ pub fn apply(a: std.mem.Allocator, source: []const u8, original_info: []const u8
     try @import("control_boundaries.zig").validate(text, edit.start_unit, edit.end_unit);
     try @import("character_runs.zig").validate(target.character_runs, text, count);
     if (edit.start_unit == edit.end_unit) return;
-    const borrowed: Values = .{ .entries = .{ .items = document.character_resources, .capacity = document.character_resources.len } };
+    const borrowed: Values = .{ .entries = .{ .items = document.character_resources, .capacity = document.character_resources.len, .pointer_stability = .{} } };
     const current = try borrowed.write(a, original_info, version, original_count, limit);
     defer a.free(current);
     const shapes = try @import("character_display_shapes.zig").read(a, current, version, count);
@@ -45,7 +45,7 @@ pub fn apply(a: std.mem.Allocator, source: []const u8, original_info: []const u8
         if (start >= stop) continue;
         const shape = shapes[run.char_shape_id];
         if ((edit.properties.outline_kind == null or shape.outline_kind_raw == @import("character_outline_kind.zig").raw(edit.properties.outline_kind.?)) and @import("../../model/character_properties.zig").effectsMatch(edit.properties, shape.effects) and (edit.properties.shade == null or try @import("../../model/shade_color.zig").encodeHwp5(edit.properties.shade.?) == shape.shade_color_raw))
-            if ((edit.properties.strike_enabled == null or (shape.strike_kind_raw <= 1 and edit.properties.strike_enabled.? == (shape.strike_kind_raw == 1))) and (edit.properties.size == null or edit.properties.size.? == shape.height) and (edit.properties.bold == null or edit.properties.bold.? == shape.bold) and (edit.properties.italic == null or edit.properties.italic.? == shape.italic) and (edit.properties.underline_kind == null or @intFromEnum(edit.properties.underline_kind.?) == shape.underline_kind_raw) and (edit.properties.underline_color == null or @import("../../model/rgb_color.zig").hwp5(edit.properties.underline_color.?) == shape.underline_color_raw) and (edit.properties.text_color == null or @import("../../model/rgb_color.zig").hwp5(edit.properties.text_color.?) == shape.text_color_raw) and (edit.properties.font_ids == null or @import("../../model/character_fonts.zig").matches(@import("../../model/character_fonts.zig").fromHwp5(shape.font_ids), edit.properties.font_ids.?))) continue;
+            if ((edit.properties.strike_enabled == null or (shape.strike_kind_raw <= 1 and edit.properties.strike_enabled.? == (shape.strike_kind_raw == 1))) and (edit.properties.size == null or edit.properties.size.? == shape.height) and (edit.properties.bold == null or edit.properties.bold.? == shape.bold) and (edit.properties.italic == null or edit.properties.italic.? == shape.italic) and (edit.properties.underline_kind == null or @backingInt(edit.properties.underline_kind.?) == shape.underline_kind_raw) and (edit.properties.underline_color == null or @import("../../model/rgb_color.zig").hwp5(edit.properties.underline_color.?) == shape.underline_color_raw) and (edit.properties.text_color == null or @import("../../model/rgb_color.zig").hwp5(edit.properties.text_color.?) == shape.text_color_raw) and (edit.properties.font_ids == null or @import("../../model/character_fonts.zig").matches(@import("../../model/character_fonts.zig").fromHwp5(shape.font_ids), edit.properties.font_ids.?))) continue;
         var source_id = run.char_shape_id;
         var properties: model.CharacterPropertyPatch = .{};
         if (source_id >= original_count) {

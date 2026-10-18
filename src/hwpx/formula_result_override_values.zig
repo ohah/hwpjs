@@ -129,7 +129,7 @@ test "HWPX manual formula result values reject invalid replacements without drop
     try std.testing.expectError(error.InvalidUtf8, values.set(a, &tree, begin, &.{0xff}));
     try std.testing.expectError(error.InvalidXmlCharacter, values.set(a, &tree, begin, &.{0}));
     try std.testing.expectError(error.InvalidFormulaFieldNode, values.set(a, &tree, 0, "9"));
-    try std.testing.expectError(error.LimitExceeded, values.set(a, &tree, begin, &([_]u8{'x'} ** (@import("formula_result_sites.zig").max_display_bytes + 1))));
+    try std.testing.expectError(error.LimitExceeded, values.set(a, &tree, begin, &@as([@import("formula_result_sites.zig").max_display_bytes + 1]u8, @splat('x'))));
     try std.testing.expectEqualStrings("수동😀", values.get(begin).?);
     const alias = values.get(begin).?[0..6];
     try std.testing.expect(try values.set(a, &tree, begin, alias));

@@ -73,7 +73,7 @@ fn makeRecord(data: []const u8, flags: u16) record.Record {
 }
 
 test "EMF+ DrawLines parses absolute integer and floating points" {
-    var integer = [_]u8{0} ** 12;
+    var integer = @as([12]u8, @splat(0));
     std.mem.writeInt(u32, integer[0..4], 2, .little);
     for ([_]i16{ -32768, 32767, -1, 1 }, 0..) |coordinate, index|
         std.mem.writeInt(i16, integer[4 + index * 2 ..][0..2], coordinate, .little);
@@ -98,7 +98,7 @@ test "EMF+ DrawLines parses absolute integer and floating points" {
     try std.testing.expectEqual(@as(i64, -32_768), closing.end.integer.x);
     try std.testing.expect((try closed_segments.next()) == null);
 
-    var floating = [_]u8{0} ** 20;
+    var floating = @as([20]u8, @splat(0));
     std.mem.writeInt(u32, floating[0..4], 2, .little);
     for ([_]f32{ -0.0, std.math.nan(f32), std.math.inf(f32), -4.5 }, 0..) |coordinate, index|
         std.mem.writeInt(u32, floating[4 + index * 4 ..][0..4], @bitCast(coordinate), .little);
@@ -116,7 +116,7 @@ test "EMF+ DrawLines parses absolute integer and floating points" {
 }
 
 test "EMF+ DrawLines exposes shared device polyline segments with its L policy" {
-    var data = [_]u8{0} ** 12;
+    var data = @as([12]u8, @splat(0));
     std.mem.writeInt(u32, data[0..4], 2, .little);
     for ([_]i16{ 1, 2, 3, 4 }, 0..) |coordinate, index|
         std.mem.writeInt(i16, data[4 + index * 2 ..][0..2], coordinate, .little);
@@ -154,7 +154,7 @@ test "EMF+ DrawLines parses variable PointR widths padding and ignores C" {
 }
 
 test "EMF+ DrawLines rejects type count ObjectID sizes truncation and limit" {
-    var data = [_]u8{0} ** 20;
+    var data = @as([20]u8, @splat(0));
     std.mem.writeInt(u32, data[0..4], 2, .little);
     _ = try parse(makeRecord(&data, 0), .{});
     try std.testing.expectError(error.UnexpectedEnd, parse(makeRecord(data[0..0], 0), .{}));

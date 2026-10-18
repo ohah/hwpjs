@@ -81,7 +81,7 @@ test "LogFontPanose preserves ignored fields and enforces specified zero fields"
 }
 
 test "LogFontExDv requires the complete LogFontEx and exact DesignVector" {
-    var bytes = [_]u8{0} ** (ex_size + design_vector.minimum_size);
+    var bytes = @as([(ex_size + design_vector.minimum_size)]u8, @splat(0));
     std.mem.writeInt(i32, bytes[16..20], 400, .little);
     std.mem.writeInt(u32, bytes[348..352], design_vector.signature, .little);
     const value = try parseExDv(&bytes);

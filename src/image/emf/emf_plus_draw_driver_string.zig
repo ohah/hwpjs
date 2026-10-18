@@ -115,7 +115,7 @@ fn putF32(bytes: []u8, offset: usize, value: f32) void {
 }
 
 test "EMF+ DrawDriverString parses literal color even glyphs and positions" {
-    var data = [_]u8{0} ** 36;
+    var data = @as([36]u8, @splat(0));
     putU32(&data, 0, 0x44332211);
     putU32(&data, 4, driver_options.cmap_lookup | driver_options.vertical);
     putU32(&data, 12, 2);
@@ -141,7 +141,7 @@ test "EMF+ DrawDriverString parses literal color even glyphs and positions" {
 }
 
 test "EMF+ DrawDriverString parses odd glyph layout brush reference matrix and padding" {
-    var data = [_]u8{0} ** 52;
+    var data = @as([52]u8, @splat(0));
     putU32(&data, 0, 7);
     putU32(&data, 4, driver_options.realized_advance | driver_options.limit_subpixel);
     putU32(&data, 8, 1);
@@ -163,7 +163,7 @@ test "EMF+ DrawDriverString parses odd glyph layout brush reference matrix and p
 }
 
 test "EMF+ DrawDriverString accepts empty glyph arrays and rejects every boundary" {
-    var empty = [_]u8{0} ** 16;
+    var empty = @as([16]u8, @splat(0));
     const zero = try parse(makeRecord(&empty, 0x8000), .{});
     try std.testing.expectEqual(@as(u32, 0), zero.glyph_count);
     var zero_glyphs = zero.glyphs();
@@ -184,13 +184,13 @@ test "EMF+ DrawDriverString accepts empty glyph arrays and rejects every boundar
     putU32(&bad_brush, 0, 64);
     try std.testing.expectError(error.InvalidEmfPlusBrushId, parse(makeRecord(&bad_brush, 0), .{}));
 
-    var one = [_]u8{0} ** 28;
+    var one = @as([28]u8, @splat(0));
     putU32(&one, 12, 1);
     try std.testing.expectError(error.LimitExceeded, parse(makeRecord(&one, 0x8000), .{ .max_glyphs = 0 }));
     var missing_matrix = one;
     putU32(&missing_matrix, 8, 1);
     try std.testing.expectError(error.InvalidEmfPlusDrawDriverStringSize, parse(makeRecord(&missing_matrix, 0x8000), .{}));
-    var unexpected_matrix = [_]u8{0} ** 52;
+    var unexpected_matrix = @as([52]u8, @splat(0));
     putU32(&unexpected_matrix, 12, 1);
     try std.testing.expectError(error.InvalidEmfPlusDrawDriverStringSize, parse(makeRecord(&unexpected_matrix, 0x8000), .{}));
     var wrong_type = makeRecord(&empty, 0x8000);

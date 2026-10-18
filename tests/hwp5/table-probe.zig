@@ -28,13 +28,13 @@ pub fn inspect(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     const report = try core.hwp5.table_validation.inspect(a, tree, .{ .list_layout = .observed8, .zone_layout = .observed_row_first, .border_count = borders });
     var out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(a);
-    inline for (std.meta.fields(@TypeOf(report))) |f| try int(a, &out, u32, @intCast(@field(report, f.name)));
+    inline for (@typeInfo(@TypeOf(report)).@"struct".field_names) |f| try int(a, &out, u32, @intCast(@field(report, f)));
     for (tree.nodes, 0..) |node, i| {
         if (node.record.value != .control_header or node.record.value.control_header.id != core.hwp5.control_rules.table_id) continue;
         var lists = try core.hwp5.table_lists.Iterator.init(tree, i);
         while (lists.next()) |entry| {
             try int(a, &out, u32, @intCast(entry.node));
-            try int(a, &out, u32, @intFromEnum(entry.kind));
+            try int(a, &out, u32, @backingInt(entry.kind));
             const raw = (try tree.nodes[entry.node].record.value.list_header.view(.observed8)).extra;
             try int(a, &out, u32, @intCast(raw.len));
             switch (entry.kind) {

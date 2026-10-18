@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { request, metadata, result, frameParser } from "./zig-test-protocol.mjs";
+import { request, metadata, result, frameParser, protocolForVersion } from "./zig-test-protocol.mjs";
 import { nativeAuditOptions, nativeTestRange } from "./native-test-range.mjs";
 
 const options = nativeAuditOptions(process.argv.slice(2));
@@ -54,7 +54,7 @@ try {
     try {
       const version = await runner.next();
       assert.equal(version.tag, 0);
-      assert.equal(version.body.toString(), "0.16.0", "UnsupportedTestProtocolVersion");
+      protocolForVersion(version.body.toString());
       runner.send(4);
       const inventory = await runner.next();
       assert.equal(inventory.tag, 3);
@@ -62,7 +62,7 @@ try {
       if (names === null) {
         names = actual;
         range = nativeTestRange(options, names.length);
-        console.log(JSON.stringify({ kind: "inventory", binarySha256: digest, tests: names.length, batchSize: size, seed: "0x485750", range }));
+        console.log(JSON.stringify({ kind: "inventory", zigVersion: version.body.toString(), binarySha256: digest, tests: names.length, batchSize: size, seed: "0x485750", range }));
       } else assert.deepEqual(actual, names, "NativeTestInventoryChanged");
       const end = Math.min(range.end, start + size);
       console.log(JSON.stringify({ kind: "batch", pid: runner.child.pid, start, end }));

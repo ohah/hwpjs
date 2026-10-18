@@ -3,7 +3,7 @@ const t = std.testing;
 const framing = @import("framing.zig");
 
 fn fixture() [108]u8 {
-    var bytes = [_]u8{0} ** 108;
+    var bytes = @as([108]u8, @splat(0));
     std.mem.writeInt(u32, bytes[0..4], 1, .little);
     std.mem.writeInt(u32, bytes[4..8], 88, .little);
     std.mem.writeInt(i32, bytes[8..12], -1, .little);
@@ -25,11 +25,11 @@ fn fixture() [108]u8 {
 
 fn emfPlusFixture() [164]u8 {
     const original = fixture();
-    var bytes = [_]u8{0} ** 164;
+    var bytes = @as([164]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 56, .little);
     std.mem.writeInt(u32, bytes[96..100], 44, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -81,11 +81,11 @@ test "EMF framing enforces the complete EMF+ stream contract" {
     std.mem.writeInt(u32, empty[52..56], 3, .little);
     try t.expectError(error.EmptyEmfPlusComment, framing.validate(t.allocator, empty[0..124]));
 
-    var delayed = [_]u8{0} ** 176;
+    var delayed = @as([176]u8, @splat(0));
     @memcpy(delayed[0..88], valid[0..88]);
     std.mem.writeInt(u32, delayed[48..52], delayed.len, .little);
     std.mem.writeInt(u32, delayed[52..56], 4, .little);
-    std.mem.writeInt(u32, delayed[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, delayed[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, delayed[92..96], 12, .little);
     @memcpy(delayed[100..156], valid[88..144]);
     @memcpy(delayed[156..176], valid[144..164]);
@@ -94,12 +94,12 @@ test "EMF framing enforces the complete EMF+ stream contract" {
 
 test "EMF framing counts only classic records between GetDC and the next EMF+ record" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 208;
+    var bytes = @as([208]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 6, .little);
 
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 56, .little);
     std.mem.writeInt(u32, bytes[96..100], 44, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -112,12 +112,12 @@ test "EMF framing counts only classic records between GetDC and the next EMF+ re
     std.mem.writeInt(u16, bytes[132..134], 0x4004, .little);
     std.mem.writeInt(u32, bytes[136..140], 12, .little);
 
-    std.mem.writeInt(u32, bytes[144..148], @intFromEnum(@import("records.zig").RecordType.savedc), .little);
+    std.mem.writeInt(u32, bytes[144..148], @backingInt(@import("records.zig").RecordType.savedc), .little);
     std.mem.writeInt(u32, bytes[148..152], 8, .little);
-    std.mem.writeInt(u32, bytes[152..156], @intFromEnum(@import("records.zig").RecordType.savedc), .little);
+    std.mem.writeInt(u32, bytes[152..156], @backingInt(@import("records.zig").RecordType.savedc), .little);
     std.mem.writeInt(u32, bytes[156..160], 8, .little);
 
-    std.mem.writeInt(u32, bytes[160..164], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[160..164], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[164..168], 28, .little);
     std.mem.writeInt(u32, bytes[168..172], 16, .little);
     std.mem.writeInt(u32, bytes[172..176], 0x2b464d45, .little);
@@ -132,11 +132,11 @@ test "EMF framing counts only classic records between GetDC and the next EMF+ re
 
 test "EMF framing routes SetTSClip through the EMF+ stream" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 180;
+    var bytes = @as([180]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 72, .little);
     std.mem.writeInt(u32, bytes[96..100], 60, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -165,11 +165,11 @@ test "EMF framing routes SetTSClip through the EMF+ stream" {
 
 test "EMF framing routes SetTSGraphics through the EMF+ stream" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 212;
+    var bytes = @as([212]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 104, .little);
     std.mem.writeInt(u32, bytes[96..100], 92, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -197,11 +197,11 @@ test "EMF framing routes SetTSGraphics through the EMF+ stream" {
 
 test "EMF framing routes MultiplyWorldTransform through the EMF+ stream" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 200;
+    var bytes = @as([200]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 92, .little);
     std.mem.writeInt(u32, bytes[96..100], 80, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -225,11 +225,11 @@ test "EMF framing routes MultiplyWorldTransform through the EMF+ stream" {
 
 test "EMF framing routes SetWorldTransform through the EMF+ stream" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 200;
+    var bytes = @as([200]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 92, .little);
     std.mem.writeInt(u32, bytes[96..100], 80, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -253,11 +253,11 @@ test "EMF framing routes SetWorldTransform through the EMF+ stream" {
 
 test "EMF framing routes ResetWorldTransform through the EMF+ stream" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 176;
+    var bytes = @as([176]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 68, .little);
     std.mem.writeInt(u32, bytes[96..100], 56, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -280,11 +280,11 @@ test "EMF framing routes ResetWorldTransform through the EMF+ stream" {
 
 test "EMF framing routes TranslateWorldTransform through the EMF+ stream" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 184;
+    var bytes = @as([184]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 76, .little);
     std.mem.writeInt(u32, bytes[96..100], 64, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -310,11 +310,11 @@ test "EMF framing routes TranslateWorldTransform through the EMF+ stream" {
 
 test "EMF framing routes ScaleWorldTransform through the EMF+ stream" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 184;
+    var bytes = @as([184]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 76, .little);
     std.mem.writeInt(u32, bytes[96..100], 64, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -340,11 +340,11 @@ test "EMF framing routes ScaleWorldTransform through the EMF+ stream" {
 
 test "EMF framing routes RotateWorldTransform through the EMF+ stream" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 180;
+    var bytes = @as([180]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 72, .little);
     std.mem.writeInt(u32, bytes[96..100], 60, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -369,11 +369,11 @@ test "EMF framing routes RotateWorldTransform through the EMF+ stream" {
 
 test "EMF framing routes SetPageTransform through the EMF+ stream" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 180;
+    var bytes = @as([180]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 72, .little);
     std.mem.writeInt(u32, bytes[96..100], 60, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -399,11 +399,11 @@ test "EMF framing routes SetPageTransform through the EMF+ stream" {
 
 test "EMF framing routes ResetClip through the EMF+ stream" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 176;
+    var bytes = @as([176]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 68, .little);
     std.mem.writeInt(u32, bytes[96..100], 56, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -426,11 +426,11 @@ test "EMF framing routes ResetClip through the EMF+ stream" {
 
 test "EMF framing routes SetClipRect through the EMF+ stream" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 192;
+    var bytes = @as([192]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 84, .little);
     std.mem.writeInt(u32, bytes[96..100], 72, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -458,11 +458,11 @@ test "EMF framing routes SetClipRect through the EMF+ stream" {
 
 test "EMF framing routes SetClipPath through the EMF+ Object Table" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 188;
+    var bytes = @as([188]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 80, .little);
     std.mem.writeInt(u32, bytes[96..100], 68, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -490,11 +490,11 @@ test "EMF framing routes SetClipPath through the EMF+ Object Table" {
 
 test "EMF framing routes SetClipRegion through the EMF+ Object Table" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 188;
+    var bytes = @as([188]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 80, .little);
     std.mem.writeInt(u32, bytes[96..100], 68, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -522,11 +522,11 @@ test "EMF framing routes SetClipRegion through the EMF+ Object Table" {
 
 test "EMF framing routes OffsetClip through the EMF+ stream" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 184;
+    var bytes = @as([184]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 76, .little);
     std.mem.writeInt(u32, bytes[96..100], 64, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -551,11 +551,11 @@ test "EMF framing routes OffsetClip through the EMF+ stream" {
 
 test "EMF framing reports opaque StrokeFillPath without inferring payload fields" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 180;
+    var bytes = @as([180]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 72, .little);
     std.mem.writeInt(u32, bytes[96..100], 60, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -579,11 +579,11 @@ test "EMF framing reports opaque StrokeFillPath without inferring payload fields
 
 test "EMF framing routes literal-color FillRects through the EMF+ stream" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 192;
+    var bytes = @as([192]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 84, .little);
     std.mem.writeInt(u32, bytes[96..100], 72, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -609,11 +609,11 @@ test "EMF framing routes literal-color FillRects through the EMF+ stream" {
 
 test "EMF framing routes literal-color FillPolygon through the EMF+ stream" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 196;
+    var bytes = @as([196]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 88, .little);
     std.mem.writeInt(u32, bytes[96..100], 76, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -639,11 +639,11 @@ test "EMF framing routes literal-color FillPolygon through the EMF+ stream" {
 
 test "EMF framing routes literal-color FillEllipse through the EMF+ stream" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 188;
+    var bytes = @as([188]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 80, .little);
     std.mem.writeInt(u32, bytes[96..100], 68, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -668,11 +668,11 @@ test "EMF framing routes literal-color FillEllipse through the EMF+ stream" {
 
 test "EMF framing routes literal-color FillPie through the EMF+ stream" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 196;
+    var bytes = @as([196]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 88, .little);
     std.mem.writeInt(u32, bytes[96..100], 76, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -699,11 +699,11 @@ test "EMF framing routes literal-color FillPie through the EMF+ stream" {
 
 test "EMF framing routes literal-color FillRegion through its Region reference" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 192;
+    var bytes = @as([192]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 84, .little);
     std.mem.writeInt(u32, bytes[96..100], 72, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -730,11 +730,11 @@ test "EMF framing routes literal-color FillRegion through its Region reference" 
 
 test "EMF framing routes literal-color FillPath through its Path reference" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 192;
+    var bytes = @as([192]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 84, .little);
     std.mem.writeInt(u32, bytes[96..100], 72, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -761,11 +761,11 @@ test "EMF framing routes literal-color FillPath through its Path reference" {
 
 test "EMF framing routes literal-color FillClosedCurve through the EMF+ stream" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 200;
+    var bytes = @as([200]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 92, .little);
     std.mem.writeInt(u32, bytes[96..100], 80, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -792,11 +792,11 @@ test "EMF framing routes literal-color FillClosedCurve through the EMF+ stream" 
 
 test "EMF framing reports private and Clear EMF+ records and rejects reserved records" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 200;
+    var bytes = @as([200]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 92, .little);
     std.mem.writeInt(u32, bytes[96..100], 80, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -834,11 +834,11 @@ test "EMF framing reports private and Clear EMF+ records and rejects reserved re
 
 test "EMF framing routes DrawArc through the Object Table Pen reference" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 212;
+    var bytes = @as([212]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 104, .little);
     std.mem.writeInt(u32, bytes[96..100], 92, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -869,11 +869,11 @@ test "EMF framing routes DrawArc through the Object Table Pen reference" {
 
 test "EMF framing routes DrawPie through the Object Table Pen reference" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 212;
+    var bytes = @as([212]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 104, .little);
     std.mem.writeInt(u32, bytes[96..100], 92, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -904,11 +904,11 @@ test "EMF framing routes DrawPie through the Object Table Pen reference" {
 
 test "EMF framing routes DrawRects through the Object Table Pen reference" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 200;
+    var bytes = @as([200]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 92, .little);
     std.mem.writeInt(u32, bytes[96..100], 80, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -938,11 +938,11 @@ test "EMF framing routes DrawRects through the Object Table Pen reference" {
 
 test "EMF framing routes DrawString through Font Brush and StringFormat references" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 244;
+    var bytes = @as([244]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 136, .little);
     std.mem.writeInt(u32, bytes[96..100], 124, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -981,11 +981,11 @@ test "EMF framing routes DrawString through Font Brush and StringFormat referenc
 
 test "EMF framing routes SetRenderingOrigin through the EMF+ stream" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 184;
+    var bytes = @as([184]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 76, .little);
     std.mem.writeInt(u32, bytes[96..100], 64, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -1014,11 +1014,11 @@ test "EMF framing routes SetRenderingOrigin through the EMF+ stream" {
 
 test "EMF framing routes SetAntiAliasMode through the EMF+ stream" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 176;
+    var bytes = @as([176]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 68, .little);
     std.mem.writeInt(u32, bytes[96..100], 56, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -1043,11 +1043,11 @@ test "EMF framing routes SetAntiAliasMode through the EMF+ stream" {
 
 test "EMF framing routes SetTextRenderingHint through the EMF+ stream" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 176;
+    var bytes = @as([176]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 68, .little);
     std.mem.writeInt(u32, bytes[96..100], 56, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -1072,11 +1072,11 @@ test "EMF framing routes SetTextRenderingHint through the EMF+ stream" {
 
 test "EMF framing routes SetTextContrast through the EMF+ stream" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 176;
+    var bytes = @as([176]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 68, .little);
     std.mem.writeInt(u32, bytes[96..100], 56, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -1101,11 +1101,11 @@ test "EMF framing routes SetTextContrast through the EMF+ stream" {
 
 test "EMF framing routes SetInterpolationMode through the EMF+ stream" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 176;
+    var bytes = @as([176]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 68, .little);
     std.mem.writeInt(u32, bytes[96..100], 56, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -1130,11 +1130,11 @@ test "EMF framing routes SetInterpolationMode through the EMF+ stream" {
 
 test "EMF framing routes SetPixelOffsetMode through the EMF+ stream" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 176;
+    var bytes = @as([176]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 68, .little);
     std.mem.writeInt(u32, bytes[96..100], 56, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -1159,11 +1159,11 @@ test "EMF framing routes SetPixelOffsetMode through the EMF+ stream" {
 
 test "EMF framing routes SetCompositingMode through the EMF+ stream" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 176;
+    var bytes = @as([176]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 68, .little);
     std.mem.writeInt(u32, bytes[96..100], 56, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -1188,11 +1188,11 @@ test "EMF framing routes SetCompositingMode through the EMF+ stream" {
 
 test "EMF framing routes SetCompositingQuality and Windows invalid-value fallback" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 176;
+    var bytes = @as([176]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 68, .little);
     std.mem.writeInt(u32, bytes[96..100], 56, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -1221,11 +1221,11 @@ test "EMF framing routes SetCompositingQuality and Windows invalid-value fallbac
 
 test "EMF framing routes Save Restore and EndContainer through the EMF+ stream" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 196;
+    var bytes = @as([196]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 88, .little);
     std.mem.writeInt(u32, bytes[96..100], 76, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -1276,11 +1276,11 @@ test "EMF framing routes Save Restore and EndContainer through the EMF+ stream" 
 
 test "EMF framing routes BeginContainer through the shared graphics state stack" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 244;
+    var bytes = @as([244]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 136, .little);
     std.mem.writeInt(u32, bytes[96..100], 124, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -1325,11 +1325,11 @@ test "EMF framing routes BeginContainer through the shared graphics state stack"
 
 test "EMF framing routes BeginContainerNoParams through the shared graphics state stack" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 212;
+    var bytes = @as([212]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 104, .little);
     std.mem.writeInt(u32, bytes[96..100], 92, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -1368,11 +1368,11 @@ test "EMF framing routes BeginContainerNoParams through the shared graphics stat
 
 test "EMF framing routes DrawBeziers through the Object Table Pen reference" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 224;
+    var bytes = @as([224]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 116, .little);
     std.mem.writeInt(u32, bytes[96..100], 104, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -1404,11 +1404,11 @@ test "EMF framing routes DrawBeziers through the Object Table Pen reference" {
 
 test "EMF framing routes DrawClosedCurve through the Object Table Pen reference" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 208;
+    var bytes = @as([208]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 100, .little);
     std.mem.writeInt(u32, bytes[96..100], 88, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -1441,11 +1441,11 @@ test "EMF framing routes DrawClosedCurve through the Object Table Pen reference"
 
 test "EMF framing routes DrawCurve through the Object Table Pen reference" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 212;
+    var bytes = @as([212]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 104, .little);
     std.mem.writeInt(u32, bytes[96..100], 92, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -1480,11 +1480,11 @@ test "EMF framing routes DrawCurve through the Object Table Pen reference" {
 
 test "EMF framing routes DrawDriverString through Font and Brush references" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 216;
+    var bytes = @as([216]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 108, .little);
     std.mem.writeInt(u32, bytes[96..100], 96, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -1517,11 +1517,11 @@ test "EMF framing routes DrawDriverString through Font and Brush references" {
 
 test "EMF framing routes DrawEllipse through the Object Table Pen reference" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 196;
+    var bytes = @as([196]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 88, .little);
     std.mem.writeInt(u32, bytes[96..100], 76, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -1550,11 +1550,11 @@ test "EMF framing routes DrawEllipse through the Object Table Pen reference" {
 
 test "EMF framing routes DrawImage through Image and ImageAttributes references" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 232;
+    var bytes = @as([232]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 124, .little);
     std.mem.writeInt(u32, bytes[96..100], 112, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -1588,11 +1588,11 @@ test "EMF framing routes DrawImage through Image and ImageAttributes references"
 
 test "EMF framing routes DrawImagePoints through Image and ImageAttributes references" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 236;
+    var bytes = @as([236]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 128, .little);
     std.mem.writeInt(u32, bytes[96..100], 116, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -1628,11 +1628,11 @@ test "EMF framing routes DrawImagePoints through Image and ImageAttributes refer
 
 test "EMF framing routes DrawLines through the Object Table Pen reference" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 200;
+    var bytes = @as([200]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 92, .little);
     std.mem.writeInt(u32, bytes[96..100], 80, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -1662,11 +1662,11 @@ test "EMF framing routes DrawLines through the Object Table Pen reference" {
 
 test "EMF framing routes DrawPath through Path and Pen object references" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 204;
+    var bytes = @as([204]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 96, .little);
     std.mem.writeInt(u32, bytes[96..100], 84, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -1702,11 +1702,11 @@ test "EMF framing routes DrawPath through Path and Pen object references" {
 
 test "EMF framing validates and counts PIXELFORMAT records" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 160;
+    var bytes = @as([160]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.pixelformat), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.pixelformat), .little);
     std.mem.writeInt(u32, bytes[92..96], 52, .little);
     std.mem.writeInt(u16, bytes[96..98], 40, .little);
     std.mem.writeInt(u16, bytes[98..100], 1, .little);
@@ -1721,11 +1721,11 @@ test "EMF framing validates and counts PIXELFORMAT records" {
 
 test "EMF framing validates and counts SETICMMODE records" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 124;
+    var bytes = @as([124]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.seticmmode), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.seticmmode), .little);
     std.mem.writeInt(u32, bytes[92..96], 16, .little);
     std.mem.writeInt(u32, bytes[96..100], 4, .little);
     bytes[100..104].* = .{ 0xde, 0xad, 0xbe, 0xef };
@@ -1738,11 +1738,11 @@ test "EMF framing validates and counts SETICMMODE records" {
 
 test "EMF framing validates and counts ALPHABLEND records" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 272;
+    var bytes = @as([272]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.alphablend), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.alphablend), .little);
     std.mem.writeInt(u32, bytes[92..96], 164, .little);
     std.mem.writeInt(i32, bytes[120..124], 2, .little);
     std.mem.writeInt(i32, bytes[124..128], 2, .little);
@@ -1769,14 +1769,14 @@ test "EMF framing validates and counts ALPHABLEND records" {
 
 test "EMF framing validates and counts TRANSPARENTBLT records" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 244;
+    var bytes = @as([244]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.transparentblt), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.transparentblt), .little);
     std.mem.writeInt(u32, bytes[92..96], 136, .little);
     bytes[128..132].* = .{ 10, 20, 30, 0 };
-    std.mem.writeInt(u32, bytes[168..172], @intFromEnum(@import("dib_colors.zig").Usage.palette_indices), .little);
+    std.mem.writeInt(u32, bytes[168..172], @backingInt(@import("dib_colors.zig").Usage.palette_indices), .little);
     std.mem.writeInt(u32, bytes[172..176], 108, .little);
     std.mem.writeInt(u32, bytes[176..180], 12, .little);
     std.mem.writeInt(u32, bytes[180..184], 128, .little);
@@ -1796,11 +1796,11 @@ test "EMF framing validates and counts TRANSPARENTBLT records" {
 
 test "EMF framing validates SETLAYOUT payloads" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 124;
+    var bytes = @as([124]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.setlayout), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.setlayout), .little);
     std.mem.writeInt(u32, bytes[92..96], 16, .little);
     std.mem.writeInt(u32, bytes[96..100], 0x00000009, .little);
     bytes[100..104].* = .{ 0xde, 0xad, 0xbe, 0xef };
@@ -1813,11 +1813,11 @@ test "EMF framing validates SETLAYOUT payloads" {
 
 test "EMF framing validates and counts SETLINKEDUFIS arrays" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 148;
+    var bytes = @as([148]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.setlinkedufis), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.setlinkedufis), .little);
     std.mem.writeInt(u32, bytes[92..96], 40, .little);
     std.mem.writeInt(u32, bytes[96..100], 2, .little);
     std.mem.writeInt(u32, bytes[100..104], 1, .little);
@@ -1837,11 +1837,11 @@ test "EMF framing validates and counts SETLINKEDUFIS arrays" {
 
 test "EMF framing validates and counts FORCEUFIMAPPING payloads" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 128;
+    var bytes = @as([128]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.forceufimapping), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.forceufimapping), .little);
     std.mem.writeInt(u32, bytes[92..96], 20, .little);
     std.mem.writeInt(u32, bytes[96..100], 0x12345678, .little);
     std.mem.writeInt(u32, bytes[100..104], 42, .little);
@@ -1856,11 +1856,11 @@ test "EMF framing validates and counts FORCEUFIMAPPING payloads" {
 
 test "EMF framing validates and counts COLORMATCHTOTARGETW payloads" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 144;
+    var bytes = @as([144]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.colormatchtotargetw), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.colormatchtotargetw), .little);
     std.mem.writeInt(u32, bytes[92..96], 36, .little);
     std.mem.writeInt(u32, bytes[96..100], 1, .little);
     std.mem.writeInt(u32, bytes[100..104], 1, .little);
@@ -1878,7 +1878,7 @@ test "EMF framing validates and counts COLORMATCHTOTARGETW payloads" {
 
 test "EMF framing connects all fixed clipping records" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 180;
+    var bytes = @as([180]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 6, .little);
@@ -1890,7 +1890,7 @@ test "EMF framing connects all fixed clipping records" {
         .{ @import("records.zig").RecordType.excludecliprect, @as(usize, 24) },
         .{ @import("records.zig").RecordType.intersectcliprect, @as(usize, 24) },
     }) |case| {
-        std.mem.writeInt(u32, bytes[at..][0..4], @intFromEnum(case[0]), .little);
+        std.mem.writeInt(u32, bytes[at..][0..4], @backingInt(case[0]), .little);
         std.mem.writeInt(u32, bytes[at + 4 ..][0..4], @intCast(case[1]), .little);
         at += case[1];
     }
@@ -1906,17 +1906,17 @@ test "EMF framing connects all fixed clipping records" {
 
 test "EMF framing connects path and extended clipping selection" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 184;
+    var bytes = @as([184]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 4, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.selectclippath), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.selectclippath), .little);
     std.mem.writeInt(u32, bytes[92..96], 12, .little);
-    std.mem.writeInt(u32, bytes[96..100], @intFromEnum(@import("region_mode.zig").RegionMode.diff_region), .little);
-    std.mem.writeInt(u32, bytes[100..104], @intFromEnum(@import("records.zig").RecordType.extselectcliprgn), .little);
+    std.mem.writeInt(u32, bytes[96..100], @backingInt(@import("region_mode.zig").RegionMode.diff_region), .little);
+    std.mem.writeInt(u32, bytes[100..104], @backingInt(@import("records.zig").RecordType.extselectcliprgn), .little);
     std.mem.writeInt(u32, bytes[104..108], 64, .little);
     std.mem.writeInt(u32, bytes[108..112], 48, .little);
-    std.mem.writeInt(u32, bytes[112..116], @intFromEnum(@import("region_mode.zig").RegionMode.xor_region), .little);
+    std.mem.writeInt(u32, bytes[112..116], @backingInt(@import("region_mode.zig").RegionMode.xor_region), .little);
     std.mem.writeInt(u32, bytes[116..120], @import("region_data.zig").header_size, .little);
     std.mem.writeInt(u32, bytes[120..124], @import("region_data.zig").rectangle_type, .little);
     std.mem.writeInt(u32, bytes[124..128], 1, .little);
@@ -1929,13 +1929,13 @@ test "EMF framing connects path and extended clipping selection" {
     std.mem.writeInt(u32, bytes[116..120], 28, .little);
     try t.expectError(error.InvalidEmfRegionDataHeaderSize, framing.validate(t.allocator, &bytes));
     std.mem.writeInt(u32, bytes[108..112], 0, .little);
-    std.mem.writeInt(u32, bytes[112..116], @intFromEnum(@import("region_mode.zig").RegionMode.and_region), .little);
+    std.mem.writeInt(u32, bytes[112..116], @backingInt(@import("region_mode.zig").RegionMode.and_region), .little);
     try t.expectError(error.MissingEmfExtSelectClipRegionData, framing.validate(t.allocator, &bytes));
 }
 
 test "EMF framing connects all RegionData drawing records and brush references" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 428;
+    var bytes = @as([428]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 6, .little);
@@ -1948,11 +1948,11 @@ test "EMF framing connects all RegionData drawing records and brush references" 
         .{ @import("records.zig").RecordType.paintrgn, @as(usize, 28) },
     }) |case| {
         const record_size = case[1] + 48;
-        std.mem.writeInt(u32, bytes[at..][0..4], @intFromEnum(case[0]), .little);
+        std.mem.writeInt(u32, bytes[at..][0..4], @backingInt(case[0]), .little);
         std.mem.writeInt(u32, bytes[at + 4 ..][0..4], @intCast(record_size), .little);
         std.mem.writeInt(u32, bytes[at + 24 ..][0..4], 48, .little);
         if (case[0] == .fillrgn or case[0] == .framergn)
-            std.mem.writeInt(u32, bytes[at + 28 ..][0..4], @intFromEnum(@import("stock_object.zig").StockObject.white_brush), .little);
+            std.mem.writeInt(u32, bytes[at + 28 ..][0..4], @backingInt(@import("stock_object.zig").StockObject.white_brush), .little);
         const region_at = at + case[1];
         std.mem.writeInt(u32, bytes[region_at..][0..4], @import("region_data.zig").header_size, .little);
         std.mem.writeInt(u32, bytes[region_at + 4 ..][0..4], @import("region_data.zig").rectangle_type, .little);
@@ -1972,7 +1972,7 @@ test "EMF framing connects all RegionData drawing records and brush references" 
 
 test "EMF framing connects all path drawing records" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 180;
+    var bytes = @as([180]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 5, .little);
@@ -1983,7 +1983,7 @@ test "EMF framing connects all path drawing records" {
         @import("records.zig").RecordType.strokeandfillpath,
         @import("records.zig").RecordType.strokepath,
     }) |kind| {
-        std.mem.writeInt(u32, bytes[at..][0..4], @intFromEnum(kind), .little);
+        std.mem.writeInt(u32, bytes[at..][0..4], @backingInt(kind), .little);
         std.mem.writeInt(u32, bytes[at + 4 ..][0..4], 24, .little);
         std.mem.writeInt(i32, bytes[at + 8 ..][0..4], -1, .little);
         std.mem.writeInt(i32, bytes[at + 20 ..][0..4], 2, .little);
@@ -2001,15 +2001,15 @@ test "EMF framing connects all path drawing records" {
 
 test "EMF framing connects EXTFLOODFILL structure and field validation" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 132;
+    var bytes = @as([132]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.extfloodfill), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.extfloodfill), .little);
     std.mem.writeInt(u32, bytes[92..96], 24, .little);
     std.mem.writeInt(i32, bytes[96..100], -2, .little);
     bytes[104..108].* = .{ 1, 2, 3, 0 };
-    std.mem.writeInt(u32, bytes[108..112], @intFromEnum(@import("flood_fill_mode.zig").FloodFillMode.border), .little);
+    std.mem.writeInt(u32, bytes[108..112], @backingInt(@import("flood_fill_mode.zig").FloodFillMode.border), .little);
     @memcpy(bytes[112..132], original[88..108]);
 
     const summary = try framing.validate(t.allocator, &bytes);
@@ -2021,15 +2021,15 @@ test "EMF framing connects EXTFLOODFILL structure and field validation" {
 
 test "EMF framing connects GRADIENTFILL arrays and index validation" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 188;
+    var bytes = @as([188]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.gradientfill), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.gradientfill), .little);
     std.mem.writeInt(u32, bytes[92..96], 80, .little);
     std.mem.writeInt(u32, bytes[112..116], 2, .little);
     std.mem.writeInt(u32, bytes[116..120], 1, .little);
-    std.mem.writeInt(u32, bytes[120..124], @intFromEnum(@import("gradient_fill_mode.zig").GradientFillMode.rectangle_vertical), .little);
+    std.mem.writeInt(u32, bytes[120..124], @backingInt(@import("gradient_fill_mode.zig").GradientFillMode.rectangle_vertical), .little);
     std.mem.writeInt(u32, bytes[156..160], 0, .little);
     std.mem.writeInt(u32, bytes[160..164], 1, .little);
     bytes[164..168].* = .{ 9, 8, 7, 6 };
@@ -2044,15 +2044,15 @@ test "EMF framing connects GRADIENTFILL arrays and index validation" {
 
 test "EMF framing keeps multiple GRADIENTFILL rectangle indexes before padding" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 216;
+    var bytes = @as([216]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.gradientfill), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.gradientfill), .little);
     std.mem.writeInt(u32, bytes[92..96], 108, .little);
     std.mem.writeInt(u32, bytes[112..116], 3, .little);
     std.mem.writeInt(u32, bytes[116..120], 2, .little);
-    std.mem.writeInt(u32, bytes[120..124], @intFromEnum(@import("gradient_fill_mode.zig").GradientFillMode.rectangle_vertical), .little);
+    std.mem.writeInt(u32, bytes[120..124], @backingInt(@import("gradient_fill_mode.zig").GradientFillMode.rectangle_vertical), .little);
     std.mem.writeInt(u32, bytes[172..176], 0, .little);
     std.mem.writeInt(u32, bytes[176..180], 1, .little);
     std.mem.writeInt(u32, bytes[180..184], 1, .little);
@@ -2067,11 +2067,11 @@ test "EMF framing keeps multiple GRADIENTFILL rectangle indexes before padding" 
 
 test "EMF framing connects BITBLT and propagates missing source errors" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 208;
+    var bytes = @as([208]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.bitblt), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.bitblt), .little);
     std.mem.writeInt(u32, bytes[92..96], 100, .little);
     std.mem.writeInt(u32, bytes[128..132], 0x00f00021, .little); // PATCOPY needs no source bitmap.
     @memcpy(bytes[188..208], original[88..108]);
@@ -2084,11 +2084,11 @@ test "EMF framing connects BITBLT and propagates missing source errors" {
 
 test "EMF framing connects STRETCHBLT and propagates missing source errors" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 216;
+    var bytes = @as([216]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.stretchblt), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.stretchblt), .little);
     std.mem.writeInt(u32, bytes[92..96], 108, .little);
     std.mem.writeInt(u32, bytes[128..132], 0x00f00021, .little);
     std.mem.writeInt(i32, bytes[188..192], -7, .little);
@@ -2103,11 +2103,11 @@ test "EMF framing connects STRETCHBLT and propagates missing source errors" {
 
 test "EMF framing connects MASKBLT and propagates bitmap-pair errors" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 284;
+    var bytes = @as([284]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.maskblt), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.maskblt), .little);
     std.mem.writeInt(u32, bytes[92..96], 176, .little);
     std.mem.writeInt(u32, bytes[128..132], 0xccf00000, .little);
     std.mem.writeInt(u32, bytes[168..172], 2, .little);
@@ -2137,11 +2137,11 @@ test "EMF framing connects MASKBLT and propagates bitmap-pair errors" {
 
 test "EMF framing connects PLGBLT and propagates bitmap-pair errors" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 292;
+    var bytes = @as([292]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.plgblt), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.plgblt), .little);
     std.mem.writeInt(u32, bytes[92..96], 184, .little);
     std.mem.writeInt(u32, bytes[180..184], 2, .little);
     std.mem.writeInt(u32, bytes[184..188], 144, .little);
@@ -2169,11 +2169,11 @@ test "EMF framing connects PLGBLT and propagates bitmap-pair errors" {
 
 test "EMF framing connects SETDIBITSTODEVICE and propagates source errors" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 212;
+    var bytes = @as([212]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.setdibitstodevice), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.setdibitstodevice), .little);
     std.mem.writeInt(u32, bytes[92..96], 104, .little);
     std.mem.writeInt(u32, bytes[136..140], 80, .little);
     std.mem.writeInt(u32, bytes[140..144], 12, .little);
@@ -2195,11 +2195,11 @@ test "EMF framing connects SETDIBITSTODEVICE and propagates source errors" {
 
 test "EMF framing connects STRETCHDIBITS and propagates ROP source errors" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 216;
+    var bytes = @as([216]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.stretchdibits), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.stretchdibits), .little);
     std.mem.writeInt(u32, bytes[92..96], 108, .little);
     std.mem.writeInt(u32, bytes[136..140], 84, .little);
     std.mem.writeInt(u32, bytes[140..144], 12, .little);
@@ -2220,7 +2220,7 @@ test "EMF framing connects STRETCHDIBITS and propagates ROP source errors" {
 }
 
 test "EMF header variant uses variable field offsets and validates UTF-16" {
-    var bytes = [_]u8{0} ** 172;
+    var bytes = @as([172]u8, @splat(0));
     const base = fixture();
     @memcpy(bytes[0..88], base[0..88]);
     std.mem.writeInt(u32, bytes[4..8], 152, .little);
@@ -2259,7 +2259,7 @@ test "EMF header variant uses variable field offsets and validates UTF-16" {
 
 test "EMF HeaderSize flowchart keeps a long description in the base variant" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 132;
+    var bytes = @as([132]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[4..8], 112, .little);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
@@ -2273,7 +2273,7 @@ test "EMF HeaderSize flowchart keeps a long description in the base variant" {
 }
 
 test "EMF header extension rejects OpenGL and pixel format metadata drift" {
-    var bytes = [_]u8{0} ** 120;
+    var bytes = @as([120]u8, @splat(0));
     const original = fixture();
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[4..8], 100, .little);
@@ -2285,7 +2285,7 @@ test "EMF header extension rejects OpenGL and pixel format metadata drift" {
     std.mem.writeInt(u32, bytes[96..100], 0, .little);
     std.mem.writeInt(u32, bytes[88..92], 39, .little);
     std.mem.writeInt(u32, bytes[92..96], 100, .little);
-    var with_pixel = bytes ++ [_]u8{0} ** 40;
+    var with_pixel = bytes ++ @as([40]u8, @splat(0));
     std.mem.writeInt(u32, with_pixel[4..8], 140, .little);
     std.mem.writeInt(u32, with_pixel[48..52], with_pixel.len, .little);
     @memcpy(with_pixel[140..160], original[88..108]);
@@ -2329,34 +2329,34 @@ test "EMF record iterator rejects truncation alignment and data after EOF" {
     std.mem.writeInt(u32, invalid[92..96], 16, .little);
     try t.expectError(error.InvalidEmfEofSize, framing.validate(t.allocator, &invalid));
 
-    var trailing = bytes ++ [_]u8{0} ** 4;
+    var trailing = bytes ++ @as([4]u8, @splat(0));
     std.mem.writeInt(u32, trailing[48..52], trailing.len, .little);
     try t.expectError(error.DataAfterEmfEof, framing.validate(t.allocator, &trailing));
 }
 
 test "EMF framing validates parameterless path bracket records and trailing data" {
     const original = fixture();
-    var valid = [_]u8{0} ** 124;
+    var valid = @as([124]u8, @splat(0));
     @memcpy(valid[0..88], original[0..88]);
     std.mem.writeInt(u32, valid[48..52], valid.len, .little);
     std.mem.writeInt(u32, valid[52..56], 4, .little);
-    std.mem.writeInt(u32, valid[88..92], @intFromEnum(@import("records.zig").RecordType.beginpath), .little);
+    std.mem.writeInt(u32, valid[88..92], @backingInt(@import("records.zig").RecordType.beginpath), .little);
     std.mem.writeInt(u32, valid[92..96], 8, .little);
-    std.mem.writeInt(u32, valid[96..100], @intFromEnum(@import("records.zig").RecordType.endpath), .little);
+    std.mem.writeInt(u32, valid[96..100], @backingInt(@import("records.zig").RecordType.endpath), .little);
     std.mem.writeInt(u32, valid[100..104], 8, .little);
     @memcpy(valid[104..124], original[88..108]);
     try t.expectEqual(@as(usize, 4), (try framing.validate(t.allocator, &valid)).records);
 
-    var invalid = [_]u8{0} ** 120;
+    var invalid = @as([120]u8, @splat(0));
     @memcpy(invalid[0..88], original[0..88]);
     std.mem.writeInt(u32, invalid[48..52], invalid.len, .little);
     std.mem.writeInt(u32, invalid[52..56], 3, .little);
-    std.mem.writeInt(u32, invalid[88..92], @intFromEnum(@import("records.zig").RecordType.closefigure), .little);
+    std.mem.writeInt(u32, invalid[88..92], @backingInt(@import("records.zig").RecordType.closefigure), .little);
     std.mem.writeInt(u32, invalid[92..96], 12, .little);
     @memcpy(invalid[100..120], original[88..108]);
     try t.expectEqual(@as(usize, 3), (try framing.validate(t.allocator, &invalid)).records);
 
-    var unclosed = [_]u8{0} ** 116;
+    var unclosed = @as([116]u8, @splat(0));
     @memcpy(unclosed[0..96], valid[0..96]);
     std.mem.writeInt(u32, unclosed[48..52], unclosed.len, .little);
     std.mem.writeInt(u32, unclosed[52..56], 3, .little);
@@ -2366,21 +2366,21 @@ test "EMF framing validates parameterless path bracket records and trailing data
 
 test "EMF framing validates world transform records" {
     const original = fixture();
-    var valid = [_]u8{0} ** 140;
+    var valid = @as([140]u8, @splat(0));
     @memcpy(valid[0..88], original[0..88]);
     std.mem.writeInt(u32, valid[48..52], valid.len, .little);
     std.mem.writeInt(u32, valid[52..56], 3, .little);
-    std.mem.writeInt(u32, valid[88..92], @intFromEnum(@import("records.zig").RecordType.setworldtransform), .little);
+    std.mem.writeInt(u32, valid[88..92], @backingInt(@import("records.zig").RecordType.setworldtransform), .little);
     std.mem.writeInt(u32, valid[92..96], 32, .little);
     std.mem.writeInt(u32, valid[96..100], 0x3f800000, .little);
     @memcpy(valid[120..140], original[88..108]);
     try t.expectEqual(@as(usize, 3), (try framing.validate(t.allocator, &valid)).records);
 
-    var invalid = [_]u8{0} ** 144;
+    var invalid = @as([144]u8, @splat(0));
     @memcpy(invalid[0..88], original[0..88]);
     std.mem.writeInt(u32, invalid[48..52], invalid.len, .little);
     std.mem.writeInt(u32, invalid[52..56], 3, .little);
-    std.mem.writeInt(u32, invalid[88..92], @intFromEnum(@import("records.zig").RecordType.modifyworldtransform), .little);
+    std.mem.writeInt(u32, invalid[88..92], @backingInt(@import("records.zig").RecordType.modifyworldtransform), .little);
     std.mem.writeInt(u32, invalid[92..96], 36, .little);
     @memcpy(invalid[124..144], original[88..108]);
     try t.expectError(error.InvalidEmfModifyWorldTransformMode, framing.validate(t.allocator, &invalid));
@@ -2388,22 +2388,22 @@ test "EMF framing validates world transform records" {
 
 test "EMF framing validates fixed point state records and trailing data" {
     const original = fixture();
-    var valid = [_]u8{0} ** 124;
+    var valid = @as([124]u8, @splat(0));
     @memcpy(valid[0..88], original[0..88]);
     std.mem.writeInt(u32, valid[48..52], valid.len, .little);
     std.mem.writeInt(u32, valid[52..56], 3, .little);
-    std.mem.writeInt(u32, valid[88..92], @intFromEnum(@import("records.zig").RecordType.movetoex), .little);
+    std.mem.writeInt(u32, valid[88..92], @backingInt(@import("records.zig").RecordType.movetoex), .little);
     std.mem.writeInt(u32, valid[92..96], 16, .little);
     std.mem.writeInt(i32, valid[96..100], -7, .little);
     std.mem.writeInt(i32, valid[100..104], 9, .little);
     @memcpy(valid[104..124], original[88..108]);
     try t.expectEqual(@as(usize, 3), (try framing.validate(t.allocator, &valid)).records);
 
-    var invalid = [_]u8{0} ** 128;
+    var invalid = @as([128]u8, @splat(0));
     @memcpy(invalid[0..88], original[0..88]);
     std.mem.writeInt(u32, invalid[48..52], invalid.len, .little);
     std.mem.writeInt(u32, invalid[52..56], 3, .little);
-    std.mem.writeInt(u32, invalid[88..92], @intFromEnum(@import("records.zig").RecordType.movetoex), .little);
+    std.mem.writeInt(u32, invalid[88..92], @backingInt(@import("records.zig").RecordType.movetoex), .little);
     std.mem.writeInt(u32, invalid[92..96], 20, .little);
     @memcpy(invalid[108..128], original[88..108]);
     try t.expectEqual(@as(usize, 3), (try framing.validate(t.allocator, &invalid)).records);
@@ -2411,29 +2411,29 @@ test "EMF framing validates fixed point state records and trailing data" {
 
 test "EMF framing validates strict modes and preserves unknown stretch modes" {
     const original = fixture();
-    var valid = [_]u8{0} ** 120;
+    var valid = @as([120]u8, @splat(0));
     @memcpy(valid[0..88], original[0..88]);
     std.mem.writeInt(u32, valid[48..52], valid.len, .little);
     std.mem.writeInt(u32, valid[52..56], 3, .little);
-    std.mem.writeInt(u32, valid[88..92], @intFromEnum(@import("records.zig").RecordType.setstretchbltmode), .little);
+    std.mem.writeInt(u32, valid[88..92], @backingInt(@import("records.zig").RecordType.setstretchbltmode), .little);
     std.mem.writeInt(u32, valid[92..96], 12, .little);
     std.mem.writeInt(u32, valid[96..100], std.math.maxInt(u32), .little);
     @memcpy(valid[100..120], original[88..108]);
     try t.expectEqual(@as(usize, 3), (try framing.validate(t.allocator, &valid)).records);
 
     var invalid = valid;
-    std.mem.writeInt(u32, invalid[88..92], @intFromEnum(@import("records.zig").RecordType.setmapmode), .little);
+    std.mem.writeInt(u32, invalid[88..92], @backingInt(@import("records.zig").RecordType.setmapmode), .little);
     std.mem.writeInt(u32, invalid[96..100], 0, .little);
     try t.expectError(error.InvalidEmfMapMode, framing.validate(t.allocator, &invalid));
 }
 
 test "EMF framing validates ColorRef state records" {
     const original = fixture();
-    var valid = [_]u8{0} ** 120;
+    var valid = @as([120]u8, @splat(0));
     @memcpy(valid[0..88], original[0..88]);
     std.mem.writeInt(u32, valid[48..52], valid.len, .little);
     std.mem.writeInt(u32, valid[52..56], 3, .little);
-    std.mem.writeInt(u32, valid[88..92], @intFromEnum(@import("records.zig").RecordType.settextcolor), .little);
+    std.mem.writeInt(u32, valid[88..92], @backingInt(@import("records.zig").RecordType.settextcolor), .little);
     std.mem.writeInt(u32, valid[92..96], 12, .little);
     valid[96..100].* = .{ 1, 2, 3, 0 };
     @memcpy(valid[100..120], original[88..108]);
@@ -2445,14 +2445,14 @@ test "EMF framing validates ColorRef state records" {
 
 test "EMF framing validates mapper flags and miter limit records" {
     const original = fixture();
-    var valid = [_]u8{0} ** 132;
+    var valid = @as([132]u8, @splat(0));
     @memcpy(valid[0..88], original[0..88]);
     std.mem.writeInt(u32, valid[48..52], valid.len, .little);
     std.mem.writeInt(u32, valid[52..56], 4, .little);
-    std.mem.writeInt(u32, valid[88..92], @intFromEnum(@import("records.zig").RecordType.setmapperflags), .little);
+    std.mem.writeInt(u32, valid[88..92], @backingInt(@import("records.zig").RecordType.setmapperflags), .little);
     std.mem.writeInt(u32, valid[92..96], 12, .little);
     valid[96] = 1;
-    std.mem.writeInt(u32, valid[100..104], @intFromEnum(@import("records.zig").RecordType.setmiterlimit), .little);
+    std.mem.writeInt(u32, valid[100..104], @backingInt(@import("records.zig").RecordType.setmiterlimit), .little);
     std.mem.writeInt(u32, valid[104..108], 12, .little);
     std.mem.writeInt(u32, valid[108..112], 0x7fc01234, .little);
     @memcpy(valid[112..132], original[88..108]);
@@ -2462,10 +2462,10 @@ test "EMF framing validates mapper flags and miter limit records" {
     invalid_mapper[96] = 2;
     try t.expectError(error.InvalidEmfMapperFlags, framing.validate(t.allocator, &invalid_mapper));
 
-    var extended_miter = [_]u8{0} ** 136;
+    var extended_miter = @as([136]u8, @splat(0));
     @memcpy(extended_miter[0..100], valid[0..100]);
     std.mem.writeInt(u32, extended_miter[48..52], extended_miter.len, .little);
-    std.mem.writeInt(u32, extended_miter[100..104], @intFromEnum(@import("records.zig").RecordType.setmiterlimit), .little);
+    std.mem.writeInt(u32, extended_miter[100..104], @backingInt(@import("records.zig").RecordType.setmiterlimit), .little);
     std.mem.writeInt(u32, extended_miter[104..108], 16, .little);
     @memcpy(extended_miter[116..136], original[88..108]);
     try t.expectEqual(@as(usize, 4), (try framing.validate(t.allocator, &extended_miter)).records);
@@ -2473,11 +2473,11 @@ test "EMF framing validates mapper flags and miter limit records" {
 
 test "EMF framing validates text alignment components" {
     const original = fixture();
-    var valid = [_]u8{0} ** 120;
+    var valid = @as([120]u8, @splat(0));
     @memcpy(valid[0..88], original[0..88]);
     std.mem.writeInt(u32, valid[48..52], valid.len, .little);
     std.mem.writeInt(u32, valid[52..56], 3, .little);
-    std.mem.writeInt(u32, valid[88..92], @intFromEnum(@import("records.zig").RecordType.settextalign), .little);
+    std.mem.writeInt(u32, valid[88..92], @backingInt(@import("records.zig").RecordType.settextalign), .little);
     std.mem.writeInt(u32, valid[92..96], 12, .little);
     std.mem.writeInt(u32, valid[96..100], 0x011f, .little);
     @memcpy(valid[100..120], original[88..108]);
@@ -2489,15 +2489,15 @@ test "EMF framing validates text alignment components" {
 
 test "EMF framing validates text justification and extent scaling" {
     const original = fixture();
-    var valid = [_]u8{0} ** 148;
+    var valid = @as([148]u8, @splat(0));
     @memcpy(valid[0..88], original[0..88]);
     std.mem.writeInt(u32, valid[48..52], valid.len, .little);
     std.mem.writeInt(u32, valid[52..56], 4, .little);
-    std.mem.writeInt(u32, valid[88..92], @intFromEnum(@import("records.zig").RecordType.settextjustification), .little);
+    std.mem.writeInt(u32, valid[88..92], @backingInt(@import("records.zig").RecordType.settextjustification), .little);
     std.mem.writeInt(u32, valid[92..96], 16, .little);
     std.mem.writeInt(i32, valid[96..100], -9, .little);
     std.mem.writeInt(i32, valid[100..104], 3, .little);
-    std.mem.writeInt(u32, valid[104..108], @intFromEnum(@import("records.zig").RecordType.scaleviewportextex), .little);
+    std.mem.writeInt(u32, valid[104..108], @backingInt(@import("records.zig").RecordType.scaleviewportextex), .little);
     std.mem.writeInt(u32, valid[108..112], 24, .little);
     std.mem.writeInt(i32, valid[112..116], -1, .little);
     std.mem.writeInt(i32, valid[116..120], 2, .little);
@@ -2510,20 +2510,20 @@ test "EMF framing validates text justification and extent scaling" {
     std.mem.writeInt(i32, invalid_scale[112..116], 0, .little);
     try t.expectError(error.InvalidEmfScaleExtentRatio, framing.validate(t.allocator, &invalid_scale));
 
-    var extended_text = [_]u8{0} ** 152;
+    var extended_text = @as([152]u8, @splat(0));
     @memcpy(extended_text[0..88], original[0..88]);
     std.mem.writeInt(u32, extended_text[48..52], extended_text.len, .little);
     std.mem.writeInt(u32, extended_text[52..56], 3, .little);
-    std.mem.writeInt(u32, extended_text[88..92], @intFromEnum(@import("records.zig").RecordType.settextjustification), .little);
+    std.mem.writeInt(u32, extended_text[88..92], @backingInt(@import("records.zig").RecordType.settextjustification), .little);
     std.mem.writeInt(u32, extended_text[92..96], 44, .little);
     @memcpy(extended_text[132..152], original[88..108]);
     try t.expectEqual(@as(usize, 3), (try framing.validate(t.allocator, &extended_text)).records);
 
-    var short_text = [_]u8{0} ** 120;
+    var short_text = @as([120]u8, @splat(0));
     @memcpy(short_text[0..88], original[0..88]);
     std.mem.writeInt(u32, short_text[48..52], short_text.len, .little);
     std.mem.writeInt(u32, short_text[52..56], 3, .little);
-    std.mem.writeInt(u32, short_text[88..92], @intFromEnum(@import("records.zig").RecordType.settextjustification), .little);
+    std.mem.writeInt(u32, short_text[88..92], @backingInt(@import("records.zig").RecordType.settextjustification), .little);
     std.mem.writeInt(u32, short_text[92..96], 12, .little);
     @memcpy(short_text[100..120], original[88..108]);
     try t.expectError(error.InvalidEmfTextJustificationRecordSize, framing.validate(t.allocator, &short_text));
@@ -2531,31 +2531,31 @@ test "EMF framing validates text justification and extent scaling" {
 
 test "EMF framing validates device-context save and relative restore" {
     const original = fixture();
-    var valid = [_]u8{0} ** 128;
+    var valid = @as([128]u8, @splat(0));
     @memcpy(valid[0..88], original[0..88]);
     std.mem.writeInt(u32, valid[48..52], valid.len, .little);
     std.mem.writeInt(u32, valid[52..56], 4, .little);
-    std.mem.writeInt(u32, valid[88..92], @intFromEnum(@import("records.zig").RecordType.savedc), .little);
+    std.mem.writeInt(u32, valid[88..92], @backingInt(@import("records.zig").RecordType.savedc), .little);
     std.mem.writeInt(u32, valid[92..96], 8, .little);
-    std.mem.writeInt(u32, valid[96..100], @intFromEnum(@import("records.zig").RecordType.restoredc), .little);
+    std.mem.writeInt(u32, valid[96..100], @backingInt(@import("records.zig").RecordType.restoredc), .little);
     std.mem.writeInt(u32, valid[100..104], 12, .little);
     std.mem.writeInt(i32, valid[104..108], -1, .little);
     @memcpy(valid[108..128], original[88..108]);
     try t.expectEqual(@as(usize, 4), (try framing.validate(t.allocator, &valid)).records);
 
     var missing_save = valid;
-    std.mem.writeInt(u32, missing_save[88..92], @intFromEnum(@import("records.zig").RecordType.realizepalette), .little);
+    std.mem.writeInt(u32, missing_save[88..92], @backingInt(@import("records.zig").RecordType.realizepalette), .little);
     try t.expectError(error.InvalidEmfRestoreDcDepth, framing.validate(t.allocator, &missing_save));
 
     var nonnegative = valid;
     std.mem.writeInt(i32, nonnegative[104..108], 0, .little);
     try t.expectError(error.InvalidEmfRestoreDcIndex, framing.validate(t.allocator, &nonnegative));
 
-    var extended_save = [_]u8{0} ** 132;
+    var extended_save = @as([132]u8, @splat(0));
     @memcpy(extended_save[0..88], original[0..88]);
     std.mem.writeInt(u32, extended_save[48..52], extended_save.len, .little);
     std.mem.writeInt(u32, extended_save[52..56], 3, .little);
-    std.mem.writeInt(u32, extended_save[88..92], @intFromEnum(@import("records.zig").RecordType.savedc), .little);
+    std.mem.writeInt(u32, extended_save[88..92], @backingInt(@import("records.zig").RecordType.savedc), .little);
     std.mem.writeInt(u32, extended_save[92..96], 24, .little);
     @memcpy(extended_save[112..132], original[88..108]);
     try t.expectEqual(@as(usize, 3), (try framing.validate(t.allocator, &extended_save)).records);
@@ -2563,35 +2563,35 @@ test "EMF framing validates device-context save and relative restore" {
 
 test "EMF framing validates logical palette record wire contracts" {
     const original = fixture();
-    var valid = [_]u8{0} ** 188;
+    var valid = @as([188]u8, @splat(0));
     @memcpy(valid[0..88], original[0..88]);
     std.mem.writeInt(u32, valid[48..52], valid.len, .little);
     std.mem.writeInt(u32, valid[52..56], 7, .little);
     std.mem.writeInt(u16, valid[56..58], 2, .little);
 
-    std.mem.writeInt(u32, valid[88..92], @intFromEnum(@import("records.zig").RecordType.createpalette), .little);
+    std.mem.writeInt(u32, valid[88..92], @backingInt(@import("records.zig").RecordType.createpalette), .little);
     std.mem.writeInt(u32, valid[92..96], 20, .little);
     std.mem.writeInt(u32, valid[96..100], 1, .little);
     std.mem.writeInt(u16, valid[100..102], 0x0300, .little);
     std.mem.writeInt(u16, valid[102..104], 1, .little);
     valid[104..108].* = .{ 0, 30, 20, 10 };
 
-    std.mem.writeInt(u32, valid[108..112], @intFromEnum(@import("records.zig").RecordType.setpaletteentries), .little);
+    std.mem.writeInt(u32, valid[108..112], @backingInt(@import("records.zig").RecordType.setpaletteentries), .little);
     std.mem.writeInt(u32, valid[112..116], 24, .little);
     std.mem.writeInt(u32, valid[116..120], 1, .little);
     std.mem.writeInt(u32, valid[120..124], 0, .little);
     std.mem.writeInt(u32, valid[124..128], 1, .little);
     valid[128..132].* = .{ 9, 60, 50, 40 };
 
-    std.mem.writeInt(u32, valid[132..136], @intFromEnum(@import("records.zig").RecordType.resizepalette), .little);
+    std.mem.writeInt(u32, valid[132..136], @backingInt(@import("records.zig").RecordType.resizepalette), .little);
     std.mem.writeInt(u32, valid[136..140], 16, .little);
     std.mem.writeInt(u32, valid[140..144], 1, .little);
     std.mem.writeInt(u32, valid[144..148], 0x400, .little);
 
-    std.mem.writeInt(u32, valid[148..152], @intFromEnum(@import("records.zig").RecordType.selectpalette), .little);
+    std.mem.writeInt(u32, valid[148..152], @backingInt(@import("records.zig").RecordType.selectpalette), .little);
     std.mem.writeInt(u32, valid[152..156], 12, .little);
     std.mem.writeInt(u32, valid[156..160], 1, .little);
-    std.mem.writeInt(u32, valid[160..164], @intFromEnum(@import("records.zig").RecordType.realizepalette), .little);
+    std.mem.writeInt(u32, valid[160..164], @backingInt(@import("records.zig").RecordType.realizepalette), .little);
     std.mem.writeInt(u32, valid[164..168], 8, .little);
     @memcpy(valid[168..188], original[88..108]);
     const summary = try framing.validate(t.allocator, &valid);
@@ -2612,15 +2612,15 @@ test "EMF framing validates logical palette record wire contracts" {
     std.mem.writeInt(u16, no_object_slot[56..58], 0, .little);
     try t.expectError(error.EmfObjectHandleOutOfBounds, framing.validate(t.allocator, &no_object_slot));
     var wrong_object_type = valid;
-    std.mem.writeInt(u32, wrong_object_type[88..92], @intFromEnum(@import("records.zig").RecordType.createpen), .little);
+    std.mem.writeInt(u32, wrong_object_type[88..92], @backingInt(@import("records.zig").RecordType.createpen), .little);
     try t.expectError(error.InvalidEmfCreatePenRecordSize, framing.validate(t.allocator, &wrong_object_type));
     var update_past_end = valid;
     std.mem.writeInt(u32, update_past_end[120..124], 1, .little);
     try t.expectError(error.EmfPaletteUpdateOutOfBounds, framing.validate(t.allocator, &update_past_end));
-    var extended_realize = [_]u8{0} ** 192;
+    var extended_realize = @as([192]u8, @splat(0));
     @memcpy(extended_realize[0..160], valid[0..160]);
     std.mem.writeInt(u32, extended_realize[48..52], extended_realize.len, .little);
-    std.mem.writeInt(u32, extended_realize[160..164], @intFromEnum(@import("records.zig").RecordType.realizepalette), .little);
+    std.mem.writeInt(u32, extended_realize[160..164], @backingInt(@import("records.zig").RecordType.realizepalette), .little);
     std.mem.writeInt(u32, extended_realize[164..168], 12, .little);
     @memcpy(extended_realize[172..192], original[88..108]);
     try t.expectEqual(@as(usize, 7), (try framing.validate(t.allocator, &extended_realize)).records);
@@ -2632,19 +2632,19 @@ test "EMF framing validates logical palette record wire contracts" {
 
 test "EMF framing validates and counts COLORCORRECTPALETTE" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 160;
+    var bytes = @as([160]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 4, .little);
     std.mem.writeInt(u16, bytes[56..58], 1, .little);
 
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.createpalette), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.createpalette), .little);
     std.mem.writeInt(u32, bytes[92..96], 24, .little);
     std.mem.writeInt(u32, bytes[96..100], 1, .little);
     std.mem.writeInt(u16, bytes[100..102], 0x0300, .little);
     std.mem.writeInt(u16, bytes[102..104], 2, .little);
 
-    std.mem.writeInt(u32, bytes[112..116], @intFromEnum(@import("records.zig").RecordType.colorcorrectpalette), .little);
+    std.mem.writeInt(u32, bytes[112..116], @backingInt(@import("records.zig").RecordType.colorcorrectpalette), .little);
     std.mem.writeInt(u32, bytes[116..120], 28, .little);
     std.mem.writeInt(u32, bytes[120..124], 1, .little);
     std.mem.writeInt(u32, bytes[124..128], 1, .little);
@@ -2664,12 +2664,12 @@ test "EMF framing validates and counts COLORCORRECTPALETTE" {
 
 test "EMF framing validates and counts SETCOLORADJUSTMENT" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 144;
+    var bytes = @as([144]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
 
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.setcoloradjustment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.setcoloradjustment), .little);
     std.mem.writeInt(u32, bytes[92..96], 36, .little);
     std.mem.writeInt(u16, bytes[96..98], @import("color_adjustment.zig").size, .little);
     std.mem.writeInt(u16, bytes[98..100], 3, .little);
@@ -2703,13 +2703,13 @@ test "EMF framing validates and counts SETCOLORADJUSTMENT" {
 
 test "EMF framing validates and classifies COMMENT envelopes" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 228;
+    var bytes = @as([228]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 7, .little);
 
     // The first record after the EMF header contains the complete EMF+ Header/EOF stream.
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 56, .little);
     std.mem.writeInt(u32, bytes[96..100], 44, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x2b464d45, .little);
@@ -2723,12 +2723,12 @@ test "EMF framing validates and classifies COMMENT envelopes" {
     std.mem.writeInt(u32, bytes[136..140], 12, .little);
 
     // Empty private, unknown private, EMFSPOOL, and unknown public comment.
-    std.mem.writeInt(u32, bytes[144..148], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[144..148], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[148..152], 12, .little);
     const offsets = [_]usize{ 156, 172, 188 };
     const identifiers = [_]u32{ 0x11223344, 0x00000000, 0x43494447 };
     for (offsets, identifiers) |offset, identifier| {
-        std.mem.writeInt(u32, bytes[offset..][0..4], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+        std.mem.writeInt(u32, bytes[offset..][0..4], @backingInt(@import("records.zig").RecordType.comment), .little);
         std.mem.writeInt(u32, bytes[offset + 4 ..][0..4], 16, .little);
         std.mem.writeInt(u32, bytes[offset + 8 ..][0..4], 4, .little);
         std.mem.writeInt(u32, bytes[offset + 12 ..][0..4], identifier, .little);
@@ -2757,20 +2757,20 @@ test "EMF framing validates and classifies COMMENT envelopes" {
 
 test "EMF framing validates nested public comment group state" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 228;
+    var bytes = @as([228]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 6, .little);
 
     for ([_]usize{ 88, 128 }) |offset| {
-        std.mem.writeInt(u32, bytes[offset..][0..4], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+        std.mem.writeInt(u32, bytes[offset..][0..4], @backingInt(@import("records.zig").RecordType.comment), .little);
         std.mem.writeInt(u32, bytes[offset + 4 ..][0..4], 40, .little);
         std.mem.writeInt(u32, bytes[offset + 8 ..][0..4], 28, .little);
         std.mem.writeInt(u32, bytes[offset + 12 ..][0..4], 0x43494447, .little);
         std.mem.writeInt(u32, bytes[offset + 16 ..][0..4], 0x00000002, .little);
     }
     for ([_]usize{ 168, 188 }) |offset| {
-        std.mem.writeInt(u32, bytes[offset..][0..4], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+        std.mem.writeInt(u32, bytes[offset..][0..4], @backingInt(@import("records.zig").RecordType.comment), .little);
         std.mem.writeInt(u32, bytes[offset + 4 ..][0..4], 20, .little);
         std.mem.writeInt(u32, bytes[offset + 8 ..][0..4], 8, .little);
         std.mem.writeInt(u32, bytes[offset + 12 ..][0..4], 0x43494447, .little);
@@ -2793,18 +2793,18 @@ test "EMF framing validates nested public comment group state" {
 
 test "EMF framing reports public MULTIFORMATS and standard WMF payloads" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 208;
+    var bytes = @as([208]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 4, .little);
 
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[92..96], 40, .little);
     std.mem.writeInt(u32, bytes[96..100], 28, .little);
     std.mem.writeInt(u32, bytes[100..104], 0x43494447, .little);
     std.mem.writeInt(u32, bytes[104..108], 0x40000004, .little);
 
-    std.mem.writeInt(u32, bytes[128..132], @intFromEnum(@import("records.zig").RecordType.comment), .little);
+    std.mem.writeInt(u32, bytes[128..132], @backingInt(@import("records.zig").RecordType.comment), .little);
     std.mem.writeInt(u32, bytes[132..136], 60, .little);
     std.mem.writeInt(u32, bytes[136..140], 48, .little);
     std.mem.writeInt(u32, bytes[140..144], 0x43494447, .little);
@@ -2833,19 +2833,19 @@ test "EMF framing reports public MULTIFORMATS and standard WMF payloads" {
 
 test "EMF framing connects SELECTOBJECT activation deletion and default restoration" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 160;
+    var bytes = @as([160]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 5, .little);
     std.mem.writeInt(u16, bytes[56..58], 1, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.createpen), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.createpen), .little);
     std.mem.writeInt(u32, bytes[92..96], 28, .little);
     std.mem.writeInt(u32, bytes[96..100], 1, .little);
     std.mem.writeInt(i32, bytes[104..108], 1, .little);
-    std.mem.writeInt(u32, bytes[116..120], @intFromEnum(@import("records.zig").RecordType.selectobject), .little);
+    std.mem.writeInt(u32, bytes[116..120], @backingInt(@import("records.zig").RecordType.selectobject), .little);
     std.mem.writeInt(u32, bytes[120..124], 12, .little);
     std.mem.writeInt(u32, bytes[124..128], 1, .little);
-    std.mem.writeInt(u32, bytes[128..132], @intFromEnum(@import("records.zig").RecordType.deleteobject), .little);
+    std.mem.writeInt(u32, bytes[128..132], @backingInt(@import("records.zig").RecordType.deleteobject), .little);
     std.mem.writeInt(u32, bytes[132..136], 12, .little);
     std.mem.writeInt(u32, bytes[136..140], 1, .little);
     @memcpy(bytes[140..160], original[88..108]);
@@ -2854,11 +2854,11 @@ test "EMF framing connects SELECTOBJECT activation deletion and default restorat
     try t.expectEqual(@as(usize, 1), summary.objects.default_restores);
     try t.expectEqual(@as(usize, 0), summary.objects.final_explicit_selected);
 
-    var stock = [_]u8{0} ** 120;
+    var stock = @as([120]u8, @splat(0));
     @memcpy(stock[0..88], original[0..88]);
     std.mem.writeInt(u32, stock[48..52], stock.len, .little);
     std.mem.writeInt(u32, stock[52..56], 3, .little);
-    std.mem.writeInt(u32, stock[88..92], @intFromEnum(@import("records.zig").RecordType.selectobject), .little);
+    std.mem.writeInt(u32, stock[88..92], @backingInt(@import("records.zig").RecordType.selectobject), .little);
     std.mem.writeInt(u32, stock[92..96], 12, .little);
     std.mem.writeInt(u32, stock[96..100], 0x80000013, .little);
     @memcpy(stock[100..120], original[88..108]);
@@ -2869,12 +2869,12 @@ test "EMF framing connects SELECTOBJECT activation deletion and default restorat
 
 test "EMF framing validates extended pen payload before object creation" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 164;
+    var bytes = @as([164]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
     std.mem.writeInt(u16, bytes[56..58], 1, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.extcreatepen), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.extcreatepen), .little);
     std.mem.writeInt(u32, bytes[92..96], 56, .little);
     std.mem.writeInt(u32, bytes[96..100], 1, .little);
     std.mem.writeInt(u32, bytes[120..124], 1, .little);
@@ -2892,12 +2892,12 @@ test "EMF framing validates extended pen payload before object creation" {
 
 test "EMF framing validates monochrome bitmap brush before object creation" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 172;
+    var bytes = @as([172]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
     std.mem.writeInt(u16, bytes[56..58], 1, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.createmonobrush), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.createmonobrush), .little);
     std.mem.writeInt(u32, bytes[92..96], 64, .little);
     std.mem.writeInt(u32, bytes[96..100], 1, .little);
     std.mem.writeInt(u32, bytes[104..108], 32, .little);
@@ -2933,7 +2933,7 @@ test "EMF framing validates extended font payload before object creation" {
     @memset(bytes[88 .. 88 + font_size], 0);
     std.mem.writeInt(u32, bytes[96..100], 1, .little);
     std.mem.writeInt(i32, bytes[116..120], 400, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.extcreatefontindirectw), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.extcreatefontindirectw), .little);
     std.mem.writeInt(u32, bytes[92..96], font_size, .little);
     @memcpy(bytes[88 + font_size ..], original[88..108]);
 
@@ -2947,11 +2947,11 @@ test "EMF framing validates extended font payload before object creation" {
 
 test "EMF framing validates 32-bit poly drawing arrays" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 156;
+    var bytes = @as([156]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.polyline), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.polyline), .little);
     std.mem.writeInt(u32, bytes[92..96], 48, .little);
     std.mem.writeInt(i32, bytes[96..100], -20, .little);
     std.mem.writeInt(u32, bytes[112..116], 2, .little);
@@ -2967,11 +2967,11 @@ test "EMF framing validates 32-bit poly drawing arrays" {
 
 test "EMF framing rejects a one-point 32-bit POLYPOLYLINE subline" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 152;
+    var bytes = @as([152]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.polypolyline), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.polypolyline), .little);
     std.mem.writeInt(u32, bytes[92..96], 44, .little);
     std.mem.writeInt(u32, bytes[112..116], 1, .little);
     std.mem.writeInt(u32, bytes[116..120], 1, .little);
@@ -2979,17 +2979,17 @@ test "EMF framing rejects a one-point 32-bit POLYPOLYLINE subline" {
     @memcpy(bytes[132..152], original[88..108]);
     try t.expectError(error.InvalidEmfPolyPolylinePointCount, framing.validate(t.allocator, &bytes));
 
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.polypolygon), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.polypolygon), .little);
     try t.expectEqual(@as(usize, 3), (try framing.validate(t.allocator, &bytes)).records);
 }
 
 test "EMF framing validates 16-bit poly drawing arrays" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 148;
+    var bytes = @as([148]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.polyline16), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.polyline16), .little);
     std.mem.writeInt(u32, bytes[92..96], 40, .little);
     std.mem.writeInt(u32, bytes[112..116], 2, .little);
     std.mem.writeInt(i16, bytes[116..118], std.math.minInt(i16), .little);
@@ -3004,11 +3004,11 @@ test "EMF framing validates 16-bit poly drawing arrays" {
 
 test "EMF framing validates POLYDRAW type arrays and alignment" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 148;
+    var bytes = @as([148]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.polydraw16), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.polydraw16), .little);
     std.mem.writeInt(u32, bytes[92..96], 40, .little);
     std.mem.writeInt(u32, bytes[112..116], 1, .little);
     std.mem.writeInt(i16, bytes[116..118], -7, .little);
@@ -3024,14 +3024,14 @@ test "EMF framing validates POLYDRAW type arrays and alignment" {
 
 test "EMF framing validates LINETO and SETPIXELV payloads" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 144;
+    var bytes = @as([144]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 4, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.lineto), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.lineto), .little);
     std.mem.writeInt(u32, bytes[92..96], 16, .little);
     std.mem.writeInt(i32, bytes[96..100], -1, .little);
-    std.mem.writeInt(u32, bytes[104..108], @intFromEnum(@import("records.zig").RecordType.setpixelv), .little);
+    std.mem.writeInt(u32, bytes[104..108], @backingInt(@import("records.zig").RecordType.setpixelv), .little);
     std.mem.writeInt(u32, bytes[108..112], 20, .little);
     std.mem.writeInt(i32, bytes[112..116], 2, .little);
     bytes[120..124].* = .{ 10, 20, 30, 0 };
@@ -3044,11 +3044,11 @@ test "EMF framing validates LINETO and SETPIXELV payloads" {
 
 test "EMF framing validates basic shape payloads" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 140;
+    var bytes = @as([140]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 3, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.roundrect), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.roundrect), .little);
     std.mem.writeInt(u32, bytes[92..96], 32, .little);
     std.mem.writeInt(i32, bytes[96..100], -4, .little);
     std.mem.writeInt(i32, bytes[116..120], 8, .little);
@@ -3061,24 +3061,24 @@ test "EMF framing validates basic shape payloads" {
 
 test "EMF framing connects color-space set and dedicated deletion" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 476;
+    var bytes = @as([476]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[52..56], 5, .little);
     std.mem.writeInt(u16, bytes[56..58], 1, .little);
-    std.mem.writeInt(u32, bytes[88..92], @intFromEnum(@import("records.zig").RecordType.createcolorspace), .little);
+    std.mem.writeInt(u32, bytes[88..92], @backingInt(@import("records.zig").RecordType.createcolorspace), .little);
     std.mem.writeInt(u32, bytes[92..96], 344, .little);
     std.mem.writeInt(u32, bytes[96..100], 1, .little);
     std.mem.writeInt(u32, bytes[100..104], @import("log_color_space.zig").signature, .little);
     std.mem.writeInt(u32, bytes[104..108], @import("log_color_space.zig").version, .little);
     std.mem.writeInt(u32, bytes[108..112], @import("log_color_space.zig").ansi_size, .little);
-    std.mem.writeInt(u32, bytes[112..116], @intFromEnum(@import("color_space_values.zig").LogicalColorSpace.srgb), .little);
-    std.mem.writeInt(u32, bytes[116..120], @intFromEnum(@import("color_space_values.zig").GamutMappingIntent.images), .little);
+    std.mem.writeInt(u32, bytes[112..116], @backingInt(@import("color_space_values.zig").LogicalColorSpace.srgb), .little);
+    std.mem.writeInt(u32, bytes[116..120], @backingInt(@import("color_space_values.zig").GamutMappingIntent.images), .little);
     bytes[428..432].* = .{ 1, 2, 3, 4 };
-    std.mem.writeInt(u32, bytes[432..436], @intFromEnum(@import("records.zig").RecordType.setcolorspace), .little);
+    std.mem.writeInt(u32, bytes[432..436], @backingInt(@import("records.zig").RecordType.setcolorspace), .little);
     std.mem.writeInt(u32, bytes[436..440], 12, .little);
     std.mem.writeInt(u32, bytes[440..444], 1, .little);
-    std.mem.writeInt(u32, bytes[444..448], @intFromEnum(@import("records.zig").RecordType.deletecolorspace), .little);
+    std.mem.writeInt(u32, bytes[444..448], @backingInt(@import("records.zig").RecordType.deletecolorspace), .little);
     std.mem.writeInt(u32, bytes[448..452], 12, .little);
     std.mem.writeInt(u32, bytes[452..456], 1, .little);
     @memcpy(bytes[456..476], original[88..108]);
@@ -3092,7 +3092,7 @@ test "EMF framing connects color-space set and dedicated deletion" {
 
 test "EMF EOF palette preserves undefined spaces and reserved-blue-green-red order" {
     const original = fixture();
-    var bytes = [_]u8{0} ** 124;
+    var bytes = @as([124]u8, @splat(0));
     @memcpy(bytes[0..88], original[0..88]);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[68..72], 2, .little);

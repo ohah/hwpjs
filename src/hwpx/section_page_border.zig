@@ -22,7 +22,7 @@ const descriptors = [_]Descriptor{
     .{ .name = "bottom", .kind = .offset, .value_kind = .unsigned },
 };
 comptime {
-    if (descriptors.len != @typeInfo(Field).@"enum".fields.len) @compileError("page border field/descriptor mismatch");
+    if (descriptors.len != @typeInfo(Field).@"enum".field_names.len) @compileError("page border field/descriptor mismatch");
 }
 
 pub const Options = struct {
@@ -42,7 +42,7 @@ pub const Item = struct {
     direct_children: usize = 0,
 
     pub fn get(self: *const Item, field: Field) ?[]const u8 {
-        return self.raw[@intFromEnum(field)];
+        return self.raw[@backingInt(field)];
     }
 
     pub fn deinit(self: *Item, a: std.mem.Allocator) void {

@@ -86,7 +86,7 @@ pub fn read(reader: *binary.Reader) !TransformMatrix {
 }
 
 test "EMF+ transform matrix maps all six values in wire order" {
-    var bytes = [_]u8{0} ** 24;
+    var bytes = @as([24]u8, @splat(0));
     for ([_]f32{ 1, 2, 3, 4, 5, 6 }, 0..) |value, index|
         std.mem.writeInt(u32, bytes[index * 4 ..][0..4], @bitCast(value), .little);
     var reader: binary.Reader = .{ .bytes = &bytes };
@@ -101,7 +101,7 @@ test "EMF+ transform matrix maps all six values in wire order" {
 }
 
 test "EMF+ transform matrix truncation is atomic" {
-    const bytes = [_]u8{0} ** 24;
+    const bytes = @as([24]u8, @splat(0));
     for (0..24) |cut| {
         var reader: binary.Reader = .{ .bytes = bytes[0..cut] };
         try std.testing.expectError(error.UnexpectedEnd, read(&reader));

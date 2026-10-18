@@ -3,8 +3,8 @@ const t = std.testing;
 const planes = @import("sample_planes.zig");
 
 // Three 1x1 components; Q=8 and DC delta +/-1 make distinct exact samples.
-const fixture = [_]u8{ 255, 216, 255, 219, 0, 67, 0 } ++ [_]u8{8} ** 64 ++
-    .{ 255, 196, 0, 38, 0, 1 } ++ [_]u8{0} ** 15 ++ .{ 1, 16, 1 } ++ [_]u8{0} ** 15 ++ .{0} ++
+const fixture = [_]u8{ 255, 216, 255, 219, 0, 67, 0 } ++ @as([64]u8, @splat(8)) ++
+    .{ 255, 196, 0, 38, 0, 1 } ++ @as([15]u8, @splat(0)) ++ .{ 1, 16, 1 } ++ @as([15]u8, @splat(0)) ++ .{0} ++
     .{ 255, 192, 0, 17, 8, 0, 1, 0, 1, 3, 9, 17, 0, 4, 17, 0, 7, 17, 0 } ++
     .{ 255, 218, 0, 8, 1, 7, 0, 0, 63, 0, 0x5f } ++
     .{ 255, 218, 0, 8, 1, 9, 0, 0, 63, 0, 0x1f } ++
@@ -66,9 +66,9 @@ test "JPEG sample planes retain sampling factors even for identical one-pixel ex
 test "JPEG sample planes keep nonconstant horizontal and vertical sample positions" {
     // DC=0, one AC +1 with Q=8, then EOB. AC code0 has size1,
     // EOB code10. Run0 addresses horizontal frequency1; run1 vertical1.
-    const q_segment = [_]u8{ 255, 219, 0, 67, 0 } ++ [_]u8{8} ** 64;
-    const dc = [_]u8{ 0, 1 } ++ [_]u8{0} ** 15 ++ .{0};
-    const ac = [_]u8{ 16, 1, 1 } ++ [_]u8{0} ** 14 ++ .{ 1, 0 };
+    const q_segment = [_]u8{ 255, 219, 0, 67, 0 } ++ @as([64]u8, @splat(8));
+    const dc = [_]u8{ 0, 1 } ++ @as([15]u8, @splat(0)) ++ .{0};
+    const ac = [_]u8{ 16, 1, 1 } ++ @as([14]u8, @splat(0)) ++ .{ 1, 0 };
     const image_bytes = [_]u8{ 255, 216 } ++ q_segment ++ .{ 255, 196, 0, 39 } ++ dc ++ ac ++
         .{ 255, 192, 0, 11, 8, 0, 8, 0, 8, 1, 9, 17, 0 } ++
         .{ 255, 218, 0, 8, 1, 9, 0, 0, 63, 0, 0x37, 255, 217 };

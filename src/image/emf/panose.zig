@@ -20,10 +20,10 @@ test "Panose validates all ten independent enum ranges" {
     const value = try parse(&bytes);
     try std.testing.expect(!value.ignored);
     for (0..size) |index| {
-        bytes = [_]u8{0} ** size;
+        bytes = @as([size]u8, @splat(0));
         bytes[index] = maxima[index] + 1;
         try std.testing.expectError(error.InvalidEmfPanoseValue, parse(&bytes));
     }
-    bytes = [_]u8{0} ** size;
+    bytes = @as([size]u8, @splat(0));
     try std.testing.expect((try parse(&bytes)).ignored);
 }

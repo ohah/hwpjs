@@ -34,7 +34,7 @@ fn makeRecord(flags: u16, data: []const u8) record.Record {
 }
 
 test "EMF+ SetClipRect preserves RectF bits CombineMode and reserved Flags" {
-    var data = [_]u8{0} ** 16;
+    var data = @as([16]u8, @splat(0));
     const bits = [_]u32{ 0x80000000, 0x7f800000, 0x7fc00001, 0xc0900000 };
     for (bits, 0..) |item, index|
         std.mem.writeInt(u32, data[index * 4 ..][0..4], item, .little);
@@ -42,7 +42,7 @@ test "EMF+ SetClipRect preserves RectF bits CombineMode and reserved Flags" {
         const flags: u16 = 0xf0ff | (@as(u16, @intCast(raw_mode)) << 8);
         const parsed = try parse(makeRecord(flags, &data));
         try std.testing.expectEqual(flags, parsed.flags);
-        try std.testing.expectEqual(@as(u4, @intCast(raw_mode)), @intFromEnum(parsed.mode));
+        try std.testing.expectEqual(@as(u4, @intCast(raw_mode)), @backingInt(parsed.mode));
         try std.testing.expectEqual(bits[0], @as(u32, @bitCast(parsed.rectangle.x)));
         try std.testing.expectEqual(bits[1], @as(u32, @bitCast(parsed.rectangle.y)));
         try std.testing.expectEqual(bits[2], @as(u32, @bitCast(parsed.rectangle.width)));
@@ -51,7 +51,7 @@ test "EMF+ SetClipRect preserves RectF bits CombineMode and reserved Flags" {
 }
 
 test "EMF+ SetClipRect rejects type mode every size axis and all truncations" {
-    const data = [_]u8{0} ** 16;
+    const data = @as([16]u8, @splat(0));
     for (0..16) |cut| {
         var truncated = makeRecord(0, data[0..cut]);
         truncated.size = @intCast(record.header_size + cut);

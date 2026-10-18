@@ -84,7 +84,7 @@ fn expectSegment(iterator: *Iterator) !Segment {
 }
 
 test "EMF+ Path fill segments close open figures at Start and EOF without duplicating explicit closure" {
-    var point_bytes = [_]u8{0} ** (10 * 4);
+    var point_bytes = @as([(10 * 4)]u8, @splat(0));
     for (0..10) |index| {
         std.mem.writeInt(i16, point_bytes[index * 4 ..][0..2], @intCast(index * 2), .little);
         std.mem.writeInt(i16, point_bytes[index * 4 + 2 ..][0..2], @intCast(index * 2 + 1), .little);
@@ -134,7 +134,7 @@ test "EMF+ Path fill segments close open figures at Start and EOF without duplic
 }
 
 test "EMF+ Path fill segments preserve a degenerate implicit closing line at EOF" {
-    var point_bytes = [_]u8{0} ** 16;
+    var point_bytes = @as([16]u8, @splat(0));
     const bits = [_]u32{ 0x80000000, 0x7fc00001, 0x80000000, 0x7fc00001 };
     for (bits, 0..) |value, index| std.mem.writeInt(u32, point_bytes[index * 4 ..][0..4], value, .little);
     const types = [_]u8{ 0x00, 0x01 };
@@ -149,7 +149,7 @@ test "EMF+ Path fill segments preserve a degenerate implicit closing line at EOF
     }
     try std.testing.expect((try iterator.next()) == null);
 
-    var integer_bytes = [_]u8{0} ** 8;
+    var integer_bytes = @as([8]u8, @splat(0));
     for ([_]i16{ 7, -8, 7, -8 }, 0..) |value, index| {
         std.mem.writeInt(i16, integer_bytes[index * 2 ..][0..2], value, .little);
     }

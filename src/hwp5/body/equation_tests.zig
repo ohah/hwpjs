@@ -2,7 +2,7 @@ const std = @import("std");
 const t = std.testing;
 const eq = @import("equation.zig");
 test "equation observed layouts preserve signed baseline, raw strings and absent font" {
-    var raw = [_]u8{0} ** 25;
+    var raw = @as([25]u8, @splat(0));
     std.mem.writeInt(u32, raw[0..4], 0xffffffff, .little);
     std.mem.writeInt(u16, raw[4..6], 1, .little);
     raw[7] = 0xd8;
@@ -33,7 +33,7 @@ test "equation observed layouts preserve signed baseline, raw strings and absent
     try t.expectError(error.UnexpectedEnd, eq.Properties.parse(&raw, .with_font));
 }
 fn allocationCase(a: std.mem.Allocator, bad: bool) !void {
-    var raw = [_]u8{0} ** 32;
+    var raw = @as([32]u8, @splat(0));
     std.mem.writeInt(u32, raw[0..4], 71 | (4 << 20), .little);
     std.mem.writeInt(u32, raw[4..8], @import("control_rules.zig").equation_id, .little);
     std.mem.writeInt(u32, raw[8..12], 88 | (1 << 10) | (20 << 20), .little);

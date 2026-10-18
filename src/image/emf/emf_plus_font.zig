@@ -74,7 +74,7 @@ fn putF32(bytes: []u8, offset: usize, value: f32) void {
 }
 
 test "EMF+ Font preserves fields UTF-16 family name reserved value and padding" {
-    var bytes = [_]u8{0} ** 36;
+    var bytes = @as([36]u8, @splat(0));
     putU32(&bytes, 0, 0xdbc01002);
     putF32(&bytes, 4, 40.5);
     putU32(&bytes, 8, 2);
@@ -97,7 +97,7 @@ test "EMF+ Font preserves fields UTF-16 family name reserved value and padding" 
 }
 
 test "EMF+ Font counts UTF-16 code units and validates surrogate pairs" {
-    var bytes = [_]u8{0} ** 28;
+    var bytes = @as([28]u8, @splat(0));
     putU32(&bytes, 0, 0xdbc01001);
     putU32(&bytes, 8, 3);
     putU32(&bytes, 20, 2);
@@ -111,7 +111,7 @@ test "EMF+ Font counts UTF-16 code units and validates surrogate pairs" {
 
 test "EMF+ Font accepts every UnitType and empty family name" {
     inline for (0..7) |raw_unit| {
-        var bytes = [_]u8{0} ** 24;
+        var bytes = @as([24]u8, @splat(0));
         putU32(&bytes, 0, 0xdbc01001);
         putU32(&bytes, 8, raw_unit);
         _ = try parse(&bytes, .{ .max_font_bytes = 24, .max_family_name_units = 0 });
@@ -119,7 +119,7 @@ test "EMF+ Font accepts every UnitType and empty family name" {
 }
 
 test "EMF+ Font accepts no padding or the exact object alignment width" {
-    var bytes = [_]u8{0} ** 30;
+    var bytes = @as([30]u8, @splat(0));
     putU32(&bytes, 0, 0xdbc01001);
     putU32(&bytes, 8, 3);
     putU32(&bytes, 20, 1);
@@ -131,7 +131,7 @@ test "EMF+ Font accepts no padding or the exact object alignment width" {
     try std.testing.expectError(error.InvalidEmfPlusFontPadding, parse(bytes[0..29], .{}));
     try std.testing.expectError(error.InvalidEmfPlusFontPadding, parse(&bytes, .{}));
 
-    var even = [_]u8{0} ** 29;
+    var even = @as([29]u8, @splat(0));
     putU32(&even, 0, 0xdbc01001);
     putU32(&even, 8, 3);
     putU32(&even, 20, 2);
@@ -141,7 +141,7 @@ test "EMF+ Font accepts no padding or the exact object alignment width" {
 }
 
 test "EMF+ Font rejects every truncation domains limits excess padding and wrong object type" {
-    var bytes = [_]u8{0} ** 28;
+    var bytes = @as([28]u8, @splat(0));
     putU32(&bytes, 0, 0xdbc01001);
     putF32(&bytes, 4, -0.0);
     putU32(&bytes, 8, 6);
@@ -161,7 +161,7 @@ test "EMF+ Font rejects every truncation domains limits excess padding and wrong
     var bad_style = bytes;
     putI32(&bad_style, 12, 0x10);
     try std.testing.expectError(error.InvalidEmfPlusFontStyleFlags, parse(&bad_style, .{}));
-    var padding = [_]u8{0} ** 30;
+    var padding = @as([30]u8, @splat(0));
     @memcpy(padding[0..28], &bytes);
     try std.testing.expectError(error.InvalidEmfPlusFontPadding, parse(&padding, .{}));
     try std.testing.expectError(error.NotEmfPlusFontObject, parseCompleted(.{ .object_id = 0, .object_type = .image, .object_data = &bytes, .multipart = false }, .{}));

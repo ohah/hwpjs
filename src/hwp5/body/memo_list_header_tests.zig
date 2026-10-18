@@ -3,7 +3,7 @@ const t = std.testing;
 const base = @import("list_header.zig").Header;
 const Header = @import("memo_list_header.zig").Header;
 test "memo list header retains full signed count dimensions flags and borrowed extra" {
-    var b = [_]u8{0} ** 19;
+    var b = @as([19]u8, @splat(0));
     for ([_]u32{ 0x80000001, 0xfedcba98, 0x81234567, 0xffffffff }, 0..) |v, i| std.mem.writeInt(u32, b[i * 4 ..][0..4], v, .little);
     @memcpy(b[16..], &[_]u8{ 9, 128, 255 });
     const h = try Header.parse(try base.parse(&b));
@@ -19,7 +19,7 @@ fn exercise(a: std.mem.Allocator) !void {
     const Tree = @import("tree.zig").Tree;
     const Groups = @import("list_groups.zig").Groups;
     // Root paragraph, memo marker, memo list header, one sibling paragraph.
-    var b = [_]u8{0} ** 84;
+    var b = @as([84]u8, @splat(0));
     for ([_]usize{ 0, 56 }) |at| std.mem.writeInt(u32, b[at..][0..4], 66 | (24 << 20) | (if (at == 0) @as(u32, 0) else 1024), .little);
     std.mem.writeInt(u32, b[28..32], 93 | 1024 | (4 << 20), .little);
     std.mem.writeInt(u32, b[36..40], 72 | 1024 | (16 << 20), .little);

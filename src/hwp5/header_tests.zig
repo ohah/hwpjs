@@ -3,7 +3,7 @@ const h = @import("root.zig");
 const a = std.testing.allocator;
 
 fn header() h.Header {
-    var bytes = [_]u8{0} ** 256;
+    var bytes = @as([256]u8, @splat(0));
     @memcpy(bytes[0..17], "HWP Document File");
     bytes[35] = 5;
     return h.Header.parse(&bytes) catch unreachable;
@@ -12,7 +12,7 @@ fn header() h.Header {
 test "HWP5 header exact size signature flags and raw preservation" {
     var value = header();
     for (0..256) |n| try std.testing.expectError(error.InvalidHeaderSize, h.Header.parse(value.raw[0..n]));
-    try std.testing.expectError(error.InvalidHeaderSize, h.Header.parse(&([_]u8{0} ** 257)));
+    try std.testing.expectError(error.InvalidHeaderSize, h.Header.parse(&(@as([257]u8, @splat(0)))));
     for (0..32) |i| {
         var bad = value.raw;
         bad[i] ^= 1;
@@ -21,8 +21,8 @@ test "HWP5 header exact size signature flags and raw preservation" {
     for (0..32) |bit| {
         std.mem.writeInt(u32, value.raw[36..40], @as(u32, 1) << @intCast(bit), .little);
         const parsed = try h.Header.parse(&value.raw);
-        inline for (@typeInfo(h.Flag).@"enum".fields) |field| {
-            try std.testing.expectEqual(bit == field.value, parsed.has(@enumFromInt(field.value)));
+        inline for (@import("../reflection.zig").fields(h.Flag)) |field| {
+            try std.testing.expectEqual(bit == field.value, parsed.has(@fromBackingInt(@intCast(field.value))));
         }
         try std.testing.expectEqualSlices(u8, &value.raw, &parsed.raw);
     }
@@ -56,7 +56,7 @@ test "HWP5 stream unsupported features never reach decompression" {
         .{ h.Flag.distribution, error.UnsupportedDistribution },
     };
     inline for (cases) |case| {
-        std.mem.writeInt(u32, value.raw[36..40], 1 | (@as(u32, 1) << @intFromEnum(case[0])), .little);
+        std.mem.writeInt(u32, value.raw[36..40], 1 | (@as(u32, 1) << @backingInt(case[0])), .little);
         try std.testing.expectError(case[1], h.stream.decode(a, &value, &.{7}, 0));
     }
     value = header();

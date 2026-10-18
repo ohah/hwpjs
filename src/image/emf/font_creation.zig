@@ -39,7 +39,7 @@ test "font creation distinguishes exact Panose and variable ExDv payloads" {
     try std.testing.expectEqual(@as(u32, 7), first.handle);
     try std.testing.expect(first.font == .panose);
 
-    var variable = [_]u8{0} ** (12 + extended_font.ex_size + 12);
+    var variable = @as([(12 + extended_font.ex_size + 12)]u8, @splat(0));
     std.mem.writeInt(u32, variable[8..12], 9, .little);
     std.mem.writeInt(i32, variable[28..32], 400, .little);
     std.mem.writeInt(u32, variable[360..364], @import("design_vector.zig").signature, .little);
@@ -56,13 +56,13 @@ test "font creation rejects every short size gap and declared boundary mismatch"
     var wrong = fixture(&bytes);
     wrong.size -= 4;
     try std.testing.expectError(error.InvalidEmfFontCreationRecordSize, parse(wrong));
-    var gap = [_]u8{0} ** (minimum_size + 1);
+    var gap = @as([(minimum_size + 1)]u8, @splat(0));
     try std.testing.expectError(error.InvalidEmfLogFontExDvSize, parse(fixture(&gap)));
     try std.testing.expect((try parse(.{ .offset = 0, .kind = .savedc, .size = 8, .bytes = bytes[0..8], .end = 8 })) == null);
 }
 
 test "font creation accepts every DesignVector axis count and rejects every Panose-to-ExDv gap" {
-    var bytes = [_]u8{0} ** maximum_size;
+    var bytes = @as([maximum_size]u8, @splat(0));
     std.mem.writeInt(i32, bytes[28..32], 400, .little);
     for (minimum_size + 1..12 + extended_font.ex_size + @import("design_vector.zig").minimum_size) |length|
         try std.testing.expectError(error.InvalidEmfLogFontExDvSize, parse(fixture(bytes[0..length])));
@@ -84,11 +84,11 @@ test "font creation record size classifies all bytes as Panose or ExDv payload" 
     panose_with_tail[minimum_size..].* = .{ 1, 2, 3, 4 };
     try std.testing.expectError(error.InvalidEmfLogFontExDvSize, parse(fixture(&panose_with_tail)));
 
-    var ex_dv_with_tail = [_]u8{0} ** (12 + extended_font.ex_size + @import("design_vector.zig").minimum_size + 4);
+    var ex_dv_with_tail = @as([12 + extended_font.ex_size + @import("design_vector.zig").minimum_size + 4]u8, @splat(0));
     std.mem.writeInt(i32, ex_dv_with_tail[28..32], 400, .little);
     std.mem.writeInt(u32, ex_dv_with_tail[12 + extended_font.ex_size ..][0..4], @import("design_vector.zig").signature, .little);
     try std.testing.expectError(error.InvalidEmfDesignVectorSize, parse(fixture(&ex_dv_with_tail)));
 
-    const oversized = [_]u8{0} ** (maximum_size + 4);
+    const oversized = @as([(maximum_size + 4)]u8, @splat(0));
     try std.testing.expectError(error.InvalidEmfFontCreationRecordSize, parse(fixture(&oversized)));
 }

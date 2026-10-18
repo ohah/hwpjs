@@ -86,7 +86,7 @@ test "EMF+ open cardinal spans apply offset and segment count after PointR resol
 }
 
 test "EMF+ open cardinal spans reject out of range selection and preserve empty selection" {
-    const bytes = [_]u8{0} ** 16;
+    const bytes = @as([16]u8, @splat(0));
     const source = try point_data.parse(&bytes, 4, false, true, .{});
     try std.testing.expectError(error.InvalidEmfPlusCardinalRange, open(source, 4, 0));
     try std.testing.expectError(error.InvalidEmfPlusCardinalRange, open(source, 3, 1));
@@ -97,7 +97,7 @@ test "EMF+ open cardinal spans reject out of range selection and preserve empty 
 }
 
 test "EMF+ closed cardinal spans include the last to first span and preserve float bits" {
-    var bytes = [_]u8{0} ** 24;
+    var bytes = @as([24]u8, @splat(0));
     const bits = [_]u32{ 0x80000000, 0x7fc00001, 1, 2, 0x7f800000, 0xff800000 };
     for (bits, 0..) |value, index| std.mem.writeInt(u32, bytes[index * 4 ..][0..4], value, .little);
     const source = try point_data.parse(&bytes, 3, false, false, .{});
@@ -114,7 +114,7 @@ test "EMF+ closed cardinal spans include the last to first span and preserve flo
 }
 
 test "EMF+ cardinal span constructors and iterator failures are atomic" {
-    const too_few = [_]u8{0} ** 8;
+    const too_few = @as([8]u8, @splat(0));
     try std.testing.expectError(error.InvalidEmfPlusCardinalPointCount, closed(try point_data.parse(&too_few, 2, false, true, .{})));
 
     const bytes = [_]u8{ 1, 2, 3, 4, 5, 6 };

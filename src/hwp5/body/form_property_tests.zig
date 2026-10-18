@@ -3,7 +3,7 @@ const t = std.testing;
 const token = @import("form_property.zig");
 const tree = @import("form_property_tree.zig");
 fn wide(comptime s: []const u8) [s.len * 2]u8 {
-    var bytes = [_]u8{0} ** (s.len * 2);
+    var bytes = @as([(s.len * 2)]u8, @splat(0));
     for (s, 0..) |c, i| bytes[i * 2] = c;
     return bytes;
 }

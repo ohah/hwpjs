@@ -142,7 +142,7 @@ fn expectBezier(iterator: *Iterator) !Bezier {
 }
 
 test "EMF+ Path geometry assembles line Bezier figure boundaries and closure metadata" {
-    var point_bytes = [_]u8{0} ** (8 * 4);
+    var point_bytes = @as([(8 * 4)]u8, @splat(0));
     for (0..8) |index| {
         std.mem.writeInt(i16, point_bytes[index * 4 ..][0..2], @intCast(index * 2), .little);
         std.mem.writeInt(i16, point_bytes[index * 4 + 2 ..][0..2], @intCast(index * 2 + 1), .little);
@@ -196,7 +196,7 @@ test "EMF+ Path geometry resolves PointR and uses the RLE B bit for segment kind
 }
 
 test "EMF+ Path geometry rejects missing starts malformed Bezier groups and post-close continuation" {
-    const points = [_]u8{0} ** 20;
+    const points = @as([20]u8, @splat(0));
     for ([_][]const u8{
         &.{0x01},
         &.{ 0x00, 0x83, 0x03, 0x03 },

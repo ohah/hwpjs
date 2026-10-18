@@ -46,7 +46,7 @@ pub fn readRect(reader: *binary.Reader) !Rect {
 
 test "EMF+ floating geometry preserves values and consumes exact widths" {
     const std = @import("std");
-    var bytes = [_]u8{0} ** 24;
+    var bytes = @as([24]u8, @splat(0));
     const input = [_]f32{ -0.0, 1.5, -2.25, std.math.inf(f32), std.math.nan(f32), 9.0 };
     for (input, 0..) |value, index|
         std.mem.writeInt(u32, bytes[index * 4 ..][0..4], @bitCast(value), .little);
@@ -64,7 +64,7 @@ test "EMF+ floating geometry preserves values and consumes exact widths" {
 
 test "EMF+ geometry failure leaves the shared cursor unchanged" {
     const std = @import("std");
-    const bytes = [_]u8{0} ** 16;
+    const bytes = @as([16]u8, @splat(0));
     for (0..4) |cut| {
         var integer_reader: binary.Reader = .{ .bytes = bytes[0..cut] };
         try std.testing.expectError(error.UnexpectedEnd, readPoint(&integer_reader));
@@ -89,7 +89,7 @@ test "EMF+ geometry failure leaves the shared cursor unchanged" {
 
 test "EMF+ integer rectangle preserves signed coordinates and exact width" {
     const std = @import("std");
-    var bytes = [_]u8{0} ** 10;
+    var bytes = @as([10]u8, @splat(0));
     const input = [_]i16{ -32768, -1, 0, 32767 };
     for (input, 0..) |value, index|
         std.mem.writeInt(i16, bytes[index * 2 ..][0..2], value, .little);

@@ -25,7 +25,7 @@ pub fn parse(bytes: []const u8) !Parallelogram {
 }
 
 test "destination parallelogram preserves three wire points and computes exact wide fourth" {
-    var bytes = [_]u8{0} ** 24;
+    var bytes = @as([24]u8, @splat(0));
     for ([_]i32{ std.math.maxInt(i32), std.math.minInt(i32), std.math.maxInt(i32), std.math.maxInt(i32), std.math.minInt(i32), std.math.maxInt(i32) }, 0..) |value, index|
         std.mem.writeInt(i32, bytes[index * 4 ..][0..4], value, .little);
     const value = try parse(&bytes);

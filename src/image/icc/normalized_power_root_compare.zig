@@ -9,11 +9,11 @@ pub fn compare(comptime precision: u16, root: Root, n: i256, d: u256) !?std.math
 pub fn compareWide(comptime precision: u16, root: @import("normalized_power_level.zig").Wide.Root, n: i1024, d: u1024) !?std.math.Order {
     return compareFor(1024, precision, root, n, d);
 }
-fn compareFor(comptime width: u16, comptime precision: u16, root: anytype, n: std.meta.Int(.signed, width), d: std.meta.Int(.unsigned, width)) !?std.math.Order {
+fn compareFor(comptime width: u16, comptime precision: u16, root: anytype, n: @Int(.signed, width), d: @Int(.unsigned, width)) !?std.math.Order {
     const equality = @import("rational_power_equality.zig").Of(width);
     if (d == 0) return error.InvalidIccRootCoordinate;
     const radical = switch (root) {
-        .zero => return std.math.order(@as(std.meta.Int(.signed, width), 0), n),
+        .zero => return std.math.order(@as(@Int(.signed, width), 0), n),
         .nonzero => |r| r,
     };
     try radical.validate();

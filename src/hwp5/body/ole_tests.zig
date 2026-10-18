@@ -4,7 +4,7 @@ const ole = @import("ole.zig");
 test "OLE layouts preserve signed fields and separate BinData from border color" {
     inline for (.{ ole.Layout.spec24, ole.Layout.observed26 }) |layout| {
         const width = if (layout == .spec24) 2 else 4;
-        var raw = [_]u8{0xff} ** (width + 23);
+        var raw = @as([(width + 23)]u8, @splat(0xff));
         std.mem.writeInt(i32, raw[width..][0..4], -2147483648, .little);
         std.mem.writeInt(i32, raw[width + 4 ..][0..4], 2147483647, .little);
         std.mem.writeInt(u16, raw[width + 8 ..][0..2], 1, .little);
@@ -32,7 +32,7 @@ test "OLE layouts preserve signed fields and separate BinData from border color"
     }
 }
 fn allocationCase(a: std.mem.Allocator, bad: bool) !void {
-    var raw = [_]u8{0} ** 38;
+    var raw = @as([38]u8, @splat(0));
     std.mem.writeInt(u32, raw[0..4], 76 | (4 << 20), .little);
     std.mem.writeInt(u32, raw[4..8], @import("control_rules.zig").id("$ole"), .little);
     std.mem.writeInt(u32, raw[8..12], 84 | (1 << 10) | (26 << 20), .little);

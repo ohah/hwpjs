@@ -4,7 +4,7 @@ const values = @import("xml_values.zig");
 pub const Field = enum(u8) { effect, sound_id_ref, invert_text, autoshow, showtime, applyto };
 pub const field_names = [_][]const u8{ "effect", "soundIDRef", "invertText", "autoshow", "showtime", "applyto" };
 comptime {
-    if (field_names.len != @typeInfo(Field).@"enum".fields.len) @compileError("presentation field/name mismatch");
+    if (field_names.len != @typeInfo(Field).@"enum".field_names.len) @compileError("presentation field/name mismatch");
 }
 
 const effects = [_][]const u8{

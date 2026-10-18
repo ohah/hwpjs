@@ -4,17 +4,17 @@ const fields = @import("shape_xml_fields.zig");
 
 pub const Kind = enum { size, position, out_margin, caption, shape_comment, parameter_set, meta_tag, label };
 pub const names = [_][]const u8{ "sz", "pos", "outMargin", "caption", "shapeComment", "parameterset", "metaTag", "label" };
-pub const common_count = @intFromEnum(Kind.label);
+pub const common_count = @backingInt(Kind.label);
 pub const Profile = enum { common, table };
 
 comptime {
-    if (names.len != @typeInfo(Kind).@"enum".fields.len) @compileError("shape child/name mismatch");
+    if (names.len != @typeInfo(Kind).@"enum".field_names.len) @compileError("shape child/name mismatch");
 }
 
 pub fn kindOf(tree: *const tree_mod.Tree, index: usize, profile: Profile) ?Kind {
     for (names, 0..) |name, slot| {
-        if (profile == .common and slot == @intFromEnum(Kind.label)) continue;
-        if (tree.elements[index].is(document_xml.paragraph_uri, name)) return @enumFromInt(slot);
+        if (profile == .common and slot == @backingInt(Kind.label)) continue;
+        if (tree.elements[index].is(document_xml.paragraph_uri, name)) return @fromBackingInt(@intCast(slot));
     }
     return null;
 }

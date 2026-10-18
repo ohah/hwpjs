@@ -8,7 +8,7 @@ pub fn writeExtended(out: *[520]u8, result: ?@import("hwpjs").image.icc.linear_p
 }
 fn writeFor(comptime bits: u16, out: *[8 + bits / 2]u8, result: anytype) void {
     const width = bits / 8;
-    const U = std.meta.Int(.unsigned, bits);
+    const U = @Int(.unsigned, bits);
     @memset(out, 0);
     if (result) |interval| {
         std.mem.writeInt(u32, out[0..4], 1, .little);

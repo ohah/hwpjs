@@ -52,7 +52,7 @@ pub fn parse(bmi: []const u8, bits: []const u8, usage: dib_colors.Usage, options
 }
 
 fn coreHeader(bit_count: u16) [12]u8 {
-    var bytes = [_]u8{0} ** 12;
+    var bytes = @as([12]u8, @splat(0));
     std.mem.writeInt(u32, bytes[0..4], 12, .little);
     std.mem.writeInt(u16, bytes[4..6], 2, .little);
     std.mem.writeInt(u16, bytes[6..8], 2, .little);
@@ -63,9 +63,9 @@ fn coreHeader(bit_count: u16) [12]u8 {
 
 test "DIB payload validates core palette and exact row bytes" {
     const core = coreHeader(1);
-    var bmi = [_]u8{0} ** 18;
+    var bmi = @as([18]u8, @splat(0));
     @memcpy(bmi[0..12], &core);
-    const bits = [_]u8{0} ** 8;
+    const bits = @as([8]u8, @splat(0));
     const value = try parse(&bmi, &bits, .rgb_colors, .{ .require_monochrome = true });
     try std.testing.expectEqual(@as(u32, 2), value.header.width);
     try std.testing.expectEqual(@as(usize, 6), value.header_extra.len);
@@ -76,33 +76,33 @@ test "DIB payload validates core palette and exact row bytes" {
 
 test "DIB payload distinguishes usage and monochrome policy" {
     const core = coreHeader(4);
-    var rgb_bmi = [_]u8{0} ** 60;
+    var rgb_bmi = @as([60]u8, @splat(0));
     @memcpy(rgb_bmi[0..12], &core);
-    const bits = [_]u8{0} ** 8;
+    const bits = @as([8]u8, @splat(0));
     _ = try parse(&rgb_bmi, &bits, .rgb_colors, .{});
     try std.testing.expectError(error.InvalidEmfMonochromeBrushBitCount, parse(&rgb_bmi, &bits, .rgb_colors, .{ .require_monochrome = true }));
 
-    var palette_bmi = [_]u8{0} ** 44;
+    var palette_bmi = @as([44]u8, @splat(0));
     @memcpy(palette_bmi[0..12], &core);
     _ = try parse(&palette_bmi, &bits, .palette_colors, .{});
     _ = try parse(&core, &bits, .palette_indices, .{});
 }
 
 fn infoHeader(compression: bmp_header.Compression, bit_count: u16, image_bytes: u32) [40]u8 {
-    var bytes = [_]u8{0} ** 40;
+    var bytes = @as([40]u8, @splat(0));
     std.mem.writeInt(u32, bytes[0..4], 40, .little);
     std.mem.writeInt(i32, bytes[4..8], 2, .little);
     std.mem.writeInt(i32, bytes[8..12], 2, .little);
     std.mem.writeInt(u16, bytes[12..14], 1, .little);
     std.mem.writeInt(u16, bytes[14..16], bit_count, .little);
-    std.mem.writeInt(u32, bytes[16..20], @intFromEnum(compression), .little);
+    std.mem.writeInt(u32, bytes[16..20], @backingInt(compression), .little);
     std.mem.writeInt(u32, bytes[20..24], image_bytes, .little);
     return bytes;
 }
 
 test "DIB payload accepts every specified CMYK compression size policy" {
     const cmyk = infoHeader(.cmyk, 32, 16);
-    const raw = [_]u8{0} ** 16;
+    const raw = @as([16]u8, @splat(0));
     _ = try parse(&cmyk, &raw, .palette_indices, .{});
     var wrong_cmyk = cmyk;
     std.mem.writeInt(u32, wrong_cmyk[20..24], 12, .little);
@@ -120,7 +120,7 @@ test "DIB payload accepts every specified CMYK compression size policy" {
 test "DIB payload can validate an explicit uncompressed scanline band" {
     var core = coreHeader(1);
     std.mem.writeInt(u16, core[6..8], 4, .little);
-    const band = [_]u8{0} ** 8;
+    const band = @as([8]u8, @splat(0));
     _ = try parse(&core, &band, .palette_indices, .{ .uncompressed_rows = 2 });
     try std.testing.expectError(error.InvalidEmfDibBitsSize, parse(&core, &band, .palette_indices, .{}));
 

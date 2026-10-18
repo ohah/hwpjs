@@ -34,7 +34,7 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 }
 
 test "basic object creation requires prefixes and accepts trailing data" {
-    var pen = [_]u8{0} ** 29;
+    var pen = @as([29]u8, @splat(0));
     std.mem.writeInt(i32, pen[16..20], 1, .little);
     for (0..28) |cut| try std.testing.expectError(error.InvalidEmfCreatePenRecordSize, parse(fixture(.createpen, pen[0..cut])));
     try std.testing.expect((try parse(fixture(.createpen, &pen))) != null);
@@ -44,7 +44,7 @@ test "basic object creation requires prefixes and accepts trailing data" {
     const parsed_pen = (try parse(fixture(.createpen, pen[0..28]))).?.pen;
     try std.testing.expectEqual(@as(i32, 1), parsed_pen.value.width.x);
 
-    const brush = [_]u8{0} ** 25;
+    const brush = @as([25]u8, @splat(0));
     for (0..24) |cut| try std.testing.expectError(error.InvalidEmfCreateBrushIndirectRecordSize, parse(fixture(.createbrushindirect, brush[0..cut])));
     try std.testing.expect((try parse(fixture(.createbrushindirect, &brush))) != null);
     var wrong_declared_brush = fixture(.createbrushindirect, brush[0..24]);

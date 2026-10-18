@@ -20,7 +20,7 @@ fn exercise(a: std.mem.Allocator, version: u16, layout: envelope.Layout) !void {
         break :blk wrapped;
     };
     defer if (layout == .observed_size_prefix) a.free(input);
-    const replacement = [_]u8{0xa5} ** 4097;
+    const replacement = @as([4097]u8, @splat(0xa5));
     const out = try replace.replaceExact(a, input, layout, "/chart/contents", &replacement, .{ .max_output_bytes = 64 * 1024 });
     defer a.free(out);
     if (layout == .observed_size_prefix) try t.expectEqual(@as(u32, @intCast(out.len - 4)), std.mem.readInt(u32, out[0..4], .little));

@@ -2,17 +2,17 @@ const std = @import("std");
 const t = std.testing;
 const trc = @import("trc_tag.zig");
 test "TRC channels distinguish permitted types by explicit edition" {
-    var curv = [_]u8{0} ** 16;
+    var curv = @as([16]u8, @splat(0));
     curv[0..4].* = "curv".*;
     curv[11] = 2;
     curv[12..16].* = .{ 255, 255, 0, 0 };
-    var para = [_]u8{0} ** 16;
+    var para = @as([16]u8, @splat(0));
     para[0..4].* = "para".*;
     para[12..16].* = .{ 255, 255, 255, 255 };
     for ([_][4]u8{ "rTRC".*, "gTRC".*, "bTRC".*, "kTRC".* }, 0..) |name, i| {
         for ([_]trc.Edition{ .v2_2001, .v4_2022 }) |edition| {
             const result = (try trc.parse(name, &curv, edition)).?;
-            try t.expectEqual(i, @intFromEnum(result.channel));
+            try t.expectEqual(i, @backingInt(result.channel));
             try t.expect(result.semantics_deferred);
             try t.expectEqual(@as(u16, 65535), try result.curve.curve_type.samples.at(0));
             try t.expectEqual(@as(u16, 0), try result.curve.curve_type.samples.at(1));
@@ -28,7 +28,7 @@ test "TRC channels distinguish permitted types by explicit edition" {
 }
 test "TRC unknown names remain unhandled and borrowed samples retain lifetime contract" {
     for ([_][4]u8{ "RTRC".*, "gtrc".*, "abcd".* }) |name| try t.expectEqual(@as(?trc.Parsed, null), try trc.parse(name, &.{}, .v4_2022));
-    var bytes = [_]u8{0} ** 16;
+    var bytes = @as([16]u8, @splat(0));
     bytes[0..4].* = "curv".*;
     bytes[11] = 2;
     const result = (try trc.parse("rTRC".*, &bytes, .v4_2022)).?;

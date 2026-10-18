@@ -2,7 +2,7 @@ const std = @import("std");
 const t = std.testing;
 const h = @import("huffman.zig");
 const lengths = @import("huffman_lengths.zig");
-const fixture = .{ 0, 1, 1 } ++ [_]u8{0} ** 14 ++ .{ 0, 5 };
+const fixture = .{ 0, 1, 1 } ++ @as([14]u8, @splat(0)) ++ .{ 0, 5 };
 test "JPEG DHT selector byte matrix and borrowed symbol order" {
     for (0..256) |selector| {
         var bytes: [19]u8 = fixture;
@@ -24,7 +24,7 @@ test "JPEG DHT selector byte matrix and borrowed symbol order" {
 }
 test "JPEG Huffman length capacity matrix reserves all ones code" {
     for (0..16) |index| for (0..256) |count| {
-        var bits = [_]u8{0} ** 16;
+        var bits = @as([16]u8, @splat(0));
         bits[index] = @intCast(count);
         const capacity = @as(u32, 1) << @as(u5, @intCast(index + 1));
         if (count >= capacity) {
@@ -35,13 +35,13 @@ test "JPEG Huffman length capacity matrix reserves all ones code" {
             try t.expectEqual(@as(u32, 65536) - @as(u32, @intCast(count)) * (65536 / capacity), report.unused_code_slots);
         }
     };
-    var full = [_]u8{1} ** 16;
+    var full = @as([16]u8, @splat(1));
     try t.expectEqual(@as(u32, 1), (try lengths.inspect(&full)).unused_code_slots);
     full[15] = 2;
     try t.expectError(error.InvalidJpegHuffmanCodeSpace, lengths.inspect(&full));
 }
 test "JPEG DHT empty symbol lists and duplicates do not certify symbol semantics" {
-    var empty = try h.Iterator.init(&([_]u8{0} ** 17), .{ .max_symbols = 0 });
+    var empty = try h.Iterator.init(&(@as([17]u8, @splat(0))), .{ .max_symbols = 0 });
     const table = (try empty.next()).?;
     try t.expectEqual(@as(usize, 0), table.symbols.len);
     try t.expectEqual(@as(u32, 65536), table.unused_code_slots);

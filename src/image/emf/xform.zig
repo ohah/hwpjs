@@ -37,7 +37,7 @@ pub fn parse(bytes: []const u8) !XForm {
 
 test "XForm preserves all six FLOAT bit patterns in wire order" {
     const values = [_]u32{ 0x3f800000, 0x80000000, 0x7f800000, 0xff800000, 0x7fc01234, 0xc0200000 };
-    var bytes = [_]u8{0} ** byte_size;
+    var bytes = @as([byte_size]u8, @splat(0));
     for (values, 0..) |value, index| std.mem.writeInt(u32, bytes[index * 4 ..][0..4], value, .little);
     const result = try parse(&bytes);
     try std.testing.expectEqual(values[0], result.m11.bits);
@@ -51,7 +51,7 @@ test "XForm preserves all six FLOAT bit patterns in wire order" {
 }
 
 test "XForm requires exactly 24 bytes" {
-    const bytes = [_]u8{0} ** (byte_size + 1);
+    const bytes = @as([(byte_size + 1)]u8, @splat(0));
     try std.testing.expectError(error.InvalidEmfXFormSize, parse(bytes[0 .. byte_size - 1]));
     try std.testing.expectError(error.InvalidEmfXFormSize, parse(&bytes));
 }

@@ -98,7 +98,7 @@ test "EMF+ polyline segments resolve relative points and honor optional closure"
 }
 
 test "EMF+ polyline segments preserve floating point bits and explicit degenerate closure" {
-    var bytes = [_]u8{0} ** 16;
+    var bytes = @as([16]u8, @splat(0));
     const bits = [_]u32{ 0x80000000, 0x7fc00001, 0x80000000, 0x7fc00001 };
     for (bits, 0..) |value, index| std.mem.writeInt(u32, bytes[index * 4 ..][0..4], value, .little);
     var iterator = segments(try point_data.parse(&bytes, 2, false, false, .{}), true);
@@ -127,7 +127,7 @@ test "EMF+ polygon boundary omits coincident closing side without changing DrawL
     try std.testing.expectEqual(resolved.IntegerPoint{ .x = 1, .y = 2 }, closing.start.integer);
     try std.testing.expectEqual(closing.start.integer, closing.end.integer);
 
-    var floats = [_]u8{0} ** 24;
+    var floats = @as([24]u8, @splat(0));
     for ([_]u32{ 0x80000000, 0, 0x3f800000, 0, 0, 0x80000000 }, 0..) |bits, index|
         std.mem.writeInt(u32, floats[index * 4 ..][0..4], bits, .little);
     var signed_zero = polygonBoundary(try point_data.parse(&floats, 3, false, false, .{}));

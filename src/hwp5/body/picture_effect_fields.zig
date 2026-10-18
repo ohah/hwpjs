@@ -36,7 +36,7 @@ pub fn read(comptime T: type, reader: *Reader) !T {
     if (T != Shadow and T != Neon and T != Reflection) @compileError("not a picture effect field block");
     var r = reader.*;
     var value: T = undefined;
-    inline for (std.meta.fields(T)) |f| @field(value, f.name) = try r.readInt(f.type);
+    inline for (@import("../../reflection.zig").fields(T)) |f| @field(value, f.name) = try r.readInt(f.type);
     reader.* = r;
     return value;
 }

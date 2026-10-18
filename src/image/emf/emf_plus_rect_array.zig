@@ -43,7 +43,7 @@ pub fn parse(bytes: []const u8, count: u32, compressed: bool, options: Options) 
 }
 
 test "EMF+ RectArray preserves integer and floating rectangle sequences" {
-    var integer_bytes = [_]u8{0} ** 16;
+    var integer_bytes = @as([16]u8, @splat(0));
     for ([_]i16{ -32768, -1, 0, 32767, 1, 2, 3, 4 }, 0..) |value, index|
         std.mem.writeInt(i16, integer_bytes[index * 2 ..][0..2], value, .little);
     const integers = try parse(&integer_bytes, 2, true, .{});
@@ -52,7 +52,7 @@ test "EMF+ RectArray preserves integer and floating rectangle sequences" {
     try std.testing.expectEqual(@as(i16, 4), (try integer_iterator.next()).?.compressed.height);
     try std.testing.expect((try integer_iterator.next()) == null);
 
-    var float_bytes = [_]u8{0} ** 16;
+    var float_bytes = @as([16]u8, @splat(0));
     for ([_]f32{ -0.0, std.math.nan(f32), std.math.inf(f32), -4.5 }, 0..) |value, index|
         std.mem.writeInt(u32, float_bytes[index * 4 ..][0..4], @bitCast(value), .little);
     const floats = try parse(&float_bytes, 1, false, .{});
@@ -64,7 +64,7 @@ test "EMF+ RectArray preserves integer and floating rectangle sequences" {
 }
 
 test "EMF+ RectArray rejects count size and limit independently" {
-    var bytes = [_]u8{0} ** 17;
+    var bytes = @as([17]u8, @splat(0));
     try std.testing.expectError(error.InvalidEmfPlusRectArrayCount, parse(bytes[0..0], 0, true, .{}));
     try std.testing.expectError(error.LimitExceeded, parse(bytes[0..8], 1, true, .{ .max_rectangles = 0 }));
     for (0..bytes.len + 1) |length| {

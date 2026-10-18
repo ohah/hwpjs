@@ -31,7 +31,7 @@ test "section count locator preserves framing level duplicate length and version
     const a = std.testing.allocator;
     var out: std.ArrayList(u8) = .empty;
     defer out.deinit(a);
-    const payload = [_]u8{0} ** 26;
+    const payload = @as([26]u8, @splat(0));
     try std.testing.expectError(error.MissingDocumentProperties, locator.locate(&.{}, version));
     for ([_]usize{ 0, 1, 15, 25 }) |length| {
         out.clearRetainingCapacity();

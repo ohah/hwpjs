@@ -1,7 +1,7 @@
 const std = @import("std");
 const t = std.testing;
 fn check(a: std.mem.Allocator, scenario: u8) !void {
-    var b = [_]u8{0} ** 218;
+    var b = @as([218]u8, @splat(0));
     std.mem.writeInt(u32, b[0..4], 71 | (4 << 20), .little);
     std.mem.writeInt(u32, b[4..8], 0x67736f20, .little);
     std.mem.writeInt(u32, b[8..12], 76 | (1 << 10) | (106 << 20), .little);

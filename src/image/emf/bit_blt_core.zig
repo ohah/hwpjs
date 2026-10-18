@@ -48,7 +48,7 @@ pub fn parse(bytes: []const u8, fixed_end: usize) !Core {
 }
 
 test "bit blt core uses each consumer's fixed end for source layout" {
-    var bytes = [_]u8{0} ** 108;
+    var bytes = @as([108]u8, @splat(0));
     std.mem.writeInt(u32, bytes[40..44], 0x00f00021, .little);
     const bit = try parse(&bytes, 100);
     const stretch = try parse(&bytes, 108);

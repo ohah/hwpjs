@@ -25,7 +25,7 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 }
 
 test "FORCEUFIMAPPING preserves the single UFI and trailing extension" {
-    var bytes = [_]u8{0} ** 20;
+    var bytes = @as([20]u8, @splat(0));
     std.mem.writeInt(u32, bytes[8..12], 0x01234567, .little);
     std.mem.writeInt(u32, bytes[12..16], 0x89abcdef, .little);
     bytes[16..20].* = .{ 1, 2, 3, 4 };
@@ -36,7 +36,7 @@ test "FORCEUFIMAPPING preserves the single UFI and trailing extension" {
 }
 
 test "FORCEUFIMAPPING validates every prefix cut declaration and identity" {
-    var bytes = [_]u8{0} ** 16;
+    var bytes = @as([16]u8, @splat(0));
     std.mem.writeInt(u32, bytes[8..12], std.math.maxInt(u32), .little);
     std.mem.writeInt(u32, bytes[12..16], 1, .little);
     for (0..16) |cut|

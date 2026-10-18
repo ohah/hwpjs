@@ -2,7 +2,7 @@ const std = @import("std");
 const t = std.testing;
 const memo = @import("memo_list.zig");
 test "memo list preserves zero high bits extra and rejects every short prefix" {
-    var b = [_]u8{0} ** 7;
+    var b = @as([7]u8, @splat(0));
     @memcpy(b[4..], &[_]u8{ 0, 128, 255 });
     for ([_]u32{ 0, 1, 3, 65536, 0x80000000, 0xffffffff }) |n| {
         std.mem.writeInt(u32, b[0..4], n, .little);
@@ -17,7 +17,7 @@ test "memo list preserves zero high bits extra and rejects every short prefix" {
 }
 test "body memo dispatch preserves framing and retries short records atomically" {
     const body = @import("reader.zig");
-    var b = [_]u8{0} ** 8;
+    var b = @as([8]u8, @splat(0));
     for (0..4) |n| {
         std.mem.writeInt(u32, b[0..4], 93 | (1 << 10) | (@as(u32, @intCast(n)) << 20), .little);
         var it = try body.Iterator.init(b[0 .. n + 4], .{ .raw = 0x05000107 }, .{});

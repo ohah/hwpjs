@@ -44,11 +44,11 @@ test "stock object enumeration preserves gaps and selection categories" {
         0x8000000d, 0x8000000e, 0x8000000f, 0x80000010, 0x80000011, 0x80000012,
         0x80000013,
     };
-    try std.testing.expectEqual(official.len, std.meta.fields(StockObject).len);
-    inline for (std.meta.fields(StockObject), 0..) |field, index| {
+    try std.testing.expectEqual(official.len, @import("../../reflection.zig").fields(StockObject).len);
+    inline for (@import("../../reflection.zig").fields(StockObject), 0..) |field, index| {
         try std.testing.expectEqual(official[index], field.value);
         try std.testing.expect((field.value & 0x80000000) != 0);
-        try std.testing.expectEqual(field.value, @intFromEnum(try parse(field.value)));
+        try std.testing.expectEqual(field.value, @backingInt(try parse(field.value)));
     }
     try std.testing.expectEqual(Kind.brush, kind(try parse(0x80000000)));
     try std.testing.expectEqual(Kind.pen, kind(try parse(0x80000013)));

@@ -89,7 +89,7 @@ fn testCubic(bezier: Bezier) cubic_evaluation.Cubic {
 }
 
 test "EMF+ Path device segments preserve Line Bezier closure roles metadata and coordinate mapping" {
-    var point_bytes = [_]u8{0} ** 20;
+    var point_bytes = @as([20]u8, @splat(0));
     for ([_]i16{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 }, 0..) |coordinate, index|
         std.mem.writeInt(i16, point_bytes[index * 2 ..][0..2], coordinate, .little);
     const types = [_]u8{ 0x20, 0x31, 0x13, 0x23, 0x83 };
@@ -161,7 +161,7 @@ test "EMF+ Path device segments preserve Line Bezier closure roles metadata and 
 }
 
 test "EMF+ Path fill device segments preserve implicit closure" {
-    var point_bytes = [_]u8{0} ** 8;
+    var point_bytes = @as([8]u8, @splat(0));
     for ([_]i16{ 1, 2, 3, 4 }, 0..) |coordinate, index|
         std.mem.writeInt(i16, point_bytes[index * 2 ..][0..2], coordinate, .little);
     const types = [_]u8{ 0x00, 0x01 };

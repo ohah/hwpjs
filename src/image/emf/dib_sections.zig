@@ -33,7 +33,7 @@ pub fn parse(bytes: []const u8, fixed_end: usize, fields: Fields) !?Sections {
 }
 
 test "DIB sections preserve undefined space and alignment padding" {
-    const bytes = [_]u8{0} ** 68;
+    const bytes = @as([68]u8, @splat(0));
     const sections = (try parse(&bytes, 52, .{ .bmi_offset = 56, .bmi_size = 8, .bits_offset = 64, .bits_size = 1 })).?;
     try std.testing.expectEqual(@as(usize, 4), sections.before_bmi.len);
     try std.testing.expectEqual(@as(usize, 8), sections.bmi.len);
@@ -48,7 +48,7 @@ test "DIB sections preserve undefined space and alignment padding" {
 }
 
 test "DIB sections reject partial overlapping and overflowing layouts" {
-    const bytes = [_]u8{0} ** 68;
+    const bytes = @as([68]u8, @splat(0));
     try std.testing.expect((try parse(&bytes, 52, .{ .bmi_offset = 0, .bmi_size = 0, .bits_offset = 0, .bits_size = 0 })) == null);
     try std.testing.expectError(error.InvalidEmfDibSectionExtent, parse(&bytes, 69, .{ .bmi_offset = 0, .bmi_size = 0, .bits_offset = 0, .bits_size = 0 }));
     try std.testing.expectError(error.IncompleteEmfDibSections, parse(&bytes, 52, .{ .bmi_offset = 56, .bmi_size = 8, .bits_offset = 0, .bits_size = 0 }));

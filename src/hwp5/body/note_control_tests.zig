@@ -2,7 +2,7 @@ const std = @import("std");
 const t = std.testing;
 const note = @import("note_control.zig");
 test "note explicit layouts retain opaque bytes and full width observed fields" {
-    var raw = [_]u8{0xff} ** 19;
+    var raw = @as([19]u8, @splat(0xff));
     const p = try note.Properties.parse(&raw, .observed16);
     const v = p.observed.?;
     try t.expectEqual(0xffffffff, v.number);
@@ -35,7 +35,7 @@ test "note IDs distinguish footer and preserve spaces and case" {
     inline for (.{ "foot", "FN  ", "EN  ", "fnxx", "enxx" }) |name| try t.expectEqual(null, note.kind(id(name)));
 }
 fn allocationCase(a: std.mem.Allocator, bad: bool) !void {
-    var raw = [_]u8{0} ** 36;
+    var raw = @as([36]u8, @splat(0));
     std.mem.writeInt(u32, raw[0..4], 71 | (20 << 20), .little);
     std.mem.writeInt(u32, raw[4..8], @import("control_rules.zig").id("fn  "), .little);
     std.mem.writeInt(u32, raw[24..28], 72 | (1 << 10) | (8 << 20), .little);

@@ -6,13 +6,13 @@ fn record(a: std.mem.Allocator, out: *std.ArrayList(u8), tag: u32, level: u32, p
     try out.appendSlice(a, payload);
 }
 fn paragraph(a: std.mem.Allocator, out: *std.ArrayList(u8), level: u32, count: usize) !void {
-    var header = [_]u8{0} ** 22;
+    var header = @as([22]u8, @splat(0));
     std.mem.writeInt(u32, header[0..4], @intCast(count * 8 + 1), .little);
     try record(a, out, 66, level, &header);
     var text: std.ArrayList(u8) = .empty;
     defer text.deinit(a);
     for (0..count) |_| {
-        var token = [_]u8{0} ** 16;
+        var token = @as([16]u8, @splat(0));
         std.mem.writeInt(u16, token[0..2], 17, .little);
         std.mem.writeInt(u32, token[2..6], @import("../body/control_rules.zig").id("fn  "), .little);
         std.mem.writeInt(u16, token[14..16], 17, .little);
@@ -22,11 +22,11 @@ fn paragraph(a: std.mem.Allocator, out: *std.ArrayList(u8), level: u32, count: u
     try record(a, out, 67, level + 1, text.items);
 }
 fn note(a: std.mem.Allocator, out: *std.ArrayList(u8), level: u32) !void {
-    var control = [_]u8{0} ** 16;
+    var control = @as([16]u8, @splat(0));
     std.mem.writeInt(u32, control[0..4], @import("../body/control_rules.zig").id("fn  "), .little);
     std.mem.writeInt(u32, control[4..8], 1, .little);
     try record(a, out, 71, level, &control);
-    var list = [_]u8{0} ** 8;
+    var list = @as([8]u8, @splat(0));
     std.mem.writeInt(u16, list[0..2], 1, .little);
     try record(a, out, 72, level + 1, &list);
 }

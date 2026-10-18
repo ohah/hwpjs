@@ -54,7 +54,7 @@ test "grouped picture explicit local affine composes noncommuting parents and re
     const rendering = tree.elements[picture].first_child.?;
     const matrix_node = tree.elements[rendering].first_child.?;
     var entries = [_]@import("picture_matrix_edit_values.zig").Entry{.{ .matrix_node = matrix_node, .values = .{ 1, 0, 7, 0, 1, 9 } }};
-    const pending: @import("picture_matrix_edit_values.zig").Values = .{ .items = &entries, .capacity = entries.len };
+    const pending: @import("picture_matrix_edit_values.zig").Values = .{ .items = &entries, .capacity = entries.len, .pointer_stability = .{} };
     const changed = try read(a, &tree, picture, &pending, .source_accumulated, 2, 3);
     try std.testing.expectEqualDeep([2]f64{ 8, 11 }, try affine.transformPoint(changed.matrix, .{ 1, 2 }));
     try std.testing.expectError(error.LimitExceeded, read(a, &tree, picture, &edits, .compose_local, 1, 3));

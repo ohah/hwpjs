@@ -121,7 +121,7 @@ test "canonical section namespace and bounded UTF16 BinData paths" {
     const longest = try paths.binary(t.allocator, 1, &max_ext);
     defer t.allocator.free(longest);
     try t.expectEqual(40, longest.len); // /BinData/ plus 31-unit component.
-    for ([_][]const u8{ &.{0}, &.{ 0, 0 }, &.{ 0, 0xd8 }, &.{ '/', 0 }, &.{ '\\', 0 }, &([_]u8{0} ** 48) }) |ext| try t.expectError(error.InvalidBinDataExtension, paths.binary(t.allocator, 1, ext));
+    for ([_][]const u8{ &.{0}, &.{ 0, 0 }, &.{ 0, 0xd8 }, &.{ '/', 0 }, &.{ '\\', 0 }, &(@as([48]u8, @splat(0))) }) |ext| try t.expectError(error.InvalidBinDataExtension, paths.binary(t.allocator, 1, ext));
 }
 fn binaryCase(a: std.mem.Allocator, bytes: []const u8, missing: bool) !void {
     var report = c.inspect(a, bytes, opts) catch |err| switch (err) {
@@ -138,7 +138,7 @@ test "binary resolution success and missing stream unwind after document success
     const base = try f.docInfo(t.allocator, 0);
     defer t.allocator.free(base);
     f.put(base, 35, u32, 1); // Mapping's first slot: BinData count, not storage id.
-    var record = [_]u8{0} ** 16;
+    var record = @as([16]u8, @splat(0));
     f.put(&record, 0, u32, 18 | (1 << 10) | (12 << 20));
     @memcpy(record[4..], &[_]u8{ 0x21, 0, 9, 0, 3, 0, 'p', 0, 'n', 0, 'g', 0 });
     const doc = try std.mem.concat(t.allocator, u8, &.{ base, &record });

@@ -24,7 +24,7 @@ test "JPEG frame precision matrix and marker family boundaries" {
     }
 }
 test "JPEG frame counts cover 255 components without a scan count restriction" {
-    var b = [_]u8{0} ** 771;
+    var b = @as([771]u8, @splat(0));
     b[0..6].* = .{ 8, 0, 1, 0, 1, 0 };
     for (0..255) |i| b[6 + i * 3 ..][0..3].* = .{ @intCast(i), 0x11, 0 };
     for (codes) |code| for (0..256) |count| {

@@ -13,7 +13,7 @@ pub const Report = struct {
 
     pub fn plus(self: Report, other: Report) !Report {
         var result: Report = .{};
-        inline for (std.meta.fields(Report)) |field| {
+        inline for (@import("../../reflection.zig").fields(Report)) |field| {
             @field(result, field.name) = std.math.add(usize, @field(self, field.name), @field(other, field.name)) catch return error.LimitExceeded;
         }
         return result;

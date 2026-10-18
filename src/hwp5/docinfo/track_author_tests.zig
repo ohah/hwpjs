@@ -3,7 +3,7 @@ const t = std.testing;
 const d = @import("reader.zig");
 const resources = @import("resources.zig");
 test "track author level validation is atomic while payload remains opaque" {
-    var b = [_]u8{0xff} ** 6;
+    var b = @as([6]u8, @splat(0xff));
     for ([_]u32{ 0, 1, 2, 1023 }) |level| {
         std.mem.writeInt(u32, b[0..4], 97 | (level << 10) | (2 << 20), .little);
         var it = try d.Iterator.init(&b, .{ .raw = 0x05010001 }, .{});
@@ -19,7 +19,7 @@ test "track author level validation is atomic while payload remains opaque" {
     }
 }
 test "track author count uses actual slot presence across old and new versions" {
-    var b = [_]u8{0} ** 82;
+    var b = @as([82]u8, @splat(0));
     std.mem.writeInt(u32, b[0..4], 17 | (72 << 20), .little);
     std.mem.writeInt(u32, b[76..80], 97 | (1 << 10) | (2 << 20), .little);
     for ([_]u32{ 0x05000107, 0x05000302, 0x05010001 }) |version| {

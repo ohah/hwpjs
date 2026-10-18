@@ -3,7 +3,7 @@ const t = std.testing;
 const Map = @import("revision_coordinates.zig").Map;
 const Ranges = @import("range_tags.zig").Ranges;
 fn span(a: u32, b: u32, kind: u8) [12]u8 {
-    var raw = [_]u8{0} ** 12;
+    var raw = @as([12]u8, @splat(0));
     std.mem.writeInt(u32, raw[0..4], a, .little);
     std.mem.writeInt(u32, raw[4..8], b, .little);
     raw[11] = kind;

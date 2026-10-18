@@ -22,7 +22,7 @@ pub const Wide = struct {
     }
 };
 fn compareFor(comptime product_bits: u16, a: anytype, b: @TypeOf(a)) !std.math.Order {
-    const U = std.meta.Int(.unsigned, product_bits);
+    const U = @Int(.unsigned, product_bits);
     if (a == .nonzero) try a.nonzero.validate();
     if (b == .nonzero) try b.nonzero.validate();
     if (a == .nonzero and b == .nonzero and (a.nonzero.exponent_numerator != b.nonzero.exponent_numerator or a.nonzero.exponent_denominator != b.nonzero.exponent_denominator)) return error.IncompatibleIccPowerRoots;

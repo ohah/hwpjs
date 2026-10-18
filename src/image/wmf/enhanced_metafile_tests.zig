@@ -8,7 +8,7 @@ fn record(parameters: []const u8) records.Record {
 }
 
 fn validParameters() [42]u8 {
-    var bytes = [_]u8{0} ** 42;
+    var bytes = @as([42]u8, @splat(0));
     std.mem.writeInt(u16, bytes[0..2], 0x000f, .little);
     std.mem.writeInt(u16, bytes[2..4], 38, .little);
     std.mem.writeInt(u32, bytes[4..8], 0x43464d57, .little);
@@ -54,7 +54,7 @@ test "WMF enhanced metafile rejects each mandatory header invariant" {
 }
 
 test "WMF enhanced metafile rejects a self-consistent oversized chunk" {
-    var bytes = [_]u8{0} ** 8232;
+    var bytes = @as([8232]u8, @splat(0));
     std.mem.writeInt(u16, bytes[0..2], 0x000f, .little);
     std.mem.writeInt(u16, bytes[2..4], 8227, .little);
     std.mem.writeInt(u32, bytes[4..8], 0x43464d57, .little);

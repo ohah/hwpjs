@@ -20,7 +20,7 @@ pub fn solve(comptime precision: u16, curve: @import("parametric_curve.zig").Cur
 pub fn solveWide(comptime precision: u16, curve: @import("parametric_curve.zig").Curve, n: u512, d: u512) !Wide.Result {
     return solveFor(512, precision, curve, n, d);
 }
-fn solveFor(comptime bits: u16, comptime precision: u16, curve: @import("parametric_curve.zig").Curve, n: @import("std").meta.Int(.unsigned, bits), d: @import("std").meta.Int(.unsigned, bits)) !types.Of(bits).Result {
+fn solveFor(comptime bits: u16, comptime precision: u16, curve: @import("parametric_curve.zig").Curve, n: @Int(.unsigned, bits), d: @Int(.unsigned, bits)) !types.Of(bits).Result {
     const preimageSolve = if (bits == 128) @import("parametric_preimage.zig").solve else @import("parametric_preimage.zig").solveWide;
     const inspect = if (bits == 128) power_bounds.inspect else power_bounds.Wide.inspect;
     const preimage = try preimageSolve(precision, curve, n, d);

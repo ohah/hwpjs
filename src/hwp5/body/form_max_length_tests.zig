@@ -4,12 +4,12 @@ const Tree = @import("form_property_tree.zig").Tree;
 const schema = @import("form_schema.zig");
 const length = @import("form_max_length.zig");
 fn wide(comptime ascii: []const u8) [ascii.len * 2]u8 {
-    var out = [_]u8{0} ** (ascii.len * 2);
+    var out = @as([(ascii.len * 2)]u8, @splat(0));
     for (ascii, 0..) |c, i| out[i * 2] = c;
     return out;
 }
 test "form MaxLength preserves arbitrary decimal magnitude and original bytes after Tree release" {
-    inline for (.{ "-1", "-0001", "-0", "-2", "0", "0001", "2147483648", "18446744073709551615", "18446744073709551616", "0" ** 128 ++ "1", "9" ** 128 }) |value| {
+    inline for (.{ "-1", "-0001", "-0", "-2", "0", "0001", "2147483648", "18446744073709551615", "18446744073709551616", @as([128]u8, @splat('0')) ++ "1", @as([128]u8, @splat('9')) ++ "" }) |value| {
         const body = "MaxLength:int:" ++ value ++ " ";
         const bytes = wide(std.fmt.comptimePrint("EditSet:set:{d}:{s} ", .{ body.len, body }));
         var tree = try Tree.parseObservedUnits(t.allocator, &bytes, .{});

@@ -71,7 +71,7 @@ fn putF32(bytes: []u8, offset: usize, value: f32) void {
 }
 
 test "EMF+ DrawImage parses compressed destination and both Object IDs" {
-    var bytes = [_]u8{0} ** 32;
+    var bytes = @as([32]u8, @splat(0));
     putU32(&bytes, 0, 62);
     putU32(&bytes, 4, 2);
     for ([_]f32{ -0.0, std.math.inf(f32), std.math.nan(f32), -4.5 }, 0..) |coordinate, index|
@@ -93,7 +93,7 @@ test "EMF+ DrawImage parses compressed destination and both Object IDs" {
 }
 
 test "EMF+ DrawImage parses floating destination and preserves absent attributes raw value" {
-    var bytes = [_]u8{0} ** 40;
+    var bytes = @as([40]u8, @splat(0));
     putU32(&bytes, 0, 0xffff_ffff);
     putU32(&bytes, 4, 2);
     for ([_]f32{ 1, 2, 3, 4, 5.25, -6.5, 7.75, -8.0 }, 0..) |coordinate, index|
@@ -110,7 +110,7 @@ test "EMF+ DrawImage parses floating destination and preserves absent attributes
 }
 
 test "EMF+ DrawImage exposes shared rectangle affine and device maps" {
-    var bytes = [_]u8{0} ** 32;
+    var bytes = @as([32]u8, @splat(0));
     putU32(&bytes, 0, 0xffff_ffff);
     putU32(&bytes, 4, 2);
     for ([_]f32{ 10, 20, 4, 5 }, 0..) |coordinate, index| putF32(&bytes, 8 + index * 4, coordinate);
@@ -131,7 +131,7 @@ test "EMF+ DrawImage exposes shared rectangle affine and device maps" {
 }
 
 test "EMF+ DrawImage rejects unit type ObjectID and every independent size mismatch" {
-    var bytes = [_]u8{0} ** 41;
+    var bytes = @as([41]u8, @splat(0));
     putU32(&bytes, 4, 2);
     _ = try parse(makeRecord(bytes[0..32], 0x4000));
     _ = try parse(makeRecord(bytes[0..40], 0));

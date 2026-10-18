@@ -1,8 +1,8 @@
 const std = @import("std");
 const icc = @import("hwpjs").image.icc;
 fn rational(comptime width: usize, out: *[2 * width]u8, value: anytype) void {
-    std.mem.writeInt(std.meta.Int(.unsigned, width * 8), out[0..width], value.numerator, .little);
-    std.mem.writeInt(std.meta.Int(.unsigned, width * 8), out[width..][0..width], value.denominator, .little);
+    std.mem.writeInt(@Int(.unsigned, width * 8), out[0..width], value.numerator, .little);
+    std.mem.writeInt(@Int(.unsigned, width * 8), out[width..][0..width], value.denominator, .little);
 }
 pub fn write(a: std.mem.Allocator, result: icc.parametric_nearest.Result) ![]u8 {
     return writeFor(32, a, result);

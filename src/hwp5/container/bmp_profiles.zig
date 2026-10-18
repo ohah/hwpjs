@@ -24,7 +24,7 @@ pub const Report = struct {
     unhandled_tags: usize = 0,
     pub fn plus(self: Report, other: Report) !Report {
         var result: Report = .{};
-        inline for (std.meta.fields(Report)) |field| @field(result, field.name) = std.math.add(usize, @field(self, field.name), @field(other, field.name)) catch return error.LimitExceeded;
+        inline for (@import("../../reflection.zig").fields(Report)) |field| @field(result, field.name) = std.math.add(usize, @field(self, field.name), @field(other, field.name)) catch return error.LimitExceeded;
         return result;
     }
 };

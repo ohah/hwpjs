@@ -38,7 +38,7 @@ pub fn deinit(a: std.mem.Allocator, rows: []Value) void {
     a.free(rows);
 }
 fn freeFields(a: std.mem.Allocator, fields: anytype) void {
-    inline for (std.meta.fields(@TypeOf(fields.*))) |field| {
+    inline for (@import("../reflection.zig").fields(@TypeOf(fields.*))) |field| {
         if (@field(fields.*, field.name)) |text| a.free(text);
     }
 }
@@ -46,13 +46,13 @@ fn readFields(comptime T: type, a: std.mem.Allocator, tree: *const Tree, node: u
     var fields: T = .{};
     errdefer freeFields(a, &fields);
     const names = comptime block: {
-        var result: [std.meta.fields(T).len][]const u8 = undefined;
-        for (std.meta.fields(T), 0..) |field, i| result[i] = field.name;
+        var result: [@import("../reflection.zig").fields(T).len][]const u8 = undefined;
+        for (@import("../reflection.zig").fields(T), 0..) |field, i| result[i] = field.name;
         break :block result;
     };
     var raw: [names.len]?@import("../xml/root.zig").attribute_value.Value = undefined;
     try tree.unprefixedAttributeValues(a, node, &names, &raw);
-    inline for (std.meta.fields(T), 0..) |field, i| {
+    inline for (@import("../reflection.zig").fields(T), 0..) |field, i| {
         @field(fields, field.name) = if (raw[i]) |value| try value.toUtf8(a, limit) else null;
     }
     return fields;

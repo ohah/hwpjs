@@ -5,7 +5,7 @@ const points = @import("shape_points.zig");
 test "polygon preserves layout, signed point order, empty counts and opaque tails" {
     const expected = [_]points.Point{ .{ .x = std.math.minInt(i32), .y = 17 }, .{ .x = -1, .y = std.math.maxInt(i32) }, .{ .x = 19, .y = -73 } };
     for ([_]polygon.Layout{ .specified_i16_axes, .observed_i32_points }) |layout| {
-        var b = [_]u8{0} ** 32;
+        var b = @as([32]u8, @splat(0));
         const start: usize = if (layout == .specified_i16_axes) 2 else 4;
         b[0] = 3;
         for (expected, 0..) |p, i| {

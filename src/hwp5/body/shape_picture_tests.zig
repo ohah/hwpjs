@@ -2,7 +2,7 @@ const std = @import("std");
 const t = std.testing;
 const picture = @import("shape_picture.zig");
 test "picture explicit prefixes preserve fields, absent versus zero, and borrowed tails" {
-    var b = [_]u8{0} ** 81;
+    var b = @as([81]u8, @splat(0));
     std.mem.writeInt(u32, b[0..4], 0xff102030, .little);
     std.mem.writeInt(i32, b[4..8], -123, .little);
     std.mem.writeInt(u32, b[8..12], 0xffffffff, .little);

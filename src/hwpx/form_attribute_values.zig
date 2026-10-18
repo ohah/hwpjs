@@ -21,21 +21,21 @@ pub fn parseButtonState(value: []const u8) !ButtonState {
 }
 pub const Values = struct {
     kind: @import("run_anchor.zig").Kind,
-    strings: [std.meta.fields(StringField).len]?[]u8 = @splat(null),
-    booleans: [std.meta.fields(BooleanField).len]?bool = @splat(null),
-    integers: [std.meta.fields(IntegerField).len]?u32 = @splat(null),
+    strings: [@import("../reflection.zig").fields(StringField).len]?[]u8 = @splat(null),
+    booleans: [@import("../reflection.zig").fields(BooleanField).len]?bool = @splat(null),
+    integers: [@import("../reflection.zig").fields(IntegerField).len]?u32 = @splat(null),
     pub fn deinit(self: *Values, a: std.mem.Allocator) void {
         for (self.strings) |value| if (value) |bytes| a.free(bytes);
         self.* = undefined;
     }
     pub fn string(self: Values, field: StringField) ?[]const u8 {
-        return self.strings[@intFromEnum(field)];
+        return self.strings[@backingInt(field)];
     }
     pub fn boolean(self: Values, field: BooleanField) ?bool {
-        return self.booleans[@intFromEnum(field)];
+        return self.booleans[@backingInt(field)];
     }
     pub fn integer(self: Values, field: IntegerField) ?u32 {
-        return self.integers[@intFromEnum(field)];
+        return self.integers[@backingInt(field)];
     }
     pub fn buttonState(self: Values) !?ButtonState {
         switch (self.kind) {
@@ -51,13 +51,13 @@ pub fn read(a: std.mem.Allocator, tree: *const Tree, node: usize, options: Optio
     if (!@import("run_anchor.zig").isForm(kind)) return error.InvalidFormNode;
     var result: Values = .{ .kind = kind };
     errdefer result.deinit(a);
-    inline for (std.meta.fields(StringField), 0..) |field, index| {
+    inline for (@import("../reflection.zig").fields(StringField), 0..) |field, index| {
         if (try tree.attributeValue(a, node, "", field.name)) |raw| result.strings[index] = try raw.toUtf8(a, options.max_attribute_bytes);
     }
-    inline for (std.meta.fields(BooleanField), 0..) |field, index| {
+    inline for (@import("../reflection.zig").fields(BooleanField), 0..) |field, index| {
         if (try tree.attributeValue(a, node, "", field.name)) |raw| result.booleans[index] = try fields.boolean(a, raw, options.max_attribute_bytes);
     }
-    inline for (std.meta.fields(IntegerField), 0..) |field, index| {
+    inline for (@import("../reflection.zig").fields(IntegerField), 0..) |field, index| {
         result.integers[index] = try fields.optionalUnsigned(a, tree, node, field.name, options.max_attribute_bytes);
     }
     return result;

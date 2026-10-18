@@ -11,8 +11,8 @@ fn value(comptime T: type, a: std.mem.Allocator, tree: *const Tree, node: usize,
     const raw = (try tree.attributeValue(a, node, "", name)) orelse return null;
     const text = try raw.toUtf8(a, 4096);
     defer a.free(text);
-    inline for (@typeInfo(T).@"enum".fields) |field| {
-        if (std.ascii.eqlIgnoreCase(text, field.name)) return @enumFromInt(field.value);
+    inline for (@import("../reflection.zig").fields(T)) |field| {
+        if (std.ascii.eqlIgnoreCase(text, field.name)) return @fromBackingInt(@intCast(field.value));
     }
     // Unknown declarations remain preserved in XML; they are not layout defaults.
     return null;

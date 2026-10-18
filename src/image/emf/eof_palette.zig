@@ -51,7 +51,7 @@ fn fixture(bytes: []const u8) records.Record {
 }
 
 test "EOF palette keeps exact entries between both undefined regions" {
-    var bytes = [_]u8{0} ** 36;
+    var bytes = @as([36]u8, @splat(0));
     std.mem.writeInt(u32, bytes[8..12], 2, .little);
     std.mem.writeInt(u32, bytes[12..16], 20, .little);
     bytes[16..20].* = .{ 9, 8, 7, 6 };
@@ -67,7 +67,7 @@ test "EOF palette keeps exact entries between both undefined regions" {
 }
 
 test "EOF palette ignores offset when count is zero and rejects every referenced range error" {
-    var bytes = [_]u8{0} ** 24;
+    var bytes = @as([24]u8, @splat(0));
     std.mem.writeInt(u32, bytes[12..16], 0xffffffff, .little);
     std.mem.writeInt(u32, bytes[20..24], bytes.len, .little);
     const absent = (try parse(fixture(&bytes))).palette;

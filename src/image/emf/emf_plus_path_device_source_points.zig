@@ -124,7 +124,7 @@ test "EMF+ Path device source points retain all original roles and indexes" {
 }
 
 test "EMF+ Path device source points keep progress atomic on malformed Bezier" {
-    const point_bytes = [_]u8{0} ** (5 * 4);
+    const point_bytes = @as([(5 * 4)]u8, @splat(0));
     const types = [_]u8{ 0x00, 0x01, 0x03, 0x01, 0x00 };
     var iterator = fromCommands(commandIterator(&point_bytes, &types, 5));
     _ = (try iterator.next()).?;

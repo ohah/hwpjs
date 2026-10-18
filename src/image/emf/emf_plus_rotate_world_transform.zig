@@ -37,7 +37,7 @@ fn makeRecord(flags: u16, data: []const u8) record.Record {
 }
 
 test "EMF+ RotateWorldTransform preserves angle bits and A flag" {
-    var data = [_]u8{0} ** 4;
+    var data = @as([4]u8, @splat(0));
     std.mem.writeInt(u32, data[0..4], 0x80000000, .little);
     const pre = try parse(makeRecord(0xdfff, &data));
     try std.testing.expectEqual(@as(u16, 0xdfff), pre.flags);
@@ -51,7 +51,7 @@ test "EMF+ RotateWorldTransform preserves angle bits and A flag" {
 }
 
 test "EMF+ RotateWorldTransform rejects type every size axis and all truncations" {
-    const data = [_]u8{0} ** 4;
+    const data = @as([4]u8, @splat(0));
     for (0..4) |cut| {
         var truncated = makeRecord(0, data[0..cut]);
         truncated.size = @intCast(record.header_size + cut);

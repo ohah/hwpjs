@@ -78,7 +78,7 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 }
 
 test "basic shapes preserve signed geometry and ANGLEARC float bits" {
-    var angle = [_]u8{0} ** 28;
+    var angle = @as([28]u8, @splat(0));
     std.mem.writeInt(i32, angle[8..12], std.math.minInt(i32), .little);
     std.mem.writeInt(i32, angle[12..16], std.math.maxInt(i32), .little);
     std.mem.writeInt(u32, angle[16..20], std.math.maxInt(u32), .little);
@@ -91,7 +91,7 @@ test "basic shapes preserve signed geometry and ANGLEARC float bits" {
     try std.testing.expectEqual(@as(u32, 0x7fc01234), @as(u32, @bitCast(angle_value.startAngle())));
     try std.testing.expectEqual(@as(u32, 0xc2b40000), @as(u32, @bitCast(angle_value.sweepAngle())));
 
-    var round = [_]u8{0} ** 32;
+    var round = @as([32]u8, @splat(0));
     for ([_]i32{ -4, -3, 2, 1, -8, 9 }, 0..) |value, index|
         std.mem.writeInt(i32, round[8 + index * 4 ..][0..4], value, .little);
     const round_value = (try parse(fixture(.roundrect, &round))).?.round_rect;
@@ -102,7 +102,7 @@ test "basic shapes preserve signed geometry and ANGLEARC float bits" {
 }
 
 test "rectangle and arc families retain distinct union tags and wire order" {
-    var bytes = [_]u8{0} ** 40;
+    var bytes = @as([40]u8, @splat(0));
     for ([_]i32{ -4, -3, 2, 1, -20, 30, 40, -50 }, 0..) |value, index|
         std.mem.writeInt(i32, bytes[8 + index * 4 ..][0..4], value, .little);
     inline for (.{
@@ -132,7 +132,7 @@ test "rectangle and arc families retain distinct union tags and wire order" {
 }
 
 test "basic shapes require complete prefixes and accept trailing record data" {
-    const bytes = [_]u8{0} ** 44;
+    const bytes = @as([44]u8, @splat(0));
     inline for (.{
         .{ records.RecordType.anglearc, @as(usize, 28), error.InvalidEmfAngleArcRecordSize },
         .{ records.RecordType.ellipse, @as(usize, 24), error.InvalidEmfRectShapeRecordSize },

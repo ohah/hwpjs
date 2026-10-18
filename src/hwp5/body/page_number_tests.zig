@@ -12,7 +12,7 @@ test "page number fields preserve all code units and odd tails" {
     for (0..12) |len| try t.expectError(error.UnexpectedEnd, P.parse(b[0..len]));
 }
 test "page number shape and position extract only their own bits" {
-    var b = [_]u8{0} ** 12;
+    var b = @as([12]u8, @splat(0));
     for (0..32) |bit| {
         const n = @as(u32, 1) << @intCast(bit);
         std.mem.writeInt(u32, b[0..4], n, .little);

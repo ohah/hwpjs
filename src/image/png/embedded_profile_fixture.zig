@@ -1,7 +1,7 @@
 const std = @import("std");
 /// Structurally bounded header with zero tags, not a semantically valid profile.
 pub fn emptyProfile(space: [4]u8) [132]u8 {
-    var bytes = [_]u8{0} ** 132;
+    var bytes = @as([132]u8, @splat(0));
     std.mem.writeInt(u32, bytes[0..4], bytes.len, .big);
     bytes[8] = 4;
     bytes[16..20].* = space;

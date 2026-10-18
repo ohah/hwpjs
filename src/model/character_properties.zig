@@ -18,7 +18,7 @@ pub fn validate(patch: Patch) !void {
 pub fn merge(previous: Patch, requested: Patch) Patch {
     const std = @import("std");
     var result = previous;
-    inline for (std.meta.fields(Patch)) |field| {
+    inline for (@import("../reflection.zig").fields(Patch)) |field| {
         if (@field(requested, field.name)) |value| {
             if (comptime std.mem.eql(u8, field.name, "font_ids")) {
                 result.font_ids = @import("character_fonts.zig").merge(previous.font_ids orelse @as(@import("character_fonts.zig").Values, @splat(null)), value);

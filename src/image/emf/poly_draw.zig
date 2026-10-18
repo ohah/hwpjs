@@ -69,7 +69,7 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 }
 
 test "POLYDRAW keeps parallel PointL types and ignored alignment bytes" {
-    var bytes = [_]u8{0} ** 56;
+    var bytes = @as([56]u8, @splat(0));
     std.mem.writeInt(u32, bytes[24..28], 3, .little);
     std.mem.writeInt(i32, bytes[28..32], std.math.minInt(i32), .little);
     bytes[52..55].* = .{ 4, 4, 5 };
@@ -84,7 +84,7 @@ test "POLYDRAW keeps parallel PointL types and ignored alignment bytes" {
 test "POLYDRAW16 keeps parallel PointS types and every padding length" {
     for (0..4) |padding_length| {
         const count: u32 = @intCast((4 - padding_length) % 4);
-        var bytes = [_]u8{0} ** 48;
+        var bytes = @as([48]u8, @splat(0));
         std.mem.writeInt(u32, bytes[24..28], count, .little);
         const type_start = header_size + count * point_s_array.width;
         for (0..count) |index| bytes[type_start + index] = 2;
@@ -100,7 +100,7 @@ test "POLYDRAW16 keeps parallel PointS types and every padding length" {
 }
 
 test "POLYDRAW variants reject truncation and type errors but ignore trailing data" {
-    var bytes = [_]u8{0} ** 48;
+    var bytes = @as([48]u8, @splat(0));
     std.mem.writeInt(u32, bytes[24..28], 3, .little);
     bytes[40..43].* = .{ 4, 4, 5 };
     for (0..header_size) |cut|
@@ -121,7 +121,7 @@ test "POLYDRAW variants reject truncation and type errors but ignore trailing da
 }
 
 test "POLYDRAW parser claims only two record types and accepts empty arrays" {
-    var bytes = [_]u8{0} ** header_size;
+    var bytes = @as([header_size]u8, @splat(0));
     try std.testing.expectEqual(@as(usize, 0), (try parse(fixture(.polydraw, &bytes))).?.long.points.count());
     try std.testing.expectEqual(@as(usize, 0), (try parse(fixture(.polydraw16, &bytes))).?.short.types.count());
     try std.testing.expect((try parse(fixture(.polyline, &bytes))) == null);

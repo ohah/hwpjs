@@ -31,8 +31,8 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 }
 
 fn sourceRecord() [136]u8 {
-    var bytes = [_]u8{0} ** 136;
-    std.mem.writeInt(u32, bytes[80..84], @intFromEnum(dib_colors.Usage.palette_indices), .little);
+    var bytes = @as([136]u8, @splat(0));
+    std.mem.writeInt(u32, bytes[80..84], @backingInt(dib_colors.Usage.palette_indices), .little);
     std.mem.writeInt(u32, bytes[84..88], 108, .little);
     std.mem.writeInt(u32, bytes[88..92], 12, .little);
     std.mem.writeInt(u32, bytes[92..96], 128, .little);
@@ -46,7 +46,7 @@ fn sourceRecord() [136]u8 {
 }
 
 fn sourceInfo32Record() [164]u8 {
-    var bytes = [_]u8{0} ** 164;
+    var bytes = @as([164]u8, @splat(0));
     std.mem.writeInt(u32, bytes[84..88], 108, .little);
     std.mem.writeInt(u32, bytes[88..92], 40, .little);
     std.mem.writeInt(u32, bytes[92..96], 148, .little);
@@ -102,7 +102,7 @@ test "TRANSPARENTBLT parses shared transfer fields color key and undefined space
 
 test "TRANSPARENTBLT requires source and validates every fixed and bitmap boundary" {
     try std.testing.expectEqual(@as(usize, 108), fixed_size);
-    const missing = [_]u8{0} ** fixed_size;
+    const missing = @as([fixed_size]u8, @splat(0));
     try std.testing.expectError(error.MissingEmfTransparentBltSourceBitmap, parse(fixture(.transparentblt, &missing)));
     for (0..fixed_size) |cut| try std.testing.expectError(error.InvalidEmfTransparentBltSize, parse(fixture(.transparentblt, missing[0..cut])));
     var mismatch = fixture(.transparentblt, &missing);

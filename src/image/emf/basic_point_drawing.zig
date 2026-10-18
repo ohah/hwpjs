@@ -29,14 +29,14 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 }
 
 test "LINETO and SETPIXELV preserve signed PointL and ColorRef wire order" {
-    var line = [_]u8{0} ** 16;
+    var line = @as([16]u8, @splat(0));
     std.mem.writeInt(i32, line[8..12], std.math.minInt(i32), .little);
     std.mem.writeInt(i32, line[12..16], std.math.maxInt(i32), .little);
     const endpoint = (try parse(fixture(.lineto, &line))).?.line_to;
     try std.testing.expectEqual(@as(i32, std.math.minInt(i32)), endpoint.x);
     try std.testing.expectEqual(@as(i32, std.math.maxInt(i32)), endpoint.y);
 
-    var pixel = [_]u8{0} ** 20;
+    var pixel = @as([20]u8, @splat(0));
     std.mem.writeInt(i32, pixel[8..12], -1, .little);
     pixel[16..20].* = .{ 0x12, 0x34, 0x56, 0 };
     const value = (try parse(fixture(.setpixelv, &pixel))).?.set_pixel;
@@ -48,7 +48,7 @@ test "LINETO and SETPIXELV preserve signed PointL and ColorRef wire order" {
 }
 
 test "basic point drawing records require prefixes and accept trailing data" {
-    const line = [_]u8{0} ** 20;
+    const line = @as([20]u8, @splat(0));
     for (0..16) |length|
         try std.testing.expectError(error.InvalidEmfLineToRecordSize, parse(fixture(.lineto, line[0..length])));
     try std.testing.expect((try parse(fixture(.lineto, &line))) != null);
@@ -56,7 +56,7 @@ test "basic point drawing records require prefixes and accept trailing data" {
     wrong_line.size = 12;
     try std.testing.expectError(error.InvalidEmfLineToRecordSize, parse(wrong_line));
 
-    const pixel = [_]u8{0} ** 24;
+    const pixel = @as([24]u8, @splat(0));
     for (0..20) |length|
         try std.testing.expectError(error.InvalidEmfSetPixelRecordSize, parse(fixture(.setpixelv, pixel[0..length])));
     try std.testing.expect((try parse(fixture(.setpixelv, &pixel))) != null);
@@ -66,7 +66,7 @@ test "basic point drawing records require prefixes and accept trailing data" {
 }
 
 test "SETPIXELV enforces specified-zero ColorRef and parser claims only two kinds" {
-    var pixel = [_]u8{0} ** 20;
+    var pixel = @as([20]u8, @splat(0));
     pixel[19] = 1;
     try std.testing.expectError(error.InvalidWmfColorReserved, parse(fixture(.setpixelv, &pixel)));
     try std.testing.expect((try parse(fixture(.movetoex, pixel[0..16]))) == null);

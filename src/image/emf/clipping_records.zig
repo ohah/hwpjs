@@ -36,7 +36,7 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 
 test "fixed clipping records preserve signed geometry and distinct operations" {
     const std = @import("std");
-    var bytes = [_]u8{0} ** 24;
+    var bytes = @as([24]u8, @splat(0));
     for ([_]i32{ std.math.minInt(i32), -2, 3, std.math.maxInt(i32) }, 0..) |value, index|
         std.mem.writeInt(i32, bytes[8 + index * 4 ..][0..4], value, .little);
 
@@ -61,7 +61,7 @@ test "fixed clipping records preserve signed geometry and distinct operations" {
 
 test "fixed clipping records require complete prefixes and accept trailing data" {
     const std = @import("std");
-    const bytes = [_]u8{0} ** 28;
+    const bytes = @as([28]u8, @splat(0));
     inline for (.{
         .{ records.RecordType.offsetcliprgn, @as(usize, 16), error.InvalidEmfOffsetClipRegionSize },
         .{ records.RecordType.setmetargn, @as(usize, 8), error.InvalidEmfSetMetaRegionSize },

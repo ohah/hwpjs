@@ -27,7 +27,7 @@ pub const View = struct {
     pub fn parseObserved(bytes: []const u8) !View {
         var r: Reader = .{ .bytes = bytes };
         var fields: Fields = undefined;
-        inline for (std.meta.fields(Fields)) |f| @field(fields, f.name) = try r.readInt(u16);
+        inline for (@import("../../reflection.zig").fields(Fields)) |f| @field(fields, f.name) = try r.readInt(u16);
         return .{ .fields = fields, .extra = bytes[r.offset..] };
     }
     pub fn diagnostics(self: View) Diagnostics {

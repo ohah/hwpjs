@@ -18,7 +18,7 @@ test "overlap preserves UTF16 signed size and opaque tail" {
     try t.expectError(error.UnexpectedEnd, P.parse(raw[0..6], .full));
 }
 fn allocationCase(a: std.mem.Allocator, bad: bool) !void {
-    var raw = [_]u8{0} ** 18;
+    var raw = @as([18]u8, @splat(0));
     std.mem.writeInt(u32, raw[0..4], 71 | (14 << 20), .little);
     std.mem.writeInt(u32, raw[4..8], @import("control_rules.zig").id("tcps"), .little);
     raw[13] = 1;

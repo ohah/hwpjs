@@ -11,7 +11,7 @@ fn fixture(a: std.mem.Allocator, declared: bool, present: bool, bad: bool) ![]u8
     defer a.free(doc);
     const body = try f.section(a);
     defer a.free(body);
-    var view = [_]u8{0} ** 5;
+    var view = @as([5]u8, @splat(0));
     f.put(&view, 0, u32, 999 | (1023 << 10) | (@as(u32, if (bad) 2 else 1) << 20));
     const nodes = [_]writer.Node{
         .{ .name = "Root Entry", .kind = 5 },
@@ -65,10 +65,10 @@ test "distribution ViewText integration owns decoded buffers and bounds cipherte
     defer file.deinit();
     const nodes = try file.toNodes(t.allocator);
     defer t.allocator.free(nodes);
-    var raw = [_]u8{0} ** 292;
+    var raw = @as([292]u8, @splat(0));
     f.put(&raw, 0, u32, 0x1000001c);
     f.put(&raw, 4, u32, 5);
-    var plain = [_]u8{0} ** 32;
+    var plain = @as([32]u8, @splat(0));
     for (0..8) |i| f.put(&plain, i * 4, u32, 999);
     const cipher = std.crypto.core.aes.Aes128.initEnc(@import("../distribution/key.zig").derive(raw[4..260]));
     for (0..2) |i| cipher.encrypt(raw[260 + i * 16 ..][0..16], plain[i * 16 ..][0..16]);
@@ -129,7 +129,7 @@ test "ViewText record budget spans multiple sections and late framing failure cl
     defer t.allocator.free(doc);
     const body = try f.section(t.allocator);
     defer t.allocator.free(body);
-    var view = [_]u8{0} ** 8;
+    var view = @as([8]u8, @splat(0));
     f.put(&view, 0, u32, 999);
     f.put(&view, 4, u32, 998);
     const nodes = [_]writer.Node{

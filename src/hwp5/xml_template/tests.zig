@@ -27,7 +27,7 @@ test "XMLTemplate absent, empty, truncated and aggregate budget are distinct" {
     const absent = try xml.Template.parse(.{}, 0);
     try t.expect(absent.schema_name == null);
     try t.expectEqual(0, absent.total_bytes);
-    const empty = [_]u8{0} ** 4;
+    const empty = @as([4]u8, @splat(0));
     const raw = [_]u8{ 1, 0, 0, 0, 'x', 0, 1 };
     const input: xml.Input = .{ .schema_name = &empty, .schema = &raw };
     const parsed = try xml.Template.parse(input, 11);

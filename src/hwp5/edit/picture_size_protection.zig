@@ -30,7 +30,7 @@ pub fn rootOwner(tree: @import("../body/tree.zig").Tree, picture_node: usize) !u
 test "HWP5 picture size protection bit applies only at paragraph vertical reference" {
     const Properties = @import("../body/object_common.zig").Properties;
     for (0..4) |reference| for ([_]bool{ false, true }) |enabled| {
-        var bytes = [_]u8{0} ** 40;
+        var bytes = @as([40]u8, @splat(0));
         const flags: u32 = (@as(u32, @intCast(reference)) << 3) | (if (enabled) @as(u32, 1) << 20 else 0);
         std.mem.writeInt(u32, bytes[0..4], flags, .little);
         const parsed = try Properties.parse(&bytes);

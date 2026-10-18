@@ -8,10 +8,10 @@ pub fn Of(comptime width: u16) type {
         512, 768 => 1024,
         else => @compileError("unsupported ordinate threshold width"),
     };
-    const I = std.meta.Int(.signed, width + 2);
-    const U = std.meta.Int(.unsigned, width);
-    const W = std.meta.Int(.signed, working);
-    const V = std.meta.Int(.unsigned, working);
+    const I = @Int(.signed, width + 2);
+    const U = @Int(.unsigned, width);
+    const W = @Int(.signed, working);
+    const V = @Int(.unsigned, working);
     return struct {
         pub fn compare(comptime precision: u16, power: @import("power_ordinate.zig").PowerValue, n: I, d: U) !?std.math.Order {
             if (d == 0) return error.InvalidIccPowerCoordinate;

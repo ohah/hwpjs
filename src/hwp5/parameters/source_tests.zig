@@ -3,7 +3,7 @@ const t = std.testing;
 const sources = @import("sources.zig");
 const options: sources.Options = .{ .parameters = .{ .header_layout = .observed6, .null_layout = .observed_empty }, .list_layout = .observed8, .bin_data_count = 1 };
 fn fixture() [16]u8 {
-    var b = [_]u8{0} ** 16;
+    var b = @as([16]u8, @splat(0));
     std.mem.writeInt(u32, b[0..4], 27 | (12 << 20), .little);
     b[4] = 1;
     b[6] = 1;

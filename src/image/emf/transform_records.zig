@@ -40,26 +40,26 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 }
 
 test "world transform records parse required payloads and all modify modes" {
-    var set_bytes = [_]u8{0} ** 32;
+    var set_bytes = @as([32]u8, @splat(0));
     std.mem.writeInt(u32, set_bytes[8..12], 0x3f800000, .little);
     const set = (try parse(fixture(.setworldtransform, &set_bytes))).?.set_world;
     try std.testing.expectEqual(@as(u32, 0x3f800000), set.m11.bits);
 
-    var modify_bytes = [_]u8{0} ** 36;
+    var modify_bytes = @as([36]u8, @splat(0));
     for ([_]ModifyMode{ .identity, .left_multiply, .right_multiply, .set }) |mode| {
-        std.mem.writeInt(u32, modify_bytes[32..36], @intFromEnum(mode), .little);
+        std.mem.writeInt(u32, modify_bytes[32..36], @backingInt(mode), .little);
         const modify = (try parse(fixture(.modifyworldtransform, &modify_bytes))).?.modify_world;
         try std.testing.expectEqual(mode, modify.mode);
     }
 }
 
 test "world transform records reject size mode and type drift" {
-    var bytes = [_]u8{0} ** 36;
+    var bytes = @as([36]u8, @splat(0));
     try std.testing.expect((try parse(fixture(.setworldtransform, &bytes))) != null);
     try std.testing.expectError(error.InvalidEmfModifyWorldTransformMode, parse(fixture(.modifyworldtransform, &bytes)));
     bytes[32] = 5;
     try std.testing.expectError(error.InvalidEmfModifyWorldTransformMode, parse(fixture(.modifyworldtransform, &bytes)));
-    var oversized = [_]u8{0} ** 40;
+    var oversized = @as([40]u8, @splat(0));
     oversized[32] = 1;
     try std.testing.expect((try parse(fixture(.modifyworldtransform, &oversized))) != null);
     try std.testing.expectError(error.InvalidEmfSetWorldTransformSize, parse(fixture(.setworldtransform, bytes[0..28])));

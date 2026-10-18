@@ -63,7 +63,7 @@ test "section definition belongs to first root paragraph, not first physical rec
     defer t.allocator.free(doc);
     const section = try f.section(t.allocator);
     defer t.allocator.free(section);
-    var prefix = [_]u8{0} ** 28;
+    var prefix = @as([28]u8, @splat(0));
     f.put(&prefix, 0, u32, 66 | (24 << 20));
     const shifted = try std.mem.concat(t.allocator, u8, &.{ &prefix, section });
     defer t.allocator.free(shifted);

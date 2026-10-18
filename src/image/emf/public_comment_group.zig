@@ -59,7 +59,7 @@ pub const State = struct {
 };
 
 test "begin group preserves rectangle and counted terminated UTF-16 units" {
-    var bytes = [_]u8{0} ** 28;
+    var bytes = @as([28]u8, @splat(0));
     for ([_]i32{ -4, -3, 2, 1 }, 0..) |value, index|
         std.mem.writeInt(i32, bytes[index * 4 ..][0..4], value, .little);
     std.mem.writeInt(u32, bytes[16..20], 4, .little);
@@ -73,7 +73,7 @@ test "begin group preserves rectangle and counted terminated UTF-16 units" {
 }
 
 test "group payloads reject every truncation extra unit and missing terminator" {
-    var bytes = [_]u8{0} ** 24;
+    var bytes = @as([24]u8, @splat(0));
     std.mem.writeInt(u32, bytes[16..20], 2, .little);
     std.mem.writeInt(u16, bytes[20..22], 'A', .little);
     std.mem.writeInt(u16, bytes[22..24], 'B', .little);
@@ -82,13 +82,13 @@ test "group payloads reject every truncation extra unit and missing terminator" 
     try std.testing.expectError(error.UnterminatedEmfPublicGroupDescription, parseBegin(&bytes));
     std.mem.writeInt(u16, bytes[22..24], 0, .little);
     try std.testing.expectError(error.TruncatedEmfPublicGroupDescription, parseBegin(bytes[0..23]));
-    var extra = [_]u8{0} ** 26;
+    var extra = @as([26]u8, @splat(0));
     extra[0..24].* = bytes;
     try std.testing.expectError(error.InvalidEmfPublicGroupDescriptionSize, parseBegin(&extra));
-    var internal_nul = [_]u8{0} ** 24;
+    var internal_nul = @as([24]u8, @splat(0));
     std.mem.writeInt(u32, internal_nul[16..20], 2, .little);
     try std.testing.expectError(error.InvalidEmfPublicGroupDescriptionTerminator, parseBegin(&internal_nul));
-    var surrogate = [_]u8{0} ** 24;
+    var surrogate = @as([24]u8, @splat(0));
     std.mem.writeInt(u32, surrogate[16..20], 2, .little);
     std.mem.writeInt(u16, surrogate[20..22], 0xd800, .little);
     try std.testing.expectError(error.InvalidEmfPublicGroupDescriptionUnicode, parseBegin(&surrogate));

@@ -60,7 +60,7 @@ fn scan(bytes: []const u8, field_id: u32, ordinal: usize, editable: bool, edit: 
 }
 
 test "formula label protection validates both edges and exact end identity" {
-    var bytes = [_]u8{0} ** 38;
+    var bytes = @as([38]u8, @splat(0));
     std.mem.writeInt(u16, bytes[0..2], 'a', .little);
     std.mem.writeInt(u16, bytes[2..4], 3, .little);
     std.mem.writeInt(u32, bytes[4..8], controls.id("%fmu"), .little);

@@ -12,7 +12,7 @@ fn allocationCase(a: std.mem.Allocator, bytes: []const u8, bad: bool) !void {
     try t.expectEqual(1, report.controls);
 }
 test "index mark tree allocation failures clean success and short dummy" {
-    var raw = [_]u8{0} ** 14;
+    var raw = @as([14]u8, @splat(0));
     std.mem.writeInt(u32, raw[0..4], 71 | (10 << 20), .little);
     std.mem.writeInt(u32, raw[4..8], @import("control_rules.zig").id("idxm"), .little);
     try t.checkAllAllocationFailures(t.allocator, allocationCase, .{ &raw, false });

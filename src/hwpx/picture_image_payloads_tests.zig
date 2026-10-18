@@ -43,7 +43,7 @@ fn inspectSample(a: std.mem.Allocator, options: payloads.Options, corrupt_png: b
 }
 
 fn wmfBytes(placeable: bool) [46]u8 {
-    var bytes = [_]u8{0} ** 46;
+    var bytes = @as([46]u8, @splat(0));
     const start: usize = if (placeable) 22 else 0;
     if (placeable) {
         std.mem.writeInt(u32, bytes[0..4], 0x9ac6cdd7, .little);
@@ -190,7 +190,7 @@ test "HWPX picture image payloads inspect two SVG resources in actual document" 
 
 test "HWPX picture image payloads classify PCX RLE and retain malformed stream" {
     const a = std.testing.allocator;
-    var bytes = [_]u8{0} ** 130;
+    var bytes = @as([130]u8, @splat(0));
     bytes[0] = 10;
     bytes[1] = 5;
     bytes[2] = 1;
@@ -226,7 +226,7 @@ test "HWPX picture image payloads classify PCX RLE and retain malformed stream" 
 
 test "HWPX picture image payloads cap cumulative PCX RLE output" {
     const a = std.testing.allocator;
-    var pcx_bytes = [_]u8{0} ** 130;
+    var pcx_bytes = @as([130]u8, @splat(0));
     pcx_bytes[0] = 10;
     pcx_bytes[1] = 5;
     pcx_bytes[2] = 1;
@@ -259,7 +259,7 @@ test "HWPX picture image payloads cap cumulative PCX RLE output" {
 
 test "HWPX picture image payloads classify TIFF structure and retain inner errors" {
     const a = std.testing.allocator;
-    var bytes = [_]u8{0} ** 42;
+    var bytes = @as([42]u8, @splat(0));
     @memcpy(bytes[0..4], &[_]u8{ 0x49, 0x49, 0x2a, 0 });
     std.mem.writeInt(u32, bytes[4..8], 8, .little);
     std.mem.writeInt(u16, bytes[8..10], 2, .little);

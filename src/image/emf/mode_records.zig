@@ -98,7 +98,7 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 }
 
 fn modeBytes(raw: u32) [12]u8 {
-    var bytes = [_]u8{0} ** 12;
+    var bytes = @as([12]u8, @splat(0));
     std.mem.writeInt(u32, bytes[8..12], raw, .little);
     return bytes;
 }
@@ -106,23 +106,23 @@ fn modeBytes(raw: u32) [12]u8 {
 test "mode records parse every defined enumeration value" {
     for (1..9) |raw| {
         const bytes = modeBytes(@intCast(raw));
-        try std.testing.expectEqual(@as(u32, @intCast(raw)), @intFromEnum((try parse(fixture(.setmapmode, &bytes))).?.map));
+        try std.testing.expectEqual(@as(u32, @intCast(raw)), @backingInt((try parse(fixture(.setmapmode, &bytes))).?.map));
     }
     for (1..3) |raw| {
         const bytes = modeBytes(@intCast(raw));
-        try std.testing.expectEqual(@as(u32, @intCast(raw)), @intFromEnum((try parse(fixture(.setbkmode, &bytes))).?.background));
-        try std.testing.expectEqual(@as(u32, @intCast(raw)), @intFromEnum((try parse(fixture(.setpolyfillmode, &bytes))).?.polygon_fill));
-        try std.testing.expectEqual(@as(u32, @intCast(raw)), @intFromEnum((try parse(fixture(.setarcdirection, &bytes))).?.arc_direction));
+        try std.testing.expectEqual(@as(u32, @intCast(raw)), @backingInt((try parse(fixture(.setbkmode, &bytes))).?.background));
+        try std.testing.expectEqual(@as(u32, @intCast(raw)), @backingInt((try parse(fixture(.setpolyfillmode, &bytes))).?.polygon_fill));
+        try std.testing.expectEqual(@as(u32, @intCast(raw)), @backingInt((try parse(fixture(.setarcdirection, &bytes))).?.arc_direction));
     }
     for (1..17) |raw| {
         const bytes = modeBytes(@intCast(raw));
-        try std.testing.expectEqual(@as(u32, @intCast(raw)), @intFromEnum((try parse(fixture(.setrop2, &bytes))).?.binary_raster_operation));
+        try std.testing.expectEqual(@as(u32, @intCast(raw)), @backingInt((try parse(fixture(.setrop2, &bytes))).?.binary_raster_operation));
     }
     for (1..5) |raw| {
         const bytes = modeBytes(@intCast(raw));
         const value = (try parse(fixture(.setstretchbltmode, &bytes))).?.stretch;
         try std.testing.expectEqual(@as(u32, @intCast(raw)), value.raw);
-        try std.testing.expectEqual(@as(u32, @intCast(raw)), @intFromEnum(value.known.?));
+        try std.testing.expectEqual(@as(u32, @intCast(raw)), @backingInt(value.known.?));
     }
 }
 
@@ -148,12 +148,12 @@ test "strict mode records reject values outside their enumerations" {
 }
 
 test "mode records require their prefix accept trailing data and do not claim unrelated records" {
-    var short = [_]u8{0} ** 8;
+    var short = @as([8]u8, @splat(0));
     try std.testing.expectError(error.InvalidEmfModeRecordSize, parse(fixture(.setmapmode, &short)));
     var declared_twelve = fixture(.setmapmode, &short);
     declared_twelve.size = 12;
     try std.testing.expectError(error.InvalidEmfModeRecordSize, parse(declared_twelve));
-    var long = [_]u8{0} ** 16;
+    var long = @as([16]u8, @splat(0));
     long[8] = 1;
     try std.testing.expect((try parse(fixture(.setstretchbltmode, &long))) != null);
     var declared_twelve_long = fixture(.setstretchbltmode, &long);

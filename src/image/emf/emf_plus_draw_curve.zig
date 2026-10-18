@@ -82,7 +82,7 @@ fn putF32(bytes: []u8, offset: usize, value: f32) void {
 }
 
 test "EMF+ DrawCurve parses integer points and ignores every reserved flag" {
-    var data = [_]u8{0} ** 24;
+    var data = @as([24]u8, @splat(0));
     putF32(&data, 0, -0.0);
     std.mem.writeInt(u32, data[4..8], 0xffffffff, .little);
     std.mem.writeInt(u32, data[8..12], 0xfffffffe, .little);
@@ -102,7 +102,7 @@ test "EMF+ DrawCurve parses integer points and ignores every reserved flag" {
     try std.testing.expectEqual(@as(i16, -1), (try points.next()).?.integer.x);
     try std.testing.expectError(error.InvalidEmfPlusCardinalRange, value.spans());
 
-    var selected_data = [_]u8{0} ** 32;
+    var selected_data = @as([32]u8, @splat(0));
     std.mem.writeInt(u32, selected_data[4..8], 1, .little);
     std.mem.writeInt(u32, selected_data[8..12], 2, .little);
     std.mem.writeInt(u32, selected_data[12..16], 4, .little);
@@ -120,7 +120,7 @@ test "EMF+ DrawCurve parses integer points and ignores every reserved flag" {
 }
 
 test "EMF+ DrawCurve parses floating points and preserves float bits" {
-    var data = [_]u8{0} ** 32;
+    var data = @as([32]u8, @splat(0));
     putF32(&data, 0, std.math.nan(f32));
     std.mem.writeInt(u32, data[4..8], 1, .little);
     std.mem.writeInt(u32, data[8..12], 0, .little);
@@ -137,7 +137,7 @@ test "EMF+ DrawCurve parses floating points and preserves float bits" {
 }
 
 test "EMF+ DrawCurve exposes shared device cardinal spans" {
-    var data = [_]u8{0} ** 32;
+    var data = @as([32]u8, @splat(0));
     std.mem.writeInt(u32, data[4..8], 1, .little);
     std.mem.writeInt(u32, data[8..12], 2, .little);
     std.mem.writeInt(u32, data[12..16], 4, .little);
@@ -161,7 +161,7 @@ test "EMF+ DrawCurve exposes shared device cardinal spans" {
 }
 
 test "EMF+ DrawCurve rejects type count ObjectID sizes truncation and limit" {
-    var data = [_]u8{0} ** 32;
+    var data = @as([32]u8, @splat(0));
     std.mem.writeInt(u32, data[12..16], 2, .little);
     _ = try parse(makeRecord(&data, 0), .{});
     for (0..16) |cut| {

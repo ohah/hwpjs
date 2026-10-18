@@ -3,7 +3,7 @@ const t = std.testing;
 const xyz = @import("xyz_type.zig");
 const values = @import("xyz_values.zig");
 test "v2 XYZ nonnegative semantics do not change raw signed parsing" {
-    var bytes = [_]u8{0} ** 32;
+    var bytes = @as([32]u8, @splat(0));
     bytes[0..4].* = "XYZ ".*;
     for (0..6) |i| {
         for ([_]i32{ std.math.minInt(i32), -1, 0, 1, std.math.maxInt(i32) }) |value| {
@@ -29,7 +29,7 @@ test "XYZType preserves signed wire values and borrows exact array" {
     try t.expectError(error.InvalidIccXyzIndex, array.at(std.math.maxInt(usize)));
 }
 test "XYZType length residue and prefix corruption are rejected" {
-    var bytes = [_]u8{0} ** 57;
+    var bytes = @as([57]u8, @splat(0));
     bytes[0..4].* = "XYZ ".*;
     for (0..bytes.len + 1) |len| {
         if (len < 8) {

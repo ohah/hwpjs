@@ -30,7 +30,7 @@ test "text justification preserves signed fields in wire order" {
         .{ std.math.maxInt(i32), std.math.minInt(i32) },
     };
     for (pairs) |pair| {
-        var bytes = [_]u8{0} ** 16;
+        var bytes = @as([16]u8, @splat(0));
         std.mem.writeInt(i32, bytes[8..12], pair[0], .little);
         std.mem.writeInt(i32, bytes[12..16], pair[1], .little);
         const value = (try parse(fixture(.settextjustification, &bytes))).?;
@@ -40,13 +40,13 @@ test "text justification preserves signed fields in wire order" {
 }
 
 test "text justification requires every prefix byte preserves trailing data and ignores unrelated records" {
-    var prefix = [_]u8{0} ** 16;
+    var prefix = @as([16]u8, @splat(0));
     for (0..prefix.len) |cut|
         try std.testing.expectError(error.InvalidEmfTextJustificationRecordSize, parse(fixture(.settextjustification, prefix[0..cut])));
     var declared_sixteen = fixture(.settextjustification, prefix[0..12]);
     declared_sixteen.size = 16;
     try std.testing.expectError(error.InvalidEmfTextJustificationRecordSize, parse(declared_sixteen));
-    var long = [_]u8{0} ** 20;
+    var long = @as([20]u8, @splat(0));
     long[16..20].* = .{ 1, 2, 3, 4 };
     try std.testing.expectEqualSlices(u8, &.{ 1, 2, 3, 4 }, (try parse(fixture(.settextjustification, &long))).?.trailing_data);
     var declared_sixteen_long = fixture(.settextjustification, &long);

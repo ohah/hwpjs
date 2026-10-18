@@ -70,7 +70,7 @@ fn nextExpectedSegment(iterator: *arc_device_segments.Iterator) !arc_device_segm
 }
 
 test "EMF+ DrawEllipse parses compressed rectangle Pen ID and ignored flags" {
-    var bytes = [_]u8{0} ** 8;
+    var bytes = @as([8]u8, @splat(0));
     for ([_]i16{ -32768, -1, 0, 32767 }, 0..) |coordinate, index|
         std.mem.writeInt(i16, bytes[index * 2 ..][0..2], coordinate, .little);
     const value = try parse(makeRecord(&bytes, 0xff3f));
@@ -96,7 +96,7 @@ test "EMF+ DrawEllipse parses compressed rectangle Pen ID and ignored flags" {
 }
 
 test "EMF+ DrawEllipse parses floating rectangle without normalizing float bits" {
-    var bytes = [_]u8{0} ** 16;
+    var bytes = @as([16]u8, @splat(0));
     for ([_]f32{ -0.0, std.math.inf(f32), std.math.nan(f32), -4.5 }, 0..) |coordinate, index|
         putF32(&bytes, index * 4, coordinate);
     const value = try parse(makeRecord(&bytes, 0xbf07));
@@ -110,7 +110,7 @@ test "EMF+ DrawEllipse parses floating rectangle without normalizing float bits"
 }
 
 test "EMF+ DrawEllipse rejects type ObjectID and every independent size mismatch" {
-    var bytes = [_]u8{0} ** 17;
+    var bytes = @as([17]u8, @splat(0));
     _ = try parse(makeRecord(bytes[0..8], 0x4000));
     _ = try parse(makeRecord(bytes[0..16], 0));
     for (0..bytes.len + 1) |cut| {

@@ -30,6 +30,6 @@ test "master page area requires its complete prefix and retains extensions" {
     try std.testing.expectEqual(@as(u8, 255), area.text_reference);
     try std.testing.expectEqual(@as(u8, 128), area.number_reference);
     try std.testing.expectEqualSlices(u8, bytes[10..], area.extra);
-    const empty = try Area.parse(&([_]u8{0} ** 10));
+    const empty = try Area.parse(&(@as([10]u8, @splat(0))));
     try std.testing.expectEqual(@as(u32, 0), empty.width);
 }

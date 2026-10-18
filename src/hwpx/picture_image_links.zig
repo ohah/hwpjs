@@ -23,10 +23,10 @@ pub const Report = struct {
     sections: usize,
     master_pages: usize,
     sites: []Site,
-    counts: [@typeInfo(binary_links.TargetState).@"enum".fields.len]usize,
+    counts: [@typeInfo(binary_links.TargetState).@"enum".field_names.len]usize,
 
     pub fn count(self: *const Report, state: binary_links.TargetState) usize {
-        return self.counts[@intFromEnum(state)];
+        return self.counts[@backingInt(state)];
     }
 
     pub fn deinit(self: *Report, a: std.mem.Allocator) void {
@@ -42,7 +42,7 @@ const Collector = struct {
     index: binary_links.Index,
     options: Options,
     sites: std.ArrayList(Site) = .empty,
-    counts: [@typeInfo(binary_links.TargetState).@"enum".fields.len]usize = @splat(0),
+    counts: [@typeInfo(binary_links.TargetState).@"enum".field_names.len]usize = @splat(0),
 
     fn deinit(self: *Collector) void {
         for (self.sites.items) |site| if (site.id) |id| self.a.free(id);
@@ -71,7 +71,7 @@ const Collector = struct {
                 .id = id,
                 .target = target,
             });
-            self.counts[@intFromEnum(target.state)] += 1;
+            self.counts[@backingInt(target.state)] += 1;
         }
     }
 

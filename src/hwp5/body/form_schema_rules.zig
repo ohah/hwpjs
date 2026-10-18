@@ -2,11 +2,11 @@ pub const Kind = @import("form_object.zig").Kind;
 pub const ValueKind = @import("form_property.zig").Kind;
 pub const Scope = enum { common, char_shape, button, combo, edit };
 pub const Field = enum { name, fore_color, back_color, group_name, tab_stop, tab_order, enabled, border_type, draw_frame, command, editable, printable, char_shape_id, follow_context, auto_size, word_wrap, caption, value, tri_state, back_style, radio_group_name, list_box_rows, text, list_box_width, edit_enable, multi_line, password_char, max_length, scroll_bars, tab_key_behavior, number, read_only, align_text };
-pub const field_count = @typeInfo(Field).@"enum".fields.len;
+pub const field_count = @typeInfo(Field).@"enum".field_names.len;
 pub const Rule = struct { field: Field, scope: Scope, key: []const u8, kind: ValueKind, types: u8 };
 fn mask(comptime kinds: anytype) u8 {
     var result: u8 = 0;
-    inline for (kinds) |k| result |= @as(u8, 1) << @intFromEnum(@as(Kind, k));
+    inline for (kinds) |k| result |= @as(u8, 1) << @backingInt(@as(Kind, k));
     return result;
 }
 const all = mask(.{ .push_button, .check_box, .combo_box, .radio_button, .edit });
@@ -71,6 +71,6 @@ pub fn scopeFor(kind: Kind, key: []const u8) ?Scope {
     };
 }
 pub fn lookup(kind: Kind, scope: Scope, key: []const u8) ?Rule {
-    for (rules) |rule| if (rule.scope == scope and rule.types & (@as(u8, 1) << @intCast(@intFromEnum(kind))) != 0 and equals(key, rule.key)) return rule;
+    for (rules) |rule| if (rule.scope == scope and rule.types & (@as(u8, 1) << @intCast(@backingInt(kind))) != 0 and equals(key, rule.key)) return rule;
     return null;
 }

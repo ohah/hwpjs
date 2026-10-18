@@ -2,7 +2,7 @@ const std = @import("std");
 const t = std.testing;
 const m = @import("memo_end.zig");
 test "memo end keeps full raw words and never guesses another signature" {
-    var b = [_]u8{0} ** 13;
+    var b = @as([13]u8, @splat(0));
     std.mem.writeInt(u32, b[0..4], 0x00256d65, .little);
     for ([_]u32{ 0, 1, 0x00ffff01, 0x80000000, 0xffffffff }) |middle| {
         std.mem.writeInt(u32, b[4..8], middle, .little);

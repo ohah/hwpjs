@@ -3,7 +3,7 @@ const t = std.testing;
 const Collection = @import("memo_range_collection.zig").Collection;
 const ranges = @import("memo_ranges.zig");
 fn fixture() [87]u8 {
-    var b = [_]u8{0} ** 87;
+    var b = @as([87]u8, @splat(0));
     for ([_][2]u32{ .{ 0, 66 | (24 << 20) }, .{ 28, 67 | (1 << 10) | (32 << 20) }, .{ 64, 71 | (1 << 10) | (19 << 20) }, .{ 34, 0x25256d65 }, .{ 50, 0x00256d65 }, .{ 58, 7 }, .{ 68, 0x25256d65 }, .{ 79, 5 }, .{ 83, 7 } }) |row| std.mem.writeInt(u32, b[row[0]..][0..4], row[1], .little);
     for ([_][2]usize{ .{ 32, 3 }, .{ 46, 3 }, .{ 48, 4 }, .{ 62, 4 } }) |row| std.mem.writeInt(u16, b[row[0]..][0..2], @intCast(row[1]), .little);
     return b;

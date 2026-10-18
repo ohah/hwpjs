@@ -8,8 +8,8 @@ pub fn runWide(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
 }
 fn runFor(comptime bits: u16, a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     const width = bits / 8;
-    const U = std.meta.Int(.unsigned, bits);
-    const I = std.meta.Int(.signed, bits);
+    const U = @Int(.unsigned, bits);
+    const I = @Int(.signed, bits);
     const Root = if (bits == 256) icc.normalized_power_level.Root else icc.normalized_power_level.Wide.Root;
     if (bytes.len > limit) return error.LimitExceeded;
     if (bytes.len != 16 + 4 * width) return error.InvalidProbeInput;

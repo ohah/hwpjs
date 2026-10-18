@@ -54,7 +54,7 @@ pub fn parse(bytes: []const u8, count: u32, relative: bool, compressed: bool, op
 const std = @import("std");
 
 test "EMF+ PointData preserves all three encodings and ignores C for relative points" {
-    var integers = [_]u8{0} ** 8;
+    var integers = @as([8]u8, @splat(0));
     std.mem.writeInt(i16, integers[0..2], -32768, .little);
     std.mem.writeInt(i16, integers[2..4], 32767, .little);
     std.mem.writeInt(i16, integers[4..6], -1, .little);
@@ -65,7 +65,7 @@ test "EMF+ PointData preserves all three encodings and ignores C for relative po
     try std.testing.expectEqual(@as(i16, -32768), (try integer_points.next()).?.integer.x);
     try std.testing.expectEqual(@as(i16, 2), (try integer_points.next()).?.integer.y);
 
-    var floats = [_]u8{0} ** 8;
+    var floats = @as([8]u8, @splat(0));
     std.mem.writeInt(u32, floats[0..4], @bitCast(@as(f32, -0.0)), .little);
     std.mem.writeInt(u32, floats[4..8], @bitCast(std.math.nan(f32)), .little);
     const floating = try parse(&floats, 1, false, false, .{});

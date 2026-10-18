@@ -5,7 +5,7 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8) ![]u8 {
     const parsed = try core.hwp5.preview_text.Text.parse(bytes);
     var out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(a);
-    inline for (std.meta.fields(@TypeOf(parsed.stats))) |f| try int(a, &out, u32, @intCast(@field(parsed.stats, f.name)));
+    inline for (@typeInfo(@TypeOf(parsed.stats)).@"struct".field_names) |f| try int(a, &out, u32, @intCast(@field(parsed.stats, f)));
     try out.appendSlice(a, parsed.raw);
     return out.toOwnedSlice(a);
 }

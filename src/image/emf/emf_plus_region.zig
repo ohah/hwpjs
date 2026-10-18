@@ -66,7 +66,7 @@ fn putF32(bytes: []u8, offset: usize, value: f32) void {
 }
 
 test "EMF+ Region validates and iterates the complete pre-order tree" {
-    var bytes = [_]u8{0} ** 36;
+    var bytes = @as([36]u8, @splat(0));
     putU32(&bytes, 0, 0xdbc01002);
     putU32(&bytes, 4, 2);
     putU32(&bytes, 8, 1);
@@ -78,19 +78,19 @@ test "EMF+ Region validates and iterates the complete pre-order tree" {
     var nodes = value.nodes();
     const root = (try nodes.next()).?;
     try std.testing.expectEqual(@as(usize, 0), root.depth);
-    try std.testing.expectEqual(@as(u32, 1), @intFromEnum(root.node_type));
+    try std.testing.expectEqual(@as(u32, 1), @backingInt(root.node_type));
     const left = (try nodes.next()).?;
     try std.testing.expectEqual(@as(usize, 1), left.depth);
     try std.testing.expectEqual(@as(f32, 3), left.data.rect.width);
     try std.testing.expectEqual(@as(f32, 4), left.data.rect.height);
     const right = (try nodes.next()).?;
     try std.testing.expectEqual(@as(usize, 1), right.depth);
-    try std.testing.expectEqual(@as(u32, 0x1000_0003), @intFromEnum(right.node_type));
+    try std.testing.expectEqual(@as(u32, 0x1000_0003), @backingInt(right.node_type));
     try std.testing.expect((try nodes.next()) == null);
 }
 
 test "EMF+ Region enforces declared count shape type limits and exact end" {
-    var terminal = [_]u8{0} ** 12;
+    var terminal = @as([12]u8, @splat(0));
     putU32(&terminal, 0, 0xdbc01001);
     putU32(&terminal, 8, 0x1000_0002);
     _ = try parse(&terminal, .{});
@@ -105,14 +105,14 @@ test "EMF+ Region enforces declared count shape type limits and exact end" {
     putU32(&terminal, 8, 6);
     try std.testing.expectError(error.InvalidEmfPlusRegionNodeType, parse(&terminal, .{}));
 
-    var trailing = [_]u8{0} ** 16;
+    var trailing = @as([16]u8, @splat(0));
     @memcpy(trailing[0..12], &terminal);
     putU32(&trailing, 8, 0x1000_0002);
     try std.testing.expectError(error.InvalidEmfPlusRegionTrailingData, parse(&trailing, .{}));
 }
 
 test "EMF+ Region rejects early completion unfinished trees and excessive depth" {
-    var early = [_]u8{0} ** 16;
+    var early = @as([16]u8, @splat(0));
     putU32(&early, 0, 0xdbc01001);
     putU32(&early, 4, 1);
     putU32(&early, 8, 0x1000_0002);
@@ -129,7 +129,7 @@ test "EMF+ Region rejects early completion unfinished trees and excessive depth"
 }
 
 test "EMF+ Region delegates an exact signed-length Path and is atomic on truncation" {
-    var bytes = [_]u8{0} ** 28;
+    var bytes = @as([28]u8, @splat(0));
     putU32(&bytes, 0, 0xdbc01001);
     putU32(&bytes, 8, 0x1000_0001);
     putU32(&bytes, 12, 12);
@@ -151,7 +151,7 @@ test "EMF+ Region completed object type is explicit" {
 }
 
 test "EMF+ Region restores sibling depths after nested left and right subtrees" {
-    var bytes = [_]u8{0} ** 44;
+    var bytes = @as([44]u8, @splat(0));
     putU32(&bytes, 0, 0xdbc01001);
     putU32(&bytes, 4, 8);
     const types = [_]u32{
@@ -173,7 +173,7 @@ test "EMF+ Region restores sibling depths after nested left and right subtrees" 
 
 test "EMF+ Region accepts every combine type and rejects every Rect truncation" {
     inline for (1..6) |combine| {
-        var bytes = [_]u8{0} ** 20;
+        var bytes = @as([20]u8, @splat(0));
         putU32(&bytes, 0, 0xdbc01001);
         putU32(&bytes, 4, 2);
         putU32(&bytes, 8, combine);
@@ -182,7 +182,7 @@ test "EMF+ Region accepts every combine type and rejects every Rect truncation" 
         _ = try parse(&bytes, .{});
     }
 
-    var rect = [_]u8{0} ** 28;
+    var rect = @as([28]u8, @splat(0));
     putU32(&rect, 0, 0xdbc01001);
     putU32(&rect, 8, 0x1000_0000);
     for (0..rect.len) |cut| {
@@ -212,7 +212,7 @@ test "EMF+ Region depth boundary and nested Path byte limit are exact" {
     try std.testing.expectError(error.EmfPlusRegionDepthLimitExceeded, parse(&bytes, .{ .node_options = .{ .max_depth = 255 } }));
     try std.testing.expectError(error.InvalidEmfPlusRegionDepthLimit, parse(&bytes, .{ .node_options = .{ .max_depth = 257 } }));
 
-    var path_bytes = [_]u8{0} ** 28;
+    var path_bytes = @as([28]u8, @splat(0));
     putU32(&path_bytes, 0, 0xdbc01001);
     putU32(&path_bytes, 8, 0x1000_0001);
     putU32(&path_bytes, 12, 12);

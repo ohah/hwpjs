@@ -26,7 +26,7 @@ pub fn parse(bytes: []const u8) !DesignVector {
 }
 
 test "DesignVector requires exact count-derived extent and preserves signed axes" {
-    var bytes = [_]u8{0} ** 72;
+    var bytes = @as([72]u8, @splat(0));
     std.mem.writeInt(u32, bytes[0..4], signature, .little);
     std.mem.writeInt(u32, bytes[4..8], 16, .little);
     std.mem.writeInt(i32, bytes[8..12], std.math.minInt(i32), .little);

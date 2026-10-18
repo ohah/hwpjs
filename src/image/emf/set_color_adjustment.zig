@@ -25,7 +25,7 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 }
 
 test "SETCOLORADJUSTMENT parses the object and preserves record extensions" {
-    var bytes = [_]u8{0} ** (minimum_size + 4);
+    var bytes = @as([(minimum_size + 4)]u8, @splat(0));
     std.mem.writeInt(u16, bytes[8..10], color_adjustment.size, .little);
     std.mem.writeInt(u16, bytes[10..12], 1, .little);
     std.mem.writeInt(u16, bytes[12..14], 6, .little);
@@ -47,7 +47,7 @@ test "SETCOLORADJUSTMENT parses the object and preserves record extensions" {
 }
 
 test "SETCOLORADJUSTMENT rejects truncation declaration mismatch and unrelated records" {
-    var bytes = [_]u8{0} ** minimum_size;
+    var bytes = @as([minimum_size]u8, @splat(0));
     std.mem.writeInt(u16, bytes[8..10], color_adjustment.size, .little);
     for (0..minimum_size) |cut|
         try std.testing.expectError(error.InvalidEmfSetColorAdjustmentRecordSize, parse(fixture(.setcoloradjustment, bytes[0..cut])));

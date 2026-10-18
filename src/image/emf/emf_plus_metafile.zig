@@ -25,19 +25,19 @@ pub fn parse(bytes: []const u8, options: Options) !Metafile {
 
 test "EMF+ metafile preserves all five types exact data and zero through three padding bytes" {
     for (1..6) |kind| for (0..4) |padding| {
-        var bytes = [_]u8{0} ** 15;
+        var bytes = @as([15]u8, @splat(0));
         std.mem.writeInt(u32, bytes[0..4], @intCast(kind), .little);
         std.mem.writeInt(u32, bytes[4..8], 4, .little);
         bytes[8..12].* = .{ 1, 2, 3, 4 };
         const value = try parse(bytes[0 .. 12 + padding], .{});
-        try std.testing.expectEqual(@as(u32, @intCast(kind)), @intFromEnum(value.data_type));
+        try std.testing.expectEqual(@as(u32, @intCast(kind)), @backingInt(value.data_type));
         try std.testing.expectEqualSlices(u8, &.{ 1, 2, 3, 4 }, value.data);
         try std.testing.expectEqual(padding, value.alignment_padding.len);
     };
 }
 
 test "EMF+ metafile rejects every truncation bad type declared overflow padding and limit" {
-    var bytes = [_]u8{0} ** 12;
+    var bytes = @as([12]u8, @splat(0));
     std.mem.writeInt(u32, bytes[0..4], 3, .little);
     std.mem.writeInt(u32, bytes[4..8], 4, .little);
     for (0..bytes.len) |cut| try std.testing.expectError(error.UnexpectedEnd, parse(bytes[0..cut], .{}));
@@ -47,7 +47,7 @@ test "EMF+ metafile rejects every truncation bad type declared overflow padding 
     invalid = bytes;
     std.mem.writeInt(u32, invalid[4..8], 5, .little);
     try std.testing.expectError(error.UnexpectedEnd, parse(&invalid, .{}));
-    var padding = [_]u8{0} ** 16;
+    var padding = @as([16]u8, @splat(0));
     @memcpy(padding[0..12], &bytes);
     try std.testing.expectError(error.InvalidEmfPlusMetafilePadding, parse(&padding, .{}));
     try std.testing.expectError(error.LimitExceeded, parse(&bytes, .{ .max_data_bytes = 11 }));

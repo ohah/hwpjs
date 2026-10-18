@@ -5,14 +5,14 @@ const schema = @import("form_schema.zig");
 const refs = @import("form_references.zig");
 const Tree = @import("form_property_tree.zig").Tree;
 fn wide(comptime ascii: []const u8) [ascii.len * 2]u8 {
-    var result = [_]u8{0} ** (ascii.len * 2);
+    var result = @as([(ascii.len * 2)]u8, @splat(0));
     for (ascii, 0..) |c, i| result[i * 2] = c;
     return result;
 }
 test "form schema table has unique reachable paths and fields for every supported kind" {
     var covered: [rules.field_count]bool = @splat(false);
     for (rules.rules, 0..) |rule, i| {
-        covered[@intFromEnum(rule.field)] = true;
+        covered[@backingInt(rule.field)] = true;
         for (rules.rules[i + 1 ..]) |other| {
             if (rule.types & other.types == 0) continue;
             try t.expect(rule.field != other.field);

@@ -7,7 +7,7 @@ fn put(comptime T: type, bytes: []u8, offset: usize, value: T) void {
 }
 
 fn emptyFile() [1536]u8 {
-    var data = [_]u8{0} ** 1536;
+    var data = @as([1536]u8, @splat(0));
     @memcpy(data[0..8], &[_]u8{ 0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1 });
     put(u16, &data, 24, 0x3e);
     put(u16, &data, 26, 3);
@@ -66,7 +66,7 @@ fn allocationCase(a: std.mem.Allocator) !void {
 }
 
 pub fn miniFile() [2560]u8 {
-    var bytes = [_]u8{0} ** 2560;
+    var bytes = @as([2560]u8, @splat(0));
     const base = emptyFile();
     @memcpy(bytes[0..1536], &base);
     put(u32, &bytes, 60, 2);

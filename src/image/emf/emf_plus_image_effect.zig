@@ -50,7 +50,7 @@ pub fn parse(kind: guid.Kind, bytes: []const u8) !Effect {
             try exact(bytes, 12);
             const raw_adjustment = uint(bytes, 0);
             if (raw_adjustment > 7) return error.InvalidEmfPlusCurveAdjustment;
-            const adjustment: CurveAdjustment = @enumFromInt(@as(u3, @intCast(raw_adjustment)));
+            const adjustment: CurveAdjustment = @fromBackingInt(@intCast(@as(u3, @intCast(raw_adjustment))));
             const raw_channel = uint(bytes, 4);
             if (raw_channel > 3) return error.InvalidEmfPlusCurveChannel;
             const intensity = sint(bytes, 8);
@@ -61,7 +61,7 @@ pub fn parse(kind: guid.Kind, bytes: []const u8) !Effect {
             }
             break :blk .{ .color_curve = .{
                 .adjustment = adjustment,
-                .channel = @enumFromInt(@as(u2, @intCast(raw_channel))),
+                .channel = @fromBackingInt(@intCast(@as(u2, @intCast(raw_channel)))),
                 .intensity = intensity,
             } };
         },
@@ -154,7 +154,7 @@ fn putF32(bytes: []u8, offset: usize, value: f32) void {
 }
 
 test "EMF+ fixed image effects enforce exact sizes and MUST ranges" {
-    var pair = [_]u8{0} ** 8;
+    var pair = @as([8]u8, @splat(0));
     putF32(&pair, 0, 255);
     std.mem.writeInt(u32, pair[4..8], 1, .little);
     try std.testing.expect((try parse(.blur, &pair)).blur.expand_edge);
@@ -173,7 +173,7 @@ test "EMF+ fixed image effects enforce exact sizes and MUST ranges" {
 }
 
 test "EMF+ color effects preserve order and conditional ranges" {
-    var triple = [_]u8{0} ** 12;
+    var triple = @as([12]u8, @splat(0));
     putI32(&triple, 0, -100);
     putI32(&triple, 4, 0);
     putI32(&triple, 8, 100);
@@ -200,7 +200,7 @@ test "EMF+ lookup matrix and red eye effects own exact array boundaries" {
     try std.testing.expectEqual(@as(u8, 0), tables.blue[0]);
     try std.testing.expectEqual(@as(u8, 255), tables.alpha[255]);
 
-    var matrix = [_]u8{0} ** 100;
+    var matrix = @as([100]u8, @splat(0));
     putF32(&matrix, 96, 2);
     const parsed_matrix = (try parse(.color_matrix, &matrix)).color_matrix;
     try std.testing.expectEqual(@as(f32, 2), parsed_matrix[24]);
@@ -210,7 +210,7 @@ test "EMF+ lookup matrix and red eye effects own exact array boundaries" {
         try std.testing.expectError(error.InvalidEmfPlusColorMatrix, parse(.color_matrix, &invalid));
     }
 
-    var areas = [_]u8{0} ** 36;
+    var areas = @as([36]u8, @splat(0));
     putI32(&areas, 0, 2);
     const red_eye = (try parse(.red_eye_correction, &areas)).red_eye_correction;
     try std.testing.expectEqual(@as(u32, 2), red_eye.count);
@@ -222,7 +222,7 @@ test "EMF+ lookup matrix and red eye effects own exact array boundaries" {
 }
 
 test "EMF+ remaining scalar effects preserve field order and both range endpoints" {
-    var triple = [_]u8{0} ** 12;
+    var triple = @as([12]u8, @splat(0));
     putI32(&triple, 0, -180);
     putI32(&triple, 4, 100);
     putI32(&triple, 8, -100);
@@ -238,7 +238,7 @@ test "EMF+ remaining scalar effects preserve field order and both range endpoint
     try std.testing.expectEqual(@as(i32, -100), level.midtone);
     try std.testing.expectEqual(@as(i32, 0), level.shadow);
 
-    var pair = [_]u8{0} ** 8;
+    var pair = @as([8]u8, @splat(0));
     putF32(&pair, 0, 255);
     putF32(&pair, 4, 100);
     const sharp = (try parse(.sharpen, &pair)).sharpen;
@@ -272,7 +272,7 @@ test "EMF+ every image effect rejects shorter and longer parameter blocks" {
         .{ .kind = .sharpen, .size = 8 },
         .{ .kind = .tint, .size = 8 },
     };
-    var bytes = [_]u8{0} ** 1028;
+    var bytes = @as([1028]u8, @splat(0));
     for (cases) |case| {
         _ = try parse(case.kind, bytes[0..case.size]);
         try std.testing.expectError(error.InvalidEmfPlusImageEffectSize, parse(case.kind, bytes[0 .. case.size - 4]));
@@ -281,7 +281,7 @@ test "EMF+ every image effect rejects shorter and longer parameter blocks" {
 }
 
 test "EMF+ scalar image effects reject each independent out of range field" {
-    var triple = [_]u8{0} ** 12;
+    var triple = @as([12]u8, @splat(0));
     for (0..3) |field| {
         @memset(&triple, 0);
         putI32(&triple, field * 4, 101);
@@ -299,7 +299,7 @@ test "EMF+ scalar image effects reject each independent out of range field" {
     putI32(&triple, 8, 101);
     try std.testing.expectError(error.InvalidEmfPlusImageEffectValue, parse(.levels, &triple));
 
-    var pair = [_]u8{0} ** 8;
+    var pair = @as([8]u8, @splat(0));
     putI32(&pair, 0, -181);
     try std.testing.expectError(error.InvalidEmfPlusImageEffectValue, parse(.tint, &pair));
     putI32(&pair, 0, 0);

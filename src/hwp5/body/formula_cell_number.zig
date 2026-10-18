@@ -12,7 +12,7 @@ pub fn parse(bytes: []const u8) !f64 {
 }
 
 fn wire(comptime text: []const u8) [text.len * 2]u8 {
-    var bytes = [_]u8{0} ** (text.len * 2);
+    var bytes = @as([(text.len * 2)]u8, @splat(0));
     for (text, 0..) |value, i| bytes[i * 2] = value;
     return bytes;
 }
@@ -24,6 +24,6 @@ test "formula cell padding retains strict number grammar and original input" {
     inline for (.{ "", " ", "1 2", "1 ,000", "\t1", "1\n", " 1e3 ", " 12,34 " }) |text| try std.testing.expectError(error.InvalidFormulaNumber, parse(&wire(text)));
     try std.testing.expectError(error.InvalidFormulaNumber, parse(&.{ 0xa0, 0, '1', 0 }));
     try std.testing.expectError(error.UnexpectedEnd, parse(&.{'1'}));
-    try std.testing.expectError(error.LimitExceeded, parse(&([_]u8{0} ** 258)));
+    try std.testing.expectError(error.LimitExceeded, parse(&(@as([258]u8, @splat(0)))));
     try std.testing.expectError(error.InvalidFormulaNumber, @import("formula_number.zig").parse(&wire(" 19,200")));
 }

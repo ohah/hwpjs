@@ -19,7 +19,7 @@ fn inspect(a: std.mem.Allocator, bytes: []const u8, limit: usize, semantic: bool
     errdefer out.deinit(a);
     if (semantic) {
         const s = core.hwp5.form_semantics.inspectObserved(tree, report, kind, ref);
-        inline for (std.meta.fields(@TypeOf(s))) |f| try int(a, &out, u32, @intFromEnum(@field(s, f.name)));
+        inline for (@typeInfo(@TypeOf(s)).@"struct".field_names) |f| try int(a, &out, u32, @backingInt(@field(s, f)));
         return out.toOwnedSlice(a);
     }
     try int(a, &out, u32, @intCast(report.known_nodes));

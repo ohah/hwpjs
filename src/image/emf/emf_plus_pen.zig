@@ -38,7 +38,7 @@ fn putU32(bytes: []u8, offset: usize, value: u32) void {
 }
 
 test "EMF+ Pen separates PenData from the trailing Brush object" {
-    var bytes = [_]u8{0} ** 32;
+    var bytes = @as([32]u8, @splat(0));
     putU32(&bytes, 0, 0xdbc01002);
     putU32(&bytes, 8, 0);
     putU32(&bytes, 12, 6);
@@ -51,7 +51,7 @@ test "EMF+ Pen separates PenData from the trailing Brush object" {
 }
 
 test "EMF+ Pen rejects type limit truncation missing brush and wrong completed type" {
-    var bytes = [_]u8{0} ** 32;
+    var bytes = @as([32]u8, @splat(0));
     putU32(&bytes, 0, 0xdbc01001);
     putU32(&bytes, 12, 0);
     putU32(&bytes, 20, 0xdbc01001);

@@ -1,9 +1,9 @@
 const std = @import("std");
 const t = std.testing;
 const q = @import("quantization.zig");
-const eight = .{0} ++ [_]u8{1} ** 64;
+const eight = .{0} ++ @as([64]u8, @splat(1));
 fn wide() [129]u8 {
-    var bytes = [_]u8{0} ** 129;
+    var bytes = @as([129]u8, @splat(0));
     bytes[0] = 0x10;
     for (0..64) |i| std.mem.writeInt(u16, bytes[1 + 2 * i ..][0..2], 1, .big);
     return bytes;

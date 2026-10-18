@@ -10,7 +10,7 @@ fn chunk(name: *const [4]u8, bytes: []const u8) Chunk {
 test "PNG sRGB exhaustive intents and optional exact companion values" {
     for (0..256) |i| {
         const bytes = [_]u8{@intCast(i)};
-        if (i < 4) try t.expectEqual(i, @intFromEnum(try srgb.parse(&bytes))) else try t.expectError(error.InvalidPngSrgbIntent, srgb.parse(&bytes));
+        if (i < 4) try t.expectEqual(i, @backingInt(try srgb.parse(&bytes))) else try t.expectError(error.InvalidPngSrgbIntent, srgb.parse(&bytes));
     }
     try t.expectError(error.InvalidPngSrgbSize, srgb.parse(&.{}));
     try t.expectError(error.InvalidPngSrgbSize, srgb.parse(&.{ 0, 0 }));
@@ -24,7 +24,7 @@ test "PNG sRGB exhaustive intents and optional exact companion values" {
 test "PNG sRGB atomic cross-check in both arrival orders and duplicate zero intent" {
     const s = chunk("sRGB", &.{0});
     const bad_g = chunk("gAMA", &.{ 0, 0, 0, 0 });
-    const bad_c = chunk("cHRM", &([_]u8{0} ** 32));
+    const bad_c = chunk("cHRM", &(@as([32]u8, @splat(0))));
     for ([_]Chunk{ bad_g, bad_c }, [_]anyerror{ error.InvalidPngSrgbGamma, error.InvalidPngSrgbChromaticities }) |bad, err| {
         var first: State = .{};
         try first.consume(h, 0, s);

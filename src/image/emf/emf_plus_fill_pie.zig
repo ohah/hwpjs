@@ -88,7 +88,7 @@ fn putF32(bytes: []u8, offset: usize, value: f32) void {
 }
 
 test "EMF+ FillPie parses compressed ArcData with both Brush forms and ignored flags" {
-    var data = [_]u8{0} ** 20;
+    var data = @as([20]u8, @splat(0));
     std.mem.writeInt(u32, data[0..4], 63, .little);
     putF32(&data, 4, 450.0);
     putF32(&data, 8, -720.0);
@@ -138,7 +138,7 @@ test "EMF+ FillPie parses compressed ArcData with both Brush forms and ignored f
 }
 
 test "EMF+ FillPie preserves floating ArcData bits with both Brush forms" {
-    var data = [_]u8{0} ** 28;
+    var data = @as([28]u8, @splat(0));
     std.mem.writeInt(u32, data[0..4], 0x44332211, .little);
     putF32(&data, 4, -0.0);
     putF32(&data, 8, std.math.nan(f32));
@@ -160,7 +160,7 @@ test "EMF+ FillPie preserves floating ArcData bits with both Brush forms" {
 }
 
 test "EMF+ FillPie rejects type Brush ID and every independent size mismatch" {
-    var data = [_]u8{0} ** 29;
+    var data = @as([29]u8, @splat(0));
     _ = try parse(makeRecord(data[0..20], 0xc000));
     _ = try parse(makeRecord(data[0..28], 0x8000));
     for (0..data.len + 1) |cut| {

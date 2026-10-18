@@ -5,7 +5,7 @@ const schema = @import("form_schema.zig");
 const refs = @import("form_references.zig");
 const semantics = @import("form_semantics.zig");
 fn wide(comptime ascii: []const u8) [ascii.len * 2]u8 {
-    var out = [_]u8{0} ** (ascii.len * 2);
+    var out = @as([(ascii.len * 2)]u8, @splat(0));
     for (ascii, 0..) |c, i| out[i * 2] = c;
     return out;
 }

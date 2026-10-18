@@ -188,7 +188,7 @@ fn putF32(bytes: []u8, offset: usize, value: f32) void {
 }
 
 test "EMF+ Path parses floating points types and indeterminate padding" {
-    var bytes = [_]u8{0} ** 32;
+    var bytes = @as([32]u8, @splat(0));
     putU32(&bytes, 0, 0xdbc01002);
     putU32(&bytes, 4, 2);
     putF32(&bytes, 12, 1.5);
@@ -247,7 +247,7 @@ test "EMF+ Path parses floating points types and indeterminate padding" {
 }
 
 test "EMF+ Path public device marker points retain Bezier control marker" {
-    var bytes = [_]u8{0} ** 32;
+    var bytes = @as([32]u8, @splat(0));
     putU32(&bytes, 0, 0xdbc01002);
     putU32(&bytes, 4, 4);
     putU32(&bytes, 8, 0x4000);
@@ -274,7 +274,7 @@ test "EMF+ Path public device marker points retain Bezier control marker" {
 }
 
 test "EMF+ Path public device marker points retain RLE flag" {
-    var bytes = [_]u8{0} ** 16;
+    var bytes = @as([16]u8, @splat(0));
     putU32(&bytes, 0, 0xdbc01002);
     putU32(&bytes, 4, 1);
     putU32(&bytes, 8, 0x0800);
@@ -295,7 +295,7 @@ test "EMF+ Path public device marker points retain RLE flag" {
 
 test "EMF+ Path public device dash points keep Bezier control and PointR RLE flags" {
     const mapping = world_page_device.resolve(transform_matrix.TransformMatrix.translation(10, 20), page_transform.build(.pixel, 2, .{ .x = 96, .y = 96 })).?;
-    var bytes = [_]u8{0} ** 32;
+    var bytes = @as([32]u8, @splat(0));
     putU32(&bytes, 0, 0xdbc01002);
     putU32(&bytes, 4, 4);
     putU32(&bytes, 8, 0x4000);
@@ -318,7 +318,7 @@ test "EMF+ Path public device dash points keep Bezier control and PointR RLE fla
     try std.testing.expect(end.point.point_type.point_type.close_subpath);
     try std.testing.expect((try dashes.next()) == null);
 
-    var relative = [_]u8{0} ** 16;
+    var relative = @as([16]u8, @splat(0));
     putU32(&relative, 0, 0xdbc01002);
     putU32(&relative, 4, 1);
     putU32(&relative, 8, 0x0800);
@@ -334,7 +334,7 @@ test "EMF+ Path public device dash points keep Bezier control and PointR RLE fla
     try std.testing.expectEqual(@as(u8, 0x10), move.point.point_type.point_type.raw);
     try std.testing.expect((try relative_dashes.next()) == null);
 
-    var relative_bezier = [_]u8{0} ** 24;
+    var relative_bezier = @as([24]u8, @splat(0));
     putU32(&relative_bezier, 0, 0xdbc01002);
     putU32(&relative_bezier, 4, 4);
     putU32(&relative_bezier, 8, 0x0800);
@@ -355,7 +355,7 @@ test "EMF+ Path public device dash points keep Bezier control and PointR RLE fla
 }
 
 test "EMF+ Path exposes shared stroke and fill device segments" {
-    var bytes = [_]u8{0} ** 32;
+    var bytes = @as([32]u8, @splat(0));
     putU32(&bytes, 0, 0xdbc01002);
     putU32(&bytes, 4, 2);
     putF32(&bytes, 12, 1.5);
@@ -483,7 +483,7 @@ test "EMF+ Path parses the official 19-point object example byte for byte" {
 }
 
 test "EMF+ Path parses signed 16-bit absolute points" {
-    var bytes = [_]u8{0} ** 28;
+    var bytes = @as([28]u8, @splat(0));
     putU32(&bytes, 0, 0xdbc01001);
     putU32(&bytes, 4, 3);
     putU32(&bytes, 8, 0x4000);
@@ -499,7 +499,7 @@ test "EMF+ Path parses signed 16-bit absolute points" {
 }
 
 test "EMF+ Path specification mode parses mixed PointR and RLE types" {
-    var bytes = [_]u8{0} ** 24;
+    var bytes = @as([24]u8, @splat(0));
     putU32(&bytes, 0, 0xdbc01002);
     putU32(&bytes, 4, 2);
     putU32(&bytes, 8, 0x4800);
@@ -522,7 +522,7 @@ test "EMF+ Path specification mode parses mixed PointR and RLE types" {
 }
 
 test "EMF+ Path independent RLE mode keeps relative and type compression orthogonal" {
-    var relative = [_]u8{0} ** 20;
+    var relative = @as([20]u8, @splat(0));
     putU32(&relative, 0, 0xdbc01001);
     putU32(&relative, 4, 2);
     putU32(&relative, 8, 0x0800);
@@ -532,7 +532,7 @@ test "EMF+ Path independent RLE mode keeps relative and type compression orthogo
     try std.testing.expect(!relative_value.point_types_rle);
     try std.testing.expectError(error.InvalidEmfPlusPathPointTypeRleHeader, parse(&relative, .{}));
 
-    var rle = [_]u8{0} ** 32;
+    var rle = @as([32]u8, @splat(0));
     putU32(&rle, 0, 0xdbc01001);
     putU32(&rle, 4, 2);
     putU32(&rle, 8, 0x1000);
@@ -548,7 +548,7 @@ test "EMF+ Path independent RLE mode keeps relative and type compression orthogo
 }
 
 test "EMF+ Path rejects every truncation and malformed semantic boundary" {
-    var bytes = [_]u8{0} ** 32;
+    var bytes = @as([32]u8, @splat(0));
     putU32(&bytes, 0, 0xdbc01001);
     putU32(&bytes, 4, 2);
     putF32(&bytes, 12, 1);
@@ -571,7 +571,7 @@ test "EMF+ Path rejects every truncation and malformed semantic boundary" {
 }
 
 test "EMF+ Path RLE rejects bad headers and runs beyond point count" {
-    var bytes = [_]u8{0} ** 16;
+    var bytes = @as([16]u8, @splat(0));
     putU32(&bytes, 0, 0xdbc01001);
     putU32(&bytes, 4, 1);
     putU32(&bytes, 8, 0x0800);
@@ -584,7 +584,7 @@ test "EMF+ Path RLE rejects bad headers and runs beyond point count" {
 }
 
 test "EMF+ Path accepts zero RLE runs without losing exact termination" {
-    var bytes = [_]u8{0} ** 20;
+    var bytes = @as([20]u8, @splat(0));
     putU32(&bytes, 0, 0xdbc01001);
     putU32(&bytes, 4, 1);
     putU32(&bytes, 8, 0x0800);
@@ -598,7 +598,7 @@ test "EMF+ Path accepts zero RLE runs without losing exact termination" {
 }
 
 test "EMF+ Path validates empty padding and completed object type" {
-    var empty = [_]u8{0} ** 12;
+    var empty = @as([12]u8, @splat(0));
     putU32(&empty, 0, 0xdbc01001);
     const value = try parseCompleted(.{
         .object_id = 3,
@@ -608,7 +608,7 @@ test "EMF+ Path validates empty padding and completed object type" {
     }, .{ .max_points = 0 });
     try std.testing.expectEqual(@as(u32, 0), value.point_count);
 
-    var excess = [_]u8{0} ** 16;
+    var excess = @as([16]u8, @splat(0));
     putU32(&excess, 0, 0xdbc01001);
     try std.testing.expectError(error.InvalidEmfPlusPathPadding, parse(&excess, .{}));
     try std.testing.expectError(error.NotEmfPlusPathObject, parseCompleted(.{
@@ -620,11 +620,11 @@ test "EMF+ Path validates empty padding and completed object type" {
 }
 
 test "EMF+ Path accepts every alignment padding width from zero through three" {
-    var no_padding = [_]u8{0} ** 12;
+    var no_padding = @as([12]u8, @splat(0));
     putU32(&no_padding, 0, 0xdbc01001);
     try std.testing.expectEqual(@as(usize, 0), (try parse(&no_padding, .{})).alignment_padding.len);
 
-    var one_padding = [_]u8{0} ** 16;
+    var one_padding = @as([16]u8, @splat(0));
     putU32(&one_padding, 0, 0xdbc01001);
     putU32(&one_padding, 4, 1);
     putU32(&one_padding, 8, 0x0800);
@@ -632,7 +632,7 @@ test "EMF+ Path accepts every alignment padding width from zero through three" {
     const one = try parse(&one_padding, .{ .flag_interpretation = .independent_rle });
     try std.testing.expectEqualSlices(u8, "\xa1", one.alignment_padding);
 
-    var two_padding = [_]u8{0} ** 20;
+    var two_padding = @as([20]u8, @splat(0));
     putU32(&two_padding, 0, 0xdbc01001);
     putU32(&two_padding, 4, 2);
     putU32(&two_padding, 8, 0x0800);
@@ -640,7 +640,7 @@ test "EMF+ Path accepts every alignment padding width from zero through three" {
     const two = try parse(&two_padding, .{ .flag_interpretation = .independent_rle });
     try std.testing.expectEqualSlices(u8, "\xa2\xb2", two.alignment_padding);
 
-    var three_padding = [_]u8{0} ** 20;
+    var three_padding = @as([20]u8, @splat(0));
     putU32(&three_padding, 0, 0xdbc01001);
     putU32(&three_padding, 4, 1);
     putU32(&three_padding, 8, 0x4000);

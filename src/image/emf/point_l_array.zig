@@ -22,7 +22,7 @@ pub const Points = struct {
 
 test "PointL array borrows exact records and preserves signed coordinates" {
     const std = @import("std");
-    var bytes = [_]u8{0} ** 16;
+    var bytes = @as([16]u8, @splat(0));
     std.mem.writeInt(i32, bytes[0..4], std.math.minInt(i32), .little);
     std.mem.writeInt(i32, bytes[4..8], std.math.maxInt(i32), .little);
     const points = try Points.parse(&bytes);

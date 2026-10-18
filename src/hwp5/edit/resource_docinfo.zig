@@ -2,10 +2,10 @@
 const std = @import("std");
 const model = @import("../../model/document.zig");
 pub fn write(a: std.mem.Allocator, original: []const u8, version: @import("../version.zig").Version, document: *const model.Document, paragraph_count: usize, character_count: usize, limit: usize) ![]u8 {
-    const paragraphs: @import("paragraph_resource_values.zig").Values = .{ .entries = .{ .items = document.paragraph_resources, .capacity = document.paragraph_resources.len } };
+    const paragraphs: @import("paragraph_resource_values.zig").Values = .{ .entries = .{ .items = document.paragraph_resources, .capacity = document.paragraph_resources.len, .pointer_stability = .{} } };
     var current = try paragraphs.write(a, original, version, paragraph_count, limit);
     errdefer a.free(current);
-    const characters: @import("character_resource_values.zig").Values = .{ .entries = .{ .items = document.character_resources, .capacity = document.character_resources.len } };
+    const characters: @import("character_resource_values.zig").Values = .{ .entries = .{ .items = document.character_resources, .capacity = document.character_resources.len, .pointer_stability = .{} } };
     if (document.character_resources.len != 0) {
         const next = try characters.write(a, current, version, character_count, limit);
         a.free(current);

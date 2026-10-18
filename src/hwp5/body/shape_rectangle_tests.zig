@@ -3,7 +3,7 @@ const t = std.testing;
 const rect = @import("shape_rectangle.zig");
 test "rectangle explicit layouts preserve signed distinct coordinates and raw rounding" {
     try t.expectEqual(79, rect.tag);
-    var raw = [_]u8{0} ** 35;
+    var raw = @as([35]u8, @splat(0));
     raw[0] = 255;
     raw[33] = 9;
     raw[34] = 128;
@@ -22,7 +22,7 @@ test "rectangle explicit layouts preserve signed distinct coordinates and raw ro
 }
 test "shared signed shape point read rolls back at every partial coordinate" {
     const Reader = @import("../../binary/reader.zig").Reader;
-    const raw = [_]u8{0} ** 11;
+    const raw = @as([11]u8, @splat(0));
     for (3..11) |end| {
         var r: Reader = .{ .bytes = raw[0..end], .offset = 3 };
         try t.expectError(error.UnexpectedEnd, rect.Point.read(&r));

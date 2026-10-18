@@ -76,7 +76,7 @@ fn putF32(bytes: []u8, offset: usize, value: f32) void {
 }
 
 test "EMF+ DrawArc parses compressed rectangle Pen ID angles and ignored flags" {
-    var bytes = [_]u8{0} ** 16;
+    var bytes = @as([16]u8, @splat(0));
     putF32(&bytes, 0, 450.0);
     putF32(&bytes, 4, -720.0);
     for ([_]i16{ -32768, -1, 0, 32767 }, 0..) |coordinate, index|
@@ -114,7 +114,7 @@ test "EMF+ DrawArc parses compressed rectangle Pen ID angles and ignored flags" 
 }
 
 test "EMF+ DrawArc parses floating rectangle without normalizing float bits" {
-    var bytes = [_]u8{0} ** 24;
+    var bytes = @as([24]u8, @splat(0));
     putF32(&bytes, 0, -0.0);
     putF32(&bytes, 4, std.math.nan(f32));
     for ([_]f32{ 1.25, -2.5, 3.75, -4.5 }, 0..) |coordinate, index|
@@ -130,7 +130,7 @@ test "EMF+ DrawArc parses floating rectangle without normalizing float bits" {
 }
 
 test "EMF+ DrawArc rejects type ObjectID and every independent size mismatch" {
-    var bytes = [_]u8{0} ** 25;
+    var bytes = @as([25]u8, @splat(0));
     _ = try parse(makeRecord(bytes[0..16], 0x4000));
     _ = try parse(makeRecord(bytes[0..24], 0));
     for (0..16) |cut|

@@ -33,7 +33,7 @@ pub const Iterator = struct {
     expected_nodes: u32,
     emitted: u32 = 0,
     depth: usize = 0,
-    children_remaining: [storage_depth]u2 = .{0} ** storage_depth,
+    children_remaining: [storage_depth]u2 = @splat(0),
     complete: bool = false,
 
     pub fn next(self: *Iterator) !?Node {

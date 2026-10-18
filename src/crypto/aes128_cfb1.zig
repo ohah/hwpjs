@@ -31,7 +31,7 @@ test "AES128 CFB1 matches independent Node and preserves every partial byte leng
     var input: [32]u8 = undefined;
     for (&input, 0..) |*byte, i| byte.* = @intCast(i);
     var output: [32]u8 = undefined;
-    const iv = [_]u8{0} ** 16;
+    const iv = @as([16]u8, @splat(0));
     for (0..33) |length| {
         try transform(key, iv, input[0..length], output[0..length], .decrypt);
         try std.testing.expectEqualSlices(u8, expected[0..length], output[0..length]);
@@ -51,5 +51,5 @@ test "AES128 CFB1 matches independent Node and preserves every partial byte leng
     try std.testing.expectError(error.OverlappingBuffers, transform(key, iv, &output, &output, .decrypt));
     try std.testing.expectError(error.OverlappingBuffers, transform(key, iv, output[0..16], output[8..24], .encrypt));
     try std.testing.expectError(error.OverlappingBuffers, transform(key, iv, output[8..24], output[0..16], .decrypt));
-    try std.testing.expectEqualSlices(u8, &([_]u8{0xaa} ** 32), &output);
+    try std.testing.expectEqualSlices(u8, &(@as([32]u8, @splat(0xaa))), &output);
 }

@@ -21,12 +21,12 @@ pub const Note = struct {
     section_ordinal: usize,
     element_index: usize,
     parent_element_index: usize,
-    child_counts: [@typeInfo(ChildKind).@"enum".fields.len]usize = @splat(0),
+    child_counts: [@typeInfo(ChildKind).@"enum".field_names.len]usize = @splat(0),
     other_attributes: usize = 0,
     direct_children: usize = 0,
 
     pub fn count(self: *const Note, kind: ChildKind) usize {
-        return self.child_counts[@intFromEnum(kind)];
+        return self.child_counts[@backingInt(kind)];
     }
 };
 
@@ -41,7 +41,7 @@ pub const Child = struct {
     direct_children: usize = 0,
 
     pub fn get(self: *const Child, field: Field) ?[]const u8 {
-        return self.raw[@intFromEnum(field)];
+        return self.raw[@backingInt(field)];
     }
 
     pub fn deinit(self: *Child, a: std.mem.Allocator) void {
@@ -113,7 +113,7 @@ fn readAttributes(a: std.mem.Allocator, tree: *const part_tree.Tree, index: usiz
             const normalized = try attribute.value.toUtf8(a, options.max_attribute_bytes);
             child.raw[slot] = normalized;
             var diagnostics: fields.Diagnostics = .{};
-            try fields.validate(child.kind, note_kind, @enumFromInt(slot), normalized, &diagnostics);
+            try fields.validate(child.kind, note_kind, @fromBackingInt(@intCast(slot)), normalized, &diagnostics);
             child.unknown_enums += diagnostics.unknown_enums;
             child.noncanonical_colors += diagnostics.noncanonical_colors;
         } else child.other_attributes += 1;
@@ -168,7 +168,7 @@ pub fn inspect(a: std.mem.Allocator, sections: []const part_tree.Tree, options: 
                 unknown_enums += child.unknown_enums;
                 noncanonical_colors += child.noncanonical_colors;
                 try children.append(a, child);
-                notes.items[note_index].child_counts[@intFromEnum(child_kind)] += 1;
+                notes.items[note_index].child_counts[@backingInt(child_kind)] += 1;
             }
         }
     }

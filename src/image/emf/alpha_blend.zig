@@ -36,7 +36,7 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 }
 
 fn sourceRecord(bit_count: u16) [164]u8 {
-    var bytes = [_]u8{0} ** 164;
+    var bytes = @as([164]u8, @splat(0));
     std.mem.writeInt(i32, bytes[32..36], 2, .little);
     std.mem.writeInt(i32, bytes[36..40], 2, .little);
     bytes[42] = 0xff;
@@ -91,7 +91,7 @@ test "ALPHABLEND parses all fixed fields source and trailing data" {
 
 test "ALPHABLEND enforces positive rectangles blend source and every boundary" {
     try std.testing.expectEqual(@as(usize, 108), fixed_size);
-    var missing = [_]u8{0} ** fixed_size;
+    var missing = @as([fixed_size]u8, @splat(0));
     std.mem.writeInt(i32, missing[32..36], 1, .little);
     std.mem.writeInt(i32, missing[36..40], 1, .little);
     std.mem.writeInt(i32, missing[100..104], 1, .little);
@@ -127,11 +127,11 @@ test "ALPHABLEND enforces positive rectangles blend source and every boundary" {
     try std.testing.expectError(error.UnsupportedEmfDibColors, parse(fixture(.alphablend, &indexed)));
     const no_alpha = sourceRecord(1);
     var constant = no_alpha;
-    std.mem.writeInt(u32, constant[80..84], @intFromEnum(dib_colors.Usage.palette_indices), .little);
+    std.mem.writeInt(u32, constant[80..84], @backingInt(dib_colors.Usage.palette_indices), .little);
     try std.testing.expectEqual(blend_function.AlphaFormat.constant, (try parse(fixture(.alphablend, &constant))).?.blend.alpha_format);
     var claims_alpha = no_alpha;
     claims_alpha[43] = 1;
-    std.mem.writeInt(u32, claims_alpha[80..84], @intFromEnum(dib_colors.Usage.palette_indices), .little);
+    std.mem.writeInt(u32, claims_alpha[80..84], @backingInt(dib_colors.Usage.palette_indices), .little);
     try std.testing.expectError(error.InvalidEmfAlphaBlendSourceBitCount, parse(fixture(.alphablend, &claims_alpha)));
     var incomplete = source;
     @memset(incomplete[96..100], 0);

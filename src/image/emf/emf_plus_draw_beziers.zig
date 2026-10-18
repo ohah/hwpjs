@@ -76,7 +76,7 @@ fn makeRecord(data: []const u8, flags: u16) record.Record {
 }
 
 test "EMF+ DrawBeziers parses integer and floating points with Pen IDs" {
-    var integer = [_]u8{0} ** 20;
+    var integer = @as([20]u8, @splat(0));
     std.mem.writeInt(u32, integer[0..4], 4, .little);
     for ([_]i16{ -32768, 32767, -1, 1, -2, 2, -3, 3 }, 0..) |coordinate, index|
         std.mem.writeInt(i16, integer[4 + index * 2 ..][0..2], coordinate, .little);
@@ -96,7 +96,7 @@ test "EMF+ DrawBeziers parses integer and floating points with Pen IDs" {
     try std.testing.expectEqual(@as(i64, -3), integer_segment.end.integer.x);
     try std.testing.expect((try integer_segments.next()) == null);
 
-    var floating = [_]u8{0} ** 36;
+    var floating = @as([36]u8, @splat(0));
     std.mem.writeInt(u32, floating[0..4], 4, .little);
     const values = [_]f32{ -0.0, std.math.nan(f32), 1, 2, 3, 4, 5, 6 };
     for (values, 0..) |coordinate, index|
@@ -107,14 +107,14 @@ test "EMF+ DrawBeziers parses integer and floating points with Pen IDs" {
     try std.testing.expectEqual(@as(u32, @bitCast(@as(f32, -0.0))), @as(u32, @bitCast(first.x)));
     try std.testing.expect(std.math.isNan(first.y));
 
-    var incomplete = [_]u8{0} ** 24;
+    var incomplete = @as([24]u8, @splat(0));
     std.mem.writeInt(u32, incomplete[0..4], 5, .little);
     const wire_valid = try parse(makeRecord(&incomplete, 0x4000), .{});
     try std.testing.expectError(error.InvalidEmfPlusBezierTopology, wire_valid.segments());
 }
 
 test "EMF+ DrawBeziers exposes shared device Bezier segments" {
-    var data = [_]u8{0} ** 20;
+    var data = @as([20]u8, @splat(0));
     std.mem.writeInt(u32, data[0..4], 4, .little);
     for ([_]i16{ 1, 2, 3, 4, 5, 6, 7, 8 }, 0..) |coordinate, index|
         std.mem.writeInt(i16, data[4 + index * 2 ..][0..2], coordinate, .little);
@@ -137,7 +137,7 @@ test "EMF+ DrawBeziers exposes shared device Bezier segments" {
 }
 
 test "EMF+ DrawBeziers flattens every connected device segment with one global budget" {
-    var data = [_]u8{0} ** 32;
+    var data = @as([32]u8, @splat(0));
     std.mem.writeInt(u32, data[0..4], 7, .little);
     for ([_]i16{ 0, 0, 0, 8, 8, 8, 8, 0, 8, -8, 16, -8, 16, 0 }, 0..) |coordinate, index|
         std.mem.writeInt(i16, data[4 + index * 2 ..][0..2], coordinate, .little);
@@ -174,7 +174,7 @@ test "EMF+ DrawBeziers parses mixed PointR widths padding and ignores C when P i
 }
 
 test "EMF+ DrawBeziers rejects type count ObjectID sizes truncation and limit" {
-    var data = [_]u8{0} ** 36;
+    var data = @as([36]u8, @splat(0));
     std.mem.writeInt(u32, data[0..4], 4, .little);
     _ = try parse(makeRecord(&data, 0), .{});
     try std.testing.expectError(error.UnexpectedEnd, parse(makeRecord(data[0..0], 0), .{}));

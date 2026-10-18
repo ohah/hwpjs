@@ -159,18 +159,18 @@ pub const Iterator = struct {
 };
 
 test "RecordType is the complete official non-contiguous enumeration" {
-    const fields = std.meta.fields(RecordType);
+    const fields = @import("../../reflection.zig").fields(RecordType);
     try std.testing.expectEqual(@as(usize, 119), fields.len);
     inline for (fields) |field| {
         const kind = try parseType(field.value);
-        try std.testing.expectEqual(field.value, @intFromEnum(kind));
+        try std.testing.expectEqual(field.value, @backingInt(kind));
     }
     for ([_]u32{ 0, 0x45, 0x6b, 0x75, 0x7b, std.math.maxInt(u32) }) |value|
         try std.testing.expectError(error.InvalidEmfRecordType, parseType(value));
 }
 
 test "record iterator rejects undefined types without advancing" {
-    var bytes = [_]u8{0} ** 8;
+    var bytes = @as([8]u8, @splat(0));
     std.mem.writeInt(u32, bytes[0..4], 0x45, .little);
     std.mem.writeInt(u32, bytes[4..8], bytes.len, .little);
     var iterator: Iterator = .{ .bytes = &bytes };

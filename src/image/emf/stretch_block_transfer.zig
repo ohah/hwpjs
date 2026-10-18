@@ -30,7 +30,7 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 }
 
 fn sourceRecord() [140]u8 {
-    var bytes = [_]u8{0} ** 140;
+    var bytes = @as([140]u8, @splat(0));
     std.mem.writeInt(u32, bytes[40..44], 0x00cc0020, .little);
     std.mem.writeInt(i32, bytes[100..104], -7, .little);
     std.mem.writeInt(i32, bytes[104..108], 9, .little);
@@ -67,7 +67,7 @@ test "STRETCHBLT adds signed source dimensions and uses its own bitmap boundary"
 }
 
 test "STRETCHBLT checks omission every fixed and dynamic cut and unrelated types" {
-    var bytes = [_]u8{0} ** fixed_size;
+    var bytes = @as([fixed_size]u8, @splat(0));
     std.mem.writeInt(u32, bytes[40..44], 0x00f00021, .little);
     try std.testing.expect((try parse(fixture(.stretchblt, &bytes))).?.core.bitmap == null);
     std.mem.writeInt(u32, bytes[40..44], 0x00cc0020, .little);

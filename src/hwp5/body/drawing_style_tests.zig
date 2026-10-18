@@ -5,7 +5,7 @@ const Alpha = @import("../docinfo/fill_alpha.zig").Alpha;
 test "style diagnostics distinguish unsupported unselected unknown and parsed atomically" {
     const Component = @import("shape_component.zig").Component;
     const validation = @import("drawing_style_validation.zig");
-    var raw = [_]u8{0} ** 137;
+    var raw = @as([137]u8, @splat(0));
     var p = try Component.parse(&raw, .double_id);
     var report: validation.Report = .{};
     try report.add(p, .{ .tail = .alpha_shadow }, 0);
@@ -55,7 +55,7 @@ test "older gradient style reuses Fill fields without manufacturing alpha" {
 }
 test "explicit fill-only style preserves absence and does not guess a shadow" {
     const Style = @import("drawing_style.zig").Style;
-    const raw = [_]u8{0} ** 37;
+    const raw = @as([37]u8, @splat(0));
     const short = try Style.parseWithTail(raw[0..21], .observed13, .fill_only);
     try t.expect(short.tail == .fill_only);
     try t.expectEqual(0, short.tail.fill_only.len);
@@ -96,7 +96,7 @@ test "per-type alpha keeps zero and mixed types in pattern-gradient-image order"
 }
 test "drawing shadow widths and unknown fill do not consume guessed tails" {
     const Style = @import("drawing_style.zig").Style;
-    var raw = [_]u8{0} ** 38;
+    var raw = @as([38]u8, @splat(0));
     std.mem.writeInt(u32, raw[21..25], 0xffffffff, .little);
     std.mem.writeInt(u32, raw[25..29], 0x80000000, .little);
     std.mem.writeInt(i32, raw[29..33], -2147483648, .little);

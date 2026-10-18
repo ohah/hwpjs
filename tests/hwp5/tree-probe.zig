@@ -10,7 +10,7 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     const report = try core.hwp5.paragraphs.inspect(tree, resources);
     var out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(a);
-    inline for (std.meta.fields(@TypeOf(report))) |field| try int(a, &out, u32, @intCast(@field(report, field.name)));
+    inline for (@typeInfo(@TypeOf(report)).@"struct".field_names) |field| try int(a, &out, u32, @intCast(@field(report, field)));
     for (tree.nodes) |node| {
         try int(a, &out, u32, if (node.parent) |p| @intCast(p) else 0xffffffff);
         try int(a, &out, u32, @intCast(node.subtree_end));

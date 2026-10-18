@@ -2,7 +2,7 @@ const std = @import("std");
 const t = std.testing;
 const c = @import("shape_connector.zig");
 test "connector preserves all fields and borrowed points without truncation repair" {
-    var b = [_]u8{0} ** 64;
+    var b = @as([64]u8, @splat(0));
     const values = [_]u32{ 0x80000000, 17, 0xffffffff, 0x7fffffff, 0xdeadbeef, 19, 23, 29, 31, 2 };
     for (values, 0..) |value, i| std.mem.writeInt(u32, b[i * 4 ..][0..4], value, .little);
     std.mem.writeInt(i32, b[40..44], -79, .little);
@@ -36,7 +36,7 @@ test "connector preserves all fields and borrowed points without truncation repa
     try t.expectEqual(0, (try c.Connector.parse(b[0..40])).points.count());
 }
 test "connector point reads preserve nonzero cursor on every truncation" {
-    const b = [_]u8{255} ** 11;
+    const b = @as([11]u8, @splat(255));
     for (1..11) |end| {
         var r: @import("../../binary/reader.zig").Reader = .{ .bytes = b[0..end], .offset = 1 };
         try t.expectError(error.UnexpectedEnd, c.ControlPoint.read(&r));

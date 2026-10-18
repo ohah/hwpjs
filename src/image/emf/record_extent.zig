@@ -11,7 +11,7 @@ pub fn requiredEnd(record: records.Record, required_end: u64) ?usize {
 }
 
 test "required prefix accepts trailing record data but not truncation or declaration mismatch" {
-    const bytes = [_]u8{0} ** 16;
+    const bytes = @as([16]u8, @splat(0));
     const valid: records.Record = .{ .offset = 0, .kind = .savedc, .size = 12, .bytes = bytes[0..12], .end = 12 };
     try std.testing.expect(hasRequiredPrefix(valid, 8));
     try std.testing.expect(!hasRequiredPrefix(valid, 16));

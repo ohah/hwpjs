@@ -27,7 +27,7 @@ pub const Brush = struct {
     direct_children: usize = 0,
 
     pub fn count(self: *const Brush, kind: NodeKind) usize {
-        return self.child_counts[@intFromEnum(kind)];
+        return self.child_counts[@backingInt(kind)];
     }
 };
 
@@ -45,7 +45,7 @@ pub const Node = struct {
     recognized_children: usize = 0,
 
     pub fn get(self: *const Node, field: Field) ?[]const u8 {
-        return self.raw[@intFromEnum(field)];
+        return self.raw[@backingInt(field)];
     }
 
     pub fn deinit(self: *Node, a: std.mem.Allocator) void {
@@ -59,7 +59,7 @@ pub const Report = struct {
     master_pages: usize,
     brushes: []Brush,
     nodes: []Node,
-    kind_counts: [@typeInfo(NodeKind).@"enum".fields.len]usize,
+    kind_counts: [@typeInfo(NodeKind).@"enum".field_names.len]usize,
     other_attributes: usize,
     unknown_enums: usize,
     non_six_hex_colors: usize,
@@ -68,7 +68,7 @@ pub const Report = struct {
     color_count_mismatch: usize,
 
     pub fn count(self: *const Report, kind: NodeKind) usize {
-        return self.kind_counts[@intFromEnum(kind)];
+        return self.kind_counts[@backingInt(kind)];
     }
 
     pub fn deinit(self: *Report, a: std.mem.Allocator) void {
@@ -122,7 +122,7 @@ fn readAttributes(a: std.mem.Allocator, tree: *const part_tree.Tree, index: usiz
             node.raw[slot] = raw;
             node.attribute_bytes = std.math.add(usize, node.attribute_bytes, raw.len) catch return error.LimitExceeded;
             var diagnostics: fields.Diagnostics = .{};
-            try fields.validate(node.kind, @enumFromInt(slot), raw, &diagnostics);
+            try fields.validate(node.kind, @fromBackingInt(@intCast(slot)), raw, &diagnostics);
             node.unknown_enums += diagnostics.unknown_enums;
             node.non_six_hex_colors += diagnostics.non_six_hex_colors;
         } else node.other_attributes += 1;
@@ -134,7 +134,7 @@ const Collector = struct {
     options: Options,
     brushes: std.ArrayList(Brush) = .empty,
     nodes: std.ArrayList(Node) = .empty,
-    kind_counts: [@typeInfo(NodeKind).@"enum".fields.len]usize = @splat(0),
+    kind_counts: [@typeInfo(NodeKind).@"enum".field_names.len]usize = @splat(0),
     other_attributes: usize = 0,
     unknown_enums: usize = 0,
     non_six_hex_colors: usize = 0,
@@ -154,7 +154,7 @@ const Collector = struct {
         self.non_six_hex_colors += node.non_six_hex_colors;
         self.attribute_bytes += node.attribute_bytes;
         try self.nodes.append(self.a, node);
-        self.kind_counts[@intFromEnum(kind)] += 1;
+        self.kind_counts[@backingInt(kind)] += 1;
         return node_index;
     }
 
@@ -185,7 +185,7 @@ const Collector = struct {
                 self.brushes.items[brush_index].direct_children += 1;
                 const kind = variantKind(tree.elements[child_index]) orelse continue;
                 const node_index = try self.appendNode(tree, child_index, kind, brush_index, null);
-                self.brushes.items[brush_index].child_counts[@intFromEnum(kind)] += 1;
+                self.brushes.items[brush_index].child_counts[@backingInt(kind)] += 1;
                 var grandchild = tree.elements[child_index].first_child;
                 while (grandchild) |grandchild_index| : (grandchild = tree.elements[grandchild_index].next_sibling) {
                     try self.countChild();

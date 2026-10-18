@@ -9,7 +9,7 @@ pub fn runWide(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
 fn runFor(comptime bits: u16, a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     const width = bits / 8;
     const prefix = 4 + 2 * width;
-    const U = std.meta.Int(.unsigned, bits);
+    const U = @Int(.unsigned, bits);
     const select = if (bits == 128) icc.parametric_nearest.select else icc.parametric_nearest.selectWide;
     const write = if (bits == 128) @import("icc-parametric-nearest-output.zig").write else @import("icc-parametric-nearest-output.zig").writeWide;
     if (bytes.len > limit) return error.LimitExceeded;

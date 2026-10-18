@@ -5,7 +5,7 @@ const d = @import("reader.zig");
 const resources = @import("resources.zig");
 
 test "track info envelope borrows core and odd extension and rejects every short prefix" {
-    var bytes = [_]u8{0xaa} ** 1035;
+    var bytes = @as([1035]u8, @splat(0xaa));
     for (0..1032) |n| try t.expectError(error.UnexpectedEnd, info.View.parse(bytes[0..n]));
     const view = try info.View.parse(&bytes);
     try t.expectEqual(1032, view.core.len);
@@ -17,7 +17,7 @@ test "track info envelope borrows core and odd extension and rejects every short
 }
 
 test "track envelope errors are atomic after an already consumed unknown record" {
-    var b = [_]u8{0} ** 1040;
+    var b = @as([1040]u8, @splat(0));
     std.mem.writeInt(u32, b[0..4], 999, .little);
     for ([_]u32{ 32, 96 }) |tag| {
         for ([_]u32{ 0, 1, 2, 1023 }) |level| {
@@ -43,7 +43,7 @@ test "track envelope errors are atomic after an already consumed unknown record"
 }
 
 test "track content count distinguishes absent slot from signed declarations" {
-    var b = [_]u8{0} ** 77;
+    var b = @as([77]u8, @splat(0));
     std.mem.writeInt(u32, b[0..4], 17 | (68 << 20), .little);
     std.mem.writeInt(u32, b[72..76], 96 | (1 << 10) | (1 << 20), .little);
     for ([_]u32{ 0x05000107, 0x05000301, 0x05000302, 0x05010001 }) |v| {

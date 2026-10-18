@@ -39,8 +39,8 @@ fn scopeOwner(tree: *const Tree, node: usize, scope: usize) !?usize {
 
 fn enumeration(comptime T: type, raw: ?[]const u8) ?T {
     const text = std.mem.trim(u8, raw orelse return null, " \t\r\n");
-    inline for (@typeInfo(T).@"enum".fields) |field| {
-        if (std.ascii.eqlIgnoreCase(text, field.name)) return @enumFromInt(field.value);
+    inline for (@import("../reflection.zig").fields(T)) |field| {
+        if (std.ascii.eqlIgnoreCase(text, field.name)) return @fromBackingInt(@intCast(field.value));
     }
     return null;
 }

@@ -57,7 +57,7 @@ fn makeRecord(data: []const u8, flags: u16) record.Record {
 }
 
 test "EMF+ FillRects parses compressed rectangles and Brush object ID" {
-    var data = [_]u8{0} ** 24;
+    var data = @as([24]u8, @splat(0));
     std.mem.writeInt(u32, data[0..4], 63, .little);
     std.mem.writeInt(u32, data[4..8], 2, .little);
     for ([_]i16{ -32768, -1, 0, 32767, 1, 2, 3, 4 }, 0..) |value, index|
@@ -81,7 +81,7 @@ test "EMF+ FillRects parses compressed rectangles and Brush object ID" {
 }
 
 test "EMF+ FillRects preserves literal ARGB and floating rectangle bits" {
-    var data = [_]u8{0} ** 24;
+    var data = @as([24]u8, @splat(0));
     std.mem.writeInt(u32, data[0..4], 0x44332211, .little);
     std.mem.writeInt(u32, data[4..8], 1, .little);
     for ([_]u32{ 0x80000000, 0x7fc00001, 0x7f800000, 0xc0900000 }, 0..) |bits, index|
@@ -97,7 +97,7 @@ test "EMF+ FillRects preserves literal ARGB and floating rectangle bits" {
 }
 
 test "EMF+ FillRects rejects type brush count size axes truncation and limit" {
-    var data = [_]u8{0} ** 40;
+    var data = @as([40]u8, @splat(0));
     std.mem.writeInt(u32, data[0..4], 0, .little);
     std.mem.writeInt(u32, data[4..8], 2, .little);
     _ = try parse(makeRecord(data[0..24], 0x4000), .{});
@@ -108,7 +108,7 @@ test "EMF+ FillRects rejects type brush count size axes truncation and limit" {
         if (cut != 40)
             try std.testing.expectError(error.InvalidEmfPlusFillRectsSize, parse(makeRecord(data[0..cut], 0), .{}));
     }
-    var zero_count = [_]u8{0} ** 8;
+    var zero_count = @as([8]u8, @splat(0));
     try std.testing.expectError(error.InvalidEmfPlusFillRectsCount, parse(makeRecord(&zero_count, 0x4000), .{}));
     std.mem.writeInt(u32, data[0..4], 64, .little);
     try std.testing.expectError(error.InvalidEmfPlusBrushId, parse(makeRecord(data[0..24], 0x4000), .{}));

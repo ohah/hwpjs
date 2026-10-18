@@ -77,3 +77,7 @@ Debug `joined-merge-debug` 빌드도 exit0입니다. SHA256은4d28598a0a95582876
 native-remaining-after-joined-guard.jsonl/.stderr는94/94·fail/skip/logErrors/leaks0·guardStopped=false·wrapper exit0·최대 physical599,229,184바이트입니다. stderr의43바이트는 Switch chart corpus: 28 files, 28 wrappers 진단이고 테스트 오류가 아닙니다. 기본 WASM과 데모 산출물은 교체하지 않았습니다.
 
 원래4,114개 이름을 기존 전체 실행의3,476개 결과, 분할640개 실행의535개 결과, 후속107개 실행의15개 결과, 이번94개 결과의 이름 집합과 대조했습니다. 원래 목록에서 누락0이며 모든 개별 결과의 status/logs/leaks0을 확인했습니다. 반복된 root/import sentinel을 중복 합산하지 않습니다. 이 이름별 교차 실행 범위 확인은 단일 최신 소스/바이너리 전체 gate 성공이 아니며 문자 속성 실패 shard의 제한도 그대로입니다. 현재 소스의 무필터 전체 재빌드와 종료 검증은 별도입니다.
+
+## 0.16 무필터 전체 재빌드
+
+10978ca9의 추적 src2,635개와 보관 사본의 blob이 모두 같은 상태에서 Zig0.16.0 ReleaseSafe 무필터 빌드 native-current-after-joined-safe가 exit0으로 완료됐습니다. SHA256은f17bb92ee236af46d149d8d19e512cd8ec2b069f4f8617a2b295f98d738fb33c입니다. 표준 runner의 metadata만 조회해 원래4,114개 전체 이름과 순서까지 동일함을 확인했습니다. 이 새 바이너리의 전체 테스트 본문을 실행한 결과는 아니며 전체 runtime gate 성공으로 처리하지 않습니다. 이후 요청된 별도 Zig0.17 업그레이드 검증과 고비용 작업이 중복되지 않도록 이 바이너리의 전체 실행은 시작하지 않았습니다.

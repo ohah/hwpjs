@@ -22,7 +22,7 @@ pub const Points = struct {
 
 test "PointS array borrows exact records and checks indexes" {
     const std = @import("std");
-    var bytes = [_]u8{0} ** 8;
+    var bytes = @as([8]u8, @splat(0));
     std.mem.writeInt(i16, bytes[0..2], -2, .little);
     std.mem.writeInt(i16, bytes[2..4], 3, .little);
     const points = try Points.parse(&bytes);

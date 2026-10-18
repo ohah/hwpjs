@@ -39,7 +39,7 @@ fn allocations(a: std.mem.Allocator, good: []const u8, bad: []const u8) !void {
 }
 test "PNG fixed color integrated allocation cleanup and explicit interpretation deferral" {
     const f = @import("pixels_fixture.zig");
-    const good = try f.withEarlyMetadata(t.allocator, 0, &.{ .{ .name = "gAMA", .bytes = &.{ 0, 0, 0, 0 } }, .{ .name = "cHRM", .bytes = &([_]u8{0} ** 32) } });
+    const good = try f.withEarlyMetadata(t.allocator, 0, &.{ .{ .name = "gAMA", .bytes = &.{ 0, 0, 0, 0 } }, .{ .name = "cHRM", .bytes = &(@as([32]u8, @splat(0))) } });
     defer t.allocator.free(good);
     const bad = try f.withEarlyMetadata(t.allocator, 0, &.{.{ .name = "gAMA", .bytes = &.{ 0x80, 0, 0, 0 } }});
     defer t.allocator.free(bad);
@@ -50,7 +50,7 @@ test "PNG fixed color metadata order duplicates and failed state preservation" {
     const h: @import("header.zig").Header = .{ .width = 1, .height = 1, .color_type = 0, .bit_depth = 8, .interlace = 0 };
     const Chunk = @import("chunks.zig").Chunk;
     const g: Chunk = .{ .name = "gAMA".*, .payload = &.{ 0, 0, 0, 0 }, .raw = &.{} };
-    const c: Chunk = .{ .name = "cHRM".*, .payload = &([_]u8{0} ** 32), .raw = &.{} };
+    const c: Chunk = .{ .name = "cHRM".*, .payload = &(@as([32]u8, @splat(0))), .raw = &.{} };
     var s: State = .{};
     try s.consume(h, 0, g);
     try s.consume(h, 0, c);

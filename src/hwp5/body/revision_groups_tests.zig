@@ -5,7 +5,7 @@ const Lists = @import("list_groups.zig").Groups;
 const Flows = @import("paragraph_flows.zig").Flows;
 const Index = @import("revision_groups.zig").Index;
 fn fixture(bad: bool) [124]u8 {
-    var b = [_]u8{0} ** 124;
+    var b = @as([124]u8, @splat(0));
     for ([_][4]u32{ .{ 0, 0, 3, 0 }, .{ 40, 1, 4, 0 }, .{ 68, 1, 5, 1 }, .{ 96, 0, 6, if (bad) 2 else 1 } }) |row| {
         const at = row[0];
         std.mem.writeInt(u32, b[at..][0..4], 66 | (row[1] << 10) | (24 << 20), .little);

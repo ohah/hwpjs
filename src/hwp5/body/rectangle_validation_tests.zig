@@ -1,7 +1,7 @@
 const std = @import("std");
 const t = std.testing;
 fn allocationCase(a: std.mem.Allocator, scenario: u8) !void {
-    var raw = [_]u8{0} ** 82;
+    var raw = @as([82]u8, @splat(0));
     std.mem.writeInt(u32, raw[0..4], 76 | (4 << 20), .little);
     std.mem.writeInt(u32, raw[4..8], 0x24726563, .little);
     std.mem.writeInt(u32, raw[8..12], 79 | (1 << 10) | (33 << 20), .little);

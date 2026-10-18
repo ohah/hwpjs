@@ -3,7 +3,7 @@ const t = std.testing;
 const arc = @import("shape_arc.zig");
 test "arc layouts retain distinct header width, signed points and borrowed extra" {
     for ([_]arc.Layout{ .specified_u32, .reference_u8 }) |layout| {
-        var b = [_]u8{0} ** 31;
+        var b = @as([31]u8, @splat(0));
         const start: usize = if (layout == .specified_u32) 4 else 1;
         @memset(b[0..start], 255);
         const coordinates = [_]i32{ std.math.minInt(i32), 19, -73, std.math.maxInt(i32), 0, -1 };

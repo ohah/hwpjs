@@ -24,7 +24,7 @@ fn entry(bytes: []u8, tag: u16, type_id: u16, count: u32, raw: u32, order: struc
 }
 
 fn sample(order: structure.ByteOrder) [66]u8 {
-    var bytes = [_]u8{0} ** 66;
+    var bytes = @as([66]u8, @splat(0));
     const ifd: usize = if (order == .little) 8 else 12;
     const strip: u32 = if (order == .little) 62 else 8;
     @memcpy(bytes[0..2], if (order == .little) "II" else "MM");
@@ -98,7 +98,7 @@ test "TIFF structure checks external fields and strip range independently" {
 }
 
 test "TIFF structure follows multiple IFDs and external strip arrays" {
-    var chained = [_]u8{0} ** 84;
+    var chained = @as([84]u8, @splat(0));
     const first = sample(.little);
     @memcpy(chained[0..first.len], &first);
     put32(chained[58..62], 66, .little);
@@ -109,7 +109,7 @@ test "TIFF structure follows multiple IFDs and external strip arrays" {
     try t.expectEqual(@as(usize, 5), chain.fields);
     try t.expectEqual(@as(usize, 1), chain.strips);
 
-    var multiple = [_]u8{0} ** 96;
+    var multiple = @as([96]u8, @splat(0));
     @memcpy(multiple[0..first.len], &first);
     put32(multiple[8 + 26 + 4 ..][0..4], 2, .little);
     put32(multiple[8 + 26 + 8 ..][0..4], 66, .little);
@@ -129,7 +129,7 @@ test "TIFF structure follows multiple IFDs and external strip arrays" {
     put32(multiple[8 + 38 + 8 ..][0..4], 75, .little);
     try t.expectError(error.InvalidTiffFieldExtent, structure.inspect(&multiple, .{}));
 
-    var big_multiple = [_]u8{0} ** 96;
+    var big_multiple = @as([96]u8, @splat(0));
     const big_first = sample(.big);
     @memcpy(big_multiple[0..big_first.len], &big_first);
     put32(big_multiple[12 + 26 + 4 ..][0..4], 2, .big);

@@ -65,19 +65,19 @@ test "public dispatcher does not claim other comment classifications" {
 }
 
 test "public dispatcher reaches every defined payload parser" {
-    var begin = [_]u8{0} ** 24;
+    var begin = @as([24]u8, @splat(0));
     std.mem.writeInt(u32, begin[0..4], 0x00000002, .little);
     try std.testing.expect((try parse(fixture(&begin))).? == .begin_group);
 
-    var end = [_]u8{0} ** 4;
+    var end = @as([4]u8, @splat(0));
     std.mem.writeInt(u32, end[0..4], 0x00000003, .little);
     try std.testing.expect((try parse(fixture(&end))).? == .end_group);
 
-    var formats = [_]u8{0} ** 24;
+    var formats = @as([24]u8, @splat(0));
     std.mem.writeInt(u32, formats[0..4], 0x40000004, .little);
     try std.testing.expect((try parse(fixture(&formats))).? == .multi_formats);
 
-    var wmf = [_]u8{0} ** 44;
+    var wmf = @as([44]u8, @splat(0));
     std.mem.writeInt(u32, wmf[0..4], 0x80000001, .little);
     std.mem.writeInt(u16, wmf[4..6], 0x0300, .little);
     std.mem.writeInt(u32, wmf[16..20], 24, .little);

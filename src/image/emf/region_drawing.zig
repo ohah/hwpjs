@@ -69,7 +69,7 @@ fn initRegion(bytes: []u8, fixed_end: usize) void {
 }
 
 test "region drawing records preserve distinct operations fields and declared RegionData" {
-    var bytes = [_]u8{0} ** 92;
+    var bytes = @as([92]u8, @splat(0));
     for ([_]i32{ -4, -3, 2, 1 }, 0..) |field, index|
         std.mem.writeInt(i32, bytes[8 + index * 4 ..][0..4], field, .little);
 
@@ -94,7 +94,7 @@ test "region drawing records preserve distinct operations fields and declared Re
         .{ records.RecordType.invertrgn, @as(usize, 28), @as(std.meta.Tag(Value), .invert) },
         .{ records.RecordType.paintrgn, @as(usize, 28), @as(std.meta.Tag(Value), .paint) },
     }) |case| {
-        var record_bytes = [_]u8{0} ** 84;
+        var record_bytes = @as([84]u8, @splat(0));
         initRegion(&record_bytes, case[1]);
         if (case[0] == .fillrgn) std.mem.writeInt(u32, record_bytes[28..32], 11, .little);
         const value = (try parse(fixture(case[0], record_bytes[0 .. case[1] + 48 + 4]))).?;
@@ -112,7 +112,7 @@ test "region drawing records preserve distinct operations fields and declared Re
 }
 
 test "region drawing records validate every prefix nested extent and unrelated type" {
-    const bytes = [_]u8{0} ** 92;
+    const bytes = @as([92]u8, @splat(0));
     inline for (.{
         .{ records.RecordType.fillrgn, @as(usize, 32) },
         .{ records.RecordType.framergn, @as(usize, 40) },

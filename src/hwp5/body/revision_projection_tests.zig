@@ -4,7 +4,7 @@ const projection = @import("revision_projection.zig");
 const Ranges = @import("range_tags.zig").Ranges;
 const source = [_]u8{ 'A', 0, 'B', 0, 'C', 0, 'D', 0, 13, 0 };
 fn ranges() [36]u8 {
-    var b = [_]u8{0} ** 36;
+    var b = @as([36]u8, @splat(0));
     for ([_][2]u32{ .{ 2, 4 }, .{ 1, 3 }, .{ 2, 3 } }, 0..) |r, i| {
         std.mem.writeInt(u32, b[i * 12 ..][0..4], r[0], .little);
         std.mem.writeInt(u32, b[i * 12 + 4 ..][0..4], r[1], .little);

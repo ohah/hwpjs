@@ -111,7 +111,7 @@ fn putF32(bytes: []u8, offset: usize, value: f32) void {
 }
 
 test "EMF+ path gradient parses surrounding colors and point boundary" {
-    var bytes = [_]u8{0} ** 52;
+    var bytes = @as([52]u8, @splat(0));
     putU32(&bytes, 4, 4);
     putU32(&bytes, 8, 0x44332211);
     putF32(&bytes, 12, 1.5);
@@ -136,7 +136,7 @@ test "EMF+ path gradient parses surrounding colors and point boundary" {
 }
 
 test "EMF+ path gradient delegates sized path boundary to the Path SSOT" {
-    var bytes = [_]u8{0} ** 44;
+    var bytes = @as([44]u8, @splat(0));
     putU32(&bytes, 0, 1);
     putU32(&bytes, 20, 1);
     putU32(&bytes, 24, 0xff010203);
@@ -153,7 +153,7 @@ test "EMF+ path gradient delegates sized path boundary to the Path SSOT" {
 }
 
 test "EMF+ path gradient rejects truncation limits negative boundaries flag conflicts and trailing data" {
-    var points = [_]u8{0} ** 28;
+    var points = @as([28]u8, @splat(0));
     putI32(&points, 24, 0);
     for (0..28) |cut| try expectError(points[0..cut], .{});
     putI32(&points, 24, 1);
@@ -166,7 +166,7 @@ test "EMF+ path gradient rejects truncation limits negative boundaries flag conf
     try std.testing.expectError(error.InvalidEmfPlusBrushDataFlags, parse(&bad_flags, .{}));
     putU32(&bad_flags, 0, 0x0c);
     try std.testing.expectError(error.InvalidEmfPlusPathGradientBlendFlags, parse(&bad_flags, .{}));
-    var trailing = [_]u8{0} ** 29;
+    var trailing = @as([29]u8, @splat(0));
     try std.testing.expectError(error.InvalidEmfPlusPathGradientTrailingData, parse(&trailing, .{}));
 }
 

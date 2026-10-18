@@ -110,15 +110,15 @@ pub const Report = struct {
     empty_text_elements: usize = 0,
     text_bytes: usize = 0,
     text_chunks: usize = 0,
-    inline_counts: [@typeInfo(InlineKind).@"enum".fields.len]usize = @splat(0),
+    inline_counts: [@typeInfo(InlineKind).@"enum".field_names.len]usize = @splat(0),
     non_direct_text_elements: usize = 0,
     nested_inline_elements: usize = 0,
     non_text_content_chunks: usize = 0,
-    other_content_counts: [@typeInfo(OtherContentKind).@"enum".fields.len]usize = @splat(0),
+    other_content_counts: [@typeInfo(OtherContentKind).@"enum".field_names.len]usize = @splat(0),
     decoded_xml_bytes: usize = 0,
 
     pub fn inlineCount(self: *const Report, kind: InlineKind) usize {
-        return self.inline_counts[@intFromEnum(kind)];
+        return self.inline_counts[@backingInt(kind)];
     }
 
     pub fn issues(self: *const Report) usize {
@@ -127,7 +127,7 @@ pub const Report = struct {
     }
 
     pub fn otherContentCount(self: *const Report, kind: OtherContentKind) usize {
-        return self.other_content_counts[@intFromEnum(kind)];
+        return self.other_content_counts[@backingInt(kind)];
     }
 };
 
@@ -273,7 +273,7 @@ const Scanner = struct {
             node.inline_kind = try inlineKind(tag, scope);
             const used = inlineTotal(self.report);
             if (used == self.options.max_inline_elements) return error.LimitExceeded;
-            self.report.inline_counts[@intFromEnum(node.inline_kind)] += 1;
+            self.report.inline_counts[@backingInt(node.inline_kind)] += 1;
             if (parent.kind == .control) self.report.nested_inline_elements += 1;
             const event: InlineEvent = .{ .location = self.location(node), .kind = node.inline_kind, .tag = tag, .scope = scope };
             if (tag.kind == .empty) try self.emit(.{ .inline_empty = event }) else try self.emit(.{ .inline_start = event });
@@ -334,7 +334,7 @@ const Scanner = struct {
             defer self.allocator.free(bytes);
             for (bytes) |byte| if (!std.ascii.isWhitespace(byte)) {
                 self.report.non_text_content_chunks += 1;
-                self.report.other_content_counts[@intFromEnum(node.other_content_kind)] += 1;
+                self.report.other_content_counts[@backingInt(node.other_content_kind)] += 1;
                 break;
             };
             return;

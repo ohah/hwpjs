@@ -56,7 +56,7 @@ test "FaceName all optional flag combinations preserve empty versus absent" {
 
 test "resource counts missing duplicate negative mismatch and font ID bounds" {
     const v = @import("../version.zig").Version{ .raw = 0x05010001 };
-    var data = [_]u8{0} ** 71;
+    var data = @as([71]u8, @splat(0));
     // ID_MAPPINGS(size 60), then one empty FACE_NAME(size 3, level 1).
     data[0..4].* = .{ 17, 0, 0xc0, 3 };
     data[8] = 1; // Korean font count
@@ -104,7 +104,7 @@ test "BinData stream per-item compression and allocation cleanup" {
 }
 
 test "all seven language font ID partitions and huge declared counts" {
-    var bytes = [_]u8{0} ** 60;
+    var bytes = @as([60]u8, @splat(0));
     for (0..7) |i| std.mem.writeInt(i32, bytes[4 + i * 4 ..][0..4], @intCast(i + 1), .little);
     const report = resources.Report{
         .mappings = try d.IdMappings.parse(&bytes, .{ .raw = 0x05010001 }),
@@ -114,10 +114,10 @@ test "all seven language font ID partitions and huge declared counts" {
     var ordinal: usize = 0;
     for (0..7) |lang| {
         for (0..lang + 1) |id| {
-            try std.testing.expectEqual(@as(?usize, ordinal), try report.fontOrdinal(@enumFromInt(lang), id));
+            try std.testing.expectEqual(@as(?usize, ordinal), try report.fontOrdinal(@fromBackingInt(@intCast(lang)), id));
             ordinal += 1;
         }
-        try std.testing.expectEqual(@as(?usize, null), try report.fontOrdinal(@enumFromInt(lang), lang + 1));
+        try std.testing.expectEqual(@as(?usize, null), try report.fontOrdinal(@fromBackingInt(@intCast(lang)), lang + 1));
     }
     for (0..7) |i| std.mem.writeInt(i32, bytes[4 + i * 4 ..][0..4], std.math.maxInt(i32), .little);
     try std.testing.expectError(error.ResourceCountMismatch, report.validate());

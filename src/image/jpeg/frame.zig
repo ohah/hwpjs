@@ -30,7 +30,7 @@ pub fn parse(code: u8, payload: []const u8, options: Options) !Frame {
     if (height != 0 and @as(u64, width) * height > options.max_pixels) return error.LimitExceeded;
     const components = try Components.parse(try r.take(@as(usize, count) * 3));
     if (r.offset != payload.len) return error.InvalidJpegFrameLength;
-    var seen = [_]bool{false} ** 256;
+    var seen = @as([256]bool, @splat(false));
     for (0..components.count()) |i| {
         const c = components.get(i).?;
         if (seen[c.id]) return error.DuplicateJpegComponent;

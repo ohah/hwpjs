@@ -15,7 +15,7 @@ fn allocationCase(a: std.mem.Allocator, bytes: []const u8, bad: bool) !void {
     try t.expectEqual(1, report.lists);
 }
 test "header footer tree and group allocation failures clean both success and truncated area" {
-    var raw = [_]u8{0} ** 34;
+    var raw = @as([34]u8, @splat(0));
     std.mem.writeInt(u32, raw[0..4], 71 | (8 << 20), .little);
     std.mem.writeInt(u32, raw[4..8], @import("control_rules.zig").id("head"), .little);
     std.mem.writeInt(u32, raw[12..16], 72 | (1 << 10) | (18 << 20), .little);

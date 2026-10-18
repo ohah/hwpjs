@@ -48,7 +48,7 @@ test "EMF+ image parallelogram resolves PointR roles and extrapolates the fourth
 }
 
 test "EMF+ image parallelogram uses wide integer geometry without narrowing" {
-    var bytes = [_]u8{0} ** 12;
+    var bytes = @as([12]u8, @splat(0));
     const coordinates = [_]i16{ -32_768, 32_767, 32_767, -32_768, -32_768, -32_768 };
     for (coordinates, 0..) |coordinate, index|
         std.mem.writeInt(i16, bytes[index * 2 ..][0..2], coordinate, .little);
@@ -57,7 +57,7 @@ test "EMF+ image parallelogram uses wide integer geometry without narrowing" {
 }
 
 test "EMF+ image parallelogram preserves floating source roles and derives the fourth corner" {
-    var bytes = [_]u8{0} ** 24;
+    var bytes = @as([24]u8, @splat(0));
     const bits = [_]u32{ 0x80000000, 0, @bitCast(@as(f32, 2)), @bitCast(@as(f32, 3)), @bitCast(@as(f32, 5)), @bitCast(@as(f32, 7)) };
     for (bits, 0..) |value, index| std.mem.writeInt(u32, bytes[index * 4 ..][0..4], value, .little);
     const value = try assemble(try point_data.parse(&bytes, 3, false, false, .{}));

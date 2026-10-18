@@ -2,7 +2,7 @@ const std = @import("std");
 fn convert(comptime bits: u16, bytes: []const u8) !f64 {
     const width = bits / 8;
     if (bytes.len != 4 + 2 * width) return error.InvalidProbeInput;
-    const U = std.meta.Int(.unsigned, bits);
+    const U = @Int(.unsigned, bits);
     const F = @import("hwpjs").image.icc.fraction.Normalized(bits);
     return (F{ .numerator = std.mem.readInt(U, bytes[4..][0..width], .big), .denominator = std.mem.readInt(U, bytes[4 + width ..][0..width], .big) }).toFloat();
 }

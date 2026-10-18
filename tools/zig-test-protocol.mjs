@@ -1,4 +1,11 @@
-// Zig 0.16.0 default test-runner protocol, not a replacement test runner.
+// Zig 0.16.0 and 0.17.0 share these standard-runner wire layouts.
+// Verified against lib/std/zig/Server.zig and lib/compiler/test_runner.zig.
+// Version selection lives here; unknown versions must fail closed.
+export function protocolForVersion(version) {
+  if (version !== "0.16.0" && version !== "0.17.0") throw new Error(`UnsupportedTestProtocolVersion: ${version}`);
+  return { request, metadata, result, frameParser };
+}
+
 export function request(tag, index) {
   const bytes = Buffer.alloc(index === undefined ? 8 : 12);
   bytes.writeUInt32LE(tag, 0);

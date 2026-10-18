@@ -136,7 +136,7 @@ fn discardDirect(r: *Reader, limit: std.Io.Limit) Reader.Error!usize {
         error.ReadFailed => return error.ReadFailed,
         error.EndOfStream => return error.EndOfStream,
     };
-    assert(n <= @intFromEnum(limit));
+    assert(n <= @backingInt(limit));
     return n;
 }
 
@@ -273,7 +273,7 @@ fn streamFallible(d: *Decompress, w: *Writer, limit: std.Io.Limit) Reader.Stream
 }
 
 fn streamInner(d: *Decompress, w: *Writer, limit: std.Io.Limit) (Error || Reader.StreamError)!usize {
-    var remaining = @intFromEnum(limit);
+    var remaining = @backingInt(limit);
     const in = d.input;
     sw: switch (d.state) {
         .protocol_header => switch (d.container_metadata.container()) {
@@ -321,7 +321,7 @@ fn streamInner(d: *Decompress, w: *Writer, limit: std.Io.Limit) (Error || Reader
         },
         .block_header => {
             d.final_block = (try d.takeIntBits(u1)) != 0;
-            const block_type: BlockType = @enumFromInt(try d.takeIntBits(u2));
+            const block_type: BlockType = @fromBackingInt(@intCast(try d.takeIntBits(u2)));
             switch (block_type) {
                 .stored => {
                     d.alignBitsForward();
@@ -385,7 +385,7 @@ fn streamInner(d: *Decompress, w: *Writer, limit: std.Io.Limit) (Error || Reader
                 d.state = .{ .stored_block = @intCast(remaining_len - n) };
             }
             w.advance(n);
-            return @intFromEnum(limit) - remaining + n;
+            return @backingInt(limit) - remaining + n;
         },
         .fixed_block => while (true) {
             // Consume bytes
@@ -413,7 +413,7 @@ fn streamInner(d: *Decompress, w: *Writer, limit: std.Io.Limit) (Error || Reader
                 try w.writeBytePreserve(flate.history_len, byte);
             } else {
                 d.state = .{ .fixed_block_literal = byte };
-                return @intFromEnum(limit) - remaining;
+                return @backingInt(limit) - remaining;
             }
         },
         .fixed_block_literal => |symbol| {
@@ -432,7 +432,7 @@ fn streamInner(d: *Decompress, w: *Writer, limit: std.Io.Limit) (Error || Reader
                 continue :sw .fixed_block;
             } else {
                 d.state = .{ .fixed_block_match = length };
-                return @intFromEnum(limit) - remaining;
+                return @backingInt(limit) - remaining;
             }
         },
         // In larger archives most blocks are usually dynamic, so
@@ -463,7 +463,7 @@ fn streamInner(d: *Decompress, w: *Writer, limit: std.Io.Limit) (Error || Reader
                 try w.writeBytePreserve(flate.history_len, byte);
             } else {
                 d.state = .{ .dynamic_block_literal = byte };
-                return @intFromEnum(limit) - remaining;
+                return @backingInt(limit) - remaining;
             }
         },
         .dynamic_block_literal => |symbol| {
@@ -483,7 +483,7 @@ fn streamInner(d: *Decompress, w: *Writer, limit: std.Io.Limit) (Error || Reader
                 continue :sw .dynamic_block;
             } else {
                 d.state = .{ .dynamic_block_match = length };
-                return @intFromEnum(limit) - remaining;
+                return @backingInt(limit) - remaining;
             }
         },
         .protocol_footer => {
@@ -499,7 +499,7 @@ fn streamInner(d: *Decompress, w: *Writer, limit: std.Io.Limit) (Error || Reader
                 .raw => {},
             }
             d.state = .end;
-            return @intFromEnum(limit) - remaining;
+            return @backingInt(limit) - remaining;
         },
         .end => return error.EndOfStream,
     }
@@ -731,7 +731,7 @@ fn HuffmanDecoder(
             if (alphabet_size == 286)
                 if (lens[256] == 0) return error.MissingEndOfBlockCode;
 
-            var count = [_]u16{0} ** (@as(usize, max_code_bits) + 1);
+            var count = @as([@as(usize, max_code_bits) + 1]u16, @splat(0));
             var max: usize = 0;
             for (lens) |n| {
                 if (n == 0) continue;

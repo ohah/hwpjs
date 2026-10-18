@@ -36,7 +36,7 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 }
 
 fn bytesFor(values: [4]i32) [24]u8 {
-    var bytes = [_]u8{0} ** 24;
+    var bytes = @as([24]u8, @splat(0));
     for (values, 0..) |value, index| std.mem.writeInt(i32, bytes[8 + index * 4 ..][0..4], value, .little);
     return bytes;
 }
@@ -65,12 +65,12 @@ test "scale extents reject zero in every ratio component" {
 }
 
 test "scale extents require their prefix accept trailing data and do not claim unrelated records" {
-    var short = [_]u8{0} ** 20;
+    var short = @as([20]u8, @splat(0));
     try std.testing.expectError(error.InvalidEmfScaleExtentsRecordSize, parse(fixture(.scaleviewportextex, &short)));
     var declared_twenty_four = fixture(.scaleviewportextex, &short);
     declared_twenty_four.size = 24;
     try std.testing.expectError(error.InvalidEmfScaleExtentsRecordSize, parse(declared_twenty_four));
-    var long = [_]u8{0} ** 28;
+    var long = @as([28]u8, @splat(0));
     inline for (.{ 8, 12, 16, 20 }) |offset| std.mem.writeInt(i32, long[offset..][0..4], 1, .little);
     try std.testing.expect((try parse(fixture(.scalewindowextex, &long))) != null);
     try std.testing.expect((try parse(fixture(.savedc, short[0..8]))) == null);

@@ -54,7 +54,7 @@ pub fn applyWithProperties(session: *editor.Session, section: usize, paragraph: 
     defer a.free(ids);
     var pending = try session.paragraph_resources.clone(a);
     errdefer pending.deinit(a);
-    inline for (std.meta.fields(@import("paragraph_margin_patch.zig").Patch)) |field| {
+    inline for (@import("../reflection.zig").fields(@import("paragraph_margin_patch.zig").Patch)) |field| {
         if (@field(patch, field.name)) |value| @field(margins, field.name) = value;
     }
     if (requested_spacing) |value| spacing = value;

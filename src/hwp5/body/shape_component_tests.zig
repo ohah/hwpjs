@@ -22,14 +22,14 @@ test "matrix raw IEEE bits and failed reads preserve data and cursor" {
     var empty: @TypeOf(r) = .{ .bytes = &.{ 1, 0 } };
     try t.expectError(error.UnexpectedEnd, rendering.Rendering.read(&empty));
     try t.expectEqual(0, empty.offset);
-    var incomplete = [_]u8{0} ** 50;
+    var incomplete = @as([50]u8, @splat(0));
     incomplete[0] = 1;
     var pair_missing: @TypeOf(r) = .{ .bytes = &incomplete };
     try t.expectError(error.UnexpectedEnd, rendering.Rendering.read(&pair_missing));
     try t.expectEqual(0, pair_missing.offset);
 }
 test "shape component explicit identity count and bounded matrix pairs" {
-    var raw = [_]u8{0} ** 197;
+    var raw = @as([197]u8, @splat(0));
     std.mem.writeInt(u32, raw[0..4], 0x246f6c65, .little);
     std.mem.writeInt(u32, raw[4..8], 0x12345678, .little);
     std.mem.writeInt(i32, raw[8..12], -2147483648, .little);
@@ -59,7 +59,7 @@ test "shape component explicit identity count and bounded matrix pairs" {
     try t.expectEqual(0, single.rendering.pairs.count());
 }
 fn allocationCase(a: std.mem.Allocator, bad: bool) !void {
-    var raw = [_]u8{0} ** 112;
+    var raw = @as([112]u8, @splat(0));
     std.mem.writeInt(u32, raw[0..4], 71 | (4 << 20), .little);
     std.mem.writeInt(u32, raw[4..8], @import("control_rules.zig").drawing_id, .little);
     std.mem.writeInt(u32, raw[8..12], 76 | (1 << 10) | (100 << 20), .little);

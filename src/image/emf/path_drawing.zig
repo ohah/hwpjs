@@ -36,7 +36,7 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 
 test "path drawing records preserve operation bounds and trailing data" {
     const std = @import("std");
-    var bytes = [_]u8{0} ** 28;
+    var bytes = @as([28]u8, @splat(0));
     for ([_]i32{ std.math.minInt(i32), -2, 3, std.math.maxInt(i32) }, 0..) |value, index|
         std.mem.writeInt(i32, bytes[8 + index * 4 ..][0..4], value, .little);
     bytes[24..28].* = .{ 9, 8, 7, 6 };
@@ -61,7 +61,7 @@ test "path drawing records preserve operation bounds and trailing data" {
 
 test "path drawing records reject every prefix truncation and unrelated types" {
     const std = @import("std");
-    const bytes = [_]u8{0} ** 28;
+    const bytes = @as([28]u8, @splat(0));
     for ([_]records.RecordType{ .fillpath, .strokeandfillpath, .strokepath }) |kind| {
         for (0..24) |length|
             try std.testing.expectError(error.InvalidEmfPathDrawingSize, parse(fixture(kind, bytes[0..length])));

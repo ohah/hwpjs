@@ -65,7 +65,7 @@ fn makeRecord(data: []const u8, flags: u16) record.Record {
 }
 
 test "EMF+ FillPolygon parses absolute integer and floating points with both brushes" {
-    var integer = [_]u8{0} ** 20;
+    var integer = @as([20]u8, @splat(0));
     std.mem.writeInt(u32, integer[0..4], 63, .little);
     std.mem.writeInt(u32, integer[4..8], 3, .little);
     for ([_]i16{ -32768, 32767, -1, 1, 2, 3 }, 0..) |coordinate, index|
@@ -91,7 +91,7 @@ test "EMF+ FillPolygon parses absolute integer and floating points with both bru
     try std.testing.expectEqual(@as(i64, 32_767), closing.end.integer.y);
     try std.testing.expect((try boundary.next()) == null);
 
-    var floating = [_]u8{0} ** 32;
+    var floating = @as([32]u8, @splat(0));
     std.mem.writeInt(u32, floating[0..4], 0x44332211, .little);
     std.mem.writeInt(u32, floating[4..8], 3, .little);
     const bits = [_]u32{ 0x80000000, 0x7fc00001, 0x7f800000, 0xc0900000, 0, 0x3f800000 };
@@ -107,7 +107,7 @@ test "EMF+ FillPolygon parses absolute integer and floating points with both bru
 }
 
 test "EMF+ FillPolygon exposes shared closed device polyline segments" {
-    var data = [_]u8{0} ** 20;
+    var data = @as([20]u8, @splat(0));
     std.mem.writeInt(u32, data[4..8], 3, .little);
     for ([_]i16{ 1, 2, 3, 4, 5, 6 }, 0..) |coordinate, index|
         std.mem.writeInt(i16, data[8 + index * 2 ..][0..2], coordinate, .little);
@@ -127,7 +127,7 @@ test "EMF+ FillPolygon exposes shared closed device polyline segments" {
 }
 
 test "EMF+ FillPolygon omits an already coincident closing side in source and device space" {
-    var data = [_]u8{0} ** 20;
+    var data = @as([20]u8, @splat(0));
     std.mem.writeInt(u32, data[4..8], 3, .little);
     for ([_]i16{ 1, 2, 3, 4, 1, 2 }, 0..) |coordinate, index|
         std.mem.writeInt(i16, data[8 + index * 2 ..][0..2], coordinate, .little);
@@ -158,7 +158,7 @@ test "EMF+ FillPolygon parses variable PointR padding and ignores C" {
 }
 
 test "EMF+ FillPolygon rejects type brush count sizes truncation and limit" {
-    var data = [_]u8{0} ** 32;
+    var data = @as([32]u8, @splat(0));
     std.mem.writeInt(u32, data[4..8], 3, .little);
     _ = try parse(makeRecord(&data, 0), .{});
     for (0..data.len) |cut|

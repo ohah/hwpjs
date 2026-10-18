@@ -336,20 +336,20 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 }
 
 fn handleRecord(handle: u32) [12]u8 {
-    var bytes = [_]u8{0} ** 12;
+    var bytes = @as([12]u8, @splat(0));
     std.mem.writeInt(u32, bytes[8..12], handle, .little);
     return bytes;
 }
 
 fn createPen(handle: u32) [28]u8 {
-    var bytes = [_]u8{0} ** 28;
+    var bytes = @as([28]u8, @splat(0));
     std.mem.writeInt(u32, bytes[8..12], handle, .little);
     std.mem.writeInt(i32, bytes[16..20], 1, .little);
     return bytes;
 }
 
 fn createBrush(handle: u32) [24]u8 {
-    var bytes = [_]u8{0} ** 24;
+    var bytes = @as([24]u8, @splat(0));
     std.mem.writeInt(u32, bytes[8..12], handle, .little);
     return bytes;
 }
@@ -357,7 +357,7 @@ fn createBrush(handle: u32) [24]u8 {
 fn regionBrushRecord(kind: records.RecordType, handle: u32) [88]u8 {
     std.debug.assert(kind == .fillrgn or kind == .framergn);
     const fixed_end: usize = if (kind == .fillrgn) 32 else 40;
-    var bytes = [_]u8{0} ** 88;
+    var bytes = @as([88]u8, @splat(0));
     std.mem.writeInt(u32, bytes[24..28], 48, .little);
     std.mem.writeInt(u32, bytes[28..32], handle, .little);
     std.mem.writeInt(u32, bytes[fixed_end..][0..4], @import("region_data.zig").header_size, .little);
@@ -368,7 +368,7 @@ fn regionBrushRecord(kind: records.RecordType, handle: u32) [88]u8 {
 }
 
 fn createExtendedPen(handle: u32) [extended_pen_creation.minimum_size]u8 {
-    var bytes = [_]u8{0} ** extended_pen_creation.minimum_size;
+    var bytes = @as([extended_pen_creation.minimum_size]u8, @splat(0));
     std.mem.writeInt(u32, bytes[8..12], handle, .little);
     std.mem.writeInt(u32, bytes[32..36], 1, .little);
     return bytes;
@@ -376,7 +376,7 @@ fn createExtendedPen(handle: u32) [extended_pen_creation.minimum_size]u8 {
 
 fn createBitmapBrush(kind: records.RecordType, handle: u32) [60]u8 {
     std.debug.assert(kind == .createmonobrush or kind == .createdibpatternbrushpt);
-    var bytes = [_]u8{0} ** 60;
+    var bytes = @as([60]u8, @splat(0));
     std.mem.writeInt(u32, bytes[8..12], handle, .little);
     std.mem.writeInt(u32, bytes[16..20], 32, .little);
     std.mem.writeInt(u32, bytes[20..24], 18, .little);
@@ -391,20 +391,20 @@ fn createBitmapBrush(kind: records.RecordType, handle: u32) [60]u8 {
 }
 
 fn createFont(handle: u32) [font_creation.minimum_size]u8 {
-    var bytes = [_]u8{0} ** font_creation.minimum_size;
+    var bytes = @as([font_creation.minimum_size]u8, @splat(0));
     std.mem.writeInt(u32, bytes[8..12], handle, .little);
     std.mem.writeInt(i32, bytes[28..32], 400, .little);
     return bytes;
 }
 
 fn restoreRecord(saved_dc: i32) [12]u8 {
-    var bytes = [_]u8{0} ** 12;
+    var bytes = @as([12]u8, @splat(0));
     std.mem.writeInt(i32, bytes[8..12], saved_dc, .little);
     return bytes;
 }
 
 fn createPalette(handle: u32, count: u16) [20]u8 {
-    var bytes = [_]u8{0} ** 20;
+    var bytes = @as([20]u8, @splat(0));
     std.mem.writeInt(u32, bytes[8..12], handle, .little);
     std.mem.writeInt(u16, bytes[12..14], 0x0300, .little);
     std.mem.writeInt(u16, bytes[14..16], count, .little);
@@ -412,7 +412,7 @@ fn createPalette(handle: u32, count: u16) [20]u8 {
 }
 
 fn colorCorrectPalette(handle: u32, first: u32, count: u32) [color_correct_palette.minimum_size]u8 {
-    var bytes = [_]u8{0} ** color_correct_palette.minimum_size;
+    var bytes = @as([color_correct_palette.minimum_size]u8, @splat(0));
     std.mem.writeInt(u32, bytes[8..12], handle, .little);
     std.mem.writeInt(u32, bytes[12..16], first, .little);
     std.mem.writeInt(u32, bytes[16..20], count, .little);
@@ -441,12 +441,12 @@ fn initColorSpaceObject(bytes: []u8) void {
     std.mem.writeInt(u32, bytes[0..4], log.signature, .little);
     std.mem.writeInt(u32, bytes[4..8], log.version, .little);
     std.mem.writeInt(u32, bytes[8..12], @intCast(bytes.len), .little);
-    std.mem.writeInt(u32, bytes[12..16], @intFromEnum(values.LogicalColorSpace.srgb), .little);
-    std.mem.writeInt(u32, bytes[16..20], @intFromEnum(values.GamutMappingIntent.images), .little);
+    std.mem.writeInt(u32, bytes[12..16], @backingInt(values.LogicalColorSpace.srgb), .little);
+    std.mem.writeInt(u32, bytes[16..20], @backingInt(values.GamutMappingIntent.images), .little);
 }
 
 test "object table bounds creation replacement deletion and slot reuse" {
-    var slots = [_]Slot{.empty} ** 3;
+    var slots = @as([3]Slot, @splat(.empty));
     var state: State = .{ .slots = &slots };
     _ = try state.consume(fixture(.createpen, &createPen(1)));
     _ = try state.consume(fixture(.createbrushindirect, &createBrush(1)));
@@ -461,7 +461,7 @@ test "object table bounds creation replacement deletion and slot reuse" {
 }
 
 test "object table tracks every non-palette creation kind" {
-    var slots = [_]Slot{.empty} ** 2;
+    var slots = @as([2]Slot, @splat(.empty));
     var state: State = .{ .slots = &slots };
     try state.consume(fixture(.createpen, &createPen(1)));
     try state.consume(fixture(.deleteobject, &handleRecord(1)));
@@ -486,18 +486,18 @@ test "object table tracks every non-palette creation kind" {
 }
 
 test "region drawing brush handles require live explicit or brush stock objects" {
-    var slots = [_]Slot{.empty} ** 4;
+    var slots = @as([4]Slot, @splat(.empty));
     var state: State = .{ .slots = &slots };
     try state.consume(fixture(.createbrushindirect, &createBrush(1)));
     try state.consume(fixture(.createpen, &createPen(2)));
     const fill = regionBrushRecord(.fillrgn, 1);
     try state.consume(fixture(.fillrgn, fill[0..80]));
-    const stock_frame = regionBrushRecord(.framergn, @intFromEnum(stock_object.StockObject.white_brush));
+    const stock_frame = regionBrushRecord(.framergn, @backingInt(stock_object.StockObject.white_brush));
     try state.consume(fixture(.framergn, &stock_frame));
     try std.testing.expectEqual(@as(usize, 2), state.report.region_brush_uses);
 
     const before = state.report;
-    for ([_]u32{ 0, 2, 3, 0x80000009, @intFromEnum(stock_object.StockObject.white_pen) }) |handle| {
+    for ([_]u32{ 0, 2, 3, 0x80000009, @backingInt(stock_object.StockObject.white_pen) }) |handle| {
         const invalid = regionBrushRecord(.fillrgn, handle);
         _ = state.consume(fixture(.fillrgn, invalid[0..80])) catch {};
         try std.testing.expectEqualDeep(before, state.report);
@@ -508,7 +508,7 @@ test "region drawing brush handles require live explicit or brush stock objects"
     try std.testing.expectError(error.DeadEmfObjectReference, state.consume(fixture(.fillrgn, dead[0..80])));
     const zero = regionBrushRecord(.fillrgn, 0);
     try std.testing.expectError(error.InvalidEmfObjectHandle, state.consume(fixture(.fillrgn, zero[0..80])));
-    const stock_pen = regionBrushRecord(.fillrgn, @intFromEnum(stock_object.StockObject.white_pen));
+    const stock_pen = regionBrushRecord(.fillrgn, @backingInt(stock_object.StockObject.white_pen));
     try std.testing.expectError(error.InvalidEmfObjectType, state.consume(fixture(.fillrgn, stock_pen[0..80])));
     const stock_gap = regionBrushRecord(.fillrgn, 0x80000009);
     try std.testing.expectError(error.InvalidEmfStockObject, state.consume(fixture(.fillrgn, stock_gap[0..80])));
@@ -516,7 +516,7 @@ test "region drawing brush handles require live explicit or brush stock objects"
 }
 
 test "palette references require a live palette and current entry bounds" {
-    var slots = [_]Slot{.empty} ** 4;
+    var slots = @as([4]Slot, @splat(.empty));
     var state: State = .{ .slots = &slots };
     _ = try state.consume(fixture(.createpalette, &createPalette(1, 1)));
     _ = try state.consume(fixture(.createpen, &createPen(2)));
@@ -525,7 +525,7 @@ test "palette references require a live palette and current entry bounds" {
     try std.testing.expectError(error.InvalidEmfPaletteObjectType, state.consume(fixture(.selectpalette, &handleRecord(2))));
     try std.testing.expectError(error.DeadEmfObjectReference, state.consume(fixture(.selectpalette, &handleRecord(3))));
 
-    var set = [_]u8{0} ** 24;
+    var set = @as([24]u8, @splat(0));
     std.mem.writeInt(u32, set[8..12], 1, .little);
     std.mem.writeInt(u32, set[12..16], 1, .little);
     std.mem.writeInt(u32, set[16..20], 1, .little);
@@ -535,7 +535,7 @@ test "palette references require a live palette and current entry bounds" {
     std.mem.writeInt(u32, set[12..16], 0, .little);
     _ = try state.consume(fixture(.setpaletteentries, &set));
 
-    var resize = [_]u8{0} ** 16;
+    var resize = @as([16]u8, @splat(0));
     std.mem.writeInt(u32, resize[8..12], 1, .little);
     std.mem.writeInt(u32, resize[12..16], 2, .little);
     _ = try state.consume(fixture(.resizepalette, &resize));
@@ -549,7 +549,7 @@ test "palette references require a live palette and current entry bounds" {
 }
 
 test "COLORCORRECTPALETTE requires a live palette and an in-bounds range" {
-    var slots = [_]Slot{.empty} ** 4;
+    var slots = @as([4]Slot, @splat(.empty));
     var state: State = .{ .slots = &slots };
     try state.consume(fixture(.createpalette, &createPalette(1, 1)));
     try state.consume(fixture(.createpen, &createPen(2)));
@@ -571,19 +571,19 @@ test "COLORCORRECTPALETTE requires a live palette and an in-bounds range" {
 fn allocationCheck(a: std.mem.Allocator) !void {
     var header = std.mem.zeroes(header_types.Header);
     header.handles = 1;
-    var save = [_]u8{0} ** 8;
-    std.mem.writeInt(u32, save[0..4], @intFromEnum(records.RecordType.savedc), .little);
+    var save = @as([8]u8, @splat(0));
+    std.mem.writeInt(u32, save[0..4], @backingInt(records.RecordType.savedc), .little);
     std.mem.writeInt(u32, save[4..8], save.len, .little);
     _ = try validate(a, &save, header);
 }
 
 test "object table validates record sizes and allocator failure" {
-    var slots = [_]Slot{.empty} ** 2;
+    var slots = @as([2]Slot, @splat(.empty));
     var state: State = .{ .slots = &slots };
-    const short = [_]u8{0} ** 8;
+    const short = @as([8]u8, @splat(0));
     try std.testing.expectError(error.InvalidEmfCreatePenRecordSize, state.consume(fixture(.createpen, &short)));
     try state.consume(fixture(.createpen, &createPen(1)));
-    var long_delete = [_]u8{0} ** 16;
+    var long_delete = @as([16]u8, @splat(0));
     std.mem.writeInt(u32, long_delete[8..12], 1, .little);
     try state.consume(fixture(.deleteobject, &long_delete));
 
@@ -595,7 +595,7 @@ test "object table validates record sizes and allocator failure" {
 }
 
 test "color-space selection and both deletion records share object lifetime" {
-    var slots = [_]Slot{.empty} ** 4;
+    var slots = @as([4]Slot, @splat(.empty));
     var snapshots: [2]Selection = undefined;
     var state: State = .{ .slots = &slots, .snapshots = &snapshots };
     try state.consume(fixture(.createcolorspace, &createColorSpace(1)));
@@ -616,7 +616,7 @@ test "color-space selection and both deletion records share object lifetime" {
 }
 
 test "color-space records reject dead wrong zero stock and out-of-range handles" {
-    var slots = [_]Slot{.empty} ** 3;
+    var slots = @as([3]Slot, @splat(.empty));
     var state: State = .{ .slots = &slots };
     try state.consume(fixture(.createpen, &createPen(1)));
     try std.testing.expectError(error.InvalidEmfObjectType, state.consume(fixture(.setcolorspace, &handleRecord(1))));
@@ -632,12 +632,12 @@ test "color-space records reject dead wrong zero stock and out-of-range handles"
 }
 
 test "color-space DC snapshots cannot restore deleted objects" {
-    var slots = [_]Slot{.empty} ** 2;
+    var slots = @as([2]Slot, @splat(.empty));
     var snapshots: [2]Selection = undefined;
     var state: State = .{ .slots = &slots, .snapshots = &snapshots };
     try state.consume(fixture(.createcolorspace, &createColorSpace(1)));
     try state.consume(fixture(.setcolorspace, &handleRecord(1)));
-    const save = [_]u8{0} ** 8;
+    const save = @as([8]u8, @splat(0));
     try state.consume(fixture(.savedc, &save));
     try state.consume(fixture(.deleteobject, &handleRecord(1)));
     try state.consume(fixture(.restoredc, &restoreRecord(-1)));
@@ -645,7 +645,7 @@ test "color-space DC snapshots cannot restore deleted objects" {
 }
 
 test "deleting an inactive color space preserves the current selection" {
-    var slots = [_]Slot{.empty} ** 3;
+    var slots = @as([3]Slot, @splat(.empty));
     var state: State = .{ .slots = &slots };
     try state.consume(fixture(.createcolorspace, &createColorSpace(1)));
     try state.consume(fixture(.createcolorspacew, &createColorSpaceWide(2)));
@@ -657,12 +657,12 @@ test "deleting an inactive color space preserves the current selection" {
 }
 
 test "cross-kind replacement deactivates current and saved color-space selections" {
-    var slots = [_]Slot{.empty} ** 2;
+    var slots = @as([2]Slot, @splat(.empty));
     var snapshots: [1]Selection = undefined;
     var state: State = .{ .slots = &slots, .snapshots = &snapshots };
     try state.consume(fixture(.createcolorspace, &createColorSpace(1)));
     try state.consume(fixture(.setcolorspace, &handleRecord(1)));
-    const save = [_]u8{0} ** 8;
+    const save = @as([8]u8, @splat(0));
     try state.consume(fixture(.savedc, &save));
     try state.consume(fixture(.createpen, &createPen(1)));
     try std.testing.expectEqual(null, state.selected.color_space);
@@ -672,7 +672,7 @@ test "cross-kind replacement deactivates current and saved color-space selection
 }
 
 test "failed color-space operations do not change reports or live objects" {
-    var slots = [_]Slot{.empty} ** 2;
+    var slots = @as([2]Slot, @splat(.empty));
     var state: State = .{ .slots = &slots };
     try state.consume(fixture(.createpen, &createPen(1)));
     const before = state.report;
@@ -683,7 +683,7 @@ test "failed color-space operations do not change reports or live objects" {
 }
 
 test "invalid basic creation payloads do not occupy or replace slots" {
-    var slots = [_]Slot{.empty} ** 3;
+    var slots = @as([3]Slot, @splat(.empty));
     var state: State = .{ .slots = &slots };
     var invalid_pen = createPen(1);
     std.mem.writeInt(i32, invalid_pen[16..20], 0, .little);
@@ -702,7 +702,7 @@ test "invalid basic creation payloads do not occupy or replace slots" {
 }
 
 test "invalid extended pen payload does not occupy its object slot" {
-    var slots = [_]Slot{.empty} ** 2;
+    var slots = @as([2]Slot, @splat(.empty));
     var state: State = .{ .slots = &slots };
     var invalid = createExtendedPen(1);
     std.mem.writeInt(u32, invalid[48..52], 1, .little);
@@ -713,7 +713,7 @@ test "invalid extended pen payload does not occupy its object slot" {
 }
 
 test "invalid bitmap brush payload does not occupy or replace its slot" {
-    var slots = [_]Slot{.empty} ** 2;
+    var slots = @as([2]Slot, @splat(.empty));
     var state: State = .{ .slots = &slots };
     var invalid = createBitmapBrush(.createmonobrush, 1);
     std.mem.writeInt(u16, invalid[42..44], 4, .little);
@@ -730,7 +730,7 @@ test "invalid bitmap brush payload does not occupy or replace its slot" {
 }
 
 test "invalid font payload does not occupy or replace its slot" {
-    var slots = [_]Slot{.empty} ** 2;
+    var slots = @as([2]Slot, @splat(.empty));
     var state: State = .{ .slots = &slots };
     var invalid = createFont(1);
     invalid[32] = 2;
@@ -748,7 +748,7 @@ test "invalid font payload does not occupy or replace its slot" {
 }
 
 test "SELECTOBJECT validates explicit and stock object types" {
-    var slots = [_]Slot{.empty} ** 5;
+    var slots = @as([5]Slot, @splat(.empty));
     var snapshots: [2]Selection = undefined;
     var state: State = .{ .slots = &slots, .snapshots = &snapshots };
     try state.consume(fixture(.createpen, &createPen(1)));
@@ -773,20 +773,20 @@ test "SELECTOBJECT validates explicit and stock object types" {
     try std.testing.expectError(error.InvalidEmfSelectableObjectType, state.consume(fixture(.selectobject, &handleRecord(4))));
     try std.testing.expectError(error.InvalidEmfSelectableObjectType, state.consume(fixture(.selectobject, &handleRecord(0x8000000f))));
     try std.testing.expectError(error.InvalidEmfStockObject, state.consume(fixture(.selectobject, &handleRecord(0x80000009))));
-    var extended_select = [_]u8{0} ** 16;
+    var extended_select = @as([16]u8, @splat(0));
     std.mem.writeInt(u32, extended_select[8..12], 1, .little);
     try state.consume(fixture(.selectobject, &extended_select));
-    const short = [_]u8{0} ** 8;
+    const short = @as([8]u8, @splat(0));
     try std.testing.expectError(error.InvalidEmfSelectObjectRecordSize, state.consume(fixture(.selectobject, &short)));
 }
 
 test "delete replacement and DC restore cannot retain dead selected objects" {
-    var slots = [_]Slot{.empty} ** 3;
+    var slots = @as([3]Slot, @splat(.empty));
     var snapshots: [3]Selection = undefined;
     var state: State = .{ .slots = &slots, .snapshots = &snapshots };
     try state.consume(fixture(.createpen, &createPen(1)));
     try state.consume(fixture(.selectobject, &handleRecord(1)));
-    const save = [_]u8{0} ** 8;
+    const save = @as([8]u8, @splat(0));
     try state.consume(fixture(.savedc, &save));
     try state.consume(fixture(.selectobject, &handleRecord(0x80000006)));
     try state.consume(fixture(.restoredc, &restoreRecord(-1)));

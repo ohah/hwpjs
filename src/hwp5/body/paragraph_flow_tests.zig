@@ -10,7 +10,7 @@ fn fixture(a: std.mem.Allocator) ![]u8 {
         var header: [4]u8 = undefined;
         std.mem.writeInt(u32, &header, row[0] | (row[1] << 10) | (len << 20), .little);
         try b.appendSlice(a, &header);
-        var payload = [_]u8{0} ** 24;
+        var payload = @as([24]u8, @splat(0));
         payload[0] = @intCast(row[2]);
         try b.appendSlice(a, payload[0..len]);
     }

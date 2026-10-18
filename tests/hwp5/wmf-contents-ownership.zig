@@ -194,7 +194,7 @@ test "public WMF create payload audit pins fields and mandatory validation" {
     const brush = try core.image.wmf_brush.parse(syntheticRecord(0x02fc, 7, &brush_bytes), .specified_zero);
     try t.expectEqual(@as(u16, 5), brush.hatch_raw);
 
-    var font_bytes = [_]u8{0} ** 50;
+    var font_bytes = @as([50]u8, @splat(0));
     std.mem.writeInt(i16, font_bytes[8..10], 400, .little);
     font_bytes[10] = 2;
     try t.expectError(error.InvalidWmfFontBoolean, core.image.wmf_font.parse(syntheticRecord(0x02fb, 28, &font_bytes)));

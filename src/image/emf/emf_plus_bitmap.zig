@@ -105,7 +105,7 @@ test "EMF+ bitmap parses exact raw rows and all alignment padding widths" {
         .{ .width = 1, .format = 0x00021006, .stride = 4, .pixels = 4, .padding = 3 },
     };
     for (cases) |case| {
-        var storage = [_]u8{0} ** 31;
+        var storage = @as([31]u8, @splat(0));
         const size = 20 + case.pixels + case.padding;
         putI32(&storage, 0, case.width);
         putI32(&storage, 4, 1);
@@ -118,7 +118,7 @@ test "EMF+ bitmap parses exact raw rows and all alignment padding widths" {
 }
 
 test "EMF+ indexed bitmap parses and validates its palette before pixels" {
-    var bytes = [_]u8{0} ** 40;
+    var bytes = @as([40]u8, @splat(0));
     putI32(&bytes, 0, 2);
     putI32(&bytes, 4, 1);
     putI32(&bytes, 8, 4);
@@ -134,7 +134,7 @@ test "EMF+ indexed bitmap parses and validates its palette before pixels" {
 }
 
 test "EMF+ compressed bitmap preserves every undefined header value and payload byte" {
-    var bytes = [_]u8{0} ** 25;
+    var bytes = @as([25]u8, @splat(0));
     putI32(&bytes, 0, std.math.minInt(i32));
     putI32(&bytes, 4, -7);
     putI32(&bytes, 8, 3);
@@ -147,7 +147,7 @@ test "EMF+ compressed bitmap preserves every undefined header value and payload 
 }
 
 test "EMF+ raw bitmap handles negative height and signed minima without overflow" {
-    var negative = [_]u8{0} ** 36;
+    var negative = @as([36]u8, @splat(0));
     putI32(&negative, 0, 2);
     putI32(&negative, 4, -2);
     putI32(&negative, 8, -8);
@@ -155,7 +155,7 @@ test "EMF+ raw bitmap handles negative height and signed minima without overflow
     const value = try parse(&negative, .{});
     try std.testing.expectEqual(@as(usize, 16), value.data.pixel.bytes.len);
 
-    var boundary = [_]u8{0} ** 20;
+    var boundary = @as([20]u8, @splat(0));
     putI32(&boundary, 0, std.math.minInt(i32));
     putI32(&boundary, 4, 1);
     putI32(&boundary, 8, 0);
@@ -170,7 +170,7 @@ test "EMF+ raw bitmap handles negative height and signed minima without overflow
 }
 
 test "EMF+ raw bitmap rejects every truncation stride mismatch oversized data and padding" {
-    var bytes = [_]u8{0} ** 24;
+    var bytes = @as([24]u8, @splat(0));
     putI32(&bytes, 0, 1);
     putI32(&bytes, 4, 1);
     putI32(&bytes, 8, 4);
@@ -191,7 +191,7 @@ test "EMF+ raw bitmap rejects every truncation stride mismatch oversized data an
     putI32(&invalid, 8, 8);
     try std.testing.expectError(error.InvalidEmfPlusBitmapStride, parse(&invalid, .{}));
     try std.testing.expectError(error.LimitExceeded, parse(&bytes, .{ .max_data_bytes = 23 }));
-    var padding = [_]u8{0} ** 28;
+    var padding = @as([28]u8, @splat(0));
     @memcpy(padding[0..24], &bytes);
     try std.testing.expectError(error.InvalidEmfPlusBitmapPadding, parse(&padding, .{}));
 }

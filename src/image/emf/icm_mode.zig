@@ -32,7 +32,7 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 test "SETICMMODE accepts every exact enumeration value" {
     const expected = [_]Mode{ .off, .on, .query, .done_outside_dc };
     for (expected, 1..) |mode, raw| {
-        var bytes = [_]u8{0} ** 12;
+        var bytes = @as([12]u8, @splat(0));
         std.mem.writeInt(u32, bytes[8..12], @intCast(raw), .little);
         const parsed = (try parse(fixture(.seticmmode, &bytes))) orelse return error.TestExpectedEqual;
         try std.testing.expectEqual(mode, parsed.mode);
@@ -41,7 +41,7 @@ test "SETICMMODE accepts every exact enumeration value" {
 }
 
 test "SETICMMODE rejects truncated or mismatched extents and ignores unrelated records" {
-    var bytes = [_]u8{0} ** 16;
+    var bytes = @as([16]u8, @splat(0));
     std.mem.writeInt(u32, bytes[8..12], 1, .little);
     for (0..12) |cut|
         try std.testing.expectError(error.InvalidEmfSetIcmModeRecordSize, parse(fixture(.seticmmode, bytes[0..cut])));

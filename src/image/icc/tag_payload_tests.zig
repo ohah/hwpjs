@@ -10,19 +10,19 @@ test "ICC payload dispatch separates unknown edition and invalid known type" {
     try t.expectError(error.InvalidIccMlucType, api.parse("desc".*, &invalid, .v4_2022, .{}));
 }
 test "ICC payload dispatch preserves borrowed strings and computational deferrals" {
-    var curve = [_]u8{0} ** 12;
+    var curve = @as([12]u8, @splat(0));
     curve[0..4].* = "curv".*;
     const trc = try api.parse("gTRC".*, &curve, .v2_2001, .{});
     try t.expect(trc == .trc);
     try t.expectEqual(.green, trc.trc.channel);
     try t.expect(trc.trc.semantics_deferred);
-    var xyz = [_]u8{0} ** 20;
+    var xyz = @as([20]u8, @splat(0));
     xyz[0..4].* = "XYZ ".*;
     std.mem.writeInt(i32, xyz[8..12], -65536, .big);
     const point = try api.parse("rXYZ".*, &xyz, .v4_2022, .{});
     try t.expect(point == .xyz);
     try t.expectEqual(@as(i32, -65536), point.xyz.xyz[0]);
-    var strings = [_]u8{0} ** 16;
+    var strings = @as([16]u8, @splat(0));
     strings[0..4].* = "mluc".*;
     std.mem.writeInt(u32, strings[12..16], 12, .big);
     const text = try api.parse("cprt".*, &strings, .v4_2022, .{});
@@ -30,7 +30,7 @@ test "ICC payload dispatch preserves borrowed strings and computational deferral
     try t.expectEqual(@intFromPtr(&strings), @intFromPtr(text.localized.strings.data.ptr));
     try t.expect(text.localized.unicode_deferred and text.localized.locale_deferred);
     try t.expectError(error.LimitExceeded, api.parse("cprt".*, &strings, .v4_2022, .{ .max_bytes = 15 }));
-    var chad = [_]u8{0} ** 44;
+    var chad = @as([44]u8, @splat(0));
     chad[0..4].* = "sf32".*;
     for ([_]usize{ 8, 24, 40 }) |offset| std.mem.writeInt(i32, chad[offset..][0..4], 65536, .big);
     const adapted = try api.parse("chad".*, &chad, .v4_2022, .{});

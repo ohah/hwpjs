@@ -89,7 +89,7 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 }
 
 test "create palette validates version count and entry wire order" {
-    var bytes = [_]u8{0} ** 24;
+    var bytes = @as([24]u8, @splat(0));
     std.mem.writeInt(u32, bytes[8..12], 7, .little);
     std.mem.writeInt(u16, bytes[12..14], 0x0300, .little);
     std.mem.writeInt(u16, bytes[14..16], 2, .little);
@@ -109,20 +109,20 @@ test "create palette validates version count and entry wire order" {
 }
 
 test "palette entry arrays require count-derived prefixes and exclude trailing data" {
-    var create = [_]u8{0} ** 20;
+    var create = @as([20]u8, @splat(0));
     std.mem.writeInt(u32, create[8..12], 1, .little);
     std.mem.writeInt(u16, create[12..14], 0x0300, .little);
     std.mem.writeInt(u16, create[14..16], 2, .little);
     try std.testing.expectError(error.InvalidEmfPaletteRecordSize, parse(fixture(.createpalette, &create)));
 
-    var extended_create = [_]u8{0} ** 28;
+    var extended_create = @as([28]u8, @splat(0));
     std.mem.writeInt(u32, extended_create[8..12], 1, .little);
     std.mem.writeInt(u16, extended_create[12..14], 0x0300, .little);
     std.mem.writeInt(u16, extended_create[14..16], 2, .little);
     const created = (try parse(fixture(.createpalette, &extended_create))).?.create;
     try std.testing.expectEqual(@as(usize, 8), created.entries.bytes.len);
 
-    var set = [_]u8{0} ** 24;
+    var set = @as([24]u8, @splat(0));
     std.mem.writeInt(u32, set[8..12], 1, .little);
     std.mem.writeInt(u32, set[12..16], std.math.maxInt(u32), .little);
     std.mem.writeInt(u32, set[16..20], 1, .little);
@@ -135,7 +135,7 @@ test "palette entry arrays require count-derived prefixes and exclude trailing d
 }
 
 test "select resize and realize enforce their scalar contracts" {
-    var select = [_]u8{0} ** 12;
+    var select = @as([12]u8, @splat(0));
     std.mem.writeInt(u32, select[8..12], default_palette, .little);
     try std.testing.expectEqual(default_palette, (try parse(fixture(.selectpalette, &select))).?.select);
     for ([_]u32{ 0, 0x80000000, 0x8000000e, 0xffffffff }) |handle| {
@@ -143,7 +143,7 @@ test "select resize and realize enforce their scalar contracts" {
         try std.testing.expectError(error.InvalidEmfPaletteHandle, parse(fixture(.selectpalette, &select)));
     }
 
-    var resize = [_]u8{0} ** 16;
+    var resize = @as([16]u8, @splat(0));
     std.mem.writeInt(u32, resize[8..12], 1, .little);
     for ([_]u32{ 1, 0x400 }) |count| {
         std.mem.writeInt(u32, resize[12..16], count, .little);
@@ -156,12 +156,12 @@ test "select resize and realize enforce their scalar contracts" {
     std.mem.writeInt(u32, resize[8..12], default_palette, .little);
     try std.testing.expectError(error.InvalidEmfPaletteHandle, parse(fixture(.resizepalette, &resize)));
 
-    const realize = [_]u8{0} ** 8;
+    const realize = @as([8]u8, @splat(0));
     try std.testing.expectEqual(Value.realize, (try parse(fixture(.realizepalette, &realize))).?);
 }
 
 test "palette records require matching declared and physical sizes and accept trailing data" {
-    var bytes = [_]u8{0} ** 12;
+    var bytes = @as([12]u8, @splat(0));
     std.mem.writeInt(u32, bytes[8..12], 1, .little);
     var mismatched = fixture(.selectpalette, &bytes);
     mismatched.size = 16;

@@ -12,18 +12,18 @@ fn frame(a: std.mem.Allocator, out: *std.ArrayList(u8), tag: u32, level: u32, by
 fn fixture(a: std.mem.Allocator) ![]u8 {
     var out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(a);
-    var ctrl = [_]u8{0} ** 46;
+    var ctrl = @as([46]u8, @splat(0));
     std.mem.writeInt(u32, ctrl[0..4], rules.form_id, .little);
     std.mem.writeInt(i32, ctrl[8..12], -17, .little);
     std.mem.writeInt(u32, ctrl[16..20], 0xfffffffe, .little);
-    var payload = [_]u8{0} ** 30;
+    var payload = @as([30]u8, @splat(0));
     @memcpy(payload[0..4], "tbp+");
     @memcpy(payload[4..8], "tbp+");
     payload[8] = 8;
     payload[12] = 8;
     for ("A:int:1 ", 0..) |c, i| payload[14 + i * 2] = c;
     for (0..12) |i| {
-        try frame(a, &out, 66, 0, &([_]u8{0} ** 24));
+        try frame(a, &out, 66, 0, &(@as([24]u8, @splat(0))));
         try frame(a, &out, 71, 1, &ctrl);
         if (i == 0) try frame(a, &out, 255, 2, &.{});
         try frame(a, &out, @import("form_object.zig").tag, 2, &payload);

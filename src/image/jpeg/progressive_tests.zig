@@ -2,10 +2,10 @@ const std = @import("std");
 const t = std.testing;
 const State = @import("progressive.zig").State;
 const frame_parser = @import("frame.zig");
-const q = .{0} ++ [_]u8{1} ** 64;
-const changed_q = .{0} ++ [_]u8{2} ** 64;
-const dc = .{ 0, 1 } ++ [_]u8{0} ** 15 ++ .{0};
-const ac = .{ 16, 1 } ++ [_]u8{0} ** 15 ++ .{0};
+const q = .{0} ++ @as([64]u8, @splat(1));
+const changed_q = .{0} ++ @as([64]u8, @splat(2));
+const dc = .{ 0, 1 } ++ @as([15]u8, @splat(0)) ++ .{0};
+const ac = .{ 16, 1 } ++ @as([15]u8, @splat(0)) ++ .{0};
 const frame_bytes = [_]u8{ 8, 0, 1, 0, 1, 1, 9, 17, 0 };
 fn state() !State {
     var s = try State.init(try frame_parser.parse(0xc2, &frame_bytes, .{}), .{});
@@ -107,7 +107,7 @@ test "JPEG progressive context rejects other processes and preserves unused Q de
     try t.expectError(error.UnsupportedJpegArithmeticTables, State.init(try frame_parser.parse(0xca, &frame_bytes, .{}), .{}));
     var s = try state();
     _ = try s.accept(&scan(9, 0, 0, 0, 1));
-    const other = (.{3} ++ [_]u8{1} ** 64) ++ (.{3} ++ [_]u8{2} ** 64);
+    const other = (.{3} ++ @as([64]u8, @splat(1))) ++ (.{3} ++ @as([64]u8, @splat(2)));
     try s.installQuantization(&other, .{});
     _ = try s.accept(&scan(9, 0, 0, 1, 0));
     try t.expectEqual(@as(usize, 63), s.report().unseen_coefficients);

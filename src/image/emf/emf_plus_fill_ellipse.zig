@@ -68,7 +68,7 @@ fn nextExpectedSegment(iterator: *arc_device_segments.Iterator) !arc_device_segm
 }
 
 test "EMF+ FillEllipse parses compressed rectangle Brush ID and ignored flags" {
-    var data = [_]u8{0} ** 12;
+    var data = @as([12]u8, @splat(0));
     std.mem.writeInt(u32, data[0..4], 63, .little);
     for ([_]i16{ -32768, -1, 0, 32767 }, 0..) |coordinate, index|
         std.mem.writeInt(i16, data[4 + index * 2 ..][0..2], coordinate, .little);
@@ -100,7 +100,7 @@ test "EMF+ FillEllipse parses compressed rectangle Brush ID and ignored flags" {
 }
 
 test "EMF+ FillEllipse preserves literal ARGB and floating rectangle bits" {
-    var data = [_]u8{0} ** 20;
+    var data = @as([20]u8, @splat(0));
     std.mem.writeInt(u32, data[0..4], 0x44332211, .little);
     for ([_]u32{ 0x80000000, 0x7fc00001, 0x7f800000, 0xc0900000 }, 0..) |bits, index|
         std.mem.writeInt(u32, data[4 + index * 4 ..][0..4], bits, .little);
@@ -121,7 +121,7 @@ test "EMF+ FillEllipse preserves literal ARGB and floating rectangle bits" {
 }
 
 test "EMF+ FillEllipse rejects type Brush ID and every independent size mismatch" {
-    var data = [_]u8{0} ** 21;
+    var data = @as([21]u8, @splat(0));
     _ = try parse(makeRecord(data[0..12], 0x4000));
     _ = try parse(makeRecord(data[0..20], 0x8000));
     for (0..data.len + 1) |cut| {

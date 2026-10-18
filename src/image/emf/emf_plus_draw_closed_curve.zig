@@ -68,7 +68,7 @@ fn putF32(bytes: []u8, offset: usize, value: f32) void {
 }
 
 test "EMF+ DrawClosedCurve parses integer and floating points with raw tension" {
-    var integer = [_]u8{0} ** 20;
+    var integer = @as([20]u8, @splat(0));
     putF32(&integer, 0, -0.0);
     std.mem.writeInt(u32, integer[4..8], 3, .little);
     for ([_]i16{ -32768, 32767, -1, 1, -2, 2 }, 0..) |coordinate, index|
@@ -91,7 +91,7 @@ test "EMF+ DrawClosedCurve parses integer and floating points with raw tension" 
     try std.testing.expectEqual(@as(i64, -32768), closing.end.integer.x);
     try std.testing.expect((try spans.next()) == null);
 
-    var floating = [_]u8{0} ** 32;
+    var floating = @as([32]u8, @splat(0));
     putF32(&floating, 0, std.math.nan(f32));
     std.mem.writeInt(u32, floating[4..8], 3, .little);
     for ([_]f32{ -0.0, 1, 2, 3, 4, 5 }, 0..) |coordinate, index|
@@ -123,7 +123,7 @@ test "EMF+ DrawClosedCurve parses relative points padding and ignores C" {
 }
 
 test "EMF+ DrawClosedCurve exposes shared closed device cardinal spans" {
-    var data = [_]u8{0} ** 20;
+    var data = @as([20]u8, @splat(0));
     std.mem.writeInt(u32, data[4..8], 3, .little);
     for ([_]i16{ 1, 2, 3, 4, 5, 6 }, 0..) |coordinate, index|
         std.mem.writeInt(i16, data[8 + index * 2 ..][0..2], coordinate, .little);
@@ -142,7 +142,7 @@ test "EMF+ DrawClosedCurve exposes shared closed device cardinal spans" {
 }
 
 test "EMF+ DrawClosedCurve rejects type count ObjectID sizes truncation and limit" {
-    var data = [_]u8{0} ** 32;
+    var data = @as([32]u8, @splat(0));
     std.mem.writeInt(u32, data[4..8], 3, .little);
     _ = try parse(makeRecord(&data, 0), .{});
     for (0..8) |cut| {
@@ -170,7 +170,7 @@ test "EMF+ DrawClosedCurve rejects type count ObjectID sizes truncation and limi
     wrong_slice.data_size = 32;
     try std.testing.expectError(error.InvalidEmfPlusDrawClosedCurveSize, parse(wrong_slice, .{}));
 
-    var excessive_padding = [_]u8{0} ** 20;
+    var excessive_padding = @as([20]u8, @splat(0));
     std.mem.writeInt(u32, excessive_padding[4..8], 3, .little);
     excessive_padding[8..16].* = .{ 0x3f, 0xff, 0xc0, 1, 2, 0x7f, 0x7e, 3 };
     try std.testing.expectError(error.InvalidEmfPlusDrawClosedCurveSize, parse(makeRecord(&excessive_padding, 0x0800), .{}));

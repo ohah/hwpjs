@@ -85,7 +85,7 @@ pub fn parsePrefix(bytes: []const u8) !LogPenEx {
 }
 
 test "LogPenEx parses user style entries without consuming following bytes" {
-    var bytes = [_]u8{0} ** 36;
+    var bytes = @as([36]u8, @splat(0));
     std.mem.writeInt(u32, bytes[0..4], 0x00010007, .little);
     std.mem.writeInt(u32, bytes[4..8], 9, .little);
     std.mem.writeInt(u32, bytes[20..24], 2, .little);
@@ -100,7 +100,7 @@ test "LogPenEx parses user style entries without consuming following bytes" {
 }
 
 test "LogPenEx validates brush relationships and interpreted fields only" {
-    var bytes = [_]u8{0} ** fixed_size;
+    var bytes = @as([fixed_size]u8, @splat(0));
     std.mem.writeInt(u32, bytes[4..8], 1, .little);
     bytes[12..16].* = .{ 1, 2, 3, 0 };
     const solid = try parsePrefix(&bytes);
@@ -126,7 +126,7 @@ test "LogPenEx validates brush relationships and interpreted fields only" {
 }
 
 test "LogPenEx rejects every bounded relationship violation" {
-    var bytes = [_]u8{0} ** fixed_size;
+    var bytes = @as([fixed_size]u8, @splat(0));
     std.mem.writeInt(u32, bytes[4..8], 1, .little);
     for (0..fixed_size) |cut| try std.testing.expectError(error.TruncatedEmfLogPenEx, parsePrefix(bytes[0..cut]));
     std.mem.writeInt(u32, bytes[20..24], 1, .little);

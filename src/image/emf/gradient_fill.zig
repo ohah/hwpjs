@@ -71,12 +71,12 @@ fn expectParsed(record: records.Record) !GradientFill {
 }
 
 test "GRADIENTFILL separates rectangle mesh padding and trailing data" {
-    var bytes = [_]u8{0} ** 84;
+    var bytes = @as([84]u8, @splat(0));
     std.mem.writeInt(i32, bytes[8..12], -4, .little);
     std.mem.writeInt(i32, bytes[20..24], 5, .little);
     std.mem.writeInt(u32, bytes[24..28], 2, .little);
     std.mem.writeInt(u32, bytes[28..32], 1, .little);
-    std.mem.writeInt(u32, bytes[32..36], @intFromEnum(gradient_fill_mode.GradientFillMode.rectangle_horizontal), .little);
+    std.mem.writeInt(u32, bytes[32..36], @backingInt(gradient_fill_mode.GradientFillMode.rectangle_horizontal), .little);
     std.mem.writeInt(i32, bytes[36..40], -2, .little);
     std.mem.writeInt(u16, bytes[44..46], 0x1122, .little);
     std.mem.writeInt(u16, bytes[50..52], 0x7788, .little);
@@ -100,10 +100,10 @@ test "GRADIENTFILL separates rectangle mesh padding and trailing data" {
 }
 
 test "GRADIENTFILL parses triangle indexes and validates every extent" {
-    var bytes = [_]u8{0} ** 96;
+    var bytes = @as([96]u8, @splat(0));
     std.mem.writeInt(u32, bytes[24..28], 3, .little);
     std.mem.writeInt(u32, bytes[28..32], 1, .little);
-    std.mem.writeInt(u32, bytes[32..36], @intFromEnum(gradient_fill_mode.GradientFillMode.triangle), .little);
+    std.mem.writeInt(u32, bytes[32..36], @backingInt(gradient_fill_mode.GradientFillMode.triangle), .little);
     for (0..3) |index| std.mem.writeInt(u32, bytes[84 + index * 4 ..][0..4], @intCast(index), .little);
     const triangle = try (try expectParsed(fixture(&bytes))).mesh(0);
     try std.testing.expectEqual(@as(u32, 0), triangle.triangle.vertex1);
@@ -129,17 +129,17 @@ test "GRADIENTFILL parses triangle indexes and validates every extent" {
 }
 
 test "GRADIENTFILL preserves empty arrays and indexes later meshes independently" {
-    var empty = [_]u8{0} ** 40;
+    var empty = @as([40]u8, @splat(0));
     empty[36..40].* = .{ 9, 8, 7, 6 };
     const empty_value = try expectParsed(fixture(&empty));
     try std.testing.expectEqual(@as(u32, 0), empty_value.vertex_count);
     try std.testing.expectEqual(@as(u32, 0), empty_value.mesh_count);
     try std.testing.expectEqualSlices(u8, &.{ 9, 8, 7, 6 }, empty_value.trailing_data);
 
-    var multiple = [_]u8{0} ** 108;
+    var multiple = @as([108]u8, @splat(0));
     std.mem.writeInt(u32, multiple[24..28], 3, .little);
     std.mem.writeInt(u32, multiple[28..32], 2, .little);
-    std.mem.writeInt(u32, multiple[32..36], @intFromEnum(gradient_fill_mode.GradientFillMode.triangle), .little);
+    std.mem.writeInt(u32, multiple[32..36], @backingInt(gradient_fill_mode.GradientFillMode.triangle), .little);
     for (0..3) |index| std.mem.writeInt(u32, multiple[84 + index * 4 ..][0..4], @intCast(index), .little);
     for (0..3) |index| std.mem.writeInt(u32, multiple[96 + index * 4 ..][0..4], @intCast(2 - index), .little);
     const value = try expectParsed(fixture(&multiple));
@@ -149,10 +149,10 @@ test "GRADIENTFILL preserves empty arrays and indexes later meshes independently
 }
 
 test "GRADIENTFILL keeps rectangle index array before separate padding array" {
-    var bytes = [_]u8{0} ** 108;
+    var bytes = @as([108]u8, @splat(0));
     std.mem.writeInt(u32, bytes[24..28], 3, .little);
     std.mem.writeInt(u32, bytes[28..32], 2, .little);
-    std.mem.writeInt(u32, bytes[32..36], @intFromEnum(gradient_fill_mode.GradientFillMode.rectangle_vertical), .little);
+    std.mem.writeInt(u32, bytes[32..36], @backingInt(gradient_fill_mode.GradientFillMode.rectangle_vertical), .little);
     std.mem.writeInt(u32, bytes[84..88], 0, .little);
     std.mem.writeInt(u32, bytes[88..92], 1, .little);
     std.mem.writeInt(u32, bytes[92..96], 1, .little);

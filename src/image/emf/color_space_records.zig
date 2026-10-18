@@ -29,7 +29,7 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 }
 
 fn handleRecord(handle: u32) [12]u8 {
-    var bytes = [_]u8{0} ** 12;
+    var bytes = @as([12]u8, @splat(0));
     std.mem.writeInt(u32, bytes[8..12], handle, .little);
     return bytes;
 }
@@ -43,8 +43,8 @@ test "color-space manipulation records preserve handles" {
 }
 
 test "color-space manipulation records require prefixes and accept trailing data" {
-    const short = [_]u8{0} ** 8;
-    const long = [_]u8{0} ** 16;
+    const short = @as([8]u8, @splat(0));
+    const long = @as([16]u8, @splat(0));
     try std.testing.expectError(error.InvalidEmfSetColorSpaceRecordSize, parse(fixture(.setcolorspace, &short)));
     try std.testing.expectEqual(@as(u32, 0), (try parse(fixture(.setcolorspace, &long))).?.set);
     try std.testing.expectError(error.InvalidEmfDeleteColorSpaceRecordSize, parse(fixture(.deletecolorspace, &short)));
@@ -56,7 +56,7 @@ test "color-space manipulation records require prefixes and accept trailing data
 }
 
 test "color-space parser does not claim neighboring object records" {
-    const bytes = [_]u8{0} ** 12;
+    const bytes = @as([12]u8, @splat(0));
     try std.testing.expect((try parse(fixture(.deleteobject, &bytes))) == null);
     try std.testing.expect((try parse(fixture(.selectobject, &bytes))) == null);
 }

@@ -20,7 +20,7 @@ test "script success and late failure release every allocation point" {
     const h = f.header();
     const doc = try f.docInfo(t.allocator, 0);
     defer t.allocator.free(doc);
-    var source = [_]u8{0} ** 20;
+    var source = @as([20]u8, @splat(0));
     @memset(source[16..], 255);
     const nodes = [_]writer.Node{
         .{ .name = "Root Entry", .kind = 5 },

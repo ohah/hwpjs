@@ -6,7 +6,7 @@ const declaration = @import("type_declaration.zig");
 test "chart declaration respects caller offset and borrows exact name bytes" {
     const wire = [_]u8{ 8, 0, 'V', 't', 'C', 'h', 'a', 'r', 't', 0, 6, 0 };
     for ([_]usize{ 0, 1, 17, 96 }) |offset| {
-        var bytes = [_]u8{0xaa} ** 112;
+        var bytes = @as([112]u8, @splat(0xaa));
         @memcpy(bytes[offset..][0..wire.len], &wire);
         var reader: Reader = .{ .bytes = &bytes, .offset = offset };
         const value = try declaration.readObserved16(&reader, 8);

@@ -49,13 +49,13 @@ fn initLog(bytes: []u8) void {
     std.mem.writeInt(u32, bytes[0..4], log.signature, .little);
     std.mem.writeInt(u32, bytes[4..8], log.version, .little);
     std.mem.writeInt(u32, bytes[8..12], @intCast(bytes.len), .little);
-    std.mem.writeInt(u32, bytes[12..16], @intFromEnum(@import("color_space_values.zig").LogicalColorSpace.srgb), .little);
-    std.mem.writeInt(u32, bytes[16..20], @intFromEnum(@import("color_space_values.zig").GamutMappingIntent.images), .little);
+    std.mem.writeInt(u32, bytes[12..16], @backingInt(@import("color_space_values.zig").LogicalColorSpace.srgb), .little);
+    std.mem.writeInt(u32, bytes[16..20], @backingInt(@import("color_space_values.zig").GamutMappingIntent.images), .little);
 }
 
 fn initAnsiRecord(bytes: []u8, handle: u32) void {
     @memset(bytes, 0);
-    std.mem.writeInt(u32, bytes[0..4], @intFromEnum(records.RecordType.createcolorspace), .little);
+    std.mem.writeInt(u32, bytes[0..4], @backingInt(records.RecordType.createcolorspace), .little);
     std.mem.writeInt(u32, bytes[4..8], @intCast(bytes.len), .little);
     std.mem.writeInt(u32, bytes[8..12], handle, .little);
     initLog(bytes[12..]);
@@ -108,7 +108,7 @@ test "wide creation validates data extent and separates padding from trailing da
 }
 
 test "color-space creation parser does not claim manipulation records" {
-    const bytes = [_]u8{0} ** 12;
+    const bytes = @as([12]u8, @splat(0));
     try std.testing.expect((try parse(fixture(.setcolorspace, &bytes))) == null);
 }
 

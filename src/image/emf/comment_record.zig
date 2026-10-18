@@ -66,7 +66,7 @@ test "COMMENT classifies predefined identifiers and preserves exact payload boun
         .{ .raw = 0x43494447, .expected = .public },
     };
     for (cases) |case| {
-        var bytes = [_]u8{0} ** 20;
+        var bytes = @as([20]u8, @splat(0));
         std.mem.writeInt(u32, bytes[8..12], 5, .little);
         std.mem.writeInt(u32, bytes[12..16], case.raw, .little);
         bytes[16] = 0xa5;
@@ -75,7 +75,7 @@ test "COMMENT classifies predefined identifiers and preserves exact payload boun
         try std.testing.expectEqual(@as(u32, 5), value.data_size);
         try std.testing.expectEqual(case.expected, value.classification);
         try std.testing.expectEqual(case.raw, value.leading_dword.?);
-        try std.testing.expectEqual(case.raw, @intFromEnum(value.identifier.?));
+        try std.testing.expectEqual(case.raw, @backingInt(value.identifier.?));
         try std.testing.expectEqualSlices(u8, bytes[12..17], value.data);
         try std.testing.expectEqualSlices(u8, bytes[16..17], value.parameters);
         try std.testing.expectEqualSlices(u8, bytes[17..20], value.alignment_padding);
@@ -84,14 +84,14 @@ test "COMMENT classifies predefined identifiers and preserves exact payload boun
 }
 
 test "COMMENT keeps absent short and unknown private data distinct" {
-    var empty = [_]u8{0} ** 12;
+    var empty = @as([12]u8, @splat(0));
     const no_data = (try parse(fixture(.comment, &empty))) orelse return error.TestExpectedEqual;
     try std.testing.expectEqual(Classification.private, no_data.classification);
     try std.testing.expectEqual(@as(?u32, null), no_data.leading_dword);
     try std.testing.expectEqual(@as(?comment_identifier.Identifier, null), no_data.identifier);
     try std.testing.expectEqual(@as(usize, 0), no_data.data.len);
 
-    var short = [_]u8{0} ** 16;
+    var short = @as([16]u8, @splat(0));
     std.mem.writeInt(u32, short[8..12], 3, .little);
     short[12..15].* = .{ 1, 2, 3 };
     short[15] = 0xcc;
@@ -100,7 +100,7 @@ test "COMMENT keeps absent short and unknown private data distinct" {
     try std.testing.expectEqualSlices(u8, short[12..15], short_private.parameters);
     try std.testing.expectEqualSlices(u8, short[15..16], short_private.alignment_padding);
 
-    var unknown = [_]u8{0} ** 20;
+    var unknown = @as([20]u8, @splat(0));
     std.mem.writeInt(u32, unknown[8..12], 8, .little);
     std.mem.writeInt(u32, unknown[12..16], 0x11223344, .little);
     unknown[16..20].* = .{ 5, 6, 7, 8 };
@@ -112,7 +112,7 @@ test "COMMENT keeps absent short and unknown private data distinct" {
 }
 
 test "COMMENT separates alignment padding from common record extensions" {
-    var bytes = [_]u8{0} ** 24;
+    var bytes = @as([24]u8, @splat(0));
     std.mem.writeInt(u32, bytes[8..12], 5, .little);
     std.mem.writeInt(u32, bytes[12..16], 0x43494447, .little);
     bytes[16] = 7;
@@ -125,7 +125,7 @@ test "COMMENT separates alignment padding from common record extensions" {
 
 test "COMMENT covers every DataSize alignment residue before record extensions" {
     for (0..8) |data_size| {
-        var bytes = [_]u8{0xa5} ** 24;
+        var bytes = @as([24]u8, @splat(0xa5));
         std.mem.writeInt(u32, bytes[8..12], @intCast(data_size), .little);
         const data_end = minimum_size + data_size;
         const padding_len = (4 - data_end % 4) % 4;
@@ -139,7 +139,7 @@ test "COMMENT covers every DataSize alignment residue before record extensions" 
 }
 
 test "COMMENT rejects every truncated prefix and inconsistent extent" {
-    var bytes = [_]u8{0} ** minimum_size;
+    var bytes = @as([minimum_size]u8, @splat(0));
     for (0..minimum_size) |cut|
         try std.testing.expectError(error.InvalidEmfCommentRecordSize, parse(fixture(.comment, bytes[0..cut])));
 
@@ -154,7 +154,7 @@ test "COMMENT rejects every truncated prefix and inconsistent extent" {
     try std.testing.expectError(error.InvalidEmfCommentDataSize, parse(fixture(.comment, &bytes)));
     std.mem.writeInt(u32, bytes[8..12], std.math.maxInt(u32), .little);
     try std.testing.expectError(error.InvalidEmfCommentDataSize, parse(fixture(.comment, &bytes)));
-    var missing_padding = [_]u8{0} ** 13;
+    var missing_padding = @as([13]u8, @splat(0));
     std.mem.writeInt(u32, missing_padding[8..12], 1, .little);
     try std.testing.expectError(error.InvalidEmfCommentPadding, parse(fixture(.comment, &missing_padding)));
     try std.testing.expect((try parse(fixture(.savedc, &bytes))) == null);

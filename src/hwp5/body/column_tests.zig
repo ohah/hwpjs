@@ -2,7 +2,7 @@ const std = @import("std");
 const t = std.testing;
 const D = @import("column_def.zig").Definition;
 test "column branches distinguish absent spacing and unsigned wire pairs" {
-    var bytes = [_]u8{255} ** 18;
+    var bytes = @as([18]u8, @splat(255));
     std.mem.writeInt(u16, bytes[0..2], 8, .little);
     const d = try D.parse(&bytes);
     try t.expect(d.spacing == null);

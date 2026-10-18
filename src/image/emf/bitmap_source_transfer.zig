@@ -47,7 +47,7 @@ pub fn parse(bytes: []const u8, fixed_end: usize) !Core {
 }
 
 test "bitmap source transfer rejects invalid extent before field access" {
-    const bytes = [_]u8{0} ** byte_size;
+    const bytes = @as([byte_size]u8, @splat(0));
     try std.testing.expectError(error.InvalidEmfBitmapSourceTransferExtent, parse(bytes[0 .. byte_size - 1], byte_size - 1));
     try std.testing.expectError(error.InvalidEmfBitmapSourceTransferExtent, parse(&bytes, byte_size + 1));
 }

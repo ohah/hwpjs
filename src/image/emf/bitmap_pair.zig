@@ -30,7 +30,7 @@ pub fn parse(bytes: []const u8, fixed_end: usize, source_fields: bitmap_object.F
 }
 
 test "bitmap pair accepts either source-mask order and rejects overlap" {
-    var bytes = [_]u8{0} ** 168;
+    var bytes = @as([168]u8, @splat(0));
     for ([_]usize{ 128, 148 }) |at| {
         std.mem.writeInt(u32, bytes[at..][0..4], 12, .little);
         std.mem.writeInt(u16, bytes[at + 4 ..][0..2], 2, .little);

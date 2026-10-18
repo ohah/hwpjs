@@ -27,7 +27,7 @@ fn makeDeclared(a: std.mem.Allocator, second_id: u16, corrupt_second: bool, decl
     fixture.put(&header, 36, u32, 0);
     var doc: std.ArrayList(u8) = .empty;
     defer doc.deinit(a);
-    var mappings = [_]u8{0} ** 60;
+    var mappings = @as([60]u8, @splat(0));
     fixture.put(&mappings, 0, i32, declared_bins);
     try fixture.frame(a, &doc, 17, 0, &mappings);
     var first = [_]u8{ 0x22, 0, 7, 0 };

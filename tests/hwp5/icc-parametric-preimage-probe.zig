@@ -9,7 +9,7 @@ pub fn runWide(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
 fn runFor(comptime bits: u16, a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     const width = bits / 8;
     const prefix = 4 + 2 * width;
-    const U = std.meta.Int(.unsigned, bits);
+    const U = @Int(.unsigned, bits);
     const solve = if (bits == 128) icc.parametric_preimage.solve else icc.parametric_preimage.solveWide;
     const writePower = if (bits == 128) @import("icc-power-preimage-output.zig").write else @import("icc-power-preimage-output.zig").writeWide;
     const linear_size = if (bits == 128) 136 else 520;

@@ -81,5 +81,5 @@ test "ICC header exact length signature and signed fixed point boundaries" {
     try t.expectEqual(@as(usize, 44), old.tail.v2.len);
     bytes[8] = 4;
     const modern = try header.parse(&bytes);
-    try t.expectEqualSlices(u8, &([_]u8{0} ** 16), &modern.tail.v4.profile_id);
+    try t.expectEqualSlices(u8, &(@as([16]u8, @splat(0))), &modern.tail.v4.profile_id);
 }

@@ -7,7 +7,7 @@ pub fn writeWide(out: *[284]u8, endpoint: icc.parametric_preimage_bounds.Wide.En
     writeFor(128, out, endpoint);
 }
 fn writeFor(comptime width: usize, out: *[28 + 2 * width]u8, endpoint: anytype) void {
-    const U = std.meta.Int(.unsigned, 8 * width);
+    const U = @Int(.unsigned, 8 * width);
     @memset(out, 0);
     std.mem.writeInt(u32, out[4..8], @intFromBool(endpoint.attained), .little);
     switch (endpoint.coordinate) {

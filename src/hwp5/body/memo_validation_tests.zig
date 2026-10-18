@@ -9,7 +9,7 @@ fn inspect(a: std.mem.Allocator, b: []const u8) !validation.Report {
     return validation.inspect(tree, groups.items);
 }
 fn fixture() [84]u8 {
-    var b = [_]u8{0} ** 84;
+    var b = @as([84]u8, @splat(0));
     for ([_]usize{ 0, 56 }) |at| std.mem.writeInt(u32, b[at..][0..4], 66 | (24 << 20) | (if (at == 0) @as(u32, 0) else 1024), .little);
     std.mem.writeInt(u32, b[28..32], 93 | 1024 | (4 << 20), .little);
     std.mem.writeInt(u32, b[36..40], 72 | 1024 | (16 << 20), .little);

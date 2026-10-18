@@ -47,12 +47,12 @@ pub fn Arithmetic(comptime bits: u16) type {
         pub fn fractionExtended(n: u1024, d: u1024) !Interval {
             return ratio(1024, n, d);
         }
-        fn ratio(comptime width: u16, n: std.meta.Int(.unsigned, width), d: std.meta.Int(.unsigned, width)) !Interval {
+        fn ratio(comptime width: u16, n: @Int(.unsigned, width), d: @Int(.unsigned, width)) !Interval {
             if (n == 0 or d == 0) return error.InvalidIccPositiveFraction;
             // At low precision a large ratio needs a shifted denominator, not
             // a negative/unsigned numerator shift. Both scaled operands fit
             // bits+width: lengths are at most bits+width-1 and width.
-            const Initial = std.meta.Int(.unsigned, bits + width);
+            const Initial = @Int(.unsigned, bits + width);
             const shift: i32 = @as(i32, bits) - 1 + @as(i32, @intCast(@clz(n))) - @as(i32, @intCast(@clz(d)));
             const scaled_n = if (shift >= 0) @as(Initial, n) << @intCast(shift) else @as(Initial, n);
             const scaled_d = if (shift < 0) @as(Initial, d) << @intCast(-shift) else @as(Initial, d);

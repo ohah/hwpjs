@@ -6,7 +6,7 @@ const Bits = @import("entropy_bits.zig").Bits;
 
 test "JPEG canonical Huffman sparse lengths decode every depth and symbol byte" {
     for (0..16) |depth| for (0..256) |symbol| {
-        var raw = [_]u8{0} ** 18;
+        var raw = @as([18]u8, @splat(0));
         raw[depth + 1] = 1;
         raw[17] = @intCast(symbol);
         var it = try h.Iterator.init(&raw, .{});
@@ -21,7 +21,7 @@ test "JPEG canonical Huffman sparse lengths decode every depth and symbol byte" 
 
 test "JPEG canonical Huffman mixed code lengths retain input symbol order" {
     // 00->9, 01->4, 100->7, 101->2 (unused all-ones prefixes remain).
-    const raw = [_]u8{ 0, 0, 2, 2 } ++ [_]u8{0} ** 13 ++ .{ 9, 4, 7, 2 };
+    const raw = [_]u8{ 0, 0, 2, 2 } ++ @as([13]u8, @splat(0)) ++ .{ 9, 4, 7, 2 };
     var it = try h.Iterator.init(&raw, .{});
     const decoder = try Decoder.init((try it.next()).?);
     var bits = try Bits.init(&.{ 0b00011001, 0b01111111 }, 2);
@@ -39,7 +39,7 @@ test "JPEG canonical Huffman mixed code lengths retain input symbol order" {
 }
 
 test "JPEG Huffman invalid prefix and truncated code preserve unaligned cursor" {
-    var raw = [_]u8{0} ** 18;
+    var raw = @as([18]u8, @splat(0));
     raw[16] = 1; // The only code has 16 zero bits.
     var it = try h.Iterator.init(&raw, .{});
     const decoder = try Decoder.init((try it.next()).?);
@@ -56,13 +56,13 @@ test "JPEG Huffman invalid prefix and truncated code preserve unaligned cursor" 
 }
 
 test "JPEG Huffman decoder rejects empty mismatched and invalid length definitions" {
-    var empty_it = try h.Iterator.init(&([_]u8{0} ** 17), .{});
+    var empty_it = try h.Iterator.init(&(@as([17]u8, @splat(0))), .{});
     const empty = (try empty_it.next()).?;
     try t.expectError(error.EmptyJpegHuffmanTable, Decoder.init(empty));
     var mismatch = empty;
     mismatch.symbols = &.{3};
     try t.expectError(error.InvalidJpegHuffmanSymbolCount, Decoder.init(mismatch));
-    var invalid_bits = [_]u8{0} ** 16;
+    var invalid_bits = @as([16]u8, @splat(0));
     invalid_bits[0] = 2;
     mismatch.bits = &invalid_bits;
     try t.expectError(error.InvalidJpegHuffmanCodeSpace, Decoder.init(mismatch));

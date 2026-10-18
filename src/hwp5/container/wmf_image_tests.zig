@@ -8,7 +8,7 @@ const header = @import("../../image/wmf/header.zig");
 const document_options: container.Options = .{ .document = .{ .list_layout = .observed8, .zone_layout = .observed_row_first, .parameters = .{ .header_layout = .observed6, .null_layout = .observed_empty } } };
 
 fn standard() [24]u8 {
-    var bytes = [_]u8{0} ** 24;
+    var bytes = @as([24]u8, @splat(0));
     std.mem.writeInt(u16, bytes[0..2], 1, .little);
     std.mem.writeInt(u16, bytes[2..4], 9, .little);
     std.mem.writeInt(u16, bytes[4..6], 0x0300, .little);
@@ -19,7 +19,7 @@ fn standard() [24]u8 {
 }
 
 fn placeable() [46]u8 {
-    var bytes = [_]u8{0} ** 46;
+    var bytes = @as([46]u8, @splat(0));
     std.mem.writeInt(u32, bytes[0..4], 0x9ac6cdd7, .little);
     std.mem.writeInt(u16, bytes[14..16], 1440, .little);
     var checksum: u16 = 0;
@@ -90,7 +90,7 @@ test "HWP WMF declared corruption does not fall back and placeable policy stays 
     std.mem.writeInt(u16, wrong_record[22..24], 0x0100, .little);
     try t.expectError(error.MissingWmfEof, budget.consume(t.allocator, &wrong_record, &.{ 'w', 0, 'm', 0, 'f', 0 }));
     try t.expectEqualDeep(before, budget.report);
-    var extra = [_]u8{0} ** 26;
+    var extra = @as([26]u8, @splat(0));
     const valid = standard();
     @memcpy(extra[0..24], &valid);
     extra[24] = 1;

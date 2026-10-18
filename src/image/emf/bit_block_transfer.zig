@@ -27,7 +27,7 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 }
 
 fn sourceRecord() [132]u8 {
-    var bytes = [_]u8{0} ** 132;
+    var bytes = @as([132]u8, @splat(0));
     std.mem.writeInt(u32, bytes[40..44], 0x00cc0020, .little);
     std.mem.writeInt(u32, bytes[84..88], 104, .little);
     std.mem.writeInt(u32, bytes[88..92], 18, .little);
@@ -72,7 +72,7 @@ test "BITBLT parses fixed fields and non-contiguous source bitmap" {
 }
 
 test "BITBLT omission follows raster truth table and all boundaries are checked" {
-    var bytes = [_]u8{0} ** fixed_size;
+    var bytes = @as([fixed_size]u8, @splat(0));
     std.mem.writeInt(u32, bytes[40..44], 0x00f00021, .little); // PATCOPY ignores source.
     try std.testing.expect((try parse(fixture(.bitblt, &bytes))).?.core.bitmap == null);
     std.mem.writeInt(u32, bytes[40..44], 0x00cc0020, .little);

@@ -64,7 +64,7 @@ fn putU32(bytes: []u8, offset: usize, value: u32) void {
 
 test "EMF+ PenData consumes every optional field in flag order" {
     const std = @import("std");
-    var bytes = [_]u8{0} ** 220;
+    var bytes = @as([220]u8, @splat(0));
     putU32(&bytes, 0, 0x1fff);
     putU32(&bytes, 4, 6);
     putU32(&bytes, 8, @bitCast(@as(f32, 1.5)));
@@ -107,7 +107,7 @@ test "EMF+ PenData consumes every optional field in flag order" {
 
 test "EMF+ PenData optional failure is atomic and flag-specific" {
     const std = @import("std");
-    var bytes = [_]u8{0} ** 16;
+    var bytes = @as([16]u8, @splat(0));
     putU32(&bytes, 0, 0x40);
     putU32(&bytes, 4, 0);
     putU32(&bytes, 12, 1);
@@ -137,7 +137,7 @@ test "EMF+ PenData assigns every individual flag to only its declared field" {
         .{ .bit = 12, .payload_bytes = 60 },
     };
     for (cases) |case| {
-        var bytes = [_]u8{0} ** 72;
+        var bytes = @as([72]u8, @splat(0));
         putU32(&bytes, 0, @as(u32, 1) << case.bit);
         if (case.bit >= 11) {
             putU32(&bytes, 12, 56);

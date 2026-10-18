@@ -6,7 +6,7 @@ pub const Options = struct {
     style: []u32,
     border_fill: []u32,
     pub fn deinit(self: *Options, a: std.mem.Allocator) void {
-        inline for (std.meta.fields(Options)) |field| a.free(@field(self, field.name));
+        inline for (@import("../reflection.zig").fields(Options)) |field| a.free(@field(self, field.name));
     }
 };
 fn ids(a: std.mem.Allocator, original: []const u32, entries: anytype) ![]u32 {

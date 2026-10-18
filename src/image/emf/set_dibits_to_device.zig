@@ -52,12 +52,12 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 }
 
 fn validRecord() [104]u8 {
-    var bytes = [_]u8{0} ** 104;
+    var bytes = @as([104]u8, @splat(0));
     std.mem.writeInt(u32, bytes[48..52], 80, .little);
     std.mem.writeInt(u32, bytes[52..56], 12, .little);
     std.mem.writeInt(u32, bytes[56..60], 96, .little);
     std.mem.writeInt(u32, bytes[60..64], 8, .little);
-    std.mem.writeInt(u32, bytes[64..68], @intFromEnum(dib_colors.Usage.palette_indices), .little);
+    std.mem.writeInt(u32, bytes[64..68], @backingInt(dib_colors.Usage.palette_indices), .little);
     std.mem.writeInt(u32, bytes[68..72], 1, .little);
     std.mem.writeInt(u32, bytes[72..76], 2, .little);
     std.mem.writeInt(u32, bytes[80..84], 12, .little);
@@ -97,7 +97,7 @@ test "SETDIBITSTODEVICE parses signed geometry unsigned scans and undefined spac
     try std.testing.expectEqual(@as(usize, 4), value.bitmap.between_bmi_and_bits.len);
     try std.testing.expectEqual(@as(usize, 0), value.trailing_data.len);
 
-    var info_bytes = [_]u8{0} ** 128;
+    var info_bytes = @as([128]u8, @splat(0));
     @memcpy(info_bytes[0..76], bytes[0..76]);
     std.mem.writeInt(u32, info_bytes[48..52], 80, .little);
     std.mem.writeInt(u32, info_bytes[52..56], 40, .little);

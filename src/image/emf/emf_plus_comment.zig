@@ -15,7 +15,7 @@ pub fn parse(value: record.Record) ?Comment {
 
 test "EMF+ comment preserves arbitrary private data and ignored flags" {
     const std = @import("std");
-    var bytes = [_]u8{0} ** 20;
+    var bytes = @as([20]u8, @splat(0));
     std.mem.writeInt(u16, bytes[0..2], 0x4003, .little);
     std.mem.writeInt(u16, bytes[2..4], 0xffff, .little);
     std.mem.writeInt(u32, bytes[4..8], 20, .little);
@@ -26,7 +26,7 @@ test "EMF+ comment preserves arbitrary private data and ignored flags" {
     try std.testing.expectEqual(@as(u16, 0xffff), value.flags);
     try std.testing.expectEqualSlices(u8, bytes[12..20], value.private_data);
 
-    var empty = [_]u8{0} ** 12;
+    var empty = @as([12]u8, @splat(0));
     std.mem.writeInt(u16, empty[0..2], 0x4003, .little);
     std.mem.writeInt(u32, empty[4..8], 12, .little);
     var empty_iterator: record.Iterator = .{ .bytes = &empty };

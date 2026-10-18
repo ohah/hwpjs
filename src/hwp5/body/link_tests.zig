@@ -3,7 +3,7 @@ const t = std.testing;
 const Tree = @import("tree.zig").Tree;
 const Links = @import("control_links.zig").Links;
 fn fixture() [80]u8 {
-    var bytes = [_]u8{0} ** 80;
+    var bytes = @as([80]u8, @splat(0));
     std.mem.writeInt(u32, bytes[0..4], 66 | (24 << 20), .little);
     std.mem.writeInt(u32, bytes[28..32], 67 | (1 << 10) | (32 << 20), .little);
     for ([_]usize{ 32, 48 }) |start| {

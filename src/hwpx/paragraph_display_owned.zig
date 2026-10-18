@@ -7,7 +7,7 @@ pub const Shape = struct {
     horizontal: ?[]u8 = null,
     spacing_type: ?[]u8 = null,
     spacing: ?Measure = null,
-    margins: [5]?Measure = .{null} ** 5,
+    margins: [5]?Measure = @as([5]?Measure, @splat(null)),
 
     pub fn deinit(self: *Shape, a: std.mem.Allocator) void {
         if (self.horizontal) |value| a.free(value);

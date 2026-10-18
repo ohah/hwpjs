@@ -2,7 +2,7 @@ const std = @import("std");
 const t = std.testing;
 const curve = @import("curve_type.zig");
 test "curve count selects identity gamma and borrowed samples without conversion" {
-    var bytes = [_]u8{0} ** 20;
+    var bytes = @as([20]u8, @splat(0));
     bytes[0..4].* = "curv".*;
     try t.expectEqual(curve.Curve.identity, try curve.parse(bytes[0..12]));
     bytes[11] = 1;
@@ -20,7 +20,7 @@ test "curve count selects identity gamma and borrowed samples without conversion
     try t.expectError(error.InvalidIccCurveIndex, samples.at(std.math.maxInt(usize)));
 }
 test "curve exact counts reject padding truncation huge declarations and bad prefixes" {
-    var bytes = [_]u8{0} ** 33;
+    var bytes = @as([33]u8, @splat(0));
     bytes[0..4].* = "curv".*;
     for ([_]u32{ 0, 1, 2, 3, 10, 0x7fffffff, 0x80000000, 0xffffffff }) |count| {
         std.mem.writeInt(u32, bytes[8..12], count, .big);

@@ -59,7 +59,7 @@ test "EMF+ rectangle device corners preserve four roles through shared mapping" 
 }
 
 test "EMF+ rectangle device iterator preserves order termination and source errors atomically" {
-    var bytes = [_]u8{0} ** 16;
+    var bytes = @as([16]u8, @splat(0));
     for ([_]i16{ 1, 2, 3, 4, -5, -6, -7, -8 }, 0..) |coordinate, index|
         std.mem.writeInt(i16, bytes[index * 2 ..][0..2], coordinate, .little);
     const source = try rect_array.parse(&bytes, 2, true, .{});
@@ -87,7 +87,7 @@ test "EMF+ rectangle device iterator preserves order termination and source erro
     try std.testing.expectError(error.UnexpectedEnd, truncated.next());
     try std.testing.expectEqualDeep(before, truncated);
 
-    var float_bytes = [_]u8{0} ** 16;
+    var float_bytes = @as([16]u8, @splat(0));
     const float_source = try rect_array.parse(&float_bytes, 1, false, .{});
     var truncated_float = fromRectArray(float_source, mapping);
     truncated_float.source.reader.bytes = float_bytes[0..15];

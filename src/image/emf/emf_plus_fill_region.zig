@@ -35,7 +35,7 @@ fn makeRecord(data: []const u8, flags: u16) record.Record {
 
 test "EMF+ FillRegion parses Region and both Brush forms while preserving ignored flags" {
     const std = @import("std");
-    var data = [_]u8{0} ** 4;
+    var data = @as([4]u8, @splat(0));
     std.mem.writeInt(u32, &data, 63, .little);
     const object = try parse(makeRecord(&data, 0x7f3f));
     try std.testing.expectEqual(@as(u16, 0x7f3f), object.flags);
@@ -51,7 +51,7 @@ test "EMF+ FillRegion parses Region and both Brush forms while preserving ignore
 
 test "EMF+ FillRegion rejects type IDs and every independent size mismatch" {
     const std = @import("std");
-    var data = [_]u8{0} ** 5;
+    var data = @as([5]u8, @splat(0));
     _ = try parse(makeRecord(data[0..4], 0x8000));
     for (0..data.len + 1) |cut| {
         if (cut != 4)

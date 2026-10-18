@@ -33,7 +33,7 @@ pub const Bullet = struct {
 
 test "bullet compact empty picture retains complete check character without repairing images" {
     const t = std.testing;
-    var bytes = [_]u8{0} ** 24;
+    var bytes = @as([24]u8, @splat(0));
     std.mem.writeInt(u16, bytes[12..14], 0x25a1, .little);
     std.mem.writeInt(u16, bytes[22..24], 0x2713, .little);
     const value = try Bullet.parse(&bytes);
@@ -49,7 +49,7 @@ test "bullet compact empty picture retains complete check character without repa
         bytes[index] = 0;
     }
     // The complete full-width form and its unknown tail remain unchanged.
-    var full = [_]u8{0} ** 26;
+    var full = @as([26]u8, @splat(0));
     std.mem.writeInt(u16, full[23..25], 0x2713, .little);
     full[25] = 0xaa;
     const full_value = try Bullet.parse(&full);

@@ -41,7 +41,7 @@ fn putF32(bytes: []u8, offset: usize, value: f32) void {
 }
 
 test "EMF+ closed curve data preserves tension and selects all point encodings" {
-    var integer = [_]u8{0} ** 20;
+    var integer = @as([20]u8, @splat(0));
     putF32(&integer, 0, -0.0);
     std.mem.writeInt(u32, integer[4..8], 3, .little);
     const compressed = try parse(&integer, 0x4000, .{});
@@ -49,7 +49,7 @@ test "EMF+ closed curve data preserves tension and selects all point encodings" 
     try std.testing.expectEqual(@as(u32, 3), compressed.count);
     try std.testing.expectEqual(@import("emf_plus_point.zig").Encoding.integer, compressed.point_data.encoding);
 
-    var floating = [_]u8{0} ** 32;
+    var floating = @as([32]u8, @splat(0));
     putF32(&floating, 0, std.math.nan(f32));
     std.mem.writeInt(u32, floating[4..8], 3, .little);
     const uncompressed = try parse(&floating, 0, .{});
@@ -65,7 +65,7 @@ test "EMF+ closed curve data preserves tension and selects all point encodings" 
 }
 
 test "EMF+ closed curve data rejects prefix count point size padding and limit" {
-    var bytes = [_]u8{0} ** 32;
+    var bytes = @as([32]u8, @splat(0));
     std.mem.writeInt(u32, bytes[4..8], 3, .little);
     _ = try parse(&bytes, 0, .{});
     for (0..8) |cut| {
@@ -80,7 +80,7 @@ test "EMF+ closed curve data rejects prefix count point size padding and limit" 
     try std.testing.expectError(error.InvalidEmfPlusClosedCurveDataSize, parse(bytes[0..31], 0, .{}));
     try std.testing.expectError(error.LimitExceeded, parse(&bytes, 0, .{ .max_points = 2 }));
 
-    var excessive_padding = [_]u8{0} ** 20;
+    var excessive_padding = @as([20]u8, @splat(0));
     std.mem.writeInt(u32, excessive_padding[4..8], 3, .little);
     excessive_padding[8..16].* = .{ 0x3f, 0xff, 0xc0, 1, 2, 0x7f, 0x7e, 3 };
     try std.testing.expectError(error.InvalidEmfPlusClosedCurveDataSize, parse(&excessive_padding, 0x0800, .{}));

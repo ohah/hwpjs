@@ -4,8 +4,8 @@ const samples = @import("progressive_samples.zig");
 const frame = @import("progressive_frame.zig");
 const storage = @import("sample_image.zig");
 
-const prefix = [_]u8{ 255, 216, 255, 219, 0, 67, 0 } ++ [_]u8{8} ** 64 ++
-    .{ 255, 196, 0, 38, 0, 1 } ++ [_]u8{0} ** 15 ++ .{ 1, 16, 1 } ++ [_]u8{0} ** 15 ++ .{0} ++
+const prefix = [_]u8{ 255, 216, 255, 219, 0, 67, 0 } ++ @as([64]u8, @splat(8)) ++
+    .{ 255, 196, 0, 38, 0, 1 } ++ @as([15]u8, @splat(0)) ++ .{ 1, 16, 1 } ++ @as([15]u8, @splat(0)) ++ .{0} ++
     .{ 255, 194, 0, 17, 8, 0, 1, 0, 1, 3, 9, 49, 0, 4, 18, 0, 7, 17, 0 };
 const initial = prefix ++
     .{ 255, 218, 0, 8, 1, 7, 0, 0, 0, 1, 0x7f } ++
@@ -73,8 +73,8 @@ test "JPEG progressive samples release every failed allocation and late entropy 
 
 test "JPEG progressive samples crop nonsquare grids before writing visible rows" {
     // Q=8, six +1 DC differences give sample 129..134 in a 3x2 block grid.
-    const q = [_]u8{ 255, 219, 0, 67, 0 } ++ [_]u8{8} ** 64;
-    const h = [_]u8{ 255, 196, 0, 38, 0, 1 } ++ [_]u8{0} ** 15 ++ .{ 1, 16, 1 } ++ [_]u8{0} ** 15 ++ .{0};
+    const q = [_]u8{ 255, 219, 0, 67, 0 } ++ @as([64]u8, @splat(8));
+    const h = [_]u8{ 255, 196, 0, 38, 0, 1 } ++ @as([15]u8, @splat(0)) ++ .{ 1, 16, 1 } ++ @as([15]u8, @splat(0)) ++ .{0};
     const raw = [_]u8{ 255, 216 } ++ q ++ h ++
         .{ 255, 194, 0, 11, 8, 0, 9, 0, 17, 1, 9, 17, 0 } ++
         .{ 255, 218, 0, 8, 1, 9, 0, 0, 0, 0, 0x55, 0x5f } ++
@@ -87,8 +87,8 @@ test "JPEG progressive samples crop nonsquare grids before writing visible rows"
 
 test "JPEG progressive samples use precision-specific level shift and no second point scaling" {
     for ([_]u8{ 8, 12 }) |precision| for ([_]u8{ 0x3f, 0x7f }) |entropy| {
-        const q = [_]u8{ 255, 219, 0, 67, 0 } ++ [_]u8{8} ** 64;
-        const dc = [_]u8{ 255, 196, 0, 20, 0, 1 } ++ [_]u8{0} ** 15 ++ .{1};
+        const q = [_]u8{ 255, 219, 0, 67, 0 } ++ @as([64]u8, @splat(8));
+        const dc = [_]u8{ 255, 196, 0, 20, 0, 1 } ++ @as([15]u8, @splat(0)) ++ .{1};
         const raw = [_]u8{ 255, 216 } ++ q ++ dc ++
             .{ 255, 194, 0, 11, precision, 0, 1, 0, 1, 1, 9, 17, 0 } ++
             .{ 255, 218, 0, 8, 1, 9, 0, 0, 0, 3, entropy, 255, 217 };
@@ -114,9 +114,9 @@ test "JPEG sample image preflight validates bounds before allocating" {
 test "JPEG progressive samples preserve both AC orientations at clipped block edges" {
     const expected = [_]u16{ 129, 129, 129, 128, 128, 127, 127, 127 };
     for ([_]u8{ 1, 17 }) |symbol| {
-        const q = [_]u8{ 255, 219, 0, 67, 0 } ++ [_]u8{8} ** 64;
-        const dc = [_]u8{ 0, 1 } ++ [_]u8{0} ** 15 ++ .{0};
-        const ac = [_]u8{ 16, 1, 1 } ++ [_]u8{0} ** 14 ++ .{ symbol, 0 };
+        const q = [_]u8{ 255, 219, 0, 67, 0 } ++ @as([64]u8, @splat(8));
+        const dc = [_]u8{ 0, 1 } ++ @as([15]u8, @splat(0)) ++ .{0};
+        const ac = [_]u8{ 16, 1, 1 } ++ @as([14]u8, @splat(0)) ++ .{ symbol, 0 };
         const raw = [_]u8{ 255, 216 } ++ q ++ .{ 255, 196, 0, 39 } ++ dc ++ ac ++
             .{ 255, 194, 0, 11, 8, 0, 9, 0, 9, 1, 9, 17, 0 } ++
             .{ 255, 218, 0, 8, 1, 9, 0, 0, 0, 0, 0x0f } ++
@@ -128,10 +128,10 @@ test "JPEG progressive samples preserve both AC orientations at clipped block ed
 }
 
 test "JPEG progressive samples use each component last used quantization snapshot" {
-    const q8 = [_]u8{ 255, 219, 0, 67, 0 } ++ [_]u8{8} ** 64;
-    const q24 = [_]u8{ 255, 219, 0, 67, 0 } ++ [_]u8{24} ** 64;
-    const q40 = [_]u8{ 255, 219, 0, 67, 0 } ++ [_]u8{40} ** 64;
-    const tables = [_]u8{ 255, 196, 0, 38, 0, 1 } ++ [_]u8{0} ** 15 ++ .{ 1, 16, 1 } ++ [_]u8{0} ** 15 ++ .{0};
+    const q8 = [_]u8{ 255, 219, 0, 67, 0 } ++ @as([64]u8, @splat(8));
+    const q24 = [_]u8{ 255, 219, 0, 67, 0 } ++ @as([64]u8, @splat(24));
+    const q40 = [_]u8{ 255, 219, 0, 67, 0 } ++ @as([64]u8, @splat(40));
+    const tables = [_]u8{ 255, 196, 0, 38, 0, 1 } ++ @as([15]u8, @splat(0)) ++ .{ 1, 16, 1 } ++ @as([15]u8, @splat(0)) ++ .{0};
     const raw = [_]u8{ 255, 216 } ++ q8 ++ tables ++
         .{ 255, 194, 0, 14, 8, 0, 1, 0, 1, 2, 9, 17, 0, 4, 17, 0 } ++
         .{ 255, 218, 0, 8, 1, 9, 0, 0, 0, 0, 0x7f } ++

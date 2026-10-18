@@ -52,7 +52,7 @@ fn putF32(bytes: []u8, offset: usize, value: f32) void {
 }
 
 test "EMF+ linear gradient parses fixed fields reserved values and preset colors" {
-    var bytes = [_]u8{0} ** 60;
+    var bytes = @as([60]u8, @splat(0));
     putU32(&bytes, 0, 0x04);
     putU32(&bytes, 4, 3);
     for ([_]f32{ 1, 2, 3, 4 }, 0..) |value, index| putF32(&bytes, 8 + index * 4, value);
@@ -74,7 +74,7 @@ test "EMF+ linear gradient parses fixed fields reserved values and preset colors
 }
 
 test "EMF+ linear gradient rejects every fixed truncation bad flags wrap and trailing data" {
-    const bytes = [_]u8{0} ** 40;
+    const bytes = @as([40]u8, @splat(0));
     for (0..40) |cut| try expectError(bytes[0..cut]);
     var invalid = bytes;
     putU32(&invalid, 0, 0x20);
@@ -82,7 +82,7 @@ test "EMF+ linear gradient rejects every fixed truncation bad flags wrap and tra
     invalid = bytes;
     putU32(&invalid, 4, 5);
     try std.testing.expectError(error.InvalidEmfPlusWrapMode, parse(&invalid));
-    var trailing = [_]u8{0} ** 41;
+    var trailing = @as([41]u8, @splat(0));
     try std.testing.expectError(error.InvalidEmfPlusLinearGradientTrailingData, parse(&trailing));
 }
 

@@ -73,7 +73,7 @@ test "EMF+ resolved PointData accumulates PointR from origin without narrowing" 
 }
 
 test "EMF+ resolved PointData preserves absolute integer and floating representations" {
-    var integers = [_]u8{0} ** 8;
+    var integers = @as([8]u8, @splat(0));
     std.mem.writeInt(i16, integers[0..2], -32_768, .little);
     std.mem.writeInt(i16, integers[2..4], 32_767, .little);
     std.mem.writeInt(i16, integers[4..6], 7, .little);
@@ -82,7 +82,7 @@ test "EMF+ resolved PointData preserves absolute integer and floating representa
     try std.testing.expectEqual(IntegerPoint{ .x = -32_768, .y = 32_767 }, (try integer_iterator.next()).?.integer);
     try std.testing.expectEqual(IntegerPoint{ .x = 7, .y = -9 }, (try integer_iterator.next()).?.integer);
 
-    var floats = [_]u8{0} ** 8;
+    var floats = @as([8]u8, @splat(0));
     std.mem.writeInt(u32, floats[0..4], @bitCast(@as(f32, -0.0)), .little);
     std.mem.writeInt(u32, floats[4..8], @bitCast(std.math.nan(f32)), .little);
     var floating_iterator = points(try point_data.parse(&floats, 1, false, false, .{}));

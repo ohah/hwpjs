@@ -23,7 +23,7 @@ pub fn calculate(bytes: []const u8, max_bytes: usize) ![16]u8 {
 fn hash(bytes: []const u8) [16]u8 {
     var digest = std.crypto.hash.Md5.init(.{});
     var at: usize = 0;
-    const zeroes = [_]u8{0} ** header.id_size;
+    const zeroes = @as([header.id_size]u8, @splat(0));
     const ranges = [_]struct { start: usize, len: usize }{
         .{ .start = header.flags_offset, .len = 4 },
         .{ .start = header.intent_offset, .len = 4 },

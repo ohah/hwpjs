@@ -34,7 +34,7 @@ test "WMF brush validates style and hatched value without erasing ignored fields
 }
 
 test "WMF font keeps raw face bytes and validates mandatory fields" {
-    var bytes = [_]u8{0} ** 50;
+    var bytes = @as([50]u8, @splat(0));
     std.mem.writeInt(i16, bytes[0..2], -112, .little);
     std.mem.writeInt(i16, bytes[8..10], 400, .little);
     bytes[13] = 129;
@@ -58,17 +58,17 @@ test "WMF font keeps raw face bytes and validates mandatory fields" {
 }
 
 test "WMF mandatory pen brush and font domains reject exact boundaries" {
-    var pen_bytes = [_]u8{0} ** 10;
+    var pen_bytes = @as([10]u8, @splat(0));
     std.mem.writeInt(u16, pen_bytes[0..2], 0x2108, .little);
     _ = try pen.parse(record(0x02fa, 8, &pen_bytes), .specified_zero);
     std.mem.writeInt(u16, pen_bytes[0..2], 9, .little);
     try t.expectError(error.UnsupportedWmfPenStyle, pen.parse(record(0x02fa, 8, &pen_bytes), .specified_zero));
 
-    var brush_bytes = [_]u8{0} ** 8;
+    var brush_bytes = @as([8]u8, @splat(0));
     std.mem.writeInt(u16, brush_bytes[0..2], 10, .little);
     try t.expectError(error.UnsupportedWmfBrushStyle, brush.parse(record(0x02fc, 7, &brush_bytes), .specified_zero));
 
-    var font_bytes = [_]u8{0} ** 50;
+    var font_bytes = @as([50]u8, @splat(0));
     std.mem.writeInt(i16, font_bytes[8..10], -1, .little);
     try t.expectError(error.InvalidWmfFontWeight, font.parse(record(0x02fb, 28, &font_bytes)));
     std.mem.writeInt(i16, font_bytes[8..10], 1001, .little);
@@ -87,11 +87,11 @@ test "WMF mandatory pen brush and font domains reject exact boundaries" {
 }
 
 test "WMF create payloads require exact function and record size" {
-    const pen_bytes = [_]u8{0} ** 10;
+    const pen_bytes = @as([10]u8, @splat(0));
     try t.expectError(error.InvalidWmfPenFunction, pen.parse(record(0x02fb, 8, &pen_bytes), .specified_zero));
     try t.expectError(error.InvalidWmfPenSize, pen.parse(record(0x02fa, 7, &pen_bytes), .specified_zero));
-    const brush_bytes = [_]u8{0} ** 8;
+    const brush_bytes = @as([8]u8, @splat(0));
     try t.expectError(error.InvalidWmfBrushSize, brush.parse(record(0x02fc, 8, &brush_bytes), .specified_zero));
-    const font_bytes = [_]u8{0} ** 50;
+    const font_bytes = @as([50]u8, @splat(0));
     try t.expectError(error.InvalidWmfFontSize, font.parse(record(0x02fb, 27, &font_bytes)));
 }

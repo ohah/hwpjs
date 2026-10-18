@@ -3,7 +3,7 @@ const t = std.testing;
 const prelude = @import("grid_prelude.zig");
 
 fn fixture() [144]u8 {
-    var bytes = [_]u8{0xa5} ** 144;
+    var bytes = @as([144]u8, @splat(0xa5));
     std.mem.writeInt(u32, bytes[32..36], 108, .little);
     std.mem.writeInt(u32, bytes[36..40], 0xfedcba98, .little);
     std.mem.writeInt(u32, bytes[56..60], 0x87654321, .little);

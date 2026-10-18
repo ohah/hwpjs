@@ -56,13 +56,13 @@ fn putU32(bytes: []u8, offset: usize, value: u32) void {
 }
 
 test "EMF+ Image dispatches unknown bitmap and metafile without guessing payload formats" {
-    var unknown = [_]u8{0} ** 11;
+    var unknown = @as([11]u8, @splat(0));
     putU32(&unknown, 0, 0xdbc01002);
     unknown[8..11].* = .{ 0xde, 0xad, 0xbe };
     const unknown_value = try parse(&unknown, .{});
     try std.testing.expectEqualSlices(u8, &.{ 0xde, 0xad, 0xbe }, unknown_value.data.unknown);
 
-    var raw = [_]u8{0} ** 32;
+    var raw = @as([32]u8, @splat(0));
     putU32(&raw, 0, 0xdbc01001);
     putU32(&raw, 4, 1);
     putI32(&raw, 8, 1);
@@ -74,7 +74,7 @@ test "EMF+ Image dispatches unknown bitmap and metafile without guessing payload
     try std.testing.expectEqual(values.PixelFormat.argb_32bpp, raw_value.data.bitmap.data.pixel.format);
     try std.testing.expectEqualSlices(u8, raw[28..32], raw_value.data.bitmap.data.pixel.bytes);
 
-    var meta = [_]u8{0} ** 20;
+    var meta = @as([20]u8, @splat(0));
     putU32(&meta, 0, 0xdbc01001);
     putU32(&meta, 4, 2);
     putU32(&meta, 8, 3);
@@ -86,7 +86,7 @@ test "EMF+ Image dispatches unknown bitmap and metafile without guessing payload
 }
 
 test "EMF+ Image rejects every envelope truncation unknown enum limit and wrong completed object" {
-    var bytes = [_]u8{0} ** 8;
+    var bytes = @as([8]u8, @splat(0));
     putU32(&bytes, 0, 0xdbc01001);
     for (0..8) |cut| try std.testing.expectError(error.UnexpectedEnd, parse(bytes[0..cut], .{}));
     var invalid = bytes;

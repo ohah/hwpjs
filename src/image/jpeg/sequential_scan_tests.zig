@@ -11,13 +11,13 @@ const sos = [_]u8{ 1, 9, 0, 0, 63, 0 };
 fn tables() !Store {
     var store: Store = .{};
     const q = struct {
-        const bytes = [_]u8{0} ++ [_]u8{1} ** 64;
+        const bytes = [_]u8{0} ++ @as([64]u8, @splat(1));
     };
     const dc = struct {
-        const bytes = [_]u8{ 0, 1 } ++ [_]u8{0} ** 15 ++ .{1};
+        const bytes = [_]u8{ 0, 1 } ++ @as([15]u8, @splat(0)) ++ .{1};
     };
     const ac = struct {
-        const bytes = [_]u8{ 16, 1 } ++ [_]u8{0} ** 15 ++ .{0};
+        const bytes = [_]u8{ 16, 1 } ++ @as([15]u8, @splat(0)) ++ .{0};
     };
     try store.installQuantization(&q.bytes, .{});
     try store.installHuffman(&dc.bytes, .{});

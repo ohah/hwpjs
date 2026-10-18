@@ -2,7 +2,7 @@ const std = @import("std");
 const core = @import("hwpjs");
 const int = @import("resource-probe.zig").int;
 fn fixed(a: std.mem.Allocator, out: *std.ArrayList(u8), value: anytype) !void {
-    inline for (std.meta.fields(@TypeOf(value))) |f| try int(a, out, f.type, @field(value, f.name));
+    inline for (@typeInfo(@TypeOf(value)).@"struct".field_names) |f| try int(a, out, @FieldType(@TypeOf(value), f), @field(value, f));
 }
 fn color(a: std.mem.Allocator, out: *std.ArrayList(u8), p: core.hwp5.picture_color.Color) !void {
     try int(a, out, i32, p.type_raw);

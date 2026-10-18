@@ -27,7 +27,7 @@ pub fn toRectF(value: RectData) geometry.RectF {
 
 test "EMF+ rectangle data selects integer and floating wire forms exactly" {
     const std = @import("std");
-    var bytes = [_]u8{0} ** 16;
+    var bytes = @as([16]u8, @splat(0));
     for ([_]i16{ -1, 2, -3, 4 }, 0..) |value, index|
         std.mem.writeInt(i16, bytes[index * 2 ..][0..2], value, .little);
     var integer_reader: binary.Reader = .{ .bytes = &bytes };

@@ -78,7 +78,7 @@ pub fn inspectTable(a: std.mem.Allocator, tree: *const tree_mod.Tree, table: usi
             if (!table_xml.childIs(tree, index, "tr") and !table_xml.childIs(tree, index, "inMargin") and !table_xml.childIs(tree, index, "cellzoneList")) report.other_direct_children += 1;
             continue;
         };
-        const selected: usize = @intFromEnum(kind);
+        const selected: usize = @backingInt(kind);
         if (report.shape_children == options.max_shape_children) return error.LimitExceeded;
         report.shape_children += 1;
         per_table[selected] += 1;
@@ -109,11 +109,11 @@ pub fn inspectTable(a: std.mem.Allocator, tree: *const tree_mod.Tree, table: usi
             },
         }
     }
-    inline for (std.meta.fields(ChildKind), 0..) |_, child_index| {
+    inline for (@import("../reflection.zig").fields(ChildKind), 0..) |_, child_index| {
         const count = per_table[child_index];
         const missing = @intFromBool(count == 0);
         const duplicate = @intFromBool(count > 1);
-        switch (@as(ChildKind, @enumFromInt(child_index))) {
+        switch (@as(ChildKind, @fromBackingInt(@intCast(child_index)))) {
             .size => {
                 report.size.missing_tables += missing;
                 report.size.duplicate_tables += duplicate;

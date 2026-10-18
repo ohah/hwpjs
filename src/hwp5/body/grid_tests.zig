@@ -15,8 +15,8 @@ test "grid sweep agrees with dense oracle for every subset of 2x2 rectangles in 
     for (0..512) |mask| {
         var cells: [9]grid.Rectangle = undefined;
         var count: usize = 0;
-        var dense = [_]u8{0} ** 4;
-        var starts = [_]u16{0} ** 2;
+        var dense = @as([4]u8, @splat(0));
+        var starts = @as([2]u16, @splat(0));
         var overlap = false;
         for (rectangles, 0..) |c, i| {
             if (mask & (@as(usize, 1) << @intCast(i)) == 0) continue;

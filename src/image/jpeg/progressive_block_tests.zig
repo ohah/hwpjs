@@ -7,9 +7,9 @@ const Bits = @import("entropy_bits.zig").Bits;
 const huffman = @import("huffman.zig");
 const frame = @import("frame.zig");
 const frame_bytes = [_]u8{ 8, 0, 1, 0, 1, 1, 9, 17, 0 };
-const dc = [_]u8{ 0, 0, 3 } ++ [_]u8{0} ** 14 ++ .{ 0, 1, 2 };
+const dc = [_]u8{ 0, 0, 3 } ++ @as([14]u8, @splat(0)) ++ .{ 0, 1, 2 };
 // 000 EOB, 001 new coefficient, 010 EOB1, 011 ZRL.
-const ac = [_]u8{ 16, 0, 0, 4 } ++ [_]u8{0} ** 13 ++ .{ 0, 1, 16, 240 };
+const ac = [_]u8{ 16, 0, 0, 4 } ++ @as([13]u8, @splat(0)) ++ .{ 0, 1, 16, 240 };
 
 fn decoder(start: u8, end: u8, ah: u8, al: u8, raw: ?[]const u8) !Decoder {
     var table: ?huffman.Table = null;
@@ -63,7 +63,7 @@ test "JPEG progressive block initial AC ZRL may end exactly at spectral boundary
 }
 
 test "JPEG progressive block maximum EOB run spans blocks but not restart boundary" {
-    const table = [_]u8{ 16, 1 } ++ [_]u8{0} ** 15 ++ .{224};
+    const table = [_]u8{ 16, 1 } ++ @as([15]u8, @splat(0)) ++ .{224};
     const d = try decoder(1, 63, 0, 0, &table);
     var bits = try Bits.init(&.{ 0x7f, 0xff, 0 }, 3); // 0 + fourteen ones + pad1
     var block: [64]i32 = @splat(0);
@@ -130,7 +130,7 @@ test "JPEG progressive block late errors preserve bits predictor EOB and all coe
     try t.expectError(error.InvalidJpegProgressiveCoefficient, d.decode(&bits, &state, &block));
     state.eob_remaining = 32768;
     try t.expectError(error.InvalidJpegEobRun, d.decode(&bits, &state, &block));
-    const invalid = [_]u8{ 16, 1 } ++ [_]u8{0} ** 15 ++ .{2};
+    const invalid = [_]u8{ 16, 1 } ++ @as([15]u8, @splat(0)) ++ .{2};
     block = @splat(0);
     state = .{};
     bits = try Bits.init(&.{0}, 1);

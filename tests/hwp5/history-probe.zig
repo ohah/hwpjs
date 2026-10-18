@@ -15,7 +15,7 @@ pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
         const item = try core.hwp5.history.Item.parse(raw, .{ .start_layout = layout, .framing = options, .date_layout = if (mode >= 3) .observed_systemtime16 else .preserve_raw });
         try int(a, &out, u32, item.start.flags);
         try int(a, &out, u32, item.start.option);
-        inline for (std.meta.fields(@TypeOf(item.report))) |field| try int(a, &out, u32, @intCast(@field(item.report, field.name)));
+        inline for (@typeInfo(@TypeOf(item.report)).@"struct".field_names) |field| try int(a, &out, u32, @intCast(@field(item.report, field)));
     }
     var it = core.hwp5.history.record.Iterator.init(raw, options);
     while (try it.next()) |rec| {

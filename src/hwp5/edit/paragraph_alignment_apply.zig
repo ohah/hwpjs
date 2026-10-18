@@ -14,7 +14,7 @@ pub fn applyWithProperties(a: std.mem.Allocator, document: *model.Document, deco
     if (section >= document.sections.len) return error.InvalidSection;
     if (index >= document.sections[section].paragraphs.len) return error.InvalidParagraph;
     const selected = &document.sections[section].paragraphs[index];
-    const borrowed: Values = .{ .entries = .{ .items = document.paragraph_resources, .capacity = document.paragraph_resources.len } };
+    const borrowed: Values = .{ .entries = .{ .items = document.paragraph_resources, .capacity = document.paragraph_resources.len, .pointer_stability = .{} } };
     const current = try borrowed.write(a, decoded, version, original_count, limit);
     defer a.free(current);
     const shapes = try @import("paragraph_display_shapes.zig").read(a, current, version, original_count + document.paragraph_resources.len);
@@ -24,7 +24,7 @@ pub fn applyWithProperties(a: std.mem.Allocator, document: *model.Document, deco
     const effective_alignment: u32 = alignment orelse current_shape.alignment;
     if (effective_alignment > 5) return error.InvalidParagraphAlignment;
     var unchanged = current_shape.alignment == effective_alignment;
-    inline for (std.meta.fields(model.ParagraphMarginPatch)) |field| if (@field(patch, field.name)) |value| {
+    inline for (@import("../../reflection.zig").fields(model.ParagraphMarginPatch)) |field| if (@field(patch, field.name)) |value| {
         unchanged = unchanged and @field(current_shape, field.name) == value;
     };
     if (requested_spacing) |value| {
@@ -42,7 +42,7 @@ pub fn applyWithProperties(a: std.mem.Allocator, document: *model.Document, deco
         margins = intent.margins;
         spacing = intent.spacing;
     }
-    inline for (std.meta.fields(model.ParagraphMarginPatch)) |field| if (@field(patch, field.name)) |value| {
+    inline for (@import("../../reflection.zig").fields(model.ParagraphMarginPatch)) |field| if (@field(patch, field.name)) |value| {
         @field(margins, field.name) = value;
     };
     if (requested_spacing) |value| spacing = value;

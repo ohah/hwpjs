@@ -6,8 +6,8 @@ const h = @import("huffman.zig");
 const frame_parser = @import("frame.zig");
 const frame_bytes = [_]u8{ 8, 0, 1, 0, 1, 1, 9, 17, 0 };
 // DC: 00->0, 01->1, 10->2. AC: 000->EOB,001->01,010->F0,011->E1.
-const dc = [_]u8{ 0, 0, 3 } ++ [_]u8{0} ** 14 ++ .{ 0, 1, 2 };
-const ac = [_]u8{ 16, 0, 0, 4 } ++ [_]u8{0} ** 13 ++ .{ 0, 1, 240, 225 };
+const dc = [_]u8{ 0, 0, 3 } ++ @as([14]u8, @splat(0)) ++ .{ 0, 1, 2 };
+const ac = [_]u8{ 16, 0, 0, 4 } ++ @as([13]u8, @splat(0)) ++ .{ 0, 1, 240, 225 };
 fn decoder(dc_raw: []const u8, ac_raw: []const u8) !Block {
     var di = try h.Iterator.init(dc_raw, .{});
     var ai = try h.Iterator.init(ac_raw, .{});
@@ -49,7 +49,7 @@ test "JPEG sequential ZRL may end exactly at 64 but not cross the block" {
     const before = overflow;
     try t.expectError(error.InvalidJpegAcRun, d.decode(&overflow, 0));
     try t.expectEqualDeep(before, overflow);
-    const ac_f1 = [_]u8{ 16, 1 } ++ [_]u8{0} ** 15 ++ .{241};
+    const ac_f1 = [_]u8{ 16, 1 } ++ @as([15]u8, @splat(0)) ++ .{241};
     const run_decoder = try decoder(&dc, &ac_f1);
     var run = try Bits.init(&.{ 0b00010101, 0b01111111 }, 2);
     const run_before = run;
@@ -77,8 +77,8 @@ test "JPEG sequential block truncation and predictor overflow preserve bit state
 }
 
 test "JPEG sequential block rejects invalid categories and table classes" {
-    const dc_bad = [_]u8{ 0, 1 } ++ [_]u8{0} ** 15 ++ .{12};
-    const ac_bad = [_]u8{ 16, 1 } ++ [_]u8{0} ** 15 ++ .{16};
+    const dc_bad = [_]u8{ 0, 1 } ++ @as([15]u8, @splat(0)) ++ .{12};
+    const ac_bad = [_]u8{ 16, 1 } ++ @as([15]u8, @splat(0)) ++ .{16};
     var bits = try Bits.init(&.{0}, 1);
     const before = bits;
     const invalid_dc = try decoder(&dc_bad, &ac);

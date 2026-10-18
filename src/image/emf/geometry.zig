@@ -40,7 +40,7 @@ pub fn parseRectL(bytes: []const u8) !RectL {
 }
 
 test "signed geometry objects preserve documented wire order" {
-    var point_bytes = [_]u8{0} ** 8;
+    var point_bytes = @as([8]u8, @splat(0));
     std.mem.writeInt(i32, point_bytes[0..4], -2, .little);
     std.mem.writeInt(i32, point_bytes[4..8], 3, .little);
     const point = try parsePointL(&point_bytes);
@@ -50,7 +50,7 @@ test "signed geometry objects preserve documented wire order" {
     try std.testing.expectEqual(@as(i32, -2), size.width);
     try std.testing.expectEqual(@as(i32, 3), size.height);
 
-    var rect_bytes = [_]u8{0} ** 16;
+    var rect_bytes = @as([16]u8, @splat(0));
     for ([_]i32{ -4, -3, 2, 1 }, 0..) |value, index|
         std.mem.writeInt(i32, rect_bytes[index * 4 ..][0..4], value, .little);
     const rect = try parseRectL(&rect_bytes);
@@ -61,7 +61,7 @@ test "signed geometry objects preserve documented wire order" {
 }
 
 test "geometry objects reject truncated and oversized inputs" {
-    const bytes = [_]u8{0} ** 17;
+    const bytes = @as([17]u8, @splat(0));
     try std.testing.expectError(error.InvalidEmfPointLSize, parsePointL(bytes[0..7]));
     try std.testing.expectError(error.InvalidEmfPointLSize, parsePointL(bytes[0..9]));
     try std.testing.expectError(error.InvalidEmfSizeLSize, parseSizeL(bytes[0..7]));
@@ -73,7 +73,7 @@ test "geometry objects reject truncated and oversized inputs" {
 }
 
 test "PointS preserves signed XY wire order" {
-    var bytes = [_]u8{0} ** 4;
+    var bytes = @as([4]u8, @splat(0));
     std.mem.writeInt(i16, bytes[0..2], std.math.minInt(i16), .little);
     std.mem.writeInt(i16, bytes[2..4], std.math.maxInt(i16), .little);
     const point = try parsePointS(&bytes);

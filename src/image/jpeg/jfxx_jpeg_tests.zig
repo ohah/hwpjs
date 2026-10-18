@@ -2,8 +2,8 @@ const std = @import("std");
 const t = std.testing;
 const jpeg = @import("jfxx_jpeg.zig");
 
-const q = [_]u8{ 255, 219, 0, 67, 0 } ++ [_]u8{8} ** 64;
-const h = [_]u8{ 255, 196, 0, 38, 0, 1 } ++ [_]u8{0} ** 15 ++ .{ 1, 16, 1 } ++ [_]u8{0} ** 15 ++ .{0};
+const q = [_]u8{ 255, 219, 0, 67, 0 } ++ @as([64]u8, @splat(8));
+const h = [_]u8{ 255, 196, 0, 38, 0, 1 } ++ @as([15]u8, @splat(0)) ++ .{ 1, 16, 1 } ++ @as([15]u8, @splat(0)) ++ .{0};
 const sof = [_]u8{ 255, 192, 0, 11, 8, 0, 1, 0, 1, 1, 1, 17, 0 };
 const scan = [_]u8{ 255, 218, 0, 8, 1, 1, 0, 0, 63, 0, 0x5f };
 const fixture = [_]u8{ 255, 216 } ++ q ++ h ++ sof ++ scan ++ .{ 255, 217 };
@@ -58,6 +58,6 @@ test "JPEG JFXX compressed thumbnail rejects nonbaseline IDs trailing and oversi
             return error.UnexpectedValidTruncation;
         } else |_| {}
     }
-    const huge = [_]u8{0} ** 65528;
+    const huge = @as([65528]u8, @splat(0));
     try t.expectError(error.LimitExceeded, jpeg.decode(t.allocator, &huge, .{}));
 }

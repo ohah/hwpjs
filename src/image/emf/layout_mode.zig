@@ -33,7 +33,7 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 }
 
 fn bytesFor(raw: u32) [minimum_size]u8 {
-    var bytes = [_]u8{0} ** minimum_size;
+    var bytes = @as([minimum_size]u8, @splat(0));
     std.mem.writeInt(u32, bytes[8..12], raw, .little);
     return bytes;
 }
@@ -59,12 +59,12 @@ test "SETLAYOUT rejects every undefined single bit and composite" {
 }
 
 test "SETLAYOUT requires its prefix, preserves extensions, and ignores unrelated records" {
-    const short = [_]u8{0} ** 8;
+    const short = @as([8]u8, @splat(0));
     try std.testing.expectError(error.InvalidEmfSetLayoutRecordSize, parse(fixture(.setlayout, &short)));
     var declared_twelve = fixture(.setlayout, &short);
     declared_twelve.size = minimum_size;
     try std.testing.expectError(error.InvalidEmfSetLayoutRecordSize, parse(declared_twelve));
-    var long = [_]u8{0} ** 16;
+    var long = @as([16]u8, @splat(0));
     long[12..16].* = .{ 0xde, 0xad, 0xbe, 0xef };
     const extended = (try parse(fixture(.setlayout, &long))) orelse return error.TestExpectedEqual;
     try std.testing.expectEqual(@as(u32, 0), extended.raw);

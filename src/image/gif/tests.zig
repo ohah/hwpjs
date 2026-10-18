@@ -74,7 +74,7 @@ test "gif KwKwK and omitted initial clear are decoded without invented resets" {
 test "gif graphics control crosses comments but is consumed by plain text" {
     const gce = [_]u8{ 0x21, 0xf9, 4, 0x1f, 0x34, 0x12, 1, 0 };
     const comment = [_]u8{ 0x21, 0xfe, 1, 65, 0 };
-    const text = [_]u8{ 0x21, 1, 12 } ++ [_]u8{0} ** 12 ++ [_]u8{0};
+    const text = [_]u8{ 0x21, 1, 12 } ++ @as([12]u8, @splat(0)) ++ [_]u8{0};
     const raw = tiny[0..19].* ++ gce ++ comment ++ text ++ tiny[19..].*;
     var d = try gif.decode(a, &raw, .{});
     defer d.deinit(a);

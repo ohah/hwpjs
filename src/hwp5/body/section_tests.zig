@@ -2,7 +2,7 @@ const std = @import("std");
 const t = std.testing;
 const body = @import("reader.zig");
 test "section language version boundary, signed units and extra bytes" {
-    var bytes = [_]u8{255} ** 29;
+    var bytes = @as([29]u8, @splat(255));
     const modern = @import("../version.zig").Version{ .raw = 0x05000105 };
     for (0..26) |n| try t.expectError(error.UnexpectedEnd, body.section_def.Definition.parse(bytes[0..n], modern));
     const old = try body.section_def.Definition.parse(&bytes, .{ .raw = 0x05000104 });
@@ -21,7 +21,7 @@ test "section language version boundary, signed units and extra bytes" {
     try t.expectEqual(0, d.language.?);
 }
 test "page and border minimum sizes use field sums and keep signed wire values" {
-    const bytes = [_]u8{255} ** 43;
+    const bytes = @as([43]u8, @splat(255));
     for (0..40) |n| try t.expectError(error.UnexpectedEnd, body.PageDefinition.parse(bytes[0..n]));
     const page = try body.PageDefinition.parse(&bytes);
     try t.expectEqual(0xffffffff, page.width);
@@ -34,7 +34,7 @@ test "page and border minimum sizes use field sums and keep signed wire values" 
     try t.expectEqual(65535, border.border_fill_id);
     try t.expectEqual(3, border.extra.len);
     for ([_]u32{ 73, 75 }) |tag| {
-        var raw = [_]u8{0} ** 5;
+        var raw = @as([5]u8, @splat(0));
         std.mem.writeInt(u32, raw[0..4], tag | (1 << 20), .little);
         var it = try body.Iterator.init(&raw, .{ .raw = 0x05000307 }, .{});
         for (0..2) |_| {

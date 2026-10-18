@@ -45,11 +45,11 @@ fn putU32(bytes: []u8, offset: usize, value: u32) void {
 }
 
 test "EMF+ CustomLineCap dispatches default and adjustable arrow data" {
-    var default_bytes = [_]u8{0} ** 56;
+    var default_bytes = @as([56]u8, @splat(0));
     putU32(&default_bytes, 0, 0xdbc01001);
     try std.testing.expectEqual(@as(u32, 0), (try parse(&default_bytes, .{})).data.default.flags_raw);
 
-    var arrow_bytes = [_]u8{0} ** 60;
+    var arrow_bytes = @as([60]u8, @splat(0));
     putU32(&arrow_bytes, 0, 0xdbc01002);
     putU32(&arrow_bytes, 4, 1);
     putU32(&arrow_bytes, 20, 1);
@@ -57,7 +57,7 @@ test "EMF+ CustomLineCap dispatches default and adjustable arrow data" {
 }
 
 test "EMF+ CustomLineCap rejects envelope truncation type limit and wrong completed object" {
-    var bytes = [_]u8{0} ** 56;
+    var bytes = @as([56]u8, @splat(0));
     putU32(&bytes, 0, 0xdbc01001);
     for (0..8) |cut| try expectError(bytes[0..cut], .{});
     putU32(&bytes, 4, 2);

@@ -22,7 +22,7 @@ pub const Stats = struct {
     sites: usize = 0,
     external: usize = 0,
     targets: usize = 0,
-    formats: [std.meta.fields(image.Format).len]usize = @splat(0),
+    formats: [@import("reflection.zig").fields(image.Format).len]usize = @splat(0),
     mismatches: usize = 0,
     encoded_bytes: usize = 0,
     invalid_svg: usize = 0,
@@ -61,7 +61,7 @@ pub const Stats = struct {
             try std.testing.expect(payloads.isCandidate(items.items[target.item_index]));
             try std.testing.expectEqual(@as(?usize, target.entry_index), items.items[target.item_index].entry_index);
             try std.testing.expectEqual(@as(usize, 1), target.references);
-            result.formats[@intFromEnum(target.format)] += 1;
+            result.formats[@backingInt(target.format)] += 1;
             bytes += target.encoded_bytes;
             mismatches += @intFromBool(target.media_matches == false);
             result.invalid_svg += @intFromBool(target.format == .svg and target.inspection_error != null);
@@ -77,7 +77,7 @@ pub const Stats = struct {
         }
         try std.testing.expectEqual(report.encoded_bytes, bytes);
         try std.testing.expectEqual(report.media_mismatches, mismatches);
-        try std.testing.expectEqual(report.unknown_formats, result.formats[@intFromEnum(image.Format.unknown)]);
+        try std.testing.expectEqual(report.unknown_formats, result.formats[@backingInt(image.Format.unknown)]);
         return result;
     }
 

@@ -6,7 +6,7 @@ pub fn write(a: std.mem.Allocator, input: []const u8, version: Version, patch: P
     if (input.len > limit) return error.LimitExceeded;
     _ = try @import("../docinfo/para_shape.zig").ParaShape.parse(input, version);
     const output = try a.dupe(u8, input);
-    inline for (std.meta.fields(Patch), 0..) |field, index| {
+    inline for (@import("../../reflection.zig").fields(Patch), 0..) |field, index| {
         if (@field(patch, field.name)) |value| std.mem.writeInt(i32, output[4 + index * 4 ..][0..4], value, .little);
     }
     return output;

@@ -31,7 +31,7 @@ test "list views explicitly distinguish six and eight byte layouts without norma
 }
 test "control and list short payloads leave dispatch unchanged" {
     for ([_]u32{ 71, 72 }) |tag| {
-        var bytes = [_]u8{0} ** 7;
+        var bytes = @as([7]u8, @splat(0));
         std.mem.writeInt(u32, bytes[0..4], tag | (3 << 20), .little);
         var it = try b.Iterator.init(&bytes, .{ .raw = 0x05000307 }, .{});
         for (0..2) |_| {

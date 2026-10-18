@@ -223,7 +223,7 @@ pub const master_style_ref_present = [_][3]usize{
     .{ 21, 21, 29 },  .{ 130, 130, 158 },
 };
 pub const master_style_ref_resolved = master_style_ref_present;
-pub const master_style_ref_absent = [_][3]usize{.{ 0, 0, 0 }} ** 8;
+pub const master_style_ref_absent = @as([8][3]usize, @splat(.{ 0, 0, 0 }));
 pub const master_style_ref_missing = master_style_ref_absent;
 pub const master_style_ref_absent_table = master_style_ref_absent;
 // [runs, missing charTcId, zero charTcId, paraTcId alias present,
@@ -261,10 +261,10 @@ pub const section_switch_shape = [_][21]u64{
     observedSwitchShape(12), observedSwitchShape(14), observedSwitchShape(15), observedSwitchShape(9),
     observedSwitchShape(12), observedSwitchShape(10), observedSwitchShape(12), observedSwitchShape(9),
 };
-pub const master_switch_shape = [_][21]u64{[_]u64{0} ** 21} ** 8;
+pub const master_switch_shape = @as([8][21]u64, @splat(@as([21]u64, @splat(0))));
 pub const section_run_topology_sec_pr = [_]usize{ 75, 72, 72, 55, 64, 62, 63, 92 };
 pub const section_run_topology_late_sec_pr = [_]usize{ 3, 3, 4, 1, 3, 3, 0, 15 };
-pub const zero_run_topology = [_]usize{0} ** 8;
+pub const zero_run_topology = @as([8]usize, @splat(0));
 // Text node: [total, non-direct, missing charStyleIDRef, zero, over u32, child not in model].
 pub const section_text_nodes = [_][6]usize{
     .{ 32422, 0, 32294, 0, 0, 0 }, .{ 25613, 0, 25612, 0, 0, 0 },
@@ -292,14 +292,14 @@ pub const master_text_digest_sum = [_]u64{
 // Three groups of [sites, absent, empty, embedded, external, missing], then
 // unclassified attributes, from the independent OPF/ElementTree oracle.
 pub const master_binary = [_][19]usize{
-    .{ 4, 0, 0, 4, 0, 0 } ++ .{0} ** 13,
-    .{ 3, 0, 0, 3, 0, 0 } ++ .{0} ** 13,
-    .{ 10, 0, 0, 10, 0, 0 } ++ .{0} ** 13,
-    .{0} ** 19,
-    .{0} ** 19,
-    .{0} ** 19,
-    .{ 3, 0, 0, 3, 0, 0 } ++ .{0} ** 13,
-    .{ 15, 0, 0, 15, 0, 0 } ++ .{0} ** 13,
+    .{ 4, 0, 0, 4, 0, 0 } ++ @as([13]usize, @splat(0)),
+    .{ 3, 0, 0, 3, 0, 0 } ++ @as([13]usize, @splat(0)),
+    .{ 10, 0, 0, 10, 0, 0 } ++ @as([13]usize, @splat(0)),
+    @as([19]usize, @splat(0)),
+    @as([19]usize, @splat(0)),
+    @as([19]usize, @splat(0)),
+    .{ 3, 0, 0, 3, 0, 0 } ++ @as([13]usize, @splat(0)),
+    .{ 15, 0, 0, 15, 0, 0 } ++ @as([13]usize, @splat(0)),
 };
 // [Hancom model, 2011 XSD-only hyphen, other 2011, foreign].
 pub const section_text_child_classes = [_][4]usize{
@@ -326,32 +326,32 @@ pub const section_tab_fields = [_][21]u64{
     .{ 370, 370, 0, 0, 4515192, 370, 370, 0, 0, 0, 500, 0, 370, 370, 0, 0, 0, 0, 72, 0, 0 },
     .{ 2293, 2293, 0, 0, 10303875, 2293, 2293, 0, 0, 0, 2404, 0, 2293, 2293, 0, 0, 0, 0, 462, 0, 0 },
 };
-pub const master_tab_fields = [_][21]u64{[_]u64{0} ** 21} ** 8;
+pub const master_tab_fields = @as([8][21]u64, @splat(@as([21]u64, @splat(0))));
 // Direct hp:t annotation fields; order matches each attribute report's counts().
 pub const section_markpen_fields = [_][9]u64{
     .{ 1, 1, 1, 0, 0, 16_777_215, 0, 1, 0 },
     .{ 2, 2, 2, 0, 0, 33_554_175, 0, 2, 0 },
-    [_]u64{0} ** 9,
-    [_]u64{0} ** 9,
-    [_]u64{0} ** 9,
+    @as([9]u64, @splat(0)),
+    @as([9]u64, @splat(0)),
+    @as([9]u64, @splat(0)),
     .{ 2, 2, 2, 0, 0, 33_554_430, 0, 2, 0 },
     .{ 22, 22, 22, 0, 0, 369_098_730, 0, 26, 0 },
-    [_]u64{0} ** 9,
+    @as([9]u64, @splat(0)),
 };
-pub const master_markpen_fields = [_][9]u64{[_]u64{0} ** 9} ** 8;
+pub const master_markpen_fields = @as([8][9]u64, @splat(@as([9]u64, @splat(0))));
 pub const section_title_mark_fields = [_][6]u64{
     .{ 1, 1, 1, 0, 0, 0 },
     .{ 61, 61, 61, 0, 0, 0 },
-    [_]u64{0} ** 6,
-    [_]u64{0} ** 6,
+    @as([6]u64, @splat(0)),
+    @as([6]u64, @splat(0)),
     .{ 305, 305, 305, 0, 0, 0 },
-    [_]u64{0} ** 6,
-    [_]u64{0} ** 6,
-    [_]u64{0} ** 6,
+    @as([6]u64, @splat(0)),
+    @as([6]u64, @splat(0)),
+    @as([6]u64, @splat(0)),
 };
-pub const master_title_mark_fields = [_][6]u64{[_]u64{0} ** 6} ** 8;
-pub const section_track_change_tag_fields = [_][20]u64{[_]u64{0} ** 20} ** 8;
-pub const master_track_change_tag_fields = [_][20]u64{[_]u64{0} ** 20} ** 8;
+pub const master_title_mark_fields = @as([8][6]u64, @splat(@as([6]u64, @splat(0))));
+pub const section_track_change_tag_fields = @as([8][20]u64, @splat(@as([20]u64, @splat(0))));
+pub const master_track_change_tag_fields = @as([8][20]u64, @splat(@as([20]u64, @splat(0))));
 pub const master_page_number_sum = [_]u64{ 0, 0, 4, 0, 0, 0, 0, 0 };
 // Independent Python zipfile/ElementTree survey of direct 2011 secPr/pagePr.
 // Same two roots and UTF-8 relative-path shard rule as hwpx_known_survey.zig.

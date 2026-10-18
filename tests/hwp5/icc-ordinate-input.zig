@@ -13,7 +13,7 @@ pub fn parseWide(bytes: []const u8) !Of(512) {
 fn parseFor(comptime bits: u16, bytes: []const u8) !Of(bits) {
     const width = bits / 8;
     const prefix = 4 + 2 * width;
-    const U = std.meta.Int(.unsigned, bits);
+    const U = @Int(.unsigned, bits);
     if (bytes.len != prefix + 68) return error.InvalidProbeInput;
     const payload = bytes[prefix..];
     const value: icc.power_ordinate.Value = switch (std.mem.readInt(u32, payload[0..4], .big)) {

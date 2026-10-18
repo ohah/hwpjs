@@ -2,7 +2,7 @@ const std = @import("std");
 const t = std.testing;
 const field = @import("field_start.zig");
 test "field attributes have independent raw bit views" {
-    var raw = [_]u8{0} ** 11;
+    var raw = @as([11]u8, @splat(0));
     for (0..32) |bit| {
         const flags = @as(u32, 1) << @intCast(bit);
         std.mem.writeInt(u32, raw[0..4], flags, .little);
@@ -18,7 +18,7 @@ test "field attributes have independent raw bit views" {
     try t.expect(!field.supports(rules.id("%%%%")));
 }
 fn allocationCase(a: std.mem.Allocator, bad: bool) !void {
-    var raw = [_]u8{0} ** 19;
+    var raw = @as([19]u8, @splat(0));
     std.mem.writeInt(u32, raw[0..4], 71 | ((if (bad) @as(u32, 14) else 15) << 20), .little);
     std.mem.writeInt(u32, raw[4..8], @import("control_rules.zig").id("%hlk"), .little);
     var tree = try @import("tree.zig").Tree.parse(a, raw[0..if (bad) 18 else 19], .{ .raw = 0x05010001 }, .{});

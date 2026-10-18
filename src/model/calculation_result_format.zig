@@ -50,6 +50,6 @@ test "HWPX calculation result format syntax and hostile boundaries" {
     }
     try std.testing.expectError(error.UnsupportedCalculationResultPrecision, parse("%.18f"));
     try std.testing.expectError(error.UnsupportedCalculationResultPrecision, parse("%.999999999999999999f"));
-    const oversized = [_]u8{'0'} ** 65;
+    const oversized = @as([65]u8, @splat('0'));
     try std.testing.expectError(error.LimitExceeded, parse(&oversized));
 }

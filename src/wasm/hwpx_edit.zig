@@ -915,7 +915,7 @@ export fn hwpx_edit_replace_paragraph_ranges_font_name(ptr: [*]const u8, length:
     const s = if (active) |*value| value else return fail(error.EditorNotOpen);
     const replacement = @import("paragraph_replace_request.zig").prepare(.hwpx, a, s, ptr[0..length], text_ptr[0..text_length]) catch |err| return fail(err);
     defer a.free(replacement);
-    const commands = @import("named_font_replacement_commands.zig").build(.hwpx, a, replacement, @enumFromInt(language), name_ptr[0..name_length]) catch |err| return fail(err);
+    const commands = @import("named_font_replacement_commands.zig").build(.hwpx, a, replacement, @fromBackingInt(@intCast(language)), name_ptr[0..name_length]) catch |err| return fail(err);
     defer a.free(commands);
     applyBatch(s, commands) catch |err| return fail(err);
     return 1;
@@ -946,7 +946,7 @@ export fn hwpx_edit_replace_paragraph_ranges_font_name_properties(ptr: [*]const 
     const s = if (active) |*value| value else return fail(error.EditorNotOpen);
     const replacement = @import("paragraph_replace_request.zig").prepare(.hwpx, a, s, ptr[0..length], text_ptr[0..text_length]) catch |err| return fail(err);
     defer a.free(replacement);
-    const commands = @import("character_property_replacement_commands.zig").buildWithFont(.hwpx, a, replacement, @enumFromInt(language), name_ptr[0..name_length], patch) catch |err| return fail(err);
+    const commands = @import("character_property_replacement_commands.zig").buildWithFont(.hwpx, a, replacement, @fromBackingInt(@intCast(language)), name_ptr[0..name_length], patch) catch |err| return fail(err);
     defer a.free(commands);
     applyBatch(s, commands) catch |err| return fail(err);
     return 1;
@@ -1007,7 +1007,7 @@ export fn hwpx_edit_set_character_font_name(section: u32, paragraph: u32, start:
     if (end < start) return fail(error.InvalidTextPosition);
     if (size > 4096) return fail(error.LimitExceeded);
     _ = @import("character_font_args.zig").decode(language, 0) catch |err| return fail(err);
-    apply(.{ .kind = .character_font_name, .section = section, .paragraph = paragraph, .start = start, .deleted = end - start, .inserted = "", .font_language = @enumFromInt(language), .font_name = ptr[0..size] }) catch |err| return fail(err);
+    apply(.{ .kind = .character_font_name, .section = section, .paragraph = paragraph, .start = start, .deleted = end - start, .inserted = "", .font_language = @fromBackingInt(@intCast(language)), .font_name = ptr[0..size] }) catch |err| return fail(err);
     return 1;
 }
 export fn hwpx_edit_splice_font_name(section: u32, paragraph: u32, start: u32, end: u32, text_ptr: [*]const u8, text_size: usize, language: u32, name_ptr: [*]const u8, name_size: usize) u32 {
@@ -1022,7 +1022,7 @@ export fn hwpx_edit_splice_font_name_properties(section: u32, paragraph: u32, st
     _ = @import("character_font_args.zig").decode(language, 0) catch |err| return fail(err);
     const patch = @import("character_property_args.zig").decode(mask, size, bold, italic) catch |err| return fail(err);
     const s = if (active) |*value| value else return fail(error.EditorNotOpen);
-    const commands = @import("character_property_text_commands.zig").buildWithFont(.hwpx, .{ .section = section, .paragraph = paragraph, .start = start, .end = end, .text = text_ptr[0..text_size], .language = @enumFromInt(language), .name = name_ptr[0..name_size], .text_kind = @enumFromInt(kind), .begin_element = begin }, patch) catch |err| return fail(err);
+    const commands = @import("character_property_text_commands.zig").buildWithFont(.hwpx, .{ .section = section, .paragraph = paragraph, .start = start, .end = end, .text = text_ptr[0..text_size], .language = @fromBackingInt(@intCast(language)), .name = name_ptr[0..name_size], .text_kind = @fromBackingInt(@intCast(kind)), .begin_element = begin }, patch) catch |err| return fail(err);
     applyBatch(s, &commands) catch |err| return fail(err);
     return 1;
 }
@@ -1034,7 +1034,7 @@ fn spliceCharacterProperties(section: u32, paragraph: u32, start: u32, end: u32,
     if (text_size > 4 * 1024 * 1024) return fail(error.LimitExceeded);
     const patch = @import("character_property_args.zig").decode(mask, size, bold, italic) catch |err| return fail(err);
     const s = if (active) |*value| value else return fail(error.EditorNotOpen);
-    const commands = @import("character_property_text_commands.zig").build(.hwpx, .{ .section = section, .paragraph = paragraph, .start = start, .end = end, .text = text_ptr[0..text_size], .kind = @enumFromInt(kind), .begin_element = begin }, patch) catch |err| return fail(err);
+    const commands = @import("character_property_text_commands.zig").build(.hwpx, .{ .section = section, .paragraph = paragraph, .start = start, .end = end, .text = text_ptr[0..text_size], .kind = @fromBackingInt(@intCast(kind)), .begin_element = begin }, patch) catch |err| return fail(err);
     applyBatch(s, &commands) catch |err| return fail(err);
     return 1;
 }
@@ -1046,7 +1046,7 @@ fn spliceFontName(section: u32, paragraph: u32, start: u32, end: u32, text_ptr: 
     if (text_size > 4 * 1024 * 1024 or name_size > 4096) return fail(error.LimitExceeded);
     _ = @import("character_font_args.zig").decode(language, 0) catch |err| return fail(err);
     const s = if (active) |*value| value else return fail(error.EditorNotOpen);
-    const commands = @import("named_font_text_commands.zig").build(.hwpx, .{ .section = section, .paragraph = paragraph, .start = start, .end = end, .text = text_ptr[0..text_size], .language = @enumFromInt(language), .name = name_ptr[0..name_size], .text_kind = @enumFromInt(kind), .begin_element = begin }) catch |err| return fail(err);
+    const commands = @import("named_font_text_commands.zig").build(.hwpx, .{ .section = section, .paragraph = paragraph, .start = start, .end = end, .text = text_ptr[0..text_size], .language = @fromBackingInt(@intCast(language)), .name = name_ptr[0..name_size], .text_kind = @fromBackingInt(@intCast(kind)), .begin_element = begin }) catch |err| return fail(err);
     applyBatch(s, &commands) catch |err| return fail(err);
     return 1;
 }
@@ -1054,7 +1054,7 @@ export fn hwpx_edit_set_character_font_name_ranges(ptr: [*]const u8, length: usi
     if (length > @import("character_range_batch.zig").max_ranges * 16 or name_size > 4096) return fail(error.LimitExceeded);
     _ = @import("character_font_args.zig").decode(language, 0) catch |err| return fail(err);
     const s = if (active) |*value| value else return fail(error.EditorNotOpen);
-    const commands = @import("character_range_commands.zig").buildFontName(.hwpx, a, ptr[0..length], @enumFromInt(language), name_ptr[0..name_size]) catch |err| return fail(err);
+    const commands = @import("character_range_commands.zig").buildFontName(.hwpx, a, ptr[0..length], @fromBackingInt(@intCast(language)), name_ptr[0..name_size]) catch |err| return fail(err);
     defer a.free(commands);
     applyBatch(s, commands) catch |err| return fail(err);
     return 1;
@@ -1065,8 +1065,8 @@ export fn hwpx_edit_set_paragraph_format(section: u32, paragraph: u32, id: u32) 
 }
 export fn hwpx_edit_set_paragraph_alignment(section: u32, paragraph: u32, value: u32) u32 {
     const Alignment = @import("../hwpx/paragraph_resource_clone.zig").Alignment;
-    if (value >= std.meta.fields(Alignment).len) return fail(error.InvalidParagraphAlignment);
-    apply(.{ .kind = .paragraph_alignment, .section = section, .paragraph = paragraph, .start = 0, .deleted = 0, .inserted = "", .paragraph_alignment = @enumFromInt(value) }) catch |err| return fail(err);
+    if (value >= @import("../reflection.zig").fields(Alignment).len) return fail(error.InvalidParagraphAlignment);
+    apply(.{ .kind = .paragraph_alignment, .section = section, .paragraph = paragraph, .start = 0, .deleted = 0, .inserted = "", .paragraph_alignment = @fromBackingInt(@intCast(value)) }) catch |err| return fail(err);
     return 1;
 }
 export fn hwpx_edit_set_paragraph_margins(section: u32, paragraph: u32, mask: u32, left: i32, right: i32, indent: i32, before: i32, after: i32) u32 {

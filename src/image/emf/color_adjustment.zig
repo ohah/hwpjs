@@ -39,7 +39,7 @@ pub fn parse(bytes: []const u8) !ColorAdjustment {
 }
 
 test "ColorAdjustment preserves all numeric fields including advisory-range exceptions" {
-    var bytes = [_]u8{0} ** size;
+    var bytes = @as([size]u8, @splat(0));
     std.mem.writeInt(u16, bytes[0..2], size, .little);
     std.mem.writeInt(u16, bytes[2..4], 3, .little);
     std.mem.writeInt(u16, bytes[4..6], 8, .little);
@@ -70,7 +70,7 @@ test "ColorAdjustment preserves all numeric fields including advisory-range exce
 }
 
 test "ColorAdjustment rejects every wrong object extent size flags and illuminant" {
-    var bytes = [_]u8{0} ** size;
+    var bytes = @as([size]u8, @splat(0));
     std.mem.writeInt(u16, bytes[0..2], size, .little);
     for (0..size) |cut|
         try std.testing.expectError(error.InvalidEmfColorAdjustmentSize, parse(bytes[0..cut]));

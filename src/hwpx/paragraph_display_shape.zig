@@ -13,7 +13,7 @@ pub const Shape = struct {
     horizontal: ?Value = null,
     spacing_type: ?Value = null,
     spacing: ?Measure = null,
-    margins: [5]?Measure = .{null} ** 5,
+    margins: [5]?Measure = @as([5]?Measure, @splat(null)),
 };
 pub const margin_names = [_][]const u8{ "intent", "left", "right", "prev", "next" };
 

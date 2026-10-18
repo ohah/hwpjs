@@ -61,7 +61,7 @@ test "EMF+ BeginContainer preserves rectangles units and StackIndex" {
         fixture.value.data = &fixture.data;
         const parsed = try parse(fixture.value);
         try std.testing.expectEqual(@as(u16, @intCast(raw_unit)), parsed.flags);
-        try std.testing.expectEqual(@as(u32, @intCast(raw_unit)), @intFromEnum(parsed.page_unit));
+        try std.testing.expectEqual(@as(u32, @intCast(raw_unit)), @backingInt(parsed.page_unit));
         try std.testing.expectEqual(raw_unit <= 1, parsed.discouraged_page_unit);
         try std.testing.expectEqual(@as(u32, @bitCast(values[0])), @as(u32, @bitCast(parsed.dest_rect.x)));
         try std.testing.expect(std.math.isPositiveInf(parsed.dest_rect.height));
@@ -75,7 +75,7 @@ test "EMF+ BeginContainer preserves rectangles units and StackIndex" {
 }
 
 test "EMF+ BeginContainer rejects type reserved flags unit and every size axis" {
-    const values = [_]f32{0} ** 8;
+    const values = @as([8]f32, @splat(0));
     var fixture = makeRecord(2, values, 0);
     fixture.value.data = &fixture.data;
     var wrong_type = fixture.value;

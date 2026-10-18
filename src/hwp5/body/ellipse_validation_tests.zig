@@ -2,7 +2,7 @@ const std = @import("std");
 const t = std.testing;
 const validation = @import("ellipse_validation.zig");
 fn allocationCase(a: std.mem.Allocator, scenario: u8) !void {
-    var raw = [_]u8{0} ** 136;
+    var raw = @as([136]u8, @splat(0));
     std.mem.writeInt(u32, raw[0..4], 76 | (4 << 20), .little);
     std.mem.writeInt(u32, raw[4..8], 0x24656c6c, .little);
     std.mem.writeInt(u32, raw[8..12], 80 | (1 << 10) | (60 << 20), .little);

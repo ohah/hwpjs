@@ -33,13 +33,13 @@ test "EMF+ solid and hatch brushes parse exact official fields" {
 }
 
 test "EMF+ simple brushes reject every wrong size and hatch style" {
-    const solid = [_]u8{0} ** 5;
+    const solid = @as([5]u8, @splat(0));
     for (0..solid.len + 1) |size| if (size != 4)
         try std.testing.expectError(error.InvalidEmfPlusSolidBrushSize, parseSolid(solid[0..size]));
-    const hatch = [_]u8{0} ** 13;
+    const hatch = @as([13]u8, @splat(0));
     for (0..hatch.len + 1) |size| if (size != 12)
         try std.testing.expectError(error.InvalidEmfPlusHatchBrushSize, parseHatch(hatch[0..size]));
-    var invalid = [_]u8{0} ** 12;
+    var invalid = @as([12]u8, @splat(0));
     std.mem.writeInt(u32, invalid[0..4], 0x35, .little);
     try std.testing.expectError(error.InvalidEmfPlusHatchStyle, parseHatch(&invalid));
 }

@@ -40,7 +40,7 @@ fn makeRecord(flags: u16, data: []const u8) record.Record {
 }
 
 test "EMF+ ScaleWorldTransform preserves float bits order and A flag" {
-    var data = [_]u8{0} ** 8;
+    var data = @as([8]u8, @splat(0));
     std.mem.writeInt(u32, data[0..4], 0x80000000, .little);
     std.mem.writeInt(u32, data[4..8], 0x7fc00001, .little);
     const pre = try parse(makeRecord(0xdfff, &data));
@@ -54,7 +54,7 @@ test "EMF+ ScaleWorldTransform preserves float bits order and A flag" {
 }
 
 test "EMF+ ScaleWorldTransform rejects type every size axis and all truncations" {
-    const data = [_]u8{0} ** 8;
+    const data = @as([8]u8, @splat(0));
     for (0..8) |cut| {
         var truncated = makeRecord(0, data[0..cut]);
         truncated.size = @intCast(record.header_size + cut);

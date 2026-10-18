@@ -21,9 +21,9 @@ test "HWP5 records preserve framing and fail atomically at every truncation" {
     try std.testing.expectError(error.LimitExceeded, it.next());
     it = h.record.Iterator.init(&bytes, .{ .max_records = 0 });
     try std.testing.expectError(error.LimitExceeded, it.next());
-    it = h.record.Iterator.init(&([_]u8{255} ** 8), .{ .max_payload_bytes = std.math.maxInt(usize) });
+    it = h.record.Iterator.init(&(@as([8]u8, @splat(255))), .{ .max_payload_bytes = std.math.maxInt(usize) });
     try std.testing.expectError(error.UnexpectedEnd, it.next());
-    it = h.record.Iterator.init(&([_]u8{0} ** 8), .{ .max_records = 1 });
+    it = h.record.Iterator.init(&(@as([8]u8, @splat(0))), .{ .max_records = 1 });
     _ = try it.next();
     try std.testing.expectError(error.LimitExceeded, it.next());
     try std.testing.expectEqual(@as(usize, 4), it.reader.offset);

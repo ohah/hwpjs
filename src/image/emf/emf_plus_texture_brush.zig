@@ -43,7 +43,7 @@ fn putF32(bytes: []u8, offset: usize, value: f32) void {
 }
 
 test "EMF+ texture brush parses transform then delegates optional Image" {
-    var bytes = [_]u8{0} ** 43;
+    var bytes = @as([43]u8, @splat(0));
     // Keep gamma_corrected clear so this fixture independently proves that
     // transform presence is controlled by BrushDataTransform alone.
     putU32(&bytes, 0, 0x102);
@@ -59,7 +59,7 @@ test "EMF+ texture brush parses transform then delegates optional Image" {
 }
 
 test "EMF+ texture brush permits absent Image and rejects bad flags wrap truncation and image limit" {
-    var bytes = [_]u8{0} ** 8;
+    var bytes = @as([8]u8, @splat(0));
     _ = try parse(&bytes, .{});
     for (0..8) |cut| try expectError(bytes[0..cut], .{});
     var invalid = bytes;
@@ -70,7 +70,7 @@ test "EMF+ texture brush permits absent Image and rejects bad flags wrap truncat
     invalid = bytes;
     putU32(&invalid, 4, 5);
     try std.testing.expectError(error.InvalidEmfPlusWrapMode, parse(&invalid, .{}));
-    var image_bytes = [_]u8{0} ** 16;
+    var image_bytes = @as([16]u8, @splat(0));
     putU32(&image_bytes, 8, 0xdbc01001);
     try std.testing.expectError(error.LimitExceeded, parse(&image_bytes, .{ .image_options = .{ .max_image_bytes = 7 } }));
 }

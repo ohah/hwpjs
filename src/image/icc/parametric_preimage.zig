@@ -13,7 +13,7 @@ pub fn solve(comptime precision: u16, curve: Curve, n: u128, d: u128) !Result {
 pub fn solveWide(comptime precision: u16, curve: Curve, n: u512, d: u512) !Wide.Result {
     return solveFor(512, precision, curve, n, d);
 }
-fn solveFor(comptime bits: u16, comptime precision: u16, curve: Curve, n: @import("std").meta.Int(.unsigned, bits), d: @import("std").meta.Int(.unsigned, bits)) !types.Of(bits).Result {
+fn solveFor(comptime bits: u16, comptime precision: u16, curve: Curve, n: @Int(.unsigned, bits), d: @Int(.unsigned, bits)) !types.Of(bits).Result {
     const solvePower = if (bits == 128) power.solve else power.solveWide;
     const solveLinear = if (bits == 128) linear.solve else linear.solveWide;
     // Shared solver validates target and the entire real domain, even if inactive.

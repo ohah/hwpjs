@@ -18,7 +18,7 @@ pub fn read(a: std.mem.Allocator, tree: *const Tree, node: usize, limit: usize) 
     var result: Values = .{};
     var child = tree.elements[node].first_child;
     while (child) |index| : (child = tree.elements[index].next_sibling) {
-        inline for (std.meta.fields(Values)) |field| {
+        inline for (@import("../reflection.zig").fields(Values)) |field| {
             const name = if (comptime std.mem.eql(u8, field.name, "relativeSize")) "relSz" else field.name;
             if (tree.elements[index].is(uri, name)) {
                 if (@field(result, field.name) != null) return error.DuplicateCharacterFontMetrics;

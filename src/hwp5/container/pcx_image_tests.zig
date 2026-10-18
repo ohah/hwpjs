@@ -7,7 +7,7 @@ const fixture = @import("image_fixture.zig");
 const document_options: container.Options = .{ .document = .{ .list_layout = .observed8, .zone_layout = .observed_row_first, .parameters = .{ .header_layout = .observed6, .null_layout = .observed_empty } } };
 
 fn image() [130]u8 {
-    var bytes = [_]u8{0} ** 130;
+    var bytes = @as([130]u8, @splat(0));
     bytes[0] = 10;
     bytes[1] = 5;
     bytes[2] = 1;

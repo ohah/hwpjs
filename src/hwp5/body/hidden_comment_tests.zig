@@ -17,7 +17,7 @@ test "owner cursor skips unrelated owners and returns all direct groups once" {
     try t.expectEqual(0, cursor.take(10).len);
 }
 fn allocationCase(a: std.mem.Allocator, bad: bool) !void {
-    var raw = [_]u8{0} ** 20;
+    var raw = @as([20]u8, @splat(0));
     std.mem.writeInt(u32, raw[0..4], 71 | (4 << 20), .little);
     std.mem.writeInt(u32, raw[4..8], @import("control_rules.zig").id("tcmt"), .little);
     std.mem.writeInt(u32, raw[8..12], 72 | (1 << 10) | (8 << 20), .little);

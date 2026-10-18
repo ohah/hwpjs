@@ -4,7 +4,7 @@ CFB 컨테이너 읽기·쓰기용 JavaScript/WASM 라이브러리.
 
 ## 준비 및 빌드
 
-Zig 0.16.0과 Node.js 24를 설치한 뒤 저장소 루트에서 실행합니다.
+Zig 0.17.0과 Node.js 24를 설치한 뒤 저장소 루트에서 실행합니다.
 
 ```sh
 zig build -Doptimize=ReleaseSafe

@@ -155,7 +155,7 @@ test "HWP JPEG container report outlives all CFB and RGB buffers" {
 }
 
 test "HWP JPEG counters reject overflow without modifying accumulated report" {
-    inline for (std.meta.fields(jpeg.Report)) |field| {
+    inline for (@import("../../reflection.zig").fields(jpeg.Report)) |field| {
         var prior: jpeg.Report = .{};
         @field(prior, field.name) = std.math.maxInt(usize);
         var added: jpeg.Report = .{};

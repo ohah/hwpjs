@@ -42,7 +42,7 @@ pub const Selection = struct {
     curve: core.hwp5.shape_curve.Layout = .observed_i32_points,
 };
 pub fn fields(a: std.mem.Allocator, out: *std.ArrayList(u8), value: anytype) !void {
-    inline for (std.meta.fields(@TypeOf(value))) |f| try int(a, out, u32, @intCast(@field(value, f.name)));
+    inline for (@typeInfo(@TypeOf(value)).@"struct".field_names) |f| try int(a, out, u32, @intCast(@field(value, f)));
 }
 pub fn run(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     return configured(a, bytes, limit, .{});
@@ -60,7 +60,7 @@ pub fn forbidden(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
 pub fn readForbidden(r: *core.Reader) !@FieldType(Selection, "forbidden_layout") {
     const mode = try r.readInt(u8);
     if (mode > 1) return error.InvalidMode;
-    return @enumFromInt(mode);
+    return @fromBackingInt(@intCast(mode));
 }
 pub fn memo(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     return configured(a, bytes, limit, .{ .memo_report = true });
@@ -79,7 +79,7 @@ pub fn styled(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
 pub fn readArc(r: *core.Reader) !?core.hwp5.shape_arc.Layout {
     const mode = try r.readInt(u8);
     if (mode > 2) return error.InvalidMode;
-    return if (mode == 2) null else @enumFromInt(mode);
+    return if (mode == 2) null else @fromBackingInt(@intCast(mode));
 }
 pub fn arced(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     var r: core.Reader = .{ .bytes = bytes };
@@ -89,7 +89,7 @@ pub fn arced(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
 pub fn readCounted(r: *core.Reader) !core.hwp5.shape_polygon.Layout {
     const mode = try r.readInt(u8);
     if (mode > 1) return error.InvalidMode;
-    return @enumFromInt(mode);
+    return @fromBackingInt(@intCast(mode));
 }
 pub fn readPicture(r: *core.Reader) !core.hwp5.picture_validation.Options {
     const mode = try r.readInt(u8);
@@ -97,8 +97,8 @@ pub fn readPicture(r: *core.Reader) !core.hwp5.picture_validation.Options {
     const stage = mode % 6;
     return .{
         .layout = if (mode < 6) .interleaved else .separate_axes,
-        .prefix = if (stage < 3) @enumFromInt(stage) else .with_instance78,
-        .tail = if (stage < 3) null else .{ .additional = if (stage == 3) null else @enumFromInt(stage - 4) },
+        .prefix = if (stage < 3) @fromBackingInt(@intCast(stage)) else .with_instance78,
+        .tail = if (stage < 3) null else .{ .additional = if (stage == 3) null else @fromBackingInt(@intCast(stage - 4)) },
     };
 }
 pub fn pictured(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
@@ -119,7 +119,7 @@ pub fn curved(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
 pub fn readStyle(r: *core.Reader) !core.hwp5.document_validation.types.DrawingStyleOptions {
     const mode = try r.readInt(u8);
     if (mode > 5) return error.InvalidMode;
-    return .{ .border = @enumFromInt(mode & 1), .tail = if (mode >= 4) .alpha_shadow_metadata else if (mode & 2 != 0) .fill_only else .alpha_shadow };
+    return .{ .border = @fromBackingInt(@intCast(mode & 1)), .tail = if (mode >= 4) .alpha_shadow_metadata else if (mode & 2 != 0) .fill_only else .alpha_shadow };
 }
 pub fn configured(a: std.mem.Allocator, bytes: []const u8, limit: usize, selection: Selection) ![]u8 {
     const d = core.hwp5.document_validation;

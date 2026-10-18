@@ -4,7 +4,7 @@ const header = @import("header.zig");
 const values = @import("header_v2_values.zig");
 const light = @import("pcs_illuminant.zig");
 fn fixture() !header.Header {
-    var bytes = [_]u8{0} ** 128;
+    var bytes = @as([128]u8, @splat(0));
     bytes[8] = 2;
     bytes[36..40].* = "acsp".*;
     var h = try header.parse(&bytes);
@@ -38,7 +38,7 @@ test "ICC v2 reports reserved and high bits instead of silently applying v4 rule
         try t.expectEqual(@as(u8, 1), (try values.inspect(h, .nearest_encoding)).nonzero_reserved_bytes);
     };
     var h = base;
-    h.tail.v2 = [_]u8{255} ** 44;
+    h.tail.v2 = @as([44]u8, @splat(255));
     try t.expectEqual(@as(u8, 44), (try values.inspect(h, .nearest_encoding)).nonzero_reserved_bytes);
     h.creation_date[5] = 60;
     try t.expectError(error.InvalidIccDateTime, values.inspect(h, .nearest_encoding));
@@ -46,7 +46,7 @@ test "ICC v2 reports reserved and high bits instead of silently applying v4 rule
     h.version.major = 4;
     try t.expectError(error.IccEditionMismatch, values.inspect(h, .nearest_encoding));
     h = base;
-    h.tail = .{ .v4 = .{ .profile_id = [_]u8{0} ** 16, .reserved = [_]u8{0} ** 28 } };
+    h.tail = .{ .v4 = .{ .profile_id = @as([16]u8, @splat(0)), .reserved = @as([28]u8, @splat(0)) } };
     try t.expectError(error.IccEditionMismatch, values.inspect(h, .nearest_encoding));
 }
 test "ICC v2 explicit D50 policies compare independent numeric expectations" {

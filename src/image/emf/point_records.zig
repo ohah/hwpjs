@@ -40,7 +40,7 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 
 test "all six fixed point and extent records parse signed fields" {
     const std = @import("std");
-    var bytes = [_]u8{0} ** 16;
+    var bytes = @as([16]u8, @splat(0));
     std.mem.writeInt(i32, bytes[8..12], -123, .little);
     std.mem.writeInt(i32, bytes[12..16], 456, .little);
     try std.testing.expectEqual(@as(i32, -123), (try parse(fixture(.setwindowextex, &bytes))).?.window_extent.width);
@@ -53,7 +53,7 @@ test "all six fixed point and extent records parse signed fields" {
 
 test "point records require their prefix accept trailing data and do not claim unrelated types" {
     const std = @import("std");
-    const oversized = [_]u8{0} ** 20;
+    const oversized = @as([20]u8, @splat(0));
     for ([_]records.RecordType{ .setwindowextex, .setwindoworgex, .setviewportextex, .setviewportorgex, .setbrushorgex, .movetoex }) |kind|
         try std.testing.expect((try parse(fixture(kind, &oversized))) != null);
     try std.testing.expectError(error.InvalidEmfPointRecordSize, parse(fixture(.movetoex, oversized[0..12])));

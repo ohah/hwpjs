@@ -38,7 +38,7 @@ pub fn readCompound(reader: *binary.Reader, max_elements: usize) !FloatArray {
 }
 
 test "EMF+ pen float arrays are bounded borrowed and atomically validated" {
-    var bytes = [_]u8{0} ** 16;
+    var bytes = @as([16]u8, @splat(0));
     std.mem.writeInt(u32, bytes[0..4], 3, .little);
     for ([_]f32{ 0, 0.5, 1 }, 0..) |value, index| std.mem.writeInt(u32, bytes[4 + index * 4 ..][0..4], @bitCast(value), .little);
     var reader: binary.Reader = .{ .bytes = &bytes };
@@ -59,7 +59,7 @@ test "EMF+ pen float arrays are bounded borrowed and atomically validated" {
     try std.testing.expectError(error.UnexpectedEnd, read(&reader, 3));
     try std.testing.expectEqual(@as(usize, 0), reader.offset);
 
-    var one = [_]u8{0} ** 8;
+    var one = @as([8]u8, @splat(0));
     std.mem.writeInt(u32, one[0..4], 1, .little);
     for ([_]f32{ -0.25, 1.25, std.math.nan(f32) }) |invalid| {
         std.mem.writeInt(u32, one[4..8], @bitCast(invalid), .little);

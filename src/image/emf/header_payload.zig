@@ -87,7 +87,7 @@ fn fixture(bytes: []const u8) records.Record {
 }
 
 test "Header payload owns base parsing and exact fixed-size thresholds" {
-    var bytes = [_]u8{0} ** 108;
+    var bytes = @as([108]u8, @splat(0));
     std.mem.writeInt(u32, bytes[40..44], 0x464d4520, .little);
     for ([_]struct { size: usize, variant: Variant }{
         .{ .size = 88, .variant = .base },
@@ -111,7 +111,7 @@ test "Header payload owns base parsing and exact fixed-size thresholds" {
 }
 
 test "pixel format before description determines the extension boundary" {
-    var bytes = [_]u8{0} ** 156;
+    var bytes = @as([156]u8, @splat(0));
     std.mem.writeInt(u32, bytes[40..44], 0x464d4520, .little);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[60..64], 2, .little);
@@ -132,7 +132,7 @@ test "pixel format before description determines the extension boundary" {
 }
 
 test "Header payload treats incomplete optional pairs as absent per HeaderSize flow" {
-    var bytes = [_]u8{0} ** 108;
+    var bytes = @as([108]u8, @splat(0));
     std.mem.writeInt(u32, bytes[40..44], 0x464d4520, .little);
     std.mem.writeInt(u32, bytes[48..52], bytes.len, .little);
     std.mem.writeInt(u32, bytes[60..64], 1, .little);

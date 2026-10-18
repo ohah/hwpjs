@@ -3,7 +3,7 @@ const t = std.testing;
 const p = @import("parser.zig");
 const put = @import("../document/test_fixture.zig").put;
 pub fn fixture() [92]u8 {
-    var b = [_]u8{0} ** 92;
+    var b = @as([92]u8, @splat(0));
     put(&b, 0, u16, 0xfffe);
     put(&b, 24, u32, 1);
     @memcpy(b[28..44], &@import("header.zig").hwp_fmt);

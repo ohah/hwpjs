@@ -28,7 +28,7 @@ pub fn parse(value: record.Record, multipart: bool) !Fragment {
     const object_id = try record_flags.objectId(value.flags);
     const raw_type: u7 = @truncate(value.flags >> 8);
     const object_type: ObjectType = switch (raw_type) {
-        1...9 => @enumFromInt(raw_type),
+        1...9 => @fromBackingInt(@intCast(raw_type)),
         else => return error.InvalidEmfPlusObjectType,
     };
     const continues = value.flags & 0x8000 != 0;
@@ -126,7 +126,7 @@ fn transition(pending: ?Pending, fragment: Fragment) !Transition {
 }
 
 pub const State = struct {
-    table: [64]?ObjectType = .{null} ** 64,
+    table: [64]?ObjectType = @splat(null),
     pending: ?Pending = null,
     report: Report = .{},
 
@@ -278,7 +278,7 @@ test "EMF+ object flags preserve type ID and noncontinued data" {
     for (1..10) |raw_type| {
         const low = try parse(makeRecord(@intCast(raw_type << 8), &data), false);
         try std.testing.expectEqual(@as(u6, 0), low.object_id);
-        try std.testing.expectEqual(@as(u7, @intCast(raw_type)), @intFromEnum(low.object_type));
+        try std.testing.expectEqual(@as(u7, @intCast(raw_type)), @backingInt(low.object_type));
         const high = try parse(makeRecord(@intCast((raw_type << 8) | 63), &data), false);
         try std.testing.expectEqual(@as(u6, 63), high.object_id);
     }
@@ -450,7 +450,7 @@ test "EMF+ object assembler enforces limits and preserves pending state on rejec
     var assembler = Assembler.init(std.testing.allocator, .{ .max_object_bytes = 7 });
     defer assembler.deinit();
 
-    const too_large_direct = [_]u8{0} ** 8;
+    const too_large_direct = @as([8]u8, @splat(0));
     try std.testing.expectError(error.LimitExceeded, assembler.consume(makeRecord(0x0100, &too_large_direct)));
     try std.testing.expect(assembler.pending == null);
 

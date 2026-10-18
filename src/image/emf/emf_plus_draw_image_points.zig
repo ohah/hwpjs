@@ -96,7 +96,7 @@ fn writePrefix(bytes: []u8, attributes: u32) void {
 }
 
 test "EMF+ DrawImagePoints parses relative points effect and ignores C" {
-    var bytes = [_]u8{0} ** 36;
+    var bytes = @as([36]u8, @splat(0));
     writePrefix(&bytes, 62);
     bytes[28..36].* = .{ 1, 2, 3, 4, 5, 6, 0xaa, 0xbb };
     const value = try parse(makeRecord(&bytes, 0x683f));
@@ -123,7 +123,7 @@ test "EMF+ DrawImagePoints parses relative points effect and ignores C" {
 }
 
 test "EMF+ DrawImagePoints parses absolute integer and floating points" {
-    var integer = [_]u8{0} ** 40;
+    var integer = @as([40]u8, @splat(0));
     writePrefix(&integer, 0xffff_ffff);
     for ([_]i16{ -32768, 32767, -1, 1, -2, 2 }, 0..) |coordinate, index|
         std.mem.writeInt(i16, integer[28 + index * 2 ..][0..2], coordinate, .little);
@@ -139,7 +139,7 @@ test "EMF+ DrawImagePoints parses absolute integer and floating points" {
     try std.testing.expectEqual(@as(i16, 2), (try integer_points.next()).?.integer.y);
     try std.testing.expect((try integer_points.next()) == null);
 
-    var floating = [_]u8{0} ** 52;
+    var floating = @as([52]u8, @splat(0));
     writePrefix(&floating, 7);
     for ([_]f32{ -0.0, std.math.nan(f32), 1, 2, 3, 4 }, 0..) |coordinate, index|
         putF32(&floating, 28 + index * 4, coordinate);
@@ -150,7 +150,7 @@ test "EMF+ DrawImagePoints parses absolute integer and floating points" {
     try std.testing.expectEqual(@as(u32, @bitCast(@as(f32, -0.0))), @as(u32, @bitCast(first.x)));
     try std.testing.expect(std.math.isNan(first.y));
 
-    var mapped = [_]u8{0} ** 40;
+    var mapped = @as([40]u8, @splat(0));
     writePrefix(&mapped, 0xffff_ffff);
     for ([_]f32{ 10, 20, 4, 5 }, 0..) |coordinate, index| putF32(&mapped, 8 + index * 4, coordinate);
     for ([_]i16{ 100, 200, 108, 204, 97, 215 }, 0..) |coordinate, index|
@@ -165,7 +165,7 @@ test "EMF+ DrawImagePoints parses absolute integer and floating points" {
 }
 
 test "EMF+ DrawImagePoints exposes the shared source to device mapper" {
-    var data = [_]u8{0} ** 40;
+    var data = @as([40]u8, @splat(0));
     writePrefix(&data, 0xffff_ffff);
     for ([_]f32{ 10, 20, 4, 5 }, 0..) |coordinate, index| putF32(&data, 8 + index * 4, coordinate);
     for ([_]i16{ 100, 200, 108, 204, 97, 215 }, 0..) |coordinate, index|
@@ -181,7 +181,7 @@ test "EMF+ DrawImagePoints exposes the shared source to device mapper" {
 }
 
 test "EMF+ DrawImagePoints rejects type count unit ObjectID and every size mismatch" {
-    var bytes = [_]u8{0} ** 53;
+    var bytes = @as([53]u8, @splat(0));
     writePrefix(&bytes, 0xffff_ffff);
     _ = try parse(makeRecord(bytes[0..36], 0x0800));
     _ = try parse(makeRecord(bytes[0..40], 0x4000));

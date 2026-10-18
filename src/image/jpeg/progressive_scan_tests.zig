@@ -7,9 +7,9 @@ const zero: [64]i32 = @splat(0);
 const mono = [_]u8{ 8, 0, 8, 0, 16, 1, 9, 17, 0 };
 const dc_scan = [_]u8{ 1, 9, 0, 0, 0, 2 };
 const ac_scan = [_]u8{ 1, 9, 0, 1, 63, 0 };
-const qt = [_]u8{0} ++ [_]u8{1} ** 64;
-const dc = [_]u8{ 0, 1 } ++ [_]u8{0} ** 15 ++ .{1};
-const ac = [_]u8{ 16, 1 } ++ [_]u8{0} ** 15 ++ .{16};
+const qt = [_]u8{0} ++ @as([64]u8, @splat(1));
+const dc = [_]u8{ 0, 1 } ++ @as([15]u8, @splat(0)) ++ .{1};
+const ac = [_]u8{ 16, 1 } ++ @as([15]u8, @splat(0)) ++ .{16};
 
 fn tables() !Store {
     var s: Store = .{};

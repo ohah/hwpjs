@@ -75,7 +75,7 @@ fn expectSegment(iterator: *Iterator) !Segment {
 }
 
 test "EMF+ Path segments materialize line and Bezier figure closure in order" {
-    var point_bytes = [_]u8{0} ** (11 * 4);
+    var point_bytes = @as([(11 * 4)]u8, @splat(0));
     for (0..11) |index| {
         std.mem.writeInt(i16, point_bytes[index * 4 ..][0..2], @intCast(index * 2), .little);
         std.mem.writeInt(i16, point_bytes[index * 4 + 2 ..][0..2], @intCast(index * 2 + 1), .little);
@@ -114,7 +114,7 @@ test "EMF+ Path segments materialize line and Bezier figure closure in order" {
 }
 
 test "EMF+ Path segments preserve an explicit degenerate closing line" {
-    var point_bytes = [_]u8{0} ** 16;
+    var point_bytes = @as([16]u8, @splat(0));
     const bits = [_]u32{ 0x80000000, 0x7fc00001, 0x80000000, 0x7fc00001 };
     for (bits, 0..) |value, index| std.mem.writeInt(u32, point_bytes[index * 4 ..][0..4], value, .little);
     const types = [_]u8{ 0x00, 0x81 };
@@ -129,7 +129,7 @@ test "EMF+ Path segments preserve an explicit degenerate closing line" {
     }
     try std.testing.expect((try iterator.next()) == null);
 
-    var integer_bytes = [_]u8{0} ** 8;
+    var integer_bytes = @as([8]u8, @splat(0));
     for ([_]i16{ 7, -8, 7, -8 }, 0..) |value, index| {
         std.mem.writeInt(i16, integer_bytes[index * 2 ..][0..2], value, .little);
     }

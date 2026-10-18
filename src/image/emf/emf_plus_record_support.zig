@@ -71,9 +71,9 @@ pub fn policy(kind: record_type.RecordType) Policy {
 const std = @import("std");
 
 test "EMF+ record support exhaustively classifies the official contiguous range" {
-    var counts = [_]usize{0} ** std.meta.fields(Policy).len;
-    var raw: u32 = @intFromEnum(record_type.RecordType.header);
-    while (raw <= @intFromEnum(record_type.RecordType.set_ts_clip)) : (raw += 1) {
+    var counts: [@typeInfo(Policy).@"enum".field_names.len]usize = @splat(0);
+    var raw: u32 = @backingInt(record_type.RecordType.header);
+    while (raw <= @backingInt(record_type.RecordType.set_ts_clip)) : (raw += 1) {
         const kind = try record_type.parse(@intCast(raw));
         const actual = policy(kind);
         const expected: Policy = if (raw >= 0x4005 and raw <= 0x4007)
@@ -83,9 +83,9 @@ test "EMF+ record support exhaustively classifies the official contiguous range"
         else
             .wire_validated;
         try std.testing.expectEqual(expected, actual);
-        counts[@intFromEnum(actual)] += 1;
+        counts[@backingInt(actual)] += 1;
     }
-    try std.testing.expectEqual(@as(usize, 54), counts[@intFromEnum(Policy.wire_validated)]);
-    try std.testing.expectEqual(@as(usize, 1), counts[@intFromEnum(Policy.opaque_preserved)]);
-    try std.testing.expectEqual(@as(usize, 3), counts[@intFromEnum(Policy.forbidden)]);
+    try std.testing.expectEqual(@as(usize, 54), counts[@backingInt(Policy.wire_validated)]);
+    try std.testing.expectEqual(@as(usize, 1), counts[@backingInt(Policy.opaque_preserved)]);
+    try std.testing.expectEqual(@as(usize, 3), counts[@backingInt(Policy.forbidden)]);
 }

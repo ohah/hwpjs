@@ -43,7 +43,7 @@ pub fn parse(bytes: []const u8, tab_stop_count: i32, range_count: i32, options: 
 }
 
 test "EMF+ StringFormatData separates exact tab and character range arrays" {
-    var bytes = [_]u8{0} ** 16;
+    var bytes = @as([16]u8, @splat(0));
     std.mem.writeInt(u32, bytes[0..4], @bitCast(@as(f32, -0.0)), .little);
     std.mem.writeInt(u32, bytes[4..8], @bitCast(@as(f32, 8.5)), .little);
     std.mem.writeInt(i32, bytes[8..12], -3, .little);
@@ -56,7 +56,7 @@ test "EMF+ StringFormatData separates exact tab and character range arrays" {
 }
 
 test "EMF+ StringFormatData rejects signed counts limits truncation and trailing bytes" {
-    const bytes = [_]u8{0} ** 16;
+    const bytes = @as([16]u8, @splat(0));
     try std.testing.expectError(error.InvalidEmfPlusTabStopCount, parse(&bytes, -1, 0, .{}));
     try std.testing.expectError(error.InvalidEmfPlusCharacterRangeCount, parse(&bytes, 0, -1, .{}));
     try std.testing.expectError(error.LimitExceeded, parse(&bytes, 2, 1, .{ .max_tab_stops = 1 }));

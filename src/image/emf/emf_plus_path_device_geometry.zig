@@ -149,7 +149,7 @@ fn commandIterator(point_bytes: []const u8, type_bytes: []const u8, count: u32, 
 }
 
 test "EMF+ Path device geometry owns figure point and command ranges without losing metadata" {
-    var point_bytes = [_]u8{0} ** (9 * 4);
+    var point_bytes = @as([(9 * 4)]u8, @splat(0));
     for (0..9) |index| {
         std.mem.writeInt(i16, point_bytes[index * 4 ..][0..2], @intCast(index * 2 + 1), .little);
         std.mem.writeInt(i16, point_bytes[index * 4 + 2 ..][0..2], @intCast(index * 2 + 2), .little);
@@ -196,7 +196,7 @@ test "EMF+ Path device geometry owns figure point and command ranges without los
 }
 
 test "EMF+ Path device geometry enforces exact independent limits and empty input" {
-    const point_bytes = [_]u8{0} ** (5 * 4);
+    const point_bytes = @as([(5 * 4)]u8, @splat(0));
     const types = [_]u8{ 0x00, 0x01, 0x03, 0x03, 0x83 };
     const source = commandIterator(&point_bytes, &types, 5, .integer);
     var exact = try collect(std.testing.allocator, source, .{ .max_figures = 1, .max_commands = 2, .max_points = 5 });
@@ -207,10 +207,10 @@ test "EMF+ Path device geometry enforces exact independent limits and empty inpu
     try std.testing.expectError(error.EmfPlusPathCommandLimitExceeded, collect(std.testing.allocator, source, .{ .max_figures = 1, .max_commands = 1, .max_points = 5 }));
     try std.testing.expectError(error.EmfPlusPathPointLimitExceeded, collect(std.testing.allocator, source, .{ .max_figures = 1, .max_commands = 2, .max_points = 4 }));
 
-    const move_bytes = [_]u8{0} ** 4;
+    const move_bytes = @as([4]u8, @splat(0));
     const move_types = [_]u8{0x00};
     try std.testing.expectError(error.EmfPlusPathPointLimitExceeded, collect(std.testing.allocator, commandIterator(&move_bytes, &move_types, 1, .integer), .{ .max_figures = 1, .max_commands = 0, .max_points = 0 }));
-    const line_bytes = [_]u8{0} ** 8;
+    const line_bytes = @as([8]u8, @splat(0));
     const line_types = [_]u8{ 0x00, 0x01 };
     try std.testing.expectError(error.EmfPlusPathCommandLimitExceeded, collect(std.testing.allocator, commandIterator(&line_bytes, &line_types, 2, .integer), .{ .max_figures = 1, .max_commands = 0, .max_points = 2 }));
     try std.testing.expectError(error.EmfPlusPathPointLimitExceeded, collect(std.testing.allocator, commandIterator(&line_bytes, &line_types, 2, .integer), .{ .max_figures = 1, .max_commands = 1, .max_points = 1 }));
@@ -242,7 +242,7 @@ test "EMF+ Path device geometry enforces exact independent limits and empty inpu
 }
 
 fn allocationExercise(allocator: std.mem.Allocator) !void {
-    const point_bytes = [_]u8{0} ** (5 * 4);
+    const point_bytes = @as([(5 * 4)]u8, @splat(0));
     const types = [_]u8{ 0x00, 0x01, 0x03, 0x03, 0x83 };
     var value = try collect(allocator, commandIterator(&point_bytes, &types, 5, .integer), .{});
     defer value.deinit(allocator);
@@ -257,7 +257,7 @@ test "EMF+ Path device geometry releases every allocation failure path" {
 test "EMF+ Path device geometry releases success and source-error allocations in every build mode" {
     var checked = std.heap.DebugAllocator(.{ .safety = true }){};
     const allocator = checked.allocator();
-    const point_bytes = [_]u8{0} ** (5 * 4);
+    const point_bytes = @as([(5 * 4)]u8, @splat(0));
     const types = [_]u8{ 0x00, 0x01, 0x03, 0x03, 0x83 };
     var value = try collect(allocator, commandIterator(&point_bytes, &types, 5, .integer), .{});
     value.deinit(allocator);

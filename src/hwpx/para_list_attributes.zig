@@ -27,7 +27,7 @@ pub const field_names = [_][]const u8{
 };
 
 comptime {
-    if (field_names.len != std.meta.fields(Field).len) @compileError("ParaListType field name count mismatch");
+    if (field_names.len != @import("../reflection.zig").fields(Field).len) @compileError("ParaListType field name count mismatch");
 }
 
 pub const Attributes = struct {
@@ -36,7 +36,7 @@ pub const Attributes = struct {
     other_attributes: usize = 0,
 
     pub fn get(self: *const Attributes, field: Field) ?[]const u8 {
-        return self.raw[@intFromEnum(field)];
+        return self.raw[@backingInt(field)];
     }
 
     pub fn deinit(self: *Attributes, a: std.mem.Allocator) void {
@@ -96,7 +96,7 @@ pub fn read(a: std.mem.Allocator, tag: xml.tags.Tag, scope: *const xml.namespace
         result.other_attributes += @intFromBool(!known);
     }
     inline for (field_names, 0..) |field_name, index| {
-        const field: Field = @enumFromInt(index);
+        const field: Field = @fromBackingInt(@intCast(index));
         const raw = try attrs.attribute(a, tag, scope, field_name, max_attribute_bytes);
         result.raw[index] = raw;
         if (raw) |value| try validateValue(&result, field, value);
@@ -125,7 +125,7 @@ pub fn readTree(a: std.mem.Allocator, tree: *const part_tree.Tree, index: usize,
                 if (result.raw[field_index] != null) return error.DuplicateParaListAttribute;
                 const value = try attribute.value.toUtf8(a, max_attribute_bytes);
                 result.raw[field_index] = value;
-                try validateValue(&result, @enumFromInt(field_index), value);
+                try validateValue(&result, @fromBackingInt(@intCast(field_index)), value);
                 break;
             }
             result.other_attributes += @intFromBool(!known);

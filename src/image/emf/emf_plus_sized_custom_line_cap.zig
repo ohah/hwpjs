@@ -13,7 +13,7 @@ pub fn read(reader: *binary.Reader, options: custom_line_cap.Options, max_bytes:
 
 test "EMF+ sized custom cap uses the declared slice and atomic cursor" {
     const std = @import("std");
-    var bytes = [_]u8{0} ** 61;
+    var bytes = @as([61]u8, @splat(0));
     std.mem.writeInt(u32, bytes[0..4], 56, .little);
     std.mem.writeInt(u32, bytes[4..8], 0xdbc01001, .little);
     bytes[60] = 0xaa;

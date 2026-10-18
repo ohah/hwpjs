@@ -2,7 +2,7 @@ const std = @import("std");
 const icc = @import("hwpjs").image.icc;
 fn locate(comptime bits: u16, comptime precision: u16, bytes: []const u8) !icc.normalized_root_location.Location {
     const width = bits / 8;
-    const U = std.meta.Int(.unsigned, bits);
+    const U = @Int(.unsigned, bits);
     const tail = 12 + 2 * width;
     const solve = if (bits == 128) icc.normalized_power_level.solve else icc.normalized_power_level.solveWide;
     const locator = if (bits == 128) icc.normalized_root_location else icc.normalized_root_location.Wide;
@@ -36,7 +36,7 @@ fn pointFor(comptime bits: u16, a: std.mem.Allocator, bytes: []const u8, limit: 
         else => return error.InvalidIccComparisonPrecision,
     };
     const out = try a.alloc(u8, 4);
-    std.mem.writeInt(u32, out[0..4], @intFromEnum(result), .little);
+    std.mem.writeInt(u32, out[0..4], @backingInt(result), .little);
     return out;
 }
 pub fn active(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
@@ -47,7 +47,7 @@ pub fn activeWide(a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
 }
 fn activeFor(comptime bits: u16, a: std.mem.Allocator, bytes: []const u8, limit: usize) ![]u8 {
     const width = bits / 8;
-    const U = std.meta.Int(.unsigned, bits);
+    const U = @Int(.unsigned, bits);
     const prefix = 4 + 2 * width;
     const inspect = if (bits == 128) icc.normalized_level_locations.inspect else icc.normalized_level_locations.inspectWide;
     if (bytes.len > limit) return error.LimitExceeded;
@@ -72,7 +72,7 @@ fn activeFor(comptime bits: u16, a: std.mem.Allocator, bytes: []const u8, limit:
     std.mem.writeInt(u32, out[4..8], @intCast(count), .little);
     if (result == .roots) for (result.roots.entries[0..count], 0..) |entry, i| {
         const slot = out[8 + 8 * i ..][0..8];
-        std.mem.writeInt(u32, slot[0..4], @intFromEnum(entry.location), .little);
+        std.mem.writeInt(u32, slot[0..4], @backingInt(entry.location), .little);
         std.mem.writeInt(i32, slot[4..8], if (entry.root == .zero) 0 else if (entry.root.nonzero.negative) -1 else 1, .little);
     };
     return out;

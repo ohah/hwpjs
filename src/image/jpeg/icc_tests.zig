@@ -50,7 +50,7 @@ test "JPEG ICC chunk sequence byte matrix and all payload truncations" {
         try t.expectError(error.InvalidJpegIccIdentifier, chunks.Chunk.parse(&bytes));
         bytes[i] ^= 1;
     }
-    const huge = [_]u8{0} ** 65534;
+    const huge = @as([65534]u8, @splat(0));
     try t.expectError(error.LimitExceeded, chunks.Chunk.parse(&huge));
 }
 

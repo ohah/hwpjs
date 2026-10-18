@@ -41,6 +41,6 @@ test "cell extension absence, zero width, marker and opaque parameter bytes are 
     try t.expectEqual(128, other.marker.?);
     try t.expect(!other.parameterSetMarked());
     // The base spec parser still preserves arbitrary extra; no automatic tail layout.
-    const short = [_]u8{0} ** 29;
+    const short = @as([29]u8, @splat(0));
     try t.expectEqual(3, (try body.Cell.parse(&short)).extra.len);
 }

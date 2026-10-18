@@ -1,7 +1,7 @@
 const std = @import("std");
 const t = std.testing;
 fn allocationCase(a: std.mem.Allocator, scenario: u8) !void {
-    var raw = [_]u8{0} ** 52;
+    var raw = @as([52]u8, @splat(0));
     std.mem.writeInt(u32, raw[0..4], 76 | (4 << 20), .little);
     std.mem.writeInt(u32, raw[4..8], 0x246c696e, .little);
     std.mem.writeInt(u32, raw[8..12], 78 | (1 << 10) | (18 << 20), .little);
@@ -33,7 +33,7 @@ test "line owner cleanup across missing duplicate orphan and allocation failures
     for (0..4) |scenario| try t.checkAllAllocationFailures(t.allocator, allocationCase, .{@as(u8, @intCast(scenario))});
 }
 fn connectorAllocationCase(a: std.mem.Allocator, scenario: u8) !void {
-    var raw = [_]u8{0} ** 96;
+    var raw = @as([96]u8, @splat(0));
     std.mem.writeInt(u32, raw[0..4], 76 | (4 << 20), .little);
     std.mem.writeInt(u32, raw[4..8], 0x24636f6c, .little);
     std.mem.writeInt(u32, raw[8..12], 78 | (1 << 10) | (40 << 20), .little);

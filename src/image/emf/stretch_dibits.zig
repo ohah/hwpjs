@@ -49,12 +49,12 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 }
 
 fn sourceRecord() [108]u8 {
-    var bytes = [_]u8{0} ** 108;
+    var bytes = @as([108]u8, @splat(0));
     std.mem.writeInt(u32, bytes[48..52], 84, .little);
     std.mem.writeInt(u32, bytes[52..56], 12, .little);
     std.mem.writeInt(u32, bytes[56..60], 100, .little);
     std.mem.writeInt(u32, bytes[60..64], 8, .little);
-    std.mem.writeInt(u32, bytes[64..68], @intFromEnum(dib_colors.Usage.palette_indices), .little);
+    std.mem.writeInt(u32, bytes[64..68], @backingInt(dib_colors.Usage.palette_indices), .little);
     std.mem.writeInt(u32, bytes[68..72], 0x00cc0020, .little);
     std.mem.writeInt(u32, bytes[84..88], 12, .little);
     std.mem.writeInt(u16, bytes[88..90], 2, .little);
@@ -103,7 +103,7 @@ test "STRETCHDIBITS parses every signed geometry field ROP and undefined spaces"
 
 test "STRETCHDIBITS enforces ROP source policy every boundary and unrelated type" {
     try std.testing.expectEqual(@as(usize, 80), fixed_size);
-    var omitted = [_]u8{0} ** fixed_size;
+    var omitted = @as([fixed_size]u8, @splat(0));
     std.mem.writeInt(u32, omitted[68..72], 0x00f00021, .little);
     try std.testing.expect((try parse(fixture(.stretchdibits, &omitted))).?.bitmap == null);
     std.mem.writeInt(u32, omitted[68..72], 0x00cc0020, .little);

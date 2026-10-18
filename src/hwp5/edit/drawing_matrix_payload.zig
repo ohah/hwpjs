@@ -69,7 +69,7 @@ test "HWP5 drawing matrix payload writes selected pair only and preserves signed
     const a = std.testing.allocator;
     for ([_]component.Layout{ .single_id, .double_id }) |layout| {
         const rendering_offset: usize = if (layout == .single_id) 46 else 50;
-        var bytes = [_]u8{0} ** 295;
+        var bytes = @as([295]u8, @splat(0));
         std.mem.writeInt(u16, bytes[rendering_offset..][0..2], 2, .little);
         bytes[294] = 0xab;
         const values: [6]f64 = .{ 1, -0.0, 3, 4, 5, 6 };

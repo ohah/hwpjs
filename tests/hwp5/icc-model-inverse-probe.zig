@@ -46,9 +46,9 @@ fn runFor(comptime bits: u16, a: std.mem.Allocator, bytes: []const u8, limit: us
     const out = try a.alloc(u8, size);
     std.mem.writeInt(u32, out[0..4], @intFromBool(result.profile_semantics_deferred), .little);
     std.mem.writeInt(u32, out[4..8], @intFromBool(result.transform_priority_deferred), .little);
-    for (result.linear.numerators, 0..) |n, i| std.mem.writeInt(std.meta.Int(.signed, bits), out[8 + i * width ..][0..width], n, .little);
-    std.mem.writeInt(std.meta.Int(.unsigned, bits), out[8 + 3 * width ..][0..width], result.linear.denominator, .little);
-    for (result.clipping, 0..) |c, i| std.mem.writeInt(u32, out[clipping_offset + i * 4 ..][0..4], @intFromEnum(c), .little);
+    for (result.linear.numerators, 0..) |n, i| std.mem.writeInt(@Int(.signed, bits), out[8 + i * width ..][0..width], n, .little);
+    std.mem.writeInt(@Int(.unsigned, bits), out[8 + 3 * width ..][0..width], result.linear.denominator, .little);
+    for (result.clipping, 0..) |c, i| std.mem.writeInt(u32, out[clipping_offset + i * 4 ..][0..4], @backingInt(c), .little);
     var offset: usize = header;
     for (payloads, 0..) |p, i| {
         std.mem.writeInt(u32, out[lengths_offset + i * 4 ..][0..4], @intCast(p.len), .little);

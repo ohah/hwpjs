@@ -28,7 +28,7 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 }
 
 test "color records parse text and background ColorRef in wire order" {
-    var bytes = [_]u8{0} ** 12;
+    var bytes = @as([12]u8, @splat(0));
     bytes[8..12].* = .{ 0x12, 0x34, 0x56, 0 };
     const text = (try parse(fixture(.settextcolor, &bytes))).?.text;
     try std.testing.expectEqual(@as(u32, 0x00563412), text.raw);
@@ -41,19 +41,19 @@ test "color records parse text and background ColorRef in wire order" {
 }
 
 test "color records require their prefix accept trailing data and enforce zero reserved byte" {
-    var short = [_]u8{0} ** 8;
+    var short = @as([8]u8, @splat(0));
     try std.testing.expectError(error.InvalidEmfColorRecordSize, parse(fixture(.settextcolor, &short)));
     var declared_twelve = fixture(.settextcolor, &short);
     declared_twelve.size = 12;
     try std.testing.expectError(error.InvalidEmfColorRecordSize, parse(declared_twelve));
 
-    var long = [_]u8{0} ** 16;
+    var long = @as([16]u8, @splat(0));
     try std.testing.expect((try parse(fixture(.setbkcolor, &long))) != null);
     var declared_twelve_long = fixture(.setbkcolor, &long);
     declared_twelve_long.size = 12;
     try std.testing.expectError(error.InvalidEmfColorRecordSize, parse(declared_twelve_long));
 
-    var reserved = [_]u8{0} ** 12;
+    var reserved = @as([12]u8, @splat(0));
     reserved[11] = 1;
     try std.testing.expectError(error.InvalidWmfColorReserved, parse(fixture(.settextcolor, &reserved)));
     try std.testing.expectError(error.InvalidWmfColorReserved, parse(fixture(.setbkcolor, &reserved)));

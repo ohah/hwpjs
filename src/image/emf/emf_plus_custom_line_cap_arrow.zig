@@ -58,7 +58,7 @@ fn putF32(bytes: []u8, offset: usize, value: f32) void {
 
 test "EMF+ adjustable arrow cap parses exact fields and preserves BOOL raw value" {
     const std = @import("std");
-    var bytes = [_]u8{0} ** byte_size;
+    var bytes = @as([byte_size]u8, @splat(0));
     putF32(&bytes, 0, 4);
     putF32(&bytes, 4, 6);
     putF32(&bytes, 8, 1);
@@ -85,7 +85,7 @@ test "EMF+ adjustable arrow cap parses exact fields and preserves BOOL raw value
 
 test "EMF+ adjustable arrow cap rejects every size enum and hot spot violation" {
     const std = @import("std");
-    var bytes = [_]u8{0} ** (byte_size + 1);
+    var bytes = @as([(byte_size + 1)]u8, @splat(0));
     for (0..bytes.len + 1) |size| if (size != byte_size)
         try std.testing.expectError(error.InvalidEmfPlusCustomLineCapArrowSize, parse(bytes[0..size]));
     putU32(&bytes, 16, 4);

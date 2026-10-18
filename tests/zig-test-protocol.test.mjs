@@ -1,6 +1,15 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { request, metadata, result, frameParser } from "../tools/zig-test-protocol.mjs";
+import { request, metadata, result, frameParser, protocolForVersion } from "../tools/zig-test-protocol.mjs";
+
+test("only inspected standard runner versions share the wire parser", () => {
+  for (const version of ["0.16.0", "0.17.0"]) {
+    assert.deepEqual(protocolForVersion(version), { request, metadata, result, frameParser });
+  }
+  for (const version of ["0.15.2", "0.17.0-dev.1", "0.18.0", "0.17.0\0", ""]) {
+    assert.throws(() => protocolForVersion(version), /UnsupportedTestProtocolVersion/);
+  }
+});
 
 test("native requests and results retain indexes and all failure flags", () => {
   assert.deepEqual([...request(4)], [4, 0, 0, 0, 0, 0, 0, 0]);

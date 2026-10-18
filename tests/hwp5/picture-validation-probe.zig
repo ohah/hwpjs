@@ -17,6 +17,6 @@ fn configured(a: std.mem.Allocator, bytes: []const u8, limit: usize, checked: bo
     const report = try core.hwp5.picture_validation.inspect(tree, options, count);
     var out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(a);
-    inline for (std.meta.fields(@TypeOf(report))) |f| try int(a, &out, u32, @intCast(@field(report, f.name)));
+    inline for (@typeInfo(@TypeOf(report)).@"struct".field_names) |f| try int(a, &out, u32, @intCast(@field(report, f)));
     return out.toOwnedSlice(a);
 }

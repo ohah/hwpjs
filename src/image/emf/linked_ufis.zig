@@ -43,7 +43,7 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 }
 
 test "SETLINKEDUFIS parses empty and populated arrays and ignores reserved bytes" {
-    var empty = [_]u8{0} ** minimum_size;
+    var empty = @as([minimum_size]u8, @splat(0));
     empty[12..20].* = .{ 1, 2, 3, 4, 5, 6, 7, 8 };
     const zero = (try parse(fixture(.setlinkedufis, &empty))) orelse return error.TestExpectedEqual;
     try std.testing.expectEqual(@as(u32, 0), zero.count);
@@ -52,7 +52,7 @@ test "SETLINKEDUFIS parses empty and populated arrays and ignores reserved bytes
     try std.testing.expectEqual(@as(usize, 0), zero.trailing_data.len);
     try std.testing.expectError(error.EmfLinkedUfiIndexOutOfBounds, zero.item(0));
 
-    var bytes = [_]u8{0} ** 36;
+    var bytes = @as([36]u8, @splat(0));
     std.mem.writeInt(u32, bytes[8..12], 2, .little);
     std.mem.writeInt(u32, bytes[12..16], 1, .little);
     std.mem.writeInt(u32, bytes[16..20], 0x11223344, .little);
@@ -77,7 +77,7 @@ test "SETLINKEDUFIS parses empty and populated arrays and ignores reserved bytes
 }
 
 test "SETLINKEDUFIS validates its count-derived prefix, preserves extensions, and dispatches exactly" {
-    var bytes = [_]u8{0} ** 36;
+    var bytes = @as([36]u8, @splat(0));
     std.mem.writeInt(u32, bytes[8..12], 2, .little);
     for (0..minimum_size) |cut| try std.testing.expectError(error.InvalidEmfSetLinkedUfisRecordSize, parse(fixture(.setlinkedufis, bytes[0..cut])));
     for (minimum_size..bytes.len) |cut| try std.testing.expectError(error.InvalidEmfSetLinkedUfisRecordSize, parse(fixture(.setlinkedufis, bytes[0..cut])));

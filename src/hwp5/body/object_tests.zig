@@ -3,7 +3,7 @@ const t = std.testing;
 const object = @import("object_common.zig");
 const Properties = object.Properties;
 test "object common bounds, absent versus empty description, and borrowed extra" {
-    var b = [_]u8{0} ** 51;
+    var b = @as([51]u8, @splat(0));
     for (0..40) |n| try t.expectError(error.UnexpectedEnd, Properties.parse(b[0..n]));
     try t.expect((try Properties.parse(b[0..40])).description_utf16 == null);
     try t.expectError(error.UnexpectedEnd, Properties.parse(b[0..41]));
@@ -21,7 +21,7 @@ test "object common bounds, absent versus empty description, and borrowed extra"
     try t.expectError(error.UnexpectedEnd, Properties.parse(&b));
 }
 test "object signed fields and unsigned sizes retain distinct offsets and extrema" {
-    var b = [_]u8{255} ** 40;
+    var b = @as([40]u8, @splat(255));
     std.mem.writeInt(i32, b[4..8], -2835, .little);
     std.mem.writeInt(i32, b[8..12], -23207, .little);
     std.mem.writeInt(u32, b[12..16], 0x80000000, .little);

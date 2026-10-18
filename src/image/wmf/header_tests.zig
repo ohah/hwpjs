@@ -3,7 +3,7 @@ const t = std.testing;
 const header = @import("header.zig");
 
 fn fixture(layout: header.SizeLayout) [46]u8 {
-    var bytes = [_]u8{0} ** 46;
+    var bytes = @as([46]u8, @splat(0));
     std.mem.writeInt(u32, bytes[0..4], 0x9ac6cdd7, .little);
     std.mem.writeInt(i16, bytes[6..8], -2, .little);
     std.mem.writeInt(i16, bytes[8..10], 3, .little);

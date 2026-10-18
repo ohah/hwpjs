@@ -141,7 +141,7 @@ test "HWP BMP allocator accounting includes successful and failed validation" {
 }
 
 test "HWP BMP counter overflow and lowered budget leave report untouched" {
-    inline for (std.meta.fields(bmp.Report)) |field| {
+    inline for (@import("../../reflection.zig").fields(bmp.Report)) |field| {
         var prior: bmp.Report = .{};
         @field(prior, field.name) = std.math.maxInt(usize);
         var added: bmp.Report = .{};

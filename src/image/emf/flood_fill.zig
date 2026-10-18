@@ -28,11 +28,11 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 }
 
 test "EXTFLOODFILL preserves signed start ColorRef mode and trailing data" {
-    var bytes = [_]u8{0} ** 28;
+    var bytes = @as([28]u8, @splat(0));
     std.mem.writeInt(i32, bytes[8..12], std.math.minInt(i32), .little);
     std.mem.writeInt(i32, bytes[12..16], std.math.maxInt(i32), .little);
     bytes[16..20].* = .{ 0x12, 0x34, 0x56, 0 };
-    std.mem.writeInt(u32, bytes[20..24], @intFromEnum(flood_fill_mode.FloodFillMode.surface), .little);
+    std.mem.writeInt(u32, bytes[20..24], @backingInt(flood_fill_mode.FloodFillMode.surface), .little);
     bytes[24..28].* = .{ 9, 8, 7, 6 };
 
     const value = (try parse(fixture(.extfloodfill, &bytes))).?;
@@ -47,7 +47,7 @@ test "EXTFLOODFILL preserves signed start ColorRef mode and trailing data" {
 }
 
 test "EXTFLOODFILL rejects every truncation invalid fields and unrelated types" {
-    var bytes = [_]u8{0} ** 28;
+    var bytes = @as([28]u8, @splat(0));
     for (0..24) |length|
         try std.testing.expectError(error.InvalidEmfFloodFillSize, parse(fixture(.extfloodfill, bytes[0..length])));
     var mismatched = fixture(.extfloodfill, bytes[0..24]);

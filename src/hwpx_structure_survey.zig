@@ -895,8 +895,8 @@ test "HWPX corpus section text and inline token read-only survey" {
     var text_elements: usize = 0;
     var empty_text_elements: usize = 0;
     var text_bytes: usize = 0;
-    var inline_counts: [@typeInfo(package.SectionTextInlineKind).@"enum".fields.len]usize = @splat(0);
-    var other_content_counts: [@typeInfo(package.SectionOtherContentKind).@"enum".fields.len]usize = @splat(0);
+    var inline_counts: [@typeInfo(package.SectionTextInlineKind).@"enum".field_names.len]usize = @splat(0);
+    var other_content_counts: [@typeInfo(package.SectionOtherContentKind).@"enum".field_names.len]usize = @splat(0);
     var non_text_content_chunks: usize = 0;
     var issues: usize = 0;
     for (roots) |root| {
@@ -947,9 +947,9 @@ test "HWPX corpus section text and inline token read-only survey" {
     }
     std.debug.print("HWPX text accepted={d} rejected_zip={d} encrypted={d} sections={d} paragraphs={d} runs={d} texts={d} empty={d} bytes={d} issues={d}\n", .{ accepted, rejected_zip, encrypted, sections, paragraphs, runs, text_elements, empty_text_elements, text_bytes, issues });
     std.debug.print("HWPX text structure direct_paragraphs={d} sections_without_direct_paragraph={d} paragraphs_without_direct_run={d} non_direct_runs={d}\n", .{ direct_paragraphs, sections_without_direct_paragraph, paragraphs_without_direct_run, non_direct_runs });
-    for (inline_counts, 0..) |count, index| std.debug.print("HWPX text inline {s}={d}\n", .{ @tagName(@as(package.SectionTextInlineKind, @enumFromInt(index))), count });
+    for (inline_counts, 0..) |count, index| std.debug.print("HWPX text inline {s}={d}\n", .{ @tagName(@as(package.SectionTextInlineKind, @fromBackingInt(@intCast(index)))), count });
     std.debug.print("HWPX ancillary XML content chunks={d}\n", .{non_text_content_chunks});
-    for (other_content_counts, 0..) |count, index| std.debug.print("HWPX ancillary {s}={d}\n", .{ @tagName(@as(package.SectionOtherContentKind, @enumFromInt(index))), count });
+    for (other_content_counts, 0..) |count, index| std.debug.print("HWPX ancillary {s}={d}\n", .{ @tagName(@as(package.SectionOtherContentKind, @fromBackingInt(@intCast(index)))), count });
     try std.testing.expectEqual(@as(usize, 476), accepted);
     try std.testing.expectEqual(@as(usize, 6), rejected_zip);
     try std.testing.expectEqual(@as(usize, 2), encrypted);

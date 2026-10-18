@@ -13,7 +13,7 @@ fn fixture(a: std.mem.Allocator) ![]u8 {
     for (0..4) |i| {
         const level: u32 = if (i == 1 or i == 2) 1 else 0;
         if (i == 1) try frame(a, &out, 72, 1, &.{ 2, 0, 0, 0, 0, 0, 0, 0 });
-        var header = [_]u8{0} ** 24;
+        var header = @as([24]u8, @splat(0));
         header[0] = 2;
         header[14] = if (i < 2) 1 else 0;
         header[22] = if (i > 1) 1 else 0;

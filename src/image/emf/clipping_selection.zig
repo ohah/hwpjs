@@ -47,15 +47,15 @@ fn fixture(kind: records.RecordType, bytes: []const u8) records.Record {
 }
 
 test "clip path accepts every RegionMode and extended selection preserves RegionData" {
-    var path = [_]u8{0} ** 12;
+    var path = @as([12]u8, @splat(0));
     for (1..6) |raw| {
         std.mem.writeInt(u32, path[8..12], @intCast(raw), .little);
-        try std.testing.expectEqual(@as(u32, @intCast(raw)), @intFromEnum((try parse(fixture(.selectclippath, &path))).?.path));
+        try std.testing.expectEqual(@as(u32, @intCast(raw)), @backingInt((try parse(fixture(.selectclippath, &path))).?.path));
     }
 
-    var extended = [_]u8{0} ** 64;
+    var extended = @as([64]u8, @splat(0));
     std.mem.writeInt(u32, extended[8..12], 48, .little);
-    std.mem.writeInt(u32, extended[12..16], @intFromEnum(region_mode.RegionMode.xor_region), .little);
+    std.mem.writeInt(u32, extended[12..16], @backingInt(region_mode.RegionMode.xor_region), .little);
     std.mem.writeInt(u32, extended[16..20], region_data.header_size, .little);
     std.mem.writeInt(u32, extended[20..24], region_data.rectangle_type, .little);
     std.mem.writeInt(u32, extended[24..28], 1, .little);
@@ -72,8 +72,8 @@ test "clip path accepts every RegionMode and extended selection preserves Region
     try std.testing.expectEqual(@as(usize, 48), trailing_value.region.?.raw.len);
     try std.testing.expectEqualSlices(u8, &.{ 9, 8, 7, 6 }, trailing_value.trailing_data);
 
-    var empty = [_]u8{0} ** 20;
-    std.mem.writeInt(u32, empty[12..16], @intFromEnum(region_mode.RegionMode.copy), .little);
+    var empty = @as([20]u8, @splat(0));
+    std.mem.writeInt(u32, empty[12..16], @backingInt(region_mode.RegionMode.copy), .little);
     empty[16..20].* = .{ 1, 2, 3, 4 };
     const empty_value = (try parse(fixture(.extselectcliprgn, &empty))).?.extended;
     try std.testing.expect(empty_value.region == null);
@@ -81,19 +81,19 @@ test "clip path accepts every RegionMode and extended selection preserves Region
 }
 
 test "clipping selection rejects mode and nested extent drift without claiming fixed records" {
-    var path = [_]u8{0} ** 16;
+    var path = @as([16]u8, @splat(0));
     std.mem.writeInt(u32, path[8..12], 0, .little);
     try std.testing.expectError(error.InvalidEmfRegionMode, parse(fixture(.selectclippath, path[0..12])));
-    std.mem.writeInt(u32, path[8..12], @intFromEnum(region_mode.RegionMode.copy), .little);
+    std.mem.writeInt(u32, path[8..12], @backingInt(region_mode.RegionMode.copy), .little);
     try std.testing.expect((try parse(fixture(.selectclippath, &path))) != null);
     var mismatched = fixture(.selectclippath, path[0..12]);
     mismatched.size += 4;
     try std.testing.expectError(error.InvalidEmfSelectClipPathSize, parse(mismatched));
 
-    var empty = [_]u8{0} ** 20;
-    std.mem.writeInt(u32, empty[12..16], @intFromEnum(region_mode.RegionMode.and_region), .little);
+    var empty = @as([20]u8, @splat(0));
+    std.mem.writeInt(u32, empty[12..16], @backingInt(region_mode.RegionMode.and_region), .little);
     try std.testing.expectError(error.MissingEmfExtSelectClipRegionData, parse(fixture(.extselectcliprgn, empty[0..16])));
-    std.mem.writeInt(u32, empty[12..16], @intFromEnum(region_mode.RegionMode.copy), .little);
+    std.mem.writeInt(u32, empty[12..16], @backingInt(region_mode.RegionMode.copy), .little);
     try std.testing.expect((try parse(fixture(.extselectcliprgn, &empty))) != null);
     std.mem.writeInt(u32, empty[8..12], std.math.maxInt(u32), .little);
     try std.testing.expectError(error.InvalidEmfExtSelectClipRegionSize, parse(fixture(.extselectcliprgn, empty[0..16])));

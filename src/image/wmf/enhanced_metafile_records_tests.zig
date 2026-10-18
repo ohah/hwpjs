@@ -5,7 +5,7 @@ const records = @import("records.zig");
 const scanner = @import("enhanced_metafile_records.zig");
 
 fn writeChunk(out: *[46]u8, remaining: u32, data: [2]u8) void {
-    out.* = .{0} ** 46;
+    out.* = @splat(0);
     std.mem.writeInt(u32, out[0..4], 23, .little);
     std.mem.writeInt(u16, out[4..6], 0x0626, .little);
     std.mem.writeInt(u16, out[6..8], 0x000f, .little);
