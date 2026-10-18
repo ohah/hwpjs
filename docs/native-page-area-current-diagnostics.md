@@ -18,7 +18,9 @@ ec174d05 게시 src와 diff --quiet 일치하는 수정 소스에서 전체 nati
 
 원인 대조는 실패했던 ec174d05 소스의 별도 사본 `/tmp/hwpjs-history-same-source.IENwSM`에서도 수행했습니다. Git blob hash로 src2,630개를 대조해 위 테스트 파일만 다르고 다른 모든 소스가 같음을 확인했습니다(`source-proof.json`). 제품 소스가 바뀐 뒤 우연히 통과한 경우를 구분하기 위한 대조입니다. 해당 ReleaseSafe979e9034e3976c85126d157585ea1a376ff2e56481178aa7cb2a351ab74dc7ca는2/2·fail/skip/log/leak0·exit0·guardStopped=false·peak16,236,904바이트입니다(`safe-guard.jsonl`). 관측자는 실패 주입 대상과 분리하되 안전/누수 검사는 유지하고, 공통 helper는 기존 std.testing.checkAllAllocationFailures로 전체 실패 지점을 그대로 검사합니다. 기존3,346개 prefix와 이 집중 결과를 합산하지 않습니다.
 
-반영된 최신 게시 소스의 전체 native 바이너리는 별도로 컴파일 중입니다(`native-full-build.log`, `/tmp/hwpjs-page-history-diagnostic.0szIEF`). 이전4,103개 binary의 결과를 새 소스의 전수 성공으로 옮기지 않습니다.
+반영된5fee5965 게시 src와 git diff --quiet가 일치하는 별도 소스에서 전체 native 바이너리를 compile exit0으로 빌드했습니다(`native-full-build.log`, `/tmp/hwpjs-page-history-diagnostic.0szIEF`). SHA-256은26723ae6af5aedc3285bbd7e489967ee4977cd22c4951c1700d0e1831bfd2ef2, inventory는4,109개입니다. `native-current-inventory.jsonl`은 root0..1의1개만 통과한 연결 검사이며 전체 결과가 아닙니다.
+
+후속 문제를 먼저 찾기 위해 같은 새 바이너리의3340..4109 범위를 batch1·4,096MiB·expected hash 고정 guardian으로 실행 중입니다(`native-tail-guard.jsonl/.stderr`). 이 범위는 반영된 지연 설치/ordered XML/History 테스트와 그 이후를 포함합니다. 이전4,103개 binary의 결과나 다른 집중 바이너리의 통과를 새 소스의 전수 성공으로 옮기지 않습니다. 새 바이너리의 나머지 범위 검증도 아직 필요합니다.
 
 5837cd37 전수의 다음3338 page area ordered pieces preserve alternating source run styles and single declarations에서 물리 peak4,298,231,168바이트가 기준4,294,967,296바이트를 넘어 guardian이 종료했습니다. 기존 guardian/batch/child 종료를 확인했습니다. source의 std.testing.checkAllAllocationFailures(std.testing.allocator, ...) 다섯 호출은 검증/쪽 영역 XML/문단 XML/두 병합 경계를 검사합니다. 제품 함수·callback·입력·단언·전체 실패 지점은 바꾸지 않고 기존 testing/allocation_failures.check로 모두 전환했습니다. 작업 트리에 이미 있던 정확히5줄 전환을 분리 소스에서 검증 후 채택했으며 새 작성으로 주장하지 않습니다.
 
