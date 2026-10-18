@@ -1,6 +1,8 @@
 # 신규 표 삽입의 모델·거래 경계
 
-공통 치수 계획 다음의 신규 표/셀 텍스트 소유·복제·실패 원자성은 [신규 표 현재 모델](created-table-model.md)을 따릅니다. 아직 Session/저장/이력에 연결된 표 삽입 지원은 아닙니다.
+이 문서는 공통 치수 계획을 처음 도입한 단계의 설계·검증 이력입니다. 이후 구현의 계약은 [HWPX 표 생성 API](hwpx-table-creation-api.md)와 [표 삽입 UI](hwpx-table-creation-ui.md), 산출물 반영 이력은 [승격 기록](hwpx-table-creation-promotion.md)이 소유합니다. 전체 목표의 현재 완료 판정은 [fixture 편집기 완료 조건](fixture-editor-completion.md)을 따릅니다. 아래의 미구현·후속 계획을 현재 제품 전체의 상태로 해석하지 않습니다.
+
+공통 치수 계획 다음의 신규 표/셀 텍스트 소유·복제·실패 원자성은 [신규 표 현재 모델](created-table-model.md)을 따릅니다. 이 최초 단계만으로는 Session/저장/이력에 연결된 표 삽입 지원이 아니었습니다.
 
 RHWP의 로컬 `tableCommands`는 생성 dialog의 행/열을 native createTable/createTableEx에 전달하고 snapshot 거래가 성공하면 첫 셀 입력 위치를 복원합니다. 이 흐름을 목표로 하되 그 프런트엔드만 붙이는 것으로 삽입 지원을 주장하지 않습니다.
 
@@ -12,7 +14,7 @@ RHWP의 로컬 `tableCommands`는 생성 dialog의 행/열을 native createTable
 
 560개 폭/열 조합의 첫·중간·마지막 행 전체를 독립 순환 배정 oracle과 대조합니다. 0/예산/오버플로/최대 u32/위조 Plan/범위 밖 반례도 검사합니다. root에 모듈을 직접 등록해 향후 전체 native 검증에 포함합니다. 이 단계만으로 표 삽입·저장·WASM/Worker·UI가 구현됐다고 해석하지 않습니다.
 
-## 이어서 필요한 구현
+## 최초 단계의 후속 계획과 당시 검증
 
 2026-10-11 최종 `zig test src/model/table_creation_plan.zig -O ReleaseSafe`는2/2·exit0이며 fmt/diff 검사와 별도 prefix `/tmp/hwpjs-table-creation-plan-20261011`의 최종 ReleaseSafe build도 exit0입니다. 기본 WASM은 교체하지 않았습니다. 새 모듈이 포함된 전체 `zig build test`·깨끗한 게시 전체 gate는 아직 완료하지 않았고 기존3859테스트 실행에 소급하지 않습니다.
 
