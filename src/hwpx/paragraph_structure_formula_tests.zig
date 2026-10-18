@@ -4,7 +4,7 @@ test "HWPX structural formula splice allocation failures preserve the complete m
     const a = std.testing.allocator;
     const input = try @import("test_formula_fixture.zig").zipWithParagraphs(a, "<p:p id='9'><p:run><p:t>AB</p:t></p:run></p:p>");
     defer a.free(input);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, bytes: []const u8) !void {
             var session = try @import("editor_session.zig").open(allocator, bytes, .{});
             defer session.deinit();

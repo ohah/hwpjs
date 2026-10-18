@@ -7,7 +7,7 @@ test "HWPX paragraph ID source parts release transient ownership on allocation f
     const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwpx", a, .limited(4_000_000));
     defer a.free(input);
     try std.testing.expectError(error.LimitExceeded, read(a, input, 1));
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, bytes: []const u8) !void {
             const parts = try read(allocator, bytes, 4_000_000);
             defer {
@@ -34,7 +34,7 @@ test "HWPX paragraph ID source parts avoid master page collision in actual sessi
     };
     const input = try fixture.storedZip(a, &sources);
     defer a.free(input);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, bytes: []const u8) !void {
             const parts = try read(allocator, bytes, 10000);
             defer {
@@ -46,7 +46,7 @@ test "HWPX paragraph ID source parts avoid master page collision in actual sessi
             try std.testing.expectEqual(@as(?usize, null), parts[1].section_ordinal);
         }
     }.run, .{input});
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, bytes: []const u8) !void {
             var current = try @import("editor_session.zig").open(allocator, bytes, .{});
             defer current.deinit();

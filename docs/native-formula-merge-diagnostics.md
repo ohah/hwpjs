@@ -1,5 +1,7 @@
 # 계산 필드 문단 병합 실패 주입 진단
 
+후속 구조 입력과 원본 파트 수명 검증은 [구조·원본 파트 진단](native-structure-source-diagnostics.md)이 소유합니다.
+
 ## 원래 전체 바이너리의 중단
 
 ReleaseSafe `51fabff6dc936cb200e48d9f4b6f25f69760f2b26f401a751389736a76ef2d1c`의3456..4111 범위는3456..3458의3개를 fail/log/leak0으로 완료했습니다. 다음3459 `HWPX merged formula input allocation failures preserve the complete model`에서 관측 peak4,330,982,832바이트가4,096MiB 한도를 넘어 exit1·guardStopped=true로 종료했습니다. 근거는 `/tmp/hwpjs-title-group-native.6U4qUw/native-tail-after-merge-absolute.jsonl/.stderr`이며 child97328의 종료를 확인했습니다. 앞서 임시 디렉터리에 없는 guardian 상대 경로로 종료한 두 준비 실행은 테스트 실행 성공이 아닙니다.
