@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[HWPX prefix 원본 소속](hwpx-prefix-insertion-affinity.md)은 `HWPJS_TEST_WASM=/absolute/candidate.wasm node --test tests/hwpx/anchor-empty-run-oracle.test.mjs`로 합성/실제 원본·normal/-O 변조 거부·저장/이력을 검사합니다. 참조 파일이 없을 때의 skip을 실제 원본 통과로 계수하지 않습니다. 실제 원본 전체 전용 입력 감사는 `node tools/hwpx-specialized-input-audit.mjs --wasm=/absolute/candidate.wasm --fixture=reference/rhwp/samples/hwpx_sample2.hwpx`입니다.
+
 [픽스쳐 요청 수명](fixture-request-lifetime.md)의 집중 회귀는 `node --test --test-concurrency=1 tests/hwpx/fixture-request-lifetime.test.mjs tests/hwpx/fixture-response.test.mjs tests/hwpx/file-input-events.test.mjs tests/hwpx/document-menu-browser-arguments.test.mjs`입니다. 실제 브라우저 검사는 아래 문서 도구 탭 명령의 지연 본문 취소·실제 파일 선택 경로를 포함하며 단위 테스트와 구분합니다.
 
 [문서 도구 탭의 실제 웹 왕복](document-ribbon.md)은 `HWPJS_TEST_WASM=/absolute/candidate.wasm node tools/document-menu-browser-audit.mjs`로 실행합니다. 픽스쳐 선택/열기·메뉴 입력/이력/저장·독립 XML/ZIP·재업로드를 검사합니다. 보호 개체는 같은 환경의 `node tools/unknown-object-browser-audit.mjs`이며 두 실행은 직렬로 수행합니다. 각 도구가 소유 브라우저/서버 종료를 확인합니다. 집중 guard는 `node --test --test-concurrency=1 tests/hwpx/document-menu-browser-arguments.test.mjs tests/hwp5/browser-click-target.test.mjs tests/hwp5/browser-session-close.test.mjs`입니다. 실제 브라우저/전체 fixture 검증과 guard 통과를 구분합니다.

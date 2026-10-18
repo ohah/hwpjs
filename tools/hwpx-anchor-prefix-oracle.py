@@ -79,18 +79,23 @@ def verify(data):
             runs[0].insert(1, text)
         elif data.get('mode', 'direct_text') == 'anchored':
             candidates = [(run, index, node) for run in paragraph.findall(namespace + 'run')
-                          for index, node in enumerate(run)
-                          if isinstance(node.tag, str) and node.tag != namespace + 'secPr' and not
+                          for index, node in enumerate(list(run) or [None])
+                          if node is None or (isinstance(node.tag, str) and node.tag != namespace + 'secPr' and not
                           (node.tag == namespace + 'bookmark' and not len(node) and not (node.text or '').strip()) and not
                           (node.tag == namespace + 'ctrl' and len(node) and not (node.text or '').strip() and
                            all(not (child.tail or '').strip() for child in node) and
                            all(child.tag in (namespace + 'colPr', namespace + 'header', namespace + 'footer') or
                                (child.tag in (namespace + 'newNum', namespace + 'pageNum', namespace + 'bookmark', namespace + 'pageHiding') and not len(child) and not (child.text or '').strip())
-                               for child in node))]
+                               for child in node)))]
             if not candidates:
                 raise ValueError('missing direct content')
             run, index, node = candidates[0]
-            if node.tag == namespace + 't':
+            if node is None:
+                if run.text:
+                    raise ValueError('ambiguous empty run')
+                text = ET.SubElement(run, namespace + 't')
+                text.text = data['text']
+            elif node.tag == namespace + 't':
                 node.text = data['text'] + (node.text or '')
             else:
                 text = ET.Element(namespace + 't')

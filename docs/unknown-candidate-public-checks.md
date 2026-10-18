@@ -1,5 +1,7 @@
 # unknownObj 후보의 공개 API 회귀
 
+[원본 빈 run 입력 소속](hwpx-prefix-insertion-affinity.md)은 실제 sample2의 저장 검사 실패를 재현하고, 다른 글꼴 run으로 기대값을 옮기던 독립 검사기의 누락과 변조 거부 회귀를 분리해 기록합니다.
+
 ## 소스와 산출물
 
 `/tmp/hwpjs-hwpx-public-current.pbeDpJ`는 e9d24ba4의 build.zig/js/web/tools/tests 사본과 원본 fixture 연결을 사용합니다. WASM 후보는eaaa0d2007a2e02fce27335e6218379284108e756e285d4859cad28167d0fe5f입니다. 명시적 HWPJS_TEST_WASM을 제공하며 고정 설치 경로를 읽는 검사도 이 사본의 zig-out/bin/hwpjs.wasm 연결을 통해 같은 후보를 사용합니다. 실제 제품 기본/외부 데모를 바꾼 것이 아닙니다.
