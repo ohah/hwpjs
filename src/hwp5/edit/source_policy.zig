@@ -12,7 +12,7 @@ pub fn hasNamedFields(source: []const u8) !bool {
     while (try it.next()) |entry| {
         if (entry.tag == @intFromEnum(body.Tag.control_header)) {
             const id = (try body.ControlHeader.parse(entry.payload)).id;
-            if (id == controls.id("%clk") or id == controls.id("%bmk") or id == controls.id("%xrf")) found = true;
+            if (id == controls.id("%clk") or id == controls.id("%bmk") or id == controls.id("%xrf") or id == controls.id("%unk") or id == controls.id("%sig")) found = true;
         }
     }
     return found;
@@ -38,12 +38,12 @@ fn objectRecord(tag: u10) bool {
 }
 
 pub fn validate(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version) !void {
-    _ = try inspect(a, source, version, false, false, false);
+    _ = try inspect(a, source, version, false, false, false, false);
 }
 
 /// Unchanged sections retain only validated local named-field topology.
 pub fn validateUnselectedSection(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version) !void {
-    _ = try inspect(a, source, version, false, true, false);
+    _ = try inspect(a, source, version, false, true, false, false);
     if (try hasNamedFields(source)) try @import("field_source_bindings.zig").validate(a, source, version);
 }
 
@@ -51,39 +51,40 @@ pub fn validateUnselectedSection(a: std.mem.Allocator, source: []const u8, versi
 /// is unchanged by that transaction, so retain local object-number fields with
 /// the existing position-preserving checks. Never grant target/structure edits.
 pub fn validateUnselectedTextSection(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version) !void {
-    try validateUnselectedCharacterFormat(a, source, version);
+    _ = try inspect(a, source, version, false, true, true, true);
+    if (try hasNamedFields(source)) try @import("field_source_bindings.zig").validateText(a, source, version);
 }
 
 /// Formula-aware text/format callers and isolated body structure retain known fields.
 pub fn hasFormulas(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version) !bool {
-    return inspect(a, source, version, true, false, false);
+    return inspect(a, source, version, true, false, false, false);
 }
 
 /// Only for section transactions that separately validate mixed field bindings.
 pub fn validateFieldTransaction(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version) !void {
-    _ = try inspect(a, source, version, true, true, false);
+    _ = try inspect(a, source, version, true, true, false, false);
 }
 
 /// Text-only field transactions retain local object-number labels. The caller
 /// must separately protect derived result spans and retain object declarations.
 pub fn validateFieldTextTransaction(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version) !void {
-    _ = try inspect(a, source, version, true, true, true);
+    _ = try inspect(a, source, version, true, true, true, true);
 }
 
 /// Character formatting cannot change text, object IDs or numbering declarations.
 /// Keep local object-number results byte-for-byte, including pre-existing orphans.
 pub fn validateCharacterFormat(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version) !void {
-    _ = try inspect(a, source, version, true, true, true);
+    _ = try inspect(a, source, version, true, true, true, false);
     if (try hasNamedFields(source)) try @import("field_source_bindings.zig").validateCharacterFormat(a, source, version);
 }
 
 /// Unselected sections are retained unchanged during character formatting only.
 pub fn validateUnselectedCharacterFormat(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version) !void {
-    _ = try inspect(a, source, version, false, true, true);
+    _ = try inspect(a, source, version, false, true, true, false);
     if (try hasNamedFields(source)) try @import("field_source_bindings.zig").validateCharacterFormat(a, source, version);
 }
 
-fn inspect(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version, allow_formulas: bool, allow_named_fields: bool, retain_object_numbers: bool) !bool {
+fn inspect(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version, allow_formulas: bool, allow_named_fields: bool, retain_object_numbers: bool, retain_revision_signs: bool) !bool {
     var formulas = false;
     var forms: ?@import("form_source_retention.zig").Report = null;
     defer if (forms) |*value| value.deinit(a);
@@ -118,7 +119,9 @@ fn inspect(a: std.mem.Allocator, source: []const u8, version: @import("../versio
                 const code = controls.expectedCode(header.id) orelse return error.UnsupportedSectionControl;
                 // Cross-reference/custom fields can carry unresolved external
                 // text positions. A local hyperlink alone is not that policy.
-                if (header.id == controls.id("%fmu") and allow_formulas) {
+                if (allow_named_fields and retain_revision_signs and try @import("revision_sign_text_retention.zig").header(header)) {
+                    // The text transaction separately validates the empty span.
+                } else if (header.id == controls.id("%fmu") and allow_formulas) {
                     formulas = true;
                 } else if ((header.id == controls.id("%clk") or header.id == controls.id("%bmk")) and allow_named_fields) {
                     _ = try @import("../body/field_start.zig").Properties.parse(header.properties);

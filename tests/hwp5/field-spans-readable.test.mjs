@@ -8,7 +8,7 @@ import { inspect, records } from "./style-preservation/text-record-oracle.mjs";
 import { independentFieldSpans } from "./field-span-oracle.mjs";
 
 assert(process.env.HWPJS_TEST_WASM, "Explicit readable field-span candidate required");
-test("actual revision-sign header alias is readable without granting unknown-field text editing", async () => {
+test("actual revision-sign header alias is readable while its retained result stays protected", async () => {
   const path = "reference/rhwp/samples/task2070/1130000-201900011_D0150004-1-002_2017년기준 시장구조조사.hwp";
   const input = readFileSync(path), source = inspect(input);
   const expected = independentFieldSpans(source.sections[0].bytes, { additionalKinds: [0x25756e6b, 0x25736967] });
@@ -22,8 +22,8 @@ test("actual revision-sign header alias is readable without granting unknown-fie
     assert.deepEqual(editor.fieldSpans(0), expected);
     assert.deepEqual(editor.fieldSpans(0), expected);
     assert.deepEqual(Buffer.from(editor.save().bytes), input);
-    assert.throws(() => editor.validateTextSourcePolicy(0), /UnsupportedSectionControl/);
-    assert.throws(() => editor.splice({ section: 0, paragraph: 50000, startUnit: 0, endUnit: 0, text: "거부" }), /UnsupportedSectionControl/);
+    editor.validateTextSourcePolicy(0);
+    assert.throws(() => editor.splice({ section: 0, paragraph: signature.begin.paragraph, startUnit: signature.begin.unit, endUnit: signature.begin.unit, text: "거부" }), /ReadOnlyRetainedFieldResult/);
     assert.deepEqual(Buffer.from(editor.save().bytes), input);
     assert.equal(editor.undo(), false);
     assert.equal(editor.redo(), false);

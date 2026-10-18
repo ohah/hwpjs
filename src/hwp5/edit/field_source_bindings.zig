@@ -1,17 +1,21 @@
 //! Validate immutable mixed field topology before position-preserving formatting.
 const std = @import("std");
 pub fn validate(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version) !void {
-    return validateWith(a, source, version, false);
+    return validateWith(a, source, version, false, false);
 }
 
 pub fn validateCharacterFormat(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version) !void {
-    return validateWith(a, source, version, true);
+    return validateWith(a, source, version, true, false);
 }
 
-fn validateWith(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version, retain_object_numbers: bool) !void {
+pub fn validateText(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version) !void {
+    return validateWith(a, source, version, true, true);
+}
+
+fn validateWith(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version, retain_object_numbers: bool, retain_revision_signs: bool) !void {
     var projection = try @import("../model_projection.zig").fromDecodedSections(a, version, &.{source});
     defer projection.deinit(a);
-    const bindings = try @import("field_bindings.zig").collect(a, source, version, projection.sections[0]);
+    const bindings = if (retain_revision_signs) try @import("revision_sign_text_retention.zig").collect(a, source, version, projection.sections[0]) else try @import("field_bindings.zig").collect(a, source, version, projection.sections[0]);
     defer a.free(bindings);
     var names = false;
     for (bindings) |binding| names = names or binding.span.field_id == @import("../body/control_rules.zig").id("%xrf");

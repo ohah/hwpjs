@@ -8,6 +8,10 @@ const Text = @import("../body/text.zig").Text;
 pub const Position = struct { paragraph: usize, unit: u32 };
 pub const Span = struct { begin: Position, end: Position, ordinal: usize, field_id: u32 = 0 };
 
+pub fn supportsMixedEditableKind(id: u32) bool {
+    return id == controls.id("%hlk") or id == controls.id("%clk") or id == controls.id("%bmk") or id == controls.id("%xrf") or id == controls.id("%fmu");
+}
+
 pub fn collect(a: std.mem.Allocator, section: model.Section, id: u32) ![]Span {
     if (id == 0) return error.UnsupportedSectionControl;
     return collectWithOwners(a, section, id, null);
@@ -86,7 +90,7 @@ fn collectWithPolicy(a: std.mem.Allocator, section: model.Section, id: u32, owne
                 if (id == 0) {
                     if (readable) {
                         if (!@import("../body/field_start.zig").supports(started_id)) return error.UnsupportedSectionControl;
-                    } else if (started_id != controls.id("%hlk") and started_id != controls.id("%clk") and started_id != controls.id("%bmk") and started_id != controls.id("%xrf") and started_id != controls.id("%fmu")) return error.UnsupportedSectionControl;
+                    } else if (!supportsMixedEditableKind(started_id)) return error.UnsupportedSectionControl;
                 } else if (started_id != id) return error.UnsupportedSectionControl;
                 if (state.depth == state.stack.len) return error.LimitExceeded;
                 const unit = std.math.add(u32, token.start_unit, std.math.cast(u32, token.raw.len / 2) orelse return error.LimitExceeded) catch return error.LimitExceeded;

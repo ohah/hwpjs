@@ -28,7 +28,7 @@ Session은 구역 경계를 검사하고, WASM `hwp5_edit_field_spans(section)`�
 
 `readable-alias/bin/hwpjs.wasm` SHA256 `9b7969358f501a5eea1a267d1858a5c57bfb725dfa2e6d57ea23d369a074302c`의 실제17필드 구조/원문/기존 편집 거부 검사를 포함한 집중9/9이 통과했습니다. 별도 `field-spans-readable-alias-mutation.log`의2/2는 같은 길이 `$RevisionSign;2;` 변조가 독립 oracle과 native 조회에서 거부되고 원문/이력이 유지됨을 검사합니다. 전체 알려진 필드 종류·거래 제한·부분 할당 실패와 기존 alias 반례의 native 집중 검사는 ReleaseSafe/Debug 각각4/4입니다. 새로운 테스트/등록을 반영한 `readable-final` 빌드와 그 후보의 전체 정규 검사·읽기 전수 검증은 별도입니다.
 
-이 대형 문서의5만 번째 문단 편집 양성 검사는 아직 완료하지 못했습니다. 구조 조회에 성공하더라도 원본 `%unk`의 의미/편집 보존 허가는 여전히 별도 source policy 거부입니다. 읽기 조회 성공을 해당 문서 편집 완료로 바꾸지 않습니다.
+위 readable 후보만으로는 대형 문서의5만 번째 문단 편집 양성 검사가 실패합니다. 구조 조회 성공과 원본 `%unk`의 편집 보존 허가는 별개입니다. 후속 텍스트 경로의 제한된 허가·실제 대형 문서 저장/이력 검사는 [빈 RevisionSign 표식 보존](hwp5-revision-sign-text-retention.md)이 소유하며, 읽기 API 통과를 그 근거로 대신하지 않습니다.
 
 최종 등록 후보 `readable-final/bin/hwpjs.wasm` SHA256 `b17b942cce1a3f3860141b1dfb999311f2a4bce8dbac0eb313be772c9a58ae41`는 ReleaseSafe5/5이며 기존331개 export 누락/종류 변경 없이 조회1개만 추가합니다. `field-spans-readable-final-reader-parity.jsonl`은975개 중 전체 읽기 JSON944동일·기존 거부5동일·HWP3범위제외26·exit0입니다. 정규5개 JS 파일을 포함한 `field-spans-readable-final-editor-audit.log`는406/406·fail/cancel/skip0·exit0, 빌드7/7단계로 종료했습니다(647,280.17ms). 이전396개 결과와 별개로 같은 readable 후보에서 확인했으며 전체 native/브라우저/기본 산출물 배포 완료를 뜻하지 않습니다.
 

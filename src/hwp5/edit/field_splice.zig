@@ -10,7 +10,7 @@ const Context = struct {
     char_count: usize,
     original: *const model.Section,
     fn prepare(a: std.mem.Allocator, draft: *model.Section, self: @This()) !void {
-        const bound = try @import("field_bindings.zig").collect(a, self.source, self.version, self.original.*);
+        const bound = try @import("revision_sign_text_retention.zig").collect(a, self.source, self.version, self.original.*);
         defer a.free(bound);
         const before = try plain.textBytes(a, draft.paragraphs[self.edit.paragraph]);
         defer a.free(before);
@@ -28,7 +28,7 @@ const Context = struct {
             const owner = binding.span.begin.paragraph;
             if (handled[owner]) continue;
             handled[owner] = true;
-            const values = try @import("field_dirty_values.zig").prepare(a, self.source, self.version, self.original.*, owner, .{ .paragraph = self.edit.paragraph, .start = self.edit.start_unit, .end = self.edit.end_unit });
+            const values = try @import("field_dirty_values.zig").prepareText(a, self.source, self.version, self.original.*, owner, .{ .paragraph = self.edit.paragraph, .start = self.edit.start_unit, .end = self.edit.end_unit });
             if (draft.paragraphs[owner].field_attributes) |previous| a.free(previous);
             draft.paragraphs[owner].field_attributes = values;
         }
@@ -40,7 +40,7 @@ const Context = struct {
             defer a.free(sites);
             _ = try @import("cross_reference_name_apply.zig").applyDraftRetainingObjectNumbers(a, self.source, self.version, draft, sites, self.char_count);
         }
-        const verified = try @import("field_bindings.zig").collect(a, self.source, self.version, draft.*);
+        const verified = try @import("revision_sign_text_retention.zig").collect(a, self.source, self.version, draft.*);
         a.free(verified);
     }
 };

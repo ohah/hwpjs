@@ -898,6 +898,7 @@ test {
     _ = @import("hwp5/parameters/tests.zig");
     _ = @import("hwp5/edit/field_bindings.zig");
     _ = @import("hwp5/edit/field_span_snapshot.zig");
+    _ = @import("hwp5/edit/revision_sign_text_tests.zig");
     _ = @import("hwp5/edit/field_source_bindings.zig");
     _ = @import("hwp5/edit/field_dirty_values.zig");
     _ = @import("hwp5/edit/field_splice.zig");

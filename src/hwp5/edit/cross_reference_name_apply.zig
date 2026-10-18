@@ -31,7 +31,7 @@ pub fn applyDraftRetainingObjectNumbers(a: std.mem.Allocator, source: []const u8
 }
 
 fn applyDraftWithRetention(a: std.mem.Allocator, source: []const u8, version: Version, section: *model.Section, sites: []const Site, char_count: usize, retain_object_numbers: bool) !Report {
-    const bindings = try @import("field_bindings.zig").collect(a, source, version, section.*);
+    const bindings = try collect(a, source, version, section.*, retain_object_numbers);
     defer a.free(bindings);
     var tree = try @import("../body/tree.zig").Tree.parse(a, source, version, .{});
     defer tree.deinit(a);
@@ -41,7 +41,7 @@ fn applyDraftWithRetention(a: std.mem.Allocator, source: []const u8, version: Ve
         const view = try @import("../body/cross_reference_command.zig").View.parse(binding.properties.command);
         if (retain_object_numbers and try @import("cross_reference_format_retention.zig").objectNumber(view)) continue;
         const label = try @import("../body/cross_reference_name_result.zig").evaluate(view, sites);
-        const current = try @import("field_bindings.zig").collect(a, source, version, section.*);
+        const current = try collect(a, source, version, section.*, retain_object_numbers);
         defer a.free(current);
         const selected = for (current) |value| {
             if (value.source_node == binding.source_node) break value;
@@ -59,7 +59,11 @@ fn applyDraftWithRetention(a: std.mem.Allocator, source: []const u8, version: Ve
         report.processed += 1;
         if (!std.mem.eql(u8, before, after)) report.changed += 1;
     }
-    const verified = try @import("field_bindings.zig").collect(a, source, version, section.*);
+    const verified = try collect(a, source, version, section.*, retain_object_numbers);
     a.free(verified);
     return report;
+}
+
+fn collect(a: std.mem.Allocator, source: []const u8, version: Version, section: model.Section, text_only: bool) ![]@import("field_bindings.zig").Binding {
+    return if (text_only) @import("revision_sign_text_retention.zig").collect(a, source, version, section) else @import("field_bindings.zig").collect(a, source, version, section);
 }

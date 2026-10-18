@@ -5,9 +5,17 @@ const controls = @import("../body/control_rules.zig");
 pub const Edit = struct { paragraph: usize, start: u32, end: u32 };
 
 pub fn prepare(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version, section: model.Section, owner_paragraph: usize, edit: Edit) ![]model.FieldAttributes {
+    return prepareWith(a, source, version, section, owner_paragraph, edit, false);
+}
+
+pub fn prepareText(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version, section: model.Section, owner_paragraph: usize, edit: Edit) ![]model.FieldAttributes {
+    return prepareWith(a, source, version, section, owner_paragraph, edit, true);
+}
+
+fn prepareWith(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version, section: model.Section, owner_paragraph: usize, edit: Edit, retain_revision_signs: bool) ![]model.FieldAttributes {
     if (owner_paragraph >= section.paragraphs.len or edit.paragraph >= section.paragraphs.len) return error.InvalidParagraph;
     if (edit.start > edit.end) return error.InvalidTextRange;
-    const bound = try @import("field_bindings.zig").collect(a, source, version, section);
+    const bound = if (retain_revision_signs) try @import("revision_sign_text_retention.zig").collect(a, source, version, section) else try @import("field_bindings.zig").collect(a, source, version, section);
     defer a.free(bound);
     var tree = try @import("../body/tree.zig").Tree.parseTextPreview(a, source, version, .{});
     defer tree.deinit(a);

@@ -58,6 +58,7 @@
 - [Canvas 제어 표시와 원문 위치 연결](canvas-control-offsets.md)
 - [실험용 HWP5 편집 JS/WASM API](hwp5-editor-api.md)
 - [현재 필드 범위 조회](hwp5-field-span-query.md)
+- [빈 RevisionSign 표식 보존 텍스트 편집](hwp5-revision-sign-text-retention.md)
 - [HWP5 native 체크포인트·편집 이력 기반](hwp5-edit-history.md)
 - [문단 분할·병합 구조 편집 기반](paragraph-structure-edit.md)
 - [추적 픽스쳐 편집 지원 전수 기준](fixture-editor-coverage.md)
