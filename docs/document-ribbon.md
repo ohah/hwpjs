@@ -32,3 +32,20 @@ tablist/tab/tabpanel 연결과 roving tabindex를 사용합니다. 방향키·Ho
 최종 후보 일반 캡처/사본은 `/var/folders/51/mr5cjhg13v324f1vgg9m237c0000gn/T/hwpjs-menu-browser-BCQ4iX`, 보호 개체는 `.../hwpjs-unknown-browser-g8YfkH`, HWP5는 `.../hwpjs-reference-browser-sz7nLq`, 기본은 `.../hwpjs-menu-browser-6QIHYy`입니다. 일반 재업로드 캡처를 직접 확인했습니다. 중간 `ribbon-plain-final-browser.jsonl`의 Download was canceled는 cleanup.success=false로 보존합니다. 당시 공간 부족이 있었지만 취소 원인을 확정하지 않으며 최종 성공으로 바꾸지 않습니다.
 
 이 결과는 RHWP형 도구 구성을 향한 기본 탭과 선택 사례의 검증입니다. 모든 리본 명령·물리 IME/클립보드·전체 fixture UI·원본 조판 동치 완료는 아니며, 최신 native/전체 공개 gate와 제품 WASM 승격도 별도입니다.
+
+## Zig 0.17 후보의 실제 웹 왕복
+
+원본 작업 트리 후보 `f4e0f396a3fea6e6354b364ff176e31d72ed00ec643fa566c4abbd8bc2f58d77`을 명시해 실제 Chromium으로 다시 검사했습니다. 미커밋 기능을 포함하는 후보이며 기본 제품 WASM/외부 데모를 교체하지 않았습니다. 로그는 `/tmp/hwpjs-zig017-current-fixtures.xouwd1`에 보관합니다.
+
+기존 일반 브라우저 도구가 upload 경로만 검사해 픽스쳐 선택 UI를 검증하지 않는 공백을 확인했습니다. `document-menu-cases.mjs`의 plain 사례에만 `fixturePicker`를 지정했고 공통 흐름은 카탈로그의 원본 경로와 정확히 하나 일치하는 항목을 선택합니다. HTTP 응답 전체 해시가 독립 oracle 입력과 같고 버튼이 활성인 것을 확인한 뒤 실제 select/click으로 문서를 엽니다. 보호 개체 사례의 upload와 다운로드 사본의 재업로드는 그대로 유지합니다. UI 카탈로그/목록/로더 소스도 실행 전후 해시 감사에 포함합니다.
+
+| 로그 | 실제 확인 |
+| --- | --- |
+| menu-browser.jsonl/.stderr | 변경 전 upload 경로·탭 키보드·입력·메뉴 U/R/S·독립 XML/ZIP·재업로드 |
+| menu-picker-browser.jsonl/.stderr | 픽스쳐 선택/열기부터 동일 입력·이력·다운로드·독립 normal/-O XML/ZIP·재업로드 |
+| hwp5-roadmap-browser.jsonl/.stderr | roadmap HWP5의 실제 입력·이력·다운로드·독립 전체 Section/비대상 stream/metadata·재업로드 |
+| unknown-object-browser.jsonl/.stderr | 표2/unknownObj4 원본에서 실제 Delete 보호 거부·바깥 입력·이력·독립 XML/ZIP·재업로드 |
+
+네 실행 모두 터미널 exit0·stderr0이며 cleanup 성공과 서버 종료를 확인했습니다. 새 picker 캡처는 `/var/folders/51/mr5cjhg13v324f1vgg9m237c0000gn/T/hwpjs-menu-browser-67diYX/reopened.png`, HWP5는 `hwpjs-reference-browser-IOCUE7`, 보호 개체는 `hwpjs-unknown-browser-KBY0U0` 디렉터리에 있습니다. 직접 확인한 초기 일반 캡처는 `hwpjs-menu-browser-NBmrXx/reopened.png`입니다. 소유 세션 세 개의 후속 조회도 active=false·pid=null입니다.
+
+브라우저 인자·정확한 picker 원본 매핑·클릭/종료 guard 세 파일13/13·fail/cancel/skip0·exit0·stderr0, JS 구문·변경 diff 공백 검사도 통과했습니다. 스킬에 따라 격리 세션과 실제 입력을 사용하고 브라우저를 종료했습니다. 이 집중 검사는 전체104개 UI 픽스쳐·모든 리본 명령·RHWP 기능/조판 동치 완료가 아닙니다.

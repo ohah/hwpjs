@@ -14,6 +14,7 @@ import {closeOwnedBrowser} from "./session-close.mjs";
 import {writeAuditRow} from "../audit-jsonl-output.mjs";
 import {documentMenuBrowserCases} from "./document-menu-cases.mjs";
 import {openBrowserRibbonPage,exerciseBrowserRibbonPages} from "./ribbon-page.mjs";
+import {demoFixtures,fixtureUrl} from "../../web/preview/fixture-catalog.mjs";
 
 export async function runDocumentMenuBrowserAudit(caseName) {
   assert(Object.hasOwn(documentMenuBrowserCases,caseName),"UnknownDocumentMenuBrowserCase");
@@ -24,7 +25,7 @@ export async function runDocumentMenuBrowserAudit(caseName) {
   const wasmPath = resolve(process.env.HWPJS_TEST_WASM), wasm = readFileSync(wasmPath);
   const fixture = resolve(config.fixturePath), input = readFileSync(fixture);
   const hash = bytes => createHash("sha256").update(bytes).digest("hex");
-  const sourcePaths = ["web/preview/index.html","web/preview/preview.css","web/preview/app.mjs","web/preview/document-menu-controls.mjs","web/preview/document-menu-mnemonic.mjs","web/preview/document-ribbon-controls.mjs","web/preview/document-ribbon-pages.mjs","tools/browser/ribbon-page.mjs","tools/document-menu-browser-audit.mjs","tools/unknown-object-browser-audit.mjs","tools/browser/document-menu-roundtrip.mjs","tools/browser/document-menu-cases.mjs","tools/hwpx-anchor-prefix-oracle.py",...(oraclePath==="tools/hwpx-anchor-prefix-oracle.py"?[]:[oraclePath])];
+  const sourcePaths = ["web/preview/index.html","web/preview/preview.css","web/preview/app.mjs","web/preview/document-menu-controls.mjs","web/preview/document-menu-mnemonic.mjs","web/preview/document-ribbon-controls.mjs","web/preview/document-ribbon-pages.mjs","web/preview/fixture-controls.mjs","web/preview/fixture-catalog.mjs","web/preview/fixture-inventory.mjs","tools/browser/ribbon-page.mjs","tools/document-menu-browser-audit.mjs","tools/unknown-object-browser-audit.mjs","tools/browser/document-menu-roundtrip.mjs","tools/browser/document-menu-cases.mjs","tools/hwpx-anchor-prefix-oracle.py",...(oraclePath==="tools/hwpx-anchor-prefix-oracle.py"?[]:[oraclePath])];
   const sourceHashes = () => Object.fromEntries(sourcePaths.map(path=>[path,hash(readFileSync(resolve(path)))]));
   const sourceSha256 = sourceHashes();
   const session = cli("agent-browser", ["session","id","--scope","worktree","--prefix",config.sessionPrefix], {cwd:root,encoding:"utf8",timeout:10000}).trim();
@@ -89,7 +90,20 @@ export async function runDocumentMenuBrowserAudit(caseName) {
     assert.equal(evaluate('window.__menuAudit.length'),0);command("press","Escape");
     menuKey("menu-save","s");assert.equal(evaluate('document.querySelector("#menu-save").disabled'),true);
     assert.equal(evaluate('window.__menuAudit.length'),0);command("press","Escape");progress("view-and-disabled-commands");
-    command("upload","#file",fixture);wait(`${replies("load")}.length===1`);
+    if(config.fixturePicker){
+      const matches=demoFixtures.filter(item=>item.path===config.fixturePath);
+      assert.equal(matches.length,1,"BrowserFixtureMustHaveUniqueCatalogEntry");
+      const selected=matches[0];
+      const fixtureResponse=await fetch(`http://127.0.0.1:${port}${fixtureUrl(selected.id)}`,{signal:AbortSignal.timeout(10000)});
+      assert.equal(fixtureResponse.status,200);
+      assert.equal(hash(Buffer.from(await fixtureResponse.arrayBuffer())),hash(input),"BrowserFixtureResponseMustMatchOracleInput");
+      command("select","#demo-fixture",selected.id);
+      assert.equal(evaluate('document.querySelector("#demo-fixture").value'),selected.id);
+      assert.equal(evaluate('document.querySelector("#demo-fixture-open").disabled'),false);
+      click("#demo-fixture-open");
+    }else command("upload","#file",fixture);
+    wait(`${replies("load")}.length===1`);
+    if(config.fixturePicker)progress("fixture-picker-loaded");
     click("#enable-edit");wait(`${replies("enable")}.some(r=>r.revision===0)`);
     openBrowserRibbonPage(driver,"view");
     click("#document-window-options > summary");command("fill","#document-window-start",String(paragraph));command("fill","#document-window-count","1");click("#document-window-apply");

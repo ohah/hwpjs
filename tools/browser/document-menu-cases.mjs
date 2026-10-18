@@ -1,6 +1,7 @@
 // Document identities and expected witnesses; interaction policy lives in the shared flow.
 export const documentMenuBrowserCases=Object.freeze({
   plain:Object.freeze({
+    fixturePicker:true,
     fixturePath:"legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwpx",paragraph:1,
     original:"가",marker:"메뉴검증😀<&",protectedAnchors:0,
     oraclePath:"tools/hwpx-anchor-prefix-oracle.py",oracleMode:"plain_text",

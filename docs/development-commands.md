@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[문서 도구 탭의 실제 웹 왕복](document-ribbon.md)은 `HWPJS_TEST_WASM=/absolute/candidate.wasm node tools/document-menu-browser-audit.mjs`로 실행합니다. 픽스쳐 선택/열기·메뉴 입력/이력/저장·독립 XML/ZIP·재업로드를 검사합니다. 보호 개체는 같은 환경의 `node tools/unknown-object-browser-audit.mjs`이며 두 실행은 직렬로 수행합니다. 각 도구가 소유 브라우저/서버 종료를 확인합니다. 집중 guard는 `node --test --test-concurrency=1 tests/hwpx/document-menu-browser-arguments.test.mjs tests/hwp5/browser-click-target.test.mjs tests/hwp5/browser-session-close.test.mjs`입니다. 실제 브라우저/전체 fixture 검증과 guard 통과를 구분합니다.
+
 Zig 버전은 `.mise.toml`의 0.17.0입니다. mise 환경에서는 `mise exec -- zig`로 실행합니다. 0.16/0.17 표준 native runner의 wire·검증 범위와 업그레이드 근거는 [Zig 0.17 이관](zig-0.17-upgrade.md)을 따릅니다. 아래 기존 `ReleaseSafe`/`Debug`/`ReleaseFast` 명령은 0.17에서도 허용되는 최적화 모드 별칭입니다.
 
 HWPX 일반 prefix 감사는 `node tools/hwpx-edit-corpus-audit.mjs --wasm=/absolute/candidate.wasm --fixture=/absolute/document.hwpx --history --paragraphs=196:197`로 한 문단만 검사할 수 있습니다. 문서 전체의1기반 문단 번호이며 끝은 제외합니다. 범위는 명시적 WASM·단일 fixture와 함께만 허용하고, 범위를 생략하면 기존 전체 inventory를 유지합니다. 부분 결과는 전체 문서 통과가 아닙니다. 경계·분모·실측은 [후보 공개 감사의 범위 실행](unknown-candidate-public-checks.md)을 따릅니다.

@@ -1,6 +1,17 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {spawnSync} from "node:child_process";
+import {documentMenuBrowserCases} from "../../tools/browser/document-menu-cases.mjs";
+import {demoFixtures,fixtureUrl} from "../../web/preview/fixture-catalog.mjs";
+
+test("plain menu roundtrip exercises the real fixture picker with one exact public source",()=>{
+  const selected=documentMenuBrowserCases.plain;
+  assert.equal(selected.fixturePicker,true);
+  const entries=demoFixtures.filter(item=>item.path===selected.fixturePath);
+  assert.equal(entries.length,1);
+  assert.match(fixtureUrl(entries[0].id),/^\/web\/preview\/demo-fixtures\/[^/]+$/);
+  assert.equal(documentMenuBrowserCases["unknown-object"].fixturePicker,undefined);
+});
 
 test("menu browser audit requires an explicit WASM before starting external processes",()=>{
   const result=spawnSync(process.execPath,["tools/document-menu-browser-audit.mjs"],{
