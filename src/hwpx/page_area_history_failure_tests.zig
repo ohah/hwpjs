@@ -25,7 +25,7 @@ fn verifyOrderedMergeHistory(a: std.mem.Allocator) !void {
     const baseline = try source.save();
     defer a.free(baseline);
     const Probe = struct {
-        fn run(allocator: std.mem.Allocator, observer: std.mem.Allocator, bytes: []const u8, expected: []const u8) !void {
+        fn run(allocator: std.mem.Allocator, observer: std.mem.Allocator, bytes: []const u8, expected: []const u8, redo_failures: *usize) !void {
             var session = try prepare(allocator, bytes);
             defer session.deinit();
             var history = try History.init(&session, 8, 4000000);
@@ -63,7 +63,26 @@ fn verifyOrderedMergeHistory(a: std.mem.Allocator) !void {
             const undone = try readonly.save();
             defer observer.free(undone);
             try std.testing.expectEqualSlices(u8, expected, undone);
-            try std.testing.expect(try history.redo(&session));
+            // A retained undo buffer otherwise makes redo allocation-free.
+            try std.testing.expectEqual(@as(usize, 0), history.stack.undo.items.len);
+            history.stack.undo.clearAndFree(allocator);
+            const revision = history.stack.revision;
+            const next_revision = history.stack.next_revision;
+            const did_redo = history.redo(&session) catch |err| {
+                if (err == error.OutOfMemory) redo_failures.* += 1;
+                try std.testing.expectEqual(count, session.sections[0].last_paragraph);
+                try std.testing.expectEqual(@as(usize, 0), history.stack.undo.items.len);
+                try std.testing.expectEqual(@as(usize, 1), history.stack.redo.items.len);
+                try std.testing.expectEqual(revision, history.stack.revision);
+                try std.testing.expectEqual(next_revision, history.stack.next_revision);
+                var failed_view = session;
+                failed_view.allocator = observer;
+                const saved = try failed_view.save();
+                defer observer.free(saved);
+                try std.testing.expectEqualSlices(u8, undone, saved);
+                return err;
+            };
+            try std.testing.expect(did_redo);
             readonly = session;
             readonly.allocator = observer;
             const redone = try readonly.save();
@@ -71,6 +90,8 @@ fn verifyOrderedMergeHistory(a: std.mem.Allocator) !void {
             try std.testing.expectEqualSlices(u8, merged, redone);
         }
     };
-    try Probe.run(a, a, input, baseline);
-    try @import("../testing/allocation_failures.zig").check(Probe.run, .{ a, input, baseline });
+    var redo_failures: usize = 0;
+    try Probe.run(a, a, input, baseline, &redo_failures);
+    try @import("../testing/allocation_failures.zig").check(Probe.run, .{ a, input, baseline, &redo_failures });
+    try std.testing.expect(redo_failures > 0);
 }

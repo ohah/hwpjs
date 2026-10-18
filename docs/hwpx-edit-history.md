@@ -1,5 +1,7 @@
 # HWPX native 편집 이력
 
+쪽 영역 병합 redo의 실제 실패 주입·coverage 음성 대조는 [redo 실패 검증](hwpx-history-redo-failure.md)을 따릅니다.
+
 현재 HWPX 일반·앵커·필드 텍스트 편집의 undo/redo를 지원합니다. HWP5 이력·구조 편집·한컴 조판 호환성은 이 구현의 완료 범위가 아닙니다. [Worker 연결](hwpx-worker-history.md)과 [Canvas 입력](canvas-edit-history.md)은 각 경계 문서가 소유합니다.
 
 ## 소유와 한도
