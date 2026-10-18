@@ -35,6 +35,7 @@ try {
     if (range && range.end > allParagraphs.length + 1) throw new Error("AuditParagraphRangeOutOfBounds");
     const paragraphs = range ? allParagraphs.filter(row => row.paragraph >= range.start && row.paragraph < range.end) : allParagraphs;
     let formulaPrefixes;
+    let unmatchedPrefixes;
     let accepted = 0;
     let completed = 0;
     const progress = paragraph => {
@@ -60,7 +61,9 @@ try {
           const namedField = editor.fieldLabels(paragraph.section, paragraph.paragraph).some(label => label.start === 0);
           if (!namedField) {
             formulaPrefixes ??= JSON.parse(execFileSync("python3", ["tools/hwpx-formula-prefix-inventory.py", path], { encoding: "utf8", timeout: 30000 }));
-            assert(formulaPrefixes.some(row => row.section === paragraph.section && row.localParagraph === paragraph.localParagraph), `${path}: protected prefix without source field at zero`);
+            const formulaPrefix = formulaPrefixes.some(row => row.section === paragraph.section && row.localParagraph === paragraph.localParagraph);
+            if (!formulaPrefix) unmatchedPrefixes ??= JSON.parse(execFileSync("python3", ["tools/hwpx-unmatched-prefix-witness.py", path], { encoding: "utf8", timeout: 30000 }));
+            assert(formulaPrefix || unmatchedPrefixes.some(row => row.section === paragraph.section && row.localParagraph === paragraph.localParagraph), `${path}: protected prefix without independent source witness`);
           }
         } else {
           assert.equal(eligible, false, path);

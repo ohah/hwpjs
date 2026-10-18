@@ -14,6 +14,14 @@
 
 ## 실제 검증
 
+### 일반 prefix 감사의 독립 거부 근거
+
+고정44파일 감사의80168/86712는 일반 감사에서 `protected prefix without source field at zero`로 종료했습니다. 실제80168의187,86712의387을 재조회하면 canEdit/outside=false·라벨0개·splice=ProtectedFieldRange이며, 기존 독립 XML 소유 조사상 미해결 시작의 가장 가까운 subList 안에 있습니다. 라벨/FORMULA만 확인하던 감사의 근거 누락으로, 제품 보호를 해제하거나 미해결 끝을 합성하지 않습니다.
+
+`tools/hwpx-unmatched-prefix-witness.py`는 기존 소유 진단과 UINT32 ID 비교를 재사용합니다. 미해결 시작부터 가장 가까운 목록 끝(루트 시작은 구역 끝)까지의 구조 범위 안에 직접 소유한 text/빈 run 사이트가 있는 문단만 보고합니다. 중첩 표·주석의 text를 바깥 문단의 근거로 쓰지 않습니다. 이는 현재 보수적 보호의 원문 근거이며 필드 의미적 종료·편집 허가가 아닙니다. 모호한 연결/중복 숫자 ID·외래 root·중복 ZIP·과대 section/DTD는 거부합니다. 일반 감사는 이 근거를 마지막 대조로 사용하되 accepted를 증가시키지 않고 거부 후 원문/이력 검사를 유지합니다.
+
+게시3f7256e3에 이 감사 변경만 적용한 `/tmp/hwpjs-unmatched-witness-all.27Bjay`에서 Node24.20.0·명시적 f4e0f396a3fea6e6354b364ff176e31d72ed00ec643fa566c4abbd8bc2f58d77 후보로3/3·fail/cancel/skip0·exit0(8189ms)을 확인했습니다. 독립 witness normal/-O와 실제 CLI 여섯 범위를 검사합니다.80168의186–188과86712의386–398/403–405/1789–1796 총27문단은 ProtectedFieldRange로 분류하고 accepted/restored0입니다. 두 파일의 문단2는 각각 입력/undo 복원1·거부0입니다. 모든 범위는 completeFixture=false이며 전체6,265문단 완료로 해석하지 않습니다. 원래 고정 감사의 실패 기록·제품 native 코어·기본 WASM/외부 데모는 바꾸지 않았습니다.
+
 ### 미해결 필드의 목록 소유 조사
 
 `tools/hwpx-unmatched-field-scope.py`는 제품 파서와 독립적인 XML 조상 순회로 가장 가까운 `hp:subList`와 그 안의 문단을 보고합니다. 마커 끝이나 편집 권한을 추론하지 않습니다. 실제80168의 미해결1개는 XML 문단186–188의 목록, 86712의 미해결4개는 각각386–398(2개),403–405,1789–1796의 목록에 속합니다. 이 좌표는 독립 XML 순서이며 public API 좌표로 그대로 쓰지 않습니다. 구역 전체 suffix 보호를 목록 단위로 좁힐 후보 근거지만 목록 밖 필드 종료 의미를 증명하지 않으므로 아직 제품 보호 정책을 변경하지 않았습니다.
