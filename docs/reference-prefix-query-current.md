@@ -16,6 +16,10 @@ aift.hwpx의 구역2 localParagraph2694/2697 MEMO는 editable=1이지만 paramet
 
 실험 제품 WASM00c5b853a09447c452061f112d3ef09ef156dbc855de66edc279c70712f94d2e는 ReleaseSafe 빌드5/5·exit0입니다(memo-product-build.log). 6dd와 export334개의 이름·종류가 같고 추가/누락은 없습니다. signature/동작 전체 동치나 공개 JS·독립 XML·브라우저 검사를 대신하지 않으며 원본 기본 WASM/외부 데모는 교체하지 않았습니다.
 
+같은 실험 제품의 공개 JS/독립 XML·ZIP 대조는 실제2곳에서2/2·fail/cancel/skip0입니다(memo-api-oracle.log). Python 일반/-O 양쪽에서 선택 라벨과 dirty 외 전체 XML·주석/작성자·비대상 파트·ZIP 메타데이터를 검사하며, 주석/작성자/다른 파트 변조·무시된 입력 반례도 oracle이 거부합니다. memo-api-scope-negative.log는 읽기 전용/editable 누락/미지 속성/미지 자식/parameters 누락/subList 중복/미닫힘/중첩 BOOKMARK의8종 반례에서 라벨 미허용·강제 명령 거부·원본/대기 redo 보존을1/1로 확인했습니다. memo-combined-current.log는 주석 본문과 표시 라벨을 연속 편집한 뒤 각각 독립 XML·저장값·두 단계 undo/redo를1/1로 확인해 원본 subtree 캐시가 현재 주석을 덮어쓰지 않음을 검사했습니다.
+
+기존 필드27/27·skip0 회귀(memo-field-regressions.log), 합성 MEMO의 전체 부분 할당 실패·실제 원본·정책 반례 Safe/Debug 각각3/3·skip/log/leak0·exit0도 통과했습니다. Safe664be5ac의 관측 peak84,738,480바이트, Debugd05d05e6는84,804,040바이트이며 memo-oom-guard.jsonl·memo-debug-guard.jsonl을 따릅니다. memo-worker.log는 실제 WASM/Worker·모의 DOM/Canvas에서 구역2 전역 문단3008의 명시적 구간/권한 조회·입력·독립 XML·ZIP·이력을1/1·295944.722125ms로 확인했습니다. 약5분 소요와 실제 Chromium/OS 입력 미검증은 남은 제한입니다. 읽기975개 최종 대조와 앞선 불완전919개 출력의 구분은 [감사 출력 무결성](audit-output-integrity.md)을 따릅니다. 이 실험 소스는 아직 main 구현/기본 데모로 반영하지 않았습니다.
+
 ## 고정 후보와 범위
 
 후보 WASM SHA256 `100483796a4f80452e96cc5761f7949da13f35e0cdcf8f4e9d5d7824c2bd2a9a`, 명시적 root `reference/rhwp/samples`를 사용했습니다. source/제품 승격 완료가 아니며 조사 중 저장이나 입력 파일 수정은 하지 않습니다.
