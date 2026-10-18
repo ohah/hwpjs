@@ -33,3 +33,15 @@
 구역이 없는 원본을 자동 복구하거나 빠진 내용을 생성한 검사가 아닙니다. 사본은 missingContentRecovered=false와 별도 이력 기준을 유지하며, 비밀번호 변환은 원본 보호 유지/재암호화 저장 지원이 아닙니다. 기본 읽기 거부를 소급 성공으로 바꾸지 않습니다.
 
 각 감사는 별도 실행/판정이며 HWP5 성공 수를 HWPX·전체 GUI·원본 조판·모든 편집 명령 완료로 확대하지 않습니다. 실제 unknownObj 한 문단의 Chromium 증거는 [브라우저 검증](hwpx-unknown-object-browser.md)이 소유합니다.
+
+## Zig 0.17 원본 작업 트리 후보 재검증
+
+후보 `f4e0f396a3fea6e6354b364ff176e31d72ed00ec643fa566c4abbd8bc2f58d77`은 0.17 이관 후 원본 작업 트리의 미커밋 기능을 포함합니다. 공개 main만의 후보와 구분하며 데모 기본 WASM은 교체하지 않았습니다. JS/감사 도구를 `/tmp/hwpjs-zig017-current-fixtures.xouwd1`에 복사해 실행했고 입력은 기존 추적 파일을 읽었습니다.
+
+- `hwp5-history.json/.stderr`: exit0·stderr0. 추적101경로를 현재 Git 목록과 대조했습니다. HWP5 53파일의 전체 문단 prefix 검증, chart 1파일 부분 지원, 암호 1파일 기본 거부입니다. 2,090시도 중2,042입력/이력/독립 CFB 텍스트·비대상 stream 검증이며 나머지48은 InvalidFormulaNumber입니다. HWPX의45개 별도 감사 분류와 암호1개 거부를 HWP5 편집 성공에 합산하지 않습니다.
+- `hwpx-history.jsonl/.stderr`: exit0·stderr0. 46경로·암호1·1,444문단 중1,231입력/저장 재열기 projection/undo·redo·원본 복원을 확인했습니다. UnsupportedParagraphControl146·InvalidFormulaNumber48·ProtectedFieldRange19는 거부입니다. 거부 후 기존 redo 보존189회도 검사했습니다. 열린45개 입력의 해시를 실행 후 원본과 다시 대조했습니다.
+- `hwpx-specialized.jsonl/.stderr`: exit0·stderr0. 같은46경로에서 전용 경로165시도 중152입력/독립 XML·ZIP/별도 편집기 재열기/이력 검증입니다. 이 중 필드 oracle6회이며 남은13거부는 chart의 UnsupportedFieldLabelRange입니다. 전용 경로 성공을 일반 입력 성공으로 바꾸거나 두 감사만으로 모든 명령/위치 지원을 주장하지 않습니다.
+
+`numeric-manual.log/.stderr`는 HWP5 chart 숫자 입력, HWPX 숫자 입력, 수동 계산 결과 splice의 세 파일6/6·fail/cancel/skip0·exit0·stderr0입니다. HWP5 비숫자 거부48곳의 유효 숫자 대체/이력/저장 텍스트를 검사했으며 독립 수식 산술 증명은 아닙니다. HWPX 숫자48곳은 normal/-O 독립 XML·산술 oracle로13계산 결과를 상대허용오차1e-5로 대조하고 저장 재열기/이력을 확인했습니다. 수동 결과13곳도 별도 명시적 API의 독립 XML·ZIP/이력/재열기를 검사했습니다. ABI 일부 부재와 잘못된 좌표·문자·크기 거부가 이력을 보존하는 음성 대조도 포함합니다.
+
+전체 native runtime·실제 브라우저·RHWP UI 동치·원본 페이지 조판 완료의 증거는 아닙니다. 암호와 수동 계산 결과의 명시적 경로도 기본 prefix 감사와 구분합니다.
