@@ -44,6 +44,8 @@ main a19c3bf7에 이 검사/회귀만 추가한 tree `45079ca24d0d7d97d9d358a579
 
 공유 source-site 판정에 정확한 paragraph namespace의 checkBtn만 추가했습니다. 다른 양식/외래 namespace를 일괄 허용하지 않으며 제품 저장 코드는 변경하지 않았습니다. 기존 두 run 배치 합성 루프에 checkBtn을 추가해 normal/-O 각각27경계를 검사하고 실제 문단72도 기존 전체 XML/ZIP·잘못된 기대 문자열 거부·undo/redo·reopen·원본 불변 회귀에 포함했습니다. 게시 afb7 후보를 명시한 `checkbox-native-tests.log/.stderr`는5/5·fail/cancel/skip0·exit0·stderr0(4374ms)입니다. WASM 미지정의 선행 `checkbox-tests`는 실제 native 회귀가 skip이므로 이 성공 근거와 구분합니다. 검사 소스 두 파일은 작업 트리와 바이트 일치합니다. 파일 전체 전용 입력 재검사는 `issue2470-36341511-fixed.jsonl/.stderr`가 소유하며 종료 전에는 전체 파일 성공으로 세지 않습니다.
 
+후속 파일 전체 전용 감사도 f4e0 후보에서390시도/390검증·독립 XML390(필드383)·거부0·exit0·stderr0으로 완료됐습니다. 원래423문단 중 일반 prefix33개와는 별도 실행이며, 이 결과는 전용 입력 경로390개를 검증한 것이지 모든 편집 명령/위치·브라우저·조판 완료가 아닙니다. 원래 실패 로그는 보존합니다.
+
 ## 전용 감사의 불변 컴파일 결과 재사용
 
 전용 감사는 리더·편집기·저장본 재열기마다 같은 WASM 바이트를 다시 WebAssembly.compile하고 있었습니다. 시작 시 한 번 만든 불변 Module만 공유하고 각 리더/편집기/reopen은 계속 별도 인스턴스·선형 메모리를 갖도록 연결했습니다. 원본/편집 상태 캐시나 WebAssembly.Instance 공유는 추가하지 않았으며 시작/끝의 WASM 메모리/파일 해시 검증도 유지합니다.
