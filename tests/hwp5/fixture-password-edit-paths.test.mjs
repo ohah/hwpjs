@@ -22,7 +22,7 @@ test("tracked encrypted HWP5 fixture is edited only after explicit password conv
   let editor, plaintext;
   try {
     assert.throws(() => reader.readText(input), /UnsupportedEncryption/);
-    assert.throws(() => decoder.decryptToPlaintext(input, "wrong"));
+    assert.throws(() => decoder.decryptToPlaintext(input, "wrong"), /WrongPasswordOrCorruptPayload/);
     plaintext = decoder.decryptToPlaintext(input, "12345");
     assert.equal(reader.readText(plaintext).sections[0].paragraphs.length, 2);
     editor = await createExperimentalHwp5Editor(wasm, plaintext);
@@ -46,7 +46,7 @@ test("tracked encrypted HWPX fixture follows explicit conversion and independent
   let plaintext;
   try {
     assert.throws(() => reader.readTextEvents(input), /EncryptedDocument/);
-    assert.throws(() => decoder.decryptToPlaintext(input, "wrong"));
+    assert.throws(() => decoder.decryptToPlaintext(input, "wrong"), /WrongPasswordOrCorruptPayload/);
     plaintext = decoder.decryptToPlaintext(input, "12345");
     const events = reader.readTextEvents(plaintext); assert.equal(events.paragraphCount, 2);
     editor.open(plaintext); editor.enableHistory();

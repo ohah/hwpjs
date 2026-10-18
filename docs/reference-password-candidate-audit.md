@@ -1,5 +1,15 @@
 # 참조 암호 문서의 명시적 열기·편집 감사
 
+## Zig 0.17 추적 암호 픽스쳐 회귀
+
+과거 기록의 EncryptVersion0 미지원은 현재 후보의 구현 상태로 재사용하지 않습니다. 실제 추적 `password-12345.hwp`는 명시적 DES 경로로 해제하고, HWPX는 별도 암호 decoder로 해제합니다. 비밀번호 제공 없는 reader 거부·오답 뒤 정상 재시도·독립 CFB/레코드 또는 XML/ZIP normal/-O·대표 한 문단 편집·이력·재열기·원본 암호 파일 불변을 기존 `tests/hwp5/fixture-password-edit-paths.test.mjs`가 검사합니다. 해제한 사본은 암호 보호를 유지하지 않습니다.
+
+작업 트리 Zig0.17 후보 `f4e0f396a3fea6e6354b364ff176e31d72ed00ec643fa566c4abbd8bc2f58d77`에서 위 파일과 HWP5/HWPX password API 두 파일의 실행은 `/tmp/hwpjs-zig017-current-fixtures.xouwd1/password-zig017-current.log/.stderr`에9/9·fail/cancel/skip0·exit0·stderr0으로 기록했습니다. 실제 legacy/AES/HWPX의 독립 평문·암호 ABI/비밀 수명 검사를 포함하지만 전체 문단 편집이나 브라우저 검사는 아닙니다.
+
+추적 편집 회귀 두 곳의 오답 검사는 임의 예외 허용 대신 `WrongPasswordOrCorruptPayload`로 고정했고 수정 뒤2/2·fail/cancel/skip0·exit0입니다. 이 파일이 main의 명시적 정규 검사 목록에 없었으므로 기존 설치 WASM 환경을 사용하는 HWP5 editor API gate에 등록했습니다. decoder나 형식 선택/fallback 정책은 바꾸지 않습니다. 기본 제품 WASM과 외부 데모를 교체하지 않았습니다.
+
+후보 트리 `4b578a898ea8ee89149585edc0f5d4240496306a`를 `/tmp/hwpjs-password-gate-clean.L6OV4x`로 추출하고 게시 소스 후보 `afb7fdfbbc8a9c9cc45a7cdb98ade6be7a6a88b1943e1c5354c63d6715b9e05e`에서도 `passwords-final.log/.stderr`가2/2·fail/cancel/skip0·단독 명령 exit0·stderr0입니다. 최초 격리 검사의 독립 oracle 의존 파일 legacy/cfb.js 누락은 ENOENT 실패로 보존하며 최종 실행과 구분합니다. 같은 사본의 Zig0.17 `build --help`도 exit0·stderr0이지만 이것은 build graph 검사이며 전체 정규 gate 완료가 아닙니다.
+
 ## 후보와 범위
 
 2026-10-13 후보 `zig-out/verification/unselected-fields-format/bin/hwpjs.wasm`의 SHA-256은 `e1609e28fdc650a04fcd66fa067ad805d1c72181a8292a01070ed6c35444ee86`입니다. 기본 전체 읽기 감사의 암호 거부를 성공으로 바꾸지 않으며, 비밀번호를 제공한 별도 복호화 경로를 검증합니다. 전체 기본 읽기·편집의 경계는 [최종 후보 기록](hwp5-unselected-field-preservation.md)을 따릅니다.
