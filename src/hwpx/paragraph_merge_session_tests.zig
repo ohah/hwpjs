@@ -23,7 +23,7 @@ test "HWPX merge retains later generated continuations and their current edits" 
     const merged = try reopened.anchorText(0, 2);
     defer a.free(merged);
     try std.testing.expectEqualStrings("기울", merged);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, borrowed: *const @import("editor_session.zig").Session) !void {
             var proxy = borrowed.*;
             proxy.allocator = allocator;
@@ -87,7 +87,7 @@ test "HWPX merged session owns input save and checkpoint restoration without dup
     defer a.free(reopened_other);
     try std.testing.expectEqualStrings(other, reopened_other);
     try std.testing.expect(std.mem.startsWith(u8, other, "비대상편집"));
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, borrowed: *const @import("editor_session.zig").Session) !void {
             var proxy = borrowed.*;
             proxy.allocator = allocator;
@@ -95,7 +95,7 @@ test "HWPX merged session owns input save and checkpoint restoration without dup
             defer allocator.free(output);
         }
     }.run, .{&session});
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, borrowed: *const @import("editor_session.zig").Session) !void {
             var proxy = borrowed.*;
             proxy.allocator = allocator;
@@ -113,7 +113,7 @@ test "HWPX merged session owns input save and checkpoint restoration without dup
     const redone = try session.save();
     defer a.free(redone);
     try std.testing.expectEqualSlices(u8, saved, redone);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, source: *const @import("xml_part_tree.zig").Tree, current_values: *const @import("paragraph_structure_values.zig").Values) !void {
             var candidate = try @import("paragraph_structure_merge.zig").prepare(allocator, source, current_values, 1, 4_000_000);
             defer candidate.deinit(allocator);

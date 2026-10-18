@@ -1,5 +1,7 @@
 # 보호 문단 서식의 실패 주입 진단
 
+후속 문단 병합 테스트의 자원 중단과 대조 검증은 [문단 병합 실패 주입 진단](native-paragraph-merge-diagnostics.md)이 소유합니다.
+
 ## 기존 실행의 후속 중단
 
 51fabff6dc936cb200e48d9f4b6f25f69760f2b26f401a751389736a76ef2d1c(4,111개)의3376..4111 범위는3376..3430의55개를 fail/log/leak0으로 완료했습니다. 다음3431 `HWPX protected style command and input remain atomic on allocation failure`에서 peak4,308,798,872바이트가4,294,967,296바이트 기준을 넘어 exit1·guardStopped=true로 종료됐습니다(`native-tail-after-ownership.jsonl/.stderr`, `/tmp/hwpjs-title-group-native.6U4qUw`). child55570 종료를 확인했습니다.
