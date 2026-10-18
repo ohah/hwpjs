@@ -3,7 +3,10 @@ const edit = @import("style_preservation.zig");
 const History = @import("editor_history.zig").History;
 
 fn sweep(merge: bool, paragraph: usize) !void {
-    const a = std.testing.allocator;
+    try @import("../../testing/checked_allocator.zig").run(sweepChecked, .{ merge, paragraph });
+}
+
+fn sweepChecked(a: std.mem.Allocator, merge: bool, paragraph: usize) !void {
     const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/chart.hwp", a, .limited(4_000_000));
     defer a.free(input);
     for (0..50_000) |index| {
