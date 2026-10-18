@@ -1,5 +1,13 @@
 // Document identities and expected witnesses; interaction policy lives in the shared flow.
 export const documentMenuBrowserCases=Object.freeze({
+  "numeric-input":Object.freeze({
+    fixturePath:"reference/rhwp/samples/hwpx/143E433F503322BD33.hwpx",paragraph:19,
+    original:"328",marker:"1",replaceWhole:true,protectedAnchors:0,
+    oraclePath:"tools/hwpx-chart-numeric-input-oracle.py",oracleMode:"numeric-input",
+    entryPath:"tools/numeric-input-browser-audit.mjs",
+    port:58866,sessionPrefix:"hwpjs-numeric-input",outputPrefix:"hwpjs-numeric-browser-",
+    scope:"one actual numeric cell: trusted Canvas replacement, dependent SUM, menu U/R/S, independent full XML/ZIP, download and reupload; not all numeric cells or layout equivalence",
+  }),
   "manual-result":Object.freeze({
     fixturePath:"reference/rhwp/samples/hwpx/143E433F503322BD33.hwpx",paragraph:39,
     original:"4,319",marker:"결과브라우저😀<&",protectedAnchors:0,

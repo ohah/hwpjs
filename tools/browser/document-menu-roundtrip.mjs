@@ -22,6 +22,7 @@ export async function runDocumentMenuBrowserAudit(caseName) {
   assert(process.env.HWPJS_TEST_WASM, "ExplicitBrowserCandidateRequired");
   if (process.argv.length !== 2) throw Error("UnexpectedBrowserAuditArguments");
   const root = resolve("."), {port,paragraph,marker,oraclePath,oracleMode,protectedAnchors}=config;
+  const editedText=config.replaceWhole?marker:marker+config.original;
   const wasmPath = resolve(process.env.HWPJS_TEST_WASM), wasm = readFileSync(wasmPath);
   const fixture = resolve(config.fixturePath), input = readFileSync(fixture);
   const hash = bytes => createHash("sha256").update(bytes).digest("hex");
@@ -164,28 +165,41 @@ export async function runDocumentMenuBrowserAudit(caseName) {
       assert.equal(evaluate('document.querySelector("#canvas-input").value'),original);
       progress("protected-unknown-deletion-refused");moveBrowserInputToStart(driver);
     }
+    if(config.replaceWhole){
+      command("press",evaluate('navigator.platform.includes("Mac")')?"Meta+Shift+ArrowDown":"Control+Shift+End");
+      assert.deepEqual(evaluate('({start:document.querySelector("#canvas-input").selectionStart,end:document.querySelector("#canvas-input").selectionEnd})'),{start:0,end:original.length});
+    }
     command("keyboard","inserttext",marker);
     wait(`${replies("splice")}.some(r=>r.revision===1)`);progress("trusted-text-edit");
     assert.deepEqual(evaluate("window.__menuInput.filter(r=>r.trusted&&r.inputType==='insertText').map(r=>r.type)"),["beforeinput","input"]);
     menuKey("menu-undo","u");wait(`${replies("undo")}.some(r=>r.changed&&r.revision===0)`);
     assert.equal(evaluate('document.querySelector("#canvas-input").value'),original);
     menuKey("menu-redo","r");wait(`${replies("redo")}.some(r=>r.changed&&r.revision===1)`);
-    assert.equal(evaluate('document.querySelector("#canvas-input").value'),marker+original);progress("mnemonic-history");
+    assert.equal(evaluate('document.querySelector("#canvas-input").value'),editedText);progress("mnemonic-history");
     command("check","#allow-stale-layout");menuKey("menu-save","s");wait(`${replies("save")}.length===1`);
     assert.equal(evaluate(`document.querySelector(${JSON.stringify(popup("menu-save"))}).open`),false);
     for(const kind of ["splice","undo","redo","save"])assert.equal(evaluate(`window.__menuAudit.filter(r=>r.direction==='request'&&r.kind===${JSON.stringify(kind)}).length`),["splice","undo"].includes(kind)&&protectedAnchors?2:1);
     const downloaded=join(output,"edited.hwpx");click(`${popup("menu-save")} > summary`);
     command("download","#menu-save",downloaded);const saved=readFileSync(downloaded);
-    const request={before:input.toString("base64"),after:saved.toString("base64"),section:0,...(oracleMode==="manual-result"?{ordinal:config.formulaOrdinal,display:marker+original}:{mode:oracleMode,paragraph,text:marker})};
+    const request={before:input.toString("base64"),after:saved.toString("base64"),section:0,...(oracleMode==="manual-result"?{ordinal:config.formulaOrdinal,display:editedText}:{mode:oracleMode,paragraph,text:marker})};
     for(const flags of [[],["-O"]]){
       await executeOracle("python3",[...flags,oraclePath],{input:JSON.stringify(request),timeout:30000});
-      const negative=oracleMode==="manual-result"?{...request,display:"wrong"}:{...request,text:"wrong"};
-      await assert.rejects(executeOracle("python3",[...flags,oracleMode==="manual-result"?oraclePath:"tools/hwpx-anchor-prefix-oracle.py"],{input:JSON.stringify(negative),timeout:30000}),error=>error.status===1&&error.signal===null&&/complete XML mismatch|Complete XML differs/.test(String(error.stderr)));
+      const negative=oracleMode==="manual-result"?{...request,display:"wrong"}:oracleMode==="numeric-input"?{...request,paragraph:paragraph+1}:{...request,text:"wrong"};
+      await assert.rejects(executeOracle("python3",[...flags,["manual-result","numeric-input"].includes(oracleMode)?oraclePath:"tools/hwpx-anchor-prefix-oracle.py"],{input:JSON.stringify(negative),timeout:30000}),error=>error.status===1&&error.signal===null&&/complete XML mismatch|Complete XML differs|Complete numeric input XML mismatch/.test(String(error.stderr)));
     }
     evaluate("window.__menuAudit=[]");command("upload","#file",downloaded);wait(`${replies("load")}.length===1`);
     click("#enable-edit");wait(`${replies("enable")}.some(r=>r.revision===0)`);
+    if(config.replaceWhole){
+      openBrowserRibbonPage(driver,"view");
+      if(!evaluate('document.querySelector("#document-window-options").open'))click("#document-window-options > summary");
+      command("fill","#document-window-start",String(paragraph));command("fill","#document-window-count","1");click("#document-window-apply");
+      wait(`${replies("set-edit-window")}.length===1`);
+    }
     command("fill","#find-input",marker);click('#find-form button[type="submit"]');
-    wait('document.querySelector("#canvas-input").value==='+JSON.stringify(marker+original));
+    // A numeric query can match other cells retained with the table owner.
+    if(config.replaceWhole)for(let attempt=0;attempt<50&&evaluate('document.querySelector("#canvas-input").value')!==editedText;attempt++)click('#find-form button[type="submit"]');
+    if(config.replaceWhole)assert.equal(evaluate('document.querySelector("#canvas-input").value'),editedText,"ReopenedNumericCellNotFound");
+    wait('document.querySelector("#canvas-input").value==='+JSON.stringify(editedText));
     openBrowserRibbonPage(driver,"view");
     const keys=evaluate("window.__menuKeys");
     for(const key of ["p","u","r","s"])assert(keys.some(row=>row.key===key&&row.trusted&&row.consumed),`MissingTrustedMnemonic:${key}`);

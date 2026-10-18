@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[숫자 셀 Canvas 브라우저 왕복](hwpx-chart-numeric-input-corpus.md)은 `HWPJS_TEST_WASM=/absolute/candidate.wasm node tools/numeric-input-browser-audit.mjs`입니다. 실제 숫자 치환·독립 SUM/XML·메뉴 이력·다운로드·재업로드를 검사하며 전체 숫자 셀/조판 검증은 아닙니다.
+
 [수식 결과 Canvas 브라우저 왕복](canvas-formula-result-input.md)은 `HWPJS_TEST_WASM=/absolute/candidate.wasm node tools/manual-result-browser-audit.mjs`입니다. 실제 참조 원본의 결과 입력·메뉴 이력·독립 XML/ZIP·다운로드·재업로드와 소유 세션 종료를 검사하며 수식 재계산/전체 조판 검증과 구분합니다.
 
 [수동 결과 참조 감사](hwpx-manual-result-reference-audit.md)의 고정 회귀는 `HWPJS_TEST_WASM=/absolute/candidate.wasm node --test --test-concurrency=1 tests/hwpx/manual-result-corpus-audit.test.mjs tests/hwpx/manual-result-oracle-section.test.mjs`입니다. 실제 chart13/참조 copay5곳의 명시적 수동 결과 입력과 산출물 파일 교체 거부를 검사하며, 참조 부재 skip이나 수식 재계산을 성공으로 혼동하지 않습니다.

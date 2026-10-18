@@ -1,5 +1,15 @@
 # 차트 예제의 숫자 입력 48곳
 
+## 실제 숫자 셀 Canvas·메뉴 왕복
+
+`numeric-input-browser-audit.mjs`는 기존 공유 문서 메뉴 flow의 numeric-input 사례를 실행합니다. 대상은 아래 참조 원본 문단19의 `328` 전체를 실제 브라우저 키보드로 선택해 `1`로 치환하는 명령입니다. native 사전 표시와 trusted beforeinput/input, 메뉴 U/R/S, 다운로드, 기존 독립 숫자 oracle의 SUM/전체 XML·ZIP normal/-O, 잘못된 대상 문단 거부, 재업로드 후 현재 숫자 표시를 검사합니다. 별도 편집 명령/독립 계산기를 만들지 않습니다.
+
+`/tmp/hwpjs-zig017-current-fixtures.xouwd1/numeric-reference-browser-bounded.jsonl/.stderr`는 작업 트리 후보 `f4e0f396a3fea6e6354b364ff176e31d72ed00ec643fa566c4abbd8bc2f58d77`에서 exit0·stderr0·verified=true·cleanup.success=true입니다. 저장본 SHA256은 `f5a9d6dec957ad09bb31923724a5bf38c5080ad0f6bd2871ed2da965ad7e1f4f`입니다. agent-browser 스킬의 격리 세션/실제 키보드 입력/종료 확인을 사용했습니다.
+
+앞선 `numeric-reference-browser.jsonl`과 `numeric-reference-browser-final.jsonl`은 저장/독립 비교 뒤 재업로드 검색 대기에서 실패했습니다. 짧은 검색어 `1`이 다른 셀에 먼저 걸렸으며 문단 창도 표 소유 문단/셀을 함께 포함합니다. 최종 검사는 실제 다음 찾기를 최대50회로 제한하고 정확한 입력값을 확인하며 실패를 성공으로 숨기지 않습니다. 중간 `numeric-reference-browser-fixed.jsonl`의 BrowserClickTargetCovered는 열린 문단 창을 다시 접은 검사 오류였습니다. 모든 실행은 소유 세션/서버를 종료했고 실패 로그를 보존합니다. 이 검사는 한 셀의 UI 경로이며 전체12/48위치의 브라우저 검증·물리 IME·원본 조판 동치 완료가 아닙니다.
+
+후보 트리 `f851c44725becfcf60d198cca05cde8e5863dae9`를 `/tmp/hwpjs-numeric-browser-clean.3GPpGW`에 추출해 게시 소스 Zig0.17 WASM `afb7fdfbbc8a9c9cc45a7cdb98ade6be7a6a88b1943e1c5354c63d6715b9e05e`에서도 숫자 입력·수동 결과·기존 plain 세 경로를 직렬 검사했습니다. `numeric.jsonl/.stderr`·`manual.jsonl/.stderr`·`plain.jsonl/.stderr` 모두 verified=true·cleanup.success=true·stderr0이고 wrapper exit0입니다. 잘못된 진입 인자 guard는10/10·fail/cancel/skip0·exit0입니다. 세 경로가 공유 flow 변경 후에도 동작하는 증거이며 전체 fixture/명령 gate가 아닙니다. 기본 WASM·외부 데모는 보존합니다.
+
 ## 추가 참조 원본의 숫자 입력 12곳
 
 `reference/rhwp/samples/hwpx/143E433F503322BD33.hwpx`의 일반 prefix 거부12곳은 독립 XML inventory의 숫자 입력12곳(문단19–21·24–26·29–31·34–36)과 일치합니다. 수식 결과3곳과 구분하며 과거 일반/전용 prefix 결과의15거부를 성공으로 바꾸지 않습니다.
