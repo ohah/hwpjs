@@ -66,7 +66,7 @@ test "page area ordered pieces preserve alternating source run styles and single
     joined.pieces[0].generated_id = 999;
     try @import("page_area_joined_validate.zig").validateMember(a, &tree, &generated_model);
     joined.pieces[0] = first_piece;
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, source_tree: *const @import("xml_part_tree.zig").Tree, current: *const @import("paragraph_structure_values.zig").Paragraph) !void {
             try @import("page_area_joined_validate.zig").validate(allocator, source_tree, current);
         }
@@ -108,7 +108,7 @@ test "page area ordered pieces preserve alternating source run styles and single
     defer a.free(moved_text);
     try std.testing.expectEqualStrings("AB😀서식<&CD", moved_text);
     for (owned) |area| try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, relocated, tree.sourceOf(area.source_element)));
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, source_tree: *const @import("xml_part_tree.zig").Tree, current: *const @import("paragraph_structure_values.zig").Paragraph, site_options: @import("text_sites.zig").Options, baseline: []const u8) !void {
             const output = try @import("page_area_joined_xml.zig").write(allocator, source_tree, current, site_options, 4000000);
             defer allocator.free(output);
@@ -138,7 +138,7 @@ test "page area ordered pieces preserve alternating source run styles and single
         if (try @import("paragraph_site_owner.zig").ancestor(&restored, site.element_index) == restored.elements[0].first_child) try text.appendSlice(a, site.text);
     }
     try std.testing.expectEqualStrings("AB😀서식<&CD", text.items);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, source_tree: *const @import("xml_part_tree.zig").Tree, current: *const @import("paragraph_joined_values.zig").Joined, site_options: @import("text_sites.zig").Options, baseline: []const u8) !void {
             const output = try @import("paragraph_joined_xml.zig").write(allocator, source_tree, current, site_options, 4000000);
             defer allocator.free(output);
@@ -182,12 +182,12 @@ test "page area ordered pieces preserve alternating source run styles and single
             try std.testing.expectEqualStrings("AB😀서식<&CD", merged_text);
         }
     };
-    try std.testing.checkAllAllocationFailures(a, MergeProbe.run, .{ &tree, &split, &left_baseline, &right_baseline, @as(usize, 0), @as(u32, 0), @as(u32, 4) });
+    try @import("../testing/allocation_failures.zig").check(MergeProbe.run, .{ &tree, &split, &left_baseline, &right_baseline, @as(usize, 0), @as(u32, 0), @as(u32, 4) });
     var ordered_split = try @import("page_area_structure_split.zig").prepare(a, &tree, &section_values, 0, 4, 4, 1001, 4000000);
     defer ordered_split.deinit(a);
     var ordered_left_baseline = try ordered_split.paragraphs[0].sites.clone(a);
     defer ordered_left_baseline.deinit(a);
     var ordered_right_baseline = try ordered_split.paragraphs[2].sites.clone(a);
     defer ordered_right_baseline.deinit(a);
-    try std.testing.checkAllAllocationFailures(a, MergeProbe.run, .{ &tree, &ordered_split, &ordered_left_baseline, &ordered_right_baseline, @as(usize, 2), @as(u32, 4), @as(u32, 8) });
+    try @import("../testing/allocation_failures.zig").check(MergeProbe.run, .{ &tree, &ordered_split, &ordered_left_baseline, &ordered_right_baseline, @as(usize, 2), @as(u32, 4), @as(u32, 8) });
 }

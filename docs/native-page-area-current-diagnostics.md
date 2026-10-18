@@ -2,11 +2,17 @@
 
 ## 2026-10-18 게시 src의 후속 native 바이너리
 
-기존5837cd37 바이너리의 full-guard-space-corrected.jsonl은 이전4GiB 중단 대상과 같은 original lazy installation allocation failures 테스트를 현재 인덱스3337에서 status0/log0/leak0으로 통과했습니다. 이 지점까지0..3337의3,338개가 완료됐으며 다음 테스트도 진행 중입니다. 집중2/2를 넘어 전체 실행 문맥에서 해당 실패 주입 경계를 확인한 것이지만 전체4,096개 종료 성공이나 최신4,103개 바이너리의 결과로 바꾸지 않습니다.
+기존5837cd37 바이너리의 full-guard-space-corrected.jsonl은 이전4GiB 중단 대상과 같은 original lazy installation allocation failures 테스트를 현재 인덱스3337에서 status0/log0/leak0으로 통과했습니다. 이 지점까지0..3337의3,338개가 완료됐고 다음3338에서 아래와 같이 중단됐습니다. 집중2/2를 넘어 전체 실행 문맥에서 해당 실패 주입 경계를 확인한 것이지만 전체4,096개 종료 성공이나 최신4,103개 바이너리의 결과로 바꾸지 않습니다.
 
 bf725540 시점 게시 src와 git diff --quiet가 일치하는 분리 소스에서 ReleaseSafe 전체 native를 --test-no-exec로 빌드했습니다. /tmp/hwpjs-click-retention.Vm3dFy/native-current-safe의 SHA256은4e1e849c53fc6fbe8e89991aa82c3e58b544420ba488b945bcb86ef2285344ad, 등록 테스트는4,103개입니다. native-current-build.log의 컴파일 exit0과 native-current-inventory.jsonl의 root만0..1 범위1/1·skip/log/leak0은 빌드/runner 연결 증거이며 전체 통과가 아닙니다.
 
-같은 바이너리의 native-current-full.jsonl/.stderr에 batch1·물리4,096MiB·expected hash 고정의 별도 전수 guardian을 시작했습니다. 기존4,096개 바이너리5837cd37의 실행은 중단하지 않으며 구역/실행별 결과를 합산하지 않습니다. 새 실행이 최근 누름틀/API 보강을 포함하고, 기존 실행의 통과 prefix가 새 실행 전체를 대신하지 않습니다. 완료/중단의 최종 guardian 기록으로 후속 갱신해야 합니다.
+같은 바이너리의 native-current-full.jsonl/.stderr는 batch1·물리4,096MiB·expected hash 고정의 별도 전수 guardian입니다. 아래 ordered XML 테스트가 이전 실패 바이너리와 동일함을 cmp로 확인한 뒤 중복 장시간 실패 재현을 피하려고 소유 guardian93330만 TERM했습니다. 완료906개·다음906번 중 ExternalSIGTERM·exit1·guardStopped=true·peak1,071,563,928바이트입니다. 자원 초과/제품 테스트 실패가 아닌 명시적 중단이며 전체4,103개 통과가 아닙니다. 수정 후 새 바이너리로 재시작해야 하며 기존4,096개 prefix와 합산하지 않습니다.
+
+## 순서형 쪽 영역 XML의 다섯 실패 주입 진단
+
+5837cd37 전수의 다음3338 page area ordered pieces preserve alternating source run styles and single declarations에서 물리 peak4,298,231,168바이트가 기준4,294,967,296바이트를 넘어 guardian이 종료했습니다. 기존 guardian/batch/child 종료를 확인했습니다. source의 std.testing.checkAllAllocationFailures(std.testing.allocator, ...) 다섯 호출은 검증/쪽 영역 XML/문단 XML/두 병합 경계를 검사합니다. 제품 함수·callback·입력·단언·전체 실패 지점은 바꾸지 않고 기존 testing/allocation_failures.check로 모두 전환했습니다. 작업 트리에 이미 있던 정확히5줄 전환을 분리 소스에서 검증 후 채택했으며 새 작성으로 주장하지 않습니다.
+
+/tmp/hwpjs-page-area-ordered.Zrprql의 Safe22d1f2ef04f20da8396b85fd96a4f5f0d7eed2e648065b19c53577a51f78080f는 root 포함2/2·fail/skip/log/leak0·exit0·guardStopped=false·peak48,267,648바이트입니다. Debug4a78f67da6cee752743a484cabc9e829a4b0445e6432c22d5c7d690b25397c9a도2/2·같은 실패/누수0·exit0·guardStopped=false·peak14,696,784바이트입니다. 동일4,096MiB guardian과 expected hash를 사용했고 근거는 ordered-safe-guard-retry.jsonl·ordered-debug-guard-retry.jsonl입니다. 최초 ordered-*-guard 실행은 분리 tools 경로 부재로 native 시작 전 실패했으므로 통과에 합산하지 않습니다. 변경 파일은 검증 소스와 작업 트리가 cmp 일치하며 전체 native 통과/제품 메모리 절감/파서 기능 확대를 의미하지 않습니다.
 
 ## 재현과 변경 범위
 

@@ -2,6 +2,8 @@
 
 ## 2026-10-18 누름틀 보존 후보의 부분 진단과 재실행
 
+같은 후보의 감시 재실행(handle8195)은 최종439경로 summary와 child code1/signalnull까지 기록했습니다. 실제 HWPX432문서·213,765문단은 plain193,416/anchored15,712/field4,570·거부67로 합계가 맞고, 다른 signature6개와 암호화 file_refused1개를 분리합니다. 거부 때문에 규정상 exit1이며 이 재실행은 요약 없이 끝난 최초 실행과 다릅니다. protection-reference-supervised.stdout/.jsonl이 근거이고 stderr는 비어 있습니다. 원본/산출물 해시와 조회 후 무변경 저장 대조이며 경로 성공213,698개를 실제 편집/브라우저/조판 성공으로 계산하지 않습니다.
+
 6ddc76ab71dc09a77acf0b57b7ec78b2cc137850189e136fb361edd5d71d0437 후보의 최초 prefix 조회는439경로 중369개 file 행을 남긴 뒤 handle89363 exit1로 종료했습니다. 최종 summary와 stderr가 없어 전체 완료나 특정 파서 결함으로 확정하지 않습니다. 다음 대상 task2070/hy_ladder4.hwpx를 포함한 해당 디렉터리2개·38문단의 독립 재실행은 plain36/anchored2·거부0·exit0이었습니다. 같은 후보의 전체 재실행은 별도 run-reference-query.mjs가 종료 code/signal·여유 공간·stdout/stderr를 protection-reference-supervised.jsonl/.stdout/.stderr에 기록하며 실행 중입니다.
 
 최초 부분 로그의 거부66곳을 입력 해시 확인 뒤 ZIP/XML의 가장 가까운 원본 p 소속과 대조했습니다. 직접 fieldBegin 기준 FORMULA35·MEMO2·CLICK_HERE5·직접 fieldBegin 없음24입니다(protection-prefix-refusal-xml.json, /tmp/hwpjs-click-retention.Vm3dFy). 직접 필드가 없다는 사실로 해당 문단에 활성 필드가 없다고 추정하지 않습니다. FORMULA나 미닫힘/소속 범위를 일괄 읽기 오류로 분류하지 않으며, 이 분류는 실제 편집 검증도 전체439개 결과도 아닙니다.
