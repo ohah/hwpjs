@@ -52,6 +52,12 @@ numeric-input/manual-result 브라우저 사례도 `fixturePicker:true`로 연�
 
 ## 병합 설명 셀이 있는 참조 SUM 입력 15곳
 
+### 실제 Canvas 입력과 저장 왕복
+
+`HWPJS_TEST_WASM=/absolute/candidate.wasm node tools/merged-sum-input-browser-audit.mjs`는 이 원본을 업로드하고 문단 2715의 `67.83`을 실제 Canvas 입력으로 `1`로 치환합니다. 공유 메뉴 flow에서 U/R/S·독립 전체 XML/ZIP normal/-O·잘못된 기대값 거부·다운로드와 재업로드를 검사합니다. 기대 합계는 기존 독립 oracle이 계산하며 새 fixture 허용 목록이나 제품 편집 규칙을 추가하지 않습니다.
+
+게시 소스 af27ff9b에 브라우저 검사 추가분만 넣은 tree `6b793145c07196810f9c84b7b2b43cd1e32eda44`의 `/tmp/hwpjs-merged-browser-clean.LkggHK/merged-browser.jsonl`은 `verified:true`와 `cleanup.success:true`·소유 브라우저/서버 종료를 기록했습니다. stderr는 0바이트입니다. Node24.20.0과 게시 소스 후보 WASM `afb7fdfbbc8a9c9cc45a7cdb98ade6be7a6a88b1943e1c5354c63d6715b9e05e`를 사용했습니다. 저장본 SHA256은 `e356ef93917ceb8aad921488213479832b6f41a018e58d62805a7057595f138e`입니다. 인자 거부 guard는 16/16·fail/cancel/skip0·exit0입니다. 실제 한 셀의 GUI 왕복을 아래 API 15좌표 검사, 전체 fixture 편집 또는 조판 동치와 동일시하지 않습니다. 기본 데모/WASM은 교체하지 않았습니다.
+
 `issue1891_external_bindata_link.hwpx`의 고정 prefix 감사는 2,864문단 중 일반 2,681/전용 163입력과 15 InvalidFormulaNumber·5 UnsupportedFieldLabelRange를 기록했습니다. 이 일반/전용 실행의 20거부를 성공으로 소급하지 않습니다. 결과 5곳의 수동 편집은 [기존 필드 결과 감사](reference-field-results-current.md)의 별도 경로입니다.
 
 원본 SHA256 `ce9f7275b9c84e4f032c218b9b6f94cf53c24f6e91fba30be7fd55b17acee924`에는 `=SUM(?3:?7)`·`%g,` 5개와 입력 15개가 있습니다. 숫자 문단은 2715–2719/2722–2726/2733–2737이며, 사이 두 행은 6열 병합 설명 셀입니다. 기존 비병합/전부 숫자 oracle은 이 문서에서 Decimal ConversionSyntax로 실패하므로 통과 조건을 넓히지 않았습니다. 새 `hwpx-merged-sum-input-oracle.py`는 원본 바이트·같은 표·결과 주소·입력 1x1 span과 두 병합 설명의 정확한 문자열/6x1 span을 고정하고 기존 Decimal formatter·field result 선택·XML signature만 재사용합니다. 일반 SUM의 모든 문자/병합 처리 규칙을 주장하지 않습니다.

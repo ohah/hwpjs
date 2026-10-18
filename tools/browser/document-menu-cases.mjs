@@ -1,5 +1,13 @@
 // Document identities and expected witnesses; interaction policy lives in the shared flow.
 export const documentMenuBrowserCases=Object.freeze({
+  "merged-sum-input":Object.freeze({
+    fixturePath:"reference/rhwp/samples/issue1891_external_bindata_link.hwpx",paragraph:2715,
+    original:"67.83",marker:"1",replaceWhole:true,protectedAnchors:0,
+    oraclePath:"tools/hwpx-merged-sum-input-oracle.py",oracleMode:"numeric-input",
+    entryPath:"tools/merged-sum-input-browser-audit.mjs",
+    port:58867,sessionPrefix:"hwpjs-merged-sum-input",outputPrefix:"hwpjs-merged-sum-browser-",
+    scope:"one actual numeric cell in a merged-description SUM table: trusted Canvas replacement, menu U/R/S, independent full XML/ZIP, download and reupload; not all fifteen inputs or layout equivalence",
+  }),
   "numeric-input":Object.freeze({
     fixturePicker:true,
     fixturePath:"reference/rhwp/samples/hwpx/143E433F503322BD33.hwpx",paragraph:19,
