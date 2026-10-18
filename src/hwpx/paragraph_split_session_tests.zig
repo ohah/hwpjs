@@ -108,7 +108,7 @@ test "HWPX public field split and dirty ZIP save release every failed allocation
     defer a.free(input);
     var session = try editor.open(a, input, .{});
     defer session.deinit();
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, source: *const editor.Session) !void {
             var proxy = source.*;
             proxy.allocator = allocator;
@@ -135,7 +135,7 @@ test "HWPX public field split and dirty ZIP save release every failed allocation
     try std.testing.expect(try session.spliceFieldLabel(0, 2, labels[0].begin_element, 0, 0, "저장😀<&"));
     const expected = try session.save();
     defer a.free(expected);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, source: *const editor.Session, saved: []const u8) !void {
             var proxy = source.*;
             proxy.allocator = allocator;
@@ -160,7 +160,7 @@ test "HWPX field split plain and label transactions survive every allocation fai
     const labels = try session.fieldLabels(0, 2);
     defer a.free(labels);
     for ([_]bool{ false, true }) |field_mode| {
-        try std.testing.checkAllAllocationFailures(a, struct {
+        try @import("../testing/allocation_failures.zig").check(struct {
             fn run(allocator: std.mem.Allocator, source: *const editor.Session, begin: usize, field: bool) !void {
                 var proxy = source.*;
                 proxy.allocator = allocator;
@@ -444,7 +444,7 @@ test "HWPX native split retains field label queries edits dirty state and histor
     defer a.free(labels);
     try std.testing.expect(labels.len > 0);
     try std.testing.expectEqual(original_target, labels[0]);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, source: *const editor.Session, paragraph: usize, field: @import("field_label_targets.zig").Target) !void {
             var proxy = source.*;
             proxy.allocator = allocator;
