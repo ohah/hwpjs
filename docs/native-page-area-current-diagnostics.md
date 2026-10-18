@@ -10,6 +10,8 @@ bf725540 시점 게시 src와 git diff --quiet가 일치하는 분리 소스에�
 
 ## 순서형 쪽 영역 XML의 다섯 실패 주입 진단
 
+ec174d05 게시 src와 diff --quiet 일치하는 수정 소스에서 전체 native를 다시 빌드했습니다. /tmp/hwpjs-page-area-ordered.Zrprql/native-full-safe의 SHA256은d3c5d9f6c0a240c0fdbab6658490c7a55a67ccc25f70a4b8b234a2e47e1c69c0이고4,103개를 등록했습니다. ordered-full-build.log의 compile exit0 뒤 ordered-full-guard.jsonl/.stderr에 기존과 같은 batch1·4,096MiB·expected hash 고정 guardian을 새로 시작했습니다(handle56210). source/이전 binary를 덮어쓰지 않았고 현재 실행 중입니다. 중단한4e1e849c/5837cd37의 prefix를 새 전수 성공으로 합산하지 않습니다.
+
 5837cd37 전수의 다음3338 page area ordered pieces preserve alternating source run styles and single declarations에서 물리 peak4,298,231,168바이트가 기준4,294,967,296바이트를 넘어 guardian이 종료했습니다. 기존 guardian/batch/child 종료를 확인했습니다. source의 std.testing.checkAllAllocationFailures(std.testing.allocator, ...) 다섯 호출은 검증/쪽 영역 XML/문단 XML/두 병합 경계를 검사합니다. 제품 함수·callback·입력·단언·전체 실패 지점은 바꾸지 않고 기존 testing/allocation_failures.check로 모두 전환했습니다. 작업 트리에 이미 있던 정확히5줄 전환을 분리 소스에서 검증 후 채택했으며 새 작성으로 주장하지 않습니다.
 
 /tmp/hwpjs-page-area-ordered.Zrprql의 Safe22d1f2ef04f20da8396b85fd96a4f5f0d7eed2e648065b19c53577a51f78080f는 root 포함2/2·fail/skip/log/leak0·exit0·guardStopped=false·peak48,267,648바이트입니다. Debug4a78f67da6cee752743a484cabc9e829a4b0445e6432c22d5c7d690b25397c9a도2/2·같은 실패/누수0·exit0·guardStopped=false·peak14,696,784바이트입니다. 동일4,096MiB guardian과 expected hash를 사용했고 근거는 ordered-safe-guard-retry.jsonl·ordered-debug-guard-retry.jsonl입니다. 최초 ordered-*-guard 실행은 분리 tools 경로 부재로 native 시작 전 실패했으므로 통과에 합산하지 않습니다. 변경 파일은 검증 소스와 작업 트리가 cmp 일치하며 전체 native 통과/제품 메모리 절감/파서 기능 확대를 의미하지 않습니다.

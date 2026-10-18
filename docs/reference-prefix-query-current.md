@@ -10,6 +10,12 @@
 
 aift.hwpx의 구역2 localParagraph2694/2697 MEMO는 editable=1이지만 parameters와 주석 본문 subList를 포함합니다. 현행 field_text_kind의 삼종 지원과 field_label_session의 subList 거부로 일반 라벨/접두사 경로가 열리지 않습니다. 허용 문자열만 추가하면 필드 구조 분할·병합까지 범위가 바뀔 수 있으므로, 후속 구현은 표시 라벨과 주석 본문의 소유권·보존·현재값을 분리하고 실제 XML/원본 메타데이터/저장 재열기로 검증해야 합니다. 이 기록은 MEMO 편집 지원 완료가 아닙니다.
 
+별도 /tmp/hwpjs-memo-label-probe.GvEcmM에서 단일 source MEMO 라벨만 허용하는 실험을 시작했습니다. 기존 삼종 구조 허용 목록은 그대로 두고 source 위치/명시 editable=1/parameters1/subList1/미지 metadata 없음 조건을 라벨 전용 정책으로 분리합니다. 생성/구조 변경 상태·중첩 MEMO를 허용하지 않습니다. 합성 입력의 기존 라벨 수0 거부를 먼저 재현한 뒤, 합성 라벨/정책 반례와 실제 aift 구역2의 전역문단3008/3011 입력·저장 재열기·현재 폭 증가·각 fieldBegin 전체 주석/작성자 subtree byte-exact·무변경 재저장을 확인했습니다. 이3개는 실험 코드 결과이며 main API/UI 지원으로 승격하지 않았습니다.
+
+실제 파일을 std.testing.allocator로 수행한 memo-actual-safe.log는3/3·exit0이었지만 RSS12,752,608KiB가 관측됐습니다. 종료 요청 때는 이미 정상 종료해 no such process였으므로 강제 중단했다고 기록하지 않습니다. 공통 checked_allocator.run으로 같은 실제 검사와 전체 누수 검사를 분리한483939aef53c045644d5f4fc71fbc3af7e26fb68000014179a37df9d031f7771의 memo-checked-guard.jsonl은3/3·fail/skip/log/leak0·exit0·guardStopped=false·관측 footprint peak85,443,016바이트입니다. 원래 RSS 표본은 peak footprint와 다른 지표이며 제품 메모리 절감으로 해석하지 않습니다. 별도 WASM/독립 전체 XML·ZIP/실제 Worker·브라우저·할당 실패 전수는 후속 검증입니다.
+
+실험 제품 WASM00c5b853a09447c452061f112d3ef09ef156dbc855de66edc279c70712f94d2e는 ReleaseSafe 빌드5/5·exit0입니다(memo-product-build.log). 6dd와 export334개의 이름·종류가 같고 추가/누락은 없습니다. signature/동작 전체 동치나 공개 JS·독립 XML·브라우저 검사를 대신하지 않으며 원본 기본 WASM/외부 데모는 교체하지 않았습니다.
+
 ## 고정 후보와 범위
 
 후보 WASM SHA256 `100483796a4f80452e96cc5761f7949da13f35e0cdcf8f4e9d5d7824c2bd2a9a`, 명시적 root `reference/rhwp/samples`를 사용했습니다. source/제품 승격 완료가 아니며 조사 중 저장이나 입력 파일 수정은 하지 않습니다.
