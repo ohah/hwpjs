@@ -15,3 +15,11 @@
 JS 후보는 `/tmp/hwpjs-window-policy-publication.4iv7ic/source`, 주입 native는 별도 소속 인덱스 후보 `02392a100fd6598bdb93d3291fabc8013e83be185cb2304231682c1f364a223b`입니다. native 함수/원본 fixture는 변경하지 않습니다. 이 집중 결과는 최신 합성 소스의 전체 정규/native/실제 OS IME gate나 기본 데모 승격 완료가 아닙니다.
 
 소속 조회 개선이 게시된 `15957015` 위의 `/tmp/hwpjs-window-policy-publication.4iv7ic/final-source`에서도 같은7파일이12/12·fail/cancel/skip0·exit0으로 종료됐습니다(`final-focused.log`). 오류 해소 뒤 native 편집/재열기 없이 재조회만 해도 정상 정책 표시가 복원되고, 원래 redo가 남아 있는지까지 확인했습니다. 이 두 새 검사는 정규 편집 묶음에 등록하지만 최신 합성 소스 전체455개의 완료 판정은 별도입니다.
+
+## 게시 소스의 전체 회귀와 실제 Worker 확인
+
+`482927a7`의 추적 소스와 일치하는 위 `final-source`에서 `zig build hwp5-editor-audit -Doptimize=ReleaseSafe -j1 --summary all`이 종료됐습니다. `final-editor-full.log` 기준455/455·실패/취소/건너뜀0, 빌드7/7단계 성공입니다. 이 산출물의 SHA-256은 `57444ae68a357b70528c6da5394f009060de4c09fcf61af3fa91fb755a708637`입니다. 전체 native 코어나 HWPX 전체·조판 완료를 뜻하지 않습니다.
+
+같은 산출물과 실제 `charshape.hwp`를 실제 Chromium의 DedicatedWorker 두 개에 각각 연결해 수정 전/후 조회 분기를 대조했습니다. 테스트 전용 wrapper는 실제 native 정책 함수에 잘못된 구역 번호를 전달하며, 원본·native 함수·제품 코드는 바꾸지 않습니다. 수정 전에는 enable이 읽기 전용인데도 두 조회 응답의 정책 필드가 **누락**되고 editable=true였습니다. 수정 후에는 두 조회 모두 readOnly=true·editable=false·정책 available=true·오류 `InvalidSection`을 반환했습니다. 활성화 전 편집 조회 거부, context 비편집, revision=0, 저장 바이트 불변도 확인했습니다.
+
+근거는 `/tmp/hwpjs-browser-policy-fault.wHp4QV/result-corrected.log`입니다. 첫 실행은 누락된 readOnly를 false로 예상한 테스트 가정 때문에 실패했으며, 누락과 false를 구분하도록 고친 실행이 통과했습니다. 브라우저 세션과 임시 서버 종료도 확인했습니다. 이는 실제 Worker 프로토콜 검증이며 실제 키보드 입력·OS IME·시각적 조판 검증이나 기본 데모 배포는 아닙니다.
