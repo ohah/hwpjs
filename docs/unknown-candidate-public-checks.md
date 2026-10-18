@@ -1,5 +1,11 @@
 # unknownObj 후보의 공개 API 회귀
 
+## Zig 0.17 게시 소스의 전체 HWP5 공개 편집 등록 회귀
+
+아래 HWPX와 같은 eddbfa8c 게시 소스 사본·Node24.20.0·afb7 후보·cbaa 기준에서 `build.zig`의 `editor_api_tests` 초기 인자와 모든 addArg의92개 고유 경로를 직렬/TAP로 실행했습니다. 중간에 install 의존성이 선언된 뒤에도 addArg가 이어지므로 추출 끝은 `has_side_effects` 직전으로 잡아 뒤의 등록을 누락하지 않았습니다. `registered-hwp5.log/.stderr`는 최상위398개·하위 포함 총493/493·fail/cancel/skip/todo0·자식 exit0/signal=null·wrapper exit0·stderr0(691328ms)입니다. 최상위와 하위 수를 합산하지 않습니다.
+
+실제 폼7문서의1,446문단 Canvas→Worker 입력/저장·독립 전체 Section·undo/redo·재열기 회귀도 이 실행에 포함됩니다. 끝에 등록 소스/두 WASM 해시가 그대로이고, 종료한 부모/runner가 남지 않으며 사본7193개 Git blob도 eddbfa8c와 전부 같음을 확인했습니다. 로그 SHA256은 `5e4a12e2814e34db2ff8399dcc2e1596e914fc923c30ac691eccdc00667808ce`입니다. 두 공개 gate는 차례로 실행했으며 기본 제품/외부 데모 WASM은 바꾸지 않았습니다. native 전체·전체 참조 corpus·실제 Chromium/OS 입력·원본 조판 또는 전체 편집기 완료를 대신하지 않습니다.
+
 ## Zig 0.17 게시 소스의 전체 HWPX 공개 등록 회귀
 
 main `eddbfa8c35bb9e28824e404a5b96f1bcd97fcb99`·tree `c201fa64d85323f153b5dc691e87d131e30bbbaf`를 `/tmp/hwpjs-published-hwpx-gate.7WPrL4`에 추출했습니다. `build.zig`의 `hwpx_text_tests` 초기 인자와 addArg를 모두 읽어 HWPX105파일과 WASM export1파일, 총106개 고유 등록 경로의 존재를 확인했습니다. HWPX 경로는 기존 `hwpxGateTestPaths` 결과와 순서까지 대조하며 별도 수동 목록을 만들지 않았습니다. `node --test --test-concurrency=1 --test-reporter=tap`으로 전체106파일을 직렬 실행했습니다.
