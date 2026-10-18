@@ -1,5 +1,19 @@
 # 수식 결과 입력의 참조 감사
 
+## Zig 0.17 후속 회귀와 산출물 결합
+
+기존 `hwpx-manual-result-input-audit.mjs`와 독립 inventory/저장 oracle을 재사용합니다. 같은 역할의 별도 감사/원본 목록을 추가하지 않습니다. 필드 결과 행에 입력 SHA256을, 최종 summary에 WASM SHA256을 기록하고 종료 시 입력 메모리/파일과 WASM 메모리/파일의 동일성을 확인하도록 보강했습니다. 수식이 없는 파일도 입력 불변 확인을 생략하지 않습니다.
+
+`/tmp/hwpjs-zig017-current-fixtures.xouwd1/manual-result-ssot-tests.log/.stderr`는 후보 `f4e0f396a3fea6e6354b364ff176e31d72ed00ec643fa566c4abbd8bc2f58d77`에서5/5·fail/cancel/skip0·exit0·stderr0입니다. 기존 oracle의 구역2/잘못된 인자 회귀와 신규 CLI 회귀를 포함합니다. 실제 chart13곳과 `issue6298/copay_cap_tac_table_leading.hwpx`5곳은 각각 전체 독립 XML·ZIP normal/-O, 원본 cache 불변, native target의 prefix 입력, 별도 편집기 재열기/무변경 save, undo/redo/undo를 검사했습니다. 좌표별 결과 수/중복 부재·성공 상태·입력/WASM 해시를 새 회귀에서 강제합니다.
+
+이는 직전 일반/전용 prefix 감사의 계산 결과 거부5개를 지원 성공으로 바꾼 것이 아니라 명시적인 수동 결과 경로의 별도 증거입니다. 실제 수식 재계산·모든 참조 원본·임의 편집 위치·브라우저/조판 완료로 확대하지 않습니다. 기본 제품 WASM/테일스케일 서버는 교체하지 않았습니다.
+
+최종 `manual-result-artifact-final.log/.stderr`는6/6·fail/cancel/skip0·exit0·stderr0입니다. 새 음성 대조는 WASM 사본을 module 로드 후 교체해 감사가 `AuditArtifactChanged`로 exit1이고 성공 summary를 출력하지 않는지 확인합니다. 원래 후보를 수정하지 않으며 자식 종료 후 자신이 만든 임시 사본만 제거합니다. 동일 JS/감사 코드를 추출한 `/tmp/hwpjs-manual-result-clean.RN6maR`에서도 main Zig0.17 후보 `afb7fdfbbc8a9c9cc45a7cdb98ade6be7a6a88b1943e1c5354c63d6715b9e05e`로6/6·fail/cancel/skip0·exit0·stderr0을 확인했습니다.
+
+정규 HWPX gate에 새 회귀를 등록합니다. 명시적 `HWPJS_TEST_WASM`이 없을 때만 기존 설치 산출물 환경 helper로 현재 prefix의 WASM을 제공하고, 명시된 후보는 덮어쓰지 않습니다. 전체 gate 실행 완료와 이 집중 회귀/빌드 연결 변경을 구분합니다.
+
+최종 커밋용 build/src를 위 사본에 추출한 뒤 Zig0.17 `build --help`로 build graph 컴파일을 exit0·stderr0으로 확인했습니다. 기존 artifact 환경 helper 회귀도2/2·exit0입니다. 이는 전체 HWPX/native gate 실행 결과가 아닙니다.
+
 아래 ca351 후보의7거부는 [표시 전용 저장 후속 수정](hwpx-preserved-formula-dependencies.md)에서 원인을 좁혀 해결했습니다. 과거8파일48수식 집계는 그대로 보존하며 새 후보의 실행 범위를 별도로 읽습니다.
 
 ## 실행과 책임

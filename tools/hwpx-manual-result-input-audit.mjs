@@ -11,11 +11,12 @@ import { execFileSync } from "./oracle-process.mjs";
 
 const options = parseEditAuditOptions(process.argv.slice(2), { requireWasm: true });
 const wasm = readFileSync(options.wasm), digest = value => createHash("sha256").update(value).digest("hex");
+const wasmSha256 = digest(wasm);
 const module = await WebAssembly.compile(wasm);
 const editor = await createHwpxEditor(module), reader = await createHwpxReader(module);
 const refused = new Set(["UnsupportedStructuralFieldEdit", "UnsupportedParagraphControl", "UnsupportedAnchoredStructure", "UnsupportedInlineControl", "UnsupportedFormulaResultStructure"]);
 const totals = { files: 0, fields: 0, verified: 0, refusals: {}, failures: 0 };
-console.log(JSON.stringify({ kind: "start", wasmSha256: digest(wasm), scope: options.fixture ? "one explicit fixture; every native source formula" : "tracked HWPX fixtures; every native source formula" }));
+console.log(JSON.stringify({ kind: "start", wasmSha256, scope: options.fixture ? "one explicit fixture; every native source formula" : "tracked HWPX fixtures; every native source formula" }));
 try {
   for (const path of options.fixture ? [options.fixture] : trackedHwpxFiles()) {
     totals.files++;
@@ -41,7 +42,7 @@ try {
       }
       for (const [ordinal, source] of sources.entries()) {
         totals.fields++;
-        const result = { kind: "field", path, section, ordinal, beginElement: source.begin_element };
+        const result = { kind: "field", path, inputSha256: inputHash, section, ordinal, beginElement: source.begin_element };
         const revision = editor.historyRevision();
         let applied = false;
         try {
@@ -93,6 +94,10 @@ try {
         console.log(JSON.stringify(result));
       }
     }
+    assert.equal(digest(input), inputHash, "AuditInputBufferChanged");
+    assert.equal(digest(readFileSync(path)), inputHash, "AuditInputChanged");
   }
 } finally { editor.close(); reader.close(); }
-console.log(JSON.stringify({ kind: "summary", ...totals, scope: "manual formula result prefix XML ZIP reopening and history only; refusals are not support; not all edits or layout" }));
+assert.equal(digest(wasm), wasmSha256, "AuditArtifactBufferChanged");
+assert.equal(digest(readFileSync(options.wasm)), wasmSha256, "AuditArtifactChanged");
+console.log(JSON.stringify({ kind: "summary", wasmSha256, ...totals, scope: "manual formula result prefix XML ZIP reopening and history only; refusals are not support; not all edits or layout" }));

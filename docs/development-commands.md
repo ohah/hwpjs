@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[수동 결과 참조 감사](hwpx-manual-result-reference-audit.md)의 고정 회귀는 `HWPJS_TEST_WASM=/absolute/candidate.wasm node --test --test-concurrency=1 tests/hwpx/manual-result-corpus-audit.test.mjs tests/hwpx/manual-result-oracle-section.test.mjs`입니다. 실제 chart13/참조 copay5곳의 명시적 수동 결과 입력과 산출물 파일 교체 거부를 검사하며, 참조 부재 skip이나 수식 재계산을 성공으로 혼동하지 않습니다.
+
 [HWPX prefix 원본 소속](hwpx-prefix-insertion-affinity.md)은 `HWPJS_TEST_WASM=/absolute/candidate.wasm node --test tests/hwpx/anchor-empty-run-oracle.test.mjs`로 합성/실제 원본·normal/-O 변조 거부·저장/이력을 검사합니다. 참조 파일이 없을 때의 skip을 실제 원본 통과로 계수하지 않습니다. 실제 원본 전체 전용 입력 감사는 `node tools/hwpx-specialized-input-audit.mjs --wasm=/absolute/candidate.wasm --fixture=reference/rhwp/samples/hwpx_sample2.hwpx`입니다.
 
 [픽스쳐 요청 수명](fixture-request-lifetime.md)의 집중 회귀는 `node --test --test-concurrency=1 tests/hwpx/fixture-request-lifetime.test.mjs tests/hwpx/fixture-response.test.mjs tests/hwpx/file-input-events.test.mjs tests/hwpx/document-menu-browser-arguments.test.mjs`입니다. 실제 브라우저 검사는 아래 문서 도구 탭 명령의 지연 본문 취소·실제 파일 선택 경로를 포함하며 단위 테스트와 구분합니다.

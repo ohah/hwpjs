@@ -180,6 +180,9 @@ pub fn build(b: *std.Build) void {
     const formula_query_parity_step = b.step("hwpx-formula-query-parity", "Compare HWPX display queries against an explicit baseline WASM");
     formula_query_parity_step.dependOn(&formula_query_parity.step);
     const hwpx_text_tests = b.addSystemCommand(&.{ "node", "--test", "tests/hwpx/text-reader.test.mjs", "tests/hwpx/canvas-preview.test.mjs", "tests/hwpx/editor.test.mjs", "tests/hwpx/formula-editor.test.mjs", "tests/hwpx/note-editor.test.mjs", "tests/hwpx/anchor-editor.test.mjs", "tests/hwpx/header-footer-editor.test.mjs", "tests/hwpx/object-boundary-editor.test.mjs", "tests/hwpx/history-editor.test.mjs" });
+    if (b.graph.environ_map.get("HWPJS_TEST_WASM") == null) {
+        installedArtifactEnvironment(hwpx_text_tests, "HWPJS_TEST_WASM", "hwpjs.wasm");
+    }
     hwpx_text_tests.addArg("tests/hwpx/created-cell-xml.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/formula-result-paragraphs.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/formula-result-paragraph-api.test.mjs");
@@ -243,6 +246,7 @@ pub fn build(b: *std.Build) void {
     hwpx_text_tests.addArg("tests/hwpx/manual-formula-result-worker.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/manual-formula-result-edge.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/manual-formula-result-splice.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/manual-result-corpus-audit.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/manual-formula-result-targets.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/manual-formula-result-text-worker.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/manual-formula-result-exterior.test.mjs");
