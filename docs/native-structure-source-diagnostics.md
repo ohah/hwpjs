@@ -1,5 +1,7 @@
 # 문단 구조·원본 파트 실패 주입 진단
 
+고정 전체 바이너리의 후속 앞 구간 완료와 한계는 [native 앞 구간 기록](native-prefix-coverage-current.md)이 소유합니다.
+
 ## 구조 계산 필드 입력
 
 원래 전체 바이너리 `51fabff6dc936cb200e48d9f4b6f25f69760f2b26f401a751389736a76ef2d1c`의3463 중단은 [이전 병합 진단](native-formula-merge-diagnostics.md)을 따릅니다. 실제 중단 대상은 `paragraph_structure_formula_tests.zig` 첫 테스트입니다. 작업 트리에 이미 있던 공통 실패 주입 helper 전환 한 줄만 분리 소스 `/tmp/hwpjs-structural-formula-diagnostic.mlWzzz`에서 검증했습니다. `58010454`와 다른 src2,633개 Git blob은 같고 대상도 해당 한 줄만 치환한 결과와 정확히 같습니다. 실제 chart 저장·재열기 검사와 전체 실패 지점·단언·제품 함수는 유지했습니다.
