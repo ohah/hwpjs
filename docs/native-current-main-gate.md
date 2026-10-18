@@ -39,3 +39,11 @@
 Debug 집중 빌드도 exit0·stderr0입니다. `field-debug-guard.jsonl/.stderr`는 같은6개가6/6·fail/skip/logErrors/leaks0·guardStopped=false·wrapper exit0·stderr0·최대 physical18,121,064바이트로 완료됐습니다. Debug SHA256은22b5e21dac20539b38c40e3a86d6487a0b00cccc64f182582923c6d68383a34c입니다. 두 모드의 집중 결과를 이전 바이너리의3,476개와 합쳐 새 단일 전체 gate 성공으로 주장하지 않습니다. 이후 범위 재개/전체 성공은 별도 종료 근거가 필요합니다.
 
 후속 전체 목록용 ReleaseSafe 빌드의 `native-field-safe-build.log/.stderr`는 모두0바이트이나 프로세스 exit1이고 `native-field-safe`도0바이트입니다. stderr가 비었다는 이유로 빌드 성공으로 처리하지 않으며, 이 산출물의 inventory나 테스트는 실행하지 않았습니다. 당시 디스크 여유가 약116MiB였지만 진단 부재 때문에 종료 원인을 NoSpaceLeft로 확정하지 않습니다. 루트 .zig-cache는 약22GiB이고 읽기 전용 lsof 검사에서 열린 파일이 없었으며, 아직 삭제하지 않았습니다. 새 전체 빌드/범위 재개는 미완료입니다.
+
+## 남은 목록의 분할 수집 대조
+
+같은 사본에서 원래4,114개 inventory의 index3476부터 끝까지638개 이름을 기준으로 분할 빌드를 수행했습니다. 단순 test-filter 빌드 `native-tail-safe`는 exit0이었지만 실제 inventory에는 필요한378개만 있었고260개가 누락됐습니다. 필터로 제외된 상위 테스트의 import가 수집되지 않는 경우이므로 이 바이너리로 남은 전체 검사를 실행하지 않았습니다.
+
+보관 사본에만 import 전용 `src/native_tail_imports.zig`를 추가해 누락 모듈을 명시적으로 수집했습니다. 동일한638개 필터를 사용한 ReleaseSafe 빌드 `native-tail-imports-safe`는 exit0·signal null입니다. 원래 전체 이름과 다시 대조한 결과 필요한638개가 모두 포함되며 누락0·중복0입니다. 추가2개는 native_tail_imports.test_0/root.test_0 import sentinel이고, 컴파일 inventory는640개입니다. 제품 진입점·원래 테스트 본문·실패 주입 범위는 이 수집용 파일로 변경하지 않았습니다.
+
+바이너리 SHA256은bd78ecd0a24a6ef7c2c03e8af92745c51db0f68065be0e2bb9535c41bb936e4a입니다. `native-tail-imports-guard.jsonl/.stderr`에 같은4,096MiB guardian·batch1·seed0x485750·명시적 해시를 적용해 직렬 실행을 시작했습니다. guardian과 자식은 nice10을 상속합니다. 실행 시작은 완료 증거가 아니며, 이640개 inventory에 대한 성공도 기존3,476개 결과와 합친 단일 전체 gate 성공으로 취급하지 않습니다. 기본 WASM 교체·캐시 삭제·브라우저 실행은 하지 않았습니다.
