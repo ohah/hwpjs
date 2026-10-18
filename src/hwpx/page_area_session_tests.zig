@@ -360,7 +360,7 @@ test "page area original lazy installation allocation failures retain prior sour
     _ = try source.spliceAnchored(0, 3, 0, 0, "기존머리😀");
     const baseline = try source.save();
     defer a.free(baseline);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, existing: *const editor.Session) !void {
             var proxy = existing.*;
             proxy.allocator = allocator;
