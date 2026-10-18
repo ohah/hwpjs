@@ -14,6 +14,10 @@
 
 게시24af820d에 이 보정만 추가한 Git tree의 JS/도구/테스트와 실제 원본3개를 `/tmp/hwpjs-field-prefix-clean.lTDPCg`에 추출했습니다. 게시 Zig0.17 후보 `afb7fdfbbc8a9c9cc45a7cdb98ade6be7a6a88b1943e1c5354c63d6715b9e05e`를 명시한4/4·fail/cancel/skip0·exit0(1365ms)이며 aift MEMO 선택·합성15경계와 실제 두 공문 집중 저장 검사를 포함합니다. 같은 사본의 기존 generic field oracle 자체 검사도 normal/-O 양쪽 exit0입니다. 작업 트리의 미커밋 generic field oracle 변경에 의존하지 않으며 공문 전체 전용 감사나44파일의 최종 결과를 대체하지 않습니다.
 
+후속36392900의 문단90도 실제 원문/저장으로 재현했습니다. 첫 run은0폭 ctrl이고 다음 run에 line/container/rect/pic 등14개 원본 개체가 있습니다. 제품은 첫 line 앞에 text를 삽입했지만 검사기는 line을 알지 못해 뒤 빈 text를 기대했습니다. 앞의 보정만 있는 사본의 `36392900-specialized.jsonl/.stderr`는 계속 XML 불일치·exit1이므로 해결로 계수하지 않았습니다. line을 포함하는 회귀를 먼저 추가해 `Incorrect source prefix site` 실패를 확인한 뒤 독립 선택기에 관측 line을 추가했습니다. 원본 개체의 재배치·일반 정규화는 허용하지 않습니다.
+
+게시bf296cb3에 line 보정과 회귀만 추가한 `/tmp/hwpjs-field-line-clean.Yip6Fs`에서 Node24.20.0·게시 afb7 후보의4/4·fail/cancel/skip0·exit0(1754ms)을 확인했습니다. 합성 경계는17종(normal/-O), 실제 저장 원본은 세 공문입니다. 같은 분리 소스와 고정 f4e0 후보로36392900 전체 전용 prefix 감사를 재실행한 `36392900-specialized.jsonl/.stderr`는77시도/77검증/독립 XML77(필드74)·거부0·exit0·stderr0입니다. 후보가 다른 두 실행의 성공 수를 합산하지 않으며, 고정44파일 원래 실패 기록이나 모든 명령/조판 완료를 대체하지 않습니다.
+
 별도 `anchor-empty-run-oracle.py`는 합성 원본에서 정상 빈 run prefix 하나를 허용하고 다른 run으로 이동·소유 run의 스타일 변경·metadata 변경·문자 데이터가 있는 모호한 빈 run 네 반례를 거부합니다. Python normal/-O 양쪽에서 실행합니다. 실제 원본 검사도 전체 XML·ZIP 대조 뒤 잘못된 run/스타일/metadata 세 변조를 양쪽 모드에서 거부합니다. 세 변조의 제품 표시 문자열이 정상 저장과 같다는 점도 확인하여 텍스트 projection만으로 서식 소속을 증명하지 못함을 검사합니다. 실제 undo 원본/redo 저장 바이트 일치·저장 재열기/무변경 save·원본 파일 불변도 확인합니다.
 
 새 두 검사는 정규 HWPX gate에 등록하며 기존 미커밋 specialized-prefix-oracle 테스트를 커밋에 포함하지 않습니다. 명령은 [개발·검증 명령](development-commands.md)이 소유합니다. 전체 native·모든 명령/위치·실제 브라우저/원본 조판 동치의 검증은 아닙니다.

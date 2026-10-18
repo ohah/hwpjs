@@ -41,7 +41,7 @@ def check(body,expected):
  chosen=leading_object_site(tree,marker,site);chosen.text='X'+(chosen.text or '')
  wanted=E.fromstring("<r xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'>"+expected+"</r>")
  if E.tostring(tree)!=E.tostring(wanted):raise ValueError('Incorrect source prefix site')
-for obj in ['tbl','pic','container','ellipse']:
+for obj in ['tbl','pic','container','ellipse','line']:
  body='<p:p><p:run>'+begin+'<p:secPr/></p:run><p:run><p:'+obj+'/></p:run><p:run><p:t>A</p:t>'+end+'</p:run></p:p>'
  check(body,body.replace('<p:'+obj+'/>','<p:t>X</p:t><p:'+obj+'/>'))
  body='<p:p><p:run>'+begin+'<p:'+obj+'/><p:t>A</p:t>'+end+'</p:run></p:p>'
@@ -56,18 +56,19 @@ try:check(body,body)
 except ValueError as error:
  if str(error)!='Leading object is outside selected field':raise
 else:raise ValueError('Accepted object outside the chosen field')
-print('15 prefix site cases verified')
+print('17 prefix site cases verified')
 `;
-  for (const flags of [[], ["-O"]]) assert.match(execFileSync("python3", [...flags, "-c", program], { encoding: "utf8", timeout: 10000 }), /15 prefix site cases verified/);
+  for (const flags of [[], ["-O"]]) assert.match(execFileSync("python3", [...flags, "-c", program], { encoding: "utf8", timeout: 10000 }), /17 prefix site cases verified/);
 });
 
-test("actual multi-run table and ellipse field prefixes preserve complete XML ZIP and history", async t => {
+test("actual multi-run table ellipse and line field prefixes preserve complete XML ZIP and history", async t => {
   if (!process.env.HWPJS_TEST_WASM) { t.skip("explicit candidate WASM required"); return; }
   const editor = await createHwpxEditor(readFileSync(process.env.HWPJS_TEST_WASM));
   try {
     for (const [path, section, paragraph, local] of [
       ["reference/rhwp/samples/hwpx/opengov/36382669_결재문서본문_’26년 제3차 강사선정 심의회 운영결과.hwpx", 2, 114, 1],
       ["reference/rhwp/samples/hwpx/opengov/36385226_결재문서본문_제2처리장 슬러지인발용 에어리프트 브로워 2호기 소모품 교체 보고.hwpx", 0, 74, 74],
+      ["reference/rhwp/samples/hwpx/opengov/36392900_결재문서본문_일일굴착복구공사현황보고.hwpx", 0, 90, 90],
     ]) {
       const input = readFileSync(path); editor.open(input); editor.enableHistory();
       const target = editor.fieldRangeTarget(section, paragraph, 0, 0); assert(target);
