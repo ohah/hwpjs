@@ -24,6 +24,14 @@ export fn hwp5_edit_validate_text_source_policy(section_index: u32) u32 {
     s.validateTextSourcePolicy(section_index) catch |err| return fail(err);
     return 1;
 }
+export fn hwp5_edit_text_source_protection(section_index: u32) u32 {
+    hwp5_edit_output_free();
+    const s = session() catch |err| return fail(err);
+    var snapshot = s.textSourceProtection(a, section_index) catch |err| return fail(err);
+    defer snapshot.deinit(a);
+    output = std.json.Stringify.valueAlloc(a, snapshot, .{}) catch |err| return fail(err);
+    return 1;
+}
 export fn hwp5_edit_output_free() void {
     if (output) |bytes| a.free(bytes);
     output = null;

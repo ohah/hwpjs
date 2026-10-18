@@ -2,6 +2,34 @@ const std = @import("std");
 const fixture = @import("click_retained_fixture.zig");
 const model = @import("../../model/document.zig");
 
+test "retained click splice cannot disguise newly broken model with balanced source" {
+    const a = std.testing.allocator;
+    const bytes = try fixture.balanced(a);
+    defer a.free(bytes);
+    var document = try @import("../model_projection.zig").fromDecodedSections(a, fixture.version, &.{bytes});
+    defer document.deinit(a);
+    try @import("text_source_policy.zig").validateSelected(a, bytes, fixture.version);
+    const p = &document.sections[0].paragraphs[1];
+    try std.testing.expectEqual(@as(usize, 4), p.tokens.len);
+    const changed = try a.alloc(model.Token, 3);
+    changed[0] = p.tokens[0];
+    changed[1] = p.tokens[1];
+    changed[2] = p.tokens[3];
+    changed[2].start_unit = 9;
+    a.free(p.tokens[2].raw);
+    a.free(p.tokens);
+    p.tokens = changed;
+    p.declared_units = 10;
+    try std.testing.expectError(error.UnsupportedCrossParagraphField, applyDraft(a, bytes, &document.sections[0], .{
+        .section = 0,
+        .paragraph = 0,
+        .start_unit = 8,
+        .end_unit = 8,
+        .utf8 = "X",
+    }));
+    try unchanged(document.sections[0]);
+}
+
 const Context = struct {
     source: []const u8,
     original: *const model.Section,

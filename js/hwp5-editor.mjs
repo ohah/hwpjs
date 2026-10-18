@@ -2,6 +2,7 @@ import { decodeCharacterFontMetrics } from "./character-font-metrics.mjs";
 import { validateAbi } from "./abi.mjs";
 import { decodeHwp5FieldSpans } from "./hwp5-field-spans.mjs";
 import { decodeHwp5FieldTopology } from "./hwp5-field-topology.mjs";
+import { decodeHwp5TextSourceProtection } from "./hwp5-text-source-protection.mjs";
 import { decodeCharacterEffects } from "./character-effects.mjs";
 import { characterEffectArgs, characterEffectMode } from "./character-effect-args.mjs";
 import { hwp5CharacterOutlineArg } from "./character-outline-args.mjs";
@@ -112,6 +113,13 @@ export async function createExperimentalHwp5Editor(source, input, { distribution
       return decodeHwp5NormalizationInfo(output(() => wasm.hwp5_edit_normalization_info()).bytes);
     },
     supportsTextSourcePolicy() { check(); return typeof wasm.hwp5_edit_validate_text_source_policy === "function"; },
+    supportsTextSourceProtection() { check(); return typeof wasm.hwp5_edit_text_source_protection === "function"; },
+    textSourceProtection(section) {
+      check(); const index = u32(section, "section");
+      if (typeof wasm.hwp5_edit_text_source_protection !== "function") throw new Error("Hwp5TextSourceProtectionAbiUnavailable");
+      const bytes = output(() => wasm.hwp5_edit_text_source_protection(index)).bytes;
+      return decodeHwp5TextSourceProtection(bytes, wasm.hwp5_edit_paragraph_count(index));
+    },
     validateTextSourcePolicy(section) {
       check(); u32(section, "section");
       if (typeof wasm.hwp5_edit_validate_text_source_policy !== "function") throw new Error("Hwp5TextSourcePolicyAbiUnavailable");

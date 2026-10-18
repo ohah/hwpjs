@@ -144,6 +144,10 @@ pub fn build(b: *std.Build) void {
     editor_api_tests.setEnvironmentVariable("HWPJS_TEST_WASM", b.getInstallPath(.bin, "hwpjs.wasm"));
     editor_api_tests.addArg("tests/hwp5/text-source-policy-content.test.mjs");
     editor_api_tests.addArg("tests/hwp5/text-source-policy-api.test.mjs");
+    editor_api_tests.addArg("tests/hwp5/text-source-protection.test.mjs");
+    editor_api_tests.addArg("tests/hwp5/retained-click-policy.test.mjs");
+    editor_api_tests.addArg("tests/hwp5/retained-click-worker.test.mjs");
+    editor_api_tests.addArg("tests/hwp5/retained-click-roundtrip.test.mjs");
     editor_api_tests.addArg("tests/hwp5/normalization-consent.test.mjs");
     editor_api_tests.addArg("tests/hwp5/normalized-worker.test.mjs");
     editor_api_tests.addArg("tests/hwp5/normalized-distribution-worker.test.mjs");

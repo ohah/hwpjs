@@ -498,6 +498,11 @@ pub const Session = opaque {
         const state = self.stateConst();
         try @import("text_source_policy.zig").validate(state.allocator, state.decoded, state.source.header.version(), section);
     }
+    pub fn textSourceProtection(self: *const Session, a: std.mem.Allocator, section: usize) !@import("text_source_protection.zig").Snapshot {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        return @import("text_source_protection.zig").read(a, state.decoded, state.source.header.version(), section, state.document.sections[section]);
+    }
 
     pub fn editableTextLength(self: *const Session, a: std.mem.Allocator, section: usize, index: usize) !u32 {
         if (index >= try self.paragraphCount(section)) return error.InvalidParagraph;

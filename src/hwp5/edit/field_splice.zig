@@ -10,7 +10,10 @@ const Context = struct {
     char_count: usize,
     original: *const model.Section,
     fn prepare(a: std.mem.Allocator, draft: *model.Section, self: @This()) !void {
-        const bound = try @import("revision_sign_text_retention.zig").collect(a, self.source, self.version, self.original.*);
+        const bound = @import("revision_sign_text_retention.zig").collect(a, self.source, self.version, self.original.*) catch |err| switch (err) {
+            error.UnsupportedCrossParagraphField => return @import("click_field_retained_splice.zig").prepare(a, self.source, self.version, self.original.*, draft, self.edit, self.char_count),
+            else => return err,
+        };
         defer a.free(bound);
         const before = try plain.textBytes(a, draft.paragraphs[self.edit.paragraph]);
         defer a.free(before);

@@ -24,7 +24,7 @@ test("native text source policy queries preserve source save and history and kee
   assert.throws(() => editor.validateTextSourcePolicy(0), /EditorClosed/);
 });
 
-test("actual unclosed click field refuses policy and edits without damaging original history", async t => {
+test("actual unclosed click field keeps strict policy and protected owner refusal without damaging original history", async t => {
   const path = "reference/rhwp/samples/issue1921/59043_regulatory_analysis.hwp";
   const { existsSync } = await import("node:fs");
   if (!existsSync(path)) return t.skip("RHWP reference fixture unavailable");
@@ -52,7 +52,7 @@ test("actual unclosed click field refuses policy and edits without damaging orig
   try {
     editor.enableHistory();
     assert.throws(() => editor.validateTextSourcePolicy(0), /UnsupportedCrossParagraphField/);
-    assert.throws(() => editor.splice({section: 0, paragraph: 0, startUnit: 0, endUnit: 0, text: "검증😀"}), /UnsupportedCrossParagraphField/);
+    assert.throws(() => editor.splice({section: 0, paragraph: 52, startUnit: 0, endUnit: 0, text: "검증😀"}), /UnsupportedCrossParagraphField/);
     assert.deepEqual(Buffer.from(editor.save().bytes), original);
     assert.equal(editor.undo(), false);
     assert.equal(editor.redo(), false);

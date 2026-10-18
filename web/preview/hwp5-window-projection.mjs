@@ -16,6 +16,7 @@ export function projectHwp5DependencyWindow(editor, projection, { offset, count,
     paragraph.windowOrdinal = ordinal;
     paragraph.windowContext = ordinal < offset || ordinal >= offset + count;
     if (found.fieldTopologyDiagnostics?.has(paragraph.section)) {
+      paragraph.fieldTopologyEditableCandidate = paragraph.editable === true;
       paragraph.selectable = !paragraph.windowContext && (paragraph.selectable === true || paragraph.editable === true);
       paragraph.editable = false;
       paragraph.fieldTopologyError = "UnresolvedFieldMarkers";

@@ -4,6 +4,12 @@ const model = @import("../../model/document.zig");
 const plain = @import("plain_text.zig");
 
 pub fn prepare(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version, original: model.Section, draft: *model.Section, edit: plain.Splice, char_count: usize) !void {
+    // Never hide a newly broken model behind recovery for an original field.
+    if (@import("text_source_policy.zig").validateSelected(a, source, version)) |_| {
+        return error.UnsupportedCrossParagraphField;
+    } else |err| {
+        if (err != error.UnsupportedCrossParagraphField) return err;
+    }
     var before = try @import("click_field_retention.zig").read(a, source, version, original);
     defer before.deinit(a);
     if (edit.paragraph >= before.protected_paragraphs.len) return error.InvalidParagraph;

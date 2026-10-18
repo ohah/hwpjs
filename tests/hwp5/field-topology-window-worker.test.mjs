@@ -17,12 +17,14 @@ test("actual unresolved field Worker windows stay readonly and preserve source a
   const loaded = await send({ kind: "load", format: "hwp5", bytes: input });
   assert.equal(loaded.error, undefined);
   assert.equal(loaded.content.editorSessionAvailable, true);
-  assert.equal(loaded.content.readOnly, true);
+  assert.equal(loaded.content.readOnly, false);
+  assert.equal(loaded.content.retainedClickFieldProtection, true);
   const check = reply => {
     assert.equal(reply.error, undefined);
     assert.equal(reply.content.readOnly, true);
     assert.equal(reply.content.fieldTopologyDiagnostics[0].unresolved.length, 1);
-    assert(reply.content.paragraphs.every(row => !row.editable && row.fieldTopologyError === "UnresolvedFieldMarkers"));
+    assert(reply.content.paragraphs.every(row => !row.editable));
+    assert(reply.content.paragraphs.some(row => !row.windowContext && row.fieldTopologyError === "UnresolvedFieldMarkers"));
     assert(reply.content.paragraphs.filter(row => row.windowContext).every(row => row.selectable === false));
   };
   check(await send({ kind: "query-window", offset: 52, count: 1 }));
@@ -32,7 +34,7 @@ test("actual unresolved field Worker windows stay readonly and preserve source a
   const active = await send({ kind: "set-edit-window", offset: 52, count: 1 });
   check(active);
   check(await send({ kind: "query-edit-window", offset: 52, count: 1 }));
-  assert.equal((await send({ kind: "splice", section: 0, paragraph: 0, startUnit: 0, endUnit: 0, text: "입력😀" })).error, "UnsupportedCrossParagraphField");
+  assert.equal((await send({ kind: "splice", section: 0, paragraph: 52, startUnit: 0, endUnit: 0, text: "입력😀" })).error, "UnsupportedCrossParagraphField");
   const after = await send({ kind: "query-edit-window", offset: 52, count: 1 });
   check(after);
   assert.equal(after.historyRevision, enabled.historyRevision);

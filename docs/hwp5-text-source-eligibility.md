@@ -4,7 +4,7 @@
 
 `local_field_spans.inspectReadableBound`는 기존 scanner와 원본 논리 리스트 소속 검사를 재사용해 `Report{spans, unresolved}`를 반환합니다. 닫힌 marker 쌍만 spans에 넣고 짝 불명 표식은 `unclosed_start`/`orphan_end`로 분리합니다. 시작의 position은 8유닛 표식 바로 뒤, 종료의 position은 종료 표식 시작입니다. `marker_id`는 해당 표식의 원시 ID이며 고아 종료의 ID를 가상 시작 ID로 바꾸지 않습니다. ordinal은 시작만 가지며 list_node는 실제 원본 리스트 노드 또는 루트의 null입니다. 진단은 문단/UTF-16 위치순으로 반환합니다. 호출자가 두 소유 배열을 `Report.deinit`으로 해제합니다.
 
-미지 시작 종류·짝 ID 불일치·원본 바인딩 오류·중첩 상한·OOM은 진단 모드에서도 오류입니다. 기존 strict collector는 동일 scanner에 진단 수집 없이 진입하므로 미닫힘/고아 표식을 계속 거부합니다. 이 보고서는 **marker 토폴로지 진단**이며 CTRL_HEADER 속성 바인딩·명령 평가·편집 허가를 인증하지 않습니다. 종료 위치를 만들거나 원문을 고치지 않습니다. 공개 조회 API는 아래 계약을 따르며, [읽기 전용 구간 표시](hwp5-unresolved-field-window.md)에 연결했습니다. 복구/편집 거래 연결은 아직 미완료입니다.
+미지 시작 종류·짝 ID 불일치·원본 바인딩 오류·중첩 상한·OOM은 진단 모드에서도 오류입니다. 기존 strict collector는 동일 scanner에 진단 수집 없이 진입하므로 미닫힘/고아 표식을 계속 거부합니다. 이 보고서는 **marker 토폴로지 진단**이며 CTRL_HEADER 속성 바인딩·명령 평가·편집 허가를 인증하지 않습니다. 종료 위치를 만들거나 원문을 고치지 않습니다. 공개 조회 API는 아래 계약을 따르며, [읽기 전용 구간 표시](hwp5-unresolved-field-window.md)에 연결했습니다. 보호 밖의 일반 텍스트 거래 연결은 [보존 계획과 추가 보호 조회](hwp5-click-field-retention.md)를 따르며 전체 필드 복구/편집은 아직 미완료입니다.
 
 `field_topology_tests.zig`에 별도 테스트를 두고 기존 scanner 테스트와 함께 root에 명시적으로 등록했습니다. 실제 원본에서 닫힌28범위와 문단52/위치8/리스트236의 미닫힘1개를 확인했습니다. 합성 고아 종료·미닫힘 동시 존재/정렬, 전체 부분 할당 실패와 해제, 잘못된 ID·미지 시작·위조 source node·33중첩 반례도 검사합니다. 분리 게시 소스의 ReleaseSafe/Debug는 각각12/12·skip0입니다. 초기 실파일 읽기 한도 부족과 디스크 공간 부족으로 실패한 실행은 성공에 포함하지 않았습니다.
 
@@ -22,13 +22,13 @@ native `hwp5_edit_field_topology(section)`는 성공1/실패0·기존 error/outp
 
 `reference/rhwp/samples/issue1921/59043_regulatory_analysis.hwp`는 기본 편집 세션 열기와 원문 조회는 가능하지만 원본 텍스트 정책은 `UnsupportedCrossParagraphField`입니다. 독립 CFB.js·Node 압축 해제·레코드 관측에서 Section0의1531문단에 필드 시작29개·종료28개를 확인했습니다. 논리 리스트별 독립 관측에서는 문단52/UTF-16위치0의 `%clk` 시작(레코드238, 소유 컨트롤220/리스트236)이 닫히지 않았습니다. 단순히 문단 경계 통과를 금지한 것으로 단정하거나 문서 전체가 손상됐다고 판정하지 않습니다. 닫는 위치를 임의로 추정하지 않는 현재 엄격 편집 정책의 제한입니다.
 
-`text-source-policy-api.test.mjs`에 실제 원본의 표식 개수/시작 위치, native 정책과 실제 splice 거부, 저장 바이트·undo/redo·디스크 원본 불변 회귀를 추가했습니다. `57444ae68a357b70528c6da5394f009060de4c09fcf61af3fa91fb755a708637` 후보와 게시 소스의 API에서3/3·실패/건너뜀0입니다. 이 결과는 자동 복구나 이 원본의 편집 지원 완료가 아닙니다. 종료 표식 부재를 보존하면서 다른 범위를 편집하려면 필드 범위 불명확성을 명시하는 별도 모델/저장 검증이 필요합니다. 앞선 전체455개 성공은 이 새 회귀 추가 전 결과입니다.
+`text-source-policy-api.test.mjs`에 실제 원본의 표식 개수/시작 위치, native 정책과 실제 splice 거부, 저장 바이트·undo/redo·디스크 원본 불변 회귀를 추가했습니다. `57444ae68a357b70528c6da5394f009060de4c09fcf61af3fa91fb755a708637` 후보와 게시 소스의 API에서3/3·실패/건너뜀0입니다. 이 결과는 자동 복구나 이 원본의 편집 지원 완료가 아닙니다. 종료 표식 부재를 보존하는 다른 범위의 입력은 이후 [추가 보호 모델과 실제 저장 검증](hwp5-click-field-retention.md)에 연결했습니다. 해당 필드 자체의 편집 지원과는 구분합니다. 앞선 전체455개 성공은 이 새 회귀 추가 전 결과입니다.
 
 문단의 텍스트가 표시/선택 가능하다는 사실은 그 문서의 입력 거래가 허용된다는 뜻이 아닙니다. `hwpspec.hwp`에서는 문단 로컬 editable 표시가 true였지만 다른 구역의 미지원 상호참조 때문에 native splice가 거부됐습니다. 이 불일치를 고치되 [글자 서식 보존](hwp5-table-number-format-retention.md)과 일반 입력 권한을 합치지 않습니다.
 
 ## 책임과 범위
 
-`edit/text_source_policy.validate`는 원래 source_policy의 선택/비선택 구역 검사와 field_source_bindings를 재사용합니다. 규칙·태그·참조값을 JS에서 재해석하지 않습니다. Session의 `validateTextSourcePolicy`는 불변 decoded source를 검사할 뿐 텍스트·리소스·저장 기준·이력을 변경하지 않습니다. 이것은 원본 차원의 **필요조건**이며 모든 문단/범위의 편집 성공이나 객체/필드 결과 직접 입력을 보장하지 않습니다. 기존 native 명령의 최종 검사는 유지합니다.
+`edit/text_source_policy.validate`는 원래 source_policy의 선택/비선택 구역 검사와 field_source_bindings를 재사용합니다. 규칙·태그·참조값을 JS에서 재해석하지 않습니다. Session의 `validateTextSourcePolicy`는 불변 decoded source를 검사할 뿐 텍스트·리소스·저장 기준·이력을 변경하지 않습니다. 이는 기존 전체 원본에 대한 **보수적 엄격 검사**이며 모든 문단/범위의 편집 성공이나 객체/필드 결과 직접 입력을 보장하지 않습니다. 검증된 미닫힘 click의 보호 밖 입력은 별도의 추가 보호 조회/거래 경로를 따르므로 이 엄격 거부를 모든 경로의 필요조건으로 해석하지 않습니다. 기존 native 명령의 최종 검사는 유지합니다.
 
 선택 구역에 named field가 있으면 기존 field transaction 정책과 원본 바인딩을 검증하고, 없으면 기존 formula-aware 정책을 사용합니다. 다른 구역은 기존 validateUnselectedSection을 그대로 사용합니다. 따라서 unknown/control/cross-section 제한을 보존하며 글자 서식 전용 표 번호 허가를 일반 입력에 전달하지 않습니다.
 

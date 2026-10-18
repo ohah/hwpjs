@@ -46,7 +46,7 @@ export function createDocumentWindowControls({ form, start, count, apply, restor
       } else note.textContent = total ? `${total}문단 · 기본 표시 한도 적용` : "";
       if (content.format === "hwp5" && Array.isArray(content.fieldTopologyDiagnostics)) {
         const unresolved = content.fieldTopologyDiagnostics.reduce((sum, row) => sum + (Array.isArray(row?.unresolved) ? row.unresolved.length : 0), 0);
-        if (unresolved) note.textContent += ` · 필드 범위 미확정 ${unresolved}건 · 해당 구역 읽기 전용`;
+        if (unresolved) note.textContent += ` · 필드 범위 미확정 ${unresolved}건 · ${content.retainedClickFieldProtection === true ? "보호 범위 읽기 전용" : "해당 구역 읽기 전용"}`;
       }
       refresh();
     },
