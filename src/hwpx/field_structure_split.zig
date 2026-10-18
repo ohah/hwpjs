@@ -126,7 +126,7 @@ test "HWPX field structure split candidate owns both marker sides with atomic al
     const dirty_begin = report.markers[input_ranges[0].begin_marker].element_index;
     try std.testing.expectError(error.DuplicateFieldDirty, @import("paragraph_structure_save.zig").writeWithFieldGroups(a, &trees, 0, &candidate, .{}, &.{ .{ .element_index = dirty_begin, .dirty = true }, .{ .element_index = dirty_begin, .dirty = false } }, 10000));
     try std.testing.expectError(error.InvalidElementIndex, @import("paragraph_structure_save.zig").writeWithFieldGroups(a, &trees, 0, &candidate, .{}, &.{.{ .element_index = tree.elements.len, .dirty = true }}, 10000));
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, parsed: *const Tree, row: *const model.Paragraph, field: @import("field_text_ranges.zig").Range) !void {
             var edited = (try @import("field_label_splice.zig").prepareOwned(allocator, parsed, row, field, 0, .{ .start_unit = 0, .end_unit = 3 }, 0, 0, "한😀<&", 10000)).?;
             defer edited.deinit(allocator);
@@ -185,7 +185,7 @@ test "HWPX field structure split candidate owns both marker sides with atomic al
     candidate.paragraphs[1].field_positions = right_owned[0..0];
     try std.testing.expectError(error.SourceBindingMismatch, partition.validate(a, &trees, 0, candidate.paragraphs[0..2], &report, 100));
     candidate.paragraphs[1].field_positions = right_owned;
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, inputs: []const Tree, before: *const model.Values, linked: *const @import("field_markers.zig").Report) !void {
             var deletion_dirty = try @import("field_split_dirty.zig").prepare(allocator, inputs, 0, before, 0, 0, 1, &.{});
             defer deletion_dirty.deinit(allocator);
