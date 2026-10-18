@@ -12,11 +12,26 @@ def leading_object_site(tree, begin, text):
     if paragraph is None:
         return text
     runs = paragraph.findall(P + "run")
-    if not runs or not len(runs[0]):
+    selected = None
+    for run in runs:
+        if len(run) == 0:
+            return text
+        for child in run:
+            if child.tag in (P + "tbl", P + "pic", P + "container", P + "ellipse"):
+                selected = (run, child)
+                break
+            # Only known zero-width source metadata may precede offset zero.
+            # Text (including an empty site), notes and unknown controls stop us.
+            if not isinstance(child.tag, str) or child.tag == P + "secPr":
+                continue
+            if child.tag == P + "ctrl" and all(node.tag in (P + "fieldBegin", P + "fieldEnd", P + "colPr") for node in child):
+                continue
+            return text
+        if selected is not None:
+            break
+    if selected is None:
         return text
-    anchor = runs[0][0]
-    if anchor.tag not in (P + "tbl", P + "pic", P + "container"):
-        return text
+    run, anchor = selected
     elements = list(tree.iter())
     ends = [node for node in elements if node.tag == P + "fieldEnd"
             and node.get("beginIDRef") == begin.get("id")]
@@ -26,5 +41,5 @@ def leading_object_site(tree, begin, text):
     # Display offset zero precedes the protected object's one-unit boundary;
     # the first existing text after the object is not that position.
     inserted = ET.Element(P + "t")
-    runs[0].insert(0, inserted)
+    run.insert(list(run).index(anchor), inserted)
     return inserted

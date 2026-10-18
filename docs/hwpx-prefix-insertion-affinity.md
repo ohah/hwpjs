@@ -8,6 +8,12 @@
 
 ## 적대적 회귀
 
+필드 라벨의 별도 source-site 선택은 `tools/hwpx_field_prefix_site.py`가 소유합니다. 실제 공문36382669의 구역2·전역114/로컬1은 metadata/fieldBegin run 뒤 다른 run의 표 앞에 입력합니다.36385226의 구역0·문단74는 fieldBegin이 이전 문단에 있고 타원 개체 앞에 입력합니다. 이전 검사는 첫 run의 첫 자식과 tbl/pic/container만 보아 각각 표 뒤 빈 text와 타원 뒤 text를 수정한 기대 XML을 만들었습니다. 고정44파일 감사의 해당 XML 불일치는 보존하며 이 두 집중 재현을 파일 전체 통과로 바꾸지 않습니다.
+
+필드 검사기는 직접 run 순서를 따르되 알려진0폭 metadata만 건너뛰고 tbl/pic/container/관측 ellipse 앞의 같은 run 안에 text를 기대합니다. 기존 text/빈 run·주석/알 수 없는 제어와 외래 namespace를 임의로 건너뛰지 않으며 객체가 선택 필드 밖이면 거부합니다. 제품 native 저장 코드는 변경하지 않습니다. `field-prefix-oracle-routing.test.mjs`의 normal/-O 합성15경계와 실제 두 공문의 정상/틀린 기대값·전체 XML/ZIP·undo/redo·재열기·원본 불변 검사가 이 계약을 확인합니다.
+
+게시24af820d에 이 보정만 추가한 Git tree의 JS/도구/테스트와 실제 원본3개를 `/tmp/hwpjs-field-prefix-clean.lTDPCg`에 추출했습니다. 게시 Zig0.17 후보 `afb7fdfbbc8a9c9cc45a7cdb98ade6be7a6a88b1943e1c5354c63d6715b9e05e`를 명시한4/4·fail/cancel/skip0·exit0(1365ms)이며 aift MEMO 선택·합성15경계와 실제 두 공문 집중 저장 검사를 포함합니다. 같은 사본의 기존 generic field oracle 자체 검사도 normal/-O 양쪽 exit0입니다. 작업 트리의 미커밋 generic field oracle 변경에 의존하지 않으며 공문 전체 전용 감사나44파일의 최종 결과를 대체하지 않습니다.
+
 별도 `anchor-empty-run-oracle.py`는 합성 원본에서 정상 빈 run prefix 하나를 허용하고 다른 run으로 이동·소유 run의 스타일 변경·metadata 변경·문자 데이터가 있는 모호한 빈 run 네 반례를 거부합니다. Python normal/-O 양쪽에서 실행합니다. 실제 원본 검사도 전체 XML·ZIP 대조 뒤 잘못된 run/스타일/metadata 세 변조를 양쪽 모드에서 거부합니다. 세 변조의 제품 표시 문자열이 정상 저장과 같다는 점도 확인하여 텍스트 projection만으로 서식 소속을 증명하지 못함을 검사합니다. 실제 undo 원본/redo 저장 바이트 일치·저장 재열기/무변경 save·원본 파일 불변도 확인합니다.
 
 새 두 검사는 정규 HWPX gate에 등록하며 기존 미커밋 specialized-prefix-oracle 테스트를 커밋에 포함하지 않습니다. 명령은 [개발·검증 명령](development-commands.md)이 소유합니다. 전체 native·모든 명령/위치·실제 브라우저/원본 조판 동치의 검증은 아닙니다.
