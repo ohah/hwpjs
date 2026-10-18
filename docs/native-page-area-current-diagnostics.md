@@ -10,7 +10,15 @@ bf725540 시점 게시 src와 git diff --quiet가 일치하는 분리 소스에�
 
 ## 순서형 쪽 영역 XML의 다섯 실패 주입 진단
 
-ec174d05 게시 src와 diff --quiet 일치하는 수정 소스에서 전체 native를 다시 빌드했습니다. /tmp/hwpjs-page-area-ordered.Zrprql/native-full-safe의 SHA256은d3c5d9f6c0a240c0fdbab6658490c7a55a67ccc25f70a4b8b234a2e47e1c69c0이고4,103개를 등록했습니다. ordered-full-build.log의 compile exit0 뒤 ordered-full-guard.jsonl/.stderr에 기존과 같은 batch1·4,096MiB·expected hash 고정 guardian을 새로 시작했습니다(handle56210). source/이전 binary를 덮어쓰지 않았고 현재 실행 중입니다. 중단한4e1e849c/5837cd37의 prefix를 새 전수 성공으로 합산하지 않습니다.
+ec174d05 게시 src와 diff --quiet 일치하는 수정 소스에서 전체 native를 다시 빌드했습니다. /tmp/hwpjs-page-area-ordered.Zrprql/native-full-safe의 SHA256은d3c5d9f6c0a240c0fdbab6658490c7a55a67ccc25f70a4b8b234a2e47e1c69c0이고4,103개를 등록했습니다. ordered-full-build.log의 compile exit0 뒤 ordered-full-guard.jsonl/.stderr에 기존과 같은 batch1·4,096MiB·expected hash 고정 guardian을 새로 시작했습니다(handle56210). 아래 후속 History 테스트에서 자원 중단으로 종료됐으며 현재 실행 중이 아닙니다. source/이전 binary를 덮어쓰지 않았고, 중단한4e1e849c/5837cd37의 prefix를 새 전수 성공으로 합산하지 않습니다.
+
+이 실행은0..3345의3,346개를 fail/log/leak0으로 완료했습니다. 이전 문제였던 lazy installation과 ordered XML 테스트도 현재3344/3345에서 status0입니다. 다음3346 `page area public ordered merge History ZIP transaction fails atomically`에서 관측 peak4,310,486,400바이트가4,294,967,296바이트 기준을 넘어 guardian이 중단했습니다. exit1·guardStopped=true이고 마지막 child88049의 종료를 확인했습니다. 전체4,103개 통과나 새 메모/계산 결과 후보의 전체 native 결과가 아닙니다.
+
+후속 중단 파일 `page_area_history_failure_tests.zig`는 저장 불변 관찰에도 std.testing.allocator를 사용하며 같은 할당자로 전체 실패 주입을 반복합니다. 작업 트리에 이미 있던 checked_allocator observer·공통 allocation_failures helper 전환은 callback·단언·입력·전체 실패 주입을 유지하는 변경임을 diff로 확인했습니다. 별도5df653c5 기반 소스 `/tmp/hwpjs-page-history-diagnostic.0szIEF`에서 이 파일만 반영해 검증했습니다. ReleaseSafe43cceccac8e07b003bd54367318da4defdb98e9ca71525fb36ffdae4e0fe1fe3은 같은4,096MiB guardian에서2/2·fail/skip/log/leak0·exit0·guardStopped=false·관측 peak16,269,672바이트입니다(`history-safe-guard.jsonl`). Debuga0836a45a166954f1a2b28e3ae2b29511264dd547dcbe80a702dface4d168727도2/2·같은 오류/누수0·exit0·guardStopped=false·peak8,077,648바이트입니다(`history-debug-guard.jsonl`). 검증 후 기존 작업 트리 변경을 채택했으며 새 작성이나 제품 메모리 절감으로 주장하지 않습니다.
+
+원인 대조는 실패했던 ec174d05 소스의 별도 사본 `/tmp/hwpjs-history-same-source.IENwSM`에서도 수행했습니다. Git blob hash로 src2,630개를 대조해 위 테스트 파일만 다르고 다른 모든 소스가 같음을 확인했습니다(`source-proof.json`). 제품 소스가 바뀐 뒤 우연히 통과한 경우를 구분하기 위한 대조입니다. 해당 ReleaseSafe979e9034e3976c85126d157585ea1a376ff2e56481178aa7cb2a351ab74dc7ca는2/2·fail/skip/log/leak0·exit0·guardStopped=false·peak16,236,904바이트입니다(`safe-guard.jsonl`). 관측자는 실패 주입 대상과 분리하되 안전/누수 검사는 유지하고, 공통 helper는 기존 std.testing.checkAllAllocationFailures로 전체 실패 지점을 그대로 검사합니다. 기존3,346개 prefix와 이 집중 결과를 합산하지 않습니다.
+
+반영된 최신 게시 소스의 전체 native 바이너리는 별도로 컴파일 중입니다(`native-full-build.log`, `/tmp/hwpjs-page-history-diagnostic.0szIEF`). 이전4,103개 binary의 결과를 새 소스의 전수 성공으로 옮기지 않습니다.
 
 5837cd37 전수의 다음3338 page area ordered pieces preserve alternating source run styles and single declarations에서 물리 peak4,298,231,168바이트가 기준4,294,967,296바이트를 넘어 guardian이 종료했습니다. 기존 guardian/batch/child 종료를 확인했습니다. source의 std.testing.checkAllAllocationFailures(std.testing.allocator, ...) 다섯 호출은 검증/쪽 영역 XML/문단 XML/두 병합 경계를 검사합니다. 제품 함수·callback·입력·단언·전체 실패 지점은 바꾸지 않고 기존 testing/allocation_failures.check로 모두 전환했습니다. 작업 트리에 이미 있던 정확히5줄 전환을 분리 소스에서 검증 후 채택했으며 새 작성으로 주장하지 않습니다.
 

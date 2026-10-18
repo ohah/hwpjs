@@ -14,7 +14,10 @@ fn prepare(a: std.mem.Allocator, input: []const u8) !editor.Session {
 }
 
 test "page area public ordered merge History ZIP transaction fails atomically" {
-    const a = std.testing.allocator;
+    try @import("../testing/checked_allocator.zig").run(verifyOrderedMergeHistory, .{});
+}
+
+fn verifyOrderedMergeHistory(a: std.mem.Allocator) !void {
     const input = try @import("test_formula_fixture.zig").zipWithParagraphs(a, paragraphs);
     defer a.free(input);
     var source = try prepare(a, input);
@@ -22,7 +25,7 @@ test "page area public ordered merge History ZIP transaction fails atomically" {
     const baseline = try source.save();
     defer a.free(baseline);
     const Probe = struct {
-        fn run(allocator: std.mem.Allocator, bytes: []const u8, expected: []const u8) !void {
+        fn run(allocator: std.mem.Allocator, observer: std.mem.Allocator, bytes: []const u8, expected: []const u8) !void {
             var session = try prepare(allocator, bytes);
             defer session.deinit();
             var history = try History.init(&session, 8, 4000000);
@@ -33,22 +36,22 @@ test "page area public ordered merge History ZIP transaction fails atomically" {
                 try std.testing.expectEqual(@as(usize, 0), history.stack.undo.items.len);
                 try std.testing.expectEqual(@as(usize, 0), history.stack.redo.items.len);
                 var readonly = session;
-                readonly.allocator = std.testing.allocator;
+                readonly.allocator = observer;
                 const saved = try readonly.save();
-                defer std.testing.allocator.free(saved);
+                defer observer.free(saved);
                 try std.testing.expectEqualSlices(u8, expected, saved);
                 return err;
             };
             try std.testing.expectEqual(count - 1, session.sections[0].last_paragraph);
             var readonly = session;
-            readonly.allocator = std.testing.allocator;
+            readonly.allocator = observer;
             const merged = try readonly.save();
-            defer std.testing.allocator.free(merged);
+            defer observer.free(merged);
             const did_undo = history.undo(&session) catch |err| {
                 var failed_view = session;
-                failed_view.allocator = std.testing.allocator;
+                failed_view.allocator = observer;
                 const saved = try failed_view.save();
-                defer std.testing.allocator.free(saved);
+                defer observer.free(saved);
                 try std.testing.expectEqualSlices(u8, merged, saved);
                 try std.testing.expectEqual(@as(usize, 1), history.stack.undo.items.len);
                 try std.testing.expectEqual(@as(usize, 0), history.stack.redo.items.len);
@@ -56,18 +59,18 @@ test "page area public ordered merge History ZIP transaction fails atomically" {
             };
             try std.testing.expect(did_undo);
             readonly = session;
-            readonly.allocator = std.testing.allocator;
+            readonly.allocator = observer;
             const undone = try readonly.save();
-            defer std.testing.allocator.free(undone);
+            defer observer.free(undone);
             try std.testing.expectEqualSlices(u8, expected, undone);
             try std.testing.expect(try history.redo(&session));
             readonly = session;
-            readonly.allocator = std.testing.allocator;
+            readonly.allocator = observer;
             const redone = try readonly.save();
-            defer std.testing.allocator.free(redone);
+            defer observer.free(redone);
             try std.testing.expectEqualSlices(u8, merged, redone);
         }
     };
-    try Probe.run(a, input, baseline);
-    try std.testing.checkAllAllocationFailures(a, Probe.run, .{ input, baseline });
+    try Probe.run(a, a, input, baseline);
+    try @import("../testing/allocation_failures.zig").check(Probe.run, .{ a, input, baseline });
 }
