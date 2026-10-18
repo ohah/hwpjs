@@ -677,7 +677,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     preview(); queueMicrotask(pump);
   });
   listen(input, "keydown", event => {
-    if (!target || composing || event.isComposing || event.keyCode === 229) return;
+    if (!target || event.defaultPrevented || event.getModifierState?.("AltGraph") || composing || event.isComposing || event.keyCode === 229) return;
     const navigation = navigationIntent(event, platform);
     const key = navigation?.key ?? event.key;
     if (structureTarget?.kind === "split" && historyPending && !event.metaKey && !event.ctrlKey && !event.altKey && Array.from(key).length === 1 && key.isWellFormed()) {

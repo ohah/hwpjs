@@ -1,5 +1,11 @@
 # Canvas 문단 경계 단축키
 
+## 호스트가 처리한 키와 AltGraph 보호
+
+Canvas의 공통 keydown 진입점은 `defaultPrevented` 또는 `getModifierState("AltGraph")`인 이벤트를 선택 이동·명령 해석 전에 반환합니다. 이미 다른 UI가 처리한 Ctrl+A/방향키를 다시 실행하거나 AltGraph를 전체 선택·이력·줄 나누기로 해석하지 않습니다. 기존 IME/229 거부와 일반 Ctrl/Meta 단축키는 유지하며 키 반복/단어 이동의 별도 규칙을 바꾸지 않습니다.
+
+`canvas-editor.test.mjs`의 실제 HWP5/native harness에서 consumed/AltGraph × a/z/Enter/ArrowRight 8조합을 검사했습니다. 수정 전 consumed/a·consumed/ArrowRight는 선택이 바뀌고 AltGraph a/z/Enter도 가로채는 실패를 재현했습니다. 수정 후 선택·요청0·원본 저장 바이트 불변을 확인했습니다. 게시7a07c1a8에 이 수정/회귀만 적용한 tree `e3bf558215938a95f40f02d66e6082ccd2774ad9`의 `/tmp/hwpjs-canvas-key-clean.PCCGeY`에서 게시 afb7 후보·Node24.20.0으로 해당 Canvas 파일 전체207/207·fail/cancel/skip0·exit0·stderr0(2314ms)입니다. 로그는 `canvas-key-tests.log/.stderr`입니다. 실제 native 문서를 연결한 이벤트 harness 검사이며 OS AltGraph 키보드나 실제 Chromium E2E로 확대하지 않습니다. 기본 데모 산출물은 바꾸지 않았습니다.
+
 ## 계약
 
 플랫폼별 키 해석은 `web/preview/navigation-intent.mjs`가 소유하고 실제 위치 계산은 기존 `text-navigation.mjs`가 담당합니다. macOS Cmd+위/아래는 `Home`/`End`와 `paragraphEdge=true`로 변환합니다. 일반 위/아래는 표시 줄 이동이며 Cmd+좌우는 표시 줄 Home/End를 유지합니다. Shift 확장은 기존 anchor를 보존합니다. macOS Control 키 조합은 호스트에 위임합니다.

@@ -1,5 +1,21 @@
 import test from "node:test";
 
+test("Canvas respects consumed keys and AltGraph without changing selection or document", async t => {
+  for (const state of ["consumed", "altgraph"]) for (const key of ["a", "z", "Enter", "ArrowRight"]) await t.test(`${state}/${key}`, async t => {
+    const h = await harness(t, "parashape", p => p.paragraph === 5);
+    assert(h.controller.selectTextRange({ ...h.paragraph, startUnit: 1, endUnit: 2 }));
+    const original = Buffer.from(h.native.save().bytes);
+    const event = new Event("keydown", { cancelable: true });
+    Object.assign(event, { key, ctrlKey: ["a", "z"].includes(key), getModifierState: name => state === "altgraph" && name === "AltGraph" });
+    if (state === "consumed") event.preventDefault();
+    h.input.dispatchEvent(event);
+    assert.equal(h.requests.length, 0);
+    assert.equal(h.input.selectionStart, 1); assert.equal(h.input.selectionEnd, 2);
+    assert.deepEqual(Buffer.from(h.native.save().bytes), original);
+    assert.equal(event.defaultPrevented, state === "consumed");
+  });
+});
+
 test("Canvas selection delete command preserves independent records and one history transaction", async t => {
   const h = await harness(t, "parashape", p => p.paragraph === 5);
   h.native.enableHistory();
