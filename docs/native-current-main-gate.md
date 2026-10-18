@@ -1,5 +1,11 @@
 # 현재 main 소스의 전체 native 실행
 
+## 반복 provenance 문단 병합의 실패 주입
+
+고정 전체 실행 index3290을 포함한 후속18개를 별도 필터로 재현한 `remaining-eighteen-original.stderr`는 대상18개 모두 NondeterministicMemoryUsage·root1개 pass·exit1입니다. 이 중 paragraph_joined_tests의 두 테스트와 공유 XML 검증 callback의 소유권을 확인했습니다. 세 callback은 source/current를 읽기만 하며 출력·clone을 주입 allocator로 만들고 callback 안에서 해제하므로 기존 `testing/allocation_failures.check`로 세 호출만 연결했습니다. 제품 코드·전체 실패 지점·문자 순서·서식·원본 불변 단언은 변경하지 않았습니다.
+
+`/tmp/hwpjs-native-allocator-probe.Kn255w/joined-safe.stderr`와 `joined-debug.stderr`는 ReleaseSafe/Debug 각각3/3·exit0(문단 병합2+root1)입니다. 수정 파일은 검증 사본과 바이트 일치하며 fmt --check와 diff --check도 통과했습니다. 나머지17개 수정이나 최신 전체 native 통과를 뜻하지 않습니다. 실행 중인 고정 바이너리/실패 기록과 기본 WASM/데모는 보존합니다.
+
 ## BMP/GIF/ViewText 소유권과 보호 앵커의 후속 여섯 회귀
 
 고정 실행 index1947/1989/2005/2007/2489/2494도 별도 필터로 재현했습니다. `/tmp/hwpjs-native-allocator-probe.Kn255w/remaining-six-original.stderr`는 대상6개 모두 NondeterministicMemoryUsage·root1개 pass·exit1입니다. BMP/RLE·GIF·ViewText detached report 소유권 및 보호 splice/OLE의 실제 단언 실패라고 추정하지 않고 오류 종류를 확인했습니다.

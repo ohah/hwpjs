@@ -30,13 +30,13 @@ test "HWPX joined model repeats merge and edits across heterogeneous source owne
     try std.testing.expectError(error.SplitSurrogatePair, @import("paragraph_joined_splice.zig").splice(a, &tree, &merged, 2, 0, "x", 10000));
     try std.testing.expectError(error.InvalidXmlCharacter, @import("paragraph_joined_splice.zig").splice(a, &tree, &merged, 0, 0, &.{0}, 10000));
     try std.testing.expectError(error.LimitExceeded, @import("paragraph_joined_splice.zig").splice(a, &tree, &merged, 0, 0, "x", 1));
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, original: *const @import("xml_part_tree.zig").Tree, l: *const model.Joined, r: *const model.Joined) !void {
             var output = try @import("paragraph_joined_merge.zig").prepare(allocator, original, l, r, 10000);
             defer output.deinit(allocator);
         }
     }.run, .{ &tree, &first, &tail });
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, original: *const @import("xml_part_tree.zig").Tree, current: *const model.Joined) !void {
             var copy = try current.clone(allocator);
             defer copy.deinit(allocator);
@@ -128,7 +128,7 @@ fn verifyOutput(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").
         index += 1;
     }
     try std.testing.expectEqual(styles.len, index);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, original: *const @import("xml_part_tree.zig").Tree, joined: *const model.Joined) !void {
             const xml = try @import("paragraph_joined_xml.zig").write(allocator, original, joined, .{}, 10000);
             defer allocator.free(xml);
