@@ -5,7 +5,7 @@ import json
 import sys
 import xml.etree.ElementTree as ET
 import zipfile
-from hwpx_field_prefix_site import leading_object_site
+from hwpx_field_prefix_site import is_prefix_object, leading_object_site
 from hwpx_field_dirty_owners import mark_dirty_owners
 
 P = "{http://www.hancom.co.kr/hwpml/2011/paragraph}"
@@ -23,9 +23,11 @@ def fragments(tree, kinds=("HYPERLINK", "CLICK_HERE")):
         if len(ends) != 1:
             raise ValueError("Ambiguous field end")
         seen = set()
-        for text in elements[start + 1:ends[0]]:
-            if text.tag != P + "t" and not (text.tag == P + "run" and len(text) == 0):
-                continue
+        scope = elements[start + 1:ends[0]]
+        texts = [node for node in scope if node.tag == P + "t" or (node.tag == P + "run" and len(node) == 0)]
+        objects = [node for node in scope if is_prefix_object(node) and parents.get(node) is not None and parents[node].tag == P + "run"]
+        # Preserve existing text choices; object-only host paragraphs are fallback sites.
+        for text in texts + objects:
             owner = parents.get(text)
             while owner is not None and owner.tag != P + "p":
                 owner = parents.get(owner)
@@ -65,9 +67,13 @@ def compare(before, after, prefix, begin_id=None, paragraph=None, at_unit=0, del
             if not choices or ((begin_id is not None or paragraph is not None) and len(choices) != 1):
                 raise ValueError("Unknown or ambiguous chosen field fragment")
             begin, _, text = choices[0]
+            if is_prefix_object(text) and (at_unit != 0 or deleted_units != 0):
+                raise ValueError("Object-only field oracle supports prefix insertion only")
             mark_dirty_owners(expected, begin)
             if at_unit == 0 and deleted_units == 0:
                 text = leading_object_site(expected, begin, text)
+            if is_prefix_object(text):
+                raise ValueError("Validated object prefix site required")
             if text.tag == P + "run":
                 text = ET.SubElement(text, P + "t")
             encoded = (text.text or "").encode("utf-16-le")

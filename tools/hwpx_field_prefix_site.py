@@ -4,6 +4,12 @@ import xml.etree.ElementTree as ET
 P = "{http://www.hancom.co.kr/hwpml/2011/paragraph}"
 
 
+def is_prefix_object(node):
+    graphic = node.tag in (P + "tbl", P + "pic", P + "container", P + "ellipse", P + "line", P + "rect")
+    number = node.tag == P + "ctrl" and len(node) == 1 and node[0].tag == P + "autoNum"
+    return graphic or number
+
+
 def leading_object_site(tree, begin, text):
     parents = {child: parent for parent in tree.iter() for child in parent}
     paragraph = parents.get(text)
@@ -17,9 +23,7 @@ def leading_object_site(tree, begin, text):
         if len(run) == 0:
             return text
         for child in run:
-            graphic = child.tag in (P + "tbl", P + "pic", P + "container", P + "ellipse", P + "line", P + "rect")
-            number = child.tag == P + "ctrl" and len(child) == 1 and child[0].tag == P + "autoNum"
-            if graphic or number:
+            if is_prefix_object(child):
                 selected = (run, child)
                 break
             # Only known zero-width source metadata may precede offset zero.

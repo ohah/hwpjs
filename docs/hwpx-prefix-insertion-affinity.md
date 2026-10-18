@@ -1,5 +1,17 @@
 # HWPX prefix 입력의 원본 run 소속 검증
 
+## 텍스트 노드 없는 필드 소유 표 문단
+
+`issue2813/dangjik_dutylog.hwpx`는 게시 검사기에서도 MissingIndependentFieldFragment로 재현됐습니다. 원본 SHA256은 `d785a49b62c43ed5b4602509657a112742d916782828022a355b916bcc19a4c5`이고 위치는 구역0·전체/로컬 문단141·beginElement1574·CLICK_HERE1918049232입니다. 원본 문단은 charPrIDRef14의 run 안45x11 표만 있고 직접 text가 없습니다. native 저장은 그 표 앞에 text를 추가했으나 독립 fragments는 text/빈 run만 수집해 바깥 문단을 누락했습니다. 표 안 셀의 text를 바깥 문단의 위치로 재사용하지 않습니다.
+
+보존 개체 판정은 `hwpx_field_prefix_site.is_prefix_object`에 한 번만 두고 위치 선택과 field inventory가 공유합니다. fragments는 기존 text/빈 run 후보를 우선 유지한 뒤 누락 문단에만 run 직접 자식인 알려진 개체를 보충합니다. 개체 전용 후보는0위치 prefix 삽입만 허용하며, 알려지지 않은 제어에 막혀 검증된 삽입 위치를 얻지 못하면 거부합니다. 그래픽 내부 text를 기대값으로 만들거나 임의 객체/ctrl을 허용하지 않습니다. BOOKMARK 등 기존 adapter의 종류 선택은 유지합니다.
+
+합성 원본의 바깥/안쪽 소속·기존 text 우선·잘못된 내부 삽입/서식/비대상 payload 거부·개체 전용 non-prefix/미지 제어 거부를 normal/-O로 검사합니다. 수정 전 Missing independent outer object paragraph를 재현했고 실제 당직일지 좌표도 독립 전체 XML/ZIP·잘못된 기대값 거부·undo/redo·재열기/원본 불변 회귀에 추가했습니다.
+
+9a5e51ac에 이 수정만 더한 tree `405e40da5a0e86ee361d68cdbe62b32c2775e620`의 `/tmp/hwpjs-object-field-clean.HjnR9Z`에서 게시 afb7 후보·Node24.20.0의 `object-field-tests.log/.stderr`는5/5·fail/cancel/skip0·exit0·stderr0(3682ms)입니다. 같은 최종 사본과 f4e0 후보의 `issue2813-fixed.jsonl/.stderr`는 전체 전용237시도/237검증/독립 XML237(필드236)·거부0·exit0·stderr0입니다. 추가 거부 guard 전 사본의 통과는 `issue2813-initial-fixed`·`object-field-initial-tests`로 따로 보존했습니다. 기존 generic oracle 자체의 UTF16/범위/5변조 self-test도 normal/-O 양쪽 exit0이며, 사용자 미커밋 styled-run 삭제 모드는 커밋에서 제외했습니다. 이 결과를 전체 명령/조판/최신 전체 gate 완료나 원래 고정44파일 실패 행의 소급 성공으로 바꾸지 않습니다.
+
+기존 pageNum 수정 사본 `/tmp/hwpjs-page-number-prefix-clean.1oFSzn`의 `remaining-documents.jsonl`도 issue2373/156689818_kftc_press.hwpx의46/46(필드37), issue2470/36382471_masked.hwpx의30/30(필드26)을 f4e0 후보에서 각각 전체 독립 XML·거부0·exit0/signal=null로 확인했습니다. 해당 ID의 `-current.jsonl/.stderr`가 근거이며, 이어진 당직일지는 MissingIndependentFieldFragment·exit1이었음을 그대로 보존합니다. 세 파일 wrapper의 exit1을 전체 성공으로 바꾸지 않고, 당직일지의 후속 수정 결과는 위 최종 사본과 구분합니다.
+
 ## pageNum 설정 뒤 표 앞 입력
 
 고정44파일 감사의 `issue2083_hide_fill_page.hwpx` 실패를 게시 검사기에서도 재현했습니다. 원본 SHA256은 `7758c15c57b1ef14fda6e6d29409ae3425f344931f2901641af84a40ef413d2e`이고 실패 위치는 구역2·전체 문단121/로컬1·beginElement32·beginId2012463474입니다. 원본은 fieldBegin 뒤 pageNum 설정2개·표·빈 text 순서이며 저장본은 두 설정을 유지하고 같은 run의 표 바로 앞에 text만 추가했습니다. 기존 독립 선택기는 pageNum을 모르는 ctrl로 보고 표 뒤 text를 기대한 것이 원인입니다. 제품 편집/저장은 변경하지 않습니다.
