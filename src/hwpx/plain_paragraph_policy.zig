@@ -51,7 +51,7 @@ fn validateMode(tree: *const tree_module.Tree, sites: *const sites_module.Sites,
                 if (bookmark) has_bookmark = true;
                 const retained_field = allow_fields and @import("retained_field_marker.zig").supported(tree, run_index);
                 if (!content.is(uri, "t") and !bookmark and !retained_field and !content.is(uri, "secPr") and !@import("retained_run_metadata.zig").supported(tree, run_index) and !(allow_anchors and @import("run_anchor.zig").kind(tree, run_index) != null)) has_bookmark_unsupported = true;
-                if (!content.is(uri, "t") and !@import("retained_page_number.zig").supported(tree, run_index) and !@import("retained_number_restart.zig").supported(tree, run_index) and !@import("retained_bookmark.zig").supported(tree, run_index) and !@import("retained_run_metadata.zig").supported(tree, run_index) and !(allow_anchors and @import("run_anchor.zig").kind(tree, run_index) != null)) has_other_run_content = true;
+                if (!content.is(uri, "t") and !@import("retained_page_number.zig").supported(tree, run_index) and !@import("retained_number_restart.zig").supported(tree, run_index) and !@import("retained_bookmark.zig").supported(tree, run_index) and !@import("retained_run_metadata.zig").supported(tree, run_index) and !(allow_anchors and retained_field) and !(allow_anchors and allow_fields and content.is(uri, "secPr")) and !(allow_anchors and @import("run_anchor.zig").kind(tree, run_index) != null)) has_other_run_content = true;
                 if (allow_anchors and @import("run_anchor.zig").kind(tree, run_index) != null) {
                     has_anchor = true;
                     run_child = content.next_sibling;
@@ -79,28 +79,32 @@ fn validateMode(tree: *const tree_module.Tree, sites: *const sites_module.Sites,
         } else if (!element.is(uri, "linesegarray")) return error.UnsupportedParagraphControl;
         child = element.next_sibling;
     }
-    for (sites.items, locations) |site, location| {
-        if (location.paragraph_ordinal != paragraph) continue;
-        // Synthetic run sites have no inline text children. Direct run
-        // controls were checked above, including the protected-anchor mode.
-        if (site.missing_text and tree.elements[site.element_index].is(uri, "run")) continue;
-        var inline_child = tree.elements[site.element_index].first_child;
-        while (inline_child) |inline_index| {
-            const inline_element = tree.elements[inline_index];
-            if (@import("retained_markpen_marker.zig").supported(tree, inline_index)) {
+    // Empty text owners may have no materialized site. Eligibility must still
+    // inspect their inline children rather than silently skipping metadata.
+    var text_run = tree.elements[paragraph_index].first_child;
+    while (text_run) |run_index| : (text_run = tree.elements[run_index].next_sibling) {
+        if (!tree.elements[run_index].is(uri, "run")) continue;
+        var text_child = tree.elements[run_index].first_child;
+        while (text_child) |text_index| : (text_child = tree.elements[text_index].next_sibling) {
+            if (!tree.elements[text_index].is(uri, "t")) continue;
+            var inline_child = tree.elements[text_index].first_child;
+            while (inline_child) |inline_index| {
+                const inline_element = tree.elements[inline_index];
+                if (@import("retained_markpen_marker.zig").supported(tree, inline_index)) {
+                    inline_child = inline_element.next_sibling;
+                    continue;
+                }
+                if (@import("title_mark_axis.zig").retained(tree, inline_index)) {
+                    has_title_marker = true;
+                    inline_child = inline_element.next_sibling;
+                    continue;
+                }
+                if (!allow_tabs or !@import("retained_inline_unit.zig").supported(tree, inline_index)) return error.UnsupportedInlineControl;
+                const inline_kind = @import("retained_inline_unit.zig").kind(tree, inline_index);
+                if (inline_kind != .nb_space and inline_kind != .fw_space) has_non_space_inline = true;
+                if (inline_kind == .line_break) has_line_break = true;
                 inline_child = inline_element.next_sibling;
-                continue;
             }
-            if (@import("title_mark_axis.zig").retained(tree, inline_index)) {
-                has_title_marker = true;
-                inline_child = inline_element.next_sibling;
-                continue;
-            }
-            if (!allow_tabs or !@import("retained_inline_unit.zig").supported(tree, inline_index)) return error.UnsupportedInlineControl;
-            const inline_kind = @import("retained_inline_unit.zig").kind(tree, inline_index);
-            if (inline_kind != .nb_space and inline_kind != .fw_space) has_non_space_inline = true;
-            if (inline_kind == .line_break) has_line_break = true;
-            inline_child = inline_element.next_sibling;
         }
     }
     if (has_title_marker and has_anchor and !allow_anchors) return error.UnsupportedParagraphControl;

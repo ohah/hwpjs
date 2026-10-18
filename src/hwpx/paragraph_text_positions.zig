@@ -112,7 +112,10 @@ fn buildMode(a: std.mem.Allocator, tree: *const tree_module.Tree, sites: *const 
             }
             if (@import("title_mark_axis.zig").retained(tree, index)) {
                 if (!title_axis_validated) {
-                    var axis = try @import("title_mark_axis.zig").build(a, tree, sites, locations, paragraph);
+                    var axis = if (field_text)
+                        try @import("title_mark_axis.zig").buildForFieldText(a, tree, sites, locations, paragraph)
+                    else
+                        try @import("title_mark_axis.zig").build(a, tree, sites, locations, paragraph);
                     defer axis.deinit(a);
                     title_axis_validated = true;
                 }

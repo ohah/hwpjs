@@ -949,6 +949,7 @@ test {
     _ = @import("hwp5/edit/formula_dependency_scope.zig");
     _ = @import("hwpx/title_mark_axis.zig");
     _ = @import("hwpx/title_mark_axis_tests.zig");
+    _ = @import("hwpx/title_field_label_tests.zig");
     _ = @import("hwpx/title_mark_position.zig");
     _ = @import("hwpx/title_mark_edit_tests.zig");
     _ = @import("hwpx/retained_bookmark_tests.zig");

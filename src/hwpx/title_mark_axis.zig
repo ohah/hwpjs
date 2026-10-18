@@ -14,7 +14,7 @@ pub fn retained(tree: *const trees.Tree, index: usize) bool {
     const paragraph = tree.elements[run].parent orelse return false;
     return tree.elements[text].is(uri, "t") and tree.elements[run].is(uri, "run") and tree.elements[paragraph].is(uri, "p");
 }
-pub const Mark = struct { element: usize, display_unit: usize, source_unit: usize, ignore: ?bool, kind: enum { title_mark, number_setting, bookmark, anchor, section_setting, run_setting } = .title_mark };
+pub const Mark = struct { element: usize, display_unit: usize, source_unit: usize, ignore: ?bool, kind: enum { title_mark, number_setting, bookmark, anchor, section_setting, run_setting, field_marker } = .title_mark };
 fn displayWidth(mark: Mark) usize {
     return if (mark.kind == .anchor) 1 else 0;
 }
@@ -62,6 +62,15 @@ pub const Axis = struct {
 };
 const Atom = struct { offset: usize, units: usize = 0, mark: ?struct { element: usize, ignore: ?bool, kind: @FieldType(Mark, "kind") = .title_mark } = null };
 pub fn build(a: std.mem.Allocator, tree: *const trees.Tree, sites: *const sites_mod.Sites, locations: []const @import("section_text.zig").Location, paragraph: usize) !Axis {
+    return buildMode(a, tree, sites, locations, paragraph, false);
+}
+
+/// Coordinates only; the caller must validate field links, type and ownership.
+pub fn buildForFieldText(a: std.mem.Allocator, tree: *const trees.Tree, sites: *const sites_mod.Sites, locations: []const @import("section_text.zig").Location, paragraph: usize) !Axis {
+    return buildMode(a, tree, sites, locations, paragraph, true);
+}
+
+fn buildMode(a: std.mem.Allocator, tree: *const trees.Tree, sites: *const sites_mod.Sites, locations: []const @import("section_text.zig").Location, paragraph: usize, field_text: bool) !Axis {
     const owner = try @import("paragraph_site_owner.zig").resolve(tree, sites, locations, paragraph);
     var atoms: std.ArrayList(Atom) = .empty;
     defer atoms.deinit(a);
@@ -76,6 +85,11 @@ pub fn build(a: std.mem.Allocator, tree: *const trees.Tree, sites: *const sites_
         var text = tree.elements[index].first_child;
         while (text) |text_index| : (text = tree.elements[text_index].next_sibling) {
             if (!tree.elements[text_index].is(uri, "t")) {
+                if (field_text and @import("retained_field_marker.zig").supported(tree, text_index)) {
+                    const marker = tree.elements[text_index].first_child.?;
+                    try atoms.append(a, .{ .offset = tree.elements[marker].start_tag.start, .mark = .{ .element = marker, .ignore = null, .kind = .field_marker } });
+                    continue;
+                }
                 if (@import("retained_bookmark.zig").directSupported(tree, text_index) or tree.elements[text_index].is(uri, "secPr")) {
                     try atoms.append(a, .{ .offset = tree.elements[text_index].start_tag.start, .mark = .{ .element = text_index, .ignore = null, .kind = if (tree.elements[text_index].is(uri, "secPr")) .section_setting else .bookmark } });
                     continue;
