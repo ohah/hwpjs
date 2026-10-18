@@ -1172,6 +1172,7 @@ test {
     _ = @import("hwp5/edit/page_settings_snapshot.zig");
     _ = @import("hwp5/edit/section_settings_snapshot.zig");
     _ = @import("hwp5/edit/paragraph_flow_snapshot.zig");
+    _ = @import("hwp5/body/table_list_index_tests.zig");
     _ = @import("hwp5/edit/table_layout_sources.zig");
     _ = @import("hwp5/edit/table_anchor_positions.zig");
     _ = @import("hwp5/edit/structural_anchor_positions.zig");

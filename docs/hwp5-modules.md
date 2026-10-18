@@ -2,6 +2,8 @@
 
 - [Canvas 문단 경계 단축키](canvas-paragraph-edge-navigation.md)
 
+- [원본 소속 조회 인덱스](hwp5-source-ownership-index.md)
+
 - [HWP5 구간 Worker·Canvas 연결 후보](hwp5-window-ui-integration.md)
 
 - [저장된 구역의 명시적 편집 사본 후보](hwp5-available-section-copy.md)

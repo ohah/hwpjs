@@ -109,6 +109,8 @@ pub fn build(b: *std.Build) void {
     editor_api_tests.addArg("tests/hwp5/field-spans-readable.test.mjs");
     editor_api_tests.addArg("tests/hwp5/revision-sign-text.test.mjs");
     editor_api_tests.addArg("tests/hwp5/revision-sign-negative.test.mjs");
+    editor_api_tests.addArg("tests/hwp5/flow-host-editor.test.mjs");
+    editor_api_tests.addArg("tests/hwp5/column-sources-editor.test.mjs");
     editor_api_tests.addArg("tests/hwp5/window-query-worker.test.mjs");
     editor_api_tests.addArg("tests/hwp5/window-selection.test.mjs");
     editor_api_tests.addArg("tests/hwp5/window-canvas-harness.test.mjs");
@@ -153,6 +155,12 @@ pub fn build(b: *std.Build) void {
     audit.dependOn(&editor_api_tests.step);
     const editor_api_step = b.step("hwp5-editor-audit", "Test experimental JS WASM HWP5 editor boundary");
     editor_api_step.dependOn(&editor_api_tests.step);
+    const ownership_parity = b.addSystemCommand(&.{ "node", "--test", "--test-concurrency=1", "tests/hwp5/ownership-index-query-parity.test.mjs" });
+    ownership_parity.setEnvironmentVariable("HWPJS_TEST_WASM", b.getInstallPath(.bin, "hwpjs.wasm"));
+    ownership_parity.step.dependOn(b.getInstallStep());
+    ownership_parity.has_side_effects = true;
+    const ownership_parity_step = b.step("hwp5-ownership-query-parity", "Compare HWP5 ownership queries against an explicit baseline WASM");
+    ownership_parity_step.dependOn(&ownership_parity.step);
     const hwpx_text_tests = b.addSystemCommand(&.{ "node", "--test", "tests/hwpx/text-reader.test.mjs", "tests/hwpx/canvas-preview.test.mjs", "tests/hwpx/editor.test.mjs", "tests/hwpx/formula-editor.test.mjs", "tests/hwpx/note-editor.test.mjs", "tests/hwpx/anchor-editor.test.mjs", "tests/hwpx/header-footer-editor.test.mjs", "tests/hwpx/object-boundary-editor.test.mjs", "tests/hwpx/history-editor.test.mjs" });
     hwpx_text_tests.addArg("tests/hwpx/created-cell-xml.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/field-query-publication.test.mjs");

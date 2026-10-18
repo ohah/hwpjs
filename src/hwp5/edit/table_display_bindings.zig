@@ -21,6 +21,10 @@ pub fn read(a: std.mem.Allocator, source: []const u8, version: @import("../versi
     defer tree.deinit(a);
     var groups = try @import("../body/list_groups.zig").Groups.build(a, tree);
     defer groups.deinit(a);
+    var flows = try @import("../body/paragraph_flows.zig").Flows.build(a, tree, groups.items);
+    defer flows.deinit(a);
+    var lists: @import("../body/table_list_index.zig").Index = .{ .tree = tree };
+    defer lists.deinit(a);
     var output: std.ArrayList(Binding) = .empty;
     errdefer output.deinit(a);
     for (paragraphs, 0..) |p, index| {
@@ -33,7 +37,7 @@ pub fn read(a: std.mem.Allocator, source: []const u8, version: @import("../versi
         const owner_node = parent orelse continue;
         const owner_value = tree.nodes[owner_node].record.value;
         if (owner_value != .control_header or owner_value.control_header.id != @import("../body/control_rules.zig").table_id) continue;
-        const owner = @import("../body/formula_cell.zig").locate(tree, groups, node, .observed8) catch |err| {
+        const owner = @import("../body/formula_cell.zig").locateIndexed(a, &lists, flows, node, .observed8) catch |err| {
             if (err == error.FormulaInCaption) continue;
             return err;
         };

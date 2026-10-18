@@ -27,20 +27,34 @@ pub fn locate(tree: Tree, groups: Groups, paragraph: usize, layout: body.list_he
     var iterator = try @import("table_lists.zig").Iterator.init(tree, parent);
     while (iterator.next()) |entry| {
         if (entry.node != list) continue;
-        if (entry.kind != .cell) return error.FormulaInCaption;
-        const header = tree.nodes[list].record.value.list_header;
-        const cell = try body.Cell.parse((try header.view(layout)).extra);
-        const table = tree.nodes[iterator.table_node].record.value.table;
-        const rectangle: @import("table_grid.zig").Rectangle = .{ .column = cell.column, .row = cell.row, .column_span = cell.column_span, .row_span = cell.row_span };
-        try rectangle.validate(table.row_count, table.column_count);
-        return .{
-            .control_node = parent,
-            .table_node = iterator.table_node,
-            .list_node = list,
-            .origin = .{ .column = cell.column, .row = cell.row },
-            .columns = table.column_count,
-            .rows = table.row_count,
-        };
+        return fromEntry(tree, parent, list, iterator.table_node, entry.kind, layout);
     }
     return error.InvalidTableOwner;
+}
+
+/// Same cell decoding, with ownership already mapped from this source tree.
+pub fn locateIndexed(a: @import("std").mem.Allocator, index: *@import("table_list_index.zig").Index, flows: @import("paragraph_flows.zig").Flows, paragraph: usize, layout: body.list_header.Layout) !Owner {
+    const tree = index.tree;
+    if (paragraph >= tree.nodes.len or tree.nodes[paragraph].record.value != .header) return error.InvalidParagraph;
+    const parent = tree.nodes[paragraph].parent orelse return error.FormulaOutsideTable;
+    const list = try flows.get(paragraph);
+    const entry = try index.get(a, parent, list);
+    return fromEntry(tree, parent, list, entry.table_node, entry.kind, layout);
+}
+
+fn fromEntry(tree: Tree, parent: usize, list: usize, table_node: usize, kind: @import("table_lists.zig").Kind, layout: body.list_header.Layout) !Owner {
+    if (kind != .cell) return error.FormulaInCaption;
+    const header = tree.nodes[list].record.value.list_header;
+    const cell = try body.Cell.parse((try header.view(layout)).extra);
+    const table = tree.nodes[table_node].record.value.table;
+    const rectangle: @import("table_grid.zig").Rectangle = .{ .column = cell.column, .row = cell.row, .column_span = cell.column_span, .row_span = cell.row_span };
+    try rectangle.validate(table.row_count, table.column_count);
+    return .{
+        .control_node = parent,
+        .table_node = table_node,
+        .list_node = list,
+        .origin = .{ .column = cell.column, .row = cell.row },
+        .columns = table.column_count,
+        .rows = table.row_count,
+    };
 }
