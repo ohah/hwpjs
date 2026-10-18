@@ -30,6 +30,12 @@ ec174d05 게시 src와 diff --quiet 일치하는 수정 소스에서 전체 nati
 
 쪽 영역 History의 추가 redo 실패 coverage는 [전용 검증](hwpx-history-redo-failure.md)을 따릅니다. 위26723ae6 바이너리는 그 보강 전 테스트 소스이므로 새 coverage를 검증했다고 읽지 않습니다.
 
+## 두 보강을 포함한 후속 컴파일
+
+1653c72e 게시 src의 별도 사본은 `/tmp/hwpjs-native-current-source.JaEvXR`이며 git diff --quiet로 src 일치를 확인했습니다. 첫 전체 native 컴파일은 exit1이었지만 `native-full-build.log`와 출력 파일이0바이트라 원인은 확정하지 못했습니다. 디스크 여유가 낮았다는 관측만으로 ENOSPC를 확정하거나 제품 실패로 분류하지 않습니다. 이 파일을 유효한 테스트 바이너리로 실행하지 않았습니다.
+
+실패 기록을 보존하고 별도 `native-full-safe-retry` 출력과 `native-full-build-retry.log`로 재시도 중입니다. pipefail과 tee를 사용해 오류를 파일뿐 아니라 명령 출력에도 남깁니다. 컴파일 성공·새 inventory·검증 결과는 아직 확인 전이며 이전26723ae6 결과를 새 소스의 통과로 옮기지 않습니다.
+
 5837cd37 전수의 다음3338 page area ordered pieces preserve alternating source run styles and single declarations에서 물리 peak4,298,231,168바이트가 기준4,294,967,296바이트를 넘어 guardian이 종료했습니다. 기존 guardian/batch/child 종료를 확인했습니다. source의 std.testing.checkAllAllocationFailures(std.testing.allocator, ...) 다섯 호출은 검증/쪽 영역 XML/문단 XML/두 병합 경계를 검사합니다. 제품 함수·callback·입력·단언·전체 실패 지점은 바꾸지 않고 기존 testing/allocation_failures.check로 모두 전환했습니다. 작업 트리에 이미 있던 정확히5줄 전환을 분리 소스에서 검증 후 채택했으며 새 작성으로 주장하지 않습니다.
 
 /tmp/hwpjs-page-area-ordered.Zrprql의 Safe22d1f2ef04f20da8396b85fd96a4f5f0d7eed2e648065b19c53577a51f78080f는 root 포함2/2·fail/skip/log/leak0·exit0·guardStopped=false·peak48,267,648바이트입니다. Debug4a78f67da6cee752743a484cabc9e829a4b0445e6432c22d5c7d690b25397c9a도2/2·같은 실패/누수0·exit0·guardStopped=false·peak14,696,784바이트입니다. 동일4,096MiB guardian과 expected hash를 사용했고 근거는 ordered-safe-guard-retry.jsonl·ordered-debug-guard-retry.jsonl입니다. 최초 ordered-*-guard 실행은 분리 tools 경로 부재로 native 시작 전 실패했으므로 통과에 합산하지 않습니다. 변경 파일은 검증 소스와 작업 트리가 cmp 일치하며 전체 native 통과/제품 메모리 절감/파서 기능 확대를 의미하지 않습니다.
@@ -64,4 +70,4 @@ ReleaseSafe 집중 바이너리 `7dcbd29c370669b956f2c8207ae73c92fc12e37bc02168d
 
 `72c3ab63`과 `src/` 전체가 동일한 위 분리 소스에서 전체 ReleaseSafe 바이너리 `5837cd376892f967c6cd942c6708e819fb50e4f93d3a59e0a8fc3bf4d1043adb`를 새로 컴파일했습니다. runner inventory는4,096개이며 이전4,090개 결과를 이어 붙이지 않고 인덱스0부터 같은4,096MiB guardian으로 검증합니다. 첫 시도와 재실행은 아래에서 구분하며 전체 완료/통과 판정은 아직 하지 않았습니다. JS/Worker/Canvas 전체 편집 묶음과 이 native 결과도 합산하지 않습니다.
 
-위 실행의 첫 시도는0..811의812개 결과를 남긴 뒤 Node 로그 기록의 ENOSPC로 exit1 종료됐습니다. resource-guard-complete까지 기록되지 않았으므로 전체 자원 gate나 제품 실패로 분류하지 않습니다. 디스크 공간 확보 후 같은 바이너리/한도로0부터 full-guard-space-corrected.jsonl에서 다시 실행 중이며 첫 시도와 합산하지 않습니다. 별도의469개 편집 묶음은 성공 종료했지만 이 native 재실행과 범위가 다릅니다.
+위 실행의 첫 시도는0..811의812개 결과를 남긴 뒤 Node 로그 기록의 ENOSPC로 exit1 종료됐습니다. resource-guard-complete까지 기록되지 않았으므로 전체 자원 gate나 제품 실패로 분류하지 않습니다. 디스크 공간 확보 후 같은 바이너리/한도로0부터 full-guard-space-corrected.jsonl에서 재시작했고, 위에 기록한3338 ordered XML의 물리 자원 초과로 exit1 종료됐습니다. 현재 실행 중이 아니며 첫 시도와 합산하지 않습니다. 별도의469개 편집 묶음은 성공 종료했지만 이 native 재실행과 범위가 다릅니다.
