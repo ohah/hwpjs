@@ -91,6 +91,6 @@ test "OLE document ordinal selection cleans success zero and late failure under 
         defer t.expect(debug.deinit() == .ok) catch @panic("OleReferenceLeak");
         try check(debug.allocator(), id);
         try t.expectEqual(@as(usize, 0), debug.total_requested_bytes);
-        try t.checkAllAllocationFailures(t.allocator, check, .{id});
+        try @import("../../testing/allocation_failures.zig").check(check, .{id});
     }
 }

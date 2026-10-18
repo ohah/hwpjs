@@ -142,7 +142,7 @@ test "chart footnote shared ChartText propagates per and total text limits" {
 }
 test "chart footnote composition ownership and OOM" {
     try exercise(t.allocator);
-    try t.checkAllAllocationFailures(t.allocator, exercise, .{});
+    try @import("../../testing/allocation_failures.zig").check(exercise, .{});
     var gpa: std.heap.DebugAllocator(.{ .safety = true, .enable_memory_limit = true }) = .init;
     defer t.expect(gpa.deinit() == .ok) catch @panic("footnote leak");
     try exercise(gpa.allocator());

@@ -83,6 +83,6 @@ fn deepExercise(a: std.mem.Allocator, late: bool) !void {
     }
 }
 test "nested form property stack and node growth release every failed allocation" {
-    try t.checkAllAllocationFailures(t.allocator, deepExercise, .{false});
-    try t.checkAllAllocationFailures(t.allocator, deepExercise, .{true});
+    try @import("../../testing/allocation_failures.zig").check(deepExercise, .{false});
+    try @import("../../testing/allocation_failures.zig").check(deepExercise, .{true});
 }

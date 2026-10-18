@@ -71,7 +71,7 @@ fn exerciseMany(a: std.mem.Allocator, version: u16, layout: envelope.Layout) !vo
 test "OLE stream replacement preserves envelope version siblings and metadata" {
     for ([_]u16{ 3, 4 }) |version| for ([_]envelope.Layout{ .raw_cfb, .observed_size_prefix }) |layout| {
         try exercise(t.allocator, version, layout);
-        try t.checkAllAllocationFailures(t.allocator, exercise, .{ version, layout });
+        try @import("../../testing/allocation_failures.zig").check(exercise, .{ version, layout });
     };
 }
 

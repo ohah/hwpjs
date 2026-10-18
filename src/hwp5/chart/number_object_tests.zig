@@ -72,7 +72,7 @@ fn reject(a: std.mem.Allocator, bytes: []const u8, expected: anyerror) !void {
 test "chart number object raw float bits references caps OOM ownership and balance" {
     for (patterns) |bits| {
         try exercise(t.allocator, bits);
-        try t.checkAllAllocationFailures(t.allocator, exercise, .{bits});
+        try @import("../../testing/allocation_failures.zig").check(exercise, .{bits});
         var gpa: std.heap.DebugAllocator(.{ .safety = true, .enable_memory_limit = true }) = .init;
         defer t.expect(gpa.deinit() == .ok) catch @panic("number object leak");
         try exercise(gpa.allocator(), bits);

@@ -1,5 +1,11 @@
 # 현재 main 소스의 전체 native 실행
 
+## 차트/OLE/중첩 양식 속성의 후속 여섯 실패
+
+`remaining-eighteen-original.stderr`에서 재현된 index2759/2767/2814/2825/2832/2907의 callback은 차트 type/object table·CFB 입출력·문서 검사 report·중첩 속성 트리를 주입 allocator로 생성하고 callback 안에서 해제합니다. 외부 세션으로 결과를 넘기지 않으므로 공통 `allocation_failures.check`에 해당 일곱 호출(중첩 속성 정상/오류 두 경로 포함)만 연결했습니다. 제품 코드·모든 실패 지점·독립 DebugAllocator 회계·truncation/원값/메타데이터/후기 오류 단언은 유지했습니다.
+
+같은 분리 사본의 `detached-six-safe.stderr`·`detached-six-debug.stderr`는 ReleaseSafe/Debug 각각21/21·exit0입니다. 대상6개 외 같은 차트/단일 OLE/속성의 주변 회귀와 root도 포함합니다. 이는 이 여섯 모듈의 모든 테스트나 전체 native gate 성공은 아닙니다. 변경6파일은 검증 사본과 바이트 일치하며 fmt/diff 검사도 통과했습니다.
+
 ## 반복 provenance 문단 병합의 실패 주입
 
 고정 전체 실행 index3290을 포함한 후속18개를 별도 필터로 재현한 `remaining-eighteen-original.stderr`는 대상18개 모두 NondeterministicMemoryUsage·root1개 pass·exit1입니다. 이 중 paragraph_joined_tests의 두 테스트와 공유 XML 검증 callback의 소유권을 확인했습니다. 세 callback은 source/current를 읽기만 하며 출력·clone을 주입 allocator로 만들고 callback 안에서 해제하므로 기존 `testing/allocation_failures.check`로 세 호출만 연결했습니다. 제품 코드·전체 실패 지점·문자 순서·서식·원본 불변 단언은 변경하지 않았습니다.

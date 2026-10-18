@@ -109,7 +109,7 @@ fn reject(a: std.mem.Allocator, bytes: []const u8, expected: anyerror, cap: usiz
 test "chart light ownership exact limits zero and multiple sources OOM" {
     for ([_]u16{ 0, 1, 2, 3, 16 }) |count| {
         try exercise(t.allocator, count);
-        try t.checkAllAllocationFailures(t.allocator, exercise, .{count});
+        try @import("../../testing/allocation_failures.zig").check(exercise, .{count});
         var gpa: std.heap.DebugAllocator(.{ .safety = true, .enable_memory_limit = true }) = .init;
         defer t.expect(gpa.deinit() == .ok) catch @panic("light leak");
         try exercise(gpa.allocator(), count);
