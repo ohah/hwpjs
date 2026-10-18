@@ -109,6 +109,7 @@ pub fn build(b: *std.Build) void {
     editor_api_tests.addArg("tests/hwp5/field-spans-readable.test.mjs");
     editor_api_tests.addArg("tests/hwp5/revision-sign-text.test.mjs");
     editor_api_tests.addArg("tests/hwp5/revision-sign-negative.test.mjs");
+    editor_api_tests.addArg("tests/hwp5/window-source-policy.test.mjs");
     editor_api_tests.addArg("tests/hwp5/flow-host-editor.test.mjs");
     editor_api_tests.addArg("tests/hwp5/column-sources-editor.test.mjs");
     editor_api_tests.addArg("tests/hwp5/window-query-worker.test.mjs");

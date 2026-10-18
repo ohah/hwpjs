@@ -47,3 +47,5 @@ Worker의 조회는 편집 활성화를 뜻하지 않습니다. 활성 구간은
 최초 정규 실행 `editor-full.log`는451개 중450pass·1fail·cancel/skip0·exit1입니다. 실패는 새 그림 구간 테스트가 가져오는 `tests/hwp5/picture-byte-oracle.mjs`를 분리 스냅샷에 포함하지 않아 발생한 `ERR_MODULE_NOT_FOUND`입니다. 해당 독립 도우미를 포함한 뒤 정확한 그림 구간1파일은1/1·exit0으로 통과했습니다. 이를 최초 전체 실행의451/451로 소급 변경하지 않습니다. 같은 후보의 `editor-full-corrected.log`로 정규 묶음을 처음부터 다시 실행 중이며, 전체 종료 전에는 게시/승격 완료로 기록하지 않습니다.
 
 재실행 `editor-full-corrected.log`는451/451·fail/cancel/skip0·exit0·7/7단계,1,115,428.23ms로 종료했습니다. 설치 산출물은 위574fc8f4와 일치하며 입력/구간 조회/부분 표 fallback/실제 fixture 소속/실패 이력/HWPX 구간 controller를 포함한 등록 묶음 전체의 근거입니다. 처음 실행의 누락 도우미 실패를 덮어쓰거나 두 실행을 합산하지 않습니다. 이 검증 뒤 구간 UI 소스를 main 게시 대상으로 삼되 기본 WASM/외부 데모의 승격, 전체 native 및 이후 성능 개선 후보의 정규 gate는 별도입니다.
+
+후속 적대적 검증에서 조회 분기의 원본 정책 전달 누락을 재현했습니다. [구간 조회 원본 편집 정책](hwp5-window-source-policy.md)이 재현·수정·거부/이력 불변 계약을 소유합니다. 위451/451은 이 후속 수정 전 스냅샷이며 이후 변경의 전체 gate로 소급 사용하지 않습니다.

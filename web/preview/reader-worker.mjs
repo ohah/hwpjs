@@ -322,7 +322,7 @@ self.onmessage = async event => {
       if (!editor || !preview) throw new Error("EditorNotOpen");
       if (message.kind === "query-edit-window" && !historyEnabled) throw new Error("EditorNotOpen");
       if (format === "hwp5") {
-        const content = queryHwp5WindowContent(editor, hwp5DisplayProjection(), { offset: message.offset, count: message.count }, hwp5ParagraphFormatsAvailable());
+        const content = hwp5Display(queryHwp5WindowContent(editor, hwp5DisplayProjection(), { offset: message.offset, count: message.count }, hwp5ParagraphFormatsAvailable()));
         reply({ kind: message.kind, content });
         return;
       }
