@@ -34,6 +34,14 @@
 
 같은 최종 후보의 본 작업 트리 Canvas/Worker 검사도1/1·fail/skip/cancel0·exit0입니다(`memo-final-main-canvas.log`,284,313ms). native 권한 조회·직접 입력·독립 XML/ZIP oracle·undo/redo 저장 바이트를 검사했습니다. 모의 DOM/Canvas이며 실제 브라우저나 성능 개선 완료 증거가 아닙니다.
 
+## 전용 prefix 감사의 MEMO 연결
+
+고정 감사 `/tmp/hwpjs-old-failures-current.8bPWPB`의 aift 일반 입력은6,343문단 중6,225개 편집/이력 복원, 거부113 UnsupportedParagraphControl·3 ProtectedFieldRange·2 InvalidFormulaNumber입니다. 전용 감사는 전역3008(구역2·로컬2694·beginElement25779)의 MEMO를 일반 필드/BOOKMARK inventory에서만 찾다가0개로 실패했습니다. 저장 데이터 손상의 증거가 아니라 감사 경로 누락이며, 고정 실행과 실패 기록을 소급 변경하지 않습니다.
+
+`tools/hwpx-field-prefix-oracle.mjs`가 독립 XML inventory에서 구역·로컬 문단·beginElement를 모두 대조하여 일반 필드/BOOKMARK/MEMO 검사기를 선택합니다. MEMO inventory만 `tools/memo-label-oracle.py`에 추가하고 기존 annotation subtree·metadata·전체 XML/ZIP 검증은 그대로 재사용합니다. 중복/미발견 대상은 거부하며 다른 유형으로 일반 필드 검사기의 허용 목록을 넓히지 않습니다.
+
+Zig0.17 게시 후보 `afb7fdfbbc8a9c9cc45a7cdb98ade6be7a6a88b1943e1c5354c63d6715b9e05e`에서 실제3008/3011 두 문단의 신규 선택 경로·저장·독립 normal/-O 검사·잘못된 기대값 거부·이력·재열기2/2, fail/cancel/skip0·exit0을 확인했습니다. 선택기 회귀2/2도 통과하며 section/paragraph/element 오선택, 중복/빈 inventory와 일반 필드 우선 선택을 검사합니다. 이는 aift 전용 감사 전체나44파일 재검증의 완료가 아닙니다. 제품 native 코어·기본 WASM/데모는 변경하지 않았습니다.
+
 ## 남은 제한
 
 실제 Chromium의 메모 라벨 입력·독립 저장·재업로드와 종료 검증은 [실제 브라우저 왕복](hwpx-memo-browser-roundtrip.md)을 따릅니다. 아래 과거 후보 기록의 브라우저 미검증을 모든 후속 후보의 상태로 해석하지 않습니다.

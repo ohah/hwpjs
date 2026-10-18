@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import {createHwpxEditor} from "../../js/hwpx-editor.mjs";
 import {execFileSync} from "../../tools/oracle-process.mjs";
+import {selectFieldPrefixOracle} from "../../tools/hwpx-field-prefix-oracle.mjs";
 assert(process.env.HWPJS_TEST_WASM,"Explicit MEMO candidate required");
 const wasm=readFileSync(process.env.HWPJS_TEST_WASM);
 const source=readFileSync("reference/rhwp/samples/hwpx/aift.hwpx");
@@ -54,11 +55,13 @@ for(const [paragraph,local,beginId]of [[3008,2694,"2135782115"],[3011,2697,"2135
   const labels=e.fieldLabels(2,paragraph);assert.equal(labels.length,1);assert.equal(labels[0].start,0);
   assert.deepEqual(Buffer.from(e.save()),source);
   const marker="메모😀<&",target=labels[0];
+  const selected=selectFieldPrefixOracle({before:source.toString("base64"),section:2,paragraph:local,beginElement:target.beginElement});
+  assert.deepEqual(selected,{oracle:"tools/memo-label-oracle.py",beginId});
   e.spliceFieldLabel(2,paragraph,target.beginElement,0,0,marker);
   const saved=Buffer.from(e.save());
   const request={before:source.toString("base64"),after:saved.toString("base64"),section:2,paragraph:local,beginId,text:marker};
   for(const flags of [[],["-O"]]){
-   execFileSync("python3",[...flags,"tools/memo-label-oracle.py"],{input:JSON.stringify(request),timeout:30000});
+   execFileSync("python3",[...flags,selected.oracle],{input:JSON.stringify({...request,mode:"prefix"}),timeout:30000});
    assert.throws(()=>execFileSync("python3",[...flags,"tools/memo-label-oracle.py"],{input:JSON.stringify({...request,text:"wrong"}),timeout:30000}),x=>x.status===1&&/complete XML mismatch/.test(String(x.stderr)));
   }
   assert.throws(()=>e.spliceFieldLabel(2,paragraph,target.beginElement,3,0,"X"),/SplitSurrogatePair/);

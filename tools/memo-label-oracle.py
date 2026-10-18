@@ -5,6 +5,20 @@ def require(value,message):
  if not value:raise ValueError(message)
 def signature(e):
  return (e.tag,sorted(e.attrib.items()),e.text,e.tail,[signature(c) for c in e])
+def inventory(before):
+ result=[]
+ with zipfile.ZipFile(io.BytesIO(base64.b64decode(before))) as source:
+  for name in source.namelist():
+   if not name.startswith('Contents/section') or not name.endswith('.xml'):continue
+   tree=E.fromstring(source.read(name));indices={node:index for index,node in enumerate(tree.iter())}
+   for paragraph,owner in enumerate(tree.iter(P+'p'),1):
+    direct=[node for run in owner.findall(P+'run') for node in run]
+    for ctrl in direct:
+     if ctrl.tag!=P+'ctrl':continue
+     for begin in ctrl:
+      if begin.tag==P+'fieldBegin' and begin.get('type')=='MEMO' and begin.get('editable')=='1':
+       result.append({'part':name,'paragraph':paragraph,'beginId':begin.get('id'),'beginElement':indices[begin]})
+ return result
 def verify(d):
  part='Contents/section%d.xml'%d['section']
  with zipfile.ZipFile(io.BytesIO(base64.b64decode(d['before']))) as a,zipfile.ZipFile(io.BytesIO(base64.b64decode(d['after']))) as b:
@@ -52,4 +66,11 @@ def self_test():
   except ValueError:continue
   raise ValueError('oracle accepted a mutation')
 if __name__=='__main__':
- self_test();verify(json.load(sys.stdin));print('MEMO full XML/ZIP verified')
+ self_test()
+ if sys.argv[1:]==['--self-test']:print('MEMO oracle self-test verified')
+ else:
+  data=json.load(sys.stdin)
+  if data.get('mode')=='inventory':print(json.dumps(inventory(data['before'])))
+  else:
+   require(data.get('mode') in (None,'prefix'),'unknown MEMO oracle mode')
+   verify(data);print('MEMO full XML/ZIP verified')
