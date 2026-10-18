@@ -2,6 +2,8 @@
 
 ## 외부 BinData 참조 원본의 수동 결과 5곳
 
+게시 소스 후보 `afb7fdfbbc8a9c9cc45a7cdb98ade6be7a6a88b1943e1c5354c63d6715b9e05e`에서도 5곳 전부의 독립 XML/ZIP normal/-O·표시 재열기·cache 보존·이력/원본 불변을 확인했습니다. main `747660dc`의 tree `33da00e5ba62b1d638d8d0e122f44a805a900c2a`에서 JS/tools/tests를 추출한 `/tmp/hwpjs-manual-published.uRHiw4`에서 Node24.20.0으로 `--test-name-pattern=issue1891_external_bindata_link`를 적용해 집중 1/1·fail/cancel/skip0·exit0(22529ms)입니다. 앞선 f4e0 작업 트리 후보 결과와 별도이며, 기본 WASM 승격이나 전체 문서 편집 완료는 아닙니다.
+
 고정44파일 감사의 `issue1891_external_bindata_link.hwpx`는2,864문단 중 일반2,681/전용163입력과 비숫자15·일반 필드 라벨5거부를 기록했습니다. 독립 원문에서 결과5곳은 문단2740–2744의 SUM이며, 문자 prefix 거부를 수동 결과 미지원으로 해석하지 않습니다. 숫자15곳의 독립 산술·전체 XML 저장은 [병합 SUM 입력 검증](hwpx-chart-numeric-input-corpus.md)이 소유합니다.
 
 기존 수동 결과 감사 회귀 목록에 같은 원본/분모5를 추가했습니다. 별도 oracle이나 제품 코드 변경 없이5개 전체를 원본에서 독립 관측하고 native 소유권 조회·Unicode/XML prefix·독립 normal/-O 전체 XML/ZIP·source formula cache 불변·표시 재열기·undo/redo/undo 저장 바이트와 원본/후보 불변을 검사합니다. 원본 SHA256은 `ce9f7275b9c84e4f032c218b9b6f94cf53c24f6e91fba30be7fd55b17acee924`입니다.

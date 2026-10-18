@@ -54,6 +54,8 @@ numeric-input/manual-result 브라우저 사례도 `fixturePicker:true`로 연�
 
 ### 실제 Canvas 입력과 저장 왕복
 
+아래 15좌표 API 회귀도 게시 소스 후보 `afb7fdfbbc8a9c9cc45a7cdb98ade6be7a6a88b1943e1c5354c63d6715b9e05e`에서 확인했습니다. main `747660dc`의 tree `33da00e5ba62b1d638d8d0e122f44a805a900c2a`에서 추출한 `/tmp/hwpjs-manual-published.uRHiw4`의 Node24.20.0 실행은 집중 1/1·fail/cancel/skip0·exit0(82462ms)입니다. 15곳 전부의 독립 산술/XML normal/-O·변조 거부·undo/redo·비숫자 거부 후 이력 보존·재열기/재저장을 포함합니다. 앞선 f4e0 후보 결과와 별도이며 아래 브라우저 한 셀 범위를 15셀 GUI로 확대하지 않습니다.
+
 `HWPJS_TEST_WASM=/absolute/candidate.wasm node tools/merged-sum-input-browser-audit.mjs`는 이 원본을 업로드하고 문단 2715의 `67.83`을 실제 Canvas 입력으로 `1`로 치환합니다. 공유 메뉴 flow에서 U/R/S·독립 전체 XML/ZIP normal/-O·잘못된 기대값 거부·다운로드와 재업로드를 검사합니다. 기대 합계는 기존 독립 oracle이 계산하며 새 fixture 허용 목록이나 제품 편집 규칙을 추가하지 않습니다.
 
 게시 소스 af27ff9b에 브라우저 검사 추가분만 넣은 tree `6b793145c07196810f9c84b7b2b43cd1e32eda44`의 `/tmp/hwpjs-merged-browser-clean.LkggHK/merged-browser.jsonl`은 `verified:true`와 `cleanup.success:true`·소유 브라우저/서버 종료를 기록했습니다. stderr는 0바이트입니다. Node24.20.0과 게시 소스 후보 WASM `afb7fdfbbc8a9c9cc45a7cdb98ade6be7a6a88b1943e1c5354c63d6715b9e05e`를 사용했습니다. 저장본 SHA256은 `e356ef93917ceb8aad921488213479832b6f41a018e58d62805a7057595f138e`입니다. 인자 거부 guard는 16/16·fail/cancel/skip0·exit0입니다. 실제 한 셀의 GUI 왕복을 아래 API 15좌표 검사, 전체 fixture 편집 또는 조판 동치와 동일시하지 않습니다. 기본 데모/WASM은 교체하지 않았습니다.
