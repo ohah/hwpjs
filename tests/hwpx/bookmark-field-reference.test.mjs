@@ -22,6 +22,9 @@ test("reference BOOKMARK field input retains section settings and trailing bookm
     for (const flags of [[], ["-O"]]) {
       const verify = value => execFileSync("python3", [...flags, "tools/hwpx-anchor-prefix-oracle.py"], { input: JSON.stringify(value), timeout: 30000 });
       verify(request);
+      const bookmarkRequest = { ...request, mode: "prefix", beginId: "1115723309" };
+      execFileSync("python3", [...flags, "tools/hwpx-bookmark-field-oracle.py"], { input: JSON.stringify(bookmarkRequest), timeout: 30000 });
+      assert.throws(() => execFileSync("python3", [...flags, "tools/hwpx-bookmark-field-oracle.py"], { input: JSON.stringify({ ...bookmarkRequest, text: "wrong" }), timeout: 30000 }), error => error.status === 1 && /Unexpected XML change/.test(String(error.stderr)));
       assert.throws(() => verify({ ...request, text: "wrong" }), error => error.status === 1 && /complete XML mismatch/.test(String(error.stderr)));
     }
     assert.equal(editor.undo(), true);

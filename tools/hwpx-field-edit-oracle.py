@@ -11,13 +11,13 @@ from hwpx_field_dirty_owners import mark_dirty_owners
 P = "{http://www.hancom.co.kr/hwpml/2011/paragraph}"
 
 
-def fragments(tree):
+def fragments(tree, kinds=("HYPERLINK", "CLICK_HERE")):
     elements = list(tree.iter())
     paragraphs = list(tree.iter(P + "p"))
     parents = {child: parent for parent in tree.iter() for child in parent}
     result = []
     for start, begin in enumerate(elements):
-        if begin.tag != P + "fieldBegin" or begin.get("type") not in ("HYPERLINK", "CLICK_HERE"):
+        if begin.tag != P + "fieldBegin" or begin.get("type") not in kinds:
             continue
         ends = [index for index in range(start + 1, len(elements)) if elements[index].tag == P + "fieldEnd" and elements[index].get("beginIDRef") == begin.get("id")]
         if len(ends) != 1:

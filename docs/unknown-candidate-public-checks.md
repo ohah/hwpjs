@@ -48,7 +48,13 @@
 
 `/tmp/hwpjs-title-field-crosscheck.PEUEXF`의 `crosscheck-final.log/.stderr`는 명시적 eaaa0d20 후보·동결 JS·깨끗한6bc8c4fa oracle·수정 helper로6/6·fail/cancel/skip0·exit0·stderr0(8686.423917ms)입니다. 제목 양성/metadata 음성, 기존/여러 문단 중첩, 표 경계, 일반 BOOKMARK 거부를 결합했습니다. scoped oracle self-test도 normal/-O에서 통과했습니다. 같은 디렉터리의 먼저 실행한 `crosscheck.log`와 `crosscheck-complete.log`는 사본에 title-field-mutate.py/중첩 oracle 파일이 빠져 exit1이었으며 성공으로 세지 않습니다. 누락된 기존 도구를 연결한 최종 실행과 구분합니다.
 
-`36388711_사회보장제도 신설 협의요청서(청년오피스)_260624.hwpx`의 specialized 전체 감사는 여전히 inventory0개로 중단됩니다. 현재 선택 필드가 BOOKMARK(beginElement32/id1115723309)이고 일반 inventory가 그 종류를 제외하기 때문입니다. 기존 bookmark-field-reference 전용 테스트와 이 감사의 미연결을 구분하며, 전체 파일 감사 통과로 주장하지 않습니다.
+`36388711_사회보장제도 신설 협의요청서(청년오피스)_260624.hwpx`의 specialized 전체 감사는 당시 inventory0개로 중단됐습니다. 선택 필드가 BOOKMARK(beginElement32/id1115723309)이고 일반 inventory가 그 종류를 제외하기 때문입니다. 후속 `hwpx-bookmark-field-oracle.py`는 별도 BOOKMARK 전용 adapter로 이를 연결합니다. 일반 fragments의 기본 종류는 바꾸지 않고, 같은 원본 fragment 순회·전체 XML/ZIP comparator를 명시적 종류 인자로 재사용합니다. 감사는 일반 inventory에 정확한 선택 대상이 없을 때만 이 별도 inventory의 같은 section/문단/beginElement를 연결하며, 일치0/복수는 계속 실패입니다. 뒤의 텍스트나 첫 번째 후보로 대체하지 않습니다. 실제 prefix 명령·WASM은 바꾸지 않았습니다.
+
+공통 dirty helper의 허용 상위 종류에는 기존 text-field 계약의 BOOKMARK도 명시했습니다. 합성 여러 문단의 BOOKMARK 상위 필드와 CLICK_HERE/HYPERLINK 자식이 함께 dirty가 되며, DATE 상위는 거부합니다. BOOKMARK 전용 adapter의 합성 검사는 editable=0·dirty=0 원본의 올바른 prefix와 잘못된 ID/문자열/dirty/DATE 대체를 검사하고, 일반 field oracle의 BOOKMARK 거부도 유지합니다. 최종 사본·실제 파일별 결과는 아래 후속 기록을 따릅니다.
+
+`/tmp/hwpjs-bookmark-audit.P9yX9V`는1d03fc70의 깨끗한 oracle/동결 JS에 이 연결만 더한 사본입니다. 작업 트리의 styled-run 삭제/별도 refusal 출력은 제외했습니다. helper의 BOOKMARK 상위 지원을 확정한 뒤 다시 실행한 `bookmark-final-tests.log/.stderr`는7/7·fail/cancel/skip0·exit0·stderr0(8493.724417ms)입니다. 실제 BOOKMARK/제목·원본/여러 문단 중첩·표 경계·일반 거부와 합성5검사를 normal/-O에서 확인했습니다. base/scoped oracle의 두 모드 self-test도 통과했습니다.
+
+같은 최종 사본과 eaaa0d20 후보의 `bookmark-final-corpus.log/.stderr`는 위36388711 원본의52시도/검증52/독립 XML52(필드1)/거부0·exit0/signal=null입니다. 파일별120초 상한 내 정상 종료이며 일반 입력 문단을 이 specialized 분모에 넣지 않습니다. 일반 inventory를 넓히거나 앞선 inventory0 오류를 무시한 결과가 아닙니다. 이52개를 전체 참조 corpus/브라우저/원본 조판 증거로 확대하지 않습니다.
 
 같은 중첩 필드 수정 사본의 `leading-corpus.log/.stderr`에서 앞선 task1789 원본도90시도/검증90/독립 XML90(필드86)/거부0·exit0으로 재확인했습니다. 두 원본의 특수 입력 결과이며 일반 입력·전체 참조 corpus·실제 브라우저 검증을 대신하지 않습니다.
 

@@ -24,6 +24,6 @@ def mark_dirty_owners(tree, selected):
             # The caller's explicit fragment oracle validates the selected
             # field kind (including observed BOOKMARK metadata). Only inferred
             # ancestor permissions belong to this shared helper.
-            if node is not selected and node.get("type") not in ("CLICK_HERE", "HYPERLINK"):
+            if node is not selected and node.get("type") not in ("CLICK_HERE", "HYPERLINK", "BOOKMARK"):
                 raise ValueError("Unsupported field dirty owner")
             node.set("dirty", "1")

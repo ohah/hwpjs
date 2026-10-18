@@ -1,5 +1,6 @@
 """Adversarial checks for source-selected field/object prefix expectations."""
 import io
+import base64
 from pathlib import Path
 import runpy
 import sys
@@ -20,6 +21,20 @@ def archive(xml, other=b"keep"):
 
 
 class LeadingFieldObject(unittest.TestCase):
+    def test_explicit_bookmark_adapter_requires_kind_target_and_dirty(self):
+        verify = runpy.run_path(str(TOOLS / "hwpx-bookmark-field-oracle.py"))["verify"]
+        xml = ("<r xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'>"
+               "<p:p><p:run><p:fieldBegin id='7' type='BOOKMARK' editable='0' dirty='0'/>"
+               "<p:t>A</p:t><p:fieldEnd beginIDRef='7'/></p:run></p:p></r>").encode()
+        valid = xml.replace(b"dirty='0'", b"dirty='1'").replace(b">A<", b">XA<")
+        wire = lambda data: base64.b64encode(archive(data)).decode()
+        request = {"before": wire(xml), "after": wire(valid), "beginId": "7", "paragraph": 1, "text": "X"}
+        verify(request)
+        for patch in ({"beginId": "8"}, {"text": "wrong"}, {"after": wire(valid.replace(b"dirty='1'", b"dirty='0'"))},
+                      {"before": wire(xml.replace(b"BOOKMARK", b"DATE")), "after": wire(valid.replace(b"BOOKMARK", b"DATE"))}):
+            with self.assertRaises(ValueError):
+                verify({**request, **patch})
+
     def test_generic_oracle_still_requires_explicit_bookmark_fragment_validation(self):
         xml = ("<r xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'>"
                "<p:p><p:run><p:fieldBegin id='7' type='BOOKMARK'/><p:t>A</p:t>"
@@ -36,6 +51,9 @@ class LeadingFieldObject(unittest.TestCase):
         valid = xml.replace(b"type='CLICK_HERE'", b"type='CLICK_HERE' dirty='1'").replace(
             b"type='HYPERLINK'", b"type='HYPERLINK' dirty='1'").replace(b">B<", b">XB<")
         compare(archive(xml), archive(valid), "X", "2", 2)
+        compare(archive(xml.replace(b"CLICK_HERE", b"BOOKMARK")), archive(valid.replace(b"CLICK_HERE", b"BOOKMARK")), "X", "2", 2)
+        with self.assertRaisesRegex(ValueError, "Unsupported field dirty owner"):
+            compare(archive(xml.replace(b"CLICK_HERE", b"DATE")), archive(valid.replace(b"CLICK_HERE", b"DATE")), "X", "2", 2)
         for kind in (b"CLICK_HERE", b"HYPERLINK"):
             mutant = valid.replace(b"type='" + kind + b"' dirty='1'", b"type='" + kind + b"'")
             with self.assertRaisesRegex(ValueError, "Unexpected XML change"):

@@ -65,9 +65,14 @@ try {
         totals.xmlVerified++;
       } else {
         const inventory = JSON.parse(execFileSync("python3", ["tools/hwpx-field-edit-oracle.py"], { input: JSON.stringify({ mode: "inventory", before: input.toString("base64") }), encoding: "utf8", timeout: 30000 }));
-        const choices = inventory.filter(entry => entry.part === `Contents/section${p.section}.xml` && entry.paragraph === p.localParagraph && (fieldTarget === null || entry.beginElement === fieldTarget.beginElement));
+        const matchesTarget = entry => entry.part === `Contents/section${p.section}.xml` && entry.paragraph === p.localParagraph && (fieldTarget === null || entry.beginElement === fieldTarget.beginElement);
+        let choices = inventory.filter(matchesTarget), oracle = "tools/hwpx-field-edit-oracle.py";
+        if (choices.length === 0 && fieldTarget !== null) {
+          oracle = "tools/hwpx-bookmark-field-oracle.py";
+          choices = JSON.parse(execFileSync("python3", [oracle], { input: JSON.stringify({ mode: "inventory", before: input.toString("base64") }), encoding: "utf8", timeout: 30000 })).filter(matchesTarget);
+        }
         assert.equal(choices.length, 1, "independent field fragment must be unique");
-        for (const flags of [[], ["-O"]]) execFileSync("python3", [...flags, "tools/hwpx-field-edit-oracle.py"], { input: JSON.stringify({ mode: "prefix", before: input.toString("base64"), after: Buffer.from(saved).toString("base64"), beginId: choices[0].beginId, paragraph: p.localParagraph, text: "경로😀<&" }), encoding: "utf8", timeout: 30000 });
+        for (const flags of [[], ["-O"]]) execFileSync("python3", [...flags, oracle], { input: JSON.stringify({ mode: "prefix", before: input.toString("base64"), after: Buffer.from(saved).toString("base64"), beginId: choices[0].beginId, paragraph: p.localParagraph, text: "경로😀<&" }), encoding: "utf8", timeout: 30000 });
         totals.xmlVerified++;
         totals.xmlFieldVerified++;
       }
