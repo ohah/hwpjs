@@ -132,7 +132,26 @@ test("renderer shade paints before glyph and restores text color with measured a
   assert.equal(calls.filter(call => call.kind === "rect" && call.color === "#ffff00").length, 1);
 });
 
+test("macOS command vertical keys reach paragraph edges rather than one wrapped visual row", () => {
+  const text = "1,498 ", layout = layoutContent({ paragraphs: [{ section: 0, paragraph: 0, text, editable: true, label: "" }], limited: false }, 16, text => text.length * 8);
+  assert(layout.rows.length >= 3);
+  for (const [key, unit, expected] of [["ArrowUp", text.length, 0], ["ArrowDown", 0, text.length]]) {
+    const intent = navigationIntent({ key, metaKey: true }, "MacIntel");
+    assert.deepEqual(intent, { key: key === "ArrowUp" ? "Home" : "End", paragraphEdge: true, word: false });
+    const point = { section: 0, paragraph: 0, unit };
+    const moved = navigateText(layout, text, point, point, intent.key, intent);
+    assert.equal(moved.focus.unit, expected);
+    const selected = navigateText(layout, text, point, point, intent.key, { ...intent, extend: true });
+    assert.equal(selected.anchor.unit, unit);
+    assert.equal(selected.focus.unit, expected);
+  }
+  assert.equal(navigationIntent({ key: "ArrowUp", ctrlKey: true }, "MacIntel"), null);
+  assert.deepEqual(navigationIntent({ key: "ArrowUp" }, "MacIntel"), { key: "ArrowUp", paragraphEdge: false, word: false });
+});
+
 test("platform navigation separates macOS Option words and Cmd line edges", () => {
+  assert.deepEqual(navigationIntent({ key: "ArrowUp", metaKey: true }, "MacIntel"), { key: "Home", paragraphEdge: true, word: false });
+  assert.deepEqual(navigationIntent({ key: "ArrowDown", metaKey: true }, "MacIntel"), { key: "End", paragraphEdge: true, word: false });
   assert.deepEqual(navigationIntent({ key: "ArrowRight", altKey: true }, "MacIntel"), { key: "ArrowRight", word: true, paragraphEdge: false });
   assert.deepEqual(navigationIntent({ key: "ArrowLeft", metaKey: true }, "macOS"), { key: "Home", word: false, paragraphEdge: false });
   assert.deepEqual(navigationIntent({ key: "ArrowRight", ctrlKey: true }, "Win32"), { key: "ArrowRight", word: true, paragraphEdge: true });

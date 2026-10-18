@@ -6,5 +6,6 @@ export function navigationIntent(event, platform = "") {
   if (mac && event.ctrlKey) return null;
   if (event.altKey && !(mac && horizontal && !event.metaKey)) return null;
   if (mac && event.metaKey && horizontal) return { key: event.key === "ArrowLeft" ? "Home" : "End", paragraphEdge: false, word: false };
+  if (mac && event.metaKey && ["ArrowUp", "ArrowDown"].includes(event.key)) return { key: event.key === "ArrowUp" ? "Home" : "End", paragraphEdge: true, word: false };
   return { key: event.key, paragraphEdge: Boolean(event.ctrlKey || event.metaKey), word: horizontal && Boolean(event.ctrlKey || (mac && event.altKey)) };
 }
