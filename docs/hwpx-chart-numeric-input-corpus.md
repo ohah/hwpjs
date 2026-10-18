@@ -1,5 +1,17 @@
 # 차트 예제의 숫자 입력 48곳
 
+## 데모에서 참조 숫자·결과 예제 선택
+
+픽스쳐 허용 목록에 `numeric-formula-reference.hwpx`를 추가했습니다. UI 라벨은 `숫자 입력·표 계산 결과 (참조)`이며 아래143E433F 원본 한 개만 가리킵니다. 임의 경로나 런타임 디렉터리 열거는 허용하지 않습니다. 기존 서버 응답 회귀는 모든 항목의 GET/HEAD 원본 일치와 경로/realpath 보호를 계속 검사합니다.
+
+numeric-input/manual-result 브라우저 사례도 `fixturePicker:true`로 연결해 목록 선택→실제 열기→Canvas 편집·이력→독립 XML/ZIP→다운로드·재업로드를 검사합니다. 같은 원본을 두 번 카탈로그에 복제하지 않으며 두 사례 모두 원본 경로와 유일한 항목이 대응함을 guard가 확인합니다. 단위/서버/수명/인자 세 파일은23/23·fail/cancel/skip0·exit0입니다.
+
+작업 트리 후보의 `numeric-picker-browser.jsonl/.stderr`·`manual-picker-browser.jsonl/.stderr`(`/tmp/hwpjs-zig017-current-fixtures.xouwd1`)는 모두 exit0·stderr0·verified=true·cleanup.success=true입니다. 후보 트리 `ce7d0a1d2a7aca3137d54bdd5336e56e35db0930`의 `/tmp/hwpjs-numeric-picker-clean.Dt8xSl` 사본도 게시 소스 Zig0.17 WASM `afb7fdfbbc8a9c9cc45a7cdb98ade6be7a6a88b1943e1c5354c63d6715b9e05e`로 numeric/manual 두 왕복과 인자 guard12/12를 통과했습니다. 같은 경로의 `numeric.jsonl/.stderr`·`manual.jsonl/.stderr`와 wrapper exit0이 근거입니다. 스킬의 격리/실제 입력/종료 확인을 사용했습니다.
+
+서버는 허용 목록을 시작 시 import하므로 기존8080 소유 서버에서 새 URL이404인 것을 먼저 확인했습니다. PID/명령/cwd/리스너를 확인하고 해당 서버만 재시작했습니다. 이후 로컬8080과 기존 테일스케일10000의 새 fixture URL 모두200·원본 SHA256 `1ee1e9045be4334fb9f940d7226cfda2884df9fecac6fa7fca76fb81c08a4a81` 일치입니다. 기본 WASM은 양쪽 모두 기존 `cbaaf27f858229fedd01b9996ce152bd31aa6d6f346481b7887bcc510ef68346` 그대로이며 후보를 승격하지 않았습니다. 다른 프로젝트의 서버/테일스케일 경로는 변경하지 않았습니다.
+
+같은 기본 WASM의 `numeric-picker-default-browser.jsonl/.stderr`도 숫자 셀 전체 왕복 exit0·stderr0·verified=true·cleanup.success=true입니다. 반면 `manual-picker-default-browser.stderr`는 브라우저를 열기 전 `HwpxManualFormulaResultTargetAbiUnavailable`로 exit1입니다. 기본에는 결과 텍스트 projection ABI가 없으므로 이 새 Canvas 경로의 후보 성공을 현재 외부 데모의 결과 직접 입력 성공으로 합치지 않습니다. 해당 기능의 기본 승격/별도 후보 공개는 미완료입니다.
+
 ## 실제 숫자 셀 Canvas·메뉴 왕복
 
 `numeric-input-browser-audit.mjs`는 기존 공유 문서 메뉴 flow의 numeric-input 사례를 실행합니다. 대상은 아래 참조 원본 문단19의 `328` 전체를 실제 브라우저 키보드로 선택해 `1`로 치환하는 명령입니다. native 사전 표시와 trusted beforeinput/input, 메뉴 U/R/S, 다운로드, 기존 독립 숫자 oracle의 SUM/전체 XML·ZIP normal/-O, 잘못된 대상 문단 거부, 재업로드 후 현재 숫자 표시를 검사합니다. 별도 편집 명령/독립 계산기를 만들지 않습니다.

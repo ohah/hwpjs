@@ -4,8 +4,8 @@ import {spawnSync} from "node:child_process";
 import {documentMenuBrowserCases} from "../../tools/browser/document-menu-cases.mjs";
 import {demoFixtures,fixtureUrl} from "../../web/preview/fixture-catalog.mjs";
 
-test("plain menu roundtrip exercises the real fixture picker with one exact public source",()=>{
-  const selected=documentMenuBrowserCases.plain;
+for(const name of ["plain","numeric-input","manual-result"])test(`${name} menu roundtrip exercises the real fixture picker with one exact public source`,()=>{
+  const selected=documentMenuBrowserCases[name];
   assert.equal(selected.fixturePicker,true);
   const entries=demoFixtures.filter(item=>item.path===selected.fixturePath);
   assert.equal(entries.length,1);
