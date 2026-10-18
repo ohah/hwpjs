@@ -1,5 +1,15 @@
 # Canvas 수식 결과 텍스트 경로
 
+## 참조 원본의 반복 가능한 메뉴 왕복
+
+`manual-result-browser-audit.mjs`는 기존 문서 메뉴 브라우저 flow에 선언된 manual-result 사례만 전달합니다. 별도 UI 명령/편집기/다운로드 구현을 만들지 않습니다. 대상은 `hwpx/143E433F503322BD33.hwpx` 문단39·수식 ordinal0·표시 `4,319`이며 원본 해시 `1ee1e9045be4334fb9f940d7226cfda2884df9fecac6fa7fca76fb81c08a4a81`을 결과에 남깁니다. 사전 조회는 native 결과 표시를 사용하고 저장 검증은 기존 독립 수동 결과 oracle을 사용합니다. 일반 prefix oracle로 수식 결과를 잘못 판단하지 않습니다.
+
+작업 트리 Zig0.17 후보 `f4e0f396a3fea6e6354b364ff176e31d72ed00ec643fa566c4abbd8bc2f58d77`에서 `/tmp/hwpjs-zig017-current-fixtures.xouwd1/manual-result-reference-browser.jsonl/.stderr`가 exit0·stderr0·verified=true·cleanup.success=true입니다. agent-browser 스킬의 격리 세션·실제 입력·종료 확인을 사용했습니다. 실제 브라우저 beforeinput/input의 trusted 입력, 결과 prefix `결과브라우저😀<&`, 메뉴 U/R/S, 전체 XML/ZIP normal/-O·잘못된 표시 기대값 거부, 다운로드/재업로드와 현재 결과 표시를 확인했습니다. 저장본 SHA256은 `a4bb9414f8d5cc90e17030cd1b0600d57e8f12a6203558e3bed460561153dcf3`입니다.
+
+새 진입점도 잘못된/부분 인자를 파일 읽기·브라우저 시작 전에 거부하는 회귀에 포함해8/8·fail/cancel/skip0·exit0입니다. 한 결과의 실제 경로이며 숫자 의존값 재계산·물리 IME·모든 위치/필드·원본 조판 지원의 증거가 아닙니다. 기본 WASM과 외부 데모를 교체하지 않았습니다.
+
+커밋 후보 트리 `cd8ab5a78af4cc91980fd32fe96bf28a5459fdf4`를 `/tmp/hwpjs-manual-browser-clean.foLfSv`에 추출한 뒤 게시 소스 Zig0.17 WASM `afb7fdfbbc8a9c9cc45a7cdb98ade6be7a6a88b1943e1c5354c63d6715b9e05e`에서도 같은 결과 왕복과 기존 plain 픽스쳐 왕복을 직렬로 실행했습니다. `manual.jsonl/.stderr`·`plain.jsonl/.stderr` 모두 verified=true·cleanup.success=true·stderr0이고 wrapper exit0입니다. 결과 저장본 해시도 작업 트리와 같았습니다. 집중 guard8/8도 통과했으며 세 소유 세션 모두 종료 후 active=false·pid=null을 확인했습니다. 이 격리 검사는 미커밋 app 변경에 의존하지 않는지 확인한 것이며 전체 편집 gate 통과로 확대하지 않습니다.
+
 ## 소유권과 경계
 
 Worker의 기존 `splice` 메시지는 일반/필드 바깥 경로 뒤에 수식 결과의 native range target을 조회하고, 유일한 결과 내부 범위만 `spliceManualFormulaResult`로 보냅니다. 문단 전체가 하나의 결과인 경우에만 해당 target의 전체 범위 일치를 근거로 whole-paragraph 편집을 표시합니다. 혼합 문단은 `query-edit-range`가 native 결과 범위 권한을 조회하며 결과 밖·모호한 선택은 허용하지 않습니다. 문자열 내용이나 source cache 길이로 소유권을 추측하지 않습니다.

@@ -26,6 +26,7 @@ export async function runDocumentMenuBrowserAudit(caseName) {
   const fixture = resolve(config.fixturePath), input = readFileSync(fixture);
   const hash = bytes => createHash("sha256").update(bytes).digest("hex");
   const sourcePaths = ["web/preview/index.html","web/preview/preview.css","web/preview/app.mjs","web/preview/document-menu-controls.mjs","web/preview/document-menu-mnemonic.mjs","web/preview/document-ribbon-controls.mjs","web/preview/document-ribbon-pages.mjs","web/preview/fixture-controls.mjs","web/preview/fixture-catalog.mjs","web/preview/fixture-inventory.mjs","tools/browser/ribbon-page.mjs","tools/document-menu-browser-audit.mjs","tools/unknown-object-browser-audit.mjs","tools/browser/document-menu-roundtrip.mjs","tools/browser/document-menu-cases.mjs","tools/hwpx-anchor-prefix-oracle.py",...(oraclePath==="tools/hwpx-anchor-prefix-oracle.py"?[]:[oraclePath])];
+  if(config.entryPath)sourcePaths.push(config.entryPath);
   const sourceHashes = () => Object.fromEntries(sourcePaths.map(path=>[path,hash(readFileSync(resolve(path)))]));
   const sourceSha256 = sourceHashes();
   const session = cli("agent-browser", ["session","id","--scope","worktree","--prefix",config.sessionPrefix], {cwd:root,encoding:"utf8",timeout:10000}).trim();
@@ -33,7 +34,7 @@ export async function runDocumentMenuBrowserAudit(caseName) {
   const output = mkdtempSync(join(tmpdir(),config.outputPrefix));
   const editor = await createHwpxEditor(wasm);
   let original;
-  try { editor.open(input); original = editor.anchorText(0,paragraph); assert.equal(original,config.original); }
+  try { editor.open(input); original = oracleMode==="manual-result"?editor.manualFormulaResultDisplayText(0,paragraph):editor.anchorText(0,paragraph); assert.equal(original,config.original); }
   finally { editor.close(); }
   const command = (...args) => {
     const result = JSON.parse(cli("agent-browser", ["--json","--session",session,...args], {
@@ -175,10 +176,11 @@ export async function runDocumentMenuBrowserAudit(caseName) {
     for(const kind of ["splice","undo","redo","save"])assert.equal(evaluate(`window.__menuAudit.filter(r=>r.direction==='request'&&r.kind===${JSON.stringify(kind)}).length`),["splice","undo"].includes(kind)&&protectedAnchors?2:1);
     const downloaded=join(output,"edited.hwpx");click(`${popup("menu-save")} > summary`);
     command("download","#menu-save",downloaded);const saved=readFileSync(downloaded);
-    const request={mode:oracleMode,before:input.toString("base64"),after:saved.toString("base64"),section:0,paragraph,text:marker};
+    const request={before:input.toString("base64"),after:saved.toString("base64"),section:0,...(oracleMode==="manual-result"?{ordinal:config.formulaOrdinal,display:marker+original}:{mode:oracleMode,paragraph,text:marker})};
     for(const flags of [[],["-O"]]){
       await executeOracle("python3",[...flags,oraclePath],{input:JSON.stringify(request),timeout:30000});
-      await assert.rejects(executeOracle("python3",[...flags,"tools/hwpx-anchor-prefix-oracle.py"],{input:JSON.stringify({...request,text:"wrong"}),timeout:30000}),error=>error.status===1&&error.signal===null&&/complete XML mismatch/.test(String(error.stderr)));
+      const negative=oracleMode==="manual-result"?{...request,display:"wrong"}:{...request,text:"wrong"};
+      await assert.rejects(executeOracle("python3",[...flags,oracleMode==="manual-result"?oraclePath:"tools/hwpx-anchor-prefix-oracle.py"],{input:JSON.stringify(negative),timeout:30000}),error=>error.status===1&&error.signal===null&&/complete XML mismatch|Complete XML differs/.test(String(error.stderr)));
     }
     evaluate("window.__menuAudit=[]");command("upload","#file",downloaded);wait(`${replies("load")}.length===1`);
     click("#enable-edit");wait(`${replies("enable")}.some(r=>r.revision===0)`);

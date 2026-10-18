@@ -29,11 +29,11 @@ test("menu browser audit rejects partial-scope arguments before reading a candid
   assert.equal(result.stdout,"");assert.match(result.stderr,/UnexpectedBrowserAuditArguments/);assert.doesNotMatch(result.stderr,/ENOENT/);
 });
 
-for(const [args,env,pattern] of [
+for(const tool of ["unknown-object","manual-result"])for(const [args,env,pattern] of [
   [[],{HWPJS_TEST_WASM:""},/ExplicitBrowserCandidateRequired/],
   [["--skip-history"],{HWPJS_TEST_WASM:"/nonexistent-menu-audit.wasm"},/UnexpectedBrowserAuditArguments/],
-])test(`unknown object browser refuses invalid inputs before starting external processes: ${pattern}`,()=>{
-  const result=spawnSync(process.execPath,["tools/unknown-object-browser-audit.mjs",...args],{
+])test(`${tool} browser refuses invalid inputs before starting external processes: ${pattern}`,()=>{
+  const result=spawnSync(process.execPath,[`tools/${tool}-browser-audit.mjs`,...args],{
     encoding:"utf8",timeout:10000,env:{...process.env,PATH:"/nonexistent-menu-audit-bin",...env},
   });
   assert.equal(result.error,undefined);assert.equal(result.signal,null);assert.equal(result.status,1);
