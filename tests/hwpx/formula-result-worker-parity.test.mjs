@@ -1,12 +1,15 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
+import {createHash} from "node:crypto";
 import {workerCanvasHarness} from "../canvas/worker-harness.mjs";
 
 test("same Worker source preserves complete aift display responses with optional native candidate filtering", async t => {
   const candidate = process.env.HWPJS_TEST_WASM;
   const baseline = process.env.HWPJS_BASELINE_WASM;
   assert(candidate && baseline && candidate !== baseline, "Explicit distinct artifacts required");
+  const digest = path => createHash("sha256").update(readFileSync(path)).digest("hex");
+  assert.notEqual(digest(candidate), digest(baseline), "DistinctWasmArtifactsRequired");
   t.after(() => { process.env.HWPJS_TEST_WASM = candidate; });
   const bytes = readFileSync("reference/rhwp/samples/hwpx/aift.hwpx");
   const results = [];

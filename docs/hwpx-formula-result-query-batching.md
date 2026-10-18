@@ -41,4 +41,6 @@ Canvas 입력·독립 저장 oracle 재검사는1/1·fail/skip/cancel0·exit0입
 
 `HWPJS_TEST_WASM=/absolute/candidate.wasm node --test tests/hwpx/formula-result-paragraphs.test.mjs tests/hwpx/formula-result-paragraph-api.test.mjs`는 decoder·요청 수명·실제 API 집중 검사입니다. 정규 HWPX 검증 묶음에도 등록합니다.
 
-`HWPJS_BASELINE_WASM=/absolute/frozen-baseline.wasm zig build hwpx-formula-query-parity -Doptimize=ReleaseSafe --prefix /absolute/isolated-output`은 새 설치 후보와 명시적 baseline을 같은 Worker 소스로 대조합니다. 누락되거나 같은 경로인 baseline은 실패시키며, 기본 데모에 설치하지 않도록 별도 prefix를 사용합니다.
+`HWPJS_BASELINE_WASM=/absolute/frozen-baseline.wasm zig build hwpx-formula-query-parity -Doptimize=ReleaseSafe --prefix /absolute/isolated-output`은 새 설치 후보와 명시적 baseline을 같은 Worker 소스로 대조합니다. 누락되거나 같은 경로인 baseline은 실패시키며 경로가 달라도 SHA-256이 같으면 `DistinctWasmArtifactsRequired`로 거부합니다. 기본 데모에 설치하지 않도록 별도 prefix를 사용합니다.
+
+서로 다른 실제 경로의 같은 c10 파일로 실행한 CLI 음성 대조는 해당 오류·exit1이었고 Worker 하위 검사 전에 종료했습니다(`formula-same-artifact-negative.log`,93ms). 최종 c10 대8fa 전체 Worker 대조는 이 추가 guard를 적용한 소스로 다시 실행 중입니다(`formula-final-c10-worker-parity.log`). 앞선 e298 대8fa 성공과 구분합니다.
