@@ -1,5 +1,13 @@
 # 수식 결과 입력의 참조 감사
 
+## 과거 실패 원본의 결과 입력 경로 재확인
+
+Zig0.17 동결44개 재검사의 `hwpx/143E433F503322BD33.hwpx`는 일반/전용 prefix에서35문단 검증·15거부였습니다. 그중3곳의 `UnsupportedFieldLabelRange`는 일반 필드 라벨 명령의 거부이며, 수동 수식 결과 경로까지 미지원이라는 뜻은 아닙니다. 같은 원본의 모든 수식3곳을 기존 수동 결과 감사로 검사하는 항목을 `manual-result-corpus-audit.test.mjs`에 추가했습니다. 별도 inventory/저장 oracle을 만들거나 기존 prefix 결과를 통과로 수정하지 않습니다.
+
+작업 트리 후보 `f4e0f396a3fea6e6354b364ff176e31d72ed00ec643fa566c4abbd8bc2f58d77`와 게시 소스 후보 `afb7fdfbbc8a9c9cc45a7cdb98ade6be7a6a88b1943e1c5354c63d6715b9e05e`에서 각각 집중1/1·fail/cancel/skip0·exit0입니다. 원본 SHA256은 `1ee1e9045be4334fb9f940d7226cfda2884df9fecac6fa7fca76fb81c08a4a81`이며3곳 모두 독립 XML/ZIP normal/-O·cache 보존·재열기·undo/redo/undo·원본/후보 불변을 검사합니다. 나머지12곳의 비숫자 prefix 거부, 모든 숫자 입력 명령·브라우저·조판 지원은 이 결과로 증명하지 않습니다.
+
+기존 chart13·copay5·산출물 교체 거부·구역2 oracle를 포함한 두 테스트 파일 전체도 `/tmp/hwpjs-zig017-current-fixtures.xouwd1/manual-result-three-reference.log/.stderr`에서7/7·fail/cancel/skip0·exit0·stderr0입니다. 집중1/1과 합산하지 않습니다. 기본 WASM과 외부 데모를 교체하지 않았습니다.
+
 ## Zig 0.17 후속 회귀와 산출물 결합
 
 기존 `hwpx-manual-result-input-audit.mjs`와 독립 inventory/저장 oracle을 재사용합니다. 같은 역할의 별도 감사/원본 목록을 추가하지 않습니다. 필드 결과 행에 입력 SHA256을, 최종 summary에 WASM SHA256을 기록하고 종료 시 입력 메모리/파일과 WASM 메모리/파일의 동일성을 확인하도록 보강했습니다. 수식이 없는 파일도 입력 불변 확인을 생략하지 않습니다.

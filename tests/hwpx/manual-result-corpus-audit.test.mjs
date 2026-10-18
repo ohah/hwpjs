@@ -45,6 +45,7 @@ test("manual result audit rejects replacing its WASM file after the module was l
 for (const [fixture, expected] of [
   ["legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx", 13],
   ["reference/rhwp/samples/issue6298/copay_cap_tac_table_leading.hwpx", 5],
+  ["reference/rhwp/samples/hwpx/143E433F503322BD33.hwpx", 3],
 ]) test(`every direct manual result independently edits saves and reopens: ${fixture}`, t => {
   if (!existsSync(fixture)) return t.skip("reference fixture not present");
   assert(process.env.HWPJS_TEST_WASM, "Explicit candidate required");
