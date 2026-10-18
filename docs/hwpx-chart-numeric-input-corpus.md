@@ -1,5 +1,15 @@
 # 차트 예제의 숫자 입력 48곳
 
+## 추가 참조 원본의 숫자 입력 12곳
+
+`reference/rhwp/samples/hwpx/143E433F503322BD33.hwpx`의 일반 prefix 거부12곳은 독립 XML inventory의 숫자 입력12곳(문단19–21·24–26·29–31·34–36)과 일치합니다. 수식 결과3곳과 구분하며 과거 일반/전용 prefix 결과의15거부를 성공으로 바꾸지 않습니다.
+
+기존 numeric-input 회귀를 두 원본으로 매개화했습니다. 독립 oracle은 원본 SHA256 `1ee1e9045be4334fb9f940d7226cfda2884df9fecac6fa7fca76fb81c08a4a81`에 수식 분모3을 결합하며, 기존 chart 해시/분모13도 유지합니다. 임의 입력 파일이나 호출자가 정한 분모를 허용하지 않습니다. 첫 실행은 이 원본의 HYPERLINK1곳까지 FORMULA로 가정해 `Observed field kind`로 실패했습니다. 수식 ordinal은 기존 수동 결과 oracle과 동일하게 FORMULA만 세도록 바로잡았으며, 비수식 필드는 전체 XML 비교의 보존 대상입니다. 첫 실패 로그는 `/tmp/hwpjs-zig017-current-fixtures.xouwd1/numeric-reference-12.log/.stderr`에 남깁니다.
+
+각 숫자를1로 치환해 실제 의존 SUM·표시/Command/LastResult·dirty·전체 XML/비대상 ZIP payload를 normal/-O로 검사합니다. 첫 좌표에서는 정상 재직렬화와8종 변조 거부도 검사합니다. undo 뒤 잘못된 문자 prefix가 InvalidFormulaNumber로 거부되고 revision·원본 저장이 그대로인지, redo가 살아 있는지도 두 원본 모두 검사합니다. 새 원본의 결과 입력3곳은 [수동 결과 감사](hwpx-manual-result-reference-audit.md)의 별도 경로가 소유합니다. 실제 브라우저/모든 위치/조판 지원 증명은 아닙니다.
+
+같은 디렉터리의 `numeric-reference-final.log/.stderr`는 작업 트리 Zig0.17 후보 `f4e0f396a3fea6e6354b364ff176e31d72ed00ec643fa566c4abbd8bc2f58d77`에서 두 원본의48+12좌표를2/2·fail/cancel/skip0·exit0·stderr0으로 검사했습니다. `numeric-reference-clean-wasm.log/.stderr`는 게시 소스 후보 `afb7fdfbbc8a9c9cc45a7cdb98ade6be7a6a88b1943e1c5354c63d6715b9e05e`에서 새12좌표를 집중1/1·오류/skip0·exit0·stderr0으로 검사한 별도 결과입니다. 기본 제품 WASM/외부 데모를 교체하지 않았습니다.
+
 ## 대상과 독립 기대값
 
 대상은 `legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx` 원본 SHA25685699a2e906525f4118c8dcc3f426f7896ae1dd9fa39b3ee2ef790d6b04abdde입니다. [일반 본문 감사](hwpx-plain-prefix-verification.md)의 문자 prefix가 거부된48좌표와, 독립 XML 수식 inventory에서 선택한 결과 셀 이외의48숫자 입력이 정확히 같음을 대조했습니다. 거부를 읽기 전용이나 지원 성공으로 세지 않고 유효 숫자 변경을 따로 검사합니다.
