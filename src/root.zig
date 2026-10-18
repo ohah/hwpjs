@@ -706,6 +706,7 @@ test {
     _ = @import("hwpx/anchor_split_save_tests.zig");
     _ = @import("hwpx/paragraph_boundary_changes.zig");
     _ = @import("hwpx/anchor_paragraph_edit_tests.zig");
+    _ = @import("hwpx/unknown_object_anchor_tests.zig");
     _ = @import("hwpx/run_text_boundary_tests.zig");
     _ = @import("hwpx/text_sites_clone_tests.zig");
     _ = @import("hwpx/editor_checkpoint_tests.zig");

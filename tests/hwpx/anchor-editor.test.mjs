@@ -5,7 +5,7 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
 
 test("public HWPX page number settings preserve zero-width text offsets and all XML", async () => {
-  const editor = await createHwpxEditor(readFileSync("zig-out/bin/hwpjs.wasm"));
+  const editor = await createHwpxEditor(readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"));
   try {
     for (const [name, paragraph] of [["noori", 13], ["page", 1], ["table-bug", 1]]) {
       const input = readFileSync(`legacy/rust/crates/hwp-core/tests/fixtures/${name}.hwpx`);
@@ -39,7 +39,7 @@ for name in a.namelist():
 
 test("public HWPX automatic table numbers protect anchors and preserve complete XML", async () => {
   const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/table-caption.hwpx");
-  const editor = await createHwpxEditor(readFileSync("zig-out/bin/hwpjs.wasm"));
+  const editor = await createHwpxEditor(readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"));
   const paragraphs = [2, 5, 8, 11, 14, 17, 20, 23];
   const originals = [];
   try {
@@ -118,7 +118,7 @@ for name in a.namelist():
 
 test("public HWPX anchored note references edit both sides preserve all XML and reject deletion", async () => {
   const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/footnote-endnote.hwpx");
-  const editor = await createHwpxEditor(readFileSync("zig-out/bin/hwpjs.wasm"));
+  const editor = await createHwpxEditor(readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"));
   try {
     editor.open(input);
     for (const paragraph of [1, 4]) {
