@@ -158,4 +158,3 @@ elif __name__ == "__main__":
             raise ValueError("Unknown field oracle mode")
         compare(base64.b64decode(payload["before"]), base64.b64decode(payload["after"]), payload["text"], payload.get("beginId"), payload.get("paragraph"), payload.get("atUnit", 0), payload.get("deletedUnits", 0))
         print("Independent field edit: complete XML and non-target ZIP payloads verified")
-
