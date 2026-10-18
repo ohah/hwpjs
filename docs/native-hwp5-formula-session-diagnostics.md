@@ -10,4 +10,6 @@ ReleaseSafe e7481f228fa63faae48483c6cab35a9a4c89599ebe6b7eaabf0fe2bd7ca6c3b5는 
 
 재현은 `zig test src/root.zig -O ReleaseSafe --test-filter 'public formula session preserves original'`이고 Debug도 같습니다. 실제 한 테스트와 root를 확인했습니다. 진단 비용의 개선이며 전체 native gate·제품 메모리 최적화·모든 계산 규칙/편집/GUI 완료는 아닙니다.
 
+후속 다단의 관측 OOM 재현·회귀와 각 바이너리 결과는 [다단 실패 주입 진단](native-column-observer-diagnostics.md)이 소유합니다.
+
 구형 바이너리의 후속3507..4111은3507..3664의158개를 status/log/leak0으로 완료하고3665 column materialization에서 peak4,343,090,632바이트로 중단됐습니다(`native-tail-after-hwp5-formula-session.jsonl/.stderr`). 다음3666..4111도3666..3677의12개 완료 후3678 joined anchor inventory에서 peak4,347,858,352바이트로 중단됐습니다(`native-tail-after-column-materialization.jsonl/.stderr`). 두 중단은 위 단일 수식 session 테스트와 별개이며 해결로 계수하지 않습니다.

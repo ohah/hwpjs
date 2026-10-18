@@ -4,7 +4,10 @@ const editor = @import("editor_session.zig");
 const checkpoint = @import("editor_checkpoint.zig");
 
 test "column boundary session materializes original ownership only after successful input" {
-    const a = std.testing.allocator;
+    try @import("../testing/checked_allocator.zig").run(materializationSweep, .{});
+}
+
+fn materializationSweep(a: std.mem.Allocator) !void {
     for ([_][]const u8{ "multicolumns.hwpx", "multicolumns-widths.hwpx" }) |name| {
         const path = try std.fmt.allocPrint(a, "legacy/rust/crates/hwp-core/tests/fixtures/{s}", .{name});
         defer a.free(path);
@@ -31,27 +34,53 @@ test "column boundary session materializes original ownership only after success
         try std.testing.expectEqual(@as(u8, 'X'), after[0]);
         try std.testing.expectEqualStrings(before, after[1..]);
         try std.testing.expectEqualSlices(u8, input, session.source);
-        if (std.mem.eql(u8, name, "multicolumns.hwpx")) try std.testing.checkAllAllocationFailures(a, struct {
-            fn run(allocator: std.mem.Allocator, source: []const u8) !void {
-                var current = try editor.open(std.testing.allocator, source, .{});
+        try @import("../testing/allocation_failures.zig").check(struct {
+            fn run(allocator: std.mem.Allocator, source: []const u8, observer: std.mem.Allocator) !void {
+                var current = try editor.open(allocator, source, .{});
                 defer current.deinit();
                 const baseline = try current.anchorText(0, 2);
-                defer std.testing.allocator.free(baseline);
-                current.allocator = allocator;
-                defer current.allocator = std.testing.allocator;
+                defer allocator.free(baseline);
                 _ = current.splice(0, 2, 0, 0, "X") catch |err| {
-                    current.allocator = std.testing.allocator;
-                    try std.testing.expect(current.sections[0].structure_values == null);
-                    const unchanged = try current.anchorText(0, 2);
-                    defer std.testing.allocator.free(unchanged);
-                    try std.testing.expectEqualStrings(baseline, unchanged);
-                    try std.testing.expectEqualSlices(u8, source, current.source);
+                    try observeMaterializationFailure(&current, observer, baseline, source);
                     return err;
                 };
                 try std.testing.expectEqual(@as(u32, 0), current.sections[0].structure_values.?.paragraphs[1].column_boundaries.?[0].unit);
             }
-        }.run, .{input});
+        }.run, .{ input, a });
+        std.debug.print("column materialization allocation sweep: {s}\n", .{name});
     }
+}
+
+fn observeMaterializationFailure(current: *editor.Session, observer: std.mem.Allocator, baseline: []const u8, source: []const u8) !void {
+    const original_allocator = current.allocator;
+    current.allocator = observer;
+    defer current.allocator = original_allocator;
+    if (current.sections[0].structure_values != null) return error.MaterializationChangedOwnership;
+    const unchanged = try current.anchorText(0, 2);
+    defer observer.free(unchanged);
+    if (!std.mem.eql(u8, baseline, unchanged)) return error.MaterializationChangedText;
+    if (!std.mem.eql(u8, source, current.source)) return error.MaterializationChangedSource;
+}
+
+test "column boundary failure observer stays active while injected allocation remains unavailable" {
+    try @import("../testing/checked_allocator.zig").run(struct {
+        fn run(observer: std.mem.Allocator) !void {
+            const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/multicolumns.hwpx", observer, .limited(4_000_000));
+            defer observer.free(input);
+            var failing = std.testing.FailingAllocator.init(observer, .{});
+            var current = try editor.open(failing.allocator(), input, .{});
+            defer current.deinit();
+            const baseline = try current.anchorText(0, 2);
+            defer failing.allocator().free(baseline);
+            failing.fail_index = failing.alloc_index;
+            try std.testing.expectError(error.OutOfMemory, current.splice(0, 2, 0, 0, "X"));
+            try observeMaterializationFailure(&current, observer, baseline, input);
+            try std.testing.expectError(error.MaterializationChangedText, observeMaterializationFailure(&current, observer, "wrong", input));
+            try std.testing.expectError(error.OutOfMemory, failing.allocator().alloc(u8, 1));
+            try std.testing.expect(current.allocator.ptr == failing.allocator().ptr);
+            try std.testing.expect(current.allocator.vtable == failing.allocator().vtable);
+        }
+    }.run, .{});
 }
 
 test "column boundary checkpoint exchanges text and coordinates with failure atomic capture" {
@@ -99,7 +128,7 @@ fn verify(path: []const u8) !void {
     try std.testing.expectEqual(@as(u8, 'X'), section.structure_values.?.paragraphs[1].sites.items[0].text[0]);
     try std.testing.expectEqualStrings(original_text, section.structure_values.?.paragraphs[1].sites.items[0].text[1..]);
     try std.testing.expectEqual(required + 1, try checkpoint.size(&session, 4_000_000));
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, current: *editor.Session) !void {
             const original_allocator = current.allocator;
             current.allocator = allocator;
