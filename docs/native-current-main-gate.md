@@ -69,3 +69,11 @@ column_boundary_joined_merge_tests의 다섯 실패 주입 호출을 공통 chec
 집중 ReleaseSafe `joined-merge-safe-retry` 빌드는 exit0이고 SHA256은482192789ce0e99c51bdc95cd495a20cd9e1a5229257296531f477488eed9c27입니다. `joined-merge-safe-retry-guard.jsonl/.stderr`는5/5·fail/skip/logErrors/leaks0·guardStopped=false·wrapper exit0·stderr0·최대 physical36,618,600바이트입니다. 실제 확장/재병합2검사·공통 할당자 대조2검사·root sentinel1개이며, 중단된107개 실행과 합친 전체 gate 성공이 아닙니다.
 
 Debug `joined-merge-debug` 빌드도 exit0입니다. SHA256은4d28598a0a95582876211e07433b27d0ef488334bc5084182440e45c8cd132f4이며 `joined-merge-debug-guard.jsonl/.stderr`는 같은5개가5/5·fail/skip/logErrors/leaks0·guardStopped=false·wrapper exit0·stderr0·최대 physical14,893,392바이트로 완료됐습니다. 두 모드의 집중 결과는 별도 증거이며 남은 전체 목록의 완료나 제품 WASM 반영은 아닙니다.
+
+## 남은 검사 목록 종료
+
+10978ca9의 남은92개가 소속된53개 모듈을 보관 사본의 native_remaining_after_joined_imports.zig에서 모두 명시적으로 import했습니다. ReleaseSafe 빌드 exit0이며 native-remaining-after-joined-safe의 SHA256은3a490199b6295de9ea313a0c8c4b50c5ec115a0d2bef03966ea4ad493c2b4e43입니다. 이전107개 inventory의 index15부터 끝까지92개를 전체 이름으로 대조해 누락/중복0이며 추가2개는 import sentinel입니다.
+
+native-remaining-after-joined-guard.jsonl/.stderr는94/94·fail/skip/logErrors/leaks0·guardStopped=false·wrapper exit0·최대 physical599,229,184바이트입니다. stderr의43바이트는 Switch chart corpus: 28 files, 28 wrappers 진단이고 테스트 오류가 아닙니다. 기본 WASM과 데모 산출물은 교체하지 않았습니다.
+
+원래4,114개 이름을 기존 전체 실행의3,476개 결과, 분할640개 실행의535개 결과, 후속107개 실행의15개 결과, 이번94개 결과의 이름 집합과 대조했습니다. 원래 목록에서 누락0이며 모든 개별 결과의 status/logs/leaks0을 확인했습니다. 반복된 root/import sentinel을 중복 합산하지 않습니다. 이 이름별 교차 실행 범위 확인은 단일 최신 소스/바이너리 전체 gate 성공이 아니며 문자 속성 실패 shard의 제한도 그대로입니다. 현재 소스의 무필터 전체 재빌드와 종료 검증은 별도입니다.
