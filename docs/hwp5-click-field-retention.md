@@ -18,6 +18,20 @@ click_field_retention.read는 미닫힘 %clk가 있는 구역의 원본 헤더�
 
 ReleaseSafe 제품 빌드는5/5단계 성공, 후보 SHA-256은703fc80b76b96c4644733b27e27f908437d9e70f8b9e2549d245246cf181ca8b입니다. 이전8e087670 후보의333개 export 이름/kind를 모두 유지하며 추가/누락은 없습니다. 이름/kind 대조는 signature/전체 동작 동치의 증거가 아니며 실제 바인딩·원본/이력/구형 ABI 회귀는 위21개로 구분합니다. 이번 후보의 전체 native/편집 묶음·브라우저·기본 데모 승격을 주장하지 않습니다.
 
+## 원자적 비공개 준비 단계
+
+click_field_retained_splice.prepare는 model.transaction의 private draft 안에서만 사용합니다. 원본 계획이 보호한 문단은 거부하고 기존 plain.applyFieldTransaction으로 목표 문단만 준비합니다. 준비 후 보호 배열/바인딩 헤더 수를 다시 확인하고, 비대상 문단은 공통 model.equality.paragraph로 전체 값이 동일한지 검사합니다. 새 문단 비교 함수는 기존 equality 내부 구현을 재사용합니다. 호출자가 수행하는 allocation-free commit 경계는 기존 transaction 그대로입니다.
+
+실제 세션 splice의 fallback과 UI 허가는 **아직 게시하지 않았습니다**. 이 helper의 정규 테스트는 작은 decoded-section fixture와 명시적인 transaction 어댑터를 사용합니다. 합성 구역은 완전한 HWP 컨테이너가 아니며 실제 파일 지원 근거와 구분합니다. 전체 부분 할당 실패의 원본 불변/해제, 미닫힘 소속 거부, SplitControlToken·UnsupportedControlDeletion·InvalidTextPosition·UnsupportedTextControl을 검사했습니다. ReleaseSafe/Debug 각각 root 포함3/3·실패/건너뜀0입니다(prepared-final-safe-corrected.log·prepared-final-debug.log).
+
+## 실제 문서의 격리 입력 실험
+
+같은 임시 소스에만 strict binding의 UnsupportedCrossParagraphField 뒤 위 준비 단계를 호출하는 분기를 넣었습니다. 게시 소스의 분기와 기본 정책은 바꾸지 않았습니다. 동결 baseline703fc80b는 실제 미닫힘 문서의 문단0 입력을 여전히 거부합니다. 실험 후보01b07d2286b26142530be61b5cb48b1c96510fa42ba8233b0958cfcaae06f047은 같은 문서 문단0에 보존😀를 삽입하고 독립 CFB.js/Node oracle의 전체 Section·모든 비대상 스트림 대조, undo/redo, 저장 재열기를 통과했습니다. 미닫힘 문단52와 기존 필드 문단의 입력 거부 뒤 원본/대기 redo도 유지됐습니다. 재열기 뒤 source list node ID가 바뀔 수 있으므로 의미 좌표와 원시 표식은 비교하되 원본별 노드 번호를 억지로 동일하게 취급하지 않습니다.
+
+실험 build는5/5단계 성공, prototype-retained-edit.log의 baseline/후보2/2·실패/건너뜀0입니다. 최초 빌드는 비교 helper의 공개 여부를 잘못 가정해 실패했고 명시적 paragraph 비교를 추가해 재실행했습니다. 합성 준비 테스트도 새 텍스트 토큰이 X만 담는다고 가정한 것과 개행 대신 문자 역슬래시/n을 넣은 검사 입력을 고친 뒤 통과했습니다. 실패한 실행은 성공에 합산하지 않았습니다.
+
+실험 소스·baseline-703fc80b.wasm·후보·로그는 /tmp/hwpjs-click-retention.Vm3dFy에 있습니다. 실험 후보에서도 기존 validateTextSourcePolicy는 보수적으로 거부하며, 기본/구간 UI를 열거나 배포하지 않았습니다. 이 결과는 native 준비 경로의 실제 저장 가능성을 확인한 것이며 문서 전체 필드 편집·조판 동치·완성된 공개 편집 기능을 뜻하지 않습니다.
+
 ## 다음 연결의 완료 조건
 
 입력 거래에서 계획을 원자적으로 검증하고, 보호 범위의 직접/경계/교차 입력은 원본과 이력을 보존하며 거부해야 합니다. 보호 밖의 실제 입력은 독립 전체 Section·비대상 스트림 oracle, 반복 입력·undo/redo·저장 재열기로 검증해야 합니다. 구역 필요조건과 문단별 보호 정보를 함께 native에서 제공하고 기본/구간 UI 모두에 전달하기 전에는 readOnly를 해제하지 않습니다.

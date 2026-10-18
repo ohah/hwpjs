@@ -1,6 +1,9 @@
 //! Allocation-free value comparison, including null/empty and float bit patterns.
 const std = @import("std");
 const model = @import("document.zig");
+pub fn paragraph(left: model.Paragraph, right: model.Paragraph) bool {
+    return equal(model.Paragraph, left, right);
+}
 
 pub fn document(left: model.Document, right: model.Document) bool {
     inline for (std.meta.fields(model.Document)) |field| {

@@ -898,6 +898,7 @@ test {
     _ = @import("hwp5/parameters/tests.zig");
     _ = @import("hwp5/edit/field_bindings.zig");
     _ = @import("hwp5/edit/click_field_retention_tests.zig");
+    _ = @import("hwp5/edit/click_retained_splice_tests.zig");
     _ = @import("hwp5/edit/field_span_snapshot.zig");
     _ = @import("hwp5/edit/field_topology_tests.zig");
     _ = @import("hwp5/edit/local_field_spans.zig");
