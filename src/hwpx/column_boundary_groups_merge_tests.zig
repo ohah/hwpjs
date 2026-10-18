@@ -55,7 +55,7 @@ test "column two groups merge candidate is atomic under allocation failures" {
         }
     };
     try Probe.run(a, tree, source);
-    try std.testing.checkAllAllocationFailures(a, Probe.run, .{ tree, source });
+    try @import("../testing/allocation_failures.zig").check(Probe.run, .{ tree, source });
     var styled = try source.clone(a);
     defer styled.deinit(a);
     for (styled.paragraphs[0..4], 0..) |*paragraph, ordinal| {
@@ -70,7 +70,7 @@ test "column two groups merge candidate is atomic under allocation failures" {
         for (paragraph.character_styles.?) |*span| span.char_shape_id = @intCast(ordinal + 5);
     }
     try Probe.run(a, tree, &styled);
-    try std.testing.checkAllAllocationFailures(a, Probe.run, .{ tree, &styled });
+    try @import("../testing/allocation_failures.zig").check(Probe.run, .{ tree, &styled });
     for (styled.paragraphs[0..4], 0..) |paragraph, ordinal| for (paragraph.character_styles.?) |span| {
         try std.testing.expectEqual(@as(?u32, @intCast(ordinal + 5)), span.char_shape_id);
     };

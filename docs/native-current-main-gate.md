@@ -47,3 +47,11 @@ Debug 집중 빌드도 exit0·stderr0입니다. `field-debug-guard.jsonl/.stderr
 보관 사본에만 import 전용 `src/native_tail_imports.zig`를 추가해 누락 모듈을 명시적으로 수집했습니다. 동일한638개 필터를 사용한 ReleaseSafe 빌드 `native-tail-imports-safe`는 exit0·signal null입니다. 원래 전체 이름과 다시 대조한 결과 필요한638개가 모두 포함되며 누락0·중복0입니다. 추가2개는 native_tail_imports.test_0/root.test_0 import sentinel이고, 컴파일 inventory는640개입니다. 제품 진입점·원래 테스트 본문·실패 주입 범위는 이 수집용 파일로 변경하지 않았습니다.
 
 바이너리 SHA256은bd78ecd0a24a6ef7c2c03e8af92745c51db0f68065be0e2bb9535c41bb936e4a입니다. `native-tail-imports-guard.jsonl/.stderr`에 같은4,096MiB guardian·batch1·seed0x485750·명시적 해시를 적용해 직렬 실행을 시작했습니다. guardian과 자식은 nice10을 상속합니다. 실행 시작은 완료 증거가 아니며, 이640개 inventory에 대한 성공도 기존3,476개 결과와 합친 단일 전체 gate 성공으로 취급하지 않습니다. 기본 WASM 교체·캐시 삭제·브라우저 실행은 하지 않았습니다.
+
+이 실행은0..535 배타 범위의535개가 status/logs/leaks0으로 완료된 뒤 index535의 `column two groups merge candidate is atomic under allocation failures`에서 자원 한도로 종료했습니다. physical current/peak4,321,824,152바이트·limit4,294,967,296바이트·guardStopped=true·wrapper exit1이며 소유 guardian/runner/자식의 종료도 확인했습니다.535번은 결과가 없으므로 통과나 단언 실패로 세지 않습니다. stderr의 수식 구조 할당 지점 수/두 다단 fixture 완료 문구도 테스트 오류로 분류하지 않습니다.
+
+`column_boundary_groups_merge_tests.zig`는 작업 트리에 이미 있던 두 줄의 공통 allocation_failures.check 연결만 별도 사본에 적용했습니다. 두 callback·기본/서식 상태·원본 불변·분할/재병합·후속 입력·모든 실패 지점은 그대로입니다. src2,635개의 HEAD blob과 대조해 이 파일만 다르고 추가 파일은 위 import 수집 root뿐임을 확인했습니다. 제품 함수는 변경하지 않았습니다.
+
+집중 ReleaseSafe `column-groups-safe` SHA256은55f2d1d1e6046319dc28e12a4b58910ecc4b7b455f8de5b481868f5637b59d0a입니다. `column-groups-safe-guard.jsonl/.stderr`는4/4·fail/skip/logErrors/leaks0·guardStopped=false·wrapper exit0·stderr0·최대 physical63,275,392바이트입니다. 실제 두 상태의 실패 주입1검사·공통 할당자 대조2검사·root sentinel1개이며, 앞선535개와 합산한 전체 gate 성공이 아닙니다.
+
+Debug `column-groups-debug` SHA256은8ed646add285f06db5556ec63c40860ee5e2768f654eea56ef19751196819046입니다. `column-groups-debug-guard.jsonl/.stderr`도 같은4개가4/4·fail/skip/logErrors/leaks0·guardStopped=false·wrapper exit0·stderr0·최대 physical21,922,152바이트로 완료됐습니다. 두 빌드 모두 exit0이며 fmt/diff 검사와 검증 사본/작업 트리의 해당 파일 바이트 대조도 통과했습니다. 남은 전체 목록의 재개는 별도 실행으로 검증해야 합니다.
