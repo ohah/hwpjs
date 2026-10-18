@@ -1,5 +1,7 @@
 # 제목 표식과 책갈피 필드의 텍스트 편집
 
+후속 Worker/Canvas 반례와 실제 Chromium 입력·다운로드·재업로드는 [브라우저 검증](hwpx-title-field-browser-roundtrip.md)을 따릅니다. 아래 API 단계의 미검증 기록을 당시의 범위와 구분합니다.
+
 ## 소유권과 허용 범위
 
 실제 `reference/rhwp/samples/추진일정.hwpx`의 구역0/문단1은 구역 설정·단 설정·빈 제목 표식과 닫힌 BOOKMARK 필드를 함께 갖습니다. 전체 문단 편집은 계속 거부하고, 기존 `fieldLabels`/`spliceFieldLabel`의 연결·종류·선택 소유권 검사를 통과한 필드 텍스트만 허용합니다. BOOKMARK의 기존 editable 값 해석을 바꾸거나 새 API를 만들지 않습니다.
