@@ -1,5 +1,11 @@
 # 추적 픽스쳐 편집 지원 전수 기준
 
+## 누름틀 보존 후보의 추적 입력·이력 재검증 — 2026-10-18
+
+187e8c44 소스 계열 후보 6ddc76ab71dc09a77acf0b57b7ec78b2cc137850189e136fb361edd5d71d0437에 Git 추적101경로를 제공하고 hwp5-edit-corpus-audit를 일반/--history로 각각 실행했습니다. 두 실행 모두 exit0이며 HWP5 전 문단 성공53파일·chart 부분 지원1·암호 기본 읽기 거부1, HWPX 별도 감사45·암호 기본 읽기 거부1입니다. 열린 HWP5 2,090문단 중2,042문단의 실제 접두사 입력·저장 텍스트 전체/비대상 스트림·재열기가 확인됐고, 이력 실행에서는 성공2,042개 모두 undo/redo의 저장값·조판 상태 복원이 확인됐습니다. 거부48개는 모두 chart.hwp의 InvalidFormulaNumber입니다. 근거는 /tmp/hwpjs-click-retention.Vm3dFy/protection-tracked-prefix.json·protection-tracked-history.json이며 두 stderr는 비어 있습니다.
+
+같은 후보의 numeric-formula-corpus·fixture-password-edit-paths는5/5·실패/취소/건너뜀0·exit0입니다(protection-formula-password-paths.log). 숫자 의존48칸의 두 규모 입력/13개 수식 재계산과 암호 HWP5/HWPX 각각 명시적 변환 뒤 실제 편집·독립 저장 대조·재열기·이력을 확인합니다. 임의 비숫자 허용이나 재암호화 저장 지원은 아닙니다. 이 감사의 HWPX45개는 읽기/별도 분류일 뿐 편집 성공으로 합산하지 않습니다. HWPX Worker 전수·정규 HWP5 editor gate·이전 native 전수는 별도 실행 중이며 이 결과를 전체 필드/위치/원본 조판/실제 브라우저 전수 완료로 해석하지 않습니다.
+
 ## main 기반 사본 API 후보의 추적 파일 대조 — 2026-10-18
 
 후보 WASM `b44486466c21dcb5be480250f64e2c958a93ccbaa37831258a2a83f9cbd4c439`와 분리된 main 계열 JS/도구에서 Git 추적 HWP/HWPX 101경로를 다시 열거했다. 각 입력 해시를 보존하고 기존 도구를 명시적 단일 fixture 인자로 순차 실행했으며 무관한 작업 트리 변경을 채택하지 않았다. HWP5는 53파일 모든 문단 삽입·독립 텍스트/비대상 스트림·저장 재열기 검증, chart.hwp 1파일 부분 지원, 암호 1파일 기본 미리보기 거부다. HWPX는 45파일 별도 편집 감사 대상으로 분류하고 암호 1파일 기본 읽기 거부다. HWPX 45건은 이 도구의 편집 성공 건수가 아니다.
