@@ -41,7 +41,7 @@ def check(body,expected):
  chosen=leading_object_site(tree,marker,site);chosen.text='X'+(chosen.text or '')
  wanted=E.fromstring("<r xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'>"+expected+"</r>")
  if E.tostring(tree)!=E.tostring(wanted):raise ValueError('Incorrect source prefix site')
-for obj in ['tbl','pic','container','ellipse','line','rect']:
+for obj in ['tbl','pic','container','ellipse','line','rect','checkBtn']:
  body='<p:p><p:run>'+begin+'<p:secPr/></p:run><p:run><p:'+obj+'/></p:run><p:run><p:t>A</p:t>'+end+'</p:run></p:p>'
  check(body,body.replace('<p:'+obj+'/>','<p:t>X</p:t><p:'+obj+'/>'))
  body='<p:p><p:run>'+begin+'<p:'+obj+'/><p:t>A</p:t>'+end+'</p:run></p:p>'
@@ -62,9 +62,9 @@ try:check(body,body)
 except ValueError as error:
  if str(error)!='Leading object is outside selected field':raise
 else:raise ValueError('Accepted object outside the chosen field')
-print('25 prefix site cases verified')
+print('27 prefix site cases verified')
 `;
-  for (const flags of [[], ["-O"]]) assert.match(execFileSync("python3", [...flags, "-c", program], { encoding: "utf8", timeout: 10000 }), /25 prefix site cases verified/);
+  for (const flags of [[], ["-O"]]) assert.match(execFileSync("python3", [...flags, "-c", program], { encoding: "utf8", timeout: 10000 }), /27 prefix site cases verified/);
 });
 
 test("object-only field inventory preserves the outer paragraph and independent saved XML", () => {
@@ -130,6 +130,7 @@ test("actual graphic and automatic-number field prefixes preserve complete XML Z
       ["reference/rhwp/samples/hwpx/opengov/36382669_결재문서본문_’26년 제3차 강사선정 심의회 운영결과.hwpx", 2, 129, 16],
       ["reference/rhwp/samples/issue2083_hide_fill_page.hwpx", 2, 121, 1],
       ["reference/rhwp/samples/issue2813/dangjik_dutylog.hwpx", 0, 141, 141],
+      ["reference/rhwp/samples/issue2470/36341511_masked.hwpx", 0, 72, 72],
     ]) {
       const input = readFileSync(path); editor.open(input); editor.enableHistory();
       const target = editor.fieldRangeTarget(section, paragraph, 0, 0); assert(target);

@@ -7,7 +7,8 @@ P = "{http://www.hancom.co.kr/hwpml/2011/paragraph}"
 def is_prefix_object(node):
     graphic = node.tag in (P + "tbl", P + "pic", P + "container", P + "ellipse", P + "line", P + "rect")
     number = node.tag == P + "ctrl" and len(node) == 1 and node[0].tag == P + "autoNum"
-    return graphic or number
+    checkbox = node.tag == P + "checkBtn"
+    return graphic or number or checkbox
 
 
 def leading_object_site(tree, begin, text):
