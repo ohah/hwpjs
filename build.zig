@@ -189,6 +189,16 @@ pub fn build(b: *std.Build) void {
     hwpx_text_tests.addArg("tests/hwpx/chart-numeric-input-corpus.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/oracle-process-async.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/plain-fixture-audit-arguments.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/document-menu-controls.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/document-menu-disclosures.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/document-menu-keyboard.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/document-menu-mnemonic.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/document-menu-mnemonic-boundary.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/document-menu-browser-arguments.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/document-menu-command-registry.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/document-menu-popup-layer.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/document-menu-wiring.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/document-menu-gate-registration.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/title-field-canvas.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/title-field-browser-arguments.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/reference-field-audit-arguments.test.mjs");

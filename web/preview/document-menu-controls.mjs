@@ -2,6 +2,7 @@
 import { createMenuDisclosures } from "./document-menu-disclosures.mjs";
 import { createMenuPopupLayer } from "./document-menu-popup-layer.mjs";
 import { navigateDocumentMenu } from "./document-menu-keyboard.mjs";
+import { documentMenuMnemonic } from "./document-menu-mnemonic.mjs";
 export function createDocumentMenuControls(entries) {
   let closed = false;
   const ids = entries.map(({ button }, index) => typeof button.id === "string" && button.id ? button.id : `menu-entry-${index}`);
@@ -16,6 +17,9 @@ export function createDocumentMenuControls(entries) {
     if (closed) return;
     for (const { button, target } of entries) {
       button.disabled = disabled(target);
+      const key = button.getAttribute?.("data-menu-key");
+      if (typeof key === "string" && /^[a-z0-9]$/i.test(key)) button.setAttribute?.("aria-keyshortcuts", key.toUpperCase());
+      else button.removeAttribute?.("aria-keyshortcuts");
       for (const attribute of ["aria-expanded", "aria-pressed"]) {
         const value = target.getAttribute?.(attribute);
         if (value === "true" || value === "false" || (attribute === "aria-pressed" && value === "mixed")) button.setAttribute?.(attribute, value);
@@ -46,8 +50,11 @@ export function createDocumentMenuControls(entries) {
     const keydown = event => {
       if (closed) return;
       refresh();
+      if (closed) return;
       const buttons = entries.filter(({ button, target }) => button.closest?.("details") === popup && !button.disabled && !disabled(target)).map(({ button }) => button);
       if (navigateDocumentMenu(event, popup, buttons, () => { popup.open = true; popupLayer.refresh(); })) return;
+      const mnemonic = documentMenuMnemonic(event, popup, buttons);
+      if (mnemonic && listeners.find(row => row.button === mnemonic)?.click()) { event.preventDefault(); return; }
       if (closed || event.defaultPrevented || event.isComposing || event.keyCode === 229 || event.key !== "Escape" || !popup.open) return;
       event.preventDefault();
       popup.open = false;

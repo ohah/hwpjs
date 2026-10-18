@@ -39,41 +39,41 @@
   <nav class="document-menu" aria-label="문서 메뉴">
     <details><summary>파일</summary>
       <div class="document-menu-popup" popover="manual">
-      <button id="menu-open" type="button">문서 열기</button>
-      <button id="menu-save" type="button" disabled>편집본 다운로드</button>
+      <button id="menu-open" type="button" data-menu-key="o">문서 열기</button>
+      <button id="menu-save" type="button" data-menu-key="s" disabled>편집본 다운로드</button>
       </div>
     </details>
     <details><summary>편집</summary>
       <div class="document-menu-popup" popover="manual">
-      <button id="menu-undo" type="button" disabled>실행 취소</button>
-      <button id="menu-redo" type="button" disabled>다시 실행</button>
-      <button id="menu-find" type="button" aria-controls="find-form">찾기·바꾸기</button>
-      <button id="menu-copy" type="button" disabled>복사</button>
-      <button id="menu-cut" type="button" disabled>잘라내기</button>
-      <button id="menu-paste" type="button" disabled>붙여넣기</button>
-      <button id="menu-delete" type="button" disabled>선택 텍스트 지우기</button>
+      <button id="menu-undo" type="button" data-menu-key="u" disabled>실행 취소</button>
+      <button id="menu-redo" type="button" data-menu-key="r" disabled>다시 실행</button>
+      <button id="menu-find" type="button" data-menu-key="f" aria-controls="find-form">찾기·바꾸기</button>
+      <button id="menu-copy" type="button" data-menu-key="c" disabled>복사</button>
+      <button id="menu-cut" type="button" data-menu-key="x" disabled>잘라내기</button>
+      <button id="menu-paste" type="button" data-menu-key="v" disabled>붙여넣기</button>
+      <button id="menu-delete" type="button" data-menu-key="d" disabled>선택 텍스트 지우기</button>
       </div>
     </details>
     <details><summary>보기</summary>
       <div class="document-menu-popup" popover="manual">
-      <button id="menu-properties" type="button" aria-controls="document-inspector" aria-expanded="false">문단·표·수식 속성</button>
+      <button id="menu-properties" type="button" data-menu-key="p" aria-controls="document-inspector" aria-expanded="false">문단·표·수식 속성</button>
       </div>
     </details>
     <details><summary>서식</summary>
       <div class="document-menu-popup" popover="manual">
-      <button id="menu-bold" type="button" aria-pressed="false" disabled>굵게</button>
-      <button id="menu-italic" type="button" aria-pressed="false" disabled>기울임</button>
-      <button id="menu-underline" type="button" aria-pressed="false" disabled>밑줄</button>
-      <button id="menu-strike" type="button" aria-pressed="false" disabled>취소선</button>
-      <button id="menu-align-left" type="button" aria-pressed="false" disabled>왼쪽 정렬</button>
-      <button id="menu-align-center" type="button" aria-pressed="false" disabled>가운데 정렬</button>
-      <button id="menu-align-right" type="button" aria-pressed="false" disabled>오른쪽 정렬</button>
-      <button id="menu-align-justify" type="button" aria-pressed="false" disabled>양쪽 정렬</button>
-      <button id="menu-align-distribute" type="button" aria-pressed="false" disabled>배분 정렬</button>
-      <button id="menu-align-space" type="button" aria-pressed="false" disabled>나눔 정렬</button>
+      <button id="menu-bold" type="button" data-menu-key="b" aria-pressed="false" disabled>굵게</button>
+      <button id="menu-italic" type="button" data-menu-key="i" aria-pressed="false" disabled>기울임</button>
+      <button id="menu-underline" type="button" data-menu-key="u" aria-pressed="false" disabled>밑줄</button>
+      <button id="menu-strike" type="button" data-menu-key="s" aria-pressed="false" disabled>취소선</button>
+      <button id="menu-align-left" type="button" data-menu-key="l" aria-pressed="false" disabled>왼쪽 정렬</button>
+      <button id="menu-align-center" type="button" data-menu-key="c" aria-pressed="false" disabled>가운데 정렬</button>
+      <button id="menu-align-right" type="button" data-menu-key="r" aria-pressed="false" disabled>오른쪽 정렬</button>
+      <button id="menu-align-justify" type="button" data-menu-key="j" aria-pressed="false" disabled>양쪽 정렬</button>
+      <button id="menu-align-distribute" type="button" data-menu-key="d" aria-pressed="false" disabled>배분 정렬</button>
+      <button id="menu-align-space" type="button" data-menu-key="n" aria-pressed="false" disabled>나눔 정렬</button>
       </div>
     </details>
-    <details><summary>삽입</summary><div class="document-menu-popup" popover="manual"><button id="menu-insert-table" type="button" disabled>표 삽입 설정</button></div></details>
+    <details><summary>삽입</summary><div class="document-menu-popup" popover="manual"><button id="menu-insert-table" type="button" data-menu-key="t" disabled>표 삽입 설정</button></div></details>
   </nav>
   <form id="table-creation-form" class="editor-toolbar toolbar-group" hidden>
     <button id="table-creation-focus" type="button" disabled>표 삽입 설정</button>

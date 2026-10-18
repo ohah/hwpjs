@@ -1,5 +1,7 @@
 # 문서 메뉴 열림 상태
 
+게시 메뉴 mnemonic의 현재 계약과 소스 고정 실제 Chromium 검증은 [메뉴 키 입력 검증](document-menu-mnemonic-browser.md)이 소유합니다. 아래 실행 기록은 해당 시점의 이력입니다.
+
 ## RHWP 소스 비교 경계 (2026-10-13)
 
 현재 참조 `reference/rhwp/rhwp-studio/src/ui/menu-bar.ts`를 직접 비교했습니다. RHWP는 제목 mousedown 토글·열린 메뉴 사이 mouseenter 전환·바깥 mousedown/Escape 닫기·CommandDispatcher 실행·열릴 때 eligibility 갱신을 구현합니다. HWPJS는 기존 controller 명령 위임·현재 eligibility 갱신과 `details.open` 상태, 별도 disclosure/popup 계층으로 대응합니다. 포맷별 편집 의미는 메뉴가 아니라 기존 Worker/native 경계가 소유합니다.
