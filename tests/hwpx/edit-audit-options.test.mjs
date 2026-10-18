@@ -3,6 +3,13 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { parseEditAuditOptions } from "../../tools/hwpx-edit-audit-options.mjs";
 
+test("progress intervals are opt-in canonical bounded integers and never a scope limit", () => {
+  assert.deepEqual(parseEditAuditOptions(["--progress-every=2"], { allowProgress: true }), { progressEvery: 2 });
+  for (const value of ["", "0", "01", "-1", "1.5", "1e2", "Infinity", "1000001", "9007199254740992"]) assert.throws(() => parseEditAuditOptions([`--progress-every=${value}`], { allowProgress: true }), /InvalidAuditProgressInterval/);
+  assert.throws(() => parseEditAuditOptions(["--progress-every=1", "--progress-every=2"], { allowProgress: true }), /DuplicateAuditArgument/);
+  assert.throws(() => parseEditAuditOptions(["--progress-every=1"]), /Unknown argument/);
+});
+
 test("edit audits share exact option validation without silent scope reduction", () => {
   assert.deepEqual(parseEditAuditOptions(["--wasm=/tmp/candidate.wasm", "--fixture=a.hwpx", "--history"], { allowHistory: true }), { wasm: "/tmp/candidate.wasm", fixture: "a.hwpx", history: true });
   for (const args of [["--fixture=a", "--fixture=b"], ["--wasm=a", "--wasm=b"], ["--history", "--history"]])
@@ -45,4 +52,21 @@ test("real paragraph ranges preserve full-run totals and explicitly report parti
   const bad = run(["--paragraphs=7:9"]);
   assert.equal(bad.status, 1); assert.match(bad.stderr, /AuditParagraphRangeOutOfBounds/);
   assert.equal(bad.stdout.trim().split("\n").length, 1, "no misleading success summary after invalid range");
+  const observed = success(["--progress-every=2"]), progress = observed.filter(row => row.kind === "progress");
+  assert.deepEqual(observed.at(-1).totals, full.at(-1).totals);
+  assert.deepEqual(progress.map(row => row.completed), [2, 4, 6]);
+  for (const row of progress) {
+    assert.equal(row.status, "in_progress"); assert.equal(row.selectedParagraphs, 7); assert.equal(row.inputParagraphs, 7);
+    assert.equal(row.accepted + row.refused, row.completed); assert.equal(row.lastParagraph, row.completed);
+  }
+  const observedPart = success(["--paragraphs=3:5", "--progress-every=1"]);
+  assert.deepEqual(observedPart.at(-1).totals, part.at(-1).totals);
+  assert.deepEqual(observedPart.filter(row => row.kind === "progress").map(row => [row.completed, row.selectedParagraphs, row.inputParagraphs, row.lastParagraph]), [[1, 2, 7, 3], [2, 2, 7, 4]]);
+  assert.equal(observedPart.at(-2).completeFixture, false);
+  const numeric = spawnSync(process.execPath, ["tools/hwpx-edit-corpus-audit.mjs", `--wasm=${process.env.HWPJS_TEST_WASM}`, "--fixture=legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx", "--paragraphs=20:21", "--history", "--progress-every=1"], { encoding: "utf8", timeout: 15000 });
+  assert.equal(numeric.error, undefined); assert.equal(numeric.signal, null); assert.equal(numeric.status, 0, numeric.stderr);
+  const numericRows = numeric.stdout.trim().split("\n").map(JSON.parse), refused = numericRows.find(row => row.kind === "progress");
+  assert.equal(refused.completed, 1); assert.equal(refused.accepted, 0); assert.equal(refused.refused, 1); assert.equal(refused.status, "in_progress");
+  assert.deepEqual(numericRows.at(-1).totals.refused, { InvalidFormulaNumber: 1 });
+  assert.equal(numericRows.at(-2).completeFixture, false);
 });

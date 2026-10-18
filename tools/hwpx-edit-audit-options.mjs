@@ -1,7 +1,14 @@
 // Shared CLI boundary for plain and specialized HWPX edit audits.
-export function parseEditAuditOptions(args, { allowHistory = false, requireWasm = false, allowParagraphRange = false } = {}) {
+export function parseEditAuditOptions(args, { allowHistory = false, requireWasm = false, allowParagraphRange = false, allowProgress = false } = {}) {
   const options = {};
   for (const argument of args) {
+    if (allowProgress && argument.startsWith("--progress-every=")) {
+      if (options.progressEvery !== undefined) throw new Error("DuplicateAuditArgument");
+      const raw = argument.slice("--progress-every=".length);
+      if (!/^[1-9][0-9]*$/.test(raw) || !Number.isSafeInteger(Number(raw)) || Number(raw) > 1000000) throw new Error("InvalidAuditProgressInterval");
+      options.progressEvery = Number(raw);
+      continue;
+    }
     if (allowParagraphRange && argument.startsWith("--paragraphs=")) {
       if (options.paragraphRange !== undefined) throw new Error("DuplicateAuditArgument");
       const range = /^--paragraphs=([1-9][0-9]*):([1-9][0-9]*)$/.exec(argument);

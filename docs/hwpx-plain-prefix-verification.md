@@ -1,5 +1,17 @@
 # 일반 본문 prefix의 독립 검증 경계
 
+## 긴 일반 감사의 선택적 진행 행
+
+일반 `hwpx-edit-corpus-audit.mjs`는 선택적 `--progress-every=N`을 받습니다. 공통 CLI parser에서 이 도구만 opt-in하며 N은 선행0 없는1~1,000,000 정수입니다. 중복/0/음수/분수/지수/초과를 거부하며 다른 감사에 옵션을 조용히 허용하지 않습니다. 새 범위/시간 제한이나 검사 생략 옵션은 아닙니다.
+
+`kind=progress/status=in_progress` 행은 해당 문단의 입력/거부 검증·저장/복원·선택한 history 검사가 끝난 뒤에만 출력합니다. 파일별 completed·선택 분모·원본 분모·마지막1기반 문단 번호·accepted·refused를 분리합니다. 거부를 편집 성공으로 바꾸지 않으며 중간 행은 최종 입력 불변/summary/종료 코드나 독립 XML·실제 브라우저 성공의 증거가 아닙니다. 기본 출력과 마지막 총계는 유지합니다.
+
+`edit-audit-options.test.mjs`는 실제 charshape7문단에서 진행 출력 유무의 최종 총계 동일성,2/4/6 보고와 부분3:5 범위의 분모2/원본7·미완료 구분을 검사합니다. 실제 chart20문단의 비숫자 prefix 거부는 completed1/accepted0/refused1이며 final InvalidFormulaNumber1과 같음을 확인합니다. 검증이 끝나기 전 성공 개수를 올리는 방식은 사용하지 않습니다.
+
+작업 트리 후보 `f4e0f396a3fea6e6354b364ff176e31d72ed00ec643fa566c4abbd8bc2f58d77`의 `/tmp/hwpjs-zig017-current-fixtures.xouwd1/audit-progress.log/.stderr`는 관련 CLI 파일과8/8·fail/cancel/skip0·exit0·stderr0입니다. 실행 중인44개 감사의 고정 사본/프로세스는 변경하거나 재시작하지 않았습니다. 이 기능으로 그 기존 실행의 현재 문단 위치를 소급 확인했다고 주장하지 않습니다.
+
+후보 트리 `6000eb07ce350a1fd94d70b08ab03dd0dedc763b`의 `/tmp/hwpjs-audit-progress-clean.DjYzd1` 사본에서도 게시 소스 Zig0.17 WASM `afb7fdfbbc8a9c9cc45a7cdb98ade6be7a6a88b1943e1c5354c63d6715b9e05e`로 등록 회귀4/4·fail/cancel/skip0·단독 명령 exit0·stderr0입니다(`tests-final.log/.stderr`). 첫 추출의 비추적 corpus-audit-arguments 파일 부재는 준비 실패이며 최종 검사에 합산하지 않습니다. 기존 등록 파일을 확장했으므로 gate 등록을 복제하지 않습니다.
+
 ## 권한 조회와 실제 편집
 
 [추적 Worker 검사](hwpx-worker-fixture-roundtrip.md)의1,278개 plain 집계는 일반 본문 전부를 실제로 편집한 수가 아닙니다. 실제 전수 쓰기는 별도 감사로 수행하며, 성공한 권한 조회만으로 저장·이력·다른 XML 보존을 증명하지 않습니다.

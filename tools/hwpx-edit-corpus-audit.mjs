@@ -10,7 +10,7 @@ import { execFileSync } from "./oracle-process.mjs";
 import { hwpxParagraphCoordinates } from "./hwpx-paragraph-coordinates.mjs";
 import { captureInputIdentity, verifyInputIdentity } from "./audit-input-identity.mjs";
 
-const options = parseEditAuditOptions(process.argv.slice(2), { allowHistory: true, allowParagraphRange: true });
+const options = parseEditAuditOptions(process.argv.slice(2), { allowHistory: true, allowParagraphRange: true, allowProgress: true });
 const wasm = readFileSync(options.wasm ?? "zig-out/bin/hwpjs.wasm");
 const history = options.history ?? false;
 const editor = await createHwpxEditor(wasm), reader = await createHwpxReader(wasm);
@@ -36,6 +36,11 @@ try {
     const paragraphs = range ? allParagraphs.filter(row => row.paragraph >= range.start && row.paragraph < range.end) : allParagraphs;
     let formulaPrefixes;
     let accepted = 0;
+    let completed = 0;
+    const progress = paragraph => {
+      completed++;
+      if (options.progressEvery && completed % options.progressEvery === 0) console.log(JSON.stringify({ kind: "progress", status: "in_progress", path, completed, selectedParagraphs: paragraphs.length, inputParagraphs: allParagraphs.length, lastParagraph: paragraph.paragraph, accepted, refused: completed - accepted, history }));
+    };
     let previousEdited = null;
     for (const paragraph of paragraphs) {
       counts.paragraphs++;
@@ -73,6 +78,7 @@ try {
             counts.refusalRedoPreserved++;
           }
         }
+        progress(paragraph);
         continue;
       }
       assert(eligible || outsideEligible, `${path}: successful prefix without eligible plain or field-exterior range`);
@@ -99,6 +105,7 @@ try {
       } else editor.splice(paragraph.section, paragraph.paragraph, 0, 7, "");
       assert.deepEqual(Buffer.from(editor.save()), input, path);
       counts.accepted++; accepted++;
+      progress(paragraph);
     }
     verifyInputIdentity(input, inputIdentity, path);
     console.log(JSON.stringify({ path, inputSha256: inputIdentity, paragraphs: paragraphs.length, accepted, ...(range ? { inputParagraphs: allParagraphs.length, paragraphRange: range, completeFixture: range.start === 1 && range.end === allParagraphs.length + 1 } : {}) }));
