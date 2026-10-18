@@ -55,3 +55,17 @@ Debug 집중 빌드도 exit0·stderr0입니다. `field-debug-guard.jsonl/.stderr
 집중 ReleaseSafe `column-groups-safe` SHA256은55f2d1d1e6046319dc28e12a4b58910ecc4b7b455f8de5b481868f5637b59d0a입니다. `column-groups-safe-guard.jsonl/.stderr`는4/4·fail/skip/logErrors/leaks0·guardStopped=false·wrapper exit0·stderr0·최대 physical63,275,392바이트입니다. 실제 두 상태의 실패 주입1검사·공통 할당자 대조2검사·root sentinel1개이며, 앞선535개와 합산한 전체 gate 성공이 아닙니다.
 
 Debug `column-groups-debug` SHA256은8ed646add285f06db5556ec63c40860ee5e2768f654eea56ef19751196819046입니다. `column-groups-debug-guard.jsonl/.stderr`도 같은4개가4/4·fail/skip/logErrors/leaks0·guardStopped=false·wrapper exit0·stderr0·최대 physical21,922,152바이트로 완료됐습니다. 두 빌드 모두 exit0이며 fmt/diff 검사와 검증 사본/작업 트리의 해당 파일 바이트 대조도 통과했습니다. 남은 전체 목록의 재개는 별도 실행으로 검증해야 합니다.
+
+## 원본 단 그룹 확장 재개
+
+afed750b의 src2,635개 Git blob과 같은 사본에서 남은105개를 필터링한 첫 빌드는 exit0이지만 drawing_gradient_source 검사1개가 누락됐습니다. 실행하지 않고 해당 모듈을 import 수집 root에 추가했습니다. 후속 `native-tail-after-groups-complete-safe`는 exit0·SHA256 c95a2d5cd59bea9dfc1dc5f3745df6c1d8aa3e3637d5fa8927e1d12e352d0436이며 필요한105개 포함·누락/중복0·추가 import sentinel2개로 inventory107개입니다.
+
+`native-tail-after-groups-complete-guard.jsonl/.stderr`는 index0..15 배타 범위의15개가 status/logs/leaks0으로 완료된 뒤15번 `joined column source extension merges either adjacent owner without resetting coordinates`에서 자원 한도로 종료했습니다. physical current4,366,208,456/peak4,366,798,280바이트·limit4,294,967,296바이트·guardStopped=true·wrapper exit1입니다. stderr의 NativeRunnerClosed/SIGTERM은 감시기 중단 이후의 불완전 실행이며 단언 실패나 전체 통과가 아닙니다.
+
+column_boundary_joined_merge_tests의 다섯 실패 주입 호출을 공통 checker로 연결했습니다. 원본 저장 불변 관측도 실패 주입과 독립적인 checked_allocator.run으로 분리해 안전성·누수 검사를 유지하고 호출 스택 추적을 끕니다. 원래 두 방향·좌표·서식·분할/재병합·원본 보존 단언과 모든 실패 지점은 유지합니다. src2,635개를 afed750b와 대조해 이 테스트 파일만 다르고 추가 파일은 import 수집 root뿐임을 확인했습니다. 제품 함수는 변경하지 않았습니다.
+
+첫 집중 빌드의 테스트 매개변수 shadowing 오류를 수정한 뒤 재빌드가 명시적 NoSpaceLeft·exit1로 종료했습니다. joined-merge-safe는0바이트이며 실행하지 않았습니다. 디스크 부족으로 이 기록 추가도 한 번 실패했으나 기존 문서 바이트가 보존됨을 확인했습니다. 사용자 재개 요청 후 여유 약91GiB를 관측해 루트 .zig-cache는 삭제하지 않고 재빌드했습니다.
+
+집중 ReleaseSafe `joined-merge-safe-retry` 빌드는 exit0이고 SHA256은482192789ce0e99c51bdc95cd495a20cd9e1a5229257296531f477488eed9c27입니다. `joined-merge-safe-retry-guard.jsonl/.stderr`는5/5·fail/skip/logErrors/leaks0·guardStopped=false·wrapper exit0·stderr0·최대 physical36,618,600바이트입니다. 실제 확장/재병합2검사·공통 할당자 대조2검사·root sentinel1개이며, 중단된107개 실행과 합친 전체 gate 성공이 아닙니다.
+
+Debug `joined-merge-debug` 빌드도 exit0입니다. SHA256은4d28598a0a95582876211e07433b27d0ef488334bc5084182440e45c8cd132f4이며 `joined-merge-debug-guard.jsonl/.stderr`는 같은5개가5/5·fail/skip/logErrors/leaks0·guardStopped=false·wrapper exit0·stderr0·최대 physical14,893,392바이트로 완료됐습니다. 두 모드의 집중 결과는 별도 증거이며 남은 전체 목록의 완료나 제품 WASM 반영은 아닙니다.

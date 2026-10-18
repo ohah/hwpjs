@@ -84,11 +84,15 @@ test "joined column source extension merges either adjacent owner without resett
             try std.testing.expectEqual(with_continuation.paragraphs[2].generated_id, continuation_prepend.paragraphs[1].generated_id);
             const baseline = try @import("paragraph_structure_save.zig").write(a, &tree, &with_continuation, .{}, &.{}, 10000);
             defer a.free(baseline);
-            try std.testing.checkAllAllocationFailures(a, struct {
+            try @import("../testing/allocation_failures.zig").check(struct {
                 fn unchanged(parsed: *const Tree, values: *const Values, expected: []const u8) !void {
-                    const saved = try @import("paragraph_structure_save.zig").write(std.testing.allocator, parsed, values, .{}, &.{}, 10000);
-                    defer std.testing.allocator.free(saved);
-                    try std.testing.expectEqualSlices(u8, expected, saved);
+                    try @import("../testing/checked_allocator.zig").run(struct {
+                        fn verify(observer: std.mem.Allocator, source: *const Tree, current: *const Values, expected_bytes: []const u8) !void {
+                            const saved = try @import("paragraph_structure_save.zig").write(observer, source, current, .{}, &.{}, 10000);
+                            defer observer.free(saved);
+                            try std.testing.expectEqualSlices(u8, expected_bytes, saved);
+                        }
+                    }.verify, .{ parsed, values, expected });
                 }
                 fn run(allocator: std.mem.Allocator, parsed: *const Tree, values: *const Values, expected: []const u8) !void {
                     var result = @import("paragraph_structure_merge.zig").prepare(allocator, parsed, values, 0, 10000) catch |err| {
@@ -104,7 +108,7 @@ test "joined column source extension merges either adjacent owner without resett
         }
         try std.testing.expectEqual(@as(usize, 3), with_continuation.paragraphs.len);
         try std.testing.expectEqualStrings("후", with_continuation.paragraphs[first].sites.items[0].text);
-        try std.testing.checkAllAllocationFailures(a, struct {
+        try @import("../testing/allocation_failures.zig").check(struct {
             fn run(allocator: std.mem.Allocator, parsed: *const Tree, source: *const Values) !void {
                 var result = try @import("paragraph_structure_merge.zig").prepare(allocator, parsed, source, 0, 10000);
                 defer result.deinit(allocator);
@@ -130,7 +134,7 @@ test "joined column remerge preserves authority and crossing text through source
     defer merged.deinit(a);
     var split = try @import("paragraph_structure_split.zig").prepare(a, &tree, &merged, 0, 1, 1, 3, 10000);
     defer split.deinit(a);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, parsed: *const Tree, source: *const Values) !void {
             var output = @import("paragraph_structure_merge.zig").prepare(allocator, parsed, source, 0, 10000) catch |err| {
                 try expectOriginal(source);
@@ -171,7 +175,7 @@ test "joined column remerge preserves authority and crossing text through source
         try std.testing.expectEqual(expected.unit, actual.unit);
         try std.testing.expectEqualStrings(tree.sourceOf(expected.source_element), reopened.sourceOf(actual.source_element));
     }
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, parsed: *const Tree, source: *const Values) !void {
             var candidate = try @import("paragraph_structure_merge.zig").prepare(allocator, parsed, source, 0, 10000);
             defer candidate.deinit(allocator);
@@ -190,7 +194,7 @@ test "joined column remerge preserves authority and crossing text through source
     const partial_xml = try @import("paragraph_structure_save.zig").write(a, &tree, &partial, .{}, &.{}, 10000);
     defer a.free(partial_xml);
     try verifySaved(a, &tree, &partial, &.{ "AL😀", "B" });
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, parsed: *const Tree, source: *const Values) !void {
             var candidate = @import("paragraph_structure_merge.zig").prepare(allocator, parsed, source, 0, 10000) catch |err| {
                 try std.testing.expectEqualStrings("L", source.paragraphs[0].sites.items[1].text);
