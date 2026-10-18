@@ -1,5 +1,13 @@
 # 현재 main 소스의 전체 native 실행
 
+## Zig 0.17 게시 소스의 root 전체 재실행 — 진행 중
+
+공개 gate에 사용한 eddbfa8c·tree `c201fa64d85323f153b5dc691e87d131e30bbbaf`의 `/tmp/hwpjs-published-hwpx-gate.7WPrL4`에서 `zig test src/root.zig -O ReleaseSafe --test-no-exec -femit-bin=.../native-safe`를 Zig0.17.0으로 새로 컴파일했습니다. 빌드 exit0·stdout/stderr0이며 SHA256은 `21be9993e5f06ca8564a5ce9be49a9b246663bce6f3b59b0481439036236296e`입니다. 아래 구형4,114개/부분 결과를 재사용한 바이너리가 아닙니다.
+
+`native-guard-full.jsonl/.stderr`는 이 바이너리의 실제 inventory4,118개·범위0..4118·fullInventoryCovered=true·batch1·seed0x485750·4,096MiB 관찰 한도로 시작했습니다. 시작 명령은 `env -u HWPJS_CHARACTER_FAILURE_START -u HWPJS_CHARACTER_FAILURE_END`로 문자 속성 실패 주입의 별도 범위 제한을 제거했습니다. 최종 complete·결과 누락/중복·fail/skip/log/leak·guardian 종료와 터미널 종료를 확인하기 전에는 전체 통과가 아닙니다. `src/root.zig`의 실행이며 build test에 별도로 연결된 controlled text 테스트나 모든 native 빌드 target의 완료로 확대하지 않습니다.
+
+메모리 guardian은 게시 Git에 없는 로컬 보조 도구이므로 제품 소스에 섞지 않고 세 파일만 사본에 추가했습니다. `zig-native-footprint-audit.mjs` SHA256은 `7593186be0ac17078b440d04f62aad2f2b6a67cbf076c1512e2e6cdfd115cf1f`, `native-footprint-values.mjs`는 `8dbcb2ed523db52592d38ebc901259408f7c53509b5268e77e21948d5e1fb1da`, `native-audit-fatal-observer.mjs`는 `6e031ec9cfa8dab67a8b8c3de4d013968af2a266268d78561d27f1270624aeaa`입니다. 실행기/프로토콜·기존 helper는 게시 사본 그대로입니다. 최초 `native-full.stderr`는 guardian 부재 MODULE_NOT_FOUND·exit1이고 테스트를 시작하지 못한 진입 실패로 보존합니다. 후속 로그와 합산하거나 숨기지 않습니다. 기본 WASM/외부 데모는 교체하지 않았습니다.
+
 ## 소스와 빌드
 
 `/tmp/hwpjs-native-group-current.TKXcyl`의 추적 src2,635개 Git blob을 ab811f17과 전수 대조해 모두 동일함을 확인했습니다. 무관한 작업 트리 변경은 가져오지 않았습니다. ReleaseSafe 전체 빌드 `zig test src/root.zig -O ReleaseSafe --test-no-exec -femit-bin=.../native-safe`는 `native-safe-build.log`가 비어 있고 exit0입니다. 바이너리 SHA256은a80d8cc6d1070542c826439d8ac169d46e816362339b8d8a4c01582449a1177b입니다.
