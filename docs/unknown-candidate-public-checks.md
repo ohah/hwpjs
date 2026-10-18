@@ -32,7 +32,17 @@
 
 같은 사본에서 문제 원본 전체의 specialized prefix 감사를 다시 실행한 `task1789-specialized.log/.stderr`는 exit0입니다. 시도90/검증90/독립 XML90(필드86)/거부0이며, 일반·필드 밖 일반 입력 가능한 나머지 문단은 이 specialized 감사 대상이 아닙니다. 이 한 파일의90개 결과를 전체 참조 corpus 통과로 확대하지 않습니다.
 
-## 등록 gate 상태
+## 여러 문단에 걸친 중첩 필드 감사
+
+옛 감사 로그의861개 완료 행 중 verification_failed44개를 읽기 전용으로 분류했습니다. 이는 옛77b60b82 산출물/당시 도구의 결과이며 현재 실패44개라는 뜻이 아닙니다. 현재 후보로 `task1765/merged_cell_trailing_ls.hwpx`를 다시 검사한 `task1765-specialized.log/.stderr`는1시도/독립 XML1·거부0·exit0입니다. 반면 `hwpx/opengov/36387103_결재문서본문_수질검사 신청 민원 처리 결과 안내.hwpx`는 현재에도 기존 specialized 도구의 `independent field fragment must be unique`에서2!=1로 실패했습니다. 같은 문단을 덮는 외부/내부 필드의 두 inventory 행을 파싱 실패로 잘못 해석한 것입니다.
+
+수정한 inventory는 원본 ElementTree의 요소 순번인 beginElement를 함께 내보냅니다. 감사 도구는 입력 전에 선택한 실제 fieldRangeTarget과 이 독립 인덱스를 연결해 정확히 한 필드를 검사합니다. 첫 후보 선택이나 오류 무시는 하지 않습니다. 필드 경로를 anchored 조회보다 우선하는 실제 prefix 명령 순서와도 맞춥니다. 필드 oracle의 `hwpx_field_dirty_owners.py`는 원본의 필드 시작/끝 포함 관계로 선택 필드와 상위 필드의 dirty 기대값을 구성하며, 여러 문단 범위도 유지합니다. 교차 필드/선택 필드 끝의 모호성은 거부하고 전체 XML/ZIP 비교는 유지합니다.
+
+`/tmp/hwpjs-nested-field-audit.DkiTGa`에는883e7e8d의 두 도구에 이 수정만 적용했습니다. 작업 트리의 styled-run 삭제/별도 refusal 출력 변경은 포함하지 않습니다. 명시적 eaaa0d20 후보의 `nested-tests.log/.stderr`는4/4·fail/cancel/skip0·exit0입니다. 실제 원본의14/16번 문단에서 내부 필드 선택·독립 인덱스/ID·전체 XML/ZIP normal/-O·undo/redo·재열기·원본 불변을 확인했고, 합성 여러 문단 필드의 상위/선택 dirty 누락도 거부했습니다. 기존 두 실제 필드 회귀와 Python 두 모드의 기존 self-test도 통과했습니다. 파일 전체의 specialized 감사인 `nested-corpus.log/.stderr`도68시도/검증68/독립 XML68(필드63)/거부0·exit0이며, 집중 결과와 합산하지 않습니다.
+
+## 전체 등록 gate 상태
+
+같은 중첩 필드 수정 사본의 `leading-corpus.log/.stderr`에서 앞선 task1789 원본도90시도/검증90/독립 XML90(필드86)/거부0·exit0으로 재확인했습니다. 두 원본의 특수 입력 결과이며 일반 입력·전체 참조 corpus·실제 브라우저 검증을 대신하지 않습니다.
 
 도구 탭을 더한082cf938의 build/js/web/tools/tests2,046개 Git blob과 정확히 같은 `/tmp/hwpjs-ribbon-preview.yjDs24`에서 등록97파일·concurrency1·명시적 후보/기준·TAP의 `registered-hwpx-97-tap.log/.stderr`를 새로 시작했습니다. 고정 설치 경로를 읽는 검사에도 이 사본의 zig-out/bin 연결로 같은 후보를 제공합니다. 실행 중이며 완료로 세지 않습니다. [도구 탭 집중 검증](document-ribbon.md)이나 앞선95파일 결과를 새 전체 gate로 합산하지 않습니다.
 

@@ -6,6 +6,7 @@ import sys
 import xml.etree.ElementTree as ET
 import zipfile
 from hwpx_field_prefix_site import leading_object_site
+from hwpx_field_dirty_owners import mark_dirty_owners
 
 P = "{http://www.hancom.co.kr/hwpml/2011/paragraph}"
 
@@ -64,7 +65,7 @@ def compare(before, after, prefix, begin_id=None, paragraph=None, at_unit=0, del
             if not choices or ((begin_id is not None or paragraph is not None) and len(choices) != 1):
                 raise ValueError("Unknown or ambiguous chosen field fragment")
             begin, _, text = choices[0]
-            begin.set("dirty", "1")
+            mark_dirty_owners(expected, begin)
             if at_unit == 0 and deleted_units == 0:
                 text = leading_object_site(expected, begin, text)
             if text.tag == P + "run":
@@ -151,7 +152,8 @@ elif __name__ == "__main__":
             for name in source.namelist():
                 if name.startswith("Contents/section") and name.endswith(".xml"):
                     root = ET.fromstring(source.read(name))
-                    inventory.extend({"part": name, "beginId": begin.get("id"), "paragraph": paragraph} for begin, paragraph, _ in fragments(root))
+                    indices = {node: index for index, node in enumerate(root.iter())}
+                    inventory.extend({"part": name, "beginId": begin.get("id"), "beginElement": indices[begin], "paragraph": paragraph} for begin, paragraph, _ in fragments(root))
         print(json.dumps(inventory))
     else:
         if payload.get("mode") not in (None, "prefix", "insert", "replace"):

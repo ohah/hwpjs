@@ -8,6 +8,31 @@ test("field object prefix oracle rejects displaced text dirty marker object and 
   for (const flags of [[], ["-O"]]) execFileSync("python3", [...flags, "tests/hwpx/field-leading-object-oracle.py"], { timeout: 30000 });
 });
 
+test("actual cross-paragraph nested field prefixes retain both dirty owners", async () => {
+  assert(process.env.HWPJS_TEST_WASM, "requires explicit nested candidate");
+  const editor = await createHwpxEditor(readFileSync(process.env.HWPJS_TEST_WASM));
+  const path = "reference/rhwp/samples/hwpx/opengov/36387103_결재문서본문_수질검사 신청 민원 처리 결과 안내.hwpx";
+  const input = readFileSync(path);
+  try {
+    for (const [paragraph, beginId] of [[14, "1555813748"], [16, "1823917435"]]) {
+      editor.open(input);
+      editor.enableHistory({ maxEntries: 8, maxCheckpointBytes: 16 * 1024 * 1024 });
+      const target = editor.fieldRangeTarget(0, paragraph, 0, 0);
+      const inventory = JSON.parse(execFileSync("python3", ["tools/hwpx-field-edit-oracle.py"], { input: JSON.stringify({ mode: "inventory", before: input.toString("base64") }), encoding: "utf8", timeout: 30000 }));
+      const matches = inventory.filter(row => row.paragraph === paragraph && row.beginElement === target.beginElement);
+      assert.equal(matches.length, 1); assert.equal(matches[0].beginId, beginId);
+      const text = "중첩범위😀<&";
+      editor.spliceFieldLabel(0, paragraph, target.beginElement, 0, 0, text);
+      const saved = Buffer.from(editor.save());
+      for (const flags of [[], ["-O"]]) execFileSync("python3", [...flags, "tools/hwpx-field-edit-oracle.py"], { input: JSON.stringify({ before: input.toString("base64"), after: saved.toString("base64"), paragraph, beginId, text }), timeout: 30000 });
+      assert.equal(editor.undo(), true); assert.deepEqual(Buffer.from(editor.save()), input);
+      assert.equal(editor.redo(), true); assert.deepEqual(Buffer.from(editor.save()), saved);
+      editor.open(saved); assert.deepEqual(Buffer.from(editor.save()), saved);
+    }
+    assert.deepEqual(readFileSync(path), input);
+  } finally { editor.close(); }
+});
+
 test("actual field prefix stays before a leading table rather than moving past its protected unit", async () => {
   assert(process.env.HWPJS_TEST_WASM, "requires explicit field candidate");
   const wasm = readFileSync(process.env.HWPJS_TEST_WASM);

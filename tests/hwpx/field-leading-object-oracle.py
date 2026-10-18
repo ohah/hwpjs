@@ -20,6 +20,19 @@ def archive(xml, other=b"keep"):
 
 
 class LeadingFieldObject(unittest.TestCase):
+    def test_nested_field_marks_ancestor_across_paragraphs_and_rejects_lost_dirty(self):
+        xml = ("<r xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'>"
+               "<p:p><p:run><p:fieldBegin id='1' type='CLICK_HERE'/><p:t>A</p:t></p:run></p:p>"
+               "<p:p><p:run><p:fieldBegin id='2' type='HYPERLINK'/><p:t>B</p:t></p:run></p:p>"
+               "<p:p><p:run><p:fieldEnd beginIDRef='2'/><p:fieldEnd beginIDRef='1'/></p:run></p:p></r>").encode()
+        valid = xml.replace(b"type='CLICK_HERE'", b"type='CLICK_HERE' dirty='1'").replace(
+            b"type='HYPERLINK'", b"type='HYPERLINK' dirty='1'").replace(b">B<", b">XB<")
+        compare(archive(xml), archive(valid), "X", "2", 2)
+        for kind in (b"CLICK_HERE", b"HYPERLINK"):
+            mutant = valid.replace(b"type='" + kind + b"' dirty='1'", b"type='" + kind + b"'")
+            with self.assertRaisesRegex(ValueError, "Unexpected XML change"):
+                compare(archive(xml), archive(mutant), "X", "2", 2)
+
     def test_each_supported_leading_object_preserves_payload_and_dirty(self):
         for kind in ("tbl", "pic", "container"):
             with self.subTest(kind=kind):

@@ -45,7 +45,11 @@ try {
         assert(["UnsupportedParagraphControl", "UnsupportedInlineControl", "MissingTextSite", "SourceBindingMismatch", "UnsupportedFieldLabel", "UnsupportedStructuralFieldEdit"].includes(error.message));
       }
       const revision = editor.historyRevision();
-      try { insertPrefix(editor, p.section, p.paragraph, "경로😀<&"); }
+      let fieldTarget = null;
+      try {
+        fieldTarget = typeof editor.fieldRangeTarget === "function" ? editor.fieldRangeTarget(p.section, p.paragraph, 0, 0) : null;
+        insertPrefix(editor, p.section, p.paragraph, "경로😀<&");
+      }
       catch (error) {
         assert(allowedRefusals.has(error.message), `${path}/${p.paragraph}: unexpected ${error.message}`);
         verifyRefusalHistory(editor, { original: input, previousEdited, revision, context: `${path}/${p.section}/${p.paragraph}` });
@@ -54,14 +58,14 @@ try {
         continue;
       }
       const saved = editor.save();
-      if (anchored) {
+      if (anchored && fieldTarget === null) {
         try {
           for (const flags of [[], ["-O"]]) execFileSync("python3", [...flags, "tools/hwpx-anchor-prefix-oracle.py"], { input: JSON.stringify({ mode: "anchored", before: input.toString("base64"), after: Buffer.from(saved).toString("base64"), section: p.section, paragraph: p.localParagraph, text: "경로😀<&" }), encoding: "utf8", timeout: 30000 });
         } catch (error) { throw new Error(`${path}/${p.section}/${p.paragraph}: XML oracle failed`, { cause: error }); }
         totals.xmlVerified++;
       } else {
         const inventory = JSON.parse(execFileSync("python3", ["tools/hwpx-field-edit-oracle.py"], { input: JSON.stringify({ mode: "inventory", before: input.toString("base64") }), encoding: "utf8", timeout: 30000 }));
-        const choices = inventory.filter(entry => entry.part === `Contents/section${p.section}.xml` && entry.paragraph === p.localParagraph);
+        const choices = inventory.filter(entry => entry.part === `Contents/section${p.section}.xml` && entry.paragraph === p.localParagraph && (fieldTarget === null || entry.beginElement === fieldTarget.beginElement));
         assert.equal(choices.length, 1, "independent field fragment must be unique");
         for (const flags of [[], ["-O"]]) execFileSync("python3", [...flags, "tools/hwpx-field-edit-oracle.py"], { input: JSON.stringify({ mode: "prefix", before: input.toString("base64"), after: Buffer.from(saved).toString("base64"), beginId: choices[0].beginId, paragraph: p.localParagraph, text: "경로😀<&" }), encoding: "utf8", timeout: 30000 });
         totals.xmlVerified++;
