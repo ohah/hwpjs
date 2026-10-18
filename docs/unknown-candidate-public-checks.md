@@ -1,5 +1,15 @@
 # unknownObj 후보의 공개 API 회귀
 
+## 과거 실패44개 재검사 — 고정 실행 기록
+
+`/tmp/hwpjs-old-failures-current.8bPWPB`는 과거 `/tmp/hwpjs-normalized-reference-edit.Dld3zF`의 실제 완료861행에서 verification_failed44개를 전부 고정한 사본입니다. 과거 root의975개 전체가 완료됐다는 뜻은 아닙니다. baseline 로그 SHA256은 `31c3aa0e0745ff6936fe79065a626ff7d780f2c95e6b7f4099f0e95484e2115f`입니다. 원본44개의 SHA256이 당시 행과 모두 같음을 확인했고, 합계48,568,945바이트를 cases에 복사했습니다. 원본을 수정하지 않습니다.
+
+시작 당시 HEAD는737a50a8이며 작업 트리의 JS/도구421파일을 해시와 함께 고정했습니다. 이 사본에는 미커밋 도구가 포함되므로 main 소스와 동일하다고 주장하지 않습니다. `candidate.wasm`은 Zig0.17 작업 트리 후보 `f4e0f396a3fea6e6354b364ff176e31d72ed00ec643fa566c4abbd8bc2f58d77`의 사본입니다. manifest SHA256은 `fbc985c34b429b6c9128b95bcfa4d8e5b55e2484f22cc318ce05931e3f3a9470`입니다. 중간 검증에서 코드421·원본44·사본44·WASM 모두 그대로임을 다시 확인했습니다. 기본 제품/외부 데모를 교체하지 않았습니다.
+
+감사는 문서별 일반 prefix/저장/이력 뒤 전용 prefix/독립 XML·ZIP/재열기/이력을 직렬 실행합니다. 결과는 `results.jsonl/.stderr`가 소유합니다. 파일 완료 행44개·누락/중복 없음·입력/후보 해시 일치·최종 summary·터미널 종료 코드를 모두 확인하기 전에는44개 완료로 기록하지 않습니다. stderr가 비어 있어도 파일 행의 verification_failed를 성공으로 바꾸지 않습니다. 거부는 지원 성공이 아니며 계산 결과의 명시적 수동 편집은 별도 경로입니다. 전체975개 편집·모든 명령/위치·실제 브라우저/조판 동치 완료와도 구분합니다.
+
+첫 원본의 독립 XML 문단 수는1,203개입니다. 일반 감사 정상 종료 후 전용 감사로 넘어간 것을 프로세스 전환으로 확인했고, 전용 oracle 입력에서754번 문단을 관측했습니다. 이는 성공 개수가 아니라 실행 위치이며 파일 최종 결과가 아닙니다. 별도 한 문단870의 실측은 조회 약0.008–1.5ms·prefix 입력4.7ms·save96ms·reader177ms·독립 XML270ms이며 undo/redo·각 save까지 exit0입니다. `first-query-profile.jsonl`, `first-transaction-profile.jsonl`이 근거이며 한 표본을 전체 성능/호환성 증명으로 확대하지 않습니다.
+
 [원본 빈 run 입력 소속](hwpx-prefix-insertion-affinity.md)은 실제 sample2의 저장 검사 실패를 재현하고, 다른 글꼴 run으로 기대값을 옮기던 독립 검사기의 누락과 변조 거부 회귀를 분리해 기록합니다.
 
 ## 소스와 산출물
