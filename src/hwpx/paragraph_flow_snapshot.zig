@@ -174,24 +174,27 @@ test "HWPX paragraph flow uses current merged column boundaries and continuation
 }
 
 test "HWPX paragraph flow reads hyperlink source columns without granting anchor edit permission" {
-    const a = std.testing.allocator;
-    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/hyperlink.hwpx", a, .limited(4_000_000));
-    defer a.free(bytes);
-    var session = try editor.open(a, bytes, .{});
-    defer session.deinit();
-    const rows = try read(a, &session, 0);
-    defer free(a, rows);
-    try std.testing.expectEqual(@as(usize, 9), rows.len);
-    try std.testing.expectEqual(@as(?u32, 1), rows[0].column_declaration.?.count);
-    try std.testing.expectEqual(@as(usize, 1), rows[0].column_changes.len);
-    try std.testing.expectEqual(@as(u32, 0), rows[0].column_changes[0].unit);
-    try std.testing.checkAllAllocationFailures(a, struct {
-        fn run(allocator: std.mem.Allocator, current: *const editor.Session) !void {
-            const output = try read(allocator, current, 0);
-            defer free(allocator, output);
-            try std.testing.expectEqual(@as(usize, 9), output.len);
+    try @import("../testing/checked_allocator.zig").run(struct {
+        fn run(a: std.mem.Allocator) !void {
+            const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/hyperlink.hwpx", a, .limited(4_000_000));
+            defer a.free(bytes);
+            var session = try editor.open(a, bytes, .{});
+            defer session.deinit();
+            const rows = try read(a, &session, 0);
+            defer free(a, rows);
+            try std.testing.expectEqual(@as(usize, 9), rows.len);
+            try std.testing.expectEqual(@as(?u32, 1), rows[0].column_declaration.?.count);
+            try std.testing.expectEqual(@as(usize, 1), rows[0].column_changes.len);
+            try std.testing.expectEqual(@as(u32, 0), rows[0].column_changes[0].unit);
+            try std.testing.checkAllAllocationFailures(a, struct {
+                fn run(allocator: std.mem.Allocator, current: *const editor.Session) !void {
+                    const output = try read(allocator, current, 0);
+                    defer free(allocator, output);
+                    try std.testing.expectEqual(@as(usize, 9), output.len);
+                }
+            }.run, .{&session});
         }
-    }.run, .{&session});
+    }.run, .{});
 }
 
 test "HWPX paragraph flow note context keeps direct ownership" {

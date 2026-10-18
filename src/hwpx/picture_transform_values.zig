@@ -156,25 +156,28 @@ fn readComponent(a: std.mem.Allocator, tree: *const Tree, picture: usize, max_ma
 }
 
 test "HWPX container transform shares parser while separating node contracts" {
-    const a = std.testing.allocator;
-    const source = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph' xmlns:c='http://www.hancom.co.kr/hwpml/2011/core'><p:container reverse='0'><p:flip horizontal='0' vertical='1'/><p:rotationInfo angle='90'/><p:renderingInfo><c:transMatrix e1='1' e2='0' e3='10' e4='0' e5='1' e6='20'/></p:renderingInfo><p:pic reverse='1'/></p:container></s:sec>";
-    var tree = try @import("section_tree.zig").parse(a, source, 0, 0, .{});
-    defer tree.deinit(a);
-    try std.testing.expectError(error.InvalidPictureDisplayNode, read(a, &tree, 1, 3));
-    try std.testing.expectError(error.InvalidPictureContainerNode, readContainer(a, &tree, 6, 3));
-    try std.testing.expectError(error.InvalidPictureContainerNode, readContainer(a, &tree, tree.elements.len, 3));
-    try std.testing.expectError(error.LimitExceeded, readContainer(a, &tree, 1, 0));
-    try std.testing.checkAllAllocationFailures(a, struct {
-        fn run(allocator: std.mem.Allocator, parsed: *const Tree) !void {
-            var value = try readContainer(allocator, parsed, 1, 3);
-            defer value.deinit(allocator);
-            try std.testing.expectEqual(@as(?bool, false), value.reverse);
-            try std.testing.expectEqual(@as(?bool, true), value.flip[1]);
-            try std.testing.expectEqual(@as(?u32, 90), value.angle);
-            try std.testing.expectEqual(@as(usize, 1), value.matrices.len);
-            try std.testing.expectEqual(@as(?f64, 10), value.matrices[0].values[2]);
+    try @import("../testing/checked_allocator.zig").run(struct {
+        fn run(a: std.mem.Allocator) !void {
+            const source = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph' xmlns:c='http://www.hancom.co.kr/hwpml/2011/core'><p:container reverse='0'><p:flip horizontal='0' vertical='1'/><p:rotationInfo angle='90'/><p:renderingInfo><c:transMatrix e1='1' e2='0' e3='10' e4='0' e5='1' e6='20'/></p:renderingInfo><p:pic reverse='1'/></p:container></s:sec>";
+            var tree = try @import("section_tree.zig").parse(a, source, 0, 0, .{});
+            defer tree.deinit(a);
+            try std.testing.expectError(error.InvalidPictureDisplayNode, read(a, &tree, 1, 3));
+            try std.testing.expectError(error.InvalidPictureContainerNode, readContainer(a, &tree, 6, 3));
+            try std.testing.expectError(error.InvalidPictureContainerNode, readContainer(a, &tree, tree.elements.len, 3));
+            try std.testing.expectError(error.LimitExceeded, readContainer(a, &tree, 1, 0));
+            try std.testing.checkAllAllocationFailures(a, struct {
+                fn run(allocator: std.mem.Allocator, parsed: *const Tree) !void {
+                    var value = try readContainer(allocator, parsed, 1, 3);
+                    defer value.deinit(allocator);
+                    try std.testing.expectEqual(@as(?bool, false), value.reverse);
+                    try std.testing.expectEqual(@as(?bool, true), value.flip[1]);
+                    try std.testing.expectEqual(@as(?u32, 90), value.angle);
+                    try std.testing.expectEqual(@as(usize, 1), value.matrices.len);
+                    try std.testing.expectEqual(@as(?f64, 10), value.matrices[0].values[2]);
+                }
+            }.run, .{&tree});
         }
-    }.run, .{&tree});
+    }.run, .{});
 }
 
 fn allocationCase(a: std.mem.Allocator) !void {

@@ -34,29 +34,32 @@ test "HWPX line rendering endpoints share affine order and reject incomplete geo
 }
 
 test "HWPX line rendering endpoints actual scaled line all allocation failures" {
-    const a = std.testing.allocator;
-    const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/shapeline.hwpx", a, .limited(4_000_000));
-    defer a.free(input);
-    var session = try @import("editor_session.zig").open(a, input, .{});
-    defer session.deinit();
-    const tree = &session.sections[0].tree;
-    var count: usize = 0;
-    for (tree.elements, 0..) |element, node| {
-        if (!element.is(@import("document_xml.zig").paragraph_uri, "line")) continue;
-        const expected: Endpoints = if (count == 0) .{ .{ 0, 0 }, .{ 2100, 2050 } } else .{ .{ 0, 0 }, .{ 2400 * 6.166667, 2350 * 0.914894 } };
-        try std.testing.checkAllAllocationFailures(a, struct {
-            fn run(allocator: std.mem.Allocator, source: *const Tree, index: usize, target: Endpoints) !void {
-                const actual = try read(allocator, source, index, 32);
-                for (actual, target) |point, reference| for (point, reference) |number, wanted| try std.testing.expectApproxEqAbs(wanted, number, 1e-8);
+    try @import("../testing/checked_allocator.zig").run(struct {
+        fn run(a: std.mem.Allocator) !void {
+            const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/shapeline.hwpx", a, .limited(4_000_000));
+            defer a.free(input);
+            var session = try @import("editor_session.zig").open(a, input, .{});
+            defer session.deinit();
+            const tree = &session.sections[0].tree;
+            var count: usize = 0;
+            for (tree.elements, 0..) |element, node| {
+                if (!element.is(@import("document_xml.zig").paragraph_uri, "line")) continue;
+                const expected: Endpoints = if (count == 0) .{ .{ 0, 0 }, .{ 2100, 2050 } } else .{ .{ 0, 0 }, .{ 2400 * 6.166667, 2350 * 0.914894 } };
+                try std.testing.checkAllAllocationFailures(a, struct {
+                    fn run(allocator: std.mem.Allocator, source: *const Tree, index: usize, target: Endpoints) !void {
+                        const actual = try read(allocator, source, index, 32);
+                        for (actual, target) |point, reference| for (point, reference) |number, wanted| try std.testing.expectApproxEqAbs(wanted, number, 1e-8);
+                    }
+                }.run, .{ tree, node, expected });
+                try std.testing.expectError(error.LimitExceeded, transforms.readLine(a, tree, node, 0));
+                try std.testing.expectError(error.InvalidPictureDisplayNode, transforms.read(a, tree, node, 32));
+                count += 1;
             }
-        }.run, .{ tree, node, expected });
-        try std.testing.expectError(error.LimitExceeded, transforms.readLine(a, tree, node, 0));
-        try std.testing.expectError(error.InvalidPictureDisplayNode, transforms.read(a, tree, node, 32));
-        count += 1;
-    }
-    try std.testing.expectEqual(@as(usize, 2), count);
-    try std.testing.expectError(error.InvalidLineGeometryNode, transforms.readLine(a, tree, tree.elements.len, 32));
-    const saved = try session.save();
-    defer a.free(saved);
-    try std.testing.expectEqualSlices(u8, input, saved);
+            try std.testing.expectEqual(@as(usize, 2), count);
+            try std.testing.expectError(error.InvalidLineGeometryNode, transforms.readLine(a, tree, tree.elements.len, 32));
+            const saved = try session.save();
+            defer a.free(saved);
+            try std.testing.expectEqualSlices(u8, input, saved);
+        }
+    }.run, .{});
 }

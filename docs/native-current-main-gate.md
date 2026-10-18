@@ -1,5 +1,13 @@
 # 현재 main 소스의 전체 native 실행
 
+## 후속 11개 할당 실패 회귀의 동일 오류 재현과 수정
+
+고정 바이너리의 index138/546/575/620/623/626/700/712/726/886/928도 각각 단독 필터 목록에 넣어 원래 소스에서 재현했습니다. `/tmp/hwpjs-native-allocator-probe.Kn255w/remaining-original.stderr`는 root sentinel1개만 pass·대상11개 모두 NondeterministicMemoryUsage·exit1입니다. 앞선 세 실패와 이름이 비슷하다는 이유로 원인을 추정해 통과 처리한 것이 아닙니다.
+
+해당 테스트 전체를 기존 checked_allocator.run에 연결했습니다. 거래가 publish하는 버퍼의 backing과 복원/해제 backing을 일치시키며 전체 std.testing.checkAllAllocationFailures·숫자0/부재·namespace·독립 원값·원본 ZIP·이력 단언은 유지합니다. XML/표/각주/그림/자동번호 등의 제품 읽기/저장 로직은 바꾸지 않습니다. 단, Zig0.17 fmt가 character_font_patch의 enum 정수 변환2곳을 @intFromEnum→@backingInt로 치환한 표기 변경은 포함합니다.
+
+같은 사본의 `remaining-fixed.stderr`·`remaining-debug.stderr`는 각각 ReleaseSafe/Debug12/12·exit0(대상11+root1)입니다. 기존 helper 정상/삼킨 OOM/의도적 누수 대조는 앞 절의 별도 결과가 소유합니다. 변경11파일의 fmt --check와 별도 prefix ReleaseSafe 제품 빌드5/5·exit0도 확인했습니다(`remaining-product-build.stderr`). 커밋용 tree `05943b2b0b50b8c4d83828d42c6e19166435355f`의 수정11파일은 검사 사본과 최상위 선언 사이 빈 줄 외 바이트가 같으며, 사용자 readChart 추가는 제외했습니다. 실행 중인 구형 고정 바이너리의 실패 행과 합산하거나 최신 전체 native 성공으로 바꾸지 않습니다.
+
 ## 0.17 기본 테스트 할당자의 비결정적 할당 횟수 — 세 회귀 수정
 
 위 전체 실행의 index27 덧말 거래·133 글꼴 metric·924 생성 표 snapshot은 status1을 반환했습니다. 같은 게시 소스를 별도 filter로 실행한 `native-dutmal-focused.stderr`·`native-query-focused.stderr`에서 세 오류 모두 `NondeterministicMemoryUsage`·exit1로 재현했습니다. std.testing.allocator는 이0.17 설치에서 SafeAllocator이고, 작은 bucket의 현재 채움 위치에 따라 growingResizeBucket 성공 여부가 바뀝니다. checkAllAllocationFailures는 최초 성공 실행의 alloc_index를 분모로 삼으므로 backing의 재할당 경로가 바뀌면 대상 할당 지점에 도달하지 못한 성공을 이 오류로 거부합니다. 오류를 OOM으로 바꾸거나 무시하지 않습니다.

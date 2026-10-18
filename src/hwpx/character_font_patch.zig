@@ -7,11 +7,11 @@ pub fn write(a: std.mem.Allocator, tree: *const Tree, node: usize, language: fac
     const current = (try @import("character_font_references.zig").read(a, tree, node, 4096)) orelse return error.MissingCharacterFontReference;
     const fragment = tree.sourceOf(node);
     if (fragment.len > limit) return error.LimitExceeded;
-    if (current[@intFromEnum(language)] == id) return a.dupe(u8, fragment);
+    if (current[@backingInt(language)] == id) return a.dupe(u8, fragment);
     var child = tree.elements[node].first_child;
     while (child) |index| : (child = tree.elements[index].next_sibling) {
         if (!tree.elements[index].is(@import("document_xml.zig").head_uri, "fontRef")) continue;
-        const name = faces.reference_names[@intFromEnum(language)];
+        const name = faces.reference_names[@backingInt(language)];
         const attribute = try tree.attributeValue(a, index, "", name);
         const replacement = if (attribute) |raw| try std.fmt.allocPrint(a, "{c}{d}{c}", .{ raw.raw[0], id, raw.raw[0] }) else try std.fmt.allocPrint(a, " {s}=\"{d}\"", .{ name, id });
         defer a.free(replacement);
@@ -23,26 +23,29 @@ pub fn write(a: std.mem.Allocator, tree: *const Tree, node: usize, language: fac
 }
 
 test "character font patch changes only one language preserves zero and allocation failures" {
-    const a = std.testing.allocator;
-    const input = "<h:head xmlns:h='http://www.hancom.co.kr/hwpml/2011/head'><h:charPr id='9' textColor='#ff0000'><!--keep--><h:fontRef latin = '7' hangul='&#48;' opaque='keep'/><h:bold/></h:charPr><h:charPr/></h:head>";
-    var tree = try @import("xml_part_tree.zig").parse(a, input, .header, null, 0, .{});
-    defer tree.deinit(a);
-    try std.testing.checkAllAllocationFailures(a, struct {
-        fn run(allocator: std.mem.Allocator, source: *const Tree) !void {
-            const changed = try write(allocator, source, 1, .latin, 42, 4096);
-            defer allocator.free(changed);
-            try std.testing.expectEqualStrings("<h:charPr id='9' textColor='#ff0000'><!--keep--><h:fontRef latin = '42' hangul='&#48;' opaque='keep'/><h:bold/></h:charPr>", changed);
-            const same = try write(allocator, source, 1, .hangul, 0, 4096);
-            defer allocator.free(same);
-            try std.testing.expectEqualStrings(source.sourceOf(1), same);
-            const inserted = try write(allocator, source, 1, .symbol, 0, 4096);
-            defer allocator.free(inserted);
-            try std.testing.expectEqualStrings("<h:charPr id='9' textColor='#ff0000'><!--keep--><h:fontRef latin = '7' hangul='&#48;' opaque='keep' symbol=\"0\"/><h:bold/></h:charPr>", inserted);
+    try @import("../testing/checked_allocator.zig").run(struct {
+        fn run(a: std.mem.Allocator) !void {
+            const input = "<h:head xmlns:h='http://www.hancom.co.kr/hwpml/2011/head'><h:charPr id='9' textColor='#ff0000'><!--keep--><h:fontRef latin = '7' hangul='&#48;' opaque='keep'/><h:bold/></h:charPr><h:charPr/></h:head>";
+            var tree = try @import("xml_part_tree.zig").parse(a, input, .header, null, 0, .{});
+            defer tree.deinit(a);
+            try std.testing.checkAllAllocationFailures(a, struct {
+                fn run(allocator: std.mem.Allocator, source: *const Tree) !void {
+                    const changed = try write(allocator, source, 1, .latin, 42, 4096);
+                    defer allocator.free(changed);
+                    try std.testing.expectEqualStrings("<h:charPr id='9' textColor='#ff0000'><!--keep--><h:fontRef latin = '42' hangul='&#48;' opaque='keep'/><h:bold/></h:charPr>", changed);
+                    const same = try write(allocator, source, 1, .hangul, 0, 4096);
+                    defer allocator.free(same);
+                    try std.testing.expectEqualStrings(source.sourceOf(1), same);
+                    const inserted = try write(allocator, source, 1, .symbol, 0, 4096);
+                    defer allocator.free(inserted);
+                    try std.testing.expectEqualStrings("<h:charPr id='9' textColor='#ff0000'><!--keep--><h:fontRef latin = '7' hangul='&#48;' opaque='keep' symbol=\"0\"/><h:bold/></h:charPr>", inserted);
+                }
+            }.run, .{&tree});
+            try std.testing.expectEqualStrings(input, tree.source);
+            try std.testing.expectError(error.LimitExceeded, write(a, &tree, 1, .latin, 0, 1));
+            try std.testing.expectError(error.MissingCharacterFontReference, write(a, &tree, 4, .latin, 0, 4096));
         }
-    }.run, .{&tree});
-    try std.testing.expectEqualStrings(input, tree.source);
-    try std.testing.expectError(error.LimitExceeded, write(a, &tree, 1, .latin, 0, 1));
-    try std.testing.expectError(error.MissingCharacterFontReference, write(a, &tree, 4, .latin, 0, 4096));
+    }.run, .{});
 }
 
 test "character font patch preserves actual header outside one language attribute" {

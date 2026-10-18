@@ -80,19 +80,22 @@ test "HWPX section note shapes validate official scalar lexicals and exact budge
 }
 
 test "HWPX section note shapes enforce part order and release every allocation failure" {
-    const a = std.testing.allocator;
-    var header = try header_tree.parse(a, "<h:head xmlns:h='http://www.hancom.co.kr/hwpml/2011/head'/>", 0, .{});
-    defer header.deinit(a);
-    try std.testing.expectError(error.InvalidPartKind, notes.inspect(a, &.{header}, .{}));
-    var later = try section_tree.parse(a, prefix ++ "<p:secPr><p:footNotePr/></p:secPr>" ++ suffix, 1, 1, .{});
-    defer later.deinit(a);
-    try std.testing.expectError(error.InvalidPartKind, notes.inspect(a, &.{later}, .{}));
-    const source = prefix ++ "<p:secPr><p:footNotePr><p:autoNumFormat type='USER_CHAR' userChar='*'/><p:noteLine length='-1' width='4 mm' color='#A10FCA0'/><p:numbering newNum='1'/></p:footNotePr><p:endNotePr><p:placement place='END_OF_SECTION'/></p:endNotePr></p:secPr>" ++ suffix;
-    try std.testing.checkAllAllocationFailures(a, struct {
-        fn run(allocator: std.mem.Allocator, xml_source: []const u8) !void {
-            var report = try inspect(allocator, xml_source, .{});
-            defer report.deinit(allocator);
-            try std.testing.expectEqual(@as(usize, 2), report.notes.len);
+    try @import("../testing/checked_allocator.zig").run(struct {
+        fn run(a: std.mem.Allocator) !void {
+            var header = try header_tree.parse(a, "<h:head xmlns:h='http://www.hancom.co.kr/hwpml/2011/head'/>", 0, .{});
+            defer header.deinit(a);
+            try std.testing.expectError(error.InvalidPartKind, notes.inspect(a, &.{header}, .{}));
+            var later = try section_tree.parse(a, prefix ++ "<p:secPr><p:footNotePr/></p:secPr>" ++ suffix, 1, 1, .{});
+            defer later.deinit(a);
+            try std.testing.expectError(error.InvalidPartKind, notes.inspect(a, &.{later}, .{}));
+            const source = prefix ++ "<p:secPr><p:footNotePr><p:autoNumFormat type='USER_CHAR' userChar='*'/><p:noteLine length='-1' width='4 mm' color='#A10FCA0'/><p:numbering newNum='1'/></p:footNotePr><p:endNotePr><p:placement place='END_OF_SECTION'/></p:endNotePr></p:secPr>" ++ suffix;
+            try std.testing.checkAllAllocationFailures(a, struct {
+                fn run(allocator: std.mem.Allocator, xml_source: []const u8) !void {
+                    var report = try inspect(allocator, xml_source, .{});
+                    defer report.deinit(allocator);
+                    try std.testing.expectEqual(@as(usize, 2), report.notes.len);
+                }
+            }.run, .{source});
         }
-    }.run, .{source});
+    }.run, .{});
 }

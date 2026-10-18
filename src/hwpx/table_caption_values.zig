@@ -56,35 +56,38 @@ fn readComponent(a: std.mem.Allocator, tree: *const Tree, table: usize) !?Values
 }
 
 test "HWPX table caption source actual values and all allocation failures" {
-    const a = std.testing.allocator;
-    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/table-caption.hwpx", a, .limited(4_000_000));
-    defer a.free(bytes);
-    var session = try @import("editor_session.zig").open(a, bytes, .{});
-    defer session.deinit();
-    const tree = &session.sections[0].tree;
-    const sides = [_]u32{ 2, 3, 0, 1, 0, 1, 3, 3 };
-    var count: usize = 0;
-    for (tree.elements, 0..) |_, node| {
-        if (!fields.childIs(tree, node, "tbl")) continue;
-        const value = (try read(a, tree, node)).?;
-        try std.testing.expectEqual(@as(?u32, sides[count]), value.side);
-        try std.testing.expectEqual(@as(?bool, count == 6), value.full_size);
-        try std.testing.expectEqual(@as(?i64, 8504), value.width);
-        try std.testing.expectEqual(@as(?i64, 850), value.gap);
-        const last: u32 = if (count == 6) 26646 else if (count >= 2 and count <= 5) 8504 else 20976;
-        try std.testing.expectEqual(@as(?u32, last), value.last_width);
-        try std.testing.expect(value.list_node != null);
-        try std.testing.expectEqual(@as(?u32, 0), value.text_direction);
-        try std.testing.expectEqual(@as(?u32, if (count == 7) 1 else 0), value.line_wrap);
-        try std.testing.expectEqual(@as(?u32, if (count == 2 or count == 3) 1 else if (count == 5) 2 else 0), value.vertical_alignment);
-        try std.testing.checkAllAllocationFailures(a, struct {
-            fn run(allocator: std.mem.Allocator, source: *const Tree, index: usize, expected: Values) !void {
-                try std.testing.expectEqualDeep(expected, (try read(allocator, source, index)).?);
+    try @import("../testing/checked_allocator.zig").run(struct {
+        fn run(a: std.mem.Allocator) !void {
+            const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/table-caption.hwpx", a, .limited(4_000_000));
+            defer a.free(bytes);
+            var session = try @import("editor_session.zig").open(a, bytes, .{});
+            defer session.deinit();
+            const tree = &session.sections[0].tree;
+            const sides = [_]u32{ 2, 3, 0, 1, 0, 1, 3, 3 };
+            var count: usize = 0;
+            for (tree.elements, 0..) |_, node| {
+                if (!fields.childIs(tree, node, "tbl")) continue;
+                const value = (try read(a, tree, node)).?;
+                try std.testing.expectEqual(@as(?u32, sides[count]), value.side);
+                try std.testing.expectEqual(@as(?bool, count == 6), value.full_size);
+                try std.testing.expectEqual(@as(?i64, 8504), value.width);
+                try std.testing.expectEqual(@as(?i64, 850), value.gap);
+                const last: u32 = if (count == 6) 26646 else if (count >= 2 and count <= 5) 8504 else 20976;
+                try std.testing.expectEqual(@as(?u32, last), value.last_width);
+                try std.testing.expect(value.list_node != null);
+                try std.testing.expectEqual(@as(?u32, 0), value.text_direction);
+                try std.testing.expectEqual(@as(?u32, if (count == 7) 1 else 0), value.line_wrap);
+                try std.testing.expectEqual(@as(?u32, if (count == 2 or count == 3) 1 else if (count == 5) 2 else 0), value.vertical_alignment);
+                try std.testing.checkAllAllocationFailures(a, struct {
+                    fn run(allocator: std.mem.Allocator, source: *const Tree, index: usize, expected: Values) !void {
+                        try std.testing.expectEqualDeep(expected, (try read(allocator, source, index)).?);
+                    }
+                }.run, .{ tree, node, value });
+                count += 1;
             }
-        }.run, .{ tree, node, value });
-        count += 1;
-    }
-    try std.testing.expectEqual(@as(usize, 8), count);
+            try std.testing.expectEqual(@as(usize, 8), count);
+        }
+    }.run, .{});
 }
 
 test "HWPX table caption source distinguishes absence zero and duplicate children" {

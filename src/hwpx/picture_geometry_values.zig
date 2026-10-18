@@ -115,37 +115,40 @@ test "HWPX container shared geometry rejects foreign nodes duplicates and invali
 }
 
 test "HWPX container shared geometry preserves root values and nested absence" {
-    const a = std.testing.allocator;
-    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/shapecontainer-2.hwpx", a, .limited(4_000_000));
-    defer a.free(bytes);
-    var session = try @import("editor_session.zig").open(a, bytes, .{});
-    defer session.deinit();
-    const tree = &session.sections[0].tree;
-    var count: usize = 0;
-    for (tree.elements, 0..) |_, node| {
-        if (!fields.childIs(tree, node, "container")) continue;
-        const value = try readContainer(a, tree, node);
-        const position = try @import("picture_position_values.zig").readContainer(a, tree, node);
-        if (count == 0) {
-            try std.testing.expectEqual(@as(?u32, 59528), value.width);
-            try std.testing.expectEqual(@as(?u32, 58392), value.height);
-            try std.testing.expectEqual(@as(?bool, false), value.treat_as_character);
-            try std.testing.expectEqualDeep([4]?bool{ false, false, true, false }, position.flags);
-        } else {
-            try std.testing.expectEqualDeep(Values{}, value);
-            try std.testing.expectEqualDeep(@import("picture_position_values.zig").Values{}, position);
-        }
-        try std.testing.checkAllAllocationFailures(a, struct {
-            fn run(allocator: std.mem.Allocator, source: *const Tree, index: usize) !void {
-                _ = try readContainer(allocator, source, index);
-                _ = try @import("picture_position_values.zig").readContainer(allocator, source, index);
+    try @import("../testing/checked_allocator.zig").run(struct {
+        fn run(a: std.mem.Allocator) !void {
+            const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/shapecontainer-2.hwpx", a, .limited(4_000_000));
+            defer a.free(bytes);
+            var session = try @import("editor_session.zig").open(a, bytes, .{});
+            defer session.deinit();
+            const tree = &session.sections[0].tree;
+            var count: usize = 0;
+            for (tree.elements, 0..) |_, node| {
+                if (!fields.childIs(tree, node, "container")) continue;
+                const value = try readContainer(a, tree, node);
+                const position = try @import("picture_position_values.zig").readContainer(a, tree, node);
+                if (count == 0) {
+                    try std.testing.expectEqual(@as(?u32, 59528), value.width);
+                    try std.testing.expectEqual(@as(?u32, 58392), value.height);
+                    try std.testing.expectEqual(@as(?bool, false), value.treat_as_character);
+                    try std.testing.expectEqualDeep([4]?bool{ false, false, true, false }, position.flags);
+                } else {
+                    try std.testing.expectEqualDeep(Values{}, value);
+                    try std.testing.expectEqualDeep(@import("picture_position_values.zig").Values{}, position);
+                }
+                try std.testing.checkAllAllocationFailures(a, struct {
+                    fn run(allocator: std.mem.Allocator, source: *const Tree, index: usize) !void {
+                        _ = try readContainer(allocator, source, index);
+                        _ = try @import("picture_position_values.zig").readContainer(allocator, source, index);
+                    }
+                }.run, .{ tree, node });
+                count += 1;
             }
-        }.run, .{ tree, node });
-        count += 1;
-    }
-    try std.testing.expectEqual(@as(usize, 2), count);
-    try std.testing.expectError(error.InvalidContainerGeometryNode, readContainer(a, tree, tree.elements.len));
-    try std.testing.expectError(error.InvalidContainerGeometryNode, @import("picture_position_values.zig").readContainer(a, tree, 0));
+            try std.testing.expectEqual(@as(usize, 2), count);
+            try std.testing.expectError(error.InvalidContainerGeometryNode, readContainer(a, tree, tree.elements.len));
+            try std.testing.expectError(error.InvalidContainerGeometryNode, @import("picture_position_values.zig").readContainer(a, tree, 0));
+        }
+    }.run, .{});
 }
 
 test "HWPX table shared geometry preserves source size and placement" {

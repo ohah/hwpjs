@@ -30,27 +30,30 @@ pub fn read(a: std.mem.Allocator, tree: *const Tree) !Snapshot {
 }
 
 test "HWPX automatic number source snapshot actual captions and allocation failures" {
-    const a = std.testing.allocator;
-    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/table-caption.hwpx", a, .limited(4_000_000));
-    defer a.free(bytes);
-    var session = try @import("editor_session.zig").open(a, bytes, .{});
-    defer session.deinit();
-    const check = struct {
-        fn run(allocator: std.mem.Allocator, tree: *const Tree) !void {
-            var snapshot = try read(allocator, tree);
-            defer snapshot.deinit(allocator);
-            try std.testing.expectEqual(@as(usize, 8), snapshot.rows.len);
-            for (snapshot.rows, 0..) |row, index| {
-                try std.testing.expectEqual(@as(?i32, @intCast(index + 1)), row.values.num);
-                try std.testing.expectEqualStrings("TABLE", row.values.get(.num_type).?);
-                try std.testing.expect(row.anchor_node != null);
-                try std.testing.expectEqualStrings("DIGIT", row.format.?.get(.type).?);
-                try std.testing.expectEqual(@as(?bool, false), row.format.?.supscript);
-            }
+    try @import("../testing/checked_allocator.zig").run(struct {
+        fn run(a: std.mem.Allocator) !void {
+            const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/table-caption.hwpx", a, .limited(4_000_000));
+            defer a.free(bytes);
+            var session = try @import("editor_session.zig").open(a, bytes, .{});
+            defer session.deinit();
+            const check = struct {
+                fn run(allocator: std.mem.Allocator, tree: *const Tree) !void {
+                    var snapshot = try read(allocator, tree);
+                    defer snapshot.deinit(allocator);
+                    try std.testing.expectEqual(@as(usize, 8), snapshot.rows.len);
+                    for (snapshot.rows, 0..) |row, index| {
+                        try std.testing.expectEqual(@as(?i32, @intCast(index + 1)), row.values.num);
+                        try std.testing.expectEqualStrings("TABLE", row.values.get(.num_type).?);
+                        try std.testing.expect(row.anchor_node != null);
+                        try std.testing.expectEqualStrings("DIGIT", row.format.?.get(.type).?);
+                        try std.testing.expectEqual(@as(?bool, false), row.format.?.supscript);
+                    }
+                }
+            }.run;
+            try check(a, &session.sections[0].tree);
+            try std.testing.checkAllAllocationFailures(a, check, .{&session.sections[0].tree});
         }
-    }.run;
-    try check(a, &session.sections[0].tree);
-    try std.testing.checkAllAllocationFailures(a, check, .{&session.sections[0].tree});
+    }.run, .{});
 }
 
 test "HWPX automatic number source snapshot selected ordinal preserves strict document ordering" {

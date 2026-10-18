@@ -69,22 +69,25 @@ test "HWPX automatic number sites track text and anchored splits" {
 }
 
 test "HWPX automatic number sites preserve retained prefixes after plain split" {
-    const a = std.testing.allocator;
-    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/footnote-endnote.hwpx", a, .limited(4_000_000));
-    defer a.free(bytes);
-    var session = try editor.open(a, bytes, .{});
-    defer session.deinit();
-    try std.testing.expect(try session.splitParagraph(0, 2, 0, 0));
-    const actual = try read(a, &session, 0);
-    defer a.free(actual);
-    try std.testing.expectEqual(@as(usize, 4), actual.len);
-    try std.testing.expectEqual(@as(?usize, 2), actual[0].paragraph);
-    for (actual) |row| try std.testing.expectEqual(@as(?usize, 0), row.anchor_unit);
-    try std.testing.checkAllAllocationFailures(a, struct {
-        fn run(allocator: std.mem.Allocator, state: *const editor.Session, expected: []const Site) !void {
-            const rows = try read(allocator, state, 0);
-            defer allocator.free(rows);
-            try std.testing.expectEqualDeep(expected, rows);
+    try @import("../testing/checked_allocator.zig").run(struct {
+        fn run(a: std.mem.Allocator) !void {
+            const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/footnote-endnote.hwpx", a, .limited(4_000_000));
+            defer a.free(bytes);
+            var session = try editor.open(a, bytes, .{});
+            defer session.deinit();
+            try std.testing.expect(try session.splitParagraph(0, 2, 0, 0));
+            const actual = try read(a, &session, 0);
+            defer a.free(actual);
+            try std.testing.expectEqual(@as(usize, 4), actual.len);
+            try std.testing.expectEqual(@as(?usize, 2), actual[0].paragraph);
+            for (actual) |row| try std.testing.expectEqual(@as(?usize, 0), row.anchor_unit);
+            try std.testing.checkAllAllocationFailures(a, struct {
+                fn run(allocator: std.mem.Allocator, state: *const editor.Session, expected: []const Site) !void {
+                    const rows = try read(allocator, state, 0);
+                    defer allocator.free(rows);
+                    try std.testing.expectEqualDeep(expected, rows);
+                }
+            }.run, .{ &session, actual });
         }
-    }.run, .{ &session, actual });
+    }.run, .{});
 }
