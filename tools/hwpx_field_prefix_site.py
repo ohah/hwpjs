@@ -17,7 +17,9 @@ def leading_object_site(tree, begin, text):
         if len(run) == 0:
             return text
         for child in run:
-            if child.tag in (P + "tbl", P + "pic", P + "container", P + "ellipse", P + "line"):
+            graphic = child.tag in (P + "tbl", P + "pic", P + "container", P + "ellipse", P + "line", P + "rect")
+            number = child.tag == P + "ctrl" and len(child) == 1 and child[0].tag == P + "autoNum"
+            if graphic or number:
                 selected = (run, child)
                 break
             # Only known zero-width source metadata may precede offset zero.

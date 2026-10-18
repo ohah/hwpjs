@@ -18,6 +18,10 @@
 
 게시bf296cb3에 line 보정과 회귀만 추가한 `/tmp/hwpjs-field-line-clean.Yip6Fs`에서 Node24.20.0·게시 afb7 후보의4/4·fail/cancel/skip0·exit0(1754ms)을 확인했습니다. 합성 경계는17종(normal/-O), 실제 저장 원본은 세 공문입니다. 같은 분리 소스와 고정 f4e0 후보로36392900 전체 전용 prefix 감사를 재실행한 `36392900-specialized.jsonl/.stderr`는77시도/77검증/독립 XML77(필드74)·거부0·exit0·stderr0입니다. 후보가 다른 두 실행의 성공 수를 합산하지 않으며, 고정44파일 원래 실패 기록이나 모든 명령/조판 완료를 대체하지 않습니다.
 
+36382669의 전체 전용 재검사에서는 문단121(로컬8)의 단일 ctrl/autoNum PAGE 앞 입력, 이어 문단129(로컬16)의 rect 앞 입력도 검사기 목록에 없었습니다. 각각 실제 원본/저장으로 재현했고 자동번호 합성 경계는 수정 전 `Incorrect source prefix site`로 실패했습니다. 자동번호를0폭 metadata로 건너뛰지 않고 하나의 보존 개체로 취급하며, rect도 다른 그래픽처럼 정확히 앞에 삽입합니다. 혼합/알 수 없는 ctrl은 계속 일반 통과시키지 않습니다. 중간 전체 감사 두 실패 로그는 `/tmp/hwpjs-field-line-clean.Yip6Fs/36382669-specialized.*`와 `/tmp/hwpjs-field-number-clean.9bILkA/36382669-specialized.*`입니다.
+
+67561bd7에 자동번호/rect 보정만 추가한 `/tmp/hwpjs-field-number-final.MxG471`에서 Node24.20.0·f4e0 후보의 실제36382669 전체 전용 감사는127/127·독립 XML127(필드122),36385226은58/58·독립 XML58(필드54)로 각각거부0·exit0·signal=null·stderr0입니다. 상세는 각 ID의 `-specialized.jsonl/.stderr`가 소유합니다. 같은 분리 소스의 게시 afb7 후보 회귀는4/4·fail/cancel/skip0·exit0(2528ms)이며 normal/-O 합성21경계와 실제 세 공문의5좌표 저장/잘못된 기대값 거부/이력/재열기를 포함합니다. 이 후속 결과를 고정44파일 감사의 실패 행에 덮어쓰거나 전체 파서·모든 명령·브라우저 완료로 해석하지 않습니다.
+
 별도 `anchor-empty-run-oracle.py`는 합성 원본에서 정상 빈 run prefix 하나를 허용하고 다른 run으로 이동·소유 run의 스타일 변경·metadata 변경·문자 데이터가 있는 모호한 빈 run 네 반례를 거부합니다. Python normal/-O 양쪽에서 실행합니다. 실제 원본 검사도 전체 XML·ZIP 대조 뒤 잘못된 run/스타일/metadata 세 변조를 양쪽 모드에서 거부합니다. 세 변조의 제품 표시 문자열이 정상 저장과 같다는 점도 확인하여 텍스트 projection만으로 서식 소속을 증명하지 못함을 검사합니다. 실제 undo 원본/redo 저장 바이트 일치·저장 재열기/무변경 save·원본 파일 불변도 확인합니다.
 
 새 두 검사는 정규 HWPX gate에 등록하며 기존 미커밋 specialized-prefix-oracle 테스트를 커밋에 포함하지 않습니다. 명령은 [개발·검증 명령](development-commands.md)이 소유합니다. 전체 native·모든 명령/위치·실제 브라우저/원본 조판 동치의 검증은 아닙니다.
