@@ -44,6 +44,10 @@
 
 같은 중첩 필드 수정 사본의 `leading-corpus.log/.stderr`에서 앞선 task1789 원본도90시도/검증90/독립 XML90(필드86)/거부0·exit0으로 재확인했습니다. 두 원본의 특수 입력 결과이며 일반 입력·전체 참조 corpus·실제 브라우저 검증을 대신하지 않습니다.
 
-도구 탭을 더한082cf938의 build/js/web/tools/tests2,046개 Git blob과 정확히 같은 `/tmp/hwpjs-ribbon-preview.yjDs24`에서 등록97파일·concurrency1·명시적 후보/기준·TAP의 `registered-hwpx-97-tap.log/.stderr`를 새로 시작했습니다. 고정 설치 경로를 읽는 검사에도 이 사본의 zig-out/bin 연결로 같은 후보를 제공합니다. 실행 중이며 완료로 세지 않습니다. [도구 탭 집중 검증](document-ribbon.md)이나 앞선95파일 결과를 새 전체 gate로 합산하지 않습니다.
+옛 실패 목록의 `issue6451/underline_run_fragments.hwpx`도 같은 사본·후보의 `underline-corpus.log/.stderr`에서110시도/검증110/독립 XML110(필드95)/거부0·exit0입니다. 파일별120초 상한 내 정상 종료이며 시간 초과나 미검사 문단을 통과로 계수하지 않았습니다.
+
+도구 탭을 더한082cf938의 build/js/web/tools/tests2,046개 Git blob과 정확히 같은 `/tmp/hwpjs-ribbon-preview.yjDs24`에서 등록97파일·concurrency1·명시적 후보/기준·TAP의 `registered-hwpx-97-tap.log/.stderr`가295/295·fail/cancel/skip0·child exit0/signal=null·stderr0(925534.848458ms)으로 완료됐습니다. wrapper 세션의 종료코드도0이며 자식 PID91684의 종료를 확인했습니다. 고정 설치 경로를 읽는 검사에도 이 사본의 zig-out/bin 연결로 같은 후보를 제공했습니다. [도구 탭 집중 검증](document-ribbon.md)이나 앞선95파일 결과를 합산하지 않습니다.
+
+이295개는082cf938 소스의 gate입니다. 이후7e5b8401/6bc8c4fa의 필드 oracle·감사 도구·회귀 추가는 위 별도 사본의4개 집중 검사 및 실제 원본별 결과로 검증했으며, 실행 중이던97파일 사본에 변경을 주입하지 않았습니다. 따라서295개가 후속 도구 수정까지 포함한 최신 전체 gate라고 주장하지 않습니다. 제품 WASM/외부 데모를 교체한 것도 아니며 전체 native는 별도 진행 중입니다.
 
 위 집중 통과가 최신 전체 native gate·전체 HWPX 공개 gate·브라우저/조판·임의 명령/위치 완료를 뜻하지 않습니다. 실제 픽스쳐 입력/저장 전수는 [후보 추적 감사](unknown-candidate-fixture-verification.md), 실제 HWP5 화면 검증은 [로드맵 브라우저](hwp5-roadmap-browser-roundtrip.md)가 소유합니다.
