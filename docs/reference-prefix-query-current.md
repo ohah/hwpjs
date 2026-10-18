@@ -1,5 +1,13 @@
 # 최신 참조 텍스트 읽기·입력 경로 조사
 
+## 2026-10-18 누름틀 보존 후보의 부분 진단과 재실행
+
+6ddc76ab71dc09a77acf0b57b7ec78b2cc137850189e136fb361edd5d71d0437 후보의 최초 prefix 조회는439경로 중369개 file 행을 남긴 뒤 handle89363 exit1로 종료했습니다. 최종 summary와 stderr가 없어 전체 완료나 특정 파서 결함으로 확정하지 않습니다. 다음 대상 task2070/hy_ladder4.hwpx를 포함한 해당 디렉터리2개·38문단의 독립 재실행은 plain36/anchored2·거부0·exit0이었습니다. 같은 후보의 전체 재실행은 별도 run-reference-query.mjs가 종료 code/signal·여유 공간·stdout/stderr를 protection-reference-supervised.jsonl/.stdout/.stderr에 기록하며 실행 중입니다.
+
+최초 부분 로그의 거부66곳을 입력 해시 확인 뒤 ZIP/XML의 가장 가까운 원본 p 소속과 대조했습니다. 직접 fieldBegin 기준 FORMULA35·MEMO2·CLICK_HERE5·직접 fieldBegin 없음24입니다(protection-prefix-refusal-xml.json, /tmp/hwpjs-click-retention.Vm3dFy). 직접 필드가 없다는 사실로 해당 문단에 활성 필드가 없다고 추정하지 않습니다. FORMULA나 미닫힘/소속 범위를 일괄 읽기 오류로 분류하지 않으며, 이 분류는 실제 편집 검증도 전체439개 결과도 아닙니다.
+
+aift.hwpx의 구역2 localParagraph2694/2697 MEMO는 editable=1이지만 parameters와 주석 본문 subList를 포함합니다. 현행 field_text_kind의 삼종 지원과 field_label_session의 subList 거부로 일반 라벨/접두사 경로가 열리지 않습니다. 허용 문자열만 추가하면 필드 구조 분할·병합까지 범위가 바뀔 수 있으므로, 후속 구현은 표시 라벨과 주석 본문의 소유권·보존·현재값을 분리하고 실제 XML/원본 메타데이터/저장 재열기로 검증해야 합니다. 이 기록은 MEMO 편집 지원 완료가 아닙니다.
+
 ## 고정 후보와 범위
 
 후보 WASM SHA256 `100483796a4f80452e96cc5761f7949da13f35e0cdcf8f4e9d5d7824c2bd2a9a`, 명시적 root `reference/rhwp/samples`를 사용했습니다. source/제품 승격 완료가 아니며 조사 중 저장이나 입력 파일 수정은 하지 않습니다.

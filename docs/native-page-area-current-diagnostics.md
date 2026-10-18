@@ -1,5 +1,13 @@
 # 쪽 영역 현재 XML 테스트의 진단 할당 범위
 
+## 2026-10-18 게시 src의 후속 native 바이너리
+
+기존5837cd37 바이너리의 full-guard-space-corrected.jsonl은 이전4GiB 중단 대상과 같은 original lazy installation allocation failures 테스트를 현재 인덱스3337에서 status0/log0/leak0으로 통과했습니다. 이 지점까지0..3337의3,338개가 완료됐으며 다음 테스트도 진행 중입니다. 집중2/2를 넘어 전체 실행 문맥에서 해당 실패 주입 경계를 확인한 것이지만 전체4,096개 종료 성공이나 최신4,103개 바이너리의 결과로 바꾸지 않습니다.
+
+bf725540 시점 게시 src와 git diff --quiet가 일치하는 분리 소스에서 ReleaseSafe 전체 native를 --test-no-exec로 빌드했습니다. /tmp/hwpjs-click-retention.Vm3dFy/native-current-safe의 SHA256은4e1e849c53fc6fbe8e89991aa82c3e58b544420ba488b945bcb86ef2285344ad, 등록 테스트는4,103개입니다. native-current-build.log의 컴파일 exit0과 native-current-inventory.jsonl의 root만0..1 범위1/1·skip/log/leak0은 빌드/runner 연결 증거이며 전체 통과가 아닙니다.
+
+같은 바이너리의 native-current-full.jsonl/.stderr에 batch1·물리4,096MiB·expected hash 고정의 별도 전수 guardian을 시작했습니다. 기존4,096개 바이너리5837cd37의 실행은 중단하지 않으며 구역/실행별 결과를 합산하지 않습니다. 새 실행이 최근 누름틀/API 보강을 포함하고, 기존 실행의 통과 prefix가 새 실행 전체를 대신하지 않습니다. 완료/중단의 최종 guardian 기록으로 후속 갱신해야 합니다.
+
 ## 재현과 변경 범위
 
 이전 개체 번호 보존 스냅샷의 전체 native 바이너리 `3e781bafcb0668d5111122ccf47ae55e8ce8c06e3d7e5a3d00de8ecd66950d74`는4,087개 중 인덱스0..3313의3,314개를 완료했습니다. 완료 결과의 실패·오류 로그·누수는0입니다. 다음 인덱스3314 `page area current XML saves real owner relocation with nested prior edits`에서 물리 footprint4,313,533,872바이트로4,096MiB 감시 기준을 넘어 guardian이 소유 프로세스를 종료했습니다. 최종 exit1·guardStopped=true이며 전체 native 통과가 아닙니다. 해당 native 및 guardian/batch 프로세스의 종료도 확인했습니다.
