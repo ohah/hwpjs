@@ -4,7 +4,9 @@
 
 `document-menu-disclosures.mjs`는 바깥 pointerdown뿐 아니라 focusin에서도 열린 메뉴를 닫습니다. 키보드로 리본·본문 등 메뉴 밖에 이동해도 이전 popup이 남지 않으며, 메뉴 안과 composedPath 안의 포커스는 유지합니다. 이벤트를 취소하거나 포커스를 강제로 되돌리지 않습니다. 기존 `details.open`만 열림 상태를 소유하고 close에서 두 document listener를 모두 제거합니다.
 
-실패 회귀를 먼저 재현한 뒤 메뉴 disclosure·제어기·키보드·mnemonic·popup layer 집중19/19, 실패/취소/skip0을 확인했습니다. 이 변경의 실제 브라우저 Tab 이동은 아직 검증하지 않았으며 기존 Chromium 기록으로 대체하지 않습니다.
+실패 회귀를 먼저 재현한 뒤 메뉴 disclosure·제어기·키보드·mnemonic·popup layer 집중19/19, 실패/취소/skip0을 확인했습니다.
+
+실제 Chromium의 `/tmp` 캡처 디렉터리 `hwpjs-menu-browser-Cn3F7P` 실행도 exit0·verified=true·cleanup.success=true입니다. 게시 소스 후보 WASM `afb7fdfbbc8a9c9cc45a7cdb98ade6be7a6a88b1943e1c5354c63d6715b9e05e`로 열린 삽입 메뉴에서 실제 Tab 키를 보내 메뉴 바깥 포커스·전체 메뉴 닫힘·Worker 명령 미발행을 검사했습니다. Popover의 순차 포커스 순서 때문에 한 번의 Tab으로 바깥에 간다는 가정은 실패했고, 최대12회 안에 실제로 바깥에 도달하는지 검사하도록 수정했습니다. 이후 픽스쳐 선택·입력·U/R/S·다운로드·독립 normal/-O XML/ZIP와 재업로드까지 통과했습니다. disclosure helper도 실행 전후 소스 해시 감사에 포함합니다. agent-browser 스킬의 격리/실제 키 입력/소유 브라우저·서버 종료를 사용했으며, 모든 OS 키보드 동치나 전체 fixture UI 통과 주장은 아닙니다.
 
 ## 메뉴 막대 좌·우 키 이동
 

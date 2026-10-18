@@ -32,6 +32,7 @@ export async function runDocumentMenuBrowserAudit(caseName) {
   const sourcePaths = ["web/preview/index.html","web/preview/preview.css","web/preview/app.mjs","web/preview/document-menu-controls.mjs","web/preview/document-menu-mnemonic.mjs","web/preview/document-ribbon-controls.mjs","web/preview/document-ribbon-pages.mjs","web/preview/fixture-controls.mjs","web/preview/fixture-catalog.mjs","web/preview/fixture-inventory.mjs","tools/browser/ribbon-page.mjs","tools/document-menu-browser-audit.mjs","tools/unknown-object-browser-audit.mjs","tools/browser/document-menu-roundtrip.mjs","tools/browser/document-menu-cases.mjs","tools/hwpx-anchor-prefix-oracle.py",...(oraclePath==="tools/hwpx-anchor-prefix-oracle.py"?[]:[oraclePath])];
   if(config.entryPath)sourcePaths.push(config.entryPath);
   sourcePaths.push("web/preview/document-menu-keyboard.mjs");
+  sourcePaths.push("web/preview/document-menu-disclosures.mjs");
   sourcePaths.push("tools/browser/audit-origin.mjs");
   const sourceHashes = () => Object.fromEntries(sourcePaths.map(path=>[path,hash(readFileSync(resolve(path)))]));
   const sourceSha256 = sourceHashes();
@@ -105,6 +106,14 @@ export async function runDocumentMenuBrowserAudit(caseName) {
       assert.deepEqual(state.map(row=>row.focused),state.map((_,index)=>index===expected));
     }
     command("press","Escape");assert.equal(evaluate(`document.querySelector(${JSON.stringify(popup("menu-properties"))}).open`),false);
+    click(`${popup("menu-insert-table")} > summary`);
+    assert.equal(evaluate(`document.querySelector(${JSON.stringify(popup("menu-insert-table"))}).open`),true);
+    assert.equal(evaluate('document.querySelector("#menu-insert-table").disabled'),true);
+    for(let attempt=0;attempt<12&&evaluate('document.querySelector(".document-menu").contains(document.activeElement)');attempt++)command("press","Tab");
+    assert.equal(evaluate('document.querySelector(".document-menu").contains(document.activeElement)'),false);
+    assert.equal(evaluate('Array.from(document.querySelectorAll(".document-menu details")).some(popup=>popup.open)'),false);
+    assert.equal(evaluate('window.__menuAudit.length'),0,"FocusExitMustNotDispatch");
+    progress("trusted-menu-focus-exit");
     menuKey("menu-undo","u");assert.equal(evaluate('document.querySelector("#menu-undo").disabled'),true);
     assert.equal(evaluate('window.__menuAudit.length'),0);command("press","Escape");
     menuKey("menu-save","s");assert.equal(evaluate('document.querySelector("#menu-save").disabled'),true);
