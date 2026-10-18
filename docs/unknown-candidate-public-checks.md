@@ -65,3 +65,17 @@
 이295개는082cf938 소스의 gate입니다. 이후7e5b8401/6bc8c4fa의 필드 oracle·감사 도구·회귀 추가는 위 별도 사본의4개 집중 검사 및 실제 원본별 결과로 검증했으며, 실행 중이던97파일 사본에 변경을 주입하지 않았습니다. 따라서295개가 후속 도구 수정까지 포함한 최신 전체 gate라고 주장하지 않습니다. 제품 WASM/외부 데모를 교체한 것도 아니며 전체 native는 별도 진행 중입니다.
 
 위 집중 통과가 최신 전체 native gate·전체 HWPX 공개 gate·브라우저/조판·임의 명령/위치 완료를 뜻하지 않습니다. 실제 픽스쳐 입력/저장 전수는 [후보 추적 감사](unknown-candidate-fixture-verification.md), 실제 HWP5 화면 검증은 [로드맵 브라우저](hwp5-roadmap-browser-roundtrip.md)가 소유합니다.
+
+## HWP5 공개 편집 API 등록 gate
+
+같은082cf938 사본·eaaa0d20 후보·2589a92e 기준·명시적 fixture Git index에서 `editor_api_tests` 등록90개 고유 파일을 직렬/TAP로 실행한 `registered-hwp5-90-tap.log/.stderr`는478/478·fail/cancel/skip0·child exit0/signal=null·stderr0(679897.614291ms)입니다. 최상위391개와 하위 subtest를 포함한 총478개를 중복 합산하지 않습니다. wrapper 세션 exit0과 자식 PID23620 종료도 확인했습니다. HWPX295개와 별개이며, native 전체·모든 명령/위치·원본 조판·제품 WASM 승격을 대신하지 않습니다.
+
+## 큰 원본의 명시적 문단 범위 실행
+
+`aift.hwpx`의 일반 입력/이력 전체 감사는 `/tmp/hwpjs-bookmark-audit.P9yX9V/aift-plain.log/.stderr`에서120초 상한의 ETIMEDOUT/SIGTERM으로 끝났습니다. 완료 파일 행/총계가 없으므로 통과로 세지 않습니다. 종료 후 해당 감사 자식이 남지 않았음을 확인했습니다. 원본은6,343문단이며, 일부 조회/입력 관측을 전체 검사로 확대하지 않습니다.
+
+일반 감사의 범위 선택은 공통 CLI 경계의 opt-in 검증과 일반 감사의 문단 필터/집계로 분리했습니다. 기본 전체 실행은 그대로이며 범위 옵션은 명시적 fixture/WASM이 필요합니다.0/역전/빈 범위·지수/소수/선행0·중복·정밀도/정수 상한·실제 문단 수 초과를 거부합니다. 결과는 선택 범위/검사 문단 수/원본 전체 문단 수/completeFixture를 구분합니다. completeFixture는 문단 inventory 전체를 시도했는지만 뜻하며 거부 문단까지 편집 지원하거나 모든 명령을 검증했다는 뜻이 아닙니다. 잘못된 실행 범위에서는 성공 파일 행/요약을 출력하지 않습니다. 실행 명령은 [개발 명령](development-commands.md)이 소유합니다.
+
+`/tmp/hwpjs-paragraph-range.OnGmPi`는5e1ce5f9의 동결 JS/도구에 이 범위 변경만 적용한 사본입니다. 명시적 eaaa0d20 후보의 `range-tests.log/.stderr`는3/3·fail/cancel/skip0·exit0·stderr0(448.737459ms)입니다. 실제 charshape7문단의 기본 전체와1:8 범위 총계가 같고,3:5 부분의 분모2/원본7/completeFixture=false 및7:9 거부 후 성공 요약 부재를 검사했습니다. 잘못된 인자/실제 범위 회귀는 정규 HWPX gate에 등록합니다. 이 실행은 고비용 전수 회귀를 추가로 시작한 것이 아닙니다.
+
+같은 사본의 `aift-bookmark-range.log/.stderr`는 해당 원본의196:197 한 문단에서 입력/이력 복원1·거부0·exit0/signal=null입니다. 원본 분모6,343/선택1/completeFixture=false를 확인했습니다. 이 한 문단이나 여러 부분 범위의 수를 무조건 합쳐 전수 통과로 주장하지 않습니다.

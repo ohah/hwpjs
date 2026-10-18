@@ -1,7 +1,16 @@
 // Shared CLI boundary for plain and specialized HWPX edit audits.
-export function parseEditAuditOptions(args, { allowHistory = false, requireWasm = false } = {}) {
+export function parseEditAuditOptions(args, { allowHistory = false, requireWasm = false, allowParagraphRange = false } = {}) {
   const options = {};
   for (const argument of args) {
+    if (allowParagraphRange && argument.startsWith("--paragraphs=")) {
+      if (options.paragraphRange !== undefined) throw new Error("DuplicateAuditArgument");
+      const range = /^--paragraphs=([1-9][0-9]*):([1-9][0-9]*)$/.exec(argument);
+      if (!range) throw new Error("InvalidAuditParagraphRange");
+      const start = Number(range[1]), end = Number(range[2]);
+      if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start >= end || end > 0x100000000) throw new Error("InvalidAuditParagraphRange");
+      options.paragraphRange = { start, end };
+      continue;
+    }
     if (argument === "--history" && allowHistory) {
       if (options.history !== undefined) throw new Error("DuplicateAuditArgument");
       options.history = true;
@@ -13,5 +22,6 @@ export function parseEditAuditOptions(args, { allowHistory = false, requireWasm 
     options[match[1]] = match[2];
   }
   if (requireWasm && options.wasm === undefined) throw new Error("MissingAuditWasm");
+  if (options.paragraphRange && (options.fixture === undefined || options.wasm === undefined)) throw new Error("AuditParagraphRangeRequiresFixtureAndWasm");
   return options;
 }

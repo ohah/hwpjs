@@ -194,6 +194,7 @@ pub fn build(b: *std.Build) void {
     hwpx_text_tests.addArg("tests/hwpx/document-menu-controls.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/document-ribbon-controls.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/document-ribbon-browser.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/edit-audit-options.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/document-menu-disclosures.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/document-menu-keyboard.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/document-menu-mnemonic.test.mjs");

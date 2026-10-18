@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+HWPX 일반 prefix 감사는 `node tools/hwpx-edit-corpus-audit.mjs --wasm=/absolute/candidate.wasm --fixture=/absolute/document.hwpx --history --paragraphs=196:197`로 한 문단만 검사할 수 있습니다. 문서 전체의1기반 문단 번호이며 끝은 제외합니다. 범위는 명시적 WASM·단일 fixture와 함께만 허용하고, 범위를 생략하면 기존 전체 inventory를 유지합니다. 부분 결과는 전체 문서 통과가 아닙니다. 경계·분모·실측은 [후보 공개 감사의 범위 실행](unknown-candidate-public-checks.md)을 따릅니다.
+
 [원본 소속 조회 인덱스](hwp5-source-ownership-index.md)의 대조는 `HWPJS_BASELINE_WASM=/absolute/frozen-baseline.wasm zig build hwp5-ownership-query-parity -Doptimize=ReleaseSafe`입니다. 설치 경로와 다른 동결 baseline이 필요하며 후보는 현재 빌드의 설치 산출물을 명시합니다. 추적48fixture·참조3원본의 전체 표/문단 흐름/단 조회 배열·독립 셀 소속·원본 불변을 검사합니다. 기본 암호/배포 거부3개는 지원 성공이 아닙니다. 관련 문단/단 편집 회귀는 정규 `hwp5-editor-audit`에 등록하며 이 대조가 전체 native·브라우저·기본 WASM 승격을 대신하지 않습니다.
 
 [로컬 개체 번호 보존](hwp5-object-number-retention.md)은 `HWPJS_TEST_WASM=/absolute/candidate.wasm node --test --test-concurrency=1 tests/hwp5/object-number-text.test.mjs tests/hwp5/object-number-canvas.test.mjs tests/hwp5/unselected-cross-reference-gate.test.mjs`로 실제7구역/반례/Canvas를 검사합니다. 실제 Chromium은 `HWPJS_TEST_WASM=/absolute/candidate.wasm node tools/hwp5-reference-browser-audit.mjs --root=/absolute/verified-source --case=roadmap --port=58851`입니다. `zig build hwp5-editor-audit -Doptimize=ReleaseSafe`는 참조 회귀/guard를 포함한 등록 묶음을 직렬 실행하고 설치 산출물을 명시하며, 집중 통과가 전체 gate 완료를 뜻하지는 않습니다.

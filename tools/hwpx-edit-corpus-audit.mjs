@@ -10,13 +10,13 @@ import { execFileSync } from "./oracle-process.mjs";
 import { hwpxParagraphCoordinates } from "./hwpx-paragraph-coordinates.mjs";
 import { captureInputIdentity, verifyInputIdentity } from "./audit-input-identity.mjs";
 
-const options = parseEditAuditOptions(process.argv.slice(2), { allowHistory: true });
+const options = parseEditAuditOptions(process.argv.slice(2), { allowHistory: true, allowParagraphRange: true });
 const wasm = readFileSync(options.wasm ?? "zig-out/bin/hwpjs.wasm");
 const history = options.history ?? false;
 const editor = await createHwpxEditor(wasm), reader = await createHwpxReader(wasm);
 const paths = options.fixture !== undefined ? [options.fixture] : trackedHwpxFiles();
 assert(paths.length > 0, "EmptyFixtureInventory");
-console.log(JSON.stringify({ kind: "start", scope: options.fixture !== undefined ? "one explicit HWPX fixture; every paragraph prefix" : "all tracked HWPX files; every paragraph prefix", files: paths.length, wasmSha256: createHash("sha256").update(wasm).digest("hex"), evidence: "product projection and saved history; not independent XML or browser proof" }));
+console.log(JSON.stringify({ kind: "start", scope: options.paragraphRange ? "one explicit HWPX fixture; selected paragraph prefix range only" : options.fixture !== undefined ? "one explicit HWPX fixture; every paragraph prefix" : "all tracked HWPX files; every paragraph prefix", ...(options.paragraphRange ? { paragraphRange: options.paragraphRange } : {}), files: paths.length, wasmSha256: createHash("sha256").update(wasm).digest("hex"), evidence: "product projection and saved history; not independent XML or browser proof" }));
 const counts = { files: paths.length, encrypted: 0, paragraphs: 0, accepted: 0, refused: {}, history, restored: 0, refusalRedoPreserved: 0 };
 try {
   for (const path of paths) {
@@ -30,7 +30,10 @@ try {
     }
     if (history) editor.enableHistory();
     const original = reader.readTextEvents(input);
-    const paragraphs = hwpxParagraphCoordinates(original.events);
+    const allParagraphs = hwpxParagraphCoordinates(original.events);
+    const range = options.paragraphRange;
+    if (range && range.end > allParagraphs.length + 1) throw new Error("AuditParagraphRangeOutOfBounds");
+    const paragraphs = range ? allParagraphs.filter(row => row.paragraph >= range.start && row.paragraph < range.end) : allParagraphs;
     let formulaPrefixes;
     let accepted = 0;
     let previousEdited = null;
@@ -98,7 +101,7 @@ try {
       counts.accepted++; accepted++;
     }
     verifyInputIdentity(input, inputIdentity, path);
-    console.log(JSON.stringify({ path, inputSha256: inputIdentity, paragraphs: paragraphs.length, accepted }));
+    console.log(JSON.stringify({ path, inputSha256: inputIdentity, paragraphs: paragraphs.length, accepted, ...(range ? { inputParagraphs: allParagraphs.length, paragraphRange: range, completeFixture: range.start === 1 && range.end === allParagraphs.length + 1 } : {}) }));
   }
   if (options.fixture === undefined) assert.equal(counts.encrypted, paths.filter(path => path.endsWith("/password-12345.hwpx")).length);
   assert.equal(counts.paragraphs, counts.accepted + Object.values(counts.refused).reduce((sum, value) => sum + value, 0), "Paragraph classification mismatch");
