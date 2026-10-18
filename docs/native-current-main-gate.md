@@ -37,3 +37,5 @@
 `/tmp/hwpjs-field-session-memory.84U4nD`의 src2,635개를499d3819와 blob 단위로 대조해 위 테스트 파일만 다름을 확인했습니다. ReleaseSafe 집중 빌드 exit0·stderr0, SHA256은6fb8daca1af12152b8283774afa71d22303b2411c92eaaa1b1c9ae9cc2acf8a1입니다. 같은4,096MiB guardian의 `field-safe-guard.jsonl/.stderr`는6/6·fail/skip/logErrors/leaks0·guardStopped=false·wrapper exit0·stderr0·최대 physical60,588,416바이트입니다.6개에는 실제 실패 주입/이력3검사·공통 할당자/실패 주입2검사·root import sentinel1개가 포함됩니다. 공통 helper는 모든 실패 인덱스와 삼킨 OOM 거부를 별도 검증합니다.
 
 Debug 집중 빌드도 exit0·stderr0입니다. `field-debug-guard.jsonl/.stderr`는 같은6개가6/6·fail/skip/logErrors/leaks0·guardStopped=false·wrapper exit0·stderr0·최대 physical18,121,064바이트로 완료됐습니다. Debug SHA256은22b5e21dac20539b38c40e3a86d6487a0b00cccc64f182582923c6d68383a34c입니다. 두 모드의 집중 결과를 이전 바이너리의3,476개와 합쳐 새 단일 전체 gate 성공으로 주장하지 않습니다. 이후 범위 재개/전체 성공은 별도 종료 근거가 필요합니다.
+
+후속 전체 목록용 ReleaseSafe 빌드의 `native-field-safe-build.log/.stderr`는 모두0바이트이나 프로세스 exit1이고 `native-field-safe`도0바이트입니다. stderr가 비었다는 이유로 빌드 성공으로 처리하지 않으며, 이 산출물의 inventory나 테스트는 실행하지 않았습니다. 당시 디스크 여유가 약116MiB였지만 진단 부재 때문에 종료 원인을 NoSpaceLeft로 확정하지 않습니다. 루트 .zig-cache는 약22GiB이고 읽기 전용 lsof 검사에서 열린 파일이 없었으며, 아직 삭제하지 않았습니다. 새 전체 빌드/범위 재개는 미완료입니다.
