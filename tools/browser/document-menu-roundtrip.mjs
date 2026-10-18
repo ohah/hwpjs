@@ -15,13 +15,16 @@ import {writeAuditRow} from "../audit-jsonl-output.mjs";
 import {documentMenuBrowserCases} from "./document-menu-cases.mjs";
 import {openBrowserRibbonPage,exerciseBrowserRibbonPages} from "./ribbon-page.mjs";
 import {demoFixtures,fixtureUrl} from "../../web/preview/fixture-catalog.mjs";
+import {parseBrowserAuditOrigin,verifyBrowserSourceResponses} from "./audit-origin.mjs";
 
 export async function runDocumentMenuBrowserAudit(caseName) {
   assert(Object.hasOwn(documentMenuBrowserCases,caseName),"UnknownDocumentMenuBrowserCase");
   const config=documentMenuBrowserCases[caseName];
   assert(process.env.HWPJS_TEST_WASM, "ExplicitBrowserCandidateRequired");
   if (process.argv.length !== 2) throw Error("UnexpectedBrowserAuditArguments");
+  const externalOrigin=parseBrowserAuditOrigin(process.env.HWPJS_BROWSER_ORIGIN);
   const root = resolve("."), {port,paragraph,marker,oraclePath,oracleMode,protectedAnchors}=config;
+  const origin=externalOrigin??`http://127.0.0.1:${port}`;
   const editedText=config.replaceWhole?marker:marker+config.original;
   const wasmPath = resolve(process.env.HWPJS_TEST_WASM), wasm = readFileSync(wasmPath);
   const fixture = resolve(config.fixturePath), input = readFileSync(fixture);
@@ -29,6 +32,7 @@ export async function runDocumentMenuBrowserAudit(caseName) {
   const sourcePaths = ["web/preview/index.html","web/preview/preview.css","web/preview/app.mjs","web/preview/document-menu-controls.mjs","web/preview/document-menu-mnemonic.mjs","web/preview/document-ribbon-controls.mjs","web/preview/document-ribbon-pages.mjs","web/preview/fixture-controls.mjs","web/preview/fixture-catalog.mjs","web/preview/fixture-inventory.mjs","tools/browser/ribbon-page.mjs","tools/document-menu-browser-audit.mjs","tools/unknown-object-browser-audit.mjs","tools/browser/document-menu-roundtrip.mjs","tools/browser/document-menu-cases.mjs","tools/hwpx-anchor-prefix-oracle.py",...(oraclePath==="tools/hwpx-anchor-prefix-oracle.py"?[]:[oraclePath])];
   if(config.entryPath)sourcePaths.push(config.entryPath);
   sourcePaths.push("web/preview/document-menu-keyboard.mjs");
+  sourcePaths.push("tools/browser/audit-origin.mjs");
   const sourceHashes = () => Object.fromEntries(sourcePaths.map(path=>[path,hash(readFileSync(resolve(path)))]));
   const sourceSha256 = sourceHashes();
   const session = cli("agent-browser", ["session","id","--scope","worktree","--prefix",config.sessionPrefix], {cwd:root,encoding:"utf8",timeout:10000}).trim();
@@ -62,6 +66,7 @@ export async function runDocumentMenuBrowserAudit(caseName) {
   const progress = name => {phase=name;writeAuditRow({kind:"menu-browser-phase",caseName,phase,session,output});};
   try {
     assert.equal(command("session","info").active,false,"RefuseActiveSession");
+    if(externalOrigin===null){
     server = spawn(process.execPath,[resolve("tools/serve-preview.mjs"),String(port),wasmPath],{cwd:root,stdio:["ignore","pipe","pipe"]});
     await new Promise((accept,reject) => {
       const timer=setTimeout(()=>reject(Error("ServerStartTimeout")),10000);
@@ -69,9 +74,10 @@ export async function runDocumentMenuBrowserAudit(caseName) {
       server.once("exit",code=>{clearTimeout(timer);reject(Error(`ServerExited:${code}`));});
       server.stdout.once("data",bytes=>{clearTimeout(timer);String(bytes).includes(`127.0.0.1:${port}/web/preview/index.html`)?accept():reject(Error("UnexpectedServer"));});
     });
-    const response=await fetch(`http://127.0.0.1:${port}/zig-out/bin/hwpjs.wasm`,{signal:AbortSignal.timeout(10000)});
+    }else await verifyBrowserSourceResponses(origin,sourceSha256);
+    const response=await fetch(`${origin}/zig-out/bin/hwpjs.wasm`,{signal:AbortSignal.timeout(10000),redirect:"error"});
     assert.equal(response.status,200);assert.equal(hash(Buffer.from(await response.arrayBuffer())),hash(wasm));
-    owned=true;command("open",`http://127.0.0.1:${port}/web/preview/index.html`);command("snapshot","-i");
+    owned=true;command("open",`${origin}/web/preview/index.html`);command("snapshot","-i");
     wait('!document.querySelector("#file").disabled');
     evaluate(`(() => {
       window.__menuAudit=[];window.__menuKeys=[];window.__menuInput=[];const watched=new WeakSet(),post=Worker.prototype.postMessage;
@@ -107,7 +113,7 @@ export async function runDocumentMenuBrowserAudit(caseName) {
       const matches=demoFixtures.filter(item=>item.path===config.fixturePath);
       assert.equal(matches.length,1,"BrowserFixtureMustHaveUniqueCatalogEntry");
       const selected=matches[0];
-      const fixtureResponse=await fetch(`http://127.0.0.1:${port}${fixtureUrl(selected.id)}`,{signal:AbortSignal.timeout(10000)});
+      const fixtureResponse=await fetch(`${origin}${fixtureUrl(selected.id)}`,{signal:AbortSignal.timeout(10000),redirect:"error"});
       assert.equal(fixtureResponse.status,200);
       assert.equal(hash(Buffer.from(await fixtureResponse.arrayBuffer())),hash(input),"BrowserFixtureResponseMustMatchOracleInput");
       // Stall one response body at the browser boundary, then use the real file input.
@@ -215,8 +221,10 @@ export async function runDocumentMenuBrowserAudit(caseName) {
     const keys=evaluate("window.__menuKeys");
     for(const key of ["p","u","r","s"])assert(keys.some(row=>row.key===key&&row.trusted&&row.consumed),`MissingTrustedMnemonic:${key}`);
     command("scrollintoview","#canvas-input");command("screenshot",join(output,"reopened.png"));
-    assert.deepEqual(readFileSync(fixture),input);assert.deepEqual(readFileSync(wasmPath),wasm);assert.deepEqual(sourceHashes(),sourceSha256);verified=true;
-    writeAuditRow({kind:"menu-browser-result",caseName,verified,session,output,sourceSha256,wasmSha256:hash(wasm),inputSha256:hash(input),savedSha256:hash(saved),scope:config.scope});
+    assert.deepEqual(readFileSync(fixture),input);assert.deepEqual(readFileSync(wasmPath),wasm);assert.deepEqual(sourceHashes(),sourceSha256);
+    if(externalOrigin!==null)await verifyBrowserSourceResponses(origin,sourceSha256);
+    verified=true;
+    writeAuditRow({kind:"menu-browser-result",caseName,verified,session,output,origin,sourceSha256,wasmSha256:hash(wasm),inputSha256:hash(input),savedSha256:hash(saved),scope:config.scope});
   }catch(error){
     writeAuditRow({kind:"menu-browser-failure",caseName,phase,error:error.message});throw error;
   }finally{
@@ -224,7 +232,7 @@ export async function runDocumentMenuBrowserAudit(caseName) {
     finally{
       if(server?.pid&&server.exitCode===null&&server.signalCode===null){const ended=once(server,"exit"),timer=setTimeout(()=>server.kill("SIGKILL"),3000);server.kill("SIGTERM");try{await ended;}finally{clearTimeout(timer);}}
       const serverExited=!server?.pid||server.exitCode!==null||server.signalCode!==null;
-      writeAuditRow({kind:"menu-browser-cleanup",session,browserClosed:closed,serverExited,success:verified&&closed&&serverExited});
+      writeAuditRow({kind:"menu-browser-cleanup",session,browserClosed:closed,serverOwned:Boolean(server?.pid),serverExited,success:verified&&closed&&serverExited});
     }
   }
 }

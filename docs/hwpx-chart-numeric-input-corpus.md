@@ -2,6 +2,14 @@
 
 ## 기본 데모와 분리한 후보 미리보기
 
+### 원격 URL의 실제 브라우저 검증
+
+공유 메뉴 flow는 선택적 `HWPJS_BROWSER_ORIGIN`의 명시적 HTTPS origin만 허용합니다. 경로/사용자정보/query/hash/공백/비정규 origin은 브라우저·파일 읽기 전에 거부하며 기존 CLI의 부분 인자 거부도 유지합니다. `audit-origin.mjs`는 origin 검증과 선택된 UI 소스의 HTTP200/바이트 해시·redirect 거부를 소유합니다. WASM 전체 해시도 기존 비교로 확인합니다. 원격 모드는 서버를 소유하지 않으며 소유 브라우저만 종료합니다. 모든 원격 JS import의 전수 해시 검사로 확대하지 않습니다.
+
+origin·잘못된 UI 소스/404 거부와 기존 진입 guard는14/14·fail/cancel/skip0·exit0입니다. 트리 `484929ab90417f45abc29dabea908b5ab5930ed8`의 `/tmp/hwpjs-remote-browser-clean.Q6x4gn`에서 실제 후보 URL10001로 `remote-manual.jsonl/.stderr`를 실행해 수식 결과의 picker→trusted Canvas 입력→메뉴 U/R/S→독립 전체 XML/ZIP normal/-O/잘못된 표시 거부→다운로드·재업로드를 검증했습니다. 원격 UI 선택 소스는 검사 전후 해시를 대조했습니다. agent-browser 스킬의 격리 세션·실제 키 입력·종료 확인을 사용했습니다. 아래 최초 HTTP/API 증거와 별도로 원격 GUI 경로를 추가한 것이며 전체 fixture/편집 명령 완료는 아닙니다.
+
+같은 사본의 `remote-numeric.jsonl/.stderr`도 같은 원격 URL에서 숫자 셀 picker/치환·독립 SUM/XML·메뉴 이력·다운로드·재업로드를 통과했습니다. 두 원격 결과는 verified=true·cleanup.success=true·serverOwned=false·stderr0이며, 기존 `local-plain.jsonl/.stderr`는 로컬 분기의 verified=true·cleanup.success=true·serverOwned=true·stderr0입니다. 세 명령을 직렬 실행한 wrapper도 exit0입니다. 세 소유 브라우저는 종료 후 active=false·pid=null이며 원격 후보 서버는 계속 실행 중입니다.
+
 수식 결과 Canvas 직접 입력을 확인할 별도 후보는 `https://macstudio.tailed42f2.ts.net:10001/web/preview/index.html`입니다. tailnet 내부 Serve이며 테일스케일 연결이 필요합니다. 새 포트에 Funnel은 켜지 않았습니다. 기존10000→8080 기본 데모,443→8768 및8443→4174는 변경하지 않았습니다.
 
 후보 서버는 main `1a7449a0`의 JS/web/tools를 추출한 `/tmp/hwpjs-candidate-preview.pOFJmo`에서8081 loopback으로 실행하며, 별도 검증 WASM `afb7fdfbbc8a9c9cc45a7cdb98ade6be7a6a88b1943e1c5354c63d6715b9e05e`만 override합니다. 기본 파일/WASM을 덮어쓰지 않았고 재부팅/임시 폴더 제거 후 자동 복구되는 정식 배포도 아닙니다. 목록에서 `숫자 입력·표 계산 결과 (참조)`를 열어 후보 기능을 확인할 수 있습니다.

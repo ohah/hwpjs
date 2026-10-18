@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[원격 후보 브라우저 검증](hwpx-chart-numeric-input-corpus.md)은 기존 숫자/수식 결과 브라우저 명령에 `HWPJS_BROWSER_ORIGIN=https://host:port`와 정확한 `HWPJS_TEST_WASM`을 명시합니다. HTTPS origin·선택 UI 소스·WASM을 대조하며 원격 서버를 생성/종료하지 않습니다. 환경변수가 없으면 기존 격리 로컬 서버 검사입니다.
+
 [숫자 셀 Canvas 브라우저 왕복](hwpx-chart-numeric-input-corpus.md)은 `HWPJS_TEST_WASM=/absolute/candidate.wasm node tools/numeric-input-browser-audit.mjs`입니다. 실제 숫자 치환·독립 SUM/XML·메뉴 이력·다운로드·재업로드를 검사하며 전체 숫자 셀/조판 검증은 아닙니다.
 
 [수식 결과 Canvas 브라우저 왕복](canvas-formula-result-input.md)은 `HWPJS_TEST_WASM=/absolute/candidate.wasm node tools/manual-result-browser-audit.mjs`입니다. 실제 참조 원본의 결과 입력·메뉴 이력·독립 XML/ZIP·다운로드·재업로드와 소유 세션 종료를 검사하며 수식 재계산/전체 조판 검증과 구분합니다.

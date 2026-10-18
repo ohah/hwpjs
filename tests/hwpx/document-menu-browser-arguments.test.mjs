@@ -3,6 +3,30 @@ import assert from "node:assert/strict";
 import {spawnSync} from "node:child_process";
 import {documentMenuBrowserCases} from "../../tools/browser/document-menu-cases.mjs";
 import {demoFixtures,fixtureUrl} from "../../web/preview/fixture-catalog.mjs";
+import {parseBrowserAuditOrigin,verifyBrowserSourceResponses} from "../../tools/browser/audit-origin.mjs";
+import {createHash} from "node:crypto";
+
+test("external browser origins are explicit canonical HTTPS roots only",()=>{
+  assert.equal(parseBrowserAuditOrigin(undefined),null);
+  assert.equal(parseBrowserAuditOrigin("https://example.test:10001/"),"https://example.test:10001");
+  for(const value of ["", " https://example.test", "http://example.test", "file:///tmp/a", "https://user:secret@example.test", "https://example.test/path", "https://example.test/?q=x", "https://example.test/#x", "https://example.test/../", "https://EXAMPLE.test"]){
+    assert.throws(()=>parseBrowserAuditOrigin(value),/InvalidBrowserAuditOrigin/);
+  }
+  const result=spawnSync(process.execPath,["tools/numeric-input-browser-audit.mjs"],{encoding:"utf8",timeout:10000,env:{...process.env,PATH:"/nonexistent-menu-audit-bin",HWPJS_TEST_WASM:"/missing.wasm",HWPJS_BROWSER_ORIGIN:"http://example.test"}});
+  assert.equal(result.error,undefined);assert.equal(result.signal,null);assert.equal(result.status,1);
+  assert.equal(result.stdout,"");assert.match(result.stderr,/InvalidBrowserAuditOrigin/);assert.doesNotMatch(result.stderr,/ENOENT/);
+});
+
+test("remote browser source witnesses reject wrong bytes and HTTP status without fetching tool files",async()=>{
+  const bytes=Buffer.from("source"),hash=createHash("sha256").update(bytes).digest("hex"),calls=[];
+  const hashes={"web/preview/app.mjs":hash,"js/hwpx-editor.mjs":hash,"tools/browser/audit-origin.mjs":"not served"};
+  await verifyBrowserSourceResponses("https://example.test",hashes,async(url,options)=>{
+    calls.push(url);assert.equal(options.redirect,"error");assert(options.signal instanceof AbortSignal);return new Response(bytes);
+  });
+  assert.deepEqual(calls,["https://example.test/web/preview/app.mjs","https://example.test/js/hwpx-editor.mjs"]);
+  await assert.rejects(verifyBrowserSourceResponses("https://example.test",hashes,async()=>new Response("changed")),/BrowserRemoteSourceChanged/);
+  await assert.rejects(verifyBrowserSourceResponses("https://example.test",hashes,async()=>new Response(null,{status:404})),/BrowserRemoteSourceUnavailable/);
+});
 
 for(const name of ["plain","numeric-input","manual-result"])test(`${name} menu roundtrip exercises the real fixture picker with one exact public source`,()=>{
   const selected=documentMenuBrowserCases[name];
