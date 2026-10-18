@@ -1,6 +1,9 @@
 const std = @import("std");
 test "HWPX protected style command and input remain atomic on allocation failure" {
-    const a = std.testing.allocator;
+    try @import("../testing/checked_allocator.zig").run(protectedStyleAtomicity, .{});
+}
+
+fn protectedStyleAtomicity(a: std.mem.Allocator) !void {
     const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/shapeline.hwpx", a, .limited(4_000_000));
     defer a.free(input);
     var baseline = try @import("editor_session.zig").open(a, input, .{});
@@ -29,7 +32,7 @@ test "HWPX protected style command and input remain atomic on allocation failure
         }
     };
     try Probe.run(a, input, ids[ids.len - 1]);
-    try std.testing.checkAllAllocationFailures(a, Probe.run, .{ input, ids[ids.len - 1] });
+    try @import("../testing/allocation_failures.zig").check(Probe.run, .{ input, ids[ids.len - 1] });
 }
 test "HWPX character style public command validates real IDs and preserves redo on refusal" {
     const a = std.testing.allocator;
@@ -65,7 +68,7 @@ test "HWPX character style public command validates real IDs and preserves redo 
     const redo = try session.save();
     defer a.free(redo);
     try std.testing.expectEqualSlices(u8, edited, redo);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, bytes: []const u8, resource_id: u32) !void {
             var current = try @import("editor_session.zig").open(allocator, bytes, .{});
             defer current.deinit();

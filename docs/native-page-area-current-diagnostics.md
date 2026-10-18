@@ -58,6 +58,8 @@ ReleaseSafe1dbae957f8cb7f3a5b70e45ea499072c2be9138256f1116ac545788c3352efb9는2/
 
 다음 미확인 실패를 조사하기 위해 같은 수정 전51fabff6 바이너리의3376..4111 범위를 별도 `native-tail-after-ownership.jsonl/.stderr`에서 시작했습니다. 수정 전3375를 반복하거나 검사 목록에서 영구 제외하는 것이 아니며, 그 지점의 수정은 위 집중 결과와 구분합니다. 이후 최신 전체 gate는 새 바이너리로 다시 검사해야 합니다.
 
+그 후속 범위의55개 완료와3431/3432 서식 검사 자원 중단, 분리 대조 결과는 [보호 문단 서식 진단](native-protected-style-diagnostics.md)이 소유합니다. 위 실행 시작 기록을 아직 살아 있는 프로세스로 읽거나 전체 통과로 합산하지 않습니다.
+
 5837cd37 전수의 다음3338 page area ordered pieces preserve alternating source run styles and single declarations에서 물리 peak4,298,231,168바이트가 기준4,294,967,296바이트를 넘어 guardian이 종료했습니다. 기존 guardian/batch/child 종료를 확인했습니다. source의 std.testing.checkAllAllocationFailures(std.testing.allocator, ...) 다섯 호출은 검증/쪽 영역 XML/문단 XML/두 병합 경계를 검사합니다. 제품 함수·callback·입력·단언·전체 실패 지점은 바꾸지 않고 기존 testing/allocation_failures.check로 모두 전환했습니다. 작업 트리에 이미 있던 정확히5줄 전환을 분리 소스에서 검증 후 채택했으며 새 작성으로 주장하지 않습니다.
 
 /tmp/hwpjs-page-area-ordered.Zrprql의 Safe22d1f2ef04f20da8396b85fd96a4f5f0d7eed2e648065b19c53577a51f78080f는 root 포함2/2·fail/skip/log/leak0·exit0·guardStopped=false·peak48,267,648바이트입니다. Debug4a78f67da6cee752743a484cabc9e829a4b0445e6432c22d5c7d690b25397c9a도2/2·같은 실패/누수0·exit0·guardStopped=false·peak14,696,784바이트입니다. 동일4,096MiB guardian과 expected hash를 사용했고 근거는 ordered-safe-guard-retry.jsonl·ordered-debug-guard-retry.jsonl입니다. 최초 ordered-*-guard 실행은 분리 tools 경로 부재로 native 시작 전 실패했으므로 통과에 합산하지 않습니다. 변경 파일은 검증 소스와 작업 트리가 cmp 일치하며 전체 native 통과/제품 메모리 절감/파서 기능 확대를 의미하지 않습니다.
