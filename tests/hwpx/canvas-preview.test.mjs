@@ -5,6 +5,37 @@ import { execFileSync } from "node:child_process";
 import { createHwpxReader } from "../../js/hwpx.mjs";
 import { displayHwpxContent } from "../../web/preview/hwpx-content.mjs";
 import { displayRunText } from "../../web/preview/layout.mjs";
+import { workerCanvasHarness, dispatchCanvasEvent } from "../canvas/worker-harness.mjs";
+
+test("HWPX Canvas consumed and AltGraph keys retain selection source and redo", async t => {
+  assert(process.env.HWPJS_TEST_WASM, "ExplicitCanvasKeyCandidateRequired");
+  const h = await workerCanvasHarness(t);
+  const source = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/parashape.hwpx");
+  assert.equal((await h.send({ kind: "load", format: "hwpx", bytes: source })).error, undefined);
+  assert.equal((await h.send({ kind: "enable" })).error, undefined);
+  const point = { section: 0, paragraph: 5, startUnit: 1, endUnit: 2 };
+  assert.equal((await h.send({ kind: "splice", section: 0, paragraph: 5, startUnit: 0, endUnit: 0, text: "이력😀" })).error, undefined);
+  const edited = Buffer.from((await h.send({ kind: "save" })).bytes);
+  assert.equal((await h.send({ kind: "undo" })).changed, true);
+  for (const state of ["consumed", "altgraph"]) for (const key of ["a", "z", "Enter", "ArrowRight"]) {
+    assert.equal(h.controller.selectTextRange(point), true);
+    const event = new Event("keydown", { cancelable: true });
+    Object.assign(event, { key, ctrlKey: ["a", "z"].includes(key), getModifierState: name => state === "altgraph" && name === "AltGraph" });
+    if (state === "consumed") event.preventDefault();
+    h.input.dispatchEvent(event);
+    assert.equal(event.defaultPrevented, state === "consumed", `${state}/${key}`);
+    assert.equal(h.requests.length, 0, `${state}/${key}`);
+    assert.deepEqual(h.controller.selectedRange(), point, `${state}/${key}`);
+    assert.deepEqual(Buffer.from((await h.send({ kind: "save" })).bytes), source);
+  }
+  assert.equal((await h.send({ kind: "redo" })).changed, true);
+  assert.deepEqual(Buffer.from((await h.send({ kind: "save" })).bytes), edited);
+  assert.equal(h.controller.selectTextRange(point), true);
+  assert.equal(dispatchCanvasEvent(h.input, "keydown", { key: "a", ctrlKey: true }).defaultPrevented, true);
+  assert.equal(h.input.selectionStart, 0); assert.equal(h.input.selectionEnd, h.input.value.length);
+  assert.deepEqual(Buffer.from((await h.send({ kind: "save" })).bytes), edited);
+  assert.deepEqual(readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/parashape.hwpx"), source);
+});
 
 const event = (paragraph, kind, value = "", inlineKind = null) => ({ section: 0, paragraph, kind, value, inlineKind });
 const sample = { paragraphCount: 2, events: [event(1, "paragraph_start"), event(1, "content", "A😀"), event(2, "paragraph_start"), event(2, "content", "아이"), event(2, "inline_empty", "", "tab"), event(2, "paragraph_end"), event(1, "content", "B"), event(1, "paragraph_end")] };
