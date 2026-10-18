@@ -18,12 +18,18 @@ export function createMenuDisclosures(popups) {
     if (closed || contains(event.target) || event.composedPath?.().some(contains)) return;
     for (const popup of popups) popup.open = false;
   };
-  for (const document of documents) document.addEventListener("pointerdown", outside);
+  for (const document of documents) {
+    document.addEventListener("pointerdown", outside);
+    document.addEventListener("focusin", outside);
+  }
   return { close() {
     if (closed) return;
     closed = true;
     for (const { summary, enter } of rows) summary?.removeEventListener?.("pointerenter", enter);
-    for (const document of documents) document.removeEventListener("pointerdown", outside);
+    for (const document of documents) {
+      document.removeEventListener("pointerdown", outside);
+      document.removeEventListener("focusin", outside);
+    }
     for (const popup of popups) popup.open = false;
   } };
 }

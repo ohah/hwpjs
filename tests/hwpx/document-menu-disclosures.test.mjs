@@ -27,8 +27,14 @@ test("menu hover transfers only an already open disclosure and outside pointers 
   document.dispatchEvent(inside); assert.equal(b.popup.open, true); assert.equal(inside.defaultPrevented, false);
   const outside = Object.assign(new Event("pointerdown", { cancelable: true }), { composedPath: () => [document, { window: true }] });
   document.dispatchEvent(outside); assert.equal(b.popup.open, false); assert.equal(outside.defaultPrevented, false);
+  b.popup.open = true;
+  const insideFocus = Object.assign(new Event("focusin"), { composedPath: () => [b.child, document] });
+  document.dispatchEvent(insideFocus); assert.equal(b.popup.open, true);
+  const outsideFocus = Object.assign(new Event("focusin", { cancelable: true }), { composedPath: () => [document] });
+  document.dispatchEvent(outsideFocus); assert.equal(b.popup.open, false); assert.equal(outsideFocus.defaultPrevented, false);
   a.popup.open = true; controls.close(); controls.close(); assert.equal(a.popup.open, false);
   a.popup.open = true; b.summary.dispatchEvent(new Event("pointerenter"));
   assert.equal(a.popup.open, true); assert.equal(b.popup.open, false);
   document.dispatchEvent(new Event("pointerdown")); assert.equal(a.popup.open, true);
+  document.dispatchEvent(new Event("focusin")); assert.equal(a.popup.open, true);
 });

@@ -1,5 +1,11 @@
 # 문서 도구 탭
 
+## 메뉴 바깥 포커스 이동
+
+`document-menu-disclosures.mjs`는 바깥 pointerdown뿐 아니라 focusin에서도 열린 메뉴를 닫습니다. 키보드로 리본·본문 등 메뉴 밖에 이동해도 이전 popup이 남지 않으며, 메뉴 안과 composedPath 안의 포커스는 유지합니다. 이벤트를 취소하거나 포커스를 강제로 되돌리지 않습니다. 기존 `details.open`만 열림 상태를 소유하고 close에서 두 document listener를 모두 제거합니다.
+
+실패 회귀를 먼저 재현한 뒤 메뉴 disclosure·제어기·키보드·mnemonic·popup layer 집중19/19, 실패/취소/skip0을 확인했습니다. 이 변경의 실제 브라우저 Tab 이동은 아직 검증하지 않았으며 기존 Chromium 기록으로 대체하지 않습니다.
+
 ## 메뉴 막대 좌·우 키 이동
 
 메뉴 막대의 기존 키보드는 단일 popup 안의 위/아래·Home/End와 Escape만 처리했습니다. 좌/우 키의 제어기 회귀를 먼저 추가해 defaultPrevented=false로 실패하는 것을 재현했습니다. `document-menu-keyboard.mjs`의 `navigateDocumentMenuBar`가 메뉴 간 순환 포커스/열림 상태만 소유하고, 제어기는 기존 popup layer를 갱신한 뒤 요약에 포커스를 줍니다. 명령 실행·native 편집·WASM은 변경하지 않습니다.
