@@ -24,6 +24,42 @@ test("native text source policy queries preserve source save and history and kee
   assert.throws(() => editor.validateTextSourcePolicy(0), /EditorClosed/);
 });
 
+test("actual unclosed click field refuses policy and edits without damaging original history", async t => {
+  const path = "reference/rhwp/samples/issue1921/59043_regulatory_analysis.hwp";
+  const { existsSync } = await import("node:fs");
+  if (!existsSync(path)) return t.skip("RHWP reference fixture unavailable");
+  const original = readFileSync(path);
+  const { inspect, records } = await import("./style-preservation/text-record-oracle.mjs");
+  const sections = inspect(original).sections;
+  assert.equal(sections.length, 1);
+  const markers = [];
+  let paragraph = -1;
+  for (const record of records(sections[0].bytes)) {
+    if (record.tag === 66) paragraph++;
+    if (record.tag !== 67) continue;
+    for (let unit = 0; unit < record.payload.length / 2;) {
+      const code = record.payload.readUInt16LE(unit * 2);
+      const width = code >= 1 && code <= 23 && code !== 10 && code !== 13 ? 8 : 1;
+      assert(unit * 2 + width * 2 <= record.payload.length);
+      if (code === 3 || code === 4) markers.push({ code, paragraph, unit, id: record.payload.readUInt32LE(unit * 2 + 2) });
+      unit += width;
+    }
+  }
+  assert.equal(markers.filter(row => row.code === 3).length, 29);
+  assert.equal(markers.filter(row => row.code === 4).length, 28);
+  assert(markers.some(row => row.code === 3 && row.paragraph === 52 && row.unit === 0 && row.id === 0x25636c6b));
+  const editor = await createExperimentalHwp5Editor(wasm, original);
+  try {
+    editor.enableHistory();
+    assert.throws(() => editor.validateTextSourcePolicy(0), /UnsupportedCrossParagraphField/);
+    assert.throws(() => editor.splice({section: 0, paragraph: 0, startUnit: 0, endUnit: 0, text: "검증😀"}), /UnsupportedCrossParagraphField/);
+    assert.deepEqual(Buffer.from(editor.save().bytes), original);
+    assert.equal(editor.undo(), false);
+    assert.equal(editor.redo(), false);
+  } finally { editor.close(); }
+  assert.deepEqual(readFileSync(path), original);
+});
+
 test("text source policy optional ABI absence is explicit rather than a positive permission", async () => {
   const old = Buffer.from(wasm), name = "hwp5_edit_validate_text_source_policy";
   const at = old.indexOf(name);
