@@ -8,6 +8,8 @@
 
 ## 사용과 반환값
 
+선택적 `supportsTextSourceProtection()`·`textSourceProtection(section)`의 보호 배열·구형 ABI·원자적 입력 계약은 [미닫힘 누름틀 원본 보존](hwp5-click-field-retention.md#공개-추가-보호와-입력-연결)이 소유합니다. 보호 배열의 false는 임의 편집 허가가 아니며 기존 엄격 `validateTextSourcePolicy()`와 범위를 구분합니다.
+
 선택적 `splitParagraph({ section, paragraph, atUnit, endUnit = atUnit })`의 문단 생성·선택 교체·원자성·native 이력 및 지원 제한은 [문단 구조 편집](paragraph-structure-edit.md)이 소유합니다. 새 구조 export가 없는 이전 제품은 기존 open/편집/저장을 계속 사용할 수 있으며 구조 명령만 `Hwp5StructureAbiUnavailable`로 거부합니다.
 
 ```js

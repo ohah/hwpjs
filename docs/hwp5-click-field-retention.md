@@ -52,6 +52,8 @@ UI는 기존 엄격 조회를 우선하고 동일 오류일 때만 새 native �
 
 보존 경로는 현재 모델의 UnsupportedCrossParagraphField만 보고 허용하지 않습니다. immutable 원본의 공통 validateSelected도 정확히 같은 오류여야 하며 정상 원본이나 다른 오류는 복구하지 않습니다. 닫힌 %clk 원본을 먼저 엄격 검증한 뒤 현재 모델에서 종료 토큰만 없애는 반례로 거부·원자적 모델 불변을 확인했습니다. 기존 원본 미닫힘의 보호 밖 입력과 전체 부분 할당 실패 검사는 유지합니다.
 
+187e8c44의 src만 별도 /tmp/hwpjs-retained-negative.egB2nv에 추출해 위 원본 검사만 제거한 음성 대조를 실행했습니다. ReleaseSafe 컴파일 후 반례가 expected error.UnsupportedCrossParagraphField, found void로 실패해 실제 잘못된 성공을 검출했습니다(2개 중1개 실패, exit1, original-source-guard-negative-retry.log). 같은 복사본의 검사만 원상 복원하자 root 포함2/2·skip0·exit0이었습니다(original-source-guard-restored.log). 복원 helper는 제품 후보와 바이트 일치합니다. 최초 original-source-guard-negative.log는 NoSpaceLeft 컴파일 실패여서 음성 대조 성공으로 세지 않습니다. 제품/활성 검증 소스는 변경하지 않았습니다.
+
 이 보강을 포함한 후보는 6ddc76ab71dc09a77acf0b57b7ec78b2cc137850189e136fb361edd5d71d0437이며 ReleaseSafe 제품 빌드5/5, native 집중 Safe/Debug 각각6/6입니다. protection-counter-safe.log·protection-counter-debug.log·protection-counter-build.log가 근거입니다. 이전 c80 후보와 보강 후보 각각 읽기 전수975개는 응답 동일944·동일 거부5·HWP3 제외26이었습니다. 보강 후보의 protection-counter-reader.jsonl은 baseline703→6dd 전체 JSON/원본 불변 결과이며 쓰기 지원 성공으로 세지 않습니다. 정규 editor gate는 protection-counter-editor-full.log에서 실행 중이고 전체 통과로 표기하지 않습니다. 기존 native4096 실행은 이 보강 이전 별도 산출물이므로 최신 main 전체 native 통과 근거도 아닙니다.
 
 같은 보강 후보의 API/Worker 경계17파일43/43(실패/취소/건너뜀0, protection-counter-node.log)이 통과했습니다. 별도 retained-click-roundtrip.test.mjs는 같은 실제 원본에서 삽입→교체→삭제 각각 독립 Section/비대상 스트림 oracle, surrogate 중간 삽입 거부, 보호 거부 뒤 pending redo, 저장 재열기 뒤 재편집·보호 배열/필드 의미 보존을 확인했습니다(1/1, protection-repeat-roundtrip.log). 정규 editor gate에도 등록합니다. 이미 실행 중인 전체 gate에는 이 추가1개가 포함되지 않으므로 집중1개를 전체 결과에 합산하지 않습니다.
