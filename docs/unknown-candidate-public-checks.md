@@ -1,5 +1,13 @@
 # unknownObj 후보의 공개 API 회귀
 
+## Zig 0.17 게시 소스의 전체 HWPX 공개 등록 회귀
+
+main `eddbfa8c35bb9e28824e404a5b96f1bcd97fcb99`·tree `c201fa64d85323f153b5dc691e87d131e30bbbaf`를 `/tmp/hwpjs-published-hwpx-gate.7WPrL4`에 추출했습니다. `build.zig`의 `hwpx_text_tests` 초기 인자와 addArg를 모두 읽어 HWPX105파일과 WASM export1파일, 총106개 고유 등록 경로의 존재를 확인했습니다. HWPX 경로는 기존 `hwpxGateTestPaths` 결과와 순서까지 대조하며 별도 수동 목록을 만들지 않았습니다. `node --test --test-concurrency=1 --test-reporter=tap`으로 전체106파일을 직렬 실행했습니다.
+
+Node24.20.0·명시적 게시 소스 Zig0.17 후보 `afb7fdfbbc8a9c9cc45a7cdb98ade6be7a6a88b1943e1c5354c63d6715b9e05e`·명시적 기준 `cbaaf27f858229fedd01b9996ce152bd31aa6d6f346481b7887bcc510ef68346`의 `registered-hwpx.log/.stderr`는348/348·fail/cancel/skip/todo0·자식 exit0/signal=null·wrapper exit0·stderr0(1056593ms)입니다. 시작/종료에 build 등록 소스와 두 WASM의 해시를 대조했습니다. 로그 SHA256은 `c0060cc38c2aeff42f37299b1ed8caeaffe3286622a2f5446597711abf3e7931`입니다. 종료 뒤 부모/테스트 runner가 남지 않았고 사본의 추적7193개 Git blob이 해당 HEAD와 전부 일치함을 재확인했습니다.
+
+Git inventory를 쓰는 검사를 위해 추출한 추적 fixture만 사본의 임시 Git index에 등록했고, 참조 samples는 별도 clone 사본으로 제공했습니다. 고정 설치 경로를 읽는 테스트에도 사본 안 `zig-out/bin/hwpjs.wasm`으로 같은 후보를 제공했습니다. 원래 작업 트리의 기본 WASM/외부 데모는 교체하지 않았습니다. 이후 문서 기록 커밋을 제외한 해당 게시 코드의 공개 등록 회귀 결과이며 최신 전체 native gate·HWP5 공개 gate·전체 참조 문서 전수 편집·실제 브라우저/OS 입력·원본 조판 완료로 확대하지 않습니다. 아래 진행 중인 고정44문서 결과와 합산하지 않습니다.
+
 ## 과거 실패44개 재검사 — 고정 실행 기록
 
 `/tmp/hwpjs-old-failures-current.8bPWPB`는 과거 `/tmp/hwpjs-normalized-reference-edit.Dld3zF`의 실제 완료861행에서 verification_failed44개를 전부 고정한 사본입니다. 과거 root의975개 전체가 완료됐다는 뜻은 아닙니다. baseline 로그 SHA256은 `31c3aa0e0745ff6936fe79065a626ff7d780f2c95e6b7f4099f0e95484e2115f`입니다. 원본44개의 SHA256이 당시 행과 모두 같음을 확인했고, 합계48,568,945바이트를 cases에 복사했습니다. 원본을 수정하지 않습니다.
