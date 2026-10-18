@@ -22,6 +22,8 @@
 
 같은 실제 aift 원본의 메모와 구분되는 필드 바깥 입력 회귀도 위 Canvas 파일에서 검사합니다. 구역1·전역 문단196은 plainEditable=false이지만 시작 범위의 native query-edit-range는 true입니다. 원본 XML 구역1 로컬 문단9와의 좌표 차이를 명시하고 Canvas 선택·범위 조회·Unicode/XML 문자 입력 뒤 독립 Python 일반/-O 전체 XML·비대상 ZIP payload, undo 원본/redo 편집본 바이트 일치와 원본 불변을 확인합니다. 게시 소스 Zig0.17 후보 `afb7fdfbbc8a9c9cc45a7cdb98ade6be7a6a88b1943e1c5354c63d6715b9e05e`에서 해당 새 회귀1/1·fail/cancel/skip0·exit0, 약57.9초입니다. 제품 코드 변경 없이 기존 범위 권한 경로를 확인한 것으로, 메모 라벨 자체나 전체6,343문단 검사의 추가 완료 수로 합산하지 않습니다.
 
+게시 커밋 `48bd48fd`를 `/tmp/hwpjs-aift-canvas-clean.qCv1H8`에 추출한 독립 소스에서도 같은 집중 회귀1/1·fail/cancel/skip0·exit0, 약59.2초입니다. 복사한 실제 reference 원본과 작업 트리 원본의 SHA256은 모두 `5e27ee51825d10f0f51bd04935f0f9f8fc24f930a010367d822638964fefd491`입니다. 작업 트리의 미커밋 Worker/Canvas 코드 없이도 통과하며 실제 브라우저 증거로 승격하지 않습니다.
+
 반영된 작업 트리의 ReleaseSafe 집중 바이너리 a26947dba0dec547c529e1249b2e4640c19fb301819e72d54628bcd294f7b376은6/6·fail/skip/log/leak0·exit0입니다. root/XML 익명 등록3개와 메모 assertion 테스트3개를 포함합니다. resource guard 중단 없이 관측 peak footprint78,840,240바이트입니다. 로그는 `/tmp/hwpjs-memo-label-probe.GvEcmM/memo-integrated-guard.jsonl`입니다. 전체 native gate 완료와 구분합니다.
 
 별도 동결 출판 소스의 집중 native 바이너리4fa42f147c8a9e2eb4fb5ceedf605d810fa88751604dad7c614eb43ec58c9a3a도4/4·fail/skip/log/leak0·exit0입니다(root 등록1개+메모 assertion3개). 관측 peak footprint84,738,480바이트이며 `memo-published-guard.jsonl`을 따릅니다. 작업 트리6개와 출판 소스4개는 서로 다른 inventory이므로 합산하지 않습니다.
