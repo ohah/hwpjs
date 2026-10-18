@@ -24,7 +24,7 @@ example.hwpx 첫 문단에는 구역/단 설정 run 다음에 빈 charPrIDRef4 r
 
 `tests/hwpx/oracle-process-async.test.mjs`의8/8·fail/skip/cancel0·exit0은 큰 Unicode 입력의 바이트 길이/SHA256/EOF, 없는 TMPDIR, 빈 입력, nonzero, 잘못된 입력/stdio, timeout, EPIPE, spawn 실패, 출력 예산을 검사합니다(`async-oracle-tests-final.log`). 종료 뒤 소유 자식 PID가 없다는 대조도 포함합니다. 이8개를 문단 편집 지원 수에 합산하지 않습니다.
 
-같은 동결 소스의 `plain-edit-async.jsonl/.stderr`는46파일/암호1/전체1,444문단/일반 권한1,278·실제 prefix1,230·숫자 입력 거부48의 끝 summary와 exit0·stderr0을 확인했습니다. 실제 편집과 거부 좌표가 각각 중복 없이1,230/48개이며 서로 겹치지 않음을 재계수했습니다. 일반 숫자 입력48곳의 문자 prefix 거부를 쓰기 성공이나 읽기 전용 문단으로 세지 않습니다. 유효 숫자 변경의 전수 검사는 아직 별도입니다.
+같은 동결 소스의 `plain-edit-async.jsonl/.stderr`는46파일/암호1/전체1,444문단/일반 권한1,278·실제 prefix1,230·숫자 입력 거부48의 끝 summary와 exit0·stderr0을 확인했습니다. 실제 편집과 거부 좌표가 각각 중복 없이1,230/48개이며 서로 겹치지 않음을 재계수했습니다. 일반 숫자 입력48곳의 문자 prefix 거부를 쓰기 성공이나 읽기 전용 문단으로 세지 않습니다. 후속 [숫자 입력 전수 검사](hwpx-chart-numeric-input-corpus.md)는 그48좌표와 독립 숫자 witness가 같음을 확인하고 유효 숫자 변경·캐시 산술·이력·재열기까지 검사했습니다. 따라서 같은1,278개 plain 대상의 실제 쓰기는 일반 텍스트1,230과 유효 숫자48로 구분합니다.
 
 원본/WASM/oracle/감사 소스 해시를 기록하며 종료 후 그대로인지 검사합니다. oracle SHA256은f947fab274ec6a83822c0dc37c9ca03cb29d5470401ba87b5f7f968c895fa7c0, 감사 소스는dab46a704d3c58487fc3d3735fe4e276c82deeafb46587ae0940a1e1e5bc9387입니다. 게시 `tools/hwpx-plain-fixture-audit.mjs`의 바이트도 이 소스 해시와 같습니다. 실제1,230개는 Python 일반/-O의 전체 XML·비대상 ZIP payload 비교와 각 입력의 원문 undo→저장 redo→원문 undo를 모두 통과했습니다.48거부는 예외/원문/revision·이전의 대기 redo 보존을 검사했습니다. 새 문서를 reopen한 검사는 이 감사에 포함되지 않습니다.
 

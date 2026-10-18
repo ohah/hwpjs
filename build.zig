@@ -186,6 +186,7 @@ pub fn build(b: *std.Build) void {
     hwpx_text_tests.addArg("tests/hwpx/memo-label.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/title-field-prefix.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/plain-prefix-empty-run.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/chart-numeric-input-corpus.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/oracle-process-async.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/plain-fixture-audit-arguments.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/title-field-canvas.test.mjs");
