@@ -1,5 +1,13 @@
 # 수식 결과 입력의 참조 감사
 
+## 외부 BinData 참조 원본의 수동 결과 5곳
+
+고정44파일 감사의 `issue1891_external_bindata_link.hwpx`는2,864문단 중 일반2,681/전용163입력과 비숫자15·일반 필드 라벨5거부를 기록했습니다. 독립 원문에서 결과5곳은 문단2740–2744의 SUM이며, 문자 prefix 거부를 수동 결과 미지원으로 해석하지 않습니다. 숫자15곳의 독립 산술·전체 XML 저장은 [병합 SUM 입력 검증](hwpx-chart-numeric-input-corpus.md)이 소유합니다.
+
+기존 수동 결과 감사 회귀 목록에 같은 원본/분모5를 추가했습니다. 별도 oracle이나 제품 코드 변경 없이5개 전체를 원본에서 독립 관측하고 native 소유권 조회·Unicode/XML prefix·독립 normal/-O 전체 XML/ZIP·source formula cache 불변·표시 재열기·undo/redo/undo 저장 바이트와 원본/후보 불변을 검사합니다. 원본 SHA256은 `ce9f7275b9c84e4f032c218b9b6f94cf53c24f6e91fba30be7fd55b17acee924`입니다.
+
+작업 트리 f4e0f396a3fea6e6354b364ff176e31d72ed00ec643fa566c4abbd8bc2f58d77 후보의 집중1/1·fail/cancel/skip0·exit0(17487ms)을 확인했습니다.201af066에 이 테스트 목록 변경만 적용한 tree `bd1e22478c3caf2e70fe44627bd21137475a4186`의 `/tmp/hwpjs-manual-five-clean.WkPNe7`에서도 같은 후보·Node24.20.0으로 집중1/1·fail/cancel/skip0·exit0·stderr0(17447ms)입니다. `manual-five-tests.log/.stderr`가 근거입니다. 단위 테스트5개나 원래 prefix 감사20거부의 소급 통과가 아니며 전체 명령/Canvas/브라우저/조판·기본 WASM 승격 완료와 구분합니다.
+
 ## 과거 실패 원본의 결과 입력 경로 재확인
 
 Zig0.17 동결44개 재검사의 `hwpx/143E433F503322BD33.hwpx`는 일반/전용 prefix에서35문단 검증·15거부였습니다. 그중3곳의 `UnsupportedFieldLabelRange`는 일반 필드 라벨 명령의 거부이며, 수동 수식 결과 경로까지 미지원이라는 뜻은 아닙니다. 같은 원본의 모든 수식3곳을 기존 수동 결과 감사로 검사하는 항목을 `manual-result-corpus-audit.test.mjs`에 추가했습니다. 별도 inventory/저장 oracle을 만들거나 기존 prefix 결과를 통과로 수정하지 않습니다.
