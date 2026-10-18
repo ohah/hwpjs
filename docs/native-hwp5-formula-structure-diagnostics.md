@@ -1,5 +1,7 @@
 # HWP5 계산 필드 구조 거래 실패 주입 진단
 
+후속 공개 apply/save 거래의 별도 진단은 [수식 session 실패 관측](native-hwp5-formula-session-diagnostics.md)이 소유합니다.
+
 ## 원래 바이너리의 중단
 
 고정 전체 바이너리51fabff6dc936cb200e48d9f4b6f25f69760f2b26f401a751389736a76ef2d1c의3501 본문 split 중단은 [앞 구간 기록](native-prefix-coverage-current.md)을 따릅니다. 별도3502..4111 실행도 첫 본문 merge에서 peak4,351,987,264바이트가4,096MiB 한도를 넘어 exit1·guardStopped=true로 종료됐습니다(`/tmp/hwpjs-title-group-native.6U4qUw/native-tail-after-hwp5-formula-split.jsonl/.stderr`). 이 범위의 완료 테스트는0개이며 child68774 종료를 확인했습니다.
