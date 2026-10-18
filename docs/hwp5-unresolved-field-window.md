@@ -16,6 +16,8 @@ hwp5-field-window-topology는 오류/ABI 선택만, hwp5-unresolved-field-depend
 
 ## 실제 문서와 반례
 
+앞선 Git inventory 설정 오류를 보완한 전체 편집 재실행은469/469·실패/취소/건너뜀0·빌드7/7단계 성공으로 종료됐습니다(window-editor-full.log, 673226.562666ms). 이 실행은 공개 marker API/읽기 전용 구간/UI 연결과8e087670 native 후보의 결과입니다. 뒤에 추가하는 보호 계획/입력 거래 변경이나 전체 native·원본 조판 완료의 증거로 사용하지 않습니다.
+
 앞선7c38bc1b 소스의 전체 편집 실행은456개 중455개 성공·1개 실패로 종료됐습니다(topology-editor-full.log). 유일한 실패는 table-content 테스트가 격리 소스에서 Git inventory를 조회할 때 .git을 찾지 못한 설정 오류였습니다. 제품 성공으로 합산하지 않았습니다. 명시적 GIT_DIR/GIT_WORK_TREE/별도 GIT_INDEX_FILE로 재실행한 해당 파일은3/3·skip0입니다(table-content-corrected.log). 최신 전체 묶음의 완료 판정은 별도입니다.
 
 원본 issue1921/59043_regulatory_analysis.hwp의 구역0/문단52를 조회했습니다. 28개의 닫힌 marker 쌍과 리스트236의 미닫힘1개를 진단하며, 창은 요청1문단+소유 context6문단을 반환합니다. Worker의 활성화 전 query/edit-query 분리, 세션 시작 후 구간 활성화, 강제 splice 거부, revision/undo 목록·원본/저장 불변을 확인했습니다. 합성 검사는 외부 리스트 제외·동일 소속 반복 처리1회·context 비선택·읽기 전용·예산 초과·위조 소속/위치·알 수 없는 오류와 빈 fallback 거부를 포함합니다.

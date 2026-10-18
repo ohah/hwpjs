@@ -14,6 +14,7 @@
 
 - [원본 입력 적격성의 UI 전달](hwp5-text-source-eligibility.md)
 - [짝 불명 필드의 읽기 전용 구간 표시](hwp5-unresolved-field-window.md)
+- [미닫힘 누름틀 필드의 원본 보존 계획](hwp5-click-field-retention.md)
 
 - [표 번호 참조 문서의 글자 서식 보존](hwp5-table-number-format-retention.md)
 

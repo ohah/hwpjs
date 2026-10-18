@@ -2,7 +2,7 @@
 const std = @import("std");
 const model = @import("../../model/document.zig");
 const spans = @import("local_field_spans.zig");
-const body = @import("../body/reader.zig");
+const headers = @import("field_header_source.zig");
 const start = @import("../body/field_start.zig");
 pub const Binding = struct {
     span: spans.Span,
@@ -35,14 +35,7 @@ fn collectWithPolicy(a: std.mem.Allocator, source: []const u8, version: @import(
             continue;
         }
         const owner = try paragraph.originalNode();
-        var actual: usize = 0;
-        var child: usize = @as(usize, owner) + 1;
-        while (child < tree.nodes[owner].subtree_end) : (child = tree.nodes[child].subtree_end) {
-            const node = tree.nodes[child];
-            if (node.parent != owner) return error.SourceBindingMismatch;
-            if (node.record.framing.tag != @intFromEnum(body.Tag.control_header)) continue;
-            if (start.supports((try body.ControlHeader.parse(node.record.framing.payload)).id)) actual += 1;
-        }
+        const actual = try headers.count(tree, owner);
         if (actual != expected) return error.SourceBindingMismatch;
     }
     const result = try a.alloc(Binding, found.len);
@@ -52,33 +45,10 @@ fn collectWithPolicy(a: std.mem.Allocator, source: []const u8, version: @import(
     for (found, result) |span, *binding| {
         const paragraph = section.paragraphs[span.begin.paragraph];
         const owner = try paragraph.originalNode();
-        if (owner >= tree.nodes.len) return error.SourceBindingMismatch;
-        var ordinal: usize = 0;
-        var selected: ?usize = null;
-        var child: usize = @as(usize, owner) + 1;
-        while (child < tree.nodes[owner].subtree_end) : (child = tree.nodes[child].subtree_end) {
-            const node = tree.nodes[child];
-            if (node.parent != owner) return error.SourceBindingMismatch;
-            if (node.record.framing.tag != @intFromEnum(body.Tag.control_header)) continue;
-            const header = try body.ControlHeader.parse(node.record.framing.payload);
-            if (!start.supports(header.id)) continue;
-            if (ordinal == span.ordinal) {
-                if (header.id != span.field_id) {
-                    if (!readable) return error.FieldMarkerMismatch;
-                    _ = @import("../body/control_identity.zig").resolve(span.field_id, header.id, 3, header.properties) catch |err| switch (err) {
-                        error.ControlIdMismatch => return error.FieldMarkerMismatch,
-                        else => return err,
-                    };
-                }
-                selected = child;
-            }
-            ordinal += 1;
-        }
-        const index = selected orelse return error.SourceBindingMismatch;
-        const entry = try seen.getOrPut(a, index);
+        const header = try headers.read(tree, owner, span.ordinal, span.field_id, readable);
+        const entry = try seen.getOrPut(a, header.source_node);
         if (entry.found_existing) return error.SourceBindingMismatch;
-        const header = try body.ControlHeader.parse(tree.nodes[index].record.framing.payload);
-        binding.* = .{ .span = span, .source_node = std.math.cast(u32, index) orelse return error.LimitExceeded, .properties = try start.Properties.parse(header.properties) };
+        binding.* = .{ .span = span, .source_node = header.source_node, .properties = header.properties };
     }
     return result;
 }
