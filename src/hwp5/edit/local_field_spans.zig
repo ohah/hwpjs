@@ -7,6 +7,40 @@ const controls = @import("../body/control_rules.zig");
 const Text = @import("../body/text.zig").Text;
 pub const Position = struct { paragraph: usize, unit: u32 };
 pub const Span = struct { begin: Position, end: Position, ordinal: usize, field_id: u32 = 0 };
+pub const Unresolved = struct {
+    kind: enum { unclosed_start, orphan_end },
+    /// For starts, the first content unit after the eight-unit marker.
+    position: Position,
+    marker_id: u32,
+    ordinal: ?usize,
+    list_node: ?usize,
+};
+pub const Report = struct {
+    spans: []Span,
+    unresolved: []Unresolved,
+
+    pub fn deinit(self: *Report, a: std.mem.Allocator) void {
+        a.free(self.spans);
+        a.free(self.unresolved);
+        self.* = undefined;
+    }
+};
+
+/// Diagnostic only: never invent an end position for an unclosed field.
+/// Strict collectors and field transactions continue to reject unresolved markers.
+pub fn inspectReadableBound(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version, section: model.Section) !Report {
+    var unresolved: std.ArrayList(Unresolved) = .empty;
+    defer unresolved.deinit(a);
+    const spans = try boundScan(a, source, version, section, 0, true, &unresolved);
+    errdefer a.free(spans);
+    std.mem.sort(Unresolved, unresolved.items, {}, struct {
+        fn less(_: void, lhs: Unresolved, rhs: Unresolved) bool {
+            return lhs.position.paragraph < rhs.position.paragraph or
+                (lhs.position.paragraph == rhs.position.paragraph and lhs.position.unit < rhs.position.unit);
+        }
+    }.less);
+    return .{ .spans = spans, .unresolved = try unresolved.toOwnedSlice(a) };
+}
 
 pub fn supportsMixedEditableKind(id: u32) bool {
     return id == controls.id("%hlk") or id == controls.id("%clk") or id == controls.id("%bmk") or id == controls.id("%xrf") or id == controls.id("%fmu");
@@ -40,6 +74,10 @@ fn boundWithKind(a: std.mem.Allocator, source: []const u8, version: @import("../
 }
 
 fn boundWithPolicy(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version, section: model.Section, id: u32, readable: bool) ![]Span {
+    return boundScan(a, source, version, section, id, readable, null);
+}
+
+fn boundScan(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version, section: model.Section, id: u32, readable: bool, unresolved: ?*std.ArrayList(Unresolved)) ![]Span {
     var tree = try @import("../body/tree.zig").Tree.parseTextPreview(a, source, version, .{});
     defer tree.deinit(a);
     const ownership = @import("paragraph_owner.zig");
@@ -54,7 +92,7 @@ fn boundWithPolicy(a: std.mem.Allocator, source: []const u8, version: @import(".
         if (tree.nodes[node].parent != parent) return error.SourceBindingMismatch;
         owners[index] = try ownership.logicalOwner(tree, groups, node);
     }
-    return collectWithPolicy(a, section, id, owners, readable);
+    return scanWithPolicy(a, section, id, owners, readable, unresolved);
 }
 
 fn collectWithOwners(a: std.mem.Allocator, section: model.Section, id: u32, owners: ?[]const ?usize) ![]Span {
@@ -62,6 +100,10 @@ fn collectWithOwners(a: std.mem.Allocator, section: model.Section, id: u32, owne
 }
 
 fn collectWithPolicy(a: std.mem.Allocator, section: model.Section, id: u32, owners: ?[]const ?usize, readable: bool) ![]Span {
+    return scanWithPolicy(a, section, id, owners, readable, null);
+}
+
+fn scanWithPolicy(a: std.mem.Allocator, section: model.Section, id: u32, owners: ?[]const ?usize, readable: bool, unresolved: ?*std.ArrayList(Unresolved)) ![]Span {
     if (id != 0 and id != controls.id("%hlk") and id != controls.id("%clk") and id != controls.id("%bmk") and id != controls.id("%xrf")) return error.UnsupportedSectionControl;
     if (owners) |values| if (values.len != section.paragraphs.len) return error.SourceBindingMismatch;
     const Open = struct { begin: Position, ordinal: usize, id: u32 };
@@ -98,8 +140,12 @@ fn collectWithPolicy(a: std.mem.Allocator, section: model.Section, id: u32, owne
                 ordinal += 1;
                 state.depth += 1;
             } else if (c.code == 4) {
-                if (state.depth == 0) return error.UnsupportedCrossParagraphField;
                 const end_id = std.mem.readInt(u32, c.data[0..4], .little);
+                if (state.depth == 0) {
+                    const report = unresolved orelse return error.UnsupportedCrossParagraphField;
+                    try report.append(a, .{ .kind = .orphan_end, .position = .{ .paragraph = pi, .unit = token.start_unit }, .marker_id = end_id, .ordinal = null, .list_node = if (owners) |values| values[pi] else null });
+                    continue;
+                }
                 if (!@import("../body/field_end_identity.zig").matches(state.stack[state.depth - 1].id, end_id)) return error.FieldMarkerMismatch;
                 state.depth -= 1;
                 try out.append(a, .{ .begin = state.stack[state.depth].begin, .end = .{ .paragraph = pi, .unit = token.start_unit }, .ordinal = state.stack[state.depth].ordinal, .field_id = state.stack[state.depth].id });
@@ -107,8 +153,19 @@ fn collectWithPolicy(a: std.mem.Allocator, section: model.Section, id: u32, owne
         }
     }
     if (unbound.depth != 0) return error.UnsupportedCrossParagraphField;
-    var states = streams.valueIterator();
-    while (states.next()) |state| if (state.depth != 0) return error.UnsupportedCrossParagraphField;
+    var states = streams.iterator();
+    while (states.next()) |entry| {
+        const state = entry.value_ptr;
+        if (state.depth == 0) continue;
+        const report = unresolved orelse return error.UnsupportedCrossParagraphField;
+        for (state.stack[0..state.depth]) |open| try report.append(a, .{
+            .kind = .unclosed_start,
+            .position = open.begin,
+            .marker_id = open.id,
+            .ordinal = open.ordinal,
+            .list_node = if (entry.key_ptr.* == std.math.maxInt(usize)) null else entry.key_ptr.*,
+        });
+    }
     return out.toOwnedSlice(a);
 }
 

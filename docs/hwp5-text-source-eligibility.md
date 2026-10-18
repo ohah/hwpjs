@@ -1,5 +1,15 @@
 # HWP5 원본 입력 적격성의 UI 전달
 
+## 짝 불명 표식의 native 진단
+
+`local_field_spans.inspectReadableBound`는 기존 scanner와 원본 논리 리스트 소속 검사를 재사용해 `Report{spans, unresolved}`를 반환합니다. 닫힌 marker 쌍만 spans에 넣고 짝 불명 표식은 `unclosed_start`/`orphan_end`로 분리합니다. 시작의 position은 8유닛 표식 바로 뒤, 종료의 position은 종료 표식 시작입니다. `marker_id`는 해당 표식의 원시 ID이며 고아 종료의 ID를 가상 시작 ID로 바꾸지 않습니다. ordinal은 시작만 가지며 list_node는 실제 원본 리스트 노드 또는 루트의 null입니다. 진단은 문단/UTF-16 위치순으로 반환합니다. 호출자가 두 소유 배열을 `Report.deinit`으로 해제합니다.
+
+미지 시작 종류·짝 ID 불일치·원본 바인딩 오류·중첩 상한·OOM은 진단 모드에서도 오류입니다. 기존 strict collector는 동일 scanner에 진단 수집 없이 진입하므로 미닫힘/고아 표식을 계속 거부합니다. 이 보고서는 **marker 토폴로지 진단**이며 CTRL_HEADER 속성 바인딩·명령 평가·편집 허가를 인증하지 않습니다. 종료 위치를 만들거나 원문을 고치지 않습니다. 아직 JS/WASM 공개 진단 API·Canvas·복구/편집 거래에 연결하지 않았습니다.
+
+`field_topology_tests.zig`에 별도 테스트를 두고 기존 scanner 테스트와 함께 root에 명시적으로 등록했습니다. 실제 원본에서 닫힌28범위와 문단52/위치8/리스트236의 미닫힘1개를 확인했습니다. 합성 고아 종료·미닫힘 동시 존재/정렬, 전체 부분 할당 실패와 해제, 잘못된 ID·미지 시작·위조 source node·33중첩 반례도 검사합니다. 분리 게시 소스의 ReleaseSafe/Debug는 각각12/12·skip0입니다. 초기 실파일 읽기 한도 부족과 디스크 공간 부족으로 실패한 실행은 성공에 포함하지 않았습니다.
+
+ReleaseSafe 제품 빌드는5/5단계 성공, 후보 SHA-256은 `7c38bc1bb2df912024b09619d2cd6d889ab472a04fe20a3edc4e6063fe7276dd`입니다. 이 후보의 기존 API/Worker 정책·필드 wire/ABI/원본 oracle·구간 의존성 집중8파일은18/18·실패/취소/건너뜀0입니다. 로그는 `/tmp/hwpjs-browser-policy-fault.wHp4QV/topology-native-safe.log`·`topology-native-debug.log`·`topology-build-safe.log`·`topology-js-focused.log`입니다. 전체 최신 native/편집 묶음·브라우저·기본 데모 승격이나 해당 문서의 편집 완료 결과는 아닙니다.
+
 ## 실제 종료 표식 부재의 구분
 
 `reference/rhwp/samples/issue1921/59043_regulatory_analysis.hwp`는 기본 편집 세션 열기와 원문 조회는 가능하지만 원본 텍스트 정책은 `UnsupportedCrossParagraphField`입니다. 독립 CFB.js·Node 압축 해제·레코드 관측에서 Section0의1531문단에 필드 시작29개·종료28개를 확인했습니다. 논리 리스트별 독립 관측에서는 문단52/UTF-16위치0의 `%clk` 시작(레코드238, 소유 컨트롤220/리스트236)이 닫히지 않았습니다. 단순히 문단 경계 통과를 금지한 것으로 단정하거나 문서 전체가 손상됐다고 판정하지 않습니다. 닫는 위치를 임의로 추정하지 않는 현재 엄격 편집 정책의 제한입니다.
