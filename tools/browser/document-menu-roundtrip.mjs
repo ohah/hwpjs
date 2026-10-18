@@ -28,6 +28,7 @@ export async function runDocumentMenuBrowserAudit(caseName) {
   const hash = bytes => createHash("sha256").update(bytes).digest("hex");
   const sourcePaths = ["web/preview/index.html","web/preview/preview.css","web/preview/app.mjs","web/preview/document-menu-controls.mjs","web/preview/document-menu-mnemonic.mjs","web/preview/document-ribbon-controls.mjs","web/preview/document-ribbon-pages.mjs","web/preview/fixture-controls.mjs","web/preview/fixture-catalog.mjs","web/preview/fixture-inventory.mjs","tools/browser/ribbon-page.mjs","tools/document-menu-browser-audit.mjs","tools/unknown-object-browser-audit.mjs","tools/browser/document-menu-roundtrip.mjs","tools/browser/document-menu-cases.mjs","tools/hwpx-anchor-prefix-oracle.py",...(oraclePath==="tools/hwpx-anchor-prefix-oracle.py"?[]:[oraclePath])];
   if(config.entryPath)sourcePaths.push(config.entryPath);
+  sourcePaths.push("web/preview/document-menu-keyboard.mjs");
   const sourceHashes = () => Object.fromEntries(sourcePaths.map(path=>[path,hash(readFileSync(resolve(path)))]));
   const sourceSha256 = sourceHashes();
   const session = cli("agent-browser", ["session","id","--scope","worktree","--prefix",config.sessionPrefix], {cwd:root,encoding:"utf8",timeout:10000}).trim();
@@ -88,6 +89,16 @@ export async function runDocumentMenuBrowserAudit(caseName) {
     assert.equal(evaluate(`document.querySelector(${JSON.stringify(popup("menu-properties"))}).open`),false);
     command("press","p");assert.equal(evaluate('document.querySelector("#inspector-toggle").getAttribute("aria-expanded")'),"true","ClosedMenuMustNotDispatch");
     menuKey("menu-properties","p");assert.equal(evaluate('document.querySelector("#inspector-toggle").getAttribute("aria-expanded")'),"false");
+    click(`${popup("menu-properties")} > summary`);
+    const barOrigin=evaluate(`Array.from(document.querySelectorAll('.document-menu details')).indexOf(document.querySelector(${JSON.stringify(popup("menu-properties"))}))`);
+    for(const [key,delta] of [["ArrowRight",1],["ArrowLeft",0]]){
+      command("press",key);
+      const state=evaluate("Array.from(document.querySelectorAll('.document-menu details')).map(p=>({open:p.open,focused:p.querySelector('summary')===document.activeElement}))");
+      const expected=(barOrigin+delta)%state.length;
+      assert.deepEqual(state.map(row=>row.open),state.map((_,index)=>index===expected));
+      assert.deepEqual(state.map(row=>row.focused),state.map((_,index)=>index===expected));
+    }
+    command("press","Escape");assert.equal(evaluate(`document.querySelector(${JSON.stringify(popup("menu-properties"))}).open`),false);
     menuKey("menu-undo","u");assert.equal(evaluate('document.querySelector("#menu-undo").disabled'),true);
     assert.equal(evaluate('window.__menuAudit.length'),0);command("press","Escape");
     menuKey("menu-save","s");assert.equal(evaluate('document.querySelector("#menu-save").disabled'),true);

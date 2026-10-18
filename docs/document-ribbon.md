@@ -1,5 +1,15 @@
 # 문서 도구 탭
 
+## 메뉴 막대 좌·우 키 이동
+
+메뉴 막대의 기존 키보드는 단일 popup 안의 위/아래·Home/End와 Escape만 처리했습니다. 좌/우 키의 제어기 회귀를 먼저 추가해 defaultPrevented=false로 실패하는 것을 재현했습니다. `document-menu-keyboard.mjs`의 `navigateDocumentMenuBar`가 메뉴 간 순환 포커스/열림 상태만 소유하고, 제어기는 기존 popup layer를 갱신한 뒤 요약에 포커스를 줍니다. 명령 실행·native 편집·WASM은 변경하지 않습니다.
+
+닫힌 요약에서 좌/우는 다른 요약으로 포커스만 이동하며 메뉴를 열지 않습니다. 열린 메뉴에서는 이전 메뉴를 닫고 옆 메뉴를 열며 처음/끝을 순환합니다. IME/229·소비된 이벤트·수정키/Shift를 가로채지 않고 close 뒤에는 동작하지 않습니다. `details.open`이 계속 단일 상태 원본이며 별도 활성 메뉴 인덱스를 저장하지 않습니다.
+
+메뉴 키보드·제어기·mnemonic·disclosure·popup layer 다섯 파일19/19·fail/cancel/skip0·exit0입니다. 실제 작업 트리의 명시적 Zig0.17 후보 `f4e0f396a3fea6e6354b364ff176e31d72ed00ec643fa566c4abbd8bc2f58d77`에서도 `/tmp/hwpjs-zig017-current-fixtures.xouwd1/menu-horizontal-browser.jsonl/.stderr`가 exit0·stderr0·verified=true·cleanup.success=true입니다. agent-browser 스킬의 격리/실제 키 입력/종료 확인을 사용했습니다. 실제 열린 메뉴의 오른쪽/왼쪽 이동·유일한 열림/포커스·Escape 뒤 기존 픽스쳐 선택·입력·메뉴 U/R/S·독립 XML/ZIP·재업로드를 확인했습니다. 모든 RHWP 메뉴/명령 동치 완료는 아닙니다.
+
+커밋 후보 트리 `3d0122a81d37cab2a9f79d1d70f10236710b93a5`를 `/tmp/hwpjs-menu-horizontal-clean.MsLPHp`로 추출하고 게시 소스 Zig0.17 WASM `afb7fdfbbc8a9c9cc45a7cdb98ade6be7a6a88b1943e1c5354c63d6715b9e05e`로도 집중19/19·실제 브라우저 wrapper exit0·stderr0·verified=true·cleanup.success=true입니다. 키보드 helper 자체도 브라우저 실행 전후 해시 감사에 포함했습니다. 두 소유 세션은 종료 후 active=false·pid=null을 확인하며 기본 WASM/데모 서버는 교체하지 않습니다.
+
 [픽스쳐 요청 수명](fixture-request-lifetime.md)은 픽스쳐/로컬 파일 전환 시 취소와 기존 generation 보호의 책임을 구분합니다. 일반 실제 웹 왕복은 지연 본문을 취소한 뒤 picker 편집/저장까지 검사합니다.
 
 ## 책임과 상태

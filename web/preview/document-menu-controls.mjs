@@ -1,7 +1,7 @@
 // Menu entries delegate to existing controls; they never own native commands.
 import { createMenuDisclosures } from "./document-menu-disclosures.mjs";
 import { createMenuPopupLayer } from "./document-menu-popup-layer.mjs";
-import { navigateDocumentMenu } from "./document-menu-keyboard.mjs";
+import { navigateDocumentMenu, navigateDocumentMenuBar } from "./document-menu-keyboard.mjs";
 import { documentMenuMnemonic } from "./document-menu-mnemonic.mjs";
 export function createDocumentMenuControls(entries) {
   let closed = false;
@@ -51,6 +51,7 @@ export function createDocumentMenuControls(entries) {
       if (closed) return;
       refresh();
       if (closed) return;
+      if (navigateDocumentMenuBar(event, popups, () => popupLayer.refresh())) return;
       const buttons = entries.filter(({ button, target }) => button.closest?.("details") === popup && !button.disabled && !disabled(target)).map(({ button }) => button);
       if (navigateDocumentMenu(event, popup, buttons, () => { popup.open = true; popupLayer.refresh(); })) return;
       const mnemonic = documentMenuMnemonic(event, popup, buttons);

@@ -3,6 +3,32 @@ import assert from "node:assert/strict";
 import { navigateDocumentMenu } from "../../web/preview/document-menu-keyboard.mjs";
 import { createDocumentMenuControls } from "../../web/preview/document-menu-controls.mjs";
 
+test("menu bar arrows move between summaries and preserve open or closed intent", () => {
+  const focused = [];
+  const popups = [0, 1, 2].map(index => {
+    const summary = { focus: () => focused.push(index) };
+    return Object.assign(new EventTarget(), { open: false, querySelector: selector => selector === "summary" ? summary : null });
+  });
+  const buttons = popups.map(popup => Object.assign(new EventTarget(), { closest: () => popup }));
+  const controls = createDocumentMenuControls(buttons.map(button => ({ button, target: { disabled: false, click() { throw Error("UnexpectedCommand"); } } })));
+  const key = (index, key, extra = {}) => {
+    const event = Object.assign(new Event("keydown", { cancelable: true }), { key, ...extra });
+    Object.defineProperty(event, "target", { value: popups[index].querySelector("summary") });
+    popups[index].dispatchEvent(event); return event;
+  };
+  assert.equal(key(0, "ArrowRight").defaultPrevented, true);
+  assert.deepEqual(focused, [1]); assert(popups.every(popup => !popup.open));
+  popups[1].open = true;
+  assert.equal(key(1, "ArrowLeft").defaultPrevented, true);
+  assert.deepEqual(focused, [1, 0]); assert.deepEqual(popups.map(popup => popup.open), [true, false, false]);
+  assert.equal(key(0, "ArrowLeft").defaultPrevented, true);
+  assert.deepEqual(focused, [1, 0, 2]); assert.deepEqual(popups.map(popup => popup.open), [false, false, true]);
+  for (const extra of [{ shiftKey: true }, { ctrlKey: true }, { altKey: true }, { metaKey: true }, { isComposing: true }, { keyCode: 229 }]) assert.equal(key(2, "ArrowRight", extra).defaultPrevented, false);
+  controls.close();
+  assert.equal(key(2, "ArrowRight").defaultPrevented, false);
+  assert.deepEqual(focused, [1, 0, 2]);
+});
+
 test("menu focus navigation opens at edges and wraps without issuing commands", () => {
   const summary = {}, focused = [], buttons = [0, 1, 2].map(index => ({ focus: () => focused.push(index) }));
   const popup = { open: false, querySelector: () => summary };
