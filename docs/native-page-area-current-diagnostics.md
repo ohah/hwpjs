@@ -20,7 +20,15 @@ ec174d05 게시 src와 diff --quiet 일치하는 수정 소스에서 전체 nati
 
 반영된5fee5965 게시 src와 git diff --quiet가 일치하는 별도 소스에서 전체 native 바이너리를 compile exit0으로 빌드했습니다(`native-full-build.log`, `/tmp/hwpjs-page-history-diagnostic.0szIEF`). SHA-256은26723ae6af5aedc3285bbd7e489967ee4977cd22c4951c1700d0e1831bfd2ef2, inventory는4,109개입니다. `native-current-inventory.jsonl`은 root0..1의1개만 통과한 연결 검사이며 전체 결과가 아닙니다.
 
-후속 문제를 먼저 찾기 위해 같은 새 바이너리의3340..4109 범위를 batch1·4,096MiB·expected hash 고정 guardian으로 실행 중입니다(`native-tail-guard.jsonl/.stderr`). 이 범위는 반영된 지연 설치/ordered XML/History 테스트와 그 이후를 포함합니다. 이전4,103개 binary의 결과나 다른 집중 바이너리의 통과를 새 소스의 전수 성공으로 옮기지 않습니다. 새 바이너리의 나머지 범위 검증도 아직 필요합니다.
+후속 문제를 먼저 찾기 위해 같은 새 바이너리의3340..4109 범위를 batch1·4,096MiB·expected hash 고정 guardian으로 검사했습니다(`native-tail-guard.jsonl/.stderr`). 3340..3355의16개는 fail/log/leak0으로 완료됐고 이전 지연 설치/ordered XML/History 중단 대상도3349/3350/3351에서 status0입니다. 다음3356 `mixed original source merge candidate saves prior nested edits and leaves source unchanged`의 peak4,356,935,136바이트가 한도를 넘어 guardian이 중단했습니다. exit1·guardStopped=true이며 child6937 종료를 확인했습니다. 다른 binary 결과와 합산하지 않으며 나머지 범위는 아직 미완료입니다.
+
+## 원본 혼합 병합 후보의 전체 실패 주입
+
+이 대상은 `column_page_area_source_merge.zig`에서 실제 headerfooter.hwpx의 선행 머리/꼬리 텍스트 편집을 준비하고 병합 후보 XML·원문 불변을 검사합니다. 작업 트리에 이미 있던 std.testing.checkAllAllocationFailures 호출1개를 공통 allocation_failures.check로 바꾸는 한 줄만 검증 후 채택했습니다. 제품 함수·callback·입력·단언·전체 실패 지점을 바꾸지 않았으며 한도를 올리지 않았습니다.
+
+별도 e505ed43 기반 소스 `/tmp/hwpjs-mixed-source-diagnostic.9FaNfr`의 ReleaseSafe97bd032e1e921228e6aab9c68137b5e76353986b2c1c5fd2aa3067ae9c373c02는2/2·fail/skip/log/leak0·exit0·guardStopped=false·peak33,341,800바이트입니다(`mixed-ReleaseSafe-guard.jsonl`). Debugdd9cf46bb05d7dc427c4051a4b9be2e4c6db5b61a3c99756a0701853f8a0521a도2/2·같은 오류/누수0·exit0·guardStopped=false·peak10,535,248바이트입니다(`mixed-Debug-guard.jsonl`). root1개+assertion1개이며 기존16개 범위 결과와 합산하지 않습니다. 전체 native gate 완료나 제품 메모리 절감의 증거가 아닙니다.
+
+쪽 영역 History의 추가 redo 실패 coverage는 [전용 검증](hwpx-history-redo-failure.md)을 따릅니다. 위26723ae6 바이너리는 그 보강 전 테스트 소스이므로 새 coverage를 검증했다고 읽지 않습니다.
 
 5837cd37 전수의 다음3338 page area ordered pieces preserve alternating source run styles and single declarations에서 물리 peak4,298,231,168바이트가 기준4,294,967,296바이트를 넘어 guardian이 종료했습니다. 기존 guardian/batch/child 종료를 확인했습니다. source의 std.testing.checkAllAllocationFailures(std.testing.allocator, ...) 다섯 호출은 검증/쪽 영역 XML/문단 XML/두 병합 경계를 검사합니다. 제품 함수·callback·입력·단언·전체 실패 지점은 바꾸지 않고 기존 testing/allocation_failures.check로 모두 전환했습니다. 작업 트리에 이미 있던 정확히5줄 전환을 분리 소스에서 검증 후 채택했으며 새 작성으로 주장하지 않습니다.
 

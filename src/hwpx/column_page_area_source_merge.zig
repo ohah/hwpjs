@@ -195,7 +195,7 @@ test "mixed original source merge candidate saves prior nested edits and leaves 
     try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, output, "꼬리&lt;&amp;"));
     try std.testing.expect(original.paragraphs[0].pieces == null);
     try std.testing.expect(original.paragraphs[1].page_area_positions == null);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, tree: *const Tree, before: *const model.Values, site_options: @import("text_sites.zig").Options, expected: []const u8) !void {
             var candidate = prepare(allocator, tree, before, 0, 1, 4000000) catch |err| {
                 try std.testing.expectEqual(@as(usize, 4), before.paragraphs.len);
