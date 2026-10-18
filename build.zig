@@ -173,8 +173,16 @@ pub fn build(b: *std.Build) void {
     ownership_parity.has_side_effects = true;
     const ownership_parity_step = b.step("hwp5-ownership-query-parity", "Compare HWP5 ownership queries against an explicit baseline WASM");
     ownership_parity_step.dependOn(&ownership_parity.step);
+    const formula_query_parity = b.addSystemCommand(&.{ "node", "--test", "--test-concurrency=1", "tests/hwpx/formula-result-worker-parity.test.mjs" });
+    formula_query_parity.setEnvironmentVariable("HWPJS_TEST_WASM", b.getInstallPath(.bin, "hwpjs.wasm"));
+    formula_query_parity.step.dependOn(b.getInstallStep());
+    formula_query_parity.has_side_effects = true;
+    const formula_query_parity_step = b.step("hwpx-formula-query-parity", "Compare HWPX display queries against an explicit baseline WASM");
+    formula_query_parity_step.dependOn(&formula_query_parity.step);
     const hwpx_text_tests = b.addSystemCommand(&.{ "node", "--test", "tests/hwpx/text-reader.test.mjs", "tests/hwpx/canvas-preview.test.mjs", "tests/hwpx/editor.test.mjs", "tests/hwpx/formula-editor.test.mjs", "tests/hwpx/note-editor.test.mjs", "tests/hwpx/anchor-editor.test.mjs", "tests/hwpx/header-footer-editor.test.mjs", "tests/hwpx/object-boundary-editor.test.mjs", "tests/hwpx/history-editor.test.mjs" });
     hwpx_text_tests.addArg("tests/hwpx/created-cell-xml.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/formula-result-paragraphs.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/formula-result-paragraph-api.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/memo-label.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/memo-label-canvas.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/field-query-publication.test.mjs");

@@ -2,6 +2,7 @@ import { decodeCharacterFontMetrics } from "./character-font-metrics.mjs";
 import { createMemory } from "./wasm-memory.mjs";
 import { decodeChartSeriesText } from "./hwpx-chart-series-text.mjs";
 import { decodeFieldTargets } from "./hwpx-field-target-wire.mjs";
+import { decodeFormulaResultParagraphs } from "./formula-result-paragraphs.mjs";
 import { decodePictureOwners } from "./hwpx-picture-owners.mjs";
 import { decodeInlineStringSources } from "./hwpx-inline-string-sources.mjs";
 import { dutmalKind } from "./hwpx-dutmal-kind.mjs";
@@ -1261,6 +1262,14 @@ export async function createHwpxEditor(source) {
       });
     },
     fieldLabels,
+    manualFormulaResultParagraphs(section) {
+      ready(); uint(section);
+      if (typeof wasm.hwpx_edit_manual_formula_result_paragraphs !== "function") throw new Error("HwpxManualFormulaResultParagraphAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_manual_formula_result_paragraphs(section)) throw memory.error();
+        return decodeFormulaResultParagraphs(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
     fieldRangeTarget(section, paragraph, start, end) {
       ready(); [section, paragraph, start, end].forEach(uint);
       if (end < start) throw new Error("InvalidTextPosition");

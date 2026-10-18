@@ -12,6 +12,7 @@ pub const text = @import("text/root.zig");
 pub const model = @import("model/document.zig");
 
 test {
+    _ = @import("hwpx/formula_result_paragraphs.zig");
     _ = @import("hwpx/memo_label_session_tests.zig");
     _ = @import("hwp5/docinfo/section_count_tests.zig");
     _ = @import("hwp5/edit/available_section_copy_tests.zig");
