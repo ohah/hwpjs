@@ -46,6 +46,18 @@ ReleaseSafe 집중 바이너리4414aabe09670b43c5603628164ceaf9b4584206fbb70abae
 
 후속51012899의 src2,634개 전체 Git blob 해시를 대조한 분리 소스는 `/tmp/hwpjs-title-group-native.6U4qUw`입니다. 제목 필드 수정과 위 그룹 진단 변경을 모두 포함하는 새 `native-safe`는 compile exit0이고 SHA256은51fabff6dc936cb200e48d9f4b6f25f69760f2b26f401a751389736a76ef2d1c, inventory는4,111개입니다. 3350..4111 범위의 batch1/4,096MiB/expected hash 고정 guardian을 `native-tail-guard.jsonl/.stderr`에 시작했습니다. 이는 새 빌드·범위 시작의 근거이며 종료 성공·전체4,111개 통과를 뜻하지 않습니다. 서로 다른 기존 binary의 prefix와 합산하지 않습니다.
 
+같은 바이너리의 후속 범위는3350..3374의25개를 fail/log/leak0으로 완료했습니다. 위 그룹 XML 대상도3372에서 status0입니다. 다음3375 `page area group validates actual left right source ownership through failures`에서 peak4,385,361,352바이트가 한도를 넘어 guardian이 exit1·guardStopped=true로 종료했습니다. child80796 종료를 확인했고 전체 gate는 미완료입니다.
+
+같은51fabff6의 별도0..3350 검사는0..646의647개 결과가 fail/log/leak0이지만 로그 쓰기의 ENOSPC로 exit1 종료됐습니다(`native-prefix-guard.jsonl/.stderr`). 이후 batch 측 EPIPE도 기록됐으며 제품 assertion 실패로 분류하지 않습니다. 마지막 완전한 결과 다음647부터 같은 hash/한도/배치로 `native-prefix-resume-guard.jsonl/.stderr`를 시작했습니다. 최초 실행의 미기록647/648 결과를 추정하거나 중복 성공으로 세지 않습니다. 종료 전 재개 범위 전체 통과를 선언하지 않습니다.
+
+## 쪽 영역 그룹 소유권의 네 실패 주입 진단
+
+새3375 대상은 제품 `validate`를 변경하지 않습니다. 작업 트리에 있던 테스트 바깥 수명의 checked_allocator.run과 네 개의 공통 allocation_failures.check 전환을 별도 `/tmp/hwpjs-page-area-group-diagnostic.6oOnNc`에서 검증했습니다. 다른 src2,633개 Git blob이 모두 같고, 이 파일도 바깥 할당자와 네 호출을 치환한 결과와 정확히 같습니다. callback·입력·단언·전체 실패 인덱스를 줄이지 않았고 제품 함수 앞부분 원문도 같습니다.
+
+ReleaseSafe1dbae957f8cb7f3a5b70e45ea499072c2be9138256f1116ac545788c3352efb9는2/2·fail/skip/log/leak0·exit0·guardStopped=false·peak10,256,720바이트입니다(`group-safe-build.log`, `group-safe-guard.jsonl/.stderr`). Debuga45c32645d4d89e4908b571c3bbdeeb35540b434b7739c723f15cbff406cbbd8도2/2·같은 오류0·exit0·guardStopped=false·peak4,931,920바이트입니다(`group-debug-build.log`, `group-debug-guard.jsonl/.stderr`). 각 root1개+실제 assertion1개이며 이전25개/647개와 합산하지 않습니다. 동일4,096MiB 한도이며 제품 메모리 상한이나 전체 native 통과의 증거가 아닙니다. 기존 테스트 변경을 검증 후 채택했으며 새 product 수정으로 주장하지 않습니다.
+
+다음 미확인 실패를 조사하기 위해 같은 수정 전51fabff6 바이너리의3376..4111 범위를 별도 `native-tail-after-ownership.jsonl/.stderr`에서 시작했습니다. 수정 전3375를 반복하거나 검사 목록에서 영구 제외하는 것이 아니며, 그 지점의 수정은 위 집중 결과와 구분합니다. 이후 최신 전체 gate는 새 바이너리로 다시 검사해야 합니다.
+
 5837cd37 전수의 다음3338 page area ordered pieces preserve alternating source run styles and single declarations에서 물리 peak4,298,231,168바이트가 기준4,294,967,296바이트를 넘어 guardian이 종료했습니다. 기존 guardian/batch/child 종료를 확인했습니다. source의 std.testing.checkAllAllocationFailures(std.testing.allocator, ...) 다섯 호출은 검증/쪽 영역 XML/문단 XML/두 병합 경계를 검사합니다. 제품 함수·callback·입력·단언·전체 실패 지점은 바꾸지 않고 기존 testing/allocation_failures.check로 모두 전환했습니다. 작업 트리에 이미 있던 정확히5줄 전환을 분리 소스에서 검증 후 채택했으며 새 작성으로 주장하지 않습니다.
 
 /tmp/hwpjs-page-area-ordered.Zrprql의 Safe22d1f2ef04f20da8396b85fd96a4f5f0d7eed2e648065b19c53577a51f78080f는 root 포함2/2·fail/skip/log/leak0·exit0·guardStopped=false·peak48,267,648바이트입니다. Debug4a78f67da6cee752743a484cabc9e829a4b0445e6432c22d5c7d690b25397c9a도2/2·같은 실패/누수0·exit0·guardStopped=false·peak14,696,784바이트입니다. 동일4,096MiB guardian과 expected hash를 사용했고 근거는 ordered-safe-guard-retry.jsonl·ordered-debug-guard-retry.jsonl입니다. 최초 ordered-*-guard 실행은 분리 tools 경로 부재로 native 시작 전 실패했으므로 통과에 합산하지 않습니다. 변경 파일은 검증 소스와 작업 트리가 cmp 일치하며 전체 native 통과/제품 메모리 절감/파서 기능 확대를 의미하지 않습니다.

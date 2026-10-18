@@ -40,7 +40,10 @@ pub fn validate(a: std.mem.Allocator, tree: *const Tree, paragraphs: []const Par
 }
 
 test "page area group validates actual left right source ownership through failures" {
-    const a = std.testing.allocator;
+    try @import("../testing/checked_allocator.zig").run(verifyActualGroupOwnership, .{});
+}
+
+fn verifyActualGroupOwnership(a: std.mem.Allocator) !void {
     const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/headerfooter.hwpx", a, .limited(4000000));
     defer a.free(input);
     var session = try @import("editor_session.zig").open(a, input, .{});
@@ -108,7 +111,7 @@ test "page area group validates actual left right source ownership through failu
     split.paragraphs[1].page_area_positions = null;
     try std.testing.expectError(error.MissingPageAreaPositions, @import("paragraph_structure_save.zig").write(a, &section.tree, &split, @import("editor_session.zig").siteOptions(session.options), &.{}, 4000000));
     split.paragraphs[1].page_area_positions = first_owned;
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, tree: *const Tree, source_rows: []const Paragraph) !void {
             const rows = try allocator.dupe(Paragraph, source_rows);
             defer allocator.free(rows);
@@ -130,7 +133,7 @@ test "page area group validates actual left right source ownership through failu
     const ordered_section = try @import("paragraph_structure_save.zig").write(a, &section.tree, &split, @import("editor_session.zig").siteOptions(session.options), &.{}, 4000000);
     defer a.free(ordered_section);
     try std.testing.expectEqualStrings(section_output, ordered_section);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, tree: *const Tree, rows: []const Paragraph, current: *const @import("paragraph_structure_values.zig").Values, baseline: *const @import("paragraph_structure_values.zig").Values, options: @import("text_sites.zig").Options, expected: []const u8) !void {
             const output = try @import("page_area_group_xml.zig").writeCurrent(allocator, tree, rows, current, baseline, options, 4000000);
             defer allocator.free(output);
@@ -160,14 +163,14 @@ test "page area group validates actual left right source ownership through failu
         };
         try std.testing.expectEqualStrings(expected_text, text.items);
     }
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, tree: *const Tree, rows: []const Paragraph, options: @import("text_sites.zig").Options, expected: []const u8) !void {
             const output = try @import("page_area_group_xml.zig").write(allocator, tree, rows, options, 4000000);
             defer allocator.free(output);
             try std.testing.expectEqualStrings(expected, output);
         }
     }.run, .{ &section.tree, &group, @import("editor_session.zig").siteOptions(session.options), rendered });
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, tree: *const Tree, rows: []const Paragraph) !void {
             try validate(allocator, tree, rows);
         }
