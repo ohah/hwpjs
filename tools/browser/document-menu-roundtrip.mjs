@@ -133,7 +133,11 @@ export async function runDocumentMenuBrowserAudit(caseName) {
       click("#demo-fixture-open");
     }else command("upload","#file",fixture);
     wait(`${replies("load")}.length===1`);
-    if(config.fixturePicker)progress("fixture-picker-loaded");
+    if(config.fixturePicker){
+      assert.equal(evaluate('document.querySelector("#file").value'),"","FixtureOpenMustClearPreviousLocalFile");
+      assert.equal(evaluate('document.querySelector("#file").files.length'),0,"FixtureOpenMustClearPreviousFileList");
+      progress("fixture-picker-loaded");
+    }
     click("#enable-edit");wait(`${replies("enable")}.some(r=>r.revision===0)`);
     openBrowserRibbonPage(driver,"view");
     click("#document-window-options > summary");command("fill","#document-window-start",String(paragraph));command("fill","#document-window-count","1");click("#document-window-apply");

@@ -9,6 +9,30 @@ function requestHarness(fetchBytes) {
   return { control, input, opened, select, click() { button.dispatchEvent(new Event("click")); } };
 }
 
+test("fixture control clears the local selection only when opening a valid server fixture", () => {
+  const h = requestHarness(() => { throw Error("must remain lazy"); });
+  h.input.value = "C:\\fakepath\\local.hwp";
+  h.select.value = "../secret"; h.click();
+  assert.equal(h.input.value, "C:\\fakepath\\local.hwp");
+  assert.equal(h.opened.length, 0);
+  h.select.value = "table.hwpx"; h.click();
+  assert.equal(h.input.value, "");
+  assert.equal(h.opened.length, 1);
+  assert.equal(h.opened[0].name, "table.hwpx");
+  h.control.close();
+});
+
+test("fixture cancellation does not clear a newly chosen local file", async () => {
+  const h = requestHarness(() => { throw Error("must remain lazy"); });
+  h.click();
+  h.input.value = "C:\\fakepath\\new.hwp";
+  h.input.dispatchEvent(new Event("change"));
+  assert.equal(h.input.value, "C:\\fakepath\\new.hwp");
+  await assert.rejects(h.opened[0].arrayBuffer(), { name: "AbortError" });
+  h.control.close();
+  assert.equal(h.input.value, "C:\\fakepath\\new.hwp");
+});
+
 test("fixture control aborts both superseded and closing requests without starting eager fetches", async () => {
   const requests = [];
   const h = requestHarness((url, options) => new Promise((resolve, reject) => {

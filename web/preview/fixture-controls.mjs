@@ -14,6 +14,8 @@ export function createFixtureControls({ select, button, input, open, fetchBytes 
     const fixture = demoFixtures.find(item => item.id === select.value);
     if (!fixture) return;
     cancel();
+    // A server fixture supersedes the previous native FileList.
+    if (input) input.value = "";
     const request = new AbortController();
     pending = request;
     // Lazy read goes through the upload loader's size/error/generation checks.
