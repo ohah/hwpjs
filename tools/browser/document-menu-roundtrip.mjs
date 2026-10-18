@@ -97,6 +97,36 @@ export async function runDocumentMenuBrowserAudit(caseName) {
       const fixtureResponse=await fetch(`http://127.0.0.1:${port}${fixtureUrl(selected.id)}`,{signal:AbortSignal.timeout(10000)});
       assert.equal(fixtureResponse.status,200);
       assert.equal(hash(Buffer.from(await fixtureResponse.arrayBuffer())),hash(input),"BrowserFixtureResponseMustMatchOracleInput");
+      // Stall one response body at the browser boundary, then use the real file input.
+      // This proves cancellation wiring, not physical network throughput.
+      evaluate(`(() => {
+        const originalBody=Response.prototype.arrayBuffer,originalAbort=AbortController.prototype.abort;
+        const state=window.__fixtureFetchAudit={started:false,aborted:false,resumed:false};
+        AbortController.prototype.abort=function(...args){
+          const result=originalAbort.apply(this,args);
+          state.aborted=this.signal.aborted;
+          AbortController.prototype.abort=originalAbort;
+          return result;
+        };
+        Response.prototype.arrayBuffer=function(...args){
+          if(new URL(this.url,location.href).pathname!==${JSON.stringify(fixtureUrl(selected.id))})return originalBody.apply(this,args);
+          Response.prototype.arrayBuffer=originalBody;
+          state.started=true;
+          return new Promise(resolve=>{state.release=resolve;}).then(value=>{state.resumed=true;return value;});
+        };
+      })()`);
+      command("select","#demo-fixture",selected.id);
+      click("#demo-fixture-open");
+      wait("window.__fixtureFetchAudit.started");
+      command("upload","#file",fixture);
+      wait(`${replies("load")}.length===1`);
+      assert.equal(evaluate("window.__fixtureFetchAudit.aborted"),true);
+      evaluate("window.__fixtureFetchAudit.release(new Uint8Array([0]).buffer)");
+      wait("window.__fixtureFetchAudit.resumed");
+      assert.equal(evaluate(`${replies("load")}.length`),1,"CanceledFixtureMustNotStartAWorker");
+      assert.equal(evaluate('document.querySelector("#status").textContent.includes("오류:")'),false);
+      progress("fixture-fetch-canceled-by-upload");
+      evaluate("window.__menuAudit=[]");
       command("select","#demo-fixture",selected.id);
       assert.equal(evaluate('document.querySelector("#demo-fixture").value'),selected.id);
       assert.equal(evaluate('document.querySelector("#demo-fixture-open").disabled'),false);

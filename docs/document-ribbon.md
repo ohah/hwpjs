@@ -1,5 +1,7 @@
 # 문서 도구 탭
 
+[픽스쳐 요청 수명](fixture-request-lifetime.md)은 픽스쳐/로컬 파일 전환 시 취소와 기존 generation 보호의 책임을 구분합니다. 일반 실제 웹 왕복은 지연 본문을 취소한 뒤 picker 편집/저장까지 검사합니다.
+
 ## 책임과 상태
 
 `web/preview/document-ribbon-pages.mjs`가 홈·삽입·보기의 이름과 기존 도구 그룹 선택자를 소유합니다. DOM 이동·ARIA·포커스·수명은 `document-ribbon-controls.mjs`가 맡습니다. 새 편집 명령이나 WASM 호출은 만들지 않습니다.

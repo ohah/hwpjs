@@ -290,7 +290,7 @@ async function openSelectedFile(selected, { availableSectionsOnly = false, avail
   } catch (error) { if (epoch === generation) status.textContent = `오류: ${failureMessage(error)}`; }
 }
 bindFileInput(input, () => openSelectedFile(input.files[0]));
-const fixtureControls = createFixtureControls({ select: document.querySelector("#demo-fixture"), button: document.querySelector("#demo-fixture-open"), open: selected => openSelectedFile(selected) });
+const fixtureControls = createFixtureControls({ select: document.querySelector("#demo-fixture"), button: document.querySelector("#demo-fixture-open"), input, open: selected => openSelectedFile(selected) });
 window.addEventListener("pagehide", event => { if (!event.persisted) { fixtureControls.close(); generation++; worker?.terminate(); inspector.close(); passwordControls.close(); saveControls.close(); historyControls.close(); cellSizeControls.close(); cellResizeControls.close(); paragraphMarginControls.close(); paragraphSpacingControls.close(); characterPropertyControls.close(); underlineColorControls.close(); direct.close(); renderer.close(); } });
 viewScaleControls = createViewScaleControls({ node: document.querySelector("#view-scale"), renderer, ready: () => Boolean(worker) && openedFormat !== null && !controls.busy() && direct.settled() });
 window.addEventListener("pagehide", event => { if (!event.persisted) viewScaleControls.close(); });
