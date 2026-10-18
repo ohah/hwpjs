@@ -29,7 +29,7 @@ native 집중 바이너리 f237e8421e9c47efe6c22e6dc4c967b6d325bd2eb4e40fcfad10b
 
 최종 재빌드는 c10f3382b7a8872c0305f4b8e7537ff1359e3f2e1e93875681668f3b782757fd로 파일 hash가 달라졌습니다. 두 모듈을 컴파일해 유효성을 확인하고 custom section 이외9개 section(type/function/table/memory/global/export/element/code/data)의 전체 바이트 hash가 각각 같음을 별도로 확인했습니다. 실행 코드·데이터·export는 동일하며 파일 전체 동치로 주장하지 않습니다. `candidate-e298cf28.wasm`과 `candidate-c10f3382.wasm`을 모두 보존합니다. e298의 읽기975개·Worker 대조 결과를 c10에서 새로 실행한 결과로 바꾸어 기록하지 않습니다.
 
-최종 c10 후보 자체의 decoder/API 집중 검사와 기존 계산 결과 회귀도37/37·fail/skip/cancel0·exit0입니다(`formula-final-c10-focused.log`,59,664ms). Git 추적 HWPX46개 Worker의 편집·이력·재열기 검사는 별도 실행 중이며 이37개 결과에 포함하지 않습니다.
+최종 c10 후보 자체의 decoder/API 집중 검사와 기존 계산 결과 회귀도37/37·fail/skip/cancel0·exit0입니다(`formula-final-c10-focused.log`,59,664ms). 아래 Git 추적 HWPX46개 Worker의 편집·이력·재열기 결과와 범위가 다르며 합산하지 않습니다.
 
 같은 Worker JS와 old/new WASM을 한 프로세스에서 비교하는 `formula-result-worker-parity.test.mjs`는3/3·fail/skip/cancel0·exit0입니다(`formula-worker-parity.log`,297,220ms; 상위1개+후보/기존 하위2개). 전체 load/enable/window 응답·권한·원문 저장을 대조했습니다. 후보57,537ms·기존239,639ms는 이 검사 시나리오의 실행 시간이며 실제 브라우저 성능이나 한글 조판 동치를 뜻하지 않습니다.
 
@@ -37,10 +37,14 @@ native 집중 바이너리 f237e8421e9c47efe6c22e6dc4c967b6d325bd2eb4e40fcfad10b
 
 Canvas 입력·독립 저장 oracle 재검사는1/1·fail/skip/cancel0·exit0입니다(`formula-candidate-memo-canvas-retry.log`,101,934ms). 첫 Canvas 후보 검사는 oracle 임시 입력 쓰기의 ENOSPC로 실패했으며 재시도와 합산하지 않습니다. 이 검사는 실제 Worker/WASM과 모의 DOM/Canvas이며 실제 브라우저 검사가 아닙니다. 기본 배포 승격 전 실제 브라우저·전체 native gate를 별도로 확인해야 합니다.
 
+후속 c10 메모 라벨의 실제 Chromium 왕복과 종료 검증은 [브라우저 실측](hwpx-memo-browser-roundtrip.md)이 소유합니다. 해당 한 곳의 GUI 성공을 모든 fixture·레이아웃·전체 native 완료로 확대하지 않습니다.
+
 ## 재현
 
 `HWPJS_TEST_WASM=/absolute/candidate.wasm node --test tests/hwpx/formula-result-paragraphs.test.mjs tests/hwpx/formula-result-paragraph-api.test.mjs`는 decoder·요청 수명·실제 API 집중 검사입니다. 정규 HWPX 검증 묶음에도 등록합니다.
 
 `HWPJS_BASELINE_WASM=/absolute/frozen-baseline.wasm zig build hwpx-formula-query-parity -Doptimize=ReleaseSafe --prefix /absolute/isolated-output`은 새 설치 후보와 명시적 baseline을 같은 Worker 소스로 대조합니다. 누락되거나 같은 경로인 baseline은 실패시키며 경로가 달라도 SHA-256이 같으면 `DistinctWasmArtifactsRequired`로 거부합니다. 기본 데모에 설치하지 않도록 별도 prefix를 사용합니다.
 
-서로 다른 실제 경로의 같은 c10 파일로 실행한 CLI 음성 대조는 해당 오류·exit1이었고 Worker 하위 검사 전에 종료했습니다(`formula-same-artifact-negative.log`,93ms). 최종 c10 대8fa 전체 Worker 대조는 이 추가 guard를 적용한 소스로 다시 실행 중입니다(`formula-final-c10-worker-parity.log`). 앞선 e298 대8fa 성공과 구분합니다.
+서로 다른 실제 경로의 같은 c10 파일로 실행한 CLI 음성 대조는 해당 오류·exit1이었고 Worker 하위 검사 전에 종료했습니다(`formula-same-artifact-negative.log`,93ms). 최종 c10 대8fa 전체 Worker 대조도 추가 guard를 적용한 소스로3/3·fail/skip/cancel0·exit0입니다(`formula-final-c10-worker-parity.log`,297,507ms; 상위1개+하위2개). 후보57,918ms·기존239,526ms이며 앞선 e298 대8fa 실행과 합산하지 않습니다.
+
+최종 c10의 Git 추적 HWPX46경로 Worker 편집·이력·저장·재열기 검사는1/1·fail/skip/cancel0·exit0입니다(`formula-tracked-worker.log`,554,402ms). 1,444문단 중 plain1,278·anchor146·field7·formula13, 암호 기본 거부1입니다. 보호 개체 텍스트146곳·필드7곳·계산 결과13곳을 실제 명령으로 편집하고 각 저장본의 재열기 projection과 재저장 바이트를 확인했습니다. 모든 문단의 편집, 암호 문서 지원, 모든 채널의 독립 XML 검사를 의미하지 않습니다.
