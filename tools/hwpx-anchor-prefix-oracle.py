@@ -2,9 +2,12 @@
 import base64
 import io
 import json
+from pathlib import Path
+import runpy
 import sys
 import zipfile
 import xml.etree.ElementTree as ET
+selected_paragraphs = runpy.run_path(str(Path(__file__).with_name('hwpx_text_snapshot_order.py')))['selected_paragraphs']
 
 
 def signature(element):
@@ -35,7 +38,7 @@ def verify(data):
         parser = lambda: ET.XMLParser(target=ET.TreeBuilder(insert_comments=True, insert_pis=True))
         expected = ET.fromstring(before.read(name), parser=parser())
         actual = ET.fromstring(after.read(name), parser=parser())
-        paragraphs = list(expected.iter(namespace + 'p'))
+        paragraphs = selected_paragraphs(expected)
         if data['paragraph'] > len(paragraphs):
             raise ValueError('paragraph index')
         paragraph = paragraphs[data['paragraph'] - 1]

@@ -1,5 +1,15 @@
 # HWPX prefix 입력의 원본 run 소속 검증
 
+## 활성 분기 문단 번호와 원본 XML 순서
+
+`issue2006/1790387_prep_final_report.hwpx`의 구역0·API 문단495를 재현했습니다. 원본 SHA256은 `c68baed24096386f9041930d24d39409b61ac99463bf04dfd242440dfdeb739f`입니다. API reader/editor는 selected-default 분기를 사용하지만 anchor oracle은 ElementTree의 모든 p를 세고 있었습니다. 실제 수정한 문단은 XML 원본496번째이고, 원본495번째는 바로 앞의 다른 그림 설명 문단입니다. 이 구역의 raw p2092개와 독립 selected2090개를 확인했고 게시 afb7 reader의 해당 구역 문단 수도2090으로 같았습니다. 파서가 엉뚱한 문단을 수정한 것으로 분류하지 않습니다.
+
+기존 `hwpx_text_snapshot_order.py`의 엄격한 관측 branch 규칙을 ordered_children로 분리해 기존 event-order digest와 새 selected_paragraphs가 함께 사용합니다. 선택한 노드의 참조만 반환하고 XML을 삭제/정규화하지 않으므로 비활성 분기의 원문·주석도 저장 비교 대상입니다. hp:t 안의 p는 문단 번호에 넣지 않습니다. 관측 chart case/default·부모/순서/요구 namespace를 검증하고 처리하지 못한 분기를 raw로 되돌리거나 임의 선택하지 않습니다. anchor oracle의 API 좌표에만 이 매핑을 연결하며 다른 field oracle을 무조건 같은 선택 범위로 바꾸지 않았습니다.
+
+actual report 회귀는 수정 전 complete XML mismatch로 실패했습니다. 이후 게시 afb7 후보에서 해당 API495 입력·전체 XML/비대상 payload normal/-O·잘못된496 좌표 거부·undo/redo·재열기/원본 불변이 통과했습니다. raw/default/chart의 독립 문단 순서와 event count 일치·주석/원본 불변 및 미지원 requirement/자식/부모3반례도 normal/-O로 검사합니다. 별도 module loader로 oracle을 읽는 기존 빈 run 회귀까지 유지했습니다.
+
+eab38188에 이 수정만 더한 tree `bc8f170701940e1d1b8345c66293e5f0d1626830`의 `/tmp/hwpjs-selected-prefix-clean.WSV6QF`에서 게시 afb7 후보·Node24.20.0의 `selected-anchor-tests.log/.stderr`는4/4·fail/cancel/skip0·exit0·stderr0(7556ms)입니다. 공유 Section/master snapshot verifier의 기존 self-test도 Python normal/-O 네 실행 모두 exit0입니다. 같은 사본/f4e0 후보로 보고서 전체 전용 감사를 `issue2006-fixed.jsonl/.stderr`에서 시작했으며 최종 집계/종료 전에는 전체 문서 통과가 아닙니다. 기존 고정44파일 실패 행이나 최신 전체 gate 성공으로 소급하지 않습니다. 제품 파서·저장 로직과 기본 WASM/외부 데모는 변경하지 않았습니다.
+
 ## 텍스트 노드 없는 필드 소유 표 문단
 
 `issue2813/dangjik_dutylog.hwpx`는 게시 검사기에서도 MissingIndependentFieldFragment로 재현됐습니다. 원본 SHA256은 `d785a49b62c43ed5b4602509657a112742d916782828022a355b916bcc19a4c5`이고 위치는 구역0·전체/로컬 문단141·beginElement1574·CLICK_HERE1918049232입니다. 원본 문단은 charPrIDRef14의 run 안45x11 표만 있고 직접 text가 없습니다. native 저장은 그 표 앞에 text를 추가했으나 독립 fragments는 text/빈 run만 수집해 바깥 문단을 누락했습니다. 표 안 셀의 text를 바깥 문단의 위치로 재사용하지 않습니다.

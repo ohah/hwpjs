@@ -17,6 +17,33 @@ def require(condition, detail):
         raise AssertionError(detail)
 
 
+def ordered_children(node, parent, in_text, mode):
+    children = list(node)
+    if mode != "raw" and not in_text and node.tag == SWITCH:
+        children = [child for child in children if isinstance(child.tag, str)]
+        require(parent == RUN, ("unmodeled switch parent", parent))
+        require(len(children) == 2 and children[0].tag == CASE and children[1].tag == DEFAULT, "unmodeled switch children")
+        require(children[0].get(PARA + "required-namespace") == CHART, "unmodeled switch requirement")
+        return [children[0] if mode == "selected_chart" else children[1]]
+    return children
+
+
+def selected_paragraphs(root, mode="selected_default"):
+    """Return source nodes in the observed selected event order, without rewriting XML."""
+    require(mode in ("raw", "selected_default", "selected_chart"), "unmodeled paragraph selection")
+    result = []
+
+    def visit(node, in_text=False, parent=None):
+        if not in_text and node.tag == PARA + "p":
+            result.append(node)
+        owns_text = in_text or node.tag == PARA + "t"
+        for child in ordered_children(node, parent, in_text, mode):
+            visit(child, owns_text, node.tag)
+
+    visit(root)
+    return result
+
+
 def update_ordered(root, result, payload, counts, mode):
     """Append hp:t bytes and canonical boundary events for one XML subtree.
 
@@ -49,13 +76,7 @@ def update_ordered(root, result, payload, counts, mode):
         before_text = len(payload)
         if owns_text:
             content(node.text)
-        children = list(node)
-        if mode != "raw" and not in_text and node.tag == SWITCH:
-            require(parent == RUN, ("unmodeled switch parent", parent))
-            require(len(children) == 2 and children[0].tag == CASE and children[1].tag == DEFAULT, "unmodeled switch children")
-            require(children[0].get(PARA + "required-namespace") == CHART, "unmodeled switch requirement")
-            children = [children[0] if mode == "selected_chart" else children[1]]
-        for child in children:
+        for child in ordered_children(node, parent, in_text, mode):
             visit(child, owns_text, node.tag)
             if owns_text:
                 content(child.tail)
