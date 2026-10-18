@@ -4,11 +4,19 @@
 
 `local_field_spans.inspectReadableBound`는 기존 scanner와 원본 논리 리스트 소속 검사를 재사용해 `Report{spans, unresolved}`를 반환합니다. 닫힌 marker 쌍만 spans에 넣고 짝 불명 표식은 `unclosed_start`/`orphan_end`로 분리합니다. 시작의 position은 8유닛 표식 바로 뒤, 종료의 position은 종료 표식 시작입니다. `marker_id`는 해당 표식의 원시 ID이며 고아 종료의 ID를 가상 시작 ID로 바꾸지 않습니다. ordinal은 시작만 가지며 list_node는 실제 원본 리스트 노드 또는 루트의 null입니다. 진단은 문단/UTF-16 위치순으로 반환합니다. 호출자가 두 소유 배열을 `Report.deinit`으로 해제합니다.
 
-미지 시작 종류·짝 ID 불일치·원본 바인딩 오류·중첩 상한·OOM은 진단 모드에서도 오류입니다. 기존 strict collector는 동일 scanner에 진단 수집 없이 진입하므로 미닫힘/고아 표식을 계속 거부합니다. 이 보고서는 **marker 토폴로지 진단**이며 CTRL_HEADER 속성 바인딩·명령 평가·편집 허가를 인증하지 않습니다. 종료 위치를 만들거나 원문을 고치지 않습니다. 아직 JS/WASM 공개 진단 API·Canvas·복구/편집 거래에 연결하지 않았습니다.
+미지 시작 종류·짝 ID 불일치·원본 바인딩 오류·중첩 상한·OOM은 진단 모드에서도 오류입니다. 기존 strict collector는 동일 scanner에 진단 수집 없이 진입하므로 미닫힘/고아 표식을 계속 거부합니다. 이 보고서는 **marker 토폴로지 진단**이며 CTRL_HEADER 속성 바인딩·명령 평가·편집 허가를 인증하지 않습니다. 종료 위치를 만들거나 원문을 고치지 않습니다. 공개 조회 API는 아래 계약을 따르며, 아직 Canvas·복구/편집 거래에 연결하지 않았습니다.
 
 `field_topology_tests.zig`에 별도 테스트를 두고 기존 scanner 테스트와 함께 root에 명시적으로 등록했습니다. 실제 원본에서 닫힌28범위와 문단52/위치8/리스트236의 미닫힘1개를 확인했습니다. 합성 고아 종료·미닫힘 동시 존재/정렬, 전체 부분 할당 실패와 해제, 잘못된 ID·미지 시작·위조 source node·33중첩 반례도 검사합니다. 분리 게시 소스의 ReleaseSafe/Debug는 각각12/12·skip0입니다. 초기 실파일 읽기 한도 부족과 디스크 공간 부족으로 실패한 실행은 성공에 포함하지 않았습니다.
 
 ReleaseSafe 제품 빌드는5/5단계 성공, 후보 SHA-256은 `7c38bc1bb2df912024b09619d2cd6d889ab472a04fe20a3edc4e6063fe7276dd`입니다. 이 후보의 기존 API/Worker 정책·필드 wire/ABI/원본 oracle·구간 의존성 집중8파일은18/18·실패/취소/건너뜀0입니다. 로그는 `/tmp/hwpjs-browser-policy-fault.wHp4QV/topology-native-safe.log`·`topology-native-debug.log`·`topology-build-safe.log`·`topology-js-focused.log`입니다. 전체 최신 native/편집 묶음·브라우저·기본 데모 승격이나 해당 문서의 편집 완료 결과는 아닙니다.
+
+## 공개 marker 진단 API
+
+열린 HWP5 편집기의 `supportsFieldTopology()`는 optional native export의 존재 여부만 반환하며, `fieldTopology(section)`은 위 `{spans, unresolved}`를 조회합니다. 기존 `fieldSpans(section)`의 source_node를 포함하는 엄격 바인딩 배열과 다른 타입입니다. 진단 spans에는 source_node가 없으며 미닫힘 문서에서도 확인된 marker 쌍을 읽을 수 있습니다. 성공이 편집 적격성을 뜻하지 않으며 기존 엄격 API/쓰기 거부를 바꾸지 않습니다. 구역 번호는 u32, 닫힌 세션은 EditorClosed, 구형 ABI 부재는 Hwp5FieldTopologyAbiUnavailable입니다.
+
+native `hwp5_edit_field_topology(section)`는 성공1/실패0·기존 error/output 버퍼 계약을 사용합니다. Session은 기존 모델/decoded source를 빌려 조회하고, report/직렬화 버퍼는 기존 소유권 규칙으로 해제합니다. JSON의 좌표/ID/ordinal/null·순서·중복·역전 검사는 별도 `js/hwp5-field-topology.mjs`가 맡습니다. 이 모듈은 HWP 표식 바이트나 필드 명령을 해석하지 않습니다.
+
+후보 `8e087670441f42c4e34bb66d063a07ef26ece984c9478934a5329b1640fc05d3`는 ReleaseSafe5/5단계 성공입니다. 기존332 export의 이름/kind를 모두 유지하고 optional 함수1개만 추가한333개입니다. 집중7파일16/16·실패/취소/건너뜀0으로 실제 미닫힘 문서의28범위/진단1개·원본 불변·엄격 거부 유지, 정상 문서의 편집 좌표 이동/undo/진단 후 pending redo/저장 재열기, 구형 ABI 부재와 malformed wire15종을 확인했습니다. 두 새 파일은 정규 편집 묶음에 등록했습니다. 근거는 `/tmp/hwpjs-field-topology-api.RwIArF/build-safe.log`·`focused.log`이며 이 후보의 전체 정규/native·브라우저·기본 배포 검증 완료는 아닙니다.
 
 ## 실제 종료 표식 부재의 구분
 

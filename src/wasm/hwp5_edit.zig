@@ -172,6 +172,14 @@ export fn hwp5_edit_field_spans(section: u32) u32 {
     output = std.json.Stringify.valueAlloc(a, rows, .{}) catch |err| return fail(err);
     return 1;
 }
+export fn hwp5_edit_field_topology(section: u32) u32 {
+    hwp5_edit_output_free();
+    const s = session() catch |err| return fail(err);
+    var report = s.fieldTopology(a, section) catch |err| return fail(err);
+    defer report.deinit(a);
+    output = std.json.Stringify.valueAlloc(a, report, .{}) catch |err| return fail(err);
+    return 1;
+}
 export fn hwp5_edit_section_count() u32 {
     const s = session() catch |err| {
         _ = fail(err);

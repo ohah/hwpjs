@@ -267,6 +267,12 @@ pub const Session = opaque {
         if (section >= state.document.sections.len) return error.InvalidSection;
         return @import("field_span_snapshot.zig").read(a, state.decoded[section], state.source.header.version(), state.document.sections[section]);
     }
+    /// Marker diagnostics only, not field-header binding or edit admission.
+    pub fn fieldTopology(self: *const Session, a: std.mem.Allocator, section: usize) !@import("local_field_spans.zig").Report {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        return @import("local_field_spans.zig").inspectReadableBound(a, state.decoded[section], state.source.header.version(), state.document.sections[section]);
+    }
     pub fn formulaSources(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("formula_snapshot.zig").Row {
         const state = self.stateConst();
         if (section >= state.document.sections.len) return error.InvalidSection;
