@@ -195,6 +195,7 @@ pub fn build(b: *std.Build) void {
     hwpx_text_tests.addArg("tests/hwpx/unknown-object-anchor.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/unknown-object-anchor-canvas.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/chart-numeric-input-corpus.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/merged-sum-input-corpus.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/oracle-process-async.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/plain-fixture-audit-arguments.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/document-menu-controls.test.mjs");

@@ -50,6 +50,18 @@ numeric-input/manual-result 브라우저 사례도 `fixturePicker:true`로 연�
 
 같은 디렉터리의 `numeric-reference-final.log/.stderr`는 작업 트리 Zig0.17 후보 `f4e0f396a3fea6e6354b364ff176e31d72ed00ec643fa566c4abbd8bc2f58d77`에서 두 원본의48+12좌표를2/2·fail/cancel/skip0·exit0·stderr0으로 검사했습니다. `numeric-reference-clean-wasm.log/.stderr`는 게시 소스 후보 `afb7fdfbbc8a9c9cc45a7cdb98ade6be7a6a88b1943e1c5354c63d6715b9e05e`에서 새12좌표를 집중1/1·오류/skip0·exit0·stderr0으로 검사한 별도 결과입니다. 기본 제품 WASM/외부 데모를 교체하지 않았습니다.
 
+## 병합 설명 셀이 있는 참조 SUM 입력 15곳
+
+`issue1891_external_bindata_link.hwpx`의 고정 prefix 감사는 2,864문단 중 일반 2,681/전용 163입력과 15 InvalidFormulaNumber·5 UnsupportedFieldLabelRange를 기록했습니다. 이 일반/전용 실행의 20거부를 성공으로 소급하지 않습니다. 결과 5곳의 수동 편집은 [기존 필드 결과 감사](reference-field-results-current.md)의 별도 경로입니다.
+
+원본 SHA256 `ce9f7275b9c84e4f032c218b9b6f94cf53c24f6e91fba30be7fd55b17acee924`에는 `=SUM(?3:?7)`·`%g,` 5개와 입력 15개가 있습니다. 숫자 문단은 2715–2719/2722–2726/2733–2737이며, 사이 두 행은 6열 병합 설명 셀입니다. 기존 비병합/전부 숫자 oracle은 이 문서에서 Decimal ConversionSyntax로 실패하므로 통과 조건을 넓히지 않았습니다. 새 `hwpx-merged-sum-input-oracle.py`는 원본 바이트·같은 표·결과 주소·입력 1x1 span과 두 병합 설명의 정확한 문자열/6x1 span을 고정하고 기존 Decimal formatter·field result 선택·XML signature만 재사용합니다. 일반 SUM의 모든 문자/병합 처리 규칙을 주장하지 않습니다.
+
+`merged-sum-input-corpus.test.mjs`는 독립 XML의 15좌표를 제품 텍스트와 대조하고 매번 원본을 열어 1로 변경합니다. 원래 5개 합계/Command/LastResult/표시도 먼저 독립 계산과 같아야 하며, 수정한 숫자에 의존하는 1개 결과만 기대 XML에 반영합니다. 전체 XML·ZIP 순서/CRC/검사 대상 metadata/comment·비대상 payload를 normal/-O로 검사합니다. 첫 좌표는 정상 재직렬화와 입력/캐시/병합 설명/서식/다른 payload/ZIP comment 변조 6종 거부도 확인합니다. 각 좌표의 undo 원본·비숫자 거부/revision 불변·redo 저장본·재열기/재저장·원본 불변도 검사합니다.
+
+작업 트리의 명시적 f4e0f396a3fea6e6354b364ff176e31d72ed00ec643fa566c4abbd8bc2f58d77 후보에서 15좌표를 포함한 1/1·fail/cancel/skip0·exit0(64177ms)을 확인했습니다. 단위 테스트 15개라는 뜻이 아니며, 기본 WASM/외부 데모·전체 명령/브라우저/조판 지원 완료와 구분합니다. 제품 코드는 변경하지 않았습니다.
+
+cdc26136의 게시 JS/도구에 이 추가분만 넣은 Git tree `d213dd788ccf633ababb1d09c7b117ed1dadec7f`의 `/tmp/hwpjs-merged-sum-clean.pWeY2u`에서도 같은 f4e0 후보·Node24.20.0으로 1/1·fail/cancel/skip0·exit0·stderr0(63824ms)을 확인했습니다. 로그는 `merged-sum-tests.log/.stderr`입니다. 전체 native/최신 공개 gate나 게시 afb7 WASM의 검사로 확대하지 않습니다.
+
 ## 대상과 독립 기대값
 
 대상은 `legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx` 원본 SHA25685699a2e906525f4118c8dcc3f426f7896ae1dd9fa39b3ee2ef790d6b04abdde입니다. [일반 본문 감사](hwpx-plain-prefix-verification.md)의 문자 prefix가 거부된48좌표와, 독립 XML 수식 inventory에서 선택한 결과 셀 이외의48숫자 입력이 정확히 같음을 대조했습니다. 거부를 읽기 전용이나 지원 성공으로 세지 않고 유효 숫자 변경을 따로 검사합니다.
