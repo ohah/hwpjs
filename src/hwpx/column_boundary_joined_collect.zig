@@ -158,7 +158,7 @@ test "column joined anchor inventory includes object width in column coordinates
             try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, edited_section, "<p:rect"));
         }
     };
-    try std.testing.checkAllAllocationFailures(a, Probe.run, .{ &tree, &view });
+    try @import("../testing/allocation_failures.zig").check(Probe.run, .{ &tree, &view });
     try std.testing.expectError(error.LimitExceeded, collectWithAnchors(a, &tree, &view, 1));
     try std.testing.expectEqualStrings(xml, tree.source);
 }
@@ -328,7 +328,7 @@ test "column joined tab inventory counts Unicode and inline tabs in global coord
     try std.testing.expectEqual(@as(usize, 2), tabs);
     try std.testing.expectEqual(@as(usize, 2), columns);
     try std.testing.expectError(error.LimitExceeded, collectWithTabs(a, &tree, &view, 1));
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, source: *const Tree, current: *const Joined) !void {
             const output = try collectWithTabs(allocator, source, current, 100);
             defer allocator.free(output);
