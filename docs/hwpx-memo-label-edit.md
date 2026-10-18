@@ -32,4 +32,6 @@
 
 ## 남은 제한
 
+로딩 반복 조회의 후속 후보·실측·남은 검증은 [계산 결과 조회 후보 최적화](hwpx-formula-result-query-batching.md)를 따릅니다.
+
 기본 WASM과 외부 데모는 아직 교체하지 않았습니다. 실제 브라우저와 전체 native gate는 별도입니다. 실험00c5 후보의 native-export profile에서 aift 편집 활성화111,770ms 중91,810ms가 계산 결과 대상 조회111회에 쓰였습니다. 정확성 통과를 실사용 성능 완료로 해석하지 않습니다. `/tmp/hwpjs-memo-label-probe.GvEcmM/memo-native-profile.log` 완료 행을 따릅니다.
