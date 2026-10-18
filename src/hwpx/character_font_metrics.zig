@@ -68,21 +68,24 @@ pub fn list(session: *const @import("editor_session.zig").Session) ![]Row {
 }
 
 test "HWPX font metrics preserve absent empty zero signed fields and namespaces on allocation failure" {
-    const a = std.testing.allocator;
-    const input = "<h:head xmlns:h='http://www.hancom.co.kr/hwpml/2011/head' xmlns:x='urn:foreign'><h:charPr><x:ratio hangul='90'/><h:ratio hangul='0' latin='120' x:hanja='50'/><h:spacing hangul='-8'/><h:relSz/><h:offset hangul='-100'/></h:charPr><h:charPr/></h:head>";
-    var tree = try @import("xml_part_tree.zig").parse(a, input, .header, null, 0, .{});
-    defer tree.deinit(a);
-    try std.testing.checkAllAllocationFailures(a, struct {
-        fn run(allocator: std.mem.Allocator, source: *const Tree) !void {
-            const values = try read(allocator, source, 1, 4096);
-            try std.testing.expectEqualDeep(@as(?Languages, .{ 0, 120, null, null, null, null, null }), values.ratio);
-            try std.testing.expectEqual(@as(?i32, -8), values.spacing.?[0]);
-            try std.testing.expectEqualDeep(@as(?Languages, @splat(null)), values.relativeSize);
-            try std.testing.expectEqual(@as(?i32, -100), values.offset.?[0]);
-            try std.testing.expectEqualDeep(Values{}, try read(allocator, source, 7, 4096));
+    try @import("../testing/checked_allocator.zig").run(struct {
+        fn run(a: std.mem.Allocator) !void {
+            const input = "<h:head xmlns:h='http://www.hancom.co.kr/hwpml/2011/head' xmlns:x='urn:foreign'><h:charPr><x:ratio hangul='90'/><h:ratio hangul='0' latin='120' x:hanja='50'/><h:spacing hangul='-8'/><h:relSz/><h:offset hangul='-100'/></h:charPr><h:charPr/></h:head>";
+            var tree = try @import("xml_part_tree.zig").parse(a, input, .header, null, 0, .{});
+            defer tree.deinit(a);
+            try std.testing.checkAllAllocationFailures(a, struct {
+                fn run(allocator: std.mem.Allocator, source: *const Tree) !void {
+                    const values = try read(allocator, source, 1, 4096);
+                    try std.testing.expectEqualDeep(@as(?Languages, .{ 0, 120, null, null, null, null, null }), values.ratio);
+                    try std.testing.expectEqual(@as(?i32, -8), values.spacing.?[0]);
+                    try std.testing.expectEqualDeep(@as(?Languages, @splat(null)), values.relativeSize);
+                    try std.testing.expectEqual(@as(?i32, -100), values.offset.?[0]);
+                    try std.testing.expectEqualDeep(Values{}, try read(allocator, source, 7, 4096));
+                }
+            }.run, .{&tree});
+            try std.testing.expectEqualStrings(input, tree.source);
         }
-    }.run, .{&tree});
-    try std.testing.expectEqualStrings(input, tree.source);
+    }.run, .{});
 }
 
 test "HWPX font metrics refuse duplicate children and numeric overflow" {

@@ -1,5 +1,13 @@
 # 현재 main 소스의 전체 native 실행
 
+## 0.17 기본 테스트 할당자의 비결정적 할당 횟수 — 세 회귀 수정
+
+위 전체 실행의 index27 덧말 거래·133 글꼴 metric·924 생성 표 snapshot은 status1을 반환했습니다. 같은 게시 소스를 별도 filter로 실행한 `native-dutmal-focused.stderr`·`native-query-focused.stderr`에서 세 오류 모두 `NondeterministicMemoryUsage`·exit1로 재현했습니다. std.testing.allocator는 이0.17 설치에서 SafeAllocator이고, 작은 bucket의 현재 채움 위치에 따라 growingResizeBucket 성공 여부가 바뀝니다. checkAllAllocationFailures는 최초 성공 실행의 alloc_index를 분모로 삼으므로 backing의 재할당 경로가 바뀌면 대상 할당 지점에 도달하지 못한 성공을 이 오류로 거부합니다. 오류를 OOM으로 바꾸거나 무시하지 않습니다.
+
+세 테스트 전체만 기존 `testing/checked_allocator.zig.run`으로 감싸 원본 준비·거래·복원·해제를 같은 안전 DebugAllocator에서 수행하게 했습니다. 특히 변경 값을 publish하는 덧말 거래에서 실패 주입 backing만 교체하면 allocator 소유권이 어긋날 수 있으므로 테스트 전체의 backing을 일치시킵니다. 기존 std.testing.checkAllAllocationFailures의 전체 실패 인덱스와 XML/ZIP·원값·이력 단언은 그대로이며 제품 함수는 변경하지 않습니다. 다른 native 실패의 원인까지 이 세 재현으로 확정하지 않습니다.
+
+별도 `/tmp/hwpjs-native-allocator-probe.Kn255w`에서 세 회귀/루트 sentinel은 ReleaseSafe4/4·exit0(`allocator-probe.stderr`), Debug는 공통 checked callback 회귀까지5/5·exit0(`allocator-debug.stderr`)입니다. helper 자체 ReleaseSafe2/2는 삼킨 OOM 거부와 callback 오류 보존을 확인했고, 의도적 누수 대조는 TestAllocatorLeak·exit1로 실패했습니다(`allocator-helper.stderr`, `allocator-negative.stderr`). 누수 검사를 비활성화하지 않았습니다. 최종 커밋용 tree `60ad2fda3e4aab988b2cb185a88d6dafeedcb705`의 수정3파일이 해당 사본과 바이트 일치하며 zig fmt --check·별도 prefix ReleaseSafe 제품 빌드5/5·exit0도 확인했습니다. 진행 중인 고정 native 바이너리의 실패를 소급 통과로 고치거나 새 전체 native gate 성공으로 합산하지 않습니다. 기본 WASM/외부 데모는 변경하지 않았습니다.
+
 ## Zig 0.17 게시 소스의 root 전체 재실행 — 진행 중
 
 공개 gate에 사용한 eddbfa8c·tree `c201fa64d85323f153b5dc691e87d131e30bbbaf`의 `/tmp/hwpjs-published-hwpx-gate.7WPrL4`에서 `zig test src/root.zig -O ReleaseSafe --test-no-exec -femit-bin=.../native-safe`를 Zig0.17.0으로 새로 컴파일했습니다. 빌드 exit0·stdout/stderr0이며 SHA256은 `21be9993e5f06ca8564a5ce9be49a9b246663bce6f3b59b0481439036236296e`입니다. 아래 구형4,114개/부분 결과를 재사용한 바이너리가 아닙니다.
