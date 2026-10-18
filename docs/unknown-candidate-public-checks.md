@@ -20,7 +20,13 @@
 
 공간 확보 뒤 같은 소스와 WASM에서 해당 두 파일을 재실행한 `memo-resource-retry.log/.stderr`는5/5·fail/cancel/skip0·exit0·stderr0(151578.225584ms)입니다. 실제 Worker MEMO label·주석과 표시의 동시 편집·잘못된 metadata의 거부/redo·두 실제 원본의 전체 XML/ZIP을 검사합니다. 이5개 통과를 앞선283개와 합쳐 한 번의288개 전체 gate 성공으로 주장하지 않습니다.
 
-## 완료 경계
+## 추가 참조 원본의 필드 위치 불일치
+
+등록 gate 밖의 `reference/rhwp/samples/task1789/exclusion_probe_line_spacing.hwpx`를 같은082cf938 사본·eaaa0d20 후보로 검사한 `task1789-current-specialized.log/.stderr`는 exit1입니다. 실행에는120초 상한을 두었으며 시간 초과가 아니라 `Unexpected XML change outside the chosen field prefix`로 종료했습니다. 옛77b60b82 후보의 장기 감사 로그에도 같은 원본의 같은 오류가 있었으나 새 재현과 합산하지 않습니다.
+
+별도 공개 API 재현에서 구역0·문단17의 `anchorText`는 UnsupportedStructuralFieldEdit, `fieldRangeTarget(0,17,0,0)`은 beginElement211/start0/end68입니다. 독립 XML inventory의 해당 필드는 id1878228493입니다. 원본 문단 첫 run에는 tbl 다음에 `2. ` 텍스트가 있고, 저장 diff는 이 run의 tbl 앞에 prefix 텍스트를 새로 넣습니다. fieldBegin.dirty는 원래1입니다. 반면 현재 필드 oracle은 해당 문단의 첫 텍스트인 표 뒤 `2. `에 prefix를 넣은 기대 트리를 만듭니다. 따라서 이 원본은 현재 oracle과 저장 위치가 일치하지 않습니다. 이 관측만으로 제품 오류 또는 oracle 오류를 확정하거나 검증을 완화하지 않습니다. 필드의 표시 위치/앞선 개체와 원문 위치 계약을 대조한 뒤 회귀를 추가해야 하며, 이 원본의 필드 prefix 검증은 미해결입니다.
+
+## 등록 gate 상태
 
 도구 탭을 더한082cf938의 build/js/web/tools/tests2,046개 Git blob과 정확히 같은 `/tmp/hwpjs-ribbon-preview.yjDs24`에서 등록97파일·concurrency1·명시적 후보/기준·TAP의 `registered-hwpx-97-tap.log/.stderr`를 새로 시작했습니다. 고정 설치 경로를 읽는 검사에도 이 사본의 zig-out/bin 연결로 같은 후보를 제공합니다. 실행 중이며 완료로 세지 않습니다. [도구 탭 집중 검증](document-ribbon.md)이나 앞선95파일 결과를 새 전체 gate로 합산하지 않습니다.
 
