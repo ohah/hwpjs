@@ -38,6 +38,7 @@ import { previewDrawingOutlineLayers } from "./drawing-outline-layers.mjs";
 import { paintDrawingOutline } from "./drawing-outline-paint.mjs";
 import { layoutPageContent } from "./page-content-layout.mjs";
 import { layoutHwp5PageContent } from "./hwp5-page-layout.mjs";
+import { HWP5_WINDOW_LAYOUT_SCOPE, layoutHwp5WindowContent } from "./hwp5-window-page-layout.mjs";
 import { projectDraftAnchoredObjects } from "./anchored-object-draft.mjs";
 import { projectDraftDrawings } from "./drawing-draft.mjs";
 import { paintRowTransform } from "./row-transform-paint.mjs";
@@ -312,7 +313,8 @@ export function createRenderer(canvas, viewportElement, spacer, onLayout = () =>
       const inkHeight = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
       return { width: horizontalGlyphWidth(metrics.width, fontAt.horizontalScale(paragraph, unit, kind)), height: Math.max(fontAt.textHeight(paragraph, unit, kind), Number.isFinite(inkHeight) ? inkHeight : 0) };
     };
-    const pageLayout = pictureDisplay.format === "hwp5" ? layoutHwp5PageContent(pictureDisplay, measure) : layoutPageContent(pictureDisplay, measure);
+    const windowFragment = pictureDisplay.format === "hwp5" && Boolean(pictureDisplay.window);
+    const pageLayout = pictureDisplay.format === "hwp5" ? (windowFragment ? layoutHwp5WindowContent : layoutHwp5PageContent)(pictureDisplay, measure) : layoutPageContent(pictureDisplay, measure);
     const logicalWidth = Math.max(1, viewport.clientWidth / viewScale - 2 * TEXT_LEFT);
     layout = pageLayout.state === "paginated" ? pageLayout : { ...layoutTableContent(pictureDisplay, logicalWidth, measure), pageLayoutError: pageLayout.error, pageLayoutTableNode: pageLayout.tableNode, pageLayoutAnchorReason: pageLayout.anchorReason, pageLayoutPolicyReason: pageLayout.policyReason };
     layout = attachCreatedTableFlow(pictureDisplay, layout, measure);
@@ -335,6 +337,8 @@ export function createRenderer(canvas, viewportElement, spacer, onLayout = () =>
     canvas.dataset.pageLayoutAnchorReason = layout.pageLayoutAnchorReason ?? "";
     canvas.dataset.pageLayoutPolicyReason = layout.pageLayoutPolicyReason ?? "";
     canvas.dataset.pageLayoutMode = layout.pageLayoutMode ?? "logical-fallback";
+    canvas.dataset.pageLayoutScope = layout.layoutScope ?? (windowFragment ? HWP5_WINDOW_LAYOUT_SCOPE : "document-preview");
+    canvas.dataset.documentPageNumbersExact = windowFragment || layout.documentPageNumbersExact === false ? "false" : "unverified";
     canvas.dataset.limited = String(layout.limited);
     if (scrollOrigin) { viewport.scrollTop = scrollOrigin.top; viewport.scrollLeft = scrollOrigin.left; }
     onLayout(layout);

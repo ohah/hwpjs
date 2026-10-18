@@ -46,12 +46,14 @@ import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
 import { saveDocument } from "./document-save.mjs";
 import { encodeCharacterRanges } from "../../js/character-range-batch.mjs";
 import { createFieldLinkDisplayGuard } from "./field-link-display-guard.mjs";
+import { queryHwp5WindowContent } from "./hwp5-window-query-content.mjs";
 let module, bytes, preview, editor, format;
 let historyEnabled = false;
 let hwpxChartOlePolicy = false;
 let protectionRemoved = false;
 let hwp5StyleOpenError = null;
 let hwpxWindow = null;
+let hwp5Window = null;
 let hwpxCreatedTablesPending = false;
 function normalizationMetadataAvailable() {
   return WebAssembly.Module.exports(module).some(entry => entry.name === "hwp5_edit_normalization_info" && entry.kind === "function");
@@ -60,12 +62,24 @@ function outsideFieldRange(section, paragraph, start, end) {
   if (hwpxCreatedTablesPending && !editor.createdTableHostMode(section)) return false;
   return WebAssembly.Module.exports(module).some(entry => entry.name === "hwpx_edit_can_edit_outside_field" && entry.kind === "function") && editor.canEditOutsideField(section, paragraph, start, end);
 }
-function hwp5Display() {
+function hwp5DisplayProjection() {
+  return editor && historyEnabled && preview.primarySource === "distribution_viewtext" ? { ...preview, readOnly: false } : preview;
+}
+function hwp5ParagraphFormatsAvailable() {
+  return ["hwp5_edit_para_shape_count", "hwp5_edit_para_shape_id", "hwp5_edit_set_paragraph_format"].every(name => WebAssembly.Module.exports(module).some(entry => entry.name === name && entry.kind === "function"));
+}
+function hwp5Display(projected = null) {
   // Only an explicitly opened native editor can lift the display-only gate.
-  const content = displayContent(editor && historyEnabled && preview.primarySource === "distribution_viewtext" ? { ...preview, readOnly: false } : preview);
+  if (!projected && hwp5Window) {
+    const total = preview.sections.reduce((sum, section) => sum + section.paragraphs.length, 0);
+    const offset = Math.min(hwp5Window.offset, Math.max(0, total - 1));
+    projected = queryHwp5WindowContent(editor, hwp5DisplayProjection(), { offset, count: Math.min(hwp5Window.count, total - offset) }, hwp5ParagraphFormatsAvailable());
+  }
+  const content = projected ?? displayContent(hwp5DisplayProjection());
   const normalizationExport = preview.primarySource === "distribution_viewtext" ? "hwp5_edit_open_normalized_distribution" : "hwp5_edit_open_normalized";
   content.normalizationEditingAvailable = normalizationMetadataAvailable() && hwp5StyleOpenError === "RepairedSourceUnsupported" && WebAssembly.Module.exports(module).some(entry => entry.name === normalizationExport && entry.kind === "function");
   if (editor?.supportsNormalizationInfo()) content.normalizationInfo = editor.normalizationInfo();
+  content.documentWindowAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwp5_edit_field_spans" && entry.kind === "function");
   if (preview.primarySource === "distribution_viewtext") content.primarySource = preview.primarySource;
   content.distributionEditingAvailable = preview.primarySource === "distribution_viewtext" && WebAssembly.Module.exports(module).some(entry => entry.name === "hwp5_edit_open_distribution" && entry.kind === "function") && (hwp5StyleOpenError !== "RepairedSourceUnsupported" || content.normalizationEditingAvailable);
   content.paragraphAlignmentAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwp5_edit_set_paragraph_alignment" && entry.kind === "function");
@@ -103,7 +117,8 @@ function hwp5Display() {
   content.characterShadeRangesAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwp5_edit_set_character_shade_ranges" && entry.kind === "function");
   if (protectionRemoved) content.passwordProtectionRemoved = true;
   attachHwp5TextSourcePolicy(editor, content);
-  const paragraphFormatAvailable = ["hwp5_edit_para_shape_count", "hwp5_edit_para_shape_id", "hwp5_edit_set_paragraph_format"].every(name => WebAssembly.Module.exports(module).some(entry => entry.name === name && entry.kind === "function"));
+  if (content.window) return content;
+  const paragraphFormatAvailable = hwp5ParagraphFormatsAvailable();
   const prepared = attachHwp5PictureTails(editor, attachHwp5Pictures(editor, attachHwp5PageSources(editor, attachHwp5ParagraphFormats(editor, attachHwp5Tables(editor, preview, attachHwp5Styles(editor, preview, content, hwp5StyleOpenError)), paragraphFormatAvailable))));
   prepared.hwp5GroupGeometry = projectHwp5GroupGeometry(prepared);
   attachHwp5Lines(editor, prepared);
@@ -288,8 +303,15 @@ self.onmessage = async event => {
     }
     if (message.kind === "set-edit-window") {
       if (!editor || !preview || !historyEnabled) throw new Error("EditorNotOpen");
-      if (format !== "hwpx") throw new Error("UnsupportedDocumentWindowFormat");
       const full = message.offset === null && message.count === null;
+      if (format === "hwp5") {
+        const projected = full ? displayContent(hwp5DisplayProjection()) : queryHwp5WindowContent(editor, hwp5DisplayProjection(), { offset: message.offset, count: message.count }, hwp5ParagraphFormatsAvailable());
+        const content = hwp5Display(projected);
+        hwp5Window = full ? null : { offset: message.offset, count: message.count };
+        reply({ kind: "set-edit-window", content });
+        return;
+      }
+      if (format !== "hwpx") throw new Error("UnsupportedDocumentWindowFormat");
       const projected = full ? displayHwpxContent(preview) : projectHwpxWindow(editor, preview, { offset: message.offset, count: message.count });
       const content = hwpxDisplay(projected);
       hwpxWindow = full ? null : { offset: message.offset, count: message.count };
@@ -298,8 +320,13 @@ self.onmessage = async event => {
     }
     if (message.kind === "query-window" || message.kind === "query-edit-window") {
       if (!editor || !preview) throw new Error("EditorNotOpen");
-      if (format !== "hwpx") throw new Error("UnsupportedDocumentWindowFormat");
       if (message.kind === "query-edit-window" && !historyEnabled) throw new Error("EditorNotOpen");
+      if (format === "hwp5") {
+        const content = queryHwp5WindowContent(editor, hwp5DisplayProjection(), { offset: message.offset, count: message.count }, hwp5ParagraphFormatsAvailable());
+        reply({ kind: message.kind, content });
+        return;
+      }
+      if (format !== "hwpx") throw new Error("UnsupportedDocumentWindowFormat");
       let content = projectHwpxWindow(editor, preview, { offset: message.offset, count: message.count });
       if (message.kind === "query-edit-window") {
         content = hwpxDisplay(content);
@@ -331,6 +358,7 @@ self.onmessage = async event => {
       historyEnabled = false;
       hwp5StyleOpenError = null;
       hwpxWindow = null;
+      hwp5Window = null;
       format = message.format ?? "hwp5";
       hwpxChartOlePolicy = format === "hwpx" && requestedPolicy;
       if (format !== "hwp5" && format !== "hwpx") throw new Error("UnknownDocumentFormat");

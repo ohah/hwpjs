@@ -1,9 +1,9 @@
 import { HWPX_DISPLAY_BOUNDS } from "./hwpx-content.mjs";
 
 export function createDocumentWindowControls({ form, start, count, apply, restore, note, ready, request }) {
-  let closed = false, total = 0, format = null;
+  let closed = false, total = 0, format = null, hwp5Available = false;
   const refresh = () => {
-    const enabled = !closed && format === "hwpx" && total > 0 && ready();
+    const enabled = !closed && (format === "hwpx" || format === "hwp5" && hwp5Available) && total > 0 && ready();
     for (const node of [start, count, apply, restore]) node.disabled = !enabled;
   };
   const integer = node => /^\d+$/.test(node.value) ? Number(node.value) : NaN;
@@ -28,7 +28,7 @@ export function createDocumentWindowControls({ form, start, count, apply, restor
   refresh();
   return {
     refresh,
-    reset() { total = 0; format = null; start.value = "1"; count.value = "100"; note.textContent = ""; refresh(); },
+    reset() { total = 0; format = null; hwp5Available = false; start.value = "1"; count.value = "100"; note.textContent = ""; refresh(); },
     message(message) {
       if (closed) return;
       if (message.error) { if (message.kind === "set-edit-window") note.textContent = `구간 이동 실패: ${message.error}`; refresh(); return; }
@@ -36,6 +36,7 @@ export function createDocumentWindowControls({ form, start, count, apply, restor
       const content = message.content;
       total = Number.isSafeInteger(content.totalParagraphs) && content.totalParagraphs >= 0 ? content.totalParagraphs : 0;
       format = content.format;
+      hwp5Available = content.documentWindowAvailable === true;
       start.max = String(total);
       count.max = String(HWPX_DISPLAY_BOUNDS.maxParagraphs);
       if (["load", "unlock"].includes(message.kind)) { start.value = "1"; count.value = "100"; }

@@ -296,7 +296,7 @@ documentWindowControls = createDocumentWindowControls({
   form: document.querySelector("#document-window-form"), start: document.querySelector("#document-window-start"),
   count: document.querySelector("#document-window-count"), apply: document.querySelector("#document-window-apply"),
   restore: document.querySelector("#document-window-restore"), note: document.querySelector("#document-window-status"),
-  ready: () => Boolean(worker) && openedFormat === "hwpx" && controls.ready() && !controls.busy() && direct.settled(),
+  ready: () => Boolean(worker) && ["hwpx", "hwp5"].includes(openedFormat) && controls.ready() && !controls.busy() && direct.settled(),
   request: message => controls.request(message),
 });
 window.addEventListener("pagehide", event => { if (!event.persisted) documentWindowControls.close(); });
