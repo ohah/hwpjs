@@ -28,6 +28,8 @@
 
 같은 최종 후보로 동결 출판 JS의 기존 필드 회귀27/27·fail/skip/cancel0·exit0을 확인했습니다(`memo-final-field-regressions.log`,101,022ms). 전체 편집 audit나 실제 브라우저 검사는 아닙니다.
 
+같은 최종 후보의 본 작업 트리 Canvas/Worker 검사도1/1·fail/skip/cancel0·exit0입니다(`memo-final-main-canvas.log`,284,313ms). native 권한 조회·직접 입력·독립 XML/ZIP oracle·undo/redo 저장 바이트를 검사했습니다. 모의 DOM/Canvas이며 실제 브라우저나 성능 개선 완료 증거가 아닙니다.
+
 ## 남은 제한
 
 기본 WASM과 외부 데모는 아직 교체하지 않았습니다. 실제 브라우저와 전체 native gate는 별도입니다. 실험00c5 후보의 native-export profile에서 aift 편집 활성화111,770ms 중91,810ms가 계산 결과 대상 조회111회에 쓰였습니다. 정확성 통과를 실사용 성능 완료로 해석하지 않습니다. `/tmp/hwpjs-memo-label-probe.GvEcmM/memo-native-profile.log` 완료 행을 따릅니다.
