@@ -15,6 +15,7 @@
 - [표 번호 참조가 있는 선택 구역의 일반 입력](hwp5-selected-table-number-text.md)
 
 - [표·그림 등 로컬 개체 번호 참조 보존](hwp5-object-number-retention.md)
+- [표 표시 셀의 응답 내 조회 인덱스](hwp5-table-cell-index.md)
 
 - [표 번호 상호참조의 원본 대상 연결](hwp5-table-number-targets.md)
 

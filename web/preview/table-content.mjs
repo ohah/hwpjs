@@ -9,7 +9,7 @@ export function attachTables(editor, preview, content) {
     let bindings;
     try { bindings = editor.tableBindings(section.index); }
     catch (error) { content.tableBindingsErrors.push({ section: section.index, error: error.message }); continue; }
-    const tables = new Map();
+    const tables = new Map(), cellsByList = new Map();
     const selectedTables = content.window ? new Set(bindings.filter(binding => displayed.has(`${section.index}:${binding.paragraph}`)).map(binding => binding.tableNode)) : null;
     for (const binding of bindings) {
       if (selectedTables && !selectedTables.has(binding.tableNode)) continue;
@@ -18,9 +18,11 @@ export function attachTables(editor, preview, content) {
         table = { section: section.index, tableNode: binding.tableNode, rows: binding.rows, columns: binding.columns, cells: [], partial: false };
         tables.set(binding.tableNode, table);
       }
-      let cell = table.cells.find(value => value.listNode === binding.listNode);
+      const cellKey = `${binding.tableNode}:${binding.listNode}`;
+      let cell = cellsByList.get(cellKey);
       if (!cell) {
         cell = { listNode: binding.listNode, row: binding.row, column: binding.column, rowSpan: binding.rowSpan, columnSpan: binding.columnSpan, width: binding.width, height: binding.height, paragraphs: [] };
+        cellsByList.set(cellKey, cell);
         table.cells.push(cell);
       }
       const paragraph = displayed.get(`${section.index}:${binding.paragraph}`);
