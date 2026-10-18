@@ -1,5 +1,13 @@
 # 현재 main 소스의 전체 native 실행
 
+## BMP/GIF/ViewText 소유권과 보호 앵커의 후속 여섯 회귀
+
+고정 실행 index1947/1989/2005/2007/2489/2494도 별도 필터로 재현했습니다. `/tmp/hwpjs-native-allocator-probe.Kn255w/remaining-six-original.stderr`는 대상6개 모두 NondeterministicMemoryUsage·root1개 pass·exit1입니다. BMP/RLE·GIF·ViewText detached report 소유권 및 보호 splice/OLE의 실제 단언 실패라고 추정하지 않고 오류 종류를 확인했습니다.
+
+이 여섯 실패 주입 callback은 전달받은 allocator로 버퍼/후보를 만들고 callback 안에서 해제하며 원래 tree/문단을 읽기만 합니다. 따라서 기존 `testing/allocation_failures.check`에 연결하는 여섯 호출만 교체했습니다. 정상 detached 소유권 검사·별도 메모리 회계와 전체 실패 인덱스/Unicode 경계/opaque payload·실패 원자성 단언은 유지합니다. 세션으로 버퍼를 publish하는 앞선 덧말 거래의 backing 변경과는 구분합니다. 제품 코드와 공통 검사기는 변경하지 않았습니다.
+
+중간 `remaining-six-fixed.stderr`는 비슷한 이름의 styled splice 호출을 먼저 바꿔 대상2489가 여전히 실패한6pass/1fail·exit1 기록입니다. 그 변경을 되돌리고 정확한2489의 호출만 수정했습니다. 최종 `remaining-six-final.stderr`·`remaining-six-debug.stderr`는 ReleaseSafe/Debug 각각7/7·exit0(대상6+root1)입니다. 커밋용 tree `3ce88a007096256b098d8040253f178f36a3ce16`의 변경6파일이 해당 사본과 바이트 일치하며 fmt --check·별도 prefix ReleaseSafe 제품 빌드5/5(제품 컴파일 cached)·exit0도 확인했습니다(`remaining-six-build.stderr`). 기존 helper의 OOM 누락/누수 음성 대조는 앞선 별도 근거가 소유합니다. 고정 전체 실행의 실패 행은 보존하며 이 집중 결과를 새 단일 전체 native 성공으로 합산하지 않습니다.
+
 ## 후속 11개 할당 실패 회귀의 동일 오류 재현과 수정
 
 고정 바이너리의 index138/546/575/620/623/626/700/712/726/886/928도 각각 단독 필터 목록에 넣어 원래 소스에서 재현했습니다. `/tmp/hwpjs-native-allocator-probe.Kn255w/remaining-original.stderr`는 root sentinel1개만 pass·대상11개 모두 NondeterministicMemoryUsage·exit1입니다. 앞선 세 실패와 이름이 비슷하다는 이유로 원인을 추정해 통과 처리한 것이 아닙니다.

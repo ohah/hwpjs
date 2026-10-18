@@ -121,7 +121,7 @@ fn detached(a: std.mem.Allocator) !void {
 }
 test "HWP BMP container evidence outlives CFB and all image buffers" {
     try detached(t.allocator);
-    try t.checkAllAllocationFailures(t.allocator, detached, .{});
+    try @import("../../testing/allocation_failures.zig").check(detached, .{});
 }
 
 fn invalidIndex(a: std.mem.Allocator) !void {

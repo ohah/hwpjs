@@ -181,7 +181,7 @@ test "HWPX protected splice actual fixture preserves text and positions on every
     _ = try session.splitParagraphAnchored(0, 1, 1, 0);
     const section = &session.sections[0];
     const original = &section.structure_values.?.paragraphs[1];
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tree, before: *const model.Paragraph) !void {
             var candidate = try before.clone(allocator);
             defer candidate.deinit(allocator);

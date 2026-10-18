@@ -37,7 +37,7 @@ test "HWPX OLE source anchor preserves opaque payload and protected Unicode boun
     const source = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:p><p:run><p:t>A😀</p:t>" ++ object ++ "<p:t>B</p:t></p:run></p:p></s:sec>";
     var tree = try trees.parse(a, source, .section, 0, 0, .{});
     defer tree.deinit(a);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, parsed: *const trees.Tree) !void {
             var sites = try sites_mod.collect(allocator, parsed, .{});
             defer sites.deinit(allocator);

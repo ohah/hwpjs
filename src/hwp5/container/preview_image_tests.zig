@@ -88,7 +88,7 @@ fn document(a: std.mem.Allocator) !void {
 }
 test "PrvImage raw GIF survives compressed document flag and detached report ownership" {
     try document(t.allocator);
-    try t.checkAllAllocationFailures(t.allocator, document, .{});
+    try @import("../../testing/allocation_failures.zig").check(document, .{});
     var checked: std.heap.DebugAllocator(.{ .safety = true, .enable_memory_limit = true }) = .init;
     defer _ = checked.deinit();
     try document(checked.allocator());

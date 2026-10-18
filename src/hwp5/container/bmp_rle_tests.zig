@@ -74,7 +74,7 @@ fn detached(a: std.mem.Allocator) !void {
 }
 test "BMP RLE HWP scalar evidence outlives CFB index and RGBA buffers" {
     try detached(t.allocator);
-    try t.checkAllAllocationFailures(t.allocator, detached, .{});
+    try @import("../../testing/allocation_failures.zig").check(detached, .{});
     var checked: std.heap.DebugAllocator(.{ .safety = true, .enable_memory_limit = true }) = .init;
     defer _ = checked.deinit();
     try detached(checked.allocator());

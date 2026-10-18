@@ -52,7 +52,7 @@ test "ViewText strict semantics owns detached reports without replacing framing 
     defer _ = checked.deinit();
     try success(checked.allocator());
     try t.expectEqual(@as(usize, 0), checked.total_requested_bytes);
-    try t.checkAllAllocationFailures(t.allocator, success, .{});
+    try @import("../../testing/allocation_failures.zig").check(success, .{});
 }
 fn lateFailure(a: std.mem.Allocator) !void {
     const bytes = try make(a, 2, false, true);
