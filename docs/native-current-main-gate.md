@@ -19,3 +19,11 @@
 차이 중 여섯 파일은 formula_session_tests/formula_structure_transaction_tests/column_boundary_checkpoint_tests/column_boundary_group_extend_tests/paragraph_id_source_parts_tests/paragraph_structure_formula_tests입니다. root.zig의14행에서 시작하는 test 블록에서만 이 여섯 모듈을 import합니다. 나머지 column_boundary_joined_collect.zig와 field_structure_split.zig의 차이도 test 선언 안의 할당 실패 checker 교체뿐입니다.8개 전체 diff를 확인했으며 제품 함수의 변경을 발견하지 못했습니다. 테스트용 관측 할당자/observer·검사 범위의 차이는 유지하며 서로 다른 native 바이너리의 결과를 합산하지 않습니다.
 
 재확인한 공개 후보 SHA256은eaaa0d2007a2e02fce27335e6218379284108e756e285d4859cad28167d0fe5f이고, 설치된 기본 WASM은cbaaf27f858229fedd01b9996ce152bd31aa6d6f346481b7887bcc510ef68346입니다. 이 근거는 보관된 소스와 검증 범위의 대응이지 현재 HEAD로 재빌드한 WASM의 바이트 동일성/전체 native 성공/기본 승격 증거가 아닙니다. 제품 기본을 교체하지 않았습니다.
+
+## 장시간 반복 검사의 관측
+
+공개 HWP5/HWPX gate가 종료된 뒤 남은 native index2507의 밑줄 배치 전체 할당 실패 검사는44,929지점을 순차 재생합니다.1,024지점마다 남기는 stderr가43,008→44,032로 증가했고 동일 PID87595의 CPU 시간이 함께 증가했습니다. 이는 전체4,114개 테스트의 완료 수가 아니라 한 테스트 안의 반복 진행입니다.
+
+해당 PID를1초/10ms 간격으로 관측한 `/tmp/hwpjs-native-underline-87595.sample.txt`의83개 main-thread 샘플은 verifyUnderlineFailures 아래 History.applyBatch·문자 속성 투영/parseHeaderAt·Session.save/header_resource_save를 실행 중이었습니다. physical footprint5184K/peak6144K였으며 RSS와 같은 지표로 합산하지 않습니다. 짧은 샘플을 전체 실행 시간의 정확한 비중이나 완전한 무한 루프 부재 증명으로 확대하지 않습니다. 이 관측과 증가한 반복 지점은 현재 작업이 실제 검증 계산을 수행하고 있다는 근거입니다. 원본 header 재해석과 저장을 실패 주입마다 반복하는 비용은 후속 성능 조사 대상이며, 이 관측만으로 제품 캐시나 검증 범위를 바꾸지 않았습니다.
+
+첫 sample 보고서 쓰기는 일시적 No space left on device였고, 즉시 공간/PID를 다시 확인한 뒤 같은1초 관측의 재시도로 보고서를 저장했습니다. 기존 검사 프로세스는 살아 있었으며 샘플 저장 실패를 native 테스트 실패/성공으로 분류하지 않습니다. 추가 전수 검사나 브라우저는 실행하지 않았습니다.
