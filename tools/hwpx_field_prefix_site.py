@@ -26,7 +26,7 @@ def leading_object_site(tree, begin, text):
             # Text (including an empty site), notes and unknown controls stop us.
             if not isinstance(child.tag, str) or child.tag == P + "secPr":
                 continue
-            if child.tag == P + "ctrl" and all(node.tag in (P + "fieldBegin", P + "fieldEnd", P + "colPr") for node in child):
+            if child.tag == P + "ctrl" and all(node.tag in (P + "fieldBegin", P + "fieldEnd", P + "colPr", P + "pageNum") for node in child):
                 continue
             return text
         if selected is not None:

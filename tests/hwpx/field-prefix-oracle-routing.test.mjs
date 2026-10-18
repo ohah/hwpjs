@@ -46,12 +46,15 @@ for obj in ['tbl','pic','container','ellipse','line','rect']:
  check(body,body.replace('<p:'+obj+'/>','<p:t>X</p:t><p:'+obj+'/>'))
  body='<p:p><p:run>'+begin+'<p:'+obj+'/><p:t>A</p:t>'+end+'</p:run></p:p>'
  check(body,body.replace('<p:'+obj+'/>','<p:t>X</p:t><p:'+obj+'/>'))
-for preceding in ['<p:t/>','<p:t>before</p:t>',"<p:ctrl><p:footNote/></p:ctrl>",'<p:future/>',"<x:ellipse xmlns:x='urn:foreign'/>"]:
+for preceding in ['<p:t/>','<p:t>before</p:t>',"<p:ctrl><p:footNote/></p:ctrl>",'<p:future/>',"<x:ellipse xmlns:x='urn:foreign'/>","<p:ctrl><p:pageNum/><p:future/></p:ctrl>","<p:ctrl><x:pageNum xmlns:x='urn:foreign'/></p:ctrl>"]:
  body='<p:p><p:run>'+begin+preceding+'<p:tbl/><p:t>A</p:t>'+end+'</p:run></p:p>'
  check(body,body.replace('<p:t>A</p:t>','<p:t>XA</p:t>'))
 for metadata in ['', '<p:secPr/>']:
  body='<p:p><p:run>'+begin+metadata+'</p:run><p:run><p:ctrl><p:autoNum num="1" numType="PAGE"/></p:ctrl><p:t>A</p:t>'+end+'</p:run></p:p>'
  check(body,body.replace('<p:ctrl><p:autoNum','<p:t>X</p:t><p:ctrl><p:autoNum'))
+for count in [1,2]:
+ body='<p:p><p:run>'+begin+('<p:ctrl><p:pageNum pos="BOTTOM_CENTER"/></p:ctrl>'*count)+'<p:tbl/><p:t>A</p:t>'+end+'</p:run></p:p>'
+ check(body,body.replace('<p:tbl/>','<p:t>X</p:t><p:tbl/>'))
 body='<p:p><p:run>'+begin+'</p:run><p:run/><p:run><p:tbl/><p:t>A</p:t>'+end+'</p:run></p:p>'
 check(body,body.replace('<p:t>A</p:t>','<p:t>XA</p:t>'))
 body='<p:p><p:run><p:tbl/>'+begin+'<p:t>A</p:t>'+end+'</p:run></p:p>'
@@ -59,9 +62,9 @@ try:check(body,body)
 except ValueError as error:
  if str(error)!='Leading object is outside selected field':raise
 else:raise ValueError('Accepted object outside the chosen field')
-print('21 prefix site cases verified')
+print('25 prefix site cases verified')
 `;
-  for (const flags of [[], ["-O"]]) assert.match(execFileSync("python3", [...flags, "-c", program], { encoding: "utf8", timeout: 10000 }), /21 prefix site cases verified/);
+  for (const flags of [[], ["-O"]]) assert.match(execFileSync("python3", [...flags, "-c", program], { encoding: "utf8", timeout: 10000 }), /25 prefix site cases verified/);
 });
 
 test("actual graphic and automatic-number field prefixes preserve complete XML ZIP and history", async t => {
@@ -74,6 +77,7 @@ test("actual graphic and automatic-number field prefixes preserve complete XML Z
       ["reference/rhwp/samples/hwpx/opengov/36392900_결재문서본문_일일굴착복구공사현황보고.hwpx", 0, 90, 90],
       ["reference/rhwp/samples/hwpx/opengov/36382669_결재문서본문_’26년 제3차 강사선정 심의회 운영결과.hwpx", 2, 121, 8],
       ["reference/rhwp/samples/hwpx/opengov/36382669_결재문서본문_’26년 제3차 강사선정 심의회 운영결과.hwpx", 2, 129, 16],
+      ["reference/rhwp/samples/issue2083_hide_fill_page.hwpx", 2, 121, 1],
     ]) {
       const input = readFileSync(path); editor.open(input); editor.enableHistory();
       const target = editor.fieldRangeTarget(section, paragraph, 0, 0); assert(target);

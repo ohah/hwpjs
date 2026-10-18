@@ -1,5 +1,13 @@
 # HWPX prefix 입력의 원본 run 소속 검증
 
+## pageNum 설정 뒤 표 앞 입력
+
+고정44파일 감사의 `issue2083_hide_fill_page.hwpx` 실패를 게시 검사기에서도 재현했습니다. 원본 SHA256은 `7758c15c57b1ef14fda6e6d29409ae3425f344931f2901641af84a40ef413d2e`이고 실패 위치는 구역2·전체 문단121/로컬1·beginElement32·beginId2012463474입니다. 원본은 fieldBegin 뒤 pageNum 설정2개·표·빈 text 순서이며 저장본은 두 설정을 유지하고 같은 run의 표 바로 앞에 text만 추가했습니다. 기존 독립 선택기는 pageNum을 모르는 ctrl로 보고 표 뒤 text를 기대한 것이 원인입니다. 제품 편집/저장은 변경하지 않습니다.
+
+`hwpx_field_prefix_site.py`의 알려진0폭 설정 목록에 정확한 paragraph namespace의 pageNum만 추가했습니다. autoNum은 계속 보존 개체이며, 외래 pageNum과 pageNum+미지 제어를 섞은 ctrl은 건너뛰지 않는 음성 대조를 추가했습니다. 기존21경계에 쪽 번호1/2개와 두 거부 경계를 더한25개 합성(normal/-O)은 수정 전 Incorrect source prefix site를 재현했고 수정 후 통과했습니다. 실제 원본 좌표도 기존 full XML/ZIP·틀린 기대값 거부·undo/redo·재열기·원본 불변 회귀에 추가했습니다.
+
+3ef0d41e에 이 변경만 더한 tree `099840967ad4d8bd13cd024c5a7034483ce08876`의 `/tmp/hwpjs-page-number-prefix-clean.1oFSzn`에서 f4e0 후보의 해당 원본 전체 전용 감사는77시도/77검증/독립 XML77(필드72)·거부0·exit0·stderr0입니다(`issue2083-fixed.jsonl/.stderr`). 원래 실패는 게시 검사 사본의 `issue2083-specialized.jsonl/.stderr`·`issue2083-repro.json/.log`에 보존합니다. 같은 수정 사본의 게시 afb7 후보·Node24.20.0 집중 회귀도4/4·fail/cancel/skip0·exit0·stderr0(2978ms)입니다(`page-number-tests.log/.stderr`). 고정44파일의 실패 행을 소급 수정하지 않고 전체 명령/조판 또는 최신 전체 gate 완료와 구분합니다.
+
 ## 전용 감사의 WASM 무결성
 
 `hwpx-specialized-input-audit.mjs`는 시작에 읽은 WASM을 기존 `audit-input-identity.mjs`로 고정하고 각 파일 시작과 최종 성공 집계 직전에 메모리/파일 바이트를 재확인합니다. 원본 입력 무결성과 별개이며 변경된 산출물 경로에 성공 집계를 붙이지 않습니다. `manual-result-corpus-audit.test.mjs`의 기존 사본 교체 음성 대조를 매개화해 수동 결과/전용 감사 모두 실제 자식 프로세스의 start 이후 WASM 사본을 교체하고 exit1·성공 집계 부재를 확인합니다. 제품 WASM이나 원본 fixture는 수정하지 않습니다.
