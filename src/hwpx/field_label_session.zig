@@ -106,6 +106,7 @@ fn validateLinkedAtParagraph(tree: *const tree_module.Tree, field: @import("fiel
         if (other.section != field.section or other.begin_marker == field.begin_marker) continue;
         const relationship = try @import("field_nested_ownership.zig").relation(field, other);
         if (relationship == .disjoint) continue;
+        if (@import("field_label_marker_policy.zig").isMemo(begin)) return error.UnsupportedNestedFieldLabel;
         if (local == null) return error.UnsupportedNestedFieldLabel;
         if (relationship == .ancestor or relationship == .descendant) {
             const marker = report.markers[other.begin_marker];
@@ -127,9 +128,7 @@ fn validateLinkedAtParagraph(tree: *const tree_module.Tree, field: @import("fiel
             return error.UnsupportedFieldLabelContent;
         }
     }
-    const kind = begin.begin.?.type_raw orelse return error.UnsupportedFieldLabel;
-    if (!@import("field_text_kind.zig").supported(kind)) return error.UnsupportedFieldLabel;
-    if (begin.unexpected_children != 0 or begin.sub_list_children != 0) return error.UnsupportedFieldLabel;
+    if (!@import("field_label_marker_policy.zig").supported(begin, local != null)) return error.UnsupportedFieldLabel;
     _ = try @import("field_marker_ownership.zig").paragraph(tree, frames, begin.element_index);
     _ = try @import("field_marker_ownership.zig").paragraph(tree, frames, report.markers[field.end_marker].element_index);
 }

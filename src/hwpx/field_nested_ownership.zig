@@ -60,8 +60,8 @@ pub fn dirtyOwners(a: std.mem.Allocator, selected: Range, ranges: []const Range,
         if (kind != .same and kind != .descendant) continue;
         if (other.begin_marker >= report.markers.len) return error.SourceBindingMismatch;
         const marker = report.markers[other.begin_marker];
-        const begin = marker.begin orelse return error.InvalidFieldLinks;
-        if (!@import("field_text_kind.zig").supported(begin.type_raw orelse "") or marker.unexpected_children != 0 or marker.sub_list_children != 0) return error.UnsupportedNestedFieldLabel;
+        _ = marker.begin orelse return error.InvalidFieldLinks;
+        if (!@import("field_label_marker_policy.zig").supported(marker, kind == .same)) return error.UnsupportedNestedFieldLabel;
         if (kind == .same) {
             if (found_selected) return error.SourceBindingMismatch;
             found_selected = true;

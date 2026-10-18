@@ -175,6 +175,8 @@ pub fn build(b: *std.Build) void {
     ownership_parity_step.dependOn(&ownership_parity.step);
     const hwpx_text_tests = b.addSystemCommand(&.{ "node", "--test", "tests/hwpx/text-reader.test.mjs", "tests/hwpx/canvas-preview.test.mjs", "tests/hwpx/editor.test.mjs", "tests/hwpx/formula-editor.test.mjs", "tests/hwpx/note-editor.test.mjs", "tests/hwpx/anchor-editor.test.mjs", "tests/hwpx/header-footer-editor.test.mjs", "tests/hwpx/object-boundary-editor.test.mjs", "tests/hwpx/history-editor.test.mjs" });
     hwpx_text_tests.addArg("tests/hwpx/created-cell-xml.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/memo-label.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/memo-label-canvas.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/field-query-publication.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/nested-field-reference.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/nested-field-canvas.test.mjs");

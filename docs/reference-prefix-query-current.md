@@ -1,5 +1,7 @@
 # 최신 참조 텍스트 읽기·입력 경로 조사
 
+메모 라벨 구현 계약과 본 코드 반영 후 검증은 [HWPX 메모 표시 라벨 편집](hwpx-memo-label-edit.md)을 따릅니다. 아래 실험 기록은 당시의 상태이며 기본 WASM/데모 승격을 뜻하지 않습니다.
+
 ## 2026-10-18 누름틀 보존 후보의 부분 진단과 재실행
 
 같은 후보의 감시 재실행(handle8195)은 최종439경로 summary와 child code1/signalnull까지 기록했습니다. 실제 HWPX432문서·213,765문단은 plain193,416/anchored15,712/field4,570·거부67로 합계가 맞고, 다른 signature6개와 암호화 file_refused1개를 분리합니다. 거부 때문에 규정상 exit1이며 이 재실행은 요약 없이 끝난 최초 실행과 다릅니다. protection-reference-supervised.stdout/.jsonl이 근거이고 stderr는 비어 있습니다. 원본/산출물 해시와 조회 후 무변경 저장 대조이며 경로 성공213,698개를 실제 편집/브라우저/조판 성공으로 계산하지 않습니다.
