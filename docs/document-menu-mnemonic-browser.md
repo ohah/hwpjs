@@ -1,5 +1,7 @@
 # 문서 메뉴 키 입력과 실제 브라우저 검증
 
+공통 실행 흐름으로 분리한 후의 일반 문서/보호 개체 재검증은 [unknownObj 브라우저 검증](hwpx-unknown-object-browser.md)을 따릅니다. 아래28개는 분리 전 시점이며 현재 메뉴 회귀는31개입니다.
+
 ## 현재 계약
 
 열린 메뉴에서만 단일 문자 키를 기존 명령으로 위임합니다. `index.html`의 `data-menu-key`가 키 정의의 단일 출처이며 CSS 표시와 `aria-keyshortcuts`도 이를 사용합니다. 키 해석은 `document-menu-mnemonic.mjs`, 포커스 이동은 `document-menu-keyboard.mjs`, 최신 활성 상태와 명령 위임은 `document-menu-controls.mjs`가 소유합니다. native/Worker 편집 명령이나 별도 메뉴 상태를 추가하지 않습니다.
