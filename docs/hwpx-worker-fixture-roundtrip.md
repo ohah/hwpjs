@@ -6,7 +6,11 @@
 
 필드·앵커 편집은 기존 Worker 명령을 호출하고 save→undo/save→redo/save→undo/save를 비교한다. 편집본을 새로운 세션으로 다시 열어 모든 문단 텍스트와 객체 종류별 개수를 대조하고 변경 없는 재저장도 byte-exact인지 확인한다. 재열기 projection은 기존 `worker-reopen-projection.mjs`를 재사용한다. 직렬화 뒤 바뀔 수 있는 source node ID를 텍스트 동일성으로 오인하지 않는다.
 
+일반 본문의 실제1,230개 prefix 편집·독립 비교와 숫자 입력48곳의 거부 검증은 [별도 감사](hwpx-plain-prefix-verification.md)를 따른다. 권한 조회1,278개나 이 Worker 선언의 재열기 범위를 그 전수 검사와 혼동하지 않는다.
+
 ## 2026-10-18 실측
+
+제목 책갈피 후보2589a92e5e53b0fa222d373f78cba64900a1ae623f19a9c4ea6195df1290634c의 후속 실행도1/1·fail/skip/cancel0·exit0·stderr0입니다(552,225.59ms, `/tmp/hwpjs-title-group-native.6U4qUw/tracked-worker-title-v4.log/.stderr`). 독립 Git index의 추적46경로와 동결 JS/Worker를 사용했으며 실행 테스트 파일 SHA256은11330eb1f8e1bd28f8e3a72e5fea0940c0551c3c3c8be5b0fde06a3ccdebc527입니다. 현재 작업 트리의46개 fixture 바이트도 모두 같음을 별도로 대조했습니다. 앵커146/필드7/계산 결과13의 편집·이력·재열기/재저장과 기존 고정1,444문단 집계가 통과했습니다. 아래 후보들과 합산하지 않으며 일반 본문1,278개의 실제 전수 편집은 이 선언에 포함하지 않습니다.
 
 - 기존 테스트는 계산 결과 전용 문단의 편집 허용을 빠뜨려 `editable` 일치 검사에서 실패했다. main 전후 Worker/adapter를 같은 WASM으로 비교해 추적 46파일의 문단 정책이 동일함을 먼저 확인했다. 제품의 권한 판정을 완화해서 해결하지 않았다.
 - 추적 46경로 중 암호화 1개는 비밀번호 요구를 확인했다. 나머지 문단 합계 1,444개에서 plain 1,278개·anchor 146개·field 7개와 계산 결과 전용 13개를 분리했다. plain 1,278개를 이번 검사에서 전부 편집했다는 뜻은 아니다.

@@ -97,17 +97,26 @@ def verify(data):
                 text.text = data['text']
                 run.insert(index, text)
         elif data.get('mode', 'direct_text') in ('direct_text', 'plain_text'):
-            texts = [t for run in paragraph.findall(namespace + 'run')
-                     for t in run.findall(namespace + 't')]
-            if texts:
-                text = texts[0]
-            elif data.get('mode') == 'plain_text':
-                runs = paragraph.findall(namespace + 'run')
-                if len(runs) != 1 or len(runs[0]) or runs[0].text:
-                    raise ValueError('ambiguous empty run')
-                text = ET.SubElement(runs[0], namespace + 't')
+            if data.get('mode') == 'plain_text':
+                text = None
+                for run in paragraph.findall(namespace + 'run'):
+                    if len(run) == 0:
+                        if run.text:
+                            raise ValueError('ambiguous empty run')
+                        text = ET.SubElement(run, namespace + 't')
+                        break
+                    texts = run.findall(namespace + 't')
+                    if texts:
+                        text = texts[0]
+                        break
+                if text is None:
+                    raise ValueError('missing plain text source owner')
             else:
-                raise ValueError('missing direct text')
+                texts = [t for run in paragraph.findall(namespace + 'run')
+                         for t in run.findall(namespace + 't')]
+                if not texts:
+                    raise ValueError('missing direct text')
+                text = texts[0]
             text.text = data['text'] + (text.text or '')
         else:
             raise ValueError('unknown prefix mode')
