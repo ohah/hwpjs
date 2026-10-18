@@ -5,6 +5,7 @@ import json
 import sys
 import xml.etree.ElementTree as ET
 import zipfile
+from hwpx_field_prefix_site import leading_object_site
 
 P = "{http://www.hancom.co.kr/hwpml/2011/paragraph}"
 
@@ -64,6 +65,8 @@ def compare(before, after, prefix, begin_id=None, paragraph=None, at_unit=0, del
                 raise ValueError("Unknown or ambiguous chosen field fragment")
             begin, _, text = choices[0]
             begin.set("dirty", "1")
+            if at_unit == 0 and deleted_units == 0:
+                text = leading_object_site(expected, begin, text)
             if text.tag == P + "run":
                 text = ET.SubElement(text, P + "t")
             encoded = (text.text or "").encode("utf-16-le")
@@ -155,3 +158,4 @@ elif __name__ == "__main__":
             raise ValueError("Unknown field oracle mode")
         compare(base64.b64decode(payload["before"]), base64.b64decode(payload["after"]), payload["text"], payload.get("beginId"), payload.get("paragraph"), payload.get("atUnit", 0), payload.get("deletedUnits", 0))
         print("Independent field edit: complete XML and non-target ZIP payloads verified")
+

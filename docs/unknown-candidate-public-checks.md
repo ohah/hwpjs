@@ -24,7 +24,13 @@
 
 등록 gate 밖의 `reference/rhwp/samples/task1789/exclusion_probe_line_spacing.hwpx`를 같은082cf938 사본·eaaa0d20 후보로 검사한 `task1789-current-specialized.log/.stderr`는 exit1입니다. 실행에는120초 상한을 두었으며 시간 초과가 아니라 `Unexpected XML change outside the chosen field prefix`로 종료했습니다. 옛77b60b82 후보의 장기 감사 로그에도 같은 원본의 같은 오류가 있었으나 새 재현과 합산하지 않습니다.
 
-별도 공개 API 재현에서 구역0·문단17의 `anchorText`는 UnsupportedStructuralFieldEdit, `fieldRangeTarget(0,17,0,0)`은 beginElement211/start0/end68입니다. 독립 XML inventory의 해당 필드는 id1878228493입니다. 원본 문단 첫 run에는 tbl 다음에 `2. ` 텍스트가 있고, 저장 diff는 이 run의 tbl 앞에 prefix 텍스트를 새로 넣습니다. fieldBegin.dirty는 원래1입니다. 반면 현재 필드 oracle은 해당 문단의 첫 텍스트인 표 뒤 `2. `에 prefix를 넣은 기대 트리를 만듭니다. 따라서 이 원본은 현재 oracle과 저장 위치가 일치하지 않습니다. 이 관측만으로 제품 오류 또는 oracle 오류를 확정하거나 검증을 완화하지 않습니다. 필드의 표시 위치/앞선 개체와 원문 위치 계약을 대조한 뒤 회귀를 추가해야 하며, 이 원본의 필드 prefix 검증은 미해결입니다.
+별도 공개 API 재현에서 구역0·문단17의 `anchorText`는 UnsupportedStructuralFieldEdit, `fieldRangeTarget(0,17,0,0)`은 beginElement211/start0/end68입니다. 독립 XML inventory의 해당 필드는 id1878228493입니다. 원본 문단 첫 run에는 tbl 다음에 `2. ` 텍스트가 있고, 저장 diff는 이 run의 tbl 앞에 prefix 텍스트를 새로 넣습니다. fieldBegin.dirty는 원래1입니다. 기존 필드 oracle은 해당 문단의 첫 텍스트인 표 뒤 `2. `에 prefix를 넣은 기대 트리를 만들었습니다.
+
+후속 원인 대조에서 `source_field_paragraph_positions`가 `anchor_text_positions.buildForFieldText`의 한 단위 개체 경계를 사용하고, 필드 입력은 `field_text_positions.insertionSite`로 필드 소속 site를 선택함을 확인했습니다. 따라서 이 원본의0번 입력은 표 앞 경계이고 표 뒤 텍스트의0번이 아닙니다. 제품 위치 계산을 바꾸지 않고 독립 oracle의 원본 site 선택을 보완했습니다. `tools/hwpx_field_prefix_site.py`는 원본 문단 첫 run의 직접 tbl/pic/container가 선택 필드 시작·끝 사이에 있는 경우에만 앞쪽 텍스트 site를 만듭니다. 오직 삽입 위치0·삭제0에 적용하며, 전체 XML·dirty·ZIP metadata/비대상 payload 비교는 그대로 유지합니다. 저장본을 보고 기대 위치를 고르지 않습니다.
+
+`/tmp/hwpjs-field-boundary.LHORcC`의 oracle은 HEAD83c18d62에 위 세 줄과 새 helper만 추가한 사본입니다. 무관한 작업 트리의 styled-run 삭제 변경은 제외했습니다. 같은 eaaa0d20 후보의 `field-boundary-tests.log/.stderr`는3/3·fail/cancel/skip0·exit0입니다. 새 실제 원본 회귀는 필드 oracle 및 기존 별도 anchor oracle을 normal/-O에서 모두 통과하며, undo/redo·독립 editor 재열기·바이트 일치·원본 불변을 검사합니다. 합성 회귀는 tbl/pic/container 각각의 표 뒤 잘못된 삽입·개체/dirty/필드 끝/기대 문자열/비대상 header 변조와 필드 밖 선행 개체를 거부합니다. 기존 실제 중첩 필드 회귀도 통과했습니다. 두 Python 모드의 기존 field oracle self-test도 exit0입니다. 실제 브라우저/전체 native gate 또는 임의 위치 전수의 증거는 아닙니다.
+
+같은 사본에서 문제 원본 전체의 specialized prefix 감사를 다시 실행한 `task1789-specialized.log/.stderr`는 exit0입니다. 시도90/검증90/독립 XML90(필드86)/거부0이며, 일반·필드 밖 일반 입력 가능한 나머지 문단은 이 specialized 감사 대상이 아닙니다. 이 한 파일의90개 결과를 전체 참조 corpus 통과로 확대하지 않습니다.
 
 ## 등록 gate 상태
 
