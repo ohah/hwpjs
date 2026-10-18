@@ -1,9 +1,42 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { execFileSync } from "../../tools/oracle-process.mjs";
 import { workerCanvasHarness } from "../canvas/worker-harness.mjs";
 import { createFieldLinkDisplayGuard } from "../../web/preview/field-link-display-guard.mjs";
+
+test("actual truncated field keeps preceding Canvas text editable and preserves the unresolved tail", async t => {
+  const path = "reference/rhwp/samples/issue5729/stacked_tac_band_om_top.hwpx";
+  if (!existsSync(path)) return t.skip("reference fixture not present");
+  const source = readFileSync(path), h = await workerCanvasHarness(t, { paintFrames: true });
+  const loaded = await h.send({ kind: "load", format: "hwpx", bytes: source });
+  assert.equal(loaded.error, undefined); assert.equal(loaded.content.readOnly, false);
+  const row = loaded.content.paragraphs.find(p => p.section === 0 && p.paragraph === 2);
+  assert.equal(row.text, "한국잡월드"); assert.equal(row.plainEditable, true);
+  const tail = loaded.content.paragraphs.find(p => p.section === 0 && p.paragraph === 31);
+  assert.equal(tail.editable, false); assert.equal(tail.fieldReadOnlyReason, "InvalidFieldLinks");
+  assert.equal((await h.send({ kind: "enable" })).error, undefined);
+  assert.equal(h.controller.selectTextRange({ section: 0, paragraph: 2, startUnit: 0, endUnit: 0 }), true);
+  const prefix = "앞문단😀<&";
+  assert.equal(h.controller.replaceSelectedText(prefix), true);
+  assert.equal((await h.flush()).error, undefined);
+  const saved = Buffer.from((await h.send({ kind: "save" })).bytes);
+  for (const flags of [[], ["-O"]]) execFileSync("python3", [...flags, "tools/hwpx-anchor-prefix-oracle.py"], {
+    input: JSON.stringify({ mode: "plain_text", before: source.toString("base64"), after: saved.toString("base64"), section: 0, paragraph: 3, text: prefix }), timeout: 30000,
+  });
+  assert.equal((await h.send({ kind: "undo" })).changed, true);
+  assert.deepEqual(Buffer.from((await h.send({ kind: "save" })).bytes), source);
+  const refused = await h.send({ kind: "splice", section: 0, paragraph: 31, startUnit: 0, endUnit: 0, text: "X" });
+  assert.equal(refused.error, "InvalidFieldLinks");
+  assert.deepEqual(Buffer.from((await h.send({ kind: "save" })).bytes), source);
+  assert.equal((await h.send({ kind: "redo" })).changed, true);
+  assert.deepEqual(Buffer.from((await h.send({ kind: "save" })).bytes), saved);
+  const reopened = await h.send({ kind: "load", format: "hwpx", bytes: saved });
+  assert.equal(reopened.error, undefined);
+  assert.equal(reopened.content.paragraphs.find(p => p.paragraph === 2).text, prefix + row.text);
+  assert.deepEqual(Buffer.from((await h.send({ kind: "save" })).bytes), saved);
+  assert.deepEqual(readFileSync(path), source);
+});
 
 test("field link display guard caches only native link refusal per section and request", () => {
   const guard = createFieldLinkDisplayGuard();

@@ -1,5 +1,15 @@
 # HWPX 필드 링크 거부와 읽기 전용 표시
 
+## Zig 0.17의 절단 원본 재확인
+
+`issue5729/stacked_tac_band_om_top.hwpx` SHA256 `5cc90baee062dddf9e14ba70ffb0093686197da7714d3773e5db5fed7dc5a1c9`를 독립 ZIP/XML로 재확인했습니다. 유일한 section0에 CLICK_HERE 시작1854889790/fieldid627272811 하나와 끝0개가 있고 중복 시작/미해결 끝은 없습니다. 마지막32번 문단의 root 시작이며 종료를 임의 합성하지 않습니다. 현재 fieldLabels의32회 InvalidFieldLinks는 같은 구역 링크 결함의 반복 조회이지32개 독립 파서 손상이 아닙니다.
+
+직접 native 조회에서는 앞쪽 일반 문단의 plain 권한이 살아 있습니다. 실제 원본을 추가한 기존 `field-link-readonly-worker.test.mjs`는 문단3의 Canvas 선택·replaceSelectedText→Worker splice·독립 전체 XML/ZIP normal/-O·undo 원문·잘못된 꼬리 편집 거부 후 redo 수정본·재열기/원본 불변을 검사합니다. 마지막32번 문단은 InvalidFieldLinks로 보호합니다. 첫 회귀의 ProtectedFieldRange 기대값은 실제 Worker 경로의 InvalidFieldLinks와 달라 실패했으며 제품 정책을 바꾸지 않고 정확한 거부값으로 고쳤습니다.
+
+`/tmp/hwpjs-zig017-current-fixtures.xouwd1/stacked-field-worker-final.log/.stderr`는 작업 트리 후보 `f4e0f396a3fea6e6354b364ff176e31d72ed00ec643fa566c4abbd8bc2f58d77`에서4/4·fail/cancel/skip0·exit0·stderr0입니다. `stacked-field-query.jsonl/.stderr`는32개 native 라벨 조회/무변경 저장의 별도 진단이며 편집 성공 수에 합산하지 않습니다. 이 회귀 파일이 정규 HWPX gate의 명시적 목록에 없던 것도 확인해 등록했습니다. Canvas DOM/폰트는 대역이며 실제 브라우저·꼬리 복구/편집·전체 gate 완료로 확대하지 않습니다. 기본 WASM은 교체하지 않았습니다.
+
+커밋 후보 트리 `75dd0c2f452e62ce2c07f28d482b7ed757a8ba4f`의 소스를 `/tmp/hwpjs-field-tail-clean.lkehZm`에 추출하고 실제 두 fixture를 복사한 검사도 게시 소스 Zig0.17 후보 `afb7fdfbbc8a9c9cc45a7cdb98ade6be7a6a88b1943e1c5354c63d6715b9e05e`에서4/4·fail/cancel/skip0·exit0·stderr0입니다(`worker-final.log/.stderr`). 같은 사본의 `build-help-final.log/.stderr`는 Zig0.17 build graph 컴파일 exit0·stderr0이며 전체 HWPX gate 실행 증거는 아닙니다. 첫 추출은 존재하지 않는 build.zig.zon을 지정해 실패했으므로 성공에 계수하지 않습니다.
+
 ## 실제 원문 조사
 
 참조 reader 성공 HWPX435개에 대해 최초 source 문단의 fieldLabels(0,1)를 조회했습니다.432개는 조회 성공,3개는 InvalidFieldLinks였고 다른 오류는 없었습니다. 이전 전수 문단 조사6297회는 다음3파일의 XML 문단 수 합계와 같습니다. 실패 횟수를6297개 파일로 세지 않습니다.
