@@ -164,6 +164,14 @@ export fn hwp5_edit_formula_sources(section: u32) u32 {
     output = std.json.Stringify.valueAlloc(a, rows, .{}) catch |err| return fail(err);
     return 1;
 }
+export fn hwp5_edit_field_spans(section: u32) u32 {
+    hwp5_edit_output_free();
+    const s = session() catch |err| return fail(err);
+    const rows = s.fieldSpans(a, section) catch |err| return fail(err);
+    defer a.free(rows);
+    output = std.json.Stringify.valueAlloc(a, rows, .{}) catch |err| return fail(err);
+    return 1;
+}
 export fn hwp5_edit_section_count() u32 {
     const s = session() catch |err| {
         _ = fail(err);

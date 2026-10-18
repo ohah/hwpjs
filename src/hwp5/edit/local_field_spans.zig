@@ -19,6 +19,12 @@ pub fn collectMixedBound(a: std.mem.Allocator, source: []const u8, version: @imp
     return boundWithKind(a, source, version, section, 0);
 }
 
+/// Structural read-only ranges for every known field control ID. This does
+/// not change the narrower field transaction or result-editing admission.
+pub fn collectReadableBound(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version, section: model.Section) ![]Span {
+    return boundWithPolicy(a, source, version, section, 0, true);
+}
+
 /// Source-backed logical list identities, not shared control ancestry.
 pub fn collectBound(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version, section: model.Section, id: u32) ![]Span {
     if (id == 0) return error.UnsupportedSectionControl;
@@ -26,6 +32,10 @@ pub fn collectBound(a: std.mem.Allocator, source: []const u8, version: @import("
 }
 
 fn boundWithKind(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version, section: model.Section, id: u32) ![]Span {
+    return boundWithPolicy(a, source, version, section, id, false);
+}
+
+fn boundWithPolicy(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version, section: model.Section, id: u32, readable: bool) ![]Span {
     var tree = try @import("../body/tree.zig").Tree.parseTextPreview(a, source, version, .{});
     defer tree.deinit(a);
     const ownership = @import("paragraph_owner.zig");
@@ -40,10 +50,14 @@ fn boundWithKind(a: std.mem.Allocator, source: []const u8, version: @import("../
         if (tree.nodes[node].parent != parent) return error.SourceBindingMismatch;
         owners[index] = try ownership.logicalOwner(tree, groups, node);
     }
-    return collectWithOwners(a, section, id, owners);
+    return collectWithPolicy(a, section, id, owners, readable);
 }
 
 fn collectWithOwners(a: std.mem.Allocator, section: model.Section, id: u32, owners: ?[]const ?usize) ![]Span {
+    return collectWithPolicy(a, section, id, owners, false);
+}
+
+fn collectWithPolicy(a: std.mem.Allocator, section: model.Section, id: u32, owners: ?[]const ?usize, readable: bool) ![]Span {
     if (id != 0 and id != controls.id("%hlk") and id != controls.id("%clk") and id != controls.id("%bmk") and id != controls.id("%xrf")) return error.UnsupportedSectionControl;
     if (owners) |values| if (values.len != section.paragraphs.len) return error.SourceBindingMismatch;
     const Open = struct { begin: Position, ordinal: usize, id: u32 };
@@ -70,7 +84,9 @@ fn collectWithOwners(a: std.mem.Allocator, section: model.Section, id: u32, owne
             if (c.code == 3) {
                 const started_id = std.mem.readInt(u32, c.data[0..4], .little);
                 if (id == 0) {
-                    if (started_id != controls.id("%hlk") and started_id != controls.id("%clk") and started_id != controls.id("%bmk") and started_id != controls.id("%xrf") and started_id != controls.id("%fmu")) return error.UnsupportedSectionControl;
+                    if (readable) {
+                        if (!@import("../body/field_start.zig").supports(started_id)) return error.UnsupportedSectionControl;
+                    } else if (started_id != controls.id("%hlk") and started_id != controls.id("%clk") and started_id != controls.id("%bmk") and started_id != controls.id("%xrf") and started_id != controls.id("%fmu")) return error.UnsupportedSectionControl;
                 } else if (started_id != id) return error.UnsupportedSectionControl;
                 if (state.depth == state.stack.len) return error.LimitExceeded;
                 const unit = std.math.add(u32, token.start_unit, std.math.cast(u32, token.raw.len / 2) orelse return error.LimitExceeded) catch return error.LimitExceeded;
@@ -90,6 +106,45 @@ fn collectWithOwners(a: std.mem.Allocator, section: model.Section, id: u32, owne
     var states = streams.valueIterator();
     while (states.next()) |state| if (state.depth != 0) return error.UnsupportedCrossParagraphField;
     return out.toOwnedSlice(a);
+}
+
+fn readableAllocationCase(a: std.mem.Allocator, section: model.Section) !void {
+    const rows = try collectWithPolicy(a, section, 0, null, true);
+    defer a.free(rows);
+    try std.testing.expectEqual(@as(usize, 1), rows.len);
+}
+
+test "readable field ranges accept every known field kind without widening transaction spans" {
+    const a = std.testing.allocator;
+    var begin = [_]u8{ 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0 };
+    var end = [_]u8{ 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0 };
+    var tokens = [_]model.Token{
+        .{ .start_unit = 0, .kind = .control, .encoding = .utf16le, .raw = &begin },
+        .{ .start_unit = 8, .kind = .control, .encoding = .utf16le, .raw = &end },
+    };
+    var paragraphs = [_]model.Paragraph{paragraph(&tokens)};
+    const section: model.Section = .{ .paragraphs = &paragraphs, .source_record_count = 0 };
+    for (controls.rules) |rule| {
+        if (rule.code != 3) continue;
+        std.mem.writeInt(u32, begin[2..6], rule.control_id, .little);
+        std.mem.writeInt(u32, end[2..6], rule.control_id & 0x00ffffff, .little);
+        const rows = try collectWithPolicy(a, section, 0, null, true);
+        defer a.free(rows);
+        try std.testing.expectEqual(@as(usize, 1), rows.len);
+        try std.testing.expectEqual(rule.control_id, rows[0].field_id);
+        try std.testing.expectEqual(rows[0].begin, rows[0].end);
+        const editable = rule.control_id == controls.id("%hlk") or rule.control_id == controls.id("%clk") or rule.control_id == controls.id("%bmk") or rule.control_id == controls.id("%xrf") or rule.control_id == controls.id("%fmu");
+        if (!editable) try std.testing.expectError(error.UnsupportedSectionControl, collectWithOwners(a, section, 0, null));
+    }
+    std.mem.writeInt(u32, begin[2..6], controls.id("%sig"), .little);
+    std.mem.writeInt(u32, end[2..6], controls.id("%sig") & 0x00ffffff, .little);
+    try @import("../../testing/allocation_failures.zig").check(readableAllocationCase, .{section});
+    end[2] ^= 1;
+    try std.testing.expectError(error.FieldMarkerMismatch, collectWithPolicy(a, section, 0, null, true));
+    for ([_]u32{ controls.id("secd"), controls.id("zzzz") }) |id| {
+        std.mem.writeInt(u32, begin[2..6], id, .little);
+        try std.testing.expectError(error.UnsupportedSectionControl, collectWithPolicy(a, section, 0, null, true));
+    }
 }
 
 fn allocationCase(a: std.mem.Allocator) !void {

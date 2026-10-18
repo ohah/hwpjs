@@ -12,7 +12,16 @@ pub const Binding = struct {
 };
 
 pub fn collect(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version, section: model.Section) ![]Binding {
-    const found = try spans.collectMixedBound(a, source, version, section);
+    return collectWithPolicy(a, source, version, section, false);
+}
+
+/// All known field kinds for read-only coordinates, never transaction admission.
+pub fn collectReadable(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version, section: model.Section) ![]Binding {
+    return collectWithPolicy(a, source, version, section, true);
+}
+
+fn collectWithPolicy(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version, section: model.Section, readable: bool) ![]Binding {
+    const found = if (readable) try spans.collectReadableBound(a, source, version, section) else try spans.collectMixedBound(a, source, version, section);
     defer a.free(found);
     var tree = try @import("../body/tree.zig").Tree.parseTextPreview(a, source, version, .{});
     defer tree.deinit(a);
@@ -54,7 +63,13 @@ pub fn collect(a: std.mem.Allocator, source: []const u8, version: @import("../ve
             const header = try body.ControlHeader.parse(node.record.framing.payload);
             if (!start.supports(header.id)) continue;
             if (ordinal == span.ordinal) {
-                if (header.id != span.field_id) return error.FieldMarkerMismatch;
+                if (header.id != span.field_id) {
+                    if (!readable) return error.FieldMarkerMismatch;
+                    _ = @import("../body/control_identity.zig").resolve(span.field_id, header.id, 3, header.properties) catch |err| switch (err) {
+                        error.ControlIdMismatch => return error.FieldMarkerMismatch,
+                        else => return err,
+                    };
+                }
                 selected = child;
             }
             ordinal += 1;

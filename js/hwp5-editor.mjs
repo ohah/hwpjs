@@ -1,5 +1,6 @@
 import { decodeCharacterFontMetrics } from "./character-font-metrics.mjs";
 import { validateAbi } from "./abi.mjs";
+import { decodeHwp5FieldSpans } from "./hwp5-field-spans.mjs";
 import { decodeCharacterEffects } from "./character-effects.mjs";
 import { characterEffectArgs, characterEffectMode } from "./character-effect-args.mjs";
 import { hwp5CharacterOutlineArg } from "./character-outline-args.mjs";
@@ -418,6 +419,11 @@ export async function createExperimentalHwp5Editor(source, input, { distribution
       return decodeHwp5ColumnSources(output(() => wasm.hwp5_edit_column_sources(index)).bytes);
     },
     copyText,
+    fieldSpans(section) {
+      check(); const index = u32(section, "section");
+      if (typeof wasm.hwp5_edit_field_spans !== "function") throw new Error("Hwp5FieldSpansAbiUnavailable");
+      return decodeHwp5FieldSpans(output(() => wasm.hwp5_edit_field_spans(index)).bytes);
+    },
     formulaSources(section) {
       check(); const index = u32(section, "section");
       if (typeof wasm.hwp5_edit_formula_sources !== "function") throw new Error("Hwp5FormulaSourcesAbiUnavailable");

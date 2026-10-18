@@ -262,6 +262,11 @@ pub const Session = opaque {
         if (section >= state.document.sections.len) return error.InvalidSection;
         return @import("drawing_object_extras.zig").read(a, state.decoded[section], state.source.header.version());
     }
+    pub fn fieldSpans(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("field_span_snapshot.zig").Row {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        return @import("field_span_snapshot.zig").read(a, state.decoded[section], state.source.header.version(), state.document.sections[section]);
+    }
     pub fn formulaSources(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("formula_snapshot.zig").Row {
         const state = self.stateConst();
         if (section >= state.document.sections.len) return error.InvalidSection;

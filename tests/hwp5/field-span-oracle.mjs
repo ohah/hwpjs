@@ -3,12 +3,16 @@ import assert from "node:assert/strict";
 import { records } from "./style-preservation/text-record-oracle.mjs";
 
 const kinds = new Set([0x25686c6b, 0x25636c6b, 0x25626d6b, 0x25787266, 0x25666d75]);
-export function independentFieldSpans(bytes) {
-  const all = records(bytes), ancestors = [], parents = [], latestList = new Map(), paragraphs = [];
+export function independentFieldSpans(bytes, { additionalKinds = [] } = {}) {
+  const acceptedKinds = new Set([...kinds, ...additionalKinds]);
+  const all = records(bytes), ancestors = [], children = new Map(), latestList = new Map(), paragraphs = [];
   for (const [index, row] of all.entries()) {
     while (ancestors.length && all[ancestors.at(-1)].level >= row.level) ancestors.pop();
     const parent = ancestors.at(-1) ?? null;
-    parents[index] = parent;
+    if (parent !== null) {
+      if (!children.has(parent)) children.set(parent, []);
+      children.get(parent).push({ ...row, index });
+    }
     if (row.tag === 72) latestList.set(parent, index);
     if (row.tag === 66) {
       const list = parent === null ? null : latestList.get(parent);
@@ -21,10 +25,10 @@ export function independentFieldSpans(bytes) {
   for (const [paragraph, item] of paragraphs.entries()) {
     if (!states.has(item.scope)) states.set(item.scope, []);
     const opened = states.get(item.scope);
-    const direct = all.flatMap((row, index) => parents[index] === item.node ? [{ ...row, index }] : []);
+    const direct = children.get(item.node) ?? [];
     const textRows = direct.filter(row => row.tag === 67);
     assert(textRows.length <= 1, "duplicate independent paragraph text");
-    const headers = direct.filter(row => row.tag === 71 && row.payload.length >= 4 && kinds.has(row.payload.readUInt32LE(0)));
+    const headers = direct.filter(row => row.tag === 71 && row.payload.length >= 4 && acceptedKinds.has(row.payload.readUInt32LE(0)));
     const text = textRows[0]?.payload ?? Buffer.alloc(0);
     assert.equal(text.length % 2, 0);
     let ordinal = 0;
@@ -33,7 +37,11 @@ export function independentFieldSpans(bytes) {
       assert(unit + width <= text.length / 2, "truncated independent control");
       if (code === 3) {
         const field_id = text.readUInt32LE(unit * 2 + 2), header = headers[ordinal];
-        assert(header && header.payload.readUInt32LE(0) === field_id, "independent field header mismatch");
+        const payload = header?.payload;
+        const revisionSign = field_id === 0x25736967 && payload?.length >= 11 && payload.readUInt32LE(0) === 0x25756e6b
+          && payload.length >= 11 + payload.readUInt16LE(9) * 2
+          && payload.subarray(11, 11 + payload.readUInt16LE(9) * 2).toString("utf16le") === "$RevisionSign;1;";
+        assert(header && (header.payload.readUInt32LE(0) === field_id || revisionSign), `independent field header mismatch paragraph=${paragraph} ordinal=${ordinal} marker=${field_id.toString(16)} header=${header?.payload.readUInt32LE(0).toString(16) ?? "missing"}`);
         opened.push({ source_node: header.index, field_id, ordinal: ordinal++, begin: { paragraph, unit: unit + width } });
       } else if (code === 4) {
         const start = opened.pop(), end = text.readUInt32LE(unit * 2 + 2);

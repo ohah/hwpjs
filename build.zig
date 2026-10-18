@@ -102,6 +102,11 @@ pub fn build(b: *std.Build) void {
     editor_api_tests.addArg("tests/hwp5/unselected-table-number-text.test.mjs");
     editor_api_tests.addArg("tests/hwp5/object-number-text.test.mjs");
     editor_api_tests.addArg("tests/hwp5/object-number-canvas.test.mjs");
+    editor_api_tests.addArg("tests/hwp5/field-spans-wire.test.mjs");
+    editor_api_tests.addArg("tests/hwp5/field-spans-editor.test.mjs");
+    editor_api_tests.addArg("tests/hwp5/field-spans-oracle.test.mjs");
+    editor_api_tests.addArg("tests/hwp5/field-spans-abi.test.mjs");
+    editor_api_tests.addArg("tests/hwp5/field-spans-readable.test.mjs");
     editor_api_tests.addArg("tests/hwp5/browser-click-target.test.mjs");
     editor_api_tests.addArg("tests/hwp5/browser-session-close.test.mjs");
     editor_api_tests.addArg("tests/hwp5/reference-browser-arguments.test.mjs");
