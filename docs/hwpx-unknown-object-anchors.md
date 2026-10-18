@@ -2,6 +2,8 @@
 
 후속 [실제 브라우저 검증](hwpx-unknown-object-browser.md)은 개체 Delete 거부·빈 undo·입력·메뉴 이력·다운로드·재업로드와 세션 종료 증거를 소유합니다.
 
+같은 후보의975개 참조 문서 전체 reader JSON 회귀는 [후보 reader 대조](unknown-reader-parity-current.md)를 따릅니다. 같은 거부5개는 지원 성공으로 세지 않습니다.
+
 ## 계약과 출처
 
 `run_anchor.zig`가 정확한2011 paragraph namespace·문단 직접 run 아래의 `unknownObj`만 `unknown_object=21`로 분류합니다. 기존 `dutmal=20`을 포함한 종류 번호는 유지합니다. 별도 whitelist/편집 캐시는 만들지 않고 기존 보호 앵커의 위치·원문 저장·삭제 거부 경로를 재사용합니다. 표시1단위와 기존 확장 컨트롤 원본8단위의 축도 공통 계층이 소유합니다. 외부 namespace, ctrl/t 내부 또는 문단 직접 배치는 이 분류를 얻지 못합니다.
