@@ -10,6 +10,8 @@ actual report 회귀는 수정 전 complete XML mismatch로 실패했습니다. 
 
 eab38188에 이 수정만 더한 tree `bc8f170701940e1d1b8345c66293e5f0d1626830`의 `/tmp/hwpjs-selected-prefix-clean.WSV6QF`에서 게시 afb7 후보·Node24.20.0의 `selected-anchor-tests.log/.stderr`는4/4·fail/cancel/skip0·exit0·stderr0(7556ms)입니다. 공유 Section/master snapshot verifier의 기존 self-test도 Python normal/-O 네 실행 모두 exit0입니다. 같은 사본/f4e0 후보로 보고서 전체 전용 감사를 `issue2006-fixed.jsonl/.stderr`에서 시작했으며 최종 집계/종료 전에는 전체 문서 통과가 아닙니다. 기존 고정44파일 실패 행이나 최신 전체 gate 성공으로 소급하지 않습니다. 제품 파서·저장 로직과 기본 WASM/외부 데모는 변경하지 않았습니다.
 
+앞 절의 후속 보고서 전체 전용 실행은 같은 bc8f1707 사본/f4e0 후보의 `issue2006-fixed.jsonl/.stderr`에서368시도/368검증/독립 XML368(필드0)·거부0·exit0·stderr0으로 완료됐습니다. 단일 좌표 회귀와 별도의 전체 전용 prefix 결과이며, 과거 일반 prefix 결과와 합산해 새 단일 전체 문서/모든 명령 실행으로 바꾸지 않습니다.
+
 ## 텍스트 노드 없는 필드 소유 표 문단
 
 `issue2813/dangjik_dutylog.hwpx`는 게시 검사기에서도 MissingIndependentFieldFragment로 재현됐습니다. 원본 SHA256은 `d785a49b62c43ed5b4602509657a112742d916782828022a355b916bcc19a4c5`이고 위치는 구역0·전체/로컬 문단141·beginElement1574·CLICK_HERE1918049232입니다. 원본 문단은 charPrIDRef14의 run 안45x11 표만 있고 직접 text가 없습니다. native 저장은 그 표 앞에 text를 추가했으나 독립 fragments는 text/빈 run만 수집해 바깥 문단을 누락했습니다. 표 안 셀의 text를 바깥 문단의 위치로 재사용하지 않습니다.
@@ -35,6 +37,14 @@ eab38188에 이 수정만 더한 tree `bc8f170701940e1d1b8345c66293e5f0d1626830`
 `hwpx-specialized-input-audit.mjs`는 시작에 읽은 WASM을 기존 `audit-input-identity.mjs`로 고정하고 각 파일 시작과 최종 성공 집계 직전에 메모리/파일 바이트를 재확인합니다. 원본 입력 무결성과 별개이며 변경된 산출물 경로에 성공 집계를 붙이지 않습니다. `manual-result-corpus-audit.test.mjs`의 기존 사본 교체 음성 대조를 매개화해 수동 결과/전용 감사 모두 실제 자식 프로세스의 start 이후 WASM 사본을 교체하고 exit1·성공 집계 부재를 확인합니다. 제품 WASM이나 원본 fixture는 수정하지 않습니다.
 
 main a19c3bf7에 이 검사/회귀만 추가한 tree `45079ca24d0d7d97d9d358a5799d308d17177a26`의 `/tmp/hwpjs-specialized-artifact-clean.cP2UTC`에서 게시 afb7 후보·Node24.20.0으로 기존 identity 검사와 교체 대조 3/3·fail/cancel/skip0·exit0입니다. 같은 사본의 정상 대조 `issue1893_clickhere_field_roundtrip.hwpx` 전체 전용 감사도 9시도/9검증/독립 XML9(필드6)·거부0·exit0입니다. 이 보강은 감사의 증거 결합이며 새 제품 편집 기능이나 실행 중인 고정44파일 감사 결과의 소급 변경이 아닙니다.
+
+## 전용 감사의 불변 컴파일 결과 재사용
+
+전용 감사는 리더·편집기·저장본 재열기마다 같은 WASM 바이트를 다시 WebAssembly.compile하고 있었습니다. 시작 시 한 번 만든 불변 Module만 공유하고 각 리더/편집기/reopen은 계속 별도 인스턴스·선형 메모리를 갖도록 연결했습니다. 원본/편집 상태 캐시나 WebAssembly.Instance 공유는 추가하지 않았으며 시작/끝의 WASM 메모리/파일 해시 검증도 유지합니다.
+
+`/tmp/hwpjs-specialized-module-clean.0dofZ9/module-before.log`·`module-after.log`는 동일 게시 afb7 후보·Node24.20.0·issue1893 원본에서 실제 compile/instantiate 호출과 서로 다른 memory 객체를 관찰했습니다. compile은11→1이고 instances/distinctMemories는 양쪽11입니다. 두 실행의 전체 전용9/9·독립 XML9(필드6)·거부0·이력/재열기 집계와 WASM 해시가 같고 exit0·stderr0입니다. tracked table 원본도 baseline3compile/3memory를 관찰했고, 새 회귀는1compile/3memory·전체 전용1/1과 XML·이력을 강제합니다. 최초 table 관찰의 사본 fixture 누락 실패는 module-before-table 로그로 보존하며 정상 baseline은 module-before-table-valid입니다.
+
+34f1e69d에 이 변경만 추가한 tree `36f27a63655e9a4e0bd241b82c42d6686d6c6513`의 같은 사본에서 새 회귀·기존 출력 parser·WASM 교체 거부는7/7·fail/cancel/skip0·exit0·stderr0(5225ms)입니다(`module-tests.log/.stderr`). 기존 parser 테스트와 새 module-reuse 테스트를 정규 gate에 각각 한 번 등록해 HWPX 등록 경로107개가 중복 없이 확인됐습니다. build fmt --check·build --help도 exit0·stderr0입니다. 초당/전체 시간 속도 향상이나 실제 편집기 조판 성능을 이 호출 수로 추정하지 않습니다. 진행 중이던 고정 보고서/native/44문서 사본은 바꾸거나 재시작하지 않았습니다.
 
 ## 실제 실패와 원인
 
