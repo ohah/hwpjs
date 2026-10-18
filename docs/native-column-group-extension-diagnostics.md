@@ -4,6 +4,8 @@
 
 `/tmp/hwpjs-title-group-native.6U4qUw/native-tail-after-field-split.jsonl/.stderr`는 고정51fabff6…ef2d1c의3689..3713을25개·status/log/leak0으로 완료한 뒤3714 `column group extension repeats without restoring hidden prefix runs`에서 중단했습니다. peak4,340,944,328바이트·exit1·guardStopped=true이며 전체 범위4111 완료가 아닙니다. 앞선 중단은 [필드 분할 진단](native-field-split-diagnostics.md)을 따릅니다.
 
+같은 구형 바이너리의 `native-tail-after-column-group-extension.jsonl/.stderr`는3715 실제 XML/continuation 검사를1개 완료한 뒤3716 기본/서식 후보의 실패 주입 검사에서 peak4,342,681,032바이트·exit1·guardStopped=true로 중단했습니다. 아래 현재 소스의4개 집중 검사는 이 두 실패 주입 경로를 모두 포함하지만 구형 중단을 소급 성공으로 바꾸지 않습니다.
+
 ## 변경 범위
 
 `column_boundary_group_extend_tests.zig`의 세 checkAllAllocationFailures 호출만 공통 allocation_failures.check로 바꿨습니다. callback·모든 실패 지점·단언·fixture·소스 불변 조건·제품 함수는 유지합니다. 실패 중의 unchanged 검사는 이미 소유한 배열/텍스트를 읽으므로 별도의 실패 allocator 관측 할당을 추가하지 않습니다.
