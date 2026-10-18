@@ -7,7 +7,7 @@ test "HWPX generated-left formula merge allocation failures preserve authority" 
     var baseline = try @import("editor_session.zig").open(a, input, .{});
     defer baseline.deinit();
     try std.testing.expect(try baseline.splitParagraph(0, 1, 1, 0));
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, borrowed: *const @import("editor_session.zig").Session) !void {
             const parts = try allocator.dupe(@import("editor_session.zig").Section, borrowed.sections);
             defer allocator.free(parts);
@@ -27,7 +27,7 @@ test "HWPX generated-left formula merge allocation failures preserve authority" 
         }
     }.run, .{&baseline});
     try std.testing.expect(try baseline.mergeParagraph(0, 2));
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, borrowed: *const @import("editor_session.zig").Session) !void {
             var session = borrowed.*;
             session.allocator = allocator;
@@ -49,7 +49,7 @@ test "HWPX merged formula input allocation failures preserve the complete model"
     const a = std.testing.allocator;
     const input = try @import("test_formula_fixture.zig").zipWithParagraphs(a, "<p:p id='9'><p:run><p:t>AB</p:t></p:run></p:p><p:p id='10'><p:run><p:t>CD</p:t></p:run></p:p>");
     defer a.free(input);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, bytes: []const u8) !void {
             var session = try @import("editor_session.zig").open(allocator, bytes, .{});
             defer session.deinit();
@@ -87,7 +87,7 @@ test "HWPX formula merge transaction allocation failures preserve native authori
     defer a.free(input);
     var baseline = try @import("editor_session.zig").open(a, input, .{});
     defer baseline.deinit();
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, borrowed: *const @import("editor_session.zig").Session) !void {
             const parts = try allocator.dupe(@import("editor_session.zig").Section, borrowed.sections);
             defer allocator.free(parts);

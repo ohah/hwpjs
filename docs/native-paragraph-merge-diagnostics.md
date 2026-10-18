@@ -1,5 +1,7 @@
 # HWPX 문단 병합 실패 주입 진단
 
+후속 계산 필드 병합의 별도 중단과 대조는 [계산 필드 병합 진단](native-formula-merge-diagnostics.md)이 소유합니다.
+
 ## 중단 재현과 변경 범위
 
 2026-10-18 전체 ReleaseSafe 바이너리 `51fabff6dc936cb200e48d9f4b6f25f69760f2b26f401a751389736a76ef2d1c`의 후속 범위3433..4111은3433..3452의20개를 fail/log/leak0으로 완료했습니다. 다음3453 `HWPX merge retains later generated continuations and their current edits`에서 관측 peak4,300,688,792바이트가4,096MiB 한도를 넘어 exit1·guardStopped=true로 종료했습니다. 근거는 `/tmp/hwpjs-title-group-native.6U4qUw/native-tail-after-style-pair.jsonl/.stderr`입니다. 제품 assertion 실패나 전체 통과로 재분류하지 않습니다.
