@@ -66,7 +66,10 @@ pub fn relocateRendered(a: std.mem.Allocator, tree: *const Tree, paragraph: *con
 }
 
 test "page area current XML saves real owner relocation with nested prior edits" {
-    const a = std.testing.allocator;
+    try @import("../testing/checked_allocator.zig").run(verifyCurrentAreaRelocation, .{});
+}
+
+fn verifyCurrentAreaRelocation(a: std.mem.Allocator) !void {
     const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/headerfooter.hwpx", a, .limited(4000000));
     defer a.free(input);
     var session = try @import("editor_session.zig").open(a, input, .{});
@@ -104,7 +107,7 @@ test "page area current XML saves real owner relocation with nested prior edits"
     try std.testing.expectEqual(@as(u32, 4), actual[1].unit);
     const fragment = try write(a, &section.tree, owner, options, 4000000);
     defer a.free(fragment);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, source: *const Tree, current: *const Paragraph, site_options: Options, expected: []const u8) !void {
             const output = try write(allocator, source, current, site_options, 4000000);
             defer allocator.free(output);
