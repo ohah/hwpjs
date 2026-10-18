@@ -8,6 +8,8 @@
 
 실제 Chromium의 `/tmp` 캡처 디렉터리 `hwpjs-menu-browser-Cn3F7P` 실행도 exit0·verified=true·cleanup.success=true입니다. 게시 소스 후보 WASM `afb7fdfbbc8a9c9cc45a7cdb98ade6be7a6a88b1943e1c5354c63d6715b9e05e`로 열린 삽입 메뉴에서 실제 Tab 키를 보내 메뉴 바깥 포커스·전체 메뉴 닫힘·Worker 명령 미발행을 검사했습니다. Popover의 순차 포커스 순서 때문에 한 번의 Tab으로 바깥에 간다는 가정은 실패했고, 최대12회 안에 실제로 바깥에 도달하는지 검사하도록 수정했습니다. 이후 픽스쳐 선택·입력·U/R/S·다운로드·독립 normal/-O XML/ZIP와 재업로드까지 통과했습니다. disclosure helper도 실행 전후 소스 해시 감사에 포함합니다. agent-browser 스킬의 격리/실제 키 입력/소유 브라우저·서버 종료를 사용했으며, 모든 OS 키보드 동치나 전체 fixture UI 통과 주장은 아닙니다.
 
+위 포커스 이동 검증은 게시 커밋 `20d96824`만 `git archive`로 `/tmp/hwpjs-menu-focus-clean.oxh2Xe`에 추출한 뒤에도 반복했습니다. 같은 게시 소스 후보 WASM으로 전체 plain 브라우저 흐름 exit0·verified=true·cleanup.success=true와 집중11/11을 확인했습니다. 캡처는 `hwpjs-menu-browser-iUd8wf`, 격리 세션은 `hwpjs-menu-mnemonic-0ddc1cad2513`이며 후속 조회 active=false·pid=null입니다. 작업 트리의 미커밋 JS에 의존하지 않는 UI 증거이며 현재 HEAD 전체 native gate를 대신하지 않습니다.
+
 ## 메뉴 막대 좌·우 키 이동
 
 메뉴 막대의 기존 키보드는 단일 popup 안의 위/아래·Home/End와 Escape만 처리했습니다. 좌/우 키의 제어기 회귀를 먼저 추가해 defaultPrevented=false로 실패하는 것을 재현했습니다. `document-menu-keyboard.mjs`의 `navigateDocumentMenuBar`가 메뉴 간 순환 포커스/열림 상태만 소유하고, 제어기는 기존 popup layer를 갱신한 뒤 요약에 포커스를 줍니다. 명령 실행·native 편집·WASM은 변경하지 않습니다.
