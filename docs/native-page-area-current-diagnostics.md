@@ -27,3 +27,5 @@ Debug 집중 바이너리 `179ccd4aa22e180ad4ac1522575fadc9221baa63a1f0986572c41
 ReleaseSafe 집중 바이너리 `7dcbd29c370669b956f2c8207ae73c92fc12e37bc02168de49db2e03438bf611`은 같은4,096MiB guardian에서 root 포함2/2·실패/건너뜀/로그/누수0·exit0·guardStopped=false, 관측 peak34,652,520바이트입니다(`guard-safe.jsonl`). Debug `9fbb08b8c57da28582e245a6bebf1a1abea876831eb9e1c5c18d2493e940f296`도2/2·동일0결과·exit0·guardStopped=false, 관측 peak11,288,912바이트입니다(`guard-debug.jsonl`). 최초 잘못된 테스트 범위를 교체한 컴파일 산출물은 실행 전에 구분했고 위 결과에 포함하지 않았습니다.
 
 이 대조는 재현된 메모리 증가가 테스트 실패 주입의 진단 할당 경로에 의해 해소된다는 근거입니다. 제품 편집 메모리 최적화나 모든 누수 부재로 확대하지 않습니다. 이전3,326개와 이 집중2개는 다른 바이너리이므로 합산하지 않으며, 수정된 최신 전체 native 실행은 별도입니다. 종료된 이전 실행의 임시 `.zig-cache`233MiB만 삭제했고 원본·로그·검증 바이너리는 보존했습니다. 캐시는 재빌드로 재생성할 수 있습니다.
+
+`72c3ab63`과 `src/` 전체가 동일한 위 분리 소스에서 전체 ReleaseSafe 바이너리 `5837cd376892f967c6cd942c6708e819fb50e4f93d3a59e0a8fc3bf4d1043adb`를 새로 컴파일했습니다. runner inventory는4,096개이며 이전4,090개 결과를 이어 붙이지 않고 인덱스0부터 같은4,096MiB guardian으로 실행 중입니다(`full-guard.jsonl`·`full-guard.stderr`). 전체 완료/통과 판정은 아직 하지 않았습니다. 별도로 진행 중인 JS/Worker/Canvas 전체 편집 묶음과 이 native 결과도 합산하지 않습니다.
