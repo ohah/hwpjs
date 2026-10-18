@@ -108,6 +108,9 @@ pub fn build(b: *std.Build) void {
     editor_api_tests.addArg("tests/hwp5/field-spans-abi.test.mjs");
     editor_api_tests.addArg("tests/hwp5/field-topology-wire.test.mjs");
     editor_api_tests.addArg("tests/hwp5/field-topology-api.test.mjs");
+    editor_api_tests.addArg("tests/hwp5/field-topology-window.test.mjs");
+    editor_api_tests.addArg("tests/hwp5/field-topology-window-worker.test.mjs");
+    editor_api_tests.addArg("tests/hwp5/document-editor-access.test.mjs");
     editor_api_tests.addArg("tests/hwp5/field-spans-readable.test.mjs");
     editor_api_tests.addArg("tests/hwp5/revision-sign-text.test.mjs");
     editor_api_tests.addArg("tests/hwp5/revision-sign-negative.test.mjs");

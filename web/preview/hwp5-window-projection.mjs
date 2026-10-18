@@ -15,7 +15,17 @@ export function projectHwp5DependencyWindow(editor, projection, { offset, count,
     if (!Number.isSafeInteger(ordinal) || ordinal < 0 || ordinal >= total) throw new Error("WindowDependencyBindingMismatch");
     paragraph.windowOrdinal = ordinal;
     paragraph.windowContext = ordinal < offset || ordinal >= offset + count;
+    if (found.fieldTopologyDiagnostics?.has(paragraph.section)) {
+      paragraph.selectable = !paragraph.windowContext && (paragraph.selectable === true || paragraph.editable === true);
+      paragraph.editable = false;
+      paragraph.fieldTopologyError = "UnresolvedFieldMarkers";
+    }
     if (paragraph.windowContext) { paragraph.editable = false; paragraph.selectable = false; }
+  }
+  const diagnostics = [...(found.fieldTopologyDiagnostics ?? [])].filter(([section]) => content.paragraphs.some(row => row.section === section)).map(([section, unresolved]) => ({ section, unresolved }));
+  if (diagnostics.length) {
+    content.fieldTopologyDiagnostics = diagnostics;
+    content.readOnly = !content.paragraphs.some(row => row.editable === true);
   }
   return { ...content, window: { requestedOffset: offset, requestedCount: count, paragraphOffset: offset, paragraphCount: count, contextCount: plan.ordinals.length - count } };
 }

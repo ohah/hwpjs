@@ -76,6 +76,7 @@ function hwp5Display(projected = null) {
     projected = queryHwp5WindowContent(editor, hwp5DisplayProjection(), { offset, count: Math.min(hwp5Window.count, total - offset) }, hwp5ParagraphFormatsAvailable());
   }
   const content = projected ?? displayContent(hwp5DisplayProjection());
+  content.editorSessionAvailable = editor !== null;
   const normalizationExport = preview.primarySource === "distribution_viewtext" ? "hwp5_edit_open_normalized_distribution" : "hwp5_edit_open_normalized";
   content.normalizationEditingAvailable = normalizationMetadataAvailable() && hwp5StyleOpenError === "RepairedSourceUnsupported" && WebAssembly.Module.exports(module).some(entry => entry.name === normalizationExport && entry.kind === "function");
   if (editor?.supportsNormalizationInfo()) content.normalizationInfo = editor.normalizationInfo();

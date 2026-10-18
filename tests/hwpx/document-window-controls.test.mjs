@@ -2,6 +2,21 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createDocumentWindowControls } from "../../web/preview/document-window-controls.mjs";
 
+test("HWP5 window note discloses unresolved fields without blocking readonly navigation", () => {
+  const h = harness();
+  const content = { format: "hwp5", totalParagraphs: 1531, documentWindowAvailable: true, readOnly: true,
+    window: { requestedOffset: 52, paragraphOffset: 52, paragraphCount: 1 },
+    fieldTopologyDiagnostics: [{ section: 0, unresolved: [{}] }] };
+  h.controls.message({ kind: "set-edit-window", content });
+  assert.match(h.note.textContent, /53~53/);
+  assert.match(h.note.textContent, /필드 범위 미확정 1건.*해당 구역 읽기 전용/);
+  assert.equal(h.apply.disabled, false);
+  h.controls.message({ kind: "load", content: { format: "hwpx", totalParagraphs: 1 } });
+  assert.doesNotMatch(h.note.textContent, /필드 범위 미확정/);
+  h.controls.close();
+});
+
+
 function harness() {
   const nodes = Object.fromEntries(["form", "start", "count", "apply", "restore", "note"].map(key => [key, Object.assign(new EventTarget(), { value: key === "count" ? "100" : "1", disabled: false, textContent: "" })]));
   let ready = true;

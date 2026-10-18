@@ -30,5 +30,6 @@ export function hwp5OwnedWindowDependencies(editor, projection) {
 // Explicit new-ABI route: unavailable field discovery must not become empty data.
 export function hwp5FieldOwnedWindowDependencies(editor, projection) {
   editor = memoHwp5WindowFlows(editor);
-  return compose([hwp5OwnedWindowDependencies(editor, projection), hwp5FieldWindowDependencies(editor, projection), hwp5ColumnWindowDependencies(editor, projection), hwp5RepeatedWindowDependencies(editor, projection), hwp5PageControlWindowDependencies(editor, projection)]);
+  const fields = hwp5FieldWindowDependencies(editor, projection);
+  return { ...compose([hwp5OwnedWindowDependencies(editor, projection), fields, hwp5ColumnWindowDependencies(editor, projection), hwp5RepeatedWindowDependencies(editor, projection), hwp5PageControlWindowDependencies(editor, projection)]), fieldTopologyDiagnostics: fields.fieldTopologyDiagnostics };
 }

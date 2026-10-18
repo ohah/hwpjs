@@ -44,6 +44,10 @@ export function createDocumentWindowControls({ form, start, count, apply, restor
         if (message.kind === "set-edit-window") start.value = String(content.window.requestedOffset + 1);
         note.textContent = `문단 ${content.window.paragraphOffset + 1}~${content.window.paragraphOffset + content.window.paragraphCount} / ${total} · 객체 소유 문단 포함 · 원본 쪽 번호 아님`;
       } else note.textContent = total ? `${total}문단 · 기본 표시 한도 적용` : "";
+      if (content.format === "hwp5" && Array.isArray(content.fieldTopologyDiagnostics)) {
+        const unresolved = content.fieldTopologyDiagnostics.reduce((sum, row) => sum + (Array.isArray(row?.unresolved) ? row.unresolved.length : 0), 0);
+        if (unresolved) note.textContent += ` · 필드 범위 미확정 ${unresolved}건 · 해당 구역 읽기 전용`;
+      }
       refresh();
     },
     close() { if (closed) return; closed = true; form.removeEventListener("submit", submit); restore.removeEventListener("click", full); refresh(); },
