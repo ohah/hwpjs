@@ -733,10 +733,10 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
       committed = renderer.paragraph(target).text; input.value = committed;
       updateReadOnly(); setSelection(next, next); reveal(); return;
     }
-    if ((event.metaKey || event.ctrlKey) && key.toLowerCase() === "a") {
+    if ((event.metaKey || event.ctrlKey) && !event.altKey && !event.shiftKey && key.toLowerCase() === "a") {
       event.preventDefault(); setSelection({ ...target, unit: 0 }, { ...target, unit: input.value.length }); reveal(); return;
     }
-    if ((event.metaKey || event.ctrlKey) && ["z", "y"].includes(key.toLowerCase())) { event.preventDefault(); travel(key.toLowerCase() === "y" || event.shiftKey ? "redo" : "undo"); return; }
+    if ((event.metaKey || event.ctrlKey) && !event.altKey && ["z", "y"].includes(key.toLowerCase())) { event.preventDefault(); travel(key.toLowerCase() === "y" || event.shiftKey ? "redo" : "undo"); return; }
     if (key === "Enter") {
       event.preventDefault();
       if (multipleParagraphs() || (event.shiftKey && target?.createdCell && renderer.paragraph(target)?.softLineBreakAvailable === true)) replaceSelection("\n");

@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[Canvas 단축키 수정키](canvas-shortcut-modifiers.md)는 `HWPJS_TEST_WASM=/absolute/candidate.wasm node --test tests/hwp5/canvas-editor.test.mjs`와 같은 후보의 `node tools/document-menu-browser-audit.mjs`로 모사 Canvas/native 회귀 및 실제 Alt 조합 비소비·입력/저장 왕복을 구분해 검사합니다.
+
 [편람178범위 명시 정책](hwp5-unselected-field-preservation.md)은 `HWPJS_TEST_WASM=/absolute/candidate.wasm node --test tests/hwp5/manual-range-policy-reference.test.mjs`로 실행합니다. 기본 거부 유지·명시적 half-open 입력·독립 Section/비대상 stream·이력·재열기를 검사하며 한글 affinity/조판 또는 기본 정책의 무거부 지원과 구분합니다.
 
 [참조 HWP5 숫자 입력](hwp5-reference-chart-numeric-input.md)은 `HWPJS_TEST_WASM=/absolute/candidate.wasm node --test tests/hwp5/numeric-formula-corpus.test.mjs`로 실행합니다. 실제12입력/3수식의 두 규모 숫자 치환·독립 산술·비대상 stream·이력·재열기를 검사하며 문자 prefix 거부와 전체 편집/조판 완료를 구분합니다.

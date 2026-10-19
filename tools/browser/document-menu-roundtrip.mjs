@@ -40,6 +40,7 @@ export async function runDocumentMenuBrowserAudit(caseName) {
   sourcePaths.push("tools/browser/audit-origin.mjs");
   sourcePaths.push("tools/browser/numeric-target.mjs");
   sourcePaths.push("tools/browser/input-origin.mjs","tools/hwpx-field-prefix-oracle.mjs");
+  sourcePaths.push("web/preview/canvas-editor.mjs");
   sourcePaths.push("tools/browser/save-shortcuts.mjs","web/preview/save-controls.mjs","web/preview/document-download.mjs");
   const sourceHashes = () => Object.fromEntries(sourcePaths.map(path=>[path,hash(readFileSync(resolve(path)))]));
   const sourceSha256 = sourceHashes();
@@ -105,7 +106,7 @@ export async function runDocumentMenuBrowserAudit(caseName) {
         if(message.kind==='splice'&&window.__saveShortcutHold?.next){const held=window.__saveShortcutHold;held.next=false;held.held=true;held.release=()=>post.call(this,message,...rest);return;}
         return post.call(this,message,...rest);
       };
-      window.addEventListener('keydown',event=>window.__menuKeys.push({key:event.key,trusted:event.isTrusted,consumed:event.defaultPrevented,ctrl:event.ctrlKey,meta:event.metaKey}));
+      window.addEventListener('keydown',event=>window.__menuKeys.push({key:event.key,trusted:event.isTrusted,consumed:event.defaultPrevented,ctrl:event.ctrlKey,meta:event.metaKey,alt:event.altKey,shift:event.shiftKey}));
       for(const type of ['beforeinput','input'])document.querySelector('#canvas-input').addEventListener(type,event=>window.__menuInput.push({type,trusted:event.isTrusted,inputType:event.inputType}));
     })()`);
     if(exerciseBrowserRibbonPages(driver))progress("ribbon-keyboard-and-permissions");
@@ -226,6 +227,18 @@ export async function runDocumentMenuBrowserAudit(caseName) {
       assert.deepEqual([sent.section,sent.paragraph,sent.startUnit,sent.endUnit],[0,paragraph-1,config.editRange.start,config.editRange.end]);
     }
     assert.deepEqual(evaluate("window.__menuInput.filter(r=>r.trusted&&r.inputType==='insertText').map(r=>r.type)"),["beforeinput","input"]);
+    if(config.verifyShortcutModifiers){
+      command("focus","#canvas-input");
+      const witness=()=>evaluate('({value:document.querySelector("#canvas-input").value,start:document.querySelector("#canvas-input").selectionStart,end:document.querySelector("#canvas-input").selectionEnd,requests:window.__menuAudit.filter(r=>r.direction==="request").length})');
+      const before=witness();
+      for(const primary of ["Control","Meta"])for(const key of ["a","z","y"]){
+        const count=evaluate("window.__menuKeys.length");command("press",`${primary}+Alt+${key}`);
+        const observed=evaluate(`window.__menuKeys.slice(${count}).find(row=>row.key===${JSON.stringify(key)})`);
+        assert(observed?.trusted&&!observed.consumed&&observed.alt&&observed.ctrl===(primary==="Control")&&observed.meta===(primary==="Meta"),"CanvasAltShortcutWasConsumedOrMissing");
+        assert.deepEqual(witness(),before,"RejectedShortcutChangedSelectionOrDocument");
+      }
+      progress("trusted-alt-shortcuts-not-consumed");
+    }
     menuKey("menu-undo","u");wait(`${replies("undo")}.some(r=>r.changed&&r.revision===0)`);
     assert.equal(evaluate('document.querySelector("#canvas-input").value'),original);
     menuKey("menu-redo","r");wait(`${replies("redo")}.some(r=>r.changed&&r.revision===1)`);

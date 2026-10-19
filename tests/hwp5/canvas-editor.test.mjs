@@ -1,5 +1,28 @@
 import test from "node:test";
 
+test("Canvas uses exact primary modifiers for select-all and history shortcuts", async t => {
+  for (const primary of ["ctrlKey", "metaKey"]) for (const [key, extra] of [["a", { altKey: true }], ["a", { shiftKey: true }], ["z", { altKey: true }], ["y", { altKey: true }]]) await t.test(`ignored/${primary}/${key}/${Object.keys(extra)[0]}`, async t => {
+    const h = await harness(t, "parashape", p => p.paragraph === 5);
+    h.controller.message({ kind: "enable", historyAvailable: true });
+    assert(h.controller.selectTextRange({ ...h.paragraph, startUnit: 1, endUnit: 2 }));
+    const original = Buffer.from(h.native.save().bytes);
+    const event = dispatch(h.input, "keydown", { key, [primary]: true, ...extra });
+    assert.equal(event.defaultPrevented, false);
+    assert.equal(h.requests.length, 0);
+    assert.equal(h.input.selectionStart, 1); assert.equal(h.input.selectionEnd, 2);
+    assert.deepEqual(Buffer.from(h.native.save().bytes), original);
+  });
+  for (const primary of ["ctrlKey", "metaKey"]) for (const [key, shiftKey, command] of [["a", false, null], ["z", false, "undo"], ["z", true, "redo"], ["y", false, "redo"]]) await t.test(`accepted/${primary}/${key}/${shiftKey}`, async t => {
+    const h = await harness(t, "parashape", p => p.paragraph === 5);
+    h.controller.message({ kind: "enable", historyAvailable: true });
+    assert(h.controller.selectTextRange({ ...h.paragraph, startUnit: 1, endUnit: 2 }));
+    const event = dispatch(h.input, "keydown", { key, [primary]: true, shiftKey });
+    assert.equal(event.defaultPrevented, true);
+    if (command) { assert.equal(h.requests.length, 1); assert.equal(h.requests[0].kind, command); }
+    else { assert.equal(h.requests.length, 0); assert.equal(h.input.selectionStart, 0); assert.equal(h.input.selectionEnd, h.input.value.length); }
+  });
+});
+
 test("Canvas respects consumed keys and AltGraph without changing selection or document", async t => {
   for (const state of ["consumed", "altgraph"]) for (const key of ["a", "z", "Enter", "ArrowRight"]) await t.test(`${state}/${key}`, async t => {
     const h = await harness(t, "parashape", p => p.paragraph === 5);

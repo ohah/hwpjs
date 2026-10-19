@@ -63,6 +63,7 @@ export const documentMenuBrowserCases=Object.freeze({
     scope:"one actual formula result: trusted Canvas input, menu U/R/S, independent full XML/ZIP, download and reupload; not recalculation, every result or layout equivalence",
   }),
   plain:Object.freeze({
+    verifyShortcutModifiers:true,
     saveShortcuts:true,
     fixturePicker:true,
     fixturePath:"legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwpx",paragraph:1,
