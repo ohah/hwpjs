@@ -13,15 +13,12 @@ import xml.etree.ElementTree as E
 import zipfile
 
 shared = runpy.run_path(str(Path(__file__).with_name("hwpx-chart-numeric-input-oracle.py")))
+package_checks = runpy.run_path(str(Path(__file__).with_name("hwpx_numeric_package.py")))
+parse = package_checks["parse"]
 P = shared["P"]
 require = shared["require"]
 SOURCE = "6adca8d39bdcf51e8791d8afa1e584b9570eb8b15df901e74ce61cfd500cdb4a"
 PART = "Contents/section0.xml"
-
-
-def parse(raw):
-    require(b"<!DOCTYPE" not in raw and b"<!ENTITY" not in raw, "Unsupported declaration")
-    return E.fromstring(raw, parser=E.XMLParser(target=E.TreeBuilder(insert_comments=True, insert_pis=True)))
 
 
 def layout(root):
@@ -108,16 +105,7 @@ def verify(data):
     before, after = [base64.b64decode(data[key], validate=True) for key in ("before", "after")]
     require(hashlib.sha256(before).hexdigest() == SOURCE, "Observed ladder source bytes")
     require(type(data["paragraph"]) is int and data["text"] in ("1", "2"), "Explicit ladder input")
-    with zipfile.ZipFile(io.BytesIO(before)) as old, zipfile.ZipFile(io.BytesIO(after)) as new:
-        require(old.namelist() == new.namelist() and len(set(old.namelist())) == len(old.namelist()) and old.comment == new.comment, "ZIP inventory")
-        require(old.testzip() is None and new.testzip() is None, "ZIP integrity")
-        for entry in old.infolist():
-            saved = new.getinfo(entry.filename)
-            for key in ("compress_type", "date_time", "extra", "comment", "external_attr", "internal_attr", "create_system"):
-                require(getattr(entry, key) == getattr(saved, key), "ZIP metadata")
-            if entry.filename != PART:
-                require(old.read(entry) == new.read(entry.filename), "Non-target payload")
-        expected = parse(old.read(PART))
+    with package_checks["expectation"](before, after, PART) as (expected, actual):
         targets, results = layout(expected)
         original = calculate(targets, results)
         for key, (ordinal, _, params, _) in results.items():
@@ -141,7 +129,7 @@ def verify(data):
             shared["manual"].selected(expected, ordinal)[1].text = rendered
             affected.append(ordinal)
         require(len(affected) in (1, 2), "Observed direct and downstream result count")
-        require(shared["prefix"].signature(expected) == shared["prefix"].signature(parse(new.read(PART))), "Complete cascaded SUM XML mismatch")
+        require(shared["prefix"].signature(expected) == shared["prefix"].signature(actual), "Complete cascaded SUM XML mismatch")
     return {"inputs": 28, "formulas": 14, "affected": affected}
 
 

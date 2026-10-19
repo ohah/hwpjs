@@ -8,6 +8,8 @@
 
 ## 책임과 SSOT
 
+전체 ZIP/XML 봉투는 [공통 숫자 oracle 모듈](hwpx-numeric-oracle-envelope.md)이 소유합니다. 이 문서의 고정 원본·의존 그래프·기대 변경은 연쇄 원본 oracle의 책임으로 유지합니다.
+
 `tools/hwpx-cascaded-sum-input-oracle.py`는 정확한 원본 바이트·14개 정의/결과 주소·28개 단일 입력 셀을 확인합니다. 원래 cache/Command/표시값을 먼저 Decimal 계산과 대조한 뒤 의존 그래프를 재평가합니다. 원본에 없는 입력이나 순환/누락 의존값은 추측하지 않습니다. 새 제품 수식 파서를 만들지 않고 기존 독립 reference parser·정수 출력 포맷·필드 결과 선택·XML signature를 재사용합니다.
 
 기대 출력은 선택한 입력 hp:t와 실제로 바뀐 직접/후속 SUM의 LastResult/Command/dirty/표시만 수정합니다. 전체 section XML signature·ZIP 목록/CRC/comment·메타데이터·비대상 payload를 대조합니다. 같은 숫자처럼 보인다는 이유로 다른 문단/스타일/병합 구조 변경을 정규화하지 않습니다.

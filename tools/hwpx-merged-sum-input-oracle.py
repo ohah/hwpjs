@@ -12,14 +12,11 @@ from pathlib import Path
 import runpy
 
 numeric = runpy.run_path(str(Path(__file__).with_name("hwpx-chart-numeric-input-oracle.py")))
+package_checks = runpy.run_path(str(Path(__file__).with_name("hwpx_numeric_package.py")))
+parse = package_checks["parse"]
 P = numeric["P"]
 require = numeric["require"]
 SOURCE = "ce9f7275b9c84e4f032c218b9b6f94cf53c24f6e91fba30be7fd55b17acee924"
-
-
-def parse(raw):
-    require(b"<!DOCTYPE" not in raw and b"<!ENTITY" not in raw, "Unsupported declaration")
-    return E.fromstring(raw, parser=E.XMLParser(target=E.TreeBuilder(insert_comments=True, insert_pis=True)))
 
 
 def layout(root):
@@ -85,16 +82,8 @@ def inventory(raw):
 def verify(data):
     before, after = [base64.b64decode(data[key], validate=True) for key in ("before", "after")]
     require(type(data["paragraph"]) is int and data["text"] == "1", "Explicit numeric replacement")
-    with archive(before) as old, zipfile.ZipFile(io.BytesIO(after)) as new:
-        require(old.namelist() == new.namelist() and len(set(old.namelist())) == len(old.namelist()) and old.comment == new.comment, "ZIP inventory")
-        require(old.testzip() is None and new.testzip() is None, "ZIP integrity")
-        for entry in old.infolist():
-            current = new.getinfo(entry.filename)
-            for key in ("compress_type", "date_time", "extra", "comment", "external_attr", "internal_attr", "create_system"):
-                require(getattr(entry, key) == getattr(current, key), "ZIP metadata")
-            if entry.filename != "Contents/section0.xml":
-                require(old.read(entry) == new.read(entry.filename), "Non-target payload")
-        expected = parse(old.read("Contents/section0.xml"))
+    require(hashlib.sha256(before).hexdigest() == SOURCE, "Observed merged SUM source bytes")
+    with package_checks["expectation"](before, after, "Contents/section0.xml") as (expected, actual):
         targets, results = layout(expected)
         require(data["paragraph"] in targets, "Observed numeric target")
         selected = targets[data["paragraph"]]
@@ -116,7 +105,6 @@ def verify(data):
             numeric["manual"].selected(expected, ordinal)[1].text = value
             changed += 1
         require(changed == 1, "One dependent SUM result")
-        actual = parse(new.read("Contents/section0.xml"))
         require(numeric["prefix"].signature(expected) == numeric["prefix"].signature(actual), "Complete merged SUM XML mismatch")
 
 

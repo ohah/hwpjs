@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[BELOW 입력](hwpx-below-sum-input-corpus.md)과 [공통 숫자 oracle 봉투](hwpx-numeric-oracle-envelope.md)는 `HWPJS_TEST_WASM=/absolute/candidate.wasm node --test --test-concurrency=1 tests/hwpx/below-sum-input-corpus.test.mjs tests/hwpx/numeric-package-oracle.test.mjs`로 실제50입력/설명·normal/-O 전체 XML/ZIP·변조 거부·이력/재열기를 검사합니다. 공통 봉투만 검사하려면 두 번째 테스트 파일을 단독 실행하며 후보 WASM은 필요하지 않습니다.
+
 [여러 표의 SUM·ABOVE 입력](hwpx-nested-sum-input-corpus.md)은 `HWPJS_TEST_WASM=/absolute/candidate.wasm node --test tests/hwpx/nested-sum-input-corpus.test.mjs`로 실제22입력·표별 분모·normal/-O XML/ZIP·거부/이력/재열기를 검사합니다. 모든 방향 수식/브라우저/원본 조판 검증은 아닙니다.
 
 [연쇄 SUM 입력](hwpx-cascaded-sum-input-corpus.md)은 `HWPJS_TEST_WASM=/absolute/candidate.wasm node --test tests/hwpx/cascaded-sum-input-corpus.test.mjs`로 실제28입력의 직접/후속 결과·normal/-O XML/ZIP·이력/재열기를 검사합니다. 후보는 명시적으로 지정하며 모든 숫자 포맷/편집 명령 완료와 구분합니다.

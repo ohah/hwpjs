@@ -12,14 +12,11 @@ import xml.etree.ElementTree as E
 import zipfile
 
 numeric = runpy.run_path(str(Path(__file__).with_name("hwpx-chart-numeric-input-oracle.py")))
+package_checks = runpy.run_path(str(Path(__file__).with_name("hwpx_numeric_package.py")))
+parse = package_checks["parse"]
 P, require = numeric["P"], numeric["require"]
 SOURCE = "e7b147f7cea66c97bed79085a3d89c2656037e0f711232f659ed3c7344984f62"
 PART = "Contents/section0.xml"
-
-
-def parse(raw):
-    require(b"<!DOCTYPE" not in raw and b"<!ENTITY" not in raw, "Unsupported declaration")
-    return E.fromstring(raw, parser=E.XMLParser(target=E.TreeBuilder(insert_comments=True, insert_pis=True)))
 
 
 def layout(root):
@@ -90,16 +87,7 @@ def verify(data):
     before, after = [base64.b64decode(data[key], validate=True) for key in ("before", "after")]
     require(hashlib.sha256(before).hexdigest() == SOURCE, "Observed nested SUM source bytes")
     require(type(data["paragraph"]) is int and data["text"] == "1", "Explicit nested SUM input")
-    with zipfile.ZipFile(io.BytesIO(before)) as old, zipfile.ZipFile(io.BytesIO(after)) as new:
-        require(old.namelist() == new.namelist() and len(set(old.namelist())) == len(old.namelist()) and old.comment == new.comment, "ZIP inventory")
-        require(old.testzip() is None and new.testzip() is None, "ZIP integrity")
-        for entry in old.infolist():
-            saved = new.getinfo(entry.filename)
-            for key in ("compress_type", "date_time", "extra", "comment", "external_attr", "internal_attr", "create_system"):
-                require(getattr(entry, key) == getattr(saved, key), "ZIP metadata")
-            if entry.filename != PART:
-                require(old.read(entry) == new.read(entry.filename), "Non-target payload")
-        expected = parse(old.read(PART))
+    with package_checks["expectation"](before, after, PART) as (expected, actual):
         targets, results = layout(expected)
         for ordinal, (_, params, operands) in enumerate(results):
             rendered = numeric["formatted"](sum((Decimal(text.text.replace(",", "")) for text in operands), Decimal(0)), "%g,")
@@ -116,7 +104,7 @@ def verify(data):
         params["Command"].text = params["Formula"].text + "??%g,;;" + rendered
         field.set("dirty", "1")
         numeric["manual"].selected(expected, ordinal)[1].text = rendered
-        require(numeric["prefix"].signature(expected) == numeric["prefix"].signature(parse(new.read(PART))), "Complete nested SUM XML mismatch")
+        require(numeric["prefix"].signature(expected) == numeric["prefix"].signature(actual), "Complete nested SUM XML mismatch")
     return {"inputs": 22, "formulas": 3, "affected": [ordinal]}
 
 

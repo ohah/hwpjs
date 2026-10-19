@@ -8,6 +8,8 @@ ABOVE 결과 셀은 `(6,11)`이며 위의 숫자 행1~10만 더합니다. 행0�
 
 ## 책임과 실패 대조
 
+전체 ZIP/XML 봉투는 [공통 숫자 oracle 모듈](hwpx-numeric-oracle-envelope.md)이 소유합니다. 원본별 표/방향 입력 선택과 기대 계산은 이 원본 oracle이 계속 소유합니다.
+
 `tools/hwpx-nested-sum-input-oracle.py`는 고정 원본의 표 소속·셀 주소·단일 숫자 leaf를 독립 XML에서 선택하고 Decimal로 계산합니다. 정수/소수 출력 포맷·필드 결과 leaf 선택·전체 XML signature는 기존 독립 oracle을 재사용합니다. 제품 parser/evaluator나 저장본에서 기대 피연산자를 가져오지 않습니다.
 
 기대 변경은 선택 입력과 해당 표의 결과 LastResult/Command/dirty/표시뿐입니다. 다른 두 수식·전체 section XML·다른 ZIP payload·항목 순서/CRC/comment·일곱 metadata 필드를 대조합니다. 각 표의 첫 입력에서 정상 재직렬화 대조 후 입력/결과/다른 표/캐시/명령/dirty/결과 아래 값/다른 payload/metadata의9종 변조를 거부합니다.

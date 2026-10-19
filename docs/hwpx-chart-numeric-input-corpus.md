@@ -4,6 +4,8 @@
 
 [중첩 문서의 여러 표 SUM·ABOVE 입력22곳](hwpx-nested-sum-input-corpus.md)은 표별 소속과 방향 집계의 경계를 별도 독립 검증으로 관리합니다.
 
+[BELOW 숫자 입력50곳](hwpx-below-sum-input-corpus.md)은 두 문단 셀의 비율 설명·수동 표시·필드 밖 suffix·여러 표/열 소속을 별도 검증합니다. 병합/연쇄/여러 표/BELOW 네 원본의 보존 검사는 [공통 oracle 봉투](hwpx-numeric-oracle-envelope.md)를 공유합니다.
+
 ## 기본 데모와 분리한 후보 미리보기
 
 ### 원격 URL의 실제 브라우저 검증

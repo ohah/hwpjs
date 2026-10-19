@@ -198,6 +198,8 @@ pub fn build(b: *std.Build) void {
     hwpx_text_tests.addArg("tests/hwpx/merged-sum-input-corpus.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/cascaded-sum-input-corpus.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/nested-sum-input-corpus.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/below-sum-input-corpus.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/numeric-package-oracle.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/oracle-process-async.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/plain-fixture-audit-arguments.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/document-menu-controls.test.mjs");
