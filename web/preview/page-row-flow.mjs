@@ -3,9 +3,10 @@ import { columnReferenceBoxes } from "./column-reference-boxes.mjs";
 import { reserveTableVerticalFlow } from "./table-vertical-flow-reservation.mjs";
 import { pageSequenceReference } from "./page-sequence-reference.mjs";
 import { isHardLineBreak } from "./hard-line-break.mjs";
+import { positionedRowFragments, positionedRowOwnerMatches } from "./positioned-row-fragments.mjs";
 
 /** Paginate measured body rows. Caller owns shaping, columns and section selection. */
-export function paginateBodyRows(rows, setting, paragraphFlows, { x = 20, y = 20, gap = 20, zoneGap = 0, maxPages = 2000, columnDeclaration, columnZones = false, measureRow, maxRows = 20000, rowY, columnBottom, minimumRowPage } = {}) {
+export function paginateBodyRows(rows, setting, paragraphFlows, { x = 20, y = 20, gap = 20, zoneGap = 0, maxPages = 2000, columnDeclaration, columnZones = false, measureRow, measurePositionedRow, maxRows = 20000, rowY, columnBottom, minimumRowPage } = {}) {
   const unavailable = error => ({ state: "unavailable", error });
   if (![x, y, gap, zoneGap].every(Number.isFinite) || gap < 0 || zoneGap < 0 || !Number.isSafeInteger(maxPages) || maxPages < 1) return unavailable("InvalidPageFlowBounds");
   const initial = pageReferenceBoxes(setting, { x, y });
@@ -15,6 +16,7 @@ export function paginateBodyRows(rows, setting, paragraphFlows, { x = 20, y = 20
   if (rowY !== undefined && typeof rowY !== "function") return unavailable("InvalidPageFlowBounds");
   if (columnBottom !== undefined && typeof columnBottom !== "function") return unavailable("InvalidPageFlowBounds");
   if (minimumRowPage !== undefined && typeof minimumRowPage !== "function") return unavailable("InvalidPageFlowBounds");
+  if (measurePositionedRow !== undefined && typeof measurePositionedRow !== "function") return unavailable("InvalidPageFlowBounds");
   if (typeof columnZones !== "boolean" || (columnZones && columnDeclaration !== undefined)) return unavailable("InvalidPageFlowBounds");
   if (columnZones) columnDeclaration = paragraphFlows[0]?.column_changes?.filter(change => change.unit === 0).at(-1)?.declaration ?? paragraphFlows[0]?.column_declaration;
   const columnsFor = body => columnDeclaration === undefined ? { state: "placed", boxes: [body] } : columnReferenceBoxes(body, columnDeclaration);
@@ -62,7 +64,7 @@ export function paginateBodyRows(rows, setting, paragraphFlows, { x = 20, y = 20
     return true;
   };
   const input = rows[Symbol.iterator]();
-  let pending, limited = false;
+  let pending, limited = false, positioned = false;
   while (true) {
     const source = pending ?? input.next().value;
     pending = undefined;
@@ -123,6 +125,10 @@ export function paginateBodyRows(rows, setting, paragraphFlows, { x = 20, y = 20
         if (!Number.isFinite(proposed) || proposed < cursor) return unavailable("InvalidPageRowPosition");
         cursor = proposed;
       }
+      if (measurePositionedRow) {
+        row = measurePositionedRow(source, row, { y: cursor, column: current.columns[columnOrdinal], pageOrdinal: current.ordinal, columnOrdinal });
+        if (!validRow(row) || !positionedRowOwnerMatches(source, row)) return unavailable("UnsupportedPageRow");
+      }
       const column = current.columns[columnOrdinal], fullBottom = column.y + column.height;
       const bottom = columnBottom ? columnBottom(row, { column, pageOrdinal: current.ordinal, columnOrdinal, placedRows: result }) : fullBottom;
       if (!Number.isFinite(bottom) || bottom < column.y || bottom > fullBottom) return unavailable("InvalidPageColumnBottom");
@@ -156,12 +162,16 @@ export function paginateBodyRows(rows, setting, paragraphFlows, { x = 20, y = 20
     if (!paragraphAnchors.has(anchorKey)) paragraphAnchors.set(anchorKey, cursor);
     const sourceEnd = source.endUnit ?? source.paragraphSource?.text.length;
     if (source.paragraphSource && (!Number.isInteger(sourceEnd) || sourceEnd > source.paragraphSource.text.length || !Number.isInteger(row.endUnit) || row.endUnit > sourceEnd || row.endUnit < source.startUnit || row.endUnit === source.startUnit && source.startUnit < sourceEnd)) return unavailable("UnsupportedPageRow");
-    result.push({ ...row, x: column.x, y: cursor, ...(rowY ? { flowAnchorY } : {}), columnOrdinal, zoneOrdinal, pageOrdinal: current.ordinal, referenceBoxes: { paper: current.paper, page: current.page, column } });
+    const expanded = row.positionedFragments === undefined ? { state: "expanded", rows: [row] }
+      : positionedRowFragments(source, row, maxRows - result.length);
+    if (expanded.state !== "expanded") return expanded;
+    positioned ||= row.positionedFragments !== undefined;
+    for (const fragment of expanded.rows) result.push({ ...fragment, x: column.x, y: cursor, ...((rowY || measurePositionedRow) ? { flowAnchorY } : {}), columnOrdinal, zoneOrdinal, pageOrdinal: current.ordinal, referenceBoxes: { paper: current.paper, page: current.page, column } });
     cursor += row.height; zoneBottom = Math.max(zoneBottom, cursor); previous = key;
     const terminalBreak = source.paragraphSource && sourceEnd === source.paragraphSource.text.length && row.startUnit < sourceEnd && isHardLineBreak(source.paragraphSource.text.slice(-1));
     if (source.paragraphSource && (row.endUnit < sourceEnd || terminalBreak)) {
       pending = { ...source, startUnit: row.endUnit };
     }
   }
-  return { state: "paginated", rows: result, pages, limited, ...(columnZones || initialColumns.boxes.length > 1 ? { spatialRows: true } : {}), height: pages.length ? pages.at(-1).paper.y + pages.at(-1).paper.height : y };
+  return { state: "paginated", rows: result, pages, limited, ...(positioned || columnZones || initialColumns.boxes.length > 1 ? { spatialRows: true } : {}), height: pages.length ? pages.at(-1).paper.y + pages.at(-1).paper.height : y };
 }
