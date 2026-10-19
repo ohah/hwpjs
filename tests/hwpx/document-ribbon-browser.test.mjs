@@ -4,6 +4,19 @@ import { readFileSync } from "node:fs";
 import { openBrowserRibbonPage } from "../../tools/browser/ribbon-page.mjs";
 import { hwpxGateTestPaths } from "../../tools/hwpx-gate-registration.mjs";
 
+test("HWPX gate inventory retains shared-folder tests and excludes foreign commented or outside commands", () => {
+  const source = `const hwpx_text_tests = b.addSystemCommand(&.{ "node", "--test", "tests/hwpx/first.test.mjs", "tests/wasm/initial.test.mjs" });
+    hwpx_text_tests.addArg("tests/wasm/export-parity.test.mjs");
+    hwpx_text_tests.addArg("tests/hwp5/shared.test.mjs");
+    // hwpx_text_tests.addArg("tests/wasm/commented.test.mjs");
+    foreign_tests.addArg("tests/wasm/foreign.test.mjs");
+    hwpx_text_tests.step.dependOn(b.getInstallStep());
+    hwpx_text_tests.addArg("tests/wasm/outside.test.mjs");`;
+  assert.deepEqual(hwpxGateTestPaths(source), ["tests/hwpx/first.test.mjs", "tests/wasm/initial.test.mjs", "tests/wasm/export-parity.test.mjs", "tests/hwp5/shared.test.mjs"]);
+  const actual = hwpxGateTestPaths(readFileSync(new URL("../../build.zig", import.meta.url), "utf8"));
+  assert.equal(actual.filter(path => path === "tests/wasm/export-parity.test.mjs").length, 1);
+});
+
 test("browser ribbon adapter uses a guarded real click and confirms selected visible state", () => {
   for (const name of ["home", "insert", "view"]) {
     const commands = [];

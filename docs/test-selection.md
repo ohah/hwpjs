@@ -1,5 +1,11 @@
 # 집중 테스트의 정확한 파일 선택
 
+## Gate 목록의 공통 폴더 검사
+
+`hwpxGateTestPaths`는 HWPX gate의 초기 literal 인자와 독립 addArg 줄에 등록된 모든 `tests/` 경로를 반환합니다. 폴더를 `tests/hwpx/`로 제한하면 같은 gate의 `tests/wasm/export-parity.test.mjs`가 누락됩니다. 주석·다른 command·gate 바깥 줄은 여전히 제외합니다. 이 목록은 실행 결과가 아니며 파일 수나 종료0만으로 전체 검사 성공을 판단하지 않습니다.
+
+공통 폴더의 초기/추가 인자·주석/다른 command/종료 뒤 인자·실제 export-parity 등록을 기존 정규 리본 경계 회귀에서 검사합니다. HEAD에 해당 helper/검사만 얹은 tree `f07d0d4fe2925b34a270d52f7420a45e503018d8`의 `/tmp/hwpjs-gate-inventory-clean.LtYq3f/tests.log/.stderr`는4/4·fail/cancel/skip0·exit0·stderr0입니다. 먼저 실행한 작업 트리의 미게시 차트 전수 등록 검사는 변경 전/후 동일하게 미등록 chart-mixed-current-values에서 실패했고, HEAD의 별도 미등록 chart-controls 검사도 이 수정의 검증에 채택하지 않았습니다. 기존 사용자 차트 파일/등록을 임의로 추가하지 않았으며 전체 HWPX gate 통과로 확대하지 않습니다.
+
 ## 중첩 runner와 게시본 선택 반례 — 2026-10-16
 
 추가로 runner 자체를 symlink나 macOS /tmp alias 경로로 실행하면 기존 direct-invocation 판정의 URL 비교가 달라 CLI 본문을 실행하지 않고 끝나는 경계도 재현했습니다. 처음 /tmp 경로를 쓴 부정 대조의 빈 stdout은 이 별도 문제였고, 원본 runner를 realpath 경로로 다시 실행한 뒤 중첩 컨텍스트의 test-selection→test-complete code0을 구분해 확인했습니다. 판정도 realpath로 정규화하고 import 용도의 존재하지 않는 argv 경계에서는 CLI 본문을 실행하지 않습니다. 새 회귀는 실제 runner/launcher symlink 양쪽에서 pass/fail 자식과 완료 행을 검사합니다.

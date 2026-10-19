@@ -6,8 +6,8 @@ export function hwpxGateTestPaths(source) {
   const block = source.slice(start, end);
   const initial = /^const hwpx_text_tests = b\.addSystemCommand\(&\.\{([^\n]*)\}\);/m.exec(block);
   if (!initial) throw new Error("MissingHwpxGateInitialArguments");
-  return [...initial[1].matchAll(/"(tests\/hwpx\/[^"\n]*\.test\.mjs)"/g),
-    ...block.matchAll(/^\s*hwpx_text_tests\.addArg\("(tests\/hwpx\/[^"\n]*\.test\.mjs)"\);\s*$/gm)].map(match => match[1]);
+  return [...initial[1].matchAll(/"(tests\/[^"\n]*\.test\.mjs)"/g),
+    ...block.matchAll(/^\s*hwpx_text_tests\.addArg\("(tests\/[^"\n]*\.test\.mjs)"\);\s*$/gm)].map(match => match[1]);
 }
 
 export function verifyHwpxGateRegistration(source, paths) {
