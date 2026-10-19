@@ -170,6 +170,9 @@ pub fn build(b: *std.Build) void {
     editor_api_tests.addArg("tests/hwp5/retained-click-roundtrip.test.mjs");
     editor_api_tests.addArg("tests/hwp5/normalization-consent.test.mjs");
     editor_api_tests.addArg("tests/hwp5/normalized-worker.test.mjs");
+    editor_api_tests.addArg("tests/hwp5/observed-docinfo-consent.test.mjs");
+    editor_api_tests.addArg("tests/hwp5/observed-docinfo-worker.test.mjs");
+    editor_api_tests.addArg("tests/hwp5/observed-docinfo-worker-compat.test.mjs");
     editor_api_tests.addArg("tests/hwp5/style-open-error.test.mjs");
     editor_api_tests.addArg("tests/hwp5/normalized-distribution-worker.test.mjs");
     editor_api_tests.addArg("tests/hwp5/form-source-retention.test.mjs");

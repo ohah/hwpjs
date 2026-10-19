@@ -22,3 +22,11 @@ test("distribution normalization and available-section consent gates remain dist
   assert.equal(canStartDocumentSession({ format: "unknown" }), false);
   assert.equal(canStartDocumentSession(null), false);
 });
+
+test("observed DocInfo suggestion applies only to HWP5 and never overrides available-section readonly mode", () => {
+  const content = { format: "hwp5", readOnly: true, observedDocInfoEditingAvailable: true };
+  assert.equal(canStartDocumentSession(content), true);
+  for (const value of [false, undefined, "true", 1]) assert.equal(canStartDocumentSession({ ...content, observedDocInfoEditingAvailable: value }), false);
+  assert.equal(canStartDocumentSession({ ...content, format: "hwpx" }), false);
+  assert.equal(canStartDocumentSession({ ...content, availableSectionsOnly: true }), false);
+});

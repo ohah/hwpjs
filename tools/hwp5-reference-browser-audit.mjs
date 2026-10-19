@@ -36,7 +36,7 @@ const wasmPath = resolve(process.env.HWPJS_TEST_WASM), wasm = readFileSync(wasmP
 const fixture = resolve(root, "reference/rhwp/samples", selectedCase.fixture), input = readFileSync(fixture);
 const output = mkdtempSync(join(tmpdir(), "hwpjs-reference-browser-"));
 const digest = bytes => createHash("sha256").update(bytes).digest("hex");
-const baselineEditor = await createExperimentalHwp5Editor(wasm, input, { distribution: selectedCase.distribution, normalizeObservedCfb: selectedCase.normalize });
+const baselineEditor = await createExperimentalHwp5Editor(wasm, input, { distribution: selectedCase.distribution, normalizeObservedCfb: selectedCase.normalize, retainObservedDocInfo: selectedCase.observedDocInfo ?? false });
 let baseline, original;
 try {
   assert.equal(baselineEditor.normalizationInfo().normalized, selectedCase.normalize);
@@ -57,12 +57,17 @@ const evaluate = expression => {
   if (!result || !Object.hasOwn(result, "result")) throw Error("InvalidBrowserEvalResponse");
   return result.result;
 };
-const enableSelector = "#enable-edit";
+const enableSelector = selectedCase.observedDocInfo ? "#enable-observed-docinfo-edit" : "#enable-edit";
+let observedNormalizationPrompt = false;
 let normalizationPrompt = false;
 const driver = { command, evaluate, afterClick(selector) {
-  if (selector === "#enable-edit" && normalizationPrompt) command("dialog", "accept");
+  if (selector === "#enable-observed-docinfo-edit") {
+    command("dialog", "accept");
+    if (observedNormalizationPrompt) command("dialog", "accept");
+  } else if (selector === "#enable-edit" && normalizationPrompt) command("dialog", "accept");
 } };
 const click = selector => {
+  if (selector === "#enable-observed-docinfo-edit") observedNormalizationPrompt = evaluate('window.__hwpAudit.findLast(r=>r.direction==="reply"&&r.kind==="load")?.normalization===true');
   if (selector === "#enable-edit") normalizationPrompt = selectedCase.normalize && evaluate('window.__hwpAudit.findLast(r=>r.direction==="reply"&&r.kind==="load")?.normalization===true');
   return clickBrowserTarget(driver, selector);
 };
@@ -104,10 +109,10 @@ try {
         this.addEventListener("message", event => {
           const row = event.data, owner = row.content?.paragraphs.find(p => p.section === ${section} && p.paragraph === ${paragraph});
           if(row.content)window.__hwpCurrentContent=row.content;
-          window.__hwpAudit.push({ direction: "reply", kind: row.kind, origin: row.origin, error: row.error, changed: row.changed, revision: row.historyRevision, text: owner?.text, normalization: row.content?.normalizationEditingAvailable });
+          window.__hwpAudit.push({ direction: "reply", kind: row.kind, origin: row.origin, error: row.error, changed: row.changed, revision: row.historyRevision, text: owner?.text, normalization: row.content?.normalizationEditingAvailable, observedDocInfo: row.content?.observedDocInfoDiagnostics });
         });
       }
-      window.__hwpAudit.push({ direction: "request", kind: message.kind, origin: message.origin, section: message.section, paragraph: message.paragraph, startUnit: message.startUnit, endUnit: message.endUnit, window: message.kind === "set-edit-window" ? { offset: message.offset, count: message.count } : null });
+      window.__hwpAudit.push({ direction: "request", kind: message.kind, origin: message.origin, retainObservedDocInfo: message.retainObservedDocInfo, section: message.section, paragraph: message.paragraph, startUnit: message.startUnit, endUnit: message.endUnit, window: message.kind === "set-edit-window" ? { offset: message.offset, count: message.count } : null });
       return post.call(this, message, ...rest);
     };
   })()`);
@@ -115,8 +120,17 @@ try {
   command("upload", "#file", fixture);
   wait('window.__hwpAudit.some(r => r.direction === "reply" && r.kind === "load")');
   phase("loaded");
+  if (!selectedCase.normalize && !selectedCase.observedDocInfo) {
+    assert.equal(evaluate('document.querySelector("#enable-observed-docinfo-edit")?.hidden ?? true'), true);
+  }
   click(enableSelector);
   wait('window.__hwpAudit.some(r => r.direction === "reply" && r.kind === "enable" && r.revision === 0)');
+  if (selectedCase.observedDocInfo) {
+    assert.equal(evaluate('window.__hwpAudit.find(r=>r.direction==="request"&&r.kind==="enable").retainObservedDocInfo'), true);
+    assert.equal(evaluate('window.__hwpAudit.find(r=>r.direction==="reply"&&r.kind==="enable").observedDocInfo.unresolved_style_characters'), 50);
+    assert.match(evaluate('document.querySelector("#download-status").textContent'), /미해석\/부재 150개/);
+    assert.match(evaluate('document.querySelector("#download-status").textContent'), /리소스 개수 불일치 유지/);
+  }
   if (selectedCase.window) { selectWindow(displayOriginal); phase("window-selected"); }
   if(selectedCase.blankCell){
     assert.equal(displayOriginal,"");
@@ -128,6 +142,15 @@ try {
     for (let index = 0; index < occurrence; index++) click('#find-form button[type="submit"]');
   }
   assert.equal(evaluate('document.querySelector("#canvas-input").value'), displayOriginal);
+  if (selectedCase.observedDocInfo) {
+    command("scrollintoview", "#canvas-input");
+    const point = evaluate('(() => {const r=document.querySelector("#canvas-input").getBoundingClientRect(),x=Math.round(r.left+1),y=Math.round(r.top+r.height/2);return {x,y,canvas:document.elementFromPoint(x,y)===document.querySelector("#canvas")};})()');
+    assert.equal(point.canvas, true, "EditingCaretMustHitCanvas");
+    evaluate('window.__observedPointer=false;document.querySelector("#canvas").addEventListener("pointerdown",e=>window.__observedPointer=e.isTrusted,{once:true})');
+    command("mouse", "move", String(point.x), String(point.y)); command("mouse", "down"); command("mouse", "up");
+    assert.equal(evaluate('window.__observedPointer'), true);
+    assert.ok(evaluate('document.querySelector("#canvas").dataset.caret').startsWith(`${section}:${paragraph}:`));
+  }
   evaluate('window.__hwpTrustedInput = []; for (const type of ["beforeinput", "input"]) document.querySelector("#canvas-input").addEventListener(type, event => window.__hwpTrustedInput.push({ type, trusted: event.isTrusted }))');
   moveBrowserInputToStart(driver); command("keyboard", "inserttext", marker);
   wait('window.__hwpAudit.some(r => r.direction === "reply" && r.kind === "splice" && r.revision === 1)');
@@ -154,7 +177,7 @@ try {
   verifyRaw(baseline, saved, section, paragraph, 0, 0, marker, { fieldIds: [0x25787266] });
   assert.throws(() => verifyRaw(baseline, saved, section, paragraph, 0, 0, marker.replace("검증", "검진"), { fieldIds: [0x25787266] }), assert.AssertionError);
   assert.deepEqual(inspect(saved).metadata, inspect(baseline).metadata);
-  const reopened = await createExperimentalHwp5Editor(wasm, saved, { distribution: selectedCase.distribution });
+  const reopened = await createExperimentalHwp5Editor(wasm, saved, { distribution: selectedCase.distribution, retainObservedDocInfo: selectedCase.observedDocInfo ?? false });
   // This empty fixture has no PARA_TEXT record; insertion materializes its CR.
   const expectedNativeText = selectedCase.blankCell && original === "" ? marker + "\r" : marker + original;
   try { assert.equal(reopened.text(section, paragraph), expectedNativeText); } finally { reopened.close(); }
@@ -167,7 +190,7 @@ try {
   }
   evaluate('window.__hwpAudit = []');
   command("upload", "#file", downloaded);
-  if (selectedCase.window) {
+  if (selectedCase.window || selectedCase.observedDocInfo) {
     wait('window.__hwpAudit.some(r => r.direction === "reply" && r.kind === "load" && !r.error)');
     click(enableSelector);
     wait('window.__hwpAudit.some(r => r.direction === "reply" && r.kind === "enable" && r.revision === 0)');

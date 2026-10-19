@@ -1,5 +1,7 @@
 # HWP5 모듈 계약 인덱스
 
+- [관측 DocInfo 모드의 Worker·동의 UI](hwp5-observed-docinfo-ui.md)
+
 - [관측 DocInfo 보존 모드의 JS 경계](hwp5-observed-docinfo-api.md)
 
 - [빈 셀 문단의 연속 Canvas 편집 왕복](hwp5-empty-cell-browser-sequence.md)

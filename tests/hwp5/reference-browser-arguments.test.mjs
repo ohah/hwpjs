@@ -35,6 +35,12 @@ test("browser reference cases own their source positions and explicit opening po
   assert.deepEqual(hwp5BrowserReferenceCase("roadmap"), { fixture: "issue5941/1490000-201600081_roadmap_research.hwp", section: 0, paragraph: 5, occurrence: 1, distribution: false, normalize: false });
   for (const name of ["__proto__", "constructor", "missing", "", null]) assert.throws(() => hwp5BrowserReferenceCase(name), /UnknownBrowserReferenceCase/);
   assert(Object.isFrozen(hwp5BrowserReferenceCase("roadmap")));
+  const observed = hwp5BrowserReferenceCase("observed-docinfo");
+  assert.equal(observed.fixture, "20250130-hongbo_saved.hwp");
+  assert.equal(observed.paragraph, 2);
+  assert.equal(observed.observedDocInfo, true);
+  assert.equal(observed.normalize, true);
+  assert(Object.isFrozen(observed));
   const empty=hwp5BrowserReferenceCase("empty-cell");
   assert.equal(empty.fixture,"253E164F57A1BC6934-empty.hwp");
   assert.equal(empty.paragraph,1);assert.equal(empty.normalize,true);assert.equal(empty.blankCell,true);

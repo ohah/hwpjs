@@ -2,6 +2,7 @@
 export function canStartDocumentSession(content) {
   if (!content || !["hwp5", "hwpx"].includes(content.format) || content.availableSectionsOnly === true) return false;
   return !content.readOnly || content.distributionEditingAvailable === true || content.normalizationEditingAvailable === true
+    || content.format === "hwp5" && content.observedDocInfoEditingAvailable === true
     || content.format === "hwp5" && content.editorSessionAvailable === true;
 }
 export function documentFormatLabel(content) {

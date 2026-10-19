@@ -281,7 +281,7 @@ async function openSelectedFile(selected, { availableSectionsOnly = false, avail
         if (initial) availableSectionsControls.loaded(content);
         availableSectionCopyControls.loaded(content);
         if (content.availableSectionsOnly) downloadStatus.textContent = "저장된 구역의 읽기 전용 미리보기입니다. 편집·다운로드를 허용하지 않습니다. 원본 파일은 변경하지 않았습니다.";
-        if (initial && canStartDocumentSession(content)) controls.loaded({ distribution: content.distributionEditingAvailable === true, normalization: content.normalizationEditingAvailable === true });
+        if (initial && canStartDocumentSession(content)) controls.loaded({ distribution: content.distributionEditingAvailable === true, normalization: content.normalizationEditingAvailable === true, observedDocInfo: content.observedDocInfoEditingAvailable === true });
         if (availableSectionCopySummary(content)) status.textContent += " · 저장된 구역의 편집 사본";
         else if (content.normalizationInfo?.normalized) status.textContent += " · CFB 보정본 편집 (저장·실행 취소 기준: 보정본)";
         if (event.data.kind === "load" && content.primarySource === "distribution_viewtext") downloadStatus.textContent = content.distributionEditingAvailable ? "배포용 문서입니다. 편집 시작 버튼으로 제한적 편집을 선택할 수 있으며 저장 시 배포 플래그와 재조판 경고를 유지합니다." : "배포용 문서는 이 WASM에서 읽기 전용입니다.";

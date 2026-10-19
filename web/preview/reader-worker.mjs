@@ -82,6 +82,11 @@ function hwp5Display(projected = null) {
   }
   const content = projected ?? displayContent(hwp5DisplayProjection());
   content.editorSessionAvailable = editor !== null;
+  const observedDocInfoAvailable = ["hwp5_edit_open_observed_docinfo", "hwp5_edit_observed_docinfo_diagnostics"].every(name => WebAssembly.Module.exports(module).some(entry => entry.kind === "function" && entry.name === name));
+  if (observedDocInfoAvailable) {
+    content.observedDocInfoEditingAvailable = !editor && preview.primarySource !== "distribution_viewtext" && ["UnexpectedEnd", "RepairedSourceUnsupported", "ResourceCountMismatch"].includes(hwp5StyleOpenError);
+    content.observedDocInfoDiagnostics = editor?.observedDocInfoDiagnostics() ?? null;
+  }
   const normalizationExport = preview.primarySource === "distribution_viewtext" ? "hwp5_edit_open_normalized_distribution" : "hwp5_edit_open_normalized";
   content.normalizationEditingAvailable = normalizationMetadataAvailable() && hwp5StyleOpenError === "RepairedSourceUnsupported" && WebAssembly.Module.exports(module).some(entry => entry.name === normalizationExport && entry.kind === "function");
   if (editor?.supportsNormalizationInfo()) content.normalizationInfo = editor.normalizationInfo();
@@ -753,6 +758,7 @@ self.onmessage = async event => {
     } else if (message.kind === "enable") {
       if (format === "hwpx") {
         if (message.normalizeObservedCfb !== undefined) throw new Error("UnsupportedNormalizationFormat");
+        if (message.retainObservedDocInfo !== undefined) throw new Error("UnsupportedObservedDocInfoFormat");
         if (!editor) {
           const next = await createHwpxEditor(module);
           try { next.open(bytes); } catch (error) { next.close(); throw error; }
@@ -780,8 +786,10 @@ self.onmessage = async event => {
       }
       if (message.distribution !== undefined && typeof message.distribution !== "boolean") throw new Error("InvalidDistributionPolicy");
       if (message.normalizeObservedCfb !== undefined && typeof message.normalizeObservedCfb !== "boolean") throw new Error("InvalidNormalizationPolicy");
+      if (message.retainObservedDocInfo !== undefined && typeof message.retainObservedDocInfo !== "boolean") throw new Error("InvalidObservedDocInfoPolicy");
+      if (message.retainObservedDocInfo === true && editor) throw new Error("ObservedDocInfoRequiresFreshSession");
       if (message.normalizeObservedCfb === true && !normalizationMetadataAvailable()) throw new Error("Hwp5NormalizationAbiUnavailable");
-      editor ??= await createExperimentalHwp5Editor(module, bytes, { distribution: message.distribution ?? false, normalizeObservedCfb: message.normalizeObservedCfb ?? false });
+      editor ??= await createExperimentalHwp5Editor(module, bytes, { distribution: message.distribution ?? false, normalizeObservedCfb: message.normalizeObservedCfb ?? false, retainObservedDocInfo: message.retainObservedDocInfo ?? false });
       if (!historyEnabled) { editor.enableHistory(); historyEnabled = true; }
       const structureAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwp5_edit_split" && entry.kind === "function");
       const mergeAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwp5_edit_merge" && entry.kind === "function");
