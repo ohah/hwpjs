@@ -8,7 +8,7 @@ import { pageParagraphCoverage } from "./page-paragraph-coverage.mjs";
 import { alignTableCellFlow } from "./table-cell-vertical-alignment.mjs";
 
 /** Measure flat cell paragraphs without inventing source padding or page policy. */
-export function measureTableCells(table, paragraphs, measure, { origin, padding, maxRows = 20000, pictures = [], pictureReferences, paragraphFlows, measureCellFlow, compactLines = false, columnWidths, minimumRowHeight = 28 } = {}) {
+export function measureTableCells(table, paragraphs, measure, { origin, padding, maxRows = 20000, pictures = [], pictureReferences, paragraphFlows, measureCellFlow, compactLines = false, columnWidths, sourceRowHorizontals = false, minimumRowHeight = 28 } = {}) {
   const unavailable = error => ({ state: "unavailable", error });
   if (!Number.isFinite(minimumRowHeight) || minimumRowHeight < 0) return unavailable("InvalidTableCellMeasurement");
   if (!Array.isArray(pictures)) return unavailable("InvalidTableCellPictures");
@@ -24,7 +24,7 @@ export function measureTableCells(table, paragraphs, measure, { origin, padding,
     if (members.has(key)) return unavailable("AmbiguousTableCellParagraph");
     members.set(key, paragraph);
   }
-  const initial = tableGrid(table, { ...origin, columnWidths, minRow: minimumRowHeight }), flows = new Map(), owned = new Set();
+  const initial = tableGrid(table, { ...origin, columnWidths, sourceRowHorizontals, minRow: minimumRowHeight }), flows = new Map(), owned = new Set();
   let measuredRows = 0;
   for (const [index, cell] of table.cells.entries()) {
     const insets = tableCellInsets(padding, cell);
@@ -65,7 +65,7 @@ export function measureTableCells(table, paragraphs, measure, { origin, padding,
     measuredRows += flow.rows.length;
     flows.set(cell.listNode, flow);
   }
-  const grid = tableGrid(table, { ...origin, columnWidths, minRow: minimumRowHeight, contentSize: cell => {
+  const grid = tableGrid(table, { ...origin, columnWidths, sourceRowHorizontals, minRow: minimumRowHeight, contentSize: cell => {
     const insets = tableCellInsets(padding, cell);
     return { width: 0, height: flows.get(cell.listNode).height + insets.top + insets.bottom };
   } });

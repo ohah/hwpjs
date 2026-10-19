@@ -4,7 +4,7 @@ import { layoutContent } from "./layout.mjs";
 import { measureInlineObjectParagraph } from "./inline-object-paragraph-measurement.mjs";
 import { layoutInlineTablePageContent } from "./inline-table-page-content.mjs";
 import { hwpUnitPixels } from "./hwp-units.mjs";
-import { sourceTableColumns } from "./table-source-columns.mjs";
+import { tableSourceHorizontalLayout } from "./table-source-horizontal-layout.mjs";
 import { textMeasurement } from "./text-measurement.mjs";
 import { reserveNestedFloatingFlow } from "./nested-floating-flow-reservation.mjs";
 
@@ -25,10 +25,10 @@ export function measureNestedTable(content, root, measure, { maxRows = 20000, ma
   }
   const measureTable = (table, budget, depth) => {
     if (depth > maxDepth) return unavailable("NestedTableMeasurementLimit");
-    const source = sourceTableColumns(table);
+    const source = tableSourceHorizontalLayout(table);
     if (source.state !== "resolved") return { ...source, section: table.section, tableNode: table.tableNode };
     return measureTableCells(table, content.paragraphs, measure, { origin: { x: 0, y: 0 }, padding: "source", maxRows: budget, compactLines: true,
-      columnWidths: source.columns.map(hwpUnitPixels), minimumRowHeight: 0,
+      ...source.gridOptions, minimumRowHeight: 0,
       paragraphFlows: content.paragraphFlows, pictures: content.pictures ?? [],
       measureCellFlow(input) {
         if (!input.paragraphs.some(p => hosts.has(`${table.section}:${table.tableNode}:${input.cell.listNode}:${p.paragraph}`))) return null;

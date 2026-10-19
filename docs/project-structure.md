@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+[행별 표 셀 경계](source-table-row-horizontals.md)는 원본 HU 경계 복원·표 격자·선행/최종 측정의 책임을 분리하고 공통 열 제약과 다른 물리 셀 폭을 보존합니다.
+
 [저장 구역 읽기 전용 UI](hwp5-available-sections-preview.md)는 native 후보의 개수 보고서와 JS 경계 검사·Worker 읽기 전용 모드·버튼 수명을 분리합니다. native 후보와 기본 배포의 지원 여부를 구분합니다.
 
 [Native 범위 재개](native-test-range-audit.md)는 순수 인자/coverage 판정을 `native-test-range.mjs`에 분리하고 표준 runner 프로토콜·실제 실행·완료 범위를 구분합니다.

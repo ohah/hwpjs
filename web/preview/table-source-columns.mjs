@@ -29,6 +29,6 @@ export function sourceTableColumns(table) {
   const missing = positions.flatMap((value, index) => value === null ? [index] : []);
   if (missing.length) return { ...unavailable("UnderdeterminedSourceTableColumns"), missing };
   const columns = positions.slice(1).map((position, index) => position - positions[index]);
-  if (columns.some(width => width <= 0)) return unavailable("InvalidSourceTableColumns");
+  if (columns.some(width => width <= 0)) return { ...unavailable("InvalidSourceTableColumns"), reason: "NonPositiveSourceColumnSolution" };
   return { state: "resolved", columns, positions, width: positions.at(-1) };
 }

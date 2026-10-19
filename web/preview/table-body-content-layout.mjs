@@ -1,5 +1,6 @@
 import { layoutContent } from "./layout.mjs";
 import { measureTableCells } from "./table-cell-measurement.mjs";
+import { tableSourceHorizontalLayout } from "./table-source-horizontal-layout.mjs";
 import { layoutMeasuredMultipleTables } from "./multiple-table-page-layout.mjs";
 import { pageReferenceBoxes } from "./page-reference-boxes.mjs";
 import { hwpUnitPixels } from "./hwp-units.mjs";
@@ -72,7 +73,10 @@ export function layoutTableBodyContent(content, measure, maxRows, { measureBodyP
     if (remaining < 1) return unavailable("TableCellMeasurementLimit");
     const origin = { x: 0, y: 0 };
     const hasChildren = content.tables.some(child => child.section === table.section && child.parentTableNode === table.tableNode);
+    const sourceColumns = hasChildren ? null : tableSourceHorizontalLayout(table);
+    if (sourceColumns && sourceColumns.state !== "resolved") return { ...sourceColumns, section: table.section, tableNode: table.tableNode };
     const measured = hasChildren ? measureNestedTable(content, table, measure, { maxRows: remaining, overflow: "visible" }) : measureTableCells(table, content.paragraphs, measure, { origin, padding: "source", maxRows: remaining,
+      ...sourceColumns.gridOptions,
       pictures, paragraphFlows: content.paragraphFlows, pictureReferences: { paper: reference.boxes.paper, page: reference.boxes.page, column: reference.boxes.page } });
     if (measured.state !== "measured") return measured;
     remaining -= measured.rowCount;
