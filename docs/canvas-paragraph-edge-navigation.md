@@ -10,6 +10,10 @@
 
 세로 소유권 최종 분리 소스도4파일272/272·실패/cancel/skip0·exit0·stderr0으로 종료했습니다. 근거는 `/tmp/hwpjs-navigation-publish.KsSYcz/clean-final-regression.log`이며 먼 후보 조회 최적화와 그 부정 기대를 포함합니다. primary의 무관한 기존 Canvas 변경은 이 분리 소스에 포함하지 않았습니다.
 
+2026-10-19 기본 Tailscale10000의 실제 Chromium에서 table-bug 원본을 업로드하고 편집을 활성화한 뒤 찾기로 문단13의 `□ 25년 활동`을 선택했습니다. 신뢰된 ArrowLeft로 `[0,0)`에 접고 ArrowDown으로 문단14/unit0, ArrowUp으로 문단13/unit0, Shift+ArrowDown으로 문단14/unit0 도달을 확인했습니다. 네 키 모두 isTrusted=true/defaultPrevented=true이며 관측 중 Worker 요청0입니다. `browser-owner-selection.png`를 직접 확인해 문단13의 선택 강조와 아래 셀 줄의 caret를 확인했습니다. 이 브라우저 실행은 한 소유권 범위의 양방향 이동/선택 표시이며 테스트의3원본 위치 전수·OS IME·다운로드 보존 검사를 대신하지 않습니다.
+
+브라우저 스킬의 소유 세션 `hwpjs-navigation-owner-35c54947528a`를 close하고 후속 info의 inactive/pid=null을 확인했습니다. 별도 HTTP 대조에서 기본10000의 text-navigation/canvas-editor/WASM은 primary 파일과 전체 SHA256이 일치했습니다. primary Canvas에는 무관한 미게시 변경도 있으므로 이 실행을 깨끗한 main 전체의 브라우저 검증으로 확대하지 않습니다. 사진은 `/tmp/hwpjs-navigation-publish.KsSYcz/browser-owner-selection.png`입니다.
+
 ## 호스트가 처리한 키와 AltGraph 보호
 
 HWPX의 같은 보호는 `canvas-preview.test.mjs`에서 실제 parashape 원본→Worker/native→Canvas로 확인합니다. seed 편집/undo 뒤 8조합에서 선택·UI 요청0·저장 원본 바이트를 유지하고 redo가 seed 저장본을 복원해야 합니다. 정상 Ctrl+A의 선택은 별도로 허용합니다. cad92271에 이 회귀만 추가한 tree `4e5db694e60ac3387791d42b72f73d5fa93b6f30`의 `/tmp/hwpjs-hwpx-keys-clean.7z2qJU`에서 게시 afb7 후보·Node24.20.0으로 HWP5 Canvas/HWPX preview 두 파일213/213·fail/cancel/skip0·exit0·stderr0(22257ms)입니다. 추적 fixture 전수 읽기 검사를 위해 사본에 추출한 fixture만 임시 Git index에 등록했습니다. `key-tests.log/.stderr`가 근거입니다. 사본에서 보호 guard만 제거한 음성 대조는 consumed/a에서 선택1:2가0:4로 바뀌어 exit1(`negative-key-tests.log/.stderr`)이고, guard 복원 후 집중1/1·exit0입니다. 실제 OS/브라우저 E2E 또는 전체 fixture 편집 완료는 아닙니다.
