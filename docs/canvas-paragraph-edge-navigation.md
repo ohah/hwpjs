@@ -8,6 +8,10 @@
 
 일반 좌우 이동 최종 primary 재실행과 분리 후보의4파일은 각각274/274·실패/cancel/skip0·exit0·stderr0입니다. `primary-regression-retry.log`와 `clean-regression.log`가 근거이고 분리 로그 SHA256은 `201eb0441169e000de97439d49f7c4aa80c8ced764921fd1ad2f5c7d226801c6`입니다. 분리 소스는 게시 HEAD 위에 이번5파일 변경만 포함하며 실제 브라우저 키 입력/모든 문단·객체/OS IME 검증과 구분합니다.
 
+2026-10-19 기본10000의 실제 Chromium에서도 찾기로 원본 문단73의 `[붙임 2]`를 선택한 뒤 신뢰된 ←로73/unit0→4/unit2, →로73/unit0 이동을 확인했습니다. 4/unit2의 Shift+→는 위치를 유지하고 이 이동 동안 Worker 요청0입니다. 이어 `본문이동😀` 입력이 원본73의 `[0,0)` splice1회로 전달됐고 undo는 원문/unit0, redo는 입력문/unit6을 복원했습니다.
+
+명시적 배치 정보 저장 동의 후 받은 `/tmp/hwpjs-paragraph-navigation.B3Mcjv/browser-navigation-edited.hwp`는 독립 전체 Section `expectedSection(original,73,0,0,"본문이동😀")`·스트림 목록·모든 비대상 스트림과 일치했습니다. 파일 SHA256은 `988dd0dbbc82509b9fefbe6f15711ad02baafc8c4745b5230bdb4d3151945102`입니다. 재업로드·편집 활성화·찾기에서도73/unit6의 입력문을 확인하고 `browser-navigation-reopened.png`를 직접 보았습니다. 소유 agent-browser 세션 `hwpjs-paragraph-nav-35c54947528a`는 close 후 inactive/pid=null입니다. primary UI+bacf WASM의 한 실제 흐름이며 모든 원본/OS IME/조판 완료 또는 분리 소스 전체의 Chromium 검사로 확대하지 않습니다.
+
 ## 세로 이동의 소유권 후보 선택
 
 `text-navigation.mjs`의 선택적 `acceptRow`는 위치 계산에 소유권 정책을 주입합니다. Canvas는 기존 `renderer.selectionRanges`로 해당 anchor에서 후보 줄까지의 선택 가능 여부를 확인합니다. 다른 소유권의 줄을 최단 거리로 먼저 선택한 뒤 거부해 멈추지 않고, 허용되는 후보 중 가까운 줄을 선택합니다. 기존 구역·반복 페이지·변환 프레임 조건과 최종 선택 범위 검사도 유지합니다. 이미 허용한 줄보다 먼 후보에는 불필요한 소유권 조회를 하지 않습니다. 형식별 소유권 규칙이나 저장 모델을 이동 모듈에 복제하지 않습니다.
