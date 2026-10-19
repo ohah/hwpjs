@@ -28,7 +28,7 @@ pub fn deinit(a: std.mem.Allocator, rows: []Source) void {
     a.free(rows);
 }
 pub fn read(a: std.mem.Allocator, raw: []const u8, version: @import("../version.zig").Version, options: @import("../body/drawing_style_validation.zig").Options) ![]Source {
-    var tree = try @import("../body/tree.zig").Tree.parse(a, raw, version, .{});
+    var tree = try @import("source_tree.zig").parse(a, raw, version, .{});
     defer tree.deinit(a);
     _ = try @import("../body/shape_validation.zig").inspect(tree);
     var out: std.ArrayList(Source) = .empty;
@@ -97,7 +97,7 @@ test "drawing style scalar inventory actual grouped layouts and allocation failu
         const expected = try read(a, raw, document.header.version(), options);
         defer deinit(a, expected);
         try std.testing.expect(expected.len > 0);
-        var tree = try @import("../body/tree.zig").Tree.parse(a, raw, document.header.version(), .{});
+        var tree = try @import("source_tree.zig").parse(a, raw, document.header.version(), .{});
         defer tree.deinit(a);
         for (expected) |item| {
             try std.testing.expect(item.owner_node < item.component_node);

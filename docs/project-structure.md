@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+[현재 원본 조회 보존 정책](current-source-query-policy.md)은 HWP5 source-tree SSOT·명시적 DocInfo 보존 세션·필드 소유 HWPX 선언 좌표의 공통 계약과 고정 검증을 소유합니다.
+
 [구역별 객체 배치](section-object-layout.md)는 객체·선언 소속 분리와 affine/객체/진단 좌표의 전역 합성을 분리합니다.
 
 [반복 영역 인스턴스](page-area-object-instances.md)는 선언 좌표·시작 쪽 선택·표/그림/도형 조립과 단일 본문 합성의 책임을 분리합니다.

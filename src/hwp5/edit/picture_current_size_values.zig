@@ -72,7 +72,7 @@ test "HWP5 picture current size intents add update and remove preserve state at 
         baseline = component;
     };
     const original = baseline orelse return error.MissingPictureComponent;
-    var tree = try @import("../body/tree.zig").Tree.parse(a, raw, version, .{});
+    var tree = try @import("source_tree.zig").parse(a, raw, version, .{});
     defer tree.deinit(a);
     for (0..3) |mode| try std.testing.checkAllAllocationFailures(a, struct {
         fn run(allocator: std.mem.Allocator, bytes: []const u8, selected_version: @import("../version.zig").Version, record_count: usize, left: u32, right: u32, width: u32, height: u32, phase: usize) !void {
@@ -112,7 +112,7 @@ test "HWP5 picture current size intents repeat reset and reject invalid ownershi
     const components = try @import("drawing_component_sources.zig").read(a, raw, version);
     defer a.free(components);
     var empty: [0]model.Paragraph = .{};
-    var tree = try @import("../body/tree.zig").Tree.parse(a, raw, version, .{});
+    var tree = try @import("source_tree.zig").parse(a, raw, version, .{});
     defer tree.deinit(a);
     var section: model.Section = .{ .paragraphs = &empty, .source_record_count = tree.nodes.len };
     defer if (section.picture_current_sizes) |values| a.free(values);

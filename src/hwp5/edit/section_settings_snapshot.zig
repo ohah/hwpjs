@@ -18,7 +18,7 @@ pub const Setting = struct {
     extra_raw: []const u8,
 };
 pub fn read(a: std.mem.Allocator, raw: []const u8, version: @import("../version.zig").Version) !Setting {
-    var tree = try @import("../body/tree.zig").Tree.parse(a, raw, version, .{});
+    var tree = try @import("source_tree.zig").parse(a, raw, version, .{});
     defer tree.deinit(a);
     const index = try @import("../body/section_validation.zig").definitionOwner(tree);
     const d = try @import("../body/section_def.zig").Definition.parse(tree.nodes[index].record.value.control_header.properties, version);

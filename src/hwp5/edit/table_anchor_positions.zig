@@ -3,7 +3,7 @@ const std = @import("std");
 const model = @import("../../model/document.zig");
 pub const Anchor = struct { table_record_node: usize, control_node: usize, paragraph: usize, source_unit: usize, current_unit: u32 };
 pub fn read(a: std.mem.Allocator, raw: []const u8, version: @import("../version.zig").Version, paragraphs: []const model.Paragraph) ![]Anchor {
-    var tree = try @import("../body/tree.zig").Tree.parse(a, raw, version, .{});
+    var tree = try @import("source_tree.zig").parse(a, raw, version, .{});
     defer tree.deinit(a);
     var links = try @import("../body/control_links.zig").Links.build(a, tree);
     defer links.deinit(a);
@@ -38,7 +38,7 @@ test "HWP5 table anchor current positions actual multiple hosts and allocation f
     defer a.free(expected);
     try std.testing.expectEqual(@as(usize, 2), expected.len);
     for (expected) |row| try std.testing.expectEqual(row.source_unit, row.current_unit);
-    var tree = try @import("../body/tree.zig").Tree.parse(a, raw, source.header.version(), .{});
+    var tree = try @import("source_tree.zig").parse(a, raw, source.header.version(), .{});
     defer tree.deinit(a);
     var links = try @import("../body/control_links.zig").Links.build(a, tree);
     defer links.deinit(a);

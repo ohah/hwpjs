@@ -1,4 +1,5 @@
 const Reader = @import("../../binary/reader.zig").Reader;
+pub const AdditionalPolicy = enum { required, observed_absent };
 pub const Picture = @import("picture_info.zig").Picture;
 pub const Pattern = struct { background: u32, foreground: u32, kind: i32 };
 pub const Gradient = struct {
@@ -31,6 +32,7 @@ pub const Known = struct {
     image: ?Image,
     /// Length-prefixed extension: gradient blur center is its first byte when present.
     additional: []const u8,
+    additional_present: bool = true,
     extra: []const u8,
     pub fn blurCenter(self: Known) ?u8 {
         return if (self.gradient != null and self.additional.len == 1) self.additional[0] else null;
@@ -40,6 +42,10 @@ pub const Fill = struct {
     flags: u32,
     data: union(enum) { known: Known, unknown: []const u8 },
     pub fn parse(bytes: []const u8) !Fill {
+        return parseWithAdditionalPolicy(bytes, .required);
+    }
+
+    pub fn parseWithAdditionalPolicy(bytes: []const u8, policy: AdditionalPolicy) !Fill {
         var r: Reader = .{ .bytes = bytes };
         const flags = try r.readInt(u32);
         // Unknown type bits can change field ordering: preserve the whole tail.
@@ -60,8 +66,9 @@ pub const Fill = struct {
             gradient = .{ .kind = kind, .angle = angle, .center_x = x, .center_y = y, .blur = blur, .positions = positions, .colors = colors };
         }
         const image: ?Image = if (flags & 2 != 0) .{ .mode = try r.readInt(u8), .picture = try Picture.read(&r) } else null;
-        const size = try r.readInt(u32);
+        const present = !(policy == .observed_absent and flags <= 1 and r.offset == bytes.len);
+        const size = if (present) try r.readInt(u32) else 0;
         const additional = try r.take(size);
-        return .{ .flags = flags, .data = .{ .known = .{ .pattern = pattern, .gradient = gradient, .image = image, .additional = additional, .extra = bytes[r.offset..] } } };
+        return .{ .flags = flags, .data = .{ .known = .{ .pattern = pattern, .gradient = gradient, .image = image, .additional = additional, .additional_present = present, .extra = bytes[r.offset..] } } };
     }
 };

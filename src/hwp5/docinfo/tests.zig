@@ -1,6 +1,18 @@
 const std = @import("std");
 const d = @import("reader.zig");
 
+test "DocInfo wholly absent caret coordinates retain presence and partial coordinates fail" {
+    const bytes = @as([27]u8, @splat(0));
+    const absent = try d.Properties.parseWithCaretPolicy(bytes[0..14], .observed_absent);
+    try std.testing.expect(!absent.caret_present);
+    try std.testing.expectEqual(@as(usize, 0), absent.extra.len);
+    try std.testing.expectError(error.UnexpectedEnd, d.Properties.parse(bytes[0..14]));
+    for (0..14) |length| try std.testing.expectError(error.UnexpectedEnd, d.Properties.parseWithCaretPolicy(bytes[0..length], .observed_absent));
+    for (15..26) |length| try std.testing.expectError(error.UnexpectedEnd, d.Properties.parseWithCaretPolicy(bytes[0..length], .observed_absent));
+    try std.testing.expect((try d.Properties.parseWithCaretPolicy(bytes[0..26], .observed_absent)).caret_present);
+    try std.testing.expectEqual(@as(usize, 1), (try d.Properties.parseWithCaretPolicy(&bytes, .observed_absent)).extra.len);
+}
+
 test "DocInfo properties use 26 bytes and retain extension bytes" {
     var bytes: [29]u8 = undefined;
     for (&bytes, 0..) |*b, i| b.* = @intCast(i + 1);

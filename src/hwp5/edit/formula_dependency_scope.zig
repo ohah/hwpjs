@@ -54,7 +54,7 @@ test "formula dependency scope includes nested table paragraphs in the outer sou
     defer source.deinit();
     const section = try source.decodeSection(a, 0);
     defer a.free(section);
-    var tree = try Tree.parse(a, section, source.header.version(), .{});
+    var tree = try @import("source_tree.zig").parse(a, section, source.header.version(), .{});
     defer tree.deinit(a);
     var groups = try Groups.build(a, tree);
     defer groups.deinit(a);

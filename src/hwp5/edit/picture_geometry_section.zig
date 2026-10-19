@@ -7,10 +7,10 @@ pub fn write(a: std.mem.Allocator, source: []const u8, version: Version, value: 
     const matrices = value.resize_matrices orelse return error.MissingPictureResizeMatrices;
     const output = try @import("picture_current_size_section.zig").write(a, source, version, value.source_picture_node, .{ .width = value.width, .height = value.height }, limit);
     errdefer a.free(output);
-    var tree = try @import("../body/tree.zig").Tree.parse(a, source, version, .{});
+    var tree = try @import("source_tree.zig").parse(a, source, version, .{});
     defer tree.deinit(a);
     const root = try @import("picture_size_protection.zig").rootOwner(tree, value.source_picture_node);
-    const properties = try @import("../body/object_common.zig").Properties.parse(tree.nodes[root].record.value.control_header.properties);
+    const properties = try @import("../body/object_common.zig").parseControl(tree.nodes[root].record.value.control_header);
     if (properties.sizeProtected()) return error.PictureSizeProtected;
     const component_node = tree.nodes[value.source_picture_node].parent.?;
     const layout = try @import("../body/shape_validation.zig").componentLayout(tree, component_node);

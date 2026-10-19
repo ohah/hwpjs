@@ -37,6 +37,7 @@ pub const Iterator = struct {
     records: framing.Iterator,
     version: Version,
     projection: enum { all, text_preview } = .all,
+    table_zone_count_policy: table.ZoneCountPolicy = .required,
     pub fn init(bytes: []const u8, version: Version, options: framing.Options) !Iterator {
         try version.requireSupported();
         return .{ .records = framing.Iterator.init(bytes, options), .version = version };
@@ -51,19 +52,19 @@ pub const Iterator = struct {
     pub fn next(self: *Iterator) !?Record {
         var candidate = self.records;
         const r = (try candidate.next()) orelse return null;
-        const value: Value = if (self.projection == .text_preview and r.tag != @intFromEnum(Tag.paragraph_header) and r.tag != @intFromEnum(Tag.paragraph_text)) .unknown else switch (r.tag) {
-            @intFromEnum(Tag.paragraph_header) => .{ .header = try Header.parse(r.payload, self.version) },
-            @intFromEnum(Tag.paragraph_text) => .{ .text = try Text.parse(r.payload) },
-            @intFromEnum(Tag.char_runs) => .{ .char_runs = try Runs.parse(r.payload) },
-            @intFromEnum(Tag.line_segments) => .{ .line_segments = try Segments.parse(r.payload) },
-            @intFromEnum(Tag.range_tags) => .{ .range_tags = try Ranges.parse(r.payload) },
-            @intFromEnum(Tag.control_header) => .{ .control_header = try ControlHeader.parse(r.payload) },
-            @intFromEnum(Tag.list_header) => .{ .list_header = try ListHeader.parse(r.payload) },
-            @intFromEnum(Tag.page_definition) => .{ .page_definition = try PageDefinition.parse(r.payload) },
-            @intFromEnum(Tag.note_shape) => .{ .note_shape = try NoteShape.parse(r.payload) },
-            @intFromEnum(Tag.table) => .{ .table = try Table.parse(r.payload, self.version) },
-            @intFromEnum(Tag.page_border) => .{ .page_border = try PageBorder.parse(r.payload) },
-            @intFromEnum(Tag.memo_list) => .{ .memo_list = try memo_list.Header.parse(r.payload) },
+        const value: Value = if (self.projection == .text_preview and r.tag != @backingInt(Tag.paragraph_header) and r.tag != @backingInt(Tag.paragraph_text)) .unknown else switch (r.tag) {
+            @backingInt(Tag.paragraph_header) => .{ .header = try Header.parse(r.payload, self.version) },
+            @backingInt(Tag.paragraph_text) => .{ .text = try Text.parse(r.payload) },
+            @backingInt(Tag.char_runs) => .{ .char_runs = try Runs.parse(r.payload) },
+            @backingInt(Tag.line_segments) => .{ .line_segments = try Segments.parse(r.payload) },
+            @backingInt(Tag.range_tags) => .{ .range_tags = try Ranges.parse(r.payload) },
+            @backingInt(Tag.control_header) => .{ .control_header = try ControlHeader.parse(r.payload) },
+            @backingInt(Tag.list_header) => .{ .list_header = try ListHeader.parse(r.payload) },
+            @backingInt(Tag.page_definition) => .{ .page_definition = try PageDefinition.parse(r.payload) },
+            @backingInt(Tag.note_shape) => .{ .note_shape = try NoteShape.parse(r.payload) },
+            @backingInt(Tag.table) => .{ .table = try Table.parseWithZoneCountPolicy(r.payload, self.version, self.table_zone_count_policy) },
+            @backingInt(Tag.page_border) => .{ .page_border = try PageBorder.parse(r.payload) },
+            @backingInt(Tag.memo_list) => .{ .memo_list = try memo_list.Header.parse(r.payload) },
             else => .unknown,
         };
         self.records = candidate;

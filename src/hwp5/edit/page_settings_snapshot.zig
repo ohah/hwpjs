@@ -20,7 +20,7 @@ pub const Setting = struct {
 };
 
 pub fn read(a: std.mem.Allocator, decoded: []const u8, version: @import("../version.zig").Version) !Setting {
-    var tree = try Tree.parse(a, decoded, version, .{});
+    var tree = try @import("source_tree.zig").parse(a, decoded, version, .{});
     defer tree.deinit(a);
     const section = try @import("../body/section_validation.zig").definitionOwner(tree);
     var result: ?Setting = null;

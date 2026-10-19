@@ -25,6 +25,11 @@ pub const Record = struct { framing: framing.Record, value: Value };
 pub const Iterator = struct {
     records: framing.Iterator,
     version: Version,
+    caret_policy: @import("properties.zig").CaretPolicy = .required,
+    font_type_policy: @import("face_name.zig").TypeInfoPolicy = .required,
+    style_character_policy: @import("style.zig").CharacterPolicy = .required,
+    character_tail_policy: @import("char_shape.zig").TailPolicy = .required,
+    fill_additional_policy: @import("fill.zig").AdditionalPolicy = .required,
 
     pub fn init(bytes: []const u8, version: Version, options: framing.Options) !Iterator {
         try version.requireSupported();
@@ -34,21 +39,21 @@ pub const Iterator = struct {
         var candidate = self.records;
         const r = (try candidate.next()) orelse return null;
         // Envelope validation does not make track-change fields understood.
-        if (r.tag == @intFromEnum(Tag.track_change_info)) _ = try @import("track_change_info.zig").View.parse(r.payload);
+        if (r.tag == @backingInt(Tag.track_change_info)) _ = try @import("track_change_info.zig").View.parse(r.payload);
         const value: Value = switch (r.tag) {
-            @intFromEnum(Tag.document_properties) => .{ .properties = try Properties.parse(r.payload) },
-            @intFromEnum(Tag.id_mappings) => .{ .id_mappings = try IdMappings.parse(r.payload, self.version) },
-            @intFromEnum(Tag.bin_data) => .{ .bin_data = try BinData.parse(r.payload) },
-            @intFromEnum(Tag.face_name) => .{ .face_name = try FaceName.parse(r.payload) },
-            @intFromEnum(Tag.tab_def) => .{ .tab_def = try TabDef.parse(r.payload) },
-            @intFromEnum(Tag.numbering) => .{ .numbering = try Numbering.parse(r.payload, self.version) },
-            @intFromEnum(Tag.bullet) => .{ .bullet = try Bullet.parse(r.payload) },
-            @intFromEnum(Tag.style) => .{ .style = try Style.parse(r.payload) },
-            @intFromEnum(Tag.border_fill) => .{ .border_fill = try BorderFill.parse(r.payload) },
-            @intFromEnum(Tag.char_shape) => .{ .char_shape = try CharShape.parse(r.payload, self.version) },
-            @intFromEnum(Tag.para_shape) => .{ .para_shape = try ParaShape.parse(r.payload, self.version) },
-            @intFromEnum(Tag.compatible_document) => .{ .compatible_document = try CompatibleDocument.parse(r.payload) },
-            @intFromEnum(Tag.layout_compatibility) => .{ .layout_compatibility = try LayoutCompatibility.parse(r.payload) },
+            @backingInt(Tag.document_properties) => .{ .properties = try Properties.parseWithCaretPolicy(r.payload, self.caret_policy) },
+            @backingInt(Tag.id_mappings) => .{ .id_mappings = try IdMappings.parse(r.payload, self.version) },
+            @backingInt(Tag.bin_data) => .{ .bin_data = try BinData.parse(r.payload) },
+            @backingInt(Tag.face_name) => .{ .face_name = try FaceName.parseWithTypeInfoPolicy(r.payload, self.font_type_policy) },
+            @backingInt(Tag.tab_def) => .{ .tab_def = try TabDef.parse(r.payload) },
+            @backingInt(Tag.numbering) => .{ .numbering = try Numbering.parse(r.payload, self.version) },
+            @backingInt(Tag.bullet) => .{ .bullet = try Bullet.parse(r.payload) },
+            @backingInt(Tag.style) => .{ .style = try Style.parseWithCharacterPolicy(r.payload, self.style_character_policy) },
+            @backingInt(Tag.border_fill) => .{ .border_fill = try BorderFill.parseWithAdditionalPolicy(r.payload, self.fill_additional_policy) },
+            @backingInt(Tag.char_shape) => .{ .char_shape = try CharShape.parseWithTailPolicy(r.payload, self.version, self.character_tail_policy) },
+            @backingInt(Tag.para_shape) => .{ .para_shape = try ParaShape.parse(r.payload, self.version) },
+            @backingInt(Tag.compatible_document) => .{ .compatible_document = try CompatibleDocument.parse(r.payload) },
+            @backingInt(Tag.layout_compatibility) => .{ .layout_compatibility = try LayoutCompatibility.parse(r.payload) },
             @import("memo_shape.zig").tag => .{ .memo_shape = try MemoShape.parse(r.payload) },
             else => .unknown,
         };
@@ -56,7 +61,7 @@ pub const Iterator = struct {
             .properties, .id_mappings, .compatible_document => 0,
             .bin_data, .face_name, .tab_def, .numbering, .bullet, .style, .border_fill, .char_shape, .para_shape, .layout_compatibility => 1,
             .unknown => switch (r.tag) {
-                @intFromEnum(Tag.track_change_info), @intFromEnum(Tag.track_change), @intFromEnum(Tag.track_change_author) => 1,
+                @backingInt(Tag.track_change_info), @backingInt(Tag.track_change), @backingInt(Tag.track_change_author) => 1,
                 else => null,
             },
             .memo_shape => 1,

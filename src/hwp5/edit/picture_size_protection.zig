@@ -3,10 +3,10 @@ const std = @import("std");
 const rules = @import("../body/control_rules.zig");
 
 pub fn read(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version, picture_node: usize) !bool {
-    var tree = try @import("../body/tree.zig").Tree.parse(a, source, version, .{});
+    var tree = try @import("source_tree.zig").parse(a, source, version, .{});
     defer tree.deinit(a);
     const root = try rootOwner(tree, picture_node);
-    const properties = try @import("../body/object_common.zig").Properties.parse(tree.nodes[root].record.value.control_header.properties);
+    const properties = try @import("../body/object_common.zig").parseControl(tree.nodes[root].record.value.control_header);
     return properties.sizeProtected();
 }
 
@@ -51,7 +51,7 @@ test "HWP5 picture size protection follows actual root and grouped ownership" {
         defer a.free(raw);
         const pictures = try @import("picture_sources.zig").read(a, raw, source.header.version(), .base73);
         defer a.free(pictures);
-        var tree = try @import("../body/tree.zig").Tree.parse(a, raw, source.header.version(), .{});
+        var tree = try @import("source_tree.zig").parse(a, raw, source.header.version(), .{});
         defer tree.deinit(a);
         for (pictures) |picture| {
             try std.testing.expect(!try read(a, raw, source.header.version(), picture.picture_node));

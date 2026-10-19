@@ -17,7 +17,7 @@ pub const Binding = struct {
 };
 pub fn read(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version, paragraphs: []const model.Paragraph) ![]Binding {
     if (paragraphs.len > 100_000) return error.LimitExceeded;
-    var tree = try @import("../body/tree.zig").Tree.parse(a, source, version, .{});
+    var tree = try @import("source_tree.zig").parse(a, source, version, .{});
     defer tree.deinit(a);
     var groups = try @import("../body/list_groups.zig").Groups.build(a, tree);
     defer groups.deinit(a);

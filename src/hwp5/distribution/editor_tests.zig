@@ -66,7 +66,7 @@ test "distribution native editor open allocation failures preserve source" {
             try std.testing.expectEqual(@as(usize, 1), session.sectionCount());
         }
     };
-    try std.testing.checkAllAllocationFailures(a, Probe.run, .{@as([]const u8, input)});
+    try @import("../../testing/allocation_failures.zig").check(Probe.run, .{@as([]const u8, input)});
     try std.testing.expectEqualSlices(u8, before, input);
     const normal = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/parashape.hwp", a, .limited(4000000));
     defer a.free(normal);

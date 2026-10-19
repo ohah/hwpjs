@@ -19,6 +19,11 @@ pub const Tree = struct {
     pub fn parse(a: std.mem.Allocator, bytes: []const u8, version: Version, options: framing.Options) !Tree {
         return parseWithIterator(a, try body.Iterator.init(bytes, version, options));
     }
+    pub fn parseWithTableZoneCountPolicy(a: std.mem.Allocator, bytes: []const u8, version: Version, options: framing.Options, policy: body.table.ZoneCountPolicy) !Tree {
+        var iterator = try body.Iterator.init(bytes, version, options);
+        iterator.table_zone_count_policy = policy;
+        return parseWithIterator(a, iterator);
+    }
     /// Same hierarchy/framing, but only paragraph header and text payloads are decoded.
     pub fn parseTextPreview(a: std.mem.Allocator, bytes: []const u8, version: Version, options: framing.Options) !Tree {
         return parseWithIterator(a, try body.Iterator.initTextPreview(bytes, version, options));

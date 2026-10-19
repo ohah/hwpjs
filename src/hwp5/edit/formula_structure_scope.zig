@@ -15,7 +15,7 @@ pub fn validate(a: std.mem.Allocator, source: []const u8, version: Version, para
 
 pub fn validateLimited(a: std.mem.Allocator, source: []const u8, version: Version, paragraph: model.Paragraph, inspections: usize) !void {
     if (paragraph.parent_node == null) return;
-    var tree = try Tree.parse(a, source, version, .{});
+    var tree = try @import("source_tree.zig").parse(a, source, version, .{});
     defer tree.deinit(a);
     var groups = try Groups.build(a, tree);
     defer groups.deinit(a);

@@ -21,7 +21,7 @@ pub fn writeAll(a: std.mem.Allocator, source: []const u8, version: Version, size
 
 pub fn write(a: std.mem.Allocator, source: []const u8, version: Version, picture_node: usize, size: payload_writer.Size, limit: usize) ![]u8 {
     if (source.len > limit) return error.LimitExceeded;
-    var tree = try @import("../body/tree.zig").Tree.parse(a, source, version, .{});
+    var tree = try @import("source_tree.zig").parse(a, source, version, .{});
     defer tree.deinit(a);
     _ = try @import("../body/shape_validation.zig").inspect(tree);
     if (picture_node >= tree.nodes.len or tree.nodes[picture_node].record.framing.tag != @import("../body/shape_picture.zig").tag) return error.InvalidPictureOwner;
@@ -53,7 +53,7 @@ test "HWP5 picture current size section actual root and group records reparse wi
         const version = source.header.version();
         const pictures = try @import("picture_sources.zig").read(a, raw, version, .base73);
         defer a.free(pictures);
-        var tree = try @import("../body/tree.zig").Tree.parse(a, raw, version, .{});
+        var tree = try @import("source_tree.zig").parse(a, raw, version, .{});
         defer tree.deinit(a);
         for (pictures) |picture| {
             const node = tree.nodes[picture.component_node];
@@ -67,7 +67,7 @@ test "HWP5 picture current size section actual root and group records reparse wi
             const offset = node.record.framing.offset + node.record.framing.raw.len - node.record.framing.payload.len + original.current_size_offset;
             try std.testing.expectEqualSlices(u8, raw[0..offset], changed[0..offset]);
             try std.testing.expectEqualSlices(u8, raw[offset + 8 ..], changed[offset + 8 ..]);
-            var reopened = try @import("../body/tree.zig").Tree.parse(a, changed, version, .{});
+            var reopened = try @import("source_tree.zig").parse(a, changed, version, .{});
             defer reopened.deinit(a);
             _ = try @import("../body/shape_validation.zig").inspect(reopened);
             const current = try @import("../body/shape_component.zig").Component.parse(reopened.nodes[picture.component_node].record.framing.payload, layout);

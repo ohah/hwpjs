@@ -1,5 +1,6 @@
 const Reader = @import("../../binary/reader.zig").Reader;
 const Version = @import("../version.zig").Version;
+pub const TailPolicy = enum { required, observed_unresolved_four_bytes };
 pub const CharShape = struct {
     font_ids: [7]u16,
     ratios: [7]u8,
@@ -16,6 +17,7 @@ pub const CharShape = struct {
     shadow_color: u32,
     border_fill_id: ?u16,
     strike_color: ?u32,
+    unresolved_tail: ?[]const u8 = null,
     extra: []const u8,
     pub fn outlineKindRaw(self: CharShape) u3 {
         return @truncate(self.attributes >> 8);
@@ -49,6 +51,10 @@ pub const CharShape = struct {
         return @truncate(self.attributes >> 26);
     }
     pub fn parse(bytes: []const u8, version: Version) !CharShape {
+        return parseWithTailPolicy(bytes, version, .required);
+    }
+
+    pub fn parseWithTailPolicy(bytes: []const u8, version: Version, policy: TailPolicy) !CharShape {
         try version.requireSupported();
         var r: Reader = .{ .bytes = bytes };
         var v: CharShape = undefined;
@@ -65,12 +71,36 @@ pub const CharShape = struct {
         v.underline_color = try r.readInt(u32);
         v.shade_color = try r.readInt(u32);
         v.shadow_color = try r.readInt(u32);
+        v.unresolved_tail = null;
+        if (policy == .observed_unresolved_four_bytes and version.raw >= 0x05000300 and bytes.len - r.offset == 4) {
+            v.unresolved_tail = try r.take(4);
+            v.border_fill_id = null;
+            v.strike_color = null;
+            v.extra = bytes[r.offset..];
+            return v;
+        }
         v.border_fill_id = if (version.raw >= 0x05000201 and r.offset < bytes.len) try r.readInt(u16) else null;
         v.strike_color = if (version.raw >= 0x05000300 and r.offset < bytes.len) try r.readInt(u32) else null;
         v.extra = bytes[r.offset..];
         return v;
     }
 };
+
+test "observed character tail preserves four unresolved bytes without inventing border or strike" {
+    const std = @import("std");
+    const bytes = @as([74]u8, @splat(0));
+    const version: Version = .{ .raw = 0x05000300 };
+    try std.testing.expectError(error.UnexpectedEnd, CharShape.parse(bytes[0..72], version));
+    const shape = try CharShape.parseWithTailPolicy(bytes[0..72], version, .observed_unresolved_four_bytes);
+    try std.testing.expect(shape.border_fill_id == null and shape.strike_color == null);
+    try std.testing.expectEqual(@as(usize, 4), shape.unresolved_tail.?.len);
+    try std.testing.expect(shape.unresolved_tail.?.ptr == bytes[68..].ptr);
+    for ([_]usize{ 69, 71, 73 }) |length| try std.testing.expectError(error.UnexpectedEnd, CharShape.parseWithTailPolicy(bytes[0..length], version, .observed_unresolved_four_bytes));
+    const complete = try CharShape.parseWithTailPolicy(&bytes, version, .observed_unresolved_four_bytes);
+    try std.testing.expect(complete.unresolved_tail == null);
+    try std.testing.expectEqual(@as(?u16, 0), complete.border_fill_id);
+    try std.testing.expectEqual(@as(?u32, 0), complete.strike_color);
+}
 
 test "HWP5 character effects preserve reserved kinds conflicting scripts and neighboring bits" {
     const std = @import("std");

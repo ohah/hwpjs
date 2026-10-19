@@ -20,7 +20,7 @@ fn hex(a: std.mem.Allocator, bytes: []const u8) ![]u8 {
 pub fn read(a: std.mem.Allocator, raw: []const u8, version: @import("../version.zig").Version) ![]Source {
     const geometry = try @import("drawing_sources.zig").read(a, raw, version);
     defer a.free(geometry);
-    var tree = try @import("../body/tree.zig").Tree.parse(a, raw, version, .{});
+    var tree = try @import("source_tree.zig").parse(a, raw, version, .{});
     defer tree.deinit(a);
     var rows: std.ArrayList(Source) = .empty;
     errdefer {
@@ -28,7 +28,7 @@ pub fn read(a: std.mem.Allocator, raw: []const u8, version: @import("../version.
         rows.deinit(a);
     }
     for (geometry) |row| {
-        const common = try @import("../body/object_common.zig").Properties.parse(tree.nodes[row.control_node].record.value.control_header.properties);
+        const common = try @import("../body/object_common.zig").parseControl(tree.nodes[row.control_node].record.value.control_header);
         const encoded = try hex(a, common.extra);
         errdefer a.free(encoded);
         try rows.append(a, .{ .control_node = row.control_node, .paragraph_node = row.paragraph_node, .extra_bytes = common.extra.len, .extra_hex = encoded });

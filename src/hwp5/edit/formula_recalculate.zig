@@ -16,14 +16,14 @@ pub fn applyDraftForParagraph(a: std.mem.Allocator, source: []const u8, version:
 }
 
 fn applySelected(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version, section: *model.Section, char_count: usize, limits: Limits, edited_node: ?usize) !usize {
-    var tree = try @import("../body/tree.zig").Tree.parse(a, source, version, .{});
+    var tree = try @import("source_tree.zig").parse(a, source, version, .{});
     defer tree.deinit(a);
     var groups = try @import("../body/list_groups.zig").Groups.build(a, tree);
     defer groups.deinit(a);
     var remaining = limits;
     var processed: usize = 0;
     for (tree.nodes, 0..) |node, source_node| {
-        if (node.record.framing.tag != @intFromEnum(body.Tag.control_header)) continue;
+        if (node.record.framing.tag != @backingInt(body.Tag.control_header)) continue;
         const header = try body.ControlHeader.parse(node.record.framing.payload);
         if (header.id != @import("../body/control_rules.zig").id("%fmu")) continue;
         const parent = node.parent orelse return error.SourceBindingMismatch;
@@ -63,7 +63,7 @@ fn applySelected(a: std.mem.Allocator, source: []const u8, version: @import("../
         var child = parent + 1;
         while (child < source_node) {
             const earlier = tree.nodes[child];
-            if (earlier.record.framing.tag == @intFromEnum(body.Tag.control_header) and (try body.ControlHeader.parse(earlier.record.framing.payload)).id == header.id) ordinal += 1;
+            if (earlier.record.framing.tag == @backingInt(body.Tag.control_header) and (try body.ControlHeader.parse(earlier.record.framing.payload)).id == header.id) ordinal += 1;
             child = earlier.subtree_end;
         }
         if (p.formula_results == null) {
@@ -102,7 +102,7 @@ test "known table local formula scope preserves outside edit but never skips aff
         if (binding.span.field_id == @import("../body/control_rules.zig").id("%fmu")) break binding;
     } else return error.TestExpectedEqual;
     try std.testing.expectEqual(@as(usize, 0), try applyDraftForParagraph(a, bytes, source.header.version(), &doc.sections[0], 65536, .{}, 0));
-    var tree = try @import("../body/tree.zig").Tree.parse(a, bytes, source.header.version(), .{});
+    var tree = try @import("source_tree.zig").parse(a, bytes, source.header.version(), .{});
     defer tree.deinit(a);
     var groups = try @import("../body/list_groups.zig").Groups.build(a, tree);
     defer groups.deinit(a);

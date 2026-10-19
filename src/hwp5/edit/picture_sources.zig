@@ -20,7 +20,7 @@ pub const Source = struct {
     extra_bytes: usize,
 };
 pub fn read(a: std.mem.Allocator, raw: []const u8, version: @import("../version.zig").Version, prefix: Picture.Prefix) ![]Source {
-    var tree = try @import("../body/tree.zig").Tree.parse(a, raw, version, .{});
+    var tree = try @import("source_tree.zig").parse(a, raw, version, .{});
     defer tree.deinit(a);
     _ = try @import("../body/shape_validation.zig").inspect(tree);
     _ = try @import("../body/picture_validation.zig").inspect(tree, .{ .prefix = prefix }, null);
@@ -60,7 +60,7 @@ test "picture sources actual fixed fields grouped ownership and allocation failu
         defer a.free(queried);
         try std.testing.expectEqualDeep(expected, queried);
         try std.testing.expectError(error.InvalidSection, session.pictureSources(a, 999, .base73));
-        var tree = try @import("../body/tree.zig").Tree.parse(a, raw, document.header.version(), .{});
+        var tree = try @import("source_tree.zig").parse(a, raw, document.header.version(), .{});
         defer tree.deinit(a);
         for (expected) |row| {
             const bytes = tree.nodes[row.picture_node].record.framing.payload;

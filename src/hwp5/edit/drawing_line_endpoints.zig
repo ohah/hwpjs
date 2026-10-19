@@ -11,7 +11,7 @@ pub const Endpoints = struct {
     points: [2][2]f64,
 };
 pub fn read(a: std.mem.Allocator, raw: []const u8, version: @import("../version.zig").Version) ![]Endpoints {
-    var tree = try @import("../body/tree.zig").Tree.parse(a, raw, version, .{});
+    var tree = try @import("source_tree.zig").parse(a, raw, version, .{});
     defer tree.deinit(a);
     _ = try @import("../body/shape_validation.zig").inspect(tree);
     _ = try @import("../body/line_validation.zig").inspect(tree);

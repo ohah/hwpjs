@@ -23,7 +23,7 @@ pub const Source = struct {
     extra_bytes: usize,
 };
 pub fn read(a: std.mem.Allocator, raw: []const u8, version: Version) ![]Source {
-    var tree = try @import("../body/tree.zig").Tree.parse(a, raw, version, .{});
+    var tree = try @import("source_tree.zig").parse(a, raw, version, .{});
     defer tree.deinit(a);
     // 기존 검증기가 root/그룹 소유권과 직접 자식 순서를 단독으로 소유합니다.
     _ = try @import("../body/shape_validation.zig").inspect(tree);
@@ -76,7 +76,7 @@ test "HWP5 component inventory actual grouped offsets and allocation failures" {
         defer a.free(queried);
         try std.testing.expectEqualDeep(rows, queried);
         try std.testing.expectError(error.InvalidSection, session.drawingComponentSources(a, 999));
-        var tree = try @import("../body/tree.zig").Tree.parse(a, raw, source.header.version(), .{});
+        var tree = try @import("source_tree.zig").parse(a, raw, source.header.version(), .{});
         defer tree.deinit(a);
         var count: usize = 0;
         for (tree.nodes) |node| count += @intFromBool(node.record.framing.tag == 76);

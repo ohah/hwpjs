@@ -19,7 +19,7 @@ pub const Source = struct {
 };
 
 pub fn read(a: std.mem.Allocator, raw: []const u8, version: Version) ![]Source {
-    var tree = try Tree.parse(a, raw, version, .{});
+    var tree = try @import("source_tree.zig").parse(a, raw, version, .{});
     defer tree.deinit(a);
     var groups = try @import("paragraph_owner.zig").inspectGroups(a, tree, version);
     defer groups.deinit(a);

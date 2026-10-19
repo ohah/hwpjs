@@ -33,7 +33,7 @@ pub fn applyDraftRetainingObjectNumbers(a: std.mem.Allocator, source: []const u8
 fn applyDraftWithRetention(a: std.mem.Allocator, source: []const u8, version: Version, section: *model.Section, sites: []const Site, char_count: usize, retain_object_numbers: bool) !Report {
     const bindings = try collect(a, source, version, section.*, retain_object_numbers);
     defer a.free(bindings);
-    var tree = try @import("../body/tree.zig").Tree.parse(a, source, version, .{});
+    var tree = try @import("source_tree.zig").parse(a, source, version, .{});
     defer tree.deinit(a);
     var report: Report = .{};
     for (bindings) |binding| {

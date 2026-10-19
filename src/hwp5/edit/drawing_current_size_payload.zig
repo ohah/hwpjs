@@ -28,7 +28,7 @@ test "HWP5 drawing current size payload actual fourteen pictures retain every ot
         defer a.free(raw);
         const pictures = try @import("picture_sources.zig").read(a, raw, source.header.version(), .base73);
         defer a.free(pictures);
-        var tree = try @import("../body/tree.zig").Tree.parse(a, raw, source.header.version(), .{});
+        var tree = try @import("source_tree.zig").parse(a, raw, source.header.version(), .{});
         defer tree.deinit(a);
         for (pictures) |picture| {
             const layout = try @import("../body/shape_validation.zig").componentLayout(tree, picture.component_node);

@@ -23,7 +23,7 @@ pub const Report = struct {
 };
 
 pub fn collect(a: std.mem.Allocator, source: []const u8, version: Version) !Report {
-    var tree = try Tree.parse(a, source, version, .{});
+    var tree = try @import("source_tree.zig").parse(a, source, version, .{});
     defer tree.deinit(a);
     var forms = try linked.collectObservedUnits(a, tree, .{});
     defer forms.deinit(a);

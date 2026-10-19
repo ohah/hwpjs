@@ -32,7 +32,7 @@ pub fn prepare(a: std.mem.Allocator, source: []const u8, version: Version, pictu
 }
 
 fn extract(a: std.mem.Allocator, changed: []const u8, version: Version, picture_node: u32, target: [2]u32) !model.PictureCurrentSize {
-    var tree = try @import("../body/tree.zig").Tree.parse(a, changed, version, .{});
+    var tree = try @import("source_tree.zig").parse(a, changed, version, .{});
     defer tree.deinit(a);
     const component_node = tree.nodes[picture_node].parent.?;
     const layout = try @import("../body/shape_validation.zig").componentLayout(tree, component_node);

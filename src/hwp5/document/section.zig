@@ -43,7 +43,7 @@ pub fn inspectCollected(a: std.mem.Allocator, bytes: []const u8, version: @impor
         if (node.record.value != .control_header) continue;
         const h = node.record.value.control_header;
         if (!object.supports(h.id)) continue;
-        _ = try object.Properties.parse(h.properties);
+        _ = try object.parseControl(h);
         objects += 1;
     }
     const parameter_report = try sources.inspectBodyDetailed(a, tree, types.parameterOptions(options, counts.bin_data_count));

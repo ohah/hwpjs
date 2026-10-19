@@ -2,6 +2,29 @@ const std = @import("std");
 const t = std.testing;
 const object = @import("object_common.zig");
 const Properties = object.Properties;
+test "object control compatibility is limited to drawing controls" {
+    const bytes = @as([36]u8, @splat(0));
+    try t.expect(!(try object.parseControl(.{ .id = @import("control_rules.zig").drawing_id, .properties = &bytes })).prevent_page_break_present);
+    for ([_]u32{ @import("control_rules.zig").table_id, @import("control_rules.zig").equation_id }) |id| {
+        try t.expectError(error.UnexpectedEnd, object.parseControl(.{ .id = id, .properties = &bytes }));
+    }
+}
+test "object observed absent page break preserves presence and rejects partial fields" {
+    const bytes = @as([42]u8, @splat(0));
+    const absent = try Properties.parseWithPolicy(bytes[0..36], .observed_absent);
+    try t.expect(!absent.prevent_page_break_present);
+    try t.expectEqual(0, absent.prevent_page_break);
+    try t.expect(absent.description_utf16 == null);
+    try t.expectEqual(0, absent.extra.len);
+    try t.expectError(error.UnexpectedEnd, Properties.parse(bytes[0..36]));
+    for (0..36) |length| try t.expectError(error.UnexpectedEnd, Properties.parseWithPolicy(bytes[0..length], .observed_absent));
+    for (37..40) |length| try t.expectError(error.UnexpectedEnd, Properties.parseWithPolicy(bytes[0..length], .observed_absent));
+    const present = try Properties.parseWithPolicy(bytes[0..40], .observed_absent);
+    try t.expect(present.prevent_page_break_present);
+    try t.expectEqual(0, present.prevent_page_break);
+    try t.expectError(error.UnexpectedEnd, Properties.parseWithPolicy(bytes[0..41], .observed_absent));
+    try t.expectEqual(0, (try Properties.parseWithPolicy(&bytes, .observed_absent)).description_utf16.?.len);
+}
 test "object common bounds, absent versus empty description, and borrowed extra" {
     var b = @as([51]u8, @splat(0));
     for (0..40) |n| try t.expectError(error.UnexpectedEnd, Properties.parse(b[0..n]));

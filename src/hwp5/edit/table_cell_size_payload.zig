@@ -51,7 +51,7 @@ test "HWP5 cell size payload keeps actual nested cell extensions and original va
     defer source.deinit();
     const decoded = try source.decodeSection(a, 0);
     defer a.free(decoded);
-    var tree = try @import("../body/tree.zig").Tree.parse(a, decoded, source.header.version(), .{});
+    var tree = try @import("source_tree.zig").parse(a, decoded, source.header.version(), .{});
     defer tree.deinit(a);
     var document = try @import("../model_projection.zig").fromDecodedSections(a, source.header.version(), &.{decoded});
     defer document.deinit(a);

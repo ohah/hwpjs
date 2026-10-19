@@ -73,6 +73,27 @@ export fn hwp5_edit_available_section_copy_info() u32 {
 export fn hwp5_edit_open_normalized(ptr: [*]const u8, size: usize) u32 {
     return openNormalizedMode(ptr, size, false);
 }
+export fn hwp5_edit_open_observed_docinfo(ptr: [*]const u8, size: usize, normalize_cfb: u32) u32 {
+    if (normalize_cfb > 1) return fail(error.InvalidNormalizationOption);
+    if (size > 64 * 1024 * 1024) return fail(error.LimitExceeded);
+    if (normalize_cfb == 1) {
+        const next = @import("../hwp5/edit/normalized_open.zig").openRetainingObservedDocInfo(a, ptr[0..size]) catch |err| return fail(err);
+        hwp5_edit_close();
+        active = next.session;
+        normalization = next.deviations;
+    } else {
+        const next = Session.openRetainingObservedDocInfo(a, ptr[0..size]) catch |err| return fail(err);
+        hwp5_edit_close();
+        active = next;
+    }
+    return 1;
+}
+export fn hwp5_edit_observed_docinfo_diagnostics() u32 {
+    hwp5_edit_output_free();
+    const s = session() catch |err| return fail(err);
+    output = std.json.Stringify.valueAlloc(a, s.observedDocInfoDiagnostics(), .{}) catch |err| return fail(err);
+    return 1;
+}
 export fn hwp5_edit_open_normalized_distribution(ptr: [*]const u8, size: usize) u32 {
     return openNormalizedMode(ptr, size, true);
 }

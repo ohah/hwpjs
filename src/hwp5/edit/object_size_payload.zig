@@ -5,7 +5,7 @@ const common = @import("../body/object_common.zig");
 pub fn write(a: std.mem.Allocator, payload: []const u8, size: [2]u32, limit: usize) ![]u8 {
     const control = try @import("../body/control_header.zig").Header.parse(payload);
     if (!common.supports(control.id)) return error.UnsupportedObjectSize;
-    const properties = try common.Properties.parse(control.properties);
+    const properties = try common.parseControl(control);
     if (properties.sizeProtected()) return error.PictureSizeProtected;
     if (payload.len > limit) return error.LimitExceeded;
     const offset = payload.len - control.properties.len + properties.size_offset;
@@ -56,7 +56,7 @@ test "HWP5 object size payload actual root picture declarations preserve every o
         defer a.free(decoded);
         const pictures = try @import("picture_sources.zig").read(a, decoded, source.header.version(), .base73);
         defer a.free(pictures);
-        var tree = try @import("../body/tree.zig").Tree.parse(a, decoded, source.header.version(), .{});
+        var tree = try @import("source_tree.zig").parse(a, decoded, source.header.version(), .{});
         defer tree.deinit(a);
         for (pictures) |picture| {
             const payload = tree.nodes[picture.owner_node].record.framing.payload;

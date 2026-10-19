@@ -17,7 +17,7 @@ pub const Source = struct {
     extra_nonzero: bool,
 };
 pub fn read(a: std.mem.Allocator, raw: []const u8, version: @import("../version.zig").Version, paragraphs: []const @import("../../model/document.zig").Paragraph) ![]Source {
-    var tree = try @import("../body/tree.zig").Tree.parse(a, raw, version, .{});
+    var tree = try @import("source_tree.zig").parse(a, raw, version, .{});
     defer tree.deinit(a);
     var links = try @import("../body/control_links.zig").Links.build(a, tree);
     defer links.deinit(a);

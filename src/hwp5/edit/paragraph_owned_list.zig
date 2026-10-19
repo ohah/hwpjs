@@ -28,7 +28,7 @@ test "paragraph owned list requires explicit root sibling count and rejects forg
     try @import("../record_writer.zig").append(a, &bytes, 66, 0, &head, 1024);
     try @import("../record_writer.zig").append(a, &bytes, 72, 1, &list, 1024);
     try @import("../record_writer.zig").append(a, &bytes, 66, 1, &head, 1024);
-    var tree = try Tree.parse(a, bytes.items, .{ .raw = 0x05000107 }, .{});
+    var tree = try @import("source_tree.zig").parse(a, bytes.items, .{ .raw = 0x05000107 }, .{});
     defer tree.deinit(a);
     var groups = try Groups.build(a, tree);
     defer groups.deinit(a);

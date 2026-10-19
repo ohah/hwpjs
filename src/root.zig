@@ -12,12 +12,17 @@ pub const text = @import("text/root.zig");
 pub const model = @import("model/document.zig");
 
 test {
+    _ = @import("hwp5/edit/source_tree_tests.zig");
+    _ = @import("object_common_probe.zig");
+    _ = @import("docinfo_properties_probe.zig");
+    _ = @import("observed_docinfo_session_probe.zig");
     _ = @import("table_zone_count_probe.zig");
     _ = @import("compat/stack_fallback_tests.zig");
     _ = @import("testing/repeated_bytes.zig");
     _ = @import("hwpx/formula_result_paragraphs.zig");
     _ = @import("hwpx/formula_result_display_snapshot.zig");
     _ = @import("hwpx/page_area_declaration_snapshot.zig");
+    _ = @import("hwpx/page_area_declaration_field_tests.zig");
     _ = @import("hwpx/memo_label_session_tests.zig");
     _ = @import("hwp5/docinfo/section_count_tests.zig");
     _ = @import("hwp5/edit/available_section_copy_tests.zig");

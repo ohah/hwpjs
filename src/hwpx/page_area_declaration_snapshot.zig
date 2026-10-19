@@ -37,7 +37,7 @@ pub fn read(a: std.mem.Allocator, session: *const editor.Session, section_index:
                 if (originals != 1) return error.SourceBindingMismatch;
                 continue;
             }
-            const segments = try @import("paragraph_protected_positions.zig").build(a, &section.tree, paragraph);
+            const segments = try @import("page_area_declaration_positions.zig").build(a, session, section_index, paragraph, ordinal);
             defer a.free(segments);
             const positions = try source.collect(a, &section.tree, paragraph.template_element, segments, 100000);
             defer a.free(positions);
@@ -55,6 +55,39 @@ fn append(a: std.mem.Allocator, rows: *std.ArrayList(Row), owners: *std.AutoHash
         if (entry.found_existing) return error.SourceBindingMismatch;
         try rows.append(a, .{ .paragraph = paragraph, .source_element = item.source_element, .source_control = item.source_control, .unit = item.unit, .affinity = item.affinity });
     }
+}
+
+test "page area field declaration reads real hyperlink owner without granting plain editing" {
+    const a = std.testing.allocator;
+    const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "reference/rhwp/samples/hwpx/143E433F503322BD33.hwpx", a, .limited(4000000));
+    defer a.free(input);
+    var session = try editor.open(a, input, .{});
+    defer session.deinit();
+    const rows = try read(a, &session, 0);
+    defer a.free(rows);
+    try std.testing.expectEqual(@as(usize, 1), rows.len);
+    try std.testing.expectEqual(@as(usize, 49), rows[0].paragraph);
+    try std.testing.expectEqual(@as(u32, 0), rows[0].unit);
+    try std.testing.expect(!try session.canEdit(0, 49));
+    const saved = try session.save();
+    defer a.free(saved);
+    try std.testing.expectEqualSlices(u8, input, saved);
+    const labels = try session.fieldLabels(0, 49);
+    defer a.free(labels);
+    try std.testing.expectEqual(@as(usize, 1), labels.len);
+    try std.testing.expect(try session.spliceFieldLabel(0, 49, labels[0].begin_element, labels[0].start, 0, "검증😀"));
+    const changed = try read(a, &session, 0);
+    defer a.free(changed);
+    try std.testing.expectEqualDeep(rows, changed);
+    const output = try session.save();
+    defer a.free(output);
+    var reopened = try editor.open(a, output, .{});
+    defer reopened.deinit();
+    const restored = try read(a, &reopened, 0);
+    defer a.free(restored);
+    try std.testing.expectEqual(@as(usize, 1), restored.len);
+    try std.testing.expectEqual(@as(usize, 49), restored[0].paragraph);
+    try std.testing.expectEqual(@as(u32, 0), restored[0].unit);
 }
 
 test "page area declaration snapshot follows real preceding split and releases every failed query" {

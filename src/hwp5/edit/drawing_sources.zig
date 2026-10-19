@@ -28,7 +28,7 @@ pub const Source = struct {
     component_extra_bytes: usize,
 };
 pub fn read(a: std.mem.Allocator, raw: []const u8, version: @import("../version.zig").Version) ![]Source {
-    var tree = try @import("../body/tree.zig").Tree.parse(a, raw, version, .{});
+    var tree = try @import("source_tree.zig").parse(a, raw, version, .{});
     defer tree.deinit(a);
     const component = @import("../body/shape_component.zig");
     var out: std.ArrayList(Source) = .empty;
@@ -39,7 +39,7 @@ pub fn read(a: std.mem.Allocator, raw: []const u8, version: @import("../version.
         if (tree.nodes[parent].record.value != .header) return error.InvalidDrawingOwner;
         const child = (try @import("../body/owned_record.zig").find(tree, index, component.tag)) orelse return error.MissingShapeComponent;
         const shape = try component.Component.parse(tree.nodes[child].record.framing.payload, .double_id);
-        const common = try @import("../body/object_common.zig").Properties.parse(node.record.value.control_header.properties);
+        const common = try @import("../body/object_common.zig").parseControl(node.record.value.control_header);
         try out.append(a, .{ .control_node = index, .component_node = child, .paragraph_node = parent, .kind_id = shape.id, .flags = common.flags, .offset_x = common.offset_x, .offset_y = common.offset_y, .width = common.width, .height = common.height, .instance_id = common.instance_id, .z_order = common.z_order, .outer_margins = common.margins, .prevent_page_break = common.prevent_page_break, .description_bytes = if (common.description_utf16) |text| text.len else null, .object_extra_bytes = common.extra.len, .component_offset_x = shape.offset_x, .component_offset_y = shape.offset_y, .original_width = shape.original_width, .original_height = shape.original_height, .current_width = shape.current_width, .current_height = shape.current_height, .component_attributes = shape.attributes, .rotation_angle = shape.rotation_angle, .matrix_pairs = shape.rendering.pairs.count(), .component_extra_bytes = shape.extra.len });
     }
     return out.toOwnedSlice(a);
@@ -58,7 +58,7 @@ test "HWP5 drawing sources actual geometry allocation failures" {
         const expected = try read(a, bytes, source.header.version());
         defer a.free(expected);
         try std.testing.expect(expected.len > 0);
-        var tree = try @import("../body/tree.zig").Tree.parse(a, bytes, source.header.version(), .{});
+        var tree = try @import("source_tree.zig").parse(a, bytes, source.header.version(), .{});
         defer tree.deinit(a);
         for (expected) |row| {
             const payload = tree.nodes[row.control_node].record.framing.payload;

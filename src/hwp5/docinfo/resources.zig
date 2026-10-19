@@ -1,6 +1,13 @@
 const d = @import("reader.zig");
 const Version = @import("../version.zig").Version;
 const Options = @import("../record.zig").Options;
+pub const DecodingPolicy = struct {
+    caret: @import("properties.zig").CaretPolicy = .required,
+    font_type: @import("face_name.zig").TypeInfoPolicy = .required,
+    style_character: @import("style.zig").CharacterPolicy = .required,
+    character_tail: @import("char_shape.zig").TailPolicy = .required,
+    fill_additional: @import("fill.zig").AdditionalPolicy = .required,
+};
 pub const Language = enum(u3) { korean, english, hanja, japanese, other, symbol, user };
 /// Same contiguous order as ID_MAPPINGS slots 8..14.
 pub const Kind = enum { border_fill, char_shape, tab_def, numbering, bullet, para_shape, style };
@@ -13,6 +20,11 @@ pub const Report = struct {
     mappings: d.IdMappings,
     bin_data_count: usize,
     face_name_count: usize,
+    unresolved_font_type_count: usize = 0,
+    absent_caret_count: usize = 0,
+    unresolved_style_character_count: usize = 0,
+    unresolved_character_tail_count: usize = 0,
+    absent_fill_additional_count: usize = 0,
     memo_shape_count: usize = 0,
     track_change_author_count: usize = 0,
     track_change_count: usize = 0,
@@ -77,7 +89,11 @@ pub const BinDataSelection = struct {
 /// No allocations from declared counts; preserve mismatches as a report.
 /// Counts BinData, FACE_NAME, formatting, memo and raw track-change resources.
 pub fn inspect(bytes: []const u8, version: Version, options: Options) !Report {
-    return (try scan(bytes, version, options, null)).report;
+    return inspectWithDecodingPolicy(bytes, version, options, .{});
+}
+
+pub fn inspectWithDecodingPolicy(bytes: []const u8, version: Version, options: Options, policy: DecodingPolicy) !Report {
+    return (try scan(bytes, version, options, null, policy)).report;
 }
 
 /// Resolves a one-based BinData ordinal while the same complete traversal
@@ -98,7 +114,7 @@ pub fn inspectBinDataOrdinals(bytes: []const u8, version: Version, options: Opti
         if (index != 0 and ordinal <= ordinals[index - 1]) return error.InvalidBinDataOrdinalOrder;
     }
     var selector: Selector = .{ .ordinals = ordinals, .items = items };
-    const result = try scan(bytes, version, options, &selector);
+    const result = try scan(bytes, version, options, &selector, .{});
     if (selector.next != ordinals.len) return error.BinDataNotFound;
     return result.report;
 }
@@ -111,11 +127,21 @@ const Selector = struct {
 
 const Scan = struct { report: Report };
 
-fn scan(bytes: []const u8, version: Version, options: Options, selector: ?*Selector) !Scan {
+fn scan(bytes: []const u8, version: Version, options: Options, selector: ?*Selector, policy: DecodingPolicy) !Scan {
     var it = try d.Iterator.init(bytes, version, options);
+    it.caret_policy = policy.caret;
+    it.font_type_policy = policy.font_type;
+    it.style_character_policy = policy.style_character;
+    it.character_tail_policy = policy.character_tail;
+    it.fill_additional_policy = policy.fill_additional;
     var mappings: ?d.IdMappings = null;
     var bins: usize = 0;
     var fonts: usize = 0;
+    var unresolved_fonts: usize = 0;
+    var absent_carets: usize = 0;
+    var unresolved_styles: usize = 0;
+    var unresolved_character_tails: usize = 0;
+    var absent_fill_additionals: usize = 0;
     var memos: usize = 0;
     var authors: usize = 0;
     var changes: usize = 0;
@@ -132,7 +158,25 @@ fn scan(bytes: []const u8, version: Version, options: Options, selector: ?*Selec
                 selected.next += 1;
             };
         },
-        .face_name => fonts += 1,
+        .properties => |properties| {
+            if (!properties.caret_present) absent_carets += 1;
+        },
+        .face_name => |font| {
+            fonts += 1;
+            if (font.unresolved_type_info != null) unresolved_fonts += 1;
+        },
+        .style => |style| {
+            counts[@backingInt(Kind.style)] += 1;
+            if (!style.char_shape_present) unresolved_styles += 1;
+        },
+        .char_shape => |shape| {
+            counts[@backingInt(Kind.char_shape)] += 1;
+            if (shape.unresolved_tail != null) unresolved_character_tails += 1;
+        },
+        .border_fill => |border| {
+            counts[@backingInt(Kind.border_fill)] += 1;
+            if (border.fill.data == .known and !border.fill.data.known.additional_present) absent_fill_additionals += 1;
+        },
         .memo_shape => memos += 1,
         else => {
             if (r.framing.tag == @backingInt(d.Tag.track_change_author)) authors += 1;
@@ -142,5 +186,5 @@ fn scan(bytes: []const u8, version: Version, options: Options, selector: ?*Selec
             }
         },
     };
-    return .{ .report = .{ .mappings = mappings orelse return error.MissingIdMappings, .bin_data_count = bins, .face_name_count = fonts, .memo_shape_count = memos, .track_change_author_count = authors, .track_change_count = changes, .counts = counts } };
+    return .{ .report = .{ .mappings = mappings orelse return error.MissingIdMappings, .bin_data_count = bins, .face_name_count = fonts, .unresolved_font_type_count = unresolved_fonts, .absent_caret_count = absent_carets, .unresolved_style_character_count = unresolved_styles, .unresolved_character_tail_count = unresolved_character_tails, .absent_fill_additional_count = absent_fill_additionals, .memo_shape_count = memos, .track_change_author_count = authors, .track_change_count = changes, .counts = counts } };
 }

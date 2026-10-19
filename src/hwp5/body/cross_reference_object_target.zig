@@ -10,7 +10,7 @@ pub fn collect(a: std.mem.Allocator, tree: @import("tree.zig").Tree, section: us
         if (node.record.value != .control_header) continue;
         const header = node.record.value.control_header;
         if (!@import("object_common.zig").supports(header.id)) continue;
-        const properties = try @import("object_common.zig").Properties.parse(header.properties);
+        const properties = try @import("object_common.zig").parseControl(header);
         try out.append(a, .{ .section = section, .record_offset = node.record.framing.offset, .control_id = header.id, .instance_id = properties.instance_id });
     }
     return out.toOwnedSlice(a);

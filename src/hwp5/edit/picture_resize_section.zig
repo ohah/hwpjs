@@ -4,11 +4,11 @@ const Version = @import("../version.zig").Version;
 
 pub fn write(a: std.mem.Allocator, source: []const u8, version: Version, picture_node: usize, target: [2]u32, limit: usize) ![]u8 {
     if (source.len > limit) return error.LimitExceeded;
-    var tree = try @import("../body/tree.zig").Tree.parse(a, source, version, .{});
+    var tree = try @import("source_tree.zig").parse(a, source, version, .{});
     defer tree.deinit(a);
     const root = try @import("picture_size_protection.zig").rootOwner(tree, picture_node);
     const control = tree.nodes[root].record;
-    const properties = try @import("../body/object_common.zig").Properties.parse(control.value.control_header.properties);
+    const properties = try @import("../body/object_common.zig").parseControl(control.value.control_header);
     if (properties.sizeProtected()) return error.PictureSizeProtected;
     if ((properties.flags >> 15) & 7 != 4 or (properties.flags >> 18) & 3 != 2) return error.UnsupportedRelativePictureResize;
     const component_node = tree.nodes[picture_node].parent.?;
@@ -43,7 +43,7 @@ test "HWP5 picture resize section actual fourteen root and group targets preserv
         const version = source.header.version();
         const pictures = try @import("picture_sources.zig").read(a, raw, version, .base73);
         defer a.free(pictures);
-        var before = try @import("../body/tree.zig").Tree.parse(a, raw, version, .{});
+        var before = try @import("source_tree.zig").parse(a, raw, version, .{});
         defer before.deinit(a);
         for (pictures) |picture| {
             const changed = try write(a, raw, version, picture.picture_node, .{ 10000, 6000 }, raw.len);
@@ -51,11 +51,11 @@ test "HWP5 picture resize section actual fourteen root and group targets preserv
             const repeated = try write(a, changed, version, picture.picture_node, .{ 10000, 6000 }, changed.len);
             defer a.free(repeated);
             try std.testing.expectEqualSlices(u8, changed, repeated);
-            var after = try @import("../body/tree.zig").Tree.parse(a, changed, version, .{});
+            var after = try @import("source_tree.zig").parse(a, changed, version, .{});
             defer after.deinit(a);
             const layout = try @import("../body/shape_validation.zig").componentLayout(after, picture.component_node);
             const root = try @import("picture_size_protection.zig").rootOwner(after, picture.picture_node);
-            const common = try @import("../body/object_common.zig").Properties.parse(after.nodes[root].record.value.control_header.properties);
+            const common = try @import("../body/object_common.zig").parseControl(after.nodes[root].record.value.control_header);
             if (layout == .double_id) {
                 try std.testing.expectEqual(@as(u32, 10000), common.width);
                 try std.testing.expectEqual(@as(u32, 6000), common.height);

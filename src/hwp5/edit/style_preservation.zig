@@ -51,6 +51,7 @@ const State = struct {
     style_count: usize,
     char_count: usize,
     para_count: usize,
+    observed_docinfo: ?@import("observed_docinfo.zig").Diagnostics = null,
 
     fn deinit(self: *State) void {
         const a = self.allocator;
@@ -105,14 +106,22 @@ pub const Session = opaque {
     }
 
     pub fn open(a: std.mem.Allocator, input: []const u8) !*Session {
-        return openMode(a, input, false);
+        return openMode(a, input, false, false);
     }
 
     pub fn openDistribution(a: std.mem.Allocator, input: []const u8) !*Session {
-        return openMode(a, input, true);
+        return openMode(a, input, true, false);
     }
 
-    fn openMode(a: std.mem.Allocator, input: []const u8, distribution: bool) !*Session {
+    pub fn openRetainingObservedDocInfo(a: std.mem.Allocator, input: []const u8) !*Session {
+        return openMode(a, input, false, true);
+    }
+
+    pub fn observedDocInfoDiagnostics(self: *const Session) ?@import("observed_docinfo.zig").Diagnostics {
+        return self.stateConst().observed_docinfo;
+    }
+
+    fn openMode(a: std.mem.Allocator, input: []const u8, distribution: bool, retain_observed_docinfo: bool) !*Session {
         var source = if (distribution) try Source.openReadOnly(a, input) else try Source.open(a, input);
         errdefer source.deinit();
         if (distribution) {
@@ -124,8 +133,13 @@ pub const Session = opaque {
         if (!std.mem.eql(u8, input, source.file.bytes)) return error.RepairedSourceUnsupported;
         const info = try source.decodeDocInfo(a, max_stream);
         defer a.free(info);
-        const resources = try @import("../docinfo/resources.zig").inspect(info, source.header.version(), .{});
-        try resources.validateKnownCounts();
+        var observed: ?@import("observed_docinfo.zig").Diagnostics = null;
+        const resources = if (retain_observed_docinfo) retained: {
+            const inspected = try @import("observed_docinfo.zig").inspect(info, source.header.version());
+            observed = inspected.diagnostics;
+            break :retained inspected.report;
+        } else try @import("../docinfo/resources.zig").inspect(info, source.header.version(), .{});
+        if (!retain_observed_docinfo) try resources.validateKnownCounts();
         const style_count = resources.count(.style);
 
         const decoded = try a.alloc([]u8, source.section_count);
@@ -152,7 +166,7 @@ pub const Session = opaque {
             var node: usize = 0;
             var paragraph_index: usize = 0;
             while (try it.next()) |record| : (node += 1) {
-                if (record.tag != @intFromEnum(Tag.paragraph_header)) continue;
+                if (record.tag != @backingInt(Tag.paragraph_header)) continue;
                 if (paragraph_index >= section.paragraphs.len) return error.SourceBindingMismatch;
                 const p = section.paragraphs[paragraph_index];
                 if (try p.originalNode() != node) return error.SourceBindingMismatch;
@@ -166,6 +180,7 @@ pub const Session = opaque {
         }
         const owned = try a.create(State);
         owned.* = .{ .allocator = a, .source = source, .decoded = decoded, .document = document, .style_offsets = offsets, .style_count = style_count, .char_count = resources.count(.char_shape), .para_count = resources.count(.para_shape) };
+        owned.observed_docinfo = observed;
         return @ptrCast(owned);
     }
 
@@ -531,7 +546,7 @@ pub const Session = opaque {
                 errdefer @import("editor_checkpoint.zig").rollback(checkpoint, state.allocator, self, &state.document) catch unreachable;
                 const id = try self.ensureFont(edit.language, edit.name);
                 var ids: @import("../../model/character_fonts.zig").Values = @splat(null);
-                ids[@intFromEnum(edit.language)] = id;
+                ids[@backingInt(edit.language)] = id;
                 try self.apply(.{ .set_character_properties = .{ .section = edit.section, .paragraph = edit.paragraph, .start_unit = edit.start_unit, .end_unit = edit.end_unit, .properties = .{ .font_ids = ids } } });
             },
             .set_paragraph_spacing => |edit| {
