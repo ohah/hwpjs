@@ -76,6 +76,7 @@
 - [중첩 목록 문단 텍스트 편집](hwp5-nested-text-edit.md)
 - [바탕쪽 목록 텍스트 편집](hwp5-master-page-edit.md)
 - [계산식 command 분리](hwp5-formula-command.md)
+- [참조 표 숫자 입력·SUM](hwp5-reference-chart-numeric-input.md)
 - [기존 빈 문단 텍스트 편집](hwp5-empty-text-edit.md)
 - [제어 포함 텍스트 편집 확장 작업](hwp5-control-text-edit.md)
 - [편집 모델의 하이퍼링크 수정 속성](hwp5-field-attribute-edit.md)

@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { runInNewContext } from "node:vm";
 import { inflateRawSync } from "node:zlib";
+import { createHash } from "node:crypto";
 import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
 import { verifyChartFormulas, chartNumericTargets } from "./style-preservation/formula-record-oracle.mjs";
 import { generalNumber } from "./style-preservation/general-number-oracle.mjs";
@@ -65,4 +66,46 @@ test("independent general-number oracle has fixed exponent and rounding boundary
   }
   assert.throws(() => generalNumber(Infinity));
   assert.throws(() => generalNumber(NaN));
+});
+
+for (const base of [500, 1000000]) test(`reference HWP5 chart edits all twelve numeric dependencies with base ${base}`, async t => {
+  if (!process.env.HWPJS_TEST_WASM) { t.skip("explicit reference candidate required"); return; }
+  const path = "reference/rhwp/samples/143E433F503322BD33.hwp", input = readFileSync(path);
+  const digest = bytes => createHash("sha256").update(bytes).digest("hex");
+  assert.equal(digest(input), "1bcdc7a2de38680cdb715556f40c8477f8242131d28de949b09e945022bf35fa");
+  const original = streams(input), targets = chartNumericTargets(inflateRawSync(original.get("BodyText/Section0")));
+  assert.deepEqual(targets, [18, 19, 20, 23, 24, 25, 28, 29, 30, 33, 34, 35]);
+  const module = await WebAssembly.compile(wasm), wasmHash = digest(wasm);
+  for (const [index, paragraph] of targets.entries()) {
+    const editor = await createExperimentalHwp5Editor(module, input);
+    try {
+      editor.enableHistory();
+      const source = editor.text(0, paragraph), before = editor.save({ allowStaleLayout: true });
+      assert.equal(before.layoutRequiresReflow, false);
+      assert(source.endsWith("\r"));
+      assert.throws(() => editor.splice({ section: 0, paragraph, startUnit: 0, endUnit: 0, text: "검증😀" }), /InvalidFormulaNumber/);
+      assert.deepEqual(editor.save({ allowStaleLayout: true }), before);
+      const number = String(base + index + 1);
+      editor.splice({ section: 0, paragraph, startUnit: 0, endUnit: source.length - 1, text: number });
+      assert.equal(editor.text(0, paragraph), number + "\r");
+      const saved = editor.save({ allowStaleLayout: true }), current = streams(saved.bytes);
+      assert.equal(saved.layoutRequiresReflow, true);
+      assert.equal(verifyChartFormulas(inflateRawSync(current.get("BodyText/Section0")), 3), 3);
+      assert.deepEqual([...current.keys()].sort(), [...original.keys()].sort());
+      for (const [name, bytes] of original) if (name !== "BodyText/Section0") assert.deepEqual(current.get(name), bytes);
+      assert.equal(editor.undo(), true); assert.deepEqual(editor.save({ allowStaleLayout: true }), before);
+      assert.throws(() => editor.splice({ section: 0, paragraph, startUnit: 0, endUnit: 0, text: "bad" }), /InvalidFormulaNumber/);
+      assert.equal(editor.redo(), true); assert.deepEqual(editor.save({ allowStaleLayout: true }), saved);
+      const reopened = await createExperimentalHwp5Editor(module, saved.bytes);
+      try {
+        assert.equal(reopened.text(0, paragraph), number + "\r");
+        const roundtrip = reopened.save({ allowStaleLayout: true });
+        assert.deepEqual(roundtrip.bytes, saved.bytes);
+        assert.equal(roundtrip.layoutRequiresReflow, false, "reopen starts a new unchanged session, not a layout equivalence proof");
+      } finally { reopened.close(); }
+    } finally { editor.close(); }
+  }
+  assert.deepEqual(readFileSync(path), input);
+  assert.equal(digest(wasm), wasmHash);
+  assert.equal(digest(readFileSync(process.env.HWPJS_TEST_WASM)), wasmHash);
 });

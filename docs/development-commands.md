@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[참조 HWP5 숫자 입력](hwp5-reference-chart-numeric-input.md)은 `HWPJS_TEST_WASM=/absolute/candidate.wasm node --test tests/hwp5/numeric-formula-corpus.test.mjs`로 실행합니다. 실제12입력/3수식의 두 규모 숫자 치환·독립 산술·비대상 stream·이력·재열기를 검사하며 문자 prefix 거부와 전체 편집/조판 완료를 구분합니다.
+
 [누름틀 중간 Canvas 입력](canvas-field-interior-input.md)은 `HWPJS_TEST_WASM=/absolute/candidate.wasm node tools/field-interior-browser-audit.mjs`로 실행합니다. 실제 키보드 범위 치환·Worker 좌표·메뉴 이력·독립 XML/ZIP·다운로드·같은 문단 재업로드·소유 브라우저/서버 종료를 확인하며 전체 필드/IME/조판 완료와 구분합니다.
 
 [실제 저장 단축키](canvas-document-download.md)는 `HWPJS_TEST_WASM=/absolute/candidate.wasm node tools/document-menu-browser-audit.mjs`와 같은 환경의 `node tools/below-sum-input-browser-audit.mjs`를 직렬 실행합니다. 입력 반영 대기 저장 차단·신뢰된 Ctrl/Cmd+S·실제 파일/메뉴 snapshot 일치·독립 XML/ZIP·재업로드·종료를 검사하며 OS IME·전체 fixture 조판과 구분합니다.
