@@ -1,5 +1,13 @@
 # 수식 결과 입력의 참조 감사
 
+## carried-anchor·중첩 표 원본의 수동 결과 전체
+
+고정44파일 감사에서 `issue5543_carried_anchor_ladder.hwpx`는 일반/전용 prefix 후42문단이 남았고 그중14곳은 UnsupportedFieldLabelRange였습니다. `issue3637/regulatory_impact_nested_table_escape.hwpx`는25문단 중3곳이 같은 거부였습니다. 기존 수동 결과 감사로 두 원본의 독립 수식 전체를 검사해 각각14/14·3/3·refusals/failures0·exit0·stderr0을 확인했습니다. 로그는 `/tmp/hwpjs-native-postfix-main.33GojG/issue5543-manual-current.jsonl/.stderr`·`issue3637-manual-current.jsonl/.stderr`이며 작업 트리 f4e0 후보를 명시했습니다. 입력 SHA256은 각각 `6adca8d39bdcf51e8791d8afa1e584b9570eb8b15df901e74ce61cfd500cdb4a`·`e7b147f7cea66c97bed79085a3d89c2656037e0f711232f659ed3c7344984f62`입니다.
+
+두 원본/분모만 기존 `manual-result-corpus-audit.test.mjs`의 표에 추가했습니다. 별도 파서/inventory/저장 oracle을 복제하지 않고 기존 전체 XML/ZIP normal/-O·cache 보존·native 대상 소유권·재열기·undo/redo/undo·입력/WASM 불변을 그대로 검사합니다. 이 파일은 이미 정규 gate에 등록돼 있습니다. 나머지28/22곳의 비숫자 prefix 거부나 모든 숫자 입력 명령을 이 수동 결과 성공으로 계수하지 않습니다. 기존 숫자 oracle의 전체 격자 inventory는 두 원본의 병합 셀에서 UnsupportedOracleCellSpan으로 거부하므로, 해당 독립 증거 미확보를 제품 숫자 편집 실패와 혼동하지 않습니다.
+
+소스 tree `e2603adbb1f74e14b3e7747d5a5d893ec6b8593a`만 추출한 `/tmp/hwpjs-manual-tail-clean.P1Snos`에서도 게시 afb7 후보·Node24.20.0으로 신규 두 선언2/2·exit0·stderr0(`manual-tail-published-tests.log/.stderr`,19159ms), 기존 chart13/copay5/143E3/외부참조5·신규14/3과 CLI/산출물 교체 거부까지 전체9/9·fail/cancel/skip0·exit0·stderr0(`manual-complete-tests.log/.stderr`,62036ms)입니다. 두 성공 수를 합산하지 않습니다. 실제 브라우저·조판·기본 WASM 승격·모든 편집 완료 증거는 아닙니다.
+
 ## 외부 BinData 참조 원본의 수동 결과 5곳
 
 게시 소스 후보 `afb7fdfbbc8a9c9cc45a7cdb98ade6be7a6a88b1943e1c5354c63d6715b9e05e`에서도 5곳 전부의 독립 XML/ZIP normal/-O·표시 재열기·cache 보존·이력/원본 불변을 확인했습니다. main `747660dc`의 tree `33da00e5ba62b1d638d8d0e122f44a805a900c2a`에서 JS/tools/tests를 추출한 `/tmp/hwpjs-manual-published.uRHiw4`에서 Node24.20.0으로 `--test-name-pattern=issue1891_external_bindata_link`를 적용해 집중 1/1·fail/cancel/skip0·exit0(22529ms)입니다. 앞선 f4e0 작업 트리 후보 결과와 별도이며, 기본 WASM 승격이나 전체 문서 편집 완료는 아닙니다.
