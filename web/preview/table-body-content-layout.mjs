@@ -98,6 +98,8 @@ export function layoutTableBodyContent(content, measure, maxRows, { measureBodyP
     if (siblings.length && entries[siblings.at(-1)].table.tableNode >= table.tableNode) return unavailable("AmbiguousTablePageHost");
     siblings.push(entries.length); hosts.set(table.hostParagraph, siblings); tableIds.add(table.tableNode);
     entries.push({ table, measured, origin, padding: "source", rowHeights: measured.grid.rows, splitMode: table.pagination.page_break === "none" || captionReservation || inline || geometry.vertical_offset !== 0 || source.vertical_relative === 1 ? "whole" : "row-bands", outerInsets, captionReservation, inline, host, inlineFlow });
+    if (inline && isSingleInlineTableHost(host, table) && table.pagination.page_break === "cell" && !captionReservation
+      && measured.grid.height + outerInsets.top + outerInsets.bottom > reference.boxes.page.height) entries.at(-1).splitMode = "row-bands";
   }
   for (const siblings of hosts.values()) {
     const group = siblings.map(index => entries[index]);
