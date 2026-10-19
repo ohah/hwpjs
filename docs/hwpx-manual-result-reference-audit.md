@@ -1,5 +1,15 @@
 # 수식 결과 입력의 참조 감사
 
+## 추적 목록의 암호 문서 거부 분리
+
+2026-10-20 기본 전체 목록의 감사가 password-12345.hwpx에서 EncryptedDocument로 중단됨을 명시적71f79419 WASM으로 재현했습니다(exit1). 제품의 암호 거부 정책 문제가 아니라 감사 루프의 누락이었습니다. 이제 해당 오류만 `encrypted_document_refused` 파일 행과 summary.encrypted로 기록하고 다음 파일로 진행합니다. 다른 open 오류는 계속 전파하며 암호 파일은 fields/verified에 더하지 않습니다. 거부 시 입력 버퍼와 디스크 원본 hash도 검사합니다.
+
+수정 후 같은 후보의 추적46개 전수 실행은 exit0·암호1·수식13·verified13·refusals/failures0입니다. `/tmp/hwpjs-short-object-candidate.kC4LH3/tracked-hwpx-manual-results-audit.jsonl`이 파일/수식별 근거이며13개 모두 독립 XML/ZIP 일반/-O·수식 원본 cache 보존·현재 표시·재열기·undo/redo/undo를 검사했습니다. 이는 암호 편집 성공이나 전체 문단/명령/UI 조판 완료가 아닙니다. `manual-result-encrypted-audit.test.mjs`는 암호 파일 단독 실행의 명시 거부·편집 성공0·요약 생성·원본 불변을 검사합니다.
+
+수정 후 같은 후보의 기존 수식 결과 corpus 회귀와 새 암호 거부 회귀는 합계10/10·skip0·exit0입니다. 참조6곳의 양성 입력과 실행 중 후보 교체 음성 검사도 포함하며 새 검사는 정규 HWPX gate 목록에 등록했습니다. 전체 native gate나 기본 데모 반영 완료와 구분합니다.
+
+추가 음성 회귀는 HWPX가 아닌 입력을 명시했을 때 종료 코드1과 요약 부재를 요구해, 암호 오류 외의 실패를 삼키지 않는지 검사합니다. 게시용 main 사본에서 암호/손상 두 검사2/2·skip0을 확인했습니다. 이 두 사례는 암호 해독/편집 지원이 아니라 감사의 오류 분류 경계입니다.
+
 ## carried-anchor·중첩 표 원본의 수동 결과 전체
 
 고정44파일 감사에서 `issue5543_carried_anchor_ladder.hwpx`는 일반/전용 prefix 후42문단이 남았고 그중14곳은 UnsupportedFieldLabelRange였습니다. `issue3637/regulatory_impact_nested_table_escape.hwpx`는25문단 중3곳이 같은 거부였습니다. 기존 수동 결과 감사로 두 원본의 독립 수식 전체를 검사해 각각14/14·3/3·refusals/failures0·exit0·stderr0을 확인했습니다. 로그는 `/tmp/hwpjs-native-postfix-main.33GojG/issue5543-manual-current.jsonl/.stderr`·`issue3637-manual-current.jsonl/.stderr`이며 작업 트리 f4e0 후보를 명시했습니다. 입력 SHA256은 각각 `6adca8d39bdcf51e8791d8afa1e584b9570eb8b15df901e74ce61cfd500cdb4a`·`e7b147f7cea66c97bed79085a3d89c2656037e0f711232f659ed3c7344984f62`입니다.

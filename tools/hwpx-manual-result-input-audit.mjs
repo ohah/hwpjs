@@ -15,13 +15,21 @@ const wasmSha256 = digest(wasm);
 const module = await WebAssembly.compile(wasm);
 const editor = await createHwpxEditor(module), reader = await createHwpxReader(module);
 const refused = new Set(["UnsupportedStructuralFieldEdit", "UnsupportedParagraphControl", "UnsupportedAnchoredStructure", "UnsupportedInlineControl", "UnsupportedFormulaResultStructure"]);
-const totals = { files: 0, fields: 0, verified: 0, refusals: {}, failures: 0 };
+const totals = { files: 0, encrypted: 0, fields: 0, verified: 0, refusals: {}, failures: 0 };
 console.log(JSON.stringify({ kind: "start", wasmSha256, scope: options.fixture ? "one explicit fixture; every native source formula" : "tracked HWPX fixtures; every native source formula" }));
 try {
   for (const path of options.fixture ? [options.fixture] : trackedHwpxFiles()) {
     totals.files++;
     const input = readFileSync(path), inputHash = digest(input);
-    editor.open(input);
+    try { editor.open(input); }
+    catch (error) {
+      if (error.message !== "EncryptedDocument") throw error;
+      assert.equal(digest(input), inputHash, "AuditInputBufferChanged");
+      assert.equal(digest(readFileSync(path)), inputHash, "AuditInputChanged");
+      totals.encrypted++;
+      console.log(JSON.stringify({ kind: "file", path, inputSha256: inputHash, status: "encrypted_document_refused", error: error.message }));
+      continue;
+    }
     editor.enableHistory({ maxEntries: 4, maxCheckpointBytes: 16 * 1024 * 1024 });
     const rows = hwpxParagraphCoordinates(reader.readTextEvents(input).events);
     const inventory = JSON.parse(execFileSync("python3", ["tools/hwpx-manual-result-inventory.py"], { input, encoding: "utf8", timeout: 30000 }));

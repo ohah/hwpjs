@@ -318,6 +318,7 @@ pub fn build(b: *std.Build) void {
     hwpx_text_tests.addArg("tests/hwpx/manual-formula-result-edge.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/manual-formula-result-splice.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/manual-result-corpus-audit.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/manual-result-encrypted-audit.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/specialized-audit-output.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/specialized-module-reuse.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/field-link-readonly-worker.test.mjs");
