@@ -3,18 +3,26 @@ const trees = @import("xml_part_tree.zig");
 const gaps = @import("element_whitespace_gaps.zig");
 const uri = @import("document_xml.zig").paragraph_uri;
 
-/// Metadata-only runs may own text only in a metadata-only paragraph.
+/// A run with only zero-position metadata can own an empty text site.
+/// Fields, drawing anchors, existing text and opaque source gaps are excluded.
 pub fn runOnly(tree: *const trees.Tree, index: usize) bool {
     if (index >= tree.elements.len) return false;
     const run = tree.elements[index];
     if (!run.is(uri, "run") or !gaps.empty(tree, index)) return false;
     var child = run.first_child orelse return false;
     while (true) {
-        if (!supported(tree, child) and !sectionSettingSupported(tree, child)) return false;
+        if (!runChildSupported(tree, child)) return false;
         child = tree.elements[child].next_sibling orelse return true;
     }
 }
 
+/// Shared zero-position run-child rule; never classifies visible/unknown objects as metadata.
+pub fn runChildSupported(tree: *const trees.Tree, index: usize) bool {
+    return supported(tree, index) or sectionSettingSupported(tree, index);
+}
+
+// Only the empty-run fallback uses this rule. Existing ctrl classification
+// and unrelated text/anchor policy remain unchanged.
 fn sectionSettingSupported(tree: *const trees.Tree, index: usize) bool {
     if (index >= tree.elements.len) return false;
     const setting = tree.elements[index];
@@ -23,6 +31,7 @@ fn sectionSettingSupported(tree: *const trees.Tree, index: usize) bool {
     return parent < tree.elements.len and tree.elements[parent].is(uri, "run");
 }
 
+/// Empty fallback must not precede an object/field-owned insertion boundary.
 pub fn paragraphOnly(tree: *const trees.Tree, run_index: usize) bool {
     if (!runOnly(tree, run_index)) return false;
     const parent = tree.elements[run_index].parent orelse return false;

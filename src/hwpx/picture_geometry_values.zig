@@ -62,6 +62,11 @@ pub fn readForm(a: std.mem.Allocator, tree: *const Tree, node: usize) !Values {
     return readComponent(a, tree, node);
 }
 
+pub fn readOle(a: std.mem.Allocator, tree: *const Tree, node: usize) !Values {
+    if (node >= tree.elements.len or !fields.childIs(tree, node, "ole")) return error.InvalidOleDisplayNode;
+    return readComponent(a, tree, node);
+}
+
 fn readComponent(a: std.mem.Allocator, tree: *const Tree, picture: usize) !Values {
     var result: Values = .{};
     if (try child(tree, picture, "sz")) |size| {

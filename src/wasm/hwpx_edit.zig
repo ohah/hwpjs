@@ -347,6 +347,31 @@ export fn hwpx_edit_section_fill_brushes(section: u32) u32 {
     return 1;
 }
 
+export fn hwpx_edit_ole_sites(section: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const rows = @import("../hwpx/ole_display_sites.zig").read(a, session, section) catch |err| return fail(err);
+    defer a.free(rows);
+    output = std.json.Stringify.valueAlloc(a, rows, .{}) catch |err| return fail(err);
+    if (output.?.len > session.options.max_output_bytes) {
+        hwpx_edit_output_free();
+        return fail(error.LimitExceeded);
+    }
+    return 1;
+}
+export fn hwpx_edit_ole_source(section: u32, node: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    if (section >= session.sections.len) return fail(error.InvalidSectionIndex);
+    var value = @import("../hwpx/ole_source_values.zig").read(a, &session.sections[section].tree, node) catch |err| return fail(err);
+    defer value.deinit(a);
+    output = std.json.Stringify.valueAlloc(a, value, .{}) catch |err| return fail(err);
+    if (output.?.len > session.options.max_output_bytes) {
+        hwpx_edit_output_free();
+        return fail(error.LimitExceeded);
+    }
+    return 1;
+}
 export fn hwpx_edit_picture_sites(section: u32) u32 {
     hwpx_edit_output_free();
     const session = if (active) |*value| value else return fail(error.EditorNotOpen);

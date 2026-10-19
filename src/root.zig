@@ -252,6 +252,7 @@ test {
     _ = @import("hwpx/manifest_image_payloads_tests.zig");
     _ = @import("hwpx/png_rgba_payloads_tests.zig");
     _ = @import("hwpx/ole_payloads_tests.zig");
+    _ = @import("hwpx/ole_source_values_tests.zig");
     _ = @import("image/tiff/structure_tests.zig");
     _ = @import("image/pcx/structure_tests.zig");
     _ = @import("hwpx/fill_brush_image_payloads_tests.zig");

@@ -35,6 +35,7 @@ import { attachNoteReferences } from "./note-reference-content.mjs";
 import { attachHwpxPictures } from "./hwpx-picture-content.mjs";
 import { attachHwpxPictureCaptions } from "./hwpx-picture-captions.mjs";
 import { attachHwpxPageAreaDeclarations } from "./hwpx-page-area-declarations.mjs";
+import { attachHwpxOleSources } from "./hwpx-ole-content.mjs";
 import { attachHwpxLines } from "./hwpx-line-content.mjs";
 import { attachHwpxConnectors } from "./hwpx-connector-content.mjs";
 import { attachHwp5Lines } from "./hwp5-line-content.mjs";
@@ -288,6 +289,7 @@ function hwpxDisplay(projected) {
   const displayed = attachHwpxPageSettings(editor, attachHwpxConnectors(editor, attachHwpxLines(editor, attachHwpxPictures(editor, attachHwpxParagraphFormats(editor, tableContent, paragraphAvailable)))));
   attachHwpxPictureCaptions(editor, displayed, ["hwpx_edit_picture_caption", "hwpx_edit_picture_caption_bindings"].every(name => WebAssembly.Module.exports(module).some(entry => entry.name === name && entry.kind === "function")));
   attachHwpxPageAreaDeclarations(editor, displayed, formulaExports.has("hwpx_edit_page_area_declarations"));
+  attachHwpxOleSources(editor, displayed, ["hwpx_edit_ole_sites", "hwpx_edit_ole_source"].every(name => formulaExports.has(name)));
   displayed.lines.push(...displayed.connectors.flatMap(row => row.referenceLine ? [row.referenceLine] : []));
   if (content.window && content.paragraphs.some(row => row.clipped)) throw new Error("ParagraphWindowTextBudgetExceeded");
   const creationAvailable = ["hwpx_edit_created_tables", "hwpx_edit_insert_table", "hwpx_edit_set_created_cell_text", "hwpx_edit_save_for_display"].every(name => WebAssembly.Module.exports(module).some(entry => entry.name === name && entry.kind === "function"));

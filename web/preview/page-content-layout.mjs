@@ -18,6 +18,8 @@ export function layoutPageContent(content, measure, maxRows = 20000, { pageNumbe
   if (content.pageSettingsError || content.paragraphFlowErrors?.length || !content.pageSettings?.length) return unavailable("AmbiguousPageSettings");
   if (content.pictureCaptionErrors?.length) return unavailable("AmbiguousPictureCaptionContent");
   if (content.pictures?.some(p => p.captionPartial)) return unavailable("IncompletePictureCaptionContent");
+  if (content.oleSourceErrors?.length) return unavailable("IncompleteOlePageContent");
+  if (content.oles?.length) return { ...unavailable("UnsupportedOlePageContent"), section: content.oles[0].section, oleNode: content.oles[0].oleNode };
   if (content.createdTables?.length) {
     if (pageNumbers !== undefined) return unavailable("UnsupportedCreatedTablePageNumbers");
     return content.paragraphFlows?.some(flow => ["footnote", "endnote"].includes(flow.host))

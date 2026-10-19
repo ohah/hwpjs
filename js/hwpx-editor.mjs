@@ -47,6 +47,7 @@ import { decodeRectangleRenderingSource } from "./hwpx-rectangle-rendering-sourc
 import { decodeRectangleRenderingSources } from "./hwpx-rectangle-rendering-sources.mjs";
 import { decodeFillBrushes } from "./hwpx-fill-brushes.mjs";
 import { decodePictureSites } from "./hwpx-picture-sites-wire.mjs";
+import { decodeOleSites, decodeOleSource } from "./hwpx-ole-source.mjs";
 import { decodePictureOwner } from "./hwpx-picture-owner-wire.mjs";
 import { decodePictureRenderingCorners } from "./hwpx-picture-corners-wire.mjs";
 import { decodePicturePosition } from "./hwpx-picture-position-wire.mjs";
@@ -826,6 +827,22 @@ export async function createHwpxEditor(source) {
       try {
         if (!wasm.hwpx_edit_container_source_snapshot(section, containerNode)) throw memory.error();
         return decodeContainerSource(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
+    oleSites(section) {
+      ready(); uint(section);
+      if (typeof wasm.hwpx_edit_ole_sites !== "function") throw new Error("HwpxOleSourceAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_ole_sites(section)) throw memory.error();
+        return decodeOleSites(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
+    oleSource(section, oleNode) {
+      ready(); uint(section); uint(oleNode);
+      if (typeof wasm.hwpx_edit_ole_source !== "function") throw new Error("HwpxOleSourceAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_ole_source(section, oleNode)) throw memory.error();
+        return decodeOleSource(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
       } finally { wasm.hwpx_edit_output_free(); }
     },
     pictureSites(section) {
