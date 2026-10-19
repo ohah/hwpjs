@@ -15,3 +15,11 @@
 최초 다운로드 요청은 동의 없이 `LayoutReflowRequired`로 거부됐습니다. 표시된 ‘원본 배치 정보 유지 저장 허용’을 직접 체크하고 다시 저장해 `/tmp/hwpjs-table-canvas-publish.EhN4M1/browser-edited.hwp`를 받았습니다. 독립 `expectedSection(original,262,13,14,"표입력😀")`와 전체 Section이 일치하고 스트림 목록 및 모든 비대상 스트림도 동일했습니다. 재업로드·편집 활성화·입력 문자열 찾기로 같은 문단262/선택`[13,18)`·`개인정보의 수집 및 이용표입력😀적`을 확인했습니다. 원본 배치 정보의 재계산이나 동의 자동 부여는 하지 않았습니다.
 
 `browser-edited.png`를 직접 확인했습니다. agent-browser 소유 세션 `hwpjs-table-fallback-35c54947528a`는 close 후 재조회에서 active=false/pid=null입니다. 이 수동 Chromium 왕복은 한 셀 입력/동의/저장/재열기이며 실제 OS IME·브라우저4셀 전수·undo/redo·원본 조판 동치의 증거가 아닙니다. 페이지 배치는 여전히 `UnsupportedHwp5SectionNumbering`을 표시하고 논리 대체 화면을 사용했습니다.
+
+## 기본 데모 WASM 반영
+
+후속 기본 데모 반영 전 primary JS와 같은 bacf 후보로 쪽·단 API/adapters/editor/menu/owner-worker/followup·미확정 표 Canvas·양 형식 암호 편집8파일57/57·실패/cancel/skip0·exit0·stderr0을 확인했습니다. 로그는 `/tmp/hwpjs-table-canvas-publish.EhN4M1/primary-candidate-compatibility.log`입니다. 실제 모듈 함수 export는 기존310개를 모두 유지하고 후보336개입니다. 전체 export 수와 함수 수를 혼용하지 않습니다.
+
+기존 기본 cbaa WASM은 같은 디렉터리의 `default-before-promotion.wasm`으로 백업한 뒤, 검증된 bacf 산출물을 primary `zig-out/bin/hwpjs.wasm`에 설치했습니다. 서버를 재시작하거나 참조 장기 감사를 변경하지 않았습니다. loopback8080과 `https://macstudio.tailed42f2.ts.net:10000/zig-out/bin/hwpjs.wasm` 모두HTTP200·bacf 전체 SHA256 일치·Cache-Control=no-store를 확인했습니다. 기본 데모는 새로고침 후 새 모듈을 사용하며 이미 열린 Worker는 자동 교체되지 않습니다.
+
+이 반영은 생성 WASM/기본 데모의 갱신이며 모든 primary 미커밋 JS 변경의 게시·모든 객체/필드/조판 완료가 아닙니다. 앞 절10001 브라우저 왕복을10000의 새 브라우저 실행으로 소급하지 않습니다. 기존 cbaa 기본 산출물의 과거 검증 기록도 유지합니다.
