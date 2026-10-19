@@ -42,13 +42,13 @@ test "structural deletion plan derives absent originals without enabling old wri
         try std.testing.expectEqualSlices(u8, first, second);
         try std.testing.expectEqual(expected.instance_id, actual.instance_id);
     }
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, borrowed: Tree, current: @import("../../model/document.zig").Section, version: @import("../version.zig").Version) !void {
             var checked = try plan.buildWithDeletions(allocator, borrowed, current, version, true);
             defer checked.deinit(allocator);
         }
     }.run, .{ tree, section.*, source.header.version() });
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, bytes: []const u8, current: @import("../../model/document.zig").Section, version: @import("../version.zig").Version) !void {
             const output = try @import("structure_section_writer.zig").writeWithDeletions(allocator, bytes, current, version, 1000, 4_000_000, true);
             defer allocator.free(output);

@@ -58,7 +58,7 @@ test "HWP5 column split scope actual declaration safe boundary and allocation fa
     const p = document.sections[0].paragraphs[1];
     try validate(a, raw, source.header.version(), p, 8, 1000);
     try std.testing.expectError(error.UnsupportedColumnAnchorRelocation, validate(a, raw, source.header.version(), p, 7, 1000));
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, bytes: []const u8, version: @import("../version.zig").Version, paragraph: model.Paragraph) !void {
             try validate(allocator, bytes, version, paragraph, 8, 1000);
         }

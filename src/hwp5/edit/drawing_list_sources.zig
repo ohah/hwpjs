@@ -80,7 +80,7 @@ test "HWP5 drawing lists distinguish caption body and grouped ownership allocati
             if (row.kind == .caption) try std.testing.expectEqual(row.control_node, row.owner_node) else try std.testing.expect(row.owner_node > row.control_node);
             try std.testing.expect(row.list_node > row.owner_node);
         }
-        try std.testing.checkAllAllocationFailures(a, struct {
+        try @import("../../testing/allocation_failures.zig").check(struct {
             fn run(allocator: std.mem.Allocator, raw: []const u8, version: @import("../version.zig").Version, values: []const Source) !void {
                 const actual = try read(allocator, raw, version);
                 defer allocator.free(actual);

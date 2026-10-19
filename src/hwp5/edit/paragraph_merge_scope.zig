@@ -61,7 +61,7 @@ test "paragraph merge scope rejects actual sibling cells sharing parent and acce
     try @import("paragraph_split.zig").apply(a, section, raw, file.header.version(), 2, 1, 0xfffffffe, 1000);
     try std.testing.expect((try validate(a, tree, section.*, 2, file.header.version())) != null);
     try std.testing.expectError(error.InvalidParagraph, validate(a, tree, section.*, section.paragraphs.len - 1, file.header.version()));
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, borrowed: Tree, current: model.Section, version: Version) !void {
             _ = try validate(allocator, borrowed, current, 2, version);
         }

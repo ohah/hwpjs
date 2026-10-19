@@ -1,12 +1,18 @@
 # 현재 main 소스의 전체 native 실행
 
+## HWP5 소속·구역·그림·단 조회의 후속 여덟 실패
+
+고정 전체 실행 index3497/3499/3572/3602/3607/3612/3614/3615는 분리 사본의 `next-eight-original.stderr`에서 모두 NondeterministicMemoryUsage·exit1(root1 pass/대상8 fail)로 재현했습니다. 후보 소유권을 확인한 열 호출만 공통 `allocation_failures.check`로 연결했습니다. 문단 소속 검사는 원문/현재 모델을 읽기만 하고, 삭제 계획/저장·그림 배열·리소스 바이트·단 선언 후보는 주입 allocator에서 만들고 callback 안에서 해제합니다. 단 소속 바인딩의 얕은 copy는 자신의 배열만 해제하며 원래 열 정보는 빌립니다. 구역 확장 바이트도 원본 수명을 빌리는 계약을 유지합니다.
+
+`/tmp/hwpjs-native-allocator-probe.Kn255w/next-eight-safe.stderr`·`next-eight-debug.stderr`는 ReleaseSafe/Debug 각각9/9·exit0(대상8+root1)입니다. 제품 함수·실패 지점·독립 원값/그림 서명/길이/소속/원본 보존 단언은 변경하지 않았습니다. 변경8파일은 검사 사본과 바이트 일치하며 fmt --check·diff --check도 통과했습니다. `next-eight-product-build.stderr`의 별도 prefix ReleaseSafe 빌드도5/5·exit0(WASM compile45s)입니다. 기본 WASM/데모와 진행 중인 고정 전체 바이너리는 바꾸지 않았으며 현재 소스의 단일 전체 native 통과는 아닙니다.
+
 ## 필드·셀 크기·혼합 문단 후보의 후속 11개 실패
 
 index2987/3132/3161/3233/3288/3306/3336/3361/3369/3399/3421도 `remaining-eighteen-original.stderr`에서 NondeterministicMemoryUsage로 개별 재현된 대상입니다. source/tree는 읽기 전용이고 결과/후보/clone은 callback 안에서 해제하는12호출을 기존 `allocation_failures.check`에 연결했습니다. 체크박스3132는 기존 배열의 scalar만 바꾸는 경로이고 검증용 임시 버퍼는 주입 allocator에서 생성/해제하며 기존 배열에 새 할당을 publish하지 않는 것을 set 구현으로 확인했습니다. 원본 소유 배열의 allocator는 바꾸지 않습니다. 셀 크기3233은 callback 소유 copy만 수정/해제합니다. 전체 실패 지점·후보 원자성·잘못된 소속 거부·문자/스타일/독립 저장 단언을 유지했습니다.
 
 분리 사본의 `remaining-eleven-safe.stderr`·`remaining-eleven-debug.stderr`는 각12/12·exit0(대상11+root1)입니다. fmt가 section_save의 **테스트 코드** enum 변환2곳을 @intFromEnum→@backingInt로 바꿔, 해당 실제 배포 문서 편집/서명 거부 두 테스트까지 포함한 최종 `remaining-eleven-final-safe.stderr`·`remaining-eleven-final-debug.stderr`를 다시 실행했습니다. 두 모드 모두14/14·exit0입니다. 변경11파일의 사본 바이트 일치·fmt --check·diff --check 및 별도 prefix ReleaseSafe 제품 빌드5/5·exit0도 확인했습니다(`remaining-product-build.stderr`, WASM compile45s). 제품 저장 함수나 기본 WASM/데모는 변경하지 않았습니다.
 
-이것으로 앞서 재현한 후속18개는 반복 provenance1·차트/OLE6·이11개로 각각 수정/집중 검증됐습니다. 고정 전체 실행의 원래 실패 행을 고치거나 단일 최신 전체 native 성공으로 합산하지 않습니다. 이후 전체 실행에서 추가된 index3449/3497/3499 등은 별도 원인 재현/검증이 필요한 새 실패입니다.
+이것으로 앞서 재현한 후속18개는 반복 provenance1·차트/OLE6·이11개로 각각 수정/집중 검증됐습니다. 고정 전체 실행의 원래 실패 행을 고치거나 단일 최신 전체 native 성공으로 합산하지 않습니다. 이후 전체 실행에서 추가된 index3497/3499 등은 별도 원인 재현/검증이 필요한 새 실패입니다. index3449는 아래에서 원래 상태값2(skip)를 재확인했으며 실패가 아닙니다.
 
 ## 차트/OLE/중첩 양식 속성의 후속 여섯 실패
 
@@ -48,7 +54,9 @@ index2987/3132/3161/3233/3288/3306/3336/3361/3369/3399/3421도 `remaining-eighte
 
 공개 gate에 사용한 eddbfa8c·tree `c201fa64d85323f153b5dc691e87d131e30bbbaf`의 `/tmp/hwpjs-published-hwpx-gate.7WPrL4`에서 `zig test src/root.zig -O ReleaseSafe --test-no-exec -femit-bin=.../native-safe`를 Zig0.17.0으로 새로 컴파일했습니다. 빌드 exit0·stdout/stderr0이며 SHA256은 `21be9993e5f06ca8564a5ce9be49a9b246663bce6f3b59b0481439036236296e`입니다. 아래 구형4,114개/부분 결과를 재사용한 바이너리가 아닙니다.
 
-`native-guard-full.jsonl/.stderr`는 이 바이너리의 실제 inventory4,118개·범위0..4118·fullInventoryCovered=true·batch1·seed0x485750·4,096MiB 관찰 한도로 시작했습니다. 시작 명령은 `env -u HWPJS_CHARACTER_FAILURE_START -u HWPJS_CHARACTER_FAILURE_END`로 문자 속성 실패 주입의 별도 범위 제한을 제거했습니다. 최종 complete·결과 누락/중복·fail/skip/log/leak·guardian 종료와 터미널 종료를 확인하기 전에는 전체 통과가 아닙니다. `src/root.zig`의 실행이며 build test에 별도로 연결된 controlled text 테스트나 모든 native 빌드 target의 완료로 확대하지 않습니다.
+`native-guard-full.jsonl/.stderr`는 이 바이너리의 실제 inventory4,118개·범위0..4118·fullInventoryCovered=true·batch1·seed0x485750·4,096MiB 관찰 한도로 시작했습니다. 시작 명령은 `env -u HWPJS_CHARACTER_FAILURE_START -u HWPJS_CHARACTER_FAILURE_END`로 범위 환경변수를 제거했습니다. 이는 단일 지점을 요구하는 mixed-run 문자 속성 보조 검사의 전수 실행을 뜻하지 않습니다. index3449는 두 변수가 없으면 SkipZigTest를 반환하며 실제 원래 상태값도2(skip)입니다. 최초 후속 목록의 status!=0을 모두 실패로 부른 분류를 정정합니다. 같은 고정 바이너리의 `shard-unset-server.jsonl/.stderr`에서도 해당 한 검사가 pass0/fail0/skip1·exit1·stderr0으로 재현됐고, 분리 사본의 `character-shard-unset.stderr`는 terminal runner에서도 root1 pass/대상1 skip·exit0입니다. skip을 성공으로 변경하거나 원래 전체 결과에서 제외하지 않습니다.
+
+최종 complete·결과 누락/중복·fail/skip/log/leak·guardian 종료와 터미널 종료를 확인하기 전에는 전체 통과가 아닙니다. `src/root.zig`의 실행이며 build test에 별도로 연결된 controlled text 테스트나 모든 native 빌드 target의 완료로 확대하지 않습니다.
 
 메모리 guardian은 게시 Git에 없는 로컬 보조 도구이므로 제품 소스에 섞지 않고 세 파일만 사본에 추가했습니다. `zig-native-footprint-audit.mjs` SHA256은 `7593186be0ac17078b440d04f62aad2f2b6a67cbf076c1512e2e6cdfd115cf1f`, `native-footprint-values.mjs`는 `8dbcb2ed523db52592d38ebc901259408f7c53509b5268e77e21948d5e1fb1da`, `native-audit-fatal-observer.mjs`는 `6e031ec9cfa8dab67a8b8c3de4d013968af2a266268d78561d27f1270624aeaa`입니다. 실행기/프로토콜·기존 helper는 게시 사본 그대로입니다. 최초 `native-full.stderr`는 guardian 부재 MODULE_NOT_FOUND·exit1이고 테스트를 시작하지 못한 진입 실패로 보존합니다. 후속 로그와 합산하거나 숨기지 않습니다. 기본 WASM/외부 데모는 교체하지 않았습니다.
 

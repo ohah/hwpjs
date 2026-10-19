@@ -56,7 +56,7 @@ test "binary resource resolves actual picture ordinals bounded bytes and allocat
             try std.testing.expectEqualSlices(u8, bytes, queried);
             try std.testing.expectError(error.LimitExceeded, read(a, &document, picture.bin_data_id, bytes.len - 1));
             // Repeat failure injection once per fixture; all ordinals are read above.
-            if (picture.picture_node == pictures[0].picture_node) try std.testing.checkAllAllocationFailures(a, struct {
+            if (picture.picture_node == pictures[0].picture_node) try @import("../../testing/allocation_failures.zig").check(struct {
                 fn run(allocator: std.mem.Allocator, source: *const Source, ordinal: u16, expected: []const u8) !void {
                     const actual = try read(allocator, source, ordinal, 8_000_000);
                     defer allocator.free(actual);

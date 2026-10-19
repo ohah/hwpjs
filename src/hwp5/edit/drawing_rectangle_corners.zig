@@ -44,7 +44,7 @@ test "HWP5 rectangle rendering corners actual scale grouped allocation failures"
         defer a.free(expected);
         try std.testing.expect(expected.len > 0);
         if (std.mem.eql(u8, name, "matrix")) try std.testing.expectEqualDeep([4][2]f64{ .{ 0, 0 }, .{ 8504, 0 }, .{ 8504, 17008 }, .{ 0, 17008 } }, expected[0].points);
-        try std.testing.checkAllAllocationFailures(a, struct {
+        try @import("../../testing/allocation_failures.zig").check(struct {
             fn run(allocator: std.mem.Allocator, bytes: []const u8, version: @import("../version.zig").Version, values: []const Corners) !void {
                 const actual = try read(allocator, bytes, version);
                 defer allocator.free(actual);

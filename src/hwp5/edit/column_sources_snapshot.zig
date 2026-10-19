@@ -81,7 +81,7 @@ test "HWP5 column sources actual equal variable and nested declarations all allo
         for (rows, flows, 0..) |row, *flow, index| {
             flow.* = .{ .paragraph = index * 2, .source_node = @intCast(row.paragraph_node), .template_node = @intCast(row.paragraph_node), .parent_node = null, .generated = false, .top_level = true, .break_flags = 0, .section_break = false, .multicolumn_break = false, .page_break = false, .column_break = false };
         }
-        try std.testing.checkAllAllocationFailures(a, struct {
+        try @import("../../testing/allocation_failures.zig").check(struct {
             fn bind(allocator: std.mem.Allocator, declarations: []const Declaration, flow: []const @import("paragraph_flow_snapshot.zig").Flow) !void {
                 const copy = try allocator.dupe(Declaration, declarations);
                 defer allocator.free(copy);
@@ -91,7 +91,7 @@ test "HWP5 column sources actual equal variable and nested declarations all allo
         }.bind, .{ rows, flows });
         try std.testing.expectError(error.MissingColumnOwner, bindCurrent(a, rows, &.{}));
         for (rows) |row| try std.testing.expect(row.current_paragraph == null);
-        try std.testing.checkAllAllocationFailures(a, struct {
+        try @import("../../testing/allocation_failures.zig").check(struct {
             fn run(allocator: std.mem.Allocator, raw: []const u8, version: @import("../version.zig").Version, expected: []const Declaration) !void {
                 const actual = try read(allocator, raw, version);
                 defer free(allocator, actual);

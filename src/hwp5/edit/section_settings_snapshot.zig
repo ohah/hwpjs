@@ -32,7 +32,7 @@ test "HWP5 section settings source actual fields match independent values and al
     defer source.deinit();
     const raw = try source.decodeSection(a, 0);
     defer a.free(raw);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, input: []const u8, version: @import("../version.zig").Version) !void {
             const value = try read(allocator, input, version);
             try std.testing.expectEqual(@as(u32, 0), value.flags);
