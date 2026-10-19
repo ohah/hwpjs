@@ -217,6 +217,8 @@ pub fn build(b: *std.Build) void {
     hwpx_text_tests.addArg("tests/hwpx/table-anchor-coverage.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/drawing-wrap-page-policy.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/table-caption-page-projection.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/table-paragraph-paper-bounds.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/table-page-horizontal-placement.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/picture-caption-worker-layout.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/captioned-picture-worker-roundtrip.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/source-table-row-horizontals.test.mjs");

@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+[문단 기준 표 경계](table-paragraph-paper-bounds.md)는 원본 위치를 유지하는 종이 여백 배치와 거부 조건을 소유합니다.
+
 [머리말·꼬리말과 본문 합성](page-area-body-composition.md)은 소속 분리·본문 조판·실제 페이지 반복의 경계를 소유합니다.
 
 [행별 표 셀 경계](source-table-row-horizontals.md)는 원본 HU 경계 복원·표 격자·선행/최종 측정의 책임을 분리하고 공통 열 제약과 다른 물리 셀 폭을 보존합니다.

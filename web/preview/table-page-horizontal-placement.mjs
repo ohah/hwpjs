@@ -11,6 +11,7 @@ export function placeTablePagesHorizontally(table, layout, outerInsets, paragrap
   const shifts = new Map(), boundaries = new Map();
   for (const box of layout.boxes) {
     if (box.tableNode !== table.tableNode) continue;
+    if (![box.x, box.width, box.x + box.width].every(Number.isFinite) || box.width <= 0) return unavailable("TablePageWidthOverflow");
     const reference = box.referenceBoxes, key = box.pageOrdinal;
     if (shifts.has(key)) continue;
     const name = ["paper", "page", "column", "paragraph"][relative];
@@ -33,7 +34,8 @@ export function placeTablePagesHorizontally(table, layout, outerInsets, paragrap
     const outerOnlyOverflow = relative === 2 && table.sourceGeometry.horizontal_alignment === 0 && geometry.horizontal_offset === 0
       && hwpUnitPixels(geometry.width) <= reference.column.width + 1e-8 && measuredWidth <= reference.column.width + 1e-8
       && measuredWidth + margins.left + margins.right > reference.column.width;
-    boundaries.set(key, table.sourceGeometry.vertical_relative === 1 || outerOnlyOverflow ? reference.paper ?? reference.column : reference.column);
+    // 문단은 위치 기준이지 종이 여백에 걸친 원본 표의 잘라내기 경계가 아닙니다.
+    boundaries.set(key, relative === 3 || table.sourceGeometry.vertical_relative === 1 || outerOnlyOverflow ? reference.paper ?? reference.column : reference.column);
   }
   const ownsPosition = item => item.tableNode === table.tableNode || item.positionOwnerTableNode === table.tableNode;
   const boxes = layout.boxes.map(box => ownsPosition(box) ? { ...box, x: box.x + shifts.get(box.pageOrdinal), ...(box.tableNode === table.tableNode && boundaries.get(box.pageOrdinal) !== box.referenceBoxes.column ? { horizontalOverflowBoundary: "paper" } : {}) } : box);
