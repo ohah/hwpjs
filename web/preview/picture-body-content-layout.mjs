@@ -8,14 +8,14 @@ import { paginateBodyRows } from "./page-row-flow.mjs";
 import { projectFloatingPicturePage } from "./picture-page-projection.mjs";
 import { signedInt32 } from "./signed-int32.mjs";
 import { paginatePictureDocumentFlow } from "./picture-document-flow.mjs";
+import { hasPictureSourceErrors, hasFinitePictureCrop } from "./picture-source-validation.mjs";
 
 export function layoutPictureBodyContent(content, measure, maxRows) {
   const unavailable = error => ({ state: "unavailable", error });
   if (content.pageSettings?.length !== 1 || content.tables?.length || content.drawings?.length || content.lines?.length || content.paragraphs.some(p => p.tableCell || p.clipped)) return unavailable("UnsupportedPicturePageObjects");
   if (!content.paragraphFlows?.every(f => f.top_level === true && f.single_column === true)) return unavailable("UnsupportedPicturePageFlow");
-  const sourceErrors = ["ownerError", "geometryError", "positionError", "flowError", "cropError", "transformError", "renderingCornersError"];
-  if (content.pictures.some(p => sourceErrors.some(field => p[field] !== null && p[field] !== undefined))) return unavailable("AmbiguousPicturePageSource");
-  if (content.pictures.some(p => !Array.isArray(p.crop?.clip) || p.crop.clip.length !== 4 || !Array.from(p.crop.clip).every(Number.isFinite))) return unavailable("MissingPicturePageCrop");
+  if (content.pictures.some(hasPictureSourceErrors)) return unavailable("AmbiguousPicturePageSource");
+  if (content.pictures.some(p => !hasFinitePictureCrop(p))) return unavailable("MissingPicturePageCrop");
   const inline = content.pictures.every(p => p.geometry?.treatAsCharacter === true);
   const inlinePictures = content.pictures.filter(p => p.geometry?.treatAsCharacter === true);
   const floatingPictures = content.pictures.filter(p => p.geometry?.treatAsCharacter !== true);

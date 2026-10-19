@@ -22,6 +22,7 @@ import { validateNestedTableOwnership } from "./nested-table-ownership.mjs";
 import { measureNestedTable } from "./nested-table-measurement.mjs";
 import { nestedTablePaperBounds } from "./nested-table-paper-bounds.mjs";
 import { inlineTableHostAnchors } from "./inline-table-host-anchors.mjs";
+import { hasPictureSourceErrors, hasFinitePictureCrop } from "./picture-source-validation.mjs";
 
 // Source-ordered block tables; inline, captions and nested flow are separate.
 export function layoutTableBodyContent(content, measure, maxRows, { measureBodyParagraph } = {}) {
@@ -41,7 +42,7 @@ export function layoutTableBodyContent(content, measure, maxRows, { measureBodyP
   const floating = pictures.filter(p => p.geometry?.treatAsCharacter !== true);
   const bodyPictures = floating.filter(p => !content.paragraphs.find(paragraph => paragraph.section === p.section && paragraph.paragraph === p.paragraph)?.tableCell);
   if (new Set(pictures.map(p => `${p.section}:${p.pictureNode}`)).size !== pictures.length || floating.some(p => signedInt32(p.flow?.zOrder) === null)) return unavailable("UnsupportedTablePagePictures");
-  if (pictures.some(p => ["ownerError", "geometryError", "positionError", "flowError", "cropError", "transformError", "renderingCornersError"].some(key => p[key] != null) || picturePaintPlan(p).state === "unsupported_transform" || !Array.isArray(p.crop?.clip) || p.crop.clip.length !== 4 || !Array.from(p.crop.clip).every(Number.isFinite))) return unavailable("UnsupportedTablePagePictures");
+  if (pictures.some(p => hasPictureSourceErrors(p) || picturePaintPlan(p).state === "unsupported_transform" || !hasFinitePictureCrop(p))) return unavailable("UnsupportedTablePagePictures");
   if (floating.some(p => p.flow?.textWrap !== 1 || p.position?.relations?.[2] !== 0)) return unavailable("UnsupportedTablePagePictures");
   const pictureIndex = inlinePictureIndex({ ...content, pictures: inline });
   if (pictureIndex.size !== inline.length || [...pictureIndex.values()].some(item => !item)) return unavailable("UnsupportedTablePagePictures");

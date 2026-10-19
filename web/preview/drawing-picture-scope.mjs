@@ -1,4 +1,5 @@
 import { inlinePictureIndex } from "./picture-inline.mjs";
+import { hasPictureSourceErrors, hasFinitePictureCrop } from "./picture-source-validation.mjs";
 
 // 도형 내부 그림을 제거된 본문 문단의 그림으로 전달하지 않습니다.
 export function drawingPictureScope(content, bodyParagraphs) {
@@ -12,7 +13,7 @@ export function drawingPictureScope(content, bodyParagraphs) {
     if (paragraph.drawingText || paragraph.drawingCaption) {
       if (picture.geometry?.treatAsCharacter !== true) return fail("UnsupportedDrawingLocalFloatingPicture");
       if (picture.caption != null) return fail("UnsupportedDrawingLocalPictureCaption");
-      if (["ownerError", "geometryError", "positionError", "flowError", "cropError", "transformError", "renderingCornersError"].some(field => picture[field] != null)) return fail("InvalidDrawingLocalPicture");
+      if (hasPictureSourceErrors(picture) || !hasFinitePictureCrop(picture)) return fail("InvalidDrawingLocalPicture");
       const key = `${picture.section}:${picture.pictureNode}`;
       if (localIds.has(key)) return fail("AmbiguousDrawingPictureOwner");
       localIds.add(key); localPictures.push(picture);
