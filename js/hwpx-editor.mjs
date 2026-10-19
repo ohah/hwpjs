@@ -3,6 +3,8 @@ import { createMemory } from "./wasm-memory.mjs";
 import { decodeChartSeriesText } from "./hwpx-chart-series-text.mjs";
 import { decodeFieldTargets } from "./hwpx-field-target-wire.mjs";
 import { decodeFormulaResultParagraphs } from "./formula-result-paragraphs.mjs";
+import { decodeFormulaResultDisplaySnapshot } from "./formula-result-display-snapshot.mjs";
+import { decodePageAreaDeclarations } from "./hwpx-page-area-declarations.mjs";
 import { decodePictureOwners } from "./hwpx-picture-owners.mjs";
 import { decodeInlineStringSources } from "./hwpx-inline-string-sources.mjs";
 import { dutmalKind } from "./hwpx-dutmal-kind.mjs";
@@ -1287,6 +1289,22 @@ export async function createHwpxEditor(source) {
       try {
         if (!wasm.hwpx_edit_manual_formula_result_paragraphs(section)) throw memory.error();
         return decodeFormulaResultParagraphs(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
+    manualFormulaResultDisplaySnapshot(section) {
+      ready(); uint(section);
+      if (typeof wasm.hwpx_edit_manual_formula_result_display_snapshot !== "function") throw new Error("HwpxFormulaResultSnapshotAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_manual_formula_result_display_snapshot(section)) throw memory.error();
+        return decodeFormulaResultDisplaySnapshot(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
+    pageAreaDeclarations(section) {
+      ready(); uint(section);
+      if (typeof wasm.hwpx_edit_page_area_declarations !== "function") throw new Error("HwpxPageAreaDeclarationsAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_page_area_declarations(section)) throw memory.error();
+        return decodePageAreaDeclarations(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
       } finally { wasm.hwpx_edit_output_free(); }
     },
     fieldRangeTarget(section, paragraph, start, end) {

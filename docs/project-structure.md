@@ -1,5 +1,9 @@
 # 파일·폴더 구조
 
+[수식 표시 묶음 조회](hwpx-formula-display-batch.md)는 요청 단위 준비·조회 수명과 선택적 API를 소유합니다.
+
+[현재 반복 영역 선언 좌표](hwpx-page-area-declarations-api.md)는 원본 identity와 현재 UTF-16 좌표의 조회 경계를 소유합니다.
+
 [반복 그림 그리기](repeated-picture-layers.md)는 원본 그림 identity와 페이지·단별 표시 인스턴스의 분리를 소유합니다.
 
 [내부 투영 글자 높이](layout-source-font-height.md)는 문서 형식 단서와 공통 측정 정책·실제 브라우저 회귀를 소유합니다.

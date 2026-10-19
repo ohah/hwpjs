@@ -12,6 +12,13 @@ pub fn list(session: *const editor.Session, section_index: usize) ![]u32 {
     if (!try @import("formula_source_query.zig").hasFormula(a, &section.tree)) return a.alloc(u32, 0);
     var current = try @import("formula_current_snapshot.zig").readFlat(a, session, section_index);
     defer current.deinit(a);
+    return listPrepared(session, section_index, &current);
+}
+
+pub fn listPrepared(session: *const editor.Session, section_index: usize, current: *const @import("formula_current_snapshot.zig").Snapshot) ![]u32 {
+    if (section_index >= session.sections.len) return error.InvalidSectionIndex;
+    const section = &session.sections[section_index];
+    const a = session.allocator;
     if (section.locations.len != section.sites.items.len) return error.InvalidTextSites;
     const source_first = section.source_first_paragraph orelse section.first_paragraph;
     var paragraphs: std.ArrayList(u32) = .empty;

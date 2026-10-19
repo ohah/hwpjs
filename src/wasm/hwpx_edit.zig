@@ -1504,6 +1504,23 @@ export fn hwpx_edit_manual_formula_result_paragraphs(section: u32) u32 {
     output = std.json.Stringify.valueAlloc(a, paragraphs, .{}) catch |err| return fail(err);
     return 1;
 }
+export fn hwpx_edit_page_area_declarations(section: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const rows = @import("../hwpx/page_area_declaration_snapshot.zig").read(a, session, section) catch |err| return fail(err);
+    defer a.free(rows);
+    output = std.json.Stringify.valueAlloc(a, rows, .{}) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_manual_formula_result_display_snapshot(section: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const snapshot = @import("../hwpx/formula_result_display_snapshot.zig");
+    const rows = snapshot.read(session, section) catch |err| return fail(err);
+    defer snapshot.free(a, rows);
+    output = std.json.Stringify.valueAlloc(a, rows, .{}) catch |err| return fail(err);
+    return 1;
+}
 export fn hwpx_edit_manual_formula_result_range_target(section: u32, paragraph: u32, start: u32, end: u32) u32 {
     hwpx_edit_output_free();
     const session = if (active) |*value| value else return fail(error.EditorNotOpen);

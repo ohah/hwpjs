@@ -20,6 +20,15 @@ fn collect(session: *const editor.Session, section_index: usize, paragraph: usiz
     const a = session.allocator;
     var view = (try @import("formula_result_projection.zig").prepare(session, section_index, paragraph)) orelse return a.alloc(Target, 0);
     defer view.deinit();
+    return collectPrepared(&view, range);
+}
+
+pub fn listPrepared(view: *const @import("formula_result_projection.zig").View) ![]Target {
+    return collectPrepared(view, null);
+}
+
+fn collectPrepared(view: *const @import("formula_result_projection.zig").View, range: ?Range) ![]Target {
+    const a = view.allocator;
     const sites = view.sites();
     const segments = view.segments;
     var targets: std.ArrayList(Target) = .empty;
