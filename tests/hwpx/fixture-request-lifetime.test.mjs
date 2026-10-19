@@ -1,11 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { createServer } from "node:http";
+import { once } from "node:events";
 import { createFixtureControls } from "../../web/preview/fixture-controls.mjs";
 
-function requestHarness(fetchBytes) {
+function requestHarness(fetchBytes, timing = {}) {
   const button = new EventTarget(), input = new EventTarget(), opened = [];
   const select = { value: "table.hwpx", ownerDocument: { createElement: () => ({}) }, append() {} };
-  const control = createFixtureControls({ select, button, input, open: file => opened.push(file), fetchBytes });
+  const control = createFixtureControls({ select, button, input, open: file => opened.push(file), fetchBytes, ...timing });
   return { control, input, opened, select, click() { button.dispatchEvent(new Event("click")); } };
 }
 
@@ -20,6 +22,62 @@ test("fixture control clears the local selection only when opening a valid serve
   assert.equal(h.opened.length, 1);
   assert.equal(h.opened[0].name, "table.hwpx");
   h.control.close();
+});
+
+for (const phase of ["headers", "body"]) test(`fixture timeout bounds stalled ${phase} even when transport ignores abort and permits a fresh retry`, async () => {
+  const timers = new Map(); let next = 0, signal, late, calls = 0;
+  const h = requestHarness((_, options) => {
+    signal = options.signal;
+    if (++calls > 1) return Promise.resolve({ ok: true, arrayBuffer: async () => new Uint8Array([9]).buffer });
+    const stalled = new Promise(resolve => { late = resolve; });
+    return phase === "headers" ? stalled : Promise.resolve({ ok: true, arrayBuffer: () => stalled });
+  }, { setTimer(fn, ms) { assert.equal(ms, 30000); timers.set(++next, fn); return next; }, clearTimer(id) { timers.delete(id); } });
+  try {
+    h.click();
+    const failed = assert.rejects(h.opened[0].arrayBuffer(), /다운로드 시간이 초과/);
+    await Promise.resolve();
+    assert.equal(timers.size, 1);
+    [...timers.values()][0]();
+    await failed;
+    assert.equal(signal.aborted, true); assert.equal(timers.size, 0);
+    late(phase === "headers" ? { ok: false, status: 503 } : new ArrayBuffer(1));
+    h.click();
+    assert.deepEqual(new Uint8Array(await h.opened[1].arrayBuffer()), new Uint8Array([9]));
+    assert.equal(timers.size, 0); assert.equal(calls, 2);
+  } finally { h.control.close(); }
+});
+
+test("fixture success clears its deadline so a completed request cannot expire later", async () => {
+  const timers = new Map();
+  const h = requestHarness(async () => ({ ok: true, arrayBuffer: async () => new ArrayBuffer(2) }), {
+    setTimer(fn) { timers.set(1, fn); return 1; }, clearTimer(id) { timers.delete(id); },
+  });
+  try {
+    h.click(); await h.opened[0].arrayBuffer(); assert.equal(timers.size, 0);
+  } finally { h.control.close(); }
+});
+
+for (const phase of ["headers", "body"]) test(`real fetch timeout aborts stalled ${phase} and retries over a fresh connection`, async t => {
+  let requests = 0;
+  const server = createServer((_, response) => {
+    if (++requests > 1) { response.end(Buffer.from([7, 8])); return; }
+    if (phase === "body") {
+      response.writeHead(200, { "content-length": "100" });
+      response.write(Buffer.from([1]));
+    }
+  });
+  server.listen(0, "127.0.0.1"); await once(server, "listening");
+  t.after(async () => { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); });
+  const origin = `http://127.0.0.1:${server.address().port}/`;
+  const h = requestHarness((_, options) => fetch(origin, options), { timeoutMs: 500 });
+  try {
+    h.click();
+    await assert.rejects(h.opened[0].arrayBuffer(), /다운로드 시간이 초과/);
+    assert.equal(requests, 1);
+    h.click();
+    assert.deepEqual(new Uint8Array(await h.opened[1].arrayBuffer()), new Uint8Array([7, 8]));
+    assert.equal(requests, 2);
+  } finally { h.control.close(); }
 });
 
 test("fixture cancellation does not clear a newly chosen local file", async () => {
