@@ -1,5 +1,11 @@
 # unknownObj 후보의 공개 API 회귀
 
+## 게시 d4c7d918의 최신 HWP5 등록 회귀 — 실행 중
+
+숫자 입력·편람178범위·Canvas 수정키 회귀를 포함한 게시 `d4c7d918b0316056a52600ab7d86e36631b89b3e`를 `/tmp/hwpjs-field-interior-browser.DVJV5s`에 고정했습니다. 앞선 소유 브라우저 종료 후 e9aa1141 이후22경로만 Git archive로 반영했고 전체7,219개 blob을 게시 tree와 대조했습니다. 사본 Git index도 그 추적 목록으로 갱신했습니다. 별도 qzuKq7의 진행 중인 참조 감사 소스/원본은 변경하지 않았으며 새 대형 사본이나 WASM 빌드도 만들지 않았습니다.
+
+초기 배열부터 has_side_effects 직전까지의 모든 등록에서93개 고유 파일을 추출해 Node24.20.0·nice10·직렬·명시적9e75 후보/cbaa 기준으로 실행합니다. `current-hwp5-gate.jsonl/.stderr`가 근거이며 실행기 `run-current-hwp5-gate.mjs`는 시작/끝의 전체 소스·두 WASM 불변을 확인합니다. 실행기 SHA256은 `a1f6c147cb529b7e7591af189a3ab2dcd2441506a7fc286ee9a6a79a22899887`, 최초 부모는55745입니다. 최종 통계·종료·불변 재대조 전에는 통과가 아닙니다. 이전495개·집중224개/178범위와 합산하지 않으며 기본 WASM/외부 데모·전체 참조 편집/조판 완료와 구분합니다.
+
 ## 최신 후보의 전체 참조 입력·이력 감사 — 실행 중
 
 같은 e9aa1141 분리 사본 `/tmp/hwpjs-main-hwp5-gate.qzuKq7`·9e75 후보에서 전체 참조975경로의 signature별 HWP5/HWPX 입력 감사를 시작했습니다. 격리 실행기 `run-current-reference-edit.mjs`는 시작에7,214개 Git blob을 정확한 e9aa1141 tree와 대조하고975개 원본 경로/해시 manifest를 출력합니다. 끝에 소스·전체 원본·WASM을 다시 대조합니다. `run-reference-edit-files.mjs`는 게시된 개별 HWP5/일반 HWPX/전용 HWPX 감사만 순차 호출하며 이력·독립 저장 검증을 유지합니다. 파일별 결과·거부와 전체 종료를 분리하고 시간 경과를 이유로 재시작하지 않습니다. HWP3는 범위 제외이며 전체 prefix 검사가 모든 명령/위치/브라우저/조판 지원을 뜻하지 않습니다.
