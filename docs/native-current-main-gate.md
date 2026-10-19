@@ -50,13 +50,15 @@ index2987/3132/3161/3233/3288/3306/3336/3361/3369/3399/3421도 `remaining-eighte
 
 별도 `/tmp/hwpjs-native-allocator-probe.Kn255w`에서 세 회귀/루트 sentinel은 ReleaseSafe4/4·exit0(`allocator-probe.stderr`), Debug는 공통 checked callback 회귀까지5/5·exit0(`allocator-debug.stderr`)입니다. helper 자체 ReleaseSafe2/2는 삼킨 OOM 거부와 callback 오류 보존을 확인했고, 의도적 누수 대조는 TestAllocatorLeak·exit1로 실패했습니다(`allocator-helper.stderr`, `allocator-negative.stderr`). 누수 검사를 비활성화하지 않았습니다. 최종 커밋용 tree `60ad2fda3e4aab988b2cb185a88d6dafeedcb705`의 수정3파일이 해당 사본과 바이트 일치하며 zig fmt --check·별도 prefix ReleaseSafe 제품 빌드5/5·exit0도 확인했습니다. 진행 중인 고정 native 바이너리의 실패를 소급 통과로 고치거나 새 전체 native gate 성공으로 합산하지 않습니다. 기본 WASM/외부 데모는 변경하지 않았습니다.
 
-## Zig 0.17 게시 소스의 root 전체 재실행 — 진행 중
+## Zig 0.17 게시 소스의 root 전체 재실행 — 종료, 실패/skip 포함
 
 공개 gate에 사용한 eddbfa8c·tree `c201fa64d85323f153b5dc691e87d131e30bbbaf`의 `/tmp/hwpjs-published-hwpx-gate.7WPrL4`에서 `zig test src/root.zig -O ReleaseSafe --test-no-exec -femit-bin=.../native-safe`를 Zig0.17.0으로 새로 컴파일했습니다. 빌드 exit0·stdout/stderr0이며 SHA256은 `21be9993e5f06ca8564a5ce9be49a9b246663bce6f3b59b0481439036236296e`입니다. 아래 구형4,114개/부분 결과를 재사용한 바이너리가 아닙니다.
 
 `native-guard-full.jsonl/.stderr`는 이 바이너리의 실제 inventory4,118개·범위0..4118·fullInventoryCovered=true·batch1·seed0x485750·4,096MiB 관찰 한도로 시작했습니다. 시작 명령은 `env -u HWPJS_CHARACTER_FAILURE_START -u HWPJS_CHARACTER_FAILURE_END`로 범위 환경변수를 제거했습니다. 이는 단일 지점을 요구하는 mixed-run 문자 속성 보조 검사의 전수 실행을 뜻하지 않습니다. index3449는 두 변수가 없으면 SkipZigTest를 반환하며 실제 원래 상태값도2(skip)입니다. 최초 후속 목록의 status!=0을 모두 실패로 부른 분류를 정정합니다. 같은 고정 바이너리의 `shard-unset-server.jsonl/.stderr`에서도 해당 한 검사가 pass0/fail0/skip1·exit1·stderr0으로 재현됐고, 분리 사본의 `character-shard-unset.stderr`는 terminal runner에서도 root1 pass/대상1 skip·exit0입니다. skip을 성공으로 변경하거나 원래 전체 결과에서 제외하지 않습니다.
 
-최종 complete·결과 누락/중복·fail/skip/log/leak·guardian 종료와 터미널 종료를 확인하기 전에는 전체 통과가 아닙니다. `src/root.zig`의 실행이며 build test에 별도로 연결된 controlled text 테스트나 모든 native 빌드 target의 완료로 확대하지 않습니다.
+최종 complete는4,118개 모두 종료·pass4,065/fail52/skip1·logErrors/leaks0·success=false입니다. 결과 인덱스가0..4118 순서로 정확히 한 번씩 나오고 이름 중복0임을 확인했습니다. resource-guard-complete는code1/signal=null·guardStopped=false·최대 physical1,687,635,576바이트(한도4,294,967,296)이며 terminal exit1과 guardian/runner 종료도 확인했습니다. 로그 SHA256은 `1776c7fd1e7e4f5d7e40723211e459781dc019d7a1c0aae5b76b39278d8b06c3`이고 원래 바이너리 해시도 그대로입니다. 실패52개 중 앞선46개는 후속 source/집중 검증으로 수정했으며 마지막3687/3708/3716/3729/3740/3746 여섯 개는 별도 재현 대상입니다. 원래 결과를 수정 후 성공으로 덮어쓰지 않습니다.
+
+이 종료는 전체 통과가 아닙니다. 최신 수정 소스의 단일 전체 재실행과 skip인 보조 검사의 범위 증거도 별도입니다. `src/root.zig`의 실행이며 build test에 별도로 연결된 controlled text 테스트나 모든 native 빌드 target의 완료로 확대하지 않습니다.
 
 메모리 guardian은 게시 Git에 없는 로컬 보조 도구이므로 제품 소스에 섞지 않고 세 파일만 사본에 추가했습니다. `zig-native-footprint-audit.mjs` SHA256은 `7593186be0ac17078b440d04f62aad2f2b6a67cbf076c1512e2e6cdfd115cf1f`, `native-footprint-values.mjs`는 `8dbcb2ed523db52592d38ebc901259408f7c53509b5268e77e21948d5e1fb1da`, `native-audit-fatal-observer.mjs`는 `6e031ec9cfa8dab67a8b8c3de4d013968af2a266268d78561d27f1270624aeaa`입니다. 실행기/프로토콜·기존 helper는 게시 사본 그대로입니다. 최초 `native-full.stderr`는 guardian 부재 MODULE_NOT_FOUND·exit1이고 테스트를 시작하지 못한 진입 실패로 보존합니다. 후속 로그와 합산하거나 숨기지 않습니다. 기본 WASM/외부 데모는 교체하지 않았습니다.
 

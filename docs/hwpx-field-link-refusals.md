@@ -10,6 +10,8 @@
 
 같은 사본의 f4e0 후보 전체32문단 일반 감사는 accepted25/restored25·UnsupportedParagraphControl6·ProtectedFieldRange1·refusalRedoPreserved5·exit0·stderr0입니다(`issue5729-fixed-full.jsonl/.stderr`). 보호7문단을 편집 지원으로 세지 않으며 전용 입력/임의 위치/실제 브라우저/조판 완료 주장이 아닙니다. 원래 고정44파일 감사의 실패 행은 그대로이고 기본 WASM/데모도 변경하지 않았습니다.
 
+같은 사본/후보의 전용 입력 감사도7시도/6검증·독립 XML6(필드0)·UnsupportedFieldLabelRange1·exit0·stderr0으로 완료됐습니다(`issue5729-current-specialized.jsonl/.stderr`). 유일한 전용 거부는32번 문단이며 일반25/전용6의 상보적 prefix 경로가 검증돼도 이 꼬리의 필드 종료를 복구하거나 편집 허용한 것은 아닙니다.
+
 ## Zig 0.17의 절단 원본 재확인
 
 `issue5729/stacked_tac_band_om_top.hwpx` SHA256 `5cc90baee062dddf9e14ba70ffb0093686197da7714d3773e5db5fed7dc5a1c9`를 독립 ZIP/XML로 재확인했습니다. 유일한 section0에 CLICK_HERE 시작1854889790/fieldid627272811 하나와 끝0개가 있고 중복 시작/미해결 끝은 없습니다. 마지막32번 문단의 root 시작이며 종료를 임의 합성하지 않습니다. 현재 fieldLabels의32회 InvalidFieldLinks는 같은 구역 링크 결함의 반복 조회이지32개 독립 파서 손상이 아닙니다.
