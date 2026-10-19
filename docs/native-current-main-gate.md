@@ -1,5 +1,13 @@
 # 현재 main 소스의 전체 native 실행
 
+## 필드·셀 크기·혼합 문단 후보의 후속 11개 실패
+
+index2987/3132/3161/3233/3288/3306/3336/3361/3369/3399/3421도 `remaining-eighteen-original.stderr`에서 NondeterministicMemoryUsage로 개별 재현된 대상입니다. source/tree는 읽기 전용이고 결과/후보/clone은 callback 안에서 해제하는12호출을 기존 `allocation_failures.check`에 연결했습니다. 체크박스3132는 기존 배열의 scalar만 바꾸는 경로이고 검증용 임시 버퍼는 주입 allocator에서 생성/해제하며 기존 배열에 새 할당을 publish하지 않는 것을 set 구현으로 확인했습니다. 원본 소유 배열의 allocator는 바꾸지 않습니다. 셀 크기3233은 callback 소유 copy만 수정/해제합니다. 전체 실패 지점·후보 원자성·잘못된 소속 거부·문자/스타일/독립 저장 단언을 유지했습니다.
+
+분리 사본의 `remaining-eleven-safe.stderr`·`remaining-eleven-debug.stderr`는 각12/12·exit0(대상11+root1)입니다. fmt가 section_save의 **테스트 코드** enum 변환2곳을 @intFromEnum→@backingInt로 바꿔, 해당 실제 배포 문서 편집/서명 거부 두 테스트까지 포함한 최종 `remaining-eleven-final-safe.stderr`·`remaining-eleven-final-debug.stderr`를 다시 실행했습니다. 두 모드 모두14/14·exit0입니다. 변경11파일의 사본 바이트 일치·fmt --check·diff --check 및 별도 prefix ReleaseSafe 제품 빌드5/5·exit0도 확인했습니다(`remaining-product-build.stderr`, WASM compile45s). 제품 저장 함수나 기본 WASM/데모는 변경하지 않았습니다.
+
+이것으로 앞서 재현한 후속18개는 반복 provenance1·차트/OLE6·이11개로 각각 수정/집중 검증됐습니다. 고정 전체 실행의 원래 실패 행을 고치거나 단일 최신 전체 native 성공으로 합산하지 않습니다. 이후 전체 실행에서 추가된 index3449/3497/3499 등은 별도 원인 재현/검증이 필요한 새 실패입니다.
+
 ## 차트/OLE/중첩 양식 속성의 후속 여섯 실패
 
 `remaining-eighteen-original.stderr`에서 재현된 index2759/2767/2814/2825/2832/2907의 callback은 차트 type/object table·CFB 입출력·문서 검사 report·중첩 속성 트리를 주입 allocator로 생성하고 callback 안에서 해제합니다. 외부 세션으로 결과를 넘기지 않으므로 공통 `allocation_failures.check`에 해당 일곱 호출(중첩 속성 정상/오류 두 경로 포함)만 연결했습니다. 제품 코드·모든 실패 지점·독립 DebugAllocator 회계·truncation/원값/메타데이터/후기 오류 단언은 유지했습니다.

@@ -5,7 +5,7 @@ test "underline intent combines size emphasis and position in complete HWPX head
     const source = "<h:head xmlns:h='http://www.hancom.co.kr/hwpml/2011/head'><h:refList><h:charProperties itemCnt='1'><h:charPr id='9' height='1379'><h:italic/><h:underline type='BOTTOM' shape='WAVE' color='#123456'/></h:charPr><!--keep--></h:charProperties></h:refList></h:head>";
     var tree = try @import("../hwpx/xml_part_tree.zig").parse(a, source, .header, null, 0, .{});
     defer tree.deinit(a);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, input: *const @import("../hwpx/xml_part_tree.zig").Tree) !void {
             var values: @import("../hwpx/character_resource_values.zig").Values = .{};
             defer values.deinit(allocator);

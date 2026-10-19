@@ -94,7 +94,7 @@ test "mixed reopened original merge preserves owned declarations through candida
             }
         };
         try Probe.run(a, &section.tree, current);
-        try std.testing.checkAllAllocationFailures(a, Probe.run, .{ &section.tree, current });
+        try @import("../testing/allocation_failures.zig").check(Probe.run, .{ &section.tree, current });
         try std.testing.expectEqualDeep(snapshot, current.*);
     }
 }

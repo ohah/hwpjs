@@ -111,7 +111,7 @@ test "HWPX styled field fragments retain only current owned marker controls" {
     defer a.free(dirty_xml);
     try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, dirty_xml, "dirty=\"1\""));
     try std.testing.expectError(error.DuplicateFieldDirty, @import("character_style_paragraph_xml.zig").writeFieldsDirty(a, &tree, &paragraph, &.{ .{ .element_index = 4, .dirty = true }, .{ .element_index = 4, .dirty = false } }, 4000));
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, parsed: *const @import("xml_part_tree.zig").Tree, current: *const @import("text_sites.zig").Sites, piece: @import("character_style_paint.zig").Span) !void {
             const output = try @import("character_style_run_fragment.zig").writeFields(allocator, parsed, current, piece, 4000, true, true, &.{});
             defer allocator.free(output);

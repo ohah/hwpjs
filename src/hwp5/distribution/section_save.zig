@@ -132,7 +132,7 @@ test "distribution section CFB save allocation failures keep source and determin
         }
     };
     try Probe.run(a, input, snapshot, plain, reference);
-    try std.testing.checkAllAllocationFailures(a, Probe.run, .{ @as([]const u8, input), @as([]const u8, snapshot), @as([]const u8, plain), @as([]const u8, reference) });
+    try @import("../../testing/allocation_failures.zig").check(Probe.run, .{ @as([]const u8, input), @as([]const u8, snapshot), @as([]const u8, plain), @as([]const u8, reference) });
 }
 
 test "distribution section CFB save retains actual model text edit after reopen" {
@@ -147,7 +147,7 @@ test "distribution section CFB save retains actual model text edit after reopen"
     defer a.free(docinfo);
     var records = @import("../record.zig").Iterator.init(docinfo, .{});
     var char_count: usize = 0;
-    while (try records.next()) |record| if (record.tag == @intFromEnum(@import("../docinfo/reader.zig").Tag.char_shape)) {
+    while (try records.next()) |record| if (record.tag == @backingInt(@import("../docinfo/reader.zig").Tag.char_shape)) {
         char_count += 1;
     };
     var document = try @import("../model_projection.zig").fromDecodedSections(a, source.header.version(), &.{plain});
@@ -177,7 +177,7 @@ test "distribution section CFB save rejects signature and history without modify
     const Flag = @import("../file_header.zig").Flag;
     for ([_]Flag{ .history, .digital_signature, .signature_preview }) |flag| {
         var header = source.header.raw;
-        std.mem.writeInt(u32, header[36..40], source.header.flags() | (@as(u32, 1) << @intFromEnum(flag)), .little);
+        std.mem.writeInt(u32, header[36..40], source.header.flags() | (@as(u32, 1) << @backingInt(flag)), .little);
         const modified = try cfb.stream_replace.rebuildExact(a, &source.file, "/FileHeader", &header, .{});
         defer a.free(modified);
         const before = try a.dupe(u8, modified);

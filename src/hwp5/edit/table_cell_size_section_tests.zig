@@ -21,7 +21,7 @@ test "HWP5 cell size mutation preserves values across all allocation failures" {
         break;
     };
     const other = second orelse return error.MissingSecondCell;
-    for (0..3) |phase| try std.testing.checkAllAllocationFailures(a, struct {
+    for (0..3) |phase| try @import("../../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, original: model.Section, decoded: []const u8, version: @import("../version.zig").Version, left: @import("table_display_bindings.zig").Binding, right: @import("table_display_bindings.zig").Binding, mode: usize) !void {
             var section = original;
             const initial = [_]model.TableCellSize{
@@ -46,7 +46,7 @@ test "HWP5 cell size mutation preserves values across all allocation failures" {
     var sizes = [_]model.TableCellSize{.{ .source_list_node = first.list_node, .width = 1234, .height = 5678 }};
     var sized = document.sections[0];
     sized.table_cell_sizes = &sizes;
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, decoded: []const u8, current: model.Section, version: @import("../version.zig").Version) !void {
             const saved = writer.writeWithDeletions(allocator, decoded, current, version, 1000, 4_000_000, true) catch |err| {
                 try std.testing.expectEqual(@as(u32, 1234), current.table_cell_sizes.?[0].width);

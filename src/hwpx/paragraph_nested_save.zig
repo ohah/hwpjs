@@ -132,7 +132,7 @@ test "HWPX joined nested save binds duplicate child XML to each original host" {
         }
     };
     try Probe.run(a, &tree, &current, &original, &joined, rendered, &merged_values);
-    try std.testing.checkAllAllocationFailures(a, Probe.run, .{ &tree, &current, &original, &joined, rendered, &merged_values });
+    try @import("../testing/allocation_failures.zig").check(Probe.run, .{ &tree, &current, &original, &joined, rendered, &merged_values });
     try std.testing.expectEqualStrings(source, tree.source);
 }
 

@@ -131,7 +131,7 @@ test "HWPX merge XML preserves heterogeneous styles namespaces and current text"
     try std.testing.expect(std.mem.indexOf(u8, merged, "linesegarray") == null);
     try std.testing.expectEqualStrings(source, tree.source);
     try std.testing.expectError(error.LimitExceeded, @import("paragraph_merge_xml.zig").write(a, &tree, &values.paragraphs[0], &values.paragraphs[1], .{}, 1));
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, original: *const @import("xml_part_tree.zig").Tree, current: *const @import("paragraph_structure_values.zig").Values) !void {
             const output = try @import("paragraph_merge_xml.zig").write(allocator, original, &current.paragraphs[0], &current.paragraphs[1], .{}, 10000);
             defer allocator.free(output);

@@ -59,7 +59,7 @@ test "source column anchor candidate allocation failures retain original values"
             try std.testing.expect(candidate.paragraphs[0].column_boundaries != null);
         }
     };
-    try std.testing.checkAllAllocationFailures(a, Probe.run, .{ &section.tree, &current });
+    try @import("../testing/allocation_failures.zig").check(Probe.run, .{ &section.tree, &current });
     try std.testing.expect(current.paragraphs[0].pieces == null);
     try std.testing.expect(current.paragraphs[0].protected_positions == null);
     try std.testing.expect(current.paragraphs[0].column_boundaries == null);

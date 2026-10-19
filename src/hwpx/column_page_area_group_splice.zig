@@ -66,7 +66,7 @@ test "mixed declaration group input candidate failures preserve all current valu
         }
     };
     try Probe.run(a, &section.tree, source);
-    try std.testing.checkAllAllocationFailures(a, Probe.run, .{ &section.tree, source });
+    try @import("../testing/allocation_failures.zig").check(Probe.run, .{ &section.tree, source });
     var protected = try source.clone(a);
     defer protected.deinit(a);
     protected.paragraphs[1].page_area_positions.?[0].unit = 2;

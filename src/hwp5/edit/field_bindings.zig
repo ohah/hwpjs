@@ -67,7 +67,7 @@ test "field bindings preserve actual command bytes and reject forged field kind"
     defer a.free(bound);
     try std.testing.expectEqual(@as(usize, 2), bound.len);
     try std.testing.expect(bound[0].properties.command.len != 0);
-    try std.testing.checkAllAllocationFailures(a, allocationCase, .{ bytes, source.header.version(), doc.sections[0] });
+    try @import("../../testing/allocation_failures.zig").check(allocationCase, .{ bytes, source.header.version(), doc.sections[0] });
     // Current markers must not bind an original header of a different kind.
     var tree = try @import("../body/tree.zig").Tree.parseTextPreview(a, bytes, source.header.version(), .{});
     defer tree.deinit(a);

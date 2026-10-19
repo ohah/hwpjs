@@ -22,7 +22,7 @@ test "HWPX checkbox pending values preserve an existing state on failed validati
     const a = std.testing.allocator;
     var tree = try trees.parse(a, xml, .section, 0, 0, .{});
     defer tree.deinit(a);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, parsed: *const trees.Tree) !void {
             var values: subject.Values = .empty;
             defer values.deinit(std.testing.allocator);
