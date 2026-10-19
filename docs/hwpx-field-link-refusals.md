@@ -1,5 +1,15 @@
 # HWPX 필드 링크 거부와 읽기 전용 표시
 
+## 절단 원본의 일반 prefix 감사 — 라벨 조회 오류와 보호 증거 분리
+
+실제 issue5729 원본의 최신 일반 감사도 ProtectedFieldRange 뒤 `fieldLabels`의 InvalidFieldLinks 때문에 중단됐습니다. `/tmp/hwpjs-reference-followup.DhrVro/issue5729-current-plain.*`와 `issue5729-regression-before.*`에 전체 감사/32번 문단 집중 실패를 보존했습니다. native가 보호를 거부하지 못한 것이 아니라 감사 도구가 미닫힘 필드에 유효한 라벨 목록을 요구한 문제입니다.
+
+일반 감사는 InvalidFieldLinks만 라벨 부재와 구분해 받으며 다른 오류는 계속 전파합니다. 해당 경우에는 같은 문단의 수식 prefix만으로 보호 사유를 인정하지 않고, 기존 독립 unmatched-prefix-witness의 정확한 section/localParagraph 증거를 요구합니다. 중복 ID·잘못된 end·다른 소속·모호한 링크를 witness가 계속 거부합니다. 제품 파서/편집 권한·원본 XML은 변경하지 않습니다.
+
+커밋용 소스 tree `b892f7a6616aab02dd106a6a66d013dd2593cc49`만 추출한 `/tmp/hwpjs-unmatched-audit-clean.3b2STF`에서 게시 afb7 후보의 witness/실제 감사·Worker/Canvas 보존 회귀는8/8·fail/cancel/skip0·exit0·stderr0입니다(`unmatched-audit-tests.log/.stderr`,13854ms). 새32번 문단 회귀는 normal/-O의 독립 witness가 시작1854889790 하나만 가리킴과 accepted/restored0·ProtectedFieldRange1·redo 변경0을 확인합니다. 기존 모호한 소속/외래 namespace 음성 대조와 실제 앞쪽 Canvas 입력·잘못된 꼬리 편집 거부도 그대로 실행했습니다.
+
+같은 사본의 f4e0 후보 전체32문단 일반 감사는 accepted25/restored25·UnsupportedParagraphControl6·ProtectedFieldRange1·refusalRedoPreserved5·exit0·stderr0입니다(`issue5729-fixed-full.jsonl/.stderr`). 보호7문단을 편집 지원으로 세지 않으며 전용 입력/임의 위치/실제 브라우저/조판 완료 주장이 아닙니다. 원래 고정44파일 감사의 실패 행은 그대로이고 기본 WASM/데모도 변경하지 않았습니다.
+
 ## Zig 0.17의 절단 원본 재확인
 
 `issue5729/stacked_tac_band_om_top.hwpx` SHA256 `5cc90baee062dddf9e14ba70ffb0093686197da7714d3773e5db5fed7dc5a1c9`를 독립 ZIP/XML로 재확인했습니다. 유일한 section0에 CLICK_HERE 시작1854889790/fieldid627272811 하나와 끝0개가 있고 중복 시작/미해결 끝은 없습니다. 마지막32번 문단의 root 시작이며 종료를 임의 합성하지 않습니다. 현재 fieldLabels의32회 InvalidFieldLinks는 같은 구역 링크 결함의 반복 조회이지32개 독립 파서 손상이 아닙니다.

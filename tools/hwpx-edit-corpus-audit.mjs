@@ -58,10 +58,15 @@ try {
         } else if (error.message === "ProtectedFieldRange") {
           assert.equal(eligible, false, path);
           assert.equal(outsideEligible, false, path);
-          const namedField = editor.fieldLabels(paragraph.section, paragraph.paragraph).some(label => label.start === 0);
+          let labels = null;
+          try { labels = editor.fieldLabels(paragraph.section, paragraph.paragraph); }
+          catch (error) { if (error.message !== "InvalidFieldLinks") throw error; }
+          const namedField = labels?.some(label => label.start === 0) ?? false;
           if (!namedField) {
             formulaPrefixes ??= JSON.parse(execFileSync("python3", ["tools/hwpx-formula-prefix-inventory.py", path], { encoding: "utf8", timeout: 30000 }));
-            const formulaPrefix = formulaPrefixes.some(row => row.section === paragraph.section && row.localParagraph === paragraph.localParagraph);
+            // A broken link query requires independent unresolved-field evidence,
+            // never merely a coincident formula prefix in the same paragraph.
+            const formulaPrefix = labels !== null && formulaPrefixes.some(row => row.section === paragraph.section && row.localParagraph === paragraph.localParagraph);
             if (!formulaPrefix) unmatchedPrefixes ??= JSON.parse(execFileSync("python3", ["tools/hwpx-unmatched-prefix-witness.py", path], { encoding: "utf8", timeout: 30000 }));
             assert(formulaPrefix || unmatchedPrefixes.some(row => row.section === paragraph.section && row.localParagraph === paragraph.localParagraph), `${path}: protected prefix without independent source witness`);
           }

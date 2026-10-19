@@ -50,3 +50,19 @@ test("actual audit classifies unresolved protection without accepting it as edit
     }
   }
 });
+
+test("actual truncated tail audit verifies its unresolved source witness instead of requiring valid labels", t => {
+  if (!process.env.HWPJS_TEST_WASM) { t.skip("explicit candidate WASM required"); return; }
+  for (const flags of [[], ["-O"]]) {
+    const witness = JSON.parse(execFileSync("python3", [...flags, "tools/hwpx-unmatched-prefix-witness.py", "reference/rhwp/samples/issue5729/stacked_tac_band_om_top.hwpx"], { encoding: "utf8", timeout: 30000 }));
+    assert.deepEqual(witness, [{ section: 0, localParagraph: 32, unmatchedBeginIds: ["1854889790"] }]);
+  }
+  const result = spawnSync(process.execPath, ["tools/hwpx-edit-corpus-audit.mjs", `--wasm=${process.env.HWPJS_TEST_WASM}`, "--fixture=reference/rhwp/samples/issue5729/stacked_tac_band_om_top.hwpx", "--paragraphs=32:33", "--history"], { encoding: "utf8", timeout: 30000 });
+  assert.equal(result.error, undefined); assert.equal(result.signal, null);
+  assert.equal(result.status, 0, result.stderr); assert.equal(result.stderr, "");
+  const rows = result.stdout.trim().split("\n").map(JSON.parse), totals = rows.at(-1).totals;
+  assert.equal(rows.at(-2).completeFixture, false);
+  assert.equal(totals.paragraphs, 1); assert.equal(totals.accepted, 0); assert.equal(totals.restored, 0);
+  assert.deepEqual(totals.refused, { ProtectedFieldRange: 1 });
+  assert.equal(totals.refusalRedoPreserved, 0);
+});
