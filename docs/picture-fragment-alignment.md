@@ -14,7 +14,15 @@ reserved-body-row는 표 경계 등으로 자른 임시 text의 끝을 실제 �
 
 line-visible-end.mjs는 공통 정렬과 조각 검증이 공유하는 후행 ASCII 공백/CR/LF 제외 경계입니다. 첫 실제 회귀에서 정렬 후 후행 공백이642.53px 줄의650.53px까지 나가 InvalidPositionedRowFragments로 거부됐습니다. 글자 영역은 여전히 줄 폭 안에서 검사하고 후행 공백의 좌표만 기존 공통 정렬과 같은 의미로 허용합니다. 다른 글자 넘침/비유한 좌표를 허용하도록 폭 검사를 없애지 않았습니다.
 
-## 검증
+## 후보 데모 반영
+
+ef389466 게시 후 기존 후보8082/10001만 새 고정 화면 사본으로 교체했습니다. PID5395 listener/명령을 확인한 뒤 종료하고 새 PID47996을 시작했습니다. WASM은 기존 검증8c52c744 그대로이며 기본8080 서버는 교체하지 않았습니다.10001에서 새 조각 정렬·공통 정렬·visible-end 세 소스의 응답 해시가 사본과 일치했고 예제107개 HEAD가 모두200입니다.
+
+실제10001의 연쇄 SUM fixture 선택도 성공했습니다. hwpjs-fixture-profile-zAoC3D HAR,5쪽·정렬 미지원1줄·도형 넘침1줄·그림6/6이며 소유 브라우저 inactive를 확인했습니다. 클릭→두 RAF 약2976ms, Worker post→reply2750ms입니다. 이는 조판 표시 수정이며 수식 최적화 WASM을 아직 반영하지 않아1.68초 후보 성능과 혼동하지 않습니다. same-server Mac의 단건이며 사용자의 WAN/원본 조판 동치 보장이 아닙니다.
+
+주소: https://macstudio.tailed42f2.ts.net:10001/web/preview/index.html (tailnet only).
+
+## 회귀 검증 기록
 
 ### 깨끗한 게시 사본 검증
 
