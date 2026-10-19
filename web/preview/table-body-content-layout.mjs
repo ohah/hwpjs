@@ -1,4 +1,5 @@
 import { layoutContent } from "./layout.mjs";
+import { isSingleInlineTableHost } from "./single-inline-table-host.mjs";
 import { measureTableCells } from "./table-cell-measurement.mjs";
 import { tableSourceHorizontalLayout } from "./table-source-horizontal-layout.mjs";
 import { layoutMeasuredMultipleTables } from "./multiple-table-page-layout.mjs";
@@ -66,7 +67,7 @@ export function layoutTableBodyContent(content, measure, maxRows, { measureBodyP
     const host = content.paragraphs.find(p => p.section === table.section && p.paragraph === table.hostParagraph);
     const anchorReason = tablePageAnchorError(source);
     if (anchorReason) return { ...unavailable("UnsupportedTablePageAnchor"), tableNode: table.tableNode, anchorReason };
-    const mixedInline = inline && host?.text !== "\ufffc";
+    const mixedInline = inline && !isSingleInlineTableHost(host, table);
     if (inline && (typeof host?.text !== "string" || !host.text.includes("\ufffc"))) return unavailable("UnsupportedInlineTableHost");
     if (inline && Object.hasOwn(table, "anchorUnit") && (!Number.isSafeInteger(table.anchorUnit) || table.anchorUnit < 0 || host.text[table.anchorUnit] !== "\ufffc")) return unavailable("InvalidInlineTableAnchorPosition");
     if (table.section !== setting.section_ordinal) return unavailable("UnsupportedPageSections");
@@ -110,7 +111,7 @@ export function layoutTableBodyContent(content, measure, maxRows, { measureBodyP
       group.map(({ table }) => ({ section: table.section, paragraph: table.hostParagraph, anchorUnit: table.anchorUnit, node: table.tableNode })),
       overlays, textAnchors);
     if (anchors.state !== "resolved") return unavailable(anchors.error);
-    if (group.length === 1 && host.text === "\ufffc") continue;
+    if (group.length === 1 && !overlays.length && !textAnchors.length && isSingleInlineTableHost(host, group[0].table)) continue;
     const inlineFlow = measureInlineTableParagraph(host, group.map(({ table, measured, outerInsets }) => ({ tableNode: table.tableNode, ...(Object.hasOwn(table, "anchorUnit") ? { unit: table.anchorUnit } : {}), width: measured.grid.width + outerInsets.left + outerInsets.right, height: measured.grid.height + outerInsets.top + outerInsets.bottom })), reference.boxes.page.width, measure, { maxRows: remaining, allowLineOverflow: true, zeroWidthUnits: anchors.zeroWidthUnits, textAnchorUnits: anchors.textAnchorUnits });
     if (inlineFlow.state !== "measured") return inlineFlow;
     if (inlineFlow.anchors.some(anchor => reference.boxes.page.x + anchor.x + anchor.width > reference.boxes.paper.x + reference.boxes.paper.width + 1e-8)) return unavailable("InlineTablePaperWidthOverflow");
@@ -133,7 +134,8 @@ export function layoutTableBodyContent(content, measure, maxRows, { measureBodyP
       const siblings = hosts.get(paragraph.paragraph);
       if (seen.has(paragraph.paragraph)) return unavailable("UnsupportedTableHostText");
       seen.add(paragraph.paragraph);
-      if (!entries[siblings[0]].inlineFlow && paragraph.text !== "\ufffc".repeat(siblings.length)) {
+      if (!entries[siblings[0]].inlineFlow && paragraph.text !== "\ufffc".repeat(siblings.length)
+        && !(siblings.length === 1 && isSingleInlineTableHost(paragraph, entries[siblings[0]].table))) {
         const hostFlow = measureBlockTableHost(paragraph, siblings.map(tableIndex => ({ table: entries[tableIndex].table, tableIndex })), reference.boxes.page.width, measure, remaining);
         if (hostFlow.state !== "measured") return hostFlow;
         remaining -= hostFlow.rowCount; sequence.push(...hostFlow.sequence);

@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+[단독 인라인 표 호스트](single-inline-table-host.md)는 typed 구조 앵커 판정과 기존 혼합 줄 측정·수평 배치의 책임을 분리합니다.
+
 [캡션·도형 페이지 경계](caption-frame-page-boundaries.md)는 캡션 프레임 fit·앵커 쪽 이동과 coverage 이후 명시적 문단 조각 선택을 분리합니다.
 
 [수식 표시 묶음 조회](hwpx-formula-display-batch.md)는 요청 단위 준비·조회 수명과 선택적 API를 소유합니다.

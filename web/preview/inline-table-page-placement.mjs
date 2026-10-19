@@ -1,11 +1,12 @@
 import { paragraphLineGeometry } from "./paragraph-geometry.mjs";
 import { tableInsets } from "./table-insets.mjs";
+import { isSingleInlineTableHost } from "./single-inline-table-host.mjs";
 
 // A table-only inline paragraph is one indivisible measured line.
 export function placeInlineTablePages(table, paragraph, layout, outerInsets) {
   const unavailable = error => ({ state: "unavailable", error });
   const margins = tableInsets(outerInsets);
-  if (!margins || paragraph?.text !== "\ufffc" || layout?.state !== "placed") return unavailable("UnsupportedInlineTableHost");
+  if (!margins || (paragraph?.text !== "\ufffc" && !isSingleInlineTableHost(paragraph, table)) || layout?.state !== "placed") return unavailable("UnsupportedInlineTableHost");
   const boxes = layout.boxes.filter(box => box.tableNode === table.tableNode && box.section === table.section);
   if (!boxes.length || new Set(boxes.map(box => box.pageOrdinal)).size !== 1) return unavailable("UnsupportedSplitInlineTable");
   let left = Infinity, right = -Infinity;
