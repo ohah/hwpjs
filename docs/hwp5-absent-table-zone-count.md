@@ -18,6 +18,20 @@ native 회귀는 `src/table_zone_count_probe.zig`가 소유하며 정규 root에
 
 실제 빈 셀 입력·원시 표 레코드 보존의 집중 native도 게시용 사본에서1/1·exit0으로 재확인했습니다. 부분 필드 거부 집중1/1과 별개이며, 앞선 고정 소스 전체 native 근거를 대체하지 않습니다.
 
+## 기본 데모 승격 전 읽기 대조
+
+기존 기본 bacf2ef3와 새30434b54를 명시한 reader parity는 추적 fixture 디렉터리93파일에서 전체 JSON 일치91·동일 거부2·exit0입니다. `/tmp/hwpjs-table-zone-publish.I81Var/demo-reader-parity.jsonl`이 입력/산출물 hash와 파일별 근거를 소유합니다. 동일 거부는 지원 성공으로 집계하지 않고 이 디렉터리 밖 데모/참조 파일이나 편집/UI의 전수 검증으로 확대하지 않습니다.
+
+기존 기본 WASM은 같은 검증 폴더의 `default-before-bacf2ef3.wasm`으로 보관하고 원본과 SHA-256 전체 일치를 확인했습니다. 이 기록 시점에는 기본 파일 자체도 bacf2ef3 그대로입니다. 실제 복합 HWPX 브라우저 왕복의 새30434b54 결과는 [복합 셀 검증](hwpx-complex-cell-browser-roundtrip.md)이 소유하며, 전체 Worker 편집 감사가 끝나기 전에는 교체하지 않습니다.
+
+## 기본 데모 반영 완료
+
+후속 Worker 전수는 앵커146·필드7·수식 결과13의 편집/이력/저장 재열기 검사를 통과했습니다. 최초 두 파일 동시 실행은7pass/1fail·exit1이며 실패는 headerfooter의 오래된 모든 쪽 반복 기대입니다. 선언 host 페이지를 기준으로 수정한 뒤 page-worker-corpus 파일 전체를7/7·skip0·exit0으로 다시 실행했습니다. 전수 Worker 편집 성공과 수정 후 페이지 파일 성공은 별도 실행 결과이며 단일8/8 실행으로 표현하지 않습니다. 로그는 같은 검증 폴더의 `demo-worker-check.log`와 `demo-page-worker-after-fix.log`입니다.
+
+2026-10-20 위 검사 종료 후 기본 `zig-out/bin/hwpjs.wasm`을30434b54로 원자적 교체했습니다. 기존 bacf2ef3 복구 사본은 유지했습니다. 기존8080 서버를 재시작하지 않고 로컬 HTTP와 외부10000 HTTPS에서 각각200·gzip·해제 후16,587,350바이트·전체 SHA-256 일치를 확인했습니다. 현재 기본 주소는 `https://macstudio.tailed42f2.ts.net:10000/web/preview/index.html`이며 새로고침해야 페이지 수명 단위 컴파일 캐시가 새 WASM을 사용합니다. 별도10001 고정 후보 서버는 변경하지 않았습니다.
+
+이제 앞선 기본 데모 미반영 문구는 당시 기록입니다. 새 DocInfo 보존 모드는30434b54에 포함되지 않으며 별도 전체 native 검증 중입니다. 이번 반영을 모든 픽스쳐/편집 명령/원본 조판의 완료로 해석하지 않습니다. 데모 JS는 현재 작업 트리 소스이며 모든 로컬 UI 변경을 게시했다는 의미도 아닙니다.
+
 ## 명령
 
 ```sh

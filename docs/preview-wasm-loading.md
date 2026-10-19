@@ -1,5 +1,7 @@
 # 데모 WASM 다운로드·컴파일 수명
 
+기본 WASM은2026-10-20에30434b54로 갱신했습니다. 승격 검증·복구 사본·실제 외부 응답은 [HWP5 표 호환 후보의 데모 반영](hwp5-absent-table-zone-count.md)이 소유합니다. 아래 bacf2ef3의 속도 수치는 이전 바이너리 실측이며 새 후보의 외부망 속도로 해석하지 않습니다. 모듈 재사용/압축 정책은 그대로 유지합니다.
+
 페이지마다 한 번만 WASM을 fetch/compile하고 새 문서 Worker에 structured-clone된 WebAssembly.Module을 전달합니다. 각 Worker의 인스턴스·문서·편집값은 독립적입니다. 직접 Worker 호출은 기존 fetch 경로를 유지합니다. HTTP/컴파일 실패는 재시도를 허용하며 새 WASM 빌드를 읽으려면 페이지를 새로고침해야 합니다.
 
 `web/preview/wasm-module-loader.mjs`가 페이지 수명과 실패 재시도를 소유합니다. 앱은 배열 버퍼 읽기·엔진 준비 후에도 현재 파일 선택 세대인지 확인합니다. 상태는 실행 엔진 준비와 문서 해석을 구분합니다. Worker는 잘못된 모듈 객체를 거부합니다.
