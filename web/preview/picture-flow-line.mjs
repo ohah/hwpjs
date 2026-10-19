@@ -13,7 +13,7 @@ export function pictureFlowLine(text, unit, line, pictures, measure, paragraphSh
     const textHeight = result.fragments.reduce((value, fragment) => Math.max(value, fragment.textHeight), text.length > 0 && unit === text.length ? Math.max(20, textMeasurement(measure("", unit)).height) : 20);
     const required = Math.max(height, paragraphLineAdvance(paragraphShape, textHeight, Math.max(line.height, textHeight + TEXT_TOP)));
     if (!Number.isFinite(required) || required <= 0) return { state: "invalid_line_height" };
-    if (required === height) return { state: "available", regions: regions.regions, nextY: regions.nextY, ...result, height };
+    if (required === height) return { state: "available", regions: regions.regions, nextY: regions.nextY, ...result, height, textHeight };
     height = required;
   }
   return { state: "unstable_line_height" };

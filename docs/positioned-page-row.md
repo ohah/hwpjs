@@ -1,5 +1,7 @@
 # 페이지 위치 확정 후 본문 행 조각
 
+[마지막 개행 삽입 행](terminal-picture-row.md)은 개행 끝의 빈 행과 원문 coverage 계약을 소유합니다.
+
 `paginateBodyRows`의 선택적 `measurePositionedRow(source,row,context)`는 현재 페이지·단·세로 위치에서 다시 측정합니다. `rowY`가 위치를 옮긴 뒤 호출하며, 새 페이지로 넘치면 그 페이지의 기준으로 다시 호출합니다. 기존 `measureRow`와 역할을 섞지 않고 옵션이 없을 때 기존 측정을 유지합니다.
 
 SQUARE 그림의 양쪽 영역처럼 한 논리적 줄을 여러 표시 행으로 그려야 할 때 결과의 `positionedFragments`로 조각을 반환합니다. `positioned-row-fragments.mjs`는 원문 구간의 연속성과 grapheme/UTF-16 경계·모든 caret 경계·동일 소속·수치/너비/행 높이·실제 행 예산을 확인합니다. 표 식별자/배치 제어를 조각에 복제하거나 이미 배치된 페이지 좌표를 재사용할 수 없습니다. glyph 경계의 너비 비교에는 기존 배치 계층과 같은1e-8 수치 허용 범위를 사용하지만 좌표를 수정하거나 clamp하지 않습니다.

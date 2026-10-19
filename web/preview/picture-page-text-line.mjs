@@ -1,6 +1,7 @@
 import { pictureFlowLine } from "./picture-flow-line.mjs";
 import { paragraphLineGeometry } from "./paragraph-geometry.mjs";
 import { displayRunText } from "./text-measurement.mjs";
+import { isHardLineBreak } from "./hard-line-break.mjs";
 
 // 기존 그림 영역/문자 분할을 페이지 소속과 현재 문단에 연결합니다.
 export function measurePicturePageTextLine(paragraph, startUnit, line, pageOrdinal, reservations, measure) {
@@ -14,8 +15,9 @@ export function measurePicturePageTextLine(paragraph, startUnit, line, pageOrdin
   const result = pictureFlowLine(paragraph.text, startUnit, { ...line, x: line.x + horizontal.x, width: horizontal.width }, reservations.filter(item => item.pageOrdinal === pageOrdinal),
     (text, unit) => measure(displayRunText(text, paragraph, unit, "text"), paragraph, unit, "text"), paragraph.paragraphShape);
   if (result.state !== "available") return result;
-  const fragments = !paragraph.text.length && result.regions.some(region => region.width > 0)
-    ? [{ ...result.regions.find(region => region.width > 0), text: "", startUnit: 0, endUnit: 0, boundaries: [{ unit: 0, x: 0 }], textHeight: 20 }]
+  const terminal = startUnit === paragraph.text.length && (!paragraph.text.length || isHardLineBreak(paragraph.text.slice(-1)));
+  const fragments = terminal && result.regions.some(region => region.width > 0)
+    ? [{ ...result.regions.find(region => region.width > 0), text: "", startUnit, endUnit: startUnit, boundaries: [{ unit: startUnit, x: 0 }], textHeight: result.textHeight }]
     : result.fragments;
   return { ...result, rows: fragments.map(fragment => {
     const measuredWidth = fragment.boundaries.at(-1).x;

@@ -1,4 +1,5 @@
 // 화면 순서가 아닌 현재 UTF-16 범위로 전체 문단 텍스트 보존을 검사합니다.
+import { isHardLineBreak } from "./hard-line-break.mjs";
 export function pageParagraphCoverage(paragraphs, rows) {
   const unavailable = () => ({ state: "unavailable", error: "IncompletePageParagraphCoverage" });
   const boundary = (text, unit) => !(text.charCodeAt(unit - 1) >= 0xd800 && text.charCodeAt(unit - 1) <= 0xdbff
@@ -25,9 +26,13 @@ export function pageParagraphCoverage(paragraphs, rows) {
   for (const [key, owner] of owners) {
     const group = groups.get(key);
     if (!group?.length || owner.text.length === 0 && group.length !== 1) return unavailable();
-    let end = 0;
+    let end = 0, terminal = false;
     for (const row of group.toSorted((a, b) => a.startUnit - b.startUnit)) {
-      if (row.startUnit !== end || row.endUnit === end && owner.text.length !== 0) return unavailable();
+      if (row.startUnit !== end) return unavailable();
+      if (row.endUnit === end && owner.text.length !== 0) {
+        if (terminal || end !== owner.text.length || !isHardLineBreak(owner.text.slice(-1))) return unavailable();
+        terminal = true;
+      }
       end = row.endUnit;
     }
     if (end !== owner.text.length) return unavailable();

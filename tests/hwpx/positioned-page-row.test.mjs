@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { paginateBodyRows } from "../../web/preview/page-row-flow.mjs";
 import { positionedRowFragments } from "../../web/preview/positioned-row-fragments.mjs";
+import { pageParagraphCoverage } from "../../web/preview/page-paragraph-coverage.mjs";
 
 const setting = { width: 15000, height: 7500, orientation: "widely", gutter_type: "left_only", duplicate_margins: 0,
   margin: { left: 0, right: 0, top: 0, bottom: 0, gutter: 0, header: 0, footer: 0 } };
@@ -15,14 +16,13 @@ function fragment(start, end, paragraphX) {
 
 test("positioned row callback sees final page coordinates and advances a fragmented line only once", () => {
   const before = structuredClone({ setting, flow, source });
-  const rows = [source, { ...source, startUnit: 4, endUnit: 4 }];
+  const rows = [source, { kind: "gap", section: 0, paragraph: 0, height: 20 }];
   const contexts = [];
   const result = paginateBodyRows(rows, setting, [flow], {
     rowY: (_row, context) => context.y + 5,
     measurePositionedRow(item, row, context) {
       contexts.push({ ...context });
-      return item.startUnit === 0 ? { ...row, endUnit: 4, positionedFragments: [fragment(0, 1, 0), fragment(1, 4, 80)] }
-        : { ...row, endUnit: 4, text: "", width: 200 };
+      return item.kind === "text" ? { ...row, endUnit: 4, positionedFragments: [fragment(0, 1, 0), fragment(1, 4, 80)] } : row;
     },
   });
   assert.equal(result.state, "paginated", result.error);
@@ -32,6 +32,7 @@ test("positioned row callback sees final page coordinates and advances a fragmen
   assert.equal(result.spatialRows, true);
   assert.deepEqual(contexts.map(c => c.y), [25, 50]);
   assert.equal(result.rows.slice(0, 2).map(row => row.text).join(""), paragraph.text);
+  assert.equal(pageParagraphCoverage([paragraph], result.rows).state, "complete");
   assert.ok(result.rows.every(row => row.positionedFragments === undefined));
   assert.deepEqual({ setting, flow, source }, before);
 });
