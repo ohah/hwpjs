@@ -1,5 +1,7 @@
 # 도형의 위아래 본문 예약
 
+[도형 내부 그림 소속](drawing-picture-scope.md)은 내부 인라인 그림을 본문 그림과 분리하는 계약과 후속 실제 참조 조사 결과를 소유합니다.
+
 ## 책임
 
 `drawing-page-reference.mjs`는 현재 UTF-16 앵커와 완전한 문단 행을 확인해 기준 영역을 선택합니다. 실제 도형 projection과 예약이 같은 함수를 사용합니다. 문단 기준 TOP_AND_BOTTOM·상단 정렬에서는 `flowAnchorY`를 사용해 예약 때문에 이동한 행을 다시 도형의 시작점으로 삼지 않습니다. 좌표 산술은 기존 `placeFloatingDrawing`을 재사용합니다.

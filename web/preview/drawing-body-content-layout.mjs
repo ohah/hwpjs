@@ -13,6 +13,8 @@ import { drawingScaledGeometry } from "./drawing-scaled-geometry.mjs";
 import { pageParagraphCoverage } from "./page-paragraph-coverage.mjs";
 import { objectOnlyTableHostKeys } from "./object-only-table-hosts.mjs";
 import { projectRootPicturePage } from "./root-picture-page-projection.mjs";
+import { drawingPictureScope } from "./drawing-picture-scope.mjs";
+import { pictureTextMeasure } from "./picture-text-measurement.mjs";
 
 // 본문 페이지 계산은 기존 경로에 위임하고 도형 내부 목록은 별도로 조판합니다.
 export function layoutDrawingBodyContent(content, measure, maxRows, layoutBody) {
@@ -40,6 +42,9 @@ export function layoutDrawingBodyContent(content, measure, maxRows, layoutBody) 
     if ((!root.grouped && (!(drawingAxisGeometry(source) || drawingRotatedGeometry(source) || drawingScaledGeometry(source)) || fill.state !== "none" && !drawingAxisGeometry(source))) || source.paint?.shadow_type !== 0 || placementSource.flow?.text_wrap !== 3 || placementSource.position?.flags?.[1] !== false || placementSource.position?.flags?.[2] !== true) return unavailable("UnsupportedDrawingPagePolicy");
   }
   const bodyParagraphs = content.paragraphs.filter(p => !p.drawingText && !p.drawingCaption);
+  const pictureScope = drawingPictureScope(content, bodyParagraphs);
+  if (pictureScope.state !== "scoped") return pictureScope;
+  const localMeasure = pictureTextMeasure(pictureScope.inlineIndex, [], measure);
   const pictureIds = new Set((content.pictures ?? []).filter(p => p.owner.anchorNode === p.pictureNode).map(p => `${p.section}:${p.pictureNode}`));
   if (pictureIds.size !== (content.pictures ?? []).filter(p => p.owner.anchorNode === p.pictureNode).length) return unavailable("AmbiguousDrawingPageContent");
   if ([...pictureIds].some(key => ids.has(key))) return unavailable("AmbiguousDrawingPageContent");
@@ -53,8 +58,9 @@ export function layoutDrawingBodyContent(content, measure, maxRows, layoutBody) 
   if (body.limited) return unavailable("DrawingPageLayoutLimit");
   const pictureRows = [], flowPictures = [];
   for (const picture of content.pictures ?? []) {
+    if (pictureScope.localIds.has(`${picture.section}:${picture.pictureNode}`)) continue;
     if (picture.owner.anchorNode === picture.pictureNode) {
-      const placed = projectRootPicturePage(picture, content.paragraphs, body.rows, measure, { maxRows: maxRows - body.rows.length - pictureRows.length });
+      const placed = projectRootPicturePage(picture, content.paragraphs, body.rows, localMeasure, { maxRows: maxRows - body.rows.length - pictureRows.length });
       if (placed.state !== "placed") return placed;
       pictureRows.push(...placed.rows);
       flowPictures.push({ section: picture.section, pictureNode: picture.pictureNode, paragraph: picture.paragraph,
@@ -74,7 +80,7 @@ export function layoutDrawingBodyContent(content, measure, maxRows, layoutBody) 
     const root = roots.get(drawing);
     // 미리보기 정책: 그룹도 저장된 도형 크기를 바꾸지 않고 넘친 텍스트를 표시합니다.
     const overflow = root.source.geometry?.treat_as_character === false ? "extend-last-column" : "reject";
-    const result = projectDrawingTextPage(drawing, content.containers, content.paragraphs, columns.declaration, body.rows, measure, { ...drawingPagePlacementOptions, maxRows: remaining, overflow });
+    const result = projectDrawingTextPage(drawing, content.containers, content.paragraphs, columns.declaration, body.rows, localMeasure, { ...drawingPagePlacementOptions, maxRows: remaining, overflow });
     if (result.state !== "placed") return result;
     rows.push(...result.rows.map(row => result.overflowed === true ? { ...row, drawingTextOverflow: "extend-last-column" } : row));
     placedDrawings.push({ section: drawing.section, drawingNode: drawing.drawingNode, hostParagraph: drawing.hostParagraph, anchorUnit: drawing.anchorUnit, rectangle: result.rectangle, pageOrdinal: result.pageOrdinal, fill: drawingFillPlan(content, drawing) });
