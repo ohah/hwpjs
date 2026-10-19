@@ -1,5 +1,13 @@
 # unknownObj 후보의 공개 API 회귀
 
+## 최신 후보의 전체 참조 입력·이력 감사 — 실행 중
+
+같은 e9aa1141 분리 사본 `/tmp/hwpjs-main-hwp5-gate.qzuKq7`·9e75 후보에서 전체 참조975경로의 signature별 HWP5/HWPX 입력 감사를 시작했습니다. 격리 실행기 `run-current-reference-edit.mjs`는 시작에7,214개 Git blob을 정확한 e9aa1141 tree와 대조하고975개 원본 경로/해시 manifest를 출력합니다. 끝에 소스·전체 원본·WASM을 다시 대조합니다. `run-reference-edit-files.mjs`는 게시된 개별 HWP5/일반 HWPX/전용 HWPX 감사만 순차 호출하며 이력·독립 저장 검증을 유지합니다. 파일별 결과·거부와 전체 종료를 분리하고 시간 경과를 이유로 재시작하지 않습니다. HWP3는 범위 제외이며 전체 prefix 검사가 모든 명령/위치/브라우저/조판 지원을 뜻하지 않습니다.
+
+최초 `current-full-reference-edit.jsonl/.stderr`는 미추적 집계 도구가 게시 사본에 없어 MODULE_NOT_FOUND·exit1로 문서 검사 전에 종료했습니다. 소스/원본 최종 불변은 통과했지만 제품/문서 검사 성공이 아닙니다. 해당 사용자 미추적 도구를 채택하지 않고 별도 scratch 실행기로 연결한 `current-full-reference-edit-retry.jsonl/.stderr`를 새 실행 기록으로 사용합니다. 최초 재실행 부모25106/집계25134를 관찰했고 첫 HWP5 원본의121/121입력·이력·비대상 stream·저장 재열기가 완료됐습니다. 전체 최종 집계 전에는975개 성공으로 보고하지 않습니다.
+
+실행기 SHA256은 각각 `4f3636e40145c05555e84f5845ff39b48af02cc0c30414b86c35d90fe1dd60ab`, `655c1e271d59811857e1b1f6be831b8cc6e10460540d22681fdf720e56691d5d`입니다. 제품 Git 경로/기존 기본 WASM/외부 서버는 변경하지 않으며 로그와 실행기는 해당 격리 경로에 보존합니다.
+
 ## 게시 e9aa1141의 HWP5 공개 등록 회귀 — 완료
 
 게시 `e9aa1141a55c4c8879e9aa47e62bcc992e22520a`·tree `04169bfb83de0635b15c6dc5d2a238c170f06fdb`를 `/tmp/hwpjs-main-hwp5-gate.qzuKq7`에 분리했습니다. 완료한 HWPX 사본의 APFS clone에 두 커밋 간 변경 경로만 Git archive로 반영하고 추적7,214개 blob 전체를 새 HEAD와 대조했습니다. 새 Git index에도 해당 blob 경로만 등록했습니다. 참조/기준/후보를 원래 작업 트리와 섞지 않으며 후보9e75·기준cbaa의 전체 해시는 아래와 같습니다.
