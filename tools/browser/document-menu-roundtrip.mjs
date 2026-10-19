@@ -11,6 +11,7 @@ import {executeOracle} from "../oracle-process-async.mjs";
 import {clickBrowserTarget} from "./click-target.mjs";
 import {moveBrowserInputToStart} from "./input-origin.mjs";
 import {closeOwnedBrowser} from "./session-close.mjs";
+import {numericBrowserTargetMatches} from "./numeric-target.mjs";
 import {writeAuditRow} from "../audit-jsonl-output.mjs";
 import {documentMenuBrowserCases} from "./document-menu-cases.mjs";
 import {openBrowserRibbonPage,exerciseBrowserRibbonPages} from "./ribbon-page.mjs";
@@ -31,9 +32,11 @@ export async function runDocumentMenuBrowserAudit(caseName) {
   const hash = bytes => createHash("sha256").update(bytes).digest("hex");
   const sourcePaths = ["web/preview/index.html","web/preview/preview.css","web/preview/app.mjs","web/preview/document-menu-controls.mjs","web/preview/document-menu-mnemonic.mjs","web/preview/document-ribbon-controls.mjs","web/preview/document-ribbon-pages.mjs","web/preview/fixture-controls.mjs","web/preview/fixture-catalog.mjs","web/preview/fixture-inventory.mjs","tools/browser/ribbon-page.mjs","tools/document-menu-browser-audit.mjs","tools/unknown-object-browser-audit.mjs","tools/browser/document-menu-roundtrip.mjs","tools/browser/document-menu-cases.mjs","tools/hwpx-anchor-prefix-oracle.py",...(oraclePath==="tools/hwpx-anchor-prefix-oracle.py"?[]:[oraclePath])];
   if(config.entryPath)sourcePaths.push(config.entryPath);
+  sourcePaths.push(...(config.oracleDependencies??[]));
   sourcePaths.push("web/preview/document-menu-keyboard.mjs");
   sourcePaths.push("web/preview/document-menu-disclosures.mjs");
   sourcePaths.push("tools/browser/audit-origin.mjs");
+  sourcePaths.push("tools/browser/numeric-target.mjs");
   const sourceHashes = () => Object.fromEntries(sourcePaths.map(path=>[path,hash(readFileSync(resolve(path)))]));
   const sourceSha256 = sourceHashes();
   const session = cli("agent-browser", ["session","id","--scope","worktree","--prefix",config.sessionPrefix], {cwd:root,encoding:"utf8",timeout:10000}).trim();
@@ -56,6 +59,7 @@ export async function runDocumentMenuBrowserAudit(caseName) {
   };
   const driver = {command,evaluate}, click = selector => clickBrowserTarget(driver,selector);
   const wait = expression => command("wait","--fn",expression);
+  const numericTarget = text => numericBrowserTargetMatches(evaluate('({value:document.querySelector("#canvas-input").value,caret:document.querySelector("#canvas").dataset.caret})'),{section:0,paragraph:paragraph-1,text});
   const popup = button => `.document-menu details:has(#${button})`;
   const menuKey = (button,key) => {
     click(`${popup(button)} > summary`);
@@ -63,7 +67,7 @@ export async function runDocumentMenuBrowserAudit(caseName) {
     command("press",key);
   };
   const replies = kind => `window.__menuAudit.filter(r=>r.direction==='reply'&&r.kind===${JSON.stringify(kind)}&&!r.error)`;
-  let server, owned = false, closed = false, verified = false, phase = "preflight";
+  let server, owned = false, closed = false, verified = false, phase = "preflight", reopenedTarget = null;
   const progress = name => {phase=name;writeAuditRow({kind:"menu-browser-phase",caseName,phase,session,output});};
   try {
     assert.equal(command("session","info").active,false,"RefuseActiveSession");
@@ -171,6 +175,10 @@ export async function runDocumentMenuBrowserAudit(caseName) {
     click("#document-window-options > summary");command("fill","#document-window-start",String(paragraph));command("fill","#document-window-count","1");click("#document-window-apply");
     wait(`${replies("set-edit-window")}.length===1`);
     click("details:has(#find-input) > summary");command("fill","#find-input",original);click('#find-form button[type="submit"]');
+    if(config.replaceWhole){
+      for(let attempt=0;attempt<50&&!numericTarget(original);attempt++)click('#find-form button[type="submit"]');
+      assert(numericTarget(original),"OriginalNumericCellNotFoundAtSource");
+    }
     if(protectedAnchors){
       wait('!document.querySelector("#canvas-input").disabled&&document.querySelector("#canvas-input").value==='+JSON.stringify(original));
       command("focus","#canvas-input");command("press",evaluate('navigator.platform.includes("Mac")')?"Meta+ArrowUp":"Control+Home");
@@ -211,8 +219,8 @@ export async function runDocumentMenuBrowserAudit(caseName) {
     for(const flags of [[],["-O"]]){
       const oracleResult=await executeOracle("python3",[...flags,oraclePath],{input:JSON.stringify(request),timeout:30000});
       if(config.expectedAffected)assert.deepEqual(JSON.parse(oracleResult).affected,config.expectedAffected);
-      const negative=oracleMode==="manual-result"?{...request,display:"wrong"}:oracleMode==="numeric-input"?{...request,paragraph:paragraph+1}:{...request,text:"wrong"};
-      await assert.rejects(executeOracle("python3",[...flags,["manual-result","numeric-input"].includes(oracleMode)?oraclePath:"tools/hwpx-anchor-prefix-oracle.py"],{input:JSON.stringify(negative),timeout:30000}),error=>error.status===1&&error.signal===null&&/complete XML mismatch|Complete XML differs|Complete (?:numeric input|merged SUM|cascaded SUM) XML mismatch/.test(String(error.stderr)));
+      const negative=oracleMode==="manual-result"?{...request,display:"wrong"}:oracleMode==="numeric-input"?{...request,paragraph:config.negativeParagraph??paragraph+1}:{...request,text:"wrong"};
+      await assert.rejects(executeOracle("python3",[...flags,["manual-result","numeric-input"].includes(oracleMode)?oraclePath:"tools/hwpx-anchor-prefix-oracle.py"],{input:JSON.stringify(negative),timeout:30000}),error=>error.status===1&&error.signal===null&&/complete XML mismatch|Complete XML differs|Complete (?:numeric input|merged SUM|cascaded SUM|BELOW SUM) XML mismatch/.test(String(error.stderr)));
     }
     evaluate("window.__menuAudit=[]");command("upload","#file",downloaded);wait(`${replies("load")}.length===1`);
     click("#enable-edit");wait(`${replies("enable")}.some(r=>r.revision===0)`);
@@ -223,9 +231,12 @@ export async function runDocumentMenuBrowserAudit(caseName) {
       wait(`${replies("set-edit-window")}.length===1`);
     }
     command("fill","#find-input",marker);click('#find-form button[type="submit"]');
-    // A numeric query can match other cells retained with the table owner.
-    if(config.replaceWhole)for(let attempt=0;attempt<50&&evaluate('document.querySelector("#canvas-input").value')!==editedText;attempt++)click('#find-form button[type="submit"]');
-    if(config.replaceWhole)assert.equal(evaluate('document.querySelector("#canvas-input").value'),editedText,"ReopenedNumericCellNotFound");
+    // Identical pre-existing numbers in retained owner cells are not the edited source.
+    if(config.replaceWhole)for(let attempt=0;attempt<50&&!numericTarget(editedText);attempt++)click('#find-form button[type="submit"]');
+    if(config.replaceWhole){
+      assert(numericTarget(editedText),"ReopenedNumericCellNotFoundAtSource");
+      reopenedTarget={section:0,paragraph,canvasCaret:evaluate('document.querySelector("#canvas").dataset.caret')};
+    }
     wait('document.querySelector("#canvas-input").value==='+JSON.stringify(editedText));
     openBrowserRibbonPage(driver,"view");
     const keys=evaluate("window.__menuKeys");
@@ -234,7 +245,7 @@ export async function runDocumentMenuBrowserAudit(caseName) {
     assert.deepEqual(readFileSync(fixture),input);assert.deepEqual(readFileSync(wasmPath),wasm);assert.deepEqual(sourceHashes(),sourceSha256);
     if(externalOrigin!==null)await verifyBrowserSourceResponses(origin,sourceSha256);
     verified=true;
-    writeAuditRow({kind:"menu-browser-result",caseName,verified,session,output,origin,sourceSha256,wasmSha256:hash(wasm),inputSha256:hash(input),savedSha256:hash(saved),scope:config.scope});
+    writeAuditRow({kind:"menu-browser-result",caseName,verified,session,output,origin,sourceSha256,wasmSha256:hash(wasm),inputSha256:hash(input),savedSha256:hash(saved),reopenedTarget,scope:config.scope});
   }catch(error){
     writeAuditRow({kind:"menu-browser-failure",caseName,phase,error:error.message});throw error;
   }finally{

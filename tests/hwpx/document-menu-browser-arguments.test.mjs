@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {spawnSync} from "node:child_process";
+import {readFileSync} from "node:fs";
 import {documentMenuBrowserCases} from "../../tools/browser/document-menu-cases.mjs";
 import {demoFixtures,fixtureUrl} from "../../web/preview/fixture-catalog.mjs";
 import {parseBrowserAuditOrigin,verifyBrowserSourceResponses} from "../../tools/browser/audit-origin.mjs";
@@ -28,7 +29,7 @@ test("remote browser source witnesses reject wrong bytes and HTTP status without
   await assert.rejects(verifyBrowserSourceResponses("https://example.test",hashes,async()=>new Response(null,{status:404})),/BrowserRemoteSourceUnavailable/);
 });
 
-for(const name of ["plain","numeric-input","manual-result","cascaded-sum-input"])test(`${name} menu roundtrip exercises the real fixture picker with one exact public source`,()=>{
+for(const name of ["plain","numeric-input","manual-result","cascaded-sum-input","below-sum-input"])test(`${name} menu roundtrip exercises the real fixture picker with one exact public source`,()=>{
   const selected=documentMenuBrowserCases[name];
   assert.equal(selected.fixturePicker,true);
   const entries=demoFixtures.filter(item=>item.path===selected.fixturePath);
@@ -53,7 +54,7 @@ test("menu browser audit rejects partial-scope arguments before reading a candid
   assert.equal(result.stdout,"");assert.match(result.stderr,/UnexpectedBrowserAuditArguments/);assert.doesNotMatch(result.stderr,/ENOENT/);
 });
 
-for(const tool of ["unknown-object","manual-result","numeric-input","merged-sum-input","cascaded-sum-input"])for(const [args,env,pattern] of [
+for(const tool of ["unknown-object","manual-result","numeric-input","merged-sum-input","cascaded-sum-input","below-sum-input"])for(const [args,env,pattern] of [
   [[],{HWPJS_TEST_WASM:""},/ExplicitBrowserCandidateRequired/],
   [["--skip-history"],{HWPJS_TEST_WASM:"/nonexistent-menu-audit.wasm"},/UnexpectedBrowserAuditArguments/],
 ])test(`${tool} browser refuses invalid inputs before starting external processes: ${pattern}`,()=>{
@@ -73,4 +74,16 @@ test("shared browser flow refuses unknown and prototype case names before any ar
     assert.equal(result.error,undefined);assert.equal(result.signal,null);assert.equal(result.status,1);
     assert.equal(result.stdout,"");assert.match(result.stderr,/UnknownDocumentMenuBrowserCase/);
   }
+});
+
+test("numeric SUM browser witnesses include shared independent oracle dependencies and a valid wrong target",()=>{
+  for(const name of ["below-sum-input","cascaded-sum-input","merged-sum-input"]){
+    const dependencies=documentMenuBrowserCases[name].oracleDependencies;
+    assert.equal(new Set(dependencies).size,dependencies.length);
+    assert(dependencies.includes("tools/hwpx_numeric_package.py"));
+    assert(dependencies.includes("tools/hwpx_text_snapshot_order.py"));
+    for(const path of dependencies)assert(readFileSync(path).length>0);
+  }
+  assert.equal(documentMenuBrowserCases["below-sum-input"].negativeParagraph,95);
+  assert.deepEqual(documentMenuBrowserCases["below-sum-input"].expectedAffected,[0]);
 });

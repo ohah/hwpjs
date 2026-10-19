@@ -26,6 +26,7 @@ test("nested table dutmal and formula reference examples are explicit catalog en
     ["training-dutmal.hwpx", "reference/rhwp/samples/hwpx/opengov/36389301_결재문서본문_직장훈련계획_덧말.hwpx"],
     ["numeric-formula-reference.hwpx", "reference/rhwp/samples/hwpx/143E433F503322BD33.hwpx"],
     ["cascaded-formula-reference.hwpx", "reference/rhwp/samples/issue5543_carried_anchor_ladder.hwpx"],
+    ["below-formula-reference.hwpx", "reference/rhwp/samples/issue6298/copay_cap_tac_table_leading.hwpx"],
   ]) {
     const matches = demoFixtures.filter(fixture => fixture.id === id);
     assert.equal(matches.length, 1);

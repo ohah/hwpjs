@@ -1,10 +1,26 @@
 // Document identities and expected witnesses; interaction policy lives in the shared flow.
+const numericSumOracleDependencies=Object.freeze([
+  "tools/hwpx_numeric_package.py","tools/hwpx-chart-numeric-input-oracle.py",
+  "tools/hwpx-formula-fixture-oracle.py","tools/hwpx-manual-result-save-oracle.py",
+  "tools/hwpx_text_snapshot_order.py",
+]);
 export const documentMenuBrowserCases=Object.freeze({
+  "below-sum-input":Object.freeze({
+    fixturePicker:true,
+    fixturePath:"reference/rhwp/samples/issue6298/copay_cap_tac_table_leading.hwpx",paragraph:89,
+    original:"30.1",marker:"1",replaceWhole:true,protectedAnchors:0,
+    oraclePath:"tools/hwpx-below-sum-input-oracle.py",oracleMode:"numeric-input",
+    oracleDependencies:numericSumOracleDependencies,negativeParagraph:95,
+    expectedAffected:Object.freeze([0]),entryPath:"tools/below-sum-input-browser-audit.mjs",
+    port:58869,sessionPrefix:"hwpjs-below-sum-input",outputPrefix:"hwpjs-below-sum-browser-",
+    scope:"one actual BELOW numeric cell: trusted Canvas replacement, manual display recalculation, literal suffix preservation, menu U/R/S, independent full XML/ZIP, download and reupload; not all fifty inputs or layout equivalence",
+  }),
   "cascaded-sum-input":Object.freeze({
     fixturePicker:true,
     fixturePath:"reference/rhwp/samples/issue5543_carried_anchor_ladder.hwpx",paragraph:109,
     original:"177",marker:"1",replaceWhole:true,protectedAnchors:0,
     oraclePath:"tools/hwpx-cascaded-sum-input-oracle.py",oracleMode:"numeric-input",
+    oracleDependencies:numericSumOracleDependencies,
     expectedAffected:Object.freeze([0,1]),entryPath:"tools/cascaded-sum-input-browser-audit.mjs",
     port:58868,sessionPrefix:"hwpjs-cascaded-sum-input",outputPrefix:"hwpjs-cascaded-sum-browser-",
     scope:"one actual ladder numeric cell: trusted Canvas replacement, direct and downstream SUM, menu U/R/S, independent full XML/ZIP, download and reupload; not all twenty-eight inputs or layout equivalence",
@@ -13,6 +29,7 @@ export const documentMenuBrowserCases=Object.freeze({
     fixturePath:"reference/rhwp/samples/issue1891_external_bindata_link.hwpx",paragraph:2715,
     original:"67.83",marker:"1",replaceWhole:true,protectedAnchors:0,
     oraclePath:"tools/hwpx-merged-sum-input-oracle.py",oracleMode:"numeric-input",
+    oracleDependencies:numericSumOracleDependencies,
     entryPath:"tools/merged-sum-input-browser-audit.mjs",
     port:58867,sessionPrefix:"hwpjs-merged-sum-input",outputPrefix:"hwpjs-merged-sum-browser-",
     scope:"one actual numeric cell in a merged-description SUM table: trusted Canvas replacement, menu U/R/S, independent full XML/ZIP, download and reupload; not all fifteen inputs or layout equivalence",
