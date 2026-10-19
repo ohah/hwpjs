@@ -183,6 +183,7 @@ onCancel: () => { generation++; pictureRequests.reset(); worker?.terminate(); wo
 });
 for (const event of ["input", "compositionstart", "compositionend"]) document.querySelector("#canvas-input").addEventListener(event, updateSave);
 async function openSelectedFile(selected, { availableSectionsOnly = false, availableSectionCopy = false } = {}) {
+  if (!selected) return;
   const epoch = ++generation;
   availableSectionsControls.reset();
   availableSectionCopyControls.reset();
