@@ -1,12 +1,18 @@
 # 현재 main 소스의 전체 native 실행
 
-## 52개 수정 뒤의 새 전체 재검사 사본 — 실행 중
+## 52개 수정 뒤의 새 전체 재검사 결과
 
 게시 `6f4fe0ea3315d316c6896587db2c4f0ead5bfc59`·tree `5c51feac1fa3e5b8dde0723ad4d4f4d9ef3761d2`를 `/tmp/hwpjs-native-postfix-main.33GojG`에 새로 추출했습니다. 추적 blob7,194개를 원래 Git blob 해시와 전수 대조해 일치했습니다. legacy/hwpers gitlink1개는 커밋 식별자만 추적되며 하위 저장소 내용은 archive/검사 대상에 없습니다. 최초 blob 전수 스크립트가 이 gitlink를 일반 파일로 취급해 UnexpectedTreeEntry로 종료한 뒤, gitlink를 명시적으로 구분한 재검사로 위 분모를 확인했습니다. 제품/테스트 소스를 맞추기 위해 무관한 사용자 변경을 가져오지 않았습니다.
 
 guardian overlay는 앞선 고정 실행에서 사용한 정확한 세 파일만 복사했고 참조 samples도 별도로 복사했습니다. 새 `zig test src/root.zig -O ReleaseSafe --test-no-exec -femit-bin=.../native-safe`는 nice10·Zig0.17.0으로 exit0·stdout/stderr0입니다(`native-safe-build.log/.stderr`). 새 바이너리 SHA256은 `b8e2e062b150ea2d93401b3a2d34d3b43c287bb98d6ac290facee4ee415c8f4a`입니다.
 
 `native-guard-full.jsonl/.stderr`에서 이 해시를 고정하고 inventory4,118개·범위0..4118·fullInventoryCovered=true·batch1·seed0x485750·4,096MiB 감시로 실제 실행을 시작했습니다. 문자 속성 shard 환경변수는 둘 다 제거했고 앞선 skip 조건을 성공으로 바꾸지 않습니다. build test의 별도 controlled text 대상도 같은 사본에서 `zig test -O ReleaseSafe --dep hwpjs -Mroot=tests/hwp5/style-preservation/text.test.zig -O ReleaseSafe -Mhwpjs=src/root.zig --test-filter 'text splice'`로 실행해9/9·fail/skip0·exit0으로 완료했습니다(`controlled-text-safe.log/.stderr`, stdout0·stderr에는 정상 OK 진행/요약만 기록). root의 진행/완료를 이 별도 대상의 통과로 계수하지 않습니다. 각 최종 종료가 필요하며, 이전52개 수정의 집중 결과와 새 전체 결과를 합산하지 않고 기본 WASM/데모는 유지합니다.
+
+최종 `native-guard-full.jsonl/.stderr`는4,118개 전부 종료했고 pass4,117/fail0/skip1·logErrors0/leaks0입니다. 원래52개 실제 실패의 전체 이름을 이번 결과와 대조해 모두 status0임을 확인했습니다. index0..4118과 이름 집합에 누락/중복이 없고 종료 후 추적7,194개 blob·위 바이너리 해시·guardian overlay 세 파일의 해시가 그대로임을 확인했습니다. 로그 SHA256은 `c3f3ef91ca3af0dca637e959df316e8006966fd3d2a39f2f04c1c5290643a436`입니다. 부모/runner 종료도 확인했습니다.
+
+resource guard는 code1/signal=null/guardStopped=false·최대 physical1,552,582,168바이트·한도4,294,967,296바이트입니다. code1과 summary.success=false는 skip1을 포함한 실제 결과로 보존하며 무건너뜀 전체 성공으로 바꾸지 않습니다. peak는 샘플 관측이며 OS 강제 한도나 단일 장기 프로세스/fuzz campaign 검증이 아닙니다.
+
+skip은 index3449 `HWPX character property transaction allocation failure shard on mixed runs` 하나이며 두 범위 환경변수를 제거한 실행의 명시적 선택형 진단입니다. 같은 바이너리의 `HWPJS_CHARACTER_FAILURE_START=0/HWPJS_CHARACTER_FAILURE_END=1`·범위3449..3450 별도 `character-shard-point0.jsonl/.stderr`는1/1·fail/skip/logErrors/leaks0·exit0·guardStopped=false입니다. 첫 주입 지점의 OOM rollback만 확인했고 success endpoint/전체 실패 지점 sweep은 아닙니다. 최초 전체 실행의 skip을 이 결과로 소급 통과 처리하거나4,118/4,118 단일 실행으로 합산하지 않습니다. 짧은 별도 실행의 최대 physical0 기록도 실제 메모리 사용0이라는 뜻이 아닙니다.
 
 ## 단 소속·분할·원본 inventory의 마지막 여섯 실패
 
