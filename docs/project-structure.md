@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+[HWPX 차트 API facade](hwpx-chart-api-facade.md)는 편집기 수명·공유 메모리와 차트 ABI 호출의 책임 분리를 소유합니다.
+
 [객체 원값·선두 쪽 번호 기반](hwpx-source-query-foundation.md)은 게시된 OLE source/현재 앵커 조회와 증명된 첫 구역 번호 metadata의 범위를 구분한다.
 
 [현재 원본 조회 보존 정책](current-source-query-policy.md)은 HWP5 source-tree SSOT·명시적 DocInfo 보존 세션·필드 소유 HWPX 선언 좌표의 공통 계약과 고정 검증을 소유합니다.
