@@ -115,7 +115,8 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     if (!extend && anchor.unit !== focus.unit && ["ArrowLeft", "ArrowRight"].includes(key)) {
       return navigateText(renderer.layout(), paragraph.text, anchor, focus, key);
     }
-    let next = navigateText(renderer.layout(), paragraph.text, anchor, focus, key, { extend: true, paragraphEdge, crossParagraph: true, preferredX, word });
+    const acceptRow = row => sameParagraph(row, focus) || Boolean(renderer.selectionRanges?.(anchor, { ...focus, section: row.section, paragraph: row.paragraph, unit: row.startUnit }));
+    let next = navigateText(renderer.layout(), paragraph.text, anchor, focus, key, { extend: true, paragraphEdge, crossParagraph: true, preferredX, word, acceptRow });
     if ((!paragraphEdge || word) && next?.focus.unit === focus.unit && ["ArrowLeft", "ArrowRight"].includes(key)) {
       const point = adjacentParagraphBoundary(renderer.layout(), focus, key);
       if (point) next = { anchor, focus: point };

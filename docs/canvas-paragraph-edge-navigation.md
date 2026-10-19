@@ -1,5 +1,15 @@
 # Canvas 문단 경계 단축키
 
+## 세로 이동의 소유권 후보 선택
+
+`text-navigation.mjs`의 선택적 `acceptRow`는 위치 계산에 소유권 정책을 주입합니다. Canvas는 기존 `renderer.selectionRanges`로 해당 anchor에서 후보 줄까지의 선택 가능 여부를 확인합니다. 다른 소유권의 줄을 최단 거리로 먼저 선택한 뒤 거부해 멈추지 않고, 허용되는 후보 중 가까운 줄을 선택합니다. 기존 구역·반복 페이지·변환 프레임 조건과 최종 선택 범위 검사도 유지합니다. 이미 허용한 줄보다 먼 후보에는 불필요한 소유권 조회를 하지 않습니다. 형식별 소유권 규칙이나 저장 모델을 이동 모듈에 복제하지 않습니다.
+
+실제 `table-bug.hwp`의 문단13/17/208에서 아래 방향의 첫 표시 후보11/16/219는 다른 소유권이지만 같은 소유권의 다음 문단14/18/209가 존재합니다. 수정 전 ↓는 원래 위치에 멈추는 실패를 `navigation-owner-before.log`로 재현했습니다. `canvas-navigation-ownership.test.mjs`는3원본 위치×일반/Shift6이동의 정확한 도착·선택 경계 유지·native 요청0·무편집 원본 저장을 검사합니다. 순수 위치 검사에서는 위/아래 양 방향·전부 거부·anchor 유지·입력 불변·불필요한 먼 줄 조회 부재를 확인합니다. Home은 여전히 표시 줄의 시작이며 문단 시작과 혼용하지 않습니다.
+
+중간 구현의 primary/분리 소스 회귀는 각각4파일272/272·실패/cancel/skip0·exit0·stderr0입니다. 로그는 `/tmp/hwpjs-table-canvas-publish.EhN4M1/navigation-owner-regression.log`와 `/tmp/hwpjs-navigation-publish.KsSYcz/clean-regression.log`입니다. 사용 WASM은 bacf 후보입니다. 최종 후보는 먼 줄 조회 최적화 이후 별도 재실행하며 중간 결과로 대체하지 않습니다. 실제 Worker/WASM·모사 DOM/Canvas의 증거이며 실제 브라우저/OS 키보드·모든 객체/조판 완료가 아닙니다.
+
+세로 소유권 최종 분리 소스도4파일272/272·실패/cancel/skip0·exit0·stderr0으로 종료했습니다. 근거는 `/tmp/hwpjs-navigation-publish.KsSYcz/clean-final-regression.log`이며 먼 후보 조회 최적화와 그 부정 기대를 포함합니다. primary의 무관한 기존 Canvas 변경은 이 분리 소스에 포함하지 않았습니다.
+
 ## 호스트가 처리한 키와 AltGraph 보호
 
 HWPX의 같은 보호는 `canvas-preview.test.mjs`에서 실제 parashape 원본→Worker/native→Canvas로 확인합니다. seed 편집/undo 뒤 8조합에서 선택·UI 요청0·저장 원본 바이트를 유지하고 redo가 seed 저장본을 복원해야 합니다. 정상 Ctrl+A의 선택은 별도로 허용합니다. cad92271에 이 회귀만 추가한 tree `4e5db694e60ac3387791d42b72f73d5fa93b6f30`의 `/tmp/hwpjs-hwpx-keys-clean.7z2qJU`에서 게시 afb7 후보·Node24.20.0으로 HWP5 Canvas/HWPX preview 두 파일213/213·fail/cancel/skip0·exit0·stderr0(22257ms)입니다. 추적 fixture 전수 읽기 검사를 위해 사본에 추출한 fixture만 임시 Git index에 등록했습니다. `key-tests.log/.stderr`가 근거입니다. 사본에서 보호 guard만 제거한 음성 대조는 consumed/a에서 선택1:2가0:4로 바뀌어 exit1(`negative-key-tests.log/.stderr`)이고, guard 복원 후 집중1/1·exit0입니다. 실제 OS/브라우저 E2E 또는 전체 fixture 편집 완료는 아닙니다.

@@ -15,7 +15,7 @@ export function adjacentParagraphBoundary(layout, focus, key) {
 }
 
 /** 기본 이동은 문단 내부다. 문단 간 후보의 소유권은 호출자가 검사한다. */
-export function navigateText(layout, text, anchor, focus, key, { extend = false, paragraphEdge = false, crossParagraph = false, preferredX = null, word = false } = {}) {
+export function navigateText(layout, text, anchor, focus, key, { extend = false, paragraphEdge = false, crossParagraph = false, preferredX = null, word = false, acceptRow = null } = {}) {
   if (!focus || !anchor || !["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(key)) return null;
   let unit = focus.unit, affinity = "forward", nextX = null;
   if (key === "ArrowLeft" || key === "ArrowRight") {
@@ -43,7 +43,7 @@ export function navigateText(layout, text, anchor, focus, key, { extend = false,
           Array.isArray(row.transform) && Array.isArray(candidate.transform) && row.transform.length === 6 && candidate.transform.length === 6 && row.transform.every((value, i) => value === candidate.transform[i]);
         return selectableText(candidate) && allowed && instance && sameFrame && delta > 0 ? [{ index, delta }] : [];
       });
-      const adjacent = candidates.reduce((best, candidate) => !best || candidate.delta < best.delta ? candidate : best, null);
+      const adjacent = candidates.reduce((best, candidate) => (!best || candidate.delta < best.delta) && (acceptRow === null || acceptRow(layout.rows[candidate.index])) ? candidate : best, null);
       const destination = adjacent && layout.rows[adjacent.index];
       const local = adjacent && [nextX, rowTop(destination, adjacent.index) + TEXT_TOP];
       const screen = local && (destination.transform === undefined ? local : affinePoint(destination.transform, local));

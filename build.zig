@@ -93,6 +93,7 @@ pub fn build(b: *std.Build) void {
     editor_api_tests.addArg("tests/hwp5/paragraph-break-layout.test.mjs");
     editor_api_tests.addArg("tests/hwp5/paragraph-break-column-editor.test.mjs");
     editor_api_tests.addArg("tests/hwp5/table-unknown-flags-canvas.test.mjs");
+    editor_api_tests.addArg("tests/hwp5/canvas-navigation-ownership.test.mjs");
     editor_api_tests.addArg("tests/hwp5/paragraph-break-followup.test.mjs");
     editor_api_tests.addArg("tests/hwp5/paragraph-break-owner-worker.test.mjs");
     editor_api_tests.addArg("tests/hwp5/paragraph-break-menu.test.mjs");
