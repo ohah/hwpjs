@@ -16,6 +16,12 @@ HWPX 짝 원본 `table-bug.hwpx`도 본문3↔72의 정확한 경계 이동과 S
 
 2026-10-19 분리 `/tmp/hwpjs-hwpx-nav-verification.Pfxh5x`의 같은4파일은275/275·실패/cancel/skip0·exit0·stderr0입니다. `clean-regression.log` SHA256은 `203f3a4af2daeb64e55f83cf4c506aa3399880e7691a1c8661ed674d8d6f785f`이고 bacf WASM을 명시했습니다. 실제 HWPX Worker/WASM과 모사 DOM/Canvas의 입력 경로 검증이며 앞선 실제 Chromium HWP5 왕복을 HWPX 브라우저 실행으로 바꾸거나 전체 fixture 조판 완료로 확대하지 않습니다.
 
+HWPX 실제 Chromium 후속 실행도 기본10000에서 완료했습니다. 데모 픽스쳐 선택기의 `table-bug.hwpx`를 다시 열고 load/enable 응답을 명시적으로 기다린 뒤 원문 찾기→72/unit0→3/unit2의 ← 이동·Shift+→ 거부·→로72/unit0 복귀를 확인했습니다. 신뢰된 키 이벤트이며 이동 중 Worker 요청0, 입력은72의 `[0,0)`에 `본문이동😀<&` splice1회입니다. 실제 undo는 원문/unit0, redo는 입력문/unit8을 복원했습니다.
+
+다운로드 `/tmp/hwpjs-hwpx-nav-verification.Pfxh5x/browser-hwpx-navigation.hwpx`의 SHA256은 `2a3bcb72a13253e8bdf6ffc47cb57f1a7afc3572da47dee4ac86e9f43b067642`입니다. 독립 prefix oracle normal/-O는 전체 XML/ZIP·원본 ordinal73을 검증하고 잘못된 ordinal74는 거부했습니다. 재업로드·활성화 응답 대기·찾기로72/unit8의 입력문을 확인하고 `browser-hwpx-reopened.png`를 직접 확인했습니다. 소유 세션 `hwpjs-hwpx-paragraph-nav-35c54947528a`는 close 후 inactive/pid=null입니다.
+
+실패 시도도 분리합니다. 최초 준비는 동적 app import 실패로 시간 초과됐으며 관측된 모듈 요청 하나는 응답 상태가 없었습니다. 이후 해당 파일의 브라우저/서버 HTTP200만으로 최초 네트워크 원인을 확정하지 않습니다. `browser-startup-failure.json`을 보존했고 새 페이지에서 준비 완료를 확인했습니다. 첫 활성화 직후 찾기/키 시도는 커서 부재·입력 요청0으로 왕복 실패이며 문단 누락으로 확정하지 않습니다. 동일 파일 경로 재선택에서 새 load가 관측되지 않아 이를 새 로드 성공으로 계수하지 않았고, 최종 검증은 데모 선택기로 명시적 load/enable 응답을 기다렸습니다. 이 결과도 한 원본 흐름의 UI 검증이지 모든 fixture·OS IME·원본 조판 완료가 아닙니다.
+
 ## 세로 이동의 소유권 후보 선택
 
 `text-navigation.mjs`의 선택적 `acceptRow`는 위치 계산에 소유권 정책을 주입합니다. Canvas는 기존 `renderer.selectionRanges`로 해당 anchor에서 후보 줄까지의 선택 가능 여부를 확인합니다. 다른 소유권의 줄을 최단 거리로 먼저 선택한 뒤 거부해 멈추지 않고, 허용되는 후보 중 가까운 줄을 선택합니다. 기존 구역·반복 페이지·변환 프레임 조건과 최종 선택 범위 검사도 유지합니다. 이미 허용한 줄보다 먼 후보에는 불필요한 소유권 조회를 하지 않습니다. 형식별 소유권 규칙이나 저장 모델을 이동 모듈에 복제하지 않습니다.
