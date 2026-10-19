@@ -56,7 +56,8 @@ export function layoutContent(content, width, measure, maxRows = 20000, { docume
       let numberPrefix = kind === "text" ? measureAutomaticNumberPrefix(p, firstUnit, measure) : null;
       // Document body height comes from each run, not the first run or a UI floor.
       // Empty/hard-break rows are measured explicitly below.
-      const initialHeight = kind === "text" && documentBody && usesDocumentFontMetrics(content.format) ? 0
+      const initialHeight = kind === "text" && documentBody && (usesDocumentFontMetrics(content.format)
+        || usesDocumentFontMetrics(p.paragraphShape?.spacingFormat)) ? 0
         : compactLines && kind === "text" ? textMeasurement(measure("", p, firstUnit, kind)).height : DEFAULT_TEXT_HEIGHT;
       let line = "", size = numberPrefix?.width ?? 0, textHeight = Math.max(initialHeight, numberPrefix?.height ?? 0), startUnit = firstUnit, boundaries = [{ unit: firstUnit, x: size }];
       const geometry = () => kind === "text" ? paragraphLineGeometry(p.paragraphShape, width, size, startUnit === 0) : { x: 0, width };

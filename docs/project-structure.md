@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+[내부 투영 글자 높이](layout-source-font-height.md)는 문서 형식 단서와 공통 측정 정책·실제 브라우저 회귀를 소유합니다.
+
 [그림 회피 조각 정렬](picture-fragment-alignment.md)은 공통 행 정렬 재사용·carrier 진단 분리·후행 공백의 폭 검증 경계를 소유합니다.
 
 [문단 표시 선택 분기](hwpx-paragraph-selected-display.md)는 기존 공통 분기 선택과 표시 자식 탐색·독립 XML 회귀·고정 native 전체 검증을 분리합니다.
