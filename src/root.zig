@@ -186,6 +186,7 @@ test {
     _ = @import("model/calculation_result_text.zig");
     _ = @import("hwpx/calculation_field_evaluate.zig");
     _ = @import("hwpx/table_caption_bindings.zig");
+    _ = @import("hwpx/picture_caption_tests.zig");
     _ = @import("hwpx/table_cell_margin_values.zig");
     _ = @import("hwpx/formula_source_query.zig");
     _ = @import("hwpx/formula_command_plan.zig");

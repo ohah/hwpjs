@@ -37,6 +37,11 @@ pub fn readRectangle(a: std.mem.Allocator, tree: *const Tree, rectangle: usize) 
     return readComponent(a, tree, rectangle);
 }
 
+pub fn readPicture(a: std.mem.Allocator, tree: *const Tree, picture: usize) !?Values {
+    if (picture >= tree.elements.len or !fields.childIs(tree, picture, "pic")) return error.InvalidPictureCaptionNode;
+    return readComponent(a, tree, picture);
+}
+
 fn readComponent(a: std.mem.Allocator, tree: *const Tree, table: usize) !?Values {
     const node = (try child(tree, table, "caption")) orelse return null;
     var result = Values{ .caption_node = node, .list_node = try child(tree, node, "subList") };

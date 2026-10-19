@@ -2,55 +2,21 @@
 const std = @import("std");
 const editor = @import("editor_session.zig");
 const Tree = @import("xml_part_tree.zig").Tree;
-const fields = @import("table_xml_fields.zig");
 const Paragraph = @import("paragraph_structure_values.zig").Paragraph;
 pub const Owner = struct { table_node: usize, caption_node: usize, list_node: usize };
 pub const Binding = struct { paragraph: usize, owner: Owner };
 
-fn direct(tree: *const Tree, parent: usize, name: []const u8, expected: usize) !void {
-    var missing: usize = 0;
-    var duplicate: usize = 0;
-    const node = fields.uniqueChild(tree, parent, name, &missing, &duplicate);
-    if (duplicate != 0 or node != expected) return error.AmbiguousTableCaptionOwner;
-}
-
 pub fn resolve(tree: *const Tree, template: usize) !?Owner {
-    if (template >= tree.elements.len or !fields.childIs(tree, template, "p")) return error.InvalidCaptionParagraphTemplate;
-    const list = tree.elements[template].parent orelse return null;
-    if (!fields.childIs(tree, list, "subList")) return null;
-    const caption = tree.elements[list].parent orelse return null;
-    if (!fields.childIs(tree, caption, "caption")) return null;
-    const table = tree.elements[caption].parent orelse return null;
-    if (!fields.childIs(tree, table, "tbl")) return null;
-    try direct(tree, table, "caption", caption);
-    try direct(tree, caption, "subList", list);
-    return .{ .table_node = table, .caption_node = caption, .list_node = list };
+    const owner = (try @import("caption_list_owner.zig").resolve(tree, template, .table)) orelse return null;
+    return .{ .table_node = owner.component_node, .caption_node = owner.caption_node, .list_node = owner.list_node };
 }
 
 pub fn fromParagraphs(a: std.mem.Allocator, section: *const editor.Section, paragraphs: []const Paragraph) ![]Binding {
-    if (paragraphs.len > 100000) return error.LimitExceeded;
-    var output: std.ArrayList(Binding) = .empty;
-    defer output.deinit(a);
-    for (paragraphs, 0..) |paragraph, index| {
-        const owner = try resolve(&section.tree, paragraph.template_element);
-        if (paragraph.joined()) |joined| {
-            try joined.validate();
-            for (joined.pieces) |piece| {
-                const other = try resolve(&section.tree, piece.template_element);
-                if (!std.meta.eql(owner, other)) return error.SourceBindingMismatch;
-            }
-        }
-        if (owner) |value| try output.append(a, .{ .paragraph = std.math.add(usize, section.first_paragraph, index) catch return error.LimitExceeded, .owner = value });
-    }
-    return output.toOwnedSlice(a);
+    return @import("caption_current_bindings.zig").fromParagraphs(Binding, resolve, a, section, paragraphs);
 }
 
 pub fn read(a: std.mem.Allocator, session: *const editor.Session, section_index: usize) ![]Binding {
-    if (section_index >= session.sections.len) return error.InvalidSectionIndex;
-    const section = &session.sections[section_index];
-    var current = try @import("display_current_paragraphs.zig").read(a, section, session.options);
-    defer current.deinit(a);
-    return fromParagraphs(a, section, current.paragraphs);
+    return @import("caption_current_bindings.zig").read(Binding, resolve, a, session, section_index);
 }
 
 test "HWPX current caption bindings reject ambiguous direct owners" {
