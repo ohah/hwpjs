@@ -1,6 +1,7 @@
 import { partitionPageAreaOwnership } from "./page-area-ownership.mjs";
-import { layoutPageAreas } from "./page-area-flow.mjs";
+import { layoutPageAreaInstances } from "./page-area-instance-layout.mjs";
 import { hwpUnitPixels } from "./hwp-units.mjs";
+import { layoutDeclaredPageAreas } from "./page-area-declaration-flow.mjs";
 
 /** Paginate body objects first; only then repeat explicitly owned page areas. */
 export function composePageAreaBody(content, measure, maxRows, layoutBody, { pageNumbers, ...bodyOptions } = {}) {
@@ -23,18 +24,22 @@ export function composePageAreaBody(content, measure, maxRows, layoutBody, { pag
   if (!Array.isArray(pageNumbers) || pageNumbers.length !== body.pages.length
     || pageNumbers.some(number => !Number.isInteger(number) || number < 1 || number > 0xffffffff)) return fail("MissingEffectivePageNumber");
   const setting = content.pageSettings[0];
-  if (body.pages.some((page, index) => !page || page.ordinal !== index || (page.section !== undefined && page.section !== setting.section_ordinal))) return fail("AmbiguousPageAreaInstance");
-  // Unknown object projection is never replaced by a text-only success.
-  if (partition.areas.some(area => ["tables", "drawings", "pictures", "lines", "containers"].some(property => area[property].length)))
-    return fail("UnsupportedPageAreaObjects");
+  if (body.pages.some(page => page?.section !== undefined && page.section !== setting.section_ordinal)) return fail("UnsupportedPageAreaSections");
+  if (body.pages.some((page, index) => !page || page.ordinal !== index)) return fail("AmbiguousPageAreaInstance");
   const pages = body.pages.map((page, index) => ({ ...page, section: setting.section_ordinal, number: pageNumbers[index],
     hideFirstHeader: index === 0 && numbering?.hide_first_header === true,
     hideFirstFooter: index === 0 && numbering?.hide_first_footer === true,
     header: { x: page.page.x, y: page.paper.y + hwpUnitPixels(setting.margin.top), width: page.page.width, height: hwpUnitPixels(setting.margin.header) },
     footer: { x: page.page.x, y: page.page.y + page.page.height, width: page.page.width, height: hwpUnitPixels(setting.margin.bottom) } }));
-  const repeated = layoutPageAreas({ ...content, paragraphs: partition.areas.flatMap(area => area.paragraphs),
-    paragraphFlows: partition.areas.flatMap(area => area.paragraphFlows) }, pages, measure, maxRows - body.rows.length);
+  const declared = Object.hasOwn(content, "pageAreaDeclarations") || Object.hasOwn(content, "pageAreaDeclarationErrors");
+  const repeated = declared ? layoutDeclaredPageAreas(content, partition, body, pages, measure, maxRows - body.rows.length)
+    : layoutPageAreaInstances(content, partition, pages, measure, maxRows - body.rows.length);
   if (repeated.state !== "placed") return repeated;
   return { ...body, rows: [...body.rows, ...repeated.rows].toSorted((a, b) => a.y - b.y), pages,
+    ...(repeated.boxes.length ? { boxes: [...(body.boxes ?? []), ...repeated.boxes] } : {}),
+    ...(repeated.placedDrawings.length ? { placedDrawings: [...(body.placedDrawings ?? []), ...repeated.placedDrawings] } : {}),
+    ...(repeated.flowPictures.length ? { flowPictures: [...(body.flowPictures ?? []), ...repeated.flowPictures] } : {}),
+    ...(repeated.tableAnchors.length ? { tableAnchors: [...(body.tableAnchors ?? []), ...repeated.tableAnchors] } : {}),
+    ...(declared ? { pageAreaSelectionPolicy: repeated.policy, pageAreaDeclarationPages: repeated.declarationPages } : {}),
     spatialRows: true, pageAreaOverflow: repeated.overflow, height: Math.max(body.height, ...repeated.rows.map(row => row.y + row.height)) };
 }

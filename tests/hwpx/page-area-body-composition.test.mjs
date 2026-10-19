@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { composePageAreaBody } from "../../web/preview/page-area-body-composition.mjs";
 import { partitionPageAreaOwnership } from "../../web/preview/page-area-ownership.mjs";
+import { layoutPageAreaContent } from "../../web/preview/page-area-content-layout.mjs";
 
 function fixture() {
   const area = { owner_node: 10, list_node: 11, apply: "both", width: 7500, height: 1500, vertical_alignment: "top" };
@@ -22,6 +23,15 @@ function fixture() {
   return { content, result };
 }
 const measure = () => ({ width: 5, height: 10 });
+
+test("compatibility entrypoint delegates identical results and bounds to the composition owner", () => {
+  const { content, result } = fixture(), before = structuredClone(content);
+  const body = () => result;
+  assert.deepEqual(layoutPageAreaContent(content, measure, 100, body, [8, 9]),
+    composePageAreaBody(content, measure, 100, body, { pageNumbers: [8, 9] }));
+  assert.equal(layoutPageAreaContent(content, measure, 0, body).error, "InvalidPageAreaComposition");
+  assert.deepEqual(content, before);
+});
 
 test("page areas compose after body objects and preserve callback options and source identities", () => {
   const { content, result } = fixture(), before = structuredClone(content);

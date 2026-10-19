@@ -38,6 +38,8 @@ test("page areas repeat identity with explicit odd-page applicability and vertic
 });
 test("page areas report vertical overflow but reject missing numbering and ambiguous owners", () => {
   assert.equal(layoutPageAreas(content, [{ ...pages[0], number: undefined }], () => 5).error, "MissingEffectivePageNumber");
+  for (const number of [0, -1, 0.5, 0x100000000, NaN, Infinity])
+    assert.equal(layoutPageAreas(content, [{ ...pages[0], number }], () => 5).error, "MissingEffectivePageNumber");
   const tall = layoutPageAreas(content, pages, () => ({ width: 5, height: 200 }));
   assert.equal(tall.state, "placed");
   assert.equal(tall.overflow.length, 3);

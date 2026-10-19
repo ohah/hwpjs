@@ -236,6 +236,18 @@ pub fn build(b: *std.Build) void {
     hwpx_text_tests.addArg("tests/hwpx/source-row-table-worker.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/caption-browser-arguments.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/page-area-body-composition.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/page-area-instances.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/page-area-object-source.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/page-area-object-worker.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/page-area-inline-picture-layout.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/drawing-restricted-placement.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/page-reference-boxes.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/table-cell-reference-box.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/page-area-declaration-pages.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/page-area-declaration-selection.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/page-area-declaration-composition.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/page-area-declaration-worker-composition.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/page-area-object-browser-arguments.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/picture-fragment-alignment.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/picture-fragment-alignment-reference.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/layout-source-font-height.test.mjs");

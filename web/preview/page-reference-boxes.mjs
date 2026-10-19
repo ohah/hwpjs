@@ -7,8 +7,9 @@ export function pageReferenceBoxes(setting, origin, pageOrdinal = 0) {
   const { margin, orientation, gutter_type: gutterType } = setting;
   const units = [setting.width, setting.height, margin?.left, margin?.right, margin?.top, margin?.bottom, margin?.gutter, margin?.header, margin?.footer];
   if (!units.every(value => Number.isInteger(value) && value >= 0 && value <= 0xffffffff) || setting.width === 0 || setting.height === 0 || setting.duplicate_margins !== 0) return invalid;
-  // Mirrored/top binding needs section start-page and binding-side ownership.
-  if (!["widely", "narrowly"].includes(orientation) || gutterType !== "left_only") return invalid;
+  // Nonzero/asymmetric mirrored binding still requires binding-side ownership.
+  const symmetricMirrored = gutterType === "left_right" && margin.gutter === 0 && margin.left === margin.right;
+  if (!["widely", "narrowly"].includes(orientation) || (gutterType !== "left_only" && !symmetricMirrored)) return invalid;
   let [width, height, left, right, top, bottom, gutter, header, footer] = units.map(hwpUnitPixels);
   if (orientation === "narrowly") [width, height] = [height, width];
   left += gutter;

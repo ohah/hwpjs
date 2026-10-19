@@ -1,5 +1,6 @@
 import { layoutContent } from "./layout.mjs";
 import { hwpUnitPixels } from "./hwp-units.mjs";
+import { selectPageAreaInstances } from "./page-area-instance-selection.mjs";
 
 /** Repeat source paragraphs in explicit page areas; caller owns effective page numbering. */
 export function layoutPageAreas(content, pages, measure, maxRows = 20000) {
@@ -22,14 +23,10 @@ export function layoutPageAreas(content, pages, measure, maxRows = 20000) {
   }
   const result = [], overflow = [];
   for (const page of pages) {
-    if (!Number.isSafeInteger(page.number) || page.number < 1) return unavailable("MissingEffectivePageNumber");
-    const owners = new Set();
-    for (const group of groups.values()) {
+    const selected = selectPageAreaInstances([...groups.values()], page);
+    if (selected.state !== "selected") return selected;
+    for (const group of selected.areas) {
       const { area, host } = group;
-      if (host === "header" && (page.hideFirstHeader || page.hideHeader) || host === "footer" && (page.hideFirstFooter || page.hideFooter)) continue;
-      if (area.apply !== "both" && (page.number % 2 === 1 ? "odd" : "even") !== area.apply) continue;
-      if (owners.has(host)) return unavailable("AmbiguousPageAreaOwner");
-      owners.add(host);
       const box = page[host];
       if (!box || ![box.x, box.y, box.width, box.height].every(Number.isFinite) || box.width <= 0 || box.height <= 0) return unavailable("MissingPageAreaBox");
       const width = hwpUnitPixels(area.width), height = hwpUnitPixels(area.height);
