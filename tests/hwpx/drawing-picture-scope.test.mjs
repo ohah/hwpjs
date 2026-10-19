@@ -60,6 +60,7 @@ test("drawing body integration retains and measures a local inline picture witho
   const result = layoutDrawingBodyContent(content, () => ({ width: 8, height: 20 }), 100, body => {
     assert.equal(body.paragraphs.length, 1);
     assert.deepEqual(body.pictures, []);
+    assert.deepEqual(body.floatingDrawingAnchors, [{ section: 0, paragraph: 0, anchorUnit: 0, node: 10 }]);
     const rows = body.paragraphs.map(p => ({ ...p, kind: "text", startUnit: 0, endUnit: p.text.length, width: 200, height: 20 }));
     const page = paginateBodyRows(rows, setting, body.paragraphFlows);
     return { ...page, pages: page.pages.map(p => ({ ...p, section: 0 })) };

@@ -203,6 +203,7 @@ pub fn build(b: *std.Build) void {
     hwpx_text_tests.addArg("tests/hwpx/picture-flow-edge-policy.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/drawing-wrap-body-flow.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/drawing-picture-scope.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/inline-table-host-anchors.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/formula-result-paragraphs.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/formula-result-paragraph-api.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/memo-label.test.mjs");

@@ -53,7 +53,16 @@ export function layoutDrawingBodyContent(content, measure, maxRows, layoutBody) 
   const bodyIds = new Set(bodyParagraphs.map(p => `${p.section}:${p.paragraph}`));
   const bodyMeasure = (text, paragraph, unit, kind) => kind === "text" && (drawings.some(d => d.section === paragraph.section && d.hostParagraph === paragraph.paragraph && d.anchorUnit === unit)
     || (content.pictures ?? []).some(p => p.owner.anchorNode === p.pictureNode && p.section === paragraph.section && p.paragraph === paragraph.paragraph && p.anchorUnit === unit)) ? { width: 0, height: textMeasurement(measure("", paragraph, unit, kind)).height } : measure(text, paragraph, unit, kind);
-  const body = layoutBody({ ...content, drawings: [], pictures: [], paragraphs: bodyParagraphs, paragraphFlows: content.paragraphFlows.filter(f => bodyIds.has(`${f.section}:${f.paragraph}`)) }, bodyMeasure, maxRows);
+  const flowAnchors = new Map();
+  for (const drawing of drawings) {
+    const root = roots.get(drawing);
+    const node = root.grouped ? drawing.source.group_context.root_anchor : drawing.drawingNode;
+    const key = `${drawing.section}:${node}`;
+    const previous = flowAnchors.get(key);
+    if (previous && (previous.paragraph !== drawing.hostParagraph || previous.anchorUnit !== drawing.anchorUnit)) return unavailable("AmbiguousDrawingFlowAnchor");
+    flowAnchors.set(key, { section: drawing.section, paragraph: drawing.hostParagraph, anchorUnit: drawing.anchorUnit, node });
+  }
+  const body = layoutBody({ ...content, floatingDrawingAnchors: [...flowAnchors.values()], drawings: [], pictures: [], paragraphs: bodyParagraphs, paragraphFlows: content.paragraphFlows.filter(f => bodyIds.has(`${f.section}:${f.paragraph}`)) }, bodyMeasure, maxRows);
   if (body.state !== "paginated") return body;
   if (body.limited) return unavailable("DrawingPageLayoutLimit");
   const pictureRows = [], flowPictures = [];

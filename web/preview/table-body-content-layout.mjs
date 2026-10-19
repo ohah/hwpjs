@@ -21,6 +21,7 @@ import { layoutFloatingTableBody } from "./floating-table-body-layout.mjs";
 import { validateNestedTableOwnership } from "./nested-table-ownership.mjs";
 import { measureNestedTable } from "./nested-table-measurement.mjs";
 import { nestedTablePaperBounds } from "./nested-table-paper-bounds.mjs";
+import { inlineTableHostAnchors } from "./inline-table-host-anchors.mjs";
 
 // Source-ordered block tables; inline, captions and nested flow are separate.
 export function layoutTableBodyContent(content, measure, maxRows, { measureBodyParagraph } = {}) {
@@ -93,9 +94,15 @@ export function layoutTableBodyContent(content, measure, maxRows, { measureBodyP
     if (!group.some(entry => entry.inline)) continue;
     if (group.some(entry => !entry.inline)) return unavailable("UnsupportedInlineTableHost");
     const host = group[0].host;
-    if (host.text.split("\ufffc").length - 1 !== group.length) return unavailable("UnsupportedInlineTableHost");
+    const overlays = (content.floatingDrawingAnchors ?? []).filter(anchor => anchor.section === host.section && anchor.paragraph === host.paragraph);
+    const textAnchors = inline.filter(p => p.section === host.section && p.paragraph === host.paragraph).map(p => ({ section: p.section, paragraph: p.paragraph, anchorUnit: p.anchorUnit, node: p.pictureNode }));
+    const anchors = host.text.split("\ufffc").length - 1 === group.length && !overlays.length && !textAnchors.length
+      ? { state: "resolved", zeroWidthUnits: [], textAnchorUnits: [] } : inlineTableHostAnchors(host,
+      group.map(({ table }) => ({ section: table.section, paragraph: table.hostParagraph, anchorUnit: table.anchorUnit, node: table.tableNode })),
+      overlays, textAnchors);
+    if (anchors.state !== "resolved") return unavailable(anchors.error);
     if (group.length === 1 && host.text === "\ufffc") continue;
-    const inlineFlow = measureInlineTableParagraph(host, group.map(({ table, measured, outerInsets }) => ({ tableNode: table.tableNode, ...(Object.hasOwn(table, "anchorUnit") ? { unit: table.anchorUnit } : {}), width: measured.grid.width + outerInsets.left + outerInsets.right, height: measured.grid.height + outerInsets.top + outerInsets.bottom })), reference.boxes.page.width, measure, { maxRows: remaining, allowLineOverflow: true });
+    const inlineFlow = measureInlineTableParagraph(host, group.map(({ table, measured, outerInsets }) => ({ tableNode: table.tableNode, ...(Object.hasOwn(table, "anchorUnit") ? { unit: table.anchorUnit } : {}), width: measured.grid.width + outerInsets.left + outerInsets.right, height: measured.grid.height + outerInsets.top + outerInsets.bottom })), reference.boxes.page.width, measure, { maxRows: remaining, allowLineOverflow: true, zeroWidthUnits: anchors.zeroWidthUnits, textAnchorUnits: anchors.textAnchorUnits });
     if (inlineFlow.state !== "measured") return inlineFlow;
     if (inlineFlow.anchors.some(anchor => reference.boxes.page.x + anchor.x + anchor.width > reference.boxes.paper.x + reference.boxes.paper.width + 1e-8)) return unavailable("InlineTablePaperWidthOverflow");
     remaining -= inlineFlow.rows.length;
