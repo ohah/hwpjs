@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+[머리말·꼬리말과 본문 합성](page-area-body-composition.md)은 소속 분리·본문 조판·실제 페이지 반복의 경계를 소유합니다.
+
 [행별 표 셀 경계](source-table-row-horizontals.md)는 원본 HU 경계 복원·표 격자·선행/최종 측정의 책임을 분리하고 공통 열 제약과 다른 물리 셀 폭을 보존합니다.
 
 [저장 구역 읽기 전용 UI](hwp5-available-sections-preview.md)는 native 후보의 개수 보고서와 JS 경계 검사·Worker 읽기 전용 모드·버튼 수명을 분리합니다. native 후보와 기본 배포의 지원 여부를 구분합니다.

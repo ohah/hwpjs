@@ -222,6 +222,9 @@ pub fn build(b: *std.Build) void {
     hwpx_text_tests.addArg("tests/hwpx/source-table-row-horizontals.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/source-row-table-worker.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/caption-browser-arguments.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/page-area-body-composition.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/page-area-flow.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/page-area-worker-layout.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/formula-result-paragraphs.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/formula-result-paragraph-api.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/memo-label.test.mjs");
