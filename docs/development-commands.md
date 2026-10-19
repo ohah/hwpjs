@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[데모 WASM 로딩 수명](preview-wasm-loading.md)은 `HWPJS_TEST_WASM=/absolute/candidate.wasm node --test --test-concurrency=1 tests/hwpx/wasm-module-loader.test.mjs tests/hwpx/preview-wasm-compression.test.mjs tests/hwpx/shared-wasm-worker.test.mjs`로 검사합니다. 단일 fetch/compile·재시도·gzip·실제 Worker 응답/무재다운로드를 검사하며 사용자 WAN·원본 조판과 구분합니다.
+
 [쪽·단 UI](paragraph-break-menu.md)는 `HWPJS_TEST_WASM=/absolute/flow-candidate.wasm node --test --test-concurrency=1 tests/hwp5/paragraph-break-menu.test.mjs tests/hwp5/paragraph-break-browser-arguments.test.mjs`로 검사합니다. 실제 브라우저 도구 `tools/flow-break-browser-audit.mjs`(키보드), `tools/flow-break-menu-browser-audit.mjs`, `tools/flow-break-search-browser-audit.mjs`, `tools/flow-break-ribbon-browser-audit.mjs`는 같은 환경변수로 직렬 실행하고 소유 세션/58879 서버의 종료를 확인합니다.
 
 [Canvas 단축키 수정키](canvas-shortcut-modifiers.md)는 `HWPJS_TEST_WASM=/absolute/candidate.wasm node --test tests/hwp5/canvas-editor.test.mjs`와 같은 후보의 `node tools/document-menu-browser-audit.mjs`로 모사 Canvas/native 회귀 및 실제 Alt 조합 비소비·수정키+Enter의 잘못된 분할 방지·입력/저장 왕복을 구분해 검사합니다. 쪽/단 나누기 명령 구현 완료를 뜻하지 않습니다.

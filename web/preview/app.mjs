@@ -1,4 +1,6 @@
 import { createRenderer } from "./renderer.mjs";
+import { createPreviewWasmModuleLoader } from "./wasm-module-loader.mjs";
+const loadPreviewWasmModule = createPreviewWasmModuleLoader();
 import { createCommandSearch } from "./command-search.mjs";
 import { detectDocumentFormat } from "../../js/document-format.mjs";
 import { createInspectorToggle } from "./inspector-toggle.mjs";
@@ -215,6 +217,9 @@ async function openSelectedFile(selected, { availableSectionsOnly = false, avail
     const bytes = await selected.arrayBuffer();
     if (epoch !== generation) return;
     const format = detectDocumentFormat(bytes);
+    status.textContent = `${selected.name} 실행 엔진 준비 중…`;
+    const wasmModule = await loadPreviewWasmModule();
+    if (epoch !== generation) return;
     openedFormat = format;
     const job = new Worker(new URL("./reader-worker.mjs", import.meta.url), { type: "module" });
     worker = job;
@@ -288,7 +293,8 @@ async function openSelectedFile(selected, { availableSectionsOnly = false, avail
         paragraphFormatControls.update();
       } catch (error) { fail(failureMessage(error)); }
     });
-    job.postMessage({ kind: "load", format, bytes, ...(availableSectionsOnly ? { availableSectionsOnly: true } : {}), ...(availableSectionCopy ? { availableSectionCopy: true } : {}), allowObservedChartOleDeviations: format === "hwpx" && document.querySelector("#chart-ole-compat").checked }, [bytes]);
+    status.textContent = `${selected.name} 문서 해석 중…`;
+    job.postMessage({ kind: "load", format, bytes, wasmModule, ...(availableSectionsOnly ? { availableSectionsOnly: true } : {}), ...(availableSectionCopy ? { availableSectionCopy: true } : {}), allowObservedChartOleDeviations: format === "hwpx" && document.querySelector("#chart-ole-compat").checked }, [bytes]);
   } catch (error) { if (epoch === generation) status.textContent = `오류: ${failureMessage(error)}`; }
 }
 bindFileInput(input, () => openSelectedFile(input.files[0]));

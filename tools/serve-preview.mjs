@@ -4,6 +4,8 @@ import { readFile, realpath } from "node:fs/promises";
 import { resolve, sep, extname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { respondDemoFixture } from "./demo-fixture-response.mjs";
+import { createPreviewWasmCompression } from "./preview-wasm-compression.mjs";
+const compressWasm = createPreviewWasmCompression();
 const root = fileURLToPath(new URL("../", import.meta.url));
 const port = Number(process.argv[2] ?? 8080);
 const experimentalWasm = process.argv[3] ? await realpath(resolve(process.argv[3])) : null;
@@ -24,8 +26,12 @@ const server = createServer(async (request, response) => {
     const allowed = [resolve(root, "web/preview") + sep, resolve(root, "js") + sep];
     if (!override && (!file.startsWith(root) || (!allowed.some(prefix => file.startsWith(prefix)) && file !== resolve(root, "zig-out/bin/hwpjs.wasm")))) { response.writeHead(404); response.end(); return; }
     const body = await readFile(file);
-    response.writeHead(200, { "Content-Type": override ? "application/wasm" : mime[extname(file)] || "application/octet-stream", "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" });
-    response.end(request.method === "HEAD" ? undefined : body);
+    const wasm = override || extname(file) === ".wasm";
+    const compressed = wasm ? compressWasm(body, request.headers["accept-encoding"]) : null;
+    const encoded = compressed ?? body;
+    response.writeHead(200, { "Content-Type": override ? "application/wasm" : mime[extname(file)] || "application/octet-stream", "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff", "Content-Length": encoded.length,
+      ...(wasm ? { Vary: "Accept-Encoding" } : {}), ...(compressed ? { "Content-Encoding": "gzip" } : {}) });
+    response.end(request.method === "HEAD" ? undefined : encoded);
   } catch { response.writeHead(404); response.end(); }
 });
 server.listen(port, "127.0.0.1", () => console.log(`http://127.0.0.1:${port}/web/preview/index.html`));

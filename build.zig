@@ -236,6 +236,9 @@ pub fn build(b: *std.Build) void {
     hwpx_text_tests.addArg("tests/hwpx/formula-display-batch-worker.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/page-area-declarations-api.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/page-area-declarations-worker.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/wasm-module-loader.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/preview-wasm-compression.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/shared-wasm-worker.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/paragraph-selected-display.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/page-area-source-ownership.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/page-area-flow.test.mjs");

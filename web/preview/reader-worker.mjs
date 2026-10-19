@@ -377,9 +377,14 @@ self.onmessage = async event => {
       format = message.format ?? "hwp5";
       hwpxChartOlePolicy = format === "hwpx" && requestedPolicy;
       if (format !== "hwp5" && format !== "hwpx") throw new Error("UnknownDocumentFormat");
-      const response = await fetch("../../zig-out/bin/hwpjs.wasm", { cache: "no-cache" });
-      if (!response.ok) throw new Error(`WASM HTTP ${response.status}: 먼저 Zig 빌드를 실행하세요.`);
-      module = await WebAssembly.compile(await response.arrayBuffer());
+      if (message.wasmModule !== undefined) {
+        if (!(message.wasmModule instanceof WebAssembly.Module)) throw new Error("InvalidPreviewWasmModule");
+        module = message.wasmModule;
+      } else {
+        const response = await fetch("../../zig-out/bin/hwpjs.wasm", { cache: "no-cache" });
+        if (!response.ok) throw new Error(`WASM HTTP ${response.status}: 먼저 Zig 빌드를 실행하세요.`);
+        module = await WebAssembly.compile(await response.arrayBuffer());
+      }
       bytes = new Uint8Array(message.bytes);
       if (format === "hwpx") {
         reader = await createHwpxReader(module);
