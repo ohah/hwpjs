@@ -68,3 +68,9 @@ test("empty file change returns before replacing the active document generation"
   const source = readFileSync(new URL("../../web/preview/app.mjs", import.meta.url), "utf8");
   assert.match(source, /async function openSelectedFile\(selected,[^\n]*\n\s*if \(!selected\) return;\n\s*const epoch = \+\+generation;/);
 });
+
+test("shared browser audit checks same-path reload and empty change without bypassing the picker", () => {
+  const source = readFileSync(new URL("../../tools/browser/document-menu-roundtrip.mjs", import.meta.url), "utf8");
+  for (const witness of ["LocalFileHandoffMustClearSelection", "SameFileMustOpenANewSession", "same-local-file-reopened", "EmptyFileChangeMustPreserveCurrentEdit", "empty-file-change-preserved-edit"]) assert(source.includes(witness));
+  assert(source.includes('sourcePaths.push("web/preview/file-input-events.mjs")'));
+});

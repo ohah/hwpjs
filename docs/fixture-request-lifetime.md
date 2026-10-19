@@ -8,6 +8,12 @@
 
 재선택 최종 분리 검사도38/38·실패/cancel/skip0·exit0·stderr0입니다. `clean-regression.log` SHA256은 `90ea6a600cadfe3974675d0f427908a59231cdf3f777592290114ed2be081a04`이며 분리 build.zig의 Zig 포맷 검사도 통과했습니다. app의 무관한 미커밋 변경을 포함하지 않습니다.
 
+공통 `document-menu-roundtrip.mjs`는 실제 로컬 업로드 뒤 value/FileList가 비었는지 확인하고 같은 경로를 다시 upload하여 두 번째 load와 새 세션을 요구합니다. 실제 편집 뒤 빈 change 이벤트를 주입해 선택·입력·요청 수·저장/undo 가능 상태가 유지되는지도 검사합니다. 빈 이벤트는 앱 경계의 음성 대조이지 OS 파일 대화상자 취소 자동화가 아닙니다. 파일 이벤트 모듈도 소스 해시 대조에 포함합니다.
+
+2026-10-19 분리 소스의 실제 Chromium 검사 `clean-browser-repeat.log/.stderr`는 같은 파일 재열기·빈 change 보존·메뉴/입력/이력/저장 단축키·독립 XML/ZIP·다운로드·재업로드·소유 브라우저/서버 종료까지 exit0·stderr0·cleanup.success=true입니다. 로그 SHA256은 `a819873487af2056ff5edb775e94678adac16c8121a7f7b6280a0bdf69d64580`입니다. 소유 `hwpjs-menu-mnemonic-dd71c21a1b0e`는 inactive/pid=null,58863 listener도 없고 `reopened.png`를 직접 확인했습니다. 같은 분리 소스의 새/기존3파일은39/39·skip0·exit0·stderr0입니다.
+
+기본 Tailscale10000 실행 `real-browser-repeat.log/.stderr`는 초기 준비의55초 대기에서 실패해 기능 검증에 도달하지 못했습니다. cleanup에서 소유 브라우저를 종료했고 외부 서버는 변경하지 않았습니다. 이 실패를 로컬 통과로 덮거나 원격 재선택 통과로 소급하지 않습니다. 모듈 준비 실패의 원인은 추가 네트워크 진단이 필요합니다. 로그들은 `/tmp/hwpjs-file-repeat-publish.v9GrGT`에 있습니다.
+
 ## 로컬 파일 선택값과 픽스쳐 전환
 
 실제 Chromium에서 로컬 파일 업로드 뒤 픽스쳐를 열어도 `#file.value`에 이전 `C:\fakepath\charshape.hwpx`가 남는 것을 재현했습니다. 서버 픽스쳐가 현재 문서 원본이 된 뒤에도 네이티브 선택란이 이전 로컬 원본을 가리키는 상태였습니다. 이 관측과 운영체제의 파일 선택 대화상자 동작 검증을 구분합니다.

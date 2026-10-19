@@ -43,6 +43,7 @@ export async function runDocumentMenuBrowserAudit(caseName) {
   sourcePaths.push("tools/browser/input-origin.mjs","tools/hwpx-field-prefix-oracle.mjs");
   sourcePaths.push("tools/browser/unsupported-paragraph-break-chords.mjs","web/preview/paragraph-break-shortcut.mjs");
   sourcePaths.push("web/preview/canvas-editor.mjs");
+  sourcePaths.push("web/preview/file-input-events.mjs");
   sourcePaths.push("tools/browser/save-shortcuts.mjs","web/preview/save-controls.mjs","web/preview/document-download.mjs");
   const sourceHashes = () => Object.fromEntries(sourcePaths.map(path=>[path,hash(readFileSync(resolve(path)))]));
   const sourceSha256 = sourceHashes();
@@ -174,6 +175,13 @@ export async function runDocumentMenuBrowserAudit(caseName) {
       assert.equal(evaluate(`${replies("load")}.length`),1,"CanceledFixtureMustNotStartAWorker");
       assert.equal(evaluate('document.querySelector("#status").textContent.includes("오류:")'),false);
       progress("fixture-fetch-canceled-by-upload");
+      assert.equal(evaluate('document.querySelector("#file").value'),"","LocalFileHandoffMustClearSelection");
+      assert.equal(evaluate('document.querySelector("#file").files.length'),0,"LocalFileHandoffMustClearFileList");
+      command("upload","#file",fixture);
+      wait(`${replies("load")}.length===2`);
+      assert.equal(evaluate('document.querySelector("#enable-edit").disabled'),false,"SameFileMustOpenANewSession");
+      assert.equal(evaluate('document.querySelector("#file").files.length'),0);
+      progress("same-local-file-reopened");
       evaluate("window.__menuAudit=[]");
       command("select","#demo-fixture",selected.id);
       assert.equal(evaluate('document.querySelector("#demo-fixture").value'),selected.id);
@@ -233,6 +241,12 @@ export async function runDocumentMenuBrowserAudit(caseName) {
       command("focus","#canvas-input");
       const witness=()=>evaluate('({value:document.querySelector("#canvas-input").value,start:document.querySelector("#canvas-input").selectionStart,end:document.querySelector("#canvas-input").selectionEnd,requests:window.__menuAudit.filter(r=>r.direction==="request").length})');
       const before=witness();
+      assert.equal(evaluate('document.querySelector("#file").files.length'),0);
+      evaluate('document.querySelector("#file").dispatchEvent(new Event("change",{bubbles:true}))');
+      assert.deepEqual(witness(),before,"EmptyFileChangeMustPreserveCurrentEdit");
+      assert.equal(evaluate('document.querySelector("#download").disabled'),false);
+      assert.equal(evaluate('document.querySelector("#undo").disabled'),false);
+      progress("empty-file-change-preserved-edit");
       for(const primary of ["Control","Meta"])for(const key of ["a","z","y"]){
         const count=evaluate("window.__menuKeys.length");command("press",`${primary}+Alt+${key}`);
         const observed=evaluate(`window.__menuKeys.slice(${count}).find(row=>row.key===${JSON.stringify(key)})`);
