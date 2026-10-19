@@ -1,5 +1,13 @@
 # Canvas 문단 경계 단축키
 
+## 중첩 원본 사이의 일반 좌우 커서 이동
+
+`paragraph-navigation.mjs`는 기존 `paragraphSelectionOwner`를 공유해 현재 소유권의 원본 순서상 다음/이전 문단을 찾습니다. 원본 배열을 바꾸거나 중첩 문단을 삭제하지 않습니다. 같은 소유권의 clipped 문단·구역 경계·중복 ID·미지 소유권·생성 셀은 거부합니다. renderer는 도착 위치의 실제 caret geometry가 있는지도 검사합니다. Canvas의 **일반 접힌 커서** 이동만 이를 사용하며 Shift 범위 선택과 편집·삭제·병합 권한은 기존 검사를 유지합니다.
+
+실제 table-bug 본문0→2·4→73에서 중간에 다른 소유권 문단이 있어 수정 전 ArrowRight가 멈추는 실패를 재현했습니다. 같은 원본의 양방향 이동·Shift 확장 거부·native 요청0·원본 무편집 저장과 순수 helper의 clipped/구역/중복/생성 셀 거부를 기존 정규 등록 파일 `canvas-navigation-ownership.test.mjs`에서 검사합니다. 최초 primary4파일 실행은 명시적 `HWPJS_TEST_WASM` 환경변수 누락으로 `ExplicitCanvasKeyCandidateRequired`1실패/1skip이며 제품 이동 실패로 분류하지 않습니다. 재실행은 명시적 bacf 후보를 사용합니다. 로그는 `/tmp/hwpjs-navigation-publish.KsSYcz/horizontal-before.log` 및 `horizontal-primary-regression.log`이고 분리 후보는 `/tmp/hwpjs-paragraph-navigation.B3Mcjv`입니다.
+
+일반 좌우 이동 최종 primary 재실행과 분리 후보의4파일은 각각274/274·실패/cancel/skip0·exit0·stderr0입니다. `primary-regression-retry.log`와 `clean-regression.log`가 근거이고 분리 로그 SHA256은 `201eb0441169e000de97439d49f7c4aa80c8ced764921fd1ad2f5c7d226801c6`입니다. 분리 소스는 게시 HEAD 위에 이번5파일 변경만 포함하며 실제 브라우저 키 입력/모든 문단·객체/OS IME 검증과 구분합니다.
+
 ## 세로 이동의 소유권 후보 선택
 
 `text-navigation.mjs`의 선택적 `acceptRow`는 위치 계산에 소유권 정책을 주입합니다. Canvas는 기존 `renderer.selectionRanges`로 해당 anchor에서 후보 줄까지의 선택 가능 여부를 확인합니다. 다른 소유권의 줄을 최단 거리로 먼저 선택한 뒤 거부해 멈추지 않고, 허용되는 후보 중 가까운 줄을 선택합니다. 기존 구역·반복 페이지·변환 프레임 조건과 최종 선택 범위 검사도 유지합니다. 이미 허용한 줄보다 먼 후보에는 불필요한 소유권 조회를 하지 않습니다. 형식별 소유권 규칙이나 저장 모델을 이동 모듈에 복제하지 않습니다.

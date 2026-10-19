@@ -24,6 +24,7 @@ import { adjacentCell } from "./table-navigation.mjs";
 import { characterTogglePatch, characterSelectionState, characterRangesState } from "./character-property-selection.mjs";
 import { characterSizeState, characterSizeRangesState } from "./character-size-selection.mjs";
 import { paragraphSelectionRanges, paragraphSelectionText } from "./paragraph-selection.mjs";
+import { adjacentOwnedParagraph } from "./paragraph-navigation.mjs";
 import { paintUnderline } from "./underline-paint.mjs";
 import { paintNumberPrefix } from "./number-prefix-paint.mjs";
 import { createPictureResources } from "./picture-resources.mjs";
@@ -405,6 +406,10 @@ export function createRenderer(canvas, viewportElement, spacer, onLayout = () =>
     tableCreationResources: () => content.tableCreationResources ? Object.fromEntries(Object.entries(content.tableCreationResources).map(([key, ids]) => [key, ids.slice()])) : null,
     findText: query => findText(content.paragraphs, query),
     adjacentCell: (point, backward) => adjacentCell(content, layout, point, backward),
+    adjacentParagraph: (point, forward) => {
+      const next = adjacentOwnedParagraph(content.paragraphs, point, forward);
+      return next && caretGeometry(layout, next) ? next : null;
+    },
     paragraph: point => createdCellParagraph(layout, point) ?? content.paragraphs.find(p => p.section === point.section && p.paragraph === point.paragraph),
     selectionRanges: (anchor, focus) => paragraphSelectionRanges(content.paragraphs, anchor, focus),
     textColorRangesAvailable: () => content.characterTextColorRangesAvailable === true,

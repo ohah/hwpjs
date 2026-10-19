@@ -4,6 +4,45 @@ import { readFileSync } from "node:fs";
 import { workerCanvasHarness, dispatchCanvasEvent } from "../canvas/worker-harness.mjs";
 import { layoutContent } from "../../web/preview/layout.mjs";
 import { navigateText } from "../../web/preview/text-navigation.mjs";
+import { adjacentOwnedParagraph } from "../../web/preview/paragraph-navigation.mjs";
+
+test("collapsed paragraph navigation skips nested owners but not clipped peers or section boundaries", () => {
+  const paragraphs = [
+    { section: 0, paragraph: 0, text: "body", selectionOwner: "section:0:body" },
+    { section: 0, paragraph: 1, text: "nested", selectionOwner: "section:0:header" },
+    { section: 0, paragraph: 2, text: "next😀", selectionOwner: "section:0:body" },
+    { section: 1, paragraph: 0, text: "other", selectionOwner: "section:1:body" },
+  ];
+  const before = structuredClone(paragraphs), point = { section: 0, paragraph: 0, unit: 4 };
+  assert.deepEqual(adjacentOwnedParagraph(paragraphs, point, true), { ...point, paragraph: 2, unit: 0, affinity: "forward" });
+  assert.equal(adjacentOwnedParagraph(paragraphs, { section: 0, paragraph: 2, unit: 0 }, false).unit, 4);
+  assert.equal(adjacentOwnedParagraph(paragraphs, { section: 0, paragraph: 2, unit: 6 }, true), null);
+  assert.equal(adjacentOwnedParagraph(paragraphs.map(p => p.paragraph === 2 ? { ...p, clipped: true } : p), point, true), null);
+  assert.equal(adjacentOwnedParagraph([...paragraphs, paragraphs[0]], point, true), null);
+  assert.equal(adjacentOwnedParagraph(paragraphs, { ...point, createdCell: {} }, true), null);
+  assert.deepEqual(paragraphs, before);
+});
+
+test("actual collapsed Canvas arrows cross nested source IDs without expanding selection permissions", async t => {
+  const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/table-bug.hwp"), h = await workerCanvasHarness(t);
+  assert.equal((await h.send({ kind: "load", bytes: input })).error, undefined);
+  assert.equal((await h.send({ kind: "enable" })).error, undefined);
+  for (const [from, to] of [[0, 2], [4, 73]]) {
+    const end = h.renderer.paragraph({ section: 0, paragraph: from }).text.length;
+    const select = () => assert.equal(h.controller.selectTextRange({ section: 0, paragraph: from, startUnit: end, endUnit: end }), true);
+    select();
+    const requests = h.requests.length;
+    dispatchCanvasEvent(h.input, "keydown", { key: "ArrowRight" });
+    assert.equal(h.canvas.dataset.caret, `0:${to}:0`);
+    dispatchCanvasEvent(h.input, "keydown", { key: "ArrowLeft" });
+    assert.equal(h.canvas.dataset.caret, `0:${from}:${end}`);
+    select();
+    dispatchCanvasEvent(h.input, "keydown", { key: "ArrowRight", shiftKey: true });
+    assert.equal(h.canvas.dataset.caret, `0:${from}:${end}`);
+    assert.equal(h.requests.length, requests);
+  }
+  assert.deepEqual(Buffer.from((await h.send({ kind: "save" })).bytes), input);
+});
 
 test("vertical candidate filtering precedes distance choice in both directions", () => {
   const layout = layoutContent({ paragraphs: [1, 2, 3, 4].map(paragraph => ({ section: 0, paragraph, text: "abcd", label: "", editable: true })), limited: false }, 500, () => 8);
