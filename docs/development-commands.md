@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[연쇄 SUM 입력](hwpx-cascaded-sum-input-corpus.md)은 `HWPJS_TEST_WASM=/absolute/candidate.wasm node --test tests/hwpx/cascaded-sum-input-corpus.test.mjs`로 실제28입력의 직접/후속 결과·normal/-O XML/ZIP·이력/재열기를 검사합니다. 후보는 명시적으로 지정하며 모든 숫자 포맷/편집 명령 완료와 구분합니다.
+
 [장시간 감사의 진행 출력](hwpx-plain-prefix-verification.md)은 일반 `hwpx-edit-corpus-audit.mjs` 명령에 선택적으로 `--progress-every=100`을 추가합니다. 검증을 마친 시도 수와 accepted/refused를 구분하며 범위/검증/최종 종료 조건을 줄이지 않습니다. 옵션이 없으면 기존 출력 그대로입니다.
 
 [원격 후보 브라우저 검증](hwpx-chart-numeric-input-corpus.md)은 기존 숫자/수식 결과 브라우저 명령에 `HWPJS_BROWSER_ORIGIN=https://host:port`와 정확한 `HWPJS_TEST_WASM`을 명시합니다. HTTPS origin·선택 UI 소스·WASM을 대조하며 원격 서버를 생성/종료하지 않습니다. 환경변수가 없으면 기존 격리 로컬 서버 검사입니다.
