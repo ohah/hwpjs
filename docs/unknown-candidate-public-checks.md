@@ -1,6 +1,6 @@
 # unknownObj 후보의 공개 API 회귀
 
-## 게시 d4c7d918의 최신 HWP5 등록 회귀 — 최초 미완료·TAP 재실행 중
+## 게시 d4c7d918의 최신 HWP5 등록 회귀 — 최초 미완료·TAP 재실행 완료
 
 숫자 입력·편람178범위·Canvas 수정키 회귀를 포함한 게시 `d4c7d918b0316056a52600ab7d86e36631b89b3e`를 `/tmp/hwpjs-field-interior-browser.DVJV5s`에 고정했습니다. 앞선 소유 브라우저 종료 후 e9aa1141 이후22경로만 Git archive로 반영했고 전체7,219개 blob을 게시 tree와 대조했습니다. 사본 Git index도 그 추적 목록으로 갱신했습니다. 별도 qzuKq7의 진행 중인 참조 감사 소스/원본은 변경하지 않았으며 새 대형 사본이나 WASM 빌드도 만들지 않았습니다.
 
@@ -9,6 +9,8 @@
 최초 실행은 자식status1/signal=null/error=null·wrapper exit1로 종료했습니다. stdout315행에 최종 테스트 통계/명시적 assertion 실패가 없고 마지막 테스트 출력은 readonly session policy이며, 그 뒤 source7,219개·두 WASM 최종 불변 검사는 통과했습니다. 로그 SHA256은 `1788927d2e4710047bf94f6c806cac264922b6e704287e898640e3c11c4d244a`입니다. runner/test 부모55745/55750 및 관측 자식56170 부재를 확인했습니다. 성공·실패 테스트 수를 추정하거나 source 검증만으로 전체 gate를 통과 처리하지 않습니다. 당시 디스크 여유의 반복 감소는 관측했지만 ENOSPC 오류 원문이나 종료 원인은 확인하지 못했습니다.
 
 같은 고정 사본의 바로 다음 document-numbering 회귀를 TAP으로 단독 실행한 `numbering-after-exit.log/.stderr`는5/5·exit0·stderr0이며 전체 종료 원인을 확정한 검사가 아닙니다. 동일93파일·소스/후보/기준을 유지하고 reporter만 TAP으로 바꾼 `current-hwp5-gate-tap-retry.jsonl/.stderr`를 새로 시작했습니다. 이전 실행과 합산하지 않으며 테스트별 진단과 전체 최종 종료를 기다립니다. TAP 실행기 SHA256은 `7322f959be11554d20d6cc7c53c2121890d21bb74664f525d7880a38ffbcaa0f`입니다. 최초 실행기는 TAP 옵션만 제거해 `run-current-hwp5-gate-spec-first.mjs`로 재구성했고 원래 a1f6 해시와 일치했습니다. 실행 소스/전체 참조 감사는 변경하지 않았으며 native 쪽·단 나누기 초안은 이 소스에 포함되지 않습니다.
+
+위 TAP 재실행은 최종516/516·fail/cancelled/skipped/todo0, 954611.623042ms로 완료했습니다. 자식status0/signal=null/error=null과 wrapper exit0을 확인했고, 끝의7,219개 소스 blob·후보/기준 WASM 불변 검사도 통과했습니다. `current-hwp5-gate-tap-retry.jsonl` SHA256은 `ea09a1745cef2cfb10a1cdd6e34a4f26e79c5c50dbe1827210825c9803ccbf93`입니다. stderr67바이트는 실행기의 자식 종료status0 JSON이며 테스트 오류가 아닙니다. 부모69830도 종료했습니다. 최초 spec 실행의 종료 원인은 여전히 미확정이고, 재실행 성공을 그 원인의 해결 증거로 쓰지 않습니다. 이 고정 소스에는 이후 수정키+Enter 변경과 현재 로컬 HWP5/HWPX 쪽·단 초안이 포함되지 않습니다.
 
 ## 최신 후보의 전체 참조 입력·이력 감사 — 실행 중
 
