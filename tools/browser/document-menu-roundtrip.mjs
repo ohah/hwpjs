@@ -20,6 +20,7 @@ import {openBrowserRibbonPage,exerciseBrowserRibbonPages} from "./ribbon-page.mj
 import {demoFixtures,fixtureUrl} from "../../web/preview/fixture-catalog.mjs";
 import {parseBrowserAuditOrigin,verifyBrowserSourceResponses} from "./audit-origin.mjs";
 import {unsupportedParagraphBreakChords} from "./unsupported-paragraph-break-chords.mjs";
+import {captureBrowserNetworkWitness} from "./network-witness.mjs";
 
 export async function runDocumentMenuBrowserAudit(caseName) {
   assert(Object.hasOwn(documentMenuBrowserCases,caseName),"UnknownDocumentMenuBrowserCase");
@@ -44,6 +45,7 @@ export async function runDocumentMenuBrowserAudit(caseName) {
   sourcePaths.push("tools/browser/unsupported-paragraph-break-chords.mjs","web/preview/paragraph-break-shortcut.mjs");
   sourcePaths.push("web/preview/canvas-editor.mjs");
   sourcePaths.push("web/preview/file-input-events.mjs");
+  sourcePaths.push("tools/browser/network-witness.mjs");
   sourcePaths.push("tools/browser/save-shortcuts.mjs","web/preview/save-controls.mjs","web/preview/document-download.mjs");
   const sourceHashes = () => Object.fromEntries(sourcePaths.map(path=>[path,hash(readFileSync(resolve(path)))]));
   const sourceSha256 = sourceHashes();
@@ -97,7 +99,8 @@ export async function runDocumentMenuBrowserAudit(caseName) {
     }else await verifyBrowserSourceResponses(origin,sourceSha256);
     const response=await fetch(`${origin}/zig-out/bin/hwpjs.wasm`,{signal:AbortSignal.timeout(10000),redirect:"error"});
     assert.equal(response.status,200);assert.equal(hash(Buffer.from(await response.arrayBuffer())),hash(wasm));
-    owned=true;command("open",`${origin}/web/preview/index.html`);command("snapshot","-i");
+    owned=true;command("open","about:blank");command("network","har","start");
+    command("open",`${origin}/web/preview/index.html`);command("snapshot","-i");
     wait('!document.querySelector("#file").disabled');
     evaluate(`(() => {
       window.__menuAudit=[];window.__menuKeys=[];window.__menuInput=[];const watched=new WeakSet(),post=Worker.prototype.postMessage;
@@ -308,7 +311,8 @@ export async function runDocumentMenuBrowserAudit(caseName) {
     verified=true;
     writeAuditRow({kind:"menu-browser-result",caseName,verified,session,output,origin,sourceSha256,wasmSha256:hash(wasm),inputSha256:hash(input),savedSha256:hash(saved),reopenedTarget,saveShortcuts:shortcutDownloads.map(({key,bytes,path,version})=>({key,file:basename(path),version,sha256:hash(bytes)})),scope:config.scope});
   }catch(error){
-    writeAuditRow({kind:"menu-browser-failure",caseName,phase,error:error.message});throw error;
+    const networkWitness=owned?captureBrowserNetworkWitness(driver,join(output,"failure.har")):null;
+    writeAuditRow({kind:"menu-browser-failure",caseName,phase,error:error.message,networkWitness});throw error;
   }finally{
     try{if(owned){await closeOwnedBrowser(command,{onClosedSocket:()=>writeAuditRow({kind:"menu-browser-close-race",session,confirmedInactive:true})});closed=true;}}
     finally{

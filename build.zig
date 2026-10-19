@@ -231,6 +231,7 @@ pub fn build(b: *std.Build) void {
     hwpx_text_tests.addArg("tests/hwpx/document-menu-save-shortcuts.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/fixture-request-lifetime.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/file-input-repeat.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/browser-network-witness.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/anchor-empty-run-oracle.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/document-menu-command-registry.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/document-menu-popup-layer.test.mjs");

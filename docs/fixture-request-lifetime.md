@@ -1,5 +1,13 @@
 # 픽스쳐 읽기 요청의 수명
 
+## 초기 모듈 준비 실패의 진단 경계
+
+`document-menu-roundtrip.mjs`는 소유 브라우저를 about:blank에서 초기화하고 네트워크 기록을 시작한 뒤 대상 페이지를 엽니다. 실패하면 브라우저를 닫기 전에 `network-witness.mjs`가 화면 준비 상태·전체 요청 수·미응답 Script·HTTP 오류·HAR 저장 결과를 기록합니다. 부분 진단 실패는 독립 표시하고 원래 감사 오류를 덮지 않습니다. 요약 URL은 credentials/query/fragment를 제외하며 원본 HAR는 로컬 산출물로만 보관합니다. 자동 재시도나 제품의 준비/오류 정책 변경은 아닙니다.
+
+2026-10-19 `/tmp/hwpjs-startup-network.d14xvK`의 first/second/third HAR는 각각501/500/501요청·HTTP/2이며 앱 준비가 모두 완료됐고 미완료0입니다. 이 세 번에서 이전 간헐 실패는 재현되지 않았으며 원인을 확정하거나 해결됐다고 주장하지 않습니다. 보강한 도구의 `remote-audit.log/.stderr`는 기본10000에서 같은 파일 재열기·빈 change 보존·메뉴 입력/이력/저장 단축키·독립 XML/ZIP·재업로드·소스/WASM 해시·소유 세션 종료까지 exit0·stderr0·cleanup.success=true입니다. 로그 SHA256은 `128b7ae2e8e8740d6563fe20de24bcbd562ff23fc3d51fa886b0444136f73efe`입니다. 앞선 준비 실패 기록을 이 후속 성공으로 바꾸지 않습니다.
+
+격리 소유 세션에서 app.mjs 요청을 의도적으로 abort한 음성 대조도 실제 브라우저로 수행했습니다. fileDisabled=true·미응답 app.mjs·HAR 저장을 확인했고 HAR의 해당 응답은 status0/`net::ERR_FAILED`였습니다. 이는 관측기를 검증한 대역 실패이지 이전 실제 장애의 원인 증명이 아닙니다. route는 제거하고 소유 세션을 종료했으며 기본 서버는 변경하지 않았습니다. startup-network와 menu-mnemonic 소유 세션 모두 inactive/pid=null을 확인했습니다. 분리 소스의 진단·재선택·인자3파일34/34·skip0·exit0·stderr0과 build.zig 포맷 검사도 통과했습니다.
+
 ## 같은 로컬 파일의 재선택
 
 `file-input-events.mjs`는 change 콜백이 File 객체를 동기적으로 확보한 뒤 네이티브 선택값을 비웁니다. 이후 동일한 경로를 다시 골라도 change가 발생합니다. 초기화 전에 선택된 파일도 같은 경로를 사용하고 File의 비동기 바이트 읽기는 계속 유효합니다. 콜백 실행 중 다른 File 선택으로 대체됐다면 이전 콜백이 새 선택을 비우지 않습니다. 초기 콜백 실패에도 이전 선택값이 남아 재시도를 막지 않습니다. app의 빈 선택은 generation/Worker/편집 상태를 초기화하기 전에 반환하므로 빈 change가 현재 문서를 버리지 않습니다.
