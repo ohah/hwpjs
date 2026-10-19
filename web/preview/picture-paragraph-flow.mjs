@@ -1,6 +1,7 @@
 import { pictureFlowLine } from "./picture-flow-line.mjs";
 import { paragraphLineGeometry, paragraphSpacePixels } from "./paragraph-geometry.mjs";
 import { textMeasurement } from "./text-measurement.mjs";
+import { alignPictureFragment } from "./picture-fragment-alignment.mjs";
 
 // 호출자가 확정한 그림과 측정된 줄 높이의 문단 흐름입니다.
 export function pictureParagraphFlow(text, box, pictures, measure, { lineHeight = 28, maxLines = 20000, paragraphShape = null, flowLine = pictureFlowLine } = {}) {
@@ -9,11 +10,7 @@ export function pictureParagraphFlow(text, box, pictures, measure, { lineHeight 
   const rows = [];
   const after = paragraphSpacePixels(paragraphShape?.after);
   let unit = 0, y = box.y + paragraphSpacePixels(paragraphShape?.before);
-  const align = fragment => {
-    const measuredWidth = fragment.boundaries.at(-1).x;
-    const offset = paragraphLineGeometry({ alignment: paragraphShape?.alignment }, fragment.width, measuredWidth, false).x;
-    return { ...fragment, x: fragment.x + offset, width: fragment.width - offset };
-  };
+  const align = fragment => alignPictureFragment(fragment, paragraphShape, fragment.endUnit === text.length);
   for (let line = 0; line < maxLines; line++) {
     const horizontal = paragraphShape && box.width > 0 ? paragraphLineGeometry({ ...paragraphShape, alignment: 0 }, box.width, 0, unit === 0) : { x: 0, width: box.width };
     const regions = flowLine(text, unit, { ...box, x: box.x + horizontal.x, width: horizontal.width, y, height: lineHeight }, pictures, measure, paragraphShape);
@@ -22,7 +19,7 @@ export function pictureParagraphFlow(text, box, pictures, measure, { lineHeight 
     if (!regions.regions.some(region => region.width > 0)) return { state: "no_fitting_region", rows, endUnit: unit, height: y - box.y };
     if (unit === text.length && regions.regions.length) {
       const region = regions.regions[0];
-      rows.push({ ...align({ ...region, boundaries: [{ unit, x: 0 }] }), text: "", startUnit: unit, endUnit: unit, y, height: regions.height, textHeight: text.length > 0 ? Math.max(20, textMeasurement(measure("", unit)).height) : 20 });
+      rows.push({ ...align({ ...region, text: "", startUnit: unit, endUnit: unit, boundaries: [{ unit, x: 0 }] }), y, height: regions.height, textHeight: text.length > 0 ? Math.max(20, textMeasurement(measure("", unit)).height) : 20 });
       if (!Number.isFinite(y + regions.height + after)) throw new RangeError("InvalidParagraphFlowBounds");
       return { state: "complete", rows, endUnit: unit, height: y - box.y + regions.height + after };
     }

@@ -1,5 +1,6 @@
 import { isHardLineBreak } from "./hard-line-break.mjs";
 import { paragraphAlignmentKey } from "./paragraph-alignments.mjs";
+import { lineVisibleEndUnit } from "./line-visible-end.mjs";
 
 /** Display spacing only; the native document and source offsets stay untouched. */
 export function alignTextRow(row, { lastLine = false } = {}) {
@@ -16,8 +17,8 @@ export function alignTextRow(row, { lastLine = false } = {}) {
   const parts = points.slice(1).map((point, index) => row.text.slice(points[index].unit - row.startUnit, point.unit - row.startUnit));
   const forced = parts.some(isHardLineBreak);
   if (alignment !== "DISTRIBUTE" && (forced || alignment === "JUSTIFY" && lastLine)) return row;
-  let visible = parts.length;
-  while (visible && (/^ +$/u.test(parts[visible - 1]) || isHardLineBreak(parts[visible - 1]))) visible--;
+  const visibleEnd = lineVisibleEndUnit(row.text, row.startUnit);
+  const visible = points.findIndex(point => point.unit === visibleEnd);
   if (visible < 2) return row;
   const slack = row.width - points[visible].x;
   if (!Number.isFinite(slack) || slack <= 0) return row;

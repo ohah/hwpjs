@@ -1,4 +1,5 @@
 import { graphemeUnits } from "./text-input.mjs";
+import { lineVisibleEndUnit } from "./line-visible-end.mjs";
 
 const tableFields = ["bandOrdinal", "tableIndex", "tableNode", "tableVerticalSource", "inlineTableFit", "inlineTableAnchor", "inlineTableAnchors", "inlineTables"];
 const placedFields = ["x", "y", "pageOrdinal", "columnOrdinal", "referenceBoxes", "transform", "pageClip"];
@@ -39,14 +40,16 @@ export function positionedRowFragments(source, row, remaining) {
       || placedFields.some(field => fragment[field] !== undefined) || tableFields.some(field => fragment[field] !== undefined) || fragment.positionedFragments !== undefined
       || !Array.isArray(fragment.boundaries) || fragment.boundaries.length !== boundaryIndex.get(fragment.endUnit) - boundaryIndex.get(unit) + 1) return fail("InvalidPositionedRowFragments");
     let previousUnit = unit - 1, previousX = -Infinity;
+    const visibleEnd = lineVisibleEndUnit(fragment.text, fragment.startUnit);
     for (const boundary of fragment.boundaries) {
       if (!boundary || !boundaries.has(boundary.unit) || boundary.unit < unit || boundary.unit > fragment.endUnit || boundary.unit <= previousUnit
-        || !Number.isFinite(boundary.x) || boundary.x < 0 || boundary.x < previousX || boundary.x > fragment.width + 1e-8) return fail("InvalidPositionedRowFragments");
+        || !Number.isFinite(boundary.x) || boundary.x < 0 || boundary.x < previousX
+        || boundary.unit <= visibleEnd && boundary.x > fragment.width + 1e-8) return fail("InvalidPositionedRowFragments");
       previousUnit = boundary.unit; previousX = boundary.x;
     }
     if (fragment.boundaries[0].unit !== unit || fragment.boundaries.at(-1).unit !== fragment.endUnit
       || (fragment.endUnit === unit && (fragments.length !== 1 || row.endUnit !== source.startUnit || unit !== paragraph.text.length))) return fail("InvalidPositionedRowFragments");
-    const { positionedFragments: _, ...carrier } = row;
+    const { positionedFragments: _, alignmentUnavailable: _staleAlignment, ...carrier } = row;
     result.push({ ...carrier, ...fragment });
     unit = fragment.endUnit;
   }

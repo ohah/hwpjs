@@ -19,7 +19,7 @@ export function measureReservedBodyRow(source, context, reservations, measure) {
   let y = context.y;
   for (let attempt = 0; attempt <= reservations.length; attempt++) {
     const line = measurePicturePageTextLine(view, source.startUnit, { ...context.column, y, height: DEFAULT_ROW_HEIGHT }, context.pageOrdinal,
-      reservations, (text, _p, unit, kind) => measure(text, p, unit, kind));
+      reservations, (text, _p, unit, kind) => measure(text, p, unit, kind), { paragraphEndUnit: p.text.length });
     if (line.state !== "available") return fail(line.error ?? line.state);
     if (line.rows.length) {
       const horizontal = paragraphLineGeometry({ ...p.paragraphShape, alignment: 0 }, context.column.width, 0, source.startUnit === 0);
