@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+[구역별 객체 배치](section-object-layout.md)는 객체·선언 소속 분리와 affine/객체/진단 좌표의 전역 합성을 분리합니다.
+
 [반복 영역 인스턴스](page-area-object-instances.md)는 선언 좌표·시작 쪽 선택·표/그림/도형 조립과 단일 본문 합성의 책임을 분리합니다.
 
 [단독 인라인 표 호스트](single-inline-table-host.md)는 typed 구조 앵커 판정과 기존 혼합 줄 측정·수평 배치의 책임을 분리합니다.

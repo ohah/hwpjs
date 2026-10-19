@@ -27,6 +27,16 @@ def verify(data):
         raise ValueError('section index')
     if type(data['paragraph']) is not int or data['paragraph'] < 1:
         raise ValueError('paragraph index')
+    paragraph_index = data['paragraph'] - 1
+    scope = data.get('paragraphScope', 'section')
+    if scope not in ('section', 'document'):
+        raise ValueError('paragraph scope')
+    if scope == 'document':
+        for section in range(data['section']):
+            previous = 'Contents/section%d.xml' % section
+            if before.namelist().count(previous) != 1:
+                raise ValueError('document paragraph section inventory')
+            paragraph_index -= len(selected_paragraphs(ET.fromstring(before.read(previous))))
     if before.namelist().count(part) != 1 or after.namelist().count(part) != 1:
         raise ValueError('target section inventory')
     namespace = '{http://www.hancom.co.kr/hwpml/2011/paragraph}'
@@ -39,9 +49,9 @@ def verify(data):
         expected = ET.fromstring(before.read(name), parser=parser())
         actual = ET.fromstring(after.read(name), parser=parser())
         paragraphs = selected_paragraphs(expected)
-        if data['paragraph'] > len(paragraphs):
+        if paragraph_index < 0 or paragraph_index >= len(paragraphs):
             raise ValueError('paragraph index')
-        paragraph = paragraphs[data['paragraph'] - 1]
+        paragraph = paragraphs[paragraph_index]
         if data.get('mode') == 'after_leading_line_break':
             runs = paragraph.findall(namespace + 'run')
             if not runs or not len(runs[0]) or runs[0][0].tag != namespace + 't':

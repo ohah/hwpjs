@@ -236,6 +236,10 @@ pub fn build(b: *std.Build) void {
     hwpx_text_tests.addArg("tests/hwpx/source-row-table-worker.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/caption-browser-arguments.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/page-area-body-composition.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/section-object-layout.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/section-object-worker.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/section-browser-arguments.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/prefix-oracle-target.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/page-area-instances.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/page-area-object-source.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/page-area-object-worker.test.mjs");

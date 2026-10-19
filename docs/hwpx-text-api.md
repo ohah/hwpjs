@@ -2,7 +2,7 @@
 
 `js/hwpx.mjs`의 `createHwpxReader(wasm)`는 독립 WASM 인스턴스를 소유합니다. `reader.readTextEvents(Uint8Array | ArrayBuffer)`는 `{ format: "hwpx", branchPolicy: "selected_default", sectionCount, paragraphCount, events }`를 반환합니다. 파일시스템·브라우저 API는 native 코어에 넣지 않습니다. `close()` 뒤 읽기는 ReaderClosed이며 반복 close는 무변경입니다.
 
-각 이벤트는 `section`, `itemIndex`, `paragraph`, `run`, `text`, `kind`, `inlineKind`, `value`, `raw`를 소유합니다. 구역 번호는 0부터, 문단/run/text 번호는 기존 스캐너의 원문 ordinal이며 문단 번호는 1부터입니다. `value`는 content 이벤트에서 정규화 UTF-8 내용이고 다른 경계에서는 원문 태그입니다. text_end의 value/raw는 비어 있습니다. 인라인 kind는 기존 9종 분류를 유지합니다. 이 값을 전체 문단 텍스트나 편집 위치로 합성하지 않습니다.
+각 이벤트는 `section`, `itemIndex`, `paragraph`, `run`, `text`, `kind`, `inlineKind`, `value`, `raw`를 소유합니다. 구역 번호는 0부터, 문단/run/text 번호는 기존 스캐너의 원문 ordinal이며 문단 번호는 1부터입니다. 문단 ordinal은 구역마다 재시작하지 않는 문서 전체 번호입니다. `value`는 content 이벤트에서 정규화 UTF-8 내용이고 다른 경계에서는 원문 태그입니다. text_end의 value/raw는 비어 있습니다. 인라인 kind는 기존 9종 분류를 유지합니다. 이 값을 전체 문단 텍스트나 편집 위치로 합성하지 않습니다.
 
 `src/hwpx/text_preview.zig`는 기존 package.inspectDocument와 [소유 텍스트 스냅샷](hwpx-section-text-snapshot.md)을 호출하고 지원 namespace가 없는 선택 분기 정책을 명시합니다. ZIP/XML·문자 참조·문단/run 범위·분기 규칙을 새로 구현하지 않습니다. 헤더/섹션 선택과 암호화 거부는 기존 파서가 담당합니다. 버전 XML의 모든 값·표/도형/마스터페이지·비본문 part·실제 조판을 이 반환값이 포함한다는 뜻은 아닙니다.
 

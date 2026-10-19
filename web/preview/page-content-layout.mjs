@@ -28,6 +28,10 @@ export function layoutPageContent(content, measure, maxRows = 20000, { pageNumbe
     return layoutHwp5ControlledPages(content, measure, maxRows, layoutPageContent);
   }
   if (content.paragraphFlows?.some(flow => ["footnote", "endnote"].includes(flow.host))) return layoutNoteBodyPages(content, measure, maxRows);
+  if (content.pageSettings.length > 1) {
+    if (pageNumbers !== undefined) return unavailable("UnsupportedSectionPageNumbers");
+    return layoutPageSections(content, measure, maxRows, layoutPageContent);
+  }
   if (content.pageSettings.length === 1 && content.paragraphFlows?.some(flow => ["header", "footer"].includes(flow.host)))
     return composePageAreaBody(content, measure, maxRows, layoutPageContent, { pageNumbers, rowY, minimumRowPage });
   if (content.drawings?.length && content.tables?.length) return content.drawings.every(d => d.source?.geometry?.treat_as_character === false)
@@ -37,10 +41,6 @@ export function layoutPageContent(content, measure, maxRows = 20000, { pageNumbe
   if (content.tables?.length) return layoutTableBodyContent(content, measure, maxRows, { rowY, minimumRowPage });
   if (content.pictures?.length) return layoutPictureBodyContent(content, measure, maxRows);
   if (content.tables?.length || content.pictures?.length || content.paragraphs.some(p => p.tableCell || p.clipped)) return unavailable("UnsupportedPageObjects");
-  if (content.pageSettings.length > 1) {
-    if (pageNumbers !== undefined) return unavailable("UnsupportedSectionPageNumbers");
-    return layoutPageSections(content, measure, maxRows, layoutPageContent);
-  }
   const setting = content.pageSettings[0];
   if (!Number.isSafeInteger(setting.section_ordinal) || setting.section_ordinal < 0) return unavailable("AmbiguousPageSettings");
   if (content.paragraphs.some(p => p.section !== setting.section_ordinal)) return unavailable("UnsupportedPageSections");
