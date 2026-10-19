@@ -5,6 +5,58 @@ import { workerCanvasHarness, dispatchCanvasEvent } from "../canvas/worker-harne
 import { layoutContent } from "../../web/preview/layout.mjs";
 import { navigateText } from "../../web/preview/text-navigation.mjs";
 import { adjacentOwnedParagraph } from "../../web/preview/paragraph-navigation.mjs";
+import { execFileSync } from "../../tools/oracle-process.mjs";
+
+test("HWPX Canvas owner-gap navigation preserves exact edit coordinates and complete saved XML", async t => {
+  const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/table-bug.hwpx"), original = Buffer.from(input);
+  const h = await workerCanvasHarness(t);
+  assert.equal((await h.send({ kind: "load", format: "hwpx", bytes: input })).error, undefined);
+  assert.equal((await h.send({ kind: "enable" })).error, undefined);
+  const end = h.renderer.paragraph({ section: 0, paragraph: 3 }).text.length;
+  assert.equal(h.controller.selectTextRange({ section: 0, paragraph: 3, startUnit: end, endUnit: end }), true);
+  const count = h.requests.length;
+  const adjacent = h.renderer.adjacentParagraph;
+  h.renderer.adjacentParagraph = () => null;
+  dispatchCanvasEvent(h.input, "keydown", { key: "ArrowRight" });
+  assert.equal(h.canvas.dataset.caret, `0:3:${end}`);
+  h.renderer.adjacentParagraph = adjacent;
+  dispatchCanvasEvent(h.input, "keydown", { key: "ArrowRight" });
+  assert.equal(h.canvas.dataset.caret, "0:72:0");
+  dispatchCanvasEvent(h.input, "keydown", { key: "ArrowLeft" });
+  assert.equal(h.canvas.dataset.caret, `0:3:${end}`);
+  dispatchCanvasEvent(h.input, "keydown", { key: "ArrowRight", shiftKey: true });
+  assert.equal(h.canvas.dataset.caret, `0:3:${end}`);
+  dispatchCanvasEvent(h.input, "keydown", { key: "ArrowRight" });
+  assert.equal(h.requests.length, count);
+  assert.equal(h.input.value, "[붙임 2]");
+  const marker = "본문이동😀<&";
+  dispatchCanvasEvent(h.input, "beforeinput", { inputType: "insertText", data: marker });
+  h.input.value = marker + h.input.value;
+  h.input.setSelectionRange(marker.length, marker.length);
+  dispatchCanvasEvent(h.input, "input", { isComposing: false });
+  assert.equal(h.requests.length, count + 1);
+  assert.deepEqual(h.requests.at(-1), { kind: "splice", origin: "canvas", section: 0, paragraph: 72, startUnit: 0, endUnit: 0, text: marker });
+  assert.equal((await h.flush()).error, undefined);
+  const saved = await h.send({ kind: "save" });
+  assert.equal(saved.error, undefined);
+  const request = { before: input.toString("base64"), after: Buffer.from(saved.bytes).toString("base64"), section: 0, paragraph: 73, text: marker, mode: "plain_text" };
+  for (const flags of [[], ["-O"]]) {
+    const oracle = value => execFileSync("python3", [...flags, "tools/hwpx-anchor-prefix-oracle.py"], { input: JSON.stringify(value), timeout: 30000 });
+    oracle(request);
+    assert.throws(() => oracle({ ...request, paragraph: 74 }), "independent oracle must reject a wrong original paragraph");
+  }
+  assert.equal(h.controller.history("undo"), true);
+  assert.equal((await h.flush()).error, undefined);
+  assert.deepEqual(Buffer.from((await h.send({ kind: "save" })).bytes), original);
+  assert.equal(h.controller.history("redo"), true);
+  assert.equal((await h.flush()).error, undefined);
+  assert.deepEqual(Buffer.from((await h.send({ kind: "save" })).bytes), Buffer.from(saved.bytes));
+  assert.equal((await h.send({ kind: "load", format: "hwpx", bytes: saved.bytes })).error, undefined);
+  assert.equal((await h.send({ kind: "enable" })).error, undefined);
+  assert.equal(h.renderer.paragraph({ section: 0, paragraph: 72 }).text, marker + "[붙임 2]");
+  assert.deepEqual(Buffer.from((await h.send({ kind: "save" })).bytes), Buffer.from(saved.bytes));
+  assert.deepEqual(input, original);
+});
 
 test("collapsed paragraph navigation skips nested owners but not clipped peers or section boundaries", () => {
   const paragraphs = [

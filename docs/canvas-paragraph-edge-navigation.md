@@ -12,6 +12,10 @@
 
 명시적 배치 정보 저장 동의 후 받은 `/tmp/hwpjs-paragraph-navigation.B3Mcjv/browser-navigation-edited.hwp`는 독립 전체 Section `expectedSection(original,73,0,0,"본문이동😀")`·스트림 목록·모든 비대상 스트림과 일치했습니다. 파일 SHA256은 `988dd0dbbc82509b9fefbe6f15711ad02baafc8c4745b5230bdb4d3151945102`입니다. 재업로드·편집 활성화·찾기에서도73/unit6의 입력문을 확인하고 `browser-navigation-reopened.png`를 직접 보았습니다. 소유 agent-browser 세션 `hwpjs-paragraph-nav-35c54947528a`는 close 후 inactive/pid=null입니다. primary UI+bacf WASM의 한 실제 흐름이며 모든 원본/OS IME/조판 완료 또는 분리 소스 전체의 Chromium 검사로 확대하지 않습니다.
 
+HWPX 짝 원본 `table-bug.hwpx`도 본문3↔72의 정확한 경계 이동과 Shift 확장 거부를 같은 등록 테스트에서 확인합니다. 경계 제공자를 임시로 거부하면 이동하지 않는 음성 대조 후 실제 provider를 복원합니다. 이동 후72의 `[0,0)`에 `본문이동😀<&`가 정확히1회 입력되고, 독립 prefix oracle은 ZIP 전체/비대상 XML·목표 원본 문단을 normal/-O에서 검사하며 잘못된 원본 ordinal74 기대값을 두 모드 모두 거부합니다. 원본 ordinal73은 Worker paragraph72와 다른 좌표 체계임을 명시합니다. undo 원본·redo 저장본·재열기 텍스트/무편집 저장·입력 불변도 확인합니다.
+
+2026-10-19 분리 `/tmp/hwpjs-hwpx-nav-verification.Pfxh5x`의 같은4파일은275/275·실패/cancel/skip0·exit0·stderr0입니다. `clean-regression.log` SHA256은 `203f3a4af2daeb64e55f83cf4c506aa3399880e7691a1c8661ed674d8d6f785f`이고 bacf WASM을 명시했습니다. 실제 HWPX Worker/WASM과 모사 DOM/Canvas의 입력 경로 검증이며 앞선 실제 Chromium HWP5 왕복을 HWPX 브라우저 실행으로 바꾸거나 전체 fixture 조판 완료로 확대하지 않습니다.
+
 ## 세로 이동의 소유권 후보 선택
 
 `text-navigation.mjs`의 선택적 `acceptRow`는 위치 계산에 소유권 정책을 주입합니다. Canvas는 기존 `renderer.selectionRanges`로 해당 anchor에서 후보 줄까지의 선택 가능 여부를 확인합니다. 다른 소유권의 줄을 최단 거리로 먼저 선택한 뒤 거부해 멈추지 않고, 허용되는 후보 중 가까운 줄을 선택합니다. 기존 구역·반복 페이지·변환 프레임 조건과 최종 선택 범위 검사도 유지합니다. 이미 허용한 줄보다 먼 후보에는 불필요한 소유권 조회를 하지 않습니다. 형식별 소유권 규칙이나 저장 모델을 이동 모듈에 복제하지 않습니다.
