@@ -1,5 +1,7 @@
 # 그림 캡션 조회 API와 Worker 소속
 
+실제 화면 입력·저장 후보의 별도 검증은 [Canvas 브라우저 왕복](captioned-picture-browser.md)을 따릅니다. API 게시와 복합 조판 후보의 브라우저 완료 범위를 합치지 않습니다.
+
 native 의미는 [캡션 코어](hwpx-picture-caption-core.md)가 소유합니다. 별도 optional export `hwpx_edit_picture_caption(section,node)`와 `hwpx_edit_picture_caption_bindings(section)`는 기존 JSON 출력 버퍼를 재사용합니다. 성공1/실패0이며 호출 전에 이전 출력을 해제하고 기존 output_ptr/len/free 수명을 따릅니다.
 
 JS `editor.pictureCaption(section,pictureNode)`는 캡션 원값 또는 null을 반환합니다. scalar schema는 기존 `decodeTableCaption`을 재사용합니다. `editor.pictureCaptionBindings(section)`는 native 전역1기반 paragraph와 picture_node/caption_node/list_node 목록을 반환합니다. `caption-bindings-wire.mjs`가 표·그림의 공통 envelope를 검증하며 소속 식별자 선택과 오류 이름은 호출자가 명시합니다. 기존 표 API/오류는 유지합니다. JS는 native 출력을 복사하고 finally에서 해제합니다.
