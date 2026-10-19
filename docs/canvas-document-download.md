@@ -1,5 +1,19 @@
 # Canvas 편집본 다운로드
 
+## 실제 Ctrl/Cmd+S 저장 경계
+
+저장 단축키는 이미 `save-controls.mjs`의 버튼과 같은 active/canRequest/request 경로를 사용합니다. 새 제품 저장 명령이나 별도 초안 모델을 만들지 않았습니다. `tools/browser/save-shortcuts.mjs`는 일반 charshape.hwpx와 실제 BELOW 참조 원본의 공유 메뉴 왕복에 신뢰된 Control+S/Meta+S 및 실제 Chromium 파일 검증을 더합니다.
+
+편집 키 입력 뒤 Worker splice 메시지 한 건만 브라우저 전송 경계에서 잠시 보류해 실제 UI의 입력 반영 대기 상태를 만듭니다. 이때 신뢰된 Ctrl+S는 소비되지만 native save 요청/다운로드가 없어야 합니다. 메시지를 그대로 해제하고 native 반영·메뉴 이력을 마친 뒤 Ctrl+S/Cmd+S가 각각 저장 요청 한 건과 실제 파일을 만들어야 합니다. 이는 실제 OS IME/CPU 지연 재현이 아니라 명시적 전송 경계 대조입니다.
+
+두 단축키 파일은 이후 메뉴 다운로드와 전체 바이트가 같아야 하고 기존 독립 normal/-O XML/ZIP·원본 보존·재업로드 검사까지 이어집니다. Chromium이 같은 이름을 덮어쓰므로 파일명뿐 아니라 inode/크기/mtimeNs/ctimeNs를 비교합니다. 변경 없는 기존 파일은 새 다운로드로 세지 않습니다. 결과 JSON에는 각 키·파일명·파일 버전·SHA256을 남깁니다.
+
+첫 `df828d6f5bafa9335c4f5466f676669f14217e44` 사본의 SaveShortcutDownloadTimeout은 이름만 새 파일로 판정한 검증기 문제였습니다. 생성된 ZIP은 유효했지만 두 번째 동일 이름 저장을 감지하지 못했습니다. 초기/수정 중 실행의 종료 소켓 오류도 보존하며 최종 성공으로 소급하지 않습니다. `session-close.mjs`는 이미 비활성인 세션을 먼저 확인하고, close의 정확한 ENOENT 오류도 후속 session info가 active=false일 때만 종료로 인정합니다. 다른 오류·활성/불명 상태는 계속 실패하며 확인된 소켓 경합은 별도 JSON 행에 기록합니다.
+
+최종 tree `300c171717809df3560bd457640a93f48ec2c73b`의 `/tmp/hwpjs-save-shortcuts-final.MjOi2p`에서 후보 `9e75fd8bab9b879b3883f4703a7a8c2ffe100f98cd48c68a511eed797840b468`로 두 원본을 직렬 실행했습니다. `shortcut-plain-final.jsonl/.stderr`와 `shortcut-below-final.jsonl/.stderr`는 모두 exit0·stderr0·verified=true·cleanup.success=true입니다. 각 원본의 두 키가 같은 파일명/서로 다른 파일 버전으로 저장됐고 메뉴 파일과 바이트 일치했습니다. BELOW의 재업로드 위치도 구역0·원본 문단89/Canvas0:88:1로 확인했습니다. 캡처/다운로드는 `hwpjs-menu-browser-gPF2qt`와 `hwpjs-below-sum-browser-Ke8MVc` 이름의 시스템 임시 디렉터리에 보존하며 캡처도 직접 확인했습니다.
+
+최종 가드는40/40·fail/cancel/skip/todo0·exit0·stderr0이며 신뢰/소비/수정키 위조·동일 이름 덮어쓰기/변경 없는 파일·종료 후 비활성 확인/활성 오류 전파를 포함합니다. 선택 build의 fmt --check·build --help·JS 구문과 추적7,214개 blob/최종 코드 일치도 확인했습니다. 스킬의 격리·실제 입력·캡처 검토·소유 세션 종료를 적용했고 두 세션 active=false/pid=null·포트58863/58869 종료를 별도 확인했습니다. 원본 조판/전체 fixture/OS IME 또는 기본 WASM·외부 데모 승격의 증거는 아닙니다. 기존 사용자 문서 변경은 제외하고 이 단락만 커밋합니다.
+
 ## 책임과 계약
 
 `document-save.mjs`는 Worker의 native 편집 세션에 저장을 위임합니다. Canvas 표시·textarea 초안은 저장 모델이 아닙니다. HWP5는 `allowStaleLayout` Boolean을 기본 false로 전달하고 native의 조판 검증을 우회하지 않습니다. HWPX는 원본 줄 배치 재계산을 하지 않으므로 결과를 보수적으로 재조판 필요 상태로 안내합니다.

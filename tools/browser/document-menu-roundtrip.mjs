@@ -1,9 +1,9 @@
 // Real Chromium menu input; native editing remains in the existing Worker.
 import assert from "node:assert/strict";
 import {spawn, execFileSync as cli} from "node:child_process";
-import {mkdtempSync, readFileSync} from "node:fs";
+import {mkdtempSync, mkdirSync, readFileSync} from "node:fs";
 import {tmpdir} from "node:os";
-import {resolve, join} from "node:path";
+import {resolve, join, basename} from "node:path";
 import {once} from "node:events";
 import {createHash} from "node:crypto";
 import {createHwpxEditor} from "../../js/hwpx-editor.mjs";
@@ -12,6 +12,7 @@ import {clickBrowserTarget} from "./click-target.mjs";
 import {moveBrowserInputToStart} from "./input-origin.mjs";
 import {closeOwnedBrowser} from "./session-close.mjs";
 import {numericBrowserTargetMatches} from "./numeric-target.mjs";
+import {armSaveShortcutInputHold,verifyHeldInputSaveShortcut,verifyReadySaveShortcuts} from "./save-shortcuts.mjs";
 import {writeAuditRow} from "../audit-jsonl-output.mjs";
 import {documentMenuBrowserCases} from "./document-menu-cases.mjs";
 import {openBrowserRibbonPage,exerciseBrowserRibbonPages} from "./ribbon-page.mjs";
@@ -37,11 +38,13 @@ export async function runDocumentMenuBrowserAudit(caseName) {
   sourcePaths.push("web/preview/document-menu-disclosures.mjs");
   sourcePaths.push("tools/browser/audit-origin.mjs");
   sourcePaths.push("tools/browser/numeric-target.mjs");
+  sourcePaths.push("tools/browser/save-shortcuts.mjs","web/preview/save-controls.mjs","web/preview/document-download.mjs");
   const sourceHashes = () => Object.fromEntries(sourcePaths.map(path=>[path,hash(readFileSync(resolve(path)))]));
   const sourceSha256 = sourceHashes();
   const session = cli("agent-browser", ["session","id","--scope","worktree","--prefix",config.sessionPrefix], {cwd:root,encoding:"utf8",timeout:10000}).trim();
   assert(/^[a-zA-Z0-9_-]+$/.test(session));
   const output = mkdtempSync(join(tmpdir(),config.outputPrefix));
+  const shortcutDirectory = join(output,"shortcut-downloads");mkdirSync(shortcutDirectory);
   const editor = await createHwpxEditor(wasm);
   let original;
   try { editor.open(input); original = oracleMode==="manual-result"?editor.manualFormulaResultDisplayText(0,paragraph):editor.anchorText(0,paragraph); assert.equal(original,config.original); }
@@ -49,7 +52,7 @@ export async function runDocumentMenuBrowserAudit(caseName) {
   const command = (...args) => {
     const result = JSON.parse(cli("agent-browser", ["--json","--session",session,...args], {
       cwd:root, encoding:"utf8", timeout:60000, maxBuffer:8*1024*1024,
-      env:{...process.env,AGENT_BROWSER_DEFAULT_TIMEOUT:"55000"},
+      env:{...process.env,AGENT_BROWSER_DEFAULT_TIMEOUT:"55000",AGENT_BROWSER_DOWNLOAD_PATH:shortcutDirectory},
     }));
     if (result.success !== true) throw Error(JSON.stringify(result.error ?? result));
     return result.data;
@@ -67,7 +70,7 @@ export async function runDocumentMenuBrowserAudit(caseName) {
     command("press",key);
   };
   const replies = kind => `window.__menuAudit.filter(r=>r.direction==='reply'&&r.kind===${JSON.stringify(kind)}&&!r.error)`;
-  let server, owned = false, closed = false, verified = false, phase = "preflight", reopenedTarget = null;
+  let server, owned = false, closed = false, verified = false, phase = "preflight", reopenedTarget = null, shortcutDownloads = [];
   const progress = name => {phase=name;writeAuditRow({kind:"menu-browser-phase",caseName,phase,session,output});};
   try {
     assert.equal(command("session","info").active,false,"RefuseActiveSession");
@@ -90,9 +93,11 @@ export async function runDocumentMenuBrowserAudit(caseName) {
         if(!watched.has(this)){watched.add(this);this.addEventListener('message',event=>{
           const row=event.data;window.__menuAudit.push({direction:'reply',kind:row.kind,error:row.error,revision:row.historyRevision,changed:row.changed});
         });}
-        window.__menuAudit.push({direction:'request',kind:message.kind,section:message.section,paragraph:message.paragraph,startUnit:message.startUnit,endUnit:message.endUnit});return post.call(this,message,...rest);
+        window.__menuAudit.push({direction:'request',kind:message.kind,section:message.section,paragraph:message.paragraph,startUnit:message.startUnit,endUnit:message.endUnit});
+        if(message.kind==='splice'&&window.__saveShortcutHold?.next){const held=window.__saveShortcutHold;held.next=false;held.held=true;held.release=()=>post.call(this,message,...rest);return;}
+        return post.call(this,message,...rest);
       };
-      document.addEventListener('keydown',event=>window.__menuKeys.push({key:event.key,trusted:event.isTrusted,consumed:event.defaultPrevented}));
+      window.addEventListener('keydown',event=>window.__menuKeys.push({key:event.key,trusted:event.isTrusted,consumed:event.defaultPrevented,ctrl:event.ctrlKey,meta:event.metaKey}));
       for(const type of ['beforeinput','input'])document.querySelector('#canvas-input').addEventListener(type,event=>window.__menuInput.push({type,trusted:event.isTrusted,inputType:event.inputType}));
     })()`);
     if(exerciseBrowserRibbonPages(driver))progress("ribbon-keyboard-and-permissions");
@@ -203,18 +208,23 @@ export async function runDocumentMenuBrowserAudit(caseName) {
       command("press",evaluate('navigator.platform.includes("Mac")')?"Meta+Shift+ArrowDown":"Control+Shift+End");
       assert.deepEqual(evaluate('({start:document.querySelector("#canvas-input").selectionStart,end:document.querySelector("#canvas-input").selectionEnd})'),{start:0,end:original.length});
     }
+    if(config.saveShortcuts)armSaveShortcutInputHold(evaluate);
     command("keyboard","inserttext",marker);
+    if(config.saveShortcuts){verifyHeldInputSaveShortcut(driver,shortcutDirectory);progress("busy-input-save-shortcut-blocked");}
     wait(`${replies("splice")}.some(r=>r.revision===1)`);progress("trusted-text-edit");
     assert.deepEqual(evaluate("window.__menuInput.filter(r=>r.trusted&&r.inputType==='insertText').map(r=>r.type)"),["beforeinput","input"]);
     menuKey("menu-undo","u");wait(`${replies("undo")}.some(r=>r.changed&&r.revision===0)`);
     assert.equal(evaluate('document.querySelector("#canvas-input").value'),original);
     menuKey("menu-redo","r");wait(`${replies("redo")}.some(r=>r.changed&&r.revision===1)`);
     assert.equal(evaluate('document.querySelector("#canvas-input").value'),editedText);progress("mnemonic-history");
-    command("check","#allow-stale-layout");menuKey("menu-save","s");wait(`${replies("save")}.length===1`);
+    command("check","#allow-stale-layout");
+    if(config.saveShortcuts){shortcutDownloads=await verifyReadySaveShortcuts(driver,shortcutDirectory);progress("trusted-save-shortcuts-downloaded");}
+    menuKey("menu-save","s");wait(`${replies("save")}.length===${shortcutDownloads.length+1}`);
     assert.equal(evaluate(`document.querySelector(${JSON.stringify(popup("menu-save"))}).open`),false);
-    for(const kind of ["splice","undo","redo","save"])assert.equal(evaluate(`window.__menuAudit.filter(r=>r.direction==='request'&&r.kind===${JSON.stringify(kind)}).length`),["splice","undo"].includes(kind)&&protectedAnchors?2:1);
+    for(const kind of ["splice","undo","redo","save"])assert.equal(evaluate(`window.__menuAudit.filter(r=>r.direction==='request'&&r.kind===${JSON.stringify(kind)}).length`),kind==="save"?shortcutDownloads.length+1:["splice","undo"].includes(kind)&&protectedAnchors?2:1);
     const downloaded=join(output,"edited.hwpx");click(`${popup("menu-save")} > summary`);
     command("download","#menu-save",downloaded);const saved=readFileSync(downloaded);
+    for(const shortcut of shortcutDownloads)assert.deepEqual(shortcut.bytes,saved,"ShortcutAndMenuSavedDifferentSnapshots");
     const request={before:input.toString("base64"),after:saved.toString("base64"),section:0,...(oracleMode==="manual-result"?{ordinal:config.formulaOrdinal,display:editedText}:{mode:oracleMode,paragraph,text:marker})};
     for(const flags of [[],["-O"]]){
       const oracleResult=await executeOracle("python3",[...flags,oraclePath],{input:JSON.stringify(request),timeout:30000});
@@ -245,11 +255,11 @@ export async function runDocumentMenuBrowserAudit(caseName) {
     assert.deepEqual(readFileSync(fixture),input);assert.deepEqual(readFileSync(wasmPath),wasm);assert.deepEqual(sourceHashes(),sourceSha256);
     if(externalOrigin!==null)await verifyBrowserSourceResponses(origin,sourceSha256);
     verified=true;
-    writeAuditRow({kind:"menu-browser-result",caseName,verified,session,output,origin,sourceSha256,wasmSha256:hash(wasm),inputSha256:hash(input),savedSha256:hash(saved),reopenedTarget,scope:config.scope});
+    writeAuditRow({kind:"menu-browser-result",caseName,verified,session,output,origin,sourceSha256,wasmSha256:hash(wasm),inputSha256:hash(input),savedSha256:hash(saved),reopenedTarget,saveShortcuts:shortcutDownloads.map(({key,bytes,path,version})=>({key,file:basename(path),version,sha256:hash(bytes)})),scope:config.scope});
   }catch(error){
     writeAuditRow({kind:"menu-browser-failure",caseName,phase,error:error.message});throw error;
   }finally{
-    try{if(owned){await closeOwnedBrowser(command);closed=true;}}
+    try{if(owned){await closeOwnedBrowser(command,{onClosedSocket:()=>writeAuditRow({kind:"menu-browser-close-race",session,confirmedInactive:true})});closed=true;}}
     finally{
       if(server?.pid&&server.exitCode===null&&server.signalCode===null){const ended=once(server,"exit"),timer=setTimeout(()=>server.kill("SIGKILL"),3000);server.kill("SIGTERM");try{await ended;}finally{clearTimeout(timer);}}
       const serverExited=!server?.pid||server.exitCode!==null||server.signalCode!==null;

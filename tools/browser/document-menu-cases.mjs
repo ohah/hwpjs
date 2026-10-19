@@ -6,6 +6,7 @@ const numericSumOracleDependencies=Object.freeze([
 ]);
 export const documentMenuBrowserCases=Object.freeze({
   "below-sum-input":Object.freeze({
+    saveShortcuts:true,
     fixturePicker:true,
     fixturePath:"reference/rhwp/samples/issue6298/copay_cap_tac_table_leading.hwpx",paragraph:89,
     original:"30.1",marker:"1",replaceWhole:true,protectedAnchors:0,
@@ -53,6 +54,7 @@ export const documentMenuBrowserCases=Object.freeze({
     scope:"one actual formula result: trusted Canvas input, menu U/R/S, independent full XML/ZIP, download and reupload; not recalculation, every result or layout equivalence",
   }),
   plain:Object.freeze({
+    saveShortcuts:true,
     fixturePicker:true,
     fixturePath:"legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwpx",paragraph:1,
     original:"가",marker:"메뉴검증😀<&",protectedAnchors:0,
