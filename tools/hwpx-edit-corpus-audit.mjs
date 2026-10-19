@@ -8,6 +8,7 @@ import { createHwpxReader } from "../js/hwpx.mjs";
 import { parseEditAuditOptions } from "./hwpx-edit-audit-options.mjs";
 import { execFileSync } from "./oracle-process.mjs";
 import { hwpxParagraphCoordinates } from "./hwpx-paragraph-coordinates.mjs";
+import { hwpxParagraphTextIndex } from "./hwpx-paragraph-text-index.mjs";
 import { captureInputIdentity, verifyInputIdentity } from "./audit-input-identity.mjs";
 
 const options = parseEditAuditOptions(process.argv.slice(2), { allowHistory: true, allowParagraphRange: true, allowProgress: true });
@@ -30,6 +31,7 @@ try {
     }
     if (history) editor.enableHistory();
     const original = reader.readTextEvents(input);
+    const originalText = hwpxParagraphTextIndex(original.events);
     const allParagraphs = hwpxParagraphCoordinates(original.events);
     const range = options.paragraphRange;
     if (range && range.end > allParagraphs.length + 1) throw new Error("AuditParagraphRangeOutOfBounds");
@@ -93,7 +95,7 @@ try {
       const saved = editor.save();
       const reopened = reader.readTextEvents(saved);
       const text = reopened.events.filter(event => event.kind === "content" && event.section === paragraph.section && event.paragraph === paragraph.paragraph).map(event => event.value).join("");
-      const before = original.events.filter(event => event.kind === "content" && event.section === paragraph.section && event.paragraph === paragraph.paragraph).map(event => event.value).join("");
+      const before = originalText(paragraph.section, paragraph.paragraph);
       assert.equal(text, `검증😀<&\r${before}`, `${path}: ${paragraph.paragraph}`);
       if (history) {
         const editedRevision = editor.historyRevision();

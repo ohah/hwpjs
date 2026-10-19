@@ -2,6 +2,32 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { parseEditAuditOptions } from "../../tools/hwpx-edit-audit-options.mjs";
+import { hwpxParagraphTextIndex } from "../../tools/hwpx-paragraph-text-index.mjs";
+
+test("audit source text index preserves event order, sections, empty text and source snapshot", () => {
+  const events = [
+    { kind: "paragraph_start", section: 0, paragraph: 1 },
+    { kind: "content", section: 0, paragraph: 1, value: "가😀" },
+    { kind: "content", section: 1, paragraph: 1, value: "다른 구역" },
+    { kind: "content", section: 0, paragraph: 1, value: "<&\r" },
+    { kind: "content", section: 0, paragraph: 2, value: "" },
+  ];
+  const lookup = hwpxParagraphTextIndex(events);
+  for (const section of [0, 1, 2]) for (const paragraph of [0, 1, 2, 3])
+    assert.equal(lookup(section, paragraph), events.filter(e => e.kind === "content" && e.section === section && e.paragraph === paragraph).map(e => e.value).join(""));
+  events[1].value = "changed"; events.length = 0;
+  assert.equal(lookup(0, 1), "가😀<&\r");
+  assert.throws(() => hwpxParagraphTextIndex(null), /InvalidParagraphEvents/);
+});
+
+test("audit source lookup scans events once rather than once per paragraph", () => {
+  let visits = 0;
+  const events = Array.from({ length: 10000 }, (_, paragraph) => ({ get kind() { visits++; return "content"; }, section: 0, paragraph, value: `${paragraph}😀` }));
+  const lookup = hwpxParagraphTextIndex(events);
+  assert.equal(visits, events.length);
+  for (let paragraph = 0; paragraph < events.length; paragraph++) assert.equal(lookup(0, paragraph), `${paragraph}😀`);
+  assert.equal(visits, events.length, "lookups must not rescan source events");
+});
 
 test("progress intervals are opt-in canonical bounded integers and never a scope limit", () => {
   assert.deepEqual(parseEditAuditOptions(["--progress-every=2"], { allowProgress: true }), { progressEvery: 2 });

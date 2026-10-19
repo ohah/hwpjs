@@ -1,6 +1,14 @@
 # 일반 본문 prefix의 독립 검증 경계
 
+## 감사 원본 텍스트 조회
+
+`tools/hwpx-paragraph-text-index.mjs`는 한 파일을 읽은 직후의 원본 content 이벤트만 구역/문단별 문자열로 묶습니다. 감사의 원본 기대값 조회용이며 제품 편집 캐시·저장 SSOT가 아닙니다. 저장 결과의 reader 재파싱·현재 텍스트 검사·undo/redo·저장 바이트 및 입력 불변 검사는 생략하지 않습니다. 실행 중인 이전 고정 사본의 감사는 변경하거나 재시작하지 않았습니다.
+
+0619 후보의 `edit-audit-options.test.mjs`는6/6·fail/cancel/skip0·exit0입니다. 원본 순서·구역 분리·빈/부재 문단·Unicode/제어문자·소스 변경 뒤 snapshot 불변과10,000개 이벤트의 단일 순회, 실제 charshape 전체/부분 감사·진행 출력의 총계 일치와 chart 숫자 거부를 검사했습니다. `/tmp/hwpjs-owner-native-proof.MXzTXm/audit-text-index.log` SHA256은 `f687da62ecfc58399ee621ee5bb8a21cbf0dcbb9513ef510c45b423121c3be49`입니다. 합성30,000이벤트/1,000조회에서 기존146.91ms/색인 생성 포함6.80ms·결과 동일을 관측했습니다. 단일 합성 조회 실측이며 대형 문서 전체 편집 시간 개선율이나 전수 감사 완료로 확대하지 않습니다.
+
 ## 긴 일반 감사의 선택적 진행 행
+
+조회 개선 게시 전에는 HEAD에 해당4파일만 얹은 tree `211e7f1477ad3b11290bb0d07ae731f8db291a6e`에서 추적 JS/도구·등록 검사·실제 두 fixture를 archive로 추출했습니다. 기본 제품 WASM을 명시한 `/tmp/hwpjs-audit-index-publish.p6MUAI/clean-tests-retry.log/.stderr`는6/6·fail/cancel/skip0·exit0·stderr0입니다. 주 작업본의 다른 미게시 JS/native 변경 없이 검증했으며 첫 잘못된 cwd의 archive 준비 실패는 통과에 합산하지 않습니다.
 
 일반 `hwpx-edit-corpus-audit.mjs`는 선택적 `--progress-every=N`을 받습니다. 공통 CLI parser에서 이 도구만 opt-in하며 N은 선행0 없는1~1,000,000 정수입니다. 중복/0/음수/분수/지수/초과를 거부하며 다른 감사에 옵션을 조용히 허용하지 않습니다. 새 범위/시간 제한이나 검사 생략 옵션은 아닙니다.
 
