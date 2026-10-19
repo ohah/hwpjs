@@ -38,6 +38,10 @@ eab38188에 이 수정만 더한 tree `bc8f170701940e1d1b8345c66293e5f0d1626830`
 
 main a19c3bf7에 이 검사/회귀만 추가한 tree `45079ca24d0d7d97d9d358a5799d308d17177a26`의 `/tmp/hwpjs-specialized-artifact-clean.cP2UTC`에서 게시 afb7 후보·Node24.20.0으로 기존 identity 검사와 교체 대조 3/3·fail/cancel/skip0·exit0입니다. 같은 사본의 정상 대조 `issue1893_clickhere_field_roundtrip.hwpx` 전체 전용 감사도 9시도/9검증/독립 XML9(필드6)·거부0·exit0입니다. 이 보강은 감사의 증거 결합이며 새 제품 편집 기능이나 실행 중인 고정44파일 감사 결과의 소급 변경이 아닙니다.
 
+## 표를 감싼 필드 원본의 전체 전용 재검사
+
+고정44파일 실행에서 XML 불일치였던 `issue5162_field_wraps_table.hwpx`(입력 SHA256 `c8f07209f7d60d60c32c7918800545c1b3079ef4e0178eaf44ca2bfe23cfc0c8`)를 후속 source tree `b892f7a6616aab02dd106a6a66d013dd2593cc49`의 `/tmp/hwpjs-unmatched-audit-clean.3b2STF`에서 같은 f4e0 후보로 재검사했습니다. `issue5162-current-specialized.jsonl/.stderr`는20시도/20검증·독립 XML20(필드20)·거부0·exit0·stderr0입니다. 기존 source-site 보정 뒤 전체 전용 경로가 끝까지 일치한 근거이며 새 제품 파서 기능이나 일반 입력/모든 명령/브라우저 완료로 계수하지 않습니다. 원래 실패 행은 보존합니다.
+
 ## 체크박스 앞 필드 prefix의 독립 경계
 
 `issue2470/36341511_masked.hwpx`(SHA256 `315b7fc1ffadc1f8096daae8ca92c46e5233598a0efbb81f99db2678b027d909`)의 구역0·전역/로컬 문단72·beginElement607·beginId1554500231에서 후속 전용 감사도 XML 불일치로 실패했습니다. `/tmp/hwpjs-reference-followup.DhrVro/issue2470-36341511-current.*`와 `-repro.*`에 원래 실패/좌표/저장 전후 바이트를 보존했습니다. 원본은 colPr metadata run 다음 checkBtn·빈 t를 갖고, 저장은 같은 소유 run의 checkBtn 앞에 새 t를 삽입했습니다. 검사기의 보존 개체 목록에 checkBtn이 없어 뒤쪽 빈 t를 수정한 기대 XML이 원인입니다.
