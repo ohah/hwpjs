@@ -6,7 +6,7 @@
 
 guardian overlay는 앞선 고정 실행에서 사용한 정확한 세 파일만 복사했고 참조 samples도 별도로 복사했습니다. 새 `zig test src/root.zig -O ReleaseSafe --test-no-exec -femit-bin=.../native-safe`는 nice10·Zig0.17.0으로 exit0·stdout/stderr0입니다(`native-safe-build.log/.stderr`). 새 바이너리 SHA256은 `b8e2e062b150ea2d93401b3a2d34d3b43c287bb98d6ac290facee4ee415c8f4a`입니다.
 
-`native-guard-full.jsonl/.stderr`에서 이 해시를 고정하고 inventory4,118개·범위0..4118·fullInventoryCovered=true·batch1·seed0x485750·4,096MiB 감시로 실제 실행을 시작했습니다. 문자 속성 shard 환경변수는 둘 다 제거했고 앞선 skip 조건을 성공으로 바꾸지 않습니다. build test의 별도 controlled text 대상도 같은 사본에서 `zig test -O ReleaseSafe --dep hwpjs -Mroot=tests/hwp5/style-preservation/text.test.zig -O ReleaseSafe -Mhwpjs=src/root.zig --test-filter 'text splice'`로 실행 중입니다(`controlled-text-safe.log/.stderr`). root의 진행/완료를 이 별도 대상의 통과로 계수하지 않습니다. 각 최종 종료가 필요하며, 이전52개 수정의 집중 결과와 새 전체 결과를 합산하지 않고 기본 WASM/데모는 유지합니다.
+`native-guard-full.jsonl/.stderr`에서 이 해시를 고정하고 inventory4,118개·범위0..4118·fullInventoryCovered=true·batch1·seed0x485750·4,096MiB 감시로 실제 실행을 시작했습니다. 문자 속성 shard 환경변수는 둘 다 제거했고 앞선 skip 조건을 성공으로 바꾸지 않습니다. build test의 별도 controlled text 대상도 같은 사본에서 `zig test -O ReleaseSafe --dep hwpjs -Mroot=tests/hwp5/style-preservation/text.test.zig -O ReleaseSafe -Mhwpjs=src/root.zig --test-filter 'text splice'`로 실행해9/9·fail/skip0·exit0으로 완료했습니다(`controlled-text-safe.log/.stderr`, stdout0·stderr에는 정상 OK 진행/요약만 기록). root의 진행/완료를 이 별도 대상의 통과로 계수하지 않습니다. 각 최종 종료가 필요하며, 이전52개 수정의 집중 결과와 새 전체 결과를 합산하지 않고 기본 WASM/데모는 유지합니다.
 
 ## 단 소속·분할·원본 inventory의 마지막 여섯 실패
 
