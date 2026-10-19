@@ -1,6 +1,6 @@
 import { paginateBodyRows } from "./page-row-flow.mjs";
 import { bodyRowSources } from "./body-row-sources.mjs";
-import { measureReservedBodyRow } from "./reserved-body-row.mjs";
+import { createReservedBodyCallbacks } from "./reserved-body-callbacks.mjs";
 import { picturePageReservations } from "./picture-page-reservations.mjs";
 import { pictureCaptionPageFit } from "./picture-caption-page-fit.mjs";
 
@@ -31,35 +31,16 @@ export function paginateReservedPictureRows(rows, setting, flows, pictures, para
       if (fit.state === "unavailable") return fit;
       anchorPages.set(key, Math.max(anchorPages.get(key) ?? 0, reservation.pageOrdinal + (fit.state === "advance" ? 1 : 0)));
     }
-    let failure;
+    const callbacks = createReservedBodyCallbacks(reserved.reservations, measure, { rowY: options.rowY, maxIterations });
+    if (callbacks.state !== "ready") return callbacks;
     page = paginateBodyRows(sources.rows, setting, flows, { ...options,
       minimumRowPage(row) {
         return Math.max(options.minimumRowPage?.(row) ?? 0, anchorPages.get(`${row.section}:${row.paragraph}`) ?? 0);
       },
-      rowY(row, context) {
-        let y = options.rowY?.(row, context) ?? context.y;
-        if (!Number.isFinite(y) || y < context.y) { failure = "InvalidReservedPictureAdvance"; return NaN; }
-        if (!row.paragraphSource) return y;
-        for (let attempt = 0; attempt < maxIterations; attempt++) {
-          const measured = measureReservedBodyRow(row, { ...context, y }, reserved.reservations, measure);
-          if (measured.state !== "measured") { failure = measured.error; return NaN; }
-          const next = options.rowY?.(row, { ...context, y: measured.y }) ?? measured.y;
-          if (!Number.isFinite(next) || next < measured.y) { failure = "InvalidReservedPictureAdvance"; return NaN; }
-          if (next === measured.y) return next;
-          y = next;
-        }
-        failure = "ReservedPictureAdvanceLimit"; return NaN;
-      },
-      measurePositionedRow(source, row, context) {
-        if (!source.paragraphSource) return row;
-        const measured = measureReservedBodyRow(source, context, reserved.reservations, measure);
-        if (measured.state !== "measured" || measured.y !== context.y) {
-          failure = measured.error ?? "UnresolvedReservedPictureAdvance"; return null;
-        }
-        return measured.row;
-      },
+      rowY: callbacks.rowY,
+      measurePositionedRow: callbacks.measurePositionedRow,
     });
-    if (failure) return fail(failure);
+    if (callbacks.failure()) return fail(callbacks.failure());
     if (page.state !== "paginated" || page.limited) return page;
     const next = picturePageReservations(pictures, paragraphs, page.rows, placement);
     if (next.state !== "reserved") return next;

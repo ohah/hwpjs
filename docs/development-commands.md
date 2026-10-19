@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[예약 본문 callback](reserved-body-callbacks.md)은 `mise exec -- node --test tests/hwpx/reserved-body-callbacks.test.mjs tests/hwpx/reserved-picture-page-flow.test.mjs tests/hwpx/reserved-body-row.test.mjs tests/hwpx/table-picture-reservation-check.test.mjs`로 검사합니다. 새 도형 감싸기 지원 완료와 구분합니다.
+
 [구역별 실제 Canvas 왕복](section-object-layout.md)은 `HWPJS_TEST_WASM=/absolute/hwpjs.wasm node tools/page-area-object-browser-audit.mjs --case=sections`입니다. 기본 복합 셀/꼬리말 모드와 같은58886·전용 세션을 쓰므로 직렬 실행합니다. 문서 전체 문단 번호로 구역1 입력·독립 저장·재업로드·소유 브라우저/서버 종료를 확인합니다.
 
 [반복 영역 인스턴스](page-area-object-instances.md)의 실제 복합 셀·꼬리말 왕복은 `HWPJS_TEST_WASM=/absolute/hwpjs.wasm node tools/page-area-object-browser-audit.mjs`입니다. 전용58886을 사용하는 다른 검사와 직렬 실행하며 신뢰된 Canvas 입력·독립 전체 저장·재업로드 및 소유 브라우저/서버 종료를 확인합니다. 원본 조판 동치와 구분합니다.
