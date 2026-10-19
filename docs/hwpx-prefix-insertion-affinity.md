@@ -1,5 +1,11 @@
 # HWPX prefix 입력의 원본 run 소속 검증
 
+## 최신 게시 소스의 공문 전용 입력 재대조
+
+`e9aa1141a55c4c8879e9aa47e62bcc992e22520a`의 분리 사본 `/tmp/hwpjs-main-hwp5-gate.qzuKq7`에서 공문36382669 전체 전용 입력을 새 후보로 재검사했습니다. 원본 SHA256은 `0f2ae84c476985c6966a1950b8339d339b5099dc3d3d7bc915e7a99823edc524`, WASM은 `9e75fd8bab9b879b3883f4703a7a8c2ffe100f98cd48c68a511eed797840b468`입니다. Node24.20.0·nice10의 `current-36382669-specialized.jsonl/.stderr`는127시도/127검증·독립 XML127(필드122)·거부0·exit0·stderr0입니다. normal/-O 전체 XML/ZIP, 별도 편집기 재열기/재저장, undo/redo와 원본 불변을 유지했습니다.
+
+종료 후 사본의7,214개 추적 blob을 원본 저장소의 정확한 e9aa1141 tree와 전수 대조해 일치했고 원본/후보 해시도 그대로였습니다. 로그 SHA256은 `c0bcb46d345f64df758c3c80babe2279a5d85ef251c7fed30c1ef4a368fabc70`입니다. 사본 자체에는 유효한 HEAD 객체가 없어 최초 HEAD 기반 사후 대조 명령은 실패했으며, 이후 원본 저장소의 명시적 commit tree로 대조한 결과만 근거로 사용합니다. 과거 f4e0 실행의 실패 행을 소급 수정하지 않으며, 이 결과는 일반 입력/모든 명령·위치/실제 브라우저/조판 또는 진행 중인 HWP5 전체 gate 완료가 아닙니다. 기본 WASM과 외부 데모는 교체하지 않았습니다.
+
 ## 활성 분기 문단 번호와 원본 XML 순서
 
 `issue2006/1790387_prep_final_report.hwpx`의 구역0·API 문단495를 재현했습니다. 원본 SHA256은 `c68baed24096386f9041930d24d39409b61ac99463bf04dfd242440dfdeb739f`입니다. API reader/editor는 selected-default 분기를 사용하지만 anchor oracle은 ElementTree의 모든 p를 세고 있었습니다. 실제 수정한 문단은 XML 원본496번째이고, 원본495번째는 바로 앞의 다른 그림 설명 문단입니다. 이 구역의 raw p2092개와 독립 selected2090개를 확인했고 게시 afb7 reader의 해당 구역 문단 수도2090으로 같았습니다. 파서가 엉뚱한 문단을 수정한 것으로 분류하지 않습니다.
