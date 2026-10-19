@@ -19,6 +19,7 @@ import {documentMenuBrowserCases} from "./document-menu-cases.mjs";
 import {openBrowserRibbonPage,exerciseBrowserRibbonPages} from "./ribbon-page.mjs";
 import {demoFixtures,fixtureUrl} from "../../web/preview/fixture-catalog.mjs";
 import {parseBrowserAuditOrigin,verifyBrowserSourceResponses} from "./audit-origin.mjs";
+import {unsupportedParagraphBreakChords} from "./unsupported-paragraph-break-chords.mjs";
 
 export async function runDocumentMenuBrowserAudit(caseName) {
   assert(Object.hasOwn(documentMenuBrowserCases,caseName),"UnknownDocumentMenuBrowserCase");
@@ -40,6 +41,7 @@ export async function runDocumentMenuBrowserAudit(caseName) {
   sourcePaths.push("tools/browser/audit-origin.mjs");
   sourcePaths.push("tools/browser/numeric-target.mjs");
   sourcePaths.push("tools/browser/input-origin.mjs","tools/hwpx-field-prefix-oracle.mjs");
+  sourcePaths.push("tools/browser/unsupported-paragraph-break-chords.mjs","web/preview/paragraph-break-shortcut.mjs");
   sourcePaths.push("web/preview/canvas-editor.mjs");
   sourcePaths.push("tools/browser/save-shortcuts.mjs","web/preview/save-controls.mjs","web/preview/document-download.mjs");
   const sourceHashes = () => Object.fromEntries(sourcePaths.map(path=>[path,hash(readFileSync(resolve(path)))]));
@@ -100,7 +102,7 @@ export async function runDocumentMenuBrowserAudit(caseName) {
       window.__menuAudit=[];window.__menuKeys=[];window.__menuInput=[];const watched=new WeakSet(),post=Worker.prototype.postMessage;
       Worker.prototype.postMessage=function(message,...rest){
         if(!watched.has(this)){watched.add(this);this.addEventListener('message',event=>{
-          const row=event.data;window.__menuAudit.push({direction:'reply',kind:row.kind,error:row.error,revision:row.historyRevision,changed:row.changed});
+          const row=event.data;window.__menuAudit.push({direction:'reply',kind:row.kind,error:row.error,revision:row.historyRevision,changed:row.changed,paragraphBreakAvailable:row.paragraphBreakAvailable});
         });}
         window.__menuAudit.push({direction:'request',kind:message.kind,section:message.section,paragraph:message.paragraph,startUnit:message.startUnit,endUnit:message.endUnit});
         if(message.kind==='splice'&&window.__saveShortcutHold?.next){const held=window.__saveShortcutHold;held.next=false;held.held=true;held.release=()=>post.call(this,message,...rest);return;}
@@ -238,14 +240,15 @@ export async function runDocumentMenuBrowserAudit(caseName) {
         assert.deepEqual(witness(),before,"RejectedShortcutChangedSelectionOrDocument");
       }
       progress("trusted-alt-shortcuts-not-consumed");
-      for(const [chord,ctrl,meta,alt,shift] of [["Control+Enter",true,false,false,false],["Meta+Enter",false,true,false,false],["Alt+Enter",false,false,true,false],["Control+Shift+Enter",true,false,false,true]]){
+      const breakAvailable=evaluate("window.__menuAudit.some(row=>row.direction==='reply'&&row.kind==='enable'&&row.paragraphBreakAvailable===true)");
+      for(const [chord,ctrl,meta,alt,shift] of unsupportedParagraphBreakChords(breakAvailable)){
         const count=evaluate("window.__menuKeys.length");command("press",chord);
         const observed=evaluate(`window.__menuKeys.slice(${count}).find(row=>row.key==='Enter')`);
         assert(observed?.trusted&&observed.consumed&&observed.ctrl===ctrl&&observed.meta===meta&&observed.alt===alt&&observed.shift===shift,"ModifiedEnterWasNotExplicitlyRefused");
         assert.deepEqual(witness(),before,"ModifiedEnterChangedSelectionOrDocument");
         assert.match(evaluate('document.querySelector("#canvas-edit-status").textContent'),/수정키.*Enter.*지원하지 않습니다/);
       }
-      progress("trusted-modified-enter-no-paragraph-split");
+      progress("trusted-unsupported-enter-no-paragraph-split");
     }
     menuKey("menu-undo","u");wait(`${replies("undo")}.some(r=>r.changed&&r.revision===0)`);
     assert.equal(evaluate('document.querySelector("#canvas-input").value'),original);

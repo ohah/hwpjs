@@ -1,5 +1,11 @@
 # Canvas 단축키의 수정키 경계
 
+## 선택적 쪽·단 명령이 있는 후보의 브라우저 부정 검사
+
+문서 메뉴 브라우저 검사는 Worker enable의 paragraphBreakAvailable을 관측하고 `unsupported-paragraph-break-chords.mjs`에서 제품의 공통 paragraphBreakShortcut 판정을 재사용합니다. 새 capability가 있으면 지원되는 Ctrl/⌘+Enter 네 조합은 기존 무변경 부정 검사에서 제외하며, 해당 명령의 저장/이력 양성 검사는 쪽·단 도구가 계속 소유합니다. 구형 ABI는 원래의 거부를 유지하고 Alt/Control+Meta 조합은 새 후보에서도 문서·선택·요청 수 불변을 검사합니다.
+
+새 후보의 첫 원격 메뉴 감사는 실제로 지원되는 Control+Enter split 요청을 잘못된 문서 변경으로 판정했습니다. 제품 변경 없이 검사 기대값을 교정한 관련27테스트는 fail/skip0·exit0입니다. `/tmp/hwpjs-owner-native-proof.MXzTXm/candidate-tailnet-browser-retry.log/.stderr`는 실제 Tailscale 후보에서 신뢰된 입력·지원하지 않는 수정키 거부·undo/redo·저장 단축키·독립 XML/ZIP·다운로드/재업로드·source/WASM 해시 대조·exit0·stderr0을 확인했습니다(로그 SHA256 `10787302525a39c0d9d0afd5f3a4f3f3d275e79352876c81dd89f3ad482ab5e1`). agent-browser 소유 세션은 종료했습니다. 첫 실패 로그는 보존하며 전체 픽스쳐·원본 조판 검증으로 확대하지 않습니다.
+
 ## 수정키+Enter의 잘못된 문단 분할 방지
 
 현재 로컬 후보의 선택적 쪽·단 명령·capability·키 입력과 검증 제한은 [명시적 나누기](paragraph-flow-break-edit.md)가 소유합니다. 아래232개 회귀/브라우저 기록은 해당 기능이 없던9e75 후보에서의 거부 경계이며, 구형 ABI와 Alt/모호한 수정키 조합에 계속 적용합니다.
