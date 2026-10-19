@@ -42,6 +42,8 @@ main a19c3bf7에 이 검사/회귀만 추가한 tree `45079ca24d0d7d97d9d358a579
 
 고정44파일 실행에서 XML 불일치였던 `issue5162_field_wraps_table.hwpx`(입력 SHA256 `c8f07209f7d60d60c32c7918800545c1b3079ef4e0178eaf44ca2bfe23cfc0c8`)를 후속 source tree `b892f7a6616aab02dd106a6a66d013dd2593cc49`의 `/tmp/hwpjs-unmatched-audit-clean.3b2STF`에서 같은 f4e0 후보로 재검사했습니다. `issue5162-current-specialized.jsonl/.stderr`는20시도/20검증·독립 XML20(필드20)·거부0·exit0·stderr0입니다. 기존 source-site 보정 뒤 전체 전용 경로가 끝까지 일치한 근거이며 새 제품 파서 기능이나 일반 입력/모든 명령/브라우저 완료로 계수하지 않습니다. 원래 실패 행은 보존합니다.
 
+같은 사본/후보의 `issue6101/36361137_firefighter_training_plan.hwpx`(입력 SHA256 `21b684d2e9c29bae5ab5a7a884f29df772aece434f4f6423b81cb3f9677df7a3`)도 `issue6101-current-specialized.jsonl/.stderr`에서449시도/449검증·독립 XML449(필드443)·거부0·exit0·stderr0입니다. 역시 고정 실행의 원래 XML 불일치를 보존한 후속 전용 검증이며 일반 문단/모든 명령·위치의 완료와 구분합니다.
+
 ## 체크박스 앞 필드 prefix의 독립 경계
 
 `issue2470/36341511_masked.hwpx`(SHA256 `315b7fc1ffadc1f8096daae8ca92c46e5233598a0efbb81f99db2678b027d909`)의 구역0·전역/로컬 문단72·beginElement607·beginId1554500231에서 후속 전용 감사도 XML 불일치로 실패했습니다. `/tmp/hwpjs-reference-followup.DhrVro/issue2470-36341511-current.*`와 `-repro.*`에 원래 실패/좌표/저장 전후 바이트를 보존했습니다. 원본은 colPr metadata run 다음 checkBtn·빈 t를 갖고, 저장은 같은 소유 run의 checkBtn 앞에 새 t를 삽입했습니다. 검사기의 보존 개체 목록에 checkBtn이 없어 뒤쪽 빈 t를 수정한 기대 XML이 원인입니다.
