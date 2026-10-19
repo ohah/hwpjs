@@ -1,5 +1,7 @@
 # HWP5 모듈 계약 인덱스
 
+- [미확정 표 플래그의 Canvas 편집 회귀](table-unknown-flags-canvas.md)
+
 - [쪽·단 나누기 메뉴와 삽입 리본](paragraph-break-menu.md)
 
 - [Canvas 문단 경계 단축키](canvas-paragraph-edge-navigation.md)
