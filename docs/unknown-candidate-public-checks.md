@@ -1,5 +1,15 @@
 # unknownObj 후보의 공개 API 회귀
 
+## 52개 native 수정 뒤 새 후보의 전체 HWPX 등록 회귀 — 실행 중
+
+제품 소스 `6f4fe0ea`의 `/tmp/hwpjs-native-postfix-main.33GojG`에서 별도 prefix ReleaseSafe WASM 빌드5/5·exit0(WASM compile45s)을 확인했습니다(`candidate-build.log/.stderr`). 새 후보 SHA256은 `9e75fd8bab9b879b3883f4703a7a8c2ffe100f98cd48c68a511eed797840b468`입니다. afb7 게시 후보와 export 이름/종류336개가 같고 missing/changedKind/added0이며 signature/동작 전체 동일성을 이 대조만으로 주장하지 않습니다.
+
+게시 `4fa53dc93f7169db796ebacfbd27833376945ea8`·tree `084590abd6abb44ffba1777ff6e26946d79f72d6`를 `/tmp/hwpjs-public-postfix-main.97m5P2`에 추출했습니다. 추적 blob7,194개를 Git blob 해시로 전수 대조해 일치했고, 이 경로들만 사본의 별도 Git index에 등록했습니다. gitlink legacy/hwpers 내용은 포함하지 않습니다. 참조 samples도 별도 사본이며 새 후보는 사본의 고정 설치 경로에만 복사했습니다. 6f4fe0ea와4fa53dc9 사이 src/build/.mise/js/web/tools 변경이 없음을 확인했고 새로 추가한 수동 결과 원본 두 회귀는 이 후속 검사 소스에 포함됩니다.
+
+등록은 기존 hwpxGateTestPaths와 순서 대조한 HWPX107파일·WASM export1파일, 총108개 고유 경로입니다. 최초 `registered-hwpx.log/.stderr`는 기준 환경변수가 없어 chart-baseline-parity가 skip될 설정임을 확인하고 소유 wrapper/runner/test 자식만 종료한 불완전 실행(exit143)으로 보존합니다. PID18848/18850/23409 종료를 확인했으며 native 전체/고정44파일 검사는 건드리지 않았습니다. 관측 타임아웃 때문에 재시작한 것이 아니고 이 부분 결과를 최종 gate로 합산하지 않습니다.
+
+후속 `registered-hwpx-baseline.jsonl/.stderr`는 Node24.20.0·동일 새 후보·명시적 cbaa 기준으로 전체108파일을 직렬 실행 중입니다. 시작/종료의 build·후보·기준·사본 고정 설치 파일 해시를 검사합니다. 종료/통계/누락·skip·소스 재대조가 완료되기 전에는 통과가 아닙니다. 원래 작업 트리의 기본 WASM/외부 데모는 변경하지 않았고 HWP5·전체 참조·브라우저·조판 완료와 구분합니다.
+
 ## Zig 0.17 게시 소스의 전체 HWP5 공개 편집 등록 회귀
 
 아래 HWPX와 같은 eddbfa8c 게시 소스 사본·Node24.20.0·afb7 후보·cbaa 기준에서 `build.zig`의 `editor_api_tests` 초기 인자와 모든 addArg의92개 고유 경로를 직렬/TAP로 실행했습니다. 중간에 install 의존성이 선언된 뒤에도 addArg가 이어지므로 추출 끝은 `has_side_effects` 직전으로 잡아 뒤의 등록을 누락하지 않았습니다. `registered-hwp5.log/.stderr`는 최상위398개·하위 포함 총493/493·fail/cancel/skip/todo0·자식 exit0/signal=null·wrapper exit0·stderr0(691328ms)입니다. 최상위와 하위 수를 합산하지 않습니다.
