@@ -1,5 +1,11 @@
 # 현재 main 소스의 전체 native 실행
 
+## 52개 수정 뒤의 새 전체 재검사 사본 — 컴파일 진행 중
+
+게시 `6f4fe0ea3315d316c6896587db2c4f0ead5bfc59`·tree `5c51feac1fa3e5b8dde0723ad4d4f4d9ef3761d2`를 `/tmp/hwpjs-native-postfix-main.33GojG`에 새로 추출했습니다. 추적 blob7,194개를 원래 Git blob 해시와 전수 대조해 일치했습니다. legacy/hwpers gitlink1개는 커밋 식별자만 추적되며 하위 저장소 내용은 archive/검사 대상에 없습니다. 최초 blob 전수 스크립트가 이 gitlink를 일반 파일로 취급해 UnexpectedTreeEntry로 종료한 뒤, gitlink를 명시적으로 구분한 재검사로 위 분모를 확인했습니다. 제품/테스트 소스를 맞추기 위해 무관한 사용자 변경을 가져오지 않았습니다.
+
+guardian overlay는 앞선 고정 실행에서 사용한 정확한 세 파일만 복사했고 참조 samples도 별도로 복사했습니다. 새 `zig test src/root.zig -O ReleaseSafe --test-no-exec -femit-bin=.../native-safe`는 nice10·Zig0.17.0으로 실행 중입니다(`native-safe-build.log/.stderr`). 컴파일 종료/새 바이너리 해시/실제 inventory를 확인하기 전에는 빌드 성공이나 테스트 시작·완료가 아닙니다. 이전52개 수정의 집중 결과와 새 전체 결과를 합산하지 않고, 기본 WASM/데모는 유지합니다.
+
 ## 단 소속·분할·원본 inventory의 마지막 여섯 실패
 
 고정 전체 실행의 마지막 실패 index3687/3708/3716/3729/3740/3746도 `last-six-original.stderr`에서 모두 NondeterministicMemoryUsage·exit1(root1 pass/대상6 fail)로 재현됐습니다. source tree/문단/현재 styles를 읽기만 하고 callback 안에서 후보·배열·출력 XML을 해제하는 일곱 호출을 기존 `allocation_failures.check`에 연결했습니다. site-union의 split/merge 후보도 callback 소유 allocator로 생성/해제하며 외부 원본에는 publish하지 않는 것을 확인했습니다. 전체 실패 지점·실제 표의 소속·빈 provenance·편집 style·소유권 불일치 거부·원본 불변 단언은 유지하고 제품 함수는 변경하지 않았습니다.
