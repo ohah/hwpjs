@@ -74,3 +74,19 @@ test("caption rows remain separate from body consumption and count against the t
     { ...options, maxRows: result.rows.length });
   assert.equal(limited.state, "unavailable");
 });
+
+test("caption frame overflow advances its source anchor instead of publishing an off-paper success", () => {
+  const f = fixture(); f.rows[0].height = 240;
+  f.picture.caption = { caption_node: 7, list_node: 8, side: 3, full_size: false, width: 2250, gap: 375,
+    last_width: 2250, text_direction: 0, line_wrap: 0, vertical_alignment: 0 };
+  const caption = { section: 0, paragraph: 2, text: "설명", editable: true,
+    drawingCaption: { drawingNode: 3, captionNode: 7, listNode: 8 } };
+  const before = structuredClone(f.picture);
+  const result = paginateReservedPictureRows(f.rows, f.setting, f.flows, [f.picture], f.paragraphs, f.measure,
+    { maxRows: 100, captionParagraphs: [...f.paragraphs, caption] });
+  assert.equal(result.state, "paginated", result.error);
+  const placed = result.pictureReservations[0], paper = result.pages[placed.pageOrdinal].paper;
+  assert.equal(placed.pageOrdinal, 1);
+  assert.ok(placed.flowRectangle.y + placed.flowRectangle.height <= paper.y + paper.height + 1e-8);
+  assert.deepEqual(f.picture, before);
+});

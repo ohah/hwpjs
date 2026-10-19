@@ -2,6 +2,7 @@ import { paginateBodyRows } from "./page-row-flow.mjs";
 import { bodyRowSources } from "./body-row-sources.mjs";
 import { measureReservedBodyRow } from "./reserved-body-row.mjs";
 import { picturePageReservations } from "./picture-page-reservations.mjs";
+import { pictureCaptionPageFit } from "./picture-caption-page-fit.mjs";
 
 // 매 반복은 원문 carrier에서 시작합니다. 표 행의 형태나 수평 위치는 바꾸지 않습니다.
 export function paginateReservedPictureRows(rows, setting, flows, pictures, paragraphs, measure, {
@@ -25,7 +26,10 @@ export function paginateReservedPictureRows(rows, setting, flows, pictures, para
   for (let iteration = 0; iteration < maxIterations; iteration++) {
     for (let i = 0; i < pictures.length; i++) {
       const key = `${pictures[i].section}:${pictures[i].paragraph}`;
-      anchorPages.set(key, Math.max(anchorPages.get(key) ?? 0, reserved.reservations[i].pageOrdinal));
+      const reservation = reserved.reservations[i];
+      const fit = pictureCaptionPageFit(reservation, page.pages.find(p => p.ordinal === reservation.pageOrdinal));
+      if (fit.state === "unavailable") return fit;
+      anchorPages.set(key, Math.max(anchorPages.get(key) ?? 0, reservation.pageOrdinal + (fit.state === "advance" ? 1 : 0)));
     }
     let failure;
     page = paginateBodyRows(sources.rows, setting, flows, { ...options,

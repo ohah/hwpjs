@@ -12,7 +12,8 @@ export function drawingPageReference(drawing, paragraphs, pageRows) {
     const anchoredRows = drawing.source?.flow?.text_wrap === 1 && relations?.[2] === 0
       ? pageRows.map(row => row.section === drawing.section && row.paragraph === drawing.hostParagraph && row.flowAnchorY !== undefined
         ? { ...row, y: row.flowAnchorY } : row) : pageRows;
-    const reference = nestedParagraphReference(owner, { rows: anchoredRows }, { x: 0, y: 0 });
+    const reference = nestedParagraphReference(owner, { rows: anchoredRows }, { x: 0, y: 0 },
+      { pageOrdinal: host.pageOrdinal, columnOrdinal: host.columnOrdinal });
     if (reference.state !== "referenced") return { state: "unavailable", error: "MissingDrawingParagraphReference", referenceError: reference.error };
     boxes = { ...boxes, paragraph: reference.rectangle };
   }

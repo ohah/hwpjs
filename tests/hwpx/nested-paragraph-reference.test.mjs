@@ -20,3 +20,18 @@ test("floating paragraph reference uses covered current rows rather than flow he
   assert.equal(nestedParagraphReference(paragraph, { rows: [row, row] }, origin).error, "IncompleteNestedParagraphReference");
   assert.deepEqual(flow, before);
 });
+
+test("explicit anchor page selects a fragment only after full paragraph coverage is proven", () => {
+  const paragraph = { section: 0, paragraph: 3, text: "abcd" };
+  const rows = [0, 1].map(pageOrdinal => ({ kind: "text", section: 0, paragraph: 3, pageOrdinal, columnOrdinal: 0,
+    startUnit: pageOrdinal * 2, endUnit: pageOrdinal * 2 + 2, text: paragraph.text.slice(pageOrdinal * 2, pageOrdinal * 2 + 2),
+    x: 20, y: pageOrdinal * 500, width: 100, textHeight: 16, textTop: 0, height: 20 }));
+  const before = structuredClone(rows), origin = { x: 0, y: 0 };
+  assert.equal(nestedParagraphReference(paragraph, { rows }, origin).error, "UnsupportedNestedParagraphReference");
+  const selected = nestedParagraphReference(paragraph, { rows }, origin, { pageOrdinal: 1, columnOrdinal: 0 });
+  assert.equal(selected.state, "referenced"); assert.equal(selected.rectangle.y, 500); assert.equal(selected.rectangle.height, 16);
+  assert.equal(nestedParagraphReference(paragraph, { rows: rows.slice(1) }, origin, { pageOrdinal: 1, columnOrdinal: 0 }).error, "IncompleteNestedParagraphReference");
+  assert.equal(nestedParagraphReference(paragraph, { rows }, origin, { pageOrdinal: 2, columnOrdinal: 0 }).state, "unavailable");
+  assert.equal(nestedParagraphReference(paragraph, { rows }, origin, { pageOrdinal: 1, columnOrdinal: -1 }).state, "unavailable");
+  assert.deepEqual(rows, before);
+});

@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+[캡션·도형 페이지 경계](caption-frame-page-boundaries.md)는 캡션 프레임 fit·앵커 쪽 이동과 coverage 이후 명시적 문단 조각 선택을 분리합니다.
+
 [수식 표시 묶음 조회](hwpx-formula-display-batch.md)는 요청 단위 준비·조회 수명과 선택적 API를 소유합니다.
 
 [현재 반복 영역 선언 좌표](hwpx-page-area-declarations-api.md)는 원본 identity와 현재 UTF-16 좌표의 조회 경계를 소유합니다.

@@ -4,6 +4,7 @@ import { picturePaintPlan } from "./picture-paint-plan.mjs";
 import { signedInt32 } from "./signed-int32.mjs";
 import { pageParagraphCoverage } from "./page-paragraph-coverage.mjs";
 import { hasPictureSourceErrors, hasFinitePictureCrop } from "./picture-source-validation.mjs";
+import { pictureFramePaperFit } from "./picture-caption-page-fit.mjs";
 
 /** Captioned wrapped pictures share the existing paragraph/frame calculation. */
 export function layoutCaptionedPictureBody(content, measure, maxRows) {
@@ -43,8 +44,7 @@ export function layoutCaptionedPictureBody(content, measure, maxRows) {
   if (coverage.state !== "complete") return coverage;
   for (const item of result.pictureReservations) {
     const page = result.pages.find(p => p.ordinal === item.pageOrdinal), frame = item.flowRectangle ?? item.rectangle;
-    if (!page || frame.x < page.paper.x || frame.y < page.paper.y || frame.x + frame.width > page.paper.x + page.paper.width
-      || frame.y + frame.height > page.paper.y + page.paper.height) return fail("PictureCaptionPageOverflow");
+    if (pictureFramePaperFit(frame, page?.paper).state !== "fits") return fail("PictureCaptionPageOverflow");
   }
   return { ...result, rows, pages: result.pages.map(p => ({ ...p, section: body[0].section })),
     flowPictures: result.pictureReservations.map(item => {

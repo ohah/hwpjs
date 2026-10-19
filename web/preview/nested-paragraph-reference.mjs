@@ -2,11 +2,15 @@ import { pageParagraphCoverage } from "./page-paragraph-coverage.mjs";
 import { rowTextTop } from "./row-geometry.mjs";
 
 // Current measured text bounds; source line caches and parent height are not used.
-export function nestedParagraphReference(paragraph, flow, origin) {
+export function nestedParagraphReference(paragraph, flow, origin, instance) {
   const unavailable = error => ({ state: "unavailable", error });
   if (!Array.isArray(flow?.rows) || flow.limited === true || !origin || ![origin.x, origin.y].every(Number.isFinite)) return unavailable("MissingNestedParagraphReference");
-  const rows = flow.rows.filter(row => row?.kind === "text" && row.section === paragraph?.section && row.paragraph === paragraph?.paragraph);
-  if (pageParagraphCoverage([paragraph], rows).state !== "complete") return unavailable("IncompleteNestedParagraphReference");
+  const allRows = flow.rows.filter(row => row?.kind === "text" && row.section === paragraph?.section && row.paragraph === paragraph?.paragraph);
+  if (pageParagraphCoverage([paragraph], allRows).state !== "complete") return unavailable("IncompleteNestedParagraphReference");
+  if (instance !== undefined && (!Number.isSafeInteger(instance?.pageOrdinal) || instance.pageOrdinal < 0
+    || instance.columnOrdinal !== undefined && (!Number.isSafeInteger(instance.columnOrdinal) || instance.columnOrdinal < 0))) return unavailable("UnsupportedNestedParagraphReference");
+  const rows = instance === undefined ? allRows : allRows.filter(row => row.pageOrdinal === instance.pageOrdinal && row.columnOrdinal === instance.columnOrdinal);
+  if (!rows.length) return unavailable("MissingNestedParagraphReference");
   let left = Infinity, top = Infinity, right = -Infinity, bottom = -Infinity;
   const page = rows[0]?.pageOrdinal, column = rows[0]?.columnOrdinal;
   for (const row of rows) {

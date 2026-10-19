@@ -230,6 +230,8 @@ pub fn build(b: *std.Build) void {
     hwpx_text_tests.addArg("tests/hwpx/picture-fragment-alignment-reference.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/layout-source-font-height.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/repeated-picture-layers.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/picture-caption-page-fit.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/drawing-paragraph-page-reference.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/formula-display-batch-api.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/page-area-declarations-api.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/paragraph-selected-display.test.mjs");
