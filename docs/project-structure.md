@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+[첫 로딩 실측](document-load-profile.md)은 Worker 호출 계측·비계측 대조와 실제 브라우저 관측의 범위를 구분합니다.
+
 [문단 기준 표 경계](table-paragraph-paper-bounds.md)는 원본 위치를 유지하는 종이 여백 배치와 거부 조건을 소유합니다.
 
 [머리말·꼬리말과 본문 합성](page-area-body-composition.md)은 소속 분리·본문 조판·실제 페이지 반복의 경계를 소유합니다.

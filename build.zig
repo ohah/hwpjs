@@ -155,6 +155,7 @@ pub fn build(b: *std.Build) void {
     editor_api_tests.addArg("tests/hwp5/window-repeated-content.test.mjs");
     editor_api_tests.addArg("tests/hwp5/browser-click-target.test.mjs");
     editor_api_tests.addArg("tests/hwp5/browser-session-close.test.mjs");
+    editor_api_tests.addArg("tests/hwp5/worker-load-profile.test.mjs");
     editor_api_tests.addArg("tests/hwp5/audit-jsonl-output.test.mjs");
     editor_api_tests.addArg("tests/hwp5/audit-reader-output-cli.test.mjs");
     editor_api_tests.addArg("tests/hwp5/reference-browser-arguments.test.mjs");
