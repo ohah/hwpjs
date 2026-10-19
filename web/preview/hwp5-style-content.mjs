@@ -41,7 +41,7 @@ export function projectHwp5Ranges(ranges, source, text) {
 export function attachHwp5Styles(editor, preview, content, openError = null) {
   content.characterShapes = null; content.characterShapesError = openError;
   if (editor) {
-    try { content.characterShapes = editor.characterShapes(); }
+    try { content.characterShapes = editor.characterShapes(); content.characterShapesError = null; }
     catch (error) { content.characterShapesError = error.message; }
   }
   for (const paragraph of content.paragraphs) {

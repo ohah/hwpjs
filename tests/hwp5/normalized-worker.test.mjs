@@ -27,6 +27,8 @@ test("Worker requires explicit normalization and preserves normalized undo basel
   assert.equal((await send({ kind: "enable", normalizeObservedCfb: true, distribution: true })).error, "NotDistributionDocument");
   const enabled = await send({ kind: "enable", normalizeObservedCfb: true });
   assert.equal(enabled.error, undefined);
+  assert.equal(enabled.content.characterShapesError, null);
+  assert(enabled.content.characterShapes.length > 0);
   assert.equal(enabled.content.normalizationInfo.historyBaseline, "normalized");
   assert.equal(enabled.historyAvailable, true);
   const baseline = await send({ kind: "save" });
@@ -34,6 +36,7 @@ test("Worker requires explicit normalization and preserves normalized undo basel
   assert.notDeepEqual(Buffer.from(baseline.bytes), input);
   const changed = await send({ kind: "splice", section: 0, paragraph: 0, startUnit: 0, endUnit: 0, text: "워커😀" });
   assert.equal(changed.error, undefined);
+  assert.equal(changed.content.characterShapesError, null);
   assert.equal(changed.content.normalizationInfo.normalized, true);
   assert.equal((await send({ kind: "save" })).error, "LayoutReflowRequired");
   const saved = await send({ kind: "save", allowStaleLayout: true });
