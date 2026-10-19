@@ -101,6 +101,7 @@ pub fn build(b: *std.Build) void {
     editor_api_tests.addArg("tests/hwp5/fixture-password-edit-paths.test.mjs");
     editor_api_tests.addArg("tests/hwp5/character-property-disclosure.test.mjs");
     editor_api_tests.addArg("tests/hwp5/numeric-formula-corpus.test.mjs");
+    editor_api_tests.addArg("tests/hwp5/absent-table-zone-count.test.mjs");
     editor_api_tests.addArg("tests/hwp5/formula-definition-editor.test.mjs");
     editor_api_tests.addArg("tests/hwp5/formula-worker-definition.test.mjs");
     editor_api_tests.addArg("tests/hwp5/document-numbering.test.mjs");

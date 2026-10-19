@@ -12,6 +12,7 @@ pub const text = @import("text/root.zig");
 pub const model = @import("model/document.zig");
 
 test {
+    _ = @import("table_zone_count_probe.zig");
     _ = @import("compat/stack_fallback_tests.zig");
     _ = @import("testing/repeated_bytes.zig");
     _ = @import("hwpx/formula_result_paragraphs.zig");

@@ -169,6 +169,7 @@
   - [차트 String 참조 분리](hwp5-chart-string-fork.md)
   - [TextBlock 보조 Backdrop·문자열 재참조](hwp5-chart-text-block-objects.md)
 - [표·셀](hwp5-tables-contracts.md)
+  - [표 zone count 전체 부재 호환과 빈 셀 입력](hwp5-absent-table-zone-count.md)
 - [ParameterSet·이름·참조](hwp5-parameters-contracts.md)
 - [DocInfo·리소스](hwp5-docinfo-contracts.md)
 

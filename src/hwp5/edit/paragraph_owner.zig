@@ -22,9 +22,9 @@ pub fn inspectGroups(a: std.mem.Allocator, tree: Tree, version: Version) !Groups
     for (tree.nodes) |*node| {
         const record = node.record.framing;
         switch (record.tag) {
-            @intFromEnum(body.Tag.control_header) => node.record.value = .{ .control_header = try body.ControlHeader.parse(record.payload) },
-            @intFromEnum(body.Tag.list_header) => node.record.value = .{ .list_header = try body.ListHeader.parse(record.payload) },
-            @intFromEnum(body.Tag.table) => node.record.value = .{ .table = try body.Table.parse(record.payload, version) },
+            @backingInt(body.Tag.control_header) => node.record.value = .{ .control_header = try body.ControlHeader.parse(record.payload) },
+            @backingInt(body.Tag.list_header) => node.record.value = .{ .list_header = try body.ListHeader.parse(record.payload) },
+            @backingInt(body.Tag.table) => node.record.value = .{ .table = try body.Table.parseWithZoneCountPolicy(record.payload, version, .observed_absent) },
             else => {},
         }
     }

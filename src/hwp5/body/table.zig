@@ -8,6 +8,7 @@ pub const Row = struct {
     }
 };
 pub const Rows = @import("../../binary/record_array.zig").Records(Row, 2);
+pub const ZoneCountPolicy = enum { required, observed_absent };
 /// HWPTAG_TABLE payload only. Control properties and cell lists are separate records.
 pub const Table = struct {
     flags: u32,
@@ -20,6 +21,11 @@ pub const Table = struct {
     zones: ?zone.Zones,
     extra: []const u8,
     pub fn parse(bytes: []const u8, version: Version) !Table {
+        return parseWithZoneCountPolicy(bytes, version, .required);
+    }
+
+    /// Explicit compatibility only. Missing count stays null, not a synthetic zero.
+    pub fn parseWithZoneCountPolicy(bytes: []const u8, version: Version, policy: ZoneCountPolicy) !Table {
         try version.requireSupported();
         var r: Reader = .{ .bytes = bytes };
         var t: Table = undefined;
@@ -31,7 +37,7 @@ pub const Table = struct {
         t.rows = try Rows.parse(try r.take(@as(usize, t.row_count) * 2));
         t.border_fill_id = try r.readInt(u16);
         t.zones = null;
-        if (version.raw >= 0x05000100) {
+        if (version.raw >= 0x05000100 and !(policy == .observed_absent and r.offset == bytes.len)) {
             const count = try r.readInt(u16);
             t.zones = try zone.Zones.parse(try r.take(@as(usize, count) * 10));
         }
