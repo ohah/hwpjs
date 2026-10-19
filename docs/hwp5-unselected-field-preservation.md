@@ -1,5 +1,11 @@
 # 수정하지 않는 구역의 필드 보존
 
+## 최신 후보의178범위 명시 정책 정규 회귀
+
+전체 참조 감사의 편람 기본 정책 결과는10,514시도/10,336입력·이력,178개 `UnsupportedRangeSemantics`입니다. 이178개를 파서 실패로 단정하거나 기본 거부를 해제하지 않았습니다. 새 `manual-range-policy-reference.test.mjs`는 원본 SHA256 `40d6d05eac4d55bdc4b0c62c42d93af104d5123b447581246f36fd15de7bd46f`를 고정하고 기존 독립 range-prefix 검사기를 재사용합니다. 원본 레코드에서178곳·비교차 prefix0을 먼저 확인하고 각 위치의 기본 거부/원본 불변 뒤 명시적 half-open 입력·독립 전체 Section/비대상 stream/metadata·잘못된 기대 문자열 거부·undo/redo·재열기·원본/후보 불변을 검사합니다. 별도 미추적 manual-range-prefix 테스트는 채택하지 않았습니다.
+
+e9aa1141 제품 소스의 분리 사본 `/tmp/hwpjs-field-interior-browser.DVJV5s`에 새 테스트만 추가해 Node24.20.0·nice10·후보 `9e75fd8bab9b879b3883f4703a7a8c2ffe100f98cd48c68a511eed797840b468`로 실행했습니다. `manual-range-policy.log/.stderr`는1/1·fail/cancel/skip/todo0·exit0·stderr0(226804.7245ms)이며 로그 SHA256은 `45c52a1a040de65932a9c0afc147d6fb01f2f69b7007dcbd63048aa958e842ac`입니다. 종료한 runner/test PID 부재와 최종 테스트 사본/작업 코드·후보 해시 일치를 확인했습니다. HWP5 editor gate에 한 번 등록했고 build fmt·JS 구문·등록 검사를 통과했습니다. 이전495개 gate에 이 새 회귀가 포함됐다고 소급하지 않습니다. 기본 정책10,336개와 명시 정책178개를 하나의 무거부 실행으로 합산하지 않으며 실제 한글 affinity·브라우저·조판 또는 전체 참조 완료를 뜻하지 않습니다.
+
 현재 표·그림 등 로컬 개체 번호 참조는 [개체 번호 보존](hwp5-object-number-retention.md)을 따릅니다. 아래 roadmap 원본의 거부는 당시 기록이며, 최신 거부 회귀는 쪽 참조 파생 입력으로 보호를 확인합니다. 실제 대상 해결·번호 갱신 완료와는 구분합니다.
 
 ## main2d56f5ac 기반 분리 재검증 (2026-10-16)

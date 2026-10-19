@@ -161,6 +161,7 @@ pub fn build(b: *std.Build) void {
     editor_api_tests.addArg("tests/hwp5/unselected-field-sections.test.mjs");
     editor_api_tests.addArg("tests/hwp5/unselected-cross-reference-gate.test.mjs");
     editor_api_tests.addArg("tests/hwp5/reference-range-prefix.test.mjs");
+    editor_api_tests.addArg("tests/hwp5/manual-range-policy-reference.test.mjs");
     editor_api_tests.addArg("tests/hwp5/onsaemiro-range-prefix.test.mjs");
     editor_api_tests.addArg("tests/hwp5/disjoint-range-marker.test.mjs");
     editor_api_tests.addArg("tests/hwp5/disjoint-range-suffix.test.mjs");

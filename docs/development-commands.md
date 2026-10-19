@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[편람178범위 명시 정책](hwp5-unselected-field-preservation.md)은 `HWPJS_TEST_WASM=/absolute/candidate.wasm node --test tests/hwp5/manual-range-policy-reference.test.mjs`로 실행합니다. 기본 거부 유지·명시적 half-open 입력·독립 Section/비대상 stream·이력·재열기를 검사하며 한글 affinity/조판 또는 기본 정책의 무거부 지원과 구분합니다.
+
 [참조 HWP5 숫자 입력](hwp5-reference-chart-numeric-input.md)은 `HWPJS_TEST_WASM=/absolute/candidate.wasm node --test tests/hwp5/numeric-formula-corpus.test.mjs`로 실행합니다. 실제12입력/3수식의 두 규모 숫자 치환·독립 산술·비대상 stream·이력·재열기를 검사하며 문자 prefix 거부와 전체 편집/조판 완료를 구분합니다.
 
 [누름틀 중간 Canvas 입력](canvas-field-interior-input.md)은 `HWPJS_TEST_WASM=/absolute/candidate.wasm node tools/field-interior-browser-audit.mjs`로 실행합니다. 실제 키보드 범위 치환·Worker 좌표·메뉴 이력·독립 XML/ZIP·다운로드·같은 문단 재업로드·소유 브라우저/서버 종료를 확인하며 전체 필드/IME/조판 완료와 구분합니다.
