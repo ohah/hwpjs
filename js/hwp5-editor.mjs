@@ -66,6 +66,7 @@ import { decodeHwp5TableAnchors } from "./hwp5-table-anchors.mjs";
 import { decodeHwp5ParagraphFlow, decodeHwp5ColumnSources } from "./hwp5-flow-sources.mjs";
 import { decodeHwp5FormulaSources } from "./hwp5-formula-sources.mjs";
 import { decodeHwp5NormalizationInfo } from "./hwp5-normalization-info.mjs";
+import { validateObservedDocInfoOption, decodeObservedDocInfoDiagnostics } from "./hwp5-observed-docinfo.mjs";
 import { validateAvailableSectionCopyOption, decodeAvailableSectionCopyInfo } from "./hwp5-available-section-copy.mjs";
 
 const encoder = new TextEncoder();
@@ -73,7 +74,8 @@ const decoder = new TextDecoder("utf-16le", { fatal: true, ignoreBOM: true });
 const u32 = (value, name) => { if (!Number.isInteger(value) || value < 0 || value > 0xffffffff) throw new RangeError(`Invalid ${name}`); return value; };
 
 /** Experimental HWP5 editing; no page layout engine. */
-export async function createExperimentalHwp5Editor(source, input, { distribution = false, normalizeObservedCfb = false, availableSectionCopy = false } = {}) {
+export async function createExperimentalHwp5Editor(source, input, { distribution = false, normalizeObservedCfb = false, availableSectionCopy = false, retainObservedDocInfo = false } = {}) {
+  validateObservedDocInfoOption(retainObservedDocInfo, distribution, availableSectionCopy);
   if (typeof distribution !== "boolean") throw new TypeError("Invalid distribution option");
   if (typeof normalizeObservedCfb !== "boolean") throw new TypeError("Invalid normalization option");
   validateAvailableSectionCopyOption(availableSectionCopy, distribution, normalizeObservedCfb);
@@ -92,16 +94,22 @@ export async function createExperimentalHwp5Editor(source, input, { distribution
   };
   const bytes = inputBytes(input);
   if (bytes.length > 64 * 1024 * 1024) throw new RangeError("LimitExceeded");
-  const open = availableSectionCopy ? wasm.hwp5_edit_open_available_section_copy : normalizeObservedCfb
+  const open = retainObservedDocInfo ? wasm.hwp5_edit_open_observed_docinfo : availableSectionCopy ? wasm.hwp5_edit_open_available_section_copy : normalizeObservedCfb
     ? distribution ? wasm.hwp5_edit_open_normalized_distribution : wasm.hwp5_edit_open_normalized
     : distribution ? wasm.hwp5_edit_open_distribution : wasm.hwp5_edit_open;
   if (normalizeObservedCfb && distribution && typeof open !== "function") throw new Error("Hwp5NormalizedDistributionAbiUnavailable");
+  if (retainObservedDocInfo && (typeof open !== "function" || typeof wasm.hwp5_edit_observed_docinfo_diagnostics !== "function")) throw new Error("Hwp5ObservedDocInfoAbiUnavailable");
   if (normalizeObservedCfb && typeof open !== "function") throw new Error("Hwp5NormalizationAbiUnavailable");
   if (availableSectionCopy && (typeof open !== "function" || typeof wasm.hwp5_edit_available_section_copy_info !== "function")) throw new Error("Hwp5AvailableSectionCopyAbiUnavailable");
   if (typeof open !== "function") throw new Error("Hwp5DistributionEditorAbiUnavailable");
-  memory.withBytes(bytes, (ptr, size) => success(open(ptr, size)));
+  memory.withBytes(bytes, (ptr, size) => success(retainObservedDocInfo ? open(ptr, size, normalizeObservedCfb ? 1 : 0) : open(ptr, size)));
   const copyText = (section, paragraph) => { check(); return output(() => wasm.hwp5_edit_copy_text(u32(section, "section"), u32(paragraph, "paragraph"))).bytes; };
   return {
+    observedDocInfoDiagnostics() {
+      check();
+      if (typeof wasm.hwp5_edit_observed_docinfo_diagnostics !== "function") throw new Error("Hwp5ObservedDocInfoAbiUnavailable");
+      return decodeObservedDocInfoDiagnostics(output(() => wasm.hwp5_edit_observed_docinfo_diagnostics()).bytes);
+    },
     ...createParagraphBreakApi({ wasm, memory, check, uint: u32, prefix: "hwp5_edit", endAsCount: false, unavailable: "Hwp5ParagraphBreakAbiUnavailable" }),
     supportsNormalizationInfo() { check(); return typeof wasm[availableSectionCopy ? "hwp5_edit_available_section_copy_info" : "hwp5_edit_normalization_info"] === "function"; },
     normalizationInfo() {

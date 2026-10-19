@@ -109,6 +109,7 @@ pub fn build(b: *std.Build) void {
     editor_api_tests.addArg("tests/hwp5/normalized-open.test.mjs");
     editor_api_tests.addArg("tests/hwp5/normalized-distribution.test.mjs");
     editor_api_tests.addArg("tests/hwp5/normalization-abi.test.mjs");
+    editor_api_tests.addArg("tests/hwp5/observed-docinfo-options.test.mjs");
     editor_api_tests.addArg("tests/hwp5/normalization-worker-abi.test.mjs");
     editor_api_tests.addArg("tests/hwp5/table-number-source-oracle.test.mjs");
     editor_api_tests.addArg("tests/hwp5/table-number-character-format.test.mjs");
