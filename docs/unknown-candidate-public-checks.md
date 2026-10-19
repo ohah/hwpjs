@@ -38,7 +38,9 @@ Git inventory를 쓰는 검사를 위해 추출한 추적 fixture만 사본의 �
 
 시작 당시 HEAD는737a50a8이며 작업 트리의 JS/도구421파일을 해시와 함께 고정했습니다. 이 사본에는 미커밋 도구가 포함되므로 main 소스와 동일하다고 주장하지 않습니다. `candidate.wasm`은 Zig0.17 작업 트리 후보 `f4e0f396a3fea6e6354b364ff176e31d72ed00ec643fa566c4abbd8bc2f58d77`의 사본입니다. manifest SHA256은 `fbc985c34b429b6c9128b95bcfa4d8e5b55e2484f22cc318ce05931e3f3a9470`입니다. 중간 검증에서 코드421·원본44·사본44·WASM 모두 그대로임을 다시 확인했습니다. 기본 제품/외부 데모를 교체하지 않았습니다.
 
-감사는 문서별 일반 prefix/저장/이력 뒤 전용 prefix/독립 XML·ZIP/재열기/이력을 직렬 실행합니다. 결과는 `results.jsonl/.stderr`가 소유합니다. 파일 완료 행44개·누락/중복 없음·입력/후보 해시 일치·최종 summary·터미널 종료 코드를 모두 확인하기 전에는44개 완료로 기록하지 않습니다. stderr가 비어 있어도 파일 행의 verification_failed를 성공으로 바꾸지 않습니다. 거부는 지원 성공이 아니며 계산 결과의 명시적 수동 편집은 별도 경로입니다. 전체975개 편집·모든 명령/위치·실제 브라우저/조판 동치 완료와도 구분합니다.
+감사는 문서별 일반 prefix/저장/이력 뒤 전용 prefix/독립 XML·ZIP/재열기/이력을 직렬 실행했습니다. 최종 `results.jsonl/.stderr`는 파일 완료 행44개·입력 manifest와 누락/중복0·summary의 전체 prefix 통과22/부분 지원6/verification_failed16·프로세스 exit1입니다. 종료 후 코드421개·원본44개·사본44개·WASM·manifest 해시를 전수 재대조해 일치했고 부모 종료도 확인했습니다. results.jsonl SHA256은 `31ef83ad352643793d95592cdded82a54c946f5d53e3148b8af226ebac1e0ab8`입니다.
+
+이것은 f4e0 고정 사본의 실패를 포함한 종료 기록이며, 이후9e75/main의 oracle 수정·숫자/수동 결과 편집 통과로 소급 변경하지 않습니다. stderr가 비어 있어도 verification_failed를 성공으로 바꾸지 않고16개를 최신 parser 결함16개로 단정하지도 않습니다. 거부는 지원 성공이 아니며 계산 결과의 명시적 수동 편집은 별도 경로입니다. 전체975개 편집·모든 명령/위치·실제 브라우저/조판 동치 완료와도 구분합니다.
 
 첫 원본의 독립 XML 문단 수는1,203개입니다. 일반 감사 정상 종료 후 전용 감사로 넘어간 것을 프로세스 전환으로 확인했고, 전용 oracle 입력에서754번 문단을 관측했습니다. 이는 성공 개수가 아니라 실행 위치이며 파일 최종 결과가 아닙니다. 별도 한 문단870의 실측은 조회 약0.008–1.5ms·prefix 입력4.7ms·save96ms·reader177ms·독립 XML270ms이며 undo/redo·각 save까지 exit0입니다. `first-query-profile.jsonl`, `first-transaction-profile.jsonl`이 근거이며 한 표본을 전체 성능/호환성 증명으로 확대하지 않습니다.
 
