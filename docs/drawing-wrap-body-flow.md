@@ -20,4 +20,10 @@
 
 참조 `copay_cap_tac_table_leading.hwpx`와 `issue5543_carried_anchor_ladder.hwpx`는 도형 감싸기 정책 거부를 지난 뒤 `UnsupportedTablePagePictures`에서 중단됩니다. 도형 내부 문단에도 인라인 그림이 있으며 기존 본문 그림 분류·투영 순서와의 조합을 더 확인해야 합니다. 두 문서의 정상 페이지/화면 지원으로 집계하지 않습니다.
 
-이번 게시 범위는 예약 엔진·공유 기준점·회귀입니다. 본문/표 진입점 연결과 wrap 정책 완화는 아직 미게시 후보이며, 실제 참조 문서 조합을 통과하기 전까지 main의 자동 도형 감싸기 지원으로 주장하지 않습니다.
+위 문단들은 예약 엔진의 초기 게시 기록입니다. 52faef85에서 본문/표 진입점 연결과 그림 캡션 복합 흐름을 게시했고 issue5543의 실제 Canvas 입력·저장 왕복을 확인했습니다. 현재 계약·고정 소스별 검증은 [그림 캡션 흐름](captioned-picture-flow.md)을 따릅니다. copay의 전체 페이지 지원은 여전히 완료되지 않았습니다.
+
+## 폭 없는 문단 간격 행
+
+문단 앞뒤 간격의 gap 행은 잉크 width가 없어도 배치된 referenceBoxes.column의 전체 폭을 점유합니다. 최종 도형 충돌 검사는 이 단의 x/width와 행의 y/height를 사용합니다. 폭 부재를 비유한 기하로 오인하지 않으며 간격 행을 검사에서 제외하지도 않습니다. 실제 예약 침범·단 좌표 누락은 계속 IncompleteDrawingWrapFlow입니다.
+
+추가 회귀를 포함한 drawing-wrap-body-flow.test.mjs의5개 검사는 정상 폭 없는 간격·강제 침범·단 좌표 부재를 확인합니다. 문단 switch 값을 복원한 별도 native 후보에서 실제 간격 행이 나타나던 거부를 재현해 이 경계를 확인했습니다. 그 후보의 native 전체 검증과 제품 기본 WASM 승격은 별개입니다.

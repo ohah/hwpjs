@@ -67,3 +67,20 @@ test("drawing wrap refuses ignored row reservations and later table intersection
     tableCollisionFootprints: [{ section: 0, pageOrdinal: 0, rectangle: { x: 20, y: 20, width: 200, height: 20 } }] }));
   assert.equal(table.error, "IncompleteDrawingWrapFlow");
 });
+
+test("drawing wrap validates widthless paragraph gaps against the full placed column", () => {
+  const f = fixture();
+  f.rows.push({ section: 0, paragraph: 1, kind: "gap", text: "", height: 12 });
+  const run = mutate => layoutDrawingWrapBody(f.drawings, f.paragraphs, options => {
+    const body = paginateBodyRows(f.rows, f.setting, f.flows, options);
+    return mutate ? mutate(body) : body;
+  });
+  const placed = run();
+  assert.equal(placed.state, "paginated", placed.error);
+  assert.equal(placed.rows.at(-1).width, undefined);
+  assert.equal(placed.rows.at(-1).referenceBoxes.column.width, 200);
+  const overlap = run(body => ({ ...body, rows: body.rows.map(row => row.kind === "gap" ? { ...row, y: 20 } : row) }));
+  assert.equal(overlap.error, "IncompleteDrawingWrapFlow");
+  const missing = run(body => ({ ...body, rows: body.rows.map(row => row.kind === "gap" ? { ...row, referenceBoxes: undefined } : row) }));
+  assert.equal(missing.error, "IncompleteDrawingWrapFlow");
+});

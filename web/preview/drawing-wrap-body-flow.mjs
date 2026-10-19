@@ -59,7 +59,10 @@ export function layoutDrawingWrapBody(drawings, paragraphs, layoutBody, { maxIte
       for (const row of occupied) {
         if (row.transform !== undefined) return unavailable("UnsupportedDrawingWrapBodyTransform");
         const local = next.reservations.filter(item => item.section === row.section && item.pageOrdinal === row.pageOrdinal);
-        const region = intersectPictureLineRegions({ x: row.x ?? 0, y: row.y, width: row.width, height: row.height }, local);
+        // 문단 간격 행은 잉크 폭이 없지만 배치된 단 전체를 예약합니다.
+        const bounds = row.kind === "gap" ? { x: row.referenceBoxes?.column?.x, y: row.y, width: row.referenceBoxes?.column?.width, height: row.height }
+          : { x: row.x ?? 0, y: row.y, width: row.width, height: row.height };
+        const region = intersectPictureLineRegions(bounds, local);
         if (region.state !== "available" || !region.regions.length) return unavailable("IncompleteDrawingWrapFlow");
       }
       return { ...body, drawingWrapReservations: next.reservations, drawingWrapIterations: iteration + 1 };
