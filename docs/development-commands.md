@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[여러 표의 SUM·ABOVE 입력](hwpx-nested-sum-input-corpus.md)은 `HWPJS_TEST_WASM=/absolute/candidate.wasm node --test tests/hwpx/nested-sum-input-corpus.test.mjs`로 실제22입력·표별 분모·normal/-O XML/ZIP·거부/이력/재열기를 검사합니다. 모든 방향 수식/브라우저/원본 조판 검증은 아닙니다.
+
 [연쇄 SUM 입력](hwpx-cascaded-sum-input-corpus.md)은 `HWPJS_TEST_WASM=/absolute/candidate.wasm node --test tests/hwpx/cascaded-sum-input-corpus.test.mjs`로 실제28입력의 직접/후속 결과·normal/-O XML/ZIP·이력/재열기를 검사합니다. 후보는 명시적으로 지정하며 모든 숫자 포맷/편집 명령 완료와 구분합니다.
 
 [장시간 감사의 진행 출력](hwpx-plain-prefix-verification.md)은 일반 `hwpx-edit-corpus-audit.mjs` 명령에 선택적으로 `--progress-every=100`을 추가합니다. 검증을 마친 시도 수와 accepted/refused를 구분하며 범위/검증/최종 종료 조건을 줄이지 않습니다. 옵션이 없으면 기존 출력 그대로입니다.

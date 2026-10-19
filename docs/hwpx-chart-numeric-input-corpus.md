@@ -2,6 +2,8 @@
 
 [연쇄 SUM 숫자 입력28곳](hwpx-cascaded-sum-input-corpus.md)은 병합 머리글을 유지한 채 직접/후속 두 결과를 구분하는 별도 독립 검증입니다.
 
+[중첩 문서의 여러 표 SUM·ABOVE 입력22곳](hwpx-nested-sum-input-corpus.md)은 표별 소속과 방향 집계의 경계를 별도 독립 검증으로 관리합니다.
+
 ## 기본 데모와 분리한 후보 미리보기
 
 ### 원격 URL의 실제 브라우저 검증
