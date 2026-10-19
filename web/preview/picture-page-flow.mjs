@@ -8,7 +8,8 @@ export function paginatePictureRows(rows, setting, flows, pictures, paragraphs, 
   if (!Array.isArray(pictures) || pictures.some(p => p.flow?.textWrap !== 1 || p.position?.relations?.[2] !== 0)) return unavailable("UnsupportedPictureFlowPolicy");
   let page = paginateBodyRows(rows, setting, flows, options);
   if (page.state !== "paginated" || page.limited) return page;
-  let reserved = picturePageReservations(pictures, paragraphs, page.rows);
+  const placementOptions = { edgePolicy: options.edgePolicy };
+  let reserved = picturePageReservations(pictures, paragraphs, page.rows, placementOptions);
   if (reserved.state !== "reserved") return reserved;
   const signature = value => JSON.stringify(value.reservations.map(item => [item.section, item.pictureNode, item.pageOrdinal, item.rectangle]));
   let previousReservations;
@@ -36,7 +37,7 @@ export function paginatePictureRows(rows, setting, flows, pictures, paragraphs, 
     } });
     if (failure) return unavailable(failure);
     if (page.state !== "paginated" || page.limited) return page;
-    const next = picturePageReservations(pictures, paragraphs, page.rows);
+    const next = picturePageReservations(pictures, paragraphs, page.rows, placementOptions);
     if (next.state !== "reserved") return next;
     if (signature(next) === signature(reserved)) return { ...page, pictureReservations: next.reservations, pictureFlowIterations: iteration + 1 };
     previousReservations = reserved.reservations;
