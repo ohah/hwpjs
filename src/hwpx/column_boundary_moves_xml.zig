@@ -198,7 +198,7 @@ test "column boundary moves XML combines coincident settings without duplicate s
         for (current.items) |site| try text.appendSlice(a, site.text);
         try std.testing.expectEqualStrings("ABCD", text.items);
         try std.testing.expectError(error.DuplicateColumnBoundary, write(a, &tree, &sites, locations, 1, &.{ boundaries[0], boundaries[0] }, 10000));
-        try std.testing.checkAllAllocationFailures(a, struct {
+        try @import("../testing/allocation_failures.zig").check(struct {
             fn run(allocator: std.mem.Allocator, parsed: *const Tree, original: *const Sites, bound_locations: []const Location, moves: []const Position) !void {
                 const result = try write(allocator, parsed, original, bound_locations, 1, moves, 10000);
                 defer allocator.free(result);

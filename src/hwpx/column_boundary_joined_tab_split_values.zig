@@ -45,7 +45,7 @@ test "HWPX column anchor split candidate partitions actual table hosts atomicall
     try @import("column_boundary_joined_group.zig").validateWithAnchors(a, &section.tree, candidate.paragraphs[0..2]);
     try std.testing.expect(try @import("column_boundary_joined_splice.zig").spliceGroupWithAnchors(a, &section.tree, candidate.paragraphs[0..2], 1, 0, 0, "오른쪽😀", 4_000_000));
     try @import("column_boundary_joined_group.zig").validateWithAnchors(a, &section.tree, candidate.paragraphs[0..2]);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, tree: *const Tree, before: *const model.Values) !void {
             var output = try prepare(allocator, tree, before, 0, 1, 1, 100000001, 4_000_000);
             defer output.deinit(allocator);

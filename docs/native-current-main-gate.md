@@ -1,5 +1,13 @@
 # 현재 main 소스의 전체 native 실행
 
+## 단 소속·분할·원본 inventory의 마지막 여섯 실패
+
+고정 전체 실행의 마지막 실패 index3687/3708/3716/3729/3740/3746도 `last-six-original.stderr`에서 모두 NondeterministicMemoryUsage·exit1(root1 pass/대상6 fail)로 재현됐습니다. source tree/문단/현재 styles를 읽기만 하고 callback 안에서 후보·배열·출력 XML을 해제하는 일곱 호출을 기존 `allocation_failures.check`에 연결했습니다. site-union의 split/merge 후보도 callback 소유 allocator로 생성/해제하며 외부 원본에는 publish하지 않는 것을 확인했습니다. 전체 실패 지점·실제 표의 소속·빈 provenance·편집 style·소유권 불일치 거부·원본 불변 단언은 유지하고 제품 함수는 변경하지 않았습니다.
+
+`/tmp/hwpjs-native-allocator-probe.Kn255w/last-six-safe.stderr`·`last-six-debug.stderr`는 ReleaseSafe/Debug 각각7/7·exit0(대상6+root1)입니다. 변경6파일은 검사 사본과 바이트 일치하며 fmt --check·diff --check도 통과했습니다. 앞선46개와 이6개로 원래52개 실패 각각의 수정/집중 검증 근거가 확보됐지만, 구형 전체 실행 결과를 소급 통과로 바꾸거나 최신 단일 전체 native 성공으로 합산하지 않습니다. 보조 shard의 skip도 그대로 별도 범위 증거가 필요합니다.
+
+같은 사본의 별도 prefix ReleaseSafe 제품 빌드도5/5·exit0입니다(`last-six-product-build.stderr`, WASM compile43s). 기본 WASM/데모는 변경하지 않았습니다.
+
 ## HWP5 소속·구역·그림·단 조회의 후속 여덟 실패
 
 고정 전체 실행 index3497/3499/3572/3602/3607/3612/3614/3615는 분리 사본의 `next-eight-original.stderr`에서 모두 NondeterministicMemoryUsage·exit1(root1 pass/대상8 fail)로 재현했습니다. 후보 소유권을 확인한 열 호출만 공통 `allocation_failures.check`로 연결했습니다. 문단 소속 검사는 원문/현재 모델을 읽기만 하고, 삭제 계획/저장·그림 배열·리소스 바이트·단 선언 후보는 주입 allocator에서 만들고 callback 안에서 해제합니다. 단 소속 바인딩의 얕은 copy는 자신의 배열만 해제하며 원래 열 정보는 빌립니다. 구역 확장 바이트도 원본 수명을 빌리는 계약을 유지합니다.

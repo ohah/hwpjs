@@ -56,7 +56,7 @@ test "column inventory XML excludes styled text runs and validates ownership ato
     try std.testing.expectError(error.DuplicateColumnBoundary, write(a, &tree, 1, &.{ inventory[0], inventory[0] }, 10000));
     try std.testing.expectError(error.InvalidColumnBoundaryOrder, write(a, &tree, 1, &.{ inventory[1], inventory[0] }, 10000));
     try std.testing.expectError(error.LimitExceeded, write(a, &tree, 1, inventory[0..2], result.len - 1));
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, parsed: *const Tree, boundaries: []const Position) !void {
             const output = try write(allocator, parsed, 1, boundaries, 10000);
             defer allocator.free(output);

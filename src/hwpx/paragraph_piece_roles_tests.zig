@@ -205,7 +205,7 @@ test "paragraph piece inventory group serialization cleans every allocation fail
         }
     };
     try Probe.run(a, &tree, split.paragraphs);
-    try std.testing.checkAllAllocationFailures(a, Probe.run, .{ &tree, split.paragraphs });
+    try @import("../testing/allocation_failures.zig").check(Probe.run, .{ &tree, split.paragraphs });
     try std.testing.expectEqualStrings("A", split.paragraphs[0].sites.items[0].text);
     try std.testing.expectEqual(@as(@TypeOf(split.paragraphs[0].pieces.?[2].output), .inventory_only), split.paragraphs[0].pieces.?[2].output);
 }

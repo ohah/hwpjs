@@ -57,7 +57,7 @@ test "HWPX column anchor group validates actual joined table ownership with allo
     const paragraphs = section.structure_values.?.paragraphs[0..1];
     try validateWithAnchors(a, &section.tree, paragraphs);
     try std.testing.expectError(error.UnsupportedParagraphControl, validateWithTabs(a, &section.tree, paragraphs));
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, tree: *const Tree, values: []const Paragraph) !void {
             try validateWithAnchors(allocator, tree, values);
         }

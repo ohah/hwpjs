@@ -47,7 +47,7 @@ test "character style site union adds empty provenance without replacing edited 
         }
     };
     try Probe.run(a, &tree, &original, &selected);
-    try std.testing.checkAllAllocationFailures(a, Probe.run, .{ &tree, &original, &selected });
+    try @import("../testing/allocation_failures.zig").check(Probe.run, .{ &tree, &original, &selected });
     try std.testing.expectEqualStrings("A😀B", original.sites.items[0].text);
     var changed = try selected.clone(a);
     defer changed.deinit(a);
@@ -101,7 +101,7 @@ test "character style site union adds empty provenance without replacing edited 
     };
     for ([_]bool{ false, true }) |different| for ([_]bool{ false, true }) |others| {
         try MergeProbe.run(a, &tree, &original, different, others);
-        try std.testing.checkAllAllocationFailures(a, MergeProbe.run, .{ &tree, &original, different, others });
+        try @import("../testing/allocation_failures.zig").check(MergeProbe.run, .{ &tree, &original, different, others });
     };
     try std.testing.expectEqualStrings("A😀B", original.sites.items[0].text);
     try std.testing.expectEqual(@as(?u32, 7), original.character_styles.?[0].char_shape_id);
