@@ -1,5 +1,7 @@
 # 문서 도구 탭
 
+[실제 누름틀 중간 입력](canvas-field-interior-input.md)은 키보드 선택·Worker 범위·메뉴 이력·독립 저장·재업로드 검증을 별도로 소유합니다.
+
 ## 메뉴 바깥 포커스 이동
 
 `document-menu-disclosures.mjs`는 바깥 pointerdown뿐 아니라 focusin에서도 열린 메뉴를 닫습니다. 키보드로 리본·본문 등 메뉴 밖에 이동해도 이전 popup이 남지 않으며, 메뉴 안과 composedPath 안의 포커스는 유지합니다. 이벤트를 취소하거나 포커스를 강제로 되돌리지 않습니다. 기존 `details.open`만 열림 상태를 소유하고 close에서 두 document listener를 모두 제거합니다.

@@ -9,7 +9,8 @@ import {createHash} from "node:crypto";
 import {createHwpxEditor} from "../../js/hwpx-editor.mjs";
 import {executeOracle} from "../oracle-process-async.mjs";
 import {clickBrowserTarget} from "./click-target.mjs";
-import {moveBrowserInputToStart} from "./input-origin.mjs";
+import {moveBrowserInputToStart,selectBrowserInputRange} from "./input-origin.mjs";
+import {selectFieldPrefixOracle} from "../hwpx-field-prefix-oracle.mjs";
 import {closeOwnedBrowser} from "./session-close.mjs";
 import {numericBrowserTargetMatches} from "./numeric-target.mjs";
 import {armSaveShortcutInputHold,verifyHeldInputSaveShortcut,verifyReadySaveShortcuts} from "./save-shortcuts.mjs";
@@ -27,7 +28,7 @@ export async function runDocumentMenuBrowserAudit(caseName) {
   const externalOrigin=parseBrowserAuditOrigin(process.env.HWPJS_BROWSER_ORIGIN);
   const root = resolve("."), {port,paragraph,marker,oraclePath,oracleMode,protectedAnchors}=config;
   const origin=externalOrigin??`http://127.0.0.1:${port}`;
-  const editedText=config.replaceWhole?marker:marker+config.original;
+  const editedText=config.editRange?config.original.slice(0,config.editRange.start)+marker+config.original.slice(config.editRange.end):config.replaceWhole?marker:marker+config.original;
   const wasmPath = resolve(process.env.HWPJS_TEST_WASM), wasm = readFileSync(wasmPath);
   const fixture = resolve(config.fixturePath), input = readFileSync(fixture);
   const hash = bytes => createHash("sha256").update(bytes).digest("hex");
@@ -38,6 +39,7 @@ export async function runDocumentMenuBrowserAudit(caseName) {
   sourcePaths.push("web/preview/document-menu-disclosures.mjs");
   sourcePaths.push("tools/browser/audit-origin.mjs");
   sourcePaths.push("tools/browser/numeric-target.mjs");
+  sourcePaths.push("tools/browser/input-origin.mjs","tools/hwpx-field-prefix-oracle.mjs");
   sourcePaths.push("tools/browser/save-shortcuts.mjs","web/preview/save-controls.mjs","web/preview/document-download.mjs");
   const sourceHashes = () => Object.fromEntries(sourcePaths.map(path=>[path,hash(readFileSync(resolve(path)))]));
   const sourceSha256 = sourceHashes();
@@ -46,8 +48,14 @@ export async function runDocumentMenuBrowserAudit(caseName) {
   const output = mkdtempSync(join(tmpdir(),config.outputPrefix));
   const shortcutDirectory = join(output,"shortcut-downloads");mkdirSync(shortcutDirectory);
   const editor = await createHwpxEditor(wasm);
-  let original;
-  try { editor.open(input); original = oracleMode==="manual-result"?editor.manualFormulaResultDisplayText(0,paragraph):editor.anchorText(0,paragraph); assert.equal(original,config.original); }
+  let original,fieldBeginId;
+  try { editor.open(input); original = oracleMode==="field-range"?editor.fieldLabelDisplayText(0,paragraph):oracleMode==="manual-result"?editor.manualFormulaResultDisplayText(0,paragraph):editor.anchorText(0,paragraph); assert.equal(original,config.original);
+    if(oracleMode==="field-range"){
+      const target=editor.fieldRangeTarget(0,paragraph,config.editRange.start,config.editRange.end);assert(target);
+      const selected=selectFieldPrefixOracle({before:input.toString("base64"),section:0,paragraph,beginElement:target.beginElement});
+      assert.equal(selected.oracle,oraclePath);fieldBeginId=selected.beginId;
+    }
+  }
   finally { editor.close(); }
   const command = (...args) => {
     const result = JSON.parse(cli("agent-browser", ["--json","--session",session,...args], {
@@ -180,7 +188,7 @@ export async function runDocumentMenuBrowserAudit(caseName) {
     click("#document-window-options > summary");command("fill","#document-window-start",String(paragraph));command("fill","#document-window-count","1");click("#document-window-apply");
     wait(`${replies("set-edit-window")}.length===1`);
     click("details:has(#find-input) > summary");command("fill","#find-input",original);click('#find-form button[type="submit"]');
-    if(config.replaceWhole){
+    if(config.replaceWhole||config.editRange){
       for(let attempt=0;attempt<50&&!numericTarget(original);attempt++)click('#find-form button[type="submit"]');
       assert(numericTarget(original),"OriginalNumericCellNotFoundAtSource");
     }
@@ -208,10 +216,15 @@ export async function runDocumentMenuBrowserAudit(caseName) {
       command("press",evaluate('navigator.platform.includes("Mac")')?"Meta+Shift+ArrowDown":"Control+Shift+End");
       assert.deepEqual(evaluate('({start:document.querySelector("#canvas-input").selectionStart,end:document.querySelector("#canvas-input").selectionEnd})'),{start:0,end:original.length});
     }
+    if(config.editRange)selectBrowserInputRange(driver,original,config.editRange.start,config.editRange.end);
     if(config.saveShortcuts)armSaveShortcutInputHold(evaluate);
     command("keyboard","inserttext",marker);
     if(config.saveShortcuts){verifyHeldInputSaveShortcut(driver,shortcutDirectory);progress("busy-input-save-shortcut-blocked");}
     wait(`${replies("splice")}.some(r=>r.revision===1)`);progress("trusted-text-edit");
+    if(config.editRange){
+      const sent=evaluate("window.__menuAudit.find(r=>r.direction==='request'&&r.kind==='splice')");
+      assert.deepEqual([sent.section,sent.paragraph,sent.startUnit,sent.endUnit],[0,paragraph-1,config.editRange.start,config.editRange.end]);
+    }
     assert.deepEqual(evaluate("window.__menuInput.filter(r=>r.trusted&&r.inputType==='insertText').map(r=>r.type)"),["beforeinput","input"]);
     menuKey("menu-undo","u");wait(`${replies("undo")}.some(r=>r.changed&&r.revision===0)`);
     assert.equal(evaluate('document.querySelector("#canvas-input").value'),original);
@@ -225,16 +238,16 @@ export async function runDocumentMenuBrowserAudit(caseName) {
     const downloaded=join(output,"edited.hwpx");click(`${popup("menu-save")} > summary`);
     command("download","#menu-save",downloaded);const saved=readFileSync(downloaded);
     for(const shortcut of shortcutDownloads)assert.deepEqual(shortcut.bytes,saved,"ShortcutAndMenuSavedDifferentSnapshots");
-    const request={before:input.toString("base64"),after:saved.toString("base64"),section:0,...(oracleMode==="manual-result"?{ordinal:config.formulaOrdinal,display:editedText}:{mode:oracleMode,paragraph,text:marker})};
+    const request={before:input.toString("base64"),after:saved.toString("base64"),section:0,...(oracleMode==="manual-result"?{ordinal:config.formulaOrdinal,display:editedText}:oracleMode==="field-range"?{paragraph,beginId:fieldBeginId,atUnit:config.editRange.start,deletedUnits:config.editRange.end-config.editRange.start,text:marker}:{mode:oracleMode,paragraph,text:marker})};
     for(const flags of [[],["-O"]]){
       const oracleResult=await executeOracle("python3",[...flags,oraclePath],{input:JSON.stringify(request),timeout:30000});
       if(config.expectedAffected)assert.deepEqual(JSON.parse(oracleResult).affected,config.expectedAffected);
       const negative=oracleMode==="manual-result"?{...request,display:"wrong"}:oracleMode==="numeric-input"?{...request,paragraph:config.negativeParagraph??paragraph+1}:{...request,text:"wrong"};
-      await assert.rejects(executeOracle("python3",[...flags,["manual-result","numeric-input"].includes(oracleMode)?oraclePath:"tools/hwpx-anchor-prefix-oracle.py"],{input:JSON.stringify(negative),timeout:30000}),error=>error.status===1&&error.signal===null&&/complete XML mismatch|Complete XML differs|Complete (?:numeric input|merged SUM|cascaded SUM|BELOW SUM) XML mismatch/.test(String(error.stderr)));
+      await assert.rejects(executeOracle("python3",[...flags,["manual-result","numeric-input","field-range"].includes(oracleMode)?oraclePath:"tools/hwpx-anchor-prefix-oracle.py"],{input:JSON.stringify(negative),timeout:30000}),error=>error.status===1&&error.signal===null&&/complete XML mismatch|Complete XML differs|Unexpected XML change outside the chosen field prefix|Complete (?:numeric input|merged SUM|cascaded SUM|BELOW SUM) XML mismatch/.test(String(error.stderr)));
     }
     evaluate("window.__menuAudit=[]");command("upload","#file",downloaded);wait(`${replies("load")}.length===1`);
     click("#enable-edit");wait(`${replies("enable")}.some(r=>r.revision===0)`);
-    if(config.replaceWhole){
+    if(config.replaceWhole||config.editRange){
       openBrowserRibbonPage(driver,"view");
       if(!evaluate('document.querySelector("#document-window-options").open'))click("#document-window-options > summary");
       command("fill","#document-window-start",String(paragraph));command("fill","#document-window-count","1");click("#document-window-apply");
@@ -242,8 +255,8 @@ export async function runDocumentMenuBrowserAudit(caseName) {
     }
     command("fill","#find-input",marker);click('#find-form button[type="submit"]');
     // Identical pre-existing numbers in retained owner cells are not the edited source.
-    if(config.replaceWhole)for(let attempt=0;attempt<50&&!numericTarget(editedText);attempt++)click('#find-form button[type="submit"]');
-    if(config.replaceWhole){
+    if(config.replaceWhole||config.editRange)for(let attempt=0;attempt<50&&!numericTarget(editedText);attempt++)click('#find-form button[type="submit"]');
+    if(config.replaceWhole||config.editRange){
       assert(numericTarget(editedText),"ReopenedNumericCellNotFoundAtSource");
       reopenedTarget={section:0,paragraph,canvasCaret:evaluate('document.querySelector("#canvas").dataset.caret')};
     }

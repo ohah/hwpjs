@@ -54,7 +54,7 @@ test("menu browser audit rejects partial-scope arguments before reading a candid
   assert.equal(result.stdout,"");assert.match(result.stderr,/UnexpectedBrowserAuditArguments/);assert.doesNotMatch(result.stderr,/ENOENT/);
 });
 
-for(const tool of ["unknown-object","manual-result","numeric-input","merged-sum-input","cascaded-sum-input","below-sum-input"])for(const [args,env,pattern] of [
+for(const tool of ["unknown-object","manual-result","numeric-input","merged-sum-input","cascaded-sum-input","below-sum-input","field-interior"])for(const [args,env,pattern] of [
   [[],{HWPJS_TEST_WASM:""},/ExplicitBrowserCandidateRequired/],
   [["--skip-history"],{HWPJS_TEST_WASM:"/nonexistent-menu-audit.wasm"},/UnexpectedBrowserAuditArguments/],
 ])test(`${tool} browser refuses invalid inputs before starting external processes: ${pattern}`,()=>{

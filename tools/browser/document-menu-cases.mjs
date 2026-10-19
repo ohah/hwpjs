@@ -5,6 +5,15 @@ const numericSumOracleDependencies=Object.freeze([
   "tools/hwpx_text_snapshot_order.py",
 ]);
 export const documentMenuBrowserCases=Object.freeze({
+  "field-interior":Object.freeze({
+    fixturePath:"reference/rhwp/samples/task1749/saved_bounds_cumulative_page_break.hwpx",paragraph:45,
+    original:"2026년 서울청년정책네트워크",marker:"중간😀<&",editRange:Object.freeze({start:2,end:4}),protectedAnchors:0,
+    oraclePath:"tools/hwpx-field-edit-oracle.py",oracleMode:"field-range",
+    oracleDependencies:Object.freeze(["tools/hwpx_field_prefix_site.py","tools/hwpx_field_dirty_owners.py"]),
+    entryPath:"tools/field-interior-browser-audit.mjs",
+    port:58870,sessionPrefix:"hwpjs-field-interior",outputPrefix:"hwpjs-field-interior-browser-",
+    scope:"one actual field interior: trusted two-character selection and replacement, Worker coordinates, menu history, independent XML ZIP, download and exact-source reupload; not every field command or layout equivalence",
+  }),
   "below-sum-input":Object.freeze({
     saveShortcuts:true,
     fixturePicker:true,
