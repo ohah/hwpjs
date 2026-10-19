@@ -1,10 +1,12 @@
 # 현재 main 소스의 전체 native 실행
 
-## 52개 수정 뒤의 새 전체 재검사 사본 — 컴파일 진행 중
+## 52개 수정 뒤의 새 전체 재검사 사본 — 실행 중
 
 게시 `6f4fe0ea3315d316c6896587db2c4f0ead5bfc59`·tree `5c51feac1fa3e5b8dde0723ad4d4f4d9ef3761d2`를 `/tmp/hwpjs-native-postfix-main.33GojG`에 새로 추출했습니다. 추적 blob7,194개를 원래 Git blob 해시와 전수 대조해 일치했습니다. legacy/hwpers gitlink1개는 커밋 식별자만 추적되며 하위 저장소 내용은 archive/검사 대상에 없습니다. 최초 blob 전수 스크립트가 이 gitlink를 일반 파일로 취급해 UnexpectedTreeEntry로 종료한 뒤, gitlink를 명시적으로 구분한 재검사로 위 분모를 확인했습니다. 제품/테스트 소스를 맞추기 위해 무관한 사용자 변경을 가져오지 않았습니다.
 
-guardian overlay는 앞선 고정 실행에서 사용한 정확한 세 파일만 복사했고 참조 samples도 별도로 복사했습니다. 새 `zig test src/root.zig -O ReleaseSafe --test-no-exec -femit-bin=.../native-safe`는 nice10·Zig0.17.0으로 실행 중입니다(`native-safe-build.log/.stderr`). 컴파일 종료/새 바이너리 해시/실제 inventory를 확인하기 전에는 빌드 성공이나 테스트 시작·완료가 아닙니다. 이전52개 수정의 집중 결과와 새 전체 결과를 합산하지 않고, 기본 WASM/데모는 유지합니다.
+guardian overlay는 앞선 고정 실행에서 사용한 정확한 세 파일만 복사했고 참조 samples도 별도로 복사했습니다. 새 `zig test src/root.zig -O ReleaseSafe --test-no-exec -femit-bin=.../native-safe`는 nice10·Zig0.17.0으로 exit0·stdout/stderr0입니다(`native-safe-build.log/.stderr`). 새 바이너리 SHA256은 `b8e2e062b150ea2d93401b3a2d34d3b43c287bb98d6ac290facee4ee415c8f4a`입니다.
+
+`native-guard-full.jsonl/.stderr`에서 이 해시를 고정하고 inventory4,118개·범위0..4118·fullInventoryCovered=true·batch1·seed0x485750·4,096MiB 감시로 실제 실행을 시작했습니다. 문자 속성 shard 환경변수는 둘 다 제거했고 앞선 skip 조건을 성공으로 바꾸지 않습니다. build test의 별도 controlled text 대상도 같은 사본에서 `zig test -O ReleaseSafe --dep hwpjs -Mroot=tests/hwp5/style-preservation/text.test.zig -O ReleaseSafe -Mhwpjs=src/root.zig --test-filter 'text splice'`로 실행 중입니다(`controlled-text-safe.log/.stderr`). root의 진행/완료를 이 별도 대상의 통과로 계수하지 않습니다. 각 최종 종료가 필요하며, 이전52개 수정의 집중 결과와 새 전체 결과를 합산하지 않고 기본 WASM/데모는 유지합니다.
 
 ## 단 소속·분할·원본 inventory의 마지막 여섯 실패
 
