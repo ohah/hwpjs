@@ -238,6 +238,14 @@ export async function runDocumentMenuBrowserAudit(caseName) {
         assert.deepEqual(witness(),before,"RejectedShortcutChangedSelectionOrDocument");
       }
       progress("trusted-alt-shortcuts-not-consumed");
+      for(const [chord,ctrl,meta,alt,shift] of [["Control+Enter",true,false,false,false],["Meta+Enter",false,true,false,false],["Alt+Enter",false,false,true,false],["Control+Shift+Enter",true,false,false,true]]){
+        const count=evaluate("window.__menuKeys.length");command("press",chord);
+        const observed=evaluate(`window.__menuKeys.slice(${count}).find(row=>row.key==='Enter')`);
+        assert(observed?.trusted&&observed.consumed&&observed.ctrl===ctrl&&observed.meta===meta&&observed.alt===alt&&observed.shift===shift,"ModifiedEnterWasNotExplicitlyRefused");
+        assert.deepEqual(witness(),before,"ModifiedEnterChangedSelectionOrDocument");
+        assert.match(evaluate('document.querySelector("#canvas-edit-status").textContent'),/수정키.*Enter.*지원하지 않습니다/);
+      }
+      progress("trusted-modified-enter-no-paragraph-split");
     }
     menuKey("menu-undo","u");wait(`${replies("undo")}.some(r=>r.changed&&r.revision===0)`);
     assert.equal(evaluate('document.querySelector("#canvas-input").value'),original);

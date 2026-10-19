@@ -1,5 +1,24 @@
 import test from "node:test";
 
+test("modified Enter never silently becomes an ordinary paragraph split", async t => {
+  for (const modifiers of [{ ctrlKey: true }, { metaKey: true }, { altKey: true }, { ctrlKey: true, shiftKey: true }, { metaKey: true, shiftKey: true }, { ctrlKey: true, altKey: true }, { altKey: true, shiftKey: true }]) await t.test(JSON.stringify(modifiers), async t => {
+    const h = await harness(t, "parashape", p => p.paragraph === 5);
+    h.controller.message({ kind: "enable", structureAvailable: true, historyAvailable: true });
+    assert(h.controller.selectTextRange({ ...h.paragraph, startUnit: 1, endUnit: 1 }));
+    const original = Buffer.from(h.native.save().bytes), paragraphs = h.native.paragraphCount(0), value = h.input.value;
+    const event = dispatch(h.input, "keydown", { key: "Enter", ...modifiers });
+    assert.equal(event.defaultPrevented, true, "native textarea newline must not bypass the command boundary");
+    assert.equal(h.requests.length, 0);
+    assert.equal(h.native.paragraphCount(0), paragraphs);
+    assert.deepEqual(Buffer.from(h.native.save().bytes), original);
+    assert.equal(h.input.value, value);
+    assert.equal(h.input.selectionStart, 1); assert.equal(h.input.selectionEnd, 1);
+    assert.match(h.note.textContent, /수정키.*Enter.*지원하지 않습니다/);
+    dispatch(h.input, "keydown", { key: "Enter" });
+    assert.equal(h.requests.length, 1); assert.equal(h.requests[0].kind, "split");
+  });
+});
+
 test("Canvas uses exact primary modifiers for select-all and history shortcuts", async t => {
   for (const primary of ["ctrlKey", "metaKey"]) for (const [key, extra] of [["a", { altKey: true }], ["a", { shiftKey: true }], ["z", { altKey: true }], ["y", { altKey: true }]]) await t.test(`ignored/${primary}/${key}/${Object.keys(extra)[0]}`, async t => {
     const h = await harness(t, "parashape", p => p.paragraph === 5);

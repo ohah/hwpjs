@@ -1,5 +1,13 @@
 # Canvas 단축키의 수정키 경계
 
+## 수정키+Enter의 잘못된 문단 분할 방지
+
+RHWP의 로컬 page 명령에서는 Ctrl+Enter가 쪽 나누기, Ctrl+Shift+Enter가 단 나누기이며 별도 native 명령으로 위임합니다. 현재 이 프로젝트에 해당 명령을 구현한 것은 아닙니다. 기존 Canvas는 Control/Command/Alt+Enter도 일반 Enter로 해석해 문단 분할을 요청했습니다. 이제 이 조합은 textarea 기본 개행도 취소하고 미지원 안내와 함께 문서/선택을 보존합니다. 일반 Enter와 기존 Shift+Enter 경로는 바꾸지 않습니다. 쪽/단 나누기 자체는 후속 native 원자적 명령·저장·이력·UI 검증이 필요한 미완료 기능이며, 이 거부를 기능 지원 성공으로 세지 않습니다.
+
+7개 수정키 조합 회귀는 수정 전 모두 split을 요청해 자식7개/부모1개 실패·exit1을 재현했습니다(`modified-enter-red.log/.stderr`). 일반 Enter가 이어서 정상 split을 요청하는 양성 대조도 포함한 Canvas 전체 `modified-enter-fixed.log/.stderr`는232/232·fail/cancel/skip/todo0·exit0·stderr0(2600.426875ms)입니다. 실행 사본은 `/tmp/hwpjs-task1749-ranges.9Y1P1R`의9b03e1c8 게시 코드에 이 guard/감사 변경만 적용했고, 종료 로그 SHA256은 `602a7c1da4bf461eb3e0ed2c9e5bf73ad2964499f4317b9f32ecb6fd96711235`입니다. 진행 중인 다른 두 검증 소스는 변경하지 않았습니다.
+
+agent-browser 스킬의 실제 Chromium에서도 Control+Enter/Command+Enter/Alt+Enter/Control+Shift+Enter 네 조합의 trusted·정확한 수정키·명시적 소비·미지원 안내·선택/문자열/Worker 요청 불변을 확인했습니다. `modified-enter-browser.jsonl/.stderr`는 exit0·stderr0·verified=true·cleanup.success=true이며 기존 Alt 조합·입력·U/R/S·실제 저장 단축키·독립 XML/ZIP·재업로드도 유지했습니다. 로그 SHA256은 `d9ff315b4bcbab3bd05b7bb28a3a7ac2fc807045c57252b97a94b83acf1798ed`, 검증 Canvas 소스는 `883e05b31fdfe6ccb058275416599b82a5aaaae38a05a8d9c3d45441bebe91ca`입니다. 저장본은 기존 일반 사례와 같은 `ee2e1133b8357e70e3d94a6ccb69240210835abd64c96bb2e0617ba2ea0f7c1b`입니다. 소유 세션 `hwpjs-menu-mnemonic-2c454345548e`의 inactive/pid=null과 포트58863 미수신을 재확인했습니다. 전체 fixture·OS IME·RHWP 기능/조판 동치 또는 기본 배포 승격 증거로 확대하지 않습니다.
+
 ## 수정과 책임
 
 Canvas의 전체 선택은 Control/Command+A이면서 Alt·Shift가 없는 경우만 처리합니다. undo/redo는 Control/Command+Z/Y이면서 Alt가 없는 경우만 처리하며 기존 Shift+Z redo는 유지합니다. 기존 소비 이벤트·AltGraph·IME/229 거부는 그대로입니다. 단축키 판정은 기존 Canvas keydown 한 곳만 소유하고 별도 명령 상태/문서 모델/이력 저장은 추가하지 않습니다.

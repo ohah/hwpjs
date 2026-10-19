@@ -739,6 +739,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     if ((event.metaKey || event.ctrlKey) && !event.altKey && ["z", "y"].includes(key.toLowerCase())) { event.preventDefault(); travel(key.toLowerCase() === "y" || event.shiftKey ? "redo" : "undo"); return; }
     if (key === "Enter") {
       event.preventDefault();
+      if (event.metaKey || event.ctrlKey || event.altKey) { report("수정키+Enter 명령은 아직 지원하지 않습니다. 문단은 변경하지 않았습니다."); return; }
       if (multipleParagraphs() || (event.shiftKey && target?.createdCell && renderer.paragraph(target)?.softLineBreakAvailable === true)) replaceSelection("\n");
       else split();
       return;
