@@ -1,5 +1,7 @@
 # 위아래 그림 예약의 정렬 정책 전달
 
+여러 페이지 문단의 기준 선택은 [분할 문단 그림 기준](picture-paragraph-page-fragment.md)에 분리합니다.
+
 `paginatePictureRows`의 명시적 `edgePolicy`는 최초 예약과 행 이동 후 재예약에 동일하게 전달합니다. 좌표 계산은 기존 `picturePageReservations` → `projectFloatingPicturePage` → `placeFloatingPicture`가 소유하며 이 경로에 정렬 계산을 복제하지 않습니다.
 
 2026-10-19 회귀에서 `TOP_AND_BOTTOM`·문단 기준·가로 정렬 3/4(안쪽/바깥쪽)에 `inside-start-outside-end`를 전달해도 `unsupported_alignment`로 거부되던 문제를 재현했습니다. 원인은 반복 배치 함수가 예약 함수에 옵션을 전달하지 않은 것입니다. 최초 예약만 고쳐도 재예약에서 다시 실패하므로 양쪽 호출을 수정했습니다.
