@@ -1,5 +1,11 @@
 # unknownObj 후보의 공개 API 회귀
 
+## 게시 e9aa1141의 HWP5 공개 등록 회귀 — 실행 중
+
+게시 `e9aa1141a55c4c8879e9aa47e62bcc992e22520a`·tree `04169bfb83de0635b15c6dc5d2a238c170f06fdb`를 `/tmp/hwpjs-main-hwp5-gate.qzuKq7`에 분리했습니다. 완료한 HWPX 사본의 APFS clone에 두 커밋 간 변경 경로만 Git archive로 반영하고 추적7,214개 blob 전체를 새 HEAD와 대조했습니다. 새 Git index에도 해당 blob 경로만 등록했습니다. 참조/기준/후보를 원래 작업 트리와 섞지 않으며 후보9e75·기준cbaa의 전체 해시는 아래와 같습니다.
+
+`editor_api_tests`의 초기 배열과 has_side_effects 직전까지의 모든 addArg에서92개 고유 경로를 추출했습니다. install 의존성 뒤의 등록도 누락하지 않습니다. Node24.20.0·nice10·직렬·명시적 HWPJS_TEST_WASM/HWPJS_BASELINE_WASM으로 `registered-hwp5.jsonl/.stderr`를 기록하고 시작/종료의 전체 소스/build/두 WASM 불변을 검사합니다. 종료/통계/skip/최종 재대조 전에는 성공이 아니며, 아래 HWPX372개·Native4,118개와 한 실행으로 합산하지 않습니다. 기본 WASM/외부 데모는 그대로입니다.
+
 ## 게시 bd75e76b의113파일 등록 회귀
 
 게시 `bd75e76b840d598784a3576aa1ebe1307ddb4b1b`·tree `e0193d9c6a1d7b2bab2d18ea0169d1d62f2136c9`를 `/tmp/hwpjs-main-public-gate.mrTKYH`에 분리했습니다. 추적7,211개 blob을 Git과 전수 대조한 뒤 그 경로만 사본의 새 Git index에 등록했고 참조 samples도 별도로 복사했습니다. `src/`·`.mise.toml` 범위에서 후보 빌드 소스6f4fe0ea와 달라진 제품 코드가 없음을 확인했습니다. 후보9e75와 기준cbaa의 전체 SHA256은 아래52개 수정 후 기록과 같으며, 후보는 사본 zig-out에만 설치하고 기준은 사본 baseline.wasm으로 고정했습니다.
