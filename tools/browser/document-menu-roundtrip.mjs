@@ -209,9 +209,10 @@ export async function runDocumentMenuBrowserAudit(caseName) {
     command("download","#menu-save",downloaded);const saved=readFileSync(downloaded);
     const request={before:input.toString("base64"),after:saved.toString("base64"),section:0,...(oracleMode==="manual-result"?{ordinal:config.formulaOrdinal,display:editedText}:{mode:oracleMode,paragraph,text:marker})};
     for(const flags of [[],["-O"]]){
-      await executeOracle("python3",[...flags,oraclePath],{input:JSON.stringify(request),timeout:30000});
+      const oracleResult=await executeOracle("python3",[...flags,oraclePath],{input:JSON.stringify(request),timeout:30000});
+      if(config.expectedAffected)assert.deepEqual(JSON.parse(oracleResult).affected,config.expectedAffected);
       const negative=oracleMode==="manual-result"?{...request,display:"wrong"}:oracleMode==="numeric-input"?{...request,paragraph:paragraph+1}:{...request,text:"wrong"};
-      await assert.rejects(executeOracle("python3",[...flags,["manual-result","numeric-input"].includes(oracleMode)?oraclePath:"tools/hwpx-anchor-prefix-oracle.py"],{input:JSON.stringify(negative),timeout:30000}),error=>error.status===1&&error.signal===null&&/complete XML mismatch|Complete XML differs|Complete (?:numeric input|merged SUM) XML mismatch/.test(String(error.stderr)));
+      await assert.rejects(executeOracle("python3",[...flags,["manual-result","numeric-input"].includes(oracleMode)?oraclePath:"tools/hwpx-anchor-prefix-oracle.py"],{input:JSON.stringify(negative),timeout:30000}),error=>error.status===1&&error.signal===null&&/complete XML mismatch|Complete XML differs|Complete (?:numeric input|merged SUM|cascaded SUM) XML mismatch/.test(String(error.stderr)));
     }
     evaluate("window.__menuAudit=[]");command("upload","#file",downloaded);wait(`${replies("load")}.length===1`);
     click("#enable-edit");wait(`${replies("enable")}.some(r=>r.revision===0)`);

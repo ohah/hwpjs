@@ -28,7 +28,7 @@ test("remote browser source witnesses reject wrong bytes and HTTP status without
   await assert.rejects(verifyBrowserSourceResponses("https://example.test",hashes,async()=>new Response(null,{status:404})),/BrowserRemoteSourceUnavailable/);
 });
 
-for(const name of ["plain","numeric-input","manual-result"])test(`${name} menu roundtrip exercises the real fixture picker with one exact public source`,()=>{
+for(const name of ["plain","numeric-input","manual-result","cascaded-sum-input"])test(`${name} menu roundtrip exercises the real fixture picker with one exact public source`,()=>{
   const selected=documentMenuBrowserCases[name];
   assert.equal(selected.fixturePicker,true);
   const entries=demoFixtures.filter(item=>item.path===selected.fixturePath);
@@ -53,7 +53,7 @@ test("menu browser audit rejects partial-scope arguments before reading a candid
   assert.equal(result.stdout,"");assert.match(result.stderr,/UnexpectedBrowserAuditArguments/);assert.doesNotMatch(result.stderr,/ENOENT/);
 });
 
-for(const tool of ["unknown-object","manual-result","numeric-input","merged-sum-input"])for(const [args,env,pattern] of [
+for(const tool of ["unknown-object","manual-result","numeric-input","merged-sum-input","cascaded-sum-input"])for(const [args,env,pattern] of [
   [[],{HWPJS_TEST_WASM:""},/ExplicitBrowserCandidateRequired/],
   [["--skip-history"],{HWPJS_TEST_WASM:"/nonexistent-menu-audit.wasm"},/UnexpectedBrowserAuditArguments/],
 ])test(`${tool} browser refuses invalid inputs before starting external processes: ${pattern}`,()=>{

@@ -20,11 +20,12 @@ test("every UI catalog URL is intercepted and serves its exact original bytes", 
   }
 });
 
-test("nested table and dutmal reference examples are explicit catalog entries", async () => {
+test("nested table dutmal and formula reference examples are explicit catalog entries", async () => {
   for (const [id, path] of [
     ["medical-exam-equipment.hwpx", "reference/rhwp/samples/issue5712/3184241_medical_exam_equipment.hwpx"],
     ["training-dutmal.hwpx", "reference/rhwp/samples/hwpx/opengov/36389301_결재문서본문_직장훈련계획_덧말.hwpx"],
     ["numeric-formula-reference.hwpx", "reference/rhwp/samples/hwpx/143E433F503322BD33.hwpx"],
+    ["cascaded-formula-reference.hwpx", "reference/rhwp/samples/issue5543_carried_anchor_ladder.hwpx"],
   ]) {
     const matches = demoFixtures.filter(fixture => fixture.id === id);
     assert.equal(matches.length, 1);

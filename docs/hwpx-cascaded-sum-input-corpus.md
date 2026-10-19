@@ -25,3 +25,11 @@ tree `6d99dc21c83b4d8a027832267b6923d65fba8440`의 분리 사본 `/tmp/hwpjs-cas
 최종 등록/검사/독립 oracle 세 코드 파일이 커밋용 tree `4bc1bb65e99189497d8b1cb2a6cbf3416763758e`와 바이트 일치함을 확인했습니다. 선택한 build의 fmt --check·build --help(exit0/stderr0)와 JS 구문·diff 검사도 통과했습니다. 기존 사용자 build/명령 문서 수정은 제외하고 HEAD에 이번 등록 한 줄과 명령 한 문단만 더했습니다.
 
 기존 merged-SUM 회귀 옆에 한 번 등록하며 현재 실행 중인 이전108파일 gate에는 새 파일이 포함되지 않습니다. 별도 집중 통과를 최신109파일 전체 gate 성공으로 합산하지 않습니다. 실행 명령은 [개발·검증 명령](development-commands.md)이 소유합니다. 실제 브라우저·OS 입력·원본 조판·모든 편집 명령·기본 WASM 승격은 별도입니다.
+
+## Canvas 실제 브라우저 왕복
+
+`tools/cascaded-sum-input-browser-audit.mjs`는 공통 문서 메뉴 왕복 도구의 별도 사례입니다. 예제 선택 목록에 명시적으로 허용한 `cascaded-formula-reference.hwpx`를 열고 문단109의177을 신뢰된 키보드 입력으로1로 치환합니다. 직접/후속 SUM의 변경 결과 ordinal이 정확히 `[0,1]`인지 독립 oracle 출력까지 검사합니다. 메뉴 실행 취소·재실행·저장, 다운로드 파일의 normal/-O 전체 XML/ZIP 대조, 잘못된 문단 반례 거부, 실제 파일 선택 재업로드를 포함합니다. 28입력 전체의 브라우저 검사가 아니라 한 실제 입력의 UI 왕복 증거입니다.
+
+선택 소스 tree `12d3e4cef0ae04e464eefb507c6e0ea4685535c1`의 분리 사본 `/tmp/hwpjs-cascaded-browser-clean.yAH5Fr`에서 위 후보 `9e75fd8b…`로 실행한 `cascaded-browser.jsonl`은 `verified:true`, cleanup의 `browserClosed:true/serverExited:true/success:true`이며 stderr는 비어 있습니다. 원본 SHA256은 위와 같고 저장 파일은 `604c9b4497fbc0ebc1b8fcce58add644e2e1899a39f2fd35f1d6988bbe3f9ea9`입니다. 캡처·다운로드 근거는 `/var/folders/51/mr5cjhg13v324f1vgg9m237c0000gn/T/hwpjs-cascaded-sum-browser-tPuJDQ`에 남깁니다. 로컬 소유 서버 포트58868 종료도 별도로 확인했습니다. 기본 WASM이나 원격 데모 서버를 승격/재시작하지 않았습니다.
+
+같은 선택 소스의 브라우저 인자·fixture 응답·클릭 대상·세션 종료 guard는30/30, fail/cancel/skip0, exit0, stderr0입니다(`browser-guards.log/.stderr`). 실제 UI 결과와 단위 guard 수를 합산하지 않습니다.

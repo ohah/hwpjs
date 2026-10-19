@@ -3,6 +3,7 @@ import { trackedDemoFixtures } from "./fixture-inventory.mjs";
 export const demoFixturePrefix = "/web/preview/demo-fixtures/";
 export const demoFixtures = Object.freeze([
   ...trackedDemoFixtures,
+  Object.freeze({ id: "cascaded-formula-reference.hwpx", name: "issue5543_carried_anchor_ladder.hwpx", label: "연쇄 SUM·병합 표 (참조)", path: "reference/rhwp/samples/issue5543_carried_anchor_ladder.hwpx" }),
   Object.freeze({ id: "numeric-formula-reference.hwpx", name: "143E433F503322BD33.hwpx", label: "숫자 입력·표 계산 결과 (참조)", path: "reference/rhwp/samples/hwpx/143E433F503322BD33.hwpx" }),
   Object.freeze({ id: "administrative-manual.hwpx", name: "2025 행정업무운영 편람(최종).hwpx", path: "reference/rhwp/samples/2025 행정업무운영 편람(최종).hwpx" }),
   Object.freeze({ id: "medical-exam-equipment.hwpx", name: "3184241_medical_exam_equipment.hwpx", label: "의료장비 — 중첩 표 (참조)", path: "reference/rhwp/samples/issue5712/3184241_medical_exam_equipment.hwpx" }),

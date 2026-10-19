@@ -1,5 +1,14 @@
 // Document identities and expected witnesses; interaction policy lives in the shared flow.
 export const documentMenuBrowserCases=Object.freeze({
+  "cascaded-sum-input":Object.freeze({
+    fixturePicker:true,
+    fixturePath:"reference/rhwp/samples/issue5543_carried_anchor_ladder.hwpx",paragraph:109,
+    original:"177",marker:"1",replaceWhole:true,protectedAnchors:0,
+    oraclePath:"tools/hwpx-cascaded-sum-input-oracle.py",oracleMode:"numeric-input",
+    expectedAffected:Object.freeze([0,1]),entryPath:"tools/cascaded-sum-input-browser-audit.mjs",
+    port:58868,sessionPrefix:"hwpjs-cascaded-sum-input",outputPrefix:"hwpjs-cascaded-sum-browser-",
+    scope:"one actual ladder numeric cell: trusted Canvas replacement, direct and downstream SUM, menu U/R/S, independent full XML/ZIP, download and reupload; not all twenty-eight inputs or layout equivalence",
+  }),
   "merged-sum-input":Object.freeze({
     fixturePath:"reference/rhwp/samples/issue1891_external_bindata_link.hwpx",paragraph:2715,
     original:"67.83",marker:"1",replaceWhole:true,protectedAnchors:0,
