@@ -89,10 +89,22 @@ def inventory(raw):
     return [{"paragraph": paragraph, "text": text.text, "ordinal": ordinal, "note": note} for paragraph, (ordinal, text, note) in sorted(targets.items())]
 
 
+def selected_inputs(data):
+    if "edits" not in data:
+        require(type(data["paragraph"]) is int and data["text"] == "1", "Explicit BELOW input")
+        return [{"paragraph": data["paragraph"], "text": data["text"]}]
+    require("paragraph" not in data and "text" not in data, "Ambiguous BELOW input shape")
+    edits = data["edits"]
+    require(type(edits) is list and 1 <= len(edits) <= 2, "Bounded BELOW sequence")
+    require(all(type(edit) is dict and set(edit) == {"paragraph", "text"} and type(edit["paragraph"]) is int and edit["text"] == "1" for edit in edits), "Explicit BELOW input")
+    require(len({edit["paragraph"] for edit in edits}) == len(edits), "Distinct BELOW sequence inputs")
+    return edits
+
+
 def verify(data):
     before, after = [base64.b64decode(data[key], validate=True) for key in ("before", "after")]
     require(hashlib.sha256(before).hexdigest() == SOURCE, "Observed BELOW source bytes")
-    require(type(data["paragraph"]) is int and data["text"] == "1", "Explicit BELOW input")
+    edits = selected_inputs(data)
     with package_checks["expectation"](before, after, PART) as (expected, actual):
         targets, results = layout(expected)
         for ordinal, (_, params, operands) in enumerate(results):
@@ -103,22 +115,27 @@ def verify(data):
             require(numeric["manual"].selected(expected, ordinal)[1].text == ("100" if ordinal == 0 else value), "Observed original BELOW display")
         suffix = list(expected.iter(P + "p"))[82].findall(P + "run/" + P + "t")
         require(len(suffix) == 2 and suffix[1].text == ".0", "Observed outside-field suffix")
-        require(data["paragraph"] in targets, "Observed BELOW input identity")
-        ordinal, text, _ = targets[data["paragraph"]]
-        require(Decimal(text.text.replace(",", "")) != 1, "Non-noop BELOW input")
-        text.text = "1"
-        field, params, operands = results[ordinal]
-        value = rendered(sum((Decimal(text.text.replace(",", "")) for text in operands), Decimal(0)))
-        params["LastResult"].text = value
-        params["Command"].text = "=SUM(BELOW)??%g,;;" + value
-        field.set("dirty", "1")
-        numeric["manual"].selected(expected, ordinal)[1].text = value
+        affected = set()
+        for edit in edits:
+            require(edit["paragraph"] in targets, "Observed BELOW input identity")
+            ordinal, text, _ = targets[edit["paragraph"]]
+            require(Decimal(text.text.replace(",", "")) != 1, "Non-noop BELOW input")
+            text.text = edit["text"]
+            affected.add(ordinal)
+        for ordinal in sorted(affected):
+            field, params, operands = results[ordinal]
+            value = rendered(sum((Decimal(text.text.replace(",", "")) for text in operands), Decimal(0)))
+            params["LastResult"].text = value
+            params["Command"].text = "=SUM(BELOW)??%g,;;" + value
+            field.set("dirty", "1")
+            numeric["manual"].selected(expected, ordinal)[1].text = value
         require(numeric["prefix"].signature(expected) == numeric["prefix"].signature(actual), "Complete BELOW SUM XML mismatch")
-    return {"inputs": 50, "formulas": 5, "affected": [ordinal]}
+    return {"inputs": 50, "formulas": 5, "affected": sorted(affected)}
 
 
 def self_test(data):
     result = verify(data)
+    chosen = selected_inputs(data)[0]["paragraph"]
 
     def mutant(kind):
         output = io.BytesIO()
@@ -131,7 +148,7 @@ def self_test(data):
                     targets, results = layout(root)
                     ordinal = result["affected"][0]
                     field, params, _ = results[ordinal]
-                    if kind == "input": targets[data["paragraph"]][1].text = "999"
+                    if kind == "input": targets[chosen][1].text = "999"
                     elif kind == "result": numeric["manual"].selected(root, ordinal)[1].text = "wrong"
                     elif kind == "other-formula": numeric["manual"].selected(root, (ordinal + 1) % 5)[1].text = "wrong"
                     elif kind == "cache": params["LastResult"].text = "wrong"

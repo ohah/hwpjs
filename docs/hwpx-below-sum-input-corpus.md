@@ -26,6 +26,18 @@ tree `df6b0fc8ee8694c31b6962ea3b16620d47f5f7ca`의 분리 사본 `/tmp/hwpjs-bel
 
 제품 parser/evaluator·편집 허용 정책을 바꾼 것이 아니라 실제 원본의 검증 공백과 oracle 규칙 중복을 줄였습니다. 기존 native/108파일 gate나 다른 후보 결과를 최신112파일 전체 gate 성공으로 합산하지 않으며 전체 문서 편집/실제 브라우저/원본 조판·기본 승격은 별도입니다. 기본 WASM과 외부 데모 서버는 변경하지 않았습니다.
 
+## 연속 숫자 편집과 현재값 SSOT
+
+`tests/hwpx/below-sum-sequence.test.mjs`는 두 입력을 원본으로 되돌리지 않고 순서대로 편집합니다. 같은 수식89/95, 같은 표의 다른 열548/550, 서로 다른 표의 같은 열548/710, 수동 표시 수식과 다른 표89/712의 네 쌍을 정방향/역방향으로 실행합니다. 여덟 경로이며50입력의 모든 쌍/임의 길이 편집을 전수 입증하지는 않습니다.
+
+독립 oracle은 기존 원본/봉투/Decimal 규칙을 그대로 사용하고 `edits` 한두 개를 모든 계산 전에 반영한 뒤 영향받는 결과 집합을 한 번 평가합니다. 단일 입력 요청은 기존 모양을 계속 허용합니다. 단일/배열 요청의 혼합·중복/빈/세 개 이상 입력·잘못된 타입을 거부하고, 한 입력만 반영한 기대값으로 두 입력 저장본을 통과시키지 않습니다. 제품 계산기나 이전 편집 결과를 기대값으로 복사하지 않습니다.
+
+각 단계의 전체 XML/ZIP normal/-O·중간 스냅샷별 undo/redo·거부 후 redo 보존·과거 분기에서 다시 편집할 때의 새 revision/redo 제거·두 입력의 재열기를 검사합니다. 최초9e75 후보의 `/tmp/hwpjs-native-postfix-main.33GojG/below-sequence-first.log/.stderr`는1/1·fail/cancel/skip/todo0·exit0·stderr0(46686ms)입니다.
+
+tree `744fcb95bfb44575c2938c06b31c132c37a1f391`의 분리 사본 `/tmp/hwpjs-below-sequence-clean.HcaCcs`에서 확장한 oracle의 기존50입력·여덟 연속 경로·공통 봉투 normal/-O를 직렬 실행한 `below-sequence-final.log/.stderr`는4/4·fail/cancel/skip/todo0·exit0·stderr0(177920ms)입니다. 두 입력 중 하나를 누락한 기대값·중복/빈/세 개/Boolean/요청 모양 혼합의 여섯 요청 반례도 양 모드에서 정확한 오류/status1/signal=null로 거부했습니다.
+
+종료 후 선택 소스의7,212개 blob과 최종 테스트/oracle의 바이트 일치를 확인했습니다. 선택 build의 fmt --check·build --help·JS 구문 검사와 새 회귀의 유일 등록(HWPX113파일·별도 WASM export1파일)도 통과했습니다. 사용자 build/명령 문서 변경은 제외하고 HEAD에 등록 한 줄과 명령 한 문단만 추가합니다. 제품 파서/수식/이력 구현을 바꾼 결과가 아니라 현재값/분기 결합 검증을 보강한 것입니다. 실행 중인 bd75e76b의113파일 gate에는 이 후속 회귀가 없으므로 최신114파일 전체 통과로 합산하지 않습니다.
+
 ## 실제 Canvas 왕복과 위치 편향 수정
 
 픽스쳐 허용 목록의 `below-formula-reference.hwpx`는 위 원본 하나를 가리킵니다. `tools/below-sum-input-browser-audit.mjs`는 공유 메뉴 flow의 별도 사례로 문단89의30.1을 신뢰된 키보드 입력으로1로 치환합니다. 메뉴 실행 취소/재실행·저장·normal/-O 전체 XML/ZIP·다른 유효 숫자 문단95 반례·다운로드·실제 파일 선택 재업로드를 검사합니다. 변경 수식 ordinal은 정확히 `[0]`이어야 하며 필드 밖 `.0`도 보존합니다. 전체50곳의 브라우저 검사는 아닙니다.

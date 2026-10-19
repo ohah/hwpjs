@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+[BELOW 연속 편집](hwpx-below-sum-input-corpus.md)은 `HWPJS_TEST_WASM=/absolute/candidate.wasm node --test --test-concurrency=1 tests/hwpx/below-sum-sequence.test.mjs tests/hwpx/below-sum-input-corpus.test.mjs`로 두 입력의 같은 수식/다른 열/다른 표·역순·분기 이력·독립 전체 XML/ZIP·재열기를 검사합니다. 여덟 경로의 실측이며 모든 입력 조합/임의 길이 명령 검사는 아닙니다.
+
 [BELOW Canvas 실제 왕복](hwpx-below-sum-input-corpus.md)은 `HWPJS_TEST_WASM=/absolute/candidate.wasm node tools/below-sum-input-browser-audit.mjs`입니다. 원본89번 문단의 신뢰된 입력·메뉴 이력·독립 XML/ZIP·재업로드의 정확한 원본 위치·소유 브라우저/서버 종료를 검사하며 전체50입력·기본 배포·조판 동치와 구분합니다.
 
 [BELOW 입력](hwpx-below-sum-input-corpus.md)과 [공통 숫자 oracle 봉투](hwpx-numeric-oracle-envelope.md)는 `HWPJS_TEST_WASM=/absolute/candidate.wasm node --test --test-concurrency=1 tests/hwpx/below-sum-input-corpus.test.mjs tests/hwpx/numeric-package-oracle.test.mjs`로 실제50입력/설명·normal/-O 전체 XML/ZIP·변조 거부·이력/재열기를 검사합니다. 공통 봉투만 검사하려면 두 번째 테스트 파일을 단독 실행하며 후보 WASM은 필요하지 않습니다.

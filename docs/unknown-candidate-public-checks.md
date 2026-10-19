@@ -1,5 +1,11 @@
 # unknownObj 후보의 공개 API 회귀
 
+## 게시 bd75e76b의113파일 등록 회귀 — 실행 중
+
+게시 `bd75e76b840d598784a3576aa1ebe1307ddb4b1b`·tree `e0193d9c6a1d7b2bab2d18ea0169d1d62f2136c9`를 `/tmp/hwpjs-main-public-gate.mrTKYH`에 분리했습니다. 추적7,211개 blob을 Git과 전수 대조한 뒤 그 경로만 사본의 새 Git index에 등록했고 참조 samples도 별도로 복사했습니다. `src/`·`.mise.toml` 범위에서 후보 빌드 소스6f4fe0ea와 달라진 제품 코드가 없음을 확인했습니다. 후보9e75와 기준cbaa의 전체 SHA256은 아래52개 수정 후 기록과 같으며, 후보는 사본 zig-out에만 설치하고 기준은 사본 baseline.wasm으로 고정했습니다.
+
+선택 build의 초기 인자/모든 addArg에서 HWPX112파일과 WASM export1파일, 총113개 고유 경로를 추출했습니다. HWPX 부분은 hwpxGateTestPaths와 순서까지 대조했습니다. Node24.20.0·nice10·직렬 실행의 `registered-hwpx.jsonl/.stderr`를 기록하며 명시적 HWPJS_TEST_WASM/HWPJS_BASELINE_WASM을 제공합니다. 시작/종료의 전체 소스·build·두 WASM 불변을 검사합니다. 실행 종료·분모/skip·최종 해시 확인 전에는 통과가 아닙니다. 이후 작업 중인 BELOW 연속 입력 회귀는 이 동결113파일에 없으며 집중 결과를 한 번의 최신114파일 gate로 합산하지 않습니다. 기존 Native/고정44원본 감사를 재시작하거나 기본 WASM/외부 서버를 교체하지 않았습니다.
+
 ## 52개 native 수정 뒤 새 후보의 전체 HWPX 등록 회귀
 
 제품 소스 `6f4fe0ea`의 `/tmp/hwpjs-native-postfix-main.33GojG`에서 별도 prefix ReleaseSafe WASM 빌드5/5·exit0(WASM compile45s)을 확인했습니다(`candidate-build.log/.stderr`). 새 후보 SHA256은 `9e75fd8bab9b879b3883f4703a7a8c2ffe100f98cd48c68a511eed797840b468`입니다. afb7 게시 후보와 export 이름/종류336개가 같고 missing/changedKind/added0이며 signature/동작 전체 동일성을 이 대조만으로 주장하지 않습니다.
