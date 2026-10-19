@@ -13,3 +13,11 @@ decoder는 최대100000개·u32 필드·1기반 문단 순서·중복 sourceElem
 실제 headerfooter 문서의 선언 소유 문단 split·undo/redo·저장 재열기와 실제 copay 표 안 선언의 host 좌표·소유 영역 문단 구분을 검사했습니다. wire 반례와 구형 기본 WASM 거부를 포함한4/4·skip0입니다. native 구현은 수식 묶음 조회와 함께 고정 tree6da11f0의 전체 native4157pass/1skip·exit0에서 검증됐습니다. 게시 전 깨끗한 main 사본의 native 차이0·fmt 통과와 같은5f3baacd artifact/구형 baseline의 두 API 파일8/8을 확인했습니다.
 
 Worker attachment·물리 페이지 바인딩·선택 정책·Canvas 합성은 이 API 게시 범위와 구분합니다. 기본 WASM 배포나 원본 한글 조판 동치를 완료했다는 주장이 아닙니다.
+
+## Worker 연결의 추가 검증
+
+Worker 연결 게시 전 현재 main의 분리 사본에서 통합663cc534 후보와 구형8c52c744 baseline을 명시한 두 API/Worker 파일은7/7·skip0을 통과했습니다. 참조 경로와 Git inventory가 없는 최초 사본 실행은 환경 오류로 실패했으며 이를 통과로 계수하지 않습니다. 게시 범위는 응답 연결·회귀·gate뿐이고 물리 페이지 선택/Canvas 합성의 미게시 변경은 포함하지 않습니다.
+
+`tests/hwpx/page-area-declarations-worker.test.mjs`는 응답마다 구역을 한 번 조회하고 문서 전역1기반 문단을 Worker 전역0기반으로 변환하는 연결을 검사합니다. 구형 ABI는 기존 응답 형태를 유지합니다. 신규 ABI의 조회 실패는 해당 구역 오류로 남기며 이전 좌표로 대체하지 않습니다.
+
+2026-10-20 작업 트리에서 명시적5f3baacd 후보로 추적46개를 대조했습니다. 45개 열기와 암호 문서1개 거부가 기존 경로와 같았으며, 새 선언/오류 필드 외 응답 전체가 일치했습니다. 실제 headerfooter의 분할·undo/redo·저장/재열기 좌표도 검사했습니다. 추가 회귀는 같은 응답 객체를 재사용하더라도 이전 좌표와 오류 배열이 남지 않고 원본 조회 행이 변경되지 않는지 검사합니다. 이 결과는 Worker 응답 계약 검증이며 물리 페이지 적용·전체 편집·기본 배포 완료 증거가 아닙니다.
