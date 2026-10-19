@@ -14,7 +14,7 @@ import { layoutHwp5ControlledPages } from "./hwp5-controlled-page-layout.mjs";
 import { layoutCreatedTableInlinePages } from "./created-table-inline-page-layout.mjs";
 
 /** Physical-page flow for the currently supported single-section body path. */
-export function layoutPageContent(content, measure, maxRows = 20000, { pageNumbers } = {}) {
+export function layoutPageContent(content, measure, maxRows = 20000, { pageNumbers, rowY, minimumRowPage } = {}) {
   const unavailable = error => ({ state: "unavailable", error });
   if (content.pageSettingsError || content.paragraphFlowErrors?.length || !content.pageSettings?.length) return unavailable("AmbiguousPageSettings");
   if (content.pictureCaptionErrors?.length) return unavailable("AmbiguousPictureCaptionContent");
@@ -33,7 +33,7 @@ export function layoutPageContent(content, measure, maxRows = 20000, { pageNumbe
     ? layoutDrawingBodyContent(content, measure, maxRows, layoutPageContent)
     : layoutMixedInlineBody(content, measure, maxRows);
   if (content.drawings?.length && !content.tables?.length) return layoutDrawingBodyContent(content, measure, maxRows, layoutPageContent);
-  if (content.tables?.length) return layoutTableBodyContent(content, measure, maxRows);
+  if (content.tables?.length) return layoutTableBodyContent(content, measure, maxRows, { rowY, minimumRowPage });
   if (content.pictures?.length) return layoutPictureBodyContent(content, measure, maxRows);
   if (content.tables?.length || content.pictures?.length || content.paragraphs.some(p => p.tableCell || p.clipped)) return unavailable("UnsupportedPageObjects");
   if (content.pageSettings.length > 1) {
@@ -52,7 +52,7 @@ export function layoutPageContent(content, measure, maxRows = 20000, { pageNumbe
   const columnZones = !bodyFlows.every(flow => flow.single_column === true);
   const measured = columnZones ? measureColumnContent(body, reference.boxes.page, bodyFlows, measure, maxRows) : layoutContent(body, reference.boxes.page.width, measure, maxRows, { documentBody: true });
   if (measured.state === "unavailable") return measured;
-  const paginated = paginateBodyRows(measured.rows, setting, bodyFlows, { columnZones, zoneGap: setting.column_zone_gap ?? 0, measureRow: measured.measureRow, maxRows });
+  const paginated = paginateBodyRows(measured.rows, setting, bodyFlows, { columnZones, zoneGap: setting.column_zone_gap ?? 0, measureRow: measured.measureRow, maxRows, rowY, minimumRowPage });
   if (paginated.state !== "paginated") return paginated;
   if (areas.length) {
     const numbering = areas[0].page_number_source;

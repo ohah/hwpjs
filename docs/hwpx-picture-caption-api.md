@@ -1,5 +1,7 @@
 # 그림 캡션 조회 API와 Worker 소속
 
+본문·표와의 복합 배치 계약과 격리 소스 검증은 [그림 캡션 흐름](captioned-picture-flow.md)을 따릅니다.
+
 실제 화면 입력·저장 후보의 별도 검증은 [Canvas 브라우저 왕복](captioned-picture-browser.md)을 따릅니다. API 게시와 복합 조판 후보의 브라우저 완료 범위를 합치지 않습니다.
 
 native 의미는 [캡션 코어](hwpx-picture-caption-core.md)가 소유합니다. 별도 optional export `hwpx_edit_picture_caption(section,node)`와 `hwpx_edit_picture_caption_bindings(section)`는 기존 JSON 출력 버퍼를 재사용합니다. 성공1/실패0이며 호출 전에 이전 출력을 해제하고 기존 output_ptr/len/free 수명을 따릅니다.

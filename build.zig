@@ -210,6 +210,15 @@ pub fn build(b: *std.Build) void {
     hwpx_text_tests.addArg("tests/hwpx/picture-paragraph-page-fragment.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/picture-caption-api.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/picture-caption-content.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/captioned-picture-body.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/reserved-body-row.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/reserved-picture-page-flow.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/table-picture-reservation-check.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/table-anchor-coverage.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/drawing-wrap-page-policy.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/table-caption-page-projection.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/picture-caption-worker-layout.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/captioned-picture-worker-roundtrip.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/source-table-row-horizontals.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/source-row-table-worker.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/caption-browser-arguments.test.mjs");

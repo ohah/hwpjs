@@ -16,6 +16,9 @@ import { pictureTextMeasure } from "./picture-text-measurement.mjs";
 import { picturePaintPlan } from "./picture-paint-plan.mjs";
 import { signedInt32 } from "./signed-int32.mjs";
 import { paginatePictureRows } from "./picture-page-flow.mjs";
+import { paginateReservedPictureRows } from "./reserved-picture-page-flow.mjs";
+import { tableCollisionFootprints } from "./table-collision-footprints.mjs";
+import { checkTablePictureReservations } from "./table-picture-reservation-check.mjs";
 import { columnReferenceBoxes } from "./column-reference-boxes.mjs";
 import { measureBlockTableHost } from "./block-table-host-flow.mjs";
 import { layoutFloatingTableBody } from "./floating-table-body-layout.mjs";
@@ -26,7 +29,7 @@ import { inlineTableHostAnchors } from "./inline-table-host-anchors.mjs";
 import { hasPictureSourceErrors, hasFinitePictureCrop } from "./picture-source-validation.mjs";
 
 // Source-ordered block tables; inline, captions and nested flow are separate.
-export function layoutTableBodyContent(content, measure, maxRows, { measureBodyParagraph } = {}) {
+export function layoutTableBodyContent(content, measure, maxRows, { measureBodyParagraph, rowY, minimumRowPage } = {}) {
   const unavailable = error => ({ state: "unavailable", error });
   if (measureBodyParagraph !== undefined && typeof measureBodyParagraph !== "function") return unavailable("InvalidTableBodyMeasurement");
   const nested = content.tables?.some(table => table.parentTableNode != null);
@@ -44,7 +47,8 @@ export function layoutTableBodyContent(content, measure, maxRows, { measureBodyP
   const bodyPictures = floating.filter(p => !content.paragraphs.find(paragraph => paragraph.section === p.section && paragraph.paragraph === p.paragraph)?.tableCell);
   if (new Set(pictures.map(p => `${p.section}:${p.pictureNode}`)).size !== pictures.length || floating.some(p => signedInt32(p.flow?.zOrder) === null)) return unavailable("UnsupportedTablePagePictures");
   if (pictures.some(p => hasPictureSourceErrors(p) || picturePaintPlan(p).state === "unsupported_transform" || !hasFinitePictureCrop(p))) return unavailable("UnsupportedTablePagePictures");
-  if (floating.some(p => p.flow?.textWrap !== 1 || p.position?.relations?.[2] !== 0)) return unavailable("UnsupportedTablePagePictures");
+  if (floating.some(p => ![0, 1].includes(p.flow?.textWrap) || p.position?.relations?.[2] !== 0
+    || (p.flow.textWrap === 0 && !bodyPictures.includes(p)))) return unavailable("UnsupportedTablePagePictures");
   const pictureIndex = inlinePictureIndex({ ...content, pictures: inline });
   if (pictureIndex.size !== inline.length || [...pictureIndex.values()].some(item => !item)) return unavailable("UnsupportedTablePagePictures");
   if (pictures.length) measure = pictureTextMeasure(pictureIndex, bodyPictures, measure);
@@ -114,7 +118,7 @@ export function layoutTableBodyContent(content, measure, maxRows, { measureBodyP
     for (const entry of group) entry.inlineFlow = inlineFlow;
   }
   if (content.paragraphs.some(p => p.section !== setting.section_ordinal)) return unavailable("UnsupportedPageSections");
-  const body = content.paragraphs.filter(p => !p.tableCell && !p.tableCaption), bodyIds = new Set(body.map(p => p.paragraph));
+  const body = content.paragraphs.filter(p => !p.tableCell && !p.tableCaption && !p.drawingCaption), bodyIds = new Set(body.map(p => p.paragraph));
   const flows = (content.paragraphFlows ?? []).filter(flow => bodyIds.has(flow.paragraph));
   const singleBodyColumn = flow => {
     if (flow.single_column === true) return true;
@@ -150,7 +154,11 @@ export function layoutTableBodyContent(content, measure, maxRows, { measureBodyP
     }
   }
   if (seen.size !== hosts.size) return unavailable("UnsupportedTablePageHost");
-  let result = layoutMeasuredMultipleTables(entries, sequence, setting, flows, { maxRows, ...(bodyPictures.length ? { paginateRows: (rows, setting, flows, options) => paginatePictureRows(rows, setting, flows, bodyPictures, body, options) } : {}) });
+  let result = layoutMeasuredMultipleTables(entries, sequence, setting, flows, { maxRows, rowY, minimumRowPage,
+    ...(bodyPictures.some(p => p.flow.textWrap === 0 || p.caption != null)
+      ? { paginateRows: (rows, setting, flows, options) => paginateReservedPictureRows(rows, setting, flows, bodyPictures, body, measure,
+        { ...options, captionParagraphs: content.paragraphs, edgePolicy: "inside-start-outside-end" }) }
+      : bodyPictures.length ? { paginateRows: (rows, setting, flows, options) => paginatePictureRows(rows, setting, flows, bodyPictures, body, options) } : {}) });
   if (result.state !== "placed") return result;
   for (const entry of entries) {
     if (entry.inlineFlow) continue;
@@ -171,5 +179,16 @@ export function layoutTableBodyContent(content, measure, maxRows, { measureBodyP
   }) : undefined;
   if (floating.some(p => flowPictures?.filter(item => item.section === p.section && item.pictureNode === p.pictureNode && item.anchorUnit === p.anchorUnit).length !== 1)) return unavailable("IncompleteTablePagePictures");
   const tableAnchors = entries.map(({ table }) => ({ section: table.section, tableNode: table.tableNode, hostParagraph: table.hostParagraph, anchorUnit: table.anchorUnit }));
-  return { ...result, tableAnchors, ...(flowPictures ? { flowPictures } : {}), state: "paginated" };
+  const footprints = [], footprintErrors = [];
+  for (const entry of entries) {
+    const collected = tableCollisionFootprints(entry.table, result, entry.outerInsets, nested ? content : null);
+    if (collected.state === "collected") footprints.push(...collected.footprints);
+    else footprintErrors.push({ section: entry.table.section, tableNode: entry.table.tableNode, error: collected.error });
+  }
+  if (result.pictureReservations?.length) {
+    if (footprintErrors.length) return { ...unavailable("IncompleteTablePictureCollisionFootprints"), tableCollisionFootprintErrors: footprintErrors };
+    const checked = checkTablePictureReservations(footprints, result.pictureReservations);
+    if (checked.state !== "clear") return checked;
+  }
+  return { ...result, tableAnchors, tableCollisionFootprints: footprints, tableCollisionFootprintErrors: footprintErrors, ...(flowPictures ? { flowPictures } : {}), state: "paginated" };
 }

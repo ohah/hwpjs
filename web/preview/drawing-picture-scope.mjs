@@ -17,7 +17,8 @@ export function drawingPictureScope(content, bodyParagraphs) {
       const key = `${picture.section}:${picture.pictureNode}`;
       if (localIds.has(key)) return fail("AmbiguousDrawingPictureOwner");
       localIds.add(key); localPictures.push(picture);
-    } else if (bodyParagraphs.includes(paragraph) && (picture.geometry?.treatAsCharacter === true || paragraph.tableCell)) bodyPictures.push(picture);
+    } else if (bodyParagraphs.includes(paragraph) && (picture.geometry?.treatAsCharacter === true || paragraph.tableCell
+      || (picture.geometry?.treatAsCharacter === false && [0, 1].includes(picture.flow?.textWrap)))) bodyPictures.push(picture);
   }
   const inlineIndex = inlinePictureIndex({ paragraphs: content.paragraphs, pictures: localPictures });
   if (inlineIndex.size !== localPictures.length || [...inlineIndex.values()].some(item => !item)) return fail("InvalidDrawingLocalPicture");

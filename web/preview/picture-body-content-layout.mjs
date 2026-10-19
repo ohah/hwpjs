@@ -8,10 +8,12 @@ import { paginateBodyRows } from "./page-row-flow.mjs";
 import { projectFloatingPicturePage } from "./picture-page-projection.mjs";
 import { signedInt32 } from "./signed-int32.mjs";
 import { paginatePictureDocumentFlow } from "./picture-document-flow.mjs";
+import { layoutCaptionedPictureBody } from "./captioned-picture-body-layout.mjs";
 import { hasPictureSourceErrors, hasFinitePictureCrop } from "./picture-source-validation.mjs";
 
 export function layoutPictureBodyContent(content, measure, maxRows) {
   const unavailable = error => ({ state: "unavailable", error });
+  if (content.pictures?.some(p => p.caption != null)) return layoutCaptionedPictureBody(content, measure, maxRows);
   if (content.pageSettings?.length !== 1 || content.tables?.length || content.drawings?.length || content.lines?.length || content.paragraphs.some(p => p.tableCell || p.clipped)) return unavailable("UnsupportedPicturePageObjects");
   if (!content.paragraphFlows?.every(f => f.top_level === true && f.single_column === true)) return unavailable("UnsupportedPicturePageFlow");
   if (content.pictures.some(hasPictureSourceErrors)) return unavailable("AmbiguousPicturePageSource");

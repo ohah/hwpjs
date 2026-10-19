@@ -81,5 +81,5 @@ export function planMultipleTablePages(entries, sequence, setting, flows, option
     if (![fragment.x, fragment.y].every(Number.isFinite)) return unavailable("InvalidTableOuterInsets");
     plans[row.tableIndex].fragments.push(fragment);
   }
-  return { state: "planned", plans, pages: layout.pages, height: layout.height, ...(layout.pictureReservations ? { pictureReservations: layout.pictureReservations } : {}), bodyRows: layout.rows.filter(row => row.tableIndex === undefined || row.inlineTableAnchor) };
+  return { state: "planned", plans, pages: layout.pages, height: layout.height, ...(layout.pictureCaptionRows ? { pictureCaptionRows: layout.pictureCaptionRows } : {}), ...(layout.pictureReservations ? { pictureReservations: layout.pictureReservations } : {}), bodyRows: layout.rows.filter(row => row.tableIndex === undefined || row.inlineTableAnchor) };
 }

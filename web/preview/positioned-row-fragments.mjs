@@ -3,6 +3,10 @@ import { graphemeUnits } from "./text-input.mjs";
 const tableFields = ["bandOrdinal", "tableIndex", "tableNode", "tableVerticalSource", "inlineTableFit", "inlineTableAnchor", "inlineTableAnchors", "inlineTables"];
 const placedFields = ["x", "y", "pageOrdinal", "columnOrdinal", "referenceBoxes", "transform", "pageClip"];
 
+export function isPositionedBodySource(row) {
+  return Boolean(row && row.kind === "text" && tableFields.every(field => row[field] === undefined));
+}
+
 export function positionedRowOwnerMatches(source, row) {
   return Boolean(source && row && row.kind === source.kind && row.section === source.section && row.paragraph === source.paragraph
     && tableFields.every(field => row[field] === source[field]));

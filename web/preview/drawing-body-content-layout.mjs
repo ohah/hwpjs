@@ -11,10 +11,13 @@ import { drawingFillPlan } from "./drawing-fill-plan.mjs";
 import { projectGroupedPicturePage } from "./grouped-picture-page-projection.mjs";
 import { drawingScaledGeometry } from "./drawing-scaled-geometry.mjs";
 import { pageParagraphCoverage } from "./page-paragraph-coverage.mjs";
+import { tableAnchorCoverage } from "./table-anchor-coverage.mjs";
 import { objectOnlyTableHostKeys } from "./object-only-table-hosts.mjs";
 import { projectRootPicturePage } from "./root-picture-page-projection.mjs";
 import { drawingPictureScope } from "./drawing-picture-scope.mjs";
 import { pictureTextMeasure } from "./picture-text-measurement.mjs";
+import { layoutDrawingWrapBody } from "./drawing-wrap-body-flow.mjs";
+import { drawingWrapPagePolicyError } from "./drawing-wrap-page-policy.mjs";
 
 // 본문 페이지 계산은 기존 경로에 위임하고 도형 내부 목록은 별도로 조판합니다.
 export function layoutDrawingBodyContent(content, measure, maxRows, layoutBody) {
@@ -39,20 +42,27 @@ export function layoutDrawingBodyContent(content, measure, maxRows, layoutBody) 
     if (fill.state === "unavailable") return fill;
     const root = roots.get(drawing);
     const placementSource = root.source;
-    if ((!root.grouped && (!(drawingAxisGeometry(source) || drawingRotatedGeometry(source) || drawingScaledGeometry(source)) || fill.state !== "none" && !drawingAxisGeometry(source))) || source.paint?.shadow_type !== 0 || placementSource.flow?.text_wrap !== 3 || placementSource.position?.flags?.[1] !== false || placementSource.position?.flags?.[2] !== true) return unavailable("UnsupportedDrawingPagePolicy");
+    if ((!root.grouped && (!(drawingAxisGeometry(source) || drawingRotatedGeometry(source) || drawingScaledGeometry(source)) || fill.state !== "none" && !drawingAxisGeometry(source))) || source.paint?.shadow_type !== 0) return unavailable("UnsupportedDrawingPagePolicy");
+    if (placementSource.flow?.text_wrap === 1) {
+      const policyReason = drawingWrapPagePolicyError(source, placementSource, root.grouped);
+      if (policyReason) return { ...unavailable("UnsupportedDrawingPagePolicy"), policyReason };
+    } else if (placementSource.flow?.text_wrap !== 3 || placementSource.position?.flags?.[1] !== false || placementSource.position?.flags?.[2] !== true) return unavailable("UnsupportedDrawingPagePolicy");
   }
   const bodyParagraphs = content.paragraphs.filter(p => !p.drawingText && !p.drawingCaption);
   const pictureScope = drawingPictureScope(content, bodyParagraphs);
   if (pictureScope.state !== "scoped") return pictureScope;
+  const { bodyPictures } = pictureScope;
+  const bodyPictureIds = new Set(bodyPictures.map(p => `${p.section}:${p.pictureNode}`));
   const localMeasure = pictureTextMeasure(pictureScope.inlineIndex, [], measure);
   const pictureIds = new Set((content.pictures ?? []).filter(p => p.owner.anchorNode === p.pictureNode).map(p => `${p.section}:${p.pictureNode}`));
   if (pictureIds.size !== (content.pictures ?? []).filter(p => p.owner.anchorNode === p.pictureNode).length) return unavailable("AmbiguousDrawingPageContent");
   if ([...pictureIds].some(key => ids.has(key))) return unavailable("AmbiguousDrawingPageContent");
   if (content.paragraphs.some(p => p.drawingText && !ids.has(`${p.section}:${p.drawingText.drawingNode}`)
     || p.drawingCaption && !ids.has(`${p.section}:${p.drawingCaption.drawingNode}`) && !pictureIds.has(`${p.section}:${p.drawingCaption.drawingNode}`))) return unavailable("AmbiguousDrawingPageContent");
-  const bodyIds = new Set(bodyParagraphs.map(p => `${p.section}:${p.paragraph}`));
+  const bodySourceParagraphs = content.paragraphs.filter(p => !p.drawingText && (!p.drawingCaption || bodyPictureIds.has(`${p.section}:${p.drawingCaption.drawingNode}`)));
+  const bodyIds = new Set(bodySourceParagraphs.map(p => `${p.section}:${p.paragraph}`));
   const bodyMeasure = (text, paragraph, unit, kind) => kind === "text" && (drawings.some(d => d.section === paragraph.section && d.hostParagraph === paragraph.paragraph && d.anchorUnit === unit)
-    || (content.pictures ?? []).some(p => p.owner.anchorNode === p.pictureNode && p.section === paragraph.section && p.paragraph === paragraph.paragraph && p.anchorUnit === unit)) ? { width: 0, height: textMeasurement(measure("", paragraph, unit, kind)).height } : measure(text, paragraph, unit, kind);
+    || (content.pictures ?? []).some(p => !bodyPictureIds.has(`${p.section}:${p.pictureNode}`) && p.owner.anchorNode === p.pictureNode && p.section === paragraph.section && p.paragraph === paragraph.paragraph && p.anchorUnit === unit)) ? { width: 0, height: textMeasurement(measure("", paragraph, unit, kind)).height } : measure(text, paragraph, unit, kind);
   const flowAnchors = new Map();
   for (const drawing of drawings) {
     const root = roots.get(drawing);
@@ -62,12 +72,13 @@ export function layoutDrawingBodyContent(content, measure, maxRows, layoutBody) 
     if (previous && (previous.paragraph !== drawing.hostParagraph || previous.anchorUnit !== drawing.anchorUnit)) return unavailable("AmbiguousDrawingFlowAnchor");
     flowAnchors.set(key, { section: drawing.section, paragraph: drawing.hostParagraph, anchorUnit: drawing.anchorUnit, node });
   }
-  const body = layoutBody({ ...content, floatingDrawingAnchors: [...flowAnchors.values()], drawings: [], pictures: [], paragraphs: bodyParagraphs, paragraphFlows: content.paragraphFlows.filter(f => bodyIds.has(`${f.section}:${f.paragraph}`)) }, bodyMeasure, maxRows);
+  const bodyContent = { ...content, floatingDrawingAnchors: [...flowAnchors.values()], drawings: [], pictures: bodyPictures, paragraphs: bodySourceParagraphs, paragraphFlows: content.paragraphFlows.filter(f => bodyIds.has(`${f.section}:${f.paragraph}`)) };
+  const body = layoutDrawingWrapBody(drawings, bodyParagraphs, options => layoutBody(bodyContent, bodyMeasure, maxRows, options));
   if (body.state !== "paginated") return body;
   if (body.limited) return unavailable("DrawingPageLayoutLimit");
   const pictureRows = [], flowPictures = [];
   for (const picture of content.pictures ?? []) {
-    if (pictureScope.localIds.has(`${picture.section}:${picture.pictureNode}`)) continue;
+    if (bodyPictureIds.has(`${picture.section}:${picture.pictureNode}`) || pictureScope.localIds.has(`${picture.section}:${picture.pictureNode}`)) continue;
     if (picture.owner.anchorNode === picture.pictureNode) {
       const placed = projectRootPicturePage(picture, content.paragraphs, body.rows, localMeasure, { maxRows: maxRows - body.rows.length - pictureRows.length });
       if (placed.state !== "placed") return placed;
@@ -101,7 +112,25 @@ export function layoutDrawingBodyContent(content, measure, maxRows, layoutBody) 
     bottoms.push(bounds.y + bounds.height);
   }
   const objectOnlyTableHosts = objectOnlyTableHostKeys(content, body);
-  const coverage = pageParagraphCoverage(content.paragraphs.filter(p => !objectOnlyTableHosts.has(`${p.section}:${p.paragraph}`)), rows);
-  if (coverage.state !== "complete") return coverage;
+  const anchors = tableAnchorCoverage(content, { ...body, rows });
+  if (anchors.state !== "covered") return anchors;
+  const coverageOwners = content.paragraphs.filter(p => !objectOnlyTableHosts.has(`${p.section}:${p.paragraph}`));
+  const coverageRows = [...rows, ...anchors.rows.filter(p => !objectOnlyTableHosts.has(`${p.section}:${p.paragraph}`))];
+  const coverage = pageParagraphCoverage(coverageOwners, coverageRows);
+  if (coverage.state !== "complete") {
+    const coverageFailures = [];
+    const byOwner = new Map();
+    for (const row of coverageRows) {
+      const key = `${row.section}:${row.paragraph}`;
+      if (!byOwner.has(key)) byOwner.set(key, []);
+      byOwner.get(key).push(row);
+    }
+    for (const owner of coverageOwners) {
+      const members = byOwner.get(`${owner.section}:${owner.paragraph}`) ?? [];
+      if (pageParagraphCoverage([owner], members).state !== "complete") coverageFailures.push({ section: owner.section, paragraph: owner.paragraph,
+        length: owner.text.length, intervals: members.filter(row => row.kind === "text").map(row => [row.startUnit, row.endUnit]) });
+    }
+    return { ...coverage, layoutStage: "drawing-coverage", coverageFailures };
+  }
   return { ...body, rows, placedDrawings, flowPictures: [...(body.flowPictures ?? []), ...flowPictures], spatialRows: true, height: Math.max(body.height, ...bottoms), pageLayoutMode: "measured-drawing-body" };
 }

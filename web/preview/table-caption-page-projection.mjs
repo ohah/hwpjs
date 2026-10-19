@@ -17,5 +17,8 @@ export function projectTablePageCaption(table, reservation, layout, { maxRows = 
   if (layout.rows.length + caption.rows.length > maxRows) return unavailable("TableCaptionPageProjectionLimit");
   const rows = caption.rows.map(row => ({ ...row, x: row.x + dx, y: row.y + dy, pageOrdinal: boxes[0].pageOrdinal, referenceBoxes: reference }));
   if (rows.some(row => ![row.x, row.y, row.height].every(Number.isFinite))) return unavailable("InvalidTableCaptionPageProjection");
-  return { ...layout, rows: [...layout.rows, ...rows].toSorted((a, b) => a.pageOrdinal - b.pageOrdinal || a.y - b.y || a.x - b.x) };
+  const placed = { section: table.section, tableNode: table.tableNode, pageOrdinal: boxes[0].pageOrdinal,
+    captionNode: table.sourceCaption.caption_node, listNode: table.sourceCaption.list_node,
+    rectangle: { ...caption.captionRectangle, x: dx + caption.captionRectangle.x, y: dy + caption.captionRectangle.y }, bounds };
+  return { ...layout, tableCaptionBounds: [...(layout.tableCaptionBounds ?? []), placed], rows: [...layout.rows, ...rows].toSorted((a, b) => a.pageOrdinal - b.pageOrdinal || a.y - b.y || a.x - b.x) };
 }

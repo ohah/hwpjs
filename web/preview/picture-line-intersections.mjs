@@ -6,7 +6,9 @@ export function intersectPictureLineRegions(line, pictures, { includeNextEvent =
   if (initial.state !== "available") return initial;
   let regions = initial.regions;
   let nextY = Infinity;
-  for (const { rectangle, flow } of pictures) {
+  for (const picture of pictures) {
+    const { flow } = picture;
+    const rectangle = picture.flowRectangle ?? picture.rectangle;
     const result = pictureLineRegions(line, rectangle, flow);
     if (result.state !== "available") return result;
     // 양쪽에 공간이 있어도 다른 그림과 합치면 줄 전체가 막힐 수 있습니다.
