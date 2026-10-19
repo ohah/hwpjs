@@ -19,3 +19,15 @@ HWPX 페이지 영역 선언의 현재 좌표는 기존 필드 소유권 검증�
 제품 WASM `8815a8e1f45ffadbc55a82b2f36fab45b5a270172d2eed7a2ecb1c4e56b4023b`와 기존 기본 WASM을 명시한 게시 사본의 공개/Worker 4파일 검사는 6/6·skip 0이다. 빈 표 셀 4문단의 scalar 경계 삽입/치환/삭제 64거래·독립 레코드·저장 재열기·이력·redo 보존, DocInfo 실패 열기 원자성·옵션/wire·구 ABI 거부, 실제 hyperlink 문단의 머리말 선언/필드 편집·독립 XML/ZIP 일반/최적화·잘못된 표식 거부·Worker 재열기를 포함한다.
 
 이 검증은 모든 객체 편집·원본 한글 조판·생략 없는 native 전수 또는 기본 데모의 산출물 교체 완료가 아니다. 소스 게시와 데모 WASM 배포는 구분한다.
+
+## 2026-10-20 데모 엔진 반영
+
+소스 커밋 `a65adb19`의 ReleaseSafe 제품에서 DWARF/선택 name section만 제거한 배포본 `1211e56195c6e380c8faee253506cc877322caf94b8458fcb1d6470f53f634c5`를 기본 `zig-out/bin/hwpjs.wasm`에 반영했다. 실행 section은 0b28 제품과 바이트 동일하다. 크기 4,467,255바이트, 서버 gzip level1 전송 1,484,729바이트다. 이전 7512 산출물은 `/tmp/hwpjs-native-verified-publish.0BG2wj/previous-default-7512.wasm`에 보존하고 새 파일을 atomic rename했다. 기존 8080 서버는 재시작/종료하지 않았다.
+
+main 기반 사본의 빈 셀 실제 브라우저 JGbUUg는 네 문단 1/2/3/5의 연속 실제 입력·undo/redo·독립 Section/비대상 stream/CFB metadata·다운로드·재업로드를 통과했다. 같은 사본의 배포용 산출물 DocInfo 브라우저 PKzzWO는 별도 동의·실제 포인터/입력·이력·독립 전체 저장·재업로드를 통과했다. 현재 작업 트리 프런트에서 같은 배포본으로 빈 셀 H5mRQ4도 통과했다. 각각 전용 브라우저/58889 서버를 finally에서 종료했고 inactive/pid 없음과 리스너 없음을 재확인했다. 파일 위치는 공통 임시 디렉터리의 `hwpjs-reference-browser-<식별자>`다. 배포본 공개/Worker 4파일도 6/6·skip 0이며 구 ABI 대조는 교체 전 7512를 사용했다.
+
+loopback 8080과 Tailscale HTTPS 10000에서 새 산출물의 해시·gzip·크기를 직접 확인했다. Tailscale 데모의 실제 aligns 픽스쳐 버튼은 첫 286ms·재열기 233ms, 다운로드 1.8/2.2ms였다. HAR는 `hwpjs-fixture-profile-7xC6Dv`에 있다. 서버와 같은 Mac의 브라우저 측정이며 사용자 외부 WAN의 장시간 대기 문제가 해결됐다는 근거는 아니다. 해당 프로파일 브라우저도 종료했다.
+
+같은 공개 데모의 빈 셀 픽스쳐 선택도 150ms에 완료됐고 다운로드는 7.2ms였다(`hwpjs-fixture-profile-ychCoK`). 이 최초 읽기 화면은 `MissingHwp5PageSources`의 논리 미리보기다. 별도 CFB 보정 동의 후 편집 경로의 페이지/셀 왕복 검증과 최초 읽기 화면을 구분하며, 프로파일 브라우저도 종료했다.
+
+페이지는 WASM module을 한 번 컴파일해 공유하므로 이미 열린 탭은 새로고침해야 한다. 이 반영에 새 OLE·선두 페이지 번호·각주/SQUARE 후보는 포함하지 않는다. 실제 한글 조판 동치나 모든 픽스쳐 편집 완료는 여전히 아니다.
