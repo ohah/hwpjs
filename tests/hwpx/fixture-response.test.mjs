@@ -22,6 +22,7 @@ test("every UI catalog URL is intercepted and serves its exact original bytes", 
 
 test("nested table dutmal and formula reference examples are explicit catalog entries", async () => {
   for (const [id, path] of [
+    ["empty-table-cells-reference.hwp", "reference/rhwp/samples/253E164F57A1BC6934-empty.hwp"],
     ["medical-exam-equipment.hwpx", "reference/rhwp/samples/issue5712/3184241_medical_exam_equipment.hwpx"],
     ["training-dutmal.hwpx", "reference/rhwp/samples/hwpx/opengov/36389301_결재문서본문_직장훈련계획_덧말.hwpx"],
     ["numeric-formula-reference.hwpx", "reference/rhwp/samples/hwpx/143E433F503322BD33.hwpx"],
