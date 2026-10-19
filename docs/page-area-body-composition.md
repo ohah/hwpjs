@@ -12,6 +12,16 @@ page-area-body-composition.mjs는 분리된 본문을 기존 페이지 조판기
 
 ## 검증
 
+### 실제 중첩 선언 소속 대조
+
+게시 전에는19df39f0의 별도 깨끗한 archive에 이 회귀/문서/검증 목록 추가만 반영하고 기존 b59f67c7 WASM으로 다시 검사했습니다. source-ownership, body-composition, page-area-flow, worker-layout 네 파일은9/9·skip0·5.9초입니다. 미게시 문단 서식/수식 최적화 없이도 통과하는 근거이며 build.zig 변경은 JS 검증 항목1개 추가뿐입니다. 전체 native 진행과 제품 반영 여부를 이 focused 결과로 대체하지 않습니다.
+
+page-area-source-ownership.test.mjs는 Python ZIP/expanded-name XML 전위 순회로 원본 선언·직접 subList·문단·그림 식별자를 독립 산출합니다. 실제 copay는 header owner262/list263, footer owner9506/list9507 및 owner9739/list9740입니다. 뒤의 두 정의 모두 BOTH이고 그림9510/9535는 첫 footer만 소유합니다. 선언이 놓인 가장 가까운 원본 문단은0기반17/955/962이며 두 footer 선언은 표 문단 안에 있어 단순 본문 배열 순서로 활성 페이지를 추정하지 않습니다.
+
+결합 후보50062ce8의 격리 사본에서 새 검사1/1·skip0·3.9초를 통과했습니다. 원본 XML과 Worker partition의 모든 영역 문단/그림 소속을 대조하고 두 그림이 본문에서 제외되는지, 중복 BOTH footer가 AmbiguousPageAreaOwner로 거부되는지, content 불변을 확인했습니다. 최초 로컬 사본은 미게시 instance-selection 모듈을 참조했으나 격리 사본에 없어 import 실패했습니다. 이를 게시 page-area-flow 진입점의 실제 반복 호출로 교체한 뒤 통과했으며, 누락 모듈을 추가해 결과를 맞추지 않았습니다.
+
+다음 구현에는 선언의 원본 host/현재 편집 좌표를 보존한 채 실제 표 셀 페이지와 연결하는 경계가 필요합니다. 해당 선언을 어느 페이지부터 적용하는지 검증하기 전 마지막 정의 선택이나 그림 생략으로 성공 처리하지 않습니다. 이 회귀는 원본 소속을 확정하며 전환 규칙이나 개체 렌더링 구현 완료의 증거가 아닙니다.
+
 87684af7 기반 격리 사본에서 HWPJS_TEST_WASM=/tmp/hwpjs-caption-api-publish.R4bJyL/install/bin/hwpjs.wasm을 명시했습니다(SHA256 b59f67c71105c93e4745cd9d5b172d45636939ddc06b4b636e4ca2a1769271e2). 새 native 문단 분기 후보와 이 JS 변경의 근거를 혼합하지 않습니다.
 
 tests/hwpx/page-area-body-composition.test.mjs는 소속 분리·본문 표 유지·콜백 전달·번호·예산·실패 전파·개체 생략 방지·순환과 잘못된 식별자를 검사합니다. page-area-flow.test.mjs는 반복 문단의 동일 식별자·페이지별 caret/선택/탐색·홀짝·숨김·원본 불변·넘침/중복 owner를 검사합니다.
