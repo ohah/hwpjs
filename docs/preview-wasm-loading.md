@@ -12,6 +12,20 @@
 
 ## 검증
 
+### 디버그 섹션만 제외한 배포 후보 (2026-10-20)
+
+`node tools/strip-wasm-debug.mjs INPUT.wasm NEW_OUTPUT.wasm`은 기존 출력 덮어쓰기를 거부하고 별도 배포 파일을 생성합니다. `.debug_*`와 선택적 `name` custom section만 제외하며 원본은 보존합니다. 함수명/소스 위치를 통한 디버깅 정보는 줄지만 ReleaseSafe 실행 코드·안전 검사는 바꾸지 않습니다. `tools/wasm-runtime-parity.mjs`가 표준 실행 섹션 및 그 외 custom section의 순서·크기·payload SHA-256을 비교합니다. API 이름만 같은 것을 동작 동치로 세지 않습니다.
+
+현재 기본30434b54에서 생성한 후보7512cca7302d77b990ab5bcaf839a8a342feebc8ec3e7007e31b38931233d1f4는16,587,350→4,460,476bytes입니다. 서버와 같은 gzip level1 기준5,446,790→1,481,953bytes로 약72.8% 감소했습니다. 실행·데이터·나머지 custom section은 전부 동일합니다. 별도 실험의 Zig strip 빌드 ff330ad9는 code section도 달라 이 동치 후보로 채택하지 않았습니다. 제품 빌드 최적화 옵션은 변경하지 않았습니다.
+
+분리한 main 사본에서 runtime-parity/loader/compression/shared-Worker/HWP5-editor/HWPX-editor 여섯 파일23/23·skip0을 확인했습니다. HWPX tracked45개 무암호 no-op ZIP 및 실제7필드 편집·독립 XML/ZIP 왕복을 포함하지만 전체 픽스쳐의 모든 위치·명령 완료 검사는 아닙니다. 첫 두 환경 설정 실패(분리 사본의 Git metadata/index 누락)는 성공으로 세지 않으며, 별도 index에 HEAD를 읽고 GIT_DIR/WORK_TREE를 지정한 재실행 결과입니다. ReleaseSafe 빌드5/5와 build.zig 포맷 검사도 통과했습니다. 진행 중인 다른 native 수정 후보의 전체 테스트 완료를 뜻하지 않습니다.
+
+실제 HWP5 roadmap Canvas 입력·이력·다운로드·독립 전체 Section/stream/metadata·재업로드는 분리 main UI에서 통과했습니다. 출력 suffix Wiyh7e, 저장 SHA-256 d7a030c6ef07a92ce55e7ef7d5fc25fd9125e277e03bf5ea03aaaf4906ed9985이며 기존 기본 바이너리의 같은 왕복 출력과 일치합니다. 소유 브라우저/전용 서버 종료를 확인했습니다.
+
+추가 HWPX copay 브라우저 감사는 분리 main UI에서 기존304와 새7512 모두 동일한 UnsupportedPageRow 논리 미리보기로 멈췄습니다(n7OSJm/gelziE). 이를 편집 왕복 성공으로 세지 않습니다. 이 사본은 페이지 배치 관련 로컬 미게시 UI 수정을 포함하지 않습니다. 바이너리 경량화가 해당 기존 레이아웃 한계를 해결하지 않습니다.
+
+이는 엔진의 첫 전송량 감소이며 `읽는 중…` 파일 다운로드 지연 원인이나 사용자 외부망 체감 시간 개선을 입증하지 않습니다. 기존 디버그 포함 바이너리는 문제 분석용으로 보존합니다.
+
 loader·압축·실제 Worker 비교3파일5/5·skip0을 분리한 main 사본에서 통과했습니다. 동시/후속 로드의 단일 fetch/compile·실패 재시도·압축 해제 원본 일치/본문 변경·quality·실제 aligns.hwpx 응답 동일·공유 모듈 사용 시 fetch0회·잘못된 모듈 거부를 확인했습니다.
 
 2026-10-20 기본 데모의 동일 페이지 aligns.hwpx 실측은 첫426.5ms/재열기226.7ms였습니다. WASM 전송은 처음5,418,377바이트(해제 후16,504,695바이트), 재열기0회였습니다. 서버와 같은 Mac의 브라우저 측정이므로 사용자 WAN의 시간이나 첫 열기 개선율을 증명하지 않습니다. 수정 전 같은 경로395.5ms보다 첫 열기가 빨라졌다고 주장하지 않으며 전송량 감소/반복 다운로드 제거를 확인한 것입니다. 기본 서버만 재시작했고 WASM SHA-256은bacf2ef3 그대로 유지했습니다. 소유 검증 브라우저는 종료했습니다.
