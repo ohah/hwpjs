@@ -6,6 +6,7 @@ const fields = @import("table_xml_fields.zig");
 const head = @import("document_xml.zig").head_uri;
 const core = "http://www.hancom.co.kr/hwpml/2011/core";
 const Value = xml.attribute_value.Value;
+const child = @import("paragraph_display_children.zig").child;
 
 pub const Measure = struct { value: ?i64 = null, unit: ?Value = null };
 pub const Shape = struct {
@@ -16,17 +17,6 @@ pub const Shape = struct {
     margins: [5]?Measure = @as([5]?Measure, @splat(null)),
 };
 pub const margin_names = [_][]const u8{ "intent", "left", "right", "prev", "next" };
-
-fn child(tree: *const tree_mod.Tree, parent: usize, uri: []const u8, name: []const u8) !?usize {
-    var found: ?usize = null;
-    var cursor = tree.elements[parent].first_child;
-    while (cursor) |index| : (cursor = tree.elements[index].next_sibling) {
-        if (!tree.elements[index].is(uri, name)) continue;
-        if (found != null) return error.DuplicateParagraphDisplayChild;
-        found = index;
-    }
-    return found;
-}
 
 fn measure(a: std.mem.Allocator, tree: *const tree_mod.Tree, index: usize) !Measure {
     const raw = try tree.attributeValue(a, index, "", "value");
@@ -42,14 +32,14 @@ pub fn read(a: std.mem.Allocator, tree: *const tree_mod.Tree, index: usize) !Sha
     if (!tree.elements[index].is(head, "paraPr")) return error.InvalidParagraphDisplayElement;
     const raw_id = (try tree.attributeValue(a, index, "", "id")) orelse return error.MissingParagraphShapeReference;
     var result: Shape = .{ .id = try fields.unsigned(a, raw_id, 4096) };
-    if (try child(tree, index, head, "align")) |alignment_node| result.horizontal = try tree.attributeValue(a, alignment_node, "", "horizontal");
-    if (try child(tree, index, head, "lineSpacing")) |spacing| {
+    if (try child(a, tree, index, head, "align")) |alignment_node| result.horizontal = try tree.attributeValue(a, alignment_node, "", "horizontal");
+    if (try child(a, tree, index, head, "lineSpacing")) |spacing| {
         result.spacing_type = try tree.attributeValue(a, spacing, "", "type");
         result.spacing = try measure(a, tree, spacing);
     }
-    if (try child(tree, index, head, "margin")) |margin| {
+    if (try child(a, tree, index, head, "margin")) |margin| {
         for (margin_names, 0..) |name, field| {
-            if (try child(tree, margin, core, name)) |node| result.margins[field] = try measure(a, tree, node);
+            if (try child(a, tree, margin, core, name)) |node| result.margins[field] = try measure(a, tree, node);
         }
     }
     return result;

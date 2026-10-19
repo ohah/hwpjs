@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+[문단 표시 선택 분기](hwpx-paragraph-selected-display.md)는 기존 공통 분기 선택과 표시 자식 탐색·독립 XML 회귀·고정 native 전체 검증을 분리합니다.
+
 [첫 로딩 실측](document-load-profile.md)은 Worker 호출 계측·비계측 대조와 실제 브라우저 관측의 범위를 구분합니다.
 
 [문단 기준 표 경계](table-paragraph-paper-bounds.md)는 원본 위치를 유지하는 종이 여백 배치와 거부 조건을 소유합니다.
