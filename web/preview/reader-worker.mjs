@@ -11,6 +11,7 @@ import { attachDutmal } from "./dutmal-content.mjs";
 import { projectFieldLabelDisplay } from "./field-label-display-content.mjs";
 import { formulaResultTextAvailable, projectFormulaResultText, spliceFormulaResultText, formulaResultTextRangeAllowed } from "./formula-result-text-command.mjs";
 import { createFormulaResultParagraphFilter } from "./formula-result-paragraph-filter.mjs";
+import { createFormulaResultDisplayLookup } from "./formula-result-display-lookup.mjs";
 import { readDutmalText, writeDutmalText, dutmalQueryIdentity } from "./dutmal-edit-command.mjs";
 import { createHwpxPasswordDecoder } from "../../js/hwpx-password.mjs";
 import { createHwp5PasswordDecoder } from "../../js/hwp5-password.mjs";
@@ -161,6 +162,7 @@ function hwpxDisplay(projected) {
   const formulaResultContext = content.manualFormulaResultTextAvailable && content.window ? attachHwpxFormulas(editor, { paragraphs: content.paragraphs }) : content;
   const formulaResultSections = new Set((formulaResultContext.formulas ?? []).map(row => row.section));
   const formulaResultParagraph = createFormulaResultParagraphFilter(editor, formulaExports);
+  const formulaDisplay = createFormulaResultDisplayLookup(editor, formulaExports);
   content.paragraphAlignmentAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwpx_edit_set_paragraph_alignment" && entry.kind === "function");
   content.paragraphMarginsAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwpx_edit_set_paragraph_margins" && entry.kind === "function");
   content.paragraphSpacingAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwpx_edit_set_paragraph_spacing" && entry.kind === "function");
@@ -253,7 +255,12 @@ function hwpxDisplay(projected) {
       }
     }
     if (paragraph.fieldLabels.length && WebAssembly.Module.exports(module).some(entry => entry.name === "hwpx_edit_field_label_display_text" && entry.kind === "function")) units += projectFieldLabelDisplay(editor, paragraph, HWPX_DISPLAY_BOUNDS.maxUnits - units + paragraph.text.length);
-    units += fieldLinkGuard.read(paragraph.section, () => projectFormulaResultText(editor, paragraph, content.manualFormulaResultTextAvailable && !paragraph.clipped && !paragraph.plainEditable && formulaResultSections.has(paragraph.section) && formulaResultParagraph(paragraph.section, paragraph.paragraph + 1), HWPX_DISPLAY_BOUNDS.maxUnits - units + paragraph.text.length), 0, "formula-results");
+    units += fieldLinkGuard.read(paragraph.section, () => {
+      const eligible = content.manualFormulaResultTextAvailable && !paragraph.clipped && !paragraph.plainEditable && formulaResultSections.has(paragraph.section);
+      const snapshot = eligible && formulaDisplay.available ? formulaDisplay.get(paragraph.section, paragraph.paragraph + 1) : undefined;
+      const available = eligible && (snapshot !== undefined ? snapshot !== null : formulaResultParagraph(paragraph.section, paragraph.paragraph + 1));
+      return projectFormulaResultText(editor, paragraph, available, HWPX_DISPLAY_BOUNDS.maxUnits - units + paragraph.text.length, snapshot ?? undefined);
+    }, 0, "formula-results");
     if (paragraph.clipped) content.limited = true;
     const wholeFormulaResult = paragraph.manualFormulaResults.length === 1 && paragraph.manualFormulaResults[0].start === 0 && paragraph.manualFormulaResults[0].end === paragraph.text.length;
     paragraph.editable = paragraph.plainEditable || paragraph.anchorEditable || paragraph.fieldLabels.length > 0 || wholeFormulaResult;

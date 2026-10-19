@@ -1,6 +1,16 @@
 # HWPX 수식 결과 표시의 요청 단위 묶음 조회
 
-게시 범위는 native 묶음 조회와 선택적 JS API입니다. Worker lookup 연결과 기본 WASM 승격은 별도이며 이번 API 게시 범위에 포함하지 않습니다.
+구현 범위는 native 묶음 조회·선택적 JS API와 Worker의 한 응답 안에서만 재사용하는 lookup입니다. 기본 WASM 승격과 페이지 영역 선언의 Worker 연결은 별도입니다.
+
+## Worker 연결의 분리 검증
+
+페이지 경계 수정4af69a12 기반 /tmp/hwpjs-formula-worker-final.ycU59M에 formula-result-display-lookup·기존 결과 텍스트 adapter·reader-worker 연결과 해당 회귀만 반영했습니다. 페이지 영역 선언 attachment와 로컬 chart/수식 엔진 재배치는 포함하지 않았습니다. 같은5f3baacd WASM에서 snapshot export의 발견만 끈 대조와 새 경로의 전체 Worker 응답이 추적46경로 모두 같았고45읽기/암호1거부입니다. 요청 수명·구역 격리·빈 결과·오류 전파·aggregate budget fallback·편집/이력/저장 재열기까지4/4·skip0으로 확인했습니다.
+
+같은 사본/같은 WASM의 양방향 실행 순서에서 chart Worker 요청은약1.24~1.29초 대0.62~0.66초, issue5543은약2.60~2.64초 대1.52~1.54초였습니다. Node Worker 모사 요청의 단건 실측이며 실제 fixture 버튼 전체/외부 WAN/GPU 완료의 측정값이 아닙니다.
+
+기존 수식/수동 결과 Worker3파일의10회귀도 통과했습니다. 함께 지정한 aift 다구역 비교는 최초 baseline 환경변수 누락으로 검증 시작 전에 실패했습니다. 기대값을 바꾸지 않고5f3baacd candidate와8c52c744 baseline을 명시해 다시 실행한 실제 후보/구형 하위 검사 포함3/3·skip0·약107초가 통과했습니다. 양쪽 전체 load/enable·구역2 window 전환·범위 권한·무편집 저장 bytes가 같았습니다. 이107초는 열기 단독 지연이 아니라 각 문서에 여러 요청을 수행한 검사 전체 시간입니다.
+
+실제 브라우저 산출물 hwpjs-caption-canvas-SfFpzD도 신뢰된 Canvas pointer·한글/이모지 입력·undo/redo·독립 XML/ZIP 일반/-O/잘못된 표식·다운로드·재업로드가 통과했습니다.5쪽·그림6/6해독, source hashes 불변이며 Worker hash는7d7bde7712a2b60ea6255c26b553205284427ea88b3332ba8eb197c6f1f3daed입니다. 소유 브라우저 inactive·전용 서버 종료를 확인했습니다. 기본 WASM/데모 산출물을 이번 연결만으로 교체했다고 주장하지 않습니다.
 
 ## 코어·API 게시 전 분리 검증
 
@@ -17,6 +27,8 @@ optional ABI hwpx_edit_manual_formula_result_display_snapshot(section)는 기존
 formula-result-display-lookup.mjs는 hwpxDisplay 호출 안에서만 section별 조회를 재사용합니다. 다음 편집·undo/redo·재열기 응답에서는 새 lookup을 생성합니다. 구 ABI는 기존 단일 조회를 그대로 사용합니다. optional 묶음의 LimitExceeded만 기존 bounded 조회로 다시 검사하며 다른 오류는 전파합니다. 이 fallback은 유효성 실패를 성공으로 바꾸거나 원문 일부를 생략하지 않습니다.
 
 ## 고정 후보와 검증
+
+아래는 초기 후보별 실행 이력이며 최신 Worker 게시 검증 범위/개수는 위 분리 검증 항목을 따릅니다.
 
 19df39f0 기반 격리 폴더 /tmp/hwpjs-formula-display-batch.7GcE7c입니다. ReleaseSafe 제품 빌드5/5·45초·MaxRSS2G, 별도 install/bin/hwpjs.wasm SHA256 a59552befc758e7dfd0b049ad471f941ae0cacfe8c8c0deaed3d3c2e9bd5209d입니다. 기존338개 함수 export는 모두 유지되고 위 snapshot 함수1개만 추가됐습니다.
 

@@ -9,12 +9,13 @@ export function formulaResultTextAvailable(editor, module) {
   const names = new Set(WebAssembly.Module.exports(module).filter(entry => entry.kind === "function").map(entry => entry.name));
   return ["spliceManualFormulaResult", "manualFormulaResultTargets", "manualFormulaResultRangeTarget", "manualFormulaResultDisplayText"].every(name => typeof editor?.[name] === "function") && exportsRequired.every(name => names.has(name));
 }
-export function projectFormulaResultText(editor, paragraph, available, maxUnits) {
+export function projectFormulaResultText(editor, paragraph, available, maxUnits, snapshot) {
   paragraph.manualFormulaResults = [];
   if (!available || paragraph.clipped || paragraph.plainEditable) return 0;
-  const targets = editor.manualFormulaResultTargets(paragraph.section, paragraph.paragraph + 1);
+  const targets = snapshot === undefined ? editor.manualFormulaResultTargets(paragraph.section, paragraph.paragraph + 1) : snapshot.targets;
+  if (!Array.isArray(targets)) throw new Error("InvalidFormulaResultTarget");
   if (!targets.length) return 0;
-  const text = editor.manualFormulaResultDisplayText(paragraph.section, paragraph.paragraph + 1);
+  const text = snapshot === undefined ? editor.manualFormulaResultDisplayText(paragraph.section, paragraph.paragraph + 1) : snapshot.text;
   if (typeof text !== "string" || targets.some(target => !uint(target.beginElement) || !uint(target.start) || !uint(target.end) || target.end < target.start || target.end > text.length)) throw new Error("InvalidFormulaResultTarget");
   const before = paragraph.text.length;
   paragraph.text = clipText(text, maxUnits);
