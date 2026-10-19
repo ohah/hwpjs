@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+[반복 그림 그리기](repeated-picture-layers.md)는 원본 그림 identity와 페이지·단별 표시 인스턴스의 분리를 소유합니다.
+
 [내부 투영 글자 높이](layout-source-font-height.md)는 문서 형식 단서와 공통 측정 정책·실제 브라우저 회귀를 소유합니다.
 
 [그림 회피 조각 정렬](picture-fragment-alignment.md)은 공통 행 정렬 재사용·carrier 진단 분리·후행 공백의 폭 검증 경계를 소유합니다.

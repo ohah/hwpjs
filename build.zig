@@ -229,6 +229,7 @@ pub fn build(b: *std.Build) void {
     hwpx_text_tests.addArg("tests/hwpx/picture-fragment-alignment.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/picture-fragment-alignment-reference.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/layout-source-font-height.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/repeated-picture-layers.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/paragraph-selected-display.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/page-area-source-ownership.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/page-area-flow.test.mjs");
