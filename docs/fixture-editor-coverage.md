@@ -1,5 +1,15 @@
 # 추적 픽스쳐 편집 지원 전수 기준
 
+## 2026-10-19 HWPX 페이지 경로의 동일 응답 대조
+
+현재 bacf WASM을 사용하는 primary Worker의 같은 응답을 게시 main 레이아웃 스냅샷과 primary 레이아웃에 각각 적용했습니다. 추적46경로 중 암호1개는 기본 거부로 분리했고45개는 양쪽 모두 paginated입니다. 페이지/행 개수·도형/그림/셀 box/표 앵커 개수·비어 있지 않은 문단의 행 존재 집계도 모두 같았습니다. 두 경로 모두 비어 있지 않은 문단의 행 부재0이며 메모리 입력과 응답 객체 불변을 검사했습니다. 측정은 문자열 UTF-16 길이×8px/높이20px입니다. 글자별 연속 범위·실제 glyph·모든 객체 의미·원본 한글 조판 또는 전체 main Worker의 검증으로 확대하지 않습니다. 비교 스냅샷은 `/tmp/hwpjs-network-witness-publish.iJPIs0`이며 이후 게시 변경은 레이아웃 그래프를 바꾸지 않았습니다.
+
+기본 데모의 참조6개와 별도 exam_social 원본까지 넓힌 고정 측정에서는 참조7개 모두 페이지 경로가 거부됐습니다. 아래쪽 SUM/연쇄 SUM의 첫 사유는 도형 정책, 숫자 예제/행정 편람은 각주와 객체의 혼합, 의료장비/훈련 문서는 중첩 부동 표의 측정 넘침입니다. exam_social은 게시 경로 UnsupportedDrawingPageObjects, primary는 다음 MissingEffectivePageNumber에 도달합니다. 이들은 파서 거부나 편집 불가의 집계가 아니며 Canvas의 논리 대체 화면도 별도입니다.
+
+후속 원인 분리에서 아래쪽/연쇄 예제의 도형2169/597은 textWrap=1(TOP_AND_BOTTOM)·shadow_type0이며 현재 페이지 정책은 IN_FRONT_OF_TEXT 경로만 허용해 UnsupportedDrawingPageWrap입니다. 미지 비트나 그림자 문제로 오분류하지 않습니다. 반면 의료장비/훈련 문서는 같은 폭 측정에서 명시적 문서 글꼴 높이를 적용하면 두 경로 모두 paginated입니다. 높이20px 감사의 넘침을 파서 버그나 실제 글꼴에서도 필연적인 실패로 확정하지 않으며 표 원문 크기를 줄이지 않았습니다. 이 styled 측정도 실제 브라우저 glyph 폭이나 원본 조판 동치는 아닙니다.
+
+근거는 `/tmp/hwpjs-hwpx-page-compare.Ti95bN/coverage.jsonl`(SHA25641233de2549308663ee2350c9b9e0ddf19cec9c51efea9dd1de416ef0951ea46), `demo-reference.jsonl`(c53e07ec0d446cc3b08d99ce54d93cbba39c730babc2a1cc9f9893d9e98806b8), `policy-details.jsonl`(a139aeff03b6e97dc1b34d5fe04cf888fa94d1fbb3dc2befa949ddfee4a8b7ad)입니다. 세 실행 exit0·stderr0이며 WASM SHA256은 bacf2ef3cd5ed1b2cf5b2ffc9d50f755ae08092d4a52c9ccf6a264e936a7a9fc입니다. 기존 거부를 삭제하거나 미게시 레이아웃 변경 전체를 채택하지 않았습니다. 감싸기 정책·각주/객체 조립과 실제 글꼴 검증은 계속 남습니다.
+
 ## 누름틀 보존 후보의 추적 입력·이력 재검증 — 2026-10-18
 
 같은6dd 후보의 추적 HWPX Worker 재검증은 protection-hwpx-worker-fixtures-retry.log의1/1·fail/cancel/skip0·565574.499ms·exit0으로 끝났습니다.46경로 중 암호 기본 거부1개를 구분하고 앵커146·필드7의 실제 입력·저장·undo/redo·각 편집본 Worker 재로드/전체 문단·개체 수 대조·무변경 재저장 바이트 일치를 확인했습니다. 수식 결과13개는 일반 입력 보호 상태이며 이153개 편집 위치에 합산하지 않습니다. 첫 protection-hwpx-worker-fixtures.log는 빈 로그·handle21454 exit1로 종료해 성공으로 세지 않으며 원인을 확정하지 않았습니다. 재실행은 종료 확인 후 새 TAP/stdout/stderr 기록으로 수행했습니다. 실제 Chromium/독립 전체 XML/원본 조판/임의 위치의 전수 증거는 아닙니다.
