@@ -6,7 +6,7 @@ import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
 import { createHwpxReader } from "../../js/hwpx.mjs";
 
 test("public HWPX formula numeric edit saves synchronized result and rejects invalid input atomically", async () => {
-  const wasm = readFileSync("zig-out/bin/hwpjs.wasm");
+  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
   const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx");
   const editor = await createHwpxEditor(wasm), reader = await createHwpxReader(wasm);
   try {
@@ -77,7 +77,7 @@ print(json.dumps(variants))`;
 });
 
 test("all forty-eight actual formula input paragraphs support numeric edit with independent recalculation", async () => {
-  const wasm = readFileSync("zig-out/bin/hwpjs.wasm");
+  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
   const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx");
   const editor = await createHwpxEditor(wasm), reader = await createHwpxReader(wasm);
   // Import the hyphenated standalone oracle explicitly; its XML/Decimal

@@ -34,6 +34,7 @@ pub fn prepare(a: std.mem.Allocator, tree: *const Tree, original: *const model.V
         current.deinit(a);
         current = next;
         current.paragraphs[index + ordinal + 1].paragraph_shape_id = previous.paragraph_shape_id;
+        current.paragraphs[index + ordinal + 1].break_before = previous.break_before;
     }
     for (current.paragraphs[index + 1 .. right.end - 1]) |*paragraph| {
         for (paragraph.pieces orelse return error.MissingJoinedParagraph, 0..) |*piece, ordinal| {

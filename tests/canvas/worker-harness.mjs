@@ -15,7 +15,7 @@ export async function workerCanvasHarness(t, { paintFrames = false, bitmapSize =
   const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
   globalThis.self = { postMessage: message => replies.push(message) };
   globalThis.fetch = async () => new Response(wasm);
-  globalThis.document = document; globalThis.window = { devicePixelRatio: 1 };
+  globalThis.document = document; globalThis.window = Object.assign(new EventTarget(), { devicePixelRatio: 1 });
   globalThis.ResizeObserver = class { observe() {} disconnect() {} };
   const frames = [];
   globalThis.requestAnimationFrame = callback => { if (paintFrames) frames.push(callback); return 1; }; globalThis.cancelAnimationFrame = () => {};

@@ -39,6 +39,7 @@ pub fn prepare(a: std.mem.Allocator, tree: *const Tree, original: *const model.V
         current = next;
         const paragraph = &current.paragraphs[left.start + ordinal];
         paragraph.paragraph_shape_id = original.paragraphs[left.start + ordinal].paragraph_shape_id;
+        paragraph.break_before = original.paragraphs[left.start + ordinal].break_before;
         for (paragraph.pieces.?) |*piece| {
             var previous = false;
             for (old_templates) |template| if (template == piece.template_element) {
@@ -53,6 +54,7 @@ pub fn prepare(a: std.mem.Allocator, tree: *const Tree, original: *const model.V
         try @import("column_boundary_extension_prefix.zig").restore(a, &original.paragraphs[left.start + ordinal], paragraph);
     }
     current.paragraphs[index].paragraph_shape_id = original.paragraphs[index].paragraph_shape_id;
+    current.paragraphs[index].break_before = original.paragraphs[index].break_before;
     for (current.paragraphs[index].pieces.?) |*piece| {
         var previous = false;
         for (old_templates) |template| if (template == piece.template_element) {

@@ -775,7 +775,7 @@ fn apply(command: histories.Command) !void {
             _ = try session.spliceFieldLabel(command.section, command.paragraph, command.begin_element, command.start, command.deleted, command.inserted);
         },
         .split => {
-            _ = try session.splitParagraph(command.section, command.paragraph, command.start, command.deleted);
+            _ = if (command.break_before) |intent| try session.splitParagraphWithBreak(command.section, command.paragraph, command.start, command.deleted, intent) else try session.splitParagraph(command.section, command.paragraph, command.start, command.deleted);
         },
         .split_anchored => {
             if (command.inserted.len != 0) return error.InvalidStructureCommand;
@@ -1125,6 +1125,11 @@ export fn hwpx_edit_paragraph_shape_refs(section_index: u32) u32 {
 }
 export fn hwpx_edit_split(section: u32, paragraph: u32, start: u32, deleted: u32) u32 {
     apply(.{ .kind = .split, .section = section, .paragraph = paragraph, .start = start, .deleted = deleted, .inserted = "" }) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_split_with_break(section: u32, paragraph: u32, start: u32, deleted: u32, kind: u32) u32 {
+    const intent = @import("paragraph_break.zig").decode(kind) catch |err| return fail(err);
+    apply(.{ .kind = .split, .section = section, .paragraph = paragraph, .start = start, .deleted = deleted, .inserted = "", .break_before = intent }) catch |err| return fail(err);
     return 1;
 }
 export fn hwpx_edit_split_anchored(section: u32, paragraph: u32, start: u32, deleted: u32) u32 {

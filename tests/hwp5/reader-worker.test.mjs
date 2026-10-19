@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
+import { withoutNormalizationExport } from "./normalization-export-fixture.mjs";
 const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
 
 test("actual HWP5 Worker history restores whole fixture projections and saved bytes", async t => {
@@ -61,9 +62,9 @@ test("actual HWP5 Worker history restores whole fixture projections and saved by
 
 test("older Worker WASM does not advertise unavailable structural editing", async t => {
   const previousSelf = globalThis.self, previousFetch = globalThis.fetch, replies = [];
-  const older = Buffer.from(wasm);
+  let older = Buffer.from(wasm);
   for (const name of ["hwp5_edit_split_range", "hwp5_edit_split", "hwp5_edit_merge"]) {
-    const at = older.indexOf(Buffer.from(name)); assert(at >= 0); older[at] = 120;
+    older = withoutNormalizationExport(older, name);
   }
   globalThis.self = { postMessage(message) { replies.push(message); } };
   globalThis.fetch = async () => new Response(older);

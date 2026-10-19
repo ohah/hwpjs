@@ -56,7 +56,7 @@ fn prepareMode(a: std.mem.Allocator, tree: *const Tree, current: *const model.Va
     }
     for (current.paragraphs, 0..) |paragraph, old_index| {
         if (old_index == index) {
-            paragraphs[initialized] = .{ .template_element = paragraph.template_element, .source_ordinal = paragraph.source_ordinal, .generated_id = paragraph.generated_id, .paragraph_shape_id = paragraph.paragraph_shape_id, .sites = try draft.left.clone(a) };
+            paragraphs[initialized] = .{ .template_element = paragraph.template_element, .source_ordinal = paragraph.source_ordinal, .generated_id = paragraph.generated_id, .break_before = paragraph.break_before, .paragraph_shape_id = paragraph.paragraph_shape_id, .sites = try draft.left.clone(a) };
             initialized += 1;
             paragraphs[initialized - 1].title_positions = try @import("title_mark_position.zig").side(a, titles, at, end, false);
             if (protected) |items| paragraphs[initialized - 1].protected_positions = try @import("paragraph_protected_positions.zig").side(a, items, at, end, false);

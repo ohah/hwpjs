@@ -6,7 +6,7 @@ import { createHash } from "node:crypto";
 import { createHwpxReader } from "../../js/hwpx.mjs";
 import { decodeHwpxText } from "../../js/hwpx-text-wire.mjs";
 
-const wasm = readFileSync("zig-out/bin/hwpjs.wasm");
+const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
 
 test("public HWPX events match independent XML content and survive later reads", async () => {
   const reader = await createHwpxReader(wasm);

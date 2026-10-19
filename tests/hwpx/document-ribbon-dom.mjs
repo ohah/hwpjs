@@ -38,7 +38,7 @@ export function ribbonFixture() {
   const menu = Object.assign(new RibbonNode(document), { selector: ".document-menu" });
   const selectors = [
     '.toolbar-group[aria-label="선택 글자 강조"]', '.toolbar-group[aria-label="기존 글자 서식"]',
-    ".style-toolbar", "#table-creation-form", ".view-toolbar", "#document-window-options",
+    ".style-toolbar", "#table-creation-form", ".view-toolbar", "#document-window-options", "#paragraph-break-tools",
   ];
   const groups = selectors.map(selector => Object.assign(new RibbonNode(document), { selector }));
   root.append(menu, quick, ...groups.slice(2)); quick.append(...groups.slice(0, 2));

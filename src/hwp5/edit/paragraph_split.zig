@@ -22,6 +22,12 @@ pub fn prepare(a: std.mem.Allocator, source: []const u8, version: Version, p: mo
 }
 
 fn prepareWithFormulas(a: std.mem.Allocator, source: []const u8, version: Version, p: model.Paragraph, at: u32, new_id: u32, char_count: usize, formulas: bool) !Draft {
+    var draft = try prepareSource(a, source, version, p, at, new_id, char_count, formulas);
+    draft.right.break_before = null;
+    return draft;
+}
+
+fn prepareSource(a: std.mem.Allocator, source: []const u8, version: Version, p: model.Paragraph, at: u32, new_id: u32, char_count: usize, formulas: bool) !Draft {
     const template = if (p.source_node == null) p.header_template orelse return error.MissingParagraphTemplate else try p.originalNode();
     if (new_id == 0 or new_id == p.instance_id) return error.InvalidParagraphInstanceId;
     if (p.source_node != null) {

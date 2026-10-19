@@ -72,6 +72,7 @@ import { decodePictureCrop } from "./hwpx-picture-crop-wire.mjs";
 import { decodePictureTransform } from "./hwpx-picture-transform-wire.mjs";
 import { decodeCharacterShapes, decodeCharacterRanges } from "./hwpx-character-shapes-wire.mjs";
 import { validateAbi } from "./abi.mjs";
+import { createParagraphBreakApi } from "./paragraph-break-api.mjs";
 import { inputBytes } from "./input.mjs";
 import { createHistoryApi } from "./editor-history.mjs";
 
@@ -134,6 +135,7 @@ export async function createHwpxEditor(source) {
     } finally { wasm.hwpx_edit_output_free(); }
   }
   return {
+    ...createParagraphBreakApi({ wasm, memory, check: ready, uint, prefix: "hwpx_edit", endAsCount: true, unavailable: "HwpxParagraphBreakAbiUnavailable" }),
     paragraphShapeIds() { return paragraphIds("paragraph_shape_ids"); },
     paragraphNeighbors(section) {
       const values = paragraphIds("paragraph_neighbors", [section]);

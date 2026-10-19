@@ -731,6 +731,11 @@ export fn hwp5_edit_split_range(section: u32, paragraph: u32, start: u32, end: u
     apply(.{ .split_paragraph = .{ .section = section, .paragraph = paragraph, .at_unit = start, .end_unit = end } }) catch |err| return fail(err);
     return 1;
 }
+export fn hwp5_edit_split_with_break(section: u32, paragraph: u32, start: u32, end: u32, kind: u32) u32 {
+    const intent = @import("paragraph_break.zig").decode(kind) catch |err| return fail(err);
+    apply(.{ .split_paragraph = .{ .section = section, .paragraph = paragraph, .at_unit = start, .end_unit = end, .break_before = intent } }) catch |err| return fail(err);
+    return 1;
+}
 export fn hwp5_edit_format(section: u32, paragraph: u32, start: u32, end: u32, id: u32) u32 {
     apply(.{ .set_character_format = .{ .section = section, .paragraph = paragraph, .start_unit = start, .end_unit = end, .char_shape_id = id } }) catch |err| return fail(err);
     return 1;
@@ -852,7 +857,7 @@ export fn hwp5_edit_replace_paragraph_ranges_font_name(ptr: [*]const u8, length:
     const s = session() catch |err| return fail(err);
     const replacement = @import("paragraph_replace_request.zig").prepare(.hwp5, a, s, ptr[0..length], text_ptr[0..text_length]) catch |err| return fail(err);
     defer a.free(replacement);
-    const commands = @import("named_font_replacement_commands.zig").build(.hwp5, a, replacement, @enumFromInt(language), name_ptr[0..name_length]) catch |err| return fail(err);
+    const commands = @import("named_font_replacement_commands.zig").build(.hwp5, a, replacement, @fromBackingInt(@intCast(language)), name_ptr[0..name_length]) catch |err| return fail(err);
     defer a.free(commands);
     applyBatch(s, commands) catch |err| return fail(err);
     return 1;
@@ -883,7 +888,7 @@ export fn hwp5_edit_replace_paragraph_ranges_font_name_properties(ptr: [*]const 
     const s = session() catch |err| return fail(err);
     const replacement = @import("paragraph_replace_request.zig").prepare(.hwp5, a, s, ptr[0..length], text_ptr[0..text_length]) catch |err| return fail(err);
     defer a.free(replacement);
-    const commands = @import("character_property_replacement_commands.zig").buildWithFont(.hwp5, a, replacement, @enumFromInt(language), name_ptr[0..name_length], patch) catch |err| return fail(err);
+    const commands = @import("character_property_replacement_commands.zig").buildWithFont(.hwp5, a, replacement, @fromBackingInt(@intCast(language)), name_ptr[0..name_length], patch) catch |err| return fail(err);
     defer a.free(commands);
     applyBatch(s, commands) catch |err| return fail(err);
     return 1;
@@ -941,14 +946,14 @@ export fn hwp5_edit_set_character_font(section: u32, paragraph: u32, start: u32,
 export fn hwp5_edit_set_character_font_name(section: u32, paragraph: u32, start: u32, end: u32, language: u32, ptr: [*]const u8, size: usize) u32 {
     _ = @import("character_font_args.zig").decode(language, 0) catch |err| return fail(err);
     if (size > 4096) return fail(error.LimitExceeded);
-    apply(.{ .set_character_font_name = .{ .section = section, .paragraph = paragraph, .start_unit = start, .end_unit = end, .language = @enumFromInt(language), .name = ptr[0..size] } }) catch |err| return fail(err);
+    apply(.{ .set_character_font_name = .{ .section = section, .paragraph = paragraph, .start_unit = start, .end_unit = end, .language = @fromBackingInt(@intCast(language)), .name = ptr[0..size] } }) catch |err| return fail(err);
     return 1;
 }
 export fn hwp5_edit_splice_font_name(section: u32, paragraph: u32, start: u32, end: u32, text_ptr: [*]const u8, text_size: usize, language: u32, name_ptr: [*]const u8, name_size: usize) u32 {
     if (text_size > 4 * 1024 * 1024 or name_size > 4096) return fail(error.LimitExceeded);
     _ = @import("character_font_args.zig").decode(language, 0) catch |err| return fail(err);
     const s = session() catch |err| return fail(err);
-    const commands = @import("named_font_text_commands.zig").build(.hwp5, .{ .section = section, .paragraph = paragraph, .start = start, .end = end, .text = text_ptr[0..text_size], .language = @enumFromInt(language), .name = name_ptr[0..name_size] }) catch |err| return fail(err);
+    const commands = @import("named_font_text_commands.zig").build(.hwp5, .{ .section = section, .paragraph = paragraph, .start = start, .end = end, .text = text_ptr[0..text_size], .language = @fromBackingInt(@intCast(language)), .name = name_ptr[0..name_size] }) catch |err| return fail(err);
     applyBatch(s, &commands) catch |err| return fail(err);
     return 1;
 }
@@ -965,7 +970,7 @@ export fn hwp5_edit_splice_font_name_properties(section: u32, paragraph: u32, st
     _ = @import("character_font_args.zig").decode(language, 0) catch |err| return fail(err);
     const patch = @import("character_property_args.zig").decode(mask, size, bold, italic) catch |err| return fail(err);
     const s = session() catch |err| return fail(err);
-    const commands = @import("character_property_text_commands.zig").buildWithFont(.hwp5, .{ .section = section, .paragraph = paragraph, .start = start, .end = end, .text = text_ptr[0..text_size], .language = @enumFromInt(language), .name = name_ptr[0..name_size] }, patch) catch |err| return fail(err);
+    const commands = @import("character_property_text_commands.zig").buildWithFont(.hwp5, .{ .section = section, .paragraph = paragraph, .start = start, .end = end, .text = text_ptr[0..text_size], .language = @fromBackingInt(@intCast(language)), .name = name_ptr[0..name_size] }, patch) catch |err| return fail(err);
     applyBatch(s, &commands) catch |err| return fail(err);
     return 1;
 }
@@ -973,7 +978,7 @@ export fn hwp5_edit_set_character_font_name_ranges(ptr: [*]const u8, length: usi
     if (length > @import("character_range_batch.zig").max_ranges * 16 or name_size > 4096) return fail(error.LimitExceeded);
     _ = @import("character_font_args.zig").decode(language, 0) catch |err| return fail(err);
     const s = session() catch |err| return fail(err);
-    const commands = @import("character_range_commands.zig").buildFontName(.hwp5, a, ptr[0..length], @enumFromInt(language), name_ptr[0..name_size]) catch |err| return fail(err);
+    const commands = @import("character_range_commands.zig").buildFontName(.hwp5, a, ptr[0..length], @fromBackingInt(@intCast(language)), name_ptr[0..name_size]) catch |err| return fail(err);
     defer a.free(commands);
     applyBatch(s, commands) catch |err| return fail(err);
     return 1;

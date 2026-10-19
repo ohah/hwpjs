@@ -1,6 +1,8 @@
 # 문단 구조 편집
 
-현재 HWP5 일반 문단의 분할·선택 영역 교체 분할·같은 논리 owner의 인접 문단 병합·생성 문단 후속 입력/글자 모양/재분할·저장·native 이력·Worker·Canvas Enter/경계 Backspace/Delete를 연결했습니다. HWPX 구조 편집, 독립 문단 삭제/이동, 보호 제어/필드/계산 결과/range의 구조 이동과 전체 조판은 남아 있습니다. 일반 문단 성공을 전체 편집 완료로 읽지 않습니다.
+[명시적 쪽·단 나누기 후보](paragraph-flow-break-edit.md)는 HWP5/HWPX native·WASM·JS·Worker·Canvas 연결과 별도 검증 경계를 소유합니다. 전체 native 검증·기본 배포 여부는 해당 문서를 따르며 일반 문단 분할 지원과 구분합니다.
+
+현재 HWP5 일반 문단의 분할·선택 영역 교체 분할·같은 논리 owner의 인접 문단 병합·생성 문단 후속 입력/글자 모양/재분할·저장·native 이력·Worker·Canvas Enter/경계 Backspace/Delete를 연결했습니다. HWPX의 세션·구조 명령은 [HWPX 편집 세션](hwpx-editor-session.md)과 위 명시적 나누기 계약으로 구분합니다. 독립 문단 삭제/이동, 모든 보호 제어/필드/계산 결과/range의 구조 이동과 전체 조판은 남아 있습니다. 일반 문단 성공을 전체 편집 완료로 읽지 않습니다.
 
 ## 현재 모델과 책임 분리
 

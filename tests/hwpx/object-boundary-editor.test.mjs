@@ -6,7 +6,7 @@ import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
 
 test("public HWPX object-only paragraph inserts at every boundary without changing objects", async () => {
   const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/shapeline.hwpx");
-  const editor = await createHwpxEditor(readFileSync("zig-out/bin/hwpjs.wasm"));
+  const editor = await createHwpxEditor(readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"));
   try {
     for (const position of [0, 1, 2]) {
       editor.open(input);

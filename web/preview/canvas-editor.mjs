@@ -20,6 +20,8 @@ import { hitDrawingBoundary } from "./drawing-boundary-hit.mjs";
 import { hitTableBoundary } from "./table-boundary-geometry.mjs";
 import { appendQueuedText } from "./queued-input.mjs";
 import { createInputIntentQueue } from "./input-intent-queue.mjs";
+import { paragraphBreakShortcut } from "./paragraph-break-shortcut.mjs";
+import { paragraphBreakIntent } from "./paragraph-split-command.mjs";
 import { createSelectionEditPermission } from "./selection-edit-permission.mjs";
 import { pictureResizeTarget } from "./picture-resize-target.mjs";
 import { transferSelectedText, pasteClipboardText } from "./clipboard-transfer.mjs";
@@ -58,6 +60,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
   let historyRevision = null;
   let historyAvailable = false, historyPending = false, structureAvailable = false, mergeAvailable = false, structureTarget = null;
   let splitQueryAvailable = false;
+  let paragraphBreakAvailable = false;
   const multipleParagraphs = () => Boolean(anchor && focus && !sameParagraph(anchor, focus));
   const rangePermission = createSelectionEditPermission();
   const splitPermission = createSelectionEditPermission({ kind: "query-split-range" });
@@ -267,7 +270,9 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     input.setAttribute("aria-busy", "true");
     return true;
   };
-  const split = () => {
+  const split = (breakBefore = null) => {
+    if (breakBefore !== null && !paragraphBreakAvailable) { report("수정키+Enter 명령은 아직 지원하지 않습니다. 문단은 변경하지 않았습니다."); return false; }
+    if (breakBefore !== null && multipleParagraphs()) { report("쪽·단 나누기는 한 문단 안에서 선택한 범위에 적용하세요."); return false; }
     if (target?.createdCell) { report("생성 셀의 여러 문단 편집은 아직 지원하지 않습니다."); return; }
     if (!textEditable() && !(splitQueryAvailable && editRange() && splitPermission.allowed(editRange()))) {
       if (splitQueryAvailable && editRange()) report(splitPermission.pending(editRange()) ? "문단 분할 범위를 확인 중입니다. 확인 후 Enter를 다시 누르세요." : "이 범위는 문단을 분할할 수 없습니다.");
@@ -280,8 +285,8 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     const position = sourceTextChange({ startUnit: unit, endUnit: end, text: "" }, renderer.paragraph(target)?.sourceOffsets);
     structureTarget = { kind: "split", ...paragraphTarget(target), paragraph: target.paragraph + 1 };
     historyPending = true; input.readOnly = false;
-    const anchored = renderer.paragraph(target)?.anchoredSplitAvailable === true ? { anchored: true } : {};
-    if (!controls.request({ kind: "split", origin: "canvas", ...target, ...anchored, atUnit: position.startUnit, endUnit: position.endUnit })) {
+    const anchored = breakBefore === null && renderer.paragraph(target)?.anchoredSplitAvailable === true ? { anchored: true } : {};
+    if (!controls.request({ kind: "split", origin: "canvas", ...target, ...anchored, ...(breakBefore === null ? {} : { breakBefore }), atUnit: position.startUnit, endUnit: position.endUnit })) {
       structureTarget = null; historyPending = false; updateReadOnly(); return false;
     }
     input.setAttribute("aria-busy", "true"); return true;
@@ -739,7 +744,12 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     if ((event.metaKey || event.ctrlKey) && !event.altKey && ["z", "y"].includes(key.toLowerCase())) { event.preventDefault(); travel(key.toLowerCase() === "y" || event.shiftKey ? "redo" : "undo"); return; }
     if (key === "Enter") {
       event.preventDefault();
-      if (event.metaKey || event.ctrlKey || event.altKey) { report("수정키+Enter 명령은 아직 지원하지 않습니다. 문단은 변경하지 않았습니다."); return; }
+      if (event.metaKey || event.ctrlKey || event.altKey) {
+        const intent = paragraphBreakShortcut(event);
+        if (intent !== null) split(intent);
+        else report("수정키+Enter 명령은 아직 지원하지 않습니다. 문단은 변경하지 않았습니다.");
+        return;
+      }
       if (multipleParagraphs() || (event.shiftKey && target?.createdCell && renderer.paragraph(target)?.softLineBreakAvailable === true)) replaceSelection("\n");
       else split();
       return;
@@ -783,11 +793,14 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
       return { section: target.section, paragraph: target.paragraph, startUnit: range.startUnit, endUnit: range.endUnit };
   };
   const canSetTypingProperties = () => Boolean(selectedRange()) && input.selectionStart === input.selectionEnd && textEditable() && renderer.characterPropertyTextAvailable?.() === true && (!typingFont || renderer.namedFontPropertyTextAvailable?.() === true);
+  const canInsertParagraphBreak = () => !events.signal.aborted && paragraphBreakAvailable && structureAvailable && !inputIntents.size && drag === null && selectedRange() !== null
+    && renderer.paragraph(target)?.selectionOwner === `section:${target.section}:body`
+    && (textEditable() || Boolean(splitQueryAvailable && editRange() && splitPermission.allowed(editRange())));
   const resetExternalSelection = controller => {
     if (historyRevision !== null && anchor && focus) historySelections.remember(historyRevision, { anchor, focus });
-    const available = historyAvailable, structure = structureAvailable, merge = mergeAvailable, splitQuery = splitQueryAvailable;
+    const available = historyAvailable, structure = structureAvailable, merge = mergeAvailable, splitQuery = splitQueryAvailable, breaks = paragraphBreakAvailable;
     controller.reset({ preserveHistory: true });
-    historyAvailable = available; structureAvailable = structure; mergeAvailable = merge; splitQueryAvailable = splitQuery;
+    historyAvailable = available; structureAvailable = structure; mergeAvailable = merge; splitQueryAvailable = splitQuery; paragraphBreakAvailable = breaks;
   };
   const settledSelection = (allowEmpty = false) => {
     if (events.signal.aborted || !target || !anchor || !focus || composing || pending || historyPending || controls.busy() || input.value !== committed) return null;
@@ -829,6 +842,14 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
   };
   const canDeleteSelection = () => settledSelection() !== null && selectionTextEditAvailable();
   return {
+    canInsertParagraphBreak,
+    insertParagraphBreak(kind) {
+      const intent = paragraphBreakIntent({ kind: "split", breakBefore: kind });
+      if (!canInsertParagraphBreak()) return false;
+      const accepted = split(intent) === true;
+      if (accepted) input.focus({ preventScroll: true });
+      return accepted;
+    },
     canDeleteSelection,
     deleteSelection() {
       if (!canDeleteSelection()) return false;
@@ -1053,6 +1074,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
       composing = false; multiComposition = null; drag = null; target = null; pending = null; anchor = null; focus = null; committed = ""; preferredX = null;
       historyAvailable = false; historyPending = false; structureAvailable = false; mergeAvailable = false; structureTarget = null;
       splitQueryAvailable = false;
+      paragraphBreakAvailable = false;
       if (!preserveHistory) { historyRevision = null; historySelections.reset(); }
       input.value = ""; input.disabled = true; input.setAttribute("aria-busy", "false"); canvas.style.cursor = "default"; report(""); renderer.preview(null); paint();
     },
@@ -1102,7 +1124,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
         report(message.error ? `그림 크기 변경 실패: ${message.error}` : "그림 크기를 변경했습니다.");
         return;
       }
-      if (message.kind === "enable") { if (!message.error) { historyAvailable = message.historyAvailable === true; structureAvailable = message.structureAvailable === true; splitQueryAvailable = message.splitQueryAvailable === true; mergeAvailable = message.mergeAvailable === true; } updateReadOnly(); report(message.error ? `편집 시작 실패: ${message.error}` : "클릭·드래그 선택 후 입력하세요. 변경 후 재조판이 필요합니다."); pump(); return; }
+      if (message.kind === "enable") { if (!message.error) { historyAvailable = message.historyAvailable === true; structureAvailable = message.structureAvailable === true; splitQueryAvailable = message.splitQueryAvailable === true; mergeAvailable = message.mergeAvailable === true; paragraphBreakAvailable = message.paragraphBreakAvailable === true; } updateReadOnly(); report(message.error ? `편집 시작 실패: ${message.error}` : "클릭·드래그 선택 후 입력하세요. 변경 후 재조판이 필요합니다."); pump(); return; }
       if (message.origin === "canvas" && structureTarget && message.kind === structureTarget.kind) {
         const queued = structureTarget.queuedText ?? "";
         const next = message.kind === "split" && message.splitTarget ? { ...structureTarget, ...message.splitTarget } : structureTarget; structureTarget = null; historyPending = false;
@@ -1141,9 +1163,9 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
           report("실행 취소/다시 실행 적용 · 재조판 필요"); return;
         }
         if (versioned && message.changed) {
-          const available = historyAvailable, structure = structureAvailable, merge = mergeAvailable, splitQuery = splitQueryAvailable;
+          const available = historyAvailable, structure = structureAvailable, merge = mergeAvailable, splitQuery = splitQueryAvailable, breaks = paragraphBreakAvailable;
           this.reset({ preserveHistory: true });
-          historyAvailable = available; structureAvailable = structure; mergeAvailable = merge; splitQueryAvailable = splitQuery;
+          historyAvailable = available; structureAvailable = structure; mergeAvailable = merge; splitQueryAvailable = splitQuery; paragraphBreakAvailable = breaks;
           report("이력은 적용됐지만 원래 선택 위치를 확인할 수 없습니다. 문단을 클릭해 입력을 이어가세요."); return;
         }
         if (!target) { report(message.changed ? "실행 취소/다시 실행 적용 · 재조판 필요" : "이동할 편집 이력이 없습니다."); return; }
@@ -1216,8 +1238,8 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
           if (message.historyRevisions !== undefined) {
             try { historySelections.retain(message.historyRevisions, revision); }
             catch {
-              const available = historyAvailable, structure = structureAvailable, merge = mergeAvailable, splitQuery = splitQueryAvailable;
-              this.reset(); historyAvailable = available; structureAvailable = structure; mergeAvailable = merge; splitQueryAvailable = splitQuery;
+              const available = historyAvailable, structure = structureAvailable, merge = mergeAvailable, splitQuery = splitQueryAvailable, breaks = paragraphBreakAvailable;
+              this.reset(); historyAvailable = available; structureAvailable = structure; mergeAvailable = merge; splitQueryAvailable = splitQuery; paragraphBreakAvailable = breaks;
               report("문서 이력 응답의 선택 정보를 확인할 수 없습니다. 문단을 다시 선택하세요.");
               return;
             }

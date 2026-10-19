@@ -112,6 +112,11 @@ pub const Session = struct {
         return @import("paragraph_split_session.zig").split(self, section_index, paragraph, start, deleted);
     }
 
+    pub fn splitParagraphWithBreak(self: *Session, section_index: usize, paragraph: usize, start: u32, deleted: u32, intent: @import("../model/paragraph_break.zig").Kind) !bool {
+        try self.requireMutableHostPositions();
+        return @import("paragraph_split_session.zig").splitWithBreak(self, section_index, paragraph, start, deleted, intent);
+    }
+
     pub fn canSplitParagraph(self: *Session, section_index: usize, paragraph: usize, start: u32, deleted: u32) !bool {
         self.requireMutableParagraphStructure(section_index) catch return false;
         return @import("paragraph_split_session.zig").canSplit(self, section_index, paragraph, start, deleted);

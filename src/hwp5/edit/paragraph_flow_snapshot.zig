@@ -37,7 +37,7 @@ pub fn read(a: std.mem.Allocator, decoded: []const u8, version: Version, section
         const parent: ?u32 = if (node.parent) |value| @intCast(value) else null;
         if (p.parent_node != parent) return error.SourceBindingMismatch;
         const generated = p.source_node == null;
-        const flags = @import("paragraph_breaks.zig").effective(generated, node.record.value.header.break_flags);
+        const flags = try @import("paragraph_breaks.zig").current(generated, node.record.value.header.break_flags, p.break_before);
         const context = try @import("paragraph_flow_host.zig").read(a, &lists, flows, template);
         row.* = .{ .paragraph = index, .source_node = p.source_node, .template_node = template, .parent_node = parent, .generated = generated, .top_level = parent == null, .break_flags = flags, .section_break = flags & 1 != 0, .multicolumn_break = flags & 2 != 0, .page_break = flags & 4 != 0, .column_break = flags & 8 != 0 };
         row.host = context.host;

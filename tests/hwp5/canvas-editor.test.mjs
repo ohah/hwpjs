@@ -1,4 +1,48 @@
 import test from "node:test";
+import { applyParagraphSplit } from "../../web/preview/paragraph-split-command.mjs";
+import { inspect as inspectFlowBreak, paragraphRecords as flowBreakParagraphRecords } from "./style-preservation/text-record-oracle.mjs";
+
+test("Canvas explicit flow shortcuts preserve selected units and one native undo", { skip: !process.env.HWPJS_TEST_WASM ? "explicit flow-break candidate required" : false }, async t => {
+  for (const primary of ["ctrlKey", "metaKey"]) for (const shiftKey of [false, true]) await t.test(`${primary}/${shiftKey}`, async t => {
+    const h = await harness(t, "parashape", p => p.paragraph === 5);
+    h.native.enableHistory();
+    h.controller.message({ kind: "enable", historyAvailable: true, structureAvailable: true, paragraphBreakAvailable: true });
+    assert(h.controller.selectTextRange({ ...h.paragraph, startUnit: 1, endUnit: 2 }));
+    const original = Buffer.from(h.native.save({ allowStaleLayout: true }).bytes);
+    const count = h.native.paragraphCount(0);
+    const event = dispatch(h.input, "keydown", { key: "Enter", [primary]: true, shiftKey });
+    assert.equal(event.defaultPrevented, true);
+    assert.equal(h.requests.length, 1);
+    assert.equal(h.requests[0].breakBefore, shiftKey ? "column" : "page");
+    assert.equal(h.requests[0].atUnit, 1); assert.equal(h.requests[0].endUnit, 2);
+    assert.equal(h.native.paragraphCount(0), count, "native change waits for command delivery");
+    h.ack();
+    assert.equal(h.native.paragraphCount(0), count + 1);
+    const saved = Buffer.from(h.native.save({ allowStaleLayout: true }).bytes);
+    const section = inspectFlowBreak(saved).sections[0].bytes;
+    assert.equal(flowBreakParagraphRecords(section, 6).head.payload[11], shiftKey ? 8 : 4);
+    assert.equal(h.native.undo(), true);
+    assert.deepEqual(Buffer.from(h.native.save().bytes), original);
+    assert.equal(h.native.undo(), false);
+    assert.equal(h.native.redo(), true);
+    assert.deepEqual(Buffer.from(h.native.save({ allowStaleLayout: true }).bytes), saved);
+  });
+});
+
+test("Canvas clears flow capability on document reset and refuses ambiguous modifiers", async t => {
+  const h = await harness(t, "parashape", p => p.paragraph === 5);
+  h.controller.message({ kind: "enable", historyAvailable: true, structureAvailable: true, paragraphBreakAvailable: true });
+  assert(h.controller.selectTextRange({ ...h.paragraph, startUnit: 1, endUnit: 1 }));
+  for (const modifiers of [{ ctrlKey: true, metaKey: true }, { ctrlKey: true, altKey: true }, { altKey: true }, { metaKey: true, altKey: true, shiftKey: true }]) {
+    dispatch(h.input, "keydown", { key: "Enter", ...modifiers });
+    assert.equal(h.requests.length, 0);
+  }
+  h.controller.reset();
+  assert(h.controller.selectTextRange({ ...h.paragraph, startUnit: 1, endUnit: 1 }));
+  dispatch(h.input, "keydown", { key: "Enter", ctrlKey: true });
+  assert.equal(h.requests.length, 0);
+  assert.match(h.note.textContent, /수정키.*Enter.*지원하지 않습니다/);
+});
 
 test("modified Enter never silently becomes an ordinary paragraph split", async t => {
   for (const modifiers of [{ ctrlKey: true }, { metaKey: true }, { altKey: true }, { ctrlKey: true, shiftKey: true }, { metaKey: true, shiftKey: true }, { ctrlKey: true, altKey: true }, { altKey: true, shiftKey: true }]) await t.test(JSON.stringify(modifiers), async t => {
@@ -1679,7 +1723,7 @@ async function harness(t, name = "charshape", choose = p => p.editable && !p.sou
       const message = queue.shift(); assert(message);
       let response = { kind: message.kind, origin: message.origin, historyRevision };
       try {
-        if (message.kind === "split") native.splitParagraph(message);
+        if (message.kind === "split") applyParagraphSplit(native, message, message);
         else if (message.kind === "merge") native.mergeParagraph(message);
         else if (message.kind === "format") native.setCharacterFormat(message);
         else if (message.kind === "character-properties") native.setCharacterProperties(message);

@@ -53,6 +53,7 @@ import { createMemory } from "./wasm-memory.mjs";
 import { inputBytes } from "./input.mjs";
 import { EXPERIMENTAL_EDITOR_FUNCTIONS } from "./abi-schema.mjs";
 import { createHistoryApi } from "./editor-history.mjs";
+import { createParagraphBreakApi } from "./paragraph-break-api.mjs";
 import { decodeCharacterShapes, decodeCharacterRanges } from "./character-shapes-wire.mjs";
 import { decodeTableBindings } from "./table-bindings-wire.mjs";
 import { decodeTablePlacements } from "./table-placements-wire.mjs";
@@ -101,6 +102,7 @@ export async function createExperimentalHwp5Editor(source, input, { distribution
   memory.withBytes(bytes, (ptr, size) => success(open(ptr, size)));
   const copyText = (section, paragraph) => { check(); return output(() => wasm.hwp5_edit_copy_text(u32(section, "section"), u32(paragraph, "paragraph"))).bytes; };
   return {
+    ...createParagraphBreakApi({ wasm, memory, check, uint: u32, prefix: "hwp5_edit", endAsCount: false, unavailable: "Hwp5ParagraphBreakAbiUnavailable" }),
     supportsNormalizationInfo() { check(); return typeof wasm[availableSectionCopy ? "hwp5_edit_available_section_copy_info" : "hwp5_edit_normalization_info"] === "function"; },
     normalizationInfo() {
       check();

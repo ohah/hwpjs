@@ -22,6 +22,7 @@ import { updatePageLayoutStatus } from "./page-layout-status.mjs";
 import { createPageStatusControls } from "./page-status-controls.mjs";
 import { createDocumentMenuControls } from "./document-menu-controls.mjs";
 import { createDocumentRibbon } from "./document-ribbon-controls.mjs";
+import { createParagraphBreakControls } from "./paragraph-break-controls.mjs";
 import { createTableCreationControls } from "./table-creation-controls.mjs";
 import { createViewScaleControls } from "./view-scale-controls.mjs";
 import { createDocumentWindowControls } from "./document-window-controls.mjs";
@@ -304,6 +305,8 @@ documentWindowControls = createDocumentWindowControls({
 window.addEventListener("pagehide", event => { if (!event.persisted) documentWindowControls.close(); });
 documentMenuControls = createDocumentMenuControls([
   { button: document.querySelector("#menu-insert-table"), target: document.querySelector("#table-creation-focus") },
+  { button: document.querySelector("#menu-insert-page-break"), target: { get disabled() { return direct?.canInsertParagraphBreak() !== true; }, click: () => direct.insertParagraphBreak("page") } },
+  { button: document.querySelector("#menu-insert-column-break"), target: { get disabled() { return direct?.canInsertParagraphBreak() !== true; }, click: () => direct.insertParagraphBreak("column") } },
   { button: document.querySelector("#menu-open"), target: input },
   { button: document.querySelector("#menu-save"), target: download },
   { button: document.querySelector("#menu-undo"), target: document.querySelector("#undo") },
@@ -327,6 +330,8 @@ documentMenuControls = createDocumentMenuControls([
 ]);
 window.addEventListener("pagehide", event => { if (!event.persisted) { checkBoxControls.close(); pictureResizeControls.close(); pictureSizeControls.close(); documentMenuControls.close(); } });
 const documentRibbon = createDocumentRibbon(document.querySelector(".editor-command-bar"));
+const paragraphBreakControls = createParagraphBreakControls({ registry: documentMenuControls, page: document.querySelector("#insert-page-break"), column: document.querySelector("#insert-column-break") });
+window.addEventListener("pagehide", event => { if (!event.persisted) paragraphBreakControls.close(); });
 window.addEventListener("pagehide", event => { if (!event.persisted) documentRibbon.close(); });
 const commandSearch = createCommandSearch({ registry: documentMenuControls, document, keyboard: window, host: document.querySelector(".document-menu") });
 window.addEventListener("pagehide", event => { if (!event.persisted) commandSearch.close(); });

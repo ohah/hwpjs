@@ -117,7 +117,7 @@ pub fn preparePair(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig
     for (current.paragraphs, 0..) |paragraph, ordinal| {
         if (ordinal == right_index) continue;
         if (ordinal == index) {
-            paragraphs[initialized] = .{ .template_element = selected.template_element, .source_ordinal = selected.source_ordinal, .generated_id = selected.generated_id, .paragraph_shape_id = selected.paragraph_shape_id, .sites = joined.sites, .pieces = joined.pieces, .character_styles = joined.character_styles, .protected_positions = protected, .title_positions = merged_titles };
+            paragraphs[initialized] = .{ .template_element = selected.template_element, .source_ordinal = selected.source_ordinal, .generated_id = selected.generated_id, .break_before = selected.break_before, .paragraph_shape_id = selected.paragraph_shape_id, .sites = joined.sites, .pieces = joined.pieces, .character_styles = joined.character_styles, .protected_positions = protected, .title_positions = merged_titles };
             titles_transferred = true;
             if (joined.character_styles != null and joined.pieces.len == 1) {
                 const piece = joined.pieces[0];

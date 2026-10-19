@@ -1,5 +1,55 @@
 # 현재 main 소스의 전체 native 실행
 
+## 수정 바이너리 전수 실행 종료
+
+4c18의 `full.jsonl`은4,137개 전체 index를 중복 없이 완료했습니다.4,136pass·0fail·1skip·logErrors/leaks0이며 skip은3464번 명시적 범위가 필요한 문자 속성 할당 실패 shard입니다. 검사기가 skip도 비성공으로 판정하므로 complete.success=false·guardian/wrapper exit1입니다. 이 결과를 단일 전체 gate 통과로 표시하지 않습니다. guardian은 guardStopped=false,관측 최고 physical1,684,686,456bytes/한도4GiB이며 샘플링 관측이지 OS 강제 cap은 아닙니다. 마지막 identity 행에서7,097입력·바이너리 해시 일치를 확인했습니다. JSONL SHA256은 `6ce032a1ef1070d3909a73166a4f3f3c3cda1b1767306e53b9dacf28b3c35ce7`입니다.
+
+같은 바이너리/소스로 START=0·END=1을 명시한 `post-full-character-point0.jsonl/.stderr`는3464..3465의1/1·fail/skip/log/leak0·range-complete·exit0으로 끝났습니다. JSONL SHA256은 `5cf0a316767d377ab260298e4e538343139fbdff10f9c7f02c2af337c26f78f0`입니다. 이후7,097입력 해시를 다시 대조했고 이름으로 기존 skip과 같은 검사의 성공임을 확인했습니다. stderr는실패0번 주입 rollback/이력 보존1지점이며 success endpoint는 없다는 정상 진단입니다. 빠른 실행에서 guardian 관측 최고0은 샘플 부재이지 실제 메모리 사용0이 아닙니다. 두 실행을 연결한 명명된 검사 coverage와 단일 무skip 전수 gate를 구분하며, 모든 문자 속성 할당 실패 지점·long-lived 단일 runner·fuzz campaign·전체 문서 편집/조판 완료로 확대하지 않습니다.
+
+
+## 쪽 영역 회귀 추가 집계와 수정 바이너리 대조
+
+기존 carry 전수 실행의 완료 행을 재집계해 실패8건을 확인했습니다:2477/2478(머리/꼬리말),3365..3368(쪽 영역 분할/재분할),3373(병합 History 실패 원자성),3387(혼합 선언 재분할). 최초로 본2건 또는3건만 전체 실패 수로 유지하지 않습니다. 현재 실행은 계속되므로 최종 실패 수가 아닙니다.
+
+4c18 수정 전체 바이너리에서3374..3375의 해당 History 검사는1/1·skip/log/leak0·range-complete·exit0입니다. `publish-owner-page-area-history.jsonl` SHA256은 `2197f474d5c9d45c0a1d270b264c994cbd55776fb8345debd0547e9bfa0b84f5`입니다. 같은 native fixture helper의 원문에서 중첩 쪽 영역과 수식 표를 합성해, fcf3와0619의 공개 split을 같은 입력으로 대조한 `publish-page-area-history-cause.json`은 이전 SourceBindingMismatch/최신 성공·문단+1·저장을 확인했습니다(SHA256 `965b2dbedba67c29766cd04f6b8f47a0ea637ecc978640a14cbf2e176a0d56cd`). 원본 fixture 파일을 덮어쓰지 않았습니다.
+
+나머지 쪽 영역 사례와 주변 회귀는4c18의3366..3390·batch1·4,096MiB 관찰 guardian으로 `publish-owner-page-area-matrix.jsonl/.stderr`에서24/24·fail/skip/log/leak0·range-complete·exit0으로 완료했습니다. guardStopped=false,관측 최고 physical12,206,440bytes이며 OS 강제 cap이나 메모리 사용0의 뜻은 아닙니다. JSONL SHA256은 `4eb5b6ee401e362ae37b682e13e063a124a1fd3456a1703b2942eeb672f0678f`입니다. 이력/metadata 진단 stderr는 비어 있지 않으며 오류로 합산하지 않습니다.
+
+기존 완료3,444행의 실패8개를 테스트 이름으로 위24개와 앞선4c18의2478..2480 결과에 연결해 모두status0임을 확인했습니다. `publish-owner-known-failures-covered.json` SHA256은 `60a8f9b64654737c212429aaf88ec8e42305220474e69f5abec824d57206edee`입니다. 이는 그 시점의 알려진8실패가 해결됐다는 증거이며, 계속 실행 중인 기존 전체 결과나 수정 바이너리4,137개 전체 실행 완료를 뜻하지 않습니다.
+
+검사 도중 여유 공간375MiB를 확인해, 매번 fresh lsof/실행 프로세스를 확인한 비활성 `/tmp/hwpjs-flow-publish.3IvUJZ/.zig-cache`346MiB, `/tmp/hwpjs-task1749-ranges.9Y1P1R/.zig-cache`159MiB, `/tmp/hwpjs-published-hwpx-gate.7WPrL4/.zig-cache`189MiB만 정리했습니다. 모두 재빌드 가능한 캐시이고 원본·소스·로그·설치 산출물·실행 중carry cache는 보존했습니다. 직후 여유는약1.1GiB입니다. 공유 global cache는 변경하지 않았습니다.
+
+
+## 수정 후 전체 native 재실행 준비 — 아직 시작 전
+
+`/tmp/hwpjs-owner-native-proof.MXzTXm/run-owner-native.mjs`의prepare가7,097개 비Markdown 추적 입력·추가 구현/검사 도구·참조 문서·guardian 코드의 해시를 고정했습니다. `source-manifest.json` SHA256은 `9a9a511ade4bc7cfd104b078cb86aaf4eac73edcde23565822bb222a84d2ffc8`이며 대상은4c18 바이너리입니다. 첫 준비의 EISDIR은 Gitlink `legacy/hwpers`를 파일로 읽으려던 증거 수집 오류였고 native 검사를 실행한 결과가 아닙니다. 해당 Gitlink는 사용자 제외 범위로 명시하고 mode160000/기록 OID를 별도 대조합니다. `/tmp`와`/private/tmp` 경로 표기의 첫 closure lookup 실패도 manifest.root 기준으로 정규화해, 최종2,565개 native 상대 literal-import 파일 해시가 모두 manifest에 일치함을 확인했습니다. 동적/외부 toolchain 전체 입력의 컴파일 증명으로 확대하지 않습니다.
+
+이 import 목록에 `src/wasm/hwp5_edit.zig`가 없어 그 파일의 후속0.17 형식 변환은 native 소스 범위를 바꾸지 않습니다. 준비 후run은 시작/끝의 목록·source hash·고정 바이너리를 대조하고4,096MiB 관찰 guardian·batch1·범위 환경변수 제거로 실행하도록 구성했습니다. 아직 실행 완료는 물론 실행 시작으로도 계수하지 않습니다. 기존 carry 전체 감사는 그대로 계속합니다.
+
+
+최신4c18 전체 바이너리에서도 선택형 mixed-run 문자 속성 shard의 실제 index는3464임을 metadata로 확인했습니다. `HWPJS_CHARACTER_FAILURE_START=0/HWPJS_CHARACTER_FAILURE_END=1`과 범위3464..3465를 명시한 `publish-owner-character-point0.jsonl/.stderr`는1/1·skip/log/leak0·range-complete·exit0입니다(JSONL SHA256 `e065080023859b44685f0c3191c619ade11901c55f228fa57e0d2a2c6b51bffa`). stderr의 `failures 1, no success endpoint in this shard`는0번 OOM을 실제 주입해 rollback을 확인했다는 진단입니다. 성공 endpoint나 모든 할당 실패 지점의 sweep은 아니며, 환경 없는 전체 실행의 skip을 소급 통과로 바꾸지 않습니다.
+
+
+후속 게시 분리 소스의 `owner-native-safe` 전체 root 빌드는exit0·stderr0, SHA256 `4c18b79568062a45b5c66b3d99582bbe41d9ec369c3000ad3bc986dccfee2b89`이며 실제 inventory는4,137개입니다. 이 바이너리의 새 owner 회귀864..865와 기존 실패2478..2480은 각각1/1·2/2·skip/log/leak0·range-complete·exit0입니다. 전체4,137개 실행은 아니며 기존 carry4,136개 전체 실행의 실패를 소급 통과로 변경하지 않습니다. 로그와 독립 owner XML 검사 기록은 [나누기 주제](paragraph-flow-break-edit.md)가 소유합니다.
+
+실행 중인 carry 바이너리의 index2477/2478에서 머리말·꼬리말 일반 분할2건이 실패했습니다. 별도 동일 소스 filter로 SourceBindingMismatch를 재현했고, 새 오른쪽 문단을 배열 인접 위치로 가정한 코드를 생성 ID 검색으로 수정했습니다. 기존 두 테스트/root3/3과 새 명시적 쪽·단 nested-descendant 회귀/probe2/2가 각각 성공했습니다. 이 수정은 현재 전체 바이너리나 fcf3 WASM에는 아직 없으며 전체 성공/새 제품 완료로 합산하지 않습니다. 재현·수정 로그는 [나누기 기록](paragraph-flow-break-edit.md)의 중첩 owner 회귀 항목이 소유합니다.
+
+## 명시적 쪽·단 나누기 로컬 후보 — 보존 반례 수정 후 전체 실행 중
+
+[명시적 나누기 후보](paragraph-flow-break-edit.md)의 native 소스를 `/tmp/hwpjs-task1749-ranges.9Y1P1R`에 고정했습니다. 게시9b03e1c8 기반에 이번 native 변경만 추가한 사본이며 사용자 작업 트리의 reserved-ID/덧말·수식/host-position 변경을 전체 복사하지 않았습니다. 정규 root에 HWP5/HWPX 새 테스트·boolean writer·ABI 종류 검사를 등록했습니다. 현재 JS/Worker/브라우저 사본의 검증과 구분합니다.
+
+`flow-break-native-build.log/.stderr`의 ReleaseSafe 전체 root 바이너리 빌드는 exit0·stdout/stderr0입니다. `flow-break-native-safe` SHA256은 `e9de8fc9a49c6c8b856deaf2075daa1e9c421f47f89a90d8a697d2cee41e4142`입니다. 소스·추적 자료·참조 samples·실행기8,314개 파일의 목록/해시를 `flow-native-source-manifest.json`으로 고정했으며 manifest SHA256은 `bbc0a80ee6472d208d8705040d707538e853887d769dc0992c156274281cf44b`입니다. 실행 직전 전수 불변 검사를 통과했고 종료 후에도 같은 검사를 요구합니다.
+
+최초 `flow-native-full.jsonl/.stderr`는 실제4,134개 inventory·범위0..4134·fullInventoryCovered=true·batch1·seed0x485750로 시작했습니다. nice10·기존4,096MiB guardian을 적용하며 문자 속성 shard 환경변수 둘 다 제거했습니다. 부모78931/guardian78971/batch78979를 확인했습니다. 중간 stderr의 corpus/실패 주입 진행 문구는 결과 status/logErrors/leaks와 구분합니다. 과거4,118개 결과나 새 집중 검사를 합산하지 않으며 optional shard skip이 나오면 그대로 보고합니다. 직접 `zig build test`의 한 장기 프로세스나 전체 fuzz campaign 실행과도 구분합니다.
+
+이후 병행한 다단 조합 검사에서 기존6b4e WASM의 나누기 값 유실을 재현했고 해당 candidate 소스를 수정했습니다. 따라서 위 전수 실행은 최신 소스를 검증하는 실행으로 계속 사용하지 않고, fresh PID/명령 확인 후 소유 guardian78971에 SIGTERM을 보냈습니다. 최종 로그는 completed951(0..951 배타 범위)·완료분 status/logErrors/leaks0, index951 시작 후 결과 없음, reason=ExternalSIGTERM·guardStopped=true·wrapper exit1입니다. 메모리 초과나 시간 관측 실패로 중단한 것이 아닙니다. 마지막 source8,314개/바이너리 불변 검사는 통과했고 부모/guardian/batch/관측 native 자식의 종료를 확인했습니다. 중단된 전체 검사를 성공으로 처리하거나 이후 결과와 합산하지 않습니다.
+
+수정본은 별도 `/tmp/hwpjs-flow-carry.yhoy68`에 두고 이전 사본은 더 이상 수정하지 않습니다. src는 독립 복사, 기존 고정 fixtures/tools 등은 읽기 전용 사용 목적의 링크이며 공유된 baseline 파일을 변경하지 않습니다. `carry-native-source-manifest.json`의8,316개 파일 목록/해시 검증은 통과했습니다. manifest SHA256은 `07aac22294cca229b2808f5217725b23ee34b5ea984583af594fd8e1f1c8e6fe`입니다. 두 새 다단 보존 테스트를 root에 연결한 `carry-native-safe` ReleaseSafe 빌드는 exit0·stdout/stderr0이고 바이너리 SHA256은 `6b89cf6559c0f3d32956ab6a27431a106a538ebc2b6f245933314d2d2a21a915`입니다.
+
+수정본 `carry-native-full.jsonl/.stderr`는 실제4,136개 inventory·범위0..4136·fullInventoryCovered=true·batch1·같은 seed/4,096MiB guardian·shard 환경변수 둘 다 제거로 실행 중입니다. 시작 직전8,316개 source/data/runner identity도 다시 확인했습니다. 이전 바이너리나 이전951개를 새 실행으로 세지 않으며, 전체 결과·종료·마지막 source/binary identity 확인은 아직 남아 있습니다.
+
+빌드 전 공간 확보는 fresh lsof에서 열린 파일과 활성 Zig 작업이 없는 과거 사본의 `.zig-cache` 두 곳만 대상으로 했습니다. `/tmp/hwpjs-native-allocator-probe.Kn255w/.zig-cache`657MiB와 `/tmp/hwpjs-zig017.iGwHEN/.zig-cache`380MiB를 제거했으며 source·로그·명시적 바이너리/설치물·공용 global cache·진행 중인 참조 감사는 보존했습니다. 생성 캐시는 재빌드할 수 있습니다. 이 정리를 native 제품 수정이나 검증 통과로 계산하지 않습니다.
+
 ## 52개 수정 뒤의 새 전체 재검사 결과
 
 게시 `6f4fe0ea3315d316c6896587db2c4f0ead5bfc59`·tree `5c51feac1fa3e5b8dde0723ad4d4f4d9ef3761d2`를 `/tmp/hwpjs-native-postfix-main.33GojG`에 새로 추출했습니다. 추적 blob7,194개를 원래 Git blob 해시와 전수 대조해 일치했습니다. legacy/hwpers gitlink1개는 커밋 식별자만 추적되며 하위 저장소 내용은 archive/검사 대상에 없습니다. 최초 blob 전수 스크립트가 이 gitlink를 일반 파일로 취급해 UnexpectedTreeEntry로 종료한 뒤, gitlink를 명시적으로 구분한 재검사로 위 분모를 확인했습니다. 제품/테스트 소스를 맞추기 위해 무관한 사용자 변경을 가져오지 않았습니다.

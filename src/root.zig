@@ -252,6 +252,12 @@ test {
     _ = @import("hwpx/table_display_cell.zig");
     _ = @import("hwpx/table_cell_size_write.zig");
     _ = @import("hwpx/xml_unsigned_attributes_write.zig");
+    _ = @import("hwpx/xml_boolean_attributes_write.zig");
+    _ = @import("hwpx/paragraph_flow_break_save_tests.zig");
+    _ = @import("hwpx/paragraph_flow_break_session_tests.zig");
+    _ = @import("hwpx/paragraph_flow_break_column_tests.zig");
+    _ = @import("hwpx/paragraph_flow_break_owner_tests.zig");
+    _ = @import("wasm/paragraph_break.zig");
     _ = @import("hwpx/xml_float_attributes_write.zig");
     _ = @import("hwpx/table_cell_size_values.zig");
     _ = @import("hwp5/edit/table_cell_size_payload.zig");
@@ -1147,6 +1153,7 @@ test {
     _ = @import("hwp5/edit/character_runs.zig");
     _ = @import("hwp5/edit/structure_plan_tests.zig");
     _ = @import("hwp5/edit/structure_session_tests.zig");
+    _ = @import("hwp5/edit/paragraph_break_session_tests.zig");
     _ = @import("hwp5/edit/formula_structure_transaction_tests.zig");
     _ = @import("hwp5/edit/formula_structure_scope_tests.zig");
     _ = @import("hwp5/edit/formula_session_tests.zig");

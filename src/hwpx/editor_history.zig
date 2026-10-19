@@ -12,6 +12,7 @@ pub const Command = struct {
     chart_text: usize = 0,
     paragraph: usize,
     right_paragraph: ?usize = null,
+    break_before: ?@import("../model/paragraph_break.zig").Kind = null,
     start: u32,
     deleted: u32,
     inserted: []const u8,
@@ -60,6 +61,7 @@ pub const History = struct {
     }
     pub fn applyBatch(self: *History, session: *editor.Session, commands: []const Command) !bool {
         try self.bind(session);
+        for (commands) |command| if (command.break_before != null and command.kind != .split) return error.InvalidStructureCommand;
         var before = try checkpoints.capture(session, self.max_checkpoint_bytes);
         var transferred = false;
         defer if (!transferred) before.deinit();
@@ -180,6 +182,7 @@ pub const History = struct {
             .split, .split_anchored => block: {
                 if (command.inserted.len != 0) return error.InvalidStructureCommand;
                 if (command.kind == .split_anchored) break :block try session.splitParagraphAnchored(command.section, command.paragraph, command.start, command.deleted);
+                if (command.break_before) |intent| break :block try session.splitParagraphWithBreak(command.section, command.paragraph, command.start, command.deleted, intent);
                 break :block try session.splitParagraph(command.section, command.paragraph, command.start, command.deleted);
             },
             .merge => block: {

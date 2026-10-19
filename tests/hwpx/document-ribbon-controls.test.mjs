@@ -1,11 +1,28 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createDocumentRibbon } from "../../web/preview/document-ribbon-controls.mjs";
+import { createParagraphBreakControls } from "../../web/preview/paragraph-break-controls.mjs";
 import { RibbonNode, ribbonFixture, emit } from "./document-ribbon-dom.mjs";
 
 const tab = (f, page) => f.document.getElementById(`document-ribbon-tab-${page}`);
 const panel = (f, page) => f.document.getElementById(`document-ribbon-panel-${page}`);
 const selected = f => ["home", "insert", "view"].filter(page => tab(f, page).getAttribute("aria-selected") === "true");
+
+test("flow ribbon mirrors menu authority, rechecks stale permissions and releases its subscription", () => {
+  const page = new EventTarget(), column = new EventTarget(), listeners = new Set(), calls = [];
+  let enabled = false;
+  const registry = { commands: () => ["page", "column"].map(kind => ({ id: `menu-insert-${kind}-break`, enabled })), execute(id) { calls.push(id); enabled = false; }, subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); } };
+  const controls = createParagraphBreakControls({ registry, page, column });
+  assert.equal(page.disabled, true); page.dispatchEvent(new Event("click")); assert.deepEqual(calls, []);
+  enabled = true; for (const fn of listeners) fn();
+  assert.equal(page.disabled, false); assert.equal(column.disabled, false);
+  column.dispatchEvent(new Event("click"));
+  assert.deepEqual(calls, ["menu-insert-column-break"]); assert.equal(page.disabled, true);
+  enabled = true; for (const fn of listeners) fn();
+  enabled = false; page.dispatchEvent(new Event("click")); assert.equal(calls.length, 1);
+  controls.close(); controls.close(); assert.equal(listeners.size, 0);
+  enabled = true; page.dispatchEvent(new Event("click")); assert.equal(calls.length, 1); assert.equal(page.disabled, true);
+});
 
 test("ribbon moves the original controls and never grants visibility or mutation permissions", () => {
   const f = ribbonFixture(), originalRoot = [...f.root.childNodes], originalQuick = [...f.quick.childNodes];

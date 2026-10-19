@@ -2,7 +2,9 @@
 
 ## 수정키+Enter의 잘못된 문단 분할 방지
 
-RHWP의 로컬 page 명령에서는 Ctrl+Enter가 쪽 나누기, Ctrl+Shift+Enter가 단 나누기이며 별도 native 명령으로 위임합니다. 현재 이 프로젝트에 해당 명령을 구현한 것은 아닙니다. 기존 Canvas는 Control/Command/Alt+Enter도 일반 Enter로 해석해 문단 분할을 요청했습니다. 이제 이 조합은 textarea 기본 개행도 취소하고 미지원 안내와 함께 문서/선택을 보존합니다. 일반 Enter와 기존 Shift+Enter 경로는 바꾸지 않습니다. 쪽/단 나누기 자체는 후속 native 원자적 명령·저장·이력·UI 검증이 필요한 미완료 기능이며, 이 거부를 기능 지원 성공으로 세지 않습니다.
+현재 로컬 후보의 선택적 쪽·단 명령·capability·키 입력과 검증 제한은 [명시적 나누기](paragraph-flow-break-edit.md)가 소유합니다. 아래232개 회귀/브라우저 기록은 해당 기능이 없던9e75 후보에서의 거부 경계이며, 구형 ABI와 Alt/모호한 수정키 조합에 계속 적용합니다.
+
+RHWP의 로컬 page 명령에서는 Ctrl+Enter가 쪽 나누기, Ctrl+Shift+Enter가 단 나누기이며 별도 native 명령으로 위임합니다. 해당 회귀 당시 이 프로젝트에는 그 명령이 없었습니다. 기존 Canvas는 Control/Command/Alt+Enter도 일반 Enter로 해석해 문단 분할을 요청했습니다. 이 거부 경계는 textarea 기본 개행도 취소하고 미지원 안내와 함께 문서/선택을 보존합니다. 일반 Enter와 기존 Shift+Enter 경로는 바꾸지 않습니다. 거부 자체를 쪽/단 기능 지원 성공으로 세지 않습니다.
 
 7개 수정키 조합 회귀는 수정 전 모두 split을 요청해 자식7개/부모1개 실패·exit1을 재현했습니다(`modified-enter-red.log/.stderr`). 일반 Enter가 이어서 정상 split을 요청하는 양성 대조도 포함한 Canvas 전체 `modified-enter-fixed.log/.stderr`는232/232·fail/cancel/skip/todo0·exit0·stderr0(2600.426875ms)입니다. 실행 사본은 `/tmp/hwpjs-task1749-ranges.9Y1P1R`의9b03e1c8 게시 코드에 이 guard/감사 변경만 적용했고, 종료 로그 SHA256은 `602a7c1da4bf461eb3e0ed2c9e5bf73ad2964499f4317b9f32ecb6fd96711235`입니다. 진행 중인 다른 두 검증 소스는 변경하지 않았습니다.
 

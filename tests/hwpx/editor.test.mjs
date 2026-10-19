@@ -5,7 +5,7 @@ import { execFileSync } from "node:child_process";
 import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
 import { createHwpxReader } from "../../js/hwpx.mjs";
 
-const wasm = readFileSync("zig-out/bin/hwpjs.wasm");
+const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
 const fixture = name => readFileSync(`legacy/rust/crates/hwp-core/tests/fixtures/${name}.hwpx`);
 
 test("all seven selected field labels in tracked HWPX fixtures edit save reopen and restore text", async () => {

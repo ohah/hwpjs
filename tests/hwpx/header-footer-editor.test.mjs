@@ -6,7 +6,7 @@ import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
 
 test("public HWPX header footer owner and bodies edit independently and preserve whole XML", async () => {
   const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/headerfooter.hwpx");
-  const editor = await createHwpxEditor(readFileSync("zig-out/bin/hwpjs.wasm"));
+  const editor = await createHwpxEditor(readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"));
   const paragraphs = [2, 3, 4];
   try {
     editor.open(input);

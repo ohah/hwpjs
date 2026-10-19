@@ -101,6 +101,13 @@ pub fn read(a: std.mem.Allocator, session: *const editor.Session, section_index:
         const continuation = paragraph.generated_id != null;
         const currentBreak = @import("paragraph_continuation_tag.zig").currentBreak;
         row.* = .{ .paragraph = std.math.add(usize, section.first_paragraph, index) catch return error.LimitExceeded, .source_node = node, .top_level = section.tree.elements[parent].is(@import("document_xml.zig").section_uri, "sec"), .page_break = currentBreak(try boolean(a, &section.tree, node, "pageBreak"), continuation), .column_break = currentBreak(try boolean(a, &section.tree, node, "columnBreak"), continuation) };
+        if (paragraph.break_before) |intent| {
+            if (!continuation or paragraph.source_ordinal != null) return error.SourceBindingMismatch;
+            if (!row.top_level) return error.UnsupportedParagraphBreakOwner;
+            const explicit = @import("paragraph_flow_break_save.zig").flags(intent);
+            row.page_break = explicit[0];
+            row.column_break = explicit[1];
+        }
         initialized += 1;
         row.single_column = single_column;
         row.host = try host(&section.tree, node);

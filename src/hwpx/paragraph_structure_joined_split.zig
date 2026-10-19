@@ -27,7 +27,7 @@ pub fn assemble(a: std.mem.Allocator, current: *const model.Values, index: usize
     for (current.paragraphs, 0..) |*paragraph, ordinal| {
         if (ordinal == index) {
             const left = try draft.left.clone(a);
-            paragraphs[initialized] = .{ .template_element = selected.template_element, .source_ordinal = selected.source_ordinal, .generated_id = selected.generated_id, .paragraph_shape_id = selected.paragraph_shape_id, .sites = left.sites, .pieces = left.pieces, .character_styles = left.character_styles };
+            paragraphs[initialized] = .{ .template_element = selected.template_element, .source_ordinal = selected.source_ordinal, .generated_id = selected.generated_id, .break_before = selected.break_before, .paragraph_shape_id = selected.paragraph_shape_id, .sites = left.sites, .pieces = left.pieces, .character_styles = left.character_styles };
             initialized += 1;
             if (left_positions) |items| paragraphs[initialized - 1].protected_positions = try a.dupe(model.ProtectedPosition, items);
             const right = try draft.right.clone(a);

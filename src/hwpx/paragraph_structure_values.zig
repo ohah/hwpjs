@@ -10,6 +10,8 @@ pub const Paragraph = struct {
     template_element: usize,
     source_ordinal: ?usize,
     generated_id: ?u32 = null,
+    /// Explicit current continuation intent; XML remains immutable provenance.
+    break_before: ?@import("../model/paragraph_break.zig").Kind = null,
     /// Explicit current override; null retains the immutable template reference.
     paragraph_shape_id: ?u32 = null,
     /// New-run fallback style. When materialized, character_styles owns current
@@ -62,7 +64,7 @@ pub const Paragraph = struct {
         errdefer if (columns) |items| a.free(items);
         const areas = if (self.page_area_positions) |items| try a.dupe(@import("page_area_position.zig").Position, items) else null;
         errdefer if (areas) |items| a.free(items);
-        return .{ .template_element = self.template_element, .source_ordinal = self.source_ordinal, .generated_id = self.generated_id, .paragraph_shape_id = self.paragraph_shape_id, .synthesized_run_character_id = self.synthesized_run_character_id, .sites = try self.sites.clone(a), .pieces = pieces, .character_styles = styles, .protected_positions = protected, .field_positions = field_positions, .title_positions = titles, .column_boundaries = columns, .page_area_positions = areas, .column_structure_changed = self.column_structure_changed };
+        return .{ .template_element = self.template_element, .source_ordinal = self.source_ordinal, .generated_id = self.generated_id, .break_before = self.break_before, .paragraph_shape_id = self.paragraph_shape_id, .synthesized_run_character_id = self.synthesized_run_character_id, .sites = try self.sites.clone(a), .pieces = pieces, .character_styles = styles, .protected_positions = protected, .field_positions = field_positions, .title_positions = titles, .column_boundaries = columns, .page_area_positions = areas, .column_structure_changed = self.column_structure_changed };
     }
 };
 

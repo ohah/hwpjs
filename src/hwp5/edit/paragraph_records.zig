@@ -30,7 +30,7 @@ pub fn append(a: std.mem.Allocator, out: *std.ArrayList(u8), template: framing.R
     std.mem.writeInt(u32, header[0..4], units | (if (last_in_owner) @as(u32, 0x80000000) else 0), .little);
     std.mem.writeInt(u16, header[Header.para_shape_id_offset..][0..2], p.para_shape_id, .little);
     header[Header.style_id_offset] = p.style_id;
-    header[Header.break_flags_offset] = @import("paragraph_breaks.zig").effective(true, parsed.break_flags);
+    header[Header.break_flags_offset] = try @import("paragraph_breaks.zig").current(true, parsed.break_flags, p.break_before);
     std.mem.writeInt(u32, header[Header.instance_id_offset..][0..4], p.instance_id, .little);
     const runs = try a.alloc(u8, p.character_runs.len * 8);
     defer a.free(runs);

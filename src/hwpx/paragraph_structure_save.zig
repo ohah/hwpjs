@@ -57,6 +57,13 @@ fn hasOwnedColumnTabs(current: *const model.Values) bool {
 }
 
 fn writeInternal(a: std.mem.Allocator, tree: *const Tree, input: *const model.Values, options: sites_mod.Options, fields: []const save.FieldDirty, limit: usize, formula_trees: ?[]const Tree, section: usize, definitions: ?*const @import("formula_definition_values.zig").Values, column_tabs: bool, field_context: ?FieldContext) ![]u8 {
+    const serialized = try writePrepared(a, tree, input, options, fields, limit, formula_trees, section, definitions, column_tabs, field_context);
+    if (!@import("paragraph_flow_break_save.zig").hasIntent(input)) return serialized;
+    defer a.free(serialized);
+    return @import("paragraph_flow_break_save.zig").write(a, tree, input, serialized, limit);
+}
+
+fn writePrepared(a: std.mem.Allocator, tree: *const Tree, input: *const model.Values, options: sites_mod.Options, fields: []const save.FieldDirty, limit: usize, formula_trees: ?[]const Tree, section: usize, definitions: ?*const @import("formula_definition_values.zig").Values, column_tabs: bool, field_context: ?FieldContext) ![]u8 {
     const grouped = try @import("paragraph_page_area_order.zig").saveView(a, tree, input);
     defer if (grouped) |rows| a.free(rows);
     const grouped_values: model.Values = .{ .paragraphs = grouped orelse input.paragraphs };

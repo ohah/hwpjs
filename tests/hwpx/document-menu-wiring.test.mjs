@@ -4,6 +4,8 @@ import { readFileSync } from "node:fs";
 
 const expected = new Map([
   ["menu-insert-table", 'document.querySelector("#table-creation-focus")'],
+  ["menu-insert-page-break", '{ get disabled() { return direct?.canInsertParagraphBreak() !== true; }, click: () => direct.insertParagraphBreak("page") }'],
+  ["menu-insert-column-break", '{ get disabled() { return direct?.canInsertParagraphBreak() !== true; }, click: () => direct.insertParagraphBreak("column") }'],
   ["menu-open", "input"], ["menu-save", "download"],
   ["menu-undo", 'document.querySelector("#undo")'],
   ["menu-redo", 'document.querySelector("#redo")'],

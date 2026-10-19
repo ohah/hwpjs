@@ -33,7 +33,7 @@ pub fn prepare(a: std.mem.Allocator, tree: *const Tree, current: *const model.Va
     defer if (styles) |items| a.free(items);
     const borrowed: @import("paragraph_joined_values.zig").Joined = .{ .pieces = pieces, .sites = .{ .items = rows }, .character_styles = styles };
     const folded = try @import("paragraph_joined_fold.zig").prepare(a, &borrowed, lv.pieces.len, limit) orelse try borrowed.clone(a);
-    var merged: model.Paragraph = .{ .template_element = left.template_element, .source_ordinal = left.source_ordinal, .generated_id = left.generated_id, .paragraph_shape_id = left.paragraph_shape_id, .sites = folded.sites, .pieces = folded.pieces, .character_styles = folded.character_styles, .column_structure_changed = true };
+    var merged: model.Paragraph = .{ .template_element = left.template_element, .source_ordinal = left.source_ordinal, .generated_id = left.generated_id, .break_before = left.break_before, .paragraph_shape_id = left.paragraph_shape_id, .sites = folded.sites, .pieces = folded.pieces, .character_styles = folded.character_styles, .column_structure_changed = true };
     if (merged.generated_id) |id| for (merged.pieces.?) |*piece| {
         piece.generated_id = id;
     };

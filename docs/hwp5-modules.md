@@ -1,5 +1,7 @@
 # HWP5 모듈 계약 인덱스
 
+- [쪽·단 나누기 메뉴와 삽입 리본](paragraph-break-menu.md)
+
 - [Canvas 문단 경계 단축키](canvas-paragraph-edge-navigation.md)
 
 - [원본 소속 조회 인덱스](hwp5-source-ownership-index.md)
@@ -69,6 +71,7 @@
 - [빈 RevisionSign 표식 보존 텍스트 편집](hwp5-revision-sign-text-retention.md)
 - [HWP5 native 체크포인트·편집 이력 기반](hwp5-edit-history.md)
 - [문단 분할·병합 구조 편집 기반](paragraph-structure-edit.md)
+- [명시적 쪽·단 나누기 편집](paragraph-flow-break-edit.md)
 - [추적 픽스쳐 편집 지원 전수 기준](fixture-editor-coverage.md)
 - [읽기 전용 문서 모델 첫 연결과 JSON 호환 경계](hwp5-model-projection.md)
 - [편집 모델과 원본 보존의 제한적 구현 실험](hwp5-style-preservation-experiment.md)

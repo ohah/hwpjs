@@ -1,5 +1,11 @@
 # 참조 암호 문서의 명시적 열기·편집 감사
 
+## 쪽·단 owner 수정 제품의 추적 암호 경로 재검증
+
+새a754 제품으로 기존 `fixture-password-edit-paths.test.mjs`를 직접 실행한 `publish-owner-password-paths.log/.stderr`는2/2·fail/cancel/skip0·exit0·stderr0입니다. 로그 SHA256은 `582df7f0df15b33ee0345397f7349dc3cad17a59b3d15477bab0c916d82d029b`입니다. 알려진 비밀번호12345의 추적 HWP5/HWPX 두 원본에서 오답 거부·정답 복호·대표 문단 입력·독립 CFB 또는 XML/ZIP normal/-O·정확한 Undo/Redo·재열기·원본 불변을 검사했습니다. 같은 두 항목이 진행 중103파일 gate에서도 통과한 것을 확인했지만 전체 gate 종료와 합산하지 않습니다.
+
+읽기 전용 별도 조사에서도 방식0 DES/방식4 AES 분기와 현재 기본cbaa의 방식0 복호 성공을 확인했습니다. EncryptVersion0 미지원이라는 과거 가정으로 새 복호기를 중복 구현하지 않습니다. 일반 reader의 비밀번호 없는 거부와 명시적 복호 사본 지원은 구분합니다. 재암호화 저장·비압축 암호 envelope·이력/서명 결합까지 지원한 결과는 아닙니다. 기본 WASM과 외부 서버는 변경하지 않았습니다.
+
 ## Zig 0.17 추적 암호 픽스쳐 회귀
 
 과거 기록의 EncryptVersion0 미지원은 현재 후보의 구현 상태로 재사용하지 않습니다. 실제 추적 `password-12345.hwp`는 명시적 DES 경로로 해제하고, HWPX는 별도 암호 decoder로 해제합니다. 비밀번호 제공 없는 reader 거부·오답 뒤 정상 재시도·독립 CFB/레코드 또는 XML/ZIP normal/-O·대표 한 문단 편집·이력·재열기·원본 암호 파일 불변을 기존 `tests/hwp5/fixture-password-edit-paths.test.mjs`가 검사합니다. 해제한 사본은 암호 보호를 유지하지 않습니다.

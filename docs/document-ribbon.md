@@ -1,5 +1,7 @@
 # 문서 도구 탭
 
+[쪽·단 나누기](paragraph-break-menu.md)는 삽입 리본·메뉴·명령 검색이 같은 권한/실행 경로를 공유하는 계약과 검증을 소유합니다.
+
 [Canvas 수정키 경계](canvas-shortcut-modifiers.md)는 전체 선택·undo/redo의 잘못된 Alt/Shift 조합 소비를 막는 계약과 실제 키 검증을 소유합니다.
 
 [실제 누름틀 중간 입력](canvas-field-interior-input.md)은 키보드 선택·Worker 범위·메뉴 이력·독립 저장·재업로드 검증을 별도로 소유합니다.

@@ -3,6 +3,7 @@ import { availableSectionsCapability, availableSectionsRequest, availableSection
 import { availableSectionCopyCapability, availableSectionCopyRequest } from "./hwp5-available-copy-preview.mjs";
 import { createHwpxReader } from "../../js/hwpx.mjs";
 import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
+import { applyParagraphSplit, paragraphBreakIntent } from "./paragraph-split-command.mjs";
 import { attachHwpxCharts } from "./hwpx-chart-content.mjs";
 import { hwpxFieldRangeTarget } from "./hwpx-field-range-target.mjs";
 import { attachCheckBoxes } from "./checkbox-content.mjs";
@@ -758,7 +759,7 @@ self.onmessage = async event => {
         const pictureDimensionsAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwpx_edit_set_picture_dimensions" && entry.kind === "function");
         const pictureResizeAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwpx_edit_resize_picture" && entry.kind === "function");
         const dutmalTextAvailable = ["hwpx_edit_inline_string_sources", "hwpx_edit_dutmal_text", "hwpx_edit_set_dutmal_text", "hwpx_edit_dutmal_text_max_bytes"].every(name => WebAssembly.Module.exports(module).some(entry => entry.name === name && entry.kind === "function"));
-        reply({ kind: "enable", dutmalTextAvailable, charShapeCount: charShapeIds.length, charShapeIds, characterShapes, characterShapesError, historyAvailable: true, structureAvailable, splitQueryAvailable, mergeAvailable, cellSizeAvailable, pictureDimensionsAvailable, pictureResizeAvailable, content: hwpxDisplay() });
+        reply({ kind: "enable", paragraphBreakAvailable: editor.supportsParagraphBreaks(), dutmalTextAvailable, charShapeCount: charShapeIds.length, charShapeIds, characterShapes, characterShapesError, historyAvailable: true, structureAvailable, splitQueryAvailable, mergeAvailable, cellSizeAvailable, pictureDimensionsAvailable, pictureResizeAvailable, content: hwpxDisplay() });
         return;
       }
       if (message.distribution !== undefined && typeof message.distribution !== "boolean") throw new Error("InvalidDistributionPolicy");
@@ -774,7 +775,7 @@ self.onmessage = async event => {
       const cellSizeAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwp5_edit_set_cell_size" && entry.kind === "function");
       const pictureCurrentSizeAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwp5_edit_set_picture_current_size" && entry.kind === "function");
       const pictureResizeAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwp5_edit_resize_picture" && entry.kind === "function");
-      reply({ kind: "enable", charShapeCount: editor.characterShapeCount(), characterShapes, characterShapesError, historyAvailable: true, structureAvailable, mergeAvailable, cellSizeAvailable, pictureCurrentSizeAvailable, pictureResizeAvailable, content: hwp5Display() });
+      reply({ kind: "enable", paragraphBreakAvailable: editor.supportsParagraphBreaks(), charShapeCount: editor.characterShapeCount(), characterShapes, characterShapesError, historyAvailable: true, structureAvailable, mergeAvailable, cellSizeAvailable, pictureCurrentSizeAvailable, pictureResizeAvailable, content: hwp5Display() });
     } else if (message.kind === "undo" || message.kind === "redo") {
       if (!editor) throw new Error("EditorNotOpen");
       const changed = message.kind === "undo" ? editor.undo() : editor.redo();
@@ -792,13 +793,13 @@ self.onmessage = async event => {
       }
     } else if (message.kind === "split" || message.kind === "merge") {
       if (!editor) throw new Error("EditorNotOpen");
+      paragraphBreakIntent(message);
       if (format === "hwpx") {
         if (!Number.isInteger(message.paragraph) || message.paragraph < 0 || message.paragraph >= 0xffffffff) throw new Error("InvalidParagraphIndex");
         const target = { ...message, paragraph: message.paragraph + 1 };
         if (message.kind === "split") {
           if (message.anchored !== undefined && typeof message.anchored !== "boolean") throw new Error("InvalidAnchorMode");
-          if (message.anchored === true) editor.splitParagraphAnchored(target);
-          else editor.splitParagraph(target);
+          applyParagraphSplit(editor, target, message, true);
         }
         else if (message.rightParagraph !== undefined) {
           if (!Number.isInteger(message.rightParagraph) || message.rightParagraph < 0 || message.rightParagraph >= 0xffffffff) throw new Error("InvalidParagraphIndex");
@@ -813,7 +814,7 @@ self.onmessage = async event => {
         return;
       }
       if (message.kind === "merge" && message.rightParagraph !== undefined) throw new Error("UnsupportedMergeTarget");
-      if (message.kind === "split") editor.splitParagraph(message);
+      if (message.kind === "split") applyParagraphSplit(editor, message, message);
       else editor.mergeParagraph(message);
       applied = true;
       reader = await createHwp5Reader(module);

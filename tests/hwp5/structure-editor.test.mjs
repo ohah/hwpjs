@@ -8,6 +8,7 @@ import { verifyMerge } from "./style-preservation/merge-record-oracle.mjs";
 import { inspect, paragraphRecords, encodeRecord } from "./style-preservation/text-record-oracle.mjs";
 import { createCfbReader } from "../../js/cfb.mjs";
 import { deflateRawSync } from "node:zlib";
+import { withoutNormalizationExport } from "./normalization-export-fixture.mjs";
 
 const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
 const fixture = name => readFileSync(`legacy/rust/crates/hwp-core/tests/fixtures/${name}.hwp`);
@@ -176,11 +177,9 @@ test("repeated generated paragraph split merge and history match independent sav
 test("older WASM without optional split exports still opens edits and saves without partial mutations", async () => {
   const input = fixture("charshape");
   for (const names of [["hwp5_edit_split_range"], ["hwp5_edit_split_range", "hwp5_edit_split"]]) {
-    const older = Buffer.from(wasm);
+    let older = Buffer.from(wasm);
     for (const name of names) {
-      const at = older.indexOf(Buffer.from(name));
-      assert(at >= 0);
-      older[at] = "x".charCodeAt(0); // Equal-length export rename leaves code/types untouched.
+      older = withoutNormalizationExport(older, name);
     }
     const module = await WebAssembly.compile(older);
     for (const name of names) assert.equal(WebAssembly.Module.exports(module).some(e => e.name === name), false);

@@ -34,6 +34,8 @@ pub const Paragraph = struct {
     source_node: ?u32,
     /// Header template provenance for generated paragraphs, not an original node.
     header_template: ?u32 = null,
+    /// Explicit new-continuation flow intent, never a copy of source flags.
+    break_before: ?@import("paragraph_break.zig").Kind = null,
     /// Serialized paragraph ID; distinct from immutable source record index.
     /// Original duplicates/zero are preserved, never normalized on load.
     instance_id: u32 = 0,

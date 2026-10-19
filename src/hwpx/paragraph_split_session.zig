@@ -4,21 +4,25 @@ const editor = @import("editor_session.zig");
 const model = @import("paragraph_structure_values.zig");
 
 pub fn split(session: *editor.Session, section_index: usize, paragraph: usize, start: u32, deleted: u32) !bool {
-    return splitMode(session, section_index, paragraph, start, deleted, false, true);
+    return splitMode(session, section_index, paragraph, start, deleted, false, true, null);
+}
+
+pub fn splitWithBreak(session: *editor.Session, section_index: usize, paragraph: usize, start: u32, deleted: u32, intent: @import("../model/paragraph_break.zig").Kind) !bool {
+    return splitMode(session, section_index, paragraph, start, deleted, false, true, intent);
 }
 
 pub fn splitAnchored(session: *editor.Session, section_index: usize, paragraph: usize, start: u32, deleted: u32) !bool {
-    return splitMode(session, section_index, paragraph, start, deleted, true, true);
+    return splitMode(session, section_index, paragraph, start, deleted, true, true, null);
 }
 
 pub fn canSplit(session: *editor.Session, section_index: usize, paragraph: usize, start: u32, deleted: u32) !bool {
-    return splitMode(session, section_index, paragraph, start, deleted, false, false) catch |err| switch (err) {
+    return splitMode(session, section_index, paragraph, start, deleted, false, false, null) catch |err| switch (err) {
         error.ProtectedFieldRange, error.UnsupportedStructuralFieldEdit, error.UnsupportedFormulaCellParagraphs, error.UnsupportedParagraphControl, error.UnsupportedInlineControl => false,
         else => return err,
     };
 }
 
-fn splitMode(session: *editor.Session, section_index: usize, paragraph: usize, start: u32, deleted: u32, anchored: bool, publish: bool) !bool {
+fn splitMode(session: *editor.Session, section_index: usize, paragraph: usize, start: u32, deleted: u32, anchored: bool, publish: bool, intent: ?@import("../model/paragraph_break.zig").Kind) !bool {
     if (section_index >= session.sections.len) return error.InvalidSectionIndex;
     const section = &session.sections[section_index];
     if (paragraph < section.first_paragraph or paragraph > section.last_paragraph) return error.InvalidParagraphIndex;
@@ -38,6 +42,13 @@ fn splitMode(session: *editor.Session, section_index: usize, paragraph: usize, s
     defer if (column_current) |*values| values.deinit(a);
     const selected_index = paragraph - section.first_paragraph;
     const selected = &current.paragraphs[selected_index];
+    if (intent != null) {
+        if (selected.template_element >= section.tree.elements.len) return error.SourceBindingMismatch;
+        const owner = section.tree.elements[selected.template_element].parent orelse return error.UnsupportedParagraphBreakOwner;
+        if (owner >= selected.template_element) return error.SourceBindingMismatch;
+        if (!section.tree.elements[owner].is(@import("document_xml.zig").section_uri, "sec")) return error.UnsupportedParagraphBreakOwner;
+        if (section.dutmal_texts.entries.items.len != 0) return error.UnsupportedDutmalStructuralSave;
+    }
     // Protected splits retain their existing anchor-ownership path until column
     // ownership can be partitioned together with protected positions.
     if (!anchored and !try @import("field_split_session_candidate.zig").hasSourceField(&section.tree, selected.template_element) and selected.column_boundaries == null and selected.generated_id == null and selected.source_ordinal != null and selected.protected_positions == null and selected.pieces == null and selected.character_styles == null) {
@@ -92,6 +103,16 @@ fn splitMode(session: *editor.Session, section_index: usize, paragraph: usize, s
     var candidate = (try @import("formula_split_session_candidate.zig").prepare(session, trees[0..session.sections.len], section_index, split_current, selected_index, paragraph, start, end, id)) orelse (try @import("field_split_session_candidate.zig").prepare(a, trees[0..session.sections.len], section_index, split_current, selected_index, start, end, id, session.options.max_xml_bytes, 200_000)) orelse if (anchored) try @import("paragraph_structure_split.zig").prepareAnchored(a, &section.tree, split_current, selected_index, start, end, id, session.options.max_xml_bytes) else try @import("paragraph_structure_split.zig").prepare(a, &section.tree, split_current, selected_index, start, end, id, session.options.max_xml_bytes);
     var transferred = false;
     defer if (!transferred) candidate.deinit(a);
+    // Nested bodies can precede the new sibling in the flat paragraph view.
+    // Bind the result by its freshly allocated identity, not by adjacency.
+    var right_index: ?usize = null;
+    for (candidate.paragraphs, 0..) |row, ordinal| if (row.generated_id == id) {
+        if (right_index != null or ordinal <= selected_index) return error.SourceBindingMismatch;
+        right_index = ordinal;
+    };
+    const split_right = right_index orelse return error.SourceBindingMismatch;
+    candidate.paragraphs[selected_index].break_before = selected.break_before;
+    candidate.paragraphs[split_right].break_before = intent;
     var dirty: ?std.ArrayList(@import("text_sites_save.zig").FieldDirty) = null;
     defer if (!transferred) {
         if (dirty) |*values| values.deinit(a);

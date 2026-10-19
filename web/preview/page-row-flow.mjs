@@ -26,7 +26,14 @@ export function paginateBodyRows(rows, setting, paragraphFlows, { x = 20, y = 20
     section ??= flow.section;
     if (!Number.isSafeInteger(flow.section) || flow.section < 0 || flow.section !== section || !Number.isSafeInteger(flow.paragraph) || flow.paragraph < 0) return unavailable("UnsupportedPageFlow");
     const key = `${flow.section}:${flow.paragraph}`;
-    if (flows.has(key) || flow.top_level !== true || ![true, false, null].includes(flow.column_break) || (flow.column_break === true && columnDeclaration === undefined) || ![true, false, null].includes(flow.page_break)) return unavailable("UnsupportedPageFlow");
+    if (flows.has(key) || flow.top_level !== true || ![true, false, null].includes(flow.column_break) || ![true, false, null].includes(flow.page_break)) return unavailable("UnsupportedPageFlow");
+    if (flow.column_break === true && columnDeclaration === undefined) {
+      // A verified full-width single column advances to the next page. Do not
+      // invent a declaration or infer the same for unknown/narrower columns.
+      if (flow.single_column !== true || flow.column_declaration?.count !== 1) return unavailable("UnsupportedPageFlow");
+      const proof = columnReferenceBoxes(initial.boxes.page, flow.column_declaration);
+      if (proof.state !== "placed" || proof.boxes.length !== 1 || ["x", "y", "width", "height"].some(name => proof.boxes[0][name] !== initial.boxes.page[name])) return unavailable("UnsupportedPageFlow");
+    }
     if (columnZones) {
       const declarations = flow.column_changes?.length ? flow.column_changes.map(change => change.declaration) : [flow.column_declaration];
       for (const declaration of declarations) {

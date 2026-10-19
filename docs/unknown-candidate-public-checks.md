@@ -1,5 +1,45 @@
 # unknownObj 후보의 공개 API 회귀
 
+## 후속 UI 포함 정규 회귀
+
+쪽·단 메뉴/검색/리본을 포함한 분리 사본의 최신 전체 회귀와 입력/후보 고정 범위는 [쪽·단 UI 검증](paragraph-break-menu.md)이 소유합니다. 아래581/377 등은 앞선 후보의 이력이며 후속 UI의 직접 검증으로 소급하지 않습니다. native 선택형 skip과 별도 검사 범위는 [native 기록](native-current-main-gate.md)을 따릅니다.
+
+## owner 수정 제품 HWPX 115파일 종료
+
+`publish-full-hwpx-tap.log/.stderr`는378개 중377pass/1skip·fail/cancel/todo0·1413582.338958ms·child status0/signal null·wrapper exit0·stderr0으로 종료했습니다. 로그 SHA256은 `2534705d4fb88bf9a59fabd0949529b3527cc7fd7a5775d3e8d79e2eb1d08750`입니다. 명시 선택 제품은a754이며 이 실행을 형식 정리 후0619 artifact에서 직접 실행했다고 보고하지 않습니다.
+
+유일한 skip은 기준 WASM 환경이 없던 chart-baseline-parity입니다. 아래 별도 명시 기준 실행은28문서/본문28입력/차트56수정·1/1·skip0·exit0으로 통과했습니다. 이를 최초 전체 TAP의378/378 단일 실행으로 바꾸지 않습니다. 실행 섹션이 같은0619의 새 직접40/40 결과·두 제품의 전체 runtime-byte 비교와도 범위를 구분합니다. 최신 HWP5 581/581 완료와 별개이며 native/전체 참조 편집/원본 조판의 종료 증거는 아닙니다.
+
+## owner 수정 제품 HWP5 103파일 완료
+
+`publish-owner-full-hwp5-tap.log/.stderr`는581/581·fail/cancel/skip/todo0·968398.946041ms·child status0/signal null·wrapper exit0·stderr0으로 종료했습니다. build.zig의103개 고유 테스트 파일과 a754 제품/9e75 기준 hash를 시작/끝 대조한 `selectedTestsBuildAndArtifactsStable=true`도 확인했습니다. 로그 SHA256은 `f0a9976a0869706b87d8ff26c84d0cf4698a31d8fa5f5e470e098992b2f182b0`입니다. 직접 선택 파일·빌드·artifact의 고정 검사이며 모든 transitive source의 사전/사후 hash 증명은 아닙니다. HWPX115파일/native/전체 참조 편집 완료와 합산하지 않습니다.
+
+이후 격리된 HWP5 WASM 파일의 기존 enum 변환6곳을 Zig0.17 fmt 표현으로 정리했습니다. 주 작업본에는 이미 있는 변환이므로 다른 사용자 변경을 가져오지 않았습니다.36개 변경/추가 Zig 파일 fmt --check는exit0입니다. 새0619 제품과 a754 제품은 code/data/import/export 등 모든 non-custom section을 전체 바이트 비교해 같았고 변경은.debug_info/.debug_line뿐입니다. 새 제품의 직접 실행과 상세 hash는 [나누기 기록](paragraph-flow-break-edit.md)이 소유합니다. 위581건을 새artifact에서 직접 재실행했다고 보고하지 않습니다.
+
+### aift Worker 전체 표시 응답·실제 export 대조
+
+`publish-owner-formula-baseline.log/.stderr`는a754/9e75의 서로 다른 실제 artifact를 명시해3/3(상위1·candidate/baseline 하위2)·fail/cancel/skip0·exit0·stderr0·107822.333125ms로 종료했습니다. 같은 Worker/Canvas 모사 소스에서 실제 `hwpx/aift.hwpx`의 load/enable·구역2/문단3007 표시 window·0경계 입력 권한·무변경 저장 원본 bytes와 전체 응답 객체를 대조합니다. 로그 SHA256은 `afcf4d6cc3bbccb4bbcf1ca80e4e42a94b6d78da06c97ed021cc98ed62150cc9`입니다. 수식 재계산·모든 문단 편집·실제 화면/조판 검사는 아닙니다.
+
+실제 artifact export 검사 `publish-owner-export-parity.json/.stderr`도exit0·stderr0입니다.336→338exports,기존 이름 누락0/kind변경0,추가는 `hwp5_edit_split_with_break`와 `hwpx_edit_split_with_break` 두 함수뿐입니다. JSON SHA256은 `99830f4f9bae2cdaf660728314fd3a512b8e94584407e7b34e985ecfea3275c8`입니다. 함수 내부 동작·정확한 binary signature 동치 증거로 승격하지 않습니다.
+
+
+### HWPX 차트의 명시적 기준 대조 보완
+
+115파일 전체 검사에서는 `chart-baseline-parity`가 명시 기준 부재로 실제 skip됐습니다. 전체 TAP의 이 상태를 변경하지 않고 a754 제품과9e75 기준을 명시한 `publish-owner-chart-baseline.log/.stderr`를 별도로 실행했습니다. 이 검사는1/1·skip0·exit0·stderr0,3887.7595ms이며 실제28문서·본문 입력28·차트 값 수정56을 포함합니다. 수정 전/후·Undo/Redo의 chart nodes/sites/본문과 전체 point packet을 대조했고 파일의 원본 바이트도 확인했습니다. 로그 SHA256은 `ed3231e884e8740e7126efc7cf7ad16af697ffcf15a20e47ba7ee36ecdf42c8f`입니다. wire signature·모든 API·원본 조판의 동치 증거는 아닙니다.
+
+
+## fcf3 후보101파일 종료·owner 수정 제품103파일 재검증
+
+분리 작업본 `publish-full-hwp5-tap-retry.log/.stderr`는571/571·fail/cancel/skip/todo0·965524.345334ms·child status0/signal null·wrapper exit0·stderr0으로 종료했습니다. 로그 SHA256은 `652fd6317573117ff21389538baf108f570d11fb66e667137fec60847d35eab0`입니다. 앞선 fixture 미연결 실패58건을 통과로 덮어쓰지 않고 별도 재실행 로그로 보존합니다. 이 검사는101파일/fcf3 제품이며 이후 owner native 수정·추가10회귀·최종 고정 검증을 소급 포함하지 않습니다. 실행 도중 공통 oracle의 nested 소유권 수정이 있었으므로 최종 소스 고정 gate와도 구분합니다.
+
+이제 최종 a754 제품·기준9e75를 명시해103파일을 `publish-owner-full-hwp5-tap.log/.stderr`로 재검증합니다. 시작의 build/선택 테스트/두 artifact hash를 종료에 재대조합니다. 다른 JS·도구 전체 불변이나 현재 전체 native 완료를 이 제한된 고정 목록으로 주장하지 않습니다. 완료/skip/최종 hash 대조 전에는 성공이 아닙니다.
+
+## 쪽·단 owner 수정 제품의 HWPX 등록 검사 — 실행 중
+
+`/tmp/hwpjs-flow-publish.3IvUJZ`에서 a7545f5f 제품을 명시해 build.zig의 HWPX 등록115파일을 중복/부재 없이 추출하고 직렬 TAP 검사를 시작했습니다. `publish-full-hwpx-tap.log/.stderr`의 시작 목록과 최종 child status/signal이 범위를 소유합니다. 분리된 HEAD의5파일(text-reader/editor/formula-editor/header-footer-editor/object-boundary-editor)은 기본 WASM을 직접 읽던6곳만 HWPJS_TEST_WASM 우선으로 고쳤습니다. 주 작업본에 이미 있는 다른 사용자 테스트·새 API 단언은 가져오지 않았습니다.
+
+검사에는 explicit baseline이 없으면 건너뛰는 chart-baseline-parity도 등록돼 있습니다. 현재 시작 명령은 HWPJS_TEST_WASM만 명시했으므로 이 기준 대조는 완료 결과의 skip과 별도 보완 실행 여부를 반드시 확인합니다. 실행 중인 이전 fcf3/HWP5 101파일 검사나 carry native 전체 실행을 새 제품의 전체 완료로 합산하지 않습니다. 새 제품 SHA256과 집중320·독립 owner20·전체 reader975 증거는 [나누기 기록](paragraph-flow-break-edit.md)·[reader 대조](unknown-reader-parity-current.md)가 소유합니다. 기본 WASM/외부 서버는 변경하지 않았습니다.
+
 ## 게시 d4c7d918의 최신 HWP5 등록 회귀 — 최초 미완료·TAP 재실행 완료
 
 숫자 입력·편람178범위·Canvas 수정키 회귀를 포함한 게시 `d4c7d918b0316056a52600ab7d86e36631b89b3e`를 `/tmp/hwpjs-field-interior-browser.DVJV5s`에 고정했습니다. 앞선 소유 브라우저 종료 후 e9aa1141 이후22경로만 Git archive로 반영했고 전체7,219개 blob을 게시 tree와 대조했습니다. 사본 Git index도 그 추적 목록으로 갱신했습니다. 별도 qzuKq7의 진행 중인 참조 감사 소스/원본은 변경하지 않았으며 새 대형 사본이나 WASM 빌드도 만들지 않았습니다.

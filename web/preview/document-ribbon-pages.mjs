@@ -5,6 +5,6 @@ export const documentRibbonPages = Object.freeze([
     '.toolbar-group[aria-label="기존 글자 서식"]',
     ".style-toolbar",
   ]) }),
-  Object.freeze({ id: "insert", label: "삽입", selectors: Object.freeze(["#table-creation-form"]), emptyHint: "문서를 열고 편집을 시작하면 지원되는 삽입 도구가 표시됩니다." }),
+  Object.freeze({ id: "insert", label: "삽입", selectors: Object.freeze(["#paragraph-break-tools", "#table-creation-form"]), emptyHint: "문서를 열고 편집을 시작하면 지원되는 삽입 도구가 표시됩니다." }),
   Object.freeze({ id: "view", label: "보기", selectors: Object.freeze([".view-toolbar", "#document-window-options"]) }),
 ]);

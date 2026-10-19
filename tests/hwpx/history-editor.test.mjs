@@ -3,7 +3,7 @@ import test from "node:test";
 import { readFileSync } from "node:fs";
 import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
 
-const wasm = readFileSync("zig-out/bin/hwpjs.wasm");
+const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
 const fixture = name => readFileSync(`legacy/rust/crates/hwp-core/tests/fixtures/${name}.hwpx`);
 
 test("public HWPX history preserves redo on refusal and no-op, resets only on successful open", async () => {
