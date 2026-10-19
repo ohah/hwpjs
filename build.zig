@@ -208,6 +208,8 @@ pub fn build(b: *std.Build) void {
     hwpx_text_tests.addArg("tests/hwpx/positioned-page-row.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/terminal-picture-row.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/picture-paragraph-page-fragment.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/picture-caption-api.test.mjs");
+    hwpx_text_tests.addArg("tests/hwpx/picture-caption-content.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/formula-result-paragraphs.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/formula-result-paragraph-api.test.mjs");
     hwpx_text_tests.addArg("tests/hwpx/memo-label.test.mjs");

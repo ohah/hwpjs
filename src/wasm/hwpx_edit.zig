@@ -474,6 +474,22 @@ export fn hwpx_edit_table_caption(section: u32, node: u32) u32 {
     output = std.json.Stringify.valueAlloc(a, value, .{}) catch |err| return fail(err);
     return 1;
 }
+export fn hwpx_edit_picture_caption(section: u32, node: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    if (section >= session.sections.len) return fail(error.InvalidSectionIndex);
+    const value = @import("../hwpx/table_caption_values.zig").readPicture(a, &session.sections[section].tree, node) catch |err| return fail(err);
+    output = std.json.Stringify.valueAlloc(a, value, .{}) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_picture_caption_bindings(section: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const bindings = @import("../hwpx/picture_caption_bindings.zig").read(a, session, section) catch |err| return fail(err);
+    defer a.free(bindings);
+    output = std.json.Stringify.valueAlloc(a, bindings, .{}) catch |err| return fail(err);
+    return 1;
+}
 export fn hwpx_edit_automatic_number_sources(section: u32) u32 {
     hwpx_edit_output_free();
     const session = if (active) |*value| value else return fail(error.EditorNotOpen);

@@ -1,5 +1,7 @@
 # 그림 캡션 코어와 현재 문단 연결
 
+공개 조회·Worker 계약은 [그림 캡션 API](hwpx-picture-caption-api.md)로 분리합니다.
+
 `table_caption_values.readPicture`는 정확한 `pic` 노드의 직접 caption 값만 읽고 기존 caption 필드 파서를 재사용합니다. 캡션 부재는 null, 잘못된 그림 노드는 오류입니다. 캡션의 시각적 배치·본문 어울림·편집 가능 여부를 여기서 판단하지 않습니다.
 
 `caption_list_owner.zig`는 직접 `pic/tbl → caption → subList → p` 연결과 namespace·중복을 검사합니다. `caption_current_bindings.zig`는 현재 문단의 joined 조각 소속 일치·100000개 한도·문단 번호 오버플로·할당자 소유 결과와 실패 정리를 소유합니다. 표와 그림은 같은 순회를 재사용하되 기존 표 출력 타입과 오류를 유지합니다. `picture_caption_bindings.zig`는 native 전역1기반 paragraph와 picture_node/caption_node/list_node를 반환합니다. 원문 노드를 복제한 별도 편집 캐시는 만들지 않습니다.

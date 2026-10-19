@@ -61,6 +61,7 @@ import { decodeTablePagination } from "./hwpx-table-pagination.mjs";
 import { decodeTableGeometry } from "./hwpx-table-geometry.mjs";
 import { decodeTableCaption } from "./hwpx-table-caption.mjs";
 import { decodeTableCaptionBindings } from "./hwpx-table-caption-bindings.mjs";
+import { decodeCaptionBindings } from "./caption-bindings-wire.mjs";
 import { decodeAutomaticNumberSites } from "./hwpx-automatic-number-sites.mjs";
 import { decodeAutomaticNumberSources } from "./hwpx-automatic-number-sources.mjs";
 import { decodeNoteReferenceSites } from "./hwpx-note-reference-sites.mjs";
@@ -1030,6 +1031,22 @@ export async function createHwpxEditor(source) {
       if (typeof wasm.hwpx_edit_table_caption !== "function") throw new Error("HwpxTableCaptionAbiUnavailable");
       try {
         if (!wasm.hwpx_edit_table_caption(section, tableNode)) throw memory.error();
+        return decodeTableCaption(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
+    pictureCaptionBindings(section) {
+      ready(); uint(section);
+      if (typeof wasm.hwpx_edit_picture_caption_bindings !== "function") throw new Error("HwpxPictureCaptionBindingsAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_picture_caption_bindings(section)) throw memory.error();
+        return decodeCaptionBindings(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()), "picture_node", "InvalidPictureCaptionBindings");
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
+    pictureCaption(section, pictureNode) {
+      ready(); uint(section); uint(pictureNode);
+      if (typeof wasm.hwpx_edit_picture_caption !== "function") throw new Error("HwpxPictureCaptionAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_picture_caption(section, pictureNode)) throw memory.error();
         return decodeTableCaption(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
       } finally { wasm.hwpx_edit_output_free(); }
     },

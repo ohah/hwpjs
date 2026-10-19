@@ -17,6 +17,8 @@ import { layoutCreatedTableInlinePages } from "./created-table-inline-page-layou
 export function layoutPageContent(content, measure, maxRows = 20000, { pageNumbers } = {}) {
   const unavailable = error => ({ state: "unavailable", error });
   if (content.pageSettingsError || content.paragraphFlowErrors?.length || !content.pageSettings?.length) return unavailable("AmbiguousPageSettings");
+  if (content.pictureCaptionErrors?.length) return unavailable("AmbiguousPictureCaptionContent");
+  if (content.pictures?.some(p => p.captionPartial)) return unavailable("IncompletePictureCaptionContent");
   if (content.createdTables?.length) {
     if (pageNumbers !== undefined) return unavailable("UnsupportedCreatedTablePageNumbers");
     return content.paragraphFlows?.some(flow => ["footnote", "endnote"].includes(flow.host))
