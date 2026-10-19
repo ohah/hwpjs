@@ -1,10 +1,12 @@
 # unknownObj 후보의 공개 API 회귀
 
-## 게시 e9aa1141의 HWP5 공개 등록 회귀 — 실행 중
+## 게시 e9aa1141의 HWP5 공개 등록 회귀 — 완료
 
 게시 `e9aa1141a55c4c8879e9aa47e62bcc992e22520a`·tree `04169bfb83de0635b15c6dc5d2a238c170f06fdb`를 `/tmp/hwpjs-main-hwp5-gate.qzuKq7`에 분리했습니다. 완료한 HWPX 사본의 APFS clone에 두 커밋 간 변경 경로만 Git archive로 반영하고 추적7,214개 blob 전체를 새 HEAD와 대조했습니다. 새 Git index에도 해당 blob 경로만 등록했습니다. 참조/기준/후보를 원래 작업 트리와 섞지 않으며 후보9e75·기준cbaa의 전체 해시는 아래와 같습니다.
 
 `editor_api_tests`의 초기 배열과 has_side_effects 직전까지의 모든 addArg에서92개 고유 경로를 추출했습니다. install 의존성 뒤의 등록도 누락하지 않습니다. Node24.20.0·nice10·직렬·명시적 HWPJS_TEST_WASM/HWPJS_BASELINE_WASM으로 `registered-hwp5.jsonl/.stderr`를 기록하고 시작/종료의 전체 소스/build/두 WASM 불변을 검사합니다. 종료/통계/skip/최종 재대조 전에는 성공이 아니며, 아래 HWPX372개·Native4,118개와 한 실행으로 합산하지 않습니다. 기본 WASM/외부 데모는 그대로입니다.
+
+같은 실행은495/495·fail/cancel/skip/todo0·653292.219292ms로 완료됐습니다. 자식 status0/signal=null/error=null·wrapper exit0이며 stderr의 구조화된 정상 종료 한 줄을 오류나 빈 stderr로 보고하지 않습니다. 마지막 `registered-hwp5-final-identity`에서7,214개 source blob·build·후보/기준 불변을 확인했습니다. 로그 SHA256은 `96dd4ba23c9ec281fa7b528879ffdff335a53e34c441502ba0e237a57211fc46`입니다. 이후 task1749 집중 회귀는 이 동결 소스에 포함되지 않으며 실제 Chromium·전체 참조 편집·원본 조판·기본 배포 완료로 확대하지 않습니다.
 
 ## 게시 bd75e76b의113파일 등록 회귀
 

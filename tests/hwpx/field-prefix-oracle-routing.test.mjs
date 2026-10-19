@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { selectFieldPrefixOracle } from "../../tools/hwpx-field-prefix-oracle.mjs";
 import { execFileSync } from "../../tools/oracle-process.mjs";
 import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
@@ -131,6 +132,7 @@ test("actual graphic and automatic-number field prefixes preserve complete XML Z
       ["reference/rhwp/samples/issue2083_hide_fill_page.hwpx", 2, 121, 1],
       ["reference/rhwp/samples/issue2813/dangjik_dutylog.hwpx", 0, 141, 141],
       ["reference/rhwp/samples/issue2470/36341511_masked.hwpx", 0, 72, 72],
+      ["reference/rhwp/samples/task1749/saved_bounds_cumulative_page_break.hwpx", 0, 44, 44],
     ]) {
       const input = readFileSync(path); editor.open(input); editor.enableHistory();
       const target = editor.fieldRangeTarget(section, paragraph, 0, 0); assert(target);
@@ -149,4 +151,36 @@ test("actual graphic and automatic-number field prefixes preserve complete XML Z
       assert.deepEqual(readFileSync(path), input);
     }
   } finally { editor.close(); }
+});
+
+test("actual task1749 field supports interior insertion replacement deletion and end insertion", async t => {
+  if (!process.env.HWPJS_TEST_WASM) { t.skip("explicit candidate WASM required"); return; }
+  const path = "reference/rhwp/samples/task1749/saved_bounds_cumulative_page_break.hwpx";
+  const input = readFileSync(path), wasm = readFileSync(process.env.HWPJS_TEST_WASM);
+  const digest = bytes => createHash("sha256").update(bytes).digest("hex");
+  assert.equal(digest(input), "2fd531b3e235a714c3fef1a59ddcd9d23225f68f5c492adb17500d23f5cbfe2f");
+  const originalWasm = digest(wasm), editor = await createHwpxEditor(wasm);
+  try {
+    for (const [atUnit, deletedUnits, text] of [[2, 0, "😀<&"], [2, 2, "치환"], [2, 2, ""], [16, 0, "끝"]]) {
+      editor.open(input); editor.enableHistory();
+      const target = editor.fieldRangeTarget(0, 45, atUnit, atUnit + deletedUnits); assert(target);
+      const selected = selectFieldPrefixOracle({ before: input.toString("base64"), section: 0, paragraph: 45, beginElement: target.beginElement });
+      assert.equal(selected.oracle, "tools/hwpx-field-edit-oracle.py");
+      editor.spliceFieldLabel(0, 45, target.beginElement, atUnit, deletedUnits, text);
+      const saved = Buffer.from(editor.save());
+      const request = { before: input.toString("base64"), after: saved.toString("base64"), paragraph: 45, beginId: selected.beginId, atUnit, deletedUnits, text };
+      for (const flags of [[], ["-O"]]) {
+        execFileSync("python3", [...flags, selected.oracle], { input: JSON.stringify(request), timeout: 30000 });
+        assert.throws(() => execFileSync("python3", [...flags, selected.oracle], { input: JSON.stringify({ ...request, text: "wrong" }), timeout: 30000 }), error => error.status === 1 && error.signal === null && /Unexpected XML change/.test(String(error.stderr)));
+      }
+      assert.equal(editor.undo(), true); assert.deepEqual(Buffer.from(editor.save()), input);
+      assert.equal(editor.redo(), true); assert.deepEqual(Buffer.from(editor.save()), saved);
+      editor.open(saved); assert.deepEqual(Buffer.from(editor.save()), saved);
+    }
+    assert.deepEqual(readFileSync(path), input);
+  } finally {
+    editor.close();
+    assert.equal(digest(wasm), originalWasm);
+    assert.equal(digest(readFileSync(process.env.HWPJS_TEST_WASM)), originalWasm);
+  }
 });

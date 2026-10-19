@@ -2,6 +2,12 @@
 
 ## 최신 게시 소스의 공문 전용 입력 재대조
 
+같은 e9aa1141 사본/9e75 후보에서36385226도58시도/58검증·독립 XML58(필드54)·거부0·exit0·stderr0으로 종료했습니다. `current-36385226-specialized.jsonl`의 SHA256은 `ac66d5672cdfdf37cbf04a23a8a37ed3c2529e0f051652db5156540e4948b4aa`이며 원본 SHA256은 `5c1ddfddb4cb83a70992c2ec099f13be41eb83dda4275137b1cbd7d6612fc642`입니다.
+
+과거 실패 목록의 `task1749/saved_bounds_cumulative_page_break.hwpx`도 `current-task1749-specialized.jsonl/.stderr`에서97시도/97검증·독립 XML97(필드93)·거부0·exit0·stderr0입니다. 원본 SHA256은 `2fd531b3e235a714c3fef1a59ddcd9d23225f68f5c492adb17500d23f5cbfe2f`, 로그는 `4cc0b0e9ec46de28c30d63dc22b45a17c5d1994947ab552a094e1a7ffc3a19bd`입니다. 별도 회귀에 객체 앞44번 prefix와 텍스트45번의 중간 삽입·치환·삭제·끝 삽입을 추가해 normal/-O 전체 XML/ZIP·잘못된 기대 문자열 거부·undo/redo·재열기·입력/후보 불변을 검사합니다. 현재 원본의 관측 입력 범위이며 모든 위치/명령/조판 완료로 확대하지 않습니다.
+
+e9aa1141 사본에 해당 회귀 한 파일만 추가한 `/tmp/hwpjs-task1749-ranges.9Y1P1R`의 `task1749-ranges-pinned.log/.stderr`는6/6·fail/cancel/skip/todo0·exit0·stderr0(5405.786583ms)입니다. 원본 해시 고정 단언을 포함한 최종 테스트와 나머지7,213개 Git blob을 종료 후 대조했습니다. 로그 SHA256은 `56edb31fbe8cc16a6cf2b1a4f6046dfb07c6002164e41d164304d5afe7f72541`입니다. 이 회귀는 기존 등록 파일에 추가해 중복 build 등록은 없으며 제품 코드를 바꾸지 않았습니다.
+
 `e9aa1141a55c4c8879e9aa47e62bcc992e22520a`의 분리 사본 `/tmp/hwpjs-main-hwp5-gate.qzuKq7`에서 공문36382669 전체 전용 입력을 새 후보로 재검사했습니다. 원본 SHA256은 `0f2ae84c476985c6966a1950b8339d339b5099dc3d3d7bc915e7a99823edc524`, WASM은 `9e75fd8bab9b879b3883f4703a7a8c2ffe100f98cd48c68a511eed797840b468`입니다. Node24.20.0·nice10의 `current-36382669-specialized.jsonl/.stderr`는127시도/127검증·독립 XML127(필드122)·거부0·exit0·stderr0입니다. normal/-O 전체 XML/ZIP, 별도 편집기 재열기/재저장, undo/redo와 원본 불변을 유지했습니다.
 
 종료 후 사본의7,214개 추적 blob을 원본 저장소의 정확한 e9aa1141 tree와 전수 대조해 일치했고 원본/후보 해시도 그대로였습니다. 로그 SHA256은 `c0bcb46d345f64df758c3c80babe2279a5d85ef251c7fed30c1ef4a368fabc70`입니다. 사본 자체에는 유효한 HEAD 객체가 없어 최초 HEAD 기반 사후 대조 명령은 실패했으며, 이후 원본 저장소의 명시적 commit tree로 대조한 결과만 근거로 사용합니다. 과거 f4e0 실행의 실패 행을 소급 수정하지 않으며, 이 결과는 일반 입력/모든 명령·위치/실제 브라우저/조판 또는 진행 중인 HWP5 전체 gate 완료가 아닙니다. 기본 WASM과 외부 데모는 교체하지 않았습니다.
