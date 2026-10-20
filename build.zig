@@ -105,6 +105,7 @@ pub fn build(b: *std.Build) void {
     editor_api_tests.addArg("tests/hwp5/formula-definition-editor.test.mjs");
     editor_api_tests.addArg("tests/hwp5/formula-worker-definition.test.mjs");
     editor_api_tests.addArg("tests/hwp5/document-numbering.test.mjs");
+    editor_api_tests.addArg("tests/hwp5/effects-only-picture-tail.test.mjs");
     editor_api_tests.step.dependOn(b.getInstallStep());
     editor_api_tests.addArg("tests/hwp5/normalized-open.test.mjs");
     editor_api_tests.addArg("tests/hwp5/normalized-distribution.test.mjs");

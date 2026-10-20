@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+5.0.3.0 그림 효과 전용 꼬리는 `HWPJS_TEST_WASM=/absolute/verified.wasm mise exec -- node --test tests/hwp5/effects-only-picture-tail.test.mjs`로 검사합니다. 실제14개 고정 offset·Worker geometry·미지 프로필 거부 검사이며 정규 hwp5-editor-audit에도 등록합니다. 계약은 [effects-only 꼬리](hwp5-effects-only-picture-tail.md)를 따릅니다.
+
 [예약 본문 callback](reserved-body-callbacks.md)은 `mise exec -- node --test tests/hwpx/reserved-body-callbacks.test.mjs tests/hwpx/reserved-picture-page-flow.test.mjs tests/hwpx/reserved-body-row.test.mjs tests/hwpx/table-picture-reservation-check.test.mjs`로 검사합니다. 새 도형 감싸기 지원 완료와 구분합니다.
 
 [구역별 실제 Canvas 왕복](section-object-layout.md)은 `HWPJS_TEST_WASM=/absolute/hwpjs.wasm node tools/page-area-object-browser-audit.mjs --case=sections`입니다. 기본 복합 셀/꼬리말 모드와 같은58886·전용 세션을 쓰므로 직렬 실행합니다. 문서 전체 문단 번호로 구역1 입력·독립 저장·재업로드·소유 브라우저/서버 종료를 확인합니다.

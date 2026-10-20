@@ -1,5 +1,7 @@
 # 파일·폴더 구조
 
+[5.0.3.0 그림 effects-only 꼬리](hwp5-effects-only-picture-tail.md)는 기존 picture tail 조회를 재사용하며 프로필 선택·Worker 부재 필드 검사는 web/preview의 기존 두 모듈이 담당합니다.
+
 [HWPX 차트 API facade](hwpx-chart-api-facade.md)는 편집기 수명·공유 메모리와 차트 ABI 호출의 책임 분리를 소유합니다.
 
 [객체 원값·선두 쪽 번호 기반](hwpx-source-query-foundation.md)은 게시된 OLE source/현재 앵커 조회와 증명된 첫 구역 번호 metadata의 범위를 구분한다.

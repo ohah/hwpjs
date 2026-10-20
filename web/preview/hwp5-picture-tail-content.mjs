@@ -22,7 +22,9 @@ export function attachHwp5PictureTails(editor, content) {
       const layout = hwp5PictureTailLayout(version);
       if (layout === null) throw new Error("UnselectedHwp5PictureTailVersion");
       const tails = validateHwp5PictureTailSources(editor.pictureTailSources(section, layout));
-      if (tails.some(row => row.image_width === null || (layout === "dimensions8" ? row.image_alpha !== null : row.image_alpha === null))) throw new Error("Hwp5PictureTailLayoutMismatch");
+      if (tails.some(row => layout === "effects_only"
+        ? row.image_width !== null || row.image_height !== null || row.image_alpha !== null || row.extra_bytes !== 0
+        : row.image_width === null || (layout === "dimensions8" ? row.image_alpha !== null : row.image_alpha === null))) throw new Error("Hwp5PictureTailLayoutMismatch");
       if (raw.length !== tails.length || new Set(raw.map(row => row.pictureNode)).size !== raw.length) throw new Error("Hwp5PictureTailInventoryMismatch");
       for (const tail of tails) {
         if (!raw.some(row => row.pictureNode === tail.component_node && row.recordNode === tail.picture_node && row.source.owner_node === tail.owner_node)) throw new Error("Hwp5PictureTailOwnerMismatch");
