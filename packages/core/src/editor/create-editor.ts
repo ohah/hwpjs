@@ -26,6 +26,7 @@ export interface UpdateCollector {dispatchCommand<T>(command:EditorCommand<T>,pa
 export interface CreateEditorOptions {readonly runtimeFactory:RuntimeFactory;readonly editorId?:string;readonly onError?:(error:EditorError)=>void;}
 interface PendingCommand {command:EditorCommand<unknown>;payload:unknown;token:StateToken;handlers:ReturnType<CommandRegistry['capture']>;}
 let nextEditorId=0;
+let nextEditorInstance=0;
 const usedRuntimes=new WeakSet<object>();
 const errorText=(error:unknown)=>error instanceof Error?error.message:String(error);
 const isWellFormed=(text:string)=>!/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/u.test(text);
@@ -34,6 +35,8 @@ const isAsyncFunction=(callback:unknown)=>Object.prototype.toString.call(callbac
 /** Headless controller. Native sessions remain the sole document/save/history authority. */
 export function createEditor(options:CreateEditorOptions) {
  const editorId=options.editorId??`hwpjs-editor-${++nextEditorId}`;
+ if(nextEditorInstance>=Number.MAX_SAFE_INTEGER)throw Error('EditorIdentityExhausted');
+ const instanceId=String(++nextEditorInstance);
  const queue=new FifoScheduler(),admission=new FifoScheduler(),registry=new CommandRegistry();
  let active:EditorRuntime|undefined,locked:{runtime:EditorRuntime;message:RuntimeMessage;context:RuntimeRequestContext;editable:boolean;enableOptions?:Readonly<Record<string,unknown>>;cancelled?:boolean}|undefined;
  let terminal=false,disposePromise:Promise<void>|undefined,requestId=0,nextGeneration=0,revisionClock=0,stateVersion=0;
@@ -139,7 +142,7 @@ export function createEditor(options:CreateEditorOptions) {
    const cancellation=new CancellationFence();
    const job={cancelled:false,fence:cancellation};loads.add(job);
    const guard=()=>{if(job.cancelled)throw Error('LoadCancelled');};
-   const tokenGeneration=++nextGeneration,documentId=`${editorId}:document:${tokenGeneration}`;
+   const tokenGeneration=++nextGeneration,documentId=`${editorId}:instance:${instanceId}:document:${tokenGeneration}`;
    const message:RuntimeMessage={kind:'load',bytes,format:owned.format,...(owned.password===undefined?{}:{password:owned.password}),...(owned.allowObservedChartOleDeviations===undefined?{}:{allowObservedChartOleDeviations:owned.allowObservedChartOleDeviations})};
    return admit(async()=>{
      const previousState=state;install({status:'loading'});
