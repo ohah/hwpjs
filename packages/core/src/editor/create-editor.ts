@@ -1,0 +1,354 @@
+import type { EditorRuntime, RuntimeFactory, RuntimeMessage, RuntimeReply, RuntimeRequestContext } from '../contracts.ts';
+import { EditorState } from '../state/editor-state.ts';
+import type { StateData, StateToken } from '../state/editor-state.ts';
+import { copyOwned, discardPromise, freezeDTO, isPromiseLike, ownObservation } from '../state/owned.ts';
+import type { InputSurfaceHooks, InputSurfaceLease, SurfaceRequestOptions } from '../host-contracts.ts';
+import { surfaceOperation } from '../commands/surface-protocol.ts';
+import { CancellationFence, interruptible } from '../scheduler/cancellation.ts';
+import { FifoScheduler } from '../scheduler/fifo.ts';
+import { CommandRegistry } from '../commands/registry.ts';
+import { SPLICE_TEXT_COMMAND, UNDO_COMMAND, REDO_COMMAND, SET_CHARACTER_PROPERTIES_COMMAND, SET_PARAGRAPH_ALIGNMENT_COMMAND } from '../commands/commands.ts';
+import type { EditorCommand, SpliceTextPayload, HistoryPayload, SelectionTarget, SetCharacterPropertiesPayload, SetParagraphAlignmentPayload } from '../commands/commands.ts';
+import {retryablePasswordReply,PasswordAttemptError} from './unlock-policy.ts';
+import { formattingSelection } from '../state/formatting-selection.ts';
+import { formattingMessage } from '../commands/formatting.ts';
+import { selectionMessage, validateSelection, validateToken } from '../commands/selection.ts';
+
+export type CommandStatus='rejected-unapplied'|'committed-with-snapshot'|'committed-refresh-required'|'known-no-op'|'handled-without-runtime';
+export interface CommandResult {readonly status:CommandStatus;readonly context:RuntimeRequestContext;readonly state:EditorState;readonly error?:string;readonly changed:boolean|null;readonly reply?:RuntimeReply;}
+export interface UpdateResult {readonly results:readonly CommandResult[];readonly stoppedIndex:number|null;readonly state:EditorState;}
+export interface EditorError {readonly error:unknown;readonly context?:RuntimeRequestContext;readonly applied:boolean|'unknown';}
+export interface LoadOptions {readonly format:'hwp5'|'hwpx';readonly editable?:boolean;readonly password?:string;readonly allowObservedChartOleDeviations?:boolean;readonly enableOptions?:Readonly<Record<string,unknown>>;}
+export interface SaveOptions {readonly token?:StateToken;readonly recovery?:boolean;readonly allowStaleLayout?:boolean;readonly allowUnprotectedOutput?:boolean;}
+export interface SaveResult {readonly bytes:Uint8Array;readonly documentId:string;readonly generation:number;readonly operationRevision:number;readonly nativeHistoryRevision?:number;readonly format:'hwp5'|'hwpx';readonly staleSnapshot:boolean;readonly layoutRequiresReflow?:boolean;readonly reply:RuntimeReply;}
+export interface ExperimentalOptions {readonly mutation:boolean;readonly token:StateToken;}
+export interface UpdateCollector {dispatchCommand<T>(command:EditorCommand<T>,payload:T):void;}
+export interface CreateEditorOptions {readonly runtimeFactory:RuntimeFactory;readonly editorId?:string;readonly onError?:(error:EditorError)=>void;}
+interface PendingCommand {command:EditorCommand<unknown>;payload:unknown;token:StateToken;handlers:ReturnType<CommandRegistry['capture']>;}
+let nextEditorId=0;
+const usedRuntimes=new WeakSet<object>();
+const errorText=(error:unknown)=>error instanceof Error?error.message:String(error);
+const isWellFormed=(text:string)=>!/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/u.test(text);
+const isAsyncFunction=(callback:unknown)=>Object.prototype.toString.call(callback)==='[object AsyncFunction]';
+
+/** Headless controller. Native sessions remain the sole document/save/history authority. */
+export function createEditor(options:CreateEditorOptions) {
+ const editorId=options.editorId??`hwpjs-editor-${++nextEditorId}`;
+ const queue=new FifoScheduler(),admission=new FifoScheduler(),registry=new CommandRegistry();
+ let active:EditorRuntime|undefined,locked:{runtime:EditorRuntime;message:RuntimeMessage;context:RuntimeRequestContext;editable:boolean;enableOptions?:Readonly<Record<string,unknown>>;cancelled?:boolean}|undefined;
+ let terminal=false,disposePromise:Promise<void>|undefined,requestId=0,nextGeneration=0,revisionClock=0,stateVersion=0;
+ let readDepth=0,collecting=false,handling=false;
+ const stateListeners=new Set<(state:EditorState)=>unknown>(),updateListeners=new Set<(state:EditorState)=>unknown>(),errorListeners=new Set<(event:EditorError)=>unknown>();
+ const released=new WeakSet<object>();
+ const loads=new Set<{cancelled:boolean;fence:CancellationFence}>();
+ let surfaceEpoch=0;
+ type SurfaceRecord={id:string;generation:number;active:boolean;hooks:InputSurfaceHooks;fence:CancellationFence};
+ let surface:SurfaceRecord|undefined;
+ const disposedFence=new CancellationFence();
+ const runRead=<T>(callback:(state:EditorState)=>T,snapshot:EditorState):T=>{
+   if(typeof callback!=='function')throw TypeError('InvalidReadCallback');if(isAsyncFunction(callback))throw Error('AsyncRead');
+   readDepth++;
+   try {const result=callback(snapshot);if(isPromiseLike(result)){discardPromise(result);throw Error('AsyncRead');}return result;}finally{readDepth--;}
+ };
+ let state=new EditorState({editorId,documentId:null,generation:0,operationRevision:0,viewRevision:0,stateVersion:0,status:'empty'},runRead);
+ function assertPublicMutation(){if(readDepth)throw Error('ReadMutation');if(collecting)throw Error('CollectorOnly');if(handling)throw Error('CommandHandlerMutation');}
+ function assertLive(){if(terminal)throw Error('EditorDisposed');}
+ function notifyError(error:unknown,context?:RuntimeRequestContext,applied:boolean|'unknown'=false) {
+   if(terminal)return;
+   const event=Object.freeze({error,context:context?Object.freeze({...context}):undefined,applied});
+   const final=(cause:unknown)=>{try{const value=options.onError?.(Object.freeze({...event,error:cause}));discardPromise(value);}catch{/* terminal sink */}};
+   if(!errorListeners.size){final(error);return;}
+   for(const listener of [...errorListeners]){
+     if(terminal)break;
+     try{const result=listener(event);if(isPromiseLike(result))void Promise.resolve(result).catch(final);}catch(cause){final(cause);}
+   }
+ }
+ function notify(listeners:readonly ((state:EditorState)=>unknown)[],snapshot:EditorState,ctx?:RuntimeRequestContext,applied=false){
+   for(const listener of listeners){if(terminal)break;try{const result=listener(snapshot);if(isPromiseLike(result))void Promise.resolve(result).catch(error=>notifyError(error,ctx,applied));}catch(error){notifyError(error,ctx,applied);}}
+ }
+ function install(patch:Partial<StateData>,mutation=false,ctx?:RuntimeRequestContext){
+   if(terminal)return;
+   // Capture both sets before any callback changes registrations.
+   const states=[...stateListeners],updates=mutation?[...updateListeners]:[];
+   const next:StateData={editorId,documentId:state.documentId,generation:state.generation,operationRevision:state.operationRevision,viewRevision:state.viewRevision,stateVersion:++stateVersion,status:state.status,content:state.content,capabilities:state.capabilities,nativeHistoryRevision:state.nativeHistoryRevision,savedOperationRevision:state.savedOperationRevision,selection:state.selection,...patch};
+   state=new EditorState(next,runRead);const snapshot=state;
+   notify(states,snapshot,ctx,mutation);notify(updates,snapshot,ctx,mutation);
+ }
+ function context(token:StateToken=state.token):RuntimeRequestContext{return {editorId,documentId:token.documentId,generation:token.generation,requestId:++requestId,operationRevision:token.operationRevision};}
+ function verifyReply(reply:RuntimeReply,ctx:RuntimeRequestContext){
+   if(!reply||typeof reply!=='object'||typeof reply.kind!=='string')throw Error('InvalidRuntimeReply');
+   const returned=reply.meta?.context;
+   if(returned&&(['editorId','documentId','generation','requestId','operationRevision'] as const).some(key=>returned[key]!==ctx[key]))throw Error('MismatchedRuntimeReply');
+ }
+ async function release(runtime:EditorRuntime|undefined){if(!runtime||released.has(runtime))return;released.add(runtime);await runtime.dispose();}
+ function enqueue<T>(task:()=>Promise<T>):Promise<T>{
+   if(terminal)return Promise.reject(Error('EditorDisposed'));
+   return queue.enqueue(async()=>{assertLive();return task();});
+ }
+ function assertSurface(record:SurfaceRecord){assertLive();if(!record.active||surface!==record)throw Error('InputSurfaceDetached');}
+ function cancelComposition(record:SurfaceRecord,reason:'detach'|'load'|'external-replace'|'dispose'){
+   try{record.hooks.cancelComposition(reason);}catch(error){notifyError(error);if(reason==='load'||reason==='external-replace')throw error;}
+ }
+ /** Admission serializes external work, but never occupies Native's queue while flushing input. */
+ function admit<T>(task:()=>Promise<T>,settings:{replace?:'load'|'external-replace';abort?:CancellationFence;guard?:()=>void}={}):Promise<T>{
+   if(terminal)return Promise.reject(Error('EditorDisposed'));
+   return admission.enqueue(async()=>{
+     assertLive();settings.guard?.();
+     const record=surface;
+     if(record){
+       assertSurface(record);
+       const settlement=Promise.resolve().then(()=>{assertSurface(record);return record.hooks.commitComposition();});
+       const interruptions=[{fence:disposedFence,error:'EditorDisposed'},{fence:record.fence,error:'InputSurfaceDetached'}];
+       if(settings.abort)interruptions.push({fence:settings.abort,error:'LoadCancelled'});
+       const outcome=await interruptible(settlement,interruptions);
+       assertLive();assertSurface(record);settings.guard?.();
+       if(outcome!=='committed'&&outcome!=='unchanged')throw Error('CompositionBlocked');
+       if(settings.replace)cancelComposition(record,settings.replace);
+     }
+     assertLive();settings.guard?.();
+     return enqueue(async()=>{
+       if(record)assertSurface(record);else if(surface)throw Error('InputSurfaceChanged');
+       return task();
+     });
+   });
+ }
+ async function newRuntime(){const runtime=await options.runtimeFactory();if(!runtime||typeof runtime.request!=='function'||typeof runtime.dispose!=='function')throw Error('InvalidRuntime');if(usedRuntimes.has(runtime))throw Error('RuntimeAlreadyOwned');usedRuntimes.add(runtime);return runtime;}
+ function history(reply:RuntimeReply){return Number.isSafeInteger(reply.historyRevision)?reply.historyRevision:undefined;}
+ function contentPatch(reply:RuntimeReply,inherit=true):Partial<StateData>{
+   if(reply.content===undefined)throw Error('SnapshotMissing');
+   const capabilities=reply.capabilities??{...(inherit&&state.documentId!==null?state.capabilities as object:{}),...Object.fromEntries(Object.entries(reply).filter(([key])=>!['content','kind','error','applied','bytes','meta','origin','requestId','historyRevision','historyRevisions'].includes(key)))};
+   return {content:ownObservation(reply.content)(),capabilities:ownObservation(capabilities)(),nativeHistoryRevision:history(reply),selection:undefined,viewRevision:state.viewRevision+1};
+ }
+ async function finishCandidate(runtime:EditorRuntime,message:RuntimeMessage,ctx:RuntimeRequestContext,editable:boolean,enableOptions?:Readonly<Record<string,unknown>>,first?:RuntimeReply,guard:()=>void=()=>{}):Promise<EditorState>{
+   let reply=first??await runtime.request(message,ctx);verifyReply(reply,ctx);
+   if(reply.error)throw Error(reply.error);
+   if(editable){const enableContext={...ctx,requestId:++requestId};reply=await runtime.request({...enableOptions,kind:'enable'},enableContext);verifyReply(reply,enableContext);if(reply.error)throw Error(reply.error);}
+   const patch=contentPatch(reply,false);assertLive();guard();
+   // Build/copy the public snapshot before giving up the prior session.
+   const nextRevision=++revisionClock;
+   const nextData={...patch,documentId:ctx.documentId,generation:ctx.generation,operationRevision:nextRevision,savedOperationRevision:nextRevision,status:'ready' as const};
+   new EditorState({editorId,viewRevision:state.viewRevision+1,stateVersion:stateVersion+1,...nextData},runRead);
+   const previous=active;active=runtime;install(nextData,true,ctx);
+   try{await release(previous);}catch(error){notifyError(error,ctx);}
+   return state;
+ }
+ function load(input:Uint8Array|ArrayBuffer,loadOptions:LoadOptions):Promise<EditorState>{
+   assertPublicMutation();
+   const bytes=copyOwned(input);if(!(bytes instanceof Uint8Array)&&!(bytes instanceof ArrayBuffer))throw TypeError('InvalidDocumentBytes');
+   const owned=copyOwned(loadOptions);if(!owned||!['hwp5','hwpx'].includes(owned.format))throw Error('InvalidDocumentFormat');
+   const cancellation=new CancellationFence();
+   const job={cancelled:false,fence:cancellation};loads.add(job);
+   const guard=()=>{if(job.cancelled)throw Error('LoadCancelled');};
+   const tokenGeneration=++nextGeneration,documentId=`${editorId}:document:${tokenGeneration}`;
+   const message:RuntimeMessage={kind:'load',bytes,format:owned.format,...(owned.password===undefined?{}:{password:owned.password}),...(owned.allowObservedChartOleDeviations===undefined?{}:{allowObservedChartOleDeviations:owned.allowObservedChartOleDeviations})};
+   return admit(async()=>{
+     const previousState=state;install({status:'loading'});
+     let candidate:EditorRuntime|undefined,keepLocked=false;
+     const ctx:RuntimeRequestContext={editorId,documentId,generation:tokenGeneration,requestId:++requestId,operationRevision:0};
+     try{
+       if(locked){const old=locked;locked=undefined;await release(old.runtime);}
+       guard();candidate=await newRuntime();assertLive();guard();
+       const reply=await candidate.request(message,ctx);verifyReply(reply,ctx);assertLive();guard();
+       if(reply.error){
+         if(reply.passwordRequired===true){locked={runtime:candidate,message:{...message,password:undefined},context:ctx,editable:owned.editable!==false,enableOptions:owned.enableOptions};keepLocked=true;}
+         throw Error(reply.error);
+       }
+       return await finishCandidate(candidate,message,ctx,owned.editable!==false,owned.enableOptions,reply,guard);
+     }catch(error){
+       if(!terminal)install({status:previousState.status});notifyError(error,ctx);throw error;
+     }finally{
+       if(candidate&&candidate!==active&&!keepLocked)await release(candidate);
+       if(bytes instanceof Uint8Array)bytes.fill(0);else new Uint8Array(bytes).fill(0);
+       delete message.password;loads.delete(job);
+     }
+   },{replace:'load',abort:cancellation,guard}).finally(()=>{loads.delete(job);if(bytes instanceof Uint8Array)bytes.fill(0);else new Uint8Array(bytes).fill(0);delete message.password;});
+ }
+ function unlock(password:string,unlockOptions:Readonly<Record<string,unknown>>={}):Promise<EditorState>{
+   assertPublicMutation();if(typeof password!=='string')throw TypeError('InvalidPassword');const owned=copyOwned(unlockOptions);
+   return admit(async()=>{
+     const candidate=locked;if(!candidate)throw Error('NoLockedCandidate');
+     const ctx={...candidate.context,requestId:++requestId};
+     let retryable=false;
+     try{const reply=await candidate.runtime.request({...owned,kind:'unlock',password},ctx);verifyReply(reply,ctx);if(reply.error){retryable=retryablePasswordReply(reply);throw Error(reply.error);}assertLive();
+       const result=await finishCandidate(candidate.runtime,candidate.message,ctx,candidate.editable,candidate.enableOptions,reply,()=>{if(candidate.cancelled)throw Error('LoadCancelled');});locked=undefined;return result;
+     }catch(error){
+       if(retryable&&locked===candidate&&!candidate.cancelled&&!terminal){
+         const retry=new PasswordAttemptError(errorText(error));notifyError(retry,ctx,false);throw retry;
+       }
+       if(locked===candidate)locked=undefined;await release(candidate.runtime);notifyError(error,ctx);throw error;
+     }
+   },{replace:'external-replace'});
+ }
+ function cancelLoad():Promise<void>{assertPublicMutation();for(const job of loads){job.cancelled=true;job.fence.cancel();}if(locked)locked.cancelled=true;return enqueue(async()=>{const candidate=locked;locked=undefined;await release(candidate?.runtime);});}
+ function result(status:CommandStatus,ctx:RuntimeRequestContext,error?:unknown,reply?:RuntimeReply):CommandResult{
+   let ownedReply:RuntimeReply|undefined;
+   try{if(reply!==undefined)ownedReply=freezeDTO(copyOwned(reply,true));}catch(metadataError){notifyError(metadataError,ctx,status.startsWith('committed'));}
+   const answer={status,context:Object.freeze({...ctx}),state,error:error===undefined?undefined:errorText(error),changed:reply?.meta?.changed??null,reply:ownedReply};return Object.freeze(answer);
+ }
+ function reject(ctx:RuntimeRequestContext,error:unknown){notifyError(error,ctx,false);return result('rejected-unapplied',ctx,error);}
+ function requireReady(token:StateToken,view=false){assertLive();if(!active||state.status!=='ready')throw Error(state.status==='refresh-required'?'RefreshRequired':'EditorNotReady');validateToken(token,state,view);}
+ async function mutate(message:RuntimeMessage,token:StateToken,preserveFormattingSelection=false):Promise<CommandResult>{
+   const ctx=context(token);let reserved:number|undefined,reply:RuntimeReply|undefined;
+   try{requireReady(token);reserved=++revisionClock;
+     // Once request() begins, an exception cannot prove that Native did not apply.
+     try{reply=await active!.request(message,ctx);verifyReply(reply,ctx);}catch(error){
+       install({operationRevision:reserved,status:'refresh-required'});notifyError(error,ctx,'unknown');return result('committed-refresh-required',ctx,error);
+     }
+     const application=reply.meta?.application??(reply.applied===true?'applied':reply.error&&reply.applied===false?'unapplied':undefined);
+     if(application==='unapplied'){if(reply.error)return reject(ctx,reply.error);return result('known-no-op',ctx,undefined,reply);}
+     const noOp=!reply.error&&(reply.meta?.changed===false||reply.changed===false);
+     if(noOp)return result('known-no-op',ctx,undefined,reply);
+     if(reply.error||reply.content===undefined){install({operationRevision:reserved,status:'refresh-required',nativeHistoryRevision:history(reply)});notifyError(reply.error??'SnapshotMissing',ctx,application==='applied'?true:'unknown');return result('committed-refresh-required',ctx,reply.error??'SnapshotMissing',reply);}
+     try{const patch=contentPatch(reply);const selection=preserveFormattingSelection?formattingSelection(state,patch,reserved):undefined;install({...patch,selection,operationRevision:reserved,status:'ready'},true,ctx);}
+     catch(error){install({operationRevision:reserved,status:'refresh-required'});notifyError(error,ctx,true);return result('committed-refresh-required',ctx,error);}
+     return result('committed-with-snapshot',ctx,undefined,reply);
+   }catch(error){return reject(ctx,error);}
+ }
+ function capture<T>(command:EditorCommand<T>,payload:T,snapshot:EditorState=state):PendingCommand{
+   if(!command||typeof command.id!=='symbol')throw Error('InvalidCommand');
+   const owned=copyOwned(payload);
+   return {command:command as EditorCommand<unknown>,payload:owned,token:((owned as {target?:StateToken;token?:StateToken})?.target??(owned as {token?:StateToken})?.token??snapshot.token),handlers:registry.capture(command)};
+ }
+ async function execute(pending:PendingCommand):Promise<CommandResult>{
+   const ctx=context(pending.token);
+   try{
+     requireReady(pending.token);
+     handling=true;let handled:boolean;try{handled=registry.run(pending.handlers,pending.payload,v=>copyOwned(v));}finally{handling=false;}
+     assertLive();if(handled)return result('handled-without-runtime',ctx);
+     if(pending.command.id===SPLICE_TEXT_COMMAND.id){
+       const payload=pending.payload as SpliceTextPayload;
+       if(typeof payload.text!=='string'||!isWellFormed(payload.text))throw Error('InvalidText');
+       const position=selectionMessage(payload.target,state);
+       return await mutate({kind:'splice',...position,text:payload.text},payload.target);
+     }
+     if(pending.command.id===SET_CHARACTER_PROPERTIES_COMMAND.id||pending.command.id===SET_PARAGRAPH_ALIGNMENT_COMMAND.id){
+       const payload=pending.payload as SetCharacterPropertiesPayload|SetParagraphAlignmentPayload;
+       const message=formattingMessage(payload,state,pending.command.id===SET_CHARACTER_PROPERTIES_COMMAND.id);
+       return await mutate(message,payload.target,true);
+     }
+     if(pending.command.id===UNDO_COMMAND.id||pending.command.id===REDO_COMMAND.id){const payload=pending.payload as HistoryPayload;validateToken(payload.token,state);return await mutate({kind:pending.command.id===UNDO_COMMAND.id?'undo':'redo'},payload.token);}
+     return reject(ctx,'UnsupportedCommand');
+   }catch(error){return reject(ctx,error);}
+ }
+ function dispatchCommand<T>(command:EditorCommand<T>,payload:T):Promise<CommandResult>{assertPublicMutation();const pending=capture(command,payload);return admit(()=>execute(pending));}
+ function update(callback:(collector:UpdateCollector,state:EditorState)=>unknown):Promise<UpdateResult>{
+   if(readDepth)throw Error('ReadMutation');if(collecting)throw Error('NestedUpdate');if(handling)throw Error('CommandHandlerMutation');assertLive();
+   if(typeof callback!=='function')throw TypeError('InvalidUpdateCallback');if(isAsyncFunction(callback))throw Error('AsyncUpdate');
+   const snapshot=state,pending:PendingCommand[]=[];let open=true;
+   const collector=Object.freeze({dispatchCommand<T>(command:EditorCommand<T>,payload:T){if(!open)throw Error('CollectorClosed');pending.push(capture(command,payload,snapshot));}});
+   collecting=true;
+   try{const returned=callback(collector,snapshot);if(isPromiseLike(returned)){discardPromise(returned);throw Error('AsyncUpdate');}if(returned!==undefined)throw Error('InvalidUpdateReturn');}
+   finally{collecting=false;open=false;}
+   return admit(async()=>{
+     const results:CommandResult[]=[];let stoppedIndex:number|null=null;
+     for(const [index,command] of pending.entries()){
+       // Coordinates are never rebased. A second command with stale coordinates stops.
+       const answer=await execute(command);results.push(answer);
+       if(answer.status==='rejected-unapplied'||answer.status==='committed-refresh-required'){stoppedIndex=index;break;}
+     }
+     return Object.freeze({results:Object.freeze(results),stoppedIndex,state});
+   });
+ }
+ function refresh():Promise<EditorState>{assertPublicMutation();const token=state.token;return enqueue(async()=>{
+   if(!active||state.status!=='refresh-required')throw Error('RefreshNotRequired');validateToken(token,state);
+   const ctx=context(token);try{const reply=await active.request({kind:'refresh'},ctx);verifyReply(reply,ctx);if(reply.error)throw Error(reply.error);assertLive();install({...contentPatch(reply),status:'ready'},true,ctx);return state;}catch(error){notifyError(error,ctx,false);throw error;}
+ });}
+ function save(saveOptions:SaveOptions={}):Promise<SaveResult>{assertPublicMutation();const owned=copyOwned(saveOptions);return admit(async()=>{
+   const token=owned.token??state.token;
+   if(!active||state.documentId===null)throw Error('EditorNotReady');validateToken(token,state);
+   const stale=state.status==='refresh-required';if(stale&&!owned.recovery)throw Error('RecoverySaveRequired');if(!stale&&state.status!=='ready')throw Error('EditorNotReady');
+   const ctx=context(token);const format=(state.content as {format?:unknown})?.format;
+   if(format!=='hwp5'&&format!=='hwpx')throw Error('UnknownDocumentFormat');
+   try{const reply=await active.request({kind:'save',allowStaleLayout:owned.allowStaleLayout??false,allowUnprotectedOutput:owned.allowUnprotectedOutput??false},ctx);verifyReply(reply,ctx);if(reply.error)throw Error(reply.error);if(!(reply.bytes instanceof Uint8Array))throw Error('SaveBytesMissing');
+     const bytes=reply.bytes.slice();assertLive();install({savedOperationRevision:token.operationRevision});
+     return Object.freeze({bytes,documentId:token.documentId!,generation:token.generation,operationRevision:token.operationRevision,nativeHistoryRevision:history(reply)??state.nativeHistoryRevision,format,staleSnapshot:stale,layoutRequiresReflow:typeof reply.layoutRequiresReflow==='boolean'?reply.layoutRequiresReflow:undefined,reply:freezeDTO(copyOwned(reply,true))});
+   }catch(error){notifyError(error,ctx,false);throw error;}
+ });}
+ function requestExperimental(message:RuntimeMessage,experimental:ExperimentalOptions):Promise<CommandResult|RuntimeReply>{
+   assertPublicMutation();const owned=copyOwned(message),settings=copyOwned(experimental);
+   if(!owned||typeof owned.kind!=='string'||typeof settings.mutation!=='boolean')throw Error('InvalidExperimentalRequest');
+   if(['load','unlock','enable','save','refresh','undo','redo','splice'].includes(owned.kind))throw Error('UseTypedEditorOperation');
+   const operation=surfaceOperation(owned.kind);
+   if(operation&&settings.mutation!==(operation==='mutation'))throw Error('OperationClassificationMismatch');
+   if(!settings.mutation&&operation!=='read')throw Error('UnsafeExperimentalQuery');
+   return (settings.mutation?admit:enqueue)(async()=>{
+     if(settings.mutation)return mutate(owned,settings.token);
+     requireReady(settings.token);const ctx=context(settings.token);
+     try{const reply=await active!.request(owned,ctx);verifyReply(reply,ctx);if(reply.error)throw Error(reply.error);return freezeDTO(copyOwned(reply,true));}catch(error){notifyError(error,ctx,false);throw error;}
+   });
+ }
+ function setSelection(target:SelectionTarget|null):Promise<EditorState>{assertPublicMutation();const owned=copyOwned(target);return admit(async()=>{requireReady(owned??state.token);if(owned)validateSelection(owned,state);install({selection:owned});return state;});}
+ function historyCommand(command:EditorCommand<HistoryPayload>,token?:StateToken):Promise<CommandResult>{
+   assertPublicMutation();const explicit=token===undefined?undefined:copyOwned(token),handlers=registry.capture(command);
+   return admit(()=>execute({...capture(command,{token:explicit??state.token}),handlers}));
+ }
+ async function readRequest(message:RuntimeMessage,token:StateToken,guard:()=>void=()=>{}):Promise<RuntimeReply>{
+   guard();requireReady(token,true);const ctx=context(token);
+   try{const reply=await active!.request(message,ctx);verifyReply(reply,ctx);if(reply.error)throw Error(reply.error);assertLive();guard();return freezeDTO(copyOwned(reply,true));}
+   catch(error){notifyError(error,ctx,false);throw error;}
+ }
+ function readResource(message:RuntimeMessage,requestOptions?:{token:StateToken}|StateToken):Promise<RuntimeReply>{
+   assertPublicMutation();const owned=copyOwned(message),expected=copyOwned(requestOptions===undefined?state.token:'token' in requestOptions?requestOptions.token:requestOptions);
+   if(surfaceOperation(owned.kind)!=='read')return Promise.reject(Error('UnsupportedReadOperation'));
+   return enqueue(()=>readRequest(owned,expected));
+ }
+ function acquireInputSurface(hooks:InputSurfaceHooks):InputSurfaceLease {
+   assertPublicMutation();assertLive();if(surface)throw Error('InputSurfaceAlreadyAttached');
+   if(!hooks||typeof hooks.commitComposition!=='function'||typeof hooks.cancelComposition!=='function')throw Error('InvalidInputSurfaceHooks');
+   const fence=new CancellationFence();
+   const generation=++surfaceEpoch;
+   const record:SurfaceRecord={id:`${editorId}:surface:${generation}`,generation,active:true,hooks:{commitComposition:hooks.commitComposition.bind(hooks),cancelComposition:hooks.cancelComposition.bind(hooks)},fence};surface=record;
+   return Object.freeze({
+     id:record.id,generation,
+     isActive:()=>!terminal&&record.active&&surface===record,
+     request(message:RuntimeMessage,requestOptions:SurfaceRequestOptions):Promise<CommandResult|RuntimeReply>{
+       assertPublicMutation();
+       let owned:RuntimeMessage,expected:SurfaceRequestOptions,operation:ReturnType<typeof surfaceOperation>;
+       try{assertSurface(record);owned=copyOwned(message);expected=copyOwned(requestOptions);if(expected.coordinates!=='legacy-native')throw Error('InvalidSurfaceCoordinates');operation=surfaceOperation(owned.kind);if(!operation)throw Error('UnsupportedSurfaceOperation');}
+       catch(error){return Promise.reject(error);}
+       return enqueue(async()=>{
+         assertSurface(record);requireReady(expected.token,true);
+         if(operation==='read')return readRequest(owned,expected.token,()=>assertSurface(record));
+         if(operation==='view'){
+           const ctx=context(expected.token);const reply=await active!.request(owned,ctx);verifyReply(reply,ctx);
+           if(reply.error)throw Error(reply.error);install(contentPatch(reply),false,ctx);assertSurface(record);return freezeDTO(copyOwned(reply,true));
+         }
+         // Existing controller owns display->raw mapping. Do not use SPLICE_TEXT_COMMAND here.
+         const answer=await mutate(owned,expected.token);assertSurface(record);return answer;
+       });
+     },
+     publishSelection(target:SelectionTarget|null):Promise<EditorState>{
+       assertPublicMutation();let owned:SelectionTarget|null;const expected=state.token;
+       try{assertSurface(record);owned=copyOwned(target);}catch(error){return Promise.reject(error);}
+       return enqueue(async()=>{assertSurface(record);requireReady(owned??expected);if(owned)validateSelection(owned,state);install({selection:owned});assertSurface(record);return state;});
+     },
+     release(){
+       if(!record.active)return;assertPublicMutation();record.active=false;record.fence.cancel();
+       if(surface===record){surface=undefined;install({selection:null});}
+       cancelComposition(record,'detach');
+     },
+   });
+ }
+ function register<T>(set:Set<T>,listener:T):()=>void{assertLive();if(typeof listener!=='function')throw TypeError('InvalidListener');set.add(listener);let attached=true;return ()=>{if(!attached)return;attached=false;set.delete(listener);};}
+ function dispose():Promise<void>{
+   assertPublicMutation();if(disposePromise)return disposePromise;
+   terminal=true;disposedFence.cancel();for(const job of loads)job.fence.cancel();loads.clear();
+   if(surface){const detached=surface;surface=undefined;detached.active=false;detached.fence.cancel();cancelComposition(detached,'dispose');}
+   state=new EditorState({editorId,documentId:state.documentId,generation:state.generation,operationRevision:state.operationRevision,viewRevision:state.viewRevision,stateVersion:++stateVersion,status:'disposed',content:state.content,capabilities:state.capabilities,nativeHistoryRevision:state.nativeHistoryRevision,savedOperationRevision:state.savedOperationRevision,selection:state.selection},runRead);
+   stateListeners.clear();updateListeners.clear();errorListeners.clear();registry.clear();
+   const nativeDisposal=queue.enqueue(async()=>{const current=active,candidate=locked?.runtime;active=undefined;locked=undefined;const failures:unknown[]=[];for(const runtime of [candidate,current])try{await release(runtime);}catch(error){failures.push(error);}if(failures.length)throw new AggregateError(failures,'RuntimeDisposeFailed');});
+   disposePromise=Promise.all([nativeDisposal,admission.drain()]).then(()=>{});return disposePromise;
+ }
+ return Object.freeze({
+   getEditorState:()=>state,
+   read:<T>(callback:(state:EditorState)=>T):T=>runRead(callback,state),
+   load,unlock,cancelLoad,dispatchCommand,update,save,refresh,requestExperimental,readResource,setSelection,acquireInputSurface,dispose,
+   undo:(token?:StateToken)=>historyCommand(UNDO_COMMAND,token),
+   redo:(token?:StateToken)=>historyCommand(REDO_COMMAND,token),
+   registerStateListener:(listener:(state:EditorState)=>unknown)=>register(stateListeners,listener),
+   registerUpdateListener:(listener:(state:EditorState)=>unknown)=>register(updateListeners,listener),
+   registerErrorListener:(listener:(event:EditorError)=>unknown)=>register(errorListeners,listener),
+   registerCommand:<T>(command:EditorCommand<T>,callback:(payload:T)=>boolean,priority=0)=>{assertLive();return registry.register(command,callback,priority);},
+ });
+}
+export type HeadlessEditor=ReturnType<typeof createEditor>;

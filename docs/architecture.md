@@ -1,5 +1,7 @@
 # Zig/WASM 구현 구조
 
+[헤드리스 코어 기반](headless-core-foundation.md)은 runtime 주입·불변 관측·명령·취소와 게시 검증 범위를 소유합니다.
+
 [도형 위아래 예약](drawing-wrap-body-flow.md)은 공유 앵커 기준점과 본문 재조판 반복을 분리하며 게시 엔진과 미게시 조합 후보의 범위를 구분합니다.
 
 [전체 fixture 편집기 완료 조건](fixture-editor-completion.md)은 사용자 목표의 범위·현재 증거와 미완료 경계를 소유합니다. 아래 개별 단계 통과를 전체 완료로 해석하지 않습니다.
