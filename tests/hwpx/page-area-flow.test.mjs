@@ -54,3 +54,31 @@ test("page areas report vertical overflow but reject missing numbering and ambig
   assert.equal(hidden.rows.length, 1);
   assert.equal(hidden.rows[0].pageNumber, 2);
 });
+
+test('zero-height page-area declarations preserve empty owners without intercepting body input',()=>{
+ const input=structuredClone(content);input.paragraphs=input.paragraphs.slice(0,1);input.paragraphs[0].text='';
+ input.paragraphFlows=input.paragraphFlows.slice(0,1);input.paragraphFlows[0].page_area.height=0;
+ const zero=[{...pages[0],header:{...pages[0].header,height:0}}],before=structuredClone(input);
+ const result=layoutPageAreas(input,zero,()=>({width:0,height:20}));
+ assert.equal(result.state,'placed',result.error);assert.equal(result.rows.length,1);assert.equal(result.overflow.length,0);
+ const row=result.rows[0];assert.equal(row.paragraph,1);assert.equal(row.height,0);assert.equal(row.textHeight,0);
+ assert.equal(row.sourceObjectAnchor,true);assert.equal(row.editable,false);
+ assert.equal(rowAtPoint({...result,spatialRows:true},25,20),-1);
+ assert.equal(layoutPageAreas(input,[{...zero[0],hideHeader:true}],()=>({width:0,height:20})).rows.length,0);
+ assert.deepEqual(input,before);
+ for(const height of [-1,NaN,0.5,0x100000000]){
+  const invalid=structuredClone(input);invalid.paragraphFlows[0].page_area.height=height;
+  assert.equal(layoutPageAreas(invalid,zero,()=>({width:0,height:20})).error,'UnsupportedPageArea');
+ }
+});
+
+test('zero declared height does not discard text or invent CENTER BOTTOM slack',()=>{
+ for(const vertical_alignment of ['top','center','bottom']){
+  const input=structuredClone(content);input.paragraphs=input.paragraphs.slice(0,1);input.paragraphFlows=input.paragraphFlows.slice(0,1);
+  Object.assign(input.paragraphFlows[0].page_area,{height:0,vertical_alignment});
+  const result=layoutPageAreas(input,[pages[0]],()=>({width:8,height:20}));
+  assert.equal(result.state,'placed',result.error);assert.equal(result.rows.map(r=>r.text).join(''),'header');assert.equal(result.rows[0].y,20);
+  const overflow=layoutPageAreas(input,[{...pages[0],header:{...pages[0].header,height:0}}],()=>({width:8,height:20}));
+  assert.equal(overflow.state,'placed');assert.equal(overflow.rows.map(r=>r.text).join(''),'header');assert.equal(overflow.overflow.length,1);
+ }
+});

@@ -24,7 +24,7 @@ export function attachHwp5PageAreas(editor, content) {
 
 export function hwp5PageArea(source) {
   validateHwp5PageAreaSources([source]);
-  if (!source || !["header", "footer"].includes(source.kind) || (source.control_attributes & ~3) !== 0 || (source.control_attributes & 3) === 3 || (source.list_attributes & ~0x60) !== 0 || (source.list_attributes >> 5 & 3) === 3 || source.list_unknown !== 0 || source.width <= 0 || source.height <= 0) throw new Error("UnsupportedHwp5PageArea");
+  if (!source || !["header", "footer"].includes(source.kind) || (source.control_attributes & ~3) !== 0 || (source.control_attributes & 3) === 3 || (source.list_attributes & ~0x60) !== 0 || (source.list_attributes >> 5 & 3) === 3 || source.list_unknown !== 0 || source.width <= 0 || source.height < 0) throw new Error("UnsupportedHwp5PageArea");
   if (source.text_references !== 0 || source.number_references !== 0) throw new Error("UnsupportedHwp5PageAreaReferences");
   const identityOnly = source.control_extra_bytes === 4 && Number.isInteger(source.control_instance_id)
     && source.control_instance_id >= 0 && source.control_instance_id <= 0xffffffff

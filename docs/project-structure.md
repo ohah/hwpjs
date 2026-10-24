@@ -442,3 +442,5 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.17.0 / WebAssembly 라
 `picture-caption-frame.mjs`는 [그림 캡션 프레임](picture-caption-frame.md)의 이미지·캡션·전체 점유 영역 측정 결과를 소유합니다. 본문 예약은 이 결과를 재사용하고 캡션 필드 해석은 기존 캡션 엔진에 유지합니다.
 
 `picture-fragment-alignment.mjs`와 `nested-paragraph-reference.mjs`는 [그림 흐름의 문단 기준 영역](picture-paragraph-reference.md)을 통해 표시용 글자 정렬과 PARA 개체 기준점을 구분합니다.
+
+`page-area-flow.mjs`와 `hwp5-page-area-content.mjs`는 [높이0인 텍스트 쪽 영역](zero-height-page-areas.md)의 원값 보존·표시 앵커·넘침 계약을 공유합니다.
