@@ -16,3 +16,13 @@
 현재 작업 트리 패키지 185건·타입 검사와, 게시할 소스 후보의 독립 회귀 145건이 통과했습니다.
 
 이 확장은 원본 한 글상자/캡션의 서식이며 전체 도형·조판·생성 문단·다중 개체 선택이나 모든 fixture 편집의 완료를 뜻하지 않습니다. 원본 표 셀 계약은 [별도 주제](headless-original-cell-formatting.md), 현재 참조 수명은 [HWP5 SDK 현재 참조](hwp5-sdk-current-references.md)가 소유합니다.
+
+
+## 원본 글상자/캡션의 입력 저장
+
+`typed-drawing-splice.test.ts`는 실제 두 형식 × 글상자/캡션 4건에서 public typed splice로 `검증😀`를 삽입하고, Native 이력·상태/명령 callback metadata·독립 저장 oracle·undo 원본 바이트·redo·재열기·이전 문서 토큰 거부·caller/디스크 입력 해시 불변을 검사합니다. UI의 물리 입력을 대신하는 증거로 쓰지 않습니다.
+
+HWPX 캡션의 자동 번호 때문에 기존 일반 텍스트 전용 독립 oracle가 거부한 사례는 검사 범위 부족이었습니다. `hwpx-plain-splice-oracle.py`의 명시 `preserve_automatic_numbers:true` 옵션은 단일 PICTURE autoNum을 가진 ctrl만 보존하며, 첫 번호 앞 범위만 검사합니다. 번호 뒤/가로지르는 편집은 지원하지 않습니다. 전체 XML/ZIP·메타데이터 대조를 유지하므로 번호 값/종류/하위 트리 삭제·수정은 실패합니다. 일반/-O self-test는 정상 캡션 삽입과 기존 회귀를 포함한 23개 오답을 거부합니다. 소스 검사 4건은 모두 통과했고 Native/WASM/제품 코드를 이 검사를 통과시키기 위해 바꾸지 않았습니다.
+
+
+게시할 소스만 분리한 후보에서 입력 4건·기존 본문 입력 2건·독립 oracle self-test 1건을 합친 7건이 통과했습니다. 현재 작업 트리 전체 패키지는 189건·타입 검사 통과입니다. 글상자/캡션 서식 데모 배포 후 `monorepo-demo-deployment-check/2026-10-24T17-02-41-122Z`에서 HTTPS11개 산출물의 바이트 일치, `monorepo-demo-smoke/2026-10-24T17-02-46-331Z`에서 두 형식 × 세 프레임워크 열기6건을 확인했습니다. 소유 브라우저와 임시49002 서버는 종료하고8082 데모만 유지합니다. 이 웹 데모 배포와 source SDK 게시의 범위는 계속 구분합니다.

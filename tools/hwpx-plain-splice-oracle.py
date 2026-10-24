@@ -28,19 +28,30 @@ def verify(data):
         paragraph = paragraphs[index]
         runs = paragraph.findall(P + 'run')
         texts = [child for run in runs for child in run if child.tag == P + 't']
+        preserve_numbers = data.get('preserve_automatic_numbers', False)
+        if type(preserve_numbers) is not bool:
+            raise ValueError('Invalid automatic-number preservation policy')
+        # This opt-in proves edits before a protected number, not arbitrary
+        # anchor offsets. Full-tree comparison below preserves the entire ctrl.
+        numbers = [child for run in runs for child in run
+                   if preserve_numbers and child.tag == P + 'ctrl'
+                   and len(child) == 1 and child[0].tag == P + 'autoNum'
+                   and child[0].get('numType') == 'PICTURE']
         table_id = data.get('zero_width_table_id')
         if table_id is not None and (type(table_id) is not str or not table_id.isascii() or not table_id.isdecimal() or not 0 < int(table_id) <= 0xffffffff):
             raise ValueError('Invalid generated table identity')
         tables = [child for run in runs for child in run if table_id is not None and child.tag == P + 'tbl' and child.get('id') == table_id]
         if table_id is not None and len(tables) != 1:
             raise ValueError('Missing or duplicate generated table')
-        if not texts or any(len(leaf) for leaf in texts) or any(child.tag != P + 't' and child not in tables for run in runs for child in run):
+        if not texts or any(len(leaf) for leaf in texts) or any(child.tag != P + 't' and child not in tables and child not in numbers for run in runs for child in run):
             raise ValueError('Oracle supports plain text leaves only')
         cursor = 0
         for run in runs:
             for child in run:
                 if child in tables and start < cursor < end:
                     raise ValueError('Splice crosses generated table')
+                if child in numbers and end > cursor:
+                    raise ValueError('Splice reaches or crosses protected automatic number')
                 if child.tag == P + 't':
                     cursor += len((child.text or '').encode('utf-16-le')) // 2
         if any(child.tag not in (P + 'run', P + 'linesegarray') for child in paragraph):
@@ -134,6 +145,30 @@ def self_test():
             rejected += 1
         else:
             raise ValueError('Oracle accepted changed run ownership')
+    number = '<p:ctrl><p:autoNum num="1" numType="PICTURE"><p:autoNumFormat type="DIGIT"/></p:autoNum></p:ctrl>'
+    caption = prefix + '그림 </p:t>' + number + '<p:t> 캡션' + suffix
+    inserted_caption = caption.replace('그림 ', '검증😀그림 ', 1)
+    numbered = dict(before=archive(caption), after=archive(inserted_caption), part='Contents/section0.xml',
+                    index=0, start=0, end=0, text='검증😀', preserve_automatic_numbers=True)
+    verify(numbered)
+    for patch in [
+        {'preserve_automatic_numbers': False},
+        {'preserve_automatic_numbers': 'true'},
+        {'start': 4, 'end': 4},
+        {'start': 2, 'end': 4},
+        {'after': archive(inserted_caption.replace('num="1"', 'num="2"'))},
+        {'after': archive(inserted_caption.replace(number, ''))},
+        {'after': archive(inserted_caption.replace('numType="PICTURE"', 'numType="TABLE"'))},
+        {'before': archive(caption.replace('autoNum', 'unknownControl'))},
+        {'after': archive(inserted_caption.replace('charPrIDRef="3"', 'charPrIDRef="9"'))},
+        {'text': 'WRONG'},
+    ]:
+        try:
+            verify({**numbered, **patch})
+        except ValueError:
+            rejected += 1
+        else:
+            raise ValueError('Oracle accepted a changed or crossed protected number')
     print(f'Plain splice oracle: valid boundary insertion and {rejected} counterexamples verified')
 
 
