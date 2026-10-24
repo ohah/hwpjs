@@ -22,3 +22,5 @@ Native 형식별 제한은 유지합니다. HWP5의 `center`는 `UnsupportedChar
 Vanilla 실제 noori 셀에서도 `demo-cell-formatting-underline/2026-10-24T17-19-08-843Z`와 `17-19-20-565Z`의 두 형식이 같은 툴바/저장/이력/재업로드를 통과했습니다. 캡션의 독립 XML 검사는 기존 anchor-properties 모드로 자동 번호 전체와 위치 보존을 대조하며, plain run 전용 모드의 초기 거부를 제품 실패로 합산하지 않습니다.
 
 게시 대상 source SDK만 분리한 후보에서는 기존 회귀와 새 명령/관측·원본 네 owner 범위를 합친161건이 모두 통과했습니다. 원래 작업 트리의 후속 renderer/Native 구현을 이 소스 검사에 끼워 넣지 않았습니다.
+
+데모를 같은 포트8082에 반영한 뒤 `monorepo-demo-deployment-check/2026-10-24T17-22-36-391Z`에서 HTTPS11개 아티팩트의 로컬 바이트 일치와 누락 URL404를 확인했습니다. 공개 주소의 실제 HWPX 밑줄 툴바·다운로드·이력·재업로드 재검증은 `demo-formatting-underline/2026-10-24T17-22-56-601Z`에서1건 통과했습니다. source SDK는1727cf64로 게시됐고, 전체 UI 패키지 게시와 구분합니다. 소유 브라우저/임시49002 서버는 종료하고8082 데모만 유지했습니다.
