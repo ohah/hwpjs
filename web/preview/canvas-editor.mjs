@@ -874,15 +874,16 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
       return typeof globalThis.navigator?.clipboard?.writeText === "function" && settledSelection() !== null && (!cut || selectionTextEditAvailable());
     },
     transferSelection,
-    selectTextRange({ section, paragraph, startUnit, endUnit }) {
+    selectTextRange({ section, paragraph, startUnit, endUnit, affinity = "forward" }, { focusInput = true } = {}) {
+      if (!["forward", "backward"].includes(affinity)) return false;
       if (composing || pending || historyPending || drag !== null || input.value !== committed || controls.busy()) return false;
       const next = { section, paragraph }, row = renderer.paragraph(next);
       if (!row || row.clipped || !selectableText(row) || ![startUnit, endUnit].every(Number.isInteger) || startUnit < 0 || endUnit < startUnit || endUnit > row.text.length) return false;
       if (snapUnit(row.text, startUnit) !== startUnit || snapUnit(row.text, endUnit) !== endUnit) return false;
       if (!caretGeometry(renderer.layout(), { ...next, unit: startUnit })) return false;
       target = next; committed = row.text; input.value = committed; input.disabled = false;
-      setSelection({ ...next, unit: startUnit }, { ...next, unit: endUnit });
-      input.focus({ preventScroll: true }); paint(); reveal();
+      setSelection({ ...next, unit: affinity === "backward" ? endUnit : startUnit }, { ...next, unit: affinity === "backward" ? startUnit : endUnit });
+      if (focusInput) input.focus({ preventScroll: true }); paint(); reveal();
       return true;
     },
     replaceSelection,
