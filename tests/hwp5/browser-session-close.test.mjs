@@ -39,3 +39,11 @@ test("a vanished close socket needs exact diagnostics and a confirmed inactive s
     await assert.rejects(closeOwnedBrowser(kind => { if (kind === "close") throw Object.assign(failure(), patch); return { active: true }; }), /CloseSocketGone/);
   }
 });
+
+test('asynchronous CLI adapters are awaited before ownership and close decisions',async()=>{
+ let active=true,closed=0,checks=0;
+ await closeOwnedBrowser(async kind=>{await Promise.resolve();if(kind==='close'){closed++;if(closed===2)active=false;return {};}checks++;return {active};},{wait:async()=>{}});
+ assert.equal(closed,2);assert.equal(checks,3);assert.equal(active,false);
+ const failure=Object.assign(Error('Gone'),{code:1,signal:null,stdout:JSON.stringify({success:false,error:'Failed to connect: No such file or directory (os error 2)'})});
+ let first=true;await closeOwnedBrowser(async kind=>{if(kind==='close')throw failure;const state={active:first};first=false;return state;});
+});
