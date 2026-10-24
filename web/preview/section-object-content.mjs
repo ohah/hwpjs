@@ -1,4 +1,4 @@
-const inventories = ["drawings", "rectangles", "containers", "pictures", "lines", "tables", "createdTables",
+const inventories = ["hwp5Drawings", "drawings", "rectangles", "containers", "pictures", "lines", "tables", "createdTables",
   "pageAreaDeclarations", "pageAreaDeclarationErrors"];
 
 /** Keep object identities in their declared section; never infer from node IDs. */
