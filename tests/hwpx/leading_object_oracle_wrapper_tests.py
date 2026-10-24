@@ -91,7 +91,7 @@ class WrapperTests(unittest.TestCase):
         self.assertEqual(wrong['detail'],'Complete XML mismatch')
 
     def test_plain_or_unmodeled_source_is_unsupported_not_invalid_input(self):
-        for obj in ('p:pic','p:switch','f:line'):
+        for obj in ('p:ellipse','p:switch','f:line'):
             source=package(f'<s:sec xmlns:s="{model.SECTION}" xmlns:p="{P}" xmlns:f="urn:foreign"><p:p><p:run charPrIDRef="1"><{obj}/><p:t/></p:run></p:p></s:sec>'.encode())
             result=oracle.handle(payload(source,after='BAD'))
             self.assertEqual(result['state'],'unsupported')

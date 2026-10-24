@@ -119,7 +119,7 @@ class LeadingObjectSlotModelTests(unittest.TestCase):
             lambda d: rename(body(d), 'urn:foreign', 'f:run', d),
             lambda d: rename(model.elements(body(d))[0], 'urn:foreign', 'f:line', d),
             lambda d: rename(model.elements(body(d))[0], model.PARA, 'hp:switch', d),
-            lambda d: rename(model.elements(body(d))[0], model.PARA, 'hp:pic', d),
+            lambda d: rename(model.elements(body(d))[0], model.PARA, 'hp:ellipse', d),
             lambda d: body(d).insertBefore(d.createElementNS(model.PARA,'hp:t'),model.elements(body(d))[-1]),
             lambda d: model.elements(body(d))[-1].appendChild(d.createTextNode(' ')),
             lambda d: model.elements(body(d))[-1].appendChild(d.createElementNS(model.PARA,'hp:tab')),

@@ -21,6 +21,10 @@
 
 새 검사를 `example`, `footnote-endnote`, `hyperlink`, `page`, `table-position`의 실제 저장본에 적용해5개 모두 통과했습니다. 마지막 source guard 버전은 `zig-out/verification/hwpx-expanded-oracle-cases/source-guard-revalidation.json`에 코드 해시와 함께 기록했습니다. 이 결과는 별도 집중 검증이며 원래 전수 감사의 실행 기록을 소급 대체하지 않습니다.
 
+## 선행 객체 슬롯
+
+직접 tbl/line/rect/pic 뒤의 유일한 빈 텍스트와 selected-default/direct 좌표 대응은 [선행 객체 독립 검사](hwpx-leading-object-insertion-oracle.md)가 별도 계약과 검증 근거를 소유합니다.
+
 ## 적대적 검증
 
 `tests/hwpx/anchor-prefix-oracle-metadata.test.mjs`와 `tests/hwpx/insertion-oracle.test.mjs`의6개 테스트가 통과했습니다. ZIP 중복·압축 방식·시각·extra/comment·속성 변조, 다른 payload·제어 트리·텍스트·서식 변경, 다른 run에 삽입한 결과, 잘못된 기대 문자열, 미지 제어의 폭 추정을 거부합니다. Node의 대용량 Python 입력은 공통 `oracle-process.mjs`의 파일 stdin을 사용합니다.

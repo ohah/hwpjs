@@ -14,7 +14,7 @@ from xml.dom import Node, minidom
 PARA = 'http://www.hancom.co.kr/hwpml/2011/paragraph'
 SECTION = 'http://www.hancom.co.kr/hwpml/2011/section'
 XMLNS = 'http://www.w3.org/2000/xmlns/'
-OBJECTS = frozenset(('tbl', 'line', 'rect'))
+OBJECTS = frozenset(('tbl', 'line', 'rect', 'pic'))
 MAX_INPUT = 64 * 1024 * 1024
 MAX_EXPANDED = 128 * 1024 * 1024
 MAX_XML = 16 * 1024 * 1024

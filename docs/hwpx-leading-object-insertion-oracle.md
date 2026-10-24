@@ -1,6 +1,6 @@
 # 선행 객체 뒤 빈 텍스트의 독립 삽입 검사
 
-`tools/hwpx_leading_object_slots.py`는 직접 tbl/line/rect1~1,024개 뒤의 유일한 빈 `hp:t`를 원본만으로 선택합니다. 원본 해시·파일명 allowlist로 통과시키지 않습니다. 허용하는 문단은 선택적인 관측 metadata run 다음 객체 run 하나와 선택적인 linesegarray뿐이며, metadata/namespace/속성 이름·자식 순서를 검사합니다. 시작 좌표는 직접 객체 개수와 같아야 합니다. nested 객체 안의 글자를 앞선 객체 수로 더하지 않고 객체 payload는 불투명 원문 보존 대상으로 둡니다. switch와 새 control 종류를 폭0으로 가정하지 않습니다.
+`tools/hwpx_leading_object_slots.py`는 직접 tbl/line/rect/pic1~1,024개 뒤의 유일한 빈 `hp:t`를 원본만으로 선택합니다. 원본 해시·파일명 allowlist로 통과시키지 않습니다. 허용하는 문단은 선택적인 관측 metadata run 다음 객체 run 하나와 선택적인 linesegarray뿐이며, metadata/namespace/속성 이름·자식 순서를 검사합니다. 시작 좌표는 직접 객체 개수와 같아야 합니다. nested 객체 안의 글자를 앞선 객체 수로 더하지 않고 객체 payload는 불투명 원문 보존 대상으로 둡니다. switch와 새 control 종류를 폭0으로 가정하지 않습니다.
 
 기본 모델의 문단 번호는 직접 section child 기준입니다. `hwpx-leading-object-oracle.py`는 공개 검사의 selected-default0기반 문단을 원본 ET node identity로 direct index에 대응시킵니다. nested 문단을 direct 문단 번호로 바꾸어 쓰지 않습니다. 중첩 문단이 interleave된 사례의 selectedIndex2→directIndex1을 별도로 검사했습니다. source에서 슬롯을 선택한 뒤에만 after를 열어 비교합니다.
 
@@ -41,3 +41,5 @@ XML은 Expat streaming preflight로 depth128/node1,000,000 예산과 DTD/entity�
 각 Python 파일을 `python3 -B <파일>` 및 `python3 -B -O <파일>`로 실행합니다. 관측 없는 공개본의 기대값은 적대19통과, ZIP10통과, wrapper7통과+3skip, 모델0통과+9skip입니다. Skip은 관측을 검증했다는 뜻이 아닙니다. 저장 관측이 필요하면 환경변수로 별도 캡처 경로를 주며, 캡처/원본/WASM은 공개 파일 closure에 포함하지 않습니다.
 
 공유 selected-default 순서 의존성은 기존 `tools/hwpx_text_snapshot_order.py`입니다. 공개 후보는 HEAD의 같은 파일을 사용하며 제품 routing JS/provenance·Native·대규모 WIP를 포함하지 않습니다. 위 최신 e774의 실제6개 fresh lifecycle/독립 검증 및 JS5개 결과는 main의 별도 통합 증거이며, 공개 Python 검사만으로 다시 실행한 결과로 표현하지 않습니다.
+
+2026-10-25에는 선행 `pic`도 동일한 불투명 객체 슬롯으로 독립 검사에 연결했습니다. 그림 내부 XML과 BinData는 그대로 보존해야 하며, 그림 크기나 렌더링 의미를 해석한 것으로 보지 않습니다. `tests/hwpx/leading_object_picture_tests.py`의 6개 반례는 그림 1~3개, namespace alias, 원본만 이용한 선택, 잘못된 좌표·텍스트, 그림 XML·바이너리 변경, foreign namespace·switch 거부를 검사합니다. 일반/최적화 각각 6/6이며 기존 적대 검사 19개도 함께 재실행합니다. 기존 전수 감사의 unsupported 결과는 소급 변경하지 않습니다.

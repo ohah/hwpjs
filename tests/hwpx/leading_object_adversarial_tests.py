@@ -96,7 +96,7 @@ class MappingAndGuardTests(unittest.TestCase):
   source=package(xml(row('<p:line/>'*1025+'<p:t/>')));self.assertEqual(oracle.handle(request(source,startUnit=1025))['state'],'unsupported')
   mixed=package(xml(row('<p:tbl/><p:line/><p:rect/><p:t/>')));self.assertEqual(oracle.handle(request(mixed,startUnit=3))['slot']['object_kinds'],('tbl','line','rect'))
  def test_qname_attribute_and_unknown_object_guards(self):
-  for fragment in ['<p:pic/><p:t/>','<p:line xmlns:p="urn:foreign"/><p:t/>','<x:line xmlns:x="urn:foreign"/><p:t/>','<p:line xmlns:f="urn:foreign" f:flag="1"/><p:t/>','<p:switch/><p:t/>']:
+  for fragment in ['<p:ellipse/><p:t/>','<p:line xmlns:p="urn:foreign"/><p:t/>','<x:line xmlns:x="urn:foreign"/><p:t/>','<p:line xmlns:f="urn:foreign" f:flag="1"/><p:t/>','<p:switch/><p:t/>']:
    r=oracle.handle(request(package(xml(row(fragment)))));self.assertNotIn(r['state'],('supported','verified'))
   other=package(xml(row()).replace(b'<p:',b'<q:').replace(b'</p:',b'</q:').replace(b'xmlns:p=',b'xmlns:q='));self.assertEqual(oracle.handle(request(other))['state'],'supported')
  def test_empty_leaf_exactness_and_run_affinity(self):
