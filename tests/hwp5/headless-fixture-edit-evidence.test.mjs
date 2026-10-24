@@ -25,3 +25,10 @@ test('prefix-era evidence requires unchanged source routing and complete ZIP ora
   current.provenance[key]='e'.repeat(64);assert.throws(()=>verifiedFixtureEvidence(report,current),/ReusedEvidenceOracleMismatch/);
  }
 });
+
+test('password-policy fingerprints cannot silently change under reused observations',()=>{
+ const {report,current}=sample(),key='tools/fixture-known-password.mjs';report.manifest.provenance[key]='d'.repeat(64);
+ assert.throws(()=>verifiedFixtureEvidence(report,current),/ReusedEvidencePasswordPolicyMismatch/);
+ current.provenance[key]='d'.repeat(64);assert.equal(verifiedFixtureEvidence(report,current).size,1);
+ current.provenance[key]='e'.repeat(64);assert.throws(()=>verifiedFixtureEvidence(report,current),/ReusedEvidencePasswordPolicyMismatch/);
+});
