@@ -17,3 +17,6 @@ export interface SetCharacterPropertiesPayload {readonly target:SelectionTarget;
 export interface SetParagraphAlignmentPayload {readonly target:SelectionTarget;readonly alignment:string;}
 export const SET_CHARACTER_PROPERTIES_COMMAND=createCommand<SetCharacterPropertiesPayload>('set-character-properties');
 export const SET_PARAGRAPH_ALIGNMENT_COMMAND=createCommand<SetParagraphAlignmentPayload>('set-paragraph-alignment');
+export type CharacterUnderlineKind='none'|'bottom'|'center'|'top';
+export interface SetCharacterUnderlinePayload {readonly target:SelectionTarget;readonly kind:CharacterUnderlineKind;}
+export const SET_CHARACTER_UNDERLINE_COMMAND=createCommand<SetCharacterUnderlinePayload>('set-character-underline');

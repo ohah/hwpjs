@@ -46,3 +46,14 @@ test('original table cells use their canonical list owner; stale and foreign own
  assert.equal(getSelectionFormatting(snapshot(selected,{...cell,createdCell:{}})).characterAvailableReason,'CreatedCellRequiresSurfacePort');
  assert.equal(getSelectionFormatting(snapshot(selected,{...cell,currentReference:{kind:'generated',section:0,id:'1'}})).characterAvailableReason,'UnsupportedFormattingReference');
 });
+
+test('underline observes its own capability and current resource inventory independently of bold',()=>{
+ const inventories={characterUnderlineAvailable:true,characterPropertiesAvailable:false,characterUnderlines:[{id:0,kind:'bottom'},{id:1,kind:'none'}]};
+ const mixed=getSelectionFormatting(snapshot(target,{},inventories));
+ assert.equal(mixed.underlineAvailableReason,null);assert.equal(mixed.underline,'mixed');assert.equal(mixed.characterAvailableReason,'FormattingCapabilityUnavailable');
+ assert.equal(getSelectionFormatting(snapshot({...target,endUnit:1},{},inventories)).underline,true);
+ assert.equal(getSelectionFormatting(snapshot({...target,startUnit:1},{},inventories)).underline,false);
+ const missing=getSelectionFormatting(snapshot(target,{}, {...inventories,characterUnderlines:[]}));assert.equal(missing.underlineAvailableReason,null);assert.equal(missing.underline,null);
+ const unavailable=getSelectionFormatting(snapshot(target,{}, {...inventories,characterUnderlineAvailable:false,characterPropertiesAvailable:true}));assert.equal(unavailable.underlineAvailableReason,'FormattingCapabilityUnavailable');assert.equal(unavailable.underline,null);assert.equal(unavailable.bold,'mixed');
+ const collapsed=getSelectionFormatting(snapshot({...target,endUnit:0},{},inventories));assert.equal(collapsed.underlineAvailableReason,'EmptyCharacterSelection');assert.equal(collapsed.underline,null);
+});

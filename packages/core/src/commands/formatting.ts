@@ -6,12 +6,13 @@ import { characterPropertyArgs } from '../../../../js/character-property-args.mj
 // @ts-ignore Shared canonical display alignment validator; native ordinals stay in the facade.
 import { paragraphAlignmentValue } from '../../../../web/preview/paragraph-alignments.mjs';
 
-export function validateFormattingTarget(target:SelectionTarget,state:EditorState,character:boolean) {
+export type FormattingCapability='characterPropertiesAvailable'|'paragraphAlignmentAvailable'|'characterUnderlineAvailable';
+export function validateFormattingTarget(target:SelectionTarget,state:EditorState,character:boolean,capability:FormattingCapability=character?'characterPropertiesAvailable':'paragraphAlignmentAvailable') {
  const row=validateSelection(target,state,true);
  if(row.createdCell)throw Error('CreatedCellRequiresSurfacePort');
  const position=character?selectionMessage(target,state):{section:target.section,paragraph:target.paragraph,startUnit:target.startUnit,endUnit:target.endUnit,reference:undefined};
  const content=state.content as Record<string,unknown>;
- if(content[character?'characterPropertiesAvailable':'paragraphAlignmentAvailable']!==true)throw Error('FormattingCapabilityUnavailable');
+ if(content[capability]!==true)throw Error('FormattingCapabilityUnavailable');
  // validateSelection proves the canonical object/list owner. Original nested
  // paragraphs use the same source ordinal ABI as original body text.
  if(!row.tableCell&&!row.drawingText&&!row.drawingCaption&&target.owner!==`section:${target.section}:body`)throw Error('UnsupportedFormattingOwner');

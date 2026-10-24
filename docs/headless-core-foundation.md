@@ -44,3 +44,5 @@ Node24 이상에서 `node --test packages/core/tests/{editor,commands,state,sche
 사용자가 지정하는 editorId는 이름이며, 같은 값을 쓰는 편집기나 폐기 후 재사용을 허용합니다. documentId는 같은 core 모듈 안에서 인스턴스별 단조 증가 식별자와 문서 세대를 함께 포함하는 opaque 값입니다. 호출자가 그 문자열 형식을 조립하거나 파싱하지 않습니다. 새 인스턴스의 문서 토큰으로 이전 인스턴스의 선택·명령을 승인하지 않습니다. 자동 ID와 사용자 ID의 이름 충돌도 문서 identity 충돌로 이어지지 않습니다. 식별자 한도에 이르면 재사용 대신 명시 거부하며 전역 이름 Set이나 시간/랜덤/플랫폼 API를 사용하지 않습니다. 별도 JS 실행 영역·별도 core 모듈 복사본 사이의 전역 인증 토큰이라는 뜻은 아닙니다.
 
 적대적 재현에서 같은 사용자 ID 두 개, 폐기 후 ID 재사용, 사용자 이름/자동 이름 충돌이 모두 다른 문서의 splice를 승인했습니다. 인스턴스별 documentId 분리 후 `identity.test.ts`4건에서 잘못된 target을 StaleTarget으로 거부하고 native 요청·이전 상태가 유지됨을 확인했습니다. 같은 편집기의 문서 교체 대조군도 포함합니다.
+
+공개 밑줄 명령·관측 selector와 실제 툴바 연결의 후속 계약/검증은 [밑줄 서식](headless-underline-formatting.md)이 소유합니다.
