@@ -1,6 +1,6 @@
 # Worker 전송 경계와 WASM 준비
 
-core의 `./runtime` 진입점은 `createWorkerEditorRuntime`, `createWorkerRuntimeFactory`, `createWasmModuleLoader`를 제공합니다. 이 게시 단계는 전송 계층이며 구체 문서 parser Worker·WASM 배포 파일까지 포함한 웹 SDK 릴리스가 아닙니다. private source package에서 별도 module Worker URL/workerFactory와 WASM Module/loader를 주입할 수 있습니다. 구체 parser backend와 앱 빌드 연결은 후속 단계입니다.
+core의 `./runtime` 진입점은 `createWorkerEditorRuntime`, `createWorkerRuntimeFactory`, `createWasmModuleLoader`를 제공합니다. 이 전송 계층은 파서 구현을 소유하지 않습니다. [구체 reader backend와 module Worker](reader-runtime-foundation.md)는 같은 계약의 별도 연결이며, WASM 배포 파일까지 포함한 웹 SDK 릴리스와 구분합니다. private source package에서 별도 module Worker URL/workerFactory와 WASM Module/loader를 주입할 수 있습니다. 앱 빌드·프레임워크 통합의 게시 범위는 별도입니다.
 
 각 runtime은 독립 Worker 하나를 소유합니다. Worker 재사용은 거부하며 기존 소유자의 Worker를 종료하지 않습니다. Worker는 `initialize-runtime`에서 WASM Module을 받은 후 `{id,message}` envelope에 `{id,reply}` 또는 `{id,transportError}`로 응답해야 합니다. 적용 여부와 이력 메타데이터는 runtime 계약을 따릅니다. 이 adapter는 요청별 context를 호출 시 캡처해 응답 메타데이터와 결합합니다.
 
