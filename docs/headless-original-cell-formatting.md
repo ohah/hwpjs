@@ -6,7 +6,7 @@ Canvas surface는 본문용 `row.selectionOwner`만 읽지 않고 같은 `paragr
 
 `packages/core/tests/integration/typed-cell-formatting.test.ts`는 실제 noori.hwp/hwpx의 원본 셀에서 문자 속성과 정렬을 각각 변경합니다. HWP5 독립 CFB/전체 레코드·DocInfo·메타데이터 보존 oracle, HWPX 독립 ZIP/전체 XML oracle의 일반/최적화 실행, 잘못된 기대값 거부, undo 원본 바이트·redo·재열기 동일성을 확인합니다. 다른 owner·stale view 거부 시 Native 호출이나 저장이 발생하지 않는 것도 검사합니다. 원본 한 셀씩의 검증이며 전체 표·모든 조판의 성공으로 확대하지 않습니다.
 
-현재 참조 수명·선택적 ABI는 [HWP5 현재 참조](hwp5-sdk-current-references.md)가 소유합니다. 생성 셀/도형 글상자/여러 셀에 걸친 서식은 이 확장의 완료 범위에 포함하지 않습니다.
+현재 참조 수명·선택적 ABI는 [HWP5 현재 참조](hwp5-sdk-current-references.md)가 소유합니다. 생성 셀/여러 셀에 걸친 서식은 이 확장의 완료 범위에 포함하지 않습니다. 원본 도형 글상자/캡션의 후속 지원과 검증은 [별도 주제](headless-drawing-text-formatting.md)를 따릅니다.
 
 ## 문단 모양 응답의 버전 경계
 

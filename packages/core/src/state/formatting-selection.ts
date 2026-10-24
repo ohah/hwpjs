@@ -20,6 +20,8 @@ export function formattingSelection(previous:EditorState,patch:Partial<StateData
   if(old.text!==row.text||JSON.stringify(identity(old.currentReference))!==JSON.stringify(identity(row.currentReference))
    ||JSON.stringify(old.sourceOffsets)!==JSON.stringify(row.sourceOffsets)
    ||JSON.stringify(old.tableCell)!==JSON.stringify(row.tableCell)
+   ||JSON.stringify(old.drawingText)!==JSON.stringify(row.drawingText)
+   ||JSON.stringify(old.drawingCaption)!==JSON.stringify(row.drawingCaption)
    ||JSON.stringify(old.createdCell)!==JSON.stringify(row.createdCell))return undefined;
   return target;
  }catch{return undefined;}

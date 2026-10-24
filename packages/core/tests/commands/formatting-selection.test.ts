@@ -30,3 +30,24 @@ for(const change of ['none','epoch','scope','text','reference','offsets','owner'
  else assert.equal(result.state.selection,undefined);
  }finally{await editor.dispose();}
 });
+
+for(const kind of ['drawingText','drawingCaption'])for(const changed of [false,true])test(`drawing formatting selection continuity: ${kind}, metadata changed=${changed}`,async()=>{
+ const binding=kind==='drawingText'?{drawingNode:7,listNode:9,textNode:8}:{drawingNode:7,listNode:9,captionNode:8};
+ const row:any={section:0,paragraph:0,text:'ABCD',editable:true,selectionOwner:null,[kind]:binding};
+ const content:any={format:'hwpx',characterPropertiesAvailable:true,paragraphs:[row]};
+ const editor=createEditor({runtimeFactory:()=>({dispose(){},async request(m:any){
+  if(['load','enable'].includes(m.kind))return {kind:m.kind,content};
+  const next=structuredClone(content);
+  if(changed)next.paragraphs[0][kind][kind==='drawingText'?'textNode':'captionNode']=10;
+  return {kind:m.kind,content:next,meta:{application:'applied',changed:true}};
+ }})});
+ try{
+  await editor.load(new Uint8Array([1]),{format:'hwpx'});
+  const target={...editor.getEditorState().token,coordinateSpace:'display' as const,format:'hwpx' as const,owner:`section:0:drawing:7:${kind==='drawingText'?'text':'caption'}:list:9`,section:0,paragraph:0,startUnit:0,endUnit:2,affinity:'forward' as const};
+  await editor.setSelection(target);
+  const result=await editor.dispatchCommand(CHAR,{target,properties:{bold:true}});
+  assert.equal(result.status,'committed-with-snapshot');
+  if(changed)assert.equal(result.state.selection,undefined);
+  else assert.deepEqual({...result.state.selection as object},{...target,...result.state.token});
+ }finally{await editor.dispose();}
+});

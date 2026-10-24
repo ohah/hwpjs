@@ -11,7 +11,7 @@ export function validateToken(token:StateToken,state:EditorState,view=false):voi
 export function validateSelection(target:SelectionTarget,state:EditorState,editable=false) {
  validateToken(target,state,true);
  if(target.coordinateSpace!=='display'||!['hwp5','hwpx'].includes(target.format)||!['forward','backward'].includes(target.affinity))throw Error('InvalidCoordinateSpace');
- const content=state.content as {format?:string;paragraphs?:Array<{section:number;paragraph:number;text:string;selectionOwner?:string;editable?:boolean;clipped?:boolean;sourceOffsets?:unknown;tableCell?:unknown;currentReference?:unknown;createdCell?:unknown}>}|undefined;
+ const content=state.content as {format?:string;paragraphs?:Array<{section:number;paragraph:number;text:string;selectionOwner?:string;editable?:boolean;clipped?:boolean;sourceOffsets?:unknown;tableCell?:unknown;drawingText?:unknown;drawingCaption?:unknown;currentReference?:unknown;createdCell?:unknown}>}|undefined;
  if(!content||content.format!==target.format)throw Error('InvalidCoordinateSpace');
  if(![target.section,target.paragraph,target.startUnit,target.endUnit].every(x=>Number.isSafeInteger(x)&&x>=0)||target.endUnit<target.startUnit)throw Error('InvalidTextPosition');
  const matches=content.paragraphs?.filter(row=>row.section===target.section&&row.paragraph===target.paragraph);

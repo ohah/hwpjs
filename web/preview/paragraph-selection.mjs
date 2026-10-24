@@ -10,6 +10,13 @@ export function paragraphSelectionEdge(anchor, focus, end = false) {
 
 export function paragraphSelectionOwner(paragraph) {
   const cell = paragraph?.tableCell;
+  const drawing = paragraph?.drawingText ?? paragraph?.drawingCaption;
+  if (cell && drawing || paragraph?.drawingText && paragraph?.drawingCaption) return null;
+  if (drawing) {
+    if (![paragraph.section, drawing.drawingNode, drawing.listNode].every(value => Number.isInteger(value) && value >= 0 && value <= 0xffffffff)) return null;
+    const kind = paragraph.drawingText ? "text" : "caption";
+    return `section:${paragraph.section}:drawing:${drawing.drawingNode}:${kind}:list:${drawing.listNode}`;
+  }
   if (cell) {
     if (![paragraph.section, cell.tableNode, cell.listNode].every(value => Number.isInteger(value) && value >= 0)) return null;
     return `section:${paragraph.section}:table:${cell.tableNode}:list:${cell.listNode}`;
