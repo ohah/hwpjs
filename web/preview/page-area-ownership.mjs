@@ -16,6 +16,7 @@ export function partitionPageAreaOwnership(content) {
       return result;
     };
     const paragraphs = index(content.paragraphs, "paragraph"), tables = index(content.tables, "tableNode"), drawings = index(content.drawings, "drawingNode"), pictures = index(content.pictures, "pictureNode");
+    const drawingRoots = index(content.hwp5Drawings, "componentNode");
     const flows = index(content.paragraphFlows, "paragraph"), roots = new Map(), groups = new Map();
     for (const flow of flows.values()) {
       if (!["header", "footer"].includes(flow.host) || flow.page_area == null) continue;
@@ -64,6 +65,15 @@ export function partitionPageAreaOwnership(content) {
         if (!object || ![object.section, object[host]].every(value => Number.isSafeInteger(value) && value >= 0)) throw new Error("InvalidPageAreaOwnership");
         const group = owner(key(object.section, object[host]));
         if (group) group[property].push(object); else body[property].push(object);
+      }
+    }
+    if (content.hwp5Drawings !== undefined) {
+      body.hwp5Drawings = [];
+      for (const group of groups.values()) group.hwp5Drawings = [];
+      for (const root of drawingRoots.values()) {
+        if (!Number.isSafeInteger(root.hostParagraph) || root.hostParagraph < 0) throw new Error("InvalidPageAreaOwnership");
+        const group = owner(key(root.section, root.hostParagraph));
+        (group ?? body).hwp5Drawings.push(root);
       }
     }
     return { state: "partitioned", body, areas: [...groups.values()] };

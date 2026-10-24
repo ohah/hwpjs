@@ -186,3 +186,5 @@
 명세 접근은 [프로젝트 규칙](project-rules.md)을 따릅니다. 새 실측은 해당 주제 문서에 남기고, 과거 단계는 [공통 구현 기록](hwp5-foundation.md)에서 확인합니다. 코드 경로는 별도 표시가 없으면 저장소 루트 또는 src/hwp5 기준입니다.
 
 - [공통 개체의 선택적 꼬리 원값](hwp5-object-extra-word.md)
+
+- [본문·머리말·꼬리말의 원본 도형 소유권](page-area-object-roots.md)
