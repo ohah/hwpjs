@@ -32,3 +32,17 @@ test('paragraph selection may include protected anchors, character may not',()=>
  const f=getSelectionFormatting(snapshot(target,{sourceOffsets:[{at:0,source:0},{at:1,source:8}]}));
  assert.equal(f.characterAvailableReason,'ProtectedAnchorRange');assert.equal(f.bold,null);assert.equal(f.paragraphAvailableReason,null);assert.equal(f.align,'CENTER');
 });
+test('original table cells use their canonical list owner; stale and foreign owners stay unavailable',()=>{
+ const cell={selectionOwner:null,tableCell:{tableNode:7,listNode:8,row:0,column:0}};
+ const selected={...target,owner:'section:0:table:7:list:8'};
+ const observed=getSelectionFormatting(snapshot(selected,cell));
+ assert.equal(observed.characterAvailableReason,null);assert.equal(observed.paragraphAvailableReason,null);
+ assert.equal(observed.bold,'mixed');assert.equal(observed.align,'CENTER');
+ for(const owner of ['section:0:body','section:0:table:7:list:9','section:0:table:9:list:8']){
+  const denied=getSelectionFormatting(snapshot({...selected,owner},cell));
+  assert.equal(denied.characterAvailableReason,'InvalidSelectionOwner');assert.equal(denied.paragraphAvailableReason,'InvalidSelectionOwner');
+ }
+ assert.equal(getSelectionFormatting(snapshot({...selected,viewRevision:2},cell)).characterAvailableReason,'StaleTarget');
+ assert.equal(getSelectionFormatting(snapshot(selected,{...cell,createdCell:{}})).characterAvailableReason,'CreatedCellRequiresSurfacePort');
+ assert.equal(getSelectionFormatting(snapshot(selected,{...cell,currentReference:{kind:'generated',section:0,id:'1'}})).characterAvailableReason,'UnsupportedFormattingReference');
+});

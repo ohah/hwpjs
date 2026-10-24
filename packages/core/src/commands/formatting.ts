@@ -12,7 +12,9 @@ export function validateFormattingTarget(target:SelectionTarget,state:EditorStat
  const position=character?selectionMessage(target,state):{section:target.section,paragraph:target.paragraph,startUnit:target.startUnit,endUnit:target.endUnit,reference:undefined};
  const content=state.content as Record<string,unknown>;
  if(content[character?'characterPropertiesAvailable':'paragraphAlignmentAvailable']!==true)throw Error('FormattingCapabilityUnavailable');
- if(target.owner!==`section:${target.section}:body`||row.tableCell)throw Error('UnsupportedFormattingOwner');
+ // validateSelection already proves the canonical table/list owner. Original
+ // cell paragraphs use the same source ordinal ABI as original body text.
+ if(!row.tableCell&&target.owner!==`section:${target.section}:body`)throw Error('UnsupportedFormattingOwner');
  if(target.format==='hwp5'){
    // attachHwp5CurrentReferences binds source ordinals to native current references.
    // These runtime commands ignore reference, so only a proven original source binding is accepted.

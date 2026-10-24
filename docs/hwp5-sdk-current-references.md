@@ -39,7 +39,7 @@ JS 참조는 native의 `{epoch,kind,section,id,row,column}`에 opaque `scope`를
 
 열린 editor와 history 활성화가 필요하며 HWP5만 허용합니다. available-sections read-only 경계도 유지합니다. 별도 `query-created-tables` 분기가 있지만 위 네 참조 메시지와는 구분합니다. 요청 ID는 응답에 반영하고 splice 성공 후 preview를 갱신합니다.
 
-`packages/core/src/commands/formatting.ts`의 typed 문자 속성과 문단 정렬은 capability, 현재 선택, 본문 owner와 원본 바인딩을 검사합니다. HWP5는 같은 section의 `kind:original` 및 u32 범위의 십진 id가 있어야 하며, 참조 부재/생성 문단은 `UnsupportedFormattingReference`로 거부합니다. 표 셀은 `UnsupportedFormattingOwner`, 생성 셀은 `CreatedCellRequiresSurfacePort` 경계입니다. 문자 서식은 빈 선택을 거부합니다. 실제 명령은 canonical source paragraph ordinal ABI를 사용하고 reference를 보내지 않습니다. id는 node ID이므로 paragraph ordinal로 변환하지 않습니다. 생성 문단/셀의 query·splice 가능성이 typed 문자 서식·정렬 지원을 뜻하지 않습니다.
+`packages/core/src/commands/formatting.ts`의 typed 문자 속성과 문단 정렬은 capability, 현재 선택, 본문 또는 원본 표 셀의 canonical owner와 원본 바인딩을 검사합니다. HWP5는 같은 section의 `kind:original` 및 u32 범위의 십진 id가 있어야 하며, 참조 부재/생성 문단은 `UnsupportedFormattingReference`로 거부합니다. 원본 표 셀의 서식 연결과 추가 검증은 [원본 표 셀 서식](headless-original-cell-formatting.md)을 따릅니다. 생성 셀은 `CreatedCellRequiresSurfacePort` 경계를 유지합니다. 문자 서식은 빈 선택을 거부합니다. 실제 명령은 canonical source paragraph ordinal ABI를 사용하고 reference를 보내지 않습니다. id는 node ID이므로 paragraph ordinal로 변환하지 않습니다. 생성 문단/셀의 query·splice 가능성이 typed 문자 서식·정렬 지원을 뜻하지 않습니다.
 
 ## 확인한 후보와 근거
 
