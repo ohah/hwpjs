@@ -15,7 +15,7 @@ function options(args) {
   const out = {};
   for (const arg of args) {
     const match = /^--([a-z]+)=(.+)$/.exec(arg);
-    if (!match || !['reference','candidate','wasm','repo','output','capture','spec','result'].includes(match[1]) || Object.hasOwn(out, match[1])) throw Error(`Invalid argument: ${arg}`);
+    if (!match || !['reference','candidate','wasm','repo','output','capture','spec','result','projection'].includes(match[1]) || Object.hasOwn(out, match[1])) throw Error(`Invalid argument: ${arg}`);
     out[match[1]] = match[2];
   }
   return out;
@@ -103,8 +103,34 @@ function runChild(mode,spec,result) {
   assert.equal(child.status,0,`${mode} capture failed: ${child.stderr}`);
   return deserialize(readFileSync(result));
 }
+function declaredReferenceProjection(records,referenceRecords) {
+  const copy=deserialize(serialize(records));let bindings=0,diagnostics=0,scope;
+  for(const [index,record] of copy.entries()) {
+    const content=record.reply.content,original=referenceRecords[index].reply.content;
+    if(!content)continue;
+    if(Object.hasOwn(content,'currentReferenceErrors')) {
+      assert(!Object.hasOwn(original,'currentReferenceErrors'),'Reference already has added field');
+      assert.deepStrictEqual(content.currentReferenceErrors,[],'Known fixture bindings must all resolve');
+      delete content.currentReferenceErrors;diagnostics++;
+    }
+    for(const [rowIndex,row] of (content.paragraphs??[]).entries()) {
+      if(!Object.hasOwn(row,'currentReference'))continue;
+      assert(!Object.hasOwn(original.paragraphs[rowIndex],'currentReference'),'Reference already has binding');
+      const ref=row.currentReference;
+      assert.equal(Object.keys(ref).sort().join(), 'column,epoch,id,kind,row,scope,section');
+      assert.equal(ref.kind,'original');assert.equal(ref.section,row.section);assert.equal(ref.row,0);assert.equal(ref.column,0);
+      assert.match(ref.epoch,/^[1-9][0-9]*$/);assert(BigInt(ref.epoch)<=0xffffffffffffffffn);
+      assert.match(ref.id,/^(0|[1-9][0-9]*)$/);assert(BigInt(ref.id)<=0xffffffffn);
+      assert.match(ref.scope,/^[1-9][0-9]*$/);scope??=ref.scope;assert.equal(ref.scope,scope,'One in-process session scope per case');
+      delete row.currentReference;bindings++;
+    }
+  }
+  assert(bindings>0&&diagnostics>0,'Declared projection must actually be present');
+  return {records:copy,bindings,diagnostics};
+}
 async function main(o) {
   setPriority(0,19);
+  assert(o.projection===undefined||o.projection==='current-references','UnknownDeclaredProjection');
   const repo = absolute(o.repo ?? resolve(dirname(here),'..'),'repo');
   const reference = absolute(o.reference,'reference'), candidate = absolute(o.candidate,'candidate'), wasm = absolute(o.wasm,'wasm');
   assert.notEqual(reference,candidate,'Independent copies required');
@@ -117,7 +143,7 @@ async function main(o) {
   for (const file of referenceClosure) assert.equal(file.sha256,sha(git(['show',`${head}:${file.relative}`])),`Reference is not exact HEAD: ${file.relative}`);
   const candidateClosure = closure(candidate,join(candidate,'web/preview/reader-runtime.mjs'));
   const cases = makeCases(repo);
-  const manifest = {head,reference,candidate,wasm:fingerprint(wasm),referenceClosure,candidateClosure,cases,artifact,started:new Date().toISOString(),scopeNormalization:'none',limitations:['Headless Node wire parity only; no browser, rendering, native build or product deployment proof.','Literal ESM source closure is fingerprinted; computed/external imports are refused.','Fixed fixtures and command sequences do not cover every command or ABI availability combination.']};
+  const manifest = {head,reference,candidate,wasm:fingerprint(wasm),referenceClosure,candidateClosure,cases,artifact,started:new Date().toISOString(),scopeNormalization:'none',declaredProjection:o.projection??null,limitations:['Headless Node wire parity only; no browser, rendering, native build or product deployment proof.','Literal ESM source closure is fingerprinted; computed/external imports are refused.','Fixed fixtures and command sequences do not cover every command or ABI availability combination.']};
   const manifestPath = join(artifact,'manifest.json');
   writeFileSync(manifestPath,JSON.stringify(manifest,null,2));
   const references = [];
@@ -141,13 +167,17 @@ async function main(o) {
     assert.deepStrictEqual(captured.closure,candidateClosure,'Candidate closure drift');
     assert.equal(captured.wasm.sha256,references[index].wasm.sha256);
     assert.equal(captured.fixture.sha256,references[index].fixture.sha256);
-    try { assert.deepStrictEqual(captured.records,references[index].records); results.push({name:c.name,pass:true,replies:captured.records.length}); }
+    try {
+      const projected=o.projection==='current-references'&&c.format==='hwp5'?declaredReferenceProjection(captured.records,references[index].records):undefined;
+      assert.deepStrictEqual(projected?.records??captured.records,references[index].records);
+      results.push({name:c.name,pass:true,replies:captured.records.length,...(projected?{declaredBindings:projected.bindings,declaredDiagnostics:projected.diagnostics}:{})});
+    }
     catch(error) { writeFileSync(join(artifact,`${c.name}.diff.txt`),error.stack); results.push({name:c.name,pass:false}); }
   }
   assert.equal(git(['rev-parse','HEAD']).toString().trim(),head,'HEAD changed during audit');
   assert.deepStrictEqual(closure(reference,join(reference,'web/preview/reader-worker.mjs')),referenceClosure);
   assert.deepStrictEqual(closure(candidate,join(candidate,'web/preview/reader-runtime.mjs')),candidateClosure);
-  const summary = {artifact,head,results,pass:results.every(r=>r.pass),limitations:manifest.limitations};
+  const summary = {artifact,head,declaredProjection:o.projection??null,results,pass:results.every(r=>r.pass),limitations:manifest.limitations};
   writeFileSync(join(artifact,'summary.json'),JSON.stringify(summary,null,2));
   console.log(JSON.stringify(summary,null,2));
   if (!summary.pass) process.exitCode=1;

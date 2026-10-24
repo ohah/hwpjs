@@ -15,7 +15,7 @@ scope.onmessage = event => {
       if (message.kind === "initialize-runtime") {
         if (runtime) throw Error("RuntimeAlreadyInitialized");
         if (!(message.wasmModule instanceof WebAssembly.Module)) throw Error("InvalidWasmModule");
-        runtime = createReaderEditorRuntime({ wasmModule: message.wasmModule });
+        runtime = createReaderEditorRuntime({ wasmModule: message.wasmModule, referenceScope: message.referenceScope });
         scope.postMessage({ id, reply: { kind: message.kind } });
       } else {
         if (!runtime) throw Error("RuntimeNotInitialized");

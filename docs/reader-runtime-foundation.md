@@ -27,7 +27,7 @@ Node24 이상의 TypeScript source 실행 환경이 필요합니다. 위 readFil
 
 ## 게시 단계의 범위
 
-이 단계는 게시 전 HEAD의 명령/표시 기능을 세션 경계로 옮긴 기반입니다. 작업 트리의 후속 도형·표·서식·현재 참조 확장을 한꺼번에 게시한 것이 아닙니다. 특히 원본 currentReference가 없는 HWP5 관측에서 typed 문자 서식 명령은 UnsupportedFormattingReference로 계속 거부합니다. 참조 증명 없이 ordinal을 ID로 추정해 허용하지 않습니다. 전체 fixture 조판/모든 편집/RN 완료를 뜻하지 않습니다.
+이 단계는 게시 전 HEAD의 명령/표시 기능을 세션 경계로 옮긴 기반입니다. 작업 트리의 후속 도형·표·서식·현재 참조 확장을 한꺼번에 게시한 것이 아닙니다. 현재 source SDK의 참조 바인딩·실험 query/splice·typed 문자 서식/문단 정렬 경계와 후보 검증은 [HWP5 SDK 현재 참조](hwp5-sdk-current-references.md)를 따릅니다. 원본 currentReference가 없는 HWP5 관측에서 typed 문자 서식·문단 정렬은 UnsupportedFormattingReference로 계속 거부합니다. 참조 증명 없이 ordinal을 ID로 추정해 허용하지 않습니다. 전체 fixture 조판/모든 편집/RN 완료를 뜻하지 않습니다.
 
 private source package의 브라우저용 번들은 다음처럼 생성할 수 있습니다. WASM은 host가 명시적으로 고른 아티팩트를 제공해야 합니다.
 

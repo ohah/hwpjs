@@ -3,6 +3,7 @@ declare module '*web/preview/reader-runtime.mjs' {
   export function copyRuntimeMessage(message: import('../contracts.ts').RuntimeMessage): import('../contracts.ts').RuntimeMessage;
   export function createReaderRuntime(options?: {
     wasmModule?: WebAssembly.Module;
+    referenceScope?: string;
     loadWasmModule?: () => Promise<WebAssembly.Module>;
     allowReload?: boolean;
   }): {

@@ -127,3 +127,14 @@ test("shared payload buffers are rejected instead of aliased across the module-l
   try { await assert.rejects(runtime.request({ kind: "load", bytes: new Uint8Array(new SharedArrayBuffer(4)) }), /SharedBufferUnsupported/); }
   finally { await runtime.dispose(); }
 });
+
+test('separate document workers receive distinct host reference scopes',async()=>{
+ const workers:EchoWorker[]=[];
+ const factory=createWorkerRuntimeFactory({wasmModule:module,workerFactory:()=>{const worker=new EchoWorker();workers.push(worker);return worker;}});
+ const a=await factory(),b=await factory();
+ try{
+  await Promise.all([a.request({kind:'ready'}),b.request({kind:'ready'})]);
+  const scopes=workers.map(w=>w.sent[0].message.referenceScope);
+  assert(scopes.every(s=>typeof s==='string'&&s.length>0));assert.notEqual(scopes[0],scopes[1]);
+ }finally{await a.dispose();await b.dispose();}
+});

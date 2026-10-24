@@ -8,4 +8,6 @@ factory의 `preload()`는 컴파일만 준비하며 문서 Worker를 만들지 �
 
 요청 payload는 컴파일 대기 전에 복사하며 SharedArrayBuffer를 거부합니다. Worker 오류·messageerror·dispose는 대기 요청을 정리하고 해당 Worker를 종료합니다. 다른 runtime의 세션에는 영향을 주지 않습니다.
 
+HWP5 현재 참조는 transport별 prefix를 initialize-runtime에서 Worker에 전달해 realm별 로컬 scope 충돌을 막습니다. [현재 참조의 scope·native epoch 계약과 브라우저 양성/취약 대조군](hwp5-sdk-current-references.md)을 따릅니다. 이 구분자는 보안 인증 수단이 아닙니다.
+
 게시 전 별도 HEAD 사본에서 `node --test packages/core/tests/transport/worker-runtime.test.ts`8건, strict 선언 생성과 browser ESM 번들4모듈을 통과했습니다. 독립 Worker·preload 무Worker·준비 실패 재시도·재사용 거부·payload/context 소유·dispose/오류를 대역 Worker로 검증한 결과입니다. 실제 브라우저·문서 파싱·물리 IME·RN 검증으로 확대하지 않습니다.

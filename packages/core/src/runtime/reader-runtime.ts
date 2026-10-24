@@ -3,6 +3,7 @@ import { createReaderRuntime } from '../../../../web/preview/reader-runtime.mjs'
 
 export interface ReaderRuntimeOptions {
   wasmModule?: WebAssembly.Module;
+  referenceScope?: string;
   loadWasmModule?: () => Promise<WebAssembly.Module>;
 }
 

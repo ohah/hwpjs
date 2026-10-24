@@ -1,3 +1,5 @@
+import {currentReferenceCommand} from "./hwp5-current-reference-command.mjs";
+import { attachHwp5CurrentReferences } from "./hwp5-current-reference-content.mjs";
 import { createHwp5Reader } from "../../js/hwp5.mjs";
 import { availableSectionsCapability, availableSectionsRequest, availableSectionsContent } from "./hwp5-available-preview.mjs";
 import { availableSectionCopyCapability, availableSectionCopyRequest } from "./hwp5-available-copy-preview.mjs";
@@ -48,7 +50,7 @@ import { attachHwp5PictureTails } from "./hwp5-picture-tail-content.mjs";
 import { projectHwp5PictureGeometry } from "./hwp5-picture-geometry.mjs";
 import { projectHwp5GroupGeometry } from "./hwp5-group-geometry-projection.mjs";
 import { clipText } from "./content.mjs";
-import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
+import { createExperimentalHwp5Editor as createHwp5Session } from "../../js/hwp5-editor.mjs";
 import { saveDocument } from "./document-save.mjs";
 import { encodeCharacterRanges } from "../../js/character-range-batch.mjs";
 import { createFieldLinkDisplayGuard } from "./field-link-display-guard.mjs";
@@ -78,7 +80,9 @@ export function copyRuntimeMessage(message) {
 }
 
 /** Session state belongs to the runtime; imports and legacy protocol stay shared. */
-export function createReaderRuntime({wasmModule,loadWasmModule,allowReload=false}={}) {
+export function createReaderRuntime({wasmModule,loadWasmModule,allowReload=false,referenceScope}={}) {
+  if(referenceScope!==undefined&&(typeof referenceScope!=="string"||!referenceScope.length))throw new TypeError("InvalidCurrentReferenceScope");
+  const createExperimentalHwp5Editor=(module,input,options={})=>createHwp5Session(module,input,{...options,referenceScope});
   const outcomes=new WeakMap();
   let lastHistoryRevision;
   let module, bytes, preview, editor, format;
@@ -109,6 +113,7 @@ export function createReaderRuntime({wasmModule,loadWasmModule,allowReload=false
       projected = queryHwp5WindowContent(editor, hwp5DisplayProjection(), { offset, count: Math.min(documentWindow.count, total - offset) }, hwp5ParagraphFormatsAvailable());
     }
     const content = projected ?? displayContent(hwp5DisplayProjection());
+    if(historyEnabled)attachHwp5CurrentReferences(editor,preview,content);
     content.editorSessionAvailable = editor !== null;
     const observedDocInfoAvailable = ["hwp5_edit_open_observed_docinfo", "hwp5_edit_observed_docinfo_diagnostics"].every(name => WebAssembly.Module.exports(module).some(entry => entry.kind === "function" && entry.name === name));
     if (observedDocInfoAvailable) {
@@ -345,6 +350,17 @@ export function createReaderRuntime({wasmModule,loadWasmModule,allowReload=false
     let applied = false;
     try {
       if (format === "hwp5" && preview?.sectionInventory && message.kind !== "load") throw new Error("AvailableSectionsReadOnly");
+      if (["query-current-references","query-current-source-references","query-current-text","splice-current"].includes(message.kind)) {
+        const result=currentReferenceCommand(editor,format,historyEnabled,message);
+        if(result)reply({kind:message.kind,requestId:message.requestId,...result});
+        else {
+          applied=true;
+          reader=await createHwp5Reader(module);
+          preview=reader.readText(editor.save({allowStaleLayout:true}).bytes);
+          reply({kind:message.kind,requestId:message.requestId,content:hwp5Display()});
+        }
+        return;
+      }
       if (message.kind === "insert-table" || message.kind === "created-cell-text") {
         if (!editor || !historyEnabled) throw new Error("EditorNotOpen");
         if (format !== "hwpx") throw new Error("UnsupportedTableCreationFormat");
@@ -944,7 +960,7 @@ export function createReaderRuntime({wasmModule,loadWasmModule,allowReload=false
       const availableSectionCopyAvailable = message.kind === "load" && message.availableSectionsOnly !== true && message.availableSectionCopy !== true && format === "hwp5" && error.message === "SectionCountMismatch" && availableSectionCopyCapability(module);
       const passwordRequired = message.kind === "load" && ((format === "hwpx" && error.message === "EncryptedDocument") || (format === "hwp5" && error.message === "UnsupportedEncryption"));
       const queryIdentity = ["chart-points", "chart-series-text"].includes(message.kind) ? { requestId: message.requestId, section: message.section, wrapper: message.wrapper } : ["query-edit-range", "query-split-range"].includes(message.kind) ? { requestId: message.requestId, section: message.section, paragraph: message.paragraph, startUnit: message.startUnit, endUnit: message.endUnit } : {};
-      reply({ kind: message.kind, applied, ...(availableSectionsPreviewAvailable ? { availableSectionsPreviewAvailable: true } : {}), ...(availableSectionCopyAvailable ? { availableSectionCopyAvailable: true } : {}), error: error.message || String(error), ...queryIdentity, ...dutmalQueryIdentity(message), ...(passwordRequired ? { passwordRequired: true } : {}) });
+      reply({ kind: message.kind, applied, ...(availableSectionsPreviewAvailable ? { availableSectionsPreviewAvailable: true } : {}), ...(availableSectionCopyAvailable ? { availableSectionCopyAvailable: true } : {}), error: error.message || String(error), ...queryIdentity, ...(["query-current-references","query-current-source-references","query-current-text","splice-current"].includes(message.kind)?{requestId:message.requestId}:{}), ...dutmalQueryIdentity(message), ...(passwordRequired ? { passwordRequired: true } : {}) });
     }
     finally {
       try { reader?.close(); } catch(error) { response=minimalError(error); }

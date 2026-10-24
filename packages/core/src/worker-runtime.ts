@@ -2,6 +2,7 @@ import type { EditorRuntime, RuntimeFactory, RuntimeMessage, RuntimeReply, Runti
 import { createWasmModuleLoader } from "./wasm-module-loader.ts";
 import { copyOwned } from "./state/owned.ts";
 const ownedWorkers = new WeakSet<object>();
+let workerScopeSequence=0;
 
 interface RuntimeWorker {
   postMessage(message: unknown): void;
@@ -20,6 +21,8 @@ export type WorkerRuntimeFactory = RuntimeFactory & { preload(): Promise<WebAsse
 
 /** Browser transport only. Its worker owns exactly one candidate/active runtime. */
 export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): EditorRuntime {
+  if(workerScopeSequence>=Number.MAX_SAFE_INTEGER)throw Error("WorkerIdentityExhausted");
+  const referenceScope=`worker:${++workerScopeSequence}`;
   const worker = options.workerFactory ? options.workerFactory(options.workerURL ?? new URL("./worker.js", import.meta.url))
     : new Worker(options.workerURL ?? new URL("./worker.js", import.meta.url), { type: "module" });
   if (ownedWorkers.has(worker)) throw Error('WorkerAlreadyOwned');
@@ -58,7 +61,7 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
     catch (error) { pending.delete(id); reject(error); }
   });
   const load = options.loadWasmModule ?? (options.wasmModule ? async () => options.wasmModule! : createWasmModuleLoader({ url: options.wasmURL }));
-  const ready = Promise.resolve().then(load).then(module => send({ kind: "initialize-runtime", wasmModule: module }));
+  const ready = Promise.resolve().then(load).then(module => send({ kind: "initialize-runtime", wasmModule: module, referenceScope }));
   void ready.catch(error => shutdown(error instanceof Error ? error : Error(String(error))));
   return {
     async request(message: RuntimeMessage, context?: RuntimeRequestContext) {

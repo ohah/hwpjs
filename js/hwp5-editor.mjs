@@ -1,3 +1,4 @@
+import { createHwp5CurrentReferenceApi } from "./hwp5-current-references.mjs";
 import { decodeCharacterFontMetrics } from "./character-font-metrics.mjs";
 import { validateAbi } from "./abi.mjs";
 import { decodeHwp5FieldSpans } from "./hwp5-field-spans.mjs";
@@ -74,9 +75,10 @@ const decoder = new TextDecoder("utf-16le", { fatal: true, ignoreBOM: true });
 const u32 = (value, name) => { if (!Number.isInteger(value) || value < 0 || value > 0xffffffff) throw new RangeError(`Invalid ${name}`); return value; };
 
 /** Experimental HWP5 editing; no page layout engine. */
-export async function createExperimentalHwp5Editor(source, input, { distribution = false, normalizeObservedCfb = false, availableSectionCopy = false, retainObservedDocInfo = false } = {}) {
+export async function createExperimentalHwp5Editor(source, input, { distribution = false, normalizeObservedCfb = false, availableSectionCopy = false, retainObservedDocInfo = false, referenceScope } = {}) {
   validateObservedDocInfoOption(retainObservedDocInfo, distribution, availableSectionCopy);
   if (typeof distribution !== "boolean") throw new TypeError("Invalid distribution option");
+  if(referenceScope!==undefined&&(typeof referenceScope!=="string"||!referenceScope.length))throw new TypeError("InvalidCurrentReferenceScope");
   if (typeof normalizeObservedCfb !== "boolean") throw new TypeError("Invalid normalization option");
   validateAvailableSectionCopyOption(availableSectionCopy, distribution, normalizeObservedCfb);
   const module = source instanceof WebAssembly.Module ? source : await WebAssembly.compile(source);
@@ -105,6 +107,7 @@ export async function createExperimentalHwp5Editor(source, input, { distribution
   memory.withBytes(bytes, (ptr, size) => success(retainObservedDocInfo ? open(ptr, size, normalizeObservedCfb ? 1 : 0) : open(ptr, size)));
   const copyText = (section, paragraph) => { check(); return output(() => wasm.hwp5_edit_copy_text(u32(section, "section"), u32(paragraph, "paragraph"))).bytes; };
   return {
+    ...createHwp5CurrentReferenceApi({wasm,memory,check,output,success,u32,referenceScope}),
     observedDocInfoDiagnostics() {
       check();
       if (typeof wasm.hwp5_edit_observed_docinfo_diagnostics !== "function") throw new Error("Hwp5ObservedDocInfoAbiUnavailable");
