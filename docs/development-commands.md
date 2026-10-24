@@ -548,3 +548,5 @@ WASM 거부 테스트는 임의 예외나 메시지만으로 성공을 판정하
 2026-09-28 명령 문서 재검증에서는 문서에 적힌 프로젝트 경로 89개, `zig build` 단계 이름 12개, 명시적 Zig 테스트 필터 160개와 네 종류의 0~7 shard 이름이 당시 파일·`build.zig`·테스트 선언에 대응하는지 확인했습니다. 104곳의 Python 명령에서 사용한 옵션 문자열도 해당 스크립트에 존재했습니다. 당시 `zig build test --summary all`은 5/5 단계·2,664/2,664 테스트로 통과했고, ReleaseSafe HWP5 감사는 별도 실행에서 10/10 단계·8,905,855회 검사로 통과했습니다. 선택적 corpus/세 빌드 모드/외부 도구 명령을 당시 전부 실행한 것은 아니며, 경로·필터 일치가 각 조사기의 의미 정확성을 증명하지 않습니다.
 
 2026-09-28 HWP5 미리보기 거부 원인 분류 후 재실행에서는 `zig build test --summary all` 5/5 단계·2,672/2,672개가 약 21분·최대 9 GiB로 통과했습니다. 오래 걸린 `HWPX known inspections include table geometry diagnostics and limits`만 분리해도 Debug 약 7분, ReleaseSafe 수십 초가 소요되며 둘 다 통과했습니다. 새 미리보기 오라클 테스트를 연결한 `zig build audit -Doptimize=ReleaseSafe --summary all`도 통과했습니다. 이 실행 시간은 현 로컬 환경의 실측이지 모든 환경의 성능 보장은 아닙니다.
+
+WASM 배포 디버그 정보와 실행 섹션 검증은 [산출물 정책](wasm-release-artifacts.md)을 따릅니다.
