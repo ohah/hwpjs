@@ -1,3 +1,4 @@
+import {loadSourceOptions} from './load-source-options.ts';
 import type { EditorRuntime, RuntimeFactory, RuntimeMessage, RuntimeReply, RuntimeRequestContext } from '../contracts.ts';
 import { EditorState } from '../state/editor-state.ts';
 import type { StateData, StateToken } from '../state/editor-state.ts';
@@ -19,7 +20,7 @@ export type CommandStatus='rejected-unapplied'|'committed-with-snapshot'|'commit
 export interface CommandResult {readonly status:CommandStatus;readonly context:RuntimeRequestContext;readonly state:EditorState;readonly error?:string;readonly changed:boolean|null;readonly reply?:RuntimeReply;}
 export interface UpdateResult {readonly results:readonly CommandResult[];readonly stoppedIndex:number|null;readonly state:EditorState;}
 export interface EditorError {readonly error:unknown;readonly context?:RuntimeRequestContext;readonly applied:boolean|'unknown';}
-export interface LoadOptions {readonly format:'hwp5'|'hwpx';readonly editable?:boolean;readonly password?:string;readonly allowObservedChartOleDeviations?:boolean;readonly enableOptions?:Readonly<Record<string,unknown>>;}
+export interface LoadOptions {readonly format:'hwp5'|'hwpx';readonly editable?:boolean;readonly password?:string;readonly allowObservedChartOleDeviations?:boolean;readonly availableSectionCopy?:boolean;readonly enableOptions?:Readonly<Record<string,unknown>>;}
 export interface SaveOptions {readonly token?:StateToken;readonly recovery?:boolean;readonly allowStaleLayout?:boolean;readonly allowUnprotectedOutput?:boolean;}
 export interface SaveResult {readonly bytes:Uint8Array;readonly documentId:string;readonly generation:number;readonly operationRevision:number;readonly nativeHistoryRevision?:number;readonly format:'hwp5'|'hwpx';readonly staleSnapshot:boolean;readonly layoutRequiresReflow?:boolean;readonly reply:RuntimeReply;}
 export interface ExperimentalOptions {readonly mutation:boolean;readonly token:StateToken;}
@@ -140,11 +141,12 @@ export function createEditor(options:CreateEditorOptions) {
    assertPublicMutation();
    const bytes=copyOwned(input);if(!(bytes instanceof Uint8Array)&&!(bytes instanceof ArrayBuffer))throw TypeError('InvalidDocumentBytes');
    const owned=copyOwned(loadOptions);if(!owned||!['hwp5','hwpx'].includes(owned.format))throw Error('InvalidDocumentFormat');
+   const sourceOptions=loadSourceOptions(owned);
    const cancellation=new CancellationFence();
    const job={cancelled:false,fence:cancellation};loads.add(job);
    const guard=()=>{if(job.cancelled)throw Error('LoadCancelled');};
    const tokenGeneration=++nextGeneration,documentId=`${editorId}:instance:${instanceId}:document:${tokenGeneration}`;
-   const message:RuntimeMessage={kind:'load',bytes,format:owned.format,...(owned.password===undefined?{}:{password:owned.password}),...(owned.allowObservedChartOleDeviations===undefined?{}:{allowObservedChartOleDeviations:owned.allowObservedChartOleDeviations})};
+   const message:RuntimeMessage={kind:'load',bytes,format:owned.format,...sourceOptions,...(owned.password===undefined?{}:{password:owned.password}),...(owned.allowObservedChartOleDeviations===undefined?{}:{allowObservedChartOleDeviations:owned.allowObservedChartOleDeviations})};
    return admit(async()=>{
      const previousState=state;install({status:'loading'});
      let candidate:EditorRuntime|undefined,keepLocked=false;
