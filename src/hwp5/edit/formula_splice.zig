@@ -1,4 +1,4 @@
-//! Atomic ordinary-text splice plus all supported local formula recalculations.
+//! Atomic ordinary-text splice plus recalculation of affected table formulas.
 const std = @import("std");
 const model = @import("../../model/document.zig");
 const plain = @import("plain_text.zig");
@@ -18,7 +18,7 @@ const Context = struct {
         const after = try plain.textBytes(a, p.*);
         defer a.free(after);
         if (std.mem.eql(u8, before, after)) return;
-        _ = try @import("formula_recalculate.zig").applyDraft(a, self.source, self.version, draft, self.char_count, .{});
+        _ = try @import("formula_recalculate.zig").applyDraftForParagraph(a, self.source, self.version, draft, self.char_count, .{}, self.edit.paragraph);
     }
 };
 
