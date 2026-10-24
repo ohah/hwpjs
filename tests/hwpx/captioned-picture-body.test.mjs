@@ -69,3 +69,19 @@ test("captioned picture flow refuses missing measurement, unsupported compositio
   assert.equal(layoutPictureBodyContent(unknown, measure, 100).error, "UnsupportedCaptionedPictureBodyFlow");
   assert.equal(layoutPictureBodyContent(fixture(), measure, 0).error, "InvalidPictureCaptionBudget");
 });
+
+
+test("caption frame separates image geometry from occupied bounds and rejects invalid inputs", async () => {
+  const { measurePictureCaptionFrame } = await import("../../web/preview/picture-caption-frame.mjs");
+  const content = fixture(), before = structuredClone(content), rectangle = {x:31,y:47,width:30,height:20};
+  const result = measurePictureCaptionFrame(content.pictures[0],content.paragraphs,rectangle,measure);
+  assert.equal(result.state,"measured",result.error); assert.deepEqual(result.rectangle,rectangle);
+  assert.deepEqual(result.captionRectangle,{x:31,y:72,width:30,height:28});
+  assert.deepEqual(result.flowRectangle,{x:31,y:47,width:30,height:53});
+  assert.equal(result.rows.map(row=>row.text).join(""),"설명");
+  assert(result.rows.every(row=>row.pictureNode===3&&row.captionNode===7&&row.listNode===8));
+  for (const change of [{x:Infinity},{width:0},{height:-1},{x:Number.MAX_VALUE,width:Number.MAX_VALUE}]) assert.equal(measurePictureCaptionFrame(content.pictures[0],content.paragraphs,{...rectangle,...change},measure).error,"InvalidPictureCaptionRectangle");
+  for (const maxRows of [0,-1,NaN,0.5]) assert.equal(measurePictureCaptionFrame(content.pictures[0],content.paragraphs,rectangle,measure,{maxRows}).error,"PictureCaptionRowLimit");
+  assert.equal(measurePictureCaptionFrame(content.pictures[0],[],rectangle,measure).error,"MissingDrawingCaptionContent");
+  assert.deepEqual(content,before);
+});

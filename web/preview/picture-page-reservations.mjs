@@ -1,6 +1,6 @@
 import { projectFloatingPicturePage } from "./picture-page-projection.mjs";
 import { intersectPictureLineRegions } from "./picture-line-intersections.mjs";
-import { layoutPictureCaption } from "./picture-caption-layout.mjs";
+import { measurePictureCaptionFrame } from "./picture-caption-frame.mjs";
 
 // 배치와 줄 공간 계산은 기존 모듈이 소유합니다. 여기서는 페이지 소속만 연결합니다.
 export function picturePageReservations(pictures, paragraphs, rows, { captionMeasure, captionParagraphs = paragraphs, maxCaptionRows = 20000, ...options } = {}) {
@@ -19,9 +19,9 @@ export function picturePageReservations(pictures, paragraphs, rows, { captionMea
     if (picture.caption != null) {
       if (typeof captionMeasure !== "function") return { state: "unavailable", error: "MissingPictureCaptionMeasurement" };
       if (captionRows.length >= maxCaptionRows) return { state: "unavailable", error: "PictureCaptionRowLimit" };
-      const caption = layoutPictureCaption(picture, captionParagraphs, result.rectangle, captionMeasure, { maxRows: maxCaptionRows - captionRows.length });
-      if (caption.state !== "positioned") return caption;
-      reservation.flowRectangle = caption.bounds;
+      const caption = measurePictureCaptionFrame(picture, captionParagraphs, result.rectangle, captionMeasure, { maxRows: maxCaptionRows - captionRows.length });
+      if (caption.state !== "measured") return caption;
+      reservation.flowRectangle = caption.flowRectangle;
       reservation.captionRectangle = caption.captionRectangle;
       captionRows.push(...caption.rows.map(row => ({ ...row, pageOrdinal: result.pageOrdinal, referenceBoxes: result.referenceBoxes })));
     }
