@@ -1,3 +1,4 @@
+import { encodeChartPointBatch, readChartPointBatchLimits } from "./chart-point-batch.mjs";
 import { decodeChartSeriesText } from "./hwpx-chart-series-text.mjs";
 
 /** Chart ABI only; the editor injects lifetime, validation and shared memory. */
@@ -72,5 +73,13 @@ export function createHwpxChartApi({ wasm, memory, ready, uint, encodedText }) {
         if (!wasm.hwpx_edit_set_chart_point(section, wrapper, point, ptr, size)) throw memory.error();
       });
     },
+    setChartPoints(section, wrapper, edits) {
+      ready(); [section, wrapper].forEach(uint);
+      const bytes = encodeChartPointBatch(edits, readChartPointBatchLimits(wasm), chartPointBytes);
+      memory.withBytes(bytes, (ptr, size) => {
+        if (!wasm.hwpx_edit_set_chart_points(section, wrapper, ptr, size)) throw memory.error();
+      });
+    },
+    chartPointBatchLimits() { ready(); return readChartPointBatchLimits(wasm); },
   };
 }
