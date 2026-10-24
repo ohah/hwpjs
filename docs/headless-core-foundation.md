@@ -34,3 +34,5 @@ await editor.dispose();
 Node24 이상에서 `node --test packages/core/tests/{editor,commands,state,scheduler}/*.test.ts`로 기반 검사를 실행할 수 있습니다. 패키지 source entry의 TypeScript를 지원하는 환경이 필요합니다. 전체 native/포맷 oracle·실제 브라우저·전체 corpus 검증은 후속 adapter 연결과 별도입니다.
 
 게시 후보의 최종 별도 사본에서 Node77건·strict 선언 생성·23모듈 browser ESM bundle이 통과했습니다. 추가 적대적 리뷰에서 발견한 잘못된 암호 후 후보 폐기 문제를 수정하고, 미적용·적용 여부 불명·모순 메타데이터·취소 경합·이중 해제를 반례로 추가했습니다. 실제 암호 HWP5/HWPX의 틀린 암호2회→정답 재시도도 현재 작업 트리의 구체 reader adapter에서 별도2건 확인했습니다. 후자는 이 기반 게시 단계만으로 실행되는 테스트가 아니므로 source-only77건과 구분합니다.
+
+후속 게시된 [Worker 전송 경계](worker-runtime-transport.md)는 `./runtime` source 진입점을 추가합니다. 구체 reader backend와 parser Worker·WASM 배포 파일의 게시 완료와는 구분합니다.
