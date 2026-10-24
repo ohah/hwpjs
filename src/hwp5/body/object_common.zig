@@ -45,6 +45,11 @@ pub const Properties = struct {
     description_utf16: ?[]const u8,
     extra: []const u8,
 
+    /// Exact trailing word view only; no interpretation or consumption of extra.
+    pub fn extraU16(self: Properties) ?u16 {
+        return if (self.extra.len == 2) @import("std").mem.readInt(u16, self.extra[0..2], .little) else null;
+    }
+
     /// Table 70: bit20 applies only to paragraph-relative vertical placement.
     pub fn sizeProtected(self: Properties) bool {
         return ((self.flags >> 3) & 3) == 2 and self.flags & (@as(u32, 1) << 20) != 0;
@@ -73,3 +78,21 @@ pub const Properties = struct {
         return p;
     }
 };
+
+test "HWP5 object extra u16 preserves exact length and little endian values" {
+    const std = @import("std");
+    const bytes: [40]u8 = @splat(0);
+    var properties = try Properties.parse(&bytes);
+    const tail = [_]u8{ 0x34, 0x12, 0xaa, 0xbb };
+    for (0..tail.len + 1) |length| {
+        properties.extra = tail[0..length];
+        try std.testing.expectEqual(if (length == 2) @as(?u16, 0x1234) else null, properties.extraU16());
+    }
+    var word: [2]u8 = undefined;
+    for (0..65536) |value| {
+        std.mem.writeInt(u16, &word, @intCast(value), .little);
+        properties.extra = &word;
+        try std.testing.expectEqual(@as(?u16, @intCast(value)), properties.extraU16());
+    }
+    try std.testing.expectEqualSlices(u8, &.{ 0x34, 0x12, 0xaa, 0xbb }, &tail);
+}
