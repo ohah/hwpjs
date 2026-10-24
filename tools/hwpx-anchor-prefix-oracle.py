@@ -16,10 +16,18 @@ def signature(element):
 
 
 def verify(data):
-    before = zipfile.ZipFile(io.BytesIO(base64.b64decode(data['before'])))
-    after = zipfile.ZipFile(io.BytesIO(base64.b64decode(data['after'])))
+    before = zipfile.ZipFile(io.BytesIO(base64.b64decode(data['before'], validate=True)))
+    after = zipfile.ZipFile(io.BytesIO(base64.b64decode(data['after'], validate=True)))
     if before.namelist() != after.namelist() or before.comment != after.comment:
         raise ValueError('ZIP inventory')
+    if len(set(before.namelist())) != len(before.namelist()):
+        raise ValueError('duplicate ZIP entry')
+    for entry in before.infolist():
+        current = after.getinfo(entry.filename)
+        for field in ('compress_type', 'date_time', 'extra', 'comment',
+                      'external_attr', 'internal_attr', 'create_system'):
+            if getattr(entry, field) != getattr(current, field):
+                raise ValueError('ZIP metadata ' + entry.filename + ' ' + field)
     if before.testzip() is not None or after.testzip() is not None:
         raise ValueError('ZIP CRC')
     part = 'Contents/section%d.xml' % data['section']
@@ -60,6 +68,13 @@ def verify(data):
             if len(text) != 1 or text[0].tag != namespace + 'lineBreak' or len(text[0]) or text[0].text is not None or text.text:
                 raise ValueError('ambiguous leading line break')
             text[0].tail = data['text'] + (text[0].tail or '')
+        elif data.get('mode') == 'after_leading_table':
+            runs = paragraph.findall(namespace + 'run')
+            if not runs or not len(runs[0]) or runs[0][0].tag != namespace + 'tbl' or (runs[0].text or '').strip():
+                raise ValueError('unique leading table required')
+            text = ET.Element(namespace + 't')
+            text.text = data['text']
+            runs[0].insert(1, text)
         elif data.get('mode') == 'metadata_run':
             runs = paragraph.findall(namespace + 'run')
             if not runs:
