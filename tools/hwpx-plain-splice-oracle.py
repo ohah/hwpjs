@@ -2,6 +2,8 @@
 import base64
 import io
 import json
+from pathlib import Path
+import runpy
 import sys
 import zipfile
 import xml.etree.ElementTree as ET
@@ -21,7 +23,12 @@ def verify(data):
             raise ValueError('Duplicate ZIP entry')
         part = data['part']
         expected = parse(before.read(part))
-        paragraphs = list(expected.iter(P + 'p'))
+        # index is zero-based within part, never a document paragraph ID.
+        order = data.get('paragraph_order', 'raw')
+        if order not in ('raw', 'selected_default'):
+            raise ValueError('Invalid paragraph order')
+        paragraphs = (list(expected.iter(P + 'p')) if order == 'raw' else
+                      runpy.run_path(str(Path(__file__).with_name('hwpx_text_snapshot_order.py')))['selected_paragraphs'](expected))
         index, start, end = data['index'], data['start'], data['end']
         if any(type(value) is not int for value in (index, start, end)) or not 0 <= index < len(paragraphs) or not 0 <= start <= end:
             raise ValueError('Invalid splice range')
@@ -29,6 +36,18 @@ def verify(data):
         runs = paragraph.findall(P + 'run')
         texts = [child for run in runs for child in run if child.tag == P + 't']
         preserve_numbers = data.get('preserve_automatic_numbers', False)
+        preserve_metadata = data.get('preserve_section_metadata', False)
+        if type(preserve_metadata) is not bool:
+            raise ValueError('Invalid section-metadata preservation policy')
+        # Only direct section/column settings have zero text width here.
+        # Never admit field, number, note, bookmark or arbitrary ctrl content.
+        # Their full subtrees, positions and tails remain in expected unchanged.
+        metadata = [child for run in runs for child in run
+                    if preserve_metadata and (child.tag == P + 'secPr' or
+                    (child.tag == P + 'ctrl' and len(child) == 1
+                     and child[0].tag == P + 'colPr'
+                     and not (child.text or '').strip()
+                     and not (child[0].tail or '').strip()))]
         if type(preserve_numbers) is not bool:
             raise ValueError('Invalid automatic-number preservation policy')
         # This opt-in proves edits before a protected number, not arbitrary
@@ -43,7 +62,7 @@ def verify(data):
         tables = [child for run in runs for child in run if table_id is not None and child.tag == P + 'tbl' and child.get('id') == table_id]
         if table_id is not None and len(tables) != 1:
             raise ValueError('Missing or duplicate generated table')
-        if not texts or any(len(leaf) for leaf in texts) or any(child.tag != P + 't' and child not in tables and child not in numbers for run in runs for child in run):
+        if not texts or any(len(leaf) for leaf in texts) or any(child.tag != P + 't' and child not in tables and child not in numbers and child not in metadata for run in runs for child in run):
             raise ValueError('Oracle supports plain text leaves only')
         cursor = 0
         for run in runs:
