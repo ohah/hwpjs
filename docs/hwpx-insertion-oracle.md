@@ -26,3 +26,11 @@
 `tests/hwpx/anchor-prefix-oracle-metadata.test.mjs`와 `tests/hwpx/insertion-oracle.test.mjs`의6개 테스트가 통과했습니다. ZIP 중복·압축 방식·시각·extra/comment·속성 변조, 다른 payload·제어 트리·텍스트·서식 변경, 다른 run에 삽입한 결과, 잘못된 기대 문자열, 미지 제어의 폭 추정을 거부합니다. Node의 대용량 Python 입력은 공통 `oracle-process.mjs`의 파일 stdin을 사용합니다.
 
 이 검사는 한 문단의 삽입 원문 보존 증거입니다. 모든 편집 위치·명령·조판·브라우저 입력과 전체 포맷 지원을 증명하지 않습니다.
+
+## 형광펜·책갈피 라벨의 실제 텍스트 소유자
+
+2026-10-25에 전수 감사의 complete XML mismatch2건을 재현했습니다. 중간진도보고서는 `hp:t`의 첫 content가 `markpenBegin.tail`인데 검사가 표식 앞의 `t.text`에 삽입하도록 예상했습니다. 추진일정은 `ignore=1` 제목 표식만 있는 첫 `t` 다음 BOOKMARK 라벨이 선택 대상인데 검사가 첫 `t`를 대상으로 삼았습니다. 원래 저장은 각 문서의 section0.xml에 요청한 UTF8 문자열10바이트만 삽입한 결과이며, 다른 payload는 그대로였습니다. 기존 검사기는 잘못된 위치 삽입을 통과시키기도 했으므로 제품 writer 대신 검증기의 소유자 선택을 수정했습니다.
+
+`hwpx-insertion-source.py`는 원본만 읽어 관측된 형광펜 begin/end 사이 첫 tail, 또는 제목 표식 다음 로컬 BOOKMARK begin/end로 둘러싸인 라벨 text를 선택합니다. 색·marker 종류·로컬 ID 연결·순서를 검증하며, 모르는 앞선 제어나 불완전한 패턴을 폭0으로 추정하지 않습니다. router와 전체 XML 검사기가 같은 독립 source helper를 사용합니다. 일반 prefix와 이 두 mode는 구분하며 검증 불일치를 다른 mode로 재시도하지 않습니다. 형광펜 밖·책갈피 밖 삽입과 다른 metadata/payload 변경은 전체 signature 비교에서 거부합니다. 이는 필드 편집 권한을 추가하는 제품 API가 아닙니다.
+
+`tests/hwpx/insertion-owned-prefix-oracle.test.mjs`를 포함한 oracle8개와 증거 재사용3개가 통과했습니다. 새 source helper 해시도 감사 provenance와 증거 재사용 조건에 포함했습니다. `zig-out/verification/hwpx-owned-prefix-corrections`는 새 명시 WASM `8c3143aa4c7e123d466536a32d2dcc75c595595600e27c4ca10a40d5f1fe5cf3`에서 실제 두 문서의 typed 삽입·저장·undo/redo·재열기·동일 재저장을 완료하고 일반/최적화 Python 및 잘못된 기대값 거부까지 각각 확인했습니다. source/implementation/WASM 불변도 확인했습니다. 이전484경로 감사의 실패 행은 그대로 남기며 이2건 집중 재검증으로 구분합니다. 별도의 무관한 필드 표시 변화3건은 이 수정으로 해결됐다고 집계하지 않습니다.

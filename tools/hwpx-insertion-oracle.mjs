@@ -32,7 +32,12 @@ export function verifyHwpxInsertion({before,after,section,sectionIndex,startUnit
  const bytes={before:before.toString('base64'),after:after.toString('base64')};
  const sourceKind=JSON.parse(execFileSync('python3',[fileURLToPath(new URL('./hwpx-insertion-site.py',import.meta.url))],{
   input:JSON.stringify({before:bytes.before,section,sectionIndex,startUnit}),encoding:'utf8',timeout:30000,maxBuffer:1024*1024}));
- assert(['plain-splice','empty-run-prefix','direct-text-prefix'].includes(sourceKind),'UnknownInsertionSourceKind');
+ assert(['plain-splice','empty-run-prefix','direct-text-prefix','markpen-owned-prefix','bookmark-owned-prefix'].includes(sourceKind),'UnknownInsertionSourceKind');
+ if(sourceKind==='markpen-owned-prefix'||sourceKind==='bookmark-owned-prefix'){
+  const result=controls('./hwpx-anchor-prefix-oracle.py',{...bytes,section,paragraph:sectionIndex+1,paragraphScope:'section',mode:sourceKind,text},
+   /ValueError: unsupported owned prefix source/,/ValueError: complete XML mismatch/);
+  return {...result,kind:sourceKind};
+ }
  if(sourceKind==='empty-run-prefix'){
   const result=controls('./hwpx-anchor-prefix-oracle.py',{...bytes,section,paragraph:sectionIndex+1,paragraphScope:'section',mode:'plain_text',text},
    /ValueError: (missing plain text source owner|ambiguous empty run)/,/ValueError: complete XML mismatch/);

@@ -14,7 +14,7 @@ export function verifiedFixtureEvidence({manifest,summary,results},{wasmSHA,prov
  assert.equal(manifest?.wasmSHA,wasmSHA,'ReusedEvidenceWasmMismatch');
  assert(summary?.implementationUnchanged===true&&summary?.sourceFilesUnchanged===true&&summary?.wasmUnchanged===true,'UnstableReusedEvidence');
  for(const key of productKeys)assert(sha(provenance[key])&&manifest.provenance?.[key]===provenance[key],`ReusedEvidenceProductMismatch:${key}`);
- for(const key of ['tools/hwpx-insertion-oracle.mjs','tools/hwpx-insertion-site.py','tools/hwpx-anchor-prefix-oracle.py'])if(Object.hasOwn(manifest.provenance??{},key))assert(sha(provenance[key])&&manifest.provenance[key]===provenance[key],`ReusedEvidenceOracleMismatch:${key}`);
+ for(const key of ['tools/hwpx-insertion-oracle.mjs','tools/hwpx-insertion-site.py','tools/hwpx-insertion-source.py','tools/hwpx-anchor-prefix-oracle.py'])if(Object.hasOwn(manifest.provenance??{},key))assert(sha(provenance[key])&&manifest.provenance[key]===provenance[key],`ReusedEvidenceOracleMismatch:${key}`);
  assert(Array.isArray(manifest.inputs)&&Array.isArray(results),'InvalidEvidenceInventory');
  assert(manifest.inputs.every(row=>typeof row.path==='string'&&sha(row.sha256)),'InvalidEvidenceInput');
  assert(new Set(manifest.inputs.map(row=>row.path)).size===manifest.inputs.length,'DuplicateEvidenceInput');

@@ -8,6 +8,7 @@ import sys
 import zipfile
 import xml.etree.ElementTree as ET
 selected_paragraphs = runpy.run_path(str(Path(__file__).with_name('hwpx_text_snapshot_order.py')))['selected_paragraphs']
+owned_prefix = runpy.run_path(str(Path(__file__).with_name('hwpx-insertion-source.py')))['owned_prefix']
 
 
 def signature(element):
@@ -60,7 +61,13 @@ def verify(data):
         if paragraph_index < 0 or paragraph_index >= len(paragraphs):
             raise ValueError('paragraph index')
         paragraph = paragraphs[paragraph_index]
-        if data.get('mode') == 'after_leading_line_break':
+        if data.get('mode') in ('markpen-owned-prefix', 'bookmark-owned-prefix'):
+            slot = owned_prefix(paragraph)
+            if slot is None or slot[0] != data['mode']:
+                raise ValueError('unsupported owned prefix source')
+            _, owner, attribute = slot
+            setattr(owner, attribute, data['text'] + (getattr(owner, attribute) or ''))
+        elif data.get('mode') == 'after_leading_line_break':
             runs = paragraph.findall(namespace + 'run')
             if not runs or not len(runs[0]) or runs[0][0].tag != namespace + 't':
                 raise ValueError('missing leading text')

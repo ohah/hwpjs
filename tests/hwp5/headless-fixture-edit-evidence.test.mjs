@@ -18,7 +18,7 @@ test('changed artifacts and incomplete or foreign results cannot become reused v
 });
 
 test('prefix-era evidence requires unchanged source routing and complete ZIP oracle fingerprints',()=>{
- for(const key of ['tools/hwpx-insertion-oracle.mjs','tools/hwpx-insertion-site.py','tools/hwpx-anchor-prefix-oracle.py']){
+ for(const key of ['tools/hwpx-insertion-oracle.mjs','tools/hwpx-insertion-site.py','tools/hwpx-insertion-source.py','tools/hwpx-anchor-prefix-oracle.py']){
   const {report,current}=sample();report.manifest.provenance[key]='d'.repeat(64);
   assert.throws(()=>verifiedFixtureEvidence(report,current),/ReusedEvidenceOracleMismatch/);
   current.provenance[key]='d'.repeat(64);assert.equal(verifiedFixtureEvidence(report,current).size,1);
