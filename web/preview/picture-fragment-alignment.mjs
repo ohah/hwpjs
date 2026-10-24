@@ -8,5 +8,5 @@ export function alignPictureFragment(fragment, paragraphShape, lastLine) {
   const aligned = alignTextRow({ ...current, kind: "text", paragraphShape,
     x: current.x + offset, width: current.width - offset }, { lastLine });
   const { kind: _kind, paragraphShape: _shape, ...result } = aligned;
-  return result;
+  return { ...result, paragraphReferenceX: -offset, paragraphReferenceWidth: current.width };
 }

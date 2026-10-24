@@ -35,3 +35,18 @@ test("explicit anchor page selects a fragment only after full paragraph coverage
   assert.equal(nestedParagraphReference(paragraph, { rows }, origin, { pageOrdinal: 1, columnOrdinal: -1 }).state, "unavailable");
   assert.deepEqual(rows, before);
 });
+
+test('picture fragments retain the unaligned reference box for LEFT RIGHT CENTER and malformed widths',async()=>{
+ const {alignPictureFragment}=await import('../../web/preview/picture-fragment-alignment.mjs');
+ const paragraph={section:0,paragraph:3,text:'ab'};
+ const fragment={x:19,y:0,width:200,text:'ab',startUnit:0,endUnit:2,textHeight:16,textTop:0,height:20,
+  boundaries:[{unit:0,x:0},{unit:1,x:8},{unit:2,x:16}]};
+ for(const alignment of [1,2,3]){
+  const aligned=alignPictureFragment(fragment,{alignment},true);
+  const row={...aligned,kind:'text',section:0,paragraph:3};
+  const reference=nestedParagraphReference(paragraph,{rows:[row]},{x:100,y:200});
+  assert.equal(reference.state,'referenced',reference.error);assert.equal(reference.rectangle.x,119);assert.equal(reference.rectangle.width,200);
+  for(const width of [NaN,Infinity,0,-1])assert.equal(nestedParagraphReference(paragraph,{rows:[{...row,paragraphReferenceWidth:width}]},{x:0,y:0}).state,'unavailable');
+ }
+ assert.equal(fragment.x,19);assert.equal(fragment.width,200);
+});
