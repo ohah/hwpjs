@@ -44,3 +44,11 @@ adapter는 editor root 안에서만 동작하며 일반 입력창/선택 상자/
 데모의 ‘단축키 설정’에서 JSON 가져오기/내보내기, 기본값 복원, 한국어/English 안내를 제공합니다. 설정은 해당 호스트 수명 동안 유지하며 자동 디스크 저장·브라우저 간 동기화는 하지 않습니다. 파일 입력은 256KiB로 제한하고 최신 가져오기만 적용합니다. 문서/선택에서 실행할 수 없는 명령은 단축키를 등록해도 실행 가능해지지 않습니다.
 
 기본 조합은 [공식 WebHwpCtrl 단축키 표](https://webhwpctrl.cloud.hancom.com/webhwpctrl/js/rights/shortcut/shortcut.htm)의 되돌리기/다시 실행/찾기/바꾸기/서식을 참고합니다. 저장 Mod+S 및 기존 Mod+Y redo 호환 별칭도 기본 JSON에 명시했습니다. 후자는 공식 표의 Ctrl+Y 한 줄 지우기와 다른 기존 호환 동작이며 JSON에서 해제할 수 있습니다. OS/브라우저가 선점해 페이지에 전달하지 않는 조합은 웹 앱이 보장할 수 없습니다. 연속 키(chord sequence), 명령 인자, 전역 OS hotkey는 버전1 지원 범위가 아닙니다.
+
+## 실행 검증
+
+2026-10-25 공개 Tailscale 데모에서 Vanilla/React/Svelte × charshape.hwp/charshape.hwpx의6건을 검사했습니다. 기본 키로 바꾸기·undo/redo·저장, 실제 다운로드·재열기, custom Mod+K/F9, 해제된 Mod+B의 Native 명령 미발생·저장 bytes 불변, English 안내, JSON 내보내기, 충돌/미지 명령 거부, 기본값 복원을 확인했습니다. 키 이벤트의 `isTrusted`, 저장 Native 요청 정확히1회, 파일 신규 생성 또는 쓰기 timestamp 변경과 응답 bytes 일치도 요구했습니다. HWPX3개 저장본은 독립 전체 XML/비대상 ZIP의 normal/`-O` 대조와 잘못된 기대 거부가 통과했습니다. HWP5 독립 Section/비대상 스트림 검증은 별도 통합 기록을 따릅니다.
+
+실행은 `node tools/editor-shortcuts-browser-audit.mjs https://macstudio.tailed42f2.ts.net:10000`입니다. 실행기는 읽기 전용 Worker/키 관측기를 사용하고 소유 브라우저를 finally 종료합니다. 마지막 증거는 `zig-out/verification/keymap-browser-final/`의 metadata/results/cleanup JSON과 실제 저장본·스크린샷입니다. 모든 fixture의 조판 동치나 OS clipboard 권한 허용을 증명하는 검사는 아닙니다.
+
+정확한 제품 경로를 지정한 설정·키 매칭·DOM adapter·비동기 설정 경합 검사는31/31 통과했습니다. `setConfig`/reset/새 import가 이전 파일 읽기 결과와 오류를 무효화하고 dispose 뒤 남은 handler가 실행하지 않는 것을 포함합니다. 임시 후보 사본까지 포함한 Bun 문자열 경로 필터 집계를 이 수치에 합산하지 않습니다. HEAD 기반 core 공개 후보의 독립 사본 검사는94/94였습니다.
