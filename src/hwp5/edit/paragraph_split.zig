@@ -63,6 +63,12 @@ fn prepareSource(a: std.mem.Allocator, source: []const u8, version: Version, p: 
         right.text_present = true;
         right.declared_units = 1;
     }
+    if (at == end) {
+        const id = try @import("character_runs.zig").continuationStyle(p.character_runs, bytes, at, char_count);
+        const runs = try a.dupe(model.CharacterRun, &.{.{ .start_unit = 0, .char_shape_id = id }});
+        a.free(right.character_runs);
+        right.character_runs = runs;
+    }
     right.source_node = null;
     right.header_template = template;
     right.instance_id = new_id;

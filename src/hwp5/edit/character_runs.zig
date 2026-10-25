@@ -21,6 +21,14 @@ fn styleAt(rows: []const model.CharacterRun, unit: u32) u32 {
     return id;
 }
 
+/// 빈 continuation의 현재 가시 끝 스타일. CR은 입력 문자가 아닙니다.
+pub fn continuationStyle(rows: []const model.CharacterRun, bytes: []const u8, at: u32, count: usize) !u32 {
+    try validate(rows, bytes, count);
+    if (bytes.len < 2 or at > bytes.len / 2 - 1) return error.InvalidTextPosition;
+    try @import("plain_text_content.zig").boundary(bytes, at);
+    return styleAt(rows, if (at == 0) 0 else at - 1);
+}
+
 fn append(a: std.mem.Allocator, rows: *std.ArrayList(model.CharacterRun), at: u32, id: u32) !void {
     if (rows.items.len > 0) {
         const last = &rows.items[rows.items.len - 1];

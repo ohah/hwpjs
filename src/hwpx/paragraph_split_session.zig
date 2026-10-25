@@ -111,6 +111,11 @@ fn splitMode(session: *editor.Session, section_index: usize, paragraph: usize, s
         right_index = ordinal;
     };
     const split_right = right_index orelse return error.SourceBindingMismatch;
+    if (!anchored and @import("empty_continuation_style.zig").eligible(selected, &candidate.paragraphs[split_right], start, end)) {
+        const resource_ids = try @import("character_style_resources.zig").ids(session);
+        defer a.free(resource_ids);
+        try @import("empty_continuation_style.zig").apply(a, &section.tree, selected, &candidate.paragraphs[split_right], start, end, resource_ids, session.options.max_sites);
+    }
     candidate.paragraphs[selected_index].break_before = selected.break_before;
     candidate.paragraphs[split_right].break_before = intent;
     var dirty: ?std.ArrayList(@import("text_sites_save.zig").FieldDirty) = null;

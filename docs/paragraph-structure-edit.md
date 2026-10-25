@@ -108,3 +108,32 @@ Worker의 `merge`는 native 병합이 적용된 직후 applied 상태를 기록�
 `node --test tests/hwp5/canvas-editor.test.mjs tests/hwp5/reader-worker.test.mjs tests/hwp5/structure-editor.test.mjs` 37/37이 통과했습니다. 새 검사는 실제 native split→Backspace merge 및 Delete beforeinput, 병합 지점 caret, 중복 요청 억제, 선택 텍스트 비병합과 실제 Worker 병합 undo/redo 전체 projection 복원을 포함합니다. DOM harness 결과이며 실제 브라우저 키 입력·다운로드·OS IME 검증과 전체 corpus 검증을 대체하지 않습니다.
 
 추적 HWP 48개의 모든 인접 문단 쌍은 `node tools/hwp5-merge-corpus-audit.mjs`로 조사했습니다. 1,434회 시도 중 566회는 독립 전체 Section/비대상 스트림·저장 후 재열기 모든 구역/문단 raw text·undo 원본 전체 바이트·redo 편집 전체 바이트가 일치했습니다. 거부는 UnsupportedStructuralControl 102, ParagraphOwnerMismatch 583, UnsupportedSectionControl 174, UnsupportedCrossParagraphField 1, UnsupportedTextControl 8이며 각 거부 후 원본 및 기존 redo 값을 검사했습니다. 열기 거부는 배포용 2개·암호화 1개로 별도 집계했고 검증 실패는 0건입니다. 같은 현재 제품으로 native paragraph merge ReleaseSafe 집중 검사도 root 포함 4/4 재확인했습니다. 이 corpus는 원본 인접 쌍 범위이며 임의 반복 구조 편집·모든 보호 컨트롤·HWPX 구조 편집·실제 브라우저·조판 동치의 증거가 아닙니다.
+
+## 2026-10-26 끝 Enter continuation 입력 서식 통합
+
+plain 문단 끝의 순수 Enter 분할에서 새 빈 문단의 첫 입력은 직전 가시 문자의 **현재 유효 서식**을 상속합니다. HWP5는 기존 CR의 원본 서식보다 현재 소유 `character_runs`의 마지막 가시 문자 서식을 우선합니다. HWPX는 원본 빈 site를 모두 보존하면서 검증된 실제 첫 insertion carrier에 현재 끝 서식을 연결합니다. 전역 first-inclusive 선택 규칙은 바꾸지 않으며 title·field·anchored·복합 구조 경로를 이 변경으로 확장하지 않습니다. 빈 선택에 임의 문자 서식 명령을 허용하는 public API도 아닙니다.
+
+HWPX는 source/template/site 구간·owned span 순서/완전성/run binding·resource ID·UTF16 위치를 검증하고 할당 성공 후에만 private candidate의 서식 배열을 교체합니다. 기존 Session의 save/budget 검증과 commit 경계를 유지합니다. 새 소유 span 배열은 site 수에 비례하며 기존 `max_sites`/세션 예산을 따릅니다. HWP5의 새 run도 준비 중 실패하면 해제되며 기존 clone/history/save 소유권을 재사용합니다.
+
+제품4파일과 테스트4파일은 실제 소스에 통합했습니다. 기존 페이지 재시작/구조 보호 WIP hunk는 보존했습니다. shared `src/root.zig`는 수정하지 않았으며 `zig-out/verification/continuation-typing-style-candidate/root-integration.patch`의 import1줄은 부모 통합 단계입니다. 전용 probe 집중 실행은 정규 root 연결이나 전체 Native gate 완료와 구분합니다.
+
+통합 소스 전용 ReleaseSafe WASM SHA256은 `d85974bb16c89a7a00c07b1a35cb4d3485cbb75fc86d999f595a5c2dbdd63997`입니다. 과거 후보와 바이트가 일치하며 통합본에서도 Native20/20, API6/6, 실제 Worker/합성 Canvas 모델4/4를 다시 통과했습니다. API 저장은 원본+명령으로 기대를 생성한 독립 HWPX wholeXML/비대상 ZIP/메타데이터 정상12건·유효 wrong-style 거부12건(normal/-O), HWP CFB 레코드/비대상 스트림/메타데이터4건을 통과했습니다. 기존 b7의 export412개와 함수 arity가 같습니다. 제품 bin/package dist는 교체하지 않았습니다.
+
+다음 8개는 같은 검사를 재실행하여 센 횟수가 아니라 집중 실행에 포함된 서로 다른 실제 반례입니다.
+
+| 반례 | 통합본 결과 |
+|---|---|
+| HWPX/HWP 전체 allocation 실패 주입, clone·원본 보존 | OOM 전수·leak 검사 통과, 기존 source/스타일 불변 |
+| HWPX 두 site에 span 한도1 | `LimitExceeded`, 미커밋 서식 null 유지 |
+| 현재 끝 resource ID5 누락 | `InvalidResourceReference`, 미커밋 서식 null 유지 |
+| 오른쪽 첫 site source start 변조 | `InvalidTextSites` |
+| owned span 누락/순서 교환 | `InvalidTextSites` / `SourceBindingMismatch` |
+| XML child 범위 밖 / run owner 위조 | 각각 `SourceBindingMismatch` |
+| HWP surrogate 중간/CR 범위 밖/resource 한도/원본 template 위조 | 해당 scalar·위치·resource·binding 오류 유지 |
+| 중간 분할/선택 삭제 분할 | 보정 미적용, 기존 텍스트/서식 정책 유지 |
+
+실제 소유 Chromium vanilla UI도 HWP/HWPX source-end 두 표본에서 Find→Enter→x→다운로드, ACK 전후 font/fillStyle·저장 스타일ID5, undo/redo 후 저장 바이트 동일, 재업로드 스타일ID5를 통과했습니다. 실제 다운로드는 관측 save bytes와 같고 독립 저장 검사도 통과했습니다. 모델4검사는 브라우저 실적으로 합산하지 않습니다. owned-last3실패 경로는 Native/API로 검증했으며 UI 전수나 OS 한글 IME·한컴 조판 동등성은 주장하지 않습니다. 소유 브라우저2개 inactive·전용 서버 종료를 확인했습니다.
+
+통합 근거는 `zig-out/verification/continuation-typing-style-integration/`의 `native-focused.log`, `api.log`, `model.log`, `hostile-cases.json`, `merge-evidence.json`, `REPORT.md`, `READY.json`에 있습니다. 원래 artifact 후보 기록은 별도로 보존했습니다. 전체 Native gate·정규 root 등록·제품 배포·커밋은 이 집중 실적과 별개입니다.
+
+HEAD e907 기반 게시 변형은 모델 필드 존재 여부를 compile-time 확인해 output-plan guard를 보존합니다. 위 실적은 실제 통합 WIP 소스의 결과이며, 이 별도 HEAD 변형은 f08c4dd7(Native 동일) 허용목록 복원 후 의미상 컴파일과 정규 root continuation41/41을 통과했습니다. WASM/API/UI는 이 HEAD 변형으로 재실행하지 않았습니다. 두 소스 snapshot의 완료 상태를 동일하게 취급하지 않습니다.

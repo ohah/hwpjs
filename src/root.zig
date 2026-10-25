@@ -12,6 +12,7 @@ pub const text = @import("text/root.zig");
 pub const model = @import("model/document.zig");
 
 test {
+    _ = @import("continuation_typing_style_tests.zig");
     _ = @import("hwp5/edit/source_tree_tests.zig");
     _ = @import("object_common_probe.zig");
     _ = @import("docinfo_properties_probe.zig");
