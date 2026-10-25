@@ -1,5 +1,9 @@
-const segments = new Intl.Segmenter("ko", { granularity: "grapheme" });
-const words = new Intl.Segmenter("ko", { granularity: "word" });
+let segments, words;
+function createSegmenter(granularity) {
+  const Segmenter = globalThis.Intl?.Segmenter;
+  if (typeof Segmenter !== "function") throw Error("IntlSegmenterUnavailable");
+  return new Segmenter("ko", { granularity });
+}
 const splitScalar = (text, unit) => unit > 0 && unit < text.length && /[\uD800-\uDBFF]/u.test(text[unit - 1]) && /[\uDC00-\uDFFF]/u.test(text[unit]);
 
 /** Prefer a verified pre-input selection; otherwise use a minimal scalar-safe replacement. */
@@ -27,12 +31,12 @@ export function textChange(before, after, selection = null) {
   return { startUnit: start, endUnit: oldEnd, text: after.slice(start, newEnd) };
 }
 export function graphemeUnits(text) {
-  return [...segments.segment(text)].map(s => s.index).concat(text.length);
+  return [...(segments ??= createSegmenter("grapheme")).segment(text)].map(s => s.index).concat(text.length);
 }
 /** 공백과 구두점을 건너뛴 단어 시작점으로 이동한다. */
 export function wordBoundary(text, unit, forward) {
   let previous = 0;
-  for (const part of words.segment(text)) {
+  for (const part of (words ??= createSegmenter("word")).segment(text)) {
     if (!part.isWordLike) continue;
     if (forward && part.index > unit) return part.index;
     if (!forward && part.index >= unit) break;
