@@ -1,3 +1,4 @@
+import {EditorWritePolicy} from './write-policy.ts';
 import type { SynchronousCallback, UpdateCallback } from '../state/synchronous-callback.ts';
 import {SelectionHistory} from '../state/selection-history.ts';
 import {loadSourceOptions} from './load-source-options.ts';
@@ -45,6 +46,7 @@ export function createEditor(options:CreateEditorOptions) {
  const instanceId=String(++nextEditorInstance);
  const queue=new FifoScheduler(),admission=new FifoScheduler(),registry=new CommandRegistry();
  const selectionHistory=new SelectionHistory();
+ const writePolicy=new EditorWritePolicy();
  let active:EditorRuntime|undefined,locked:{runtime:EditorRuntime;message:RuntimeMessage;context:RuntimeRequestContext;editable:boolean;enableOptions?:Readonly<Record<string,unknown>>;cancelled?:boolean}|undefined;
  let terminal=false,disposePromise:Promise<void>|undefined,requestId=0,nextGeneration=0,revisionClock=0,stateVersion=0;
  let readDepth=0,collecting=false,handling=false;
@@ -124,21 +126,22 @@ export function createEditor(options:CreateEditorOptions) {
  }
  async function newRuntime(){const runtime=await options.runtimeFactory();if(!runtime||typeof runtime.request!=='function'||typeof runtime.dispose!=='function')throw Error('InvalidRuntime');if(usedRuntimes.has(runtime))throw Error('RuntimeAlreadyOwned');usedRuntimes.add(runtime);return runtime;}
  function history(reply:RuntimeReply){return Number.isSafeInteger(reply.historyRevision)?reply.historyRevision:undefined;}
- function contentPatch(reply:RuntimeReply,inherit=true):Partial<StateData>{
+ function contentPatch(reply:RuntimeReply,inherit=true,editable?:boolean):Partial<StateData>{
    if(reply.content===undefined)throw Error('SnapshotMissing');
    const capabilities=reply.capabilities??{...(inherit&&state.documentId!==null?state.capabilities as object:{}),...Object.fromEntries(Object.entries(reply).filter(([key])=>!['content','kind','error','applied','bytes','meta','origin','requestId','historyRevision','historyRevisions'].includes(key)))};
-   return {content:ownObservation(reply.content)(),capabilities:ownObservation(capabilities)(),nativeHistoryRevision:history(reply),nativeHistoryRevisions:reply.historyRevisions,selection:undefined,viewRevision:state.viewRevision+1};
+   return {content:ownObservation(writePolicy.observe(reply.content,editable))(),capabilities:ownObservation(writePolicy.capabilities(capabilities,editable))(),nativeHistoryRevision:history(reply),nativeHistoryRevisions:reply.historyRevisions,selection:undefined,viewRevision:state.viewRevision+1};
  }
  async function finishCandidate(runtime:EditorRuntime,message:RuntimeMessage,ctx:RuntimeRequestContext,editable:boolean,enableOptions?:Readonly<Record<string,unknown>>,first?:RuntimeReply,guard:()=>void=()=>{}):Promise<EditorState>{
    let reply=first??await runtime.request(message,ctx);verifyReply(reply,ctx);
    if(reply.error)throw Error(reply.error);
    if(editable){const enableContext={...ctx,requestId:++requestId};reply=await runtime.request({...enableOptions,kind:'enable'},enableContext);verifyReply(reply,enableContext);if(reply.error)throw Error(reply.error);}
-   const patch=contentPatch(reply,false);assertLive();guard();
+   const patch=contentPatch(reply,false,editable);assertLive();guard();
    // Build/copy the public snapshot before giving up the prior session.
    const nextRevision=++revisionClock;
    const nextData={...patch,documentId:ctx.documentId,generation:ctx.generation,operationRevision:nextRevision,savedOperationRevision:nextRevision,status:'ready' as const};
    new EditorState({editorId,viewRevision:state.viewRevision+1,stateVersion:stateVersion+1,...nextData},runRead);
-   const previous=active;active=runtime;install(nextData,true,ctx);
+   const previous=active;
+   writePolicy.publish(editable,()=>{active=runtime;try{install(nextData,true,ctx);}catch(error){active=previous;throw error;}});
    try{await release(previous);}catch(error){notifyError(error,ctx);}
    return state;
  }
@@ -200,7 +203,7 @@ export function createEditor(options:CreateEditorOptions) {
  function requireReady(token:StateToken,view=false){assertLive();if(!active||state.status!=='ready')throw Error(state.status==='refresh-required'?'RefreshRequired':'EditorNotReady');validateToken(token,state,view);}
  async function mutate(message:RuntimeMessage,token:StateToken,preserveFormattingSelection=false):Promise<CommandResult>{
    const ctx=context(token);let reserved:number|undefined,reply:RuntimeReply|undefined;
-   try{requireReady(token);reserved=++revisionClock;
+   try{requireReady(token);writePolicy.assertWritable();reserved=++revisionClock;
      // Once request() begins, an exception cannot prove that Native did not apply.
      try{reply=await active!.request(message,ctx);verifyReply(reply,ctx);}catch(error){
        install({operationRevision:reserved,status:'refresh-required'});notifyError(error,ctx,'unknown');return result('committed-refresh-required',ctx,error);
@@ -234,6 +237,7 @@ export function createEditor(options:CreateEditorOptions) {
      requireReady(pending.token);
      handling=true;let handled:boolean;try{handled=registry.run(pending.handlers,pending.payload,v=>copyOwned(v));}finally{handling=false;}
      assertLive();if(handled)return result('handled-without-runtime',ctx);
+     writePolicy.assertWritable();
      if(pending.command.id===SPLICE_TEXT_COMMAND.id){
        const payload=pending.payload as SpliceTextPayload;
        if(payload.selectionVersion!==undefined&&payload.selectionVersion!==state.stateVersion)throw Error('StaleClipboardSelection');
