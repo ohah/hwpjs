@@ -58,7 +58,7 @@ RN의 후속 iOS 시뮬레이터 검증은 저수준 Native Context port의 두 
 | 실행 취소·다시 실행 | core undo/redo/getHistoryAvailability; `src/model/history_stack.zig`; `web/preview/history-input-intent-queue.mjs` | 빠른 undo 72, 이력 바닥 4, 독립 다운로드 2의 각각의 기록 | 구현·검증 | 실제 OS IME·세대 교체·모든 거래 조합은 별도 |
 | 기본 plain text 붙여넣기 | getSelectionClipboard/typed splice; `apps/demo/src/clipboard-bridge.ts`; 기존 Canvas 입력면 | 공개 native paste 6조합 | 구현·검증 | rich clipboard·객체·cross-owner·모든 OS 검증 확대 |
 | 선택·caret·UTF-16 타깃 | core SelectionTarget/setSelection; Native owner/token; Canvas surface | 정적 계약과 위 UI 사례 | 부분 | 원본 WCHAR 좌표와 display 좌표를 혼용하지 않고 전 범위 검증 |
-| 글자 크기·bold·italic·밑줄 | core typed character/underline 명령; `src/wasm`; `apps/demo/src/formatting-bridge.ts` | public 소스 확인, 과거 개별 서식/독립 저장·E2E 기록 | 부분 | 전체 글자 속성·모든 source shape의 typed 공개와 같은 최신 snapshot 검증 |
+| 글자 크기·bold·italic·밑줄·취소선 | core typed character/underline/strike 명령; `src/wasm`; `apps/demo/src/formatting-bridge.ts` | public 소스 확인, 과거 개별 서식/독립 저장·E2E 기록; 취소선은 공개 G2에서 원본 비어 있지 않은 선택의 Boolean on/off·readonly 거부·저장/재열기 확인 | 부분 | 전체 글자 속성·모든 source shape의 typed 공개와 같은 최신 snapshot 검증. 취소선 caret 다음 입력 서식은 미지원; 필드 내부·원본 한/글 시각 동치는 미검증 |
 | 문단 정렬 | core `SET_PARAGRAPH_ALIGNMENT_COMMAND`; 형식별 문단 속성; formatting bridge | public 소스 확인과 한정된 과거 서식 검사 | 부분 | 여백·간격·split/join 등 전체 문단 명령군 공개 |
 | 찾기·바꾸기·통계 | core text-tools/query와 setSelection/splice; `apps/demo/src/text-tools-bridge.ts` | snapshot 기반 literal 검색 계약, 과거 UI 표본 | 부분 | 긴/windowed 문서의 완전성, regex·전체 replace transaction은 별도 |
 | 필드·양식 | `js/hwp5-editor.mjs`, `js/hwpx-editor.mjs`에 저수준 기반; 전용 typed public 필드 계약은 미제공 | `docs/headless-api-coverage.md`, 과거 private field E2E는 해당 후보만 | 부분 | 필드 ID/중복명/보호/양식별 조회·명령·이력과 실제 UI 승격 |
@@ -119,7 +119,7 @@ RN의 후속 iOS 시뮬레이터 검증은 저수준 Native Context port의 두 
 | --- | --- | --- |
 | 필드·양식 | typed inventory/identity/선택/값 변경과 양식별 capability | 두 형식 실제 필드·중복명·보호·이력, 필드 외부 내용/리소스 독립 저장 보존 |
 | 표·셀 구조 | table/cell target, 생성·행열·크기·병합 범위 명시 | 실제 표·중첩·새 셀, 비대상 내용·이력·재열기와 실제 UI |
-| 문자·문단 확장/구조 | 글꼴·색·strike·split/join 등 typed 승격 | 실제 혼합 서식/필드/보호 경계, source+command 독립 XML/CFB와 trusted UI |
+| 문자·문단 확장/구조 | 글꼴·색·split/join 등 typed 승격 | 실제 혼합 서식/필드/보호 경계, source+command 독립 XML/CFB와 trusted UI |
 | 객체·media | 그림·차트·수식부터 개별 typed query/mutation | 관계/BinData·비대상 내용·배치 보존. OLE 표시와 active 실행은 별도 |
 | 문서 전체 관측·조판·export | complete/partial 텍스트 순회·typed 페이지·형식별 export | windowed 누락 검출, 원본 글꼴·줄/표/페이지 비교. PDF/bitmap/인쇄 별도 |
 | RN 네이티브 앱 | 공유 provider/scene·JSI·Native Canvas·실제 입력면 연결 | iOS/Android release build, 소유권/취소/재시작, 실제 기기 입력·저장·IME E2E |

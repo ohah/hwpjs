@@ -6,7 +6,7 @@
 | --- | --- | --- |
 | 문서 | HWP5 · HWPX 열기/편집/현재 형식 저장 | HWP3 제외; 모든 버전·암호·문서 특성 보장 아님 |
 | 텍스트 | display 선택, 지원 범위의 splice | 보호/필드/개체/unknown/clipped 대상 제한 |
-| 서식 | size/bold/italic, 밑줄, 문단 정렬 typed 명령 | 모든 글자/문단 속성 public 완료 아님 |
+| 서식 | size/bold/italic, 밑줄, 취소선, 문단 정렬 typed 명령 | 취소선은 [검증한 원본의 비어 있지 않은 선택](../api/selection.md#취소선의-선택-범위와-형식별-경계)에 적용하며 caret의 다음 입력 서식은 지원하지 않음. 모든 글자/문단 속성 public 완료 아님 |
 | 검색 | 현재 snapshot의 literal 검색·통계 | 정규식·전체 문서 순회·모두 바꾸기 transaction 보장 없음 |
 | 표·셀 | 지원 셀 내부의 텍스트/서식 경로 | typed 표 주소·생성·행열 조작 API 전체 미제공 |
 | 필드·개체·media | 일부 엔진/저수준 기능 | typed 공개 생성/조회/편집 전체로 안내하지 않음 |
