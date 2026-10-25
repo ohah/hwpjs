@@ -23,3 +23,6 @@ export const SET_CHARACTER_UNDERLINE_COMMAND=createCommand<SetCharacterUnderline
 
 export interface SetCharacterStrikePayload {readonly target:SelectionTarget;readonly enabled:boolean;}
 export const SET_CHARACTER_STRIKE_COMMAND=createCommand<SetCharacterStrikePayload>('set-character-strike');
+
+export interface SetCharacterTextColorPayload {readonly target:SelectionTarget;readonly color:string;}
+export const SET_CHARACTER_TEXT_COLOR_COMMAND=createCommand<SetCharacterTextColorPayload>('set-character-text-color');

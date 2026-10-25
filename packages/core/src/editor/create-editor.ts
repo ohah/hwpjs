@@ -12,12 +12,13 @@ import { surfaceOperation } from '../commands/surface-protocol.ts';
 import { CancellationFence, interruptible } from '../scheduler/cancellation.ts';
 import { FifoScheduler } from '../scheduler/fifo.ts';
 import { CommandRegistry } from '../commands/registry.ts';
-import { SPLICE_TEXT_COMMAND, UNDO_COMMAND, REDO_COMMAND, SET_CHARACTER_PROPERTIES_COMMAND, SET_PARAGRAPH_ALIGNMENT_COMMAND, SET_CHARACTER_UNDERLINE_COMMAND, SET_CHARACTER_STRIKE_COMMAND } from '../commands/commands.ts';
-import type { EditorCommand, SpliceTextPayload, HistoryPayload, SelectionTarget, SetCharacterPropertiesPayload, SetParagraphAlignmentPayload, SetCharacterUnderlinePayload, SetCharacterStrikePayload } from '../commands/commands.ts';
+import { SPLICE_TEXT_COMMAND, UNDO_COMMAND, REDO_COMMAND, SET_CHARACTER_PROPERTIES_COMMAND, SET_PARAGRAPH_ALIGNMENT_COMMAND, SET_CHARACTER_UNDERLINE_COMMAND, SET_CHARACTER_STRIKE_COMMAND, SET_CHARACTER_TEXT_COLOR_COMMAND } from '../commands/commands.ts';
+import type { EditorCommand, SpliceTextPayload, HistoryPayload, SelectionTarget, SetCharacterPropertiesPayload, SetParagraphAlignmentPayload, SetCharacterUnderlinePayload, SetCharacterStrikePayload, SetCharacterTextColorPayload } from '../commands/commands.ts';
 import {retryablePasswordReply,PasswordAttemptError} from './unlock-policy.ts';
 import { formattingSelection } from '../state/formatting-selection.ts';
 import { formattingMessage } from '../commands/formatting.ts';
 import { underlineMessage } from '../commands/underline.ts';
+import {textColorMessage} from '../commands/text-color.ts';
 import { strikeMessage } from '../commands/strike.ts';
 import { selectionMessage, validateSelection, validateToken } from '../commands/selection.ts';
 
@@ -245,6 +246,10 @@ export function createEditor(options:CreateEditorOptions) {
        if(typeof payload.text!=='string'||!isWellFormed(payload.text))throw Error('InvalidText');
        const position=selectionMessage(payload.target,state);
        return await mutate({kind:'splice',...position,text:payload.text},payload.target);
+     }
+     if(pending.command.id===SET_CHARACTER_TEXT_COLOR_COMMAND.id){
+       const payload=pending.payload as SetCharacterTextColorPayload;
+       return await mutate(textColorMessage(payload,state),payload.target,true);
      }
      if(pending.command.id===SET_CHARACTER_STRIKE_COMMAND.id){
        const payload=pending.payload as SetCharacterStrikePayload;

@@ -1,3 +1,6 @@
+// @ts-ignore Public selection uses the canonical UTF-16 scalar boundary.
+import {isUtf16Boundary} from '../../../../web/preview/utf16-boundary.mjs';
+import {characterTextColorState} from './text-color-state.ts';
 import type { EditorState } from './editor-state.ts';
 import type { SelectionTarget } from '../commands/commands.ts';
 import { validateSelection } from '../commands/selection.ts';
@@ -17,6 +20,9 @@ export interface SelectionFormatting {
  readonly paragraphAvailableReason:string|null;
  readonly underlineAvailableReason:string|null;
  readonly strikeAvailableReason:string|null;
+ readonly textColorAvailableReason:string|null;
+ /** Canonical #rrggbb, mixed, or unknown null; not a CSS named color. */
+ readonly textColor:FormattingValue<string>;
  readonly bold:FormattingValue<boolean>;
  readonly italic:FormattingValue<boolean>;
  readonly underline:FormattingValue<boolean>;
@@ -28,7 +34,7 @@ export interface SelectionFormatting {
 const message=(error:unknown)=>error instanceof Error?error.message:String(error);
 /** Pure owned projection. It does not rebase stale selections or manufacture a cursor. */
 export function getSelectionFormatting(state:EditorState):SelectionFormatting {
- const unavailable=(reason:string):SelectionFormatting=>Object.freeze({target:null,characterAvailableReason:reason,paragraphAvailableReason:reason,underlineAvailableReason:reason,strikeAvailableReason:reason,bold:null,italic:null,underline:null,strike:null,size:null,align:null});
+ const unavailable=(reason:string):SelectionFormatting=>Object.freeze({target:null,characterAvailableReason:reason,paragraphAvailableReason:reason,underlineAvailableReason:reason,strikeAvailableReason:reason,textColorAvailableReason:reason,textColor:null,bold:null,italic:null,underline:null,strike:null,size:null,align:null});
  if(state.status!=='ready')return unavailable(state.status==='refresh-required'?'RefreshRequired':'EditorNotReady');
  const selection=state.selection;
  if(selection==null)return unavailable('MissingSelection');
@@ -49,7 +55,10 @@ export function getSelectionFormatting(state:EditorState):SelectionFormatting {
  const underline=underlineAvailableReason===null?characterSelectionState(content,row,target.startUnit,target.endUnit,'underline'):null;
  const strike=strikeTargetReason===null?characterSelectionState(content,row,target.startUnit,target.endUnit,'strike'):null;
  const strikeAvailableReason=strikeTargetReason??(strike===null?'UnknownCharacterStrike':null);
- const size=characterAvailableReason===null?characterSizeState(content,row,target.startUnit,target.endUnit):null;
+ const textColorTargetReason=reason(true,'characterTextColorAvailable');
+ const textColor=textColorTargetReason===null?characterTextColorState(content,row,target.startUnit,target.endUnit):null;
+ const textColorAvailableReason=textColorTargetReason??(textColor===null?'UnknownCharacterTextColor':null);
+ const size=characterAvailableReason===null?characterSizeState(content,row,target.startUnit,target.endUnit,{isBoundary:isUtf16Boundary}):null;
  const align=paragraphAvailableReason===null?paragraphAlignmentKey((row as typeof row&{paragraphShape?:{alignment?:number}}).paragraphShape?.alignment):null;
- return Object.freeze({target,characterAvailableReason,paragraphAvailableReason,underlineAvailableReason,strikeAvailableReason,bold,italic,underline,strike,size,align});
+ return Object.freeze({target,characterAvailableReason,paragraphAvailableReason,underlineAvailableReason,strikeAvailableReason,textColorAvailableReason,textColor,bold,italic,underline,strike,size,align});
 }

@@ -3,10 +3,10 @@ import { snapUnit } from "./text-input.mjs";
 export const isSourceCharacterSize = value => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
 
 /** 현재 표시 구간의 원본 크기만 읽으며 미확인 값을 보정하지 않습니다. */
-export function characterSizeState(content, paragraph, start, end) {
+export function characterSizeState(content, paragraph, start, end, {isBoundary=(text,unit,last=false)=>snapUnit(text,unit,last)===unit}={}) {
   if (content?.characterPropertiesAvailable !== true || typeof paragraph?.text !== "string" || paragraph.clipped ||
       !Number.isInteger(start) || !Number.isInteger(end) || start < 0 || start >= end || end > paragraph.text.length ||
-      snapUnit(paragraph.text, start) !== start || snapUnit(paragraph.text, end, true) !== end) return null;
+      !isBoundary(paragraph.text, start) || !isBoundary(paragraph.text, end, true)) return null;
   const shapes = new Map((content.characterShapes ?? []).map(shape => [shape.id, shape]));
   let cursor = start, size, mixed = false;
   for (const span of paragraph.characterRanges ?? []) {

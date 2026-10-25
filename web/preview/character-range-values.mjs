@@ -1,18 +1,19 @@
 import { snapUnit } from "./text-input.mjs";
 
-/** Shared current-display coverage and scalar boundary checks. Null means unknown. */
-export function characterRangeValues(content, ranges, valueAt) {
+const graphemeBoundary=(text,unit,end=false)=>snapUnit(text,unit,end)===unit;
+/** Shared display coverage. Default web policy stays grapheme-safe; explicit callers may supply scalar boundaries. */
+export function characterRangeValues(content, ranges, valueAt, {isBoundary=graphemeBoundary}={}) {
   if (!Array.isArray(content?.paragraphs) || !Array.isArray(ranges) || !ranges.length) return null;
   const values = [];
   for (const range of ranges) {
     if (!range) return null;
     const paragraph = content.paragraphs.find(row => row.section === range.section && row.paragraph === range.paragraph);
     const { startUnit: start, endUnit: end } = range;
-    if (!paragraph || paragraph.clipped || typeof paragraph.text !== "string" || !Number.isInteger(start) || !Number.isInteger(end) || start < 0 || start > end || end > paragraph.text.length || snapUnit(paragraph.text, start) !== start || snapUnit(paragraph.text, end, true) !== end) return null;
+    if (!paragraph || paragraph.clipped || typeof paragraph.text !== "string" || !Number.isInteger(start) || !Number.isInteger(end) || start < 0 || start > end || end > paragraph.text.length || !isBoundary(paragraph.text, start) || !isBoundary(paragraph.text, end, true)) return null;
     if (!Array.isArray(paragraph.characterRanges)) return null;
     let cursor = start;
     for (const span of paragraph.characterRanges) {
-      if (!span || !Number.isInteger(span.start) || !Number.isInteger(span.end) || span.start < 0 || span.start > span.end || span.end > paragraph.text.length || snapUnit(paragraph.text, span.start) !== span.start || snapUnit(paragraph.text, span.end, true) !== span.end) return null;
+      if (!span || !Number.isInteger(span.start) || !Number.isInteger(span.end) || span.start < 0 || span.start > span.end || span.end > paragraph.text.length || !isBoundary(paragraph.text, span.start) || !isBoundary(paragraph.text, span.end, true)) return null;
       const low = Math.max(start, span.start), high = Math.min(end, span.end);
       if (low >= high) continue;
       const value = valueAt(span.charShapeId);
