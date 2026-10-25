@@ -46,3 +46,12 @@ Node24 이상에서 `node --test packages/core/tests/{editor,commands,state,sche
 적대적 재현에서 같은 사용자 ID 두 개, 폐기 후 ID 재사용, 사용자 이름/자동 이름 충돌이 모두 다른 문서의 splice를 승인했습니다. 인스턴스별 documentId 분리 후 `identity.test.ts`4건에서 잘못된 target을 StaleTarget으로 거부하고 native 요청·이전 상태가 유지됨을 확인했습니다. 같은 편집기의 문서 교체 대조군도 포함합니다.
 
 공개 밑줄 명령·관측 selector와 실제 툴바 연결의 후속 계약/검증은 [밑줄 서식](headless-underline-formatting.md)이 소유합니다.
+
+
+## 공개 이력 가용 상태
+
+`EditorState.nativeHistoryRevisions`는 Native 응답의 도달 가능한 revision 목록을 소유한 불변 관측값입니다. `getHistoryAvailability(state)`는 ready 상태와 유효한 현재 revision·중복 없는 목록을 요구하고 `available/canUndo/canRedo`를 반환합니다. 메타데이터가 없거나 모순이면 두 명령을 활성화하지 않습니다. 선택 변경은 이 관측값을 보존하며 문서 교체는 새 응답으로 교체합니다.
+
+공통 Native `model/history_stack.zig`는 새 변경에 단조 증가하는 ID를 부여하고 분기 시 redo를 제거합니다. 현재 ID보다 작은 도달 ID는 undo, 큰 ID는 redo입니다. 목록은 현재/undo/redo 저장 순서이므로 배열 위치를 시간 순서로 해석하지 않습니다. revision이 양수라는 이유만으로 undo 가능하다고 판단하지 않습니다. 사용자 Runtime도 이 ID 계약과 메타데이터를 충족해야 가용 상태를 제공할 수 있습니다. 데모 toolbar와 우클릭 메뉴는 같은 selector를 사용합니다.
+
+명시 WASM `fc7fb2ab7eeff2bb07ae1463f7e5b12dcc7ebbd49f4c6de9487a85da6900dda4`의 HWP5/HWPX에서 최초 열기, 편집, undo/redo, 새 분기, 16개 이력 상한을 초과한 편집과 끝까지 undo, 끝에서 no-op, 재열기를 확인했습니다. 양수 revision에서도 undo가 불가능한 경계를 포함합니다. `packages/core/tests/integration/history-availability.test.ts`가 실제 엔진 검사를, `state/history-state.test.ts`가 불변 소유권·불완전/잘못된 메타데이터 검사를 소유합니다.

@@ -14,3 +14,6 @@ export type { SelectionFormatting, FormattingValue } from './state/formatting-st
 
 export {detectDocumentFormat} from './document-format.ts';
 export {PasswordAttemptError} from './editor/unlock-policy.ts';
+
+export {getHistoryAvailability} from "./state/history-state.ts";
+export type {HistoryAvailability} from "./state/history-state.ts";

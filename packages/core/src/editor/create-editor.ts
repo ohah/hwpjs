@@ -75,7 +75,7 @@ export function createEditor(options:CreateEditorOptions) {
    if(terminal)return;
    // Capture both sets before any callback changes registrations.
    const states=[...stateListeners],updates=mutation?[...updateListeners]:[];
-   const next:StateData={editorId,documentId:state.documentId,generation:state.generation,operationRevision:state.operationRevision,viewRevision:state.viewRevision,stateVersion:++stateVersion,status:state.status,content:state.content,capabilities:state.capabilities,nativeHistoryRevision:state.nativeHistoryRevision,savedOperationRevision:state.savedOperationRevision,selection:state.selection,...patch};
+   const next:StateData={editorId,documentId:state.documentId,generation:state.generation,operationRevision:state.operationRevision,viewRevision:state.viewRevision,stateVersion:++stateVersion,status:state.status,content:state.content,capabilities:state.capabilities,nativeHistoryRevision:state.nativeHistoryRevision,nativeHistoryRevisions:state.nativeHistoryRevisions,savedOperationRevision:state.savedOperationRevision,selection:state.selection,...patch};
    state=new EditorState(next,runRead);const snapshot=state;
    notify(states,snapshot,ctx,mutation);notify(updates,snapshot,ctx,mutation);
  }
@@ -122,7 +122,7 @@ export function createEditor(options:CreateEditorOptions) {
  function contentPatch(reply:RuntimeReply,inherit=true):Partial<StateData>{
    if(reply.content===undefined)throw Error('SnapshotMissing');
    const capabilities=reply.capabilities??{...(inherit&&state.documentId!==null?state.capabilities as object:{}),...Object.fromEntries(Object.entries(reply).filter(([key])=>!['content','kind','error','applied','bytes','meta','origin','requestId','historyRevision','historyRevisions'].includes(key)))};
-   return {content:ownObservation(reply.content)(),capabilities:ownObservation(capabilities)(),nativeHistoryRevision:history(reply),selection:undefined,viewRevision:state.viewRevision+1};
+   return {content:ownObservation(reply.content)(),capabilities:ownObservation(capabilities)(),nativeHistoryRevision:history(reply),nativeHistoryRevisions:reply.historyRevisions,selection:undefined,viewRevision:state.viewRevision+1};
  }
  async function finishCandidate(runtime:EditorRuntime,message:RuntimeMessage,ctx:RuntimeRequestContext,editable:boolean,enableOptions?:Readonly<Record<string,unknown>>,first?:RuntimeReply,guard:()=>void=()=>{}):Promise<EditorState>{
    let reply=first??await runtime.request(message,ctx);verifyReply(reply,ctx);
@@ -344,7 +344,7 @@ export function createEditor(options:CreateEditorOptions) {
    assertPublicMutation();if(disposePromise)return disposePromise;
    terminal=true;disposedFence.cancel();for(const job of loads)job.fence.cancel();loads.clear();
    if(surface){const detached=surface;surface=undefined;detached.active=false;detached.fence.cancel();cancelComposition(detached,'dispose');}
-   state=new EditorState({editorId,documentId:state.documentId,generation:state.generation,operationRevision:state.operationRevision,viewRevision:state.viewRevision,stateVersion:++stateVersion,status:'disposed',content:state.content,capabilities:state.capabilities,nativeHistoryRevision:state.nativeHistoryRevision,savedOperationRevision:state.savedOperationRevision,selection:state.selection},runRead);
+   state=new EditorState({editorId,documentId:state.documentId,generation:state.generation,operationRevision:state.operationRevision,viewRevision:state.viewRevision,stateVersion:++stateVersion,status:'disposed',content:state.content,capabilities:state.capabilities,nativeHistoryRevision:state.nativeHistoryRevision,nativeHistoryRevisions:state.nativeHistoryRevisions,savedOperationRevision:state.savedOperationRevision,selection:state.selection},runRead);
    stateListeners.clear();updateListeners.clear();errorListeners.clear();registry.clear();
    const nativeDisposal=queue.enqueue(async()=>{const current=active,candidate=locked?.runtime;active=undefined;locked=undefined;const failures:unknown[]=[];for(const runtime of [candidate,current])try{await release(runtime);}catch(error){failures.push(error);}if(failures.length)throw new AggregateError(failures,'RuntimeDisposeFailed');});
    disposePromise=Promise.all([nativeDisposal,admission.drain()]).then(()=>{});return disposePromise;
