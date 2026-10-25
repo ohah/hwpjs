@@ -3,7 +3,7 @@ pageType: home
 hero:
   name: HWPJS
   text: 문서 편집의 중심은 API
-  tagline: HWP5 · HWPX를 읽고, 선택하고, 편집하고, 저장하세요. UI는 사용하는 프레임워크에 맡깁니다.
+  tagline: HWP5 · HWPX를 읽고, 선택하고, 편집하고, 저장하세요.
   actions:
     - theme: brand
       text: 시작하기
