@@ -1,7 +1,7 @@
 import {
   createEditor, detectDocumentFormat, findTextMatch, SPLICE_TEXT_COMMAND,
   type RuntimeFactory,
-} from '@hwpjs/core';
+} from '@ohah/hwpjs';
 
 // runtimeFactory는 호출마다 새 문서 runtime을 만들어야 합니다.
 export async function replaceFirst(

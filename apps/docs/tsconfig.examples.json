@@ -31,6 +31,24 @@
       ],
       "@hwpjs/svelte": [
         "../../packages/svelte/src/index.ts"
+      ],
+      "@ohah/hwpjs": [
+        "../../packages/hwpjs/src/index.ts"
+      ],
+      "@ohah/hwpjs/runtime": [
+        "../../packages/hwpjs/src/runtime.ts"
+      ],
+      "@ohah/hwpjs/vanilla": [
+        "../../packages/hwpjs/src/vanilla.ts"
+      ],
+      "@ohah/hwpjs/react": [
+        "../../packages/hwpjs/src/react.ts"
+      ],
+      "@ohah/hwpjs/svelte": [
+        "../../packages/hwpjs/src/svelte.ts"
+      ],
+      "@ohah/hwpjs/react-native": [
+        "../../packages/hwpjs/src/react-native.ts"
       ]
     }
   },

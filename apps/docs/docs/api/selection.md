@@ -11,7 +11,7 @@
 import {
   getSelectionFormatting, SET_CHARACTER_PROPERTIES_COMMAND,
   SET_PARAGRAPH_ALIGNMENT_COMMAND, type HeadlessEditor,
-} from '@hwpjs/core';
+} from '@ohah/hwpjs';
 
 export async function makeBold(editor: HeadlessEditor) {
   const selection = getSelectionFormatting(editor.getEditorState());

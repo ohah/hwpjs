@@ -12,7 +12,7 @@
 
 ## 새 배포 구조 검토
 
-내부 모노레포의 core·Vanilla·React·Svelte·React Native 분리는 유지하면서, 외부에는 단일 `@ohah/hwpjs`와 하위 경로를 제공하는 umbrella 구성을 검증 중입니다.
+내부 모노레포의 core·Vanilla·React·Svelte·React Native 분리는 유지하면서, 외부에는 단일 `@ohah/hwpjs`와 하위 경로를 제공하는 umbrella 구성을 사용합니다. 실제 tarball 소비 검증과 npm 게시는 별개입니다.
 
 | 후보 import 경로 | 의미 |
 | --- | --- |
@@ -28,6 +28,6 @@
 
 ## 지금 예제를 실행하려면
 
-현재 가이드의 코드 import는 실제 workspace의 `@hwpjs/*` 원형을 유지합니다. namespace 통합·타입/exports·tarball 소비 검증 후 새 이름으로 함께 전환할 예정입니다. 아직 공개하지 않은 API에 `bun add @ohah/hwpjs`만 안내해 설치 성공처럼 보이게 하지 않습니다.
+가이드 예제의 canonical imports는 새 단일 umbrella tarball을 clean consumer에 설치하고 실제 packed 선언 파일로 검사했습니다. 이 검증은 npm 게시를 뜻하지 않습니다. 기존 내부 workspace 이름과 외부 subpath는 별도로 유지될 수 있습니다. 아직 공개하지 않은 API에 `bun add @ohah/hwpjs`만 안내해 설치 성공처럼 보이게 하지 않습니다.
 
 [공개 API 직접 실행](../api/playground.mdx)은 배포에 포함된 실제 내부 패키지·WASM을 사용합니다. 실행 화면의 `@ohah/hwpjs` 코드 표기는 새 canonical 이름을 설명하며, npm에서 동일 API가 이미 게시됐다는 뜻은 아닙니다.

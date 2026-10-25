@@ -1,5 +1,5 @@
-import { CanvasSurface, useEditorState } from '@hwpjs/react';
-import type { HeadlessEditor } from '@hwpjs/core';
+import { CanvasSurface, useEditorState } from '@ohah/hwpjs/react';
+import type { HeadlessEditor } from '@ohah/hwpjs';
 
 // editor의 생성·load·save·dispose는 부모 앱이 소유합니다.
 export function DocumentPane({ editor }: { editor: HeadlessEditor }) {

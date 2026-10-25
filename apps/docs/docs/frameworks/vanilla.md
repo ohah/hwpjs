@@ -6,8 +6,8 @@
 
 <!-- example:vanilla.ts -->
 ```ts
-import { detectDocumentFormat } from '@hwpjs/core';
-import { createCanvasSurface } from '@hwpjs/vanilla';
+import { detectDocumentFormat } from '@ohah/hwpjs';
+import { createCanvasSurface } from '@ohah/hwpjs/vanilla';
 import { createBrowserEditor, type BrowserAssets } from './runtime';
 
 export async function mountDocument(root: HTMLElement, file: File, assets: BrowserAssets) {

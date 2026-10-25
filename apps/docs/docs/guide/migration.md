@@ -1,10 +1,10 @@
 # 기존 Rust 문서에서 이동
 
-과거 `legacy/rust/documents` 사이트는 역사로 보존합니다. 해당 사이트의 `@ohah/hwpjs`, napi/WASI 구성, `toJson`/`toHtml`/`toMarkdown`/CLI 예제를 현재 `@hwpjs/core`의 public API로 바꾸어 읽지 마세요.
+과거 `legacy/rust/documents` 사이트는 역사로 보존합니다. 해당 사이트의 `@ohah/hwpjs`, napi/WASI 구성, `toJson`/`toHtml`/`toMarkdown`/CLI 예제를 새 `@ohah/hwpjs`의 public API로 바꾸어 읽지 마세요.
 
 | 과거 문서의 안내 | 현재 시작점 |
 | --- | --- |
-| @ohah/hwpjs 설치와 플랫폼별 바이너리 | @hwpjs/* workspace 패키지와 명시 WASM 아티팩트 |
+| @ohah/hwpjs 설치와 플랫폼별 바이너리 | 새 @ohah/hwpjs와 하위 경로, 명시 WASM 아티팩트 |
 | 전역 변환 함수/CLI | Runtime 주입 → createEditor → load → typed 명령 → save |
 | Rust WASI import의 SSR externals 처리 | 문서 예제는 정적 코드 블록, Canvas는 클라이언트 마운트 |
 | 광범위 format/spec 문서 목록 | 실제 public API와 현재 지원 제한 중심 |

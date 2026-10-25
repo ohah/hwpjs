@@ -1,5 +1,5 @@
-import { createEditor } from '@hwpjs/core';
-import { createWorkerRuntimeFactory } from '@hwpjs/core/runtime';
+import { createEditor } from '@ohah/hwpjs';
+import { createWorkerRuntimeFactory } from '@ohah/hwpjs/runtime';
 
 export interface BrowserAssets {
   workerURL: string | URL;

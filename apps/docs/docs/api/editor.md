@@ -2,7 +2,7 @@
 
 [공개 API 직접 실행](./playground.mdx)에서 실제 코드·JSON 인수·반환값·오류를 확인할 수 있습니다.
 
-`createEditor({ runtimeFactory, onError? })`가 반환하는 객체의 public 소스 계약입니다. 타입 export는 `@hwpjs/core`, runtime 구현은 `@hwpjs/core/runtime`으로 나뉩니다.
+`createEditor({ runtimeFactory, onError? })`가 반환하는 객체의 public 소스 계약입니다. 타입 export는 `@ohah/hwpjs`, runtime 구현은 `@ohah/hwpjs/runtime`으로 나뉩니다.
 
 | 작업 | public API | 의미 |
 | --- | --- | --- |
