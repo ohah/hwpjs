@@ -18,6 +18,8 @@
 
 ## 독립 기준과 남은 원인 경계
 
+사용자는 동일 `noori.hwpx`를 실제 한글 에디터로 열면 HWP와 같은 색으로 보인다고 확인했습니다. 이 관측은 우리 Canvas의 두 형식 색상 차이를 호환성 결함으로 조사할 근거입니다. 다만 실제 한글의 버전·열기 경로와 내부 색 변환 분기는 아직 수집하지 않았으므로, XML 문자열 차이를 문서 자체의 표시 색 차이로 확정하거나 공개 모델의 소형 시험으로 제품 한글 동작을 대신하지 않습니다.
+
 noori.html의 SVG에는 rgb(231,231,165)가 있고 noori-1page.jpg도 노란색입니다. 더 중요한 반례는 **noori.hwpx 내부 Preview/PrvImage.png 역시 노란색**이라는 점입니다. 따라서 이전 설명의 “두 원본 문서 자체가 서로 다른 색이다”라는 단정은 유지하지 않습니다. 미리보기는 캐시일 수 있으므로 그것만으로 현재 XML의 실제 한글 import 동작을 증명하지도 않습니다.
 
 한컴 공식 Apache-2.0 공개 모델의 [CXMLAttConverter](https://github.com/hancom-io/hwpx-owpml-model/blob/main/OWPML/Base/Util.cpp)는 XML 색을 `SetRgb`로 읽고 `GetRgb`로 씁니다. [CColorRef](https://github.com/hancom-io/hwpx-owpml-model/blob/main/OWPML/Base/Type.h)는 RGB와 COLORREF 변환 시 R/B를 교환합니다. 해당 Type.h 원문을 별도 C++ 시험 프로그램에서 컴파일해 XML A5E7E7 → RGB(165,231,231), HWP COLORREF A5E7E7 → XML E7E7A5를 확인했습니다. 공식 공개 모델의 이 동작은 현재 형식별 표시 해석과 같습니다. 이 소형 시험은 한글 프로그램의 전체 HWPX import 경로 또는 특정 버전 호환 동작을 실행한 증거가 아닙니다.
@@ -25,3 +27,9 @@ noori.html의 SVG에는 rgb(231,231,165)가 있고 noori-1page.jpg도 노란색�
 현재 확정한 것은 **여러 변환 짝에서 반복되는 적·청 채널 순서 불일치와 noori의 미리보기/XML 불일치**입니다. 이 파일들을 만든 변환 경로의 색 직렬화 문제인지, 특정 한글 버전의 필드별 호환 처리인지까지는 확정하지 않았습니다. XML 색을 전역 BGR로 바꾸거나 원본 파일을 고치는 처리는 도입하지 않았습니다.
 
 원시 결과는 `zig-out/verification/color-pair-survey/survey.json`과 `actual-cells.json`, 대응 검증은 `actual-cell-findings.md`, 조사 한계는 같은 폴더 findings.md, 실제 브라우저 최종 10개 열기와 종료 확인은 `zig-out/verification/color-pair-browser/2026-10-24T16-54-02-473Z/result.json`에 보존합니다. 공식 모델 원문과 C++ 실행 근거는 `zig-out/verification/noori-current/hancom-*`, `official-colorref-probe.cpp` 및 실행 파일입니다. 특정 공개 모델의 계약과 제품 한글 전체의 실동작을 구분합니다.
+
+## noori 색상 회귀 기준 정정
+
+`tools/demo-noori-colors-browser-audit.mjs`의 헤더 기대값은 두 형식 모두 `#E7E7A5`입니다. 종전 HWPX `#A5E7E7` 기대값은 현재 출력에 맞춘 값으로 한글 동치의 근거가 아니었습니다. 해당 도구는 수정 전 HWPX에서 실패해야 하며, 현재 출력 기록을 성공한 호환성 검사로 합산하지 않습니다. 이 기준 변경만으로 제품 색상 처리를 수정했다고 주장하지 않습니다.
+
+정정한 기준의 실제8082 데모 검사는 `zig-out/verification/demo-noori-colors/2026-10-25T01-21-24-079Z/result.json`에 기록했습니다. HWP는 헤더 픽셀 `[231,231,165,255]`를 확인했고 HWPX는 기대한 노란 채움이 없어 `HancomHeaderColorMismatch:noori.hwpx`로 종료1입니다. finally의 소유 브라우저 inactive=true를 확인했습니다. 이 실행은 현재 데모의 불일치 재현이며, 최신 Native 후보나 실제 한글 프로그램을 실행한 증거는 아닙니다.
