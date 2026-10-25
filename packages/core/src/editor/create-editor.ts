@@ -1,3 +1,4 @@
+import type { SynchronousCallback, UpdateCallback } from '../state/synchronous-callback.ts';
 import {SelectionHistory} from '../state/selection-history.ts';
 import {loadSourceOptions} from './load-source-options.ts';
 import {isWellFormedText} from '../state/text-scalar.ts';
@@ -254,7 +255,7 @@ export function createEditor(options:CreateEditorOptions) {
    }catch(error){return reject(ctx,error);}
  }
  function dispatchCommand<T>(command:EditorCommand<T>,payload:T):Promise<CommandResult>{assertPublicMutation();const pending=capture(command,payload);return admit(()=>execute(pending));}
- function update(callback:(collector:UpdateCollector,state:EditorState)=>unknown):Promise<UpdateResult>{
+ function update<T>(callback:UpdateCallback<[UpdateCollector,EditorState],T>):Promise<UpdateResult>{
    if(readDepth)throw Error('ReadMutation');if(collecting)throw Error('NestedUpdate');if(handling)throw Error('CommandHandlerMutation');assertLive();
    if(typeof callback!=='function')throw TypeError('InvalidUpdateCallback');if(isAsyncFunction(callback))throw Error('AsyncUpdate');
    const snapshot=state,pending:PendingCommand[]=[];let open=true;
@@ -370,7 +371,7 @@ export function createEditor(options:CreateEditorOptions) {
  }
  return Object.freeze({
    getEditorState:()=>state,
-   read:<T>(callback:(state:EditorState)=>T):T=>runRead(callback,state),
+   read:<T>(callback:SynchronousCallback<[EditorState],T>):T=>runRead(callback,state),
    load,unlock,cancelLoad,dispatchCommand,update,save,refresh,requestExperimental,readResource,setSelection,acquireInputSurface,dispose,
    undo:(token?:StateToken)=>historyCommand(UNDO_COMMAND,token),
    redo:(token?:StateToken)=>historyCommand(REDO_COMMAND,token),
