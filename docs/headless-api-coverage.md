@@ -2,7 +2,9 @@
 
 기준일: 2026-10-25. 현재 작업 트리의 **public core 소스**를 읽은 설계·범위 inventory다. 배포 패키지/dist와 최신 WASM의 일치, 각 행의 실행 성공을 새로 검증한 결과가 아니다. 이 조사에서는 빌드·Native·브라우저를 실행하지 않았다. 병렬 개발로 API가 바뀌면 아래 public 진입점부터 갱신한다.
 
-실제 기본 붙여넣기·커서·저장 E2E는 [포커스 검증](native-clipboard-focus.md), 진행 중인 전수 감사의 oracle 미지원과 대형 문서 시간 제한은 [감사 공백 기록](headless-fixture-audit-gaps.md)이 소유한다. 이 inventory의 정적 지원 판정과 실행 검증 범위를 합산하지 않는다.
+실제 기본 붙여넣기·커서·저장 E2E는 [포커스 검증](native-clipboard-focus.md), 전수 감사 기준선의 oracle 미지원과 대형 문서 시간 제한은 [감사 공백 기록](headless-fixture-audit-gaps.md)이 소유한다. 이 inventory의 정적 지원 판정과 실행 검증 범위를 합산하지 않는다.
+
+HWPX load 직후 enable의 표시 재사용·폐기·소유권과 실측은 [최초 활성화 계약](hwpx-load-enable-projection.md)을 따른다.
 
 ## 기준과 책임
 

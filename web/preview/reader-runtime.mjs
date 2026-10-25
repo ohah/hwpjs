@@ -85,6 +85,8 @@ export function createReaderRuntime({wasmModule,loadWasmModule,allowReload=false
   const createExperimentalHwp5Editor=(module,input,options={})=>createHwp5Session(module,input,{...options,referenceScope});
   const outcomes=new WeakMap();
   let lastHistoryRevision;
+  let loadProjection = null;
+  let requestSequence = 0;
   let module, bytes, preview, editor, format;
   let historyEnabled = false;
   let hwpxChartOlePolicy = false;
@@ -330,7 +332,7 @@ export function createReaderRuntime({wasmModule,loadWasmModule,allowReload=false
     hwpxCreatedTablesPending = result.createdTableHostPending;
     return result;
   }
-  async function execute(message) {
+  async function execute(message, requestTicket, reusableLoad) {
     let reader, response;
     const minimalError = error => ({ origin: message.origin, kind: message.kind, applied,
       ...(message.requestId === undefined ? {} : { requestId: message.requestId }),
@@ -840,7 +842,13 @@ export function createReaderRuntime({wasmModule,loadWasmModule,allowReload=false
           const pictureDimensionsAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwpx_edit_set_picture_dimensions" && entry.kind === "function");
           const pictureResizeAvailable = WebAssembly.Module.exports(module).some(entry => entry.name === "hwpx_edit_resize_picture" && entry.kind === "function");
           const dutmalTextAvailable = ["hwpx_edit_inline_string_sources", "hwpx_edit_dutmal_text", "hwpx_edit_set_dutmal_text", "hwpx_edit_dutmal_text_max_bytes"].every(name => WebAssembly.Module.exports(module).some(entry => entry.name === name && entry.kind === "function"));
-          reply({ kind: "enable", paragraphBreakAvailable: editor.supportsParagraphBreaks(), dutmalTextAvailable, charShapeCount: charShapeIds.length, charShapeIds, characterShapes, characterShapesError, historyAvailable: true, structureAvailable, splitQueryAvailable, mergeAvailable, cellSizeAvailable, pictureDimensionsAvailable, pictureResizeAvailable, content: hwpxDisplay() });
+          reply({ kind: "enable", paragraphBreakAvailable: editor.supportsParagraphBreaks(), dutmalTextAvailable, charShapeCount: charShapeIds.length, charShapeIds, characterShapes, characterShapesError, historyAvailable: true, structureAvailable, splitQueryAvailable, mergeAvailable, cellSizeAvailable, pictureDimensionsAvailable, pictureResizeAvailable, content: reusableLoad && requestSequence === requestTicket && reusableLoad.ticket === requestTicket - 1
+            && reusableLoad.editor === editor && reusableLoad.preview === preview && reusableLoad.bytes === bytes
+            && reusableLoad.module === module && reusableLoad.window === documentWindow
+            && reusableLoad.chartOlePolicy === hwpxChartOlePolicy && reusableLoad.protectionRemoved === protectionRemoved
+            && reusableLoad.createdTablesPending === hwpxCreatedTablesPending
+            && Object.keys(message).every(key => ["kind", "origin", "requestId"].includes(key))
+              ? reusableLoad.content : hwpxDisplay() });
           return;
         }
         if (message.distribution !== undefined && typeof message.distribution !== "boolean") throw new Error("InvalidDistributionPolicy");
@@ -966,6 +974,14 @@ export function createReaderRuntime({wasmModule,loadWasmModule,allowReload=false
       try { reader?.close(); } catch(error) { response=minimalError(error); }
       response ??= minimalError(new Error("MissingRuntimeReply"));
       try { response=structuredClone(response); } catch(error) { response=minimalError(error); }
+      if (message.kind === "load" && format === "hwpx" && !response.error && response.content
+        && !historyEnabled && editor && message.password === undefined && requestSequence === requestTicket) {
+        try {
+          loadProjection = { ticket: requestTicket, editor, preview, bytes, module, window: documentWindow,
+            chartOlePolicy: hwpxChartOlePolicy, protectionRemoved, createdTablesPending: hwpxCreatedTablesPending,
+            content: structuredClone(response.content) };
+        } catch { loadProjection = null; } // Uncertain ownership falls back to normal projection.
+      }
       const revision=response.historyRevision;
       const changed=typeof response.changed==="boolean"?response.changed:
         typeof revision==="number"&&typeof lastHistoryRevision==="number"?revision!==lastHistoryRevision:applied?null:false;
@@ -992,6 +1008,9 @@ export function createReaderRuntime({wasmModule,loadWasmModule,allowReload=false
     // Kept out of the legacy wire; the core adapter attaches this as meta.
     outcome(reply) { return { ...outcomes.get(reply) }; },
     request(input) {
+      const requestTicket = ++requestSequence;
+      const reusableLoad = loadProjection;
+      loadProjection = null;
       if (terminal) return Promise.reject(new Error("RuntimeDisposed"));
       let message;
       try { message = copyRuntimeMessage(input); }
@@ -1004,7 +1023,7 @@ export function createReaderRuntime({wasmModule,loadWasmModule,allowReload=false
           loaded = true;
           lastHistoryRevision = undefined;
         }
-        return execute(message);
+        return execute(message, requestTicket, reusableLoad);
       });
       const settled = task.finally(() => {
         if (ArrayBuffer.isView(secret)) new Uint8Array(secret.buffer, secret.byteOffset, secret.byteLength).fill(0);
@@ -1017,6 +1036,8 @@ export function createReaderRuntime({wasmModule,loadWasmModule,allowReload=false
     dispose() {
       if (!disposal) {
         terminal = true;
+        requestSequence++;
+        loadProjection = null;
         disposal = tail.then(clear);
       }
       return disposal;

@@ -1,6 +1,6 @@
 # 전체 픽스쳐 감사의 독립 검증 공백
 
-2026-10-25의 진행 중 감사 기록이다. 전체 지원 완료를 뜻하지 않는다. 입력과 실제 종료 여부는 `zig-out/verification/post-focus-full-headless-20261025/manifest.json`, `results.jsonl`, 최종 `summary.json`이 소유한다. 최종 summary가 없으면 전수 검사는 미완료다. 대상은 HWP5/HWPX 1,068경로·1,032개 원본 해시이며 HWP3는 서명으로 제외한다. 이름에 hwp3가 있더라도 실제 HWPX로 변환된 파일은 제외하지 않는다.
+2026-10-25의 기준선 감사 기록이다. 전체 지원 완료를 뜻하지 않는다. 입력과 종료 결과는 `zig-out/verification/post-focus-full-headless-20261025/manifest.json`, `results.jsonl`, `summary.json`이 소유한다. 1,068경로·1,032개 원본 해시의 감사를 종료했고 독립 검증896·oracle 미지원131·시간 초과9·입력 대상 없음5·HWP3 제외26·사용자 제외1이다. 모두 경로 수이며 중복 원본의 계승 결과를 독립 실행으로 세지 않는다. 도구·원본·WASM은 전후 불변이다. 미지원/timeout 때문에 종료코드1이며 전체 성공이 아니다. HWP3는 서명으로 제외하고, 이름에 hwp3가 있더라도 실제 HWPX로 변환된 파일은 포함했다.
 
 ## 저장 실패와 독립 검증 미지원을 구분
 
@@ -27,4 +27,4 @@
 | 각 save | 0.39–0.44초 |
 | 재열기 load / enable | 23.59초 / 20.86초 |
 
-`runtime.cpuprofile`의 상위 self-time은 WASM function938 31.75초, function31 27.53초, function949 16.61초다. 함수명이 제거된 산출물의 번호만으로 Native 소스 함수를 추정하지 않는다. 요청 시간은 Native 명령과 표시 projection을 함께 포함하며, 짧은 save 결과만으로 전체 복사·저장 경로가 항상 빠르다고 일반화하지 않는다. load 직후 enable의 반복 표시 계산을 줄이는 실험은 별도 격리 후보에서 검증한다.
+`runtime.cpuprofile`의 상위 self-time은 WASM function938 31.75초, function31 27.53초, function949 16.61초다. 함수명이 제거된 산출물의 번호만으로 Native 소스 함수를 추정하지 않는다. 요청 시간은 Native 명령과 표시 projection을 함께 포함하며, 짧은 save 결과만으로 전체 복사·저장 경로가 항상 빠르다고 일반화하지 않는다. 후속 [최초 활성화 중복 계산 제거](hwpx-load-enable-projection.md)는 이 기준선 종료 뒤 적용한 별도 변경이다. 기준선 전체 결과를 새 runtime 버전의 전수 완료로 소급하지 않는다.
