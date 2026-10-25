@@ -1,6 +1,8 @@
 /** Fixed API samples. The editor/command/fetch dependencies are real injected implementations. */
 export const readApiProjection=state=>({status:state.status,selection:state.selection,paragraphs:state.content?.paragraphs??[]});
 export function apiLoadOptions(args={}) {
+ if(!args||typeof args!=='object'||Array.isArray(args))throw Error('InvalidArguments');
+ for(const key of Object.keys(args))if(!['format','editable'].includes(key))throw Error('InvalidArgument:'+key);
  if(!['hwp5','hwpx'].includes(args.format))throw Error('InvalidArgument:format');
  if(args.editable!==undefined&&typeof args.editable!=='boolean')throw Error('InvalidArgument:editable');
  return {format:args.format,editable:args.editable??true};
