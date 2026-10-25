@@ -6,7 +6,7 @@ import { characterPropertyArgs } from '../../../../js/character-property-args.mj
 // @ts-ignore Shared canonical display alignment validator; native ordinals stay in the facade.
 import { paragraphAlignmentValue } from '../../../../web/preview/paragraph-alignments.mjs';
 
-export type FormattingCapability='characterPropertiesAvailable'|'paragraphAlignmentAvailable'|'characterUnderlineAvailable';
+export type FormattingCapability='characterPropertiesAvailable'|'paragraphAlignmentAvailable'|'characterUnderlineAvailable'|'characterStrikeAvailable';
 export function validateFormattingTarget(target:SelectionTarget,state:EditorState,character:boolean,capability:FormattingCapability=character?'characterPropertiesAvailable':'paragraphAlignmentAvailable') {
  const row=validateSelection(target,state,true);
  if(row.createdCell)throw Error('CreatedCellRequiresSurfacePort');

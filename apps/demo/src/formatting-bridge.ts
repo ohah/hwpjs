@@ -1,5 +1,5 @@
 // Public core entry only; no runtime protocol, native facade or private selection helpers.
-import {getSelectionFormatting,SET_CHARACTER_UNDERLINE_COMMAND,SET_CHARACTER_PROPERTIES_COMMAND,SET_PARAGRAPH_ALIGNMENT_COMMAND,
+import {getSelectionFormatting,SET_CHARACTER_STRIKE_COMMAND,SET_CHARACTER_UNDERLINE_COMMAND,SET_CHARACTER_PROPERTIES_COMMAND,SET_PARAGRAPH_ALIGNMENT_COMMAND,
  type HeadlessEditor,type CommandResult,type SelectionFormatting} from '@hwpjs/core';
 import type {DemoAction,DemoCommand,DemoShellState,ActionAvailability} from './shell-contract.ts';
 
@@ -11,7 +11,7 @@ export interface FormattingBridgeOptions {
 /** A partial shell API: caller composes this with file/history/zoom actions. */
 export function createFormattingBridge({editor,onStatus,onResult}:FormattingBridgeOptions) {
  const alignments={ 'align-left':'LEFT','align-center':'CENTER','align-right':'RIGHT','align-justify':'JUSTIFY' } as const;
- const supported=(command:string)=>command==='bold'||command==='italic'||command==='underline'||command==='set-font-size'||Object.hasOwn(alignments,command);
+ const supported=(command:string)=>command==='bold'||command==='italic'||command==='underline'||command==='strike'||command==='set-font-size'||Object.hasOwn(alignments,command);
  let pending=false;
  function presentation(state:SelectionFormatting):Pick<DemoShellState,'actions'|'fontSizePoints'> {
   const availability=(reason:string|null,pressed?:boolean|'mixed'):ActionAvailability=>Object.freeze({enabled:!pending&&reason===null,reason:pending?'FormattingPending':reason??undefined,pressed});
@@ -19,6 +19,7 @@ export function createFormattingBridge({editor,onStatus,onResult}:FormattingBrid
    bold:availability(state.characterAvailableReason??(state.bold===null?'UnknownCharacterFormatting':null),state.bold??undefined),
    italic:availability(state.characterAvailableReason??(state.italic===null?'UnknownCharacterFormatting':null),state.italic??undefined),
    underline:availability(state.underlineAvailableReason??(state.underline===null?'UnknownCharacterFormatting':null),state.underline??undefined),
+   strike:availability(state.strikeAvailableReason,state.strike??undefined),
    'set-font-size':availability(state.characterAvailableReason),
   };
   for(const [command,alignment] of Object.entries(alignments))actions[command as DemoCommand]=availability(state.paragraphAvailableReason,state.align==='mixed'?'mixed':state.align===alignment);
@@ -38,6 +39,8 @@ export function createFormattingBridge({editor,onStatus,onResult}:FormattingBrid
    if(action.command==='bold'||action.command==='italic'){
     const property=action.command;
     result=await editor.dispatchCommand(SET_CHARACTER_PROPERTIES_COMMAND,{target,properties:{[property]:formatting[property]!==true}});
+   }else if(action.command==='strike'){
+    result=await editor.dispatchCommand(SET_CHARACTER_STRIKE_COMMAND,{target,enabled:formatting.strike!==true});
    }else if(action.command==='underline'){
     result=await editor.dispatchCommand(SET_CHARACTER_UNDERLINE_COMMAND,{target,kind:formatting.underline===true?'none':'bottom'});
    }else if(action.command==='set-font-size'){

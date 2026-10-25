@@ -20,3 +20,6 @@ export const SET_PARAGRAPH_ALIGNMENT_COMMAND=createCommand<SetParagraphAlignment
 export type CharacterUnderlineKind='none'|'bottom'|'center'|'top';
 export interface SetCharacterUnderlinePayload {readonly target:SelectionTarget;readonly kind:CharacterUnderlineKind;}
 export const SET_CHARACTER_UNDERLINE_COMMAND=createCommand<SetCharacterUnderlinePayload>('set-character-underline');
+
+export interface SetCharacterStrikePayload {readonly target:SelectionTarget;readonly enabled:boolean;}
+export const SET_CHARACTER_STRIKE_COMMAND=createCommand<SetCharacterStrikePayload>('set-character-strike');
