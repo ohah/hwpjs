@@ -23,6 +23,7 @@ export interface UpdateResult {readonly results:readonly CommandResult[];readonl
 export interface EditorError {readonly error:unknown;readonly context?:RuntimeRequestContext;readonly applied:boolean|'unknown';}
 export interface LoadOptions {readonly format:'hwp5'|'hwpx';readonly editable?:boolean;readonly password?:string;readonly allowObservedChartOleDeviations?:boolean;readonly availableSectionCopy?:boolean;readonly enableOptions?:Readonly<Record<string,unknown>>;}
 export interface SaveOptions {readonly token?:StateToken;readonly recovery?:boolean;readonly allowStaleLayout?:boolean;readonly allowUnprotectedOutput?:boolean;}
+export interface SelectionOptions {readonly stateVersion?:number;}
 export interface SaveResult {readonly bytes:Uint8Array;readonly documentId:string;readonly generation:number;readonly operationRevision:number;readonly nativeHistoryRevision?:number;readonly format:'hwp5'|'hwpx';readonly staleSnapshot:boolean;readonly layoutRequiresReflow?:boolean;readonly reply:RuntimeReply;}
 export interface ExperimentalOptions {readonly mutation:boolean;readonly token:StateToken;}
 export interface UpdateCollector {dispatchCommand<T>(command:EditorCommand<T>,payload:T):void;}
@@ -289,7 +290,13 @@ export function createEditor(options:CreateEditorOptions) {
      try{const reply=await active!.request(owned,ctx);verifyReply(reply,ctx);if(reply.error)throw Error(reply.error);return freezeDTO(copyOwned(reply,true));}catch(error){notifyError(error,ctx,false);throw error;}
    });
  }
- function setSelection(target:SelectionTarget|null):Promise<EditorState>{assertPublicMutation();const owned=copyOwned(target);return admit(async()=>{requireReady(owned??state.token);if(owned)validateSelection(owned,state);install({selection:owned});return state;});}
+ function setSelection(target:SelectionTarget|null,options:SelectionOptions={}):Promise<EditorState>{
+   assertPublicMutation();const owned=copyOwned(target),settings=copyOwned(options);
+   if(!settings||typeof settings!=='object'||Array.isArray(settings)||Object.keys(settings).some(key=>key!=='stateVersion')||
+     settings.stateVersion!==undefined&&(!Number.isSafeInteger(settings.stateVersion)||settings.stateVersion<0))throw Error('InvalidSelectionOptions');
+   const version=settings.stateVersion;
+   return admit(async()=>{requireReady(owned??state.token);if(version!==undefined&&version!==state.stateVersion)throw Error('StaleSelectionObservation');if(owned)validateSelection(owned,state);install({selection:owned});return state;});
+ }
  function historyCommand(command:EditorCommand<HistoryPayload>,token?:StateToken):Promise<CommandResult>{
    assertPublicMutation();const explicit=token===undefined?undefined:copyOwned(token),handlers=registry.capture(command);
    return admit(()=>execute({...capture(command,{token:explicit??state.token}),handlers}));

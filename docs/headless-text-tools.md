@@ -12,6 +12,8 @@ clipboard 관측은 검증된 단일 문단 선택의 텍스트·타깃·읽기/
 
 비동기 권한 요청 후 잘라내기/붙이기/바꾸기는 `SPLICE_TEXT_COMMAND`의 `selectionVersion`을 전달할 수 있습니다. 코어는 실행 시점의 정확한 `stateVersion`과 비교합니다. 같은 문서 revision에서 선택을 다른 곳으로 옮겼다가 되돌려도 이전 관측은 거부됩니다. 일반 타깃의 문서·소유자·scalar·원본 좌표 검증도 계속 적용합니다. 이 fence는 원본 텍스트나 편집값의 별도 캐시를 만들지 않습니다.
 
+비동기 찾기의 선택 반영은 `editor.setSelection(target, {stateVersion: observed.stateVersion})`을 사용합니다. `SelectionOptions`를 생략한 기존 호출은 유지합니다. 버전이 있으면 composition 정리와 앞선 admission 작업이 끝난 실제 반영 시점에 비교하고, 다르면 `StaleSelectionObservation`으로 거부합니다. 같은 문서 revision에서 새 Canvas 선택을 늦은 검색이 덮어쓰거나 오래된 null 선택이 새 선택을 해제하지 못하게 합니다. options는 즉시 복사하고 유효하지 않은 버전/필드는 거부합니다.
+
 코어 검사는 `packages/core/tests/state/text-tools.test.ts`와 `clipboard-state.test.ts`가 소유합니다. 공개 API만 사용하는 데모의 clipboard 권한 거부·지연 선택 변경은 `apps/demo/tests/clipboard-bridge.test.ts`, 찾기/바꾸기의 중복·닫기·dispose 경합은 `text-tools-bridge.test.ts`가 검사합니다. fake DOM 검사는 실제 Canvas·OS clipboard E2E를 대체하지 않습니다. 브라우저 증거와 배포 상태는 [통합 검증 기록](headless-editor-verification.md)을 따릅니다.
 
 ## 방향 검색 검증
@@ -19,3 +21,5 @@ clipboard 관측은 검증된 단일 문단 선택의 텍스트·타깃·읽기/
 2026-10-25 코어/bridge/독립 일치 목록 검사는29/29·566 assertions를 통과했습니다. `text-search-direction-oracle.test.ts`는 제품의 문단 방문 알고리즘을 복사하지 않고 모든 겹치는 부분 문자열 일치를 열거하여 방향/순환/origin 조합512개를 대조했습니다. 한글·emoji UTF-16 경계, 잘린/소유자 없는 행 제외, 역방향 인덱스0, 한 개뿐인 일치와 경계 null을 포함합니다. 쿼리·방향·선택 변경과 Escape/닫기/dispose 중 지연 작업의 거부도 검사했습니다.
 
 실제 Canvas 검사는 `node tools/editor-search-direction-browser-audit.mjs https://macstudio.tailed42f2.ts.net:10000`입니다. Vanilla/React/Svelte × charshape.hwp/charshape.hwpx의 아래로·위로, 경계에서 명시적 계속 찾기, 문서 전체 순환, Escape 닫기, 저장 Native 요청1회와 실제 다운로드를 확인했습니다. private/public 각6/6 통과했고 검색 후 저장된6개 파일은 원본 전체 bytes와 같습니다. 검색은 문서를 수정하지 않았습니다. 공개 최종 산출물은 `zig-out/verification/search-direction-public/`의 results/cleanup JSON·스크린샷이며 소유 브라우저 inactive=true입니다. 현재 명시 엔진은 `fc7fb2ab7eeff2bb07ae1463f7e5b12dcc7ebbd49f4c6de9487a85da6900dda4`입니다. 모든 문서·모든 검색 옵션의 구현 완료를 뜻하지 않습니다.
+
+후속 경합 검사에서 검색 setSelection이 지연된 동안 새 Canvas 선택을 먼저 반영하면 동일 문서 revision에서도 검색이 이를 덮어쓰는 실패를 재현했습니다(`queued-selection-before-fix.log`: 기대 stateVersion3, 실제4). 관측 버전 옵션을 추가한 뒤 회귀가 통과했고, 실제 코어 FIFO·composition publication·설정 즉시 복사·기존 API 호환을 포함한 상태/제어기/키 설정/찾기 bridge123개가 모두 통과했습니다. 원본 실패 기록은 `zig-out/verification/search-direction-private/`에 보존했습니다.

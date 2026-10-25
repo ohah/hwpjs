@@ -1,6 +1,6 @@
 export { createEditor } from "./editor/create-editor.ts";
 export type { HeadlessEditor, CreateEditorOptions, CommandResult, CommandStatus, UpdateResult,
-  UpdateCollector, EditorError, LoadOptions, SaveOptions, SaveResult } from "./editor/create-editor.ts";
+  UpdateCollector, EditorError, LoadOptions, SaveOptions, SaveResult, SelectionOptions } from "./editor/create-editor.ts";
 export { EditorState } from "./state/editor-state.ts";
 export type { StateToken, StateData, EditorStatus } from "./state/editor-state.ts";
 export { createCommand, SPLICE_TEXT_COMMAND, UNDO_COMMAND, REDO_COMMAND,
