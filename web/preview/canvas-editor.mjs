@@ -28,6 +28,8 @@ import { transferSelectedText, pasteClipboardText } from "./clipboard-transfer.m
 
 /** DOM draft and interaction only. Native acknowledgements own committed text. */
 export function createCanvasEditor({ canvas, viewport, input, renderer, controls, note, queryEditRange = null, querySplitRange = null, platform = globalThis.navigator?.userAgentData?.platform ?? globalThis.navigator?.platform ?? "" }) {
+  const ownerDocument = input.ownerDocument ?? globalThis.document;
+  const activeElement = () => input.getRootNode?.().activeElement ?? ownerDocument?.activeElement;
   const events = new AbortController(), listen = (node, type, fn) => node.addEventListener(type, fn, { signal: events.signal });
   const hostControls = controls;
   controls = {
@@ -147,7 +149,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     if (multiComposition) composition = compositionProjection()?.composition;
     const change = composing && !multiComposition && draftTextChange();
     if (change) composition = { anchor: { ...target, unit: change.startUnit }, focus: { ...target, unit: change.startUnit + change.text.length } };
-    renderer.select({ anchor, focus, active: document.activeElement === input || drag !== null, composition });
+    renderer.select({ anchor, focus, active: activeElement() === input || drag !== null, composition });
     canvas.dataset.caret = focus ? `${focus.section}:${focus.paragraph}:${focus.unit}` : "";
     canvas.dataset.selection = anchor && focus ? `${anchor.unit}:${focus.unit}` : "";
     canvas.dataset.composing = String(composing);
@@ -198,7 +200,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
   };
   const reveal = () => {
     const caret = caretGeometry(renderer.layout(), focus);
-    if (!caret || document.activeElement !== input) return;
+    if (!caret || activeElement() !== input) return;
     const bounds = canvasDocumentBounds(caret.screenBounds ?? caret, viewScale());
     if (!bounds) return;
     const left = canvasCaretScrollLeft(bounds.x, viewport.scrollLeft ?? 0, viewport.clientWidth);
@@ -788,7 +790,26 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     if (!multipleParagraphs()) sync();
     if (typeof text === "string") replaceSelection(text);
   });
-  listen(input, "focus", paint); listen(input, "blur", paint);
+  // A dialog/browser can restore an older textarea range while focusing it.
+  // In a settled projection the Canvas anchor/focus is the view authority;
+  // reapply it before a queued select event can publish the restored DOM range.
+  // Do not touch composing text, pending drafts or asynchronous acknowledgments.
+  const focusedSelection = () => {
+    if (activeElement() === input && target && anchor && focus && sameParagraph(anchor, target) && sameParagraph(focus, target)
+      && !composing && !pending && !historyPending && !inputIntents.size && input.value === committed && !controls.busy()) {
+      input.setSelectionRange(Math.min(anchor.unit, focus.unit), Math.max(anchor.unit, focus.unit), anchor.unit > focus.unit ? "backward" : "forward");
+    }
+    paint();
+  };
+  const focusInput = () => {
+    if (events.signal.aborted) return false;
+    input.focus({ preventScroll: true });
+    if (activeElement() !== input) return false;
+    // focus() on an already active input need not emit a focus event.
+    focusedSelection();
+    return true;
+  };
+  listen(input, "focus", focusedSelection); listen(input, "blur", paint);
   const selectedRange = () => {
       if (target?.createdCell) return null;
       if (!target || multipleParagraphs() || composing || pending || historyPending || !controls.ready() || controls.busy() || input.value !== committed) return null;
@@ -847,6 +868,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
   };
   const canDeleteSelection = () => settledSelection() !== null && selectionTextEditAvailable();
   return {
+    focusInput,
     canInsertParagraphBreak,
     insertParagraphBreak(kind) {
       const intent = paragraphBreakIntent({ kind: "split", breakBefore: kind });
