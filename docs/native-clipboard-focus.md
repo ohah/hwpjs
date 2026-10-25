@@ -8,6 +8,8 @@ Canvas의 확정 anchor/focus를 textarea에 투영한다. 브라우저나 모�
 
 ## 재현과 검증
 
+Canonical focus 수정은 `291515ba`로 별도 게시했다. `web/preview/canvas-editor.mjs`와 `tests/hwp5/canvas-focus.test.mjs` 두 파일만 포함하며, 기존 HEAD의 의존 모듈에서 8/8 검사를 통과했다. 같은 검사를 실제 WIP controller에서도 8/8 통과했다. 이 작은 게시 변경과 아래 전체 WIP 데모의 실제 브라우저 검증을 구분한다. UI·호스트 전체 source closure의 게시 완료를 뜻하지 않는다.
+
 수정 전 실제 `charshape.hwpx`의 찾기 결과 `진하게`를 선택하고 창을 닫으면 입력창은 focused지만 범위가 기대 3–6 대신 0–0이었다. 실제 paste 이벤트는 발생했지만 Worker splice 요청은 없었다. 근거는 `zig-out/verification/clipboard-public-ui/native-paste-vanilla-hwpx-2026-10-25T09-07-32-440Z/`다. focus 시 DOM 범위를 되돌리는 조건을 별도 단위 검사로 재현했다.
 
 수정 후 `tools/editor-native-paste-matrix.mjs`로 Vanilla/React/Svelte와 HWP/HWPX의 6조합을 직렬 실행했다. clipboard가 공유되므로 병렬 실행하지 않는다. 로컬과 테일스케일 공개 주소 각각 6/6, 총 12개 시나리오가 통과했다.
