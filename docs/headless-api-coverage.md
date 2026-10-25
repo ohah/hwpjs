@@ -59,7 +59,7 @@ public SSOT는 [index.ts](../packages/core/src/index.ts), [create-editor.ts](../
 | 실행 취소·다시 실행 | `UNDO_COMMAND`, `REDO_COMMAND`, `editor.undo/redo`, `getHistoryAvailability` | public 구현. Native 이력이 SSOT; 새 command handler가 외부에서 처리했다는 사실만으로 Native 편집 완료가 되지는 않음 |
 | 문자 서식 | `SET_CHARACTER_PROPERTIES_COMMAND`의 size/bold/italic, `SET_CHARACTER_UNDERLINE_COMMAND`; `getSelectionFormatting` | 부분. 글꼴/색/strike 등 저수준 기능을 모두 typed 공개했다고 주장하지 않음 |
 | 문단 서식·구조 | `SET_PARAGRAPH_ALIGNMENT_COMMAND`; split/merge/spacing/margins는 내부 transport에 존재 | 부분. 일반 문단 구조 및 전체 문단 속성 typed public 명령 필요 |
-| 찾기·바꾸기·통계 | 위 pure text helper + `setSelection`/splice 조합 | 부분. literal 다음 match, wraparound, 현재 snapshot 범위. 정규식·전체 replace transaction·한글의 통계 정의 동등성은 없음 |
+| 찾기·바꾸기·통계 | 위 pure text helper + `setSelection`/splice 조합 | 부분. literal 순방향/역방향 match, 선택적 wraparound, 현재 snapshot 범위. 정규식·전체 replace transaction·한글의 통계 정의 동등성은 없음 |
 | clipboard | `getSelectionClipboard`가 plain text/target/copyReason/editReason/stateVersion 반환 | 부분. OS 권한·read/write·paste form은 host, rich clipboard/object 복사는 미제공. 비동기 결과는 selectionVersion/token을 다시 검증 |
 | 양식·수식 | checkbox/radio/form-text/formula 등 내부 mutation 분류와 저수준 API | 엔진/저수준만. typed 조회/권한/명령/이력 계약을 기능별 공개해야 함 |
 | 표 구조·배치 | insert-table/cell-size/table-column-width 등 내부 경로 | 엔진/저수준만. 셀 내 문자·정렬 public 기능이 표 생성/행열 조작 public 지원을 뜻하지 않음 |

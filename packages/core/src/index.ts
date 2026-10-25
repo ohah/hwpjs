@@ -27,3 +27,5 @@ export {compileKeymap,resolveKeyboardShortcut} from './keymap/resolve.ts';
 export {DEFAULT_KEYMAP} from './keymap/defaults.ts';
 export type {KeymapConfig,KeymapPlatform,KeymapModifier,KeymapBinding,ShortcutBinding} from './keymap/config.ts';
 export type {CompiledKeymap,NormalizedShortcutEvent} from './keymap/resolve.ts';
+
+export type {FindTextOptions} from "./state/text-tools.ts";
