@@ -1,3 +1,4 @@
+import {SelectionHistory} from '../state/selection-history.ts';
 import {loadSourceOptions} from './load-source-options.ts';
 import {isWellFormedText} from '../state/text-scalar.ts';
 import type { EditorRuntime, RuntimeFactory, RuntimeMessage, RuntimeReply, RuntimeRequestContext } from '../contracts.ts';
@@ -42,6 +43,7 @@ export function createEditor(options:CreateEditorOptions) {
  if(nextEditorInstance>=Number.MAX_SAFE_INTEGER)throw Error('EditorIdentityExhausted');
  const instanceId=String(++nextEditorInstance);
  const queue=new FifoScheduler(),admission=new FifoScheduler(),registry=new CommandRegistry();
+ const selectionHistory=new SelectionHistory();
  let active:EditorRuntime|undefined,locked:{runtime:EditorRuntime;message:RuntimeMessage;context:RuntimeRequestContext;editable:boolean;enableOptions?:Readonly<Record<string,unknown>>;cancelled?:boolean}|undefined;
  let terminal=false,disposePromise:Promise<void>|undefined,requestId=0,nextGeneration=0,revisionClock=0,stateVersion=0;
  let readDepth=0,collecting=false,handling=false;
@@ -78,7 +80,7 @@ export function createEditor(options:CreateEditorOptions) {
    // Capture both sets before any callback changes registrations.
    const states=[...stateListeners],updates=mutation?[...updateListeners]:[];
    const next:StateData={editorId,documentId:state.documentId,generation:state.generation,operationRevision:state.operationRevision,viewRevision:state.viewRevision,stateVersion:++stateVersion,status:state.status,content:state.content,capabilities:state.capabilities,nativeHistoryRevision:state.nativeHistoryRevision,nativeHistoryRevisions:state.nativeHistoryRevisions,savedOperationRevision:state.savedOperationRevision,selection:state.selection,...patch};
-   state=new EditorState(next,runRead);const snapshot=state;
+   state=new EditorState(next,runRead);selectionHistory.observe(state);const snapshot=state;
    notify(states,snapshot,ctx,mutation);notify(updates,snapshot,ctx,mutation);
  }
  function context(token:StateToken=state.token):RuntimeRequestContext{return {editorId,documentId:token.documentId,generation:token.generation,requestId:++requestId,operationRevision:token.operationRevision};}
@@ -207,7 +209,15 @@ export function createEditor(options:CreateEditorOptions) {
      const noOp=!reply.error&&(reply.meta?.changed===false||reply.changed===false);
      if(noOp)return result('known-no-op',ctx,undefined,reply);
      if(reply.error||reply.content===undefined){install({operationRevision:reserved,status:'refresh-required',nativeHistoryRevision:history(reply)});notifyError(reply.error??'SnapshotMissing',ctx,application==='applied'?true:'unknown');return result('committed-refresh-required',ctx,reply.error??'SnapshotMissing',reply);}
-     try{const patch=contentPatch(reply);const selection=preserveFormattingSelection?formattingSelection(state,patch,reserved):undefined;install({...patch,selection,operationRevision:reserved,status:'ready'},true,ctx);}
+     try{
+       const patch=contentPatch(reply);
+       let selection:SelectionTarget|null|undefined=preserveFormattingSelection?formattingSelection(state,patch,reserved):undefined;
+       if(message.kind==='undo'||message.kind==='redo'){
+         const provisional=new EditorState({...state.token,...patch,operationRevision:reserved,stateVersion:state.stateVersion+1,status:'ready'},runRead);
+         selection=selectionHistory.restore(provisional);
+       }
+       install({...patch,selection,operationRevision:reserved,status:'ready'},true,ctx);
+     }
      catch(error){install({operationRevision:reserved,status:'refresh-required'});notifyError(error,ctx,true);return result('committed-refresh-required',ctx,error);}
      return result('committed-with-snapshot',ctx,undefined,reply);
    }catch(error){return reject(ctx,error);}
@@ -351,7 +361,7 @@ export function createEditor(options:CreateEditorOptions) {
  function register<T>(set:Set<T>,listener:T):()=>void{assertLive();if(typeof listener!=='function')throw TypeError('InvalidListener');set.add(listener);let attached=true;return ()=>{if(!attached)return;attached=false;set.delete(listener);};}
  function dispose():Promise<void>{
    assertPublicMutation();if(disposePromise)return disposePromise;
-   terminal=true;disposedFence.cancel();for(const job of loads)job.fence.cancel();loads.clear();
+   terminal=true;selectionHistory.clear();disposedFence.cancel();for(const job of loads)job.fence.cancel();loads.clear();
    if(surface){const detached=surface;surface=undefined;detached.active=false;detached.fence.cancel();cancelComposition(detached,'dispose');}
    state=new EditorState({editorId,documentId:state.documentId,generation:state.generation,operationRevision:state.operationRevision,viewRevision:state.viewRevision,stateVersion:++stateVersion,status:'disposed',content:state.content,capabilities:state.capabilities,nativeHistoryRevision:state.nativeHistoryRevision,nativeHistoryRevisions:state.nativeHistoryRevisions,savedOperationRevision:state.savedOperationRevision,selection:state.selection},runRead);
    stateListeners.clear();updateListeners.clear();errorListeners.clear();registry.clear();
