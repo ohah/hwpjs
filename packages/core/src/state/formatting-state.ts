@@ -1,6 +1,6 @@
 // @ts-ignore Public selection uses the canonical UTF-16 scalar boundary.
 import {isUtf16Boundary} from '../../../../web/preview/utf16-boundary.mjs';
-import {characterTextColorState} from './text-color-state.ts';
+import {characterTextColorObservation} from './text-color-state.ts';
 import type { EditorState } from './editor-state.ts';
 import type { SelectionTarget } from '../commands/commands.ts';
 import { validateSelection } from '../commands/selection.ts';
@@ -56,8 +56,9 @@ export function getSelectionFormatting(state:EditorState):SelectionFormatting {
  const strike=strikeTargetReason===null?characterSelectionState(content,row,target.startUnit,target.endUnit,'strike'):null;
  const strikeAvailableReason=strikeTargetReason??(strike===null?'UnknownCharacterStrike':null);
  const textColorTargetReason=reason(true,'characterTextColorAvailable');
- const textColor=textColorTargetReason===null?characterTextColorState(content,row,target.startUnit,target.endUnit):null;
- const textColorAvailableReason=textColorTargetReason??(textColor===null?'UnknownCharacterTextColor':null);
+ const colorObservation=textColorTargetReason===null?characterTextColorObservation(content,row,target.startUnit,target.endUnit):null;
+ const textColor=colorObservation?.value??null;
+ const textColorAvailableReason=textColorTargetReason??(colorObservation?.bindingValid?null:'UnknownCharacterTextColor');
  const size=characterAvailableReason===null?characterSizeState(content,row,target.startUnit,target.endUnit,{isBoundary:isUtf16Boundary}):null;
  const align=paragraphAvailableReason===null?paragraphAlignmentKey((row as typeof row&{paragraphShape?:{alignment?:number}}).paragraphShape?.alignment):null;
  return Object.freeze({target,characterAvailableReason,paragraphAvailableReason,underlineAvailableReason,strikeAvailableReason,textColorAvailableReason,textColor,bold,italic,underline,strike,size,align});
