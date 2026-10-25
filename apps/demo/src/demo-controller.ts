@@ -1,5 +1,5 @@
 import {mountShortcutSettings} from './shortcut-settings.ts';
-import {getHistoryAvailability} from "@hwpjs/core";
+import {getHistoryAvailability,getSelectionFormatting} from "@hwpjs/core";
 import { createEditor, type HeadlessEditor } from '@hwpjs/core';
 import { createWorkerRuntimeFactory } from '@hwpjs/core/runtime';
 import { createFormattingBridge } from './formatting-bridge.ts';
@@ -38,6 +38,12 @@ export interface DemoHost {
 export type MountDemoHost = (root: HTMLElement, editor: HeadlessEditor,
   onStatus: (message: string) => void) => DemoHost | Promise<DemoHost>;
 
+/** 공개 상태의 검증된 선택만 표시하며 별도 선택 캐시를 만들지 않습니다. */
+export function selectionStatusLabel(state:ReturnType<HeadlessEditor['getEditorState']>):string {
+ const selected=getSelectionFormatting(state).target;
+ return selected ? (selected.startUnit===selected.endUnit?'커서 위치':'텍스트 선택') : '선택 없음';
+}
+
 /** The app owns transport, file admission and downloads; framework hosts own the surface. */
 export async function mountDemo(root: HTMLElement, framework: DemoFramework, mountHost?: MountDemoHost,
   options: { fetch?: typeof globalThis.fetch } = {}) {
@@ -66,7 +72,7 @@ export async function mountDemo(root: HTMLElement, framework: DemoFramework, mou
       document:state.status==='ready'?'ready':state.status==='loading'?'loading':'none',hasSelection:state.selection!=null,busy,disposed:closed});
     return { ...formatState, title: filename || '새 문서', documentLabel: filename || undefined, status, busy,
       openFile: { enabled: !busy }, openFixture: { enabled: !busy },
-      zoomPercent: zoom, pageLabel: ready ? '문서 열림' : '',
+      zoomPercent: zoom, pageLabel: ready ? '문서 열림' : '', selectionLabel:selectionStatusLabel(state),
       actions };
   };
   function note(message: string) { if (closed) return; status = message; shell.update(); }
