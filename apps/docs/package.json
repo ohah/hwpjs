@@ -1,0 +1,16 @@
+{
+  "name": "@hwpjs/docs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "rspress build",
+    "typecheck": "bun scripts/check-examples.mjs",
+    "check:links": "bun scripts/check-links.mjs",
+    "check:licenses": "bun scripts/check-licenses.mjs",
+    "check": "bun run typecheck && bun run build && bun run check:links && bun run check:licenses"
+  },
+  "devDependencies": {
+    "@rspress/core": "2.0.23"
+  }
+}
