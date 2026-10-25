@@ -91,6 +91,90 @@ class Evidence(unittest.TestCase):
         data,expected=self.partial(3,4,source)
         self.check(dict(data,after=packed(expected.replace('>B<p:titleMark','>&amp;<p:titleMark'))))
 
+    def edge(self, leading, whole):
+        title="<p:titleMark ignore='1'/>"
+        source=XML.replace('B'+title+'C',title+'BC' if leading else 'BC'+title)
+        start,end=(0,4) if whole else (2,3)
+        def run(style,body):return f"<p:run charPrIDRef='{style}'>{body}</p:run>"
+        visible_style=2 if whole else 1
+        prefix=run(visible_style,"<p:t>X</p:t><p:ctrl><p:fieldBegin id='1' type='CLICK_HERE' dirty='0'/></p:ctrl>")
+        prefix+=run(visible_style,"<p:t>A</p:t><p:ctrl><p:fieldEnd beginIDRef='1'/></p:ctrl>")
+        prefix+=run(1,'<p:t/>')
+        if leading:
+            body=run(1,'<p:t>'+title+'</p:t>')
+            body+=run(2,'<p:t>BC</p:t>') if whole else run(2,'<p:t>B</p:t>')+run(1,'<p:t>C</p:t>')
+        else:
+            body=run(2,'<p:t>BC'+title+'</p:t>') if whole else run(2,'<p:t>B</p:t>')+run(1,'<p:t>C'+title+'</p:t>')
+            body+=run(1,'<p:t></p:t>')
+        begin=source.index("<p:run charPrIDRef='1'>");finish=source.index('</p:run>',begin)+len('</p:run>')
+        expected=(source[:begin]+prefix+body+source[finish:]).replace('<p:linesegarray><p:lineseg vertpos="123"/></p:linesegarray>','')
+        return dict(request(),mode='partial-field-title-format',before=packed(source),after=packed(expected),startUnit=start,endUnit=end),expected
+
+    def test_partial_title_edges_keep_zero_width_style(self):
+        for leading in [True,False]:
+            for whole in [True,False]:
+                data,_=self.edge(leading,whole)
+                self.check(data)
+
+    def test_partial_title_edge_zero_width_owner_cannot_change(self):
+        for leading in [True,False]:
+            data,expected=self.edge(leading,True)
+            old="charPrIDRef='1'><p:t>"+("<p:titleMark" if leading else '</p:t>')
+            changed="charPrIDRef='2'><p:t>"+("<p:titleMark" if leading else '</p:t>')
+            self.assertIn(old,expected)
+            self.check(dict(data,after=packed(expected.replace(old,changed))),'whole target XML differs')
+
+    def cdata(self, selected_cdata=True, special=False):
+        title="<p:titleMark ignore='1'/>"
+        content='<&😀' if special else 'C'
+        source=XML.replace('B'+title+'C','B<![CDATA['+content+']]>D'+title+'E')
+        def run(style,body):return f"<p:run charPrIDRef='{style}'><p:t>{body}</p:t></p:run>"
+        prefix="<p:run charPrIDRef='1'><p:t>X</p:t><p:ctrl><p:fieldBegin id='1' type='CLICK_HERE' dirty='0'/></p:ctrl></p:run>"
+        prefix+="<p:run charPrIDRef='1'><p:t>A</p:t><p:ctrl><p:fieldEnd beginIDRef='1'/></p:ctrl></p:run><p:run charPrIDRef='1'><p:t/></p:run>"
+        payload='&lt;&amp;😀' if special else 'C'
+        body=run(1,'B')+run(2 if selected_cdata else 1,payload)+run(1 if selected_cdata else 2,'D'+title)+run(1,'E')
+        begin=source.index("<p:run charPrIDRef='1'>");finish=source.index('</p:run>',begin)+len('</p:run>')
+        expected=(source[:begin]+prefix+body+source[finish:]).replace('<p:linesegarray><p:lineseg vertpos="123"/></p:linesegarray>','')
+        start,end=(3,7 if special else 4) if selected_cdata else (4,5)
+        return dict(request(),mode='partial-field-title-format',before=packed(source),after=packed(expected),startUnit=start,endUnit=end),expected
+
+    def test_partial_cdata_keeps_lexical_source_sites(self):
+        data,_=self.cdata()
+        self.check(data)
+
+    def test_partial_cdata_decoded_unicode_and_escaping(self):
+        data,_=self.cdata(special=True)
+        self.check(data)
+
+    def test_partial_cdata_cannot_merge_equal_style_source_sites(self):
+        data,expected=self.cdata(selected_cdata=False)
+        self.check(data)
+        separate="<p:run charPrIDRef='1'><p:t>B</p:t></p:run><p:run charPrIDRef='1'><p:t>C</p:t></p:run>"
+        merged="<p:run charPrIDRef='1'><p:t>BC</p:t></p:run>"
+        self.assertIn(separate,expected)
+        self.check(dict(data,after=packed(expected.replace(separate,merged))),'whole target XML differs')
+
+    def test_partial_empty_cdata_keeps_zero_width_owner(self):
+        data,expected=self.cdata()
+        source=XML.replace("B<p:titleMark ignore='1'/>C","B<![CDATA[]]>C<p:titleMark ignore='1'/>D")
+        expected=expected.replace("<p:run charPrIDRef='2'><p:t>C</p:t></p:run><p:run charPrIDRef='1'><p:t>D<p:titleMark ignore='1'/></p:t></p:run><p:run charPrIDRef='1'><p:t>E</p:t></p:run>","<p:run charPrIDRef='1'><p:t></p:t></p:run><p:run charPrIDRef='2'><p:t>C<p:titleMark ignore='1'/></p:t></p:run><p:run charPrIDRef='1'><p:t>D</p:t></p:run>")
+        data=dict(data,before=packed(source),after=packed(expected))
+        self.check(data)
+        zero="<p:run charPrIDRef='1'><p:t></p:t></p:run>"
+        self.assertIn(zero,expected)
+        self.check(dict(data,after=packed(expected.replace(zero,''))),'whole target XML differs')
+
+    def test_partial_adjacent_cdata_keeps_each_source_site(self):
+        data,expected=self.cdata()
+        source=XML.replace("B<p:titleMark ignore='1'/>C","<![CDATA[B]]><![CDATA[C]]>D<p:titleMark ignore='1'/>E")
+        self.check(dict(data,before=packed(source)))
+
+    def test_partial_repeated_empty_cdata_each_has_old_style(self):
+        data,expected=self.cdata()
+        source=XML.replace("B<p:titleMark ignore='1'/>C","B<![CDATA[]]><![CDATA[]]>C<p:titleMark ignore='1'/>D")
+        expected=expected.replace("<p:run charPrIDRef='2'><p:t>C</p:t></p:run><p:run charPrIDRef='1'><p:t>D<p:titleMark ignore='1'/></p:t></p:run><p:run charPrIDRef='1'><p:t>E</p:t></p:run>","<p:run charPrIDRef='1'><p:t></p:t></p:run>"*2+"<p:run charPrIDRef='2'><p:t>C<p:titleMark ignore='1'/></p:t></p:run><p:run charPrIDRef='1'><p:t>D</p:t></p:run>")
+        self.check(dict(data,before=packed(source),after=packed(expected)))
+
     def test_partial_wrong_valid_style(self):
         data,_=self.partial()
         self.check(dict(data,charShapeId=1),'partial fixture must split one source text style')

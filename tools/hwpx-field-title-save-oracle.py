@@ -5,7 +5,8 @@ import json
 from pathlib import Path
 import runpy
 import sys
-from xml.dom import Node, minidom
+from xml.dom import Node
+from xml.dom.expatbuilder import ExpatBuilderNS
 import xml.etree.ElementTree as ET
 
 shared = runpy.run_path(str(Path(__file__).with_name("hwpx-character-format-oracle.py")))
@@ -16,7 +17,14 @@ H = "http://www.hancom.co.kr/hwpml/2011/head"
 
 def parse(raw):
     require(b"<!DOCTYPE" not in raw.upper(), "DOCTYPE unsupported by this oracle")
-    return minidom.parseString(raw)
+    # minidom otherwise drops empty CDATA and merges its adjacent text nodes.
+    # That loses an original source binding even though the text is unchanged.
+    class SourceDom(ExpatBuilderNS):
+        def start_cdata_section_handler(self):
+            super().start_cdata_section_handler()
+            self.curNode.appendChild(self.document.createCDATASection(""))
+            self._cdata_continue = True
+    return SourceDom().parseString(raw)
 
 
 def children_signature(node):
@@ -130,19 +138,26 @@ def expected_partial_source_run(target, style, start, end):
                 pending.append(child)
             continue
         text_styles = set()
-        sites, value = [], ''
+        # Each CharData or whole-CDATA source item is a distinct binding.
+        # minidom preserves these source node boundaries; do not merge them.
+        sites, content_since_marker = [], False
         for node in child.childNodes:
             if node.nodeType in (Node.TEXT_NODE, Node.CDATA_SECTION_NODE):
-                value += node.data
+                sites.append((node.data, None))
+                content_since_marker = True
             else:
                 require(node.nodeType == Node.ELEMENT_NODE and node.namespaceURI == P and node.localName == 'titleMark' and not node.childNodes,
                         'partial fixture title-only inline')
-                # Edge-marker synthetic ownership requires a separate expectation.
-                require(bool(value), 'partial fixture nonempty marker left required')
-                sites.append((value, node))
-                value = ''
-        require(bool(value) or not sites, 'partial fixture nonempty marker right required')
-        sites.append((value, None))
+                if content_since_marker:
+                    value, previous = sites.pop()
+                    require(previous is None, 'partial source marker order')
+                    sites.append((value, node))
+                else:
+                    # A zero-width gap keeps its old style, including edges.
+                    sites.append(('', node))
+                content_since_marker = False
+        if not content_since_marker:
+            sites.append(('', None))
         for text, marker in sites:
             boundaries, units = {0: 0}, 0
             for index, scalar in enumerate(text):
@@ -153,8 +168,7 @@ def expected_partial_source_run(target, style, start, end):
             intervals = list(zip(cuts, cuts[1:])) if units else [(0, 0)]
             for low, high in intervals:
                 selected = high > low and start <= offset + low and offset + high <= end
-                if high > low:
-                    text_styles.add(str(style) if selected else old_style)
+                text_styles.add(str(style) if selected else old_style)
                 item = fragment(child, text[boundaries[low]:boundaries[high]], selected)
                 if not fragments:
                     for prefix in pending:

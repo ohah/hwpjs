@@ -8,7 +8,7 @@
 
 최초 원본에 서식 변경과 교체 명령을 함께 재생합니다. 잘못된 기대 서식은 원본 헤더에 존재하는 다른 유효 ID를 사용하므로, 리소스 유효성 검사에서 우연히 거부된 결과를 서식 검증 성공으로 세지 않습니다.
 
-독립 합성 검사26개는 빈 요소 서식 변경·삭제, 필드 복제·dirty 변경, 제목 마커 위치 변경, 다른 문단·속성·주석·처리 지시문·바이너리 변경 등을 거부합니다. 실제 WASM·브라우저 실행이나 한글 조판 동치를 증명하는 검사는 아닙니다.
+독립 합성 검사34개는 빈 요소 서식 변경·삭제, 필드 복제·dirty 변경, 제목 마커 위치 변경, 다른 문단·속성·주석·처리 지시문·바이너리 변경 등을 거부합니다. 실제 WASM·브라우저 실행이나 한글 조판 동치를 증명하는 검사는 아닙니다.
 
 ```sh
 mise exec -- node --test tests/hwpx/field-title-save-oracle.test.mjs
@@ -21,6 +21,12 @@ mise exec -- node --test tests/hwpx/field-title-save-oracle.test.mjs
 
 `partial-field-title-format`은 원본 한 run 안에서 같은 text 요소의 가시 문자들이 서로 다른 서식으로 나뉘는 명령을 검사합니다. 원본 DOM과 UTF-16 범위로 각 text site의 스타일 조각을 계산하며, 각 조각은 원본 속성을 유지한 run/text로 출력해야 합니다. 원본 text 안의 제목 표식과 text 사이의 필드 제어·메타데이터는 직전 조각에 한 번만 남고, 선행 제어 정보는 첫 조각에 남습니다. 빈 원본 text는 기존 서식입니다. 저장 결과에서 스타일·경계·표식 위치를 읽어 기대값을 만들지 않습니다.
 
-검사기는 한 원본 run/한 제목 표식/표식 양쪽의 비어 있지 않은 원문이라는 입력 범위를 명시적으로 요구합니다. 여러 원본 run, 표식이 원본 text의 맨 앞·뒤인 경우, 이동·분할된 제목 소유권은 이 모드로 검증했다고 주장하지 않습니다. 범위가 같은 원본 text를 나누지 않으면 기존 text별 동일 서식 모드와 혼용하지 않고 거부합니다. UTF-16 surrogate 중간 경계도 거부합니다.
+검사기는 한 원본 run/한 제목 표식이라는 입력 범위를 명시적으로 요구합니다. 여러 원본 run과 이동·분할된 제목 소유권은 이 모드로 검증했다고 주장하지 않습니다. 제목 표식이 text의 맨 앞·뒤인 경우에는 원본의 zero-width 구간도 별도 조각으로 남기고 기존 서식을 유지합니다. 앞 표식은 앞의 빈 조각, 뒤 표식은 직전 가시 조각에 남아야 하며, 뒤의 빈 조각은 별도 기존 서식입니다. 범위가 같은 원본 text를 나누지 않으면 기존 text별 동일 서식 모드와 혼용하지 않고 거부합니다. UTF-16 surrogate 중간 경계도 거부합니다.
 
-독립 리터럴 기대 XML로 좌·우 서식 변경과 비BMP·escaped 문자를 검사하고, 필드/제목의 유실·중복·스타일 소유자 변경·빈 요소 서식 오염을 거부합니다. Python 일반/최적화 각각26개와 Node wrapper2개를 통과했습니다. 이는 독립 기대값 계산기의 검증이며, 새 제품 Native/WASM 구현이나 전체 픽스쳐 부분 서식 완료를 의미하지 않습니다. 실행 근거는 `zig-out/verification/source-field-title-multistyle-candidate/oracle-node-wrapper-final.log`입니다.
+독립 리터럴 기대 XML로 좌·우 서식 변경과 비BMP·escaped 문자를 검사하고, 필드/제목의 유실·중복·스타일 소유자 변경·빈 요소 서식 오염을 거부합니다. Python 일반/최적화 각각34개와 Node wrapper2개를 통과했습니다. 이는 독립 기대값 계산기의 검증이며, 새 제품 Native/WASM 구현이나 전체 픽스쳐 부분 서식 완료를 의미하지 않습니다. 실행 근거는 `zig-out/verification/title-edge-public-reproduction/oracle-empty-cdata-tests.log`입니다.
+
+같은 폴더의 `result.json`은 fa8620dd 후보에서 맨 앞 제목의 전체 서식이 `InvalidTextSites`로 거부되고 저장 원문은 유지되는 실제 API 재현입니다. 기대값 검증 통과를 이 제품 실패의 수정 완료로 해석하지 않습니다.
+
+부분 서식의 기대값은 인접한 CharData·CDATA를 별도 원본 구간으로 유지합니다. CDATA 구간은 기존 공통 source-span 계약에서 구분자 전체를 포함하며, 서식 변경 결과는 escaped CharData를 사용할 수 있습니다. 기본 minidom은 빈 CDATA를 생략하므로, 표준 namespace DOM builder의 CDATA 시작 콜백에서 빈 노드를 먼저 생성해 원본 구간과 양옆 텍스트 경계를 보존합니다. namespace·요소·속성 콜백은 그대로 상속합니다.
+
+합성 검사는 특수 문자·비BMP 문자, 연속 CDATA, 반복 빈 CDATA와 기존 서식의 빈 구간 삭제 거부를 포함합니다. 실제 제품 serializer의 CDATA 파손을 발견한 것이 아니라, 원본 구간을 합치던 기대값 생성기의 불일치를 수정한 것입니다. 후보 Native 실행 검증과 구분합니다.
