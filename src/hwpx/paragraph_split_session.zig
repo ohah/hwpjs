@@ -111,7 +111,7 @@ fn splitMode(session: *editor.Session, section_index: usize, paragraph: usize, s
         right_index = ordinal;
     };
     const split_right = right_index orelse return error.SourceBindingMismatch;
-    if (!anchored and @import("empty_continuation_style.zig").eligible(selected, &candidate.paragraphs[split_right], start, end)) {
+    if (!anchored and @import("empty_continuation_style.zig").eligible(selected, &candidate.paragraphs[split_right], start, end) and try @import("empty_continuation_style.zig").hasStyleContext(a, &section.tree, selected)) {
         const resource_ids = try @import("character_style_resources.zig").ids(session);
         defer a.free(resource_ids);
         try @import("empty_continuation_style.zig").apply(a, &section.tree, selected, &candidate.paragraphs[split_right], start, end, resource_ids, session.options.max_sites);

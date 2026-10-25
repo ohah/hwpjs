@@ -5,6 +5,20 @@ const paint = @import("character_style_paint.zig");
 const Tree = @import("xml_part_tree.zig").Tree;
 const Segment = @import("paragraph_text_positions.zig").Segment;
 
+/// 원본에서 문자 서식 참조가 모두 생략됐다면 새 numeric intent를 만들지 않습니다.
+/// Owned context는 기존 strict 검증을 거치며, 명시 0/잘못된 ID/잘못된 문법은 생략이 아닙니다.
+pub fn hasStyleContext(a: std.mem.Allocator, tree: *const Tree, paragraph: *const P) !bool {
+    if (paragraph.character_styles != null or paragraph.synthesized_run_character_id != null) return true;
+    var found = false;
+    for (paragraph.sites.items) |site| {
+        if (site.element_index >= tree.elements.len) return error.SourceBindingMismatch;
+        const element = tree.elements[site.element_index];
+        const run = if (site.missing_text) site.element_index else element.parent orelse return error.SourceBindingMismatch;
+        if (try @import("character_style_projection.zig").runId(a, tree, run) != null) found = true;
+    }
+    return found;
+}
+
 /// 기존 plain split 이후 private candidate에만 적용합니다. commit은 Session 소유.
 pub fn apply(a: std.mem.Allocator, tree: *const Tree, before: *const P, right: *P, at: u32, end: u32, resource_ids: []const u32, max_spans: usize) !void {
     if (!eligible(before, right, at, end) or resource_ids.len == 0) return;
