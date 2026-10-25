@@ -11,7 +11,7 @@ bun run --cwd apps/docs typecheck
 HWPJS_DOCS_BASE=/hwpjs/ bun run --cwd apps/docs check
 ```
 
-`bun run --cwd apps/docs typecheck`는 **workspace 전용**입니다. Markdown의 7개 TS/TSX 예제가 실제 예제 파일과 같은지 확인하고 `packages/*/src`의 현재 공개 타입 및 Rspress 설정으로 검사합니다. npm 게시나 실제 Native/브라우저 E2E 검증을 대신하지 않습니다. 제품 패키지나 WASM을 빌드하지 않습니다.
+`bun run --cwd apps/docs typecheck`는 **workspace 전용**입니다. Markdown의 8개 TS/TSX 예제가 실제 예제 파일과 같은지 확인하고 `packages/*/src`의 현재 공개 타입 및 Rspress 설정으로 검사합니다. npm 게시나 실제 Native/브라우저 E2E 검증을 대신하지 않습니다. 제품 패키지나 WASM을 빌드하지 않습니다.
 
 ## 독립 GitHub Pages 빌드
 
@@ -35,10 +35,21 @@ bun run check:public
 
 `route.cleanUrls=true`이므로 `/hwpjs/guide/installation` 같은 요청은 출력의 `guide/installation.html`로 연결해야 합니다. 첫 페이지는 `index.html`, 리소스는 `static/`, 샘플은 `demo/noori.hwp`와 `demo/noori.hwpx`입니다. 알 수 없는 문서 경로는 `404.html`로 처리하세요.
 
-현재 Canvas 데모 링크는 Tailscale tailnet 접근이 필요합니다. 문서 사이트의 공개 다운로드와 네트워크 제한이 있는 편집기 접근을 구분합니다. Worker/WASM URL은 소비 앱이 별도로 배포·설정하며 문서 사이트 base와 같다고 가정하지 않습니다.
+`/playground`의 전체화면 Canvas와 API 문서의 함수 실행 예제는 같은 Pages 사이트의 `editor/` 정적 파일을 사용합니다. 별도 편집 서버나 사설 네트워크 접근은 필요하지 않습니다. 동일한 편집기 tree를 `/hwpjs/editor/`와 `/docs/editor/` 아래 제공할 수 있습니다.
 
 ## 내장 편집기 아티팩트
 
 `docs/public/editor/`는 검증한 웹 편집기·Worker·WASM과 기존 공개 예제 두 개를 포함하는 정적 배포본입니다. 이 디렉터리는 문서 빌드에 포함되며 외부 편집 서버를 요구하지 않습니다. 파일 업로드는 브라우저 안에서 처리합니다.
 
-저장소 루트의 `node tools/build-pages-demo.mjs --verify`는 배포본의 체크섬을 확인합니다. 재생성에는 별도로 빌드하고 검증한 `apps/demo/dist`와 `packages/core/dist`가 필요합니다. 이 생성 명령을 문서 빌드나 새 clone의 제품 빌드 성공으로 취급하지 않습니다. 생성 후에는 예제 열기·입력·이력·저장과 Worker/WASM 경로를 실제 브라우저에서 검증해야 합니다.
+저장소 루트의 `node tools/build-pages-demo.mjs --verify`는 Node 내장 모듈만으로 배포본의 경로·체크섬·canonical WASM·공개 텍스트 규칙을 확인합니다. 이 검사는 `node_modules`나 제품 재빌드 없이 실행할 수 있습니다.
+
+재생성은 별도로 빌드·검증한 multi-entry 정적 bundle을 명시적으로 입력합니다. `BUNDLE_DIR`는 해당 `manifest.json`이 있는 디렉터리입니다.
+
+```bash
+node tools/build-pages-demo.mjs --bundle-dir "$BUNDLE_DIR" --out zig-out/verification/pages-editor-reviewed
+node tools/build-pages-demo.mjs --verify --out zig-out/verification/pages-editor-reviewed
+```
+
+공개 반영을 승인한 뒤에는 `--out apps/docs/docs/public/editor`로 생성합니다. 기존 출력은 manifest/checksum 및 미기록 파일을 검사한 뒤 교체하며, 수정된 사용자 파일이나 심볼릭 링크가 있으면 거부합니다. 생산 입력 검사에는 설치된 React/ReactDOM/Svelte의 라이선스 원문이 필요하지만 docs CI의 `--verify`에서는 패키지를 resolve하지 않습니다.
+
+옵션 없는 생산은 과거 dist로의 회귀를 막기 위해 거부합니다. `--legacy-dist`는 기존 `apps/demo/dist`와 `packages/core/dist`를 사용하는 별도 과거 파이프라인이며, 현재 multi-entry bundle 재현 명령이 아닙니다. 정적 편집기 배포 성공을 새 clone의 전체 제품·Native 빌드 성공으로 해석하지 않습니다. 새 bundle은 두 형식의 실제 입력·이력·저장·재열기와 두 prefix의 Worker/WASM 경로를 별도로 검증합니다.

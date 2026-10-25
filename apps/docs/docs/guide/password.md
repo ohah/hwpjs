@@ -4,7 +4,7 @@
 
 ## 적용 버전과 공개 상태
 
-이 예제의 readonly 동작은 `b8d2ec4d` 이후의 개발 소스에서 검증했습니다. 작성 시점의 기존 공개 데모 정적 JS와 동결 패키지에는 이 수정이 아직 반영되지 않았으며, 새 묶음의 배포 검증은 별도입니다. WASM이 같은 b7이라는 사실만으로 JS의 readonly 수정까지 반영됐다고 판단하지 마세요. 새 Zig/WASM API는 npm 미게시이며 현재 npm의 기존 Rust 패키지는 이 예제의 설치 대상이 아닙니다. [게시 상태](./package-names.md)와 [Runtime 설정](./runtime.md)을 함께 확인하세요.
+이 예제의 readonly 동작은 `b8d2ec4d` 이후의 개발 소스와 함께 배포하는 새 정적 앱 묶음에서 검증했습니다. 공개 실행 도구의 readonly 수정은 해당 배포의 manifest와 JS 묶음을 기준으로 확인하세요. WASM이 같은 b7이라는 사실만으로 JS의 readonly 수정까지 반영됐다고 판단하지 마세요. 새 Zig/WASM API는 npm 미게시이며 현재 npm의 기존 Rust 패키지는 이 예제의 설치 대상이 아닙니다. [게시 상태](./package-names.md)와 [Runtime 설정](./runtime.md)을 함께 확인하세요.
 
 ## 호스트가 입력을 결정하기
 
