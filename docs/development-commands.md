@@ -1,5 +1,7 @@
 # 개발·검증 명령
 
+WASM HTTP 압축 검사는 `mise exec -- node --test tests/hwpx/preview-wasm-compression.test.mjs`와 `mise exec -- bun test ./tests/hwpx/preview-wasm-compression.test.mjs`입니다. Bun 파일 인수의 `./`를 유지합니다. [전송 크기와 실측 범위](wasm-transfer.md)를 따릅니다.
+
 HWP5 Native 텍스트 편집·실패 주입 단위 검사는 `mise exec -- zig build test-text-splice -j1 --summary all`과 `mise exec -- zig build test-text-splice -Doptimize=ReleaseSafe -j1 --summary all`입니다. WASM 설치나 선택적 외부 JSON oracle를 실행하지 않는 집중 단계이며 전체 `zig build test`를 대체하지 않습니다.
 
 5.0.3.0 그림 효과 전용 꼬리는 `HWPJS_TEST_WASM=/absolute/verified.wasm mise exec -- node --test tests/hwp5/effects-only-picture-tail.test.mjs`로 검사합니다. 실제14개 고정 offset·Worker geometry·미지 프로필 거부 검사이며 정규 hwp5-editor-audit에도 등록합니다. 계약은 [effects-only 꼬리](hwp5-effects-only-picture-tail.md)를 따릅니다.

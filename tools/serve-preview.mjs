@@ -12,6 +12,7 @@ const experimentalWasm = process.argv[3] ? await realpath(resolve(process.argv[3
 if (experimentalWasm) {
   const bytes = await readFile(experimentalWasm);
   if (bytes.length < 8 || !bytes.subarray(0, 8).equals(Buffer.from([0, 97, 115, 109, 1, 0, 0, 0]))) throw new Error("InvalidExperimentalWasm");
+  compressWasm(bytes, "br"); compressWasm(bytes, "gzip");
 }
 if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error("InvalidPort");
 const mime = { ".html": "text/html; charset=utf-8", ".mjs": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".wasm": "application/wasm" };
@@ -27,10 +28,11 @@ const server = createServer(async (request, response) => {
     if (!override && (!file.startsWith(root) || (!allowed.some(prefix => file.startsWith(prefix)) && file !== resolve(root, "zig-out/bin/hwpjs.wasm")))) { response.writeHead(404); response.end(); return; }
     const body = await readFile(file);
     const wasm = override || extname(file) === ".wasm";
-    const compressed = wasm ? compressWasm(body, request.headers["accept-encoding"]) : null;
-    const encoded = compressed ?? body;
+    const representation = wasm ? compressWasm(body, request.headers["accept-encoding"]) : { bytes: body, encoding: null };
+    if (representation.bytes === null) { response.writeHead(406, { Vary: "Accept-Encoding", "Cache-Control": "no-store" }); response.end(); return; }
+    const encoded = representation.bytes;
     response.writeHead(200, { "Content-Type": override ? "application/wasm" : mime[extname(file)] || "application/octet-stream", "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff", "Content-Length": encoded.length,
-      ...(wasm ? { Vary: "Accept-Encoding" } : {}), ...(compressed ? { "Content-Encoding": "gzip" } : {}) });
+      ...(wasm ? { Vary: "Accept-Encoding" } : {}), ...(representation.encoding ? { "Content-Encoding": representation.encoding } : {}) });
     response.end(request.method === "HEAD" ? undefined : encoded);
   } catch { response.writeHead(404); response.end(); }
 });
