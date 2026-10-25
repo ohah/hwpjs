@@ -5,5 +5,6 @@
 - [공개 API 직접 실행](./playground.mdx): 함수·JSON 인수·실제 결과/오류·전후 상태 확인
 - [HeadlessEditor](./editor.md): 문서 열기·선택·명령·저장·수명 계약
 - [선택과 서식](./selection.md): typed 명령과 지원 경계
+- [암호·취소 예제](../guide/password.md): 암호 후보 재시도·기존 문서 보존·readonly 경계
 - [편집·저장 예제](../guide/editing.md): 현재 workspace 예제
 - [패키지 이름과 게시 상태](../guide/package-names.md): 기존 npm과 새 API의 구분
