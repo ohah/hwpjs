@@ -1,3 +1,4 @@
+import {uint, observationRows, observationSpans} from "./observation-structure.mjs";
 import { snapUnit } from "./text-input.mjs";
 
 export const isSourceCharacterSize = value => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
@@ -7,11 +8,14 @@ export function characterSizeState(content, paragraph, start, end, {isBoundary=(
   if (content?.characterPropertiesAvailable !== true || typeof paragraph?.text !== "string" || paragraph.clipped ||
       !Number.isInteger(start) || !Number.isInteger(end) || start < 0 || start >= end || end > paragraph.text.length ||
       !isBoundary(paragraph.text, start) || !isBoundary(paragraph.text, end, true)) return null;
-  const shapes = new Map((content.characterShapes ?? []).map(shape => [shape.id, shape]));
+  const shapes = observationRows(content.characterShapes);
+  const spans = observationSpans(paragraph);
+  if (!shapes || !spans) return null;
   let cursor = start, size, mixed = false;
-  for (const span of paragraph.characterRanges ?? []) {
+  for (const span of spans) {
     const low = Math.max(start, span.start), high = Math.min(end, span.end);
     if (low >= high) continue;
+    if (!uint(span.charShapeId)) return null;
     const current = shapes.get(span.charShapeId)?.height;
     if (low !== cursor || !isSourceCharacterSize(current)) return null;
     if (size === undefined) size = current;
@@ -22,7 +26,7 @@ export function characterSizeState(content, paragraph, start, end, {isBoundary=(
 }
 
 export function characterSizeRangesState(content, ranges) {
-  if (!ranges?.length) return null;
+  if (!Array.isArray(ranges) || !ranges.length || !Array.isArray(content?.paragraphs) || content.paragraphs.some(row => !row || typeof row !== "object") || ranges.some(range => !range)) return null;
   let size;
   for (const range of ranges) {
     const row = content.paragraphs.find(paragraph => paragraph.section === range.section && paragraph.paragraph === range.paragraph);
