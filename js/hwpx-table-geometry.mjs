@@ -7,6 +7,7 @@ export function decodeTableGeometry(bytes) {
   const optional = (v, check) => v === null || check(v);
   const bool = v => [null, false, true].includes(v);
   const bounded = max => v => uint(v) && v <= max;
+  if (Object.hasOwn(value, "z_order") && !optional(value.z_order, signed)) throw new Error("InvalidTableGeometry");
   const g = value?.geometry;
   const margin = v => v === null || Array.isArray(v) && v.length === 4 && v.every(n => optional(n, signed));
   for (const [name, maximum] of [["text_wrap", 5], ["text_flow", 3]]) {

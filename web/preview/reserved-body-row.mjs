@@ -1,6 +1,6 @@
 import { isPositionedBodySource } from "./positioned-row-fragments.mjs";
 import { measurePicturePageTextLine } from "./picture-page-text-line.mjs";
-import { paragraphLineGeometry } from "./paragraph-geometry.mjs";
+import { paragraphReferenceGeometry } from "./paragraph-geometry.mjs";
 import { DEFAULT_ROW_HEIGHT } from "./row-geometry.mjs";
 import { graphemeUnits } from "./text-input.mjs";
 import { isHardLineBreak } from "./hard-line-break.mjs";
@@ -22,7 +22,7 @@ export function measureReservedBodyRow(source, context, reservations, measure) {
       reservations, (text, _p, unit, kind) => measure(text, p, unit, kind), { paragraphEndUnit: p.text.length });
     if (line.state !== "available") return fail(line.error ?? line.state);
     if (line.rows.length) {
-      const horizontal = paragraphLineGeometry({ ...p.paragraphShape, alignment: 0 }, context.column.width, 0, source.startUnit === 0);
+      const horizontal = paragraphReferenceGeometry(p.paragraphShape, context.column.width);
       const positionedFragments = line.rows.map(({ x, y: _y, paragraphX: _paragraphX, ...row }) => ({ ...row, paragraphX: x - context.column.x, paragraphReferenceX: x - context.column.x }));
       return { state: "measured", y, row: { ...source, endUnit: line.endUnit, height: line.height, positionedFragments,
         flowParagraphBox: { x: context.column.x + horizontal.x, width: horizontal.width } } };

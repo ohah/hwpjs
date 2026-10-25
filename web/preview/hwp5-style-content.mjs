@@ -29,7 +29,12 @@ export function projectHwp5Ranges(ranges, source, text) {
     const start = map(range.start), end = map(range.end);
     if (start !== cursor || end < start) throw new Error("CharacterDisplayLengthMismatch");
     cursor = end;
-    if (end === start) continue;
+    if (end === start) {
+      // Empty paragraphs and a separately styled CR retain source boundary
+      // affinity without inventing a display glyph or a raw text terminator.
+      if (start === text.length) output.push({ start, end, charShapeId: range.charShapeId });
+      continue;
+    }
     const previous = output.at(-1);
     if (previous?.charShapeId === range.charShapeId) previous.end = end;
     else output.push({ start, end, charShapeId: range.charShapeId });

@@ -2,7 +2,10 @@ import { selectDrawingBrush } from "./drawing-solid-fill.mjs";
 
 /** Preserve source shaping parameters; this is not a Canvas approximation. */
 export function drawingGradientSource(content, drawing) {
-  const selected = selectDrawingBrush(content, drawing);
+  return selectedGradientSource(selectDrawingBrush(content,drawing));
+}
+
+export function selectedGradientSource(selected) {
   if (selected.state !== "selected") return selected;
   const fail = error => ({ state: "unavailable", error });
   const { brush, nodes } = selected;

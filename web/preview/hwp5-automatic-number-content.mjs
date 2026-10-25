@@ -1,6 +1,7 @@
 import { validateHwp5AutomaticNumberSources } from "../../js/hwp5-automatic-number-sources.mjs";
 import { sourceDisplayPosition } from "./text-offsets.mjs";
 import { hwp5NumberFormat } from "./number-format.mjs";
+import { attachHwp5NoteReferenceDisplay } from "./hwp5-note-reference-display.mjs";
 
 function ornament(unit) {
   if (unit >= 0xd800 && unit <= 0xdfff) throw new Error("UnsupportedHwp5NumberOrnament");
@@ -33,5 +34,5 @@ export function attachHwp5AutomaticNumbers(editor, content) {
       for (const { paragraph, number } of prepared) paragraph.automaticNumbers.push(number);
     } catch (error) { content.automaticNumberErrors.push({ section, error: error.message }); }
   }
-  return content;
+  return attachHwp5NoteReferenceDisplay(content);
 }

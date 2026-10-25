@@ -1,4 +1,5 @@
 import { validShapeLayoutValues } from "./hwpx-shape-layout-values.mjs";
+import { validShapePaintValues } from "./hwpx-shape-paint-values.mjs";
 export function decodeRectangleRenderingSource(bytes) {
   const fail = () => { throw new Error("InvalidRectangleRenderingSource"); };
   if (!(bytes instanceof Uint8Array) || bytes.length > 65536) return fail();
@@ -13,11 +14,7 @@ export function decodeRectangleRenderingSource(bytes) {
   if (!value.owner || ![value.owner.paragraph, value.owner.anchor_unit, value.owner.anchor_node].every(uint) || value.owner.paragraph === 0 || value.owner.anchor_node > value.rectangle_node) return fail();
   const s = value.source, r = s.rendering, p = s.rectangle;
   if (!validShapeLayoutValues(s)) return fail();
-  const paint = s.paint;
-  if (s.stroke === null) {
-    if (!["UnsupportedLineStrokeDecoration", "UnsupportedLineStrokeColor", "UnsupportedLineStrokeStyle"].includes(s.stroke_error)) return fail();
-  } else if (!s.stroke || s.stroke_error !== null || !optional(s.stroke.color, n => uint(n) && n <= 0xffffff) || !optional(s.stroke.width, uint) || !optional(s.stroke.style, n => uint(n) && n <= 6)) return fail();
-  if (!paint || ![paint.fill_node, paint.shadow_node].every(n => optional(n, uint)) || !optional(paint.shadow_type, n => uint(n) && n <= 14) || paint.shadow_node === null && paint.shadow_type !== null) return fail();
+  if (!validShapePaintValues(s)) return fail();
   if (!bool(s.transform_identity) || !r || !p || !array(r.flip, 2, bool) || !optional(r.angle, uint) || !bool(r.reverse) || !array(r.center, 2, n => optional(n, signed)) || !bool(r.rotate_image)) return fail();
   if (r.matrix === null) {
     if (!["UnsupportedPictureMatrixSequence", "IncompletePictureMatrix", "NonFinitePictureMatrix"].includes(r.matrix_error)) return fail();

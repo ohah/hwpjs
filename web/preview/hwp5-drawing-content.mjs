@@ -8,15 +8,23 @@ import { attachHwp5DrawingCorners } from "./hwp5-drawing-corner-content.mjs";
 import { attachHwp5DrawingGeometry } from "./hwp5-drawing-geometry.mjs";
 import { attachHwp5DrawingStyles } from "./hwp5-drawing-style-content.mjs";
 import { attachHwp5DrawingComponents } from "./hwp5-drawing-component-content.mjs";
+import { attachHwp5PolygonPoints } from "./hwp5-polygon-point-content.mjs";
+import { attachHwp5CurvePoints } from "./hwp5-curve-point-content.mjs";
+import { withObservedDrawingObjectExtensions } from "./hwp5-drawing-object-extension.mjs";
 
 export function attachHwp5Drawings(editor, content) {
   content.hwp5Drawings = [];
   content.hwp5DrawingErrors = [];
+  content.hwp5DrawingObjectExtraErrors = [];
+  attachHwp5PolygonPoints(null, content);
+  attachHwp5CurvePoints(null, content);
   attachHwp5DrawingComponents(null, content);
   if (!editor) return attachHwp5DrawingStyles(editor, attachHwp5DrawingGeometry(attachHwp5DrawingCorners(editor, attachHwp5DrawingLocalTransforms(editor, attachHwp5DrawingMatrices(editor, attachHwp5DrawingBodies(editor, content))))));
   for (const section of new Set((content.paragraphs ?? []).map(row => row.section))) {
     try {
-      const sources = validateHwp5DrawingSources(editor.drawingSources(section));
+      let sources = validateHwp5DrawingSources(editor.drawingSources(section));
+      try { sources = withObservedDrawingObjectExtensions(editor, sources, section); }
+      catch (error) { content.hwp5DrawingObjectExtraErrors.push({ section, error: error.message }); }
       const anchors = validateHwp5DrawingAnchors(editor.drawingAnchors(section)), prepared = [];
       if (sources.length !== anchors.length) throw new Error("IncompleteHwp5DrawingAnchors");
       const paragraphsInSection = content.paragraphs.filter(row => row.section === section);
@@ -40,5 +48,6 @@ export function attachHwp5Drawings(editor, content) {
     } catch (error) { content.hwp5DrawingErrors.push({ section, error: error.message }); }
   }
   attachHwp5DrawingComponents(editor, content);
-  return attachHwp5DrawingStyles(editor, attachHwp5DrawingGeometry(attachHwp5DrawingCorners(editor, attachHwp5DrawingLocalTransforms(editor, attachHwp5DrawingMatrices(editor, attachHwp5DrawingBodies(editor, content))))));
+  const prepared = attachHwp5DrawingStyles(editor, attachHwp5DrawingGeometry(attachHwp5DrawingCorners(editor, attachHwp5DrawingLocalTransforms(editor, attachHwp5DrawingMatrices(editor, attachHwp5DrawingBodies(editor, content))))));
+  return attachHwp5CurvePoints(editor, attachHwp5PolygonPoints(editor, prepared));
 }

@@ -1,7 +1,7 @@
 const decoder = new TextDecoder("utf-16le", { fatal: true, ignoreBOM: true });
 
 /** Decode the private H5T1 preview wire. Every returned raw array owns its bytes. */
-export function decodeHwp5Text(bytes) {
+export function decodeHwp5Text(bytes, { allowGenerated = false } = {}) {
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   let offset = 0;
   function word() {
@@ -29,7 +29,8 @@ export function decodeHwp5Text(bytes) {
       throw new Error("InvalidHwp5TextWire");
     const paragraphs = [];
     for (let p = 0; p < paragraphCount; p++) {
-      const nodeIndex = word();
+      const nodeRaw = word();
+      const nodeIndex = allowGenerated && nodeRaw === 0xffffffff ? null : nodeRaw;
       const parentRaw = word();
       const declaredUnits = word();
       const present = word();

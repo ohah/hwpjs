@@ -1,0 +1,36 @@
+{
+  "name": "hwpjs-workspace",
+  "private": true,
+  "packageManager": "bun@1.4.4",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "bun tools/build-packages.mjs",
+    "build:web": "bun tools/build-packages.mjs --web",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test:core": "bun test ./packages/core/tests",
+    "test:packages": "bun test ./packages/core/tests ./packages/vanilla/tests ./packages/react/tests ./packages/svelte/tests ./packages/react-native/src/__tests__",
+    "build:demo": "bun x vite build --config apps/demo/vite.config.mjs apps/demo",
+    "dev": "bun tools/serve-demo.mjs",
+    "docs:build": "bun run --cwd apps/docs build",
+    "docs:typecheck": "bun run --cwd apps/docs typecheck",
+    "docs:check": "bun run --cwd apps/docs check"
+  },
+  "engines": {
+    "bun": ">=1.4.4"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "7.3.1",
+    "@types/bun": "1.4.4",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.2",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "svelte": "5.57.2",
+    "typescript": "7.0.2",
+    "vite": "8.3.5"
+  }
+}

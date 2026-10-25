@@ -9,10 +9,11 @@ function intersectTables(line, tables) {
   const initial = intersectPictureLineRegions(line, []);
   if (initial.state !== "available") return initial;
   let regions = initial.regions, nextY = Infinity;
-  for (const { table, rectangle } of tables) {
-    const result = tableLineRegions(line, rectangle, table);
+  for (const { table, rectangle, footprint,fragmentOrdinal,fragmentCount } of tables) {
+    const result = tableLineRegions(line, rectangle, table, {footprint,fragmentOrdinal,fragmentCount});
     if (result.state !== "available") return result;
-    const bottom = rectangle.y + rectangle.height + hwpUnitPixels(table.sourceGeometry.out_margin[3]);
+    const bottom = footprint === undefined ? rectangle.y + rectangle.height
+      + hwpUnitPixels(fragmentCount!==undefined&&fragmentOrdinal<fragmentCount-1?0:table.sourceGeometry.out_margin[3]) : footprint.y + footprint.height;
     if (bottom > line.y) nextY = Math.min(nextY, bottom);
     const next = [];
     for (const a of regions) for (const b of result.regions) {

@@ -1,3 +1,5 @@
+import { hwp5NumberingNoteUnits } from "./hwp5-numbering-note-units.mjs";
+
 // Known object markers are not page-number controls. Never exempt unknown markers.
 export function hwp5NumberingObjectUnits(content, paragraph) {
   const units = new Set(), identities = new Set();
@@ -16,5 +18,6 @@ export function hwp5NumberingObjectUnits(content, paragraph) {
     if (table.section !== paragraph.section || table.hostParagraph !== paragraph.paragraph) continue;
     add("table", table.tableNode, table.anchorUnit);
   }
+  for (const [node, unit] of hwp5NumberingNoteUnits(content, paragraph)) add("note", node, unit);
   return units;
 }

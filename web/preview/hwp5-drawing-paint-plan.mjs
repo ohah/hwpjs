@@ -1,18 +1,20 @@
 import { validateHwp5DrawingStyleSources } from "../../js/hwp5-drawing-style-sources.mjs";
 import { gradientStepStops } from "./gradient-step-stops.mjs";
 import { hwp5DrawingPaintTail } from "./hwp5-drawing-paint-tail.mjs";
+import { colorrefCss } from "./colorref-css.mjs";
+import { hwp5StrokeDisplay } from "./hwp5-stroke-display.mjs";
 const hatches = ["HORIZONTAL", "VERTICAL", "BACK_SLASH", "SLASH", "CROSS", "CROSS_DIAGONAL"];
 export function hwp5DrawingPaintPlan(style) {
   const fail = error => ({ state: "unavailable", error });
   try { validateHwp5DrawingStyleSources([style]); } catch (error) { return fail(error.message); }
   const tail = hwp5DrawingPaintTail(style);
   if (tail.state !== "selected") return tail;
-  const color = raw => Number.isInteger(raw) && raw >= 0 && raw <= 0xffffff ? `#${raw.toString(16).padStart(6, "0")}` : null;
+  const color = colorrefCss;
   const line = style.border.attributes.raw & 63;
-  if (line > 5 || (style.border.attributes.raw >>> 6 & 15) !== 1 || (style.border.attributes.raw >>> 10 & 63) !== 0
-    || (style.border.attributes.raw >>> 16 & 63) !== 0 || style.border.outline !== 0
-    || style.border.width <= 0 || !color(style.border.color)) return fail("UnsupportedHwp5DrawingStroke");
-  const stroke = { color: style.border.color, width: style.border.width, style: line };
+  const cap = style.border.attributes.raw >>> 6 & 15;
+  const stroke = hwp5StrokeDisplay(style.border);
+  if (!stroke || (line === 0 ? cap > 1 : cap !== 1) || (style.border.attributes.raw >>> 10 & 63) !== 0
+    || (style.border.attributes.raw >>> 16 & 63) !== 0 || style.border.outline !== 0) return fail("UnsupportedHwp5DrawingStroke");
   let fill;
   if (style.fill_flags === 0 && style.additional_bytes === 0) fill = { state: "none" };
   else if (style.fill_flags === 1 && style.additional_bytes === 0 && style.alpha.pattern === 0) {

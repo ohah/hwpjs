@@ -1,0 +1,28 @@
+{
+  "name": "@hwpjs/vanilla",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "MIT",
+  "files": [
+    "dist",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "peerDependencies": {
+    "@hwpjs/core": "0.1.x"
+  },
+  "devDependencies": {
+    "@hwpjs/core": "workspace:*"
+  },
+  "private": true
+}

@@ -1,0 +1,31 @@
+{
+  "name": "@hwpjs/react-native",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "MIT",
+  "files": [
+    "dist",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md",
+    "cpp",
+    "ios",
+    "examples/ios-context",
+    "scripts",
+    "src/native"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "sideEffects": false,
+  "peerDependencies": {
+    "@hwpjs/core": "0.1.x"
+  },
+  "devDependencies": {
+    "@hwpjs/core": "workspace:*"
+  },
+  "private": true
+}

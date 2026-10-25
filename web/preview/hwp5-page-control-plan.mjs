@@ -2,16 +2,16 @@ import { validateHwp5PageControlSources } from "../../js/hwp5-page-control-sourc
 import { hwp5NumberFormat } from "./number-format.mjs";
 
 // Plan from already paginated current rows; never manufacture missing page anchors.
-export function planHwp5PageControls(controls, paragraphs, rows, pages, startPage) {
+export function planHwp5PageControls(controls, paragraphs, rows, pages, startPage, section = 0) {
   const fail = error => ({ state: "unavailable", error });
   try {
     validateHwp5PageControlSources(controls);
-    if (!Array.isArray(paragraphs) || !Array.isArray(rows) || !Array.isArray(pages) || !pages.length
+    if (!Number.isInteger(section) || section < 0 || section > 0xffffffff || !Array.isArray(paragraphs) || !Array.isArray(rows) || !Array.isArray(pages) || !pages.length
       || !Number.isInteger(startPage) || startPage < 1 || startPage > 0xffffffff
       || pages.some((page, index) => page.ordinal !== index)) return fail("InvalidHwp5PageControlPages");
     const anchored = [];
     for (const control of controls) {
-      if (control.section !== 0 || control.extra_bytes !== 0) return fail("UnsupportedHwp5PageControlSource");
+      if (control.section !== section || control.extra_bytes !== 0) return fail("UnsupportedHwp5PageControlSource");
       const owners = paragraphs.filter(p => p.section === control.section && p.paragraph === control.paragraph);
       if (owners.length !== 1 || owners[0].clipped || owners[0].text?.[control.unit] !== "\ufffc") return fail("InvalidHwp5PageControlOwner");
       const members = rows.filter(row => row.kind === "text" && row.section === control.section && row.paragraph === control.paragraph).toSorted((a, b) => a.startUnit - b.startUnit);

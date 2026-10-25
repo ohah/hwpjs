@@ -3,17 +3,24 @@ import { rowLeft, rowTop, rowHeight, TEXT_TOP, TEXT_LEFT } from "./row-geometry.
 import { signedInt32 } from "./signed-int32.mjs";
 import { picturePaintPlan } from "./picture-paint-plan.mjs";
 import { projectGroupedPicturePage } from "./grouped-picture-page-projection.mjs";
+import { inlinePictureIndex } from "./picture-inline.mjs";
+import { pictureVisualBounds, inlinePictureShadowExtent } from "./picture-visual-bounds.mjs";
 
 // 현재 세로 텍스트 미리보기의 논리 영역입니다. 원본 페이지/다단 영역은 아닙니다.
 export function previewPictureLayers(content, layout, columnWidth) {
   const result = { behind: [], front: [], height: layout.height };
+  const shadowExtent = inlinePictureShadowExtent(inlinePictureIndex(content), layout.rows, layout.height);
+  result.inlineShadowInsets = { top: shadowExtent.top, bottom: shadowExtent.bottom };
+  result.height = Math.max(result.height, shadowExtent.height);
   for (const picture of content.pictures ?? []) {
     if (picture.owner && picture.owner.anchorNode !== picture.pictureNode) {
       const grouped = projectGroupedPicturePage(picture, content.containers, content.paragraphs, layout.rows);
       const order = signedInt32(grouped.flow?.z_order);
-      if (grouped.state !== "placed" || order === null || ![2, 3].includes(grouped.flow.text_wrap)) continue;
-      result[grouped.flow.text_wrap === 2 ? "behind" : "front"].push({ picture, paintPlan: grouped.paintPlan, zOrder: order, ...grouped.rectangle, paintOrigin: grouped.origin });
-      result.height = Math.max(result.height, grouped.rectangle.y + grouped.rectangle.height);
+      if (grouped.state !== "placed" || order === null || grouped.paintLayer === null) continue;
+      const visualBounds = pictureVisualBounds(picture, grouped.rectangle);
+      if (!visualBounds) continue;
+      result[grouped.paintLayer].push({ picture, paintPlan: grouped.paintPlan, zOrder: order, ...grouped.rectangle, visualBounds, paintOrigin: grouped.origin });
+      result.height = Math.max(result.height, visualBounds.y + visualBounds.height);
       continue;
     }
     const zOrder = signedInt32(picture.flow?.zOrder);
@@ -23,7 +30,7 @@ export function previewPictureLayers(content, layout, columnWidth) {
       || item.columnOrdinal !== undefined && (!Number.isSafeInteger(item.columnOrdinal) || item.columnOrdinal < 0))
       || new Set(instances.map(item => `${item.pageOrdinal}:${item.columnOrdinal ?? 0}`)).size !== instances.length)) continue;
     for (const flowed of instances.length ? instances : [null]) {
-    const paintPlan = picturePaintPlan(picture);
+    let paintPlan = picturePaintPlan(picture);
     if (picture.state !== "located" || paintPlan.state === "unsupported_transform" || !([2, 3].includes(picture.flow?.textWrap) || flowed) || picture.crop?.clip?.length !== 4 || !picture.crop.clip.every(Number.isFinite)) continue;
     const paragraph = content.paragraphs.find(p => p.section === picture.section && p.paragraph === picture.paragraph);
     if (!paragraph || paragraph.tableCell && !flowed || paragraph.clipped || !Number.isInteger(picture.anchorUnit) || paragraph.text?.[picture.anchorUnit] !== "\ufffc") continue;
@@ -43,9 +50,18 @@ export function previewPictureLayers(content, layout, columnWidth) {
     const { rectangle } = placement;
     if (!rectangle || ![rectangle.x, rectangle.y, rectangle.width, rectangle.height, rectangle.x + rectangle.width, rectangle.y + rectangle.height].every(Number.isFinite)
       || rectangle.width <= 0 || rectangle.height <= 0) continue;
-    result[picture.flow.textWrap === 2 ? "behind" : "front"].push({ picture, paintPlan, zOrder, ...rectangle,
-      ...(flowed ? { pageOrdinal: flowed.pageOrdinal, columnOrdinal: flowed.columnOrdinal } : {}) });
-    result.height = Math.max(result.height, rectangle.y + Math.max(rectangle.height, paintPlan.height ?? 0));
+    if (paintPlan.state === "quad" && (picture.geometry?.widthRelative !== 4 || picture.geometry?.heightRelative !== 2)) {
+      const sx = rectangle.width / paintPlan.width, sy = rectangle.height / paintPlan.height;
+      const corners = paintPlan.corners.map(([x, y]) => [x * sx, y * sy]);
+      if (!corners.flat().every(Number.isFinite)) continue;
+      paintPlan = { ...paintPlan, corners, width: rectangle.width, height: rectangle.height };
+    }
+    const visualBounds = pictureVisualBounds(picture, rectangle);
+    if (!visualBounds) continue;
+    result[picture.flow.textWrap === 2 ? "behind" : "front"].push({ picture, paintPlan, zOrder, ...rectangle, visualBounds,
+      ...(flowed ? { pageOrdinal: flowed.pageOrdinal, columnOrdinal: flowed.columnOrdinal,
+        ...(flowed.pageClip !== undefined ? { pageClip: flowed.pageClip } : {}) } : {}) });
+    result.height = Math.max(result.height, visualBounds.y + visualBounds.height, rectangle.y + (paintPlan.height ?? 0));
     }
   }
   for (const list of [result.behind, result.front]) list.sort((left, right) => left.zOrder - right.zOrder);

@@ -1,3 +1,4 @@
+import { translatePicturePlacement } from "./picture-placement-translation.mjs";
 import { paragraphLineGeometry } from "./paragraph-geometry.mjs";
 import { tableInsets } from "./table-insets.mjs";
 import { isSingleInlineTableHost } from "./single-inline-table-host.mjs";
@@ -6,7 +7,7 @@ import { isSingleInlineTableHost } from "./single-inline-table-host.mjs";
 export function placeInlineTablePages(table, paragraph, layout, outerInsets) {
   const unavailable = error => ({ state: "unavailable", error });
   const margins = tableInsets(outerInsets);
-  if (!margins || (paragraph?.text !== "\ufffc" && !isSingleInlineTableHost(paragraph, table)) || layout?.state !== "placed") return unavailable("UnsupportedInlineTableHost");
+  if (!margins || (paragraph?.text !== "\ufffc" && !isSingleInlineTableHost(paragraph, table)) || layout?.state !== "placed") return { ...unavailable("UnsupportedInlineTableHost"), section: table?.section, tableNode: table?.tableNode, paragraph: table?.hostParagraph, policyReason: "inline-final-host" };
   const boxes = layout.boxes.filter(box => box.tableNode === table.tableNode && box.section === table.section);
   if (!boxes.length) return unavailable("UnsupportedSplitInlineTable");
   const instance = item => `${item.pageOrdinal}:${item.columnOrdinal ?? 0}`;
@@ -17,19 +18,19 @@ export function placeInlineTablePages(table, paragraph, layout, outerInsets) {
     const owns = item => item.section === table.section && (item.tableNode === table.tableNode || item.positionOwnerTableNode === table.tableNode);
     if (layout.boxes.some(box => owns(box) && !instances.has(instance(box)))
       || layout.rows.some(row => owns(row) && !instances.has(instance(row)))
-      || layout.flowPictures?.some(p => p.section === table.section && p.cell?.tableNode === table.tableNode && !instances.has(instance(p)))) return unavailable("UnsupportedSplitInlineTable");
+      || layout.flowPictures?.some(p => p.section === table.section && (p.cell?.tableNode === table.tableNode || p.positionOwnerTableNode === table.tableNode) && !instances.has(instance(p)))) return unavailable("UnsupportedSplitInlineTable");
     const projectedBoxes = new Map(), projectedRows = new Map(), projectedPictures = new Map();
     for (const key of instances) {
       const boxes = layout.boxes.filter(box => !owns(box) || instance(box) === key);
       const rows = layout.rows.filter(row => !owns(row) || instance(row) === key);
-      const pictures = layout.flowPictures?.filter(p => p.section !== table.section || p.cell?.tableNode !== table.tableNode || instance(p) === key);
+      const pictures = layout.flowPictures?.filter(p => p.section !== table.section || (p.cell?.tableNode !== table.tableNode && p.positionOwnerTableNode !== table.tableNode) || instance(p) === key);
       const part = placeInlineTablePages(table, paragraph, { ...layout,
         boxes, rows, flowPictures: pictures,
       }, outerInsets);
       if (part.state !== "placed") return part;
       boxes.forEach((box, i) => { if (owns(box)) projectedBoxes.set(box, part.boxes[i]); });
       rows.forEach((row, i) => { if (owns(row)) projectedRows.set(row, part.rows[i]); });
-      pictures?.forEach((picture, i) => { if (picture.section === table.section && picture.cell?.tableNode === table.tableNode) projectedPictures.set(picture, part.flowPictures[i]); });
+      pictures?.forEach((picture, i) => { if (picture.section === table.section && (picture.cell?.tableNode === table.tableNode || picture.positionOwnerTableNode === table.tableNode)) projectedPictures.set(picture, part.flowPictures[i]); });
     }
     return { ...layout,
       boxes: layout.boxes.map(box => projectedBoxes.get(box) ?? box),
@@ -57,9 +58,9 @@ export function placeInlineTablePages(table, paragraph, layout, outerInsets) {
   const ownsPosition = item => item.section === table.section && (item.tableNode === table.tableNode || item.positionOwnerTableNode === table.tableNode);
   const projected = layout.boxes.map(box => ownsPosition(box) ? { ...box, x: box.x + shift } : box);
   const rows = layout.rows.map(row => ownsPosition(row) ? { ...row, x: row.x + shift } : row);
-  const flowPictures = layout.flowPictures?.map(picture => picture.cell?.tableNode === table.tableNode && picture.section === table.section
-    ? { ...picture, rectangle: { ...picture.rectangle, x: picture.rectangle.x + shift } } : picture);
-  if (flowPictures?.some(picture => !picture.rectangle || !Number.isFinite(picture.rectangle.x) || !Number.isFinite(picture.rectangle.x + picture.rectangle.width))) return unavailable("InlineTablePageWidthOverflow");
+  const flowPictures = layout.flowPictures?.map(picture => (picture.cell?.tableNode === table.tableNode || picture.positionOwnerTableNode === table.tableNode) && picture.section === table.section
+    ? translatePicturePlacement(picture, shift, 0).picture : picture);
+  if (flowPictures?.some(picture => !picture || !picture.rectangle || !Number.isFinite(picture.rectangle.x) || !Number.isFinite(picture.rectangle.x + picture.rectangle.width))) return unavailable("InlineTablePageWidthOverflow");
   if (projected.some(box => !Number.isFinite(box.x) || !Number.isFinite(box.x + box.width)) || rows.some(row => !Number.isFinite(row.x))) return unavailable("InlineTablePageWidthOverflow");
   return { ...layout, boxes: projected, rows, ...(flowPictures ? { flowPictures } : {}) };
 }

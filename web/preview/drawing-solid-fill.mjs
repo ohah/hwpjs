@@ -15,11 +15,18 @@ export function selectDrawingBrush(content, drawing) {
 
 export function drawingSolidFill(content, drawing) {
   const selected = selectDrawingBrush(content, drawing);
+  return selectedSolidFill(selected);
+}
+
+/** Shared exact opaque brush policy for drawings and table cells. */
+export function selectedSolidFill(selected) {
   if (selected.state !== "selected") return selected;
   const fail = error => ({ state: "unavailable", error });
   const b = selected.brush, nodes = selected.nodes;
   if (b.direct_children !== 1 || b.other_attributes !== 0 || nodes.length !== 1 || nodes[0].kind !== "win_brush") return fail("UnsupportedDrawingFillVariant");
   const n = nodes[0];
-  if (n.direct_children !== 0 || n.other_attributes !== 0 || n.unknown_enums !== 0 || n.non_six_hex_colors !== 0 || n.raw[2] !== null || n.raw[3] !== "0" || !/^#[0-9a-f]{6}$/i.test(n.raw[0] ?? "")) return fail("UnsupportedDrawingSolidFill");
+  // With no hatch style, hatchColor is retained source metadata, not a paint
+  // input. Its `none`/eight-digit spelling must not reject a valid solid face.
+  if (n.direct_children !== 0 || n.other_attributes !== 0 || n.unknown_enums !== 0 || n.raw[2] !== null || n.raw[3] !== "0" || !/^#[0-9a-f]{6}$/i.test(n.raw[0] ?? "")) return fail("UnsupportedDrawingSolidFill");
   return { state: "solid", color: n.raw[0] };
 }

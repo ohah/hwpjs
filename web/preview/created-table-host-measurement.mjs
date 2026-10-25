@@ -1,14 +1,18 @@
 import { projectCreatedTableHost } from "./created-table-host-projection.mjs";
-import { measureInlineTableParagraph } from "./inline-table-paragraph-measurement.mjs";
+import { measureInlineObjectParagraph } from "./inline-object-paragraph-measurement.mjs";
 import { pageParagraphCoverage } from "./page-paragraph-coverage.mjs";
 import { storedAutomaticNumberText } from "./automatic-number-text.mjs";
 import { projectCreatedHostTextAnchors } from "./created-host-text-anchors.mjs";
 import { displayRunText } from "./text-measurement.mjs";
 
 // Measured dimensions are derived from native cell values by the caller.
-export function measureCreatedTableHost(source, entries, width, measure, { maxRows = 20000, sourceTextAnchorUnits = [], sourceTables = [] } = {}) {
+export function measureCreatedTableHost(source, entries, width, measure, { maxRows = 20000, sourceTextAnchorUnits = [], sourceZeroWidthAnchorUnits = [], sourceTables = [],sourcePictures=[],sourceObjects=[], allowSourceTableOverflow = false, includeTerminalAfter = true } = {}) {
   const unavailable = error => ({ state: "unavailable", error });
-  if (!Array.isArray(entries) || !Array.isArray(sourceTables) || !entries.length && !sourceTables.length || !Number.isSafeInteger(maxRows) || maxRows < 1 || typeof measure !== "function") return unavailable("InvalidCreatedTableHostMeasurement");
+  if (!Array.isArray(entries) || !Array.isArray(sourceTables) || !Array.isArray(sourcePictures) || !Array.isArray(sourceObjects) || !entries.length && !sourceTables.length && !sourcePictures.length && !sourceObjects.length || !Number.isSafeInteger(maxRows) || maxRows < 1 || typeof measure !== "function") return unavailable("InvalidCreatedTableHostMeasurement");
+  if (typeof allowSourceTableOverflow !== "boolean") return unavailable("InvalidCreatedTableHostMeasurement");
+  if(sourceObjects.some(object=>!object||!Number.isSafeInteger(object.objectNode)||object.objectNode<0||!Number.isSafeInteger(object.unit)||object.unit<0
+    ||![object.width,object.height].every(value=>Number.isFinite(value)&&value>0)||object.tableNode!==undefined||object.pictureNode!==undefined||object.createdTableIdentity!==undefined))return unavailable("InvalidCreatedTableHostMeasurement");
+  const sourceUnits=[...sourceTables,...sourcePictures,...sourceObjects].map(object=>object?.unit);
   let projection;
   try { projection = projectCreatedTableHost(source, entries.map(entry => entry?.table)); }
   catch (error) {
@@ -16,25 +20,32 @@ export function measureCreatedTableHost(source, entries, width, measure, { maxRo
     throw error;
   }
   let retained;
-  try { retained = projectCreatedHostTextAnchors(source, projection, sourceTextAnchorUnits, sourceTables.map(table => table?.unit)); }
+  try { retained = projectCreatedHostTextAnchors(source, projection, sourceTextAnchorUnits, sourceUnits, sourceZeroWidthAnchorUnits); }
   catch (error) { if (error.message === "UnsupportedCreatedTableHostControls") return unavailable(error.message); throw error; }
   if (source.automaticNumberPrefixes?.length && (source.automaticNumberPrefixes.length !== 1 || storedAutomaticNumberText(source.automaticNumberPrefixes[0].source) === null)) return unavailable("UnsupportedCreatedTableHostNumberPrefix");
   const byIdentity = new Map(entries.map(entry => [entry.table.identity, entry]));
   const objects = projection.anchors.map(anchor => ({ createdTableIdentity: anchor.createdTableIdentity, unit: anchor.unit,
     width: byIdentity.get(anchor.createdTableIdentity).width, height: byIdentity.get(anchor.createdTableIdentity).height }));
   objects.push(...sourceTables.map(table => ({ ...table, unit: projection.viewUnitForSource(table.unit, "after") })));
+  objects.push(...sourcePictures.map(picture=>({...picture,unit:projection.viewUnitForSource(picture.unit,"after")})));
+  objects.push(...sourceObjects.map(object=>({...object,unit:projection.viewUnitForSource(object.unit,"after")})));
   const first = source.textStartUnit ?? 0;
   const sourceObjectUnits = new Map(sourceTables.map(table => [table.unit, table.tableNode]));
   const virtual = { ...source, text: projection.text, textStartUnit: 0, characterRanges: [],
     automaticNumbers: retained.automaticNumbers, structuralAnchors: retained.structuralAnchors, pageControls: retained.pageControls,
     ...(first ? { automaticNumberPrefixes: [] } : {}) };
-  const measured = measureInlineTableParagraph(virtual, objects, width,
+  const measuredObjects = measureInlineObjectParagraph(virtual, objects.map(object=>object.createdTableIdentity===undefined?{...object,objectNode:object.tableNode??object.pictureNode??object.objectNode}:object), width,
     (text, _paragraph, unit, kind) => {
       const original = projection.sourceUnitForView(unit);
       return measure(displayRunText(text, source, original, kind), source, original, kind);
-    }, { maxRows, textAnchorUnits: retained.textAnchorUnits, zeroWidthUnits: retained.zeroWidthUnits });
-  if (measured.state !== "measured") return measured;
-  if (measured.rows.some(row => row.numberPrefix && row.boundaries.at(-1).x > row.width + 1e-8)) return unavailable("InlineTableLineWidthOverflow");
+    }, { maxRows, includeTerminalAfter, textAnchorUnits: retained.textAnchorUnits, zeroWidthUnits: retained.zeroWidthUnits,
+      allowLineOverflow: allowSourceTableOverflow && entries.length === 0 && sourceTables.length > 0 && sourcePictures.length === 0 && sourceObjects.length === 0 });
+  if (measuredObjects.state !== "measured") return {...measuredObjects,error:measuredObjects.error.replace("InlineObject","InlineTable")};
+  const nonTableNodes=new Set([...sourcePictures.map(picture=>picture.pictureNode),...sourceObjects.map(object=>object.objectNode)]);
+  const measured={...measuredObjects,anchors:measuredObjects.anchors.filter(anchor=>anchor.createdTableIdentity!==undefined||!nonTableNodes.has(anchor.objectNode)).map(({objectNode,...anchor})=>anchor.createdTableIdentity===undefined?{...anchor,tableNode:objectNode}:anchor)};
+  const prefixOverflow = measured.rows.find(row => row.numberPrefix && row.boundaries.at(-1).x > row.width + 1e-8);
+  if (prefixOverflow) return { ...unavailable("InlineTableLineWidthOverflow"), section: source.section, paragraph: source.paragraph,
+    availableWidth: prefixOverflow.width, measuredWidth: prefixOverflow.boundaries.at(-1).x, overflowStage: "number-prefix" };
   const numberPrefixes = measured.rows.flatMap((row, lineOrdinal) => row.numberPrefix ? [{ section: source.section, paragraph: source.paragraph, lineOrdinal,
     x: (row.x ?? 20) + (row.paragraphX ?? 0), y: row.y, height: row.height, textTop: row.textTop,
     numberPrefix: row.numberPrefix }] : []);
@@ -56,7 +67,7 @@ export function measureCreatedTableHost(source, entries, width, measure, { maxRo
     const runs = projection.sourceRunsForViewRange(row.startUnit, row.endUnit);
     for (const run of runs) {
       const cuts = new Set([run.viewStart, run.viewEnd]);
-      for (const unit of sourceObjectUnits.keys()) {
+      for (const unit of sourceUnits) {
         const at = projection.viewUnitForSource(unit, "after");
         if (at >= run.viewStart && at < run.viewEnd) { cuts.add(at); cuts.add(at + 1); }
       }

@@ -1,9 +1,11 @@
+import {hwpxCreatedCellDisplay} from "./hwpx-created-cell-display.mjs";
 // Derived native snapshot only; commands keep generated identity addresses.
 export function attachCreatedTables(editor, content, available, maxUnits, sectionCount) {
   const visible = new Set(content.paragraphs.map(p => `${p.section}:${p.paragraph}`));
   const rows = [];
   const pending = new Set();
   let units = 0;
+  let paragraphShapes;
   const softLineBreakAvailable = available && editor.supportsCreatedCellSoftLineBreaks?.() === true;
   const sections = sectionCount === undefined ? new Set(content.paragraphs.map(p => p.section)) : Array.from({ length: sectionCount }, (_, index) => index);
   if (available) for (const section of sections) {
@@ -11,11 +13,15 @@ export function attachCreatedTables(editor, content, available, maxUnits, sectio
       pending.add(section);
       const hostParagraph = table.host_paragraph - 1;
       if (!visible.has(`${section}:${hostParagraph}`)) continue;
+      if(paragraphShapes===undefined){
+        try{paragraphShapes=typeof editor.paragraphShapes==="function"?editor.paragraphShapes():null;}
+        catch(error){paragraphShapes=null;content.createdTableParagraphDisplayError=error.message;}
+      }
       for (const cell of table.cells) {
         units += cell.text.length;
         if (units > maxUnits) throw new Error("CreatedTableDisplayTextBudgetExceeded");
       }
-      rows.push({ ...table, cells: table.cells.map(cell => ({ ...cell, ...(softLineBreakAvailable ? { softLineBreakAvailable: true } : {}) })), section, hostParagraph, anchorUnit: table.anchor_unit });
+      rows.push({ ...table,...hwpxCreatedCellDisplay(table,paragraphShapes),cells: table.cells.map(cell => ({ ...cell, ...(softLineBreakAvailable ? { softLineBreakAvailable: true } : {}) })), section, hostParagraph, anchorUnit: table.anchor_unit });
     }
   }
   content.createdTables = rows;

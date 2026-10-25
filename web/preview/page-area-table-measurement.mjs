@@ -1,4 +1,5 @@
 import { measureNestedTable } from "./nested-table-measurement.mjs";
+import { singleCellPictureColumn } from "./single-cell-picture-column.mjs";
 
 /** Measure original table grids only; physical repeated placement is a later step. */
 export function measurePageAreaTables(area, measure, maxRows = 20000) {
@@ -9,7 +10,7 @@ export function measurePageAreaTables(area, measure, maxRows = 20000) {
   let rowCount = 0;
   for (const table of area.tables.filter(table => table.parentTableNode == null)) {
     if (rowCount >= maxRows) return fail("PageAreaTableMeasurementLimit");
-    const measured = measureNestedTable(area, table, measure, { maxRows: maxRows - rowCount, overflow: "visible" });
+    const measured = measureNestedTable(area, table, measure, { maxRows: maxRows - rowCount, overflow: "visible", pictureReferences: singleCellPictureColumn });
     if (measured.state !== "measured") return measured;
     rowCount += measured.rowCount;
     entries.push({ table, measured });

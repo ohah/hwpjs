@@ -61,13 +61,17 @@ export function caretGeometry(layout, point) {
 
 export function selectionRects(layout, anchor, focus, ranges = null) {
   if (ranges) return ranges.flatMap(range => selectionRects(layout, { ...anchor, section: range.section, paragraph: range.paragraph, unit: range.startUnit }, { ...focus, section: range.section, paragraph: range.paragraph, unit: range.endUnit }));
+  return layout.rows.flatMap((row,index)=>rowSelectionRects(row,index,anchor,focus,ranges));
+}
+
+/** Row-local selection shares the text scene's layer and paint transform. */
+export function rowSelectionRects(row, index, anchor, focus, ranges = null) {
+  if (ranges) return ranges.flatMap(range => rowSelectionRects(row,index, { ...anchor, section: range.section, paragraph: range.paragraph, unit: range.startUnit }, { ...focus, section: range.section, paragraph: range.paragraph, unit: range.endUnit }));
   if (!sameParagraph(anchor, focus)) return [];
   const start = Math.min(anchor.unit, focus.unit), end = Math.max(anchor.unit, focus.unit);
-  return layout.rows.flatMap((row, index) => {
     if (!selectionIntersectsText(row, row.startUnit, row.endUnit, anchor, focus)) return [];
     const left = row.boundaries.find(b => b.unit >= Math.max(start, row.startUnit));
     const right = row.boundaries.find(b => b.unit >= Math.min(end, row.endUnit));
     return left && right ? [{ x: rowLeft(row) + left.x, y: rowTop(row, index) + rowTextTop(row), width: right.x - left.x, height: rowTextHeight(row),
       ...(row.pageClip === undefined ? {} : { pageClip: row.pageClip }), ...(row.transform === undefined ? {} : { transform: row.transform }) }] : [];
-  });
 }

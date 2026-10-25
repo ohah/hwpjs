@@ -16,6 +16,7 @@ export function decodeOleSites(bytes) {
     if (!row || !uint(row.ole_node) || seen.has(row.ole_node)
       || !(row.paragraph === null || uint(row.paragraph) && row.paragraph > 0)
       || !(row.anchor_unit === null || uint(row.anchor_unit))) fail();
+    if (Object.hasOwn(row, "chart_wrapper") && row.chart_wrapper !== null && !uint(row.chart_wrapper)) fail();
     if (row.error_name === null ? row.paragraph === null || row.anchor_unit === null
       : !errors.has(row.error_name) || row.anchor_unit !== null) fail();
     seen.add(row.ole_node);
@@ -32,5 +33,14 @@ export function decodeOleSource(bytes) {
     if (text !== null && (typeof text !== "string" || !text.isWellFormed() || new TextEncoder().encode(text).length > 4096)) fail();
   }
   if (![null, false, true].includes(value.has_moniker)) fail();
+  // Older optional source ABI omits this proof; absence is never identity.
+  if (Object.hasOwn(value, "transform_identity") && ![null, false, true].includes(value.transform_identity)) fail();
   return value;
+}
+
+export function decodeOleBytes(bytes) {
+  if (!(bytes instanceof Uint8Array) || bytes.length < 1 || bytes.length > 64 * 1024 * 1024 + 1 || bytes[0] > 1) {
+    throw new Error("InvalidOleBytes");
+  }
+  return { declaredExternal: bytes[0] === 1, bytes: bytes.slice(1) };
 }

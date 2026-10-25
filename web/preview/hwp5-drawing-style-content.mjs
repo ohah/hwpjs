@@ -12,7 +12,7 @@ export function attachHwp5DrawingStyles(editor, content) {
       const owners = new Map(components.map(row => [row.component_node, row.owner_node]));
       if (owners.size !== components.length) throw new Error("AmbiguousHwp5DrawingStyleOwner");
       const version = typeof editor.fileVersion === "function" ? editor.fileVersion() : null;
-      const tail = [0x05000500, 0x05010001, 0x05010100].includes(version) ? "alpha_shadow_metadata" : "fill_only";
+      const tail = [0x05000300, 0x05000500, 0x05010001, 0x05010100].includes(version) ? "alpha_shadow_metadata" : "fill_only";
       const rows = validateHwp5DrawingStyleSources(editor.drawingStyleSources(section, { border: "observed13", tail }));
       for (const row of rows) {
         if (!owners.has(row.component_node) || owners.get(row.component_node) !== row.owner_node) throw new Error("Hwp5DrawingStyleOwnerMismatch");

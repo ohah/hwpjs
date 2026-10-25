@@ -7,7 +7,7 @@ export function validateHwp5TextSourceProtection(value, count) {
   for (const bit of value.protected_paragraphs) { if (typeof bit !== "boolean") fail(); any ||= bit; }
   if (value.mode === "strict") {
     if (value.retained_headers !== null || any) fail();
-  } else if (value.mode === "retained_click") {
+  } else if (value.mode === "retained_click" || value.mode === "retained_memo") {
     if (!uint(value.retained_headers) || value.retained_headers === 0 || !any) fail();
   } else fail();
   return { mode: value.mode, protected_paragraphs: value.protected_paragraphs, retained_headers: value.retained_headers };

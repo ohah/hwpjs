@@ -7,6 +7,8 @@ export function validateHwp5TableLayoutSources(rows) {
   const signed = (value, min, max) => Number.isInteger(value) && value >= min && value <= max;
   if (!Array.isArray(rows)) throw new Error("InvalidHwp5TableLayoutSources");
   for (const row of rows) {
+    if (row && Object.hasOwn(row, "object_extra_u16") && row.object_extra_u16 !== null
+      && (!uint(row.object_extra_u16, 65535) || row.object_extra_bytes !== 2)) throw new Error("InvalidHwp5TableLayoutSources");
     if (!row || !["table_node", "table_record_node", "object_flags", "width", "height", "instance_id", "object_extra_bytes", "table_flags", "table_extra_bytes"].every(key => uint(row[key])) || !["offset_y", "offset_x", "z_order", "prevent_page_break"].every(key => signed(row[key], -0x80000000, 0x7fffffff)) || !["rows", "columns", "border_fill_id"].every(key => uint(row[key], 65535)) || !signed(row.cell_spacing, -32768, 32767) || !["outer_margins", "inner_margins"].every(key => Array.isArray(row[key]) && row[key].length === 4 && row[key].every(value => signed(value, -32768, 32767))) || !["description_bytes", "zone_count"].every(key => row[key] === null || uint(row[key])) || row.description_bytes !== null && row.description_bytes % 2 !== 0) throw new Error("InvalidHwp5TableLayoutSources");
   }
   return rows;

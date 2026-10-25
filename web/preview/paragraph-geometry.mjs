@@ -24,11 +24,18 @@ export function paragraphLineAdvance(shape, textHeight, baselineHeight, { spacin
 export function paragraphLineGeometry(shape, width, measuredWidth, firstLine) {
   const pixels = paragraphMarginPixels;
   const left = pixels(shape?.left), right = pixels(shape?.right);
-  const indent = firstLine ? pixels(shape?.indent) : 0;
+  const declaredIndent = pixels(shape?.indent);
+  const indent = declaredIndent < 0 ? (firstLine ? 0 : -declaredIndent) : (firstLine ? declaredIndent : 0);
   const start = Math.min(Math.max(0, width - 1), Math.max(0, left + indent));
   const available = Math.max(1, width - start - Math.max(0, right));
   const slack = Math.max(0, available - Math.max(1, measuredWidth));
   const alignment = paragraphAlignmentKey(shape?.alignment);
   const offset = alignment === "RIGHT" ? slack : alignment === "CENTER" ? slack / 2 : 0;
   return { x: start + offset, width: available };
+}
+
+// Match the ordinary picture-paragraph producer: paragraph margins define
+// its frame, while first-line and hanging offsets belong only to text layout.
+export function paragraphReferenceGeometry(shape, width) {
+  return paragraphLineGeometry({ ...shape, alignment: 0, indent: 0 }, width, 0, false);
 }

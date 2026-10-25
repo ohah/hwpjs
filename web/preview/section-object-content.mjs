@@ -1,5 +1,5 @@
-const inventories = ["hwp5Drawings", "drawings", "rectangles", "containers", "pictures", "lines", "tables", "createdTables",
-  "pageAreaDeclarations", "pageAreaDeclarationErrors"];
+const inventories = ["hwp5Drawings", "drawings", "rectangles", "polygons", "containers", "pictures", "lines", "tables", "createdTables", "oles", "chartTargets",
+  "pageAreaDeclarations", "pageAreaDeclarationErrors", "hwp5Notes", "hwp5NoteErrors", "hwp5NotePolicies", "hwp5NoteShapeErrors"];
 
 /** Keep object identities in their declared section; never infer from node IDs. */
 export function sectionObjectContent(content, section, declaredSections = null) {

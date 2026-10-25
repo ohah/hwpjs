@@ -2,6 +2,7 @@
 export { hwpUnitPixels as hwpUnitsToPixels } from "./hwp-units.mjs";
 import { hwpUnitPixels as hwpUnitsToPixels } from "./hwp-units.mjs";
 import { sourceTableRowHorizontals as resolveSourceRows } from "./source-table-row-horizontals.mjs";
+import { tableSourceCellMinimumHeight } from "./table-source-cell-size.mjs";
 
 export function tableGrid(table, { x = 20, y = 0, minColumn = 40, minRow = 28, contentSize = () => ({ width: 0, height: 0 }), columnWidths, sourceRowHorizontals = false } = {}) {
   const positive = value => Number.isFinite(value) && value > 0;
@@ -21,7 +22,7 @@ export function tableGrid(table, { x = 20, y = 0, minColumn = 40, minRow = 28, c
     if (![cell.width, cell.height].every(value => value === null || (Number.isInteger(value) && value >= 0 && value <= 0xffffffff))) throw new RangeError("InvalidTableGrid");
     const size = contentSize(cell);
     if (![size.width, size.height].every(value => Number.isFinite(value) && value >= 0)) throw new RangeError("InvalidTableGrid");
-    return { cell, width: Math.max(cell.width === null ? 0 : hwpUnitsToPixels(cell.width), size.width), height: Math.max(cell.height === null ? 0 : hwpUnitsToPixels(cell.height), size.height) };
+    return { cell, width: Math.max(cell.width === null ? 0 : hwpUnitsToPixels(cell.width), size.width), height: Math.max(tableSourceCellMinimumHeight(table, cell), size.height) };
   });
   const grow = (tracks, start, span, minimum) => {
     let current = 0;

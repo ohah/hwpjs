@@ -1,13 +1,13 @@
 import { projectFloatingPicturePage } from "./picture-page-projection.mjs";
-import { picturePaintPlan } from "./picture-paint-plan.mjs";
+import { rootPicturePagePolicyError } from "./root-picture-page-policy.mjs";
 import { layoutPictureCaption } from "./picture-caption-layout.mjs";
 
 // Layered root pictures do not reserve body flow. Other wrap modes need pagination.
 export function projectRootPicturePage(picture, paragraphs, rows, measure, options = {}) {
   const fail = error => ({ state: "unavailable", error });
-  if (!picture?.owner || picture.owner.anchorNode !== picture.pictureNode
-    || picture.geometry?.treatAsCharacter !== false || ![2, 3].includes(picture.flow?.textWrap)
-    || picture.position?.flags?.[0] !== false || picturePaintPlan(picture).state === "unsupported_transform") return fail("UnsupportedRootPicturePagePolicy");
+  const policyReason = rootPicturePagePolicyError(picture);
+  if (policyReason) return { ...fail("UnsupportedRootPicturePagePolicy"), policyReason,
+    section: picture?.section, paragraph: picture?.paragraph, pictureNode: picture?.pictureNode };
   const placed = projectFloatingPicturePage(picture, paragraphs, rows);
   if (placed.state !== "placed") return placed;
   const members = paragraphs.filter(row => row.section === picture.section && row.drawingCaption?.drawingNode === picture.pictureNode);

@@ -16,6 +16,7 @@ export function attachHwp5CaptionGeometry(content) {
   const captions = content.hwp5Captions ?? [];
   const sections = new Set([...captions.map(row => row.section), ...(content.tables ?? []).filter(row => row.sourceGeometry).map(row => row.section)]);
   for (const section of sections) {
+    let currentCaption = null;
     try {
       for (const table of content.tables.filter(row => row.section === section && row.sourceGeometry?.has_caption !== undefined)) {
         const present = captions.some(row => row.section === section && row.tableNode === table.tableNode);
@@ -23,6 +24,7 @@ export function attachHwp5CaptionGeometry(content) {
       }
       const prepared = [], seenTables = new Set(), seenParagraphs = new Set();
       for (const caption of captions.filter(row => row.section === section)) {
+        currentCaption = caption;
         const tables = content.tables.filter(row => row.section === section && row.tableNode === caption.tableNode);
         if (tables.length !== 1 || seenTables.has(caption.tableNode)) throw new Error("AmbiguousHwp5TableCaption");
         const table = tables[0], source = hwp5CaptionGeometry(caption.source), paragraphs = [];
@@ -37,7 +39,16 @@ export function attachHwp5CaptionGeometry(content) {
         table.sourceCaption = source; table.captionParagraphs = [...ids];
         for (const paragraph of paragraphs) paragraph.tableCaption = { tableNode: table.tableNode, captionNode: source.caption_node, listNode: source.list_node };
       }
-    } catch (error) { content.hwp5CaptionGeometryErrors.push({ section, error: error.message }); }
+    } catch (error) {
+      const evidence = {};
+      if (error.message === "UnsupportedHwp5CaptionGeometry" && currentCaption) {
+        for (const [key, value] of [["tableNode", currentCaption.tableNode], ["listNode", currentCaption.listNode],
+          ["rawCaptionFlags", currentCaption.source?.flags], ["rawCaptionAttributes", currentCaption.source?.attributes]]) {
+          if (Number.isInteger(value) && value >= 0 && value <= 0xffffffff) evidence[key] = value;
+        }
+      }
+      content.hwp5CaptionGeometryErrors.push({ section, error: error.message, ...evidence });
+    }
   }
   return content;
 }

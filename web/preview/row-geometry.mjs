@@ -16,6 +16,13 @@ export const rowTextTop = row => row.textTop ?? TEXT_TOP;
 export const rowVisualHeight = row => row.kind === "text" ? Math.max(rowHeight(row), rowTextTop(row) + rowTextHeight(row)) : rowHeight(row);
 export const rowLeft = row => (row.x ?? TEXT_LEFT) + (row.paragraphX ?? 0);
 
+export function isZeroAdvanceTextAnchor(row) {
+  return row?.kind === "text" && row.text === "" && !row.numberPrefix && row.height === 0
+    && Number.isSafeInteger(row.startUnit) && row.startUnit >= 0 && row.endUnit === row.startUnit
+    && (row.textHeight === undefined || Number.isFinite(row.textHeight) && row.textHeight >= 0)
+    && (row.textTop === undefined || Number.isFinite(row.textTop) && row.textTop >= 0);
+}
+
 // 변환 행은 조판 좌표를 유지하고 화면 입력만 같은 행렬의 역으로 돌립니다.
 export function rowLocalPoint(row, x, y) {
   if (![x, y].every(Number.isFinite)) return null;

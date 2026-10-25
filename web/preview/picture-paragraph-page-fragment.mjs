@@ -1,4 +1,4 @@
-import { paragraphLineGeometry } from "./paragraph-geometry.mjs";
+import { paragraphReferenceGeometry } from "./paragraph-geometry.mjs";
 
 // TOP/LEFT 문단 시작 앵커는 문단 높이에 의존하지 않습니다. 다른 정렬은 별도 의미 검증이 필요합니다.
 export function pictureParagraphPageFragment(picture, paragraph, members, host) {
@@ -16,7 +16,7 @@ export function pictureParagraphPageFragment(picture, paragraph, members, host) 
   const valid = box => box && [box.x, box.width, box.x + box.width].every(Number.isFinite) && box.width > 0;
   if (!valid(column) || local.some(row => row.referenceBoxes?.column?.x !== column.x || row.referenceBoxes?.column?.width !== column.width
     || row.columnOrdinal !== host.columnOrdinal)) return fail();
-  const geometry = paragraphLineGeometry({ ...paragraph.paragraphShape, alignment: 0 }, column.width, 0, true);
+  const geometry = paragraphReferenceGeometry(paragraph.paragraphShape, column.width);
   const box = host.flowParagraphBox ?? { x: column.x + geometry.x, width: geometry.width };
   if (!valid(box) || local.some(row => row.flowParagraphBox !== undefined
     && (row.flowParagraphBox.x !== box.x || row.flowParagraphBox.width !== box.width))) return fail();

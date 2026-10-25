@@ -14,10 +14,25 @@ export function attachHwpxLines(editor, content) {
       content.lineErrors.push({ section, error: error.message });
       continue;
     }
+    let batch;
+    if (typeof editor.lineDisplayBatch === "function") {
+      batch = new Map();
+      const limit = editor.lineDisplayBatchMaxNodes ?? Math.max(1, nodes.length);
+      if (!Number.isInteger(limit) || limit < 1) {
+        for (const node of nodes) batch.set(node, { node, error: "InvalidLineDisplayBatchLimit" });
+      } else for (let start = 0; start < nodes.length; start += limit) {
+        const selected = nodes.slice(start, start + limit);
+        try { for (const entry of editor.lineDisplayBatch(section, selected)) batch.set(entry.node, entry); }
+        catch (error) { for (const node of selected) batch.set(node, { node, error: error.message }); }
+      }
+    }
     for (const lineNode of nodes) {
+      const entry = batch?.get(lineNode);
       try {
+        if (batch && !entry) throw new Error("MissingLineDisplayBatchNode");
+        if (entry?.error || entry?.displayError) throw new Error(entry.error || entry.displayError);
         if (typeof editor.lineDisplay !== "function") throw new Error("HwpxLineDisplayAbiUnavailable");
-        const snapshot = editor.lineDisplay(section, lineNode);
+        const snapshot = entry ? entry.display : editor.lineDisplay(section, lineNode);
         if (displayed && !displayed.has(`${section}:${snapshot.paragraph - 1}`)) continue;
         const row = { ...snapshot, section, paragraph: snapshot.paragraph - 1, state: "located", error: null, placement: null, placementError: null };
         try {
@@ -32,8 +47,9 @@ export function attachHwpxLines(editor, content) {
         const raw = drawingStrokeSourceContent(editor, section, lineNode);
         let geometry = null, geometryError = null;
         try {
-          if (typeof editor.lineGeometry !== "function") throw new Error("HwpxLineGeometryAbiUnavailable");
-          const value = editor.lineGeometry(section, lineNode);
+          if (batch && !entry?.geometry) throw new Error(entry?.error || "MissingLineDisplayBatchGeometry");
+          if (!batch && typeof editor.lineGeometry !== "function") throw new Error("HwpxLineGeometryAbiUnavailable");
+          const value = entry ? entry.geometry : editor.lineGeometry(section, lineNode);
           if (value.current !== true || value.paintable !== false || value.coordinateSpace !== "renderingInfo" || value.geometry?.node !== lineNode || !Number.isInteger(value.geometry.paragraph) || value.geometry.paragraph < 1) throw new Error("LineGeometryBindingMismatch");
           geometry = value.geometry;
           if (displayed && !displayed.has(`${section}:${geometry.paragraph - 1}`)) continue;

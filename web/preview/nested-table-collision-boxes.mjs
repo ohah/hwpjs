@@ -1,5 +1,6 @@
 import { validateNestedTableOwnership } from "./nested-table-ownership.mjs";
 import { hwpUnitPixels } from "./hwp-units.mjs";
+import { createdTableIdentity } from "../../js/created-table-identity.mjs";
 
 export function nestedTableCollisionBoxes(root, layout, content) {
   const validated = validateNestedTableOwnership(content);
@@ -14,6 +15,18 @@ export function nestedTableCollisionBoxes(root, layout, content) {
     }
   }
   const bounds = [];
+  const generatedSeen = new Set();
+  const generatedOwner = box => {
+    if (box.tableNode !== undefined || box.listNode !== undefined) return false;
+    const cell = box.createdCell;
+    try { createdTableIdentity(cell?.identity); } catch { return false; }
+    if (![cell.row,cell.column].every(value=>Number.isSafeInteger(value)&&value>=0&&value<=0xffffffff)) return false;
+    const tables = (content.createdTables ?? []).filter(table=>table.section===box.section&&table.identity===cell.identity);
+    const key = `${box.section}:${cell.identity}:${cell.row}:${cell.column}`;
+    if (generatedSeen.has(key) || tables.length!==1 || !tables[0].cells.some(value=>value.row===cell.row&&value.column===cell.column)) return false;
+    generatedSeen.add(key);
+    return true;
+  };
   for (const table of children.values()) {
     if (!Number.isSafeInteger(table.tableNode) || table.tableNode < 0 || !table.cells.length
       || table.cells.some(c => !Number.isSafeInteger(c.listNode) || c.listNode < 0)) throw new Error("InvalidNestedTableCollisionOwner");
@@ -49,6 +62,7 @@ export function nestedTableCollisionBoxes(root, layout, content) {
       bounds.push({ pageOrdinal, x: left, y: top, width: right - left, height: bottom - top });
     }
   }
-  if (layout.boxes.some(b => b?.section === root.section && b.positionOwnerTableNode === root.tableNode && b.tableNode !== root.tableNode && !children.has(b.tableNode))) throw new Error("InvalidNestedTableCollisionOwner");
+  if (layout.boxes.some(b => b?.section === root.section && b.positionOwnerTableNode === root.tableNode && b.tableNode !== root.tableNode && !children.has(b.tableNode)
+    && !generatedOwner(b))) throw new Error("InvalidNestedTableCollisionOwner");
   return bounds;
 }

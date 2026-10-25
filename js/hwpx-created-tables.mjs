@@ -4,6 +4,13 @@ export function decodeCreatedTables(bytes) {
   if (!(bytes instanceof Uint8Array)) return fail();
   let rows;
   try { rows = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)); } catch { return fail(); }
+  return validateCreatedTables(rows);
+}
+
+// Geometry/text schema is shared; host ordinal bases remain format-specific.
+export function validateCreatedTables(rows, { hostBase = 1 } = {}) {
+  const fail = () => { throw new Error("InvalidCreatedTables"); };
+  if (hostBase !== 0 && hostBase !== 1) return fail();
   if (!Array.isArray(rows) || rows.length > 100000) return fail();
   const uint = value => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
   const keys = (value, names) => value && typeof value === "object" && !Array.isArray(value) && Object.keys(value).length === names.length && names.every(name => Object.hasOwn(value, name));
@@ -13,7 +20,7 @@ export function decodeCreatedTables(bytes) {
     try { createdTableIdentity(row.identity); } catch { return fail(); }
     if (identities.has(row.identity)) return fail();
     identities.add(row.identity);
-    if (![row.instance_id, row.host_paragraph, row.anchor_unit, row.rows, row.columns, row.width, row.height].every(uint) || !row.instance_id || !row.host_paragraph || !row.rows || !row.columns || row.width < row.columns || row.height < row.rows || row.height % row.rows || instances.has(row.instance_id)) return fail();
+    if (![row.instance_id, row.host_paragraph, row.anchor_unit, row.rows, row.columns, row.width, row.height].every(uint) || !row.instance_id || row.host_paragraph < hostBase || !row.rows || !row.columns || row.width < row.columns || row.height < row.rows || row.height % row.rows || instances.has(row.instance_id)) return fail();
     instances.add(row.instance_id);
     if (!keys(row.resources, ["paragraph", "character", "style", "border_fill"]) || !Object.values(row.resources).every(uint)) return fail();
     const count = row.rows * row.columns;

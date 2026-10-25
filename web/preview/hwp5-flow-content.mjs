@@ -4,11 +4,13 @@ import { attachHwp5MasterPages } from "./hwp5-master-page-content.mjs";
 import { attachHwp5Notes } from "./hwp5-note-content.mjs";
 import { attachHwp5Captions } from "./hwp5-caption-content.mjs";
 import { attachHwp5Drawings } from "./hwp5-drawing-content.mjs";
+import { attachHwp5Memos } from "./hwp5-memo-content.mjs";
 /** Current native flow, distinct from source declaration and physical page layout. */
 export function attachHwp5FlowSources(editor, content) {
   content.currentParagraphFlows = [];
   content.columnSources = [];
   content.flowSourceErrors = [];
+  attachHwp5Memos(content);
   if (!editor) return attachHwp5Drawings(editor, attachHwp5Captions(editor, attachHwp5Notes(editor, attachHwp5MasterPages(editor, attachHwp5PageAreas(editor, attachHwp5StructuralAnchors(editor, content))))));
   for (let section = 0; section < editor.sectionCount(); section++) {
     try {
@@ -21,5 +23,5 @@ export function attachHwp5FlowSources(editor, content) {
       content.columnSources.push(...columns.map(row => ({ ...row, section })));
     } catch (error) { content.flowSourceErrors.push({ section, error: error.message }); }
   }
-  return attachHwp5Drawings(editor, attachHwp5Captions(editor, attachHwp5Notes(editor, attachHwp5MasterPages(editor, attachHwp5PageAreas(editor, attachHwp5StructuralAnchors(editor, content))))));
+  return attachHwp5Drawings(editor, attachHwp5Captions(editor, attachHwp5Notes(editor, attachHwp5MasterPages(editor, attachHwp5PageAreas(editor, attachHwp5StructuralAnchors(editor, attachHwp5Memos(content)))))));
 }

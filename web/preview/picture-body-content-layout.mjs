@@ -11,8 +11,13 @@ import { paginatePictureDocumentFlow } from "./picture-document-flow.mjs";
 import { layoutCaptionedPictureBody } from "./captioned-picture-body-layout.mjs";
 import { hasPictureSourceErrors, hasFinitePictureCrop } from "./picture-source-validation.mjs";
 
-export function layoutPictureBodyContent(content, measure, maxRows) {
+export function layoutPictureBodyContent(content, measure, maxRows, { firstPageTopInset = 0, rowY, minimumRowPage, columnBottom, paginateRows } = {}) {
   const unavailable = error => ({ state: "unavailable", error });
+  if (!Number.isFinite(firstPageTopInset) || firstPageTopInset < 0) return unavailable("InvalidPictureFirstPageInset");
+  const external = [rowY, minimumRowPage, columnBottom, paginateRows].some(value => value !== undefined);
+  if (external && (firstPageTopInset !== 0 || content.pictures?.some(p => p.geometry?.treatAsCharacter !== true || p.caption != null))) return unavailable("UnsupportedPicturePageReservation");
+  if ([rowY, minimumRowPage, columnBottom, paginateRows].some(value => value !== undefined && typeof value !== "function")) return unavailable("InvalidPicturePageReservation");
+  if (firstPageTopInset > 0 && content.pictures?.some(p => p.caption != null)) return unavailable("UnsupportedCaptionedPictureFirstPageInset");
   if (content.pictures?.some(p => p.caption != null)) return layoutCaptionedPictureBody(content, measure, maxRows);
   if (content.pageSettings?.length !== 1 || content.tables?.length || content.drawings?.length || content.lines?.length || content.paragraphs.some(p => p.tableCell || p.clipped)) return unavailable("UnsupportedPicturePageObjects");
   if (!content.paragraphFlows?.every(f => f.top_level === true && f.single_column === true)) return unavailable("UnsupportedPicturePageFlow");
@@ -34,14 +39,16 @@ export function layoutPictureBodyContent(content, measure, maxRows) {
   const measured = layoutContent({ ...content, pictures: [] }, reference.boxes.page.width,
     pictureTextMeasure(inlineIndex, floatingPictures, measure), maxRows, { documentBody: true });
   if (measured.limited) return unavailable("PicturePageLayoutLimit");
-  if (inline) {
-    const page = paginateBodyRows(measured.rows, content.pageSettings[0], content.paragraphFlows, { maxRows });
+  if (inline && firstPageTopInset === 0) {
+    const options = { maxRows, rowY, minimumRowPage, columnBottom };
+    const page = paginateRows ? paginateRows(measured.rows, content.pageSettings[0], content.paragraphFlows, options, paginateBodyRows)
+      : paginateBodyRows(measured.rows, content.pageSettings[0], content.paragraphFlows, options);
     return page.state === "paginated" ? { ...page, pageLayoutMode: "measured-body" } : page;
   }
-  const page = square
+  const page = square || firstPageTopInset > 0
     ? paginatePictureDocumentFlow(content.paragraphs, content.pageSettings[0], reservedPictures,
       pictureTextMeasure(inlineIndex, floatingPictures, measure), content.paragraphFlows,
-      { maxRows, edgePolicy: "inside-start-outside-end" })
+      { maxRows, edgePolicy: "inside-start-outside-end", firstPageTopInset })
     : reservedPictures.length
     ? paginatePictureRows(measured.rows, content.pageSettings[0], content.paragraphFlows, reservedPictures, content.paragraphs, { maxRows })
     : paginateBodyRows(measured.rows, content.pageSettings[0], content.paragraphFlows, { maxRows });

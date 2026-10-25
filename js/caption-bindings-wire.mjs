@@ -1,6 +1,6 @@
 /** Shared current paragraph/owner envelope; component IDs stay format-specific. */
 export function decodeCaptionBindings(bytes, ownerField, errorName) {
-  if (!["table_node", "picture_node"].includes(ownerField)) throw new Error("InvalidCaptionBindingOwnerField");
+  if (!["table_node", "picture_node", "container_node"].includes(ownerField)) throw new Error("InvalidCaptionBindingOwnerField");
   const rows = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
   const uint = v => Number.isInteger(v) && v >= 0 && v <= 0xffffffff;
   const object = v => v !== null && typeof v === "object" && !Array.isArray(v);

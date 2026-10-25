@@ -10,6 +10,7 @@ export function decodeParagraphFlow(bytes) {
   if (!Array.isArray(rows)) throw new Error("InvalidParagraphFlow");
   for (const row of rows) {
     if (!row) throw new Error("InvalidParagraphFlow");
+    if (row.empty_line_eligible !== undefined && typeof row.empty_line_eligible !== "boolean") throw new Error("InvalidParagraphFlow");
     if (row.note_context !== undefined && row.note_context !== null) {
       const note = row.note_context;
       if (![note.note_node, note.list_node].every(value => Number.isInteger(value) && value >= 0 && value <= 0xffffffff)
@@ -54,6 +55,9 @@ export function decodePageSettings(bytes) {
   if (!Array.isArray(rows)) throw new Error("InvalidPageSettings");
   for (const row of rows) {
     if (!row || !uint(row.section_ordinal) || !uint(row.element_index) || !uint(row.duplicate_margins) || !optional(row.width) || !optional(row.height) || ![null, "widely", "narrowly"].includes(row.orientation) || ![null, "left_only", "left_right", "top_bottom"].includes(row.gutter_type)) throw new Error("InvalidPageSettings");
+    if (row.hide_first_empty_line !== undefined && ![null, true, false].includes(row.hide_first_empty_line)) throw new Error("InvalidPageSettings");
+    if (Object.hasOwn(row, "hide_first_empty_line") !== Object.hasOwn(row, "visibility_count")) throw new Error("InvalidPageSettings");
+    if (row.visibility_count !== undefined && (!uint(row.visibility_count) || row.visibility_count !== 1 && row.hide_first_empty_line != null)) throw new Error("InvalidPageSettings");
     if (row.margin !== null && (!row.margin || !["header", "footer", "gutter", "left", "right", "top", "bottom"].every(name => optional(row.margin[name])))) throw new Error("InvalidPageSettings");
   }
   return rows;

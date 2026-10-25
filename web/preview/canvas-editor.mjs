@@ -2,7 +2,7 @@ import { LINE_HEIGHT } from "./layout.mjs";
 import { canvasDocumentPoint, canvasDocumentBounds, canvasCaretScrollLeft } from "./canvas-pointer-coordinates.mjs";
 import { structureErrorMessage } from "./structure-error-message.mjs";
 import { hitText, caretGeometry, sameParagraph, selectableText, paragraphTarget } from "./text-geometry.mjs";
-import { textChange, snapUnit } from "./text-input.mjs";
+import { textChange, snapUnit, wordBoundary } from "./text-input.mjs";
 import { navigateText, adjacentParagraphBoundary } from "./text-navigation.mjs";
 import { sourceTextChange } from "./text-offsets.mjs";
 import { normalizeParagraphReplacement } from "../../js/paragraph-replacement.mjs";
@@ -15,6 +15,7 @@ import { characterEffectArgs, characterEffectMode } from "../../js/character-eff
 import { hwp5CharacterOutlineArg } from "../../js/character-outline-args.mjs";
 import { encodeCharacterRanges } from "../../js/character-range-batch.mjs";
 import { characterTypingState, characterTypingSize, mergeTypingProperties, typingSourceSpan } from "./character-typing-properties.mjs";
+import { projectTypingDraftRanges } from "./typing-format-draft.mjs";
 import { createHistorySelectionStore } from "./history-selection.mjs";
 import { hitDrawingBoundary } from "./drawing-boundary-hit.mjs";
 import { hitTableBoundary } from "./table-boundary-geometry.mjs";
@@ -25,11 +26,17 @@ import { paragraphBreakIntent } from "./paragraph-split-command.mjs";
 import { createSelectionEditPermission } from "./selection-edit-permission.mjs";
 import { pictureResizeTarget } from "./picture-resize-target.mjs";
 import { transferSelectedText, pasteClipboardText } from "./clipboard-transfer.mjs";
+import { installCanvasPointerFrameGate } from "./canvas-pointer-frame-gate.mjs";
+import { createHistoryInputIntentQueue } from "./history-input-intent-queue.mjs";
 
 /** DOM draft and interaction only. Native acknowledgements own committed text. */
-export function createCanvasEditor({ canvas, viewport, input, renderer, controls, note, queryEditRange = null, querySplitRange = null, platform = globalThis.navigator?.userAgentData?.platform ?? globalThis.navigator?.platform ?? "" }) {
-  const ownerDocument = input.ownerDocument ?? globalThis.document;
-  const activeElement = () => input.getRootNode?.().activeElement ?? ownerDocument?.activeElement;
+export function createCanvasEditor({ canvas, viewport, input, renderer, controls, note, queryEditRange = null, querySplitRange = null, platform = null, environment = {}, historyAvailability = null, onCommittedSelection = () => {}, onComposition = () => {} }) {
+  const ownerDocument = environment.ownerDocument ?? input.ownerDocument ?? globalThis.document;
+  const realm = ownerDocument?.defaultView ?? globalThis;
+  const AbortController = environment.AbortController ?? realm.AbortController;
+  platform ??= realm.navigator?.userAgentData?.platform ?? realm.navigator?.platform ?? "";
+  const clipboard = environment.clipboard ?? realm.navigator?.clipboard;
+  const activeElement = environment.activeElement ?? (() => input.getRootNode?.().activeElement ?? ownerDocument?.activeElement);
   const events = new AbortController(), listen = (node, type, fn) => node.addEventListener(type, fn, { signal: events.signal });
   const hostControls = controls;
   controls = {
@@ -61,6 +68,13 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
   const historySelections = createHistorySelectionStore();
   let historyRevision = null;
   let historyAvailable = false, historyPending = false, structureAvailable = false, mergeAvailable = false, structureTarget = null;
+  let deferredComposition = null, deferredReplies = [];
+  const historyIntents = createHistoryInputIntentQueue({
+    ready: () => !deferredComposition && !composing && !pending && !historyPending && !inputIntents.size && (!target || input.value === committed) && controls.ready() && !controls.busy(),
+    history: kind => performHistory(kind),
+    input: intent => applyOrderedInput(intent),
+    error: error => report(`대기 명령을 적용할 수 없습니다: ${error.message}`),
+  });
   let splitQueryAvailable = false;
   let paragraphBreakAvailable = false;
   const multipleParagraphs = () => Boolean(anchor && focus && !sameParagraph(anchor, focus));
@@ -100,7 +114,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     }
     if (typeof querySplitRange === "function" && splitQueryAvailable && controls.ready() && !controls.busy() && structureAvailable && !pending && !historyPending && target && !wholeTextEditable() && renderer.paragraph(target)?.selectable && editRange() && input.value === committed) {
       const request = splitPermission.request(editRange());
-      if (request && querySplitRange(request) === false) splitPermission.invalidate();
+      if (request && querySplitRange({ ...request, anchored: renderer.paragraph(target)?.anchoredSplitAvailable === true }) === false) splitPermission.invalidate();
     }
   };
   const report = text => { note.textContent = text; };
@@ -154,6 +168,8 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     canvas.dataset.selection = anchor && focus ? `${anchor.unit}:${focus.unit}` : "";
     canvas.dataset.composing = String(composing);
     place();
+    onComposition({ composing, pending: Boolean(pending || historyPending || inputIntents.size) });
+    if (!composing && !pending && !historyPending && !inputIntents.size && input.value === committed) onCommittedSelection(anchor && focus ? { anchor: { ...anchor }, focus: { ...focus } } : null);
   };
   const sync = () => {
     if (!target || multipleParagraphs()) return;
@@ -161,8 +177,10 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     const start = snapUnit(input.value, input.selectionStart), end = snapUnit(input.value, input.selectionEnd, true);
     const anchorUnit = backward ? end : start, focusUnit = backward ? start : end;
     if (anchor?.unit !== anchorUnit || focus?.unit !== focusUnit) preferredX = null;
-    anchor = { ...target, unit: anchorUnit, affinity: anchor?.unit === anchorUnit ? anchor.affinity : "forward" };
-    focus = { ...target, unit: focusUnit, affinity: focus?.unit === focusUnit ? focus.affinity : "forward" };
+    if (!(sameParagraph(anchor, target) && anchor.unit === anchorUnit && anchor.pageArea === target.pageArea && anchor.pageOrdinal === target.pageOrdinal))
+      anchor = { ...target, unit: anchorUnit, affinity: anchor?.unit === anchorUnit ? anchor.affinity : "forward" };
+    if (!(sameParagraph(focus, target) && focus.unit === focusUnit && focus.pageArea === target.pageArea && focus.pageOrdinal === target.pageOrdinal))
+      focus = { ...target, unit: focusUnit, affinity: focus?.unit === focusUnit ? focus.affinity : "forward" };
     updateReadOnly();
     paint();
   };
@@ -194,6 +212,8 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     draftSelection = null;
     const command = sourceRange ?? sourceTextChange(change, renderer.paragraph(target)?.sourceOffsets);
     const request = target.createdCell ? { kind: pending.kind, origin: "canvas", section: target.section, identity: target.createdCell.identity, row: target.createdCell.row, column: target.createdCell.column, text: pending.afterText } : { kind: pending.kind, origin: "canvas", section: target.section, paragraph: target.paragraph, ...command, ...(font ? { language: font.language, name: font.name } : {}), ...(properties ? { properties } : {}) };
+    const reference = renderer.paragraph(target)?.currentReference;
+    if (["splice", "created-cell-text"].includes(pending.kind) && reference) request.reference = reference;
     if (!controls.request(request)) pending = null;
     else if (queued) inputIntents.consume(committed);
     input.setAttribute("aria-busy", String(Boolean(pending)));
@@ -209,11 +229,25 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     else if (bounds.y + bounds.height > viewport.scrollTop + viewport.clientHeight) viewport.scrollTop = bounds.y + bounds.height - viewport.clientHeight;
     place(); input.scrollIntoView({ block: "nearest", inline: "nearest" });
   };
-  const preview = () => { renderer.preview({ ...target, text: input.value }); sync(); reveal(); };
+  const draftPreview = () => {
+    const change = pending && textPending() ? { startUnit: pending.start, endUnit: pending.end } : draftTextChange();
+    return { ...target, text: input.value, characterRanges: projectTypingDraftRanges(renderer.paragraph(target), input.value, change) };
+  };
+  const preview = () => { renderer.preview(draftPreview()); sync(); reveal(); };
   const coordinates = event => {
     const box = canvas.getBoundingClientRect();
     return canvasDocumentPoint(event, box, viewport.scrollTop, viewScale(), viewport.scrollLeft ?? 0);
   };
+  installCanvasPointerFrameGate({ canvas, renderer, signal: events.signal,
+    cancelDrag(pointerId) {
+      if (drag !== pointerId) return;
+      drag = null;
+      if (canvas.hasPointerCapture(pointerId)) canvas.releasePointerCapture(pointerId);
+    },
+    onBlocked(event) {
+      if (event.type === 'pointerdown') report('화면 갱신 중입니다. 갱신된 화면에서 다시 선택하세요.');
+    },
+  });
   const point = (event, constrained = null) => { const { x, y } = coordinates(event); const layout = renderer.layout(); return hitTableBoundary(layout, x, y, target => renderer.paragraph(target), constrained) ?? hitDrawingBoundary(layout, x, y, constrained) ?? hitText(layout, x, y, constrained); };
   listen(canvas, "pointermove", event => {
     canvas.style.cursor = point(event) ? "text" : "default";
@@ -267,15 +301,56 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
   });
   const release = event => { if (drag === event.pointerId) { drag = null; if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId); paint(); } };
   listen(canvas, "pointerup", release); listen(canvas, "pointercancel", release); listen(canvas, "lostpointercapture", release);
-  const travel = kind => {
+  const performHistory = kind => {
     if (!["undo", "redo"].includes(kind)) return false;
     if (!historyAvailable) { report("이 문서 형식은 실행 취소/다시 실행을 아직 지원하지 않습니다."); return false; }
     if (composing || pending || inputIntents.size || historyPending || (target && input.value !== committed) || !controls.ready() || controls.busy()) { report("입력 반영이 끝난 뒤 실행 취소/다시 실행하세요."); return false; }
-    historyPending = true; input.readOnly = true;
+    historyPending = true;
     if (historyRevision !== null && anchor && focus) historySelections.remember(historyRevision, { anchor, focus });
     if (!controls.request({ kind, origin: "canvas" })) { historyPending = false; updateReadOnly(); return false; }
     input.setAttribute("aria-busy", "true");
     return true;
+  };
+  const canRequestHistory = kind => {
+    if (!['undo', 'redo'].includes(kind) || !historyAvailable || !controls.ready() || !historyIntents.hasCapacity) return false;
+    const available = historyAvailability?.();
+    if (available?.available === false) return false;
+    return composing || Boolean(pending || inputIntents.size || historyPending || historyIntents.size || (target && input.value !== committed))
+      || !available || available[kind === 'undo' ? 'canUndo' : 'canRedo'] === true;
+  };
+  const travel = kind => {
+    if (!canRequestHistory(kind)) return false;
+    return historyIntents.history(kind);
+  };
+  const applyOrderedInput = ({ inputType, data }) => {
+    if (!target || !anchor || !focus) return false;
+    if (inputType === 'navigation') {
+      const action = JSON.parse(data), next = extendedNavigation(action.key, action.paragraphEdge, action.extend, action.word);
+      if (!next) return true;
+      if (!action.extend && !sameParagraph(target, next.focus)) {
+        target = paragraphTarget(next.focus); committed = renderer.paragraph(target).text; input.value = committed;
+      }
+      setSelection(next.anchor, next.focus, next.preferredX); reveal(); return true;
+    }
+    if (['insertText', 'insertReplacementText', 'insertFromPaste'].includes(inputType)) return replaceSelectedText(data);
+    if (['insertLineBreak', 'insertParagraph'].includes(inputType)) return split() !== false;
+    if (['deleteContentBackward', 'deleteContentForward', 'deleteWordBackward', 'deleteWordForward', 'deleteByCut'].includes(inputType)) {
+      if (!multipleParagraphs() && input.selectionStart === input.selectionEnd && inputType !== 'deleteByCut') {
+        const unit = input.selectionStart;
+        const backward = inputType.endsWith('Backward');
+        const next = inputType.startsWith('deleteWord') ? wordBoundary(committed, unit, !backward) : snapUnit(committed, unit + (backward ? -1 : 1), !backward);
+        if (next === unit) { mergeBoundary(backward); return true; }
+        setSelection({ ...target, unit: Math.min(unit, next) }, { ...target, unit: Math.max(unit, next) });
+      }
+      return replaceSelectedText('');
+    }
+    return false;
+  };
+  const queueOrderedInput = (inputType, data = '') => {
+    if (!['insertText', 'insertReplacementText', 'insertFromPaste', 'insertLineBreak', 'insertParagraph', 'deleteContentBackward', 'deleteContentForward', 'deleteWordBackward', 'deleteWordForward', 'deleteByCut', 'navigation'].includes(inputType)) return false;
+    const accepted = historyIntents.input(inputType, data ?? '');
+    if (!accepted) report('대기 입력 한도에 도달했습니다. 명령 반영 후 이어서 입력하세요.');
+    return accepted;
   };
   const split = (breakBefore = null) => {
     if (breakBefore !== null && !paragraphBreakAvailable) { report("수정키+Enter 명령은 아직 지원하지 않습니다. 문단은 변경하지 않았습니다."); return false; }
@@ -441,6 +516,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     return true;
   };
   const setCharacterUnderlineColor = color => setCharacterColor("character-underline-color", color);
+  const setCharacterStrikeColor = color => renderer.characterStrikeColorAvailable?.() === true && setCharacterColor("character-strike-color", color);
   const selectedShadeRanges = () => {
     if (!multipleParagraphs()) { const range = selectedRange(); return range ? [range] : null; }
     if (renderer.characterShadeRangesAvailable?.() !== true || composing || pending || historyPending || input.value !== committed || !controls.ready() || controls.busy()) return null;
@@ -583,6 +659,15 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
   };
   listen(input, "beforeinput", event => {
     if (compositionInvalidated) { event.preventDefault(); return; }
+    if (["historyUndo", "historyRedo"].includes(event.inputType) && !composing && !event.isComposing) {
+      event.preventDefault(); travel(event.inputType === 'historyUndo' ? 'undo' : 'redo'); return;
+    }
+    if (deferredComposition) return;
+    if (historyIntents.size && !composing && !event.isComposing) {
+      event.preventDefault();
+      if (!queueOrderedInput(event.inputType, event.data)) report('현재 대기 명령 뒤에 이 입력을 적용할 수 없습니다.');
+      return;
+    }
     if (structureTarget?.kind === "split" && historyPending) {
       event.preventDefault();
       if (!event.isComposing && !composing && ["insertText", "insertReplacementText"].includes(event.inputType)) queueSplitTyping(event.data);
@@ -627,6 +712,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
   });
   listen(input, "input", () => {
     if (compositionInvalidated) { input.value = committed; renderer.preview(null); sync(); return; }
+    if (deferredComposition) return;
     if (!target) return;
     if (multiComposition && composing) {
       const projected = compositionProjection();
@@ -642,13 +728,20 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
       const capture = queuedInputCapture ?? { before: inputIntents.projected ?? pending?.afterText, selection: null, beforeSelection: null };
       queuedInputCapture = null;
       try { inputIntents.append(capture.before, input.value, capture.selection, capture.beforeSelection); }
-      catch (error) { input.value = capture.before; renderer.preview({ ...target, text: input.value }); sync(); report(`대기 입력을 추가하지 못했습니다: ${error.message}`); return; }
+      catch (error) { input.value = capture.before; renderer.preview(draftPreview()); sync(); report(`대기 입력을 추가하지 못했습니다: ${error.message}`); return; }
     }
     preview(); if (!composing) pump();
   });
   listen(input, "compositionstart", () => {
     if (!target || !controls.ready()) return;
     compositionInvalidated = false;
+    if (historyIntents.size) {
+      const token = historyIntents.composition();
+      if (!token) { report('조합 입력을 위한 대기 공간이 없습니다.'); return; }
+      deferredComposition = { token, before: input.value, start: input.selectionStart, end: input.selectionEnd, direction: input.selectionDirection };
+      composing = true;
+      return;
+    }
     if (historyPending) { input.readOnly = true; report("문단 변경 반영 뒤 조합 입력을 시작하세요."); return; }
     if (multipleParagraphs()) {
       if (!multiCompositionAvailable() || pending || historyPending || controls.busy() || input.value !== committed) return;
@@ -671,6 +764,17 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
       compositionInvalidated = false; composing = false; multiComposition = null;
       input.value = committed; renderer.preview(null); sync(); paint(); return;
     }
+    if (deferredComposition) {
+      const capture = deferredComposition;
+      const data = typeof event.data === 'string' ? event.data : textChange(capture.before, input.value, { startUnit: capture.start, endUnit: capture.end })?.text ?? '';
+      deferredComposition = null; composing = false;
+      input.value = capture.before; input.setSelectionRange(capture.start, capture.end, capture.direction);
+      const replies = deferredReplies; deferredReplies = [];
+      for (const reply of replies) controller.message(reply);
+      if (!historyIntents.completeComposition(capture.token, data)) { historyIntents.clear(); report('조합 입력의 대기 문서를 확인할 수 없습니다.'); }
+      historyIntents.wake();
+      return;
+    }
     if (!composing) return;
     if (multiComposition) {
       const selected = multiComposition;
@@ -684,14 +788,27 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     if (compositionInputCapture) {
       const capture = compositionInputCapture; compositionInputCapture = null;
       try { inputIntents.append(capture.before, input.value, capture.selection, capture.beforeSelection); }
-      catch (error) { input.value = capture.before; renderer.preview({ ...target, text: input.value }); sync(); report(`조합 입력을 추가하지 못했습니다: ${error.message}`); return; }
+      catch (error) { input.value = capture.before; renderer.preview(draftPreview()); sync(); report(`조합 입력을 추가하지 못했습니다: ${error.message}`); return; }
     }
-    preview(); queueMicrotask(pump);
+    preview(); queueMicrotask(pump); historyIntents.wake();
   });
   listen(input, "keydown", event => {
     if (!target || event.defaultPrevented || event.getModifierState?.("AltGraph") || composing || event.isComposing || event.keyCode === 229) return;
     const navigation = navigationIntent(event, platform);
     const key = navigation?.key ?? event.key;
+    if ((event.metaKey || event.ctrlKey) && !event.altKey && ['z', 'y'].includes(key.toLowerCase()) && event.repeat) { event.preventDefault(); return; }
+    if (historyIntents.size && navigation && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(key)) {
+      event.preventDefault(); queueOrderedInput('navigation', JSON.stringify({ key, paragraphEdge: navigation.paragraphEdge, extend: event.shiftKey === true, word: navigation.word })); return;
+    }
+    if (historyIntents.size && !event.altKey && !event.metaKey && !event.ctrlKey && ['Backspace', 'Delete'].includes(key) && multipleParagraphs()) {
+      event.preventDefault(); queueOrderedInput(key === 'Backspace' ? 'deleteContentBackward' : 'deleteContentForward'); return;
+    }
+    if (historyIntents.size && !event.altKey && !event.metaKey && !event.ctrlKey && key === 'Enter') {
+      event.preventDefault(); queueOrderedInput(event.shiftKey ? 'insertLineBreak' : 'insertParagraph'); return;
+    }
+    if (historyIntents.size && !event.metaKey && !event.ctrlKey && !event.altKey && (multipleParagraphs() || pending?.kind === 'replace-paragraph-ranges') && Array.from(key).length === 1 && key.isWellFormed()) {
+      event.preventDefault(); queueOrderedInput('insertText', key); return;
+    }
     if (structureTarget?.kind === "split" && historyPending && !event.metaKey && !event.ctrlKey && !event.altKey && Array.from(key).length === 1 && key.isWellFormed()) {
       event.preventDefault(); queueSplitTyping(key); return;
     }
@@ -784,6 +901,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
   });
   listen(input, "paste", event => {
     const text = event.clipboardData?.getData("text/plain");
+    if (historyIntents.size && typeof text === 'string' && !composing) { event.preventDefault(); queueOrderedInput('insertFromPaste', text); return; }
     if (structureTarget?.kind === "split" && historyPending) { event.preventDefault(); if (!queueSplitTyping(text)) report("문단 분할 반영 뒤 여러 줄을 붙여넣으세요."); return; }
     if (!multipleParagraphs() && (typeof text !== "string" || !/[\r\n]/.test(text))) return;
     event.preventDefault();
@@ -818,10 +936,10 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
       const range = sourceTextChange({ startUnit, endUnit, text: "" }, renderer.paragraph(target)?.sourceOffsets);
       return { section: target.section, paragraph: target.paragraph, startUnit: range.startUnit, endUnit: range.endUnit };
   };
-  const canSetTypingProperties = () => Boolean(selectedRange()) && input.selectionStart === input.selectionEnd && textEditable() && renderer.characterPropertyTextAvailable?.() === true && (!typingFont || renderer.namedFontPropertyTextAvailable?.() === true);
   const canInsertParagraphBreak = () => !events.signal.aborted && paragraphBreakAvailable && structureAvailable && !inputIntents.size && drag === null && selectedRange() !== null
     && renderer.paragraph(target)?.selectionOwner === `section:${target.section}:body`
     && (textEditable() || Boolean(splitQueryAvailable && editRange() && splitPermission.allowed(editRange())));
+  const canSetTypingProperties = () => Boolean(selectedRange()) && input.selectionStart === input.selectionEnd && textEditable() && renderer.characterPropertyTextAvailable?.() === true && (!typingFont || renderer.namedFontPropertyTextAvailable?.() === true);
   const resetExternalSelection = controller => {
     if (historyRevision !== null && anchor && focus) historySelections.remember(historyRevision, { anchor, focus });
     const available = historyAvailable, structure = structureAvailable, merge = mergeAvailable, splitQuery = splitQueryAvailable, breaks = paragraphBreakAvailable;
@@ -861,13 +979,13 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     preview();
     return true;
   };
-  const transferSelection = ({ cut = false, clipboard = globalThis.navigator?.clipboard } = {}) => {
+  const transferSelection = ({ cut = false, clipboard = environment.clipboard ?? realm.navigator?.clipboard } = {}) => {
     const saved = settledSelection();
     if (!saved || (cut && !selectionTextEditAvailable())) return Promise.resolve(false);
     return transferSelectedText({ clipboard, text: saved.text, isCurrent: () => selectionCurrent(saved), cut, remove: () => replaceSelectedText(""), report });
   };
   const canDeleteSelection = () => settledSelection() !== null && selectionTextEditAvailable();
-  return {
+  const controller = {
     focusInput,
     canInsertParagraphBreak,
     insertParagraphBreak(kind) {
@@ -885,15 +1003,18 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
       return accepted;
     },
     canPasteSelection() {
-      return typeof globalThis.navigator?.clipboard?.readText === "function" && settledSelection(true) !== null && selectionTextEditAvailable();
+      return typeof clipboard?.readText === "function" && settledSelection(true) !== null && selectionTextEditAvailable();
     },
-    pasteSelection({ clipboard = globalThis.navigator?.clipboard } = {}) {
+    canPasteInput() {
+      return settledSelection(true) !== null && selectionTextEditAvailable();
+    },
+    pasteSelection({ clipboard = environment.clipboard ?? realm.navigator?.clipboard } = {}) {
       const saved = settledSelection(true);
       if (!saved || !selectionTextEditAvailable()) return Promise.resolve(false);
       return pasteClipboardText({ clipboard, isCurrent: () => selectionCurrent(saved) && selectionTextEditAvailable(), replace: replaceSelectedText, report, onDenied: () => input.focus({ preventScroll: true }) });
     },
     canTransferSelection(cut = false) {
-      return typeof globalThis.navigator?.clipboard?.writeText === "function" && settledSelection() !== null && (!cut || selectionTextEditAvailable());
+      return typeof clipboard?.writeText === "function" && settledSelection() !== null && (!cut || selectionTextEditAvailable());
     },
     transferSelection,
     selectTextRange({ section, paragraph, startUnit, endUnit, affinity = "forward" }, { focusInput = true } = {}) {
@@ -939,6 +1060,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
       return { section: target.section, paragraph: target.paragraph, unit: source.startUnit };
     },
     tableCreationResources() { return renderer.tableCreationResources?.() ?? null; },
+    tableCreationWidthHint() { return this.tableCreationSelection() ? renderer.tableCreationWidthHint?.(target) ?? null : null; },
     insertTable(options) {
       const selection = this.tableCreationSelection();
       if (!selection) return false;
@@ -990,6 +1112,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     setCharacterProperties,
     setCharacterUnderline,
     setCharacterUnderlineColor,
+    setCharacterStrikeColor,
     setCharacterShade,
     setCharacterOutline(kind) {
       if (!characterOutlineKindAvailable(kind)) return false;
@@ -1073,6 +1196,18 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
       input.setAttribute("aria-busy", "true");
       return true;
     },
+    setTableColumnWidth(width, height) {
+      if (!this.selectedCell() || !Number.isInteger(width) || width < 1 || width > 0xffffffff) return false;
+      if (height !== undefined && (!Number.isInteger(height) || height < 0 || height > 0xffffffff)) return false;
+      const cell = renderer.cell?.(target, { includeTableNode: true });
+      if (!cell || !Number.isInteger(cell.tableNode)) return false;
+      pending = { kind: "table-column-width", start: input.selectionStart, end: input.selectionEnd };
+      if (!controls.request({ kind: "table-column-width", origin: "canvas", section: cell.section, tableNode: cell.tableNode,
+        listNode: cell.listNode, width, expectedWidth: cell.width,
+        ...(height === undefined ? {} : { height, expectedHeight: cell.height }) })) { pending = null; return false; }
+      input.setAttribute("aria-busy", "true");
+      return true;
+    },
     selectedPicture() {
       if (!pictureResizeAvailable || composing || pending || historyPending || input.value !== committed || !controls.ready() || controls.busy()) return null;
       return pictureResizeTarget(renderer.selectedPicture?.());
@@ -1085,11 +1220,26 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
       input.setAttribute("aria-busy", "true");
       return true;
     },
-    settled: () => !composing && !pending && !inputIntents.size && !historyPending && (!target || input.value === committed),
-    canHistory: () => historyAvailable && !composing && !pending && !inputIntents.size && !historyPending && (!target || input.value === committed) && controls.ready() && !controls.busy(),
-    history: travel,
+    initializeCapabilities(value = {}) { this.message({ ...value, kind: "enable", origin: "surface-init" }); },
+    flushComposition() { if (composing || pending || historyPending || inputIntents.size || historyIntents.size) return "blocked"; if (target && input.value !== committed) { pump(); return "blocked"; } return "unchanged"; },
+    cancelComposition() {
+      const capture = deferredComposition, replies = deferredReplies;
+      deferredComposition = null; deferredReplies = []; historyIntents.clear();
+      clearInputIntents(); composing = false; multiComposition = null;
+      input.value = capture?.before ?? committed;
+      if (capture) input.setSelectionRange(capture.start, capture.end, capture.direction);
+      for (const reply of replies) this.message(reply);
+      renderer.preview(null); sync();
+    },
+    settled: () => !composing && !pending && !inputIntents.size && !historyPending && !historyIntents.size && (!target || input.value === committed),
+    canHistory: () => historyAvailable && !composing && !pending && !inputIntents.size && !historyPending && !historyIntents.size && (!target || input.value === committed) && controls.ready() && !controls.busy(),
+    // 기존 동기식 도구 계약은 유지하며, 키보드와 새 surface 포트는 접수 큐를 사용합니다.
+    history: kind => !historyIntents.size && performHistory(kind),
+    canRequestHistory,
+    requestHistory: travel,
     reset({ preserveHistory = false } = {}) {
       if (events.signal.aborted) return;
+      historyIntents.clear(); deferredComposition = null; deferredReplies = [];
       if (!preserveHistory) pictureResizeAvailable = false;
       renderer.selectPicture?.(null);
       rangePermission.invalidate();
@@ -1115,6 +1265,9 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     },
     message(message) {
       if (events.signal.aborted) return;
+      if (deferredComposition && composing && !['enable', 'save', 'query-edit-range', 'query-split-range', 'set-edit-window'].includes(message.kind)) { deferredReplies.push(message); return; }
+      if (message.error && !['save', 'query-edit-range', 'query-split-range'].includes(message.kind)) historyIntents.clear();
+      historyIntents.wake();
       if (message.kind === "set-edit-window") {
         if (!message.error) resetExternalSelection(this);
         return;
@@ -1234,7 +1387,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
         clearInputIntents();
         if (previous.kind === "splice-font-name") typingFont = null;
         if (["splice-font-name", "splice-character-properties"].includes(previous.kind)) typingProperties = null;
-        if (["format", "character-properties", "character-outline", "character-effect", "character-strike", "character-underline", "character-underline-color", "character-text-color", "character-shade", "character-font", "character-font-name"].includes(previous.kind) && input.value !== committed) {
+        if (["format", "character-properties", "character-outline", "character-effect", "character-strike", "character-strike-color", "character-underline", "character-underline-color", "character-text-color", "character-shade", "character-font", "character-font-name"].includes(previous.kind) && input.value !== committed) {
           report(`서식은 적용되지 않았습니다: ${message.error}`);
           preview(); pump(); return;
         }
@@ -1246,7 +1399,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
       if (previous.kind === "insert-table") {
         const next = { section: target.section, createdCell: { identity: message.identity, row: 0, column: 0 } };
         const cell = renderer.paragraph(next);
-        if (!cell?.editable || !caretGeometry(renderer.layout(), { ...next, unit: 0 })) { this.reset(); report("표는 생성됐지만 현재 표시 위치에서는 셀 입력을 시작할 수 없습니다."); return; }
+        if (!cell?.editable || !caretGeometry(renderer.layout(), { ...next, unit: 0 })) { resetExternalSelection(this); report("표는 생성됐지만 현재 표시 위치에서는 셀 입력을 시작할 수 없습니다."); return; }
         target = next; committed = cell.text; input.value = committed;
         setSelection({ ...next, unit: 0 }, { ...next, unit: 0 });
         input.focus({ preventScroll: true }); reveal(); report("표 생성 · 첫 셀에서 입력할 수 있습니다.");
@@ -1278,4 +1431,5 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     },
     close() { if (events.signal.aborted) return; this.reset(); events.abort(); renderer.onGeometry(() => {}); },
   };
+  return controller;
 }

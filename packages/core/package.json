@@ -1,12 +1,28 @@
 {
   "name": "@hwpjs/core",
   "version": "0.1.0",
-  "private": true,
   "type": "module",
   "license": "MIT",
+  "files": [
+    "dist",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md"
+  ],
   "exports": {
-    ".": "./src/index.ts",
-    "./runtime": "./src/runtime.ts",
-    "./worker": "./src/worker.ts"
-  }
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./runtime": {
+      "types": "./dist/runtime.d.ts",
+      "import": "./dist/runtime.js"
+    },
+    "./worker": "./dist/worker.js",
+    "./wasm": "./dist/hwpjs.wasm"
+  },
+  "types": "./dist/index.d.ts",
+  "sideEffects": [
+    "./dist/worker.js"
+  ],
+  "private": true
 }

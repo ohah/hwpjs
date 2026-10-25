@@ -1,3 +1,5 @@
+import { boundaryGlyphWidth, textBoundaryExtent } from "./text-line-width.mjs";
+
 // Bounded prototype spacing projection; glyphs keep their original font size.
 export function squeezeCaptionRow(row) {
   if (row.kind !== "text") return row;
@@ -8,18 +10,22 @@ export function squeezeCaptionRow(row) {
     if (!Number.isFinite(boundary.x) || boundary.x < previous) return null;
     previous = boundary.x;
   }
-  const natural = boundaries.at(-1).x;
+  const extent = textBoundaryExtent(boundaries);
+  if (!extent) return null;
+  const natural = extent.right;
   if (natural <= row.width) return row;
   if (boundaries.length < 3) return null;
-  for (let i = 1; i < boundaries.length; i++) if (boundaries[i].x - boundaries[i - 1].x > row.width) return null;
-  const lastAdvance = natural - boundaries.at(-2).x;
-  const available = row.width - lastAdvance, preceding = natural - lastAdvance;
+  const widths = boundaries.slice(1).map((point, index) => boundaryGlyphWidth(boundaries[index], point));
+  if (widths.some(width => width === null || width > row.width)) return null;
+  const lastAdvance = widths.at(-1);
+  const available = row.width - lastAdvance, preceding = boundaries.at(-2).x;
   if (available <= 0 || preceding <= 0) return null;
   let ratio = available / preceding;
   for (let i = 1; i < boundaries.length - 1; i++) {
-    const advance = boundaries[i + 1].x - boundaries[i].x;
+    const advance = widths[i];
     if (boundaries[i].x > 0) ratio = Math.min(ratio, (row.width - advance) / boundaries[i].x);
   }
   if (ratio <= 0 || !Number.isFinite(ratio)) return null;
-  return { ...row, boundaries: boundaries.map((boundary, index) => ({ ...boundary, x: index === boundaries.length - 1 ? row.width : boundary.x * ratio })) };
+  return { ...row, boundaries: boundaries.map((boundary, index) => ({ ...boundary,
+    ...(index > 0 ? {glyphWidth: widths[index - 1]} : {}), x: index === boundaries.length - 1 ? row.width : boundary.x * ratio })) };
 }

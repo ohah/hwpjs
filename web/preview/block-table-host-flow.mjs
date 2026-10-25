@@ -1,9 +1,11 @@
 import { layoutContent } from "./layout.mjs";
 import { paragraphSpacePixels } from "./paragraph-geometry.mjs";
 import { structuralAnchorUnits } from "./structural-anchor-units.mjs";
+import { textMeasurement } from "./text-measurement.mjs";
+import { inlineTableHostAnchors } from "./inline-table-host-anchors.mjs";
 
 // 블록 표 사이의 호스트 텍스트도 원래 UTF-16 좌표로 조판합니다.
-export function measureBlockTableHost(paragraph, entries, width, measure, maxRows) {
+export function measureBlockTableHost(paragraph, entries, width, measure, maxRows, { overlays = [], textAnchors = [] } = {}) {
   const unavailable = error => ({ state: "unavailable", error });
   if (!Array.isArray(entries) || !entries.length || entries.some(entry => !entry?.table || entry.table.section !== paragraph?.section || entry.table.hostParagraph !== paragraph?.paragraph || !Number.isSafeInteger(entry.tableIndex) || entry.tableIndex < 0)
     || new Set(entries.map(entry => entry.tableIndex)).size !== entries.length) return unavailable("InvalidBlockTableAnchorPosition");
@@ -11,10 +13,10 @@ export function measureBlockTableHost(paragraph, entries, width, measure, maxRow
   const anchors = entries.map(({ table, tableIndex }) => ({ unit: table.anchorUnit, tableIndex }));
   let structural;
   try { structural = structuralAnchorUnits(paragraph); } catch (error) { return unavailable(error.message); }
-  if (anchors.some(anchor => !Number.isSafeInteger(anchor.unit) || anchor.unit < 0 || paragraph.text[anchor.unit] !== "\ufffc")
-    || new Set(anchors.map(anchor => anchor.unit)).size !== anchors.length
-    || anchors.some(anchor => structural.has(anchor.unit))
-    || paragraph.text.split("\ufffc").length - 1 !== anchors.length + structural.size) return unavailable("InvalidBlockTableAnchorPosition");
+  const ownership = inlineTableHostAnchors(paragraph,
+    entries.map(({table}) => ({section:table.section,paragraph:table.hostParagraph,anchorUnit:table.anchorUnit,node:table.tableNode})), overlays, textAnchors);
+  if (ownership.state !== "resolved") return unavailable("InvalidBlockTableAnchorPosition");
+  const zeroWidth = new Set(ownership.zeroWidthUnits);
   anchors.sort((a, b) => a.unit - b.unit);
   const sequence = [];
   let rows = 0, cursor = 0;
@@ -31,7 +33,9 @@ export function measureBlockTableHost(paragraph, entries, width, measure, maxRow
     const slice = { ...paragraph, text: paragraph.text.slice(cursor, end), textStartUnit: cursor,
       paragraphShape: { ...paragraph.paragraphShape, before: 0, after: 0 } };
     const measured = layoutContent({ paragraphs: [slice], limited: false }, width,
-      (value, _paragraph, unit, kind) => measure(value, paragraph, unit, kind), maxRows - rows, { documentBody: true });
+      (value, _paragraph, unit, kind) => kind === "text" && value !== "" && zeroWidth.has(unit)
+        ? { width: 0, height: textMeasurement(measure("",paragraph,unit,kind)).height }
+        : measure(value, paragraph, unit, kind), maxRows - rows, { documentBody: true });
     if (measured.limited) return false;
     rows += measured.rows.length; sequence.push(...measured.rows);
     return true;

@@ -1,9 +1,6 @@
-import { createHwp5CurrentReferenceApi } from "./hwp5-current-references.mjs";
-import { decodeCharacterFontMetrics } from "./character-font-metrics.mjs";
 import { validateAbi } from "./abi.mjs";
-import { decodeHwp5FieldSpans } from "./hwp5-field-spans.mjs";
-import { decodeHwp5FieldTopology } from "./hwp5-field-topology.mjs";
-import { decodeHwp5TextSourceProtection } from "./hwp5-text-source-protection.mjs";
+import { encodeCellSizes } from "./cell-size-batch.mjs";
+import { decodeCharacterFontMetrics } from "./character-font-metrics.mjs";
 import { decodeCharacterEffects } from "./character-effects.mjs";
 import { characterEffectArgs, characterEffectMode } from "./character-effect-args.mjs";
 import { hwp5CharacterOutlineArg } from "./character-outline-args.mjs";
@@ -15,6 +12,8 @@ import { decodeHwp5DocumentProperties } from "./hwp5-document-properties.mjs";
 import { decodeHwp5AutomaticNumberSources } from "./hwp5-automatic-number-sources.mjs";
 import { decodeHwp5PageControlSources } from "./hwp5-page-control-sources.mjs";
 import { decodeHwp5NoteSources } from "./hwp5-note-sources.mjs";
+import { decodeHwp5FormSources, decodeHwp5FormAnchors } from "./hwp5-form-sources.mjs";
+import { decodeHwp5FormProperties } from "./hwp5-form-properties.mjs";
 import { decodeHwp5NoteShapeSources } from "./hwp5-note-shape-sources.mjs";
 import { decodeHwp5CaptionSources } from "./hwp5-caption-sources.mjs";
 import { decodeHwp5DrawingSources } from "./hwp5-drawing-sources.mjs";
@@ -25,6 +24,8 @@ import { decodeHwp5DrawingListSources } from "./hwp5-drawing-list-sources.mjs";
 import { decodeHwp5DrawingMatrixSources } from "./hwp5-drawing-matrix-sources.mjs";
 import { decodeHwp5DrawingLocalTransforms } from "./hwp5-drawing-local-transforms.mjs";
 import { decodeHwp5DrawingRectangleCorners } from "./hwp5-drawing-rectangle-corners.mjs";
+import { decodeHwp5DrawingPolygonPoints, polygonLayoutArg } from "./hwp5-drawing-polygon-points.mjs";
+import { decodeHwp5DrawingCurvePoints, curveLayoutArg } from "./hwp5-drawing-curve-points.mjs";
 import { decodeHwp5DrawingLineEndpoints } from "./hwp5-drawing-line-endpoints.mjs";
 import { decodeHwp5DrawingStyleSources, drawingStyleLayoutArgs } from "./hwp5-drawing-style-sources.mjs";
 import { decodeHwp5PictureSources, picturePrefixArg } from "./hwp5-picture-sources.mjs";
@@ -63,12 +64,19 @@ import { decodeHwp5PageSettings } from "./hwp5-page-settings.mjs";
 import { decodeHwp5SectionSettings } from "./hwp5-section-settings.mjs";
 import { decodeHwp5TableLayoutSources } from "./hwp5-table-layout-sources.mjs";
 import { decodeHwp5CellLayoutSources } from "./hwp5-cell-layout-sources.mjs";
+import { decodeHwp5BorderFillSources } from "./hwp5-border-fill-sources.mjs";
 import { decodeHwp5TableAnchors } from "./hwp5-table-anchors.mjs";
 import { decodeHwp5ParagraphFlow, decodeHwp5ColumnSources } from "./hwp5-flow-sources.mjs";
 import { decodeHwp5FormulaSources } from "./hwp5-formula-sources.mjs";
+import { decodeHwp5FieldSpans } from "./hwp5-field-spans.mjs";
+import { decodeHwp5FieldTopology } from "./hwp5-field-topology.mjs";
+import { decodeHwp5TextSourceProtection } from "./hwp5-text-source-protection.mjs";
 import { decodeHwp5NormalizationInfo } from "./hwp5-normalization-info.mjs";
 import { validateObservedDocInfoOption, decodeObservedDocInfoDiagnostics } from "./hwp5-observed-docinfo.mjs";
 import { validateAvailableSectionCopyOption, decodeAvailableSectionCopyInfo } from "./hwp5-available-section-copy.mjs";
+import { createHwp5CurrentReferenceApi } from "./hwp5-current-references.mjs";
+import { createHwp5TableCreationApi } from "./hwp5-table-creation.mjs";
+import { decodeHwp5Text } from "./hwp5-text-wire.mjs";
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder("utf-16le", { fatal: true, ignoreBOM: true });
@@ -78,7 +86,7 @@ const u32 = (value, name) => { if (!Number.isInteger(value) || value < 0 || valu
 export async function createExperimentalHwp5Editor(source, input, { distribution = false, normalizeObservedCfb = false, availableSectionCopy = false, retainObservedDocInfo = false, referenceScope } = {}) {
   validateObservedDocInfoOption(retainObservedDocInfo, distribution, availableSectionCopy);
   if (typeof distribution !== "boolean") throw new TypeError("Invalid distribution option");
-  if(referenceScope!==undefined&&(typeof referenceScope!=="string"||!referenceScope.length))throw new TypeError("InvalidCurrentReferenceScope");
+  if (referenceScope!==undefined&&(typeof referenceScope!=="string"||!referenceScope.length))throw new TypeError("InvalidCurrentReferenceScope");
   if (typeof normalizeObservedCfb !== "boolean") throw new TypeError("Invalid normalization option");
   validateAvailableSectionCopyOption(availableSectionCopy, distribution, normalizeObservedCfb);
   const module = source instanceof WebAssembly.Module ? source : await WebAssembly.compile(source);
@@ -107,7 +115,6 @@ export async function createExperimentalHwp5Editor(source, input, { distribution
   memory.withBytes(bytes, (ptr, size) => success(retainObservedDocInfo ? open(ptr, size, normalizeObservedCfb ? 1 : 0) : open(ptr, size)));
   const copyText = (section, paragraph) => { check(); return output(() => wasm.hwp5_edit_copy_text(u32(section, "section"), u32(paragraph, "paragraph"))).bytes; };
   return {
-    ...createHwp5CurrentReferenceApi({wasm,memory,check,output,success,u32,referenceScope}),
     observedDocInfoDiagnostics() {
       check();
       if (typeof wasm.hwp5_edit_observed_docinfo_diagnostics !== "function") throw new Error("Hwp5ObservedDocInfoAbiUnavailable");
@@ -139,6 +146,14 @@ export async function createExperimentalHwp5Editor(source, input, { distribution
       success(wasm.hwp5_edit_validate_text_source_policy(section));
     },
     ...createHistoryApi({ wasm, memory, check, uint: u32, prefix: "hwp5_edit", unavailable: "Hwp5HistoryAbiUnavailable" }),
+    ...createHwp5CurrentReferenceApi({ wasm, memory, check, output, success, u32, referenceScope }),
+    ...createHwp5TableCreationApi({ wasm, memory, check, output, u32 }),
+    supportsCurrentTextPreview() { check(); return typeof wasm.hwp5_edit_current_text_preview === "function"; },
+    currentTextPreview() {
+      check();
+      if (typeof wasm.hwp5_edit_current_text_preview !== "function") throw new Error("Hwp5CurrentTextPreviewAbiUnavailable");
+      return decodeHwp5Text(output(() => wasm.hwp5_edit_current_text_preview()).bytes, { allowGenerated: true });
+    },
     sectionCount() { check(); return count(wasm.hwp5_edit_section_count()); },
     paragraphCount(section) { check(); return count(wasm.hwp5_edit_paragraph_count(u32(section, "section"))); },
     characterShapeCount() { check(); return count(wasm.hwp5_edit_char_shape_count()); },
@@ -265,6 +280,12 @@ export async function createExperimentalHwp5Editor(source, input, { distribution
       if (typeof wasm.hwp5_edit_set_cell_size !== "function") throw new Error("Hwp5CellSizeAbiUnavailable");
       success(wasm.hwp5_edit_set_cell_size(...values));
     },
+    setCellSizes(cells) {
+      check();
+      const bytes = encodeCellSizes(cells);
+      if (typeof wasm.hwp5_edit_set_cell_sizes !== "function") throw new Error("Hwp5CellSizeBatchAbiUnavailable");
+      memory.withBytes(bytes, (ptr, size) => success(wasm.hwp5_edit_set_cell_sizes(ptr, size)));
+    },
     setPictureCurrentSize({ section, pictureNode, width, height }) {
       check();
       const values = [u32(section, "section"), u32(pictureNode, "pictureNode"), u32(width, "width"), u32(height, "height")];
@@ -292,6 +313,11 @@ export async function createExperimentalHwp5Editor(source, input, { distribution
       if (typeof wasm.hwp5_edit_cell_layout_sources !== "function") throw new Error("Hwp5CellLayoutSourcesAbiUnavailable");
       return decodeHwp5CellLayoutSources(output(() => wasm.hwp5_edit_cell_layout_sources(index)).bytes);
     },
+    borderFillSources() {
+      check();
+      if (typeof wasm.hwp5_edit_border_fill_sources !== "function") throw new Error("Hwp5BorderFillSourcesAbiUnavailable");
+      return decodeHwp5BorderFillSources(output(() => wasm.hwp5_edit_border_fill_sources()).bytes);
+    },
     tableAnchors(section) {
       check(); const index = u32(section, "section");
       if (typeof wasm.hwp5_edit_table_anchors !== "function") throw new Error("Hwp5TableAnchorsAbiUnavailable");
@@ -311,6 +337,64 @@ export async function createExperimentalHwp5Editor(source, input, { distribution
       check(); const index = u32(section, "section");
       if (typeof wasm.hwp5_edit_caption_sources !== "function") throw new Error("Hwp5CaptionSourcesAbiUnavailable");
       return decodeHwp5CaptionSources(output(() => wasm.hwp5_edit_caption_sources(index)).bytes);
+    },
+    supportsFormSources() {
+      check(); return ["hwp5_edit_form_sources", "hwp5_edit_form_anchors"].every(name => typeof wasm[name] === "function");
+    },
+    supportsFormProperties() {
+      check(); return typeof wasm.hwp5_edit_form_properties === "function";
+    },
+    supportsFormTextEdit() {
+      check(); return typeof wasm.hwp5_edit_set_form_text === "function";
+    },
+    supportsFormTextLayoutRetention() {
+      check(); return typeof wasm.hwp5_edit_set_form_text === "function" && typeof wasm.hwp5_edit_form_text_retains_layout_flags === "function" && wasm.hwp5_edit_form_text_retains_layout_flags() === 1;
+    },
+    supportsRadioButtonSelect() {
+      check(); return typeof wasm.hwp5_edit_select_form_radio === "function";
+    },
+    supportsUnnamedRadioSelect() {
+      check(); return typeof wasm.hwp5_edit_select_form_radio === "function" && typeof wasm.hwp5_edit_radio_unnamed_singleton === "function" && wasm.hwp5_edit_radio_unnamed_singleton() === 1;
+    },
+    selectRadioButton(section, formNode) {
+      check(); const positions = [u32(section, "section"), u32(formNode, "formNode")];
+      if (typeof wasm.hwp5_edit_select_form_radio !== "function") throw new Error("Hwp5RadioSelectAbiUnavailable");
+      success(wasm.hwp5_edit_select_form_radio(...positions));
+    },
+    supportsCheckBoxStateEdit() {
+      check(); return typeof wasm.hwp5_edit_set_form_choice === "function";
+    },
+    setCheckBoxState(section, formNode, state) {
+      check(); const positions = [u32(section, "section"), u32(formNode, "formNode")];
+      if (typeof wasm.hwp5_edit_set_form_choice !== "function") throw new Error("Hwp5FormChoiceEditAbiUnavailable");
+      const states = ["UNCHECKED", "CHECKED", "INDETERMINATE"], value = states.indexOf(state);
+      if (value < 0) throw new TypeError("InvalidFormChoiceState");
+      success(wasm.hwp5_edit_set_form_choice(...positions, value));
+    },
+    setFormText({ section, formNode, text }) {
+      check(); const positions = [u32(section, "section"), u32(formNode, "formNode")];
+      if (typeof wasm.hwp5_edit_set_form_text !== "function") throw new Error("Hwp5FormTextEditAbiUnavailable");
+      if (typeof text !== "string") throw new TypeError("Form text must be a string");
+      if (!text.isWellFormed()) throw new Error("InvalidUnicodeEncoding");
+      if (text.length > 65535) throw new RangeError("LimitExceeded");
+      const bytes = encoder.encode(text);
+      if (bytes.length > 196605) throw new RangeError("LimitExceeded");
+      memory.withBytes(bytes, (ptr, size) => success(wasm.hwp5_edit_set_form_text(...positions, ptr, size)));
+    },
+    formProperties(section) {
+      check(); const index = u32(section, "section");
+      if (typeof wasm.hwp5_edit_form_properties !== "function") throw new Error("Hwp5FormPropertiesAbiUnavailable");
+      return decodeHwp5FormProperties(output(() => wasm.hwp5_edit_form_properties(index)).bytes);
+    },
+    formSources(section) {
+      check(); const index = u32(section, "section");
+      if (typeof wasm.hwp5_edit_form_sources !== "function") throw new Error("Hwp5FormSourcesAbiUnavailable");
+      return decodeHwp5FormSources(output(() => wasm.hwp5_edit_form_sources(index)).bytes);
+    },
+    formAnchors(section) {
+      check(); const index = u32(section, "section");
+      if (typeof wasm.hwp5_edit_form_anchors !== "function") throw new Error("Hwp5FormSourcesAbiUnavailable");
+      return decodeHwp5FormAnchors(output(() => wasm.hwp5_edit_form_anchors(index)).bytes);
     },
     drawingSources(section) {
       check(); const index = u32(section, "section");
@@ -351,6 +435,16 @@ export async function createExperimentalHwp5Editor(source, input, { distribution
       check(); const index = u32(section, "section");
       if (typeof wasm.hwp5_edit_drawing_rectangle_corners !== "function") throw new Error("Hwp5DrawingRectangleCornersAbiUnavailable");
       return decodeHwp5DrawingRectangleCorners(output(() => wasm.hwp5_edit_drawing_rectangle_corners(index)).bytes);
+    },
+    drawingCurvePoints(section, layout) {
+      check(); const index = u32(section, "section"), selected = curveLayoutArg(layout);
+      if (typeof wasm.hwp5_edit_drawing_curve_points !== "function") throw new Error("Hwp5DrawingCurvePointsAbiUnavailable");
+      return decodeHwp5DrawingCurvePoints(output(() => wasm.hwp5_edit_drawing_curve_points(index, selected)).bytes);
+    },
+    drawingPolygonPoints(section, layout) {
+      check(); const index = u32(section, "section"), layoutId = polygonLayoutArg(layout);
+      if (typeof wasm.hwp5_edit_drawing_polygon_points !== "function") throw new Error("Hwp5DrawingPolygonPointsAbiUnavailable");
+      return decodeHwp5DrawingPolygonPoints(output(() => wasm.hwp5_edit_drawing_polygon_points(index, layoutId)).bytes);
     },
     drawingLineEndpoints(section) {
       check(); const index = u32(section, "section");
@@ -604,6 +698,14 @@ export async function createExperimentalHwp5Editor(source, input, { distribution
       const value = characterUnderlineArg(kind);
       if (typeof wasm.hwp5_edit_set_character_underline !== "function") throw new Error("Hwp5CharacterUnderlineAbiUnavailable");
       success(wasm.hwp5_edit_set_character_underline(...positions, value));
+    },
+    setCharacterStrikeColor({ section, paragraph, startUnit, endUnit, color }) {
+      check();
+      const positions = [u32(section, "section"), u32(paragraph, "paragraph"), u32(startUnit, "startUnit"), u32(endUnit, "endUnit")];
+      if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
+      const value = characterColorArg(color);
+      if (typeof wasm.hwp5_edit_set_character_strike_color !== "function") throw new Error("Hwp5CharacterStrikeColorAbiUnavailable");
+      success(wasm.hwp5_edit_set_character_strike_color(...positions, value));
     },
     setCharacterUnderlineColor({ section, paragraph, startUnit, endUnit, color }) {
       check();

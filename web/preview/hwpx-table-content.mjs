@@ -14,7 +14,12 @@ export function attachHwpxTables(editor, content) {
   content.tableCaptionErrors = [];
   for (const table of content.tables) {
     for (const cell of table.cells) {
-      try { cell.sourceMargin = editor.tableCellMargin(table.section, cell.listNode); }
+      try {
+        cell.sourceMargin = editor.tableCellMargin(table.section, cell.listNode);
+        cell.sourceVerticalAlignment = cell.sourceMargin.vertical_alignment;
+        cell.sourceLineWrap = cell.sourceMargin.line_wrap;
+        cell.sourceTextDirection = cell.sourceMargin.text_direction;
+      }
       catch (error) { content.tableCellMarginErrors.push({ section: table.section, listNode: cell.listNode, error: error.message }); }
     }
     try { table.sourceGeometry = editor.tableGeometry(table.section, table.tableNode); }

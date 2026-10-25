@@ -1,15 +1,31 @@
-import { decodeCharacterFontMetrics } from "./character-font-metrics.mjs";
+import { drawingTextRequest, decodeDrawingTextRequested } from "./hwpx-drawing-text-requested.mjs";
+import {encodeLineDisplayNodes,decodeLineDisplayBatch} from './hwpx-line-display-batch.mjs';
+import {encodeTableBorderSections,decodeTableBorderBatch} from './hwpx-table-border-batch.mjs';
 import { createMemory } from "./wasm-memory.mjs";
+import { decodeTableBorderSources } from "./hwpx-table-border-sources.mjs";
+import { decodeCurveGeometry } from "./hwpx-curve-geometry.mjs";
+import { decodeCurveOwner } from "./hwpx-curve-owner.mjs";
+import { decodeTabSources } from "./hwpx-tab-sources.mjs";
+import { decodeTabDefinitions } from "./hwpx-tab-definitions.mjs";
+import { decodeSectionTabs } from "./hwpx-section-tabs.mjs";
+import { encodeCellSizes } from "./cell-size-batch.mjs";
+import { decodeCharacterFontMetrics } from "./character-font-metrics.mjs";
+import { createEquationEngine } from "./equation-engine.mjs";
+import { decodeEquationStyles } from "./hwpx-equation-styles.mjs";
 import { createHwpxChartApi } from "./hwpx-chart-api.mjs";
-import { decodeFieldTargets } from "./hwpx-field-target-wire.mjs";
-import { decodeFormulaResultParagraphs } from "./formula-result-paragraphs.mjs";
-import { decodeFormulaResultDisplaySnapshot } from "./formula-result-display-snapshot.mjs";
-import { decodePageAreaDeclarations } from "./hwpx-page-area-declarations.mjs";
 import { decodePictureOwners } from "./hwpx-picture-owners.mjs";
 import { decodeInlineStringSources } from "./hwpx-inline-string-sources.mjs";
 import { dutmalKind } from "./hwpx-dutmal-kind.mjs";
 import { decodeDutmalSites } from "./hwpx-dutmal-sites.mjs";
+import { decodeEquationSources } from "./hwpx-equation-sources.mjs";
+import { decodeEquationScripts } from "./hwpx-equation-scripts.mjs";
+import { decodeEquationSites } from "./hwpx-equation-sites.mjs";
+import { decodeFieldTargets } from "./hwpx-field-target-wire.mjs";
+import { decodeFormulaResultParagraphs } from "./formula-result-paragraphs.mjs";
+import { decodeFormulaResultDisplaySnapshot } from "./formula-result-display-snapshot.mjs";
+import { decodePageAreaDeclarations } from "./hwpx-page-area-declarations.mjs";
 import { decodeCreatedTables } from "./hwpx-created-tables.mjs";
+import { decodeTableCreationResources } from "./table-creation-resources.mjs";
 import { createdTableIdentity } from "./created-table-identity.mjs";
 import { decodeFormSourceNodes, decodeFormSourceAttributes, decodeFormSites, decodeFormSourceLayout } from "./hwpx-form-source.mjs";
 import { decodeCharacterEffects } from "./character-effects.mjs";
@@ -45,9 +61,10 @@ import { decodeDrawingTextSnapshots } from "./hwpx-drawing-text-snapshots.mjs";
 import { decodeContainerSource } from "./hwpx-container-source.mjs";
 import { decodeRectangleRenderingSource } from "./hwpx-rectangle-rendering-source.mjs";
 import { decodeRectangleRenderingSources } from "./hwpx-rectangle-rendering-sources.mjs";
+import { decodeEllipseSources } from "./hwpx-ellipse-sources.mjs";
 import { decodeFillBrushes } from "./hwpx-fill-brushes.mjs";
 import { decodePictureSites } from "./hwpx-picture-sites-wire.mjs";
-import { decodeOleSites, decodeOleSource } from "./hwpx-ole-source.mjs";
+import { decodeOleSites, decodeOleSource, decodeOleBytes } from "./hwpx-ole-source.mjs";
 import { decodePictureOwner } from "./hwpx-picture-owner-wire.mjs";
 import { decodePictureRenderingCorners } from "./hwpx-picture-corners-wire.mjs";
 import { decodePicturePosition } from "./hwpx-picture-position-wire.mjs";
@@ -108,6 +125,14 @@ export async function createHwpxEditor(source) {
     if (bytes.length > maxBytes) throw new Error("LimitExceeded");
     return bytes;
   }
+  function fieldLabels(section, paragraph) {
+    ready(); uint(section); uint(paragraph);
+    if (typeof wasm.hwpx_edit_field_labels !== "function") throw new Error("HwpxFieldEditAbiUnavailable");
+    try {
+      if (!wasm.hwpx_edit_field_labels(section, paragraph)) throw memory.error();
+      return decodeFieldTargets(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+    } finally { wasm.hwpx_edit_output_free(); }
+  }
   function paragraphIds(suffix, args = []) {
     ready(); args.forEach(uint);
     const action = wasm[`hwpx_edit_${suffix}`];
@@ -118,14 +143,6 @@ export async function createHwpxEditor(source) {
       if (bytes.length % 4 || (suffix === "paragraph_shape_id" && bytes.length !== 4)) throw new Error("InvalidParagraphShapeIds");
       const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
       return Array.from({ length: bytes.length / 4 }, (_, index) => view.getUint32(index * 4, true));
-    } finally { wasm.hwpx_edit_output_free(); }
-  }
-  function fieldLabels(section, paragraph) {
-    ready(); uint(section); uint(paragraph);
-    if (typeof wasm.hwpx_edit_field_labels !== "function") throw new Error("HwpxFieldEditAbiUnavailable");
-    try {
-      if (!wasm.hwpx_edit_field_labels(section, paragraph)) throw memory.error();
-      return decodeFieldTargets(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
     } finally { wasm.hwpx_edit_output_free(); }
   }
   return {
@@ -205,6 +222,17 @@ export async function createHwpxEditor(source) {
       if (result > 1) throw memory.error();
       return result === 1;
     },
+    supportsAnchoredSplitQuery() {
+      return typeof wasm.hwpx_edit_can_split_anchored === "function";
+    },
+    canSplitParagraphAnchored({ section, paragraph, atUnit, endUnit = atUnit }) {
+      ready(); [section, paragraph, atUnit, endUnit].forEach(uint);
+      if (endUnit < atUnit) throw new RangeError("InvalidTextPosition");
+      if (typeof wasm.hwpx_edit_can_split_anchored !== "function") throw new Error("HwpxAnchoredSplitQueryAbiUnavailable");
+      const result = wasm.hwpx_edit_can_split_anchored(section, paragraph, atUnit, endUnit - atUnit);
+      if (result > 1) throw memory.error();
+      return result === 1;
+    },
     open(data, options = {}) {
       ready();
       if (!options || typeof options !== "object" || Array.isArray(options)) throw new TypeError("InvalidEditorOptions");
@@ -219,7 +247,6 @@ export async function createHwpxEditor(source) {
       });
       return { sectionCount: wasm.hwpx_edit_section_count() };
     },
-    ...createHwpxChartApi({ wasm, memory, ready, uint, encodedText }),
     splice(section, paragraph, start, deleted, text) {
       ready();
       [section, paragraph, start, deleted].forEach(uint);
@@ -377,6 +404,14 @@ export async function createHwpxEditor(source) {
       if (typeof wasm.hwpx_edit_set_character_underline !== "function") throw new Error("HwpxCharacterUnderlineAbiUnavailable");
       if (!wasm.hwpx_edit_set_character_underline(section, paragraph, startUnit, endUnit, value)) throw memory.error();
     },
+    setCharacterStrikeColor({ section, paragraph, startUnit, endUnit, color }) {
+      ready();
+      [section, paragraph, startUnit, endUnit].forEach(uint);
+      if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
+      const value = characterColorArg(color);
+      if (typeof wasm.hwpx_edit_set_character_strike_color !== "function") throw new Error("HwpxCharacterStrikeColorAbiUnavailable");
+      if (!wasm.hwpx_edit_set_character_strike_color(section, paragraph, startUnit, endUnit, value)) throw memory.error();
+    },
     setCharacterUnderlineColor({ section, paragraph, startUnit, endUnit, color }) {
       ready();
       [section, paragraph, startUnit, endUnit].forEach(uint);
@@ -472,6 +507,14 @@ export async function createHwpxEditor(source) {
       [section, listNode, width, height].forEach(uint);
       if (typeof wasm.hwpx_edit_set_cell_size !== "function") throw new Error("HwpxCellSizeAbiUnavailable");
       if (!wasm.hwpx_edit_set_cell_size(section, listNode, width, height)) throw memory.error();
+    },
+    setCellSizes(cells) {
+      ready();
+      const bytes = encodeCellSizes(cells);
+      if (typeof wasm.hwpx_edit_set_cell_sizes !== "function") throw new Error("HwpxCellSizeBatchAbiUnavailable");
+      memory.withBytes(bytes, (ptr, size) => {
+        if (!wasm.hwpx_edit_set_cell_sizes(ptr, size)) throw memory.error();
+      });
     },
     setPictureDimensions({ section, pictureNode, display, original, current }) {
       ready();
@@ -657,6 +700,19 @@ export async function createHwpxEditor(source) {
         return decodeDrawingTextSnapshot(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
       } finally { wasm.hwpx_edit_output_free(); }
     },
+    ...(typeof wasm.hwpx_edit_drawing_text_requested === "function" && typeof wasm.hwpx_edit_drawing_text_requested_max_nodes === "function" ? {
+      drawingTextRequestedMaxNodes: wasm.hwpx_edit_drawing_text_requested_max_nodes(),
+      drawingTextRequested(section, nodes) {
+        ready(); uint(section);
+        const { requested, bytes } = drawingTextRequest(nodes, wasm.hwpx_edit_drawing_text_requested_max_nodes());
+        return memory.withBytes(bytes, (ptr, size) => {
+          try {
+            if (!wasm.hwpx_edit_drawing_text_requested(section, ptr, size)) throw memory.error();
+            return decodeDrawingTextRequested(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()), requested);
+          } finally { wasm.hwpx_edit_output_free(); }
+        });
+      },
+    } : {}),
     drawingTextSnapshots(section) {
       ready(); uint(section);
       if (typeof wasm.hwpx_edit_drawing_text_snapshots !== "function") throw new Error("HwpxDrawingTextSnapshotsAbiUnavailable");
@@ -699,6 +755,60 @@ export async function createHwpxEditor(source) {
         return decodeRectangleRenderingSources(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
       } finally { wasm.hwpx_edit_output_free(); }
     },
+    ellipseSources(section) {
+      ready(); uint(section);
+      if (typeof wasm.hwpx_edit_ellipse_sources !== "function") throw new Error("HwpxEllipseSourcesAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_ellipse_sources(section)) throw memory.error();
+        return decodeEllipseSources(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
+    curveGeometry(section, node) {
+      ready(); uint(section); uint(node);
+      if (typeof wasm.hwpx_edit_curve_geometry !== "function") throw new Error("HwpxCurveGeometryAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_curve_geometry(section, node)) throw memory.error();
+        const value = decodeCurveGeometry(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+        if (value.node !== node) throw new Error("CurveGeometryNodeMismatch");
+        return value;
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
+    curveOwner(section, node) {
+      ready(); uint(section); uint(node);
+      if (typeof wasm.hwpx_edit_curve_owner !== "function") throw new Error("HwpxCurveOwnerAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_curve_owner(section, node)) throw memory.error();
+        const value = decodeCurveOwner(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+        if (value.node !== node) throw new Error("CurveOwnerNodeMismatch");
+        return value;
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
+    tabSources(section, paragraph) {
+      ready(); uint(section); uint(paragraph);
+      if (typeof wasm.hwpx_edit_tab_sources !== "function") throw new Error("HwpxTabSourcesAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_tab_sources(section, paragraph)) throw memory.error();
+        const value = decodeTabSources(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+        if (value.section !== section || value.paragraph !== paragraph) throw new Error("TabSourcesParagraphMismatch");
+        return value;
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
+    tabDefinitions() {
+      ready();
+      if (typeof wasm.hwpx_edit_tab_definitions !== "function") throw new Error("HwpxTabDefinitionsAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_tab_definitions()) throw memory.error();
+        return decodeTabDefinitions(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
+    sectionTabSources() {
+      ready();
+      if (typeof wasm.hwpx_edit_section_tabs !== "function") throw new Error("HwpxSectionTabsAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_section_tabs()) throw memory.error();
+        return decodeSectionTabs(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
     supportsCreatedCellSoftLineBreaks() {
       return typeof wasm.hwpx_edit_created_cell_soft_line_breaks === "function" && wasm.hwpx_edit_created_cell_soft_line_breaks() === 1;
     },
@@ -707,10 +817,7 @@ export async function createHwpxEditor(source) {
       if (typeof wasm.hwpx_edit_table_creation_resources !== "function") throw new Error("HwpxTableCreationResourcesAbiUnavailable");
       try {
         if (!wasm.hwpx_edit_table_creation_resources()) throw memory.error();
-        const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len())));
-        const keys = ["paragraph", "character", "style", "border_fill"];
-        if (!value || typeof value !== "object" || Object.keys(value).length !== keys.length || !keys.every(key => Object.hasOwn(value, key) && Array.isArray(value[key]) && value[key].every((id, i, ids) => Number.isInteger(id) && id >= 0 && id <= 0xffffffff && (!i || ids[i - 1] < id)))) throw new Error("InvalidTableCreationResources");
-        return value;
+        return decodeTableCreationResources(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
       } finally { wasm.hwpx_edit_output_free(); }
     },
     saveForDisplay() {
@@ -759,6 +866,23 @@ export async function createHwpxEditor(source) {
       try {
         if (!wasm.hwpx_edit_container_source_snapshot(section, containerNode)) throw memory.error();
         return decodeContainerSource(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
+    containerCaptionBindings(section) {
+      ready(); uint(section);
+      if (typeof wasm.hwpx_edit_container_caption_bindings !== "function") throw new Error("HwpxContainerCaptionBindingsAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_container_caption_bindings(section)) throw memory.error();
+        return decodeCaptionBindings(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()), "container_node", "InvalidContainerCaptionBindings");
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
+    oleBytes(section, oleNode, { allowExternalPackagedCopy = false } = {}) {
+      ready(); uint(section); uint(oleNode);
+      if (typeof allowExternalPackagedCopy !== "boolean") throw new Error("InvalidOleSourceOptions");
+      if (typeof wasm.hwpx_edit_ole_bytes !== "function") throw new Error("HwpxOleBytesAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_ole_bytes(section, oleNode, Number(allowExternalPackagedCopy))) throw memory.error();
+        return decodeOleBytes(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
       } finally { wasm.hwpx_edit_output_free(); }
     },
     oleSites(section) {
@@ -921,6 +1045,40 @@ export async function createHwpxEditor(source) {
         return decodeTablePagination(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
       } finally { wasm.hwpx_edit_output_free(); }
     },
+    ...(typeof wasm.hwpx_edit_line_display_batch === "function" && typeof wasm.hwpx_edit_line_display_batch_max_nodes === "function" ? {
+      lineDisplayBatchMaxNodes: wasm.hwpx_edit_line_display_batch_max_nodes(),
+      lineDisplayBatch(section, nodes) {
+        ready(); uint(section);
+        const bytes = encodeLineDisplayNodes(nodes, wasm.hwpx_edit_line_display_batch_max_nodes());
+        return memory.withBytes(bytes, (ptr, size) => {
+          try {
+            if (!wasm.hwpx_edit_line_display_batch(section, ptr, size)) throw memory.error();
+            return decodeLineDisplayBatch(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()), nodes);
+          } finally { wasm.hwpx_edit_output_free(); }
+        });
+      },
+    } : {}),
+    ...(typeof wasm.hwpx_edit_table_border_sources_batch === "function" && typeof wasm.hwpx_edit_table_border_sources_batch_max_sections === "function" ? {
+      tableBorderSourcesBatchMaxSections: wasm.hwpx_edit_table_border_sources_batch_max_sections(),
+      tableBorderSourcesBatch(sections) {
+        ready();
+        const bytes = encodeTableBorderSections(sections, wasm.hwpx_edit_table_border_sources_batch_max_sections());
+        return memory.withBytes(bytes, (ptr, size) => {
+          try {
+            if (!wasm.hwpx_edit_table_border_sources_batch(ptr, size)) throw memory.error();
+            return decodeTableBorderBatch(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()), sections);
+          } finally { wasm.hwpx_edit_output_free(); }
+        });
+      },
+    } : {}),
+    tableBorderSources(section) {
+      ready(); uint(section);
+      if (typeof wasm.hwpx_edit_table_border_sources !== "function") throw new Error("HwpxTableBorderSourcesAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_table_border_sources(section)) throw memory.error();
+        return decodeTableBorderSources(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
     tableGeometry(section, tableNode) {
       ready(); uint(section); uint(tableNode);
       if (typeof wasm.hwpx_edit_table_geometry !== "function") throw new Error("HwpxTableGeometryAbiUnavailable");
@@ -1041,6 +1199,14 @@ export async function createHwpxEditor(source) {
         return decodeLineDisplay(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
       } finally { wasm.hwpx_edit_output_free(); }
     },
+    tableBackgroundBytes(section, listNode) {
+      ready(); uint(section); uint(listNode);
+      if (typeof wasm.hwpx_edit_table_background_bytes !== "function") throw new Error("HwpxTableBackgroundBytesAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_table_background_bytes(section, listNode)) throw memory.error();
+        return memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len());
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
     pictureBytes(section, pictureNode) {
       ready(); uint(section); uint(pictureNode);
       if (typeof wasm.hwpx_edit_picture_bytes !== "function") throw new Error("HwpxPictureBytesAbiUnavailable");
@@ -1137,6 +1303,7 @@ export async function createHwpxEditor(source) {
         if (!wasm.hwpx_edit_splice_manual_formula_result(section, beginElement, start, deleted, ptr, size)) throw memory.error();
       });
     },
+    ...createHwpxChartApi({ wasm, memory, ready, uint, encodedText }),
     formSourceNodes(section) {
       ready(); uint(section);
       if (typeof wasm.hwpx_edit_form_source_nodes !== "function") throw new Error("HwpxFormSourceAbiUnavailable");
@@ -1162,6 +1329,65 @@ export async function createHwpxEditor(source) {
         return new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
       } finally { wasm.hwpx_edit_output_free(); }
     },
+    equationScript(section, node) {
+      ready(); [section, node].forEach(uint);
+      if (typeof wasm.hwpx_edit_equation_script !== "function") throw new Error("HwpxEquationScriptAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_equation_script(section, node)) throw memory.error();
+        return new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
+    measureEquation(source, settings) {
+      ready();
+      return createEquationEngine(wasm).measure(source, settings);
+    },
+    equationStyles(section) {
+      ready(); uint(section);
+      if (typeof wasm.hwpx_edit_equation_styles !== "function") throw new Error("HwpxEquationStylesAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_equation_styles(section)) throw memory.error();
+        return decodeEquationStyles(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
+    layoutEquation(source, settings, measurements, options) {
+      ready();
+      return createEquationEngine(wasm).layout(source, settings, measurements, options);
+    },
+    equationSources(section) {
+      ready(); uint(section);
+      if (typeof wasm.hwpx_edit_equation_sources !== "function") throw new Error("HwpxEquationSourcesAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_equation_sources(section)) throw memory.error();
+        return decodeEquationSources(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
+    equationScripts(section) {
+      ready(); uint(section);
+      if (typeof wasm.hwpx_edit_equation_scripts !== "function") throw new Error("HwpxEquationSnapshotAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_equation_scripts(section)) throw memory.error();
+        return decodeEquationScripts(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
+    setEquationScript(section, node, value) {
+      ready(); [section, node].forEach(uint);
+      if (typeof wasm.hwpx_edit_set_equation_script !== "function" || typeof wasm.hwpx_edit_equation_script_max_bytes !== "function") throw new Error("HwpxEquationScriptAbiUnavailable");
+      const maxBytes = wasm.hwpx_edit_equation_script_max_bytes();
+      if (!Number.isInteger(maxBytes) || maxBytes <= 0 || maxBytes > 0xffffffff) throw new Error("InvalidEquationScriptLimit");
+      const bytes = encodedText(value);
+      if (bytes.length > maxBytes) throw new Error("LimitExceeded");
+      memory.withBytes(bytes, (ptr, size) => {
+        if (!wasm.hwpx_edit_set_equation_script(section, node, ptr, size)) throw memory.error();
+      });
+    },
+    equationSites(section) {
+      ready(); uint(section);
+      if (typeof wasm.hwpx_edit_equation_sites !== "function") throw new Error("HwpxEquationSitesAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_equation_sites(section)) throw memory.error();
+        return decodeEquationSites(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
     dutmalSites(section) {
       ready(); uint(section);
       if (typeof wasm.hwpx_edit_dutmal_sites !== "function") throw new Error("HwpxDutmalSitesAbiUnavailable");
@@ -1175,6 +1401,14 @@ export async function createHwpxEditor(source) {
       if (typeof wasm.hwpx_edit_dutmal_display_text !== "function") throw new Error("HwpxDutmalDisplayTextAbiUnavailable");
       try {
         if (!wasm.hwpx_edit_dutmal_display_text(section, node)) throw memory.error();
+        return new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
+    fieldLabelDisplayText(section, paragraph) {
+      ready(); [section, paragraph].forEach(uint);
+      if (typeof wasm.hwpx_edit_field_label_display_text !== "function") throw new Error("HwpxFieldLabelDisplayTextAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_field_label_display_text(section, paragraph)) throw memory.error();
         return new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
       } finally { wasm.hwpx_edit_output_free(); }
     },
@@ -1232,14 +1466,6 @@ export async function createHwpxEditor(source) {
       });
     },
     fieldLabels,
-    manualFormulaResultParagraphs(section) {
-      ready(); uint(section);
-      if (typeof wasm.hwpx_edit_manual_formula_result_paragraphs !== "function") throw new Error("HwpxManualFormulaResultParagraphAbiUnavailable");
-      try {
-        if (!wasm.hwpx_edit_manual_formula_result_paragraphs(section)) throw memory.error();
-        return decodeFormulaResultParagraphs(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
-      } finally { wasm.hwpx_edit_output_free(); }
-    },
     manualFormulaResultDisplaySnapshot(section) {
       ready(); uint(section);
       if (typeof wasm.hwpx_edit_manual_formula_result_display_snapshot !== "function") throw new Error("HwpxFormulaResultSnapshotAbiUnavailable");
@@ -1256,27 +1482,12 @@ export async function createHwpxEditor(source) {
         return decodePageAreaDeclarations(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
       } finally { wasm.hwpx_edit_output_free(); }
     },
-    fieldRangeTarget(section, paragraph, start, end) {
-      ready(); [section, paragraph, start, end].forEach(uint);
-      if (end < start) throw new Error("InvalidTextPosition");
-      if (typeof wasm.hwpx_edit_field_range_target !== "function") {
-        const targets = fieldLabels(section, paragraph).filter(t => start >= t.start && end <= t.end);
-        if (targets.length > 1) throw new Error("UnsupportedFieldLabelRange");
-        return targets[0] ?? null;
-      }
+    manualFormulaResultParagraphs(section) {
+      ready(); uint(section);
+      if (typeof wasm.hwpx_edit_manual_formula_result_paragraphs !== "function") throw new Error("HwpxManualFormulaResultParagraphAbiUnavailable");
       try {
-        if (!wasm.hwpx_edit_field_range_target(section, paragraph, start, end)) throw memory.error();
-        const targets = decodeFieldTargets(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
-        if (targets.length > 1) throw new Error("InvalidFieldTargets");
-        return targets[0] ?? null;
-      } finally { wasm.hwpx_edit_output_free(); }
-    },
-    fieldLabelDisplayText(section, paragraph) {
-      ready(); [section, paragraph].forEach(uint);
-      if (typeof wasm.hwpx_edit_field_label_display_text !== "function") throw new Error("HwpxFieldLabelDisplayTextAbiUnavailable");
-      try {
-        if (!wasm.hwpx_edit_field_label_display_text(section, paragraph)) throw memory.error();
-        return new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+        if (!wasm.hwpx_edit_manual_formula_result_paragraphs(section)) throw memory.error();
+        return decodeFormulaResultParagraphs(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
       } finally { wasm.hwpx_edit_output_free(); }
     },
     manualFormulaResultTargets(section, paragraph) {
@@ -1301,6 +1512,22 @@ export async function createHwpxEditor(source) {
       if (typeof wasm.hwpx_edit_manual_formula_result_range_target !== "function") throw new Error("HwpxManualFormulaResultTargetAbiUnavailable");
       try {
         if (!wasm.hwpx_edit_manual_formula_result_range_target(section, paragraph, start, end)) throw memory.error();
+        const targets = decodeFieldTargets(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+        if (targets.length > 1) throw new Error("InvalidFieldTargets");
+        return targets[0] ?? null;
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
+    fieldRangeTarget(section, paragraph, start, end) {
+      ready(); [section, paragraph, start, end].forEach(uint);
+      if (end < start) throw new Error("InvalidTextPosition");
+      if (typeof wasm.hwpx_edit_field_range_target !== "function") {
+        // Older artifacts retain their unique-label policy, never first-match.
+        const targets = fieldLabels(section, paragraph).filter(t => start >= t.start && end <= t.end);
+        if (targets.length > 1) throw new Error("UnsupportedFieldLabelRange");
+        return targets[0] ?? null;
+      }
+      try {
+        if (!wasm.hwpx_edit_field_range_target(section, paragraph, start, end)) throw memory.error();
         const targets = decodeFieldTargets(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
         if (targets.length > 1) throw new Error("InvalidFieldTargets");
         return targets[0] ?? null;

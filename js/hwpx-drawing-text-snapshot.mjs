@@ -1,5 +1,6 @@
 import { validateTableCaption } from "./hwpx-table-caption.mjs";
 import { validateShapeSourceValues } from "./hwpx-shape-source-values.mjs";
+import { validDrawingTextValues } from "./hwpx-drawing-text-values.mjs";
 export function decodeDrawingTextSnapshot(bytes) {
   const fail = () => { throw new Error("InvalidDrawingTextSnapshot"); };
   if (!(bytes instanceof Uint8Array) || bytes.length > 65536) return fail();
@@ -15,10 +16,8 @@ export function decodeDrawingTextSnapshot(bytes) {
       || group.root_anchor > group.parent_container || group.parent_container >= value.drawing_node) return fail();
   }
   const geometry = value.geometry, text = value.text;
-  if (!geometry || !text || !uint(text.node) || text.node <= value.drawing_node || !optional(text.list_node, uint) || (text.list_node !== null && text.list_node <= text.node)) return fail();
+  if (!geometry || !validDrawingTextValues(text, value.drawing_node)) return fail();
   try { validateShapeSourceValues(value); } catch { return fail(); }
-  if (![false, true].includes(text.margin_present) || !Array.isArray(text.margins) || text.margins.length !== 4 || !text.margins.every(v => optional(v, signed)) || ![null, false, true].includes(text.editable) || !optional(text.last_width, uint) || (!text.margin_present && text.margins.some(v => v !== null))) return fail();
-  if (![text.text_direction, text.line_wrap, text.vertical_alignment].every(v => optional(v, n => uint(n) && n <= 2))) return fail();
   if (Object.hasOwn(value, "caption")) {
     try { validateTableCaption(value.caption); } catch { return fail(); }
     if (value.caption !== null && value.caption.caption_node <= value.drawing_node) return fail();

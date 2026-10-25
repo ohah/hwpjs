@@ -1,10 +1,14 @@
+import { tableAnchorPage } from "./table-anchor-page.mjs";
+import { tableHostStructuralCoverage } from "./table-host-structural-coverage.mjs";
+
 /** Nonpainted intervals require both an exact source anchor and placed table cells. */
 export function tableAnchorCoverage(content, layout) {
   const fail = error => ({ state: "unavailable", error });
   const tableSources = content?.tables === undefined ? [] : content.tables;
   const boxes = layout?.boxes === undefined ? [] : layout.boxes;
   if (!Array.isArray(tableSources) || !Array.isArray(content?.paragraphs) || !Array.isArray(layout?.rows)
-    || !Array.isArray(boxes) || (layout.tableAnchors !== undefined && !Array.isArray(layout.tableAnchors))) return fail("InvalidTableAnchorCoverage");
+    || !Array.isArray(boxes) || (layout.tableAnchors !== undefined && !Array.isArray(layout.tableAnchors))
+    || layout.flowAnchors !== undefined && (!Array.isArray(layout.flowAnchors) || layout.flowAnchors.some(row => !row))) return fail("InvalidTableAnchorCoverage");
   if (tableSources.some(table => !table) || content.paragraphs.some(p => !p) || layout.rows.some(row => !row) || boxes.some(box => !box)) return fail("InvalidTableAnchorCoverage");
   const rows = [], identities = new Set(), sites = new Set();
   for (const anchor of layout.tableAnchors ?? []) {
@@ -24,10 +28,17 @@ export function tableAnchorCoverage(content, layout) {
     if (table.cells.some(cell => !placed.some(box => box.listNode === cell.listNode && Number.isSafeInteger(box.pageOrdinal)
       && box.pageOrdinal >= 0 && [box.x, box.y, box.width, box.height, box.x + box.width, box.y + box.height].every(Number.isFinite)
       && box.width > 0 && box.height > 0))) return fail("MissingTableAnchorCoveragePlacement");
+    const structural=tableHostStructuralCoverage(owner,table,anchor,layout,placed);
+    if(structural.state!=="covered")return structural;
+    rows.push(...structural.rows);
     if (layout.rows.some(row => row.kind === "text" && row.section === owner.section && row.paragraph === owner.paragraph
       && row.startUnit <= anchor.anchorUnit && anchor.anchorUnit < row.endUnit)) continue;
+    let pageOrdinal;
+    try { pageOrdinal = tableAnchorPage(table, anchor, layout, placed); }
+    catch (error) { return fail(error.message); }
     rows.push({ kind: "text", section: owner.section, paragraph: owner.paragraph, startUnit: anchor.anchorUnit,
-      endUnit: anchor.anchorUnit + 1, text: owner.text.slice(anchor.anchorUnit, anchor.anchorUnit + 1), coverageOnly: true });
+      endUnit: anchor.anchorUnit + 1, text: owner.text.slice(anchor.anchorUnit, anchor.anchorUnit + 1), coverageOnly: true,
+      ...(pageOrdinal !== undefined ? { pageOrdinal } : {}) });
   }
   return { state: "covered", rows };
 }

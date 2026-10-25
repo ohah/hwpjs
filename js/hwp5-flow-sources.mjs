@@ -4,6 +4,13 @@ export function decodeHwp5ParagraphFlow(bytes) {
   const rows = parse(bytes);
   if (!Array.isArray(rows)) throw new Error("InvalidHwp5ParagraphFlow");
   for (const [index, row] of rows.entries()) {
+    if (row?.empty_line_eligible !== undefined && (typeof row.empty_line_eligible !== "boolean"
+      || row.empty_line_eligible && row.top_level !== true)) throw new Error("InvalidHwp5ParagraphFlow");
+    if (row && (Object.hasOwn(row, "memo_index") || Object.hasOwn(row, "memo_node"))) {
+      if (!(row.memo_index === null && row.memo_node === null)
+        && !(uint(row.memo_index) && uint(row.memo_node) && row.host === "other" && row.top_level === false
+          && uint(row.list_node) && row.memo_node + 1 === row.list_node)) throw new Error("InvalidHwp5ParagraphFlow");
+    }
     if (row?.host !== undefined) {
       if (!["body", "table_cell", "table_caption", "header", "footer", "footnote", "endnote", "master_page", "drawing", "other"].includes(row.host) || !(row.list_node === null || uint(row.list_node)) || row.top_level !== (row.host === "body") || (row.host === "body") !== (row.list_node === null)) throw new Error("InvalidHwp5ParagraphFlow");
     }

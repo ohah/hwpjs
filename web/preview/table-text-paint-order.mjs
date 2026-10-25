@@ -4,22 +4,37 @@ function paintRank(layer) {
 }
 
 export function tableTextPaintOrder(rows, first = 0) {
-  const groups = [[], [], []];
+  const indices = [];
   for (let index = first; index < rows.length; index++) {
-    const layer = rows[index].tablePaintLayer;
-    groups[paintRank(layer)].push(index);
+    paintKey(rows[index]); indices.push(index);
   }
-  return groups.flat();
+  return indices.toSorted((a, b) => comparePaint(rows[a], rows[b]));
 }
 
 export function topTablePaintRowIndex(rows, matches) {
-  let found = -1, rank = -1;
+  let found = -1;
   for (let index = rows.length - 1; index >= 0; index--) {
-    const layer = rows[index].tablePaintLayer;
-    const current = paintRank(layer);
-    if (current <= rank || !matches(rows[index], index)) continue;
-    found = index; rank = current;
-    if (rank === 2) break;
+    paintKey(rows[index]);
+    if (found >= 0 && comparePaint(rows[index], rows[found]) <= 0) continue;
+    if (matches(rows[index], index)) found = index;
   }
   return found;
+}
+
+function paintKey(item) {
+  const rank = paintRank(item.tablePaintLayer), z = item.tablePaintZOrder === undefined ? 0 : item.tablePaintZOrder;
+  if (!Number.isSafeInteger(z) || z < -2147483648 || z > 4294967295) throw new RangeError("InvalidTablePaintOrder");
+  return [rank, rank === 1 ? 0 : z];
+}
+function comparePaint(a, b) {
+  const x = paintKey(a), y = paintKey(b);
+  return x[0] - y[0] || x[1] - y[1];
+}
+
+/** Borders and text share layer/order; front borders must not paint behind body text. */
+export function tablePaintScene(boxes, rows, first = 0) {
+  const commands = boxes.map((box, index) => ({ kind: "box", item: box, index }));
+  for (let index = first; index < rows.length; index++) commands.push({ kind: "row", item: rows[index], index });
+  for (const command of commands) paintKey(command.item);
+  return commands.toSorted((a, b) => comparePaint(a.item, b.item));
 }

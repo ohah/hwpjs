@@ -2,7 +2,7 @@ import { projectHwp5RectangleGeometry } from "./hwp5-rectangle-geometry-projecti
 import { assembleHwp5RectangleContent } from "./hwp5-rectangle-content-projection.mjs";
 import { projectHwp5PictureGeometry } from "./hwp5-picture-geometry.mjs";
 import { projectHwp5DrawingText } from "./hwp5-drawing-text-projection.mjs";
-import { hwp5ObjectFlags } from "./hwp5-object-flags.mjs";
+import { bindHwp5RootPictureCaptions } from "./hwp5-picture-caption-bindings.mjs";
 
 // Assemble ownership without claiming that the page engine can place mixed roots.
 export function projectHwp5MixedRootContent(content) {
@@ -15,17 +15,10 @@ export function projectHwp5MixedRootContent(content) {
   if (geometry.state !== "projected") return geometry;
   const pictures = projectHwp5PictureGeometry(content);
   if (pictures.state !== "projected") return pictures;
-  const projected = [];
-  for (const root of roots.filter(row => row.source.kind_id === 0x24706963)) {
-    const matches = pictures.pictures.filter(row => row.section === root.section && row.pictureNode === root.componentNode);
-    const bindings = text.bindings.filter(row => row.section === root.section && row.drawingNode === root.componentNode);
-    const captions = bindings.filter(row => row.kind === "caption");
-    if (matches.length !== 1 || bindings.some(row => row.kind !== "caption") || captions.length > 1) return fail("AmbiguousHwp5MixedPictureOwnership");
-    if (hwp5ObjectFlags(root.source.flags).has_caption !== (captions.length === 1)) return fail("Hwp5MixedPictureCaptionMismatch");
-    projected.push({ ...matches[0], caption: captions[0]?.caption ?? null });
-  }
-  if (projected.length !== pictures.pictures.length) return fail("UnsupportedHwp5MixedPictureChildren");
+  const projected = bindHwp5RootPictureCaptions(content, pictures.pictures, text.bindings);
+  if (projected.state !== "projected") return projected;
+  if (projected.rootCount !== pictures.pictures.length) return fail("UnsupportedHwp5MixedPictureChildren");
   const rectangles = assembleHwp5RectangleContent(content, geometry, text);
   if (rectangles.state !== "projected") return rectangles;
-  return { state: "projected", content: { ...rectangles.content, pictures: projected } };
+  return { state: "projected", content: { ...rectangles.content, pictures: projected.pictures } };
 }

@@ -1,7 +1,5 @@
 // Semantic state adornment at the native protected unit, not original form layout.
 import { selectionRects } from "./text-geometry.mjs";
-import { affinePoint, inverseAffine } from "./affine-point-geometry.mjs";
-import { rowPageClipContains } from "./row-page-clip.mjs";
 import { inlineCheckBoxIndex, checkBoxPositionKey } from "./checkbox-inline-layout.mjs";
 const states = new Set(["CHECKED", "UNCHECKED", "INDETERMINATE"]);
 export function checkBoxProxyBoxes(content, layout) {
@@ -24,12 +22,4 @@ export function checkBoxProxyBoxes(content, layout) {
   }
   return result;
 }
-export function hitCheckBoxProxy(boxes, x, y) {
-  if (![x, y].every(Number.isFinite)) return null;
-  for (const box of boxes.toReversed()) {
-    if (!rowPageClipContains(box, x, y)) continue;
-    const local = box.transform === undefined ? [x, y] : affinePoint(inverseAffine(box.transform), [x, y]);
-    if (local && local[0] >= box.x && local[0] < box.x + box.width && local[1] >= box.y && local[1] < box.y + box.height) return box;
-  }
-  return null;
-}
+export { hitTransformedBox as hitCheckBoxProxy } from "./transformed-box-hit.mjs";

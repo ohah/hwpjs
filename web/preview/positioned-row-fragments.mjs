@@ -49,7 +49,8 @@ export function positionedRowFragments(source, row, remaining) {
     }
     if (fragment.boundaries[0].unit !== unit || fragment.boundaries.at(-1).unit !== fragment.endUnit
       || (fragment.endUnit === unit && (fragments.length !== 1 || row.endUnit !== source.startUnit || unit !== paragraph.text.length))) return fail("InvalidPositionedRowFragments");
-    const { positionedFragments: _, alignmentUnavailable: _staleAlignment, ...carrier } = row;
+    const { positionedFragments: _, alignmentUnavailable: _staleAlignment, tabUnavailable: _staleTab,
+      tabPlacements: _staleTabPlacements, ...carrier } = row;
     result.push({ ...carrier, ...fragment });
     unit = fragment.endUnit;
   }

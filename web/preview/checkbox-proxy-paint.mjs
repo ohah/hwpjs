@@ -8,6 +8,12 @@ export function paintCheckBoxProxy(ctx, box, scrollTop) {
     }
     ctx.strokeStyle = box.foreground ?? (box.checkBox.editable ? "#145b96" : "#777");
     ctx.lineWidth = 1;
+    if (box.checkBox.kind === "radio_button") {
+      const x = box.x + box.width / 2, middle = y + box.height / 2, radius = Math.max(0, Math.min(box.width, box.height) / 2 - 1);
+      ctx.beginPath(); ctx.arc(x, middle, radius, 0, Math.PI * 2); ctx.stroke();
+      if (box.checkBox.state === "CHECKED") { ctx.fillStyle = ctx.strokeStyle; ctx.beginPath(); ctx.arc(x, middle, radius * .5, 0, Math.PI * 2); ctx.fill(); }
+      return;
+    }
     ctx.strokeRect(box.x + 0.5, y + 0.5, box.width - 1, box.height - 1);
     if (box.checkBox.state === "CHECKED") {
       ctx.beginPath(); ctx.moveTo(box.x + box.width * .2, y + box.height * .5);

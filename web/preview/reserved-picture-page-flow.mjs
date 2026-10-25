@@ -18,10 +18,10 @@ export function paginateReservedPictureRows(rows, setting, flows, pictures, para
   if (sources.state !== "prepared") return sources;
   let page = paginateBodyRows(rows, setting, flows, options);
   if (page.state !== "paginated" || page.limited) return page;
-  const placement = { edgePolicy: options.edgePolicy, captionMeasure, captionParagraphs, maxCaptionRows: options.maxRows ?? 20000 };
+  const placement = { columnScoped: options.columnZones === true, edgePolicy: options.edgePolicy, captionMeasure, captionParagraphs, maxCaptionRows: options.maxRows ?? 20000 };
   let reserved = picturePageReservations(pictures, paragraphs, page.rows, placement);
   if (reserved.state !== "reserved") return reserved;
-  const signature = value => JSON.stringify(value.reservations.map(r => [r.section, r.pictureNode, r.pageOrdinal, r.rectangle, r.flowRectangle]));
+  const signature = value => JSON.stringify(value.reservations.map(r => [r.section, r.pictureNode, r.pageOrdinal, r.rectangle, r.flowRectangle, r.columnBox]));
   const anchorPages = new Map();
   for (let iteration = 0; iteration < maxIterations; iteration++) {
     for (let i = 0; i < pictures.length; i++) {
@@ -40,7 +40,7 @@ export function paginateReservedPictureRows(rows, setting, flows, pictures, para
       rowY: callbacks.rowY,
       measurePositionedRow: callbacks.measurePositionedRow,
     });
-    if (callbacks.failure()) return fail(callbacks.failure());
+    if (callbacks.failure()) return {...fail(callbacks.failure()),...callbacks.diagnostic()};
     if (page.state !== "paginated" || page.limited) return page;
     const next = picturePageReservations(pictures, paragraphs, page.rows, placement);
     if (next.state !== "reserved") return next;

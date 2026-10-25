@@ -33,7 +33,8 @@ export function spliceFormulaResultText(editor, module, message) {
   editor.spliceManualFormulaResult(message.section, target.beginElement, message.startUnit - target.start, message.endUnit - message.startUnit, message.text);
   return true;
 }
-export function formulaResultTextRangeAllowed(editor, module, section, paragraph, start, end) {
-  return formulaResultTextAvailable(editor, module) && editor.manualFormulaResultRangeTarget(section, paragraph, start, end) !== null;
+// selectionEditQuery already converted the display paragraph to native 1-based.
+export function formulaResultTextRangeAllowed(editor, module, section, nativeParagraph, start, end) {
+  return formulaResultTextAvailable(editor, module) && editor.manualFormulaResultRangeTarget(section, nativeParagraph, start, end) !== null;
 }
 function uint(value) { return Number.isInteger(value) && value >= 0 && value <= 0xffffffff; }

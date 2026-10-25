@@ -2,13 +2,14 @@ import { validateHwp5DrawingComponentSources } from "../../js/hwp5-drawing-compo
 import { validateHwp5DrawingLocalTransforms } from "../../js/hwp5-drawing-local-transforms.mjs";
 import { validateHwp5DrawingRectangleCorners } from "../../js/hwp5-drawing-rectangle-corners.mjs";
 import { hwp5DrawingGeometry } from "./hwp5-drawing-geometry.mjs";
+import { projectHwp5GroupPolygonGeometry } from "./hwp5-group-polygon-geometry.mjs";
 
-const kinds = new Map([[0x24636f6e, "container"], [0x24726563, "rectangle"], [0x24706963, "picture"]]);
+const kinds = new Map([[0x24636f6e, "container"], [0x24726563, "rectangle"], [0x24706963, "picture"], [0x246c696e, "line"], [0x24706f6c, "polygon"]]);
 // 그룹 원점은 최상위 object_common만 소유합니다. 자식 행렬은 다시 부모와 곱하지 않습니다.
 export function projectHwp5GroupGeometry(content) {
   try {
     if (["hwp5DrawingErrors", "hwp5DrawingComponentErrors", "hwp5DrawingLocalErrors", "hwp5DrawingCornerErrors"].some(key => content[key]?.length)) throw new Error("IncompleteHwp5GroupGeometry");
-    const containers = [], rectangles = [], pictureBindings = [];
+    const containers = [], rectangles = [], polygons = [], pictureBindings = [], lineBindings = [];
     for (const section of new Set((content.hwp5DrawingComponents ?? []).map(row => row.section))) {
       const rows = validateHwp5DrawingComponentSources(content.hwp5DrawingComponents.filter(row => row.section === section));
       const byNode = new Map(rows.map(row => [row.component_node, row]));
@@ -44,11 +45,16 @@ export function projectHwp5GroupGeometry(content) {
           rectangles.push({ ...binding, drawingNode: row.component_node, source: { group_context: context, rendering,
             rendering_corners: corners[0].points.map(point => [...point]), rectangle: { points: corners[0].raw_points.map(point => [...point]) }, round_rate: corners[0].round_rate,
             component: structuredClone(row) } });
-        } else pictureBindings.push({ ...binding, pictureNode: row.component_node, parentContainer: row.owner_node, rootAnchor: root.component_node, component: structuredClone(row) });
+        } else if (kind === "polygon") {
+          const polygon = projectHwp5GroupPolygonGeometry(content, row, locals[0]);
+          if (polygon.state !== "projected") throw new Error(polygon.error);
+          polygons.push({ ...binding, drawingNode: row.component_node, source: { ...polygon.source, group_context: context, rendering } });
+        } else if (kind === "line") lineBindings.push({ ...binding, lineNode: row.component_node, parentContainer: row.owner_node, rootAnchor: root.component_node, component: structuredClone(row) });
+        else pictureBindings.push({ ...binding, pictureNode: row.component_node, parentContainer: row.owner_node, rootAnchor: root.component_node, component: structuredClone(row) });
       }
     }
     const declaredRoots = (content.hwp5Drawings ?? []).filter(row => row.source?.kind_id === 0x24636f6e);
     if (declaredRoots.length !== containers.filter(row => row.source.group_context === null).length) throw new Error("IncompleteHwp5GroupRoots");
-    return { state: "projected", containers, rectangles, pictureBindings };
+    return { state: "projected", containers, rectangles, polygons, pictureBindings, lineBindings };
   } catch (error) { return { state: "unavailable", error: error.message }; }
 }

@@ -1,0 +1,167 @@
+{
+  "artifact": "zig-out/verification/hwp5-object-extra-u16/bin/hwpjs.wasm",
+  "artifactHash": "fdbb6a476a16811d0136f484e9e03a327947bc5c9e361bc756a8a06b1dde1c51",
+  "sourceHash": "7f84edfe9353b388229db2f89db322c6bf274009bf77d6b671329ce55d003434",
+  "cases": [
+    {
+      "format": "hwp5",
+      "fixture": "legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwp",
+      "steps": [
+        {
+          "message": {
+            "kind": "load",
+            "format": "hwp5",
+            "fixture": "legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwp"
+          },
+          "digest": "336199f72daa323ac8c07597d235aac5338fd1988d7cb5cc64215bf8b06fa42d"
+        },
+        {
+          "message": {
+            "kind": "enable"
+          },
+          "digest": "583060c6600fab87da2eae06615212d94cc5d2e54636c75e531a4b699316ca97"
+        },
+        {
+          "message": {
+            "kind": "query-edit-window",
+            "offset": 0,
+            "count": 1
+          },
+          "digest": "a9757779072eabe5d8b4ae3e85f1b49bddc1362b468a733feea772333dfd54db"
+        },
+        {
+          "message": {
+            "kind": "set-edit-window",
+            "offset": 0,
+            "count": 1
+          },
+          "digest": "d381f2001074eca555aa41dc7ebde5181471738b6b099a32a4022cf91d5c7992"
+        },
+        {
+          "message": {
+            "kind": "set-edit-window",
+            "offset": null,
+            "count": null
+          },
+          "digest": "fd3069912f7282a821707c8228bc8fbbb748c1ffe69eac6df14264d350b3bc72"
+        },
+        {
+          "message": {
+            "kind": "splice",
+            "section": 0,
+            "paragraph": 0,
+            "startUnit": 0,
+            "endUnit": 0,
+            "text": "런타임😀"
+          },
+          "digest": "0a6c33d23dfd57088855a70dd883215c62f7ae6b53114e5d449c011d0db66145"
+        },
+        {
+          "message": {
+            "kind": "save",
+            "allowStaleLayout": true
+          },
+          "digest": "6f64fedc9fea36fb47ae57539aa1bee693ef7118b6cc7c1bd6280f583a3a4652"
+        },
+        {
+          "message": {
+            "kind": "undo"
+          },
+          "digest": "d5e20f51b461e36d246f98ea64673e0f18987ca7543d6841177cc0ab04c600e4"
+        },
+        {
+          "message": {
+            "kind": "save"
+          },
+          "digest": "089cb439cbb1bb056a4675302ea0fe1bc445539cd73c873de3e8debb137fcb2e"
+        },
+        {
+          "message": {
+            "kind": "redo"
+          },
+          "digest": "84841aceaa9447fd27e033d3dc6494d3618598c11ac9fc7f6d099d48ff5317ae"
+        }
+      ]
+    },
+    {
+      "format": "hwpx",
+      "fixture": "legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwpx",
+      "steps": [
+        {
+          "message": {
+            "kind": "load",
+            "format": "hwpx",
+            "fixture": "legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwpx"
+          },
+          "digest": "a61b40fcd655273f593ad5181aa07515586354978cf9c1868689cae6d5ae903c"
+        },
+        {
+          "message": {
+            "kind": "enable"
+          },
+          "digest": "c63f4baf6d420f6af1d2eafad6f0d5e29ae71b2a0c09e87cbccb48a88086ef93"
+        },
+        {
+          "message": {
+            "kind": "query-edit-window",
+            "offset": 0,
+            "count": 1
+          },
+          "digest": "20a8ad04548717f69f79d35a5c53d9ca8525908c5a3d0182b633e9b9ff94396c"
+        },
+        {
+          "message": {
+            "kind": "set-edit-window",
+            "offset": 0,
+            "count": 1
+          },
+          "digest": "da1b0456ff1d3ac8a305f61f7f218febf3b696b05fc1c059f19cbb419d5f5788"
+        },
+        {
+          "message": {
+            "kind": "set-edit-window",
+            "offset": null,
+            "count": null
+          },
+          "digest": "020275e2f67a5b1b96c4f5a406eba816a62be82074739293a6e2fd68d27030bf"
+        },
+        {
+          "message": {
+            "kind": "splice",
+            "section": 0,
+            "paragraph": 0,
+            "startUnit": 0,
+            "endUnit": 0,
+            "text": "런타임😀"
+          },
+          "digest": "5ef30731a5b3d2195a9ca687bf188c4a6cc526a0388086fe0fe5d1f2c4a42480"
+        },
+        {
+          "message": {
+            "kind": "save",
+            "allowStaleLayout": true
+          },
+          "digest": "00987299c911e59384e56825198170cd9e6f604aaccdd1ea059bf8707c8dae5b"
+        },
+        {
+          "message": {
+            "kind": "undo"
+          },
+          "digest": "76ab612a0a69e3abd4c9e5b42a9c985bc96660cccee42784dea8456393fd3370"
+        },
+        {
+          "message": {
+            "kind": "save"
+          },
+          "digest": "2fec9a82bbff387e0ce8f10497394e2738b3e26adee22de73b5f41847daff496"
+        },
+        {
+          "message": {
+            "kind": "redo"
+          },
+          "digest": "46dd90a8f2003641976e61c5ceda7c6594e575aff805b6731c3cba3eabe6e302"
+        }
+      ]
+    }
+  ]
+}

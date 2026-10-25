@@ -1,24 +1,33 @@
-import { createCharacterFontMetricDisplay } from "./character-font-metric-display.mjs";
 /** Native size/emphasis with system fonts; not original font or page shaping. */
 import { underlineStyle } from "./underline-style.mjs";
 import { strikeStyle } from "./strike-style.mjs";
 import { createCharacterFontDisplay } from "./character-font-display.mjs";
 import { usesDocumentFontMetrics } from "./font-layout-policy.mjs";
+import { createCharacterFontMetricDisplay } from "./character-font-metric-display.mjs";
 import { projectDraftAnchoredObjects } from "./anchored-object-draft.mjs";
 import { characterScriptStyle } from "./character-script-style.mjs";
 import { characterReliefStyle } from "./character-relief-style.mjs";
 import { automaticNumberSource, storedAutomaticNumberText } from "./automatic-number-text.mjs";
 import { characterOutlineStyle } from "./character-outline-style.mjs";
+import {createHancomLineSymbol} from "./hancom-line-symbol.mjs";
+import { createMeasuredFontWidth } from "./measured-font-width.mjs";
 export function withDraftText(paragraph, text) {
+  const projectEquationRows = rows => rows ? projectDraftAnchoredObjects({ paragraphs: [paragraph] }, rows.map(row => ({ ...row, section: paragraph.section, paragraph: paragraph.paragraph, anchorUnit: row.unit, state: "located" })), { section: paragraph.section, paragraph: paragraph.paragraph, text }).filter(row => row.state === "located").map(({ anchorUnit, state, section, paragraph: ordinal, ...row }) => ({ ...row, unit: anchorUnit })) : undefined;
+  const equations = projectEquationRows(paragraph.equations);
+  const equationPaint = projectEquationRows(paragraph.equationPaint);
   const numbers = paragraph.automaticNumbers;
   const dutmal = paragraph.dutmal ? projectDraftAnchoredObjects({ paragraphs: [paragraph] }, paragraph.dutmal.map(row => ({ ...row, section: paragraph.section, paragraph: paragraph.paragraph, anchorUnit: row.unit, state: "located" })), { section: paragraph.section, paragraph: paragraph.paragraph, text }).map(({ anchorUnit, state, section, paragraph: ordinal, ...row }) => ({ ...row, unit: anchorUnit })) : undefined;
   const automaticNumbers = numbers ? projectDraftAnchoredObjects({ paragraphs: [paragraph] }, numbers.map(number => ({ ...number, section: paragraph.section, paragraph: paragraph.paragraph, anchorUnit: number.unit, state: "located" })), { section: paragraph.section, paragraph: paragraph.paragraph, text }).map(({ anchorUnit, state, section, paragraph: ordinal, ...number }) => ({ ...number, unit: anchorUnit })) : undefined;
-  return { ...paragraph, text, characterRanges: text === paragraph.text ? paragraph.characterRanges : null, ...(numbers ? { automaticNumbers } : {}), ...(dutmal ? { dutmal } : {}) };
+  return { ...paragraph, text, characterRanges: text === paragraph.text ? paragraph.characterRanges : null,
+    ...(Object.hasOwn(paragraph, "tabSources") ? { tabSources: text === paragraph.text ? paragraph.tabSources : null } : {}),
+    ...(numbers ? { automaticNumbers } : {}), ...(dutmal ? { dutmal } : {}), ...(equations ? { equations } : {}), ...(equationPaint ? { equationPaint } : {}) };
 }
 
 export function createTextStyle(content, baseFont) {
   const documentFont = createCharacterFontDisplay(content);
   const metrics = createCharacterFontMetricDisplay(content);
+  const measuredWidth = createMeasuredFontWidth(content);
+  const hancomLineSymbol=createHancomLineSymbol(content);
   const shapes = new Map((content.characterShapes ?? []).map(shape => [shape.id, shape]));
   const colors = new Map((content.characterTextColors ?? []).map(row => [row.id, row.color]));
   const shades = new Map((content.characterShades ?? []).map(row => [row.id, row]));
@@ -40,7 +49,10 @@ export function createTextStyle(content, baseFont) {
       else high = middle;
     }
     const candidate = ranges[low - 1];
-    const range = candidate && (unit < candidate.end || paragraph?.text === "" && unit === 0 && candidate.start === 0 && candidate.end === 0) ? candidate : null;
+    // Empty terminal lines query the paragraph boundary, not a next glyph.
+    // Prefer an explicit zero-length provenance site when one is present.
+    const terminal = typeof paragraph?.text === "string" && unit === paragraph.text.length && candidate?.end === unit;
+    const range = candidate && (unit < candidate.end || terminal) ? candidate : null;
     return range?.charShapeId === null ? null : shapes.get(range?.charShapeId);
   };
   const points = shape => Number.isInteger(shape?.height) && shape.height > 0 ? shape.height / 100 : null;
@@ -58,7 +70,11 @@ export function createTextStyle(content, baseFont) {
     return kind !== "text" || paragraph?.text?.[unit] === "\ufffc" ? null : characterScriptStyle(effects.get(shapeAt(paragraph, unit, kind)?.id), baseResolve(paragraph, unit, kind));
   };
   const resolve = (paragraph, unit, kind = "text") => script(paragraph, unit, kind)?.font ?? baseResolve(paragraph, unit, kind);
+  resolve.displayGlyph=(paragraph,unit,kind,text)=>hancomLineSymbol(shapeAt,resolve,paragraph,unit,kind,text);
+  resolve.measuredWidth = (paragraph, unit, kind, text) => measuredWidth(shapeAt(paragraph, unit, kind), paragraph, unit, kind, text, () => resolve(paragraph, unit, kind));
   resolve.horizontalScale = (paragraph, unit, kind = "text") => kind !== "text" ? 1 : metrics.horizontalScale(shapeAt(paragraph, unit, kind)?.id, paragraph?.text, unit);
+  resolve.characterAdvance = (paragraph, unit, kind, width) => kind !== "text" ? width
+    : metrics.characterAdvance(shapeAt(paragraph, unit, kind)?.id, paragraph?.text, unit, width);
   resolve.script = script;
   resolve.relief = (paragraph, unit, kind = "text") => kind !== "text" || paragraph?.text?.[unit] === "\ufffc" ? null : characterReliefStyle(effects.get(shapeAt(paragraph, unit, kind)?.id), resolve(paragraph, unit, kind));
   resolve.outlineStyle = (paragraph, unit, kind = "text") => kind !== "text" || paragraph?.text?.[unit] === "\ufffc" ? null : characterOutlineStyle(outlines.get(shapeAt(paragraph, unit, kind)?.id), resolve(paragraph, unit, kind));

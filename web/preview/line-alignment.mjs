@@ -1,9 +1,18 @@
 import { isHardLineBreak } from "./hard-line-break.mjs";
 import { paragraphAlignmentKey } from "./paragraph-alignments.mjs";
 import { lineVisibleEndUnit } from "./line-visible-end.mjs";
+import { automaticNumberText } from "./automatic-number-text.mjs";
+import { tabAlignmentPrefix } from "./tab-alignment-prefix.mjs";
+import { boundaryGlyphWidth } from "./text-line-width.mjs";
+
+function slotsAfter(parts, visible, alignment, boundary) {
+  const spaces = parts.slice(boundary, visible - 1).flatMap((part, index) => part === " " ? [boundary + index + 1] : []);
+  return alignment === "DISTRIBUTE" || alignment === "JUSTIFY" && !spaces.length
+    ? Array.from({ length: Math.max(0, visible - boundary - 1) }, (_, index) => boundary + index + 1) : spaces;
+}
 
 /** Display spacing only; the native document and source offsets stay untouched. */
-export function alignTextRow(row, { lastLine = false } = {}) {
+export function alignTextRow(row, { lastLine = false, paragraph } = {}) {
   const alignment = paragraphAlignmentKey(row.paragraphShape?.alignment);
   if (row.kind !== "text" || !["JUSTIFY", "DISTRIBUTE", "DISTRIBUTE_SPACE"].includes(alignment)) return row;
   const points = row.boundaries;
@@ -20,14 +29,39 @@ export function alignTextRow(row, { lastLine = false } = {}) {
   const visibleEnd = lineVisibleEndUnit(row.text, row.startUnit);
   const visible = points.findIndex(point => point.unit === visibleEnd);
   if (visible < 2) return row;
-  const slack = row.width - points[visible].x;
-  if (!Number.isFinite(slack) || slack <= 0) return row;
-  const spaces = parts.slice(0, visible - 1).flatMap((part, index) => part === " " ? [index + 1] : []);
-  const slots = alignment === "DISTRIBUTE" || alignment === "JUSTIFY" && !spaces.length
-    ? Array.from({ length: visible - 1 }, (_, index) => index + 1) : spaces;
+  const glyphWidths = Array.from({length: visible}, (_, index) => {
+    const width = boundaryGlyphWidth(points[index], points[index + 1]);
+    if (width === null) invalid();
+    return width;
+  });
+  const occupied = glyphWidths.reduce((right, width, index) => parts[index].trim() ? Math.max(right, points[index].x + width) : right, 0);
+  if (occupied >= row.width) return row;
+  let slots = slotsAfter(parts, visible, alignment, 0);
   if (!slots.length) return row;
-  if (/[\t\ufffc]/u.test(row.text)) return { ...row, alignmentUnavailable: "UnsupportedAlignmentControl" };
-  const increment = slack / slots.length;
+  let unsupportedControl = false;
+  for (let index = 0; index < row.text.length && !unsupportedControl; index++) {
+    if (row.text[index] !== "\ufffc") continue;
+    const text = paragraph && paragraph.section === row.section && paragraph.paragraph === row.paragraph
+      ? automaticNumberText(paragraph, row.startUnit + index) : null;
+    if (typeof text !== "string" || text.length === 0) unsupportedControl = true;
+  }
+  if (unsupportedControl) return { ...row, alignmentUnavailable: "UnsupportedAlignmentControl" };
+  if (row.text.includes("\t")) {
+    const prefix = tabAlignmentPrefix(row, paragraph, parts);
+    if (prefix.state !== "bound") return { ...row, alignmentUnavailable: "UnsupportedAlignmentControl" };
+    slots = slotsAfter(parts, visible, alignment, prefix.boundary);
+    if (!slots.length) return row;
+  }
+  let increment = Infinity, shiftedSlots = 0;
+  for (let index = 0; index < visible; index++) {
+    while (shiftedSlots < slots.length && slots[shiftedSlots] <= index) shiftedSlots++;
+    if (!parts[index].trim()) continue;
+    const width = glyphWidths[index];
+    const right = points[index].x + width;
+    if (shiftedSlots) increment = Math.min(increment, (row.width - right) / shiftedSlots);
+  }
+  if (!Number.isFinite(increment) || increment < 0) invalid();
+  if (increment === 0) return row;
   let slot = 0;
   const boundaries = points.map((point, index) => {
     while (slot < slots.length && slots[slot] <= index) slot++;

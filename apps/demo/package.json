@@ -1,0 +1,12 @@
+{
+  "name": "@hwpjs/demo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@hwpjs/core": "workspace:*",
+    "@hwpjs/vanilla": "workspace:*",
+    "@hwpjs/react": "workspace:*",
+    "@hwpjs/svelte": "workspace:*"
+  }
+}

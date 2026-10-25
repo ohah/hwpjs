@@ -1,3 +1,4 @@
+import { hwp5TablePagination } from "./hwp5-table-geometry.mjs";
 import { hwp5PageArea } from "./hwp5-page-area-content.mjs";
 import { validateHwp5OwnedColumnBreak } from "./hwp5-owned-column-break.mjs";
 /** Derive common column contexts from current HWP5 provenance and display bounds. */
@@ -74,7 +75,13 @@ export function projectHwp5ColumnFlow(content, { tableCells = false, pageAreas =
         column = hwp5ColumnContext(declaration);
         effective.set(scope, column);
       }
-      validateHwp5OwnedColumnBreak(source.break_flags, declaration, "table_cell");
+      let pagination = table.pagination;
+      if (table.layoutSource) {
+        const prefix = hwp5TablePagination(table.layoutSource, {allowOpaqueTableFlags:true});
+        if (pagination && pagination.page_break !== prefix.page_break) throw new Error("ConflictingHwp5TablePaginationSource");
+        pagination = prefix;
+      }
+      validateHwp5OwnedColumnBreak(source.break_flags, declaration, "table_cell", { allowCellPageBreak: pagination?.page_break === "cell" });
       rows.push({ ...source, column_start_declaration: column, column_declaration: column, column_changes: [], single_column: column === null || column.count === 1 });
       continue;
     }

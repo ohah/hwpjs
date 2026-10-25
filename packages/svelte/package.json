@@ -1,0 +1,31 @@
+{
+  "name": "@hwpjs/svelte",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "MIT",
+  "files": [
+    "dist",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "browser": "./dist/index.js",
+      "default": "./dist/index.server.js"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "sideEffects": false,
+  "peerDependencies": {
+    "@hwpjs/core": "0.1.x",
+    "svelte": "^5.57.2"
+  },
+  "devDependencies": {
+    "@hwpjs/core": "workspace:*"
+  },
+  "dependencies": {
+    "@hwpjs/vanilla": "workspace:*"
+  },
+  "private": true
+}

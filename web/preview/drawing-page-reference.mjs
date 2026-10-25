@@ -9,9 +9,21 @@ export function drawingPageReference(drawing, paragraphs, pageRows) {
   let boxes = host.referenceBoxes;
   if (relations?.[0] === 2 || relations?.[1] === 3) {
     const owner = paragraphs.find(row => row.section === drawing.section && row.paragraph === drawing.hostParagraph);
-    const anchoredRows = drawing.source?.flow?.text_wrap === 1 && relations?.[2] === 0
+    let anchoredRows = [0, 1].includes(drawing.source?.flow?.text_wrap) && relations?.[2] === 0
       ? pageRows.map(row => row.section === drawing.section && row.paragraph === drawing.hostParagraph && row.flowAnchorY !== undefined
         ? { ...row, y: row.flowAnchorY } : row) : pageRows;
+    if ([0, 1].includes(drawing.source?.flow?.text_wrap)) {
+      const members = anchoredRows.filter(row => row.kind === "text" && row.section === drawing.section
+        && row.paragraph === drawing.hostParagraph && row.pageOrdinal === host.pageOrdinal && row.columnOrdinal === host.columnOrdinal);
+      if (members.some(row => row.flowParagraphBox !== undefined)) {
+        const box = members[0].flowParagraphBox;
+        if (!box || ![box.x, box.width, box.x + box.width].every(Number.isFinite) || box.width <= 0
+          || members.some(row => row.flowParagraphBox?.x !== box.x || row.flowParagraphBox?.width !== box.width))
+          return { state: "unavailable", error: "InvalidDrawingParagraphBounds" };
+        const selectedRows = new Set(members);
+        anchoredRows = anchoredRows.map(row => selectedRows.has(row) ? { ...row, x: box.x, paragraphX: 0, paragraphReferenceX: 0, width: box.width } : row);
+      }
+    }
     const reference = nestedParagraphReference(owner, { rows: anchoredRows }, { x: 0, y: 0 },
       { pageOrdinal: host.pageOrdinal, columnOrdinal: host.columnOrdinal });
     if (reference.state !== "referenced") return { state: "unavailable", error: "MissingDrawingParagraphReference", referenceError: reference.error };

@@ -8,6 +8,7 @@ export function hwpxParagraphGeometry(shape) {
   const spacing = kind === 0 ? shape.spacing?.value : unitValue(shape.spacing);
   return {
     spacingFormat: "hwpx",
+    ...(Object.hasOwn(shape, "break_settings") ? {breakSettings: shape.break_settings === null ? null : {...shape.break_settings}} : {}),
     alignment: paragraphAlignmentValue(shape.horizontal),
     indent: marginValue(shape.margins[0]), left: marginValue(shape.margins[1]), right: marginValue(shape.margins[2]),
     before: marginValue(shape.margins[3]), after: marginValue(shape.margins[4]),

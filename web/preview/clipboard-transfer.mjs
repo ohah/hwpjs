@@ -27,7 +27,7 @@ export async function pasteClipboardText({ clipboard, isCurrent, replace, report
   catch {
     if (isCurrent()) {
       report("클립보드 읽기가 거부되었습니다. Ctrl/Cmd+V를 사용하세요.");
-      onDenied?.();
+      if (isCurrent()) onDenied?.();
     }
     return false;
   }

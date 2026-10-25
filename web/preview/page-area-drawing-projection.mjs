@@ -7,6 +7,7 @@ import { restrictDrawingLayout } from "./drawing-restricted-layout.mjs";
 import { pageParagraphCoverage } from "./page-paragraph-coverage.mjs";
 import { selectMasterPages } from "./master-page-selection.mjs";
 import { hwpUnitPixels } from "./hwp-units.mjs";
+import { inlinePictureIndex, picturePositionKey } from "./picture-inline.mjs";
 const sameBox = (a, b) => a && b && ["x", "y", "width", "height"].every(field => a[field] === b[field]);
 
 /** Complete one explicit area instance without borrowing the body COLUMN box. */
@@ -60,6 +61,16 @@ export function projectPageAreaDrawings(content, area, tables, page, measure, ma
     }
     const coverage = pageParagraphCoverage(area.paragraphs, rows);
     if (coverage.state !== "complete") return coverage;
+    const pictures = inlinePictureIndex(area);
+    for (const picture of area.pictures ?? []) {
+      const hosts = rows.filter(row => row.kind === "text" && row.section === picture.section && row.paragraph === picture.paragraph
+        && row.startUnit <= picture.anchorUnit && picture.anchorUnit < row.endUnit);
+      const placed = picture.geometry?.treatAsCharacter === true
+        ? pictures.get(picturePositionKey(picture.section, picture.paragraph, picture.anchorUnit))
+        : tables.flowPictures.filter(item => item.section === picture.section && item.pictureNode === picture.pictureNode).length === 1;
+      if (!placed || hosts.length !== 1) return { ...fail("IncompletePageAreaPictures"), section: picture.section,
+        pictureNode: picture.pictureNode, paragraph: picture.paragraph, pageOrdinal: page.ordinal };
+    }
     return { ...tables, state: "objects-projected", rows, placedDrawings };
   } catch (error) { return fail(error.message); }
 }

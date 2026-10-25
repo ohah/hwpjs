@@ -1,3 +1,4 @@
+import { validGroupContext } from "../../js/hwpx-group-context.mjs";
 const key = (section, node) => `${section}:${node}`;
 
 /** Follow explicit paragraph/table/drawing owners, never ancestry by array order. */
@@ -16,7 +17,9 @@ export function partitionPageAreaOwnership(content) {
       return result;
     };
     const paragraphs = index(content.paragraphs, "paragraph"), tables = index(content.tables, "tableNode"), drawings = index(content.drawings, "drawingNode"), pictures = index(content.pictures, "pictureNode");
+    const curves = index(content.curveTextSources, "curveNode");
     const drawingRoots = index(content.hwp5Drawings, "componentNode");
+    for (const id of curves.keys()) if (drawings.has(id) || pictures.has(id)) throw new Error("AmbiguousPageAreaOwnership");
     const flows = index(content.paragraphFlows, "paragraph"), roots = new Map(), groups = new Map();
     for (const flow of flows.values()) {
       if (!["header", "footer"].includes(flow.host) || flow.page_area == null) continue;
@@ -24,7 +27,7 @@ export function partitionPageAreaOwnership(content) {
       const id = key(flow.section, flow.paragraph), paragraph = paragraphs.get(id);
       if (!paragraph || paragraph.tableCell || paragraph.drawingText || paragraph.tableCaption || paragraph.drawingCaption) throw new Error("InvalidPageAreaRootOwnership");
       const groupId = `${flow.section}:${flow.host}:${flow.page_area.owner_node}:${flow.page_area.list_node}`;
-      const group = groups.get(groupId) ?? { section: flow.section, host: flow.host, area: flow.page_area, paragraphs: [], paragraphFlows: [], tables: [], drawings: [], pictures: [], lines: [], containers: [] };
+      const group = groups.get(groupId) ?? { section: flow.section, host: flow.host, area: flow.page_area, paragraphs: [], paragraphFlows: [], tables: [], drawings: [], pictures: [], lines: [], containers: [], curveTextSources: [], groupCurves: [] };
       if (["owner_node", "list_node", "apply", "width", "height", "vertical_alignment"].some(field => group.area[field] !== flow.page_area[field])) throw new Error("ConflictingPageArea");
       groups.set(groupId, group); roots.set(id, group);
     }
@@ -40,10 +43,29 @@ export function partitionPageAreaOwnership(content) {
       if (links.length > 1) throw new Error("AmbiguousPageAreaOwnership");
       if (!group && links.length) {
         const link = links[0], objectId = key(paragraph.section, link.drawingNode ?? link.pictureNode);
-        const object = link.tableNode !== undefined ? tables.get(key(paragraph.section, link.tableNode)) : drawings.get(objectId) ?? pictures.get(objectId);
-        if (!object) throw new Error("MissingPageAreaObjectOwner");
+        const object = link.tableNode !== undefined ? tables.get(key(paragraph.section, link.tableNode)) : drawings.get(objectId) ?? pictures.get(objectId) ?? curves.get(objectId);
+        if (!object) {
+          const error = new Error("MissingPageAreaObjectOwner");
+          error.section = paragraph.section; error.paragraph = paragraph.paragraph;
+          const property = link.tableNode !== undefined ? "tableNode" : link.pictureNode !== undefined ? "pictureNode" : "drawingNode";
+          const node = link[property];
+          if (Number.isSafeInteger(node) && node >= 0) error[property] = node;
+          if (property === "drawingNode" && Array.isArray(content.drawingTextSnapshotErrors)) {
+            const sources = content.drawingTextSnapshotErrors.filter(row => row?.section === paragraph.section && row.drawingNode === node);
+            if (sources.length === 1 && typeof sources[0].error === "string") error.sourceError = sources[0].error.slice(0, 256);
+          }
+          throw error;
+        }
         if (paragraph.tableCell && object.cells?.filter(cell => cell.listNode === link.listNode && cell.paragraphs?.includes(paragraph.paragraph)).length !== 1) throw new Error("InvalidPageAreaCellOwnership");
         if (paragraph.drawingText && object.source?.text?.list_node !== link.listNode) throw new Error("InvalidPageAreaDrawingOwnership");
+        if (curves.get(objectId) === object) {
+          const host = paragraphs.get(key(paragraph.section, object.hostParagraph)), context = object.source?.common?.group_context;
+          if (!paragraph.drawingText || object.source?.sourceOnly !== true || object.source.node !== link.drawingNode
+            || object.source.text?.node !== link.textNode || !context || !validGroupContext(context, object.curveNode)
+            || object.owner?.paragraph !== object.hostParagraph + 1 || object.owner?.anchor_unit !== object.anchorUnit
+            || object.owner?.anchor_node !== context.root_anchor || !Number.isSafeInteger(object.anchorUnit) || object.anchorUnit < 0
+            || !host || host.clipped || typeof host.text !== "string" || host.text[object.anchorUnit] !== "\ufffc") throw new Error("InvalidPageAreaCurveOwnership");
+        }
         group = owner(key(paragraph.section, object.hostParagraph ?? object.paragraph));
       }
       if (!group && ["header", "footer"].includes(flows.get(id)?.host)) throw new Error("MissingPageAreaRootOwnership");
@@ -58,7 +80,7 @@ export function partitionPageAreaOwnership(content) {
       const group = owner(id);
       if (group) group.paragraphFlows.push(flow); else body.paragraphFlows.push(flow);
     }
-    for (const [property, host] of [["tables", "hostParagraph"], ["drawings", "hostParagraph"], ["pictures", "paragraph"], ["lines", "paragraph"], ["containers", "hostParagraph"]]) {
+    for (const [property, host] of [["tables", "hostParagraph"], ["drawings", "hostParagraph"], ["pictures", "paragraph"], ["lines", "paragraph"], ["containers", "hostParagraph"], ["curveTextSources", "hostParagraph"], ["groupCurves", "hostParagraph"]]) {
       if (content[property] === undefined) continue;
       body[property] = [];
       for (const object of content[property]) {
@@ -77,5 +99,13 @@ export function partitionPageAreaOwnership(content) {
       }
     }
     return { state: "partitioned", body, areas: [...groups.values()] };
-  } catch (error) { return fail(error.message); }
+  } catch (error) {
+    const result = fail(error.message);
+    if (error.message === "MissingPageAreaObjectOwner") {
+      for (const field of ["section", "paragraph", "tableNode", "pictureNode", "drawingNode"])
+        if (Number.isSafeInteger(error[field]) && error[field] >= 0) result[field] = error[field];
+      if (typeof error.sourceError === "string") result.sourceError = error.sourceError;
+    }
+    return result;
+  }
 }

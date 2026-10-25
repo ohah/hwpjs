@@ -1,6 +1,7 @@
 import { pictureQuadTransform } from "./picture-quad-transform.mjs";
 import { inverseAffine, affinePoint } from "./affine-point-geometry.mjs";
 import { pageContainsPoint } from "./page-visible-rectangle.mjs";
+import { pointInClosedPath } from "./closed-path-hit-test.mjs";
 
 function contains(item, x, y) {
   if (item.pageClip !== undefined) {
@@ -12,6 +13,7 @@ function contains(item, x, y) {
     if (!point) return false;
     [x, y] = point;
   }
+  if (item.paintPlan?.state === "polygon") return pointInClosedPath(item.paintPlan.points, x, y);
   if (item.paintPlan?.state === "quad") {
     const origin = item.paintOrigin ?? { x: item.x, y: item.y };
     const mapped = pictureQuadTransform(item.paintPlan.corners, origin);

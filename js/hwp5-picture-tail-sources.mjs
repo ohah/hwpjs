@@ -1,3 +1,4 @@
+import { validateHwp5PictureShadowSource } from "./hwp5-picture-shadow-source.mjs";
 export function pictureTailLayoutArg(layout) {
   const value = ["effects_only", "dimensions8", "with_alpha9"].indexOf(layout);
   if (value < 0) throw new Error("InvalidPictureTailLayout");
@@ -13,6 +14,7 @@ export function validateHwp5PictureTailSources(rows) {
       || !Number.isInteger(row.border_opacity) || row.border_opacity < 0 || row.border_opacity > 255 || row.effects_flags & ~15
       || (row.image_width === null) !== (row.image_height === null) || row.image_width !== null && (!uint(row.image_width) || !uint(row.image_height))
       || row.image_alpha !== null && (!Number.isInteger(row.image_alpha) || row.image_alpha < -128 || row.image_alpha > 127 || row.image_width === null)) throw new Error("InvalidHwp5PictureTailSources");
+    validateHwp5PictureShadowSource(row.shadow, row.effects_flags);
     components.add(row.component_node); pictures.add(row.picture_node);
   }
   return rows;

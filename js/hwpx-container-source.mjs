@@ -1,4 +1,6 @@
 import { validShapeLayoutValues } from "./hwpx-shape-layout-values.mjs";
+import { validGroupContext } from "./hwpx-group-context.mjs";
+import { validateTableCaption } from "./hwpx-table-caption.mjs";
 export function decodeContainerSource(bytes) {
   const fail = () => { throw new Error("InvalidContainerSource"); };
   if (!(bytes instanceof Uint8Array) || bytes.length > 1048576) return fail();
@@ -10,9 +12,13 @@ export function decodeContainerSource(bytes) {
   const bool = n => n === null || typeof n === "boolean";
   const array = (a, length, check) => Array.isArray(a) && a.length === length && a.every(check);
   if (!v || !uint(v.container_node)) return fail();
+  if (Object.hasOwn(v,"has_caption") || Object.hasOwn(v,"caption")) {
+    if (typeof v.has_caption!=="boolean" || v.has_caption!==(v.caption!==null)) return fail();
+    try { validateTableCaption(v.caption); } catch { return fail(); }
+  }
   if (!Array.isArray(v.children) || !v.children.every((c, i) => c && uint(c.node) && c.node > v.container_node && (i === 0 || c.node > v.children[i - 1].node) && typeof c.namespace_uri === "string" && typeof c.local_name === "string" && c.local_name.length > 0)) return fail();
-  const c = v.group_context;
-  if (c !== null && (!c || ![c.parent_container, c.root_anchor, c.depth].every(uint) || c.depth < 1 || c.root_anchor > c.parent_container || c.parent_container >= v.container_node || c.depth > c.parent_container - c.root_anchor + 1)) return fail();
+  if (v.has_caption === true && !v.children.some(c => c.node === v.caption.caption_node && c.namespace_uri === "http://www.hancom.co.kr/hwpml/2011/paragraph" && c.local_name === "caption")) return fail();
+  if (!validGroupContext(v.group_context, v.container_node)) return fail();
   const g = v.geometry, p = v.position, f = v.flow, t = v.transform;
   if (!g || !p || !f || !t) return fail();
   if (!validShapeLayoutValues(v)) return fail();

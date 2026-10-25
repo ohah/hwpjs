@@ -1,5 +1,12 @@
 const valid = matrix => Array.isArray(matrix) && matrix.length === 6 && Array.from(matrix).every(Number.isFinite);
 
+// HWP renderingInfo row order -> Canvas affine order; no unit conversion.
+export function hwpRenderingMatrix(matrix) {
+  if (!valid(matrix)) return null;
+  const [a, c, e, b, d, f] = matrix;
+  return [a, b, c, d, e, f];
+}
+
 // Canvas 순서 a,b,c,d,e,f를 사용합니다.
 export function affinePoint(matrix, point) {
   if (!valid(matrix) || !Array.isArray(point) || point.length !== 2 || !Array.from(point).every(Number.isFinite)) return null;

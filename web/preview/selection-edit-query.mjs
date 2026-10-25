@@ -3,9 +3,11 @@ export function selectionEditQuery(message, { active, format, canEdit }) {
   return selectionQuery(message, { active, format, query: canEdit, kind: "query-edit-range" });
 }
 
-export function selectionSplitQuery(message, { active, format, canSplit }) {
+export function selectionSplitQuery(message, { active, format, canSplit, canSplitAnchored }) {
   if (message.kind !== "query-split-range") throw new Error("InvalidEditPermissionRange");
-  return selectionQuery(message, { active, format, query: canSplit, kind: "query-split-range" });
+  if (message.anchored !== undefined && typeof message.anchored !== "boolean") throw new Error("InvalidEditPermissionRange");
+  const query = message.anchored && typeof canSplitAnchored === "function" ? canSplitAnchored : canSplit;
+  return selectionQuery(message, { active, format, query, kind: "query-split-range" });
 }
 
 function selectionQuery(message, { active, format, query, kind }) {

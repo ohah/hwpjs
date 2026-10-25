@@ -29,7 +29,7 @@ export function decodeLineDisplay(bytes) {
       if (!present && value !== 0) throw new Error("InvalidLineDisplay");
       return [name, present ? value : null];
     }));
-    if (stroke.color > 0xffffff || stroke.style > 1) throw new Error("InvalidLineDisplay");
+    if (stroke.color > 0xffffff || stroke.style > 5) throw new Error("InvalidLineDisplay");
   }
   return { lineNode: view.getUint32(8, true), paragraph: view.getUint32(12, true), anchorNode: view.getUint32(16, true), anchorUnit: view.getUint32(20, true), endpoints, stroke };
 }

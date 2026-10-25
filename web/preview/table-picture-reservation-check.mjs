@@ -1,4 +1,4 @@
-import { intersectPictureLineRegions } from "./picture-line-intersections.mjs";
+import { picturePageLineRegions } from "./picture-page-reservations.mjs";
 
 // 배치가 끝난 표의 전체 footprint를 검사합니다. 겹침을 좌표 이동으로 숨기지 않습니다.
 export function checkTablePictureReservations(footprints, reservations) {
@@ -11,7 +11,7 @@ export function checkTablePictureReservations(footprints, reservations) {
     if (!identity(footprint)) return fail("InvalidTablePictureReservations");
     const rectangle = footprint.rectangle;
     const selected = reservations.filter(item => item.section === footprint.section && item.pageOrdinal === footprint.pageOrdinal);
-    const result = intersectPictureLineRegions(rectangle, selected);
+    const result = picturePageLineRegions(rectangle, footprint.pageOrdinal, selected);
     if (result.state !== "available") return fail("InvalidTablePictureReservationBounds");
     if (!result.regions.some(region => region.x <= rectangle.x && region.x + region.width >= rectangle.x + rectangle.width)) {
       return { ...fail("TablePictureReservationOverlap"), section: footprint.section, tableNode: footprint.tableNode, pageOrdinal: footprint.pageOrdinal };

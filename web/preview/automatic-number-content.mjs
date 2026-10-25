@@ -4,12 +4,15 @@ function retainedNoteSource(source, site) {
 }
 
 /** Only native-owned note numbers can be outside the plain editable coordinate space. */
-export function retainedAutomaticNumberPlainText(editor, section, paragraph, plain, anchored, snapshot = createAutomaticNumberDisplaySnapshot(editor)) {
+export function retainedAutomaticNumberPlainText(editor, section, paragraph, _flattenedText, anchored, snapshot = createAutomaticNumberDisplaySnapshot(editor)) {
   if (!anchored.startsWith("\ufffc")) return anchored;
   const { sources, sites } = snapshot(section);
   for (const site of sites) {
     if (site.paragraph === paragraph && retainedNoteSource(sources.get(site.number_node), site)) {
-      if (plain !== anchored && anchored !== "\ufffc" + plain) throw new Error("RetainedNoteTextProjectionMismatch");
+      // The plain snapshot concatenates text sites and omits retained tabs/spaces.
+      // Native editability owns the retained-prefix policy; preserve every other
+      // canonical anchor-text unit rather than comparing different projections.
+      if (editor.canEdit(section, paragraph) !== true) return anchored;
       return anchored.slice(1);
     }
   }

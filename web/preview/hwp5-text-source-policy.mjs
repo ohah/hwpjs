@@ -13,7 +13,11 @@ export function attachHwp5TextSourcePolicy(editor, content) {
       if (error !== null) {
         try {
           protection = retainedClickProtection(editor, paragraph.section, error);
-          if (protection) { error = null; content.retainedClickFieldProtection = true; }
+          if (protection) {
+            error = null;
+            if (protection.mode === "retained_memo") content.retainedMemoProtection = true;
+            else content.retainedClickFieldProtection = true;
+          }
         } catch (failure) { error = failure instanceof Error ? failure.message : "TextSourceProtectionQueryFailed"; }
       }
       sections.set(paragraph.section, { error, protection });
@@ -25,7 +29,7 @@ export function attachHwp5TextSourcePolicy(editor, content) {
       continue;
     }
     const protectedRow = state.protection?.protected_paragraphs[paragraph.paragraph];
-    const error = state.error ?? (protectedRow === true ? "UnsupportedCrossParagraphField" : null);
+    const error = state.error ?? (protectedRow === true ? (state.protection?.mode === "retained_memo" ? "OutsideEditableMemo" : "UnsupportedCrossParagraphField") : null);
     if (state.protection && protectedRow === false) restoreRetainedWindowCandidate(paragraph);
     paragraph.textSourcePolicyError = error;
     if (error !== null) {

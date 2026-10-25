@@ -1,0 +1,76 @@
+{
+  "name": "@ohah/hwpjs",
+  "version": "0.1.0-umbrella.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "files": [
+    "dist",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md",
+    "README.md"
+  ],
+  "types": "./dist/types/core/src/index.d.ts",
+  "sideEffects": [
+    "./dist/worker.js",
+    "**/*.css"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/types/core/src/index.d.ts",
+      "browser": "./dist/index.js",
+      "node": "./dist/index.js",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./runtime": {
+      "types": "./dist/types/core/src/runtime.d.ts",
+      "browser": "./dist/runtime.js",
+      "node": "./dist/runtime.js",
+      "import": "./dist/runtime.js",
+      "default": "./dist/runtime.js"
+    },
+    "./vanilla": {
+      "types": "./dist/types/vanilla/src/index.d.ts",
+      "browser": "./dist/vanilla.js",
+      "node": "./dist/vanilla.js",
+      "import": "./dist/vanilla.js",
+      "default": "./dist/vanilla.js"
+    },
+    "./react": {
+      "types": "./dist/types/react/src/index.d.ts",
+      "browser": "./dist/react.js",
+      "node": "./dist/react.js",
+      "import": "./dist/react.js",
+      "default": "./dist/react.js"
+    },
+    "./svelte": {
+      "types": "./dist/types/svelte/src/index.d.ts",
+      "browser": "./dist/svelte.js",
+      "node": "./dist/svelte.server.js",
+      "default": "./dist/svelte.server.js"
+    },
+    "./react-native": {
+      "types": "./dist/types/react-native/src/index.d.ts",
+      "browser": "./dist/react-native.js",
+      "node": "./dist/react-native.js",
+      "react-native": "./dist/react-native.js",
+      "default": "./dist/react-native.js"
+    },
+    "./worker": "./dist/worker.js",
+    "./wasm": "./dist/hwpjs.wasm",
+    "./package.json": "./package.json"
+  },
+  "peerDependencies": {
+    "react": "^19.2.0",
+    "svelte": "^5.57.2"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "svelte": {
+      "optional": true
+    }
+  }
+}

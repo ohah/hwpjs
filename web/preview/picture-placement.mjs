@@ -1,5 +1,6 @@
 import { hwpUnitPixels } from "./hwp-units.mjs";
 import { signedInt32 } from "./signed-int32.mjs";
+import { resolvePictureSize } from "./picture-size.mjs";
 
 const validBox = box => box && [box.x, box.y, box.width, box.height, box.x + box.width, box.y + box.height].every(Number.isFinite) && box.width >= 0 && box.height >= 0;
 export function alignedReferenceCoordinate(origin, extent, size, offset, alignment) {
@@ -13,8 +14,9 @@ export function alignedReferenceCoordinate(origin, extent, size, offset, alignme
 export function placeFloatingPicture(picture, boxes, { edgePolicy } = {}) {
   const geometry = picture.geometry, position = picture.position;
   if (geometry?.treatAsCharacter !== false) return { state: "not_floating" };
-  if (geometry.widthRelative !== 4 || geometry.heightRelative !== 2) return { state: "unsupported_size" };
   if (![geometry.width, geometry.height].every(value => Number.isInteger(value) && value > 0 && value <= 4294967295)) return { state: "invalid_size" };
+  const size = resolvePictureSize(geometry, boxes);
+  if (!size || (geometry.widthRelative === 3 && position?.relations?.[0] !== 2)) return { state: "unsupported_size" };
   const relations = position?.relations;
   if (!Array.isArray(relations) || relations.length !== 4 || !relations.every(Number.isInteger)) return { state: "missing_position" };
   const [vertical, horizontal, verticalAlignment, horizontalAlignment] = relations;
@@ -27,7 +29,7 @@ export function placeFloatingPicture(picture, boxes, { edgePolicy } = {}) {
   if (va === null || ha === null) return { state: "unsupported_alignment" };
   const dx = signedInt32(geometry.horizontalOffset), dy = signedInt32(geometry.verticalOffset);
   if (dx === null || dy === null) return { state: "missing_offset" };
-  const width = hwpUnitPixels(geometry.width), height = hwpUnitPixels(geometry.height);
+  const { width, height } = size;
   const x = alignedReferenceCoordinate(hbox.x, hbox.width, width, hwpUnitPixels(dx), ha);
   const y = alignedReferenceCoordinate(vbox.y, vbox.height, height, hwpUnitPixels(dy), va);
   if (![x, y, width, height, x + width, y + height].every(Number.isFinite)) return { state: "invalid_bounds" };

@@ -1,5 +1,7 @@
-import { bindNoteBodies } from "./note-body-bindings.mjs";
+import { bindSourceNoteBodies } from "./note-body-bindings.mjs";
+import { selectNoteSourceTables } from "./note-source-table-owners.mjs";
 import { attachGroupedShapeSources } from "./grouped-shape-content.mjs";
+import { attachContainerCaptions } from "./container-caption-content.mjs";
 import { attachFillBrushSources } from "./fill-brush-content.mjs";
 import { attachRectangleSources } from "./rectangle-content.mjs";
 /** Source page declarations and note ownership; no physical page count. */
@@ -8,6 +10,7 @@ export function attachHwpxPageSettings(editor, content) {
   const displayed = content.window ? new Set(content.paragraphs.map(row => `${row.section}:${row.paragraph}`)) : null;
   attachRectangleSources(editor, content);
   attachGroupedShapeSources(editor, content);
+  attachContainerCaptions(editor, content);
   attachFillBrushSources(editor, content);
   content.pageSettings = [];
   content.noteShapes = null;
@@ -31,7 +34,8 @@ export function attachHwpxPageSettings(editor, content) {
       }
     } catch (error) { content.paragraphFlowErrors.push({ section, error: error.message }); }
   }
-  const notes = bindNoteBodies(content);
+  const sourceTables = content.tables?.length ? selectNoteSourceTables(content) : null;
+  const notes = bindSourceNoteBodies(content, sourceTables?.state === "selected" ? sourceTables : null);
   content.noteBodies = notes.state === "bound" ? notes.notes : [];
   content.noteBodyBindingError = notes.state === "bound" ? null : notes.error;
   return content;

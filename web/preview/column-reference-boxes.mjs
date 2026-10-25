@@ -1,14 +1,18 @@
 import { hwpUnitPixels } from "./hwp-units.mjs";
 
 /** Source column geometry, independent of shaping and pagination. */
-export function columnReferenceBoxes(body, declaration, maxColumns = 1024) {
+export function columnReferenceBoxes(body, declaration, maxColumns = 1024, { allowZeroHeight = false } = {}) {
   const unavailable = error => ({ state: "unavailable", error });
-  if (!body || ![body.x, body.y, body.width, body.height, body.x + body.width, body.y + body.height].every(Number.isFinite) || body.width <= 0 || body.height <= 0) return unavailable("InvalidColumnBody");
+  if (typeof allowZeroHeight !== "boolean" || !body || ![body.x, body.y, body.width, body.height, body.x + body.width, body.y + body.height].every(Number.isFinite)
+    || body.width <= 0 || body.height < 0 || body.height === 0 && !allowZeroHeight) return unavailable("InvalidColumnBody");
   if (!Number.isSafeInteger(maxColumns) || maxColumns < 1 || !declaration || declaration.ambiguous !== false || !Number.isInteger(declaration.count) || declaration.count < 1 || declaration.count > maxColumns) return unavailable("InvalidColumnDeclaration");
   if (![true, false].includes(declaration.same_size) || declaration.kind !== "newspaper" || !["left", "right"].includes(declaration.direction)) return unavailable("UnsupportedColumnLayout");
   if (declaration.same_size === false) {
     const uint = value => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
-    if (!Array.isArray(declaration.sizes) || declaration.sizes.length !== declaration.count || declaration.sizes.some(size => !size || !uint(size.width) || size.width === 0 || !uint(size.gap))) return unavailable("InvalidColumnSizes");
+    if (!Array.isArray(declaration.sizes) || declaration.sizes.length !== declaration.count) return unavailable("InvalidColumnSizes");
+    for (const size of declaration.sizes) {
+      if (!size || !uint(size.width) || size.width === 0 || !uint(size.gap)) return unavailable("InvalidColumnSizes");
+    }
     let cursor = body.x;
     const boxes = declaration.sizes.map(size => {
       const box = { x: cursor, y: body.y, width: hwpUnitPixels(size.width), height: body.height };

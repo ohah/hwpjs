@@ -1,0 +1,30 @@
+{
+  "name": "@hwpjs/react",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "MIT",
+  "files": [
+    "dist",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "sideEffects": false,
+  "peerDependencies": {
+    "@hwpjs/core": "0.1.x",
+    "react": "^19.2.0"
+  },
+  "devDependencies": {
+    "@hwpjs/core": "workspace:*"
+  },
+  "dependencies": {
+    "@hwpjs/vanilla": "workspace:*"
+  },
+  "private": true
+}

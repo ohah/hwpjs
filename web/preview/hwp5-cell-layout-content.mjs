@@ -1,7 +1,7 @@
 /** Native source insets/flags attach to current cells; no dimension cache. */
 export function attachHwp5CellLayoutSources(editor, content) {
   content.cellLayoutSourceErrors = [];
-  for (const table of content.tables) for (const cell of table.cells) { delete cell.layoutSource; delete cell.sourceMargin; delete cell.sourceVerticalAlignment; }
+  for (const table of content.tables) for (const cell of table.cells) { delete cell.layoutSource; delete cell.sourceMargin; delete cell.sourceVerticalAlignment; delete cell.sourceLineWrap; delete cell.sourceTextDirection; }
   if (!editor) return content;
   for (const section of new Set(content.tables.map(table => table.section))) {
     try {
@@ -21,6 +21,8 @@ export function attachHwp5CellLayoutSources(editor, content) {
         cell.layoutSource = row;
         cell.sourceMargin = { has_margin: row.has_margin, margin: [...row.margins], header: row.header };
         cell.sourceVerticalAlignment = row.vertical_alignment;
+        cell.sourceLineWrap = row.line_wrap;
+        cell.sourceTextDirection = row.text_direction;
       }
     } catch (error) { content.cellLayoutSourceErrors.push({ section, error: error.message }); }
   }

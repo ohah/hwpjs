@@ -1,4 +1,4 @@
-export const HWP5_STRUCTURAL_ANCHOR_KINDS = Object.freeze(["section", "column", "header", "footer"]);
+export const HWP5_STRUCTURAL_ANCHOR_KINDS = Object.freeze(["section", "column", "header", "footer", "bookmark"]);
 export function decodeHwp5StructuralAnchors(bytes) {
   const rows = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
   const uint = value => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;

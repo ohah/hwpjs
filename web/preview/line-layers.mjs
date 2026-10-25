@@ -4,6 +4,7 @@ import { hwpUnitPixels } from "./hwp-units.mjs";
 import { signedInt32 } from "./signed-int32.mjs";
 import { linePaintPoints } from "./line-paint.mjs";
 import { decoratedLineBounds } from "./decorated-line-bounds.mjs";
+import { placeGroupedLine } from "./grouped-line-placement.mjs";
 
 export function previewLineLayers(content, layout, columnWidth) {
   const result = { behind: [], front: [], unavailable: [], height: layout.height };
@@ -24,14 +25,16 @@ export function previewLineLayers(content, layout, columnWidth) {
     };
     const { geometry, position, flow } = line.placement;
     const zOrder = signedInt32(flow.zOrder);
-    if (zOrder === null || ![2, 3].includes(flow.textWrap)) { reject("UnsupportedLineFlow"); continue; }
-    const placed = placeFloatingPicture({ geometry, position }, boxes);
-    if (placed.state !== "placed") { reject(placed.state); continue; }
+    if (zOrder === null || !line.groupContext && ![2, 3].includes(flow.textWrap)) { reject("UnsupportedLineFlow"); continue; }
+    const placed = line.groupContext ? placeGroupedLine(line, content.containers, boxes, anchorRow.row) : placeFloatingPicture({ geometry, position }, boxes);
+    if (placed.state !== "placed") { reject(placed.error ?? placed.state); continue; }
+    const layer = line.groupContext ? placed.paintLayer : flow.textWrap === 2 ? "behind" : "front";
+    if (layer == null) { reject("UnsupportedLineFlow"); continue; }
     const referenceBounds = line.state === "reference_located" ? decoratedLineBounds(line.referencePlan) : null;
     if (line.state === "reference_located") {
       if (!referenceBounds) { reject("UnsupportedLineStroke"); continue; }
     } else if (!linePaintPoints(line, placed.rectangle)) { reject("UnsupportedLineStroke"); continue; }
-    result[flow.textWrap === 2 ? "behind" : "front"].push({ line, zOrder, origin: placed.rectangle });
+    result[layer].push({ line, zOrder, origin: placed.rectangle, pageOrdinal: anchorRow.row.pageOrdinal });
     const halfWidth = line.state === "reference_located" ? line.referencePlan.strokeWidth / 2 : hwpUnitPixels(line.stroke.width / 2);
     result.height = Math.max(result.height, ...line.endpoints.map(point => placed.rectangle.y + hwpUnitPixels(point[1]) + halfWidth));
     if (referenceBounds) result.height = Math.max(result.height, placed.rectangle.y + referenceBounds.bottom);

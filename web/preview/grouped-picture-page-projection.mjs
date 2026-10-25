@@ -1,7 +1,8 @@
-import { drawingPageAnchor } from "./drawing-page-anchor.mjs";
+import { drawingPageReference } from "./drawing-page-reference.mjs";
 import { placeGroupedShape } from "./grouped-shape-placement.mjs";
 import { pictureQuadTransform } from "./picture-quad-transform.mjs";
 import { groupShapeChildren } from "./group-shape-children.mjs";
+import { groupedPaintLayer } from "./grouped-paint-layer.mjs";
 
 export function projectGroupedPicturePage(picture, containers, paragraphs, rows) {
   const unavailable = error => ({ state: "unavailable", error });
@@ -19,14 +20,15 @@ export function projectGroupedPicturePage(picture, containers, paragraphs, rows)
     || !transform || transform.angle !== 0 || (transform.reverse !== false && !(transform.reverse === null && transform.reverseApplicable === false)) || transform.unknownMatrixNodes !== 0 || transform.flip?.length !== 2 || !Array.from(transform.flip).every(v => v === false)
     || picture.crop?.clip?.length !== 4 || !Array.from(picture.crop.clip).every(Number.isFinite)
     || picture.crop.clip[1] <= picture.crop.clip[0] || picture.crop.clip[3] <= picture.crop.clip[2]) return unavailable("UnsupportedGroupedPictureSource");
-  const selected = drawingPageAnchor({ section: picture.section, hostParagraph: owner.paragraph, anchorUnit: owner.anchorUnit }, paragraphs, rows);
+  const selected = drawingPageReference({ section: picture.section, hostParagraph: owner.paragraph, anchorUnit: owner.anchorUnit,source:root }, paragraphs, rows);
   if (selected.state !== "selected") return selected;
-  const placement = placeGroupedShape(root, picture.renderingCorners, selected.host.referenceBoxes);
+  const placement = placeGroupedShape(root, picture.renderingCorners, selected.boxes,
+    { host: selected.host, anchor: { section: picture.section, paragraph: owner.paragraph, unit: owner.anchorUnit } });
   if (placement.state !== "placed") return placement;
   const origin = { x: placement.rectangle.x, y: placement.rectangle.y };
   const mapped = pictureQuadTransform(picture.renderingCorners, origin);
   if (mapped.state !== "mapped") return unavailable(mapped.state);
   const xs = placement.points.map(p => p[0]), ys = placement.points.map(p => p[1]);
   return { state: "placed", origin, rectangle: { x: Math.min(...xs), y: Math.min(...ys), width: Math.max(...xs) - Math.min(...xs), height: Math.max(...ys) - Math.min(...ys) },
-    pageOrdinal: selected.host.pageOrdinal, flow: root.flow, paintPlan: { state: "quad", corners: picture.renderingCorners } };
+    pageOrdinal: selected.host.pageOrdinal, flow: root.flow, paintLayer: groupedPaintLayer(root,selected.host.reservedGroupRoot===roots[0].containerNode), paintPlan: { state: "quad", corners: picture.renderingCorners } };
 }

@@ -20,7 +20,7 @@ export function layoutFloatingDrawingContent(drawing, paragraphs, declaration, b
   if (drawing.source.text === null && members.length) return unavailable("DrawingTextDisplayBindingMismatch");
   const text = drawing.source.text === null ? { state: "placed", rows: [], limited: false } : drawing.source.rendering?.angle > 0 || scaled
     ? layoutTransformedDrawingText(drawing, members, declaration, placement.rectangle, measure, { maxRows, overflow, ...(scaled ? { compactLines: true } : {}) })
-    : layoutDrawingText(drawing, members, declaration, placement.rectangle, measure, { maxRows, overflow });
+    : layoutDrawingText(drawing, members, declaration, placement.rectangle, measure, { maxRows, overflow, compactLines: true });
   if (text.state !== "placed") return text;
   const rectangle = scaled ? { ...placement.rectangle, width: hwpUnitPixels(drawing.source.rendering_corners[1][0]), height: hwpUnitPixels(drawing.source.rendering_corners[3][1]) } : placement.rectangle;
   if (!drawing.source.caption) return { ...text, rectangle, captionRectangle: null };

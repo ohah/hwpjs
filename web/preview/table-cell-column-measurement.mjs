@@ -8,7 +8,7 @@ export function measureTableCellColumns(paragraphs, declaration, width, minimumH
   if (declaration?.same_size !== true || declaration.kind !== "newspaper") return unavailable("UnsupportedTableCellColumns");
   const geometry = columnReferenceBoxes({ x: 0, y: 0, width, height: Math.max(1, minimumHeight) }, declaration);
   if (geometry.state !== "placed") return geometry;
-  const measured = layoutContent({ paragraphs, limited: false }, geometry.boxes[0].width, measure, maxRows, { documentBody: true });
+  const measured = layoutContent({ paragraphs, limited: false }, geometry.boxes[0].width, measure, maxRows, { documentBody: true, includeTerminalAfter: false });
   if (measured.limited) return unavailable("TableCellMeasurementLimit");
   if (!measured.rows.length || measured.rows.some(row => !Number.isFinite(row.height) || row.height <= 0)) return unavailable("InvalidTableCellColumns");
   const total = measured.rows.reduce((sum, row) => sum + row.height, 0);

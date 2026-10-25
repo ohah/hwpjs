@@ -1,4 +1,7 @@
 import { pageVisibleRectangle } from "./page-visible-rectangle.mjs";
+import { projectNestedInlineCaption } from "./nested-inline-caption-projection.mjs";
+import { tableCellRowExtent, isZeroAdvanceCellAnchor } from "./table-cell-band.mjs";
+import { projectNestedCellPictures } from "./nested-cell-picture-projection.mjs";
 
 // 이미 측정한 중첩 셀의 좌표와 소유권을 같은 물리 페이지로 투영합니다.
 export function projectNestedTableCellContent(flow, parent, insets, fragment, maxRows) {
@@ -40,17 +43,31 @@ export function projectNestedTableCellContent(flow, parent, insets, fragment, ma
     box.pageClip = projectClip(box.pageClip);
     if (!box.pageClip) return unavailable("InvalidNestedCellProjection");
   }
-  const rows = [];
+  const rows = [], tableCaptionBounds = [], captionOwners = new Set();
+  if (flow.inlineCaptions !== undefined && !Array.isArray(flow.inlineCaptions)) return unavailable("InvalidNestedCaptionOwner");
+  for (const descriptor of flow.inlineCaptions ?? []) {
+    const caption = projectNestedInlineCaption(descriptor?.table, descriptor?.projection, parent, insets, fragment, maxRows - rows.length);
+    if (caption.state !== "placed") return caption;
+    const identity = `${descriptor.table.tableNode}:${descriptor.table.sourceCaption.caption_node}:${descriptor.table.sourceCaption.list_node}`;
+    if (captionOwners.has(identity)) return unavailable("InvalidNestedCaptionOwner");
+    captionOwners.add(identity); rows.push(...caption.rows); tableCaptionBounds.push(...caption.tableCaptionBounds);
+  }
   for (const row of flow.rows) {
-    if (!row || row.section !== parent.section || ![row.x ?? 0, row.y, row.height, row.y + row.height].every(Number.isFinite)
-      || row.y < 0 || row.height <= 0 || row.y + row.height > height + 1e-8) return unavailable("InvalidNestedCellProjection");
+    const extent = tableCellRowExtent(row);
+    if (row?.captionNode !== undefined) {
+      if (!captionOwners.has(`${row.tableNode}:${row.captionNode}:${row.listNode}`)) return unavailable("MissingNestedCaptionPlacement");
+      continue;
+    }
+    if (!row || row.section !== parent.section || ![row.x ?? 0, row.y, row.height, extent, row.y + extent].every(Number.isFinite)
+      || row.y < 0 || row.height < 0 || extent === 0 && !isZeroAdvanceCellAnchor(row)
+      || row.y + extent > height + 1e-8) return unavailable("InvalidNestedCellProjection");
     const tableNode = row.tableNode ?? parent.tableNode, listNode = row.listNode ?? parent.listNode;
     if (tableNode === parent.tableNode ? listNode !== parent.listNode : !owners.has(`${tableNode}:${listNode}`)) return unavailable("InvalidNestedCellOwner");
     const owner = tableNode === parent.tableNode ? { x: 0, y: 0, width, height } : owners.get(`${tableNode}:${listNode}`);
     const rowWidth = row.width ?? 0, x = row.x ?? 0;
     if (!Number.isFinite(rowWidth) || rowWidth < 0 || !Number.isFinite(x + rowWidth)
       || x < owner.x || row.y < owner.y || x + rowWidth > owner.x + owner.width + 1e-8
-      || row.y + row.height > owner.y + owner.height + 1e-8) return unavailable("NestedCellRowOverflow");
+      || row.y + extent > owner.y + owner.height + 1e-8) return unavailable("NestedCellRowOverflow");
     const projected = { ...row, tableNode, listNode, positionOwnerTableNode: parent.tableNode, x: parent.x + insets.left + (row.x ?? 0), y: parent.y + insets.top + row.y,
       pageOrdinal: fragment.pageOrdinal, columnOrdinal: fragment.columnOrdinal, referenceBoxes: fragment.referenceBoxes };
     if (flow.clipOverflow === true || row.pageClip !== undefined) {
@@ -61,5 +78,7 @@ export function projectNestedTableCellContent(flow, parent, insets, fragment, ma
     rows.push(projected);
   }
   if (boxes.some(box => ![box.x, box.y, box.x + box.width, box.y + box.height].every(Number.isFinite))) return unavailable("InvalidNestedCellProjection");
-  return { state: "placed", rows, boxes };
+  const pictures = projectNestedCellPictures(flow, parent, insets, fragment, owners, rows, projectClip);
+  if (pictures.state !== "placed") return pictures;
+  return { state: "placed", rows, boxes, ...(pictures.pictures.length ? { flowPictures: pictures.pictures } : {}), ...(tableCaptionBounds.length ? { tableCaptionBounds } : {}) };
 }

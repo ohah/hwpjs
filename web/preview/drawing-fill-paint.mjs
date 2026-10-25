@@ -1,11 +1,16 @@
+import { validDrawingFill } from "./drawing-fill-validation.mjs";
 import { createDrawingPattern } from "./drawing-pattern-fill.mjs";
+import { drawingPathPoints, traceDrawingPath } from "./drawing-path-points.mjs";
 export function paintDrawingFill(ctx, drawing, scrollTop) {
-  if (!["solid", "linear_gradient", "pattern"].includes(drawing.fill?.state)) return false;
+  if (!validDrawingFill(drawing.fill)) return false;
   const r = drawing.rectangle;
   if (!r || ![r.x, r.y, r.width, r.height, scrollTop].every(Number.isFinite) || r.width <= 0 || r.height <= 0) return false;
-  if (drawing.fill.state === "solid" && !/^#[0-9a-f]{6}$/i.test(drawing.fill.color)) return false;
+  const source = drawing.drawing?.source;
+  const polygon = source?.rendering_polygon === undefined ? null : drawingPathPoints(source, drawing.origin, scrollTop);
+  if (source?.rendering_polygon !== undefined && (!polygon || polygon.length < 3)) return false;
   ctx.save();
   try {
+    if (polygon) { traceDrawingPath(ctx, polygon); ctx.clip(); }
     if (drawing.fill.state === "solid") ctx.fillStyle = drawing.fill.color;
     else if (drawing.fill.state === "pattern") {
       const pattern = createDrawingPattern(ctx, drawing.fill);

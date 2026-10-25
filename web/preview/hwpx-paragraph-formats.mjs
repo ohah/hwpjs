@@ -3,6 +3,7 @@ import { hwpxParagraphGeometry } from "./hwpx-paragraph-geometry.mjs";
 import { paragraphFormatOptions } from "./paragraph-format-options.mjs";
 export function attachHwpxParagraphFormats(editor, content, available) {
   content.paragraphFormatAvailable = false;
+  for (const paragraph of content.paragraphs) delete paragraph.tabDefinitionId;
   if (!editor || !available) return content;
   const ids = editor.paragraphShapeIds();
   content.paragraphShapeIds = ids;
@@ -24,6 +25,7 @@ export function attachHwpxParagraphFormats(editor, content, available) {
       const shape = shapes.get(paragraph.paraShapeId);
       if (!shape) throw new Error("ParagraphDisplayResourceMismatch");
       paragraph.paragraphShape = hwpxParagraphGeometry(shape);
+      paragraph.tabDefinitionId = shape.tab_pr_id;
     }
   }
   content.paragraphFormatAvailable = true;

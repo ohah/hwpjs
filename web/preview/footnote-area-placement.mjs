@@ -1,3 +1,4 @@
+import { projectNoteFlowPictures } from "./note-picture-projection.mjs";
 // 측정된 각주 영역을 한 단에 배치합니다. 참조의 페이지 이동은 페이지 엔진 책임입니다.
 export function placeFootnoteArea(notes, policy, column, occupiedBottom, separatorHeight, maxRows = 20000) {
   const unavailable = error => ({ state: "unavailable", error });
@@ -12,7 +13,7 @@ export function placeFootnoteArea(notes, policy, column, occupiedBottom, separat
   if (!Number.isFinite(height)) return unavailable("InvalidFootnoteArea");
   const top = policy.beneathText ? occupiedBottom : column.y + column.height - height;
   if (top < occupiedBottom || top + height > column.y + column.height) return unavailable("FootnoteAreaOverflow");
-  const rows = [], boxes = [], numberPrefixes = [], owners = new Set();
+  const rows = [], boxes = [], numberPrefixes = [], flowPictures = [], owners = new Set();
   let cursor = top + policy.aboveLine + separatorHeight + policy.belowLine;
   for (const note of notes) {
     if (owners.has(note.noteNode)) return unavailable("AmbiguousFootnoteArea");
@@ -36,8 +37,11 @@ export function placeFootnoteArea(notes, policy, column, occupiedBottom, separat
         output.push({ ...item, x: column.x + item.x, y: cursor + item.y });
       }
     }
+    const pictures = projectNoteFlowPictures(note.flowPictures ?? [], column.x, cursor, {}, note);
+    if (pictures.state !== "projected") return pictures;
+    flowPictures.push(...pictures.pictures);
     cursor += note.height + policy.betweenNotes;
   }
-  return { state: "placed", rows, boxes, numberPrefixes, area: { x: column.x, y: top, width: column.width, height },
+  return { state: "placed", rows, boxes, numberPrefixes, flowPictures, area: { x: column.x, y: top, width: column.width, height },
     separatorY: top + policy.aboveLine, bodyBottom: top, spatialRows: true };
 }

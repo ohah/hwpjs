@@ -6,6 +6,7 @@ import { attachCharacterEffects } from "./character-effect-content.mjs";
 import { attachCharacterOutlines } from "./character-outline-content.mjs";
 import { attachCharacterFonts } from "./character-font-content.mjs";
 import { attachCharacterStrikes } from "./character-strike-content.mjs";
+import { attachTabSources } from "./tab-source-content.mjs";
 export function attachHwpxStyles(editor, content, available) {
   content.characterShapes = null;
   content.characterShapesError = null;
@@ -25,5 +26,5 @@ export function attachHwpxStyles(editor, content, available) {
       paragraph.selectable = paragraph.text.length > 0 || paragraph.editable === true;
     } catch (error) { paragraph.characterRangesError = error.message; }
   }
-  return attachCharacterOutlines(editor, attachCharacterEffects(editor, attachCharacterShades(editor, attachCharacterStrikes(editor, attachCharacterFonts(editor, attachCharacterTextColors(editor, attachCharacterUnderlines(editor, content)))))));
+  return attachTabSources(editor, attachCharacterOutlines(editor, attachCharacterEffects(editor, attachCharacterShades(editor, attachCharacterStrikes(editor, attachCharacterFonts(editor, attachCharacterTextColors(editor, attachCharacterUnderlines(editor, content))))))));
 }

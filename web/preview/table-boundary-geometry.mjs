@@ -1,3 +1,5 @@
+import {cellTextAtBoundaryPoint} from "./table-boundary-text-hit.mjs";
+
 // 실제 표 셀 배치의 외곽과 현재 보호 앵커를 연결합니다.
 export function tableBoundaryFrames(layout) {
   const frames = [], anchors = new Map(), groups = new Map();
@@ -30,6 +32,7 @@ export function hitTableBoundary(layout, x, y, paragraphAt, target = null) {
     if (target && (target.section !== frame.section || target.paragraph !== frame.hostParagraph)) continue;
     const box = frame.rectangle, right = box.x + box.width, bottom = box.y + box.height;
     if (x < box.x - 4 || x > right + 4 || y < box.y - 4 || y > bottom + 4 || Math.min(Math.abs(x - box.x), Math.abs(x - right), Math.abs(y - box.y), Math.abs(y - bottom)) > 4) continue;
+    if (cellTextAtBoundaryPoint(layout,x,y)) return null;
     const paragraph = paragraphAt({ section: frame.section, paragraph: frame.hostParagraph });
     if (paragraph?.editable !== true || paragraph.text?.[frame.anchorUnit] !== "\ufffc") continue;
     const after = x >= box.x + box.width / 2;

@@ -1,5 +1,6 @@
 import { pageParagraphCoverage } from "./page-paragraph-coverage.mjs";
 import { isUtf16Boundary } from "./utf16-boundary.mjs";
+import { tableAnchorCoverage } from "./table-anchor-coverage.mjs";
 
 function sectionIndex(items, field, accept = () => true) {
   const sections = new Map();
@@ -24,9 +25,11 @@ export function bindPageAreaDeclarationPages(content, layout) {
     || !Array.isArray(layout.pages) || !Array.isArray(layout.rows)
     || content.paragraphs.some(row => !row) || layout.rows.some(row => !row) || layout.pages.some(page => !page)) return fail("MissingPageAreaDeclarationLayout");
   const output = [], owners = new Set();
+  const coverage = tableAnchorCoverage(content, layout);
+  if (coverage.state !== "covered") return fail("IncompletePageAreaDeclarationCoverage");
   // Request-local only: duplicates stay visible to the ownership checks below.
   const paragraphRows = sectionIndex(content.paragraphs, "paragraph");
-  const textRows = sectionIndex(layout.rows, "paragraph", row => row.kind === "text");
+  const textRows = sectionIndex([...layout.rows, ...coverage.rows], "paragraph", row => row.kind === "text");
   const physicalPages = sectionIndex(layout.pages, "ordinal");
   for (const declaration of content.pageAreaDeclarations) {
     if (!declaration || ![declaration.section, declaration.paragraph, declaration.sourceElement, declaration.unit]

@@ -2,7 +2,7 @@ import { structuralAnchorUnits } from "./structural-anchor-units.mjs";
 import { storedAutomaticNumberText } from "./automatic-number-text.mjs";
 
 // Classify source-owned display controls, not generated table placeholders.
-export function projectCreatedHostTextAnchors(source, projection, sourceTextAnchorUnits = [], sourceObjectUnits = []) {
+export function projectCreatedHostTextAnchors(source, projection, sourceTextAnchorUnits = [], sourceObjectUnits = [], sourceZeroWidthAnchorUnits = []) {
   const fail = () => { throw new Error("UnsupportedCreatedTableHostControls"); };
   const first = source.textStartUnit ?? 0, last = first + source.text.length;
   const visible = row => row && Number.isSafeInteger(row.unit) && row.unit >= first && row.unit < last;
@@ -10,10 +10,10 @@ export function projectCreatedHostTextAnchors(source, projection, sourceTextAnch
   if (![source.automaticNumbers ?? [], source.structuralAnchors ?? [], source.pageControls ?? []].every(Array.isArray)) return fail();
   const numbers = new Map();
   if (!Array.isArray(sourceTextAnchorUnits) || new Set(sourceTextAnchorUnits).size !== sourceTextAnchorUnits.length
-    || sourceTextAnchorUnits.some(unit => !Number.isSafeInteger(unit) || unit < first || unit >= last || source.text[unit - first] !== "\ufffc")) return fail();
+    || Array.from(sourceTextAnchorUnits).some(unit => !Number.isSafeInteger(unit) || unit < first || unit >= last || source.text[unit - first] !== "\ufffc")) return fail();
   const knownText = new Set(sourceTextAnchorUnits);
   if (!Array.isArray(sourceObjectUnits) || new Set(sourceObjectUnits).size !== sourceObjectUnits.length
-    || sourceObjectUnits.some(unit => !Number.isSafeInteger(unit) || unit < first || unit >= last || source.text[unit - first] !== "\ufffc" || knownText.has(unit))) return fail();
+    || Array.from(sourceObjectUnits).some(unit => !Number.isSafeInteger(unit) || unit < first || unit >= last || source.text[unit - first] !== "\ufffc" || knownText.has(unit))) return fail();
   const knownObjects = new Set(sourceObjectUnits);
   for (const row of (source.automaticNumbers ?? []).filter(visible)) {
     if (numbers.has(row.unit) || source.text[row.unit - first] !== "\ufffc") return fail();
@@ -29,6 +29,10 @@ export function projectCreatedHostTextAnchors(source, projection, sourceTextAnch
     hidden.add(row.unit);
   }
   const textAnchorUnits = [], zeroWidthUnits = [];
+  if (!Array.isArray(sourceZeroWidthAnchorUnits) || new Set(sourceZeroWidthAnchorUnits).size !== sourceZeroWidthAnchorUnits.length
+    || Array.from(sourceZeroWidthAnchorUnits).some(unit => !Number.isSafeInteger(unit) || unit < first || unit >= last
+      || source.text[unit - first] !== "\ufffc" || knownObjects.has(unit) || knownText.has(unit) || hidden.has(unit) || numbers.has(unit))) return fail();
+  for (const unit of sourceZeroWidthAnchorUnits) hidden.add(unit);
   for (let index = 0; index < source.text.length; index++) if (source.text[index] === "\ufffc") {
     const unit = first + index;
     if (knownObjects.has(unit)) {

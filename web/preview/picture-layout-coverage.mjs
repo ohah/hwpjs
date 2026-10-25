@@ -5,7 +5,7 @@ export function pictureLayoutCoverage(content, inlineIndex, layers, resourceAt =
   for (const item of [...layers.behind, ...layers.front]) keys.add(`${item.picture.section}:${item.picture.pictureNode}`);
   const source = new Set((content.pictures ?? []).map(picture => `${picture.section}:${picture.pictureNode}`));
   const eligible = [...source].filter(key => keys.has(key)).length;
-  let decoded = 0, failed = 0, loading = 0;
+  let decoded = 0, failed = 0, loading = 0, deferred = 0;
   const failures = [];
   const uniquePictures = new Map((content.pictures ?? []).map(picture => [`${picture.section}:${picture.pictureNode}`, picture]));
   for (const [key, picture] of uniquePictures) {
@@ -16,7 +16,8 @@ export function pictureLayoutCoverage(content, inlineIndex, layers, resourceAt =
       failed++;
       failures.push({ section: picture.section, pictureNode: picture.pictureNode, error: String(resource.error).slice(0, 160) });
     }
+    else if (resource?.deferred) deferred++;
     else loading++;
   }
-  return { total: source.size, eligible, pending: source.size - eligible, decoded, failed, loading, ...(failures.length ? { failures } : {}) };
+  return { total: source.size, eligible, pending: source.size - eligible, decoded, failed, loading, ...(deferred ? { deferred } : {}), ...(failures.length ? { failures } : {}) };
 }

@@ -6,6 +6,7 @@ const boxValid = b => b && [b.x, b.y, b.width, b.height, b.x + b.width, b.y + b.
 export function tableCollisionFootprints(table, layout, outerInsets, content = null) {
   const fail = error => ({ state: "unavailable", error });
   const margins = tableInsets(outerInsets);
+  if(layout?.repeatedTableHeaderBoxes!==undefined&&!Array.isArray(layout.repeatedTableHeaderBoxes))return fail("InvalidTableCollisionFootprint");
   if (!margins || !table || !Number.isSafeInteger(table.section) || table.section < 0 || !Number.isSafeInteger(table.tableNode) || table.tableNode < 0
     || !Array.isArray(table.cells) || !table.cells.length || !Array.isArray(layout?.boxes)) return fail("InvalidTableCollisionFootprint");
   if (table.parentTableNode != null) return fail("UnsupportedTableCollisionOwnership");
@@ -17,7 +18,7 @@ export function tableCollisionFootprints(table, layout, outerInsets, content = n
   const expected = new Set(table.cells.map(cell => cell?.listNode));
   if (expected.size !== table.cells.length || [...expected].some(id => !Number.isSafeInteger(id) || id < 0)) return fail("InvalidTableCollisionFootprint");
   const groups = new Map(), seen = new Set();
-  for (const box of layout.boxes.filter(b => b?.section === table.section && b.tableNode === table.tableNode)) {
+  for (const box of [...layout.boxes,...(layout.repeatedTableHeaderBoxes??[])].filter(b => b?.section === table.section && b.tableNode === table.tableNode)) {
     const reference = box.referenceBoxes?.column ?? (table.sourceGeometry?.vertical_relative === 0 ? box.referenceBoxes?.page : null);
     if (!boxValid(box) || !expected.has(box.listNode) || !Number.isSafeInteger(box.pageOrdinal) || box.pageOrdinal < 0 || !boxValid(reference)) return fail("IncompleteTableCollisionFootprint");
     const group = groups.get(box.pageOrdinal) ?? { boxes: [], column: reference, ids: new Set() };
@@ -32,7 +33,9 @@ export function tableCollisionFootprints(table, layout, outerInsets, content = n
   let caption = null;
   if (table.sourceCaption) {
     const matches = (layout.tableCaptionBounds ?? []).filter(c => c.section === table.section && c.tableNode === table.tableNode);
-    if (matches.length !== 1 || groups.size !== 1 || !groups.has(matches[0].pageOrdinal)
+    const pages = [...groups.keys()].sort((a, b) => a - b), side = table.sourceCaption.side;
+    const captionPage = groups.size === 1 ? pages[0] : side === 2 ? pages[0] : side === 3 ? pages.at(-1) : null;
+    if (matches.length !== 1 || captionPage === null || matches[0].pageOrdinal !== captionPage || !groups.has(matches[0].pageOrdinal)
       || matches[0].captionNode !== table.sourceCaption.caption_node || matches[0].listNode !== table.sourceCaption.list_node
       || !boxValid(matches[0].rectangle) || !boxValid(matches[0].bounds)) return fail("IncompleteTableCaptionCollisionFootprint");
     caption = matches[0];
@@ -50,7 +53,7 @@ export function tableCollisionFootprints(table, layout, outerInsets, content = n
       left = Math.min(left, child.x); top = Math.min(top, child.y);
       right = Math.max(right, child.x + child.width); bottom = Math.max(bottom, child.y + child.height);
     }
-    if (caption) {
+    if (caption?.pageOrdinal === pageOrdinal) {
       left = Math.min(left, caption.bounds.x); top = Math.min(top, caption.bounds.y);
       right = Math.max(right, caption.bounds.x + caption.bounds.width); bottom = Math.max(bottom, caption.bounds.y + caption.bounds.height);
     }
