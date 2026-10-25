@@ -15,7 +15,7 @@ async function setup(t:TestContext){
  try{wasm=await readFile(wasmPath);fixture=await readFile(root+'legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwpx');}
  catch(error){if((error as NodeJS.ErrnoException).code==='ENOENT'){t.skip('지정 WASM 또는 기존 charshape.hwpx fixture가 checkout에 없음');return;}throw error;}
  if(process.env.HWPJS_TEST_WASM_SHA256)assert.equal(createHash('sha256').update(wasm).digest('hex'),process.env.HWPJS_TEST_WASM_SHA256);
- compiled??=WebAssembly.compile(wasm);
+ compiled??=WebAssembly.compile(new Uint8Array(wasm));
  // fixture 부재로 skip할 때 앱 실행 모듈을 요구하지 않습니다. Native 응답을 모사하지 않습니다.
  const {selectionStatusLabel}=await import('../src/demo-controller.ts');
  const editor=createEditor({runtimeFactory:createReaderRuntimeFactory({wasmModule:await compiled})});
