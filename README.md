@@ -1,8 +1,26 @@
 # hwpjs
 
-CFB 컨테이너 읽기·쓰기용 JavaScript/WASM 라이브러리.
+HWP5·HWPX용 Headless API와 웹 어댑터, 저수준 CFB 읽기·쓰기를 제공하는 JavaScript/WASM 모노레포입니다. 고수준 ESM 진입점은 `@ohah/hwpjs`와 프레임워크별 subpath입니다.
 
-## 준비 및 빌드
+## 공개 ESM 사용법
+
+아래는 현재 source/pack 후보의 사용 예입니다. 이 source commit은 신규 npm 버전 발행을 뜻하지 않으며, 배포된 package/demo의 버전은 별도로 확인해야 합니다.
+
+```js
+import { createEditor } from '@ohah/hwpjs';
+import { createWorkerRuntimeFactory } from '@ohah/hwpjs/runtime';
+
+const editor = createEditor({
+  runtimeFactory: createWorkerRuntimeFactory({
+    workerURL: '/hwpjs/worker.js',
+    wasmURL: '/hwpjs/hwpjs.wasm',
+  }),
+});
+```
+
+이 예제는 module Worker와 WASM을 제공하는 브라우저 서버 환경을 전제로 합니다. 패키지 dist의 `worker.js`와 `hwpjs.wasm`을 해당 URL로 제공하도록 호스트를 구성합니다. React 어댑터는 `@ohah/hwpjs/react`의 `CanvasSurface`입니다. 내부 5개 `@hwpjs/*` 패키지는 private workspace와 dist exports를 사용합니다. 설치·명시 WASM 빌드 순서, 테스트/문서 명령과 Native·skip 제한은 [개발·검증 명령](docs/development-commands.md#js-모노레포-cli)을 따릅니다.
+
+## 저수준 CFB 빌드
 
 Zig 0.17.0과 Node.js 24를 설치한 뒤 저장소 루트에서 실행합니다.
 
@@ -25,7 +43,7 @@ try {
 }
 ```
 
-이 예제의 반환값은 CFB 스트림의 원시 바이트입니다. 통합 HWP/HWPX 본문 모델·일반 편집 API는 아직 제공하지 않습니다. 제한적 텍스트/기존 서식 편집은 [실험용 HWP5 JS API](docs/hwp5-editor-api.md)를 참고하세요.
+이 CFB 예제의 반환값은 컨테이너 스트림의 원시 바이트입니다. 문서 단위 고수준 사용법은 [공개 API](apps/docs/docs/api/editor.md)와 [선택·서식](apps/docs/docs/api/selection.md)을 참고하세요. 아래 저수준 예제는 고수준 편집 API의 지원 범위를 설명하는 예제가 아닙니다.
 
 HWP5 문단 텍스트의 읽기 전용 미리보기는 `node tools/hwp5-text-preview.mjs sample.hwp`로 확인할 수 있습니다. 먼저 위 빌드를 실행하세요. 제어 토큰을 제외한 텍스트와 문단별 제어 코드가 출력됩니다. [HWP5 미리보기 API](docs/hwp5-text-preview-api.md)는 완전한 문서 모델·편집·저장을 제공하지 않습니다.
 

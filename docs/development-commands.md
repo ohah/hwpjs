@@ -1,5 +1,34 @@
 # 개발·검증 명령
 
+## JS 모노레포 CLI
+
+Bun 1.4.4와 명시 WASM을 사용하는 경로입니다. 내부 core·vanilla·react·svelte·react-native 5개는 private/dist 계약이고 외부 package 진입점은 `@ohah/hwpjs`입니다.
+
+```sh
+mise exec -- bun install --frozen-lockfile --ignore-scripts
+export HWPJS_BUILD_WASM=/absolute/path/hwpjs.wasm
+mise exec -- bun run build:web --wasm="$HWPJS_BUILD_WASM"
+
+# 새 umbrella dist/pack이 필요할 때만 실행합니다.
+mise exec -- bun tools/build-public-package.mjs --wasm="$HWPJS_BUILD_WASM"
+
+mise exec -- bun run typecheck
+HWPJS_TEST_WASM="$HWPJS_BUILD_WASM" mise exec -- bun run test:packages
+mise exec -- bun run build:demo
+mise exec -- bun run docs:typecheck
+mise exec -- bun run docs:check
+mise exec -- bun run dev 8082
+```
+
+- 캐시가 모두 있으면 frozen install에 `--offline`을 추가할 수 있습니다. 실제 검증은 캐시가 있는 macOS에서 수행했으며 다른 OS·빈 캐시 설치의 성공으로 확대하지 않습니다.
+- `build:web`는 core→vanilla→react→svelte 순서로 private dist를 생성합니다. 기본 `build`는 RN까지 포함하며 실제 `packages/react-native/native-artifacts.json`과 일치하는 Native 파일이 없으면 `NativeArtifactsRequired`입니다. 가짜 manifest로 대체하지 않습니다. 이 JS 재현 경로는 새 Zig/Native 빌드 성공을 요구하거나 증명하지 않습니다.
+- `test:core`는 core 범위만 실행하는 별도 root script입니다. `test:packages`는 core·vanilla·react·svelte 및 RN src unit 범위이며 RN fake-transport unit 성공을 실제 JSI/기기 성공으로 세지 않습니다. `HWPJS_TEST_WASM` 미지정 시 일부 테스트가 참조하는 로컬 verification WASM은 source-only clone에 자동 생성되지 않습니다.
+- 옛 parity 이름은 `hwp5: pre-extraction wire exact session-scope delta and frozen remainder`, `hwpx: pre-extraction full/window/edit/save/history wire baseline`입니다. `artifact !== baseline.artifact` 경로 문자열 비교로 skip되며 pass가 아닙니다. 독립 CFB oracle는 module import 외에도 HEAD의 `legacy/cfb.js` 파일을 읽습니다.
+- demo/dev는 private 4개 dist와 `apps/demo/dist`를 선행 입력으로 사용합니다. 공개 umbrella dist는 이 demo 경로의 필수 입력이 아니며 public producer는 private dist를 소비하지 않고 source에서 별도 출력합니다.
+- root `docs:build`는 문서 빌드만 실행합니다. `docs:typecheck`는 source에 연결된 예제 8개를 검사하며, `docs:check`는 예제 타입→빌드→링크→설치 license metadata→공개 출력 검사를 수행합니다. `apps/docs/`의 추적 파일 전체와 기존 `docs/public/editor` 정적 자산이 입력입니다. 새 umbrella producer가 그 정적 자산을 갱신하는 것은 아닙니다. CI의 정적 자산 확인은 `mise exec -- bun tools/build-pages-demo.mjs --verify`입니다.
+- Native shared-snapshot은 별도 ABI/archive/빌드 flag 계약입니다. 기능이 없는 binding은 `NativeSnapshotUnavailable`로 거부하며, plain-body snapshot 검증을 전체 Canvas·실기기·IME 완료로 표시하지 않습니다.
+
+
 WASM HTTP 압축 검사는 `mise exec -- node --test tests/hwpx/preview-wasm-compression.test.mjs`와 `mise exec -- bun test ./tests/hwpx/preview-wasm-compression.test.mjs`입니다. Bun 파일 인수의 `./`를 유지합니다. [전송 크기와 실측 범위](wasm-transfer.md)를 따릅니다.
 
 HWP5 Native 텍스트 편집·실패 주입 단위 검사는 `mise exec -- zig build test-text-splice -j1 --summary all`과 `mise exec -- zig build test-text-splice -Doptimize=ReleaseSafe -j1 --summary all`입니다. WASM 설치나 선택적 외부 JSON oracle를 실행하지 않는 집중 단계이며 전체 `zig build test`를 대체하지 않습니다.
