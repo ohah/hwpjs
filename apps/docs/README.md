@@ -1,6 +1,6 @@
 # HWPJS 문서 사이트
 
-현재 Zig/WASM 개발 workspace의 공개 API를 설명하는 Rspress 2.0.23 정적 문서입니다. 제품 모노레포 변경은 순차 공개 중이므로 main의 새 clone이나 npm에서 제품을 즉시 설치·빌드할 수 있음을 보장하지 않습니다. 이번 docs-only 커밋에는 루트 package.json/bun.lock과 제품 앱 소스 WIP를 포함하지 않습니다. 설치·Runtime/WASM 설정·열기/선택/입력/저장·Vanilla/React/Svelte 예제와 제한을 제공합니다. 구 Rust 변환 UI는 포함하지 않으며 기존 HWP/HWPX 샘플 다운로드 경로는 보존합니다.
+현재 Zig/WASM 개발 workspace의 공개 API를 설명하는 Rspress 2.0.23 정적 문서입니다. 제품 모노레포 변경은 순차 공개 중이므로 main의 새 clone이나 npm에서 제품을 즉시 설치·빌드할 수 있음을 보장하지 않습니다. 이번 docs-only 커밋에는 루트 package.json/bun.lock과 제품 앱 소스 WIP를 포함하지 않습니다. 설치·Runtime/WASM 설정·열기/선택/입력/저장·Vanilla/React/Svelte 예제와 제한을 제공합니다. `/playground`는 같은 사이트의 정적 Canvas 편집기를 전체화면으로 엽니다. 구 Rust 변환 UI는 포함하지 않으며 기존 HWP/HWPX 샘플 다운로드 경로는 보존합니다.
 
 ## 저장소에서 검사
 
@@ -15,13 +15,14 @@ HWPJS_DOCS_BASE=/hwpjs/ bun run --cwd apps/docs check
 
 ## 독립 GitHub Pages 빌드
 
-`package.json`, **apps/docs/bun.lock**, `rspress.config.ts`, `docs/`, `scripts/`를 저장소 밖 작업 디렉터리로 복사하면 문서만 빌드할 수 있습니다. 루트 workspace나 루트 lock이 필요하지 않습니다. Bun 1.4.4와 Python3를 사용합니다.
+`package.json`, **apps/docs/bun.lock**, `rspress.config.ts`, `docs/`, `scripts/`, `components/`, `theme/`를 저장소 밖 작업 디렉터리로 복사하면 문서만 빌드할 수 있습니다. 루트 workspace나 루트 lock이 필요하지 않습니다. Bun 1.4.4와 Python3를 사용합니다.
 
 ```bash
 bun install --frozen-lockfile
 HWPJS_DOCS_BASE=/hwpjs/ bun run build
 HWPJS_DOCS_BASE=/hwpjs/ bun run check:links
 bun run check:licenses
+bun run check:public
 ```
 
 독립 빌드에서는 workspace 예제 타입 검사를 실행하지 않습니다. 예제와 설정 타입은 저장소에서 별도로 검사합니다. 링크 검사는 생성 HTML의 경로/앵커, CSS 리소스와 샘플 다운로드 파일을 검사합니다. 라이선스 검사는 설치된 npm metadata를 읽으며 과거 기준선이나 루트 잠금파일에 의존하지 않습니다. 외부 URL의 가용성과 실제 서버 동작은 별도입니다.
@@ -35,3 +36,9 @@ bun run check:licenses
 `route.cleanUrls=true`이므로 `/hwpjs/guide/installation` 같은 요청은 출력의 `guide/installation.html`로 연결해야 합니다. 첫 페이지는 `index.html`, 리소스는 `static/`, 샘플은 `demo/noori.hwp`와 `demo/noori.hwpx`입니다. 알 수 없는 문서 경로는 `404.html`로 처리하세요.
 
 현재 Canvas 데모 링크는 Tailscale tailnet 접근이 필요합니다. 문서 사이트의 공개 다운로드와 네트워크 제한이 있는 편집기 접근을 구분합니다. Worker/WASM URL은 소비 앱이 별도로 배포·설정하며 문서 사이트 base와 같다고 가정하지 않습니다.
+
+## 내장 편집기 아티팩트
+
+`docs/public/editor/`는 검증한 웹 편집기·Worker·WASM과 기존 공개 예제 두 개를 포함하는 정적 배포본입니다. 이 디렉터리는 문서 빌드에 포함되며 외부 편집 서버를 요구하지 않습니다. 파일 업로드는 브라우저 안에서 처리합니다.
+
+저장소 루트의 `node tools/build-pages-demo.mjs --verify`는 배포본의 체크섬을 확인합니다. 재생성에는 별도로 빌드하고 검증한 `apps/demo/dist`와 `packages/core/dist`가 필요합니다. 이 생성 명령을 문서 빌드나 새 clone의 제품 빌드 성공으로 취급하지 않습니다. 생성 후에는 예제 열기·입력·이력·저장과 Worker/WASM 경로를 실제 브라우저에서 검증해야 합니다.

@@ -1,0 +1,6 @@
+node_modules/
+doc_build/
+.rspress/
+verification/generated/
+verification/
+theme/_verification/

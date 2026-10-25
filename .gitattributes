@@ -1,0 +1,2 @@
+# Preserve frozen generated distributions byte-for-byte; checksums validate these assets.
+apps/docs/docs/public/editor/** -whitespace

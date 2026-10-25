@@ -1,0 +1,227 @@
+{
+  "schemaVersion": 1,
+  "base": "relative",
+  "supportedPrefixes": [
+    "/hwpjs/editor/",
+    "/docs/editor/"
+  ],
+  "mode": "frozen-dist-closure",
+  "licenses": {
+    "project": "LICENSE.txt",
+    "thirdParty": "THIRD_PARTY_NOTICES.txt",
+    "packages": [
+      {
+        "name": "react",
+        "version": "19.3.1",
+        "license": "MIT",
+        "licenseSha256": "da6d3703ed11cbe42bd212c725957c98da23cbff1998c05fa4b3d976d1a58e93"
+      },
+      {
+        "name": "react-dom",
+        "version": "19.3.1",
+        "license": "MIT",
+        "licenseSha256": "da6d3703ed11cbe42bd212c725957c98da23cbff1998c05fa4b3d976d1a58e93"
+      },
+      {
+        "name": "svelte",
+        "version": "5.57.2",
+        "license": "MIT",
+        "licenseSha256": "06257f4847b13a49a039efb17b944c141e71b12fd8d231b362d86919067d77a3"
+      }
+    ]
+  },
+  "frameworks": [
+    "vanilla",
+    "react",
+    "svelte",
+    "headless"
+  ],
+  "fixtures": [
+    "noori.hwp",
+    "noori.hwpx"
+  ],
+  "wasmSha256": "b7aec1c9c674dbbef96c8c88e29a39e675a7eb85da630fe8707e7e2ad230bcee",
+  "inputChecksums": [
+    {
+      "sha256": "06257f4847b13a49a039efb17b944c141e71b12fd8d231b362d86919067d77a3",
+      "bytes": 1126
+    },
+    {
+      "sha256": "1edf9d137588627d3110e206d6f875bf4338e78a3654ee7e283ac911a7af9a90",
+      "bytes": 6777
+    },
+    {
+      "sha256": "2a4c2e9a315ae209d1b4af7b691d15d980b9cd0859e31c6bc48f285f57f11e56",
+      "bytes": 1086
+    },
+    {
+      "sha256": "4632ba4ab42fa6eb86b6fb7f63c7a09df1f5a033a2157c7a68cde6351f20eb78",
+      "bytes": 57
+    },
+    {
+      "sha256": "4ac252e988ccc39b0ecd95e72202ba3ff79edbf7b163f88438c56a1f0bf73cd2",
+      "bytes": 1225
+    },
+    {
+      "sha256": "6ee9014f23650987803481e7aa51b3b2201f91f549dccfe34880469621d62aab",
+      "bytes": 324413
+    },
+    {
+      "sha256": "75b8e14073e8b4fb10ba994d9d4dee23e17c452192a8f80eaa3f25938ae0eac7",
+      "bytes": 820733
+    },
+    {
+      "sha256": "81712ff17e0c0f6cb2351fef8e10d53335524a04c3d31114bbd29299fa4b129c",
+      "bytes": 477
+    },
+    {
+      "sha256": "89d54f11575c9b0f7819962d9d72a31970dfb4d103f07e8b1d1b37e6d1fc3258",
+      "bytes": 3054
+    },
+    {
+      "sha256": "9cc9c3de5441a2eea7f41f52f3f2a15a4fc51f90c0b72741f0d7638643a85e67",
+      "bytes": 1242
+    },
+    {
+      "sha256": "b18be0217a5d9f81e587705edc0c514cdd11e6314bbe434f17d256aa21b75a7f",
+      "bytes": 257536
+    },
+    {
+      "sha256": "b3faaed62452032de180eb1c230f7cfb0d8d211ec5338f09e97830f314cab7f9",
+      "bytes": 327934
+    },
+    {
+      "sha256": "b7aec1c9c674dbbef96c8c88e29a39e675a7eb85da630fe8707e7e2ad230bcee",
+      "bytes": 5661087
+    },
+    {
+      "sha256": "b7aec1c9c674dbbef96c8c88e29a39e675a7eb85da630fe8707e7e2ad230bcee",
+      "bytes": 5661087
+    },
+    {
+      "sha256": "ba06d532e826a5bb9f8460dc6ab5ac6f6b62972823d65f9ad87e897ca23339ae",
+      "bytes": 1076552
+    },
+    {
+      "sha256": "da6d3703ed11cbe42bd212c725957c98da23cbff1998c05fa4b3d976d1a58e93",
+      "bytes": 1088
+    },
+    {
+      "sha256": "da6d3703ed11cbe42bd212c725957c98da23cbff1998c05fa4b3d976d1a58e93",
+      "bytes": 1088
+    },
+    {
+      "sha256": "e43b68ebb998b54e02fe50846365bb3c902903b5a56a733720a049baf795db13",
+      "bytes": 3281
+    },
+    {
+      "sha256": "f2c325e064ff277fcc80240ba5191eab04ae4492b093b627002dcd03fb889f7d",
+      "bytes": 7759
+    },
+    {
+      "sha256": "ff172e5c3bca15a8840bdce0818fd96c7ff26fbc076f0f247bd9cb30d985eb53",
+      "bytes": 5661
+    }
+  ],
+  "verification": {
+    "staticURLPrefixes": [
+      "/hwpjs/editor/",
+      "/docs/editor/"
+    ],
+    "moduleSyntax": true,
+    "fixtureAllowlist": true,
+    "browserE2E": "separate"
+  },
+  "files": [
+    {
+      "path": "assets/dist-9dJg0DkY.js",
+      "bytes": 1076552,
+      "sha256": "ba06d532e826a5bb9f8460dc6ab5ac6f6b62972823d65f9ad87e897ca23339ae"
+    },
+    {
+      "path": "assets/dist-BQXFrvee.js",
+      "bytes": 57,
+      "sha256": "4632ba4ab42fa6eb86b6fb7f63c7a09df1f5a033a2157c7a68cde6351f20eb78"
+    },
+    {
+      "path": "assets/index-C_Ml9f0t.js",
+      "bytes": 311382,
+      "sha256": "0027c2a1b9ce1875c431904c1e8e791b44d7bf578a11e5bcacf8e96fa681c777"
+    },
+    {
+      "path": "assets/index-C1OGHn36.css",
+      "bytes": 6777,
+      "sha256": "1edf9d137588627d3110e206d6f875bf4338e78a3654ee7e283ac911a7af9a90"
+    },
+    {
+      "path": "demo/headless/index.html",
+      "bytes": 821,
+      "sha256": "7db7f7c02196bf949db866a5ebc1f5e8b10516d9d01d323106297a571832c4c4"
+    },
+    {
+      "path": "demo/react/index.html",
+      "bytes": 821,
+      "sha256": "7db7f7c02196bf949db866a5ebc1f5e8b10516d9d01d323106297a571832c4c4"
+    },
+    {
+      "path": "demo/svelte/index.html",
+      "bytes": 821,
+      "sha256": "7db7f7c02196bf949db866a5ebc1f5e8b10516d9d01d323106297a571832c4c4"
+    },
+    {
+      "path": "demo/vanilla/index.html",
+      "bytes": 821,
+      "sha256": "7db7f7c02196bf949db866a5ebc1f5e8b10516d9d01d323106297a571832c4c4"
+    },
+    {
+      "path": "fixture-catalog.json",
+      "bytes": 216,
+      "sha256": "b67523a9df6dca8174d773a9f36f279a88603017042594d2c929449683436c67"
+    },
+    {
+      "path": "fixtures/noori.hwp",
+      "bytes": 257536,
+      "sha256": "b18be0217a5d9f81e587705edc0c514cdd11e6314bbe434f17d256aa21b75a7f"
+    },
+    {
+      "path": "fixtures/noori.hwpx",
+      "bytes": 324413,
+      "sha256": "6ee9014f23650987803481e7aa51b3b2201f91f549dccfe34880469621d62aab"
+    },
+    {
+      "path": "hwpjs/hwpjs.wasm",
+      "bytes": 5661087,
+      "sha256": "b7aec1c9c674dbbef96c8c88e29a39e675a7eb85da630fe8707e7e2ad230bcee"
+    },
+    {
+      "path": "index.html",
+      "bytes": 809,
+      "sha256": "5f9a6ce435da0d40ef5323ee600585e1891950d7bd149c9107269e27a9586a7c"
+    },
+    {
+      "path": "LICENSE.txt",
+      "bytes": 1086,
+      "sha256": "2a4c2e9a315ae209d1b4af7b691d15d980b9cd0859e31c6bc48f285f57f11e56"
+    },
+    {
+      "path": "runtime/index-wenq10ym.js",
+      "bytes": 806409,
+      "sha256": "38fd51722c54484feb177290b90f3ec51e7fe5c1872eb8448581772178ad119b"
+    },
+    {
+      "path": "runtime/index-zatkwww3.js",
+      "bytes": 7456,
+      "sha256": "65e8731f300123fc408e5af44adb72b062dcef399bab567796a3eca3fb074384"
+    },
+    {
+      "path": "runtime/worker.js",
+      "bytes": 1149,
+      "sha256": "850906d1809f0108dbc4882714dacbe85abe54befdfe8d5e3fd87808ffb5c43c"
+    },
+    {
+      "path": "THIRD_PARTY_NOTICES.txt",
+      "bytes": 6696,
+      "sha256": "9689e9992f43d9e2397fb293b05e02cc632bbefc203784aa8bad1a340b8646e8"
+    }
+  ]
+}

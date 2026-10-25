@@ -8,7 +8,8 @@
     "typecheck": "bun scripts/check-examples.mjs",
     "check:links": "bun scripts/check-links.mjs",
     "check:licenses": "bun scripts/check-licenses.mjs",
-    "check": "bun run typecheck && bun run build && bun run check:links && bun run check:licenses"
+    "check": "bun run typecheck && bun run build && bun run check:links && bun run check:licenses && bun run check:public",
+    "check:public": "bun scripts/check-public.mjs"
   },
   "devDependencies": {
     "@rspress/core": "2.0.23"

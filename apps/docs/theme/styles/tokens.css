@@ -1,0 +1,50 @@
+/* Original HWPJS styles. Reference: visual patterns only, no Spinon source/assets copied. */
+:root {
+  --rp-c-brand: #c75027;
+  --rp-c-brand-dark: #ac3d18;
+  --rp-c-brand-light: #df713f;
+  --rp-c-bg: #fcfbf9;
+  --rp-c-bg-soft: #f4f1ec;
+  --rp-c-bg-mute: #eae6df;
+  --rp-c-bg-alt: #fff;
+  --rp-c-text-0: #20252d;
+  --rp-c-text-1: #333943;
+  --rp-c-text-2: #59616e;
+  --rp-c-divider: #d9d5cf;
+  --rp-c-divider-light: #e8e3db;
+  --rp-c-link: #ac3d18;
+  --hwpjs-accent: #c75027;
+  --hwpjs-surface: #fffdfa;
+  --hwpjs-panel: #fff;
+  --hwpjs-line: #ded9d1;
+  --hwpjs-muted: #626875;
+  --hwpjs-grid: #80664712;
+  --hwpjs-glow: #e68c5024;
+  --hwpjs-title-gradient: linear-gradient(110deg, #c75027, #97524b 60%, #74628c);
+  --hwpjs-sheet-shadow: #59422920;
+  --rp-font-family-base: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", sans-serif;
+}
+html.rp-dark {
+  --rp-c-brand: #f39768;
+  --rp-c-brand-dark: #e87b47;
+  --rp-c-brand-light: #ffb88f;
+  --rp-c-bg: #111318;
+  --rp-c-bg-soft: #1b1e26;
+  --rp-c-bg-mute: #272b35;
+  --rp-c-bg-alt: #161920;
+  --rp-c-text-0: #f2f1ed;
+  --rp-c-text-1: #dedfe6;
+  --rp-c-text-2: #a9afbd;
+  --rp-c-divider: #343944;
+  --rp-c-divider-light: #2b303b;
+  --rp-c-link: #ffb88f;
+  --hwpjs-accent: #f39768;
+  --hwpjs-surface: #15181f;
+  --hwpjs-panel: #1b1f28;
+  --hwpjs-line: #353a47;
+  --hwpjs-muted: #a9afbd;
+  --hwpjs-grid: #a7b0c711;
+  --hwpjs-glow: #ee805b21;
+  --hwpjs-title-gradient: linear-gradient(110deg, #ffb68b, #ee8d72 58%, #c7a4e5);
+  --hwpjs-sheet-shadow: #0000004d;
+}

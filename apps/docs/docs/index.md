@@ -9,8 +9,8 @@ hero:
       text: 시작하기
       link: /guide/installation
     - theme: alt
-      text: 공개 API 살펴보기
-      link: /api/editor
+      text: 문서 데모 열기
+      link: /playground
 features:
   - title: Headless core
     details: 문서 수명과 명령을 DOM 없이 다룹니다. Runtime은 앱에서 주입합니다.
@@ -28,4 +28,4 @@ features:
 
 ## 샘플 파일과 데모
 
-[noori.hwp 샘플·데모](./guide/demo.md)와 [noori.hwpx 샘플·데모](./guide/demo-hwpx.md)를 제공합니다. 현재 Canvas 데모는 Tailscale tailnet 접근이 필요하며, 구 Rust 변환 UI를 이 사이트에 내장한 것은 아닙니다.
+[noori.hwp 샘플·데모](./guide/demo.md)와 [noori.hwpx 샘플·데모](./guide/demo-hwpx.md)를 제공합니다. [문서 데모](/playground)에서 샘플·파일 열기 UI를 확인할 수 있습니다. 구 Rust 변환 UI를 이 사이트에 내장한 것은 아닙니다.

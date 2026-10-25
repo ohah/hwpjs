@@ -6,6 +6,7 @@ on:
     paths:
       - 'apps/docs/**'
       - '.github/workflows/docs.yml'
+      - 'tools/build-pages-demo.mjs'
   workflow_dispatch:
 
 permissions:
@@ -26,10 +27,12 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.4.4'
+      - name: Verify bundled editor artifacts
+        run: bun tools/build-pages-demo.mjs --verify
       - name: Prepare independent documentation workspace
         run: |
           mkdir -p "$RUNNER_TEMP/hwpjs-docs"
-          cp -R apps/docs/package.json apps/docs/bun.lock apps/docs/rspress.config.ts apps/docs/docs apps/docs/scripts "$RUNNER_TEMP/hwpjs-docs/"
+          cp -R apps/docs/package.json apps/docs/bun.lock apps/docs/rspress.config.ts apps/docs/docs apps/docs/scripts apps/docs/components apps/docs/theme "$RUNNER_TEMP/hwpjs-docs/"
       - name: Install documentation dependencies
         working-directory: ${{ runner.temp }}/hwpjs-docs
         run: bun install --frozen-lockfile
@@ -41,6 +44,7 @@ jobs:
           bun run build
           bun run check:links
           bun run check:licenses
+          bun run check:public
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:

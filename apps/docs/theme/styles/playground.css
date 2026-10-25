@@ -1,0 +1,10 @@
+/* Only /playground or the parent's explicit .hwpjs-playground marker uses a full viewport. */
+body:has(.hwpjs-theme[data-page="playground"]),
+body:has(.hwpjs-playground) { margin: 0; overflow: hidden; overscroll-behavior: none; }
+.hwpjs-theme[data-page="playground"] :is(.rp-nav,.rp-doc-layout__sidebar,.rp-doc-layout__outline,.rp-sidebar-menu,.rp-doc-footer,.rp-home-footer),
+body:has(.hwpjs-playground) :is(.rp-nav,.rp-doc-layout__sidebar,.rp-doc-layout__outline,.rp-sidebar-menu,.rp-doc-footer,.rp-home-footer) { display: none !important; }
+.hwpjs-theme[data-page="playground"] :is(.rp-doc-layout__container,.rp-doc-layout__doc,.rp-doc-layout__doc-container,.rp-doc),
+body:has(.hwpjs-playground) :is(.rp-doc-layout__container,.rp-doc-layout__doc,.rp-doc-layout__doc-container,.rp-doc) {
+  width: 100%; max-width: none; min-height: 0; margin: 0; padding: 0; border: 0;
+}
+.hwpjs-theme[data-page="playground"] { --rp-nav-height: 0px; --rp-sidebar-menu-height: 0px; height: 100dvh; overflow: hidden; }

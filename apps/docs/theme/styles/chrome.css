@@ -1,0 +1,35 @@
+.hwpjs-theme { min-height: 100dvh; }
+.hwpjs-theme .rp-nav {
+  background: color-mix(in srgb, var(--rp-c-bg) 90%, transparent);
+  border-bottom: 1px solid var(--rp-c-divider-light);
+  backdrop-filter: blur(16px);
+}
+.hwpjs-theme .rp-nav__title { letter-spacing: -.04em; font-weight: 780; }
+.hwpjs-format-badge {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  min-height: 24px;
+  margin-inline-start: 12px;
+  padding: 2px 8px;
+  border: 1px solid color-mix(in srgb, var(--hwpjs-accent) 30%, transparent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--hwpjs-accent) 8%, transparent);
+  color: var(--rp-c-brand-dark);
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: .02em;
+  white-space: nowrap;
+}
+.rp-dark .hwpjs-format-badge { color: var(--hwpjs-accent); }
+.hwpjs-theme .rp-doc-layout__sidebar { border-inline-end: 1px solid var(--rp-c-divider-light); }
+.hwpjs-theme .rp-doc-layout__outline { border-inline-start: 1px solid var(--rp-c-divider-light); }
+.hwpjs-theme .rp-doc h1 { letter-spacing: -.045em; }
+.hwpjs-theme .rp-doc :is(h2,h3) { letter-spacing: -.025em; }
+.hwpjs-theme .rp-doc p { line-height: 1.85; word-break: keep-all; overflow-wrap: anywhere; }
+.hwpjs-theme .rp-doc a { text-underline-offset: 3px; }
+.hwpjs-theme :focus-visible { outline: 2px solid var(--hwpjs-accent); outline-offset: 4px; }
+@media (max-width: 600px) {
+  .hwpjs-format-badge { font-size: 9px; padding-inline: 6px; margin-inline-start: 8px; }
+  .hwpjs-theme .rp-doc { min-width: 0; }
+}

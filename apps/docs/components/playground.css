@@ -1,0 +1,9 @@
+.hwpjs-playground { position: fixed; inset: 0; z-index: 200; display: flex; flex-direction: column; width: 100%; height: 100dvh; background: #101115; color: #eceef3; }
+.hwpjs-playground-bar { display: flex; flex: 0 0 auto; gap: 16px; align-items: center; min-height: 46px; padding: 8px 16px; border-bottom: 1px solid #34363e; font: 13px/1.4 system-ui, sans-serif; }
+.hwpjs-playground-bar a { color: #f18a5b; font-weight: 700; text-decoration: none; white-space: nowrap; }
+.hwpjs-playground-bar a span { margin-left: 12px; color: #ccd0dc; font-weight: 400; }
+.hwpjs-playground-bar p { margin: 0; flex: 1; color: #aeb4c3; }
+.hwpjs-playground-bar button { margin-left: auto; border: 1px solid #5b443c; border-radius: 6px; padding: 6px 10px; background: #282021; color: #ffc2a5; white-space: nowrap; cursor: pointer; }
+.hwpjs-playground iframe { flex: 1 1 0; width: 100%; min-height: 0; border: 0; background: #edf0f5; }
+.hwpjs-playground-notice { margin: 0; padding: 6px 16px; font-size: 12px; background: #38251b; }
+@media (max-width: 600px) { .hwpjs-playground-bar { gap: 8px; padding: 7px 10px; } .hwpjs-playground-bar p { display: none; } .hwpjs-playground-bar a span { margin-left: 6px; font-size: 11px; } }

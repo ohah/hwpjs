@@ -38,6 +38,8 @@
     "examples/**/*.ts",
     "examples/**/*.tsx",
     "types/**/*.d.ts",
-    "rspress.config.ts"
+    "rspress.config.ts",
+    "components/**/*.tsx",
+    "theme/**/*.tsx"
   ]
 }

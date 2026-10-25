@@ -10,11 +10,14 @@ export default defineConfig({
   root: fileURLToPath(new URL('./docs', import.meta.url)),
   outDir: fileURLToPath(new URL('./doc_build', import.meta.url)),
   base,
+  themeDir: fileURLToPath(new URL('./theme', import.meta.url)),
+  globalStyles: fileURLToPath(new URL('./theme/styles/index.css', import.meta.url)),
   // Raw HTML download links use the same base without document-route normalization.
   replaceRules: [{ search: /__HWPJS_DOCS_BASE__/g, replace: base }],
   route: { cleanUrls: true },
   lang: 'ko',
   title: 'HWPJS',
+  icon: '/icon.svg',
   description: 'HWP5 · HWPX 문서를 위한 헤드리스 API와 Canvas 어댑터',
   markdown: { link: { checkDeadLinks: true, checkAnchors: true } },
   // Base can change between Tailscale and Pages builds in the same checkout.
@@ -23,6 +26,7 @@ export default defineConfig({
     nav: [
       { text: '시작하기', link: '/guide/installation' },
       { text: '샘플·데모', link: '/guide/demo' },
+      { text: '문서 데모', link: '/playground' },
       { text: '공개 API', link: '/api/editor' },
       { text: '프레임워크', link: '/frameworks/vanilla' },
       { text: '지원 범위', link: '/guide/limitations' },
