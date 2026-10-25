@@ -6,7 +6,7 @@ export interface SelectionTarget extends StateToken {
  readonly section:number;readonly paragraph:number;readonly startUnit:number;readonly endUnit:number;
  readonly affinity:'forward'|'backward';
 }
-export interface SpliceTextPayload {readonly target:SelectionTarget;readonly text:string;}
+export interface SpliceTextPayload {readonly target:SelectionTarget;readonly text:string;/** Optional exact selection observation fence for asynchronous clipboard operations. */readonly selectionVersion?:number;}
 export interface HistoryPayload {readonly token:StateToken;}
 export const SPLICE_TEXT_COMMAND=createCommand<SpliceTextPayload>('splice-text');
 export const UNDO_COMMAND=createCommand<HistoryPayload>('undo');

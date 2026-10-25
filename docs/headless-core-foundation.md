@@ -1,5 +1,7 @@
 # 헤드리스 코어 기반의 게시 범위
 
+검색·통계·clipboard 관측과 비동기 선택 fence는 [텍스트 도구 계약](headless-text-tools.md)을 따릅니다.
+
 `packages/core/src/index.ts`는 backend를 주입하는 편집기 진입점입니다. native 문서·저장·이력이 원본이고 `EditorState`는 소유된 불변 관측값입니다. 상태·명령 registry·FIFO·취소·선택 검증·표시 서식 selector는 각각 별도 모듈이 소유합니다. 기존 UTF-16/source 좌표 변환과 서식 인코더를 복제하지 않습니다.
 
 ```ts

@@ -13,7 +13,11 @@ export { getSelectionFormatting } from './state/formatting-state.ts';
 export type { SelectionFormatting, FormattingValue } from './state/formatting-state.ts';
 
 export {detectDocumentFormat} from './document-format.ts';
+export {findTextMatch,selectionMatchesText,getDocumentTextStatistics} from './state/text-tools.ts';
 export {PasswordAttemptError} from './editor/unlock-policy.ts';
+
+export {getSelectionClipboard} from './state/clipboard-state.ts';
+export type {SelectionClipboard} from './state/clipboard-state.ts';
 
 export {getHistoryAvailability} from "./state/history-state.ts";
 export type {HistoryAvailability} from "./state/history-state.ts";

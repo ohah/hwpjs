@@ -1,4 +1,5 @@
 import {loadSourceOptions} from './load-source-options.ts';
+import {isWellFormedText} from '../state/text-scalar.ts';
 import type { EditorRuntime, RuntimeFactory, RuntimeMessage, RuntimeReply, RuntimeRequestContext } from '../contracts.ts';
 import { EditorState } from '../state/editor-state.ts';
 import type { StateData, StateToken } from '../state/editor-state.ts';
@@ -31,7 +32,7 @@ let nextEditorId=0;
 let nextEditorInstance=0;
 const usedRuntimes=new WeakSet<object>();
 const errorText=(error:unknown)=>error instanceof Error?error.message:String(error);
-const isWellFormed=(text:string)=>!/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/u.test(text);
+const isWellFormed=isWellFormedText;
 const isAsyncFunction=(callback:unknown)=>Object.prototype.toString.call(callback)==='[object AsyncFunction]';
 
 /** Headless controller. Native sessions remain the sole document/save/history authority. */
@@ -223,6 +224,7 @@ export function createEditor(options:CreateEditorOptions) {
      assertLive();if(handled)return result('handled-without-runtime',ctx);
      if(pending.command.id===SPLICE_TEXT_COMMAND.id){
        const payload=pending.payload as SpliceTextPayload;
+       if(payload.selectionVersion!==undefined&&payload.selectionVersion!==state.stateVersion)throw Error('StaleClipboardSelection');
        if(typeof payload.text!=='string'||!isWellFormed(payload.text))throw Error('InvalidText');
        const position=selectionMessage(payload.target,state);
        return await mutate({kind:'splice',...position,text:payload.text},payload.target);
