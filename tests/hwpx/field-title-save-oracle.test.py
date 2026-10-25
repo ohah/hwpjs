@@ -175,6 +175,22 @@ class Evidence(unittest.TestCase):
         expected=expected.replace("<p:run charPrIDRef='2'><p:t>C</p:t></p:run><p:run charPrIDRef='1'><p:t>D<p:titleMark ignore='1'/></p:t></p:run><p:run charPrIDRef='1'><p:t>E</p:t></p:run>","<p:run charPrIDRef='1'><p:t></p:t></p:run>"*2+"<p:run charPrIDRef='2'><p:t>C<p:titleMark ignore='1'/></p:t></p:run><p:run charPrIDRef='1'><p:t>D</p:t></p:run>")
         self.check(dict(data,before=packed(source),after=packed(expected)))
 
+    def test_plain_title_edges_share_exact_style_expectation(self):
+        controls=["<p:ctrl><p:fieldBegin id='1' type='CLICK_HERE' dirty='0'/></p:ctrl>","<p:ctrl><p:fieldEnd beginIDRef='1'/></p:ctrl>"]
+        for leading in [True,False]:
+            for whole in [True,False]:
+                data,expected=self.edge(leading,whole)
+                source=XML.replace("B<p:titleMark ignore='1'/>C","<p:titleMark ignore='1'/>BC" if leading else "BC<p:titleMark ignore='1'/>")
+                for ctrl in controls:
+                    source=source.replace(ctrl,'');expected=expected.replace(ctrl,'')
+                self.check(dict(data,mode='partial-plain-title-format',before=packed(source),after=packed(expected)))
+
+    def test_plain_and_field_modes_do_not_silently_change_target_kind(self):
+        data,_=self.edge(True,True)
+        self.check(dict(data,mode='partial-plain-title-format'),'plain title mode requires no fields')
+        source=XML.replace("<p:ctrl><p:fieldBegin id='1' type='CLICK_HERE' dirty='0'/></p:ctrl>",'').replace("<p:ctrl><p:fieldEnd beginIDRef='1'/></p:ctrl>",'')
+        self.check(dict(data,before=packed(source)),'target field required')
+
     def test_partial_wrong_valid_style(self):
         data,_=self.partial()
         self.check(dict(data,charShapeId=1),'partial fixture must split one source text style')

@@ -13,6 +13,8 @@ shared = runpy.run_path(str(Path(__file__).with_name("hwpx-character-format-orac
 require, archive = shared["require"], shared["archive"]
 P = "http://www.hancom.co.kr/hwpml/2011/paragraph"
 H = "http://www.hancom.co.kr/hwpml/2011/head"
+PARTIAL_MODES = ("partial-field-title-format", "partial-plain-title-format")
+FORMAT_MODES = ("per-text-field-title-format", "per-text-format-and-replace", *PARTIAL_MODES)
 
 
 def parse(raw):
@@ -193,7 +195,7 @@ def verify(data):
     paragraph = data["paragraph"]
     require(type(paragraph) is int and paragraph >= 1, "paragraph index")
     mode = data["mode"]
-    require(mode in ("per-text-field-title-format", "per-text-format-and-replace", "partial-field-title-format"), "oracle mode")
+    require(mode in FORMAT_MODES, "oracle mode")
     with archive(data["before"]) as before, archive(data["after"]) as after:
         names = before.namelist()
         require(names == after.namelist() and len(set(names)) == len(names), "ZIP inventory/order/duplicate")
@@ -210,25 +212,29 @@ def verify(data):
             paragraphs = old.getElementsByTagNameNS(P, "p")
             require(paragraph <= len(paragraphs), "paragraph index")
             target = paragraphs[paragraph - 1]
-            require(target.getElementsByTagNameNS(P, "fieldBegin").length > 0, "target field required")
+            begins = target.getElementsByTagNameNS(P, "fieldBegin").length
+            if mode == "partial-plain-title-format":
+                require(begins == 0 and target.getElementsByTagNameNS(P, "fieldEnd").length == 0, "plain title mode requires no fields")
+            else:
+                require(begins > 0, "target field required")
             titles = target.getElementsByTagNameNS(P, "titleMark")
             require(titles.length == 1, "unique target title required")
             title = titles[0]
             require(title.getAttribute("ignore") == "1" and not title.childNodes, "fixture title shape")
-            if mode in ("per-text-field-title-format", "per-text-format-and-replace", "partial-field-title-format"):
+            if mode in FORMAT_MODES:
                 style = data["charShapeId"]
                 require(type(style) is int and 0 <= style <= 0xffffffff, "style ID")
                 ids = {int(n.attrib["id"]) for n in ET.fromstring(before.read("Contents/header.xml")).iter("{" + H + "}charPr")}
                 require(style in ids, "unknown resource ID")
                 source_p = list(ET.fromstring(old_raw).iter("{" + P + "}p"))[paragraph - 1]
                 _, units = shared["signature"](source_p, True, True, True)
-                if mode == "partial-field-title-format":
+                if mode in PARTIAL_MODES:
                     require(type(data["startUnit"]) is int and type(data["endUnit"]) is int and 0 <= data["startUnit"] < data["endUnit"] <= units, "partial range")
                 else:
                     require(type(data["startUnit"]) is int and type(data["endUnit"]) is int and data["startUnit"] == 0 and data["endUnit"] == units, "whole paragraph format required")
                 runs = direct(target, "run")
                 require(bool(runs), "source run required")
-                if mode == "partial-field-title-format":
+                if mode in PARTIAL_MODES:
                     expected_partial_source_run(target, style, data["startUnit"], data["endUnit"])
                 else:
                     format_source_runs(target, style)
