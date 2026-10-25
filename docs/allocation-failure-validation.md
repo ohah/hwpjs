@@ -1,6 +1,6 @@
 # 할당 실패 검증
 
-`src/testing/allocation_failures.zig`는 별도 safety-enabled DebugAllocator를 소유하고 종료 시 누수를 검사합니다. std의 `checkAllAllocationFailures`를 그대로 호출해 정상 실행에 필요한 모든 할당 실패 지점·OOM 삼킴·비결정적 할당을 검사합니다. 실패 지점 수를 샘플링하거나 줄이지 않습니다.
+`src/testing/allocation_failures.zig`는 별도 safety-enabled DebugAllocator를 소유하고 종료 시 누수를 검사합니다. 실제 할당기의 정상 resize/remap 경로를 checked control로 먼저 실행하고, 실패 주입은 `no_resize_allocator.zig`의 allocate/copy/free 대체 경로에 std의 `checkAllAllocationFailures`를 적용합니다. 이 결정적 경로의 모든 alloc 실패 지점·OOM 삼킴·비결정적 할당을 검사하며 실패 지점 수를 샘플링하거나 줄이지 않습니다. 실제 할당기의 정상 성공 경로를 대체 경로 검사로 바꾸지 않습니다.
 
 대형 실파일의 일반 실행에는 `src/testing/checked_allocator.zig`의 run을 사용합니다. 이 모듈이 safety-enabled 무추적 Debug 타입을 단일 소유하며 실패 주입 도우미도 같은 타입을 재사용합니다. run은 callback 성공/오류 뒤 allocator를 해제하고 누수가 있으면 TestAllocatorLeak, 없으면 원래 callback 오류를 전달합니다. 일반 실행을 실패 주입 전수 실행으로 잘못 표시하지 않습니다.
 
@@ -18,7 +18,7 @@ zig test src/text_preview_allocation_test.zig -O ReleaseSafe --test-filter 'allo
 zig test src/testing/allocation_failures_negative.zig -O ReleaseSafe --test-filter 'negative deliberate leak'
 ```
 
-기본 도우미 회귀는 할당 두 개에 대해 정상 실행 한 번과 두 실패 지점 모두를 실행했는지 검사하고, OOM을 삼킨 콜백도 거부합니다. 실행 중인 이전 테스트 바이너리에 이 변경을 소급하지 않습니다.
+기본 도우미 회귀는 할당 두 개에 대해 실제 할당기 정상 control·대체 경로 정상 control·두 실패 지점 모두를 실행했는지 검사하고, OOM을 삼킨 콜백도 거부합니다. grow/realloc3할당 사례는 같은 두 정상 control과3실패 지점을 검사합니다. 실행 중인 이전 테스트 바이너리에 이 변경을 소급하지 않습니다.
 
 ## 생성 셀 텍스트의 전체 gate 지연 조사
 
@@ -33,3 +33,11 @@ zig test src/testing/allocation_failures_negative.zig -O ReleaseSafe --test-filt
 최신 전체 native gate를 시작하기 전에 cwd/명령/부모·자식 PID를 확인한 이 목표의 오래된 소스 검증 프로세스만 종료했습니다. 취소를 통과/제품 실패로 계수하지 않고 다른 저장소나 사용자 프로세스는 종료하지 않았습니다. 최신 `zig build test -Doptimize=ReleaseSafe -j1 --summary all`은 실행 중이며 아직 최종 결과가 없습니다. 테스트 파일 변경은 그 최종 gate 전 미커밋입니다.
 
 같은 소스의 ReleaseSafe build6/6·exit0(42초), 별도 `full-gate-current/bin/hwpjs.wasm` SHA256 `3d77c87433cee8ee8256722756c23c06056b693a9ebb82af2388d6dc054e7252`를 확인했습니다. 기존 문단 지역 순회 후보3f096f와9개 non-custom section의 타입/길이/바이트 SHA256이 모두 같습니다. 전체 파일 해시 차이를 실행 코드 변경으로 단정하지 않으며, 이 비교로 전체 native/public gate를 대체하지 않습니다. 기본 WASM/데모는 교체하지 않았습니다.
+
+## HWP5 retained-anchor 전수 실패 주입
+
+2026-10-25 실제 Native 전체 gate에서 text splice retained-anchor 검사 문단93의 `NondeterministicMemoryUsage`를 확인했다. callback·fixture·원본 보존 단언을 유지하고 공통 결정적 helper로 연결했다. 별도 test module은 helper 세 파일을 build-generated 경로로 복사해 사용하며, 동일 물리 파일의 두 Zig module 소유 충돌과 수기 fork를 피한다.
+
+실제 build 경로와 게시할 파일만 반영한 HEAD 격리 환경 각각 Debug9/9·ReleaseSafe9/9를 통과했다. helper 자체4/4와 의도적 누수3건의 TestAllocatorLeak·exit1 부정 대조도 확인했다. ReleaseSafe WASM 전체 빌드가 성공했고 기존 fc7f 산출물과 전체 SHA·runtime sections가 같다. 근거는 `zig-out/verification/hwp5-allocation-publication/` 및 `hwp5-retained-anchor-isolated-run/actual-build-*.log`다.
+
+이전 전체 gate는 다른 모듈의 실패가 이미 확정된 상태에서 남은 root의 약13GB trace 비용을 회수하기 위해 의도적으로 종료했다. `actual-native-deterministic-closure/intentional-stop.json`에 incomplete-failed로 기록했고, 별도 trace0 후보는 유지했다. 이 집중 통과를 전체 Native gate 통과로 계수하지 않는다. 실행 명령은 개발·검증 명령의 test-text-splice 항목을 따른다.

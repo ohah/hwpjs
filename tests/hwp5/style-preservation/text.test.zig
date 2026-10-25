@@ -1,6 +1,7 @@
 const std = @import("std");
 const core = @import("hwpjs");
 const edit = core.hwp5.experimental_style_preservation;
+const allocation_failures = @import("allocation_failures");
 const a = std.testing.allocator;
 const fixture = "legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwp";
 
@@ -36,8 +37,8 @@ test "text splice retained anchor linkage allocation failures stay atomic" {
             }
         }
     };
-    try std.testing.checkAllAllocationFailures(a, Run.run, .{ bytes, @as(usize, 0) });
-    try std.testing.checkAllAllocationFailures(a, Run.run, .{ bytes, @as(usize, 93) });
+    try allocation_failures.check(Run.run, .{ bytes, @as(usize, 0) });
+    try allocation_failures.check(Run.run, .{ bytes, @as(usize, 93) });
 }
 
 test "text splice omitted empty cell allocation failures preserve source and absence" {

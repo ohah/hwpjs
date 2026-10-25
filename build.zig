@@ -40,7 +40,18 @@ pub fn build(b: *std.Build) void {
 
     const text_tests_module = b.createModule(.{ .root_source_file = b.path("tests/hwp5/style-preservation/text.test.zig"), .target = target, .optimize = optimize });
     text_tests_module.addImport("hwpjs", core);
+    const allocation_helper_files = b.addWriteFiles();
+    const allocation_helper_root = allocation_helper_files.addCopyFile(b.path("src/testing/allocation_failures.zig"), "allocation_failures.zig");
+    _ = allocation_helper_files.addCopyFile(b.path("src/testing/checked_allocator.zig"), "checked_allocator.zig");
+    _ = allocation_helper_files.addCopyFile(b.path("src/testing/no_resize_allocator.zig"), "no_resize_allocator.zig");
+    text_tests_module.addImport("allocation_failures", b.createModule(.{
+        .root_source_file = allocation_helper_root,
+        .target = target,
+        .optimize = optimize,
+    }));
     const text_tests = b.addRunArtifact(b.addTest(.{ .root_module = text_tests_module, .filters = &.{"text splice"} }));
+    const text_unit_step = b.step("test-text-splice", "Run native text splice unit and allocation failure tests");
+    text_unit_step.dependOn(&text_tests.step);
     const text_probe_module = b.createModule(.{ .root_source_file = b.path("tests/hwp5/style-preservation/text-probe.zig"), .target = target, .optimize = optimize });
     text_probe_module.addImport("hwpjs", core);
     const text_probe = b.addExecutable(.{ .name = "text-splice-probe", .root_module = text_probe_module });
