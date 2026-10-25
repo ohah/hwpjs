@@ -1,0 +1,240 @@
+{
+  "version": 1,
+  "bindings": [
+    {
+      "id": "save",
+      "command": "save",
+      "code": "KeyS",
+      "modifiers": [
+        "Mod"
+      ],
+      "platform": "all",
+      "labelKey": "command.save"
+    },
+    {
+      "id": "undo",
+      "command": "undo",
+      "code": "KeyZ",
+      "modifiers": [
+        "Mod"
+      ],
+      "platform": "all",
+      "labelKey": "command.undo"
+    },
+    {
+      "id": "cut",
+      "command": "cut",
+      "code": "KeyX",
+      "modifiers": [
+        "Mod"
+      ],
+      "platform": "all",
+      "labelKey": "command.cut"
+    },
+    {
+      "id": "copy",
+      "command": "copy",
+      "code": "KeyC",
+      "modifiers": [
+        "Mod"
+      ],
+      "platform": "all",
+      "labelKey": "command.copy"
+    },
+    {
+      "id": "paste",
+      "command": "paste",
+      "code": "KeyV",
+      "modifiers": [
+        "Mod"
+      ],
+      "platform": "all",
+      "labelKey": "command.paste"
+    },
+    {
+      "id": "find",
+      "command": "find",
+      "code": "KeyF",
+      "modifiers": [
+        "Mod"
+      ],
+      "platform": "all",
+      "labelKey": "command.find"
+    },
+    {
+      "id": "bold",
+      "command": "bold",
+      "code": "KeyB",
+      "modifiers": [
+        "Mod"
+      ],
+      "platform": "all",
+      "labelKey": "command.bold"
+    },
+    {
+      "id": "italic",
+      "command": "italic",
+      "code": "KeyI",
+      "modifiers": [
+        "Mod"
+      ],
+      "platform": "all",
+      "labelKey": "command.italic"
+    },
+    {
+      "id": "underline",
+      "command": "underline",
+      "code": "KeyU",
+      "modifiers": [
+        "Mod"
+      ],
+      "platform": "all",
+      "labelKey": "command.underline"
+    },
+    {
+      "id": "redo",
+      "command": "redo",
+      "code": "KeyZ",
+      "modifiers": [
+        "Mod",
+        "Shift"
+      ],
+      "platform": "all",
+      "labelKey": "command.redo"
+    },
+    {
+      "id": "replace-mac",
+      "command": "replace",
+      "code": "KeyH",
+      "modifiers": [
+        "Mod",
+        "Shift"
+      ],
+      "platform": "mac",
+      "labelKey": "command.replace"
+    },
+    {
+      "id": "replace-windows",
+      "command": "replace",
+      "code": "KeyH",
+      "modifiers": [
+        "Control"
+      ],
+      "platform": "windows",
+      "labelKey": "command.replace"
+    },
+    {
+      "id": "replace-linux",
+      "command": "replace",
+      "code": "KeyH",
+      "modifiers": [
+        "Control"
+      ],
+      "platform": "linux",
+      "labelKey": "command.replace"
+    },
+    {
+      "id": "bold-hancom-windows",
+      "command": "bold",
+      "code": "KeyB",
+      "modifiers": [
+        "Alt",
+        "Shift"
+      ],
+      "platform": "windows",
+      "labelKey": "command.bold"
+    },
+    {
+      "id": "bold-hancom-linux",
+      "command": "bold",
+      "code": "KeyB",
+      "modifiers": [
+        "Alt",
+        "Shift"
+      ],
+      "platform": "linux",
+      "labelKey": "command.bold"
+    },
+    {
+      "id": "italic-hancom-windows",
+      "command": "italic",
+      "code": "KeyI",
+      "modifiers": [
+        "Alt",
+        "Shift"
+      ],
+      "platform": "windows",
+      "labelKey": "command.italic"
+    },
+    {
+      "id": "italic-hancom-linux",
+      "command": "italic",
+      "code": "KeyI",
+      "modifiers": [
+        "Alt",
+        "Shift"
+      ],
+      "platform": "linux",
+      "labelKey": "command.italic"
+    },
+    {
+      "id": "underline-hancom-windows",
+      "command": "underline",
+      "code": "KeyU",
+      "modifiers": [
+        "Alt",
+        "Shift"
+      ],
+      "platform": "windows",
+      "labelKey": "command.underline"
+    },
+    {
+      "id": "underline-hancom-linux",
+      "command": "underline",
+      "code": "KeyU",
+      "modifiers": [
+        "Alt",
+        "Shift"
+      ],
+      "platform": "linux",
+      "labelKey": "command.underline"
+    },
+    {
+      "id": "redo-compat-y",
+      "command": "redo",
+      "code": "KeyY",
+      "modifiers": [
+        "Mod"
+      ],
+      "labelKey": "command.redo"
+    }
+  ],
+  "messages": {
+    "ko": {
+      "command.save": "저장",
+      "command.undo": "실행 취소",
+      "command.redo": "다시 실행",
+      "command.cut": "잘라내기",
+      "command.copy": "복사",
+      "command.paste": "붙여넣기",
+      "command.find": "찾기",
+      "command.replace": "찾아 바꾸기",
+      "command.bold": "굵게",
+      "command.italic": "기울임",
+      "command.underline": "밑줄"
+    },
+    "en": {
+      "command.save": "Save",
+      "command.undo": "Undo",
+      "command.redo": "Redo",
+      "command.cut": "Cut",
+      "command.copy": "Copy",
+      "command.paste": "Paste",
+      "command.find": "Find",
+      "command.replace": "Replace",
+      "command.bold": "Bold",
+      "command.italic": "Italic",
+      "command.underline": "Underline"
+    }
+  }
+}

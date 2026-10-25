@@ -21,3 +21,9 @@ export type {SelectionClipboard} from './state/clipboard-state.ts';
 
 export {getHistoryAvailability} from "./state/history-state.ts";
 export type {HistoryAvailability} from "./state/history-state.ts";
+
+export {parseKeymapConfig,mergeKeymap,resolveShortcutLabel} from './keymap/config.ts';
+export {compileKeymap,resolveKeyboardShortcut} from './keymap/resolve.ts';
+export {DEFAULT_KEYMAP} from './keymap/defaults.ts';
+export type {KeymapConfig,KeymapPlatform,KeymapModifier,KeymapBinding,ShortcutBinding} from './keymap/config.ts';
+export type {CompiledKeymap,NormalizedShortcutEvent} from './keymap/resolve.ts';
