@@ -51,6 +51,60 @@ class Evidence(unittest.TestCase):
         self.check(request())
         self.check(dict(request(), mode='anchor-format'), script=LEGACY)
 
+    def partial(self, start=3, end=4, source=XML):
+        runs = "<p:run charPrIDRef='1'><p:t>X</p:t><p:ctrl><p:fieldBegin id='1' type='CLICK_HERE' dirty='0'/></p:ctrl></p:run>" + \
+            "<p:run charPrIDRef='1'><p:t>A</p:t><p:ctrl><p:fieldEnd beginIDRef='1'/></p:ctrl></p:run>" + \
+            "<p:run charPrIDRef='1'><p:t/></p:run>" + \
+            f"<p:run charPrIDRef='{2 if start == 2 else 1}'><p:t>B<p:titleMark ignore='1'/></p:t></p:run>" + \
+            f"<p:run charPrIDRef='{2 if start == 3 else 1}'><p:t>C</p:t></p:run>"
+        begin=source.index("<p:run charPrIDRef='1'>")
+        finish=source.index('</p:run>',begin)+len('</p:run>')
+        expected=source[:begin]+runs+source[finish:]
+        expected=expected.replace('<p:linesegarray><p:lineseg vertpos="123"/></p:linesegarray>','')
+        return dict(request(),mode='partial-field-title-format',before=packed(source),after=packed(expected),startUnit=start,endUnit=end),expected
+
+    def test_partial_right_and_left(self):
+        for start,end in [(3,4),(2,3)]:
+            data,_=self.partial(start,end)
+            self.check(data)
+
+    def test_partial_marker_and_field_must_stay_once(self):
+        data,expected=self.partial()
+        for removed in ["<p:titleMark ignore='1'/>","<p:fieldEnd beginIDRef='1'/>"]:
+            self.check(dict(data,after=packed(expected.replace(removed,''))),'whole target XML differs')
+            self.check(dict(data,after=packed(expected.replace(removed,removed+removed))),'whole target XML differs')
+
+    def test_partial_old_empty_style_is_preserved(self):
+        data,expected=self.partial()
+        self.check(dict(data,after=packed(expected.replace("charPrIDRef='1'><p:t/>","charPrIDRef='2'><p:t/>"))),'whole target XML differs')
+
+    def test_partial_marker_cannot_change_style_owner(self):
+        data,expected=self.partial()
+        moved=expected.replace("B<p:titleMark ignore='1'/>","B").replace('>C</p:t>',"><p:titleMark ignore='1'/>C</p:t>")
+        self.check(dict(data,after=packed(moved)),'whole target XML differs')
+
+    def test_partial_non_bmp_and_escaped_text(self):
+        source=XML.replace("ignore='1'/>C","ignore='1'/>😀")
+        data,expected=self.partial(3,5,source)
+        self.check(dict(data,after=packed(expected.replace('>C</p:t>','>😀</p:t>'))))
+        source=XML.replace('>B<p:titleMark','>&amp;<p:titleMark')
+        data,expected=self.partial(3,4,source)
+        self.check(dict(data,after=packed(expected.replace('>B<p:titleMark','>&amp;<p:titleMark'))))
+
+    def test_partial_wrong_valid_style(self):
+        data,_=self.partial()
+        self.check(dict(data,charShapeId=1),'partial fixture must split one source text style')
+
+    def test_partial_surrogate_boundary(self):
+        for start,end in [(2,3),(3,4)]:
+            data,_=self.partial(start,end,XML.replace('B<p:titleMark','😀<p:titleMark'))
+            self.check(data,'partial range splits surrogate')
+
+    def test_partial_rejects_other_source_shapes(self):
+        data,_=self.partial()
+        self.check(dict(data,startUnit=0,endUnit=1),'partial fixture must split one source text style')
+        self.check(dict(data,startUnit=4,endUnit=5),'partial range')
+
     def test_splice(self):
         self.check(dict(request(), mode='per-text-format-and-replace', after=packed(SPLICED), leftBefore='B', rightBefore='C', inserted='Y', deleteUnits=1))
 

@@ -101,13 +101,85 @@ def format_source_runs(target, style):
         source_run.unlink()
 
 
+def expected_partial_source_run(target, style, start, end):
+    require(type(start) is int and type(end) is int and 0 <= start < end,
+            'partial range')
+    runs = direct(target, 'run')
+    require(len(runs) == 1, 'partial fixture requires one source run')
+    source = runs[0]
+    old_style = source.getAttribute('charPrIDRef')
+    require(bool(old_style), 'explicit source style required')
+    offset = 0
+    mixed_text = False
+    fragments, pending = [], []
+
+    def fragment(text, value, selected):
+        run = source.cloneNode(False)
+        run.setAttribute('charPrIDRef', str(style) if selected else old_style)
+        t = text.cloneNode(False)
+        if value:
+            t.appendChild(target.ownerDocument.createTextNode(value))
+        run.appendChild(t)
+        return run, t
+
+    for child in source.childNodes:
+        if not (child.nodeType == Node.ELEMENT_NODE and child.namespaceURI == P and child.localName == 't'):
+            if fragments:
+                fragments[-1][0].appendChild(child.cloneNode(True))
+            else:
+                pending.append(child)
+            continue
+        text_styles = set()
+        sites, value = [], ''
+        for node in child.childNodes:
+            if node.nodeType in (Node.TEXT_NODE, Node.CDATA_SECTION_NODE):
+                value += node.data
+            else:
+                require(node.nodeType == Node.ELEMENT_NODE and node.namespaceURI == P and node.localName == 'titleMark' and not node.childNodes,
+                        'partial fixture title-only inline')
+                # Edge-marker synthetic ownership requires a separate expectation.
+                require(bool(value), 'partial fixture nonempty marker left required')
+                sites.append((value, node))
+                value = ''
+        require(bool(value) or not sites, 'partial fixture nonempty marker right required')
+        sites.append((value, None))
+        for text, marker in sites:
+            boundaries, units = {0: 0}, 0
+            for index, scalar in enumerate(text):
+                units += len(scalar.encode('utf-16-le')) // 2
+                boundaries[units] = index + 1
+            cuts = sorted({0, units, *[p - offset for p in (start, end) if offset < p < offset + units]})
+            require(all(c in boundaries for c in cuts), 'partial range splits surrogate')
+            intervals = list(zip(cuts, cuts[1:])) if units else [(0, 0)]
+            for low, high in intervals:
+                selected = high > low and start <= offset + low and offset + high <= end
+                if high > low:
+                    text_styles.add(str(style) if selected else old_style)
+                item = fragment(child, text[boundaries[low]:boundaries[high]], selected)
+                if not fragments:
+                    for prefix in pending:
+                        item[0].insertBefore(prefix.cloneNode(True), item[1])
+                    pending = []
+                fragments.append(item)
+            if marker is not None:
+                fragments[-1][1].appendChild(marker.cloneNode(True))
+            offset += units
+        mixed_text = mixed_text or len(text_styles) > 1
+    require(end <= offset and fragments and not pending, 'partial range or source shape')
+    require(mixed_text, 'partial fixture must split one source text style')
+    for run, _ in fragments:
+        target.insertBefore(run, source)
+    target.removeChild(source)
+    source.unlink()
+
+
 def verify(data):
     part = data.get("part", "Contents/section0.xml")
     require(part == "Contents/section0.xml", "oracle fixture part")
     paragraph = data["paragraph"]
     require(type(paragraph) is int and paragraph >= 1, "paragraph index")
     mode = data["mode"]
-    require(mode in ("per-text-field-title-format", "per-text-format-and-replace"), "oracle mode")
+    require(mode in ("per-text-field-title-format", "per-text-format-and-replace", "partial-field-title-format"), "oracle mode")
     with archive(data["before"]) as before, archive(data["after"]) as after:
         names = before.namelist()
         require(names == after.namelist() and len(set(names)) == len(names), "ZIP inventory/order/duplicate")
@@ -129,17 +201,23 @@ def verify(data):
             require(titles.length == 1, "unique target title required")
             title = titles[0]
             require(title.getAttribute("ignore") == "1" and not title.childNodes, "fixture title shape")
-            if mode in ("per-text-field-title-format", "per-text-format-and-replace"):
+            if mode in ("per-text-field-title-format", "per-text-format-and-replace", "partial-field-title-format"):
                 style = data["charShapeId"]
                 require(type(style) is int and 0 <= style <= 0xffffffff, "style ID")
                 ids = {int(n.attrib["id"]) for n in ET.fromstring(before.read("Contents/header.xml")).iter("{" + H + "}charPr")}
                 require(style in ids, "unknown resource ID")
                 source_p = list(ET.fromstring(old_raw).iter("{" + P + "}p"))[paragraph - 1]
                 _, units = shared["signature"](source_p, True, True, True)
-                require(type(data["startUnit"]) is int and type(data["endUnit"]) is int and data["startUnit"] == 0 and data["endUnit"] == units, "whole paragraph format required")
+                if mode == "partial-field-title-format":
+                    require(type(data["startUnit"]) is int and type(data["endUnit"]) is int and 0 <= data["startUnit"] < data["endUnit"] <= units, "partial range")
+                else:
+                    require(type(data["startUnit"]) is int and type(data["endUnit"]) is int and data["startUnit"] == 0 and data["endUnit"] == units, "whole paragraph format required")
                 runs = direct(target, "run")
                 require(bool(runs), "source run required")
-                format_source_runs(target, style)
+                if mode == "partial-field-title-format":
+                    expected_partial_source_run(target, style, data["startUnit"], data["endUnit"])
+                else:
+                    format_source_runs(target, style)
                 require(type(data["invalidateLineSegments"]) is bool, "explicit layout invalidation expectation")
                 if data["invalidateLineSegments"]:
                     # Exact existing paragraph_continuation_metadata.remove rule,
