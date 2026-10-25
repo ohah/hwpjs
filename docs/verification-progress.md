@@ -1,5 +1,13 @@
 # 프로젝트 문서 검증 현황
 
+## 2026-10-25 현재 검증 경계
+
+기존 작업 소스의 전체 ReleaseSafe Native gate는 종료 코드0·입력 지문 변경0이었다. root 등록 검사는4,750개지만 성공 로그에 skip 수가 없으므로 전부 성공·생략0으로 표현하지 않는다. 새 제목 다중 서식 후보는 이 gate에 포함되지 않았다. 근거는 `zig-out/verification/field-mode-final-context/native-full-result.json`이다.
+
+미공개 제목 서식 후보의 최초 실제 WASM 검사는25개 중 성공7·실패14·TODO4였다. 일반 제목4개도 정확한 빈 범위 동치를 요구하자 모두 실패했다. 복합 편집28종은 가시 텍스트·양의 폭 서식이 같아도 삭제·재입력3종의 저장 XML이 달랐고1종은 제목 마커의 enclosing run style도 달랐다. 실제 Native Session 회귀에서도 재현됐다. 분리된 경계 모델 prototype6개 성공을 실제 Session 수정 완료로 해석하지 않는다. 세부 근거는 `zig-out/verification/title-zero-boundary-compound-parity/REPORT.md`와 `zig-out/verification/title-zero-boundary-candidate/native-session-result.json`에 있다.
+
+후보는 공개 데모에 배포하지 않았다. 전체 픽스쳐 편집·파서·원본 조판 동치 목표는 미완료다. 아래 과거 진행 기록의 실행 중 상태를 최신 상태로 읽지 않는다.
+
 2026-09-28 CFB 호환성 후속 검증: 현재 추적 프로젝트 Markdown 561개는 모두 검증 해시와 일치하고 인라인 로컬 링크 2,869개에 누락 대상이 없습니다. 원본 strict CFB 실패 91개 중 기본 Zig·레거시 `cfb.js`가 열던 90개는 활성 스트림 1,175개가 일치했습니다. 다른 1개는 DIFAT가 지정한 마지막 FAT 섹터의 단일 잘못된 표식만 복사본에서 보정해 스트림 5개를 대조했습니다. 제한적 복사본 보정 뒤 91개 모두 전체 strict CFB를 통과했고, 후속 7개 실파일의 활성 스트림 137개를 직접 대조했습니다. HWP5 미리보기는 해당 경로 중 81개를 포함해 전체 789개 중 667개에서 성공했고, 나머지 10개는 배포용·HWP 레코드·구역 단계에서 거부됩니다. CFB 합성 Debug·ReleaseSafe·ReleaseFast 각 13/13, HWP5 미리보기 7/7, HWPX OLE 10/10, 실파일 OLE shard 8/8과 전체 `zig build audit -Doptimize=ReleaseSafe` 종료 코드 0을 확인했습니다. 할당 실패 주입에서 발견한 오류 전파 문제도 고쳤습니다. 세부 판정은 [HWP5 미리보기](hwp5-text-preview-api.md)와 [CFB 복사본 검사](hwpx-ole-observed-repairs.md)가 소유합니다.
 
 2026-09-28 HWP5 읽기 전용 문단 토큰 미리보기 API를 추가했습니다. 공개 범위·미지원 경계는 [HWP5 문단 텍스트 미리보기 API](hwp5-text-preview-api.md)가 소유합니다. 추적 실파일 48개 중 지원 입력 45개의 모든 문단 원시 텍스트 바이트를 독립 JS 레코드 순회/Node raw DEFLATE와 대조했고 배포용 2개·암호화 1개는 명시적 거부했습니다. 직접 텍스트 부재 3건·손상·다중 구역·구역 수 불일치·wire 잘림·선두 BOM 반례가 통과했습니다. Debug·ReleaseSafe·ReleaseFast WASM 제품 빌드와 각 모드의 집중 JS 테스트 6/6, CFB 비교 47/47, ReleaseSafe HWP5 감사 10/10 단계·8,905,855회 검사·imports 0, Debug 전체 네이티브 테스트 2,664/2,664개가 통과했습니다. 이 미리보기는 통합 문서 모델·화면 텍스트·편집·저장을 증명하지 않습니다.
