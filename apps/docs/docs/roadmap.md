@@ -1,8 +1,19 @@
 # 지원 현황과 로드맵
 
-기준일: 2026-10-25. 현재 HWPJS는 **Zig 기반 HWP5/HWPX 코어와 freestanding WASM**, DOM 없는 헤드리스 API, 이를 사용하는 Canvas 호스트로 구성됩니다. 전체 형식·모든 위치의 편집·한/글과 동일한 조판은 아직 완료되지 않았습니다. HWP3는 사용자 요청으로 대상에서 제외합니다.
+기준일: 2026-10-26. 공개 배포와 준비 소스의 상태를 구분합니다. 현재 HWPJS는 **Zig 기반 HWP5/HWPX 코어와 freestanding WASM**, DOM 없는 헤드리스 API, 이를 사용하는 Canvas 호스트로 구성됩니다. 전체 형식·모든 위치의 편집·한/글과 동일한 조판은 아직 완료되지 않았습니다. HWP3는 사용자 요청으로 대상에서 제외합니다.
 
 이 페이지는 현재 작업 트리의 공개 소스와 기존 검증 기록을 대조한 상태표입니다. 이번 문서 조사에서 Native 빌드나 전수감사를 새로 실행하지 않았습니다. 소스의 public export, 패키지 빌드, npm registry 공개 설치, 실제 브라우저, RN 기기 지원은 서로 다른 증거입니다. 완료 기준이 다른 항목을 합쳐 진행률을 계산하지 않습니다.
+
+## 지금 사용할 수 있는 배포와 준비 중인 작업
+
+| 사용자 진입점 | 현재 확인한 범위 | 완료로 해석하면 안 되는 범위 |
+| --- | --- | --- |
+| [웹 Canvas 데모](./playground.mdx) · [API 직접 실행](./api/playground.mdx) | 공개 정적 배포는 b7 WASM을 사용합니다. API 실행에서 두 형식의 열기·선택·삽입·이력·저장·재열기를 확인했습니다 | 준비 중인 Company/Enter 후속 소스가 이 배포에 포함됐다는 뜻이 아니며, 모든 위치·명령·완전 조판의 증거도 아닙니다 |
+| [새 canonical 패키지 예제](./guide/package-names.md) | 단일 `@ohah/hwpjs`와 `/runtime`, `/react`, `/svelte`, `/vanilla`, `/react-native` subpath 후보를 tarball로 검사했습니다 | 새 Zig/WASM API는 npm 미게시입니다. 현재 npm의 `0.1.0-rc.10`은 구 Rust 패키지이며, 패키지 소비 검증이 새 엔진 배포 완료를 뜻하지 않습니다 |
+| Company/Enter 후속 | 준비 소스·격리 후보의 개별 검증은 공개 b7와 별도입니다 | 소스 존재·commit·후보 빌드만으로 현재 웹 배포 반영이나 전체 corpus/형식 지원을 선언하지 않습니다 |
+| [RN](./frameworks/react-native.md) | provider/JSI 기반 및 제한된 iOS 시뮬레이터 저수준 진단 harness의 근거가 있습니다 | 정식 HeadlessEditor provider 연결·Native Canvas 전체 조판·Android/iOS 제품 release·실기기·OS IME는 미완료입니다 |
+
+설치·pack·예제 검사는 [설치 안내](./guide/installation.md)의 선행 소스와 메타데이터 조건을 따릅니다. 현재 소스, 독립 tarball, 실제 웹 배포, npm registry, Native 기기 지원의 검증을 서로 계승하지 않습니다.
 
 ## 판정 기준
 
@@ -29,9 +40,11 @@
 
 b7 WASM SHA256은 `b7aec1c9c674dbbef96c8c88e29a39e675a7eb85da630fe8707e7e2ad230bcee`입니다. 감사 당시 core 배포본은 별도 보존되어 있습니다. 후속 UI·압축 배포와 감사의 verifier/Native 기준선을 혼동하지 않습니다.
 
-빠른 undo 72사례의 원본 보고서는 private 후보 origin `127.0.0.1:49012`를 기록하며, 공개 paste 6조합은 별도 HTTPS 실행 로그입니다. 배포 반영과 각 검사 실행의 출처를 합쳐 새 전수 결과로 만들지 않습니다.
+빠른 undo 72사례의 원본 보고서는 로컬 후보 환경을 기록하며, 공개 paste 6조합은 별도 HTTPS 실행 로그입니다. 배포 반영과 각 검사 실행의 출처를 합쳐 새 전수 결과로 만들지 않습니다.
 
 RN host의 60개 검사도 과거 실행입니다. 정적 지문 대조에서 당시 evidence와 현재 probe 실행기 3개(`hermes-context.cpp`, `hermes-context.js`, `run-hermes-probe.sh`)의 해시 차이를 확인했습니다. 이 성공을 현재 probe 전체의 재실행 결과로 계승하지 않으며, 새 Native 실행은 하지 않았습니다.
+
+RN의 후속 iOS 시뮬레이터 검증은 저수준 Native Context port의 두 형식 편집·이력·저장·재열기와 독립 저장 검사에 한정됩니다. 진단용 UIKit 문단 뷰와 toolchain workaround를 사용했으며, 공통 scene/shaping·정식 Native Canvas·고수준 HeadlessEditor provider·Android/실기기 지원 완료가 아닙니다. macOS host의 과거 60개 검사나 공개 b7 웹 감사와 합산하지 않습니다.
 
 ## 현재 공개 API와 UI
 
@@ -56,7 +69,7 @@ RN host의 60개 검사도 과거 실행입니다. 정적 지문 대조에서 �
 | RN 네이티브 provider/JSI | `packages/react-native/src/index.ts`, `cpp/NativeContextJsi.cpp`, `src/native/abi.zig` | 실제 Hermes host 60 checks. fake transport와 syntax compile은 별도 | 부분 | 공통 display projection, 앱 등록·release 패키징, 네이티브 Canvas/JSI 연결·실기기 build/E2E |
 | 실제 OS 한글 IME | core input lease와 Canvas 조합 이벤트 기반 | fast-undo 보고서의 CDP 관측은 compositionend 신뢰 조건 미충족, osImeVerified=false | 미검증 | 실제 OS 입력기 조합·확정·취소·undo/redo와 플랫폼별 수명 검사 |
 | pending 중 파일 교체 | core admission과 `apps/demo/src/document-admission.ts` | 교체 요청이 기존 admission에서 차단되어 Native load 0건 관측 | 미검증 | 실제 새 세대 활성화·진행 작업 취소 E2E. 차단 관측을 교체 성공으로 계수하지 않음 |
-| Enter 상속·Company 보호 후속 | 미통합 artifact 후보 | 제품 반영 증거 없음 | 미검증 | 정식 통합과 동일 snapshot 독립 저장·UI 검증 |
+| Enter 상속·Company 보호 후속 | 준비 소스/격리 후보; 공개 b7와 분리 | 후보별 근거만 유효, 공개 정적 배포 반영 증거와 구분 | 미검증(공개 배포) | 정식 통합·배포와 동일 snapshot 독립 저장·UI 검증 |
 | 탭/머리말 oracle 보완 | 기존 verifier를 재사용한 격리 후보. Native/제품 코드 변경 아님 | `zig-out/verification/oracle-closure-current/REPORT.md`; 동결·미적용 | 미검증 | 부모의 정식 적용 검토 이후 새 verifier 결과로 기록. 기존 b7 oracle 미지원 132를 소급 변경하지 않음 |
 | 전체 HWP5/HWPX 의미·조판·편집 | 포맷 코어·모델·WASM·scene·Canvas를 단계적으로 연결 | `docs/fixture-editor-completion.md`와 b7 미완료 결과 | 부분 | 모든 필드·임의 위치·모든 명령·원본 한/글 조판 및 실제 UI 전수 증명 |
 | PDF/bitmap export·인쇄 | 전용 typed public 메서드 미제공. host 책임과 구분 | public export 정적 대조 | 미구현 | export 계약·폰트·페이지 조판·독립 비교 |
@@ -66,13 +79,13 @@ RN host의 60개 검사도 과거 실행입니다. 정적 지문 대조에서 �
 
 ## 구 Rust 문서와의 차이
 
-로컬의 구 Rspress `_nav.json`, 가이드·API 인덱스, legacy README와 문서 본문에서 별도의 roadmap 문서는 발견하지 못했습니다. 공개 [구 Rust 사이트](https://ohah.github.io/hwpjs/)와 [CLI 가이드](https://ohah.github.io/hwpjs/guide/cli)는 Rust 변환기를 설명하고 있으며, 조사한 `/roadmap`, `/roadmap/`, `/roadmap.html`, `/guide/roadmap`, `/guide/roadmap.html`은 HTTP 404였습니다. 이는 확인한 경로의 결과이며 다른 과거 revision이나 별도 서버의 존재까지 부정하지 않습니다.
+구 Rspress 소스의 `_nav.json`, 가이드·API 인덱스, legacy README와 문서 본문에서는 별도의 roadmap 문서를 발견하지 못했습니다. 과거 공개 사이트의 Rust 변환기 설명과 경로 조사 결과는 당시 배포의 기록입니다. 현재 이 사이트는 새 문서로 교체됐고 `/roadmap`은 이 페이지입니다. 구 CLI 안내는 [보관된 Rust CLI 소스](https://github.com/ohah/hwpjs/blob/main/legacy/rust/documents/docs/guide/cli.mdx)에서 확인하세요. 구 변환 CLI를 새 Zig/WASM의 실행 명령으로 안내하지 않습니다.
 
 따라서 다음 표는 발견한 **구 지원 목록/확장계획과의 대조**입니다. 새 로드맵의 완료 이력을 복원한 것이 아닙니다. [보관된 Rust README](https://github.com/ohah/hwpjs/blob/main/legacy/rust/README.md), [구 Rspress 지원 목록](https://github.com/ohah/hwpjs/blob/main/legacy/rust/documents/docs/guide/index.mdx), [구 뷰어 확장 설계](https://github.com/ohah/hwpjs/blob/main/legacy/rust/docs/design/viewer-architecture.md)는 legacy 참고 자료입니다.
 
 | 구 명시 항목 | 현재 대응 위치·차이 | 검증 근거·범위 | 판정 | 남은 일 |
 | --- | --- | --- | --- | --- |
-| `@ohah/hwpjs`·Node NAPI-RS `.node` | 현재 `@hwpjs/core`와 명시 WASM runtime. 구 npm 패키지/바이너리 계약을 계승하지 않음 | package exports 정적 대조; 과거 tarball 소비와 registry 공개 설치는 별도 | 부분 | 새 패키지별 배포/호환 정책과 소비자 검증 |
+| `@ohah/hwpjs`·Node NAPI-RS `.node` | 외부 canonical 경로는 새 `@ohah/hwpjs`와 하위 경로, 내부 구현은 `@hwpjs/*`. 구 npm 패키지/바이너리 계약을 계승하지 않음 | package exports 정적 대조; 과거 tarball 소비와 registry 공개 설치는 별도 | 부분 | 새 패키지별 배포/호환 정책과 소비자 검증 |
 | Web WASI threads | 현재 `wasm32-freestanding` ABI, WASI preview1 threads runtime과 다름 | 빌드 타깃·ABI 소스 대조 | 미구현 | 구 WASI 계약의 호환 구현을 약속하지 않음 |
 | RN Craby·iOS/Android 자동 설정 | 현재 별도 provider/JSI 주입, 네이티브 Canvas 방향. 구 Craby export·자동 연결은 현행 계약 아님 | host JSI는 앱·실기기 검증과 다름 | 부분 | Native 패키징/공통 scene/입력·실기기 검증 |
 | JSON `toJson` / `parseHwp` 페이지 | 현재 state 관측/형식별 reader는 문서 전체 JSON 문자열 API가 아님. parseHwp 페이지 본문도 toJson임 | `packages/core/src/index.ts` 정적 대조 | 미구현 | 문서 전체/부분 스키마·export·독립 검사 |
