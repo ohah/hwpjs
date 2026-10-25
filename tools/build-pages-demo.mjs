@@ -8,9 +8,12 @@ import {execFileSync} from 'node:child_process';
 const root=fileURLToPath(new URL('../',import.meta.url));
 
 if(process.argv.includes('--verify')){
- const target=resolve(root,'apps/docs/docs/public/editor');
+ const outIndex=process.argv.indexOf('--out');
+ const target=resolve(root,outIndex<0?'apps/docs/docs/public/editor':process.argv[outIndex+1]);
+ if(target!==resolve(root,'apps/docs/docs/public/editor')&&!target.startsWith(resolve(root,'zig-out/verification')+'/'))throw Error('OutputOutsideOwnedPaths');
  const manifest=JSON.parse(await readFile(resolve(target,'manifest.json'),'utf8'));
  if(manifest.mode!=='frozen-dist-closure'||manifest.base!=='relative')throw Error('InvalidStaticManifest');
+ if(manifest.files.filter(f=>f.path.endsWith('.wasm')).length!==1||!manifest.files.some(f=>f.path==='hwpjs/hwpjs.wasm'&&f.sha256===manifest.wasmSha256))throw Error('NonCanonicalWasm');
  const expected=new Set(['manifest.json']);
  for(const file of manifest.files){if(!/^[A-Za-z0-9_./-]+$/.test(file.path)||file.path.split('/').includes('..'))throw Error('UnsafeManifestPath');expected.add(file.path);const bytes=await readFile(resolve(target,file.path));if(bytes.length!==file.bytes||createHash('sha256').update(bytes).digest('hex')!==file.sha256)throw Error('ChecksumMismatch:'+file.path);if(/\.(js|css|html|json|txt)$/.test(file.path)&&/(?:\.ts\.net|tailscale|\/Users\/|reference\/rhwp|legacy\/rust\/|sourceMappingURL)/i.test(bytes.toString()))throw Error('PrivateOrSourcePathInPublishedText:'+file.path);}
  async function verifyDirectory(directory){for(const entry of await readdir(directory,{withFileTypes:true})){const p=resolve(directory,entry.name);if(entry.isDirectory())await verifyDirectory(p);else if(!entry.isFile()||!expected.has(relative(target,p).split('\\').join('/')))throw Error('UnexpectedStaticFile');}}
@@ -80,11 +83,11 @@ let html=(await input('apps/demo/dist/index.html')).toString();
 for(const m of html.matchAll(/(?:src|href)=["']\/([^"']+)["']/g))enqueue('demo',m[1]);
 const canonicalWasm=await input('packages/core/dist/hwpjs.wasm');
 files.set('hwpjs/hwpjs.wasm',canonicalWasm);
-enqueue('core','worker.js');
+enqueue('core','worker.js');enqueue('core','index.js');enqueue('core','runtime.js');
 while(pending.length){const {kind,path}=pending.shift(),key=kind+':'+path;if(seen.has(key))continue;seen.add(key);
  if(!/\.(?:js|css|wasm|woff2?|ttf|png|svg|ico)$/.test(path))throw Error('UnapprovedAssetType:'+path);
  const bytes=await input((kind==='demo'?'apps/demo/dist/':'packages/core/dist/')+path);let body=bytes;
- if(kind==='demo'&&path.endsWith('.wasm')){if(!bytes.equals(canonicalWasm))throw Error('BundledWasmDiffersFromCanonical');continue;}
+ if(path.endsWith('.wasm')){if(!bytes.equals(canonicalWasm))throw Error('BundledWasmDiffersFromCanonical');continue;}
  if(/\.(?:js|css)$/.test(path)){
   const source=bytes.toString();
   for(const m of source.matchAll(/["'`]((?:\.\.\/|\.\/|\/?assets\/)[^"'`\s]+?\.(?:js|css|wasm|woff2?|ttf|png|svg|ico))["'`]/g)){
@@ -92,6 +95,7 @@ while(pending.length){const {kind,path}=pending.shift(),key=kind+':'+path;if(see
   }
   body=Buffer.from(rewrite(source));
  }
+ if(kind==='core'&&path==='runtime.js')body=Buffer.from(body.toString().replaceAll('new URL("./hwpjs.wasm", import.meta.url)','new URL("../hwpjs/hwpjs.wasm", import.meta.url)'));
  files.set((kind==='core'?'runtime/':'')+path,body);
 }
 if(catalogReplacements!==2)throw Error('ExpectedTwoCatalogs:'+catalogReplacements);
@@ -101,6 +105,16 @@ html=html.replace('</head>',`  <link rel="icon" href="${favicon}">\n  </head>`);
 files.set('index.html',Buffer.from(html));
 for(const name of ['vanilla','react','svelte','headless'])files.set('demo/'+name+'/index.html',Buffer.from(html.replaceAll('="./assets/','="../../assets/')));
 files.set('fixture-catalog.json',Buffer.from(JSON.stringify(fixtures,null,2)+'\n'));
+const apiModule=await input('apps/demo/src/api-playground.mjs');
+files.set('api/playground.js',Buffer.from(rewrite(apiModule.toString())));
+files.set('api/main.js',Buffer.from(`import {createEditor,SPLICE_TEXT_COMMAND,getHistoryAvailability} from '../runtime/index.js';
+import {createWorkerRuntimeFactory} from '../runtime/runtime.js';
+import {mountApiPlayground} from './playground.js';
+const editor=createEditor({runtimeFactory:createWorkerRuntimeFactory({workerURL:new URL('../runtime/worker.js',import.meta.url),wasmURL:new URL('../hwpjs/hwpjs.wasm',import.meta.url)})});
+const panel=mountApiPlayground(document.querySelector('main'),{editor,spliceCommand:SPLICE_TEXT_COMMAND,getHistoryAvailability,async loadFixture(format){const name=format==='hwp5'?'noori.hwp':'noori.hwpx';const response=await fetch(new URL('../fixtures/'+name,import.meta.url));if(!response.ok)throw Error('FixtureFetchFailed');return new Uint8Array(await response.arrayBuffer());}});
+window.addEventListener('pagehide',()=>{panel.dispose();void editor.dispose();},{once:true});
+`));
+files.set('api/index.html',Buffer.from(`<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Headless API 실행</title><link rel="icon" href="${favicon}"><style>body{font:16px system-ui;margin:0;padding:20px;color:#172033;background:#fff}main{max-width:1100px;margin:auto}label{display:block;margin:14px 0}textarea{display:block;width:100%;box-sizing:border-box;font:14px monospace}select,button{font:inherit;padding:8px}button{margin:8px 12px 8px 0}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f3f5f8;padding:14px;max-height:420px;overflow:auto}button:disabled{opacity:.5}</style><script type="module" src="./main.js"></script></head><body><main></main></body></html>`));
 // Resolve every bundled static reference against two mount prefixes without a server.
 for(const prefix of ['/hwpjs/editor/','/docs/editor/'])for(const [path,body]of files){
  if(!/\.(?:js|css|html)$/.test(path))continue;

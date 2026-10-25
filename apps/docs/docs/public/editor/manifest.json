@@ -55,6 +55,14 @@
       "bytes": 1086
     },
     {
+      "sha256": "3ba70b9ab3665d1d8842d3ece0933bbfd2f44da750730b87e935c47dee2120a2",
+      "bytes": 3750
+    },
+    {
+      "sha256": "40006541b8116fa7b8943994330ddc3c07f9e60032f509932b4e15265290e18b",
+      "bytes": 5156
+    },
+    {
       "sha256": "4632ba4ab42fa6eb86b6fb7f63c7a09df1f5a033a2157c7a68cde6351f20eb78",
       "bytes": 57
     },
@@ -83,12 +91,20 @@
       "bytes": 1242
     },
     {
+      "sha256": "ab463fc7cfc2d6753d774b90b7b4842c2f5d0ea3cfab2ffba102cc07fa6a370f",
+      "bytes": 76939
+    },
+    {
       "sha256": "b18be0217a5d9f81e587705edc0c514cdd11e6314bbe434f17d256aa21b75a7f",
       "bytes": 257536
     },
     {
       "sha256": "b3faaed62452032de180eb1c230f7cfb0d8d211ec5338f09e97830f314cab7f9",
       "bytes": 327934
+    },
+    {
+      "sha256": "b7aec1c9c674dbbef96c8c88e29a39e675a7eb85da630fe8707e7e2ad230bcee",
+      "bytes": 5661087
     },
     {
       "sha256": "b7aec1c9c674dbbef96c8c88e29a39e675a7eb85da630fe8707e7e2ad230bcee",
@@ -119,6 +135,10 @@
       "bytes": 7759
     },
     {
+      "sha256": "ff0b50cc230a460398a73fe65531d140a8f2d00eaf0e3a25f4d0642607127428",
+      "bytes": 9127
+    },
+    {
       "sha256": "ff172e5c3bca15a8840bdce0818fd96c7ff26fbc076f0f247bd9cb30d985eb53",
       "bytes": 5661
     }
@@ -133,6 +153,21 @@
     "browserE2E": "separate"
   },
   "files": [
+    {
+      "path": "api/index.html",
+      "bytes": 1013,
+      "sha256": "6b2fe4cece5c62202dd975b6ed9e9e75665cae46095b187cdb7aab1852130220"
+    },
+    {
+      "path": "api/main.js",
+      "bytes": 878,
+      "sha256": "58aeff0ed87d2ec13cb8c3cd142ebc82a3f0abfdc9a7f5a3f31da237c18ebf20"
+    },
+    {
+      "path": "api/playground.js",
+      "bytes": 9127,
+      "sha256": "ff0b50cc230a460398a73fe65531d140a8f2d00eaf0e3a25f4d0642607127428"
+    },
     {
       "path": "assets/dist-9dJg0DkY.js",
       "bytes": 1076552,
@@ -204,6 +239,11 @@
       "sha256": "2a4c2e9a315ae209d1b4af7b691d15d980b9cd0859e31c6bc48f285f57f11e56"
     },
     {
+      "path": "runtime/index-d5cy4mj4.js",
+      "bytes": 3670,
+      "sha256": "d37d15e34a8ba80190e593cd9268633da897cc59aacebe1297984a5a324b1f56"
+    },
+    {
       "path": "runtime/index-wenq10ym.js",
       "bytes": 806409,
       "sha256": "38fd51722c54484feb177290b90f3ec51e7fe5c1872eb8448581772178ad119b"
@@ -212,6 +252,16 @@
       "path": "runtime/index-zatkwww3.js",
       "bytes": 7456,
       "sha256": "65e8731f300123fc408e5af44adb72b062dcef399bab567796a3eca3fb074384"
+    },
+    {
+      "path": "runtime/index.js",
+      "bytes": 75662,
+      "sha256": "bd760d538c479d8ba5acee5712d937e1fa920deeb0ba0023bad2544decb08f8b"
+    },
+    {
+      "path": "runtime/runtime.js",
+      "bytes": 5037,
+      "sha256": "11049bafdc5bf722c95cf4cba34cbc055b8bbcad5524ee20a06fb5e34b57f6fb"
     },
     {
       "path": "runtime/worker.js",

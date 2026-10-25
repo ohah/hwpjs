@@ -4,7 +4,7 @@
 
 ## 로컬 workspace부터 시작
 
-현재 문서는 저장소에 있는 `@hwpjs/*` 소스와 `0.1.0` 패키지 manifest를 기준으로 합니다. npm 레지스트리에 같은 버전의 아티팩트가 게시됐다는 보장은 하지 않습니다. 다른 npm 패키지의 같은 이름이나 이전 `@ohah/hwpjs`를 대신 설치하지 마세요.
+정식 core 배포 이름은 `@ohah/hwpjs`입니다. 다만 현재 가이드의 실행 예제는 개발 workspace의 `@hwpjs/*` 소스와 `0.1.0` manifest를 기준으로 하며, 새 Zig/WASM API는 아직 npm에 게시하지 않았습니다. 현재 공개 `@ohah/hwpjs@0.1.0-rc.10`은 기존 Rust/NAPI·WASI 패키지이므로 설치만으로 이 가이드의 새 API를 사용할 수 없습니다. [패키지 이름과 게시 상태](./package-names.md)를 먼저 확인하세요.
 
 이 저장소의 앱에서는 필요한 패키지를 workspace 의존성으로 선언합니다.
 

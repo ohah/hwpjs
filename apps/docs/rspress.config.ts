@@ -48,6 +48,8 @@ export default defineConfig({
           { text: 'React Native (experimental)', link: '/frameworks/react-native' },
         ] },
         { text: 'API와 경계', items: [
+          { text: '공개 API 가이드', link: '/api/' },
+          { text: 'API 직접 실행', link: '/api/playground' },
           { text: 'HeadlessEditor', link: '/api/editor' },
           { text: '선택과 서식', link: '/api/selection' },
           { text: '지원 범위와 제한', link: '/guide/limitations' },
