@@ -44,6 +44,8 @@ bundle 모드의 canonical 편집기 경로는 `/hwpjs/editor/demo/vanilla/`입�
 
 ## 현재 검증 경계
 
+2026-10-26 후속 배포 소스는 `5f0ff9a4`이며 공개 bundle manifest SHA256은 `735d3c3d01b90ecb8cbd1342eda279da020d3ce80be8854336ef6f9fee3ce429`입니다. 공개 HTTPS의 자산 28개를 SHA와 대조했고, 별도 운영 경로의 Noori HWP 입력·undo/redo·다운로드·재열기 표본이 통과했습니다. HTTP 바이트 검증과 브라우저 편집 표본은 별도 근거이며, 아래 최초 운영 검증 이력이나 전체 fixture 성공으로 합산하지 않습니다. Native V1의 16회 undo 한도는 그대로이며, 집중 테스트 27건을 통과한 이력 후보는 아직 배포되지 않았습니다. 입력 측정 캐시의 국소 개선은 반영됐지만 전체 입력 파이프라인 O(n)은 미충족입니다.
+
 최초 작성 시점에는 부모 HTTP12개 검사 통과와 브라우저 검증 진행 상태를 구분했습니다. 후속 실제 운영 경로에서는 기존 진입의 canonical redirect, catalog117개에서 noori HWPX 선택·실제 입력·undo/redo·다운로드·다시 열기, React/Svelte의 catalog·문단 부호, API ready를 확인했고 소유 브라우저 2개를 종료했습니다. 117은 이 실행의 catalog 관측값이지 정책 기본값이나 전 fixture 검증 수가 아닙니다.
 
 이 후속은 UI/Native ACK·다운로드·reopen 근거이며 이번 실행에서 독립 CFB/XML oracle를 새로 수행한 것은 아닙니다. 엔진은 3fc/V1이며 V2 이력 미포함입니다. 이전 다른 공개 실행의 Svelte 최초 timeout은 원인이 확정되지 않은 별도 이력으로 유지하며 이번 성공으로 지우지 않습니다. 주소·PID·개인 경로는 이 공개 문서에 싣지 않습니다. 이 문서 갱신 과정에서는 새 서버·브라우저·Native 빌드를 실행하지 않았습니다. 영구 회귀 진입점은 [서버 bundle 검사](../tests/hwpx/demo-server-bundle.test.mjs)이며, 대표 경로 검증을 전체 문서·모든 fixture E2E로 확대하지 않습니다.
