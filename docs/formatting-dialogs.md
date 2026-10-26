@@ -50,6 +50,17 @@
 
 `editor.update()`는 명령을 모아 순서대로 실행합니다. 뒤 명령이 실패해도 앞에서 반영된 변경은 남을 수 있습니다. 같은 옛 target은 첫 변경 뒤 오래된 대상이 될 수도 있습니다. 따라서 전체 대화상자의 원자 적용을 대신하지 않습니다.
 
+<!-- dialog-box-model-20261026-f711ad56 -->
+## 공통 창의 box-sizing과 찾기 입력 경계
+
+2026-10-26, 소스 수정 `f711ad56`의 독립 검증입니다. 찾기 창이 `.hwp-demo` 밖의 sibling으로 생성되면 shell의 후손 전용 `border-box` 규칙이 적용되지 않았습니다. 실제 Chromium에서 input의 computed `box-sizing: content-box`와 `width:100%` 바깥으로 더해진 패딩·테두리를 확인했고, 520px 폭에서는 다음 찾기 버튼을 2px 침범했습니다. 공통 `.hwp-dialog-layer` 자체·후손·후손 가상 요소에만 `border-box`를 적용하며 전역 reset은 추가하지 않습니다.
+
+찾기 input의 border와 `outline-offset:2px`는 떨어진 윤곽으로 보였습니다. CSS 선언이 outline 두 개를 그린다는 뜻은 아닙니다. 입력 포커스의 테두리를 표시하고 `:focus-visible`의 2px outline을 offset0으로 유지합니다. 실제 Chromium에서 마우스로 누른 text input도 `:focus-visible`이므로 이를 일괄 숨기지 않습니다. 버튼·다른 서식 컨트롤의 기존 키보드 포커스 표시는 유지합니다.
+
+실제 TypeScript view를 타입 제거만 거쳐 독립 sibling DOM으로 실행했습니다. 320/520/522px × CSS zoom100/125/150% × 찾기/바꾸기 18조건에서 표시된 input/action button 겹침은 원본12조건에서 후보0조건으로 줄었고, 후보의 필드 경계와 dialog 수평 overflow 검사도 통과했습니다. 동일 판정식은 원본1통과·3실패, 후보4통과·0실패입니다. 근거는 `zig-out/verification/find-input-overlap-independent/`의 `GEOMETRY-final.json`, `originalfails.log`, `fixedpasses.log`, `FINAL-RECEIPT.json`입니다.
+
+이 결과는 CSS view scale을 사용한 독립 Chromium geometry이며 브라우저 자체 페이지 줌, Native 동작 또는 통합 앱 E2E를 대신하지 않습니다. 공통 border-box로 다른 창의 외곽폭이 2px 줄거나 body 스크롤이 일찍 생길 수 있어 서식·예제·문서 통계 창의 실제 앱 회귀는 별도 확인 대상입니다. 이 기록만으로 공개 배포 반영을 확정하지 않습니다. 공개 배포는 미확인 상태로 구분합니다.
+
 ## 취소, 오류, 포커스
 
 접수 전 취소·닫기·Escape는 서식 명령을 보내지 않는 계약입니다. 확인을 접수한 뒤 창을 닫는 것은 Native 변경 취소가 아닙니다. pending 중 중복 적용을 막고 결과를 받을 수명은 유지해야 합니다.
