@@ -83,7 +83,7 @@ export function createCanvasSurface({ root, editor, environment = {}, onStatus =
       if (!bridge?.busy() && nextSelectionKey !== selectionKey) {
         selectionKey = nextSelectionKey;
         if (selected) {
-          direct?.initializeCapabilities({ ...(state.capabilities as object), historyRevision: state.nativeHistoryRevision });
+          direct?.initializeCapabilities({ ...(state.capabilities as object), historyRevision: state.nativeHistoryRevision, historyRevisions: state.nativeHistoryRevisions });
           if (!direct?.selectTextRange(selected, { focusInput: false, selectionOrigin: "core" })) status('선택한 텍스트의 화면 위치를 표시할 수 없습니다.');
         } else direct?.external({ kind: 'external-update', origin: 'core' });
       }
@@ -96,10 +96,10 @@ export function createCanvasSurface({ root, editor, environment = {}, onStatus =
     displayed = key;
     renderer.show(state.content, { preserveScroll: !changedDocument, resourceEpoch: `${state.documentId}:${state.generation}:${state.operationRevision}`, resourceDocument: `${state.documentId}:${state.generation}` });
     if (retained && !bridge?.busy()) {
-      direct?.initializeCapabilities({ ...(state.capabilities as object), historyRevision: state.nativeHistoryRevision });
+      direct?.initializeCapabilities({ ...(state.capabilities as object), historyRevision: state.nativeHistoryRevision, historyRevisions: state.nativeHistoryRevisions });
       if (!direct?.selectTextRange(retained, { focusInput: false, selectionOrigin: "core" })) direct?.external({ kind: "external-update", origin: "core" });
     }
-    if (changedDocument) direct?.initializeCapabilities({ ...(state.capabilities as object), historyRevision: state.nativeHistoryRevision });
+    if (changedDocument) direct?.initializeCapabilities({ ...(state.capabilities as object), historyRevision: state.nativeHistoryRevision, historyRevisions: state.nativeHistoryRevisions });
   };
   const cleanup = () => {
     closed = true; explicitClearPending = undefined; frameObserver?.disconnect(); bridge?.close(); unsubscribe?.();
@@ -156,7 +156,7 @@ export function createCanvasSurface({ root, editor, environment = {}, onStatus =
     renderer.tableBackgroundReader((section: number, listNode: number) => resource('table-background-bytes', { section, listNode }, 'bytes'));
     renderer.chartReader((section: number, wrapper: number) => resource('chart-display', { section, wrapper }, 'chart'));
     render(editor.getEditorState());
-    direct.initializeCapabilities({ ...(editor.getEditorState().capabilities as object), historyRevision: editor.getEditorState().nativeHistoryRevision });
+    direct.initializeCapabilities({ ...(editor.getEditorState().capabilities as object), historyRevision: editor.getEditorState().nativeHistoryRevision, historyRevisions: editor.getEditorState().nativeHistoryRevisions });
     unsubscribe = editor.registerStateListener(render);
     const Observe = environment.ResizeObserver ?? realm.ResizeObserver;
     frameObserver = new Observe(() => alignFrame()); frameObserver!.observe(root);

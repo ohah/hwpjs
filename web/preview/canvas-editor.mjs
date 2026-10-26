@@ -1297,6 +1297,15 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
       const versioned = Number.isInteger(revision) && revision >= 0 && revision < 0xffffffff;
       const travelMessage = ["undo", "redo"].includes(message.kind);
       const revisionChanged = versioned && revision !== historyRevision;
+      if (versioned && !message.error) {
+        try { historySelections.retain(message.historyRevisions, revision); }
+        catch {
+          const available = historyAvailable, structure = structureAvailable, merge = mergeAvailable, splitQuery = splitQueryAvailable, breaks = paragraphBreakAvailable;
+          this.reset(); historyAvailable = available; structureAvailable = structure; mergeAvailable = merge; splitQueryAvailable = splitQuery; paragraphBreakAvailable = breaks;
+          report("문서 이력 응답의 선택 정보를 확인할 수 없습니다. 문단을 다시 선택하세요.");
+          return;
+        }
+      }
       if (versioned && !message.error && !travelMessage && historyRevision !== null && revisionChanged && anchor && focus) {
         historySelections.remember(historyRevision, pending?.beforeSelection ?? (pending?.anchor ? { anchor: pending.anchor, focus: pending.focus } : { anchor, focus }));
       }
@@ -1420,15 +1429,6 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
       } finally {
         if (versioned && !message.error) {
           historyRevision = revision;
-          if (message.historyRevisions !== undefined) {
-            try { historySelections.retain(message.historyRevisions, revision); }
-            catch {
-              const available = historyAvailable, structure = structureAvailable, merge = mergeAvailable, splitQuery = splitQueryAvailable, breaks = paragraphBreakAvailable;
-              this.reset(); historyAvailable = available; structureAvailable = structure; mergeAvailable = merge; splitQueryAvailable = splitQuery; paragraphBreakAvailable = breaks;
-              report("문서 이력 응답의 선택 정보를 확인할 수 없습니다. 문단을 다시 선택하세요.");
-              return;
-            }
-          }
           if (revisionChanged && !travelMessage) historySelections.remember(revision, anchor && focus ? { anchor, focus } : null);
         }
       }
