@@ -27,3 +27,23 @@ node tools/zig-native-batch-audit.mjs --binary=/absolute/compiled/native-tests -
 ```
 
 negative 실행의 종료코드1은 예상 결과입니다. 실제 제품 실행은 최종 complete의 success·skip·logErrors·leaks와 binary/source snapshot을 함께 확인해야 합니다. 전체 할당 실패 캠페인 범위는 테스트별 계약/환경변수와 구분하며 테스트 목록 전수로 모든 입력·편집·원본 조판 완료를 주장하지 않습니다.
+
+## 2026-10-26 게시 Native와 후속 변경의 검증 경계
+
+Native foundation은 `50ad5257`, 표시 자원 캐시는 `59bed088`, generic 채움 확장은 `482685bb`로 소스 게시됐습니다. [원본 색상 정책](source-color-policy.md)이 지원 필드·producer 조합·raw 보존·웹 소비 계약을 소유합니다. 이 기록 시점 공개 Pages는 manifest `5d2fa40e34d26c0fc4ba99b524dc6ebcaf8729b896a61e4da9b7d006fc09f9b1`의 이전 세대이며 소스 게시를 공개 배포 완료로 표시하지 않습니다.
+
+| 근거 | 실제 확인 | 확대하지 않는 범위 |
+| --- | --- | --- |
+| foundation 전체 ReleaseSafe | root4860 pass·1 skip + 별도 text9 pass = **4869 pass·1 skip·0 fail**, exit0, 8/8단계 | generic 추가 후 새 전체 실행 아님 |
+| 게시 전 형식 정리 연결 | 토큰 동치19파일·정리 후 집중33 및 동일 제품 WASM으로 선행 전체 실행 연결 | 형식 정리 후 전체 suite 재실행 아님 |
+| generic 확장 | 집중18/18·skip0, 별도 실제 JS5흐름/고립 Canvas7흐름 | 서로 다른 검증을 Native 통과 수로 합산하지 않음 |
+| 게시 foundation+generic의 Safe 제품 빌드 | 1회·6/6단계·exit0, 선행 확장 WASM 전체 바이트 동일 | 테스트·브라우저를 새로 실행한 것 아님 |
+| 표시 header 캐시 | 영구 전용 테스트 **5 pass·0 fail·0 skip** | Native history 보관 정책 변경이나 전체 입력 문제 해결 아님 |
+
+전체 실행의 고정 논리 source3049 digest는 `e7d146adc2c822c2d35b3705faffcbbeb00c2b3169eeb5a106f834b98eaa14ba`입니다. 이후 게시 형식 정리 base3049와 generic5를 결합한 source3050 digest는 `38668f9f6e591e15aa6cfd82658c0af5f7920c8e78776e5066761a16bacbb72b`로 구분합니다. 후자의 Safe 제품 WASM은 5,726,383바이트, SHA256 `3fc519b22c4c3f69d7e64c5337247163fcf0b7f8175e80c124325b922effccf0`이며 선행 확장 산출물과 전체 바이트가 같습니다. exports413/functions411, imports0, memory min19 pages·max없음·비공유·memory64=false이고 기존 ABI 기능/서명을 보존했습니다. 동일 바이트는 선행 실행 연결 근거이며 최신 source 전체 검증을 대신하지 않습니다.
+
+유일 skip은 `hwpx.character_property_failure_tests.test.HWPX character property transaction allocation failure shard on mixed runs`입니다. [해당 테스트](../src/hwpx/character_property_failure_tests.zig)는 `HWPJS_CHARACTER_FAILURE_START/END`가 모두 미지정이면 skip하며 이번 전체 실행도 그 조건이었습니다. pass로 세지 않고 이 별도 shard의 모든 OOM 지점 통과를 주장하지 않습니다. 각 테스트 내부 할당 실패 검사와 이 skip은 별개입니다.
+
+[표시 캐시](../web/preview/display-resource-cache.mjs)는 같은 활성 HWPX 세션의 성공한 일반 본문 splice에서 허용된 header 자원만 복사·재사용합니다. 본문·범위·권한·이력·저장 bytes는 캐시하지 않으며 서식/구조·undo/redo·문서 교체·실패 때 무효화합니다. [단위 회귀](../tests/hwpx/display-resource-cache.test.mjs)와 [실제 runtime 회귀](../tests/hwpx/display-resource-cache-runtime.test.mjs)가 영구 진입점입니다.
+
+남은 **16개 이력 보관 제한**은 입력 누락이나 캐시가 만든 문제가 아닙니다. 기존 기본값 `maxEntries=16`, `maxCheckpointBytes=8MiB`와 [공통 스택](../src/model/history_stack.zig)의 oldest eviction 때문에 기존 b7/d63에서20입력 후25 undo는 revision4,100입력 후100 undo는 revision84까지 도달했습니다. 이 수치는 해당 기존 엔진의 관측이며 generic 새 바이너리에서 재실행한 것으로 쓰지 않습니다. 캐시 커밋은 이 정책을 바꾸지 않습니다. 8MiB는 개별 checkpoint 한도이지 전체 세션 메모리 예산이 아닙니다. [이력 계약](hwpx-edit-history.md)과 [영구 이력 회귀](../src/hwpx/editor_history_tests.zig)를 따르며, 더 긴 이력을 위한 V2는 이 게시 범위와 공개 배포에 포함하지 않습니다.
