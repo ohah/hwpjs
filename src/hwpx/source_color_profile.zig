@@ -4,7 +4,7 @@ const std = @import("std");
 const Version = @import("version_xml.zig").Version;
 const rgb = @import("../model/rgb_color.zig");
 pub const Encoding = enum { rgb24, colorref24 };
-pub const Field = enum { win_brush_face_color, character_text_color, other };
+pub const Field = enum { win_brush_face_color, win_brush_hatch_color, gradation_color_value, character_text_color, other };
 pub const Profile = struct { id: []const u8 = "unknown", encoding: Encoding = .rgb24, verified: bool = false };
 const old: Profile = .{ .id = "hangul-10.0.0.5060-xml1.2", .encoding = .colorref24, .verified = true };
 const modern: Profile = .{ .id = "hangul-12.0.0.4426-xml1.5", .encoding = .rgb24, .verified = true };
@@ -20,7 +20,7 @@ pub fn classify(value: ?*const Version) Profile {
 }
 fn swaps(profile: Profile, field: Field) bool {
     return profile.encoding == .colorref24 and switch (field) {
-        .win_brush_face_color, .character_text_color => true,
+        .win_brush_face_color, .win_brush_hatch_color, .gradation_color_value, .character_text_color => true,
         .other => false,
     };
 }
@@ -41,8 +41,11 @@ pub fn encode(a: std.mem.Allocator, profile: Profile, field: Field, canonical: u
     return rgb.format(a, try encodeNumber(profile, field, canonical));
 }
 
-pub const SemanticFaceColor = struct {
+pub const SemanticFillColor = struct {
     node: usize,
     field: []const u8 = "winBrush.faceColor",
     rgb: ?u32,
 };
+
+/// Compatibility view; values are copied from the canonical fill array.
+pub const SemanticFaceColor = SemanticFillColor;

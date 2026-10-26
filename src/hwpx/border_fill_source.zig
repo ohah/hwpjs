@@ -20,6 +20,7 @@ pub const Source = struct {
     center_line: ?[]const u8 = null,
     fill_node: ?usize = null,
     fill_report: ?@import("fill_brush.zig").Report = null,
+    semantic_fill_colors: ?[]@import("source_color_profile.zig").SemanticFillColor = null,
     semantic_face_colors: ?[]@import("source_color_profile.zig").SemanticFaceColor = null,
     source_color_profile: ?@import("source_color_profile.zig").Profile = null,
     unknown_children: usize = 0,
@@ -29,7 +30,7 @@ pub const Source = struct {
         inline for (@import("../reflection.zig").fields(Source)) |field| {
             if (comptime std.mem.eql(u8, field.name, "arena")) {
                 // Arena is ownership, not wire data.
-            } else if (comptime std.mem.eql(u8, field.name, "semantic_face_colors") or std.mem.eql(u8, field.name, "source_color_profile")) {
+            } else if (comptime std.mem.eql(u8, field.name, "semantic_fill_colors") or std.mem.eql(u8, field.name, "semantic_face_colors") or std.mem.eql(u8, field.name, "source_color_profile")) {
                 if (@field(self, field.name)) |value| {
                     try writer.objectField(field.name);
                     try writer.write(value);

@@ -14,6 +14,7 @@ pub const model = @import("model/document.zig");
 
 test {
     _ = @import("hwpx/source_color_profile_tests.zig");
+    _ = @import("hwpx/source_color_fill_extension_tests.zig");
     _ = @import("continuation_typing_style_tests.zig");
     _ = @import("hwpx/implicit_tail_continuation_tests.zig");
     _ = @import("hwp5_strike_color_probe.zig");
