@@ -1,7 +1,8 @@
+import {createDocumentOpenUI,exampleAvailability} from './document-open-ui.ts';
 import {VIEW_ZOOM_LEVELS,isMenuZoomPercent} from './view-zoom.ts';
 import {DocumentOpenCancelledError} from './document-open-consent.ts';
 import type { DemoAction, DemoCommand, DemoFixture, DemoFramework, DemoShellOptions, DemoTraceEntry } from "./shell-contract.ts";
-import { actionAvailability, demoRoute, fontSizePoints, openAvailability } from "./shell-model.ts";
+import { actionAvailability, demoRoute, fontSizePoints } from "./shell-model.ts";
 
 const frameworks: readonly [DemoFramework, string][] = [["headless", "Headless"], ["vanilla", "Vanilla"], ["react", "React"], ["svelte", "Svelte"]];
 const commands: readonly [DemoCommand, string, string][] = [
@@ -32,15 +33,7 @@ let instance = 0;
 export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
   // Validate before touching the host DOM.
   const routes = frameworks.map(([id, label]) => ({ id, label, href: demoRoute(options.routes[id]) }));
-  const fixtureMap = (entries: readonly DemoFixture[]) => {
-    const result = new Map<string, boolean>();
-    for (const entry of entries) {
-      if (!entry.id || result.has(entry.id) || (entry.available !== undefined && typeof entry.available !== 'boolean')) throw new TypeError("InvalidDemoFixtureCatalog");
-      result.set(entry.id, entry.available !== false);
-    }
-    return result;
-  };
-  let fixtureAvailability = fixtureMap(options.fixtures);
+  exampleAvailability(options.fixtures); // Validate before touching host DOM.
   const doc = root.ownerDocument, prefix = `hwp-demo-${++instance}`;
   let closed = false;
   const removals: (() => void)[] = [];
@@ -119,7 +112,7 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
     summary.setAttribute("aria-expanded", "false");
     listen(details, "keydown", event => { if ((event as KeyboardEvent).key === "Escape") { event.preventDefault(); details.open = false; summary.focus(); } });
   }
-  listen(doc, "pointerdown", event => { if (!menuNav.contains(event.target as Node)) for (const row of disclosures) row.details.open = false; });
+  listen(doc, "pointerdown", event => { if (!menuNav.contains(event.target as Node)&&!openUI.containsExampleTarget(event.target as Node)) for (const row of disclosures) row.details.open = false; });
   const toolbar = el("div", "hwp-demo-tools"); toolbar.setAttribute("role", "group"); toolbar.setAttribute("aria-label", "문서 도구");
   for (const [id, label, icon] of commands) { const item = commandButton(id, label, icon); toolbar.append(item.node, item.description); }
   const formatbar = el("div", "hwp-demo-formatbar"); formatbar.setAttribute("role", "group"); formatbar.setAttribute("aria-label", "글자와 문단 서식");
@@ -137,47 +130,16 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
   for (const [id, label] of [["bold", "굵게"], ["italic", "기울임"], ["underline", "밑줄"], ["strike", "취소선"], ["align-left", "왼쪽 정렬"], ["align-center", "가운데 정렬"], ["align-right", "오른쪽 정렬"], ["align-justify", "양쪽 정렬"]] as const) {
     const item = commandButton(id, label); formatbar.append(item.node, item.description);
   }
-  const picker = el("div", "hwp-demo-picker"); picker.setAttribute("role", "group"); picker.setAttribute("aria-label", "문서 파일과 픽스쳐 열기");
-  const fileLabel = el("label", "hwp-demo-file-label", "파일 열기"), file = el("input");
-  file.type = "file"; file.accept = ".hwp,.hwpx"; file.id = `${prefix}-file`; fileLabel.htmlFor = file.id; file.dataset.role = "file-picker";
-  const fileReason = el("span", "hwp-demo-sr"); fileReason.id = `${prefix}-file-reason`; file.setAttribute("aria-describedby", fileReason.id);
-  const fixtureLabel = el("label", "", "예제 문서"), fixture = el("select"), fixtureOpen = el("button", "hwp-demo-button", "예제 열기");
-  fixture.id = `${prefix}-fixture`; fixtureLabel.htmlFor = fixture.id; fixture.dataset.role = "fixture-picker"; fixtureOpen.type = "button";
-  const fixtureReason = el("span", "hwp-demo-sr"); fixtureReason.id = `${prefix}-fixture-reason`; fixture.setAttribute("aria-describedby", fixtureReason.id); fixtureOpen.setAttribute("aria-describedby", fixtureReason.id);
-  const renderFixtures = (entries: readonly DemoFixture[]) => {
-    const selected = fixture.value;
-    const nodes = entries.map(entry => {
-      const available = fixtureAvailability.get(entry.id) === true;
-      const option = el("option", "", (entry.label || entry.name) + (available ? '' : ' (파일 없음)'));
-      option.value = entry.id; option.disabled = !available; return option;
-    });
-    fixture.replaceChildren(...nodes);
-    fixture.value = fixtureAvailability.get(selected) === true ? selected : entries.find(entry => fixtureAvailability.get(entry.id) === true)?.id ?? '';
-  };
-  renderFixtures(options.fixtures);
-  listen(fixture, "change", () => { if (!closed) update(); });
-  listen(file, "change", () => {
-    if (closed) return;
-    const state = options.getState(), available = openAvailability(state.openFile, state.busy, Boolean(options.onOpenFile));
-    const selected = file.files?.[0]; file.value = ""; // Reopening the same file remains possible.
-    if (!available.enabled || !selected) return;
-    disclosures[0].details.open = false;
-    invoke(() => options.onOpenFile?.(selected));
-  });
-  listen(fixtureOpen, "click", () => {
-    if (closed || fixtureAvailability.get(fixture.value) !== true) return;
-    const state = options.getState(), available = openAvailability(state.openFixture, state.busy, Boolean(options.onOpenFixture));
-    if (!available.enabled) return;
-    file.value = "";
-    const id = fixture.value; disclosures[0].details.open = false;
-    invoke(() => options.onOpenFixture?.(id));
-  });
-  const support = el("details", "hwp-demo-support"), supportTitle = el("summary", "", "도구 지원 안내"), supportList = el("ul");
-  support.append(supportTitle, supportList);
-  picker.append(fileLabel, file, fileReason, fixtureLabel, fixture, fixtureOpen, fixtureReason, support);
-  // One file workflow, located in the File menu rather than shrinking the document viewport.
-  disclosures[0].popup.className += " hwp-demo-file-popup";
-  disclosures[0].popup.append(picker);
+  const picker=el('div','hwp-demo-file-options');picker.dataset.role='save-options-mount';
+  const openUI=createDocumentOpenUI(shell,{id:prefix,fixtures:options.fixtures,getState:options.getState,
+    fileConnected:Boolean(options.onOpenFile),fixtureConnected:Boolean(options.onOpenFixture),
+    onSelected:()=>{disclosures[0].details.open=false;disclosures[0].summary.focus();},
+    onFile:file=>invoke(()=>options.onOpenFile?.(file)),onFixture:id=>invoke(()=>options.onOpenFixture?.(id))});
+  const fileActions=el('div','hwp-demo-file-actions');fileActions.append(openUI.fileAction,openUI.examplesAction,openUI.fileReason);
+  disclosures[0].popup.className+=' hwp-demo-file-popup';disclosures[0].popup.append(fileActions,picker);
+  shell.append(openUI.file);
+  const support=el('details','hwp-demo-support'),supportTitle=el('summary','','도구 지원 안내'),supportList=el('ul');support.append(supportTitle,supportList);
+  disclosures.at(-1)!.popup.className+=' hwp-demo-tools-popup';disclosures.at(-1)!.popup.append(support);
   const workspace = el("main", "hwp-demo-workspace"); workspace.id = `${prefix}-workspace`;
   const surfaceMount = options.framework === "headless" ? null : el("div", "hwp-demo-surface");
   const headlessMount = options.framework === "headless" ? el("div", "hwp-demo-headless-controls") : null;
@@ -228,25 +190,17 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
       if (!available.enabled) supportList.append(el("li", "", `${labels.get(command) || command}: ${available.reason}`));
     }
     supportTitle.textContent = `도구 지원 안내 (${supportList.childElementCount})`;
-    const canFile = openAvailability(state.openFile, state.busy, Boolean(options.onOpenFile)); file.disabled = !canFile.enabled;
-    fileReason.textContent = canFile.enabled ? "" : canFile.reason || "파일 열기 불가"; file.title = fileReason.textContent;
-    const canFixture = openAvailability(state.openFixture, state.busy, Boolean(options.onOpenFixture));
-    const anyFixture = [...fixtureAvailability.values()].some(Boolean);
-    fixture.disabled = !canFixture.enabled || !anyFixture;
-    fixtureOpen.disabled = !canFixture.enabled || fixtureAvailability.get(fixture.value) !== true;
-    fixtureReason.textContent = !anyFixture ? "사용 가능한 예제 파일이 없습니다." : !canFixture.enabled ? canFixture.reason || "예제 열기 불가" : fixtureAvailability.get(fixture.value) !== true ? "선택한 예제 파일이 없습니다." : "";
-    fixture.title = fixtureOpen.title = fixtureReason.textContent;
+    openUI.update();
     empty.hidden = Boolean(state.documentLabel); // Placeholder is a sibling, not host content.
   };
-  const destroy = () => { if (closed) return; closed = true; for (const remove of removals.splice(0)) remove(); shell.remove(); };
+  const destroy = () => { if (closed) return; closed = true; openUI.destroy(); for (const remove of removals.splice(0)) remove(); shell.remove(); };
   try { update(); } catch (error) { destroy(); throw error; }
   return {
     element: shell, surfaceMount, headlessMount, saveOptionsMount: picker, update, destroy,
     /** Preserve an available selection; never touch the document/host subtree. */
     setFixtures(entries: readonly DemoFixture[]) {
       if (closed) return;
-      const next = fixtureMap(entries); // Validate before changing the current list.
-      fixtureAvailability = next; renderFixtures(entries); update();
+      openUI.setFixtures(entries); update();
     },
     /** Caller passes a bounded, already redacted trace projection from callbacks. */
     setTrace(entries: readonly DemoTraceEntry[]) {
