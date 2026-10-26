@@ -10,10 +10,11 @@ export function createControlBridge(options: {
   acknowledge(reply: RuntimeReply, state?: EditorState): void;
   error(error: unknown): void;
 }) {
-  let closed = false,
-    pending = false;
+  let closed = false;
+  type PendingRequest = { id: symbol; documentId: StateToken['documentId']; generation: number };
+  let pending: PendingRequest | undefined;
   let task: Promise<void> = Promise.resolve();
-  const current = (token: StateToken) => {
+  const current = (token: Pick<StateToken, 'documentId' | 'generation'>) => {
     const s = options.state();
     return (
       !closed &&
@@ -22,9 +23,17 @@ export function createControlBridge(options: {
       s.generation === token.generation
     );
   };
+  const release = (request: PendingRequest) => {
+    if (
+      pending?.id === request.id &&
+      pending.documentId === request.documentId &&
+      pending.generation === request.generation
+    )
+      pending = undefined;
+  };
   return {
     ready: () => !closed && options.lease.isActive() && options.state().status === 'ready',
-    busy: () => closed || pending || options.state().status !== 'ready',
+    busy: () => closed || pending !== undefined || options.state().status !== 'ready',
     request(message: RuntimeMessage): boolean {
       if (closed || pending || !options.lease.isActive() || options.state().status !== 'ready')
         return false;
@@ -32,18 +41,25 @@ export function createControlBridge(options: {
       if (message.kind === 'enable') return false;
       const owned = structuredClone(message);
       const token = options.state().token;
-      pending = true;
+      const request: PendingRequest = {
+        id: Symbol('input-surface-request'),
+        documentId: token.documentId,
+        generation: token.generation,
+      };
+      pending = request;
+      let acknowledged = false;
       task = Promise.resolve()
         .then(() => {
-          if (!current(token)) return undefined;
+          if (!current(request)) return undefined;
           return options.lease.request(owned, { token, coordinates: 'legacy-native' });
         })
         .then((answer) => {
-          pending = false;
-          if (!answer || !current(token)) return;
+          release(request);
+          if (!answer || !current(request)) return;
           if ('status' in answer && 'state' in answer) {
             const result = answer as CommandResult;
             if (options.state().operationRevision !== result.state.operationRevision) return;
+            acknowledged = true;
             options.acknowledge(
               {
                 ...owned,
@@ -57,11 +73,30 @@ export function createControlBridge(options: {
               },
               result.state,
             );
-          } else options.acknowledge(answer as RuntimeReply);
+          } else {
+            acknowledged = true;
+            options.acknowledge(answer as RuntimeReply);
+          }
         })
         .catch((error) => {
-          pending = false;
-          if (!current(token)) return;
+          release(request);
+          if (acknowledged) {
+            // 이미 전달한 Native/core 응답을 UI 오류 때문에 미적용 응답으로 바꾸지 않습니다.
+            if (!closed) {
+              const callbackError = new Error(
+                '문서 응답 후 화면 반영 콜백에서 오류가 발생했습니다.',
+                { cause: error },
+              );
+              callbackError.name = 'InputSurfaceAcknowledgementCallbackError';
+              Object.assign(callbackError, {
+                documentId: request.documentId,
+                generation: request.generation,
+              });
+              options.error(callbackError);
+            }
+            return;
+          }
+          if (!current(request)) return;
           options.error(error);
           options.acknowledge({
             ...owned,
@@ -78,6 +113,7 @@ export function createControlBridge(options: {
     },
     close() {
       closed = true;
+      pending = undefined;
     },
   };
 }

@@ -21,6 +21,16 @@ mise exec -- bun run format
 
 <!-- javascript-quality-commands:end -->
 
+## 입력 표면 응답 검증
+
+[응답·콜백 계약과 검증 범위](input-surface-acknowledgement.md)를 따릅니다. Native 저장·이력 검사는 명시 WASM과 Bun을 사용합니다.
+
+```sh
+HWPJS_TEST_WASM=/absolute/path/hwpjs.wasm mise exec -- bun test ./packages/vanilla/tests/core-bridge.test.ts ./packages/vanilla/tests/core-bridge-acknowledgement.test.mjs
+```
+
+WASM을 생략하면 실제 Native 2건은 skip되며 프로토콜 검증만 실행합니다.
+
 ## JS 모노레포 CLI
 
 Bun 1.4.4와 명시 WASM을 사용하는 경로입니다. 내부 core·vanilla·react·svelte·react-native 5개는 private/dist 계약이고 외부 package 진입점은 `@ohah/hwpjs`입니다.
