@@ -55,9 +55,9 @@
       "sha256": "1fe132595cc2df0afdac35fbbebcc6995a095c095e83c658268a75f140d93151"
     },
     {
-      "path": "assets/app-BtX02QwB.js",
+      "path": "assets/app-BthxeMOl.js",
       "bytes": 329618,
-      "sha256": "899701662fbd152e69bc1b89fcd925af129e7d3eb48dbd670a66701fab3b48fd"
+      "sha256": "6e02eb1c01da7c74a75fa605b74da08b087f8a197e33e5f7ebf14e110487b386"
     },
     {
       "path": "assets/app-BunI6r6b.css",
@@ -85,14 +85,14 @@
       "sha256": "211975b2df63e0c208957931de0bd6b014f9f5b786bf7995beb35ed56b9cd8ba"
     },
     {
-      "path": "assets/vanilla-BYRwlgxP.js",
+      "path": "assets/vanilla-8ia65L2f.js",
       "bytes": 60,
-      "sha256": "0bcfe8a48cb4c4c63a6cf350a5c65314d404537c1b5fa74e8f387fdc44623374"
+      "sha256": "4883ea06804fc5672e3f047ab971a7f59e29a39cd6218a6aa911ef27b09864b6"
     },
     {
-      "path": "assets/vanilla-Btzw7g0V.js",
-      "bytes": 944048,
-      "sha256": "b54018f72f667c3847daa059a72dd15134dcdcb3e872676e81a2585f9fbaf3f2"
+      "path": "assets/vanilla-D-eyZjnw.js",
+      "bytes": 945209,
+      "sha256": "76bcb25fb6d08b43d057d3256388c9164721aba38f746663bb27ecd39e1c2617"
     },
     {
       "path": "hwpjs/hwpjs.wasm",
@@ -117,27 +117,27 @@
     {
       "path": "index.html",
       "bytes": 985,
-      "sha256": "fc49dd8a48110f8acfce086cb61a5fb5d857b7f6fa87bf849f64699deacec09c"
+      "sha256": "7c4cc88e177b446f9b78315e707007f5a266021c5633098b0961c54fd3102812"
     },
     {
       "path": "demo/vanilla/index.html",
       "bytes": 1017,
-      "sha256": "deb9e6769c0efa486ac4e881d9535ccedf7c77102600157386e3ac52483600ac"
+      "sha256": "ede4a9d7c1bff704e450f2383fb68bcaf70f32e28a35004e365077162573092e"
     },
     {
       "path": "demo/react/index.html",
       "bytes": 1017,
-      "sha256": "deb9e6769c0efa486ac4e881d9535ccedf7c77102600157386e3ac52483600ac"
+      "sha256": "ede4a9d7c1bff704e450f2383fb68bcaf70f32e28a35004e365077162573092e"
     },
     {
       "path": "demo/svelte/index.html",
       "bytes": 1017,
-      "sha256": "deb9e6769c0efa486ac4e881d9535ccedf7c77102600157386e3ac52483600ac"
+      "sha256": "ede4a9d7c1bff704e450f2383fb68bcaf70f32e28a35004e365077162573092e"
     },
     {
       "path": "demo/headless/index.html",
       "bytes": 1017,
-      "sha256": "deb9e6769c0efa486ac4e881d9535ccedf7c77102600157386e3ac52483600ac"
+      "sha256": "ede4a9d7c1bff704e450f2383fb68bcaf70f32e28a35004e365077162573092e"
     }
   ]
 }
