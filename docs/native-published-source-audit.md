@@ -1,5 +1,11 @@
 # 게시 소스 native 전수 감사
 
+## 최신 공개 배포 상태 — HTTPS·대표 브라우저 경로 검증 완료
+
+공개 자산 커밋 `0efc30f2`·manifest `268b5f21…`·WASM `3fc519b2…`의 G2는 workflow `40264419074`의 build/deploy 성공과 실제 Pages HTTPS 28개 자산의 바이트 수·SHA 일치를 확인했습니다. 정확한 식별자와 링크는 [원본 색상 정책](source-color-policy.md)의 상단 기록을 따릅니다.
+
+배포 후 실제 HTTPS 브라우저에서 noori 20회 입력·개별 Native revision·색상, 찾아 바꾸기 후 입력과 undo/redo의 캐럿·포커스, headless API ready를 확인하고 소유 브라우저를 종료했습니다. 이는 동일 G2의 로컬 E2E·Rspress 검사와 별도이며 전체 한/글 동치나 새 전체 Native gate 통과가 아닙니다. 아래 old `5d2fa4…` 기록과 전체/집중 Native 실행의 원래 범위는 보존합니다. V2 history 후보 미포함·기본 16개 이력 제한·새 npm 미출시 경계도 유지합니다.
+
 같은 시점의 고정 제품 WASM으로 실행한975참조 경로 읽기와 거부 원인 분리는 [게시 산출물 참조 읽기](reference-published-source-read.md)가 소유합니다. native 단위 테스트와 corpus 읽기를 하나의 완료 수로 합치지 않습니다.
 
 ## 2026-10-11 실행 기반

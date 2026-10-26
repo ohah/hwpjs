@@ -1,5 +1,13 @@
 # HWPX 원본 색상 호환 정책
 
+## 최신 공개 배포 상태 — HTTPS·대표 브라우저 경로 검증 완료
+
+2026-10-26 공개 자산 커밋 `0efc30f2`의 [배포 workflow 40264419074](https://github.com/ohah/hwpjs/actions/runs/40264419074)는 build/deploy 성공으로 완료됐습니다. [실제 Pages manifest](https://ohah.github.io/hwpjs/editor/manifest.json)의 SHA256은 `268b5f21334ab4f5da8ce79d734e1318db895ddca1a3af2a53b271a8e03f885f`이며, manifest를 포함한 28개 자산의 HTTPS 200·바이트 수·SHA 일치를 확인했습니다. 배포된 WASM SHA256은 `3fc519b22c4c3f69d7e64c5337247163fcf0b7f8175e80c124325b922effccf0`입니다.
+
+배포 후 실제 HTTPS `/playground`에서 noori의 trusted 키 입력 20회와 개별 Native revision 20회·색상, 찾아 바꾸기 후 입력 및 Ctrl/Meta undo·redo의 캐럿·포커스, headless API invoke의 ready 상태를 확인했고 소유 브라우저를 종료했습니다. 동일 G2의 로컬 Canvas/API E2E와 Rspress build/link/license/public 검사는 별도 근거로 구분합니다. 이 대표 경로 검증을 전체 문서·모든 편집 명령·한/글 조판 동치의 완료로 확대하지 않습니다. 아래 `5d2fa4…`는 최초 소스 게시 당시 공개 상태를 남긴 역사 기록입니다.
+
+이번 G2에 V2 history 후보는 포함하지 않으며 기본 16개 이력 보관 제한은 계속됩니다. HEAD 소스의 typed color 존재가 G2의 r5 추가 UI/코어 overlay 포함이나 새 npm 출시를 뜻하지 않습니다. 새 패키지의 npm 출시는 아직 하지 않았습니다.
+
 ## 게시 소스와 공개 배포
 
 2026-10-26 소스 기준은 Native foundation `50ad5257`, 표시 자원 캐시 `59bed088`, 표 채움 확장 `482685bb`입니다. 소스 게시와 공개 산출물 배포는 별개입니다. 이 기록 시점의 GitHub Pages 공개 manifest는 `5d2fa40e34d26c0fc4ba99b524dc6ebcaf8729b896a61e4da9b7d006fc09f9b1`이며, 아래 자동 색상 보정이 그 공개 번들에 반영됐다는 뜻이 아닙니다. [Native 검증 범위](native-published-source-audit.md)를 함께 확인합니다.
