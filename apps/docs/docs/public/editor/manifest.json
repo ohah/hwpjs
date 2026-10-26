@@ -25,11 +25,6 @@
       "sha256": "8f3e2dfa35910507a434049ce1cfbbc6001c9579d7297cc15dbe7c3e25b61e9d"
     },
     {
-      "path": "assets/app-B4JuDUYp.css",
-      "bytes": 11589,
-      "sha256": "fb239dc81833edd8767e5de954d66263730d4998f239a13da93bc32e2d73df60"
-    },
-    {
       "path": "assets/runtime-DCyBK6dY.js",
       "bytes": 390847,
       "sha256": "d6da023a4f2306fdc12b8d0f5f3258fe626306924e25457ab6766410af448e70"
@@ -70,34 +65,29 @@
       "sha256": "ac9211bf73cf56593f4dc595eb1b53b6971f9967ccc249a8eed8e65285cec56e"
     },
     {
-      "path": "assets/app-D27mWrPB.js",
-      "bytes": 315728,
-      "sha256": "e756c62f92e13f253ba24be5f21b921c17640cbc00c7bd2f9c9bb1f212f8bfdf"
-    },
-    {
       "path": "index.html",
       "bytes": 985,
-      "sha256": "96cdf882f63c5ada5c7bd4067973def35be12a98c960f51bc678cdfca73758af"
+      "sha256": "315bc9d24c0d4e1e75de630651b87a4f7b834bfe4ea9978b8a7ca2df01bded53"
     },
     {
       "path": "demo/vanilla/index.html",
       "bytes": 1017,
-      "sha256": "019f7936f4aca82b2bc08483bac94ce1cfa3d923f45474ca445829928accd3dc"
+      "sha256": "1164d8e0e926d7bf96a169f6b370bdc4c5004ec0a81a236c856cda45ca3c61b2"
     },
     {
       "path": "demo/react/index.html",
       "bytes": 1017,
-      "sha256": "019f7936f4aca82b2bc08483bac94ce1cfa3d923f45474ca445829928accd3dc"
+      "sha256": "1164d8e0e926d7bf96a169f6b370bdc4c5004ec0a81a236c856cda45ca3c61b2"
     },
     {
       "path": "demo/svelte/index.html",
       "bytes": 1017,
-      "sha256": "019f7936f4aca82b2bc08483bac94ce1cfa3d923f45474ca445829928accd3dc"
+      "sha256": "1164d8e0e926d7bf96a169f6b370bdc4c5004ec0a81a236c856cda45ca3c61b2"
     },
     {
       "path": "demo/headless/index.html",
       "bytes": 1017,
-      "sha256": "019f7936f4aca82b2bc08483bac94ce1cfa3d923f45474ca445829928accd3dc"
+      "sha256": "1164d8e0e926d7bf96a169f6b370bdc4c5004ec0a81a236c856cda45ca3c61b2"
     },
     {
       "path": "fixtures/noori.hwp",
@@ -138,6 +128,16 @@
       "path": "THIRD_PARTY_NOTICES.txt",
       "bytes": 6696,
       "sha256": "9689e9992f43d9e2397fb293b05e02cc632bbefc203784aa8bad1a340b8646e8"
+    },
+    {
+      "path": "assets/app-BBzp-Epb.js",
+      "bytes": 327885,
+      "sha256": "a04fe274843b96ec38d35fc3433ae001177f52c20a29626519b6909753fa7e41"
+    },
+    {
+      "path": "assets/app-EBE_gf3n.css",
+      "bytes": 13218,
+      "sha256": "7ffec88a6bbd19cfeebd463fc5d78f772da13d47f6fe0a7ab0b2818b25fdde2e"
     }
   ]
 }
