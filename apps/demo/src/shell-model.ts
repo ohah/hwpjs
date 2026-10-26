@@ -30,6 +30,7 @@ export function demoRoute(path: string): string {
   if (
     !path.startsWith("/") ||
     path.startsWith("//") ||
+    // oxlint-disable-next-line no-control-regex -- 경로의 C0 제어 문자를 차단하는 의도된 검사입니다.
     /[\\\s\u0000-\u001f]/.test(path) ||
     path.includes("#")
   )

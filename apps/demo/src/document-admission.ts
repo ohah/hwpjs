@@ -53,7 +53,7 @@ export function createDocumentAdmission(options: AdmissionOptions) {
       const cancellation = options.cancelLoad();
       disposal = (async () => {
         await cancellation;
-        await Promise.allSettled([...pending]);
+        await Promise.allSettled(pending);
       })();
       return disposal;
     },

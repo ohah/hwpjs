@@ -20,7 +20,8 @@ export function documentFixture() {
         node.attributes.delete(name);
       },
       replaceChildren(...nodes: Element[]) {
-        for (const child of [...node.children]) child.remove();
+        // remove()가 배열을 바꾸므로 기존 자식 목록의 사본을 순회합니다.
+        for (const child of node.children.slice()) child.remove();
         node.textContent = "";
         node.append(...nodes);
       },

@@ -31,7 +31,7 @@ async function setup({ observerThrows = false, inline = false } = {}) {
     }),
   });
   await editor.load(new Uint8Array([1]), { format: "hwpx" });
-  const { doc, root: node } = documentFixture();
+  const { root: node } = documentFixture();
   const root = node as any;
   let gate: ReturnType<typeof deferred> | undefined,
     fail = false,

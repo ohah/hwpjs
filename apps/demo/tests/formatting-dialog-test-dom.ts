@@ -60,8 +60,8 @@ export class Element extends EventTarget {
     this.modal = false;
   }
   getClientRects(): any[] {
-    for (let node: Element | undefined = this; node; node = node.parentElement)
-      if (node.hidden) return [];
+    if (this.hidden) return [];
+    for (let node = this.parentElement; node; node = node.parentElement) if (node.hidden) return [];
     return [{}];
   }
   querySelector(selector: string): any {
