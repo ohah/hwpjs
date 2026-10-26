@@ -1,0 +1,3 @@
+[submodule "legacy/hwpers"]
+	path = legacy/hwpers
+	url = https://github.com/Indosaram/hwpers.git
