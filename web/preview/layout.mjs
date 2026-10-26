@@ -1,3 +1,4 @@
+import { createNativeGraphemeSegmenter } from './text-boundary-platform.mjs';
 // Logical grapheme flow consumed by page layout; not full Hancom text shaping.
 import { DEFAULT_ROW_HEIGHT, DEFAULT_TEXT_HEIGHT, TEXT_TOP } from './row-geometry.mjs';
 import {
@@ -33,7 +34,7 @@ export function layoutContent(
     throw new RangeError('InvalidLayoutBounds');
   if (typeof includeTerminalAfter !== 'boolean') throw new RangeError('InvalidLayoutBounds');
   const rows = [];
-  const segments = new Intl.Segmenter('ko', { granularity: 'grapheme' });
+  const segments = createNativeGraphemeSegmenter();
   let limited = content.limited,
     height = 0,
     spatialRows = false;

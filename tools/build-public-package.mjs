@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 /** Build only the public umbrella; never writes internal package metadata/dist. */
 import assert from 'node:assert/strict';
 import { isProductionSource } from '../packages/hwpjs/build/source-policy.mjs';
@@ -20,10 +21,17 @@ const root = fileURLToPath(new URL('../', import.meta.url)),
   pkg = resolve(root, 'packages/hwpjs');
 const options = {};
 for (const arg of process.argv.slice(2)) {
+  if (arg === '--js-only' || arg === '--verify-native-artifact') {
+    const key = arg === '--js-only' ? 'jsOnly' : 'verifyNativeArtifact';
+    assert(!options[key], 'DuplicateBuildArgument');
+    options[key] = true;
+    continue;
+  }
   const m = /^--(wasm|out)=(.+)$/.exec(arg);
   assert(m && !Object.hasOwn(options, m[1]), 'InvalidBuildArgument');
   options[m[1]] = m[2];
 }
+assert(!(options.jsOnly && options.verifyNativeArtifact), 'ConflictingBuildArgument');
 assert(options.wasm, 'ExplicitWasmRequired');
 const destination = resolve(root, options.out ?? 'packages/hwpjs/dist');
 assert(
@@ -104,9 +112,25 @@ async function files(dir) {
   return out.sort();
 }
 const packages = ['core', 'vanilla', 'react', 'svelte', 'react-native'];
+if (options.verifyNativeArtifact) {
+  const nativeDir = join(root, 'packages/react-native'),
+    manifest = join(nativeDir, 'native-artifacts.json');
+  assert(existsSync(manifest), 'NativeArtifactsRequired');
+  const artifact = JSON.parse(await observe(manifest, 'native-artifact-metadata'));
+  assert(Array.isArray(artifact.files) && artifact.files.length, 'InvalidNativeArtifactManifest');
+  for (const item of artifact.files) {
+    const path = resolve(nativeDir, item.path);
+    assert(
+      path.startsWith(nativeDir + '/') && sha(await readFile(path)) === item.sha256,
+      'NativeArtifactMismatch',
+    );
+  }
+}
 const metadata = [
   join(pkg, 'package.json'),
   join(pkg, 'README.md'),
+  join(pkg, 'react-native.config.cjs'),
+  join(pkg, 'HwpjsNativeCanvas.podspec'),
   join(root, 'tools/build-public-package.mjs'),
   join(pkg, 'build/source-policy.mjs'),
   join(root, 'package.json'),
@@ -115,9 +139,15 @@ const metadata = [
   join(root, 'docs/third-party-notices.md'),
 ];
 for (const path of metadata) await observe(path, 'build-metadata-license');
-const entrypoints = ['index', 'runtime', 'vanilla', 'react', 'svelte', 'react-native'].map((n) =>
-  join(pkg, 'src', n + '.ts'),
-);
+const entrypoints = [
+  'index',
+  'runtime',
+  'vanilla',
+  'react',
+  'svelte',
+  'react-native',
+  'react-native-canvas',
+].map((n) => join(pkg, 'src', n + '.ts'));
 // Worker is emitted separately below so bundlers may safely copy its URL as a single asset.
 const settings = {
   outdir: dist,
@@ -231,8 +261,88 @@ for (const p of await files(join(dist, 'types')))
   if (p.endsWith('.d.ts'))
     await writeFile(
       p,
-      remap(await readFile(p, 'utf8')).replace(/(["'][^"']+)\.ts(["'])/g, '$1.js$2'),
+      remap(await readFile(p, 'utf8')).replace(/(["'][^"']+)\.tsx?(["'])/g, '$1.js$2'),
     );
+// Canvas public types use the genuine installed RN declarations, without DOM globals.
+assert(
+  existsSync(join(root, 'node_modules/react-native/package.json')),
+  'NativeCanvasTypesRequired',
+);
+const nativeConfig = join(staging, 'native-types.json'),
+  nativeTypes = join(staging, 'native-types');
+await writeFile(
+  nativeConfig,
+  JSON.stringify(
+    {
+      compilerOptions: {
+        target: 'ES2023',
+        module: 'ESNext',
+        moduleResolution: 'Bundler',
+        strict: true,
+        skipLibCheck: false,
+        jsx: 'react-jsx',
+        lib: ['ES2023'],
+        declaration: true,
+        emitDeclarationOnly: true,
+        noEmitOnError: true,
+        allowImportingTsExtensions: true,
+        rootDir: join(root, 'packages'),
+        outDir: nativeTypes,
+        paths: Object.fromEntries(
+          packages.map((n) => ['@hwpjs/' + n, [join(root, 'packages', n, 'src/index.ts')]]),
+        ),
+        types: ['react'],
+        typeRoots: [join(root, 'node_modules/@types')],
+      },
+      files: [join(root, 'packages/react-native/src/canvas.ts')],
+    },
+    null,
+    2,
+  ),
+);
+const nativeGraph = spawnSync(
+  join(root, 'node_modules/.bin/tsc'),
+  ['-p', nativeConfig, '--listFilesOnly'],
+  { cwd: root, encoding: 'utf8' },
+);
+assert(
+  nativeGraph.status === 0,
+  'NativeTypeDependencyGraphFailed:' + nativeGraph.stdout + nativeGraph.stderr,
+);
+for (const path of nativeGraph.stdout
+  .split(/\r?\n/)
+  .filter((p) => p.startsWith(join(root, 'packages') + '/') && /\.(?:ts|tsx)$/.test(p)))
+  await observe(path, 'native-types-source');
+const nativeDeclaration = spawnSync(join(root, 'node_modules/.bin/tsc'), ['-p', nativeConfig], {
+  cwd: root,
+  encoding: 'utf8',
+});
+await writeFile(
+  join(staging, 'native-declaration.log'),
+  nativeDeclaration.stdout + nativeDeclaration.stderr,
+);
+assert(
+  nativeDeclaration.status === 0,
+  'NativeDeclarationBuildFailed:' + nativeDeclaration.stdout + nativeDeclaration.stderr,
+);
+for (const path of await files(nativeTypes))
+  if (path.endsWith('.d.ts')) {
+    const target = join(dist, 'types', relative(nativeTypes, path));
+    const bytes = remap(await readFile(path, 'utf8')).replace(
+      /(["'][^"']+)\.tsx?(["'])/g,
+      '$1.js$2',
+    );
+    if (existsSync(target))
+      assert.equal(
+        await readFile(target, 'utf8'),
+        bytes,
+        'NativeSharedDeclarationMismatch:' + target,
+      );
+    else {
+      await mkdir(dirname(target), { recursive: true });
+      await writeFile(target, bytes);
+    }
+  }
 // Keep the declaration graph rooted in public exports, not every implementation declaration.
 const publicManifest = JSON.parse(await readFile(join(pkg, 'package.json'), 'utf8'));
 const declarationRoots = Object.values(publicManifest.exports)
@@ -291,6 +401,41 @@ await writeFile(
 );
 await writeFile(join(dist, 'hwpjs.wasm'), wasm);
 assert((await readFile(join(dist, 'worker.js'))).length > 500, 'EmptyWorkerEntrypoint');
+// Exact source closure for optional UIKit/JSI autolinking; no archive is fabricated.
+const nativeRoot = join(root, 'packages/react-native');
+const nativeFiles = [
+  'HwpjsNativeCanvas.podspec',
+  'HwpjsNativeCanvasSpec.rb',
+  'CANVAS.md',
+  ...[
+    'NativeJsiBinding.cpp',
+    'NativeJsiBinding.h',
+    'NativeContextJsi.h',
+    'NativeCanvasContextJsi.cpp',
+    'NativeCanvasContextJsi.h',
+    'hwp_native.h',
+    'NativeCanvasAbi.h',
+  ].map((n) => 'cpp/' + n),
+  ...[
+    'HwpCanvasContextModule.mm',
+    'HwpCanvasHost.h',
+    'HwpCanvasHost.mm',
+    'HwpCanvasModule.mm',
+    'HwpCanvasFrameImages.h',
+    'HwpCanvasFrameImages.mm',
+    'HwpCanvasReplay.h',
+    'HwpCanvasReplay.mm',
+    'HwpNativeCanvas.h',
+    'HwpNativeCanvas.mm',
+  ].map((n) => 'ios/canvas/' + n),
+];
+for (const rel of nativeFiles) {
+  const input = join(nativeRoot, rel);
+  await observe(input, 'native-canvas-source');
+  const target = join(dist, 'native/react-native', rel);
+  await mkdir(dirname(target), { recursive: true });
+  await copyFile(input, target);
+}
 const before = Object.fromEntries(
   [...observed].sort(([a], [b]) => a.localeCompare(b)).map(([path, info]) => [path, info.sha256]),
 );
@@ -321,6 +466,9 @@ await writeFile(
     {
       schemaVersion: 1,
       namespace: '@ohah/hwpjs',
+      nativeVerification: options.verifyNativeArtifact
+        ? 'artifact-files-matched-device-unverified'
+        : 'not-verified-js-only',
       buildVersions: {
         bun: Bun.version,
         typescript: JSON.parse(

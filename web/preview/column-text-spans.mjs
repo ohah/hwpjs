@@ -1,3 +1,4 @@
+import { createNativeGraphemeSegmenter } from './text-boundary-platform.mjs';
 /** Current text intervals; definitions and paragraph text remain borrowed. */
 export function columnTextSpans(paragraph, flow) {
   const changes = flow.column_changes ?? [];
@@ -5,7 +6,7 @@ export function columnTextSpans(paragraph, flow) {
   const points = [
     { unit: 0, declaration: flow.column_start_declaration ?? flow.column_declaration },
   ];
-  const segments = new Intl.Segmenter('ko', { granularity: 'grapheme' }).segment(paragraph.text);
+  const segments = createNativeGraphemeSegmenter().segment(paragraph.text);
   let previous = 0;
   for (const change of changes) {
     if (

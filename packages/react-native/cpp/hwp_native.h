@@ -35,6 +35,9 @@ HwpNativeStatus hwp_native_bridge_create(uint32_t version, HwpNativeBridge **);
 HwpNativeStatus hwp_native_bridge_destroy(HwpNativeBridge *);
 /* Every token is bound to the bridge that created it; do not mix bridges. */
 HwpNativeStatus hwp_native_open(HwpNativeBridge *, uint32_t format, const uint8_t *, size_t, HwpNativeToken *);
+/* 선택적 V2 확장. 기존 ABI v1 구조체와 19개 함수를 변경하지 않습니다. */
+HwpNativeStatus hwp_native_history_configure_v2(HwpNativeBridge *, HwpNativeToken, uint32_t expected_revision, const uint8_t *, size_t);
+HwpNativeStatus hwp_native_history_stats_v2(HwpNativeBridge *, HwpNativeToken, HwpNativeBuffer *, size_t);
 HwpNativeStatus hwp_native_close(HwpNativeBridge *, HwpNativeToken);
 HwpNativeStatus hwp_native_state(HwpNativeBridge *, HwpNativeToken, HwpNativeState *, size_t);
 /* Low-level coordinates: HWP5 paragraph section-local 0-based, HWPX native

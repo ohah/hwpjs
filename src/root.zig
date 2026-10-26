@@ -1515,4 +1515,5 @@ test {
     _ = @import("hwpx/title_writer_fragment_trace_tests.zig");
     _ = @import("hwpx/title_zero_boundary_session_regression_tests.zig");
     _ = @import("company_fixture_dependency_probe.zig");
+    _ = @import("native/context_history_v2_test.zig");
 }

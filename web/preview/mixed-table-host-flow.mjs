@@ -1,3 +1,4 @@
+import { createNativeGraphemeSegmenter } from './text-boundary-platform.mjs';
 import { inlineTableHostAnchors } from './inline-table-host-anchors.mjs';
 import { measureInlineTableParagraph } from './inline-table-paragraph-measurement.mjs';
 import { layoutContent } from './layout.mjs';
@@ -43,7 +44,7 @@ export function measureMixedTableHost(
     textAnchors,
   );
   if (anchors.state !== 'resolved') return anchors;
-  for (const part of new Intl.Segmenter('ko', { granularity: 'grapheme' }).segment(paragraph.text))
+  for (const part of createNativeGraphemeSegmenter().segment(paragraph.text))
     if (part.segment.includes('\ufffc') && part.segment.length !== 1)
       return fail('UnsupportedMixedTableHostGrapheme');
   const ordered = entries.toSorted((a, b) => a.entry.table.anchorUnit - b.entry.table.anchorUnit);

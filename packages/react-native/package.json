@@ -11,21 +11,42 @@
     "ios",
     "examples/ios-context",
     "scripts",
-    "src/native"
+    "src/native",
+    "HwpjsNativeCanvas.podspec",
+    "react-native.config.cjs",
+    "CANVAS.md",
+    "native-artifacts.json",
+    "native"
   ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    }
+    },
+    "./canvas": {
+      "types": "./dist/canvas.d.ts",
+      "react-native": "./dist/canvas.js",
+      "import": "./dist/canvas.js"
+    },
+    "./canvas/podspec": "./HwpjsNativeCanvas.podspec"
   },
   "types": "./dist/index.d.ts",
   "sideEffects": false,
   "peerDependencies": {
-    "@hwpjs/core": "0.1.x"
+    "@hwpjs/core": "0.1.x",
+    "react": "^19.2.0",
+    "react-native": ">=0.83.1 <0.84"
   },
   "devDependencies": {
     "@hwpjs/core": "workspace:*"
   },
-  "private": true
+  "private": true,
+  "peerDependenciesMeta": {
+    "react-native": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    }
+  }
 }

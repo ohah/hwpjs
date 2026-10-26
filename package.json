@@ -40,6 +40,7 @@
     "typescript": "7.0.2",
     "vite": "8.3.5",
     "oxlint": "1.89.0",
-    "oxfmt": "0.74.0"
+    "oxfmt": "0.74.0",
+    "react-native": "0.83.1"
   }
 }

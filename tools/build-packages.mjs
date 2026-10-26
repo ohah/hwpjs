@@ -15,6 +15,9 @@ for (const argument of args) {
   if (argument === '--web') {
     assert(!options.web, 'DuplicateBuildArgument');
     options.web = true;
+  } else if (argument === '--js-only') {
+    assert(!options.jsOnly, 'DuplicateBuildArgument');
+    options.jsOnly = true;
   } else {
     const match = /^--(wasm|package)=(.+)$/.exec(argument);
     assert(match && !Object.hasOwn(options, match[1]), 'InvalidBuildArgument');
@@ -63,12 +66,19 @@ async function fingerprints(paths) {
 }
 const built = [];
 for (const name of selected) {
+  if (name === 'react-native' && options.jsOnly)
+    console.warn('NativeVerification:not-verified-js-only');
   const directory = resolve(root, 'packages', name),
     source = join(directory, 'src');
-  const entries = name === 'core' ? ['index.ts', 'runtime.ts', 'worker.ts'] : ['index.ts'];
+  const entries =
+    name === 'core'
+      ? ['index.ts', 'runtime.ts', 'worker.ts']
+      : name === 'react-native'
+        ? ['index.ts', 'canvas.ts']
+        : ['index.ts'];
   for (const entry of entries)
     assert(existsSync(join(source, entry)), `MissingPackageEntrypoint:${name}/${entry}`);
-  if (name === 'react-native') {
+  if (name === 'react-native' && !options.jsOnly) {
     assert(
       existsSync(join(directory, 'native-artifacts.json')),
       'NativeArtifactsRequired: JS bundle alone is not a React Native build',
@@ -157,9 +167,12 @@ for (const name of selected) {
         outDir: staging,
         allowImportingTsExtensions: true,
         rewriteRelativeImportExtensions: true,
+        ...(name === 'react-native'
+          ? { lib: ['ES2023'], types: ['react'], skipLibCheck: false }
+          : {}),
       },
       include: [source + '/**/*.ts', source + '/**/*.tsx', source + '/**/*.d.ts'],
-      exclude: [],
+      exclude: name === 'react-native' ? [source + '/**/__tests__/**'] : [],
     }),
   );
   const declaration = spawnSync(process.execPath, ['x', 'tsc', '--project', config], {

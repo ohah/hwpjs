@@ -8,7 +8,9 @@
     "dist",
     "LICENSE",
     "THIRD_PARTY_NOTICES.md",
-    "README.md"
+    "README.md",
+    "react-native.config.cjs",
+    "HwpjsNativeCanvas.podspec"
   ],
   "types": "./dist/types/core/src/index.d.ts",
   "sideEffects": [
@@ -59,17 +61,27 @@
     },
     "./worker": "./dist/worker.js",
     "./wasm": "./dist/hwpjs.wasm",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./react-native/canvas": {
+      "types": "./dist/types/react-native/src/canvas.d.ts",
+      "react-native": "./dist/react-native-canvas.js",
+      "import": "./dist/react-native-canvas.js"
+    },
+    "./react-native/canvas/podspec": "./dist/native/react-native/HwpjsNativeCanvas.podspec"
   },
   "peerDependencies": {
     "react": "^19.2.0",
-    "svelte": "^5.57.2"
+    "svelte": "^5.57.2",
+    "react-native": ">=0.83.1 <0.84"
   },
   "peerDependenciesMeta": {
     "react": {
       "optional": true
     },
     "svelte": {
+      "optional": true
+    },
+    "react-native": {
       "optional": true
     }
   }

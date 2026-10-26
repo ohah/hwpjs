@@ -77,6 +77,16 @@ const State = struct {
 };
 
 pub const Session = opaque {
+    /// 저장 모델을 변경하지 않고 원본 문단 토큰과 빈 본문 여부를 관찰합니다.
+    pub fn displayTextPresence(self: *const Session, section: usize, index: usize) !struct { source_node: ?u32, declared_units: usize, token_count: usize, raw_units: usize, observed_empty: bool } {
+        if (index >= try self.paragraphCount(section)) return error.InvalidParagraph;
+        const p = self.stateConst().document.sections[section].paragraphs[index];
+        var bytes: usize = 0;
+        for (p.tokens) |t| bytes = try std.math.add(usize, bytes, t.raw.len);
+        return .{ .source_node = p.source_node, .declared_units = p.declared_units, .token_count = p.tokens.len, .raw_units = bytes / 2, .observed_empty = p.tokens.len == 0 and p.declared_units <= 1 };
+    }
+
+    /// 새 표 생성에 적용하는 자원 상한을 반환합니다.
     pub fn tableCreationLimits() @import("created_table_records.zig").Limits {
         return created_table_limits;
     }

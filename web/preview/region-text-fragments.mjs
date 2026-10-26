@@ -1,3 +1,4 @@
+import { createNativeGraphemeSegmenter } from './text-boundary-platform.mjs';
 // 같은 줄의 분리된 영역을 순서대로 소비합니다.
 import { isHardLineBreak } from './hard-line-break.mjs';
 import { textMeasurement } from './text-measurement.mjs';
@@ -25,7 +26,7 @@ export function regionTextFragments(
     startUnit > text.length
   )
     throw new RangeError('InvalidFragmentStart');
-  const segments = new Intl.Segmenter('ko', { granularity: 'grapheme' });
+  const segments = createNativeGraphemeSegmenter();
   if (
     startUnit !== text.length &&
     segments.segment(text).containing(startUnit)?.index !== startUnit

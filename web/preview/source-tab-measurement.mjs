@@ -1,3 +1,4 @@
+import { createNativeGraphemeSegmenter } from './text-boundary-platform.mjs';
 import { nextTabPlacement } from './tab-stop-geometry.mjs';
 import { isHardLineBreak } from './hard-line-break.mjs';
 import { validateTabSources } from '../../js/hwpx-tab-sources.mjs';
@@ -54,9 +55,7 @@ export function measureSourceTab(paragraph, unit, context, measureUnit) {
   let decimalWidth = 0,
     seenDecimal = false;
   const following = createTextLineWidth([{ unit: unit + 1, x: 0 }]);
-  for (const part of new Intl.Segmenter('ko', { granularity: 'grapheme' }).segment(
-    paragraph.text.slice(unit + 1, end),
-  )) {
+  for (const part of createNativeGraphemeSegmenter().segment(paragraph.text.slice(unit + 1, end))) {
     if (part.segment === '\t' || isHardLineBreak(part.segment)) break;
     if (part.segment.includes('\ufffc')) return fail('UnsupportedTabFollowingObject');
     const measured = measureUnit(part.segment, unit + 1 + part.index);

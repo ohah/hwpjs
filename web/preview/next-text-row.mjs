@@ -1,3 +1,4 @@
+import { createNativeGraphemeSegmenter } from './text-boundary-platform.mjs';
 import { DEFAULT_ROW_HEIGHT, DEFAULT_TEXT_HEIGHT, TEXT_TOP } from './row-geometry.mjs';
 import { paragraphLineGeometry, paragraphLineAdvance } from './paragraph-geometry.mjs';
 import { measureDisplayRun, textMeasurement } from './text-measurement.mjs';
@@ -26,7 +27,7 @@ export function nextTextRow(
     startUnit > paragraph.text.length
   )
     throw new RangeError('InvalidLayoutBounds');
-  const segments = new Intl.Segmenter('ko', { granularity: 'grapheme' }).segment(paragraph.text);
+  const segments = createNativeGraphemeSegmenter().segment(paragraph.text);
   if (!Number.isInteger(endUnit) || endUnit < startUnit || endUnit > paragraph.text.length)
     throw new RangeError('InvalidLayoutBounds');
   if (startUnit < paragraph.text.length && segments.containing(startUnit)?.index !== startUnit)

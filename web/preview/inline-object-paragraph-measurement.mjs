@@ -1,3 +1,4 @@
+import { createNativeGraphemeSegmenter } from './text-boundary-platform.mjs';
 import { layoutContent } from './layout.mjs';
 import { textMeasurement } from './text-measurement.mjs';
 import { inlineObjectLineAdvance } from './inline-object-line-advance.mjs';
@@ -75,9 +76,7 @@ export function measureInlineObjectParagraph(
   const textAnchors = new Set(textAnchorUnits);
   if (units.length !== entries.length + overlays.size + textAnchors.size)
     return unavailable('AmbiguousInlineObjectAnchors');
-  for (const part of new Intl.Segmenter('ko', { granularity: 'grapheme' }).segment(
-    paragraph.text,
-  )) {
+  for (const part of createNativeGraphemeSegmenter().segment(paragraph.text)) {
     if (part.segment.includes('\ufffc') && part.segment.length !== 1)
       return unavailable('UnsupportedInlineObjectGrapheme');
   }
@@ -152,7 +151,7 @@ export function measureInlineObjectParagraph(
       anchorUnits.some((unit) => row.startUnit <= unit && row.endUnit > unit)
     ) {
       let glyphHeight = textMeasurement(measure('', paragraph, row.startUnit, 'text')).height;
-      for (const part of new Intl.Segmenter('ko', { granularity: 'grapheme' }).segment(row.text)) {
+      for (const part of createNativeGraphemeSegmenter().segment(row.text)) {
         const unit = row.startUnit + part.index;
         if (!byUnit.has(unit))
           glyphHeight = Math.max(
