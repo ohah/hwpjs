@@ -55,7 +55,7 @@ import {
   type HeadlessEditor,
   type SelectionTarget,
   type EditorError,
-} from "@ohah/hwpjs";
+} from '@ohah/hwpjs';
 
 export function observeEditor(
   editor: HeadlessEditor,
@@ -71,7 +71,7 @@ export function observeEditor(
   };
 }
 
-const HOST_NOTICE = createCommand<{ message: string }>("host-notice");
+const HOST_NOTICE = createCommand<{ message: string }>('host-notice');
 
 // 이미 준비된 ready editor를 전달합니다. true는 Native 편집 성공이 아닙니다.
 export async function notifyHost(editor: HeadlessEditor, show: (message: string) => void) {
@@ -84,7 +84,7 @@ export async function notifyHost(editor: HeadlessEditor, show: (message: string)
     10,
   );
   try {
-    const result = await editor.dispatchCommand(HOST_NOTICE, { message: "호스트 알림" });
+    const result = await editor.dispatchCommand(HOST_NOTICE, { message: '호스트 알림' });
     if (result.error) throw Error(result.error);
     return result; // handled-without-runtime. 저장 문서의 변경 증거가 아닙니다.
   } finally {
@@ -95,7 +95,7 @@ export async function notifyHost(editor: HeadlessEditor, show: (message: string)
 export async function collectInsert(editor: HeadlessEditor, target: SelectionTarget, text: string) {
   // 콜백은 동기 수집만 합니다. Native 실행은 정상 반환 뒤 시작합니다.
   const result = await editor.update((collector, snapshot) => {
-    if (snapshot.status !== "ready") throw Error("편집 준비가 되지 않았습니다.");
+    if (snapshot.status !== 'ready') throw Error('편집 준비가 되지 않았습니다.');
     collector.dispatchCommand(SPLICE_TEXT_COMMAND, { target, text });
   });
   // 여러 명령을 수집해도 전체 rollback/read-your-writes를 보장하지 않습니다.
