@@ -1,7 +1,7 @@
 import {readFile} from 'node:fs/promises';
 import {resolve, dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {execFileSync} from 'node:child_process';
+import {checkJavaScriptModule} from './javascript-syntax.mjs';
 import {validateBundle} from './bundle-validation.mjs';
 
 const required = ['index.html', ...['vanilla', 'react', 'svelte', 'headless'].map(name => `demo/${name}/index.html`),
@@ -48,7 +48,7 @@ function validateReferences(files) {
       if (url.origin !== 'https://static.invalid' || !url.pathname.startsWith(prefix) ||
           (!files.has(target) && !directory)) throw Error('MissingStaticDependency:' + path + ':' + ref);
     }
-    if (path.endsWith('.js')) execFileSync(process.execPath, ['--check', '--input-type=module'], {input: source, stdio: 'pipe'});
+    if (path.endsWith('.js')) checkJavaScriptModule(source);
   }
 }
 export async function validateProductionBundle(directory, {root}) {

@@ -8,6 +8,7 @@ on:
       - '.github/workflows/docs.yml'
       - 'tools/build-pages-demo.mjs'
       - 'tools/pages-demo/**'
+      - 'tests/pages-demo-javascript-syntax.test.mjs'
   workflow_dispatch:
 
 permissions:
@@ -28,6 +29,8 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: '1.4.4'
+      - name: Check generated JavaScript syntax under Bun
+        run: bun test ./tests/pages-demo-javascript-syntax.test.mjs
       - name: Verify bundled editor artifacts
         run: bun tools/build-pages-demo.mjs --verify
       - name: Prepare independent documentation workspace
