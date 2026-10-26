@@ -634,3 +634,12 @@ WASM 배포 디버그 정보와 실행 섹션 검증은 [산출물 정책](wasm-
 ```sh
 mise exec -- bun test ./packages/vanilla/tests/renderer-ack-projection.test.mjs
 ```
+
+
+## 공개 패키지 JSX 회귀
+
+[JSX 런타임 계약과 검증 범위](public-package-jsx-runtime.md)를 따릅니다. 설치된 Bun·Node·React를 사용하며 Native 빌드와 문서 fixture가 필요하지 않습니다.
+
+```sh
+mise exec -- bun test ./tests/public-package-jsx-runtime.test.mjs
+```

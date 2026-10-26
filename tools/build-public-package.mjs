@@ -122,6 +122,7 @@ const entrypoints = ['index', 'runtime', 'vanilla', 'react', 'svelte', 'react-na
 const settings = {
   outdir: dist,
   target: 'browser',
+  define: { 'process.env.NODE_ENV': '"production"' },
   format: 'esm',
   splitting: true,
   sourcemap: 'none',
