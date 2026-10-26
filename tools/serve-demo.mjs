@@ -1,3 +1,5 @@
+import { parseDemoServerArguments } from "./demo-server-options.mjs";
+import { loadDemoServerBundle } from "./demo-server-bundle.mjs";
 import { createServer } from "node:http";
 import { readFile, readdir } from "node:fs/promises";
 import { resolve, extname } from "node:path";
@@ -8,10 +10,10 @@ import { createPreviewWasmCompression } from "./preview-wasm-compression.mjs";
 import { loadDemoDocumentation } from "./demo-documentation-response.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
-const port = Number(process.argv[2] ?? 8082);
-if (!Number.isInteger(port) || port < 1 || port > 65535) throw Error("InvalidPort");
+const {port, bundleDirectory, privateFixtures} = parseDemoServerArguments(process.argv.slice(2), root);
 const dist = resolve(root, "apps/demo/dist"), core = resolve(root, "packages/core/dist");
-const index = await readFile(resolve(dist, "index.html"));
+const bundle = bundleDirectory ? await loadDemoServerBundle(bundleDirectory, {root, privateFixtures}) : undefined;
+const index = bundle ? undefined : await readFile(resolve(dist, "index.html"));
 const assets = new Map();
 async function snapshot(directory, prefix) {
   for (const item of await readdir(directory, { withFileTypes: true })) {
@@ -20,10 +22,10 @@ async function snapshot(directory, prefix) {
     else if (item.isFile() && /\.(?:js|css|wasm|woff2?|ttf|png|svg|ico)$/.test(path)) assets.set(prefix + item.name, await readFile(path));
   }
 }
-await snapshot(dist, "/"); await snapshot(core, "/hwpjs/");
+if (!bundle) { await snapshot(dist, "/"); await snapshot(core, "/hwpjs/"); }
 const documentation = await loadDemoDocumentation(root);
 const compress = createPreviewWasmCompression();
-const primaryWasm = assets.get("/hwpjs/hwpjs.wasm");
+const primaryWasm = bundle?.primaryWasm ?? assets.get("/hwpjs/hwpjs.wasm");
 if (primaryWasm) { compress(primaryWasm, "br"); compress(primaryWasm, "gzip"); }
 const mime = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".wasm": "application/wasm", ".svg": "image/svg+xml", ".png": "image/png", ".ico": "image/vnd.microsoft.icon", ".woff": "font/woff", ".woff2": "font/woff2", ".ttf": "font/ttf" };
 const pages = new Set(["/", "/index.html", "/web/preview/index.html", "/demo/vanilla", "/demo/react", "/demo/svelte", "/demo/headless"]);
@@ -31,9 +33,11 @@ const server = createServer(async (request, response) => {
   try {
     if (!["GET", "HEAD"].includes(request.method)) { response.writeHead(405); response.end(); return; }
     const path = decodeURIComponent(new URL(request.url, "http://localhost").pathname);
+    if (bundle && path.startsWith("/docs/editor/")) { await bundle.respond(path, request.method, response, request.headers["accept-encoding"]); return; }
     if (documentation.respond(path,request.method,response,request.headers["accept-encoding"])) return;
     if (await respondDemoFixtureCatalog(root, path, request.method, response)) return;
     if (await respondDemoFixture(root, path, request.method, response)) return;
+    if (bundle) { await bundle.respond(path, request.method, response, request.headers["accept-encoding"]); return; }
     const body = pages.has(path) ? index : assets.get(path);
     if (!body) { response.writeHead(404, { "Cache-Control": "no-store" }); response.end(); return; }
     const wasm = path.endsWith(".wasm"), representation = wasm ? compress(body, request.headers["accept-encoding"]) : { bytes: body, encoding: null };
