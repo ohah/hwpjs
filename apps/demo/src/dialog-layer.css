@@ -12,3 +12,4 @@
 .hwp-dialog-layer :focus-visible{outline:2px solid #2463c4;outline-offset:2px}
 
 .hwp-dialog-layer [hidden]{display:none!important}
+.hwp-dialog-layer,.hwp-dialog-layer *,.hwp-dialog-layer *::before,.hwp-dialog-layer *::after{box-sizing:border-box}

@@ -12,3 +12,5 @@
 .hwp-search-message{margin:12px 0 0;min-height:20px;color:#354c71}
 .hwp-search-limit{font-size:11px;color:#6e7787;margin:4px 0 0}
 @media(max-width:480px){.hwp-search-grid{grid-template-columns:1fr}.hwp-search-actions{flex-direction:row;flex-wrap:wrap}.hwp-search-field{grid-template-columns:64px minmax(0,1fr)}}
+.hwp-search-field input:focus{outline:none;border-color:#2463c4}
+.hwp-dialog-layer .hwp-search-field input:focus-visible{outline:2px solid #2463c4;outline-offset:0}
