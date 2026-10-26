@@ -82,6 +82,7 @@ export function createCanvasSurface({ root, editor, environment = {}, onStatus =
       if (!bridge?.busy() && nextSelectionKey !== selectionKey) {
         selectionKey = nextSelectionKey;
         if (selected) {
+          direct?.initializeCapabilities({ ...(state.capabilities as object), historyRevision: state.nativeHistoryRevision });
           if (!direct?.selectTextRange(selected, { focusInput: false, selectionOrigin: "core" })) status('선택한 텍스트의 화면 위치를 표시할 수 없습니다.');
         } else direct?.external({ kind: 'external-update', origin: 'core' });
       }
