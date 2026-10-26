@@ -10,20 +10,25 @@ const valid =
   'import value from "./not-installed.js"; export const answer = await value; throw Error("MustNotExecute");';
 const isSyntaxError = (error) => error.status !== 0 && /SyntaxError/.test(String(error.stderr));
 
-test('generated ESM is parsed by real Node without importing or executing it', () => {
-  const executable = checkJavaScriptModule(valid);
-  const runtime = JSON.parse(
-    execFileSync(
-      executable,
-      [
-        '--eval',
-        'console.log(JSON.stringify({name:process.release.name,bun:Boolean(process.versions.bun)}))',
-      ],
-      { encoding: 'utf8', env: { ...process.env, NODE_OPTIONS: '' } },
-    ),
-  );
-  assert.deepEqual(runtime, { name: 'node', bun: false });
-});
+// 첫 검사에는 실제 Node 탐색·cold start와 파서·런타임 확인이 포함됩니다.
+test(
+  'generated ESM is parsed by real Node without importing or executing it',
+  { timeout: 30_000 },
+  () => {
+    const executable = checkJavaScriptModule(valid);
+    const runtime = JSON.parse(
+      execFileSync(
+        executable,
+        [
+          '--eval',
+          'console.log(JSON.stringify({name:process.release.name,bun:Boolean(process.versions.bun)}))',
+        ],
+        { encoding: 'utf8', env: { ...process.env, NODE_OPTIONS: '' } },
+      ),
+    );
+    assert.deepEqual(runtime, { name: 'node', bun: false });
+  },
+);
 test('invalid JavaScript is rejected', () => {
   assert.throws(() => checkJavaScriptModule('export const = ;'), isSyntaxError);
 });
