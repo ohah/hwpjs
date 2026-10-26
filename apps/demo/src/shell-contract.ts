@@ -11,7 +11,7 @@ export type DemoCommand =
   | "insert-header" | "insert-footer" | "toggle-marks" | "toggle-grid" | "insert-comment" | "word-count"
   | "bold" | "italic" | "underline" | "strike"
   | "align-left" | "align-center" | "align-right" | "align-justify"
-  | "set-font-size" | "set-zoom";
+  | "toggle-paragraph-marks" | "set-font-size" | "set-zoom" | "zoom-in" | "zoom-out";
 export type DemoAction =
   | { readonly command: Exclude<DemoCommand, "set-font-size" | "set-zoom"> }
   | { readonly command: "set-font-size"; readonly points: number }

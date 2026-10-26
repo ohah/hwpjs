@@ -1,3 +1,4 @@
+import {VIEW_ZOOM_LEVELS,isMenuZoomPercent} from './view-zoom.ts';
 import {DocumentOpenCancelledError} from './document-open-consent.ts';
 import type { DemoAction, DemoCommand, DemoFixture, DemoFramework, DemoShellOptions, DemoTraceEntry } from "./shell-contract.ts";
 import { actionAvailability, demoRoute, fontSizePoints, openAvailability } from "./shell-model.ts";
@@ -9,17 +10,17 @@ const commands: readonly [DemoCommand, string, string][] = [
   ["insert-table", "표", "▦"], ["insert-chart", "차트", "▥"], ["insert-footnote", "각주", "¹"], ["insert-endnote", "미주", "ⅰ"],
   ["insert-link", "하이퍼링크", "↗"], ["insert-symbol", "문자표", "Ω"], ["character-properties", "글자 모양", "가"],
   ["paragraph-properties", "문단 모양", "≡"], ["object-properties", "개체 속성", "□"], ["insert-header", "머리말", "⊤"],
-  ["insert-footer", "꼬리말", "⊥"], ["toggle-marks", "조판 부호", "¶"], ["toggle-grid", "격자 보기", "▦"],
+  ["insert-footer", "꼬리말", "⊥"], ["toggle-marks", "조판 부호", "¶"], ["toggle-paragraph-marks", "문단 부호", "↵"], ["toggle-grid", "격자 보기", "▦"],
 ];
 const menus: readonly [string, readonly DemoCommand[]][] = [
-  ["파일", ["save"]], ["편집", ["undo", "redo", "cut", "copy", "paste", "find", "replace"]],
-  ["보기", ["toggle-marks", "toggle-grid"]], ["입력", ["insert-image", "insert-table", "insert-shape", "insert-link", "insert-symbol"]],
+  ["파일", ["save"]], ["편집", ["undo", "redo", "cut", "copy", "paste", "format-copy", "find", "replace"]],
+  ["보기", ["zoom-in", "zoom-out", "toggle-marks", "toggle-paragraph-marks", "toggle-grid"]], ["입력", ["insert-image", "insert-table", "insert-shape", "insert-link", "insert-symbol"]],
   ["서식", ["bold", "italic", "underline", "strike", "character-properties", "paragraph-properties"]],
   ["쪽", ["insert-header", "insert-footer"]], ["표", ["insert-table", "object-properties"]],
   ["검토", ["insert-comment"]], ["도구", ["word-count"]],
 ];
 const labels = new Map<DemoCommand, string>([...commands.map(([id, label]) => [id, label] as [DemoCommand, string]),
-  ["undo", "실행 취소"], ["redo", "다시 실행"], ["replace", "찾아 바꾸기"], ["bold", "굵게"], ["italic", "기울임"], ["underline", "밑줄"], ["strike", "취소선"], ["align-left", "왼쪽 정렬"], ["align-center", "가운데 정렬"], ["align-right", "오른쪽 정렬"], ["align-justify", "양쪽 정렬"], ["set-font-size", "글자 크기"], ["set-zoom", "확대"], ["insert-comment", "메모"], ["word-count", "문서 통계"]]);
+  ["zoom-in", "확대"], ["zoom-out", "축소"], ["undo", "실행 취소"], ["redo", "다시 실행"], ["replace", "찾아 바꾸기"], ["bold", "굵게"], ["italic", "기울임"], ["underline", "밑줄"], ["strike", "취소선"], ["align-left", "왼쪽 정렬"], ["align-center", "가운데 정렬"], ["align-right", "오른쪽 정렬"], ["align-justify", "양쪽 정렬"], ["set-font-size", "글자 크기"], ["set-zoom", "확대"], ["insert-comment", "메모"], ["word-count", "문서 통계"]]);
 let instance = 0;
 
 /** Import is side-effect free. Call only at the platform mount boundary.
@@ -102,12 +103,18 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
     return { node, description };
   };
   const menuNav = el("nav", "hwp-demo-menus"); menuNav.setAttribute("aria-label", "문서 메뉴");
-  const disclosures: { details: HTMLDetailsElement; summary: HTMLElement }[] = [];
+  const zoomChoices: {node:HTMLButtonElement;percent:number}[] = [];
+  const disclosures: { details: HTMLDetailsElement; summary: HTMLElement; popup: HTMLElement }[] = [];
   for (const [label, items] of menus) {
     const details = el("details", "hwp-demo-menu"), summary = el("summary", "", label), popup = el("div", "hwp-demo-popup");
     popup.id = `${prefix}-menu-${disclosures.length}`; summary.setAttribute("aria-controls", popup.id);
     for (const id of items) { const button = commandButton(id); popup.append(button.node, button.description); listen(button.node, "click", () => { details.open = false; }); }
-    details.append(summary, popup); disclosures.push({ details, summary }); menuNav.append(details);
+    if (label === "보기") {
+      const scales=el("details","hwp-demo-zoom-menu"),heading=el("summary","","배율"),choices=el("div","hwp-demo-zoom-choices");
+      for(const percent of VIEW_ZOOM_LEVELS){const button=el("button","hwp-demo-button",`${percent}%`);button.type="button";button.dataset.zoomPercent=String(percent);const description=bindCommand(button,"set-zoom");zoomChoices.push({node:button,percent});listen(button,"click",()=>{details.open=false;dispatch({command:"set-zoom",percent});});choices.append(button,description);}
+      scales.append(heading,choices);popup.append(scales);
+    }
+    details.append(summary, popup); disclosures.push({ details, summary, popup }); menuNav.append(details);
     listen(details, "toggle", () => { summary.setAttribute("aria-expanded", String(details.open)); if (details.open) for (const row of disclosures) if (row.details !== details) row.details.open = false; });
     summary.setAttribute("aria-expanded", "false");
     listen(details, "keydown", event => { if ((event as KeyboardEvent).key === "Escape") { event.preventDefault(); details.open = false; summary.focus(); } });
@@ -154,6 +161,7 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
     const state = options.getState(), available = openAvailability(state.openFile, state.busy, Boolean(options.onOpenFile));
     const selected = file.files?.[0]; file.value = ""; // Reopening the same file remains possible.
     if (!available.enabled || !selected) return;
+    disclosures[0].details.open = false;
     invoke(() => options.onOpenFile?.(selected));
   });
   listen(fixtureOpen, "click", () => {
@@ -161,11 +169,15 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
     const state = options.getState(), available = openAvailability(state.openFixture, state.busy, Boolean(options.onOpenFixture));
     if (!available.enabled) return;
     file.value = "";
-    const id = fixture.value; invoke(() => options.onOpenFixture?.(id));
+    const id = fixture.value; disclosures[0].details.open = false;
+    invoke(() => options.onOpenFixture?.(id));
   });
   const support = el("details", "hwp-demo-support"), supportTitle = el("summary", "", "도구 지원 안내"), supportList = el("ul");
   support.append(supportTitle, supportList);
   picker.append(fileLabel, file, fileReason, fixtureLabel, fixture, fixtureOpen, fixtureReason, support);
+  // One file workflow, located in the File menu rather than shrinking the document viewport.
+  disclosures[0].popup.className += " hwp-demo-file-popup";
+  disclosures[0].popup.append(picker);
   const workspace = el("main", "hwp-demo-workspace"); workspace.id = `${prefix}-workspace`;
   const surfaceMount = options.framework === "headless" ? null : el("div", "hwp-demo-surface");
   const headlessMount = options.framework === "headless" ? el("div", "hwp-demo-headless-controls") : null;
@@ -182,11 +194,11 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
   const statusbar = el("footer", "hwp-demo-statusbar"), status = el("output"), page = el("span"), selection = el("span"), zoomLabel = el("label", "", "확대"), zoom = el("select");
   status.setAttribute("role", "status"); status.setAttribute("aria-live", "polite"); page.setAttribute("aria-label", "문서 쪽"); selection.setAttribute("aria-label", "선택 상태");
   zoom.id = `${prefix}-zoom`; zoomLabel.htmlFor = zoom.id;
-  for (const percent of [50, 75, 100, 125, 150, 200]) { const option = el("option", "", `${percent}%`); option.value = String(percent); zoom.append(option); }
+  for (const percent of VIEW_ZOOM_LEVELS) { const option = el("option", "", `${percent}%`); option.value = String(percent); zoom.append(option); }
   const zoomDescription = bindCommand(zoom, "set-zoom");
-  listen(zoom, "change", () => { if (closed) return; const percent = Number(zoom.value); if ([50, 75, 100, 125, 150, 200].includes(percent)) dispatch({ command: "set-zoom", percent }); });
+  listen(zoom, "change", () => { if (closed) return; const percent = Number(zoom.value); if (isMenuZoomPercent(percent)) dispatch({ command: "set-zoom", percent }); });
   statusbar.append(page, selection, status, zoomLabel, zoom, zoomDescription);
-  shell.append(titlebar, menuNav, toolbar, formatbar, picker, reason, workspace, statusbar);
+  shell.append(titlebar, menuNav, toolbar, formatbar, reason, workspace, statusbar);
   root.append(shell);
   const update = ({ resetFormatDraft = false }: { resetFormatDraft?: boolean } = {}) => {
     if (closed) return;
@@ -206,6 +218,7 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
       node.title = value.enabled ? label : `${label} — ${description.textContent}`;
       if (value.pressed !== undefined) node.setAttribute("aria-pressed", String(value.pressed)); else node.removeAttribute("aria-pressed");
     }
+    for(const {node,percent} of zoomChoices)node.setAttribute("aria-pressed",String(percent===(state.zoomPercent??100)));
     supportList.replaceChildren();
     const supportedList = new Set<DemoCommand>();
     for (const { command } of availabilityNodes) {

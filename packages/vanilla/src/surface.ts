@@ -17,6 +17,7 @@ type HostEditor = HeadlessEditor & {
   acquireInputSurface(hooks: InputSurfaceHooks): InputSurfaceLease;
   readResource(message: RuntimeMessage, token?: ReturnType<HeadlessEditor['getEditorState']>['token']): Promise<RuntimeReply>;
 };
+export interface CanvasDisplayOptions { readonly paragraphMarks:boolean; }
 export interface CanvasSurfaceOptions {
   root: HTMLElement;
   editor: HostEditor;
@@ -172,6 +173,8 @@ export function createCanvasSurface({ root, editor, environment = {}, onStatus =
       return direct.focusInput()&&!closed&&direct.canPasteInput();
     },
     setScale(value: number): boolean { return !closed && renderer.setViewScale(value); },
+    setDisplayOptions(options:CanvasDisplayOptions):boolean { return !closed&&renderer.setDisplayOptions(options); },
+    getDisplayOptions():Readonly<CanvasDisplayOptions>|undefined { return closed?undefined:renderer.getDisplayOptions(); },
     getSelection() { return editor.getEditorState().selection ?? null; },
     async flushComposition() { if (closed) return 'blocked' as const; const answer = direct.flushComposition(); if (answer !== 'blocked') await bridge!.flush(); return answer; },
     dispose(): Promise<void> { if (!disposal) { cleanup(); disposal = bridge!.flush(); } return disposal; },

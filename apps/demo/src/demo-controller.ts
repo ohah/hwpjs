@@ -1,3 +1,6 @@
+import type {CanvasDisplayOptions} from '@hwpjs/vanilla';
+import {createViewOptionsBridge} from './view-options-bridge.ts';
+import {isMenuZoomPercent,stepViewZoom} from './view-zoom.ts';
 import {mountShortcutSettings} from './shortcut-settings.ts';
 import {getHistoryAvailability,getSelectionFormatting} from "@hwpjs/core";
 import { createEditor, type HeadlessEditor } from '@hwpjs/core';
@@ -33,6 +36,8 @@ export interface DemoHost {
   canPasteInput?():boolean;
   focusForPaste?():boolean;
   setScale(value: number): boolean;
+  setDisplayOptions?(options:CanvasDisplayOptions):boolean;
+  getDisplayOptions?():Readonly<CanvasDisplayOptions>|undefined;
   dispose(): void | Promise<void>;
 }
 export type MountDemoHost = (root: HTMLElement, editor: HeadlessEditor,
@@ -61,13 +66,14 @@ export async function mountDemo(root: HTMLElement, framework: DemoFramework, mou
   const formatting = createFormattingBridge({editor,onStatus:note});
   const textTools = createTextToolsBridge({editor,root,onStatus:note,onClose:()=>{host?.focus?.();},resolveShortcut:event=>shortcuts?.resolveCommand(event)});
   const clipboard = createClipboardBridge({editor,onStatus:note,onReadDenied:()=>{host?.focus?.();},clipboard:root.ownerDocument.defaultView?.navigator.clipboard??null});
+  const viewOptions=createViewOptionsBridge({getHost:()=>host,onStatus:note});
   const presentation = (): DemoShellState => {
     const state = editor.getEditorState(), ready = state.status === 'ready';
     const formatState = formatting.getPresentation(), history=getHistoryAvailability(state);
-    const availability = { ...formatState.actions,...textTools.presentation(),...clipboard.getPresentation().actions,
+    const availability = { ...formatState.actions,...textTools.presentation(),...viewOptions.presentation(ready),...clipboard.getPresentation().actions,
       save:{enabled:ready,reason:ready?undefined:'문서를 먼저 열어주세요.'},
       undo:{enabled:host?.canRequestHistory?.('undo')??history.canUndo,reason:!ready?'문서를 먼저 열어주세요.':history.available?'현재 상태에서는 실행 취소 명령을 접수할 수 없습니다.':'편집 이력 상태를 확인할 수 없습니다.'},
-      redo:{enabled:host?.canRequestHistory?.('redo')??history.canRedo,reason:!ready?'문서를 먼저 열어주세요.':history.available?'현재 상태에서는 다시 실행 명령을 접수할 수 없습니다.':'편집 이력 상태를 확인할 수 없습니다.'},'set-zoom':{enabled:!!host} };
+      redo:{enabled:host?.canRequestHistory?.('redo')??history.canRedo,reason:!ready?'문서를 먼저 열어주세요.':history.available?'현재 상태에서는 다시 실행 명령을 접수할 수 없습니다.':'편집 이력 상태를 확인할 수 없습니다.'},'set-zoom':{enabled:!!host},'zoom-in':{enabled:!!host&&stepViewZoom(zoom,'in')!==null,reason:!host?'Canvas 표시 기능이 연결되지 않았습니다.':'최대 배율입니다.'},'zoom-out':{enabled:!!host&&stepViewZoom(zoom,'out')!==null,reason:!host?'Canvas 표시 기능이 연결되지 않았습니다.':'최소 배율입니다.'} };
     const actions=commandSupportActions({connectedCommands:new Set(Object.keys(availability) as DemoCommand[]),availability,
       document:state.status==='ready'?'ready':state.status==='loading'?'loading':'none',hasSelection:state.selection!=null,busy,disposed:closed});
     return { ...formatState, title: filename || '새 문서', documentLabel: filename || undefined, status, busy,
@@ -102,7 +108,13 @@ export async function mountDemo(root: HTMLElement, framework: DemoFramework, mou
       if(closed)return;
       const available=presentation().actions?.[action.command];
       if(!available?.enabled){note(available?.reason??'현재 사용할 수 없습니다.');return;}
-      if (action.command === 'set-zoom') { if (host?.setScale(action.percent / 100)) { zoom = action.percent; shell.update(); } return; }
+      if(viewOptions.action(action)){shell.update();return;}
+      if (action.command === 'set-zoom'||action.command==='zoom-in'||action.command==='zoom-out') {
+        const percent=action.command==='set-zoom'?action.percent:stepViewZoom(zoom,action.command==='zoom-in'?'in':'out');
+        if(!isMenuZoomPercent(percent)){note('지원되는 표시 배율을 선택해주세요.');return;}
+        if(host?.setScale(percent/100)){zoom=percent;shell.update();host.focus?.();}else note('표시 배율을 적용하지 못했습니다.');
+        return;
+      }
       if (action.command === 'undo' || action.command === 'redo') {
         if (host?.requestHistory) {
           if (!host.requestHistory(action.command)) note('실행 취소/다시 실행 명령을 접수하지 못했습니다. 문서 상태를 확인하세요.');
@@ -168,13 +180,13 @@ export async function mountDemo(root: HTMLElement, framework: DemoFramework, mou
     if (shell.headlessMount) headless = mountHeadlessPanel(shell.headlessMount, editor, note);
     shell.update();
   }
-  catch (error) { closed = true; cancelFixtureRefresh(); unsubscribe(); shortcuts?.dispose(); contextMenu?.close(); textTools.dispose(); clipboard.dispose(); sourcePolicyNotice.dispose(); observedNotice.dispose(); normalizationNotice.dispose(); savePolicy.dispose(); shell.destroy(); await editor.dispose(); throw error; }
+  catch (error) { closed = true; cancelFixtureRefresh(); unsubscribe(); shortcuts?.dispose(); contextMenu?.close(); textTools.dispose(); viewOptions.dispose(); clipboard.dispose(); sourcePolicyNotice.dispose(); observedNotice.dispose(); normalizationNotice.dispose(); savePolicy.dispose(); shell.destroy(); await editor.dispose(); throw error; }
   // Prepare code after mounting; no document/session/worker exists until open.
   // Failed preparation is evicted by the factory and the real open can retry.
   void runtimeFactory.preload().catch(() => {});
   return { editor, openFixture, refreshFixtures, shortcuts, async dispose() {
     if (closed) return; closed = true; cancelFixtureRefresh(); const drained = admission.dispose(); unsubscribe();
-    headless?.dispose(); shortcuts?.dispose(); contextMenu?.close(); textTools.dispose(); clipboard.dispose(); sourcePolicyNotice.dispose(); observedNotice.dispose(); normalizationNotice.dispose(); savePolicy.dispose();
+    headless?.dispose(); shortcuts?.dispose(); contextMenu?.close(); textTools.dispose(); viewOptions.dispose(); clipboard.dispose(); sourcePolicyNotice.dispose(); observedNotice.dispose(); normalizationNotice.dispose(); savePolicy.dispose();
     try { await host?.dispose(); await drained; } finally { try { await editor.dispose(); } finally { shell.destroy(); } }
   } };
 }

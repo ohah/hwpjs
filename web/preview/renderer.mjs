@@ -1,3 +1,5 @@
+import {DEFAULT_CANVAS_DISPLAY_OPTIONS,canvasDisplayOptions} from './canvas-display-options.mjs';
+import {paragraphMarkPlan,paintParagraphMark} from './paragraph-mark-paint.mjs';
 import {decodeTableImageTone} from "./table-image-tone.mjs";
 import { tableBackgroundTargets,tableBackgroundCoverage,tableBoxPaintBounds } from "./table-background-targets.mjs";
 import { paintTableBackground } from "./table-background-paint.mjs";
@@ -101,6 +103,7 @@ export function createRenderer(canvas, viewportElement, spacer, onLayout = () =>
   let content = { paragraphs: [], limited: false }, layout = { rows: [], limited: false };
   let draft = null, interaction = {}, onGeometry = () => {}, blink = 0, caretVisible = true;
   let resizeGuide = null;
+  let displayOptions = DEFAULT_CANVAS_DISPLAY_OPTIONS;
   let viewScale = 1, closed = false;
   let selectedPicture = null;
   let pictureResizeSelection = null, pictureResizeGuide = null;
@@ -236,6 +239,7 @@ export function createRenderer(canvas, viewportElement, spacer, onLayout = () =>
     canvas.dataset.paintPending = "false";
     paintedStamp = null;
     paintedCharts = [];
+    let paintedParagraphMarks = 0;
     const paintedForms = new Set();
     paintedFormTargets = [];
     paintedCheckBoxes = []; checkBoxPaintScrollTop = null; checkBoxPaintScrollLeft = null;
@@ -466,6 +470,7 @@ export function createRenderer(canvas, viewportElement, spacer, onLayout = () =>
           const strike = fontAt.strike(paragraph, start.unit);
           if (strike) paintUnderline(ctx, strike, x, end.x - start.x, glyphY, glyphMetrics ?? ctx.measureText(text), fontAt.fontHeight(paragraph, start.unit), rowLeft(row));
         }
+        if(displayOptions.paragraphMarks&&paintParagraphMark(ctx,paragraphMarkPlan(row,i,paragraph),viewport.scrollTop))paintedParagraphMarks++;
       } else ctx.fillText(row.text, rowLeft(row), rowTop(row, i) - viewport.scrollTop + rowTextTop(row));
       });
     };
@@ -536,8 +541,10 @@ export function createRenderer(canvas, viewportElement, spacer, onLayout = () =>
       paintRowTransform(ctx, { pageClip: basis.pageClip }, viewport.scrollTop, () => { ctx.fillStyle = "#145b96"; ctx.fillRect(x - 3, y - viewport.scrollTop - 3, 6, 6); });
     }
     canvas.dataset.paintedCaret = paintedCaret;
+    canvas.dataset.paragraphMarks = String(displayOptions.paragraphMarks);
+    canvas.dataset.paragraphMarkCount = String(paintedParagraphMarks);
     paintedFrame = { layout, content: display, resourceDocument, resourceEpoch, scrollTop: viewport.scrollTop,
-      caret: paintedCaret, selection: interaction.anchor && interaction.focus ? { anchor: { ...interaction.anchor }, focus: { ...interaction.focus } } : null };
+      displayOptions, paragraphMarkCount: paintedParagraphMarks, caret: paintedCaret, selection: interaction.anchor && interaction.focus ? { anchor: { ...interaction.anchor }, focus: { ...interaction.focus } } : null };
     publishLayoutDataset();
     paintedStamp = frameStamp(metrics);
     onGeometry();
@@ -602,6 +609,13 @@ export function createRenderer(canvas, viewportElement, spacer, onLayout = () =>
   viewport.addEventListener("scroll", schedule);
   const resize = new ResizeObserver(reflow); resize.observe(viewport);
   return {
+    getDisplayOptions: () => displayOptions,
+    setDisplayOptions(options) {
+      if(closed)return false;
+      const next=canvasDisplayOptions(options);
+      if(next.paragraphMarks===displayOptions.paragraphMarks)return true;
+      displayOptions=next;schedule();return true;
+    },
     viewScale: () => viewScale,
     revealChart(section, wrapper) {
       if (closed || draft) return false;

@@ -16,12 +16,14 @@ export const DEMO_COMMAND_REGISTRY = Object.freeze({
   'character-properties': entry('글자 속성', '서식', true), 'paragraph-properties': entry('문단 속성', '서식', true),
   'object-properties': entry('개체 속성', '서식', true),
   'insert-header': entry('머리말', '삽입'), 'insert-footer': entry('꼬리말', '삽입'),
+  'toggle-paragraph-marks': entry('문단 부호','보기'),
   'toggle-marks': entry('조판 부호', '보기'), 'toggle-grid': entry('격자', '보기'),
   'insert-comment': entry('주석', '삽입', true), 'word-count': entry('문서 통계', '문서'),
   bold: entry('굵게', '서식', true), italic: entry('기울임', '서식', true),
   underline: entry('밑줄', '서식', true), strike: entry('취소선', '서식', true),
   'align-left': entry('왼쪽 정렬', '서식', true), 'align-center': entry('가운데 정렬', '서식', true),
   'align-right': entry('오른쪽 정렬', '서식', true), 'align-justify': entry('양쪽 정렬', '서식', true),
+  'zoom-in': entry('확대','보기',false,false), 'zoom-out': entry('축소','보기',false,false),
   'set-font-size': entry('글자 크기', '서식', true), 'set-zoom': entry('확대·축소', '보기', false, false),
 } satisfies Record<DemoCommand, ReturnType<typeof entry>>);
 export const DEMO_COMMANDS = Object.freeze(Object.keys(DEMO_COMMAND_REGISTRY) as DemoCommand[]);

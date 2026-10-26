@@ -8,6 +8,7 @@ import { mountDemo, type MountDemoHost } from './demo-controller.ts';
 import type { DemoFramework } from './shell-contract.ts';
 import './shell.css';
 import './demo-viewport.css';
+import './editor-layout.css';
 
 const root = document.querySelector<HTMLElement>('#app');
 if (!root) throw Error('DemoRootMissing');
@@ -23,6 +24,7 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
     return { focus:()=>ref.current?.focus()??false,canPasteInput:()=>ref.current?.surface?.canPasteInput()??false,
       canRequestHistory:kind=>ref.current?.surface?.canRequestHistory(kind)??false,
       requestHistory:kind=>ref.current?.surface?.requestHistory(kind)??false,
+      setDisplayOptions:value=>ref.current?.surface?.setDisplayOptions(value)??false,getDisplayOptions:()=>ref.current?.surface?.getDisplayOptions(),
       focusForPaste:()=>ref.current?.surface?.focusForPaste()??false,setScale: value => ref.current?.setScale(value) ?? false, dispose: () => tree.unmount() };
   },
   svelte: (root, editor, onStatus) => {
@@ -33,6 +35,7 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
     return { focus:()=>surface?.focus()??false,canPasteInput:()=>surface?.canPasteInput()??false,
       canRequestHistory:kind=>surface?.canRequestHistory(kind)??false,
       requestHistory:kind=>surface?.requestHistory(kind)??false,
+      setDisplayOptions:value=>surface?.setDisplayOptions(value)??false,getDisplayOptions:()=>surface?.getDisplayOptions(),
       focusForPaste:()=>surface?.focusForPaste()??false,setScale: value => surface?.setScale(value) ?? false, dispose: () => unmount(component) };
   },
 };
