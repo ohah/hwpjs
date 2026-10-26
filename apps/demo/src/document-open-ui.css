@@ -1,7 +1,41 @@
-.hwp-demo-file-actions{display:grid;gap:3px}
-.hwp-demo-file-options{display:grid;gap:6px;padding:8px;border-top:1px solid #dce0e6;font-size:12px}
-.hwp-example-dialog label{display:block;margin-bottom:8px}
-.hwp-example-dialog select{box-sizing:border-box;width:100%;max-width:100%;padding:7px;font:inherit;border:1px solid #acb9cb;border-radius:3px}
-.hwp-example-dialog [role=status]{font-size:12px;min-height:1.5em;color:#596679}
-.hwp-demo-tools-popup .hwp-demo-support{margin:0}
-.hwp-demo-tools-popup .hwp-demo-support ul{position:static;width:auto;max-height:45dvh;overflow:auto;box-shadow:none;border:0;padding-left:20px}
+.hwp-demo-file-actions {
+  display: grid;
+  gap: 3px;
+}
+.hwp-demo-file-options {
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  border-top: 1px solid #dce0e6;
+  font-size: 12px;
+}
+.hwp-example-dialog label {
+  display: block;
+  margin-bottom: 8px;
+}
+.hwp-example-dialog select {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  padding: 7px;
+  font: inherit;
+  border: 1px solid #acb9cb;
+  border-radius: 3px;
+}
+.hwp-example-dialog [role="status"] {
+  font-size: 12px;
+  min-height: 1.5em;
+  color: #596679;
+}
+.hwp-demo-tools-popup .hwp-demo-support {
+  margin: 0;
+}
+.hwp-demo-tools-popup .hwp-demo-support ul {
+  position: static;
+  width: auto;
+  max-height: 45dvh;
+  overflow: auto;
+  box-shadow: none;
+  border: 0;
+  padding-left: 20px;
+}

@@ -6,37 +6,130 @@
   --hwp-format-height: 25px;
   --hwp-status-height: 23px;
   display: grid;
-  grid-template-rows: var(--hwp-title-height) var(--hwp-menu-height) var(--hwp-tools-height) var(--hwp-format-height) auto minmax(0, 1fr) var(--hwp-status-height);
+  grid-template-rows: var(--hwp-title-height) var(--hwp-menu-height) var(--hwp-tools-height) var(
+      --hwp-format-height
+    ) auto minmax(0, 1fr) var(--hwp-status-height);
   overflow: hidden;
 }
-#app .hwp-demo-titlebar { min-height: 0; padding: 3px 12px; }
-#app .hwp-demo-menus { min-height: 0; padding: 0 12px; gap: 5px; }
-#app .hwp-demo-menu summary { padding: 3px 10px; line-height: 18px; }
-#app .hwp-demo-tools { min-height: 0; padding: 5px 12px; }
-#app .hwp-demo-formatbar { min-height: 0; flex-wrap: nowrap; padding: 1px 12px; gap: 4px; overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; }
-#app .hwp-demo-formatbar > * { flex-shrink: 0; }
-#app .hwp-demo-formatbar .hwp-demo-button { padding: 0 6px; height: 21px; line-height: 19px; }
-#app .hwp-demo-format-label { height: 21px; min-width: 70px; padding: 0 6px; line-height: 19px; font-size: 12px; }
-#app .hwp-demo-size input { height: 21px; padding-block: 0; }
-#app .hwp-demo-reason { grid-row: 5; }
-#app .hwp-demo-workspace { grid-row: 6; min-height: 0; padding: 0; }
+#app .hwp-demo-titlebar {
+  min-height: 0;
+  padding: 3px 12px;
+}
+#app .hwp-demo-menus {
+  min-height: 0;
+  padding: 0 12px;
+  gap: 5px;
+}
+#app .hwp-demo-menu summary {
+  padding: 3px 10px;
+  line-height: 18px;
+}
+#app .hwp-demo-tools {
+  min-height: 0;
+  padding: 5px 12px;
+}
+#app .hwp-demo-formatbar {
+  min-height: 0;
+  flex-wrap: nowrap;
+  padding: 1px 12px;
+  gap: 4px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+}
+#app .hwp-demo-formatbar > * {
+  flex-shrink: 0;
+}
+#app .hwp-demo-formatbar .hwp-demo-button {
+  padding: 0 6px;
+  height: 21px;
+  line-height: 19px;
+}
+#app .hwp-demo-format-label {
+  height: 21px;
+  min-width: 70px;
+  padding: 0 6px;
+  line-height: 19px;
+  font-size: 12px;
+}
+#app .hwp-demo-size input {
+  height: 21px;
+  padding-block: 0;
+}
+#app .hwp-demo-reason {
+  grid-row: 5;
+}
+#app .hwp-demo-workspace {
+  grid-row: 6;
+  min-height: 0;
+  padding: 0;
+}
 /* Existing numbered scale is decorative, not a calibrated document ruler. */
-#app .hwp-demo-ruler { display: none; }
-#app .hwp-demo-surface { min-height: 0; }
-#app .hwp-demo-surface [data-hwpjs-surface] > div { scrollbar-gutter: stable; }
-#app .hwp-demo-statusbar { grid-row: 7; min-height: 0; flex-wrap: nowrap; gap: 10px; padding: 0 12px; }
-#app .hwp-demo-statusbar output { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-#app .hwp-demo-statusbar select { height: 21px; padding: 0 4px; }
-#app .hwp-demo-file-popup { width: min(360px, calc(100vw - 24px)); }
-#app .hwp-demo-file-popup .hwp-demo-picker { display: grid; padding: 8px; gap: 6px; border: 0; }
-#app .hwp-demo-file-popup input[type="file"], #app .hwp-demo-file-popup select { width: 100%; max-width: 100%; }
+#app .hwp-demo-ruler {
+  display: none;
+}
+#app .hwp-demo-surface {
+  min-height: 0;
+}
+#app .hwp-demo-surface [data-hwpjs-surface] > div {
+  scrollbar-gutter: stable;
+}
+#app .hwp-demo-statusbar {
+  grid-row: 7;
+  min-height: 0;
+  flex-wrap: nowrap;
+  gap: 10px;
+  padding: 0 12px;
+}
+#app .hwp-demo-statusbar output {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#app .hwp-demo-statusbar select {
+  height: 21px;
+  padding: 0 4px;
+}
+#app .hwp-demo-file-popup {
+  width: min(360px, calc(100vw - 24px));
+}
+#app .hwp-demo-file-popup .hwp-demo-picker {
+  display: grid;
+  padding: 8px;
+  gap: 6px;
+  border: 0;
+}
+#app .hwp-demo-file-popup input[type="file"],
+#app .hwp-demo-file-popup select {
+  width: 100%;
+  max-width: 100%;
+}
 @media (max-width: 700px) {
-  #app > .hwp-demo { --hwp-title-height: auto; }
-  #app .hwp-demo-titlebar { min-height: 35px; }
-  #app .hwp-demo-menus { gap: 0; padding-inline: 4px; }
-  #app .hwp-demo-menu summary { padding-inline: 7px; }
+  #app > .hwp-demo {
+    --hwp-title-height: auto;
+  }
+  #app .hwp-demo-titlebar {
+    min-height: 35px;
+  }
+  #app .hwp-demo-menus {
+    gap: 0;
+    padding-inline: 4px;
+  }
+  #app .hwp-demo-menu summary {
+    padding-inline: 7px;
+  }
 }
 
-#app .hwp-demo-zoom-menu > summary { padding: 6px 12px; }
-#app .hwp-demo-zoom-choices { display: grid; grid-template-columns: repeat(3,minmax(50px,1fr)); gap: 3px; padding: 4px; }
-#app .hwp-demo-zoom-choices button { text-align: center; }
+#app .hwp-demo-zoom-menu > summary {
+  padding: 6px 12px;
+}
+#app .hwp-demo-zoom-choices {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(50px, 1fr));
+  gap: 3px;
+  padding: 4px;
+}
+#app .hwp-demo-zoom-choices button {
+  text-align: center;
+}

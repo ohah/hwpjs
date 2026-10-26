@@ -8,14 +8,17 @@ interface AdmissionOptions {
 
 /** File reads/fetches and candidate loads share one replacement generation. */
 export function createDocumentAdmission(options: AdmissionOptions) {
-  let generation = 0, closed = false, abort: AbortController | undefined;
+  let generation = 0,
+    closed = false,
+    abort: AbortController | undefined;
   const pending = new Set<Promise<void>>();
   let disposal: Promise<void> | undefined;
   return {
     open(name: string, read: (signal: AbortSignal) => Promise<Uint8Array>): Promise<void> {
-      if (closed) return Promise.reject(Error('DocumentAdmissionDisposed'));
+      if (closed) return Promise.reject(Error("DocumentAdmissionDisposed"));
       const current = ++generation;
-      abort?.abort(); const controller = abort = new AbortController();
+      abort?.abort();
+      const controller = (abort = new AbortController());
       // Invoke now: a delayed cancellation must never cancel a newer load.
       const cancellation = options.cancelLoad();
       // Observe rejection immediately while the potentially slow file read runs.
@@ -29,16 +32,24 @@ export function createDocumentAdmission(options: AdmissionOptions) {
           if (!active()) return;
           await options.load(bytes, name, controller.signal);
           if (active()) options.loaded(name);
-        } catch (error) { if (active()) throw error; }
-        finally { if (active()) options.settled(); }
+        } catch (error) {
+          if (active()) throw error;
+        } finally {
+          if (active()) options.settled();
+        }
       })();
       pending.add(task);
-      void task.then(() => pending.delete(task), () => pending.delete(task));
+      void task.then(
+        () => pending.delete(task),
+        () => pending.delete(task),
+      );
       return task;
     },
     dispose(): Promise<void> {
       if (disposal) return disposal;
-      closed = true; generation++; abort?.abort();
+      closed = true;
+      generation++;
+      abort?.abort();
       const cancellation = options.cancelLoad();
       disposal = (async () => {
         await cancellation;

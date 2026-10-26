@@ -1,7 +1,31 @@
-html, body { margin: 0; height: 100%; overflow: hidden; }
-#app { height: 100dvh; }
-#app > .hwp-demo { height: 100%; min-height: 0; }
-#app .hwp-demo-workspace { display: flex; flex-direction: column; min-height: 0; overflow: hidden; padding: 10px 0 0; }
-#app .hwp-demo-ruler { flex-shrink: 0; }
-#app .hwp-demo-surface { flex: 1; height: 0; min-height: 0; }
-#app .hwp-demo[data-framework="headless"] .hwp-demo-workspace { overflow: auto; }
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+}
+#app {
+  height: 100dvh;
+}
+#app > .hwp-demo {
+  height: 100%;
+  min-height: 0;
+}
+#app .hwp-demo-workspace {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  padding: 10px 0 0;
+}
+#app .hwp-demo-ruler {
+  flex-shrink: 0;
+}
+#app .hwp-demo-surface {
+  flex: 1;
+  height: 0;
+  min-height: 0;
+}
+#app .hwp-demo[data-framework="headless"] .hwp-demo-workspace {
+  overflow: auto;
+}
