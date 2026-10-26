@@ -47,6 +47,7 @@ import { textTransactionArgs } from "./text-transaction-args.mjs";
 import { decodeCharacterUnderlines } from "./character-underlines.mjs";
 import { decodeCharacterStrikes } from "./character-strikes.mjs";
 import { decodeCharacterStrikeStyles } from "./character-strike-styles.mjs";
+import {decodeDocumentProvenance} from "./hwpx-document-provenance.mjs";
 import { decodeCharacterTextColors } from "./character-text-colors.mjs";
 import { decodeFontFaces } from "./font-faces.mjs";
 import { decodeHwpxFontFaceMetadata } from "./hwpx-font-face-metadata.mjs";
@@ -602,6 +603,17 @@ export async function createHwpxEditor(source) {
       try {
         if (!wasm.hwpx_edit_character_font_metrics()) throw memory.error();
         return decodeCharacterFontMetrics(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()), "hwpx");
+      } finally { wasm.hwpx_edit_output_free(); }
+    },
+    supportsDocumentProvenance() {
+      return typeof wasm.hwpx_edit_document_provenance === "function";
+    },
+    documentProvenance() {
+      ready();
+      if (typeof wasm.hwpx_edit_document_provenance !== "function") throw new Error("HwpxDocumentProvenanceAbiUnavailable");
+      try {
+        if (!wasm.hwpx_edit_document_provenance()) throw memory.error();
+        return decodeDocumentProvenance(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
       } finally { wasm.hwpx_edit_output_free(); }
     },
     characterTextColors() {

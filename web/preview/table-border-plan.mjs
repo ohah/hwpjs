@@ -1,3 +1,4 @@
+import { tableSemanticFaceFill } from "./table-semantic-face-fill.mjs";
 import { selectedTableImageFill } from "./table-image-fill.mjs";
 // 원본 선 종류와 단위를 Canvas 정책으로 변환합니다. 미지원 효과는 대체하지 않습니다.
 import { selectedFillPlan } from "./selected-fill-plan.mjs";
@@ -18,6 +19,8 @@ export function tableBorderPaintPlan(style) {
     if(!["solid","linear_gradient","pattern","image","none"].includes(fill.state)) return fail();
     if(fill.state==="none")fill=undefined;
   }
+  fill = tableSemanticFaceFill(style, fill);
+  if (fill?.state === "unavailable") return fail();
   // 배경 소유권은 테두리 효과와 별개입니다. 효과 거부 시에도 확인된 단색은 보존합니다.
   if (!["0", "false"].includes(style.three_d) || !["0", "false"].includes(style.shadow)
     || style.center_line !== "NONE" || style.slash !== "NONE" || style.back_slash !== "NONE"
