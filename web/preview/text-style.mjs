@@ -1,3 +1,8 @@
+import {
+  createProjectionFontCache,
+  createProjectionRangeIndex,
+  paragraphCharacterRange,
+} from "./projection-measure-memo.mjs";
 /** Native size/emphasis with system fonts; not original font or page shaping. */
 import { underlineStyle } from "./underline-style.mjs";
 import { strikeStyle } from "./strike-style.mjs";
@@ -104,7 +109,9 @@ export function withDraftText(paragraph, text) {
   };
 }
 
-export function createTextStyle(content, baseFont) {
+export function createTextStyle(content, baseFont, { projectionMemo = false } = {}) {
+  const fontCache = projectionMemo ? createProjectionFontCache() : null;
+  const rangeAt = projectionMemo ? createProjectionRangeIndex() : paragraphCharacterRange;
   const documentFont = createCharacterFontDisplay(content);
   const metrics = createCharacterFontMetricDisplay(content);
   const measuredWidth = createMeasuredFontWidth(content);
@@ -122,24 +129,7 @@ export function createTextStyle(content, baseFont) {
   const strikeStyles = new Map((content.characterStrikeStyles ?? []).map((row) => [row.id, row]));
   const shapeAt = (paragraph, unit, kind) => {
     if (kind !== "text" && kind !== "number-prefix") return null;
-    const ranges = paragraph?.characterRanges ?? [];
-    // Native/HCR1 guarantees sorted contiguous ranges. Empty provenance
-    // sites can share a boundary, so choose the last start <= unit.
-    let low = 0,
-      high = ranges.length;
-    while (low < high) {
-      const middle = low + Math.floor((high - low) / 2);
-      if (ranges[middle].start <= unit) low = middle + 1;
-      else high = middle;
-    }
-    const candidate = ranges[low - 1];
-    // Empty terminal lines query the paragraph boundary, not a next glyph.
-    // Prefer an explicit zero-length provenance site when one is present.
-    const terminal =
-      typeof paragraph?.text === "string" &&
-      unit === paragraph.text.length &&
-      candidate?.end === unit;
-    const range = candidate && (unit < candidate.end || terminal) ? candidate : null;
+    const range = rangeAt(paragraph, unit);
     return range?.charShapeId === null ? null : shapes.get(range?.charShapeId);
   };
   const points = (shape) =>
@@ -151,14 +141,19 @@ export function createTextStyle(content, baseFont) {
       nominal === null || kind !== "text"
         ? nominal
         : metrics.relativeHeight(shape?.id, paragraph?.text, unit, shape.height) / 100;
-    let font = size === null ? baseFont : baseFont.replace(/\d+(?:\.\d+)?px/, `${size}pt`);
     const family =
       kind === "text" || kind === "number-prefix"
         ? documentFont(shape?.id, paragraph?.text, unit)
         : null;
-    if (family)
-      font = font.replace(/(\d+(?:\.\d+)?(?:px|pt)\s+)/, (_, prefix) => `${prefix}${family}, `);
-    return `${shape?.italic ? "italic " : ""}${shape?.bold ? "bold " : ""}${font}`;
+    const build = () => {
+      let font = size === null ? baseFont : baseFont.replace(/\d+(?:\.\d+)?px/, `${size}pt`);
+      if (family)
+        font = font.replace(/(\d+(?:\.\d+)?(?:px|pt)\s+)/, (_, prefix) => `${prefix}${family}, `);
+      return `${shape?.italic ? "italic " : ""}${shape?.bold ? "bold " : ""}${font}`;
+    };
+    return fontCache
+      ? fontCache.get(size, family, Boolean(shape?.bold), Boolean(shape?.italic), build)
+      : build();
   };
   const script = (paragraph, unit, kind = "text") => {
     const source = automaticNumberSource(paragraph, unit, kind);

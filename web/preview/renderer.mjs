@@ -1,3 +1,4 @@
+import { watchProjectionFonts } from "./projection-measure-memo.mjs";
 import { DEFAULT_CANVAS_DISPLAY_OPTIONS, canvasDisplayOptions } from "./canvas-display-options.mjs";
 import { paragraphMarkPlan, paintParagraphMark } from "./paragraph-mark-paint.mjs";
 import { decodeTableImageTone } from "./table-image-tone.mjs";
@@ -1214,7 +1215,7 @@ export function createRenderer(
             ),
           }
         : content;
-    fontAt = createTextStyle(display, FONT);
+    fontAt = createTextStyle(display, FONT, { projectionMemo: true });
     tableBorders = tableBorderPaintIndex(display);
     pictureDisplay = {
       ...display,
@@ -1235,6 +1236,8 @@ export function createRenderer(
       charts: inlineCharts,
       checkBoxes: inlineCheckBoxes,
       forms: inlineForms,
+      projectionMemo: true,
+      stableContext: true,
     });
     const windowFragment = pictureDisplay.format === "hwp5" && Boolean(pictureDisplay.window);
     const pageLayout =
@@ -1308,6 +1311,9 @@ export function createRenderer(
     schedule();
   };
   viewport.addEventListener("scroll", schedule);
+  const stopFontWatch = watchProjectionFonts(canvas, () => {
+    if (!closed) reflow();
+  });
   const resize = new ResizeObserver(reflow);
   resize.observe(viewport);
   return {
@@ -1751,6 +1757,7 @@ export function createRenderer(
       pictureResources.close();
       stopBlink();
       resize.disconnect();
+      stopFontWatch();
       viewport.removeEventListener("scroll", schedule);
       cancelAnimationFrame(frame);
     },

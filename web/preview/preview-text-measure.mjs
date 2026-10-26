@@ -1,3 +1,4 @@
+import { createProjectionCanvasMetrics } from "./projection-measure-memo.mjs";
 import { equationPaintAt } from "./equation-render-content.mjs";
 import { dutmalAt, dutmalPaintPlan } from "./dutmal-paint.mjs";
 import { picturePositionKey } from "./picture-inline.mjs";
@@ -8,10 +9,23 @@ import { canvasGlyphGeometry } from "./canvas-glyph-geometry.mjs";
 export function createPreviewTextMeasure(
   ctx,
   fontAt,
-  { pictures = new Map(), charts = new Map(), checkBoxes = new Map(), forms = new Map() } = {},
+  {
+    pictures = new Map(),
+    charts = new Map(),
+    checkBoxes = new Map(),
+    forms = new Map(),
+    projectionMemo = false,
+    stableContext = false,
+  } = {},
 ) {
+  const projection = projectionMemo
+    ? createProjectionCanvasMetrics(ctx, undefined, { stableContext })
+    : null;
+  const measureText = projection ? (text) => projection.measureText(text) : undefined;
   return (text, paragraph, unit, kind) => {
-    ctx.font = fontAt(paragraph, unit, kind);
+    const font = fontAt(paragraph, unit, kind);
+    if (projection) projection.setFont(font);
+    else ctx.font = font;
     const atom = kind === "text" && text !== "";
     const equation = atom ? equationPaintAt(paragraph, unit) : null;
     if (equation)
@@ -35,6 +49,7 @@ export function createPreviewTextMeasure(
             return ctx.measureText(value).width;
           } finally {
             ctx.restore();
+            projection?.invalidateFont();
           }
         },
       );
@@ -65,7 +80,7 @@ export function createPreviewTextMeasure(
         width: form.width,
         height: form.affectLineSpacing ? form.height : fontAt.textHeight(paragraph, unit, kind),
       };
-    const geometry = canvasGlyphGeometry(ctx, fontAt, paragraph, unit, kind, text),
+    const geometry = canvasGlyphGeometry(ctx, fontAt, paragraph, unit, kind, text, measureText),
       { metrics, width } = geometry;
     const inkHeight = metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
     const advance =
