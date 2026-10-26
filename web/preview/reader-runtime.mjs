@@ -1,3 +1,4 @@
+import { createDisplayResourceCache } from './display-resource-cache.mjs';
 import { createHwp5Reader } from "../../js/hwp5.mjs";
 import { availableSectionsCapability, availableSectionsRequest, availableSectionsContent } from "./hwp5-available-preview.mjs";
 import { availableSectionCopyCapability, availableSectionCopyRequest } from "./hwp5-available-copy-preview.mjs";
@@ -100,6 +101,7 @@ export function createReaderRuntime({ wasmModule, loadWasmModule, allowReload = 
   if(referenceScope!==undefined&&(typeof referenceScope!=="string"||!referenceScope.length))throw new TypeError("InvalidCurrentReferenceScope");
   const createExperimentalHwp5Editor=(module,input,options={})=>createHwp5Session(module,input,{...options,referenceScope});
   let module, bytes, preview, editor, format;
+  const displayResources = createDisplayResourceCache();
   let historyEnabled = false;
   let hwpxChartOlePolicy = false;
   let protectionRemoved = false;
@@ -221,6 +223,7 @@ export function createReaderRuntime({ wasmModule, loadWasmModule, allowReload = 
     }
   }
   function hwpxDisplay(projected) {
+    const resources = displayResources.view(editor);
     if (!projected && documentWindow) {
       const offset = Math.min(documentWindow.offset, Math.max(0, preview.paragraphCount - 1));
       const count = Math.min(documentWindow.count, preview.paragraphCount - offset);
@@ -354,11 +357,11 @@ export function createReaderRuntime({ wasmModule, loadWasmModule, allowReload = 
     if (protectionRemoved) content.passwordProtectionRemoved = true;
     const styleAvailable = ["hwpx_edit_character_shapes", "hwpx_edit_character_ranges"].every(name => WebAssembly.Module.exports(module).some(entry => entry.name === name && entry.kind === "function"));
     const paragraphAvailable = ["hwpx_edit_paragraph_shape_ids", "hwpx_edit_paragraph_shape_refs", "hwpx_edit_set_paragraph_format"].every(name => WebAssembly.Module.exports(module).some(entry => entry.name === name && entry.kind === "function"));
-    const tableContent = attachHwpxTables(editor, attachHwpxStyles(editor, content, styleAvailable));
+    const tableContent = attachHwpxTables(editor, attachHwpxStyles(resources, content, styleAvailable));
     attachHwpxTableBorders(editor, tableContent, formulaExports.has("hwpx_edit_table_border_sources"));
     if (content.window) attachHwpxFormulas(editor, tableContent);
-    const sourced = attachHwpxConnectors(editor, attachHwpxLines(editor, attachHwpxPictures(editor, attachHwpxParagraphFormats(editor, tableContent, paragraphAvailable))));
-    attachTabDefinitions(editor, sourced);
+    const sourced = attachHwpxConnectors(editor, attachHwpxLines(editor, attachHwpxPictures(editor, attachHwpxParagraphFormats(resources, tableContent, paragraphAvailable))));
+    attachTabDefinitions(resources, sourced);
     attachSectionTabSources(editor, sourced);
     attachEllipses(editor, sourced, formulaExports.has("hwpx_edit_ellipse_sources"));
     const displayed = attachHwpxPageSettings(editor, sourced);
@@ -398,6 +401,7 @@ export function createReaderRuntime({ wasmModule, loadWasmModule, allowReload = 
       }
     };
     let applied = false;
+    displayResources.beginRequest(message, { format, editor, historyEnabled });
     try {
       if (format === "hwp5" && preview?.sectionInventory && message.kind !== "load") throw new Error("AvailableSectionsReadOnly");
       if (["query-current-references", "query-current-source-references", "query-current-text", "query-created-tables", "splice-current"].includes(message.kind)) {
@@ -1033,9 +1037,11 @@ export function createReaderRuntime({ wasmModule, loadWasmModule, allowReload = 
         if (format === "hwpx") {
           if (message.rangePolicy && message.rangePolicy !== "reject") throw new Error("InvalidRangePolicy");
           if (!Number.isInteger(message.startUnit) || !Number.isInteger(message.endUnit) || message.endUnit < message.startUnit) throw new Error("InvalidTextPosition");
+          const plainTextSplice = message.kind === "splice" && editor.canEdit(message.section, message.paragraph + 1);
+          if (!plainTextSplice) displayResources.invalidate();
           if (message.kind === "format") {
             editor.setCharacterFormat({ ...message, paragraph: message.paragraph + 1 });
-          } else if (editor.canEdit(message.section, message.paragraph + 1)) {
+          } else if (plainTextSplice) {
             editor.splice(message.section, message.paragraph + 1, message.startUnit, message.endUnit - message.startUnit, message.text);
           } else if (spliceFormulaResultText(editor, module, message)) {
             // A validated result target can belong to a split formula paragraph
@@ -1123,6 +1129,7 @@ export function createReaderRuntime({ wasmModule, loadWasmModule, allowReload = 
       const revision = response.historyRevision;
       const changed = typeof response.changed === "boolean" ? response.changed :
         typeof revision === "number" && typeof lastHistoryRevision === "number" ? revision !== lastHistoryRevision : applied ? null : false;
+      displayResources.finishRequest(Boolean(response.error));
       outcomes.set(response, { application: applied && changed !== false ? "applied" : "unapplied", changed });
       if (typeof revision === "number") lastHistoryRevision = revision;
       return response;
@@ -1134,6 +1141,7 @@ export function createReaderRuntime({ wasmModule, loadWasmModule, allowReload = 
   let loaded = false;
   let disposal;
   function clear() {
+    displayResources.reset();
     try { editor?.close(); }
     finally {
       if (protectionRemoved) bytes?.fill(0);
@@ -1153,7 +1161,7 @@ export function createReaderRuntime({ wasmModule, loadWasmModule, allowReload = 
       if (terminal) return Promise.reject(new Error("RuntimeDisposed"));
       let message;
       try { message = copyRuntimeMessage(input); }
-      catch (error) { return Promise.reject(error); }
+      catch (error) { displayResources.invalidate(); return Promise.reject(error); }
       const secret = message.password;
       const task = tail.then(async () => {
         if (terminal) throw new Error("RuntimeDisposed");
