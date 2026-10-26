@@ -5,6 +5,7 @@ import {mountShortcutSettings} from './shortcut-settings.ts';
 import {getHistoryAvailability,getSelectionFormatting} from "@hwpjs/core";
 import { createEditor, type HeadlessEditor } from '@hwpjs/core';
 import { createWorkerRuntimeFactory } from '@hwpjs/core/runtime';
+import {createFormattingDialogController} from './formatting-dialog-controller.ts';
 import { createFormattingBridge } from './formatting-bridge.ts';
 import { createTextToolsBridge } from './text-tools-bridge.ts';
 import { createClipboardBridge } from './clipboard-bridge.ts';
@@ -64,13 +65,14 @@ export async function mountDemo(root: HTMLElement, framework: DemoFramework, mou
   });
   const editor = createEditor({ runtimeFactory, onError: () => { if (!closed) note('문서 작업에 실패했습니다.'); } });
   const formatting = createFormattingBridge({editor,onStatus:note});
+  const formatDialogs=createFormattingDialogController({root,port:formatting,getState:()=>editor.getEditorState(),subscribe:listener=>editor.registerStateListener(listener),onStatus:note,onClose:()=>{host?.focus?.();},onPresentationChange:()=>shell.update()});
   const textTools = createTextToolsBridge({editor,root,onStatus:note,onClose:()=>{host?.focus?.();},resolveShortcut:event=>shortcuts?.resolveCommand(event)});
   const clipboard = createClipboardBridge({editor,onStatus:note,onReadDenied:()=>{host?.focus?.();},clipboard:root.ownerDocument.defaultView?.navigator.clipboard??null});
   const viewOptions=createViewOptionsBridge({getHost:()=>host,onStatus:note});
   const presentation = (): DemoShellState => {
     const state = editor.getEditorState(), ready = state.status === 'ready';
     const formatState = formatting.getPresentation(), history=getHistoryAvailability(state);
-    const availability = { ...formatState.actions,...textTools.presentation(),...viewOptions.presentation(ready),...clipboard.getPresentation().actions,
+    const availability = { ...formatState.actions,...textTools.presentation(),...formatDialogs.presentation(),...viewOptions.presentation(ready),...clipboard.getPresentation().actions,
       save:{enabled:ready,reason:ready?undefined:'문서를 먼저 열어주세요.'},
       undo:{enabled:host?.canRequestHistory?.('undo')??history.canUndo,reason:!ready?'문서를 먼저 열어주세요.':history.available?'현재 상태에서는 실행 취소 명령을 접수할 수 없습니다.':'편집 이력 상태를 확인할 수 없습니다.'},
       redo:{enabled:host?.canRequestHistory?.('redo')??history.canRedo,reason:!ready?'문서를 먼저 열어주세요.':history.available?'현재 상태에서는 다시 실행 명령을 접수할 수 없습니다.':'편집 이력 상태를 확인할 수 없습니다.'},'set-zoom':{enabled:!!host},'zoom-in':{enabled:!!host&&stepViewZoom(zoom,'in')!==null,reason:!host?'Canvas 표시 기능이 연결되지 않았습니다.':'최대 배율입니다.'},'zoom-out':{enabled:!!host&&stepViewZoom(zoom,'out')!==null,reason:!host?'Canvas 표시 기능이 연결되지 않았습니다.':'최소 배율입니다.'} };
@@ -108,6 +110,7 @@ export async function mountDemo(root: HTMLElement, framework: DemoFramework, mou
       if(closed)return;
       const available=presentation().actions?.[action.command];
       if(!available?.enabled){note(available?.reason??'현재 사용할 수 없습니다.');return;}
+      if(formatDialogs.action(action))return;
       if(viewOptions.action(action)){shell.update();return;}
       if (action.command === 'set-zoom'||action.command==='zoom-in'||action.command==='zoom-out') {
         const percent=action.command==='set-zoom'?action.percent:stepViewZoom(zoom,action.command==='zoom-in'?'in':'out');
@@ -180,13 +183,13 @@ export async function mountDemo(root: HTMLElement, framework: DemoFramework, mou
     if (shell.headlessMount) headless = mountHeadlessPanel(shell.headlessMount, editor, note);
     shell.update();
   }
-  catch (error) { closed = true; cancelFixtureRefresh(); unsubscribe(); shortcuts?.dispose(); contextMenu?.close(); textTools.dispose(); viewOptions.dispose(); clipboard.dispose(); sourcePolicyNotice.dispose(); observedNotice.dispose(); normalizationNotice.dispose(); savePolicy.dispose(); shell.destroy(); await editor.dispose(); throw error; }
+  catch (error) { closed = true; cancelFixtureRefresh(); unsubscribe(); shortcuts?.dispose(); contextMenu?.close(); textTools.dispose(); formatDialogs.dispose(); viewOptions.dispose(); clipboard.dispose(); sourcePolicyNotice.dispose(); observedNotice.dispose(); normalizationNotice.dispose(); savePolicy.dispose(); shell.destroy(); await editor.dispose(); throw error; }
   // Prepare code after mounting; no document/session/worker exists until open.
   // Failed preparation is evicted by the factory and the real open can retry.
   void runtimeFactory.preload().catch(() => {});
   return { editor, openFixture, refreshFixtures, shortcuts, async dispose() {
     if (closed) return; closed = true; cancelFixtureRefresh(); const drained = admission.dispose(); unsubscribe();
-    headless?.dispose(); shortcuts?.dispose(); contextMenu?.close(); textTools.dispose(); viewOptions.dispose(); clipboard.dispose(); sourcePolicyNotice.dispose(); observedNotice.dispose(); normalizationNotice.dispose(); savePolicy.dispose();
+    headless?.dispose(); shortcuts?.dispose(); contextMenu?.close(); textTools.dispose(); formatDialogs.dispose(); viewOptions.dispose(); clipboard.dispose(); sourcePolicyNotice.dispose(); observedNotice.dispose(); normalizationNotice.dispose(); savePolicy.dispose();
     try { await host?.dispose(); await drained; } finally { try { await editor.dispose(); } finally { shell.destroy(); } }
   } };
 }
