@@ -1,3 +1,4 @@
+import { createParagraphLookup } from './projection-paragraph-index.mjs';
 import { watchProjectionFonts } from './projection-measure-memo.mjs';
 import { DEFAULT_CANVAS_DISPLAY_OPTIONS, canvasDisplayOptions } from './canvas-display-options.mjs';
 import { paragraphMarkPlan, paintParagraphMark } from './paragraph-mark-paint.mjs';
@@ -137,6 +138,8 @@ export function createRenderer(
   if (!ctx) throw new Error('Canvas2DUnavailable');
   let content = { paragraphs: [], limited: false },
     layout = { rows: [], limited: false };
+  let projectionDeferred = false;
+  const paragraphLookup = createParagraphLookup();
   let draft = null,
     interaction = {},
     onGeometry = () => {},
@@ -272,7 +275,7 @@ export function createRenderer(
     ];
   };
   const isPaintedFrameCurrent = () => {
-    if (closed || holdingFrame || !paintedStamp) return false;
+    if (closed || projectionDeferred || holdingFrame || !paintedStamp) return false;
     const current = frameStamp();
     return (
       current !== null && paintedStamp.every((value, index) => Object.is(value, current[index]))
@@ -359,6 +362,7 @@ export function createRenderer(
   };
   const paint = () => {
     if (closed) return;
+    flushProjection(false);
     const metrics = canvasViewportMetrics(
       viewportElement,
       viewScale,
@@ -1190,7 +1194,7 @@ export function createRenderer(
         paint();
       });
   };
-  const reflow = ({ scrollOrigin = null } = {}) => {
+  const reflow = ({ scrollOrigin = null, scheduleFrame = true } = {}) => {
     layoutGeneration++;
     paintedCharts = [];
     paintedCheckBoxes = [];
@@ -1307,8 +1311,13 @@ export function createRenderer(
     // Reserve source reads in this synchronous ACK turn, before the input
     // controller can enqueue its next edit. Paint uses the same visibility policy.
     prepareVisibleResources();
+    projectionDeferred = false;
     onLayout(layout, content);
-    schedule();
+    if (scheduleFrame) schedule();
+  };
+  const flushProjection = (scheduleFrame = true) => {
+    if (!closed && projectionDeferred) reflow({ scheduleFrame });
+    return layout;
   };
   viewport.addEventListener('scroll', schedule);
   const stopFontWatch = watchProjectionFonts(canvas, () => {
@@ -1329,6 +1338,7 @@ export function createRenderer(
     viewScale: () => viewScale,
     revealChart(section, wrapper) {
       if (closed || draft) return false;
+      flushProjection();
       const matches = chartLayers.items.filter(
         (item) => item.target.section === section && item.target.wrapper === wrapper,
       );
@@ -1357,6 +1367,7 @@ export function createRenderer(
     },
     checkBoxProxies: () => paintedCheckBoxes.slice(),
     currentHwp5Choice(section, formNode) {
+      flushProjection();
       const matches = [...inlineForms.values()].filter(
         (form) => form?.checkBox?.section === section && form.checkBox.formNode === formNode,
       );
@@ -1533,15 +1544,16 @@ export function createRenderer(
         preserveScroll = false,
         resourceEpoch: nextResourceEpoch = resourceEpoch,
         resourceDocument: nextResourceDocument,
+        deferLayout = false,
       } = {},
     ) {
       // Callers without a separate document identity retain the conservative
       // epoch boundary. A node number alone never identifies a source document.
-      if (
+      const changedResourceDocument =
         nextResourceDocument === undefined
           ? nextResourceEpoch !== resourceEpoch
-          : nextResourceDocument !== resourceDocument
-      ) {
+          : nextResourceDocument !== resourceDocument;
+      if (changedResourceDocument) {
         stopPictureWait();
         pictureWaitExpired = false;
         paintedFrame = null;
@@ -1557,6 +1569,7 @@ export function createRenderer(
       resourceDocument = nextResourceDocument;
       chartResources.clear();
       content = value;
+      paragraphLookup.clear();
       draft = null;
       resizeGuide = null;
       if (content.chartDisplayAvailable === true && chartReader)
@@ -1574,9 +1587,18 @@ export function createRenderer(
         viewport.scrollTop = 0;
         viewport.scrollLeft = 0;
       }
+      if (deferLayout === true && !changedResourceDocument) {
+        // ACK 모델과 자원 세대는 이미 갱신했지만 중간 geometry는 게시하지 않습니다.
+        projectionDeferred = true;
+        layoutGeneration++;
+        canvas.dataset.paintPending = 'true';
+        schedule();
+        return undefined;
+      }
       reflow();
       return layout;
     },
+    flushProjection,
     clear() {
       stopPictureWait();
       pictureWaitExpired = false;
@@ -1590,6 +1612,7 @@ export function createRenderer(
       const resetWidth = canvas.width;
       canvas.width = resetWidth;
       content = { paragraphs: [], limited: false };
+      paragraphLookup.clear();
       draft = null;
       resizeGuide = null;
       interaction = {};
@@ -1598,19 +1621,29 @@ export function createRenderer(
       viewport.scrollLeft = 0;
       reflow();
     },
-    dutmalAtLogicalPoint: (x, y) => dutmalAnchorAtPoint(display, layout, x, y),
-    equationAtLogicalPoint: (x, y) => equationAnchorAtPoint(display, layout, x, y),
-    layout: () => layout,
+    dutmalAtLogicalPoint: (x, y) => {
+      flushProjection();
+      return dutmalAnchorAtPoint(display, layout, x, y);
+    },
+    equationAtLogicalPoint: (x, y) => {
+      flushProjection();
+      return equationAnchorAtPoint(display, layout, x, y);
+    },
+    layout: () => flushProjection(),
     paintedFrame: () => paintedFrame,
     isPaintedFrameCurrent,
     chartPreviews: () => paintedCharts.slice(),
-    chartAtLogicalPoint: (x, y) =>
-      [...paintedCharts]
-        .reverse()
-        .find(
-          (item) =>
-            x >= item.x && y >= item.y && x < item.x + item.width && y < item.y + item.height,
-        )?.target ?? chartAnchorAtPoint(content, layout, x, y),
+    chartAtLogicalPoint: (x, y) => {
+      flushProjection();
+      return (
+        [...paintedCharts]
+          .reverse()
+          .find(
+            (item) =>
+              x >= item.x && y >= item.y && x < item.x + item.width && y < item.y + item.height,
+          )?.target ?? chartAnchorAtPoint(content, layout, x, y)
+      );
+    },
     tableCreationAvailable: () =>
       content.tableCreationAvailable === true &&
       content.tableCreationResources !== null &&
@@ -1622,16 +1655,15 @@ export function createRenderer(
           )
         : null,
     findText: (query) => findText(content.paragraphs, query),
-    adjacentCell: (point, backward) => adjacentCell(content, layout, point, backward),
+    adjacentCell: (point, backward) => adjacentCell(content, flushProjection(), point, backward),
     adjacentParagraph: (point, forward) => {
       const next = adjacentOwnedParagraph(content.paragraphs, point, forward);
-      return next && caretGeometry(layout, next) ? next : null;
+      return next && caretGeometry(flushProjection(), next) ? next : null;
     },
-    paragraph: (point) =>
-      createdCellParagraph(layout, point) ??
-      content.paragraphs.find(
-        (p) => p.section === point.section && p.paragraph === point.paragraph,
-      ),
+    paragraph: (point) => {
+      if (projectionDeferred && point?.createdCell) flushProjection();
+      return createdCellParagraph(layout, point) ?? paragraphLookup.find(content.paragraphs, point);
+    },
     selectionRanges: (anchor, focus) => paragraphSelectionRanges(content.paragraphs, anchor, focus),
     textColorRangesAvailable: () => content.characterTextColorRangesAvailable === true,
     characterStrikeColorAvailable: () => content.characterStrikeColorAvailable === true,
@@ -1670,9 +1702,7 @@ export function createRenderer(
     characterToggle: (point, start, end, property) =>
       characterTogglePatch(
         content,
-        content.paragraphs.find(
-          (p) => p.section === point.section && p.paragraph === point.paragraph,
-        ),
+        paragraphLookup.find(content.paragraphs, point),
         start,
         end,
         property,
@@ -1680,22 +1710,13 @@ export function createRenderer(
     characterState: (point, start, end, property) =>
       characterSelectionState(
         content,
-        content.paragraphs.find(
-          (p) => p.section === point.section && p.paragraph === point.paragraph,
-        ),
+        paragraphLookup.find(content.paragraphs, point),
         start,
         end,
         property,
       ),
     characterSize: (point, start, end) =>
-      characterSizeState(
-        content,
-        content.paragraphs.find(
-          (p) => p.section === point.section && p.paragraph === point.paragraph,
-        ),
-        start,
-        end,
-      ),
+      characterSizeState(content, paragraphLookup.find(content.paragraphs, point), start, end),
     characterPropertyRangesAvailable: () => content.characterPropertiesRangesAvailable === true,
     characterUnderlineRangesAvailable: () => content.characterUnderlineRangesAvailable === true,
     characterStrikeRangesAvailable: () => content.characterStrikeRangesAvailable === true,
@@ -1709,9 +1730,7 @@ export function createRenderer(
     tableCreationWidthHint: (point) => createdTableWidthHint(content, point),
     cell: (point, { includeTableNode = false } = {}) => {
       if (content.format !== 'hwpx' && content.format !== 'hwp5') return null;
-      const p = content.paragraphs.find(
-        (p) => p.section === point.section && p.paragraph === point.paragraph,
-      );
+      const p = paragraphLookup.find(content.paragraphs, point);
       const table = content.tables?.find(
         (t) => t.section === point.section && t.tableNode === p?.tableCell?.tableNode,
       );
@@ -1752,6 +1771,8 @@ export function createRenderer(
     close() {
       if (closed) return;
       closed = true;
+      projectionDeferred = false;
+      paragraphLookup.clear();
       stopPictureWait();
       chartResources.close();
       pictureResources.close();

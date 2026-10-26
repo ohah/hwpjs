@@ -11,7 +11,12 @@ export function createControlBridge(options: {
   error(error: unknown): void;
 }) {
   let closed = false;
-  type PendingRequest = { id: symbol; documentId: StateToken['documentId']; generation: number };
+  type PendingRequest = {
+    id: symbol;
+    kind: RuntimeMessage['kind'];
+    documentId: StateToken['documentId'];
+    generation: number;
+  };
   let pending: PendingRequest | undefined;
   let task: Promise<void> = Promise.resolve();
   const current = (token: Pick<StateToken, 'documentId' | 'generation'>) => {
@@ -32,6 +37,7 @@ export function createControlBridge(options: {
       pending = undefined;
   };
   return {
+    pendingKind: () => (pending && current(pending) ? pending.kind : undefined),
     ready: () => !closed && options.lease.isActive() && options.state().status === 'ready',
     busy: () => closed || pending !== undefined || options.state().status !== 'ready',
     request(message: RuntimeMessage): boolean {
@@ -43,6 +49,7 @@ export function createControlBridge(options: {
       const token = options.state().token;
       const request: PendingRequest = {
         id: Symbol('input-surface-request'),
+        kind: owned.kind,
         documentId: token.documentId,
         generation: token.generation,
       };

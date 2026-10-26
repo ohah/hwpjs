@@ -153,6 +153,8 @@ export function createCanvasSurface({
       preserveScroll: !changedDocument,
       resourceEpoch: `${state.documentId}:${state.generation}:${state.operationRevision}`,
       resourceDocument: `${state.documentId}:${state.generation}`,
+      // 같은 문서의 splice 대기 중 투영 계산을 유예합니다. snapshot의 ACK 귀속 판정은 아닙니다.
+      deferLayout: !changedDocument && bridge?.pendingKind() === 'splice',
     });
     if (retained && !bridge?.busy()) {
       direct?.initializeCapabilities({
@@ -203,8 +205,13 @@ export function createCanvasSurface({
       state: () => editor.getEditorState(),
       lease,
       acknowledge(reply, state) {
-        if (state) render(state);
-        direct.message(reply);
+        try {
+          if (state) render(state);
+          direct.message(reply);
+        } finally {
+          // 사용자 입력의 다음 Native 요청 microtask보다 먼저 최종 투영을 확정합니다.
+          renderer.flushProjection();
+        }
       },
       error: (error) => status(String(error)),
     });

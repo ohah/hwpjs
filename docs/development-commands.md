@@ -626,3 +626,11 @@ WASM 거부 테스트는 임의 예외나 메시지만으로 성공을 판정하
 2026-09-28 HWP5 미리보기 거부 원인 분류 후 재실행에서는 `zig build test --summary all` 5/5 단계·2,672/2,672개가 약 21분·최대 9 GiB로 통과했습니다. 오래 걸린 `HWPX known inspections include table geometry diagnostics and limits`만 분리해도 Debug 약 7분, ReleaseSafe 수십 초가 소요되며 둘 다 통과했습니다. 새 미리보기 오라클 테스트를 연결한 `zig build audit -Doptimize=ReleaseSafe --summary all`도 통과했습니다. 이 실행 시간은 현 로컬 환경의 실측이지 모든 환경의 성능 보장은 아닙니다.
 
 WASM 배포 디버그 정보와 실행 섹션 검증은 [산출물 정책](wasm-release-artifacts.md)을 따릅니다.
+
+## 입력 응답 표시 투영 회귀
+
+[표시 투영 계산의 경계](renderer-ack-projection.md)를 따릅니다. 작은 합성 입력 회귀이며 Native 컴파일이나 ignored 문서가 필요하지 않습니다.
+
+```sh
+mise exec -- bun test ./packages/vanilla/tests/renderer-ack-projection.test.mjs
+```
