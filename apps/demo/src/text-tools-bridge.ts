@@ -4,17 +4,18 @@ import {createTextToolsDialog,type SearchDraft,type SearchDirection} from './tex
 import {createDialogLayer} from './dialog-layer.ts';
 import {replacementCaret} from './replacement-selection.ts';
 
-export function createTextToolsBridge({editor,root,onStatus,onClose,resolveShortcut}:{editor:HeadlessEditor;root:HTMLElement;onStatus:(message:string)=>void;onClose?:()=>void;resolveShortcut?:(event:KeyboardEvent)=>string|undefined}){
- let view:ReturnType<typeof createTextToolsDialog>|undefined,statistics:ReturnType<typeof createDialogLayer>|undefined,closed=false,pending=false,epoch=0;
+export function createTextToolsBridge({editor,root,onStatus,onClose,onPresentationChange,resolveShortcut}:{editor:HeadlessEditor;root:HTMLElement;onStatus:(message:string)=>void;onClose?:()=>void;onPresentationChange?:()=>void;resolveShortcut?:(event:KeyboardEvent)=>string|undefined}){
+ let view:ReturnType<typeof createTextToolsDialog>|undefined,statistics:ReturnType<typeof createDialogLayer>|undefined,closed=false,pending=false,epoch=0,subscribed=false;
  let draft:SearchDraft={query:'',replacement:'',direction:'down'},replaceMode=false,continuation:{version:number;query:string;mode:string}|undefined;
  let documentId=editor.getEditorState().documentId,generation=editor.getEditorState().generation;
  const current=()=>view?.getDraft()??draft;
  const clearContinuation=()=>{continuation=undefined;view?.continueFromEnd();};
- const close=(restoreFocus=false,clearDraft=false)=>{epoch++;if(view){draft=view.getDraft();view.destroy();view=undefined;}statistics?.destroy();statistics=undefined;clearContinuation();if(clearDraft)draft={query:'',replacement:'',direction:'down'};if(restoreFocus&&!closed&&editor.getEditorState().status==='ready')onClose?.();};
- const unsubscribe=editor.registerStateListener(state=>{if(state.documentId!==documentId||state.generation!==generation||state.status!=='ready')close(false,true);else if(statistics)close();documentId=state.documentId;generation=state.generation;});
+ const notify=()=>{if(!closed&&subscribed){try{onPresentationChange?.();}catch{/* 표시 관측 실패로 편집 접수나 정리를 중단하지 않는다. */}}};
+ const close=(restoreFocus=false,clearDraft=false)=>{epoch++;if(view){draft=view.getDraft();view.destroy();view=undefined;}statistics?.destroy();statistics=undefined;clearContinuation();if(clearDraft)draft={query:'',replacement:'',direction:'down'};notify();if(restoreFocus&&!closed&&editor.getEditorState().status==='ready')onClose?.();};
+ const unsubscribe=editor.registerStateListener(state=>{if(state.documentId!==documentId||state.generation!==generation||state.status!=='ready')close(false,true);else if(statistics)close();documentId=state.documentId;generation=state.generation;});subscribed=true;
  const presentation=():Partial<Record<DemoCommand,ActionAvailability>>=>{const state=editor.getEditorState(),reason=closed?'종료된 데모입니다.':pending?'찾기·바꾸기 작업이 진행 중입니다.':state.status!=='ready'?'문서를 먼저 열어주세요.':undefined,value={enabled:reason===undefined,reason};return{find:value,replace:value,'word-count':value};};
  const report=(error:unknown)=>{if(closed)return;const message=error instanceof Error?error.message:String(error);onStatus(message);view?.setStatus(['StaleSearchSelection','StaleSelectionObservation','StaleSearchQuery'].includes(message)?'선택이나 검색 조건이 바뀌었습니다. 다시 찾아주세요.':message);};
- const run=async(operation:(active:()=>boolean)=>Promise<void>)=>{if(closed||pending)return;const capturedEpoch=epoch,active=()=>!closed&&epoch===capturedEpoch;pending=true;view?.setBusy(true);try{await operation(active);}catch(error){if(active())report(error);}finally{pending=false;view?.setBusy(false);}};
+ const run=async(operation:(active:()=>boolean)=>Promise<void>)=>{if(closed||pending)return;const capturedEpoch=epoch,active=()=>!closed&&epoch===capturedEpoch;pending=true;try{notify();view?.setBusy(true);await operation(active);}catch(error){if(active())report(error);}finally{pending=false;try{view?.setBusy(false);}finally{notify();}}};
  const status=(message:string)=>{if(view)view.setStatus(message);else onStatus(message);};
  const find=(continuing=false,override?:SearchDirection)=>run(async active=>{
   const values=current(),text=values.query,requestedMode=override??values.direction;

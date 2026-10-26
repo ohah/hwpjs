@@ -66,7 +66,7 @@ export async function mountDemo(root: HTMLElement, framework: DemoFramework, mou
   const editor = createEditor({ runtimeFactory, onError: () => { if (!closed) note('문서 작업에 실패했습니다.'); } });
   const formatting = createFormattingBridge({editor,onStatus:note});
   const formatDialogs=createFormattingDialogController({root,port:formatting,getState:()=>editor.getEditorState(),subscribe:listener=>editor.registerStateListener(listener),onStatus:note,onClose:()=>{host?.focus?.();},onPresentationChange:()=>shell.update()});
-  const textTools = createTextToolsBridge({editor,root,onStatus:note,onClose:()=>{host?.focus?.();},resolveShortcut:event=>shortcuts?.resolveCommand(event)});
+  const textTools = createTextToolsBridge({editor,root,onStatus:note,onClose:()=>{host?.focus?.();},onPresentationChange:()=>shell.update(),resolveShortcut:event=>shortcuts?.resolveCommand(event)});
   const clipboard = createClipboardBridge({editor,onStatus:note,onReadDenied:()=>{host?.focus?.();},clipboard:root.ownerDocument.defaultView?.navigator.clipboard??null});
   const viewOptions=createViewOptionsBridge({getHost:()=>host,onStatus:note});
   const presentation = (): DemoShellState => {
